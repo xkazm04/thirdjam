@@ -1,0 +1,26 @@
+# Third Jam
+
+# Generated output
+devlog/out/
+logs/
+*.log
+!prep-reference/tools/gen.log
+node_modules/
+
+# Unreal project (created after the jam starts, under Game/)
+Game/Binaries/
+Game/Intermediate/
+Game/DerivedDataCache/
+Game/Saved/
+Game/Build/
+Game/.vs/
+Game/*.sln
+Game/*.code-workspace
+Game/Plugins/*/Binaries/
+Game/Plugins/*/Intermediate/
+Game/Packaged/
+
+# Local machine files
+.tl/
+*.local.json
+.mcp.local.json
