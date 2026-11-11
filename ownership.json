@@ -1,0 +1,43 @@
+{
+  "schema": "thirdjam.ownership/1",
+  "note": "docs/PLAN.md section 5, rule 1: one owner per path. A change across the line goes through a request in handoff/, never an edit. Patterns are globs relative to the repository root: ** crosses folders, * does not, matching ignores case.",
+  "owners": {
+    "A": [
+      "Game/Source/**",
+      "Game/Content/Maps/**",
+      "Game/Content/Cartridges/**",
+      "Game/Config/**",
+      "tools/**",
+      "schema/**",
+      "prompts/**",
+      "Game/*.uproject",
+      "Game/Content/Blueprints/**",
+      "Game/Content/UI/**"
+    ],
+    "B": [
+      "Game/Plugins/JamAssets/**",
+      "Game/Content/Look/**",
+      "Game/Content/Audio/**"
+    ]
+  },
+  "shared": {
+    "note": "Shared by the Director. any_device: both devices write here on their own branch (requests, hourly status, ledger rows, dev log material). director_only: changed by the Director on main; a device that needs a change files a handoff request.",
+    "any_device": [
+      "handoff/**",
+      "status/**",
+      "ASSETS.md",
+      "devlog/**",
+      "retro/**"
+    ],
+    "director_only": [
+      "docs/**",
+      "contracts/**",
+      "ownership.json",
+      "README.md",
+      ".gitignore",
+      ".gitattributes",
+      ".mcp.json",
+      "prep-reference/**"
+    ]
+  }
+}
