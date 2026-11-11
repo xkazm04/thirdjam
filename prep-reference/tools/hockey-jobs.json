@@ -1,0 +1,50 @@
+{
+  "style": "Reference study for art direction only. Landscape 16:9, same high three-quarter camera angle in every study. No text, no letters, no logos, no watermark, no readable numbers or letters on jerseys or boards, no real people, no real teams or leagues.",
+  "jobs": [
+    {
+      "name": "hockey-l1-a",
+      "tier": "L1",
+      "prompt": "An ice hockey rink for a toy-like 3 versus 3 game, a 60 by 30 metre rink with rounded corners, boards all around and a four metre wide goal at each end, seen from a high three-quarter camera that keeps BOTH goals in frame. Six stylized chunky toy figures (capsule bodies, round heads, simple sticks, three in deep blue jerseys and three in warm orange jerseys) and one small near-black puck on the ice. Tier look, daylight toy rink: clean stylized toy diorama, saturated flat-ish materials, pale blue-white ice with simple painted markings, bright boards, soft global illumination, strong rim light, glossy plastic accents, cheerful. Variant: an open-air rink under a clear sunny sky with simple stands around it."
+    },
+    {
+      "name": "hockey-l1-b",
+      "tier": "L1",
+      "prompt": "An ice hockey rink for a toy-like 3 versus 3 game, a 60 by 30 metre rink with rounded corners, boards all around and a four metre wide goal at each end, seen from a high three-quarter camera that keeps BOTH goals in frame. Six stylized chunky toy figures (capsule bodies, round heads, simple sticks, three in deep blue jerseys and three in warm orange jerseys) and one small near-black puck on the ice. Tier look, daylight toy rink: clean stylized toy diorama, saturated flat-ish materials, pale blue-white ice with simple painted markings, bright boards, soft global illumination, strong rim light, glossy plastic accents, cheerful. Variant: an indoor community rink with big windows and warm light."
+    },
+    {
+      "name": "hockey-l1-c",
+      "tier": "L1",
+      "prompt": "An ice hockey rink for a toy-like 3 versus 3 game, a 60 by 30 metre rink with rounded corners, boards all around and a four metre wide goal at each end, seen from a high three-quarter camera that keeps BOTH goals in frame. Six stylized chunky toy figures (capsule bodies, round heads, simple sticks, three in deep blue jerseys and three in warm orange jerseys) and one small near-black puck on the ice. Tier look, daylight toy rink: clean stylized toy diorama, saturated flat-ish materials, pale blue-white ice with simple painted markings, bright boards, soft global illumination, strong rim light, glossy plastic accents, cheerful. Variant: a tabletop-sized rink standing on a wooden table, toy-box feel, soft window light."
+    },
+    {
+      "name": "hockey-l2-a",
+      "tier": "L2",
+      "prompt": "An ice hockey rink for a toy-like 3 versus 3 game, a 60 by 30 metre rink with rounded corners, boards all around and a four metre wide goal at each end, seen from a high three-quarter camera that keeps BOTH goals in frame. Six stylized chunky toy figures (capsule bodies, round heads, simple sticks, three in deep blue jerseys and three in warm orange jerseys) and one small near-black puck on the ice. Tier look, night arena, the same rink after dark: dark ambient light, emissive trim lines along the boards and goal frames, a few strong spotlights, mild bloom, cool shadows, ice still readable and dry (not wet, not reflective), a bit grittier with scuffed ice, one or two figures tipped over. Variant: the open-air rink at night under floodlights with a dark sky."
+    },
+    {
+      "name": "hockey-l2-b",
+      "tier": "L2",
+      "prompt": "An ice hockey rink for a toy-like 3 versus 3 game, a 60 by 30 metre rink with rounded corners, boards all around and a four metre wide goal at each end, seen from a high three-quarter camera that keeps BOTH goals in frame. Six stylized chunky toy figures (capsule bodies, round heads, simple sticks, three in deep blue jerseys and three in warm orange jerseys) and one small near-black puck on the ice. Tier look, night arena, the same rink after dark: dark ambient light, emissive trim lines along the boards and goal frames, a few strong spotlights, mild bloom, cool shadows, ice still readable and dry (not wet, not reflective), a bit grittier with scuffed ice, one or two figures tipped over. Variant: the indoor rink with the house lights down and spotlights on."
+    },
+    {
+      "name": "hockey-l2-c",
+      "tier": "L2",
+      "prompt": "An ice hockey rink for a toy-like 3 versus 3 game, a 60 by 30 metre rink with rounded corners, boards all around and a four metre wide goal at each end, seen from a high three-quarter camera that keeps BOTH goals in frame. Six stylized chunky toy figures (capsule bodies, round heads, simple sticks, three in deep blue jerseys and three in warm orange jerseys) and one small near-black puck on the ice. Tier look, night arena, the same rink after dark: dark ambient light, emissive trim lines along the boards and goal frames, a few strong spotlights, mild bloom, cool shadows, ice still readable and dry (not wet, not reflective), a bit grittier with scuffed ice, one or two figures tipped over. Variant: the tabletop rink on a table in a dark room, lit by the toy's own glowing trim."
+    },
+    {
+      "name": "hockey-l3-a",
+      "tier": "L3",
+      "prompt": "An ice hockey rink for a toy-like 3 versus 3 game, a 60 by 30 metre rink with rounded corners, boards all around and a four metre wide goal at each end, seen from a high three-quarter camera that keeps BOTH goals in frame. Six stylized chunky toy figures (capsule bodies, round heads, simple sticks, three in deep blue jerseys and three in warm orange jerseys) and one small near-black puck on the ice. Tier look, full neon: the same rink at full neon, wet mirror-like reflective ice, cyan and magenta neon strips along the boards and goal frames, low ground fog, strong bloom and glow, small glowing boost pickups (bright capsules and rings) lying on the ice, path-traced look, high contrast. Variant: open-air rink, neon strips along boards and goals, their reflections visible in the ice, dark city skyline or hills behind."
+    },
+    {
+      "name": "hockey-l3-b",
+      "tier": "L3",
+      "prompt": "An ice hockey rink for a toy-like 3 versus 3 game, a 60 by 30 metre rink with rounded corners, boards all around and a four metre wide goal at each end, seen from a high three-quarter camera that keeps BOTH goals in frame. Six stylized chunky toy figures (capsule bodies, round heads, simple sticks, three in deep blue jerseys and three in warm orange jerseys) and one small near-black puck on the ice. Tier look, full neon: the same rink at full neon, wet mirror-like reflective ice, cyan and magenta neon strips along the boards and goal frames, low ground fog, strong bloom and glow, small glowing boost pickups (bright capsules and rings) lying on the ice, path-traced look, high contrast. Variant: indoor rink with neon trim, haze in the air and reflections in the ice."
+    },
+    {
+      "name": "hockey-l3-c",
+      "tier": "L3",
+      "prompt": "An ice hockey rink for a toy-like 3 versus 3 game, a 60 by 30 metre rink with rounded corners, boards all around and a four metre wide goal at each end, seen from a high three-quarter camera that keeps BOTH goals in frame. Six stylized chunky toy figures (capsule bodies, round heads, simple sticks, three in deep blue jerseys and three in warm orange jerseys) and one small near-black puck on the ice. Tier look, full neon: the same rink at full neon, wet mirror-like reflective ice, cyan and magenta neon strips along the boards and goal frames, low ground fog, strong bloom and glow, small glowing boost pickups (bright capsules and rings) lying on the ice, path-traced look, high contrast. Variant: tabletop rink in a dark room, the whole toy glowing, reflections on a glossy table."
+    }
+  ]
+}

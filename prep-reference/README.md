@@ -30,7 +30,19 @@ at hour 0. Whatever look device B picks is rebuilt from scratch in the engine du
 | `images/d4-tilt-shift-a.png` | D4 tilt-shift miniature, clay farm yard |
 | `images/d4-tilt-shift-b.png` | D4, clay harbor dock, morning |
 | `tools/gen.mjs`, `tools/jobs.json` | the generator script (a tool, not content) and the exact job list; `tools/gen.log` is its log |
+| `HOCKEY-LADDER.md` | the hockey ladder study: one 3 vs 3 ice hockey arena in three lighting tiers (L1 daylight toy rink, L2 night arena, L3 full neon), three variants each: exact prompts, UE 5.9 feasibility per tier, what stays constant and what changes |
+| `images/hockey-l1-a.png` | hockey L1 daylight toy rink, open-air under a sunny sky, simple stands |
+| `images/hockey-l1-b.png` | hockey L1, indoor community rink, big windows, warm light |
+| `images/hockey-l1-c.png` | hockey L1, tabletop rink on a wooden table, window light |
+| `images/hockey-l2-a.png` | hockey L2 night arena, open-air with floodlights |
+| `images/hockey-l2-b.png` | hockey L2, indoor rink, house lights down, spotlights on |
+| `images/hockey-l2-c.png` | hockey L2, tabletop rink in a dark room, lit by its own trim |
+| `images/hockey-l3-a.png` | hockey L3 full neon, open-air, neon strips reflected in wet ice, city and hills behind |
+| `images/hockey-l3-b.png` | hockey L3, indoor rink, neon trim, haze, reflections |
+| `images/hockey-l3-c.png` | hockey L3, tabletop rink in a dark room, whole toy glowing, glossy table |
+| `tools/gen-hockey.mjs`, `tools/hockey-jobs.json`, `tools/mkjobs.mjs` | the hockey generator (a copy of `gen.mjs` reading its own job list), the exact nine prompts, and the script that writes them; `tools/gen-hockey.log` is its log |
+| `HOCKEY-LADDER.html`, `images/web/hockey-*.jpg` | the hockey ladder review page (self-contained, nine 960 px JPEG copies embedded, reviewer notes, feasibility digest, pick form that writes the checklist line) and the nine web copies it was built from; originals in `images/` are untouched |
 
-To regenerate one image: `node tools/gen.mjs <name>` (skips names whose PNG already exists).
+To regenerate one image: `node tools/gen.mjs <name>` (skips names whose PNG already exists); for the hockey ladder, `node tools/gen-hockey.mjs <name>`.
 
 Nothing in this folder is a game asset.
