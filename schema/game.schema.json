@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "PLACEHOLDER. Accepts only an empty object. Hour 1 of the jam replaces this file with the real game-specific fields once the game exists. Until then a cartridge can say nothing about any particular game.",
+  "title": "tj.cartridge/1 game object (placeholder)",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {}
+}

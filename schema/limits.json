@@ -1,0 +1,16 @@
+{
+  "schema": "tj.limits/1",
+  "$comment": "Engine limits the JSON Schema cannot express. Counts are list lengths. Edit here, not in validate.mjs. Every key is read by validate.mjs or the designer-eval assembler.",
+  "max_json_bytes": 24000,
+  "max_tunables": 24,
+  "max_rules": 24,
+  "max_entities": 32,
+  "max_total_entity_instances": 400,
+  "max_ai": 16,
+  "max_param_keys": 16,
+  "max_palette": 8,
+  "max_mood_words": 8,
+  "max_sentence_chars": 300,
+  "max_refusal_chars": 300,
+  "blocked_terms": []
+}

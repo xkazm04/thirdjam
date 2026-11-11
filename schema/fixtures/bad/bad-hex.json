@@ -1,0 +1,176 @@
+{
+  "schema": "tj.cartridge/1",
+  "id": "test-arena",
+  "title": "Test Arena",
+  "seed": 12345,
+  "theme": {
+    "name": "Plain Grey",
+    "mood_words": [
+      "neutral",
+      "calm"
+    ],
+    "palette": [
+      {
+        "name": "base",
+        "hex": "red"
+      },
+      {
+        "name": "accent",
+        "hex": "#C0C0C0"
+      },
+      {
+        "name": "shadow",
+        "hex": "#404040"
+      }
+    ]
+  },
+  "tunables": [
+    {
+      "key": "pace",
+      "type": "number",
+      "min": 0.5,
+      "max": 3,
+      "default": 1,
+      "description": "How fast everything moves. 1 is normal."
+    },
+    {
+      "key": "chaos",
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "default": 0.2,
+      "description": "How unpredictable the arena is. 0 is orderly, 1 is wild."
+    },
+    {
+      "key": "obstacle_count",
+      "type": "integer",
+      "min": 0,
+      "max": 40,
+      "default": 10,
+      "description": "How many obstacles are placed."
+    },
+    {
+      "key": "round_length_frames",
+      "type": "integer",
+      "min": 600,
+      "max": 36000,
+      "default": 7200,
+      "description": "How long a round lasts, in physics frames (60 per second)."
+    },
+    {
+      "key": "scoring_forgiveness",
+      "type": "number",
+      "min": 0,
+      "max": 1,
+      "default": 0.3,
+      "description": "How gently mistakes are scored. 1 means mistakes cost almost nothing."
+    },
+    {
+      "key": "assist",
+      "type": "boolean",
+      "default": false,
+      "description": "Turns on gentle help for new players."
+    },
+    {
+      "key": "difficulty_preset",
+      "type": "enum",
+      "options": [
+        "calm",
+        "normal",
+        "wild"
+      ],
+      "default": "normal",
+      "description": "A named overall difficulty mood."
+    }
+  ],
+  "values": {
+    "pace": 1,
+    "chaos": 0.2,
+    "obstacle_count": 10,
+    "round_length_frames": 7200,
+    "scoring_forgiveness": 0.3,
+    "assist": false,
+    "difficulty_preset": "normal"
+  },
+  "rules": [
+    {
+      "id": "basic-score",
+      "kind": "score",
+      "params": {
+        "points_per_event": 10,
+        "mistake_penalty": 5
+      }
+    },
+    {
+      "id": "round-timer",
+      "kind": "timer",
+      "params": {
+        "limit_frames": 7200
+      }
+    },
+    {
+      "id": "target-win",
+      "kind": "win",
+      "params": {
+        "score_target": 200
+      }
+    },
+    {
+      "id": "out-of-time",
+      "kind": "lose",
+      "params": {
+        "when": "timer_expired"
+      }
+    },
+    {
+      "id": "wave-spawn",
+      "kind": "spawn",
+      "params": {
+        "interval_frames": 300,
+        "batch_size": 2
+      }
+    },
+    {
+      "id": "streak-bonus",
+      "kind": "modifier",
+      "params": {
+        "streak_length": 3,
+        "multiplier": 2
+      }
+    }
+  ],
+  "entities": [
+    {
+      "id": "test-block",
+      "kind": "block",
+      "count": 10,
+      "params": {
+        "size": "medium",
+        "bounce": 0.4
+      }
+    },
+    {
+      "id": "test-drone",
+      "kind": "drone",
+      "count": 2,
+      "params": {
+        "speed_scale": 1,
+        "glow": true
+      }
+    }
+  ],
+  "ai": [
+    {
+      "id": "drift-behaviour",
+      "kind": "wander",
+      "applies_to": [
+        "test-drone"
+      ],
+      "params": {
+        "turn_rate": 0.5,
+        "retarget_frames": 120
+      }
+    }
+  ],
+  "game": {}
+}
