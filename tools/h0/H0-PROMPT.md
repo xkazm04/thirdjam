@@ -1,8 +1,9 @@
 # H0: the unattended start of the jam on device A
 
 You are the integrating Director on device A for the Third Jam (`C:/Users/kazda/kiro/thirdjam`). The operator is asleep and started you
-with a scheduled task at jam start, 2026-11-12 06:00 CET. You run alone until the operator wakes; you work through subagents the way
-`docs/TRACKS.md` section 5 allows for sleeping hours (at most two builders at a time, text and test work first, no asset imports). Read,
+with a scheduled task at jam start, 2026-11-12 06:00 CET. You run alone until the operator wakes; you work through subagents in the lanes of
+`docs/TRACKS.md` section 5 (up to five builders live on A, two editors on separate MCP ports, each lane in its own worktree; what waits for the operator
+is asset selection and any "operator" decision, nothing else). Read,
 in this order, before anything else: `docs/PREP-CHECKLIST.md` section D, `docs/PLAN.md` (sections 3, 4, 4b, 6, 9), `docs/HOCKEY.md`,
 `docs/TRACKS.md`, `tools/mcp/README.md`, `tools/run/*.ps1`, `tools/skills/README.md` (if present), `tools/mcp/ANIMATION.md` and
 `tools/mcp/PHYSICS.md` (if present), `schema/README` material in `prompts/README.md`, and `prep-reference/HOCKEY-LADDER.md` (reference only, never import).
@@ -43,12 +44,15 @@ in this order, before anything else: `docs/PREP-CHECKLIST.md` section D, `docs/P
    `contracts/assets-naming.md` written from the plan (every type, field, enum string and asset name). Push. Write `status/A.md` `## H1`.
 
 ## Hour 1 to 6: M0 greybox (HOCKEY.md section 3)
-Builders (Opus for C++, Sonnet for data and tests), one or two at a time, each with a brief file under `briefs/` in the repo (commit the briefs, they are the dev log's
-spine): rink + boards + two nets from procedural geometry (a rink builder in C++ or geometry script reading `game.rink`), one player skater pawn (capsule) with the
+Builders in lanes A1-A6 (TRACKS.md section 5: Opus for C++ and AI, Sonnet for data, tests, camera/HUD and packaging), up to five live, each in its own worktree
+with a brief file under `briefs/` in the repo (commit the briefs, they are the dev log's spine). Start A1 (core), A2 (AI brain against the core's interfaces, headless
+tests), A4 (cartridge + validator port) and A5 (camera, HUD, input) in parallel as soon as the project skeleton and the seam stubs are committed; A3 (balancing sweeps)
+starts when A1's simulation compiles headless; A6 packages at H6. Deliverables: rink + boards + two nets from procedural geometry (a rink builder in C++ or geometry script reading `game.rink`), one player skater pawn (capsule) with the
 skating model from `tools/skills/skating-physics.md` and the HOCKEY.md numbers (a plain fixed-step C++ simulation at 60 Hz, not Character Movement, not Chaos),
 the puck in the same simulation (0.12 m, near-black, 30 m/s cap, 4 sub-steps per frame; Chaos only for cosmetics), shoot (reach 1.5 m, 18 m/s,
-24-frame cooldown), goal triggers behind the lines, score HUD (plain UMG text), restart on R, the arena camera with both nets in frame, cartridge loading from JSON
-through a validator port of `schema/validate.mjs`'s rules (unknown keys are errors). Tests: `BothNetsInFrame`, a scripted "score on an empty net" automation test,
+24-frame cooldown), goal triggers behind the lines, score HUD (plain UMG text) with a radar mini-rink, restart on R, the **third-person follow camera** (HOCKEY.md section 2 and
+`game.camera`) with the arena camera as the cartridge alternative, a 120 x 60 m rink by default, cartridge loading from JSON through a validator port of
+`schema/validate.mjs`'s rules (unknown keys are errors). Tests: `FarNetReadable`, a scripted "score on an empty net" automation test,
 `Package` via `tools/run/package.ps1 -Config Development` then `run-packaged.ps1 -Seconds 10`. Commit per builder package; push; `status/A.md` every hour with free RAM,
 GPU memory, editor crashes, packaged-build age, and what is next. Screenshots through the SceneCapture toolset into `devlog/shots/` with the naming convention in `devlog/README.md`.
 

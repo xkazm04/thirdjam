@@ -45,19 +45,39 @@ A stub for each seam (empty interface, empty rigs, an event logger) is committed
 - Nothing live is shared: no shared editor, no shared DDC, no shared port. Reference stills travel in the repo; big source files (raw
   generations, 4K originals) never enter git and are exchanged only if a handoff asks, via a dated zip outside the repo.
 
-## 5. Tempo (the leads balance it; nobody runs the machine into the ground)
+## 5. Parallel lanes (both machines are cleared for this project; use them)
 
-Each lead applies these rules every hour, from the numbers it reads itself (`Get-CimInstance Win32_OperatingSystem` for free RAM, `nvidia-smi`
-for GPU memory and load, the editor log for crashes):
+The unit of parallelism is a **lane**: one builder, one git worktree (`.worktrees/<lane>` on branch `lane/<device>-<name>`), its own project copy,
+its own project-local derived-data cache, and, when it needs the editor, its own editor instance on its own MCP port (`tools/run/editor.ps1 -McpPort 8001`, `8002`, ...,
+which passes `-ModelContextProtocolPort`; the client follows with `tools/mcp/mcp.mjs --url http://127.0.0.1:8001/mcp`). Builders never share an editor, a port or a cache. A lane that only edits text (C++, JSON, prompts,
+tests, docs) needs no editor at all; the lead compiles and tests its result in the lead's own worktree before merging.
+
+| Device A (64 GB, RTX 4090), the integrating Director's machine | Device B (128 GB, high-end GPU), the art lead's machine |
+|---|---|
+| **A1 core**: rink builder, skater sim, puck, shooting, goals, rules, cartridge loader (Opus) | **B1 materials and light rigs**: ice/boards/net masters, `LR_L1..L3`, post volumes (Opus) |
+| **A2 AI and simulation**: bot brain, roles, yield rules, headless bot-vs-bot tournaments over seeds (Opus) | **B2 dressing and meshes**: arena surroundings for the chosen path, Fab selections, generated props, 2K cap (Sonnet) |
+| **A3 balancing sweeps**: headless parameter sweeps on the fixed-step sim (shot speed, skater grip, check thresholds, pickup magnitudes); reports curves, proposes cartridge values (Sonnet) | **B3 VFX and audio**: Niagara per event, MetaSounds, puck readability kit, pickups (Opus) |
+| **A4 cartridge and Designer**: `game` schema, presets, Designer D0/D1, validator port to C++ (Sonnet) | **B4 skater T-B1**: humanoid + retarget behind `IJamSkaterVisual` (Opus; needs a 10-20 min human step for the AnimBP graph) |
+| **A5 camera, HUD, input, first-play script**: third-person camera, radar, tutorial text, controller support (Sonnet) | **B5 skater T-B2**: generated rigged figure via partner tools (Sonnet; needs operator accounts) |
+| **A6 QA, packaging, dev log**: automation tests green, Shipping packages every 6 h, screenshots, `devlog/` build (Sonnet) | **B6 capture and video**: screenshots per milestone, the 1080p trailer, NvRTX stills if the trial passed (Sonnet) |
+| Editors: up to **2** at once (two lanes driving MCP), one cook/package at a time | Editors: up to **3** at once, one cook/package at a time, one generation or render job at a time |
+| Builders: up to **5** live, plus the Director | Builders: up to **7** live, plus the lead |
+
+Lanes merge upward: lane branch -> device branch (`dev-a` / `dev-b`) by the device lead every 90 minutes after the lane's own tests pass; device branch ->
+`main` by the Director at the 3-hour windows (section 4). A lane that touches another lane's files is split, not merged. Headless work (A2, A3, A4 tests) runs
+the fixed-step simulation without rendering, so it costs CPU only and scales with cores, not with the GPU.
+
+**Tempo rules**, read by each lead every hour from its own measurements (`Get-CimInstance Win32_OperatingSystem` free RAM, `nvidia-smi` GPU memory, editor logs):
 
 | Reading | Rule |
 |---|---|
-| free RAM < 16 GB (A) / < 32 GB (B) | no new builder; the next cook or package waits |
-| one editor + one cook or package running | no second heavy job; builders do text-only work (C++, JSON, prompts, docs) |
-| GPU memory > 80% or a render job (video, NvRTX, generation) running | no editor PIE sessions; no screenshot runs |
+| free RAM < 12 GB (A) / < 24 GB (B) | no new editor; new builders only on text lanes |
+| free RAM < 6 GB | no new builder of any kind; the next cook or package waits |
+| a cook or package running | no second cook or package on that device; editors keep running |
+| GPU memory > 85% or a render, generation or NvRTX job running | no new PIE session; screenshots wait |
 | any wall-clock failure (frame budget, timeout) while another heavy job ran | re-run alone before it is believed (lesson from the Godot night) |
 | builder silent 15 minutes past its time box | check it on disk; restart it from its brief file |
-| hour of the day with the human asleep | at most two builders per machine, both on text-only or test work; no asset imports (they need eyes) |
+| the human asleep | the lane counts above still apply; what waits for eyes is asset *selection* (Fab picks, generated-mesh picks) and any decision in a brief marked "operator"; everything else runs |
 
 NvRTX trial on A (tonight, if access arrives): clone and `Setup.bat` run at low priority; the engine build runs only when no jam work is on A,
 and never past H0 while A's editor is in use. The trial engine never opens the shared project (NVRTX-NOTES.md guardrails).

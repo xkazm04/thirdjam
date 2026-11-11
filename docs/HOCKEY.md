@@ -23,7 +23,8 @@ the regular game is a bright toy rink, raw play is the same rink at night, boost
 | Puck | radius 0.12 m, height 0.08, max 30 m/s, near-black | **0.35 m made the player lose 1:3**; readability comes from colour and VFX, never size |
 | Shot | reach 1.5 m, exit 18 m/s regardless of mass, cooldown 24 frames, must face within 60 deg | keep; add charge-up as a tunable later |
 | Goal pause | 120 frames, then faceoff reset at centre, skaters at spawns facing the far net | keep |
-| Camera | [0, 52, 14] fov 55 cropped both nets | start higher and wider; both nets in frame is an acceptance test |
+| Camera | Godot used a fixed arena camera [0, 52, 14] fov 55 that cropped both nets | **Decision 2026-11-12 (operator): third-person camera** behind and above the player's skater, following with lag, looking down the ice; the fixed arena camera stays as cartridge option `game.camera.mode = "arena"`. A radar (mini-rink) in the HUD and a far-net marker replace "both nets in frame" as the readability device |
+| Rink size | Godot 60 x 30 m | **Decision 2026-11-12 (operator): twice as large, 120 x 60 m** as the default (`game.rink.length_m` 120, `width_m` 60); the Godot numbers for speed and shot are kept as the starting tunables and re-balanced by the A3 sweep lane (a skater crosses 120 m in about 15 s at 8 m/s) |
 | AI | stateless per tick; roles chaser / support / back; stall detector 120 frames; **yield rules**: blue bots yield when the human is nearer the puck (+2 m, within 15 m); red non-backs hold when the human is within 4.5 m of the puck | without the yield rules the human never touched the puck and the core bot had 0 shots |
 | Tests | player bot must WIN with >= 3 shots; AI bot: every skater moved >= 3 m, puck path > 30 m, >= 1 AI shot | "the human has something to do" is a gate, not a hope |
 | Critic | puck invisible from above, team colours hard to read from above | jersey colours must contrast on ice from the top; puck gets a trail and a shadow disc |
@@ -56,6 +57,7 @@ game.teams: [ { id, colour_hex, skaters: [ { role: "player" | "chaser" | "suppor
 game.ai: { yield_margin_m, yield_radius_m, hold_radius_m, speed_scale, red_skill }
 game.pickups: [ { kind: "speed" | "precision" | "heavy_puck" | "big_puck" | "reverse_other", spawn_every_frames, duration_frames, magnitude } ]
 game.look: { tier: "l1_day" | "l2_night" | "l3_neon", trim_colour_hex, fog_density, wet_ice: bool }
+game.camera: { mode: "third_person" | "arena", distance_m, height_m, lag_frames, fov_deg, radar: bool }
 ```
 
 Presets shipped as D0 cartridges: `hockey.regular` (M1), `hockey.raw` (M2), `hockey.boost` (M3), three `hockey.arena.*` (M3b).
@@ -98,7 +100,7 @@ three tiers (nine images, reference only) are in `prep-reference/HOCKEY-LADDER.m
 - `PlayerBotWins`: scripted player bot vs AI at seeds 1, 2, 7: WIN with >= 3 shots, same state hash per seed (determinism).
 - `AiBotPlays`: every skater moved >= 3 m, puck travelled > 30 m, >= 1 AI shot, no skater outside the rink.
 - `HumanHasSomethingToDo`: the player's skater touches the puck within 600 frames of every faceoff at default tuning.
-- `BothNetsInFrame`: both goal triggers project inside the viewport at the arena camera.
+- `FarNetReadable`: in third-person mode the far net's marker is inside the viewport and the radar shows all six skaters and the puck; in arena mode both goal triggers project inside the viewport.
 - `FrameBudget`: p99 frame under 8 ms at 1080p Shipping on device A for the shipped tier.
 - `Package`: `tools/run/package.ps1` Shipping passes; staged size and zip under budget.
 - `CartridgeRoundTrip`: every shipped cartridge validates, loads, and the bots pass on it.

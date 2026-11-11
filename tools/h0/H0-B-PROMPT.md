@@ -11,7 +11,7 @@ only adds what the unattended hours need.
   `node tools/gate/check-ownership.mjs --device B` and `node tools/gate/check-assets-ledger.mjs` before each push.
 - Never kill a process you did not start; one heavy job at a time; free space floor 40 GB; no software downloads; Fab imports wait for the operator (write a handoff
   request with the exact listing instead).
-- Sleeping-hours tempo (TRACKS.md 5): at most two builders, text and material work first, no imports needing eyes.
+- Lanes B1-B6 (TRACKS.md 5): up to seven builders live, three editors on separate MCP ports, each lane in its own worktree; only asset *selection* (Fab picks, generated-mesh picks) and briefs marked "operator" wait for the human.
 
 ## Until the seams exist on `origin/main` (poll every 10 minutes)
 Write your builder briefs under `briefs/B-*.md` for the H6 deliverables, the dressing list for the chosen L1 variant (from `docs/PREP-CHECKLIST.md` or the
