@@ -1,0 +1,60 @@
+{
+  "style": "Reference study for art direction only. Landscape 16:9, no text, no letters, no logos, no watermark, no characters or people. Subject: a physics-driven toy arena seen from a three-quarter game camera, a few chunky interactive objects, a clear open play area in the middle, and a distinct background.",
+  "jobs": [
+    {
+      "name": "d1-toy-diorama-a",
+      "direction": "D1",
+      "prompt": "Art direction: clean stylized toy diorama. Chunky stacked wooden-and-plastic blocks and a big rubber ball on a bright round platform. Saturated, flat-ish materials in primary colors, soft global illumination, strong rim light on every edge, glossy accents on plastic parts. Sunny pastel sky background with simple soft clouds. Daylight."
+    },
+    {
+      "name": "d1-toy-diorama-b",
+      "direction": "D1",
+      "prompt": "Art direction: clean stylized toy diorama. A square play mat with a ring of cylindrical pins, a few oversized cubes and a glossy sphere. Saturated flat-ish materials in teal, orange and yellow, soft global illumination, strong rim light, glossy accents. Warm sunset lighting with long soft shadows, distant stylized hills as background."
+    },
+    {
+      "name": "d1-toy-diorama-c",
+      "direction": "D1",
+      "prompt": "Art direction: clean stylized toy diorama. An indoor playroom floor as the arena: chunky toy ramps, tubes and spinning discs, soft saturated materials in candy colors, soft global illumination from a big window, strong rim light, glossy accents. Background is a blurred shelf wall with simple colorful shapes. Bright cheerful indoor light."
+    },
+    {
+      "name": "d2-cel-painted-a",
+      "direction": "D2",
+      "prompt": "Art direction: painted cel-shaded. A stone courtyard arena with chunky barrels, crates and a large round boulder. Hand-painted textures with visible brush strokes, bold ink-like dark outlines around every object, flat cel-shaded lighting steps, limited palette of five or six muted earthy colors plus one red accent. Distinct painted forest-and-cliff backdrop. Late afternoon light."
+    },
+    {
+      "name": "d2-cel-painted-b",
+      "direction": "D2",
+      "prompt": "Art direction: painted cel-shaded. A snowy wooden platform arena with chunky barrels and round stones, hand-painted textures, visible ink-like outlines, flat cel-shaded shadows, very limited palette of cool blues, cream and one orange accent. Painted pine trees and mountains as background. Overcast soft light."
+    },
+    {
+      "name": "d2-cel-painted-c",
+      "direction": "D2",
+      "prompt": "Art direction: painted cel-shaded. A desert ruin arena with sandstone blocks, clay pots and a round stone wheel, hand-painted textures with rough pencil-like hatching, thick ink-like outlines, limited palette of sand, terracotta, teal and cream. Painted dunes and a huge pale sun in the background. Hard noon light with crisp flat shadows."
+    },
+    {
+      "name": "d3-neon-night-a",
+      "direction": "D3",
+      "prompt": "Art direction: neon night, high contrast. A dark industrial arena with a wet reflective black floor, chunky metal crates and a glowing sphere, emissive cyan and magenta light strips along the edges of the play area, volumetric haze and glow, strong reflections of the lights in the wet floor, deep shadows. Distant dark city skyline with a few lit windows as background. Path-traced look."
+    },
+    {
+      "name": "d3-neon-night-b",
+      "direction": "D3",
+      "prompt": "Art direction: neon night, high contrast. A rainy rooftop arena at night, puddles reflecting colored light, chunky barrels and a heavy ball, emissive orange and violet trim on the barriers, light haze and bloom, glossy wet surfaces, very dark ambient with sharp bright highlights. Blurred glowing city lights far behind. Path-traced look."
+    },
+    {
+      "name": "d3-neon-night-c",
+      "direction": "D3",
+      "prompt": "Art direction: neon night, high contrast. A dark glass-floored space arena with mirror-like reflections, floating chunky geometric objects with glowing green edge trim, emissive grid lines on the floor, thick glowing fog near the ground, strong bloom, deep black surroundings with a faint nebula as background. Path-traced look."
+    },
+    {
+      "name": "d4-tilt-shift-a",
+      "direction": "D4",
+      "prompt": "Art direction: tilt-shift miniature. A small farm-yard arena with soft clay-like chunky objects: hay bales, buckets and a big round ball, matte clay and felt materials with fingerprint-like surface detail, shallow depth of field with strong blur at the top and bottom of the frame, warm golden daylight, gentle soft shadows. Miniature fields and a toy barn in the background."
+    },
+    {
+      "name": "d4-tilt-shift-b",
+      "direction": "D4",
+      "prompt": "Art direction: tilt-shift miniature. A seaside harbor arena with soft clay-like chunky floating crates and round buoys on a flat dock, matte clay materials, shallow depth of field with a sharp band across the middle and blur above and below, warm morning daylight, pastel colors. Miniature boats and a lighthouse in the background."
+    }
+  ]
+}
