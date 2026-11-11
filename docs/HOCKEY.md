@@ -18,7 +18,8 @@ the regular game is a bright toy rink, raw play is the same rink at night, boost
 |---|---|---|
 | Rink | 60 x 30 m, corner radius 5 m, boards all round | fits the camera and six skaters; keep |
 | Goals | 4.0 m wide, 1.5 high, 1.5 deep, at x = +-26; trigger box behind the line, puck-only | goal detection by overlap, scoring side = opposite |
-| Skater | speed 8 m/s, accel 12, turn 5 rad/s, lateral grip 3, mass 80 | arcade skating that still slides; keep as tunables |
+| Skater | speed 8 m/s, accel 12, turn 5 rad/s, lateral grip 3, mass 80, glide drag 0.147 m/s^2 (0.015 x 9.8), brake as a separate decel | arcade skating that still slides; keep as tunables (`rink.ice_friction` is the glide friction coefficient, 0.015) |
+| Simulation | **plain fixed-step C++ at 60 Hz for skaters and puck; Chaos only for cosmetics** (tipped figures, debris) | Chaos substepping and async tick are experimental in 5.9 and carry no determinism guarantee (`docs/SKATERS-RESEARCH.md` 4-5); the same-hash-per-seed test needs our own integrator, as the Godot kernel did. Puck: 4 sub-steps per frame so 30 m/s never tunnels a post |
 | Puck | radius 0.12 m, height 0.08, max 30 m/s, near-black | **0.35 m made the player lose 1:3**; readability comes from colour and VFX, never size |
 | Shot | reach 1.5 m, exit 18 m/s regardless of mass, cooldown 24 frames, must face within 60 deg | keep; add charge-up as a tunable later |
 | Goal pause | 120 frames, then faceoff reset at centre, skaters at spawns facing the far net | keep |
@@ -47,7 +48,7 @@ Wire names (snake_case; durations in `_frames`; absent value = omit the key):
 
 ```
 game.rink: { length_m, width_m, corner_radius_m, board_restitution, ice_friction, goal_width_m, obstacles: [ {kind, x, z, size} ] }
-game.skater: { speed, accel, turn_rate, lateral_grip, mass, check_enabled, check_speed_min, knockdown_frames }
+game.skater: { speed, accel, turn_rate, lateral_grip, mass, glide_drag, brake_decel, check_enabled, check_speed_min, knockdown_frames }
 game.puck: { radius_m, max_speed, drag, colour_hex }
 game.shot: { reach_m, speed, cooldown_frames, aim_cone_deg }
 game.rules: { mode: "first_to" | "timer", score_to_win, timer_frames, goal_pause_frames, offside: false, penalties: false }
@@ -66,8 +67,12 @@ The skater is the biggest risk and the key to fun. Gameplay never knows what a s
 (movement, puck handling, checks) and talks to its visual through one interface so the look can be swapped without touching play code.
 
 `IJamSkaterVisual` (C++ interface, implemented by a component the pawn owns; wire names fixed now):
-`SetTeam(team_id, colour_hex)`, `SetNumber(n)`, `UpdateMotion(speed, turn_rate, facing)`, `PlayShoot()`, `PlayCheck()`,
-`SetKnockedDown(bool)`, `SetHasPuck(bool)`, `SetBoost(kind | none)`.
+`SetTeam(team_id, colour_hex)`, `SetNumber(n)` (drives material params `NumberTens`, `NumberOnes`), `UpdateMotion(speed, turn_rate, facing)`,
+`PlayShoot()`, `PlayCheck()`, `SetKnockedDown(bool down, float dir_x, float dir_z)` (the direction the figure falls), `SetHasPuck(bool)`, `SetBoost(kind | none)`.
+Recipes: `tools/skills/skater-toy-figure.md` (T-A: engine basic shapes posed by C++ each tick, no skeleton; pose timings reuse our own Godot
+rig's keyframes, declared in the dev log), `tools/skills/skater-retarget.md` (T-B1/T-B2), `tools/skills/skating-physics.md` (movement, puck, determinism test).
+Known gap (`docs/SKATERS-RESEARCH.md` 6): no MCP toolset edits an Animation Blueprint graph or an IK Rig; retargeting goes through the Python tool and
+the three-node AnimBP graph for T-B1 needs 10-20 minutes of a human in the editor during an attention window.
 
 | Track | Owner | Window | What | Promotion rule |
 |---|---|---|---|---|

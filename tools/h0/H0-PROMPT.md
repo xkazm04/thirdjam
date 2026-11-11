@@ -45,7 +45,8 @@ in this order, before anything else: `docs/PREP-CHECKLIST.md` section D, `docs/P
 ## Hour 1 to 6: M0 greybox (HOCKEY.md section 3)
 Builders (Opus for C++, Sonnet for data and tests), one or two at a time, each with a brief file under `briefs/` in the repo (commit the briefs, they are the dev log's
 spine): rink + boards + two nets from procedural geometry (a rink builder in C++ or geometry script reading `game.rink`), one player skater pawn (capsule) with the
-skating model from `tools/skills/skating-physics.md` and the HOCKEY.md numbers, puck as a Chaos body (0.12 m, near-black, 30 m/s cap), shoot (reach 1.5 m, 18 m/s,
+skating model from `tools/skills/skating-physics.md` and the HOCKEY.md numbers (a plain fixed-step C++ simulation at 60 Hz, not Character Movement, not Chaos),
+the puck in the same simulation (0.12 m, near-black, 30 m/s cap, 4 sub-steps per frame; Chaos only for cosmetics), shoot (reach 1.5 m, 18 m/s,
 24-frame cooldown), goal triggers behind the lines, score HUD (plain UMG text), restart on R, the arena camera with both nets in frame, cartridge loading from JSON
 through a validator port of `schema/validate.mjs`'s rules (unknown keys are errors). Tests: `BothNetsInFrame`, a scripted "score on an empty net" automation test,
 `Package` via `tools/run/package.ps1 -Config Development` then `run-packaged.ps1 -Seconds 10`. Commit per builder package; push; `status/A.md` every hour with free RAM,
