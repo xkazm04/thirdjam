@@ -1,6 +1,6 @@
 # Third Jam: the plan for the 2026 Epic AI MegaJam
 
-Status: draft v1, written 2026-11-11 evening (CET). Planning only. Under rule 7(h) of the official rules nothing here is
+Status: v2, 2026-11-12 ~01:00 CET (v1 2026-11-11 evening). The game is decided: ice hockey 3v3, see `docs/HOCKEY.md`; the two-machine split is in `docs/TRACKS.md`; both override this file where they differ. Planning only. Under rule 7(h) of the official rules nothing here is
 game content: it is tooling, schema, prompts, scripts and a schedule. The Unreal project is created after
 **Thu 2026-11-12 06:00 CET** (jam start 00:00 EST). Source of decisions: spark `megajam-unreal` in the third-life vault.
 
@@ -36,14 +36,14 @@ NVIDIA and partner prize criteria.
 
 | When | Hours | Gate |
 |---|---|---|
-| Thu 06:00-07:00 | H0-1 | **Theme binding** (section 6): read the theme, run the rubric, choose the spine, write `GAME.md` (one page) and the rules schema delta. Hard cap one hour |
+| Thu 06:00-07:00 | H0-1 | **Theme binding** (section 6): skin and one twist for hockey; `GAME.md`, `THEME.md`, the `game` schema (HOCKEY.md 4); A commits the seam stubs (TRACKS.md 3). Hard cap one hour |
 | Thu 07:00-12:00 | H1-6 | greybox playable on A (core verb works, one arena, placeholder shapes); B fixes look direction and builds the first asset batch; first **package test** |
-| Thu 12:00 | H6 | Gate 1: core loop playable for 2 min. If not, cut scope now |
+| Thu 12:00 | H6 | Gate 1 = **M0 greybox** (HOCKEY.md 3): score on an empty net; packaged build runs. If not, cut scope now |
 | Thu 12:00-Fri 06:00 | H6-24 | core loop to fun; Designer D0 (cartridge presets); audio pass 1; look pass 1 |
-| Fri 06:00 | H24 | Gate 2 **fun check**: a fresh player (or an agent playing a recorded session) gives a verdict. Second package test |
+| Fri 06:00 | H24 | Gate 2 = **M1 regular hockey, the MVP**: bots pass, a fresh player scores within 2 minutes, L1 look. Second package test |
 | Fri 06:00-Sat 06:00 | H24-48 | levels and progression; Designer D1 (text to validated JSON via the API); assets pass 2 |
-| Sat 06:00 | H48 | Gate 3 vertical slice: start to end of the planned experience, ugly allowed. Third package test |
-| Sat 06:00-Sun 06:00 | H48-72 | polish, audio pass 2, lighting, VFX, performance, Designer D1 hardening, tutorial text |
+| Sat 06:00 | H48 | Gate 3 = **M2 raw play** on L2 night; skater track T-B1/T-B2 verdicts. Third package test |
+| Sat 06:00-Sun 06:00 | H48-72 | **M3 boost + M3b arenas by H56** on L3 neon (or L2 if the frame gate fails); then polish, audio pass 2, Designer D1 hardening, tutorial text |
 | Sun 06:00 | H72 | **Feature freeze**. Only fixes, polish, packaging from here |
 | Sun 06:00-18:00 | H72-84 | packaging, clean-machine test, video capture, dev log, assets ledger, submission text |
 | Sun 18:00 | H84 | submission candidate built and tested on a clean profile |
@@ -134,28 +134,26 @@ Rules of the road:
 9. **No running of two heavy jobs at once on one device** (the lesson of 2026-11-11: wall-clock limits were meaningless while
    the Director verified, a job ran and three builders worked on one machine).
 
-## 6. Theme binding (hour 0 to 1)
+## 6. Theme binding (hour 0 to 1): the game is fixed, the theme is a skin and a twist
 
-The vision stays fixed; the theme is bent onto it. Rubric (score 1-5 each, sum, pick the highest, tie-break by fun):
+The game is ice hockey 3v3 (`docs/HOCKEY.md`); hour 1 does not choose a spine. It binds the theme in two layers:
+
+1. **Skin** (always): theme name, mood words, palette, trim colour, the arena's dressing and backdrop, pickup names and shapes, the
+   jersey motif, the title. All of it is cartridge `theme` and `look` data plus device B's dressing list.
+2. **Twist** (one, chosen by the rubric below): one rule or pickup that only makes sense under the theme, as a cartridge entry in M3's
+   pickup table or M3b's arena list (examples of the kind: a rink that shrinks each goal, a puck that splits, a boost that only the losing
+   team can take). The twist is the "use of theme" judges can see in 30 seconds without being told.
 
 | Criterion | Question |
 |---|---|
-| Theme visibility | can a judge see the theme in the first 30 s without being told (rule 7g and 5 points) |
-| Fun within 2 minutes | does the core verb feel good with greybox shapes |
-| Buildable in 24 h | one arena, one verb, no animation-heavy characters, no network |
-| Designer fit | can a sentence meaningfully change rules, arena or opponents |
-| Look ceiling | can device B make it look striking with stylized, bought and generated assets |
+| Theme visibility | can a judge see the theme in the first 30 s (title, arena skin, the twist) |
+| Fun within 2 minutes | does the twist make M1 more fun, or only different |
+| Buildable by H56 | is the twist data over existing systems (pickups, rules, rink), not a new system |
+| Designer fit | can a sentence turn the twist up or down |
+| Look ceiling | does the skin fit the art ladder's chosen tier |
 
-Spine shortlist, taken from Third Life's three recipe cards (`engine/cards/`) and what Unreal does well:
-
-1. **Physics toy with goals** (card `knock_down`): objects, impacts, destruction, a clear scoring rule. Instantly readable,
-   strong audio and VFX payoff, no character animation, Chaos does the work. Safest.
-2. **Arena ball sport** (card `two_sides_ball`): two sides, a ball or puck, simple bots. Needs AI opponents and animation;
-   higher fun ceiling, more risk.
-3. **Time trial driving** (card `timed_drive`): Chaos vehicles, a track, ghosts. Tuning heavy; track design costs time.
-
-Whichever wins, the first hour ends with `GAME.md`: core verb, win and lose, one-line pitch, theme skin, five cartridge
-parameters the Designer may change, and the 2-minute first-play script.
+Hour 1 ends with `GAME.md` (one page: pitch, theme skin, the twist, five cartridge parameters the Designer may change, the 2-minute first-play
+script) and `docs/THEME.md` (the theme's exact wording).
 
 ## 7. Prep before 06:00 CET (what we may and may not do)
 
@@ -183,8 +181,7 @@ final hours serve. Solo Driver is available because there is one human; it appli
 
 ## 9. Cut lines (in this order)
 
-1. Designer D2 workshop view. 2. Second arena. 3. Live generation D1 reduced to "pick from generated variants". 4. Extra
-cartridges. 5. Second art direction. Never cut: packaging, the 2-minute first-play experience, audio, the dev log, the assets ledger.
+1. Designer D2 workshop view. 2. L3 neon (ship L2). 3. M3b arena manipulation. 4. M3 pickups beyond two kinds. 5. Live generation D1 reduced to "pick from generated variants". 6. Skater tracks T-B1/T-B2 (the toy figure ships). 7. M2 raw play (ship M1 alone). Never cut: packaging, the 2-minute first-play experience, audio, the dev log, the assets ledger.
 
 ## 10. Risks
 
