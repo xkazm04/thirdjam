@@ -42,7 +42,13 @@ at hour 0. Whatever look device B picks is rebuilt from scratch in the engine du
 | `images/hockey-l3-c.png` | hockey L3, tabletop rink in a dark room, whole toy glowing, glossy table |
 | `tools/gen-hockey.mjs`, `tools/hockey-jobs.json`, `tools/mkjobs.mjs` | the hockey generator (a copy of `gen.mjs` reading its own job list), the exact nine prompts, and the script that writes them; `tools/gen-hockey.log` is its log |
 | `HOCKEY-LADDER.html`, `images/web/hockey-*.jpg` | the hockey ladder review page (self-contained, nine 960 px JPEG copies embedded, reviewer notes, feasibility digest, pick form that writes the checklist line) and the nine web copies it was built from; originals in `images/` are untouched |
+| `STYLE-PATHS.md` | the style paths study: three art styles (P2 painted cel, P3 clay miniature, P4 stylized broadcast) x three tiers, third-person camera on a 120 by 60 m rink: exact prompts, UE 5.9 feasibility per path, scores, ladder stacking, comparison with the P1 toy baseline |
+| `images/path-p2-t1.png`, `-t2`, `-t3` | P2 painted cel: regular, raw night, boost climax |
+| `images/path-p3-t1.png`, `-t2`, `-t3` | P3 clay miniature: regular, raw night, boost climax |
+| `images/path-p4-t1.png`, `-t2`, `-t3` | P4 stylized broadcast: regular, raw night, boost climax (P4 stills show small stick and glove marks that look like a maker mark: do not show publicly) |
+| `tools/gen-paths.mjs`, `tools/path-jobs.json`, `tools/mkpaths.mjs` | the style-paths generator (a copy of `gen-hockey.mjs` reading its own job list), the exact nine prompts, and the script that writes them; `tools/gen-paths.log` is its log |
+| `STYLE-PATHS.html`, `images/web/path-*.jpg` | the style-paths review page (self-contained, nine 960 px JPEG copies embedded, reviewer notes, feasibility digest, comparison with the baseline, one-pick form that writes the checklist line) and the nine web copies it was built from; originals in `images/` are untouched |
 
-To regenerate one image: `node tools/gen.mjs <name>` (skips names whose PNG already exists); for the hockey ladder, `node tools/gen-hockey.mjs <name>`.
+To regenerate one image: `node tools/gen.mjs <name>` (skips names whose PNG already exists); for the hockey ladder, `node tools/gen-hockey.mjs <name>`.  For the style paths, `node tools/gen-paths.mjs <name>`.
 
 Nothing in this folder is a game asset.

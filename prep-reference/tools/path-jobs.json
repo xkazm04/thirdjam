@@ -1,0 +1,59 @@
+{
+  "style": "Reference study for art direction only. Landscape 16:9, same third-person camera in every study. No text, no letters, no logos, no watermark, no readable numbers or letters on jerseys or boards, no real people, no real teams or leagues.",
+  "jobs": [
+    {
+      "name": "path-p2-t1",
+      "path": "P2",
+      "tier": "T1",
+      "prompt": "Ice hockey 3 vs 3 in a huge rink 120 by 60 metres with rounded corners and boards all round, seen from a third-person camera behind and slightly above one skater's shoulder, looking down the length of the ice toward the far net; the player's skater is large in the lower foreground with a stick and a small near-black puck ahead; the other five skaters are spread down the ice; two jersey colours, deep blue and warm orange. Style, painted cel: hand-painted textures, visible ink-like outlines, flat cel lighting steps, a limited palette of five or six colours plus one accent, painted backdrop cards. Figures are chunky toy-proportioned skaters, inked and flat-shaded. Tier, regular: bright, full house lights or daylight, cheerful. No text, no letters, no logos, no readable numbers."
+    },
+    {
+      "name": "path-p2-t2",
+      "path": "P2",
+      "tier": "T2",
+      "prompt": "Ice hockey 3 vs 3 in a huge rink 120 by 60 metres with rounded corners and boards all round, seen from a third-person camera behind and slightly above one skater's shoulder, looking down the length of the ice toward the far net; the player's skater is large in the lower foreground with a stick and a small near-black puck ahead; the other five skaters are spread down the ice; two jersey colours, deep blue and warm orange. Style, painted cel: hand-painted textures, visible ink-like outlines, flat cel lighting steps, a limited palette of five or six colours plus one accent, painted backdrop cards. Figures are chunky toy-proportioned skaters, inked and flat-shaded. Tier, raw night: lights down, spot cones, emissive trim, scuffed ice, one tipped-over figure. No text, no letters, no logos, no readable numbers."
+    },
+    {
+      "name": "path-p2-t3",
+      "path": "P2",
+      "tier": "T3",
+      "prompt": "Ice hockey 3 vs 3 in a huge rink 120 by 60 metres with rounded corners and boards all round, seen from a third-person camera behind and slightly above one skater's shoulder, looking down the length of the ice toward the far net; the player's skater is large in the lower foreground with a stick and a small near-black puck ahead; the other five skaters are spread down the ice; two jersey colours, deep blue and warm orange. Style, painted cel: hand-painted textures, visible ink-like outlines, flat cel lighting steps, a limited palette of five or six colours plus one accent, painted backdrop cards. Figures are chunky toy-proportioned skaters, inked and flat-shaded. Tier, boost climax: a saturated poster-like glow with painted light rays and glowing boost pickups (bright capsules and rings) on the ice. No text, no letters, no logos, no readable numbers."
+    },
+    {
+      "name": "path-p3-t1",
+      "path": "P3",
+      "tier": "T1",
+      "prompt": "Ice hockey 3 vs 3 in a huge rink 120 by 60 metres with rounded corners and boards all round, seen from a third-person camera behind and slightly above one skater's shoulder, looking down the length of the ice toward the far net; the player's skater is large in the lower foreground with a stick and a small near-black puck ahead; the other five skaters are spread down the ice; two jersey colours, deep blue and warm orange. Style, clay miniature: matte clay and felt materials with fingerprint detail, soft rounded forms, warm bounce light, a hint of tilt-shift depth of field at the far end. Figures are clay toys with a stitched jersey look. Tier, regular: bright, full house lights or daylight, cheerful. No text, no letters, no logos, no readable numbers."
+    },
+    {
+      "name": "path-p3-t2",
+      "path": "P3",
+      "tier": "T2",
+      "prompt": "Ice hockey 3 vs 3 in a huge rink 120 by 60 metres with rounded corners and boards all round, seen from a third-person camera behind and slightly above one skater's shoulder, looking down the length of the ice toward the far net; the player's skater is large in the lower foreground with a stick and a small near-black puck ahead; the other five skaters are spread down the ice; two jersey colours, deep blue and warm orange. Style, clay miniature: matte clay and felt materials with fingerprint detail, soft rounded forms, warm bounce light, a hint of tilt-shift depth of field at the far end. Figures are clay toys with a stitched jersey look. Tier, raw night: lights down, spot cones, emissive trim, scuffed ice, one tipped-over figure. No text, no letters, no logos, no readable numbers."
+    },
+    {
+      "name": "path-p3-t3",
+      "path": "P3",
+      "tier": "T3",
+      "prompt": "Ice hockey 3 vs 3 in a huge rink 120 by 60 metres with rounded corners and boards all round, seen from a third-person camera behind and slightly above one skater's shoulder, looking down the length of the ice toward the far net; the player's skater is large in the lower foreground with a stick and a small near-black puck ahead; the other five skaters are spread down the ice; two jersey colours, deep blue and warm orange. Style, clay miniature: matte clay and felt materials with fingerprint detail, soft rounded forms, warm bounce light, a hint of tilt-shift depth of field at the far end. Figures are clay toys with a stitched jersey look. Tier, boost climax: strings of fairy lights and glowing clay boost pickups (capsules and rings) in a dark room. No text, no letters, no logos, no readable numbers."
+    },
+    {
+      "name": "path-p4-t1",
+      "path": "P4",
+      "tier": "T1",
+      "prompt": "Ice hockey 3 vs 3 in a huge rink 120 by 60 metres with rounded corners and boards all round, seen from a third-person camera behind and slightly above one skater's shoulder, looking down the length of the ice toward the far net; the player's skater is large in the lower foreground with a stick and a small near-black puck ahead; the other five skaters are spread down the ice; two jersey colours, deep blue and warm orange. Style, stylized broadcast: semi-realistic physically based materials, glossy boards, real ice with scrape marks, glass panels, arena rig lighting, lens flare and bloom, a sports-broadcast feel, stylized proportions. Figures are stylized athletes with helmets and visors, proportions between toy and real. Tier, regular: bright, full house lights or daylight, cheerful. No text, no letters, no logos, no readable numbers."
+    },
+    {
+      "name": "path-p4-t2",
+      "path": "P4",
+      "tier": "T2",
+      "prompt": "Ice hockey 3 vs 3 in a huge rink 120 by 60 metres with rounded corners and boards all round, seen from a third-person camera behind and slightly above one skater's shoulder, looking down the length of the ice toward the far net; the player's skater is large in the lower foreground with a stick and a small near-black puck ahead; the other five skaters are spread down the ice; two jersey colours, deep blue and warm orange. Style, stylized broadcast: semi-realistic physically based materials, glossy boards, real ice with scrape marks, glass panels, arena rig lighting, lens flare and bloom, a sports-broadcast feel, stylized proportions. Figures are stylized athletes with helmets and visors, proportions between toy and real. Tier, raw night: lights down, spot cones, emissive trim, scuffed ice, one tipped-over figure. No text, no letters, no logos, no readable numbers."
+    },
+    {
+      "name": "path-p4-t3",
+      "path": "P4",
+      "tier": "T3",
+      "prompt": "Ice hockey 3 vs 3 in a huge rink 120 by 60 metres with rounded corners and boards all round, seen from a third-person camera behind and slightly above one skater's shoulder, looking down the length of the ice toward the far net; the player's skater is large in the lower foreground with a stick and a small near-black puck ahead; the other five skaters are spread down the ice; two jersey colours, deep blue and warm orange. Style, stylized broadcast: semi-realistic physically based materials, glossy boards, real ice with scrape marks, glass panels, arena rig lighting, lens flare and bloom, a sports-broadcast feel, stylized proportions. Figures are stylized athletes with helmets and visors, proportions between toy and real. Tier, boost climax: full neon strips, wet reflective ice, haze, glowing boost pickups (capsules and rings) on the ice. No text, no letters, no logos, no readable numbers."
+    }
+  ]
+}
