@@ -73,8 +73,11 @@ The skater is the biggest risk and the key to fun. Gameplay never knows what a s
 `PlayShoot()`, `PlayCheck()`, `SetKnockedDown(bool down, float dir_x, float dir_z)` (the direction the figure falls), `SetHasPuck(bool)`, `SetBoost(kind | none)`.
 Recipes: `tools/skills/skater-toy-figure.md` (T-A: engine basic shapes posed by C++ each tick, no skeleton; pose timings reuse our own Godot
 rig's keyframes, declared in the dev log), `tools/skills/skater-retarget.md` (T-B1/T-B2), `tools/skills/skating-physics.md` (movement, puck, determinism test).
-Known gap (`docs/SKATERS-RESEARCH.md` 6): no MCP toolset edits an Animation Blueprint graph or an IK Rig; retargeting goes through the Python tool and
-the three-node AnimBP graph for T-B1 needs 10-20 minutes of a human in the editor during an attention window.
+Verified by R2 (`tools/mcp/ANIMATION.md`, `PHYSICS.md`): MCP builds an Animation Blueprint, its variables, state contents and transition rules, a Control Rig
+with nodes, a pawn with a C++ lean component, a Niagara system; it cannot add **states or transitions** to a state machine (no tool, no Python, no DSL), so the
+project carries an 80-line C++ editor helper `UTJAnimGraphEdLibrary` (source in ANIMATION.md) from H0, because Live Coding cannot add a module later. Retargeting
+UE4 -> UE5 mannequin works in one Python script (`run_batch_retarget`), no human needed. Chaos repeats to six decimals across runs and a restart only with
+**Use Fixed Frame Rate = 60** (`DefaultEngine.ini`, set at H0); our own fixed-step sim still owns gameplay.
 
 | Track | Owner | Window | What | Promotion rule |
 |---|---|---|---|---|

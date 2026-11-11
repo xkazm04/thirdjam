@@ -37,7 +37,9 @@ in this order, before anything else: `docs/PREP-CHECKLIST.md` section D, `docs/P
 4. Create the Unreal project: `Game/ThirdJam.uproject`, blank **C++** project (not a template), engine association "5.9", modules `JamCore`, `JamGame`, `JamDesigner`
    (JamDesigner may be a stub), plugins `ModelContextProtocol`, `ToolsetRegistry`, `AllToolsets` enabled (editor only), a content-only plugin `Game/Plugins/JamAssets`
    (empty, with its `.uplugin`), `Config/DefaultEditorPerProjectUserSettings.ini` with `bAutoStartServer=True`, `DefaultGame.ini` with an explicit `+MapsToCook`
-   list, `DefaultEngine.ini` with fixed 60 Hz physics settings from `tools/mcp/PHYSICS.md` if present. Build with `tools/run/build.ps1`. Commit.
+   list, `DefaultEngine.ini` with **Use Fixed Frame Rate = True, 60** (the setting `tools/mcp/PHYSICS.md` proved; two `SetSectionProperties` calls, then restart), and an
+**editor module `JamEditor`** carrying `UTJAnimGraphEdLibrary` from `tools/mcp/ANIMATION.md` (the only way an agent adds AnimBP states; Live Coding cannot add a module later).
+Build with `tools/run/build.ps1`. Commit.
 5. Commit the four seam stubs from TRACKS.md section 3: `IJamSkaterVisual` (C++ interface with the exact calls from HOCKEY.md section 5), three empty light-rig
    placeholders named `LR_L1_Day`, `LR_L2_Night`, `LR_L3_Neon` (as empty sub-level maps or Data Assets; say which in `contracts/look-tiers.md`), an event logger that
    broadcasts the gameplay events named in TRACKS.md section 2, and `contracts/skater-visual.md`, `contracts/look-tiers.md`, `contracts/events.md`,

@@ -182,3 +182,17 @@ Disk floor: every script refuses to start, and stops its own child, when free sp
 `-MinFreeGB`, else `$env:TJ_MIN_FREE_GB`, else **20 GB**. Logs go to `<project>\logs\`.
 From Git Bash, set `MSYS_NO_PATHCONV=1` before passing `/Engine/...` or `/Game/...` paths (Git Bash rewrites them;
 `package.ps1` repairs `-Map` and warns).
+
+## 8. Animation and physics
+
+Proven on a throwaway project (2026-11-11, UE 5.9.0), details and exact calls in two files:
+
+- `ANIMATION.md`: mannequin content from the engine's own template packs (no download); Animation Blueprint with a
+  state machine (MCP for everything except adding states and transitions, which needs a small C++ editor helper,
+  source included); Control Rig with a procedural node (MCP only); IK retarget UE4 -> UE5 mannequin (one Python script,
+  no MCP toolset exists); Blueprint pawn with a capsule and a C++ component leaning from Tick (MCP only, Graph DSL);
+  Niagara system from a template on an actor with a screenshot (MCP only); a verdict per skater track.
+- `PHYSICS.md`: Chaos sphere with a physical material and an impulse gives identical positions at frames 60/120/180
+  across PIE runs and an editor restart **only with Use Fixed Frame Rate = 60**; without it, a background editor steps
+  0.33 s per frame. The setting needs a restart (or a Python line) to reach the running editor, and it also cuts MCP
+  call latency from about 1.2-1.7 s to 0.06-0.3 s.
