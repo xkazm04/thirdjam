@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Look Studies</title>
+<meta name="description" content="Four art directions for the Third Jam entry, with reference stills, feasibility notes and a decision pending on the operator.">
+<style>
+  :root {
+    --bg: #f6f4ef; --panel: #ffffff; --ink: #1d1b17; --muted: #66625a; --line: #e3dfd6;
+    --accent: #b5542c; --accent-ink: #ffffff; --good: #2f7d4f; --warn: #a36b00; --bad: #a83a2a;
+    --pending: #fff3d6; --pending-ink: #6b4a00;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15140f; --panel: #1f1d17; --ink: #ece8df; --muted: #a39d92; --line: #35322a;
+      --accent: #e0774a; --accent-ink: #15140f; --good: #6ec28f; --warn: #e2b04a; --bad: #e06a57;
+      --pending: #3a2d0b; --pending-ink: #ffd886;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #15140f; --panel: #1f1d17; --ink: #ece8df; --muted: #a39d92; --line: #35322a;
+    --accent: #e0774a; --accent-ink: #15140f; --good: #6ec28f; --warn: #e2b04a; --bad: #e06a57;
+    --pending: #3a2d0b; --pending-ink: #ffd886;
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 Georgia, "Iowan Old Style", "Times New Roman", serif; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 24px 16px 80px; }
+  header h1 { font-size: 2rem; margin: 0 0 4px; letter-spacing: -0.01em; }
+  header p { margin: 0; color: var(--muted); }
+  .pending { margin: 20px 0 28px; padding: 14px 16px; border-radius: 10px; background: var(--pending); color: var(--pending-ink); border: 1px solid var(--line); }
+  .pending strong { display: block; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
+  .declare { font-size: 0.92rem; color: var(--muted); border-left: 3px solid var(--accent); padding-left: 12px; margin: 0 0 28px; }
+  nav.toc { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
+  nav.toc a { text-decoration: none; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; font-size: 0.92rem; }
+  table.summary { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; font-size: 0.95rem; margin-bottom: 36px; }
+  table.summary th, table.summary td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: center; }
+  table.summary th:first-child, table.summary td:first-child { text-align: left; }
+  table.summary tr:last-child td { border-bottom: 0; }
+  table.summary .total { font-weight: 700; }
+  section.dir { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px 20px 8px; margin-bottom: 28px; }
+  section.dir h2 { margin: 0 0 2px; font-size: 1.45rem; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  section.dir h2 .tag { font: 700 0.72rem/1 system-ui, sans-serif; letter-spacing: 0.08em; text-transform: uppercase; background: var(--accent); color: var(--accent-ink); padding: 5px 8px; border-radius: 6px; }
+  section.dir h2 .score { font: 600 0.9rem/1 system-ui, sans-serif; color: var(--muted); margin-left: auto; }
+  section.dir .sub { color: var(--muted); margin: 0 0 14px; }
+  .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .gallery figure { margin: 0; }
+  .gallery img { width: 100%; height: auto; display: block; border-radius: 8px; border: 1px solid var(--line); background: #000; }
+  .gallery figcaption { font-size: 0.82rem; color: var(--muted); margin-top: 6px; }
+  details { margin: 0 0 12px; }
+  details summary { cursor: pointer; font-weight: 600; font-family: system-ui, sans-serif; font-size: 0.92rem; color: var(--ink); }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 24px; margin: 10px 0 14px; font-size: 0.95rem; }
+  .cols h4 { margin: 0 0 4px; font: 700 0.75rem/1 system-ui, sans-serif; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .cols p { margin: 0; }
+  .lvl { font: 600 0.78rem/1 system-ui, sans-serif; padding: 3px 7px; border-radius: 5px; border: 1px solid currentColor; }
+  .lvl.low { color: var(--good); } .lvl.med { color: var(--warn); } .lvl.high { color: var(--bad); }
+  .bars { display: grid; grid-template-columns: max-content 1fr; gap: 6px 12px; align-items: center; font: 0.85rem system-ui, sans-serif; margin: 6px 0 14px; }
+  .bar { height: 10px; background: var(--line); border-radius: 5px; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--accent); }
+  .pick { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; border-top: 1px solid var(--line); padding: 12px 0 10px; font-family: system-ui, sans-serif; font-size: 0.92rem; }
+  .pick label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+  .reco { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin-bottom: 28px; }
+  .reco h2 { margin: 0 0 8px; font-size: 1.3rem; }
+  .decision { background: var(--panel); border: 2px solid var(--accent); border-radius: 14px; padding: 18px 20px; font-family: system-ui, sans-serif; }
+  .decision h2 { margin: 0 0 6px; font-size: 1.2rem; }
+  .decision .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+  .decision input[type=text] { flex: 1 1 240px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); font: inherit; }
+  .decision button { padding: 8px 14px; border: 0; border-radius: 8px; background: var(--accent); color: var(--accent-ink); font: 600 0.92rem system-ui, sans-serif; cursor: pointer; }
+  .decision .out { margin-top: 10px; font-size: 0.9rem; color: var(--muted); white-space: pre-wrap; }
+  code { font: 0.88em ui-monospace, "Cascadia Mono", Consolas, monospace; }
+  @media (max-width: 640px) { .cols { grid-template-columns: 1fr; } header h1 { font-size: 1.6rem; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Look studies: four art directions</h1>
+  <p>Reference stills for the Third Jam entry, scored for Unreal Engine 5.9 on one RTX 4090 with agents doing the work in about 20 hours of device-B time.</p>
+</header>
+
+<div class="pending">
+  <strong>Decision pending on the operator</strong>
+  Pick a base direction (and an optional layer) before the theme-binding hour, or leave it to the hour-1 rubric. The pick form is at the bottom; it writes a line you paste into <code>docs/PREP-CHECKLIST.md</code>.
+</div>
+
+<p class="declare">These images are reference studies only. They are never imported into any Unreal project, never used as textures or tracing sources, and never shipped. Under contest rule 7(h) only tools, prompts and scripts may exist before the start; every shipped asset is made during the contest period. Generated 2026-11-11 with Codex image generation; prompts carry no brands, artists or franchises.</p>
+
+<nav class="toc">
+  <a href="#d1">D1 toy diorama · 23</a>
+  <a href="#d2">D2 painted cel · 19</a>
+  <a href="#d3">D3 neon night · 17</a>
+  <a href="#d4">D4 tilt-shift · 19</a>
+  <a href="#reco">Recommendation</a>
+  <a href="#decide">Decide</a>
+</nav>
+
+<table class="summary">
+  <thead><tr><th>Direction</th><th>Theme flexibility</th><th>Buildable in 20 h</th><th>Striking in 60 s</th><th>Performance</th><th>Readability</th><th>Total</th></tr></thead>
+  <tbody>
+    <tr><td>D1 clean stylized toy diorama</td><td>5</td><td>5</td><td>3</td><td>5</td><td>5</td><td class="total">23</td></tr>
+    <tr><td>D2 painted cel-shaded</td><td>4</td><td>3</td><td>4</td><td>4</td><td>4</td><td class="total">19</td></tr>
+    <tr><td>D3 neon night, high contrast</td><td>3</td><td>4</td><td>5</td><td>2</td><td>3</td><td class="total">17</td></tr>
+    <tr><td>D4 tilt-shift miniature</td><td>4</td><td>3</td><td>5</td><td>4</td><td>3</td><td class="total">19</td></tr>
+  </tbody>
+</table>
+<p style="margin:-26px 0 30px; font-size:0.85rem; color:var(--muted)">Scores are one reviewer's judgement from the stills and general engine knowledge; nothing is measured. A gap of 2 or less is a tie. A generated still shows a finished look and hides the cost of the set dressing, which in the engine is the expensive part, not the arena.</p>
+
+<!-- D1 -->
+<section class="dir" id="d1">
+  <h2><span class="tag">D1</span> Clean stylized toy diorama <span class="score">23 / 25</span></h2>
+  <p class="sub">Saturated flat-ish materials, soft global illumination, strong rim light, glossy accents. Range is carried by palette and light, not geometry.</p>
+  <div class="gallery">
+    <figure><img src="images/d1-toy-diorama-a.png" alt="D1 a: chunky blocks and a rubber ball on a round platform, daylight" loading="lazy"><figcaption>a · blocks on a round platform, daylight</figcaption></figure>
+    <figure><img src="images/d1-toy-diorama-b.png" alt="D1 b: play mat with pins and cubes at sunset" loading="lazy"><figcaption>b · play mat with pins and cubes, sunset</figcaption></figure>
+    <figure><img src="images/d1-toy-diorama-c.png" alt="D1 c: playroom floor with ramps and discs, window light" loading="lazy"><figcaption>c · playroom floor with ramps and discs, window light</figcaption></figure>
+  </div>
+  <div class="bars">
+    <span>Theme flexibility</span><div class="bar"><i style="width:100%"></i></div>
+    <span>Buildable in 20 h</span><div class="bar"><i style="width:100%"></i></div>
+    <span>Striking in 60 s</span><div class="bar"><i style="width:60%"></i></div>
+    <span>Performance</span><div class="bar"><i style="width:100%"></i></div>
+    <span>Readability</span><div class="bar"><i style="width:100%"></i></div>
+  </div>
+  <div class="cols">
+    <div><h4>Cost</h4><p><span class="lvl low">low</span> A handful of parametric master materials (flat tint, fresnel rim, clearcoat gloss), one directional light plus sky light with Lumen GI, bloom, a mild grade. Primitives, no Nanite needed.</p></div>
+    <div><h4>Frame-rate risk</h4><p><span class="lvl low">low</span> Software Lumen at medium scalability, few draw calls, no ray tracing.</p></div>
+    <div><h4>Assets</h4><p>Procedural bevelled primitives by script, a few generated hero props, optional stylized Fab packs (ledgered). Agents can make the chunky shape without hand modelling.</p></div>
+    <div><h4>Designer fit</h4><p>Best of the four: theme skin tokens map straight onto material parameters (tint, gloss).</p></div>
+    <div><h4>Theme flexibility</h4><p>High. Only a dark or gritty theme fights it.</p></div>
+    <div><h4>Risk</h4><p>Reads as generic or "mobile" if it stays plain; needs strong colour design, a good sky and soft shadows.</p></div>
+  </div>
+  <details><summary>Prompts used</summary>
+    <ul>
+      <li><b>a</b> Chunky stacked wooden-and-plastic blocks and a big rubber ball on a bright round platform. Saturated, flat-ish materials in primary colors, soft global illumination, strong rim light on every edge, glossy accents on plastic parts. Sunny pastel sky background with simple soft clouds. Daylight.</li>
+      <li><b>b</b> A square play mat with a ring of cylindrical pins, a few oversized cubes and a glossy sphere. Saturated flat-ish materials in teal, orange and yellow, soft global illumination, strong rim light, glossy accents. Warm sunset lighting with long soft shadows, distant stylized hills as background.</li>
+      <li><b>c</b> An indoor playroom floor as the arena: chunky toy ramps, tubes and spinning discs, soft saturated materials in candy colors, soft global illumination from a big window, strong rim light, glossy accents. Background is a blurred shelf wall with simple colorful shapes. Bright cheerful indoor light.</li>
+    </ul>
+  </details>
+  <div class="pick"><span>Your rating:</span>
+    <label><input type="radio" name="r-d1" value="base"> base</label>
+    <label><input type="radio" name="r-d1" value="layer"> layer</label>
+    <label><input type="radio" name="r-d1" value="fallback"> fallback</label>
+    <label><input type="radio" name="r-d1" value="no"> no</label>
+  </div>
+</section>
+
+<!-- D2 -->
+<section class="dir" id="d2">
+  <h2><span class="tag">D2</span> Painted cel-shaded <span class="score">19 / 25</span></h2>
+  <p class="sub">Hand-painted textures, visible ink-like outlines, limited palette. Strong palette discipline makes the interactive objects stand out.</p>
+  <div class="gallery">
+    <figure><img src="images/d2-cel-painted-a.png" alt="D2 a: stone courtyard with barrels and a boulder, late afternoon" loading="lazy"><figcaption>a · stone courtyard, late afternoon</figcaption></figure>
+    <figure><img src="images/d2-cel-painted-b.png" alt="D2 b: snowy wooden platform, cool palette with one orange accent" loading="lazy"><figcaption>b · snowy wooden platform, cool palette</figcaption></figure>
+    <figure><img src="images/d2-cel-painted-c.png" alt="D2 c: desert ruin with sandstone blocks and clay pots, hard noon light" loading="lazy"><figcaption>c · desert ruin, hard noon light</figcaption></figure>
+  </div>
+  <div class="bars">
+    <span>Theme flexibility</span><div class="bar"><i style="width:80%"></i></div>
+    <span>Buildable in 20 h</span><div class="bar"><i style="width:60%"></i></div>
+    <span>Striking in 60 s</span><div class="bar"><i style="width:80%"></i></div>
+    <span>Performance</span><div class="bar"><i style="width:80%"></i></div>
+    <span>Readability</span><div class="bar"><i style="width:80%"></i></div>
+  </div>
+  <div class="cols">
+    <div><h4>Cost</h4><p><span class="lvl med">medium</span> Outline post-process (depth and normal edges or custom stencil) and a toon ramp are 3 to 4 hours; consistent painted textures across every prop are the long tail, and agents drift in style between assets.</p></div>
+    <div><h4>Frame-rate risk</h4><p><span class="lvl low">low to medium</span> Edge detection is cheap at 1080p, noisier and costlier at high resolution or with overlapping translucency.</p></div>
+    <div><h4>Assets</h4><p>Outline and ramp are engine-side. Painted texture sets generated in the jam, or Fab painted packs. A backdrop of a few layered cards suits a fixed three-quarter camera.</p></div>
+    <div><h4>Designer fit</h4><p>Palette swaps rebuild the mood, but each theme needs textures redone, which live skinning cannot do.</p></div>
+    <div><h4>Theme flexibility</h4><p>Medium to high.</p></div>
+    <div><h4>Risk</h4><p>Outline artifacts on thin geometry and particles; style drift between assets.</p></div>
+  </div>
+  <details><summary>Prompts used</summary>
+    <ul>
+      <li><b>a</b> A stone courtyard arena with chunky barrels, crates and a large round boulder. Hand-painted textures with visible brush strokes, bold ink-like dark outlines around every object, flat cel-shaded lighting steps, limited palette of five or six muted earthy colors plus one red accent. Distinct painted forest-and-cliff backdrop. Late afternoon light.</li>
+      <li><b>b</b> A snowy wooden platform arena with chunky barrels and round stones, hand-painted textures, visible ink-like outlines, flat cel-shaded shadows, very limited palette of cool blues, cream and one orange accent. Painted pine trees and mountains as background. Overcast soft light.</li>
+      <li><b>c</b> A desert ruin arena with sandstone blocks, clay pots and a round stone wheel, hand-painted textures with rough pencil-like hatching, thick ink-like outlines, limited palette of sand, terracotta, teal and cream. Painted dunes and a huge pale sun in the background. Hard noon light with crisp flat shadows.</li>
+    </ul>
+  </details>
+  <div class="pick"><span>Your rating:</span>
+    <label><input type="radio" name="r-d2" value="base"> base</label>
+    <label><input type="radio" name="r-d2" value="layer"> layer</label>
+    <label><input type="radio" name="r-d2" value="fallback"> fallback</label>
+    <label><input type="radio" name="r-d2" value="no"> no</label>
+  </div>
+</section>
+
+<!-- D3 -->
+<section class="dir" id="d3">
+  <h2><span class="tag">D3</span> Neon night, high contrast <span class="score">17 / 25</span></h2>
+  <p class="sub">Dark scene, emissive trim, wet reflective floor, glow and haze. The most striking stills of the set, and the most expensive to keep readable.</p>
+  <div class="gallery">
+    <figure><img src="images/d3-neon-night-a.png" alt="D3 a: dark industrial arena, wet black floor, cyan and magenta light strips" loading="lazy"><figcaption>a · industrial wet floor, cyan and magenta</figcaption></figure>
+    <figure><img src="images/d3-neon-night-b.png" alt="D3 b: rainy rooftop arena at night with orange and violet trim" loading="lazy"><figcaption>b · rainy rooftop, orange and violet (richest, most expensive)</figcaption></figure>
+    <figure><img src="images/d3-neon-night-c.png" alt="D3 c: glass-floored space arena with green edge trim and ground fog" loading="lazy"><figcaption>c · glass-floored space arena, green trim (simplest to build)</figcaption></figure>
+  </div>
+  <div class="bars">
+    <span>Theme flexibility</span><div class="bar"><i style="width:60%"></i></div>
+    <span>Buildable in 20 h</span><div class="bar"><i style="width:80%"></i></div>
+    <span>Striking in 60 s</span><div class="bar"><i style="width:100%"></i></div>
+    <span>Performance</span><div class="bar"><i style="width:40%"></i></div>
+    <span>Readability</span><div class="bar"><i style="width:60%"></i></div>
+  </div>
+  <div class="cols">
+    <div><h4>Cost</h4><p><span class="lvl med">medium</span> The first image of the look takes about 4 hours (emissive materials, Lumen GI from emissives, glossy floor, height and volumetric fog, bloom, grade); tuning exposure so gameplay stays readable and reflections stay stable takes the rest.</p></div>
+    <div><h4>Frame-rate risk</h4><p><span class="lvl high">high</span> on a mid-range judge machine: ray-traced reflections, volumetric fog and many emissive lights add up. Needs a scalability fallback (software Lumen, fake reflection card, reduced fog) that makes the floor look far worse than the study. Test on a weaker GPU by H12.</p></div>
+    <div><h4>Assets</h4><p>Mostly procedural: emissive trim on bevelled primitives, a tiling wet-floor material, a skybox or card skyline. Fab sci-fi kits are plentiful.</p></div>
+    <div><h4>NvRTX</h4><p>True path tracing is a stills-and-video option on device B only; the shipped build cannot rely on it (see <code>docs/NVRTX-NOTES.md</code>).</p></div>
+    <div><h4>Theme flexibility</h4><p>Low to medium. It is a night look; a bright, cheerful or natural theme works against it.</p></div>
+    <div><h4>Risk</h4><p>Dark scenes hurt readability and video compression (banding at 1080p); the stills are more beautiful than a Lumen-lit real scene will be.</p></div>
+  </div>
+  <details><summary>Prompts used</summary>
+    <ul>
+      <li><b>a</b> A dark industrial arena with a wet reflective black floor, chunky metal crates and a glowing sphere, emissive cyan and magenta light strips along the edges of the play area, volumetric haze and glow, strong reflections of the lights in the wet floor, deep shadows. Distant dark city skyline with a few lit windows as background. Path-traced look.</li>
+      <li><b>b</b> A rainy rooftop arena at night, puddles reflecting colored light, chunky barrels and a heavy ball, emissive orange and violet trim on the barriers, light haze and bloom, glossy wet surfaces, very dark ambient with sharp bright highlights. Blurred glowing city lights far behind. Path-traced look.</li>
+      <li><b>c</b> A dark glass-floored space arena with mirror-like reflections, floating chunky geometric objects with glowing green edge trim, emissive grid lines on the floor, thick glowing fog near the ground, strong bloom, deep black surroundings with a faint nebula as background. Path-traced look.</li>
+    </ul>
+  </details>
+  <div class="pick"><span>Your rating:</span>
+    <label><input type="radio" name="r-d3" value="base"> base</label>
+    <label><input type="radio" name="r-d3" value="layer"> layer</label>
+    <label><input type="radio" name="r-d3" value="fallback"> fallback</label>
+    <label><input type="radio" name="r-d3" value="no"> no</label>
+  </div>
+</section>
+
+<!-- D4 -->
+<section class="dir" id="d4">
+  <h2><span class="tag">D4</span> Tilt-shift miniature <span class="score">19 / 25</span></h2>
+  <p class="sub">Soft clay-like materials, shallow depth of field, warm daylight. The look is carried by the depth-of-field band and warm light more than by materials.</p>
+  <div class="gallery">
+    <figure><img src="images/d4-tilt-shift-a.png" alt="D4 a: clay farm-yard arena with hay bales and buckets, golden light" loading="lazy"><figcaption>a · clay farm yard, golden daylight</figcaption></figure>
+    <figure><img src="images/d4-tilt-shift-b.png" alt="D4 b: clay harbor dock with crates and buoys, morning light" loading="lazy"><figcaption>b · clay harbor dock, morning</figcaption></figure>
+  </div>
+  <div class="bars">
+    <span>Theme flexibility</span><div class="bar"><i style="width:80%"></i></div>
+    <span>Buildable in 20 h</span><div class="bar"><i style="width:60%"></i></div>
+    <span>Striking in 60 s</span><div class="bar"><i style="width:100%"></i></div>
+    <span>Performance</span><div class="bar"><i style="width:80%"></i></div>
+    <span>Readability</span><div class="bar"><i style="width:60%"></i></div>
+  </div>
+  <div class="cols">
+    <div><h4>Cost</h4><p><span class="lvl med">medium</span> The post effect (a screen-space blur band on a fixed three-quarter camera, cheaper and more predictable than cinematic DoF) and the clay material (rough, low specular, noise normal for fingerprints, optional wrap lighting) are about 4 hours; set dressing is the open-ended part, capped by a fixed camera that only needs a ring of props.</p></div>
+    <div><h4>Frame-rate risk</h4><p><span class="lvl low">low to medium</span> A blur band is cheap; real bokeh DoF on a moving camera is not. Keep the camera angle fixed.</p></div>
+    <div><h4>Assets</h4><p>Arena and chunky objects procedural; the dressing that sells the miniature (barn, boats, trees, fences) from Fab stylized packs or generated meshes, all ledgered. Without dressing it drops to "blurred D1".</p></div>
+    <div><h4>Designer fit</h4><p>Works for anything that can be a tiny world; the warm daylight is a bias but the post effect works under any light.</p></div>
+    <div><h4>Theme flexibility</h4><p>Medium to high.</p></div>
+    <div><h4>Risk</h4><p>Blur at the top and bottom hides edge information gameplay may need, so the playable area must sit inside the sharp band; a moving or zooming camera breaks the illusion.</p></div>
+  </div>
+  <details><summary>Prompts used</summary>
+    <ul>
+      <li><b>a</b> A small farm-yard arena with soft clay-like chunky objects: hay bales, buckets and a big round ball, matte clay and felt materials with fingerprint-like surface detail, shallow depth of field with strong blur at the top and bottom of the frame, warm golden daylight, gentle soft shadows. Miniature fields and a toy barn in the background.</li>
+      <li><b>b</b> A seaside harbor arena with soft clay-like chunky floating crates and round buoys on a flat dock, matte clay materials, shallow depth of field with a sharp band across the middle and blur above and below, warm morning daylight, pastel colors. Miniature boats and a lighthouse in the background.</li>
+    </ul>
+  </details>
+  <div class="pick"><span>Your rating:</span>
+    <label><input type="radio" name="r-d4" value="base"> base</label>
+    <label><input type="radio" name="r-d4" value="layer"> layer</label>
+    <label><input type="radio" name="r-d4" value="fallback"> fallback</label>
+    <label><input type="radio" name="r-d4" value="no"> no</label>
+  </div>
+</section>
+
+<section class="reco" id="reco">
+  <h2>Reviewer's recommendation</h2>
+  <p><b>D1 as the base, D4 as the layer on top.</b> They share one pipeline (chunky bevelled primitives, soft Lumen light, a few parametric master materials), so choosing D1 in hour 1 keeps D4 open: the tilt-shift band, warm grade and a clay roughness variant are post-process and material changes that can be tried in about an hour once the greybox exists, and they are the cheapest way to turn a plain D1 into a video that stands out. D1 also maps most directly onto the Designer's theme skin tokens.</p>
+  <ul>
+    <li><b>What would change the D1 pick:</b> a dark, tense or sci-fi theme from the hour-1 binding takes D3 (with a software-Lumen fallback proven on a weaker GPU by H12), because D1 would fight the theme; D3 is also the pick if the NvRTX question resolves in favour of path-traced stills and video on device B.</li>
+    <li><b>What would change the D4 layer:</b> if the camera has to move or zoom, or the playable area fills the frame, drop the tilt-shift and use D2 (outlines keep objects readable under any camera) as the second direction instead.</li>
+  </ul>
+</section>
+
+<section class="decision" id="decide">
+  <h2>Your decision</h2>
+  <p style="margin:0;color:var(--muted);font-size:0.92rem">Rate each direction above (base / layer / fallback / no), add a note, then copy the line into <code>docs/PREP-CHECKLIST.md</code> under "Art direction". Nothing here is sent anywhere; the page only builds the text. Ratings are remembered in this browser only.</p>
+  <div class="row">
+    <input type="text" id="note" placeholder="Note (optional): e.g. D3 if the theme is dark; keep camera fixed">
+    <button type="button" id="make">Build the checklist line</button>
+    <button type="button" id="copy">Copy</button>
+  </div>
+  <div class="out" id="out">(no ratings yet)</div>
+</section>
+</div>
+<script>
+(function () {
+  var dirs = ['d1','d2','d3','d4'];
+  var names = { d1: 'D1 toy diorama', d2: 'D2 painted cel', d3: 'D3 neon night', d4: 'D4 tilt-shift' };
+  var KEY = 'thirdjam.look-pick.v1';
+  function load() {
+    try {
+      var saved = JSON.parse(localStorage.getItem(KEY) || '{}');
+      dirs.forEach(function (d) {
+        if (saved[d]) { var el = document.querySelector('input[name="r-' + d + '"][value="' + saved[d] + '"]'); if (el) el.checked = true; }
+      });
+      if (saved.note) document.getElementById('note').value = saved.note;
+    } catch (e) {}
+  }
+  function state() {
+    var s = {};
+    dirs.forEach(function (d) { var el = document.querySelector('input[name="r-' + d + '"]:checked'); if (el) s[d] = el.value; });
+    var n = document.getElementById('note').value.trim(); if (n) s.note = n;
+    return s;
+  }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state())); } catch (e) {} }
+  function line() {
+    var s = state(), parts = [];
+    ['base','layer','fallback'].forEach(function (role) {
+      var picked = dirs.filter(function (d) { return s[d] === role; }).map(function (d) { return names[d]; });
+      if (picked.length) parts.push(role + ': ' + picked.join(', '));
+    });
+    var rejected = dirs.filter(function (d) { return s[d] === 'no'; }).map(function (d) { return names[d]; });
+    if (rejected.length) parts.push('no: ' + rejected.join(', '));
+    if (!parts.length) return '(no ratings yet)';
+    var d = new Date(), stamp = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    return '- [x] **Art direction** (' + stamp + '): ' + parts.join('; ') + (s.note ? '. Note: ' + s.note : '') + '. Source: prep-reference/LOOK-STUDIES.html';
+  }
+  document.addEventListener('change', function (e) { if (e.target && e.target.type === 'radio') { save(); document.getElementById('out').textContent = line(); } });
+  document.getElementById('note').addEventListener('input', save);
+  document.getElementById('make').addEventListener('click', function () { save(); document.getElementById('out').textContent = line(); });
+  document.getElementById('copy').addEventListener('click', function () {
+    var t = line(); document.getElementById('out').textContent = t;
+    if (navigator.clipboard && t.indexOf('(no') !== 0) { navigator.clipboard.writeText(t).then(function () { document.getElementById('out').textContent = t + '\n(copied)'; }, function () {}); }
+  });
+  load(); document.getElementById('out').textContent = line();
+})();
+</script>
+</body>
+</html>

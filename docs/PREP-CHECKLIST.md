@@ -16,6 +16,7 @@ Status date: 2026-11-11 evening CET. Tick boxes in place.
 - [ ] **Approve the `unreal-mcp` server once in Claude Code** (operator-only, interactive): with an editor running and a `.mcp.json` from `tools/mcp/mcp.json.template` in the project folder, start `claude` there and accept the project MCP server prompt; `claude mcp list` then shows it connected instead of "Pending approval". Agents cannot click this. Do it on both devices during the first 15 minutes after H0 (the project folder does not exist before).
 - [ ] **Jam Discord** joined (NVIDIA and partner prize criteria are asked there). Epic's daily livestream is at 20:00 CET Thursday to Sunday.
 - [ ] **Sleep plan** written for the 93 hours: human attention windows are in PLAN.md section 3.
+- [ ] **Art direction**: open `prep-reference/LOOK-STUDIES.html` in a browser (four directions, 11 stills, feasibility, scores), rate each as base / layer / fallback / no, and paste the generated line here. Reviewer's recommendation: D1 toy diorama as the base, D4 tilt-shift as the layer; D3 neon if the theme turns dark. If left open, the hour-1 rubric decides.
 
 ## B. Verified by agents tonight (see the reports)
 

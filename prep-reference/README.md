@@ -17,6 +17,7 @@ at hour 0. Whatever look device B picks is rebuilt from scratch in the engine du
 | File | What |
 |---|---|
 | `STUDY.md` | the four directions: exact prompts, file names, feasibility for UE 5.9 on one RTX 4090, scores, recommendation |
+| `LOOK-STUDIES.html` | the same as one page with the stills, for the operator's art-direction decision (ratings stay in the browser; the page builds a checklist line) |
 | `images/d1-toy-diorama-a.png` | D1 clean stylized toy diorama, blocks on a round platform, daylight |
 | `images/d1-toy-diorama-b.png` | D1, play mat with pins and cubes, sunset |
 | `images/d1-toy-diorama-c.png` | D1, playroom floor with ramps and discs, window light |
