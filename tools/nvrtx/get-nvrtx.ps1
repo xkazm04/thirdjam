@@ -18,10 +18,11 @@ function Say($m) { $line = (Get-Date -Format 'yyyy-MM-dd HH:mm:ss') + ' ' + $m; 
 function FreeGB { [math]::Round((Get-PSDrive -Name ($Dest.Substring(0,1))).Free / 1GB, 1) }
 function Run($cmdline, $cwd) {
   Add-Content -Path $out -Value ("==== " + (Get-Date -Format 'HH:mm:ss') + " " + $cmdline) -Encoding utf8
-  Push-Location $cwd
-  cmd.exe /c "$cmdline >> `"$out`" 2>&1"
+  # Nested quotes from PowerShell to cmd.exe are unreliable: write the stage as a .cmd file and run that.
+  $stage = Join-Path $env:TEMP 'nvrtx-stage.cmd'
+  @('@echo off', ('cd /d "' + $cwd + '"'), ($cmdline + ' >> "' + $out + '" 2>&1'), 'exit /b %ERRORLEVEL%') | Set-Content -Path $stage -Encoding ascii
+  cmd.exe /c "$stage"
   $code = $LASTEXITCODE
-  Pop-Location
   Get-Content $out -Tail 5 | ForEach-Object { Say ("  | " + $_) } | Out-Null  # Out-Null: a function returns ALL output, not only `return`
   return [int]$code
 }
@@ -34,17 +35,17 @@ if (-not (Test-Path (Join-Path $Dest '.git'))) {
   if ($code -ne 0) { Say 'FAIL clone'; exit 1 }
 } else { Say 'clone: folder exists, skipping' }
 $t = Get-Date
-$code = Run "Setup.bat --force" $Dest
+$code = Run ("call `"" + (Join-Path $Dest 'Setup.bat') + "`" --force") $Dest  # absolute path: cmd may not resolve a bare .bat from the cwd
 Say ("Setup.bat exit=$code in {0:N0} s, free=$(FreeGB) GB" -f ((Get-Date) - $t).TotalSeconds)
 if ($code -ne 0) { Say 'FAIL Setup.bat'; exit 1 }
 $t = Get-Date
-$code = Run "GenerateProjectFiles.bat" $Dest
+$code = Run ("call `"" + (Join-Path $Dest 'GenerateProjectFiles.bat') + "`"") $Dest
 Say ("GenerateProjectFiles exit=$code in {0:N0} s" -f ((Get-Date) - $t).TotalSeconds)
 if ($code -ne 0) { Say 'FAIL GenerateProjectFiles'; exit 1 }
 if ($NoBuild) { Say 'PASS (no build requested)'; exit 0 }
 if ((FreeGB) -lt $MinFreeGB) { Say "FAIL free space below $MinFreeGB GB before build"; exit 1 }
 $t = Get-Date
-$code = Run "Engine\Build\BatchFiles\Build.bat UnrealEditor Win64 Development -WaitMutex" $Dest
+$code = Run ("call `"" + (Join-Path $Dest 'Engine\Build\BatchFiles\Build.bat') + "`" UnrealEditor Win64 Development -WaitMutex") $Dest
 Say ("Build UnrealEditor exit=$code in {0:N0} min, free=$(FreeGB) GB" -f ((Get-Date) - $t).TotalMinutes)
 if ($code -ne 0) { Say 'FAIL build'; exit 1 }
 $size = [math]::Round((Get-ChildItem $Dest -Recurse -File -ErrorAction SilentlyContinue | Measure-Object Length -Sum).Sum / 1GB, 1)
