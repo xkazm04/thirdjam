@@ -116,3 +116,10 @@ situation in game. Ideal state would be to shout at AI teammates for short strat
    `Brain->ApplyCartridge(*Cartridge); Brain->ResetBrain();` (patch applied by the Director), or the game plays `pro` with the old hold radius whatever the cut says.
 4. **Curve target restated** (from A3's first measurement, 20 seeds, scripted human): regular rookie 85 % / pro 50 % / all_star 25 % holds; small rink is too easy at every level (95 / 65 / 55)
    and gets its own profile offsets. `FJamAIIntent` (the R-0007 hook) already consumes defend / space / pass / praise.
+
+## R-0010 (H5.8, 2026-11-12 11:45): the default rink is 90 x 45 (operator: "lets then keep 90x45 as default")
+1. `hockey.regular` becomes **90 x 45 m, skater speed 11** (the measured small-rink cell: a goal every 70 s with the scripted human, 16 of 20 bot matches finish, the two-minute first
+   play exists). Lane A3 makes the change in the presets (it is editing them) and re-targets the difficulty curve on it: rookie 85 % / pro 50 % / all_star 25 % on the new regular.
+2. **120 x 60 stays a shipped cut**: `hockey.arena.large` (120 x 60, speed 8) replaces `hockey.arena.small`; `hockey.arena.wide` (140 x 70) stays. Tests and sweeps run on regular and large.
+3. `GAME.md`, `HOCKEY.md` section 2 and the menu descriptions follow (Director edits the docs; lane A8 reads descriptions from the cartridges).
+4. The camera defaults are unchanged (measured for 120 m; on 90 m the far net is nearer, which only helps); the far-net marker stays.
