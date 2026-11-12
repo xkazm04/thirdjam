@@ -1,0 +1,1 @@
+B20 technique 2: left T1 with B's ice (MI_Ice_Night broadcast path), right M_P4_Ice (scratch tiles, lines under the surface, roughness 0.02-0.3) with Lumen reflections; game camera, low 2 m, 8 m

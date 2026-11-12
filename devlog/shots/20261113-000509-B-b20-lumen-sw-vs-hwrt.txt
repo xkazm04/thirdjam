@@ -1,0 +1,1 @@
+B20 Lumen software vs hardware ray tracing (editor restarted with r.RayTracing and skin cache on; r.Lumen.HardwareRayTracing 1; then hit lighting): concept camera top, game camera bottom left/middle; no visible change (mean |d| 2 levels); bottom right: the bluer final ice body

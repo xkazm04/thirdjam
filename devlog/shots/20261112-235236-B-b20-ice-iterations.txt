@@ -1,0 +1,1 @@
+B20 ice in depth, concept camera (3 m behind the skater, 1.2 m up): 1 scratches + deep parallax layer + wet patches; 2 a far-end bank of emissive lamp heads (lamp streaks in the ice); 3 darker ice body 0.16; 4 body 0.22 + turn arcs + bloom 0.9 and filmic toe 0.65
