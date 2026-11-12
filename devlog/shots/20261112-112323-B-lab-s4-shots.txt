@@ -1,0 +1,1 @@
+S4 clips, 8 frames each: Shot_Slap 0.7 s, Shot_Wrist 0.35 s, Check 0.5 s

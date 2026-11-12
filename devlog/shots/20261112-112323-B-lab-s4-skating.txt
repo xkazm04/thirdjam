@@ -1,0 +1,1 @@
+S4 clips, 8 frames each: Idle_Faceoff, Stride (3/4 front), Stride (side), Stride (behind), Glide, Stop; in place, loops seam 0.0 cm

@@ -1,0 +1,147 @@
+# Skater lab S4: scripted original (Blender Python only), report at 11:25
+
+Question: can a Blender Python script alone build an *original* articulated toy skater with scripted, perfectly looping clips, exported as FBX?
+**Answer: yes.** The whole lane rebuilds from nothing in 82 s with one command. No service, no download, no credits. Nothing was imported into
+Unreal (lane rule), so everything Unreal-side below is **unverified until lane B5 imports it**.
+
+Lab folder: `C:\Users\kazda\jam\skater-lab\s4\` (scripts, `export\`, renders in `r\`, sheets in `sheets\`, measurements in `inspect.jsonl`,
+`check_fbx.json`, `clips_report.json`).
+
+## Steps: PASS/FAIL with evidence
+
+| Step | Result | Evidence |
+|---|---|---|
+| 1. `build_skater.py`: mesh + rig | **PASS** | 5,344 triangles (body 5,148 + stick 196; cap 15k), 2,776 vertices, 0 textures, 9 material slots `Jersey Trim Helmet Gloves Skin Pads Skate Blade Stick`. 24 bones (below), real `root` at the origin, rest A-pose (arms 50 deg down), limbs separate. Rest bounds 172.7 cm tall (helmet top), 0.0 cm lowest point. Every part is rigid: one vertex group per part at weight 1.0. Normals: smooth shading with sharp edges above 40 deg (60 deg on spheres), so the rounded bevels shade as one surface and box edges stay crisp under a toon ramp. |
+| 2. `build_clips.py`: 10 clips from pose tables | **PASS** | All 10 clips, pelvis horizontal travel **0.000 cm** at every frame of every clip (pelvis x and y are locked; only its height is keyed); root never moves (0.000 cm). Loop seams 0.000 cm (first frame copied into the last frame). Lowest mesh point over every clip (stick included) >= 0.0 cm after the ice clamps. Table below. |
+| 3. Export FBX + GLB, then prove | **PASS** (Blender side) | `export\SK_Skater_S4.fbx` 2.4 MB (mesh, stick, armature, 10 takes), `export\SK_Skater_S4.glb` 0.57 MB (same, 10 animations), `SM_S4_Stick.fbx` (optional static stick, pivot at the grip). `tools/meshy/inspect.py` on both: same 24 bones, 9 materials, 10 actions, `move_root` [0,0,0] and `move_pelvis` x,y = 0 on every action. Re-import of the FBX in Blender: armature scale 1.0, root bone `root`, 60 fps. Renders and sheets made from the **re-imported FBX**, not from the source scene. |
+| Iterate at least twice | **PASS** (4 passes) | Pass 1: slim, small head (about 5 heads), stick sank 14 cm into the ice in Stride. Pass 2: chunkier torso, limbs, gloves, breezers; bigger helmet; deeper stride lean (pelvis 26 deg + spine 26 deg), faceoff bent over further. Pass 3: slap follow-through raised, celebrate stick visible overhead, thicker stick for distance read, ice clamps for skates and stick, hands kept above the ice in Fall. Pass 4: head scaled 1.10 (about 4 heads), rest-pose stick out of the ice, bigger free-arm swing in Stride. |
+
+Bones (parent > child): `root` > `pelvis` > `spine_01` > `spine_02` > `spine_03` > `neck_01` > `head` > `head_socket`; `spine_03` >
+`clavicle_l|r` > `upperarm_l|r` > `lowerarm_l|r` > `hand_l|r`; `hand_r` > `stick_socket` (the stick mesh is skinned to it); `pelvis` > `thigh_l|r` >
+`calf_l|r` > `foot_l|r`; `root` > `puck_socket` (78 cm ahead, 10 cm left, z 0). `head_socket` is 186 cm up. `spine_02` was added so the spine
+chain matches the mannequin names. No twist, ball or finger bones.
+
+| Clip (take `Armature|<name>`) | Frames @60 | Seconds | Loop | Pelvis horizontal, max over clip | Pelvis height range | Seam first-to-last (max joint) |
+|---|---|---|---|---|---|---|
+| Idle_Faceoff | 121 | 2.0 | yes | 0.000 cm | 1.2 cm (breathing) | **0.000 cm** |
+| Stride | 61 | 1.0 | yes | 0.000 cm | 4.0 cm | **0.000 cm** |
+| Glide | 121 | 2.0 | yes | 0.000 cm | 1.0 cm | **0.000 cm** |
+| Stop | 37 | 0.6 | one-shot | 0.000 cm | 15 cm | n/a (60 cm, by design) |
+| Shot_Slap | 43 | 0.7 | one-shot | 0.000 cm | 6 cm | n/a |
+| Shot_Wrist | 22 | 0.35 | one-shot | 0.000 cm | 3 cm | n/a |
+| Check | 31 | 0.5 | one-shot | 0.000 cm | 14 cm | n/a |
+| Fall | 37 | 0.6 | one-shot, ends lying flat | 0.000 cm | 55.5 cm | n/a |
+| GetUp | 73 | 1.2 | one-shot, from the Fall end pose to Glide | 0.000 cm | 51.5 cm | n/a |
+| Celebrate | 73 | 1.2 | one-shot, ends arms and stick up | 0.000 cm | 10 cm | n/a |
+
+How the clips are authored: each clip is a list of key poses `(frame, pose, ease)` in `build_clips.py` (`CLIPS`, with named poses `GLIDE`, `FACEOFF`,
+`SLAP_UP` and so on). A pose holds pelvis height, (pitch, roll, yaw) per spine, neck, head and clavicle, **skate targets** (x, y, z, yaw, pitch,
+edge roll) solved by two-bone IK, a **stick target** (blade heel or grip position plus yaw, tilt, twist) that the right arm reaches by IK, and the left
+hand as "grip at fraction f of the shaft", "offset from the shoulder" or an absolute point. Loops use cyclic Catmull-Rom between keys; one-shots ease
+per key. Every frame is baked (linear keys at 60 Hz), so any number can be changed and the clip rebuilt in 6 s. The left-shot slap (bottom hand left)
+winds up over the head, contacts at the front left, and follows through high to the front right.
+
+## Rubric row (judged as harshly as a generated candidate)
+
+| Candidate | Look fit | Technical | Motion | Cost | Provenance | Import risk |
+|---|---|---|---|---|---|---|
+| S4 scripted toy (`SK_Skater_S4`) | **3**: reads as a hockey skater at a glance (helmet with cage, wide jersey with white hem and sleeve stripes, team-colour socks, dark breezers, skates, stick); clean blocky silhouette from behind; at 40 px the white helmet and the jersey colour carry it and blue against orange is unmistakable. But it is visibly primitive "programmer art": rounded boxes and tubes, no face, no hands, no cloth folds; next to a good generated figure it looks cheaper. | **5**: 5.3k tris, no textures, 24 bones with mannequin names, real root at the origin, A-pose, limbs separate, rigid weights (nothing to skin badly), sockets as bones, one material slot per colour. | **4**: loops exact (0.000 cm seam), 0.000 cm pelvis drift, no ice penetration, stride reads as skating (side push, full leg extension, deep knee, 52 deg forward lean, see side and behind rows), slap wind-up readable even at 40 px, fall ends flat. Minus: rigid joints and pose-to-pose motion look like a toy; Check's shoulder thrust is weak; Stop reads only as "turn and lean", no spray. | **5**: 0 credits, 82 s full rebuild, about 25 min of authoring from scratch. | **5**: `original` (made by our scripts); counts as ours for every pool that scores own work; no licence questions. | **3**: unverified in Unreal: the extra "Armature" node, front axis, take naming, body + stick as two skinned mesh nodes (expect one combined skeletal mesh), sockets are bones not `USkeletalMeshSocket`s. Same skeleton for mesh and clips, so no retarget. |
+
+## Contact sheets (filed with `devlog/shot.mjs`)
+
+- `devlog/shots/20261112-112323-B-lab-s4-turntable.png`: 8-view turntable, rest A-pose (top) and Glide pose (bottom)
+- `devlog/shots/20261112-112323-B-lab-s4-skating.png`: Idle_Faceoff, Stride (3/4 front), Stride (side), Stride (from behind), Glide, Stop
+- `devlog/shots/20261112-112323-B-lab-s4-shots.png`: Shot_Slap, Shot_Wrist, Check
+- `devlog/shots/20261112-112324-B-lab-s4-fall.png`: Fall, GetUp, Celebrate
+- `devlog/shots/20261112-112324-B-lab-s4-distance.png`: about 40 px tall from the chase angle, 2x nearest: Stride blue, Stride orange, Shot_Slap, Fall orange, Stop, Idle_Faceoff orange
+
+Look in the renders: Workbench studio light, material colour, black object outline. It stands in for the P2 cel look; it is not the game's shader.
+
+## Rebuild (exact commands)
+
+Everything, one command (about 82 s):
+```
+bash C:/Users/kazda/jam/skater-lab/s4/run_all.sh
+```
+Or step by step:
+```
+"C:/Program Files/Blender Foundation/Blender 4.2/blender.exe" -b --factory-startup --python C:/Users/kazda/jam/skater-lab/s4/build_skater.py -- C:/Users/kazda/jam/skater-lab/s4
+"C:/Program Files/Blender Foundation/Blender 4.2/blender.exe" -b --factory-startup --python C:/Users/kazda/jam/skater-lab/s4/build_clips.py -- C:/Users/kazda/jam/skater-lab/s4
+"C:/Program Files/Blender Foundation/Blender 4.2/blender.exe" -b --factory-startup --python C:/Users/kazda/jam/thirdjam/tools/meshy/inspect.py -- C:/Users/kazda/jam/skater-lab/s4/export/SK_Skater_S4.fbx C:/Users/kazda/jam/skater-lab/s4/export/SK_Skater_S4.glb
+"C:/Program Files/Blender Foundation/Blender 4.2/blender.exe" -b --factory-startup --python C:/Users/kazda/jam/skater-lab/s4/check_fbx.py -- C:/Users/kazda/jam/skater-lab/s4/export/SK_Skater_S4.fbx C:/Users/kazda/jam/skater-lab/s4/check_fbx.json
+bash C:/Users/kazda/jam/skater-lab/s4/render_all.sh
+```
+`render_s4.py` is my own Workbench renderer. `tools/meshy/render.py` does not fit this file: it hides every mesh but the largest, which would hide the
+stick, and it assumes a figure that faces -Y. Its modes are `turntable | motion | side | back | game` (game = orthographic, 40 px per 1.70 m, from
+behind and above), with an `orange` tint option.
+
+## Export settings and what Unreal should do with them (unverified until imported)
+
+- Built in Blender facing **+X**, left = +Y, Z up, metres. FBX: `axis_forward=-Z, axis_up=Y` (Blender defaults), `apply_unit_scale=True`,
+  `apply_scale_options=FBX_SCALE_ALL`, `global_scale=1.0`, `add_leaf_bones=False`, `primary_bone_axis=Y, secondary_bone_axis=X`,
+  `armature_nodetype=NULL`, `mesh_smooth_type=FACE`, `bake_anim_use_all_actions=True` (one take per action), `bake_anim_use_nla_strips=False`,
+  `bake_anim_force_startend_keying=True`, step 1, no simplification, 60 fps.
+- Expected in UE 5.9 with default FBX skeletal import options ("Force Front XAxis" **off**, Import Uniform Scale 1.0, Convert Scene on): the figure
+  stands about 173 units tall, Z up, **faces +X** (unlike the UE mannequin, which faces +Y: do not add the usual -90 yaw on the mesh component), its
+  left hand on -Y. Units arrive as centimetres with no 100x or 0.01x scale on the root (the Blender re-import shows armature scale 1.0).
+- The armature object is named `Armature`. The expectation, from community practice, is that UE drops a root null named "Armature" so `root` is the
+  skeleton root. **If it does not**, the skeleton gets one extra bone `Armature` above `root`. That is harmless for this visual, but B5 should report it.
+- Body and stick are two skinned mesh nodes on one armature. Expect one skeletal mesh `SK_Skater_S4` with 9 material slots. 10 anim sequences, probably
+  named `SK_Skater_S4_Anim_Armature_<Clip>`; rename on import. Root motion: the root has identity keys, so there is nothing to extract.
+- Looping clips repeat their first frame as the last frame, as the brief asked: a 1/60 s duplicate at the wrap. Trimming the last frame in UE
+  would make the wrap seamless.
+- Sockets: `stick_socket`, `puck_socket`, `head_socket` exist as **bones**. `GetSocketLocation` / `DoesSocketExist` accept bone names, so the
+  contract's names work as they are. Adding real skeletal-mesh sockets on those bones (the import skill's step 2) is still cleanest for acceptance.
+
+## Team colour, jersey number, knock-down direction
+
+- **Orange team**: only the `Jersey` slot carries team colour (jersey, sleeves, socks: the largest areas, front and back). A material instance whose
+  base colour is the `TeamColour` vector param tints it. `Trim` stays white on both teams. The distance sheet shows the orange tint reading at
+  40 px. `Helmet` (off-white), `Gloves` and `Pads` (near black) are neutral on purpose, and can take `TeamColour` too if the Director wants
+  more colour.
+- **Jersey number**: no texture is shipped. UV0 is a planar projection seen from behind that frames the jersey back (u 0..1 across the back, v 0..1
+  from hem to shoulders). A jersey material can draw the seven-segment digits `NumberTens` / `NumberOnes` in that UV box, masked to back-facing
+  normals (the same digit approach as the T-A skill). That is material work on the Unreal side; it has not been built.
+- **Knock-down direction**: `Fall` falls **backwards** (towards the figure's -X) and ends flat. The visual yaws the mesh component so that its
+  backward axis points along (DirX, DirZ) (yaw = atan2(DirZ, DirX) + 180 deg in rink terms), holds the last frame while down, then plays
+  `GetUp` and eases the yaw back to facing. A `Fall_Forward` clip would take about 10 min in the pose table if the Director wants falls in both
+  directions without the yaw trick.
+- Other calls: `PlayShoot` = `Shot_Wrist` (or `Shot_Slap` for a charged shot), `PlayCheck` = `Check`, speed blend `Glide` <-> `Stride`, lean from
+  `TurnRate` by an additive spine roll or a component roll (no lean clips were authored), `Idle_Faceoff` for faceoffs and pauses, and `Celebrate`.
+
+## Verdict: **keep as fallback** (and queue it for import if the editor has a free 20-minute slot)
+
+It is the only candidate with zero cost, zero licence risk and a full, exactly looping clip set on one skeleton with no retarget, and it is
+re-tunable in seconds. It is a step up from T-A (real skates, cage, stripes, a stride that reads as skating at 40 px). It does not beat a
+good generated figure on looks. Use it if T-B2 or T-B1 stall on rig or retarget work, or as the "ours" option for the provenance pool.
+
+## What is weak
+
+- Primitive look: no face, no hands, no fabric. It reads well as a toy, but it is not a character.
+- Rigid parts: joints show gaps and overlaps when bent (elbow and knee spheres hide most of it). The raised arms pass into the helmet in the
+  Slap wind-up and in Celebrate (visible in the sheets at 160 px, invisible at 40 px).
+- Motion is pose-to-pose with splines: no overlap, no follow-through on the head or arms, no secondary motion. `Check` is the weakest clip; `Stop`
+  needs blade spray from the game to sell it.
+- The stick is hidden by the body from directly behind in Stride.
+- No lean or turn clips (`Skate_Left/Right`); lean must come from code.
+
+## What I could not verify
+
+- Anything in Unreal: the import itself, the "Armature" node handling, the front axis, the scale, take naming, the material slot order, sockets,
+  performance (5.3k tris times 6 skaters should be trivial), and the cel shader on these normals.
+- Whether the GLB is useful downstream. It inspects correctly; Blender re-imports it at 24 fps with the same durations.
+- Hands do not grip exactly: the left hand targets the shaft by IK, but the glove is a box, so the grip is approximate (centimetres, invisible at
+  game distance).
+
+## Ledger rows for the lead to paste (ASSETS.md)
+
+| File | Origin | Tool | Licence | Note |
+|---|---|---|---|---|
+| `SK_Skater_S4.fbx` / `.glb` (mesh, rig, 10 clips) | original | Blender 4.2 Python, `skater-lab/s4/build_skater.py`, `build_clips.py` | ours | no generated or downloaded input |
+| `SM_S4_Stick.fbx` | original | same | ours | optional static stick, pivot at the grip |
+
+## For the lead or the operator to decide
+
+1. Queue S4 for import (about 20 min of B5's editor time) as the "ours" fallback, or keep it on disk only.
+2. If it is imported: should `Helmet` and `Gloves` also take `TeamColour`, and is the back-UV number approach wanted (who builds the digit material)?
+3. Should I add `Fall_Forward`, `Skate_Left/Right` lean clips and a crossover? Each is about 10 min of pose-table work.
