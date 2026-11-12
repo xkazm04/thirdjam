@@ -121,3 +121,43 @@ Anything audible: voice character ("gravelly" was not achievable from the stock 
 2. Music: keep the two tracks (about 1,380 credits) or not; read s.4 of elevenlabs.io/music-terms first, and decide whether to credit "Created in collaboration with ElevenLabs" (not required on paid plans).
 3. Licence: the plan is paid (Creator), so the terms of use allow commercial use of Output; confirm with the organisers' rules on AI-generated audio (theme page says AI use is context only) and keep `ledger.jsonl` as the provenance record.
 4. Which takes to import: the engine team needs the picks from the listening page; wavs are in `audio-lab/wav/`.
+
+## Sports commentator voices (addition requested by the lead, 2026-11-12)
+
+### API facts (docs read 2026-11-12)
+- Design: `POST https://api.elevenlabs.io/v1/text-to-voice/design`. Body `voice_description` (required; no length limit stated), `text` (100 to 1000 characters, or `auto_generate_text`), `model_id` (`eleven_multilingual_ttv_v2` default, or `eleven_ttv_v3`), `loudness` (-1 to 1, default 0.5), `guidance_scale` (default 5), `seed`. Response `previews[]` of `{generated_voice_id, audio_base_64, media_type, duration_secs}`: **three previews per call** (observed). Source: elevenlabs.io/docs/api-reference/text-to-voice/design.
+- Save: `POST /v1/text-to-voice` with `voice_name`, `voice_description`, `generated_voice_id`; returns the voice (`voice_id`). The docs name no slot or plan errors. Source: .../api-reference/text-to-voice/create.
+- Cost: the Voice Design guide says you are charged only for the preview-text characters, once, although three samples come back. Observed: 5 calls with a 150-character text. Total spend for the whole addition was 1,455 credits (quota 125,737 -> 127,192 used); TTS header costs summed to 705, so design was about 750 for five calls, roughly 1 credit per preview character. Source: the voice-design capability page (found at elevenlabs.io/docs/eleven-creative/voices/voice-design); the api-reference overview page for it returned 403.
+- Slots: `GET /v1/user/subscription` shows `voice_limit` 30, `voice_slots_used` 18 before and 23 after; 7 free; `can_extend_voice_limit` false. Nothing was deleted. The docs say saving a preview uses one slot but not how many a plan includes; the 30 comes from the subscription response.
+- Licence for designed voices: not stated on any page I could read. The Terms of Use say paid users may use Output commercially and keep their rights (see above); nothing separate about designed voices, and I could not read the designed-voice or prohibited-use specifics. Unverified; operator should check.
+
+### Descriptions (verbatim, all sent with guidance_scale 5, loudness 0.5, model `eleven_multilingual_ttv_v2`)
+- C1 Classic play-by-play: "Native American English, North American broadcast. Male, 45 to 55. Studio quality. Persona: classic sports play-by-play announcer. Emotion: steady, authoritative, building excitement. A deep, steady baritone with a warm resonant timbre and measured pacing that rises quickly in pitch and intensity as the action speeds up."
+- C2 High-energy excitable: "Native American English. Male, 25 to 35. Studio quality. Persona: hyper-energetic sports announcer. Emotion: excited, breathless, thrilled. A bright, fast-talking voice with a higher pitch, rapid pacing and punchy delivery, always on the edge of shouting."
+- C3 Dry witty colour: "Native English with a mid-Atlantic accent. Male, 40 to 50. Studio quality. Persona: dry witty colour commentator. Emotion: relaxed, amused, wry. A smooth, slightly raspy mid-range voice with a laid-back pace, deadpan timing and a hint of a smile in every line."
+- C4 1950s newsreel announcer: "Native English with a mid-Atlantic accent. Male, 40 to 50. Studio quality. Persona: 1950s newsreel and film-studio announcer. Emotion: theatrical, proud, urgent. A clipped, crisp, formal delivery with a projecting chest voice, precise consonants and dramatic pauses."
+- C5 Warm sharp female play-by-play: "Native American English. Female, 30 to 40. Studio quality. Persona: confident sports play-by-play announcer. Emotion: warm, sharp, enthusiastic. A clear, quick, confident voice with a warm mid-range timbre, crisp diction and fast pacing that lifts with the action."
+- Design preview text (all five, 150 characters): "Blue wins the faceoff and Orange is on the break, nobody back! He shoots... he scores! Big hit along the boards, and that's a wrap on the second take."
+
+### Saved voices (account voice ids) and which preview was kept
+| Variant | voice_id | kept preview | spares (not saved; mp3 in `audio-lab/commentators/`) |
+|---|---|---|---|
+| C1 | 1gm1MeFwA3QfH0NyejOt | 1 | C1_2, C1_3 |
+| C2 | FGymx4HciRaNj8j7HIX1 | 1 | C2_2, C2_3 |
+| C3 | V18qdcTJ8uPIeabKuiZZ | 2 | C3_1, C3_3 |
+| C4 | ZL9GpDFsgoV9hmD3GFe2 | 3 | C4_1, C4_2 |
+| C5 | zGmIRV8rOzprpDf4Wutc | 3 | C5_1, C5_2 |
+
+I could not tell the previews apart by ear. The kept preview is a heuristic on duration (fast voices C2, C5: the shortest of the three; deliberate voices C1, C3, C4: the longest, i.e. slower and more pauses), so any of the three could be better. Each saved voice is named "Hokej C<n> <variant>". The ten lines were made with TTS (multilingual_v2, stability 0.35, style 0.4) from the saved voices, not from the preview audio.
+
+### Files and measurements
+50 files `C:/Users/kazda/jam/audio-lab/VO_Commentator_C<n>_<Line>.mp3` plus wavs in `wav/`; lines Welcome, Faceoff, Break, Scores, Boards, BigHit, DirectorsCall, TenSeconds, Wrap, Retake. Full per-file duration, LUFS and peak are in `audio-lab/table.md` and `measure.json`. Ranges: loudness -13.4 to -26.6 LUFS, all peaks below -0.4 dBTP. The loudest are C2_Scores (-13.5), C5_Break (-13.4) and C5 generally (-14 to -17); the quietest is C3_TenSeconds (-26.6, peak -10.7), consistent with the relaxed C3 description. C3 and C1 run -17 to -21 and C4 -15 to -18. Durations: Welcome 3.0 to 4.9 s (C2 slowest, 4.9 s: slower than a "fast" voice should be, the numbers contradict the description there), shortest lines about 1 s. Credits: header cost 10 to 26 per line, 141 per voice, 705 for all 50.
+
+### Full commentary estimate
+About 120 lines with three alternates in one voice is 480 generations. At the observed 14 credits per line (mean line 33 characters, about 0.43 credits per character) that is roughly 6,800 credits; with longer 50-character lines, about 10,300. Quota remaining 16,100 (resets 2026-11-13), so it fits with 5,800 to 9,300 to spare, but would take roughly 40 to 65 percent of what is left. Do the alternates only for the voices that survive triage.
+
+### Failed or unavailable
+Nothing failed. No slot error. The per-voice credit cost of design is derived, not measured per call (the design response carries no cost header).
+
+### Not verified
+Everything audible: whether any variant sounds like a sports commentator, whether C2 really is excitable, whether C4 reads as newsreel, whether any voice resembles a real broadcaster by accident (I named none; a designed voice can still land close to a real person, so listen for that), accent drift despite the language prefix, and consistency of one voice across lines. Licence terms for designed voices (above).
