@@ -1,0 +1,1 @@
+A/B new P2C against current R (skh/export5): same pose and camera, close and 40 px (3x)

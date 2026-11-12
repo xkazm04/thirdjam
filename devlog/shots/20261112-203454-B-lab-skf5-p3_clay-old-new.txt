@@ -1,0 +1,1 @@
+SKF fifth pass p3_clay: each row old (export4) | new (export5) from the game camera (rear-high, 5 frames each), then old | new from the side. Rows: Lift, Stumble->Stumble_Short, Check_Hit_Left, Check_Hit_Back, Poke_Hit, Lift_Hit, Board_Hit, Check_Deliver_Left, Trip, Idle_Faceoff->Idle.
