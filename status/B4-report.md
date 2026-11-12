@@ -195,3 +195,130 @@ Columns as in lane B5's report (path | kind | version | source type | tool | url
 - `d766df5` import: mesh, skeleton, 15 clips, 9 material instances, sockets
 - `2c1c8bb` AnimBP, blend space, montages, `BP_SkaterVisual_TB1`, lean re-export, stills
 - the commit holding this report (hash in the final message)
+
+---
+
+# Phase 2 (first note, written at 12:16 for the lead at once)
+
+**Unreal rejects lane S4's track-stripped FBX.** Importing `C:/Users/kazda/jam/skater-lab/s4/export/SK_Skater_S4_loopcut.fbx` (12:09, after
+`strip_tracks.py`) fails in the FBX SDK: `Cannot open FBX file ... FInterchangeFbxParser::LoadFbxFile: Cannot load the FBX file. There was an error
+when parsing the file.` Nothing is imported. Fallback used (S4's own advice, not my phase 1 route): I ran unmodified copies of lane S4's
+`build_skater.py` and `build_clips.py` with my scratch folder as the lab dir, **without** `strip_tracks.py`
+(`$S4B/s4lab/export/SK_Skater_S4_loopcut.fbx`). That file imports cleanly: `root` at identity rotation and scale 1.0, every bone at world scale 1,
+`root` keeps identity keys (harmless). **Lane S5 must not run the strip step on the hybrid file either.** Lane S4 should drop `strip_tracks.py`
+from `run_all.sh` (or make it optional) so its published export is the importable one. T-B1 refresh committed as `131000e`.
+
+## Phase 2 result (lead's follow-ups A and B, 12:12 to 12:30; editor on 8002 closed through `ExitEditor`, `Rink` discarded, never saved)
+
+### Both new files: what Unreal did
+
+| File | Result |
+|---|---|
+| Lane S4 `export/SK_Skater_S4_loopcut.fbx` (12:09, track-stripped) | **Rejected** by the FBX SDK (`Cannot load the FBX file. There was an error when parsing the file.`). Nothing imported. |
+| Lane S5 `export/SK_Skater_S5_loopcut.fbx` (12:19, track-stripped) | **Rejected**, same error (copied to `$S4B/s5in/probe_1219.fbx` first, so not a half-written file). |
+| S4 fallback: lane S4 `build_skater.py` + `build_clips.py` run unmodified into `$S4B/s4lab/`, no strip step | **Imports.** 24 bones, `root` the root, **identity rotation, scale 1.0**, every bone at world scale 1; faces +X, 172.7 cm; 16 takes (`GetUp_Front` new); `root` keeps identity keys (harmless). Leans arrive as 30-key loops with 24 tracks, mirrored: **`lean_fix.py` and `i5_drop_root.py` are no longer needed.** Loop wraps unchanged: Stride 0.611 cm (frame step 3.94), Glide 0.004, Idle 0.004, Crossover 1.402. |
+| S5 fallback: lane S5 `retarget.py` (12:19:11, byte-identical) with its byte-identical `in/` inputs into `$S4B/s5lab/`, no strip step | **Imports.** 32 bones, `root` identity at scale 1, 170 cm, faces +X; 3 slots `Material_0`, `Trim`, `Stick`; 16 takes named `SK_SkaterTB2Armature_<Clip>` (renamed), 32 tracks each; loop wraps Stride 0.442 cm (step 2.87), Glide 0.005, Idle 0.005. No texture imported (none embedded). |
+
+**The strip step is the only thing between the published files and Unreal.** Both labs should publish without `strip_tracks.py`.
+Socket compensation: the scale part is gone (all bones at scale 1). I kept the rotation alignment (`s2_socket_xf.py`) because the socket bones
+still carry Blender bone axes (`puck_socket` and `head_socket` have roll 90 at rest); measured socket world rotation identity and scale 1.0 on both meshes.
+
+### A. T-B1 refresh: PASS (commit `131000e`)
+
+Route: **delete and rebuild with my scripts** (`$S4B/p2/00_clean_tb1.py`, then `i1`/`i2` on the fallback file, `p2/m1_materials.py`, `s1`/`s2`,
+`p2/a0_bs_montage.py`, `a1`, `a2`, `p2/a3_states.py`, `p2/a4_contents.mjs`, `p2/a5_run.mjs`, `b1`, `b2`, `p2/b3_bp.dsl`, `b4`).
+- `GetUp_Front` wired after `Fall_Forward` (0.2 s blend), plain `GetUp` after `Fall`; both return to Skate automatically at the end. The phase 1
+  "turn 180 degrees before the get-up" trick is gone.
+- **A knock-down during a get-up interrupts it**: GetUp and GetUpFront each have transitions to Fall and FallForward (0.15 s); the Blueprint resets
+  its yaw-easing counter on a new knock-down. Seen in `tb1-falls`: the leftmost figure was knocked down 0.4 s into its get-up and lies again.
+- Blend space: Glide at 0 and 1 m/s, **full Stride at 5 m/s** (rate 1.0) and at 8 m/s (rate 1.3); crossovers at (5, +-3) and (8, +-3) with the same rates; leans at (0 to 3, +-3).
+- Helmet: team colour x **0.75** (dynamic instance and the `MI_SkaterTB1_Helmet` default).
+- Stills: `devlog/shots/20261112-121953-B-tb1-stride.png`, `20261112-121953-B-tb1-falls.png` (right to left: Fall, Fall_Forward, GetUp mid,
+  GetUp_Front mid, knock-down during a get-up; game time frozen with global time dilation), `20261112-121954-B-tb1-teams.png`.
+
+### B. T-B2 rebuilt on the hybrid: PASS (commit `d793aff`)
+
+- Removed lane B5's set: `AM_SkaterTB2_Shoot` deleted; every other old TB2 clip, blend space, montage, mesh, skeleton, AnimBP and Blueprint was deleted
+  and rebuilt under the same name from the hybrid (the old `AS_SkaterTB2_{Stride,Glide,Idle_Faceoff,Shot_Slap,Shot_Wrist,Fall,GetUp,Celebrate}` names
+  now hold S4 clips retargeted by S5). `M_SkaterTB2` kept unchanged: KeyGain 6, KeyBias 0.15, JerseyLum 0.08 not retuned; the recolour of the clean
+  texture looks right in `tb2h-teams`. `T_SkaterTB2_BaseColor` re-imported in place from `skater-lab/s6/T_SkaterTB2_BaseColor_clean.png` (2048 x 2048, sRGB).
+- Slots: `Material_0` = `M_SkaterTB2`, `Trim` = `MI_SkaterTB2_Trim`, `Stick` = `MI_SkaterTB2_Stick` (copies of the TB1 instances).
+- Same structure as T-B1 (scripts in `$S4B/tb2/` are the T-B1 scripts with the names changed): same states, blend space axes and samples, both
+  montages, the fall logic, `SetTeam` before BeginPlay. One difference: a single dynamic instance (the hue-key material colours suit and helmet
+  together); `SetBoost` sets its `Emissive` to 1.0, back to 0.5 on `None`.
+- **Shins and skates** (`tb2h-shins`): the shins are clean. One small mark remains: three short dark diagonal strokes on the outer side of the
+  right boot. It comes from the **texture** (dark strokes inside a flat colour patch, not on a silhouette or crease that the outline pass draws).
+  The laces on the boot tops are texture too and read as laces.
+- Stills: `20261112-122757-B-tb2h-stride.png`; `20261112-122757-B-tb2h-slap.png` (side view: in the wind-up both mitts are clear of the helmet by
+  about one mitt width and the lower mitt sits on the shaft; at contact the figure has turned away); `20261112-122757-B-tb2h-falls.png` (same five
+  states as T-B1); `20261112-122758-B-tb2h-teams.png`; `20261112-122758-B-tb2h-six.png`; `20261112-122758-B-tb2h-shins.png`;
+  `20261112-122758-B-tb1-vs-tb2h.png` (game camera, both striding at 7 m/s: left T-B1, right T-B2 hybrid).
+
+### Comparison as they now stand
+
+- **Same motion now**, so the choice is the figure. From the game camera T-B1 still reads more crisply: a block back with a white hem, dark breezers
+  splitting body and legs, a visible stick blade. The hybrid from behind is one smooth team-colour shape with white stripes: its team colour reads
+  very well, better than T-B1 at 60 m in `tb2h-six`, but the leg push is less legible without the dark breezers.
+- **Close up and from the front the hybrid wins clearly**: a face with eyes, a rounded helmet, a character (`tb2h-teams`). T-B1 is the cage-and-block toy.
+- **Hybrid weak spots seen**: the **mitts stay yellow on both teams** (outside the hue key) and on the blue team read like an orange accent; the left
+  mitt leaves the shaft in some two-handed frames (S5 measured 12 cm in the slap); in lying poses the skates float (S5: 6 to 10 cm), visible in
+  `tb2h-falls`; the texture mark on one boot; the same TAA ghost halo as T-B1 in the first second after a teleport.
+- **Cost**: T-B1 4.6 MB in 32 files, 5.9k triangles, no texture, all `original`. T-B2 10.4 MB in 27 files, 19.9k triangles, one 2K texture, mesh and
+  texture `ai-generated`.
+- My call: the hybrid as the shipped T-B2 for looks; T-B1 stays the all-`original` fallback. If the mitts join the hue key, the hybrid has no
+  team-reading problem left.
+
+### Not verified (phase 2)
+
+- Frame cost (the port 8000 editor was up throughout).
+- `Celebrate`, `Stop`, `Shot_Wrist` on both figures (imported, not wired); the turn-lean sign against A's pawn.
+- That the labs' published files import once the strip step is dropped: I proved it on byte-identical reruns of their scripts and inputs, not on their own files.
+
+### Commits (phase 2)
+
+`131000e` T-B1 refresh; `86291ab` early note on the stripped FBX; `d793aff` T-B2 hybrid; this section in the commit after it.
+
+### Files after phase 2 (bytes)
+
+T-B1: 32 files, 4,629,488 bytes (`SK_SkaterTB1` 941,511; `SKEL_SkaterTB1` 11,633; `AS_SkaterTB1_GetUp_Front` 215,819; other clips 144,573 to 226,171;
+`ABP_SkaterTB1` 350,219; `BP_SkaterVisual_TB1` 312,403; `BS_SkaterTB1_Skate` 24,880; montages about 8,800; instances about 9,000 each).
+T-B2: 27 files, 10,446,401 bytes (`SK_SkaterTB2` 3,744,531; `T_SkaterTB2_BaseColor` 2,356,732; `SKEL_SkaterTB2` 13,398; clips 166,459 to 316,995;
+`ABP_SkaterTB2` 350,554; `BP_SkaterVisual_TB2` 287,855; `BS_SkaterTB2_Skate` 25,144; `M_SkaterTB2` 22,040; `AM_SkaterTB2_Shot_Slap` 8,912;
+`AM_SkaterTB2_Check` 9,108; `MI_SkaterTB2_Stick` 8,960; `MI_SkaterTB2_Trim` 8,954).
+
+### Ledger rows (phase 2), ready to paste
+
+Remove: lane B5's `AM_SkaterTB2_Shoot.uasset` row, and lane B5's phase 2 rows for `SK_SkaterTB2`, `SKEL_SkaterTB2`, `T_SkaterTB2_BaseColor`, the eight
+`AS_SkaterTB2_*` clips, `BS_SkaterTB2_Skate`, `AM_SkaterTB2_Check`, `ABP_SkaterTB2`, `BP_SkaterVisual_TB2` (same paths, new content below). `M_SkaterTB2.uasset`
+keeps lane B5's row. T-B1: one file added (`AS_SkaterTB1_GetUp_Front`); every other phase 1 T-B1 row stands, its note changed to "rebuilt from lane S4's
+12:09 export (cm, root at unit scale), strip step removed"; the two lean rows lose "re-exported by lane B4 lean_fix.py; root track removed".
+
+```
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_GetUp_Front.uasset | anim | 0.1 | original | Blender 4.2 Python script (lane S4) + UE 5.9 via MCP/Python | | | 2026-11-12 | B | n | build_clips.py 12:09 export; get-up from the face-down fall |
+| Game/Plugins/JamAssets/Content/Skaters/SK_SkaterTB2.uasset | mesh | 0.1 | ai-generated | Hyper3D Rodin (mesh, texture) + Meshy (rig) + Blender retarget script (lane S5) | | | 2026-11-12 | B | y | Rodin task c07557c7-cf01-462a-97a3-9f0336c0ff31, Meshy rig 01a1cf39-74e0-7496-9b7c-cd8a09ffe4d3; root, sockets, boot weights by s5 retarget.py; includes the S4 stick (original) |
+| Game/Plugins/JamAssets/Content/Skaters/SKEL_SkaterTB2.uasset | other | 0.1 | ai-generated | Hyper3D Rodin (mesh, texture) + Meshy (rig) + Blender retarget script (lane S5) | | | 2026-11-12 | B | y | skeleton of the hybrid import |
+| Game/Plugins/JamAssets/Content/Skaters/T_SkaterTB2_BaseColor.uasset | other | 0.1 | ai-generated | Hyper3D Rodin (mesh, texture) + Meshy (rig) + Blender retarget script (lane S5) | | | 2026-11-12 | B | y | texture: Rodin diffuse cleaned by lane S6 (T_SkaterTB2_BaseColor_clean.png), 2K |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB2_Idle_Faceoff.uasset | anim | 0.1 | original | Blender 4.2 Python script (lanes S4, S5) | | | 2026-11-12 | B | y | S4 build_clips.py clip retargeted onto R by S5 retarget.py |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB2_Stride.uasset | anim | 0.1 | original | Blender 4.2 Python script (lanes S4, S5) | | | 2026-11-12 | B | y | S4 build_clips.py clip retargeted onto R by S5 retarget.py |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB2_Glide.uasset | anim | 0.1 | original | Blender 4.2 Python script (lanes S4, S5) | | | 2026-11-12 | B | y | S4 build_clips.py clip retargeted onto R by S5 retarget.py |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB2_Stop.uasset | anim | 0.1 | original | Blender 4.2 Python script (lanes S4, S5) | | | 2026-11-12 | B | y | S4 build_clips.py clip retargeted onto R by S5 retarget.py |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB2_Shot_Slap.uasset | anim | 0.1 | original | Blender 4.2 Python script (lanes S4, S5) | | | 2026-11-12 | B | y | S4 build_clips.py clip retargeted onto R by S5 retarget.py |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB2_Shot_Wrist.uasset | anim | 0.1 | original | Blender 4.2 Python script (lanes S4, S5) | | | 2026-11-12 | B | y | S4 build_clips.py clip retargeted onto R by S5 retarget.py |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB2_Check.uasset | anim | 0.1 | original | Blender 4.2 Python script (lanes S4, S5) | | | 2026-11-12 | B | y | S4 build_clips.py clip retargeted onto R by S5 retarget.py |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB2_Fall.uasset | anim | 0.1 | original | Blender 4.2 Python script (lanes S4, S5) | | | 2026-11-12 | B | y | S4 build_clips.py clip retargeted onto R by S5 retarget.py |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB2_Fall_Forward.uasset | anim | 0.1 | original | Blender 4.2 Python script (lanes S4, S5) | | | 2026-11-12 | B | y | S4 build_clips.py clip retargeted onto R by S5 retarget.py |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB2_GetUp.uasset | anim | 0.1 | original | Blender 4.2 Python script (lanes S4, S5) | | | 2026-11-12 | B | y | S4 build_clips.py clip retargeted onto R by S5 retarget.py |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB2_GetUp_Front.uasset | anim | 0.1 | original | Blender 4.2 Python script (lanes S4, S5) | | | 2026-11-12 | B | y | S4 build_clips.py clip retargeted onto R by S5 retarget.py |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB2_Celebrate.uasset | anim | 0.1 | original | Blender 4.2 Python script (lanes S4, S5) | | | 2026-11-12 | B | y | S4 build_clips.py clip retargeted onto R by S5 retarget.py |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB2_Lean_Left.uasset | anim | 0.1 | original | Blender 4.2 Python script (lanes S4, S5) | | | 2026-11-12 | B | y | S4 build_clips.py clip retargeted onto R by S5 retarget.py |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB2_Lean_Right.uasset | anim | 0.1 | original | Blender 4.2 Python script (lanes S4, S5) | | | 2026-11-12 | B | y | S4 build_clips.py clip retargeted onto R by S5 retarget.py |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB2_Crossover_Left.uasset | anim | 0.1 | original | Blender 4.2 Python script (lanes S4, S5) | | | 2026-11-12 | B | y | S4 build_clips.py clip retargeted onto R by S5 retarget.py |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB2_Crossover_Right.uasset | anim | 0.1 | original | Blender 4.2 Python script (lanes S4, S5) | | | 2026-11-12 | B | y | S4 build_clips.py clip retargeted onto R by S5 retarget.py |
+| Game/Plugins/JamAssets/Content/Skaters/BS_SkaterTB2_Skate.uasset | anim | 0.1 | original | Blender 4.2 Python script (lanes S4, S5) + UE 5.9 via MCP/Python | | | 2026-11-12 | B | y | 2D blend space Speed x TurnRate (lane B4) |
+| Game/Plugins/JamAssets/Content/Skaters/AM_SkaterTB2_Shot_Slap.uasset | anim | 0.1 | original | Blender 4.2 Python script (lanes S4, S5) + UE 5.9 via MCP/Python | | | 2026-11-12 | B | y | montage for PlayShoot |
+| Game/Plugins/JamAssets/Content/Skaters/AM_SkaterTB2_Check.uasset | anim | 0.1 | original | Blender 4.2 Python script (lanes S4, S5) + UE 5.9 via MCP/Python | | | 2026-11-12 | B | y | montage for PlayCheck (S4 Check clip) |
+| Game/Plugins/JamAssets/Content/Skaters/ABP_SkaterTB2.uasset | other | 0.1 | original | UE 5.9 via MCP/Python | | | 2026-11-12 | B | y | AnimBP, same structure as ABP_SkaterTB1 (lane B4) |
+| Game/Plugins/JamAssets/Content/Skaters/BP_SkaterVisual_TB2.uasset | other | 0.1 | original | UE 5.9 via MCP/Python | | | 2026-11-12 | B | y | implements IJamSkaterVisual (lane B4) |
+| Game/Plugins/JamAssets/Content/Skaters/MI_SkaterTB2_Stick.uasset | material | 0.1 | original | UE 5.9 via MCP/Python | | | 2026-11-12 | B | y | copy of MI_SkaterTB1_Stick |
+| Game/Plugins/JamAssets/Content/Skaters/MI_SkaterTB2_Trim.uasset | material | 0.1 | original | UE 5.9 via MCP/Python | | | 2026-11-12 | B | y | copy of MI_SkaterTB1_Trim (stick tape) |
+```
