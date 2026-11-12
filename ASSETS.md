@@ -176,6 +176,26 @@ Rules that apply to every row:
 | Game/Plugins/JamAssets/Content/Skaters/AM_SkaterTB2_Shot_Slap.uasset | anim | 0.0 | original | Blender 4.2 Python script (lanes S4, S5) + UE 5.9 via MCP/Python | | | 2026-11-12 | B | y | montage for PlayShoot |
 | Game/Plugins/JamAssets/Content/Skaters/MI_SkaterTB2_Stick.uasset | material | 0.0 | original | UE 5.9 via MCP/Python | | | 2026-11-12 | B | y | copy of MI_SkaterTB1_Stick |
 | Game/Plugins/JamAssets/Content/Skaters/MI_SkaterTB2_Trim.uasset | material | 0.0 | original | UE 5.9 via MCP/Python | | | 2026-11-12 | B | y | copy of MI_SkaterTB1_Trim (stick tape) |
+| Game/Plugins/JamAssets/Content/VFX/NS_poke.uasset | vfx | 0.5 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | event poke; User.Strength, User.Colour, User.Variant (0 clean, 1 miss) (569986 bytes) |
+| Game/Plugins/JamAssets/Content/VFX/NS_lift.uasset | vfx | 0.3 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | event lift (331442 bytes) |
+| Game/Plugins/JamAssets/Content/VFX/NS_foul.uasset | vfx | 0.5 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | event foul; User.Variant = foul kind index (564393 bytes) |
+| Game/Plugins/JamAssets/Content/VFX/NS_faceoff.uasset | vfx | 0.5 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | event faceoff; User.Variant 0 drop, 1 won, 2 lost (570147 bytes) |
+| Game/Plugins/JamAssets/Content/VFX/NS_pass.uasset | vfx | 0.3 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | event pass (328503 bytes) |
+| Game/Plugins/JamAssets/Content/VFX/NS_effect_start.uasset | vfx | 0.5 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | event effect_start (rising ring + flash) (558510 bytes) |
+| Game/Plugins/JamAssets/Content/VFX/NS_effect_end.uasset | vfx | 0.3 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | event effect_end (falling ring) (323877 bytes) |
+| Game/Plugins/JamAssets/Content/VFX/NS_zone_enter.uasset | vfx | 0.3 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | event zone_enter (322701 bytes) |
+| Game/Plugins/JamAssets/Content/VFX/NS_zone_exit.uasset | vfx | 0.3 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | event zone_exit (323052 bytes) |
+| Game/Plugins/JamAssets/Content/Audio/MS_poke.uasset | audio | 0.2 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | MetaSound source synthesised in-engine (no waves); inputs Strength, Variant (237579 bytes) |
+| Game/Plugins/JamAssets/Content/Audio/MS_lift.uasset | audio | 0.2 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | MetaSound source synthesised in-engine (no waves) (188906 bytes) |
+| Game/Plugins/JamAssets/Content/Audio/MS_foul.uasset | audio | 0.3 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | MetaSound source synthesised in-engine (no waves); inputs Strength, Variant (333753 bytes) |
+| Game/Plugins/JamAssets/Content/Audio/MS_pass.uasset | audio | 0.2 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | MetaSound source synthesised in-engine (no waves) (167837 bytes) |
+| Game/Plugins/JamAssets/Content/Audio/MS_effect_start.uasset | audio | 0.2 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | MetaSound source synthesised in-engine (no waves) (225859 bytes) |
+| Game/Plugins/JamAssets/Content/Audio/MS_effect_end.uasset | audio | 0.2 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | MetaSound source synthesised in-engine (no waves) (181658 bytes) |
+| Game/Plugins/JamAssets/Content/Audio/MS_zone_enter.uasset | audio | 0.1 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | MetaSound source synthesised in-engine (no waves) (149652 bytes) |
+| Game/Plugins/JamAssets/Content/Audio/MS_zone_exit.uasset | audio | 0.1 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | MetaSound source synthesised in-engine (no waves) (149647 bytes) |
+| Game/Plugins/JamAssets/Content/Audio/MS_announce.uasset | audio | 0.2 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | MetaSound source synthesised in-engine (no waves) (261783 bytes) |
+| Game/Plugins/JamAssets/Content/Audio/MS_bark.uasset | audio | 0.1 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | MetaSound source synthesised in-engine (no waves) (137241 bytes) |
+| Game/Plugins/JamAssets/Content/Audio/MS_signal.uasset | audio | 0.3 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | MetaSound source synthesised in-engine (no waves); inputs Strength, Variant (0 defend .. 3 praise) (279483 bytes) |
 
 
 Director ruling 2026-11-12: a mesh, texture, rig or motion clip produced by a generation service from our own prompt (Meshy, Tripo, Rodin, text-to-motion) is `ai-generated`, not `sourced`; a clip or mesh taken from a service's preset library (for example Meshy library action 187 `Knock_Down`) is `sourced` and carries the service's licence and the preset id in `url`.
