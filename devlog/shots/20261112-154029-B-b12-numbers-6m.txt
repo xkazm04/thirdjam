@@ -1,0 +1,1 @@
+Jersey numbers from the game camera (6 m behind, 3.5 m up, stride 7 m/s), stand-in ice, PIE + CaptureGameViewport. Left two: T-B1 (SK_SkaterTB1, UV0 back), right two: T-B2 (SK_SkaterTB2, pre-skinned box projection). Row 1: blue 1, orange 7, blue 13, orange 42. Row 2: orange 13, blue 42, orange 99, blue 1. Row 3: blue 99, orange 42, blue 7, orange 99. Single digits centred.

@@ -1,0 +1,1 @@
+Crests (12/11 cm, left chest; T-B2 centre-left because its left arm covers the left chest). Top: TeamId 0 blue = comet, TeamId 1 orange = fox. Bottom: same figures with TeamId swapped against colour (comet on orange, fox on blue): the crest follows TeamId, and the hue key does not recolour it. Order left to right: T-B2 orange, T-B2 blue, T-B1 orange, T-B1 blue.

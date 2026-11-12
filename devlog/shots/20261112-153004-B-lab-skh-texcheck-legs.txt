@@ -1,0 +1,1 @@
+Lower-leg glyph check, 8 azimuths: rows P4A, P4B, gB, P3A, P3B

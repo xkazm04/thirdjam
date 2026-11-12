@@ -1,0 +1,1 @@
+P3B: turntable rest with stick; Goalie_Hold front and side; 40 px from behind: Stride, Shot_Slap, Glide, Goalie_Hold
