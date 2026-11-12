@@ -51,7 +51,7 @@ Cartridge errors are sentences that start `at <JSON pointer>:`, because the Desi
 | `skater.knockdown_frames` | 15..300 | 90 (1.5 s); 15 is a stumble, 300 (5 s) is a penalty |
 | `skater.pass_speed` | 5..30 | 14 (C-0005); below a shot, above skating, so a pass arrives before the lane closes |
 | `skater.pass_lead_frames` | 0..60 | 20 (C-0005); the receiver's position a third of a second ahead |
-| `stick.reach_m` | 0.8..3 | 1.6 (R-0013); the blade from the skater's edge at full aim |
+| `stick.reach_m` | 0.8..3 | 1.2 (R-0022 point 3; was 1.6 in R-0013): rest 1.0 m, full aim 1.6 m from the skater centre, which both of B's figures can pose |
 | `stick.poke_window_frames` | 2..30 | 8; the timing window of a clean poke |
 | `stick.lift_range_m` | 0.5..2.5 | 1.0; contact range of a stick lift beyond the two bodies |
 | `stick.stumble_frames` | 0..90 | 20; `hockey.raw` sets 0 |

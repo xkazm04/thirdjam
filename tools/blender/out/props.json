@@ -1,0 +1,69 @@
+{
+  "SM_Net": {
+    "triangles": 316,
+    "fbx_mb": 0.02,
+    "dimensions_m": [
+      1.6,
+      4.1,
+      1.576
+    ]
+  },
+  "SM_Board_Segment": {
+    "triangles": 72,
+    "fbx_mb": 0.02,
+    "dimensions_m": [
+      0.12,
+      2.0,
+      2.26
+    ]
+  },
+  "SM_Bench": {
+    "triangles": 72,
+    "fbx_mb": 0.02,
+    "dimensions_m": [
+      0.43,
+      2.4,
+      0.9
+    ]
+  },
+  "SM_Puck": {
+    "triangles": 380,
+    "fbx_mb": 0.02,
+    "dimensions_m": [
+      0.24,
+      0.24,
+      0.08
+    ]
+  },
+  "SM_GoalLight": {
+    "triangles": 356,
+    "fbx_mb": 0.03,
+    "dimensions_m": [
+      0.376,
+      0.252,
+      0.328
+    ]
+  },
+  "SM_Pedestal_Round": {
+    "triangles": 276,
+    "fbx_mb": 0.02,
+    "dimensions_m": [
+      0.99,
+      0.99,
+      0.135
+    ]
+  },
+  "SM_Pedestal_Hex": {
+    "triangles": 60,
+    "fbx_mb": 0.02,
+    "dimensions_m": [
+      0.857,
+      0.99,
+      0.135
+    ]
+  },
+  "build_s": 0.1,
+  "atlas": "T_Props_Atlas.png 1024x1024 RGBA",
+  "render_s": 0.6,
+  "total_s": 1.6
+}

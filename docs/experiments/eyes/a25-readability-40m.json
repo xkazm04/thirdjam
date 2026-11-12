@@ -1,0 +1,112 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "readability",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-12T16:25:49.226Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "readability",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a25/docs/experiments/img/rink/reg-constr-40m.png",
+          "width": 2560,
+          "height": 1440
+        },
+        {
+          "label": "B",
+          "path": ".claude/worktrees/a25/docs/experiments/img/rink/large-constr-40m.png",
+          "width": 2560,
+          "height": 1440
+        }
+      ],
+      "distance": 40,
+      "thumbnails": [],
+      "prompt_chars": 2740,
+      "usage": {
+        "prompt": 3044,
+        "output": 710,
+        "thoughts": 1312,
+        "total": 5066,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00987,
+      "ms": 36667,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A: reg-constr-40m.png",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "Not visible anywhere on the rink surface or near any skater's stick."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "Not visible because the puck is entirely absent, making carrier identification impossible."
+              },
+              "team_colours": {
+                "score": 5,
+                "evidence": "The two teams are instantly distinguishable by their vibrant cyan blue and warm orange cylindrical figures."
+              },
+              "far_net": {
+                "score": 4,
+                "evidence": "Located at the far center boards, visible as a distinct red rectangular goal frame roughly 90 pixels wide directly under the vertical light pillar."
+              },
+              "zone_strips": {
+                "score": 5,
+                "evidence": "The dark blue zone lines and dark red center red line are high-contrast, multi-pixel thick horizontal bands spanning the entire width of the ice."
+              }
+            },
+            "first_look": "The massive blown-out white spotlight pool on the lower half of the rink",
+            "noise": [
+              "Overblown white spotlight pools washing out the ice surface texture",
+              "Bright white studio spotlights mounted on tripods outside the boards",
+              "Yellow-and-white camera crane and film set props in the dark background",
+              "Vertical white light pillar rising from the far goal frame"
+            ],
+            "overall": 2
+          },
+          {
+            "label": "Still B: large-constr-40m.png",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "Not visible anywhere on the ice surface or around any of the player models."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "Not visible as no puck or indicator exists to determine possession."
+              },
+              "team_colours": {
+                "score": 5,
+                "evidence": "Easily told apart by the saturated light blue and bright orange jersey hulls."
+              },
+              "far_net": {
+                "score": 4,
+                "evidence": "Visible at the far end center boards as a clean red rectangular frame topped by a bright vertical beam."
+              },
+              "zone_strips": {
+                "score": 5,
+                "evidence": "The blue defensive/offensive zone lines and red center line clearly stripe across the rink in high contrast."
+              }
+            },
+            "first_look": "Blinding overexposed white glare dominating the foreground ice",
+            "noise": [
+              "Extreme overexposure in the foreground spotlight washing out rink details",
+              "Film crane, spotlight rigs, and clapperboard outside the boards",
+              "High-intensity vertical beacon beam centered above the far net",
+              "Perimeter floor lamps casting extraneous halos outside the rink"
+            ],
+            "overall": 2
+          }
+        ]
+      },
+      "markdown": "**eyes/readability** A=reg-constr-40m.png B=large-constr-40m.png at 40 m (gemini-3.8-flash, in 3044 out 710 think 1312 tokens, ~$0.0099, 36.7 s)\n- stills:\n  - label: Still A: reg-constr-40m.png; first_look: The massive blown-out white spotlight pool on the lower half of the rink; overall: 2\n    - elements:\n      - puck: score 1, evidence Not visible anywhere on the rink surface or near any skater's stick.\n      - carrier: score 1, evidence Not visible because the puck is entirely absent, making carrier identification impossible.\n      - team_colours: score 5, evidence The two teams are instantly distinguishable by their vibrant cyan blue and warm orange cylindrical figures.\n      - far_net: score 4, evidence Located at the far center boards, visible as a distinct red rectangular goal frame roughly 90 pixels wide directly under the vertical light pillar.\n      - zone_strips: score 5, evidence The dark blue zone lines and dark red center red line are high-contrast, multi-pixel thick horizontal bands spanning the entire width of the ice.\n    - noise: Overblown white spotlight pools washing out the ice surface texture; Bright white studio spotlights mounted on tripods outside the boards; Yellow-and-white camera crane and film set props in the dark background; Vertical white light pillar rising from the far goal frame\n  - label: Still B: large-constr-40m.png; first_look: Blinding overexposed white glare dominating the foreground ice; overall: 2\n    - elements:\n      - puck: score 1, evidence Not visible anywhere on the ice surface or around any of the player models.\n      - carrier: score 1, evidence Not visible as no puck or indicator exists to determine possession.\n      - team_colours: score 5, evidence Easily told apart by the saturated light blue and bright orange jersey hulls.\n      - far_net: score 4, evidence Visible at the far end center boards as a clean red rectangular frame topped by a bright vertical beam.\n      - zone_strips: score 5, evidence The blue defensive/offensive zone lines and red center line clearly stripe across the rink in high contrast.\n    - noise: Extreme overexposure in the foreground spotlight washing out rink details; Film crane, spotlight rigs, and clapperboard outside the boards; High-intensity vertical beacon beam centered above the far net; Perimeter floor lamps casting extraneous halos outside the rink"
+    }
+  ]
+}

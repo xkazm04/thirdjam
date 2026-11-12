@@ -64,6 +64,7 @@
   .meta { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
   .id { font:.7rem var(--mono); color:var(--muted); overflow-wrap:anywhere; }
   .chip { font:600 .68rem/1 var(--sans); padding:3px 6px; border-radius:4px; border:1px solid var(--note); color:var(--note); background:var(--note-bg); }
+  .shot { display:block; max-width:100%; height:auto; border-radius:8px; margin:0 0 8px; }
   .note { margin:2px 0 0; font-size:.88rem; color:var(--muted); white-space:pre-wrap; overflow-wrap:anywhere; max-width:80ch; }
   .ctl { display:flex; flex-wrap:wrap; justify-content:flex-end; align-items:center; gap:6px; }
   .seg { display:inline-flex; border:1px solid var(--line); border-radius:9px; overflow:hidden; position:relative; }
@@ -163,7 +164,9 @@
       if (it.subgroup && it.subgroup !== lastSub) { d.appendChild(el('p', 'sub', it.subgroup)); }
       lastSub = it.subgroup || null;
       var n = el('div', 'item'); n.id = 'i-' + it._i; n.dataset.i = it._i;
-      var b = el('div', 'body'); b.appendChild(el('div', 'text', it.text));
+      var b = el('div', 'body');
+      if (it.image) { var im = document.createElement('img'); im.className = 'shot'; im.src = it.image; im.alt = it.text; im.loading = 'lazy'; b.appendChild(im); }
+      b.appendChild(el('div', 'text', it.text));
       var m = el('div', 'meta'); m.appendChild(el('span', 'id', it.id));
       (it.tags || []).forEach(function (t) { m.appendChild(el('span', 'chip', t)); });
       b.appendChild(m);

@@ -77,7 +77,11 @@ namespace JamAI
 		// DrawPressPct of faceoffs it takes the draw DrawPressFrames after the drop (else the sim's own bot timing, 6-18 frames)
 		int DrawJumpPct = 0;
 		int DrawPressPct = 0;
-		int DrawPressFrames = 8;     // detours for a pickup within 8 m (never while carrying, never when the puck is nearer)
+		int DrawPressFrames = 8;
+		// Director 15:16: an opposing carrier with the human's blade within reach this many consecutive frames gives the puck up
+		// (a pass, else a dump shot a few frames later); -1 = never (rookie holds it and loses it to the forecheck)
+		int ForecheckYieldFrames = -1;
+		double CarrySpeed = 1.0;       // top speed while carrying the puck, as a fraction (a carrier is slower than a chaser, so a forecheck closes)     // detours for a pickup within 8 m (never while carrying, never when the puck is nearer)
 		bool bBlockShots = true;       // the back steps onto the path of a shot on its net
 		double BlockMinDistM = 0.0;    // ... only of a shot taken at least this far from the net (rookie: long shots only)
 		bool bClearLane = false;       // holds a shot while a defender stands in the lane puck -> goal (within 1.2 m of the line)
@@ -90,12 +94,14 @@ namespace JamAI
 	inline FJamBotSkill ProOppSkill()
 	{
 		FJamBotSkill K;
-		K.ShootExtraM = 30.0;
+		K.ShootExtraM = 13.0;  // 16:30 worktree sweep, 60 seeds: regular 55 / large 48 (30 before 16:18)
 		K.LeadFrames = 60;
+		K.DrawJumpPct = 100;   // 16:18: the pro centre never wins the draw outright (the sim's own bot timing still can); with it the human touches the puck inside 600 frames after every faceoff
 		K.PokeFrames = 6;      // R-0017: pokes after the puck has sat 6 frames inside blade reach
 		K.bLift = true;
 		K.bPassOut = false;    // 15:13 sweep: pro passing kept the puck from the human past 600 frames after faceoffs (HumanHasSomethingToDo); all_star passes
 		K.bReadLanes = true;
+		K.ForecheckYieldFrames = 20;   // Director 15:16
 		K.bIntercept = true;
 		K.bUseAimCone = true;
 		return K;
@@ -215,6 +221,8 @@ namespace JamAI
 		// R-0007: the intent read from the world on the last Think (search "TeamIntent" in JamAICore.cpp): defend = teammates fall back
 		// in front of the own net, space = spread to free ice, pass = the carrier passes to the human, praise = +10% speed, no reaction delay.
 		const FJamAIIntent& GetTeamIntent() const { return TeamIntent; }
+		int GetDrawJumps() const { return DrawJumps; }
+		int GetDrawPresses() const { return DrawPresses; }
 		// Fills Out[i] for every skater that is not the player; Out[PlayerIndex] is left untouched.
 		void Think(const FJamAIWorld& W, FJamAIInput* Out);
 		bool IsStalled() const { return bStalled; }
@@ -229,7 +237,10 @@ namespace JamAI
 		int Stalls = 0;
 		int StallChaser[2] = {-1, -1};
 		ERole Used[kMaxSkaters] = {};
-		int InReach[kMaxSkaters] = {};   // R-0017: frames an opposing carrier's puck has been inside this bot's blade reach
+		int InReach[kMaxSkaters] = {};
+		int Pressed[kMaxSkaters] = {};   // frames the human's blade has been within reach of this carrier
+		int DrawJumps = 0;               // diagnostics: early draw presses sent
+		int DrawPresses = 0;   // R-0017: frames an opposing carrier's puck has been inside this bot's blade reach
 		void StickPlay(const FJamAIWorld& W, int Id, FJamAIInput& In);
 		bool LastManGoalie(const FJamAIWorld& W, int Id) const;
 
@@ -238,7 +249,8 @@ namespace JamAI
 		int64_t Tick = 0;
 		FJamAIIntent TeamIntent;
 		int64_t PlayThinks = 0;       // thinks since play resumed (the drop)
-		int Faceoffs = 0;             // faceoff countdowns seen (the draw knobs hash on it)
+		int Faceoffs = 0;             // faceoff countdowns seen
+		int64_t FaceoffStart = 0;     // frame the current faceoff countdown began (the draw knobs hash on it, so they vary per match)
 		bool bWasFaceoff = false;
 
 		const FJamBotSkill& SkillOf(const FJamAIWorld& W, int Id) const;
@@ -252,7 +264,8 @@ namespace JamAI
 		double ShootRangeM = 40.0;   // bot_hockey.gd 40; bot_hockey_ai.gd 22
 		bool bPeelToMiddle = true;   // bot_hockey.gd peels off the board toward the middle; bot_hockey_ai.gd pushes straight
 		bool bBoardPeel = true;      // lane A2: peel off any board (end boards too); false = the Godot bot exactly
-		int DrawReactionFrames = 12; // lane A3 (R-0013): the scripted human takes the draw this many frames after the drop (a person's reaction)
+		int DrawReactionFrames = 12;
+		bool bForecheckLead = false;  // lane A3: skate to where an opposing carrier's puck will be (16:08 sweep: off, it cost the human 25 points) // lane A3 (R-0013): the scripted human takes the draw this many frames after the drop (a person's reaction)
 		FJamAIInput Think(const FJamAIWorld& W) const;
 	};
 

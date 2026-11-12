@@ -130,7 +130,7 @@ bool FJamStick::RunTest(const FString& Parameters)
 		const int32 O = FirstOpponent(Sim, Me);
 		Park(Sim, { Me, O });
 		Sim->SetSkater(O, FVector2D(0, 0), FVector2D::ZeroVector, 0);
-		Sim->SetSkater(Me, FVector2D(3.2, 0), FVector2D::ZeroVector, UE_DOUBLE_PI);   // the carried puck sits on the carrier's blade 1.2 m ahead; full reach from 3.2 m lands the blade on it
+		Sim->SetSkater(Me, FVector2D(2.6, 0), FVector2D::ZeroVector, UE_DOUBLE_PI);   // the carried puck sits on the carrier's blade 1.0 m ahead (reach 1.2); full aim from 2.6 m lands the blade on it
 		GivePuck(Sim, O);
 		TestEqual(TEXT("the opponent carries"), Sim->GetPuck().LastTouch, O);
 		TArray<FJamInput> In;
@@ -148,9 +148,9 @@ bool FJamStick::RunTest(const FString& Parameters)
 		UJamSim* S2 = MakeSim(G, 1, true);
 		Park(S2, { Me, O });
 		S2->SetSkater(O, FVector2D(0, 0), FVector2D::ZeroVector, 0);
-		S2->SetSkater(Me, FVector2D(3.2, 0), FVector2D::ZeroVector, UE_DOUBLE_PI);
+		S2->SetSkater(Me, FVector2D(2.9, 0), FVector2D::ZeroVector, UE_DOUBLE_PI);   // inside the arming distance (two bodies + reach + 1 m = 3.0)
 		GivePuck(S2, O);
-		In[Me].Stick = FVector2D(-0.5, 0);   // half reach: the blade stops 0.8 m short of the carried puck
+		In[Me].Stick = FVector2D(-0.5, 0);   // half aim: the blade (1.0 m out) stops 0.9 m short of the carried puck
 		In[Me].bPoke = true;
 		S2->Step(In);
 		In[Me].bPoke = false;

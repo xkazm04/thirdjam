@@ -1,0 +1,74 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "ab-pair",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T16:02:23.306Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "ab-pair",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/look-lab/base2-b-24m.jpg",
+          "width": 1920,
+          "height": 1081
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/look-lab/proof-faceoff-24m.jpg",
+          "width": 2560,
+          "height": 1442
+        }
+      ],
+      "distance": 24,
+      "thumbnails": [],
+      "prompt_chars": 3506,
+      "usage": {
+        "prompt": 3219,
+        "output": 369,
+        "thoughts": 1107,
+        "total": 4695,
+        "calls": 1
+      },
+      "cost_usd_est": 0.02415,
+      "ms": 20822,
+      "retried": false,
+      "answer": {
+        "elements": {
+          "sky": {
+            "closer": "b",
+            "why": "Still B features a textured deep-blue dome above the horizon, whereas Still A is a flat black void."
+          },
+          "ice": {
+            "closer": "b",
+            "why": "Still B uses visible, directional brush-like streaks across the surface, while Still A uses a cloudy noise texture."
+          },
+          "pools": {
+            "closer": "b",
+            "why": "The lighting steps in Still B have painted, brush-stroke edges that fit the cel style, unlike the smooth, hard-edged bands in Still A."
+          },
+          "figures": {
+            "closer": "tie",
+            "why": "Both stills use the exact same cylindrical toy models, colours, and proportions."
+          },
+          "construction": {
+            "closer": "b",
+            "why": "Still B includes the requested team-coloured emissive trims (blue left, orange right) and board rails, whereas Still A has uniform yellow trim and plain boards."
+          },
+          "outline": {
+            "closer": "b",
+            "why": "Still B applies a visible ink-like outline to the environment and figures, which is largely absent in Still A."
+          }
+        },
+        "verdict": "b",
+        "confidence": 0.8,
+        "reason": "Still B successfully implements the painted brush strokes, the blue night sky, and the specific architectural details like team-coloured trims.",
+        "loser_keeps": "Still A renders the painted ice lines without the messy post-process outline artifacts seen in Still B."
+      },
+      "markdown": "**eyes/ab-pair** A=base2-b-24m.jpg B=proof-faceoff-24m.jpg at 24 m (gemini-3.1-pro-preview, in 3219 out 369 think 1107 tokens, ~$0.0242, 20.8 s)\n- elements:\n \n \n-\n \ns\nk\ny\n:\n \nc\nl\no\ns\ne\nr\n \nb\n,\n \nw\nh\ny\n \nS\nt\ni\nl\nl\n \nB\n \nf\ne\na\nt\nu\nr\ne\ns\n \na\n \nt\ne\nx\nt\nu\nr\ne\nd\n \nd\ne\ne\np\n-\nb\nl\nu\ne\n \nd\no\nm\ne\n \na\nb\no\nv\ne\n \nt\nh\ne\n \nh\no\nr\ni\nz\no\nn\n,\n \nw\nh\ne\nr\ne\na\ns\n \nS\nt\ni\nl\nl\n \nA\n \ni\ns\n \na\n \nf\nl\na\nt\n \nb\nl\na\nc\nk\n \nv\no\ni\nd\n.\n\n\n \n \n-\n \ni\nc\ne\n:\n \nc\nl\no\ns\ne\nr\n \nb\n,\n \nw\nh\ny\n \nS\nt\ni\nl\nl\n \nB\n \nu\ns\ne\ns\n \nv\ni\ns\ni\nb\nl\ne\n,\n \nd\ni\nr\ne\nc\nt\ni\no\nn\na\nl\n \nb\nr\nu\ns\nh\n-\nl\ni\nk\ne\n \ns\nt\nr\ne\na\nk\ns\n \na\nc\nr\no\ns\ns\n \nt\nh\ne\n \ns\nu\nr\nf\na\nc\ne\n,\n \nw\nh\ni\nl\ne\n \nS\nt\ni\nl\nl\n \nA\n \nu\ns\ne\ns\n \na\n \nc\nl\no\nu\nd\ny\n \nn\no\ni\ns\ne\n \nt\ne\nx\nt\nu\nr\ne\n.\n\n\n \n \n-\n \np\no\no\nl\ns\n:\n \nc\nl\no\ns\ne\nr\n \nb\n,\n \nw\nh\ny\n \nT\nh\ne\n \nl\ni\ng\nh\nt\ni\nn\ng\n \ns\nt\ne\np\ns\n \ni\nn\n \nS\nt\ni\nl\nl\n \nB\n \nh\na\nv\ne\n \np\na\ni\nn\nt\ne\nd\n,\n \nb\nr\nu\ns\nh\n-\ns\nt\nr\no\nk\ne\n \ne\nd\ng\ne\ns\n \nt\nh\na\nt\n \nf\ni\nt\n \nt\nh\ne\n \nc\ne\nl\n \ns\nt\ny\nl\ne\n,\n \nu\nn\nl\ni\nk\ne\n \nt\nh\ne\n \ns\nm\no\no\nt\nh\n,\n \nh\na\nr\nd\n-\ne\nd\ng\ne\nd\n \nb\na\nn\nd\ns\n \ni\nn\n \nS\nt\ni\nl\nl\n \nA\n.\n\n\n \n \n-\n \nf\ni\ng\nu\nr\ne\ns\n:\n \nc\nl\no\ns\ne\nr\n \nt\ni\ne\n,\n \nw\nh\ny\n \nB\no\nt\nh\n \ns\nt\ni\nl\nl\ns\n \nu\ns\ne\n \nt\nh\ne\n \ne\nx\na\nc\nt\n \ns\na\nm\ne\n \nc\ny\nl\ni\nn\nd\nr\ni\nc\na\nl\n \nt\no\ny\n \nm\no\nd\ne\nl\ns\n,\n \nc\no\nl\no\nu\nr\ns\n,\n \na\nn\nd\n \np\nr\no\np\no\nr\nt\ni\no\nn\ns\n.\n\n\n \n \n-\n \nc\no\nn\ns\nt\nr\nu\nc\nt\ni\no\nn\n:\n \nc\nl\no\ns\ne\nr\n \nb\n,\n \nw\nh\ny\n \nS\nt\ni\nl\nl\n \nB\n \ni\nn\nc\nl\nu\nd\ne\ns\n \nt\nh\ne\n \nr\ne\nq\nu\ne\ns\nt\ne\nd\n \nt\ne\na\nm\n-\nc\no\nl\no\nu\nr\ne\nd\n \ne\nm\ni\ns\ns\ni\nv\ne\n \nt\nr\ni\nm\ns\n \n(\nb\nl\nu\ne\n \nl\ne\nf\nt\n,\n \no\nr\na\nn\ng\ne\n \nr\ni\ng\nh\nt\n)\n \na\nn\nd\n \nb\no\na\nr\nd\n \nr\na\ni\nl\ns\n,\n \nw\nh\ne\nr\ne\na\ns\n \nS\nt\ni\nl\nl\n \nA\n \nh\na\ns\n \nu\nn\ni\nf\no\nr\nm\n \ny\ne\nl\nl\no\nw\n \nt\nr\ni\nm\n \na\nn\nd\n \np\nl\na\ni\nn\n \nb\no\na\nr\nd\ns\n.\n\n\n \n \n-\n \no\nu\nt\nl\ni\nn\ne\n:\n \nc\nl\no\ns\ne\nr\n \nb\n,\n \nw\nh\ny\n \nS\nt\ni\nl\nl\n \nB\n \na\np\np\nl\ni\ne\ns\n \na\n \nv\ni\ns\ni\nb\nl\ne\n \ni\nn\nk\n-\nl\ni\nk\ne\n \no\nu\nt\nl\ni\nn\ne\n \nt\no\n \nt\nh\ne\n \ne\nn\nv\ni\nr\no\nn\nm\ne\nn\nt\n \na\nn\nd\n \nf\ni\ng\nu\nr\ne\ns\n,\n \nw\nh\ni\nc\nh\n \ni\ns\n \nl\na\nr\ng\ne\nl\ny\n \na\nb\ns\ne\nn\nt\n \ni\nn\n \nS\nt\ni\nl\nl\n \nA\n.\n- verdict: b\n- confidence: 0.8\n- reason: Still B successfully implements the painted brush strokes, the blue night sky, and the specific architectural details like team-coloured trims.\n- loser_keeps: Still A renders the painted ice lines without the messy post-process outline artifacts seen in Still B."
+    }
+  ]
+}

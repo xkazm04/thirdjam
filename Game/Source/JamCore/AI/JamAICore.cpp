@@ -111,6 +111,10 @@ namespace JamAI
 		TeamIntent = FJamAIIntent();
 		PlayThinks = 0;
 		Faceoffs = 0;
+		FaceoffStart = 0;
+		DrawJumps = 0;
+		DrawPresses = 0;
+		for (int i = 0; i < kMaxSkaters; ++i) { Pressed[i] = 0; }
 		bWasFaceoff = false;
 	}
 
@@ -166,7 +170,7 @@ namespace JamAI
 		// lane A3: reaction delay. While frozen (goal pause) the ring is cleared, so after a faceoff a bot with delay N stands
 		// for N frames; while playing, the input sent is the one decided N thinks ago.
 		constexpr int Ring = kMaxReactionFrames + 1;
-		if (W.bFaceoffPhase && !bWasFaceoff) { ++Faceoffs; }
+		if (W.bFaceoffPhase && !bWasFaceoff) { ++Faceoffs; FaceoffStart = W.Frame; }
 		bWasFaceoff = W.bFaceoffPhase;
 		if (W.bFrozen)
 		{
@@ -198,9 +202,10 @@ namespace JamAI
 				// R-0013 draw: a centre that jumps early (pokes in the countdown) loses the draw; rookie does it at its rate
 				const FJamBotSkill& K = SkillOf(W, i);
 				if (W.bFaceoffPhase && W.Skaters[i].bCentre && W.FaceoffCountdown == 6 && K.DrawJumpPct > 0
-					&& static_cast<int>((Hash11(static_cast<uint64_t>(Faceoffs) * 7 + 1, static_cast<uint64_t>(i)) + 1.0) * 50.0) < K.DrawJumpPct)
+					&& static_cast<int>((Hash11(static_cast<uint64_t>(FaceoffStart) * 7 + 1, static_cast<uint64_t>(i)) + 1.0) * 50.0) < K.DrawJumpPct)
 				{
 					In.bPoke = true;
+					++DrawJumps;
 				}
 				Hist[i][Head] = In;
 				Out[i] = In;
@@ -209,6 +214,7 @@ namespace JamAI
 			// lane A3 (R-0009): the back is the net's last line (no goalies): it keeps full speed and reacts at once at every level
 			const bool bBackRole = W.Skaters[i].Role == ERole::Back;
 			double Sc = Params.SpeedScale * (W.Skaters[i].Team != PlayerTeam && !bBackRole ? Params.RedSkill : 1.0);
+			if (W.Carrier == i) { Sc *= SkillOf(W, i).CarrySpeed; }
 			// R-0007 TeamIntent praise: +10% for the praised teammate (the sim caps |Move| at 1, so it lifts scaled-down bots only)
 			if (W.PlayerIndex >= 0 && W.Skaters[i].Team == PlayerTeam && TeamIntent.Kind == ETeamIntent::Praise && TeamIntent.Active(W.Frame)
 				&& (TeamIntent.Target < 0 || TeamIntent.Target == i))
@@ -228,9 +234,10 @@ namespace JamAI
 			{
 				const FJamBotSkill& K = SkillOf(W, i);
 				if (W.bDrawOpen && W.Skaters[i].bCentre && K.DrawPressPct > 0 && PlayThinks >= K.DrawPressFrames
-					&& static_cast<int>((Hash11(static_cast<uint64_t>(Faceoffs) * 7 + 3, static_cast<uint64_t>(i)) + 1.0) * 50.0) < K.DrawPressPct)
+					&& static_cast<int>((Hash11(static_cast<uint64_t>(FaceoffStart) * 7 + 3, static_cast<uint64_t>(i)) + 1.0) * 50.0) < K.DrawPressPct)
 				{
 					In.bPoke = true;
+					++DrawPresses;
 				}
 			}
 			Hist[i][Head] = In;
@@ -514,6 +521,21 @@ namespace JamAI
 			}
 			In.bPass = bPressure && bOpen;
 		}
+		// Director 15:16: a carrier under the human's forecheck gives the puck up after the level's frames: pass, else dump it
+		if (C == Id && W.PlayerIndex >= 0 && W.Skaters[W.PlayerIndex].Team != S.Team && !W.Skaters[W.PlayerIndex].bDown
+			&& W.Skaters[W.PlayerIndex].Pos.DistTo(W.PuckPos) <= W.SkaterRadius + W.StickReach)
+		{
+			++Pressed[Id];
+		}
+		else
+		{
+			Pressed[Id] = 0;
+		}
+		if (K.ForecheckYieldFrames >= 0 && Pressed[Id] > K.ForecheckYieldFrames)
+		{
+			In.bPass = true;
+			if (Pressed[Id] > K.ForecheckYieldFrames + 8 && S.bCanShoot) { In.bShoot = true; }
+		}
 		// bots never body-check (R-0013 fouls: no check from behind or on a skater without the puck is ever thrown)
 		In.bCheck = false;
 		// R-0019: never shoot from inside a no_shoot zone
@@ -782,6 +804,44 @@ namespace JamAI
 			if (L < 1.2 && L > 0.01)
 			{
 				Want += Dd.Normalized() * (1.2 - L) * 3.0;
+			}
+		}
+		// lane A3 (forecheck): against an opposing carrier, skate to where the puck will be (a lead of up to 1 s on its velocity, in the
+		// attacking frame) instead of lining up behind it; trailing a carrier at equal speed never closes the gap
+		if (bForecheckLead && W.Carrier >= 0 && W.Skaters[W.Carrier].Team != Me.Team)
+		{
+			const FVec2 PuckV = W.PuckVel * Sg;
+			const double Lead = Clamp(ToPuck.Length() / 10.0, 0.0, 1.0);
+			FVec2 Tgt = Puck + PuckV * Lead;
+			// the carrier's body is between us and the puck (riding the boards): come round it on the ice side
+			const FVec2 Cp = W.Skaters[W.Carrier].Pos * Sg;
+			const FVec2 ToC = Cp - Pos;
+			if (ToC.Length() < ToPuck.Length() && ToC.Dot(ToPuck) > 0.0 && std::fabs(ToC.Cross(ToPuck.Normalized())) < 1.5)
+			{
+				FVec2 Side = ToPuck.Normalized().Perp();
+				if (Side.Dot(FVec2(0.0, 0.0) - Cp) < 0.0) { Side = -Side; }   // the side that faces the middle of the rink
+				Tgt = Cp + Side * 2.5 + PuckV * Lead;
+			}
+			// never chase into either net: a target behind a goal line in front of the net mouth stays a metre out
+			// (the sim lets a skater into the net, where it got stuck for 400 frames in the 16:06 trace, regular pro seed 15)
+			if (std::fabs(Tgt.Y) < W.GoalHalfWidth + 1.5 && std::fabs(Tgt.X) > Gx - 1.0) { Tgt.X = Sign(Tgt.X) * (Gx - 1.0); }
+			Want = Tgt - Pos;
+		}
+		// lane A3 (16:12): never steer into either net mouth (the sim lets a skater into the net and it can stick there for many
+		// seconds; the 16:11 trace scan had the scripted human inside a net up to 34 s per match on the large rink)
+		{
+			FVec2 T = Pos + Want;
+			if (std::fabs(T.Y) < W.GoalHalfWidth + 1.0 && std::fabs(T.X) > Gx - 1.0)
+			{
+				T.X = Sign(T.X) * (Gx - 1.0);
+				Want = T - Pos;
+			}
+			// behind a net (between its back and the end boards) and heading for the middle: go round the side of the net,
+			// not into its back (the 16:12 trace: the human pushed into the back of the net for up to 2 minutes)
+			if (std::fabs(Pos.X) > Gx + 0.3 && std::fabs(Pos.Y) < W.GoalHalfWidth + 1.2 && Want.X * Sign(Pos.X) < 0.0)
+			{
+				const double Sy = Pos.Y >= 0.0 ? 1.0 : -1.0;
+				Want = FVec2(0.0, Sy);
 			}
 		}
 		const FVec2 Dir = Want.Length() > 0.05 ? Want.Normalized() : FVec2();

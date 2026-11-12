@@ -403,9 +403,11 @@ void AHokejGameMode::GatherInputs()
 			W.IntentFramesLeft = Intent.FramesLeft(Sim->GetFrame());
 		}
 	}
-	// lane A3 (R-0017): the pickups on the ice (only all_star bots detour for them)
+	// lane A3 (R-0017): the pickups on the ice (only all_star bots detour for them); BuildWorld already reads them from the sim's
+	// effect system, this refills from the game mode's own one in case they differ
 	if (Effects)
 	{
+		W.NumPickups = 0;
 		for (const FJamPickupOnIce& P : Effects->GetPickups())
 		{
 			if (W.NumPickups >= JamAI::FJamAIWorld::kMaxPickups) break;

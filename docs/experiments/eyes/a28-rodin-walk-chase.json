@@ -1,0 +1,77 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "figure",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T16:34:59.472Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "figure",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": "devlog/shots/20261112-173143-A-a28-rodin-walk-chase.png",
+          "width": 3200,
+          "height": 740
+        }
+      ],
+      "thumbnails": [
+        "A: 128x30"
+      ],
+      "prompt_chars": 2702,
+      "usage": {
+        "prompt": 3088,
+        "output": 346,
+        "thoughts": 0,
+        "total": 3434,
+        "calls": 1
+      },
+      "cost_usd_est": 0.01033,
+      "ms": 15568,
+      "retried": false,
+      "answer": {
+        "hockey_player": {
+          "full": 3,
+          "small": 2,
+          "parts": {
+            "stick": false,
+            "blade": false,
+            "hands": true,
+            "skates": true,
+            "helmet": true
+          },
+          "evidence": "Helmet, gloves, and skates are present, but the lack of a stick severely hurts the hockey read."
+        },
+        "toy": {
+          "full": 4,
+          "small": 3,
+          "evidence": "Chunky proportions and simple colors give a toy-like appearance, though the lighting is a bit dark."
+        },
+        "best_row": "Row 1 (f00-f07)",
+        "proportions": {
+          "head_of_height": 0.25,
+          "shoulder_of_height": 0.45,
+          "stick_of_height": 0
+        },
+        "changes": [
+          "head 0.25 of height -> 0.30",
+          "shoulder 0.45 of height -> 0.50",
+          "add stick 0.0 of height -> 0.80"
+        ],
+        "worst": [
+          "Missing hockey stick",
+          "Dark lighting obscures details",
+          "Lack of contrast between player and background"
+        ],
+        "works": [
+          "Chunky, toy-like proportions",
+          "Clear jersey color",
+          "Visible helmet and skates"
+        ]
+      },
+      "markdown": "**eyes/figure** A=20261112-173143-A-a28-rodin-walk-chase.png (gemini-3.1-pro-preview, in 3088 out 346 tokens, ~$0.0103, 15.6 s)\n- hockey_player:\n  - full: 3\n  - small: 2\n  - parts:\n    - stick: false\n    - blade: false\n    - hands: true\n    - skates: true\n    - helmet: true\n  - evidence: Helmet, gloves, and skates are present, but the lack of a stick severely hurts the hockey read.\n- toy:\n  - full: 4\n  - small: 3\n  - evidence: Chunky proportions and simple colors give a toy-like appearance, though the lighting is a bit dark.\n- best_row: Row 1 (f00-f07)\n- proportions:\n  - head_of_height: 0.25\n  - shoulder_of_height: 0.45\n  - stick_of_height: 0\n- changes: head 0.25 of height -> 0.30; shoulder 0.45 of height -> 0.50; add stick 0.0 of height -> 0.80\n- worst: Missing hockey stick; Dark lighting obscures details; Lack of contrast between player and background\n- works: Chunky, toy-like proportions; Clear jersey color; Visible helmet and skates"
+    }
+  ]
+}

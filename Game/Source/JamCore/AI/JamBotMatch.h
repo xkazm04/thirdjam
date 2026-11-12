@@ -96,6 +96,8 @@ namespace JamAI
 		int GoalFrames[16] = {};             // frame of each goal (first 16)
 		uint64_t Hashes[64] = {};            // StateHash every HashEvery frames (first 64)
 		int NumHashes = 0;
+		int DrawJumps = 0;                   // lane A3 diagnostics: early draw presses the brain sent / draws it took early
+		int DrawPresses = 0;
 	};
 
 	// Optional trace: called every TraceEvery frames with the world the bots saw and the inputs they sent.

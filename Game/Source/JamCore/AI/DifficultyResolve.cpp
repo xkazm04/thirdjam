@@ -35,6 +35,15 @@ namespace JamAI
 			}
 		}
 		ApplyDifficultyProfile(GetDifficultyProfile(Out.Level), Out.Params);
+		{
+			// R-0009 point 4: the level's large-rink offsets
+			const FJamDifficultyProfile& Prof = GetDifficultyProfile(Out.Level);
+			if (Cart.Game.Rink.LengthM >= LargeRinkM)
+			{
+				if (Prof.LargeSpeedScale > 0.0) { Out.Params.SpeedScale = Prof.LargeSpeedScale; }
+				if (Prof.LargeRedSkill > 0.0) { Out.Params.RedSkill = Prof.LargeRedSkill; }
+			}
+		}
 		// 2. explicit game.ai numbers (the loaded values, which the loader read from exactly these keys)
 		const FJamAiConfig& G = Cart.Game.Ai;
 		struct FKey { const TCHAR* Name; double* Dst; double Src; };

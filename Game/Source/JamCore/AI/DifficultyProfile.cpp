@@ -31,10 +31,13 @@ namespace JamAI
 			Opp.bIntercept = false;
 			Opp.bUseAimCone = true;
 			Opp.PokeFrames = -1;   // R-0017: rookie bots never poke
-			Opp.DrawJumpPct = 45;  // R-0013 / Director 14:45: the rookie centre jumps early in 45% of faceoffs (bot draw wins ~30%)
-			// 15:36 sweep: speed 0.95 / red 0.9 and a 60-frame stall tolerance (the stall rule lets a rookie shoot when facing the net; at 180
-			// frames rookie bots went whole matches without a shot, SeasonTakes)
-			return FJamDifficultyProfile{"rookie", 0.95, 0.9, 4.0, 25.0, 0.0, 60, Opp, true};
+			Opp.DrawJumpPct = 100; // 16:23: the rookie centre always jumps early (the human takes the opening touch)
+			// 16:28 worktree sweep (stick reach 1.2, A16's net slide), 60 seeds: regular 85 at 0.96 / 0.88, large 87 at 1.0 / 0.93.
+			// Stall 60: the stall rule is what lets a rookie shoot at all (SeasonTakes needs one AI shot per match).
+			FJamDifficultyProfile P{"rookie", 0.96, 0.88, 4.0, 25.0, 0.0, 60, Opp, true};
+			P.LargeSpeedScale = 1.0;
+			P.LargeRedSkill = 0.93;
+			return P;
 		}
 
 		FJamDifficultyProfile MakeAllStar()
@@ -51,8 +54,10 @@ namespace JamAI
 			Opp.bPassOut = true;
 			Opp.bReadLanes = true;
 			Opp.bSeekPickups = true;
-			Opp.DrawPressPct = 40; // takes 40% of draws 8 frames after the drop (bot draw wins ~65-70%)
+			Opp.DrawPressPct = 0;  // 16:18: no early press; the centre jumps early in half the faceoffs instead (faceoffs without a human touch 2 per 40 matches)
+			Opp.DrawJumpPct = 75;   // 16:25 worktree sweep: faceoffs without a human touch at most 2 per 40 matches
 			Opp.DrawPressFrames = 8;
+			Opp.ForecheckYieldFrames = 12;   // Director 15:16
 			Opp.bIntercept = true;
 			Opp.bUseAimCone = true;
 			return FJamDifficultyProfile{"all_star", 1.0, 1.0, 4.0, 25.0, 0.0, 60, Opp, false};
@@ -86,6 +91,8 @@ namespace JamAI
 			if (std::strcmp(Key, "draw_jump_pct") == 0) { K.DrawJumpPct = static_cast<int>(V); return true; }
 			if (std::strcmp(Key, "draw_press_pct") == 0) { K.DrawPressPct = static_cast<int>(V); return true; }
 			if (std::strcmp(Key, "draw_press_frames") == 0) { K.DrawPressFrames = static_cast<int>(V); return true; }
+			if (std::strcmp(Key, "carry_speed") == 0) { K.CarrySpeed = V; return true; }
+			if (std::strcmp(Key, "forecheck_yield_frames") == 0) { K.ForecheckYieldFrames = static_cast<int>(V); return true; }
 			if (std::strcmp(Key, "pass_to_human") == 0) { K.bPassToHuman = V != 0.0; return true; }
 			return false;
 		}

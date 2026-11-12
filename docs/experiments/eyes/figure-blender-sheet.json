@@ -1,0 +1,78 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "figure",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T16:06:05.875Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "figure",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/blender-sheet.png",
+          "width": 3072,
+          "height": 3072
+        }
+      ],
+      "thumbnails": [
+        "A: 128x128"
+      ],
+      "prompt_chars": 2677,
+      "usage": {
+        "prompt": 3008,
+        "output": 513,
+        "thoughts": 1261,
+        "total": 4782,
+        "calls": 1
+      },
+      "cost_usd_est": 0.0273,
+      "ms": 24069,
+      "retried": false,
+      "answer": {
+        "hockey_player": {
+          "full": 4,
+          "small": 3,
+          "parts": {
+            "stick": true,
+            "blade": true,
+            "hands": true,
+            "skates": true,
+            "helmet": true
+          },
+          "evidence": "The figure holds a stick with a distinct blade, wears a helmet with a visor, has bulky hands, and stands on black blocks representing skates."
+        },
+        "toy": {
+          "full": 4,
+          "small": 4,
+          "evidence": "The top rows use a chunky, legless cylindrical body and simple geometric spheres for the head and hands, strongly resembling a classic peg toy."
+        },
+        "best_row": "The top 'toy' row reads best because its solid, legless cylindrical body maximizes the chunky toy aesthetic, whereas the bottom 'broadcast' row is too spindly and mannequin-like.",
+        "proportions": {
+          "head_of_height": 0.25,
+          "shoulder_of_height": 0.4,
+          "stick_of_height": 0.9
+        },
+        "changes": [
+          "head 0.25 of height -> 0.35 to enhance the exaggerated toy proportions",
+          "skates are featureless black blocks -> add a distinct silver or grey blade underneath to read clearly as ice skates",
+          "stick blade is a thick, short block -> elongate and thin out the blade to look more like a hockey stick",
+          "hands are simple spheres -> add a slight cuff or thumb shape to read as bulky hockey gloves"
+        ],
+        "worst": [
+          "The skates are just black rectangular prisms with no visible blades, making them look like boots or stands.",
+          "The stick blade is too short and thick, resembling a mallet rather than a hockey stick.",
+          "The hands are featureless black spheres that fail to convey the bulk and shape of hockey gloves."
+        ],
+        "works": [
+          "The chunky, legless cylindrical body in the top row perfectly captures a peg-toy aesthetic.",
+          "The high contrast between the blue body, tan stick, and black accents keeps the figure readable even when downscaled.",
+          "The poses clearly communicate distinct hockey actions like carrying the puck and poke-checking."
+        ]
+      },
+      "markdown": "**eyes/figure** A=blender-sheet.png (gemini-3.1-pro-preview, in 3008 out 513 think 1261 tokens, ~$0.0273, 24.1 s)\n- hockey_player:\n  - full: 4\n  - small: 3\n  - parts:\n    - stick: true\n    - blade: true\n    - hands: true\n    - skates: true\n    - helmet: true\n  - evidence: The figure holds a stick with a distinct blade, wears a helmet with a visor, has bulky hands, and stands on black blocks representing skates.\n- toy:\n  - full: 4\n  - small: 4\n  - evidence: The top rows use a chunky, legless cylindrical body and simple geometric spheres for the head and hands, strongly resembling a classic peg toy.\n- best_row: The top 'toy' row reads best because its solid, legless cylindrical body maximizes the chunky toy aesthetic, whereas the bottom 'broadcast' row is too spindly and mannequin-like.\n- proportions:\n  - head_of_height: 0.25\n  - shoulder_of_height: 0.4\n  - stick_of_height: 0.9\n- changes: head 0.25 of height -> 0.35 to enhance the exaggerated toy proportions; skates are featureless black blocks -> add a distinct silver or grey blade underneath to read clearly as ice skates; stick blade is a thick, short block -> elongate and thin out the blade to look more like a hockey stick; hands are simple spheres -> add a slight cuff or thumb shape to read as bulky hockey gloves\n- worst: The skates are just black rectangular prisms with no visible blades, making them look like boots or stands.; The stick blade is too short and thick, resembling a mallet rather than a hockey stick.; The hands are featureless black spheres that fail to convey the bulk and shape of hockey gloves.\n- works: The chunky, legless cylindrical body in the top row perfectly captures a peg-toy aesthetic.; The high contrast between the blue body, tan stick, and black accents keeps the figure readable even when downscaled.; The poses clearly communicate distinct hockey actions like carrying the puck and poke-checking."
+    }
+  ]
+}

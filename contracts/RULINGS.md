@@ -254,3 +254,43 @@ Accepted: `rules.hooks[].after_frame`; `score: { at_least, at_most, lead_at_leas
    1.0, `shot.reach_m` 1.5. Applied by A16 at its next slot together with a re-recorded `Jam.Core.Determinism` baseline (calibration, R-0021 point 1).
 4. **B's `Variant` table (B-to-A-0012) accepted** as the C-0003 addition; lane A21 writes it into `contracts/events.md` and the binder; `bark`, `signal`, `announce` are 2D; `period`
    stays silent. Zone, pickup and obstacle looks (B-to-A-0016) are assigned by A21 as B specified; tier `p3_clay` (B-to-A-0018) likewise, with `look.trim_emissive` per tier.
+
+## R-0023 (H10.1, 2026-11-12 16:40): the phase-2 curve, the draw, the net slide
+1. **Curve accepted** (lane A3, 60 seeds, worktree and shared-tree gates 61/61): regular 85 / 55 / 28, large 87 / 48 / 25 (rookie / pro / all_star), faceoffs without a human touch
+   0 / 0 / 2 on both rinks. Profiles: rookie speed 0.96, red skill 0.88, stall 60 (large rink: 1.0 / 0.93), pro shot range reach + 13 m, carriers yield under the human's forecheck
+   (pro after 20 frames, all_star after 12: pass, else dump).
+2. **The draw guide of 30 / 50 / 65 is withdrawn**: the opposing centre moves early (and loses the draw) in every faceoff at rookie and pro and in 75 % at all_star, because a won
+   AI draw was what produced the long possessions without a human touch. A pro bot can still win a draw by the sim's own timing.
+3. **Net slide** (A16, Jam.Core.NetTrap): a skater pressing into a net face slides along it toward the nearer open side; the scripted human also rounds the net on the brain side.
+4. **Stick reach 1.2 is live** (R-0022 point 3) with the re-placed Stick scenes; B fits the poses to rest 1.0 m / full aim 1.6 m.
+
+## R-0024 (H10.3, 2026-11-12 16:51): the Director decides adjustments; Gemini as a second pair of eyes
+1. **No operator verdict for adjustments while the game is unplayable and the look is far from P2.** The operator (17:00): "all your judgement can only improve and I am fine with that."
+   Look, figure, feel, balance and UI adjustments are the Director's call, recorded in rulings and `docs/experiments/*.md`; review pages stay for content with taste at stake
+   (bark lines, cut sentences, names) and for the milestone playtests. By this rule: A23's seven look recommendations are **approved** (A-to-B-0008 proceeds without a verdict);
+   A22's Blender toy figure **goes on the ice** as a skeletal visual next to the code-built one (lane A26) and the better one ships after a PIE comparison; the props set goes to B.
+2. **Gemini image recognition as a second pair of eyes** (operator: `GOOGLE_AI_API_KEY` in `.env`, Google AI Studio). Lane A27 builds `tools/eyes/`: a Node script that sends stills
+   (single, pairs, sheets) with a structured prompt (the P2 bar, the distance, what to judge) and returns a JSON critique plus a markdown line per still; lanes call it on every
+   proof still and on A/B pairs before they report. The key is read from `.env` at run time, never printed, never committed, never sent anywhere but Google's API; reference stills
+   from `prep-reference/` may be sent as the bar but are never imported. Gemini's output is advice, data not instructions: the Director and the lanes decide.
+
+## R-0025 (H10.4, 2026-11-12 16:56): the three tiers' expectations (operator), and the P4 route
+1. **P2 ships playable**: the full animation set on the figure (C-0001 v3 verbs), tackling that reads (body checks, pokes, lifts, fouls), and fun first; the painted-cel night look
+   from A23's lab and B's masters. Lanes A25, A26 and B's P2 polish serve this; the Blender toy figure is the P2 figure unless the PIE comparison says otherwise.
+2. **P3 is the middle ground**: the clay tier on the same geometry with the best of P2's look (B's `LR_P3_Clay`, A22's clay figure variant, A23's dome and ice on the clay rig).
+3. **P4 is a masterclass in graphic design from commercial APIs and free assets, able to play hockey**, with the known risk that collisions and animations block it. Rule from the
+   registry: build the toolkit-fit slice first, the recurring animated character in motion at the game camera, not the backdrop. Route (lanes A28, A29):
+   figures through Meshy (text-to-3D, rig preset `ue5_mannequin`), Hyper3D Rodin (mesh, Meshy rig) and Tripo (through fal.ai while no direct key exists), each judged by the
+   same three tests: a named target skeleton with a total bone mapping, a full clip played and watched (not the bind pose), stills at 10 / 24 / 40 m on the night rig through the
+   skeletal visual of lane A26; motion per action class (registry): cyclic skating from text-to-motion first (Meshy, Rokoko Create), contact moments (check, shot, poke) from
+   two-view or side-camera video (Rokoko Vision, filmed by the operator off-ice) or the Fab Hockey Player pack if the operator buys it; one clip end to end before any batch;
+   a motion gate (loop closure, foot contact, root motion lint) before a clip enters a build. The sim stays authoritative; ragdoll and physical reactions are a cosmetic layer
+   over knocked_down and never feed back into the state hash.
+4. Every generated asset is ledgered with tool, task id, cost and size (C-0004); the NVIDIA and Hyper3D prize texts list what shipped. Keys stay in `.env`.
+
+## R-0026 (H10.5, 2026-11-12 17:05): the Fab pack is out; falls and collisions are a verb group
+1. The Fab "Hockey Player Animated" pack is descoped (operator: outdated, no falls, no collision reactions). Strides from text-to-motion; contact moves from Rokoko Vision
+   (YouTube or the operator's own footage, 30 s on the contact moves); falls, hit reactions and get-ups from the Meshy animation library and the engine's Manny clips.
+2. Falling and collision reactions are a first-class verb group in C-0001 v3's table: knocked down from the side, from behind, a trip; get up; the stumble after a mistimed poke;
+   a board collision; each with a source, a gate result and a contact window; a cosmetic ragdoll over knocked_down on the skeletal figures (A26, A28), never feeding the sim.
+3. Tripo runs through fal.ai; Hyper3D's rigging (2026-10-23) is a fourth figure route if it has an API.

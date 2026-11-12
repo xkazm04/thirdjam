@@ -68,7 +68,7 @@ struct JAMCORE_API FJamStickConfig
 {
 	GENERATED_BODY()
 	// How far the blade reaches from the skater's edge at full aim, metres.
-	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double ReachM = 1.6;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double ReachM = 1.2;   // R-0022 point 3 (was 1.6)
 	// Frames after a poke press during which the blade reaching the puck takes it cleanly.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 PokeWindowFrames = 8;
 	// Centre-to-centre distance (beyond the two bodies) within which a stick lift strips the carrier.

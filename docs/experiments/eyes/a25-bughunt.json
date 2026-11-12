@@ -1,0 +1,123 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-12T16:25:12.446Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a25/docs/experiments/img/rink/reg-corner.png",
+          "width": 2560,
+          "height": 1440
+        },
+        {
+          "label": "B",
+          "path": ".claude/worktrees/a25/docs/experiments/img/rink/reg-constr-10m.png",
+          "width": 2560,
+          "height": 1440
+        },
+        {
+          "label": "C",
+          "path": ".claude/worktrees/a25/docs/experiments/img/rink/reg-benches.png",
+          "width": 2560,
+          "height": 1440
+        },
+        {
+          "label": "D",
+          "path": ".claude/worktrees/a25/docs/experiments/img/rink/reg-goallight.png",
+          "width": 2560,
+          "height": 1440
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2337,
+      "usage": {
+        "prompt": 5133,
+        "output": 649,
+        "thoughts": 3841,
+        "total": 9623,
+        "calls": 1
+      },
+      "cost_usd_est": 0.02069,
+      "ms": 58636,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [
+              {
+                "where": "Top-left quadrant, floating in the void at approximately x=900, y=250",
+                "what": "A bright green glowing rectangular box floats isolated in midair with no mounting structure or physical support.",
+                "severity": 4,
+                "confidence": 0.95
+              },
+              {
+                "where": "Center and right quadrants, embedded within the translucent glass panels",
+                "what": "Flat solid-blue rectangular shapes appear across the glass panes, resembling untextured placeholder decals.",
+                "severity": 2,
+                "confidence": 0.8
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still B",
+            "findings": [
+              {
+                "where": "Top-right quadrant, touching the upper screen edge at x=1850, y=10",
+                "what": "The floating green glowing rectangular box appears partially cut off in the upper void without an attachment.",
+                "severity": 3,
+                "confidence": 0.95
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still C",
+            "findings": [
+              {
+                "where": "Top-left quadrant, floating in the void at x=360, y=365",
+                "what": "A bright green glowing rectangular box floats unsupported in the black void.",
+                "severity": 4,
+                "confidence": 0.95
+              },
+              {
+                "where": "Center quadrant, along the illuminated top rail of the dasher boards at x=1350",
+                "what": "The emissive strip on the top rail abruptly changes from warm orange-yellow to bright cyan-blue across a seamless edge.",
+                "severity": 3,
+                "confidence": 0.9
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still D",
+            "findings": [
+              {
+                "where": "Top-right quadrant, floating in the void at x=2230, y=390",
+                "what": "A bright green glowing rectangular box hovers unsupported in the empty black space.",
+                "severity": 4,
+                "confidence": 0.95
+              },
+              {
+                "where": "Center, extending vertically behind the goal frame crossbar",
+                "what": "The vertical goal light beam extends straight into infinity without a visible emitter, lamp fixture, or volumetric falloff at the top.",
+                "severity": 2,
+                "confidence": 0.75
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=reg-corner.png B=reg-constr-10m.png C=reg-benches.png D=reg-goallight.png (gemini-3.8-flash, in 5133 out 649 think 3841 tokens, ~$0.0207, 58.6 s)\n- stills:\n  - label: Still A; clean: false\n    - findings:\n      - where: Top-left quadrant, floating in the void at approximately x=900, y=250; what: A bright green glowing rectangular box floats isolated in midair with no mounting structure or physical support.; severity: 4; confidence: 0.95\n      - where: Center and right quadrants, embedded within the translucent glass panels; what: Flat solid-blue rectangular shapes appear across the glass panes, resembling untextured placeholder decals.; severity: 2; confidence: 0.8\n  - label: Still B; clean: false\n    - findings:\n      - where: Top-right quadrant, touching the upper screen edge at x=1850, y=10; what: The floating green glowing rectangular box appears partially cut off in the upper void without an attachment.; severity: 3; confidence: 0.95\n  - label: Still C; clean: false\n    - findings:\n      - where: Top-left quadrant, floating in the void at x=360, y=365; what: A bright green glowing rectangular box floats unsupported in the black void.; severity: 4; confidence: 0.95\n      - where: Center quadrant, along the illuminated top rail of the dasher boards at x=1350; what: The emissive strip on the top rail abruptly changes from warm orange-yellow to bright cyan-blue across a seamless edge.; severity: 3; confidence: 0.9\n  - label: Still D; clean: false\n    - findings:\n      - where: Top-right quadrant, floating in the void at x=2230, y=390; what: A bright green glowing rectangular box hovers unsupported in the empty black space.; severity: 4; confidence: 0.95\n      - where: Center, extending vertically behind the goal frame crossbar; what: The vertical goal light beam extends straight into infinity without a visible emitter, lamp fixture, or volumetric falloff at the top.; severity: 2; confidence: 0.75"
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "ab-pair",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T16:22:44.762Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "ab-pair",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a25/docs/experiments/img/rink/reg-base-24m.png",
+          "width": 2560,
+          "height": 1440
+        },
+        {
+          "label": "B",
+          "path": ".claude/worktrees/a25/docs/experiments/img/rink/reg-constr-24m.png",
+          "width": 2560,
+          "height": 1440
+        }
+      ],
+      "distance": 24,
+      "thumbnails": [],
+      "prompt_chars": 3504,
+      "usage": {
+        "prompt": 3215,
+        "output": 279,
+        "thoughts": 1801,
+        "total": 5295,
+        "calls": 1
+      },
+      "cost_usd_est": 0.03139,
+      "ms": 34007,
+      "retried": false,
+      "answer": {
+        "elements": {
+          "sky": {
+            "closer": "tie",
+            "why": "Both show a black void instead of a deep-blue night dome."
+          },
+          "ice": {
+            "closer": "tie",
+            "why": "Both use identical scuffed ice textures with brush streaks."
+          },
+          "pools": {
+            "closer": "tie",
+            "why": "Both feature the same blown-out white spotlight pools."
+          },
+          "figures": {
+            "closer": "tie",
+            "why": "Both use identical pill-shaped toy figures."
+          },
+          "construction": {
+            "closer": "b",
+            "why": "Still B includes the requested ochre kick plate and dark glass rail on the boards."
+          },
+          "outline": {
+            "closer": "tie",
+            "why": "Neither image features the requested visible ink-like outlines."
+          }
+        },
+        "verdict": "b",
+        "confidence": 0.9,
+        "reason": "Still B includes the explicitly requested board details like the kick plate and glass rail.",
+        "loser_keeps": "The cleaner ice surface without unrequested red face-off markings."
+      },
+      "markdown": "**eyes/ab-pair** A=reg-base-24m.png B=reg-constr-24m.png at 24 m (gemini-3.1-pro-preview, in 3215 out 279 think 1801 tokens, ~$0.0314, 34 s)\n- elements:\n  - sky: closer tie, why Both show a black void instead of a deep-blue night dome.\n  - ice: closer tie, why Both use identical scuffed ice textures with brush streaks.\n  - pools: closer tie, why Both feature the same blown-out white spotlight pools.\n  - figures: closer tie, why Both use identical pill-shaped toy figures.\n  - construction: closer b, why Still B includes the requested ochre kick plate and dark glass rail on the boards.\n  - outline: closer tie, why Neither image features the requested visible ink-like outlines.\n- verdict: b\n- confidence: 0.9\n- reason: Still B includes the explicitly requested board details like the kick plate and glass rail.\n- loser_keeps: The cleaner ice surface without unrequested red face-off markings."
+    }
+  ]
+}

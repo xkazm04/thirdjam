@@ -108,3 +108,19 @@
 - **clean build PASS 7fc7439** (merge of dev-b ab68c40 + answers), pushed 16:02; ledger 188 rows PASS. H9 Shipping package 15:59: 247.6 MB (`Game/Packaged/Hokej_Hokej_H9/`), every B folder cooked 100 % (A21); B's assets from the merge (LR_P3_Clay, zone/pickup looks, 11 effects, 11 sounds) cook at the next package.
 - running: A3 (brain iteration in worktree `a3`), A22 (Blender figures and props), A23 (P2 look lab, worktree editor 8011), A24 (P4 NvRTX lab, 8012). Lanes A16, A18, A21 closed.
 - B: your handoffs are answered in the files on main; A-to-B-0007 (props out, stick and hands) is open on you.
+
+## H10.1 (16:41) gate 61/61, clean build PASS cf315c2, pushed; H10 package next
+- A3's phase-2 brain and curve, A16's net slide, stick reach 1.2 (R-0022/R-0023) on main at cf315c2; gate 61 automation tests green, node 185/185, ledger PASS. NvRTX track closed and the 276 GB tree deleted (682 GB free).
+- running: A22 second figure pass (Blender), A23 P2 look lab (editor 8011). Packaging `Hokej_Hokej_H10` now: first build with B's clay rig, zone and pickup looks, 11 new effects and sounds, and the new curve.
+
+## H10.2 (16:47) H10 package 249.5 MB; look lab and Blender figures to the operator
+- `Hokej_Hokej_H10.zip` 249.5 MB (16:41, first with B's clay rig, zone and pickup looks, new effects and sounds, the new curve, stick reach 1.2). A23 look lab: seven measured recommendations, handoff A-to-B-0008 to B, proposal materials under `Game/Content/LookLab/`. A22: parametric Blender skater (toy / clay / broadcast) with 17 animations and seven props, toy variant imported under `Game/Content/Figures/` (not on the ice). Review tool gains an `image` field; page `docs/reviews/look-figures-2026-11-12.html` published for the operator.
+- next: operator verdicts on figures and look; lane A25 (rink construction bands and net frame in RinkActor) when the look verdict is in; B on A-to-B-0007 and 0008.
+
+## H10.3 (16:52) R-0024: Director's judgement replaces verdicts for adjustments; Gemini eyes
+- Operator: no verdicts for adjustments while the game is unplayable; Gemini (`GOOGLE_AI_API_KEY` in `.env`) as a second pair of eyes. Approved by the Director: A23's seven look changes (B: A-to-B-0008 proceeds, no verdict needed), the Blender toy figure goes on the ice for a PIE comparison (A26), rink construction in code (A25), the eyes tool (A27). Three lanes started 17:08 in their own worktrees.
+
+## H10.5 (17:12) eyes tool in; queue for the next lanes
+- A27 done: `tools/eyes` (Gemini 3.1 Pro for judgement, 3.8 Flash for batch, about $0.03 per still), six presets, findings in `docs/experiments/EYES.md`. Lanes A25 and A26 use it on their proofs.
+- Queued (editor cap, after A25/A26 land): **A30 HUD pass 2** from EYES.md: mark which skater is yours, show how a faceoff is won, bark drawn once (bubble or strip), own-net marker off the screen edge; **A22 pass 3** figure proportions (head 0.35, blade line, thinner longer blade, cuffs) only if A26's comparison picks the skeletal figure.
+- Operator: Fab pack descoped (R-0026); waiting for A29's three YouTube candidates for Rokoko Vision.

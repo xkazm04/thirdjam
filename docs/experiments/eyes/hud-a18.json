@@ -1,0 +1,414 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "hud",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-12T16:07:36.809Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "hud",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "devlog/shots/20261112-153300-A-a18-hud-play-1080p.png",
+          "width": 1920,
+          "height": 1082
+        },
+        {
+          "label": "B",
+          "path": "devlog/shots/20261112-153300-A-a18-hud-faceoff-720p.png",
+          "width": 1280,
+          "height": 722
+        },
+        {
+          "label": "C",
+          "path": "devlog/shots/20261112-153300-A-a18-hud-controls-720p.png",
+          "width": 1280,
+          "height": 722
+        },
+        {
+          "label": "D",
+          "path": "devlog/shots/20261112-153300-A-a18-call-card-1080p.png",
+          "width": 1920,
+          "height": 1082
+        },
+        {
+          "label": "E",
+          "path": "devlog/shots/20261112-153300-A-a18-hud-effects-bark-1080p.png",
+          "width": 1920,
+          "height": 1082
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2604,
+      "usage": {
+        "prompt": 14609,
+        "output": 5589,
+        "thoughts": 4514,
+        "total": 24712,
+        "calls": 2
+      },
+      "cost_usd_est": 0.03761,
+      "ms": 88458,
+      "retried": true,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "elements": [
+              {
+                "name": "Blue score plate",
+                "position": "top center-left",
+                "legible": true,
+                "text": "00"
+              },
+              {
+                "name": "Period status banner",
+                "position": "top center",
+                "legible": true,
+                "text": "PERIOD 1: FIRST TO 3"
+              },
+              {
+                "name": "Orange score plate",
+                "position": "top center-right",
+                "legible": true,
+                "text": "00"
+              },
+              {
+                "name": "Target net distance marker",
+                "position": "mid left edge",
+                "legible": true,
+                "text": "7 m"
+              },
+              {
+                "name": "Own net distance marker",
+                "position": "mid right edge",
+                "legible": true,
+                "text": "own 86 m"
+              },
+              {
+                "name": "Director call readiness prompt",
+                "position": "bottom left corner",
+                "legible": true,
+                "text": "ESC / START DIRECTOR'S CALL READY"
+              },
+              {
+                "name": "Radar mini-rink",
+                "position": "bottom right corner",
+                "legible": true,
+                "text": "none"
+              }
+            ],
+            "collisions": [
+              "Own net distance marker sits flush against the extreme right screen border",
+              "Director call prompt is pushed tightly against the bottom-left viewport boundary"
+            ],
+            "missing": [
+              "No player pointer or indicator showing which skater is human-controlled",
+              "No on-screen control mapping or action prompts for passing or shooting"
+            ],
+            "smallest_text_px": 12,
+            "legibility": 4
+          },
+          {
+            "label": "Still B",
+            "elements": [
+              {
+                "name": "Blue score plate",
+                "position": "top center-left",
+                "legible": true,
+                "text": "00"
+              },
+              {
+                "name": "Period status banner",
+                "position": "top center",
+                "legible": true,
+                "text": "PERIOD 1: FIRST TO 3"
+              },
+              {
+                "name": "Orange score plate",
+                "position": "top center-right",
+                "legible": true,
+                "text": "00"
+              },
+              {
+                "name": "Own net marker",
+                "position": "top center over far goal",
+                "legible": true,
+                "text": "own 42 m"
+              },
+              {
+                "name": "Target net distance marker",
+                "position": "mid right edge",
+                "legible": true,
+                "text": "48 m"
+              },
+              {
+                "name": "Speech bubble",
+                "position": "center screen above faceoff dot",
+                "legible": true,
+                "text": "Why does the puck always find the human first?"
+              },
+              {
+                "name": "Faceoff countdown reticle",
+                "position": "center foreground over skaters",
+                "legible": true,
+                "text": "6"
+              },
+              {
+                "name": "Bark subtitle strip",
+                "position": "bottom center",
+                "legible": true,
+                "text": "#3 Why does the puck always find the human first?"
+              },
+              {
+                "name": "Director call readiness prompt",
+                "position": "bottom left corner",
+                "legible": true,
+                "text": "ESC / START DIRECTOR'S CALL READY"
+              },
+              {
+                "name": "Radar mini-rink",
+                "position": "bottom right corner",
+                "legible": true,
+                "text": "none"
+              }
+            ],
+            "collisions": [
+              "Countdown reticle overlaps directly across both blue skater 1 and orange skater 11",
+              "Speech bubble and bottom subtitle banner simultaneously display duplicate text"
+            ],
+            "missing": [
+              "No faceoff input instructions showing how to contest the puck drop",
+              "No indicator confirming which skater the player controls"
+            ],
+            "smallest_text_px": 9,
+            "legibility": 3
+          },
+          {
+            "label": "Still C",
+            "elements": [
+              {
+                "name": "Blue score plate",
+                "position": "top center-left",
+                "legible": true,
+                "text": "00"
+              },
+              {
+                "name": "Period status banner",
+                "position": "top center",
+                "legible": true,
+                "text": "PERIOD 1: FIRST TO 3"
+              },
+              {
+                "name": "Orange score plate",
+                "position": "top center-right",
+                "legible": true,
+                "text": "00"
+              },
+              {
+                "name": "Target net distance marker",
+                "position": "upper left edge",
+                "legible": true,
+                "text": "55 m"
+              },
+              {
+                "name": "Own net distance marker",
+                "position": "mid-lower left edge",
+                "legible": true,
+                "text": "own 31 m"
+              },
+              {
+                "name": "Controls strip",
+                "position": "bottom center",
+                "legible": true,
+                "text": "MOVE WASD / L-STICK SHOOT SPACE / A CHECK SHIFT / B BRAKE CTRL / LT PAUSE ESC"
+              },
+              {
+                "name": "Director call readiness prompt",
+                "position": "bottom left corner",
+                "legible": true,
+                "text": "ESC / START DIRECTOR'S CALL READY"
+              },
+              {
+                "name": "Radar mini-rink",
+                "position": "bottom right corner",
+                "legible": true,
+                "text": "none"
+              }
+            ],
+            "collisions": [
+              "Controls strip overlaps right over the ice close to the bottom screen edge",
+              "Target net distance marker at 55 m is clipped near the upper left frame boundary"
+            ],
+            "missing": [
+              "No indicator distinguishing the active user player from teammate bots",
+              "No possession indicator showing who currently controls the puck"
+            ],
+            "smallest_text_px": 9,
+            "legibility": 4
+          },
+          {
+            "label": "Still D",
+            "elements": [
+              {
+                "name": "Blue score plate",
+                "position": "top center-left",
+                "legible": true,
+                "text": "00"
+              },
+              {
+                "name": "Period status banner",
+                "position": "top center",
+                "legible": true,
+                "text": "PERIOD 1: FIRST TO 3"
+              },
+              {
+                "name": "Orange score plate",
+                "position": "top center-right",
+                "legible": true,
+                "text": "00"
+              },
+              {
+                "name": "Own net marker",
+                "position": "top center behind card",
+                "legible": false,
+                "text": "own 47 m"
+              },
+              {
+                "name": "Target net distance marker",
+                "position": "mid left edge",
+                "legible": true,
+                "text": "35 m"
+              },
+              {
+                "name": "Director call card header",
+                "position": "center screen card top",
+                "legible": true,
+                "text": "DIRECTOR'S CALL - PERIOD 1"
+              },
+              {
+                "name": "Director call card sliders",
+                "position": "center screen card body",
+                "legible": true,
+                "text": "SKATER SPEED 11 SHOT POWER 18 ICE FRICTION 0.015 OPPONENTS' SKILL 1 TURN RATE 5"
+              },
+              {
+                "name": "Director call card buttons",
+                "position": "center screen card bottom",
+                "legible": true,
+                "text": "APPLY BACK"
+              },
+              {
+                "name": "Director call readiness prompt",
+                "position": "bottom left corner",
+                "legible": true,
+                "text": "ESC / START DIRECTOR'S CALL READY"
+              },
+              {
+                "name": "Radar mini-rink",
+                "position": "bottom right corner",
+                "legible": true,
+                "text": "none"
+              }
+            ],
+            "collisions": [
+              "Director call card completely covers the center ice and skaters",
+              "Director call card header obscures the own net 47 m marker and far net"
+            ],
+            "missing": [
+              "No game pause state indicator clarifying whether gameplay is active behind modal",
+              "No controller button prompt icons on the Apply and Back modal buttons"
+            ],
+            "smallest_text_px": 11,
+            "legibility": 3
+          },
+          {
+            "label": "Still E",
+            "elements": [
+              {
+                "name": "Blue score plate",
+                "position": "top center-left",
+                "legible": true,
+                "text": "00"
+              },
+              {
+                "name": "Period status banner",
+                "position": "top center",
+                "legible": true,
+                "text": "PERIOD 1: FIRST TO 3"
+              },
+              {
+                "name": "Orange score plate",
+                "position": "top center-right",
+                "legible": true,
+                "text": "00"
+              },
+              {
+                "name": "Own net marker",
+                "position": "top center over goal",
+                "legible": true,
+                "text": "own 65 m"
+              },
+              {
+                "name": "Speed modifier icon",
+                "position": "top center directly below own net marker",
+                "legible": true,
+                "text": "speed"
+              },
+              {
+                "name": "Target net distance marker",
+                "position": "mid left edge",
+                "legible": true,
+                "text": "19 m"
+              },
+              {
+                "name": "Speech bubble",
+                "position": "center screen above skaters",
+                "legible": true,
+                "text": "Nobody on this line reads a play anymore"
+              },
+              {
+                "name": "Faceoff countdown reticle",
+                "position": "center foreground over skaters",
+                "legible": true,
+                "text": "5"
+              },
+              {
+                "name": "Bark subtitle strip",
+                "position": "bottom center",
+                "legible": true,
+                "text": "#3 Nobody on this line reads a play anymore"
+              },
+              {
+                "name": "Director call readiness prompt",
+                "position": "bottom left corner",
+                "legible": true,
+                "text": "ESC / START DIRECTOR'S CALL READY"
+              },
+              {
+                "name": "Radar mini-rink",
+                "position": "bottom right corner",
+                "legible": true,
+                "text": "none"
+              }
+            ],
+            "collisions": [
+              "Faceoff countdown reticle covers blue skater 1 torso and stick",
+              "Speech bubble and bottom subtitle banner simultaneously display duplicate text"
+            ],
+            "missing": [
+              "No input prompt explaining how to win or contest the faceoff",
+              "No indicator confirming which skater is player-controlled"
+            ],
+            "smallest_text_px": 11,
+            "legibility": 3
+          }
+        ]
+      },
+      "markdown": "**eyes/hud** A=20261112-153300-A-a18-hud-play-1080p.png B=20261112-153300-A-a18-hud-faceoff-720p.png C=20261112-153300-A-a18-hud-controls-720p.png D=20261112-153300-A-a18-call-card-1080p.png E=20261112-153300-A-a18-hud-effects-bark-1080p.png (gemini-3.8-flash, in 14609 out 5589 think 4514 tokens, ~$0.0376, 88.5 s, 1 retry)\n- stills:\n  - label: Still A; smallest_text_px: 12; legibility: 4\n    - elements:\n      - name: Blue score plate; position: top center-left; legible: true; text: 00\n      - name: Period status banner; position: top center; legible: true; text: PERIOD 1: FIRST TO 3\n      - name: Orange score plate; position: top center-right; legible: true; text: 00\n      - name: Target net distance marker; position: mid left edge; legible: true; text: 7 m\n      - name: Own net distance marker; position: mid right edge; legible: true; text: own 86 m\n      - name: Director call readiness prompt; position: bottom left corner; legible: true; text: ESC / START DIRECTOR'S CALL READY\n      - name: Radar mini-rink; position: bottom right corner; legible: true; text: none\n    - collisions: Own net distance marker sits flush against the extreme right screen border; Director call prompt is pushed tightly against the bottom-left viewport boundary\n    - missing: No player pointer or indicator showing which skater is human-controlled; No on-screen control mapping or action prompts for passing or shooting\n  - label: Still B; smallest_text_px: 9; legibility: 3\n    - elements:\n      - name: Blue score plate; position: top center-left; legible: true; text: 00\n      - name: Period status banner; position: top center; legible: true; text: PERIOD 1: FIRST TO 3\n      - name: Orange score plate; position: top center-right; legible: true; text: 00\n      - name: Own net marker; position: top center over far goal; legible: true; text: own 42 m\n      - name: Target net distance marker; position: mid right edge; legible: true; text: 48 m\n      - name: Speech bubble; position: center screen above faceoff dot; legible: true; text: Why does the puck always find the human first?\n      - name: Faceoff countdown reticle; position: center foreground over skaters; legible: true; text: 6\n      - name: Bark subtitle strip; position: bottom center; legible: true; text: #3 Why does the puck always find the human first?\n      - name: Director call readiness prompt; position: bottom left corner; legible: true; text: ESC / START DIRECTOR'S CALL READY\n      - name: Radar mini-rink; position: bottom right corner; legible: true; text: none\n    - collisions: Countdown reticle overlaps directly across both blue skater 1 and orange skater 11; Speech bubble and bottom subtitle banner simultaneously display duplicate text\n    - missing: No faceoff input instructions showing how to contest the puck drop; No indicator confirming which skater the player controls\n  - label: Still C; smallest_text_px: 9; legibility: 4\n    - elements:\n      - name: Blue score plate; position: top center-left; legible: true; text: 00\n      - name: Period status banner; position: top center; legible: true; text: PERIOD 1: FIRST TO 3\n      - name: Orange score plate; position: top center-right; legible: true; text: 00\n      - name: Target net distance marker; position: upper left edge; legible: true; text: 55 m\n      - name: Own net distance marker; position: mid-lower left edge; legible: true; text: own 31 m\n      - name: Controls strip; position: bottom center; legible: true; text: MOVE WASD / L-STICK SHOOT SPACE / A CHECK SHIFT / B BRAKE CTRL / LT PAUSE ESC\n      - name: Director call readiness prompt; position: bottom left corner; legible: true; text: ESC / START DIRECTOR'S CALL READY\n      - name: Radar mini-rink; position: bottom right corner; legible: true; text: none\n    - collisions: Controls strip overlaps right over the ice close to the bottom screen edge; Target net distance marker at 55 m is clipped near the upper left frame boundary\n    - missing: No indicator distinguishing the active user player from teammate bots; No possession indicator showing who currently controls the puck\n  - label: Still D; smallest_text_px: 11; legibility: 3\n    - elements:\n      - name: Blue score plate; position: top center-left; legible: true; text: 00\n      - name: Period status banner; position: top center; legible: true; text: PERIOD 1: FIRST TO 3\n      - name: Orange score plate; position: top center-right; legible: true; text: 00\n      - name: Own net marker; position: top center behind card; legible: false; text: own 47 m\n      - name: Target net distance marker; position: mid left edge; legible: true; text: 35 m\n      - name: Director call card header; position: center screen card top; legible: true; text: DIRECTOR'S CALL - PERIOD 1\n      - name: Director call card sliders; position: center screen card body; legible: true; text: SKATER SPEED 11 SHOT POWER 18 ICE FRICTION 0.015 OPPONENTS' SKILL 1 TURN RATE 5\n      - name: Director call card buttons; position: center screen card bottom; legible: true; text: APPLY BACK\n      - name: Director call readiness prompt; position: bottom left corner; legible: true; text: ESC / START DIRECTOR'S CALL READY\n      - name: Radar mini-rink; position: bottom right corner; legible: true; text: none\n    - collisions: Director call card completely covers the center ice and skaters; Director call card header obscures the own net 47 m marker and far net\n    - missing: No game pause state indicator clarifying whether gameplay is active behind modal; No controller button prompt icons on the Apply and Back modal buttons\n  - label: Still E; smallest_text_px: 11; legibility: 3\n    - elements:\n      - name: Blue score plate; position: top center-left; legible: true; text: 00\n      - name: Period status banner; position: top center; legible: true; text: PERIOD 1: FIRST TO 3\n      - name: Orange score plate; position: top center-right; legible: true; text: 00\n      - name: Own net marker; position: top center over goal; legible: true; text: own 65 m\n      - name: Speed modifier icon; position: top center directly below own net marker; legible: true; text: speed\n      - name: Target net distance marker; position: mid left edge; legible: true; text: 19 m\n      - name: Speech bubble; position: center screen above skaters; legible: true; text: Nobody on this line reads a play anymore\n      - name: Faceoff countdown reticle; position: center foreground over skaters; legible: true; text: 5\n      - name: Bark subtitle strip; position: bottom center; legible: true; text: #3 Nobody on this line reads a play anymore\n      - name: Director call readiness prompt; position: bottom left corner; legible: true; text: ESC / START DIRECTOR'S CALL READY\n      - name: Radar mini-rink; position: bottom right corner; legible: true; text: none\n    - collisions: Faceoff countdown reticle covers blue skater 1 torso and stick; Speech bubble and bottom subtitle banner simultaneously display duplicate text\n    - missing: No input prompt explaining how to win or contest the faceoff; No indicator confirming which skater is player-controlled"
+    }
+  ]
+}

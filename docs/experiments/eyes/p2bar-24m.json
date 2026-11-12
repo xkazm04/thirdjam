@@ -1,0 +1,123 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "p2-bar",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T16:04:50.092Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "p2-bar",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/look-lab/proof-faceoff-24m.jpg",
+          "width": 2560,
+          "height": 1442
+        }
+      ],
+      "distance": 24,
+      "bar": "path-p2-t2.png",
+      "thumbnails": [],
+      "prompt_chars": 3432,
+      "usage": {
+        "prompt": 3135,
+        "output": 360,
+        "thoughts": 1946,
+        "total": 5441,
+        "calls": 1
+      },
+      "cost_usd_est": 0.03394,
+      "ms": 21679,
+      "retried": false,
+      "answer": {
+        "score": 3,
+        "gaps": [
+          {
+            "rank": 1,
+            "element": "figures",
+            "gap": "The skaters are primitive capsules with tiny spheres, completely lacking the chunky toy proportions, big hands, and visible stick blades.",
+            "change": "Replace the capsule placeholders with the actual chunky toy character meshes."
+          },
+          {
+            "rank": 2,
+            "element": "pools",
+            "gap": "The spotlights create harsh, noisy, concentric rings on the ice instead of soft light pools over painted brush streaks.",
+            "change": "Soften the spotlight penumbra falloff and replace the procedural ice noise with a hand-painted brush-streak texture."
+          },
+          {
+            "rank": 3,
+            "element": "sky",
+            "gap": "The background is a black void filled with literal 3D movie-set props (crane, lights) instead of a painted deep-blue night dome.",
+            "change": "Delete the 3D props outside the boards and add a deep-blue unlit sky dome mesh."
+          }
+        ],
+        "works": [
+          "The deep blue and warm orange jersey colours separate clearly on the ice.",
+          "The rule of no crowds, goalies, or referees is strictly followed.",
+          "The far net is placed correctly and is red."
+        ],
+        "lead_sentence": "This still looks like a greybox blockout; we need to swap in the actual toy character meshes, smooth out those harsh lighting bands, and add the painted sky dome before we can properly evaluate the art style."
+      },
+      "markdown": "**eyes/p2-bar** A=proof-faceoff-24m.jpg at 24 m (gemini-3.1-pro-preview, in 3135 out 360 think 1946 tokens, ~$0.0339, 21.7 s)\n- score: 3\n- gaps:\n  - rank: 1; element: figures; gap: The skaters are primitive capsules with tiny spheres, completely lacking the chunky toy proportions, big hands, and visible stick blades.; change: Replace the capsule placeholders with the actual chunky toy character meshes.\n  - rank: 2; element: pools; gap: The spotlights create harsh, noisy, concentric rings on the ice instead of soft light pools over painted brush streaks.; change: Soften the spotlight penumbra falloff and replace the procedural ice noise with a hand-painted brush-streak texture.\n  - rank: 3; element: sky; gap: The background is a black void filled with literal 3D movie-set props (crane, lights) instead of a painted deep-blue night dome.; change: Delete the 3D props outside the boards and add a deep-blue unlit sky dome mesh.\n- works: The deep blue and warm orange jersey colours separate clearly on the ice.; The rule of no crowds, goalies, or referees is strictly followed.; The far net is placed correctly and is red.\n- lead_sentence: This still looks like a greybox blockout; we need to swap in the actual toy character meshes, smooth out those harsh lighting bands, and add the painted sky dome before we can properly evaluate the art style."
+    },
+    {
+      "ok": true,
+      "preset": "p2-bar",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/look-lab/base2-b-24m.jpg",
+          "width": 1920,
+          "height": 1081
+        }
+      ],
+      "distance": 24,
+      "bar": "path-p2-t2.png",
+      "thumbnails": [],
+      "prompt_chars": 3426,
+      "usage": {
+        "prompt": 3135,
+        "output": 367,
+        "thoughts": 2037,
+        "total": 5539,
+        "calls": 1
+      },
+      "cost_usd_est": 0.03512,
+      "ms": 26187,
+      "retried": false,
+      "answer": {
+        "score": 2,
+        "gaps": [
+          {
+            "rank": 1,
+            "element": "figures",
+            "gap": "Players are represented by basic capsule primitives without heads, limbs, or outlines, rather than the required chunky toy figures.",
+            "change": "Replace the placeholder capsule meshes with the chunky toy character models featuring round heads and big hands."
+          },
+          {
+            "rank": 2,
+            "element": "sky",
+            "gap": "The environment is a pure black void exposing prototype film-set props instead of the required deep-blue night dome.",
+            "change": "Add a deep-blue skybox dome above a dark ceiling line and delete the placeholder film-set props."
+          },
+          {
+            "rank": 3,
+            "element": "pools",
+            "gap": "The ice is lit by three harsh, concentrically banded light pools instead of four soft, shadowed spot cones.",
+            "change": "Change the lighting setup to four spotlights and smooth their falloff gradients to create soft pools without harsh banding."
+          }
+        ],
+        "works": [
+          "The 3-on-3 player count with no goalies, referees, or crowd is correct.",
+          "The primary team colors (deep blue and warm orange) are established on the player proxies.",
+          "The basic layout of the rink with standard ice markings is in place."
+        ],
+        "lead_sentence": "This is clearly still a greybox blockout; we need to swap these capsules for our actual toy character models and replace the black void with our painted night skybox before we can meaningfully evaluate the art direction."
+      },
+      "markdown": "**eyes/p2-bar** A=base2-b-24m.jpg at 24 m (gemini-3.1-pro-preview, in 3135 out 367 think 2037 tokens, ~$0.0351, 26.2 s)\n- score: 2\n- gaps:\n  - rank: 1; element: figures; gap: Players are represented by basic capsule primitives without heads, limbs, or outlines, rather than the required chunky toy figures.; change: Replace the placeholder capsule meshes with the chunky toy character models featuring round heads and big hands.\n  - rank: 2; element: sky; gap: The environment is a pure black void exposing prototype film-set props instead of the required deep-blue night dome.; change: Add a deep-blue skybox dome above a dark ceiling line and delete the placeholder film-set props.\n  - rank: 3; element: pools; gap: The ice is lit by three harsh, concentrically banded light pools instead of four soft, shadowed spot cones.; change: Change the lighting setup to four spotlights and smooth their falloff gradients to create soft pools without harsh banding.\n- works: The 3-on-3 player count with no goalies, referees, or crowd is correct.; The primary team colors (deep blue and warm orange) are established on the player proxies.; The basic layout of the rink with standard ice markings is in place.\n- lead_sentence: This is clearly still a greybox blockout; we need to swap these capsules for our actual toy character models and replace the black void with our painted night skybox before we can meaningfully evaluate the art direction."
+    }
+  ]
+}

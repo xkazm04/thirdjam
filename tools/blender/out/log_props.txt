@@ -1,0 +1,35 @@
+TBBmalloc: skip allocation functions replacement in ucrtbase.dll: unknown prologue for function _msize
+Blender 4.2.1 LTS (hash 396f546c9d82 built 2024-08-20 00:50:53)
+Fra:1 Mem:64.29M (Peak 68.00M) | Time:00:00.42 | Rendering 1 / 24 samples
+Fra:1 Mem:64.30M (Peak 68.00M) | Time:00:00.49 | Rendering 24 / 24 samples
+Saved: 'C:\Users\kazda\kiro\thirdjam\tools\blender\out\render\props_overview.png'
+Time: 00:00.58 (Saving: 00:00.06)
+
+bl_ext.user_default.ComfyUI-BlenderAI-node Register cost 0.0000s
+Func from_cache: 1.1909s
+Func csv_to_trie: 1.1909s
+Warning: No mesh data to join
+
+FBX export starting... 'C:\\Users\\kazda\\kiro\\thirdjam\\tools\\blender\\out\\SM_Net.fbx'
+export finished in 0.0000 sec.
+
+FBX export starting... 'C:\\Users\\kazda\\kiro\\thirdjam\\tools\\blender\\out\\SM_Board_Segment.fbx'
+export finished in 0.0000 sec.
+
+FBX export starting... 'C:\\Users\\kazda\\kiro\\thirdjam\\tools\\blender\\out\\SM_Bench.fbx'
+export finished in 0.0156 sec.
+
+FBX export starting... 'C:\\Users\\kazda\\kiro\\thirdjam\\tools\\blender\\out\\SM_Puck.fbx'
+export finished in 0.0000 sec.
+
+FBX export starting... 'C:\\Users\\kazda\\kiro\\thirdjam\\tools\\blender\\out\\SM_GoalLight.fbx'
+export finished in 0.0000 sec.
+
+FBX export starting... 'C:\\Users\\kazda\\kiro\\thirdjam\\tools\\blender\\out\\SM_Pedestal_Round.fbx'
+export finished in 0.0000 sec.
+
+FBX export starting... 'C:\\Users\\kazda\\kiro\\thirdjam\\tools\\blender\\out\\SM_Pedestal_Hex.fbx'
+export finished in 0.0000 sec.
+A22 props.py PASS {"SM_Net": {"triangles": 316, "fbx_mb": 0.02, "dimensions_m": [1.6, 4.1, 1.576]}, "SM_Board_Segment": {"triangles": 72, "fbx_mb": 0.02, "dimensions_m": [0.12, 2.0, 2.26]}, "SM_Bench": {"triangles": 72, "fbx_mb": 0.02, "dimensions_m": [0.43, 2.4, 0.9]}, "SM_Puck": {"triangles": 380, "fbx_mb": 0.02, "dimensions_m": [0.24, 0.24, 0.08]}, "SM_GoalLight": {"triangles": 356, "fbx_mb": 0.03, "dimensions_m": [0.376, 0.252, 0.328]}, "SM_Pedestal_Round": {"triangles": 276, "fbx_mb": 0.02, "dimensions_m": [0.99, 0.99, 0.135]}, "SM_Pedestal_Hex": {"triangles": 60, "fbx_mb": 0.02, "dimensions_m": [0.857, 0.99, 0.135]}, "build_s": 0.1, "atlas": "T_Props_Atlas.png 1024x1024 RGBA", "render_s": 0.6, "total_s": 1.6}
+
+Blender quit
