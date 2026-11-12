@@ -145,3 +145,83 @@ good generated figure on looks. Use it if T-B2 or T-B1 stall on rig or retarget 
 1. Queue S4 for import (about 20 min of B5's editor time) as the "ours" fallback, or keep it on disk only.
 2. If it is imported: should `Helmet` and `Gloves` also take `TeamColour`, and is the back-UV number approach wanted (who builds the digit material)?
 3. Should I add `Fall_Forward`, `Skate_Left/Right` lean clips and a crossover? Each is about 10 min of pose-table work.
+
+## Polish pass (lead's request, 11:26 to 11:35)
+
+Same rules: Blender only, nothing in Unreal. All Unreal behaviour is still **unverified until lane B5 imports it**.
+
+**Triangles: 5,932** (body 5,736 + stick 196; cap 6k). Still 0 textures, 9 slots, 24 bones (unchanged), rest height 172.7 cm. To stay under 6k
+I lowered the shoulder-pad spheres to 12x8 segments.
+
+### What changed
+
+1. **Toy ball joints**, each weighted to the parent bone: shoulder balls on `clavicle_l/r`, elbow balls moved to `upperarm_l/r`, hip balls
+   on `pelvis`, knee balls on `thigh_l/r` (the knee pads stay on the calves). The gaps at bent joints are closed in every sheet.
+   **Arms in the helmet are fixed by pose, not by head size.** A measurement counts arm and glove vertices inside the helmet volume on every
+   frame. It is now **0 for every frame** of `Shot_Slap`, `Celebrate`, `Check`, `Stride` and `Fall_Forward`; before the fix it was 36 in the slap
+   and 40 in Celebrate. The fix needed extra keys: in Celebrate the hands go out in front first, then up; in the slap wind-up the hands come up
+   on the left side and the downswing is routed outside the head; the slap follow-through ends lower and wider.
+2. **Face**: two dark eye dots between the cage bars plus a dark visor line under the helmet brim (turntable, front views). These are 3 small
+   pieces in the existing near-black `Pads` slot. No new slot was added: `Skin` and `Helmet` are light colours, so they cannot make dark dots.
+3. **New clips**: `Fall_Forward` (0.6 s, ends face down with the head turned, arms out); `Lean_Left` / `Lean_Right` (2-frame holds of the glide
+   carve: 25 deg body roll, skates out to the side of the turn on edge, inside knee bent more, stick trailing behind on the outside, for blending
+   by turn rate); `Crossover_Left` / `Crossover_Right` (40-frame in-place loops: the outside skate steps over, the inside skate pushes under,
+   built on the lean pose); and a new **`Check`** (0.5 s: wind-back with the right shoulder and elbow pulled back, then a step in with the right
+   skate, a drive up 16 cm, and the right shoulder and elbow leading).
+4. **Stride from behind**: the stick is carried wide on the right (grip 26 to 32 cm outside the shoulder, blade turned out). The 40 px chase-view
+   rows show the stick to the right of the body on every frame. The side push (leg out on either side) and the free-arm swing read at 40 px.
+5. **`export\SK_Skater_S4_loopcut.fbx`**: looping clips without the repeated last frame (Stride 60, Glide 120, Idle_Faceoff 120, crossovers 40
+   frames). The 2-frame leans keep both frames. `SK_Skater_S4.fbx` (first frame repeated at the end) is still exported next to it.
+
+### Clip table (measured on the re-imported FBX files)
+
+| Clip | Frames, main FBX | Frames, loopcut | Pelvis x,y max | Seam first-last, main | Seam, loopcut (one frame step) | Lowest point |
+|---|---|---|---|---|---|---|
+| Idle_Faceoff | 121 | 120 | 0.000 cm | **0.000 cm** | 0.004 cm | 0.04 cm |
+| Stride | 61 | 60 | 0.000 | **0.000** | 0.611 | -0.12 |
+| Glide | 121 | 120 | 0.000 | **0.000** | 0.004 | 0.0 |
+| Crossover_Left | 41 | 40 | 0.000 | **0.000** | 1.402 | 0.23 |
+| Crossover_Right | 41 | 40 | 0.000 | **0.000** | 1.402 | -0.39 |
+| Lean_Left (hold) | 2 | 2 | 0.000 | 0.000 | 0.000 | 1.2 |
+| Lean_Right (hold) | 2 | 2 | 0.000 | 0.000 | 0.000 | 1.17 |
+| Stop | 37 | 37 | 0.000 | one-shot | | 0.0 |
+| Shot_Slap | 43 | 43 | 0.000 | one-shot | | 0.0 |
+| Shot_Wrist | 22 | 22 | 0.000 | one-shot | | 0.0 |
+| Check | 31 | 31 | 0.000 | one-shot | | 0.0 |
+| Fall | 37 | 37 | 0.000 | one-shot, ends flat on the back | | 0.0 |
+| Fall_Forward | 37 | 37 | 0.000 | one-shot, ends flat face down | | -1.14 |
+| GetUp | 73 | 73 | 0.000 | one-shot (from the back fall) | | 0.0 |
+| Celebrate | 73 | 73 | 0.000 | one-shot | | 0.0 |
+
+Root motion is 0.000 cm in every take of both files. The "loopcut seam" column is the motion over one frame (last frame to first), which is the
+wanted continuation, not a jump. Knock-down: the visual picks `Fall` or `Fall_Forward`, whichever is nearer to (DirX, DirZ) relative to facing,
+and yaws the mesh by at most 90 deg for the rest. There is no forward `GetUp` yet: from `Fall_Forward` the visual would need either a short
+roll-over blend into `GetUp` or a `GetUp_Front` clip (about 10 min).
+
+### Contact sheets (filed with `devlog/shot.mjs`)
+
+- `devlog/shots/20261112-113449-B-lab-s4b-turntable.png`: ball joints and face, rest and Glide
+- `devlog/shots/20261112-113449-B-lab-s4b-skating.png`: faceoff, stride (3/4, side, behind), glide, leans (4 views each), stop
+- `devlog/shots/20261112-113449-B-lab-s4b-crossover.png`: crossovers
+- `devlog/shots/20261112-113450-B-lab-s4b-shots.png`: slap, wrist, new check
+- `devlog/shots/20261112-113450-B-lab-s4b-fall.png`: fall, fall forward, get-up, celebrate
+- `devlog/shots/20261112-113450-B-lab-s4b-distance.png`: about 40 px, chase angle: stride blue and orange, slap, fall, stop, check
+
+### Still weak
+
+- Crossovers read best from behind; from the 3/4 front the leg crossing is subtle and the trailing stick is hidden.
+- The slap wind-up now goes up beside the left shoulder rather than straight over the head: less dramatic from the front, still clear in the
+  40 px chase view.
+- The leans float the skates 1.2 cm (the ice clamp is conservative on a 25 deg edge). `Fall_Forward` dips 1.1 cm into the ice at the end
+  (the chest).
+- The eye dots use the `Pads` slot. If a material instance ever tints `Pads` with the team colour, the eyes would change colour too; a separate
+  `Eyes` slot would cost one more draw.
+- Motion is still pose-to-pose with no secondary motion; there is no forward get-up.
+
+### Rebuild (unchanged command; about 2 min now, 15 takes and two FBX files)
+
+```
+bash C:/Users/kazda/jam/skater-lab/s4/run_all.sh
+```
+Outputs: `export\SK_Skater_S4.fbx`, `export\SK_Skater_S4_loopcut.fbx`, `export\SK_Skater_S4.glb`, `SM_S4_Stick.fbx`, `inspect.jsonl` (all three
+files), `check_fbx.json`, `check_fbx_loopcut.json`, `sheets\*.png`.

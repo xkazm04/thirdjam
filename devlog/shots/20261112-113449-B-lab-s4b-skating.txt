@@ -1,0 +1,1 @@
+S4 polish: Idle_Faceoff, Stride 3/4 front, side, behind (stick now carried wide on the right), Glide, Lean_Left and Lean_Right (4 views each), Stop
