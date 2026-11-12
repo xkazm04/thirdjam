@@ -1,0 +1,74 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "ab-pair",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T18:29:14.083Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "ab-pair",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a30/docs/experiments/img/bakeoff/a30-toy-play-10m.jpg",
+          "width": 2560,
+          "height": 1440
+        },
+        {
+          "label": "B",
+          "path": ".claude/worktrees/a30/docs/experiments/img/bakeoff/a30-b2-play-10m.jpg",
+          "width": 2560,
+          "height": 1440
+        }
+      ],
+      "distance": 10,
+      "thumbnails": [],
+      "prompt_chars": 3509,
+      "usage": {
+        "prompt": 3233,
+        "output": 323,
+        "thoughts": 817,
+        "total": 4373,
+        "calls": 1
+      },
+      "cost_usd_est": 0.02015,
+      "ms": 16586,
+      "retried": false,
+      "answer": {
+        "elements": {
+          "sky": {
+            "closer": "tie",
+            "why": "Both feature the same deep-blue night dome with stars above a dark horizon line."
+          },
+          "ice": {
+            "closer": "tie",
+            "why": "Both show identical scuffed ice textures with painted-looking brush streaks."
+          },
+          "pools": {
+            "closer": "tie",
+            "why": "Both display the same four soft light pools with distinct flat cel lighting steps."
+          },
+          "figures": {
+            "closer": "b",
+            "why": "Still B applies the required deep blue and warm orange team colours, whereas A uses uniform grey."
+          },
+          "construction": {
+            "closer": "tie",
+            "why": "Both have identical boards with ochre kick plates, dark rails, and thick red nets."
+          },
+          "outline": {
+            "closer": "tie",
+            "why": "Both feature identical visible ink-like outlines on the characters and puck."
+          }
+        },
+        "verdict": "b",
+        "confidence": 0.9,
+        "reason": "Still B implements the required deep blue and warm orange team colours for the figures, making them distinct, whereas Still A leaves them in a uniform grey state.",
+        "loser_keeps": "The environment lighting, ice textures, and board construction are identical and already meet the bar."
+      },
+      "markdown": "**eyes/ab-pair** A=a30-toy-play-10m.jpg B=a30-b2-play-10m.jpg at 10 m (gemini-3.1-pro-preview, in 3233 out 323 think 817 tokens, ~$0.0202, 16.6 s)\n- elements:\n  - sky: closer tie, why Both feature the same deep-blue night dome with stars above a dark horizon line.\n  - ice: closer tie, why Both show identical scuffed ice textures with painted-looking brush streaks.\n  - pools: closer tie, why Both display the same four soft light pools with distinct flat cel lighting steps.\n  - figures: closer b, why Still B applies the required deep blue and warm orange team colours, whereas A uses uniform grey.\n  - construction: closer tie, why Both have identical boards with ochre kick plates, dark rails, and thick red nets.\n  - outline: closer tie, why Both feature identical visible ink-like outlines on the characters and puck.\n- verdict: b\n- confidence: 0.9\n- reason: Still B implements the required deep blue and warm orange team colours for the figures, making them distinct, whereas Still A leaves them in a uniform grey state.\n- loser_keeps: The environment lighting, ice textures, and board construction are identical and already meet the bar."
+    }
+  ]
+}

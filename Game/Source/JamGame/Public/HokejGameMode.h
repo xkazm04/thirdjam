@@ -81,7 +81,14 @@ private:
 	void PossessHuman(APlayerController* PC);
 	int32 ComputeTake() const;
 	void UpdateTake(bool bForce);
-	UClass* ResolveVisualClass(FName Visual) const;
+	// Lane A31 (B-to-A-0021): the visual class for game.skater.visual, and for generated_b2 by game.look.tier (p3_clay -> BP_SkaterVisual_TB2_P3,
+	// p4_broadcast -> _TB2_P4, else _TB2; a failed load falls to _TB2, then to the toy figure).
+	UClass* ResolveVisualClass(FName Visual, const FString& Tier) const;
+	// B-to-A-0021 point 2: fixed jersey numbers per slot so a replay shows the same player: team 0 gets 7, 13, 42; team 1 gets 9, 21, 88 (a fourth
+	// skater and beyond keep the old team * 10 + slot + 1).
+	static int32 JerseyNumberFor(int32 Team, int32 SlotInTeam);
+	// A live tier change that resolves to another figure class respawns every skater's visual with the setup calls repeated (B-to-A-0021 point 1).
+	void RespawnVisualsIfClassChanged(const FJamGameConfig& G);
 	FJamInput ReadHumanInput();
 	FJamInput ScriptedHumanInput();
 	// Scripted human state (R-0013 / C-0005 proof): frames shoot has been held, last frame a pass went out.
@@ -99,6 +106,11 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UJamEffectSystem> Effects;
 	UPROPERTY(Transient) TArray<TObjectPtr<AJamPickupActor>> PickupActors;
 	TArray<FName> LastBoost;
+	// Lane A31 (B-to-A-0024 point 3): the goalie stance last sent per skater: -2 off, else the side (-1, 0, +1); SetGoalieStance goes out on a change.
+	TArray<int8> LastGoalie;
+	TArray<int64> GoalieOnFrame;   // the frame the stance last came on (minimum hold)
+	// Lane A31: the class the skater visuals were spawned with (a live tier change compares against it).
+	UPROPERTY(Transient) TObjectPtr<UClass> SpawnedVisualClass;
 	UPROPERTY(Transient) TObjectPtr<UJamHudWidget> Hud;
 	UPROPERTY(Transient) TObjectPtr<UJamRuleSystem> Rules;
 	UPROPERTY(Transient) TObjectPtr<UJamZoneSystem> ZoneSystem;

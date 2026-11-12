@@ -1,0 +1,74 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "ab-pair",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T18:27:26.023Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "ab-pair",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a30/docs/experiments/img/bakeoff/a30-toy-faceoff-24m.jpg",
+          "width": 2560,
+          "height": 1440
+        },
+        {
+          "label": "B",
+          "path": ".claude/worktrees/a30/docs/experiments/img/bakeoff/a30-b1-faceoff-24m.jpg",
+          "width": 2560,
+          "height": 1440
+        }
+      ],
+      "distance": 24,
+      "thumbnails": [],
+      "prompt_chars": 3515,
+      "usage": {
+        "prompt": 3237,
+        "output": 368,
+        "thoughts": 2335,
+        "total": 5940,
+        "calls": 1
+      },
+      "cost_usd_est": 0.03891,
+      "ms": 24292,
+      "retried": false,
+      "answer": {
+        "elements": {
+          "sky": {
+            "closer": "tie",
+            "why": "Both stills feature the identical deep-blue night dome with faint stars above a dark ceiling line."
+          },
+          "ice": {
+            "closer": "tie",
+            "why": "Both images use the exact same ice surface with painted-looking brush streaks and frost patches."
+          },
+          "pools": {
+            "closer": "tie",
+            "why": "The four spotlight pools with distinct, flat cel lighting steps are identical across both screenshots."
+          },
+          "figures": {
+            "closer": "b",
+            "why": "Still B applies the required deep blue and warm orange jersey colours to the chunky toy figures, whereas Still A uses untextured grey placeholders."
+          },
+          "construction": {
+            "closer": "tie",
+            "why": "Both stills share the same board design with an ochre kick plate, dark glass rail, and red nets, though both fail to implement the team-coloured emissive trim."
+          },
+          "outline": {
+            "closer": "tie",
+            "why": "Both images apply the same visible ink-like outlines to the skaters and rink elements."
+          }
+        },
+        "verdict": "b",
+        "confidence": 0.95,
+        "reason": "Still B successfully implements the required deep blue and warm orange team colours on the figures, fulfilling a core visual requirement that Still A completely lacks.",
+        "loser_keeps": "Still A's neutral grey figures arguably make the flat cel lighting steps on the character models slightly easier to read without the distraction of saturated colours."
+      },
+      "markdown": "**eyes/ab-pair** A=a30-toy-faceoff-24m.jpg B=a30-b1-faceoff-24m.jpg at 24 m (gemini-3.1-pro-preview, in 3237 out 368 think 2335 tokens, ~$0.0389, 24.3 s)\n- elements:\n  - sky: closer tie, why Both stills feature the identical deep-blue night dome with faint stars above a dark ceiling line.\n  - ice: closer tie, why Both images use the exact same ice surface with painted-looking brush streaks and frost patches.\n  - pools: closer tie, why The four spotlight pools with distinct, flat cel lighting steps are identical across both screenshots.\n  - figures: closer b, why Still B applies the required deep blue and warm orange jersey colours to the chunky toy figures, whereas Still A uses untextured grey placeholders.\n  - construction: closer tie, why Both stills share the same board design with an ochre kick plate, dark glass rail, and red nets, though both fail to implement the team-coloured emissive trim.\n  - outline: closer tie, why Both images apply the same visible ink-like outlines to the skaters and rink elements.\n- verdict: b\n- confidence: 0.95\n- reason: Still B successfully implements the required deep blue and warm orange team colours on the figures, fulfilling a core visual requirement that Still A completely lacks.\n- loser_keeps: Still A's neutral grey figures arguably make the flat cel lighting steps on the character models slightly easier to read without the distraction of saturated colours."
+    }
+  ]
+}

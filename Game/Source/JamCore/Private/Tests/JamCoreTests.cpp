@@ -97,7 +97,7 @@ bool FJamCartridgeRoundTrip::RunTest(const FString& Parameters)
 			{
 				TestEqual(TEXT("values override skater.speed"), C->Game.Skater.Speed, 11.0);
 				TestEqual(TEXT("values override goal_pause_frames"), C->Game.Rules.GoalPauseFrames, 90);
-				TestEqual(TEXT("absent visual = toy_skeletal"), C->Game.Skater.Visual, FName(TEXT("toy_skeletal")));
+				TestEqual(TEXT("absent visual = humanoid_b1"), C->Game.Skater.Visual, FName(TEXT("humanoid_b1")));
 				TestEqual(TEXT("absent knockdown_frames = 90"), C->Game.Skater.KnockdownFrames, 90);
 				TestTrue(TEXT("aim cone present"), C->Game.Shot.bHasAimCone);
 				TestEqual(TEXT("team 0 colour from hex"), C->Game.Teams[0].Colour.ToFColorSRGB(), FColor(0x1D, 0x4E, 0xD8));

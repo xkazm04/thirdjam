@@ -37,6 +37,55 @@ What the sweeps taught:
 - A2's 4.5 m hold radius was why pro was 90% before this lane. A contested puck also gives the human more touches, not fewer.
 - A teammate yielding more (4 / 25 at all_star) makes the human's side weaker. That is why all_star shares rookie's yield numbers, for the opposite reason.
 
+## R-0029 pass 2: pro and all_star measured with the playtester (worktree a3 on main 74c7c0f, which has A31's bot charge; 20:09)
+
+Profile changes only:
+- Pro: red skill 0.94 (the FJamAIParams default, was 1.0); large-rink offset red skill 0.9.
+- All_star: speed scale 1.08. Bots may push past 1 (the sim clamps bot input at 1.5).
+- Rookie is unchanged.
+
+| rink | level vs player | before (20:04) | after (20:08) | target |
+|---|---|---|---|---|
+| regular | pro vs regular | 25 % | **50 %** | ~50 |
+| large | pro vs regular | 15 % | **55 %** | ~50 |
+| regular | all_star vs good | 40 % | **30 %** | ~25 |
+| large | all_star vs good | 30 % | **25 %** | ~25 |
+
+Full grid after (novice / regular / good, win %):
+- regular: rookie 80 / 100 / 100, pro 0 / 50 / 65, all_star 0 / 10 / 30
+- large: rookie 85 / 95 / 95, pro 25 / 55 / 95, all_star 5 / 5 / 25
+
+The good player at all_star still idles 15 s about once per match on regular (1.1 spells, 5.1 s) and 3.8 times on large. GoodNeverIdlesAtAllStar stays a Bar.
+
+Gates: Jam.Bot (6), Jam.Playtest.NoviceScoresAtRookie (14 of 20), Jam.Slow.DifficultyCurve and Jam.Effects (5) all pass. HumanHasSomethingToDo's novice part: 5 of 116 faceoffs without a touch against a budget of 11.
+
+## R-0029: rookie measured with lane A34's playtester (worktree a3, 19:53)
+
+Changes:
+- P1: the back's guard post is per side now (`FJamBotSkill::GuardRadiusM / GuardRangeM`). Rookie opponents use 10 m out and 20 m range; everyone else keeps 5 / 45.
+- P2: rookie speed 0.85, red skill 0.75.
+- P3: rookie shot range reach + 5 m.
+- Large-rink rookie offsets: speed 0.9, red skill 0.8 (from the novice grid; 1.0 / 0.93 before).
+- Pro and all_star are untouched (second pass after A31's charged shots).
+- The playtester's 600-frame touch window no longer counts frames the human sits in the box.
+- The playtest lines carry `wo_frames`: in the windows that ran out, the frames by who held the puck (mate, opponent, loose).
+
+Playtester grid, 20 seeds, human win % (novice / regular / good). Before = PLAYTEST.md section 3 (main f89014c); after = this worktree.
+
+| rink | level | before | after | novice: goal inside 2 min (before / after) | novice: faceoffs without a touch (before / after) |
+|---|---|---|---|---|---|
+| regular | rookie | 15 / 60 / 70 | **80** / 100 / 100 | 7 / **17** of 20 | 28 / 12 |
+| regular | pro | 5 / 40 / 50 | 5 / 40 / 50 | 6 / 6 | 14 / 9 |
+| regular | all_star | 10 / 30 / 40 | 10 / 30 / 40 | 8 / 8 | 7 / 5 |
+| large | rookie | 30 / 80 / 70 | **85** / 100 / 80 | 4 / 7 | 13 / 12 |
+| large | pro | 5 / 25 / 40 | 5 / 25 / 40 | 3 / 3 | 7 / 7 |
+| large | all_star | 5 / 10 / 20 | 5 / 10 / 20 | 3 / 3 | 6 / 6 |
+
+Gate state:
+- Jam.Playtest.NoviceScoresAtRookie (20-seed form) passes: 17 of 20.
+- The novice part of HumanHasSomethingToDo fails: 12 of 126 faceoffs against a budget of 2. In those windows the puck was loose for 74 % of the frames (9,616 of 12,933), with a mate holding it 14 % and an opponent 12 %.
+- Bar.Playtest.GoodNeverIdlesAtAllStar still fails (1-3 spells per seed); it stays a Bar.
+
 ## Phase 2, final (worktree a3, 16:33): stick reach 1.2 (R-0022), A16's net slide, 60 seeds
 
 Changes since the 15:30 tree:

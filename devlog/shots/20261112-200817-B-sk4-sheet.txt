@@ -1,0 +1,1 @@
+SK4: game camera (6 m behind, 3.5 m up, FOV 70) rows T-B1, R, P3, P4; columns Knockdown_Left, Knockdown_Right, Knockdown_Back (generated: Fall_Forward), Check_Hit_Left, Board_Hit (P3: Check_Hit_Back), Board_Pin, Poke_Hit, Lift_Hit (reactions caught 0.1 to 0.4 s in)

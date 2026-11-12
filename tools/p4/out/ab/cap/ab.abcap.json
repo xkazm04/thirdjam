@@ -1,0 +1,43 @@
+{
+ "tool": "thirdjam.p4-abcap/1",
+ "tag": "ab",
+ "frame": 8,
+ "figures": {
+  "Rodin2": {
+   "clip": "/Game/P4/Rodin2/Anims/MF_Unarmed_Walk_Fwd_P4_Rodin2",
+   "pelvis_z_at_frame": 59.6,
+   "clip_len_s": 1.5,
+   "mass_kg": 38.2
+  },
+  "Tripo3": {
+   "clip": "/Game/P4/Tripo3/AS_P4_Tripo3_vendor_walk",
+   "pelvis_z_at_frame": 0.3,
+   "clip_len_s": 8.3,
+   "mass_kg": 0.0
+  },
+  "TB2P4": {
+   "clip": "/JamAssets/Skaters/AS_SkaterTB2_P4_Stride",
+   "pelvis_z_at_frame": 65.2,
+   "clip_len_s": 0.983,
+   "mass_kg": 0.0
+  }
+ },
+ "Rodin2": {
+  "clip": "/Game/P4/Rodin2/Anims/MF_Unarmed_Walk_Fwd_P4_Rodin2",
+  "pelvis_z_at_frame": 59.6,
+  "clip_len_s": 1.5,
+  "mass_kg": 38.2
+ },
+ "Tripo3": {
+  "clip": "/Game/P4/Tripo3/AS_P4_Tripo3_vendor_walk",
+  "pelvis_z_at_frame": 0.3,
+  "clip_len_s": 8.3,
+  "mass_kg": 0.0
+ },
+ "TB2P4": {
+  "clip": "/JamAssets/Skaters/AS_SkaterTB2_P4_Stride",
+  "pelvis_z_at_frame": 65.2,
+  "clip_len_s": 0.983,
+  "mass_kg": 0.0
+ }
+}

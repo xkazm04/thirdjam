@@ -1,0 +1,1 @@
+SK4: generated figures, get-ups starting and reactions (Check_Hit_Right, Board_Hit / P3 Check_Hit_Back, Board_Pin, Lift_Hit)

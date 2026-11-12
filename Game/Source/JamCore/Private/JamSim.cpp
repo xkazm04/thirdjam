@@ -19,14 +19,32 @@ namespace
 	const FName KindPillar(TEXT("pillar"));
 	const FName KindBumper(TEXT("bumper"));
 	const FName KindGoalShield(TEXT("goal_shield"));
+	// Lane A32: kinds of the commentator's read-out events.
+	const FName KindLong(TEXT("long"));
+	const FName KindCoast(TEXT("coast"));
+	const FName KindLast10s(TEXT("last_10s"));
+	const FName KindSuddenDeath(TEXT("sudden_death"));
+	// Lane A33 (R-0028 point 3, tackling that reads): the check's direction seen from the victim, and a skater's board hit. Read-outs only: no state changes.
+	const FName CheckFront(TEXT("front"));
+	const FName CheckSideL(TEXT("side_l"));
+	const FName CheckSideR(TEXT("side_r"));
+	const FName CheckBehind(TEXT("behind"));
+	const FName KindSkater(TEXT("skater"));
 
 	constexpr double Gravity = 9.8;
+	// Lane A32 read-outs: a shot counts as "on goal" for this many frames, a possession becomes a "carry" after this many, a post rings at most this often.
+	constexpr int32 SaveWindowFrames = 90;
+	constexpr int32 CarryFrames = 300;
+	constexpr int32 PostEventGapFrames = 20;
+	constexpr double PostEventMinSpeed = 3.0;
+	constexpr int32 ClockLastFrames = 600;
 	constexpr double SkaterBoardBounce = 0.3;
 	constexpr double SkaterSkaterBounce = 0.2;
 	constexpr double NetBounce = 0.3;
 	constexpr double BoardTangentKeep = 0.9;
 	constexpr double BoardEventMinSpeed = 3.0;   // m/s normal impact before a "board" event
 	constexpr int32 BoardEventGapFrames = 6;
+	constexpr double SkaterBoardEventMinSpeed = 4.0;   // lane A33: a skater's normal speed into the boards before a "board" event (Who = skater, Kind = skater)
 	constexpr double ReferenceIceFriction = 0.015; // the ice friction glide_drag was measured on
 
 	double WrapPi(double A)
@@ -145,6 +163,7 @@ void UJamSim::Restart()
 		S.PokeReadyFrame = S.LiftReadyFrame = 0;
 		S.PenaltyFrames = 0;
 		S.StumbleFrames = 0;
+		S.LastCarryFrame = -1000;
 	}
 	PendingFaceoffDot = FVector2D::ZeroVector;
 	Puck = FJamPuckState();
@@ -168,8 +187,115 @@ void UJamSim::Restart()
 	}
 	ActiveModifiers.Reset();
 	ResolveStats();
+	ResetReadouts();
 	FaceoffReset();
 	FireRule(EJamRuleTrigger::OnPeriodStart, -1, -1, NAME_None, 1.f);
+}
+
+// ---------------------------------------------------------------- lane A32: commentator read-outs ----------------------------------------------------------------
+
+void UJamSim::ResetReadouts()
+{
+	ShotFrame = -1000000;
+	ShotBy = -1;
+	ShotStrength = 0.f;
+	CarryIndex = -1;
+	CarryStartFrame = 0;
+	CarryStartPos = CarryPrevPuck = FVector2D::ZeroVector;
+	CarryDistM = 0.0;
+	bCarryAnnounced = false;
+	BreakawayFor = -1;
+	ClockAnnouncedPeriod = 0;
+	PostEventCooldown = 0;
+}
+
+// "save": a shot by the other team left within SaveWindowFrames, the puck is still heading for the shooter's net (its line crosses the goal line inside
+// the mouth plus a metre), and Blocker is that net's last man (the defender nearest its own goal line, standing). The touch about to happen stops it.
+void UJamSim::CheckSave(const FJamSkaterState& Blocker)
+{
+	if (Frame - ShotFrame > SaveWindowFrames || !Skaters.IsValidIndex(ShotBy) || Skaters[ShotBy].Team == Blocker.Team || !Blocker.CanAct()) return;
+	const double Gx = AttackGoalX(Skaters[ShotBy].Team);
+	const double Dir = Gx > 0 ? 1.0 : -1.0;
+	if (Puck.Vel.X * Dir <= 1e-6) return;                 // not heading for the net
+	const double T = (Gx - Puck.Pos.X) / Puck.Vel.X;
+	if (T <= 0.0) return;                                 // already past the line
+	const double YCross = Puck.Pos.Y + Puck.Vel.Y * T;
+	if (FMath::Abs(YCross) > Config.Rink.GoalWidthM * 0.5 + 1.0) return;
+	// The last man: the blocker's teammate nearest the goal line being attacked.
+	for (const FJamSkaterState& S : Skaters)
+	{
+		if (S.Team != Blocker.Team || S.Index == Blocker.Index || S.InBox() || S.IsDown()) continue;
+		if ((Gx - S.Pos.X) * Dir < (Gx - Blocker.Pos.X) * Dir) return;   // someone deeper: the blocker is not the last man
+	}
+	Emit(JamEvents::Save, Blocker.Index, Puck.Pos, ShotStrength);
+	ShotFrame = -1000000;   // one save per shot
+}
+
+void UJamSim::StepReadouts()
+{
+	// Possession: the same carrier frame after frame.
+	const int32 C = CarrierIndex();
+	if (C != CarryIndex)
+	{
+		CarryIndex = C;
+		CarryStartFrame = Frame;
+		CarryStartPos = CarryPrevPuck = Puck.Pos;
+		CarryDistM = 0.0;
+		bCarryAnnounced = false;
+		if (C < 0 || BreakawayFor != C) BreakawayFor = -1;
+	}
+	else if (C >= 0)
+	{
+		CarryDistM += FVector2D::Distance(CarryPrevPuck, Puck.Pos);
+		CarryPrevPuck = Puck.Pos;
+	}
+	if (C >= 0)
+	{
+		const FJamSkaterState& S = Skaters[C];
+		const double Gx = AttackGoalX(S.Team);
+		const double Dir = Gx > 0 ? 1.0 : -1.0;
+		const double L = Config.Rink.LengthM;
+		// "carry": CarryFrames of one possession; Kind coast when it started in the own net area and now sits past the far blue line (a third into the attacking half).
+		if (!bCarryAnnounced && Frame - CarryStartFrame >= CarryFrames)
+		{
+			bCarryAnnounced = true;
+			const bool bCoast = CarryStartPos.X * Dir < -(GoalLineX() - 10.0) && Puck.Pos.X * Dir > L / 6.0;
+			Emit(JamEvents::Carry, C, Puck.Pos, static_cast<float>(FMath::Clamp(CarryDistM / FMath::Max(L, 1.0), 0.0, 1.0)), bCoast ? KindCoast : KindLong);
+		}
+		// "breakaway": every standing opponent is behind the carrier (a metre of slack), the net is 5 to 45 m ahead, the carrier skates at it; once per rush.
+		if (BreakawayFor != C)
+		{
+			const double Ahead = S.Pos.X * Dir;
+			const double GoalDist = GoalLineX() - Ahead;
+			if (GoalDist > 5.0 && GoalDist < 45.0 && Ahead > -5.0 && Dot(S.Vel, FVector2D(Dir, 0.0)) > 2.0)
+			{
+				bool bClear = true;
+				double Gap = 1e9;
+				for (const FJamSkaterState& O : Skaters)
+				{
+					if (O.Team == S.Team || O.InBox() || O.IsDown()) continue;
+					const double OAhead = O.Pos.X * Dir;
+					if (OAhead > Ahead - 1.0) { bClear = false; break; }
+					Gap = FMath::Min(Gap, Ahead - OAhead);
+				}
+				if (bClear)
+				{
+					BreakawayFor = C;
+					Emit(JamEvents::Breakaway, C, S.Pos, static_cast<float>(FMath::Clamp(Gap / 10.0, 0.0, 1.0)));
+				}
+			}
+		}
+	}
+	// "clock" last_10s: ClockLastFrames left in the current timed take, once per take (sudden_death is emitted where bOvertime turns on).
+	if (Config.Rules.Mode == RuleTimer && Config.Rules.TimerFrames > 0 && !bOvertime && Phase == EJamSimPhase::Playing)
+	{
+		const int32 LeftInPeriod = (Period * Config.Rules.TimerFrames) / 3 - GetTimerElapsed();
+		if (LeftInPeriod <= ClockLastFrames && ClockAnnouncedPeriod != Period)
+		{
+			ClockAnnouncedPeriod = Period;
+			Emit(JamEvents::Clock, -1, FVector2D::ZeroVector, 0.f, KindLast10s);
+		}
+	}
 }
 
 TArray<FString> UJamSim::ApplyLiveConfig(const FJamGameConfig& N)
@@ -409,6 +535,7 @@ void UJamSim::EndPeriodNow()
 			TimerLeft = 0;
 			if (Score[0] != Score[1]) { EndMatchNow(-1); return; }
 			bOvertime = true;   // a tie at the horn: next goal wins, as the clock would have done
+			Emit(JamEvents::Clock, -1, FVector2D::ZeroVector, 0.f, KindSuddenDeath);   // lane A32 read-out
 		}
 		else
 		{
@@ -422,6 +549,7 @@ void UJamSim::EndPeriodNow()
 	// first_to: a period is whatever the rules say it is; the next one starts at the faceoff.
 	Phase = EJamSimPhase::GoalPause;
 	PauseFrames = Config.Rules.GoalPauseFrames;
+	Emit(JamEvents::PeriodEnd, -1, FVector2D::ZeroVector, 0.f, FName(*FString::Printf(TEXT("take_%d"), Period)));   // lane A32 read-out
 	FireRule(EJamRuleTrigger::OnPeriodEnd, -1, -1, NAME_None, static_cast<float>(Period));
 	++Period;
 	FireRule(EJamRuleTrigger::OnPeriodStart, -1, -1, NAME_None, static_cast<float>(Period));
@@ -432,6 +560,7 @@ void UJamSim::UpdatePeriod()
 	if (Config.Rules.Mode != RuleTimer || Config.Rules.TimerFrames <= 0) return;
 	const int32 New = FMath::Clamp(1 + (GetTimerElapsed() * 3) / Config.Rules.TimerFrames, 1, 3);
 	if (New == Period) return;
+	Emit(JamEvents::PeriodEnd, -1, FVector2D::ZeroVector, 0.f, FName(*FString::Printf(TEXT("take_%d"), Period)));   // lane A32 read-out
 	FireRule(EJamRuleTrigger::OnPeriodEnd, -1, -1, NAME_None, static_cast<float>(Period));
 	Period = New;
 	FireRule(EJamRuleTrigger::OnPeriodStart, -1, -1, NAME_None, static_cast<float>(Period));
@@ -662,6 +791,7 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 	FrameEvents.Reset();
 	++Frame;
 	if (BoardEventCooldown > 0) --BoardEventCooldown;
+	if (PostEventCooldown > 0) --PostEventCooldown;
 	// C-0005: effective stats for this frame, before anything integrates.
 	CollectModifiers();
 	ResolveStats();
@@ -802,6 +932,7 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 			else
 			{
 				bOvertime = true; // a tie at the horn: next goal wins
+				Emit(JamEvents::Clock, -1, FVector2D::ZeroVector, 0.f, KindSuddenDeath);   // lane A32 read-out
 			}
 		}
 		UpdatePeriod();
@@ -811,7 +942,10 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 	for (FJamSkaterState& S : Skaters)
 	{
 		S.bHasPuck = (Puck.LastTouch == S.Index) && CarrierIndex() == S.Index;
+		if (S.bHasPuck) S.LastCarryFrame = Frame;
 	}
+	// Lane A32: breakaway, carry and clock read-outs (after everything moved; emits only).
+	if (Phase == EJamSimPhase::Playing) StepReadouts();
 }
 
 void UJamSim::StepSkater(FJamSkaterState& S, const FJamInput& In)
@@ -984,6 +1118,8 @@ void UJamSim::CollideSkaterStatic(FJamSkaterState& S)
 	{
 		S.Pos -= N * (D + R);
 		const double Vn = Dot(S.Vel, N);
+		// Lane A33: a hard board hit is announced (cosmetic read-out; Strength = normal speed / skater.speed, Kind = skater, Where = the contact on the boards).
+		if (Vn >= SkaterBoardEventMinSpeed) Emit(JamEvents::Board, S.Index, S.Pos + N * R, static_cast<float>(Vn / FMath::Max(1e-6, Config.Skater.Speed)), KindSkater);
 		if (Vn > 0) S.Vel -= N * ((1.0 + SkaterBoardBounce) * Vn);
 	}
 	// Nets as solid boxes behind each goal line. A skater is pushed out along the shortest axis; the speed it pressed into the hull with becomes a slide
@@ -1069,9 +1205,15 @@ void UJamSim::CollideSkaters()
 				auto Landed = [&](FJamSkaterState& Checker, FJamSkaterState& Victim, const FVector2D& Dir)
 				{
 					Checker.CheckWindow = 0;
-					Emit(JamEvents::Check, Checker.Index, Contact, Strength);
+					// Lane A33: the direction of the hit seen from the victim (Dir = the push, checker towards victim): along the facing = behind, against it = front,
+					// else the side the checker came from (the sim's yaw grows to the right, so the left is (sin yaw, -cos yaw)). Same thresholds as the foul rule below.
+					const FVector2D VF = Victim.Forward();
+					const double Along = Dot(Dir, VF);
+					const FName CheckKind = Along > 0.5 ? CheckBehind : Along < -0.5 ? CheckFront : (Dot(Dir, FVector2D(VF.Y, -VF.X)) < 0.0 ? CheckSideL : CheckSideR);
+					Emit(JamEvents::Check, Checker.Index, Contact, Strength, CheckKind);
 					FireRule(EJamRuleTrigger::OnCheck, Checker.Index, Checker.Team, NAME_None, Strength);
-					const bool bVictimHasPuck = CarrierIndex() == Victim.Index;
+					// R-0029 point 3: a victim that carried the puck within game.stick.foul_grace_frames still counts as the carrier (the puck just left it).
+					const bool bVictimHasPuck = CarrierIndex() == Victim.Index || (Frame - Victim.LastCarryFrame) <= Config.Stick.FoulGraceFrames;
 					const bool bFromBehind = Dot(Dir, Victim.Forward()) > 0.5;
 					KnockDown(Victim.Index, Dir, Strength, CauseCheck);
 					if (Config.Rules.bPenalties && (!bVictimHasPuck || bFromBehind)) CallFoul(Checker, Victim, Contact, Strength, bVictimHasPuck ? FoulFromBehind : FoulNoPuck);
@@ -1173,6 +1315,10 @@ void UJamSim::TryShoot(FJamSkaterState& S, float Charge)
 	S.LastShotCharge = FMath::Clamp(Charge, 0.f, 1.f);
 	++S.Shots;
 	Emit(JamEvents::Shot, S.Index, Puck.Pos, static_cast<float>(Speed / MaxSpeed));
+	// Lane A32: the shot in flight, for "save".
+	ShotFrame = Frame;
+	ShotBy = S.Index;
+	ShotStrength = static_cast<float>(FMath::Clamp(Speed / MaxSpeed, 0.0, 1.0));
 }
 
 // C-0005 pass: the best teammate ahead of the puck with an open lane. The aim is where the receiver will be when the puck gets there
@@ -1340,6 +1486,7 @@ void UJamSim::StepPuck()
 				if (Db < DeflectRangeM && SpB > DeflectMinSpeed && Db > 1e-6 && Dot(Puck.Vel, FromBlade) < 0.0)
 				{
 					const bool bOwn = Skaters.IsValidIndex(Puck.LastTouch) && Skaters[Puck.LastTouch].Team == S.Team;
+					if (!bOwn && Config.Shot.bDeflect && S.bStickAimed) CheckSave(S);   // lane A32: the blade about to stop a shot on goal
 					if (bOwn)
 					{
 						// Reception: the pass is seated on the blade and moves with the receiver (R-0021: the puck stays on the stick).
@@ -1365,6 +1512,7 @@ void UJamSim::StepPuck()
 			const FVector2D N = Dist > 1e-9 ? Dlt / Dist : S.Forward();
 			Puck.Pos = S.Pos + N * Min;
 			const double Vn = Dot(Puck.Vel - S.Vel, N);
+			if (Vn < 0 && Puck.LastTouch != S.Index) CheckSave(S);   // lane A32: the body about to stop a shot on goal
 			if (Vn < 0) Puck.Vel -= N * Vn;
 			Touched[S.Index] = true;
 			Puck.LastTouch = S.Index;
@@ -1409,8 +1557,17 @@ void UJamSim::StepPuck()
 		{
 			const double X0 = Side * GL;
 			const double X1 = Side * (GL + NetDepth);
-			CollidePuckCircle(FVector2D(X0, -Hw), PostRadius, R, NetBounce);
-			CollidePuckCircle(FVector2D(X0, Hw), PostRadius, R, NetBounce);
+			const double SpeedBefore = Puck.Vel.Size();
+			for (int32 PostSide = -1; PostSide <= 1; PostSide += 2)
+			{
+				const FVector2D PostAt(X0, PostSide * Hw);
+				if (CollidePuckCircle(PostAt, PostRadius, R, NetBounce) && PostEventCooldown == 0 && SpeedBefore >= PostEventMinSpeed)
+				{
+					// Lane A32 read-out: the puck rang a post.
+					Emit(JamEvents::Post, -1, PostAt, static_cast<float>(SpeedBefore / MaxSpeed));
+					PostEventCooldown = PostEventGapFrames;
+				}
+			}
 			CollidePuckSegment(FVector2D(X0, -Hw), FVector2D(X1, -Hw), Prev, R, NetBounce);
 			CollidePuckSegment(FVector2D(X0, Hw), FVector2D(X1, Hw), Prev, R, NetBounce);
 			CollidePuckSegment(FVector2D(X1, -Hw), FVector2D(X1, Hw), Prev, R, NetBounce);
@@ -1452,6 +1609,8 @@ void UJamSim::ScoreGoal(int32 ScoringTeam)
 	const int32 Who = Puck.LastTouch;
 	if (Skaters.IsValidIndex(Who) && Skaters[Who].Team == ScoringTeam) ++Skaters[Who].Goals;
 	Emit(JamEvents::Goal, Who, Puck.Pos, 1.f);
+	ShotFrame = -1000000;   // lane A32: the shot went in, no save
+	BreakawayFor = -1;
 	// C-0005: the rule hook sees the goal (and the score it reached) before the win check, so AddScore / EndMatch land in the same frame.
 	FireRule(EJamRuleTrigger::OnGoal, Who, ScoringTeam, NAME_None, static_cast<float>(Score[ScoringTeam]));
 	FireRule(EJamRuleTrigger::OnScoreReached, Who, ScoringTeam, NAME_None, static_cast<float>(Score[ScoringTeam]));

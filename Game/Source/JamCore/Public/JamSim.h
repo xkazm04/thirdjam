@@ -154,6 +154,8 @@ struct JAMCORE_API FJamSkaterState
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bFoulThisFrame = false;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") float LastPassStrength = 0.f;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bAtFaceoff = false;
+	// R-0029 point 3: the last frame this skater carried the puck (-1000 = never); a check within game.stick.foul_grace_frames of it is not a foul_no_puck.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int64 LastCarryFrame = -1000;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bTouchingPuck = false;
 	// Last toucher of the puck and the puck within shot reach.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bHasPuck = false;
@@ -377,6 +379,13 @@ private:
 	void UpdatePeriod();
 	void ApplyPendingRink();
 
+	// Lane A32 (B-to-A-0026 ask 3): the commentator's read-out events. CheckSave runs where a skater's blade or body is about to touch the puck
+	// (before the touch changes the velocity); StepReadouts runs at the end of a Playing frame for breakaway, carry and the clock. None of the
+	// state below is hashed: these events describe play, they never change it (C-0003).
+	void CheckSave(const FJamSkaterState& Blocker);
+	void StepReadouts();
+	void ResetReadouts();
+
 	UPROPERTY() FJamGameConfig Config;
 	UPROPERTY() TArray<FJamSkaterState> Skaters;
 	UPROPERTY() FJamPuckState Puck;
@@ -420,4 +429,19 @@ private:
 	// The rink and spawns as Init saw them, so Restart() undoes ShrinkRink / GrowRink.
 	FJamRinkConfig InitRink;
 	TArray<FVector2D> InitSpawns;
+
+	// Lane A32 read-out state (never hashed, see StepReadouts). The last shot in flight (for "save"), the current possession (for "carry"),
+	// the rush already called (for "breakaway"), the take whose last ten seconds were called (for "clock"), the post event gap.
+	int64 ShotFrame = -1000000;
+	int32 ShotBy = -1;
+	float ShotStrength = 0.f;
+	int32 CarryIndex = -1;
+	int64 CarryStartFrame = 0;
+	FVector2D CarryStartPos = FVector2D::ZeroVector;
+	FVector2D CarryPrevPuck = FVector2D::ZeroVector;
+	double CarryDistM = 0.0;
+	bool bCarryAnnounced = false;
+	int32 BreakawayFor = -1;
+	int32 ClockAnnouncedPeriod = 0;
+	int32 PostEventCooldown = 0;
 };

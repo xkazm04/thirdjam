@@ -1,0 +1,36 @@
+{
+  "schema": "thirdjam.bonemap/1",
+  "vendor": "tripo3",
+  "source_skeleton": "Tripo3D v2.5 image-to-3d mesh (fal request 01a1d0ba-7173-7992-9dfb-bddf57ca5ae0) rigged by the Meshy rigging API with its own template meshyrig (ue5_mannequin refused for this mesh), rig 01a1d0bc-0afc-7013-ae0e-5f8d18b1e0f5: 24 bones Hips/Spine02/Spine01/Spine/neck/Head + Left/Right Shoulder, Arm, ForeArm, Hand, UpLeg, Leg, Foot, ToeBase",
+  "target_skeleton": "/Game/Characters/Mannequins/Meshes/SK_Mannequin (UE5 Manny)",
+  "note": "source -> target; root is the armature node named by tools/p4/normalize_fbx.py",
+  "rows": {
+    "root": "root",
+    "Hips": "pelvis",
+    "Spine02": "spine_01",
+    "Spine01": "spine_02",
+    "Spine": "spine_03",
+    "neck": "neck_01",
+    "Head": "head",
+    "LeftShoulder": "clavicle_l",
+    "LeftArm": "upperarm_l",
+    "LeftForeArm": "lowerarm_l",
+    "LeftHand": "hand_l",
+    "RightShoulder": "clavicle_r",
+    "RightArm": "upperarm_r",
+    "RightForeArm": "lowerarm_r",
+    "RightHand": "hand_r",
+    "LeftUpLeg": "thigh_l",
+    "LeftLeg": "calf_l",
+    "LeftFoot": "foot_l",
+    "LeftToeBase": "ball_l",
+    "RightUpLeg": "thigh_r",
+    "RightLeg": "calf_r",
+    "RightFoot": "foot_r",
+    "RightToeBase": "ball_r"
+  },
+  "source_leaf_bones_unmapped": [
+    "head_end",
+    "headfront"
+  ]
+}

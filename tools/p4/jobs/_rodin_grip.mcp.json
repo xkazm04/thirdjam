@@ -1,0 +1,1 @@
+{"script":{"content":"A28_GRIP={'vendor':'Rodin','mesh':'/Game/P4/Rodin/SK_P4_Rodin','alias':{}}\nexec(open(r'C:/Users/kazda/kiro/thirdjam/tools/p4/ue_grip.py').read())\n","language":"Python"}}

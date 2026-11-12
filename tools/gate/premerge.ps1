@@ -106,8 +106,12 @@ try {
             $ok = @(Select-String -Path $src -Pattern 'Test Completed\. Result=\{Success\}' -ErrorAction SilentlyContinue).Count
             $bad = @(Select-String -Path $src -Pattern 'Test Completed\. Result=\{Fail[^}]*\}' -ErrorAction SilentlyContinue)
             $extra['automation_pass'] = $ok; $extra['automation_fail'] = $bad.Count
+            # B-to-A-0027: a material without the skeletal-mesh usage flag is silent in the editor and total in a package (grey figures)
+            $flag = @(Select-String -Path $src -Pattern 'missing usage flag' -ErrorAction SilentlyContinue)
+            $extra['usage_flag_lines'] = $flag.Count
             if ($w.timedOut) { Write-Step 'FAIL' 'automation' "timeout after $($w.seconds)s (log $src)" }
             elseif ($bad.Count -gt 0) { foreach ($b in ($bad | Select-Object -First 10)) { Write-Host "  | $($b.Line.Trim())" }; Write-Step 'FAIL' 'automation' "$ok passed, $($bad.Count) failed (log $src)" }
+            elseif ($flag.Count -gt 0) { foreach ($f in ($flag | Select-Object -First 3)) { Write-Host "  | $($f.Line.Trim())" }; Write-Step 'FAIL' 'automation' "$ok passed, but $($flag.Count) 'missing usage flag' line(s): a material on a skeletal mesh lacks the flag (log $src)" }
             elseif ($ok -eq 0) { foreach ($l in (Get-ErrorLines $src 6)) { Write-Host "  | $l" }; Write-Step 'FAIL' 'automation' "no test result lines for filter '$Filter' (exit $($w.exit), log $src)" }
             else { Write-Step 'PASS' 'automation' "$ok tests passed (filter '$Filter', $($w.seconds)s)" }
         }

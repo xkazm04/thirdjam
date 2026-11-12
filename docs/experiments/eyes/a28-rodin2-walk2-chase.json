@@ -1,0 +1,78 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "figure",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T17:26:59.999Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "figure",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": "devlog/shots/20261112-182453-A-a28-rodin2-walk2-chase.png",
+          "width": 3200,
+          "height": 740
+        }
+      ],
+      "thumbnails": [
+        "A: 128x30"
+      ],
+      "prompt_chars": 2704,
+      "usage": {
+        "prompt": 3092,
+        "output": 490,
+        "thoughts": 2473,
+        "total": 6055,
+        "calls": 1
+      },
+      "cost_usd_est": 0.04174,
+      "ms": 26708,
+      "retried": false,
+      "answer": {
+        "hockey_player": {
+          "full": 2,
+          "small": 1,
+          "parts": {
+            "stick": true,
+            "blade": true,
+            "hands": false,
+            "skates": true,
+            "helmet": true
+          },
+          "evidence": "The figure possesses a helmet, stick, and skates, but the arms are locked in a rigid horizontal pose, making it look like a scarecrow rather than a player holding a stick."
+        },
+        "toy": {
+          "full": 4,
+          "small": 3,
+          "evidence": "The oversized head, cylindrical limbs, and simple blue, white, and orange color scheme strongly convey a chunky toy aesthetic."
+        },
+        "best_row": "The top row (f00-f07) reads best as it shows a consistent forward walk cycle, whereas the bottom row shows broken ragdoll states.",
+        "proportions": {
+          "head_of_height": 0.35,
+          "shoulder_of_height": 0.55,
+          "stick_of_height": 0.8
+        },
+        "changes": [
+          "arm pose -> bring arms down to hold the stick with both hands in a hockey ready stance",
+          "shoulder width 0.55 of height -> 0.40 to make the arms look less detached from the torso",
+          "hands -> add distinct chunky gloves rather than simple black stumps",
+          "stick length 0.80 of height -> 1.10 to make it more prominent and reach the ice naturally"
+        ],
+        "worst": [
+          "The arms are locked in a rigid horizontal pose, completely breaking the hockey player silhouette.",
+          "The stick is held by only one hand and floats awkwardly behind the player.",
+          "At small scale, the wide arms make the silhouette look like a blue cross rather than a skater."
+        ],
+        "works": [
+          "The oversized helmet and chunky body proportions successfully sell the toy aesthetic.",
+          "The bright orange stick blade contrasts well against the dark stick and blue uniform.",
+          "The white stripes on the jersey and socks help break up the solid blue mass."
+        ]
+      },
+      "markdown": "**eyes/figure** A=20261112-182453-A-a28-rodin2-walk2-chase.png (gemini-3.1-pro-preview, in 3092 out 490 think 2473 tokens, ~$0.0417, 26.7 s)\n- hockey_player:\n  - full: 2\n  - small: 1\n  - parts:\n    - stick: true\n    - blade: true\n    - hands: false\n    - skates: true\n    - helmet: true\n  - evidence: The figure possesses a helmet, stick, and skates, but the arms are locked in a rigid horizontal pose, making it look like a scarecrow rather than a player holding a stick.\n- toy:\n  - full: 4\n  - small: 3\n  - evidence: The oversized head, cylindrical limbs, and simple blue, white, and orange color scheme strongly convey a chunky toy aesthetic.\n- best_row: The top row (f00-f07) reads best as it shows a consistent forward walk cycle, whereas the bottom row shows broken ragdoll states.\n- proportions:\n  - head_of_height: 0.35\n  - shoulder_of_height: 0.55\n  - stick_of_height: 0.8\n- changes: arm pose -> bring arms down to hold the stick with both hands in a hockey ready stance; shoulder width 0.55 of height -> 0.40 to make the arms look less detached from the torso; hands -> add distinct chunky gloves rather than simple black stumps; stick length 0.80 of height -> 1.10 to make it more prominent and reach the ice naturally\n- worst: The arms are locked in a rigid horizontal pose, completely breaking the hockey player silhouette.; The stick is held by only one hand and floats awkwardly behind the player.; At small scale, the wide arms make the silhouette look like a blue cross rather than a skater.\n- works: The oversized helmet and chunky body proportions successfully sell the toy aesthetic.; The bright orange stick blade contrasts well against the dark stick and blue uniform.; The white stripes on the jersey and socks help break up the solid blue mass."
+    }
+  ]
+}

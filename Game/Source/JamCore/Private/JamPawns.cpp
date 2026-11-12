@@ -10,6 +10,8 @@
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
 #include "NiagaraSystem.h"
+#include "JamEventBus.h"
+#include "Engine/GameInstance.h"
 
 namespace
 {
@@ -105,16 +107,16 @@ AJamSkater::AJamSkater()
 	AutoPossessAI = EAutoPossessAI::Disabled;
 }
 
-void AJamSkater::InitSkater(int32 InSimIndex, int32 InTeam, const FLinearColor& Colour, int32 Number, UClass* VisualClass)
+UObject* AJamSkater::CreateVisual(UClass* VisualClass)
 {
-	SimIndex = InSimIndex;
-	Team = InTeam;
 	UObject* Visual = nullptr;
+	// A unique name each time: ResetVisual (lane A31) destroys the old component, which stays in memory until GC, so "SkaterVisual" alone would collide.
+	const FName CompName = MakeUniqueObjectName(this, VisualClass ? VisualClass : UJamPlaceholderVisual::StaticClass(), TEXT("SkaterVisual"));
 	if (VisualClass && VisualClass->ImplementsInterface(UJamSkaterVisual::StaticClass()))
 	{
 		if (VisualClass->IsChildOf(UActorComponent::StaticClass()))
 		{
-			UActorComponent* C = NewObject<UActorComponent>(this, VisualClass, TEXT("SkaterVisual"));
+			UActorComponent* C = NewObject<UActorComponent>(this, VisualClass, CompName);
 			if (USceneComponent* SC = Cast<USceneComponent>(C)) SC->SetupAttachment(Root);
 			C->RegisterComponent();
 			AddInstanceComponent(C);
@@ -132,12 +134,18 @@ void AJamSkater::InitSkater(int32 InSimIndex, int32 InTeam, const FLinearColor& 
 	if (!Visual)
 	{
 		if (VisualClass) UE_LOG(LogJamSim, Warning, TEXT("JAMSKATER visual class %s does not implement IJamSkaterVisual; using the placeholder"), *VisualClass->GetPathName());
-		UJamPlaceholderVisual* C = NewObject<UJamPlaceholderVisual>(this, TEXT("SkaterVisual"));
+		UJamPlaceholderVisual* C = NewObject<UJamPlaceholderVisual>(this, CompName);
 		C->SetupAttachment(Root);
 		C->RegisterComponent();
 		AddInstanceComponent(C);
 		Visual = C;
 	}
+	return Visual;
+}
+
+void AJamSkater::SetupVisual(UObject* Visual, const FLinearColor& Colour, int32 Number)
+{
+	// C-0001: SetTeam and SetNumber once at spawn (B-to-A-0021 point 2: no number is drawn until SetNumber is called), then the resting state.
 	VisualObject = Visual;
 	IJamSkaterVisual::Execute_SetTeam(Visual, Team, Colour);
 	IJamSkaterVisual::Execute_SetNumber(Visual, FMath::Clamp(Number, 0, 99));
@@ -145,13 +153,42 @@ void AJamSkater::InitSkater(int32 InSimIndex, int32 InTeam, const FLinearColor& 
 	IJamSkaterVisual::Execute_SetBoost(Visual, NAME_None);
 	bWasDown = false;
 	bHadPuck = false;
+	bWasAtFaceoff = false;
+	LastCharge = 0.f;
+	LastAimDeg = 0.f;
+	LastAimReach = 0.f;
+}
+
+void AJamSkater::InitSkater(int32 InSimIndex, int32 InTeam, const FLinearColor& Colour, int32 Number, UClass* VisualClass)
+{
+	SimIndex = InSimIndex;
+	Team = InTeam;
+	SetupVisual(CreateVisual(VisualClass), Colour, Number);
+}
+
+bool AJamSkater::ResetVisual(const FLinearColor& Colour, int32 Number, UClass* VisualClass)
+{
+	if (VisualObject && VisualClass && VisualObject->GetClass() == VisualClass) return false;
+	if (UActorComponent* OldC = Cast<UActorComponent>(VisualObject.Get()))
+	{
+		RemoveInstanceComponent(OldC);
+		OldC->DestroyComponent();
+	}
+	else if (AActor* OldA = Cast<AActor>(VisualObject.Get()))
+	{
+		OldA->Destroy();
+	}
+	VisualObject = nullptr;
+	SetupVisual(CreateVisual(VisualClass), Colour, Number);
+	return true;
 }
 
 void AJamSkater::ApplySimFrame(const FJamSkaterState& S)
 {
 	if (!VisualObject) return;
 	UObject* V = VisualObject;
-	if (S.bShotThisFrame || S.bPassThisFrame) IJamSkaterVisual::Execute_PlayShoot(V, S.bShotThisFrame ? S.LastShotCharge : 0.f);
+	// B-to-A-0024 point 2 (lane A31): PlayShoot only for a shot; a pass is PlayPass alone (below), never a charge-0 shot in the same frame.
+	if (S.bShotThisFrame) IJamSkaterVisual::Execute_PlayShoot(V, S.LastShotCharge);
 	if (S.bCheckThisFrame) IJamSkaterVisual::Execute_PlayCheck(V);
 	if (S.IsDown() != bWasDown)
 	{
@@ -302,9 +339,45 @@ void AJamPuck::InitPuck(double RadiusM, const FLinearColor& Colour)
 	}
 }
 
+double AJamPuck::PopLiftM(double FramesSincePop, double Strength01)
+{
+	if (FramesSincePop < 0.0 || FramesSincePop >= (double)PopFrames) return 0.0;
+	const double S = 0.5 + 0.5 * FMath::Clamp(Strength01, 0.0, 1.0);
+	return PopHeightM * S * FMath::Sin(PI * FramesSincePop / (double)PopFrames);
+}
+
+bool AJamPuck::IsStrip(int32 PrevLastTouch, const FJamPuckState& P)
+{
+	// A check strip (UJamSim::KnockDown) clears LastTouch and leaves the puck moving from where it was; a faceoff reset clears it too but pins the puck still on the dot.
+	return PrevLastTouch >= 0 && P.LastTouch == -1 && P.Vel.Size() > 0.2 && FVector2D::Distance(P.Pos, P.PrevPos) < 0.5;
+}
+
 void AJamPuck::ApplyRender(const FJamPuckState& P, float Alpha)
 {
-	SetActorLocation(Lerp2D(P.PrevPos, P.Pos, Alpha, HalfHeightM));
+	// Lane A33: the sim frame comes from the bus (set by the game mode before the visuals are driven); the pop counts those frames, never wall clock.
+	int64 SimFrame = LastSimFrame;
+	if (UGameInstance* GI = GetGameInstance())
+	{
+		if (const UJamEventBus* Bus = GI->GetSubsystem<UJamEventBus>()) SimFrame = Bus->GetSimFrame();
+	}
+	if (SimFrame != LastSimFrame)
+	{
+		if (IsStrip(PrevLastTouch, P))
+		{
+			PopStartFrame = SimFrame;
+			PopStrength = FMath::Clamp(P.Vel.Size() / 6.0, 0.0, 1.0);
+		}
+		PrevLastTouch = P.LastTouch;
+		LastSimFrame = SimFrame;
+	}
+	double LiftM = 0.0;
+	if (PopStartFrame >= 0 && SimFrame >= 0)
+	{
+		const double Since = (double)(SimFrame - PopStartFrame) + FMath::Clamp(Alpha, 0.f, 1.f);
+		LiftM = PopLiftM(Since, PopStrength);
+		if (Since >= (double)PopFrames) PopStartFrame = -1;
+	}
+	SetActorLocation(Lerp2D(P.PrevPos, P.Pos, Alpha, HalfHeightM + LiftM));
 }
 
 void AJamPuck::ApplyRenderAt(const FVector& WorldCm)

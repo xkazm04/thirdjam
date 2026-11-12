@@ -1,0 +1,117 @@
+{
+ "tool": "thirdjam.p4-setup/1",
+ "vendor": "Tripo3",
+ "import_mesh_paths": [
+  "/Game/P4/Tripo3/SK_P4_Tripo3.SK_P4_Tripo3"
+ ],
+ "rename_skeleton": true,
+ "skeleton": "/Game/P4/Tripo3/SKEL_P4_Tripo3.SKEL_P4_Tripo3",
+ "bone_count": 25,
+ "bones": "root Hips Spine02 Spine01 Spine neck Head head_end headfront LeftShoulder LeftArm LeftForeArm LeftHand RightShoulder RightArm RightForeArm RightHand LeftUpLeg LeftLeg LeftFoot LeftToeBase RightUpLeg RightLeg RightFoot RightToeBase",
+ "bounds_origin_cm": [
+  0.0,
+  -0.9,
+  -0.0
+ ],
+ "bounds_extent_cm": [
+  0.4,
+  0.9,
+  0.7
+ ],
+ "size_vendor": {
+  "pelvis_z_cm": 0.0,
+  "head_z_cm": 0.0,
+  "hand_span_cm": 0.0,
+  "hand_len_cm": null,
+  "height_cm": 0.7
+ },
+ "size_manny": {
+  "pelvis_z_cm": null,
+  "head_z_cm": 0.0,
+  "hand_span_cm": null,
+  "hand_len_cm": null,
+  "height_cm": 180.5
+ },
+ "size_ratio": {
+  "pelvis_z_cm": null,
+  "head_z_cm": null,
+  "hand_span_cm": null,
+  "hand_len_cm": null,
+  "height_cm": 0.0
+ },
+ "material": "/Game/P4/Tripo3/M_P4_Tripo3",
+ "texture_size": [
+  2048,
+  2048
+ ],
+ "vendor_clip_paths": [
+  "/Game/P4/Tripo3/AS_P4_Tripo3_vendor_walk.AS_P4_Tripo3_vendor_walk",
+  "/Game/P4/Tripo3/AS_P4_Tripo3_vendor_run.AS_P4_Tripo3_vendor_run"
+ ],
+ "ikrig_vendor": {
+  "auto": true,
+  "chains": [
+   "Spine",
+   "Neck",
+   "Head",
+   "LeftLeg",
+   "LeftFoot",
+   "LeftClavicle",
+   "LeftArm",
+   "RightLeg",
+   "RightFoot",
+   "RightClavicle",
+   "RightArm"
+  ],
+  "retarget_root": "Hips"
+ },
+ "ikrig_manny": {
+  "auto": true,
+  "chains": [
+   "Spine",
+   "Neck",
+   "Head",
+   "LeftLeg",
+   "LeftFoot",
+   "LeftClavicle",
+   "LeftArm",
+   "LeftThumb",
+   "LeftIndex",
+   "LeftMiddle",
+   "LeftRing",
+   "LeftPinky",
+   "LeftIndexMetacarpal",
+   "LeftMiddleMetacarpal",
+   "LeftRingMetacarpal",
+   "LeftPinkyMetacarpal",
+   "RightLeg",
+   "RightFoot",
+   "RightClavicle",
+   "RightArm",
+   "RightThumb",
+   "RightIndex",
+   "RightMiddle",
+   "RightRing",
+   "RightPinky",
+   "RightIndexMetacarpal",
+   "RightMiddleMetacarpal",
+   "RightRingMetacarpal",
+   "RightPinkyMetacarpal"
+  ],
+  "retarget_root": "pelvis"
+ },
+ "chain_mappings": [],
+ "retargeted": [
+  "/Game/P4/Tripo3/Anims/MF_Unarmed_Walk_Fwd_P4_Tripo3",
+  "/Game/P4/Tripo3/Anims/MF_Unarmed_Jog_Fwd_P4_Tripo3",
+  "/Game/P4/Tripo3/Anims/MM_Idle_P4_Tripo3"
+ ],
+ "retargeted_len_s": [
+  "MM_Idle_P4_Tripo3",
+  7.567
+ ],
+ "physics_asset": {
+  "path": "/Game/P4/Tripo3/PA_P4_Tripo3",
+  "bodies": []
+ }
+}

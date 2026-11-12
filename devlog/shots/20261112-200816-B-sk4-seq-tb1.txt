@@ -1,0 +1,1 @@
+SK4: T-B1 bot match (humanoid_b1), game camera, 12 frames at slomo 0.25: the human checks an orange carrier, Knockdown_Right, hold, GetUp_Side_Right

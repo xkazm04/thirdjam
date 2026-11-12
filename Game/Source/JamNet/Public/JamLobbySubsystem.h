@@ -63,6 +63,8 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Jam|Lobby") FString GetWarningText() const;
 	UFUNCTION(BlueprintPure, Category = "Jam|Lobby") int32 GetBoundPort() const { return BoundPort; }
 	uint64 GetSeed() const { return Seed; }
+	// Lane A38: FPlatformTime::Seconds() when the guest sent its first HELLO / when the host heard it (the "invite code to first frame" clock). 0 = not yet.
+	double GetJoinedAtSeconds() const { return JoinedAt; }
 
 	UJamLockstepDriver* GetDriver() const { return Driver; }
 	IJamLink* GetLink() const;
@@ -104,4 +106,5 @@ private:
 	int32 GuestIndex = -1;
 	int64 LobbyTicks = 0;
 	int64 StartTicks = 0;
+	double JoinedAt = 0.0;
 };

@@ -8,7 +8,9 @@ sources under `Game/Content/P4/Anim/Src/<Vendor>/`, the proof level `Game/Conten
 
 Operator decisions folded in (17:0x-17:1x): the Fab "Hockey Player Animated" pack is **descoped** (not in any route or table); falls and collision reactions are a
 first-class verb group (knocked_down from the side / from behind / a trip, get_up, a stumble on a mistimed poke, a board collision); Rokoko Vision accepts YouTube video
-and 30 seconds of Vision budget go to the contact moves only (section 6).
+and 30 seconds of Vision budget go to the contact moves only (section 6). **R-0027 point 3 (18:3x): device B ships the broadcast figure and the strides (31 takes,
+`retro/device-b-lab/skater-skh/`, generic `retarget.py`); this lane's deliverable narrows to the falls, collision reactions and contact clips on the Manny skeleton,
+plus the retarget note for B (section 8, pass 3). No more credits on strides.**
 
 ## 0. The answer in six lines
 
@@ -229,6 +231,17 @@ stance and draw on ice, 2019). Spend: about 10 s each, contact moves only.
    the toy does) until the source skeleton's root scale is fixed at import (the real fix: strip the `Reference` node's scale track, or import with the armature
    node dropped). All 18 generated clips were re-retargeted with the script; the 4 Manny duplicates were never affected. The earlier strips
    (`devlog/shots/20261112-175258-*`) were deleted; the pass-2 strips are `devlog/shots/20261112-18xxxx-A-a29-<verb>.png`.
+   **Pass 3 (18:24-18:45): the real fix for the Meshy-rig clips (the falls group).** `clip.py --normalize [prerot] --zup` folds in A28's `tools/p4/normalize_fbx.py`
+   steps (bake the mesh parent-inverse and the armature's object transform, centimetre scene, scale 100 applied, armature named `root`) and adds the missing piece:
+   the vendor rigs **bind with the pelvis at the origin and the feet below it**, so the IK Retargeter read a source pelvis height of about 0 and scaled by 100; the
+   rest skeleton and every mesh are lifted together so the lowest bone sits on z 0, and the root bone's pose is re-keyed from world matrices recorded before the
+   scale (transform_apply scales rest bones, not location keys). `ue_retarget.py` then runs Pelvis Motion ON, Root Motion and Run IK Rig OFF on every run.
+   Measured on the Manny output (pelvis z in cm, t0 / min / max / end): `knocked_down_back` 92.6 / 27.1 / 149.4 / 27.4, `trip_fall` 95.7 / 24.1 / 95.7 / 24.9,
+   `get_up_1` 21.0 / 20.5 / 92.1 / 92.0: **the falls drop and the get-up rises.** The falls group was re-retargeted from `Src/Meshyrig3/`.
+   Still open: the **Reference rig** (text-to-motion strides) scales x100 through the Pelvis Motion op even after normalization (its SMPL-H bind pose puts every bone
+   head within 11 cm of the origin, so the lift does not give it a pelvis height either); the strides keep the pass-2 root-locked retarget, and since R-0027 point 3
+   strides are device B's (31 takes) this lane does not pursue it. Note for B's `retarget.py`: on a Meshy `ue5_mannequin` FBX, normalize first, lift the rest
+   skeleton onto the ground, keep Pelvis Motion on and Root Motion off; the pelvis then lands within 2 cm of the Manny's own clips.
 2. **The contact moves have no clip until the operator films** (or decides on the YouTube route). Until then `check` is `MM_Attack_02` and the shot is E1's text-to-motion
    slap shot, both placeholders.
 3. **The clips play on the Manny, not yet on A28's figure.** A28 has no status file yet; when its `SK_P4_*` on the Meshy `ue5_mannequin` preset lands, the `meshyrig` bone

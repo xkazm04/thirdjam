@@ -1,0 +1,63 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-12T17:36:20.302Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "devlog/shots/20261112-183430-A-a29-get-up-1.png",
+          "width": 5760,
+          "height": 558
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2277,
+      "usage": {
+        "prompt": 1744,
+        "output": 244,
+        "thoughts": 0,
+        "total": 1988,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00222,
+      "ms": 5025,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [
+              {
+                "where": "Top-left edge, header text line at y=0-15 px",
+                "what": "Internal debug/export text label ('AS_P4_get_up_1...') is burned directly into the viewport frame.",
+                "severity": 1,
+                "confidence": 0.95
+              },
+              {
+                "where": "Throughout all sub-frames across the panorama, lower halves",
+                "what": "The character mannequin lies completely detached and floating above the surface plane with no ground contact shadows rendered beneath it.",
+                "severity": 4,
+                "confidence": 0.9
+              },
+              {
+                "where": "Right two panels, vertical boundaries",
+                "what": "Visible vertical seams and harsh tonal band discontinuities across the panoramic strip.",
+                "severity": 3,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=20261112-183430-A-a29-get-up-1.png (gemini-3.8-flash, in 1744 out 244 tokens, ~$0.0022, 5 s)\n- stills:\n  - label: Still A; clean: false\n    - findings:\n      - where: Top-left edge, header text line at y=0-15 px; what: Internal debug/export text label ('AS_P4_get_up_1...') is burned directly into the viewport frame.; severity: 1; confidence: 0.95\n      - where: Throughout all sub-frames across the panorama, lower halves; what: The character mannequin lies completely detached and floating above the surface plane with no ground contact shadows rendered beneath it.; severity: 4; confidence: 0.9\n      - where: Right two panels, vertical boundaries; what: Visible vertical seams and harsh tonal band discontinuities across the panoramic strip.; severity: 3; confidence: 0.85"
+    }
+  ]
+}

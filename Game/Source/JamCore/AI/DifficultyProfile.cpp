@@ -15,7 +15,9 @@ namespace JamAI
 		FJamDifficultyProfile MakePro()
 		{
 			const FJamAIParams D;
-			return FJamDifficultyProfile{"pro", D.SpeedScale, D.RedSkill, D.YieldMarginM, D.YieldRadiusM, D.HoldRadiusM, D.StallFrames, D.Opp, D.Mate.bPassToHuman};
+			FJamDifficultyProfile P{"pro", D.SpeedScale, D.RedSkill, D.YieldMarginM, D.YieldRadiusM, D.HoldRadiusM, D.StallFrames, D.Opp, D.Mate.bPassToHuman};
+			P.LargeRedSkill = 0.9;   // R-0029 pass 2: the regular playtester on 120 x 60 (35 % at 0.94, 55 % at 0.9)
+			return P;
 		}
 
 		FJamDifficultyProfile MakeRookie()
@@ -23,7 +25,9 @@ namespace JamAI
 			FJamBotSkill Opp;
 			Opp.ReactionFrames = 0;
 			Opp.AimErrorDeg = 0.0;
-			Opp.ShootExtraM = 13.0;
+			Opp.ShootExtraM = 5.0;     // R-0029 P3 (13 before): shoot from reach + 5 m
+			Opp.GuardRadiusM = 10.0;   // R-0029 P1 (5 / 45 before): the rookie back's guard post 10 m out, only within 20 m of its net
+			Opp.GuardRangeM = 20.0;
 			Opp.bBlockShots = true;
 			Opp.BlockMinDistM = 35.0;   // only a shot from near centre ice (90 x 45: 41 m to the net) is blocked
 			Opp.AimToleranceDeg = 20.0;
@@ -31,12 +35,13 @@ namespace JamAI
 			Opp.bIntercept = false;
 			Opp.bUseAimCone = true;
 			Opp.PokeFrames = -1;   // R-0017: rookie bots never poke
+			Opp.ShotChargeFrames = 0;   // lane A31 (B-to-A-0024): rookie taps its shots
 			Opp.DrawJumpPct = 100; // 16:23: the rookie centre always jumps early (the human takes the opening touch)
-			// 16:28 worktree sweep (stick reach 1.2, A16's net slide), 60 seeds: regular 85 at 0.96 / 0.88, large 87 at 1.0 / 0.93.
+			// R-0029 P2: speed 0.85 / red skill 0.75 (0.96 / 0.88 before, tuned against the scripted human); measured with lane A34's novice.
 			// Stall 60: the stall rule is what lets a rookie shoot at all (SeasonTakes needs one AI shot per match).
-			FJamDifficultyProfile P{"rookie", 0.96, 0.88, 4.0, 25.0, 0.0, 60, Opp, true};
-			P.LargeSpeedScale = 1.0;
-			P.LargeRedSkill = 0.93;
+			FJamDifficultyProfile P{"rookie", 0.85, 0.75, 4.0, 25.0, 0.0, 60, Opp, true};
+			P.LargeSpeedScale = 0.9;   // R-0029: large-rink rookie offsets from the playtester grid (novice 85 %, 19:43); 1.0 / 0.93 before
+			P.LargeRedSkill = 0.8;
 			return P;
 		}
 
@@ -50,6 +55,7 @@ namespace JamAI
 			Opp.LeadFrames = 60;
 			Opp.bClearLane = true;
 			Opp.PokeFrames = 2;
+			Opp.ShotChargeFrames = 18;   // lane A31 (B-to-A-0024): all_star winds its shots up (pro 10, the FJamBotSkill default)
 			Opp.bLift = true;
 			Opp.bPassOut = true;
 			Opp.bReadLanes = true;
@@ -60,7 +66,8 @@ namespace JamAI
 			Opp.ForecheckYieldFrames = 12;   // Director 15:16
 			Opp.bIntercept = true;
 			Opp.bUseAimCone = true;
-			return FJamDifficultyProfile{"all_star", 1.0, 1.0, 4.0, 25.0, 0.0, 60, Opp, false};
+			// R-0029 pass 2 (with A31's charge): speed 1.08 (bots may push past 1, the sim clamps them at 1.5): the good playtester 30 % / 25 %
+			return FJamDifficultyProfile{"all_star", 1.08, 1.0, 4.0, 25.0, 0.0, 60, Opp, false};
 		}
 
 		void SetErr(char* Err, int ErrLen, const char* Msg, const char* Pair)
@@ -91,9 +98,12 @@ namespace JamAI
 			if (std::strcmp(Key, "draw_jump_pct") == 0) { K.DrawJumpPct = static_cast<int>(V); return true; }
 			if (std::strcmp(Key, "draw_press_pct") == 0) { K.DrawPressPct = static_cast<int>(V); return true; }
 			if (std::strcmp(Key, "draw_press_frames") == 0) { K.DrawPressFrames = static_cast<int>(V); return true; }
+			if (std::strcmp(Key, "guard_radius_m") == 0) { K.GuardRadiusM = V; return true; }
+			if (std::strcmp(Key, "guard_range_m") == 0) { K.GuardRangeM = V; return true; }
 			if (std::strcmp(Key, "carry_speed") == 0) { K.CarrySpeed = V; return true; }
 			if (std::strcmp(Key, "forecheck_yield_frames") == 0) { K.ForecheckYieldFrames = static_cast<int>(V); return true; }
 			if (std::strcmp(Key, "pass_to_human") == 0) { K.bPassToHuman = V != 0.0; return true; }
+			if (std::strcmp(Key, "shot_charge_frames") == 0) { K.ShotChargeFrames = static_cast<int>(V); return true; }   // lane A31
 			return false;
 		}
 	}
@@ -169,8 +179,8 @@ namespace JamAI
 			else if (std::strcmp(Key, "yield_radius_m") == 0) { P.YieldRadiusM = V; }
 			else if (std::strcmp(Key, "hold_radius_m") == 0) { P.HoldRadiusM = V; }
 			else if (std::strcmp(Key, "stall_frames") == 0) { P.StallFrames = static_cast<int>(V); }
-			else if (std::strcmp(Key, "guard_range_m") == 0) { P.GuardRangeM = V; }
-			else if (std::strcmp(Key, "guard_radius_m") == 0) { P.GuardRadiusM = V; }
+			else if (std::strcmp(Key, "guard_range_m") == 0) { P.GuardRangeM = V; P.Opp.GuardRangeM = V; P.Mate.GuardRangeM = V; }   // both sides (opp.* / mate.* for one)
+			else if (std::strcmp(Key, "guard_radius_m") == 0) { P.GuardRadiusM = V; P.Opp.GuardRadiusM = V; P.Mate.GuardRadiusM = V; }
 			else { bOk = false; }
 			if (!bOk) { *Eq = '='; SetErr(Err, ErrLen, "unknown tune key", Pair); return false; }
 		}

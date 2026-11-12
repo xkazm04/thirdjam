@@ -1013,6 +1013,7 @@ namespace
 		ReadInteger(St, TEXT("poke_window_frames"), C.Stick.PokeWindowFrames);
 		ReadNumber(St, TEXT("lift_range_m"), C.Stick.LiftRangeM);
 		ReadInteger(St, TEXT("stumble_frames"), C.Stick.StumbleFrames);
+		ReadInteger(St, TEXT("foul_grace_frames"), C.Stick.FoulGraceFrames);
 		ReadNumber(St, TEXT("mouse_sensitivity"), C.Stick.MouseSensitivity);
 
 		FJPtr Pk = Obj(G, TEXT("puck"));

@@ -13,9 +13,25 @@
 #include "Misc/FileHelper.h"
 #include "HAL/IConsoleManager.h"
 
+// Lane A38: the simulated bad link for measurements (0 / 0 = the real wire). Set on both processes' command lines, e.g.
+// -dpcvars=jam.net.SimDelayMs=40,jam.net.SimLoss=0.02 (40 ms each way = an 80 ms round trip, 2% loss).
+static TAutoConsoleVariable<float> CVarJamNetSimDelayMs(TEXT("jam.net.SimDelayMs"), 0.f, TEXT("Hold every outgoing JamNet datagram this many ms (simulated one-way latency)."));
+static TAutoConsoleVariable<float> CVarJamNetSimLoss(TEXT("jam.net.SimLoss"), 0.f, TEXT("Drop this fraction of outgoing JamNet datagrams (simulated loss, 0..1)."));
+
 namespace
 {
 	constexpr int32 ResendEvery = 30;   // lobby messages re-sent every half second until answered
+
+	void ApplyImpairment(FJamUdpLink& Link, uint64 Seed)
+	{
+		const double DelayMs = CVarJamNetSimDelayMs.GetValueOnGameThread();
+		const double Loss = CVarJamNetSimLoss.GetValueOnGameThread();
+		if (DelayMs > 0.0 || Loss > 0.0)
+		{
+			Link.SetImpairment(DelayMs, Loss, Seed);
+			UE_LOG(LogJamNet, Warning, TEXT("JAMNET simulated link: %.0f ms one-way, %.1f%% loss (jam.net.SimDelayMs / jam.net.SimLoss)"), DelayMs, Loss * 100.0);
+		}
+	}
 	constexpr int32 StartSendTicks = 30; // host sends START for half a second before opening the level
 	const TCHAR* RinkMap = TEXT("/Game/Maps/Rink");
 
@@ -107,6 +123,7 @@ bool UJamLobbySubsystem::Host(const FString& InCut, const FString& Name)
 	int32 PortIndex = 0;
 	for (; PortIndex < JamNet::PortSlots; ++PortIndex) if (Link->Bind(JamNet::BasePort + PortIndex) > 0) break;
 	if (!Link->IsOpen()) { Fail(FString::Printf(TEXT("no free UDP port in %d..%d"), JamNet::BasePort, JamNet::BasePort + JamNet::PortSlots - 1)); return false; }
+	ApplyImpairment(*Link, Seed * 2 + 1);
 	BoundPort = Link->GetBoundPort();
 	TArray<uint32> Addrs = FJamUdpLink::LocalAddresses();
 	for (uint32 Ip : Addrs) { Codes.Add(FJamInviteCode::Encode(Ip, PortIndex)); CodeAddresses.Add(FJamInviteCode::FormatIp(Ip)); }
@@ -128,8 +145,10 @@ bool UJamLobbySubsystem::Join(const FString& Code, const FString& Name)
 	if (!FJamInviteCode::Decode(Code, Ip, Port)) { Fail(FString::Printf(TEXT("\"%s\" is not an invite code (8 letters and digits, shown as ABCD-EFGH)"), *Code)); return false; }
 	Link = MakeUnique<FJamUdpLink>();
 	if (Link->Bind(0) <= 0) { Fail(TEXT("could not open a UDP socket")); return false; }
+	ApplyImpairment(*Link, 2);
 	BoundPort = Link->GetBoundPort();
 	Link->SetPeer(Ip, Port);
+	JoinedAt = FPlatformTime::Seconds();
 	Driver = NewObject<UJamLockstepDriver>(this);
 	UE_LOG(LogJamNet, Log, TEXT("JAMNET joining %s:%d as %s from port %d"), *FJamInviteCode::FormatIp(Ip), Port, *LocalName, BoundPort);
 	SetState(EJamLobbyState::Joining);
@@ -206,6 +225,7 @@ void UJamLobbySubsystem::TickLobby()
 			Link->SetPeer(Ip, Port);
 			RemoteName = M.Name;
 			bGuestAcked = false;
+			JoinedAt = FPlatformTime::Seconds();
 			UE_LOG(LogJamNet, Log, TEXT("JAMNET guest \"%s\" from %s:%d"), *RemoteName, *FJamInviteCode::FormatIp(Ip), Port);
 			SendLobby(static_cast<uint8>(JamNet::EType::Welcome));
 			SetState(EJamLobbyState::Ready);

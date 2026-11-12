@@ -1,0 +1,1 @@
+﻿Lane A31: hockey.regular, generated_b2 on l2_night, PIE paused at frame 668 from the game camera (2560 wide floating PIE). BP_SkaterVisual_TB2, MI_Glass, floor -20 cm, 73 stanchions at 3.6 m. Same frame as the clay and broadcast stills (jam.livecut).

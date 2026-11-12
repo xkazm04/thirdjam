@@ -53,18 +53,49 @@ FString FJamUdpLink::PeerString() const
 	return Peer.IsValid() ? Peer->ToString(true) : FString(TEXT("(none)"));
 }
 
+void FJamUdpLink::SetImpairment(double DelayMs, double Loss, uint64 Seed)
+{
+	SimDelayMs = FMath::Max(0.0, DelayMs);
+	SimLoss = FMath::Clamp(Loss, 0.0, 1.0);
+	SimRng = FJamRandom(Seed);
+	SimDropped = 0;
+}
+
+void FJamUdpLink::FlushHeld()
+{
+	if (!Held.Num() || !Socket || !Peer.IsValid()) return;
+	const double Now = FPlatformTime::Seconds();
+	int32 N = 0;
+	while (N < Held.Num() && Held[N].ReadyAt <= Now)
+	{
+		int32 Sent = 0;
+		Socket->SendTo(Held[N].Bytes.GetData(), Held[N].Bytes.Num(), Sent, *Peer);
+		++N;
+	}
+	if (N) Held.RemoveAt(0, N);
+}
+
 bool FJamUdpLink::Send(const TArray<uint8>& Bytes)
 {
 	if (!Socket || !Peer.IsValid()) return false;
+	// Counted as offered to the wire: the bandwidth figure is what the game sends; what the (simulated) wire loses is its business.
+	BytesSent += Bytes.Num();
+	++PacketsSent;
+	if (SimLoss > 0.0 && SimRng.NextUnit() < SimLoss) { ++SimDropped; return true; }
+	if (SimDelayMs > 0.0)
+	{
+		Held.Add({ FPlatformTime::Seconds() + SimDelayMs / 1000.0, Bytes });
+		FlushHeld();
+		return true;
+	}
 	int32 Sent = 0;
-	const bool bOk = Socket->SendTo(Bytes.GetData(), Bytes.Num(), Sent, *Peer);
-	if (bOk) { BytesSent += Sent; ++PacketsSent; }
-	return bOk;
+	return Socket->SendTo(Bytes.GetData(), Bytes.Num(), Sent, *Peer);
 }
 
 bool FJamUdpLink::RecvFrom(TArray<uint8>& Out, uint32& FromIp, int32& FromPort)
 {
 	if (!Socket) return false;
+	FlushHeld();
 	ISocketSubsystem* SS = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM);
 	TSharedRef<FInternetAddr> From = SS->CreateInternetAddr();
 	int32 Read = 0;

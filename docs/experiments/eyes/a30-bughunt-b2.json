@@ -1,0 +1,69 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-12T18:35:53.118Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a30/docs/experiments/img/bakeoff/a30-b2-strip.jpg",
+          "width": 2560,
+          "height": 703
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2259,
+      "usage": {
+        "prompt": 1706,
+        "output": 360,
+        "thoughts": 1026,
+        "total": 3092,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00648,
+      "ms": 15346,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [
+              {
+                "where": "Bottom-left panel, right half of the frame",
+                "what": "Camera is positioned behind or clipping into the dasher boards, causing a massive board mesh and yellow rail to obstruct the right side of the ice and play area.",
+                "severity": 4,
+                "confidence": 0.95
+              },
+              {
+                "where": "Bottom-right panel, lower-left to mid-right foreground",
+                "what": "Camera has dropped behind the perimeter boards, causing the yellow-capped dasher board to bisect the frame and thin vertical stanchions to float into empty black void without glass panes.",
+                "severity": 4,
+                "confidence": 0.9
+              },
+              {
+                "where": "Top-second panel, top center and bottom center",
+                "what": "Duplicate instructional text: 'Try hitting the puck first. The net is step two.' is displayed simultaneously above the MATCH 1 popup and in the bottom subtitle banner.",
+                "severity": 2,
+                "confidence": 0.85
+              },
+              {
+                "where": "Top-third panel, top-center near the upper boards",
+                "what": "An empty orange HUD target box/reticle floats above the ice near the dasher boards with no associated figure or text inside.",
+                "severity": 2,
+                "confidence": 0.8
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=a30-b2-strip.jpg (gemini-3.8-flash, in 1706 out 360 think 1026 tokens, ~$0.0065, 15.3 s)\n- stills:\n  - label: Still A; clean: false\n    - findings:\n      - where: Bottom-left panel, right half of the frame; what: Camera is positioned behind or clipping into the dasher boards, causing a massive board mesh and yellow rail to obstruct the right side of the ice and play area.; severity: 4; confidence: 0.95\n      - where: Bottom-right panel, lower-left to mid-right foreground; what: Camera has dropped behind the perimeter boards, causing the yellow-capped dasher board to bisect the frame and thin vertical stanchions to float into empty black void without glass panes.; severity: 4; confidence: 0.9\n      - where: Top-second panel, top center and bottom center; what: Duplicate instructional text: 'Try hitting the puck first. The net is step two.' is displayed simultaneously above the MATCH 1 popup and in the bottom subtitle banner.; severity: 2; confidence: 0.85\n      - where: Top-third panel, top-center near the upper boards; what: An empty orange HUD target box/reticle floats above the ice near the dasher boards with no associated figure or text inside.; severity: 2; confidence: 0.8"
+    }
+  ]
+}

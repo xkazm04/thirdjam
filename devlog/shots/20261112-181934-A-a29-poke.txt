@@ -1,1 +1,0 @@
-AS_P4_poke: 2.4667 s, 8 frames over 2 s (sequence time), UE5 Manny, three-quarter front, proof level

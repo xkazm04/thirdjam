@@ -1,0 +1,21 @@
+{
+  "tool": "thirdjam.cuts.stills/1",
+  "url": "http://127.0.0.1:8021/mcp",
+  "distance_m": 24,
+  "stills": [
+    {
+      "id": "power-up-cut",
+      "cut": "C:/Users/kazda/kiro/thirdjam/.claude/worktrees/a37/tools/cuts/out/cuts/power-up-cut.cartridge.json",
+      "shows": "pickups speed + big_puck on the ice",
+      "match_seconds_before_freeze": 14,
+      "playcut_ok": true,
+      "freeze": "{\"returnValue\":\"frozen\"}",
+      "unfreeze_ok": true,
+      "capture": true,
+      "size": null,
+      "file": "power-up-cut-24m.png",
+      "error": ""
+    }
+  ],
+  "seconds": 23
+}

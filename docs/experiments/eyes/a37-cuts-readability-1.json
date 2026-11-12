@@ -1,0 +1,186 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "readability",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-12T18:43:22.081Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "readability",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a37/docs/experiments/img/cuts/matinee-cut-24m.png",
+          "width": 1275,
+          "height": 700
+        },
+        {
+          "label": "B",
+          "path": ".claude/worktrees/a37/docs/experiments/img/cuts/pillar-cut-24m.png",
+          "width": 1275,
+          "height": 700
+        },
+        {
+          "label": "C",
+          "path": ".claude/worktrees/a37/docs/experiments/img/cuts/neon-cut-24m.png",
+          "width": 1275,
+          "height": 700
+        },
+        {
+          "label": "D",
+          "path": ".claude/worktrees/a37/docs/experiments/img/cuts/carpet-cut-24m.png",
+          "width": 1275,
+          "height": 700
+        }
+      ],
+      "distance": 24,
+      "thumbnails": [],
+      "prompt_chars": 2793,
+      "usage": {
+        "prompt": 5240,
+        "output": 1412,
+        "thoughts": 1730,
+        "total": 8382,
+        "calls": 1
+      },
+      "cost_usd_est": 0.01571,
+      "ms": 31599,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "elements": {
+              "puck": {
+                "score": 4,
+                "evidence": "Located at the lower-left near x=280, y=555, the tiny dark puck is made instantly locatable by an intense 25-pixel glowing yellow-white circle around it."
+              },
+              "carrier": {
+                "score": 4,
+                "evidence": "The lowest skater on the left is holding their stick directly in the glowing puck halo and is tethered by a bright yellow targeting line."
+              },
+              "team_colours": {
+                "score": 1,
+                "evidence": "Not visible; all skaters render as uniform black silhouettes with no identifiable deep blue or warm orange jersey tones."
+              },
+              "far_net": {
+                "score": 4,
+                "evidence": "Visible at the upper center (x=640, y=170) as a 50-pixel-wide red rectangle beneath a prominent yellow diamond and '48 m' distance label."
+              },
+              "zone_strips": {
+                "score": 5,
+                "evidence": "The red center line, blue attacking line, and blue faceoff circle are sharply contrasted across the plain pale ice surface."
+              }
+            },
+            "first_look": "Blinding yellow-white glare from the rink boards",
+            "noise": [
+              "Intense over-bright board glow washing out perimeter contrast",
+              "Orange dialogue speech bubble hovering over the ice",
+              "Overlaid yellow distance diamond and text above the net"
+            ],
+            "overall": 3
+          },
+          {
+            "label": "Still B",
+            "elements": {
+              "puck": {
+                "score": 4,
+                "evidence": "Located at x=280, y=560, the small dark disc sits inside a bright lime-yellow ring roughly 20 pixels wide."
+              },
+              "carrier": {
+                "score": 4,
+                "evidence": "The skater positioned lowest in the left group holds their stick to the illuminated puck indicator, linked by a pale aiming ray."
+              },
+              "team_colours": {
+                "score": 1,
+                "evidence": "Not visible; all figures appear in monochromatic dark charcoal shading that completely obscures team identification."
+              },
+              "far_net": {
+                "score": 4,
+                "evidence": "The red net frame sits at the far center boards, clearly marked by an overlay tag reading '48 m'."
+              },
+              "zone_strips": {
+                "score": 3,
+                "evidence": "The blue line and red center line are visible but interrupted and visually degraded by dark blue patches and circular floor highlights."
+              }
+            },
+            "first_look": "Dark blue mottled ice texture and circular ice gradients",
+            "noise": [
+              "Two white cylindrical obstacle pillars placed on the ice",
+              "Patchy dark blue water-like floor texture",
+              "Orange speech bubble on the left wing"
+            ],
+            "overall": 2
+          },
+          {
+            "label": "Still C",
+            "elements": {
+              "puck": {
+                "score": 4,
+                "evidence": "Located near center ice at x=535, y=460, marked by a bright yellow-white halo ring beneath the player's stick."
+              },
+              "carrier": {
+                "score": 4,
+                "evidence": "The central skater positioned at the lower edge of the center circle holds their stick directly against the glowing puck indicator."
+              },
+              "team_colours": {
+                "score": 1,
+                "evidence": "Not visible; all toy figures appear as pitch-black silhouettes against the ice, showing neither blue nor orange."
+              },
+              "far_net": {
+                "score": 4,
+                "evidence": "A 50-pixel-wide red goal cage is framed centrally against the far boards beneath a yellow diamond and '44 m' banner."
+              },
+              "zone_strips": {
+                "score": 4,
+                "evidence": "The red centerline and blue lines remain cleanly readable across the ice surface despite the luminous center circle effect."
+              }
+            },
+            "first_look": "Radiant cyan neon burst filling the center ice circle",
+            "noise": [
+              "High-contrast glowing cyan radial pattern inside the faceoff circle",
+              "Over-bright specular bloom along the arena boards",
+              "Dialogue bubble overlay above the center cluster"
+            ],
+            "overall": 3
+          },
+          {
+            "label": "Still D",
+            "elements": {
+              "puck": {
+                "score": 4,
+                "evidence": "Found at x=410, y=435, the dark puck is clearly indicated by an elliptical lime-yellow outline."
+              },
+              "carrier": {
+                "score": 4,
+                "evidence": "The lowest skater in the left-hand pack touches the highlighted ring with their stick tip."
+              },
+              "team_colours": {
+                "score": 1,
+                "evidence": "Not visible; all players are shaded uniformly in dark charcoal-black with no distinct blue or orange jerseys."
+              },
+              "far_net": {
+                "score": 4,
+                "evidence": "The red goal frame is visible at the far end below a yellow indicator and '47 m' text."
+              },
+              "zone_strips": {
+                "score": 2,
+                "evidence": "The blue line and red center line are heavily camouflaged and fragmented by an overpowering cyan grid pattern overlaid on the ice."
+              }
+            },
+            "first_look": "Dense cyan floor grid covering the ice surface",
+            "noise": [
+              "High-frequency cyan grid lines dominating the visual field",
+              "Orange dialogue box pinned near neutral ice",
+              "Concentric stepped oval lighting shades across the rink"
+            ],
+            "overall": 2
+          }
+        ]
+      },
+      "markdown": "**eyes/readability** A=matinee-cut-24m.png B=pillar-cut-24m.png C=neon-cut-24m.png D=carpet-cut-24m.png at 24 m (gemini-3.8-flash, in 5240 out 1412 think 1730 tokens, ~$0.0157, 31.6 s)\n- stills:\n  - label: Still A; first_look: Blinding yellow-white glare from the rink boards; overall: 3\n    - elements:\n      - puck: score 4, evidence Located at the lower-left near x=280, y=555, the tiny dark puck is made instantly locatable by an intense 25-pixel glowing yellow-white circle around it.\n      - carrier: score 4, evidence The lowest skater on the left is holding their stick directly in the glowing puck halo and is tethered by a bright yellow targeting line.\n      - team_colours: score 1, evidence Not visible; all skaters render as uniform black silhouettes with no identifiable deep blue or warm orange jersey tones.\n      - far_net: score 4, evidence Visible at the upper center (x=640, y=170) as a 50-pixel-wide red rectangle beneath a prominent yellow diamond and '48 m' distance label.\n      - zone_strips: score 5, evidence The red center line, blue attacking line, and blue faceoff circle are sharply contrasted across the plain pale ice surface.\n    - noise: Intense over-bright board glow washing out perimeter contrast; Orange dialogue speech bubble hovering over the ice; Overlaid yellow distance diamond and text above the net\n  - label: Still B; first_look: Dark blue mottled ice texture and circular ice gradients; overall: 2\n    - elements:\n      - puck: score 4, evidence Located at x=280, y=560, the small dark disc sits inside a bright lime-yellow ring roughly 20 pixels wide.\n      - carrier: score 4, evidence The skater positioned lowest in the left group holds their stick to the illuminated puck indicator, linked by a pale aiming ray.\n      - team_colours: score 1, evidence Not visible; all figures appear in monochromatic dark charcoal shading that completely obscures team identification.\n      - far_net: score 4, evidence The red net frame sits at the far center boards, clearly marked by an overlay tag reading '48 m'.\n      - zone_strips: score 3, evidence The blue line and red center line are visible but interrupted and visually degraded by dark blue patches and circular floor highlights.\n    - noise: Two white cylindrical obstacle pillars placed on the ice; Patchy dark blue water-like floor texture; Orange speech bubble on the left wing\n  - label: Still C; first_look: Radiant cyan neon burst filling the center ice circle; overall: 3\n    - elements:\n      - puck: score 4, evidence Located near center ice at x=535, y=460, marked by a bright yellow-white halo ring beneath the player's stick.\n      - carrier: score 4, evidence The central skater positioned at the lower edge of the center circle holds their stick directly against the glowing puck indicator.\n      - team_colours: score 1, evidence Not visible; all toy figures appear as pitch-black silhouettes against the ice, showing neither blue nor orange.\n      - far_net: score 4, evidence A 50-pixel-wide red goal cage is framed centrally against the far boards beneath a yellow diamond and '44 m' banner.\n      - zone_strips: score 4, evidence The red centerline and blue lines remain cleanly readable across the ice surface despite the luminous center circle effect.\n    - noise: High-contrast glowing cyan radial pattern inside the faceoff circle; Over-bright specular bloom along the arena boards; Dialogue bubble overlay above the center cluster\n  - label: Still D; first_look: Dense cyan floor grid covering the ice surface; overall: 2\n    - elements:\n      - puck: score 4, evidence Found at x=410, y=435, the dark puck is clearly indicated by an elliptical lime-yellow outline.\n      - carrier: score 4, evidence The lowest skater in the left-hand pack touches the highlighted ring with their stick tip.\n      - team_colours: score 1, evidence Not visible; all players are shaded uniformly in dark charcoal-black with no distinct blue or orange jerseys.\n      - far_net: score 4, evidence The red goal frame is visible at the far end below a yellow indicator and '47 m' text.\n      - zone_strips: score 2, evidence The blue line and red center line are heavily camouflaged and fragmented by an overpowering cyan grid pattern overlaid on the ice.\n    - noise: High-frequency cyan grid lines dominating the visual field; Orange dialogue box pinned near neutral ice; Concentric stepped oval lighting shades across the rink"
+    }
+  ]
+}

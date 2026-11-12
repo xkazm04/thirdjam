@@ -96,6 +96,18 @@ float UJamEffectsBinder::VariantFor(FName Event, FName Kind)
 		if (Kind == FName(TEXT("praise"))) return 3.f;
 		return 0.f;   // defend
 	}
+	// Lane A33 (docs/experiments/TACKLING.md): the check's direction seen from the victim; the puck's board hit is 0, a skater's 1.
+	if (Event == JamEvents::Check)
+	{
+		if (Kind == FName(TEXT("side_l"))) return 1.f;
+		if (Kind == FName(TEXT("side_r"))) return 2.f;
+		if (Kind == FName(TEXT("behind"))) return 3.f;
+		return 0.f;   // front (and a check with no Kind)
+	}
+	if (Event == JamEvents::Board)
+	{
+		return Kind == FName(TEXT("skater")) ? 1.f : 0.f;
+	}
 	return 0.f;   // shot_blocked reuses the foul assets at Variant 0 (B-to-A-0016); everything else has one kind
 }
 

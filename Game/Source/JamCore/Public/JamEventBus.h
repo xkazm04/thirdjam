@@ -37,6 +37,15 @@ namespace JamEvents
 	JAMCORE_API extern const FName Lift;         // "lift": a stick lift; Where = the carrier, Strength 0
 	JAMCORE_API extern const FName Foul;         // "foul": a check that was a foul; Who = the fouler, Where = contact, Strength = check strength
 	JAMCORE_API extern const FName ShotBlocked;  // "shot_blocked" (R-0019): a shot refused inside a no_shoot zone; Who = shooter, Where = puck, Strength 0, Kind = zone id
+	// Lane A32 (B-to-A-0026 ask 3): the seven events the commentator bank has lines for, proposed for C-0003 ("Proposed, for the Director" in contracts/events.md).
+	// All read-outs of state the sim already has: nothing here changes play or the state hash.
+	JAMCORE_API extern const FName Save;         // "save": the last man's blade or body stops a shot on goal; Who = the blocker, Where = puck, Strength = the shot's strength
+	JAMCORE_API extern const FName Post;         // "post": the puck hits a goal post; Who -1, Where = the post, Strength = puck speed / game.puck.max_speed
+	JAMCORE_API extern const FName Breakaway;    // "breakaway": the carrier is past every standing defender with the net ahead; Who = carrier, Where = carrier, Strength = gap to the nearest defender / 10 m, once per rush
+	JAMCORE_API extern const FName Carry;        // "carry": one carrier has kept the puck for 300 frames; Who = carrier, Where = puck, Strength = metres carried / rink length, Kind = long | coast, once per possession
+	JAMCORE_API extern const FName PeriodEnd;    // "period_end": a take ends (not the match); Who -1, Where centre ice, Strength 0, Kind = "take_<n>" of the take that ended
+	JAMCORE_API extern const FName Clock;        // "clock": Who -1, Where centre ice, Strength 0, Kind = last_10s (600 frames left in a timed take) | sudden_death (a tie at the horn plays on)
+	JAMCORE_API extern const FName SeasonTake;   // "season_take": a season match is built, before its first drop (the game mode sends it); Who -1, Where centre ice, Strength 0, Kind = "level_<n>"
 	// R-0013: `faceoff` gains Kind = drop (the puck is live, Who -1) | won (Who = the centre that won) | lost (Who = the centre that lost).
 }
 

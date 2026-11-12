@@ -1,0 +1,1 @@
+{"script":{"content":"import unreal\nlib=unreal.EditorAssetLibrary\nprint('A28 Rodin2 delete', lib.delete_directory('/Game/P4/Rodin2') if lib.does_directory_exist('/Game/P4/Rodin2') else 'absent')\n","language":"Python"}}

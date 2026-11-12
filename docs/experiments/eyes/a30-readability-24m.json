@@ -1,0 +1,145 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "readability",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-12T18:34:56.458Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "readability",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a30/docs/experiments/img/bakeoff/a30-toy-play-24m.jpg",
+          "width": 2560,
+          "height": 1440
+        },
+        {
+          "label": "B",
+          "path": ".claude/worktrees/a30/docs/experiments/img/bakeoff/a30-b1-play-24m.jpg",
+          "width": 2560,
+          "height": 1440
+        },
+        {
+          "label": "C",
+          "path": ".claude/worktrees/a30/docs/experiments/img/bakeoff/a30-b2-play-24m.jpg",
+          "width": 2560,
+          "height": 1440
+        }
+      ],
+      "distance": 24,
+      "thumbnails": [],
+      "prompt_chars": 2770,
+      "usage": {
+        "prompt": 4211,
+        "output": 998,
+        "thoughts": 926,
+        "total": 6135,
+        "calls": 1
+      },
+      "cost_usd_est": 0.01037,
+      "ms": 19353,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "elements": {
+              "puck": {
+                "score": 4,
+                "evidence": "Located at center right ice with a glowing pale-yellow disc ring around a tiny 6-pixel dark spot, making it quick to locate against the light ice."
+              },
+              "carrier": {
+                "score": 3,
+                "evidence": "Identifiable only because the stick of the rightmost midfield skater points directly into the glowing puck ring, though the dark silhouette skater blends into the other two clustered figures."
+              },
+              "team_colours": {
+                "score": 1,
+                "evidence": "Not visible; all figures share an identical untextured dark grey/black mannequin appearance with no distinguishing jersey colors."
+              },
+              "far_net": {
+                "score": 5,
+                "evidence": "Centered at the far end of the rink, the bright red frame is roughly 110 pixels wide and provides clear contrast against the light ice."
+              },
+              "zone_strips": {
+                "score": 4,
+                "evidence": "The foreground blue line and center red line stretch clearly across the rink, though the far blue line is somewhat subdued under darker ice shading."
+              }
+            },
+            "first_look": "Bright overlapping concentric spotlight circles on the ice",
+            "noise": [
+              "Stepped concentric spotlight gradients on the rink surface",
+              "Deep blue shadow patches between lit zones that swallow skater lower bodies"
+            ],
+            "overall": 2
+          },
+          {
+            "label": "Still B",
+            "elements": {
+              "puck": {
+                "score": 4,
+                "evidence": "Found immediately right of center ice, marked by a bright neon-yellow halo approximately 25 pixels wide surrounding the dark puck core."
+              },
+              "carrier": {
+                "score": 4,
+                "evidence": "The rightmost orange skater in the midfield cluster is clearly the puck carrier as its stick blade directly touches the puck glow."
+              },
+              "team_colours": {
+                "score": 5,
+                "evidence": "Bright saturated royal blue and vivid warm orange helmets and jerseys separate the two three-player teams instantly."
+              },
+              "far_net": {
+                "score": 5,
+                "evidence": "A stark red rectangular goal frame centered against the far dasher boards, framed cleanly against the far goal crease circle."
+              },
+              "zone_strips": {
+                "score": 5,
+                "evidence": "The near blue line, central red line, and far blue line are solid, unbroken horizontal stripes that stand out distinctly against the rink."
+              }
+            },
+            "first_look": "Foreground bright blue toy skaters",
+            "noise": [
+              "Stepped circular brightness rings on the ice surface",
+              "High-contrast dark shadow pools in the unlit neutral zones"
+            ],
+            "overall": 4
+          },
+          {
+            "label": "Still C",
+            "elements": {
+              "puck": {
+                "score": 4,
+                "evidence": "Clearly spotted at center right via a distinct bright yellow glow circle resting on the white faceoff circle ice."
+              },
+              "carrier": {
+                "score": 4,
+                "evidence": "The right orange skater's stick points right into the puck halo, clearly distinguishing it from the adjacent blue defender and orange teammate."
+              },
+              "team_colours": {
+                "score": 5,
+                "evidence": "Electric blue and bright orange gear provide immediate, unmistakable team differentiation across the ice."
+              },
+              "far_net": {
+                "score": 5,
+                "evidence": "Crisply outlined red goal frame standing in the upper center, unoccluded and sharp against the far boards."
+              },
+              "zone_strips": {
+                "score": 5,
+                "evidence": "Continuous blue and red transverse lines across the ice provide obvious territorial demarcation."
+              }
+            },
+            "first_look": "Saturated blue helmets of foreground skaters",
+            "noise": [
+              "Concentric spotlight falloff rings baked onto the ice plane",
+              "Heavy dark shadows cast beneath and between the skaters"
+            ],
+            "overall": 4
+          }
+        ]
+      },
+      "markdown": "**eyes/readability** A=a30-toy-play-24m.jpg B=a30-b1-play-24m.jpg C=a30-b2-play-24m.jpg at 24 m (gemini-3.8-flash, in 4211 out 998 think 926 tokens, ~$0.0104, 19.4 s)\n- stills:\n  - label: Still A; first_look: Bright overlapping concentric spotlight circles on the ice; overall: 2\n    - elements:\n      - puck: score 4, evidence Located at center right ice with a glowing pale-yellow disc ring around a tiny 6-pixel dark spot, making it quick to locate against the light ice.\n      - carrier: score 3, evidence Identifiable only because the stick of the rightmost midfield skater points directly into the glowing puck ring, though the dark silhouette skater blends into the other two clustered figures.\n      - team_colours: score 1, evidence Not visible; all figures share an identical untextured dark grey/black mannequin appearance with no distinguishing jersey colors.\n      - far_net: score 5, evidence Centered at the far end of the rink, the bright red frame is roughly 110 pixels wide and provides clear contrast against the light ice.\n      - zone_strips: score 4, evidence The foreground blue line and center red line stretch clearly across the rink, though the far blue line is somewhat subdued under darker ice shading.\n    - noise: Stepped concentric spotlight gradients on the rink surface; Deep blue shadow patches between lit zones that swallow skater lower bodies\n  - label: Still B; first_look: Foreground bright blue toy skaters; overall: 4\n    - elements:\n      - puck: score 4, evidence Found immediately right of center ice, marked by a bright neon-yellow halo approximately 25 pixels wide surrounding the dark puck core.\n      - carrier: score 4, evidence The rightmost orange skater in the midfield cluster is clearly the puck carrier as its stick blade directly touches the puck glow.\n      - team_colours: score 5, evidence Bright saturated royal blue and vivid warm orange helmets and jerseys separate the two three-player teams instantly.\n      - far_net: score 5, evidence A stark red rectangular goal frame centered against the far dasher boards, framed cleanly against the far goal crease circle.\n      - zone_strips: score 5, evidence The near blue line, central red line, and far blue line are solid, unbroken horizontal stripes that stand out distinctly against the rink.\n    - noise: Stepped circular brightness rings on the ice surface; High-contrast dark shadow pools in the unlit neutral zones\n  - label: Still C; first_look: Saturated blue helmets of foreground skaters; overall: 4\n    - elements:\n      - puck: score 4, evidence Clearly spotted at center right via a distinct bright yellow glow circle resting on the white faceoff circle ice.\n      - carrier: score 4, evidence The right orange skater's stick points right into the puck halo, clearly distinguishing it from the adjacent blue defender and orange teammate.\n      - team_colours: score 5, evidence Electric blue and bright orange gear provide immediate, unmistakable team differentiation across the ice.\n      - far_net: score 5, evidence Crisply outlined red goal frame standing in the upper center, unoccluded and sharp against the far boards.\n      - zone_strips: score 5, evidence Continuous blue and red transverse lines across the ice provide obvious territorial demarcation.\n    - noise: Concentric spotlight falloff rings baked onto the ice plane; Heavy dark shadows cast beneath and between the skaters"
+    }
+  ]
+}

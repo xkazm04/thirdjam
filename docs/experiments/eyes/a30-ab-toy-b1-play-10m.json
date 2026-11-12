@@ -1,0 +1,74 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "ab-pair",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T18:26:01.419Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "ab-pair",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a30/docs/experiments/img/bakeoff/a30-toy-play-10m.jpg",
+          "width": 2560,
+          "height": 1440
+        },
+        {
+          "label": "B",
+          "path": ".claude/worktrees/a30/docs/experiments/img/bakeoff/a30-b1-play-10m.jpg",
+          "width": 2560,
+          "height": 1440
+        }
+      ],
+      "distance": 10,
+      "thumbnails": [],
+      "prompt_chars": 3509,
+      "usage": {
+        "prompt": 3233,
+        "output": 367,
+        "thoughts": 1756,
+        "total": 5356,
+        "calls": 1
+      },
+      "cost_usd_est": 0.03194,
+      "ms": 22103,
+      "retried": false,
+      "answer": {
+        "elements": {
+          "sky": {
+            "closer": "tie",
+            "why": "Both images share the exact same deep-blue gradient sky with scattered white pixels for stars above the black horizon."
+          },
+          "ice": {
+            "closer": "tie",
+            "why": "Both images use the identical ice surface texture showing light grey and white painted brush streaks."
+          },
+          "pools": {
+            "closer": "tie",
+            "why": "Both images feature the exact same four circular light pools with three distinct flat brightness steps."
+          },
+          "figures": {
+            "closer": "b",
+            "why": "Still B applies the requested deep blue and warm orange colours to the chunky figures, while Still A leaves them in a flat, untextured grey."
+          },
+          "construction": {
+            "closer": "tie",
+            "why": "Both images feature the exact same rink boards with a yellow emissive top, dark glass rail, ochre kick plate, and thick red nets."
+          },
+          "outline": {
+            "closer": "tie",
+            "why": "Both images render identical black outlines around the figures and sticks that thin out on the distant player."
+          }
+        },
+        "verdict": "b",
+        "confidence": 1,
+        "reason": "Still B fulfills the core requirement of having two distinct team jersey colours (deep blue and warm orange) on the figures, whereas Still A presents unfinished grey models.",
+        "loser_keeps": "The entire environment, including the ice texture, stepped lighting pools, and night sky, is identical and successfully establishes the painted cel style."
+      },
+      "markdown": "**eyes/ab-pair** A=a30-toy-play-10m.jpg B=a30-b1-play-10m.jpg at 10 m (gemini-3.1-pro-preview, in 3233 out 367 think 1756 tokens, ~$0.0319, 22.1 s)\n- elements:\n  - sky: closer tie, why Both images share the exact same deep-blue gradient sky with scattered white pixels for stars above the black horizon.\n  - ice: closer tie, why Both images use the identical ice surface texture showing light grey and white painted brush streaks.\n  - pools: closer tie, why Both images feature the exact same four circular light pools with three distinct flat brightness steps.\n  - figures: closer b, why Still B applies the requested deep blue and warm orange colours to the chunky figures, while Still A leaves them in a flat, untextured grey.\n  - construction: closer tie, why Both images feature the exact same rink boards with a yellow emissive top, dark glass rail, ochre kick plate, and thick red nets.\n  - outline: closer tie, why Both images render identical black outlines around the figures and sticks that thin out on the distant player.\n- verdict: b\n- confidence: 1\n- reason: Still B fulfills the core requirement of having two distinct team jersey colours (deep blue and warm orange) on the figures, whereas Still A presents unfinished grey models.\n- loser_keeps: The entire environment, including the ice texture, stepped lighting pools, and night sky, is identical and successfully establishes the painted cel style."
+    }
+  ]
+}

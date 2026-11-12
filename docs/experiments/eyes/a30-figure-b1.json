@@ -1,0 +1,77 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "figure",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T18:34:06.221Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "figure",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a30/docs/experiments/img/bakeoff/a30-b1-verbs-sheet.png",
+          "width": 2559,
+          "height": 960
+        }
+      ],
+      "thumbnails": [
+        "A: 128x48"
+      ],
+      "prompt_chars": 2682,
+      "usage": {
+        "prompt": 3001,
+        "output": 421,
+        "thoughts": 1081,
+        "total": 4503,
+        "calls": 1
+      },
+      "cost_usd_est": 0.02403,
+      "ms": 26722,
+      "retried": false,
+      "answer": {
+        "hockey_player": {
+          "full": 4,
+          "small": 3,
+          "parts": {
+            "stick": true,
+            "blade": true,
+            "hands": true,
+            "skates": true,
+            "helmet": true
+          },
+          "evidence": "All essential hockey equipment is present and in the correct anatomical locations, though the stick becomes hard to see when downscaled."
+        },
+        "toy": {
+          "full": 5,
+          "small": 4,
+          "evidence": "The oversized heads, stubby limbs, lack of joints, and simple flat shading strongly convey a plastic toy figure."
+        },
+        "best_row": "The top row reads best because the upright poses clearly show the silhouette and the large numbers on the back aid identification.",
+        "proportions": {
+          "head_of_height": 0.35,
+          "shoulder_of_height": 0.5,
+          "stick_of_height": 1
+        },
+        "changes": [
+          "stick thickness 2px -> 4px to maintain visibility at a distance",
+          "helmet cage bars 1px -> 3px and reduce number of bars to simplify",
+          "skate blade color dark grey -> light silver to separate from shadows"
+        ],
+        "worst": [
+          "The stick shaft is too thin and vanishes completely in the downscaled view.",
+          "The helmet cage is too complex and thin, turning into visual noise at a distance.",
+          "The sliding pose in the bottom middle breaks the silhouette and makes the legs unreadable."
+        ],
+        "works": [
+          "The chunky proportions and oversized heads perfectly capture the toy aesthetic.",
+          "The high-contrast, saturated orange and blue jersey colors pop well against the ice.",
+          "The large, bold white numbers on the back are highly readable."
+        ]
+      },
+      "markdown": "**eyes/figure** A=a30-b1-verbs-sheet.png (gemini-3.1-pro-preview, in 3001 out 421 think 1081 tokens, ~$0.0240, 26.7 s)\n- hockey_player:\n  - full: 4\n  - small: 3\n  - parts:\n    - stick: true\n    - blade: true\n    - hands: true\n    - skates: true\n    - helmet: true\n  - evidence: All essential hockey equipment is present and in the correct anatomical locations, though the stick becomes hard to see when downscaled.\n- toy:\n  - full: 5\n  - small: 4\n  - evidence: The oversized heads, stubby limbs, lack of joints, and simple flat shading strongly convey a plastic toy figure.\n- best_row: The top row reads best because the upright poses clearly show the silhouette and the large numbers on the back aid identification.\n- proportions:\n  - head_of_height: 0.35\n  - shoulder_of_height: 0.5\n  - stick_of_height: 1\n- changes: stick thickness 2px -> 4px to maintain visibility at a distance; helmet cage bars 1px -> 3px and reduce number of bars to simplify; skate blade color dark grey -> light silver to separate from shadows\n- worst: The stick shaft is too thin and vanishes completely in the downscaled view.; The helmet cage is too complex and thin, turning into visual noise at a distance.; The sliding pose in the bottom middle breaks the silhouette and makes the legs unreadable.\n- works: The chunky proportions and oversized heads perfectly capture the toy aesthetic.; The high-contrast, saturated orange and blue jersey colors pop well against the ice.; The large, bold white numbers on the back are highly readable."
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "ab-pair",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T18:29:42.600Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "ab-pair",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a30/docs/experiments/img/bakeoff/a30-toy-play-40m.jpg",
+          "width": 2560,
+          "height": 1440
+        },
+        {
+          "label": "B",
+          "path": ".claude/worktrees/a30/docs/experiments/img/bakeoff/a30-b2-play-40m.jpg",
+          "width": 2560,
+          "height": 1440
+        }
+      ],
+      "distance": 40,
+      "thumbnails": [],
+      "prompt_chars": 3509,
+      "usage": {
+        "prompt": 3233,
+        "output": 347,
+        "thoughts": 808,
+        "total": 4388,
+        "calls": 1
+      },
+      "cost_usd_est": 0.02033,
+      "ms": 12470,
+      "retried": false,
+      "answer": {
+        "elements": {
+          "sky": {
+            "closer": "tie",
+            "why": "Both stills feature the exact same deep-blue gradient dome with stars above a dark ceiling line."
+          },
+          "ice": {
+            "closer": "tie",
+            "why": "Both stills use the identical painted texture with visible brush strokes and frost patches."
+          },
+          "pools": {
+            "closer": "tie",
+            "why": "Both stills show the same four distinct spotlights with three flat cel-shaded bands."
+          },
+          "figures": {
+            "closer": "b",
+            "why": "Still B colors the toy figures in the required deep blue and warm orange, whereas Still A leaves them as untextured dark grey silhouettes."
+          },
+          "construction": {
+            "closer": "tie",
+            "why": "Both feature the same emissive board trims, ochre kick plates, dark glass rails, and red nets."
+          },
+          "outline": {
+            "closer": "tie",
+            "why": "Both apply the same ink-like outlines to the figures and objects."
+          }
+        },
+        "verdict": "b",
+        "confidence": 0.95,
+        "reason": "Still B successfully implements the required deep blue and warm orange team colors on the figures, which is essential for gameplay readability and the art style, while Still A leaves them as grey placeholders.",
+        "loser_keeps": "The flat cel-shaded lighting steps in the spot pools are perfectly executed and identical in both."
+      },
+      "markdown": "**eyes/ab-pair** A=a30-toy-play-40m.jpg B=a30-b2-play-40m.jpg at 40 m (gemini-3.1-pro-preview, in 3233 out 347 think 808 tokens, ~$0.0203, 12.5 s)\n- elements:\n  - sky: closer tie, why Both stills feature the exact same deep-blue gradient dome with stars above a dark ceiling line.\n  - ice: closer tie, why Both stills use the identical painted texture with visible brush strokes and frost patches.\n  - pools: closer tie, why Both stills show the same four distinct spotlights with three flat cel-shaded bands.\n  - figures: closer b, why Still B colors the toy figures in the required deep blue and warm orange, whereas Still A leaves them as untextured dark grey silhouettes.\n  - construction: closer tie, why Both feature the same emissive board trims, ochre kick plates, dark glass rails, and red nets.\n  - outline: closer tie, why Both apply the same ink-like outlines to the figures and objects.\n- verdict: b\n- confidence: 0.95\n- reason: Still B successfully implements the required deep blue and warm orange team colors on the figures, which is essential for gameplay readability and the art style, while Still A leaves them as grey placeholders.\n- loser_keeps: The flat cel-shaded lighting steps in the spot pools are perfectly executed and identical in both."
+    }
+  ]
+}

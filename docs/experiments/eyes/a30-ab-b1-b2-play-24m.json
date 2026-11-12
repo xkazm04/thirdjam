@@ -1,0 +1,74 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "ab-pair",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T18:31:44.543Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "ab-pair",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a30/docs/experiments/img/bakeoff/a30-b1-play-24m.jpg",
+          "width": 2560,
+          "height": 1440
+        },
+        {
+          "label": "B",
+          "path": ".claude/worktrees/a30/docs/experiments/img/bakeoff/a30-b2-play-24m.jpg",
+          "width": 2560,
+          "height": 1440
+        }
+      ],
+      "distance": 24,
+      "thumbnails": [],
+      "prompt_chars": 3508,
+      "usage": {
+        "prompt": 3235,
+        "output": 363,
+        "thoughts": 2365,
+        "total": 5963,
+        "calls": 1
+      },
+      "cost_usd_est": 0.03921,
+      "ms": 25670,
+      "retried": false,
+      "answer": {
+        "elements": {
+          "sky": {
+            "closer": "tie",
+            "why": "Both stills feature the exact same deep-blue night dome with scattered white stars above a black ceiling line."
+          },
+          "ice": {
+            "closer": "tie",
+            "why": "The painted brush streaks and frost patches on the ice surface are pixel-identical in both images."
+          },
+          "pools": {
+            "closer": "tie",
+            "why": "Both images show the exact same four circular light pools with distinct flat cel lighting steps."
+          },
+          "figures": {
+            "closer": "b",
+            "why": "The blue foreground figures in B retain visible yellow sticks and blue helmets, whereas A's overly thick black lines swallow these interior colors."
+          },
+          "construction": {
+            "closer": "tie",
+            "why": "The yellow and blue emissive board trims, ochre kick plates, and red net frames are identical in both."
+          },
+          "outline": {
+            "closer": "b",
+            "why": "The black outlines in B are thin enough on the nearest players to look like drawn ink, while A's outlines are so thick they obscure the stick shafts."
+          }
+        },
+        "verdict": "b",
+        "confidence": 0.95,
+        "reason": "Still B successfully balances the painted cel aesthetic by keeping the black outlines thin enough to preserve the interior colors and toy-like readability of the foreground figures.",
+        "loser_keeps": "Still A successfully implements the flat cel lighting steps and the saturated glowing puck trail."
+      },
+      "markdown": "**eyes/ab-pair** A=a30-b1-play-24m.jpg B=a30-b2-play-24m.jpg at 24 m (gemini-3.1-pro-preview, in 3235 out 363 think 2365 tokens, ~$0.0392, 25.7 s)\n- elements:\n  - sky: closer tie, why Both stills feature the exact same deep-blue night dome with scattered white stars above a black ceiling line.\n  - ice: closer tie, why The painted brush streaks and frost patches on the ice surface are pixel-identical in both images.\n  - pools: closer tie, why Both images show the exact same four circular light pools with distinct flat cel lighting steps.\n  - figures: closer b, why The blue foreground figures in B retain visible yellow sticks and blue helmets, whereas A's overly thick black lines swallow these interior colors.\n  - construction: closer tie, why The yellow and blue emissive board trims, ochre kick plates, and red net frames are identical in both.\n  - outline: closer b, why The black outlines in B are thin enough on the nearest players to look like drawn ink, while A's outlines are so thick they obscure the stick shafts.\n- verdict: b\n- confidence: 0.95\n- reason: Still B successfully balances the painted cel aesthetic by keeping the black outlines thin enough to preserve the interior colors and toy-like readability of the foreground figures.\n- loser_keeps: Still A successfully implements the flat cel lighting steps and the saturated glowing puck trail."
+    }
+  ]
+}

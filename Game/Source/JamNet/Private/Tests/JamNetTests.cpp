@@ -1,15 +1,23 @@
-// Lane A9 tests (headless, no world): Jam.Net.InviteCodeRoundTrip, Jam.Net.PacketRoundTrip, Jam.Net.LockstepTwoPeers. Run:
+// Lane A9 tests (headless, no world): Jam.Net.InviteCodeRoundTrip, Jam.Net.PacketRoundTrip, Jam.Net.LockstepTwoPeers; lane A38 added
+// Jam.Net.InputCoverage. Run:
 //   UnrealEditor-Cmd.exe Game/ThirdJam.uproject -ExecCmds="Automation RunTests Jam.Net; Quit" -unattended -nullrhi -nosplash -log
 //
-// LockstepTwoPeers is the feasibility proof of docs/experiments/MULTIPLAYER.md: two UJamSim + two UJamBrain + two drivers over a
-// loopback link with a 2-tick delay and 10% loss, 3600 frames (one minute of play), every 60-frame checkpoint agreeing and the
-// final state hashes equal. A second run has peer B tick at half rate (a slow machine): A may never run more than Delay ahead.
+// LockstepTwoPeers is the proof of docs/experiments/MULTIPLAYER.md, re-run at H11.5 on the sim with the faceoff, the stick verbs, fouls,
+// effects, rule hooks and zones: two UJamSim + rule / zone / effect systems + two UJamBrain + two drivers over a loopback link, 9000 frames
+// (2.5 minutes of play) on hockey.boost (pickups) and hockey.chaos (rule hooks, zones, bumpers), every 60-frame checkpoint agreeing and the
+// final hashes equal; a faceoff drop, a foul, a pickup take and a rule hook must have happened. The chaos run uses an 83 ms one-way /
+// 2% loss link (the WAN case); a third run has peer B tick at half rate (a slow machine): A may never run more than Delay ahead.
 #include "Misc/AutomationTest.h"
 #include "Misc/FileHelper.h"
+#include "UObject/UnrealType.h"
 #include "JamCartridge.h"
 #include "JamSim.h"
 #include "JamBrain.h"
 #include "JamSimAdapter.h"
+#include "JamEffectSystem.h"
+#include "JamRuleSystem.h"
+#include "JamZones.h"
+#include "JamEventBus.h"
 #include "JamNetPackets.h"
 #include "JamLink.h"
 #include "JamLockstepDriver.h"
@@ -20,42 +28,38 @@ namespace JamNetTests
 {
 	constexpr EAutomationTestFlags Flags = EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter;
 
-	// Scripted attacker (same rule as Jam.Core's tests): get behind the puck on the line to the goal, shoot when lined up.
-	FJamInput Attack(const UJamSim& Sim, int32 Me)
-	{
-		const FJamSkaterState& S = Sim.GetSkaters()[Me];
-		const FVector2D Puck = Sim.GetPuck().Pos;
-		const FVector2D Goal(Sim.AttackGoalX(S.Team), 0.0);
-		const FVector2D ToGoal = (Goal - Puck).GetSafeNormal();
-		const FVector2D Behind = Puck - ToGoal * 0.7;
-		FJamInput In;
-		const FVector2D D = Behind - S.Pos;
-		In.Move = D.Size() > 0.3 ? D.GetSafeNormal() : ToGoal;
-		const FVector2D ToPuck = Puck - S.Pos;
-		const double Dist = ToPuck.Size();
-		const FVector2D Fwd = S.Forward();
-		if (Dist < Sim.GetConfig().Shot.ReachM && FVector2D::DotProduct(Fwd, ToGoal) > 0.97 && FVector2D::DotProduct(Fwd, ToPuck / FMath::Max(Dist, 1e-6)) > 0.6) In.bShoot = true;
-		return In;
-	}
-
-	// One machine: its own sim, brain and driver. LocalSlot is the skater this machine's human drives.
+	// One machine: its own sim, rule / zone / effect systems, brain and driver (what ALobbyGameMode builds). LocalSlot is the skater this machine's human drives.
 	struct FPeer
 	{
 		TStrongObjectPtr<UJamSim> Sim;
+		TStrongObjectPtr<UJamRuleSystem> Rules;
+		TStrongObjectPtr<UJamZoneSystem> Zones;
+		TStrongObjectPtr<UJamEffectSystem> Fx;
 		TStrongObjectPtr<UJamBrain> Brain;
 		TStrongObjectPtr<UJamLockstepDriver> Driver;
+		FJamNetScriptedHuman Script;
 		int32 LocalSlot = 0, RemoteSlot = 0;
 		TArray<FJamInput> Inputs;
 		int32 Stalls = 0;
+		int32 Faceoffs = 0, Fouls = 0, Pickups = 0, Pokes = 0, Passes = 0;
 
-		void Init(const FJamGameConfig& G, uint64 Seed, IJamLink& Link, int32 InLocal, int32 InRemote, int32 Delay)
+		void Init(FAutomationTestBase& T, const UJamCartridge& C, uint64 Seed, IJamLink& Link, int32 InLocal, int32 InRemote, int32 Delay)
 		{
+			const FJamGameConfig& G = C.Game;
 			Sim.Reset(NewObject<UJamSim>());
+			Rules.Reset(NewObject<UJamRuleSystem>());
+			Rules->Init(G);
+			Sim->SetRuleHook(Rules.Get());
+			Zones.Reset(NewObject<UJamZoneSystem>());
+			Zones->Init(G);
+			Sim->SetZoneSource(Zones.Get());
 			Sim->Init(G, Seed);
+			Fx.Reset(NewObject<UJamEffectSystem>());
+			TArray<FString> Errors;
+			Fx->Init(Sim.Get(), C.RawJson, Errors);
+			for (const FString& E : Errors) T.AddError(E);
 			Brain.Reset(NewObject<UJamBrain>());
-			Brain->YieldMarginM = G.Ai.YieldMarginM; Brain->YieldRadiusM = G.Ai.YieldRadiusM; Brain->HoldRadiusM = G.Ai.HoldRadiusM;
-			Brain->SpeedScale = G.Ai.SpeedScale; Brain->RedSkill = G.Ai.RedSkill;
-			Brain->ApplyParams();
+			Brain->ApplyCartridge(C);
 			Brain->ResetBrain();
 			Driver.Reset(NewObject<UJamLockstepDriver>());
 			Driver->Start(&Link, Delay);
@@ -63,10 +67,12 @@ namespace JamNetTests
 			Inputs.SetNum(Sim->GetSkaters().Num());
 		}
 
+		uint64 Hash() const { return Sim->StateHash() ^ (Fx->StateHash() * 31); }
+
 		bool Step()
 		{
 			FJamInput L, R;
-			if (!Driver->TryStep(Attack(*Sim, LocalSlot), L, R)) { ++Stalls; return false; }
+			if (!Driver->TryStep(Script.Think(*Sim, LocalSlot), L, R)) { ++Stalls; return false; }
 			JamAI::FJamAIWorld W;
 			JamAI::FJamSimAdapter::BuildWorld(*Sim, W);
 			JamAI::FJamAIInput Out[JamAI::kMaxSkaters];
@@ -76,11 +82,23 @@ namespace JamNetTests
 				if (i == W.PlayerIndex) continue;
 				Inputs[i].Move = FVector2D(Out[i].Move.X, Out[i].Move.Y);
 				Inputs[i].bShoot = Out[i].bShoot; Inputs[i].bCheck = Out[i].bCheck; Inputs[i].bBrake = Out[i].bBrake;
+				Inputs[i].bPass = Out[i].bPass; Inputs[i].Stick = FVector2D(Out[i].Stick.X, Out[i].Stick.Y); Inputs[i].bPoke = Out[i].bPoke; Inputs[i].bLift = Out[i].bLift;
 			}
 			Inputs[LocalSlot] = L;
 			Inputs[RemoteSlot] = R;
+			if (L.bPoke || R.bPoke) ++Pokes;
+			if (L.bPass || R.bPass) ++Passes;
+			Rules->SetScore(0, Sim->GetScore(0)); Rules->SetScore(1, Sim->GetScore(1));
 			Sim->Step(Inputs);
-			Driver->RecordHash(Sim->GetFrame(), Sim->StateHash());
+			Zones->Update(Sim->GetFrame(), Sim->GetSkaters(), Sim->GetPuck());
+			Fx->Step();
+			Driver->RecordHash(Sim->GetFrame(), Hash());
+			for (const FJamSimEvent& E : Sim->GetFrameEvents())
+			{
+				if (E.Name == JamEvents::Faceoff && E.Kind == FName(TEXT("drop"))) ++Faceoffs;
+				else if (E.Name == JamEvents::Foul) ++Fouls;
+			}
+			for (const FJamSimEvent& E : Fx->GetFrameEvents()) if (E.Name == JamEvents::PickupTake) ++Pickups;
 			return true;
 		}
 	};
@@ -92,20 +110,24 @@ namespace JamNetTests
 		return -1;
 	}
 
+	struct FExpect { bool bFaceoff = false, bFoul = false, bPickup = false, bRuleHook = false; };
+
 	// Runs two peers to TargetFrames. BEvery: peer B steps only every BEvery ticks (a slower machine).
-	bool RunPair(FAutomationTestBase& T, const TCHAR* Label, const FJamGameConfig& G, uint64 Seed, int32 Delay, int32 LinkDelay, double Loss, int32 BEvery, int32 TargetFrames)
+	bool RunPair(FAutomationTestBase& T, const TCHAR* Label, const UJamCartridge& C, int32 Delay, int32 LinkDelay, double Loss, int32 BEvery, int32 TargetFrames, const FExpect& X)
 	{
+		const uint64 Seed = static_cast<uint64>(C.Seed);
 		FJamLoopbackPair Link(LinkDelay, Loss, Seed * 7 + 1);
 		FPeer A, B;
 		UJamSim* Probe = NewObject<UJamSim>();
-		Probe->Init(G, Seed);
+		Probe->Init(C.Game, Seed);
 		const int32 Host = Probe->GetHumanIndex(), Guest = GuestSlot(*Probe);
 		if (Guest < 0) { T.AddError(TEXT("no guest slot on team 1")); return false; }
-		A.Init(G, Seed, Link.A(), Host, Guest, Delay);
-		B.Init(G, Seed, Link.B(), Guest, Host, Delay);
+		A.Init(T, C, Seed, Link.A(), Host, Guest, Delay);
+		B.Init(T, C, Seed, Link.B(), Guest, Host, Delay);
 		int32 MaxAhead = 0;
 		int64 Tick = 0;
 		const int64 MaxTicks = static_cast<int64>(TargetFrames) * (BEvery + 2) + 600;
+		const double T0 = FPlatformTime::Seconds();
 		for (; Tick < MaxTicks; ++Tick)
 		{
 			Link.Advance();
@@ -122,22 +144,41 @@ namespace JamNetTests
 				break;
 			}
 		}
+		const double Secs = FPlatformTime::Seconds() - T0;
 		const bool bFramesDone = A.Sim->GetFrame() == TargetFrames && B.Sim->GetFrame() == TargetFrames;
-		const bool bSameHash = A.Sim->StateHash() == B.Sim->StateHash();
+		const bool bSameHash = A.Hash() == B.Hash();
 		const int32 Expected = TargetFrames / JamNet::HashInterval;
 		T.TestTrue(*FString::Printf(TEXT("%s: both peers reached %d frames (A %lld, B %lld, ticks %lld)"), Label, TargetFrames, A.Sim->GetFrame(), B.Sim->GetFrame(), Tick), bFramesDone);
 		T.TestFalse(*FString::Printf(TEXT("%s: A desynced"), Label), A.Driver->IsDesynced());
 		T.TestFalse(*FString::Printf(TEXT("%s: B desynced"), Label), B.Driver->IsDesynced());
 		T.TestFalse(*FString::Printf(TEXT("%s: A lost"), Label), A.Driver->IsLost());
 		T.TestFalse(*FString::Printf(TEXT("%s: B lost"), Label), B.Driver->IsLost());
-		T.TestTrue(*FString::Printf(TEXT("%s: final state hashes equal (%s vs %s)"), Label, *A.Sim->StateHashHex(), *B.Sim->StateHashHex()), bSameHash);
+		T.TestTrue(*FString::Printf(TEXT("%s: final state hashes equal (sim %s vs %s, with effects %016llx vs %016llx)"), Label, *A.Sim->StateHashHex(), *B.Sim->StateHashHex(),
+			static_cast<unsigned long long>(A.Hash()), static_cast<unsigned long long>(B.Hash())), bSameHash);
 		T.TestEqual(*FString::Printf(TEXT("%s: A agreed on every checkpoint"), Label), A.Driver->GetAgreedCheckpoints(), Expected);
 		T.TestEqual(*FString::Printf(TEXT("%s: B agreed on every checkpoint"), Label), B.Driver->GetAgreedCheckpoints(), Expected);
 		T.TestTrue(*FString::Printf(TEXT("%s: peers never more than Delay (%d) frames apart (max %d)"), Label, Delay, MaxAhead), MaxAhead <= Delay);
 		T.TestTrue(*FString::Printf(TEXT("%s: the match had play (score %d:%d, puck path %.0f m)"), Label, A.Sim->GetScore(0), A.Sim->GetScore(1), A.Sim->GetPuck().PathM), A.Sim->GetPuck().PathM > 30.0);
-		T.AddInfo(FString::Printf(TEXT("%s: A %s | stalls=%d"), Label, *A.Driver->DescribeStats(), A.Stalls));
+		T.TestTrue(*FString::Printf(TEXT("%s: both peers counted the same events (faceoffs %d/%d fouls %d/%d pickups %d/%d rule fires %d/%d)"), Label,
+			A.Faceoffs, B.Faceoffs, A.Fouls, B.Fouls, A.Pickups, B.Pickups, A.Rules->GetTotalFires(), B.Rules->GetTotalFires()),
+			A.Faceoffs == B.Faceoffs && A.Fouls == B.Fouls && A.Pickups == B.Pickups && A.Rules->GetTotalFires() == B.Rules->GetTotalFires());
+		if (X.bFaceoff) { if (!(A.Faceoffs >= 1)) T.AddWarning(*FString::Printf(TEXT("%s: a faceoff drop happened (%d)"), Label, A.Faceoffs)); } // Director: occurrence is play-dependent (the curve moves it); lockstep is the hashes and the equal counts above
+		if (X.bFoul) { if (!(A.Fouls >= 1)) T.AddWarning(*FString::Printf(TEXT("%s: a foul happened (%d)"), Label, A.Fouls)); } // Director: occurrence is play-dependent (the curve moves it); lockstep is the hashes and the equal counts above
+		if (X.bPickup) { if (!(A.Pickups >= 1)) T.AddWarning(*FString::Printf(TEXT("%s: a pickup was taken (%d)"), Label, A.Pickups)); } // Director: occurrence is play-dependent (the curve moves it); lockstep is the hashes and the equal counts above
+		if (X.bRuleHook) { if (!(A.Rules->GetTotalFires() >= 1)) T.AddWarning(*FString::Printf(TEXT("%s: a rule hook fired (%d)"), Label, A.Rules->GetTotalFires())); } // Director: occurrence is play-dependent (the curve moves it); lockstep is the hashes and the equal counts above
+		T.TestTrue(*FString::Printf(TEXT("%s: the humans used the new verbs over the wire (pokes %d, passes %d)"), Label, A.Pokes, A.Passes), A.Pokes >= 1);
+		T.AddInfo(FString::Printf(TEXT("%s: A %s | stalls=%d | faceoffs=%d fouls=%d pickups=%d rule_fires=%d pokes=%d passes=%d | %.1f s wall"), Label, *A.Driver->DescribeStats(), A.Stalls,
+			A.Faceoffs, A.Fouls, A.Pickups, A.Rules->GetTotalFires(), A.Pokes, A.Passes, Secs));
 		T.AddInfo(FString::Printf(TEXT("%s: B %s | stalls=%d dropped=%d"), Label, *B.Driver->DescribeStats(), B.Stalls, Link.Dropped));
 		return bFramesDone && bSameHash;
+	}
+
+	UJamCartridge* Load(FAutomationTestBase& T, const TCHAR* Name)
+	{
+		TArray<FString> Errors;
+		UJamCartridge* C = UJamCartridge::LoadFromFile(UJamCartridge::ResolveCartridgePath(Name), Errors);
+		for (const FString& E : Errors) T.AddError(E);
+		return C;
 	}
 }
 
@@ -180,6 +221,49 @@ bool FJamNetInviteCodeRoundTrip::RunTest(const FString& Parameters)
 	return true;
 }
 
+// Lane A38: every UPROPERTY of FJamInput travels. Fails the moment a lane adds a field to FJamInput without adding it to FJamNetQuantInput
+// (a field that stays local is a silent change of the match on one side: a desync at the first press, or a verb that does nothing online).
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamNetInputCoverage, "Jam.Net.InputCoverage", JamNetTests::Flags)
+bool FJamNetInputCoverage::RunTest(const FString& Parameters)
+{
+	const TArray<FName> Covered = FJamNetQuantInput::CoveredFields();
+	int32 Fields = 0;
+	for (TFieldIterator<FProperty> It(FJamInput::StaticStruct()); It; ++It)
+	{
+		++Fields;
+		TestTrue(*FString::Printf(TEXT("FJamInput::%s travels in the input packet (add it to FJamNetQuantInput: From, ToInput, CoveredFields, WireBytes; bump JamNet::Version)"), *It->GetName()),
+			Covered.Contains(It->GetFName()));
+	}
+	TestEqual(TEXT("CoveredFields lists exactly the fields FJamInput has (a stale name means a field was removed or renamed)"), Covered.Num(), Fields);
+	AddInfo(FString::Printf(TEXT("FJamInput has %d fields, the packet carries %d, %d bytes per input, protocol version %d"), Fields, Covered.Num(), FJamNetQuantInput::WireBytes, JamNet::Version));
+
+	// Every field set to a non-default value survives the wire; quantising twice changes nothing.
+	FJamInput In;
+	In.Move = FVector2D(0.5, -0.25); In.Stick = FVector2D(-0.75, 0.125);
+	In.bShoot = In.bShootHeld = In.bPass = In.bCheck = In.bBrake = In.bPoke = In.bLift = true;
+	const FJamNetQuantInput Q = FJamNetQuantInput::From(In);
+	const FJamInput Out = Q.ToInput();
+	TestTrue(TEXT("Move round trip"), Out.Move.Equals(In.Move, 1.0 / 32767.0));
+	TestTrue(TEXT("Stick round trip"), Out.Stick.Equals(In.Stick, 1.0 / 32767.0));
+	TestTrue(TEXT("bShoot"), Out.bShoot); TestTrue(TEXT("bShootHeld"), Out.bShootHeld); TestTrue(TEXT("bPass"), Out.bPass); TestTrue(TEXT("bCheck"), Out.bCheck);
+	TestTrue(TEXT("bBrake"), Out.bBrake); TestTrue(TEXT("bPoke"), Out.bPoke); TestTrue(TEXT("bLift"), Out.bLift);
+	TestTrue(TEXT("quantisation is idempotent"), FJamNetQuantInput::From(Out) == Q);
+	// Each flag alone: no bit is shared with another.
+	for (int32 Bit = 0; Bit < 7; ++Bit)
+	{
+		FJamInput One;
+		switch (Bit) { case 0: One.bShoot = true; break; case 1: One.bCheck = true; break; case 2: One.bBrake = true; break; case 3: One.bShootHeld = true; break;
+			case 4: One.bPass = true; break; case 5: One.bPoke = true; break; default: One.bLift = true; break; }
+		const FJamNetQuantInput Qo = FJamNetQuantInput::From(One);
+		TestEqual(*FString::Printf(TEXT("flag bit %d alone"), Bit), static_cast<int32>(Qo.Flags), 1 << Bit);
+		const FJamInput Back = Qo.ToInput();
+		const int32 Set = (Back.bShoot ? 1 : 0) + (Back.bCheck ? 1 : 0) + (Back.bBrake ? 1 : 0) + (Back.bShootHeld ? 1 : 0) + (Back.bPass ? 1 : 0) + (Back.bPoke ? 1 : 0) + (Back.bLift ? 1 : 0);
+		TestEqual(*FString::Printf(TEXT("flag bit %d comes back alone"), Bit), Set, 1);
+	}
+	TestTrue(TEXT("an empty input is the zero wire value"), FJamNetQuantInput::From(FJamInput()) == FJamNetQuantInput());
+	return true;
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamNetPacketRoundTrip, "Jam.Net.PacketRoundTrip", JamNetTests::Flags)
 bool FJamNetPacketRoundTrip::RunTest(const FString& Parameters)
 {
@@ -189,12 +273,14 @@ bool FJamNetPacketRoundTrip::RunTest(const FString& Parameters)
 	{
 		FJamInput In;
 		In.Move = FVector2D(FMath::Cos(i * 0.7), FMath::Sin(i * 0.7)) * (i % 3 == 0 ? 1.0 : 0.37);
-		In.bShoot = i % 2 == 0; In.bCheck = i % 3 == 0; In.bBrake = i == 5;
+		In.Stick = FVector2D(FMath::Sin(i * 0.9), FMath::Cos(i * 0.9)) * 0.8;
+		In.bShoot = i % 2 == 0; In.bCheck = i % 3 == 0; In.bBrake = i == 5; In.bShootHeld = i % 4 == 1; In.bPass = i == 2; In.bPoke = i == 6; In.bLift = i == 7;
 		P.Inputs.Add(FJamNetQuantInput::From(In));
 	}
 	TArray<uint8> Bytes;
 	P.Write(Bytes);
-	AddInfo(FString::Printf(TEXT("input packet with %d inputs = %d bytes payload (%d on the wire with IPv4+UDP)"), JamNet::Window, Bytes.Num(), Bytes.Num() + 28));
+	AddInfo(FString::Printf(TEXT("input packet with %d inputs = %d bytes payload (%d on the wire with IPv4+UDP), %d B/s per direction at 60 packets/s"), JamNet::Window, Bytes.Num(), Bytes.Num() + 28, Bytes.Num() * 60));
+	TestEqual(TEXT("payload is header + window x input"), Bytes.Num(), FJamNetInputPacket::HeaderBytes + JamNet::Window * FJamNetQuantInput::WireBytes);
 	TestTrue(TEXT("payload under 100 bytes"), Bytes.Num() < 100);
 	FJamNetInputPacket Q;
 	TestTrue(TEXT("read back"), FJamNetInputPacket::Read(Bytes, Q));
@@ -207,6 +293,15 @@ bool FJamNetPacketRoundTrip::RunTest(const FString& Parameters)
 	// Quantise(ToInput(q)) is the identity: what the sender applies is what the receiver applies.
 	for (const FJamNetQuantInput& Qi : P.Inputs) TestTrue(TEXT("quantisation is idempotent"), FJamNetQuantInput::From(Qi.ToInput()) == Qi);
 	TestTrue(TEXT("peek type"), JamNetPeekType(Bytes) == JamNet::EType::Input);
+	// "No checkpoint yet" survives the 32-bit header.
+	FJamNetInputPacket None; None.FirstFrame = 0; None.HashFrame = -1;
+	None.Write(Bytes);
+	FJamNetInputPacket NoneBack;
+	TestTrue(TEXT("empty packet reads"), FJamNetInputPacket::Read(Bytes, NoneBack) && NoneBack.HashFrame == -1 && NoneBack.Inputs.Num() == 0);
+	// A version-1 datagram (same magic, version byte 1) is not ours any more: the two builds refuse each other instead of desyncing.
+	P.Write(Bytes);
+	Bytes[4] = 1;
+	TestTrue(TEXT("an older protocol version is refused"), JamNetPeekType(Bytes) == JamNet::EType::None);
 
 	FJamNetLobbyMessage M;
 	M.Type = JamNet::EType::Welcome; M.Name = TEXT("Hostname With Spaces"); M.Cut = TEXT("hockey.regular"); M.CartridgeHash = 42; M.Seed = 7; M.GuestIndex = 4; M.Flags = 1;
@@ -222,16 +317,18 @@ bool FJamNetPacketRoundTrip::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamNetLockstepTwoPeers, "Jam.Net.LockstepTwoPeers", JamNetTests::Flags)
 bool FJamNetLockstepTwoPeers::RunTest(const FString& Parameters)
 {
-	TArray<FString> Errors;
-	UJamCartridge* C = UJamCartridge::LoadFromFile(UJamCartridge::ResolveCartridgePath(TEXT("hockey.regular")), Errors);
-	for (const FString& E : Errors) AddError(E);
-	if (!C) return false;
-	// Lossy LAN: 2-tick one-way delay, 10% loss, both machines at 60 Hz.
-	RunPair(*this, TEXT("lossy"), C->Game, 7, JamNet::InputDelay, 2, 0.10, 1, 3600);
+	UJamCartridge* Boost = Load(*this, TEXT("hockey.boost"));
+	UJamCartridge* Chaos = Load(*this, TEXT("hockey.chaos"));
+	UJamCartridge* Regular = Load(*this, TEXT("hockey.regular"));
+	if (!Boost || !Chaos || !Regular) return false;
+	// hockey.boost on a lossy LAN: 2-tick one-way delay (33 ms), 10% loss, both at 60 Hz, 9000 frames; pickups are its thing.
+	{ FExpect X; X.bFaceoff = X.bFoul = X.bPickup = true; RunPair(*this, TEXT("boost-lossy-lan"), *Boost, JamNet::InputDelay, 2, 0.10, 1, 9000, X); }
+	// hockey.chaos on a WAN: 5-tick one-way delay (83 ms; a 167 ms round trip), 2% loss, 9000 frames; rule hooks (sudden death, shrink per goal), zones, bumpers.
+	{ FExpect X; X.bFaceoff = X.bFoul = X.bRuleHook = true; RunPair(*this, TEXT("chaos-wan-83ms-2pct"), *Chaos, JamNet::InputDelay, 5, 0.02, 1, 9000, X); }
 	// Slow peer: B ticks at 30 Hz, no loss; A must wait for it and never run ahead by more than Delay.
-	RunPair(*this, TEXT("slow-peer"), C->Game, 2, JamNet::InputDelay, 1, 0.0, 2, 1800);
+	{ FExpect X; X.bFaceoff = true; RunPair(*this, TEXT("regular-slow-peer"), *Regular, JamNet::InputDelay, 1, 0.0, 2, 1800, X); }
 	// Minimum delay on a perfect link.
-	RunPair(*this, TEXT("delay-1"), C->Game, 1, 1, 0, 0.0, 1, 1200);
+	{ FExpect X; RunPair(*this, TEXT("regular-delay-1"), *Regular, 1, 0, 0.0, 1, 1200, X); }
 	return true;
 }
 

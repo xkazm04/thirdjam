@@ -1,0 +1,57 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-12T17:36:19.977Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "devlog/shots/20261112-183430-A-a29-trip-fall.png",
+          "width": 5760,
+          "height": 558
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2278,
+      "usage": {
+        "prompt": 1740,
+        "output": 177,
+        "thoughts": 0,
+        "total": 1917,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00197,
+      "ms": 4750,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [
+              {
+                "where": "Top-left corner across the upper edge",
+                "what": "Engine debug/caption text overlay reading sequence time and frame metadata is burned into the viewport render.",
+                "severity": 1,
+                "confidence": 0.95
+              },
+              {
+                "where": "Middle frames across the horizontal sequence (frames 4 to 8)",
+                "what": "The falling mannequin mesh penetrates through the flat ground plane, with limbs and torso partly sunk beneath the ice surface geometry.",
+                "severity": 3,
+                "confidence": 0.9
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=20261112-183430-A-a29-trip-fall.png (gemini-3.8-flash, in 1740 out 177 tokens, ~$0.0020, 4.8 s)\n- stills:\n  - label: Still A; clean: false\n    - findings:\n      - where: Top-left corner across the upper edge; what: Engine debug/caption text overlay reading sequence time and frame metadata is burned into the viewport render.; severity: 1; confidence: 0.95\n      - where: Middle frames across the horizontal sequence (frames 4 to 8); what: The falling mannequin mesh penetrates through the flat ground plane, with limbs and torso partly sunk beneath the ice surface geometry.; severity: 3; confidence: 0.9"
+    }
+  ]
+}
