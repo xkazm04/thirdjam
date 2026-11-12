@@ -1,0 +1,72 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "readability",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-12T19:44:11.040Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "readability",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a43/Game/Saved/Screenshots/WindowsEditor/a43-b1-base2-24m.png",
+          "width": 2560,
+          "height": 1354
+        }
+      ],
+      "distance": 24,
+      "thumbnails": [],
+      "prompt_chars": 2712,
+      "usage": {
+        "prompt": 1921,
+        "output": 413,
+        "thoughts": 0,
+        "total": 2334,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00299,
+      "ms": 12155,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A: a43-b1-base2-24m.png",
+            "elements": {
+              "puck": {
+                "score": 4,
+                "evidence": "A tiny black disc surrounded by an intense pale yellow circular glow is clearly marked at the stick blade of blue skater #7 near the center."
+              },
+              "carrier": {
+                "score": 5,
+                "evidence": "Blue skater #7 is immediately identifiable as the carrier due to the glowing puck at their stick and a sharp bright yellow-white guideline extending from them toward the bottom right."
+              },
+              "team_colours": {
+                "score": 4,
+                "evidence": "Skater #7 is in deep royal blue while the nearby opposing skater is clearly visible in warm orange, though distant figures at the far end are tiny blue specks."
+              },
+              "far_net": {
+                "score": 4,
+                "evidence": "The red-framed net stands out distinctly against the bright white ice spotlight patch in the upper-left offensive zone, spanning about 130 pixels wide."
+              },
+              "zone_strips": {
+                "score": 5,
+                "evidence": "The thick dark red center line and horizontal dark blue blue-line are crisply drawn and span completely across the ice surface."
+              }
+            },
+            "first_look": "bright yellow guide line leading to the glowing puck at blue skater #7",
+            "noise": [
+              "glowing yellow and blue strips along the top of the dasher boards",
+              "repetitive bright white circular spotlight patches across the ice",
+              "prominent tall floodlight lattice tower in the dark background"
+            ],
+            "overall": 4
+          }
+        ]
+      },
+      "markdown": "**eyes/readability** A=a43-b1-base2-24m.png at 24 m (gemini-3.8-flash, in 1921 out 413 tokens, ~$0.0030, 12.2 s)\n- stills:\n  - label: Still A: a43-b1-base2-24m.png; first_look: bright yellow guide line leading to the glowing puck at blue skater #7; overall: 4\n    - elements:\n      - puck: score 4, evidence A tiny black disc surrounded by an intense pale yellow circular glow is clearly marked at the stick blade of blue skater #7 near the center.\n      - carrier: score 5, evidence Blue skater #7 is immediately identifiable as the carrier due to the glowing puck at their stick and a sharp bright yellow-white guideline extending from them toward the bottom right.\n      - team_colours: score 4, evidence Skater #7 is in deep royal blue while the nearby opposing skater is clearly visible in warm orange, though distant figures at the far end are tiny blue specks.\n      - far_net: score 4, evidence The red-framed net stands out distinctly against the bright white ice spotlight patch in the upper-left offensive zone, spanning about 130 pixels wide.\n      - zone_strips: score 5, evidence The thick dark red center line and horizontal dark blue blue-line are crisply drawn and span completely across the ice surface.\n    - noise: glowing yellow and blue strips along the top of the dasher boards; repetitive bright white circular spotlight patches across the ice; prominent tall floodlight lattice tower in the dark background"
+    }
+  ]
+}

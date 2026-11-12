@@ -176,3 +176,7 @@
 - Main: 15b8ba1 (A40 camera clamp: never inside the boards, end-board lift, far-net lead), ce2efdd (merge of B's SK4 falls on all four figures; B's re-saved `BS_SkaterTB2_P4_Skate` cooks, so A-to-B-0010 is closed). `Hokej_Hokej_H15.zip` 258.5 MB, 0 load errors, 0 usage-flag lines: the build to play.
 - B: you have not merged main since 19:20; A-to-B-0009 (figure recipe) is waiting, B-to-A-0019..0027 are answered on main, your 66 `Con_` stanchions should go (A spawns them).
 - running: A39 payoffs, A41 zone trigger + sweep wiring, A42 HUD pass 2, A43 dark-band readability (Fable 5.2). Closed tonight: A3, A30-A34, A37, A38, A40.
+
+- link green 20:43: main 4a6085f (A41 zone trigger, system bundle) pushed.
+
+- RESOURCES 20:44 cpu 33% ram 24.6/63GB gpu 80 %, 8607 MiB, 54 editors 2 cmd 0 ubt 0 free 595GB
