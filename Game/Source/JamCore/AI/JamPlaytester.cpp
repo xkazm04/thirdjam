@@ -420,6 +420,8 @@ namespace JamAI
 		FJamAIWorld W;
 		FJamAIInput In[kMaxSkaters];
 		int64_t SinceFaceoff = 0, SinceTouch = 0, CarrySpell = 0;
+		int64_t WinMate = 0, WinOpp = 0, WinLoose = 0;   // this window's frames by holder
+		auto CountWindow = [&]() { St.WoMateFrames += WinMate; St.WoOppFrames += WinOpp; St.WoLooseFrames += WinLoose; };
 		bool bWaitingTouch = Pi >= 0;
 		int LastLead = 0;
 		St.Faceoffs = 1;
@@ -451,7 +453,7 @@ namespace JamAI
 				{
 					bWaitingTouch = false;
 					if (SinceFaceoff > St.MaxFaceoffToTouch) { St.MaxFaceoffToTouch = static_cast<int>(SinceFaceoff); }
-					if (SinceFaceoff > TouchWindow) { ++St.FaceoffsWithoutTouch; }
+					if (SinceFaceoff > TouchWindow) { ++St.FaceoffsWithoutTouch; CountWindow(); }
 				}
 			}
 			else if (bPlay)
@@ -505,7 +507,7 @@ namespace JamAI
 				if (Lead != 0) { LastLead = Lead; }
 				if (bWaitingTouch)
 				{
-					if (SinceFaceoff > TouchWindow) { ++St.FaceoffsWithoutTouch; }
+					if (SinceFaceoff > TouchWindow) { ++St.FaceoffsWithoutTouch; CountWindow(); }
 					if (SinceFaceoff > St.MaxFaceoffToTouch) { St.MaxFaceoffToTouch = static_cast<int>(SinceFaceoff); }
 					bWaitingTouch = false;
 				}
@@ -515,10 +517,18 @@ namespace JamAI
 				++St.Faceoffs;
 				SinceFaceoff = 0;
 				bWaitingTouch = true;
+				WinMate = WinOpp = WinLoose = 0;
 			}
 			else if (bPlay)
 			{
-				++SinceFaceoff;
+				// lane A3 (R-0029 point 5): frames the human sits in the box do not count against the touch window (he cannot touch the puck from there)
+				const UJamSim* BoxSim = Sim.GetSim();
+				const bool bHumanInBox = BoxSim && BoxSim->GetSkaters().IsValidIndex(Pi) && BoxSim->GetSkaters()[Pi].InBox();
+				if (!bHumanInBox) { ++SinceFaceoff; }
+				if (bWaitingTouch)
+				{
+					if (W.Carrier < 0) { ++WinLoose; } else if (W.Skaters[W.Carrier].Team == W.Skaters[Pi].Team) { ++WinMate; } else { ++WinOpp; }
+				}
 			}
 			// the sim's own events: checks, knockdowns, fouls, pokes, lifts, passes of the human
 			if (const UJamSim* S = Sim.GetSim())
@@ -542,6 +552,7 @@ namespace JamAI
 		if (bWaitingTouch && SinceFaceoff > TouchWindow)
 		{
 			++St.FaceoffsWithoutTouch;
+			CountWindow();
 			if (SinceFaceoff > St.MaxFaceoffToTouch) { St.MaxFaceoffToTouch = static_cast<int>(SinceFaceoff); }
 		}
 		St.bOver = Sim.IsOver();
@@ -559,7 +570,7 @@ namespace JamAI
 			"\"goals\":[%d,%d],\"goals_by_human\":%d,\"frames\":%lld,\"play_frames\":%lld,\"touches\":%d,\"touches_per_min\":%.1f,\"carries_3s\":%d,\"carry_frames\":%lld,"
 			"\"shots\":%d,\"shots_on_target\":%d,\"shots_mates\":%d,\"shots_opp\":%d,\"lead_changes\":%d,"
 			"\"first_touch\":%lld,\"first_shot\":%lld,\"first_goal_for\":%lld,\"first_goal_by_human\":%lld,\"first_goal_against\":%lld,"
-			"\"faceoffs\":%d,\"faceoffs_without_touch\":%d,\"max_faceoff_to_touch\":%d,"
+			"\"faceoffs\":%d,\"faceoffs_without_touch\":%d,\"max_faceoff_to_touch\":%d,\"wo_frames\":[%lld,%lld,%lld],"
 			"\"checks_landed\":%d,\"checks_taken\":%d,\"knockdowns\":%d,\"fouls\":%d,\"fouls_from_behind\":%d,\"fouls_no_puck\":%d,\"box_frames\":%lld,\"pokes\":%d,\"pokes_clean\":%d,\"lifts\":%d,\"passes\":%d,"
 			"\"idle_frames\":%lld,\"idle_spells\":%d,\"max_no_touch\":%lld,\"hash\":\"%016llx\",\"player_index\":%d",
 			Cartridge, Difficulty, PlaytesterName(Kind), static_cast<unsigned long long>(S.Seed), Result, S.bOver ? "true" : "false",
@@ -568,6 +579,7 @@ namespace JamAI
 			S.Shots, S.ShotsOnTarget, S.ShotsMates, S.ShotsOpp, S.LeadChanges,
 			static_cast<long long>(S.FirstTouch), static_cast<long long>(S.FirstShot), static_cast<long long>(S.FirstGoalFor), static_cast<long long>(S.FirstGoalByHuman),
 			static_cast<long long>(S.FirstGoalAgainst), S.Faceoffs, S.FaceoffsWithoutTouch, S.MaxFaceoffToTouch,
+			static_cast<long long>(S.WoMateFrames), static_cast<long long>(S.WoOppFrames), static_cast<long long>(S.WoLooseFrames),
 			S.ChecksLanded, S.ChecksTaken, S.Knockdowns, S.Fouls, S.FoulsFromBehind, S.FoulsNoPuck, static_cast<long long>(S.BoxFrames), S.Pokes, S.PokesClean, S.Lifts, S.Passes,
 			static_cast<long long>(S.IdleFrames), S.IdleSpells, static_cast<long long>(S.MaxNoTouch), static_cast<unsigned long long>(S.Hash), S.PlayerIndex);
 		static const char* ActNames[] = {"idle", "draw", "chase", "carry", "charge", "pass", "support", "forecheck", "poke", "check", "lapse"};
@@ -613,22 +625,21 @@ namespace JamPlaytestTestsLocal
 	}
 }
 
-// R-0029: the two bars live under "Bar." until lane A3 lands the calibrations and wires the 20-seed gate forms; the premerge filter "Jam" skips them on purpose.
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamPlaytestNoviceScoresAtRookie, "Bar.Playtest.NoviceScoresAtRookie",
+// R-0029 point 5 (lane A3): the novice bar is a gate in its 20-seed form; GoodNeverIdlesAtAllStar stays a "Bar." until it passes.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamPlaytestNoviceScoresAtRookie, "Jam.Playtest.NoviceScoresAtRookie",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::CommandletContext | EAutomationTestFlags::EngineFilter)
 
 bool FJamPlaytestNoviceScoresAtRookie::RunTest(const FString& Parameters)
 {
-	// The M1 bar: a fresh human scores within two minutes (7,200 frames) at rookie on hockey.regular, in 2 of 3 seeds; and the match replays (same hash twice).
+	// The M1 bar (R-0029): a fresh human scores within two minutes (7,200 frames) at rookie on hockey.regular in at least 10 of 20 seeds; seed 1 replays (same hash twice).
 	using namespace JamPlaytestTestsLocal;
 	UJamCartridge* Cart = Load(*this, TEXT("hockey.regular"));
 	if (!Cart) { return false; }
 	bool bOk = true;
 	int32 Scored = 0;
-	for (const uint64 Seed : {1ull, 2ull, 7ull})
+	for (uint64 Seed = 1; Seed <= 20; ++Seed)
 	{
 		const JamAI::FJamPlaytestStats A = Run(*Cart, Seed, JamAI::EPlaytester::Novice, TEXT("rookie"));
-		AddInfo(Line(A, "rookie", JamAI::EPlaytester::Novice));
 		const bool bScored = A.FirstGoalByHuman >= 0 && A.FirstGoalByHuman <= 7200;
 		Scored += bScored ? 1 : 0;
 		AddInfo(FString::Printf(TEXT("%s hockey.regular rookie novice seed %llu: first goal by the human at frame %lld, %d:%d, %s"), bScored ? TEXT("PASS") : TEXT("INFO"),
@@ -641,8 +652,8 @@ bool FJamPlaytestNoviceScoresAtRookie::RunTest(const FString& Parameters)
 			if (bSame) { AddInfo(TEXT("PASS ") + Msg); } else { AddError(TEXT("FAIL ") + Msg); bOk = false; }
 		}
 	}
-	const FString Msg = FString::Printf(TEXT("the novice scores within 7,200 frames at rookie in %d of 3 seeds (need 2)"), Scored);
-	if (Scored >= 2) { AddInfo(TEXT("PASS ") + Msg); } else { AddError(TEXT("FAIL ") + Msg); bOk = false; }
+	const FString Msg = FString::Printf(TEXT("the novice scores within 7,200 frames at rookie in %d of 20 seeds (need 10)"), Scored);
+	if (Scored >= 10) { AddInfo(TEXT("PASS ") + Msg); } else { AddError(TEXT("FAIL ") + Msg); bOk = false; }
 	return bOk;
 }
 

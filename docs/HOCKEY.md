@@ -56,7 +56,7 @@ game.rules: { mode: "first_to" | "timer", score_to_win, timer_frames, goal_pause
 game.teams: [ { id, colour_hex, skaters: [ { role: "player" | "chaser" | "support" | "back", spawn: [x, z] } ] } ]
 game.ai: { yield_margin_m, yield_radius_m, hold_radius_m, speed_scale, red_skill }
 game.pickups: [ { kind: "speed" | "precision" | "heavy_puck" | "big_puck" | "reverse_other", spawn_every_frames, duration_frames, magnitude } ]
-game.look: { tier: "l1_day" | "l2_night" | "l3_neon" | "p3_clay", trim_colour_hex, fog_density, wet_ice: bool, trim_emissive? (0..100; absent = the tier's default, 30 or 12 for clay) }
+game.look: { tier: "l1_day" | "l2_night" | "l3_neon" | "p3_clay" | "p4_broadcast", trim_colour_hex, fog_density, wet_ice: bool, trim_emissive? (0..100; absent = the tier's default, 30 or 12 for clay) }
 game.camera: { mode: "third_person" | "arena", distance_m, height_m, look_ahead_m, lag_frames, fov_deg, radar: bool }
   defaults measured by lane E4 (`docs/experiments/CAMERA-120M.md`): distance 6, height 3.5, look_ahead 5, lag 4 frames, fov 70 (wide option 8 / 4 / 6 / 6 / 85);
   pitch derived as -atan(height / (distance + look_ahead)); the pawn sits 0.7 m to the side of the camera axis or it hides the puck for the first 6.4 m;

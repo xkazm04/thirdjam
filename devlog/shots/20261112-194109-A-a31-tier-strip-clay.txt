@@ -1,0 +1,1 @@
+﻿Lane A31: the same frame 668 after jam.livecut to p3_clay: LR_P3_Clay streamed, MPC_Look.Clay 1, six visuals respawned as BP_SkaterVisual_TB2_P3 with SetTeam/SetNumber repeated.

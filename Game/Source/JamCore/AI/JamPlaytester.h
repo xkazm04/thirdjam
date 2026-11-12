@@ -97,6 +97,8 @@ namespace JamAI
 		int LeadChanges = 0;             // the leading team changes (ties in between allowed)
 		int64_t FirstTouch = -1, FirstShot = -1, FirstGoalFor = -1, FirstGoalByHuman = -1, FirstGoalAgainst = -1;
 		int Faceoffs = 0, FaceoffsWithoutTouch = 0, MaxFaceoffToTouch = 0;
+		// lane A3 (R-0029): in the faceoff windows that ran out without a human touch, frames by who held the puck
+		int64_t WoMateFrames = 0, WoOppFrames = 0, WoLooseFrames = 0;
 		int ChecksLanded = 0, ChecksTaken = 0, Fouls = 0;
 		int FoulsFromBehind = 0, FoulsNoPuck = 0;   // the two kinds of foul (contracts/events.md): from behind on the carrier; on a skater without the puck
 		int64_t BoxFrames = 0;           // frames the human sat in the penalty box

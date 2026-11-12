@@ -55,6 +55,12 @@ namespace JamAI
 		FVec2 Stick;
 		bool bPoke = false;
 		bool bLift = false;
+		// Lane A31 (B-to-A-0024 point 1): the shot is charged. The brain holds this level for the skill's ShotChargeFrames while lined up on the
+		// net with the puck, then drops it: the sim's StepCharge fires the charged shot on the release (bShoot stays false for that whole window).
+		// Lane A31 (B-to-A-0024 point 3, R-0013 point 3): this bot is the last man holding the crease; GoalieSide -1 left, 0 centre, +1 right,
+		// seen from the goalie facing up-ice (the side the carrier is on). The game mode turns it into C-0001 v3's SetGoalieStance.
+		bool bGoalie = false;
+		int GoalieSide = 0;
 	};
 
 	// lane A3: how well one side's bots play. The defaults are A2's brain, which is what the human's teammates play at every
@@ -82,11 +88,19 @@ namespace JamAI
 		// Director 15:16: an opposing carrier with the human's blade within reach this many consecutive frames gives the puck up
 		// (a pass, else a dump shot a few frames later); -1 = never (rookie holds it and loses it to the forecheck)
 		int ForecheckYieldFrames = -1;
-		double CarrySpeed = 1.0;       // top speed while carrying the puck, as a fraction (a carrier is slower than a chaser, so a forecheck closes)     // detours for a pickup within 8 m (never while carrying, never when the puck is nearer)
+		double CarrySpeed = 1.0;
+		// R-0029 P1: the back's guard post, per side (it was FJamAIParams::GuardRadiusM / GuardRangeM for both teams): stand at most
+		// GuardRadiusM out from the own net on the line to the puck, when the puck is in our half or within GuardRangeM of the net
+		double GuardRadiusM = 5.0;
+		double GuardRangeM = 45.0;       // top speed while carrying the puck, as a fraction (a carrier is slower than a chaser, so a forecheck closes)     // detours for a pickup within 8 m (never while carrying, never when the puck is nearer)
 		bool bBlockShots = true;       // the back steps onto the path of a shot on its net
 		double BlockMinDistM = 0.0;    // ... only of a shot taken at least this far from the net (rookie: long shots only)
 		bool bClearLane = false;       // holds a shot while a defender stands in the lane puck -> goal (within 1.2 m of the line)
 		bool bPassToHuman = false;     // (the human's teammates only) with the puck and facing a free human 5-25 m away: pass by shooting
+		// Lane A31 (B-to-A-0024 point 1): frames the carrier holds shoot before releasing an aimed shot on the net (the sim's charge rule
+		// applies to every skater: speed + charge x bonus, charge = held / shot.charge_frames_max). 0 = a tap (rookie); pro 10, all_star 18.
+		// Board chips, dumps under a forecheck and the pass-by-shot to the human stay taps.
+		int ShotChargeFrames = 10;
 	};
 	constexpr int kMaxReactionFrames = 30;
 
@@ -242,6 +256,10 @@ namespace JamAI
 		int Pressed[kMaxSkaters] = {};   // frames the human's blade has been within reach of this carrier
 		int DrawJumps = 0;               // diagnostics: early draw presses sent
 		int DrawPresses = 0;   // R-0017: frames an opposing carrier's puck has been inside this bot's blade reach
+		// Lane A31: frames shoot has been held for the current aimed shot (0 = not charging); the goalie intent of the last Decide per skater.
+		int Charging[kMaxSkaters] = {};
+		bool bGoalieNow[kMaxSkaters] = {};
+		int GoalieSideNow[kMaxSkaters] = {};
 		void StickPlay(const FJamAIWorld& W, int Id, FJamAIInput& In);
 		bool LastManGoalie(const FJamAIWorld& W, int Id) const;
 
@@ -255,8 +273,9 @@ namespace JamAI
 		bool bWasFaceoff = false;
 
 		const FJamBotSkill& SkillOf(const FJamAIWorld& W, int Id) const;
-		FVec2 Decide(const FJamAIWorld& W, int Id, bool& bShoot);
-		FVec2 Attack(const FJamAIWorld& W, int Id, const FVec2& Me, const FVec2& Pp, const FVec2& Dirg, double D, bool& bShoot) const;
+		// bAimed (lane A31): the shot is the lined-up shot on the net (the one worth charging), not a board chip, a dump or a pass-by-shot.
+		FVec2 Decide(const FJamAIWorld& W, int Id, bool& bShoot, bool& bAimed);
+		FVec2 Attack(const FJamAIWorld& W, int Id, const FVec2& Me, const FVec2& Pp, const FVec2& Dirg, double D, bool& bShoot, bool& bAimed) const;
 	};
 
 	// Scripted input for the human's skater, used only by tests and tournaments (Godot bot_hockey.gd).

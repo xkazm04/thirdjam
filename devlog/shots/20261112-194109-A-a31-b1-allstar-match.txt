@@ -1,0 +1,1 @@
+﻿Lane A31: humanoid_b1 bot match at all_star, 95 s, paused: JAMSHOT charge 0.23 and 0.07 from bots (charged shots), JAMPASS lines with no PlayShoot, JAMGOALIE on/off for the last man (B-to-A-0024 acceptance).

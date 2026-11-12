@@ -37,6 +37,33 @@ What the sweeps taught:
 - A2's 4.5 m hold radius was why pro was 90% before this lane. A contested puck also gives the human more touches, not fewer.
 - A teammate yielding more (4 / 25 at all_star) makes the human's side weaker. That is why all_star shares rookie's yield numbers, for the opposite reason.
 
+## R-0029: rookie measured with lane A34's playtester (worktree a3, 19:53)
+
+Changes:
+- P1: the back's guard post is per side now (`FJamBotSkill::GuardRadiusM / GuardRangeM`). Rookie opponents use 10 m out and 20 m range; everyone else keeps 5 / 45.
+- P2: rookie speed 0.85, red skill 0.75.
+- P3: rookie shot range reach + 5 m.
+- Large-rink rookie offsets: speed 0.9, red skill 0.8 (from the novice grid; 1.0 / 0.93 before).
+- Pro and all_star are untouched (second pass after A31's charged shots).
+- The playtester's 600-frame touch window no longer counts frames the human sits in the box.
+- The playtest lines carry `wo_frames`: in the windows that ran out, the frames by who held the puck (mate, opponent, loose).
+
+Playtester grid, 20 seeds, human win % (novice / regular / good). Before = PLAYTEST.md section 3 (main f89014c); after = this worktree.
+
+| rink | level | before | after | novice: goal inside 2 min (before / after) | novice: faceoffs without a touch (before / after) |
+|---|---|---|---|---|---|
+| regular | rookie | 15 / 60 / 70 | **80** / 100 / 100 | 7 / **17** of 20 | 28 / 12 |
+| regular | pro | 5 / 40 / 50 | 5 / 40 / 50 | 6 / 6 | 14 / 9 |
+| regular | all_star | 10 / 30 / 40 | 10 / 30 / 40 | 8 / 8 | 7 / 5 |
+| large | rookie | 30 / 80 / 70 | **85** / 100 / 80 | 4 / 7 | 13 / 12 |
+| large | pro | 5 / 25 / 40 | 5 / 25 / 40 | 3 / 3 | 7 / 7 |
+| large | all_star | 5 / 10 / 20 | 5 / 10 / 20 | 3 / 3 | 6 / 6 |
+
+Gate state:
+- Jam.Playtest.NoviceScoresAtRookie (20-seed form) passes: 17 of 20.
+- The novice part of HumanHasSomethingToDo fails: 12 of 126 faceoffs against a budget of 2. In those windows the puck was loose for 74 % of the frames (9,616 of 12,933), with a mate holding it 14 % and an opponent 12 %.
+- Bar.Playtest.GoodNeverIdlesAtAllStar still fails (1-3 spells per seed); it stays a Bar.
+
 ## Phase 2, final (worktree a3, 16:33): stick reach 1.2 (R-0022), A16's net slide, 60 seeds
 
 Changes since the 15:30 tree:

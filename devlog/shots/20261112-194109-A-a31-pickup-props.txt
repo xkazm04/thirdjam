@@ -1,0 +1,1 @@
+﻿Lane A31: hockey.boost (l3_neon, 120x60) at 26 s: B SM_Pickup_<kind> props on SM_Pickup_Base at PickupTop, spun and bobbed by sim frame; numbers 7/13/42 on the skeletal toy backs.

@@ -61,7 +61,7 @@ of them out explicitly, but a Designer or hand-written cartridge may leave them 
 | `effects[].stats[].multiply` / `add` | 1 / 0 | |
 | `look.trim_colour_hex` | `#38BDF8` | |
 | `look.fog_density` | 0 | |
-| `look.trim_emissive` | by tier: 30 (`l1_day`, `l2_night`, `l3_neon`), 12 (`p3_clay`) | B-to-A-0018 point 5; the beacon stays at 40 |
+| `look.trim_emissive` | by tier: 30 (`l1_day`, `l2_night`, `l3_neon`, `p4_broadcast`), 12 (`p3_clay`) | B-to-A-0018 point 5, B-to-A-0025 (lane A31); the beacon stays at 40 |
 | `look.wet_ice` | false | |
 | `camera` (whole object) | see below | measured by lane E4, `docs/experiments/CAMERA-120M.md` |
 | `barks.enabled` | true | lane A12, ruling R-0007; read by `UJamBarkSystem` from the cartridge's raw JSON |
@@ -75,6 +75,8 @@ of them out explicitly, but a Designer or hand-written cartridge may leave them 
 | `rules.hooks[].then[].team` | the hook's team | |
 | `rules.variants` | none | the loader expands each variant into a hook named `variant-*` after the explicit hooks (`expandVariants` in validate.mjs, `ExpandVariants` in JamCartridge.cpp): `sudden_death` = on_goal after frame 600 end_match; `last_goal_double` = on_goal at score_to_win add_score 1 (first_to only); `mercy_goals` = on_goal lead_at_least N end_match; `period_count` = on_frame every timer_frames / N (3600 in first_to) end_period; `shrink_per_goal` = on_goal shrink_rink by the fraction |
 | `barks.intensity` | `normal` | `quiet` doubles the cooldowns and never mocks, `loud` halves them |
+| `commentary.enabled` | true | lane A32 (B-to-A-0026); read by `UJamCommentarySystem` from the cartridge's raw JSON, console `jam.Commentary -1|0|1` overrides |
+| `commentary.intensity` | `normal` | `quiet` plays priority 3 and up only and doubles the situation cooldowns, `loud` halves them; the 2.5 s gate between lines never changes |
 
 ## Camera defaults (when `game.camera` or any of its keys is absent)
 

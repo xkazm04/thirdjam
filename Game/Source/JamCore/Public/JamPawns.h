@@ -56,6 +56,12 @@ public:
 	// null or invalid falls back to UJamPlaceholderVisual.
 	void InitSkater(int32 InSimIndex, int32 InTeam, const FLinearColor& Colour, int32 Number, UClass* VisualClass);
 
+	// Lane A31 (B-to-A-0021): replaces the visual mid-match (a Director's Call changed game.look.tier and with it the figure class): the old
+	// component or attached actor is destroyed, the new one created and the setup calls (SetTeam, SetNumber, SetHasPuck, SetBoost) repeated;
+	// the per-frame state flags are cleared so the next ApplySimFrame re-sends knocked-down, puck and faceoff state. Same class: no-op, false.
+	bool ResetVisual(const FLinearColor& Colour, int32 Number, UClass* VisualClass);
+	UClass* GetVisualClass() const { return VisualObject ? VisualObject->GetClass() : nullptr; }
+
 	// After every sim step: drives the visual (UpdateMotion every frame, one-shots on the frame they happen).
 	void ApplySimFrame(const FJamSkaterState& S);
 
@@ -73,6 +79,8 @@ public:
 
 
 private:
+	UObject* CreateVisual(UClass* VisualClass);
+	void SetupVisual(UObject* Visual, const FLinearColor& Colour, int32 Number);
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Skater") TObjectPtr<USceneComponent> Root;
 	UPROPERTY(Transient) TObjectPtr<UObject> VisualObject;
 	int32 SimIndex = -1;

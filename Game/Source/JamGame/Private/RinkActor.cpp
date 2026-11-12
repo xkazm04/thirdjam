@@ -270,6 +270,8 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 		// goal lines at half-length - 4 m (FJamRinkConfig::GoalLineX). A's own markings below use the same numbers (LengthM / 6 and GL).
 		IceMid->SetScalarParameterValue(TEXT("BlueLineFrac"), 0.3333f);
 		IceMid->SetScalarParameterValue(TEXT("GoalLineOffsetCm"), 400.f);
+		// B-to-A-0023 point 5 (lane A31): M_Ice's frost band follows the cut's corner radius (game.rink.corner_radius_m in cm; B's instance default 375 is today's regular rink).
+		IceMid->SetScalarParameterValue(TEXT("CornerRadiusCm"), static_cast<float>(R.CornerRadiusM * UU));
 		IceMid->SetVectorParameterValue(TEXT("Color"), FLinearColor(0.80f, 0.86f, 0.92f));
 		Ice->SetMaterial(0, IceMid);
 	}
@@ -326,9 +328,10 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 		B.Commit(Boards, 0);
 		Boards->SetMaterial(0, LoadLook(TEXT("MI_Toon_Board"), BoardsMaterialPath));
 		G.Commit(Glass, 0);
-		// Lane A25: B's glass instance when it exists (MI_Toon_Glass, stencil 0, translucent); the net placeholder stands in as before.
-		Glass->SetMaterial(0, LoadLook(TEXT("MI_Toon_Glass"), NetMaterialPath));
-		// Lane A25: stanchions, 5 cm square posts from the board top to the rail top, one every 2.4 m along the outline (the count rounds so the ring closes evenly).
+		// B-to-A-0023 point 2 (lane A31): B's MI_Glass (MI_Bcast_Glass on the broadcast tier); the net placeholder stands in only when B's instance is absent.
+		SetGlassForTier(Game.Look.Tier);
+		// Lane A25: stanchions, 5 cm square posts from the board top to the rail top (board 1.2 m + glass 0.9 m + the 4 cm rail), one every StanchionSpacingM
+		// (3.6 m) along the outline (the count rounds so the ring closes evenly). B-to-A-0023 point 3: these are the glass stanchions; B removes its 66 Con_ actors.
 		{
 			double Perimeter = 0;
 			for (int32 i = 0; i < Line.Num(); ++i) Perimeter += FVector2D::Distance(Line[i], Line[(i + 1) % Line.Num()]);
@@ -814,6 +817,19 @@ UMaterialInterface* ARinkActor::LoadConstructionMat(const TCHAR* LookName, const
 	UMaterialInstanceDynamic* D = UMaterialInstanceDynamic::Create(Mi, this);
 	D->SetVectorParameterValue(TEXT("Color"), Tint);
 	return D;
+}
+
+void ARinkActor::SetGlassForTier(const FString& Tier)
+{
+	if (!Glass) return;
+	const TCHAR* LookName = Tier == TEXT("p4_broadcast") ? TEXT("MI_Bcast_Glass") : TEXT("MI_Glass");
+	bool bLook = false;
+	UMaterialInterface* Mi = LoadLook(LookName, NetMaterialPath, &bLook);
+	const FString NewName = bLook ? FString(LookName) : FString(TEXT("placeholder"));
+	if (NewName == GlassLookName && Glass->GetMaterial(0) == Mi) return;
+	Glass->SetMaterial(0, Mi);
+	GlassLookName = NewName;
+	UE_LOG(LogJamSim, Log, TEXT("JAMRINK glass %s for tier %s%s"), *GlassLookName, *Tier, bLook ? TEXT("") : TEXT(" (B's instance missing: the net placeholder stands in)"));
 }
 
 void ARinkActor::SetTrimEmissive(float Emissive)

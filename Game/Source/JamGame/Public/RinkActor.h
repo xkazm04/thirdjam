@@ -89,6 +89,14 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
 	int32 GetZoneQuadCount() const { return ZoneQuads.Num(); }
 
+	// Lane A31 (B-to-A-0023 point 2, 0025): the glass panel's instance per look tier: /JamAssets/Look/MI_Bcast_Glass on p4_broadcast, MI_Glass on every
+	// other tier (the net placeholder stands in when B's instance is absent). Build reads game.look.tier; ULookTierSwitcher::SetTier pushes a change.
+	UFUNCTION(BlueprintCallable, Category = "Jam|Rink")
+	void SetGlassForTier(const FString& Tier);
+	// The look name the glass carries right now ("MI_Glass", "MI_Bcast_Glass", or "placeholder"), for the PIE proof.
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	FString GetGlassLookName() const { return GlassLookName; }
+
 	// Lane A25: shows or hides the construction layer (kick plate, rail, net frame extras, goal lights, benches, extra markings) without a rebuild;
 	// `jam.rink.construction` drives it on every rink actor, so a ProfileGPU before/after pair is two console commands on one frame.
 	UFUNCTION(BlueprintCallable, Category = "Jam|Rink")
@@ -111,5 +119,6 @@ private:
 	UMaterialInterface* LoadConstructionMat(const TCHAR* LookName, const TCHAR* LabName, const FLinearColor& Tint, float LabEmissive = -1.f, bool bLabTint = false);
 	bool bLookIce = false;
 	bool bLookTrim = false;
+	FString GlassLookName = TEXT("placeholder");
 	FLinearColor BeaconColour = FLinearColor::White;   // game.look.trim_colour at the last Build, for the opaque beacon mode
 };

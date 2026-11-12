@@ -264,7 +264,7 @@ void USkeletalSkaterVisual::BuildFigure()
 		if (Toon)
 		{
 			Mid->SetScalarParameterValue(JamMaterialParams::Emissive, BaseEmissive);
-			Mid->SetScalarParameterValue(TEXT("RimStrength"), 0.6f);
+			Mid->SetScalarParameterValue(TEXT("RimStrength"), 1.3f);   // B-to-A-0023 point 4 (lane A31): 1.2..1.5 reads in the dark bands; 0.6 did not
 		}
 	}
 	SetRenderCustomDepth(true);

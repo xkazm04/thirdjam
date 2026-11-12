@@ -1,0 +1,1 @@
+﻿Lane A31: hockey.regular generated_b2, jam.livecut to p4_broadcast on a running (unpaused) match at frame 553: six visuals respawned as BP_SkaterVisual_TB2_P4 and animating at once (the crouch of the paused strip was the AnimBP not ticking).

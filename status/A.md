@@ -151,3 +151,5 @@
 - link green 19:35: main 969fbc3 (dev-b merged incl. 0027 M_Toon flag, A34 playtester) pushed.
 
 - RESOURCES 19:44 cpu 96% ram 30.6/63GB gpu 75 %, 9338 MiB, 46 editors 3 cmd 0 ubt 0 free 624GB
+
+- link green 19:52: main 356dc63 (humanoid_b1 default, foul grace, lockstep v2) pushed.

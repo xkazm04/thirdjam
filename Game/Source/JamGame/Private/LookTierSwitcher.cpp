@@ -9,6 +9,9 @@
 #include "Components/LocalLightComponent.h"
 #include "Components/LightComponent.h"
 #include "Components/SkyLightComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "Materials/MaterialParameterCollection.h"
+#include "Materials/MaterialParameterCollectionInstance.h"
 #include "EngineUtils.h"
 #include "RinkActor.h"
 
@@ -22,15 +25,20 @@ namespace
 		{ TEXT("l2_night"), TEXT("/JamAssets/Rigs/LR_L2_Night.LR_L2_Night") },
 		{ TEXT("l3_neon"),  TEXT("/JamAssets/Rigs/LR_L3_Neon.LR_L3_Neon") },
 		{ TEXT("p3_clay"),  TEXT("/JamAssets/Rigs/LR_P3_Clay.LR_P3_Clay") },   // B-to-A-0018 (lane A21)
+		{ TEXT("p4_broadcast"), TEXT("/JamAssets/Rigs/LR_P4_Broadcast.LR_P4_Broadcast") },   // B-to-A-0025 (lane A31)
 	};
-	// B-to-A-0018 point 5: trim Emissive per tier; on bright clay ice 30 reads as a thin gold line, so clay ships 12 (B's 10..15).
+	// B-to-A-0018 point 5: trim Emissive per tier; on bright clay ice 30 reads as a thin gold line, so clay ships 12 (B's 10..15). Broadcast 30 (B-to-A-0025).
 	struct FTierTrim { const TCHAR* Tier; float Emissive; };
 	const FTierTrim GTierTrim[] = {
 		{ TEXT("l1_day"),   30.f },
 		{ TEXT("l2_night"), 30.f },
 		{ TEXT("l3_neon"),  30.f },
 		{ TEXT("p3_clay"),  12.f },
+		{ TEXT("p4_broadcast"), 30.f },
 	};
+	// B-to-A-0025 point 3: the shared look collection B's rigs write (Clay = 1 clay, 0 cel, -1 broadcast).
+	const TCHAR* LookCollectionPath = TEXT("/JamAssets/Look/MPC_Look.MPC_Look");
+	const FName LookClayParam(TEXT("Clay"));
 }
 
 TArray<FString> ULookTierSwitcher::GetKnownTiers()
@@ -127,6 +135,10 @@ bool ULookTierSwitcher::SetTier(const FString& Tier, float RinkLengthM)
 		It.RemoveCurrent();
 	}
 
+	// B-to-A-0025 point 3 (lane A31): MPC_Look.Clay back to 0 before the next rig streams, so a rig without a BP_LookParams (the neon rig) never keeps the
+	// previous tier's surface response; a rig that has one writes its own value on BeginPlay afterwards.
+	ResetLookCollection();
+
 	if (!LoadedRigs.Contains(Tier))
 	{
 		FString PackageName = MapPath;
@@ -152,6 +164,7 @@ bool ULookTierSwitcher::SetTier(const FString& Tier, float RinkLengthM)
 	HidePersistentLights(true);
 	LowerFloor();
 	PushTrimEmissive();
+	PushGlass();
 	UE_LOG(LogJamLook, Log, TEXT("JAMLOOK tier=%s map=%s scale=%.3f (rink %.1f m) trim_emissive=%.1f"), *Tier, *MapPath, Scale, RinkLengthM, GetTrimEmissive());
 	return true;
 }
@@ -161,6 +174,39 @@ void ULookTierSwitcher::OnRigLoaded()
 	if (TObjectPtr<ULevelStreamingDynamic>* Rig = LoadedRigs.Find(CurrentTier))
 	{
 		if (*Rig && (*Rig)->GetLoadedLevel()) ApplyRigScale(*Rig, CurrentScale);
+	}
+	UE_LOG(LogJamLook, Log, TEXT("JAMLOOK rig %s loaded: MPC_Look.Clay=%.1f (BP_LookParams writes its value on BeginPlay, read again by GetLookClay)"), *CurrentTier, GetLookClay());
+}
+
+void ULookTierSwitcher::ResetLookCollection()
+{
+	UWorld* W = GetWorld();
+	UMaterialParameterCollection* MPC = LoadObject<UMaterialParameterCollection>(nullptr, LookCollectionPath, nullptr, LOAD_NoWarn | LOAD_Quiet);
+	if (!W || !MPC) return;
+	if (UMaterialParameterCollectionInstance* Inst = W->GetParameterCollectionInstance(MPC))
+	{
+		Inst->SetScalarParameterValue(LookClayParam, 0.f);
+	}
+}
+
+float ULookTierSwitcher::GetLookClay() const
+{
+	UWorld* W = GetWorld();
+	UMaterialParameterCollection* MPC = LoadObject<UMaterialParameterCollection>(nullptr, LookCollectionPath, nullptr, LOAD_NoWarn | LOAD_Quiet);
+	if (!W || !MPC) return 0.f;
+	float V = 0.f;
+	if (UMaterialParameterCollectionInstance* Inst = W->GetParameterCollectionInstance(MPC)) Inst->GetScalarParameterValue(LookClayParam, V);
+	return V;
+}
+
+void ULookTierSwitcher::PushGlass()
+{
+	// B-to-A-0023 point 2 / 0025: the glass instance follows the tier (MI_Bcast_Glass on p4_broadcast, MI_Glass elsewhere); the rink reads it at Build too.
+	UWorld* W = GetWorld();
+	if (!W) return;
+	for (TActorIterator<ARinkActor> It(W); It; ++It)
+	{
+		if (*It) It->SetGlassForTier(CurrentTier);
 	}
 }
 
@@ -229,9 +275,14 @@ void ULookTierSwitcher::LowerFloor()
 		A->GetActorBounds(false, Origin, Extent);
 		const double Top = Origin.Z + Extent.Z;
 		if (Extent.X < 2500.0 || Extent.Y < 1000.0 || Top > 0.5 || Top < -10.0) continue;
+		// B-to-A-0023 point 1 (lane A31): the floor is authored Static, so the offset was refused ("must be Movable") and its bounds stayed at -5 cm.
+		// Movable first, then the move; the bounds are read back so the log states what the picture has.
+		if (UStaticMeshComponent* C = A->GetStaticMeshComponent()) if (C->Mobility != EComponentMobility::Movable) C->SetMobility(EComponentMobility::Movable);
 		const double Delta = FloorZCm - Top;
 		A->AddActorWorldOffset(FVector(0, 0, Delta));
-		UE_LOG(LogJamLook, Log, TEXT("JAMLOOK floor %s lowered by %.1f cm to a top of %.1f cm"), *A->GetName(), -Delta, FloorZCm);
+		A->GetActorBounds(false, Origin, Extent);
+		UE_LOG(LogJamLook, Log, TEXT("JAMLOOK floor %s lowered by %.1f cm to a top of %.1f cm (bounds read back: top %.1f cm, mobility %s)"), *A->GetName(), -Delta, FloorZCm,
+			Origin.Z + Extent.Z, A->GetStaticMeshComponent() && A->GetStaticMeshComponent()->Mobility == EComponentMobility::Movable ? TEXT("Movable") : TEXT("not Movable"));
 		++N;
 	}
 	bFloorLowered = true;

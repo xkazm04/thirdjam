@@ -1,0 +1,73 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "readability",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-12T18:45:52.352Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "readability",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a37/docs/experiments/img/cuts/power-up-cut-24m.png",
+          "width": 1275,
+          "height": 700
+        }
+      ],
+      "distance": 24,
+      "thumbnails": [],
+      "prompt_chars": 2712,
+      "usage": {
+        "prompt": 1888,
+        "output": 394,
+        "thoughts": 555,
+        "total": 2837,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00497,
+      "ms": 12644,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A: power-up-cut-24m.png",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "Not visible anywhere on the ice surface or near the lone distant skater."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "Only one tiny distant figure (approx 15x25 px) is visible near the far net, and no puck is discernibly attached to them."
+              },
+              "team_colours": {
+                "score": 1,
+                "evidence": "Only a single dark-clad skater is on the ice, making comparison between deep blue and warm orange jerseys impossible."
+              },
+              "far_net": {
+                "score": 4,
+                "evidence": "The red net frame is visible at the far boards around x=700, y=235, clearly marked with a red banner and '83 m' text."
+              },
+              "zone_strips": {
+                "score": 4,
+                "evidence": "The red center line and far blue line cut clearly across the rink ice surface with solid contrast against the white and blue ice."
+              }
+            },
+            "first_look": "Top center scoreboard with bright blue and orange blocks",
+            "noise": [
+              "Large black void consuming the entire left third of the screen",
+              "Bottom dialogue subtitle bar with chat text",
+              "Glowing neon cyan pickup ring placed on the red line near the boards",
+              "Bright electric blue light streak along the left outer dasher board"
+            ],
+            "overall": 2
+          }
+        ]
+      },
+      "markdown": "**eyes/readability** A=power-up-cut-24m.png at 24 m (gemini-3.8-flash, in 1888 out 394 think 555 tokens, ~$0.0050, 12.6 s)\n- stills:\n  - label: Still A: power-up-cut-24m.png; first_look: Top center scoreboard with bright blue and orange blocks; overall: 2\n    - elements:\n      - puck: score 1, evidence Not visible anywhere on the ice surface or near the lone distant skater.\n      - carrier: score 1, evidence Only one tiny distant figure (approx 15x25 px) is visible near the far net, and no puck is discernibly attached to them.\n      - team_colours: score 1, evidence Only a single dark-clad skater is on the ice, making comparison between deep blue and warm orange jerseys impossible.\n      - far_net: score 4, evidence The red net frame is visible at the far boards around x=700, y=235, clearly marked with a red banner and '83 m' text.\n      - zone_strips: score 4, evidence The red center line and far blue line cut clearly across the rink ice surface with solid contrast against the white and blue ice.\n    - noise: Large black void consuming the entire left third of the screen; Bottom dialogue subtitle bar with chat text; Glowing neon cyan pickup ring placed on the red line near the boards; Bright electric blue light streak along the left outer dasher board"
+    }
+  ]
+}
