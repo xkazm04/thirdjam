@@ -1,0 +1,76 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "figure",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T16:35:24.739Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "figure",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": "devlog/shots/20261112-173209-A-a28-tripo-walk-chase.png",
+          "width": 3200,
+          "height": 740
+        }
+      ],
+      "thumbnails": [
+        "A: 128x30"
+      ],
+      "prompt_chars": 2702,
+      "usage": {
+        "prompt": 3088,
+        "output": 302,
+        "thoughts": 2049,
+        "total": 5439,
+        "calls": 1
+      },
+      "cost_usd_est": 0.03439,
+      "ms": 25097,
+      "retried": false,
+      "answer": {
+        "hockey_player": {
+          "full": 2,
+          "small": 2,
+          "parts": {
+            "stick": false,
+            "blade": false,
+            "hands": false,
+            "skates": true,
+            "helmet": true
+          },
+          "evidence": "Helmet and skates are visible, but stick and hands are undefined."
+        },
+        "toy": {
+          "full": 4,
+          "small": 3,
+          "evidence": "Chunky proportions and simple colors support the toy aesthetic."
+        },
+        "best_row": "Row 1 reads best as it shows stable, upright locomotion.",
+        "proportions": {
+          "head_of_height": 0.33,
+          "shoulder_of_height": 0.5,
+          "stick_of_height": 0.5
+        },
+        "changes": [
+          "stick thickness 2px -> 12px",
+          "hand color blue -> black",
+          "head 0.33 of height -> 0.25"
+        ],
+        "worst": [
+          "Stick is invisible.",
+          "Hands blend into arms.",
+          "Head blends into torso."
+        ],
+        "works": [
+          "Chunky proportions.",
+          "White stripe accents."
+        ]
+      },
+      "markdown": "**eyes/figure** A=20261112-173209-A-a28-tripo-walk-chase.png (gemini-3.1-pro-preview, in 3088 out 302 think 2049 tokens, ~$0.0344, 25.1 s)\n- hockey_player:\n  - full: 2\n  - small: 2\n  - parts:\n    - stick: false\n    - blade: false\n    - hands: false\n    - skates: true\n    - helmet: true\n  - evidence: Helmet and skates are visible, but stick and hands are undefined.\n- toy:\n  - full: 4\n  - small: 3\n  - evidence: Chunky proportions and simple colors support the toy aesthetic.\n- best_row: Row 1 reads best as it shows stable, upright locomotion.\n- proportions:\n  - head_of_height: 0.33\n  - shoulder_of_height: 0.5\n  - stick_of_height: 0.5\n- changes: stick thickness 2px -> 12px; hand color blue -> black; head 0.33 of height -> 0.25\n- worst: Stick is invisible.; Hands blend into arms.; Head blends into torso.\n- works: Chunky proportions.; White stripe accents."
+    }
+  ]
+}

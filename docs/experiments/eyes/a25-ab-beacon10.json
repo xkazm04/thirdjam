@@ -1,0 +1,74 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "ab-pair",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T16:24:13.672Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "ab-pair",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a25/docs/experiments/img/rink/reg-farnet-beacon1.png",
+          "width": 2560,
+          "height": 1440
+        },
+        {
+          "label": "B",
+          "path": ".claude/worktrees/a25/docs/experiments/img/rink/reg-farnet-beacon0.png",
+          "width": 2560,
+          "height": 1440
+        }
+      ],
+      "distance": 40,
+      "thumbnails": [],
+      "prompt_chars": 3514,
+      "usage": {
+        "prompt": 3219,
+        "output": 333,
+        "thoughts": 808,
+        "total": 4360,
+        "calls": 1
+      },
+      "cost_usd_est": 0.02013,
+      "ms": 20746,
+      "retried": false,
+      "answer": {
+        "elements": {
+          "sky": {
+            "closer": "tie",
+            "why": "Both stills feature a pure black void rather than the requested deep-blue night dome."
+          },
+          "ice": {
+            "closer": "tie",
+            "why": "Both stills use the exact same blue ice texture with painted-looking brush streaks and frost patches."
+          },
+          "pools": {
+            "closer": "tie",
+            "why": "Both stills have identical soft white light pools illuminating the center of the rink."
+          },
+          "figures": {
+            "closer": "tie",
+            "why": "Both stills show the exact same orange cylindrical toy figure with the number 13."
+          },
+          "construction": {
+            "closer": "tie",
+            "why": "Both stills feature identical boards with an ochre kick plate, dark glass rail, and thick red nets."
+          },
+          "outline": {
+            "closer": "tie",
+            "why": "Both stills apply the same visible outlines to the figure and background objects."
+          }
+        },
+        "verdict": "b",
+        "confidence": 0.95,
+        "reason": "Still B correctly uses a small red screen marker in the HUD to highlight the far net, whereas Still A uses a massive, distracting in-world light beam that violates the art style.",
+        "loser_keeps": "The painted ice texture and soft lighting pools are effective and should be maintained."
+      },
+      "markdown": "**eyes/ab-pair** A=reg-farnet-beacon1.png B=reg-farnet-beacon0.png at 40 m (gemini-3.1-pro-preview, in 3219 out 333 think 808 tokens, ~$0.0201, 20.7 s)\n- elements:\n  - sky: closer tie, why Both stills feature a pure black void rather than the requested deep-blue night dome.\n  - ice: closer tie, why Both stills use the exact same blue ice texture with painted-looking brush streaks and frost patches.\n  - pools: closer tie, why Both stills have identical soft white light pools illuminating the center of the rink.\n  - figures: closer tie, why Both stills show the exact same orange cylindrical toy figure with the number 13.\n  - construction: closer tie, why Both stills feature identical boards with an ochre kick plate, dark glass rail, and thick red nets.\n  - outline: closer tie, why Both stills apply the same visible outlines to the figure and background objects.\n- verdict: b\n- confidence: 0.95\n- reason: Still B correctly uses a small red screen marker in the HUD to highlight the far net, whereas Still A uses a massive, distracting in-world light beam that violates the art style.\n- loser_keeps: The painted ice texture and soft lighting pools are effective and should be maintained."
+    }
+  ]
+}

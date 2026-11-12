@@ -1,0 +1,74 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "ab-pair",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T16:23:39.748Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "ab-pair",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a25/docs/experiments/img/rink/reg-farnet-beacon1.png",
+          "width": 2560,
+          "height": 1440
+        },
+        {
+          "label": "B",
+          "path": ".claude/worktrees/a25/docs/experiments/img/rink/reg-farnet-beacon2.png",
+          "width": 2560,
+          "height": 1440
+        }
+      ],
+      "distance": 40,
+      "thumbnails": [],
+      "prompt_chars": 3514,
+      "usage": {
+        "prompt": 3219,
+        "output": 288,
+        "thoughts": 3050,
+        "total": 6557,
+        "calls": 1
+      },
+      "cost_usd_est": 0.04649,
+      "ms": 54817,
+      "retried": false,
+      "answer": {
+        "elements": {
+          "sky": {
+            "closer": "tie",
+            "why": "Both backgrounds are a black void rather than the requested deep-blue dome."
+          },
+          "ice": {
+            "closer": "tie",
+            "why": "Both show identical scuffed textures with painted brush streaks."
+          },
+          "pools": {
+            "closer": "tie",
+            "why": "Both feature the same soft light pools on the ice."
+          },
+          "figures": {
+            "closer": "tie",
+            "why": "Both display the same single cylindrical orange figure."
+          },
+          "construction": {
+            "closer": "tie",
+            "why": "Both have identical boards with ochre kick plates and dark rails."
+          },
+          "outline": {
+            "closer": "tie",
+            "why": "Neither image features prominent ink-like outlines whose width falls with distance."
+          }
+        },
+        "verdict": "a",
+        "confidence": 0.6,
+        "reason": "The warm-toned HUD marker in A provides higher contrast against the dark background, making the net faster to locate.",
+        "loser_keeps": "The cool-toned marker in B blends smoothly with the blue ice palette."
+      },
+      "markdown": "**eyes/ab-pair** A=reg-farnet-beacon1.png B=reg-farnet-beacon2.png at 40 m (gemini-3.1-pro-preview, in 3219 out 288 think 3050 tokens, ~$0.0465, 54.8 s)\n- elements:\n  - sky: closer tie, why Both backgrounds are a black void rather than the requested deep-blue dome.\n  - ice: closer tie, why Both show identical scuffed textures with painted brush streaks.\n  - pools: closer tie, why Both feature the same soft light pools on the ice.\n  - figures: closer tie, why Both display the same single cylindrical orange figure.\n  - construction: closer tie, why Both have identical boards with ochre kick plates and dark rails.\n  - outline: closer tie, why Neither image features prominent ink-like outlines whose width falls with distance.\n- verdict: a\n- confidence: 0.6\n- reason: The warm-toned HUD marker in A provides higher contrast against the dark background, making the net faster to locate.\n- loser_keeps: The cool-toned marker in B blends smoothly with the blue ice palette."
+    }
+  ]
+}

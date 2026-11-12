@@ -1,0 +1,65 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "p2-bar",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T16:22:10.616Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "p2-bar",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a25/docs/experiments/img/rink/reg-constr-24m.png",
+          "width": 2560,
+          "height": 1440
+        }
+      ],
+      "distance": 24,
+      "thumbnails": [],
+      "prompt_chars": 3429,
+      "usage": {
+        "prompt": 2015,
+        "output": 368,
+        "thoughts": 1285,
+        "total": 3668,
+        "calls": 1
+      },
+      "cost_usd_est": 0.02387,
+      "ms": 21581,
+      "retried": false,
+      "answer": {
+        "score": 3,
+        "gaps": [
+          {
+            "rank": 1,
+            "element": "figures",
+            "gap": "The characters are placeholder capsules lacking chunky toy proportions, big hands, visible stick blades, and ink-like outlines.",
+            "change": "Replace the capsule meshes with the chunky toy character models and apply a post-process outline material."
+          },
+          {
+            "rank": 2,
+            "element": "pools",
+            "gap": "The spotlight pools are blown out to pure white, completely erasing the scuffed ice texture and failing the 'soft light pools' requirement.",
+            "change": "Reduce the intensity multiplier on the spotlights until the painted ice texture remains visible across the entire lit area."
+          },
+          {
+            "rank": 3,
+            "element": "sky",
+            "gap": "The background is a pure black void containing movie set props instead of the required deep-blue night dome.",
+            "change": "Swap the black background for a deep-blue skybox and remove the background construction/movie props."
+          }
+        ],
+        "works": [
+          "The boards feature the requested ochre kick plate at the foot and dark glass rail on top.",
+          "The red net frame stands out clearly at the far end of the rink.",
+          "The deep blue and warm orange team colors provide strong contrast and separate well on the ice."
+        ],
+        "lead_sentence": "We have the basic layout and team colors blocking, but we need to swap out these placeholder capsules for the actual toy figures, dial back the blown-out lighting, and get our deep blue night sky in place."
+      },
+      "markdown": "**eyes/p2-bar** A=reg-constr-24m.png at 24 m (gemini-3.1-pro-preview, in 2015 out 368 think 1285 tokens, ~$0.0239, 21.6 s)\n- score: 3\n- gaps:\n  - rank: 1; element: figures; gap: The characters are placeholder capsules lacking chunky toy proportions, big hands, visible stick blades, and ink-like outlines.; change: Replace the capsule meshes with the chunky toy character models and apply a post-process outline material.\n  - rank: 2; element: pools; gap: The spotlight pools are blown out to pure white, completely erasing the scuffed ice texture and failing the 'soft light pools' requirement.; change: Reduce the intensity multiplier on the spotlights until the painted ice texture remains visible across the entire lit area.\n  - rank: 3; element: sky; gap: The background is a pure black void containing movie set props instead of the required deep-blue night dome.; change: Swap the black background for a deep-blue skybox and remove the background construction/movie props.\n- works: The boards feature the requested ochre kick plate at the foot and dark glass rail on top.; The red net frame stands out clearly at the far end of the rink.; The deep blue and warm orange team colors provide strong contrast and separate well on the ice.\n- lead_sentence: We have the basic layout and team colors blocking, but we need to swap out these placeholder capsules for the actual toy figures, dial back the blown-out lighting, and get our deep blue night sky in place."
+    }
+  ]
+}

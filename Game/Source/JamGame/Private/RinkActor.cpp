@@ -9,6 +9,22 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "LookTierSwitcher.h"
 #include "Engine/World.h"
+#include "HAL/IConsoleManager.h"
+#include "UObject/UObjectIterator.h"
+
+// Lane A25: the construction layer's switch. 0 hides the kick plate, glass rail, net frame extras, goal lights, benches and the extra markings on every rink
+// actor (the "before" of the ProfileGPU pair); 1 shows them. Read at Build and on every change.
+static TAutoConsoleVariable<int32> CVarRinkConstruction(TEXT("jam.rink.construction"), 1,
+	TEXT("1: the rink's construction layer (kick plate, glass rail, net frame, goal lights, benches, faceoff markings) is visible; 0: hidden. Lane A25."));
+// Default 0: at 40 m the eyes tool preferred no column over B's translucent one (0.95: "a massive, distracting in-world light beam"; the 14 cm net frame
+// reads 4/5 as the far net on both rink sizes without it) and the translucent one only weakly over the opaque (0.6). docs/experiments/RINK.md has the pair.
+static TAutoConsoleVariable<int32> CVarRinkBeacon(TEXT("jam.rink.beacon"), 0,
+	TEXT("Far-net beacon column: 0 off, 1 B's MI_Trim_Beacon (translucent), 2 opaque emissive column. Lane A25, eyes finding 3."));
+static FAutoConsoleVariableSink GRinkConstructionSink(FConsoleCommandDelegate::CreateLambda([]()
+{
+	const bool bOn = ARinkActor::IsConstructionEnabled();
+	for (TObjectIterator<ARinkActor> It; It; ++It) if (IsValid(*It)) { It->SetConstructionVisible(bOn); It->ApplyBeaconMode(); }
+}));
 
 namespace
 {
@@ -46,6 +62,15 @@ namespace
 			}
 		}
 
+		// Lane A25: overwrites the UVs of the quad just emitted (one-sided quads only): the trim strips take U = distance along the outline, V = height,
+		// so the pattern runs continuously around the corner arcs instead of stepping where the face turns from x to y (eyes finding 2, trim seam).
+		void LastUV(const FVector2D& A, const FVector2D& B, const FVector2D& Cc, const FVector2D& D)
+		{
+			const int32 I = UV.Num() - 4;
+			if (I < 0) return;
+			UV[I] = A; UV[I + 1] = B; UV[I + 2] = Cc; UV[I + 3] = D;
+		}
+
 		// Axis-aligned box (all six faces, outward normals).
 		void Box(const FVector& Min, const FVector& Max)
 		{
@@ -79,6 +104,35 @@ namespace
 			Quad(FVector(A - Side, H), FVector(B - Side, H), FVector(B + Side, H), FVector(A + Side, H), FVector::UpVector);
 		}
 
+		// Lane A25: a flat ring sector on the ice from angle A0 to A1 (radians, counter-clockwise), for creases.
+		void Arc(const FVector2D& Cc, double R0, double R1, double A0, double A1, double H, int32 Seg = 24)
+		{
+			for (int32 i = 0; i < Seg; ++i)
+			{
+				const double T0 = A0 + (A1 - A0) * i / Seg, T1 = A0 + (A1 - A0) * (i + 1) / Seg;
+				const FVector2D D0(FMath::Cos(T0), FMath::Sin(T0)), D1(FMath::Cos(T1), FMath::Sin(T1));
+				Quad(FVector(Cc + D0 * R0, H), FVector(Cc + D0 * R1, H), FVector(Cc + D1 * R1, H), FVector(Cc + D1 * R0, H), FVector::UpVector);
+			}
+		}
+
+		// Lane A25: a box of half-width HalfW (sideways) and half-height HalfH (up) along the line A -> B, any direction (rails along the
+		// rounded corners, the nets' diagonal braces). Up is the vertical-most direction perpendicular to the bar; a vertical bar takes +x as its side.
+		void Bar(const FVector& A, const FVector& B, double HalfW, double HalfH)
+		{
+			const FVector Dir = (B - A).GetSafeNormal();
+			FVector Side = FVector::CrossProduct(Dir, FVector::UpVector);
+			if (!Side.Normalize()) Side = FVector::ForwardVector;
+			const FVector Up = FVector::CrossProduct(Side, Dir).GetSafeNormal();
+			const FVector S = Side * HalfW, U = Up * HalfH;
+			const FVector P[8] = { A - S - U, A + S - U, A + S + U, A - S + U, B - S - U, B + S - U, B + S + U, B - S + U };
+			Quad(P[3], P[2], P[6], P[7], Up);
+			Quad(P[0], P[4], P[5], P[1], -Up);
+			Quad(P[1], P[5], P[6], P[2], Side);
+			Quad(P[0], P[3], P[7], P[4], -Side);
+			Quad(P[0], P[1], P[2], P[3], -Dir);
+			Quad(P[4], P[7], P[6], P[5], Dir);
+		}
+
 		void Commit(UProceduralMeshComponent* Pm, int32 Section)
 		{
 			Pm->CreateMeshSection_LinearColor(Section, V, T, N, UV, C, Tan, false);
@@ -109,11 +163,24 @@ ARinkActor::ARinkActor()
 	Nets = MakePm(TEXT("Nets"));
 	Obstacles = MakePm(TEXT("Obstacles"));
 	Zones = MakePm(TEXT("Zones"));
+	KickPlate = MakePm(TEXT("KickPlate"));
+	GlassRail = MakePm(TEXT("GlassRail"));
+	GoalLights = MakePm(TEXT("GoalLights"));
+	Benches = MakePm(TEXT("Benches"));
 	Glass->SetCastShadow(false);
+	// Lane A25: the glass panel stays stencil 0 (no ramp, no outline: a translucent sheet with an outline reads as a wall) and casts nothing.
+	Glass->SetRenderCustomDepth(false);
+	Glass->SetCustomDepthStencilValue(0);
 	// R-0002 (B-to-A-0005): stencil 1 = toon ramp + outline, 2 = banded ice without outline, 0 = untouched.
-	for (UProceduralMeshComponent* P : { Boards.Get(), Nets.Get(), Obstacles.Get() }) { P->SetRenderCustomDepth(true); P->SetCustomDepthStencilValue(1); }
+	for (UProceduralMeshComponent* P : { Boards.Get(), Nets.Get(), Obstacles.Get(), KickPlate.Get(), GlassRail.Get(), GoalLights.Get(), Benches.Get() }) { P->SetRenderCustomDepth(true); P->SetCustomDepthStencilValue(1); }
 	Ice->SetRenderCustomDepth(true);
 	Ice->SetCustomDepthStencilValue(2);
+	// Lane A25: the painted markings lie on the ice and take its stencil (banded, no outline), like the zone decals; they cast nothing.
+	Markings->SetRenderCustomDepth(true);
+	Markings->SetCustomDepthStencilValue(2);
+	Markings->SetCastShadow(false);
+	// Lane A25: the thin rail and stanchions cast no shadow (a 5 cm post's VSM shadow is noise); the kick plate, benches and goal lights do.
+	GlassRail->SetCastShadow(false);
 	// C-0005 / A15: zone decals lie on the ice, so they take the ice's stencil (banded, no outline) and cast nothing.
 	Zones->SetRenderCustomDepth(true);
 	Zones->SetCustomDepthStencilValue(2);
@@ -209,7 +276,8 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 
 	// Boards: inner face, top cap, outer face; glass band above; trim strip along the inner top edge.
 	{
-		FMeshBuf G, TrB, TrO;
+		FMeshBuf G, TrB, TrO, Kick, Rail, Posts;
+		double TrimS = 0;   // distance along the outline so far, cm (trim UVs)
 		const double H = BoardHeightM * UU, T = BoardThicknessM * UU, GH = (BoardHeightM + GlassHeightM) * UU;
 		// Split the outline at x = 0 so each trim strip is wholly on the blue (x < 0) or the orange (x > 0) half.
 		TArray<FVector2D> Split;
@@ -232,17 +300,62 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 			B.Quad(FVector(Q0, 0), FVector(Q0, H), FVector(Q1, H), FVector(Q1, 0), Nout);
 			const FVector2D M0 = P0 + Out * (T * 0.5), M1 = P1 + Out * (T * 0.5);
 			G.Quad(FVector(M0, H), FVector(M1, H), FVector(M1, GH), FVector(M0, GH), Nin, true);
+			// Lane A25: the kick plate, a 25 cm band standing 2 cm proud of the inner face at the board foot (front face and top lip; the ring closes itself).
+			{
+				const double KH = KickPlateHeightM * UU, KP = KickPlateProudM * UU;
+				const FVector2D K0 = P0 - Out * KP, K1 = P1 - Out * KP;
+				Kick.Quad(FVector(K0, 0), FVector(K1, 0), FVector(K1, KH), FVector(K0, KH), Nin);
+				Kick.Quad(FVector(K0, KH), FVector(K1, KH), FVector(P1, KH), FVector(P0, KH), FVector::UpVector);
+			}
+			// Lane A25: the dark glass rail, 6 cm wide and 4 cm high, capping the glass along the board's middle line.
+			Rail.Bar(FVector(M0, GH + 2.0), FVector(M1, GH + 2.0), 3.0, 2.0);
 			// R-0002: a 10 cm emissive strip on top of the board, along its inner edge (a box: top, inner and outer faces).
 			const FVector2D I0 = P0 + Out * 1.0, I1 = P1 + Out * 1.0, O0 = P0 + Out * 11.0, O1 = P1 + Out * 11.0;
 			FMeshBuf& Tr = ((P0.X + P1.X) * 0.5 < 0) ? TrB : TrO;
+			// Lane A25: U runs along the outline (cm / 1000, the scale the world-position UVs had on the straight sides), V across or up; no step at the corner seam.
+			const double S0 = TrimS, S1 = TrimS + FVector2D::Distance(P0, P1);
+			TrimS = S1;
+			const double U0 = S0 / 1000.0, U1 = S1 / 1000.0;
 			Tr.Quad(FVector(I0, H + 10.0), FVector(I1, H + 10.0), FVector(O1, H + 10.0), FVector(O0, H + 10.0), FVector::UpVector);
+			Tr.LastUV(FVector2D(U0, (H + 10.0) / 1000.0), FVector2D(U1, (H + 10.0) / 1000.0), FVector2D(U1, (H + 20.0) / 1000.0), FVector2D(U0, (H + 20.0) / 1000.0));
 			Tr.Quad(FVector(I0, H), FVector(I1, H), FVector(I1, H + 10.0), FVector(I0, H + 10.0), Nin);
+			Tr.LastUV(FVector2D(U0, H / 1000.0), FVector2D(U1, H / 1000.0), FVector2D(U1, (H + 10.0) / 1000.0), FVector2D(U0, (H + 10.0) / 1000.0));
 			Tr.Quad(FVector(O0, H), FVector(O0, H + 10.0), FVector(O1, H + 10.0), FVector(O1, H), Nout);
+			Tr.LastUV(FVector2D(U0, H / 1000.0), FVector2D(U0, (H + 10.0) / 1000.0), FVector2D(U1, (H + 10.0) / 1000.0), FVector2D(U1, H / 1000.0));
 		}
 		B.Commit(Boards, 0);
 		Boards->SetMaterial(0, LoadLook(TEXT("MI_Toon_Board"), BoardsMaterialPath));
 		G.Commit(Glass, 0);
-		Glass->SetMaterial(0, LoadMat(NetMaterialPath));
+		// Lane A25: B's glass instance when it exists (MI_Toon_Glass, stencil 0, translucent); the net placeholder stands in as before.
+		Glass->SetMaterial(0, LoadLook(TEXT("MI_Toon_Glass"), NetMaterialPath));
+		// Lane A25: stanchions, 5 cm square posts from the board top to the rail top, one every 2.4 m along the outline (the count rounds so the ring closes evenly).
+		{
+			double Perimeter = 0;
+			for (int32 i = 0; i < Line.Num(); ++i) Perimeter += FVector2D::Distance(Line[i], Line[(i + 1) % Line.Num()]);
+			const int32 Count = FMath::Max(4, FMath::RoundToInt32(Perimeter / StanchionSpacingM));
+			const double Step = Perimeter / Count;
+			int32 Seg = 0;
+			double SegStart = 0, SegLen = FVector2D::Distance(Line[0], Line[1 % Line.Num()]);
+			for (int32 k = 0; k < Count; ++k)
+			{
+				const double S = k * Step;
+				while (S > SegStart + SegLen && Seg < Line.Num() - 1) { SegStart += SegLen; ++Seg; SegLen = FVector2D::Distance(Line[Seg], Line[(Seg + 1) % Line.Num()]); }
+				const FVector2D A = Line[Seg], Bp = Line[(Seg + 1) % Line.Num()];
+				const FVector2D Dir = (Bp - A).GetSafeNormal();
+				const FVector2D Out(Dir.Y, -Dir.X);
+				const FVector2D M = (A + Dir * FMath::Clamp(S - SegStart, 0.0, SegLen)) * UU + Out * (T * 0.5);
+				Posts.Box(FVector(M.X - 2.5, M.Y - 2.5, H), FVector(M.X + 2.5, M.Y + 2.5, GH + 4.0));
+			}
+		}
+		Kick.Commit(KickPlate, 0);
+		KickPlate->SetMaterial(0, LoadConstructionMat(TEXT("MI_Toon_KickPlate"), TEXT("MI_LL_KickPlate"), FLinearColor(0.85f, 0.72f, 0.12f), 0.6f));
+		Rail.Commit(GlassRail, 0);
+		Posts.Commit(GlassRail, 1);
+		{
+			UMaterialInterface* RailMat = LoadConstructionMat(TEXT("MI_Toon_GlassRail"), TEXT("MI_LL_GlassRail"), FLinearColor(0.05f, 0.05f, 0.06f));
+			GlassRail->SetMaterial(0, RailMat);
+			GlassRail->SetMaterial(1, RailMat);
+		}
 		TrB.Commit(Trim, 0);
 		TrO.Commit(TrimOrange, 0);
 		const FLinearColor Blue = Game.Teams.Num() == 2 ? Game.Teams[0].Colour : FLinearColor(0.012f, 0.07f, 0.69f);
@@ -274,14 +387,14 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 		}
 
 		// R-0002: far-net beacon posts, d 12 cm, 8 m tall, 1 m behind each net (basic cylinder: 100 cm across and tall).
-		const UMaterialInterface* BeaconMat = TrimMat(TEXT("MI_Trim_Beacon"), Game.Look.TrimColour);
+		BeaconColour = Game.Look.TrimColour;
 		for (int32 S = -1; S <= 1; S += 2)
 		{
 			UStaticMeshComponent* Bc = S > 0 ? BeaconPos : BeaconNeg;
 			Bc->SetRelativeLocation(FVector(S * (GL + Depth + 1.0) * UU, 0, 400.0));
 			Bc->SetRelativeScale3D(FVector(0.12, 0.12, 8.0));
-			Bc->SetMaterial(0, const_cast<UMaterialInterface*>(BeaconMat));
 		}
+		ApplyBeaconMode();   // lane A25: material and visibility from jam.rink.beacon
 	}
 
 	// Markings: section 0 red (centre line, goal lines, faceoff dots), section 1 blue (blue lines, centre circle).
@@ -294,26 +407,63 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 			const double X = S * GL * UU;
 			const double Ext = FMath::Max(Hz - FMath::Max(0.0, Inset - (R.LengthM * 0.5 - GL)) * UU, Hz * 0.6);
 			B.Strip(FVector2D(X, -Ext), FVector2D(X, Ext), 3.0, Z);
-			for (int32 Zs = -1; Zs <= 1; Zs += 2)
-			{
-				B.Ring(FVector2D(S * (GL - 6.0) * UU, Zs * FMath::Min(7.0, R.WidthM * 0.3) * UU), 0.0, 30.0, Z, 16);
-			}
 		}
-		B.Ring(FVector2D::ZeroVector, 0.0, 15.0, Z + 0.1, 16);
 		B.Commit(Markings, 0);
 		FMeshBuf Blue;
 		for (int32 S = -1; S <= 1; S += 2) Blue.Strip(FVector2D(S * R.LengthM / 6.0 * UU, -Hz), FVector2D(S * R.LengthM / 6.0 * UU, Hz), 15.0, Z);
 		Blue.Ring(FVector2D::ZeroVector, 450.0, 460.0, Z, 64);
 		Blue.Commit(Markings, 1);
+		// Lane A25: the marks B's painted ice does not carry, always visible: section 2 red (faceoff circles r 4.5 m with four hash marks each, the eight
+		// faceoff dots, the crease outlines, the trapezoids behind the nets), section 3 blue (crease fills, the centre dot). Line width 8 cm (the goal line's
+		// class, HalfW 4), the blue and centre lines stay at 30 cm. The end-zone dots sit where the old section-0 dots were (x = goal line - 6 m, z = +-min(7, 0.3 w));
+		// the neutral-zone dots 1.5 m inside the blue lines; the crease is a 1.8 m half-disc on the goal line; the trapezoid runs from goal width/2 + 1.35 m at the
+		// goal line to + 2.25 m at the end boards (clamped before the corner arc).
+		FMeshBuf Red2, Blue2;
+		{
+			const double LW = 6.0, CircleR = 450.0, DotR = 30.0, Hash = 60.0, HashX = 85.0, CreaseR = 180.0;   // 12 cm lines: 8 cm aliased into dots at 24 m (first proof)
+			const double DotY = FMath::Min(7.0, R.WidthM * 0.3) * UU;
+			for (int32 S = -1; S <= 1; S += 2)
+			{
+				const double CX = S * (GL - 6.0) * UU, NX = S * (R.LengthM / 6.0 - 1.5) * UU;
+				for (int32 Zs = -1; Zs <= 1; Zs += 2)
+				{
+					const FVector2D C(CX, Zs * DotY);
+					Red2.Ring(C, 0.0, DotR, Z, 16);
+					Red2.Ring(C, CircleR - LW, CircleR + LW, Z, 64);
+					for (int32 Hx = -1; Hx <= 1; Hx += 2) for (int32 Hy = -1; Hy <= 1; Hy += 2)
+						Red2.Strip(FVector2D(C.X + Hx * HashX, C.Y + Hy * CircleR), FVector2D(C.X + Hx * HashX, C.Y + Hy * (CircleR + Hash)), LW, Z);
+					Red2.Ring(FVector2D(NX, Zs * DotY), 0.0, DotR, Z, 16);
+				}
+				// Crease: the half-disc faces the centre (towards -x for the +x goal).
+				const FVector2D GC(S * GL * UU, 0);
+				const double A0 = S > 0 ? UE_DOUBLE_PI * 0.5 : -UE_DOUBLE_PI * 0.5;
+				Blue2.Arc(GC, 0.0, CreaseR - LW, A0, A0 + UE_DOUBLE_PI, Z - 0.1, 24);
+				Red2.Arc(GC, CreaseR - LW, CreaseR + LW, A0, A0 + UE_DOUBLE_PI, Z, 24);
+				// Trapezoid: two lines from the goal line to the end boards, outside the net.
+				const double TrapNear = (Hw + 1.35) * UU, TrapFar = FMath::Min((Hw + 2.25) * UU, FMath::Max(TrapNear, Hz - Inset * UU));
+				for (int32 Zs = -1; Zs <= 1; Zs += 2)
+					Red2.Strip(FVector2D(S * GL * UU, Zs * TrapNear), FVector2D(S * R.LengthM * 0.5 * UU, Zs * TrapFar), LW, Z);
+			}
+			Blue2.Ring(FVector2D::ZeroVector, 0.0, 15.0, Z, 16);
+		}
+		Red2.Commit(Markings, 2);
+		Blue2.Commit(Markings, 3);
 		UMaterialInterface* Base = LoadObject<UMaterialInterface>(nullptr, TEXT("/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial"));
 		UMaterialInstanceDynamic* Red = UMaterialInstanceDynamic::Create(Base, this);
 		Red->SetVectorParameterValue(TEXT("Color"), FLinearColor(0.6f, 0.02f, 0.02f));
 		UMaterialInstanceDynamic* BlueM = UMaterialInstanceDynamic::Create(Base, this);
 		BlueM->SetVectorParameterValue(TEXT("Color"), FLinearColor(0.02f, 0.08f, 0.6f));
+		UMaterialInstanceDynamic* PaleBlue = UMaterialInstanceDynamic::Create(Base, this);
+		PaleBlue->SetVectorParameterValue(TEXT("Color"), FLinearColor(0.35f, 0.55f, 0.85f));
 		Markings->SetMaterial(0, Red);
 		Markings->SetMaterial(1, BlueM);
-		// B's ice material paints the lines itself from RinkHalfLength / RinkHalfWidth; ours would double them.
-		Markings->SetVisibility(!bLookIce);
+		Markings->SetMaterial(2, Red);
+		Markings->SetMaterial(3, PaleBlue);
+		// B's ice material paints the centre, blue and goal lines and the centre circle itself from RinkHalfLength / RinkHalfWidth; ours would double them.
+		// The construction sections (2, 3) stay, and follow jam.rink.construction.
+		Markings->SetVisibility(true);
+		Markings->SetMeshSectionVisible(0, !bLookIce);
+		Markings->SetMeshSectionVisible(1, !bLookIce);
 	}
 
 	// Zones (C-0005 / A15): flat decals at 0.8 cm (above the markings at 0.6), one fill section and one rim section per zone kind,
@@ -429,36 +579,86 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 
 	// Nets: posts and crossbar (frame, section 0) and the mesh (section 1), open towards the centre.
 	{
-		FMeshBuf Mesh;
-		const double PR = 5.0; // post half size, cm
+		// Lane A25 (LOOK-LAB.md recommendation 6): 14 cm tubular frame (posts, crossbar, side and back bottom bars: section 0, the box the sim's goal volume
+		// matches) plus the back frame (two back posts to 0.9 m, a back bar, two braces from the crossbar ends: section 2, hidden with the construction);
+		// the netting (section 1) drapes over it: sloped top from the crossbar to the back bar, vertical back below it, two side panels.
+		FMeshBuf Mesh, Extra;
+		const double PR = NetBarM * 0.5 * UU; // post half size, cm
+		const double BR = 5.0;                // brace half size, cm
 		for (int32 S = -1; S <= 1; S += 2)
 		{
 			const double X0 = S * GL * UU, X1 = S * (GL + Depth) * UU;
-			const double Y0 = -Hw * UU, Y1 = Hw * UU, Hh = NetH * UU;
+			const double Y0 = -Hw * UU, Y1 = Hw * UU, Hh = NetH * UU, Bh = NetBackHeightM * UU;
 			B.Box(FVector(X0 - PR, Y0 - PR, 0), FVector(X0 + PR, Y0 + PR, Hh));
 			B.Box(FVector(X0 - PR, Y1 - PR, 0), FVector(X0 + PR, Y1 + PR, Hh));
 			B.Box(FVector(X0 - PR, Y0 - PR, Hh - PR * 2), FVector(X0 + PR, Y1 + PR, Hh));
 			B.Box(FVector(FMath::Min(X0, X1) - PR, Y0 - PR, 0), FVector(FMath::Max(X0, X1) + PR, Y0 + PR, 2 * PR));
 			B.Box(FVector(FMath::Min(X0, X1) - PR, Y1 - PR, 0), FVector(FMath::Max(X0, X1) + PR, Y1 + PR, 2 * PR));
 			B.Box(FVector(X1 - PR, Y0 - PR, 0), FVector(X1 + PR, Y1 + PR, 2 * PR));
+			Extra.Box(FVector(X1 - PR, Y0 - PR, 0), FVector(X1 + PR, Y0 + PR, Bh));
+			Extra.Box(FVector(X1 - PR, Y1 - PR, 0), FVector(X1 + PR, Y1 + PR, Bh));
+			Extra.Box(FVector(X1 - PR, Y0 - PR, Bh - PR * 2), FVector(X1 + PR, Y1 + PR, Bh));
+			Extra.Bar(FVector(X0, Y0, Hh - PR), FVector(X1, Y0, Bh - PR), BR, BR);
+			Extra.Bar(FVector(X0, Y1, Hh - PR), FVector(X1, Y1, Bh - PR), BR, BR);
 			const FVector In(-S, 0, 0);
-			Mesh.Quad(FVector(X1, Y0, 0), FVector(X1, Y1, 0), FVector(X1, Y1, Hh), FVector(X1, Y0, Hh), In, true);
-			Mesh.Quad(FVector(X0, Y0, 0), FVector(X1, Y0, 0), FVector(X1, Y0, Hh), FVector(X0, Y0, Hh), FVector(0, 1, 0), true);
-			Mesh.Quad(FVector(X0, Y1, 0), FVector(X1, Y1, 0), FVector(X1, Y1, Hh), FVector(X0, Y1, Hh), FVector(0, -1, 0), true);
-			Mesh.Quad(FVector(X0, Y0, Hh), FVector(X1, Y0, Hh), FVector(X1, Y1, Hh), FVector(X0, Y1, Hh), FVector(0, 0, -1), true);
+			Mesh.Quad(FVector(X1, Y0, 0), FVector(X1, Y1, 0), FVector(X1, Y1, Bh), FVector(X1, Y0, Bh), In, true);
+			Mesh.Quad(FVector(X0, Y0, 0), FVector(X1, Y0, 0), FVector(X1, Y0, Bh), FVector(X0, Y0, Hh), FVector(0, 1, 0), true);
+			Mesh.Quad(FVector(X0, Y1, 0), FVector(X1, Y1, 0), FVector(X1, Y1, Bh), FVector(X0, Y1, Hh), FVector(0, -1, 0), true);
+			Mesh.Quad(FVector(X0, Y0, Hh), FVector(X1, Y0, Bh), FVector(X1, Y1, Bh), FVector(X0, Y1, Hh), FVector(0, 0, -1), true);
 		}
 		B.Commit(Nets, 0);
 		Mesh.Commit(Nets, 1);
-		bool bLookFrame = false;
-		UMaterialInterface* FrameMat = LoadLook(TEXT("MI_Toon_NetFrame"), TEXT("/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial"), &bLookFrame);
-		if (!bLookFrame)
-		{
-			UMaterialInstanceDynamic* Frame = UMaterialInstanceDynamic::Create(FrameMat, this);
-			Frame->SetVectorParameterValue(TEXT("Color"), FLinearColor(0.7f, 0.03f, 0.02f));
-			FrameMat = Frame;
-		}
+		Extra.Commit(Nets, 2);
+		UMaterialInterface* FrameMat = LoadConstructionMat(TEXT("MI_Toon_NetFrame"), TEXT("MI_LL_NetFrame"), FLinearColor(0.7f, 0.03f, 0.02f));
 		Nets->SetMaterial(0, FrameMat);
 		Nets->SetMaterial(1, LoadLook(TEXT("MI_Toon_NetMesh"), NetMaterialPath));
+		Nets->SetMaterial(2, FrameMat);
+
+		// Lane A25: a goal light on the end-board rail behind each net: a dark housing 30 x 24 x 20 cm on the rail, a red lens on its rink face.
+		{
+			FMeshBuf Housing, Lens;
+			const double GH = (BoardHeightM + GlassHeightM) * UU + 4.0;
+			for (int32 S = -1; S <= 1; S += 2)
+			{
+				const double Mx = S * (R.LengthM * 0.5 * UU + BoardThicknessM * 0.5 * UU);
+				Housing.Box(FVector(Mx - 20.0, -15.0, GH), FVector(Mx + 20.0, 15.0, GH + 30.0));
+				const double Lx = Mx - S * 20.0;
+				Lens.Box(FVector(FMath::Min(Lx, Lx - S * 4.0), -10.0, GH + 5.0), FVector(FMath::Max(Lx, Lx - S * 4.0), 10.0, GH + 25.0));
+			}
+			Housing.Commit(GoalLights, 0);
+			Lens.Commit(GoalLights, 1);
+			// Mid-grey lifted housing: a black box on the black backdrop behind the end boards is invisible (first proof); B's MI_Toon_GoalLight replaces it.
+			GoalLights->SetMaterial(0, LoadConstructionMat(TEXT("MI_Toon_GoalLight"), TEXT("MI_LL_GlassRail"), FLinearColor(0.45f, 0.45f, 0.48f), 1.2f, true));
+			GoalLights->SetMaterial(1, FrameMat);
+		}
+	}
+
+	// Lane A25: benches outside the +y boards (Unreal +Y is the rink's z axis), crowdless: two team benches and a shorter penalty bench between them, each a
+	// board-coloured enclosure (back wall 1.1 m, two end walls; section 0) with an ochre seat slab (section 1). Lengths scale with the rink: team bench 0.1 L
+	// centred at +-0.0833 L, penalty bench 0.0533 L at the centre with a divider. 90 x 45: 9 m benches at +-7.5 m, 4.8 m penalty bench.
+	{
+		FMeshBuf Walls, Seats;
+		const double Y0 = (R.WidthM * 0.5 + BoardThicknessM) * UU + 5.0, Depth1 = 110.0, Wall = 10.0, Hgt = 110.0;
+		auto Bench = [&](double XC, double Len, bool bDivider)
+		{
+			const double X0 = XC - Len * 0.5, X1 = XC + Len * 0.5;
+			Walls.Box(FVector(X0, Y0 + Depth1 - Wall, 0), FVector(X1, Y0 + Depth1, Hgt));
+			Walls.Box(FVector(X0, Y0, 0), FVector(X0 + Wall, Y0 + Depth1, Hgt));
+			Walls.Box(FVector(X1 - Wall, Y0, 0), FVector(X1, Y0 + Depth1, Hgt));
+			if (bDivider) Walls.Box(FVector(XC - Wall * 0.5, Y0, 0), FVector(XC + Wall * 0.5, Y0 + Depth1, Hgt));
+			Seats.Box(FVector(X0 + Wall, Y0 + 40.0, 40.0), FVector(X1 - Wall, Y0 + Depth1 - Wall, 48.0));
+			Seats.Box(FVector(X0 + Wall, Y0 + Depth1 - Wall - 8.0, 48.0), FVector(X1 - Wall, Y0 + Depth1 - Wall, 85.0));
+		};
+		const double L = R.LengthM * UU;
+		Bench(-L * 0.0833, L * 0.1, false);
+		Bench(L * 0.0833, L * 0.1, false);
+		Bench(0, L * 0.0533, true);
+		Walls.Commit(Benches, 0);
+		Seats.Commit(Benches, 1);
+		// B's bench instance when it ships (MI_Toon_Bench); else the lab flat master in a warm grey with a lift (the outer side of the boards is unlit at night).
+		// Lift 1.2: at 0.5 an unlit stencil-1 surface quantises into the ramp's floor and reads black (second proof); the net frame at 2 reads everywhere.
+		Benches->SetMaterial(0, LoadConstructionMat(TEXT("MI_Toon_Bench"), TEXT("MI_LL_KickPlate"), FLinearColor(0.62f, 0.60f, 0.56f), 1.2f, true));
+		Benches->SetMaterial(1, LoadConstructionMat(TEXT("MI_Toon_KickPlate"), TEXT("MI_LL_KickPlate"), FLinearColor(0.85f, 0.72f, 0.12f), 1.2f));
 	}
 
 	// Obstacles (M3b): boxes and pillars, 1.2 m tall like the boards (section 0); C-0005 / A15 adds goal shields (section 0,
@@ -536,7 +736,84 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 	GoalTriggerNeg->SetRelativeLocation(FVector(-(GL + Depth * 0.5) * UU, 0, NetH * 0.5 * UU));
 	GoalTriggerNeg->SetBoxExtent(FVector(Depth * 0.5 * UU, Hw * UU, NetH * 0.5 * UU));
 
-	UE_LOG(LogJamSim, Log, TEXT("JAMRINK built %gx%g m corner %g goal %g m, %d obstacles, %d zones (%d on B's strips), outline %d points"), R.LengthM, R.WidthM, R.CornerRadiusM, R.GoalWidthM, R.Obstacles.Num(), ZonesDrawn, ZoneQuadsDrawn, Line.Num());
+	SetConstructionVisible(IsConstructionEnabled());
+	UE_LOG(LogJamSim, Log, TEXT("JAMRINK built %gx%g m corner %g goal %g m, %d obstacles, %d zones (%d on B's strips), outline %d points, construction %s (%d stanchions)"), R.LengthM, R.WidthM, R.CornerRadiusM, R.GoalWidthM, R.Obstacles.Num(), ZonesDrawn, ZoneQuadsDrawn, Line.Num(), IsConstructionEnabled() ? TEXT("on") : TEXT("off"), GlassRail->GetNumSections() > 1 ? GlassRail->GetProcMeshSection(1)->ProcVertexBuffer.Num() / 24 : 0);
+}
+
+bool ARinkActor::IsConstructionEnabled()
+{
+	return CVarRinkConstruction.GetValueOnGameThread() != 0;
+}
+
+void ARinkActor::SetConstructionVisible(bool bVisible)
+{
+	for (UProceduralMeshComponent* P : { KickPlate.Get(), GlassRail.Get(), GoalLights.Get(), Benches.Get() }) if (P) P->SetVisibility(bVisible);
+	if (Nets && Nets->GetNumSections() > 2) Nets->SetMeshSectionVisible(2, bVisible);
+	if (Markings && Markings->GetNumSections() > 3) { Markings->SetMeshSectionVisible(2, bVisible); Markings->SetMeshSectionVisible(3, bVisible); }
+}
+
+int32 ARinkActor::GetBeaconMode()
+{
+	return FMath::Clamp(CVarRinkBeacon.GetValueOnGameThread(), 0, 2);
+}
+
+void ARinkActor::ApplyBeaconMode()
+{
+	const int32 Mode = GetBeaconMode();
+	UMaterialInterface* Mat = nullptr;
+	if (Mode == 1)
+	{
+		// R-0002: B's translucent beacon instance; the placeholder trim tinted with the trim colour stands in.
+		bool bLook = false;
+		Mat = LoadLook(TEXT("MI_Trim_Beacon"), TrimMaterialPath, &bLook);
+		if (!bLook)
+		{
+			UMaterialInstanceDynamic* D = UMaterialInstanceDynamic::Create(Mat, this);
+			D->SetVectorParameterValue(TEXT("TeamColour"), BeaconColour);
+			D->SetVectorParameterValue(TEXT("Color"), BeaconColour);
+			D->SetScalarParameterValue(TEXT("Emissive"), 4.f);
+			Mat = D;
+		}
+	}
+	else if (Mode == 2)
+	{
+		// Opaque emissive column in the trim colour (B's MI_Trim_BeaconOpaque if it ever ships; the lab flat instance tinted and lifted stands in).
+		Mat = LoadConstructionMat(TEXT("MI_Trim_BeaconOpaque"), TEXT("MI_LL_NetFrame"), BeaconColour, 6.f, true);
+	}
+	for (UStaticMeshComponent* Bc : { BeaconPos.Get(), BeaconNeg.Get() })
+	{
+		if (!Bc) continue;
+		Bc->SetVisibility(Mode != 0);
+		if (Mat) Bc->SetMaterial(0, Mat);
+	}
+}
+
+UMaterialInterface* ARinkActor::LoadConstructionMat(const TCHAR* LookName, const TCHAR* LabName, const FLinearColor& Tint, float LabEmissive, bool bLabTint)
+{
+	// B's shipped instance first (/JamAssets/Look/MI_Toon_*), then lane A23's proposal (/Game/LookLab/MI_LL_*, one log line per name), then the basic shape material tinted.
+	bool bLook = false;
+	UMaterialInterface* Mi = LoadLook(LookName, TEXT("/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial"), &bLook);
+	if (bLook) return Mi;
+	const FString LabPath = FString::Printf(TEXT("/Game/LookLab/%s.%s"), LabName, LabName);
+	if (UMaterialInterface* Lab = LoadObject<UMaterialInterface>(nullptr, *LabPath, nullptr, LOAD_NoWarn | LOAD_Quiet))
+	{
+		static TSet<FString> Logged;
+		if (!Logged.Contains(LookName)) { Logged.Add(LookName); UE_LOG(LogJamSim, Log, TEXT("JAMRINK look /JamAssets/Look/%s missing: /Game/LookLab/%s stands in (logged once)"), LookName, LabName); }
+		if (LabEmissive >= 0.f || bLabTint)
+		{
+			// The lab's flat master (M_LL_Flat: Tint, Emissive, Roughness) has no ambient floor, so a vertical face under the near-vertical pool spots falls into
+			// the ramp's darkest band and reads black (first proof, 17:08); a small emissive lift keeps the kick plate ochre. B's toon master carries its own fill.
+			// Outside the boards there is no light at all in LR_L2_Night, so the benches and goal-light housings are tinted and lifted copies too.
+			UMaterialInstanceDynamic* D = UMaterialInstanceDynamic::Create(Lab, this);
+			if (LabEmissive >= 0.f) D->SetScalarParameterValue(TEXT("Emissive"), LabEmissive);
+			if (bLabTint) D->SetVectorParameterValue(TEXT("Tint"), Tint);
+			return D;
+		}
+		return Lab;
+	}
+	UMaterialInstanceDynamic* D = UMaterialInstanceDynamic::Create(Mi, this);
+	D->SetVectorParameterValue(TEXT("Color"), Tint);
+	return D;
 }
 
 void ARinkActor::SetTrimEmissive(float Emissive)

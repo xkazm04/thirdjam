@@ -1,0 +1,77 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "figure",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T16:31:49.715Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "figure",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": "devlog/shots/20261112-172933-A-a28-meshy-walk-chase.png",
+          "width": 3200,
+          "height": 740
+        }
+      ],
+      "thumbnails": [
+        "A: 128x30"
+      ],
+      "prompt_chars": 2702,
+      "usage": {
+        "prompt": 3088,
+        "output": 457,
+        "thoughts": 1249,
+        "total": 4794,
+        "calls": 1
+      },
+      "cost_usd_est": 0.02665,
+      "ms": 18463,
+      "retried": false,
+      "answer": {
+        "hockey_player": {
+          "full": 2,
+          "small": 1,
+          "parts": {
+            "stick": false,
+            "blade": false,
+            "hands": true,
+            "skates": true,
+            "helmet": true
+          },
+          "evidence": "The figure wears a hockey helmet, gloves, and skates, but the complete absence of a stick destroys the hockey player silhouette, especially at a distance."
+        },
+        "toy": {
+          "full": 2,
+          "small": 1,
+          "evidence": "The proportions are too slender and realistic, resembling a standard human mannequin rather than having the chunky, exaggerated, rounded forms of a toy."
+        },
+        "best_row": "The top row (f00-f07) reads best as the upright walking poses display the character's full silhouette and uniform details clearly, compared to the crumpled ragdoll poses in the bottom row.",
+        "proportions": {
+          "head_of_height": 0.14,
+          "shoulder_of_height": 0.25,
+          "stick_of_height": 0
+        },
+        "changes": [
+          "head 0.14 of height -> 0.25",
+          "shoulder 0.25 of height -> 0.35",
+          "add stick 0.60 of height",
+          "thicken arms and legs by at least 50% for a chunkier toy look"
+        ],
+        "worst": [
+          "The complete lack of a hockey stick makes it impossible to read as a hockey player at a glance.",
+          "The realistic, slender proportions fail to convey the requested toy aesthetic.",
+          "At the downscaled size, the figure turns into an indistinct blue blob without a stick to define its action."
+        ],
+        "works": [
+          "The deep blue jersey with white stripes provides good contrast and reads clearly as a uniform.",
+          "The helmet and skates are distinctly modeled and recognizable at full resolution."
+        ]
+      },
+      "markdown": "**eyes/figure** A=20261112-172933-A-a28-meshy-walk-chase.png (gemini-3.1-pro-preview, in 3088 out 457 think 1249 tokens, ~$0.0267, 18.5 s)\n- hockey_player:\n  - full: 2\n  - small: 1\n  - parts:\n    - stick: false\n    - blade: false\n    - hands: true\n    - skates: true\n    - helmet: true\n  - evidence: The figure wears a hockey helmet, gloves, and skates, but the complete absence of a stick destroys the hockey player silhouette, especially at a distance.\n- toy:\n  - full: 2\n  - small: 1\n  - evidence: The proportions are too slender and realistic, resembling a standard human mannequin rather than having the chunky, exaggerated, rounded forms of a toy.\n- best_row: The top row (f00-f07) reads best as the upright walking poses display the character's full silhouette and uniform details clearly, compared to the crumpled ragdoll poses in the bottom row.\n- proportions:\n  - head_of_height: 0.14\n  - shoulder_of_height: 0.25\n  - stick_of_height: 0\n- changes: head 0.14 of height -> 0.25; shoulder 0.25 of height -> 0.35; add stick 0.60 of height; thicken arms and legs by at least 50% for a chunkier toy look\n- worst: The complete lack of a hockey stick makes it impossible to read as a hockey player at a glance.; The realistic, slender proportions fail to convey the requested toy aesthetic.; At the downscaled size, the figure turns into an indistinct blue blob without a stick to define its action.\n- works: The deep blue jersey with white stripes provides good contrast and reads clearly as a uniform.; The helmet and skates are distinctly modeled and recognizable at full resolution."
+    }
+  ]
+}
