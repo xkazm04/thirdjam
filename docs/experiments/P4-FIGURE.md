@@ -113,7 +113,24 @@ One figure with a rig and five falls: Rodin + Meshy 20.5 cr, 4 minutes; Tripo + 
 5. Git Bash rewrites `/Game/...` arguments into `C:/Program Files/Git/Game/...`: `MSYS_NO_PATHCONV=1` on every script that passes asset paths.
 6. The editor must be closed whenever no import or retarget runs (R-0009; it holds `UnrealEditor-JamCore.dll` on the shared tree).
 
-## 7. Open questions for the Director
+## 7. Pass 2 (18:00-18:30): the three blockers and the look route [run]
+
+- **Stick in the hand.** `SM_P4_Stick` v2 (shaft along +X) and `tools/p4/ue_grip.py`: the socket rotation is computed per skeleton from the hand bone (relative = inverse(hand_r world) x
+  make_rot_from_xz(shaft direction, up)), three numbers written on `stick_socket`: Meshy [-26.2, -56.6, 164.3], Rodin [-28.7, -54.7, 163.2], Tripo [-44.3, 104.4, 145.5], Rodin2
+  [-19.3, -51.2, 178.7]. Eyes reads the stick on every pass-2 sheet; Rodin: hockey player 4/5, toy 5/5 (`20261112-182416-A-a28-rodin-walk2-chase.png`). It hangs from one glove;
+  a two-hand grip is the next step.
+- **Library clips.** `normalize_fbx.py split`: one FBX per action, pelvis X/Y travel stripped per frame. The five falls import and play on each skeleton, but the pelvis Z stays flat
+  (the translation does not survive the Blender round trip), so a fall rotates about the hip (`*-fall2-*` sheets). Open.
+- **Retarget pose and ragdoll.** Upper-arm offsets (Y / Z, 20 deg) in the target retarget pose do not free the arms (minimum hand-to-pelvis ground distance 28 / 32 / 14 / 26 cm
+  for Meshy / Rodin / Tripo / Rodin2); on the image-to-3D figures the arm chains do not drive the arms at all (rest T-pose through the walk). Mass-scaled shove: Meshy and Rodin
+  crumple and stay down (pelvis 90 -> 64, 80 -> 53 cm) and come back upright after the restore; Tripo and Rodin2 are thrown up by their overlapping auto physics bodies (big head,
+  gloves): hand-made capsules next, not a smaller impulse.
+- **Look route.** Codex concept sheet (`tools/p4/out/concept/a28-concept/p4-skater-7-sheet.png`, prompt beside it) -> Rodin multi-view (two crops, 0.5 cr; two sticks, as drawn) and
+  Tripo via fal (data URIs refused: `fal.mjs upload` to fal's CDN; the whole sheet gives one two-body mesh that Meshy cannot rig; the front crop gives the concept figure, which Meshy
+  rigs only with `meshyrig`, 24 Mixamo-style bones, `bonemap-meshyrig.json`). Both imported (`SK_P4_Rodin2`, `SK_P4_Tripo3`) and walking; eyes: toy 4/5 on both, hockey 2/5 for the
+  T-pose arms. The look is solved by the concept sheet; the rig is now the blocker. Per figure: Rodin 0.5 + Meshy 5 cr + one Codex image, 6 minutes; Tripo (fal) + Meshy 5 cr, 5 minutes.
+
+## 8. Open questions for the Director
 
 1. Which figure goes forward for the A29 night-rig stills: Tripo (look) or Rodin (cost)? Both share the rig and the retargets; the swap is one config file.
 2. `Game/Content/Characters/Mannequins/` already held the Manny set when this lane started (another lane's copy); this lane added `Meshes/SK_Mannequin`, `SKM_Manny_Simple`,

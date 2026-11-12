@@ -294,3 +294,21 @@ Accepted: `rules.hooks[].after_frame`; `score: { at_least, at_most, lead_at_leas
 2. Falling and collision reactions are a first-class verb group in C-0001 v3's table: knocked down from the side, from behind, a trip; get up; the stumble after a mistimed poke;
    a board collision; each with a source, a gate result and a contact window; a cosmetic ragdoll over knocked_down on the skeletal figures (A26, A28), never feeding the sim.
 3. Tripo runs through fal.ai; Hyper3D's rigging (2026-10-23) is a fourth figure route if it has an API.
+
+## R-0027 (H11.3, 2026-11-12 18:35): device B's H11.9 read; duplication ends; the figure bake-off; B's asks become lanes
+1. **B was right about the duplication.** While A built a Blender toy figure (A22/A26) and a generated-figure route (A28/A29), B had four figures with every C-0001 v3 call,
+   numbers, crests and the carried puck on the blade (`BP_SkaterVisual_TB1` rebuilt, `_TB2`, `_TB2_P3` clay, `_TB2_P4` broadcast), a star-dome rig without props, a broadcast
+   rig, and the Rodin + Meshy-rig + scripted-clips route proven since 15:56. The Director did not read `status/B.md` between the H8 and H10 merges; from now on the Director reads
+   B's status head and the open `B-to-A` list before every brief.
+2. **The P2 figure is decided by a bake-off, not by lane** (lane A30, after the dev-b merge): `toy_skeletal` (A26), `humanoid_b1` (B's TB1v2), `generated_b2`, each on the night rig,
+   same frozen frames at 10 / 24 / 40 m in play and at a faceoff, the stick verbs forced on the frozen frame, eyes `ab-pair` and `figure` on every pair, GPU cost per figure, and
+   a bot-match clip of each. The Director picks from the table (R-0024 point 1); B's proposal (`humanoid_b1` default, `generated_b2` alternative) is the favourite going in
+   because it has the most original motion and hands on the stick in every take. The clay and broadcast figures ride their tiers (B-to-A-0021).
+3. **P4 route merged into B's**: A28 keeps only the image-to-3D look experiment (concept sheet -> Rodin / Tripo), judged against `_TB2_P4`; A29 keeps only what B lacks (falls and
+   collision reactions from the Meshy library, contact moves from Rokoko Vision when the operator films), delivered as Manny-skeleton clips plus a note for B's `retarget.py`;
+   neither spends credits on a figure B already has.
+4. **B's asks become device A lanes**: A31 (code: figure class per tier and `SetNumber` at spawn with fixed numbers 7/13/42 and 9/21/88; floor Movable; `MI_Glass`; stanchions spawned
+   with the glass by `RinkActor` so B removes its 66; rim 1.3 on the toy; `PlayShoot` no longer fired with every pass; `SetGoalieStance` from the brain's owner; bots charge
+   their shots; tier `p4_broadcast` with `MI_Bcast_Glass` and `MPC_Look.Clay` reset in `SetTier`; pickup props at `PickupTop` with spin and bob, B's props preferred over
+   the token; `CornerRadiusCm` on the dynamic ice), A32 (audio: stage and cook the VO bank, a commentary player beside the barks with B's rules, music and skate-loop hooks,
+   the seven missing events). A22's props go to B as FBX (B-to-A-0022 point 2). B-to-A-0020 is answered by R-0022 (clean builds, unity off).

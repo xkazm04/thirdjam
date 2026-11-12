@@ -1,0 +1,1 @@
+{"script":{"content":"A28_CFG=r'C:/Users/kazda/kiro/thirdjam/tools/p4/jobs/tripo3.ue.json'\nexec(open(r'C:/Users/kazda/kiro/thirdjam/tools/p4/ue_setup.py').read())\n","language":"Python"}}

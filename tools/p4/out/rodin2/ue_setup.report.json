@@ -1,0 +1,117 @@
+{
+ "tool": "thirdjam.p4-setup/1",
+ "vendor": "Rodin2",
+ "import_mesh_paths": [
+  "/Game/P4/Rodin2/SK_P4_Rodin2.SK_P4_Rodin2"
+ ],
+ "rename_skeleton": true,
+ "skeleton": "/Game/P4/Rodin2/SKEL_P4_Rodin2.SKEL_P4_Rodin2",
+ "bone_count": 29,
+ "bones": "root pelvis spine_01 spine_02 spine_03 neck_01 head head_end headfront clavicle_l upperarm_l lowerarm_l hand_l LeftHand_End clavicle_r upperarm_r lowerarm_r hand_r RightHand_End thigh_l calf_l foot_l ball_l LeftToe_end thigh_r calf_r foot_r ball_r RightToe_end",
+ "bounds_origin_cm": [
+  -0.0,
+  0.0,
+  90.0
+ ],
+ "bounds_extent_cm": [
+  70.1,
+  50.8,
+  90.0
+ ],
+ "size_vendor": {
+  "pelvis_z_cm": 0.0,
+  "head_z_cm": 0.0,
+  "hand_span_cm": 0.0,
+  "hand_len_cm": 0.0,
+  "height_cm": 180.0
+ },
+ "size_manny": {
+  "pelvis_z_cm": 0.0,
+  "head_z_cm": 0.0,
+  "hand_span_cm": 0.0,
+  "hand_len_cm": 0.0,
+  "height_cm": 180.5
+ },
+ "size_ratio": {
+  "pelvis_z_cm": null,
+  "head_z_cm": null,
+  "hand_span_cm": null,
+  "hand_len_cm": null,
+  "height_cm": 1.0
+ },
+ "material": "/Game/P4/Rodin2/M_P4_Rodin2",
+ "texture_size": [
+  2048,
+  2048
+ ],
+ "vendor_clip_paths": [
+  "/Game/P4/Rodin2/AS_P4_Rodin2_vendor_walk.AS_P4_Rodin2_vendor_walk",
+  "/Game/P4/Rodin2/AS_P4_Rodin2_vendor_run.AS_P4_Rodin2_vendor_run"
+ ],
+ "ikrig_vendor": {
+  "auto": true,
+  "chains": [
+   "Spine",
+   "Neck",
+   "Head",
+   "LeftLeg",
+   "LeftFoot",
+   "LeftClavicle",
+   "LeftArm",
+   "RightLeg",
+   "RightFoot",
+   "RightClavicle",
+   "RightArm"
+  ],
+  "retarget_root": "pelvis"
+ },
+ "ikrig_manny": {
+  "auto": true,
+  "chains": [
+   "Spine",
+   "Neck",
+   "Head",
+   "LeftLeg",
+   "LeftFoot",
+   "LeftClavicle",
+   "LeftArm",
+   "LeftThumb",
+   "LeftIndex",
+   "LeftMiddle",
+   "LeftRing",
+   "LeftPinky",
+   "LeftIndexMetacarpal",
+   "LeftMiddleMetacarpal",
+   "LeftRingMetacarpal",
+   "LeftPinkyMetacarpal",
+   "RightLeg",
+   "RightFoot",
+   "RightClavicle",
+   "RightArm",
+   "RightThumb",
+   "RightIndex",
+   "RightMiddle",
+   "RightRing",
+   "RightPinky",
+   "RightIndexMetacarpal",
+   "RightMiddleMetacarpal",
+   "RightRingMetacarpal",
+   "RightPinkyMetacarpal"
+  ],
+  "retarget_root": "pelvis"
+ },
+ "chain_mappings": [],
+ "retargeted": [
+  "/Game/P4/Rodin2/Anims/MF_Unarmed_Walk_Fwd_P4_Rodin2",
+  "/Game/P4/Rodin2/Anims/MF_Unarmed_Jog_Fwd_P4_Rodin2",
+  "/Game/P4/Rodin2/Anims/MM_Idle_P4_Rodin2"
+ ],
+ "retargeted_len_s": [
+  "MM_Idle_P4_Rodin2",
+  7.567
+ ],
+ "physics_asset": {
+  "path": "/Game/P4/Rodin2/PA_P4_Rodin2",
+  "bodies": []
+ }
+}

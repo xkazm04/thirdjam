@@ -1,0 +1,17 @@
+{
+  "task_id": "2aa26e19-3f33-4b31-a4d1-f9dc4991dadd",
+  "model_mesh": {
+    "url": "https://v3b.fal.media/files/b/0ab231cc/19z2w_K1XUXEkln7L_0lx_tripo_model_2aa26e19-3f33-4b31-a4d1-f9dc4991dadd.glb",
+    "content_type": "application/octet-stream",
+    "file_name": "tripo_model_2aa26e19-3f33-4b31-a4d1-f9dc4991dadd.glb",
+    "file_size": 1555316
+  },
+  "base_model": null,
+  "pbr_model": null,
+  "rendered_image": {
+    "url": "https://v3b.fal.media/files/b/0ab231cc/dHmk43PTjkI10kkahQnt6_legacy_mesh.webp",
+    "content_type": "application/octet-stream",
+    "file_name": "legacy_mesh.webp",
+    "file_size": 207871
+  }
+}

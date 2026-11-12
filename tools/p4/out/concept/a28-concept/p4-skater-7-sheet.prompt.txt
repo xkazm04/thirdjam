@@ -1,0 +1,9 @@
+Use case: stylized-concept
+Asset type: clean 3D modelling character concept sheet.
+Generate exactly ONE image, landscape composition.
+One stylized hockey player shown exactly twice side by side: a full straight-on FRONT view on the LEFT and a full true SIDE PROFILE view on the RIGHT. Same character, identical proportions, outfit and equipment, same scale, feet on exactly the same baseline. Orthographic views, no perspective or three-quarter angles. Entire figures and complete hockey sticks inside the frame with comfortable white margins.
+Character: toy proportions, big round head about one third of total height, short thick limbs, chunky rounded hands and feet. Deep blue hockey jersey with white trim at collar, cuffs and hem, and one large white number "7" centered on the chest. Blue hockey gloves, dark blue hockey pants, blue socks, black ice skates with silver blades. Blue helmet with white metal cage visor.
+Pose: A-pose-like upright stance with arms clearly separated from body; holding a wooden hockey stick in BOTH hands with blade on the ice/baseline. Both views show the same pose as appropriate to their viewing angle.
+Style: painted cel-shaded toy look, flat solid colours, matte plastic surfaces, clean rounded forms.
+Background and lighting: plain pure white background, soft even studio lighting, NO shadows on the ground. No visible ice surface or horizon.
+No text except the required jersey number 7. No labels, no logos, no watermark, no borders, no extra objects or characters, nothing else in the frame.
