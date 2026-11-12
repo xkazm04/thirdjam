@@ -34,7 +34,7 @@ Rules that apply to every row:
 | path | kind | size_mb | origin | tool | licence | url | date | device | shipped | note |
 |---|---|---|---|---|---|---|---|---|---|---|
 | Game/Plugins/JamAssets/Content/Rigs/LR_L1_Day.umap | other | 0.0 | original | UE 5.9 editor via MCP |  |  | 2026-11-12 | A | y | empty placeholder sub-level made by lane A0 (C-0002); B fills it |
-| Game/Plugins/JamAssets/Content/Rigs/LR_L2_Night.umap | other | 0.6 | original | UE 5.9 editor via MCP/Python |  |  | 2026-11-12 | B | y | night rig: PPV, sky, 4 spots, room (lane B1) and 289 Dress_L2_Night actors of engine basic shapes: truss, film lights, slate, chair, crane, cases (lane B2); placeholder by lane A0 |
+| Game/Plugins/JamAssets/Content/Rigs/LR_L2_Night.umap | other | 0.4 | original | UE 5.9 editor via MCP/Python |  |  | 2026-11-12 | B | y | night rig: PPV, sky, 4 spots, room (lane B1) and 289 Dress_L2_Night actors of engine basic shapes: truss, film lights, slate, chair, crane, cases (lane B2); placeholder by lane A0 |
 | Game/Plugins/JamAssets/Content/Rigs/LR_L3_Neon.umap | other | 0.0 | original | UE 5.9 editor via MCP |  |  | 2026-11-12 | A | y | empty placeholder sub-level made by lane A0 (C-0002); B fills it |
 | Game/Plugins/JamAssets/Content/Look/MI_Ice_Night.uasset | material | 0.0 | original | UE 5.9 editor via MCP/Python (recipe tools/skills/look-painted-cel.md) |  |  | 2026-11-12 | B | y | instance |
 | Game/Plugins/JamAssets/Content/Look/MI_PP_Outline.uasset | material | 0.0 | original | UE 5.9 editor via MCP/Python (recipe tools/skills/look-painted-cel.md) |  |  | 2026-11-12 | B | y | instance |
@@ -111,6 +111,28 @@ Rules that apply to every row:
 | Game/Plugins/JamAssets/Content/Skaters/M_SkaterTB2.uasset | material | 0.0 | original | UE 5.9 editor via MCP/Python | | | 2026-11-12 | B | y | hue-key team recolour; copy of M_Toon |
 | Game/Plugins/JamAssets/Content/Skaters/ABP_SkaterTB2.uasset | anim | 0.2 | original | UE 5.9 editor via MCP/Python | | | 2026-11-12 | B | y | idle, skate blend, fall, get up, turn lean, DefaultSlot |
 | Game/Plugins/JamAssets/Content/Skaters/BP_SkaterVisual_TB2.uasset | other | 0.2 | original | UE 5.9 editor via MCP/Python | | | 2026-11-12 | B | y | implements IJamSkaterVisual |
+| Game/Plugins/JamAssets/Content/Arena/SM_FilmLight.uasset | mesh | 0.4 | ai-generated | Hyper3D Rodin |  |  | 2026-11-12 | B | y | Rodin task 26bba5b6-541f-4c75-8084-54003c8a41eb (status/B-skater-s3.md), spotlight on tripod, Nanite keep 50% (lane B2b) |
+| Game/Plugins/JamAssets/Content/Arena/SM_DirectorChair.uasset | mesh | 0.4 | ai-generated | Hyper3D Rodin |  |  | 2026-11-12 | B | y | Rodin task b439b854-b5f8-4514-8463-eece35718ed0 (lane B2b) |
+| Game/Plugins/JamAssets/Content/Arena/SM_Slate.uasset | mesh | 0.3 | ai-generated | Hyper3D Rodin |  |  | 2026-11-12 | B | y | Rodin task e453e553-94aa-40d9-a379-1459a919b6a0 (clapper2; first try f5ced869 rejected, not shipped) (lane B2b) |
+| Game/Plugins/JamAssets/Content/Arena/SM_CameraDolly.uasset | mesh | 0.4 | ai-generated | Hyper3D Rodin |  |  | 2026-11-12 | B | y | Rodin task 1462aa6c-7e46-4089-9dbc-9f6c16a1a219 (lane B2b) |
+| Game/Plugins/JamAssets/Content/Arena/SM_CameraCrane.uasset | mesh | 0.4 | ai-generated | Hyper3D Rodin |  |  | 2026-11-12 | B | y | Rodin task e9a845c9-c386-4d72-b8f1-96249e6685a9 (lane B2b) |
+| Game/Plugins/JamAssets/Content/Arena/SM_FlightCases.uasset | mesh | 0.4 | ai-generated | Hyper3D Rodin |  |  | 2026-11-12 | B | y | Rodin task be52e7de-3e16-4984-ae1b-24929550b31e (lane B2b) |
+| Game/Plugins/JamAssets/Content/Arena/SM_TrussLamps.uasset | mesh | 0.4 | ai-generated | Hyper3D Rodin |  |  | 2026-11-12 | B | y | Rodin task ef087401-b9a3-4293-a769-3bd11edab124 (truss2; first try 96e87959 rejected, not shipped) (lane B2b) |
+| Game/Plugins/JamAssets/Content/Arena/T_FilmLight_BaseColor.uasset | texture | 0.5 | ai-generated | Hyper3D Rodin |  |  | 2026-11-12 | B | y | 1K base colour from Rodin task 26bba5b6-541f-4c75-8084-54003c8a41eb, downsized from 2K, no text (lane B2b) |
+| Game/Plugins/JamAssets/Content/Arena/T_DirectorChair_BaseColor.uasset | texture | 0.6 | ai-generated | Hyper3D Rodin |  |  | 2026-11-12 | B | y | 1K base colour from Rodin task b439b854-b5f8-4514-8463-eece35718ed0, no text (lane B2b) |
+| Game/Plugins/JamAssets/Content/Arena/T_Slate_BaseColor.uasset | texture | 0.6 | ai-generated | Hyper3D Rodin |  |  | 2026-11-12 | B | y | 1K base colour from Rodin task e453e553-94aa-40d9-a379-1459a919b6a0, stripes only, no text (lane B2b) |
+| Game/Plugins/JamAssets/Content/Arena/T_CameraDolly_BaseColor.uasset | texture | 0.7 | ai-generated | Hyper3D Rodin |  |  | 2026-11-12 | B | y | 1K base colour from Rodin task 1462aa6c-7e46-4089-9dbc-9f6c16a1a219, no text (lane B2b) |
+| Game/Plugins/JamAssets/Content/Arena/T_CameraCrane_BaseColor.uasset | texture | 0.9 | ai-generated | Hyper3D Rodin |  |  | 2026-11-12 | B | y | 1K base colour from Rodin task e9a845c9-c386-4d72-b8f1-96249e6685a9, no text (lane B2b) |
+| Game/Plugins/JamAssets/Content/Arena/T_FlightCases_BaseColor.uasset | texture | 0.8 | ai-generated | Hyper3D Rodin |  |  | 2026-11-12 | B | y | 1K base colour from Rodin task be52e7de-3e16-4984-ae1b-24929550b31e, no text (lane B2b) |
+| Game/Plugins/JamAssets/Content/Arena/T_TrussLamps_BaseColor.uasset | texture | 0.7 | ai-generated | Hyper3D Rodin |  |  | 2026-11-12 | B | y | 1K base colour from Rodin task ef087401-b9a3-4293-a769-3bd11edab124, no text (lane B2b) |
+| Game/Plugins/JamAssets/Content/Arena/M_PropCel.uasset | material | 0.0 | original | UE 5.9 editor via MCP/Python |  |  | 2026-11-12 | B | y | prop master: BaseColorTex, Emissive 1.5, rim as M_Toon (lane B2b) |
+| Game/Plugins/JamAssets/Content/Arena/MI_FilmLight.uasset | material | 0.0 | original | UE 5.9 editor via MCP/Python |  |  | 2026-11-12 | B | y | M_PropCel instance (lane B2b) |
+| Game/Plugins/JamAssets/Content/Arena/MI_DirectorChair.uasset | material | 0.0 | original | UE 5.9 editor via MCP/Python |  |  | 2026-11-12 | B | y | M_PropCel instance (lane B2b) |
+| Game/Plugins/JamAssets/Content/Arena/MI_Slate.uasset | material | 0.0 | original | UE 5.9 editor via MCP/Python |  |  | 2026-11-12 | B | y | M_PropCel instance (lane B2b) |
+| Game/Plugins/JamAssets/Content/Arena/MI_CameraDolly.uasset | material | 0.0 | original | UE 5.9 editor via MCP/Python |  |  | 2026-11-12 | B | y | M_PropCel instance (lane B2b) |
+| Game/Plugins/JamAssets/Content/Arena/MI_CameraCrane.uasset | material | 0.0 | original | UE 5.9 editor via MCP/Python |  |  | 2026-11-12 | B | y | M_PropCel instance (lane B2b) |
+| Game/Plugins/JamAssets/Content/Arena/MI_FlightCases.uasset | material | 0.0 | original | UE 5.9 editor via MCP/Python |  |  | 2026-11-12 | B | y | M_PropCel instance (lane B2b) |
+| Game/Plugins/JamAssets/Content/Arena/MI_TrussLamps.uasset | material | 0.0 | original | UE 5.9 editor via MCP/Python |  |  | 2026-11-12 | B | y | M_PropCel instance (lane B2b) |
 
 
 Director ruling 2026-11-12: a mesh, texture, rig or motion clip produced by a generation service from our own prompt (Meshy, Tripo, Rodin, text-to-motion) is `ai-generated`, not `sourced`; a clip or mesh taken from a service's preset library (for example Meshy library action 187 `Knock_Down`) is `sourced` and carries the service's licence and the preset id in `url`.

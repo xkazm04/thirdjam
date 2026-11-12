@@ -1,0 +1,1 @@
+Top-down, camera x=20 m: blue line now at one third of the half-length (BlueLineFrac 0.3333) (lane B2b)
