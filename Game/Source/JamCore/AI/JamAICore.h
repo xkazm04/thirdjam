@@ -129,7 +129,7 @@ namespace JamAI
 		double YieldRadiusM = 15.0;    // game.ai.yield_radius_m
 		double HoldRadiusM = 0.0;      // game.ai.hold_radius_m (lane A3: pro profile 0 on puck.drag 0.5; A2's 4.5 handed the human the puck)
 		double SpeedScale = 1.0;       // game.ai.speed_scale
-		double RedSkill = 1.0;         // game.ai.red_skill (drives the side without the player)
+		double RedSkill = 0.94;        // game.ai.red_skill (drives the side without the player); pro 0.94 by the R-0029 pass 2 (regular playtester 50 %)
 		// lane A3: skill per side. Opp = the side without the human (team 1 in pure bot-vs-bot); Mate = the human's side.
 		FJamBotSkill Mate;
 		FJamBotSkill Opp = ProOppSkill();

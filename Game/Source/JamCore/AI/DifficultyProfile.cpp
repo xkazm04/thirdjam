@@ -15,7 +15,9 @@ namespace JamAI
 		FJamDifficultyProfile MakePro()
 		{
 			const FJamAIParams D;
-			return FJamDifficultyProfile{"pro", D.SpeedScale, D.RedSkill, D.YieldMarginM, D.YieldRadiusM, D.HoldRadiusM, D.StallFrames, D.Opp, D.Mate.bPassToHuman};
+			FJamDifficultyProfile P{"pro", D.SpeedScale, D.RedSkill, D.YieldMarginM, D.YieldRadiusM, D.HoldRadiusM, D.StallFrames, D.Opp, D.Mate.bPassToHuman};
+			P.LargeRedSkill = 0.9;   // R-0029 pass 2: the regular playtester on 120 x 60 (35 % at 0.94, 55 % at 0.9)
+			return P;
 		}
 
 		FJamDifficultyProfile MakeRookie()
@@ -64,7 +66,8 @@ namespace JamAI
 			Opp.ForecheckYieldFrames = 12;   // Director 15:16
 			Opp.bIntercept = true;
 			Opp.bUseAimCone = true;
-			return FJamDifficultyProfile{"all_star", 1.0, 1.0, 4.0, 25.0, 0.0, 60, Opp, false};
+			// R-0029 pass 2 (with A31's charge): speed 1.08 (bots may push past 1, the sim clamps them at 1.5): the good playtester 30 % / 25 %
+			return FJamDifficultyProfile{"all_star", 1.08, 1.0, 4.0, 25.0, 0.0, 60, Opp, false};
 		}
 
 		void SetErr(char* Err, int ErrLen, const char* Msg, const char* Pair)

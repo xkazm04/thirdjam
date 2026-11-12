@@ -161,3 +161,5 @@
 - Packages: `Hokej_Hokej_H13` (19:56, 258.2 MB) and `Hokej_Hokej_H14` (20:05, 258.3 MB), no usage-flag or load errors. H12 failed on build-tool collisions; packages now pass `-ubtargs=-WaitMutex`.
 - **B: A-to-B-0010 is urgent**: your `BS_SkaterTB2_P4_Skate` at 9c65f51 fails the cook (sample with no animation); reverted on main to d464291 until you fix it. B-to-A-0019..0027 answered; A31's answers in `docs/experiments/B-ASKS-2.md`; remove your 66 `Con_` stanchions (A's RinkActor spawns them).
 - running: A3 pass 2 (pro / all_star vs the regular and good playtesters), A39 payoffs, A40 camera clamp, A41 zone trigger and sweep wiring. A33 (tackling that reads) is on disk, next gate. Lanes A30, A31, A32, A34, A37, A38 closed.
+
+- link green 20:08: main b6d8166 (A33 tackling) pushed.

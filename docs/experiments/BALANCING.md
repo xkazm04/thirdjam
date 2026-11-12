@@ -37,6 +37,28 @@ What the sweeps taught:
 - A2's 4.5 m hold radius was why pro was 90% before this lane. A contested puck also gives the human more touches, not fewer.
 - A teammate yielding more (4 / 25 at all_star) makes the human's side weaker. That is why all_star shares rookie's yield numbers, for the opposite reason.
 
+## R-0029 pass 2: pro and all_star measured with the playtester (worktree a3 on main 74c7c0f, which has A31's bot charge; 20:09)
+
+Profile changes only:
+- Pro: red skill 0.94 (the FJamAIParams default, was 1.0); large-rink offset red skill 0.9.
+- All_star: speed scale 1.08. Bots may push past 1 (the sim clamps bot input at 1.5).
+- Rookie is unchanged.
+
+| rink | level vs player | before (20:04) | after (20:08) | target |
+|---|---|---|---|---|
+| regular | pro vs regular | 25 % | **50 %** | ~50 |
+| large | pro vs regular | 15 % | **55 %** | ~50 |
+| regular | all_star vs good | 40 % | **30 %** | ~25 |
+| large | all_star vs good | 30 % | **25 %** | ~25 |
+
+Full grid after (novice / regular / good, win %):
+- regular: rookie 80 / 100 / 100, pro 0 / 50 / 65, all_star 0 / 10 / 30
+- large: rookie 85 / 95 / 95, pro 25 / 55 / 95, all_star 5 / 5 / 25
+
+The good player at all_star still idles 15 s about once per match on regular (1.1 spells, 5.1 s) and 3.8 times on large. GoodNeverIdlesAtAllStar stays a Bar.
+
+Gates: Jam.Bot (6), Jam.Playtest.NoviceScoresAtRookie (14 of 20), Jam.Slow.DifficultyCurve and Jam.Effects (5) all pass. HumanHasSomethingToDo's novice part: 5 of 116 faceoffs without a touch against a budget of 11.
+
 ## R-0029: rookie measured with lane A34's playtester (worktree a3, 19:53)
 
 Changes:
