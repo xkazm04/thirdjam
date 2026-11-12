@@ -1,0 +1,1 @@
+Lockstep match, guest window at frame 600: the guest drives team 1's chaser; same sim frame and state hash as the host

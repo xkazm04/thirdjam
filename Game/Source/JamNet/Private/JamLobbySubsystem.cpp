@@ -1,0 +1,337 @@
+#include "JamLobbySubsystem.h"
+#include "JamLink.h"
+#include "JamLockstepDriver.h"
+#include "JamNetPackets.h"
+#include "JamCartridge.h"
+#include "JamSim.h"
+#include "LobbyWidget.h"
+#include "Engine/World.h"
+#include "Engine/GameInstance.h"
+#include "Engine/Engine.h"
+#include "GameFramework/PlayerController.h"
+#include "Kismet/GameplayStatics.h"
+#include "Misc/FileHelper.h"
+#include "HAL/IConsoleManager.h"
+
+namespace
+{
+	constexpr int32 ResendEvery = 30;   // lobby messages re-sent every half second until answered
+	constexpr int32 StartSendTicks = 30; // host sends START for half a second before opening the level
+	const TCHAR* RinkMap = TEXT("/Game/Maps/Rink");
+
+	UJamLobbySubsystem* LobbyFor(UWorld* World)
+	{
+		return (World && World->GetGameInstance()) ? World->GetGameInstance()->GetSubsystem<UJamLobbySubsystem>() : nullptr;
+	}
+
+	FString DefaultName(bool bHost)
+	{
+		FString N = FPlatformProcess::UserName(false);
+		return N.IsEmpty() ? FString(bHost ? TEXT("Host") : TEXT("Guest")) : N;
+	}
+}
+
+void UJamLobbySubsystem::Deinitialize()
+{
+	ResetSession();
+	Super::Deinitialize();
+}
+
+IJamLink* UJamLobbySubsystem::GetLink() const
+{
+	return Link.Get();
+}
+
+void UJamLobbySubsystem::ResetSession()
+{
+	if (Driver) Driver->Stop();
+	Driver = nullptr;
+	Link.Reset();
+	bHost = false;
+	bGuestAcked = false;
+	Codes.Reset();
+	CodeAddresses.Reset();
+	BoundPort = -1;
+	RemoteName.Reset();
+	GuestIndex = -1;
+	LobbyTicks = StartTicks = 0;
+}
+
+void UJamLobbySubsystem::SetState(EJamLobbyState S)
+{
+	if (State == S) return;
+	State = S;
+	UE_LOG(LogJamNet, Log, TEXT("JAMNET lobby state=%d host=%d cut=%s peer=%s"), static_cast<int32>(S), bHost ? 1 : 0, *Cut, Link ? *Link->PeerString() : TEXT("-"));
+	OnChanged.Broadcast();
+}
+
+void UJamLobbySubsystem::Fail(const FString& Why)
+{
+	Error = Why;
+	UE_LOG(LogJamNet, Warning, TEXT("JAMNET lobby failed: %s"), *Why);
+	if (Link && Link->HasPeer()) SendLobby(static_cast<uint8>(JamNet::EType::Bye));
+	ResetSession();
+	SetState(EJamLobbyState::Failed);
+}
+
+bool UJamLobbySubsystem::ComputeCartridgeHash(const FString& InCut, uint64& OutHash, uint64& OutSeed, int32& OutGuestIndex, FString& OutError) const
+{
+	const FString Path = UJamCartridge::ResolveCartridgePath(InCut);
+	TArray<uint8> Bytes;
+	if (!FFileHelper::LoadFileToArray(Bytes, *Path)) { OutError = FString::Printf(TEXT("cut \"%s\" not found at %s"), *InCut, *Path); return false; }
+	TArray<FString> Errors;
+	UJamCartridge* C = UJamCartridge::LoadFromFile(Path, Errors);
+	if (!C) { OutError = FString::Printf(TEXT("cut \"%s\" rejected: %s"), *InCut, Errors.Num() ? *Errors[0] : TEXT("?")); return false; }
+	OutHash = JamNetFnv64(Bytes);
+	OutSeed = static_cast<uint64>(C->Seed);
+	// The guest drives team 1's first skater that is not the back (deterministic from the cartridge on both sides).
+	UJamSim* Probe = NewObject<UJamSim>();
+	Probe->Init(C->Game, OutSeed);
+	OutGuestIndex = -1;
+	for (const FJamSkaterState& S : Probe->GetSkaters()) if (S.Team == 1 && S.Role != FName(TEXT("back"))) { OutGuestIndex = S.Index; break; }
+	if (OutGuestIndex < 0) for (const FJamSkaterState& S : Probe->GetSkaters()) if (S.Team == 1) { OutGuestIndex = S.Index; break; }
+	if (OutGuestIndex < 0) { OutError = TEXT("the cut has no skater on team 1 for a guest"); return false; }
+	return true;
+}
+
+bool UJamLobbySubsystem::Host(const FString& InCut, const FString& Name)
+{
+	ResetSession();
+	Error.Reset(); EndReason.Reset();
+	Cut = InCut.IsEmpty() ? TEXT("hockey.regular") : InCut;
+	LocalName = Name.IsEmpty() ? DefaultName(true) : Name;
+	bHost = true;
+	FString Why;
+	if (!ComputeCartridgeHash(Cut, CartridgeHash, Seed, GuestIndex, Why)) { Fail(Why); return false; }
+	Link = MakeUnique<FJamUdpLink>();
+	int32 PortIndex = 0;
+	for (; PortIndex < JamNet::PortSlots; ++PortIndex) if (Link->Bind(JamNet::BasePort + PortIndex) > 0) break;
+	if (!Link->IsOpen()) { Fail(FString::Printf(TEXT("no free UDP port in %d..%d"), JamNet::BasePort, JamNet::BasePort + JamNet::PortSlots - 1)); return false; }
+	BoundPort = Link->GetBoundPort();
+	TArray<uint32> Addrs = FJamUdpLink::LocalAddresses();
+	for (uint32 Ip : Addrs) { Codes.Add(FJamInviteCode::Encode(Ip, PortIndex)); CodeAddresses.Add(FJamInviteCode::FormatIp(Ip)); }
+	// Loopback last: the two-process test on one machine.
+	Codes.Add(FJamInviteCode::Encode(0x7F000001u, PortIndex)); CodeAddresses.Add(TEXT("127.0.0.1"));
+	Driver = NewObject<UJamLockstepDriver>(this);
+	UE_LOG(LogJamNet, Log, TEXT("JAMNET hosting cut=%s seed=%llu port=%d guest_index=%d codes: %s"), *Cut, static_cast<unsigned long long>(Seed), BoundPort, GuestIndex, *GetCodesText().Replace(TEXT("\n"), TEXT(" | ")));
+	SetState(EJamLobbyState::Hosting);
+	return true;
+}
+
+bool UJamLobbySubsystem::Join(const FString& Code, const FString& Name)
+{
+	ResetSession();
+	Error.Reset(); EndReason.Reset();
+	LocalName = Name.IsEmpty() ? DefaultName(false) : Name;
+	bHost = false;
+	uint32 Ip = 0; int32 Port = 0;
+	if (!FJamInviteCode::Decode(Code, Ip, Port)) { Fail(FString::Printf(TEXT("\"%s\" is not an invite code (8 letters and digits, shown as ABCD-EFGH)"), *Code)); return false; }
+	Link = MakeUnique<FJamUdpLink>();
+	if (Link->Bind(0) <= 0) { Fail(TEXT("could not open a UDP socket")); return false; }
+	BoundPort = Link->GetBoundPort();
+	Link->SetPeer(Ip, Port);
+	Driver = NewObject<UJamLockstepDriver>(this);
+	UE_LOG(LogJamNet, Log, TEXT("JAMNET joining %s:%d as %s from port %d"), *FJamInviteCode::FormatIp(Ip), Port, *LocalName, BoundPort);
+	SetState(EJamLobbyState::Joining);
+	SendLobby(static_cast<uint8>(JamNet::EType::Hello));
+	return true;
+}
+
+bool UJamLobbySubsystem::StartMatch()
+{
+	if (!bHost || State != EJamLobbyState::Ready) return false;
+	StartTicks = 0;
+	SetState(EJamLobbyState::Starting);
+	return true;
+}
+
+void UJamLobbySubsystem::Leave()
+{
+	if (Link && Link->HasPeer()) SendLobby(static_cast<uint8>(JamNet::EType::Bye));
+	ResetSession();
+	SetState(EJamLobbyState::Idle);
+}
+
+void UJamLobbySubsystem::NotifyMatchEnded(const FString& Reason)
+{
+	EndReason = Reason;
+	if (State == EJamLobbyState::InMatch) SetState(EJamLobbyState::Ended);
+}
+
+void UJamLobbySubsystem::SendLobby(uint8 Type, int32 Flags)
+{
+	if (!Link || !Link->HasPeer()) return;
+	FJamNetLobbyMessage M;
+	M.Type = static_cast<JamNet::EType>(Type);
+	M.Name = LocalName;
+	M.Cut = Cut;
+	M.CartridgeHash = CartridgeHash;
+	M.Seed = Seed;
+	M.GuestIndex = GuestIndex;
+	M.Flags = Flags;
+	TArray<uint8> Bytes;
+	M.Write(Bytes);
+	Link->Send(Bytes);
+}
+
+void UJamLobbySubsystem::OpenRink()
+{
+	UWorld* World = GetGameInstance() ? GetGameInstance()->GetWorld() : nullptr;
+	if (!World) { Fail(TEXT("no world to open the rink in")); return; }
+	Driver->Start(Link.Get(), JamNet::InputDelay);
+	SetState(EJamLobbyState::InMatch);
+	UE_LOG(LogJamNet, Log, TEXT("JAMNET opening %s as %s cut=%s seed=%llu"), RinkMap, bHost ? TEXT("host") : TEXT("guest"), *Cut, static_cast<unsigned long long>(Seed));
+	UGameplayStatics::OpenLevel(World, FName(RinkMap), true, FString::Printf(TEXT("game=/Script/JamNet.LobbyGameMode?cut=%s"), *Cut));
+}
+
+void UJamLobbySubsystem::Tick(float DeltaTime)
+{
+	if (!Link) return;
+	++LobbyTicks;
+	TickLobby();
+}
+
+void UJamLobbySubsystem::TickLobby()
+{
+	TArray<uint8> Bytes;
+	FJamNetLobbyMessage M;
+	switch (State)
+	{
+	case EJamLobbyState::Hosting:
+	{
+		uint32 Ip = 0; int32 Port = 0;
+		while (Link->RecvFrom(Bytes, Ip, Port))
+		{
+			if (!FJamNetLobbyMessage::Read(Bytes, M) || M.Type != JamNet::EType::Hello) continue;
+			Link->SetPeer(Ip, Port);
+			RemoteName = M.Name;
+			bGuestAcked = false;
+			UE_LOG(LogJamNet, Log, TEXT("JAMNET guest \"%s\" from %s:%d"), *RemoteName, *FJamInviteCode::FormatIp(Ip), Port);
+			SendLobby(static_cast<uint8>(JamNet::EType::Welcome));
+			SetState(EJamLobbyState::Ready);
+			break;
+		}
+		break;
+	}
+	case EJamLobbyState::Joining:
+	{
+		while (Link->Recv(Bytes))
+		{
+			if (!FJamNetLobbyMessage::Read(Bytes, M)) continue;
+			if (M.Type == JamNet::EType::Bye) { Fail(TEXT("the host left")); return; }
+			if (M.Type != JamNet::EType::Welcome) continue;
+			RemoteName = M.Name;
+			Cut = M.Cut;
+			FString Why;
+			uint64 MyHash = 0, MySeed = 0; int32 MyGuest = -1;
+			if (!ComputeCartridgeHash(Cut, MyHash, MySeed, MyGuest, Why)) { Fail(Why); return; }
+			if (MyHash != M.CartridgeHash) { Fail(FString::Printf(TEXT("your cut \"%s\" differs from the host's; both need the same file"), *Cut)); return; }
+			CartridgeHash = MyHash;
+			Seed = M.Seed;
+			GuestIndex = M.GuestIndex;
+			SendLobby(static_cast<uint8>(JamNet::EType::Hello), 1);
+			SetState(EJamLobbyState::Ready);
+			break;
+		}
+		if (State == EJamLobbyState::Joining && LobbyTicks % ResendEvery == 0) SendLobby(static_cast<uint8>(JamNet::EType::Hello));
+		if (State == EJamLobbyState::Joining && LobbyTicks > 60 * 60) Fail(TEXT("no answer from the host in 60 s (same network? port forwarded?)"));
+		break;
+	}
+	case EJamLobbyState::Ready:
+	{
+		while (Link->Recv(Bytes))
+		{
+			if (!FJamNetLobbyMessage::Read(Bytes, M)) continue;
+			if (M.Type == JamNet::EType::Bye) { Fail(FString::Printf(TEXT("%s left"), *RemoteName)); return; }
+			if (bHost && M.Type == JamNet::EType::Hello) { if (M.Flags & 1) bGuestAcked = true; else SendLobby(static_cast<uint8>(JamNet::EType::Welcome)); }
+			if (!bHost && M.Type == JamNet::EType::Welcome) SendLobby(static_cast<uint8>(JamNet::EType::Hello), 1);
+			if (!bHost && M.Type == JamNet::EType::Start) { OpenRink(); return; }
+		}
+		if (bHost && !bGuestAcked && LobbyTicks % ResendEvery == 0) SendLobby(static_cast<uint8>(JamNet::EType::Welcome));
+		if (bHost && bGuestAcked && bAutoStart) StartMatch();
+		break;
+	}
+	case EJamLobbyState::Starting:
+	{
+		if (StartTicks % 5 == 0) SendLobby(static_cast<uint8>(JamNet::EType::Start));
+		if (++StartTicks >= StartSendTicks) OpenRink();
+		break;
+	}
+	case EJamLobbyState::InMatch:
+	{
+		// The driver owns receiving now. The host keeps repeating START until the guest's first input packet arrives.
+		if (bHost && Driver && !Driver->HasHeardPeer() && LobbyTicks % 10 == 0) SendLobby(static_cast<uint8>(JamNet::EType::Start));
+		break;
+	}
+	default: break;
+	}
+}
+
+FString UJamLobbySubsystem::GetCodesText() const
+{
+	FString Out;
+	for (int32 i = 0; i < Codes.Num(); ++i) Out += FString::Printf(TEXT("%s%s   (%s)"), i ? TEXT("\n") : TEXT(""), *Codes[i], *CodeAddresses[i]);
+	return Out;
+}
+
+FString UJamLobbySubsystem::GetStatusText() const
+{
+	switch (State)
+	{
+	case EJamLobbyState::Idle: return TEXT("Host a match and read your friend the code, or type theirs.");
+	case EJamLobbyState::Hosting: return FString::Printf(TEXT("Waiting for a friend... cut: %s"), *Cut);
+	case EJamLobbyState::Joining: return TEXT("Calling the host...");
+	case EJamLobbyState::Ready: return bHost ? FString::Printf(TEXT("%s is here. Press Start."), *RemoteName) : FString::Printf(TEXT("Joined %s. Waiting for the host to start..."), *RemoteName);
+	case EJamLobbyState::Starting: return TEXT("Starting...");
+	case EJamLobbyState::InMatch: return TEXT("In the match.");
+	case EJamLobbyState::Ended: return FString::Printf(TEXT("Match over: %s"), *EndReason);
+	case EJamLobbyState::Failed: return Error;
+	}
+	return FString();
+}
+
+FString UJamLobbySubsystem::GetWarningText() const
+{
+	return FString::Printf(TEXT("LAN only: your friend must be on the same network, unless your router forwards UDP port %d to this computer."), BoundPort > 0 ? BoundPort : JamNet::BasePort);
+}
+
+// ---- console (grep'd across Game/Source before naming; R-0003 point 4) ----
+
+static FAutoConsoleCommandWithWorldAndArgs CmdJamLobby(TEXT("jam.lobby"), TEXT("Open the Play-with-a-friend lobby screen over the current map (lane A8's menu entry calls this)."),
+	FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
+	{
+		APlayerController* PC = World ? World->GetFirstPlayerController() : nullptr;
+		if (!PC) { UE_LOG(LogJamNet, Warning, TEXT("jam.lobby: no player controller")); return; }
+		ULobbyWidget::Open(PC);
+	}));
+
+static FAutoConsoleCommandWithWorldAndArgs CmdJamHost(TEXT("jam.host"), TEXT("jam.host <cut> [name] [auto]: host a match; 'auto' starts as soon as the guest is ready."),
+	FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
+	{
+		UJamLobbySubsystem* L = LobbyFor(World);
+		if (!L) return;
+		L->Host(Args.Num() > 0 ? Args[0] : FString(), Args.Num() > 1 ? Args[1] : FString());
+		L->SetAutoStart(Args.Contains(TEXT("auto")));
+		UE_LOG(LogJamNet, Display, TEXT("jam.host: %s"), *L->GetStatusText());
+	}));
+
+static FAutoConsoleCommandWithWorldAndArgs CmdJamJoin(TEXT("jam.join"), TEXT("jam.join <code|ip:port> [name]: join a hosted match."),
+	FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
+	{
+		UJamLobbySubsystem* L = LobbyFor(World);
+		if (!L || Args.Num() < 1) return;
+		L->Join(Args[0], Args.Num() > 1 ? Args[1] : FString());
+		UE_LOG(LogJamNet, Display, TEXT("jam.join: %s"), *L->GetStatusText());
+	}));
+
+static FAutoConsoleCommandWithWorldAndArgs CmdJamStart(TEXT("jam.start"), TEXT("jam.start: host starts the match once the guest is ready."),
+	FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
+	{
+		if (UJamLobbySubsystem* L = LobbyFor(World)) UE_LOG(LogJamNet, Display, TEXT("jam.start: %s"), L->StartMatch() ? TEXT("starting") : TEXT("not ready (host with a guest present only)"));
+	}));
+
+static FAutoConsoleCommandWithWorldAndArgs CmdJamLeave(TEXT("jam.leave"), TEXT("jam.leave: leave the lobby or the match."),
+	FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
+	{
+		if (UJamLobbySubsystem* L = LobbyFor(World)) L->Leave();
+	}));

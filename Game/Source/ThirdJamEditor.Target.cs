@@ -8,7 +8,7 @@ public class ThirdJamEditorTarget : TargetRules
 		Type = TargetType.Editor;
 		DefaultBuildSettings = BuildSettingsVersion.V8;
 		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_9;
-		ExtraModuleNames.AddRange(new string[] { "JamCore", "JamGame", "JamDesigner" });
+		ExtraModuleNames.AddRange(new string[] { "JamCore", "JamGame", "JamDesigner", "JamNet" });
 		ExtraModuleNames.Add("JamEditor");
 	}
 }

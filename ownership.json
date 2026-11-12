@@ -14,7 +14,9 @@
       "Game/Content/Blueprints/**",
       "Game/Content/UI/**",
       "Game/Content/Placeholders/**",
-      "Game/Content/Designer/**"
+      "Game/Content/Designer/**",
+      "Game/Content/Barks/**",
+      "Game/Source/JamNet/**"
     ],
     "B": [
       "Game/Plugins/JamAssets/**",
