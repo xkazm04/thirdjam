@@ -1,0 +1,57 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-12T17:21:46.390Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "devlog/shots/20261112-181934-A-a29-skate-fwd.png",
+          "width": 5760,
+          "height": 558
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2278,
+      "usage": {
+        "prompt": 1744,
+        "output": 238,
+        "thoughts": 0,
+        "total": 1982,
+        "calls": 1
+      },
+      "cost_usd_est": 0.0022,
+      "ms": 5600,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A: 20261112-181934-A-a29-skate-fwd.png",
+            "findings": [
+              {
+                "where": "Top-left corner",
+                "what": "Debug text overlay displaying animation sequence info ('AS_P4_skate_fwd: 1.3333 s, 8 frames over 2 s (sequence time), UE5 Manny, three-quarter front, proof level') is baked onto the image canvas.",
+                "severity": 2,
+                "confidence": 0.95
+              },
+              {
+                "where": "Entire lower half beneath all eight character figures",
+                "what": "Characters are rendered floating against a pure black background with completely missing ground geometry, ice plane, and contact shadows.",
+                "severity": 4,
+                "confidence": 0.98
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=20261112-181934-A-a29-skate-fwd.png (gemini-3.8-flash, in 1744 out 238 tokens, ~$0.0022, 5.6 s)\n- stills:\n  - label: Still A: 20261112-181934-A-a29-skate-fwd.png; clean: false\n    - findings:\n      - where: Top-left corner; what: Debug text overlay displaying animation sequence info ('AS_P4_skate_fwd: 1.3333 s, 8 frames over 2 s (sequence time), UE5 Manny, three-quarter front, proof level') is baked onto the image canvas.; severity: 2; confidence: 0.95\n      - where: Entire lower half beneath all eight character figures; what: Characters are rendered floating against a pure black background with completely missing ground geometry, ice plane, and contact shadows.; severity: 4; confidence: 0.98"
+    }
+  ]
+}

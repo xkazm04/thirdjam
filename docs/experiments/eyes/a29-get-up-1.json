@@ -1,0 +1,57 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-12T17:21:46.732Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "devlog/shots/20261112-181934-A-a29-get-up-1.png",
+          "width": 5760,
+          "height": 558
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2277,
+      "usage": {
+        "prompt": 1744,
+        "output": 234,
+        "thoughts": 0,
+        "total": 1978,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00219,
+      "ms": 5822,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A: 20261112-181934-A-a29-get-up-1.png",
+            "findings": [
+              {
+                "where": "Top-left edge, header text line",
+                "what": "Engine debug/proof overlay text ('AS_P4_get_up_1: 0.2667 s, 8 frames...') rendered directly onto the capture.",
+                "severity": 1,
+                "confidence": 0.95
+              },
+              {
+                "where": "Center horizontal line across all 8 character frames",
+                "what": "Animation filmstrip sheet shows an identical static standing pose across all 8 frames for an animation named 'get_up_1', indicating missing motion data or frozen playback.",
+                "severity": 4,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=20261112-181934-A-a29-get-up-1.png (gemini-3.8-flash, in 1744 out 234 tokens, ~$0.0022, 5.8 s)\n- stills:\n  - label: Still A: 20261112-181934-A-a29-get-up-1.png; clean: false\n    - findings:\n      - where: Top-left edge, header text line; what: Engine debug/proof overlay text ('AS_P4_get_up_1: 0.2667 s, 8 frames...') rendered directly onto the capture.; severity: 1; confidence: 0.95\n      - where: Center horizontal line across all 8 character frames; what: Animation filmstrip sheet shows an identical static standing pose across all 8 frames for an animation named 'get_up_1', indicating missing motion data or frozen playback.; severity: 4; confidence: 0.85"
+    }
+  ]
+}

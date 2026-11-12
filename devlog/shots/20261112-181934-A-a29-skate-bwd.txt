@@ -1,0 +1,1 @@
+AS_P4_skate_bwd: 0.7 s, 8 frames over 2 s (sequence time), UE5 Manny, three-quarter front, proof level

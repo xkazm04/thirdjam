@@ -14,7 +14,8 @@ and 30 seconds of Vision budget go to the contact moves only (section 6).
 
 1. **Text-to-motion (Meshy prime) gives a skating stride that passes the gate** once it is cut to its best cycle and the loop is blended closed: `AS_P4_skate_fwd`,
    1.33 s, loop error 0 m, root in place, retargeted onto the Manny with every core bone mapped. 10 credits and about 2 minutes of tool time per locomotion clip.
-   **Not yet watched playing correctly**: the retarget leaves the pelvis translation 80 m off (section 8, blocker 1, with the fix path); rotations are right.
+   Pass 2: the retargeter runs root-locked (FK chains only; the Pelvis Motion op put the pelvis 80 m off, section 8 blocker 1), so every clip plays in place
+   with the pelvis at the ref pose; the falls lose their drop and tilt until the source root scale is fixed at import.
 2. **The Meshy animation library covers the falls group** on the `ue5_mannequin` rig (names match the Manny core; 3 credits a clip, 4 s): knocked down from the front,
    from behind, a trip, a hit reaction, a stumble, two get-ups, idle.
 3. **The Manny clips that ship with the engine** are the day-one fallback for hit reactions and falls (`MM_HitReact_*`, `MM_Death_*`, `MM_Attack_02` as a check), already on
@@ -24,12 +25,20 @@ and 30 seconds of Vision budget go to the contact moves only (section 6).
    gate and retarget path takes it from there (`bonemap-rokoko.json` to be written from the first file's bone list).
 5. **A motion gate runs before any clip enters a build** (section 3): loop closure, foot contact, root motion lint, contact window. Thresholds are in this file.
 6. What did not work and is written down so nobody repeats it (all measured 17:20-17:55 on UE 5.9 through MCP): a SceneCapture2D driven from editor Python under
-   Simulate exports black; an `execute_python` that contains `await asyncio.sleep` leaves every later viewport capture black; scrubbing with `set_animation` +
-   `set_position` across calls blackens too, `override_animation_data(seq, True, False, t, 0)` per call renders; and a level whose lights are Stationary with no built
-   lighting renders black in Simulate on a fresh editor instance: the proof level's sun and sky light are Movable now. A force-stopped editor leaves
+   Simulate exports black; an `execute_python` that contains `await asyncio.sleep` leaves every later viewport capture black; a level whose lights are Stationary
+   with no built lighting renders black in Simulate on a fresh editor instance (that, not the scrub call, was the black screen of 17:20-17:50: the proof level's sun
+   and sky light are Movable now, sky real-time capture off since it prints a red warning without a SkyAtmosphere); `override_animation_data(seq, True, False, t, 0)`
+   renders but never changes the pose (every frame identical, measured 18:19), while `set_animation_mode` + `set_animation` + `set_position(t)` + `set_play_rate(0)` +
+   `play` in one call per frame scrubs. A force-stopped editor leaves
    `Saved/Autosaves/PackageRestoreData.json`, and the next editor on the same tree (any lane's) blocks on a modal "Restore Packages" dialog that stops every MCP tool.
 
 ## 1. Verb table (C-0001 v3 and the falls group), source, gate, contact window
+
+**Watched (pass 2, 18:19-18:21):** every clip below plays on the Manny in the proof level; strips `devlog/shots/20261112-181934-A-a29-<verb>.png` (8 frames over
+2 s of sequence time, three-quarter front, 720 px per frame, caption in the `.txt` next to each). What the eye sees with the root-locked retarget: `skate_fwd` is a
+crouched stride with the legs alternating and the arms pumping; `knocked_down_back` keeps the pelvis at standing height, so the "fall" reads as the body folding
+backward with the legs kicking up rather than going down (section 8, blocker 1: the pelvis drop and tilt return once the source root scale is fixed at import).
+The eyes `bug-hunt` readings for six strips are in `docs/experiments/eyes/a29-*.json` and summarised in `status/A29.md`.
 
 Filled per clip by `tools/p4motion/jobs.json`; "src" is the vendor skeleton: *Ref* = Meshy text-to-motion Reference (52 bones), *MRig* = Meshy `ue5_mannequin` rig (28),
 *Manny* = engine clip on `SK_Mannequin`. Gate columns are the measured numbers; the verdict is PASS / WARN / FAIL as `gate.mjs` prints them. A contact window is the frame
@@ -210,8 +219,16 @@ stance and draw on ice, 2019). Spend: about 10 s each, contact moves only.
    `axis_up='Z'` and the armature rotation applied **without** `bake_space_transform`), check `Pelvis` z is about 90 cm at t 0 before building the rig; (b) failing that,
    zero the pelvis translation on the *output* clip (UE 5.9 Python exposes no `AnimDataController` on `AnimSequence`; the Blender route can do it on a re-export);
    (c) failing both, retarget with the Pelvis Motion op removed from the op stack, which keeps the figure on the ground at the cost of the pelvis bob and the fall drop.
-   About 30 minutes with the editor; the eyes judgement waits on it. The proof strips under `devlog/shots/20261112-175258-A-a29-*.png` were captured with this
-   pelvis offset, so they show the lit floor and a figure far off camera: **not evidence of motion**, kept so the capture path is on record.
+   **Pass 2 (18:10-18:20): resolved by (c).** (a) was measured first: the source `Pelvis`'s parent bone `Reference` (the armature node UE imports as a bone)
+   carries **scale 100** in the animation track at t 0 while the bind pose is at scale 1, so every Blender export variant (transforms applied, `FBX_SCALE_ALL`)
+   and the vendor's own FBX give the same 80 m; setting the Pelvis Motion op's `TranslationAlpha` to 0 through an override set (`A29_InPlace`) fixed the Reference
+   route but left the Meshy rig's pelvis moving through the Root Motion op (its pelvis is its root). So `ue_retarget.py` now builds every retargeter with the
+   Pelvis Motion, Run IK Rig and Root Motion ops **disabled** (FK Chains + Remap Curves only): measured after, `AS_P4_skate_fwd` and `AS_P4_knocked_down_back`
+   keep the pelvis at the Manny's ref pose (0, 2.3, 95.9 cm) every frame while thighs and feet rotate as before. Cost: no pelvis bob on the strides and **no
+   pelvis tilt or drop in the falls** (a knocked-down figure folds its limbs standing up); the fall drop has to come from the visual (the pawn's knockdown tilt, as
+   the toy does) until the source skeleton's root scale is fixed at import (the real fix: strip the `Reference` node's scale track, or import with the armature
+   node dropped). All 18 generated clips were re-retargeted with the script; the 4 Manny duplicates were never affected. The earlier strips
+   (`devlog/shots/20261112-175258-*`) were deleted; the pass-2 strips are `devlog/shots/20261112-18xxxx-A-a29-<verb>.png`.
 2. **The contact moves have no clip until the operator films** (or decides on the YouTube route). Until then `check` is `MM_Attack_02` and the shot is E1's text-to-motion
    slap shot, both placeholders.
 3. **The clips play on the Manny, not yet on A28's figure.** A28 has no status file yet; when its `SK_P4_*` on the Meshy `ue5_mannequin` preset lands, the `meshyrig` bone
