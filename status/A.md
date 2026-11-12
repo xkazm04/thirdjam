@@ -8,3 +8,8 @@
 - next: A1 core sim, A2 AI, A5 camera/HUD start when A0's skeleton compiles; A6 packages at H6; device B starts on `docs/DEVICE-B.md`.
 - blocked: nothing.
 - machine: C: 445 GB free; NvRTX 5.8 build died at 7110/9110 in the reboot, not resumed (would compete for CPU); no editor running yet.
+
+## H5 (10:50)
+- done: A0 skeleton (build 56 s, MCP 40 s, Development package 50 s, runs); A4 schema + 5 presets (88 tests). Contracts C-0001..C-0004 and `contracts/RULINGS.md` R-0001. Pushed for device B.
+- next: A1 core sim, A2 AI + tournaments, A5 camera/HUD/toy figure running in parallel (ports 8001-8003); A4 resumed to add `game.skater.visual`.
+- blocked: nothing. ToolsetRegistry ships some runtime code (cannot be editor-only). Development package 1036 MB staged (pdb 363 MB), never ships.

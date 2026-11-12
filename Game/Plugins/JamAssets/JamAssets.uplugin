@@ -1,0 +1,13 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "JamAssets",
+	"Description": "Content-only plugin: all art, audio, materials, VFX and light rigs of Hokej. Owner: device B (contracts/assets-naming.md).",
+	"Category": "ThirdJam",
+	"CreatedBy": "Hokej",
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"Installed": false,
+	"EnabledByDefault": true
+}
