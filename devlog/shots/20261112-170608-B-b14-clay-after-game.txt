@@ -1,0 +1,1 @@
+B14 clay pass 2: real game p3_clay at the faceoff, game camera; six BP_SkaterVisual_TB2_P3 figures (swapped in place by script), dent normal T_Clay_Dent_N on ice, tabletop and warm paper sweep, focus 11 m f/3.2 + depth blur

@@ -1,0 +1,1 @@
+SKF third pass p2_cel: rear-high view (behind, 30 deg above, on the upper back / number box): Glide, Stride f0 f15 f30, Aim_P00_R130, Aim_N63_R160, Aim_P70_R160, Aim_N30_R100.

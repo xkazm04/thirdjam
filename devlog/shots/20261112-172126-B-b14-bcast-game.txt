@@ -1,0 +1,1 @@
+B14 broadcast LR_P4_Broadcast (loaded by script over the l2_night game), game camera at the faceoff, six P4 figures (MI_Bcast_SkaterP4, JerseyLum 0.25), MI_Bcast_Glass, MPC_Look Clay -1
