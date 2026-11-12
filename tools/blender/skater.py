@@ -36,6 +36,7 @@ T0 = time.time()
 # ---------------------------------------------------------------- parameters (metres and degrees; edit here)
 
 VARIANT = "toy"
+NO_STRETCH = False
 
 BASE = dict(
     # body (toy: 1.6 m to the top of the head, a big head, shoulders wider than the hips)
@@ -46,8 +47,10 @@ BASE = dict(
     skate_len=0.32, skate_w=0.09, skate_h=0.09, skate_y=0.13,
     shoulder_y=0.30, shoulder_z=0.98, arm_r=0.065, elbow_offset=(0.30, 0.0, -0.20),   # elbows forward: both arms cross in front of the chest to the stick (two-bone IK arms, baked)
     # stick: the shaft top (grip end) is at the top hand; the shaft runs forward and down to the ice at the lie angle
-    stick_shaft=1.30, stick_blade=0.35, stick_lie_deg=42.0, blade_out_deg=30.0, stick_r_top=0.032, stick_r_heel=0.024,
-    stick_top=(0.33, -0.38, 0.88),                                  # the grip in front of the right shoulder, outside the torso                                   # Blender space: -Y is the skater's right
+    stick_shaft=1.20, stick_blade=0.35, stick_lie_deg=42.0,   # pass 4: 10 cm shorter so two-bone arms reach the long verbs
+    blade_out_deg=30.0, stick_r_top=0.032, stick_r_heel=0.024,
+    stick_top=(0.33, -0.38, 0.81),                                  # the grip in front of the right shoulder, outside the torso; z = shaft x sin(lie) + 0.01 keeps the blade on the ice
+    ik_stretch=0.10, max_stretch=0.10,                              # pass 4: IK may stretch the arm bones (ik_stretch is a stiffness, not a cap); the bake clamps the scale at 1 + max_stretch                                   # Blender space: -Y is the skater's right
     blade_h=0.08, blade_h_toe=0.055, blade_t=0.03, blade_t_toe=0.018, heel_r=0.045, tape_len=0.15, knob=True,   # the blade tapers toward the toe
     hand_upper=0.07, hand_lower=0.43, hand_r=0.085, gloves=True,
     lean_deg=15.0,                                                  # the skate_left / skate_right lean; the game caps the roll it adds on top
@@ -93,7 +96,7 @@ SHEET_POSES = [("idle", 0), ("carry", 15), ("poke", 6)]
 
 def parse_args():
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
-    opts = {"variant": "toy", "out": "tools/blender/out", "render": False, "turntable": False, "export": True}
+    opts = {"variant": "toy", "out": "tools/blender/out", "render": False, "turntable": False, "export": True, "checker": False, "no_stretch": False}
     i = 0
     while i < len(argv):
         a = argv[i]
@@ -107,6 +110,10 @@ def parse_args():
             opts["turntable"] = True
         elif a == "--no-export":
             opts["export"] = False
+        elif a == "--checker":
+            opts["checker"] = True
+        elif a == "--no-stretch":
+            opts["no_stretch"] = True
         i += 1
     return opts
 
@@ -522,14 +529,18 @@ class Build:
         for pb in arm.pose.bones:
             pb.rotation_mode = "QUATERNION"
         # arms reach their hand on the stick by a two-bone IK to a helper bone that rides stick_root; bake_arms() turns the result into plain keys
+        stretch = 0.0 if NO_STRETCH else p["ik_stretch"]
         for bone in ("arm_l", "arm_r"):
+            for seg in ("_upper", "_fore"):
+                arm.pose.bones[bone + seg].ik_stretch = stretch
             pb = arm.pose.bones[bone + "_fore"]
             c = pb.constraints.new("IK")
             c.target = arm
             c.subtarget = "ik_hand_" + bone[-1]
             c.chain_count = 2
             c.use_tail = True
-            c.use_stretch = False
+            c.use_stretch = stretch > 0.0
+        self.stats["ik_stretch"] = stretch
         # skin
         mesh = self.mesh
         mesh.parent = arm
@@ -740,7 +751,13 @@ class Build:
             for f in range(0, int(act.frame_end) + 1):
                 self.scene.frame_set(f)
                 bpy.context.view_layer.update()
-                frames[f] = {bn: arm.convert_space(pose_bone=arm.pose.bones[bn], matrix=arm.pose.bones[bn].matrix, from_space="POSE", to_space="LOCAL").copy() for bn in arm_bones}
+                frames[f] = {}
+                for bn in arm_bones:
+                    m = arm.convert_space(pose_bone=arm.pose.bones[bn], matrix=arm.pose.bones[bn].matrix, from_space="POSE", to_space="LOCAL")
+                    loc, rot, sc = m.decompose()
+                    cap = 1.0 + self.p["max_stretch"]
+                    sc = Vector((min(sc.x, cap), min(sc.y, cap), min(sc.z, cap)))   # a 10 % stretch allowance, no more: past it the forearm points at the mitten and stops short
+                    frames[f][bn] = Matrix.LocRotScale(loc, rot, sc)
                 for fore, hand in (("arm_l_fore", "ik_hand_l"), ("arm_r_fore", "ik_hand_r")):
                     gap = (arm.pose.bones[fore].tail - arm.pose.bones[hand].head).length
                     worst = max(worst, gap)
@@ -766,14 +783,19 @@ class Build:
                     kp.interpolation = "LINEAR"
         # proof: with the constraints gone, the keyed arms must still end at the mittens
         post = 0.0
+        post_action = {}
         for name, act in self.actions.items():
             arm.animation_data.action = act
-            for f in range(0, int(act.frame_end) + 1, 3):
+            post_action[name] = 0.0
+            for f in range(0, int(act.frame_end) + 1):
                 self.scene.frame_set(f)
                 bpy.context.view_layer.update()
                 for fore, hand in (("arm_l_fore", "ik_hand_l"), ("arm_r_fore", "ik_hand_r")):
-                    post = max(post, (arm.pose.bones[fore].tail - arm.pose.bones[hand].head).length)
+                    gap = (arm.pose.bones[fore].tail - arm.pose.bones[hand].head).length
+                    post = max(post, gap)
+                    post_action[name] = max(post_action[name], gap)
         self.stats["baked_worst_gap_cm"] = round(post, 2)
+        self.stats["baked_gap_cm"] = {k: round(v, 1) for k, v in post_action.items()}
         self.stats["arms_baked"] = len(self.actions)
 
     # ---- export
@@ -913,6 +935,25 @@ class Build:
         sc.render.filepath = path
         bpy.ops.render.render(write_still=True)
 
+    def render_number_check(self, outdir):
+        """Blender's COLOR_GRID image on the `number` slot, seen from behind: the letters and numbers prove the UV orientation (A..H left to right, 1..8 bottom to top)"""
+        img = bpy.data.images.new("uv_check", 1024, 1024)
+        img.generated_type = "COLOR_GRID"
+        m = self.materials["number"]
+        nt = m.node_tree
+        tex = nt.nodes.new("ShaderNodeTexImage")
+        tex.image = img
+        tex.interpolation = "Closest"
+        nt.links.new(tex.outputs["Color"], nt.nodes["Principled BSDF"].inputs["Base Color"])
+        self.arm.animation_data.action = self.actions["idle"]
+        self.scene.frame_set(0)
+        self.puck.hide_render = True
+        self.pivot.rotation_euler = (0, 0, math.pi)          # the camera pivot turned 180 degrees: the figure seen from behind
+        self.render_to(os.path.join(outdir, "%s_number_check.png" % VARIANT), CELL_PX)
+        self.pivot.rotation_euler = (0, 0, 0)
+        nt.links.remove(tex.outputs["Color"].links[0])        # the export never carries the test texture
+        nt.nodes.remove(tex)
+
     def render_cells(self, outdir, variant_index):
         t = time.time()
         for i, (action, frame) in enumerate(SHEET_POSES):
@@ -940,9 +981,10 @@ class Build:
 
 
 def main():
-    global VARIANT
+    global VARIANT, NO_STRETCH
     opts = parse_args()
     VARIANT = opts["variant"]
+    NO_STRETCH = opts["no_stretch"]
     if VARIANT not in VARIANTS:
         raise SystemExit("unknown variant %s" % VARIANT)
     p = dict(BASE)
@@ -962,10 +1004,12 @@ def main():
         t = time.time()
         b.export_fbx(os.path.join(out, "SK_Skater%s.fbx" % VARIANT.capitalize()))
         b.stats["export_s"] = round(time.time() - t, 1)
-    if opts["render"] or opts["turntable"]:
+    if opts["render"] or opts["turntable"] or opts["checker"]:
         rdir = os.path.join(out, "render")
         os.makedirs(rdir, exist_ok=True)
         b.setup_render()
+        if opts["checker"]:
+            b.render_number_check(rdir)
         if opts["render"]:
             b.render_cells(rdir, list(VARIANTS).index(VARIANT))
         if opts["turntable"]:

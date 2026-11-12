@@ -1,9 +1,9 @@
 TBBmalloc: skip allocation functions replacement in ucrtbase.dll: unknown prologue for function _msize
 Blender 4.2.1 LTS (hash 396f546c9d82 built 2024-08-20 00:50:53)
-Fra:0 Mem:63.38M (Peak 63.38M) | Time:00:00.35 | Rendering 1 / 24 samples
-Fra:0 Mem:63.38M (Peak 63.38M) | Time:00:00.38 | Rendering 24 / 24 samples
+Fra:0 Mem:63.38M (Peak 63.38M) | Time:00:00.34 | Rendering 1 / 24 samples
+Fra:0 Mem:63.38M (Peak 63.38M) | Time:00:00.37 | Rendering 24 / 24 samples
 Saved: 'C:\Users\kazda\kiro\thirdjam\tools\blender\out\render\cell_07.png'
-Time: 00:00.45 (Saving: 00:00.04)
+Time: 00:00.43 (Saving: 00:00.04)
 
 Fra:15 Mem:63.47M (Peak 63.47M) | Time:00:00.03 | Rendering 1 / 24 samples
 Fra:15 Mem:63.47M (Peak 63.47M) | Time:00:00.06 | Rendering 24 / 24 samples
@@ -13,7 +13,7 @@ Time: 00:00.12 (Saving: 00:00.03)
 Fra:6 Mem:63.14M (Peak 63.14M) | Time:00:00.03 | Rendering 1 / 24 samples
 Fra:6 Mem:63.14M (Peak 63.14M) | Time:00:00.06 | Rendering 24 / 24 samples
 Saved: 'C:\Users\kazda\kiro\thirdjam\tools\blender\out\render\cell_09.png'
-Time: 00:00.12 (Saving: 00:00.03)
+Time: 00:00.11 (Saving: 00:00.03)
 
 Fra:0 Mem:51.38M (Peak 51.38M) | Time:00:00.03 | Rendering 1 / 24 samples
 Fra:0 Mem:51.38M (Peak 51.38M) | Time:00:00.05 | Rendering 24 / 24 samples
@@ -35,10 +35,10 @@ Fra:3 Mem:51.38M (Peak 51.38M) | Time:00:00.05 | Rendering 24 / 24 samples
 Saved: 'C:\Users\kazda\kiro\thirdjam\tools\blender\out\render\broadcast_tt_003.png'
 Time: 00:00.07 (Saving: 00:00.01)
 
-Fra:4 Mem:51.38M (Peak 51.38M) | Time:00:00.03 | Rendering 1 / 24 samples
+Fra:4 Mem:51.38M (Peak 51.38M) | Time:00:00.04 | Rendering 1 / 24 samples
 Fra:4 Mem:51.38M (Peak 51.38M) | Time:00:00.05 | Rendering 24 / 24 samples
 Saved: 'C:\Users\kazda\kiro\thirdjam\tools\blender\out\render\broadcast_tt_004.png'
-Time: 00:00.07 (Saving: 00:00.01)
+Time: 00:00.08 (Saving: 00:00.01)
 
 Fra:5 Mem:51.38M (Peak 51.38M) | Time:00:00.03 | Rendering 1 / 24 samples
 Fra:5 Mem:51.38M (Peak 51.38M) | Time:00:00.05 | Rendering 24 / 24 samples
@@ -95,12 +95,12 @@ Fra:15 Mem:51.38M (Peak 51.38M) | Time:00:00.05 | Rendering 24 / 24 samples
 Saved: 'C:\Users\kazda\kiro\thirdjam\tools\blender\out\render\broadcast_tt_015.png'
 Time: 00:00.07 (Saving: 00:00.01)
 
-Fra:16 Mem:51.38M (Peak 51.38M) | Time:00:00.04 | Rendering 1 / 24 samples
+Fra:16 Mem:51.38M (Peak 51.38M) | Time:00:00.03 | Rendering 1 / 24 samples
 Fra:16 Mem:51.38M (Peak 51.38M) | Time:00:00.05 | Rendering 24 / 24 samples
 Saved: 'C:\Users\kazda\kiro\thirdjam\tools\blender\out\render\broadcast_tt_016.png'
 Time: 00:00.08 (Saving: 00:00.01)
 
-Fra:17 Mem:51.38M (Peak 51.38M) | Time:00:00.03 | Rendering 1 / 24 samples
+Fra:17 Mem:51.38M (Peak 51.38M) | Time:00:00.04 | Rendering 1 / 24 samples
 Fra:17 Mem:51.38M (Peak 51.38M) | Time:00:00.05 | Rendering 24 / 24 samples
 Saved: 'C:\Users\kazda\kiro\thirdjam\tools\blender\out\render\broadcast_tt_017.png'
 Time: 00:00.07 (Saving: 00:00.01)
@@ -163,7 +163,7 @@ Time: 00:00.07 (Saving: 00:00.01)
 Fra:29 Mem:51.38M (Peak 51.38M) | Time:00:00.03 | Rendering 1 / 24 samples
 Fra:29 Mem:51.38M (Peak 51.38M) | Time:00:00.05 | Rendering 24 / 24 samples
 Saved: 'C:\Users\kazda\kiro\thirdjam\tools\blender\out\render\broadcast_tt_029.png'
-Time: 00:00.07 (Saving: 00:00.01)
+Time: 00:00.08 (Saving: 00:00.01)
 
 Fra:30 Mem:51.38M (Peak 51.38M) | Time:00:00.03 | Rendering 1 / 24 samples
 Fra:30 Mem:51.38M (Peak 51.38M) | Time:00:00.05 | Rendering 24 / 24 samples
@@ -173,14 +173,14 @@ Time: 00:00.07 (Saving: 00:00.01)
 Fra:31 Mem:51.38M (Peak 51.38M) | Time:00:00.03 | Rendering 1 / 24 samples
 Fra:31 Mem:51.38M (Peak 51.38M) | Time:00:00.05 | Rendering 24 / 24 samples
 Saved: 'C:\Users\kazda\kiro\thirdjam\tools\blender\out\render\broadcast_tt_031.png'
-Time: 00:00.08 (Saving: 00:00.01)
+Time: 00:00.07 (Saving: 00:00.01)
 
 Fra:32 Mem:51.38M (Peak 51.38M) | Time:00:00.03 | Rendering 1 / 24 samples
-Fra:32 Mem:51.38M (Peak 51.38M) | Time:00:00.06 | Rendering 24 / 24 samples
+Fra:32 Mem:51.38M (Peak 51.38M) | Time:00:00.05 | Rendering 24 / 24 samples
 Saved: 'C:\Users\kazda\kiro\thirdjam\tools\blender\out\render\broadcast_tt_032.png'
-Time: 00:00.08 (Saving: 00:00.01)
+Time: 00:00.07 (Saving: 00:00.01)
 
-Fra:33 Mem:51.38M (Peak 51.38M) | Time:00:00.04 | Rendering 1 / 24 samples
+Fra:33 Mem:51.38M (Peak 51.38M) | Time:00:00.03 | Rendering 1 / 24 samples
 Fra:33 Mem:51.38M (Peak 51.38M) | Time:00:00.05 | Rendering 24 / 24 samples
 Saved: 'C:\Users\kazda\kiro\thirdjam\tools\blender\out\render\broadcast_tt_033.png'
 Time: 00:00.07 (Saving: 00:00.01)
@@ -188,7 +188,7 @@ Time: 00:00.07 (Saving: 00:00.01)
 Fra:34 Mem:51.38M (Peak 51.38M) | Time:00:00.03 | Rendering 1 / 24 samples
 Fra:34 Mem:51.38M (Peak 51.38M) | Time:00:00.05 | Rendering 24 / 24 samples
 Saved: 'C:\Users\kazda\kiro\thirdjam\tools\blender\out\render\broadcast_tt_034.png'
-Time: 00:00.08 (Saving: 00:00.01)
+Time: 00:00.07 (Saving: 00:00.01)
 
 Fra:35 Mem:51.38M (Peak 51.38M) | Time:00:00.03 | Rendering 1 / 24 samples
 Fra:35 Mem:51.38M (Peak 51.38M) | Time:00:00.05 | Rendering 24 / 24 samples
@@ -198,17 +198,17 @@ Time: 00:00.07 (Saving: 00:00.01)
 Fra:36 Mem:51.38M (Peak 51.38M) | Time:00:00.03 | Rendering 1 / 24 samples
 Fra:36 Mem:51.38M (Peak 51.38M) | Time:00:00.05 | Rendering 24 / 24 samples
 Saved: 'C:\Users\kazda\kiro\thirdjam\tools\blender\out\render\broadcast_tt_036.png'
-Time: 00:00.08 (Saving: 00:00.01)
+Time: 00:00.07 (Saving: 00:00.01)
 
 Fra:37 Mem:51.38M (Peak 51.38M) | Time:00:00.03 | Rendering 1 / 24 samples
 Fra:37 Mem:51.38M (Peak 51.38M) | Time:00:00.05 | Rendering 24 / 24 samples
 Saved: 'C:\Users\kazda\kiro\thirdjam\tools\blender\out\render\broadcast_tt_037.png'
-Time: 00:00.08 (Saving: 00:00.01)
+Time: 00:00.07 (Saving: 00:00.01)
 
 Fra:38 Mem:51.38M (Peak 51.38M) | Time:00:00.03 | Rendering 1 / 24 samples
 Fra:38 Mem:51.38M (Peak 51.38M) | Time:00:00.05 | Rendering 24 / 24 samples
 Saved: 'C:\Users\kazda\kiro\thirdjam\tools\blender\out\render\broadcast_tt_038.png'
-Time: 00:00.08 (Saving: 00:00.01)
+Time: 00:00.07 (Saving: 00:00.01)
 
 Fra:39 Mem:51.38M (Peak 51.38M) | Time:00:00.03 | Rendering 1 / 24 samples
 Fra:39 Mem:51.38M (Peak 51.38M) | Time:00:00.05 | Rendering 24 / 24 samples
@@ -218,7 +218,7 @@ Time: 00:00.07 (Saving: 00:00.01)
 Fra:40 Mem:51.38M (Peak 51.38M) | Time:00:00.03 | Rendering 1 / 24 samples
 Fra:40 Mem:51.38M (Peak 51.38M) | Time:00:00.05 | Rendering 24 / 24 samples
 Saved: 'C:\Users\kazda\kiro\thirdjam\tools\blender\out\render\broadcast_tt_040.png'
-Time: 00:00.08 (Saving: 00:00.01)
+Time: 00:00.07 (Saving: 00:00.01)
 
 Fra:41 Mem:51.38M (Peak 51.38M) | Time:00:00.03 | Rendering 1 / 24 samples
 Fra:41 Mem:51.38M (Peak 51.38M) | Time:00:00.05 | Rendering 24 / 24 samples
@@ -228,22 +228,22 @@ Time: 00:00.07 (Saving: 00:00.01)
 Fra:42 Mem:51.38M (Peak 51.38M) | Time:00:00.03 | Rendering 1 / 24 samples
 Fra:42 Mem:51.38M (Peak 51.38M) | Time:00:00.05 | Rendering 24 / 24 samples
 Saved: 'C:\Users\kazda\kiro\thirdjam\tools\blender\out\render\broadcast_tt_042.png'
-Time: 00:00.08 (Saving: 00:00.01)
+Time: 00:00.07 (Saving: 00:00.01)
 
 Fra:43 Mem:51.38M (Peak 51.38M) | Time:00:00.03 | Rendering 1 / 24 samples
 Fra:43 Mem:51.38M (Peak 51.38M) | Time:00:00.05 | Rendering 24 / 24 samples
 Saved: 'C:\Users\kazda\kiro\thirdjam\tools\blender\out\render\broadcast_tt_043.png'
 Time: 00:00.07 (Saving: 00:00.01)
 
-Fra:44 Mem:51.38M (Peak 51.38M) | Time:00:00.04 | Rendering 1 / 24 samples
-Fra:44 Mem:51.38M (Peak 51.38M) | Time:00:00.06 | Rendering 24 / 24 samples
+Fra:44 Mem:51.38M (Peak 51.38M) | Time:00:00.03 | Rendering 1 / 24 samples
+Fra:44 Mem:51.38M (Peak 51.38M) | Time:00:00.05 | Rendering 24 / 24 samples
 Saved: 'C:\Users\kazda\kiro\thirdjam\tools\blender\out\render\broadcast_tt_044.png'
-Time: 00:00.08 (Saving: 00:00.01)
+Time: 00:00.07 (Saving: 00:00.01)
 
 Fra:45 Mem:51.38M (Peak 51.38M) | Time:00:00.03 | Rendering 1 / 24 samples
 Fra:45 Mem:51.38M (Peak 51.38M) | Time:00:00.05 | Rendering 24 / 24 samples
 Saved: 'C:\Users\kazda\kiro\thirdjam\tools\blender\out\render\broadcast_tt_045.png'
-Time: 00:00.08 (Saving: 00:00.01)
+Time: 00:00.07 (Saving: 00:00.01)
 
 Fra:46 Mem:51.38M (Peak 51.38M) | Time:00:00.03 | Rendering 1 / 24 samples
 Fra:46 Mem:51.38M (Peak 51.38M) | Time:00:00.05 | Rendering 24 / 24 samples
@@ -268,12 +268,12 @@ Time: 00:00.07 (Saving: 00:00.01)
 Fra:50 Mem:51.38M (Peak 51.38M) | Time:00:00.03 | Rendering 1 / 24 samples
 Fra:50 Mem:51.38M (Peak 51.38M) | Time:00:00.05 | Rendering 24 / 24 samples
 Saved: 'C:\Users\kazda\kiro\thirdjam\tools\blender\out\render\broadcast_tt_050.png'
-Time: 00:00.08 (Saving: 00:00.01)
+Time: 00:00.07 (Saving: 00:00.01)
 
-Fra:51 Mem:51.38M (Peak 51.38M) | Time:00:00.04 | Rendering 1 / 24 samples
-Fra:51 Mem:51.38M (Peak 51.38M) | Time:00:00.06 | Rendering 24 / 24 samples
+Fra:51 Mem:51.38M (Peak 51.38M) | Time:00:00.03 | Rendering 1 / 24 samples
+Fra:51 Mem:51.38M (Peak 51.38M) | Time:00:00.05 | Rendering 24 / 24 samples
 Saved: 'C:\Users\kazda\kiro\thirdjam\tools\blender\out\render\broadcast_tt_051.png'
-Time: 00:00.08 (Saving: 00:00.01)
+Time: 00:00.07 (Saving: 00:00.01)
 
 Fra:52 Mem:51.38M (Peak 51.38M) | Time:00:00.03 | Rendering 1 / 24 samples
 Fra:52 Mem:51.38M (Peak 51.38M) | Time:00:00.05 | Rendering 24 / 24 samples
@@ -316,12 +316,12 @@ Saved: 'C:\Users\kazda\kiro\thirdjam\tools\blender\out\render\broadcast_tt_059.p
 Time: 00:00.07 (Saving: 00:00.01)
 
 bl_ext.user_default.ComfyUI-BlenderAI-node Register cost 0.0010s
-Func from_cache: 0.9171s
-Func csv_to_trie: 0.9171s
+Func from_cache: 0.8860s
+Func csv_to_trie: 0.8860s
 
 FBX export starting... 'C:\\Users\\kazda\\kiro\\thirdjam\\tools\\blender\\out\\SK_SkaterBroadcast.fbx'
 (bpy.data.armatures['SKEL_SkaterBroadcast'], 'POSE')
-export finished in 1.3125 sec.
-A22 skater.py PASS {"triangles": 4330, "vertices": 2238, "material_slots": ["base", "number", "head", "trim", "steel", "stick"], "bones": ["root", "pelvis", "torso", "head", "head_socket", "arm_l_upper", "arm_l_fore", "arm_r_upper", "arm_r_fore", "stick_root", "ik_hand_l", "ik_hand_r", "stick_socket", "puck_socket"], "ik_worst_gap_cm": 11.95, "ik_gap_cm": {"idle": 0.0, "skate": 0.0, "skate_left": 0.0, "skate_right": 0.0, "carry": 0.9, "aim_left": 0.0, "aim_right": 0.0, "poke": 12.0, "lift": 0.0, "shoot_windup": 0.0, "shoot_release": 0.0, "check": 0.0, "knocked_down": 0.0, "get_up": 0.0, "faceoff_ready": 0.0, "draw": 0.0, "goalie_left": 0.0, "goalie_centre": 0.0, "goalie_right": 0.0}, "baked_worst_gap_cm": 11.95, "arms_baked": 19, "actions": {"idle": 60, "skate": 36, "skate_left": 36, "skate_right": 36, "carry": 60, "aim_left": 30, "aim_right": 30, "poke": 18, "lift": 20, "shoot_windup": 24, "shoot_release": 51, "check": 20, "knocked_down": 40, "get_up": 20, "faceoff_ready": 30, "draw": 15, "goalie_left": 30, "goalie_centre": 30, "goalie_right": 30}, "build_s": 0.5, "variant": "broadcast", "fbx": "C:\\Users\\kazda\\kiro\\thirdjam\\tools\\blender\\out\\SK_SkaterBroadcast.fbx", "fbx_mb": 2.23, "export_s": 0.4, "render_cells_s": 0.7, "render_turntable_s": 4.9, "total_s": 6.9}
+export finished in 1.6719 sec.
+A22 skater.py PASS {"triangles": 4330, "vertices": 2238, "material_slots": ["base", "number", "head", "trim", "steel", "stick"], "ik_stretch": 0.1, "bones": ["root", "pelvis", "torso", "head", "head_socket", "arm_l_upper", "arm_l_fore", "arm_r_upper", "arm_r_fore", "stick_root", "ik_hand_l", "ik_hand_r", "stick_socket", "puck_socket"], "ik_worst_gap_cm": 0.02, "ik_gap_cm": {"idle": 0.0, "skate": 0.0, "skate_left": 0.0, "skate_right": 0.0, "carry": 0.0, "aim_left": 0.0, "aim_right": 0.0, "poke": 0.0, "lift": 0.0, "shoot_windup": 0.0, "shoot_release": 0.0, "check": 0.0, "knocked_down": 0.0, "get_up": 0.0, "faceoff_ready": 0.0, "draw": 0.0, "goalie_left": 0.0, "goalie_centre": 0.0, "goalie_right": 0.0}, "baked_worst_gap_cm": 2.43, "baked_gap_cm": {"idle": 0.2, "skate": 0.3, "skate_left": 0.3, "skate_right": 0.3, "carry": 0.4, "aim_left": 0.0, "aim_right": 0.0, "poke": 2.4, "lift": 1.2, "shoot_windup": 0.5, "shoot_release": 0.0, "check": 1.6, "knocked_down": 0.6, "get_up": 0.7, "faceoff_ready": 0.0, "draw": 0.0, "goalie_left": 0.1, "goalie_centre": 0.1, "goalie_right": 0.1}, "arms_baked": 19, "actions": {"idle": 60, "skate": 36, "skate_left": 36, "skate_right": 36, "carry": 60, "aim_left": 30, "aim_right": 30, "poke": 18, "lift": 20, "shoot_windup": 24, "shoot_release": 51, "check": 20, "knocked_down": 40, "get_up": 20, "faceoff_ready": 30, "draw": 15, "goalie_left": 30, "goalie_centre": 30, "goalie_right": 30}, "build_s": 0.5, "variant": "broadcast", "fbx": "C:\\Users\\kazda\\kiro\\thirdjam\\tools\\blender\\out\\SK_SkaterBroadcast.fbx", "fbx_mb": 2.24, "export_s": 0.4, "render_cells_s": 0.7, "render_turntable_s": 4.7, "total_s": 6.7}
 
 Blender quit

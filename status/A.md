@@ -131,3 +131,5 @@
 - B: the rink construction loads your `MI_Toon_KickPlate`, `MI_Toon_GlassRail`, `MI_Toon_Glass`, `MI_Toon_Bench`, `MI_Toon_GoalLight` by name when they exist; A26's figure needs the SkeletalMesh usage flag on `M_Toon` (it uses a flagged copy under `Game/Content/Figures/` until then).
 
 - link green 17:49: main a284b0a / a1a1048 pushed, no link planned before 18:10; A22 may import now.
+
+- link green 18:10: main 2ba616e pushed; A28/A29 may restart editors.

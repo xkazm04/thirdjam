@@ -9,6 +9,7 @@
     "steel",
     "stick"
   ],
+  "ik_stretch": 0.1,
   "bones": [
     "root",
     "pelvis",
@@ -25,16 +26,16 @@
     "stick_socket",
     "puck_socket"
   ],
-  "ik_worst_gap_cm": 11.95,
+  "ik_worst_gap_cm": 0.02,
   "ik_gap_cm": {
     "idle": 0.0,
     "skate": 0.0,
     "skate_left": 0.0,
     "skate_right": 0.0,
-    "carry": 0.9,
+    "carry": 0.0,
     "aim_left": 0.0,
     "aim_right": 0.0,
-    "poke": 12.0,
+    "poke": 0.0,
     "lift": 0.0,
     "shoot_windup": 0.0,
     "shoot_release": 0.0,
@@ -47,7 +48,28 @@
     "goalie_centre": 0.0,
     "goalie_right": 0.0
   },
-  "baked_worst_gap_cm": 11.95,
+  "baked_worst_gap_cm": 2.43,
+  "baked_gap_cm": {
+    "idle": 0.2,
+    "skate": 0.3,
+    "skate_left": 0.3,
+    "skate_right": 0.3,
+    "carry": 0.4,
+    "aim_left": 0.0,
+    "aim_right": 0.0,
+    "poke": 2.4,
+    "lift": 1.2,
+    "shoot_windup": 0.5,
+    "shoot_release": 0.0,
+    "check": 1.6,
+    "knocked_down": 0.6,
+    "get_up": 0.7,
+    "faceoff_ready": 0.0,
+    "draw": 0.0,
+    "goalie_left": 0.1,
+    "goalie_centre": 0.1,
+    "goalie_right": 0.1
+  },
   "arms_baked": 19,
   "actions": {
     "idle": 60,
@@ -73,9 +95,9 @@
   "build_s": 0.5,
   "variant": "broadcast",
   "fbx": "C:\\Users\\kazda\\kiro\\thirdjam\\tools\\blender\\out\\SK_SkaterBroadcast.fbx",
-  "fbx_mb": 2.23,
+  "fbx_mb": 2.24,
   "export_s": 0.4,
   "render_cells_s": 0.7,
-  "render_turntable_s": 4.9,
-  "total_s": 6.9
+  "render_turntable_s": 4.7,
+  "total_s": 6.7
 }
