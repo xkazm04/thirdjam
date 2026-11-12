@@ -198,3 +198,5 @@
 ## H12.7 (22:40) H18 packaged with B's B17/B18/SK5/QA1 merge; five lanes for the last stretch
 - `Hokej_Hokej_H18.zip` (22:38): main 0e5ca5a: motion blur off in B's rigs, tier-aware contact effects, sounds for save/post/breakaway/period_end/clock/season_take, jersey emissive at night, the puck beacon and trail gate; everything of H17.
 - running: A44 Designer pass 2, A45 C-0001 v4 + bots check, A46 passes to the human, A47 QA1's ten faults + binder round 3, A48 H17 storyboard (Fable 5.2). B: SKI2 (three concept-sheet figures) and SKI3 (clay/broadcast scripted figure) until about 01:00.
+
+- link green 22:43: main 54a4b43 (A44 Designer pass 2) pushed.

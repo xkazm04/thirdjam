@@ -1,0 +1,186 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "readability",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-12T21:49:08.309Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "readability",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/storyboard/a48-05-match-card-regular.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/storyboard/a48-06-you-tag.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/storyboard/a48-07-far-net-marker.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/storyboard/a48-08-bark-and-commentary.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "distance": 6,
+      "thumbnails": [],
+      "prompt_chars": 2823,
+      "usage": {
+        "prompt": 5359,
+        "output": 1344,
+        "thoughts": 0,
+        "total": 6703,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00906,
+      "ms": 18483,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A: a48-05-match-card-regular.jpg",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "The puck is not visible anywhere on the ice surface or behind the central overlay."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "No player has possession as the game is frozen on a pre-faceoff screen."
+              },
+              "team_colours": {
+                "score": 4,
+                "evidence": "Deep blue (foreground skater, left scoreboard tile) and warm orange (distant skaters, right scoreboard tile) are easily distinguishable."
+              },
+              "far_net": {
+                "score": 3,
+                "evidence": "The red frame sits at top-center under the scoreboard, partially occluded by the large clapperboard graphic and measuring roughly 110 px wide."
+              },
+              "zone_strips": {
+                "score": 4,
+                "evidence": "A thin blue line and a prominent dark red line cross the rink horizontally, visible to either side of the clapperboard."
+              }
+            },
+            "first_look": "giant central Match 1 clapperboard overlay",
+            "noise": [
+              "large Match 1 clapperboard obscuring mid-ice",
+              "faceoff countdown reticle and prompt directly over player",
+              "bottom controller keybinding bar"
+            ],
+            "overall": 2
+          },
+          {
+            "label": "Still B: a48-06-you-tag.jpg",
+            "elements": {
+              "puck": {
+                "score": 4,
+                "evidence": "A small dark disc surrounded by a bright yellowish glow ring (about 30 px across) sits at the stick blade between the two central skaters."
+              },
+              "carrier": {
+                "score": 4,
+                "evidence": "The orange skater labeled 'YOU' has their stick touching the glowing puck, though the close blue skater competes for immediate focus."
+              },
+              "team_colours": {
+                "score": 5,
+                "evidence": "Skaters clearly display vivid deep blue and saturated warm orange jerseys with high-contrast outlines."
+              },
+              "far_net": {
+                "score": 4,
+                "evidence": "Centered in the upper third with a red outline, yellow diamond icon, and a '49 m' text box, spanning about 110 px wide."
+              },
+              "zone_strips": {
+                "score": 5,
+                "evidence": "Horizontal red center line and blue zone line span the full width of the rink ice."
+              }
+            },
+            "first_look": "blue player back with blue target reticle",
+            "noise": [
+              "dialogue speech bubble 'Nice stance...' below scoreboard",
+              "persistent blue targeting reticle under the foreground skater",
+              "bottom keybinding bar"
+            ],
+            "overall": 4
+          },
+          {
+            "label": "Still C: a48-07-far-net-marker.jpg",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "The puck is not visible on the ice surface."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "No carrier visible; the only skaters are isolated without possession."
+              },
+              "team_colours": {
+                "score": 4,
+                "evidence": "Vibrant blue on the foreground figure and warm orange on the mid-distance skater are sharply separated."
+              },
+              "far_net": {
+                "score": 4,
+                "evidence": "The red net frame is fully visible dead center at 49 m, highlighted with a yellow directional pip."
+              },
+              "zone_strips": {
+                "score": 5,
+                "evidence": "Clear red line spans horizontally through the mid-ice, with an unobstructed blue line further up."
+              }
+            },
+            "first_look": "blue player back with large ground reticle",
+            "noise": [
+              "oversized blue crosshair reticle on the ice",
+              "concentric gradient circles on the ice surface",
+              "bottom control prompt bar"
+            ],
+            "overall": 3
+          },
+          {
+            "label": "Still D: a48-08-bark-and-commentary.jpg",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "The puck is not visible in the frame."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "No player visibly controls a puck; distant players at the far net are too small to discern stick contact."
+              },
+              "team_colours": {
+                "score": 4,
+                "evidence": "Foreground blue is unmistakable, and distant tiny clusters still resolve into distinct blue and orange patches."
+              },
+              "far_net": {
+                "score": 4,
+                "evidence": "Red net frame clearly visible at top-center under the '49 m' badge, flanked by distant skaters."
+              },
+              "zone_strips": {
+                "score": 5,
+                "evidence": "Both the transverse red line and blue zone line are fully visible across the ice."
+              }
+            },
+            "first_look": "commentary banner below the scoreboard",
+            "noise": [
+              "wide white-and-orange speech banner 'You saw me coming...'",
+              "oversized blue targeting ring under foreground skater",
+              "bottom keybinding banner"
+            ],
+            "overall": 3
+          }
+        ]
+      },
+      "markdown": "**eyes/readability** A=a48-05-match-card-regular.jpg B=a48-06-you-tag.jpg C=a48-07-far-net-marker.jpg D=a48-08-bark-and-commentary.jpg at 6 m (gemini-3.8-flash, in 5359 out 1344 tokens, ~$0.0091, 18.5 s)\n- stills:\n  - label: Still A: a48-05-match-card-regular.jpg; first_look: giant central Match 1 clapperboard overlay; overall: 2\n    - elements:\n      - puck: score 1, evidence The puck is not visible anywhere on the ice surface or behind the central overlay.\n      - carrier: score 1, evidence No player has possession as the game is frozen on a pre-faceoff screen.\n      - team_colours: score 4, evidence Deep blue (foreground skater, left scoreboard tile) and warm orange (distant skaters, right scoreboard tile) are easily distinguishable.\n      - far_net: score 3, evidence The red frame sits at top-center under the scoreboard, partially occluded by the large clapperboard graphic and measuring roughly 110 px wide.\n      - zone_strips: score 4, evidence A thin blue line and a prominent dark red line cross the rink horizontally, visible to either side of the clapperboard.\n    - noise: large Match 1 clapperboard obscuring mid-ice; faceoff countdown reticle and prompt directly over player; bottom controller keybinding bar\n  - label: Still B: a48-06-you-tag.jpg; first_look: blue player back with blue target reticle; overall: 4\n    - elements:\n      - puck: score 4, evidence A small dark disc surrounded by a bright yellowish glow ring (about 30 px across) sits at the stick blade between the two central skaters.\n      - carrier: score 4, evidence The orange skater labeled 'YOU' has their stick touching the glowing puck, though the close blue skater competes for immediate focus.\n      - team_colours: score 5, evidence Skaters clearly display vivid deep blue and saturated warm orange jerseys with high-contrast outlines.\n      - far_net: score 4, evidence Centered in the upper third with a red outline, yellow diamond icon, and a '49 m' text box, spanning about 110 px wide.\n      - zone_strips: score 5, evidence Horizontal red center line and blue zone line span the full width of the rink ice.\n    - noise: dialogue speech bubble 'Nice stance...' below scoreboard; persistent blue targeting reticle under the foreground skater; bottom keybinding bar\n  - label: Still C: a48-07-far-net-marker.jpg; first_look: blue player back with large ground reticle; overall: 3\n    - elements:\n      - puck: score 1, evidence The puck is not visible on the ice surface.\n      - carrier: score 1, evidence No carrier visible; the only skaters are isolated without possession.\n      - team_colours: score 4, evidence Vibrant blue on the foreground figure and warm orange on the mid-distance skater are sharply separated.\n      - far_net: score 4, evidence The red net frame is fully visible dead center at 49 m, highlighted with a yellow directional pip.\n      - zone_strips: score 5, evidence Clear red line spans horizontally through the mid-ice, with an unobstructed blue line further up.\n    - noise: oversized blue crosshair reticle on the ice; concentric gradient circles on the ice surface; bottom control prompt bar\n  - label: Still D: a48-08-bark-and-commentary.jpg; first_look: commentary banner below the scoreboard; overall: 3\n    - elements:\n      - puck: score 1, evidence The puck is not visible in the frame.\n      - carrier: score 1, evidence No player visibly controls a puck; distant players at the far net are too small to discern stick contact.\n      - team_colours: score 4, evidence Foreground blue is unmistakable, and distant tiny clusters still resolve into distinct blue and orange patches.\n      - far_net: score 4, evidence Red net frame clearly visible at top-center under the '49 m' badge, flanked by distant skaters.\n      - zone_strips: score 5, evidence Both the transverse red line and blue zone line are fully visible across the ice.\n    - noise: wide white-and-orange speech banner 'You saw me coming...'; oversized blue targeting ring under foreground skater; bottom keybinding banner"
+    }
+  ]
+}
