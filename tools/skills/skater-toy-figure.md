@@ -60,7 +60,7 @@ Gameplay owns the pawn and the simulation (`tools/skills/skating-physics.md`); y
    Get `SimFrame` from the sim (a getter on the game mode or the sim subsystem), never count your own ticks.
 5. **Pose function.** `FToyPose ComputePose(const FToyInputs& In, int32 Frame)` as a **static pure function** (testable without a world).
    Then `TickComponent` applies the pose (optionally interpolated with the sim's render alpha). Formulas (degrees, metres, frames):
-   - Lean: `target = clamp(0.6 * speed * turn_rate, -25, 25)`; follow `lean += (target - lean) * (1 - exp(-12/60))` once per sim frame
+   - Lean: `target = clamp(2.5 * speed * turn_rate, -35, 35)` (measured by lane E2 on 2026-11-12: the earlier 0.6 and 25-degree cap gave about 10 degrees, invisible from the arena camera; 2.5 with a 35-degree cap reads clearly; add blade spray on hard turns and stops, a 6 cm stick, a dark helmet band, check pitch 30 degrees); follow `lean += (target - lean) * (1 - exp(-12/60))` once per sim frame
      (keep `lean` in the pose state advanced per sim frame, not per render frame).
    - Crouch and bob: body pitch `-(10 + 6 * min(speed/8, 1))`; `phase += speed / 2.4 / 60` per sim frame; `bob_z = 0.04 * min(speed/8,1) * |sin(pi*phase)|`;
      body yaw sway `4 * sin(2*pi*phase) * min(speed/8,1)`.
