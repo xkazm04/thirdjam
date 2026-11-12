@@ -1,0 +1,1 @@
+NS_board, Strength 1.0, Colour orange: 0.15 s trim-coloured flash plus a dust puff, time dilation 0.1. Throwaway layout with LR_L2_Night, PIE capture 1920x1085, spawned from Python with set_variable_float('Strength') and set_variable_linear_color('Colour').
