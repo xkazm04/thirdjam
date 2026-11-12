@@ -1,4 +1,4 @@
-# Lane B10 report: zone strips and the pickup look (device B)
+﻿# Lane B10 report: zone strips and the pickup look (device B)
 
 - Worktree `C:/Users/kazda/jam/wt/b-vfx`, branch `lane/b-vfx`.
   - **`git merge --ff-only dev-b` failed** ("Not possible to fast-forward": the lane branch has B3b's commits that `dev-b` holds as a different commit).
@@ -16,9 +16,9 @@
 
 | # | Deliverable | Verdict | Evidence |
 |---|---|---|---|
-| 1 | Zone strips `M_Zone` + 5 `MI_Zone_<kind>` | **PASS** | Compiles with no error expressions (327 pixel-shader instructions). In PIE, all 5 kinds × rect 12×8 m and circle r 5 m: crisp edges on both shapes, each kind read by pattern as well as colour, the painted lines show through, and a stand-in puck reads on every zone it sat on (stills `b10-top-*`, `b10-cam10-*`, `b10-cam30-east`). |
+| 1 | Zone strips `M_Zone` + 5 `MI_Zone_<kind>` | **PASS** | Compiles with no error expressions (327 pixel-shader instructions). In PIE, all 5 kinds Ã— rect 12Ã—8 m and circle r 5 m: crisp edges on both shapes, each kind read by pattern as well as colour, the painted lines show through, and a stand-in puck reads on every zone it sat on (stills `b10-top-*`, `b10-cam10-*`, `b10-cam30-east`). |
 | 2 | Pickup look | **PASS** | `SM_Pickup_Base` has socket `PickupTop` at 45 cm. There is a generic `SM_Pickup_Token`, `M_Pickup` with spin and bob by WPO, six kind instances plus `MI_Pickup_Base`, and `NS_pickup_idle`. Read: 10 m clear; about 25-30 m in colour (`b10-pickup-close`, `b10-cam30-*`). The spin is seen as a changed orientation between captures. |
-| 3 | Verify in PIE | **PASS, with caveats** | Real game on `/Game/Maps/Rink` (HokejGameMode, live bot match, 90×45 cut, night rig), with my actors placed in memory only. The camera was a helper `CameraActor` with the follow camera's geometry (6-10 m back, 3.5 m up, pitch -18, FOV 70), not the follow camera itself. Caveats are under "Honest readability". |
+| 3 | Verify in PIE | **PASS, with caveats** | Real game on `/Game/Maps/Rink` (HokejGameMode, live bot match, 90Ã—45 cut, night rig), with my actors placed in memory only. The camera was a helper `CameraActor` with the follow camera's geometry (6-10 m back, 3.5 m up, pitch -18, FOV 70), not the follow camera itself. Caveats are under "Honest readability". |
 | 4 | List for device A | **PASS** | Below. |
 | + | R-0019 add-on: `MI_Toon_Bumper`, `MI_Toon_GoalShield` | **PASS** | Instances of `M_Toon` (master untouched). Still `b10-obstacles`. |
 | + | `NS_blade_spray` | **PASS** | Ends itself (spawned without auto-destroy: inactive 6 s later). Device A's toy skaters were already spawning it live in PIE: six components active at once during the match. Still `b10-blade-spray`. |
@@ -39,8 +39,8 @@
 
 | Instance | `ZoneColour` (from 0012) | `Pattern` | Look and motion |
 |---|---|---|---|
-| `MI_Zone_slow_ice` | 0.35, 0.65, 1.0 | 0 | frosted cross-hatch, thin lines at ±45° every 0.5 m, slow breathing ("rough") |
-| `MI_Zone_fast_ice` | 0.2, 1.0, 0.8 | 1 | 2.6 m streaks along world X in lanes 0.7 m apart, scrolling +X at 1.5 m/s × (0.6..1.4 by Strength) ("slick") |
+| `MI_Zone_slow_ice` | 0.35, 0.65, 1.0 | 0 | frosted cross-hatch, thin lines at Â±45Â° every 0.5 m, slow breathing ("rough") |
+| `MI_Zone_fast_ice` | 0.2, 1.0, 0.8 | 1 | 2.6 m streaks along world X in lanes 0.7 m apart, scrolling +X at 1.5 m/s Ã— (0.6..1.4 by Strength) ("slick") |
 | `MI_Zone_bumper` | 1.0, 0.35, 0.1 | 2 | a 1.2 m band of thick chevrons pointing outward along the edge, ink between them ("bouncy, pushes out") |
 | `MI_Zone_no_shoot` | 1.0, 0.1, 0.2 | 3 | 0.5 m diagonal hazard stripes, red and ink, across the whole zone ("forbidden"); Emissive 3.5 so it stays red, not pink |
 | `MI_Zone_boost_only` | 0.9, 0.8, 0.2 | 4 | a dotted ring 0.9 m inside the edge, 36 cm dots every 0.75 m, with a slow chase |
@@ -54,14 +54,14 @@
 **`SM_Pickup_Base`** (`Props/`) is made with GeometryScript from primitives:
 - a 70 cm plinth 6 cm high, a 62 cm step and a torus ring;
 - the top of the ring is at 12 cm, pivot at the centre of the bottom, no collision;
-- **socket `PickupTop` at Z 45 cm** (the attach height for any pickup mesh: the token's centre sits there, bob ±8 cm);
+- **socket `PickupTop` at Z 45 cm** (the attach height for any pickup mesh: the token's centre sits there, bob Â±8 cm);
 - default material `MI_Pickup_Base`.
 
 **`SM_Pickup_Token`** is the generic upright reel-like disc (46 cm diameter, 8 cm thick, a 16 cm hub), pivot at its centre, bounds extended for the WPO. Default material `MI_Pickup_custom`.
 
 **`M_Pickup`** is Default Lit (so it survives the stencil-1 ramp and gets the ink outline):
-- Emissive = `PickupColour` × `Emissive` × `BodyTint` + ring glow + Fresnel rim;
-- WPO = spin about the component pivot's Z at `Spin`°/s, plus a bob of `BobHeight` cm at `BobSpeed` Hz, with a per-placement phase hashed from the position;
+- Emissive = `PickupColour` Ã— `Emissive` Ã— `BodyTint` + ring glow + Fresnel rim;
+- WPO = spin about the component pivot's Z at `Spin`Â°/s, plus a bob of `BobHeight` cm at `BobSpeed` Hz, with a per-placement phase hashed from the position;
 - the normals are rotated with the spin.
 
 **Parameters:** `PickupColour`, `Emissive` 6, `BodyTint` 1, `Roughness` 0.45, `RimStrength` 0.8, `RimPower` 2.5, `RimColour`, `Spin` 90, `BobHeight` 8, `BobSpeed` 0.5, `RingGlow` 0, `RingEmissive` 14, `RingInner` 20, `RingOuter` 33, `RingMinZ` 6.
@@ -77,7 +77,7 @@
 | `MI_Pickup_Base` | 1.0, 0.85, 0.6 | `Spin` 0, `BobHeight` 0, `BodyTint` 0.12, `Emissive` 1.5, `RingGlow` 1; tint per kind with a MID setting `PickupColour` |
 
 **`NS_pickup_idle`** (`VFX/`, Fountain emitter, CPU, `M_Fx_Sprite`):
-- 10 + 10 × `User.Strength` rising sparks per second from a flat 56 cm disc, 0.7-1.3 m/s, 0.9-1.4 s life, 5-10 cm, about 20 alive;
+- 10 + 10 Ã— `User.Strength` rising sparks per second from a flat 56 cm disc, 0.7-1.3 m/s, 0.9-1.4 s life, 5-10 cm, about 20 alive;
 - user parameters `User.Colour` (default 1, 0.85, 0.6) and `User.Strength` (0.5);
 - **it loops until stopped.** To stop it: `Deactivate()` lets the live sparks finish (verified: inactive after 6 s), or `DestroyComponent()` / `DestroyInstance()` removes it at once. Spawn it with auto-destroy so a deactivated component cleans itself up.
 
@@ -89,11 +89,11 @@
 ## 4. `NS_blade_spray` (what the toy figure expects)
 
 **What the code does:** `ToySkaterVisual.cpp:36` loads `/JamAssets/VFX/NS_blade_spray.NS_blade_spray` by soft path. Line 361 spawns it with `SpawnSystemAtLocation(World, BladeSpray, ComponentLocation + (0, 0, GroundOffsetCm), Facing)`:
-- every 8 frames while |lean| ≥ 25° and the skater is not down;
+- every 8 frames while |lean| â‰¥ 25Â° and the skater is not down;
 - **it sets no user parameters** and keeps no handle, so the asset must end itself and must look right at its defaults.
 
 **What the asset does:**
-- one burst of `16 + 22 × saturate(User.Strength)` sprites (default Strength 0.6, so 29; at most 38);
+- one burst of `16 + 22 Ã— saturate(User.Strength)` sprites (default Strength 0.6, so 29; at most 38);
 - 0.25-0.4 s life, 1.5-3.4 m/s from a point 4 cm under the blade, gravity on;
 - spawned from a flattened ellipsoid stretched along the system's local Y, so it fans **sideways from the skater's facing**, low to the ice;
 - `User.Colour` default 0.8, 0.9, 1.0 (white-blue); `M_Fx_Sprite`, no shadows.
@@ -123,13 +123,13 @@
   - the real follow camera (a helper camera stood in for it);
   - device A's actual zone and pickup rendering;
   - `visible:false`;
-  - the 120×60 and 140×70 cuts;
+  - the 120Ã—60 and 140Ã—70 cuts;
   - frame cost (two editors were up).
 
 ## 6. What device A needs (handoff list)
 
 1. **Zone mesh:**
-   - `/Engine/BasicShapes/Plane` (100×100 cm, UV 0..1) or any flat quad whose **UV 0..1 spans the zone's bounding box**: w × d for a rect, 2r × 2r for a circle;
+   - `/Engine/BasicShapes/Plane` (100Ã—100 cm, UV 0..1) or any flat quad whose **UV 0..1 spans the zone's bounding box**: w Ã— d for a rect, 2r Ã— 2r for a circle;
    - scale `(w/1, d/1, 1)` in metres per 100 cm, i.e. `SetRelativeScale3D(w_m, d_m, 1)`;
    - Z = ice + **0.2 cm**; any yaw is fine;
    - cartridge `x, z` map to world X, Y (as in `RinkActor`).
@@ -201,7 +201,7 @@ Total: **857,661 bytes**
 
 ## 10. Commits
 
-See the end of this file (filled in after the commit).
+`5640ac8`: every asset above, the 10 stills and this report. This line is added in a follow-up commit.
 
 ## 11. Lead must decide
 
