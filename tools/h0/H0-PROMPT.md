@@ -27,6 +27,11 @@ in this order, before anything else: `docs/PREP-CHECKLIST.md` section D, `docs/P
   `tools/run/smoke.ps1` fails twice; packaging fails twice for the same reason; free space is under 40 GB; or you have reached M1's code complete and need the
   operator's eyes for a human playtest. Otherwise keep going until the operator messages you.
 
+## Decisions already made (do not re-open)
+Team name **Hokej**. Look: **P2 painted cel, night arena (L2-b indoor, spotlights on), crowdless**; day and neon are later extensions; P3/P4 are later stages (HOCKEY.md section 6).
+Third-person camera, 120 x 60 m rink, toy-figure skaters by code (T-A). Read `docs/experiments/*.md` and `tools/skills/*.md` first: the night of 2026-11-11/12 measured the
+painted-cel look, the camera at 120 m, animation sources and Meshy; their recipes and numbers are the briefs' starting points, not suggestions.
+
 ## Hour 0 to 1 (do in this order)
 1. `tools/run/smoke.ps1` must pass (build, editor, MCP, spawn, read back). If it fails, fix the environment issue it names, retry once, else BLOCKED.
 2. `docs/THEME.md` (above). Then `GAME.md` at the repo root: the one page from PLAN.md section 6 (pitch, theme skin, the one twist chosen by the rubric,

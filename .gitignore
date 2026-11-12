@@ -24,3 +24,8 @@ Game/Packaged/
 .tl/
 *.local.json
 .mcp.local.json
+
+# Secrets: never committed
+.env
+.env.*
+*.key

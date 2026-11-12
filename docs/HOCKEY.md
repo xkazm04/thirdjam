@@ -89,6 +89,12 @@ Both device-B tracks are experiments by design: the game ships on T-A unless a t
 
 ## 6. Art ladder on one geometry
 
+**Decision 2026-11-12 01:00 (operator):** the look to chase is **P2 painted cel at tier T2, night arena** (`prep-reference/STYLE-PATHS.md`), on the baseline ladder's
+**L2 "Indoor, spotlights on"** arena (`prep-reference/HOCKEY-LADDER.md`, L2-b): house lights down, spot cones, emissive trim in team colours, scuffed ice, dark ceiling,
+**no crowd**. The ladder starts at night; day (L1) and neon (L3) variants are extensions if time allows. **P3 clay miniature and P4 stylized broadcast (both at T2) are later
+stages or levels**, taken only on the success of P2 and the progress of the parallel lanes. The table below keeps the three lighting tiers as the mechanism; the shipped order is L2 first.
+Team name: **Hokej**.
+
 | Tier | Game tier | Lighting rig | Post process | Materials (same assets, parameters change) | Costly part |
 |---|---|---|---|---|---|
 | L1 day | M1 | sun + sky light, Lumen GI, soft shadows | mild bloom, warm grade | flat tint, rim fresnel, plastic gloss | the sky and stands dressing |
