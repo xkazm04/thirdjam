@@ -57,7 +57,7 @@ which is in a module that is not available on the platform"). It has to be disab
 
 **Combined, applied (package c1 at 12:46, today's tree incl. the morning's content and code): zip 249.8 MB, staged 395.3 MB**, and the build ran 15 s
 (`run-packaged.ps1`). Sum of the single deltas is -134.8 MB; the content and code added since 12:04 account for the rest.
-The re-baseline on the shared tree is in `status/A.md` `## H7 size`.
+**Re-baseline on the shared tree, 13:00 link window: zip 247.5 MB, staged 393 MB** (`Game/Packaged/Hokej_Hokej_H7.zip`, sha256 `f1fcaf72...5e48`, ran 10.4 s); `status/A.md` `## H7 size`.
 
 ### 1.1 Exact config lines (applied)
 
@@ -128,7 +128,7 @@ Reading: compressed audio is small: 3 minutes of music at Bink q40 is about 2.4 
 | Nanite on | 5.10 |
 
 Nanite data is smaller than the classic vertex buffers for a dense mesh, so Nanite is not a size cost here. LOD and distance-field-scale variants did not take
-effect in the commandlet (`EditorStaticMeshLibrary` reported 0 triangles before the build): not measured. `KeepMobileMinLODSettingOnDesktop`: only matters with MinLOD set; not measured.
+effect in the commandlet (two attempts: `EditorStaticMeshLibrary` reports LOD count -1 and 0 vertices for an Interchange-imported OBJ under `-nullrhi`, `set_lods` returns -1): not measured. `KeepMobileMinLODSettingOnDesktop`: only matters with MinLOD set; not measured.
 Animation: ACL is the 5.9 default codec; no skeletal content to measure (estimate: a 2 s 60-bone clip is under 0.1 MB).
 
 ## 3. Emergency ladder (if the zip is still over budget at H72)
@@ -138,7 +138,7 @@ Current headroom after the applied rows: about 750 MB under the limit. In this o
 1. Drop SM5/D3D11 shaders (`-D3D11TargetedShaderFormats=PCD3D_SM5` only, remove the `+` line): **-7.0 MB** now, grows with every material. Risk: D3D11 fallback gone.
 2. Delete `Engine/Extras/Redist/en-us/vc_redist.arm64.exe` from the stage before zipping: **-11.0 MB** (estimate from the file).
 3. Global texture RDO: `[/Script/Engine.TextureEncodingProjectSettings] bFinalUsesRDO=True`, `FinalRDOLambda=30`: on painted textures -58 to -71 % (lab), but on today's content **-0.1 MB** (measured, package c2: the only big textures are uncompressed UI cards, which RDO does not touch). Becomes worth it once device B's BC textures arrive.
-4. UI cards from uncompressed UserInterface2D to BC7 (lane A8): 10 x 6.0 MB raw -> 1.5 MB raw; estimated **-10 to -14 MB** of the 20.6 MB stored (not measured: the lab copy did not take the setting).
+4. UI cards from uncompressed UserInterface2D to BC7 (lane A8): 10 x 6.0 MB raw -> 1.5 MB raw; estimated **-10 to -14 MB** of the 19.4 MB stored. Not measured: three lab attempts (duplicates of `T_UI_TitleSlate` set to BC7 / BC1 / BC7+RDO, UI and World LOD groups, saved through EditorAssetLibrary) all cooked at the same 6.0 MB raw, so the commandlet route does not change this asset's cooked format; A8 should flip one card in the editor and read the `textures` line of the next `report.mjs` table.
 5. Development-only content out of the cook (test maps, debug widgets, `Designer` cache if it grows): check `tools/size/report.mjs` `sources_mb` for `game:*` folders.
 6. Music: Bink quality 40, under 3 minutes unique: about **2.4 MB** total, so only if someone shipped PCM (PCM is 8x).
 7. Textures 1K for props (-75 % per texture), then 1K for everything but hero assets.

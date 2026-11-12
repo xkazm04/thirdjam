@@ -70,3 +70,11 @@
 - M1 status: bots pass, scripted human scores within 2 minutes, L2 look merged, Shipping package under 700 MB. **Open for M1: the operator's own playtest** (a fresh human scoring within 2 minutes) and B's answer on the L2 GPU hang (handoff 0003).
 - running: A13 size playbook; device B lanes B2/B3/B5 and handoffs 0001-0005.
 - next: 13:00 window package (A13 re-baseline to Game/Packaged/Hokej_Hokej_H7.zip for the operator); 14:00 merge window with a full gate.
+
+## H7 size
+- lane: A13 (size playbook, `docs/experiments/SIZE.md`). Re-baseline: Shipping package of the shared tree in the 13:00 link window, `tools/run/package.ps1 -Config Shipping -Zip -Name Hokej_Hokej_H7`.
+- result: PASS. **zip 247.5 MB** (259,494,422 bytes, sha256 `f1fcaf7289f9b6cf2ac6da15b0cf0bef049e58505baa7650f7d6141316655e48`), **staged 393 MB**; package 82 s; run-packaged stayed up 10.4 s. Copied to `Game/Packaged/Hokej_Hokej_H7.zip` for the operator.
+- against the 12:04 package of record (376.2 / 548 MB): -128.7 MB zipped, -155 MB staged, with the morning's content and code added in between.
+- applied (12:44): NNEDenoiser and 38 other unused engine plugins disabled in `Game/ThirdJam.uproject`; pak compression Oodle Leviathan level 7, and five `+DirectoriesToNeverCook` engine folders in `DefaultGame.ini`. Measured alone: -113.3, -4.2, -16.3 and -1.0 MB zipped.
+- breakdown: pak 74.1 MB shader code, 19.6 MB textures (19.4 MB of it uncompressed UI cards), 12.8 MB engine content; exe 164.8 MB, DLSS dll 56.2, VC++ redistributable 28.9. History: `tools/size/history/20261112-130142-Hokej_Hokej_H7.json` (every package now writes one).
+- next: asset-side rules handed to B (`handoff/A-to-B-0004.md`). Emergency ladder in SIZE.md section 3 (SM6 only -7.0, arm64 redistributable -11.0, UI cards to BC7 about -10 to -14, ...).
