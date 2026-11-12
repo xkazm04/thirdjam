@@ -41,6 +41,11 @@ public:
 	// Opacity 1 while held, then linear to 0 over the fade; 0 when never shown. Pure (tests call it).
 	static float OpacityFor(int64 ShownFrame, int64 Now);
 
+	// Lane A42 (y-slots): a bubble whose box [Pos.Y - Height, Pos.Y] crosses the band [Top, Bottom] moves above it (when MinY allows) or
+	// below it; Pos is the bubble's bottom-centre. Pure (tests call it). The bark's second copy on the strip is gone: the strip at the
+	// bottom centre is the commentator's line, drawn by UJamHudWidget.
+	static FVector2D PushOutOfBand(FVector2D Pos, float Height, float Top, float Bottom, float MinY);
+
 	int32 GetVisibleBubbleCount() const;
 	FString GetStripText() const;
 
@@ -58,4 +63,7 @@ private:
 	UPROPERTY(Transient) TArray<FJamBarkBubble> Bubbles;
 	int64 Now = 0;
 	int64 StripFrame = -1000000;
+	// Lane A42: the overlay whose MATCH banner the bubbles keep clear of.
+	TWeakObjectPtr<class UJamDirectorsCallHudWidget> Overlay;
+	int32 OverlaySearchTick = 0;
 };

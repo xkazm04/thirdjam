@@ -254,6 +254,44 @@ bool FJamHudText::RunTest(const FString&)
 	return true;
 }
 
+// Lane A42 (HUD pass 2): the words on the ice are hockey (R-0021 point 3) and the frame rules behind them.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamHudPass2, "Jam.Hud.YoursFaceoffMarkers", EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+bool FJamHudPass2::RunTest(const FString&)
+{
+	// The faceoff ring: HOLD while the countdown runs, DROP at the drop, nothing otherwise; WON / LOST after the draw.
+	TestEqual(TEXT("hold while counting"), UJamHudWidget::FaceoffCue(90, false), FString(TEXT("HOLD")));
+	TestEqual(TEXT("drop at zero"), UJamHudWidget::FaceoffCue(0, true), FString(TEXT("DROP")));
+	TestTrue(TEXT("no cue in play"), UJamHudWidget::FaceoffCue(0, false).IsEmpty());
+	TestEqual(TEXT("won"), UJamHudWidget::DrawResultText(true), FString(TEXT("WON")));
+	TestEqual(TEXT("lost"), UJamHudWidget::DrawResultText(false), FString(TEXT("LOST")));
+	TestEqual(TEXT("result frames"), UJamHudWidget::DrawResultFrames, 40);
+	TestEqual(TEXT("hint wording"), UJamHudWidget::FaceoffHintText(), FString(TEXT("press shoot at the drop, not before")));
+	TestEqual(TEXT("hint count"), UJamHudWidget::FaceoffHintCount, 3);
+	// The YOU tag: the first 5 s, then 2 s after every drop.
+	TestTrue(TEXT("you at the start"), UJamHudWidget::ShowYouTag(299, -1));
+	TestFalse(TEXT("gone after 5 s"), UJamHudWidget::ShowYouTag(300, -1));
+	TestTrue(TEXT("you after a drop"), UJamHudWidget::ShowYouTag(1000 + 119, 1000));
+	TestFalse(TEXT("gone 2 s after the drop"), UJamHudWidget::ShowYouTag(1000 + 120, 1000));
+	// The ring under the human fades from 20 m to the chevron at 24 m.
+	TestEqual(TEXT("ring full at 10 m"), UJamHudWidget::RingAlphaAt(10.f), 1.f);
+	TestEqual(TEXT("ring half at 22 m"), UJamHudWidget::RingAlphaAt(22.f), 0.5f);
+	TestEqual(TEXT("ring gone at 24 m"), UJamHudWidget::RingAlphaAt(24.f), 0.f);
+	// Markers stay 48 px inside the screen edge (the own-net marker sat flush on the right edge in the eyes pass).
+	const FVector2D Right = UJamHudWidget::ClampMarker(FVector2D(1900, 500), 1920, 1080, 40, 150, 30);
+	TestEqual(TEXT("right edge"), static_cast<float>(Right.X), 1920.f - 48.f - 40.f);
+	const FVector2D Left = UJamHudWidget::ClampMarker(FVector2D(-200, 500), 1920, 1080, 40, 150, 30);
+	TestEqual(TEXT("left edge"), static_cast<float>(Left.X), 48.f + 40.f);
+	const FVector2D Low = UJamHudWidget::ClampMarker(FVector2D(960, 1200), 1920, 1080, 40, 150, 30);
+	TestEqual(TEXT("bottom edge"), static_cast<float>(Low.Y), 1080.f - 48.f - 30.f);
+	TestEqual(TEXT("inside untouched"), UJamHudWidget::ClampMarker(FVector2D(960, 500), 1920, 1080, 40, 150, 30), FVector2D(960, 500));
+	// The commentator's strip: full for the line plus 90 frames, gone 30 frames later.
+	TestEqual(TEXT("strip full"), UJamHudWidget::CommentaryOpacityFor(100, 120, 100 + 120 + 90), 1.f);
+	TestEqual(TEXT("strip half"), UJamHudWidget::CommentaryOpacityFor(100, 120, 100 + 120 + 90 + 15), 0.5f);
+	TestEqual(TEXT("strip gone"), UJamHudWidget::CommentaryOpacityFor(100, 120, 100 + 120 + 90 + 30), 0.f);
+	TestEqual(TEXT("strip never shown"), UJamHudWidget::CommentaryOpacityFor(-1000000, 0, 50), 0.f);
+	return true;
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamCameraInsideBoards, "Jam.Camera.InsideBoards", EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 bool FJamCameraInsideBoards::RunTest(const FString&)
 {

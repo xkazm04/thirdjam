@@ -7,11 +7,13 @@
 #include "HUDFeed.h"
 #include "RadarWidget.h"
 #include "JamEffectTypes.h"
+#include "JamEventBus.h"
 #include "HUDWidget.generated.h"
 
 class UCanvasPanel;
 class UTextBlock;
 class UBorder;
+class UImage;
 
 // Where the far-net marker is this frame (Slate units, i.e. DPI-scaled viewport coordinates).
 USTRUCT(BlueprintType)
@@ -90,9 +92,69 @@ public:
 	// Lane A14's effect feed calls it (or jam.ui.effects previews it).
 	void SetEffectSlots(const TArray<TPair<FString, FString>>& Slots);
 
+	// ---- Lane A42 (HUD pass 2, from the eyes pass of A27): which skater is yours, how a faceoff is won, the markers inside the edge.
+	// The "YOU" tag over the human's head: the first 5 s of a match and 2 s after every drop (LastDropFrame -1 = no drop yet).
+	static constexpr int64 YouTagStartFrames = 300;
+	static constexpr int64 YouTagAfterDropFrames = 120;
+	static bool ShowYouTag(int64 SimFrame, int64 LastDropFrame)
+	{
+		return SimFrame < YouTagStartFrames || (LastDropFrame >= 0 && SimFrame >= LastDropFrame && SimFrame - LastDropFrame < YouTagAfterDropFrames);
+	}
+	// The ring under the human: 1.1 m in team colour; from RingFadeStartM it fades out and the chevron over the head fades in, gone at RingFadeEndM.
+	static constexpr float YouRingRadiusM = 1.1f;
+	static constexpr float CarrierRingRadiusM = 0.8f;
+	static constexpr float RingFadeStartM = 20.f;
+	static constexpr float RingFadeEndM = 24.f;
+	static float RingAlphaAt(float CameraDistanceM)
+	{
+		return 1.f - FMath::Clamp((CameraDistanceM - RingFadeStartM) / (RingFadeEndM - RingFadeStartM), 0.f, 1.f);
+	}
+	// The word in the ring during a faceoff (R-0013 point 2: the early mover loses, the first clean press wins): HOLD while it counts, DROP at zero.
+	static FString FaceoffCue(int32 CountdownFrames, bool bDropped) { return CountdownFrames > 0 ? TEXT("HOLD") : (bDropped ? TEXT("DROP") : TEXT("")); }
+	// The one-line hint under the ring for the first FaceoffHintCount faceoffs of a session.
+	static constexpr int32 FaceoffHintCount = 3;
+	static FString FaceoffHintText() { return TEXT("press shoot at the drop, not before"); }
+	// After the draw: WON or LOST in the human's team colour for DrawResultFrames.
+	static constexpr int32 DrawResultFrames = 40;
+	static FString DrawResultText(bool bWon) { return bWon ? TEXT("WON") : TEXT("LOST"); }
+	// Preview of the draw result for the proof shots (jam.ui.draw won|lost [frames]); counts sim frames.
+	void PreviewDraw(bool bWon, int32 Frames) { bLastDrawWon = bWon; DrawPreviewFrames = FMath::Max(1, Frames); }
+	// Markers stay MarkerEdgePx inside the screen edge (HalfW: half the marker's drawn width, Top: under the scoreboard, Bottom: above the strips).
+	static constexpr float MarkerEdgePx = 48.f;
+	static FVector2D ClampMarker(FVector2D Sp, float VW, float VH, float HalfW, float Top, float BottomPx)
+	{
+		return FVector2D(FMath::Clamp(Sp.X, MarkerEdgePx + HalfW, VW - MarkerEdgePx - HalfW), FMath::Clamp(Sp.Y, Top, VH - MarkerEdgePx - BottomPx));
+	}
+	// The commentator's line (lane A32's JAMVO text) on the bottom-centre strip: two lines at most, held for the line's duration plus
+	// CommentaryHoldFrames, then faded over CommentaryFadeFrames. The barks keep their bubbles (one copy of each line on screen).
+	static constexpr int32 CommentaryHoldFrames = 90;
+	static constexpr int32 CommentaryFadeFrames = 30;
+	static float CommentaryOpacityFor(int64 ShownFrame, int32 DurationFrames, int64 Now)
+	{
+		const int64 Age = Now - ShownFrame;
+		if (Age < 0 || ShownFrame <= -1000000) return 0.f;
+		const int64 Hold = static_cast<int64>(FMath::Max(0, DurationFrames)) + CommentaryHoldFrames;
+		if (Age <= Hold) return 1.f;
+		const int64 Fade = Age - Hold;
+		return Fade >= CommentaryFadeFrames ? 0.f : 1.f - static_cast<float>(Fade) / static_cast<float>(CommentaryFadeFrames);
+	}
+	UFUNCTION(BlueprintPure, Category = "Jam|Hud")
+	FString GetCommentaryText() const;
+	// What the ring says this frame (HOLD / DROP / WON / LOST / empty); tests and the proof read it.
+	UFUNCTION(BlueprintPure, Category = "Jam|Hud")
+	FString GetFaceoffCue() const;
+	UFUNCTION(BlueprintPure, Category = "Jam|Hud")
+	bool IsYouTagVisible() const;
+	// Faceoffs seen this session (process), for the hint.
+	static int32 GetFaceoffsThisSession() { return FaceoffsThisSession; }
+	// The bus event handler: faceoff drop / won / lost (presentation only: nothing is written back).
+	UFUNCTION() void HandleJamEvent(FName Event, const FJamEventPayload& Payload);
+
 protected:
 	virtual TSharedRef<SWidget> RebuildWidget() override;
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+	virtual void NativeConstruct() override;
+	virtual void NativeDestruct() override;
 
 private:
 	// Lane A18 preview counter (declared by lane A16 to keep the tree compiling, R-0003 point 5).
@@ -131,4 +193,32 @@ private:
 	int32 LastFaceoffFrames = 0;
 	int64 DropUntil = -1;
 	bool bEffectsFromFeed = false;
+
+	// Lane A42: the yours / carrier rings, the YOU tag, the faceoff words, the marker arrows.
+	void UpdateYours(const FJamPresentationFrame& Frame);
+	// Projects a rink point (metres) with a radius around it to a screen ellipse; false when behind the camera.
+	bool ProjectGroundRing(const FVector2D& PosM, float RadiusM, FVector2D& OutCentre, FVector2D& OutSize, float& OutCameraDistM) const;
+	void PlaceMarkerArrow(UWidget* Arrow, const FVector2D& Raw, const FVector2D& Clamped, bool bBehind, float VW);
+	static int32 FaceoffsThisSession;
+	UPROPERTY(Transient) TObjectPtr<UImage> YouRing;
+	UPROPERTY(Transient) TObjectPtr<UWidget> YouChevron;
+	UPROPERTY(Transient) TObjectPtr<UBorder> YouTag;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> YouTagText;
+	UPROPERTY(Transient) TObjectPtr<UImage> CarrierRing;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> FaceoffWord;
+	UPROPERTY(Transient) TObjectPtr<UBorder> FaceoffHintPlate;
+	UPROPERTY(Transient) TObjectPtr<UWidget> NetArrow;
+	UPROPERTY(Transient) TObjectPtr<UWidget> OwnArrow;
+	UPROPERTY(Transient) TObjectPtr<UBorder> CommentaryStrip;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> CommentaryText;
+	UPROPERTY(Transient) TObjectPtr<class UJamEventBus> Bus;
+	void UpdateCommentary(const FJamPresentationFrame& Frame);
+	int64 CommentaryFrame = -1000000;
+	int32 CommentaryDuration = 0;
+	int64 LastSimFrame = -1;
+	int64 LastDropFrame = -1;
+	int64 DrawResultUntil = -1;
+	int32 DrawPreviewFrames = 0;
+	bool bLastDrawWon = false;
+	bool bCountdownSeen = false;
 };

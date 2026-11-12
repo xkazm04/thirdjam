@@ -152,6 +152,16 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Jam|DirectorsCall") FString GetAnnouncementText() const;
 	bool IsTakeCardVisible() const;
 
+	// Lane A42 (y-slots): the band of Slate y the MATCH banner covers at a viewport height VH (anchor 0.4, the 640 x 360 card, the FACEOFF
+	// line under it), so the bark bubbles keep out of it. Pure (tests call it); GetBannerBandPx answers only while the card is up.
+	static void BannerBandPx(float VH, float& OutTop, float& OutBottom) { OutTop = VH * 0.4f - 190.f; OutBottom = VH * 0.4f + 236.f; }
+	bool GetBannerBandPx(float VH, float& OutTop, float& OutBottom) const
+	{
+		if (!IsTakeCardVisible()) return false;
+		BannerBandPx(VH, OutTop, OutBottom);
+		return true;
+	}
+
 protected:
 	virtual TSharedRef<SWidget> RebuildWidget() override;
 

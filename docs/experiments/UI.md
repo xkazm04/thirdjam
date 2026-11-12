@@ -92,3 +92,54 @@ Director's Cut lives in the menu and the Designer; on the ice the words are hock
 
 Unchanged on purpose: the `period` event kind `take_n` (data contract C-0003), the Designer's "Director's Call: skater speed up (11 -> 12)" (already hockey), the menu, the season screen and the Designer copy (film framing stays), lane A12's bark lines (character speech, A12's data).
 Tests updated with their owners' consent: CameraTests (FormatTake, CardFor), MenuTests (MATCH 1 card). `Progression.cpp` gained `#include "UObject/Package.h"`: once edited it leaves the unity blob and `GetTransientPackage()` needs the full type.
+
+## 7. HUD pass 2 (lane A42, from H12.1): which skater is yours, how a faceoff is won, one bark at a time, the own-net marker
+
+Lane A27's eyes pass (EYES.md) read all five of A18's HUD stills the same way: nothing says which skater is yours, nothing says how the faceoff is won, the bark is drawn twice
+(bubble and strip), the own-net marker sits on the screen edge. The bake-off strips (FIGURE-BAKEOFF.md) added the bubble over the `MATCH 1` banner. All presentation:
+`HUDWidget.*`, `BarkWidget.*`, one band helper on the overlay (`DirectorsCallWidget.h`); the feed, the sim and the state hash are untouched.
+
+| Gap | Before | After |
+|---|---|---|
+| Yours | the human's figure is one blue skater among three | a ring under the human's feet from the kit's chalk ring (T_UI_Ring) tinted the team colour, 1.1 m on the ice projected to a screen ellipse (four points of the circle give the box); from 20 m it fades and a team-colour chevron over the helmet fades in (gone at 24 m); a YOU tag (Label 22 Black, paper on a team plate, ink edge) over the helmet (1.9 m) the first 300 frames of a match and 120 frames after every drop |
+| Carrier | the puck glow only | a thin paper ring (0.8 m) under the carrier when it is not you (`UJamSim::CarrierIndex`, read only; loose puck = no ring) |
+| Faceoff | the ring counts 3, 2, 1 then DROP | the digit (72 Black) over **HOLD** (Label, yellow, outlined) while it counts; **DROP** at zero as before; then **WON** or **LOST** in the human's team colour for 40 frames (the bus's `faceoff` `won` event: Who's team against the human's); a one-line pill under the ring the first three faceoffs of a session: "press shoot at the drop, not before" (R-0013 point 2 in the player's words: the early mover loses, the first clean press wins) |
+| Barks | the bubble over the speaker and the same text on a bottom pill | the bubble only; the bottom-centre strip is the commentator's line (lane A32's JAMVO text from `UJamCommentarySystem::GetLastLine`, Body 18 Bold, wrap at 880 or the width minus the radar and ready pill, two lines at most), held for the line's duration plus 90 frames, faded over 30; it moves up (y -150) while the controls strip shows. The strip lives on the HUD widget (always on screen), not the bark widget (created at the first bark) |
+| Bubble over the banner | the bubble's y clamped to [170, VH-60] whatever was there | the overlay tells the band the MATCH banner covers (`BannerBandPx`: 0.4 VH -190 to +236); a bubble crossing it goes above the band when it fits under the scoreboard, else below (`PushOutOfBand`); the whole bubble stays on screen (clamped by its half width, it was cut at the edge before) |
+| Markers | own-net caption flush on the right edge (clamp 60 px by the diamond's centre) | both markers clamped 48 px inside every edge plus their half width (`ClampMarker`), bottom room 56 / 64 px so the captions clear the ready pill and the strips; a chevron arrow (two bars, ink edge) appears beside a clamped or behind-us marker pointing at the edge the net lies beyond |
+
+Previews for the proof: `jam.ui.faceoff <frames>` now counts sim frames (a time-dilation freeze holds it), `jam.ui.draw won|lost [frames]` shows the result. Tests:
+`Jam.Hud.YoursFaceoffMarkers` (cue words, result words, tag windows, ring fade, clamps, strip opacity) in CameraTests, the band and push assertions in `Jam.Menu.DirectorsCallOncePerPeriod`.
+
+Not changed (seen in the stills, not in this brief): the bubble's top clamp (170) overlaps the far-net caption's top clamp (150) when the net is dead ahead; the `PERIOD n - FACEOFF`
+line of the match card touches the ring's top at 0.66 (A18's slots); the yours ring is the countdown ring's art with its tick marks, a reticle rather than a plain ring (a plain
+ring texture is a one-line swap in `MakeGroundRing`).
+
+### Stills (`docs/experiments/img/hud2/`, floating PIE window 1920x1080 and 1280x720 through `StartPIE playMode: PlayMode_InEditorFloating`, `CaptureGameViewport`)
+
+| Still | Shows |
+|---|---|
+| `a42-match-start-{1080p,720p}.jpg` | the YOU tag and the ring under 7, the carrier's glow, the commentary strip above the controls strip, own-net marker left with the arrow |
+| `a42-banner-countdown-*.jpg` | a restart at a tenth of the speed: the MATCH 1 card, the ring with 2 over HOLD, the hint under it |
+| `a42-faceoff-countdown-*.jpg` | the previewed countdown (4, HOLD, hint) at the boards, both markers on the left edge with arrows |
+| `a42-draw-won-*.jpg`, `a42-draw-lost-*.jpg` | WON / LOST in the ring in blue (the human's team) |
+| `a42-bark-and-commentary-*.jpg` | one bark in its bubble (whole bubble on screen) and the commentator's line on the strip, nothing twice |
+| `a42-own-net-a-*.jpg`, `a42-own-net-b-*.jpg` | the own-net marker 48 px inside the right edge and the bottom-left corner, caption clear of the ready pill |
+| `a42-banner-bubble-*.jpg` | the banner up; the bark asked for during it was refused by the bark cooldowns, so the y-slot is proven by the test, not the still |
+
+### Eyes verdicts (`tools/eyes` `hud` preset, gemini-3.8-flash, no thinking, six stills per call; `docs/experiments/eyes/a42-hud-{1080p,720p}.{json,md}`, $0.035 each)
+
+Run on the PNG captures (converted to JPEG q88 afterwards to keep the folder at a third of the size). Legibility 1080p: A 4, B 3, C 3, D 3, E 3, F 2; 720p: A 4, B 3, C 3, D 4, E 4, F 3.
+Smallest text read 12-13 px at 1080p, 10 px at 720p (the own-net caption; A18 measured 9 px for the same caption).
+
+What it now sees that A27's pass listed as missing: the `YOU` tag ("Player indicator, above blue skater #7, legible", both resolutions), `HOLD` under the digit and
+`LOST` in the ring (transcribed on every countdown and draw still), one copy of each line (the bark in its bubble, the commentary on the "subtitle bar", never the same
+text twice), the own-net marker inside the edge ("mid-left edge", "mid-right edge"; the 1080p F still reads it as colliding with the far-net marker's `88 m`, which is
+true: both nets lie to the right there and the two markers stack 40 px apart; the 720p F still reads the two as one line "own 18 m 88 m").
+
+Where it is wrong or not ours: "Far net marker ... own 52 m" (it swaps the names: the caption says own); "the reticle overlaps the skater's skates / torso" (the ring is
+under the human's feet by design, and the countdown ring sits at 0.66 of the height where the camera puts the human); "Clapperboard banner completely occludes center
+ice" (A8's match card, 150 frames); "missing: a match timer" (first-to-3 cuts have none); "missing: puck highlight" (the puck glow is in the frame); "missing: what to
+hold for the faceoff" on stills without the hint (the hint shows the first three faceoffs of a session; still C is the fourth of that PIE session and D/E are after the draw).
+Fair hits to keep: the own-net caption is "legible: false" four times at 1080p (muted #9AA0A8 at 14 px over ice: A18's secondary-caption choice; a paper caption would
+fix it in one line), and the commentary line in F sits behind the ring when the human stands at the bottom of the frame (the strip is at the bottom centre by the brief).
