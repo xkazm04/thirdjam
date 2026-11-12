@@ -7,7 +7,7 @@
   - I restarted the editor and loaded all 21 assets back from disk. All of them load, the Niagara systems compile `UpToDate` with no errors, and no package was dirty. That session closed with `ExitEditor` (log: `LogExit: Exiting.`, no fatal line).
 - Built: 9 new Niagara systems and 11 new MetaSounds. `MS_faceoff` was rebuilt with a `Variant` input.
 - Verified in PIE on `/Game/Maps/Rink` with the cartridge-loaded night rig (`LR_L2_Night` streamed in by the game, `HokejGameMode`, a live match).
-- Commits: `2bc21b4` (the first five events), and the final commit that carries this report.
+- Commits: `2bc21b4` (the first five events) and `a8d3e4c` (the rest and this report).
 
 ## 1. Gap list (C-0003 v1 + additions, C-0005 §6, the header `JamEventBus.h`, and the R-0013 names from the brief)
 
@@ -159,7 +159,7 @@ New, total **6,534,114 bytes**:
 ## 6. Commits
 
 - `2bc21b4`: poke, lift, foul, faceoff (NS new, MS + Variant), pass, and their five stills.
-- The final commit (this report): effect_start/end, zone_enter/exit, announce, bark, signal, and the two stills.
+- `a8d3e4c` (plus a one-line follow-up that records the hashes): effect_start/end, zone_enter/exit, announce, bark, signal, and the two stills.
 
 ## 7. Unfinished or unverified
 
