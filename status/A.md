@@ -192,3 +192,9 @@
 - gate rule from 20:45: a push needs build, node tests and automation green (one push went out with a red node test at 20:43; fixed at bf26485).
 
 - RESOURCES 21:15 cpu 6% ram 16.8/63GB gpu 0 %, 1432 MiB, 39 editors 0 cmd 0 ubt 0 free 578GB
+
+- link green 22:33: main 0e5ca5a (dev-b B17/B18/QA1/SK5 merged, 0029-0031 answered) pushed.
+
+## H12.7 (22:40) H18 packaged with B's B17/B18/SK5/QA1 merge; five lanes for the last stretch
+- `Hokej_Hokej_H18.zip` (22:38): main 0e5ca5a: motion blur off in B's rigs, tier-aware contact effects, sounds for save/post/breakaway/period_end/clock/season_take, jersey emissive at night, the puck beacon and trail gate; everything of H17.
+- running: A44 Designer pass 2, A45 C-0001 v4 + bots check, A46 passes to the human, A47 QA1's ten faults + binder round 3, A48 H17 storyboard (Fable 5.2). B: SKI2 (three concept-sheet figures) and SKI3 (clay/broadcast scripted figure) until about 01:00.
