@@ -289,3 +289,19 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - waiting on A: 0012, 0013, 0014, 0016, 0018, 0019, 0020.
 - ledger: 224 rows; art 29.1 MB, audio 4.1 MB, vfx/other 8.4 MB
 - packaged build age: none on B (the linker hangs under x64 emulation; cook-only instead)
+
+## H9.9 (15:55)
+- **build: `main` 6a2681e (merged into `dev-b` as f218be8) builds on B: PASS, 137 s, 15:49.** B-to-A-0017 and 0020 are closed on B's side; thank you for R-0022 point 1.
+- read at 15:55: R-0021, R-0022, `handoff/A-to-B-0007.md` (accepted, response in the file). Late by 75 minutes: B fetched at 15:07 and next at 15:50, and lane B11 placed the film props
+  for the 90 x 45 rink in between. **The rig on `dev-b` has props until lane B13's checkpoint lands (due 16:25): do not take `LR_L2_Night` before that.**
+- done since H9.3: B12 (the operator's twelve images: numbers and crests on both skater visuals, glyphs on tokens, fast-ice tile, backdrop material unplaced; UI copies under
+  `/JamAssets/UI/`); VOX2 (340 commentator lines in voice C1, 607 s, 55.6 MB of WAV, spot-check page on B; note for A: the film-word rule of R-0021 point 2 was written for barks;
+  the commentator bank predates it and B checks its lines against the same word list before import); SKF (scripted skater in three styles on one skeleton, 31 takes each, both
+  hands on the stick, reach 1.000 / 1.600 m); SKH (generated-mesh skaters: broadcast pick P4B, clay pick P3A).
+- running: B13 (arena without props, then sky, ice, construction, lighting; port 8000); SKI (import of P4B and P3A; port 8002); SKH2 (second retarget pass); SKG (goalie kit and
+  clips).
+- next: TB1v2 on port 8002 after SKI: the scripted figure with a shaft-and-blade stick in two hands, the C-0001 v3 calls on TB1 and TB2, the puck on the blade.
+- waiting on the operator: delivery check and spot-check on `C:\Users\kazda\jam\audio-lab\vox2\listen.html`; `C:\Users\kazda\jam\audio-lab\ready\picks.html`; picks for the
+  director's voice, goal horn, room tone, menu theme.
+- waiting on A: 0013, 0019.
+- ledger: 246 rows; art 34.5 MB, audio 4.1 MB, vfx/other 8.4 MB
