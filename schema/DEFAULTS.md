@@ -10,6 +10,7 @@ of them out explicitly, but a Designer or hand-written cartridge may leave them 
 | `rink.board_restitution` | 0.4 | arcade bounce, not measured, A3 sweep may retune |
 | `rink.ice_friction` | 0.015 | glide friction coefficient (0.015 x 9.8 = 0.147 m/s^2) |
 | `rink.goal_width_m` | 4 | |
+| `rink.goal_height_m` | 0.61 | R-0033 point 2 (lane A50): the half-height net of a game without goalies; a real net is 1.22. Net frame, netting, goal triggers and the sim's lifted-puck goal test read it |
 | `rink.obstacles` | none | |
 | `skater.accel` | 12 | |
 | `skater.turn_rate` | 5 | |

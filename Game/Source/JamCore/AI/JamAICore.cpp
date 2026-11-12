@@ -259,6 +259,13 @@ namespace JamAI
 					Charging[i] = 0;   // a hold in progress is released here (the sim fires whatever charge it has)
 				}
 			}
+			// R-0033 point 2 (lane A50): any skater standing in its own crease takes the stance, not only the back on its LastManGoalie rule. The
+			// steering above is untouched: this is the visual intent only (the game mode sends SetGoalieStance on a change).
+			if (!bGoalieNow[i])
+			{
+				int Side = 0;
+				if (CreaseStance(W, i, Side)) { bGoalieNow[i] = true; GoalieSideNow[i] = Side; }
+			}
 			In.bGoalie = bGoalieNow[i];
 			In.GoalieSide = bGoalieNow[i] ? GoalieSideNow[i] : 0;
 			// R-0013 draw: the opposing centre takes the draw early at the level's rate (else the sim's bot timing decides)
@@ -518,6 +525,24 @@ namespace JamAI
 			const double Along = Rel.Dot(U);
 			if (Along > 0.0 && Along < L && std::fabs(Rel.Cross(U)) < 2.5) { return false; }   // a teammate stands between
 		}
+		return true;
+	}
+
+	bool CreaseStance(const FJamAIWorld& W, int Id, int& OutSide)
+	{
+		OutSide = 0;
+		if (Id < 0 || Id >= W.NumSkaters || W.bFrozen) { return false; }
+		const FJamAISkater& S = W.Skaters[Id];
+		if (S.bDown || W.Carrier == Id) { return false; }
+		const int C = W.Carrier;
+		if (C < 0 || W.Skaters[C].Team == S.Team) { return false; }
+		const FVec2 OwnGoal = W.OwnGoal(S.Team);
+		const FVec2 Cp = W.Skaters[C].Pos;
+		// the carrier inside our blue line: the outer third of the rink on our side (LastManGoalie's rule)
+		if (Cp.X * OwnGoal.X <= 0.0 || std::fabs(Cp.X) < W.HalfLength / 3.0) { return false; }
+		// in the crease: within CreaseStanceM of the goal centre, on the ice side of the goal line
+		if (S.Pos.DistTo(OwnGoal) > CreaseStanceM || std::fabs(S.Pos.X) > W.GoalX) { return false; }
+		OutSide = std::fabs(Cp.Y) < 1.0 ? 0 : static_cast<int>(AICoreLocal::Sign(Cp.Y)) * (S.Team == 0 ? 1 : -1);
 		return true;
 	}
 

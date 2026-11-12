@@ -42,6 +42,7 @@ namespace
 	const FName BarkGoalFor(TEXT("goal_for")), BarkGoalAgainst(TEXT("goal_against")), BarkFaceoff(TEXT("faceoff"));
 	const TCHAR* PathCommentary = TEXT("/JamAssets/Audio/MS_commentary.MS_commentary");
 	const TCHAR* PathMusic = TEXT("/JamAssets/Audio/MS_music_match.MS_music_match");
+	const TCHAR* PathCrowdBed = TEXT("/JamAssets/Audio/MS_crowd_bed.MS_crowd_bed");   // R-0033 point 4 (lane A50): B's crowd bed, when it exists
 	const TCHAR* PathSkate = TEXT("/JamAssets/Audio/MS_skate_loop.MS_skate_loop");
 
 	int32 TakeNumber(FName Kind)
@@ -97,6 +98,7 @@ void FJamCommentaryPicker::Reset(uint64 Seed)
 	bBarkAtHumanThisFrame = bCutRequested = false;
 	LastSituationFrame.Reset();
 	SituationHistory.Reset();
+	HeardThisMatch.Reset();
 	Last = FJamCommentaryPick();
 	PickCount = 0;
 	PrevScore[0] = PrevScore[1] = 0;
@@ -366,7 +368,12 @@ int32 FJamCommentaryPicker::ChooseAmong(const TArray<TPair<int32, int32>>& Optio
 		const FJamCommentaryLine& L = Bank.Lines[Options[i].Key];
 		if (L.Priority == BestP && Specificity(L) == BestS) Top.Add(i);
 	}
-	return Top[Rng.NextInt(Top.Num())];
+	// R-0033 point 3 (lane A50, the operator's "randomly change the lines to prevent repetition"): a random draw among the top candidates, preferring the
+	// lines not yet heard this match; when every one of them has been heard, any of them (Candidates already dropped the situation's last line).
+	TArray<int32> Unheard;
+	for (int32 i : Top) if (!HeardThisMatch.Contains(Bank.Lines[Options[i].Key].Id)) Unheard.Add(i);
+	const TArray<int32>& Pool = Unheard.Num() > 0 ? Unheard : Top;
+	return Pool[Rng.NextInt(Pool.Num())];
 }
 
 bool FJamCommentaryPicker::Start(int32 LineIndex, FName Event, int64 Frame, FJamCommentaryPick& Out)
@@ -387,6 +394,7 @@ bool FJamCommentaryPicker::Start(int32 LineIndex, FName Event, int64 Frame, FJam
 	TArray<FName>& H = SituationHistory.FindOrAdd(L.Situation);
 	H.Add(L.Id);
 	if (H.Num() > JamCommentary::NoRepeatPerSituation) H.RemoveAt(0);
+	HeardThisMatch.Add(L.Id);   // R-0033 point 3 (lane A50)
 	Last = Out;
 	++PickCount;
 	return true;
@@ -557,7 +565,10 @@ void UJamCommentarySystem::RefreshSettings()
 		if (Override == 0) S.bEnabled = false;
 		else if (Override == 1) S.bEnabled = true;
 		SetSettings(S);
-		if (Picker) Picker->Reset(static_cast<uint64>(C->Seed) ^ 0xC0DEull);
+		// R-0033 point 3 (lane A50): two matches of the same cut must not open with the same line (B-to-A-0032 acceptance), so the cut's seed is salted
+		// with a per-process match counter and the clock. Cosmetic only: the picker's stream is never the sim's, and the tests seed the picker directly.
+		static uint64 MatchCount = 0;
+		if (Picker) Picker->Reset((static_cast<uint64>(C->Seed) ^ 0xC0DEull) + (++MatchCount) * 0x9E3779B97F4A7C15ull + FPlatformTime::Cycles64());
 		UE_LOG(LogJamCommentary, Log, TEXT("JAMVO settings from %s: enabled=%d intensity=%s"), *C->Id, S.bEnabled ? 1 : 0, *S.Intensity.ToString());
 	}
 	else if (Override >= 0 && Settings.bEnabled != (Override == 1))
@@ -749,9 +760,18 @@ void UJamCommentarySystem::OnMatchBuilt(AHokejGameMode* GM)
 			if (Music) { Music->SetFloatParameter(TEXT("Level"), JamCommentary::MusicLevelPause); Music->Play(); MusicLevel = JamCommentary::MusicLevelPause; }
 		}
 	}
+	// R-0033 point 4 (lane A50): B's crowd bed loop starts with the music when the asset exists (a quiet load, no "missing" line: B says when it lands).
+	if (!CrowdBed)
+	{
+		if (USoundBase* Bed = Cast<USoundBase>(StaticLoadObject(USoundBase::StaticClass(), nullptr, PathCrowdBed, nullptr, LOAD_NoWarn | LOAD_Quiet)))
+		{
+			CrowdBed = UGameplayStatics::CreateSound2D(World, Bed, 1.f, 1.f, 0.f, nullptr, false, false);
+			if (CrowdBed) CrowdBed->Play();
+		}
+	}
 	// The skate loop is attached to the human's skater when the first frame runs (the actor may be rebuilt by LoadCut).
 	if (Skate) { Skate->Stop(); Skate->DestroyComponent(); Skate = nullptr; SkateOwner = nullptr; }
-	UE_LOG(LogJamCommentary, Log, TEXT("JAMVO match built: music=%d season_last=%d"), Music ? 1 : 0, bSeasonLastTake ? 1 : 0);
+	UE_LOG(LogJamCommentary, Log, TEXT("JAMVO match built: music=%d crowd_bed=%d season_last=%d"), Music ? 1 : 0, CrowdBed ? 1 : 0, bSeasonLastTake ? 1 : 0);
 }
 
 void UJamCommentarySystem::UpdateLoops(const UJamSim& Sim, AHokejGameMode* GM)

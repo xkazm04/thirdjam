@@ -961,6 +961,7 @@ namespace
 		ReadNumber(Rink, TEXT("board_restitution"), C.Rink.BoardRestitution);
 		ReadNumber(Rink, TEXT("ice_friction"), C.Rink.IceFriction);
 		ReadNumber(Rink, TEXT("goal_width_m"), C.Rink.GoalWidthM);
+		ReadNumber(Rink, TEXT("goal_height_m"), C.Rink.GoalHeightM);   // R-0033 point 2 (lane A50)
 		if (Rink) if (FJPtr Obs = Rink->Get(TEXT("obstacles")); Obs && Obs->IsArray())
 		{
 			for (const FJPtr& O : Obs->Array)

@@ -246,7 +246,8 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 	const FJamRinkConfig& R = Game.Rink;
 	const double GL = R.GoalLineX();
 	const double Hw = R.GoalWidthM * 0.5;
-	const double Depth = UJamSim::NetDepth, NetH = UJamSim::NetHeight;
+	// R-0033 point 2 (lane A50): the frame, the netting and the goal triggers stand game.rink.goal_height_m tall (0.61 by default: the half-height net).
+	const double Depth = UJamSim::NetDepth, NetH = R.GoalHeightM;
 	FMeshBuf B;
 
 	// Ice: a fan over the outline.
@@ -591,7 +592,8 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 		for (int32 S = -1; S <= 1; S += 2)
 		{
 			const double X0 = S * GL * UU, X1 = S * (GL + Depth) * UU;
-			const double Y0 = -Hw * UU, Y1 = Hw * UU, Hh = NetH * UU, Bh = NetBackHeightM * UU;
+			// The back frame stands at 0.9 m under a 1.5 m crossbar; with a lower opening it keeps that proportion (never above the crossbar).
+			const double Y0 = -Hw * UU, Y1 = Hw * UU, Hh = NetH * UU, Bh = FMath::Min(NetBackHeightM, NetH * (NetBackHeightM / 1.5)) * UU;
 			B.Box(FVector(X0 - PR, Y0 - PR, 0), FVector(X0 + PR, Y0 + PR, Hh));
 			B.Box(FVector(X0 - PR, Y1 - PR, 0), FVector(X0 + PR, Y1 + PR, Hh));
 			B.Box(FVector(X0 - PR, Y0 - PR, Hh - PR * 2), FVector(X0 + PR, Y1 + PR, Hh));

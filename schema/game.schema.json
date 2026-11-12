@@ -56,6 +56,12 @@
           "maximum": 10,
           "description": "Width of each net opening in metres."
         },
+        "goal_height_m": {
+          "type": "number",
+          "minimum": 0.3,
+          "maximum": 1.5,
+          "description": "Height of each net opening in metres (crossbar). 0.61 is the half-height net of a game without goalies (R-0033); 1.22 is a real net. A lifted puck over it is no goal."
+        },
         "obstacles": {
           "type": "array",
           "maxItems": 12,

@@ -39,6 +39,7 @@ Cartridge errors are sentences that start `at <JSON pointer>:`, because the Desi
 | `rink.board_restitution` | 0..1 | a coefficient |
 | `rink.ice_friction` | 0..0.1 | 0.015 real ice; 0 never slows; 0.1 is carpet |
 | `rink.goal_width_m` | 2..10 | Godot 4.0; 2 is hard to score, 10 is nearly the whole end of a 20 m rink |
+| `rink.goal_height_m` | 0.3..1.5 | 0.61 default (R-0033: half a real net, no goalies); 1.22 a real net; 0.3 is a puck-and-a-half slot, 1.5 the old frame height |
 | `rink.obstacles[]` | 0..12 items, size 0.5..10, x/z within +-80/+-40 | clutter beyond 12 breaks the bot path planner and the view |
 | `skater.speed` | 3..16 | 8 is the measured Godot value; 3 is walking pace; above 16 a skater crosses the rink faster than the camera lag recovers |
 | `skater.accel` | 4..40 | 12 measured; 4 is a heavy slide, 40 is instant |

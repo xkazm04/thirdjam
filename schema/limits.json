@@ -20,6 +20,7 @@
     "rink.board_restitution": "0..1",
     "rink.ice_friction": "0..0.1",
     "rink.goal_width_m": "2..10",
+    "rink.goal_height_m": "0.3..1.5",
     "rink.obstacles[]": "0..12",
     "rink.obstacles[].kind": "box|pillar|bumper|goal_shield",
     "rink.obstacles[].x": "-80..80",

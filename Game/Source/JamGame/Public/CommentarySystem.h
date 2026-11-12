@@ -186,6 +186,8 @@ private:
 	const TCHAR* CutReason = TEXT("bark_at_human");
 	TMap<FName, int64> LastSituationFrame;
 	TMap<FName, TArray<FName>> SituationHistory;
+	// R-0033 point 3 (lane A50): every line id started this match; ChooseAmong prefers the top candidates not in it.
+	TSet<FName> HeardThisMatch;
 	FJamCommentaryPick Last;
 	int32 PickCount = 0;
 
@@ -268,6 +270,8 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UAudioComponent> Voice;
 	UPROPERTY(Transient) TObjectPtr<USoundBase> VoicePlayer;
 	UPROPERTY(Transient) TObjectPtr<UAudioComponent> Music;
+	// R-0033 point 4 (lane A50): B's crowd bed loop (MS_crowd_bed), started with the music when the asset exists.
+	UPROPERTY(Transient) TObjectPtr<UAudioComponent> CrowdBed;
 	UPROPERTY(Transient) TObjectPtr<UAudioComponent> Skate;
 	UPROPERTY(Transient) TObjectPtr<AJamSkater> SkateOwner;
 	UPROPERTY(Transient) TMap<FName, TObjectPtr<USoundBase>> Waves;

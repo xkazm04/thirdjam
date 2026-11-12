@@ -257,7 +257,7 @@ public:
 	static constexpr int32 PuckSubsteps = 4;
 	static constexpr double SkaterRadius = 0.4;
 	static constexpr double NetDepth = 1.5;
-	static constexpr double NetHeight = 1.5;
+	// R-0033 point 2 (lane A50): the net's height is the cartridge's game.rink.goal_height_m (FJamRinkConfig::GoalHeightM, 0.61 by default), no longer a constant.
 	static constexpr double PostRadius = 0.05;
 	static constexpr double ShotFrontDot = 0.5;      // must face within 60 degrees
 	static constexpr int32 CheckWindowFrames = 6;
@@ -406,8 +406,12 @@ public:
 	// x of the goal line a team attacks (+GL for team 0, -GL for team 1; the other way round after SwapNets); the goal mouth centre is (x, 0).
 	double AttackGoalX(int32 Team) const;
 	double GoalLineX() const { return Config.Rink.GoalLineX(); }
-	// True when a puck centre at P is inside the goal volume of the net at +x (Side +1) or -x (Side -1).
-	bool InGoal(const FVector2D& P, int32 Side) const;
+	// True when a puck centre at P is inside the goal volume of the net at +x (Side +1) or -x (Side -1). The two-argument form is the puck on the ice.
+	// R-0033 point 2 (lane A50): with a height (metres above the ice, the puck's centre) the opening is game.rink.goal_height_m tall: a lifted puck at or
+	// above the crossbar is no goal. The step passes the ice height today (the sim's puck has no height state; the pawn's hop is cosmetic): the test is in
+	// place for the day a lifted shot enters the sim.
+	bool InGoal(const FVector2D& P, int32 Side) const { return InGoal(P, Side, 0.0); }
+	bool InGoal(const FVector2D& P, int32 Side, double HeightM) const;
 
 	// Rink metres -> Unreal centimetres (the one conversion; Height in metres above the ice).
 	static FVector ToWorld(const FVector2D& P, double HeightM = 0.0) { return FVector(P.X * 100.0, P.Y * 100.0, HeightM * 100.0); }

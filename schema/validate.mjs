@@ -625,7 +625,7 @@ export const DESIGNER_EDITABLE = ['values', 'theme', 'rules', 'entities', 'ai'];
 // teams[].skaters[].role and camera.mode, stays exactly as the host gave it.
 export const DESIGNER_GAME_EDITABLE = [
   'rink.length_m', 'rink.width_m', 'rink.corner_radius_m', 'rink.board_restitution', 'rink.ice_friction',
-  'rink.goal_width_m', 'rink.obstacles',
+  'rink.goal_width_m', 'rink.goal_height_m', 'rink.obstacles',
   'pickups', 'effects',
   'rules.mode', 'rules.score_to_win', 'rules.timer_frames',
   // C-0005 (lane A15): rule hooks, variants and zones are the Designer's parts too, within the limits and the frame-600 guard
