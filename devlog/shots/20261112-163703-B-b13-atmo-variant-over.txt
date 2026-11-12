@@ -1,0 +1,1 @@
+B13 atmosphere VARIANT, stills only, not in the rig (veto window until 21:00): haze post 0.0003 / 0.5 and faded light shafts 0.3 (lane B2c VER b) on the four spots, open-sky rig, transient materials in PIE.

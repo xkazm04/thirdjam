@@ -1,0 +1,1 @@
+B13 final saved state, game camera at the faceoff (real game, PIE, 90 x 45, scale 1.000): open night sky (variant B), new ice, net grid, kick plate, glass stanchions, end fills; A's glass still the placeholder M_Net.
