@@ -16,7 +16,10 @@
       "Game/Content/Placeholders/**",
       "Game/Content/Designer/**",
       "Game/Content/Barks/**",
-      "Game/Source/JamNet/**"
+      "Game/Source/JamNet/**",
+      "Game/Source/JamCore/Effects/**",
+      "Game/Source/JamCore/Rules/**",
+      "Game/Content/Cartridges/ladder/**"
     ],
     "B": [
       "Game/Plugins/JamAssets/**",

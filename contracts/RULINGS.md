@@ -134,3 +134,11 @@ situation in game. Ideal state would be to shout at AI teammates for short strat
    bot-only big-rink matches goalless, which is fine for a cut nobody plays bot-only.
 4. **Large Rink cut ships in timer mode** (`rules.mode timer`, 3 minutes = 10,800 frames) so it always ends; regular stays first-to-3.
 5. Lane A3's `LiveConfig` fix (loads `hockey.arena.large` for the held-back-geometry check) and the intent plumbing (`FJamAIWorld` intent fields filled by `GatherInputs`) are accepted.
+
+## R-0012 (H7, 2026-11-12 12:55): phase 2, depth on P2 (operator's direction)
+1. Operator: "each dimension we touched is in very basic game design and gameplay state ... master game on P2 ... let players design custom boosts, rules and aspects ... in parallel upgrade into
+   P3 and P4, where mainly in P4 we will be glad to make even regular hockey game work." Chosen depth, all four at once: composable effects (A14), rule hooks / variants / zones / obstacles (A15),
+   puck control / passing / charged shots / deflections (A16), cuts as progression (A17). Contract C-0005 (`contracts/depth.md`) fixes the wire names and two seams; A16 lands the seams first.
+2. Device B: P2 to full polish and P3 clay in parallel from now; P4 only after P3 ships, bar = "regular hockey works and looks broadcast-like"; the L2 GPU hang first (handoff 0006).
+3. "Ahead of schedule" is retired as a status word: the milestones are met, the dimensions are first drafts. Gate 2 (H24) now reads: M1 plus effects, rules, feel and the season playable
+   on P2, the operator's playtest done, P3 rig in progress.
