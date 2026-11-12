@@ -1,0 +1,1 @@
+P2C GetUp_Side_Left, GetUp_Side_Right, Goalie_Block_Left from the side: before (pass 1, top of each pair) and after the prop rule (pass 2, skf5 takes)

@@ -1,0 +1,1 @@
+SK5 item 7: TB1 jersey night fill 2.0 -> 2.5 (EmissiveNight, night only), dark side band 24 m, before|after: blue cloth luma 19 -> 50, orange 58 -> 88

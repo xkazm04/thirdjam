@@ -1,0 +1,1 @@
+QA1: night T-B1 bot match strip; heavy motion blur on camera turns, puck trail smear

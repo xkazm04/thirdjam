@@ -1,0 +1,1 @@
+QA1: cut list; Raw Cut card says 90 x 45 m although the cartridge is 120 x 60

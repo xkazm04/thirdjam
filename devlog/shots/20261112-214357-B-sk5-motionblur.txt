@@ -1,0 +1,1 @@
+SK5 item 8: game camera during a forced hard turn (W then A+S), top: motion blur default (smeared ice), bottom: PPV_L2_Night motion blur 0 (crisp); not the same instant

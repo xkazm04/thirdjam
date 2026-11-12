@@ -342,3 +342,19 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
   **0022** (A22/A26/A28/A29 against B's figures and retarget), 0019.
 - running: SK4 (falls and collisions in the engine, puck at distance; port 8000).
 - ledger: 844 rows; on disk art 50.9 MB, audio 36.4 MB, vfx/other 9.6 MB
+
+## H16.4 (22:25)
+- done since H13.3 (all on `dev-b`, each cook-checked before its push since 20:35): SK4 falls and collisions on all four figures and the puck beacon; SK5 polish on the
+  shipped figure (lift, 20-frame stumble 6 frames after the poke, level-hip idle, knockdown rate by strength, jersey emissive 2.5 at night), haze cards on, motion blur
+  off, dark puck ring on the other tiers, `HitWobble` on the glass; B17 contact effects on a tier-aware material; B18 the six newer events' effects and sounds, the puck
+  trail gated by speed; QA1 an end-to-end play of the joined game (`status/QA1-report.md`: B's side passes on three tiers; ranked faults in handoff 0030); SKC the
+  concept-sheet figure recipe of A-to-B-0009 through B's retarget: three figures (`status/B-skater-skc.md`).
+- running: SKI2 (the three concept-sheet figures behind `BP_SkaterVisual_TB2`, `_TB2_P3`, `_TB2_P4`; port 8000, until about 01:00); SKI3 (the shipped figure's clay and
+  broadcast versions as `BP_SkaterVisual_TB1_P3` / `_TB1_P4`; port 8002, until about 00:55).
+- open on A: 0029 (optional vectors for the contact effects), 0030 (QA1's faults on A's side, ranked), 0031 (silent and sound-only events). Waiting for A45's commit
+  of C-0001 v4 to move B's four reaction events onto the interface.
+- open on B from A: none (0008 to 0011 done; 0009's figures in lane SKI2).
+- cook-only on `dev-b` a05236e merged with `main` 0542360: 1420 packages, 0 errors.
+- waiting on the operator (back about 22:45): clay or broadcast as the tier to push (`devlog/shots/20261112-172129-B-b14-tiers-strip.png`); goalies (kit and 14 clips in
+  Blender, R-0013 says no goalie figure); the night sky variant; the commentary delivery check and listening to the mix; a goal horn pick.
+- ledger: 913 rows

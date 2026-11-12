@@ -1,0 +1,1 @@
+QA1: hockey.arena.large 120 x 60: game view and debug-camera rig views
