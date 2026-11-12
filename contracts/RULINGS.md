@@ -30,3 +30,16 @@
 6. **Device B's machine is not the plan's machine**: Windows 11 ARM64, 64 GB unified memory shared with the GPU, the editor running x64 under emulation. TRACKS.md section 5 caps for B are
    therefore **4 builders and at most 2 editors**, and B's lead measures before each new editor as it already does. B's H6 row is expected at about H9; accepted.
 7. **New event name** `directors_call` (lane A7, payload `Kind` = the tunable key, `Strength` = the new value as a float where meaningful) joins C-0003.
+
+## R-0003 (H4.9, 2026-11-12 10:55): seams from lanes A2 and A7, and the bot-match gate
+1. **`AiBotPlays` on `hockey.regular` (120 x 60):** the "match ends within 36,000 frames" clause is relaxed to "at least one goal within 18,000 frames" for pure bot-vs-bot; the
+   finish clause stays on `hockey.arena.small`. Evidence (A2, 20 seeds): regular finishes 2 of 20 bot-vs-bot matches in 10 minutes, small 16 of 20; with the scripted human both finish.
+   Lane A3's `all_star` profile is expected to finish regular-rink matches; that is the real fix.
+2. **Rink size evidence for the operator** (A2): seconds per goal with the scripted human 130 (120 x 60) vs 70 (90 x 45); bot-vs-bot 363 vs 127. Default stays 120 x 60 until the operator rules.
+3. **Game mode seams (lane A1 resumes):** add `directors_call` to `JamEvents` (`Who` -1, `Where` zero, `Strength` = position of the new value in the tunable's range 0..1, `Kind` = key);
+   `ApplyCartridgeLive(UJamCartridge*)` on the game mode changes the running config without resetting the match (sim setters for the live-changeable tunables); call
+   `UJamDesignerSubsystem::NotifyPeriodStarted` at each TAKE and `SetCurrentCartridge` with the booted cut; `PublicIncludePaths` for `JamCore/AI`; stage `Content/Designer/` as UFS next to `Cartridges/`.
+4. **Console names ignore case:** `jam.Cut` (cvar) and `jam.cut` (command) collided and crashed the editor; the command is `jam.playcut`. Rule: every new console name is grepped across `Game/Source` first.
+5. **Shared Source tree:** two lanes broke the build for all others this hour (a missing module dependency, a missing include). Rule: a lane runs `tools/run/build.ps1` before every pause and
+   every report, and never leaves a half-written file in `Game/Source`. The Director fixes a cross-lane break on sight and names it here.
+6. **`A2`'s private build copy** `C:/Users/kazda/kiro/a2-build` is deleted by the Director. Lanes that need a private copy use a git worktree under `.worktrees/` (TRACKS.md 5), not an ad-hoc folder.
