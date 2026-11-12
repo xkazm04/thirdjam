@@ -13,7 +13,8 @@
       "Game/*.uproject",
       "Game/Content/Blueprints/**",
       "Game/Content/UI/**",
-      "Game/Content/Placeholders/**"
+      "Game/Content/Placeholders/**",
+      "Game/Content/Designer/**"
     ],
     "B": [
       "Game/Plugins/JamAssets/**",
@@ -29,7 +30,10 @@
       "ASSETS.md",
       "devlog/**",
       "retro/**",
-      "briefs/**"
+      "briefs/**",
+      "docs/experiments/**",
+      "docs/SUBMISSION.md",
+      "tools/qa/**"
     ],
     "director_only": [
       "docs/**",

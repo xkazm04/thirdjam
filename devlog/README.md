@@ -77,3 +77,8 @@ node --test "devlog/**/*.test.mjs" "tools/gate/**/*.test.mjs"
 (`node --test devlog` does not work on Node 24: a bare directory name is treated as a file.) The tests build pages from `devlog/fixtures` (fake transcripts with
 planted keys, emails and home paths, fake notes, status, and PNGs written by the test) and from temporary git repositories, and assert the structure of the page
 and that nothing planted survives. `node devlog/fixtures/make-fixtures.mjs` regenerates the fixture transcripts.
+
+## Added in H6 (lane A6)
+
+- `--since <ISO time>`: ignore transcript turns and prompts before this instant. A Claude project folder can hold older sessions; the jam transcripts of this project live with the Director's session under `~/.claude/projects/<slug of the folder the Director was started in>` (sessions and their `subagents/`), so point `--transcripts` at the session file and its folder, or at the project folder with `--since 2026-11-12T05:00:00Z` (H0 in CET).
+- Real-data build and findings: see `devlog/notes.md`, entry H6.
