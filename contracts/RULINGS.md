@@ -339,3 +339,12 @@ Accepted: `rules.hooks[].after_frame`; `score: { at_least, at_most, lead_at_leas
    with a cartridge key, a test, and the playtester grid before and after.
 5. The gate: `Jam.Playtest.NoviceScoresAtRookie` becomes the 20-seed form (`scored_2min` at least 10 of 20) and `HumanHasSomethingToDo` runs with `-player=novice` with a budget of
    at most 2 faceoffs without a touch per 20 matches; lane A3 wires both when the calibrations land.
+
+## R-0030 (H11.8, 2026-11-12 19:50): the shipped figure is humanoid_b1; the toy's materials were lost in a commit; a camera lane
+1. **Bake-off result** (lane A30, `docs/experiments/FIGURE-BAKEOFF.md`): B's rebuilt scripted figure `humanoid_b1` is the shipped default (absent key = `humanoid_b1`), `generated_b2`
+   the alternative (it took four of six pairs on toy-ness, b1 both faceoff pairs and the hockey read with legible numbers), `toy_skeletal` and `toy` stay values. Cost decided
+   nothing (all within noise). B's figures carry two faults for B: no far-reach side aim holds (in progress on B), the lift take goes vertical.
+2. The toy's three materials (`M_ToonFigure`, `MI_SkaterFigure_Trim`, `MI_SkaterFigure_Stick`) were deleted by the pass-3 import commit (0882dab) and never restored, so the toy drew the
+   default grid material in every build since H11; restored from a284b0a. The gate's new "missing usage flag" check would have caught it; it is on from 969fbc3.
+3. **Camera**: every bake-off strip shows the game camera inside the boards along the glass (severity 4). Lane A40 implements the board camera clamp (FEEL proposal feel.07, approved
+   R-0021) and the camera height at the end boards.
