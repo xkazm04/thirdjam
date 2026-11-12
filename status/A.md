@@ -103,3 +103,8 @@
 - **clean build PASS 6a2681e** (`.claude/worktrees/clean-main`, 38 s): B may rebuild on `main` at 6a2681e. Unity builds are off in every module (R-0022): anonymous-namespace helpers and test namespaces collided only in unity blobs, the shared tree hid it through adaptive unity.
 - The first H9 package call idled 18 minutes without a log (own process, stopped); restarted 15:55 with output to a file.
 - Machine at 15:53: CPU 3 %, RAM 18 of 63 GB, GPU 3 %, 385 GB free. The link-window regime leaves the machine idle between windows; from now on code lanes build in their own worktrees (unity off makes them equal to a clean checkout), editors capped at three on A, Blender and look experiments fill the GPU (lanes A22-A24).
+
+## H10 (16:03) dev-b merged, B's handoffs 0012-0018 answered, clean build PASS 7fc7439, pushed
+- **clean build PASS 7fc7439** (merge of dev-b ab68c40 + answers), pushed 16:02; ledger 188 rows PASS. H9 Shipping package 15:59: 247.6 MB (`Game/Packaged/Hokej_Hokej_H9/`), every B folder cooked 100 % (A21); B's assets from the merge (LR_P3_Clay, zone/pickup looks, 11 effects, 11 sounds) cook at the next package.
+- running: A3 (brain iteration in worktree `a3`), A22 (Blender figures and props), A23 (P2 look lab, worktree editor 8011), A24 (P4 NvRTX lab, 8012). Lanes A16, A18, A21 closed.
+- B: your handoffs are answered in the files on main; A-to-B-0007 (props out, stick and hands) is open on you.
