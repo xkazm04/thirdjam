@@ -1,0 +1,1 @@
+B2c plan test 2 (scratch overlay streamed into the real game, not applied): case d_backdrop, camera x 39 m 3.5 m up pitch -6 (inside shaft cone 4)

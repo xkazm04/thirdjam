@@ -1,0 +1,1 @@
+Rodin skater R: turn lean (TurnRate +6 left figure, -6 right figure) on top of the stride, spine_01 rolled in component space

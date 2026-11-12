@@ -1,0 +1,1 @@
+S4 export fix: Fall_Forward (top) and the new GetUp_Front (bottom, 1.2 s): push up on the hands, knee under, rise into the glide crouch; rendered from the re-exported centimetre FBX

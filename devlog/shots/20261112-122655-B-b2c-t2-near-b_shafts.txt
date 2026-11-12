@@ -1,0 +1,1 @@
+B2c test 2, shafts 0.6 seen from INSIDE cone 1 (camera x -51 m, game-camera pitch): the whole background gets a grey veil

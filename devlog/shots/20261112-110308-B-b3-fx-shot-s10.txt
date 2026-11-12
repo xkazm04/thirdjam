@@ -1,0 +1,1 @@
+NS_shot, Strength 1.0, ice spray burst 0.05 m above the ice; captured with global time dilation 0.1 because it lives 0.25 s. Throwaway layout with LR_L2_Night, PIE capture 1920x1085, spawned from Python with set_variable_float('Strength') and set_variable_linear_color('Colour').

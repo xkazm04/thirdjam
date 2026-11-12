@@ -1,0 +1,1 @@
+Rodin skater R: deep blue (0.02,0.10,0.55) and orange (0.95,0.30,0.03) side by side, hue-key M_SkaterTB2, Emissive 0.5; small glyph marks are visible on the shins

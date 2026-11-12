@@ -1,0 +1,1 @@
+NS_directors_call: warm-white ring of 160 sprites sweeping out across the ice at 15 m/s, about 0.5 s after spawn, camera 16 m back and 9 m up. Throwaway layout with LR_L2_Night, PIE capture 1920x1085, spawned from Python with set_variable_float('Strength') and set_variable_linear_color('Colour').

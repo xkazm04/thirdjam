@@ -1,0 +1,1 @@
+S6: changed texels in magenta (130k of 4.19M), yellow outline = UV region of lower legs, boots and blades

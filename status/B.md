@@ -181,3 +181,91 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - packaged build age: none yet on B
 - packaged size: none yet
 - ledger: 6 `MI_Dress_*` rows; `LR_L2_Night` row now 0.6 MB
+
+## H5.3 Effects and audio in; first skater path proven; Rodin route proven
+
+- done since H5.1 (all pushed, `dev-b` at the commit after `cf5e937`; ownership and assets gates PASS, 61 ledger rows, audio 2 MB, vfx/other 4.1 MB):
+  - **B3 merged** (`status/B3-report.md`): `SM_PuckDisc`, `NS_puck_trail`; `NS_`/`MS_` for all eleven events including `directors_call`; `MS_skate_loop`,
+    `MS_arena_room`; sound classes and a mix. MetaSound graphs and Niagara stacks were built entirely through MCP (the calls are in the report). Nobody has
+    listened to the sounds yet: they are checked by recorded level and length only. Handoff **B-to-A-0007** tells A's binder and puck what to set.
+  - **B5 phase 1** (`lane/b-skater`, not merged): the whole import path for a generated skater works: mesh, 29-bone skeleton (importer adds a root),
+    clips, hue-key team-colour material, `ABP_SkaterTB2`, `BP_SkaterVisual_TB2` answering all eight interface calls, PIE stills. Figure 1 itself is test
+    only (numbers and marks on its texture). The promotion gate could not run: nothing on `main` reads `game.skater.visual` yet.
+  - **Skater lab**: S1 three more Meshy styles (pick: big-head mascot; orange refine has different UVs, so team colour is a hue-key in the material);
+    S2 clips for nine needs (generated strides do not loop: 53 to 85 degrees seam, 1.8 to 6 m drift; wrist shot and check unusable; a Blender script now
+    strips, trims and loops); S3 **mesh in Hyper3D Rodin, rig in Meshy works** (0.5 Rodin credit, same 28 bones; the lead's first pick) plus seven Rodin set
+    props for dressing pass 2 (`briefs/B2b-props-rodin.md`).
+- lanes now: B5 phase 2 (the Rodin skater through the proven path, editor 8002, box 13:15); S2 follow-up (engine-ready clip sets for the Rodin skater and
+  the mascot, 12:15); S4 scripted original skater (13:15); V1 visual-upgrade plan (12:45); B2b prop pass starts on port 8000 when the main tree has rebuilt.
+- credits: Meshy balance 860 at 11:07 (1204 at the start; the lab's caps total 375); Rodin 415 of 421.
+- next: merge `lane/b-skater` when phase 2 reports; verify the look on A's rink in `Rink` (handoff 0005 acceptance) and do the lighting pass; first package on B.
+- blocked: none. Operator: Hyper3D licence wording for shipping Rodin output, and the prize criteria.
+- lfs size: about 7 MB from B
+- engine build: 5.9.0 CL 60351404
+- packaged build age: none yet on B (A's Shipping baseline: 322.5 MB zip)
+- packaged size: none yet on B
+- ledger: 30 rows from lane B3
+
+## H6.6 Both skater visuals in the engine; look fixed on the real rink; props in
+
+- done since H5.3 (all pushed; `dev-b` at `3291d19`; ownership gate PASS; ledger 132 rows, art 17.3 MB of 350, audio 1.8 MB):
+  - **Look on the real rink** (B1b, `status/B1b-report.md`): ice between the pools 1 -> 47 of 255 through `IceAmbient` in `M_Ice`, pools unchanged; blue-line
+    blotch fixed; net mesh darkened; `PPV_L2_Night` on screen-space reflections (lighting pass about 8 -> 1.3 ms on B, unconfirmed, two editors up); handoff 0005
+    accepted on A's meshes. Handoff **0009** lists five look defects on A's side (skater Emissive reset, two sky lights, coplanar floors, puck size, line positions).
+  - **Dressing pass 2** (B2b): seven Hyper3D Rodin props imported base-colour-only at 1K with Nanite; 188.7k triangles of dressing; blue lines at a third of the half-length.
+  - **Skater lab closed out**: S4 a Blender-scripted original skater with 16 exact-looping clips; S5 the same clips retargeted onto the Rodin mesh ("the hybrid");
+    S6 the Rodin texture cleaned of lace-like marks. **T-B2 is now the hybrid** and **T-B1 the scripted original**, both behind `IJamSkaterVisual` with the same AnimBP
+    structure (idle, glide-to-stride by speed, leans and crossovers by turn rate, slap shot and check montages, falls both ways with their get-ups), verified in PIE
+    with stills (`devlog/shots/*-B-tb1-*`, `*-B-tb2h-*`). Finding for anyone exporting FBX: Unreal 5.9's importer rejects files rewritten by the labs' track-strip
+    step; the step is disabled in both lab scripts.
+  - Handoffs open: 0007 (wiring effects, sounds, puck kit), 0008 (T-B1 redefined; who reads `game.skater.visual`), 0009. None answered yet (A's last merge was 11:05).
+- lanes now (two editors): B2c stage light on the real rig plus plan test 2 on scratch (port 8000, 13:15); B6s skater polish (mitt colour key, one boot mark)
+  and a **real-match preview**: both visuals attached to A's pawns in PIE from Python, stills and a short clip (port 8002, 13:50).
+- next: merge `main` (A is at `4043884`: DLSS plugin, barks) when the main editor is free, rebuild; first package on B; plan tests 2 and 3 results into
+  `briefs/B7-visual-upgrade-plan.md`; the 15:00 merge window.
+- blocked: the promotion rule for either skater track waits for A to consume `game.skater.visual` (0008). Operator: Hyper3D licence wording for shipping Rodin
+  output (T-B2's mesh and seven props depend on it; T-B1 and the basic-shape dressing do not); `C:\r` (eight stray PNGs from a lab lane) to delete by hand.
+- credits: Meshy 806 at 11:20 (lab spent about 400 of the 1204), Rodin 415 of 421.
+- lfs size: about 30 MB from B
+- engine build: 5.9.0 CL 60351404
+- packaged build age: none yet on B
+- packaged size: none yet on B
+- ledger: reconciled with disk at `3291d19` (T-B2 rows replaced by the hybrid's, T-B1 rows `shipped` n until the ruling)
+
+## H7.7 GPU hang answered; rig re-laid for 90 x 45; phase 2 lane plan (answers A-to-B-0006)
+
+- B's miss: `handoff/A-to-B-0001..0006` and R-0006..R-0013 went unread on B from 11:10 to 13:00 (B read only the answers to its own handoffs). B now reads open
+  `A-to-B` files, the tail of `contracts/RULINGS.md` and `status/A.md` after every fetch.
+- done since H6.6 (pushed, `dev-b` at `4c415cc`; ownership and ledger gates PASS, 143 rows, art 17.4 MB, audio 1.8 MB):
+  - **A-to-B-0003 (GPU hang): answered, status done on B's side.** One editor, 7 PIE runs, 11.5 minutes, four mid-PIE rig reloads: no hang before or after. Hardened:
+    no dressing or room piece casts a shadow, spot attenuation 40 -> 30 m, shadow resolution scale 0.5, ray-traced shadows off per light. `ShadowDepths` 1.09 -> 0.84 ms,
+    VSM pool never above 180 of 4096 pages. **First single-editor numbers on B: GPU 11.5 to 12.1 ms median, 13.1 to 13.4 ms p99 on `l2_night` (device B numbers);
+    Lumen GI is the large cost, not shadows.** The one-editor check on A's 4090 is A's (commands in the handoff's Response).
+  - **Pools re-laid for the default 90 x 45 rink** (R-0010): spots at x = +-11.25, +-33.75 m, 24 m pools touching, centre brightness unchanged (218 of 255).
+    The 120 and 140 m cuts now have unlit ends: handoff **B-to-A-0011** asks the look switch to scale the rig by `length_m / 90`.
+  - Stage light and hero prop groups (B2c); plan test 2 passed for backdrop flats, haze and faded light shafts (not applied yet; operator veto until 21:00).
+  - Both skater visuals played full bot matches in the real game through `game.skater.visual` (B6s): the hybrid (T-B2: Rodin mesh, our scripted clips) and the
+    scripted original (T-B1). Clips: `C:\Users\kazda\jam\skater-lab\match\`.
+  - Audio lab (ElevenLabs, outside the repo): director's voice in two stock voices, five designed commentator voices, 13 effects in two takes, two music tracks;
+    listening page for the operator's triage; nothing imported yet. `status/B-audio-au1.md`.
+  - Answered: A-to-B-0001 (done: seven Rodin props and the T-B2 mesh ship), 0002 (accepted), 0005 (needs the operator's voice). Opened: B-to-A-0010 (clean-checkout
+    build break; since fixed on `main`), 0011 (rig scale). B's first package attempt hung in UBT at a compile step after 16 minutes and was stopped: still unproven on ARM64.
+- **Phase 2 lane plan (two editors by the operator's decision; R-0005 allows three):**
+
+  | When | Editor 1 (main tree, port 8000) | Editor 2 (worktree, port 8002) | No editor |
+  |---|---|---|---|
+  | now to 15:15 | B8: A-to-B-0004 import rules on every texture + a re-runnable script; skater tweaks (lean by speed, orange in the dark bands, puck socket) | B3b: `NS_`/`MS_` for the new events (`poke`, `lift`, `foul`, faceoff kinds, `pass`, `effect_*`, `zone_*`, `announce`, `bark`, `signal`) | P3 clay brief; Codex batch 1 prompts (backdrop flats, crests, pickup glyphs) |
+  | 15:15 to 18:00 | P2 polish: dressing moved in for 90 x 45 (after A answers 0011), backdrop flats + haze + shafts applied, truss over the new pools; audio import after the operator's picks | **P3 clay, pass 1**: `M_Clay` family, `LR_P3_Clay` rig (warm key, soft shadow, depth-of-field band), toy figure and both humanoids in clay instances | Codex batch 1 generated and triaged; first package of the plugin on B (retry, alone) |
+  | 18:00 to 24:00 | zone strips and pickup looks when A15 asks; `LR_L1_Day` as a switch | P3 pass 2 and its readability tests (puck at 10/24/40 m, team colours, far net) | commentary lines if the operator picks a voice; music loop edit |
+  | overnight | soak and frame tables per tier with ONE editor; stills for the dev log | P3 complete by H36 (Fri 18:00) as A-to-B-0006 asks; `LR_L3_Neon` as a poster tier only if P3 is on time | |
+
+  Builders: two editor lanes plus up to three without an editor. P4 (broadcast) is not started: its humanoids already exist (T-B1, T-B2) and play in the real game,
+  so P4's remaining cost is stands, glass and rig lights; B will not touch it before P3 ships. When `LR_P3_Clay` exists B says so here and asks A for the tier value `p3_clay`.
+- blocked: nothing. Waiting on A: 0007 (binder parameters, puck kit), 0008 (T-B1 ruling, puck at `puck_socket`), 0009 (five look defects on A's side), 0011 (rig scale).
+  Waiting on the operator: audio triage (`C:\Users\kazda\jam\audio-lab\listen.html`); the microphone test for A-to-B-0005; Hyper3D and ElevenLabs-music licence wording;
+  veto on the atmosphere pass by 21:00.
+- lfs size: about 35 MB from B
+- engine build: 5.9.0 CL 60351404
+- packaged build age: none on B (A's H7 Shipping zip: 247.5 MB)
+- packaged size: none on B
+- ledger: 143 rows, sizes from disk

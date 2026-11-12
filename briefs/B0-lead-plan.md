@@ -68,6 +68,18 @@ parameters on the ice (B-to-A-0005).
 - Every Rodin file that ships: `ai-generated`, tool "Hyper3D Rodin", task id in `note`; list Rodin under tools used at submission.
 - Open: the Hyper3D / NVIDIA prize criteria (`docs/PLAN.md` 12) are still unknown; the operator asks on the jam Discord.
 
+## More keys from the operator (H6.8, 12:42): `TRIPO_API_KEY`, `ELEVEN_LABS_API_KEY`, `GOOGLE_API_KEY` in `.env`
+
+- **ElevenLabs** ("sound effects and audio coverage, managed on this device"): lab lane AU1 writes a client outside the repo (`C:\Users\kazda\jam\eleven-tools\`)
+  and generates a first batch into `C:\Users\kazda\jam\audio-lab\`: a director's voice for the theme ("Action!", "Cut!", "That's a wrap!", "Take two."...),
+  recorded-quality effects to layer over or replace the synthesised MetaSounds, and music if the API offers it; with a local listening page so the operator
+  picks by ear (agents cannot listen). Import into `/JamAssets/Audio/` as `SFX_*` follows the pick. Voice lines touch device A's bark and signal systems
+  (lane A12 uses Flite and SAPI voices): a handoff follows the pick.
+- **Tripo**: kept in reserve as a third generator (it has an Unreal skeleton preset and its own animation presets). Not needed today: the skater converged
+  on the Rodin mesh with scripted clips, and Rodin covers props.
+- **Google Cloud**: in reserve; no use identified yet. Candidates if a need appears: a second text-to-speech source, or an image model for the painted
+  backdrop flats (today they are procedural).
+
 ## Waits for the operator
 
 - `.env` with the Meshy key on this machine (it is gitignored, so it did not come with the clone): needed for B5.

@@ -1,0 +1,1 @@
+S2: B5 stride clip (text-to-motion, 120f) on B5 rig, 8 frames

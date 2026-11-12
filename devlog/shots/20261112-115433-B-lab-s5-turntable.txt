@@ -1,0 +1,1 @@
+S5 hybrid (Rodin+Meshy mesh R driven by S4 scripted clips), re-imported SK_Skater_S5.fbx: 8-view turntable, rest A-pose with stick in the right mitten (top) and Glide frame 1 (bottom)

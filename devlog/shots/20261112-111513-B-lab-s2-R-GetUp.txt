@@ -1,0 +1,1 @@
+S2 engine clip GetUp on rig R (8 frames)

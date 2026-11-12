@@ -1,0 +1,1 @@
+S6: skater shin/skate close renders from 8 azimuths, before (top) and after (bottom) texture cleanup; laces, blade dots and smears gone, black runner caps kept

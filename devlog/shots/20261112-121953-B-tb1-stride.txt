@@ -1,0 +1,1 @@
+T-B1 phase 2 (fixed S4 export, root at unit scale), Stride 5 and 7 m/s (full stride at 5), game camera 6 m behind 3.5 m up

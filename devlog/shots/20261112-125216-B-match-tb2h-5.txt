@@ -1,0 +1,1 @@
+T-B2 hybrid in play, game camera, five skaters in frame (real match, PIE on /Game/Maps/Rink with device A's HokejGameMode, jam.Cut hockey.test.visual-b2).

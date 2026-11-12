@@ -1,0 +1,1 @@
+T-B2 hybrid in play, game camera, human plus a blue team-mate overlapping; TAA ghost on the moving near figures (real match, PIE on /Game/Maps/Rink with device A's HokejGameMode, jam.Cut hockey.test.visual-b2).

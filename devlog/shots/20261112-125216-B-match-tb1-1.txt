@@ -1,0 +1,1 @@
+T-B1 in play, game camera (real match, PIE on /Game/Maps/Rink with device A's HokejGameMode, jam.Cut = scratch copy of hockey.test.visual-b2 with visual humanoid_b1).
