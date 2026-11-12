@@ -11,6 +11,16 @@ namespace JamAI
 		inline FVec2 LerpV(const FVec2& A, const FVec2& B, double T) { return A + (B - A) * T; }
 		inline double DegToRad(double D) { return D * kPi / 180.0; }
 		inline double RadToDeg(double R) { return R * 180.0 / kPi; }
+		// lane A3: deterministic value in [-1, 1] from two integers (splitmix64 finaliser); no state, no seed
+		inline double Hash11(uint64_t A, uint64_t B)
+		{
+			uint64_t Z = A * 0x9E3779B97F4A7C15ull + B + 0x632BE59BD9B4E019ull;
+			Z = (Z ^ (Z >> 30)) * 0xBF58476D1CE4E5B9ull;
+			Z = (Z ^ (Z >> 27)) * 0x94D049BB133111EBull;
+			Z ^= Z >> 31;
+			return static_cast<double>(Z >> 11) * (2.0 / 9007199254740992.0) - 1.0;
+		}
+		inline FVec2 Rotate(const FVec2& V, double Rad) { const double C = std::cos(Rad), S = std::sin(Rad); return FVec2(V.X * C - V.Y * S, V.X * S + V.Y * C); }
 	}
 	using namespace AICoreLocal;
 
@@ -91,11 +101,31 @@ namespace JamAI
 		for (int i = 0; i < kMaxSkaters; ++i)
 		{
 			Used[i] = ERole::Chaser;
+			for (int k = 0; k <= kMaxReactionFrames; ++k)
+			{
+				Hist[i][k] = FJamAIInput();
+			}
 		}
+		Tick = 0;
+		TeamIntent = FJamAIIntent();
+	}
+
+	const FJamBotSkill& FJamBrain::SkillOf(const FJamAIWorld& W, int Id) const
+	{
+		const int PlayerTeam = W.PlayerIndex >= 0 ? W.Skaters[W.PlayerIndex].Team : 0;
+		return W.Skaters[Id].Team != PlayerTeam ? Params.Opp : Params.Mate;
 	}
 
 	void FJamBrain::Think(const FJamAIWorld& W, FJamAIInput* Out)
 	{
+		TeamIntent = FJamAIIntent();
+		if (W.IntentKind >= 1 && W.IntentKind <= 4 && W.IntentFramesLeft > 0)
+		{
+			TeamIntent.Kind = static_cast<ETeamIntent>(W.IntentKind);
+			TeamIntent.IssuedFrame = W.Frame;
+			TeamIntent.Frames = W.IntentFramesLeft;
+			TeamIntent.Target = W.IntentTarget;
+		}
 		const FVec2 Pp = W.PuckPos;
 		if (Pp.DistTo(Anchor) > Params.StallMoveM || W.Frame < AnchorFrame)
 		{
@@ -129,6 +159,24 @@ namespace JamAI
 			}
 		}
 		const int PlayerTeam = W.PlayerIndex >= 0 ? W.Skaters[W.PlayerIndex].Team : 0;
+		// lane A3: reaction delay. While frozen (goal pause) the ring is cleared, so after a faceoff a bot with delay N stands
+		// for N frames; while playing, the input sent is the one decided N thinks ago.
+		constexpr int Ring = kMaxReactionFrames + 1;
+		if (W.bFrozen)
+		{
+			for (int i = 0; i < kMaxSkaters; ++i)
+			{
+				for (int k = 0; k < Ring; ++k)
+				{
+					Hist[i][k] = FJamAIInput();
+				}
+			}
+		}
+		else
+		{
+			++Tick;
+		}
+		const int Head = static_cast<int>(Tick % Ring);
 		for (int i = 0; i < W.NumSkaters; ++i)
 		{
 			if (i == W.PlayerIndex)
@@ -138,10 +186,19 @@ namespace JamAI
 			FJamAIInput In;
 			if (W.bFrozen || W.Skaters[i].bDown)
 			{
+				Hist[i][Head] = In;
 				Out[i] = In;
 				continue;
 			}
-			const double Sc = Params.SpeedScale * (W.Skaters[i].Team != PlayerTeam ? Params.RedSkill : 1.0);
+			// lane A3 (R-0009): the back is the net's last line (no goalies): it keeps full speed and reacts at once at every level
+			const bool bBackRole = W.Skaters[i].Role == ERole::Back;
+			double Sc = Params.SpeedScale * (W.Skaters[i].Team != PlayerTeam && !bBackRole ? Params.RedSkill : 1.0);
+			// R-0007 TeamIntent praise: +10% for the praised teammate (the sim caps |Move| at 1, so it lifts scaled-down bots only)
+			if (W.PlayerIndex >= 0 && W.Skaters[i].Team == PlayerTeam && TeamIntent.Kind == ETeamIntent::Praise && TeamIntent.Active(W.Frame)
+				&& (TeamIntent.Target < 0 || TeamIntent.Target == i))
+			{
+				Sc *= 1.1;
+			}
 			bool bShoot = false;
 			FVec2 Dir = Decide(W, i, bShoot);
 			if (Dir.Length() > 1.0)
@@ -150,7 +207,18 @@ namespace JamAI
 			}
 			In.Move = Dir * Sc;
 			In.bShoot = bShoot;
-			Out[i] = In;
+			Hist[i][Head] = In;
+			int Delay = bBackRole ? 0 : SkillOf(W, i).ReactionFrames;
+			if (TeamIntent.Kind == ETeamIntent::Praise && TeamIntent.Active(W.Frame) && W.PlayerIndex >= 0 && W.Skaters[i].Team == PlayerTeam
+				&& (TeamIntent.Target < 0 || TeamIntent.Target == i))
+			{
+				Delay = 0;   // ACE.md 2: a praised teammate reacts at once
+			}
+			Delay = Delay < 0 ? 0 : (Delay > kMaxReactionFrames ? kMaxReactionFrames : Delay);
+			// the steering is the one decided Delay thinks ago; the shot stays live (a delayed shot almost never meets the sim's
+			// reach and facing gate: in the sweep any delay >= 2 frames stopped the AI from scoring at all)
+			Out[i] = Hist[i][(Head - Delay + Ring) % Ring];
+			Out[i].bShoot = In.bShoot;
 		}
 	}
 
@@ -202,6 +270,35 @@ namespace JamAI
 			Role = ERole::Support;
 			D = 99.0;
 		}
+		// R-0007 TeamIntent defend / space for the human's teammates (pass is read in Attack)
+		const bool bMate = W.PlayerIndex >= 0 && S.Team == W.Skaters[W.PlayerIndex].Team;
+		if (bMate && TeamIntent.Active(W.Frame) && D > 2.5)
+		{
+			if (TeamIntent.Kind == ETeamIntent::Defend && S.Role != ERole::Back && Pp.X * OppGoal.X > 0.0)
+			{
+				// ACE.md 2: with the puck in our attacking half, fall back to 8 m in front of the own net on the puck's side
+				FVec2 T(OwnGoal.X + Sign(-OwnGoal.X) * 8.0, Clamp(Pp.Y, -8.0, 8.0));
+				Used[Id] = ERole::Back;
+				return Arrive(Me, T - S.Vel * 0.25, Params.ArriveSlowRadius) + Separate(Me, W, Id, Params.SeparateRadius) * 1.2;
+			}
+			else if (TeamIntent.Kind == ETeamIntent::Space)
+			{
+				// free ice: the point ahead of the puck on the far side from the nearest opponent, kept inside the boards
+				FVec2 Near = Pp;
+				double Best = 1e18;
+				for (int o = 0; o < W.NumSkaters; ++o)
+				{
+					if (W.Skaters[o].Team == S.Team) { continue; }
+					const double Dd = W.Skaters[o].Pos.DistTo(Me);
+					if (Dd < Best) { Best = Dd; Near = W.Skaters[o].Pos; }
+				}
+				FVec2 T = Pp + FVec2(Sign(OppGoal.X) * 12.0, (Near.Y > Me.Y ? -1.0 : 1.0) * 10.0);
+				T.X = Clamp(T.X, -W.GoalX + 2.0, W.GoalX - 2.0);
+				T.Y = Clamp(T.Y, -W.HalfWidth + 4.0, W.HalfWidth - 4.0);
+				Used[Id] = ERole::Support;
+				return Arrive(Me, T, Params.ArriveSlowRadius) + Separate(Me, W, Id, Params.SeparateRadius) * 1.2;
+			}
+		}
 		Used[Id] = Role;
 
 		if (Role == ERole::Chaser || (Role == ERole::Support && D < Params.PounceRadius))
@@ -216,9 +313,39 @@ namespace JamAI
 			}
 			else
 			{
-				const FVec2 Gl = OwnGoal + FVec2(Sign(-OwnGoal.X) * 3.0, 0.0);
-				const FVec2 T = Gl + (Pp - Gl).LimitLength(Params.BackRadius);
-				Out = Arrive(Me, T, Params.ArriveSlowRadius);
+				FVec2 T;
+				if (Pp.X * OwnGoal.X > 0.0 || Pp.DistTo(OwnGoal) < Params.GuardRangeM)
+				{
+					// lane A3 (R-0009, feel QA): puck in our half or in shooting range: guard the net, on the line goal centre -> puck, at most
+					// GuardRadiusM from the goal centre, so a long shot meets a body (no goalies in this game)
+					const FVec2 ToPuck = Pp - OwnGoal;
+					const double L = ToPuck.Length();
+					const double R = L * 0.5 < Params.GuardRadiusM ? L * 0.5 : Params.GuardRadiusM;
+					T = OwnGoal + ToPuck.Normalized() * R;
+					if (std::fabs(T.X) > W.GoalX) { T.X = OwnGoal.X; }
+				}
+				else
+				{
+					const FVec2 Gl = OwnGoal + FVec2(Sign(-OwnGoal.X) * 3.0, 0.0);
+					T = Gl + (Pp - Gl).LimitLength(Params.BackRadius);
+				}
+				Out = Arrive(Me, T - S.Vel * 0.25, Params.ArriveSlowRadius);   // damped: stop on the post, do not slide through it
+				// lane A3 (R-0009): a shot on our net: step onto its path (the closest point of the puck's line)
+				const double Pv = W.PuckVel.Length();
+				if (SkillOf(W, Id).bBlockShots && Pp.DistTo(OwnGoal) >= SkillOf(W, Id).BlockMinDistM && Pv > 6.0 && W.PuckVel.Dot(OwnGoal - Pp) > 0.0)
+				{
+					const FVec2 Dir = W.PuckVel * (1.0 / Pv);
+					const double Tg = std::fabs(Dir.X) > 1e-6 ? (OwnGoal.X - Pp.X) / Dir.X : -1.0;
+					const double Yg = Pp.Y + Dir.Y * Tg;
+					if (Tg > 0.0 && std::fabs(Yg) < W.GoalHalfWidth + 1.0)
+					{
+						double Along = (Me - Pp).Dot(Dir);
+						Along = Along < 0.0 ? 0.0 : (Along > Tg ? Tg : Along);
+						const FVec2 Block = Pp + Dir * Along;
+						// damped: aim ahead of our own drift so the skater stops on the line instead of sliding through it
+						Out = Arrive(Me, Block - S.Vel * 0.25, 1.0);
+					}
+				}
 			}
 		}
 		else
@@ -240,14 +367,39 @@ namespace JamAI
 	FVec2 FJamBrain::Attack(const FJamAIWorld& W, int Id, const FVec2& Me, const FVec2& Pp, const FVec2& Dirg, double D, bool& bShoot) const
 	{
 		const FJamAISkater& S = W.Skaters[Id];
+		const FJamBotSkill& K = SkillOf(W, Id);
 		const FVec2 Fwd = S.Facing.Normalized();
 		const FVec2 OppGoal = W.OppGoal(S.Team);
 		const double Dgoal = Pp.DistTo(OppGoal);
 		const double GeoTol = RadToDeg(std::atan2(1.4, Dgoal > 1.0 ? Dgoal : 1.0));
-		const double Tol = Params.AimToleranceDeg < GeoTol ? Params.AimToleranceDeg : GeoTol;
-		const bool bFaceOk = Fwd.Dot(Dirg) > std::cos(DegToRad(Tol));
+		double Tol = K.AimToleranceDeg < GeoTol ? K.AimToleranceDeg : GeoTol;
+		// lane A3: aim error. The bot lines up on a point off the goal centre by up to AimErrorDeg; the error is a fixed
+		// function of the skater and a 2-second window, so the approach does not jitter.
+		FVec2 Aim = Dirg;
+		if (K.AimErrorDeg > 0.0)
+		{
+			Aim = Rotate(Dirg, DegToRad(K.AimErrorDeg * Hash11(static_cast<uint64_t>(Id) + 1, static_cast<uint64_t>(W.Frame / 120))));
+		}
+		bool bFaceOk = Fwd.Dot(Aim) > std::cos(DegToRad(Tol));
+		if (K.bUseAimCone && Params.AimConeDeg > 0.0 && K.AimErrorDeg <= 0.0)
+		{
+			// lane A3: the sim snaps a shot facing inside the cone onto the goal centre; a bot that knows it shoots there
+			bFaceOk = bFaceOk || Fwd.Dot(Dirg) > std::cos(DegToRad(Params.AimConeDeg * 0.9));
+		}
 		const bool bNearWall = std::fabs(Pp.Y) > W.HalfWidth - 2.0 && Dgoal > 6.0;
-		bool bOkShot = bFaceOk && Dgoal < W.ShotReach + Params.ShootExtraM && !bNearWall;
+		bool bOkShot = bFaceOk && Dgoal < W.ShotReach + K.ShootExtraM && !bNearWall;
+		if (bOkShot && K.bClearLane)
+		{
+			// lane A3: no shot into a defender's body; keep carrying instead
+			const FVec2 Lane = Fwd;
+			for (int o = 0; o < W.NumSkaters && bOkShot; ++o)
+			{
+				if (W.Skaters[o].Team == S.Team) { continue; }
+				const FVec2 Rel = W.Skaters[o].Pos - Pp;
+				const double Along = Rel.Dot(Lane);
+				if (Along > 0.0 && Along < Dgoal && std::fabs(Rel.Cross(Lane)) < 1.2) { bOkShot = false; }
+			}
+		}
 		if (bStalled && Fwd.Dot(Dirg) > 0.0)
 		{
 			bOkShot = true;
@@ -255,6 +407,33 @@ namespace JamAI
 		if (D < W.ShotReach && bOkShot && S.bCanShoot)
 		{
 			bShoot = true;
+		}
+		// lane A3: a teammate that holds the puck and faces the human with a clear lane passes it (shot = pass, no pass button)
+		const bool bPassIntent = TeamIntent.Kind == ETeamIntent::Pass && TeamIntent.Active(W.Frame);
+		if ((K.bPassToHuman || bPassIntent) && W.PlayerIndex >= 0 && W.Skaters[W.PlayerIndex].Team == S.Team && S.bCanShoot && D < W.ShotReach)
+		{
+			const FJamAISkater& H = W.Skaters[W.PlayerIndex];
+			const FVec2 To = H.Pos + H.Vel * 0.3 - Pp;
+			const double Dh = To.Length();
+			if (Dh > 5.0 && Dh < 25.0 && !H.bDown && Fwd.Dot(To * (1.0 / Dh)) > std::cos(DegToRad(15.0)))
+			{
+				bool bClear = true;
+				for (int o = 0; o < W.NumSkaters && bClear; ++o)
+				{
+					if (W.Skaters[o].Team == S.Team) { continue; }
+					const FVec2 Rel = W.Skaters[o].Pos - Pp;
+					const double Along = Rel.Dot(To) / Dh;
+					bClear = !(Along > 0.0 && Along < Dh && std::fabs(Rel.Cross(To) / Dh) < 2.0);
+				}
+				if (bClear) { bShoot = true; }
+			}
+		}
+		// R-0007 pass intent: the carrier turns to face the human (lead 1.5 x velocity) so the pass above can fire
+		if (bPassIntent && W.PlayerIndex >= 0 && W.Skaters[W.PlayerIndex].Team == S.Team && D < W.ShotReach + 0.5)
+		{
+			const FJamAISkater& H = W.Skaters[W.PlayerIndex];
+			const FVec2 Lead = H.Pos + H.Vel * 1.5;
+			if (Lead.DistTo(Pp) < 25.0) { return (Lead - Me).Normalized(); }
 		}
 		// lane A2: chip a puck off the boards (dribbling cannot: no skater fits between the board and the puck)
 		FVec2 Bn;
@@ -264,7 +443,7 @@ namespace JamAI
 		}
 		// Approach direction: towards the goal, or off the boards when the puck lies on them (lane A2 addition: the
 		// Godot brain only aimed at the goal, which on an end board puts the approach point outside the rink).
-		FVec2 Push = Dirg;
+		FVec2 Push = Aim;
 		if (bBoardPeel)
 		{
 			BoardPeel(W, Pp, OppGoal.X >= 0.0 ? 1.0 : -1.0, Push);
@@ -275,7 +454,32 @@ namespace JamAI
 		{
 			return (Pp + Push * 3.0 - Me).Normalized();
 		}
-		const double Lead = Clamp(D / 8.0, 0.0, Params.LeadFrames / 60.0);
+		double Lead = Clamp(D / 8.0, 0.0, K.LeadFrames / 60.0);
+		if (K.bIntercept)
+		{
+			// lane A3: earliest t with |Pp + V t - Me| = speed * t (speed = own top speed), capped like the plain lead
+			const FVec2 R = Pp - Me;
+			const FVec2 V = W.PuckVel.LimitLength(25.0);
+			const double Sp = Params.InterceptSpeed * Params.SpeedScale;
+			const double A = V.Dot(V) - Sp * Sp, B = 2.0 * R.Dot(V), C = R.Dot(R);
+			double T = -1.0;
+			if (std::fabs(A) < 1e-9)
+			{
+				T = std::fabs(B) > 1e-9 ? -C / B : -1.0;
+			}
+			else
+			{
+				const double Disc = B * B - 4.0 * A * C;
+				if (Disc >= 0.0)
+				{
+					const double Sq = std::sqrt(Disc);
+					const double T1 = (-B - Sq) / (2.0 * A), T2 = (-B + Sq) / (2.0 * A);
+					const double Lo = T1 < T2 ? T1 : T2, Hi = T1 < T2 ? T2 : T1;
+					T = Lo > 0.0 ? Lo : Hi;
+				}
+			}
+			Lead = Clamp(T > 0.0 ? T : D / 8.0, 0.0, K.LeadFrames / 60.0);
+		}
 		const FVec2 Tgt = Pp + W.PuckVel.LimitLength(25.0) * Lead;
 		FVec2 Behind = Tgt - Push * 1.2;
 		// slow deterministic sway of the approach line so two pursuers do not lock the puck in a corner

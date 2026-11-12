@@ -1,5 +1,6 @@
 // Lane A2: match runner and config parser (engine-free). See JamBotMatch.h.
 #include "JamBotMatch.h"
+#include "DifficultyProfile.h"
 
 #include <cstdio>
 #include <cstdlib>
@@ -74,6 +75,7 @@ namespace JamAI
 	bool FJamMatchConfig::Parse(const char* Text, char* Err, int ErrLen)
 	{
 		bool bSkatersReset = false;
+		bool bAiNumberSeen = false;   // lane A3: ai.difficulty applies its profile, so it must come before explicit ai.* numbers
 		const char* P = Text;
 		char Pair[256];
 		while (P && *P)
@@ -129,6 +131,32 @@ namespace JamAI
 				AddSkater(*this, std::atoi(Tok[0]), Role, std::atof(Tok[2]), std::atof(Tok[3]));
 				continue;
 			}
+			if (std::strcmp(Key, "ai.difficulty") == 0)
+			{
+				EDifficulty Level = EDifficulty::Pro;
+				if (!ParseDifficulty(Val, Level) || bAiNumberSeen)
+				{
+					*Eq = '=';
+					SetErr(Err, ErrLen, bAiNumberSeen ? "ai.difficulty must come before the ai numbers" : "bad ai.difficulty", Pair);
+					return false;
+				}
+				ApplyDifficultyProfile(GetDifficultyProfile(Level), AI);
+				continue;
+			}
+			if (std::strcmp(Key, "ai.tune") == 0)
+			{
+				// lane A3: tools/sweep tuning hook, "ai.tune=opp.reaction_frames:6,hold_radius_m:3" (':' and ',' as the pair already uses '=' and ';')
+				char Tune[256];
+				std::snprintf(Tune, sizeof(Tune), "%s", Val);
+				for (char* C = Tune; *C; ++C) { if (*C == ':') { *C = '='; } else if (*C == ',') { *C = ';'; } }
+				char TuneErr[200] = {};
+				if (!ApplyDifficultyTune(Tune, AI, TuneErr, sizeof(TuneErr)))
+				{
+					SetErr(Err, ErrLen, "bad ai.tune", TuneErr);
+					return false;
+				}
+				continue;
+			}
 			if (std::strcmp(Key, "rules.mode") == 0)
 			{
 				if (std::strcmp(Val, "timer") == 0) { bTimer = true; }
@@ -164,6 +192,7 @@ namespace JamAI
 				{
 					if (K.D) { *K.D = V; } else { *K.I = static_cast<int>(V); }
 					bFound = true;
+					bAiNumberSeen = bAiNumberSeen || std::strncmp(Key, "ai.", 3) == 0;
 					break;
 				}
 			}
@@ -223,6 +252,9 @@ namespace JamAI
 		FJamBrain Brain;
 		Brain.Reset();
 		Brain.Params = C.AI;
+		// lane A3: the sim facts the skills read
+		Brain.Params.InterceptSpeed = C.Speed;
+		Brain.Params.AimConeDeg = C.AimConeDeg;
 		FJamPlayerBot Bot;
 		if (Mode == EJamPlayerMode::PlayerBotAI)
 		{

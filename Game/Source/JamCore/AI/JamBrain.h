@@ -12,6 +12,8 @@
 #include "JamAICore.h"
 #include "JamBrain.generated.h"
 
+class UJamCartridge;
+
 UCLASS()
 class JAMCORE_API UJamBrain : public UObject
 {
@@ -33,6 +35,15 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|AI")
 	float RedSkill = 1.f;
+
+	// lane A3: game.ai.difficulty as resolved by ApplyCartridge ("rookie" | "pro" | "all_star").
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Jam|AI")
+	FName Difficulty = TEXT("pro");
+
+	// lane A3: the whole game.ai resolution (difficulty profile -> explicit game.ai numbers -> Designer values) plus the sim
+	// facts the skills read; also sets the five properties above. Call it instead of setting them, then ResetBrain.
+	// DifficultyOverride replaces the cartridge's level (nullptr = the cartridge's own).
+	void ApplyCartridge(const UJamCartridge& Cart, const TCHAR* DifficultyOverride = nullptr);
 
 	void ApplyParams();
 	void ResetBrain();

@@ -123,3 +123,14 @@ situation in game. Ideal state would be to shout at AI teammates for short strat
 2. **120 x 60 stays a shipped cut**: `hockey.arena.large` (120 x 60, speed 8) replaces `hockey.arena.small`; `hockey.arena.wide` (140 x 70) stays. Tests and sweeps run on regular and large.
 3. `GAME.md`, `HOCKEY.md` section 2 and the menu descriptions follow (Director edits the docs; lane A8 reads descriptions from the cartridges).
 4. The camera defaults are unchanged (measured for 120 m; on 90 m the far net is nearer, which only helps); the far-net marker stays.
+
+## R-0011 (H6.5, 2026-11-12 12:35): puck carrying, the instant goal, and the gates (lane A3's final report)
+1. **Adopt `puck.drag` 0.5** in every preset: carrying is the fun (A10) and it gives +45 % touches and 40 % shorter matches (A3). It hands the human every match at the current
+   profiles, so lane A3 **re-tunes the three profiles on drag 0.5** to the same targets (rookie 85 / pro 50 / all_star 25 on regular). The other four feel changes (glide drag 0.3, grip 4,
+   accel 16, reach 2.0) are **not** adopted together; A3 may take at most one more if the curve needs it and says which.
+2. **Net guarding:** rookie's back blocks long shots only (as shipped); pro and all_star block all. The curve wins over the clause.
+3. **Gates:** `PlayerBotWins` runs on **regular only** at rookie (seeds 1, 2, 7: WIN, identical hashes), with **no** first-goal-frame clause at rookie; the clause "first goal after frame 600
+   in at least 2 of 3 seeds" applies at **pro**, where the backs block. `AiBotPlays` on `hockey.arena.large` requires movement, puck path and shots only (no goal clause): guarding backs make
+   bot-only big-rink matches goalless, which is fine for a cut nobody plays bot-only.
+4. **Large Rink cut ships in timer mode** (`rules.mode timer`, 3 minutes = 10,800 frames) so it always ends; regular stays first-to-3.
+5. Lane A3's `LiveConfig` fix (loads `hockey.arena.large` for the held-back-geometry check) and the intent plumbing (`FJamAIWorld` intent fields filled by `GatherInputs`) are accepted.

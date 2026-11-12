@@ -1,7 +1,7 @@
 {
   "schema": "tj.cartridge/1",
-  "id": "hockey-arena-small",
-  "title": "Hockey Arena Small",
+  "id": "hockey-arena-large",
+  "title": "Large Rink Cut",
   "seed": 1,
   "theme": {
     "name": "Night Rink",
@@ -39,7 +39,7 @@
       "type": "number",
       "min": 3,
       "max": 16,
-      "default": 11,
+      "default": 8,
       "description": "Top skating speed in metres per second. Higher is faster and harder to control."
     },
     {
@@ -113,15 +113,15 @@
   "ai": [],
   "game": {
     "rink": {
-      "length_m": 90,
-      "width_m": 45,
-      "corner_radius_m": 3.75,
+      "length_m": 120,
+      "width_m": 60,
+      "corner_radius_m": 5,
       "board_restitution": 0.4,
       "ice_friction": 0.015,
       "goal_width_m": 4
     },
     "skater": {
-      "speed": 11,
+      "speed": 8,
       "accel": 12,
       "turn_rate": 5,
       "lateral_grip": 3,
@@ -157,21 +157,21 @@
           {
             "role": "player",
             "spawn": [
-              -7.5,
+              -10,
               0
             ]
           },
           {
             "role": "chaser",
             "spawn": [
-              -7.5,
-              -7.5
+              -10,
+              -10
             ]
           },
           {
             "role": "back",
             "spawn": [
-              -22.5,
+              -30,
               0
             ]
           }
@@ -184,21 +184,21 @@
           {
             "role": "chaser",
             "spawn": [
-              7.5,
+              10,
               0
             ]
           },
           {
             "role": "support",
             "spawn": [
-              7.5,
-              7.5
+              10,
+              10
             ]
           },
           {
             "role": "back",
             "spawn": [
-              22.5,
+              30,
               0
             ]
           }
@@ -206,11 +206,7 @@
       }
     ],
     "ai": {
-      "yield_margin_m": 2,
-      "yield_radius_m": 15,
-      "hold_radius_m": 4.5,
-      "speed_scale": 1,
-      "red_skill": 1
+      "difficulty": "pro"
     },
     "look": {
       "tier": "l2_night",

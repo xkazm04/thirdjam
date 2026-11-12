@@ -4,6 +4,7 @@
 #include "JamPawns.h"
 #include "JamBrain.h"
 #include "JamSimAdapter.h"
+#include "SignalSystem.h"
 #include "RinkActor.h"
 #include "LookTierSwitcher.h"
 #include "HUDFeed.h"
@@ -300,6 +301,18 @@ void AHokejGameMode::GatherInputs()
 {
 	JamAI::FJamAIWorld W;
 	JamAI::FJamSimAdapter::BuildWorld(*Sim, W);
+	// lane A3 (R-0009): the human's active team signal into the world the brain reads (FJamAIWorld::Intent*, frames, deterministic)
+	if (const UWorld* World = GetWorld())
+	{
+		FJamTeamIntent Intent;
+		const UJamSignalSystem* Signals = World->GetSubsystem<UJamSignalSystem>();
+		if (Signals && Signals->GetActiveIntent(Intent))
+		{
+			W.IntentKind = static_cast<int32>(Intent.Intent);   // EJamTeamIntent: None 0, Defend 1, Space 2, Pass 3, Praise 4
+			W.IntentTarget = Intent.TargetIndex;
+			W.IntentFramesLeft = Intent.FramesLeft(Sim->GetFrame());
+		}
+	}
 	JamAI::FJamAIInput Out[JamAI::kMaxSkaters];
 	Brain->Think(W, Out);
 	const int32 Human = Sim->GetHumanIndex();
