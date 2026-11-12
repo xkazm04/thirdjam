@@ -212,3 +212,5 @@
 ## H13.1 (23:32) main d96ac1d: QA1's ten faults fixed, gate 92/92; controls lane A49 proving in a package
 - Since H12.7: 54a4b43 Designer pass 2 (A44); 0dae80f H17 storyboard (A48; logging on in Shipping); 4c60b6f passes reach the human (A46) + HUD fixes (A42b); d96ac1d QA1 fixes (A47: motion blur off, plain banner, CALL READY, commentary cut floor and must-play goal calls, bank when-conditions, boost on l2_night, no ghost figures, own-goal colour, pro bots charge; binder round 3). R-0032: the operator's H18 playtest (unplayable: mouse not on the stick, stick blinking, camera, tackles not taking the puck): lane A49 owns the control path; H19 follows its proof.
 - B: A-to-B-0012: C-0001 v4 is on branch `lane/a45` (push in progress); move your four figure events onto the interface, then one merge lands both. 0029-0031 answered and done in A47.
+
+- RESOURCES 23:56 cpu 4% ram 20.8/63GB gpu 6 %, 852 MiB, 48 editors 0 cmd 0 ubt 0 free 555GB

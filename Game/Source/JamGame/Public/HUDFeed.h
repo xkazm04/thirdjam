@@ -109,6 +109,13 @@ struct JAMGAME_API FJamPresentationFrame
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Presentation")
 	int32 FaceoffCountdownFrames = 0;
 
+	// Lane A49: the human's sprint stamina, 0..1 (1 = full), and whether the sprint runs this frame; the HUD draws the bar.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Presentation")
+	float HumanStamina01 = 1.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Presentation")
+	bool bHumanSprinting = false;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Presentation")
 	bool bDirectorsCallReady = false;
 

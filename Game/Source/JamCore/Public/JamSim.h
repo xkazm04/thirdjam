@@ -73,6 +73,11 @@ struct JAMCORE_API FJamInput
 	// carry it as a flag bit (the checklist line), else the two peers desync at the first deke.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Sim")
 	bool bDeke = false;
+
+	// Lane A49 sprint held (level): +game.skater.sprint.bonus top speed and thrust while the skater moves and its stamina lasts (drain_frames of
+	// sprint, refill_frames to full). Bots never set it. LOCKSTEP: a new input field; lane A38's FJamNetQuantInput must carry it as a flag bit.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Sim")
+	bool bSprint = false;
 };
 
 // (Named EJamSimPhase, not EJamPhase: lane A5's presentation enum EJamPhase lives in JamGame/HUDFeed.h.)
@@ -112,8 +117,13 @@ struct JAMCORE_API FJamSkaterState
 
 	// First frame a shot is allowed again (cooldown).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int64 ShotReadyFrame = 0;
-	// Frames left of the check window (set to 6 when check is pressed).
+	// Frames left of the check window (set to 6 when check is pressed; 12 for the human, lane A49's calibration).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 CheckWindow = 0;
+	// Lane A49 sprint stamina in ticks: full = drain_frames * refill_frames; a sprinting frame takes refill_frames, a resting frame gives drain_frames back.
+	// Starts full; hashed only once it left full, so a match without a sprint hashes as before.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 Stamina = -1;
+	// Read-out: the sprint applied this frame.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bSprinting = false;
 	// Frames left knocked down; 0 = standing.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 KnockFrames = 0;
 	// Direction of the fall (rink x, z), unit; valid while KnockFrames > 0.
@@ -251,6 +261,13 @@ public:
 	static constexpr double PostRadius = 0.05;
 	static constexpr double ShotFrontDot = 0.5;      // must face within 60 degrees
 	static constexpr int32 CheckWindowFrames = 6;
+	// Lane A49 calibrations for the human's check (FEEL.md): a 12-frame window (0.2 s, a person's press is not frame-exact) and a check that lands from 2 m/s
+	// of the human's own speed (the sim's rule needs the checker's speed along the contact, and the operator skates slowly into the carrier). Bots keep the cartridge's
+	// check_speed_min and the 6-frame window, so the scripted Determinism baseline does not move.
+	static constexpr int32 HumanCheckWindowFrames = 12;
+	static constexpr double HumanCheckSpeedMinMs = 2.0;
+	// The sprint stamina's full value for a config (ticks).
+	int32 StaminaFull() const;
 	static constexpr double FaceoffDropM = 0.5;      // the faceoff puck lands up to this far off the dot (seeded)
 	// R-0013: the faceoff countdown, the draw window after the drop, the penalty box, the pause before a free faceoff after a foul.
 	static constexpr int32 FaceoffCountdownFrames = 90;

@@ -209,8 +209,9 @@ void UJamSettingsWidget::BuildTree()
 	// Controls summary (lane A5's mapping) under both columns.
 	Heading(Root, TEXT("settings"), TEXT("CONTROLS"), TEXT(""));
 	UTextBlock* Controls = S::Text(T,
-		TEXT("Skate   WASD / left stick        Shoot   Space / A        Check   Shift / B  (Raw Cut)\n")
-		TEXT("Restart   R / View        Pause and Director's Call   Esc / Start        Menus   stick or arrows, A / Enter, B / Esc back"),
+		TEXT("Skate   WASD / left stick        Aim the stick   mouse / right stick        Shoot   hold left mouse / RT        Check   right mouse / RB\n")
+		TEXT("Cross-check   middle mouse, mouse 4 / LB        Deke   wheel, Q / Y        Sprint   Shift / LT        Poke   Space / A        Pass   E / X\n")
+		TEXT("Signals   1-4 / D-pad        Brake   Ctrl / B        Restart   R / View        Pause and Director's Call   Esc / Start        Menus   arrows, Enter, Esc back"),   // lane A49
 		S::BodyFont(), S::Chalk());
 	Controls->SetAutoWrapText(true);
 	AddV(Root, Controls, FMargin(0, -2, 0, 6));

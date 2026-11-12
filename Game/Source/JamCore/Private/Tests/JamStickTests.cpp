@@ -5,6 +5,7 @@
 #include "JamCartridge.h"
 #include "JamSim.h"
 #include "JamEventBus.h"
+#include "JamPawns.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
 
@@ -313,6 +314,44 @@ bool FJamStick::RunTest(const FString& Parameters)
 		TestFalse(TEXT("kept the puck through the hard 180"), bLost);
 		AddInfo(FString::Printf(TEXT("after the 180: speed %.2f, puck %.2f m from the body"), Sim->GetSkaters()[Me].Vel.Size(), FVector2D::Distance(Sim->GetSkaters()[Me].Pos, Sim->GetPuck().Pos)));
 	}
+	return true;
+}
+
+// Lane A49 (complaint 3): the aim sent to the visual is side-stable across the +-180 wrap and never jumps more than 15 degrees in a frame.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamAimSmoothing, "Jam.Core.AimSmoothing", JamStickTests::Flags)
+bool FJamAimSmoothing::RunTest(const FString& Parameters)
+{
+	int32 Side = 0;
+	bool bInit = false;
+	float Sent = 0.f;
+	// Settle on the left at 60 degrees.
+	for (int32 i = 0; i < 30; ++i) Sent = AJamSkater::SmoothAimDeg(60.f, Sent, Side, bInit);
+	TestEqual(TEXT("settled at 60"), Sent, 60.f, 0.1f);
+	TestEqual(TEXT("side left"), Side, 1);
+	// The aim swings behind and jitters across +-180 (what the stuck mouse aim did while the skater skated): the sent aim holds +70, never flips.
+	float MaxStep = 0.f;
+	for (int32 i = 0; i < 600; ++i)
+	{
+		const float Raw = (i % 2 == 0) ? 179.f : -179.f;
+		const float Prev = Sent;
+		Sent = AJamSkater::SmoothAimDeg(Raw, Sent, Side, bInit);
+		MaxStep = FMath::Max(MaxStep, FMath::Abs(Sent - Prev));
+		if (Sent < 0.f) { AddError(FString::Printf(TEXT("flipped to the right at frame %d (sent %.1f)"), i, Sent)); break; }
+	}
+	TestEqual(TEXT("held at the left clamp"), Sent, AJamSkater::AimClampDeg, 0.1f);
+	TestTrue(TEXT("every step under 15 degrees behind"), MaxStep <= AJamSkater::AimSlewDegPerFrame + 1e-3f);
+	// Through the front to the right: the side changes, the sent aim slews at most 15 degrees per frame and settles.
+	MaxStep = 0.f;
+	for (int32 i = 0; i < 60; ++i)
+	{
+		const float Prev = Sent;
+		Sent = AJamSkater::SmoothAimDeg(-60.f, Sent, Side, bInit);
+		MaxStep = FMath::Max(MaxStep, FMath::Abs(Sent - Prev));
+	}
+	TestEqual(TEXT("settled at -60"), Sent, -60.f, 0.1f);
+	TestEqual(TEXT("side right"), Side, -1);
+	TestTrue(TEXT("every step under 15 degrees through the front"), MaxStep <= AJamSkater::AimSlewDegPerFrame + 1e-3f);
+	AddInfo(FString::Printf(TEXT("max step through the front %.2f degrees (slew %.0f)"), MaxStep, AJamSkater::AimSlewDegPerFrame));
 	return true;
 }
 

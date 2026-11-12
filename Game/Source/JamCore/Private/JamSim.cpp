@@ -934,7 +934,7 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 		if (In.bDeke) TryDeke(S);
 		if (In.bCheck && Config.Skater.bCheckEnabled)
 		{
-			S.CheckWindow = CheckWindowFrames;
+			S.CheckWindow = S.bHuman ? HumanCheckWindowFrames : CheckWindowFrames;   // lane A49: the human's press gets 0.2 s to connect
 			S.bCheckThisFrame = true;
 		}
 		if (In.bPoke) TryPoke(S);
@@ -991,8 +991,17 @@ void UJamSim::StepSkater(FJamSkaterState& S, const FJamInput& In)
 	// C-0005: per-skater effective stats (base values when no modifier touches them).
 	// R-0029 point 4 (lane A39): the breakaway burst lifts top speed and thrust by speed_bonus while it runs.
 	const double Burst = S.BreakawayFrames > 0 ? 1.0 + FMath::Max(0.0, Config.Skater.BreakawaySpeedBonus) : 1.0;
-	const double Speed = Eff(EJamStat::SkaterSpeed, S.Index) * Burst;
-	const double Accel = Eff(EJamStat::SkaterAccel, S.Index) * Burst;
+	// Lane A49: the sprint (Shift / LT held, bots never): +sprint.bonus on top speed and thrust while the skater moves and its stamina lasts. Integer ticks:
+	// a sprinting frame costs refill_frames, a resting frame returns drain_frames, so the bar empties in drain_frames and fills in refill_frames exactly.
+	const int32 Full = StaminaFull();
+	if (S.Stamina < 0 || S.Stamina > Full) S.Stamina = Full;
+	const bool bWantSprint = In.bSprint && C.SprintBonus > 0.0 && S.Stamina > 0 && In.Move.SizeSquared() > 0.0025 && S.CanAct() && !S.InBox();
+	S.bSprinting = bWantSprint;
+	if (bWantSprint) S.Stamina = FMath::Max(0, S.Stamina - FMath::Max(1, C.SprintRefillFrames));
+	else if (S.Stamina < Full) S.Stamina = FMath::Min(Full, S.Stamina + FMath::Max(1, C.SprintDrainFrames));
+	const double SprintMul = bWantSprint ? 1.0 + C.SprintBonus : 1.0;
+	const double Speed = Eff(EJamStat::SkaterSpeed, S.Index) * Burst * SprintMul;
+	const double Accel = Eff(EJamStat::SkaterAccel, S.Index) * Burst * SprintMul;
 	const double TurnRate = Eff(EJamStat::SkaterTurnRate, S.Index);
 	const double Grip = Eff(EJamStat::SkaterGrip, S.Index);
 	// Glide friction scales with the ice: glide_drag was measured at ice_friction 0.015 (DEFAULTS.md). R-0019: the zone under the skater scales speed and glide.
@@ -1256,11 +1265,13 @@ void UJamSim::CollideSkaters()
 					KnockDown(Victim.Index, Dir, Strength, CauseCheck);
 					if (Config.Rules.bPenalties && (!bVictimHasPuck || bFromBehind)) CallFoul(Checker, Victim, Contact, Strength, bVictimHasPuck ? FoulFromBehind : FoulNoPuck);
 				};
-				if (A.CheckWindow > 0 && A.CanAct() && !B.IsDown() && ASpeed > Eff(EJamStat::CheckSpeedMin, A.Index))
+				// Lane A49: the human's check lands from HumanCheckSpeedMinMs of its own speed along the contact (a calibration, FEEL.md); bots keep check_speed_min.
+				auto MinSpeed = [&](const FJamSkaterState& Checker) { const double M = Eff(EJamStat::CheckSpeedMin, Checker.Index); return Checker.bHuman ? FMath::Min(M, HumanCheckSpeedMinMs) : M; };
+				if (A.CheckWindow > 0 && A.CanAct() && !B.IsDown() && ASpeed > MinSpeed(A))
 				{
 					Landed(A, B, N);
 				}
-				else if (B.CheckWindow > 0 && B.CanAct() && !A.IsDown() && BSpeed > Eff(EJamStat::CheckSpeedMin, B.Index))
+				else if (B.CheckWindow > 0 && B.CanAct() && !A.IsDown() && BSpeed > MinSpeed(B))
 				{
 					Landed(B, A, -N);
 				}
@@ -1826,6 +1837,11 @@ void UJamSim::ScoreGoal(int32 ScoringTeam)
 	PauseFrames = Config.Rules.GoalPauseFrames;
 }
 
+int32 UJamSim::StaminaFull() const
+{
+	return FMath::Max(1, Config.Skater.SprintDrainFrames) * FMath::Max(1, Config.Skater.SprintRefillFrames);
+}
+
 uint64 UJamSim::StateHash() const
 {
 	FHasher H;
@@ -1865,6 +1881,8 @@ uint64 UJamSim::StateHash() const
 		if (S.DekeFrames != 0) { H.AddI(S.DekeFrames); H.AddI(S.DekeSide); }
 		if (S.DekeReadyFrame != 0) H.AddI(S.DekeReadyFrame);
 		if (S.SettleFrames != 0) H.AddI(S.SettleFrames);   // lane A46: only while a body reception settles
+		// Lane A49: the sprint stamina only once it left full (unset or full = no sprint yet), so a match without a sprint hashes as before.
+		if (S.Stamina >= 0 && S.Stamina != StaminaFull()) H.AddI(S.Stamina);
 	}
 	if (DekeCommitFrames != 0) { H.AddI(DekeCommitFrames); H.AddI(DekeCommitSide); H.AddI(DekeCommitSkater); }
 	H.AddI(FaceoffCountdown);

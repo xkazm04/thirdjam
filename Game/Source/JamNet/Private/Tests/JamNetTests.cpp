@@ -281,7 +281,7 @@ bool FJamNetPacketRoundTrip::RunTest(const FString& Parameters)
 	P.Write(Bytes);
 	AddInfo(FString::Printf(TEXT("input packet with %d inputs = %d bytes payload (%d on the wire with IPv4+UDP), %d B/s per direction at 60 packets/s"), JamNet::Window, Bytes.Num(), Bytes.Num() + 28, Bytes.Num() * 60));
 	TestEqual(TEXT("payload is header + window x input"), Bytes.Num(), FJamNetInputPacket::HeaderBytes + JamNet::Window * FJamNetQuantInput::WireBytes);
-	TestTrue(TEXT("payload under 100 bytes"), Bytes.Num() < 100);
+	TestTrue(TEXT("payload under 120 bytes (two flag bytes since protocol 4: the sprint)"), Bytes.Num() < 120);
 	FJamNetInputPacket Q;
 	TestTrue(TEXT("read back"), FJamNetInputPacket::Read(Bytes, Q));
 	TestEqual(TEXT("first frame"), Q.FirstFrame, P.FirstFrame);

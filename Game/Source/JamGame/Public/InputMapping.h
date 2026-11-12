@@ -1,5 +1,7 @@
-// Enhanced Input for Hokej, built in C++ (no editor assets): WASD / left stick move, space / A shoot, shift / B check, R restart, Esc pause. Lane A5.
-// A pawn adds a UJamPlayerInput component and reads Axis / IsShootHeld / IsCheckHeld each simulation step.
+// Enhanced Input for Hokej, built in C++ (no editor assets). Lane A5; the operator's mapping is lane A49 (docs/experiments/CONTROLS.md):
+//   mouse aims the stick, left button shoots (hold to charge), right button body-checks, middle / mouse 4 cross-checks (the lift), wheel or Q dekes;
+//   WASD skate, Shift sprint, Space poke, E pass, Ctrl brake, R restart, Esc pause; gamepad: sticks, RT shoot, RB check, LB lift, LT sprint, A poke, X pass, Y deke, B brake.
+// A pawn adds a UJamPlayerInput component and reads Axis / IsShootHeld / ... each simulation step.
 #pragma once
 
 #include "CoreMinimal.h"
@@ -28,8 +30,11 @@ public:
 	UPROPERTY() TObjectPtr<UInputAction> Check;    // bool
 	UPROPERTY() TObjectPtr<UInputAction> Restart;  // bool
 	UPROPERTY() TObjectPtr<UInputAction> Pause;    // bool
-	UPROPERTY() TObjectPtr<UInputAction> Brake;    // bool, held: Ctrl / left trigger
-	// R-0013 (lane A16): the stick. IA_StickAim: right stick, absolute; IA_StickMouse: mouse delta, accumulated; IA_Poke: left mouse / RB; IA_Lift: right mouse / LB.
+	UPROPERTY() TObjectPtr<UInputAction> Brake;    // bool, held: Ctrl / gamepad B
+	// Lane A49: IA_Sprint, held: Shift / left trigger (+game.skater.sprint.bonus speed while the stamina lasts).
+	UPROPERTY() TObjectPtr<UInputAction> Sprint;
+	// R-0013 (lane A16): the stick. IA_StickAim: right stick, absolute; IA_StickMouse: mouse delta, accumulated (the fallback when the cursor is hidden);
+	// IA_Poke: Space / A; IA_Lift (the cross-check): middle mouse, mouse 4 / LB. Lane A49 moved shoot to the left button / RT and check to the right button / RB.
 	UPROPERTY() TObjectPtr<UInputAction> StickAim;
 	UPROPERTY() TObjectPtr<UInputAction> StickMouse;
 	UPROPERTY() TObjectPtr<UInputAction> Poke;
@@ -42,6 +47,11 @@ public:
 
 	// Keys mapped to an action, for tests ("is the gamepad A button on Shoot").
 	bool IsKeyMapped(const UInputAction* Action, const FKey& Key) const;
+
+	// The binding table as text, one row per action ("SHOOT  left mouse / RT"), for the controls strip, the pause card and CONTROLS.md. Lane A49.
+	static FString BindingTableText(bool bOneLine);
+	// jam.ctrl.Log 1: the per-frame JAMCTRL / JAMAIM proof lines are on.
+	static bool LogEnabled();
 
 private:
 	void Build();
@@ -68,6 +78,13 @@ public:
 	// Held while Ctrl or the left trigger is down; the game mode copies it into FJamInput::bBrake.
 	UFUNCTION(BlueprintPure, Category = "Jam|Input")
 	bool IsBrakeHeld() const { return bBrake; }
+
+	// Lane A49: held while Shift or the left trigger is down; the game mode copies it into FJamInput::bSprint.
+	UFUNCTION(BlueprintPure, Category = "Jam|Input")
+	bool IsSprintHeld() const { return bSprint; }
+
+	// Clears the accumulated mouse delta (the game mode does it when the cursor aim takes over, so a later fallback starts from zero).
+	void ResetMouseAim() { MouseAimPx = FVector2D::ZeroVector; }
 
 
 	// R-0013 stick aim: right stick in [-1, 1]^2 (X right, Y forward), zero when idle.
@@ -125,6 +142,8 @@ private:
 	void OnCheckDone() { bCheck = false; }
 	void OnBrakeStarted() { bBrake = true; }
 	void OnBrakeDone() { bBrake = false; }
+	void OnSprintStarted() { bSprint = true; }
+	void OnSprintDone() { bSprint = false; }
 	void OnStickAim(const FInputActionValue& V);
 	void OnStickAimDone(const FInputActionValue& V);
 	void OnStickMouse(const FInputActionValue& V);
@@ -139,6 +158,7 @@ private:
 	bool bShoot = false;
 	bool bCheck = false;
 	bool bBrake = false;
+	bool bSprint = false;
 	bool bShootLatch = false;
 	bool bCheckLatch = false;
 	bool bPokeLatch = false;

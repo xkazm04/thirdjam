@@ -1013,6 +1013,13 @@ namespace
 			ReadNumber(Ba, TEXT("speed_bonus"), C.Skater.BreakawaySpeedBonus);
 			ReadInteger(Ba, TEXT("frames"), C.Skater.BreakawayFrames);
 		}
+		// Lane A49: game.skater.sprint { bonus, drain_frames, refill_frames }
+		if (const FJPtr Sp = Obj(Sk, TEXT("sprint")))
+		{
+			ReadNumber(Sp, TEXT("bonus"), C.Skater.SprintBonus);
+			ReadInteger(Sp, TEXT("drain_frames"), C.Skater.SprintDrainFrames);
+			ReadInteger(Sp, TEXT("refill_frames"), C.Skater.SprintRefillFrames);
+		}
 
 		const FJPtr St = G->Get(TEXT("stick"));
 		ReadNumber(St, TEXT("reach_m"), C.Stick.ReachM);

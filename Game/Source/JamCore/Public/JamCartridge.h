@@ -64,6 +64,11 @@ struct JAMCORE_API FJamSkaterConfig
 	// top speed and acceleration for BreakawayFrames, once per possession (event breakaway). speed_bonus 0 = off.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double BreakawaySpeedBonus = 0.2;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 BreakawayFrames = 60;
+	// game.skater.sprint (lane A49): Shift / LT held adds bonus to top speed and thrust while the stamina lasts; it drains in drain_frames of sprint and
+	// refills in refill_frames at rest. bonus 0 = off.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double SprintBonus = 0.15;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 SprintDrainFrames = 180;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 SprintRefillFrames = 360;
 };
 
 // game.stick (R-0013, lane A16): the mouse / right-stick aimed stick.
@@ -213,8 +218,9 @@ struct JAMCORE_API FJamCameraConfig
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") bool bRadar = true;
 	// A40: the board clamp margin, the end-board height and the far-net lead (DEFAULTS.md).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double BoardsMarginM = 0.8;
-	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double EndHeightM = 5;
-	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double FarNetBias = 0.5;
+	// Lane A49: end_height_m 3 (was 5) and far_net_bias 0.2 (was 0.5): the lead and the lift fought the mouse aim and pushed the human out of the frame's middle third.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double EndHeightM = 3;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double FarNetBias = 0.2;
 };
 
 // The hockey `game` object with every default applied and every `values` override folded in.

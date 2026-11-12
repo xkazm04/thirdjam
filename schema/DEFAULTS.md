@@ -33,6 +33,9 @@ of them out explicitly, but a Designer or hand-written cartridge may leave them 
 | `skater.pass_lead_frames` | 20 | lane A16 (C-0005) |
 | `skater.breakaway.speed_bonus` | 0.2 | lane A39 (R-0029 point 4): a carrier past centre ice with no opponent between it and the net gets this fraction more top speed and acceleration for `frames`, once per possession (event `breakaway`); 0 = off |
 | `skater.breakaway.frames` | 60 | lane A39 |
+| `skater.sprint.bonus` | 0.15 | lane A49: Shift / LT held adds this fraction to top speed and acceleration while the skater moves and the stamina lasts; bots never sprint; 0 = off |
+| `skater.sprint.drain_frames` | 180 | lane A49: frames of sprint from full to empty (3 s) |
+| `skater.sprint.refill_frames` | 360 | lane A49: frames at rest from empty to full (6 s) |
 | `skater.visual` | `humanoid_b1` | which figure is drawn: `toy_skeletal` (the Blender toy figure as a skeletal mesh, lane A26, the default since H11.7), `toy` (the code-built figure), `humanoid_b1`, `generated_b2`; gameplay is identical; the Designer may not change it (R-0001) |
 | `puck.radius_m` | 0.12 | |
 | `puck.max_speed` | 30 | |
@@ -97,8 +100,8 @@ of them out explicitly, but a Designer or hand-written cartridge may leave them 
 | `camera.fov_deg` | 70 |
 | `camera.radar` | true |
 | `camera.boards_margin_m` | 0.8 | lane A40: the camera never crosses the boards' inner face minus this, corner arcs included |
-| `camera.end_height_m` | 5 | lane A40: the lift when the boards take the arm (proportional to the arm lost), looking along the rink at an end board |
-| `camera.far_net_bias` | 0.5 | lane A40: the yaw lead toward the far net when heading for it, fading in from 8 to 20 m |
+| `camera.end_height_m` | 3 | lane A49 (was 5, lane A40): the lift when the boards take the arm (proportional to the arm lost), looking along the rink at an end board |
+| `camera.far_net_bias` | 0.2 | lane A49 (was 0.5, lane A40): the yaw lead toward the far net when heading for it, fading in from 8 to 20 m |
 
 Wide option (not a default): 8 / 4 / 6 / 6 frames / fov 85. Pitch is derived, never stored: `-atan(height_m / (distance_m + look_ahead_m))`.
 In `arena` mode the distance, height, look-ahead and lag keys are ignored.

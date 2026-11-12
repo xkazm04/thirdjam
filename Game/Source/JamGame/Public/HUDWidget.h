@@ -185,6 +185,9 @@ private:
 	// Lane A18: the plates and strips of the slate kit around the elements above.
 	UPROPERTY(Transient) TObjectPtr<UBorder> ControlsStrip;
 	UPROPERTY(Transient) TObjectPtr<UBorder> CardPlate;
+	// Lane A49: the sprint stamina bar (bottom centre, above the strips): a dark back plate and a fill that shrinks with the stamina; hidden while full and idle.
+	UPROPERTY(Transient) TObjectPtr<UBorder> StaminaBack;
+	UPROPERTY(Transient) TObjectPtr<UBorder> StaminaFill;
 	UPROPERTY(Transient) TObjectPtr<UWidget> CountdownBox;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> CountdownText;
 	UPROPERTY(Transient) TObjectPtr<class UHorizontalBox> EffectsRow;

@@ -199,6 +199,13 @@ void UJamDirectorsCallWidget::BuildTree()
 	PauseStatus->SetJustification(ETextJustify::Center);
 	PauseStatus->SetAutoWrapText(true);
 	AddV(Pause, PauseStatus, FMargin(0, 10, 0, 0));
+	// Lane A49: the controls card on the pause menu (the same table as UJamInputMap::BindingTableText and docs/experiments/CONTROLS.md).
+	UTextBlock* Controls = S::Text(T,
+		TEXT("SKATE  WASD / L-STICK      AIM STICK  MOUSE / R-STICK      SHOOT  HOLD LMB / RT      CHECK  RMB / RB\n")
+		TEXT("CROSS-CHECK  MMB, MOUSE4 / LB      DEKE  WHEEL, Q / Y      SPRINT  SHIFT / LT      POKE  SPACE / A\n")
+		TEXT("PASS  E / X      SIGNALS  1-4 / D-PAD      BRAKE  CTRL / B      RESTART  R / VIEW      PAUSE  ESC / MENU"), S::CaptionFont(), S::Chalk());
+	Controls->SetJustification(ETextJustify::Center);
+	AddV(Pause, Controls, FMargin(0, 12, 0, 0));
 	UTextBlock* Keys = S::Text(T, TEXT("ESC / START  resume      STICK  move      A  select      B  back"), S::CaptionFont(), S::Muted());
 	Keys->SetJustification(ETextJustify::Center);
 	AddV(Pause, Keys, FMargin(0, 8, 0, 0));

@@ -300,12 +300,20 @@ void UJamHudWidget::BuildTree()
 	YouTag->SetContent(YouTagText);
 	Place(Root, YouTag, FVector2D(0, 0), FVector2D(0.5, 1), FVector2D(0, 0));
 
+	// ---- Lane A49: the sprint stamina bar (Shift / LT): 240 x 8 px, bottom centre above the strips; drains in sprint.drain_frames, refills in refill_frames.
+	StaminaBack = S::Plate(T, FLinearColor(0.f, 0.f, 0.f, 0.55f), FMargin(0));
+	StaminaBack->SetVisibility(ESlateVisibility::Collapsed);
+	Place(Root, StaminaBack, FVector2D(0.5, 1), FVector2D(0.5, 1), FVector2D(0, -168), FVector2D(244, 12));
+	StaminaFill = S::Plate(T, S::Chalk(), FMargin(0));
+	StaminaFill->SetVisibility(ESlateVisibility::Collapsed);
+	Place(Root, StaminaFill, FVector2D(0.5, 1), FVector2D(0, 1), FVector2D(-120, -170), FVector2D(240, 8));
+
 	// ---- Controls hint: a bottom strip for the first 10 s, fading out over the last 2 s.
 	ControlsStrip = S::Plate(T, S::Pill(0.72f, 0.f), FMargin(0, 8));
 	ControlsStrip->SetVisibility(ESlateVisibility::Collapsed);
 	ControlsStrip->SetHorizontalAlignment(HAlign_Center);
 	ControlsText = MakeText(T, TEXT("ControlsText"), S::Font(S::Body, FName("Bold"), 40), S::Paper());
-	ControlsText->SetText(FText::FromString(TEXT("MOVE  WASD / L-STICK      SHOOT  SPACE / A      CHECK  SHIFT / B      BRAKE  CTRL / LT      PAUSE  ESC")));
+	ControlsText->SetText(FText::FromString(TEXT("SKATE  WASD      AIM  MOUSE      SHOOT  HOLD LMB      CHECK  RMB      CROSS-CHECK  MMB      SPRINT  SHIFT      POKE  SPACE      PASS  E      PAUSE  ESC")));   // lane A49 (UJamInputMap::BindingTableText has the full table)
 	ControlsText->SetJustification(ETextJustify::Center);
 	ControlsStrip->SetContent(ControlsText);
 	UCanvasPanelSlot* StripSlot = Root->AddChildToCanvas(ControlsStrip);
@@ -470,6 +478,15 @@ void UJamHudWidget::RefreshFromFrame(const FJamPresentationFrame& F)
 	AwayBox->SetBrushColor(F.TeamColour1);
 	TakeText->SetText(FText::FromString(FormatTake(F.Take, F.ScoreToWin).ToUpper()));
 	TimerText->SetText(FText::FromString(F.bHasTimer ? FormatTimer(F.FramesRemaining) : FString()));
+	// Lane A49: the stamina bar shows while the sprint runs or the bar is not full; yellow while sprinting, chalk while it refills.
+	if (StaminaBack && StaminaFill)
+	{
+		const bool bShow = F.bHumanSprinting || F.HumanStamina01 < 0.999f;
+		StaminaBack->SetVisibility(bShow ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+		StaminaFill->SetVisibility(bShow ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+		StaminaFill->SetBrushColor(F.bHumanSprinting ? S::Yellow() : S::Chalk());
+		if (UCanvasPanelSlot* FS = Cast<UCanvasPanelSlot>(StaminaFill->Slot)) FS->SetSize(FVector2D(FMath::Max(2.f, 240.f * FMath::Clamp(F.HumanStamina01, 0.f, 1.f)), 8.f));
+	}
 	TimerText->SetVisibility(F.bHasTimer ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 
 	const FString Card = CardFor(F.Phase);
