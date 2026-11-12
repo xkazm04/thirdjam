@@ -1,0 +1,1 @@
+LR_L2_Night on a basic-shape layout, PIE CaptureGameViewport 1920x1085: blue figure 6 m ahead, camera 3.5 m up; RampOn 1, OutlineOn 1 (device B, N1X)
