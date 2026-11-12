@@ -1,0 +1,76 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "figure",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T16:53:07.145Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "figure",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": "devlog/shots/20261112-175156-A-a28-tripo-walk-stick-chase.png",
+          "width": 2560,
+          "height": 500
+        }
+      ],
+      "thumbnails": [
+        "A: 128x25"
+      ],
+      "prompt_chars": 2708,
+      "usage": {
+        "prompt": 2984,
+        "output": 446,
+        "thoughts": 2366,
+        "total": 5796,
+        "calls": 1
+      },
+      "cost_usd_est": 0.03971,
+      "ms": 22933,
+      "retried": false,
+      "answer": {
+        "hockey_player": {
+          "full": 2,
+          "small": 1,
+          "parts": {
+            "stick": false,
+            "blade": false,
+            "hands": true,
+            "skates": true,
+            "helmet": true
+          },
+          "evidence": "The blue character wears a helmet and skates, but lacks a hockey stick entirely (the stick visible belongs to the mannequin behind), making it read as a generic skater rather than a hockey player."
+        },
+        "toy": {
+          "full": 4,
+          "small": 3,
+          "evidence": "The character features exaggerated, chunky proportions, an oversized head, and simple blocky shapes that strongly resemble a plastic toy figure."
+        },
+        "best_row": "The top row (f00-f07) reads slightly better as it shows the character's front and side profile during the initial stride, making the toy proportions clearer.",
+        "proportions": {
+          "head_of_height": 0.33,
+          "shoulder_of_height": 0.5,
+          "stick_of_height": 0
+        },
+        "changes": [
+          "Add a hockey stick to the blue character's hands (stick length ~1.2 of height).",
+          "Change the glove color to white or warm orange to contrast with the blue jersey.",
+          "Lighten the deep blue jersey slightly so it does not blend into the dark environment and shadows."
+        ],
+        "worst": [
+          "The complete absence of a hockey stick on the main blue character breaks the hockey read.",
+          "The dark blue jersey gets lost in the dark background, especially at smaller scales.",
+          "The hands are the exact same color as the jersey, making arm poses difficult to read."
+        ],
+        "works": [
+          "The oversized helmet and chunky body successfully convey the intended toy aesthetic.",
+          "The white skates provide excellent contrast against the dark ice, grounding the character."
+        ]
+      },
+      "markdown": "**eyes/figure** A=20261112-175156-A-a28-tripo-walk-stick-chase.png (gemini-3.1-pro-preview, in 2984 out 446 think 2366 tokens, ~$0.0397, 22.9 s)\n- hockey_player:\n  - full: 2\n  - small: 1\n  - parts:\n    - stick: false\n    - blade: false\n    - hands: true\n    - skates: true\n    - helmet: true\n  - evidence: The blue character wears a helmet and skates, but lacks a hockey stick entirely (the stick visible belongs to the mannequin behind), making it read as a generic skater rather than a hockey player.\n- toy:\n  - full: 4\n  - small: 3\n  - evidence: The character features exaggerated, chunky proportions, an oversized head, and simple blocky shapes that strongly resemble a plastic toy figure.\n- best_row: The top row (f00-f07) reads slightly better as it shows the character's front and side profile during the initial stride, making the toy proportions clearer.\n- proportions:\n  - head_of_height: 0.33\n  - shoulder_of_height: 0.5\n  - stick_of_height: 0\n- changes: Add a hockey stick to the blue character's hands (stick length ~1.2 of height).; Change the glove color to white or warm orange to contrast with the blue jersey.; Lighten the deep blue jersey slightly so it does not blend into the dark environment and shadows.\n- worst: The complete absence of a hockey stick on the main blue character breaks the hockey read.; The dark blue jersey gets lost in the dark background, especially at smaller scales.; The hands are the exact same color as the jersey, making arm poses difficult to read.\n- works: The oversized helmet and chunky body successfully convey the intended toy aesthetic.; The white skates provide excellent contrast against the dark ice, grounding the character."
+    }
+  ]
+}

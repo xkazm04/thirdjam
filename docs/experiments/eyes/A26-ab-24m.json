@@ -1,0 +1,74 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "ab-pair",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T16:28:34.332Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "ab-pair",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a26/docs/experiments/img/figure/toy-24m.jpg",
+          "width": 2560,
+          "height": 1440
+        },
+        {
+          "label": "B",
+          "path": ".claude/worktrees/a26/docs/experiments/img/figure/skel-24m.jpg",
+          "width": 2560,
+          "height": 1440
+        }
+      ],
+      "distance": 24,
+      "thumbnails": [],
+      "prompt_chars": 3493,
+      "usage": {
+        "prompt": 3209,
+        "output": 335,
+        "thoughts": 2078,
+        "total": 5622,
+        "calls": 1
+      },
+      "cost_usd_est": 0.03537,
+      "ms": 22020,
+      "retried": false,
+      "answer": {
+        "elements": {
+          "sky": {
+            "closer": "tie",
+            "why": "Both images feature a pure black void instead of the requested deep-blue night dome."
+          },
+          "ice": {
+            "closer": "tie",
+            "why": "Both stills use the exact same painted-looking ice texture with brush streaks and frost patches."
+          },
+          "pools": {
+            "closer": "tie",
+            "why": "Both show identical stepped cel-shaded light pools on the ice."
+          },
+          "figures": {
+            "closer": "b",
+            "why": "Still B features chunky toy figures with visible arms, big hands, and skates, whereas Still A uses abstract floating cylinders."
+          },
+          "construction": {
+            "closer": "tie",
+            "why": "Both have identical boards with emissive trim, kick plates, and red nets."
+          },
+          "outline": {
+            "closer": "b",
+            "why": "The more complex character geometry in Still B better showcases the thick, ink-like outlines, especially on the arms and sticks."
+          }
+        },
+        "verdict": "b",
+        "confidence": 0.95,
+        "reason": "Still B introduces proper chunky toy character models that fit the art direction, replacing Still A's placeholder cylinders, while keeping all other environment elements identical.",
+        "loser_keeps": "The visible jersey numbers on the backs of the characters in Still A."
+      },
+      "markdown": "**eyes/ab-pair** A=toy-24m.jpg B=skel-24m.jpg at 24 m (gemini-3.1-pro-preview, in 3209 out 335 think 2078 tokens, ~$0.0354, 22 s)\n- elements:\n  - sky: closer tie, why Both images feature a pure black void instead of the requested deep-blue night dome.\n  - ice: closer tie, why Both stills use the exact same painted-looking ice texture with brush streaks and frost patches.\n  - pools: closer tie, why Both show identical stepped cel-shaded light pools on the ice.\n  - figures: closer b, why Still B features chunky toy figures with visible arms, big hands, and skates, whereas Still A uses abstract floating cylinders.\n  - construction: closer tie, why Both have identical boards with emissive trim, kick plates, and red nets.\n  - outline: closer b, why The more complex character geometry in Still B better showcases the thick, ink-like outlines, especially on the arms and sticks.\n- verdict: b\n- confidence: 0.95\n- reason: Still B introduces proper chunky toy character models that fit the art direction, replacing Still A's placeholder cylinders, while keeping all other environment elements identical.\n- loser_keeps: The visible jersey numbers on the backs of the characters in Still A."
+    }
+  ]
+}

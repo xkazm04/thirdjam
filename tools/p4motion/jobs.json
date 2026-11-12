@@ -1,0 +1,840 @@
+{
+  "schema": "thirdjam.p4motion.jobs/1",
+  "status_2026-11-12T18:00": "every ue.out clip exists on SK_Mannequin with correct bone rotations, but its pelvis translation is scaled wrong by the IK Retargeter's Pelvis Motion op (source skeleton imported Y-up): docs/experiments/P4-MOTION.md section 8 blocker 1 has the measurements and the fix path; no clip has been watched playing correctly yet",
+  "note": "Every generation of lane A29: prompt, vendor task id, credits, wall and server time, what came back, how clip.py cut it and what the gate said. The raw vendor files live outside the repo (download URLs expire in 3 days); the in-place clips are /Game/P4/Anim/AS_P4_*. Classes: locomotion (loop), attack (contact window), reaction, pose. The per-clip ledger lines from meshy.mjs are in meshy-ledger.jsonl.",
+  "jobs": [
+    {
+      "clip": "AS_P4_skate_fwd",
+      "verbs": [
+        "skate"
+      ],
+      "class": "locomotion",
+      "loop": true,
+      "vendor": "meshy",
+      "route": "text-to-motion prime 4 s",
+      "task_id": "01a1d07d-e431-71dc-8642-c53299e992eb",
+      "credits": 10,
+      "wall_ms": 22767,
+      "server_ms": 19300,
+      "requested_at": "2026-11-12T17:01:11+02:00",
+      "prompt": "ice hockey player skating forward on ice in a low athletic crouch, torso leaning forward, long gliding strides pushing off alternately with the left and right leg, arms swinging naturally while holding a hockey stick with both hands low in front, smooth continuous cycle that repeats seamlessly",
+      "raw": {
+        "frames": 120,
+        "fps": 30,
+        "skeleton": "Reference (SMPL-H, 52 bones)",
+        "root_travel_m": [-0.097, -1.96, 0.001],
+        "loop_err_m": 0.734
+      },
+      "cut": {
+        "trim": [45, 85],
+        "loop_blend": 6,
+        "frames": 41,
+        "note": "the gate's best cut: one stride cycle, 1.37 s; six frames blended toward frame 1 to close the loop"
+      },
+      "gate": {
+        "verdict": "PASS",
+        "loop_err_m": 0,
+        "float_max_m": 0.053,
+        "glide_mps_mean": 0.726,
+        "root_after_m": 0
+      },
+      "ue": {
+        "src": "/Game/P4/Anim/Src/Meshy/AS_P4_skate_fwd_src",
+        "out": "/Game/P4/Anim/AS_P4_skate_fwd",
+        "frames_60": 80,
+        "seconds": 1.3333,
+        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshy_Manny",
+        "unmapped_core": []
+      }
+    },
+    {
+      "clip": "AS_P4_knocked_down_back",
+      "verbs": [
+        "knocked_down (from the front: a check into the chest, falls on the back)"
+      ],
+      "class": "reaction",
+      "vendor": "meshy",
+      "route": "animation library action 187 Knock Down on the E1 ue5_mannequin rig 01a1cd14-2963-73ea-bcdb-3ca6ef260654",
+      "task_id": "01a1d089-9151-70bc-87eb-0fd0dfcc4809",
+      "credits": 3,
+      "wall_ms": 12055,
+      "server_ms": 4140,
+      "requested_at": "2026-11-12T17:13:57+02:00",
+      "raw": {
+        "frames": 76,
+        "fps": 30,
+        "skeleton": "Meshy ue5_mannequin (28 bones)",
+        "root_travel_m": [0.022, 0.581, -0.58]
+      },
+      "cut": {
+        "frames": 76,
+        "note": "whole clip; the 0.58 m knock-back travel is stripped (the sim moves the pawn), the 0.58 m drop stays"
+      },
+      "gate": {
+        "verdict": "WARN",
+        "foot_slide_p90_mps": 1.384,
+        "root_after_m": 0,
+        "note": "the slide is the knock-back itself: the feet leave the ice as the body is thrown; acceptable for a reaction"
+      },
+      "ue": {
+        "src": "/Game/P4/Anim/Src/Meshyrig/AS_P4_knocked_down_back_src",
+        "out": "/Game/P4/Anim/AS_P4_knocked_down_back",
+        "frames_60": 150,
+        "seconds": 2.5,
+        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshyrig_Manny",
+        "unmapped_core": []
+      }
+    },
+    {
+      "clip": "AS_P4_skate_bwd",
+      "verbs": [
+        "skate backward"
+      ],
+      "class": "locomotion",
+      "vendor": "meshy",
+      "task_id": "01a1d09f-1867-765a-8676-ed50b79c520e",
+      "credits": 10,
+      "wall_ms": 12587,
+      "server_ms": 7774,
+      "requested_at": "2026-11-12T17:37-17:40+02:00",
+      "loop": true,
+      "route": "text-to-motion prime 4 s",
+      "prompt": "ice hockey player skating backward on ice, knees bent in a low defensive crouch, hips low, legs pushing out in alternating C-cuts to move backward, torso upright, arms relaxed holding a hockey stick in front, smooth continuous cycle that repeats seamlessly",
+      "raw": {
+        "frames": 120,
+        "fps": 30,
+        "skeleton": "Reference (SMPL-H, 52 bones)",
+        "root_travel_m": [-0.376, 0.729, -0.16],
+        "loop_err_m": 0.578,
+        "best_cut": {
+          "first_frame": 13,
+          "last_frame": 34,
+          "err": 0.21918752245508868
+        }
+      },
+      "cut": {
+        "frames": 22,
+        "seconds": 0.7,
+        "trim": [13, 34],
+        "loop_blend": 6,
+        "note": "the gate's best cut; six frames blended toward the first frame"
+      },
+      "gate": {
+        "verdict": "PASS",
+        "loop_err_m": 0,
+        "float_max_m": 0.024,
+        "glide_mps_mean": 0.441,
+        "root_after_m": 0
+      },
+      "ue": {
+        "src": "/Game/P4/Anim/Src/Meshy/AS_P4_skate_bwd_src",
+        "out": "/Game/P4/Anim/AS_P4_skate_bwd",
+        "frames_60": 42,
+        "seconds": 0.7,
+        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshy_Manny",
+        "unmapped_core": []
+      }
+    },
+    {
+      "clip": "AS_P4_crossover_l",
+      "verbs": [
+        "crossover left"
+      ],
+      "class": "locomotion",
+      "vendor": "meshy",
+      "task_id": "01a1d09f-4a5c-7093-be2f-bf715bd80b3d",
+      "credits": 10,
+      "wall_ms": 23307,
+      "server_ms": 11687,
+      "requested_at": "2026-11-12T17:37-17:40+02:00",
+      "loop": true,
+      "route": "text-to-motion prime 4 s",
+      "prompt": "ice hockey player skating forward and turning left in a wide arc, leaning into the turn, crossover strides where the right leg crosses over the left, low crouch, hands holding a hockey stick low, smooth continuous cycle that repeats seamlessly",
+      "raw": {
+        "frames": 120,
+        "fps": 30,
+        "skeleton": "Reference (SMPL-H, 52 bones)",
+        "root_travel_m": [0.12, -1.324, -0.007],
+        "loop_err_m": 0.832,
+        "best_cut": {
+          "first_frame": 54,
+          "last_frame": 85,
+          "err": 0.30224428861435915
+        }
+      },
+      "cut": {
+        "frames": 32,
+        "seconds": 1.033,
+        "trim": [54, 85],
+        "loop_blend": 6,
+        "note": "the gate's best cut; six frames blended toward the first frame"
+      },
+      "gate": {
+        "verdict": "PASS",
+        "loop_err_m": 0,
+        "float_max_m": 0.025,
+        "glide_mps_mean": 0.386,
+        "root_after_m": 0
+      },
+      "ue": {
+        "src": "/Game/P4/Anim/Src/Meshy/AS_P4_crossover_l_src",
+        "out": "/Game/P4/Anim/AS_P4_crossover_l",
+        "frames_60": 62,
+        "seconds": 1.033,
+        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshy_Manny",
+        "unmapped_core": []
+      }
+    },
+    {
+      "clip": "AS_P4_crossover_r",
+      "verbs": [
+        "crossover right"
+      ],
+      "class": "locomotion",
+      "vendor": "meshy",
+      "task_id": "01a1d09f-a660-736d-acb0-00a509779f79",
+      "credits": 10,
+      "wall_ms": 23144,
+      "server_ms": 11785,
+      "requested_at": "2026-11-12T17:37-17:40+02:00",
+      "loop": true,
+      "route": "text-to-motion prime 4 s",
+      "prompt": "ice hockey player skating forward and turning right in a wide arc, leaning into the turn, crossover strides where the left leg crosses over the right, low crouch, hands holding a hockey stick low, smooth continuous cycle that repeats seamlessly",
+      "raw": {
+        "frames": 120,
+        "fps": 30,
+        "skeleton": "Reference (SMPL-H, 52 bones)",
+        "root_travel_m": [-5.301, 1.405, -0.138],
+        "loop_err_m": 1.033,
+        "best_cut": {
+          "first_frame": 52,
+          "last_frame": 79,
+          "err": 0.15024470040570478
+        }
+      },
+      "cut": {
+        "frames": 28,
+        "seconds": 0.9,
+        "trim": [52, 79],
+        "loop_blend": 6,
+        "note": "the gate's best cut; six frames blended toward the first frame"
+      },
+      "gate": {
+        "verdict": "WARN",
+        "loop_err_m": 0,
+        "float_max_m": 0.061,
+        "glide_mps_mean": 3.378,
+        "root_after_m": 0
+      },
+      "ue": {
+        "src": "/Game/P4/Anim/Src/Meshy/AS_P4_crossover_r_src",
+        "out": "/Game/P4/Anim/AS_P4_crossover_r",
+        "frames_60": 54,
+        "seconds": 0.9,
+        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshy_Manny",
+        "unmapped_core": []
+      }
+    },
+    {
+      "clip": "AS_P4_glide",
+      "verbs": [
+        "glide"
+      ],
+      "class": "locomotion",
+      "vendor": "meshy",
+      "task_id": "01a1d0a0-0187-74bf-a739-a4bc1a4b9a31",
+      "credits": 10,
+      "wall_ms": 22939,
+      "server_ms": 11670,
+      "requested_at": "2026-11-12T17:37-17:40+02:00",
+      "loop": true,
+      "route": "text-to-motion prime 3 s",
+      "prompt": "ice hockey player gliding forward on ice on both skates, knees bent, feet still and shoulder width apart, torso leaning slightly forward, holding a hockey stick with both hands with the blade on the ice, slight breathing and balance sway, loops seamlessly",
+      "raw": {
+        "frames": 90,
+        "fps": 30,
+        "skeleton": "Reference (SMPL-H, 52 bones)",
+        "root_travel_m": [-0.345, -1.734, -0.028],
+        "loop_err_m": 0.344,
+        "best_cut": {
+          "first_frame": 9,
+          "last_frame": 29,
+          "err": 0.1365950584757736
+        }
+      },
+      "cut": {
+        "frames": 21,
+        "seconds": 0.667,
+        "trim": [9, 29],
+        "loop_blend": 6,
+        "note": "the gate's best cut; six frames blended toward the first frame"
+      },
+      "gate": {
+        "verdict": "PASS",
+        "loop_err_m": 0,
+        "float_max_m": 0.037,
+        "glide_mps_mean": 1.388,
+        "root_after_m": 0
+      },
+      "ue": {
+        "src": "/Game/P4/Anim/Src/Meshy/AS_P4_glide_src",
+        "out": "/Game/P4/Anim/AS_P4_glide",
+        "frames_60": 40,
+        "seconds": 0.667,
+        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshy_Manny",
+        "unmapped_core": []
+      }
+    },
+    {
+      "clip": "AS_P4_stop",
+      "verbs": [
+        "stop (re-prompted: feet on the ice from the first frame)"
+      ],
+      "class": "locomotion",
+      "vendor": "meshy",
+      "task_id": "01a1d0b9-665c-727a-95e2-5f8e1a29508b",
+      "credits": 10,
+      "wall_ms": 12740,
+      "server_ms": 9420,
+      "requested_at": "2026-11-12T17:37-17:40+02:00",
+      "loop": false,
+      "route": "animation library action undefined undefined on the E1 ue5_mannequin rig 01a1cd14-2963-73ea-bcdb-3ca6ef260654",
+      "raw": {
+        "frames": 90,
+        "fps": 30,
+        "skeleton": "Reference (SMPL-H, 52 bones)",
+        "root_travel_m": [0, 0, -0.218]
+      },
+      "cut": {
+        "frames": 90,
+        "seconds": 2.967
+      },
+      "gate": {
+        "verdict": "PASS",
+        "float_max_m": 0.029,
+        "glide_mps_mean": 0.225,
+        "root_after_m": 0
+      },
+      "ue": {
+        "src": "/Game/P4/Anim/Src/Meshy/AS_P4_stop_src",
+        "out": "/Game/P4/Anim/AS_P4_stop",
+        "frames_60": 178,
+        "seconds": 2.967,
+        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshy_Manny",
+        "unmapped_core": []
+      }
+    },
+    {
+      "clip": "AS_P4_carry",
+      "verbs": [
+        "carry (stickhandling)"
+      ],
+      "class": "locomotion",
+      "vendor": "meshy",
+      "task_id": "01a1d0b8-b36a-7371-ab6e-59447b8387ca",
+      "credits": 10,
+      "wall_ms": 30137,
+      "server_ms": 15891,
+      "requested_at": "2026-11-12T17:37-17:40+02:00",
+      "loop": true,
+      "route": "animation library action undefined undefined on the E1 ue5_mannequin rig 01a1cd14-2963-73ea-bcdb-3ca6ef260654",
+      "raw": {
+        "frames": 120,
+        "fps": 30,
+        "skeleton": "Reference (SMPL-H, 52 bones)",
+        "root_travel_m": [-0.032, -0.046, -0.01],
+        "loop_err_m": 0.398,
+        "best_cut": {
+          "first_frame": 28,
+          "last_frame": 108,
+          "err": 0.1150293875494432
+        }
+      },
+      "cut": {
+        "frames": 81,
+        "seconds": 2.667,
+        "trim": [28, 108],
+        "loop_blend": 6,
+        "note": "the gate's best cut; six frames blended toward the first frame"
+      },
+      "gate": {
+        "verdict": "PASS",
+        "loop_err_m": 0,
+        "float_max_m": 0.027,
+        "glide_mps_mean": 0.491,
+        "root_after_m": 0
+      },
+      "ue": {
+        "src": "/Game/P4/Anim/Src/Meshy/AS_P4_carry_src",
+        "out": "/Game/P4/Anim/AS_P4_carry",
+        "frames_60": 160,
+        "seconds": 2.667,
+        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshy_Manny",
+        "unmapped_core": []
+      }
+    },
+    {
+      "clip": "AS_P4_poke",
+      "verbs": [
+        "poke"
+      ],
+      "class": "attack",
+      "vendor": "meshy",
+      "task_id": "01a1d0b9-2745-728b-9cc7-0bf55217ec8e",
+      "credits": 10,
+      "wall_ms": 12382,
+      "server_ms": 10110,
+      "requested_at": "2026-11-12T17:37-17:40+02:00",
+      "contact_window": [20, 45],
+      "route": "animation library action undefined undefined on the E1 ue5_mannequin rig 01a1cd14-2963-73ea-bcdb-3ca6ef260654",
+      "raw": {
+        "frames": 75,
+        "fps": 30,
+        "skeleton": "Reference (SMPL-H, 52 bones)",
+        "root_travel_m": [0, 0, 0.018]
+      },
+      "cut": {
+        "frames": 75,
+        "seconds": 2.467
+      },
+      "gate": {
+        "verdict": "WARN",
+        "contact": {
+          "window": [20, 45],
+          "peak_hand_frame": 36,
+          "peak_hand_mps": 4.03
+        },
+        "float_max_m": 0.03,
+        "foot_slide_p90_mps": 1.019,
+        "root_after_m": 0
+      },
+      "ue": {
+        "src": "/Game/P4/Anim/Src/Meshy/AS_P4_poke_src",
+        "out": "/Game/P4/Anim/AS_P4_poke",
+        "frames_60": 148,
+        "seconds": 2.467,
+        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshy_Manny",
+        "unmapped_core": []
+      }
+    },
+    {
+      "clip": "AS_P4_knocked_down_behind",
+      "verbs": [
+        "knocked_down (from behind, falls forward)"
+      ],
+      "class": "reaction",
+      "vendor": "meshy",
+      "task_id": "01a1d09f-3935-73ea-9cd3-c527cd326f5a",
+      "credits": 3,
+      "wall_ms": 12036,
+      "server_ms": 4770,
+      "requested_at": "2026-11-12T17:37-17:40+02:00",
+      "route": "animation library action 180 Shot in the Back and Fall on the E1 ue5_mannequin rig 01a1cd14-2963-73ea-bcdb-3ca6ef260654",
+      "raw": {
+        "frames": 141,
+        "fps": 30,
+        "skeleton": "Meshy ue5_mannequin (28 bones)",
+        "root_travel_m": [0, 0, -0.623]
+      },
+      "cut": {
+        "frames": 141,
+        "seconds": 4.667
+      },
+      "gate": {
+        "verdict": "PASS",
+        "float_max_m": 0.357,
+        "foot_slide_p90_mps": 0.072,
+        "root_after_m": 0
+      },
+      "ue": {
+        "src": "/Game/P4/Anim/Src/Meshyrig/AS_P4_knocked_down_behind_src",
+        "out": "/Game/P4/Anim/AS_P4_knocked_down_behind",
+        "frames_60": 280,
+        "seconds": 4.667,
+        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshyrig_Manny",
+        "unmapped_core": []
+      }
+    },
+    {
+      "clip": "AS_P4_knocked_down_front",
+      "verbs": [
+        "knocked_down (hit from the front, falls forward)"
+      ],
+      "class": "reaction",
+      "vendor": "meshy",
+      "task_id": "01a1d09f-6969-7189-986c-c7ca40eb078a",
+      "credits": 3,
+      "wall_ms": 11939,
+      "server_ms": 3197,
+      "requested_at": "2026-11-12T17:37-17:40+02:00",
+      "route": "animation library action 184 Shot and Fall Forward on the E1 ue5_mannequin rig 01a1cd14-2963-73ea-bcdb-3ca6ef260654",
+      "raw": {
+        "frames": 66,
+        "fps": 30,
+        "skeleton": "Meshy ue5_mannequin (28 bones)",
+        "root_travel_m": [0, 0, -0.557]
+      },
+      "cut": {
+        "frames": 66,
+        "seconds": 2.167
+      },
+      "gate": {
+        "verdict": "WARN",
+        "float_max_m": 0.316,
+        "foot_slide_p90_mps": 0.25,
+        "root_after_m": 0
+      },
+      "ue": {
+        "src": "/Game/P4/Anim/Src/Meshyrig/AS_P4_knocked_down_front_src",
+        "out": "/Game/P4/Anim/AS_P4_knocked_down_front",
+        "frames_60": 130,
+        "seconds": 2.167,
+        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshyrig_Manny",
+        "unmapped_core": []
+      }
+    },
+    {
+      "clip": "AS_P4_knocked_down_side",
+      "verbs": [
+        "knocked_down (variant 2)"
+      ],
+      "class": "reaction",
+      "vendor": "meshy",
+      "task_id": "01a1d09f-a534-7263-8688-95c4821cffbf",
+      "credits": 3,
+      "wall_ms": 12017,
+      "server_ms": 4072,
+      "requested_at": "2026-11-12T17:37-17:40+02:00",
+      "route": "animation library action 190 Knock Down 1 on the E1 ue5_mannequin rig 01a1cd14-2963-73ea-bcdb-3ca6ef260654",
+      "raw": {
+        "frames": 99,
+        "fps": 30,
+        "skeleton": "Meshy ue5_mannequin (28 bones)",
+        "root_travel_m": [0, 0, -0.608]
+      },
+      "cut": {
+        "frames": 99,
+        "seconds": 3.267
+      },
+      "gate": {
+        "verdict": "WARN",
+        "float_max_m": 1.029,
+        "foot_slide_p90_mps": 0.61,
+        "root_after_m": 0
+      },
+      "ue": {
+        "src": "/Game/P4/Anim/Src/Meshyrig/AS_P4_knocked_down_side_src",
+        "out": "/Game/P4/Anim/AS_P4_knocked_down_side",
+        "frames_60": 196,
+        "seconds": 3.267,
+        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshyrig_Manny",
+        "unmapped_core": []
+      }
+    },
+    {
+      "clip": "AS_P4_hit_in_back_skating",
+      "verbs": [
+        "knocked_down (checked from behind at speed)"
+      ],
+      "class": "reaction",
+      "vendor": "meshy",
+      "task_id": "01a1d09f-d677-71f0-9736-f2c21678fad2",
+      "credits": 3,
+      "wall_ms": 12468,
+      "server_ms": 4425,
+      "requested_at": "2026-11-12T17:37-17:40+02:00",
+      "route": "animation library action 416 Hit in Back While Running on the E1 ue5_mannequin rig 01a1cd14-2963-73ea-bcdb-3ca6ef260654",
+      "raw": {
+        "frames": 76,
+        "fps": 30,
+        "skeleton": "Meshy ue5_mannequin (28 bones)",
+        "root_travel_m": [0, 0, 0.077]
+      },
+      "cut": {
+        "frames": 76,
+        "seconds": 2.5
+      },
+      "gate": {
+        "verdict": "WARN",
+        "float_max_m": 0.097,
+        "foot_slide_p90_mps": 1.107,
+        "root_after_m": 0
+      },
+      "ue": {
+        "src": "/Game/P4/Anim/Src/Meshyrig/AS_P4_hit_in_back_skating_src",
+        "out": "/Game/P4/Anim/AS_P4_hit_in_back_skating",
+        "frames_60": 150,
+        "seconds": 2.5,
+        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshyrig_Manny",
+        "unmapped_core": []
+      }
+    },
+    {
+      "clip": "AS_P4_trip_fall",
+      "verbs": [
+        "knocked_down (a trip)"
+      ],
+      "class": "reaction",
+      "vendor": "meshy",
+      "task_id": "01a1d0a0-067e-7684-b77a-0caa92b3bc7b",
+      "credits": 3,
+      "wall_ms": 11735,
+      "server_ms": 3205,
+      "requested_at": "2026-11-12T17:37-17:40+02:00",
+      "route": "animation library action 366 Falling Down on the E1 ue5_mannequin rig 01a1cd14-2963-73ea-bcdb-3ca6ef260654",
+      "raw": {
+        "frames": 69,
+        "fps": 30,
+        "skeleton": "Meshy ue5_mannequin (28 bones)",
+        "root_travel_m": [0, 0, -0.63]
+      },
+      "cut": {
+        "frames": 69,
+        "seconds": 2.267
+      },
+      "gate": {
+        "verdict": "WARN",
+        "float_max_m": 0.226,
+        "foot_slide_p90_mps": 0.383,
+        "root_after_m": 0
+      },
+      "ue": {
+        "src": "/Game/P4/Anim/Src/Meshyrig/AS_P4_trip_fall_src",
+        "out": "/Game/P4/Anim/AS_P4_trip_fall",
+        "frames_60": 136,
+        "seconds": 2.267,
+        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshyrig_Manny",
+        "unmapped_core": []
+      }
+    },
+    {
+      "clip": "AS_P4_fall_2",
+      "verbs": [
+        "knocked_down (short fall)"
+      ],
+      "class": "reaction",
+      "vendor": "meshy",
+      "task_id": "01a1d0a0-352b-7132-813e-29dae2aa6e62",
+      "credits": 3,
+      "wall_ms": 12057,
+      "server_ms": 2749,
+      "requested_at": "2026-11-12T17:37-17:40+02:00",
+      "route": "animation library action 503 Fall 2 on the E1 ue5_mannequin rig 01a1cd14-2963-73ea-bcdb-3ca6ef260654",
+      "raw": {
+        "frames": 21,
+        "fps": 30,
+        "skeleton": "Meshy ue5_mannequin (28 bones)",
+        "root_travel_m": [0, 0, 0]
+      },
+      "cut": {
+        "frames": 21,
+        "seconds": 0.667
+      },
+      "gate": {
+        "verdict": "PASS",
+        "float_max_m": 0.021,
+        "foot_slide_p90_mps": 0.134,
+        "root_after_m": 0
+      },
+      "ue": {
+        "src": "/Game/P4/Anim/Src/Meshyrig/AS_P4_fall_2_src",
+        "out": "/Game/P4/Anim/AS_P4_fall_2",
+        "frames_60": 40,
+        "seconds": 0.667,
+        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshyrig_Manny",
+        "unmapped_core": []
+      }
+    },
+    {
+      "clip": "AS_P4_hit_reaction",
+      "verbs": [
+        "check received, stays up",
+        "board collision (fallback)"
+      ],
+      "class": "reaction",
+      "vendor": "meshy",
+      "task_id": "01a1d0a0-64f4-7013-b207-a3e26a625727",
+      "credits": 3,
+      "wall_ms": 11784,
+      "server_ms": 2844,
+      "requested_at": "2026-11-12T17:37-17:40+02:00",
+      "route": "animation library action 178 Hit Reaction on the E1 ue5_mannequin rig 01a1cd14-2963-73ea-bcdb-3ca6ef260654",
+      "raw": {
+        "frames": 50,
+        "fps": 30,
+        "skeleton": "Meshy ue5_mannequin (28 bones)",
+        "root_travel_m": [0, 0, 0]
+      },
+      "cut": {
+        "frames": 50,
+        "seconds": 1.633
+      },
+      "gate": {
+        "verdict": "WARN",
+        "float_max_m": 0.041,
+        "foot_slide_p90_mps": 1.175,
+        "root_after_m": 0
+      },
+      "ue": {
+        "src": "/Game/P4/Anim/Src/Meshyrig/AS_P4_hit_reaction_src",
+        "out": "/Game/P4/Anim/AS_P4_hit_reaction",
+        "frames_60": 98,
+        "seconds": 1.633,
+        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshyrig_Manny",
+        "unmapped_core": []
+      }
+    },
+    {
+      "clip": "AS_P4_stumble",
+      "verbs": [
+        "stumble (mistimed poke)"
+      ],
+      "class": "reaction",
+      "vendor": "meshy",
+      "task_id": "01a1d0a0-93d7-7733-ad13-3efeefde4490",
+      "credits": 3,
+      "wall_ms": 11825,
+      "server_ms": 7399,
+      "requested_at": "2026-11-12T17:37-17:40+02:00",
+      "route": "animation library action 519 Sliding Stumble on the E1 ue5_mannequin rig 01a1cd14-2963-73ea-bcdb-3ca6ef260654",
+      "raw": {
+        "frames": 342,
+        "fps": 30,
+        "skeleton": "Meshy ue5_mannequin (28 bones)",
+        "root_travel_m": [0, 0, -0.255]
+      },
+      "cut": {
+        "frames": 342,
+        "seconds": 11.367
+      },
+      "gate": {
+        "verdict": "PASS",
+        "float_max_m": 0.36,
+        "foot_slide_p90_mps": 0.078,
+        "root_after_m": 0
+      },
+      "ue": {
+        "src": "/Game/P4/Anim/Src/Meshyrig/AS_P4_stumble_src",
+        "out": "/Game/P4/Anim/AS_P4_stumble",
+        "frames_60": 682,
+        "seconds": 11.367,
+        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshyrig_Manny",
+        "unmapped_core": []
+      }
+    },
+    {
+      "clip": "AS_P4_get_up_1",
+      "verbs": [
+        "get_up"
+      ],
+      "class": "reaction",
+      "vendor": "meshy",
+      "task_id": "01a1d0a0-c300-705b-8d73-770b0942365e",
+      "credits": 3,
+      "wall_ms": 11812,
+      "server_ms": 5697,
+      "requested_at": "2026-11-12T17:37-17:40+02:00",
+      "route": "animation library action 344 Stand Up 1 on the E1 ue5_mannequin rig 01a1cd14-2963-73ea-bcdb-3ca6ef260654",
+      "raw": {
+        "frames": 249,
+        "fps": 30,
+        "skeleton": "Meshy ue5_mannequin (28 bones)",
+        "root_travel_m": [0, 0, 0.632]
+      },
+      "cut": {
+        "frames": 249,
+        "seconds": 8.267
+      },
+      "gate": {
+        "verdict": "PASS",
+        "float_max_m": 0.138,
+        "foot_slide_p90_mps": 0.031,
+        "root_after_m": 0
+      },
+      "ue": {
+        "src": "/Game/P4/Anim/Src/Meshyrig/AS_P4_get_up_1_src",
+        "out": "/Game/P4/Anim/AS_P4_get_up_1",
+        "frames_60": 496,
+        "seconds": 8.267,
+        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshyrig_Manny",
+        "unmapped_core": []
+      }
+    },
+    {
+      "clip": "AS_P4_get_up_2",
+      "verbs": [
+        "get_up (variant)"
+      ],
+      "class": "reaction",
+      "vendor": "meshy",
+      "task_id": "01a1d0a0-f1cd-706b-a4df-247e1ecb1476",
+      "credits": 3,
+      "wall_ms": 11828,
+      "server_ms": 3520,
+      "requested_at": "2026-11-12T17:37-17:40+02:00",
+      "route": "animation library action 345 Stand Up 2 on the E1 ue5_mannequin rig 01a1cd14-2963-73ea-bcdb-3ca6ef260654",
+      "raw": {
+        "frames": 93,
+        "fps": 30,
+        "skeleton": "Meshy ue5_mannequin (28 bones)",
+        "root_travel_m": [0, 0, 0.355]
+      },
+      "cut": {
+        "frames": 93,
+        "seconds": 3.067
+      },
+      "gate": {
+        "verdict": "PASS",
+        "float_max_m": 0.082,
+        "foot_slide_p90_mps": 0.04,
+        "root_after_m": 0
+      },
+      "ue": {
+        "src": "/Game/P4/Anim/Src/Meshyrig/AS_P4_get_up_2_src",
+        "out": "/Game/P4/Anim/AS_P4_get_up_2",
+        "frames_60": 184,
+        "seconds": 3.067,
+        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshyrig_Manny",
+        "unmapped_core": []
+      }
+    },
+    {
+      "clip": "AS_P4_idle",
+      "verbs": [
+        "idle"
+      ],
+      "class": "pose",
+      "vendor": "meshy",
+      "task_id": "01a1d0a1-20ef-7752-8ab8-0d5f0d326735",
+      "credits": 3,
+      "wall_ms": 11885,
+      "server_ms": 4456,
+      "requested_at": "2026-11-12T17:37-17:40+02:00",
+      "route": "animation library action 0 Idle on the E1 ue5_mannequin rig 01a1cd14-2963-73ea-bcdb-3ca6ef260654",
+      "raw": {
+        "frames": 121,
+        "fps": 30,
+        "skeleton": "Meshy ue5_mannequin (28 bones)",
+        "root_travel_m": [0, 0, 0]
+      },
+      "cut": {
+        "frames": 121,
+        "seconds": 4
+      },
+      "gate": {
+        "verdict": "PASS",
+        "float_max_m": 0.012,
+        "foot_slide_p90_mps": 0.042,
+        "root_after_m": 0
+      },
+      "ue": {
+        "src": "/Game/P4/Anim/Src/Meshyrig/AS_P4_idle_src",
+        "out": "/Game/P4/Anim/AS_P4_idle",
+        "frames_60": 240,
+        "seconds": 4,
+        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshyrig_Manny",
+        "unmapped_core": []
+      }
+    }
+  ]
+}

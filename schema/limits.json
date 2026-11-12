@@ -43,7 +43,7 @@
     "skater.brake_decel": "1..30",
     "skater.check_speed_min": "1..12",
     "skater.knockdown_frames": "15..300",
-    "skater.visual": "toy|humanoid_b1|generated_b2",
+    "skater.visual": "toy|humanoid_b1|generated_b2|toy_skeletal",
     "skater.pass_speed": "5..30",
     "skater.pass_lead_frames": "0..60",
     "stick.reach_m": "0.8..3",

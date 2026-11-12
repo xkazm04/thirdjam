@@ -1,0 +1,32 @@
+{
+  "schema": "thirdjam.p4motion.bonemap/1",
+  "source": "Meshy rigging preset ue5_mannequin (28 bones, no root, Manny names on the core; LeftHand_End/RightHand_End, LeftToe_end/RightToe_end, head_end, headfront leaves): the skeleton the Meshy animation library clips come on, and A28's figures",
+  "target": "UE5 Manny: /Game/Characters/Mannequins/Meshes/SK_Mannequin (SKM_Manny_Simple)",
+  "retarget_root": { "source": "pelvis", "target": "pelvis" },
+  "chains": [
+    { "chain": "Spine", "source": ["spine_01", "spine_03"], "target": ["spine_01", "spine_05"] },
+    { "chain": "Neck", "source": ["neck_01", "neck_01"], "target": ["neck_01", "neck_02"] },
+    { "chain": "Head", "source": ["head", "head"], "target": ["head", "head"] },
+    { "chain": "LeftClavicle", "source": ["clavicle_l", "clavicle_l"], "target": ["clavicle_l", "clavicle_l"] },
+    { "chain": "LeftArm", "source": ["upperarm_l", "hand_l"], "target": ["upperarm_l", "hand_l"], "ik_goal": "LeftHandIK" },
+    { "chain": "LeftLeg", "source": ["thigh_l", "foot_l"], "target": ["thigh_l", "foot_l"], "ik_goal": "LeftFootIK" },
+    { "chain": "LeftFoot", "source": ["ball_l", "ball_l"], "target": ["ball_l", "ball_l"] },
+    { "chain": "RightClavicle", "source": ["clavicle_r", "clavicle_r"], "target": ["clavicle_r", "clavicle_r"] },
+    { "chain": "RightArm", "source": ["upperarm_r", "hand_r"], "target": ["upperarm_r", "hand_r"], "ik_goal": "RightHandIK" },
+    { "chain": "RightLeg", "source": ["thigh_r", "foot_r"], "target": ["thigh_r", "foot_r"], "ik_goal": "RightFootIK" },
+    { "chain": "RightFoot", "source": ["ball_r", "ball_r"], "target": ["ball_r", "ball_r"] }
+  ],
+  "target_core_bones": ["pelvis", "spine_01", "spine_02", "spine_03", "spine_04", "spine_05", "neck_01", "neck_02", "head",
+    "clavicle_l", "upperarm_l", "lowerarm_l", "hand_l", "thigh_l", "calf_l", "foot_l", "ball_l",
+    "clavicle_r", "upperarm_r", "lowerarm_r", "hand_r", "thigh_r", "calf_r", "foot_r", "ball_r"],
+  "known_unmapped_target": {
+    "fingers": "every finger and metacarpal chain (the Meshy rig has no fingers unless include_fingers was set; hands stay in the ref pose, gloves hide it)",
+    "twist": "all *_twist_* bones (not in any chain)",
+    "ik": "ik_* bones (not in any chain)",
+    "root": "root (the Meshy rig has no root; every clip is stripped in place, so root never moves)"
+  },
+  "notes": [
+    "Names match the Manny core one to one, so the IK Retargeter is close to a copy with the spine 3 -> 5 spread; the same table serves clips that A28's Meshy-rigged figure plays directly (no retarget) and the Manny proof.",
+    "docs/experiments/MESHY.md section 4 lists the 28 bones."
+  ]
+}

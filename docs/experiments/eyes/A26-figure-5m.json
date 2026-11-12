@@ -1,0 +1,78 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "figure",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T16:29:35.887Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "figure",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a26/Game/Saved/Screenshots/WindowsEditor/skel-verbs-5m.png",
+          "width": 2560,
+          "height": 1440
+        }
+      ],
+      "thumbnails": [
+        "A: 128x72"
+      ],
+      "prompt_chars": 2677,
+      "usage": {
+        "prompt": 3036,
+        "output": 456,
+        "thoughts": 2054,
+        "total": 5546,
+        "calls": 1
+      },
+      "cost_usd_est": 0.03619,
+      "ms": 25842,
+      "retried": false,
+      "answer": {
+        "hockey_player": {
+          "full": 3,
+          "small": 2,
+          "parts": {
+            "stick": true,
+            "blade": true,
+            "hands": true,
+            "skates": true,
+            "helmet": true
+          },
+          "evidence": "The right orange player has all parts visible, but the blue player lacks visible arms and a physical stick, appearing as a blue cylinder; skates are tiny slivers that vanish when downscaled."
+        },
+        "toy": {
+          "full": 4,
+          "small": 4,
+          "evidence": "The figures use simple pill-shaped bodies, spherical floating hands, and flat shading, strongly resembling peg dolls or Fisher-Price toys."
+        },
+        "best_row": "Rightmost orange player (no rows present)",
+        "proportions": {
+          "head_of_height": 0.23,
+          "shoulder_of_height": 0.33,
+          "stick_of_height": 0.83
+        },
+        "changes": [
+          "skates 0.05 of height -> 0.15 to remain visible at distance",
+          "blue player arms visibility -> add distinct arm geometry or color contrast",
+          "stick thickness 4px -> 10px to read better when downscaled",
+          "head 0.23 of height -> 0.30 for a chunkier toy proportion"
+        ],
+        "worst": [
+          "The blue player reads as a featureless cylinder because the arms are missing or perfectly blended into the body.",
+          "The skates are too small and thin, disappearing completely in the downscaled version.",
+          "The blue player's stick is missing, replaced by a confusing glowing white line on the ice."
+        ],
+        "works": [
+          "The deep blue and warm orange colors provide excellent team contrast.",
+          "The black helmets with thick visors clearly establish the hockey theme.",
+          "The glowing puck highlight ensures the puck is easily tracked."
+        ]
+      },
+      "markdown": "**eyes/figure** A=skel-verbs-5m.png (gemini-3.1-pro-preview, in 3036 out 456 think 2054 tokens, ~$0.0362, 25.8 s)\n- hockey_player:\n  - full: 3\n  - small: 2\n  - parts:\n    - stick: true\n    - blade: true\n    - hands: true\n    - skates: true\n    - helmet: true\n  - evidence: The right orange player has all parts visible, but the blue player lacks visible arms and a physical stick, appearing as a blue cylinder; skates are tiny slivers that vanish when downscaled.\n- toy:\n  - full: 4\n  - small: 4\n  - evidence: The figures use simple pill-shaped bodies, spherical floating hands, and flat shading, strongly resembling peg dolls or Fisher-Price toys.\n- best_row: Rightmost orange player (no rows present)\n- proportions:\n  - head_of_height: 0.23\n  - shoulder_of_height: 0.33\n  - stick_of_height: 0.83\n- changes: skates 0.05 of height -> 0.15 to remain visible at distance; blue player arms visibility -> add distinct arm geometry or color contrast; stick thickness 4px -> 10px to read better when downscaled; head 0.23 of height -> 0.30 for a chunkier toy proportion\n- worst: The blue player reads as a featureless cylinder because the arms are missing or perfectly blended into the body.; The skates are too small and thin, disappearing completely in the downscaled version.; The blue player's stick is missing, replaced by a confusing glowing white line on the ice.\n- works: The deep blue and warm orange colors provide excellent team contrast.; The black helmets with thick visors clearly establish the hockey theme.; The glowing puck highlight ensures the puck is easily tracked."
+    }
+  ]
+}

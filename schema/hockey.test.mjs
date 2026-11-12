@@ -13,6 +13,7 @@ const regular = () => read('hockey.regular.cartridge.json');
 const large = () => read('hockey.arena.large.cartridge.json');
 const PRESETS = [
   'hockey.test.visual-b2.cartridge.json',
+  'hockey.test.visual-a26.cartridge.json',   // lane A26: the regular cut with game.skater.visual toy_skeletal (the proof cartridge)
   'hockey.regular.cartridge.json', 'hockey.raw.cartridge.json', 'hockey.boost.cartridge.json',
   'hockey.arena.large.cartridge.json', 'hockey.arena.wide.cartridge.json',
   'hockey.chaos.cartridge.json',   // lane A15 (C-0005): sudden death, shrink per goal, two bumpers, one slow circle

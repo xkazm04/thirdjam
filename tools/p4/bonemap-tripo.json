@@ -1,0 +1,40 @@
+{
+  "schema": "thirdjam.bonemap/1",
+  "vendor": "tripo",
+  "source_skeleton": "Tripo3D v2.5 mesh through fal (12678a9a-55d1-422b-b16b-2a9bb75a6db5) rigged by the Meshy rigging API, skeleton_template ue5_mannequin, rig 01a1d095-8b3f-7521-9ca2-cad3c8af3053: the same 28 bones as the Meshy figure",
+  "target_skeleton": "/Game/Characters/Mannequins/Meshes/SK_Mannequin (UE5 Manny, Templates/TemplateResources/High/Characters 5.9)",
+  "note": "source -> target. The target chains spine, arms, legs must each be the target of a row (totality, tools/p4/bonemap_check.py). The Meshy FBX has no root: tools/p4/normalize_fbx.py names the armature node root and the legacy FbxFactory imports it as the root bone (pelvis is its child), so the root row exists after import only. No twist, IK, finger or spine_04/05 / neck_02 bones: those rows are absent and the check lists them.",
+  "rows": {
+    "root": "root",
+    "pelvis": "pelvis",
+    "spine_01": "spine_01",
+    "spine_02": "spine_02",
+    "spine_03": "spine_03",
+    "neck_01": "neck_01",
+    "head": "head",
+    "clavicle_l": "clavicle_l",
+    "upperarm_l": "upperarm_l",
+    "lowerarm_l": "lowerarm_l",
+    "hand_l": "hand_l",
+    "clavicle_r": "clavicle_r",
+    "upperarm_r": "upperarm_r",
+    "lowerarm_r": "lowerarm_r",
+    "hand_r": "hand_r",
+    "thigh_l": "thigh_l",
+    "calf_l": "calf_l",
+    "foot_l": "foot_l",
+    "ball_l": "ball_l",
+    "thigh_r": "thigh_r",
+    "calf_r": "calf_r",
+    "foot_r": "foot_r",
+    "ball_r": "ball_r"
+  },
+  "source_leaf_bones_unmapped": [
+    "head_end",
+    "headfront",
+    "LeftHand_End",
+    "RightHand_End",
+    "LeftToe_end",
+    "RightToe_end"
+  ]
+}

@@ -27,7 +27,7 @@ of them out explicitly, but a Designer or hand-written cartridge may leave them 
 | `skater.knockdown_frames` | 90 | only read when `check_enabled` is true |
 | `skater.pass_speed` | 14 | lane A16 (C-0005) |
 | `skater.pass_lead_frames` | 20 | lane A16 (C-0005) |
-| `skater.visual` | `toy` | which figure is drawn: `toy`, `humanoid_b1`, `generated_b2`; gameplay is identical; the Designer may not change it (R-0001) |
+| `skater.visual` | `toy_skeletal` | which figure is drawn: `toy_skeletal` (the Blender toy figure as a skeletal mesh, lane A26, the default since H11.7), `toy` (the code-built figure), `humanoid_b1`, `generated_b2`; gameplay is identical; the Designer may not change it (R-0001) |
 | `puck.radius_m` | 0.12 | |
 | `puck.max_speed` | 30 | |
 | `puck.drag` | 0 | |

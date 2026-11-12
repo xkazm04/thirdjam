@@ -1,0 +1,1 @@
+{"script":{"content":"import unreal\nlib=unreal.EditorAssetLibrary\nprint('A28 Meshy delete', lib.delete_directory('/Game/P4/Meshy') if lib.does_directory_exist('/Game/P4/Meshy') else 'absent')\n","language":"Python"}}

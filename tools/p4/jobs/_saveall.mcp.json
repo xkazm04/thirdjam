@@ -1,0 +1,1 @@
+{"script":{"content":"import unreal\nlib=unreal.EditorAssetLibrary\nfor d in ('/Game/P4/Meshy','/Game/P4/Rodin','/Game/P4/Tripo','/Game/P4/Manny','/Game/P4/Maps'):\n    print('A28 saveall', d, lib.save_directory(d, only_if_is_dirty=True))\nprint('A28 saveall level', unreal.get_editor_subsystem(unreal.LevelEditorSubsystem).save_current_level())\n","language":"Python"}}

@@ -124,3 +124,16 @@
 - A27 done: `tools/eyes` (Gemini 3.1 Pro for judgement, 3.8 Flash for batch, about $0.03 per still), six presets, findings in `docs/experiments/EYES.md`. Lanes A25 and A26 use it on their proofs.
 - Queued (editor cap, after A25/A26 land): **A30 HUD pass 2** from EYES.md: mark which skater is yours, show how a faceoff is won, bark drawn once (bubble or strip), own-net marker off the screen edge; **A22 pass 3** figure proportions (head 0.35, blade line, thinner longer blade, cuffs) only if A26's comparison picks the skeletal figure.
 - Operator: Fab pack descoped (R-0026); waiting for A29's three YouTube candidates for Rokoko Vision.
+
+## H10.6 (17:43) rink construction and the skeletal figure on main; gate 61/61
+- 547699c rink construction (A25), a284b0a skeletal skater visual (A26, `game.skater.visual: toy_skeletal`, VisualSwap on three tracks), both clean-built and pushed. Eyes tool on main (A27). Lanes A25, A26, A27 closed.
+- running: A22 pass 3 (mittens on the shaft, lean in the skate cycle, head 0.30, blade line, number slot) -> then `toy_skeletal` becomes the default and the H11 package goes out; A28 (P4 figures through Meshy, Rodin, Tripo via fal, Hyper3D rigging), A29 (P4 motion set, YouTube candidates for Rokoko Vision); B on A-to-B-0007 and 0008.
+- B: the rink construction loads your `MI_Toon_KickPlate`, `MI_Toon_GlassRail`, `MI_Toon_Glass`, `MI_Toon_Bench`, `MI_Toon_GoalLight` by name when they exist; A26's figure needs the SkeletalMesh usage flag on `M_Toon` (it uses a flagged copy under `Game/Content/Figures/` until then).
+
+- link green 17:49: main a284b0a / a1a1048 pushed, no link planned before 18:10; A22 may import now.
+
+- link green 18:10: main 2ba616e pushed; A28/A29 may restart editors.
+
+## H11 (18:14) H11 package 249.7 MB; skeletal toy figure is the default; P4 slices on main
+- `Game/Packaged/Hokej_Hokej_H11/Hokej_Hokej_H11.zip` 249.7 MB (18:11): skeletal toy figure default (A26 + A22 pass 3), rink construction (A25), A3's curve, net slide, B's clay rig and looks. Pass-4 figure and the P4 pipelines (A28 figures, A29 motion) committed after the package.
+- running: A28 pass 2 (image-to-3D figures, blockers), A29 pass 2 (pelvis translation in the retarget, proof strips), B on A-to-B-0007/0008. Lanes A22, A25, A26, A27 closed.
