@@ -1,0 +1,1 @@
+NS_knockdown, Strength 1.0: radial ice-chip scrape from a 40 cm ring at the skater, time dilation 0.1 (radial, because the payload has no fall direction). Throwaway layout with LR_L2_Night, PIE capture 1920x1085, spawned from Python.
