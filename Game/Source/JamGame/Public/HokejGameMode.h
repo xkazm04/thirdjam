@@ -95,6 +95,24 @@ private:
 	int32 ScriptCharge = 0;
 	int64 ScriptLastPass = -600;
 
+	// Lane A49 (complaint 1): the match's input mode. The menu leaves the viewport in game-and-UI with capture only while a button is down, so the mouse delta never
+	// reached IA_StickMouse in the package; the match sets its own mode (cursor shown, locked to the viewport) and re-applies it after the pause menu's Resume.
+	void EnsureMatchInputMode(APlayerController* PC);
+	bool bMatchInputModeSet = false;
+	// Lane A49: the stick aim from the cursor: the cursor deprojected onto the ice, the vector from the skater to it. False when the cursor is hidden or off the ice;
+	// zero inside the dead zone (0.5 m in, 0.7 m out), |Stick| 0.5..1 over 0.5..3 m. The accumulated mouse delta stays as the fallback (right stick first).
+	bool CursorAimRink(APlayerController* PC, const FVector2D& SkaterPosM, FVector2D& OutStick);
+	bool bCursorAiming = false;
+	// Lane A49: the button edges logged once per press (JAMCTRL btn=...), the sprint level and brake level on change.
+	bool bLastSprint = false, bLastBrake = false, bLastShootHeld = false;
+	// Lane A49 (complaint 5 proof, jam.ctrl.Drill 1 = tackle, 2 = cross-check): a scripted FJamInput that mirrors WASD + one right (middle) mouse press: chase the
+	// opposing carrier at full stick, press once within range, then read the sim's own events for 20 frames; 10 attempts, a JAMDRILL line each and a summary.
+	FJamInput DrillInput();
+	void DrillObserve();
+	int64 DrillPressFrame = -1, DrillCooldownUntil = 0;
+	int32 DrillVictim = -1, DrillAttempts = 0, DrillLanded = 0, DrillStripped = 0, DrillKnockdowns = 0, DrillVisualDown = 0, DrillLifted = 0;
+	bool bDrillLandedThis = false, bDrillStrippedThis = false, bDrillKnockThis = false, bDrillVisualThis = false, bDrillLiftThis = false;
+
 	UFUNCTION() void HandleRestartPressed();
 
 	UPROPERTY(Transient) TObjectPtr<UJamCartridge> Cartridge;

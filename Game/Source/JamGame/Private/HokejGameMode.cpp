@@ -23,6 +23,7 @@
 #include "Progression.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Engine/World.h"
+#include "EngineUtils.h"
 #include "Engine/GameInstance.h"
 #include "GameFramework/PlayerController.h"
 #include "Camera/PlayerCameraManager.h"
@@ -36,6 +37,9 @@ static TAutoConsoleVariable<FString> CVarJamCut(TEXT("jam.Cut"), TEXT("hockey.re
 	TEXT("Cartridge the Hokej game mode loads at start (name in Content/Cartridges or a path). The -cut=<name> launch argument wins."));
 static TAutoConsoleVariable<int32> CVarJamScriptHuman(TEXT("jam.ScriptHuman"), 0,
 	TEXT("1: the human's skater plays itself (skate behind the puck, shoot when lined up). For PIE proofs through MCP."));
+// Lane A49: the tackle / cross-check drill (packaged proof of complaint 5). 1 = tackle (right mouse), 2 = cross-check (middle mouse); resets to 0 after 10 attempts.
+static TAutoConsoleVariable<int32> CVarJamCtrlDrill(TEXT("jam.ctrl.Drill"), 0,
+	TEXT("1 = tackle drill, 2 = cross-check drill: the human chases the carrier and presses once in range, 10 attempts, JAMDRILL lines. Lane A49 proof."));
 // Lane A31: a Director's Call from the console: load a cartridge (name or path) and apply it to the running match without a reset
 // (AHokejGameMode::ApplyCartridgeLive), the way the Designer does. A tier change swaps the rig and respawns the figures in place.
 static FAutoConsoleCommandWithWorldAndArgs CmdJamLiveCut(TEXT("jam.livecut"), TEXT("jam.livecut <name-or-path>: apply a cartridge to the running match live (Director's Call); no reset"),
@@ -164,7 +168,14 @@ UClass* AHokejGameMode::ResolveVisualClass(FName Visual, const FString& Tier) co
 	// contracts/skater-visual.md: BP_SkaterVisual_<track>; R-0001 item 1: game.skater.visual picks it.
 	if (Visual == VisualSkeletal) return USkeletalSkaterVisual::StaticClass();
 	TArray<const TCHAR*> Paths;   // in order of preference; the first that loads wins
-	if (Visual == VisualB1) Paths.Add(TEXT("/JamAssets/Skaters/BP_SkaterVisual_TB1.BP_SkaterVisual_TB1_C"));
+	if (Visual == VisualB1)
+	{
+		// B-to-A-0030 (the Director's answer, lane A47): B imports the scripted figure per tier as BP_SkaterVisual_TB1_P3 (clay) and _TB1_P4 (broadcast);
+		// the night figure is the fallback of both until they land.
+		if (Tier == TierClay) Paths.Add(TEXT("/JamAssets/Skaters/BP_SkaterVisual_TB1_P3.BP_SkaterVisual_TB1_P3_C"));
+		else if (Tier == TierBroadcast) Paths.Add(TEXT("/JamAssets/Skaters/BP_SkaterVisual_TB1_P4.BP_SkaterVisual_TB1_P4_C"));
+		Paths.Add(TEXT("/JamAssets/Skaters/BP_SkaterVisual_TB1.BP_SkaterVisual_TB1_C"));
+	}
 	else if (Visual == VisualB2)
 	{
 		// B-to-A-0021 point 1 (lane A31): the figure follows the look tier; the hybrid figure is the fallback of both tier figures.
@@ -218,7 +229,17 @@ void AHokejGameMode::BuildMatch()
 	if (!World || !Cartridge) return;
 	const FJamGameConfig& G = Cartridge->Game;
 
-	for (AJamSkater* S : Skaters) if (S) S->Destroy();
+	// Lane A47 (B-to-A-0030 fault 6): a Blueprint visual is a child actor attached to the skater, and AActor::Destroy on the skater leaves it standing on the
+	// ice (18 ghosts after three LoadCut rebuilds in QA1). The visual goes first (A31's ResetVisual teardown), the skater after.
+	int32 VisualActors = 0, VisualComponents = 0;
+	for (AJamSkater* S : Skaters)
+	{
+		if (!S) continue;
+		if (AActor* VA = Cast<AActor>(S->GetVisualObject())) { VA->Destroy(); ++VisualActors; }
+		else if (UActorComponent* VC = Cast<UActorComponent>(S->GetVisualObject())) { VC->DestroyComponent(); ++VisualComponents; }
+		S->Destroy();
+	}
+	if (Skaters.Num()) UE_LOG(LogHokej, Log, TEXT("JAMVISUAL teardown: %d skaters, %d visual actors and %d visual components destroyed before them"), Skaters.Num(), VisualActors, VisualComponents);
 	Skaters.Reset();
 	if (Puck) Puck->Destroy();
 
@@ -267,6 +288,12 @@ void AHokejGameMode::BuildMatch()
 		A->SetActorLabel(FString::Printf(TEXT("Skater_%d_%s_%s"), S.Index, *G.Teams[S.Team].Id, *S.Role.ToString()));
 #endif
 		Skaters.Add(A);
+	}
+	{
+		// Lane A47: the ghost count the proof reads. Every skater visual actor in the world should belong to a skater built just now.
+		int32 VisualsInWorld = 0;
+		for (TActorIterator<AActor> It(World); It; ++It) if (It->GetClass()->GetName().Contains(TEXT("SkaterVisual"))) ++VisualsInWorld;
+		UE_LOG(LogHokej, Log, TEXT("JAMVISUAL after build: %d skaters, %d SkaterVisual actors in the world (ghosts=%d)"), Skaters.Num(), VisualsInWorld, FMath::Max(0, VisualsInWorld - Skaters.Num()));
 	}
 	Puck = World->SpawnActor<AJamPuck>(AJamPuck::StaticClass(), FTransform::Identity, P);
 	Puck->InitPuck(G.Puck.RadiusM, G.Puck.Colour);
@@ -334,8 +361,49 @@ void AHokejGameMode::PossessHuman(APlayerController* PC)
 	In->OnRestart.AddUniqueDynamic(this, &AHokejGameMode::HandleRestartPressed);
 	if (PC->GetPawn() != Human) PC->Possess(Human);
 	PC->SetViewTarget(Human);
-	if (!Hud) Hud = UJamHudWidget::CreateAndAdd(PC);
+	if (!Hud)
+	{
+		Hud = UJamHudWidget::CreateAndAdd(PC);
+		// Lane A49: the HUD never takes a click; with the cursor shown, a left button over a plate would otherwise be eaten by Slate instead of shooting.
+		if (Hud) Hud->SetVisibility(ESlateVisibility::HitTestInvisible);
+	}
+	bMatchInputModeSet = false;
+	EnsureMatchInputMode(PC);
 	PushPresentation();
+}
+
+void AHokejGameMode::EnsureMatchInputMode(APlayerController* PC)
+{
+	if (!PC || !PC->IsLocalController()) return;
+	UWorld* W = GetWorld();
+	if (W && W->IsPaused()) return;   // the pause menu (Director's Call) owns the cursor while it is open
+	if (bMatchInputModeSet && PC->bShowMouseCursor) return;
+	PC->bShowMouseCursor = true;
+	FInputModeGameAndUI Mode;
+	Mode.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
+	Mode.SetHideCursorDuringCapture(false);
+	PC->SetInputMode(Mode);
+	bMatchInputModeSet = true;
+	UE_LOG(LogHokej, Log, TEXT("JAMCTRL input mode set: game+ui, cursor shown and locked to the viewport, the HUD hit-test invisible (lane A49)"));
+}
+
+bool AHokejGameMode::CursorAimRink(APlayerController* PC, const FVector2D& SkaterPosM, FVector2D& OutStick)
+{
+	OutStick = FVector2D::ZeroVector;
+	if (!PC || !PC->bShowMouseCursor) return false;
+	float MX = 0.f, MY = 0.f;
+	if (!PC->GetMousePosition(MX, MY)) return false;
+	FVector O, D;
+	if (!PC->DeprojectScreenPositionToWorld(MX, MY, O, D) || D.Z >= -1e-4) return false;
+	const FVector Hit = O + D * (-O.Z / D.Z);   // the ice is z = 0 (UJamSim::ToWorld)
+	const FVector2D Delta = FVector2D(Hit.X / 100.0, Hit.Y / 100.0) - SkaterPosM;
+	const double Dist = Delta.Size();
+	const double Enter = bCursorAiming ? 0.5 : 0.7;   // hysteresis: a cursor parked on the skater holds the blade ahead without flapping at the edge
+	if (Dist < Enter) { bCursorAiming = false; return true; }
+	bCursorAiming = true;
+	const double Mag = 0.5 + 0.5 * FMath::Clamp((Dist - 0.5) / 2.5, 0.0, 1.0);
+	OutStick = Delta / Dist * Mag;
+	return true;
 }
 
 void AHokejGameMode::RestartPlayer(AController* NewPlayer)
@@ -352,6 +420,7 @@ void AHokejGameMode::PostLogin(APlayerController* NewPlayer)
 
 void AHokejGameMode::HandleRestartPressed()
 {
+	UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=restart (R / View)"), Sim ? Sim->GetFrame() : -1);
 	// Lane A17: at the end of a season take, R after a win opens the next take (the season decides); otherwise the same cut restarts (RETAKE).
 	if (Sim && Sim->GetPhase() == EJamSimPhase::Over && Cartridge)
 	{
@@ -439,19 +508,128 @@ FJamInput AHokejGameMode::ReadHumanInput()
 	In.bShootHeld = Pi->IsShootHeld();
 	In.bPass = Pi->ConsumePassPressed();
 	In.bCheck = Pi->ConsumeCheckPressed();
-	In.bBrake = Pi->IsBrakeHeld();  // A5: Ctrl / left trigger (FEEL.md proposal 6)
-	// R-0013 (lane A16): the stick. Right stick is absolute; the mouse accumulates pixels, 100 px = one reach at mouse_sensitivity 1. Camera-relative like Move.
+	In.bBrake = Pi->IsBrakeHeld();  // A5: Ctrl / gamepad B (FEEL.md proposal 6)
+	In.bSprint = Pi->IsSprintHeld();   // lane A49: Shift / LT
+	// R-0013 (lane A16) + lane A49: the stick. Right stick first (absolute, camera-relative like Move); then the cursor on the ice (the blade points at the cursor,
+	// rink-exact); then the accumulated mouse delta (100 px = one reach at mouse_sensitivity 1) when the cursor is hidden.
+	APlayerController* PC = Cast<APlayerController>(Human->GetController());
+	EnsureMatchInputMode(PC);
+	const TCHAR* Src = TEXT("none");
 	FVector2D Aim = Pi->GetStickAxis();
-	if (Aim.SizeSquared() < 0.01)
+	FVector2D StickRink = FVector2D::ZeroVector;
+	if (Aim.SizeSquared() >= 0.01)
+	{
+		StickRink = Fwd * Aim.Y + Right * Aim.X;
+		Src = TEXT("pad");
+	}
+	else if (CursorAimRink(PC, Sim->GetSkaters()[Sim->GetHumanIndex()].Pos, StickRink))
+	{
+		Src = TEXT("mouse");
+		Pi->ResetMouseAim();
+	}
+	else
 	{
 		Aim = Pi->GetMouseAimPx() * (0.01 * Sim->GetConfig().Stick.MouseSensitivity);
 		if (Aim.SizeSquared() > 1.0) Aim.Normalize();
+		if (Aim.SizeSquared() >= 0.0025) { StickRink = Fwd * Aim.Y + Right * Aim.X; Src = TEXT("mousedelta"); }
 	}
-	In.Stick = Fwd * Aim.Y + Right * Aim.X;
+	In.Stick = StickRink;
 	In.bPoke = Pi->ConsumePokePressed();
 	In.bLift = Pi->ConsumeLiftPressed();
 	In.bDeke = Pi->ConsumeDekePressed();   // lane A39 (R-0029 point 4): IA_Deke, Q / gamepad Y
+	// Lane A49 proof lines: the stick every frame when jam.ctrl.Log is on; every button edge always (a few per minute).
+	const int64 Frame = Sim->GetFrame();
+	if (UJamInputMap::LogEnabled())
+	{
+		UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld stick=(%.3f,%.3f) src=%s move=(%.2f,%.2f) shoot=%d sprint=%d brake=%d"), Frame, In.Stick.X, In.Stick.Y, Src,
+			In.Move.X, In.Move.Y, In.bShootHeld ? 1 : 0, In.bSprint ? 1 : 0, In.bBrake ? 1 : 0);
+	}
+	if (In.bCheck) UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=check (right mouse / RB)"), Frame);
+	if (In.bPoke) UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=poke (space / A)"), Frame);
+	if (In.bLift) UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=lift (middle mouse, mouse 4 / LB)"), Frame);
+	if (In.bPass) UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=pass (E / X)"), Frame);
+	if (In.bDeke) UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=deke (wheel, Q / Y)"), Frame);
+	if (In.bShootHeld != bLastShootHeld) { bLastShootHeld = In.bShootHeld; UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=shoot held=%d (left mouse / RT)"), Frame, In.bShootHeld ? 1 : 0); }
+	if (In.bSprint != bLastSprint) { bLastSprint = In.bSprint; UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=sprint held=%d (shift / LT)"), Frame, In.bSprint ? 1 : 0); }
+	if (In.bBrake != bLastBrake) { bLastBrake = In.bBrake; UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=brake held=%d (ctrl / B)"), Frame, In.bBrake ? 1 : 0); }
 	return In;
+}
+
+FJamInput AHokejGameMode::DrillInput()
+{
+	// Mirrors what the bindings produce: WASD as a unit Move toward the carrier, one frame of bCheck (right mouse) or bLift (middle mouse) when in range.
+	const int32 Mode = CVarJamCtrlDrill.GetValueOnGameThread();
+	const int32 Me = Sim->GetHumanIndex();
+	const FJamSkaterState& S = Sim->GetSkaters()[Me];
+	FJamInput In;
+	if (Sim->GetPhase() != EJamSimPhase::Playing) return In;
+	const int32 C = Sim->CarrierIndex();
+	if (C == Me)
+	{
+		// The drill took the puck itself: give it away (a tap shot up the ice) so a bot carries again.
+		In.Move = S.Forward();
+		if (Sim->GetFrame() % 30 == 0) In.bShoot = true;
+		return In;
+	}
+	if (C < 0 || Sim->GetSkaters()[C].Team == S.Team)
+	{
+		const FVector2D ToPuck = Sim->GetPuck().Pos - S.Pos;
+		In.Move = ToPuck.Size() > 0.5 ? ToPuck.GetSafeNormal() : FVector2D::ZeroVector;
+		return In;
+	}
+	const FJamSkaterState& V = Sim->GetSkaters()[C];
+	const FVector2D ToC = V.Pos - S.Pos;
+	const double Dist = ToC.Size();
+	In.Move = ToC.GetSafeNormal();
+	In.Stick = In.Move;   // the blade toward the carrier, as the cursor would be held
+	// Press when the bodies are about to meet inside the human's check window (a person's judgement: closing speed times the window), or inside lift range.
+	const double Gap = Dist - UJamSim::SkaterRadius * 2.0;
+	const double Closing = Dist > 1e-6 ? FVector2D::DotProduct(S.Vel - V.Vel, ToC / Dist) : 0.0;
+	const bool bInRange = Mode == 2 ? Gap <= Sim->GetConfig().Stick.LiftRangeM - 0.2
+		: (Gap <= 0.25 || (Closing > 0.5 && Gap <= Closing * (UJamSim::HumanCheckWindowFrames - 3) * UJamSim::DT));
+	if (DrillPressFrame < 0 && Sim->GetFrame() >= DrillCooldownUntil && bInRange && !V.IsDown() && S.CanAct())
+	{
+		if (Mode == 2) In.bLift = true; else In.bCheck = true;
+		DrillPressFrame = Sim->GetFrame();
+		DrillVictim = C;
+		bDrillLandedThis = bDrillStrippedThis = bDrillKnockThis = bDrillVisualThis = bDrillLiftThis = false;
+		UE_LOG(LogHokej, Log, TEXT("JAMDRILL %s press frame=%lld dist=%.2f closing=%.2f my_speed=%.2f victim=%d"), Mode == 2 ? TEXT("lift") : TEXT("tackle"), Sim->GetFrame(), Dist, Closing, S.Vel.Size(), C);
+	}
+	return In;
+}
+
+void AHokejGameMode::DrillObserve()
+{
+	// After the sim stepped: read its own events and state for the press under way; close the attempt after 20 frames.
+	if (DrillPressFrame < 0) return;
+	const int32 Me = Sim->GetHumanIndex();
+	for (const FJamSimEvent& E : Sim->GetFrameEvents())
+	{
+		if (E.Name == JamEvents::Check && E.Who == Me) bDrillLandedThis = true;
+		if (E.Name == JamEvents::Knockdown && E.Who == DrillVictim) bDrillKnockThis = true;
+		if (E.Name == JamEvents::Lift && E.Who == Me && E.Strength > 0.5f) bDrillLiftThis = true;
+	}
+	if (Sim->GetPuck().LastTouch != DrillVictim) bDrillStrippedThis = true;
+	if (Skaters.IsValidIndex(DrillVictim) && Sim->GetSkaters()[DrillVictim].IsDown()) bDrillVisualThis = true;   // ApplySimFrame sent SetKnockedDown(true) on that edge
+	if (Sim->GetFrame() - DrillPressFrame < 20) return;
+	++DrillAttempts;
+	DrillLanded += bDrillLandedThis ? 1 : 0;
+	DrillStripped += bDrillStrippedThis ? 1 : 0;
+	DrillKnockdowns += bDrillKnockThis ? 1 : 0;
+	DrillVisualDown += bDrillVisualThis ? 1 : 0;
+	DrillLifted += bDrillLiftThis ? 1 : 0;
+	const int32 Mode = CVarJamCtrlDrill.GetValueOnGameThread();
+	UE_LOG(LogHokej, Log, TEXT("JAMDRILL %s attempt=%d landed=%d stripped=%d knockdown=%d victim_visual_down=%d lift_clean=%d"), Mode == 2 ? TEXT("lift") : TEXT("tackle"),
+		DrillAttempts, bDrillLandedThis ? 1 : 0, bDrillStrippedThis ? 1 : 0, bDrillKnockThis ? 1 : 0, bDrillVisualThis ? 1 : 0, bDrillLiftThis ? 1 : 0);
+	DrillPressFrame = -1;
+	DrillCooldownUntil = Sim->GetFrame() + 120;
+	if (DrillAttempts >= 10)
+	{
+		UE_LOG(LogHokej, Log, TEXT("JAMDRILL summary mode=%d attempts=%d landed=%d stripped=%d knockdowns=%d victim_visual_down=%d lift_clean=%d"), Mode, DrillAttempts,
+			DrillLanded, DrillStripped, DrillKnockdowns, DrillVisualDown, DrillLifted);
+		CVarJamCtrlDrill->Set(0, ECVF_SetByCode);
+		DrillAttempts = DrillLanded = DrillStripped = DrillKnockdowns = DrillVisualDown = DrillLifted = 0;
+	}
 }
 
 void AHokejGameMode::GatherInputs()
@@ -533,7 +711,9 @@ void AHokejGameMode::GatherInputs()
 			}
 		}
 	}
-	Inputs[Human] = (bScriptedHuman || CVarJamScriptHuman.GetValueOnGameThread() != 0) ? ScriptedHumanInput() : ReadHumanInput();
+	if (CVarJamCtrlDrill.GetValueOnGameThread() != 0) Inputs[Human] = DrillInput();   // lane A49 proof drill
+	else Inputs[Human] = (bScriptedHuman || CVarJamScriptHuman.GetValueOnGameThread() != 0) ? ScriptedHumanInput() : ReadHumanInput();
+	if (Skaters.IsValidIndex(Human) && Skaters[Human]) Skaters[Human]->SetLogAim(UJamInputMap::LogEnabled());
 }
 
 void AHokejGameMode::DeliverEvents()
@@ -549,6 +729,7 @@ void AHokejGameMode::DeliverEvents()
 		Pl.Where = UJamSim::ToWorld(E.Where, E.Name == JamEvents::Board || E.Name == JamEvents::Shot || E.Name == JamEvents::Goal ? 0.04 : 0.0);
 		Pl.Strength = E.Strength;
 		Pl.Kind = E.Kind;
+		Pl.Dir = FVector(E.Dir.X, E.Dir.Y, 0.0);   // lane A47 (B-to-A-0029): rink (x, z) -> world (x, y), the same axes as ToWorld
 		Bus->Broadcast(E.Name, Pl);
 	}
 	if (Effects)
@@ -615,6 +796,12 @@ void AHokejGameMode::PushPresentation()
 	}
 	F.PuckM = Sim->GetPuck().Pos;
 	F.HumanIndex = Sim->GetHumanIndex();
+	if (Sim->GetSkaters().IsValidIndex(F.HumanIndex))
+	{
+		const FJamSkaterState& H = Sim->GetSkaters()[F.HumanIndex];
+		F.HumanStamina01 = H.Stamina < 0 ? 1.f : FMath::Clamp((float)H.Stamina / (float)FMath::Max(1, Sim->StaminaFull()), 0.f, 1.f);   // lane A49
+		F.bHumanSprinting = H.bSprinting;
+	}
 	F.AttackSign = Sim->GetHumanTeam() == 0 ? 1 : -1;
 	F.NetInsetM = 4.f;
 	// Home = the human's team.
@@ -647,6 +834,7 @@ void AHokejGameMode::StepOnce()
 	StepMsMax = FMath::Max(StepMsMax, Ms);
 	++Steps;
 	if (Effects) Effects->Step();   // lane A14: after the sim's frame, before the events go out
+	if (CVarJamCtrlDrill.GetValueOnGameThread() != 0 || DrillPressFrame >= 0) DrillObserve();   // lane A49
 	DeliverEvents();
 	// Lane A15 (C-0005): ShrinkRink / GrowRink changed the geometry at this faceoff; rebuild the rink actor from the sim's config.
 	if (Rink && Sim->GetRinkRevision() != BuiltRinkRevision)

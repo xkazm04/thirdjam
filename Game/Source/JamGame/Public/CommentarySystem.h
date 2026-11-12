@@ -28,6 +28,8 @@ namespace JamCommentary
 	// Timing in sim frames (60 Hz).
 	constexpr int32 GateFrames = 150;           // at most one line per 2.5 s, from the start of the last line (B's rule 5)
 	constexpr int32 BarkYieldFrames = 150;      // a bark addressed to the human holds the booth for its bubble hold
+	constexpr int32 CutFloorFrames = 30;        // lane A47 (B-to-A-0030 fault 3): a bark never cuts a line under 0.5 s old; the line plays on, the booth still holds after it
+	constexpr int32 MustPlayPriority = 5;       // lane A47: a priority-5 line (goal calls) cuts a playing lower-priority line and ignores the 2.5 s gate (never the bark hold)
 	constexpr int32 NoRepeatPerSituation = 3;   // the last three alternates of a situation are skipped
 	constexpr int32 SecondBeatFrames = 300;     // a goal's second beat may still follow this long after the goal, in the pause (B's rule 6)
 	constexpr int32 LastTenFrames = 600;        // "late", "last ten seconds"
@@ -153,6 +155,8 @@ public:
 	bool IsGateOpen(int64 Frame) const { return Frame - LastStartFrame >= JamCommentary::GateFrames && Frame >= LastEndFrame && Frame >= BarkHoldUntil; }
 	bool IsLinePlaying(int64 Frame) const { return Frame < LastEndFrame; }
 	bool TakeCutRequest() { const bool b = bCutRequested; bCutRequested = false; return b; }
+	// Why the last cut was requested: "bark_at_human" or "must_play" (lane A47).
+	const TCHAR* GetCutReason() const { return CutReason; }
 	int32 GetPickCount() const { return PickCount; }
 	const FJamCommentaryPick& GetLast() const { return Last; }
 	int64 GetLastEndFrame() const { return LastEndFrame; }
@@ -179,6 +183,7 @@ private:
 	int64 BarkHoldUntil = -1000000;
 	bool bBarkAtHumanThisFrame = false;
 	bool bCutRequested = false;
+	const TCHAR* CutReason = TEXT("bark_at_human");
 	TMap<FName, int64> LastSituationFrame;
 	TMap<FName, TArray<FName>> SituationHistory;
 	FJamCommentaryPick Last;
@@ -234,6 +239,8 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Jam|Commentary") const FJamCommentaryPick& GetLastLine() const { return Last; }
 	UFUNCTION(BlueprintPure, Category = "Jam|Commentary") int32 GetLineCount() const { return PlayCount; }
+	// The sim frame the last line ends on (moved to the cut frame when it was cut); the HUD's caption follows it (lane A47, B-to-A-0030 fault 7).
+	UFUNCTION(BlueprintPure, Category = "Jam|Commentary") int64 GetLineEndFrame() const;
 	UFUNCTION(BlueprintPure, Category = "Jam|Commentary") FJamCommentarySettings GetSettings() const { return Settings; }
 	UFUNCTION(BlueprintCallable, Category = "Jam|Commentary") void SetSettings(const FJamCommentarySettings& S);
 

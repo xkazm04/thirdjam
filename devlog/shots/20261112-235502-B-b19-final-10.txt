@@ -1,0 +1,1 @@
+B19 final: 10 m behind centre ice, bulb reflections in the far ice (screen-space reflections)

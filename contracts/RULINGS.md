@@ -360,3 +360,23 @@ Accepted: `rules.hooks[].after_frame`; `score: { at_least, at_most, lead_at_leas
 3. **The figure recipe** (A-to-B-0009) runs on B for a cel toy, the broadcast figure and a clay figure, each with an A/B sheet against the figure it would replace; the Director
    decides the swap per tier from the sheets with the eyes tool.
 4. The glass hit (`HitWobble` on B's glass instances) is bound by A's effects binder for 12 frames on the nearest panel when B's lane lands it (A45 leaves the hook).
+
+## R-0032 (H12.9, 2026-11-12 22:50): the operator's H18 playtest: unplayable; controls first
+The operator: "Camera does not stay where player moves, mouse is not binded to work with the stick, the stick blinks back and forth. Player should have option with mouse to tackle or
+cross-check instead of the shift. Using shift rather for sprint. No player reaction on tackle making impossible to take puck from opponent. Difficulty does not matter if the game is
+trash." Rulings: (1) lane A49 owns input, the control path, the follow camera and the stick aim until it reports; no other lane edits them; (2) the bindings are the operator's:
+mouse aims the stick, left button shoots (hold to charge), right button tackles, middle or mouse 4 cross-checks (lift), Shift sprints (new mechanic with a stamina bar, a cartridge
+key), Space pokes, E passes, Q dekes; gamepad mirrors it; (3) every control proof comes from a packaged build through the real input path, not from PIE; (4) no calibration
+verdicts are asked of the operator until a person can play; the playtester keeps measuring in the background.
+
+## R-0033 (H13.2, 2026-11-13 00:10): the operator's decisions relayed by B (22:50, 23:55) and the controls fix
+1. **Tiers**: `p3_clay` is the tier B pushes next, against the P3 concept; `p4_broadcast` stays a lab tier (never in a shipped cut) narrowed overnight to the skater and the ice;
+   the operator decides in the morning between P4 and a full P3 focus. A28/A29 feed the lab only.
+2. **Goalies**: no dedicated goalie; any skater near its own crease takes the stance (the human included); the goal opening is halved in height by a cartridge key
+   (`game.rink.goal_height_m`, default 0.61, width unchanged) read by the net mesh, the frame, the sim's goal test and the bots' aim (lane A50).
+3. **Commentary accepted as generated** (voice C1, all 340 lines); the player picks at random, never the last line of a situation, preferring lines unheard this match (A50).
+4. **Crowd instead of horns**: B replaces the horns with crowd reactions; `MS_goal` Variant 0 when the human's team scores, 1 when it concedes; a crowd bed starts with the music (A50).
+5. **Controls (lane A49, R-0032)**: five root causes found and fixed in a packaged build through the real input path: the menu's input mode left the viewport without mouse capture
+   (the stick only moved with a button held), the camera's lead and lift turned away from the player, the raw blade angle flipped at the clamp behind a turning skater, Shift
+   was the check, and the check needed a bot's speed and a 6-frame press. Bindings as the operator asked; a sprint on Shift with a stamina bar; the human's check lands from
+   2 m/s with a 12-frame window. H19 is the first package with it. `FJamInput::bSprint` needs a lockstep flag bit (A50).

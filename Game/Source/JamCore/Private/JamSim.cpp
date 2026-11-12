@@ -169,6 +169,8 @@ void UJamSim::Restart()
 		S.StumbleFrames = 0;
 		S.LastCarryFrame = -1000;
 		S.OneTimers = S.Breakaways = S.Dekes = 0;
+		S.PassesReceived = 0;
+		S.SettleFrames = 0;
 		S.PassReceivedFrame = -1;
 		S.BreakawayFrames = 0;
 		S.bBreakawayUsed = false;
@@ -622,6 +624,7 @@ void UJamSim::FaceoffReset()
 		S.YawRate = 0;
 		// R-0029 point 4: a faceoff ends every payoff window; the next possession may burst again.
 		S.PassReceivedFrame = -1;
+		S.SettleFrames = 0;
 		S.BreakawayFrames = 0;
 		S.bBreakawayUsed = false;
 		S.CarryFrames = 0;
@@ -750,7 +753,7 @@ int32 UJamSim::CarrierIndex() const
 	return (FVector2D::Distance(S.Pos, Puck.Pos) <= Eff(EJamStat::ShotReach, C) || FVector2D::Distance(S.BladePos, Puck.Pos) <= DeflectRangeM) ? C : -1;
 }
 
-void UJamSim::Emit(FName Name, int32 Who, const FVector2D& Where, float Strength, FName Kind)
+void UJamSim::Emit(FName Name, int32 Who, const FVector2D& Where, float Strength, FName Kind, const FVector2D& Dir)
 {
 	FJamSimEvent E;
 	E.Name = Name;
@@ -759,6 +762,7 @@ void UJamSim::Emit(FName Name, int32 Who, const FVector2D& Where, float Strength
 	E.Strength = FMath::Clamp(Strength, 0.f, 1.f);
 	E.Kind = Kind;
 	E.Frame = Frame;
+	E.Dir = Dir.GetSafeNormal();   // lane A47 read-out (B-to-A-0029): zero stays zero
 	FrameEvents.Add(E);
 }
 
@@ -930,7 +934,7 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 		if (In.bDeke) TryDeke(S);
 		if (In.bCheck && Config.Skater.bCheckEnabled)
 		{
-			S.CheckWindow = CheckWindowFrames;
+			S.CheckWindow = S.bHuman ? HumanCheckWindowFrames : CheckWindowFrames;   // lane A49: the human's press gets 0.2 s to connect
 			S.bCheckThisFrame = true;
 		}
 		if (In.bPoke) TryPoke(S);
@@ -987,8 +991,17 @@ void UJamSim::StepSkater(FJamSkaterState& S, const FJamInput& In)
 	// C-0005: per-skater effective stats (base values when no modifier touches them).
 	// R-0029 point 4 (lane A39): the breakaway burst lifts top speed and thrust by speed_bonus while it runs.
 	const double Burst = S.BreakawayFrames > 0 ? 1.0 + FMath::Max(0.0, Config.Skater.BreakawaySpeedBonus) : 1.0;
-	const double Speed = Eff(EJamStat::SkaterSpeed, S.Index) * Burst;
-	const double Accel = Eff(EJamStat::SkaterAccel, S.Index) * Burst;
+	// Lane A49: the sprint (Shift / LT held, bots never): +sprint.bonus on top speed and thrust while the skater moves and its stamina lasts. Integer ticks:
+	// a sprinting frame costs refill_frames, a resting frame returns drain_frames, so the bar empties in drain_frames and fills in refill_frames exactly.
+	const int32 Full = StaminaFull();
+	if (S.Stamina < 0 || S.Stamina > Full) S.Stamina = Full;
+	const bool bWantSprint = In.bSprint && C.SprintBonus > 0.0 && S.Stamina > 0 && In.Move.SizeSquared() > 0.0025 && S.CanAct() && !S.InBox();
+	S.bSprinting = bWantSprint;
+	if (bWantSprint) S.Stamina = FMath::Max(0, S.Stamina - FMath::Max(1, C.SprintRefillFrames));
+	else if (S.Stamina < Full) S.Stamina = FMath::Min(Full, S.Stamina + FMath::Max(1, C.SprintDrainFrames));
+	const double SprintMul = bWantSprint ? 1.0 + C.SprintBonus : 1.0;
+	const double Speed = Eff(EJamStat::SkaterSpeed, S.Index) * Burst * SprintMul;
+	const double Accel = Eff(EJamStat::SkaterAccel, S.Index) * Burst * SprintMul;
 	const double TurnRate = Eff(EJamStat::SkaterTurnRate, S.Index);
 	const double Grip = Eff(EJamStat::SkaterGrip, S.Index);
 	// Glide friction scales with the ice: glide_drag was measured at ice_friction 0.015 (DEFAULTS.md). R-0019: the zone under the skater scales speed and glide.
@@ -1153,7 +1166,7 @@ void UJamSim::CollideSkaterStatic(FJamSkaterState& S)
 		S.Pos -= N * (D + R);
 		const double Vn = Dot(S.Vel, N);
 		// Lane A33: a hard board hit is announced (cosmetic read-out; Strength = normal speed / skater.speed, Kind = skater, Where = the contact on the boards).
-		if (Vn >= SkaterBoardEventMinSpeed) Emit(JamEvents::Board, S.Index, S.Pos + N * R, static_cast<float>(Vn / FMath::Max(1e-6, Config.Skater.Speed)), KindSkater);
+		if (Vn >= SkaterBoardEventMinSpeed) Emit(JamEvents::Board, S.Index, S.Pos + N * R, static_cast<float>(Vn / FMath::Max(1e-6, Config.Skater.Speed)), KindSkater, -N);   // lane A47: Dir = the board normal into the rink
 		if (Vn > 0) S.Vel -= N * ((1.0 + SkaterBoardBounce) * Vn);
 	}
 	// Nets as solid boxes behind each goal line. A skater is pushed out along the shortest axis; the speed it pressed into the hull with becomes a slide
@@ -1244,7 +1257,7 @@ void UJamSim::CollideSkaters()
 					const FVector2D VF = Victim.Forward();
 					const double Along = Dot(Dir, VF);
 					const FName CheckKind = Along > 0.5 ? CheckBehind : Along < -0.5 ? CheckFront : (Dot(Dir, FVector2D(VF.Y, -VF.X)) < 0.0 ? CheckSideL : CheckSideR);
-					Emit(JamEvents::Check, Checker.Index, Contact, Strength, CheckKind);
+					Emit(JamEvents::Check, Checker.Index, Contact, Strength, CheckKind, Dir);   // lane A47: Dir = the contact normal, checker towards victim (B-to-A-0029 ask 1)
 					FireRule(EJamRuleTrigger::OnCheck, Checker.Index, Checker.Team, NAME_None, Strength);
 					// R-0029 point 3: a victim that carried the puck within game.stick.foul_grace_frames still counts as the carrier (the puck just left it).
 					const bool bVictimHasPuck = CarrierIndex() == Victim.Index || (Frame - Victim.LastCarryFrame) <= Config.Stick.FoulGraceFrames;
@@ -1252,11 +1265,13 @@ void UJamSim::CollideSkaters()
 					KnockDown(Victim.Index, Dir, Strength, CauseCheck);
 					if (Config.Rules.bPenalties && (!bVictimHasPuck || bFromBehind)) CallFoul(Checker, Victim, Contact, Strength, bVictimHasPuck ? FoulFromBehind : FoulNoPuck);
 				};
-				if (A.CheckWindow > 0 && A.CanAct() && !B.IsDown() && ASpeed > Eff(EJamStat::CheckSpeedMin, A.Index))
+				// Lane A49: the human's check lands from HumanCheckSpeedMinMs of its own speed along the contact (a calibration, FEEL.md); bots keep check_speed_min.
+				auto MinSpeed = [&](const FJamSkaterState& Checker) { const double M = Eff(EJamStat::CheckSpeedMin, Checker.Index); return Checker.bHuman ? FMath::Min(M, HumanCheckSpeedMinMs) : M; };
+				if (A.CheckWindow > 0 && A.CanAct() && !B.IsDown() && ASpeed > MinSpeed(A))
 				{
 					Landed(A, B, N);
 				}
-				else if (B.CheckWindow > 0 && B.CanAct() && !A.IsDown() && BSpeed > Eff(EJamStat::CheckSpeedMin, B.Index))
+				else if (B.CheckWindow > 0 && B.CanAct() && !A.IsDown() && BSpeed > MinSpeed(B))
 				{
 					Landed(B, A, -N);
 				}
@@ -1282,7 +1297,7 @@ void UJamSim::KnockDown(int32 Victim, const FVector2D& Dir, float Strength, FNam
 	V.KnockFrames = FMath::RoundToInt32(Eff(EJamStat::KnockdownFrames, Victim));
 	V.KnockDir = Dir.GetSafeNormal();
 	if (V.KnockDir.IsNearlyZero()) V.KnockDir = FVector2D(1, 0);
-	Emit(JamEvents::Knockdown, V.Index, V.Pos, Strength, Cause);
+	Emit(JamEvents::Knockdown, V.Index, V.Pos, Strength, Cause, V.KnockDir);   // lane A47: Dir = KnockDir (B-to-A-0029 ask 1)
 	FireRule(EJamRuleTrigger::OnKnockdown, V.Index, V.Team, Cause, Strength);
 	// C-0005: a check that lands on the carrier always strips the puck; it squirts off the victim's line, a little back towards the checker.
 	if (Puck.LastTouch == V.Index && FVector2D::Distance(V.Pos, Puck.Pos) <= Eff(EJamStat::ShotReach, Victim))
@@ -1357,6 +1372,7 @@ void UJamSim::TryShoot(FJamSkaterState& S, float Charge)
 	// The payoff windows close with the shot: a second shot is no one-timer, the deke is spent. A shot inside the deke window keeps the back committed
 	// until the puck has crossed the goal line (a beaten goalie does not recover for that shot): the flight at this speed, braked by the drag, plus 3 frames.
 	S.PassReceivedFrame = -1;
+	S.SettleFrames = 0;   // lane A46: the shot spends the settle (its carry assist must not pull the shot back onto the blade)
 	if (S.DekeFrames > 0 && S.DekeSide != 0 && DekeCommitSkater == S.Index)
 	{
 		const double DistToLine = FMath::Abs(AttackGoalX(S.Team) - Puck.Pos.X);
@@ -1478,6 +1494,8 @@ void UJamSim::StepPayoffWindows(FJamSkaterState& S)
 		if (S.DekeFrames == 0 || CarrierIndex() != S.Index) { S.DekeFrames = 0; S.DekeSide = 0; }
 	}
 	if (S.PassReceivedFrame >= 0 && (Config.Shot.OneTimerWindowFrames <= 0 || Frame - S.PassReceivedFrame > Config.Shot.OneTimerWindowFrames)) S.PassReceivedFrame = -1;
+	// Lane A46: the settle after a body reception counts down and ends at once when the puck is no longer carried.
+	if (S.SettleFrames > 0) { --S.SettleFrames; if (CarrierIndex() != S.Index) S.SettleFrames = 0; }
 }
 
 // C-0005 pass: the best teammate ahead of the puck with an open lane. The aim is where the receiver will be when the puck gets there
@@ -1546,6 +1564,7 @@ void UJamSim::TryPass(FJamSkaterState& S)
 	S.DekeFrames = 0;
 	S.DekeSide = 0;
 	S.PassReceivedFrame = -1;
+	S.SettleFrames = 0;   // lane A46
 	S.bPassThisFrame = true;
 	S.LastShotCharge = 0.f;
 	S.LastPassStrength = static_cast<float>(Speed / MaxSpeed);
@@ -1654,6 +1673,7 @@ void UJamSim::StepPuck()
 						// Reception: the pass is seated on the blade and moves with the receiver (R-0021: the puck stays on the stick).
 						Puck.Pos = S.BladePos;
 						Puck.Vel = S.Vel;
+						++S.PassesReceived;   // lane A46
 						// R-0029 point 4 (lane A39): the one-timer window opens on a received teammate's puck (kept only while one-timers are on, so a cut
 						// with window_frames 0 hashes as before).
 						if (Config.Shot.OneTimerWindowFrames > 0) S.PassReceivedFrame = Frame;
@@ -1664,6 +1684,28 @@ void UJamSim::StepPuck()
 						Puck.Vel = (Puck.Vel - Nb * (2.0 * Dot(Puck.Vel, Nb))) * DeflectKeep;
 					}
 					else continue;
+					Puck.LastTouch = S.Index;
+					S.DeflectCooldown = 10;
+					Touched[S.Index] = true;
+					continue;
+				}
+			}
+			// Lane A46 (PAYOFFS.md section 6): body reception. A teammate's pass in flight (nobody carries it) that reaches the body within stick.reception_m,
+			// not only the blade disc, at DeflectMinSpeed..BodyReceptionMaxSpeed is seated on the blade like a blade reception, with ReceptionSettleFrames of
+			// settle in which the carry assist holds it there; a faster pass bounces off the body as before (the blade above still takes it). reception_m 0 = off.
+			if (Config.Stick.ReceptionM > 0.0 && S.DeflectCooldown == 0 && Puck.LastTouch != S.Index && S.CanAct()
+				&& Skaters.IsValidIndex(Puck.LastTouch) && Skaters[Puck.LastTouch].Team == S.Team && CarrierIndex() < 0)
+			{
+				const FVector2D FromBody = Puck.Pos - S.Pos;
+				const double Dbody = FromBody.Size();
+				const double SpP = Puck.Vel.Size();
+				if (Dbody < Config.Stick.ReceptionM && Dbody > 1e-6 && SpP > DeflectMinSpeed && SpP <= BodyReceptionMaxSpeed && Dot(Puck.Vel - S.Vel, FromBody) < 0.0)
+				{
+					Puck.Pos = S.BladePos;
+					Puck.Vel = S.Vel;
+					S.SettleFrames = ReceptionSettleFrames;
+					++S.PassesReceived;
+					if (Config.Shot.OneTimerWindowFrames > 0) S.PassReceivedFrame = Frame;
 					Puck.LastTouch = S.Index;
 					S.DeflectCooldown = 10;
 					Touched[S.Index] = true;
@@ -1687,7 +1729,7 @@ void UJamSim::StepPuck()
 			const double Assist = Config.Puck.CarryAssist;
 			// R-0021 (operator, feel.00): a carried puck stays on the blade through every turn and leaves only on a shot, a pass, a poke, a lift or a
 			// check. Only a puck that rides with the carrier is carried: a shot or pass that just left the stick (fast relative to the body) is not pulled back.
-			if (Ci >= 0 && Assist > 0.0 && !bDrawOpen && !Skaters[Ci].bShotThisFrame && !Skaters[Ci].bPassThisFrame && (Puck.Vel - Skaters[Ci].Vel).Size() < 4.0)
+			if (Ci >= 0 && Assist > 0.0 && !bDrawOpen && !Skaters[Ci].bShotThisFrame && !Skaters[Ci].bPassThisFrame && ((Puck.Vel - Skaters[Ci].Vel).Size() < 4.0 || Skaters[Ci].SettleFrames > 0))   // lane A46: the settle holds it
 			{
 				// The puck closes on the blade by a fraction per substep (assist 1 = on the blade within a frame, 0.6 = within three) and moves with the carrier.
 				const FJamSkaterState& C = Skaters[Ci];
@@ -1713,7 +1755,7 @@ void UJamSim::StepPuck()
 				Puck.Vel = Tangent * BoardTangentKeep - Normal * E;
 				if (Vn >= BoardEventMinSpeed && BoardEventCooldown == 0)
 				{
-					Emit(JamEvents::Board, -1, Puck.Pos + N * R, static_cast<float>(Vn / MaxSpeed));
+					Emit(JamEvents::Board, -1, Puck.Pos + N * R, static_cast<float>(Vn / MaxSpeed), NAME_None, -N);   // lane A47: Dir = the board normal into the rink (B-to-A-0029 ask 2)
 					BoardEventCooldown = BoardEventGapFrames;
 				}
 			}
@@ -1795,6 +1837,11 @@ void UJamSim::ScoreGoal(int32 ScoringTeam)
 	PauseFrames = Config.Rules.GoalPauseFrames;
 }
 
+int32 UJamSim::StaminaFull() const
+{
+	return FMath::Max(1, Config.Skater.SprintDrainFrames) * FMath::Max(1, Config.Skater.SprintRefillFrames);
+}
+
 uint64 UJamSim::StateHash() const
 {
 	FHasher H;
@@ -1833,6 +1880,9 @@ uint64 UJamSim::StateHash() const
 		if (S.CarryFrames != 0) H.AddI(S.CarryFrames);
 		if (S.DekeFrames != 0) { H.AddI(S.DekeFrames); H.AddI(S.DekeSide); }
 		if (S.DekeReadyFrame != 0) H.AddI(S.DekeReadyFrame);
+		if (S.SettleFrames != 0) H.AddI(S.SettleFrames);   // lane A46: only while a body reception settles
+		// Lane A49: the sprint stamina only once it left full (unset or full = no sprint yet), so a match without a sprint hashes as before.
+		if (S.Stamina >= 0 && S.Stamina != StaminaFull()) H.AddI(S.Stamina);
 	}
 	if (DekeCommitFrames != 0) { H.AddI(DekeCommitFrames); H.AddI(DekeCommitSide); H.AddI(DekeCommitSkater); }
 	H.AddI(FaceoffCountdown);

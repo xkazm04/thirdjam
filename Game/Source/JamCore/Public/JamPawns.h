@@ -73,6 +73,18 @@ public:
 	// The object that implements IJamSkaterVisual (a component, or an attached actor).
 	UFUNCTION(BlueprintPure, Category = "Jam|Skater") UObject* GetVisualObject() const { return VisualObject; }
 
+	// Lane A49 (complaint 3, "the stick blinks back and forth"): the aim sent to the visual is smoothed and side-stable. The raw blade angle relative to the
+	// facing wraps at +-180 when the aim points behind the skater (the mouse aim is held in rink space while the skater turns); clamped to the figure's +-70
+	// holds that wrap is a flip from -70 to +70 every frame the facing jitters. SmoothAimDeg keeps the side the stick was on while the aim is behind (|raw| > 90),
+	// only lets the side change through the front, clamps to AimClampDeg and slews at most AimSlewDegPerFrame per frame toward the target (a 6-frame approach).
+	static constexpr float AimClampDeg = 70.f;
+	static constexpr float AimSlewDegPerFrame = 15.f;
+	static float SmoothAimDeg(float RawRelDeg, float Prev, int32& Side, bool& bInit);
+	// The last aim and reach sent to the visual (tests, the JAMAIM proof line).
+	float GetSentAimDeg() const { return SentAimDeg; }
+	float GetSentReachM() const { return SentReachM; }
+	void SetLogAim(bool bOn) { bLogAim = bOn; }
+
 	// C-0001 v3 / B-to-A-0014: the world position (cm) of the visual's puck_socket when it exposes one (a mesh socket on any of its components, or a scene
 	// component named puck_socket); false when the visual has none. The game mode draws a carried puck there.
 	bool GetPuckSocketWorld(FVector& Out) const;
@@ -91,6 +103,12 @@ private:
 	float LastCharge = 0.f;
 	float LastAimDeg = 0.f;
 	float LastAimReach = 0.f;
+	// Lane A49 aim smoothing state.
+	float SentAimDeg = 0.f;
+	float SentReachM = 1.2f;
+	int32 AimSide = 1;
+	bool bAimInit = false;
+	bool bLogAim = false;
 };
 
 UCLASS()

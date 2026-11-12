@@ -626,6 +626,7 @@ namespace JamAI
 		St.bOver = Sim.IsOver();
 		St.Winner = Sim.Winner();
 		St.Hash = Sim.StateHash();
+		if (const UJamSim* S = Sim.GetSim()) { if (S->GetSkaters().IsValidIndex(Pi)) { St.PassesReceived = S->GetSkaters()[Pi].PassesReceived; } }   // lane A46
 		return St;
 	}
 
@@ -639,7 +640,7 @@ namespace JamAI
 			"\"shots\":%d,\"shots_on_target\":%d,\"shots_mates\":%d,\"shots_opp\":%d,\"lead_changes\":%d,"
 			"\"first_touch\":%lld,\"first_shot\":%lld,\"first_goal_for\":%lld,\"first_goal_by_human\":%lld,\"first_goal_against\":%lld,"
 			"\"faceoffs\":%d,\"faceoffs_without_touch\":%d,\"max_faceoff_to_touch\":%d,\"wo_frames\":[%lld,%lld,%lld],"
-			"\"checks_landed\":%d,\"checks_taken\":%d,\"knockdowns\":%d,\"fouls\":%d,\"fouls_from_behind\":%d,\"fouls_no_puck\":%d,\"box_frames\":%lld,\"pokes\":%d,\"pokes_clean\":%d,\"lifts\":%d,\"passes\":%d,"
+			"\"checks_landed\":%d,\"checks_taken\":%d,\"knockdowns\":%d,\"fouls\":%d,\"fouls_from_behind\":%d,\"fouls_no_puck\":%d,\"box_frames\":%lld,\"pokes\":%d,\"pokes_clean\":%d,\"lifts\":%d,\"passes\":%d,\"passes_received\":%d,"
 			"\"one_timers\":%d,\"breakaways\":%d,\"dekes\":%d,\"payoff_goals\":%d,"
 			"\"idle_frames\":%lld,\"idle_spells\":%d,\"max_no_touch\":%lld,\"hash\":\"%016llx\",\"player_index\":%d",
 			Cartridge, Difficulty, PlaytesterName(Kind), static_cast<unsigned long long>(S.Seed), Result, S.bOver ? "true" : "false",
@@ -649,7 +650,7 @@ namespace JamAI
 			static_cast<long long>(S.FirstTouch), static_cast<long long>(S.FirstShot), static_cast<long long>(S.FirstGoalFor), static_cast<long long>(S.FirstGoalByHuman),
 			static_cast<long long>(S.FirstGoalAgainst), S.Faceoffs, S.FaceoffsWithoutTouch, S.MaxFaceoffToTouch,
 			static_cast<long long>(S.WoMateFrames), static_cast<long long>(S.WoOppFrames), static_cast<long long>(S.WoLooseFrames),
-			S.ChecksLanded, S.ChecksTaken, S.Knockdowns, S.Fouls, S.FoulsFromBehind, S.FoulsNoPuck, static_cast<long long>(S.BoxFrames), S.Pokes, S.PokesClean, S.Lifts, S.Passes,
+			S.ChecksLanded, S.ChecksTaken, S.Knockdowns, S.Fouls, S.FoulsFromBehind, S.FoulsNoPuck, static_cast<long long>(S.BoxFrames), S.Pokes, S.PokesClean, S.Lifts, S.Passes, S.PassesReceived,
 			S.OneTimers, S.Breakaways, S.Dekes, S.PayoffGoals,
 			static_cast<long long>(S.IdleFrames), S.IdleSpells, static_cast<long long>(S.MaxNoTouch), static_cast<unsigned long long>(S.Hash), S.PlayerIndex);
 		static const char* ActNames[] = {"idle", "draw", "chase", "carry", "charge", "pass", "support", "forecheck", "poke", "check", "lapse", "one_timer", "deke"};

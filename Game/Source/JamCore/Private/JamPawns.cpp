@@ -205,17 +205,24 @@ void AJamSkater::ApplySimFrame(const FJamSkaterState& S)
 		FRotator(0.0, FMath::RadiansToDegrees(S.Yaw), 0.0));
 
 	// C-0001 v3 (B-to-A-0014): the stick verbs. Aim: the blade relative to the facing, positive = left (the sim's yaw grows to the right).
+	// Lane A49: smoothed and side-stable before it is sent (SmoothAimDeg); the reach follows with the same 6-frame approach.
 	{
 		const FVector2D D = S.BladePos - S.Pos;
 		const double Rel = FMath::UnwindRadians(FMath::Atan2(D.Y, D.X) - S.Yaw);
 		const float AimDeg = static_cast<float>(-FMath::RadiansToDegrees(Rel));
 		const float Reach = static_cast<float>(D.Size());
-		if (!FMath::IsNearlyEqual(AimDeg, LastAimDeg, 0.01f) || !FMath::IsNearlyEqual(Reach, LastAimReach, 0.001f))
+		LastAimDeg = AimDeg;
+		LastAimReach = Reach;
+		const float Prev = SentAimDeg;
+		SentAimDeg = SmoothAimDeg(AimDeg, SentAimDeg, AimSide, bAimInit);
+		SentReachM = FMath::IsNearlyZero(SentReachM) ? Reach : SentReachM + (Reach - SentReachM) * 0.35f;
+		if (bLogAim)
 		{
-			LastAimDeg = AimDeg;
-			LastAimReach = Reach;
+			int64 Frame = -1;
+			if (UGameInstance* GI = GetGameInstance()) if (const UJamEventBus* Bus = GI->GetSubsystem<UJamEventBus>()) Frame = Bus->GetSimFrame();
+			UE_LOG(LogJamSim, Log, TEXT("JAMAIM frame=%lld raw=%.1f sent=%.1f d=%.1f side=%d reach=%.2f"), Frame, AimDeg, SentAimDeg, SentAimDeg - Prev, AimSide, SentReachM);
 		}
-		IJamSkaterVisual::Execute_SetStickAim(V, AimDeg, Reach);
+		IJamSkaterVisual::Execute_SetStickAim(V, SentAimDeg, SentReachM);
 	}
 	{
 		const int32 Max = 30;   // the visual gets 0..1; the sim's charge_frames_max is applied by LastShotCharge on release
@@ -233,6 +240,28 @@ void AJamSkater::ApplySimFrame(const FJamSkaterState& S)
 	}
 	if (S.DrawResult != 0) IJamSkaterVisual::Execute_PlayFaceoffDraw(V, S.DrawResult > 0);
 	if (S.bFoulThisFrame) IJamSkaterVisual::Execute_PlayFoulReaction(V);
+}
+
+float AJamSkater::SmoothAimDeg(float RawRelDeg, float Prev, int32& Side, bool& bInit)
+{
+	const float Raw = FMath::UnwindDegrees(RawRelDeg);
+	// The side changes only through the front: within 90 degrees of the facing the raw sign rules (with a 2 degree band that keeps the last side, so a
+	// blade held straight ahead does not flap); behind, the stick stays on the side it was on, at the clamp.
+	if (FMath::Abs(Raw) <= 90.f)
+	{
+		if (FMath::Abs(Raw) > 2.f) Side = Raw > 0.f ? 1 : -1;
+	}
+	if (Side == 0) Side = 1;
+	const float Target = FMath::Abs(Raw) <= 90.f ? FMath::Clamp(Raw, -AimClampDeg, AimClampDeg) : (float)Side * AimClampDeg;
+	if (!bInit)
+	{
+		bInit = true;
+		return Target;
+	}
+	// A 6-frame approach (35 % of the gap per frame: within 10 % after 6 frames), never more than AimSlewDegPerFrame in one frame.
+	const float Gap = Target - Prev;
+	const float Step = FMath::Clamp(Gap * 0.35f, -AimSlewDegPerFrame, AimSlewDegPerFrame);
+	return FMath::Abs(Gap) < 0.05f ? Target : Prev + Step;
 }
 
 bool AJamSkater::GetPuckSocketWorld(FVector& Out) const

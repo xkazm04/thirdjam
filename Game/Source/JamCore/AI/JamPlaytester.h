@@ -108,6 +108,7 @@ namespace JamAI
 		int FoulsFromBehind = 0, FoulsNoPuck = 0;   // the two kinds of foul (contracts/events.md): from behind on the carrier; on a skater without the puck
 		int64_t BoxFrames = 0;           // frames the human sat in the penalty box
 		int Pokes = 0, PokesClean = 0, Lifts = 0, Passes = 0;
+		int PassesReceived = 0;          // lane A46: teammates' passes seated on the human's blade (UJamSim's FJamSkaterState::PassesReceived)
 		// R-0029 point 4 (lane A39): the payoffs the human used (one-timer shots, bursts, dekes) and the human's goals within 180 frames of one of them
 		int OneTimers = 0, Breakaways = 0, Dekes = 0, PayoffGoals = 0;
 		int Knockdowns = 0;              // the human knocked down (any cause)

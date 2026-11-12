@@ -1,0 +1,71 @@
+[2026.11.12-22.02.51:900][898]LogHokej: JAMCART loaded ../../../../../../Users/kazda/kiro/thirdjam/.claude/worktrees/a47/Game/Content/Cartridges/hockey.regular.cartridge.json id=hockey-regular title="Regular Cut" seed=1 rink=90x45 visual=humanoid_b1 tier=l2_night
+[2026.11.12-22.02.52:201][898]LogHokej: JAMVISUAL humanoid_b1 tier=l2_night class=/JamAssets/Skaters/BP_SkaterVisual_TB1.BP_SkaterVisual_TB1_C
+[2026.11.12-22.02.52:207][898]LogHokej: JAMVISUAL after build: 6 skaters, 6 SkaterVisual actors in the world (ghosts=0)
+[2026.11.12-22.02.52:255][898]LogJamEvents: JAMEVENT period who=-1 where=(0.0,0.0,0.0) strength=0.000 frame=0 kind=take_1
+[2026.11.12-22.02.52:255][898]LogJamBarks: JAMBARK settings from hockey-regular: enabled=1 intensity=normal
+[2026.11.12-22.02.52:256][898]LogJamCommentary: JAMVO settings from hockey-regular: enabled=1 intensity=normal
+[2026.11.12-22.02.52:267][898]LogJamCommentary: JAMVO match built: music=1 season_last=0
+[2026.11.12-22.02.52:271][898]LogJamCommentary: JAMVO id=period.take_1.01 event=period frame=0 dur=240 text="Welcome to the rink: blue against orange, first period."
+[2026.11.12-22.02.54:034][995]LogJamEvents: JAMEVENT faceoff who=-1 where=(0.0,0.0,0.0) strength=0.000 frame=90 kind=drop
+[2026.11.12-22.02.54:034][995]LogJamBarks: JAMBARK who=3 situation=faceoff tone=mock id=faceoff.opponent.mock.10 frame=90 text="Nice stance. Shame it's the only part that moves right."
+[2026.11.12-22.02.54:056][996]LogJamEvents: JAMEVENT faceoff who=0 where=(-1.9,-1.5,0.0) strength=0.000 frame=91 kind=won
+[2026.11.12-22.02.54:057][996]LogJamEvents: JAMEVENT faceoff who=3 where=(-1.9,-1.5,0.0) strength=0.000 frame=91 kind=lost
+[2026.11.12-22.02.59:463][320]LogJamEvents: JAMEVENT board who=-1 where=(-4500.0,1023.2,4.0) strength=0.364 frame=414 kind=none
+[2026.11.12-22.02.59:465][320]LogJamCommentary: JAMVO id=board.rim.02 event=board frame=414 dur=99 text="Wrapped around the boards."
+[2026.11.12-22.02.59:529][324]LogJamEvents: JAMEVENT board who=0 where=(-4500.0,1021.5,4.0) strength=1.000 frame=418 kind=skater
+[2026.11.12-22.03.00:864][404]LogJamEvents: JAMEVENT board who=3 where=(-4475.0,2009.7,4.0) strength=0.665 frame=498 kind=skater
+[2026.11.12-22.03.00:864][404]LogJamEvents: JAMEVENT board who=-1 where=(-4453.2,2056.3,4.0) strength=0.163 frame=498 kind=none
+[2026.11.12-22.03.01:346][433]LogJamEvents: JAMEVENT shot who=3 where=(-4041.6,2238.0,4.0) strength=0.600 frame=527 kind=none
+[2026.11.12-22.03.01:347][433]LogJamEvents: JAMEVENT board who=-1 where=(-4037.8,2250.0,4.0) strength=0.515 frame=527 kind=none
+[2026.11.12-22.03.02:280][489]LogJamBarks: JAMBARK who=3 situation=steal tone=complain id=steal.opponent.complain.08 frame=583 text="Nobody on this line reads a play anymore"
+[2026.11.12-22.03.04:563][626]LogJamEvents: JAMEVENT board who=0 where=(-3378.2,2250.0,4.0) strength=0.827 frame=720 kind=skater
+[2026.11.12-22.03.04:630][630]LogJamEvents: JAMEVENT board who=-1 where=(-3136.4,2250.0,4.0) strength=0.209 frame=724 kind=none
+[2026.11.12-22.03.04:747][637]LogJamEvents: JAMEVENT board who=-1 where=(-3055.7,2250.0,4.0) strength=0.146 frame=731 kind=none
+[2026.11.12-22.03.09:281][909]LogJamCommentary: JAMVO id=carry.long.02 event=carry frame=1003 dur=60 text="Nobody can catch up."
+[2026.11.12-22.03.17:282][389]LogJamEvents: JAMEVENT board who=-1 where=(-3805.5,2250.0,4.0) strength=0.345 frame=1483 kind=none
+[2026.11.12-22.03.17:398][396]LogJamEvents: JAMEVENT board who=4 where=(-3713.5,2250.0,4.0) strength=0.920 frame=1490 kind=skater
+[2026.11.12-22.03.17:398][396]LogJamCommentary: JAMVO id=board.hard.01 event=board frame=1490 dur=88 text="Off the boards and out."
+[2026.11.12-22.03.17:432][398]LogJamEvents: JAMEVENT board who=0 where=(-3911.7,2250.0,4.0) strength=0.978 frame=1492 kind=skater
+[2026.11.12-22.03.17:649][411]LogJamBarks: JAMBARK who=4 situation=stall tone=bravado id=stall.opponent.bravado.10 frame=1505 text="We're patient because we know how this ends"
+[2026.11.12-22.03.20:248][567]LogJamEvents: JAMEVENT board who=-1 where=(-4495.5,1933.1,4.0) strength=0.363 frame=1661 kind=none
+[2026.11.12-22.03.20:315][571]LogJamEvents: JAMEVENT board who=0 where=(-4494.8,1937.0,4.0) strength=0.992 frame=1665 kind=skater
+[2026.11.12-22.03.20:516][583]LogJamCommentary: JAMVO id=lift.clean.02 event=lift frame=1677 dur=77 text="Textbook stick lift."
+[2026.11.12-22.03.20:598][588]LogJamEvents: JAMEVENT board who=-1 where=(-4487.4,1971.3,4.0) strength=0.184 frame=1682 kind=none
+[2026.11.12-22.03.20:649][591]LogJamEvents: JAMEVENT board who=0 where=(-4479.2,1998.1,4.0) strength=0.561 frame=1685 kind=skater
+[2026.11.12-22.03.21:065][616]LogJamEvents: JAMEVENT board who=3 where=(-4500.0,1879.3,4.0) strength=0.799 frame=1710 kind=skater
+[2026.11.12-22.03.21:666][652]LogJamBarks: JAMBARK who=3 situation=steal tone=complain id=steal.opponent.complain.13 frame=1746 text="Why does the puck always find the human first?"
+[2026.11.12-22.03.21:682][653]LogJamCommentary: JAMVO_CUT id=lift.clean.02 frame=1747 reason=bark_at_human
+[2026.11.12-22.03.22:748][717]LogJamEvents: JAMEVENT board who=-1 where=(-4500.0,1804.9,4.0) strength=0.153 frame=1811 kind=none
+[2026.11.12-22.03.23:282][749]LogJamEvents: JAMEVENT board who=1 where=(-4500.0,1280.9,4.0) strength=0.399 frame=1843 kind=skater
+[2026.11.12-22.03.24:299][810]LogJamCommentary: JAMVO id=poke.clean.01 event=poke frame=1904 dur=87 text="Poked away!"
+[2026.11.12-22.03.26:100][918]LogJamBarks: JAMBARK who=4 situation=steal tone=bravado id=steal.opponent.bravado.04 frame=2012 text="Pucks come to us, they run away from you"
+[2026.11.12-22.03.27:182][983]LogJamEvents: JAMEVENT board who=3 where=(-4500.0,1599.2,4.0) strength=0.534 frame=2077 kind=skater
+[2026.11.12-22.03.27:783][ 19]LogJamEvents: JAMEVENT board who=4 where=(-4500.0,1330.1,4.0) strength=0.463 frame=2113 kind=skater
+[2026.11.12-22.03.28:200][ 44]LogJamEvents: JAMEVENT board who=-1 where=(-4500.0,1701.9,4.0) strength=0.151 frame=2138 kind=none
+[2026.11.12-22.03.28:366][ 54]LogJamEvents: JAMEVENT board who=1 where=(-4500.0,1553.3,4.0) strength=0.634 frame=2148 kind=skater
+[2026.11.12-22.03.32:233][286]LogJamEvents: JAMEVENT board who=-1 where=(-4209.0,-2240.5,4.0) strength=0.349 frame=2380 kind=none
+[2026.11.12-22.03.32:233][286]LogJamCommentary: JAMVO id=board.rim.03 event=board frame=2380 dur=88 text="Around the wall it goes."
+[2026.11.12-22.03.32:333][292]LogJamEvents: JAMEVENT board who=-1 where=(-4189.0,-2244.5,4.0) strength=0.277 frame=2386 kind=none
+[2026.11.12-22.03.32:366][294]LogJamEvents: JAMEVENT board who=3 where=(-4224.2,-2236.6,4.0) strength=0.978 frame=2388 kind=skater
+[2026.11.12-22.03.32:766][318]LogJamEvents: JAMEVENT board who=3 where=(-4116.4,-2250.0,4.0) strength=0.700 frame=2412 kind=skater
+[2026.11.12-22.03.39:302][710]LogJamCommentary: JAMVO id=pass.any.03 event=pass frame=2804 dur=67 text="Tape to tape."
+[2026.11.12-22.03.39:302][710]LogJamBarks: JAMBARK who=3 situation=steal tone=complain id=steal.opponent.complain.09 frame=2804 text="Of course the puck bounced there, it hates us"
+[2026.11.12-22.03.43:786][979]LogJamCommentary: JAMVO id=lift.clean.01 event=lift frame=3073 dur=152 text="Lifts the stick, takes the puck!"
+[2026.11.12-22.03.47:252][187]LogJamEvents: JAMEVENT board who=-1 where=(-4500.0,-1005.9,4.0) strength=0.364 frame=3281 kind=none
+[2026.11.12-22.03.47:319][191]LogJamEvents: JAMEVENT board who=0 where=(-4500.0,-1004.1,4.0) strength=1.000 frame=3285 kind=skater
+[2026.11.12-22.03.47:319][191]LogJamCommentary: JAMVO id=board.hard.03 event=board frame=3285 dur=86 text="Loud one off the wall."
+[2026.11.12-22.03.48:687][273]LogJamBarks: JAMBARK who=3 situation=steal tone=bravado id=steal.opponent.bravado.11 frame=3367 text="Your best shift is our warm-up"
+[2026.11.12-22.03.48:704][274]LogJamCommentary: JAMVO_CUT id=board.hard.03 frame=3368 reason=bark_at_human
+[2026.11.12-22.03.48:885][285]LogJamEvents: JAMEVENT board who=3 where=(-4279.9,-2216.5,4.0) strength=0.658 frame=3379 kind=skater
+[2026.11.12-22.03.48:987][291]LogJamEvents: JAMEVENT board who=-1 where=(-4356.9,-2169.7,4.0) strength=0.136 frame=3385 kind=none
+[2026.11.12-22.03.54:899][645]LogJamCommentary: JAMVO id=poke.clean.02 event=poke frame=3739 dur=106 text="Quick stick, puck gone."
+[2026.11.12-22.03.57:250][786]LogJamBarks: JAMBARK who=3 situation=steal tone=complain id=steal.opponent.complain.02 frame=3880 text="Can we get one clean bounce before the buzzer?"
+[2026.11.12-22.04.01:259][ 26]LogJamEvents: JAMEVENT board who=-1 where=(-161.4,2250.0,4.0) strength=0.134 frame=4120 kind=none
+[2026.11.12-22.04.03:560][164]LogJamCommentary: JAMVO id=carry.long.01 event=carry frame=4258 dur=59 text="Still carrying it."
+[2026.11.12-22.04.06:076][315]LogJamEvents: JAMEVENT board who=-1 where=(4500.0,748.6,4.0) strength=0.388 frame=4409 kind=none
+[2026.11.12-22.04.06:077][315]LogJamCommentary: JAMVO id=board.rim.01 event=board frame=4409 dur=76 text="Rimmed around the back."
+[2026.11.12-22.04.06:093][316]LogJamEvents: JAMEVENT board who=5 where=(4500.0,590.9,4.0) strength=1.000 frame=4410 kind=skater
+[2026.11.12-22.04.06:276][327]LogJamEvents: JAMEVENT board who=3 where=(4500.0,460.5,4.0) strength=0.841 frame=4421 kind=skater
+[2026.11.12-22.04.06:344][331]LogJamBarks: JAMBARK who=5 situation=steal tone=complain id=steal.opponent.complain.05 frame=4425 text="Hell of a time for the ice to go soft"
+[2026.11.12-22.04.06:426][336]LogJamEvents: JAMEVENT board who=0 where=(4500.0,812.8,4.0) strength=0.936 frame=4430 kind=skater
+[2026.11.12-22.04.06:427][336]LogJamEvents: JAMEVENT board who=-1 where=(4500.0,720.2,4.0) strength=0.171 frame=4430 kind=none

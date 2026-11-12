@@ -241,6 +241,9 @@ namespace JamAI
 			const int32 Lt = S.GetPuck().LastTouch;
 			const TArray<FJamSkaterState>& All = S.GetSkaters();
 			W.Carrier = (All.IsValidIndex(Lt) && All[Lt].CanAct() && FVector2D::Distance(All[Lt].Pos, S.GetPuck().Pos) <= G.Shot.ReachM) ? Lt : -1;
+			// lane A46: whom the sim's pass would go to from the carrier right now (the brain passes to the human only when it is this teammate)
+			W.CarrierBestPass = -1;
+			if (W.Carrier >= 0) { FVector2D Aim; W.CarrierBestPass = S.BestPass(W.Carrier, Aim); }
 		}
 		W.SkaterRadius = UJamSim::SkaterRadius;
 		W.StickReach = G.Stick.ReachM;

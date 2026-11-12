@@ -97,7 +97,10 @@ namespace JamAI
 		bool bBlockShots = true;       // the back steps onto the path of a shot on its net
 		double BlockMinDistM = 0.0;    // ... only of a shot taken at least this far from the net (rookie: long shots only)
 		bool bClearLane = false;       // holds a shot while a defender stands in the lane puck -> goal (within 1.2 m of the line)
-		bool bPassToHuman = false;     // (the human's teammates only) with the puck and facing a free human 5-25 m away: pass by shooting
+		// (the human's teammates only) lane A46 (mate.pass_to_human): the share of the chances the carrier passes to the human when the human is open (standing,
+		// 5-25 m away, ahead of or level with the puck, no opponent within 2 m of the lane): rookie 0.6, pro 0.4, all_star 0.2; 0 = never. The human's `pass`
+		// signal makes it 0.9 while it runs. The coin is a fixed function of the skater and the 2-second window. Lane A3's rule was a 0 | 1 flag.
+		double PassToHuman = 0.0;
 		// Lane A31 (B-to-A-0024 point 1): frames the carrier holds shoot before releasing an aimed shot on the net (the sim's charge rule
 		// applies to every skater: speed + charge x bonus, charge = held / shot.charge_frames_max). 0 = a tap (rookie); pro 10, all_star 18.
 		// Board chips, dumps under a forecheck and the pass-by-shot to the human stay taps.
@@ -208,6 +211,7 @@ namespace JamAI
 		bool bDrawOpen = false;         // R-0013: the faceoff draw is open (first clean stick input wins)
 		int FramesSinceDrop = -1;       // frames since the drop while the draw is open (-1 unknown; set by FJamSimAdapter::View)
 		int Carrier = -1;               // UJamSim::CarrierIndex: a skater that can act with the puck within shot reach, else -1
+		int CarrierBestPass = -1;       // lane A46: the teammate UJamSim::BestPass would send the carrier's pass to right now (-1: no carrier or nobody open); the adapter fills it
 		// R-0029 point 4 (lane A39): the goalie commit of the latest deke (UJamSim::GetDekeCommit): while it runs, the deker's opponents' blades, pokes
 		// and shot blocks follow PuckPos - DekeCommitOffset (the puck's old side) instead of the puck.
 		int DekeCommitFrames = 0;
@@ -292,8 +296,9 @@ namespace JamAI
 		const FJamBotSkill& SkillOf(const FJamAIWorld& W, int Id) const;
 		// bAimed (lane A31): the shot is the lined-up shot on the net (the one worth charging), not a board chip, a dump or a pass-by-shot.
 		// bDeke (lane A39, R-0029 point 4): the carrier taps the deke this frame (live, like the shot).
-		FVec2 Decide(const FJamAIWorld& W, int Id, bool& bShoot, bool& bAimed, bool& bDeke);
-		FVec2 Attack(const FJamAIWorld& W, int Id, const FVec2& Me, const FVec2& Pp, const FVec2& Dirg, double D, bool& bShoot, bool& bAimed, bool& bDeke) const;
+		// bPass (lane A46): the carrier passes to the human this frame (FJamAIInput::bPass: the sim's pass with its lead solve).
+		FVec2 Decide(const FJamAIWorld& W, int Id, bool& bShoot, bool& bAimed, bool& bDeke, bool& bPass);
+		FVec2 Attack(const FJamAIWorld& W, int Id, const FVec2& Me, const FVec2& Pp, const FVec2& Dirg, double D, bool& bShoot, bool& bAimed, bool& bDeke, bool& bPass) const;
 	};
 
 	// Scripted input for the human's skater, used only by tests and tournaments (Godot bot_hockey.gd).

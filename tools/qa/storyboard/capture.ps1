@@ -24,6 +24,8 @@ public static class W32 {
   [DllImport("user32.dll")] public static extern bool GetClientRect(IntPtr h, out RECT r);
   [DllImport("user32.dll")] public static extern bool ClientToScreen(IntPtr h, ref PT p);
   [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr h);
+  [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
+  [DllImport("user32.dll")] public static extern bool PrintWindow(IntPtr h, IntPtr hdc, uint flags);
 }
 "@
 $root = Split-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) -Parent
@@ -52,9 +54,10 @@ while ($sw.Elapsed.TotalSeconds -lt $Seconds) {
         if (-not $s.done -and $t -ge $s.at) {
             $s.done = $true
             [W32]::SetForegroundWindow($h) | Out-Null
-            Start-Sleep -Milliseconds 50
-            [System.Windows.Forms.SendKeys]::SendWait($s.keys)
-            Note ("keys at {0:0.0}s: {1}" -f $t, $s.keys)
+            Start-Sleep -Milliseconds 120
+            # Keys go only to the game: if another window holds the foreground (the operator is at the desk), the sequence is skipped and noted.
+            if ([W32]::GetForegroundWindow() -eq $h) { [System.Windows.Forms.SendKeys]::SendWait($s.keys); Note ("keys at {0:0.0}s: {1}" -f $t, $s.keys) }
+            else { Note ("keys at {0:0.0}s SKIPPED (game not in the foreground): {1}" -f $t, $s.keys) }
         }
     }
     if ($t -lt $next) { continue }
@@ -65,11 +68,15 @@ while ($sw.Elapsed.TotalSeconds -lt $Seconds) {
     if ($w -lt 100 -or $hh -lt 100) { continue }
     $bmp = New-Object System.Drawing.Bitmap $w, $hh
     $g = [System.Drawing.Graphics]::FromImage($bmp)
-    $g.CopyFromScreen($pt.X, $pt.Y, 0, 0, $bmp.Size)
+    # PrintWindow with PW_CLIENTONLY | PW_RENDERFULLCONTENT reads the game's own swap chain, so a window in front of the game does not end up in the still.
+    $hdc = $g.GetHdc(); $ok = [W32]::PrintWindow($h, $hdc, 3); $g.ReleaseHdc($hdc)
+    $how = 'printwindow'
+    if (-not $ok) { $g.CopyFromScreen($pt.X, $pt.Y, 0, 0, $bmp.Size); $how = 'screen' }
     $file = Join-Path $out ('shots\t{0:000}s.png' -f [int]$t)
     $bmp.Save($file, [System.Drawing.Imaging.ImageFormat]::Png)
     $g.Dispose(); $bmp.Dispose(); $n++
-    Note ("shot {0} {1}x{2}" -f (Split-Path $file -Leaf), $w, $hh)
+    $fgs = if ([W32]::GetForegroundWindow() -eq $h) { 'fg' } else { 'bg' }
+    Note ("shot {0} {1}x{2} {3} {4}" -f (Split-Path $file -Leaf), $w, $hh, $how, $fgs)
 }
 $p.Refresh()
 if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force -Confirm:$false; Note "stopped game pid $($p.Id) after $([int]$sw.Elapsed.TotalSeconds) s, $n captures" }

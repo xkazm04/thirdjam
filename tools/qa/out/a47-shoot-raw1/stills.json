@@ -1,0 +1,23 @@
+[
+ {
+  "target": 1465,
+  "frame": 1465,
+  "label": "board-skater",
+  "file": "C:\\Users\\kazda\\kiro\\thirdjam\\tools\\qa\\out\\a47-shoot-raw1\\board-skater-f1465.png",
+  "ok": true
+ },
+ {
+  "target": 2574,
+  "frame": 2574,
+  "label": "board-puck",
+  "file": "C:\\Users\\kazda\\kiro\\thirdjam\\tools\\qa\\out\\a47-shoot-raw1\\board-puck-f2574.png",
+  "ok": true
+ },
+ {
+  "target": 2584,
+  "frame": 2584,
+  "label": "board-skater-b",
+  "file": "C:\\Users\\kazda\\kiro\\thirdjam\\tools\\qa\\out\\a47-shoot-raw1\\board-skater-b-f2584.png",
+  "ok": true
+ }
+]

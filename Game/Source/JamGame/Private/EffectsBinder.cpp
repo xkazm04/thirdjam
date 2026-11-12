@@ -108,23 +108,33 @@ float UJamEffectsBinder::VariantFor(FName Event, FName Kind)
 	{
 		return Kind == FName(TEXT("skater")) ? 1.f : 0.f;
 	}
+	// Lane A47 (B-to-A-0031 ask 3): MS_clock plays ten ticks at Variant 0 and nothing at Variant 1, so sudden death has no countdown.
+	if (Event == JamEvents::Clock)
+	{
+		return Kind == FName(TEXT("sudden_death")) ? 1.f : 0.f;
+	}
 	return 0.f;   // shot_blocked reuses the foul assets at Variant 0 (B-to-A-0016); everything else has one kind
 }
 
 bool UJamEffectsBinder::IsSound2D(FName Event)
 {
-	return Event == JamEvents::Bark || Event == JamEvents::Signal || Event == JamEvents::Announce;
+	// Lane A47 (B-to-A-0031 ask 2): the horn, the ticks and the organ sting have a zero position; 2D so they do not pan with the camera from centre ice.
+	return Event == JamEvents::Bark || Event == JamEvents::Signal || Event == JamEvents::Announce
+		|| Event == JamEvents::PeriodEnd || Event == JamEvents::Clock || Event == JamEvents::SeasonTake;
 }
 
 bool UJamEffectsBinder::IsSilentEvent(FName Event)
 {
-	return Event == JamEvents::Period;
+	// carry fires constantly and has nothing to show or play (B-to-A-0031 ask 1, lane A47).
+	return Event == JamEvents::Period || Event == JamEvents::Carry;
 }
 
 bool UJamEffectsBinder::IsSoundOnlyEvent(FName Event)
 {
 	// Director, H9.4: B makes no NS_ for these four on purpose (MS_lose, MS_bark, MS_signal, MS_announce only).
-	return Event == JamEvents::Lose || Event == JamEvents::Bark || Event == JamEvents::Signal || Event == JamEvents::Announce;
+	// B-to-A-0031 ask 2 (lane A47): period_end, clock and season_take are sound-only too (MS_period_end, MS_clock, MS_season_take).
+	return Event == JamEvents::Lose || Event == JamEvents::Bark || Event == JamEvents::Signal || Event == JamEvents::Announce
+		|| Event == JamEvents::PeriodEnd || Event == JamEvents::Clock || Event == JamEvents::SeasonTake;
 }
 
 FLinearColor UJamEffectsBinder::ZoneKindColour(FName Kind)
@@ -225,6 +235,17 @@ FLinearColor UJamEffectsBinder::ColourFor(FName Event, const FJamEventPayload& P
 	if (const UJamPresentation* P = UJamPresentation::Get(this))
 	{
 		const FJamPresentationFrame& F = P->GetFrame();
+		if (Event == JamEvents::Goal && P->HasFrame())
+		{
+			// Lane A47 (B-to-A-0030 fault 8): the goal burst takes the scoring team's colour, read from the side of the net the puck is in; Who is the last
+			// toucher, which on an own goal is the conceding team. Team 0 attacks AttackGoalX(0) (swapped nets included).
+			const AHokejGameMode* GM = Cast<AHokejGameMode>(GetOwner());
+			if (const UJamSim* Sim = GM ? GM->GetSim() : nullptr)
+			{
+				const int32 Scoring = (Payload.Where.X > 0.0) == (Sim->AttackGoalX(0) > 0.0) ? 0 : 1;
+				return F.GetTeamColour(Scoring);
+			}
+		}
 		if (P->HasFrame() && F.Skaters.IsValidIndex(Payload.Who))
 		{
 			return F.GetTeamColour(F.Skaters[Payload.Who].TeamId);
@@ -251,6 +272,10 @@ void UJamEffectsBinder::HandleEvent(FName Event, const FJamEventPayload& Payload
 				C->SetVariableFloat(TEXT("User.Strength"), Payload.Strength);
 				C->SetVariableLinearColor(TEXT("User.Colour"), ColourFor(Event, Payload));
 				C->SetVariableFloat(TEXT("User.Variant"), Variant);
+				// Lane A47 (B-to-A-0029 asks 1 and 2): the sim's contact normal rides the payload as Dir (unit, world x/y, z 0; zero when the sim gave none).
+				// NS_check and NS_knockdown read User.Dir (chips along the hit, the slide streak); NS_board reads User.Normal (into the rink: chips leave the face).
+				if (Event == JamEvents::Check || Event == JamEvents::Knockdown) C->SetVariableVec3(TEXT("User.Dir"), Payload.Dir);
+				else if (Event == JamEvents::Board) C->SetVariableVec3(TEXT("User.Normal"), Payload.Dir);
 				++SpawnedNiagara;
 			}
 		}

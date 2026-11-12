@@ -152,9 +152,14 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Jam|DirectorsCall") FString GetAnnouncementText() const;
 	bool IsTakeCardVisible() const;
 
-	// Lane A42 (y-slots): the band of Slate y the MATCH banner covers at a viewport height VH (anchor 0.4, the 640 x 360 card, the FACEOFF
-	// line under it), so the bark bubbles keep out of it. Pure (tests call it); GetBannerBandPx answers only while the card is up.
-	static void BannerBandPx(float VH, float& OutTop, float& OutBottom) { OutTop = VH * 0.4f - 190.f; OutBottom = VH * 0.4f + 236.f; }
+	// Lane A42: the MATCH card in the top band under the scoreboard at 0.7 scale (A48's storyboard finding 3): 448 x 252 Slate units centred at
+	// y MatchCardCentreY, the FACEOFF line under it; the human and the countdown ring stay clear.
+	static constexpr float MatchCardW = 448.f;
+	static constexpr float MatchCardH = 252.f;
+	static constexpr float MatchCardCentreY = 262.f;
+	// Lane A42 (y-slots): the band of Slate y the MATCH card covers (card plus the line under it; VH kept for callers, the band is absolute),
+	// so the bark bubbles keep out of it. Pure (tests call it); GetBannerBandPx answers only while the card is up.
+	static void BannerBandPx(float VH, float& OutTop, float& OutBottom) { (void)VH; OutTop = MatchCardCentreY - MatchCardH * 0.5f - 4.f; OutBottom = MatchCardCentreY + MatchCardH * 0.5f + 40.f; }
 	bool GetBannerBandPx(float VH, float& OutTop, float& OutBottom) const
 	{
 		if (!IsTakeCardVisible()) return false;

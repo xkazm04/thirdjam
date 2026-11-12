@@ -1,0 +1,32 @@
+[
+ {
+  "rebuild": 1,
+  "ok": true,
+  "world": "/Game/Maps/UEDPIE_0_Rink.Rink",
+  "skaters": 6,
+  "visuals": 6,
+  "classes": {
+   "BP_SkaterVisual_TB1_C": 6
+  }
+ },
+ {
+  "rebuild": 2,
+  "ok": true,
+  "world": "/Game/Maps/UEDPIE_0_Rink.Rink",
+  "skaters": 6,
+  "visuals": 6,
+  "classes": {
+   "BP_SkaterVisual_TB1_C": 6
+  }
+ },
+ {
+  "rebuild": 3,
+  "ok": true,
+  "world": "/Game/Maps/UEDPIE_0_Rink.Rink",
+  "skaters": 6,
+  "visuals": 6,
+  "classes": {
+   "BP_SkaterVisual_TB1_C": 6
+  }
+ }
+]

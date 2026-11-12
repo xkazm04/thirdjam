@@ -13,6 +13,8 @@
 #include "Components/WidgetSwitcher.h"
 #include "Components/SizeBox.h"
 #include "Components/Image.h"
+#include "Components/VerticalBox.h"
+#include "Components/VerticalBoxSlot.h"
 #include "GameFramework/PlayerController.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
@@ -197,6 +199,13 @@ void UJamDirectorsCallWidget::BuildTree()
 	PauseStatus->SetJustification(ETextJustify::Center);
 	PauseStatus->SetAutoWrapText(true);
 	AddV(Pause, PauseStatus, FMargin(0, 10, 0, 0));
+	// Lane A49: the controls card on the pause menu (the same table as UJamInputMap::BindingTableText and docs/experiments/CONTROLS.md).
+	UTextBlock* Controls = S::Text(T,
+		TEXT("SKATE  WASD / L-STICK      AIM STICK  MOUSE / R-STICK      SHOOT  HOLD LMB / RT      CHECK  RMB / RB\n")
+		TEXT("CROSS-CHECK  MMB, MOUSE4 / LB      DEKE  WHEEL, Q / Y      SPRINT  SHIFT / LT      POKE  SPACE / A\n")
+		TEXT("PASS  E / X      SIGNALS  1-4 / D-PAD      BRAKE  CTRL / B      RESTART  R / VIEW      PAUSE  ESC / MENU"), S::CaptionFont(), S::Chalk());
+	Controls->SetJustification(ETextJustify::Center);
+	AddV(Pause, Controls, FMargin(0, 12, 0, 0));
 	UTextBlock* Keys = S::Text(T, TEXT("ESC / START  resume      STICK  move      A  select      B  back"), S::CaptionFont(), S::Muted());
 	Keys->SetJustification(ETextJustify::Center);
 	AddV(Pause, Keys, FMargin(0, 8, 0, 0));
@@ -474,21 +483,22 @@ void UJamDirectorsCallHudWidget::BuildTree()
 		CS->SetAutoSize(true);
 	};
 	// The period card, where lane A5 draws its win/lose card (never at the same time: this one shows only in play).
-	// With the generated clapperboard (R-0008) the number is chalked into its box; without it the text says "TAKE n".
-	TakeArt = nullptr;
-	if (UTexture2D* Slate = Art(TEXT("T_UI_MatchCard")))
-	{
-		TakeArt = Picture(T, Slate, 640.f, 360.f);
-		TakeArt->SetVisibility(ESlateVisibility::Collapsed);
-		Place(TakeArt, FVector2D(0.5, 0.4), FVector2D(0.5, 0.5), FVector2D(0, 0));
-	}
-	TakeCard = S::IceText(T, TEXT(""), S::Font(TakeArt ? 110 : 84, FName("Black"), S::TrackTitle, true), S::Chalk());
-	TakeCard->SetVisibility(ESlateVisibility::Collapsed);
-	// The chalk box of the slate art sits at 66% of its height: 0.16 * 360 px below the centre of a 640 px wide card.
-	Place(TakeCard, FVector2D(0.5, 0.4), FVector2D(0.5, 0.5), FVector2D(0, TakeArt ? 58 : 0));
+	// R-0021 point 3 (lane A47, B-to-A-0030 fault 2): a plain banner on A18's panel, "MATCH n" over "PERIOD n - FACEOFF"; the clapperboard art
+	// (T_UI_MatchCard) stays in the menu's world. TakeArt is the plate so the show / hide logic is unchanged.
+	UBorder* Banner = S::Plate(T, S::Panel(0.92f), FMargin(44, 18, 44, 22));
+	UVerticalBox* BannerBody = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("BannerBody"));
+	Banner->SetContent(BannerBody);
+	TakeCard = S::IceText(T, TEXT(""), S::Font(77, FName("Black"), S::TrackTitle, true), S::Chalk());
+	TakeCard->SetJustification(ETextJustify::Center);
 	TakeSub = S::IceText(T, TEXT("FACEOFF"), S::LabelFont(true), S::Yellow());
-	TakeSub->SetVisibility(ESlateVisibility::Collapsed);
-	Place(TakeSub, FVector2D(0.5, 0.4), FVector2D(0.5, 0), FVector2D(0, TakeArt ? 190 : 56));
+	TakeSub->SetJustification(ETextJustify::Center);
+	if (UVerticalBoxSlot* VS = BannerBody->AddChildToVerticalBox(TakeCard)) { VS->SetHorizontalAlignment(HAlign_Center); VS->SetPadding(FMargin(0)); }
+	if (UVerticalBoxSlot* VS = BannerBody->AddChildToVerticalBox(TakeSub)) { VS->SetHorizontalAlignment(HAlign_Center); VS->SetPadding(FMargin(0, 2, 0, 0)); }
+	TakeArt = Banner;
+	TakeArt->SetVisibility(ESlateVisibility::Collapsed);
+	// Lane A42 (A48's storyboard finding 3): the banner sits in the top band under the scoreboard (centre at y MatchCardCentreY), so the
+	// human and the countdown ring at 0.66 stay clear for its 150 frames.
+	Place(TakeArt, FVector2D(0.5, 0), FVector2D(0.5, 0.5), FVector2D(0, MatchCardCentreY));
 	// The scoreboard line: a pill directly under the scoreboard (whose plates end near y 104 at 1080p).
 	UBorder* LinePill = S::Plate(T, S::Pill(0.86f), FMargin(18, 6));
 	LinePill->SetVisibility(ESlateVisibility::Collapsed);
@@ -498,7 +508,7 @@ void UJamDirectorsCallHudWidget::BuildTree()
 	Place(LinePill, FVector2D(0.5, 0), FVector2D(0.5, 0), FVector2D(0, 112));
 	UBorder* HintPill = S::Plate(T, S::Pill(0.8f), FMargin(14, 5));
 	HintPill->SetVisibility(ESlateVisibility::Collapsed);
-	ReadyHint = S::IceText(T, TEXT("ESC / START   DIRECTOR'S CALL READY"), S::CaptionFont(), S::Yellow());
+	ReadyHint = S::IceText(T, TEXT("ESC / START   CALL READY"), S::CaptionFont(), S::Yellow());   // R-0021 point 3 (lane A47): the menu keeps the film words
 	ReadyHint->SetVisibility(ESlateVisibility::Collapsed);
 	HintPill->SetContent(ReadyHint);
 	Place(HintPill, FVector2D(0, 1), FVector2D(0, 1), FVector2D(S::EdgePx, -S::EdgePx));
@@ -523,7 +533,7 @@ void UJamDirectorsCallHudWidget::ShowTake(int32 Take, int64 UntilFrame)
 		}
 		if (Take <= 1) Note = P->ActiveNote(Path);
 	}
-	TakeCard->SetText(FText::FromString(TakeArt ? FString::FromInt(Match) : FString::Printf(TEXT("MATCH %d"), Match)));
+	TakeCard->SetText(FText::FromString(FString::Printf(TEXT("MATCH %d"), Match)));
 	const FString Line = Count > 0 ? FString::Printf(TEXT("OF %d   -   PERIOD %d   -   FACEOFF"), Count, FMath::Max(1, Take)) : FString::Printf(TEXT("PERIOD %d   -   FACEOFF"), FMath::Max(1, Take));
 	TakeSub->SetText(FText::FromString(Note.IsEmpty() ? Line : FString::Printf(TEXT("COACH'S NOTE: %s"), *Note)));
 	// A note needs reading time: the card stays twice as long (2 x TakeCardFrames).
@@ -583,7 +593,9 @@ FString UJamDirectorsCallHudWidget::GetTakeCardText() const
 {
 	if (!TakeCard) return FString();
 	// With the slate art the text block holds only the number; the card still reads "MATCH n" to callers.
-	return TakeArt ? FString::Printf(TEXT("MATCH %s"), *TakeCard->GetText().ToString()) : TakeCard->GetText().ToString();
+	// Lane A47's plain banner holds the whole "MATCH n" line; only the old slate art held the bare number.
+	const FString Text = TakeCard->GetText().ToString();
+	return (TakeArt && !Text.StartsWith(TEXT("MATCH"))) ? FString::Printf(TEXT("MATCH %s"), *Text) : Text;
 }
 FString UJamDirectorsCallHudWidget::GetAnnouncementText() const { return Announcement ? Announcement->GetText().ToString() : FString(); }
 bool UJamDirectorsCallHudWidget::IsTakeCardVisible() const { return TakeCard && TakeCard->GetVisibility() != ESlateVisibility::Collapsed; }

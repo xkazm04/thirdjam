@@ -213,7 +213,7 @@
       "difficulty": "pro"
     },
     "look": {
-      "tier": "l3_neon",
+      "tier": "l2_night",
       "trim_colour_hex": "#22F5E1",
       "fog_density": 0.02,
       "wet_ice": true

@@ -143,3 +143,20 @@ ice" (A8's match card, 150 frames); "missing: a match timer" (first-to-3 cuts ha
 hold for the faceoff" on stills without the hint (the hint shows the first three faceoffs of a session; still C is the fourth of that PIE session and D/E are after the draw).
 Fair hits to keep: the own-net caption is "legible: false" four times at 1080p (muted #9AA0A8 at 14 px over ice: A18's secondary-caption choice; a paper caption would
 fix it in one line), and the commentary line in F sits behind the ring when the human stands at the bottom of the frame (the strip is at the bottom centre by the brief).
+
+### 7b. A48's storyboard findings 2, 3 and 5 (H17.6, from the Director's message)
+
+| Finding | Was | Is |
+|---|---|---|
+| 2: YOU over the wrong skater | the tag at 1.9 m over the helmet, projected: at the match camera it landed on the orange centre behind the human | while the ring shows, the tag sits inside the ring's top arc at the human's own feet (`UpdateYours`: alignment 0.5/0, 6 px under the arc); over the helmet only past the 24 m fade, where the projection error is small. The ring is a plain chalk ring with an ink edge (`T_UI_RingPlain`, a code-drawn 512 px PNG imported BC7 / no mips / UI group, ledger row in ASSETS.md; the countdown ring stays the fallback when the asset is missing) |
+| 3: MATCH card over the human for 150 frames | 640 x 360 card centred at 0.4 VH, its FACEOFF line on the ring | 448 x 252 (0.7) centred at y 262 in the top band under the scoreboard (`MatchCardCentreY`, `MatchCardW/H` on the overlay), number 77 px, the line under the card; `BannerBandPx` is now that absolute band (132 to 428), the human and the ring at 0.66 stay clear; MenuTests assert the band is under 0.42 VH and above the ring |
+| 5 / still 9: far speaker's bubble, bubbles over the pause card | a speaker 40 m away floated its bubble at the top of the frame; bubbles and the commentary strip stayed under TIME OUT | a speaker farther than `MaxBubbleDistanceM` (24) from the camera, or outside the frame, gets no bubble (the voice still plays); every bubble is cleared (`ShownFrame` reset) and the commentary strip hidden while the world is paused (`UGameplayStatics::SetGamePaused` is the pause menu's signal; the feed's `Paused` phase is honoured too); bubbles near the radar or the ready pill rise to VH-180 |
+
+Stills (`docs/experiments/img/hud2/a42b-*-1080p.jpg`, floating PIE 1920x1080): `match-card-top-band` and `you-tag-at-ring` (the card under the scoreboard, YOU inside the
+ring on the dot, 2 over HOLD, the hint), `bark-plain-ring` (plain blue ring under 7, the white carrier ring under 9, the commentary strip; the forced bark drew no bubble:
+either refused by the cooldown or its speaker outside the frame, the still cannot tell which), `pause-clears-bubbles` (TIME OUT with no bubble and no strip; still 9's
+"own 1 m" marker is the own-net caption clamped to the edge), `play-plain-ring`. Eyes (`docs/experiments/eyes/a42b-hud-1080p.{json,md}`, $0.032): legibility 3 / 3 / 4 / 4 / 3,
+smallest text 13-14 px; it reads "Player indicator ring tag, lower center, YOU" on both card stills (no longer over the orange centre), "Match clapperboard, center upper
+half", and on the pause still lists no bubble and no strip; its collisions are the card over centre ice (it is in the top band now: the far ice behind it, not the human),
+the ring over the human's skates (by design) and the minimap flush with the margin (A18's 24 px edge). Not changed: InputMapping, CameraFollow, the pawn, the pause
+menu's controls card (R-0032, lane A49).

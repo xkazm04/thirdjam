@@ -72,6 +72,11 @@ struct JAMCORE_API FJamEventPayload
 	// R-0001 item 3: pickup kind for pickup_spawn / pickup_take, cause ("check" | "boost") for knockdown; NAME_None otherwise.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Events")
 	FName Kind = NAME_None;
+
+	// Lane A47 (B-to-A-0029): a unit direction on the rink plane (world x, y; z 0). check and knockdown: the contact normal, checker towards victim
+	// (the binder's Niagara User.Dir); board: the board normal pointing into the rink (User.Normal). Zero for every other event. A read-out of the sim.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Events")
+	FVector Dir = FVector::ZeroVector;
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FJamEventSignature, FName, Event, const FJamEventPayload&, Payload);

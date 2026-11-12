@@ -108,11 +108,13 @@ namespace
 		Box->SetVisibility(ESlateVisibility::HitTestInvisible);
 		return Box;
 	}
-	// The ground ring (the chalk ring of the kit, tinted; a rounded outline without the art), drawn as the ellipse the caller sizes.
+	// The ground ring: a plain chalk ring (T_UI_RingPlain, A48's storyboard finding 2: the countdown ring's cross hairs read as a reticle on
+	// the ice), the countdown ring without it, a rounded outline without any art; tinted, drawn as the ellipse the caller sizes.
 	UImage* MakeGroundRing(UWidgetTree* Tree, const TCHAR* Name, const FLinearColor& Colour)
 	{
 		UImage* I = Tree->ConstructWidget<UImage>(UImage::StaticClass(), Name);
-		I->SetBrush(S::Ring(64.f));
+		if (UTexture2D* Plain = S::Art(TEXT("T_UI_RingPlain"))) I->SetBrush(S::ImageBrush(Plain, FVector2D(64.f, 64.f)));
+		else I->SetBrush(S::Ring(64.f));
 		I->SetColorAndOpacity(Colour);
 		I->SetVisibility(ESlateVisibility::Collapsed);
 		return I;
@@ -298,12 +300,20 @@ void UJamHudWidget::BuildTree()
 	YouTag->SetContent(YouTagText);
 	Place(Root, YouTag, FVector2D(0, 0), FVector2D(0.5, 1), FVector2D(0, 0));
 
+	// ---- Lane A49: the sprint stamina bar (Shift / LT): 240 x 8 px, bottom centre above the strips; drains in sprint.drain_frames, refills in refill_frames.
+	StaminaBack = S::Plate(T, FLinearColor(0.f, 0.f, 0.f, 0.55f), FMargin(0));
+	StaminaBack->SetVisibility(ESlateVisibility::Collapsed);
+	Place(Root, StaminaBack, FVector2D(0.5, 1), FVector2D(0.5, 1), FVector2D(0, -168), FVector2D(244, 12));
+	StaminaFill = S::Plate(T, S::Chalk(), FMargin(0));
+	StaminaFill->SetVisibility(ESlateVisibility::Collapsed);
+	Place(Root, StaminaFill, FVector2D(0.5, 1), FVector2D(0, 1), FVector2D(-120, -170), FVector2D(240, 8));
+
 	// ---- Controls hint: a bottom strip for the first 10 s, fading out over the last 2 s.
 	ControlsStrip = S::Plate(T, S::Pill(0.72f, 0.f), FMargin(0, 8));
 	ControlsStrip->SetVisibility(ESlateVisibility::Collapsed);
 	ControlsStrip->SetHorizontalAlignment(HAlign_Center);
 	ControlsText = MakeText(T, TEXT("ControlsText"), S::Font(S::Body, FName("Bold"), 40), S::Paper());
-	ControlsText->SetText(FText::FromString(TEXT("MOVE  WASD / L-STICK      SHOOT  SPACE / A      CHECK  SHIFT / B      BRAKE  CTRL / LT      PAUSE  ESC")));
+	ControlsText->SetText(FText::FromString(TEXT("SKATE  WASD      AIM  MOUSE      SHOOT  HOLD LMB      CHECK  RMB      CROSS-CHECK  MMB      SPRINT  SHIFT      POKE  SPACE      PASS  E      PAUSE  ESC")));   // lane A49 (UJamInputMap::BindingTableText has the full table)
 	ControlsText->SetJustification(ETextJustify::Center);
 	ControlsStrip->SetContent(ControlsText);
 	UCanvasPanelSlot* StripSlot = Root->AddChildToCanvas(ControlsStrip);
@@ -335,7 +345,7 @@ void UJamHudWidget::BuildTree()
 
 	// ---- Director's Call ready line (lane A5's; the overlay of lane A8 draws the live hint, this one stays for its feed flag).
 	CallText = MakeText(T, TEXT("CallText"), S::LabelFont(true), S::Yellow());
-	CallText->SetText(FText::FromString(TEXT("DIRECTOR'S CALL READY")));
+	CallText->SetText(FText::FromString(TEXT("CALL READY")));   // R-0021 point 3 (lane A47, B-to-A-0030 fault 2): no film word on the ice
 	CallText->SetVisibility(ESlateVisibility::Collapsed);
 	Place(Root, CallText, FVector2D(0.5, 1), FVector2D(0.5, 1), FVector2D(0, -40));
 
@@ -468,6 +478,15 @@ void UJamHudWidget::RefreshFromFrame(const FJamPresentationFrame& F)
 	AwayBox->SetBrushColor(F.TeamColour1);
 	TakeText->SetText(FText::FromString(FormatTake(F.Take, F.ScoreToWin).ToUpper()));
 	TimerText->SetText(FText::FromString(F.bHasTimer ? FormatTimer(F.FramesRemaining) : FString()));
+	// Lane A49: the stamina bar shows while the sprint runs or the bar is not full; yellow while sprinting, chalk while it refills.
+	if (StaminaBack && StaminaFill)
+	{
+		const bool bShow = F.bHumanSprinting || F.HumanStamina01 < 0.999f;
+		StaminaBack->SetVisibility(bShow ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+		StaminaFill->SetVisibility(bShow ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+		StaminaFill->SetBrushColor(F.bHumanSprinting ? S::Yellow() : S::Chalk());
+		if (UCanvasPanelSlot* FS = Cast<UCanvasPanelSlot>(StaminaFill->Slot)) FS->SetSize(FVector2D(FMath::Max(2.f, 240.f * FMath::Clamp(F.HumanStamina01, 0.f, 1.f)), 8.f));
+	}
 	TimerText->SetVisibility(F.bHasTimer ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 
 	const FString Card = CardFor(F.Phase);
@@ -562,8 +581,13 @@ void UJamHudWidget::UpdateCommentary(const FJamPresentationFrame& F)
 			CommentaryFrame = L.Frame;
 			CommentaryDuration = L.DurationFrames;
 		}
+		// Lane A47 (B-to-A-0030 fault 7): the caption follows the voice: a cut line (bark, must-play goal call) ends at the cut frame.
+		const int64 End = C->GetLineEndFrame();
+		if (CommentaryFrame > -1000000 && End >= CommentaryFrame) CommentaryDuration = static_cast<int32>(FMath::Min<int64>(End - CommentaryFrame, L.DurationFrames));
 	}
-	const float Alpha = CommentaryOpacityFor(CommentaryFrame, CommentaryDuration, F.SimFrame);
+	// Nothing on the strip under the pause card (A48's storyboard, still 9): the pause menu pauses the world (no new frame carries the phase).
+	const bool bPaused = F.Phase == EJamPhase::Paused || (GetWorld() && GetWorld()->IsPaused());
+	const float Alpha = bPaused ? 0.f : CommentaryOpacityFor(CommentaryFrame, CommentaryDuration, F.SimFrame, 0);   // A47: the caption ends with the line
 	CommentaryStrip->SetRenderOpacity(Alpha);
 	CommentaryStrip->SetVisibility(Alpha > 0.f ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	if (Alpha > 0.f)
@@ -677,6 +701,9 @@ void UJamHudWidget::UpdateYours(const FJamPresentationFrame& F)
 	// Just over the helmet (the toy figure's head socket is at 1.65 m; the bark bubbles sit higher, at 2.35 m, so the two never meet).
 	const bool bHead = bOn && PC && UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(PC, UJamSim::ToWorld(Me.PosM, 1.9), Head, false);
 	const float ChevronAlpha = 1.f - RingAlpha;
+	// A48's storyboard (finding 2): a point 1.9 m over the helmet projects onto whoever stands behind the human at the match camera. While the
+	// ring shows, the tag sits inside the ring's top arc (the human's own feet, nobody else's); only past the fade does it go over the head.
+	const bool bTagAtRing = RingAlpha > 0.f;
 	if (bHead && ChevronAlpha > 0.f)
 	{
 		YouChevron->SetRenderOpacity(ChevronAlpha);
@@ -687,11 +714,16 @@ void UJamHudWidget::UpdateYours(const FJamPresentationFrame& F)
 			for (int32 i = 0; i < O->GetChildrenCount(); ++i) if (UBorder* Bar = Cast<UBorder>(O->GetChildAt(i))) Bar->SetBrush(S::Rounded(Team, 2.5f, FLinearColor(0, 0, 0, 0.9f), 1.5f));
 	}
 	else Hide(YouChevron);
-	if (bHead && ShowYouTag(F.SimFrame, LastDropFrame))
+	if ((bTagAtRing || bHead) && ShowYouTag(F.SimFrame, LastDropFrame))
 	{
 		YouTag->SetBrush(S::Rounded(Team, 8.f, FLinearColor(0, 0, 0, 0.9f), 2.f));
 		YouTag->SetVisibility(ESlateVisibility::HitTestInvisible);
-		if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(YouTag->Slot)) CS->SetPosition(Head + FVector2D(0, ChevronAlpha > 0.f ? -34.f : -8.f));
+		if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(YouTag->Slot))
+		{
+			// Inside the ring's top arc: the tag's top edge 6 px under the arc (alignment 0.5, 0), else over the helmet (alignment 0.5, 1).
+			CS->SetAlignment(FVector2D(0.5f, bTagAtRing ? 0.f : 1.f));
+			CS->SetPosition(bTagAtRing ? Centre + FVector2D(0, -Size.Y * 0.5f + 6.f) : Head + FVector2D(0, ChevronAlpha > 0.f ? -34.f : -8.f));
+		}
 	}
 	else Hide(YouTag);
 

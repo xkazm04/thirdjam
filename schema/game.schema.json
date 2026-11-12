@@ -284,6 +284,31 @@
               "description": "How long the burst lasts, in physics frames."
             }
           }
+        },
+        "sprint": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Lane A49: the sprint (Shift / left trigger held): top speed and acceleration rise by bonus while the skater moves and its stamina lasts; the stamina drains in drain_frames of sprint and refills in refill_frames at rest. Bots never sprint. Leave the key out for the defaults.",
+          "properties": {
+            "bonus": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Fraction added to top speed and acceleration while sprinting; 0 turns the sprint off."
+            },
+            "drain_frames": {
+              "type": "integer",
+              "minimum": 30,
+              "maximum": 1800,
+              "description": "Physics frames of sprint from a full stamina bar to empty."
+            },
+            "refill_frames": {
+              "type": "integer",
+              "minimum": 30,
+              "maximum": 3600,
+              "description": "Physics frames at rest from empty to full."
+            }
+          }
         }
       }
     },
@@ -327,6 +352,12 @@
           "minimum": 0,
           "maximum": 120,
           "description": "A check on a skater that carried the puck within this many frames is not a foul for hitting a player without the puck."
+        },
+        "reception_m": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 3,
+          "description": "Lane A46: a teammate's pass that reaches the body within this radius (metres) at 6-14 m/s is seated on the blade with a 4-frame settle; faster passes bounce off the body unless the blade meets them. 0 = only the blade receives."
         },
         "deke": {
           "type": "object",
@@ -1101,13 +1132,13 @@
           "type": "number",
           "minimum": 1,
           "maximum": 15,
-          "description": "Height in metres the chase camera lifts to when the boards take its whole arm; it rises in proportion to the arm lost and looks along the rink at an end board."
+          "description": "Height in metres the chase camera lifts to when the boards take its whole arm; it rises in proportion to the arm lost and looks along the rink at an end board. Default 3 since lane A49 (was 5)."
         },
         "far_net_bias": {
           "type": "number",
           "minimum": 0,
           "maximum": 1,
-          "description": "How much of the angle to the far net the framing leads by when the skater heads for it (0 = none, 1 = aim at the net)."
+          "description": "How much of the angle to the far net the framing leads by when the skater heads for it (0 = none, 1 = aim at the net). Default 0.2 since lane A49 (was 0.5); the human never leaves the frame's middle third."
         },
         "radar": {
           "type": "boolean",

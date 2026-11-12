@@ -976,3 +976,100 @@ The main file repeats the last frame, so a 20-frame take has 21 frames (as every
 ### Sheets
 
 - `devlog/shots/20261112-203453-B-lab-skf5-p2_cel-old-new.png`, `20261112-203454-B-lab-skf5-p3_clay-old-new.png`, `20261112-203454-B-lab-skf5-p4_broadcast-old-new.png`
+
+## Sixth pass: clay style, bands, stitches, felt (23:32 to 23:50)
+
+The coordinator asked for this pass, for `p3_clay` only (`BP_SkaterVisual_TB1_P3` in the engine). Blender only.
+
+**Where the files are**
+
+| What | Folder |
+|---|---|
+| Shipped mesh | `C:\Users\kazda\jam\skater-lab\skf\export6\p3_clay\` (SK_Skater_p3_clay.fbx, _loopcut.fbx, SM_Stick_p3_clay.fbx), **without fuzz** |
+| The fuzz variant | `skf\export6fz\p3_clay\` |
+| Measurements | `skf\work6\p3_clay\` (`compare_anim*.json`, `check_fbx*.json`) |
+
+- `export/` to `export5/` and `s4/` were not touched.
+- Rebuild:
+  - shipped: `SKF_SUFFIX=6 SKF_FUZZ=0 bash C:/Users/kazda/jam/skater-lab/skf/run_all.sh p3_clay`
+  - fuzz variant: `SKF_SUFFIX=6fz SKF_FUZZ=1 bash .../run_all.sh p3_clay`
+  - sheets: `bash skf/sheet6.sh`
+  - Builder switch `--fuzz 0|1` or env `SKF_FUZZ`.
+
+**Mesh-only re-import is safe** (`compare_anim.py`, `export5` against `export6`, main and loopcut files):
+- same 24 bones and parents, rest matrices max difference **0.0**;
+- 72 / 72 takes, same names; **672,051 keys (main) and 662,091 (loopcut) compared, max difference 0.0**, no curve missing.
+- The clip pass is unchanged and re-checked: pelvis and root travel 0, seams 0; the old reaches 1.000 / 1.600 m with the same blade heights; aim grid within 0.03 cm, blend test 0 failures.
+- The lowest point over all takes is -0.97 cm (the stick), against -0.96 in `export5`. No new below-ice point in any take.
+- At most **1 bone weight per vertex** (rigid parts). The UV0 back-number projection is unchanged.
+
+### What was added (all `Trim` unless stated)
+
+| Item | How | Triangles |
+|---|---|---|
+| **Cream band on each upper sleeve** | 5 cm wide, 4.5 mm proud (edges 2 mm), ray-cast onto the clay surface (28 points round), bound to `upperarm_l/r` | about 170 each |
+| **Two cream bands on each sock** | 4 cm wide, same build, bound to `calf_l/r` | about 170 each |
+| **Hem band and collar ring** | the existing cream clay rolls (hem 2 cm and collar 2.4 cm round), kept | unchanged |
+| **Running stitches** | **71 dashes of 4.0 x 1.4 x 0.5 cm, 2.4 cm gaps, 3 mm above the felt** (the texture lane's readable size). Around the hem 3.5 cm above the hem roll, round the collar 3.5 cm below the collar roll, down both sides, over both shoulders, and round both cuffs 3.5 cm from the cuff roll. They replace the old 3.0 x 0.9 cm cross-stitches and their jersey ridges. | 852 |
+| Forearm rolls | removed (the concept bands the upper sleeves) | -400 |
+| **Felt** | seeded fine displacement on every `Jersey` part (socks included), 1.5 mm, two octaves (60 and 130 per m), on top of the clay lumps, in the vertices and smooth normals | 0 |
+| **Stick** | darker shaft (sRGB 0.17 / 0.12 / 0.10), the blade in `Stick`, with **cream tape** as a raised spiral (7 turns, 4.5 mm round cord) inside the blade height | +572 (984 in all) |
+| **Fuzz** (variant only) | 600 two-sided fibre cards, 10 to 20 x 3 to 4.5 mm, on the upper chest and back, shoulder pads, outer upper sleeves and sock tops; slot **`Fuzz`**, bound to the bone of the cloth under it | 1,200 |
+
+**Totals.** Shipped `export6`: **12,436** triangles (body 11,452 + stick 984), 9 slots as before. Fuzz variant: **13,636**, with a 10th slot `Fuzz`. The cap is 16k.
+
+**Band and stitch deformation.** Every band and stitch is weighted 1.0 to the same bone as the cloth under it, so it moves rigidly with it.
+- The bands sit 2 to 4.5 mm above the ray-cast surface at 28 points round, so they don't z-fight.
+- Iteration 1 used 14 points round the sock: the felt bulged through between the points and the band broke into blocks (`lab-skf6-close` was re-filed after the fix).
+- Checked on the rendered stride, slap and knockdown sheets: no tearing. The joins at elbows and knees are the existing ball-joint overlaps.
+
+### Vertex colours (one layer `Col`, exported in the FBX as linear data; face-corner domain after import)
+
+| Channel | Meaning |
+|---|---|
+| **R** | felt amount: Jersey and Trim (cloth, bands, stitches, patch) 1.0, Pads (breezers) 0.6, Fuzz 1.0, clay parts (helmet, gloves, skates, skin, blade, stick shaft) 0.0 |
+| **G** | a random value per part (island), 0..0.97, for mottling |
+| **B** | ambient occlusion baked per vertex: 12 hemisphere rays of 25 cm. Dark under the arms, between the legs, under the helmet rim, where the bands meet the felt. |
+| A | 1 |
+
+**What the engine should do**
+- Read `Col` in the jersey and clay masters.
+- R: mix the felt response (rim and roughness 1) with the clay response.
+- G: a small brightness or hue jitter per part (mottling, about ±4 %).
+- B: multiply it into the base colour or ambient (about 0.6 + 0.4 × B), so the figure gets depth without a texture.
+- If the fuzz variant is used, the **`Fuzz` slot** needs:
+  - the jersey's team colour;
+  - two-sided rendering;
+  - masked or dithered opacity that fades the cards towards their tips;
+  - no shadow casting.
+
+### Did the fuzz earn its place? No
+
+On my own renders, close up it reads as a few stray hairs on the shoulders. At 8 m, 70 px and 40 px the fuzz and no-fuzz figures are indistinguishable (`lab-skf6-8m`, `-game70`, `-game40`, middle row against bottom row). It is noise, not wool, so `export6` ships without it. The variant stays in `export6fz` if the engine's dithered alpha makes more of it.
+
+### What reads now (70 px and 40 px from the game camera, blue and orange)
+
+At 70 px:
+- the cream upper-sleeve bands and the two sock bands read clearly in both colours;
+- the hem roll and the stitched band above it read as a cream line;
+- the patch reads as before.
+
+At 40 px the sleeve and sock bands still separate the limbs, and the stitches merge into the hem line.
+
+### Still far from the concept
+
+- **Not fuzzy wool.** The felt displacement is barely visible at our vertex density (2 to 3 cm spacing), so the jersey still reads as matte clay or felt, not woolly. True wool needs the engine (a fuzz shader or a normal map), or a much denser mesh.
+- **Stitches.** The stitches are hard-edged boxes, not soft thread. They read as dashes, as wanted, but up close they look sculpted.
+- **Clay thumbprints.** The helmet, gloves and skates have dents and lumps from the earlier passes, but no fingerprint ridges.
+- **Sleeve bands.** The concept's bands sit near the shoulder and are wider; mine are at mid upper arm, 5 cm wide.
+- **Tape wrap.** The tape spiral is visible on the blade only up close.
+- **Not verified:** anything in Unreal (vertex-colour import, the `Col` layer on the skeletal mesh, how the masters use it).
+
+### Sheets
+
+- `devlog/shots/20261112-234642-B-lab-skf6-turntable.png` (old above new)
+- `devlog/shots/20261112-234642-B-lab-skf6-close.png` (back, sleeve, sock: old / with fuzz / without fuzz)
+- `devlog/shots/20261112-234642-B-lab-skf6-game70.png`
+- `devlog/shots/20261112-234642-B-lab-skf6-game40.png`
+- `devlog/shots/20261112-234642-B-lab-skf6-8m.png`
+- `devlog/shots/20261112-234642-B-lab-skf6-knockdowns.png`

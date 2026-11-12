@@ -1,0 +1,1 @@
+SKT: P3C part map from bone weights x base colour, flat colours on the Glide pose (collar leak fixed by height and neck distance)
