@@ -1,0 +1,1 @@
+SKH6 P4B after the settle pass (export6 build of 18:40, before the hold fix), side: Knockdown_Left, Knockdown_Right, Knockdown_Back, Fall_Forward, Goalie_Block_Left

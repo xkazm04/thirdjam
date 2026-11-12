@@ -683,3 +683,230 @@ Above: columns -63 to +70 (+ = the skater's left, image left), rows 1.00 to 1.60
 - **Back occlusion.** No number, only the rear-high sheets.
 - **P4 Lift / Pass.** Whether the engine's left-arm swing came from the first-pass flips.
 - **Unreal.** Nothing was imported.
+
+## Fourth pass: fixes, falls and collisions (17:42 to 18:00)
+
+The coordinator asked for this pass. Blender only.
+
+**Where the files are**
+- New files: `C:\Users\kazda\jam\skater-lab\skf\export4\<style>\`, same three file names, **70 takes** (55 plus 15 new).
+- `export/` (15:27), `export2/` (16:17) and `export3/` (17:19) were not touched; nor was `s4/`.
+- Work files: `skf\work4\<style>\` (`check_fbx.json`, `clips_report.json`, `aim_grid.json`, `summary4.md`).
+- Rebuild: `SKF_SUFFIX=4 bash C:/Users/kazda/jam/skater-lab/skf/run_all.sh`, about 3 min with the new renders.
+- Summaries: `node summary4.mjs` and `node wrap4.mjs`, run from `skf/`.
+
+**R-0025 and R-0026 are not in my checkout.** `contracts/RULINGS.md` ends at R-0022. Part B follows the coordinator's description of them.
+
+### Part A: fixes
+
+**1. Aim holds are truly static.**
+- Every `Aim_*` hold (24 grid holds and 4 aliases) is one key held for 30 frames. Every frame is identical: the largest joint motion over the 24 holds is **0 cm** in all styles, and the free hand has zero motion.
+  - Before: a 0.1-degree wobble moved the free hand 5.5 cm at frames 7 to 8.
+- The free hand of the one-handed holds now hangs beside the hip (left shoulder offset forward 6, out 10, down 48 cm), never behind the back.
+
+**2. Wrap speed.**
+- New check in `check_fbx.py`: in every looping take, the step from the last frame to the first is compared with the mean step of the cycle, for both hands and the blade toe. An offender is a wrap step above 1.2 × the mean.
+
+| Style | Before (export3) | After (export4) |
+|---|---|---|
+| p2_cel | 0 | 0 |
+| p3_clay | 0 | 0 |
+| p4_broadcast | 2: `Stride` hand_r (wrap 4.48 cm against a 2.47 cm mean, ×1.81) and blade (5.62 against 4.24, ×1.32) | **0** |
+
+- Cause: the top-hand grip correction (5 undamped iterations) oscillated in some frames. Frame 0 of P4 Stride sat 10 cm off frames 59 and 1, although the input pose was the same.
+- Fix: the correction is damped (factor 0.7, up to 15 iterations) for both hands, in every take. Frames 59, 0 and 1 now agree within 0.2 cm.
+
+**3. Locomotion hips within 2 cm of Glide** (pelvis height min..max, cm):
+
+| Take | p2_cel | p3_clay | p4_broadcast |
+|---|---|---|---|
+| Glide | 76.0..77.0 | 72.0..72.9 | 80.4..81.7 |
+| Stride | 75.0..76.0 | 71.1..72.0 | 79.1..80.4 |
+| Crossover_Left / Right | 74.5..76.5 (was 69..73) | 70.6..72.5 (was 65.6..69.3) | 78.5..81.1 (was 71.3..76.5) |
+| Lean_Left / Right | 75.0 (was 71.0) | 71.1 (was 67.4) | 79.1 (was 73.9) |
+| Stop | 75.0..76.0 (was 61..76) | 71.1..72.0 (was 58.3..72) | 79.1..80.4 (was 60.9..80.4) |
+
+- `Backward` does not exist in this set.
+- The trunk now leans 2 to 4 degrees more in the leans and in Stop, and Stop's front skate is at 0.38 m instead of 0.52.
+- **New leg reach guard.** With the hips up, wide authored steps were out of the legs' reach: crossover skates missed their targets by 12 to 16 cm. A target out of reach now moves in towards the hip horizontally and stays on the ice. Skate target miss after the fix: **0** in every take.
+
+**4. P3 child's grip.**
+- The top hand grips **10 cm below the knob**: grip-to-heel 1.30 m (was 1.40), and the shaft and knob continue 10 cm above the hand. The 56-degree lie from the third pass stays.
+- The P3 hold solver treats a flat blade (0 to 2 cm) as a hard rule.
+- Result: **all 24 P3 holds** have the blade 0.02 to 2.01 cm above the ice, within 0.03 cm of their point, and the blend test passes (worst error 2.75 cm, height -2.87..1.90 cm).
+  - `Aim_N63_R100` was 3.9 cm heel-up; it is now flat and two-handed.
+- The cost is more one-handed holds: `N63_R130`, `N63_R145`, `N63_R160`, `N46_R145`, `N46_R160`, `N30_R160`.
+- I tried the hard rule for P2 too: one far-right hold could not be both flat and on its point (13 cm miss), so P2 and P4 keep the third-pass rule. Their blades sit 0.1 to 2.3 cm up, and their blend tests pass.
+
+**Other checks after Part A and Part B, in all styles:**
+- **Unchanged:**
+  - pelvis and root travel 0.000 cm and loop seams 0.000 cm in all 70 takes;
+  - aliases and Poke exactly on 1.000 m / 1.600 m;
+  - foot pitch max 20.3 to 21.8 / 25.0 to 25.1 deg.
+- **Twist over 45 deg:** 0 in P2 and P3. P4 has 2, both its left skate in the new `GetUp_Side_*` (below).
+- **Moved against the third pass** (full lists in `work4/<style>/summary4.md`):
+
+| Style | What | Third pass -> fourth |
+|---|---|---|
+| P2, P4 | crossover and lean stick low (stick carried higher because the hips are higher) | P2 4.4 to 5.8 -> 6.8 to 7.0 cm; P4 8.7 to 10.7 -> 12.3 to 12.4 cm |
+| P2 | Stride stick low | -1.69 -> -1.08 cm |
+| P2 | Check stick low | -0.64 -> -0.17 cm |
+| P3 (child grip) | arm reach in the faceoffs and GetUp (better) | 1.29 to 1.44 -> 0.99 to 1.0 |
+| P3 | GetUp stick low (better) | -2.01 -> +0.40 cm |
+| P3 | Faceoff stick (better) | now above the ice |
+| P3 | Shot_Slap / Shot_Wrist bottom-hand gap (worse) | 3.9 / 3.2 -> 5.7 / 5.4 cm |
+| P3 | Lean_Left stick low | 3.2 -> 8.6 cm |
+| P4 | Stride stick low | -0.14 -> +1.91 cm |
+
+### Part B: falls and collisions (15 new takes, same solver and rules)
+
+| Take | Frames (s) | Contact frame | Blends from -> to |
+|---|---|---|---|
+| `Check_Hit_Left` / `_Right` / `_Back` | 29 (0.47) | 3 | Glide -> Glide |
+| `Knockdown_Left` | 31 (0.5) | 2 | Glide -> lying on the right hip and forearm (held from 21) -> **`GetUp_Side_Left`** |
+| `Knockdown_Right` | 31 (0.5) | 2 | Glide -> lying on the left hip -> **`GetUp_Side_Right`** |
+| `Knockdown_Back` | 31 (0.5) | 2 | Glide -> **`Fall_Forward`'s end pose** (frame 26 on) -> `GetUp_Front` |
+| `Trip` | 27 (0.43) | 2 | Glide -> **`Fall_Forward`'s end pose** -> `GetUp_Front` |
+| `GetUp_Side_Left` / `_Right` | 55 (0.9) | - | the knockdown's last frame exactly -> Glide |
+| `Board_Hit` | 31 (0.5) | 4 | Glide -> Glide |
+| `Board_Pin` | 61 (1.0) | - | loop |
+| `Check_Deliver_Left` / `_Right` | 31 (0.5) | 16 | Glide -> Glide |
+| `Poke_Hit` | 25 (0.4) | 3 | Glide -> Glide |
+| `Lift_Hit` | 21 (0.33) | 3 | Glide -> Glide |
+
+- **Check hits** (the receiver stays up): upper body thrown away from the hit, extreme at 6 held to 8, head lagging, free arm out, one recovery step at 15 on the push side, back in Glide at 28.
+- **Knockdowns reach the ice within 0.35 s:**
+  - the side knockdowns at frame 15 (0.25 s);
+  - `Knockdown_Back` on its knees and hands at 9, chest at 19;
+  - `Trip` (left leg taken, forward tumble) on its forearms at 12 (0.2 s), chest at 17.
+- **Side get-ups:** sit up with the stick planted as a prop (12), kneel on the stick (34), up (54).
+- **`Board_Hit`:** both forearms up and the near shoulder in, head turned away, compressed at 6 to 8, a rebound step back at 16, Glide at 30.
+- **`Board_Pin`:** a braced lean on the forearms against the boards, stick up; a 60-frame breathing loop.
+- **Delivered checks:** `Check_Deliver_Right` is today's `Check` (wind 9, drive 16, follow-through 21 to 30). **`Check` stays as its alias** (same keys).
+  - `Check_Deliver_Left` mirrors body, head, clavicles and skates; the stick stays in the right hand.
+- **`Poke_Hit`:** the stick is knocked out to the right (extreme 6 to 8), a half step with the right skate at 14, Glide at 24.
+- **`Lift_Hit`:** the blade rises to 36 cm (7 to 9) and comes back by 20.
+
+**The stick stays in the top hand in every new take.**
+
+How the new takes measure (all three styles; per-part tables below):
+- Every body part and the skates stay at or above the ice. The lowest are the forearms and arms in the side knockdowns (2 to 4 cm up) and the hands on the ice in Knockdown_Back and Trip (1.1 to 1.7 cm).
+- The stick dips at most 0.7 to 1.0 cm into the ice, except P4 `GetUp_Side_Right`, -2.9 cm while it is planted as a prop.
+- Bottom hand on the shaft within 0.2 cm in every two-handed frame.
+- Pelvis horizontal travel 0.000 cm.
+
+**Iteration on my own sheets:**
+- In pass 1, the side knockdowns ended curled up like someone sitting. Their arms and torso were also 3 to 10 cm into the ice.
+- `GetUp_Side_Left` had the arm over-reached (extension 2.9) with the stick 7.6 cm in the ice, from the switch between a stick lying on the ice and a propped stick.
+- Pass 2:
+  - the side pose is higher (pelvis drop 0.53, then 0.55; roll 60 to 66);
+  - the side pose is stretched out (skates 0.52 to 0.58 forward, trunk back) and reads as sliding on the hip;
+  - the get-up sits with the stick held at the grip as a prop;
+  - the get-ups are 0.9 s, which removed the twist steps in P2 and P3.
+
+**40 px (chase camera, blue and orange).** Left is distinguishable from right: the body goes down to opposite sides. Both read differently from the back and the trip. **`Knockdown_Back` and `Trip` look alike from behind**: both go forward onto the chest. Only the kicked leg differs, and it doesn't read at 40 px.
+
+**What is weak**
+- `Board_Hit` reads only as arms up and a lean at the 6-frame sampling; the impact is small. `Lift_Hit` is subtle, because the stick moves but the body barely does.
+- `Check_Deliver_Left` keeps the stick on the right side, so it is a left-shoulder drive with a right-handed stick.
+- The steps over 45 deg grew with the new takes (P2 31 -> 88, P3 37 -> 91, P4 34 -> 93). These are the fast arcade extremes (hits at frames 2 to 6) and are all swing.
+- **P4 `GetUp_Side_Left` / `_Right`: the left skate turns 50 to 65 deg** at frames 24 to 25 when the shin swings from in front of the skate to behind it. Skates are authored, not twist-limited. A longer sit-to-kneel phase, or turning the skate in the table before the swing, would fix it.
+- The knockdowns end in their own lying pose, held from frame 21. A knock-down during a get-up has no transition. Knock direction relative to facing is for the visual to pick.
+
+### Per-style measurements (from `work4/<style>/summary4.md`)
+
+### p2_cel: 70 takes, tris {"body":6550,"stick":196}
+| Take | Frames | s | Contact | Lowest by part (cm) | Stick low | Steps >45 (max twist) | Hand gap | Arm ext |
+|---|---|---|---|---|---|---|---|---|
+| Check_Hit_Left | 29 | 0.467 | 3 | arms 62.71, forearms 52.03, hands 45.66, head 95.47, hips 49.74, knees_shins 13.42, skates 0, thighs 35.97, torso 59.96 | -0.74 | 8 (12) | 0.04 | 0.886 |
+| Check_Hit_Right | 29 | 0.467 | 3 | arms 68.62, forearms 57.17, hands 46.23, head 95.47, hips 49.74, knees_shins 13.43, skates 0, thighs 35.97, torso 59.96 | 0.2 | 8 (12) | 0.04 | 0.886 |
+| Check_Hit_Back | 29 | 0.467 | 3 | arms 68.13, forearms 57.36, hands 46.23, head 83.8, hips 51.07, knees_shins 14.01, skates 0, thighs 35.87, torso 63.62 | 0.73 | 8 (12) | 0.04 | 0.886 |
+| Knockdown_Left | 31 | 0.5 | 2 | arms 2.99, forearms 3.67, hands 9.82, head 38.52, hips 5.93, knees_shins 8.36, skates 0, thighs 7.26, torso 8.88 | -0.41 | 6 (12) | 0.04 | 0.886 |
+| Knockdown_Right | 31 | 0.5 | 2 | arms 8.07, forearms 8.71, hands 14.29, head 38.52, hips 5.93, knees_shins 11.15, skates 0, thighs 8.23, torso 8.88 | 0.73 | 6 (12) | 0.04 | 0.987 |
+| Knockdown_Back | 31 | 0.5 | 2 | arms 16.87, forearms 13.22, hands 1.71, head 1.6, hips 7.41, knees_shins 8.97, skates 0, thighs 9.96, torso 8.77 | 0.61 | 8 (12) | 0.04 | 0.886 |
+| Trip | 27 | 0.433 | 2 | arms 16.87, forearms 14.02, hands 1.71, head 1.6, hips 7.41, knees_shins 8, skates 0, thighs 8.9, torso 8.77 | 0.73 | 7 (12) | 0.04 | 0.886 |
+| GetUp_Side_Left | 55 | 0.9 | - | arms 3.31, forearms 3.93, hands 9.86, head 39.52, hips 6.93, knees_shins 4.5, skates 0, thighs 6.12, torso 9.88 | -0.74 | 1 (22.4) | 0.04 | 0.985 |
+| GetUp_Side_Right | 55 | 0.9 | - | arms 8.13, forearms 8.45, hands 6.05, head 39.52, hips 6.93, knees_shins 3.86, skates 0, thighs 5.48, torso 9.88 | -0.45 | 2 (41.5) | 0.04 | 0.987 |
+| Board_Hit | 31 | 0.5 | 4 | arms 62.71, forearms 57.41, hands 46.22, head 76.83, hips 48.17, knees_shins 14.05, skates 0, thighs 32.85, torso 57.48 | 0.73 | 6 (12) | 0.05 | 0.889 |
+| Board_Pin | 61 | 1 | - | arms 63.66, forearms 64.76, hands 72.83, head 74.09, hips 50.31, knees_shins 17.29, skates 0.23, thighs 26.83, torso 59.32 | 82.76 | 0 (0) | one hand | 0.588 |
+| Check_Deliver_Left | 31 | 0.5 | 16 | arms 71.32, forearms 57.41, hands 46.23, head 97.52, hips 47.61, knees_shins 13.05, skates 0, thighs 33.04, torso 62.02 | -0.18 | 0 (0) | 0.04 | 0.886 |
+| Check_Deliver_Right | 31 | 0.5 | 16 | arms 70.97, forearms 57.08, hands 46.23, head 97.52, hips 47.61, knees_shins 13.05, skates 0, thighs 33.04, torso 62.02 | -0.17 | 0 (0) | 0.04 | 0.886 |
+| Poke_Hit | 25 | 0.4 | 3 | arms 68.62, forearms 52.32, hands 40.61, head 100.37, hips 51.81, knees_shins 13.78, skates 0, thighs 36.44, torso 65.92 | 0.72 | 3 (10.7) | 0.06 | 0.982 |
+| Lift_Hit | 21 | 0.333 | 3 | arms 72.12, forearms 56.76, hands 44.99, head 106.21, hips 56.24, knees_shins 14.06, skates 0, thighs 37.25, torso 72.04 | 0.73 | 0 (0) | 0.2 | 0.986 |
+Pelvis height min..max cm: Glide 76..77 (was 76..77); Stride 75..76 (was 75..76); Crossover_Left 74.5..76.5 (was 69..73); Crossover_Right 74.5..76.5 (was 69..73); Lean_Left 74.95..75 (was 70.95..71); Lean_Right 74.95..75 (was 70.95..71); Stop 75..76 (was 61..76)
+Skate target miss max cm (IK could not reach): 
+Grid: holds error max 0.02 cm; blade heel/toe 0.11..2.28 cm; one-handed Aim_N63_R160 Aim_N46_R160; blend worst 4.98 cm, height -2.5..1.9 cm, fails 0
+Holds static: largest joint motion first->last frame over the 24 holds 0 cm; free hand (wrap check) all zero motion: true
+All takes: pelvis x,y max 0 cm, root 0 cm, loop seams 0 cm; steps>45 31 -> 88 (new takes included), twist>45 0 -> 0; foot pitch max 21.8 / 25.1
+Old reach: Aim_Front 1 m 0 deg; Aim_Left 1 m 70 deg; Aim_Right 1 m -63 deg; Aim_FarReach 1.6 m 0 deg; Poke 1.6 m 0 deg
+Moved against the third pass: Check: stick low -0.64->-0.17; any low -0.64->-0.17 | Crossover_Left: stick low 4.37->6.78 | Faceoff_Ready: stick low 0.05->0.26 | Lean_Left: stick low 5.81->7.02 | Shot_Slap: steps>45 13->11 | Stride: stick low -1.69->-1.08; any low -1.69->-1.08 | Stumble: steps>45 6->4
+
+### p3_clay: 70 takes, tris {"body":11556,"stick":412}
+| Take | Frames | s | Contact | Lowest by part (cm) | Stick low | Steps >45 (max twist) | Hand gap | Arm ext |
+|---|---|---|---|---|---|---|---|---|
+| Check_Hit_Left | 29 | 0.467 | 3 | arms 58.6, forearms 47.3, hands 41.02, head 86.91, hips 47.35, knees_shins 12.67, skates 0.16, thighs 34.53, torso 56.48 | 0.27 | 8 (12) | 0.19 | 0.897 |
+| Check_Hit_Right | 29 | 0.467 | 3 | arms 64.37, forearms 58.93, hands 50.8, head 86.83, hips 47.23, knees_shins 12.73, skates 0.16, thighs 34.77, torso 56.32 | 0.41 | 8 (12) | 0.19 | 0.897 |
+| Check_Hit_Back | 29 | 0.467 | 3 | arms 65.82, forearms 54.7, hands 48.73, head 79.79, hips 48.22, knees_shins 12.58, skates 0.14, thighs 35.61, torso 57.11 | 0.41 | 8 (12) | 0.19 | 0.897 |
+| Knockdown_Left | 31 | 0.5 | 2 | arms 6.96, forearms 6.98, hands 13.9, head 41.72, hips 11.67, knees_shins 10.86, skates 0.16, thighs 13.81, torso 16.18 | -0.56 | 7 (12) | 0.19 | 0.897 |
+| Knockdown_Right | 31 | 0.5 | 2 | arms 11.34, forearms 11.58, hands 13.56, head 41.95, hips 11.4, knees_shins 11.14, skates 0.16, thighs 14.49, torso 15.8 | 0.41 | 6 (12) | 0.19 | 0.987 |
+| Knockdown_Back | 31 | 0.5 | 2 | arms 24.23, forearms 11.63, hands 1.66, head 23.13, hips 13.76, knees_shins 11.24, skates 0.16, thighs 12.68, torso 14.16 | -0.41 | 6 (12) | 0.19 | 0.897 |
+| Trip | 27 | 0.433 | 2 | arms 24.23, forearms 12.15, hands 1.66, head 23.13, hips 13.76, knees_shins 10.82, skates 0.16, thighs 11.95, torso 14.16 | 0.41 | 7 (12) | 0.19 | 0.914 |
+| GetUp_Side_Left | 55 | 0.9 | - | arms 7.47, forearms 7.44, hands 13.9, head 42.63, hips 11.48, knees_shins 6.74, skates 0.14, thighs 7.97, torso 17.1 | -0.62 | 1 (27.4) | 0.19 | 0.979 |
+| GetUp_Side_Right | 55 | 0.9 | - | arms 11.61, forearms 9.91, hands 6.87, head 42.86, hips 11.78, knees_shins 5.95, skates 0.14, thighs 7.3, torso 16.72 | -0.96 | 2 (41.9) | 0.19 | 0.987 |
+| Board_Hit | 31 | 0.5 | 4 | arms 59.84, forearms 58.93, hands 50.78, head 80.87, hips 45.98, knees_shins 12.72, skates 0.16, thighs 32.59, torso 54.54 | 0.4 | 6 (12) | 0.2 | 0.904 |
+| Board_Pin | 61 | 1 | - | arms 61.11, forearms 61.35, hands 71.54, head 80.11, hips 47.17, knees_shins 17.65, skates 1.53, thighs 26.87, torso 55.57 | 75.84 | 0 (0) | one hand | 0.62 |
+| Check_Deliver_Left | 31 | 0.5 | 16 | arms 68.15, forearms 58.25, hands 47.04, head 87.44, hips 45.38, knees_shins 12.36, skates 0.14, thighs 32.88, torso 56.8 | -0.55 | 0 (0) | 0.19 | 0.897 |
+| Check_Deliver_Right | 31 | 0.5 | 16 | arms 68.44, forearms 57.52, hands 50.49, head 87.44, hips 45.26, knees_shins 12.33, skates 0.16, thighs 32.6, torso 56.77 | 0.13 | 0 (0) | 0.19 | 0.897 |
+| Poke_Hit | 25 | 0.4 | 3 | arms 67.74, forearms 50.8, hands 42.1, head 90.79, hips 49.27, knees_shins 12.65, skates 0.15, thighs 34.99, torso 60.5 | 0.32 | 3 (7.5) | 0.2 | 0.984 |
+| Lift_Hit | 21 | 0.333 | 3 | arms 70.43, forearms 56.34, hands 47.97, head 95.42, hips 53.13, knees_shins 12.73, skates 0.16, thighs 36.05, torso 64.79 | 0.41 | 0 (0) | 0.2 | 0.986 |
+Pelvis height min..max cm: Glide 72..72.92 (was 72..72.92); Stride 71.08..72 (was 71.08..72); Crossover_Left 70.62..72.46 (was 65.58..69.25); Crossover_Right 70.62..72.46 (was 65.58..69.25); Lean_Left 71.04..71.08 (was 67.37..67.42); Lean_Right 71.04..71.08 (was 67.37..67.42); Stop 71.08..72 (was 58.25..72)
+Skate target miss max cm (IK could not reach): 
+Grid: holds error max 0.03 cm; blade heel/toe 0.02..2.01 cm; one-handed Aim_N63_R130 Aim_N63_R145 Aim_N63_R160 Aim_N46_R145 Aim_N46_R160 Aim_N30_R160; blend worst 2.75 cm, height -2.87..1.9 cm, fails 0
+Holds static: largest joint motion first->last frame over the 24 holds 0 cm; free hand (wrap check) all zero motion: true
+All takes: pelvis x,y max 0 cm, root 0 cm, loop seams 0 cm; steps>45 37 -> 91 (new takes included), twist>45 0 -> 0; foot pitch max 21.7 / 25
+Old reach: Aim_Front 1 m 0 deg; Aim_Left 1 m 70 deg; Aim_Right 1 m -63 deg; Aim_FarReach 1.6 m 0 deg; Poke 1.6 m 0 deg
+Moved against the third pass: Aim_FarReach: stick low 0.94->0.73; arm ext 0.396->0.557 | Aim_Front: arm ext 0.939->0.869 | Aim_N30_R100: stick low 0.53->0.81 | Aim_N30_R145: stick low 0.94->0.19 | Aim_N30_R160: stick low 0.93->0.67; arm ext 0.347->0.493 | Aim_N46_R100: stick low 0.74->0.41; arm ext 0.879->0.914 | Aim_N46_R145: stick low 0.94->0.68; arm ext 0.452->0.501 | Aim_N46_R160: stick low 0.93->0.67; arm ext 0.382->0.512 | Aim_N63_R100: stick low 0.75->0.4; arm ext 0.901->0.938 | Aim_N63_R145: stick low 0.93->0.71; arm ext 0.506->0.55 | Aim_N63_R160: stick low 0.92->0.71; arm ext 0.45->0.565 | Aim_P00_R100: arm ext 0.939->0.869 | Aim_P00_R130: stick low 0.93->0.72 | Aim_P00_R145: stick low 0.95->0.69; arm ext 0.389->0.486 | Aim_P00_R160: stick low 0.94->0.73; arm ext 0.396->0.557 | Aim_P35_R100: arm ext 0.791->0.742 | Aim_P35_R130: arm ext 0.466->0.533 | Aim_P35_R145: arm ext 0.45->0.582 | Aim_P35_R160: arm ext 0.562->0.721 | Aim_P70_R130: arm ext 0.463->0.59 | Aim_P70_R145: arm ext 0.58->0.734 | Aim_P70_R160: arm ext 0.769->0.928 | Aim_Right: stick low 0.75->0.4; arm ext 0.901->0.938 | Celebrate: arm ext 0.97->0.897; steps>45 6->2 | Check: stick low -0.4->0.13; any low -0.4->0.13; arm ext 0.97->0.897 | Crossover_Left: stick low 1.85->8.3 | Crossover_Right: stick low -0.47->-0.86; any low -0.47->-0.86 | Faceoff_Draw: stick low -0.79->0.39; any low -0.79->0.16; arm ext 1.388->1.005 | Faceoff_Ready: stick low -0.52->0.82; any low -0.52->0.16; arm ext 1.293->0.997 | Fall: arm ext 0.97->0.913 | Fall_Forward: arm ext 0.97->0.914 | Foul_Reaction: arm ext 0.97->0.897 | GetUp: stick low -2.01->0.4; any low -2.01->0.14; arm ext 1.439->0.987 | GetUp_Front: stick low -1.38->-0.94; any low -1.38->-0.94; arm ext 1.052->0.979 | Glide: arm ext 0.973->0.903 | Goalie_Block_Left: stick low 18.62->19.02 | Goalie_Block_Right: stick low 15.52->15.95 | Goalie_Hold: stick low 20.17->21.27 | Idle_Faceoff: arm ext 1.088->0.99 | Lean_Left: skate low 1.2->0.92; stick low 3.17->8.58; any low 1.2->0.92 | Lean_Right: skate low 1.19->0.94; stick low 1.01->0; any low 1.01->0 | Poke: arm ext 1.052->0.981 | Shot_Charge: stick low 77.93->70.52 | Shot_Slap: hand gap 3.94->5.7; steps>45 11->8 | Shot_Wrist: hand gap 3.17->5.4 | Stop: arm ext 0.97->0.897 | Stride: stick low -1.15->-0.28; any low -1.15->-0.28 | Stumble: arm ext 0.97->0.897; steps>45 10->11
+
+### p4_broadcast: 70 takes, tris {"body":9396,"stick":240}
+| Take | Frames | s | Contact | Lowest by part (cm) | Stick low | Steps >45 (max twist) | Hand gap | Arm ext |
+|---|---|---|---|---|---|---|---|---|
+| Check_Hit_Left | 29 | 0.467 | 3 | arms 72.58, forearms 60.71, hands 53.87, head 103.11, hips 57.07, knees_shins 17.54, skates 0.03, thighs 40.98, torso 58.25 | 1.06 | 6 (12) | 0.04 | 0.966 |
+| Check_Hit_Right | 29 | 0.467 | 3 | arms 79.35, forearms 67.12, hands 56.23, head 103.11, hips 57.07, knees_shins 17.55, skates 0.03, thighs 41, torso 58.25 | 0.79 | 6 (12) | 0.04 | 0.966 |
+| Check_Hit_Back | 29 | 0.467 | 3 | arms 74.73, forearms 63.03, hands 56.23, head 92.88, hips 57.47, knees_shins 18.14, skates 0, thighs 39.52, torso 58.95 | 1.06 | 6 (12) | 0.04 | 0.966 |
+| Knockdown_Left | 31 | 0.5 | 2 | arms 3.9, forearms 4.8, hands 12.59, head 41.45, hips 10.43, knees_shins 12.42, skates 0.03, thighs 10.8, torso 10.02 | 0.32 | 9 (12) | 0.04 | 0.966 |
+| Knockdown_Right | 31 | 0.5 | 2 | arms 9.81, forearms 10.97, hands 17.38, head 41.45, hips 10.43, knees_shins 15.79, skates 0.03, thighs 12.77, torso 10.02 | 1.06 | 6 (12) | 0.04 | 0.987 |
+| Knockdown_Back | 31 | 0.5 | 2 | arms 17.25, forearms 15.31, hands 1.06, head 18.06, hips 9.32, knees_shins 9.97, skates 0.03, thighs 11.5, torso 8.28 | 0.09 | 6 (12) | 0.04 | 0.966 |
+| Trip | 27 | 0.433 | 2 | arms 17.25, forearms 15.88, hands 1.06, head 18.06, hips 9.32, knees_shins 12.1, skates 0.03, thighs 11.78, torso 8.28 | 1.06 | 7 (12) | 0.04 | 0.966 |
+| GetUp_Side_Left | 55 | 0.9 | - | arms 4.43, forearms 5.22, hands 12.7, head 42.58, hips 10.01, knees_shins 2.21, skates 0, thighs 4.62, torso 10.5 | -0.06 | 1 (50.5) | 0.04 | 0.988 |
+| GetUp_Side_Right | 55 | 0.9 | - | arms 9.26, forearms 9.74, hands 8, head 42.58, hips 10.01, knees_shins 1.64, skates 0, thighs 3.92, torso 10.5 | -2.85 | 1 (65.1) | 0.04 | 0.988 |
+| Board_Hit | 31 | 0.5 | 4 | arms 70.84, forearms 67.12, hands 56.21, head 94.41, hips 54.93, knees_shins 18.16, skates 0, thighs 36.25, torso 56.36 | 1.06 | 6 (12) | 0.05 | 0.966 |
+| Board_Pin | 61 | 1 | - | arms 70.62, forearms 72.4, hands 82.27, head 93.29, hips 56.52, knees_shins 19.5, skates 0.16, thighs 28.95, torso 57.76 | 90.69 | 0 (0) | one hand | 0.58 |
+| Check_Deliver_Left | 31 | 0.5 | 16 | arms 81.47, forearms 67.12, hands 56.23, head 104.29, hips 53.38, knees_shins 17.03, skates 0.03, thighs 36.15, torso 55.7 | 0.39 | 0 (0) | 0.04 | 0.966 |
+| Check_Deliver_Right | 31 | 0.5 | 16 | arms 80.53, forearms 66.91, hands 56.23, head 104.29, hips 53.38, knees_shins 17.03, skates 0.03, thighs 36.15, torso 55.7 | 0.63 | 0 (0) | 0.04 | 0.966 |
+| Poke_Hit | 25 | 0.4 | 3 | arms 77.16, forearms 59.7, hands 46.01, head 109.09, hips 59.06, knees_shins 17.88, skates 0.03, thighs 41.63, torso 61.33 | 1.06 | 5 (12) | 0.06 | 0.985 |
+| Lift_Hit | 21 | 0.333 | 3 | arms 82.33, forearms 65.81, hands 53.49, head 115.61, hips 63.78, knees_shins 18.93, skates 0.03, thighs 42.16, torso 66.37 | 1.06 | 0 (0) | 0.15 | 0.987 |
+Pelvis height min..max cm: Glide 80.4..81.7 (was 80.4..81.7); Stride 79.1..80.4 (was 79.1..80.4); Crossover_Left 78.45..81.05 (was 71.3..76.5); Crossover_Right 78.45..81.05 (was 71.3..76.5); Lean_Left 79.03..79.1 (was 73.83..73.9); Lean_Right 79.03..79.1 (was 73.83..73.9); Stop 79.1..80.4 (was 60.9..80.4)
+Skate target miss max cm (IK could not reach): 
+Grid: holds error max 0.04 cm; blade heel/toe 1.24..2.04 cm; one-handed Aim_N63_R160; blend worst 2.97 cm, height -1.45..1.94 cm, fails 0
+Holds static: largest joint motion first->last frame over the 24 holds 0 cm; free hand (wrap check) all zero motion: true
+All takes: pelvis x,y max 0 cm, root 0 cm, loop seams 0 cm; steps>45 34 -> 93 (new takes included), twist>45 0 -> 2; foot pitch max 20.3 / 25.1
+Old reach: Aim_Front 1 m 0 deg; Aim_Left 1 m 70 deg; Aim_Right 1 m -63 deg; Aim_FarReach 1.6 m 0 deg; Poke 1.6 m 0 deg
+Moved against the third pass: Aim_N30_R145: stick low 1.08->0.88 | Crossover_Left: stick low 8.65->12.29 | Faceoff_Draw: arm ext 1.038->1.073 | Lean_Left: stick low 10.68->12.43 | Lean_Right: stick low 0.21->0.48 | Stride: stick low -0.14->1.91
+
+
+### Sheets (iteration 2)
+
+- `devlog/shots/20261112-175941-B-lab-skf4-p2_cel-collisions.png`, `...-p2_cel-knockdowns.png`, `...-p2_cel-knockdowns-40px.png`
+- the same three for `p3_clay` (`175942`) and `p4_broadcast` (`175942` / `175943`)
+
+Collisions and knockdowns: 6 frames each from the game camera (left half) and from the side (right half). The 40 px sheet shows Knockdown_Left, Knockdown_Right, Knockdown_Back and Trip in blue and orange.
+
+### Not verified
+
+- **Rulings.** The text of R-0025 and R-0026 (not in my checkout).
+- **Unreal.** Anything there, including:
+  - how the engine picks Knockdown_Left / Right / Back from a hit direction;
+  - whether `Check_Hit_*` reads at speed when the pawn moves.
+- **Contacts.** Contact between the bodies is not modelled; the receiver and the checker are separate takes.
+- **Skate lift on skinned figures.** It needs the retarget lane on `export4/`.
+- **Static holds in Unreal.** Whether a constant 30-frame take imports correctly (B4 saw 2-frame holds lose their pose). The holds are 31 frames of identical keys, not 2.

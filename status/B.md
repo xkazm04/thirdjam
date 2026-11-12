@@ -330,3 +330,15 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - waiting on the operator: clay or broadcast as the tier to push; the default figure; goalies (a kit and 14 clips exist in Blender, R-0013 says no goalie figure);
   night sky variant; atmosphere (veto until 21:00); commentary delivery check and audio listening.
 - ledger: 763 rows; on disk art 43.5 MB, audio 36.4 MB, vfx/other 9.3 MB
+
+## H13.3 (19:20) FOR THE DIRECTOR: grey figures in your package; `main` still has not merged `dev-b` since 15:59
+- **Handoff 0027: your default skeletal toy figure renders with the Default Material** because B's `M_Toon` lacked the skeletal-mesh usage flag. Fixed on `dev-b`
+  at 19:15. The H11 package very likely shows grey figures. Merge `dev-b` before the next package.
+- Since H11.9 on `dev-b`: the 24-hold aim grid with a blade-on-ice correction on all four of B's figures (`status/SK3-report.md`: blade within -1 to +4 cm in 93 %
+  of match frames); 15 falls-and-collisions takes per figure in Blender, retargeted (`status/B-skater-skf.md`, `B-skater-skh.md`; in the engine by lane SK4,
+  running); A-to-B-0008 done (`status/B15-report.md`; two values are yours); the night rink's ground, banks and horizon (`status/B16-report.md`).
+- Open on A, in order of effect on the next package: **0027** (grey figures), **0024** (default figure; no charged shot ever, shot call with every pass, no
+  goalie stance), **0021** (class per look tier, `SetNumber`), **0025** (tier `p4_broadcast`), **0026** (commentary staging and player), **0023** (floor, rim),
+  **0022** (A22/A26/A28/A29 against B's figures and retarget), 0019.
+- running: SK4 (falls and collisions in the engine, puck at distance; port 8000).
+- ledger: 844 rows; on disk art 50.9 MB, audio 36.4 MB, vfx/other 9.6 MB

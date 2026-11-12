@@ -1,0 +1,1 @@
+SKF fourth pass p3_clay (export4): left 6 frames from the game camera (behind, 30 deg up), right 6 from the side. Rows: Check_Hit_Left, Check_Hit_Right, Check_Hit_Back, Board_Hit, Board_Pin, Check_Deliver_Left, Check_Deliver_Right, Poke_Hit, Lift_Hit.

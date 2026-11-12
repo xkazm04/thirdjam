@@ -1,0 +1,1 @@
+B16 before: 24 m frozen frame, black void outside the boards (B15 state)

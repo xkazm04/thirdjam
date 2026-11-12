@@ -1,0 +1,1 @@
+B15 tier stability: clay game camera AFTER step 6 (construction off, glass hidden): only motion edges differ

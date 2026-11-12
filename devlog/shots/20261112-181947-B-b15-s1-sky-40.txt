@@ -1,0 +1,1 @@
+B15 step 1: A23 gradient on MI_NightSky_Stars (GradSpread 1.0), room walls out of Lumen: dark band 48 -> 80 luma; 40 m; pair with proof-faceoff-40m
