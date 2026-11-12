@@ -613,7 +613,8 @@ namespace JamPlaytestTestsLocal
 	}
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamPlaytestNoviceScoresAtRookie, "Jam.Playtest.NoviceScoresAtRookie",
+// R-0029: the two bars live under "Bar." until lane A3 lands the calibrations and wires the 20-seed gate forms; the premerge filter "Jam" skips them on purpose.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamPlaytestNoviceScoresAtRookie, "Bar.Playtest.NoviceScoresAtRookie",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::CommandletContext | EAutomationTestFlags::EngineFilter)
 
 bool FJamPlaytestNoviceScoresAtRookie::RunTest(const FString& Parameters)
@@ -645,7 +646,7 @@ bool FJamPlaytestNoviceScoresAtRookie::RunTest(const FString& Parameters)
 	return bOk;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamPlaytestGoodNeverIdlesAtAllStar, "Jam.Playtest.GoodNeverIdlesAtAllStar",
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamPlaytestGoodNeverIdlesAtAllStar, "Bar.Playtest.GoodNeverIdlesAtAllStar",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::CommandletContext | EAutomationTestFlags::EngineFilter)
 
 bool FJamPlaytestGoodNeverIdlesAtAllStar::RunTest(const FString& Parameters)

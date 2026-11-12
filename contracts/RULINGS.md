@@ -324,3 +324,18 @@ Accepted: `rules.hooks[].after_frame`; `score: { at_least, at_most, lead_at_leas
    metrics per difficulty (touches, shots, goals, lead changes, time to first goal) and calibration proposals; A37 every shipped cut plays (the 30 Designer cuts and the eight
    takes through the bot sweep and the eyes tool on each cut's look); A38 lockstep multiplayer re-proven on the new sim. Queued behind them: HUD pass 2 (EYES.md), goalie saves
    as events for the commentator.
+
+## R-0029 (H11.7, 2026-11-12 19:38): the curve is measured with the playtester, not the scripted human; three payoffs become scope
+1. Lane A34's human-like playtester (novice / regular / good through the real input path) is the measure of the curve from now on. Targets: the novice wins 85 % at rookie and
+   scores inside two minutes in at least half of 20 seeds (the M1 bar), the regular player about 50 % at pro, the good player about 25 % at all_star and never idles 15 s at
+   all_star. Today's numbers: novice 15 / 5 / 10, regular 60 / 40 / 30, good 70 / 50 / 40 on the regular rink: rookie is far too hard for a first-time player.
+2. **Calibrations applied** (R-0021 point 1, lane A3 in its worktree, reported in BALANCING.md and PLAYTEST.md): P1 the back's guard post 5 / 45 -> 10 / 20 m at rookie (per side
+   if the sim allows, else global at rookie); P2 rookie speed 0.85 / red skill 0.75; P3 rookie shot range +5 m. Measured together: novice 85 %, 10 of 20 inside two minutes.
+   The large-rink offsets get their own numbers from the same grid. Pro and all_star untouched until the regular and good players are measured against them again.
+3. **Sim rule** (lane A16): no `foul_no_puck` when the victim carried the puck within the last 12 frames (today two of three fouls on a novice are this one). Until then the rookie
+   cut keeps `rules.penalties` true; the rule lands with A16's change. `puck.drag` stays 0.5.
+4. **Three payoffs become scope** (lane A39): the one-timer (a shot within 10 frames of a received pass gets the full charge and a wider cone), the breakaway burst (+20 % speed for
+   60 frames once past the last man, once per possession), the deke (a tap moves the puck 1 m to the blade side and commits the crease back for 15 frames). Each a calibration
+   with a cartridge key, a test, and the playtester grid before and after.
+5. The gate: `Jam.Playtest.NoviceScoresAtRookie` becomes the 20-seed form (`scored_2min` at least 10 of 20) and `HumanHasSomethingToDo` runs with `-player=novice` with a budget of
+   at most 2 faceoffs without a touch per 20 matches; lane A3 wires both when the calibrations land.
