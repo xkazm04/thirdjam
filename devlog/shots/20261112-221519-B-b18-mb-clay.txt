@@ -1,0 +1,1 @@
+B18 item 1, clay: game camera during a turn in a bot match. Left before (engine default motion blur smears the figures), right after (LR_P3_Clay PPV motion blur amount 0, max 0): figures sharp, shallow focus kept.
