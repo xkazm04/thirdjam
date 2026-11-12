@@ -6,7 +6,12 @@ gate at H24 (`docs/HOCKEY.md` 5).
 
 Repo `C:/Users/kazda/jam/thirdjam`, branch `lane/b-skater-tb2`, own worktree. Read first: `docs/experiments/MESHY.md` (all; section 6 is your command
 list), `tools/meshy/README.md`, `tools/skills/skater-retarget.md` (steps 1-2 and 4-9), `tools/mcp/ANIMATION.md`, `contracts/skater-visual.md`,
-`briefs/B0-lead-plan.md`. You own `Game/Plugins/JamAssets/Content/Skaters/TB2/**`.
+`briefs/B0-lead-plan.md`. You own `Game/Plugins/JamAssets/Content/Skaters/**`.
+
+Fixed by the contracts and R-0001 (they win over the recipe): everything in `/JamAssets/Skaters/` (`BP_SkaterVisual_TB2` directly in that folder, C-0001);
+names `SK_SkaterTB2`, `SKEL_SkaterTB2`, `AS_SkaterTB2_<clip>`, `ABP_SkaterTB2`, `T_SkaterTB2_BaseColor` (C-0004 with the prefixes R-0001 point 6 accepted);
+the swap is the cartridge key `game.skater.visual` = `generated_b2`, and the test cartridge already exists:
+`Game/Content/Cartridges/hockey.test.visual-b2.cartridge.json` (A's file; do not edit it). `SetTeam` receives an `FLinearColor`.
 
 ## Preconditions (check each; if one fails, stop and report, do not improvise)
 
@@ -20,7 +25,7 @@ list), `tools/meshy/README.md`, `tools/skills/skater-retarget.md` (steps 1-2 and
 
 1. Run section 6 of `MESHY.md` with the scratch folder `C:\Users\kazda\jam\meshy-work` (outside the repo) and `MESHY_LEDGER` in it. One preview retry at
    most. **The pick of the preview is the operator's if they are awake; if not, take the first preview whose limbs are separate and record why.**
-2. Import per `skater-retarget.md`: `SK_Skater_TB2` from the rig FBX, clips onto that skeleton with mesh import off, one 2K texture at most.
+2. Import per `skater-retarget.md`: `SK_SkaterTB2` from the rig FBX, clips onto that skeleton with mesh import off, one 2K texture at most.
    Known risks from the experiment: the skeleton has 28 bones and no root (does the import add one); pelvis drift in the clips (strip it); no stick in
    the mesh (socket `stick_socket` on `hand_r`, plus `puck_socket`, `head_socket` as the contract names them).
 3. Material: B1's `M_Toon` as parent with the generated texture as base colour times `TeamColour`, so the orange team is a parameter and not a second

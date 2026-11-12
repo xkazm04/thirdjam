@@ -13,12 +13,14 @@ Machine rules as in `briefs/B1-look.md`. You get the editor only when the lead h
 ## The dressing list (first pass: engine basic shapes and procedural meshes only, nothing downloaded, nothing generated)
 
 Everything sits outside the boards, never on the ice, never between the third-person camera (6 m behind, 3.5 m above the skater) and the play.
-The rink is 120 x 60 m by default and may load as 90 x 45 or 140 x 70: place dressing **relative to the rink bounds** (a `BP_` group that takes
-half-length and half-width, or anchors A exposes; ask through the lead), not at fixed world positions.
+Dressing lives **inside the rig map** `/JamAssets/Rigs/LR_L2_Night` (C-0002 allows "look dressing" there; it is fixed in world space, rink centre at the
+origin, ice top at Z = 0). The rink is 120 x 60 m by default and may load as 90 x 45 or 140 x 70, and the rig does not know which: so every piece
+stands **outside the 140 x 70 footprint plus 2 m** (|x| > 72 m or |y| > 37 m) and inside B1's room (footprint plus 12 m). On the small cut the set
+simply stands further back. Meshes go to `/JamAssets/Arena/` (`SM_`, `BP_`), labels in the map `Dress_L2_Night_<n>`.
 
 | # | Piece | Asset | Built from | Stencil | Why it is here |
 |---|---|---|---|---|---|
-| 1 | Dark room: floor apron 10 m around the boards, four walls, ceiling at 28 m | `SM_Room_*` or scaled basic shapes in `BP_Arena_Room` | planes, cubes; `MI_Toon_Dark` | 0, no shadow | "house lights down"; hides the void, gives Lumen something to occlude the sky |
+| 1 | Dark room: floor apron, four walls, ceiling at 28 m | **built by lane B1** as `Room_L2_Night_<n>` in the rig; you only check it and add to it | planes, cubes; `MI_Toon_Dark` | 0, no shadow | "house lights down"; hides the void, gives Lumen something to occlude the sky |
 | 2 | Light truss: two beams along the long axis at 25 m with four lamp heads over the spot positions | `SM_Truss_Beam`, `SM_Lamp_Head` | cubes and cylinders; `MI_Toon_Dark`, lens disc `MI_Trim_Beacon` at low Emissive | 1 on the lamp heads | the spots must come from something; a lit lens disc sells it |
 | 3 | Film lights on stands: 6 to 8 around the boards, 4 m tall, tripod legs, barn-door head aimed at the ice | `BP_FilmLight` (`SM_Stand`, `SM_LampHead`, `SM_BarnDoor`) | cylinders, cubes | 1 | the first thing that says "set" instead of "arena" |
 | 4 | Director's chair at the centre line, outside the boards on the camera side | `BP_DirectorChair` | cubes, thin cylinders; seat and back in trim orange | 1 | the theme in one prop; visible at the faceoff |
@@ -40,7 +42,7 @@ and keep going with pass 1 meanwhile. Every kept file gets an `ai-generated` led
 
 ## Acceptance
 
-- [ ] `BP_Arena_Room` and the pieces above exist under `Arena/`, placed in `LR_L2_Night` (or the level the contract names for dressing) by rink bounds.
+- [ ] The pieces above exist under `/JamAssets/Arena/` and are placed in `LR_L2_Night` outside the 140 x 70 m footprint plus 2 m.
 - [ ] Three PIE screenshots at 1920x1080 through `CaptureGameViewport` from the third-person camera position: own end, centre faceoff, far end. In none
       of them does dressing cover the ice, the far net or its beacon.
 - [ ] `GetFrameTimings` with and without the dressing visible: the difference is reported (target under 0.5 ms on device B; the gate is A's).

@@ -40,25 +40,22 @@ emulation on ARM64. So, until measured otherwise:
 H6 (12:00) is 90 minutes away and the seams are not in: the H6 row will not be met in full. Target for the H6 push: briefs, status, and whatever of B1
 exists. The realistic date for the full H6 row is H9.
 
-## Names B will use until the contracts say otherwise
+## Names (the contracts landed at H4.3: C-0001 to C-0004 and R-0001; this is B's reading of them)
 
-Content root: the `JamAssets` plugin, `/JamAssets/...` in the editor, `Game/Plugins/JamAssets/Content/...` on disk.
+Content root: the `JamAssets` plugin, `/JamAssets/...` in the editor, `Game/Plugins/JamAssets/Content/...` on disk. `Game/Content/Look/` and `Audio/` are not used.
 
 | Folder | Holds |
 |---|---|
-| `Rigs/` | `LR_L2_Night`, later `LR_L1_Day`, `LR_L3_Neon` (A's placeholders live here) |
-| `Look/Materials/` | `M_Toon`, `M_Trim`, `M_Ice`, `PP_ToonRamp`, `PP_Outline` and every `MI_*` from `tools/skills/look-painted-cel.md` 4 |
-| `Arena/` | `SM_*` dressing meshes, `BP_*` dressing groups |
-| `VFX/` | `NS_puck_trail`, `NS_<event>`, their materials |
-| `Audio/` | `MS_<event>`, `SFX_*` waves, sound classes and mixes |
-| `Skaters/TB2/` | `SK_Skater_TB2`, its clips, `BP_SkaterVisual_TB2` |
-| `Props/` | pickups (M3) |
+| `Rigs/` | `LR_L2_Night` first, later `LR_L1_Day`, `LR_L3_Neon`; actors labelled `PPV_`, `Sky_`, `Spot_`, `Room_`, `Dress_` + `<Tier>` |
+| `Look/` (flat) | `M_Toon`, `M_Trim`, `M_Ice`, `M_PP_ToonRamp`, `M_PP_Outline` (B's choice: the prefix for a material is `M_`, there is no `PP_`), every `MI_*` of the recipe, `MI_PP_ToonRamp`, `MI_PP_Outline` |
+| `Arena/` | `SM_*`, `BP_*` dressing |
+| `Props/` | `SM_PuckDisc`, pickups (M3) |
+| `VFX/` | `NS_puck_trail`, `NS_<event>` (R-0001 says `FX/`: handoff 0004) |
+| `Audio/` | `MS_<event>`, `SFX_*`, sound classes and mixes |
+| `Skaters/` | `SK_SkaterTB2`, `SKEL_`, `AS_`, `ABP_`, `T_SkaterTB2_BaseColor`, `BP_SkaterVisual_TB2` |
 
-Open naming questions for the Director, to raise as one handoff once the contracts are in and still silent on them:
-1. `PP_` is not in the prefix list (`SM_ M_ MI_ T_ SFX_ NS_ MS_ BP_ LR_`); the recipe uses `PP_ToonRamp`, `PP_Outline`. Also `SK_` and `A_`/`AS_` for the skater.
-2. The stencil convention (0 room and emissives, 1 figures/boards/nets, 2 ice, 3 puck) must be set by whoever spawns the mesh: A for the rink, the toy
-   skater and the puck. Without it the ramp and outline do nothing.
-3. Which material names A's rink builder assigns (B proposes `MI_Ice_Night`, `MI_Toon_Board`, `MI_Toon_NetFrame`, `MI_Toon_NetMesh`, `MI_Toon_Puck`).
+Raised with A: the effects folder and the binder's parameters (B-to-A-0004); stencil values, material paths, board trim, beacon and the two rink-size
+parameters on the ice (B-to-A-0005).
 
 ## Waits for the operator
 

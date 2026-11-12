@@ -6,13 +6,22 @@ hears when they fire, and the kit that keeps a 12 cm near-black puck findable on
 Repo `C:/Users/kazda/jam/thirdjam`, branch `lane/b-vfx-audio`, own worktree. Read first: `contracts/events.md` (names and payloads: it wins over this
 file), `contracts/assets-naming.md`, `tools/skills/look-painted-cel.md` (1 and 7), `docs/experiments/CAMERA-120M.md` (puck findings),
 `tools/mcp/ANIMATION.md` (the Niagara-from-template calls that are proven), `briefs/B0-lead-plan.md`.
-You own `Game/Plugins/JamAssets/Content/VFX/**` and `.../Audio/**`. Machine rules as in `briefs/B1-look.md`; you drive the editor only in your turn.
+You own `Game/Plugins/JamAssets/Content/VFX/**`, `.../Audio/**` and the puck kit meshes under `.../Props/`. Machine rules as in `briefs/B1-look.md`; you drive
+the editor only in your turn.
+
+What the contracts and rulings fixed after this brief was first written (they win):
+- Folders: `NS_<event>` in `/JamAssets/VFX/`, `MS_<event>` in `/JamAssets/Audio/` (C-0003, C-0004). R-0001 point 4 says `/JamAssets/FX/`: handoff B-to-A-0004 asks
+  for one spelling; build in `VFX/` and expect a possible folder move.
+- **No `BP_EventFx`**: the binder is A's C++ component `UJamEffectsBinder` in `JamGame`; it finds your assets by name. You deliver only the assets.
+- The payload is `{ Who, Where, Strength, Kind }`; `Kind` is the pickup kind on `pickup_spawn` / `pickup_take` and the cause (`check` | `boost`) on `knockdown`.
+- Until A answers 0004, expose on every Niagara system the user parameters `User.Strength` (float) and `User.Colour` (linear colour), and on every
+  MetaSound a float input `Strength`; test them yourself by spawning the system from Python or a test Blueprint you do not commit.
 
 ## Part 1, first: the puck readability kit (due with the H6 row)
 
 | Asset | What | Notes |
 |---|---|---|
-| `SM_PuckDisc` + `MI_Trim_PuckHalo` | flat glowing disc under the puck: diameter 60 cm, 4 mm thick, stencil 0, no shadow | accent colour that is neither team colour nor trim: start at yellow-green (0.75, 1.0, 0.15), Emissive 10 to 25; a white disc vanishes on lit ice (measured) |
+| `/JamAssets/Props/SM_PuckDisc` + `/JamAssets/Look/MI_Trim_PuckHalo` (B1 makes the instance) | flat glowing disc under the puck: diameter 60 cm, 4 mm thick, stencil 0, no shadow | accent colour that is neither team colour nor trim: start at yellow-green (0.75, 1.0, 0.15), Emissive 10 to 25; a white disc vanishes on lit ice (measured) |
 | `NS_puck_trail` | ribbon behind the puck, width 10 cm, life 0.35 s, alpha by speed (off under 4 m/s), same accent colour | user parameter `Speed` (float) and `Colour`; A attaches it to the puck and feeds `Speed`. Deterministic gameplay never reads it |
 | `MI_Toon_Puck` rim variant | optional thin band | measured as sub-pixel past 20 m: build it last or not at all |
 
