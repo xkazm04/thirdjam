@@ -287,3 +287,10 @@ Accepted: `rules.hooks[].after_frame`; `score: { at_least, at_most, lead_at_leas
    a motion gate (loop closure, foot contact, root motion lint) before a clip enters a build. The sim stays authoritative; ragdoll and physical reactions are a cosmetic layer
    over knocked_down and never feed back into the state hash.
 4. Every generated asset is ledgered with tool, task id, cost and size (C-0004); the NVIDIA and Hyper3D prize texts list what shipped. Keys stay in `.env`.
+
+## R-0026 (H10.5, 2026-11-12 17:05): the Fab pack is out; falls and collisions are a verb group
+1. The Fab "Hockey Player Animated" pack is descoped (operator: outdated, no falls, no collision reactions). Strides from text-to-motion; contact moves from Rokoko Vision
+   (YouTube or the operator's own footage, 30 s on the contact moves); falls, hit reactions and get-ups from the Meshy animation library and the engine's Manny clips.
+2. Falling and collision reactions are a first-class verb group in C-0001 v3's table: knocked down from the side, from behind, a trip; get up; the stumble after a mistimed poke;
+   a board collision; each with a source, a gate result and a contact window; a cosmetic ragdoll over knocked_down on the skeletal figures (A26, A28), never feeding the sim.
+3. Tripo runs through fal.ai; Hyper3D's rigging (2026-10-23) is a fourth figure route if it has an API.
