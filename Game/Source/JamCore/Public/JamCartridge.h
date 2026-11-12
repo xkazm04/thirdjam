@@ -178,6 +178,8 @@ struct JAMCORE_API FJamLookConfig
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") FLinearColor TrimColour = FLinearColor::White;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double FogDensity = 0;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") bool bWetIce = false;
+	// look.trim_emissive (0..100): the board trim strips' Emissive. -1 = absent, the tier's default applies (ULookTierSwitcher::DefaultTrimEmissiveFor: 30, clay 12). B-to-A-0018.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double TrimEmissive = -1;
 };
 
 USTRUCT(BlueprintType)

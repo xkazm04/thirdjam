@@ -482,12 +482,34 @@ bool UJamDesignerSubsystem::LoadCut(const FString& Name, FString& OutError)
 	}
 	Current = C;
 	UE_LOG(LogJamDesigner, Log, TEXT("JAMDESIGNER cut loaded %s (%s)"), *Name, *C->ThemeName);
-	OnCutChanged.Broadcast(C);
-	if (!CallGameMode(TEXT("LoadCut"), Path, nullptr))
-	{
-		UE_LOG(LogJamDesigner, Log, TEXT("JAMDESIGNER no running game mode took the cut (menu or test); it is current and applies at the next match"));
-	}
+	ScheduleCutApply(Path);
 	return true;
+}
+
+void UJamDesignerSubsystem::ScheduleCutApply(const FString& Path)
+{
+	// R-0017 point 3: LoadCut may be reached from a Designer job callback (HTTP completion, the CLI's game-thread task) that runs
+	// inside the editor's TEDS processing window; rebuilding the match there destroys skaters mid-processing and crashed the
+	// editor. The match rebuild and OnCutChanged therefore run on the next core-ticker tick (start of the next frame, outside
+	// any world tick). Several loads in one frame coalesce: the last one wins.
+	PendingApplyPath = Path;
+	if (bApplyScheduled) return;
+	bApplyScheduled = true;
+	TWeakObjectPtr<UJamDesignerSubsystem> Weak(this);
+	FTSTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateLambda([Weak](float)
+	{
+		UJamDesignerSubsystem* S = Weak.Get();
+		if (!S) return false;
+		S->bApplyScheduled = false;
+		const FString P = S->PendingApplyPath;
+		S->PendingApplyPath.Reset();
+		if (S->Current) S->OnCutChanged.Broadcast(S->Current);
+		if (!S->CallGameMode(TEXT("LoadCut"), P, nullptr))
+		{
+			UE_LOG(LogJamDesigner, Log, TEXT("JAMDESIGNER no running game mode took the cut (menu or test); it is current and applies at the next match"));
+		}
+		return false;
+	}));
 }
 
 FString UJamDesignerSubsystem::SaveCut(const FString& Name, const FString& Json, const FString& Sentence, FString& OutError)

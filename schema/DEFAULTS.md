@@ -60,6 +60,7 @@ of them out explicitly, but a Designer or hand-written cartridge may leave them 
 | `effects[].stats[].multiply` / `add` | 1 / 0 | |
 | `look.trim_colour_hex` | `#38BDF8` | |
 | `look.fog_density` | 0 | |
+| `look.trim_emissive` | by tier: 30 (`l1_day`, `l2_night`, `l3_neon`), 12 (`p3_clay`) | B-to-A-0018 point 5; the beacon stays at 40 |
 | `look.wet_ice` | false | |
 | `camera` (whole object) | see below | measured by lane E4, `docs/experiments/CAMERA-120M.md` |
 | `barks.enabled` | true | lane A12, ruling R-0007; read by `UJamBarkSystem` from the cartridge's raw JSON |

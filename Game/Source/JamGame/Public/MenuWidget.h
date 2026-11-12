@@ -67,6 +67,9 @@ public:
 	// screen) when the cut is rejected. The MenuToMatchAndBack automation calls this.
 	UFUNCTION(BlueprintCallable, Category = "Jam|Menu") bool ChooseCut(const FString& Name);
 
+	// Lane A17: "PLAY THE SEASON": starts take 1 or resumes the current take. False (with the reason on screen) when there is no season.
+	UFUNCTION(BlueprintCallable, Category = "Jam|Menu") bool PlaySeason();
+
 	// Sends one sentence to the Designer (live with a key, cached without); the result fills the Direct screen.
 	UFUNCTION(BlueprintCallable, Category = "Jam|Menu") void Direct(const FString& Sentence);
 	UFUNCTION(BlueprintPure, Category = "Jam|Menu") bool IsRolling() const { return bRolling; }
@@ -95,6 +98,11 @@ private:
 	void AddTinted(UButton* B, UTextBlock* T) { Tinted.Add(TPair<TWeakObjectPtr<UButton>, TWeakObjectPtr<UTextBlock>>(B, T)); }
 
 	UFUNCTION() void OnChooseClicked();
+	// Lane A17: "PLAY THE SEASON" (starts or resumes the season through UJamProgression).
+	UFUNCTION() void OnSeasonClicked();
+	void RefreshSeason();
+	// The Designer's ListCuts() plus the season takes the player has played.
+	TArray<FJamCutInfo> ListCutsWithSeason() const;
 	UFUNCTION() void OnDirectClicked();
 	UFUNCTION() void OnFriendClicked();
 	UFUNCTION() void OnSettingsClicked();
@@ -119,6 +127,8 @@ private:
 
 	UPROPERTY(Transient) TObjectPtr<UWidgetSwitcher> Switcher;
 	UPROPERTY(Transient) TObjectPtr<UWidget> TitlePicture;
+	UPROPERTY(Transient) TObjectPtr<UButton> SeasonButton;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> SeasonText;
 	UPROPERTY(Transient) TObjectPtr<UButton> ChooseButton;
 	UPROPERTY(Transient) TObjectPtr<UButton> DirectButton;
 	UPROPERTY(Transient) TObjectPtr<UButton> FriendButton;

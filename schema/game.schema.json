@@ -938,9 +938,16 @@
           "enum": [
             "l1_day",
             "l2_night",
-            "l3_neon"
+            "l3_neon",
+            "p3_clay"
           ],
-          "description": "light and art tier of the arena"
+          "description": "light and art tier of the arena; p3_clay is the clay-figure look (B-to-A-0018)"
+        },
+        "trim_emissive": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Emissive strength of the board trim strips. Absent = the tier's default: l1_day 30, l2_night 30, l3_neon 30, p3_clay 12 (bright clay ice reads 30 as a thin gold line). The far-net beacon stays at 40."
         },
         "trim_colour_hex": {
           "type": "string",

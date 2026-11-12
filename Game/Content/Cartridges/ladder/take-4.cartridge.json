@@ -169,11 +169,27 @@
       "aim_cone_deg": 8
     },
     "rules": {
-      "mode": "first_to",
-      "score_to_win": 3,
+      "mode": "timer",
+      "timer_frames": 10800,
       "goal_pause_frames": 120,
       "offside": false,
-      "penalties": true
+      "penalties": true,
+      "hooks": [
+        {
+          "id": "first-to-three",
+          "when": "on_goal",
+          "team": "scoring",
+          "score": {
+            "at_least": 3
+          },
+          "then": [
+            {
+              "do": "end_match",
+              "team": "scoring"
+            }
+          ]
+        }
+      ]
     },
     "teams": [
       {

@@ -25,6 +25,19 @@ namespace JamEvents
 	JAMCORE_API extern const FName Period;       // "period" (R-0003 3): a TAKE starts; Who -1, Where centre ice, Strength 0, Kind = "take_<n>"
 	JAMCORE_API extern const FName Bark;         // "bark" (R-0007, lane A12): Who = speaker skater index, Where = speaker, Strength 0, Kind = situation (goal_for, steal, ...)
 	JAMCORE_API extern const FName Signal;       // "signal" (R-0007, lane A12): Who = the human's skater, Where = human, Strength = frames/600, Kind = defend | space | pass | praise
+	// C-0005 section 6 (lane A16 registered; producers: A15 rules, A14 effects and zones, A16 passes).
+	JAMCORE_API extern const FName Announce;     // "announce": a rule's text on the scoreboard line; Who -1, Where zero, Strength 0, Kind = "rule"; the text rides FJamSimEvent::Text
+	JAMCORE_API extern const FName Pass;         // "pass": Who = passer, Where = puck, Strength = pass speed / puck.max_speed
+	JAMCORE_API extern const FName EffectStart;  // "effect_start": Who = target skater or -1, Where = that skater (or zero), Kind = effect id
+	JAMCORE_API extern const FName EffectEnd;    // "effect_end": same payload as effect_start
+	JAMCORE_API extern const FName ZoneEnter;    // "zone_enter": Who = skater, Where = skater, Kind = zone id
+	JAMCORE_API extern const FName ZoneExit;     // "zone_exit": same payload as zone_enter
+	// R-0013 (lane A16): the stick. Who = the actor; Kind = clean | miss for poke and lift, foul_from_behind | foul_no_puck for foul.
+	JAMCORE_API extern const FName Poke;         // "poke": a poke check; Where = blade, Strength 0
+	JAMCORE_API extern const FName Lift;         // "lift": a stick lift; Where = the carrier, Strength 0
+	JAMCORE_API extern const FName Foul;         // "foul": a check that was a foul; Who = the fouler, Where = contact, Strength = check strength
+	JAMCORE_API extern const FName ShotBlocked;  // "shot_blocked" (R-0019): a shot refused inside a no_shoot zone; Who = shooter, Where = puck, Strength 0, Kind = zone id
+	// R-0013: `faceoff` gains Kind = drop (the puck is live, Who -1) | won (Who = the centre that won) | lost (Who = the centre that lost).
 }
 
 USTRUCT(BlueprintType)

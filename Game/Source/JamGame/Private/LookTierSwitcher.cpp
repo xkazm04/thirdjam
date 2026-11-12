@@ -10,6 +10,7 @@
 #include "Components/LightComponent.h"
 #include "Components/SkyLightComponent.h"
 #include "EngineUtils.h"
+#include "RinkActor.h"
 
 DEFINE_LOG_CATEGORY(LogJamLook);
 
@@ -20,6 +21,15 @@ namespace
 		{ TEXT("l1_day"),   TEXT("/JamAssets/Rigs/LR_L1_Day.LR_L1_Day") },
 		{ TEXT("l2_night"), TEXT("/JamAssets/Rigs/LR_L2_Night.LR_L2_Night") },
 		{ TEXT("l3_neon"),  TEXT("/JamAssets/Rigs/LR_L3_Neon.LR_L3_Neon") },
+		{ TEXT("p3_clay"),  TEXT("/JamAssets/Rigs/LR_P3_Clay.LR_P3_Clay") },   // B-to-A-0018 (lane A21)
+	};
+	// B-to-A-0018 point 5: trim Emissive per tier; on bright clay ice 30 reads as a thin gold line, so clay ships 12 (B's 10..15).
+	struct FTierTrim { const TCHAR* Tier; float Emissive; };
+	const FTierTrim GTierTrim[] = {
+		{ TEXT("l1_day"),   30.f },
+		{ TEXT("l2_night"), 30.f },
+		{ TEXT("l3_neon"),  30.f },
+		{ TEXT("p3_clay"),  12.f },
 	};
 }
 
@@ -37,6 +47,44 @@ FString ULookTierSwitcher::GetRigMapPath(const FString& Tier)
 		if (Tier.Equals(R.Tier, ESearchCase::CaseSensitive)) { return R.Map; }
 	}
 	return FString();
+}
+
+float ULookTierSwitcher::DefaultTrimEmissiveFor(const FString& Tier)
+{
+	for (const FTierTrim& T : GTierTrim)
+	{
+		if (Tier.Equals(T.Tier, ESearchCase::CaseSensitive)) { return T.Emissive; }
+	}
+	return 30.f;
+}
+
+float ULookTierSwitcher::GetTrimEmissiveFor(const FString& Tier) const
+{
+	return bTrimOverride ? TrimOverride : DefaultTrimEmissiveFor(Tier);
+}
+
+float ULookTierSwitcher::GetTrimEmissive() const
+{
+	return GetTrimEmissiveFor(CurrentTier.IsEmpty() ? FString(TEXT("l2_night")) : CurrentTier);
+}
+
+void ULookTierSwitcher::SetTrimEmissiveOverride(float Emissive)
+{
+	bTrimOverride = Emissive >= 0.f;
+	TrimOverride = FMath::Clamp(Emissive, 0.f, 100.f);
+	PushTrimEmissive();
+}
+
+void ULookTierSwitcher::PushTrimEmissive()
+{
+	// The rink reads the value at Build; a tier change between builds (a Director's Call, the Settings override) pushes it here.
+	UWorld* W = GetWorld();
+	if (!W) return;
+	const float E = GetTrimEmissive();
+	for (TActorIterator<ARinkActor> It(W); It; ++It)
+	{
+		if (*It) It->SetTrimEmissive(E);
+	}
 }
 
 float ULookTierSwitcher::RigScaleFor(float RinkLengthM)
@@ -64,7 +112,8 @@ bool ULookTierSwitcher::SetTier(const FString& Tier, float RinkLengthM)
 		return true;
 	}
 
-	// Unload every other rig, and this tier's rig too when the scale changed (a level transform is fixed at load: R-0016 point 5).
+	// Unload every other rig (B-to-A-0018 point 4: unloaded, not hidden, so B's BP_LookParams EndPlay restores MPC_Look), and this
+	// tier's rig too when the scale changed (a level transform is fixed at load: R-0016 point 5).
 	for (auto It = LoadedRigs.CreateIterator(); It; ++It)
 	{
 		if (It.Key() == Tier && FMath::IsNearlyEqual(Scale, CurrentScale, 1e-3f)) { continue; }
@@ -102,7 +151,8 @@ bool ULookTierSwitcher::SetTier(const FString& Tier, float RinkLengthM)
 	CurrentScale = Scale;
 	HidePersistentLights(true);
 	LowerFloor();
-	UE_LOG(LogJamLook, Log, TEXT("JAMLOOK tier=%s map=%s scale=%.3f (rink %.1f m)"), *Tier, *MapPath, Scale, RinkLengthM);
+	PushTrimEmissive();
+	UE_LOG(LogJamLook, Log, TEXT("JAMLOOK tier=%s map=%s scale=%.3f (rink %.1f m) trim_emissive=%.1f"), *Tier, *MapPath, Scale, RinkLengthM, GetTrimEmissive());
 	return true;
 }
 

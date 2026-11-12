@@ -226,3 +226,31 @@ Accepted: `rules.hooks[].after_frame`; `score: { at_least, at_most, lead_at_leas
    `tools/review/build.mjs` into one self-contained HTML page: grouped items, pass / reject / comment per item, a "listen" button for text lines (browser speech synthesis), filters by
    group, a running count, and an export line (JSON and a markdown summary) the operator pastes back; decisions are remembered in the browser. The Director publishes it as a private
    artifact and applies the exported decisions. First instance: the bark bank.
+
+## R-0021 (H8.5, 2026-11-12 14:40): operator verdicts on feel, the bark bank and the arena
+1. **Feel proposals: all pass** (docs/reviews/feel-2026-11-12.decisions.json). Standing rule from the operator: until the game is playable and watchable, calibrations (physics, AI
+   curve, feel numbers) need no operator approval; lanes apply and record them in docs/experiments/*.md, and the operator reviews calibrations again near the finished phase. The one
+   comment (feel.00) is work: the stick must read as a hockey stick (shaft and blade), the figures need hands on it, and a carried puck must stay on the blade (A16 for the carry and the
+   code-built toy figure's stick; B for the TB1/TB2 figures, handoff A-to-B-0007).
+2. **Barks are hockey first.** The operator: "We are pushing the theme too far, it should be hockey first theme, keeping director cut in the menu for its adjustments." Every bark line
+   that leans on film vocabulary (cut, take, director, script, scene, reel, credits, reshoot, rehearsal, frame, blooper, editor, prop, camera, clip, sequel, draft, tape, rewind, movie,
+   screen test, wrap, rewrite, plot, footnote, headline, makeup: 224 of 1,340 lines) is rewritten as rink talk at the same register, same id, same tone and the same mild budget (lane A20).
+   directors_call reactions speak of "the rules changed", "new rule", "your tweak", never of directors or cuts. The register of R-0015 stands.
+3. **Director's Cut lives in the menu and the Designer, not on the ice.** In-match copy is hockey: PERIOD, FACEOFF, GOAL, the score; the card between matches reads as a match card
+   (MATCH 3 OF 8), not a TAKE card; the feature name Director's Call stays as the name of the one live change, with hockey wording on its card. Cuts, takes and the season's film
+   framing stay in the menu, the Designer and the season screen. Lane A18 applies this at its next pass. (Director's reading of "keeping director cut in the menu"; the operator corrects it if the in-match cards were meant to keep the film words.)
+4. **Props out of the arena for now.** The operator: focus on the night sky, the arena surface, the construction and the lighting; the film props (Rodin set: lights on stands, chair,
+   slate, dolly, crane, cases, truss lamps) come back later, placed to the final art style, to carry the concept that the whole game is a filming session. The assets stay in the plugin
+   and in the ledger, unplaced. The painted backdrop flats count as props and wait with them; haze and light shafts are lighting and may proceed (B's atmosphere pass, veto window kept).
+
+## R-0022 (H9.1, 2026-11-12 15:12): clean builds before every push; C-0001 v3; stick reach; B's Variant table
+1. **No push to main without a clean-worktree build.** B-to-A-0017 was right twice: per-lane commits cut from the shared tree left `main` compiling only with device A's working
+   tree (103 errors at 5760168 in a fresh checkout). From now on the Director commits the whole working tree at a window after the gate's build step, builds that commit in
+   `.claude/worktrees/clean-main` (detached at the commit), and pushes only on PASS; `status/A.md` carries the line "clean build PASS <sha>" B waits for. Lane commits of subsets stop.
+2. **C-0001 v3 signed** as lane A16 wrote it in `contracts/skater-visual.md`: `SetStickAim`, `PlayPoke`, `PlayLift`, `PlayPass`, `SetShotCharge`, `SetFaceoff`, `PlayFaceoffDraw`,
+   `SetGoalieStance`, `PlayFoulReaction`, all BlueprintNativeEvent with empty defaults; the carried puck draws at the visual's `puck_socket` when exposed. B mirrors them on TB1/TB2
+   (answer to B-to-A-0014).
+3. **Stick reach**: `game.stick.reach_m` default moves from 1.6 to **1.2** (rest 1.0 m, full aim 1.6 m from the skater centre), which both of B's figures can pose; `lift_range_m` stays
+   1.0, `shot.reach_m` 1.5. Applied by A16 at its next slot together with a re-recorded `Jam.Core.Determinism` baseline (calibration, R-0021 point 1).
+4. **B's `Variant` table (B-to-A-0012) accepted** as the C-0003 addition; lane A21 writes it into `contracts/events.md` and the binder; `bark`, `signal`, `announce` are 2D; `period`
+   stays silent. Zone, pickup and obstacle looks (B-to-A-0016) are assigned by A21 as B specified; tier `p3_clay` (B-to-A-0018) likewise, with `look.trim_emissive` per tier.

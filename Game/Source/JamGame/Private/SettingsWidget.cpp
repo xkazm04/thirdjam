@@ -14,24 +14,28 @@
 #include "Engine/World.h"
 
 using namespace JamMenuStyle;
+using S = FJamUiStyle;
+
+// Lane A18 (visual layer): two columns (key, difficulty, look | volume, voice, barks) with kit icons, the controls under both;
+// type and plates from FJamUiStyle. The settings themselves (load, save, apply) are lane A8's.
 
 const TCHAR* FJamSettings::Section = TEXT("Jam.Settings");
 
 FJamSettings FJamSettings::Load()
 {
-	FJamSettings S;
-	if (!GConfig) return S;
+	FJamSettings St;
+	if (!GConfig) return St;
 	FString D;
-	if (GConfig->GetString(Section, TEXT("Difficulty"), D, GGameUserSettingsIni)) ParseDifficulty(D, S.Difficulty);
-	GConfig->GetString(Section, TEXT("LookTier"), S.LookTierOverride, GGameUserSettingsIni);
-	if (!S.LookTierOverride.IsEmpty() && !ULookTierSwitcher::GetKnownTiers().Contains(S.LookTierOverride)) S.LookTierOverride.Empty();
+	if (GConfig->GetString(Section, TEXT("Difficulty"), D, GGameUserSettingsIni)) ParseDifficulty(D, St.Difficulty);
+	GConfig->GetString(Section, TEXT("LookTier"), St.LookTierOverride, GGameUserSettingsIni);
+	if (!St.LookTierOverride.IsEmpty() && !ULookTierSwitcher::GetKnownTiers().Contains(St.LookTierOverride)) St.LookTierOverride.Empty();
 	float V = 1.f;
-	if (GConfig->GetFloat(Section, TEXT("Volume"), V, GGameUserSettingsIni)) S.Volume = FMath::Clamp(V, 0.f, 1.f);
+	if (GConfig->GetFloat(Section, TEXT("Volume"), V, GGameUserSettingsIni)) St.Volume = FMath::Clamp(V, 0.f, 1.f);
 	int32 B = -1;
-	if (GConfig->GetInt(Section, TEXT("Barks"), B, GGameUserSettingsIni)) S.Barks = FMath::Clamp(B, -1, 1);
-	GConfig->GetString(Section, TEXT("BarkIntensity"), S.BarkIntensity, GGameUserSettingsIni);
-	if (S.BarkIntensity != TEXT("quiet") && S.BarkIntensity != TEXT("normal") && S.BarkIntensity != TEXT("loud")) S.BarkIntensity.Empty();
-	return S;
+	if (GConfig->GetInt(Section, TEXT("Barks"), B, GGameUserSettingsIni)) St.Barks = FMath::Clamp(B, -1, 1);
+	GConfig->GetString(Section, TEXT("BarkIntensity"), St.BarkIntensity, GGameUserSettingsIni);
+	if (St.BarkIntensity != TEXT("quiet") && St.BarkIntensity != TEXT("normal") && St.BarkIntensity != TEXT("loud")) St.BarkIntensity.Empty();
+	return St;
 }
 
 void FJamSettings::Save() const
@@ -70,11 +74,11 @@ FString FJamSettings::DifficultyString(EJamMenuDifficulty D)
 	}
 }
 
-bool FJamSettings::ParseDifficulty(const FString& S, EJamMenuDifficulty& Out)
+bool FJamSettings::ParseDifficulty(const FString& Str, EJamMenuDifficulty& Out)
 {
-	if (S == TEXT("rookie")) { Out = EJamMenuDifficulty::Rookie; return true; }
-	if (S == TEXT("pro")) { Out = EJamMenuDifficulty::Pro; return true; }
-	if (S == TEXT("all_star")) { Out = EJamMenuDifficulty::AllStar; return true; }
+	if (Str == TEXT("rookie")) { Out = EJamMenuDifficulty::Rookie; return true; }
+	if (Str == TEXT("pro")) { Out = EJamMenuDifficulty::Pro; return true; }
+	if (Str == TEXT("all_star")) { Out = EJamMenuDifficulty::AllStar; return true; }
 	return false;
 }
 
@@ -94,6 +98,7 @@ FString FJamSettings::TierLabel(const FString& Tier)
 	if (Tier == TEXT("l1_day")) return TEXT("DAY (L1)");
 	if (Tier == TEXT("l2_night")) return TEXT("NIGHT (L2)");
 	if (Tier == TEXT("l3_neon")) return TEXT("NEON (L3)");
+	if (Tier == TEXT("p3_clay")) return TEXT("CLAY (P3)");   // B-to-A-0018 (lane A21)
 	return Tier.ToUpper();
 }
 
@@ -113,84 +118,101 @@ void UJamSettingsWidget::BuildTree()
 	Root = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("SettingsRoot"));
 	T->RootWidget = Root;
 
-	auto Label = [&](const FString& S) { UTextBlock* L = Text(T, S, 16, Dim()); return L; };
+	// A heading with its kit icon and a caption under it.
+	auto Heading = [&](UVerticalBox* Col, const FString& Icon, const FString& Title, const FString& Caption)
+	{
+		UHorizontalBox* H = T->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
+		if (!Icon.IsEmpty()) AddH(H, S::Icon(T, Icon, 22.f), FMargin(0, 0, 8, 0));
+		AddH(H, S::Text(T, Title, S::Font(S::Body, FName("Bold"), S::TrackLabel), S::Yellow()), FMargin(0));
+		AddV(Col, H, FMargin(0, 10, 0, 0));
+		UTextBlock* C = S::Text(T, Caption, S::CaptionFont(), S::Muted());
+		C->SetAutoWrapText(true);
+		AddV(Col, C, FMargin(0, 0, 0, 4));
+	};
 
-	// API key: masked, stored by the Designer in Saved/Config, never shown back.
-	AddV(Root, Label(TEXT("API KEY  (typed here, kept on this machine only; the Designer directs live cuts with it)")), FMargin(0, 10, 0, 2));
+	UHorizontalBox* Columns = T->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
+	UVerticalBox* Left = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("SettingsLeft"));
+	UVerticalBox* Right = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("SettingsRight"));
+	AddH(Columns, Left, FMargin(0, 0, 14, 0), true, VAlign_Top);
+	AddH(Columns, Right, FMargin(14, 0, 0, 0), true, VAlign_Top);
+	AddV(Root, Columns, FMargin(0));
+	UTextBlock* Tmp = nullptr;
+
+	// Left column: the API key, the AI difficulty, the look tier.
+	Heading(Left, TEXT("cut-directors"), TEXT("API KEY"), TEXT("Typed here, kept on this machine only; the Designer directs live cuts with it."));
 	UHorizontalBox* KeyRow = T->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
 	KeyBox = T->ConstructWidget<UEditableTextBox>(UEditableTextBox::StaticClass(), TEXT("KeyBox"));
 	KeyBox->SetIsPassword(true);
 	KeyBox->SetHintText(FText::FromString(TEXT("paste a key and press Enter")));
-	KeyBox->SetMinDesiredWidth(420.f);
+	KeyBox->SetMinDesiredWidth(220.f);
+	KeyBox->WidgetStyle.SetFont(S::BodyFont());
+	KeyBox->WidgetStyle.SetPadding(FMargin(10, 7));
 	KeyBox->OnTextCommitted.AddDynamic(this, &UJamSettingsWidget::OnKeyCommitted);
 	AddH(KeyRow, KeyBox, FMargin(0, 0, 8, 0), true);
-	KeyState = Text(T, TEXT(""), 16, Yellow());
-	AddH(KeyRow, KeyState, FMargin(8, 0));
-	UTextBlock* Tmp = nullptr;
-	ClearKeyButton = Button(T, TEXT("CLEAR"), 16, Tmp);
+	ClearKeyButton = Button(T, TEXT("CLEAR"), S::Caption + 1, Tmp);
 	ClearKeyText = Tmp;
 	ClearKeyButton->OnClicked.AddDynamic(this, &UJamSettingsWidget::OnClearKey);
-	AddH(KeyRow, ClearKeyButton, FMargin(8, 0, 0, 0));
-	AddV(Root, KeyRow, FMargin(0, 0, 0, 10));
+	AddH(KeyRow, ClearKeyButton, FMargin(0));
+	AddV(Left, KeyRow, FMargin(0, 0, 0, 2));
+	KeyState = S::Text(T, TEXT(""), S::CaptionFont(), S::Yellow());
+	AddV(Left, KeyState, FMargin(0, 0, 0, 6));
 
-	// AI difficulty (lane A3's enum; a placeholder that stores the choice until the difficulty layer reads it).
-	AddV(Root, Label(TEXT("AI DIFFICULTY  (rookie | pro | all_star; read by the difficulty layer when it lands)")), FMargin(0, 10, 0, 2));
-	DifficultyButton = Button(T, TEXT(""), 22, Tmp);
+	Heading(Left, TEXT("signal-defend"), TEXT("AI DIFFICULTY"), TEXT("Rookie, pro or all-star opponents."));
+	DifficultyButton = Button(T, TEXT(""), S::Body + 2, Tmp);
 	DifficultyText = Tmp;
 	DifficultyButton->OnClicked.AddDynamic(this, &UJamSettingsWidget::OnDifficultyClicked);
-	AddV(Root, DifficultyButton, FMargin(0, 0, 0, 10), HAlign_Left);
+	AddV(Left, DifficultyButton, FMargin(0, 0, 0, 6), HAlign_Left);
 
-	// Look tier override.
-	AddV(Root, Label(TEXT("LOOK  (the cut's own tier, or force one light rig)")), FMargin(0, 10, 0, 2));
-	TierButton = Button(T, TEXT(""), 22, Tmp);
+	Heading(Left, TEXT("upscale"), TEXT("LOOK"), TEXT("The cut's own tier, or force one light rig."));
+	TierButton = Button(T, TEXT(""), S::Body + 2, Tmp);
 	TierText = Tmp;
 	TierButton->OnClicked.AddDynamic(this, &UJamSettingsWidget::OnTierClicked);
-	AddV(Root, TierButton, FMargin(0, 0, 0, 10), HAlign_Left);
+	AddV(Left, TierButton, FMargin(0, 0, 0, 6), HAlign_Left);
 
-	// Volume.
-	AddV(Root, Label(TEXT("VOLUME")), FMargin(0, 10, 0, 2));
+	// Right column: the volume, the voice signals, the barks.
+	Heading(Right, TEXT("voice"), TEXT("VOLUME"), TEXT("Everything the game plays."));
 	UHorizontalBox* VolRow = T->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
 	VolumeSlider = T->ConstructWidget<USlider>(USlider::StaticClass(), TEXT("VolumeSlider"));
 	VolumeSlider->SetStepSize(0.05f);
 	VolumeSlider->RequiresControllerLock = false;
 	VolumeSlider->IsFocusable = true;
-	VolumeSlider->SetSliderBarColor(Dim());
-	VolumeSlider->SetSliderHandleColor(Yellow());
+	VolumeSlider->SetWidgetStyle(S::SliderStyle());
 	VolumeSlider->OnValueChanged.AddDynamic(this, &UJamSettingsWidget::OnVolumeChanged);
 	USizeBox* VolBox = T->ConstructWidget<USizeBox>(USizeBox::StaticClass());
-	VolBox->SetWidthOverride(360.f);
+	VolBox->SetWidthOverride(260.f);
 	VolBox->AddChild(VolumeSlider);
 	AddH(VolRow, VolBox, FMargin(0, 0, 12, 0));
-	VolumeText = Text(T, TEXT(""), 20, Chalk());
+	VolumeText = S::Text(T, TEXT(""), S::Font(S::Body + 2, FName("Bold")), S::Chalk());
 	AddH(VolRow, VolumeText);
-	AddV(Root, VolRow, FMargin(0, 0, 0, 10));
+	AddV(Right, VolRow, FMargin(0, 4, 0, 6));
 
 	// Voice signals (lane A11's recognizer); keyboard signals 1-4 stay on regardless.
-	AddV(Root, Label(TEXT("VOICE SIGNALS  (say a signal instead of pressing 1-4; the keys always work)")), FMargin(0, 10, 0, 2));
+	Heading(Right, TEXT("signal-pass"), TEXT("VOICE SIGNALS"), TEXT("Say a signal instead of pressing 1-4; the keys always work."));
 	UHorizontalBox* VoiceRow = T->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
-	VoiceButton = Button(T, TEXT(""), 22, Tmp);
+	VoiceButton = Button(T, TEXT(""), S::Body + 2, Tmp);
 	VoiceText = Tmp;
 	VoiceButton->OnClicked.AddDynamic(this, &UJamSettingsWidget::OnVoiceClicked);
 	AddH(VoiceRow, VoiceButton, FMargin(0, 0, 12, 0));
-	VoiceStatusText = Text(T, TEXT(""), 16, Dim(), FName("Regular"));
-	AddH(VoiceRow, VoiceStatusText);
-	AddV(Root, VoiceRow, FMargin(0, 0, 0, 10));
+	VoiceStatusText = S::Text(T, TEXT(""), S::CaptionFont(), S::Muted());
+	VoiceStatusText->SetAutoWrapText(true);
+	AddH(VoiceRow, VoiceStatusText, FMargin(0), true);
+	AddV(Right, VoiceRow, FMargin(0, 0, 0, 6));
 
 	// Barks (lane A12): off, the cut's own, on; the intensity override rides along.
-	AddV(Root, Label(TEXT("BARKS  (what the other skaters shout: off | cut's own | on, quiet | normal | loud)")), FMargin(0, 10, 0, 2));
-	BarksButton = Button(T, TEXT(""), 22, Tmp);
+	Heading(Right, TEXT("barks"), TEXT("BARKS"), TEXT("What the other skaters shout: off, the cut's own, or on (quiet, normal, loud)."));
+	BarksButton = Button(T, TEXT(""), S::Body + 2, Tmp);
 	BarksText = Tmp;
 	BarksButton->OnClicked.AddDynamic(this, &UJamSettingsWidget::OnBarksClicked);
-	AddV(Root, BarksButton, FMargin(0, 0, 0, 10), HAlign_Left);
+	AddV(Right, BarksButton, FMargin(0, 0, 0, 6), HAlign_Left);
 
-	// Controls summary (lane A5's mapping).
-	AddV(Root, Label(TEXT("CONTROLS")), FMargin(0, 14, 0, 2));
-	UTextBlock* Controls = Text(T,
+	// Controls summary (lane A5's mapping) under both columns.
+	Heading(Root, TEXT("settings"), TEXT("CONTROLS"), TEXT(""));
+	UTextBlock* Controls = S::Text(T,
 		TEXT("Skate   WASD / left stick        Shoot   Space / A        Check   Shift / B  (Raw Cut)\n")
 		TEXT("Restart   R / View        Pause and Director's Call   Esc / Start        Menus   stick or arrows, A / Enter, B / Esc back"),
-		16, Chalk(), FName("Regular"));
+		S::BodyFont(), S::Chalk());
 	Controls->SetAutoWrapText(true);
-	AddV(Root, Controls, FMargin(0, 0, 0, 6));
+	AddV(Root, Controls, FMargin(0, -2, 0, 6));
 
 	RefreshLabels();
 }
@@ -211,7 +233,7 @@ void UJamSettingsWidget::RefreshLabels()
 	bool bHasKey = false;
 	if (UGameInstance* GI = GetGameInstance()) if (UJamDesignerSubsystem* D = GI->GetSubsystem<UJamDesignerSubsystem>()) bHasKey = D->HasApiKey();
 	KeyState->SetText(FText::FromString(bHasKey ? TEXT("key: set") : TEXT("key: none (cached cuts only)")));
-	KeyState->SetColorAndOpacity(FSlateColor(bHasKey ? Yellow() : Dim()));
+	KeyState->SetColorAndOpacity(FSlateColor(bHasKey ? S::Yellow() : S::Muted()));
 	ClearKeyButton->SetIsEnabled(bHasKey);
 	if (VoiceText) VoiceText->SetText(FText::FromString(UJamSignalSystem::IsVoiceSignalsEnabled() ? TEXT("VOICE: ON") : TEXT("VOICE: OFF")));
 	if (VoiceStatusText) VoiceStatusText->SetText(FText::FromString(VoiceStatus()));
@@ -257,7 +279,6 @@ void UJamSettingsWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTi
 	Tint(TierButton, TierText);
 	Tint(VoiceButton, VoiceText);
 	Tint(BarksButton, BarksText);
-	if (VolumeSlider) VolumeSlider->SetSliderHandleColor(VolumeSlider->HasAnyUserFocus() || VolumeSlider->IsHovered() ? Yellow() : Chalk());
 	// The recognizer's state changes on its own (microphone, start-up): re-read it twice a second.
 	if (VoiceStatusText && ++VoiceStatusTick % 30 == 0) VoiceStatusText->SetText(FText::FromString(VoiceStatus()));
 }

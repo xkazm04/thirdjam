@@ -43,7 +43,7 @@ Calls arrive on the game thread from the simulation tick. Call from C++ as `IJam
 | `SetTeam` | `int32 TeamId`, `FLinearColor Colour` | `TeamId` 0 or 1 (index into `game.teams`); colour linear RGB, alpha 1 | jersey colour; writes `TeamColour` |
 | `SetNumber` | `int32 N` | 0..99 | jersey number; `NumberTens` = N / 10, `NumberOnes` = N % 10 |
 | `UpdateMotion` | `float Speed`, `float TurnRate`, `FRotator Facing` | speed m/s >= 0; turn rate rad/s, positive = turning left seen from above; facing yaw in degrees, pitch and roll 0 | every frame |
-| `PlayShoot` | none | | a shot left the stick this frame |
+| `PlayShoot` | `float Charge` | 0..1 | a shot (or a pass, Charge 0) left the stick this frame; Charge 1 = a fully wound-up charged shot (`shot.charge_frames_max` held). **v2 (C-0005, lane A16, H7):** was `none`; implementations must take the parameter (the toy figure scales its swing by 1 + 0.6 x Charge) |
 | `PlayCheck` | none | | this skater threw a body check this frame |
 | `SetKnockedDown` | `bool bDown`, `float DirX`, `float DirZ` | (DirX, DirZ) unit vector on the ice plane in rink coordinates (x along the rink, z across); ignored when `bDown` is false | fall towards that direction; false = get up |
 | `SetHasPuck` | `bool bHasPuck` | | |
@@ -112,6 +112,15 @@ None yet. The swap goes through a cartridge key (open question 1).
 ## Version history
 
 - v1 (H4, lane A0): first version, with the compiled stub.
+- v3 (H9, proposed by lane A16 from handoff B-to-A-0014, awaiting the Director's signature): the stick verbs, all `BlueprintNativeEvent` with empty native defaults
+  (a visual that ignores them keeps compiling): `SetStickAim(float AngleDeg, float ReachM)` every frame (0 = forward, positive = the skater's left; reach = skater centre
+  to the blade on the ice; the sim's blade is at 0.4 m + aim x `game.stick.reach_m`, so 1.2 m at rest and 2.0 m at full aim with the default 1.6), `PlayPoke(bool bClean)` on the
+  frame a poke resolves (false = mistimed, a stumble follows), `PlayLift()`, `PlayPass(float Strength)` (speed / max), `SetShotCharge(float Charge01)` every frame while charging
+  (0 otherwise; `PlayShoot(Charge)` releases), `SetFaceoff(bool bReady)` (a centre at the dot before the drop), `PlayFaceoffDraw(bool bWon)` on the drop for the two centres,
+  `SetGoalieStance(bool bOn, int32 Side)` (called by the brain's owner, never by the sim), `PlayFoulReaction()` on the fouler. The pawn (`AJamSkater::ApplySimFrame`) makes every
+  call from the sim state; the toy figure implements `SetStickAim` and `SetShotCharge`. A carried puck is drawn at the visual's `puck_socket` when the visual exposes one (a mesh
+  socket on any component, or a scene component named `puck_socket`): `AJamSkater::GetPuckSocketWorld`, `AJamPuck::ApplyRenderAt`.
+- v2 (H7, lane A16, per C-0005 section 5): `PlayShoot(float Charge)`; the toy figure (`UToySkaterVisualComponent`), the placeholder visual and the camera proof scene updated; device B's `BP_SkaterVisual_TB1/TB2` must re-implement the event with the new signature (handoff note in lane A16's report).
 
 ## Open questions
 

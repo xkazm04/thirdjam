@@ -8,6 +8,7 @@
 #include "JamPawns.h"
 #include "JamCartridge.h"
 #include "JamDesignerSubsystem.h"
+#include "JamRuleSystem.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerController.h"
 #include "Engine/GameInstance.h"
@@ -140,7 +141,8 @@ void UJamDirectorsCallController::ApplySettingsForMatch()
 	{
 		if (ULookTierSwitcher* L = GetWorld() ? GetWorld()->GetSubsystem<ULookTierSwitcher>() : nullptr)
 		{
-			L->SetTier(S.LookTierOverride);
+			AHokejGameMode* GM = GetGameMode();   // R-0016 point 5 (lane A15): the rig scales with the running rink
+			L->SetTier(S.LookTierOverride, GM && GM->GetSim() ? static_cast<float>(GM->GetSim()->GetConfig().Rink.LengthM) : 90.f);
 			UE_LOG(LogJamDirectorsCall, Log, TEXT("JAMCALL look tier override %s"), *S.LookTierOverride);
 		}
 	}
@@ -182,6 +184,17 @@ void UJamDirectorsCallController::OnJamEvent(FName Event, const FJamEventPayload
 		Overlay->ShowTake(Take, CurrentSimFrame() + TakeCardFrames);
 		bOpeningCardShown = true;
 		if (Menu && Menu->IsOpen()) Menu->ShowPause();
+	}
+	else if (Event == JamEvents::Announce)
+	{
+		// Lane A15 (C-0005): a rule spoke; the text rides the rule system's side channel (UJamRuleSystem::GetLastAnnouncement).
+		AHokejGameMode* GM = GetGameMode();
+		UJamRuleSystem* Rules = GM ? GM->GetRules() : nullptr;
+		if (Rules && !Rules->GetLastAnnouncement().IsEmpty())
+		{
+			Overlay->ShowAnnouncement(UJamDirectorsCallWidget::RuleLine(Rules->GetLastAnnouncement()), CurrentSimFrame() + AnnouncementFrames);
+			UE_LOG(LogJamDirectorsCall, Log, TEXT("JAMRULE announced \"%s\""), *Rules->GetLastAnnouncement());
+		}
 	}
 }
 

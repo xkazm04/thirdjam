@@ -4,6 +4,8 @@
 #include "JamPawns.h"
 #include "JamBrain.h"
 #include "JamSimAdapter.h"
+#include "JamRuleSystem.h"
+#include "JamZones.h"
 #include "SignalSystem.h"
 #include "RinkActor.h"
 #include "LookTierSwitcher.h"
@@ -12,8 +14,11 @@
 #include "InputMapping.h"
 #include "CameraFollow.h"
 #include "EffectsBinder.h"
+#include "JamEffectSystem.h"
+#include "JamPickupActor.h"
 #include "ToySkaterVisual.h"
 #include "JamDesignerSubsystem.h"
+#include "Progression.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Engine/World.h"
 #include "Engine/GameInstance.h"
@@ -88,11 +93,16 @@ bool AHokejGameMode::ApplyCartridgeLive(UJamCartridge* NewCartridge)
 {
 	if (!NewCartridge || !Sim || !bBuilt) return false;
 	const TArray<FString> Held = Sim->ApplyLiveConfig(NewCartridge->Game);
+	if (Effects) Effects->ApplyLiveConfig(NewCartridge->RawJson);   // lane A14: effects / pickups lists, the `director` trigger
 	const FJamGameConfig& G = Sim->GetConfig();
 	// R-0009 point 3: the brain resolves difficulty profile -> explicit game.ai -> Designer values itself (lane A3).
 	Brain->ApplyCartridge(*NewCartridge);
 	if (Rink && Rink->IceMid) Rink->IceMid->SetScalarParameterValue(TEXT("Wet"), G.Look.bWetIce ? 1.f : 0.f);
-	if (ULookTierSwitcher* Look = GetWorld()->GetSubsystem<ULookTierSwitcher>()) Look->SetTier(G.Look.Tier);
+	if (ULookTierSwitcher* Look = GetWorld()->GetSubsystem<ULookTierSwitcher>())
+	{
+		Look->SetTrimEmissiveOverride(static_cast<float>(G.Look.TrimEmissive));   // B-to-A-0018 point 5 (lane A21): -1 = the tier's default
+		Look->SetTier(G.Look.Tier, G.Rink.LengthM);   // R-0016 point 5: the rig scales with the rink
+	}
 	Cartridge = NewCartridge;
 	if (UGameInstance* GI = GetGameInstance()) if (UJamDesignerSubsystem* D = GI->GetSubsystem<UJamDesignerSubsystem>()) D->SetCurrentCartridge(NewCartridge);
 	UE_LOG(LogHokej, Log, TEXT("JAMGAME live cut id=%s at frame %lld; held back until the next match: %s"), *NewCartridge->Id, Sim->GetFrame(), Held.Num() ? *FString::Join(Held, TEXT(", ")) : TEXT("none"));
@@ -157,8 +167,26 @@ void AHokejGameMode::BuildMatch()
 	Rink->Build(G);
 
 	Sim = NewObject<UJamSim>(this);
+	// Lane A15 (C-0005 seam B): the only IJamRuleHook, set before Init so the opening faceoff reaches it; the zone system reads sim state after each step.
+	Rules = NewObject<UJamRuleSystem>(this);
+	Rules->Init(G);
+	Sim->SetRuleHook(Rules);
+	ZoneSystem = NewObject<UJamZoneSystem>(this);
+	ZoneSystem->Init(G);
+	Sim->SetZoneSource(ZoneSystem);   // R-0019: the sim reads ice factors, no_shoot and bumper zones from it
 	Sim->Init(G, static_cast<uint64>(Cartridge->Seed));
+	BuiltRinkRevision = Sim->GetRinkRevision();
 	Inputs.SetNum(Sim->GetSkaters().Num());
+
+	// Lane A14 (C-0005): the effect system binds itself as the sim's modifier source and owns the pickups.
+	AJamPickupActor::DestroyAll(PickupActors);
+	Effects = NewObject<UJamEffectSystem>(this);
+	{
+		TArray<FString> EffectErrors;
+		Effects->Init(Sim, Cartridge->RawJson, EffectErrors);
+		for (const FString& E : EffectErrors) UE_LOG(LogHokej, Error, TEXT("JAMEFFECTS %s"), *E);
+	}
+	LastBoost.Init(NAME_None, Sim->GetSkaters().Num());
 
 	Brain = NewObject<UJamBrain>(this);
 	// R-0009 point 3: the brain resolves difficulty profile -> explicit game.ai -> Designer values itself (lane A3).
@@ -179,16 +207,33 @@ void AHokejGameMode::BuildMatch()
 	Puck = World->SpawnActor<AJamPuck>(AJamPuck::StaticClass(), FTransform::Identity, P);
 	Puck->InitPuck(G.Puck.RadiusM, G.Puck.Colour);
 
-	if (ULookTierSwitcher* Look = World->GetSubsystem<ULookTierSwitcher>()) Look->SetTier(G.Look.Tier);
+	if (ULookTierSwitcher* Look = World->GetSubsystem<ULookTierSwitcher>())
+	{
+		Look->SetTrimEmissiveOverride(static_cast<float>(G.Look.TrimEmissive));   // B-to-A-0018 point 5 (lane A21): -1 = the tier's default
+		Look->SetTier(G.Look.Tier, G.Rink.LengthM);   // R-0016 point 5: the rig scales with the rink
+	}
 
 	Accumulator = 0.0;
 	StepMsSum = StepMsMax = 0.0;
 	Steps = 0;
 	bBuilt = true;
+	bResultReported = false;
 	// The opening faceoff event, TAKE 1 and the first presentation frame.
 	DeliverEvents();
 	UpdateTake(true);
-	for (AJamSkater* A : Skaters) A->ApplySimFrame(Sim->GetSkaters()[A->GetSimIndex()]);
+	for (AJamSkater* A : Skaters)
+	{
+		A->ApplySimFrame(Sim->GetSkaters()[A->GetSimIndex()]);
+		if (Effects && LastBoost.IsValidIndex(A->GetSimIndex()))
+		{
+			const FName Boost = Effects->GetBoostKindFor(A->GetSimIndex());   // lane A14: the toy figure glows while boosted
+			if (Boost != LastBoost[A->GetSimIndex()])
+			{
+				LastBoost[A->GetSimIndex()] = Boost;
+				if (UObject* V = A->GetVisualObject()) IJamSkaterVisual::Execute_SetBoost(V, Boost);
+			}
+		}
+	}
 	PushPresentation();
 	for (AJamSkater* A : Skaters) A->ApplyRender(Sim->GetSkaters()[A->GetSimIndex()], 1.f);
 	Puck->ApplyRender(Sim->GetPuck(), 1.f);
@@ -241,14 +286,24 @@ void AHokejGameMode::PostLogin(APlayerController* NewPlayer)
 
 void AHokejGameMode::HandleRestartPressed()
 {
+	// Lane A17: at the end of a season take, R after a win opens the next take (the season decides); otherwise the same cut restarts (RETAKE).
+	if (Sim && Sim->GetPhase() == EJamSimPhase::Over && Cartridge)
+	{
+		if (UJamProgression* P = UJamProgression::Get(this); P && P->HandleRestart(this)) return;
+	}
 	RestartMatch();
 }
 
 void AHokejGameMode::RestartMatch()
 {
 	if (!Sim) return;
+	if (Rules) Rules->ResetMatch();          // lane A15: before the sim's Restart so its faceoff counts in the new match
+	if (ZoneSystem) ZoneSystem->ResetMatch();
 	Sim->Restart();
+	if (Effects) Effects->Restart();   // lane A14
+	AJamPickupActor::DestroyAll(PickupActors);
 	Brain->ResetBrain();
+	bResultReported = false;
 	Accumulator = 0.0;
 	UE_LOG(LogHokej, Log, TEXT("JAMGAME restart (%s)"), *CutName);
 	DeliverEvents();
@@ -256,22 +311,44 @@ void AHokejGameMode::RestartMatch()
 	PushPresentation();
 }
 
-FJamInput AHokejGameMode::ScriptedHumanInput() const
+// The scripted human (jam.ScriptHuman 1, PIE proofs): chases the puck, carries it towards the net, passes once when a teammate is open and the net is
+// far, and charges its shot (holds shoot up to charge_frames_max, then releases) when lined up inside 30 m. Deterministic: sim state only.
+FJamInput AHokejGameMode::ScriptedHumanInput()
 {
 	const int32 Me = Sim->GetHumanIndex();
 	const FJamSkaterState& S = Sim->GetSkaters()[Me];
 	const FVector2D PuckPos = Sim->GetPuck().Pos;
-	const FVector2D ToGoal = (FVector2D(Sim->AttackGoalX(S.Team), 0.0) - PuckPos).GetSafeNormal();
+	const FVector2D Goal(Sim->AttackGoalX(S.Team), 0.0);
+	const FVector2D ToGoal = (Goal - PuckPos).GetSafeNormal();
 	const FVector2D Behind = PuckPos - ToGoal * 0.7;
 	FJamInput In;
 	const FVector2D D = Behind - S.Pos;
 	In.Move = D.Size() > 0.3 ? D.GetSafeNormal() : ToGoal;
 	const FVector2D ToPuck = PuckPos - S.Pos;
 	const double Dist = ToPuck.Size();
-	if (Dist < Sim->GetConfig().Shot.ReachM && FVector2D::DotProduct(S.Forward(), ToGoal) > 0.97 && Dist > 1e-6 && FVector2D::DotProduct(S.Forward(), ToPuck / Dist) > 0.6)
+	const double GoalDist = FVector2D::Distance(PuckPos, Goal);
+	const bool bHave = Dist < Sim->GetConfig().Shot.ReachM && Dist > 1e-6 && FVector2D::DotProduct(S.Forward(), ToPuck / Dist) > 0.6;
+	// In the faceoff: press at the drop (the first clean press wins the draw).
+	if (Sim->IsDrawOpen() && S.bCentre) { In.bPoke = true; return In; }
+	if (Sim->GetPhase() != EJamSimPhase::Playing) { ScriptCharge = 0; return In; }
+	FVector2D Aim;
+	if (bHave && GoalDist > 30.0 && Sim->GetFrame() - ScriptLastPass > 600 && Sim->BestPass(Me, Aim) >= 0)
 	{
-		In.bShoot = true;
+		In.bPass = true;
+		ScriptLastPass = Sim->GetFrame();
+		ScriptCharge = 0;
+		return In;
 	}
+	const int32 Max = Sim->GetConfig().Shot.ChargeFramesMax;
+	if (bHave && FVector2D::DotProduct(S.Forward(), ToGoal) > 0.97 && GoalDist < 30.0)
+	{
+		if (Max <= 0) { In.bShoot = true; return In; }
+		if (ScriptCharge < Max) { In.bShootHeld = true; ++ScriptCharge; return In; }
+		ScriptCharge = 0;   // release: the charged shot fires this frame
+		return In;
+	}
+	if (ScriptCharge > 0 && bHave) { In.bShootHeld = true; ++ScriptCharge; if (ScriptCharge >= Max + 10) ScriptCharge = 0; return In; }   // keep the charge while turning in
+	ScriptCharge = 0;
 	return In;
 }
 
@@ -291,9 +368,22 @@ FJamInput AHokejGameMode::ReadHumanInput()
 	const FVector2D Fwd(FMath::Cos(Yaw), FMath::Sin(Yaw));
 	const FVector2D Right(-FMath::Sin(Yaw), FMath::Cos(Yaw));
 	In.Move = Fwd * Axis.Y + Right * Axis.X;
-	In.bShoot = Pi->ConsumeShootPressed();
+	// C-0005 charged shot: the human sends the held level; the sim charges while the puck is in reach and fires on release (a tap = a short charge).
+	Pi->ConsumeShootPressed();
+	In.bShootHeld = Pi->IsShootHeld();
+	In.bPass = Pi->ConsumePassPressed();
 	In.bCheck = Pi->ConsumeCheckPressed();
 	In.bBrake = Pi->IsBrakeHeld();  // A5: Ctrl / left trigger (FEEL.md proposal 6)
+	// R-0013 (lane A16): the stick. Right stick is absolute; the mouse accumulates pixels, 100 px = one reach at mouse_sensitivity 1. Camera-relative like Move.
+	FVector2D Aim = Pi->GetStickAxis();
+	if (Aim.SizeSquared() < 0.01)
+	{
+		Aim = Pi->GetMouseAimPx() * (0.01 * Sim->GetConfig().Stick.MouseSensitivity);
+		if (Aim.SizeSquared() > 1.0) Aim.Normalize();
+	}
+	In.Stick = Fwd * Aim.Y + Right * Aim.X;
+	In.bPoke = Pi->ConsumePokePressed();
+	In.bLift = Pi->ConsumeLiftPressed();
 	return In;
 }
 
@@ -313,6 +403,34 @@ void AHokejGameMode::GatherInputs()
 			W.IntentFramesLeft = Intent.FramesLeft(Sim->GetFrame());
 		}
 	}
+	// lane A3 (R-0017): the pickups on the ice (only all_star bots detour for them)
+	if (Effects)
+	{
+		for (const FJamPickupOnIce& P : Effects->GetPickups())
+		{
+			if (W.NumPickups >= JamAI::FJamAIWorld::kMaxPickups) break;
+			W.PickupKind[W.NumPickups] = P.PickupIndex;
+			W.PickupPos[W.NumPickups] = JamAI::FVec2(P.Pos.X, P.Pos.Y);
+			++W.NumPickups;
+		}
+	}
+	// lane A3 (R-0019): slow-ice circles (rects by half diagonal) and who stands in a no_shoot zone
+	if (ZoneSystem)
+	{
+		for (const FJamZoneConfig& Z : ZoneSystem->GetZones())
+		{
+			if (Z.Kind != FName(TEXT("slow_ice")) || W.NumSlowIce >= JamAI::FJamAIWorld::kMaxSlowIce) continue;
+			const bool bRect = Z.Shape == FName(TEXT("rect"));
+			W.SlowIceCentre[W.NumSlowIce] = JamAI::FVec2(Z.X, Z.Z);
+			W.SlowIceRadius[W.NumSlowIce] = bRect ? 0.5 * FMath::Sqrt(Z.W * Z.W + Z.D * Z.D) : Z.R;
+			++W.NumSlowIce;
+		}
+		for (int32 i = 0; i < W.NumSkaters; ++i)
+		{
+			FName ZoneId;
+			W.Skaters[i].bNoShoot = ZoneSystem->BlocksShot(FVector2D(W.Skaters[i].Pos.X, W.Skaters[i].Pos.Y), ZoneId);
+		}
+	}
 	JamAI::FJamAIInput Out[JamAI::kMaxSkaters];
 	Brain->Think(W, Out);
 	const int32 Human = Sim->GetHumanIndex();
@@ -326,6 +444,10 @@ void AHokejGameMode::GatherInputs()
 			I.bShoot = Out[i].bShoot;
 			I.bCheck = Out[i].bCheck;
 			I.bBrake = Out[i].bBrake;
+			I.bPass = Out[i].bPass;   // lane A3 (R-0017): pass, stick aim, poke, lift
+			I.Stick = FVector2D(Out[i].Stick.X, Out[i].Stick.Y);
+			I.bPoke = Out[i].bPoke;
+			I.bLift = Out[i].bLift;
 		}
 	}
 	Inputs[Human] = (bScriptedHuman || CVarJamScriptHuman.GetValueOnGameThread() != 0) ? ScriptedHumanInput() : ReadHumanInput();
@@ -346,6 +468,46 @@ void AHokejGameMode::DeliverEvents()
 		Pl.Kind = E.Kind;
 		Bus->Broadcast(E.Name, Pl);
 	}
+	if (Effects)
+	{
+		for (const FJamSimEvent& E : Effects->GetFrameEvents())
+		{
+			if (!UJamEventBus::IsKnownEvent(E.Name)) continue;
+			FJamEventPayload Pl;
+			Pl.Who = E.Who;
+			Pl.Where = UJamSim::ToWorld(E.Where, AJamPickupActor::HoverM);
+			Pl.Strength = E.Strength;
+			Pl.Kind = E.Kind;
+			Bus->Broadcast(E.Name, Pl);
+		}
+	}
+	// Lane A15 (C-0005): zone_enter / zone_exit from the zone system's membership pass (Who = skater or -1 for the puck, Kind = zone id),
+	// and "announce" when a rule spoke this frame but the sim did not carry the event itself.
+	if (ZoneSystem)
+	{
+		for (const FJamSimEvent& E : ZoneSystem->GetFrameEvents())
+		{
+			FJamEventPayload Pl;
+			Pl.Who = E.Who;
+			Pl.Where = UJamSim::ToWorld(E.Where);
+			Pl.Strength = E.Strength;
+			Pl.Kind = E.Kind;
+			Bus->Broadcast(E.Name, Pl);
+		}
+	}
+	if (Rules)
+	{
+		TArray<FString> Said;
+		Rules->TakePendingAnnouncements(Said);
+		bool bSimAnnounced = false;
+		for (const FJamSimEvent& E : Sim->GetFrameEvents()) if (E.Name == JamEvents::Announce) bSimAnnounced = true;
+		if (Said.Num() && !bSimAnnounced)
+		{
+			FJamEventPayload Pl;
+			Pl.Kind = FName(TEXT("rule"));
+			Bus->Broadcast(JamEvents::Announce, Pl);
+		}
+	}
 }
 
 void AHokejGameMode::PushPresentation()
@@ -355,8 +517,9 @@ void AHokejGameMode::PushPresentation()
 	const FJamGameConfig& G = Cartridge->Game;
 	FJamPresentationFrame F;
 	F.SimFrame = Sim->GetFrame();
-	F.RinkLengthM = G.Rink.LengthM;
-	F.RinkWidthM = G.Rink.WidthM;
+	// Lane A15 (C-0005): the sim's rink, not the cartridge's: ShrinkRink / GrowRink change it at a faceoff and the radar and net markers follow.
+	F.RinkLengthM = Sim->GetConfig().Rink.LengthM;
+	F.RinkWidthM = Sim->GetConfig().Rink.WidthM;
 	for (const FJamSkaterState& S : Sim->GetSkaters())
 	{
 		FJamPresentationSkater Ps;
@@ -380,6 +543,7 @@ void AHokejGameMode::PushPresentation()
 	switch (Sim->GetPhase())
 	{
 	case EJamSimPhase::Playing: F.Phase = EJamPhase::Play; break;
+	case EJamSimPhase::Faceoff: F.Phase = EJamPhase::Play; F.FaceoffCountdownFrames = Sim->GetFaceoffCountdown(); break;
 	case EJamSimPhase::GoalPause: F.Phase = EJamPhase::GoalPause; break;
 	case EJamSimPhase::Over: F.Phase = Sim->GetWinner() == Sim->GetHumanTeam() ? EJamPhase::Win : EJamPhase::Lose; break;
 	}
@@ -390,15 +554,48 @@ void AHokejGameMode::PushPresentation()
 void AHokejGameMode::StepOnce()
 {
 	GatherInputs();
+	if (Rules) { Rules->SetScore(0, Sim->GetScore(0)); Rules->SetScore(1, Sim->GetScore(1)); }   // lane A15: the score mirror the hooks' conditions read
 	const double T0 = FPlatformTime::Seconds();
 	Sim->Step(Inputs);
+	if (ZoneSystem) ZoneSystem->Update(Sim->GetFrame(), Sim->GetSkaters(), Sim->GetPuck());   // lane A15: membership and zone events for this frame
 	const double Ms = (FPlatformTime::Seconds() - T0) * 1000.0;
 	StepMsSum += Ms;
 	StepMsMax = FMath::Max(StepMsMax, Ms);
 	++Steps;
+	if (Effects) Effects->Step();   // lane A14: after the sim's frame, before the events go out
 	DeliverEvents();
+	// Lane A15 (C-0005): ShrinkRink / GrowRink changed the geometry at this faceoff; rebuild the rink actor from the sim's config.
+	if (Rink && Sim->GetRinkRevision() != BuiltRinkRevision)
+	{
+		BuiltRinkRevision = Sim->GetRinkRevision();
+		Rink->Build(Sim->GetConfig());
+		if (ULookTierSwitcher* Look = GetWorld()->GetSubsystem<ULookTierSwitcher>())
+		{
+			Look->SetTrimEmissiveOverride(static_cast<float>(Sim->GetConfig().Look.TrimEmissive));   // B-to-A-0018 point 5 (lane A21)
+			Look->SetTier(Sim->GetConfig().Look.Tier, Sim->GetConfig().Rink.LengthM);   // R-0016 point 5: the rig is re-scaled for the shrunk rink
+		}
+		UE_LOG(LogHokej, Log, TEXT("JAMRINK rebuilt at frame %lld: %gx%g m (revision %d)"), Sim->GetFrame(), Sim->GetConfig().Rink.LengthM, Sim->GetConfig().Rink.WidthM, BuiltRinkRevision);
+	}
 	if (Sim->GetPhase() == EJamSimPhase::Playing) UpdateTake(false);
-	for (AJamSkater* A : Skaters) A->ApplySimFrame(Sim->GetSkaters()[A->GetSimIndex()]);
+	// Lane A17: a finished match is reported once to the season (ignored unless this cut is the running season take).
+	if (Sim->GetPhase() == EJamSimPhase::Over && !bResultReported && Cartridge)
+	{
+		bResultReported = true;
+		if (UJamProgression* P = UJamProgression::Get(this)) P->RecordResult(Cartridge->SourcePath, Sim->GetWinner() == Sim->GetHumanTeam());
+	}
+	for (AJamSkater* A : Skaters)
+	{
+		A->ApplySimFrame(Sim->GetSkaters()[A->GetSimIndex()]);
+		if (Effects && LastBoost.IsValidIndex(A->GetSimIndex()))
+		{
+			const FName Boost = Effects->GetBoostKindFor(A->GetSimIndex());   // lane A14: the toy figure glows while boosted
+			if (Boost != LastBoost[A->GetSimIndex()])
+			{
+				LastBoost[A->GetSimIndex()] = Boost;
+				if (UObject* V = A->GetVisualObject()) IJamSkaterVisual::Execute_SetBoost(V, Boost);
+			}
+		}
+	}
 	PushPresentation();
 	if (Sim->GetFrame() % 600 == 0)
 	{
@@ -422,6 +619,13 @@ void AHokejGameMode::Tick(float DeltaSeconds)
 	if (N == MaxStepsPerFrame && Accumulator > UJamSim::DT) Accumulator = 0.0; // fell behind: drop the backlog, never spiral
 	const float Alpha = static_cast<float>(FMath::Clamp(Accumulator / UJamSim::DT, 0.0, 1.0));
 	for (AJamSkater* A : Skaters) A->ApplyRender(Sim->GetSkaters()[A->GetSimIndex()], Alpha);
-	Puck->ApplyRender(Sim->GetPuck(), Alpha);
+	// C-0001 v3: a carried puck is drawn at the carrier visual's puck_socket when the visual exposes one (cosmetic; the sim keeps its own position).
+	{
+		FVector SocketCm;
+		const int32 Carrier = Sim->CarrierIndex();
+		if (Skaters.IsValidIndex(Carrier) && Skaters[Carrier] && Skaters[Carrier]->GetPuckSocketWorld(SocketCm)) Puck->ApplyRenderAt(SocketCm);
+		else Puck->ApplyRender(Sim->GetPuck(), Alpha);
+	}
+	AJamPickupActor::Sync(GetWorld(), Effects, PickupActors, static_cast<double>(Sim->GetFrame()) + Alpha);   // lane A14
 	if (UJamPresentation* Pres = UJamPresentation::Get(this)) Pres->SetRenderAlpha(Alpha);
 }

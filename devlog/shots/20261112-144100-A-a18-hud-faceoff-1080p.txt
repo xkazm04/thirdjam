@@ -1,0 +1,1 @@
+Faceoff countdown (jam.ui.faceoff preview): the chalk ring with the seconds; DROP follows at zero. Lane A18.

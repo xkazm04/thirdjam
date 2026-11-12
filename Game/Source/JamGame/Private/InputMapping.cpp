@@ -54,6 +54,11 @@ void UJamInputMap::Build()
 	Restart = MakeAction(this, TEXT("IA_Restart"), EInputActionValueType::Boolean);
 	Brake = MakeAction(this, TEXT("IA_Brake"), EInputActionValueType::Boolean);
 	Pause = MakeAction(this, TEXT("IA_Pause"), EInputActionValueType::Boolean);
+	StickAim = MakeAction(this, TEXT("IA_StickAim"), EInputActionValueType::Axis2D);
+	StickMouse = MakeAction(this, TEXT("IA_StickMouse"), EInputActionValueType::Axis2D);
+	Poke = MakeAction(this, TEXT("IA_Poke"), EInputActionValueType::Boolean);
+	Lift = MakeAction(this, TEXT("IA_Lift"), EInputActionValueType::Boolean);
+	Pass = MakeAction(this, TEXT("IA_Pass"), EInputActionValueType::Boolean);
 	Context = NewObject<UInputMappingContext>(this, TEXT("IMC_Hokej"));
 
 	// WASD and arrows: a 1D key feeds X; W / Up swizzle it onto Y, S / Down swizzle and negate, A / Left negate.
@@ -83,6 +88,15 @@ void UJamInputMap::Build()
 	Context->MapKey(Brake, EKeys::Gamepad_LeftTriggerAxis);  // left trigger (analog key, actuation threshold 0.5)
 	Context->MapKey(Restart, EKeys::R);
 	Context->MapKey(Restart, EKeys::Gamepad_Special_Left);      // Back / View
+	// R-0013 (lane A16): the stick.
+	Context->MapKey(StickAim, EKeys::Gamepad_Right2D);
+	Context->MapKey(StickMouse, EKeys::Mouse2D);
+	Context->MapKey(Poke, EKeys::LeftMouseButton);
+	Context->MapKey(Poke, EKeys::Gamepad_RightShoulder);
+	Context->MapKey(Lift, EKeys::RightMouseButton);
+	Context->MapKey(Lift, EKeys::Gamepad_LeftShoulder);
+	Context->MapKey(Pass, EKeys::E);
+	Context->MapKey(Pass, EKeys::Gamepad_FaceButton_Left);   // X
 	Context->MapKey(Pause, EKeys::Escape);
 	Context->MapKey(Pause, EKeys::Gamepad_Special_Right);       // Start / Menu
 }
@@ -170,6 +184,13 @@ void UJamPlayerInput::TryBind()
 	EIC->BindAction(M->Check, ETriggerEvent::Completed, this, &UJamPlayerInput::OnCheckDone);
 	EIC->BindAction(M->Brake, ETriggerEvent::Started, this, &UJamPlayerInput::OnBrakeStarted);
 	EIC->BindAction(M->Brake, ETriggerEvent::Completed, this, &UJamPlayerInput::OnBrakeDone);
+	EIC->BindAction(M->StickAim, ETriggerEvent::Triggered, this, &UJamPlayerInput::OnStickAim);
+	EIC->BindAction(M->StickAim, ETriggerEvent::Completed, this, &UJamPlayerInput::OnStickAimDone);
+	EIC->BindAction(M->StickAim, ETriggerEvent::Canceled, this, &UJamPlayerInput::OnStickAimDone);
+	EIC->BindAction(M->StickMouse, ETriggerEvent::Triggered, this, &UJamPlayerInput::OnStickMouse);
+	EIC->BindAction(M->Poke, ETriggerEvent::Started, this, &UJamPlayerInput::OnPokeStarted);
+	EIC->BindAction(M->Lift, ETriggerEvent::Started, this, &UJamPlayerInput::OnLiftStarted);
+	EIC->BindAction(M->Pass, ETriggerEvent::Started, this, &UJamPlayerInput::OnPassStarted);
 	EIC->BindAction(M->Restart, ETriggerEvent::Started, this, &UJamPlayerInput::OnRestartStarted);
 	EIC->BindAction(M->Pause, ETriggerEvent::Started, this, &UJamPlayerInput::OnPauseStarted);
 	BoundPC = PC;
@@ -184,6 +205,44 @@ void UJamPlayerInput::OnMove(const FInputActionValue& V)
 void UJamPlayerInput::OnMoveDone(const FInputActionValue&)
 {
 	Axis = FVector2D::ZeroVector;
+}
+
+void UJamPlayerInput::OnStickAim(const FInputActionValue& V)
+{
+	StickAxis = FVector2D(V.Get<FVector2D>()).ClampAxes(-1.0, 1.0);
+}
+
+void UJamPlayerInput::OnStickAimDone(const FInputActionValue&)
+{
+	StickAxis = FVector2D::ZeroVector;
+}
+
+void UJamPlayerInput::OnStickMouse(const FInputActionValue& V)
+{
+	MouseAimPx += FVector2D(V.Get<FVector2D>());
+	const double L = MouseAimPx.Size();
+	if (L > 200.0) MouseAimPx *= 200.0 / L;
+}
+
+bool UJamPlayerInput::ConsumePokePressed()
+{
+	const bool B = bPokeLatch;
+	bPokeLatch = false;
+	return B;
+}
+
+bool UJamPlayerInput::ConsumePassPressed()
+{
+	const bool B = bPassLatch;
+	bPassLatch = false;
+	return B;
+}
+
+bool UJamPlayerInput::ConsumeLiftPressed()
+{
+	const bool B = bLiftLatch;
+	bLiftLatch = false;
+	return B;
 }
 
 bool UJamPlayerInput::ConsumeShootPressed()

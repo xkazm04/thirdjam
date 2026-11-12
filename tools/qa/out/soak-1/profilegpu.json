@@ -1,0 +1,218 @@
+[
+  {
+    "dump": 1,
+    "label": "soak-1 t6s l2_night 90x45",
+    "frame_ms": 3.089,
+    "frames_all": [
+      0.001,
+      1.385,
+      3.089
+    ],
+    "scene_ms": 2.202,
+    "shadowdepths": [
+      "ShadowDepths 0.408"
+    ],
+    "vsm": [
+      "FVirtualShadowMapArray::BuildPageAllocation 0.128",
+      "VirtualShadowMapMarkPages 0.058",
+      "FVirtualShadowMapArray::BeginMarkPages 0.057"
+    ],
+    "lights": [
+      "Lights 0.061",
+      "Lights 0.018"
+    ],
+    "lumen": [
+      "LumenScreenProbeGather 0.917",
+      "LumenSceneLighting 0.353",
+      "LumenSceneUpdate: 2 card captures 0.031M texels 0.071"
+    ],
+    "basepass": [
+      "BasePass 0.163"
+    ],
+    "post": [
+      "PostProcessing 0.506"
+    ],
+    "nanite": [
+      "Nanite::VisBuffer 0.182"
+    ]
+  },
+  {
+    "dump": 2,
+    "label": "soak-1 t22s l3_neon 120x60",
+    "frame_ms": 2.92,
+    "frames_all": [
+      0.001,
+      1.35,
+      2.92
+    ],
+    "scene_ms": 1.81,
+    "shadowdepths": [
+      "ShadowDepths 0.038"
+    ],
+    "vsm": [
+      "Shadow.Virtual.ProcessInvalidationsGPU 0.001"
+    ],
+    "lights": [
+      "Lights 0.009"
+    ],
+    "lumen": [
+      "LumenScreenProbeGather 0.973",
+      "LumenSceneLighting 0.265",
+      "LumenReflections 0.180"
+    ],
+    "basepass": [
+      "BasePass 0.065"
+    ],
+    "post": [
+      "PostProcessing 0.515"
+    ],
+    "nanite": [
+      "Nanite::VisBuffer 0.159"
+    ]
+  },
+  {
+    "dump": 3,
+    "label": "soak-1 t43s l2_night 90x45",
+    "frame_ms": 4.161,
+    "frames_all": [
+      0,
+      1.831,
+      4.161
+    ],
+    "scene_ms": 2.756,
+    "shadowdepths": [
+      "ShadowDepths 0.525"
+    ],
+    "vsm": [
+      "FVirtualShadowMapArray::BuildPageAllocation 0.194",
+      "VirtualShadowMapProjectionMaskBits 0.089",
+      "VirtualShadowMapProjection(Input:GBuffer) 0.089"
+    ],
+    "lights": [
+      "Lights 0.117",
+      "Lights 0.026"
+    ],
+    "lumen": [
+      "LumenScreenProbeGather 1.250",
+      "LumenSceneLighting 0.441",
+      "LumenSceneUpdate: 2 card captures 0.016M texels 0.100"
+    ],
+    "basepass": [
+      "BasePass 0.139"
+    ],
+    "post": [
+      "PostProcessing 0.671"
+    ],
+    "nanite": [
+      "Nanite::VisBuffer 0.229"
+    ]
+  },
+  {
+    "dump": 4,
+    "label": "soak-2 t6s l2_night",
+    "frame_ms": 4.018,
+    "frames_all": [
+      0.001,
+      2.113,
+      4.018
+    ],
+    "scene_ms": 2.634,
+    "shadowdepths": [
+      "ShadowDepths 0.504"
+    ],
+    "vsm": [
+      "FVirtualShadowMapArray::BuildPageAllocation 0.157",
+      "Shadow.Virtual.ProcessInvalidations 0.070",
+      "VirtualShadowMapProjectionMaskBits 0.054"
+    ],
+    "lights": [
+      "Lights 0.077",
+      "Lights 0.025"
+    ],
+    "lumen": [
+      "LumenScreenProbeGather 1.555",
+      "LumenSceneLighting 0.389",
+      "LumenSceneUpdate: 2 card captures 0.031M texels 0.084"
+    ],
+    "basepass": [
+      "BasePass 0.192"
+    ],
+    "post": [
+      "PostProcessing 0.644"
+    ],
+    "nanite": [
+      "Nanite::VisBuffer 0.223"
+    ]
+  },
+  {
+    "dump": 5,
+    "label": "soak-2 t22s l3_neon",
+    "frame_ms": 5.653,
+    "frames_all": [
+      0.004,
+      3.326,
+      5.653
+    ],
+    "scene_ms": 3.418,
+    "shadowdepths": [
+      "ShadowDepths 0.044"
+    ],
+    "vsm": [
+      "Shadow.Virtual.ProcessInvalidationsGPU 0.004"
+    ],
+    "lights": [
+      "Lights 0.021"
+    ],
+    "lumen": [
+      "LumenScreenProbeGather 2.527",
+      "LumenSceneLighting 0.551",
+      "LumenReflections 0.300"
+    ],
+    "basepass": [
+      "BasePass 0.093"
+    ],
+    "post": [
+      "PostProcessing 1.645"
+    ],
+    "nanite": [
+      "Nanite::VisBuffer 0.228"
+    ]
+  },
+  {
+    "dump": 6,
+    "label": "soak-2 t43s l2_night",
+    "frame_ms": 4.199,
+    "frames_all": [
+      0.001,
+      1.772,
+      4.199
+    ],
+    "scene_ms": 2.705,
+    "shadowdepths": [
+      "ShadowDepths 0.523"
+    ],
+    "vsm": [
+      "FVirtualShadowMapArray::BuildPageAllocation 0.177",
+      "VirtualShadowMapProjectionMaskBits 0.086",
+      "VirtualShadowMapProjection(Input:GBuffer) 0.084"
+    ],
+    "lights": [
+      "Lights 0.112",
+      "Lights 0.022"
+    ],
+    "lumen": [
+      "LumenScreenProbeGather 1.214",
+      "LumenSceneLighting 0.430",
+      "LumenSceneUpdate: 8 card captures 0.032M texels 0.103"
+    ],
+    "basepass": [
+      "BasePass 0.131"
+    ],
+    "post": [
+      "PostProcessing 0.657"
+    ],
+    "nanite": [
+      "Nanite::VisBuffer 0.224"
+    ]
+  }
+]

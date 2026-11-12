@@ -84,3 +84,11 @@
 - running: A16 (seams landed on disk, stick and faceoff in progress), A15 (proof), A17 (PIE proof at the window), A18 (UI kit), A7 (defer LoadCut, library regen), A3 (brain: pickups, passes, stick, goalie), A10 (one-editor GPU soak at 14:30). Device B: P2 polish + P3 clay from 15:15, two editors.
 - blocked: nothing. Tree: lanes keep breaking each other's compile between windows; R-0003 point 5 re-stated to A18.
 - operator items: Hyper3D licence wording for shipping Rodin output; the voice test needs a human at device B's mic; skim Game/Content/Barks/REVIEW.md for cuts.
+
+## H8.4 (14:28) review pages published; 14:30 link is the Director's
+- A19 done (commit d157c37): `tools/review/build.mjs`, `apply-barks.mjs`, 18 tests. Both pages read in full by the Director before publishing and published as private artifacts for the operator: feel proposals https://claude.ai/artifact/2G6QcjRc4KxJvq7FXecB4m, bark bank (1,340 lines) https://claude.ai/artifact/CGLHDhkkCAbf7z9B7TVVng. Decisions come back as JSON exports; the Director applies them with `apply-barks.mjs`.
+- 14:30 window: one link of the shared tree by the Director for A16, A18, A3, A7 (all on disk, uncommitted). Then: A10 soak alone 14:30-14:50 (editor on 8010), A16 headless tests meanwhile, A16 + A18 PIE proofs 14:50-15:00. Full gate, commit and H9 Shipping package at the 15:00 window if green.
+
+## H9.1 (15:08) B-to-A-0017: main compiles only as the whole shared tree; the full commit comes at 15:30
+- 5760168 carries the two seam headers (`JamModifiers.h`, `JamRuleHooks.h`) and the cook-list fix for 0015. A clean worktree build of 5760168 still fails (over 100 errors from `JamCartridge.cpp` on): the A14/A15/A17 commits were cut from a tree whose other files (A16's sim, cartridge helpers) were never committed, so `main` between 7b01f03 and now builds only with device A's working tree. Cause: per-lane commits from one shared tree.
+- Fix: at the 15:30 window the Director commits the whole working tree after the gate's build step passes, verifies it in a clean worktree (`.claude/worktrees/clean-main`) before pushing, and from then on every push to main is preceded by that clean build (R-0022 to follow). B: do not rebuild on main before the push that follows "clean build PASS" in this file.

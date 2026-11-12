@@ -49,6 +49,11 @@ namespace JamAI
 		bool bShoot = false;
 		bool bCheck = false;
 		bool bBrake = false;
+		// R-0013 / R-0017 (lane A16's FJamInput): pass, stick aim (|Stick| <= 1 of stick reach, zero = no aim), poke, lift
+		bool bPass = false;
+		FVec2 Stick;
+		bool bPoke = false;
+		bool bLift = false;
 	};
 
 	// lane A3: how well one side's bots play. The defaults are A2's brain, which is what the human's teammates play at every
@@ -62,6 +67,17 @@ namespace JamAI
 		int LeadFrames = 30;           // cap of the lead on a moving puck
 		bool bIntercept = false;       // lead by an intercept solve (puck path vs own top speed) instead of dist / 8
 		bool bUseAimCone = false;      // knows the sim's aim assist: facing inside shot.aim_cone_deg counts as on target
+		// R-0017 (phase 2): stick and pass use
+		int PokeFrames = -1;           // poke once an opposing carrier's puck has been inside blade reach this many frames (-1 = never pokes)
+		bool bLift = false;            // stick-lifts an opposing carrier at contact range
+		bool bPassOut = false;         // passes (FJamAIInput::bPass) to an open teammate when a defender is within 2 m
+		bool bReadLanes = false;       // the support cuts the pass lane between the opposing carrier and its nearest teammate
+		bool bSeekPickups = false;
+		// R-0013 draws (opposing centre only): DrawJumpPct of faceoffs it moves early in the countdown (loses the draw);
+		// DrawPressPct of faceoffs it takes the draw DrawPressFrames after the drop (else the sim's own bot timing, 6-18 frames)
+		int DrawJumpPct = 0;
+		int DrawPressPct = 0;
+		int DrawPressFrames = 8;     // detours for a pickup within 8 m (never while carrying, never when the puck is nearer)
 		bool bBlockShots = true;       // the back steps onto the path of a shot on its net
 		double BlockMinDistM = 0.0;    // ... only of a shot taken at least this far from the net (rookie: long shots only)
 		bool bClearLane = false;       // holds a shot while a defender stands in the lane puck -> goal (within 1.2 m of the line)
@@ -76,6 +92,10 @@ namespace JamAI
 		FJamBotSkill K;
 		K.ShootExtraM = 30.0;
 		K.LeadFrames = 60;
+		K.PokeFrames = 6;      // R-0017: pokes after the puck has sat 6 frames inside blade reach
+		K.bLift = true;
+		K.bPassOut = false;    // 15:13 sweep: pro passing kept the puck from the human past 600 frames after faceoffs (HumanHasSomethingToDo); all_star passes
+		K.bReadLanes = true;
 		K.bIntercept = true;
 		K.bUseAimCone = true;
 		return K;
@@ -121,6 +141,10 @@ namespace JamAI
 		bool bCanShoot = false;   // the sim's shot gate: in reach, facing within 60 deg, cooldown over
 		bool bHasPuck = false;
 		bool bDown = false;       // knocked down
+		bool bCanPoke = false;    // R-0017: poke ready (cooldown over, no open window, can act)
+		bool bCanLift = false;    // R-0017: lift ready
+		bool bCentre = false;     // R-0013: takes the faceoff draw
+		bool bNoShoot = false;    // R-0019: standing inside a no_shoot zone (UJamZoneSystem::BlocksShot): never shoots from here
 	};
 
 	// Read-only view of the simulation for one frame.
@@ -145,6 +169,24 @@ namespace JamAI
 		int32_t IntentKind = 0;
 		int32_t IntentTarget = -1;      // skater index the intent is aimed at, -1 = every teammate
 		int32_t IntentFramesLeft = 0;
+		// R-0017: stick facts, the carrier, and the pickups lying on the ice (filled by the game mode from UJamEffectSystem; none headless)
+		bool bFaceoffPhase = false;     // R-0013: the faceoff countdown runs (everyone holds; a centre that presses anything loses the draw)
+		int FaceoffCountdown = 0;       // frames left of it
+		bool bDrawOpen = false;         // R-0013: the faceoff draw is open (first clean stick input wins)
+		int FramesSinceDrop = -1;       // frames since the drop while the draw is open (-1 unknown; set by FJamSimAdapter::View)
+		int Carrier = -1;               // UJamSim::CarrierIndex: a skater that can act with the puck within shot reach, else -1
+		double SkaterRadius = 0.4;
+		double StickReach = 1.6;        // game.stick.reach_m
+		double LiftRange = 1.0;         // game.stick.lift_range_m
+		static constexpr int kMaxPickups = 8;
+		int NumPickups = 0;
+		int PickupKind[kMaxPickups] = {};   // index of the kind in the cut's pickup list (the brain does not read it)
+		FVec2 PickupPos[kMaxPickups];
+		// R-0019: slow-ice zones as circles (rect zones by their half diagonal), from the game mode's UJamZoneSystem; none headless
+		static constexpr int kMaxSlowIce = 8;
+		int NumSlowIce = 0;
+		FVec2 SlowIceCentre[kMaxSlowIce];
+		double SlowIceRadius[kMaxSlowIce] = {};
 		// Own goal of team t: (t == 0 ? -GoalX : +GoalX, 0).
 		FVec2 OwnGoal(int Team) const { return FVec2(Team == 0 ? -GoalX : GoalX, 0.0); }
 		FVec2 OppGoal(int Team) const { return OwnGoal(1 - Team); }
@@ -187,11 +229,17 @@ namespace JamAI
 		int Stalls = 0;
 		int StallChaser[2] = {-1, -1};
 		ERole Used[kMaxSkaters] = {};
+		int InReach[kMaxSkaters] = {};   // R-0017: frames an opposing carrier's puck has been inside this bot's blade reach
+		void StickPlay(const FJamAIWorld& W, int Id, FJamAIInput& In);
+		bool LastManGoalie(const FJamAIWorld& W, int Id) const;
 
 		// lane A3: reaction delay ring (input of the last kMaxReactionFrames + 1 thinks per skater)
 		FJamAIInput Hist[kMaxSkaters][kMaxReactionFrames + 1] = {};
 		int64_t Tick = 0;
 		FJamAIIntent TeamIntent;
+		int64_t PlayThinks = 0;       // thinks since play resumed (the drop)
+		int Faceoffs = 0;             // faceoff countdowns seen (the draw knobs hash on it)
+		bool bWasFaceoff = false;
 
 		const FJamBotSkill& SkillOf(const FJamAIWorld& W, int Id) const;
 		FVec2 Decide(const FJamAIWorld& W, int Id, bool& bShoot);
@@ -204,6 +252,7 @@ namespace JamAI
 		double ShootRangeM = 40.0;   // bot_hockey.gd 40; bot_hockey_ai.gd 22
 		bool bPeelToMiddle = true;   // bot_hockey.gd peels off the board toward the middle; bot_hockey_ai.gd pushes straight
 		bool bBoardPeel = true;      // lane A2: peel off any board (end boards too); false = the Godot bot exactly
+		int DrawReactionFrames = 12; // lane A3 (R-0013): the scripted human takes the draw this many frames after the drop (a person's reaction)
 		FJamAIInput Think(const FJamAIWorld& W) const;
 	};
 

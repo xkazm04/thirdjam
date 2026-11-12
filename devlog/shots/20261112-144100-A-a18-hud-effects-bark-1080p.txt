@@ -1,0 +1,1 @@
+Effect slot row under the scoreboard (jam.ui.effects preview: bolt icon + label) and an opponent bark in the code-drawn chalk bubble with the orange edge and tail. Lane A18.

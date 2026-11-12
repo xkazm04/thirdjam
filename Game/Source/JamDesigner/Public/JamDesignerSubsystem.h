@@ -106,6 +106,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Jam|Designer") bool ApplyResult(const FJamDesignerResult& Result, FString& OutError);
 
 	UFUNCTION(BlueprintPure, Category = "Jam|Designer") UJamCartridge* GetCurrentCartridge() const { return Current; }
+	// True between a LoadCut and the next frame, when the match rebuild and OnCutChanged run (R-0017: never inside a callback).
+	UFUNCTION(BlueprintPure, Category = "Jam|Designer") bool IsCutApplyPending() const { return bApplyScheduled; }
 	// Makes C current without loading a file (the game mode calls this with the cartridge it booted, so a Director's Call has a base).
 	UFUNCTION(BlueprintCallable, Category = "Jam|Designer") void SetCurrentCartridge(UJamCartridge* C) { Current = C; }
 
@@ -170,6 +172,7 @@ private:
 	UJamEventBus* GetBus() const;
 	bool CallGameMode(const TCHAR* Function, const FString& StringArg, UObject* ObjectArg) const;
 	void Finish(const FJamDesignerResult& Result, const TFunction<void(const FJamDesignerResult&)>& Done);
+	void ScheduleCutApply(const FString& Path);
 
 	friend struct FJamDesignerJob;
 
@@ -185,4 +188,6 @@ private:
 	FString CliExeOverride;
 	bool bCallUsedThisPeriod = false;
 	bool bBusy = false;
+	bool bApplyScheduled = false;
+	FString PendingApplyPath;
 };

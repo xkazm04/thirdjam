@@ -190,7 +190,7 @@ bool FJamWaitForMatch::Update()
 		Test->TestTrue(TEXT("match started on the regular cut"), GM->GetCartridge() && GM->GetCartridge()->Id == TEXT("hockey-regular"));
 		UJamDirectorsCallController* Ctl = W->GetSubsystem<UJamDirectorsCallController>();
 		Test->TestTrue(TEXT("Director's Call controller is active in the rink"), Ctl && Ctl->IsActive());
-		Test->TestTrue(TEXT("TAKE 1 card shown"), Ctl && Ctl->GetOverlay() && Ctl->GetOverlay()->GetTakeCardText() == TEXT("TAKE 1"));
+		Test->TestTrue(TEXT("MATCH 1 card shown"), Ctl && Ctl->GetOverlay() && Ctl->GetOverlay()->GetTakeCardText() == TEXT("MATCH 1"));
 		if (Ctl)
 		{
 			Ctl->Pause();

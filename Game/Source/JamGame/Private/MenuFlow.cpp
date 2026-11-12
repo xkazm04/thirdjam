@@ -1,6 +1,7 @@
 #include "MenuFlow.h"
 #include "JamCartridge.h"
 #include "JamJson.h"
+#include "Progression.h"
 #include "Kismet/GameplayStatics.h"
 #include "HAL/IConsoleManager.h"
 #include "Misc/FileHelper.h"
@@ -34,6 +35,8 @@ void UJamMenuFlow::ReturnToMenu(UObject* WorldContext)
 {
 	UGameplayStatics::SetGamePaused(WorldContext, false);
 	UE_LOG(LogJamMenu, Log, TEXT("JAMMENU return to menu"));
+	// Lane A17: back at the menu the season run ends (its results stay); a cut chosen from the list is a free play.
+	if (UJamProgression* P = UJamProgression::Get(WorldContext)) P->EndSeasonRun();
 	UGameplayStatics::OpenLevel(WorldContext, FName(MenuMap), true);
 }
 

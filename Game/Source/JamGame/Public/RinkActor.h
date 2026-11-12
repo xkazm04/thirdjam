@@ -50,8 +50,12 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UStaticMeshComponent> BeaconNeg;
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UProceduralMeshComponent> Nets;
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UProceduralMeshComponent> Obstacles;
-	// C-0005 / A15: flat zone decals on the ice (game.rink.zones), one section pair (fill, rim) per zone kind.
+	// C-0005 / A15: flat zone decals on the ice (game.rink.zones), one section pair (fill, rim) per zone kind. Fallback only since
+	// B-to-A-0016 (lane A21): a zone whose /JamAssets/Look/MI_Zone_<kind> exists is drawn as a ZoneQuads entry instead.
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UProceduralMeshComponent> Zones;
+	// B-to-A-0016: one engine plane per visible zone with a dynamic MI_Zone_<kind> (scalars Circle, Strength), 0.2 cm above the ice,
+	// no shadow, no collision, stencil 0; scaled to (w, d, 1) m or (2r, 2r, 1) m so the material reads the zone's size from the UVs.
+	UPROPERTY(Transient, VisibleAnywhere, Category = "Jam|Rink") TArray<TObjectPtr<UStaticMeshComponent>> ZoneQuads;
 	// Behind the +x goal line (team 0 scores here) and behind the -x line (team 1 scores here).
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UBoxComponent> GoalTriggerPos;
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UBoxComponent> GoalTriggerNeg;
@@ -59,6 +63,15 @@ public:
 	// The dynamic instances, so look tiers and the Designer can set Wet / Scuff / Emissive / TeamColour.
 	UPROPERTY(Transient, BlueprintReadOnly, Category = "Jam|Rink") TObjectPtr<UMaterialInstanceDynamic> IceMid;
 	UPROPERTY(Transient, BlueprintReadOnly, Category = "Jam|Rink") TObjectPtr<UMaterialInstanceDynamic> TrimMid;
+	UPROPERTY(Transient, BlueprintReadOnly, Category = "Jam|Rink") TObjectPtr<UMaterialInstanceDynamic> TrimOrangeMid;
+
+	// B-to-A-0018 point 5 (lane A21): the trim strips' Emissive, per tier from ULookTierSwitcher (night 30, clay 12); Build reads it,
+	// SetTier pushes a change. Only B's MI_Trim_Blue / MI_Trim_Orange take it; the placeholder keeps its own scale and the beacon stays at 40.
+	UFUNCTION(BlueprintCallable, Category = "Jam|Rink")
+	void SetTrimEmissive(float Emissive);
+
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	int32 GetZoneQuadCount() const { return ZoneQuads.Num(); }
 
 	// The rounded-rectangle outline used for the ice and the boards (rink metres, counter-clockwise from +x).
 	static void Outline(double LengthM, double WidthM, double CornerM, int32 ArcSegments, TArray<FVector2D>& Out);
@@ -67,4 +80,5 @@ private:
 	UMaterialInterface* LoadMat(const TCHAR* Path) const;
 	UMaterialInterface* LoadLook(const TCHAR* LookName, const TCHAR* FallbackPath, bool* bOutFromLook = nullptr) const;
 	bool bLookIce = false;
+	bool bLookTrim = false;
 };

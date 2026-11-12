@@ -243,11 +243,11 @@ bool FJamFxNaming::RunTest(const FString&)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamHudText, "Jam.Hud.Text", EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 bool FJamHudText::RunTest(const FString&)
 {
-	TestEqual(TEXT("take"), UJamHudWidget::FormatTake(2), FString(TEXT("TAKE 2")));
+	TestEqual(TEXT("take"), UJamHudWidget::FormatTake(2), FString(TEXT("PERIOD 2")));
 	TestEqual(TEXT("timer 3:00"), UJamHudWidget::FormatTimer(180 * 60), FString(TEXT("3:00")));
 	TestEqual(TEXT("timer rounds up"), UJamHudWidget::FormatTimer(59), FString(TEXT("0:01")));
-	TestEqual(TEXT("win card"), UJamHudWidget::CardFor(EJamPhase::Win), FString(TEXT("THAT'S A WRAP")));
-	TestEqual(TEXT("lose card"), UJamHudWidget::CardFor(EJamPhase::Lose), FString(TEXT("RETAKE?")));
+	TestEqual(TEXT("win card"), UJamHudWidget::CardFor(EJamPhase::Win), FString(TEXT("YOU WIN")));
+	TestEqual(TEXT("lose card"), UJamHudWidget::CardFor(EJamPhase::Lose), FString(TEXT("REMATCH?")));
 	TestTrue(TEXT("no card in play"), UJamHudWidget::CardFor(EJamPhase::Play).IsEmpty());
 	return true;
 }
@@ -277,8 +277,8 @@ bool FJamCameraInsideBoards::RunTest(const FString&)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamHudRules, "Jam.Hud.RuleAndHints", EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 bool FJamHudRules::RunTest(const FString&)
 {
-	TestEqual(TEXT("first to"), UJamHudWidget::FormatTake(1, 3), FString(TEXT("TAKE 1: first to 3")));
-	TestEqual(TEXT("timer rule"), UJamHudWidget::FormatTake(1, 0), FString(TEXT("TAKE 1")));
+	TestEqual(TEXT("first to"), UJamHudWidget::FormatTake(1, 3), FString(TEXT("PERIOD 1: first to 3")));
+	TestEqual(TEXT("timer rule"), UJamHudWidget::FormatTake(1, 0), FString(TEXT("PERIOD 1")));
 	FJamPresentationFrame F;
 	F.SimFrame = 100;
 	TestTrue(TEXT("hint at 100"), UJamHudWidget::ShowControlsHint(F));

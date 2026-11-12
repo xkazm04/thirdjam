@@ -1,0 +1,1 @@
+Faceoff countdown preview (jam.ui.faceoff 400): the chalk ring with the seconds left, DROP follows at zero; the own-net marker muted. Lane A18.

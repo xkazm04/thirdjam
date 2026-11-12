@@ -1,0 +1,1 @@
+0.6 s after jam.pausemenu restart: lane A16's faceoff countdown ring at 1 and the controls strip are up, but the opening TAKE card is not: the restart's card request lands on the new frame count before the reset is seen, so the overlay cleared it. Fixed in code after this shot (the overlay opens the card itself on a frame reset); proof at the next link. Lane A18.

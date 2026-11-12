@@ -2,7 +2,7 @@
 // Bot tournament (lane A2): N headless bot-vs-bot matches per cartridge and seed range; one JSON line per match,
 // then a summary table and one summary JSON line last.
 //
-//   node tools/tournament/run.mjs --cartridges hockey.regular,hockey.arena.small --seeds 1-20
+//   node tools/tournament/run.mjs --cartridges hockey.regular,hockey.arena.large --seeds 1-20
 //        [--mode playerbot|playerbot_ai|brain|idle] [--runner native|ue] [--sim jam|ref] [--max-frames 36000] [--out file.jsonl] [--uproject <path>]
 //
 // Runners (same engine-free sources, same output):
@@ -42,7 +42,7 @@ const PASSED = {
   puck: ['radius_m', 'max_speed', 'drag'],
   shot: ['reach_m', 'speed', 'cooldown_frames', 'aim_cone_deg'],
   rules: ['mode', 'score_to_win', 'timer_frames', 'goal_pause_frames'],
-  ai: ['yield_margin_m', 'yield_radius_m', 'hold_radius_m', 'speed_scale', 'red_skill'],
+  ai: ['difficulty', 'yield_margin_m', 'yield_radius_m', 'hold_radius_m', 'speed_scale', 'red_skill'],
 };
 
 // Cartridge -> flat "k=v;..." for FJamMatchConfig::Parse. Absent keys stay absent (the C++ side holds DEFAULTS.md).
@@ -64,10 +64,10 @@ export function flatten(cart) {
 
 function newestMtime(files) { return Math.max(...files.map((f) => statSync(f).mtimeMs)); }
 
-function buildNative() {
+export function buildNative() {
   const exe = join(outDir, 'jam_tournament.exe');
-  const sources = [join(here, 'native', 'main.cpp'), join(src, 'AI', 'JamAICore.cpp'), join(src, 'AI', 'JamBotMatch.cpp'), join(src, 'AI', 'JamBotRefSim.cpp')];
-  const headers = [join(src, 'AI', 'JamAICore.h'), join(src, 'AI', 'JamBotMatch.h'), join(src, 'AI', 'JamBotRefSim.h')];
+  const sources = [join(here, 'native', 'main.cpp'), join(src, 'AI', 'JamAICore.cpp'), join(src, 'AI', 'JamBotMatch.cpp'), join(src, 'AI', 'JamBotRefSim.cpp'), join(src, 'AI', 'DifficultyProfile.cpp')];
+  const headers = [join(src, 'AI', 'JamAICore.h'), join(src, 'AI', 'JamBotMatch.h'), join(src, 'AI', 'JamBotRefSim.h'), join(src, 'AI', 'DifficultyProfile.h')];
   if (existsSync(exe) && statSync(exe).mtimeMs > newestMtime([...sources, ...headers])) return exe;
   const cxx = process.env.CXX || ['C:/Program Files/LLVM/bin/clang++.exe'].find(existsSync) || 'clang++';
   mkdirSync(outDir, { recursive: true });
@@ -78,7 +78,7 @@ function buildNative() {
   return exe;
 }
 
-function engineRoot() {
+export function engineRoot() {
   if (process.env.UE_ROOT && existsSync(process.env.UE_ROOT)) return process.env.UE_ROOT;
   const dflt = 'C:/Program Files/Epic Games/UE_5.9';
   return existsSync(dflt) ? dflt : null;
@@ -141,7 +141,7 @@ function table(rows) {
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const cartridges = arg('cartridges', 'hockey.regular,hockey.arena.small').split(',');
+  const cartridges = arg('cartridges', 'hockey.regular,hockey.arena.large').split(',');
   const seeds = arg('seeds', '1-20');
   const modes = arg('mode', 'playerbot').split(',');
   const runner = arg('runner', 'native');

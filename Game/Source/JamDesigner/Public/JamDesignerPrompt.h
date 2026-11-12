@@ -56,6 +56,8 @@ struct JAMDESIGNER_API FJamDesignerPrompt
 
 	// validateDesignerOutput(base, out) without the cartridge validation (that part is A1's loader).
 	static void CheckDesignerEdits(const FJamJson& Base, const FJamJson& Out, TArray<FString>& OutErrors);
+	// C-0005 (lane A15): the frame-600 guard on one game.rules.hooks[] entry (mirror of hookEndsMatchEarly in validate.mjs).
+	static bool HookEndsMatchEarly(const TSharedPtr<FJamJson>& Hook);
 
 	static FJamDesignerApiReply ParseApiResponse(const FString& Body);
 

@@ -176,3 +176,55 @@ captures (the window handle was not found; `tools/qa/gamerun.ps1` needs a `FindW
     needs `FindWindow` by title. The game's log and the JAMEVENT lines were enough for bug 5.
 11. `StopPIE` after `stop.py` (unregister the tick, drop every PIE reference, `gc.collect()`) never crashed the editor in six runs; the CAMERA-120M pitfall holds and the mitigation works.
 12. The `jam.Cut` console variable accepts an absolute path (`ResolveCartridgePath` returns a `.json` path as is), which is how the QA copies were played without touching `Game/Content/Cartridges`.
+
+## Operator verdict (2026-11-12 14:28 CET, review page docs/reviews/feel-2026-11-12.html, export in feel-2026-11-12.decisions.json)
+All eleven proposals pass. Comment on feel.00: "the stick does not have hockey stick shape, we have no hands on players. The puck does not stick with the stick." Standing note from the
+operator: while the game is not yet playable and watchable, calibrations like these need no approval; the operator reviews calibrations again near the finished phase (R-0021 point 1).
+
+## GPU soak (R-0016 point 6, 14:32-14:36, one editor, the GPU alone)
+
+Setup: the Director's link of 14:31 (`build-ThirdJamEditor-Development-20261112-143113.log`, `Result: Succeeded`), no other editor, cook or build running (checked
+with `tasklist` / `Get-Process` before the start); one editor, `-ModelContextProtocolPort=8010`, log `tools/qa/out/soak-1/editor-soak-1.log`. Driver **NVIDIA 610.88**
+(internal 32.0.16.1088, date 7-22-2026) on the RTX 4090 (adapter 0; adapter 1 is the AMD iGPU, unused). Script `tools/qa/soak.mjs`, two runs (`soak-1`, `soak-2`, `soak.json` each),
+PIE viewport 1280 x 704.
+
+Sequence per run: `jam.ScriptHuman 1`, StartPIE on `/Game/Maps/Rink` with the default cut, `stat gpu`, `ProfileGPU` (dumped to the log), 60 s of play, `jam.playcut hockey.boost` at
+20 s and `jam.playcut hockey.regular` at 40 s (each followed by a HUD capture and a `ProfileGPU`), StopPIE. The log confirms the default cut: `JAMCART loaded
+hockey.regular.cartridge.json id=hockey-regular title="Regular Cut" seed=1 rink=90x45 visual=toy tier=l2_night`, `JAMLOOK tier=l2_night map=/JamAssets/Rigs/LR_L2_Night
+scale=1.000 (rink 90.0 m)`, `rig loaded: 12 local lights scaled`; at 20 s `JAMDESIGNER cut loaded hockey.boost (Neon Rink)` + `JAMLOOK tier=l3_neon ... scale=1.333 (rink 120.0 m)`;
+at 40 s `JAMCART loaded hockey.regular ... rink=90x45 ... tier=l2_night` again. The scripted human played (goals at frames 640 by a bot and 1652 by the human in soak-1).
+
+**Result: no hang, 2 of 2 runs, 2 x 60 s plus two rig switches each.** `grep "GPU crash|DEVICE_HUNG|Device Removed|DXGI_ERROR|TerminateOnGPUCrash"` on the editor log: 0 lines;
+`Virtual Shadow` / `VirtualShadow` warnings: 0; `LogD3D12RHI: Warning` / `LogRHI: Warning`: 0; no `.nv-gpudmp` written. The VSM-off retry was therefore not run.
+
+ProfileGPU (inclusive ms of the PIE frame; the editor-world frame rendered alongside is listed for completeness; `stat gpu` was on but the Slate capture does not include the stat
+canvas, so the totals below are ProfileGPU's, `tools/qa/out/soak-1/profilegpu.json`):
+
+| Dump | Cut / rig | PIE frame total | Scene | ShadowDepths | VSM top row | Lights | Lumen (probe gather / scene lighting) | PostProcessing | editor-world frame |
+|---|---|---|---|---|---|---|---|---|---|
+| soak-1 t6 s | regular, l2_night, 90 x 45 | **3.09 ms** | 2.20 | **0.41** | BuildPageAllocation 0.13 | **0.06** | 0.92 / 0.35 | 0.51 | 1.39 |
+| soak-1 t22 s | boost, l3_neon, 120 x 60 | 2.92 ms | 1.81 | 0.04 | (no VSM pages) | 0.01 | 0.97 / 0.27 (+ reflections 0.18) | 0.52 | 1.35 |
+| soak-1 t43 s | regular, l2_night | 4.16 ms | 2.76 | 0.53 | BuildPageAllocation 0.19 | 0.12 | 1.25 / 0.44 | 0.67 | 1.83 |
+| soak-2 t6 s | regular, l2_night | 4.02 ms | 2.63 | 0.50 | BuildPageAllocation 0.16 | 0.08 | 1.56 / 0.39 | 0.64 | 2.11 |
+| soak-2 t22 s | boost, l3_neon | 5.65 ms | 3.42 | 0.04 | (no VSM pages) | 0.02 | 2.53 / 0.55 (+ reflections 0.30) | 1.65 | 3.33 |
+| soak-2 t43 s | regular, l2_night | 4.20 ms | 2.71 | 0.52 | BuildPageAllocation 0.18 | 0.11 | 1.21 / 0.43 | 0.66 | 1.77 |
+
+Reading: the hardened `LR_L2_Night` costs 0.4-0.5 ms of ShadowDepths and about 0.1 ms of Lights at 1280 x 704, with Lumen screen-probe gather the largest pass (0.9-1.6 ms);
+the whole PIE frame is 3-4 ms on the night rig and 3-6 ms on the neon rig, well inside the 8 ms gate. The morning's two hangs (bug 2, page faults inside `ShadowDepths` of
+`Spot_L2_Night_*`, 10:04 and 10:08) happened with four to five editors and a package cook sharing the GPU and the pre-hardening rig; with the hardened rig and the GPU alone
+nothing reproduces in 120 s and two rig switches. The VSM hypothesis is neither confirmed nor excluded by this soak: the pass still runs (0.5 ms, pages allocated every frame)
+and does not hang alone; the next discriminating test is the same soak with four editors open, with `r.Shadow.Virtual.Enable 0` as the B arm. Editor closed at 14:35:53,
+port 8010 free, no other editor running at any point of the soak.
+
+## Lane A16 calibrations (R-0013, C-0005, R-0021; applied without approval per R-0021 point 1, 2026-11-12 14:38)
+
+| What | Value | Why (measured) |
+|---|---|---|
+| carry: the puck stays on the blade | closes on the blade by min(1, 100 x carry_assist x dt) per substep and moves with the carrier; leaves only on shot, pass, poke, lift or a check | operator feel.00 ("the puck does not stick with the stick"); the 90 deg/s cutoff of C-0005 is dropped; Jam.Core.Stick keeps the puck through an instant 180 at 11 m/s |
+| carry assist gate | only while the puck moves with the carrier (relative speed under 4 m/s), never on the frame a shot or pass leaves | a 14 m/s pass was pulled back to the passer; a tap shot left at 15 instead of 18 m/s |
+| pass lead | flight time solved against the receiver velocity, plus pass_lead_frames (20) of its motion | a fixed 20-frame lead missed a 5 m/s runner by 8 m (0 of 10 seeds) |
+| pass reception | a teammate puck reaching the blade keeps 25 % of its relative speed and is the receiver's | the receiver's own blade deflected every pass (deflection and reception share the 0.6 m blade radius) |
+| deflection | only an aimed stick (stick input that frame) deflects an opponent shot, at 70 % | with passive blades every bot back became a goalie: the A3 sweep fell to rookie 30 % (from 90) with 18 human shots per match |
+| draw push | 2.5 m/s back towards the winner's side (was 4) | the player bot never presses at the draw; after a lost draw it needed 660-867 frames to the first touch (gate: 600) |
+| charged shot | tap 17.85, half hold 21.81, full 25.78 m/s (speed 18 + bonus 8, cap 30) | measured in Jam.Core.FeelDepth |
+| faceoff countdown | 90 frames, clock paused, puck pinned, early press loses, bot centres press at 6..18 frames, passive human = seeded coin | R-0013 point 2; the brain patch (A3) replaces the sim's bot timing |

@@ -115,3 +115,47 @@ None.
 | `bark` | the bark system picks a line | speaker skater index | speaker | 0 | the situation (`goal_for`, `goal_against`, `check_landed`, `check_received`, `steal`, `stall`, `near_miss`, `faceoff`, `win`, `lose`, `directors_call`, `signal_ack_*`, `praise_reply`) |
 | `signal` | the human issues a team signal (keys 1-4, d-pad, later voice) | the human's skater | human | frames / 600 | `defend` / `space` / `pass` / `praise` |
 The bark text itself travels in the bark system's own side channel, not in the payload. The `TextToSpeech` engine plugin (Flite, offline) is enabled for `jam.BarkVoice 1`.
+
+## Additions (C-0005, lane A16 registered on the bus, H7)
+| Event | When | Who | Where | Strength | Kind |
+|---|---|---|---|---|---|
+| `announce` | a rule hook action `Announce` | -1 | zero | 0 | `rule` (the text rides the side channel `FJamSimEvent::Text`; the HUD shows it on the scoreboard line) |
+| `pass` | a lead pass leaves the stick (lane A16) | the passer | puck position | pass speed / `game.puck.max_speed` | none |
+| `effect_start` | an effect becomes active (lane A14) | target skater, or -1 | that skater (or zero) | 0 | the effect id |
+| `effect_end` | an effect expires (lane A14) | target skater, or -1 | that skater (or zero) | 0 | the effect id |
+| `zone_enter` | a skater enters a rink zone (lane A15) | the skater | the skater | 0 | the zone id |
+| `zone_exit` | a skater leaves a rink zone (lane A15) | the skater | the skater | 0 | the zone id |
+Constants: `JamEvents::Announce`, `Pass`, `EffectStart`, `EffectEnd`, `ZoneEnter`, `ZoneExit`. Asset names follow the rule: `NS_pass`, `MS_pass`, ... .
+
+## Additions (R-0013, lane A16 registered on the bus, H7.5): the stick and the faceoff
+| Event | When | Who | Where | Strength | Kind |
+|---|---|---|---|---|---|
+| `poke` | a poke check (left mouse / RB) | the poker | the blade | 1 when it took the puck from an opponent, else 0 | `clean` (took the puck) / `miss` (the window ran out next to a carrier: the poker stumbles) |
+| `lift` | a stick lift (right mouse / LB) | the lifter | the carrier (clean) or the blade (miss) | 1 clean, 0 miss | `clean` / `miss` |
+| `foul` | a body check from behind or on a skater without the puck, with `rules.penalties` on | the fouler | contact point | the check strength | `foul_from_behind` / `foul_no_puck` |
+| `faceoff` | now carries a Kind: the puck goes live at the drop, then the draw resolves | `drop`: -1; `won` / `lost`: the centre | the dot | 0 | `drop` / `won` / `lost` |
+A faceoff therefore emits up to three `faceoff` events (drop, won, lost) within `UJamSim::DrawWindowFrames` of each other. Consumers that count faceoffs should count `Kind == drop`.
+| `shot_blocked` | a shot refused inside a `no_shoot` zone (R-0019) | the shooter | the puck | 0 | the zone id |
+Constants: `JamEvents::Poke`, `Lift`, `Foul`, `ShotBlocked`.
+
+## Proposed by B, accepted (B-to-A-0012, lane A21, H9.3): the `Variant` input, and what the binder sets
+Where an event's `Kind` changes the picture or the sound, B makes **one asset with one extra input** instead of an asset per kind: Niagara user parameter **`User.Variant`**
+(float) and MetaSound float input **`Variant`**, default 0 (a binder that sets nothing gets the first kind). `UJamEffectsBinder::VariantFor(Event, Kind)` is the one mapping:
+
+| Event | `Kind` -> `Variant` |
+|---|---|
+| `poke`, `lift` | `clean` 0, `miss` 1 |
+| `faceoff` | `drop` 0, `won` 1, `lost` 2 |
+| `foul` | `foul_from_behind` 0 (single whistle), `foul_no_puck` 1 (double whistle); 2 (long whistle with a buzzer) is free for a harder foul if a ruling adds one |
+| `signal` | `defend` 0, `space` 1, `pass` 2, `praise` 3 (the order of `EJamTeamIntent` in `SignalIntent.h`, confirmed on A's side) |
+| every other event | 0 |
+
+The binder also: plays `bark`, `signal` and `announce` as **2D** sounds (not at `Where`); for `zone_enter` / `zone_exit` (Kind = zone **id**) sends the zone **kind's** colour as
+`User.Colour`: `slow_ice` (0.35, 0.65, 1.0), `fast_ice` (0.2, 1.0, 0.8), `bumper` (1.0, 0.35, 0.1), `no_shoot` (1.0, 0.1, 0.2), `boost_only` (0.9, 0.8, 0.2) (the same colours
+are on B's `MI_Zone_<kind>`); for `pickup_spawn` / `pickup_take` / `effect_start` / `effect_end` sends the pickup kind's colour (`speed` (0.1, 0.9, 1.0), `precision` (1.0, 0.2, 0.9),
+`heavy_puck` (0.55, 0.3, 1.0), `big_puck` (1.0, 0.75, 0.1), `reverse_other` (1.0, 0.15, 0.1), custom and unknown white); `pass` sends `Strength` = speed / `game.puck.max_speed` (the sim
+already does); `shot_blocked` reuses `NS_foul` / `MS_foul` at Variant 0 until B makes `NS_shot_blocked` / `MS_shot_blocked` (the binder looks for those first); `period` is silent.
+Asset names, as on `dev-b`: `NS_` / `MS_` for `poke`, `lift`, `foul`, `faceoff`, `pass`, `effect_start`, `effect_end`, `zone_enter`, `zone_exit`; `MS_announce`, `MS_bark`, `MS_signal`
+(sound only); `NS_pickup_idle` (the pickup actor, `User.Colour`); `NS_blade_spray` (the toy figure, `User.Strength` = |lean| / 35 deg, 0..1). `lose`, `bark`, `signal` and
+`announce` are **sound-only by design** (`UJamEffectsBinder::IsSoundOnlyEvent`): the binder skips their Niagara lookup, so a bot match logs no "missing NS_" line for them
+(Director, H9.4). A custom effect id on `effect_start` / `effect_end` gets a white burst: colouring it by the effect's `kind` needs the kind in the payload, a C-0003 addition for the Director. (The Director signs this in a ruling.)

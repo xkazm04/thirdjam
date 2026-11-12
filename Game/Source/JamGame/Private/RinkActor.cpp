@@ -7,6 +7,8 @@
 #include "UObject/ConstructorHelpers.h"
 #include "Materials/MaterialInterface.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "LookTierSwitcher.h"
+#include "Engine/World.h"
 
 namespace
 {
@@ -256,9 +258,20 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 			D->SetScalarParameterValue(TEXT("Emissive"), 4.f);
 			return D;
 		};
-		Trim->SetMaterial(0, TrimMat(TEXT("MI_Trim_Blue"), Blue));
-		TrimOrange->SetMaterial(0, TrimMat(TEXT("MI_Trim_Orange"), Orange));
-		TrimMid = Cast<UMaterialInstanceDynamic>(Trim->GetMaterial(0));
+		// B-to-A-0018 point 5 (lane A21): the two strips are always a dynamic instance so the per-tier Emissive can be set (B's
+		// MI_Trim_Blue / MI_Trim_Orange: night 30, clay 12, from the switcher); the placeholder keeps its own 4.
+		{
+			bool bLookBlue = false, bLookOrange = false;
+			UMaterialInterface* BlueBase = LoadLook(TEXT("MI_Trim_Blue"), TrimMaterialPath, &bLookBlue);
+			UMaterialInterface* OrangeBase = LoadLook(TEXT("MI_Trim_Orange"), TrimMaterialPath, &bLookOrange);
+			bLookTrim = bLookBlue && bLookOrange;
+			TrimMid = Cast<UMaterialInstanceDynamic>(bLookBlue ? UMaterialInstanceDynamic::Create(BlueBase, this) : TrimMat(TEXT("MI_Trim_Blue"), Blue));
+			TrimOrangeMid = Cast<UMaterialInstanceDynamic>(bLookOrange ? UMaterialInstanceDynamic::Create(OrangeBase, this) : TrimMat(TEXT("MI_Trim_Orange"), Orange));
+			Trim->SetMaterial(0, TrimMid);
+			TrimOrange->SetMaterial(0, TrimOrangeMid);
+			const ULookTierSwitcher* Look = GetWorld() ? GetWorld()->GetSubsystem<ULookTierSwitcher>() : nullptr;
+			SetTrimEmissive(Look ? Look->GetTrimEmissiveFor(Game.Look.Tier) : ULookTierSwitcher::DefaultTrimEmissiveFor(Game.Look.Tier));
+		}
 
 		// R-0002: far-net beacon posts, d 12 cm, 8 m tall, 1 m behind each net (basic cylinder: 100 cm across and tall).
 		const UMaterialInterface* BeaconMat = TrimMat(TEXT("MI_Trim_Beacon"), Game.Look.TrimColour);
@@ -306,13 +319,58 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 	// Zones (C-0005 / A15): flat decals at 0.8 cm (above the markings at 0.6), one fill section and one rim section per zone kind,
 	// in the order the kinds first appear. Circle = disc + 25 cm rim ring; rect = quad + 25 cm border of four strips.
 	int32 ZonesDrawn = 0;
+	int32 ZoneQuadsDrawn = 0;
 	{
+		// B-to-A-0016 (lane A21): a zone whose MI_Zone_<kind> exists becomes one engine plane (100 x 100 cm, UVs 0..1) scaled to the
+		// zone's bounding box, 0.2 cm above the ice, with a dynamic instance carrying Circle (1 circle / 0 rect) and Strength. No shadow,
+		// no collision, stencil 0. A kind without its instance on this machine falls through to A's decal below, so play never waits on an asset.
+		for (UStaticMeshComponent* Q : ZoneQuads) if (Q) Q->DestroyComponent();
+		ZoneQuads.Reset();
+		UStaticMesh* PlaneMesh = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Plane.Plane"));   // engine content, cached after the first load; not held across GC
+		TMap<FName, UMaterialInterface*> ZoneLooks;   // kind -> B's instance (null = missing, looked up once per Build)
+		auto ZoneLookFor = [this, &ZoneLooks](const FName& Kind) -> UMaterialInterface*
+		{
+			if (UMaterialInterface** Found = ZoneLooks.Find(Kind)) return *Found;
+			bool bLook = false;
+			UMaterialInterface* Mi = LoadLook(*FString::Printf(TEXT("MI_Zone_%s"), *Kind.ToString()), TEXT("/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial"), &bLook);
+			if (!bLook)
+			{
+				static TSet<FName> Logged;
+				if (!Logged.Contains(Kind)) { Logged.Add(Kind); UE_LOG(LogJamSim, Log, TEXT("JAMRINK zone look /JamAssets/Look/MI_Zone_%s missing (logged once): A's decal stands in"), *Kind.ToString()); }
+			}
+			ZoneLooks.Add(Kind, bLook ? Mi : nullptr);
+			return bLook ? Mi : nullptr;
+		};
+
 		struct FZoneKindBuf { FName Kind; FMeshBuf Fill, Rim; double StrengthSum = 0; int32 Count = 0; };
 		TArray<FZoneKindBuf> Kinds;
 		const double ZH = 0.8, RimW = 25.0;
 		for (const FJamZoneConfig& Zn : R.Zones)
 		{
 			if (!Zn.bVisible) continue;
+			const bool bCircle = Zn.Shape != FName(TEXT("rect"));
+			if (UMaterialInterface* Look = PlaneMesh ? ZoneLookFor(Zn.Kind) : nullptr)
+			{
+				UStaticMeshComponent* Q = NewObject<UStaticMeshComponent>(this);   // unique auto name: a rebuild never clashes with a quad that is still being destroyed
+				Q->SetupAttachment(RootComponent);
+				Q->SetMobility(EComponentMobility::Movable);
+				Q->SetStaticMesh(PlaneMesh);
+				Q->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+				Q->SetCastShadow(false);
+				Q->SetRenderCustomDepth(false);
+				Q->SetCustomDepthStencilValue(0);
+				const double SizeX = bCircle ? Zn.R * 2.0 : Zn.W, SizeY = bCircle ? Zn.R * 2.0 : Zn.D;   // the plane is 1 m, so metres are the scale
+				Q->SetRelativeLocation(FVector(Zn.X * UU, Zn.Z * UU, 0.2));
+				Q->SetRelativeScale3D(FVector(FMath::Max(SizeX, 0.01), FMath::Max(SizeY, 0.01), 1.0));
+				UMaterialInstanceDynamic* D = UMaterialInstanceDynamic::Create(Look, this);
+				D->SetScalarParameterValue(TEXT("Circle"), bCircle ? 1.f : 0.f);
+				D->SetScalarParameterValue(TEXT("Strength"), static_cast<float>(FMath::Clamp(Zn.Strength, 0.0, 1.0)));
+				Q->SetMaterial(0, D);
+				Q->RegisterComponent();
+				ZoneQuads.Add(Q);
+				++ZoneQuadsDrawn; ++ZonesDrawn;
+				continue;
+			}
 			FZoneKindBuf* K = Kinds.FindByPredicate([&Zn](const FZoneKindBuf& E) { return E.Kind == Zn.Kind; });
 			if (!K) { K = &Kinds.AddDefaulted_GetRef(); K->Kind = Zn.Kind; }
 			K->StrengthSum += Zn.Strength; ++K->Count; ++ZonesDrawn;
@@ -406,7 +464,7 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 	// Obstacles (M3b): boxes and pillars, 1.2 m tall like the boards (section 0); C-0005 / A15 adds goal shields (section 0,
 	// a wall Size wide across the rink, 0.3 m deep) and bumpers (a pillar in its own magenta section 1).
 	{
-		FMeshBuf Bump;
+		FMeshBuf Bump, Shield;
 		auto Cylinder = [](FMeshBuf& Buf, const FVector& C, double Hs)
 		{
 			const int32 Seg = 20;
@@ -432,9 +490,9 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 			}
 			else if (O.Kind == FName(TEXT("goal_shield")))
 			{
-				// Size metres wide along the rink's z (Unreal Y), 0.3 m deep along x, standing across the rink.
+				// Size metres wide along the rink's z (Unreal Y), 0.3 m deep along x, standing across the rink. Own section 2 (B-to-A-0016: MI_Toon_GoalShield).
 				const double Hd = 0.15 * UU;
-				B.Box(C - FVector(Hd, Hs, 0), C + FVector(Hd, Hs, BoardHeightM * UU));
+				Shield.Box(C - FVector(Hd, Hs, 0), C + FVector(Hd, Hs, BoardHeightM * UU));
 			}
 			else
 			{
@@ -456,6 +514,20 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 			}
 			Obstacles->SetMaterial(1, BumperMat);
 		}
+		if (Shield.V.Num())
+		{
+			// B-to-A-0016: goal shields in pale grey-white (MI_Toon_GoalShield), stencil 1 like the boards; a tinted basic material stands in.
+			Shield.Commit(Obstacles, 2);
+			bool bLookShield = false;
+			UMaterialInterface* ShieldMat = LoadLook(TEXT("MI_Toon_GoalShield"), TEXT("/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial"), &bLookShield);
+			if (!bLookShield)
+			{
+				UMaterialInstanceDynamic* D = UMaterialInstanceDynamic::Create(ShieldMat, this);
+				D->SetVectorParameterValue(TEXT("Color"), FLinearColor(0.85f, 0.87f, 0.9f));
+				ShieldMat = D;
+			}
+			Obstacles->SetMaterial(2, ShieldMat);
+		}
 	}
 
 	// Goal triggers behind each line (cosmetic markers of the goal volume the simulation uses).
@@ -464,5 +536,13 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 	GoalTriggerNeg->SetRelativeLocation(FVector(-(GL + Depth * 0.5) * UU, 0, NetH * 0.5 * UU));
 	GoalTriggerNeg->SetBoxExtent(FVector(Depth * 0.5 * UU, Hw * UU, NetH * 0.5 * UU));
 
-	UE_LOG(LogJamSim, Log, TEXT("JAMRINK built %gx%g m corner %g goal %g m, %d obstacles, %d zones, outline %d points"), R.LengthM, R.WidthM, R.CornerRadiusM, R.GoalWidthM, R.Obstacles.Num(), ZonesDrawn, Line.Num());
+	UE_LOG(LogJamSim, Log, TEXT("JAMRINK built %gx%g m corner %g goal %g m, %d obstacles, %d zones (%d on B's strips), outline %d points"), R.LengthM, R.WidthM, R.CornerRadiusM, R.GoalWidthM, R.Obstacles.Num(), ZonesDrawn, ZoneQuadsDrawn, Line.Num());
+}
+
+void ARinkActor::SetTrimEmissive(float Emissive)
+{
+	// Only B's trim instances carry the contract's Emissive scale (30 by default); the placeholder's 4 is its own and stays.
+	if (!bLookTrim) return;
+	if (TrimMid) TrimMid->SetScalarParameterValue(TEXT("Emissive"), Emissive);
+	if (TrimOrangeMid) TrimOrangeMid->SetScalarParameterValue(TEXT("Emissive"), Emissive);
 }

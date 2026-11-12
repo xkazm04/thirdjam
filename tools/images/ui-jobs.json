@@ -1,0 +1,156 @@
+{
+  "batch": "ui",
+  "style": "Style: a UI element for an arcade ice-hockey video game in a painted-cel night look: flat saturated paint strokes with soft ink outlines, slate-grey and deep navy darks, chalk-white strokes, electric blue (#1D4ED8) and warm orange (#E8651A) accents only. Film-production motif: clapperboards, slate cards, film counters. The element is drawn once, centred, filling the frame, with a flat TRANSPARENT background (PNG alpha) outside its own shape and nothing else in the picture: no scene, no rink, no texture behind it, no drop shadow. Absolutely no lettering, digits or symbols unless the prompt spells them out. No real brands, teams, leagues, logos or people. Teen-appropriate.",
+  "jobs": [
+    {
+      "name": "panel-9slice",
+      "aspect": "square",
+      "prompt": "A UI panel for 9-slice scaling: one rounded rectangle filling the whole frame with a 4 percent margin, corner radius about 6 percent of the width, filled with flat dark slate (#1C1F26) at full opacity, a 2 percent thick chalk-white painted border with slightly uneven hand-drawn edges, the inside completely flat and uniform so text can sit on it. Nothing else."
+    },
+    {
+      "name": "score-plate",
+      "aspect": "landscape",
+      "prompt": "A scoreboard digit plate in a film-counter style: one horizontal rounded rectangle filling the frame with a 4 percent margin, filled with flat light chalk-grey (#E6E6E2) at full opacity, a thin dark ink border, two small film-counter notches at the left and right edges, the centre completely flat and empty so a large digit can be drawn on it by the game. Nothing else."
+    },
+    {
+      "name": "bubble-left",
+      "aspect": "landscape",
+      "prompt": "A comic speech bubble for a text line: one wide rounded bubble filling the frame with a 6 percent margin on top and sides, flat chalk-white fill (#F4F4F0) at full opacity, a 2 percent thick dark ink outline, and a short pointed tail at the BOTTOM LEFT that points down-left to the speaker below. The inside completely flat and empty. Nothing else."
+    },
+    {
+      "name": "call-card-frame",
+      "aspect": "landscape",
+      "prompt": "A card frame for a 'director's call' dialog: a slate-grey (#2A2E36) rounded card filling the frame with a 3 percent margin, a black-and-white diagonal clapper stripe band across the top 7 percent of the card, a thin chalk-white border, a small chalk megaphone doodle in the top-right corner, and the rest of the card flat and empty for sliders and text. Nothing else."
+    },
+    {
+      "name": "cut-card-frame",
+      "aspect": "landscape",
+      "prompt": "A film-strip frame for a menu card: a horizontal frame filling the picture, dark ink (#0E1014) borders with a row of chalk-white sprocket holes along the top edge and the bottom edge, a thin chalk-white inner edge, and the centre fully TRANSPARENT so a picture shows through. Nothing else."
+    },
+    {
+      "name": "button-normal",
+      "aspect": "landscape",
+      "prompt": "A wide UI button plate: one horizontal rounded rectangle filling the frame with a 6 percent margin, flat dark slate fill (#1C1F26) at full opacity, a thin chalk-white painted border, the centre flat and empty for a label. Nothing else."
+    },
+    {
+      "name": "button-hover",
+      "aspect": "landscape",
+      "prompt": "A wide UI button plate in its highlighted state: one horizontal rounded rectangle filling the frame with a 6 percent margin, flat electric blue fill (#1D4ED8) at full opacity, a thicker chalk-white painted border, a small chalk triangle pointer at the left inside edge, the centre flat and empty for a label. Nothing else."
+    },
+    {
+      "name": "button-pressed",
+      "aspect": "landscape",
+      "prompt": "A wide UI button plate in its pressed state: one horizontal rounded rectangle filling the frame with a 6 percent margin, flat warm orange fill (#E8651A) at full opacity, a thin dark ink border, the centre flat and empty for a label. Nothing else."
+    },
+    {
+      "name": "countdown-ring",
+      "aspect": "square",
+      "prompt": "A film-leader countdown ring: one chalk-white circle outline about 5 percent thick filling the frame with a 6 percent margin, a thinner second ring just inside it, a horizontal and a vertical hairline crossing the circle like a film leader, four small tick marks at the quarter points, the centre fully TRANSPARENT and empty so a large number can be drawn there. Nothing else."
+    },
+    {
+      "name": "icon-cut-regular",
+      "aspect": "square",
+      "prompt": "One flat UI icon centred in the frame: a plain hockey puck seen at a slight angle, chalk-white strokes with a blue accent, inside a thin chalk circle. Nothing else."
+    },
+    {
+      "name": "icon-cut-raw",
+      "aspect": "square",
+      "prompt": "One flat UI icon centred in the frame: a hockey puck with three impact spikes bursting from it, chalk-white strokes with an orange accent, inside a thin chalk circle. Nothing else."
+    },
+    {
+      "name": "icon-cut-boost",
+      "aspect": "square",
+      "prompt": "One flat UI icon centred in the frame: a lightning bolt striking a hockey puck, chalk-white strokes with a blue accent, inside a thin chalk circle. Nothing else."
+    },
+    {
+      "name": "icon-cut-large",
+      "aspect": "square",
+      "prompt": "One flat UI icon centred in the frame: a hockey rink outline (rounded rectangle with a centre line and two circles) with two outward arrows, chalk-white strokes with a blue accent, inside a thin chalk circle. Nothing else."
+    },
+    {
+      "name": "icon-cut-wide",
+      "aspect": "square",
+      "prompt": "One flat UI icon centred in the frame: a very wide, flat hockey rink outline stretched left to right with a centre line, chalk-white strokes with an orange accent, inside a thin chalk circle. Nothing else."
+    },
+    {
+      "name": "icon-cut-directors",
+      "aspect": "square",
+      "prompt": "One flat UI icon centred in the frame: a small clapperboard with its clapper open, chalk-white strokes with blue and orange accents, inside a thin chalk circle. Nothing else."
+    },
+    {
+      "name": "icon-pickup-speed",
+      "aspect": "square",
+      "prompt": "One flat UI icon centred in the frame: a lightning bolt, chalk-white strokes with a blue accent, inside a thin chalk circle. Nothing else."
+    },
+    {
+      "name": "icon-pickup-precision",
+      "aspect": "square",
+      "prompt": "One flat UI icon centred in the frame: a crosshair target with a dot in the middle, chalk-white strokes with an orange accent, inside a thin chalk circle. Nothing else."
+    },
+    {
+      "name": "icon-pickup-heavy",
+      "aspect": "square",
+      "prompt": "One flat UI icon centred in the frame: a blacksmith anvil sitting on a hockey puck, chalk-white strokes with a blue accent, inside a thin chalk circle. Nothing else."
+    },
+    {
+      "name": "icon-signal-defend",
+      "aspect": "square",
+      "prompt": "One flat UI icon centred in the frame: a shield with a hockey stick across it, chalk-white strokes with a blue accent, inside a thin chalk circle. Nothing else."
+    },
+    {
+      "name": "icon-signal-space",
+      "aspect": "square",
+      "prompt": "One flat UI icon centred in the frame: two skater dots moving apart with outward arrows between them, chalk-white strokes with an orange accent, inside a thin chalk circle. Nothing else."
+    },
+    {
+      "name": "icon-signal-pass",
+      "aspect": "square",
+      "prompt": "One flat UI icon centred in the frame: a hockey puck with a curved motion arrow flying from one skater dot to another, chalk-white strokes with a blue accent, inside a thin chalk circle. Nothing else."
+    },
+    {
+      "name": "icon-signal-praise",
+      "aspect": "square",
+      "prompt": "One flat UI icon centred in the frame: a raised hockey glove giving a thumbs-up with two small sparkle stars, chalk-white strokes with an orange accent, inside a thin chalk circle. Nothing else."
+    },
+    {
+      "name": "icon-settings",
+      "aspect": "square",
+      "prompt": "One flat UI icon centred in the frame: a gear wheel, chalk-white strokes with a blue accent, inside a thin chalk circle. Nothing else."
+    },
+    {
+      "name": "icon-voice",
+      "aspect": "square",
+      "prompt": "One flat UI icon centred in the frame: a studio microphone with two small sound waves, chalk-white strokes with an orange accent, inside a thin chalk circle. Nothing else."
+    },
+    {
+      "name": "icon-barks",
+      "aspect": "square",
+      "prompt": "One flat UI icon centred in the frame: a small speech bubble with three dots inside it, chalk-white strokes with a blue accent, inside a thin chalk circle. Nothing else."
+    },
+    {
+      "name": "panel-9slice-v2",
+      "aspect": "square",
+      "prompt": "A UI panel for 9-slice scaling: one rounded rectangle filling the whole frame with a 4 percent margin, corner radius about 6 percent of the width. The rectangle is SOLID and fully OPAQUE: a flat, even dark slate (#1C1F26) paint fill from edge to edge with no hole, no window, no gradient and no texture, and a 2 percent thick chalk-white hand-painted border. Only the area outside the rounded rectangle is transparent. Nothing else."
+    },
+    {
+      "name": "score-plate-v2",
+      "aspect": "landscape",
+      "prompt": "A scoreboard digit plate in a film-counter style: one horizontal rounded rectangle filling the frame with a 4 percent margin. The plate is SOLID and fully OPAQUE: a flat, even light chalk-grey (#E6E6E2) paint fill from edge to edge with no hole, no window, no gradient, and a thin dark ink border, with two small semicircular film-counter notches cut into the left and right edges. Only the area outside the plate is transparent. Nothing else."
+    },
+    {
+      "name": "title-hokej",
+      "aspect": "landscape",
+      "prompt": "A film-slate title card for an arcade ice-hockey game: a slate-grey clapperboard filling the frame, the black-and-white striped clapper across the top, and the big chalk letters HOKEJ written by hand across the middle of the slate, nothing under them. Behind the slate a night hockey rink seen from behind the net: blue and orange trim lights, four spot cones over scuffed ice, no crowd. Only this one word appears: HOKEJ. This card may have a full painted background instead of a transparent one."
+    },
+    {
+      "name": "icon-upscale",
+      "aspect": "square",
+      "prompt": "One flat UI icon centred in the frame: a small rectangle expanding into a larger rectangle with two diagonal arrows pointing outward (a generic upscaling glyph), chalk-white strokes with a blue accent, inside a thin chalk circle. Nothing else."
+    },
+    {
+      "name": "match-card",
+      "aspect": "landscape",
+      "prompt": "A card for the start of an ice-hockey match framed as a film take: a slate-grey clapperboard filling the frame, clapper stripes on top, chalk writing that says only MATCH and a large empty chalk box under it where a number will be drawn by the game, a small hockey puck doodle in the corner. Only the word MATCH appears. This card may have a full painted background (a night rink behind the slate) instead of a transparent one."
+    }
+  ]
+}

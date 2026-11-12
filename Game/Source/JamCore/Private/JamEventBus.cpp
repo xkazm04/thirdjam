@@ -18,13 +18,25 @@ namespace JamEvents
 	const FName Period(TEXT("period"));
 	const FName Bark(TEXT("bark"));
 	const FName Signal(TEXT("signal"));
+	const FName Announce(TEXT("announce"));
+	const FName Pass(TEXT("pass"));
+	const FName EffectStart(TEXT("effect_start"));
+	const FName EffectEnd(TEXT("effect_end"));
+	const FName ZoneEnter(TEXT("zone_enter"));
+	const FName ZoneExit(TEXT("zone_exit"));
+	const FName Poke(TEXT("poke"));
+	const FName Lift(TEXT("lift"));
+	const FName Foul(TEXT("foul"));
+	const FName ShotBlocked(TEXT("shot_blocked"));
 }
 
 TArray<FName> UJamEventBus::GetKnownEvents()
 {
 	return { JamEvents::Shot, JamEvents::Board, JamEvents::Goal, JamEvents::Faceoff, JamEvents::Check,
 		JamEvents::Knockdown, JamEvents::PickupSpawn, JamEvents::PickupTake, JamEvents::Win, JamEvents::Lose, JamEvents::DirectorsCall, JamEvents::Period,
-		JamEvents::Bark, JamEvents::Signal };
+		JamEvents::Bark, JamEvents::Signal,
+		JamEvents::Announce, JamEvents::Pass, JamEvents::EffectStart, JamEvents::EffectEnd, JamEvents::ZoneEnter, JamEvents::ZoneExit,
+		JamEvents::Poke, JamEvents::Lift, JamEvents::Foul, JamEvents::ShotBlocked };
 }
 
 bool UJamEventBus::IsKnownEvent(FName Event)

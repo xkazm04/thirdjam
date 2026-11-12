@@ -15,6 +15,10 @@ class AJamSkater;
 class AJamPuck;
 class UJamBrain;
 class UJamEffectsBinder;
+class UJamRuleSystem;
+class UJamZoneSystem;
+class UJamEffectSystem;
+class AJamPickupActor;
 class UJamHudWidget;
 
 JAMGAME_API DECLARE_LOG_CATEGORY_EXTERN(LogHokej, Log, All);
@@ -52,8 +56,13 @@ public:
 	void RestartMatch();
 
 	UFUNCTION(BlueprintPure, Category = "Jam|Game") UJamSim* GetSim() const { return Sim; }
+	// Lane A14 (C-0005): the effect system (modifiers, triggers, pickups); its HUD rows are GetEffects()->GetHudFeedFor(human).
+	UFUNCTION(BlueprintPure, Category = "Jam|Game") UJamEffectSystem* GetEffects() const { return Effects; }
 	UFUNCTION(BlueprintPure, Category = "Jam|Game") UJamCartridge* GetCartridge() const { return Cartridge; }
 	UFUNCTION(BlueprintPure, Category = "Jam|Game") AJamSkater* GetHumanSkater() const;
+	// Lane A15 (C-0005): the rule hook (announce text for the RULE: scoreboard line) and the zone system (membership, zone events).
+	UFUNCTION(BlueprintPure, Category = "Jam|Game") UJamRuleSystem* GetRules() const { return Rules; }
+	UFUNCTION(BlueprintPure, Category = "Jam|Game") UJamZoneSystem* GetZones() const { return ZoneSystem; }
 
 	// Test hook: when set, the human's input comes from here instead of the keyboard/gamepad (PIE proof through MCP).
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Game") bool bScriptedHuman = false;
@@ -74,7 +83,10 @@ private:
 	void UpdateTake(bool bForce);
 	UClass* ResolveVisualClass(FName Visual) const;
 	FJamInput ReadHumanInput();
-	FJamInput ScriptedHumanInput() const;
+	FJamInput ScriptedHumanInput();
+	// Scripted human state (R-0013 / C-0005 proof): frames shoot has been held, last frame a pass went out.
+	int32 ScriptCharge = 0;
+	int64 ScriptLastPass = -600;
 
 	UFUNCTION() void HandleRestartPressed();
 
@@ -84,7 +96,14 @@ private:
 	UPROPERTY(Transient) TArray<TObjectPtr<AJamSkater>> Skaters;
 	UPROPERTY(Transient) TObjectPtr<AJamPuck> Puck;
 	UPROPERTY(Transient) TObjectPtr<UJamBrain> Brain;
+	UPROPERTY(Transient) TObjectPtr<UJamEffectSystem> Effects;
+	UPROPERTY(Transient) TArray<TObjectPtr<AJamPickupActor>> PickupActors;
+	TArray<FName> LastBoost;
 	UPROPERTY(Transient) TObjectPtr<UJamHudWidget> Hud;
+	UPROPERTY(Transient) TObjectPtr<UJamRuleSystem> Rules;
+	UPROPERTY(Transient) TObjectPtr<UJamZoneSystem> ZoneSystem;
+	// Lane A15: UJamSim::GetRinkRevision the rink actor was last built for (ShrinkRink / GrowRink rebuild it at the next faceoff).
+	int32 BuiltRinkRevision = 0;
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Game") TObjectPtr<UJamEffectsBinder> EffectsBinder;
 
 	TArray<FJamInput> Inputs;
@@ -95,4 +114,6 @@ private:
 	int64 Steps = 0;
 	bool bBuilt = false;
 	int32 Take = 0;
+	// Lane A17: the finished match was reported to UJamProgression (reset by RestartMatch and BuildMatch).
+	bool bResultReported = false;
 };

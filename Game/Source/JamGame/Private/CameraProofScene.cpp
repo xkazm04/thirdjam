@@ -242,7 +242,7 @@ void AJamProofScene::StepSim()
 	// ---- shots, checks and the puck
 	if (bShoot && PuckFree == 0)
 	{
-		IJamSkaterVisual::Execute_PlayShoot(Visuals[0]);
+		IJamSkaterVisual::Execute_PlayShoot(Visuals[0], 1.f);
 		IJamSkaterVisual::Execute_SetHasPuck(Visuals[0], false);
 		PuckVel = FVector2D(FMath::Cos(Yr), FMath::Sin(Yr)) * 20.f;
 		PuckFree = 50;

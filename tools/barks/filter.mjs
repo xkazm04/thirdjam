@@ -47,7 +47,7 @@ const BANNED = [
 // "ass" only inside a "kick your ass" phrase; "damn" and "hell" as interjections; "crap" as a noun.
 const MILD = ['damn', 'hell', 'crap', 'kick your ass', 'kicked your ass', 'kicking your ass', 'kick their ass', 'kick some ass'];
 export const MILD_QUOTA = 0.1;
-const esc = (w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\// Capitalised words allowed anywhere');
+const esc = (w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const MILD_RULES = MILD.map((w) => new RegExp(`(^|[^a-z'])${esc(w)}(?=$|[^a-z'])`, 'i'));
 const BARE_ASS = /(^|[^a-z'])ass(?=$|[^a-z'])/i;
 const ASS_PHRASE = /kick(ed|ing)? (your|their|some|your own) ass/i;
@@ -57,6 +57,24 @@ const OFFWORLD = ['goalie', 'goalies', 'goaltender', 'keeper', 'crowd', 'fans', 
   'coach', 'coaches', 'tooth', 'teeth', 'overtime', 'shootout', 'zamboni', 'helmet cam', 'replay booth'];
 const OFFWORLD_RULES = OFFWORLD.map((w) => new RegExp(`(^|[^a-z'])${esc(w)}(?=$|[^a-z'])`, 'i'));
 
+// R-0021 point 2 (lane A20): barks are hockey first. The film words of the Director's Cut theme stay in the menu and the Designer, not on the ice.
+// Hard: a line with one of these is rejected (the ones that only ever mean the film). Soft: counted and printed by the CLI as a statistic, never a
+// rejection, because "take the puck", "frame the shot", "the lead" and "an extra step" are hockey; the reviewer reads those by eye.
+const FILM_HARD = ['director', "director's", 'directors', 'cut', 'cuts', 'scene', 'scenes', 'script', 'scripts', 'reel', 'reels', 'take two', 'take three',
+  'blooper', 'bloopers', 'reshoot', 'rehearsal', 'rehearse', 'screen test', 'final cut', 'movie', 'movies', 'camera', 'cameras', 'stunt double', 'cast list', 'actor', 'actors'];
+const FILM_SOFT = ['take', 'takes', 'credits', 'frame', 'footnote', 'headline', 'makeup', 'editor', 'edit', 'edits', 'prop', 'props', 'clip', 'sequel', 'draft', 'tape',
+  'rewind', 'wrap', 'rewrite', 'plot', 'slate', 'studio', 'extra', 'extras', 'filming', 'film', 'lead', 'picture', 'acting', 'review'];
+const FILM_HARD_RULES = FILM_HARD.map((w) => new RegExp(`(^|[^a-z'])${esc(w)}(?=$|[^a-z'])`, 'i'));
+const FILM_SOFT_RULES = FILM_SOFT.map((w) => new RegExp(`(^|[^a-z'])${esc(w)}(?=$|[^a-z'])`, 'i'));
+
+// { hard: [...], soft: [...] }: the film words a line leans on. hard is a rejection in checkLine; soft is for the statistics and the review.
+export function filmWords(text) {
+  const t = String(text ?? '');
+  const hard = FILM_HARD.filter((w, i) => FILM_HARD_RULES[i].test(t));
+  const soft = FILM_SOFT.filter((w, i) => FILM_SOFT_RULES[i].test(t));
+  return { hard, soft };
+}
+
 // Number of distinct mild words in a line (0 for a clean line).
 export function mildCount(text) {
   let n = 0;
@@ -64,9 +82,9 @@ export function mildCount(text) {
   return n;
 }
 
-// Capitalised words allowed anywhere (hockey and film terms the theme uses, pronoun I, interjections).
+// Capitalised words allowed anywhere (pronoun I, interjections). The film words (TAKE, CUT, WRAP, ACTION, RETAKE, Oscar) left with R-0021 point 2.
 const ALLOW_CAPS = new Set([
-  'I', "I'm", "I'll", "I'd", "I've", 'OK', 'TAKE', 'CUT', 'WRAP', 'ACTION', 'RETAKE', 'GG', 'Zamboni', 'Oscar',
+  'I', "I'm", "I'll", "I'd", "I've", 'OK', 'GG',
 ]);
 
 const RULES = BANNED.map((w) => {
@@ -94,6 +112,8 @@ export function checkLine(text) {
   if (mildCount(t) > 1) reasons.push('two mild words in one line');
   if (BARE_ASS.test(lower) && !ASS_PHRASE.test(lower)) reasons.push('"ass" outside a kick-your-ass phrase');
   for (let i = 0; i < OFFWORLD_RULES.length; i += 1) if (OFFWORLD_RULES[i].test(lower)) { reasons.push(`not in this game: "${OFFWORLD[i]}"`); break; }
+  const film = filmWords(t);
+  if (film.hard.length) reasons.push(`film word "${film.hard[0]}" (R-0021: barks are hockey first)`);
   // Proper nouns: a capitalised word that does not start a sentence and is not allowed.
   const words = t.split(/\s+/);
   let sentenceStart = true;
@@ -153,7 +173,13 @@ if (process.argv[1] && /filter\.mjs$/.test(process.argv[1].replace(/\\/g, '/')))
   const bank = JSON.parse(readFileSync(file, 'utf8'));
   const { kept, rejected } = filterBank(bank.lines);
   for (const r of rejected.slice(0, 40)) console.log(`REJECT ${r.id ?? ''} ${JSON.stringify(r.text)}: ${r.reasons.join('; ')}`);
-  console.log(`${rejected.length ? 'FAIL' : 'PASS'} filter ${kept.length} clean, ${rejected.length} rejected of ${bank.lines.length}`);
-  console.log(JSON.stringify({ tool: 'thirdjam.barks.filter/1', ok: rejected.length === 0, clean: kept.length, rejected: rejected.length, reasons: stats(rejected) }));
+  // R-0021 soft film words: a statistic, not a rejection (take the puck, the lead, frame the shot are hockey); read them by eye.
+  const soft = {};
+  let softLines = 0;
+  for (const l of bank.lines) { const f = filmWords(l.text).soft; if (f.length) softLines += 1; for (const w of f) soft[w] = (soft[w] ?? 0) + 1; }
+  const mild = bank.lines.filter((l) => mildCount(l.text) > 0).length;
+  console.log(`INFO theme: ${softLines} lines with a soft film word (hockey sense allowed, read by eye): ${Object.entries(soft).map(([w, n]) => `${w}=${n}`).join(' ') || 'none'}`);
+  console.log(`${rejected.length ? 'FAIL' : 'PASS'} filter ${kept.length} clean, ${rejected.length} rejected of ${bank.lines.length}; ${mild} mild`);
+  console.log(JSON.stringify({ tool: 'thirdjam.barks.filter/1', ok: rejected.length === 0, clean: kept.length, rejected: rejected.length, mild, soft_film_lines: softLines, soft_film_words: soft, reasons: stats(rejected) }));
   process.exit(rejected.length ? 1 : 0);
 }

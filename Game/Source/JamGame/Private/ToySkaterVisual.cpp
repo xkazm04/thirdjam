@@ -2,6 +2,7 @@
 #include "EffectsBinder.h"
 #include "NiagaraSystem.h"
 #include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/TextRenderComponent.h"
 #include "Engine/StaticMesh.h"
@@ -121,8 +122,11 @@ FToyPose UToySkaterVisualComponent::ComputePose(const FToyPoseState& S, const FT
 	P.BodyYawSwayDeg = 4.f * FMath::Sin(2.f * PI * S.Phase) * Spd;
 	P.BobCm = 100.f * 0.04f * Spd * FMath::Abs(FMath::Sin(PI * S.Phase));
 
-	const float Shot = ShotStickYaw(In.FramesSinceShoot);
-	P.StickYawDeg = Shot;
+	const float Shot = ShotStickYaw(In.FramesSinceShoot, In.ShootCharge);
+	// C-0001 v3: the aim turns the stick (left-positive aim = negative Unreal yaw) and the reach slides it forward; a held charge winds the blade back and up.
+	P.StickYawDeg = Shot - In.AimDeg - 40.f * In.ChargeHold01;
+	P.StickPitchDeg -= 15.f * In.ChargeHold01;
+	P.StickForwardCm += FMath::Clamp((In.AimReachM - 1.2f) * 100.f, -40.f, 80.f);
 	P.BodyYawSwayDeg += 0.3f * Shot;
 
 	const float Chk = CheckCurve01(In.FramesSinceCheck);
@@ -207,8 +211,14 @@ void UToySkaterVisualComponent::BuildFigure()
 	StickPivot = AddNode(TEXT("stick_pivot"), BodyPivot, FVector(0.f, 0.3f, 0.9f));
 	const FRotator StickRot = FRotationMatrix::MakeFromZ(StickDir).Rotator();
 	Stick = AddMesh(TEXT("stick"), Cyl, StickPivot, StickDir * (StickLenM * 0.5f), FVector(0.06f, 0.06f, StickLenM), StickRot);
-	Blade = AddMesh(TEXT("blade"), Cub, StickPivot, StickDir * StickLenM, FVector(0.3f, 0.05f, 0.08f), FRotator::ZeroRotator);
-	StickSocket = AddNode(TEXT("stick_socket"), StickPivot, StickDir * StickLenM);
+	// R-0021 feel.00: the blade lies flat on the ice at a hockey lie, turned 30 degrees out from the shaft, with a short heel where the shaft meets it,
+	// and two gloved hands on the shaft (upper near the shoulder, lower at mid-shaft).
+	const FVector BladeAt = StickDir * StickLenM + FVector(0.1f, 0.03f, 0.03f);
+	Blade = AddMesh(TEXT("blade"), Cub, StickPivot, BladeAt, FVector(0.36f, 0.035f, 0.075f), FRotator(0.f, 30.f, 0.f));
+	BladeHeel = AddMesh(TEXT("blade_heel"), Cub, StickPivot, StickDir * (StickLenM - 0.05f) + FVector(0.f, 0.f, 0.06f), FVector(0.07f, 0.05f, 0.14f), StickRot);
+	HandUpper = AddMesh(TEXT("hand_upper"), Sph, StickPivot, StickDir * 0.16f, FVector(0.12f));
+	HandLower = AddMesh(TEXT("hand_lower"), Sph, StickPivot, StickDir * 0.58f, FVector(0.12f));
+	StickSocket = AddNode(TEXT("stick_socket"), StickPivot, BladeAt);
 
 	SkateL = AddMesh(TEXT("skate_l"), Cub, LeanNode, FVector(0.f, -0.12f, 0.04f), FVector(0.3f, 0.08f, 0.08f));
 	SkateR = AddMesh(TEXT("skate_r"), Cub, LeanNode, FVector(0.f, 0.12f, 0.04f), FVector(0.3f, 0.08f, 0.08f));
@@ -246,12 +256,12 @@ void UToySkaterVisualComponent::BuildFigure()
 	{
 		UJamEffectsBinder::LoadOrLogOnce(FSoftObjectPath(TEXT("/JamAssets/Look/M_Toon.M_Toon")));
 	}
-	const TArray<UStaticMeshComponent*> Meshes = { Body.Get(), BodyCap.Get(), Head.Get(), HelmetBand.Get(), Stick.Get(), Blade.Get(), SkateL.Get(), SkateR.Get() };
+	const TArray<UStaticMeshComponent*> Meshes = { Body.Get(), BodyCap.Get(), Head.Get(), HelmetBand.Get(), Stick.Get(), Blade.Get(), BladeHeel.Get(), HandUpper.Get(), HandLower.Get(), SkateL.Get(), SkateR.Get() };
 	for (UStaticMeshComponent* M : Meshes)
 	{
 		UMaterialInterface* Base = Toon ? Toon : Fallback;
 		if (M == HelmetBand.Get() && HelmetMi) { Base = HelmetMi; }
-		if ((M == Stick.Get() || M == Blade.Get()) && StickMi) { Base = StickMi; }
+		if ((M == Stick.Get() || M == Blade.Get() || M == BladeHeel.Get()) && StickMi) { Base = StickMi; }
 		UMaterialInstanceDynamic* Mid = UMaterialInstanceDynamic::Create(Base, this);
 		M->SetMaterial(0, Mid);
 		M->SetRenderCustomDepth(true);
@@ -259,7 +269,7 @@ void UToySkaterVisualComponent::BuildFigure()
 		Mids.Add(Mid);
 		if (Toon)
 		{
-			Mid->SetScalarParameterValue(JamMaterialParams::Emissive, 2.2f);
+			Mid->SetScalarParameterValue(JamMaterialParams::Emissive, UToySkaterVisualComponent::BaseEmissive);
 			Mid->SetScalarParameterValue(TEXT("RimStrength"), 0.6f);
 		}
 	}
@@ -310,6 +320,9 @@ void UToySkaterVisualComponent::SetTeam_Implementation(int32 TeamId, FLinearColo
 	SetColourOn(HelmetBand, FLinearColor(0.02f, 0.02f, 0.025f));         // dark helmet band
 	SetColourOn(Stick, FLinearColor(0.6f, 0.45f, 0.25f));
 	SetColourOn(Blade, FLinearColor(0.05f, 0.05f, 0.05f));
+	SetColourOn(BladeHeel, FLinearColor(0.05f, 0.05f, 0.05f));
+	SetColourOn(HandUpper, FLinearColor(0.12f, 0.12f, 0.12f));   // gloves
+	SetColourOn(HandLower, FLinearColor(0.12f, 0.12f, 0.12f));
 	SetColourOn(SkateL, FLinearColor(0.08f, 0.08f, 0.09f));
 	SetColourOn(SkateR, FLinearColor(0.08f, 0.08f, 0.09f));
 }
@@ -349,6 +362,10 @@ void UToySkaterVisualComponent::UpdateMotion_Implementation(float InSpeed, float
 	In.bDown = bDown;
 	In.Frame = LocalFrame;
 	In.FramesSinceShoot = ShootStart >= 0 ? LocalFrame - ShootStart : -1;
+	In.ShootCharge = ShootCharge;
+	In.ChargeHold01 = ChargeHold01;
+	In.AimDeg = AimDeg;
+	In.AimReachM = AimReachM;
 	In.FramesSinceCheck = CheckStart >= 0 ? LocalFrame - CheckStart : -1;
 	In.FramesSinceKnock = KnockStart >= 0 ? LocalFrame - KnockStart : -1;
 	LastPose = ComputePose(State, In);
@@ -368,14 +385,19 @@ void UToySkaterVisualComponent::UpdateMotion_Implementation(float InSpeed, float
 		}
 		if (BladeSpray && GetWorld() && bBuilt)
 		{
-			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), BladeSpray, GetComponentLocation() + FVector(0, 0, GroundOffsetCm), Facing);
+			// B-to-A-0016 (lane A21): User.Strength is the lean, 0..1 of MaxLeanDeg (the sign is not sent: the spray goes both ways for now).
+			if (UNiagaraComponent* Spray = UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), BladeSpray, GetComponentLocation() + FVector(0, 0, GroundOffsetCm), Facing))
+			{
+				Spray->SetVariableFloat(TEXT("User.Strength"), FMath::Clamp(FMath::Abs(State.Lean) / MaxLeanDeg, 0.f, 1.f));
+			}
 		}
 	}
 }
 
-void UToySkaterVisualComponent::PlayShoot_Implementation()
+void UToySkaterVisualComponent::PlayShoot_Implementation(float Charge)
 {
 	ShootStart = LocalFrame;
+	ShootCharge = FMath::Clamp(Charge, 0.f, 1.f);
 }
 
 void UToySkaterVisualComponent::PlayCheck_Implementation()
@@ -403,14 +425,26 @@ void UToySkaterVisualComponent::SetHasPuck_Implementation(bool bInHasPuck)
 	bHasPuck = bInHasPuck;
 }
 
+void UToySkaterVisualComponent::SetStickAim_Implementation(float AngleDeg, float ReachM)
+{
+	AimDeg = FMath::Clamp(AngleDeg, -70.f, 70.f);   // B's figures pose -63..+70; beyond that the body turns, not the stick
+	AimReachM = FMath::Clamp(ReachM, 0.6f, 2.2f);
+}
+
+void UToySkaterVisualComponent::SetShotCharge_Implementation(float Charge01)
+{
+	ChargeHold01 = FMath::Clamp(Charge01, 0.f, 1.f);
+}
+
 void UToySkaterVisualComponent::SetBoost_Implementation(FName Kind)
 {
 	Boost = Kind;
 	if (bBuilt && Kind == NAME_None)
 	{
+		// R-0016: back to the painted-cel base (2.2, as at spawn), not to 1.0.
 		for (UMaterialInstanceDynamic* Mid : Mids)
 		{
-			Mid->SetScalarParameterValue(JamMaterialParams::Emissive, 1.f);
+			Mid->SetScalarParameterValue(JamMaterialParams::Emissive, UToySkaterVisualComponent::BaseEmissive);
 		}
 		if (BodyPivot)
 		{
@@ -450,7 +484,7 @@ void UToySkaterVisualComponent::ApplyPose(const FToyPose& P, const FRotator& Fac
 	{
 		for (UMaterialInstanceDynamic* Mid : Mids)
 		{
-			Mid->SetScalarParameterValue(JamMaterialParams::Emissive, P.Emissive);
+			Mid->SetScalarParameterValue(JamMaterialParams::Emissive, UToySkaterVisualComponent::BaseEmissive * P.Emissive);   // the pose's value is a multiplier
 		}
 	}
 }
