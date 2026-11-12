@@ -1,0 +1,1 @@
+SK4: T-B1 test figures (all facing away from the camera) after SetKnockedDown: push right -> Knockdown_Left (lies to its right), push left -> Knockdown_Right, push forward -> Knockdown_Back, push back -> Fall, SetTripped -> Trip, push 37 deg -> Knockdown_Left; held last frame
