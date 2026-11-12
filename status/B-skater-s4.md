@@ -225,3 +225,107 @@ bash C:/Users/kazda/jam/skater-lab/s4/run_all.sh
 ```
 Outputs: `export\SK_Skater_S4.fbx`, `export\SK_Skater_S4_loopcut.fbx`, `export\SK_Skater_S4.glb`, `SM_S4_Stick.fbx`, `inspect.jsonl` (all three
 files), `check_fbx.json`, `check_fbx_loopcut.json`, `sheets\*.png`.
+
+## Export fix (lead's request after lane B4's import, 12:01 to 12:12)
+
+Blender only. **Unreal is the real test.** Everything below is what the FBX file itself contains and what Blender's importer makes of it. The
+reasoning about Unreal rests on one fact from B4's first import, explained under point 1.
+
+### 1. Root scale and rotation
+
+**What the first file contained** (read straight from the FBX with Blender's FBX parser, `fbx_nodes.py`):
+- `UnitScaleFactor` was 100: metres.
+- The `Armature` null had `Lcl Rotation` (-90, 0, 0): Blender's axis turn.
+- The `root` bone node had `Lcl Rotation` (90, 0, 0), because the root bone pointed up (+Z).
+
+Unreal canceled the null's -90 with its own Y-up to Z-up conversion and dropped the null. That left `root` with its own 90 deg ("roll 90") and
+the metre unit as "scale 100". This matches B4's numbers exactly.
+
+**What changed:**
+- **Centimetres in the data.** Before the FBX export, `build_clips.py` scales the bone heads and tails and the mesh vertices by 100, scales the
+  pelvis location keys by 100, and sets the scene unit to 0.01 m. The armature object keeps identity rotation and unit scale. Export uses
+  `apply_unit_scale=True`, `apply_scale_options=FBX_SCALE_NONE` and `global_scale=1.0`, so the file says `UnitScaleFactor` 1.0 (cm) and every
+  node `Lcl Scaling` is 1. This is lane B5's recipe. The GLB is written before the scaling and stays in metres.
+- **`root` lies along +Y with roll 0** (head (0,0,0), tail (0,15,0) cm) instead of pointing up. Its rest matrix is identity, so its FBX node
+  has `Lcl Rotation` (0, 0, 0). The world rest position of every other bone, the mesh, the bone names and all clip names are unchanged.
+  Only `root`'s own direction changed; it carries no geometry and no keys. **Side effect for lane B4:** the socket compensation
+  (`s2_socket_xf.py`) should no longer be needed. Children of `root` (`pelvis`, `puck_socket`) now have different local rotations relative to
+  `root`, but the same world rest pose.
+- **Axes stay `axis_forward=-Z`, `axis_up=Y`**, which B4 proved gives +X facing and a null that Unreal cancels. I first tried B5's `-Y`/`Z`:
+  the file then had a 180 deg Z rotation on the null, so I went back. Other settings are unchanged: `add_leaf_bones=False`, primary bone axis Y,
+  secondary X, `mesh_smooth_type=FACE`, one take per action, step 1, no simplification. The only other change is
+  `bake_anim_use_all_bones=False`, and the file is written from the rest pose (no clip assigned).
+- **No take keys `root` or the armature object.** Blender's exporter writes a curve node for every bone and for the armature object in every take
+  whatever the options; I tested `bake_anim_use_all_bones` and `force_startend_keying` both off. So a new post-step, `strip_tracks.py`,
+  rewrites each FBX without the curve nodes and curves of `root` and `Armature`: 96 curve nodes and 288 curves per file. It uses Blender's
+  own FBX parser and binary writer; everything else is copied as parsed.
+
+**Proof (Blender side):**
+- In the file (`fbx_nodes.txt`, both FBX files): `UnitScaleFactor` 1.0; `Armature` null translation 0, rotation (-90, 0, 0) (the axis turn,
+  as before), scaling 1; `root` translation 0, rotation **(0, 0, 0)**, scaling **1**; `pelvis` at 88 (cm).
+- Curve nodes per model over the 16 takes: 48 for every bone except `root` and `Armature`, which have **none**.
+- Re-imported with Blender's importer (`check_fbx.json`, `check_fbx_loopcut.json`):
+  - The armature object's matrix is `diag(0.01, 0.01, 0.01, 1)`, meaning Blender turns the cm file back into metres on the object. The first
+    file re-imported at scale 1.0 because its node carried the 100.
+  - `root` rest `matrix_local` is the **identity**.
+  - 24 bones, rest height **172.7 cm**.
+  - Every take keys 23 bones, `root` not among them.
+
+Expected in Unreal: `root` reference pose with no rotation, scale 1.0, the figure facing +X, 172.7 units. **Unverified until B4 or B5
+re-imports.**
+
+### 2. Hold clips
+
+Every hold is now a **30-frame loop** (31 frames in the main file with the first frame repeated, 30 in loopcut). A breathing wobble of
+0.1 deg (pelvis and spine_02 pitch) plus 0.05 mm of pelvis height runs through the IK, so no curve of a solved bone is constant. This applies to
+`Lean_Left` and `Lean_Right` (`hold_keys()` in `build_clips.py`). Seam: 0.000 cm in the main file, 0.004 cm per frame in loopcut. Left and right
+render mirrored (skating sheet, leans row).
+
+### 3. `GetUp_Front` (new, 1.2 s, 73 frames)
+
+Starts from the `Fall_Forward` end pose. It pushes up on both hands with the stick flat under the right glove, brings the left knee under,
+kneels on the right, rises into a crouch and ends in the `Glide` pose. Pelvis horizontal travel 0.000 cm; the lowest point is -1.14 cm (the
+chest at frame 0, inherited from the `Fall_Forward` end). Sheet: `devlog/shots/20261112-121127-B-lab-s4c-getup-front.png` (top row
+`Fall_Forward`, bottom row `GetUp_Front`).
+
+### Measurements (re-imported FBX files, both variants)
+
+| Clip | Frames main / loopcut | Keyed bones (root?) | Pelvis x,y max | Seam main / loopcut (cm) | Lowest point (cm) |
+|---|---|---|---|---|---|
+| Idle_Faceoff | 121 / 120 | 23 (no) | 0.000 | 0.000 / 0.004 | 0.04 |
+| Stride | 61 / 60 | 23 (no) | 0.000 | 0.000 / 0.611 | -0.12 |
+| Glide | 121 / 120 | 23 (no) | 0.000 | 0.000 / 0.004 | 0.0 |
+| Lean_Left | 31 / 30 | 23 (no) | 0.000 | 0.000 / 0.004 | 1.2 |
+| Lean_Right | 31 / 30 | 23 (no) | 0.000 | 0.000 / 0.004 | 1.09 |
+| Crossover_Left | 41 / 40 | 23 (no) | 0.000 | 0.000 / 1.402 | 0.23 |
+| Crossover_Right | 41 / 40 | 23 (no) | 0.000 | 0.000 / 1.402 | -0.39 |
+| Stop | 37 | 23 (no) | 0.000 | one-shot | 0.0 |
+| Shot_Slap | 43 | 23 (no) | 0.000 | one-shot | 0.0 |
+| Shot_Wrist | 22 | 23 (no) | 0.000 | one-shot | 0.0 |
+| Check | 31 | 23 (no) | 0.000 | one-shot | 0.0 |
+| Fall | 37 | 23 (no) | 0.000 | one-shot | 0.0 |
+| Fall_Forward | 37 | 23 (no) | 0.000 | one-shot | -1.14 |
+| GetUp | 73 | 23 (no) | 0.000 | one-shot | 0.0 |
+| GetUp_Front | 73 | 23 (no) | 0.000 | one-shot | -1.14 |
+| Celebrate | 73 | 23 (no) | 0.000 | one-shot | 0.0 |
+
+Triangles are unchanged at 5,932. In the loopcut seam column, a value above 0 is the motion over one frame, not a jump.
+
+### Rebuild (one command, about 2.5 min)
+
+```
+bash C:/Users/kazda/jam/skater-lab/s4/run_all.sh
+```
+
+Order: `build_skater.py`, `build_clips.py` (GLB in metres, then both FBX files in cm), `strip_tracks.py` on both FBX files,
+`tools/meshy/inspect.py`, `check_fbx.py` on both, `fbx_nodes.py` / `fbx_tracks.py` into `fbx_nodes.txt`, then `render_all.sh`. File names are
+unchanged: `export/SK_Skater_S4.fbx`, `export/SK_Skater_S4_loopcut.fbx`, `export/SK_Skater_S4.glb`.
+
+### Not verified / for the hybrid lane
+
+- Whether Unreal now shows `root` at rotation 0 and scale 1, and the figure still facing +X. The file-level evidence says yes; only an import
+  proves it.
+- The FBX files are rewritten by `strip_tracks.py` through Blender's binary writer, not by the exporter. Blender re-imports them identically.
+  The FBX SDK in Unreal has not read such a file yet; if it rejects it, run with the strip step removed (only root's identity keys come back,
+  which are harmless now that the reference pose is identity at scale 1).
+- `SM_S4_Stick.fbx` is unchanged (metres, `FBX_SCALE_ALL`).
