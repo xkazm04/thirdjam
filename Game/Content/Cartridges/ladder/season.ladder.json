@@ -1,0 +1,56 @@
+{
+  "schema": "tj.ladder/1",
+  "ladder": {
+    "id": "season-one",
+    "takes": [
+      {
+        "title": "The Read-Through",
+        "cartridge": "take-1",
+        "twist_text": "Take one. Nobody is judging yet: find the net twice.",
+        "unlock": "always"
+      },
+      {
+        "title": "The Big Room",
+        "cartridge": "take-2",
+        "twist_text": "We moved to the big stage. More ice, and the clock is rolling.",
+        "unlock": "previous_won"
+      },
+      {
+        "title": "Rough Cut",
+        "cartridge": "take-3",
+        "twist_text": "Drop the manners. Hit them, but keep the puck in frame.",
+        "unlock": "previous_won"
+      },
+      {
+        "title": "Set Pieces",
+        "cartridge": "take-4",
+        "twist_text": "The art department dressed the set. Play around the props, or off them.",
+        "unlock": "previous_won"
+      },
+      {
+        "title": "Rubber Boards",
+        "cartridge": "take-5",
+        "twist_text": "Somebody swapped the boards for rubber. Bank it in.",
+        "unlock": "previous_won"
+      },
+      {
+        "title": "One Goal",
+        "cartridge": "take-6",
+        "twist_text": "One take, one goal. Whoever scores wins the scene.",
+        "unlock": "previous_won"
+      },
+      {
+        "title": "Wide Shot",
+        "cartridge": "take-7",
+        "twist_text": "Widescreen. The far net is a long way off: get there first, three times.",
+        "unlock": "previous_won"
+      },
+      {
+        "title": "Everything We Shot",
+        "cartridge": "take-8",
+        "twist_text": "Final cut. Hits allowed, lights up, against the best cast we have.",
+        "unlock": "previous_won"
+      }
+    ]
+  }
+}

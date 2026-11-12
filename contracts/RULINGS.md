@@ -164,3 +164,8 @@ to be implemented to start the game. / No need to mention Director's cut in the 
    bubbles with tails, faceoff countdown. A18 takes over the visual layer of `HUDWidget`, `BarkWidget`, `DirectorsCallWidget`, `MenuWidget`, `MenuStyle.h` and `Game/Content/UI/**`; logic stays.
 5. **Name:** the game is **HOKEJ**. The subtitle "a director's cut" is removed from the slate and every screen; the Director's Call feature keeps its name; the theme is shown through the cuts,
    the takes and the Director's Call, not in the title.
+
+## R-0014 (H7.6, 2026-11-12 13:35): season ladder details (lane A17)
+1. `game.ladder.takes[].fallback` (a preset id) is added to C-0005: the take plays its fallback when its designed cartridge fails validation or references a primitive that has not landed.
+2. The ladder as measured ships: levels rookie 1-2, pro 3-7, all_star 8; take 3's checks become a two-sided feature when lane A16's brain patch (bots check at pro and all_star) lands.
+3. "Take" names both the in-match period and a season level; the menu and the end card use the take's title to keep them apart. Accepted.
