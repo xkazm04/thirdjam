@@ -1,0 +1,18 @@
+[2026.11.12-10.29.52:318][553]LogHokej: JAMCART loaded C:/Users/kazda/kiro/thirdjam/tools/qa/cartridges/hockey.regular.qa.json id=hockey-regular title="Hockey Regular" seed=1 rink=120x60 visual=toy tier=l1_day
+[2026.11.12-10.29.52:319][553]LogJamSim: JAMRINK built 120x60 m corner 5 goal 4 m, 0 obstacles, outline 52 points
+[2026.11.12-10.29.52:323][553]LogJamLook: JAMLOOK tier=l1_day map=/JamAssets/Rigs/LR_L1_Day.LR_L1_Day
+[2026.11.12-10.29.52:323][553]LogJamEvents: JAMEVENT faceoff who=-1 where=(0.0,0.0,0.0) strength=0.000 frame=0 kind=none
+[2026.11.12-10.29.52:323][553]LogJamEvents: JAMEVENT period who=-1 where=(0.0,0.0,0.0) strength=0.000 frame=0 kind=take_1
+[2026.11.12-10.29.57:541][864]LogJamEvents: JAMEVENT shot who=3 where=(-1.9,-1.5,4.0) strength=0.600 frame=311 kind=none
+[2026.11.12-10.30.01:308][ 90]LogJamEvents: JAMEVENT board who=-1 where=(-143.4,-3000.0,4.0) strength=0.304 frame=537 kind=none
+[2026.11.12-10.30.02:466][153]LogHokej: JAMSIM frame=600 hash=e94f1d8637ab1041 score=0:0 phase=0 step_ms mean=0.0030 worst=0.0300
+[2026.11.12-10.30.12:703][753]LogHokej: JAMSIM frame=1200 hash=e752a7cd280c40e6 score=0:0 phase=0 step_ms mean=0.0031 worst=0.0408
+[2026.11.12-10.30.17:839][ 54]LogJamEvents: JAMEVENT board who=-1 where=(-2985.3,-3000.0,4.0) strength=0.123 frame=1501 kind=none
+[2026.11.12-10.30.22:927][353]LogHokej: JAMSIM frame=1800 hash=c95b1afc3057fa0c score=0:0 phase=0 step_ms mean=0.0032 worst=0.0488
+[2026.11.12-10.30.24:101][417]LogJamEvents: JAMEVENT board who=-1 where=(-6000.0,-42.2,4.0) strength=0.157 frame=1864 kind=none
+[2026.11.12-10.30.33:384][953]LogHokej: JAMSIM frame=2400 hash=44df21841673065e score=0:0 phase=0 step_ms mean=0.0033 worst=0.0572
+[2026.11.12-10.30.41:946][454]LogJamEvents: JAMEVENT board who=-1 where=(5954.5,2708.4,4.0) strength=0.259 frame=2901 kind=none
+[2026.11.12-10.30.43:787][553]LogHokej: JAMSIM frame=3000 hash=33f856603f8d1aff score=0:0 phase=0 step_ms mean=0.0033 worst=0.0572
+[2026.11.12-10.30.53:481][ 94]LogJamEvents: JAMEVENT board who=-1 where=(4476.0,-3000.0,4.0) strength=0.271 frame=3541 kind=none
+[2026.11.12-10.30.54:760][153]LogHokej: JAMSIM frame=3600 hash=b2472e5b57761d14 score=0:0 phase=0 step_ms mean=0.0033 worst=0.0572
+[2026.11.12-10.30.59:312][411]LogJamEvents: JAMEVENT board who=-1 where=(6000.0,-901.4,4.0) strength=0.267 frame=3858 kind=none

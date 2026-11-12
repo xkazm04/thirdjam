@@ -105,3 +105,14 @@ situation in game. Ideal state would be to shout at AI teammates for short strat
 3. Content law applies: no text that reads as a real brand, team, league or person; no logos but ours (invented); English; teen-appropriate. Prompts are kept with the generator.
 4. The generator is `tools/images/gen.mjs` (lane A8 lifts it from `prep-reference/tools/gen.mjs`, one image per run, a job list file per batch, outputs to a scratch folder, only the picked
    files are imported). Lane A8 owns menu/UI art on A; device B owns textures, decals, crests and scoreboard faces (handoff A-to-B-0002); A6 owns the itch page and trailer cards.
+
+## R-0009 (H5.7, 2026-11-12 11:40): link windows on device A, and lane A3's gate changes
+1. **Link windows.** Five editors held the project DLLs at 11:36 and no lane could link. From now on, on device A: **every lane closes its editor at :00 and :30 for five minutes**
+   (`tools/run/editor.ps1 -Stop`, or `ExitEditor` through MCP), and keeps the editor closed whenever it is not actively in PIE or capturing. A lane that needs to link outside a window
+   builds its own git worktree copy (TRACKS.md 5) instead of the shared tree. Partial builds with `-ModuleWithSuffix` are forbidden (they removed `UnrealEditor.modules` once).
+2. **Lane A3's deviations accepted:** `PlayerBotWins` (WIN at seeds 1, 2, 7 with identical hashes) is gated at `rookie`; at `pro` the gate is "the human scores at least once and the match
+   has a result or reaches 36,000 frames with the human ahead or level in at least 2 of 3 seeds". `HumanHasSomethingToDo` treats the 10-minute window as a full match.
+3. **Difficulty resolution** (A3): profile `rookie | pro | all_star` -> explicit `game.ai` numbers -> Designer values; presets carry `ai: { difficulty: "pro" }`; the game mode calls
+   `Brain->ApplyCartridge(*Cartridge); Brain->ResetBrain();` (patch applied by the Director), or the game plays `pro` with the old hold radius whatever the cut says.
+4. **Curve target restated** (from A3's first measurement, 20 seeds, scripted human): regular rookie 85 % / pro 50 % / all_star 25 % holds; small rink is too easy at every level (95 / 65 / 55)
+   and gets its own profile offsets. `FJamAIIntent` (the R-0007 hook) already consumes defend / space / pass / praise.

@@ -1,0 +1,11 @@
+[2026.11.12-10.36.56:630][697]LogHokej: JAMCART loaded C:/Users/kazda/kiro/thirdjam/tools/qa/cartridges/hockey.regular.qa.json id=hockey-regular title="Hockey Regular" seed=1 rink=120x60 visual=toy tier=l1_day
+[2026.11.12-10.36.56:631][697]LogJamSim: JAMRINK built 120x60 m corner 5 goal 4 m, 0 obstacles, outline 52 points
+[2026.11.12-10.36.56:638][697]LogJamLook: JAMLOOK tier=l1_day map=/JamAssets/Rigs/LR_L1_Day.LR_L1_Day
+[2026.11.12-10.36.56:638][697]LogJamEvents: JAMEVENT faceoff who=-1 where=(0.0,0.0,0.0) strength=0.000 frame=0 kind=none
+[2026.11.12-10.36.56:638][697]LogJamEvents: JAMEVENT period who=-1 where=(0.0,0.0,0.0) strength=0.000 frame=0 kind=take_1
+[2026.11.12-10.37.01:897][  8]LogJamEvents: JAMEVENT shot who=3 where=(-1.9,-1.5,4.0) strength=0.600 frame=311 kind=none
+[2026.11.12-10.37.06:448][273]LogJamEvents: JAMEVENT board who=-1 where=(-1034.1,-3000.0,4.0) strength=0.248 frame=576 kind=none
+[2026.11.12-10.37.06:848][297]LogHokej: JAMSIM frame=600 hash=f0dce0d5a3ff5adf score=0:0 phase=0 step_ms mean=0.0042 worst=0.0137
+[2026.11.12-10.37.15:556][802]LogJamEvents: JAMEVENT board who=-1 where=(-6000.0,-2091.6,4.0) strength=0.280 frame=1105 kind=none
+[2026.11.12-10.37.16:662][868]LogJamEvents: JAMEVENT shot who=3 where=(-5897.9,-1418.3,4.0) strength=0.600 frame=1171 kind=none
+[2026.11.12-10.37.17:146][897]LogHokej: JAMSIM frame=1200 hash=34215a8749257da6 score=0:0 phase=0 step_ms mean=0.0044 worst=0.1215

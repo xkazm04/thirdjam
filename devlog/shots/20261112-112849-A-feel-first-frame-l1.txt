@@ -1,0 +1,1 @@
+﻿A10 feel QA, PIE frame 287 on the QA copy of hockey.regular (l1_day rig, the l2_night rig hangs the GPU): first play view, puck a 6 px dot 10 m ahead on noisy ice, far net 66 m marker, no controls hint

@@ -1,0 +1,1 @@
+﻿A10 feel QA, play plan on the QA copy of hockey.regular, frame 1564: the human on the puck (within 1.1 m); over 60 s the chaser skated 436 m, spent half the frames 2.6 m behind a puck doing 7.4 m/s (puck drag 0, pushed to skater speed), bumped it 14 times and scored 0

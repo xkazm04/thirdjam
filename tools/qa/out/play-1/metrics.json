@@ -1,0 +1,68 @@
+{
+  "run": "C:\\Users\\kazda\\kiro\\thirdjam\\tools\\qa\\out\\play-1",
+  "plan": "play",
+  "frames": 3601,
+  "first_frame": 278,
+  "last_frame": 3878,
+  "status": {
+    "plan": "play",
+    "n": 3601,
+    "phase": 220,
+    "phase_name": "faceoff",
+    "phase_start": 3860,
+    "done": true,
+    "err": null,
+    "flushed": 3601,
+    "first_touch": 340,
+    "goal_frames": [],
+    "shots": 0,
+    "had_puck_frames": 0,
+    "hardturn": null,
+    "lost_after_hardturn": null,
+    "checks_pressed": 0,
+    "faceoffs": 0,
+    "far_frames": 0,
+    "pickups_taken": 0,
+    "shot_log": [],
+    "teleports": 0,
+    "wall_s": 61.6,
+    "last_frame": 3878
+  },
+  "play": {
+    "first_touch_frame": 340,
+    "first_touch_s": 5.67,
+    "goal_frames": [],
+    "first_goal_s": null,
+    "final_score": [
+      0,
+      0
+    ],
+    "play_frames": 0,
+    "far_from_puck_pct": null,
+    "on_puck_pct": null,
+    "longest_carry_frames": 0,
+    "carries": 0,
+    "hardturn_frame": null,
+    "puck_lost_after_hard_turn": null,
+    "shots_pressed": 0,
+    "events": {
+      "touches_human": 0,
+      "shots_all": 4,
+      "shots_human": 0,
+      "goals": 0,
+      "knockdowns": 0,
+      "knockdowns_human": 0,
+      "checks": 0,
+      "checks_human": 0,
+      "faceoffs": 1,
+      "names": [
+        "faceoff",
+        "period",
+        "shot",
+        "board"
+      ]
+    },
+    "flights": [],
+    "teleports": 0
+  }
+}

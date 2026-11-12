@@ -1,0 +1,104 @@
+{
+  "run": "C:\\Users\\kazda\\kiro\\thirdjam\\tools\\qa\\out\\raw-1",
+  "plan": "raw",
+  "frames": 3601,
+  "first_frame": 278,
+  "last_frame": 3878,
+  "status": {
+    "plan": "raw",
+    "n": 3601,
+    "phase": 31,
+    "phase_name": "chase",
+    "phase_start": 3492,
+    "done": true,
+    "err": null,
+    "flushed": 3601,
+    "first_touch": 328,
+    "goal_frames": [],
+    "shots": 5,
+    "had_puck_frames": 439,
+    "hardturn": 726,
+    "lost_after_hardturn": true,
+    "checks_pressed": 26,
+    "faceoffs": 0,
+    "far_frames": 212,
+    "pickups_taken": 0,
+    "shot_log": [
+      [
+        1028,
+        17
+      ],
+      [
+        1029,
+        16.9
+      ],
+      [
+        1030,
+        16.7
+      ],
+      [
+        3490,
+        16
+      ],
+      [
+        3491,
+        15.9
+      ]
+    ],
+    "teleports": 0,
+    "wall_s": 62.5,
+    "last_frame": 3878
+  },
+  "play": {
+    "first_touch_frame": 328,
+    "first_touch_s": 5.47,
+    "goal_frames": [],
+    "first_goal_s": null,
+    "final_score": [
+      0,
+      0
+    ],
+    "play_frames": 3601,
+    "far_from_puck_pct": 5.9,
+    "on_puck_pct": 12.1,
+    "longest_carry_frames": 77,
+    "carries": 15,
+    "hardturn_frame": 726,
+    "puck_lost_after_hard_turn": true,
+    "shots_pressed": 5,
+    "events": {
+      "touches_human": 0,
+      "shots_all": 3,
+      "shots_human": 2,
+      "goals": 0,
+      "knockdowns": 1,
+      "knockdowns_human": 0,
+      "checks": 1,
+      "checks_human": 1,
+      "faceoffs": 1,
+      "names": [
+        "faceoff",
+        "period",
+        "shot",
+        "board",
+        "check",
+        "knockdown"
+      ]
+    },
+    "flights": [
+      {
+        "frame": 1030,
+        "dist_to_goal_line_m": 15.7,
+        "puck_speed_after_mps": 18,
+        "goal_after_frames": null
+      },
+      {
+        "frame": 3492,
+        "dist_to_goal_line_m": 2.6,
+        "puck_speed_after_mps": 18,
+        "goal_after_frames": null
+      }
+    ],
+    "teleports": 0
+  }
+}
