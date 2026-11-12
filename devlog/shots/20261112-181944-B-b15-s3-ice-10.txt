@@ -1,0 +1,1 @@
+B15 step 3: M_Ice streak and frost tiles (TileBaseKeep 0.3, TileFrostAmount 0.35), NightWet 0.3; 10 m; pair with proof-faceoff-10m
