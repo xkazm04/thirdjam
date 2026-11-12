@@ -1,0 +1,1 @@
+SKI2 Knockdown_Right then GetUp_Side_Right on P2C, game camera

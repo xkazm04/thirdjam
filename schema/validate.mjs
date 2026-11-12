@@ -633,6 +633,13 @@ export const DESIGNER_GAME_EDITABLE = [
   'look.tier',
   'ai.difficulty',
   'barks',
+  // Lane A44 (tonight's keys): the three payoffs as whole objects (A39, PAYOFFS.md section 2), the foul grace (A16, R-0029 point 3), the booth (A32),
+  // the board trim glow and the broadcast tier (A21 / A31, through look.tier), the three chase-camera numbers (A40). camera.mode and the rest of
+  // camera, skater, shot and stick stay the host's.
+  'shot.one_timer', 'skater.breakaway', 'stick.deke', 'stick.foul_grace_frames',
+  'commentary',
+  'look.trim_emissive',
+  'camera.boards_margin_m', 'camera.end_height_m', 'camera.far_net_bias',
 ];
 
 function withoutPaths(game, paths) {

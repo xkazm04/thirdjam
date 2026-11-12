@@ -255,7 +255,15 @@ test('Designer: may change the listed game paths, not the roles or the camera mo
   assert.ok(has(validateDesignerOutput(base, spd).errors, '/game/skater/speed', 'may not change'));
   const tun = regular(); tun.tunables[0].max = 12;
   assert.ok(has(validateDesignerOutput(base, tun).errors, '/tunables', 'may not change'));
-  assert.ok(DESIGNER_GAME_EDITABLE.includes('look.tier') && !DESIGNER_GAME_EDITABLE.some((p) => p.includes('camera') || p.includes('role')));
+  // lane A44: the three chase-camera numbers are editable; camera.mode and every role stay the host's
+  assert.ok(DESIGNER_GAME_EDITABLE.includes('look.tier') && !DESIGNER_GAME_EDITABLE.some((p) => p === 'camera' || p === 'camera.mode' || p.includes('role')));
+  for (const p of ['shot.one_timer', 'skater.breakaway', 'stick.deke', 'stick.foul_grace_frames', 'commentary', 'look.trim_emissive', 'camera.boards_margin_m', 'camera.end_height_m', 'camera.far_net_bias']) assert.ok(DESIGNER_GAME_EDITABLE.includes(p), p);
+  const fov = regular(); fov.game.camera.fov_deg = 90;
+  assert.ok(has(validateDesignerOutput(base, fov).errors, '/game/camera/fov_deg', 'may not change'));
+  const payoffs = regular(); payoffs.game.shot.one_timer = { window_frames: 24, cone_bonus_deg: 16 }; payoffs.game.skater.breakaway = { speed_bonus: 0.4, frames: 120 };
+  payoffs.game.stick = { deke: { offset_m: 1.5, commit_frames: 30 }, foul_grace_frames: 60 }; payoffs.game.commentary = { intensity: 'quiet' };
+  payoffs.game.look.trim_emissive = 60; payoffs.game.camera.end_height_m = 12;
+  assert.deepEqual(validateDesignerOutput(base, payoffs).errors, []);
 });
 
 test('ai.difficulty: rookie | pro | all_star, absent = pro; every preset names it; the Designer may change it', () => {

@@ -1,0 +1,1 @@
+SKI2 P3C Check_Hit_Right at the game camera on clay (flagged: 5 frames stick in the helmet radius): the stick stays beside the helmet, nothing pokes through
