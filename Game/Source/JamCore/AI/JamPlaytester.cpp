@@ -64,6 +64,8 @@ namespace JamAI
 			P.DrawReactionFrames = 6;    // plus the 12 frames of reaction: 18 after the drop
 			P.ChaseLeadS = 0.0;          // chases where the puck is, not where it goes
 			P.bGoalside = false;
+			P.OneTimerPct = 0;           // R-0029 point 4: the novice knows neither payoff
+			P.DekePct = 0;
 			break;
 		case EPlaytester::Regular:
 			P.ReactionFrames = 6;
@@ -78,6 +80,8 @@ namespace JamAI
 			P.DrawReactionFrames = 4;
 			P.ChaseLeadS = 0.5;
 			P.bGoalside = true;
+			P.OneTimerPct = 50;          // R-0029 point 4: the regular player takes half the chances
+			P.DekePct = 50;
 			break;
 		default:
 			P.ReactionFrames = 3;
@@ -92,6 +96,8 @@ namespace JamAI
 			P.DrawReactionFrames = 2;
 			P.ChaseLeadS = 0.8;
 			P.bGoalside = true;
+			P.OneTimerPct = 100;         // R-0029 point 4: the good player always
+			P.DekePct = 100;
 			break;
 		}
 		return P;
@@ -126,6 +132,7 @@ namespace JamAI
 		HoldFrames = 0;
 		LastPassFrame = -1000;
 		LastCheckFrame = -1000;
+		LastDekeFrame = -1000;
 		PlayFrames = 0;
 		Act = EPlaytesterAct::Idle;
 		for (int& A : Acts) { A = 0; }
@@ -234,8 +241,54 @@ namespace JamAI
 			const double Dgoal = (Goal - Puck).Length();
 			const bool bLaneBlocked = Corridor(W, Pi, W.PuckPos, AimDir * Sg, Dgoal, 1.2, false, Me.Team);
 			const bool bPressured = NearOppDist < P.PressureM;
+			// R-0029 point 4 (lane A39): the two payoffs a person presses for. The one-timer: a pass just landed on my blade: tap the shot at once when
+			// the net is in range and I face it well enough for the widened cone (the sim adds one_timer.cone_bonus_deg; I assume 8 over my tolerance).
+			// The deke: inside 12 m with the crease back on my line to the net: one tap, then the shot once the puck has moved (the sim aims it at the
+			// open post). The good player always, the regular one in half the 2-second windows (a seeded coin), the novice never.
+			bool bPayoff = false;
+			const double Coin = (Noise(W.Frame / 120, 11) + 1.0) * 50.0;
+			if (Me.OneTimerFrames > 0 && P.OneTimerPct > 0 && Dgoal < P.ShootRangeM + 8.0 && AngleBetweenDeg(Face, AimDir) <= P.ReleaseToleranceDeg + 8.0
+				&& (P.OneTimerPct >= 100 || Coin < P.OneTimerPct))
+			{
+				In.bShoot = true;
+				bHolding = false;
+				HoldFrames = 0;
+				Act = EPlaytesterAct::OneTimer;
+				bPayoff = true;
+			}
+			else if (Me.DekeFrames > 0)
+			{
+				// deking: wait for the puck to settle on the new side, then let the shot go; keep skating at the net
+				bHolding = false;
+				HoldFrames = 0;
+				Act = EPlaytesterAct::Deke;
+				bPayoff = true;
+				if (Me.bDekeSettled && AngleBetweenDeg(Face, ToGoalFromPuck) <= 30.0) { In.bShoot = true; }
+			}
+			else if (P.DekePct > 0 && Me.bCanDeke && Dgoal > 5.0 && Dgoal < 12.0 && W.Frame - LastDekeFrame > 90 && AngleBetweenDeg(Face, ToGoalFromPuck) <= 25.0
+				&& (P.DekePct >= 100 || Coin < P.DekePct))
+			{
+				for (int i = 0; i < W.NumSkaters; ++i)
+				{
+					const FJamAISkater& O = W.Skaters[i];
+					if (i == Pi || O.Team == Me.Team || O.bDown) { continue; }
+					const FVec2 Op = O.Pos * Sg;
+					const FVec2 Rel = Op - Puck;
+					const double Along = Rel.Dot(ToGoalFromPuck);
+					if (Along > 0.0 && Along < Dgoal && std::fabs(Rel.Cross(ToGoalFromPuck)) < 2.0 && (Goal - Op).Length() < 5.0)
+					{
+						In.bDeke = true;
+						LastDekeFrame = W.Frame;
+						bHolding = false;
+						HoldFrames = 0;
+						Act = EPlaytesterAct::Deke;
+						bPayoff = true;
+						break;
+					}
+				}
+			}
 			// pass: a teammate clearly ahead and open, while a defender closes or the lane to the goal is blocked
-			if (W.Frame - LastPassFrame > 90 && (bPressured || bLaneBlocked))
+			if (!bPayoff && W.Frame - LastPassFrame > 90 && (bPressured || bLaneBlocked))
 			{
 				for (int i = 0; i < W.NumSkaters; ++i)
 				{
@@ -277,7 +330,7 @@ namespace JamAI
 					break;
 				}
 			}
-			if (Act != EPlaytesterAct::Pass && Dgoal < P.ShootRangeM && (!bLaneBlocked || bPressured))
+			if (!bPayoff && Act != EPlaytesterAct::Pass && Dgoal < P.ShootRangeM && (!bLaneBlocked || bPressured))
 			{
 				// in range: line up on the aim while holding the button, let go when lined up (or when patience runs out)
 				Target = Puck + AimDir * 10.0;
@@ -299,7 +352,7 @@ namespace JamAI
 				}
 				Act = EPlaytesterAct::Charge;
 			}
-			else if (bHolding)
+			else if (bHolding && !bPayoff)
 			{
 				// out of range again or passing: let go (fires whatever charge there is; a person does the same)
 				bHolding = false;
@@ -368,6 +421,15 @@ namespace JamAI
 				{
 					Target -= (N * Sg) * 1.0;   // a puck on the boards: come at it from the ice side
 				}
+				// R-0029 point 4 (lane A39): a teammate's puck coming at me fast and near is a pass: reach for it (the sim seats a pass on the blade
+				// only when the blade sits on its line; the one-timer window opens on that reception). Every player reaches for a pass.
+				const FVec2 ToMe = Me.Pos - W.PuckPos;
+				const double Dm = ToMe.Length();
+				if (W.PuckLastTouch >= 0 && W.PuckLastTouch != Pi && W.Skaters[W.PuckLastTouch].Team == Me.Team && Dm > 1e-6 && Dm < 8.0
+					&& W.PuckVel.Length() > 6.0 && W.PuckVel.Dot(ToMe) > 0.0)
+				{
+					In.Stick = (W.PuckPos - Me.Pos) * (1.0 / Dm);
+				}
 			}
 		}
 
@@ -429,6 +491,8 @@ namespace JamAI
 		const int IdleWindow = 900;
 		const FName KindCheck(TEXT("check"));
 		const FName KindFoulBehind(TEXT("foul_from_behind"));
+		const FName KindOneTimer(TEXT("one_timer"));
+		int64_t LastPayoff = -100000;   // R-0029 point 4 (lane A39): the frame of the human's last one-timer, burst or deke
 		for (int64_t F = 0; F < MaxFrames && !Sim.IsOver(); ++F)
 		{
 			Sim.View(W);
@@ -495,6 +559,7 @@ namespace JamAI
 					{
 						++St.GoalsByHuman;
 						if (St.FirstGoalByHuman < 0) { St.FirstGoalByHuman = St.Frames; }
+						if (St.Frames - LastPayoff <= 180) { ++St.PayoffGoals; }   // a carry with a payoff: the goal came within 3 s of one
 					}
 				}
 				else
@@ -542,6 +607,9 @@ namespace JamAI
 					else if (E.Name == JamEvents::Poke) { ++St.Pokes; if (E.Strength > 0.5f) { ++St.PokesClean; } }
 					else if (E.Name == JamEvents::Lift) { if (E.Strength > 0.5f) { ++St.Lifts; } }
 					else if (E.Name == JamEvents::Pass) { ++St.Passes; }
+					else if (E.Name == JamEvents::Shot) { if (E.Kind == KindOneTimer) { ++St.OneTimers; LastPayoff = St.Frames; } }
+					else if (E.Name == JamEvents::Breakaway) { ++St.Breakaways; LastPayoff = St.Frames; }
+					else if (E.Name == JamEvents::Deke) { ++St.Dekes; LastPayoff = St.Frames; }
 				}
 				const TArray<FJamSkaterState>& Sk = S->GetSkaters();
 				if (Sk.IsValidIndex(Pi) && Sk[Pi].InBox()) { ++St.BoxFrames; }
@@ -572,6 +640,7 @@ namespace JamAI
 			"\"first_touch\":%lld,\"first_shot\":%lld,\"first_goal_for\":%lld,\"first_goal_by_human\":%lld,\"first_goal_against\":%lld,"
 			"\"faceoffs\":%d,\"faceoffs_without_touch\":%d,\"max_faceoff_to_touch\":%d,\"wo_frames\":[%lld,%lld,%lld],"
 			"\"checks_landed\":%d,\"checks_taken\":%d,\"knockdowns\":%d,\"fouls\":%d,\"fouls_from_behind\":%d,\"fouls_no_puck\":%d,\"box_frames\":%lld,\"pokes\":%d,\"pokes_clean\":%d,\"lifts\":%d,\"passes\":%d,"
+			"\"one_timers\":%d,\"breakaways\":%d,\"dekes\":%d,\"payoff_goals\":%d,"
 			"\"idle_frames\":%lld,\"idle_spells\":%d,\"max_no_touch\":%lld,\"hash\":\"%016llx\",\"player_index\":%d",
 			Cartridge, Difficulty, PlaytesterName(Kind), static_cast<unsigned long long>(S.Seed), Result, S.bOver ? "true" : "false",
 			S.GoalsFor, S.GoalsAgainst, S.GoalsByHuman, static_cast<long long>(S.Frames), static_cast<long long>(S.PlayFrames), S.Touches,
@@ -581,8 +650,9 @@ namespace JamAI
 			static_cast<long long>(S.FirstGoalAgainst), S.Faceoffs, S.FaceoffsWithoutTouch, S.MaxFaceoffToTouch,
 			static_cast<long long>(S.WoMateFrames), static_cast<long long>(S.WoOppFrames), static_cast<long long>(S.WoLooseFrames),
 			S.ChecksLanded, S.ChecksTaken, S.Knockdowns, S.Fouls, S.FoulsFromBehind, S.FoulsNoPuck, static_cast<long long>(S.BoxFrames), S.Pokes, S.PokesClean, S.Lifts, S.Passes,
+			S.OneTimers, S.Breakaways, S.Dekes, S.PayoffGoals,
 			static_cast<long long>(S.IdleFrames), S.IdleSpells, static_cast<long long>(S.MaxNoTouch), static_cast<unsigned long long>(S.Hash), S.PlayerIndex);
-		static const char* ActNames[] = {"idle", "draw", "chase", "carry", "charge", "pass", "support", "forecheck", "poke", "check", "lapse"};
+		static const char* ActNames[] = {"idle", "draw", "chase", "carry", "charge", "pass", "support", "forecheck", "poke", "check", "lapse", "one_timer", "deke"};
 		N += std::snprintf(Buf + N, static_cast<size_t>(BufLen - N), ",\"acts\":{");
 		for (int a = 0; a < static_cast<int>(EPlaytesterAct::Count) && N < BufLen; ++a)
 		{

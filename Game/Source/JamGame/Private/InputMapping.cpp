@@ -58,6 +58,7 @@ void UJamInputMap::Build()
 	StickMouse = MakeAction(this, TEXT("IA_StickMouse"), EInputActionValueType::Axis2D);
 	Poke = MakeAction(this, TEXT("IA_Poke"), EInputActionValueType::Boolean);
 	Lift = MakeAction(this, TEXT("IA_Lift"), EInputActionValueType::Boolean);
+	Deke = MakeAction(this, TEXT("IA_Deke"), EInputActionValueType::Boolean);   // lane A39
 	Pass = MakeAction(this, TEXT("IA_Pass"), EInputActionValueType::Boolean);
 	Context = NewObject<UInputMappingContext>(this, TEXT("IMC_Hokej"));
 
@@ -95,6 +96,8 @@ void UJamInputMap::Build()
 	Context->MapKey(Poke, EKeys::Gamepad_RightShoulder);
 	Context->MapKey(Lift, EKeys::RightMouseButton);
 	Context->MapKey(Lift, EKeys::Gamepad_LeftShoulder);
+	Context->MapKey(Deke, EKeys::Q);                        // lane A39 (R-0029 point 4): the deke
+	Context->MapKey(Deke, EKeys::Gamepad_FaceButton_Top);   // Y
 	Context->MapKey(Pass, EKeys::E);
 	Context->MapKey(Pass, EKeys::Gamepad_FaceButton_Left);   // X
 	Context->MapKey(Pause, EKeys::Escape);
@@ -190,6 +193,7 @@ void UJamPlayerInput::TryBind()
 	EIC->BindAction(M->StickMouse, ETriggerEvent::Triggered, this, &UJamPlayerInput::OnStickMouse);
 	EIC->BindAction(M->Poke, ETriggerEvent::Started, this, &UJamPlayerInput::OnPokeStarted);
 	EIC->BindAction(M->Lift, ETriggerEvent::Started, this, &UJamPlayerInput::OnLiftStarted);
+	EIC->BindAction(M->Deke, ETriggerEvent::Started, this, &UJamPlayerInput::OnDekeStarted);
 	EIC->BindAction(M->Pass, ETriggerEvent::Started, this, &UJamPlayerInput::OnPassStarted);
 	EIC->BindAction(M->Restart, ETriggerEvent::Started, this, &UJamPlayerInput::OnRestartStarted);
 	EIC->BindAction(M->Pause, ETriggerEvent::Started, this, &UJamPlayerInput::OnPauseStarted);
@@ -242,6 +246,13 @@ bool UJamPlayerInput::ConsumeLiftPressed()
 {
 	const bool B = bLiftLatch;
 	bLiftLatch = false;
+	return B;
+}
+
+bool UJamPlayerInput::ConsumeDekePressed()
+{
+	const bool B = bDekeLatch;
+	bDekeLatch = false;
 	return B;
 }
 

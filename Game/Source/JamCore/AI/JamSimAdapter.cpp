@@ -245,6 +245,13 @@ namespace JamAI
 		W.SkaterRadius = UJamSim::SkaterRadius;
 		W.StickReach = G.Stick.ReachM;
 		W.LiftRange = G.Stick.LiftRangeM;
+		// R-0029 point 4 (lane A39): the goalie commit of the latest deke
+		{
+			int32 Deker = -1, Side = 0;
+			W.DekeCommitFrames = S.GetDekeCommit(Deker, Side);
+			W.DekeCommitSkater = W.DekeCommitFrames > 0 ? Deker : -1;
+			W.DekeCommitOffset = W.DekeCommitFrames > 0 ? FVec2(0.0, Side * S.EffectiveDekeOffsetM()) : FVec2();
+		}
 		const int64 NextFrame = S.GetFrame() + 1;   // UJamSim::Step increments the frame before shots are tried
 		for (int32 i = 0; i < W.NumSkaters; ++i)
 		{
@@ -261,6 +268,16 @@ namespace JamAI
 			O.bCentre = K.bCentre;
 			O.bCanPoke = K.CanAct() && NextFrame >= K.PokeReadyFrame && K.PokeWindow <= 0;
 			O.bCanLift = K.CanAct() && NextFrame >= K.LiftReadyFrame;
+			// R-0029 point 4 (lane A39): the payoff windows, as the sim will see them on the next step
+			O.OneTimerFrames = (G.Shot.OneTimerWindowFrames > 0 && K.PassReceivedFrame >= 0)
+				? FMath::Max(0, static_cast<int32>(G.Shot.OneTimerWindowFrames - (NextFrame - K.PassReceivedFrame) + 1)) : 0;
+			O.bBreakaway = K.BreakawayFrames > 0;
+			O.DekeFrames = K.DekeFrames;
+			const int32 DekeTotal = FMath::Max(UJamSim::DekeMoveFrames, G.Stick.DekeCommitFrames);
+			O.bDekeSettled = K.DekeFrames > 0 && (DekeTotal - K.DekeFrames) >= UJamSim::DekeMoveFrames;
+			O.bCanDeke = K.CanAct() && G.Stick.DekeOffsetM > 0.0 && G.Stick.DekeCommitFrames > 0 && NextFrame >= K.DekeReadyFrame && K.DekeFrames == 0;
+			const FVector2D Off = S.DekeOffset(K);
+			O.DekeOffset = FVec2(Off.X, Off.Y);
 			// the same gate as UJamSim::TryShoot
 			const FVector2D To = S.GetPuck().Pos - K.Pos;
 			const double D = To.Size();
@@ -303,6 +320,7 @@ namespace JamAI
 			I.Stick = FVector2D(In[i].Stick.X, In[i].Stick.Y);
 			I.bPoke = In[i].bPoke;
 			I.bLift = In[i].bLift;
+			I.bDeke = In[i].bDeke;   // R-0029 point 4 (lane A39): the deke tap
 		}
 		if (bWithSystems) { Systems.BeforeStep(*Sim); }   // lane A41: score mirror, sim step, zone update, effect step (the game mode's order)
 		Sim->Step(Inputs);

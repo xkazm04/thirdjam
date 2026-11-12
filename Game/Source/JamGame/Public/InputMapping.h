@@ -34,6 +34,8 @@ public:
 	UPROPERTY() TObjectPtr<UInputAction> StickMouse;
 	UPROPERTY() TObjectPtr<UInputAction> Poke;
 	UPROPERTY() TObjectPtr<UInputAction> Lift;
+	// R-0029 point 4 (lane A39): IA_Deke, Q / gamepad Y: the carrier's deke tap (FJamInput::bDeke).
+	UPROPERTY() TObjectPtr<UInputAction> Deke;
 	// C-0005 (lane A16): IA_Pass, E / X: a lead pass to the best open teammate.
 	UPROPERTY() TObjectPtr<UInputAction> Pass;
 	UPROPERTY() TObjectPtr<UInputMappingContext> Context;
@@ -83,6 +85,9 @@ public:
 	bool ConsumeLiftPressed();
 
 	UFUNCTION(BlueprintCallable, Category = "Jam|Input")
+	bool ConsumeDekePressed();
+
+	UFUNCTION(BlueprintCallable, Category = "Jam|Input")
 	bool ConsumePassPressed();
 
 	// True once after each press (latched until read): a shot or check is an event, not a level.
@@ -125,6 +130,7 @@ private:
 	void OnStickMouse(const FInputActionValue& V);
 	void OnPokeStarted() { bPokeLatch = true; }
 	void OnLiftStarted() { bLiftLatch = true; }
+	void OnDekeStarted() { bDekeLatch = true; }
 	void OnPassStarted() { bPassLatch = true; }
 	void OnRestartStarted() { OnRestart.Broadcast(); }
 	void OnPauseStarted() { OnPause.Broadcast(); }
@@ -137,6 +143,7 @@ private:
 	bool bCheckLatch = false;
 	bool bPokeLatch = false;
 	bool bLiftLatch = false;
+	bool bDekeLatch = false;
 	bool bPassLatch = false;
 	FVector2D StickAxis = FVector2D::ZeroVector;
 	FVector2D MouseAimPx = FVector2D::ZeroVector;

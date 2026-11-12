@@ -265,6 +265,25 @@
           "minimum": 0,
           "maximum": 60,
           "description": "How far ahead of the receiver a pass is aimed, in physics frames of the receiver's motion."
+        },
+        "breakaway": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Lane A39 (R-0029 point 4): the breakaway burst: once a carrier past centre ice has no opponent between it and the net it attacks, its top speed and acceleration rise by speed_bonus for frames, once per possession; event breakaway. Leave the key out for the defaults.",
+          "properties": {
+            "speed_bonus": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Fraction added to top speed and acceleration during the burst; 0 turns the burst off."
+            },
+            "frames": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 300,
+              "description": "How long the burst lasts, in physics frames."
+            }
+          }
         }
       }
     },
@@ -308,6 +327,25 @@
           "minimum": 0,
           "maximum": 120,
           "description": "A check on a skater that carried the puck within this many frames is not a foul for hitting a player without the puck."
+        },
+        "deke": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Lane A39 (R-0029 point 4): the deke: a tap moves the carried puck offset_m to the blade side within 6 frames and commits the crease back for commit_frames; a shot inside the commit window aims at the open post; a second tap inside 30 frames does nothing. Leave the key out for the defaults.",
+          "properties": {
+            "offset_m": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 2,
+              "description": "How far the puck moves to the side on a deke, in metres; 0 turns the deke off."
+            },
+            "commit_frames": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 60,
+              "description": "Frames the crease back stays committed to the puck's old side after a deke."
+            }
+          }
         }
       }
     },
@@ -395,6 +433,25 @@
         "deflect": {
           "type": "boolean",
           "description": "Whether a shot that hits a skater near its stick deflects (70 percent of its speed) instead of stopping dead."
+        },
+        "one_timer": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Lane A39 (R-0029 point 4): a shot released within window_frames of receiving a teammate's pass gets the full charge without the hold and a wider aim cone; the shot event carries kind one_timer. Leave the key out for the defaults.",
+          "properties": {
+            "window_frames": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 60,
+              "description": "Frames after a received pass during which a shot is a one-timer; 0 turns one-timers off."
+            },
+            "cone_bonus_deg": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 30,
+              "description": "Extra half-angle of aim help, in degrees, added to aim_cone_deg for a one-timer."
+            }
+          }
         }
       }
     },

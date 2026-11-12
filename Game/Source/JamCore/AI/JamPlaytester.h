@@ -38,13 +38,17 @@ namespace JamAI
 		int DrawReactionFrames = 12;     // presses for the draw this many frames after the drop
 		double ChaseLeadS = 0.5;         // leads a moving puck / carrier by this many seconds of its velocity
 		bool bGoalside = true;           // defends goalside of an opposing carrier that is nearer our net than we are
+		// R-0029 point 4 (lane A39): how often the player uses the one-timer and the deke when the chance is there (per cent of 2-second windows:
+		// the good player always, the regular one half the time, the novice never). The breakaway burst is the sim's: nobody presses for it.
+		int OneTimerPct = 50;
+		int DekePct = 50;
 	};
 	FJamPlaytesterProfile PlaytesterProfile(EPlaytester Kind);
 	const char* PlaytesterName(EPlaytester Kind);
 	bool ParsePlaytester(const char* Name, EPlaytester& Out);
 
 	// What the playtester decided this frame (diagnostics; the match counts them).
-	enum class EPlaytesterAct : uint8_t { Idle, Draw, Chase, Carry, Charge, Pass, Support, Forecheck, Poke, Check, Lapse, Count };
+	enum class EPlaytesterAct : uint8_t { Idle, Draw, Chase, Carry, Charge, Pass, Support, Forecheck, Poke, Check, Lapse, OneTimer, Deke, Count };
 
 	class FJamPlaytester
 	{
@@ -67,6 +71,7 @@ namespace JamAI
 		int HoldFrames = 0;
 		int64_t LastPassFrame = -1000;
 		int64_t LastCheckFrame = -1000;
+		int64_t LastDekeFrame = -1000;   // R-0029 point 4 (lane A39)
 		int64_t PlayFrames = 0;          // unfrozen frames seen (the lapse clock)
 		EPlaytesterAct Act = EPlaytesterAct::Idle;
 		int Acts[static_cast<int>(EPlaytesterAct::Count)] = {};
@@ -103,6 +108,8 @@ namespace JamAI
 		int FoulsFromBehind = 0, FoulsNoPuck = 0;   // the two kinds of foul (contracts/events.md): from behind on the carrier; on a skater without the puck
 		int64_t BoxFrames = 0;           // frames the human sat in the penalty box
 		int Pokes = 0, PokesClean = 0, Lifts = 0, Passes = 0;
+		// R-0029 point 4 (lane A39): the payoffs the human used (one-timer shots, bursts, dekes) and the human's goals within 180 frames of one of them
+		int OneTimers = 0, Breakaways = 0, Dekes = 0, PayoffGoals = 0;
 		int Knockdowns = 0;              // the human knocked down (any cause)
 		int64_t IdleFrames = 0;          // frames beyond 900 since the human's last touch (play frames only)
 		int IdleSpells = 0;              // spells without a touch that reached 900 frames

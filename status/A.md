@@ -180,3 +180,15 @@
 - link green 20:43: main 4a6085f (A41 zone trigger, system bundle) pushed.
 
 - RESOURCES 20:44 cpu 33% ram 24.6/63GB gpu 80 %, 8607 MiB, 54 editors 2 cmd 0 ubt 0 free 595GB
+
+- link green 20:53: main 5507fec (A42 HUD pass 2) pushed.
+
+- link green 20:58: main 1f964a9 (A39 payoffs, dev-b merged, 0028 answered) pushed.
+
+## H12.5 (21:05) payoffs on main at 1f964a9; H16 and H17 packaged; two lanes running
+- Main since H12.2: 4a6085f A41 (zone triggers live, one system bundle for every headless path), 5507fec A42 (HUD pass 2), A43 (dark bands: solved by B15's dome; jersey emissive proposal and the puck as the 24 m fault, A-to-B-0011), 1f964a9 A39 (one-timer, breakaway burst, deke on Q / gamepad Y; lockstep protocol v3; all_star speed 1.15 with the payoffs on), dev-b merged (B's cook-only 1400 packages 0 errors; A-to-B-0009 accepted: B runs the figure recipe for three figures by 23:30), B-to-A-0028 answered (R-0031: C-0001 v4, bots check at pro and all_star).
+- Packages: `Hokej_Hokej_H16` (20:55) and `Hokej_Hokej_H17` (21:00, 258.5 MB): H17 is the build to play (payoffs, HUD pass 2, commentator, tackling, camera clamp, curve by playtester class).
+- running: A44 (the Designer learns tonight's keys, six new cuts), A45 (C-0001 v4 + bots check). Then: A3's next pass on the curve with bot checks, B's figure A/B sheets at 23:30.
+- gate rule from 20:45: a push needs build, node tests and automation green (one push went out with a red node test at 20:43; fixed at bf26485).
+
+- RESOURCES 21:15 cpu 6% ram 16.8/63GB gpu 0 %, 1432 MiB, 39 editors 0 cmd 0 ubt 0 free 578GB

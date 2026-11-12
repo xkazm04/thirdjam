@@ -66,8 +66,11 @@ namespace JamAI
 			Opp.ForecheckYieldFrames = 12;   // Director 15:16
 			Opp.bIntercept = true;
 			Opp.bUseAimCone = true;
+			Opp.bOneTimer = true;   // R-0029 point 4 (lane A39): all_star bots use the one-timer and the deke; pro the one-timer (ProOppSkill); rookie neither
+			Opp.bDeke = true;
 			// R-0029 pass 2 (with A31's charge): speed 1.08 (bots may push past 1, the sim clamps them at 1.5): the good playtester 30 % / 25 %
-			return FJamDifficultyProfile{"all_star", 1.08, 1.0, 4.0, 25.0, 0.0, 60, Opp, false};
+			// R-0029 with A39's payoffs on (one-timer, burst, deke): speed 1.15 brings the good playtester back to 23 % at 40 seeds (1.08 measured 38 %, 1.12 33 %); A39 section 9.
+			return FJamDifficultyProfile{"all_star", 1.15, 1.0, 4.0, 25.0, 0.0, 60, Opp, false};
 		}
 
 		void SetErr(char* Err, int ErrLen, const char* Msg, const char* Pair)
@@ -104,6 +107,8 @@ namespace JamAI
 			if (std::strcmp(Key, "forecheck_yield_frames") == 0) { K.ForecheckYieldFrames = static_cast<int>(V); return true; }
 			if (std::strcmp(Key, "pass_to_human") == 0) { K.bPassToHuman = V != 0.0; return true; }
 			if (std::strcmp(Key, "shot_charge_frames") == 0) { K.ShotChargeFrames = static_cast<int>(V); return true; }   // lane A31
+			if (std::strcmp(Key, "one_timer") == 0) { K.bOneTimer = V != 0.0; return true; }   // R-0029 point 4 (lane A39)
+			if (std::strcmp(Key, "deke") == 0) { K.bDeke = V != 0.0; return true; }
 			return false;
 		}
 	}

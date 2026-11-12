@@ -67,6 +67,12 @@ struct JAMCORE_API FJamInput
 	// Stick lift pressed this frame (edge): strips an opposing carrier within lift_range_m.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Sim")
 	bool bLift = false;
+
+	// R-0029 point 4 (lane A39) deke pressed this frame (edge): the carried puck moves game.stick.deke.offset_m to the blade side within 6 frames and the
+	// crease back commits for commit_frames; a second tap inside 30 frames does nothing. LOCKSTEP: a new input field; lane A38's FJamNetQuantInput must
+	// carry it as a flag bit (the checklist line), else the two peers desync at the first deke.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Sim")
+	bool bDeke = false;
 };
 
 // (Named EJamSimPhase, not EJamPhase: lane A5's presentation enum EJamPhase lives in JamGame/HUDFeed.h.)
@@ -141,12 +147,34 @@ struct JAMCORE_API FJamSkaterState
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 DeflectCooldown = 0;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 Passes = 0;
 
+	// R-0029 point 4 (lane A39): the three payoffs.
+	// The frame a teammate's pass landed on this blade (-1 none); a shot within shot.one_timer.window_frames of it is a one-timer. Only kept while one-timers are on.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int64 PassReceivedFrame = -1;
+	// Frames left of the breakaway burst (top speed and accel x (1 + speed_bonus)); the burst fires once per possession (bBreakawayUsed resets when the puck changes hands).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 BreakawayFrames = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bBreakawayUsed = false;
+	// Consecutive frames as the carrier (counted only while the burst is on): the burst needs BreakawayCarryFrames of carry, so a touch-and-shoot never bursts.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 CarryFrames = 0;
+	// Frames left of the deke (the puck moves over the first DekeMoveFrames, the crease back stays committed for all of them); DekeSide +1 = towards +z, -1 = towards -z, 0 = none.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 DekeFrames = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 DekeSide = 0;
+	// First frame a deke is allowed again (a second tap inside DekeLockoutFrames does nothing).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int64 DekeReadyFrame = 0;
+	// Match statistics of the payoffs.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 OneTimers = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 Breakaways = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 Dekes = 0;
+
 	// One-frame flags for the visual (set during the step that just ran).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bShotThisFrame = false;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bPassThisFrame = false;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bCheckThisFrame = false;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bPokeThisFrame = false;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bLiftThisFrame = false;
+	// R-0029 point 4 (lane A39) one-frame flags for the visual: the shot that left was a one-timer, the burst fired, a deke started.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bOneTimerThisFrame = false;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bBreakawayThisFrame = false;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bDekeThisFrame = false;
 	// C-0001 v3 one-frame results for the visual: a poke resolved (1 clean, -1 missed), the draw resolved (1 won, -1 lost), a foul was called on this skater,
 	// the strength (speed / max) of the pass that left this frame; and the level: standing at the dot as a centre before the drop.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 PokeResult = 0;
@@ -229,6 +257,17 @@ public:
 	static constexpr double DeflectMinSpeed = 6.0;   // slower pucks are just pushed
 	static constexpr int32 PassCooldownFrames = 12;
 	static constexpr double CarryYawRateMax = 1.5707963; // rad/s (90 deg/s): carry assist off above it (C-0005)
+	// R-0029 point 4 (lane A39): the deke moves the puck over this many frames, a second tap inside the lockout does nothing, the puck sits this far
+	// ahead of the body while deked (so it stays inside shot reach at the full offset), the burst needs this clear corridor to the net (half-width, and
+	// the crease depth the back may hold without counting as "between"), and the deke shot aims this far inside the post.
+	static constexpr int32 DekeMoveFrames = 6;
+	static constexpr int32 DekeLockoutFrames = 30;
+	static constexpr double DekeAheadM = 0.8;
+	static constexpr double BreakawayCorridorM = 4.0;
+	static constexpr double BreakawayCreaseM = 6.0;
+	static constexpr double BreakawayMinGoalM = 8.0;
+	static constexpr int32 BreakawayCarryFrames = 30;
+	static constexpr double DekePostInsetM = 0.6;
 
 	// Builds the match from a validated config: skaters at their spawns, puck at centre, score 0, phase Playing.
 	// Queues the opening "faceoff" event. Returns false (and logs) if the config has no player.
@@ -314,6 +353,16 @@ public:
 	bool IsDrawOpen() const { return bDrawOpen; }
 	// The skater carrying the puck right now (last toucher, standing and in control, puck within its reach), -1 when the puck is loose. The brain reads it.
 	int32 CarrierIndex() const;
+	// R-0029 point 4 (lane A39): true when Skater carries the puck past centre ice, skates at the net and no standing opponent stands in the corridor
+	// between it and the crease (the rule of the breakaway burst). The brain and the tests read it.
+	bool PastLastDefender(int32 Skater) const;
+	// The sideways offset of a deked puck from the body line, rink metres (zero when the skater is not deking); DekeOffsetM clamped so the puck stays in reach.
+	FVector2D DekeOffset(const FJamSkaterState& S) const;
+	double EffectiveDekeOffsetM() const;
+	// The goalie commit of the latest deke: frames left (0 none), the deker and the side (+1 = +z). It runs deke.commit_frames from the tap and, for a shot
+	// released inside the deke window, until that puck has crossed the goal line: the brain's crease back follows the puck's old side (puck - (0, side * offset))
+	// while it runs. Outlives the carry, so the brain reads it from here, not from the carrier.
+	int32 GetDekeCommit(int32& OutSkater, int32& OutSide) const { OutSkater = DekeCommitSkater; OutSide = DekeCommitSide; return DekeCommitFrames; }
 	// Tests: ends a running countdown at once with a loose puck at the dot and no draw (so a scripted scene starts in Playing).
 	void SkipFaceoff();
 	// The teammate a pass from Skater would go to right now (the rule of TryPass) and the aim point; -1 when nobody is open. Scripts and the brain read it.
@@ -357,6 +406,10 @@ private:
 	void TryShoot(FJamSkaterState& S, float Charge);
 	void StepCharge(FJamSkaterState& S, const FJamInput& In);
 	void TryPass(FJamSkaterState& S);
+	// R-0029 point 4 (lane A39): the deke tap, the burst decision (before the skater moves), and the window bookkeeping after the puck moved.
+	void TryDeke(FJamSkaterState& S);
+	void StepBreakaway(FJamSkaterState& S);
+	void StepPayoffWindows(FJamSkaterState& S);
 	// The teammate a pass from S goes to, and where to aim (lead); -1 when nobody is open.
 	int32 PickReceiver(const FJamSkaterState& S, FVector2D& OutAim) const;
 	void StepPuck();
@@ -402,6 +455,11 @@ private:
 	int32 TimerLeft = 0;
 	bool bOvertime = false;
 	int32 BoardEventCooldown = 0;
+
+	// R-0029 point 4 (lane A39): the goalie commit of the latest deke (see GetDekeCommit).
+	int32 DekeCommitFrames = 0;
+	int32 DekeCommitSide = 0;
+	int32 DekeCommitSkater = -1;
 
 	// R-0013 faceoff and draw state.
 	int32 FaceoffCountdown = 0;
