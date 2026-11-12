@@ -24,7 +24,7 @@ the regular game is a bright toy rink, raw play is the same rink at night, boost
 | Shot | reach 1.5 m, exit 18 m/s regardless of mass, cooldown 24 frames, must face within 60 deg | keep; add charge-up as a tunable later |
 | Goal pause | 120 frames, then faceoff reset at centre, skaters at spawns facing the far net | keep |
 | Camera | Godot used a fixed arena camera [0, 52, 14] fov 55 that cropped both nets | **Decision 2026-11-12 (operator): third-person camera** behind and above the player's skater, following with lag, looking down the ice; the fixed arena camera stays as cartridge option `game.camera.mode = "arena"`. A radar (mini-rink) in the HUD and a far-net marker replace "both nets in frame" as the readability device |
-| Rink size | Godot 60 x 30 m | **Decision 2026-11-12 (operator): twice as large, 120 x 60 m** as the default (`game.rink.length_m` 120, `width_m` 60); the Godot numbers for speed and shot are kept as the starting tunables and re-balanced by the A3 sweep lane (a skater crosses 120 m in about 15 s at 8 m/s) |
+| Rink size | Godot 60 x 30 m | **Decision 2026-11-12 (operator): twice as large, 120 x 60 m** as the default (`game.rink.length_m` 120, `width_m` 60); the Godot numbers for speed and shot are kept as the starting tunables and re-balanced by the A3 sweep lane (a skater crosses 120 m in about 15 s at 8 m/s). **Evidence against the default** (lane E4, 2026-11-12): six skaters on 7200 m^2 are about 4.5x sparser than an NHL 3-on-3 overtime rink and the view feels empty; the A3 lane's first sweep is `rink 90 x 45, skater.speed 11` versus `120 x 60, speed 8`, and the operator decides on the bot-tournament numbers and a look at both |
 | AI | stateless per tick; roles chaser / support / back; stall detector 120 frames; **yield rules**: blue bots yield when the human is nearer the puck (+2 m, within 15 m); red non-backs hold when the human is within 4.5 m of the puck | without the yield rules the human never touched the puck and the core bot had 0 shots |
 | Tests | player bot must WIN with >= 3 shots; AI bot: every skater moved >= 3 m, puck path > 30 m, >= 1 AI shot | "the human has something to do" is a gate, not a hope |
 | Critic | puck invisible from above, team colours hard to read from above | jersey colours must contrast on ice from the top; puck gets a trail and a shadow disc |
@@ -57,7 +57,12 @@ game.teams: [ { id, colour_hex, skaters: [ { role: "player" | "chaser" | "suppor
 game.ai: { yield_margin_m, yield_radius_m, hold_radius_m, speed_scale, red_skill }
 game.pickups: [ { kind: "speed" | "precision" | "heavy_puck" | "big_puck" | "reverse_other", spawn_every_frames, duration_frames, magnitude } ]
 game.look: { tier: "l1_day" | "l2_night" | "l3_neon", trim_colour_hex, fog_density, wet_ice: bool }
-game.camera: { mode: "third_person" | "arena", distance_m, height_m, lag_frames, fov_deg, radar: bool }
+game.camera: { mode: "third_person" | "arena", distance_m, height_m, look_ahead_m, lag_frames, fov_deg, radar: bool }
+  defaults measured by lane E4 (`docs/experiments/CAMERA-120M.md`): distance 6, height 3.5, look_ahead 5, lag 4 frames, fov 70 (wide option 8 / 4 / 6 / 6 / 85);
+  pitch derived as -atan(height / (distance + look_ahead)); the pawn sits 0.7 m to the side of the camera axis or it hides the puck for the first 6.4 m;
+  lag is frame-based on the sim tick (the engine spring arm's DeltaSeconds lag drifts 0.67 m at 60 Hz vs 0.43 m at 30 Hz); far net = UMG screen marker with
+  distance text (beacon optional, brighter frame useless past 60 m); radar = C++-driven UMG mini-rink 200 x 100 px bottom-right; puck ships plain near-black with a
+  trail and a contact-shadow disc (emissive rim marginal).
 ```
 
 Presets shipped as D0 cartridges: `hockey.regular` (M1), `hockey.raw` (M2), `hockey.boost` (M3), three `hockey.arena.*` (M3b).
