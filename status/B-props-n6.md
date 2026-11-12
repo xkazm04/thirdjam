@@ -69,3 +69,21 @@ Not recommended: reel2 (mark on the hub), first canister (bin look). The reel is
 - Text-like marks were checked by eye in 4 views at 256 px only; the penalty box's stained outer face and the scoreboard's mottled face could hold faint marks at higher resolution. Textures were not opened at 2K.
 - The 40 px sheet is the first turntable view in Workbench flat light, not the game's lighting or play camera; colours will shift in the night look.
 - Licence wording for shipping Rodin output is still open (see `status/B-skater-s3.md`).
+
+## Update 2 (lead's re-prompts: no team colours, replacements for spot, reel, canister)
+3 more generations, **1.5 credits**; total lane 8.5 credits. Balance 408 -> **406.5** (checked). 4 views each, no letters, digits or marks seen. Sheets filed: `lab-n6-pickups-together-2`, `-pickup-film-reel-2`, `-pickup-spotlight-head-2`, `-pickup-film-canister-2`. Folders `C:\Users\kazda\jam\skater-lab\n6\<name>\base_basic_pbr.glb`, sheet `pickups_together_2.png`.
+
+| Kind | Kept file | Task id | Tris | Bounds m | Look | Prompt start (then suffix A) |
+|---|---|---|---|---|---|---|
+| speed: film reel | `reel3` (replaces `reel`) | 2bc1a8ef-c4f4-4793-a9ce-ce4dc834181d | 4,726 | 0.737 x 1.821 x 1.791 | 4 | a chunky toy film reel standing upright on its edge like a wheel, two big round flanges with six large round holes and dark spokes, in strong lemon yellow painted metal, plain hub with no marks, |
+| precision: lens | `lens` (unchanged) | 2ee28217-51d5-4631-8f53-01cf0110d04d | 4,836 | 1.755 x 1.834 x 1.709 | 3 | as above |
+| heavy puck: canister | `canister3` (replaces `canister2`) | 63df2422-2478-4fd5-8dd3-d076e02c9e00 | 4,732 | 1.837 x 1.846 x 0.810 | 4 | a chunky toy film canister, a very flat wide round tin lying on its side, much wider than tall, like a short squat pill box with a lid, in bright red painted metal with a white band around the rim, |
+| big puck: spotlight head | `spot2` (replaces `spot`) | 6bde7a6f-7440-441f-82e3-7e80ce8957b1 | 4,762 | 1.656 x 1.695 x 1.745 | 3 | a chunky toy small studio spotlight head lying on the ice, round lamp with a short bracket and a glowing lens, in vivid violet purple painted metal with a pale yellow lens, |
+| reverse: megaphone | `megaphone` | 21e1de89-19df-4e74-82df-ec8c6123fa3e | 4,692 | as above | 5 | as above |
+| mystery: clapper | `clapper` | 0b4839da-61c3-4f47-a812-a11577d15b7d | 4,952 | as above | 4 | as above |
+
+Notes: reel3 is a true wheel (two flanges, six holes, dark spool between), clean hub, but its yellow renders pale cream-tan, not lemon; the canister is now clearly wider than tall (0.81 vs 1.84), red with a white band; spot2 is a plain violet blob with a cream lens and a small stub (bracket mostly lost), less lamp-like than before. Ledger rows: replace the Reel, Canister and SpotHead rows' task ids with the three above; the superseded tasks (c334ebc7..., d1a28f78..., 4337e317...) are not recommended.
+
+### Separation at 40 px (sheet `pickups_together_2.png`)
+- All six now separate by silhouette and by hue: wheel (tan), cyan barrel, flat red disc, violet ball, pink horn, green slate. No two share both hue and shape. The orange/red pair is gone.
+- Team-colour check: **nothing reads as orange-team** (the only warm items are the red tin, which is saturated red with a white band, and the pale tan reel). **Two come near blue-team:** the violet spotlight is the closest to deep blue (violet reads as a lighter, redder blue-purple; at 40 px with dark ice it could pass as a pale blue-team marker), and the cyan lens is a light blue. Neither is the deep blue, but if the blue team is tinted bright in play, shift the spotlight to white-hot yellow or magenta-free pink and the lens to green-teal. The reel is the weakest in contrast (pale on a light ground; fine on dark ice): saturate its diffuse in the material.
