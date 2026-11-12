@@ -305,3 +305,28 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
   director's voice, goal horn, room tone, menu theme.
 - waiting on A: 0013, 0019.
 - ledger: 246 rows; art 34.5 MB, audio 4.1 MB, vfx/other 8.4 MB
+
+## H11.9 (17:55) FOR THE DIRECTOR, READ FIRST: `main` last merged `dev-b` at 15:59; eight handoffs and four figures are waiting
+- **`dev-b` e197957 holds, since your last merge (ab68c40):** four skater figures in the engine with **all nine C-0001 v3 calls, numbers, crests and the carried puck
+  on the blade** (`BP_SkaterVisual_TB1` = a rebuilt Blender figure, `_TB2` hybrid, `_TB2_P3` clay, `_TB2_P4` broadcast; `status/SK2-report.md`); the night rig without
+  props, with a star dome, towers, stanchions, ice scuff, scratches and frost (`status/B13-report.md`); clay tier pass 2 and a broadcast rig `LR_P4_Broadcast`
+  (`status/B14-report.md`, the three tiers in one strip: `devlog/shots/20261112-172129-B-b14-tiers-strip.png`); the operator's audio picks in the event sounds, a music
+  loop and the commentator bank of 340 lines (`status/AUD-report.md`); jersey numbers, crests, UI textures (`status/B12-report.md`).
+- **Open handoffs from B, none answered: 0019** (pickup props), **0021** (figure class per look tier, `SetNumber` at spawn, UI textures), **0022** (lane A22's Blender
+  skater duplicates B's: three styles, 55 takes each, in the engine), **0023** (floor lowering does not happen, glass material, stanchion scaling, rim), **0024** (what
+  the pawn sent in a bot match: no charged shot ever, a shot call with every pass, no goalie stance; the default figure), **0025** (tier value `p4_broadcast`),
+  **0026** (stage the commentator bank, a commentary player, music and skate-loop hooks).
+- **Rulings written without the above, for the Director to re-read against it:** R-0024 point 1 and R-0025 point 1 ("the Blender toy figure is the P2 figure unless the
+  PIE comparison says otherwise", lane A26): the comparison should include `humanoid_b1` and `generated_b2`, which already play matches with the stick verbs; R-0025
+  point 3 (lanes A28, A29: figures through Meshy, Rodin, Tripo with a `ue5_mannequin` rig; motion from text-to-motion and video): B has that route proven end to end
+  since 15:56 (`status/B-skater-skh.md`: Rodin mesh, Meshy rig, scripted clips retargeted in Blender with a generic `retarget.py`, four passes of measurements; the
+  scripts are in `retro/device-b-lab/skater-skh/`), and its clay and broadcast figures are that route's output. B proposes: A28 and A29 judge B's `_TB2_P4` first and
+  spend their credits only on what it lacks (contact moves from video, falls); B's Blender lanes take requests by handoff.
+- **A25 against B13 (both built rink construction between 16:00 and 17:10):** B's rig has 66 glass stanchions as `Con_` actors and B's `MI_Toon_Board` paints a kick
+  plate and rail band; A25 draws a kick plate, a glass rail with stanchions and net frames in `RinkActor`. B is merging `main` 547699c now and lane B15 (port 8002)
+  removes B's duplicates in favour of A's code (the code scales with the rink; B's actors do not), creates `MI_Toon_KickPlate` and `MI_Toon_GlassRail`, and applies
+  A-to-B-0008 points 1 to 7 on top of lane B13's rig. A-to-B-0008 is accepted; stills by H13.
+- running: SK3 (aim grid of 24 holds in the engine, rim, tier-aware figure materials; port 8000), B15 from 18:00.
+- waiting on the operator: clay or broadcast as the tier to push; the default figure; goalies (a kit and 14 clips exist in Blender, R-0013 says no goalie figure);
+  night sky variant; atmosphere (veto until 21:00); commentary delivery check and audio listening.
+- ledger: 763 rows; on disk art 43.5 MB, audio 36.4 MB, vfx/other 9.3 MB
