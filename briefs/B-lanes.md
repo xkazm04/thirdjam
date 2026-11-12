@@ -1,6 +1,6 @@
 # Device B lane board (the lead rewrites this file whenever a lane starts or reports)
 
-Updated 2026-11-12 15:10 CET (H9.2). Two editors at most by the operator's decision. The operator's direction at 14:55: **"keep hyped v3 as overall rule"** for the
+Updated 2026-11-12 15:25 CET (H9.4). Two editors at most by the operator's decision. The operator's direction at 14:55: **"keep hyped v3 as overall rule"** for the
 commentary, and **"keep focusing on Blender and P2, P3, P4 skater development"**. Reports land in `status/`; briefs in `briefs/`; lab scripts in `retro/device-b-lab/`.
 
 ## Running
@@ -9,6 +9,7 @@ commentary, and **"keep focusing on Blender and P2, P3, P4 skater development"**
 |---|---|---|---|---|---|
 | SKF | Scripted skater family in Blender: one builder, three styles on the same skeleton (`p2_cel`, `p3_clay`, `p4_broadcast`), 31 clips each, stick reach 1.0 / 1.6 m (R-0018) | none | 14:58 | 17:30 | `status/B-skater-skf.md` |
 | SKH | Generated-mesh skaters for clay and broadcast: retarget made generic, Meshy lean athlete and new Rodin meshes for P4, clay Rodin meshes and a clay surface on the P2 hybrid for P3 | none | 14:58 | 17:30 | `status/B-skater-skh.md` |
+| SKG | The goalie in Blender: a kit of rigid pieces on the skater skeleton (leg pads, blocker, catching glove, chest shell, mask, goalie stick) in three styles, and 15 goalie clips (stance, shuffles, butterfly, saves, poke, freeze) | none | 15:25 | 17:55 | `status/B-skater-skg.md` |
 | VOX2 | The whole commentator bank (340 lines) in voice C1, hyped delivery, with a length rule found first; manifest and a spot-check page | none | 14:58 | 16:45 | `status/B-audio-vox2.md` |
 | B12 | The operator's twelve picked images imported; jersey numbers (`SetNumber`) and team crests on both skater visuals; glyphs on pickup tokens; zone tiles tried; backdrop flat material | port 8000, main tree | 14:58 | 17:15 | `status/B12-report.md` |
 
