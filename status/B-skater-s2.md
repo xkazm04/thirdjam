@@ -36,7 +36,7 @@ Note: `MESHY.md` (lane E1's stride) records 0.91 m forward and 0.38 m sideways; 
 | 3 hard stop | "hockey player skating fast then braking hard: turns hips sideways, both skates skid sideways, deep knee bend, leans back and away from the direction of travel, arms out for balance, comes to a stop" (3 s) | `01a1cf32-e692-70de-9e20-cfd48b01bc13` / `01a1cf33-4203-7059-b4f8-678e13ea735c` | 90 / 3.0 | 2.8 cm, dz +10 | one-shot (93 deg first to last, it ends upright) | partly: crouch, arms out, hips turn, then straightens; no skid or lean-back reads clearly; `lab-s2-stop` | 13 |
 | 5 wrist shot | "ice hockey wrist shot: standing in a crouch holding a stick with both hands low at the right side, quick sweep of the stick forward with a flick of the wrists, short follow-through pointing toward the target, fast" (2 s) | `01a1cf33-746a-767f-b878-bdeabf80f7de` / `01a1cf33-a609-77a3-ab2c-966de66ec269` | 60 / 2.0 | 3.5 cm | 5 deg, nearly closed | **no**: small hand movement, almost no sweep, no stick; `lab-s2-wrist` | 13 |
 | 6 body check | "ice hockey body check: skater in a crouch drives the right shoulder forward into an opponent, lunging a big step ahead, torso rotating and elbows tucked, then recovers to a skating stance" (2.5 s) | `01a1cf33-dcff-73cb-a88c-fccc56c1d15f` / `01a1cf34-1031-743c-9b08-f134cc8d7508` | 75 / 2.5 | 44 cm forward | 24 deg, recovers near the start | weak: a lunge with forward arms, the shoulder lead is not clear; `lab-s2-check` | 13 |
-| 7 knocked down + get up | "a skater is knocked down on the ice: falls backward hard, lands lying flat on the back with arms and legs spread, lies still for a moment, then rolls to the side, pushes up onto hands and knees, and stands up" (6 s) | `01a1cf34-42dc-73c5-b6c6-f45b0c6c433e` / `01a1cf34-9ec2-74d1-bf45-66ac25bddbd9` | 180 / 6.0 | 9 cm; pelvis dz +41 (it ends standing) | one-shot | **yes**: lies flat on the back (about 1.5 s), rolls, crouches, stands. Ends in a crouch, not a skating stance; `lab-s2-knocked` | 13 |
+| 7 knocked down + get up (CORRECTION, see the engine section: the clip starts already lying on the ice, there is no fall in it; use library 187 for the fall) | "a skater is knocked down on the ice: falls backward hard, lands lying flat on the back with arms and legs spread, lies still for a moment, then rolls to the side, pushes up onto hands and knees, and stands up" (6 s) | `01a1cf34-42dc-73c5-b6c6-f45b0c6c433e` / `01a1cf34-9ec2-74d1-bf45-66ac25bddbd9` | 180 / 6.0 | 9 cm; pelvis dz +41 (it ends standing) | one-shot | **yes**: lies flat on the back (about 1.5 s), rolls, crouches, stands. Ends in a crouch, not a skating stance; `lab-s2-knocked` | 13 |
 | 8 celebration | "ice hockey player celebrating a goal: stands up straight, raises both arms high above the head with fists clenched, jumps slightly and shouts with joy, shaking fists in the air" (3 s) | `01a1cf34-d1ca-7152-aef9-d20ff77e677b` / `01a1cf35-2d3a-77c3-aee0-23702ee1b226` | 90 / 3.0 | 16 cm, 34 cm vertical (jump) | 21 deg, one-shot | yes: arms rise, a small jump; short; `lab-s2-celebrate` | 13 |
 | 9 faceoff idle | "ice hockey faceoff stance: bent over deeply at the waist with knees bent, feet wide apart, holding a stick low with both hands on the ice in front, head up looking forward, waiting still with tiny movements" (3 s) | `01a1cf35-5f26-75cb-9275-1aa837765138` / `01a1cf35-e387-7269-b50c-24ef65dc4f55` | 90 / 3.0 | 0.5 cm | **1.7 deg**: loops as is | yes: bent over, knees bent, nearly still; hands are empty (no stick); `lab-s2-faceoff` | 13 |
 
@@ -100,3 +100,72 @@ The B5 figure's jersey shows a number (a "29") and a small wordmark on the chest
 3. Whether another 25 to 40 credits goes into re-prompts for the wrist shot and the check (budget left in S2: 12 credits, so it needs more from the pool).
 4. Whether to queue the clip set for import after the figure texture is cleaned of numbers and marks; the 3 shared library presets (187, Idle, Cheer 298) cost 9 credits to regenerate.
 5. Confirm text-to-motion output is `ai-generated` and the library presets `sourced` for the ASSETS.md ledger (as `MESHY.md` open question 2).
+
+---
+
+# Engine-ready clips for mascot A and Rodin skater R
+
+Follow-up from the lead (decisions: stride = stride B; stop, turn lean and check come from code; wrist shot = slap shot trimmed; figure 1 is test-only; ship mascot A; Rodin R became the lead's first pick, A second). Done about 11:10-11:20 local. No Unreal.
+
+**Rigs.** A = S1 mascot "A", rig task `01a1cf33-3b37-7559-9f87-cea18ff7a346` (28 bones; pelvis 0.68 m high, standing head about 1.09 m, so a skater about 1.1 m tall and the cm figures below are for that size). R = Rodin no-TAPose, rig task `01a1cf39-74e0-7496-9b7c-cd8a09ffe4d3`. Both have the same 28 bone names, so the same trims and export settings apply.
+
+## Credits
+
+54 credits: per rig 6 animates x 3 (stride B, glide, B5's slap-shot motion, knocked-down, celebration, faceoff) plus one 3-action library animate (187, 298, 0) = 27, twice. S2 total in this report: 138 + 54 = **192** of the 215 allowance (150 + 35 + 30); 23 left. Account balance reads 806 at the end (shared with the other lanes).
+
+Animate tasks, A: Stride `01a1cf3b-406b-72f6-8e32-cadb76853dc3`, Glide `01a1cf3b-7bae-74f0-b0d8-5f9204e834b9`, Shot `01a1cf3b-b65b-707a-a748-40304280b54c`, Knocked `01a1cf3b-f0d2-7080-bebb-28114e1554d2`, Celebrate `01a1cf3c-2b6a-722b-8686-ccb458b7ad83`, Faceoff `01a1cf3c-649e-7704-9f60-b1bf49d39110`, library 187/298/0 `01a1cf3c-c76e-7752-bd32-c73c9d3dfa37`. R, same order: `01a1cf3d-00c6-7157-8856-411d5bc66b29`, `01a1cf3d-3c65-7627-abdb-2f0dd0a9c489`, `01a1cf3d-76a8-70f8-bdd3-d31f7c09c724`, `01a1cf3d-b154-75e2-addf-ca1891dac672`, `01a1cf3d-ea98-722d-9c07-a4e497141449`, `01a1cf3e-2352-7158-b188-5f00899cde66`, `01a1cf3e-5c1e-7478-b2b5-fcd1f931f9a0`. Motion tasks are in the tables above: stride B `01a1cf31-78f9-7509-8281-bbf499e0f6f1`, glide `01a1cf32-2f66-7333-b8e1-4a5dc6bbe2f4`, slap shot `01a1cf22-8a91-7712-8132-b7f0bb2bd0b1`, knocked `01a1cf34-42dc-73c5-b6c6-f45b0c6c433e`, celebrate `01a1cf34-d1ca-7152-aef9-d20ff77e677b`, faceoff `01a1cf35-5f26-75cb-9275-1aa837765138`. Provenance: text-to-motion clips `ai-generated`; library 187 / 298 / 0 `sourced`.
+
+## The script `skater-lab/s2/make_engine_clip.py`
+
+```
+B="C:/Program Files/Blender Foundation/Blender 4.2/blender.exe"
+"$B" -b --factory-startup --python s2/make_engine_clip.py -- --in X.fbx --out Y.fbx [--action SUB] [--start F --end F | --auto-end]
+     [--strip lock|linear|none] [--loop N] [--closed] [--name NAME] [--fps N] [--preview P.fbx] [--report R.json]
+```
+- Reads one action of the Meshy FBX and samples every frame (bone local location, rotation, scale). It strips the pelvis horizontal travel: default `lock` fixes the pelvis world X/Y to frame 1 and keeps the Z bob and the drop; `linear` removes only the straight-line drift and keeps the sway. Optional trim. Optional loop: the last N frames (N = 15 as used here) are cross-faded into the first: `out[i] = slerp(tail[i], head[i], i/N)` for i < N (rotations slerp, locations and scales lerp), so the clip becomes N frames shorter and the wrap is one natural frame step. `--closed` appends a copy of frame 1 (last frame equals first). `--auto-end` picks the end frame, within the last 40 % of the range, whose pose is closest to the first. It bakes a key on every bone at every frame at the clip's own rate (30 fps) into one action named `--name`.
+- FBX export settings: armature only (`--preview` also writes a mesh version, used for the sheets); `use_armature_deform_only=False`; `add_leaf_bones=False` (the 28 bones, including `head_end`, `headfront`, `LeftHand_End`, `LeftToe_end`, are real bones in the source and keep their names); `bake_anim=True`; `bake_anim_use_all_bones=True`; `bake_anim_use_all_actions=False`; `bake_anim_use_nla_strips=False`; `bake_anim_force_startend_keying=True`; `bake_anim_step=1.0`; `bake_anim_simplify_factor=0`; axes -Z forward and Y up (the importer's defaults); `apply_unit_scale=True`; `apply_scale_options=FBX_SCALE_NONE`; `mesh_smooth_type=OFF`.
+- After export it re-imports the file and prints `MEASURE_BEFORE` and `MEASURE_AFTER`: frames, seconds, pelvis horizontal travel first to last frame (cm), pelvis dz and Z range, seam (largest local joint rotation difference first to last, in degrees, with the bone), largest pelvis-relative position difference, and the median one-frame step. A JSON report sits next to each FBX.
+- Batch: `s2/engine.sh A` and `s2/engine.sh R` (the exact trims are inside). `s2/prof.py` printed the per-frame motion profile I used to pick the trims.
+
+## Engine clips
+
+All at 30 fps. Files: `C:\Users\kazda\jam\skater-lab\s2\engine\A\<Clip>.fbx` and `...\engine\R\<Clip>.fbx` (armature only, 270 to 360 KB) with a `<Clip>.json` beside each. Numbers are A / R where they differ. Travel = pelvis horizontal travel first to last frame, before then after. Seam = largest joint rotation difference first to last frame. Step = median joint change between consecutive frames of that clip.
+
+| Clip | Source | Trim / loop | Frames, seconds | Travel before -> after (cm) | Seam before -> after (deg) | Step |
+|---|---|---|---|---|---|---|
+| `Stride` | stride B | trim 1-106 (auto-end, nearest pose at 27 deg), 15-frame loop blend | 91, 3.03 | 597 -> **0** / 667 -> **0**; Z bob 9.6 / 11.3 kept | 52.8 -> **10.8** (calf_r) / 53.5 -> **11.0** | 12.2 / 11.6 |
+| `Stride_Closed` | same | same plus `--closed` | 92, 3.07 | 0 / 0 | **0 / 0** | |
+| `Glide` | glide | whole, 15-frame loop blend | 75, 2.5 | 1.5 -> **0** / 1.6 -> **0** | 4.1 -> **0.2** / 4.0 -> **0.2** | 0.1 |
+| `Idle_Faceoff` | faceoff | whole, 15-frame loop blend | 75, 2.5 | 0.5 -> **0** / 0.5 -> **0** | 1.7 -> **0.3** / 1.8 -> **0.1** | 0.1 |
+| `Shot_Slap` | B5 slap shot motion | trim 18-66 (dead time 1-17 and the recovery after 66 cut), no loop | 49, 1.63 | 8.2 -> **0** / 9.8 -> **0**; dz -10 | one-shot | 6.1 |
+| `Shot_Wrist` | same | trim 33-45 (the swing only) | 13, 0.43 | 8.2 -> **0** / 9.8 -> **0** | one-shot | 15.4 |
+| `Fall` | library 187 Knock_Down | whole (falls and ends flat) | 76, 2.53 | 43 -> **0** / 55 -> **0**; dz -46 / -49 kept | one-shot | 10.5 |
+| `GetUp` | knocked-down text clip | trim 58-180 (lies still until about frame 58, then rolls, kneels, stands) | 123, 4.10 | 6.6 -> **0** / 12.5 -> **0**; dz +46 / +49 kept | one-shot | 6.4 |
+| `Celebrate` | celebration text clip | whole | 90, 3.0 | 15.6 -> **0** / 17.4 -> **0**; jump Z range 33 / 38 kept | one-shot (21) | 8.6 |
+| `Celebrate_Cheer298` (fallback) | library 298 | whole | 57, 1.9 | 0 | 1.2 | 10.6 |
+| `Idle_Lib0` (spare) | library 0 | whole | 121, 4.03 | 0 | 0 | 2.9 |
+
+All "after" numbers come from re-importing the exported FBX. Pelvis travel is 0 on every clip (target under 2 cm: met). **Seam target (under 3 degrees): met by `Glide`, `Idle_Faceoff` and `Stride_Closed`; not met by the open `Stride` (10.8 / 11.0 degrees).** That value is one ordinary frame step of a fast stride (median 12 degrees), so the wrap is a natural step, not a jump; the blend cannot go lower without a duplicated first frame. Choice for the lead: `Stride` (no repeated frame, right for an engine that loops by wrapping) or `Stride_Closed` (last frame equals the first, so one frame of about 33 ms repeats at the wrap). I would ship `Stride`. Only the horizontal pelvis travel is removed; yaw drift is not.
+
+Correction to my first report: I wrote that the knocked-down text clip "falls backward". The measurements show it starts already lying on the ice (pelvis 43 cm high at frame 1) and lies still for about 2 s before getting up. So `Fall` is library 187 and `GetUp` is the second part of the knocked-down clip.
+
+## Contact sheets as filed (8 frames each, `devlog/shots/20261112-1114xx-B-lab-s2-<A|R>-<clip>.png`)
+
+`lab-s2-A-Stride`, `-Glide`, `-Idle_Faceoff`, `-Shot_Slap`, `-Shot_Wrist`, `-Fall`, `-GetUp`, `-Celebrate`, `-Celebrate_Cheer298`, `-Idle_Lib0`, and the same ten as `lab-s2-R-...`. Local copies: `skater-lab\s2\sheets_e\A\` and `\R\`. `Stride_Closed` has the same frames as `Stride`, so no separate sheet.
+
+## By eye: do the big head, short limbs or mitten hands break a clip?
+
+Judged from 8 stills per clip at 192 px; `render.py`'s camera follows the pelvis, so lying clips are cropped and zoomed.
+- **A (mascot):** Stride, Glide and Faceoff read well. The big white gloves swing wide and stay readable, feet stay apart, no crossing. In the shots the gloves pass in front of the face and chin early on and end over the knees; no hand goes through the helmet. In Celebrate the arms are short, so the raised gloves end up against the sides of the helmet (frames 3 to 5), touching or slightly intersecting it: it reads as arms up, but not as a high raise. Fall and GetUp read.
+- **R (Rodin):** the render camera shows R from higher up and closer than A, so the side-on checks are less certain. Stride: mitten fists swing in front and behind, legs short, skates do not cross; reads. Glide and Faceoff: the head covers the chest from this angle, fists sit under the chin. In both shots the fists vanish behind the helmet for frames 4 to 8; I cannot tell whether they intersect it. Celebrate: the fists end beside and slightly behind the helmet (frames 3 to 5), the same kind of touching as A. Fall and GetUp read.
+- Neither figure has a stick, so the shots show only the hands.
+
+## What still looks wrong
+
+1. The open stride wrap is one frame step (10.8 / 11 degrees), not under 3 degrees (the closed variant is).
+2. Celebrate: arms too short on both figures, gloves or fists touch the helmet. Fix with a code-added arm raise, or use the smaller `Celebrate_Cheer298`.
+3. Shots: no stick, so the swing reads as hand waving; the wrist clip is only the 0.43 s swing.
+4. R's shots could not be judged from this camera; render R from the side before promoting it.
+5. `GetUp` ends in a crouch, not the glide pose: blend into Glide about 0.3 s. `Fall` ends flat and holds frame 76 until `GetUp` starts; the 2 s of lying in the text clip is cut.
+6. Pelvis yaw drift stays; with `lock` the stride's sideways sway is gone. If the stride looks stiff, re-run with `--strip linear`.
+7. Not verified: Unreal import (28 bones, no root), foot sliding against the ice, how the baked take names come in. The re-import in Blender gives the same 28 bones and one action per file.
