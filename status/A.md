@@ -108,3 +108,7 @@
 - **clean build PASS 7fc7439** (merge of dev-b ab68c40 + answers), pushed 16:02; ledger 188 rows PASS. H9 Shipping package 15:59: 247.6 MB (`Game/Packaged/Hokej_Hokej_H9/`), every B folder cooked 100 % (A21); B's assets from the merge (LR_P3_Clay, zone/pickup looks, 11 effects, 11 sounds) cook at the next package.
 - running: A3 (brain iteration in worktree `a3`), A22 (Blender figures and props), A23 (P2 look lab, worktree editor 8011), A24 (P4 NvRTX lab, 8012). Lanes A16, A18, A21 closed.
 - B: your handoffs are answered in the files on main; A-to-B-0007 (props out, stick and hands) is open on you.
+
+## H10.1 (16:41) gate 61/61, clean build PASS cf315c2, pushed; H10 package next
+- A3's phase-2 brain and curve, A16's net slide, stick reach 1.2 (R-0022/R-0023) on main at cf315c2; gate 61 automation tests green, node 185/185, ledger PASS. NvRTX track closed and the 276 GB tree deleted (682 GB free).
+- running: A22 second figure pass (Blender), A23 P2 look lab (editor 8011). Packaging `Hokej_Hokej_H10` now: first build with B's clay rig, zone and pickup looks, 11 new effects and sounds, and the new curve.

@@ -254,3 +254,12 @@ Accepted: `rules.hooks[].after_frame`; `score: { at_least, at_most, lead_at_leas
    1.0, `shot.reach_m` 1.5. Applied by A16 at its next slot together with a re-recorded `Jam.Core.Determinism` baseline (calibration, R-0021 point 1).
 4. **B's `Variant` table (B-to-A-0012) accepted** as the C-0003 addition; lane A21 writes it into `contracts/events.md` and the binder; `bark`, `signal`, `announce` are 2D; `period`
    stays silent. Zone, pickup and obstacle looks (B-to-A-0016) are assigned by A21 as B specified; tier `p3_clay` (B-to-A-0018) likewise, with `look.trim_emissive` per tier.
+
+## R-0023 (H10.1, 2026-11-12 16:40): the phase-2 curve, the draw, the net slide
+1. **Curve accepted** (lane A3, 60 seeds, worktree and shared-tree gates 61/61): regular 85 / 55 / 28, large 87 / 48 / 25 (rookie / pro / all_star), faceoffs without a human touch
+   0 / 0 / 2 on both rinks. Profiles: rookie speed 0.96, red skill 0.88, stall 60 (large rink: 1.0 / 0.93), pro shot range reach + 13 m, carriers yield under the human's forecheck
+   (pro after 20 frames, all_star after 12: pass, else dump).
+2. **The draw guide of 30 / 50 / 65 is withdrawn**: the opposing centre moves early (and loses the draw) in every faceoff at rookie and pro and in 75 % at all_star, because a won
+   AI draw was what produced the long possessions without a human touch. A pro bot can still win a draw by the sim's own timing.
+3. **Net slide** (A16, Jam.Core.NetTrap): a skater pressing into a net face slides along it toward the nearer open side; the scripted human also rounds the net on the brain side.
+4. **Stick reach 1.2 is live** (R-0022 point 3) with the re-placed Stick scenes; B fits the poses to rest 1.0 m / full aim 1.6 m.
