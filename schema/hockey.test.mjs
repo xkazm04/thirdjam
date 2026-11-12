@@ -10,6 +10,7 @@ const CART_DIR = resolve(HERE, '..', 'Game', 'Content', 'Cartridges');
 const read = (f) => JSON.parse(readFileSync(resolve(CART_DIR, f), 'utf8'));
 const regular = () => read('hockey.regular.cartridge.json');
 const PRESETS = [
+  'hockey.test.visual-b2.cartridge.json',
   'hockey.regular.cartridge.json', 'hockey.raw.cartridge.json', 'hockey.boost.cartridge.json',
   'hockey.arena.small.cartridge.json', 'hockey.arena.wide.cartridge.json',
 ];
@@ -17,7 +18,7 @@ const PRESETS = [
 const has = (errors, pointer, fragment) => errors.some((e) => e.startsWith(`at ${pointer}:`) && e.includes(fragment));
 const errorsOf = (c) => validateCartridge(c).errors;
 
-test('the preset folder holds exactly the five presets', () => {
+test('the preset folder holds exactly the six presets', () => {
   assert.deepEqual(readdirSync(CART_DIR).sort(), [...PRESETS].sort());
 });
 
@@ -90,6 +91,25 @@ test('every enum value the brief lists is accepted', () => {
     const c = regular(); c.game.pickups = [{ kind, spawn_every_frames: 600, duration_frames: 60 }]; assert.deepEqual(errorsOf(c), []);
   }
   for (const role of ['chaser', 'support', 'back']) { const c = regular(); c.game.teams[0].skaters[1].role = role; assert.deepEqual(errorsOf(c), []); }
+});
+
+test('skater.visual: valid values pass, a wrong value fails with a pointer, the Designer may not change it', () => {
+  for (const v of ['toy', 'humanoid_b1', 'generated_b2']) {
+    const c = regular(); c.game.skater.visual = v;
+    assert.deepEqual(errorsOf(c), []);
+  }
+  const bad = regular(); bad.game.skater.visual = 'clay';
+  const errors = errorsOf(bad);
+  assert.ok(has(errors, '/game/skater/visual', 'is not allowed'), errors.join('\n'));
+  assert.ok(has(errors, '/game/skater/visual', '"toy", "humanoid_b1", "generated_b2"'));
+  const changed = regular(); changed.game.skater.visual = 'generated_b2';
+  assert.ok(has(validateDesignerOutput(regular(), changed).errors, '/game/skater/visual', 'may not change'));
+  assert.equal(regular().game.skater.visual, undefined);
+  const b2 = read('hockey.test.visual-b2.cartridge.json');
+  assert.equal(b2.id, 'hockey-test-visual-b2');
+  assert.equal(b2.game.skater.visual, 'generated_b2');
+  const { visual, ...rest } = b2.game.skater;
+  assert.deepEqual(rest, regular().game.skater);
 });
 
 test('exactly one player: zero and two are both rejected', () => {
@@ -181,7 +201,8 @@ test('limits.json game_ranges mirror the schema exactly', () => {
       if (s.items?.properties) for (const [k, v] of Object.entries(s.items.properties)) walk(v, `${path}[].${k}`);
       return;
     }
-    if (s.minimum !== undefined) mirror[path] = `${s.minimum}..${s.maximum}`;
+    if (s.enum) mirror[path] = s.enum.join('|');
+    else if (s.minimum !== undefined) mirror[path] = `${s.minimum}..${s.maximum}`;
   };
   walk(schema, '');
   assert.deepEqual(loadLimits().game_ranges, mirror);

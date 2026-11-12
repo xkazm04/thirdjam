@@ -164,6 +164,14 @@
           "minimum": 15,
           "maximum": 300,
           "description": "How long a knocked-down skater stays down, in physics frames."
+        },
+        "visual": {
+          "enum": [
+            "toy",
+            "humanoid_b1",
+            "generated_b2"
+          ],
+          "description": "Which skater figure is drawn: toy (default), humanoid_b1 or generated_b2. Gameplay is identical. The Designer may not change it."
         }
       }
     },

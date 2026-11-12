@@ -20,6 +20,7 @@ of them out explicitly, but a Designer or hand-written cartridge may leave them 
 | `skater.check_enabled` | false | |
 | `skater.check_speed_min` | 5 | only read when `check_enabled` is true |
 | `skater.knockdown_frames` | 90 | only read when `check_enabled` is true |
+| `skater.visual` | `toy` | which figure is drawn: `toy`, `humanoid_b1`, `generated_b2`; gameplay is identical; the Designer may not change it (R-0001) |
 | `puck.radius_m` | 0.12 | |
 | `puck.max_speed` | 30 | |
 | `puck.drag` | 0 | |
