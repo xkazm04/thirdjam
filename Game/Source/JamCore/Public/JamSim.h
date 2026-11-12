@@ -232,6 +232,9 @@ struct JAMCORE_API FJamSimEvent
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int64 Frame = 0;
 	// Side channel for "announce" (C-0005): the rule's text for the scoreboard line. Empty for every other event.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") FString Text;
+	// Lane A47 (B-to-A-0029): the contact normal (checker towards victim) for check and knockdown, the board normal into the rink for board; zero otherwise.
+	// Rink axes (x, z), unit length. A read-out: nothing in the step reads it and events are not hashed.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") FVector2D Dir = FVector2D::ZeroVector;
 };
 
 UCLASS(BlueprintType)
@@ -424,7 +427,7 @@ private:
 	bool CollidePuckCircle(const FVector2D& C, double CR, double R, double E);
 	bool CollidePuckBox(const FVector2D& Min, const FVector2D& Max, double R, double E);
 	void ScoreGoal(int32 ScoringTeam);
-	void Emit(FName Name, int32 Who, const FVector2D& Where, float Strength, FName Kind = NAME_None);
+	void Emit(FName Name, int32 Who, const FVector2D& Where, float Strength, FName Kind = NAME_None, const FVector2D& Dir = FVector2D::ZeroVector);
 	void KnockDown(int32 Victim, const FVector2D& Dir, float Strength, FName Cause);
 
 	// C-0005 seams.

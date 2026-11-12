@@ -337,7 +337,7 @@ void UJamHudWidget::BuildTree()
 
 	// ---- Director's Call ready line (lane A5's; the overlay of lane A8 draws the live hint, this one stays for its feed flag).
 	CallText = MakeText(T, TEXT("CallText"), S::LabelFont(true), S::Yellow());
-	CallText->SetText(FText::FromString(TEXT("DIRECTOR'S CALL READY")));
+	CallText->SetText(FText::FromString(TEXT("CALL READY")));   // R-0021 point 3 (lane A47, B-to-A-0030 fault 2): no film word on the ice
 	CallText->SetVisibility(ESlateVisibility::Collapsed);
 	Place(Root, CallText, FVector2D(0.5, 1), FVector2D(0.5, 1), FVector2D(0, -40));
 
@@ -564,10 +564,13 @@ void UJamHudWidget::UpdateCommentary(const FJamPresentationFrame& F)
 			CommentaryFrame = L.Frame;
 			CommentaryDuration = L.DurationFrames;
 		}
+		// Lane A47 (B-to-A-0030 fault 7): the caption follows the voice: a cut line (bark, must-play goal call) ends at the cut frame.
+		const int64 End = C->GetLineEndFrame();
+		if (CommentaryFrame > -1000000 && End >= CommentaryFrame) CommentaryDuration = static_cast<int32>(FMath::Min<int64>(End - CommentaryFrame, L.DurationFrames));
 	}
 	// Nothing on the strip under the pause card (A48's storyboard, still 9): the pause menu pauses the world (no new frame carries the phase).
 	const bool bPaused = F.Phase == EJamPhase::Paused || (GetWorld() && GetWorld()->IsPaused());
-	const float Alpha = bPaused ? 0.f : CommentaryOpacityFor(CommentaryFrame, CommentaryDuration, F.SimFrame);
+	const float Alpha = bPaused ? 0.f : CommentaryOpacityFor(CommentaryFrame, CommentaryDuration, F.SimFrame, 0);   // A47: the caption ends with the line
 	CommentaryStrip->SetRenderOpacity(Alpha);
 	CommentaryStrip->SetVisibility(Alpha > 0.f ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	if (Alpha > 0.f)

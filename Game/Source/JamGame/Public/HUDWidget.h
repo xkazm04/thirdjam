@@ -129,11 +129,13 @@ public:
 	// CommentaryHoldFrames, then faded over CommentaryFadeFrames. The barks keep their bubbles (one copy of each line on screen).
 	static constexpr int32 CommentaryHoldFrames = 90;
 	static constexpr int32 CommentaryFadeFrames = 30;
-	static float CommentaryOpacityFor(int64 ShownFrame, int32 DurationFrames, int64 Now)
+	// Lane A47 (B-to-A-0030 fault 7): the live strip passes HoldFrames 0 and the line's real end (a cut shortens DurationFrames), so the caption
+	// fades the moment the voice stops; the default keeps the earlier reading for the tests.
+	static float CommentaryOpacityFor(int64 ShownFrame, int32 DurationFrames, int64 Now, int32 HoldFrames = CommentaryHoldFrames)
 	{
 		const int64 Age = Now - ShownFrame;
 		if (Age < 0 || ShownFrame <= -1000000) return 0.f;
-		const int64 Hold = static_cast<int64>(FMath::Max(0, DurationFrames)) + CommentaryHoldFrames;
+		const int64 Hold = static_cast<int64>(FMath::Max(0, DurationFrames)) + FMath::Max(0, HoldFrames);
 		if (Age <= Hold) return 1.f;
 		const int64 Fade = Age - Hold;
 		return Fade >= CommentaryFadeFrames ? 0.f : 1.f - static_cast<float>(Fade) / static_cast<float>(CommentaryFadeFrames);

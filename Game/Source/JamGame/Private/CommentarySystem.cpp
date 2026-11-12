@@ -35,6 +35,9 @@ namespace
 		SfxEarly(TEXT("early")), SfxDrop(TEXT("drop")), SfxTakeN(TEXT("take_n")), SfxTakeTied(TEXT("take_tied")), SfxTied(TEXT("tied")), SfxLast10(TEXT("last_10")),
 		SfxLast10Tied(TEXT("last_10_tied")), SfxLast10Close(TEXT("last_10_close")), SfxSudden(TEXT("sudden")), SfxShutout(TEXT("shutout")), SfxSeason(TEXT("season"));
 	const FName KindBoost(TEXT("boost")), KindCheck(TEXT("check"));
+	// Lane A47 (B-to-A-0030 fault 4): B tagged board.bank and board.rim with their condition as the line's kind so they could never play on a plain
+	// board hit. The payload's kind for board is "skater" or none, so these kinds are conditions for WhenHolds, not a kind to match.
+	bool IsConditionKind(FName Kind) { return Kind == SfxBank || Kind == SfxRim; }
 	const FName SitGoalBlue(TEXT("goal.blue")), SitGoalOrange(TEXT("goal.orange")), SitGoalPause(TEXT("goal.pause")), SitBoardBank(TEXT("board.bank"));
 	const FName BarkGoalFor(TEXT("goal_for")), BarkGoalAgainst(TEXT("goal_against")), BarkFaceoff(TEXT("faceoff"));
 	const TCHAR* PathCommentary = TEXT("/JamAssets/Audio/MS_commentary.MS_commentary");
@@ -148,8 +151,8 @@ bool FJamCommentaryPicker::WhenHolds(const FJamCommentaryLine& L, const FJamComm
 		if (S.EndsWith(TEXT("_down"))) return E.Strength < 0.5f;
 		return true;
 	}
-	// Plain, colour and kind situations hold once event, kind and team matched.
-	if (Sfx.IsNone() || Sfx == SfxAny || Sfx == SfxBlue || Sfx == SfxOrange || Sfx == L.Kind) return true;
+	// Plain, colour and kind situations hold once event, kind and team matched (a condition kind, B's bank / rim tag, is not a kind: it reads on below).
+	if (Sfx.IsNone() || Sfx == SfxAny || Sfx == SfxBlue || Sfx == SfxOrange || (Sfx == L.Kind && !IsConditionKind(L.Kind))) return true;
 	// The human.
 	if (Sfx == SfxHuman) return E.Who == W.HumanIndex;
 	if (Sfx == SfxToHuman) return E.Kind == FName(*FString::Printf(TEXT("to_%d"), W.HumanIndex));
@@ -210,7 +213,9 @@ bool FJamCommentaryPicker::WhenHolds(const FJamCommentaryLine& L, const FJamComm
 		for (int64 F : HumanShotFrames) if (E.Frame - F <= JamCommentary::StreakWindowFrames) ++N;
 		return N >= 3;
 	}
-	if (Sfx == SfxBank) return E.Frame - LastBoardFrame <= JamCommentary::BankWindowFrames;
+	// board.bank is a goal-time line (Observe adds it at the goal). Lane A47 (B-to-A-0030 fault 4): on a board event this held whenever the previous
+	// board hit was within a second (the puck rattling along the boards), so "Banked it in off the boards!" played on a plain board hit.
+	if (Sfx == SfxBank) return E.Event == JamEvents::Goal && E.Frame - LastBoardFrame <= JamCommentary::BankWindowFrames;
 	if (Sfx == SfxAfterGoal) return LastGoalFrame > PrevDropFrame;
 	if (Sfx == SfxAfterFoul) return LastFoulFrame > PrevDropFrame;
 	if (Sfx == SfxEarly) return W.DrawEarly.IsValidIndex(E.Who) && W.DrawEarly[E.Who];
@@ -239,7 +244,7 @@ void FJamCommentaryPicker::Candidates(const FJamCommentaryEvent& E, const FJamCo
 	{
 		const FJamCommentaryLine& L = Bank.Lines[I];
 		if (L.Priority < MinPriority) continue;
-		if (!L.Kind.IsNone())
+		if (!L.Kind.IsNone() && !IsConditionKind(L.Kind))
 		{
 			if (bZone) { if (!ZoneKind || *ZoneKind != L.Kind) continue; }
 			else if (L.Kind != E.Kind) continue;
@@ -406,13 +411,21 @@ bool FJamCommentaryPicker::Resolve(const FJamCommentaryWorld& W, FJamCommentaryP
 	};
 	if (!Settings.bEnabled) { Close(); return false; }
 	// The booth yields to a bark addressed to the human: nothing starts, a playing line is cut.
+	// Lane A47: a must-play candidate (priority 5: the goal calls) is never silenced by a bark; in the first PIE proof a bark 61 frames before a goal held
+	// the booth through the goal and the colour call fell (B-to-A-0030 fault 3, "a goal always called"). The hold still starts for everything else.
+	bool bMustPlayPending = false;
+	for (const FJamCommentaryEvent& E : Pending) for (int32 I : E.Candidates) if (Bank.Lines[I].Priority >= JamCommentary::MustPlayPriority) bMustPlayPending = true;
 	if (bBarkAtHumanThisFrame)
 	{
 		BarkHoldUntil = FMath::Max(BarkHoldUntil, Frame + JamCommentary::BarkYieldFrames);
-		if (IsLinePlaying(Frame)) { bCutRequested = true; LastEndFrame = Frame; }
-		if (OutSkip && Pending.Num()) *OutSkip = TEXT("yield");
-		Close();
-		return false;
+		// Lane A47 (B-to-A-0030 fault 3): a line under 0.5 s old is never cut after a word; it plays on and the hold starts after it. An older line is cut.
+		if (IsLinePlaying(Frame) && Frame - LastStartFrame >= JamCommentary::CutFloorFrames) { bCutRequested = true; CutReason = TEXT("bark_at_human"); LastEndFrame = Frame; }
+		if (!bMustPlayPending)
+		{
+			if (OutSkip && Pending.Num()) *OutSkip = TEXT("yield");
+			Close();
+			return false;
+		}
 	}
 	// The goal's second beat expires when the pause ends.
 	if (bGoalBeatPending && (!W.bPause || Frame - GoalBeat.Frame > JamCommentary::SecondBeatFrames)) bGoalBeatPending = false;
@@ -443,10 +456,18 @@ bool FJamCommentaryPicker::Resolve(const FJamCommentaryWorld& W, FJamCommentaryP
 	const FName Event = Slot >= 0 ? Pending[Slot].Event : GoalBeat.Event;
 	if (!IsGateOpen(Frame))
 	{
-		// A late quick-play line describes a play that is over: dropped, never queued (the goal beat alone waits for the gate).
-		if (OutSkip) *OutSkip = Frame < LastEndFrame ? TEXT("playing") : Frame < BarkHoldUntil ? TEXT("yield") : TEXT("gate");
-		Close();
-		return false;
+		// Lane A47 (B-to-A-0030 fault 3, A32's open point 1): a must-play line (priority 5: the goal calls) cuts a playing lower-priority line, skips the
+		// 2.5 s gate behind one and plays through a bark hold; it never cuts a playing priority-5 line (then it is dropped as before).
+		const bool bMustPlay = !bFromBeat && Bank.Lines[LineIndex].Priority >= JamCommentary::MustPlayPriority && !(IsLinePlaying(Frame) && Last.Priority >= JamCommentary::MustPlayPriority);
+		if (!bMustPlay)
+		{
+			// A late quick-play line describes a play that is over: dropped, never queued (the goal beat alone waits for the gate).
+			if (OutSkip) *OutSkip = Frame < LastEndFrame ? TEXT("playing") : Frame < BarkHoldUntil ? TEXT("yield") : TEXT("gate");
+			Close();
+			return false;
+		}
+		if (IsLinePlaying(Frame)) { bCutRequested = true; CutReason = TEXT("must_play"); }
+		LastEndFrame = Frame;
 	}
 	const bool bOk = Start(LineIndex, Event, Frame, Out);
 	if (bOk)
@@ -612,7 +633,7 @@ void UJamCommentarySystem::HandleSimFrame(const FJamPresentationFrame& F)
 	FJamCommentaryPick P;
 	FString Skip;
 	const bool bStart = Picker->Resolve(W, P, &Skip);
-	if (Picker->TakeCutRequest()) CutLine();
+	if (Picker->TakeCutRequest()) CutLine();   // before Play: a must-play cut names the line it cut, not the one that starts
 	if (bStart) Play(P);
 	else if (!Skip.IsEmpty()) UE_LOG(LogJamCommentary, Verbose, TEXT("JAMVO_SKIP frame=%lld reason=%s"), W.Frame, *Skip);
 }
@@ -639,8 +660,13 @@ void UJamCommentarySystem::CutLine()
 	if (Voice && Voice->IsPlaying())
 	{
 		Voice->FadeOut(0.15f, 0.f);
-		UE_LOG(LogJamCommentary, Log, TEXT("JAMVO_CUT id=%s frame=%lld reason=bark_at_human"), *Last.LineId.ToString(), Frame);
+		UE_LOG(LogJamCommentary, Log, TEXT("JAMVO_CUT id=%s frame=%lld reason=%s"), *Last.LineId.ToString(), Frame, Picker ? Picker->GetCutReason() : TEXT("bark_at_human"));
 	}
+}
+
+int64 UJamCommentarySystem::GetLineEndFrame() const
+{
+	return Picker ? Picker->GetLastEndFrame() : -1000000;
 }
 
 void UJamCommentarySystem::Play(const FJamCommentaryPick& P)

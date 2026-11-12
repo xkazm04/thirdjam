@@ -1,0 +1,23 @@
+[
+ {
+  "target": 3832,
+  "frame": 3832,
+  "label": "goal-burst",
+  "file": "C:\\Users\\kazda\\kiro\\thirdjam\\tools\\qa\\out\\a47-shoot-raw2\\goal-burst-f3832.png",
+  "ok": true
+ },
+ {
+  "target": 3854,
+  "frame": 3854,
+  "label": "goal-call",
+  "file": "C:\\Users\\kazda\\kiro\\thirdjam\\tools\\qa\\out\\a47-shoot-raw2\\goal-call-f3854.png",
+  "ok": true
+ },
+ {
+  "target": 4054,
+  "frame": 4054,
+  "label": "banner-period2",
+  "file": "C:\\Users\\kazda\\kiro\\thirdjam\\tools\\qa\\out\\a47-shoot-raw2\\banner-period2-f4054.png",
+  "ok": true
+ }
+]

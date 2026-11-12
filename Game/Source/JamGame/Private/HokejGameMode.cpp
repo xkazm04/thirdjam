@@ -23,6 +23,7 @@
 #include "Progression.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Engine/World.h"
+#include "EngineUtils.h"
 #include "Engine/GameInstance.h"
 #include "GameFramework/PlayerController.h"
 #include "Camera/PlayerCameraManager.h"
@@ -164,7 +165,14 @@ UClass* AHokejGameMode::ResolveVisualClass(FName Visual, const FString& Tier) co
 	// contracts/skater-visual.md: BP_SkaterVisual_<track>; R-0001 item 1: game.skater.visual picks it.
 	if (Visual == VisualSkeletal) return USkeletalSkaterVisual::StaticClass();
 	TArray<const TCHAR*> Paths;   // in order of preference; the first that loads wins
-	if (Visual == VisualB1) Paths.Add(TEXT("/JamAssets/Skaters/BP_SkaterVisual_TB1.BP_SkaterVisual_TB1_C"));
+	if (Visual == VisualB1)
+	{
+		// B-to-A-0030 (the Director's answer, lane A47): B imports the scripted figure per tier as BP_SkaterVisual_TB1_P3 (clay) and _TB1_P4 (broadcast);
+		// the night figure is the fallback of both until they land.
+		if (Tier == TierClay) Paths.Add(TEXT("/JamAssets/Skaters/BP_SkaterVisual_TB1_P3.BP_SkaterVisual_TB1_P3_C"));
+		else if (Tier == TierBroadcast) Paths.Add(TEXT("/JamAssets/Skaters/BP_SkaterVisual_TB1_P4.BP_SkaterVisual_TB1_P4_C"));
+		Paths.Add(TEXT("/JamAssets/Skaters/BP_SkaterVisual_TB1.BP_SkaterVisual_TB1_C"));
+	}
 	else if (Visual == VisualB2)
 	{
 		// B-to-A-0021 point 1 (lane A31): the figure follows the look tier; the hybrid figure is the fallback of both tier figures.
@@ -218,7 +226,17 @@ void AHokejGameMode::BuildMatch()
 	if (!World || !Cartridge) return;
 	const FJamGameConfig& G = Cartridge->Game;
 
-	for (AJamSkater* S : Skaters) if (S) S->Destroy();
+	// Lane A47 (B-to-A-0030 fault 6): a Blueprint visual is a child actor attached to the skater, and AActor::Destroy on the skater leaves it standing on the
+	// ice (18 ghosts after three LoadCut rebuilds in QA1). The visual goes first (A31's ResetVisual teardown), the skater after.
+	int32 VisualActors = 0, VisualComponents = 0;
+	for (AJamSkater* S : Skaters)
+	{
+		if (!S) continue;
+		if (AActor* VA = Cast<AActor>(S->GetVisualObject())) { VA->Destroy(); ++VisualActors; }
+		else if (UActorComponent* VC = Cast<UActorComponent>(S->GetVisualObject())) { VC->DestroyComponent(); ++VisualComponents; }
+		S->Destroy();
+	}
+	if (Skaters.Num()) UE_LOG(LogHokej, Log, TEXT("JAMVISUAL teardown: %d skaters, %d visual actors and %d visual components destroyed before them"), Skaters.Num(), VisualActors, VisualComponents);
 	Skaters.Reset();
 	if (Puck) Puck->Destroy();
 
@@ -267,6 +285,12 @@ void AHokejGameMode::BuildMatch()
 		A->SetActorLabel(FString::Printf(TEXT("Skater_%d_%s_%s"), S.Index, *G.Teams[S.Team].Id, *S.Role.ToString()));
 #endif
 		Skaters.Add(A);
+	}
+	{
+		// Lane A47: the ghost count the proof reads. Every skater visual actor in the world should belong to a skater built just now.
+		int32 VisualsInWorld = 0;
+		for (TActorIterator<AActor> It(World); It; ++It) if (It->GetClass()->GetName().Contains(TEXT("SkaterVisual"))) ++VisualsInWorld;
+		UE_LOG(LogHokej, Log, TEXT("JAMVISUAL after build: %d skaters, %d SkaterVisual actors in the world (ghosts=%d)"), Skaters.Num(), VisualsInWorld, FMath::Max(0, VisualsInWorld - Skaters.Num()));
 	}
 	Puck = World->SpawnActor<AJamPuck>(AJamPuck::StaticClass(), FTransform::Identity, P);
 	Puck->InitPuck(G.Puck.RadiusM, G.Puck.Colour);
@@ -549,6 +573,7 @@ void AHokejGameMode::DeliverEvents()
 		Pl.Where = UJamSim::ToWorld(E.Where, E.Name == JamEvents::Board || E.Name == JamEvents::Shot || E.Name == JamEvents::Goal ? 0.04 : 0.0);
 		Pl.Strength = E.Strength;
 		Pl.Kind = E.Kind;
+		Pl.Dir = FVector(E.Dir.X, E.Dir.Y, 0.0);   // lane A47 (B-to-A-0029): rink (x, z) -> world (x, y), the same axes as ToWorld
 		Bus->Broadcast(E.Name, Pl);
 	}
 	if (Effects)

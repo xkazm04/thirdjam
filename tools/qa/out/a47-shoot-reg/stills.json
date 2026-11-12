@@ -1,0 +1,23 @@
+[
+ {
+  "target": 20,
+  "frame": 20,
+  "label": "banner",
+  "file": "C:\\Users\\kazda\\kiro\\thirdjam\\tools\\qa\\out\\a47-shoot-reg\\banner-f20.png",
+  "ok": true
+ },
+ {
+  "target": 417,
+  "frame": 417,
+  "label": "board",
+  "file": "C:\\Users\\kazda\\kiro\\thirdjam\\tools\\qa\\out\\a47-shoot-reg\\board-f417.png",
+  "ok": true
+ },
+ {
+  "target": 523,
+  "frame": 523,
+  "label": "windup",
+  "file": "C:\\Users\\kazda\\kiro\\thirdjam\\tools\\qa\\out\\a47-shoot-reg\\windup-f523.png",
+  "ok": true
+ }
+]

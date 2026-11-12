@@ -753,7 +753,7 @@ int32 UJamSim::CarrierIndex() const
 	return (FVector2D::Distance(S.Pos, Puck.Pos) <= Eff(EJamStat::ShotReach, C) || FVector2D::Distance(S.BladePos, Puck.Pos) <= DeflectRangeM) ? C : -1;
 }
 
-void UJamSim::Emit(FName Name, int32 Who, const FVector2D& Where, float Strength, FName Kind)
+void UJamSim::Emit(FName Name, int32 Who, const FVector2D& Where, float Strength, FName Kind, const FVector2D& Dir)
 {
 	FJamSimEvent E;
 	E.Name = Name;
@@ -762,6 +762,7 @@ void UJamSim::Emit(FName Name, int32 Who, const FVector2D& Where, float Strength
 	E.Strength = FMath::Clamp(Strength, 0.f, 1.f);
 	E.Kind = Kind;
 	E.Frame = Frame;
+	E.Dir = Dir.GetSafeNormal();   // lane A47 read-out (B-to-A-0029): zero stays zero
 	FrameEvents.Add(E);
 }
 
@@ -1156,7 +1157,7 @@ void UJamSim::CollideSkaterStatic(FJamSkaterState& S)
 		S.Pos -= N * (D + R);
 		const double Vn = Dot(S.Vel, N);
 		// Lane A33: a hard board hit is announced (cosmetic read-out; Strength = normal speed / skater.speed, Kind = skater, Where = the contact on the boards).
-		if (Vn >= SkaterBoardEventMinSpeed) Emit(JamEvents::Board, S.Index, S.Pos + N * R, static_cast<float>(Vn / FMath::Max(1e-6, Config.Skater.Speed)), KindSkater);
+		if (Vn >= SkaterBoardEventMinSpeed) Emit(JamEvents::Board, S.Index, S.Pos + N * R, static_cast<float>(Vn / FMath::Max(1e-6, Config.Skater.Speed)), KindSkater, -N);   // lane A47: Dir = the board normal into the rink
 		if (Vn > 0) S.Vel -= N * ((1.0 + SkaterBoardBounce) * Vn);
 	}
 	// Nets as solid boxes behind each goal line. A skater is pushed out along the shortest axis; the speed it pressed into the hull with becomes a slide
@@ -1247,7 +1248,7 @@ void UJamSim::CollideSkaters()
 					const FVector2D VF = Victim.Forward();
 					const double Along = Dot(Dir, VF);
 					const FName CheckKind = Along > 0.5 ? CheckBehind : Along < -0.5 ? CheckFront : (Dot(Dir, FVector2D(VF.Y, -VF.X)) < 0.0 ? CheckSideL : CheckSideR);
-					Emit(JamEvents::Check, Checker.Index, Contact, Strength, CheckKind);
+					Emit(JamEvents::Check, Checker.Index, Contact, Strength, CheckKind, Dir);   // lane A47: Dir = the contact normal, checker towards victim (B-to-A-0029 ask 1)
 					FireRule(EJamRuleTrigger::OnCheck, Checker.Index, Checker.Team, NAME_None, Strength);
 					// R-0029 point 3: a victim that carried the puck within game.stick.foul_grace_frames still counts as the carrier (the puck just left it).
 					const bool bVictimHasPuck = CarrierIndex() == Victim.Index || (Frame - Victim.LastCarryFrame) <= Config.Stick.FoulGraceFrames;
@@ -1285,7 +1286,7 @@ void UJamSim::KnockDown(int32 Victim, const FVector2D& Dir, float Strength, FNam
 	V.KnockFrames = FMath::RoundToInt32(Eff(EJamStat::KnockdownFrames, Victim));
 	V.KnockDir = Dir.GetSafeNormal();
 	if (V.KnockDir.IsNearlyZero()) V.KnockDir = FVector2D(1, 0);
-	Emit(JamEvents::Knockdown, V.Index, V.Pos, Strength, Cause);
+	Emit(JamEvents::Knockdown, V.Index, V.Pos, Strength, Cause, V.KnockDir);   // lane A47: Dir = KnockDir (B-to-A-0029 ask 1)
 	FireRule(EJamRuleTrigger::OnKnockdown, V.Index, V.Team, Cause, Strength);
 	// C-0005: a check that lands on the carrier always strips the puck; it squirts off the victim's line, a little back towards the checker.
 	if (Puck.LastTouch == V.Index && FVector2D::Distance(V.Pos, Puck.Pos) <= Eff(EJamStat::ShotReach, Victim))
@@ -1743,7 +1744,7 @@ void UJamSim::StepPuck()
 				Puck.Vel = Tangent * BoardTangentKeep - Normal * E;
 				if (Vn >= BoardEventMinSpeed && BoardEventCooldown == 0)
 				{
-					Emit(JamEvents::Board, -1, Puck.Pos + N * R, static_cast<float>(Vn / MaxSpeed));
+					Emit(JamEvents::Board, -1, Puck.Pos + N * R, static_cast<float>(Vn / MaxSpeed), NAME_None, -N);   // lane A47: Dir = the board normal into the rink (B-to-A-0029 ask 2)
 					BoardEventCooldown = BoardEventGapFrames;
 				}
 			}

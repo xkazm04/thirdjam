@@ -374,8 +374,8 @@ void UToySkaterVisualComponent::UpdateMotion_Implementation(float InSpeed, float
 		ApplyPose(LastPose, Facing);
 	}
 
-	// Blade spray hook on a hard turn (|lean| >= 25 deg): a request every 8 frames, a placeholder Niagara system by soft path.
-	if (FMath::Abs(State.Lean) >= 25.f && LocalFrame % 8 == 0 && !bDown)
+	// Blade spray hook on a hard turn (|lean| >= 25 deg): a request every 12 frames (B-to-A-0029 ask 3, lane A47: B's larger fan was too busy at 8), a Niagara system by soft path.
+	if (FMath::Abs(State.Lean) >= 25.f && LocalFrame % 12 == 0 && !bDown)
 	{
 		++BladeSprayRequests;
 		if (!bSprayTried)

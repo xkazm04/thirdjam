@@ -240,11 +240,19 @@ namespace JamAI
 			// under a forecheck) and Attack's board chip and pass-by-shot never charge.
 			{
 				const int Window = SkillOf(W, i).ShotChargeFrames;
-				if (Window > 0 && W.Carrier == i && In.bShoot && bAimed && !W.Skaters[i].bNoShoot)
+				// Lane A47 (B-to-A-0030 fault 9): QA1 saw pro charges of 0.00 to 0.07 with the window at 10. Two causes. (1) The hold asked for
+				// W.Carrier == i, and the carrier of record is the last toucher with the puck in reach: a bot arriving on a loose puck or a pass is aimed
+				// and in reach before it has touched it, so its first shot went out as a tap through In.bShoot. (2) A hold in progress was released the
+				// first frame the line-up or the carrier test flickered (the puck a few centimetres past reach on a fast carry), after one or two frames.
+				// Now an aimed shot in reach charges whether or not the bot is the carrier of record, and a hold in progress rides out a frame without
+				// the line-up while the bot can still shoot (puck in reach, cooldown over); it releases at the window's end or when the puck is gone.
+				const bool bWantCharge = Window > 0 && In.bShoot && bAimed && !W.Skaters[i].bNoShoot;
+				const bool bKeepCharge = Window > 0 && Charging[i] > 0 && W.Skaters[i].bCanShoot && !W.Skaters[i].bNoShoot;
+				if (bWantCharge || bKeepCharge)
 				{
 					In.bShoot = false;
 					if (Charging[i] < Window) { In.bShootHeld = true; ++Charging[i]; }
-					else { Charging[i] = 0; }   // release
+					else { Charging[i] = 0; }   // release: the sim fires the charged shot
 				}
 				else
 				{

@@ -86,6 +86,11 @@ UJamFollowCamera::UJamFollowCamera()
 	bUsePawnControlRotation = false;
 	SetAbsolute(true, true, true);
 	FieldOfView = 70.f;
+	// Lane A47 (B-to-A-0030 fault 1): the engine's default motion blur smears every camera turn; the follow camera carries its own post-process
+	// override so the frame is sharp whatever rig volume is under it (B's three rigs set 0 in their volumes too). Presentation only.
+	PostProcessBlendWeight = 1.f;
+	PostProcessSettings.bOverride_MotionBlurAmount = true;
+	PostProcessSettings.MotionBlurAmount = 0.f;
 }
 
 void UJamFollowCamera::ApplyConfig(const FJamCameraSettings& InConfig)

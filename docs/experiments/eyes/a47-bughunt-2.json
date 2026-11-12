@@ -1,0 +1,92 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-12T22:19:11.183Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "tools/qa/out/a47-shoot-raw2/goal-burst-f3832.png",
+          "width": 1920,
+          "height": 1082
+        },
+        {
+          "label": "B",
+          "path": "tools/qa/out/a47-shoot-raw2/goal-call-f3854.png",
+          "width": 1920,
+          "height": 1082
+        },
+        {
+          "label": "C",
+          "path": "tools/qa/out/a47-shoot-raw2/banner-period2-f4054.png",
+          "width": 1920,
+          "height": 1082
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2326,
+      "usage": {
+        "prompt": 4026,
+        "output": 424,
+        "thoughts": 0,
+        "total": 4450,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00461,
+      "ms": 16250,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A: goal-burst-f3832.png",
+            "findings": [
+              {
+                "where": "Top-left quadrant, blue player 7's hockey stick",
+                "what": "The hockey stick held by blue player 7 is completely detached from the player's hands and floating high in the air above the left shoulder.",
+                "severity": 4,
+                "confidence": 0.98
+              },
+              {
+                "where": "Bottom-right quadrant, bottom edge",
+                "what": "An orange figure's severed floating helmet and head mesh clips in without a visible torso or body attached.",
+                "severity": 3,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still B: goal-call-f3854.png",
+            "findings": [],
+            "clean": true
+          },
+          {
+            "label": "Still C: banner-period2-f4054.png",
+            "findings": [
+              {
+                "where": "Center, directly behind the 'MATCH 1' title banner",
+                "what": "There is a dark residual rounded rect with faint white text '01' clipping directly behind the central 'MATCH 1' banner box.",
+                "severity": 2,
+                "confidence": 0.9
+              },
+              {
+                "where": "Top-center, directly below the scoreboard",
+                "what": "The orange dialogue banner directly collides with and overlaps the yellow diamond objective marker and '66 m' distance text.",
+                "severity": 3,
+                "confidence": 0.95
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=goal-burst-f3832.png B=goal-call-f3854.png C=banner-period2-f4054.png (gemini-3.8-flash, in 4026 out 424 tokens, ~$0.0046, 16.3 s)\n- stills:\n  - label: Still A: goal-burst-f3832.png; clean: false\n    - findings:\n      - where: Top-left quadrant, blue player 7's hockey stick; what: The hockey stick held by blue player 7 is completely detached from the player's hands and floating high in the air above the left shoulder.; severity: 4; confidence: 0.98\n      - where: Bottom-right quadrant, bottom edge; what: An orange figure's severed floating helmet and head mesh clips in without a visible torso or body attached.; severity: 3; confidence: 0.85\n  - label: Still B: goal-call-f3854.png; clean: true\n    - findings: (none)\n  - label: Still C: banner-period2-f4054.png; clean: false\n    - findings:\n      - where: Center, directly behind the 'MATCH 1' title banner; what: There is a dark residual rounded rect with faint white text '01' clipping directly behind the central 'MATCH 1' banner box.; severity: 2; confidence: 0.9\n      - where: Top-center, directly below the scoreboard; what: The orange dialogue banner directly collides with and overlaps the yellow diamond objective marker and '66 m' distance text.; severity: 3; confidence: 0.95"
+    }
+  ]
+}

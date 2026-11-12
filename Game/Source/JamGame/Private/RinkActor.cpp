@@ -620,7 +620,9 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 		// Lane A25: a goal light on the end-board rail behind each net: a dark housing 30 x 24 x 20 cm on the rail, a red lens on its rink face.
 		{
 			FMeshBuf Housing, Lens;
-			const double GH = (BoardHeightM + GlassHeightM) * UU + 4.0;
+			// Lane A47 (B-to-A-0030 fault 10): the housing sat 4 cm above the rail and read as floating over the glass on every tier; it now straddles the
+			// rail top with its base 6 cm below the glass line, clamped onto the glass.
+			const double GH = (BoardHeightM + GlassHeightM) * UU - 6.0;
 			for (int32 S = -1; S <= 1; S += 2)
 			{
 				const double Mx = S * (R.LengthM * 0.5 * UU + BoardThicknessM * 0.5 * UU);

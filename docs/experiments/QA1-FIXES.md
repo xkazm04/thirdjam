@@ -55,6 +55,50 @@ UMG: a bark bubble, the banner and the caption are UMG that `HighResShot` does n
 The brief says "three `jam.livecut` rebuilds": `jam.livecut` is `ApplyCartridgeLive` (no rebuild; a changed visual class respawns through `ResetVisual`, which was clean
 in QA1). The ghosts came from `LoadCut` -> `BuildMatch` (`jam.Cut <name>` and the Designer's apply), so the proof rebuilds through `jam.Cut`.
 
-## 4. Results
+## 4. Results (2026-11-12, worktree a47 at main 0e5ca5a, builds 22:55 / 23:00 / 23:09 / 23:16, editor on MCP 8026 from 23:02 to 23:19)
 
-(filled from the run; see `status/A47.md`)
+Headless (`a47-tests-4.log`, 23:16): **40/40**: Jam.Commentary 9/9 (BankClean, BankWhen, CutFloor, MustPlay, Selection, Stoppage, Timing, Yield + BankClean's embed check),
+Jam.Core 16/16 (Determinism, CartridgeParity on the regenerated parity.json, TacklingEvents with the three `Dir` asserts), Jam.Effects 6/6, Jam.Bot 9/9 (ProCharge: hockey.regular
+pro, the brain on all six, seed 1: **24 shots, 19 charged >= 0.3, mean 0.26, best 0.33**; before the fix QA1 saw 0.00 to 0.07). Node: `commentary/check.mjs` PASS (340 lines,
+0 errors), `schema/validate.mjs` PASS on the boost cartridge.
+
+PIE (`tools/qa/out/a47-log-1`, `-log-raw`, `-shoot-reg`, `-shoot-raw1`, `-shoot-raw2`; stills in `docs/experiments/img/qa1/`, 1920x1082 JPEG q4):
+
+| Still | Shows | Row |
+|---|---|---|
+| `a47-banner-f20.jpg` | the plain banner "MATCH 1 / PERIOD 1 - FACEOFF" on the panel plate at frame 20, "ESC / START   CALL READY" bottom left, the take line caption | 2, 7 |
+| `a47-banner-period2-f4054.jpg` | the same banner at the period-2 drop after the goal ("PERIOD 2 - FACEOFF"), WON in the ring, "Picture perfect." (the second beat) | 2 |
+| `a47-board-skater-f1465.jpg` | blue 42 into the side boards at 0.92: B's Variant 1 burst (puffs, the clack star, the shake line) leaving the board face; "Loud one off the wall." | 8 (User.Normal) |
+| `a47-board-puck-f2574.jpg`, `a47-board-f417.jpg` | puck board hits at 0.29 / 0.36: small chips at the contact (faint at that strength) | 8 |
+| `a47-goal-burst-f3832.jpg` | 3 frames after blue's goal: the blue ring of NS_goal over the net, "It's in, for blue!" (the colour call, started at 3829) and an opponent's bark bubble that arrived 3 frames later and did **not** cut it; the goal light box on the glass line behind the net | 3a, 6, 8 |
+| `a47-goal-call-f3854.jpg` | 25 frames after the goal: the call still playing under the burst; score 01:00 | 3, 7 |
+| `a47-windup-f523.jpg` | orange 9 (a pro bot) with the puck at the boards 4 frames before its 0.60 shot; the hold is on (the figure's PlayShoot charge pose is B's TB1 figure's, faint from behind) | 9 |
+
+Log facts (hockey.regular, 60 s, then hockey.raw, 100 s, both `jam.ScriptHuman 1`, seed 1): 13 and 16 commentator lines, 2 + 2 cut by a bark at the human, every cut on a
+line 30 frames or older (the first cut in the raw run: `board.hard.03` at 1462 cut at 1537); 0 `JAMFX missing` lines for carry / period_end / clock / season_take and 0 overall;
+`JAMVISUAL after build: 6 skaters, 6 SkaterVisual actors (ghosts=0)` after each of three `jam.Cut hockey.regular` rebuilds in the first run and one in the second, and the
+Python actor count 6 `JamSkater` / 6 `BP_SkaterVisual_TB1_C` after each; `JAMVISUAL teardown: 6 skaters, 6 visual actors ... destroyed before them`. The first raw run (before
+the bark-hold change, 23:03) had the goal at 3829 silenced by a bark at 3768 (hold to 3918, the beat at 3918); the second (23:18) calls it at 3829.
+
+Eyes (`bug-hunt`, gemini-3.8-flash, no thinking, `docs/experiments/eyes/a47-bughunt-{1,2}.json`, $0.011): the banner stills clean except a faint dark rounded rect behind the
+"MATCH 1" box (the far-net marker's caption under the banner: A42's marker, severity 2) and the bark bubble over the net marker at the period-2 drop; every board still: the skater's
+skate and stick blade clip into the kick plate when a figure leans on the boards (B's TB1 figure against A25's kick plate, severity 3 to 4, not this lane); the goal-burst still: the
+shooting figure's stick "floating above the shoulder" (the TB1 shoot pose seen from behind) and the bottom-right head of a figure cut by the frame. Advice, not a bug list.
+
+Not obtained: **a check burst along the hit and a knockdown still.** In 235 s of bot play on three cuts (regular, raw, and an all_star copy) no check landed: `FJamBrain` only ever
+writes `In.bCheck = false` (JamAICore.cpp line 582), so bots never body-check (R-0031 point 2 is not on main yet; B-to-A-0029 saw check, knockdown, foul 0 in 92 s for the
+same reason), and the scripted human has no check. The `Dir` read-out on check and knockdown is proven by `Jam.Core.TacklingEvents` instead (the sim lands checks headlessly:
+Dir = the push, unit, equal to the victim's KnockDir; the board Dir points into the rink). The picture waits for the first landed check in PIE (A33's `tools/qa/tackle.py` drives the
+human into a check through the input path, which A49 owns tonight).
+
+## 5. For the Director
+
+1. **Must-play over the bark hold**: B's rule 5 ("the booth yields to a bark at the human") now has one exception, priority 5. Without it the first raw proof had the goal at 3829
+   silenced by a steal complaint 61 frames earlier (the hold ran to 3918), which is QA1's fault 3 in another coat; B's acceptance line is "a goal always called". If B wants the bark
+   to win on the goal frame itself, that is one condition (`bBarkAtHumanThisFrame` in the must-play test).
+2. **Bots never check** (above): `In.bCheck` is never set in `JamAICore.cpp`. Whoever owns R-0031 point 2's lane should know the proof still is waiting on it.
+3. `jam.Cut <relative path>` loads the preset of the same family instead of the file (`ResolveCartridgePath`); the QA cartridge path `tools/qa/cartridges/...` resolved to
+   `hockey.raw`. Not chased tonight.
+4. Files outside the brief's list, each one small: `RinkActor.cpp` (the goal light's base, 1 constant), `MenuFlow.cpp` (the rink-size strings live there, not in MenuWidget.cpp),
+   `JamEventBus.h` (`FJamEventPayload::Dir`), `JamAICore.cpp` (the charge hold), `BotTests.cpp` and `JamTacklingTests.cpp` (tests), `SkeletalSkaterVisual.cpp` line 657
+   (`% 8` -> `% 12`, A49's file under R-0032: the one constant, nothing else), `parity.json` (regenerated), the `tools/qa/a47*` harness (new).
