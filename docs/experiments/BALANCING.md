@@ -62,6 +62,8 @@ The game mode fills the inputs in `AHokejGameMode::GatherInputs`:
 
 The headless tournament has none of these, so the sweep measures stick play, passing and the goalie rule only.
 
+## Phase 2 rookie fix (15:36): speed 0.95, red 0.9, stall tolerance 60 frames, so rookie bots shoot in every match (SeasonTakes needs one AI shot). Rookie measured over 30 seeds: regular 83% (25-5-0), large 100%. Takes 1 and 2, seeds 1-7: every match has at least 1 AI shot, take-1 seeds 1, 2 and 7 won.
+
 ## Phase 2 sweep (15:15, gate binary of 15:00, rookie speed 0.85 / red 0.8, pro without pass-out; 20 seeds)
 
 | rink | level | W-L-unf | human win % | goals/match | shots AI | human touches/min (min) | match s | faceoffs without a human touch |

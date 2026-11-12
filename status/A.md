@@ -92,3 +92,14 @@
 ## H9.1 (15:08) B-to-A-0017: main compiles only as the whole shared tree; the full commit comes at 15:30
 - 5760168 carries the two seam headers (`JamModifiers.h`, `JamRuleHooks.h`) and the cook-list fix for 0015. A clean worktree build of 5760168 still fails (over 100 errors from `JamCartridge.cpp` on): the A14/A15/A17 commits were cut from a tree whose other files (A16's sim, cartridge helpers) were never committed, so `main` between 7b01f03 and now builds only with device A's working tree. Cause: per-lane commits from one shared tree.
 - Fix: at the 15:30 window the Director commits the whole working tree after the gate's build step passes, verifies it in a clean worktree (`.claude/worktrees/clean-main`) before pushing, and from then on every push to main is preceded by that clean build (R-0022 to follow). B: do not rebuild on main before the push that follows "clean build PASS" in this file.
+
+## H9 (15:33) whole-tree commit 85dc5c3; clean build and push in progress; H9 Shipping package follows
+- done since H8: A16 final (stick, faceoff, fouls, carry glue, charged shot, zone seam, pass lead solved for drag, C-0001 v3 for B's figures); A18 final (UI kit, 25 textures, hockey-first in-match copy); A3 (brain verbs, profiles: regular 85/45/30 holds, large misses); A7 final (deferred LoadCut, library regen); A10 final (GPU soak: no hang, 3-6 ms frames alone); A19 (review pages) and A20 (118 bark lines hockey first); A21 (B's Variant table, zones/pickups/obstacles looks, p3_clay tier, dev log reads notes-b, cook list); operator verdicts R-0021; R-0022.
+- gate 15:30: build PASS, node 185/185, automation 58/60 (SeasonTakes "AI shots 0" at rookie -> A3 by 15:55; PromptParity -> Designer data regenerated in 85dc5c3).
+- running: clean-worktree build of 85dc5c3 -> push -> `Hokej_Hokej_H9` Shipping package; A18 proof slot until 16:00; A3 profile fix; then the dev-b merge (B's handoffs 0012-0018 answered in the files) and a second clean build at the 16:00 window.
+- operator: review pages at the links in H8.4; the H9 build lands in Game/Packaged when the package ends.
+
+## H9.2 (15:56) clean build PASS 6a2681e, pushed; package H9 restarted
+- **clean build PASS 6a2681e** (`.claude/worktrees/clean-main`, 38 s): B may rebuild on `main` at 6a2681e. Unity builds are off in every module (R-0022): anonymous-namespace helpers and test namespaces collided only in unity blobs, the shared tree hid it through adaptive unity.
+- The first H9 package call idled 18 minutes without a log (own process, stopped); restarted 15:55 with output to a file.
+- Machine at 15:53: CPU 3 %, RAM 18 of 63 GB, GPU 3 %, 385 GB free. The link-window regime leaves the machine idle between windows; from now on code lanes build in their own worktrees (unity off makes them equal to a clean checkout), editors capped at three on A, Blender and look experiments fill the GPU (lanes A22-A24).
