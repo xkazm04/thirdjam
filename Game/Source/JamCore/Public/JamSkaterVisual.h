@@ -71,8 +71,10 @@ public:
 	void PlayCheck();
 
 	// Knocked down (true) or back up (false). DirX, DirZ: unit vector on the ice plane (rink x, rink z) the figure falls towards; ignored when bDown is false.
+	// C-0001 v4 (R-0031 point 1, B-to-A-0028 ask 2): KnockdownFrames = the sim's down time in frames when bDown (the figure's get-up must end when the sim
+	// releases the skater, SetKnockedDown(false) follows exactly that many frames later); 0 when bDown is false.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Jam|SkaterVisual")
-	void SetKnockedDown(bool bDown, float DirX, float DirZ);
+	void SetKnockedDown(bool bDown, float DirX, float DirZ, int32 KnockdownFrames);
 
 	// The skater gained (true) or lost (false) the puck.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Jam|SkaterVisual")
@@ -127,4 +129,29 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Jam|SkaterVisual")
 	void PlayFoulReaction();
 	virtual void PlayFoulReaction_Implementation() {}
+
+	// ---- C-0001 v4 (R-0031 point 1, B-to-A-0028; lane A45; cosmetic only, empty defaults so every visual keeps compiling) ----
+	// One-shot on a skater that takes a hit and stays up: a check that landed without a knockdown (none in today's sim: every landed check knocks down), or a
+	// skater-skater collision at 3 m/s closing or more with no check landed. DirX, DirZ: the push on this skater (unit, rink x / z), the other skater towards this one:
+	// classify against the facing exactly as SetKnockedDown's direction (along the facing = from behind, against it = from the front, else the side the other came from).
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Jam|SkaterVisual")
+	void PlayHitReaction(float DirX, float DirZ);
+	virtual void PlayHitReaction_Implementation(float DirX, float DirZ) {}
+
+	// One-shot: this skater hit the boards at 4 m/s or more along the normal (the skater `board` event of C-0003, Who = this skater; its Strength is on the bus).
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Jam|SkaterVisual")
+	void PlayBoardHit();
+	virtual void PlayBoardHit_Implementation() {}
+
+	// Level: true while this skater has been pressed against the boards for 10 frames or more with an opponent within 1.2 m (centre to centre), false when either ends
+	// or the skater goes down. Called only on the change.
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Jam|SkaterVisual")
+	void SetBoardPin(bool bOn);
+	virtual void SetBoardPin_Implementation(bool bOn) {}
+
+	// One-shot on the carrier that lost the puck to an opponent's stick this frame: a clean poke (bLifted false) or a stick lift (true). The poker's own
+	// PlayPoke(true) / PlayLift() still play on the other skater.
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Jam|SkaterVisual")
+	void PlayStickHit(bool bLifted);
+	virtual void PlayStickHit_Implementation(bool bLifted) {}
 };

@@ -239,11 +239,15 @@ FSkelReaction USkeletalSkaterVisual::ReactionFor(const FSkelInputs& In)
 		}
 	}
 	// A hard board hit: a lean into the boards, 3 frames in and 9 out, 10 to 16 degrees by strength; not while down.
+	auto LeanEnv = [](int32 Since) { return Since <= 3 ? SmoothStep01((float)Since / 3.f) : 1.f - SmoothStep01((float)(Since - 3) / (float)(BoardLeanFrames - 3)); };
 	if (!In.bDown && In.SinceBoard >= 0 && In.SinceBoard < BoardLeanFrames)
 	{
-		const float Env = In.SinceBoard <= 3 ? SmoothStep01((float)In.SinceBoard / 3.f) : 1.f - SmoothStep01((float)(In.SinceBoard - 3) / (float)(BoardLeanFrames - 3));
-		R.BoardLeanDeg = (10.f + 6.f * FMath::Clamp(In.BoardStrength, 0.f, 1.f)) * Env;
+		R.BoardLeanDeg = (10.f + 6.f * FMath::Clamp(In.BoardStrength, 0.f, 1.f)) * LeanEnv(In.SinceBoard);
 	}
+	// Lane A45 (C-0001 v4): the pin holds the lean at its floor (10 degrees) while on; the lean of a fresh board hit still peaks over it.
+	if (!In.bDown && In.bPinned) R.BoardLeanDeg = FMath::Max(R.BoardLeanDeg, 10.f);
+	// A hit taken standing (PlayHitReaction): the same 12-frame curve, 14 degrees toward the push, then back up (one recovery step); not while down.
+	if (!In.bDown && In.SinceHit >= 0 && In.SinceHit < BoardLeanFrames) R.HitTipDeg = 14.f * LeanEnv(In.SinceHit);
 	// The stumble after a mistimed poke: a forward pitch that peaks at 12 degrees mid-way, a 5 degree yaw wobble (two cycles, dying out), the stick 25 cm low.
 	if (!In.bDown && !In.bPokeClean && In.SincePoke >= MissPokeFrames && In.SincePoke < MissPokeFrames + StumbleFrames)
 	{
@@ -252,6 +256,16 @@ FSkelReaction USkeletalSkaterVisual::ReactionFor(const FSkelInputs& In)
 		R.StumblePitchDeg = 12.f * Bell;
 		R.StumbleYawDeg = 5.f * FMath::Sin(4.f * PI * T) * (1.f - T);
 		R.StickDropCm = 25.f * Bell;
+	}
+	// Lane A45 (C-0001 v4): the carrier that lost the puck to a stick (PlayStickHit) plays the stumble layer at once (no jab): the same bell over StumbleFrames; a lift
+	// knocks the stick up instead of down (negative drop), a poke drops it as the stumble does. Not while down; a mistimed poke's own stumble takes precedence.
+	if (!In.bDown && In.SinceStickHit >= 0 && In.SinceStickHit < StumbleFrames && R.StumblePitchDeg == 0.f)
+	{
+		const float T = (float)In.SinceStickHit / (float)StumbleFrames;
+		const float Bell = FMath::Sin(PI * T);
+		R.StumblePitchDeg = 12.f * Bell;
+		R.StumbleYawDeg = 5.f * FMath::Sin(4.f * PI * T) * (1.f - T);
+		R.StickDropCm = (In.bStickHitLifted ? -25.f : 25.f) * Bell;
 	}
 	return R;
 }
@@ -471,6 +485,10 @@ FSkelInputs USkeletalSkaterVisual::MakeInputs() const
 	In.KnockHold = KnockHold;
 	In.SinceBoard = Since(BoardStart);
 	In.BoardStrength = BoardStrength;
+	In.SinceHit = Since(HitStart);   // lane A45 (C-0001 v4)
+	In.bPinned = bPinned;
+	In.SinceStickHit = Since(StickHitStart);
+	In.bStickHitLifted = bStickHitLifted;
 	return In;
 }
 
@@ -567,8 +585,9 @@ void USkeletalSkaterVisual::ApplyPose(const FRotator& Facing)
 	const FVector2D FwdDir(FMath::Cos(FacingRad), FMath::Sin(FacingRad));
 	const FQuat Tip = TipToward(KnockDir, LastReaction.TipDeg);
 	const FQuat BoardLean = TipToward(BoardDir, LastReaction.BoardLeanDeg);
+	const FQuat HitTip = TipToward(HitDir, LastReaction.HitTipDeg);   // lane A45: a hit taken standing
 	const FQuat Stumble = TipToward(FwdDir, LastReaction.StumblePitchDeg) * FRotator(0.f, LastReaction.StumbleYawDeg, 0.f).Quaternion();
-	SetWorldRotation(Tip * BoardLean * Stumble * Yaw * Roll);
+	SetWorldRotation(Tip * BoardLean * HitTip * Stumble * Yaw * Roll);
 
 	if (Boost != NAME_None)
 	{
@@ -683,7 +702,7 @@ void USkeletalSkaterVisual::PlayCheck_Implementation()
 	CheckStart = LocalFrame;
 }
 
-void USkeletalSkaterVisual::SetKnockedDown_Implementation(bool bDownNow, float DirX, float DirZ)
+void USkeletalSkaterVisual::SetKnockedDown_Implementation(bool bDownNow, float DirX, float DirZ, int32 KnockdownFrames)
 {
 	if (bDownNow == bDown)
 	{
@@ -691,6 +710,7 @@ void USkeletalSkaterVisual::SetKnockedDown_Implementation(bool bDownNow, float D
 	}
 	bDown = bDownNow;
 	KnockStart = LocalFrame;
+	KnockdownFramesGiven = bDownNow ? KnockdownFrames : 0;   // C-0001 v4: the down time (B's get-up ends on it; this figure holds its last fall frame)
 	if (bDownNow)
 	{
 		const FVector2D D(DirX, DirZ);
@@ -701,8 +721,8 @@ void USkeletalSkaterVisual::SetKnockedDown_Implementation(bool bDownNow, float D
 		HitStrength = PendingHitStrength >= 0.f ? PendingHitStrength : 0.5f;
 		PendingHitStrength = -1.f;
 		KnockHold = FMath::Clamp(CVarJamHitHoldFrames.GetValueOnGameThread(), 0, 30);
-		UE_LOG(LogTemp, Log, TEXT("SKELVIS %s knocked down kind=%s strength=%.2f hold=%d dir=(%.2f, %.2f) facing=%.0f"), GetOwner() ? *GetOwner()->GetName() : TEXT("?"),
-			HitKindName(HitKind), HitStrength, KnockHold, KnockDir.X, KnockDir.Y, FacingYawDeg);
+		UE_LOG(LogTemp, Log, TEXT("SKELVIS %s knocked down kind=%s strength=%.2f hold=%d dir=(%.2f, %.2f) facing=%.0f down_frames=%d"), GetOwner() ? *GetOwner()->GetName() : TEXT("?"),
+			HitKindName(HitKind), HitStrength, KnockHold, KnockDir.X, KnockDir.Y, FacingYawDeg, KnockdownFramesGiven);
 	}
 }
 
@@ -769,4 +789,35 @@ void USkeletalSkaterVisual::SetGoalieStance_Implementation(bool bOn, int32 Side)
 void USkeletalSkaterVisual::PlayFoulReaction_Implementation()
 {
 	FoulStart = LocalFrame;
+}
+
+// ---- Lane A45 (C-0001 v4): defaults onto the existing reactions ----
+
+void USkeletalSkaterVisual::PlayHitReaction_Implementation(float DirX, float DirZ)
+{
+	if (bDown) return;
+	HitStart = LocalFrame;
+	const FVector2D D(DirX, DirZ);
+	HitDir = D.IsNearlyZero() ? FVector2D(-FMath::Cos(FMath::DegreesToRadians(FacingYawDeg)), -FMath::Sin(FMath::DegreesToRadians(FacingYawDeg))) : D.GetSafeNormal();
+}
+
+void USkeletalSkaterVisual::PlayBoardHit_Implementation()
+{
+	// The bus's skater board event (OnJamEvent) usually started the lean this very frame with its strength and direction; the call stands in when none came
+	// (a scene driving the interface by hand): the lean toward the facing at the floor strength.
+	if (BoardStart == LocalFrame) return;
+	BoardStart = LocalFrame;
+	BoardStrength = 0.5f;
+	BoardDir = FVector2D(FMath::Cos(FMath::DegreesToRadians(FacingYawDeg)), FMath::Sin(FMath::DegreesToRadians(FacingYawDeg)));
+}
+
+void USkeletalSkaterVisual::SetBoardPin_Implementation(bool bOn)
+{
+	bPinned = bOn;
+}
+
+void USkeletalSkaterVisual::PlayStickHit_Implementation(bool bLifted)
+{
+	StickHitStart = LocalFrame;
+	bStickHitLifted = bLifted;
 }

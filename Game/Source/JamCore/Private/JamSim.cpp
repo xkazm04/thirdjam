@@ -49,6 +49,13 @@ namespace
 	constexpr double BoardEventMinSpeed = 3.0;   // m/s normal impact before a "board" event
 	constexpr int32 BoardEventGapFrames = 6;
 	constexpr double SkaterBoardEventMinSpeed = 4.0;   // lane A33: a skater's normal speed into the boards before a "board" event (Who = skater, Kind = skater)
+	// Lane A45 (C-0001 v4 read-outs, never hashed): a skater-skater collision at this closing speed without a landed check is a "bump" (PlayHitReaction), at most one per
+	// skater per BumpGapFrames; a skater within BoardContactEpsM of the boards counts as on them, BoardPinFrames of that with an opponent within BoardPinRangeM is a pin.
+	constexpr double BumpMinClosing = 3.0;
+	constexpr int32 BumpGapFrames = 20;
+	constexpr double BoardContactEpsM = 0.05;
+	constexpr int32 BoardPinFrames = 10;
+	constexpr double BoardPinRangeM = 1.2;
 	constexpr double ReferenceIceFriction = 0.015; // the ice friction glide_drag was measured on
 
 	double WrapPi(double A)
@@ -838,6 +845,9 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 		S.bOneTimerThisFrame = false;
 		S.bBreakawayThisFrame = false;
 		S.bDekeThisFrame = false;
+		S.bBumpThisFrame = false;   // lane A45 read-outs
+		S.bBoardHitThisFrame = false;
+		S.StickHitResult = 0;
 	}
 	Puck.PrevPos = Puck.Pos;
 
@@ -948,6 +958,19 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 	StepPuck();
 	ResolvePokes();
 	for (FJamSkaterState& S : Skaters) StepPayoffWindows(S);
+	// Lane A45 read-out (C-0001 v4 SetBoardPin): on the boards BoardPinFrames or more with a standing opponent within BoardPinRangeM; never while down or in the box.
+	for (FJamSkaterState& S : Skaters)
+	{
+		bool bPin = false;
+		if (!S.IsDown() && !S.InBox() && S.BoardFrames >= BoardPinFrames)
+		{
+			for (const FJamSkaterState& O : Skaters)
+			{
+				if (O.Team != S.Team && !O.IsDown() && !O.InBox() && FVector2D::Distance(O.Pos, S.Pos) <= BoardPinRangeM) { bPin = true; break; }
+			}
+		}
+		S.bBoardPinned = bPin;
+	}
 	if (DekeCommitFrames > 0 && --DekeCommitFrames == 0) { DekeCommitSide = 0; DekeCommitSkater = -1; }
 
 	if (Phase == EJamSimPhase::Playing && Config.Rules.Mode == RuleTimer && !bOvertime)
@@ -1087,6 +1110,7 @@ void UJamSim::ResolvePokes()
 		{
 			const int32 C = CarrierIndex();
 			const bool bFromOpponent = C >= 0 && Skaters[C].Team != S.Team;
+			if (bFromOpponent) Skaters[C].StickHitResult = 1;   // lane A45 read-out: the carrier's PlayStickHit(false)
 			// Clean take: the puck comes to the blade with the poker's motion, a touch towards the body.
 			Puck.Vel = S.Vel * 0.6 + (S.Pos - Puck.Pos).GetSafeNormal() * 1.5;
 			Puck.LastTouch = S.Index;
@@ -1119,6 +1143,7 @@ void UJamSim::TryLift(FJamSkaterState& S)
 		Puck.Vel = (S.Pos - O.Pos).GetSafeNormal() * 3.0 + S.Vel * 0.5;
 		Puck.LastTouch = S.Index;
 		++S.Touches;
+		O.StickHitResult = 2;   // lane A45 read-out: the carrier's PlayStickHit(true)
 		Emit(JamEvents::Lift, S.Index, O.Pos, 1.f, KindClean);
 		return;
 	}
@@ -1148,12 +1173,18 @@ void UJamSim::CollideSkaterStatic(FJamSkaterState& S)
 	const double R = SkaterRadius;
 	FVector2D N;
 	const double D = BoardDistance(S.Pos, N);
+	// Lane A45 read-out: consecutive frames on the boards (the pin's clock); a skater pushed out to exactly the boards last frame still counts.
+	S.BoardFrames = (D + R > -BoardContactEpsM) ? S.BoardFrames + 1 : 0;
 	if (D + R > 0)
 	{
 		S.Pos -= N * (D + R);
 		const double Vn = Dot(S.Vel, N);
 		// Lane A33: a hard board hit is announced (cosmetic read-out; Strength = normal speed / skater.speed, Kind = skater, Where = the contact on the boards).
-		if (Vn >= SkaterBoardEventMinSpeed) Emit(JamEvents::Board, S.Index, S.Pos + N * R, static_cast<float>(Vn / FMath::Max(1e-6, Config.Skater.Speed)), KindSkater);
+		if (Vn >= SkaterBoardEventMinSpeed)
+		{
+			Emit(JamEvents::Board, S.Index, S.Pos + N * R, static_cast<float>(Vn / FMath::Max(1e-6, Config.Skater.Speed)), KindSkater);
+			S.bBoardHitThisFrame = true;   // lane A45: PlayBoardHit
+		}
 		if (Vn > 0) S.Vel -= N * ((1.0 + SkaterBoardBounce) * Vn);
 	}
 	// Nets as solid boxes behind each goal line. A skater is pushed out along the shortest axis; the speed it pressed into the hull with becomes a slide
@@ -1230,6 +1261,7 @@ void UJamSim::CollideSkaters()
 			const FVector2D Contact = A.Pos + N * (Dist * 0.5);
 
 			// Checks, decided on the velocities before the contact exchange.
+			bool bLanded = false;   // lane A45: a landed check is a knockdown, not a bump
 			if (Config.Skater.bCheckEnabled && A.Team != B.Team)
 			{
 				const double ASpeed = Dot(A.Vel, N);
@@ -1238,6 +1270,7 @@ void UJamSim::CollideSkaters()
 				// R-0013: a check on a skater without the puck, or from behind (the contact normal runs along the victim's facing), is a foul when penalties are on.
 				auto Landed = [&](FJamSkaterState& Checker, FJamSkaterState& Victim, const FVector2D& Dir)
 				{
+					bLanded = true;
 					Checker.CheckWindow = 0;
 					// Lane A33: the direction of the hit seen from the victim (Dir = the push, checker towards victim): along the facing = behind, against it = front,
 					// else the side the checker came from (the sim's yaw grows to the right, so the left is (sin yaw, -cos yaw)). Same thresholds as the foul rule below.
@@ -1262,6 +1295,13 @@ void UJamSim::CollideSkaters()
 				}
 			}
 
+			// Lane A45 read-out (C-0001 v4 PlayHitReaction): a collision closing at BumpMinClosing or more with no check landed bumps both standing skaters, on the velocities
+			// before the exchange; the push on each is the other towards it. One per skater per BumpGapFrames (the bounce separates them, a second touch is the same hit).
+			if (!bLanded && !A.IsDown() && !B.IsDown() && -Dot(B.Vel - A.Vel, N) >= BumpMinClosing)
+			{
+				if (Frame - A.LastBumpFrame >= BumpGapFrames) { A.bBumpThisFrame = true; A.BumpDir = -N; A.LastBumpFrame = Frame; }
+				if (Frame - B.LastBumpFrame >= BumpGapFrames) { B.bBumpThisFrame = true; B.BumpDir = N; B.LastBumpFrame = Frame; }
+			}
 			const double Overlap = R2 - Dist;
 			A.Pos -= N * (Overlap * 0.5);
 			B.Pos += N * (Overlap * 0.5);

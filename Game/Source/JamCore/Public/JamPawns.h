@@ -29,7 +29,7 @@ public:
 	virtual void UpdateMotion_Implementation(float Speed, float TurnRate, FRotator Facing) override;
 	virtual void PlayShoot_Implementation(float Charge) override { SwingFrames = 10 + FMath::RoundToInt32(10.f * FMath::Clamp(Charge, 0.f, 1.f)); }
 	virtual void PlayCheck_Implementation() override {}
-	virtual void SetKnockedDown_Implementation(bool bDown, float DirX, float DirZ) override;
+	virtual void SetKnockedDown_Implementation(bool bDown, float DirX, float DirZ, int32 KnockdownFrames) override;
 	virtual void SetHasPuck_Implementation(bool bHasPuck) override {}
 	virtual void SetBoost_Implementation(FName Kind) override {}
 
@@ -88,6 +88,9 @@ private:
 	bool bWasDown = false;
 	bool bHadPuck = false;
 	bool bWasAtFaceoff = false;
+	bool bWasPinned = false;   // lane A45 (C-0001 v4): SetBoardPin level, sent on the change
+	// Lane A45: the sim frame for the JAMVIS log lines (from the event bus; -1 without one). Log only, never feeds the pose.
+	int64 SimFrameForLog() const;
 	float LastCharge = 0.f;
 	float LastAimDeg = 0.f;
 	float LastAimReach = 0.f;

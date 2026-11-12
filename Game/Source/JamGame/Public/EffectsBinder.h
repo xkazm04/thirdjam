@@ -74,11 +74,32 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Jam|Fx")
 	int32 GetHandledEventCount() const { return HandledEvents; }
 
+	// Lane A45 (R-0031 point 4, B-to-A-0028 ask 4): the glass hit. On a skater `board` event the rink glass's dynamic instance gets HitWobble = Strength, run down to 0 over
+	// GlassWobbleFrames sim frames (the bus's frame, never wall clock), guarded by a parameter-exists check: a glass material without HitWobble (today's M_Glass) is left alone.
+	// The rink's glass is one procedural mesh with one material slot, so "the nearest panel" is that mesh; HitPos (vector, if the material has it) carries the contact for a
+	// material that localises the sweep. Pure for tests: the value at a frame since the hit.
+	static constexpr int32 GlassWobbleFrames = 12;
+	static float GlassWobbleAt(int64 FramesSinceHit, float Strength);
+	UFUNCTION(BlueprintPure, Category = "Jam|Fx")
+	int32 GetGlassWobbleCount() const { return GlassWobbles; }
+
+	UJamEffectsBinder();
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type Reason) override;
 
 private:
+	// Lane A45: the glass hook. Finds the rink's Glass mesh once, makes (or re-makes after a tier swap) its dynamic instance when the material carries HitWobble.
+	void StartGlassWobble(const FJamEventPayload& Payload);
+	class UMaterialInstanceDynamic* GlassMid();
+	TWeakObjectPtr<class UMeshComponent> GlassMesh;
+	UPROPERTY(Transient) TObjectPtr<class UMaterialInstanceDynamic> GlassInstance;
+	bool bGlassLooked = false;
+	int64 GlassHitFrame = -1;
+	float GlassHitStrength = 0.f;
+	int32 GlassWobbles = 0;
 	UFUNCTION()
 	void OnJamEvent(FName Event, const FJamEventPayload& Payload);
 
