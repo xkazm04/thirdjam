@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { checkLine, filterBank, MAX_CHARS } from './filter.mjs';
+import { checkLine, filterBank, mildCount, MAX_CHARS, MILD_QUOTA } from './filter.mjs';
 import { SITUATIONS, SPEAKERS, TONES } from './generate.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -16,7 +16,8 @@ const TEAMMATE_ONLY = new Set(['signal_ack_defend', 'signal_ack_space', 'signal_
 test('the filter rejects what the content law forbids and keeps hockey flavour', () => {
   assert.deepEqual(checkLine("that's a wrap, rookie"), []);
   assert.deepEqual(checkLine('nice stick, shame about the aim'), []);
-  assert.ok(checkLine('this ice is damn slow').length, 'mild profanity');
+  assert.deepEqual(checkLine('this ice is damn slow'), [], 'mild word allowed (R-0015)');
+  assert.ok(checkLine('this ice is shit').length, 'hard profanity');
   assert.ok(checkLine('Gretzky would weep').length, 'real person');
   assert.ok(checkLine('go ask Bauer for a refund').length, 'brand');
   assert.ok(checkLine('the Leafs play better').length, 'team');
@@ -64,4 +65,15 @@ test('the embedded C++ copy matches barks.json (node tools/barks/embed.mjs)', ()
   const embedded = Buffer.from(m[1].split(/[\s,]+/).filter(Boolean).map(Number));
   assert.equal(embedded.length, bytes.length);
   assert.ok(embedded.equals(bytes), 'bytes differ: re-run node tools/barks/embed.mjs');
+});
+
+test('R-0015: mild words are at most one line in ten, never two in a line, and the hard list still bites', () => {
+  const mild = bank.lines.filter((l) => mildCount(l.text) > 0);
+  assert.ok(mild.length <= Math.floor(bank.lines.length * MILD_QUOTA), `${mild.length} mild lines of ${bank.lines.length}`);
+  for (const l of bank.lines) assert.ok(mildCount(l.text) <= 1, l.id);
+  assert.deepEqual(checkLine('damn, even the boards felt that one'), []);
+  assert.ok(checkLine('damn hell, what a mess').length, 'two mild words');
+  assert.ok(checkLine('you ass').length, 'bare ass');
+  assert.ok(checkLine('that was fucking bad').length, 'hard list');
+  assert.ok(checkLine('the goalie fell asleep').length, 'off-world word');
 });

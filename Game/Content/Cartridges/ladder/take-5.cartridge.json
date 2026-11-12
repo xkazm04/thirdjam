@@ -1,10 +1,10 @@
 {
   "schema": "tj.cartridge/1",
   "id": "take-5",
-  "title": "Rubber Boards",
+  "title": "Second Wind",
   "seed": 1,
   "theme": {
-    "name": "Rubber Boards",
+    "name": "Second Wind",
     "mood_words": [
       "neon",
       "electric",
@@ -132,7 +132,7 @@
       "mass": 80,
       "glide_drag": 0.147,
       "brake_decel": 6,
-      "check_enabled": false
+      "check_enabled": true
     },
     "puck": {
       "radius_m": 0.12,
@@ -151,7 +151,7 @@
       "score_to_win": 3,
       "goal_pause_frames": 120,
       "offside": false,
-      "penalties": false
+      "penalties": true
     },
     "teams": [
       {
@@ -226,6 +226,22 @@
       "lag_frames": 4,
       "fov_deg": 70,
       "radar": true
-    }
+    },
+    "effects": [
+      {
+        "id": "second-wind",
+        "kind": "speed",
+        "target": "own_team",
+        "duration_frames": 300,
+        "stats": [
+          {
+            "stat": "skater_speed",
+            "multiply": 1.25
+          }
+        ],
+        "trigger": "goal_for",
+        "stack": "refresh"
+      }
+    ]
   }
 }

@@ -25,10 +25,51 @@ Start from the current cartridge and return it whole, with only your changes mad
 
 - Never add, rename or remove a key anywhere that the schema does not list. Unknown keys are errors.
 - Never change `schema`, `id`, `title`, `seed` or `tunables`. Copy them exactly.
-- Inside `game` (the hockey rules and numbers) you may change only: `rink` numbers (`length_m`, `width_m`, `corner_radius_m`, `board_restitution`, `ice_friction`, `goal_width_m`) and `rink.obstacles`, the whole `pickups` list, `rules.mode`, `rules.score_to_win`, `rules.timer_frames`, `look.tier`, `ai.difficulty`, and the whole `barks` object (`enabled` true/false, `intensity` "quiet" | "normal" | "loud": the one-liners the bot skaters say; "make them talk trash" or "meaner" means loud, "keep them quiet" or "polite" means quiet, "no talking" means enabled false). Everything else in `game` stays exactly as it is, in particular every skater `role`, every `spawn`, `teams`, `skater`, `puck`, `shot`, the numbers in `ai`, all of `camera`, and `skater.visual` (which figure is drawn; never add, change or remove it). Stay inside the ranges in `game_ranges` below. Keep every spawn and obstacle inside the rink if you resize it; if a shrunken rink would put a spawn outside, make a smaller change. `rules.mode` "first_to" needs `score_to_win`; "timer" needs `timer_frames`. Every pickup needs `kind`, `spawn_every_frames` and `duration_frames` of at least 1. Leave a key out to use its default; never write null.
+- Inside `game` (the hockey rules and numbers) you may change only: `rink` numbers (`length_m`, `width_m`, `corner_radius_m`, `board_restitution`, `ice_friction`, `goal_width_m`), `rink.obstacles`, `rink.zones`, `rules.hooks`, `rules.variants`, the whole `pickups` list, the whole `effects` list (see "Effects and pickups" below), `rules.mode`, `rules.score_to_win`, `rules.timer_frames`, `look.tier`, `ai.difficulty`, and the whole `barks` object (`enabled` true/false, `intensity` "quiet" | "normal" | "loud": the one-liners the bot skaters say; "make them talk trash" or "meaner" means loud, "keep them quiet" or "polite" means quiet, "no talking" means enabled false). Everything else in `game` stays exactly as it is, in particular every skater `role`, every `spawn`, `teams`, `skater`, `puck`, `shot`, the numbers in `ai`, all of `camera`, and `skater.visual` (which figure is drawn; never add, change or remove it). Stay inside the ranges in `game_ranges` below. Keep every spawn and obstacle inside the rink if you resize it; if a shrunken rink would put a spawn outside, make a smaller change. `rules.mode` "first_to" needs `score_to_win`; "timer" needs `timer_frames`. Every pickup needs `kind`, `spawn_every_frames` and `duration_frames` of at least 1. Leave a key out to use its default; never write null.
 - How hard the bots play is `game.ai.difficulty`: `rookie`, `pro` (the default) or `all_star`. "Make it easier", "I keep losing", "for my little brother" move it one step down (all_star -> pro -> rookie); "make it harder", "more of a challenge", "the bots are too easy" move it one step up. Change only the level for such a sentence: leave the other `ai` numbers and the `ai_speed_scale` / `ai_red_skill` values as they are.
 - Never use `null`. If a value does not apply, leave the key out.
 - Never put a duration in seconds or milliseconds. Time in this game is physics frames, 60 per second. A key that holds a duration ends in `_frames` and its value is a whole number. Convert: 30 seconds is 1800 frames, 2 minutes is 7200 frames.
+
+# Effects and pickups: you may invent boosts from these parts
+
+An effect is a timed change to a few stats, started by a trigger. You may add, change or remove entries of `game.effects` (at most 12) and `game.pickups` (at most 8). Each effect is
+`{"id", "kind", "target", "duration_frames", "stats": [{"stat", "multiply", "add"}], "trigger", "stack", "icon"}`:
+
+- `id`: a unique kebab-case name you choose (never one of the built-in kinds speed, precision, heavy_puck, big_puck, reverse_other).
+- `target`: who the change applies to, seen from the skater who triggered it: `self`, `own_team`, `other_team`, `everyone`, `puck` or `rink`.
+- `stats`: one to four entries. **An effect may reference known stats only**: `skater_speed`, `skater_accel`, `skater_turn_rate`, `skater_grip`, `skater_mass`, `shot_speed`, `shot_aim_cone_deg`, `shot_reach`, `check_speed_min`, `knockdown_frames`, `puck_drag`, `puck_max_speed`, `puck_radius`, `ice_friction`, `board_restitution`. Never invent a stat name (no jump, no shield, no teleport): the program rejects it. `multiply` is 0.25 to 4 (1 = no change); `add` is in the stat's own unit and stays within the stat's range. Skater stats apply to skaters, puck stats to the puck, ice and board stats to the rink: pick a target that fits the stats.
+- `trigger`: `pickup` (taken from the ice; then a `pickups` entry must name this id), `goal_for` / `goal_against` (seen from the scoring team: on `goal_for`, `self` is the scorer and `other_team` the team that conceded), `check_landed` / `check_received`, `period_start` (every TAKE), `zone_enter` / `zone_exit`, or `director` (a Director's Call).
+- `duration_frames`: 60 to 7200 (1 s to 2 min, 60 frames a second). `stack`: `refresh` (default), `extend` or `ignore`. `kind` (the look: one of the five built-in kinds or `custom`) and `icon` (bolt, crosshair, weight, circle, swirl, snail, shield, star, flame, snowflake, magnet, anchor) are optional.
+
+A pickup is `{"kind", "spawn_every_frames", "duration_frames", "magnitude", "max_on_ice"}`: `kind` is a built-in (speed, precision, heavy_puck, big_puck, reverse_other) or the id of one of your effects with trigger `pickup`; the pickup's `duration_frames` (1 to 3600) wins over the effect's; `magnitude` (0.1 to 4) is the built-in's multiplier, or scales a custom effect's change (1 = as written); `max_on_ice` (1 to 4) is how many lie on the ice at once.
+
+Three worked examples (each is the whole list; copy the shape, change the words):
+
+1. "a boost that slows the other team when I score":
+   `"effects": [{"id": "slow-them", "kind": "custom", "target": "other_team", "duration_frames": 300, "trigger": "goal_for", "stack": "refresh", "icon": "snail", "stats": [{"stat": "skater_speed", "multiply": 0.7}, {"stat": "skater_turn_rate", "multiply": 0.8}]}]`
+2. "sticky puck for 5 s on pickup":
+   `"effects": [{"id": "sticky-puck", "kind": "custom", "target": "puck", "duration_frames": 300, "trigger": "pickup", "icon": "magnet", "stats": [{"stat": "puck_drag", "multiply": 3}, {"stat": "puck_max_speed", "multiply": 0.6}]}]` and
+   `"pickups": [{"kind": "sticky-puck", "spawn_every_frames": 900, "duration_frames": 300}]`
+3. "turbo lane" (a speed burst while crossing a zone):
+   `"effects": [{"id": "turbo-lane", "kind": "speed", "target": "self", "duration_frames": 120, "trigger": "zone_enter", "stack": "refresh", "icon": "bolt", "stats": [{"stat": "skater_speed", "multiply": 1.6}]}]`
+
+Keep existing effects the player did not mention. A sentence about pickups alone ("lots of speed boosts") needs only `pickups` with built-in kinds.
+
+# Rules, zones and obstacles you may invent
+
+You may invent rule hooks, rule variants, ice zones and obstacles from these parts; the schema lists every field and value.
+
+- A **hook** (`game.rules.hooks`, at most 8) is `{ "id", "when", "then": [actions] }` plus optional `every_frames` (only with `"when": "on_frame"`), `after_frame` (armed from that frame), `team` (`scoring`, `conceding` or `any`, relative to the event; default `scoring`) and `score` (`at_least`, `at_most`, `lead_at_least`, read on the hook's team after the goal counted). Actions: `add_score` (value = whole goals), `set_score_multiplier` (value 1 to 5), `end_period`, `end_match`, `shrink_rink` and `grow_rink` (value = the fraction, 0.1 is 10 percent), `set_param` (param = a tunable key such as `ice_friction`, value), `spawn_pickup` (kind), `swap_nets`, `announce` (text, at most 60 characters, shown on the scoreboard), `apply_modifier` (kind, frames). Hooks run in id order.
+- A **variant** (`game.rules.variants`) is shorthand: `sudden_death` (true), `last_goal_double` (true), `mercy_goals` (2 to 9), `period_count` (1 to 3), `shrink_per_goal` (0.02 to 0.3). Prefer a variant when one fits; write a hook for anything else.
+- A **zone** (`game.rink.zones`, at most 8) is a painted area: `{ "id", "shape": "circle", "x", "z", "r", "kind" }` or `{ "shape": "rect", "x", "z", "w", "d", "kind" }`, with optional `strength` (0 to 1, default 0.5) and `visible`. Kinds: `slow_ice`, `fast_ice`, `bumper` (throws the puck back from its edge), `no_shoot` (no shooting from inside), `boost_only` (pickups spawn only there). The centre must be inside the rink.
+- An **obstacle** may now also be a `bumper` (a round post that throws the puck back faster) or a `goal_shield` (a thin wall `size` metres wide; put it a few metres in front of a net).
+- **Never write a hook that can end the match before frame 600 (10 seconds):** an `end_match` hook needs `"after_frame": 600` or more, or `"every_frames"` of 600 or more, or `"when": "on_period_end"`, or a `score` that needs a second goal (`at_least` or `lead_at_least` of 2 or more). The program rejects it otherwise.
+
+Three worked examples, each over an unchanged cartridge:
+
+1. "the last goal counts double": `"rules": { ..., "hooks": [ { "id": "last-goal-double", "when": "on_goal", "team": "scoring", "score": { "at_least": 3 }, "then": [ { "do": "add_score", "value": 1 }, { "do": "announce", "text": "LAST GOAL COUNTS DOUBLE" } ] } ] }` (3 is the cut's `score_to_win`), or simply `"variants": { "last_goal_double": true }`.
+2. "the rink shrinks by 10 % every goal": `"rules": { ..., "variants": { "shrink_per_goal": 0.1 } }`. As a hook: `{ "id": "shrink-every-goal", "when": "on_goal", "team": "any", "then": [ { "do": "shrink_rink", "value": 0.1 }, { "do": "announce", "text": "THE RINK SHRINKS 10%" } ] }`.
+3. "a slow-ice circle at centre": `"rink": { ..., "zones": [ { "id": "centre-slow", "shape": "circle", "x": 0, "z": 0, "r": 6, "kind": "slow_ice", "strength": 0.6, "visible": true } ] }`.
 
 # How to read the player's sentence
 

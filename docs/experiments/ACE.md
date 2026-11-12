@@ -215,3 +215,21 @@ intensity, no repeats within 10 picks, bubble opacity by frames). Node: `tools/b
   its Flite static library is 31.8 MB (`lib/Win64/VS2019/Release/libFlite.lib`, voice data included) and the editor module DLL is 4.6 MB, so the
   expected delta in the monolithic Shipping exe is a few MB.
 - Widget fix after the proof: a parked bubble's rounded outline stayed visible at render opacity 0; bubbles and the strip now collapse when not showing.
+
+### 3.6 R-0015 (13:45): the harsher register
+
+- Operator: "you can be also more offensive with the mockery. The current scripts are too safe and childish." Ruling R-0015: cutting sarcasm about the player's
+  skating, aim, speed, courage and decisions; gloating; bored-veteran voice; teammates genuinely annoyed; mild language sparingly (damn, hell, crap, "kick your
+  ass"; at most one line in ten); still no slurs, nothing sexual, no threats of real harm, no real people/brands/teams, nothing about who the player is.
+- Bank regenerated with `claude-sonnet-5-5` (the register needs it; haiku's lines were the "childish" ones): **1340 lines**, 89 combinations of 12..20,
+  **56 lines with a mild word (4.2%, quota 10%)**, 1,582 raw, hard-list rejections 29, over-length 28, duplicates 12. New opponent tone `savage`
+  (loud only). `tools/barks/filter.mjs`: the hard list stays (slurs, sexual, real harm, people/brands/teams, identity), the mild words left it and are counted
+  (`mildCount`, bank quota `MILD_QUOTA` 0.1 enforced by `filterBank`, never two in one line, "ass" only inside a kick-your-ass phrase); words the old list
+  over-caught for this register were released (pathetic, stupid, dumb, useless, money, die/dead, button, punchline, "shot you"); the reviewer regex for things
+  the game lacks (goalie, crowd, referee, offside, penalty, coach) moved into the filter.
+- Picker: `quiet` = opponents complain only, teammates encourage/praise/complain; `normal` = mock 50 / complain 30 / bravado 20, never savage;
+  `loud` = savage 45 / mock 30 / bravado 15 / complain 10. Presets: `hockey.regular` `game.barks { enabled, intensity: "normal" }`, `hockey.raw` `"loud"`.
+- Tests: `Jam.Barks.BankClean` now requires the savage combinations; `PicksBySituation` proves normal never picks savage and loud does;
+  `tools/barks/barks.test.mjs` adds the mild quota. `REVIEW.md` regenerated, mild lines tagged `[mild]`.
+- Side effect for lane A7: `hockey.regular` changed (the barks key), so `gen-designer-data.mjs` reports `stale_base` until `gen-cut-library.mjs` is re-run
+  over the new regular (A7's library, not touched by this lane).

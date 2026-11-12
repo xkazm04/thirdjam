@@ -128,7 +128,7 @@
       "mass": 80,
       "glide_drag": 0.147,
       "brake_decel": 6,
-      "check_enabled": false
+      "check_enabled": true
     },
     "puck": {
       "radius_m": 0.12,
@@ -147,7 +147,7 @@
       "score_to_win": 3,
       "goal_pause_frames": 120,
       "offside": false,
-      "penalties": false
+      "penalties": true
     },
     "teams": [
       {
@@ -207,6 +207,10 @@
     ],
     "ai": {
       "difficulty": "pro"
+    },
+    "barks": {
+      "enabled": true,
+      "intensity": "normal"
     },
     "look": {
       "tier": "l2_night",

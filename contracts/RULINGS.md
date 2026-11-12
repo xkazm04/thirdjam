@@ -195,3 +195,12 @@ to be implemented to start the game. / No need to mention Director's cut in the 
    4-5 editors. **Lane A10 runs the one-editor 60 s soak on A in the 14:30 window** with B's grep list and `stat gpu`; the shipped tier stays `l2_night` unless it hangs with one editor.
 7. **Operator items from B:** Hyper3D's licence wording for shipping Rodin output from this account, and whether the prize needs Rodin content in the build or only in the pipeline (B shipped
    seven props and the T-B2 base mesh through Rodin, so both readings are covered); the voice test on B needs a human at the microphone.
+
+## R-0017 (H8.1, 2026-11-12 14:15): lane A14's names and seams; lane A12's register
+1. Accepted as implemented: `effects[].zone`, `kind` enum (five looks + `custom`), `icon` enum (12), `max_on_ice` default 1, custom-effect magnitude as a deviation scale, `director` as any live
+   cut or call with the human as source, triggers read from the sim's frame events (the bus stays cosmetic). Built-ins live under `Game/Content/Designer/builtin-effects.json` (A's folder).
+2. `reverse_other` gets a real stat: lane A16 adds `EJamStat::SkaterControlsSign` (the sim multiplies the human's and bots' move input by it); until then the half-speed fallback stands.
+3. The editor crash on `jam.say` (LoadCut from the Designer callback inside the TEDS processing window): lane A7 defers `LoadCut` to the next tick.
+4. Brain: `FJamAIWorld` gains `Pickups[] { Kind, Pos }` filled by the game mode; only `all_star` detours for a pickup within 8 m, never while carrying and never when the puck is closer
+   (lane A3 resumes for this, for pass awareness and interception once A16's pass lands, for poke/lift use at pro and all_star, foul avoidance, and the last-man-as-goalie rule).
+5. Barks: the regenerated register ships; Regular `normal`, Raw `loud`; the Director skims `REVIEW.md` for cuts before H24. A's TextToSpeech package delta is measured at the next green Shipping package.
