@@ -53,8 +53,8 @@ S('post.any', 'post', null, 'the puck hits a post', 'any', 4, 6, ['Off the post!
 S('post.late', 'post', null, 'the puck hits a post in the last ten seconds', 'any', 5, 10, ['The post says no!', 'Inches from the tying goal.']);
 // Board
 S('board.hard', 'board', null, 'the puck hits the boards with Strength 0.7 or more', 'any', 1, 20, ['Off the boards and out.', 'Rattles the boards.', 'Loud one off the wall.']);
-S('board.rim', 'board', null, 'the puck runs along the boards behind a net', 'any', 1, 25, ['Rimmed around the back.', 'Wrapped around the boards.', 'Around the wall it goes.']);
-S('board.bank', 'board', null, 'the puck banks off the boards into a goal within one second', 'any', 3, 20, ['Banked it in off the boards!', 'Used the boards like a teammate.']);
+S('board.rim', 'board', 'rim', 'the puck runs along the boards behind a net', 'any', 1, 25, ['Rimmed around the back.', 'Wrapped around the boards.', 'Around the wall it goes.']);
+S('board.bank', 'board', 'bank', 'the puck banks off the boards into a goal within one second', 'any', 3, 20, ['Banked it in off the boards!', 'Used the boards like a teammate.']);
 // Checks and knockdowns
 S('check.blue', 'check', null, 'a blue skater lands a body check', 'blue', 2, 8, ['Blue finishes the check.', 'Big hit from blue.', 'Blue lays the body.']);
 S('check.orange', 'check', null, 'an orange skater lands a body check', 'orange', 2, 8, ['Orange finishes the check.', 'Big hit from orange.', 'Orange lays the body.']);
