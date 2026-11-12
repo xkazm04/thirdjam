@@ -1,6 +1,6 @@
 {
   "schema": "tj.designer-cache/1",
-  "base_sha256": "507eb2bea277d06b1bc3243bf150fc47c8b56604ecbc6b01b4a44f5932efffa3",
+  "base_sha256": "5419d7a882e43360bf743b62b89b00699301f760fb380e6b482dda05f7354187",
   "generated_by": "claude CLI, tools/designer-eval/loop.mjs chain over hockey.regular",
   "cuts": [
     {
@@ -16,7 +16,7 @@
         "zoom"
       ],
       "base": "hockey.regular",
-      "outcome": "first_try",
+      "outcome": "repaired",
       "cartridge": {
         "schema": "tj.cartridge/1",
         "id": "hockey-regular",
@@ -127,7 +127,7 @@
           }
         ],
         "values": {
-          "skater_speed": 14
+          "skater_speed": 15
         },
         "rules": [],
         "entities": [],
@@ -154,7 +154,7 @@
           "puck": {
             "radius_m": 0.12,
             "max_speed": 30,
-            "drag": 0,
+            "drag": 0.5,
             "colour_hex": "#111111"
           },
           "shot": {
@@ -259,7 +259,7 @@
         "chill"
       ],
       "base": "hockey.regular",
-      "outcome": "first_try",
+      "outcome": "repaired",
       "cartridge": {
         "schema": "tj.cartridge/1",
         "id": "hockey-regular",
@@ -370,7 +370,7 @@
           }
         ],
         "values": {
-          "skater_speed": 7.5,
+          "skater_speed": 8,
           "shot_speed": 14,
           "puck_max_speed": 22,
           "ai_speed_scale": 0.8
@@ -400,7 +400,7 @@
           "puck": {
             "radius_m": 0.12,
             "max_speed": 30,
-            "drag": 0,
+            "drag": 0.5,
             "colour_hex": "#111111"
           },
           "shot": {
@@ -473,7 +473,7 @@
             }
           ],
           "ai": {
-            "difficulty": "pro"
+            "difficulty": "rookie"
           },
           "look": {
             "tier": "l2_night",
@@ -617,11 +617,11 @@
           }
         ],
         "values": {
-          "skater_speed": 7,
-          "shot_speed": 12,
-          "puck_max_speed": 20,
-          "ai_speed_scale": 0.7,
-          "ai_red_skill": 0.4,
+          "skater_speed": 8,
+          "shot_speed": 14,
+          "puck_max_speed": 22,
+          "ai_speed_scale": 0.75,
+          "ai_red_skill": 0.5,
           "goal_pause_frames": 180
         },
         "rules": [],
@@ -649,7 +649,7 @@
           "puck": {
             "radius_m": 0.12,
             "max_speed": 30,
-            "drag": 0,
+            "drag": 0.5,
             "colour_hex": "#111111"
           },
           "shot": {
@@ -759,7 +759,7 @@
         "madness"
       ],
       "base": "hockey.regular",
-      "outcome": "repaired",
+      "outcome": "first_try",
       "cartridge": {
         "schema": "tj.cartridge/1",
         "id": "hockey-regular",
@@ -768,30 +768,30 @@
         "theme": {
           "name": "Pinball Cut",
           "mood_words": [
-            "chaotic",
-            "neon",
-            "electric"
+            "night",
+            "crisp",
+            "bright"
           ],
           "palette": [
             {
               "name": "ice",
-              "hex": "#E0F7FF"
+              "hex": "#DCE9F5"
             },
             {
               "name": "blue",
               "hex": "#1D4ED8"
             },
             {
-              "name": "magenta",
-              "hex": "#E0339A"
+              "name": "orange",
+              "hex": "#E8651A"
             },
             {
-              "name": "lime",
-              "hex": "#A3E635"
+              "name": "trim",
+              "hex": "#38BDF8"
             },
             {
               "name": "dark",
-              "hex": "#0A0716"
+              "hex": "#0B1220"
             }
           ]
         },
@@ -870,8 +870,7 @@
           }
         ],
         "values": {
-          "board_restitution": 0.9,
-          "puck_max_speed": 45
+          "board_restitution": 0.9
         },
         "rules": [],
         "entities": [],
@@ -887,39 +886,39 @@
             "obstacles": [
               {
                 "kind": "pillar",
-                "x": 0,
-                "z": -9,
-                "size": 1.5
-              },
-              {
-                "kind": "pillar",
-                "x": 0,
-                "z": 9,
-                "size": 1.5
-              },
-              {
-                "kind": "pillar",
-                "x": -15,
+                "x": -12,
                 "z": -12,
-                "size": 1.5
+                "size": 2.5
               },
               {
                 "kind": "pillar",
-                "x": 15,
+                "x": 12,
                 "z": 12,
-                "size": 1.5
+                "size": 2.5
               },
               {
                 "kind": "pillar",
-                "x": -15,
+                "x": 0,
+                "z": -14,
+                "size": 2.5
+              },
+              {
+                "kind": "pillar",
+                "x": 0,
+                "z": 14,
+                "size": 2.5
+              },
+              {
+                "kind": "pillar",
+                "x": -32,
                 "z": 12,
-                "size": 1.5
+                "size": 2.5
               },
               {
                 "kind": "pillar",
-                "x": 15,
+                "x": 32,
                 "z": -12,
-                "size": 1.5
+                "size": 2.5
               }
             ]
           },
@@ -936,7 +935,7 @@
           "puck": {
             "radius_m": 0.12,
             "max_speed": 30,
-            "drag": 0,
+            "drag": 0.5,
             "colour_hex": "#111111"
           },
           "shot": {
@@ -945,14 +944,6 @@
             "cooldown_frames": 24,
             "aim_cone_deg": 8
           },
-          "pickups": [
-            {
-              "kind": "speed",
-              "spawn_every_frames": 600,
-              "duration_frames": 300,
-              "magnitude": 1.5
-            }
-          ],
           "rules": {
             "mode": "first_to",
             "score_to_win": 3,
@@ -1020,7 +1011,7 @@
             "difficulty": "pro"
           },
           "look": {
-            "tier": "l3_neon",
+            "tier": "l2_night",
             "trim_colour_hex": "#38BDF8",
             "fog_density": 0,
             "wet_ice": false
@@ -1187,7 +1178,7 @@
           "puck": {
             "radius_m": 0.12,
             "max_speed": 30,
-            "drag": 0,
+            "drag": 0.5,
             "colour_hex": "#111111"
           },
           "shot": {
@@ -1411,7 +1402,7 @@
           "rink": {
             "length_m": 60,
             "width_m": 30,
-            "corner_radius_m": 2.5,
+            "corner_radius_m": 3.75,
             "board_restitution": 0.4,
             "ice_friction": 0.015,
             "goal_width_m": 4
@@ -1429,7 +1420,7 @@
           "puck": {
             "radius_m": 0.12,
             "max_speed": 30,
-            "drag": 0,
+            "drag": 0.5,
             "colour_hex": "#111111"
           },
           "shot": {
@@ -1650,7 +1641,7 @@
         "ai": [],
         "game": {
           "rink": {
-            "length_m": 125,
+            "length_m": 130,
             "width_m": 65,
             "corner_radius_m": 3.75,
             "board_restitution": 0.4,
@@ -1670,7 +1661,7 @@
           "puck": {
             "radius_m": 0.12,
             "max_speed": 30,
-            "drag": 0,
+            "drag": 0.5,
             "colour_hex": "#111111"
           },
           "shot": {
@@ -1913,7 +1904,7 @@
           "puck": {
             "radius_m": 0.12,
             "max_speed": 30,
-            "drag": 0,
+            "drag": 0.5,
             "colour_hex": "#111111"
           },
           "shot": {
@@ -2028,9 +2019,7 @@
           "mood_words": [
             "night",
             "crisp",
-            "bright",
-            "sticky",
-            "muted"
+            "bright"
           ],
           "palette": [
             {
@@ -2130,8 +2119,8 @@
           }
         ],
         "values": {
-          "skater_speed": 8,
-          "ice_friction": 0.06
+          "ice_friction": 0.05,
+          "skater_speed": 8
         },
         "rules": [],
         "entities": [],
@@ -2142,7 +2131,7 @@
             "width_m": 45,
             "corner_radius_m": 3.75,
             "board_restitution": 0.4,
-            "ice_friction": 0.06,
+            "ice_friction": 0.05,
             "goal_width_m": 4
           },
           "skater": {
@@ -2158,7 +2147,7 @@
           "puck": {
             "radius_m": 0.12,
             "max_speed": 30,
-            "drag": 0,
+            "drag": 0.5,
             "colour_hex": "#111111"
           },
           "shot": {
@@ -2399,7 +2388,7 @@
           "puck": {
             "radius_m": 0.12,
             "max_speed": 30,
-            "drag": 0,
+            "drag": 0.5,
             "colour_hex": "#111111"
           },
           "shot": {
@@ -2471,9 +2460,6 @@
               ]
             }
           ],
-          "ai": {
-            "difficulty": "pro"
-          },
           "pickups": [
             {
               "kind": "speed",
@@ -2488,6 +2474,9 @@
               "magnitude": 1.5
             }
           ],
+          "ai": {
+            "difficulty": "pro"
+          },
           "look": {
             "tier": "l2_night",
             "trim_colour_hex": "#38BDF8",
@@ -2652,7 +2641,7 @@
           "puck": {
             "radius_m": 0.12,
             "max_speed": 30,
-            "drag": 0,
+            "drag": 0.5,
             "colour_hex": "#111111"
           },
           "shot": {
@@ -2727,26 +2716,6 @@
           "ai": {
             "difficulty": "pro"
           },
-          "pickups": [
-            {
-              "kind": "speed",
-              "spawn_every_frames": 300,
-              "duration_frames": 240,
-              "magnitude": 1.5
-            },
-            {
-              "kind": "speed",
-              "spawn_every_frames": 420,
-              "duration_frames": 180,
-              "magnitude": 1.3
-            },
-            {
-              "kind": "speed",
-              "spawn_every_frames": 600,
-              "duration_frames": 300,
-              "magnitude": 1.8
-            }
-          ],
           "look": {
             "tier": "l2_night",
             "trim_colour_hex": "#38BDF8",
@@ -2761,7 +2730,21 @@
             "lag_frames": 4,
             "fov_deg": 70,
             "radar": true
-          }
+          },
+          "pickups": [
+            {
+              "kind": "speed",
+              "spawn_every_frames": 360,
+              "duration_frames": 420,
+              "magnitude": 1.8
+            },
+            {
+              "kind": "speed",
+              "spawn_every_frames": 600,
+              "duration_frames": 300,
+              "magnitude": 1.5
+            }
+          ]
         }
       }
     },
@@ -2912,7 +2895,7 @@
           "puck": {
             "radius_m": 0.12,
             "max_speed": 30,
-            "drag": 0,
+            "drag": 0.5,
             "colour_hex": "#111111"
           },
           "shot": {
@@ -2991,7 +2974,7 @@
             {
               "kind": "big_puck",
               "spawn_every_frames": 900,
-              "duration_frames": 480,
+              "duration_frames": 600,
               "magnitude": 2.5
             }
           ],
@@ -3025,7 +3008,7 @@
         "colorful"
       ],
       "base": "hockey.regular",
-      "outcome": "repaired",
+      "outcome": "first_try",
       "cartridge": {
         "schema": "tj.cartridge/1",
         "id": "hockey-regular",
@@ -3036,29 +3019,29 @@
           "mood_words": [
             "neon",
             "party",
-            "electric",
-            "bright"
+            "bright",
+            "loud"
           ],
           "palette": [
             {
-              "name": "magenta",
-              "hex": "#FF2BD6"
+              "name": "ice",
+              "hex": "#E6F7FF"
+            },
+            {
+              "name": "pink",
+              "hex": "#FF2E9A"
             },
             {
               "name": "cyan",
-              "hex": "#00E5FF"
+              "hex": "#22D3EE"
             },
             {
               "name": "lime",
-              "hex": "#B6FF3B"
-            },
-            {
-              "name": "violet",
-              "hex": "#7C3AED"
+              "hex": "#A3FF12"
             },
             {
               "name": "dark",
-              "hex": "#0A0716"
+              "hex": "#0B0717"
             }
           ]
         },
@@ -3162,7 +3145,7 @@
           "puck": {
             "radius_m": 0.12,
             "max_speed": 30,
-            "drag": 0,
+            "drag": 0.5,
             "colour_hex": "#111111"
           },
           "shot": {
@@ -3267,7 +3250,7 @@
         "morning"
       ],
       "base": "hockey.regular",
-      "outcome": "first_try",
+      "outcome": "repaired",
       "cartridge": {
         "schema": "tj.cartridge/1",
         "id": "hockey-regular",
@@ -3278,8 +3261,8 @@
           "mood_words": [
             "daytime",
             "bright",
-            "crisp",
-            "clear"
+            "sunny",
+            "crisp"
           ],
           "palette": [
             {
@@ -3292,14 +3275,14 @@
             },
             {
               "name": "orange",
-              "hex": "#E8651A"
+              "hex": "#F97316"
             },
             {
-              "name": "trim",
+              "name": "sky",
               "hex": "#38BDF8"
             },
             {
-              "name": "dark",
+              "name": "slate",
               "hex": "#334155"
             }
           ]
@@ -3404,7 +3387,7 @@
           "puck": {
             "radius_m": 0.12,
             "max_speed": 30,
-            "drag": 0,
+            "drag": 0.5,
             "colour_hex": "#111111"
           },
           "shot": {
@@ -3509,7 +3492,7 @@
         "simple"
       ],
       "base": "hockey.regular",
-      "outcome": "repaired",
+      "outcome": "first_try",
       "cartridge": {
         "schema": "tj.cartridge/1",
         "id": "hockey-regular",
@@ -3620,7 +3603,7 @@
           }
         ],
         "values": {
-          "ai_red_skill": 0.6
+          "shot_speed": 21
         },
         "rules": [],
         "entities": [],
@@ -3647,7 +3630,7 @@
           "puck": {
             "radius_m": 0.12,
             "max_speed": 30,
-            "drag": 0,
+            "drag": 0.5,
             "colour_hex": "#111111"
           },
           "shot": {
@@ -3720,7 +3703,7 @@
             }
           ],
           "ai": {
-            "difficulty": "pro"
+            "difficulty": "rookie"
           },
           "look": {
             "tier": "l2_night",
@@ -3891,7 +3874,7 @@
           "puck": {
             "radius_m": 0.12,
             "max_speed": 30,
-            "drag": 0,
+            "drag": 0.5,
             "colour_hex": "#111111"
           },
           "shot": {
@@ -4133,7 +4116,7 @@
           "puck": {
             "radius_m": 0.12,
             "max_speed": 30,
-            "drag": 0,
+            "drag": 0.5,
             "colour_hex": "#111111"
           },
           "shot": {
@@ -4375,7 +4358,7 @@
           "puck": {
             "radius_m": 0.12,
             "max_speed": 30,
-            "drag": 0,
+            "drag": 0.5,
             "colour_hex": "#111111"
           },
           "shot": {
@@ -4616,7 +4599,7 @@
           "puck": {
             "radius_m": 0.12,
             "max_speed": 30,
-            "drag": 0,
+            "drag": 0.5,
             "colour_hex": "#111111"
           },
           "shot": {
@@ -4856,7 +4839,7 @@
           "puck": {
             "radius_m": 0.12,
             "max_speed": 30,
-            "drag": 0,
+            "drag": 0.5,
             "colour_hex": "#111111"
           },
           "shot": {
@@ -5084,27 +5067,21 @@
             "obstacles": [
               {
                 "kind": "pillar",
-                "x": -12,
-                "z": 6,
+                "x": 0,
+                "z": -12,
                 "size": 2
               },
               {
                 "kind": "pillar",
                 "x": 0,
-                "z": -8,
+                "z": 12,
                 "size": 2
               },
               {
                 "kind": "pillar",
-                "x": 0,
-                "z": 8,
-                "size": 2
-              },
-              {
-                "kind": "pillar",
-                "x": 12,
-                "z": -6,
-                "size": 2
+                "x": -15,
+                "z": -16,
+                "size": 1.5
               }
             ]
           },
@@ -5121,7 +5098,7 @@
           "puck": {
             "radius_m": 0.12,
             "max_speed": 30,
-            "drag": 0,
+            "drag": 0.5,
             "colour_hex": "#111111"
           },
           "shot": {
@@ -5351,74 +5328,74 @@
               {
                 "kind": "box",
                 "x": -15,
-                "z": -10,
-                "size": 4
+                "z": -12,
+                "size": 3
               },
               {
                 "kind": "box",
                 "x": -15,
-                "z": 10,
-                "size": 4
+                "z": 0,
+                "size": 3
               },
               {
                 "kind": "box",
-                "x": -30,
-                "z": -5,
-                "size": 4
-              },
-              {
-                "kind": "box",
-                "x": -30,
-                "z": 6,
-                "size": 4
-              },
-              {
-                "kind": "box",
-                "x": 0,
-                "z": -12,
-                "size": 4
-              },
-              {
-                "kind": "box",
-                "x": 0,
+                "x": -15,
                 "z": 12,
-                "size": 4
+                "size": 3
               },
               {
                 "kind": "box",
-                "x": 15,
-                "z": -10,
-                "size": 4
+                "x": 0,
+                "z": -18,
+                "size": 3
               },
               {
                 "kind": "box",
-                "x": 15,
-                "z": 10,
-                "size": 4
+                "x": 0,
+                "z": -6,
+                "size": 3
               },
               {
                 "kind": "box",
-                "x": 30,
-                "z": -5,
-                "size": 4
-              },
-              {
-                "kind": "box",
-                "x": 30,
+                "x": 0,
                 "z": 6,
-                "size": 4
+                "size": 3
               },
               {
                 "kind": "box",
-                "x": -35,
-                "z": -15,
-                "size": 4
+                "x": 0,
+                "z": 18,
+                "size": 3
               },
               {
                 "kind": "box",
-                "x": 35,
-                "z": 15,
-                "size": 4
+                "x": 15,
+                "z": -12,
+                "size": 3
+              },
+              {
+                "kind": "box",
+                "x": 15,
+                "z": 0,
+                "size": 3
+              },
+              {
+                "kind": "box",
+                "x": 15,
+                "z": 12,
+                "size": 3
+              },
+              {
+                "kind": "box",
+                "x": -30,
+                "z": -8,
+                "size": 3
+              },
+              {
+                "kind": "box",
+                "x": 30,
+                "z": 8,
+                "size": 3
               }
             ]
           },
@@ -5435,7 +5412,7 @@
           "puck": {
             "radius_m": 0.12,
             "max_speed": 30,
-            "drag": 0,
+            "drag": 0.5,
             "colour_hex": "#111111"
           },
           "shot": {
@@ -5540,7 +5517,7 @@
         "slapshot"
       ],
       "base": "hockey.regular",
-      "outcome": "repaired",
+      "outcome": "first_try",
       "cartridge": {
         "schema": "tj.cartridge/1",
         "id": "hockey-regular",
@@ -5651,7 +5628,7 @@
           }
         ],
         "values": {
-          "shot_speed": 32,
+          "shot_speed": 30,
           "puck_max_speed": 45
         },
         "rules": [],
@@ -5679,7 +5656,7 @@
           "puck": {
             "radius_m": 0.12,
             "max_speed": 30,
-            "drag": 0,
+            "drag": 0.5,
             "colour_hex": "#111111"
           },
           "shot": {
@@ -5783,7 +5760,7 @@
         "high"
       ],
       "base": "hockey.regular",
-      "outcome": "first_try",
+      "outcome": "repaired",
       "cartridge": {
         "schema": "tj.cartridge/1",
         "id": "hockey-regular",
@@ -5894,7 +5871,7 @@
           }
         ],
         "values": {
-          "ai_red_skill": 0.65
+          "shot_speed": 26
         },
         "rules": [],
         "entities": [],
@@ -5921,7 +5898,7 @@
           "puck": {
             "radius_m": 0.12,
             "max_speed": 30,
-            "drag": 0,
+            "drag": 0.5,
             "colour_hex": "#111111"
           },
           "shot": {
@@ -6162,7 +6139,7 @@
           "puck": {
             "radius_m": 0.12,
             "max_speed": 30,
-            "drag": 0,
+            "drag": 0.5,
             "colour_hex": "#111111"
           },
           "shot": {
@@ -6268,7 +6245,7 @@
         "lake"
       ],
       "base": "hockey.regular",
-      "outcome": "repaired",
+      "outcome": "first_try",
       "cartridge": {
         "schema": "tj.cartridge/1",
         "id": "hockey-regular",
@@ -6279,29 +6256,30 @@
           "mood_words": [
             "cozy",
             "winter",
+            "snowy",
             "calm",
-            "snowy"
+            "warm"
           ],
           "palette": [
             {
               "name": "snow",
-              "hex": "#F4F8FB"
+              "hex": "#F4F9FF"
             },
             {
               "name": "pond",
-              "hex": "#CFE6F2"
+              "hex": "#7FB3D5"
             },
             {
               "name": "pine",
-              "hex": "#1F3B34"
+              "hex": "#1F4D3A"
             },
             {
-              "name": "night",
-              "hex": "#14213D"
+              "name": "cocoa",
+              "hex": "#6B4423"
             },
             {
-              "name": "lantern",
-              "hex": "#F2B45A"
+              "name": "dusk",
+              "hex": "#1B2A3A"
             }
           ]
         },
@@ -6380,11 +6358,8 @@
           }
         ],
         "values": {
-          "skater_speed": 8,
-          "shot_speed": 14,
-          "ai_speed_scale": 0.8,
-          "ai_red_skill": 0.5,
-          "goal_pause_frames": 180
+          "skater_speed": 7.5,
+          "ai_red_skill": 0.6
         },
         "rules": [],
         "entities": [],
@@ -6393,7 +6368,7 @@
           "rink": {
             "length_m": 90,
             "width_m": 45,
-            "corner_radius_m": 6,
+            "corner_radius_m": 3.75,
             "board_restitution": 0.4,
             "ice_friction": 0.015,
             "goal_width_m": 4
@@ -6411,7 +6386,7 @@
           "puck": {
             "radius_m": 0.12,
             "max_speed": 30,
-            "drag": 0,
+            "drag": 0.5,
             "colour_hex": "#111111"
           },
           "shot": {
@@ -6484,7 +6459,7 @@
             }
           ],
           "ai": {
-            "difficulty": "rookie"
+            "difficulty": "pro"
           },
           "barks": {
             "enabled": true,
@@ -6530,30 +6505,31 @@
           "name": "Final Cut",
           "mood_words": [
             "sunset",
-            "golden",
+            "warm",
             "championship",
-            "final"
+            "final",
+            "glow"
           ],
           "palette": [
             {
+              "name": "sky",
+              "hex": "#FDBA74"
+            },
+            {
+              "name": "ember",
+              "hex": "#E8651A"
+            },
+            {
+              "name": "rose",
+              "hex": "#BE185D"
+            },
+            {
               "name": "gold",
-              "hex": "#F6B54A"
-            },
-            {
-              "name": "coral",
-              "hex": "#E8604C"
-            },
-            {
-              "name": "plum",
-              "hex": "#5B2A59"
-            },
-            {
-              "name": "ice",
-              "hex": "#F5E6D3"
+              "hex": "#FACC15"
             },
             {
               "name": "dusk",
-              "hex": "#1E1433"
+              "hex": "#1E1B4B"
             }
           ]
         },
@@ -6657,7 +6633,7 @@
           "puck": {
             "radius_m": 0.12,
             "max_speed": 30,
-            "drag": 0,
+            "drag": 0.5,
             "colour_hex": "#111111"
           },
           "shot": {
@@ -6775,28 +6751,28 @@
             "arcade",
             "pixel",
             "neon",
-            "chunky"
+            "bold"
           ],
           "palette": [
             {
-              "name": "phosphor",
-              "hex": "#39FF14"
+              "name": "cream",
+              "hex": "#F5E6C8"
             },
             {
               "name": "magenta",
-              "hex": "#FF2E9A"
+              "hex": "#E0218A"
             },
             {
               "name": "cyan",
-              "hex": "#00E5FF"
+              "hex": "#22D3EE"
             },
             {
-              "name": "amber",
-              "hex": "#FFB000"
+              "name": "yellow",
+              "hex": "#FACC15"
             },
             {
-              "name": "void",
-              "hex": "#120A24"
+              "name": "black",
+              "hex": "#14051F"
             }
           ]
         },
@@ -6900,7 +6876,7 @@
           "puck": {
             "radius_m": 0.12,
             "max_speed": 30,
-            "drag": 0,
+            "drag": 0.5,
             "colour_hex": "#111111"
           },
           "shot": {
@@ -6976,7 +6952,7 @@
             "difficulty": "pro"
           },
           "look": {
-            "tier": "l3_neon",
+            "tier": "l2_night",
             "trim_colour_hex": "#38BDF8",
             "fog_density": 0,
             "wet_ice": false
@@ -7142,7 +7118,7 @@
           "puck": {
             "radius_m": 0.12,
             "max_speed": 30,
-            "drag": 0,
+            "drag": 0.5,
             "colour_hex": "#111111"
           },
           "shot": {
@@ -7262,24 +7238,24 @@
           ],
           "palette": [
             {
-              "name": "mist",
-              "hex": "#D9D4E8"
+              "name": "ghost",
+              "hex": "#E6E6FA"
             },
             {
               "name": "violet",
               "hex": "#6D28D9"
             },
             {
-              "name": "ember",
-              "hex": "#FF7A18"
+              "name": "pumpkin",
+              "hex": "#E8651A"
             },
             {
               "name": "moon",
-              "hex": "#A78BFA"
+              "hex": "#FDE68A"
             },
             {
-              "name": "shadow",
-              "hex": "#0A0614"
+              "name": "graveyard",
+              "hex": "#0F0A1F"
             }
           ]
         },
@@ -7383,7 +7359,7 @@
           "puck": {
             "radius_m": 0.12,
             "max_speed": 30,
-            "drag": 0,
+            "drag": 0.5,
             "colour_hex": "#111111"
           },
           "shot": {
