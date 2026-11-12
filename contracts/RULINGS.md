@@ -77,3 +77,22 @@
    rigged in Meshy if needed), ledgered as `ai-generated` with the tool named, so the entry qualifies for the pool. No account, no Rodin: say so in the ledger.
 5. **Tools used** (`docs/SUBMISSION.md`): Unreal Engine 5.9, NVIDIA DLSS (if integrated), Claude Code (Opus, Sonnet, Fable, Haiku), Meshy (figures, motion), Hyper3D Rodin (if used),
    Codex image generation (reference studies only), Blender (evaluation renders), ffmpeg. The NVIDIA questions are answered from `docs/experiments/DLSS.md` at submission.
+
+## R-0007 (H5.4, 2026-11-12 11:25): AI voice side track (operator): barks, shouted signals, ACE
+Operator's words: "experiment with ACE too as a side track - think about AI extensions, first phase purely for trash talking PG15+, opponents would mock or complain based on the
+situation in game. Ideal state would be to shout at AI teammates for short strategy signals and get understanding for defending, going to free space, or just free complimenting."
+1. **Content law:** the entry must be teen-appropriate (official rules, 13+). "PG15" is read as sharp but clean: mockery, complaints, bravado and praise with no profanity, slurs, sexual
+   content, threats, or references to real people, brands or teams. Lines come from a **reviewed bank** generated offline (through the Claude Code CLI transport, R-0004) and filtered by a
+   word list and a reviewer pass; **no raw model text reaches the player at runtime**. The bank is English, tagged by situation and tone, and committed as data.
+2. **Phase 1, barks (ships at M2):** `UJamBarkSystem` (JamGame) listens to the event bus and the sim (goal for/against, check landed/received, puck stolen, stall, near miss, win/lose, a
+   Director's Call) and picks a line for the speaking skater (opponents mock and complain, teammates encourage and complain at the human, the human's own figure stays silent), with a
+   cooldown and no repeats; shown as a speech bubble over the figure and in a HUD strip; optional voice through the engine's own text-to-speech if any is free of downloads, else text only.
+   Cartridge key `game.barks: { enabled, intensity: "quiet" | "normal" | "loud" }`; the Designer may set it ("make them talk trash").
+3. **Phase 2, shouted signals (M3 stretch):** intents `defend | space | pass | praise` as `FJamTeamIntent` events the brain honours for N frames (teammates fall back, spread to free ice,
+   the puck carrier looks for the human, a praised teammate gets a brief skill boost); inputs in this order: keyboard/gamepad (1-4 or d-pad, always shipped, judges have no mic), then
+   **voice through Windows' built-in speech recognition** (no download, offline-capable), then NVIDIA ACE's ASR if phase 3 exists. Teammates answer with a bark ("got it", "on him").
+4. **Phase 3, ACE (NVIDIA eligibility, experiment):** lane A12 researches whether an ACE for Games plugin exists for UE 5.9 (local NIM/LLM, Riva ASR, TTS, Audio2Face), its downloads, sizes,
+   licence and GPU requirement, and whether a jam build can ship it; **reports before any download** (operator approves). If it ships, ACE voices the barks and hears the signals on NVIDIA
+   hardware with the text path as the fallback everywhere else.
+5. Ownership: lane A12 owns `Game/Source/JamGame/Bark*`, `Game/Source/JamGame/Signal*`, `Game/Content/Barks/**`, `docs/experiments/ACE.md`, `tools/barks/**`; the brain hook
+   (`FJamTeamIntent` consumption) is a one-struct seam lane A3 implements in `JamBrain` from A12's header.
