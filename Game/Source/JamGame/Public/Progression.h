@@ -24,6 +24,8 @@ struct JAMGAME_API FJamLadderTake
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Progression") FString Cartridge;
 	// The director's note on the TAKE card.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Progression") FString TwistText;
+	// R-0014: preset id played when the designed cartridge is rejected (a primitive that has not landed); empty = none.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Progression") FString Fallback;
 	// "always" (true) or "previous_won" (false).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Progression") bool bUnlockAlways = false;
 };
@@ -122,8 +124,11 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Jam|Progression") FJamSeasonState GetSeasonState() const;
 	UFUNCTION(BlueprintPure, Category = "Jam|Progression") const FJamLadder& GetLadder() const { return Ladder; }
 	UFUNCTION(BlueprintPure, Category = "Jam|Progression") const FJamSeasonProgress& GetProgress() const { return Progress; }
-	// Absolute path of take Index's cartridge (empty when out of range).
-	FString TakePath(int32 Index) const;
+	// Absolute path of the cut take Index plays: the designed cartridge, or its fallback (R-0014) when the designed one does not load.
+	// Empty when out of range. bOutFallback (optional) says which.
+	FString TakePath(int32 Index, bool* bOutFallback = nullptr) const;
+	// The designed (Fallback = false) or fallback (true) file of take Index, whether it loads or not.
+	FString TakeFilePath(int32 Index, bool bFallback) const;
 
 	// "Play the season": starts the current take (resume), or the last one when the season is wrapped.
 	UFUNCTION(BlueprintCallable, Category = "Jam|Progression", meta = (WorldContext = "WorldContext"))
@@ -169,5 +174,7 @@ private:
 	FString LoadError;
 	bool bLadderLoaded = false;
 	int32 ActiveTake = -1;
+	// The file the running take plays (designed or fallback), set by BeginTake.
+	FString ActivePath;
 	EJamTakeResult LastResult = EJamTakeResult::None;
 };

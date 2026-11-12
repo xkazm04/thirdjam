@@ -73,9 +73,11 @@
               "kind": {
                 "enum": [
                   "box",
-                  "pillar"
+                  "pillar",
+                  "bumper",
+                  "goal_shield"
                 ],
-                "description": "box is a square block, pillar is a round post"
+                "description": "box is a square block, pillar is a round post, bumper is a round post that throws the puck back faster than it came (restitution 1.6), goal_shield is a thin wall size metres wide standing where it is placed (put it in front of a net)"
               },
               "x": {
                 "type": "number",
@@ -94,6 +96,84 @@
                 "minimum": 0.5,
                 "maximum": 10,
                 "description": "Side of the box or diameter of the pillar in metres."
+              }
+            }
+          }
+        },
+        "zones": {
+          "type": "array",
+          "maxItems": 8,
+          "description": "Painted areas of the ice that change play inside them (C-0005). Leave the key out for none. The centre must be inside the rink.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "shape",
+              "x",
+              "z",
+              "kind"
+            ],
+            "properties": {
+              "id": {
+                "$ref": "cartridge.schema.json#/$defs/kebab_id"
+              },
+              "shape": {
+                "enum": [
+                  "rect",
+                  "circle"
+                ],
+                "description": "rect needs w and d, circle needs r"
+              },
+              "x": {
+                "type": "number",
+                "minimum": -80,
+                "maximum": 80,
+                "description": "Centre along the rink length in metres, 0 is the middle."
+              },
+              "z": {
+                "type": "number",
+                "minimum": -40,
+                "maximum": 40,
+                "description": "Centre across the rink in metres, 0 is the middle."
+              },
+              "w": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 160,
+                "description": "Width of a rect zone along the rink length, in metres."
+              },
+              "d": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 80,
+                "description": "Depth of a rect zone across the rink, in metres."
+              },
+              "r": {
+                "type": "number",
+                "minimum": 0.5,
+                "maximum": 40,
+                "description": "Radius of a circle zone in metres."
+              },
+              "kind": {
+                "enum": [
+                  "slow_ice",
+                  "fast_ice",
+                  "bumper",
+                  "no_shoot",
+                  "boost_only"
+                ],
+                "description": "slow_ice slows skaters and the puck inside, fast_ice speeds them up, bumper throws the puck back from its edge, no_shoot blocks shots taken inside, boost_only is where pickups may spawn"
+              },
+              "strength": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "How strong the zone is: 0 does nothing, 1 is the full effect (slow_ice at 1 halves speed, fast_ice at 1 adds half). Absent = 0.5."
+              },
+              "visible": {
+                "type": "boolean",
+                "description": "Whether the zone is painted on the ice. Absent = true."
               }
             }
           }
@@ -172,6 +252,55 @@
             "generated_b2"
           ],
           "description": "Which skater figure is drawn: toy (default), humanoid_b1 or generated_b2. Gameplay is identical. The Designer may not change it."
+        },
+        "pass_speed": {
+          "type": "number",
+          "minimum": 5,
+          "maximum": 30,
+          "description": "Puck speed of a pass (E / X) in metres per second; a pass is a lead pass to the best teammate."
+        },
+        "pass_lead_frames": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 60,
+          "description": "How far ahead of the receiver a pass is aimed, in physics frames of the receiver's motion."
+        }
+      }
+    },
+    "stick": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "The mouse / right-stick aimed stick (R-0013). Leave the key out for the defaults.",
+      "properties": {
+        "reach_m": {
+          "type": "number",
+          "minimum": 0.8,
+          "maximum": 3,
+          "description": "How far the blade reaches from the skater's edge at full aim, in metres."
+        },
+        "poke_window_frames": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 30,
+          "description": "Frames after a poke press during which the blade reaching the puck takes it cleanly."
+        },
+        "lift_range_m": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 2.5,
+          "description": "Distance beyond the two bodies within which a stick lift strips the carrier, in metres."
+        },
+        "stumble_frames": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 90,
+          "description": "Frames of lost control after a poke timed wrong next to a carrier; 0 removes the penalty."
+        },
+        "mouse_sensitivity": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 5,
+          "description": "Mouse aim scale: 1 means 100 pixels move the blade one full reach."
         }
       }
     },
@@ -201,6 +330,18 @@
           "type": "string",
           "pattern": "^#[0-9A-Fa-f]{6}$",
           "description": "Puck colour; a colour must be written as #RRGGBB, six hexadecimal digits"
+        },
+        "carry_assist": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "How strongly a carried puck is pulled to the stick while the skater turns gently; 0 is the raw bumping puck, 1 glues it."
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3,
+          "description": "Number of pucks on the ice."
         }
       }
     },
@@ -231,6 +372,22 @@
           "minimum": 1,
           "maximum": 45,
           "description": "Half-angle of the auto-aim cone in degrees; leave the key out for no aim help."
+        },
+        "charge_frames_max": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 120,
+          "description": "Holding shoot this many frames gives the full charge bonus; 0 turns charging off."
+        },
+        "charge_speed_bonus": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 20,
+          "description": "Extra puck speed in metres per second at full charge."
+        },
+        "deflect": {
+          "type": "boolean",
+          "description": "Whether a shot that hits a skater near its stick deflects (70 percent of its speed) instead of stopping dead."
         }
       }
     },
@@ -271,8 +428,185 @@
           "description": "Offside is not implemented; only false is allowed."
         },
         "penalties": {
-          "const": false,
-          "description": "Penalties are not implemented; only false is allowed."
+          "type": "boolean",
+          "description": "Hard fouls (R-0013): a check from behind or on a skater without the puck sends the checker to the box for 300 frames and gives a free faceoff at the checker's end. Absent = true."
+        },
+        "hooks": {
+          "type": "array",
+          "maxItems": 8,
+          "description": "Rule hooks (C-0005): when a trigger fires and the conditions hold, the actions run in order in the same frame. Evaluated in id order. Leave the key out for none.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "when",
+              "then"
+            ],
+            "properties": {
+              "id": {
+                "$ref": "cartridge.schema.json#/$defs/kebab_id"
+              },
+              "when": {
+                "enum": [
+                  "on_goal",
+                  "on_period_start",
+                  "on_period_end",
+                  "on_check",
+                  "on_knockdown",
+                  "on_pickup_take",
+                  "on_faceoff",
+                  "on_frame",
+                  "on_score_reached"
+                ],
+                "description": "the trigger; on_frame needs every_frames, on_score_reached needs score.at_least"
+              },
+              "every_frames": {
+                "type": "integer",
+                "minimum": 60,
+                "maximum": 18000,
+                "description": "on_frame only: the hook fires every this many physics frames (60 per second)."
+              },
+              "after_frame": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 18000,
+                "description": "The hook is armed from this physics frame on; before it, the trigger is ignored. A hook that ends the match must wait at least until frame 600 (10 seconds). Absent = 0."
+              },
+              "team": {
+                "enum": [
+                  "scoring",
+                  "conceding",
+                  "any"
+                ],
+                "description": "Which team, relative to the event: scoring is the team the event is about (the scorer, the checker, the taker), conceding is the other one, any is both or neither. The team the actions apply to unless an action names its own. Absent = scoring."
+              },
+              "score": {
+                "type": "object",
+                "additionalProperties": false,
+                "description": "Conditions on the score of the hook's team (any: either team) at the moment of the trigger, after the goal has been counted.",
+                "properties": {
+                  "at_least": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 20,
+                    "description": "The team's score is at least this."
+                  },
+                  "at_most": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 20,
+                    "description": "The team's score is at most this."
+                  },
+                  "lead_at_least": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 20,
+                    "description": "The team leads by at least this many goals."
+                  }
+                }
+              },
+              "then": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 4,
+                "description": "The actions, run in order.",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "do"
+                  ],
+                  "properties": {
+                    "do": {
+                      "enum": [
+                        "add_score",
+                        "set_score_multiplier",
+                        "end_period",
+                        "end_match",
+                        "shrink_rink",
+                        "grow_rink",
+                        "set_param",
+                        "spawn_pickup",
+                        "swap_nets",
+                        "announce",
+                        "apply_modifier"
+                      ],
+                      "description": "add_score needs value (whole goals), set_score_multiplier needs value (1 to 5), shrink_rink and grow_rink need value (the fraction, 0.05 to 0.5), set_param needs param and value, spawn_pickup needs kind, apply_modifier needs kind and frames, announce needs text"
+                    },
+                    "team": {
+                      "enum": [
+                        "scoring",
+                        "conceding",
+                        "any"
+                      ],
+                      "description": "Which team, relative to the event: scoring is the team the event is about (the scorer, the checker, the taker), conceding is the other one, any is both or neither."
+                    },
+                    "value": {
+                      "type": "number",
+                      "minimum": -20,
+                      "maximum": 20,
+                      "description": "The number the action uses; see do."
+                    },
+                    "param": {
+                      "$ref": "cartridge.schema.json#/$defs/snake_key"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "pattern": "^[a-z][a-z0-9]*([_-][a-z0-9]+)*$",
+                      "maxLength": 32,
+                      "description": "a kind must be lowercase letters and digits separated by single underscores or hyphens, starting with a letter: a pickup kind (speed, precision, heavy_puck, big_puck, reverse_other), an effect id, or a modifier kind"
+                    },
+                    "frames": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 3600,
+                      "description": "How long an applied modifier lasts, in physics frames (60 per second)."
+                    },
+                    "text": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 60,
+                      "description": "What the scoreboard says (announce)."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "variants": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Rule variants (C-0005): sugar the loader turns into hooks. Leave the key out for plain hockey.",
+          "properties": {
+            "sudden_death": {
+              "type": "boolean",
+              "description": "The next goal after frame 600 (10 seconds) wins the match."
+            },
+            "last_goal_double": {
+              "type": "boolean",
+              "description": "The goal that wins a first_to match counts double."
+            },
+            "mercy_goals": {
+              "type": "integer",
+              "minimum": 2,
+              "maximum": 9,
+              "description": "A lead of this many goals ends the match."
+            },
+            "period_count": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 3,
+              "description": "How many periods (TAKEs) the match has; a timer match is split evenly, a first_to match ends a period every minute."
+            },
+            "shrink_per_goal": {
+              "type": "number",
+              "minimum": 0.02,
+              "maximum": 0.3,
+              "description": "The rink shrinks by this fraction after every goal (0.1 is 10 percent), rebuilt at the next faceoff, never below the smallest rink."
+            }
+          }
         }
       }
     },
@@ -340,7 +674,11 @@
       "properties": {
         "difficulty": {
           "type": "string",
-          "enum": ["rookie", "pro", "all_star"],
+          "enum": [
+            "rookie",
+            "pro",
+            "all_star"
+          ],
           "description": "How hard the bots play: rookie (easier: slower reactions, wider shots, more room for the human), pro (the default), all_star (harder: faster reactions, sharp shots, they read the puck). Absent = pro. The numbers below, when present, override the level's profile."
         },
         "yield_margin_m": {
@@ -378,7 +716,7 @@
     "pickups": {
       "type": "array",
       "maxItems": 8,
-      "description": "Pickups that spawn on the ice (boost play). Leave the key out for none.",
+      "description": "Pickups that spawn on the ice (boost play). kind is a built-in (speed, precision, heavy_puck, big_puck, reverse_other) or the id of an effect in game.effects. Leave the key out for none.",
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -389,14 +727,9 @@
         ],
         "properties": {
           "kind": {
-            "enum": [
-              "speed",
-              "precision",
-              "heavy_puck",
-              "big_puck",
-              "reverse_other"
-            ],
-            "description": "what the pickup does"
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]{0,47}$",
+            "description": "a pickup kind is a built-in (speed, precision, heavy_puck, big_puck, reverse_other) or the kebab-case id of an effect declared in game.effects"
           },
           "spawn_every_frames": {
             "type": "integer",
@@ -414,7 +747,163 @@
             "type": "number",
             "minimum": 0.1,
             "maximum": 4,
-            "description": "Strength multiplier of the effect; 1 is no change; ignored by reverse_other."
+            "description": "Strength of the effect: for a built-in kind the multiplier itself (1 is no change; absent = 1.5 speed, 2 precision, 2 heavy_puck, 1.5 big_puck; ignored by reverse_other); for a custom effect it scales the effect's deviation from neutral (absent = 1 = as written)."
+          },
+          "zone": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+            "maxLength": 48,
+            "description": "Spawn only inside this rink.zones zone (absent = anywhere on the ice)."
+          },
+          "max_on_ice": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4,
+            "description": "How many of this pickup may lie on the ice at once (absent = 1); spawning pauses at the cap."
+          }
+        }
+      }
+    },
+    "effects": {
+      "type": "array",
+      "maxItems": 12,
+      "description": "Composable effects (C-0005, lane A14): each one is a timed set of stat modifiers applied to a target when its trigger fires. The five built-in pickup kinds (speed, precision, heavy_puck, big_puck, reverse_other) are shipped effect definitions (Game/Content/Designer/builtin-effects.json) and need not be declared here; a pickup may name either a built-in or an effect id from this list. Leave the key out for none.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "target",
+          "duration_frames",
+          "stats",
+          "trigger"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+            "maxLength": 48,
+            "description": "Unique kebab-case id (never one of the built-in kinds); pickups and events refer to it."
+          },
+          "kind": {
+            "enum": [
+              "speed",
+              "precision",
+              "heavy_puck",
+              "big_puck",
+              "reverse_other",
+              "custom"
+            ],
+            "description": "Visual family the toy look and the HUD read: one of the five built-in looks, or custom (absent = custom)."
+          },
+          "target": {
+            "enum": [
+              "self",
+              "own_team",
+              "other_team",
+              "everyone",
+              "puck",
+              "rink"
+            ],
+            "description": "Who the modifiers apply to, seen from the skater who triggered the effect (self = that skater; for a trigger without a skater, self and own_team mean everyone)."
+          },
+          "duration_frames": {
+            "type": "integer",
+            "minimum": 60,
+            "maximum": 7200,
+            "description": "How long the effect lasts in physics frames (1 s to 2 min); a pickup's own duration_frames wins when it spawned the effect."
+          },
+          "stats": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 4,
+            "description": "The stat changes, composed as base * product(multiply) + sum(add), clamped to the stat's schema range.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "stat"
+              ],
+              "properties": {
+                "stat": {
+                  "enum": [
+                    "skater_speed",
+                    "skater_accel",
+                    "skater_turn_rate",
+                    "skater_grip",
+                    "skater_mass",
+                    "shot_speed",
+                    "shot_aim_cone_deg",
+                    "shot_reach",
+                    "check_speed_min",
+                    "knockdown_frames",
+                    "puck_drag",
+                    "puck_max_speed",
+                    "puck_radius",
+                    "ice_friction",
+                    "board_restitution"
+                  ],
+                  "description": "Which stat (snake_case of EJamStat): a known stat only; the Designer may not invent one."
+                },
+                "multiply": {
+                  "type": "number",
+                  "minimum": 0.25,
+                  "maximum": 4,
+                  "description": "Multiplier; absent = 1 (no change). 0.25 to 4."
+                },
+                "add": {
+                  "type": "number",
+                  "minimum": -300,
+                  "maximum": 300,
+                  "description": "Added after the multipliers, in the stat's own unit; absent = 0. Must stay within the stat's range width (validate.mjs checks per stat)."
+                }
+              }
+            }
+          },
+          "trigger": {
+            "enum": [
+              "pickup",
+              "goal_for",
+              "goal_against",
+              "check_landed",
+              "check_received",
+              "period_start",
+              "zone_enter",
+              "zone_exit",
+              "director"
+            ],
+            "description": "What starts the effect: pickup (a pickup that names this id is taken), goal_for / goal_against (seen from the scoring team: self = the scorer), check_landed / check_received, period_start (every TAKE), zone_enter / zone_exit (a rink.zones zone; see zone), director (a Director's Call or Designer cut applied live)."
+          },
+          "zone": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+            "maxLength": 48,
+            "description": "zone_enter / zone_exit only: restrict the trigger to this rink.zones id (absent = any zone). Proposed by lane A14, not yet in C-0005."
+          },
+          "stack": {
+            "enum": [
+              "refresh",
+              "extend",
+              "ignore"
+            ],
+            "description": "When the same effect hits the same target while active: refresh restarts the timer (default), extend adds the duration (capped at 7200), ignore keeps the running one."
+          },
+          "icon": {
+            "enum": [
+              "bolt",
+              "crosshair",
+              "weight",
+              "circle",
+              "swirl",
+              "snail",
+              "shield",
+              "star",
+              "flame",
+              "snowflake",
+              "magnet",
+              "anchor"
+            ],
+            "description": "HUD glyph name; absent = the kind's default (bolt, crosshair, weight, circle, swirl; star for custom)."
           }
         }
       }

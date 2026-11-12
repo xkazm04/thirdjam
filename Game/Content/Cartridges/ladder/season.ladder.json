@@ -28,28 +28,32 @@
         "unlock": "previous_won"
       },
       {
-        "title": "Rubber Boards",
+        "title": "Second Wind",
         "cartridge": "take-5",
-        "twist_text": "Somebody swapped the boards for rubber. Bank it in.",
-        "unlock": "previous_won"
+        "twist_text": "Rubber boards, and every goal gives your crew a second wind. Bank it in.",
+        "unlock": "previous_won",
+        "fallback": "take-5-fallback"
       },
       {
-        "title": "One Goal",
+        "title": "The Last Word",
         "cartridge": "take-6",
-        "twist_text": "One take, one goal. Whoever scores wins the scene.",
-        "unlock": "previous_won"
+        "twist_text": "The last goal is the one they remember. Make it yours.",
+        "unlock": "previous_won",
+        "fallback": "take-6-fallback"
       },
       {
-        "title": "Wide Shot",
+        "title": "Slow Motion",
         "cartridge": "take-7",
-        "twist_text": "Widescreen. The far net is a long way off: get there first, three times.",
-        "unlock": "previous_won"
+        "twist_text": "Widescreen. The far net is a long way off: take the fast way round.",
+        "unlock": "previous_won",
+        "fallback": "take-7-fallback"
       },
       {
-        "title": "Everything We Shot",
+        "title": "The Final Cut",
         "cartridge": "take-8",
-        "twist_text": "Final cut. Hits allowed, lights up, against the best cast we have.",
-        "unlock": "previous_won"
+        "twist_text": "Final cut against the best cast: hits allowed, and the set may close in.",
+        "unlock": "previous_won",
+        "fallback": "take-8-fallback"
       }
     ]
   }

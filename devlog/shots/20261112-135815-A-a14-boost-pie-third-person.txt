@@ -1,0 +1,1 @@
+﻿A14 effects: PIE on hockey.boost with the scripted human (editor on MCP 8002). Pickups spawned from the table at frames 900/1200/1500 (speed, precision, heavy_puck) at the same seeded spots as in the headless run; the match camera is far from them, hence the arena shot that follows.

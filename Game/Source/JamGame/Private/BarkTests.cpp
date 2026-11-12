@@ -37,7 +37,7 @@ namespace JamBarkTests
 	{
 		TArray<FString> Lines;
 		const TCHAR* Situations[] = { TEXT("goal_for"), TEXT("goal_against"), TEXT("check_landed"), TEXT("check_received"), TEXT("faceoff"), TEXT("win"), TEXT("lose"), TEXT("directors_call"), TEXT("steal"), TEXT("stall"), TEXT("near_miss") };
-		const TCHAR* OppTones[] = { TEXT("mock"), TEXT("complain"), TEXT("bravado") };
+		const TCHAR* OppTones[] = { TEXT("mock"), TEXT("savage"), TEXT("complain"), TEXT("bravado") };
 		const TCHAR* MateTones[] = { TEXT("encourage"), TEXT("praise"), TEXT("complain") };
 		for (const TCHAR* S : Situations)
 		{
@@ -88,7 +88,7 @@ bool FJamBarkBankClean::RunTest(const FString&)
 	int32 Combos = 0;
 	for (const FName& S : OppSituations)
 	{
-		for (const FName& T : { JamBarks::ToneMock, JamBarks::ToneComplain, JamBarks::ToneBravado }) { TestTrue(*FString::Printf(TEXT("%s/opponent/%s has >= 12 lines"), *S.ToString(), *T.ToString()), Bank.Count(S, JamBarks::SpeakerOpponent, T) >= 12); ++Combos; }
+		for (const FName& T : { JamBarks::ToneMock, JamBarks::ToneSavage, JamBarks::ToneComplain, JamBarks::ToneBravado }) { TestTrue(*FString::Printf(TEXT("%s/opponent/%s has >= 12 lines"), *S.ToString(), *T.ToString()), Bank.Count(S, JamBarks::SpeakerOpponent, T) >= 12); ++Combos; }
 		for (const FName& T : { JamBarks::ToneEncourage, JamBarks::TonePraise, JamBarks::ToneComplain }) { TestTrue(*FString::Printf(TEXT("%s/teammate/%s has >= 12 lines"), *S.ToString(), *T.ToString()), Bank.Count(S, JamBarks::SpeakerTeammate, T) >= 12); ++Combos; }
 	}
 	for (const FName& S : MateOnly)
@@ -153,6 +153,15 @@ bool FJamBarkPicksBySituation::RunTest(const FString&)
 		FJamBarkPick Q;
 		if (QuietPicker.Pick(JamBarks::Faceoff, EJamBarkSpeaker::Opponent, 3 + (i % 3), i * 2000, Q)) TestNotEqual(TEXT("quiet opponents never mock"), Q.Tone, JamBarks::ToneMock);
 	}
+	// R-0015: normal never picks savage; loud does within 60 picks; quiet never mocks (above).
+	FJamBarkPicker NormalPicker(Bank, 9);
+	for (int32 i = 0; i < 60; ++i) { FJamBarkPick Q; if (NormalPicker.Pick(JamBarks::Lose, EJamBarkSpeaker::Opponent, 3 + (i % 3), i * 2000, Q)) TestNotEqual(TEXT("normal never savage"), Q.Tone, JamBarks::ToneSavage); }
+	FJamBarkSettings LoudS; LoudS.Intensity = JamBarks::IntensityLoud;
+	FJamBarkPicker LoudPicker(Bank, 9);
+	LoudPicker.SetSettings(LoudS);
+	bool bSavageSeen = false;
+	for (int32 i = 0; i < 60; ++i) { FJamBarkPick Q; if (LoudPicker.Pick(JamBarks::Lose, EJamBarkSpeaker::Opponent, 3 + (i % 3), i * 2000, Q) && Q.Tone == JamBarks::ToneSavage) bSavageSeen = true; }
+	TestTrue(TEXT("loud picks savage lines"), bSavageSeen);
 	FJamBarkSettings Off; Off.bEnabled = false;
 	FJamBarkPicker OffPicker(Bank, 3);
 	OffPicker.SetSettings(Off);

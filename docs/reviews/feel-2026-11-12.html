@@ -1,0 +1,385 @@
+<title>Feel Proposals Review</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Eleven feel and balance changes for the hockey game with the measured numbers behind each: pass or reject each one.">
+<style>
+  /* Layout: a sticky control bar (title, counts, filters), then an optional note and collapsible groups of item rows; the export panel closes the page. */
+  :root {
+    --bg:#f1f4f7; --panel:#ffffff; --ink:#15202b; --muted:#566676; --line:#d8e0e8; --soft:#e8eef4;
+    --accent:#1f5fbf; --accent-ink:#ffffff;
+    --pass:#1f7a4d; --pass-bg:#dff3e8; --reject:#b3372a; --reject-bg:#f9e1dd; --note:#8a5a00; --note-bg:#fbefd2;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"Cascadia Mono",Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --bg:#0e151d; --panel:#16202b; --ink:#e6edf4; --muted:#93a3b3; --line:#27364a; --soft:#1d2a38;
+    --accent:#6aa3f5; --accent-ink:#0e151d;
+    --pass:#5fcf94; --pass-bg:#173a2b; --reject:#f0806f; --reject-bg:#44211d; --note:#e5b04a; --note-bg:#3a2e12; color-scheme:dark; } }
+  :root[data-theme="dark"] {
+    --bg:#0e151d; --panel:#16202b; --ink:#e6edf4; --muted:#93a3b3; --line:#27364a; --soft:#1d2a38;
+    --accent:#6aa3f5; --accent-ink:#0e151d;
+    --pass:#5fcf94; --pass-bg:#173a2b; --reject:#f0806f; --reject-bg:#44211d; --note:#e5b04a; --note-bg:#3a2e12; color-scheme:dark; }
+  * { box-sizing:border-box; }
+  body { background:var(--bg); color:var(--ink); font:16px/1.5 var(--sans); margin:0; }
+  body::before { content:""; position:fixed; inset:0 0 auto; height:env(safe-area-inset-top,0px); z-index:30; background:var(--panel); }
+  .side { padding-left:max(16px,env(safe-area-inset-left,0px)); padding-right:max(16px,env(safe-area-inset-right,0px)); }
+  header.bar { position:sticky; top:env(safe-area-inset-top,0px); z-index:20; background:var(--panel); border-bottom:1px solid var(--line); }
+  .bar-in { max-width:960px; margin:0 auto; padding-block:10px; display:flex; flex-direction:column; gap:8px; }
+  .row { display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; }
+  h1 { font-size:1.15rem; margin:0; letter-spacing:-0.01em; text-wrap:balance; }
+  .counts { display:flex; flex-wrap:wrap; gap:6px; margin-left:auto; font-variant-numeric:tabular-nums; }
+  .cnt { font:600 .78rem/1 var(--sans); padding:5px 8px; border-radius:999px; border:1px solid var(--line); background:var(--soft); white-space:nowrap; }
+  .cnt.p { color:var(--pass); } .cnt.r { color:var(--reject); } .cnt.c { color:var(--note); }
+  .tools input, .tools select { font:inherit; font-size:.9rem; padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--ink); min-width:0; }
+  .tools input[type=search] { flex:1 1 140px; }
+  .tools select { flex:0 1 190px; }
+  button { font:inherit; font-size:.88rem; padding:6px 11px; border-radius:8px; border:1px solid var(--line); background:var(--panel); color:var(--ink); cursor:pointer; }
+  button:hover { background:var(--soft); }
+  button.prime { background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+  button[disabled] { opacity:.5; cursor:not-allowed; }
+  button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible, .seg label:has(input:focus-visible) { outline:3px solid var(--accent); outline-offset:2px; }
+  .bar-msg { margin:0; font-size:.8rem; color:var(--muted); }
+  main { max-width:960px; margin:0 auto; padding-block:16px 24px; display:flex; flex-direction:column; gap:14px; }
+  .intro { background:var(--panel); border:1px solid var(--line); border-left:4px solid var(--accent); border-radius:0 10px 10px 0; padding:12px 16px; max-width:80ch; font-size:.93rem; }
+  .intro p { margin:0 0 8px; } .intro p:last-child { margin:0; } .intro ul { margin:0 0 8px; padding-left:1.2em; } .intro li { margin:2px 0; }
+  .keys { color:var(--muted); font-size:.82rem; margin:0; }
+  kbd { font:600 .78rem var(--mono); border:1px solid var(--line); border-bottom-width:2px; border-radius:5px; padding:1px 5px; background:var(--panel); }
+  #list { display:flex; flex-direction:column; gap:12px; }
+  details.group { background:var(--panel); border:1px solid var(--line); border-radius:12px; min-width:0; }
+  details.group > summary { list-style:none; cursor:pointer; padding:12px 14px; display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; }
+  details.group > summary::-webkit-details-marker { display:none; }
+  details.group > summary::before { content:"\25B8"; color:var(--muted); width:1em; }
+  details.group[open] > summary::before { content:"\25BE"; }
+  .g-name { font-weight:700; font-size:1.02rem; overflow-wrap:anywhere; }
+  .g-count { font:.8rem var(--sans); color:var(--muted); font-variant-numeric:tabular-nums; }
+  .g-actions { margin-left:auto; display:flex; gap:6px; flex-wrap:wrap; }
+  .g-actions button { font-size:.78rem; padding:4px 9px; }
+  .sub { margin:0; padding:10px 14px 4px; font:700 .72rem/1.2 var(--sans); letter-spacing:.08em; text-transform:uppercase; color:var(--muted); border-top:1px solid var(--line); }
+  .item { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px 14px; padding:10px 14px; border-top:1px solid var(--line); align-items:start; }
+  .item.active { background:var(--soft); box-shadow:inset 4px 0 0 var(--accent); }
+  .item.v-pass { box-shadow:inset 4px 0 0 var(--pass); } .item.v-reject { box-shadow:inset 4px 0 0 var(--reject); }
+  .item.playing { background:var(--note-bg); }
+  .body { min-width:0; display:flex; flex-direction:column; gap:4px; }
+  .text { font-size:1.18rem; line-height:1.35; overflow-wrap:anywhere; text-wrap:pretty; }
+  .item.v-reject .text { text-decoration:line-through; text-decoration-thickness:1px; color:var(--muted); }
+  .meta { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+  .id { font:.7rem var(--mono); color:var(--muted); overflow-wrap:anywhere; }
+  .chip { font:600 .68rem/1 var(--sans); padding:3px 6px; border-radius:4px; border:1px solid var(--note); color:var(--note); background:var(--note-bg); }
+  .note { margin:2px 0 0; font-size:.88rem; color:var(--muted); white-space:pre-wrap; overflow-wrap:anywhere; max-width:80ch; }
+  .ctl { display:flex; flex-wrap:wrap; justify-content:flex-end; align-items:center; gap:6px; }
+  .seg { display:inline-flex; border:1px solid var(--line); border-radius:9px; overflow:hidden; position:relative; }
+  .seg label { cursor:pointer; padding:7px 13px; font-weight:600; font-size:.9rem; user-select:none; background:var(--panel); }
+  .seg label + label { border-left:1px solid var(--line); }
+  .seg input { position:absolute; opacity:0; pointer-events:none; }
+  .seg .lp:has(input:checked) { background:var(--pass-bg); color:var(--pass); }
+  .seg .lr:has(input:checked) { background:var(--reject-bg); color:var(--reject); }
+  .cmt { grid-column:1 / -1; font:inherit; font-size:.9rem; padding:6px 9px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--ink); width:100%; min-width:0; }
+  .none { color:var(--muted); padding:20px 14px; margin:0; }
+  footer.exp { max-width:960px; margin:0 auto; padding-block:8px 80px; display:flex; flex-direction:column; gap:10px; }
+  footer h2 { font-size:1.05rem; margin:0; }
+  textarea#out { width:100%; min-height:9em; font:.8rem/1.4 var(--mono); padding:9px; border:1px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); resize:vertical; }
+  .status { font-size:.85rem; color:var(--muted); min-height:1.3em; margin:0; }
+  @media (max-width:560px) { .item { grid-template-columns:minmax(0,1fr); } .ctl { justify-content:flex-start; } .counts { margin-left:0; } }
+  @media (prefers-reduced-motion: no-preference) { .item { transition:background .15s; } }
+</style>
+<header class="bar">
+  <div class="bar-in side">
+    <div class="row"><h1>Feel Proposals Review</h1><div class="counts" id="counts" aria-live="polite"></div></div>
+    <div class="row tools">
+      <select id="grp" aria-label="Group filter"></select>
+      <select id="st" aria-label="Status filter"><option value="">All items</option><option value="open">Undecided</option><option value="pass">Passed</option><option value="reject">Rejected</option><option value="comment">With a comment</option></select>
+      <input id="q" type="search" placeholder="Search" aria-label="Search items">
+      <button id="lg" type="button">Listen group</button>
+    </div>
+    <p class="bar-msg" id="voicemsg" hidden></p>
+  </div>
+</header>
+<div class="side">
+<main>
+  <section class="intro" aria-label="About this review"><p><strong>What this is.</strong> The proposals from the first-play QA (lane A10, docs/experiments/FEEL.md) with the numbers behind each, and the difficulty sweep from lane A3 (docs/experiments/BALANCING.md). Each item is one change to a game setting. Pass means &quot;make this change&quot; (or &quot;keep it&quot;, where the note says it is already in); reject means &quot;leave the setting as it is&quot;.</p><p><strong>How to read the numbers.</strong> Win percentages are the scripted human against the AI over 20 seeds, rookie / pro / all_star. The curve targets are 85 / 50 / 25. Touches per minute is how often the human gets the puck. Risk says whether bots and tests must be re-run after the change.</p><p><strong>What is already decided.</strong> The default rink is 90 x 45 (R-0010) and every preset has puck.drag 0.5 (R-0011). Those two are here so you can overrule them. The rest of the table is open.</p></section>
+  <p class="keys"><kbd>J</kbd> next <kbd>K</kbd> previous <kbd>P</kbd> pass <kbd>R</kbd> reject <kbd>L</kbd> listen <kbd>C</kbd> comment <kbd>Esc</kbd> leave the comment. P and R move to the next item; press the same key again on an item to clear it. Decisions are saved in this browser.</p>
+  <div id="list"></div>
+</main>
+<footer class="exp">
+  <h2>Send the decisions back</h2>
+  <div class="row">
+    <button id="xj" type="button" class="prime">Copy JSON</button>
+    <button id="xm" type="button">Copy markdown summary</button>
+    <button id="xc" type="button">Clear all decisions</button>
+  </div>
+  <p class="status" id="xs" role="status"></p>
+  <textarea id="out" readonly aria-label="Exported decisions" placeholder="The export appears here. Paste it back to the chat."></textarea>
+</footer>
+</div>
+<script type="application/json" id="data">{"title":"Feel Proposals Review","listen":false,"listenNote":false,"items":[{"id":"feel.00","group":"Puck, rink and pace","text":"game.puck.drag: 0 -> 0.5 (1/s)","note":"Now: 0\nProposed: 0.5 (1/s)\nWhy: the runaway puck: with exponential drag 0.5 a puck bumped to 8 m/s is at 5.6 m/s after 0.7 s, so the carrier (8 m/s) catches it every bump instead of chasing it 2.6 m behind for half the match; an 18 m/s shot has a range of 36 m (v0 / k): it reaches the goal line from 20 m in 1.6 s at 8 m/s and from the 90 x 45 blue line (about 22 m) in 1.9 s, but never from centre ice (bug 5 fixed as a side effect). 1.2 would be too much (range 15 m)\nRisk: re-run bots (the bots' chase numbers change)\nA3 sweep, this change alone (win % rookie / pro / all_star, baseline 75 / 45 / 30 regular, 5 / 20 / 5 large): regular 100 / 100 / 80, large 90 / 80 / 40; human touches per minute at pro 12.4, match seconds at pro 236\nDecided already: R-0011 shipped puck.drag 0.5 in every preset and re-targeted the AI levels (regular 90 / 45 / 25 % wins for rookie / pro / all_star). Pass to confirm, reject to revert to 0."},{"id":"feel.01","group":"Puck, rink and pace","text":"game.rink.length_m / width_m (hockey.regular): 120 / 60 -> 90 / 45 (corner 3.75)","note":"Now: 120 / 60\nProposed: 90 / 45 (corner 3.75)\nWhy: brain-as-human: goals/min 0.21 to 0.54, finished matches 2/20 to 16/20, touches/min 5.6 to 9.1\nRisk: re-run bots (the arena.small cell already passes 16/20 brain, 19/20 playerbot)\nDecided already: R-0010 made 90 x 45 the default. Final sweep at pro: 45 % wins, 32 s per goal, 15.0 touches/min (large 120 x 60: 45 %, 72 s per goal, 13.4 touches/min)."},{"id":"feel.02","group":"Puck, rink and pace","text":"game.skater.speed (with the rink change): 8 -> 11","note":"Now: 8\nProposed: 11\nWhy: 90 m end to end in 8.2 s instead of 15 s; shot stays 1.64x the skater\nRisk: re-run bots (same cell)\nDecided already: R-0010 made 90 x 45 the default. Final sweep at pro: 45 % wins, 32 s per goal, 15.0 touches/min (large 120 x 60: 45 %, 72 s per goal, 13.4 touches/min)."},{"id":"feel.2b","group":"Puck, rink and pace","text":"game.shot.reach_m: 1.5 -> 2.0","note":"Now: 1.5\nProposed: 2.0\nWhy: with the puck 2-3 m ahead of a skater at speed, a 1.5 m reach means \"no shot while moving\"; 2.0 m covers the median gap after a bump (2.6 m) only with drag (row 0); together they give a shot on the move\nRisk: re-run bots\nA3 sweep, this change alone (win % rookie / pro / all_star, baseline 75 / 45 / 30 regular, 5 / 20 / 5 large): regular 85 / 65 / 30, large 0 / 20 / 5; human touches per minute at pro 8.3, match seconds at pro 312"},{"id":"feel.03","group":"Skating","text":"game.skater.glide_drag: 0.147 -> 0.3","note":"Now: 0.147\nProposed: 0.3\nWhy: off the stick the skater still does 6.5 m/s after 5 s (7.3 now) but stops in 107 m instead of 218 m; a pad player can let go of the stick to slow down\nRisk: safe for determinism, re-run bots (bots glide too)\nA3 sweep, this change alone (win % rookie / pro / all_star, baseline 75 / 45 / 30 regular, 5 / 20 / 5 large): regular 80 / 50 / 15, large 5 / 15 / 0; human touches per minute at pro 8.8, match seconds at pro 417"},{"id":"feel.04","group":"Skating","text":"game.skater.lateral_grip: 3 -> 4","note":"Now: 3\nProposed: 4\nWhy: 90-degree turn: velocity follows in 0.85 s instead of 1.05 s, drift 3.8 m instead of 4.6 m, still 50 degrees of slip (still ice)\nRisk: re-run bots\nA3 sweep, this change alone (win % rookie / pro / all_star, baseline 75 / 45 / 30 regular, 5 / 20 / 5 large): regular 55 / 45 / 15, large 5 / 5 / 0; human touches per minute at pro 8.8, match seconds at pro 485"},{"id":"feel.05","group":"Skating","text":"game.skater.accel: 12 -> 16","note":"Now: 12\nProposed: 16\nWhy: 0.48 s to top speed instead of 0.65 s; the reverse-stick stop keeps 4.7 m/s instead of 3.2 m/s (less dead time after a stop)\nRisk: re-run bots\nA3 sweep, this change alone (win % rookie / pro / all_star, baseline 75 / 45 / 30 regular, 5 / 20 / 5 large): regular 90 / 70 / 60, large 5 / 25 / 15; human touches per minute at pro 10.6, match seconds at pro 319"},{"id":"feel.06","group":"Controls, camera and hints","text":"bind bBrake (Left trigger / Ctrl): no key -> bind it","note":"Now: no key\nProposed: bind it\nWhy: the only real stop is 1.3 s / 5.1 m and nobody can press it\nRisk: safe (input map, A5)"},{"id":"feel.07","group":"Controls, camera and hints","text":"game.camera.lag_frames: 4 -> keep 4","note":"Now: 4\nProposed: keep 4\nWhy: measured: no visible snap on U-turns, no feel cost from the camera-relative stick; change only if bug 4 is fixed by reading the lagged sim yaw, then 3 (12 degrees of error instead of about 18) is the cheaper feel\nRisk: safe"},{"id":"feel.08","group":"Controls, camera and hints","text":"HUD hint line + TAKE objective text: none -> see \"first 30 seconds\"","note":"Now: none\nProposed: see \"first 30 seconds\"\nWhy: first-play clarity\nRisk: safe (A5)"},{"id":"feel.all","group":"Puck, rink and pace","text":"All five measured feel changes together","note":"A3 sweep (drag 0, scripted human): regular 100 / 95 / 85 win % (rookie / pro / all_star), 12.1 touches/min at pro, 168 s per match at pro; large 70 / 80 / 40 win %.\nBaseline for comparison: 75 / 45 / 30 ; 8.6 ; 399 ; 5 / 20 / 5.\nR-0011 adopted only puck.drag 0.5; the other four stay open for this verdict."}]}</script>
+<script>
+(function () {
+  'use strict';
+  var CFG = JSON.parse(document.getElementById('data').textContent);
+  var ITEMS = CFG.items, TITLE = CFG.title, LISTEN = CFG.listen, LISTEN_NOTE = CFG.listenNote;
+  var KEY = 'review:' + TITLE;
+  var dec = {};
+  try { var raw = localStorage.getItem(KEY); if (raw) dec = JSON.parse(raw) || {}; } catch (e) { dec = {}; }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(dec)); } catch (e) {} }
+  function $(id) { return document.getElementById(id); }
+  function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+  function get(id) { return dec[id] || {}; }
+  function setDec(id, patch) {
+    var d = Object.assign({}, dec[id], patch);
+    if (!d.v) delete d.v;
+    if (!d.c) delete d.c;
+    if (d.v || d.c) dec[id] = d; else delete dec[id];
+    save();
+  }
+
+  // ---- build the DOM -------------------------------------------------------
+  var groups = [], gIndex = {};
+  ITEMS.forEach(function (it, i) {
+    it._i = i;
+    var g = gIndex[it.group];
+    if (!g) { g = gIndex[it.group] = { name: it.group, items: [] }; g.idx = groups.length; groups.push(g); }
+    g.items.push(it);
+  });
+  var list = $('list'), nodes = {};
+  var openAll = ITEMS.length <= 60;
+  var sel = $('grp'); sel.appendChild(new Option('All groups', ''));
+  groups.forEach(function (g, gi) {
+    sel.appendChild(new Option(g.name + ' (' + g.items.length + ')', String(gi)));
+    var d = el('details', 'group'); d.open = openAll || gi === 0; g.node = d;
+    var s = el('summary'); s.appendChild(el('span', 'g-name', g.name));
+    g.countEl = el('span', 'g-count'); s.appendChild(g.countEl);
+    var act = el('span', 'g-actions');
+    var bl = el('button', 'glisten', 'Listen'); bl.type = 'button';
+    if (!LISTEN) bl.hidden = true;
+    var bp = el('button', null, 'Pass the rest'); bp.type = 'button'; bp.title = 'Mark every undecided item shown in this group as passed';
+    act.appendChild(bl); act.appendChild(bp); s.appendChild(act); d.appendChild(s);
+    bp.addEventListener('click', function (e) {
+      e.preventDefault(); e.stopPropagation();
+      g.items.forEach(function (it) { if (!nodes[it.id].hidden && !get(it.id).v) { setDec(it.id, { v: 'pass' }); paint(it); } });
+      refresh();
+    });
+    bl.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); toggleGroupListen(g); });
+    var lastSub = null;
+    g.items.forEach(function (it) {
+      if (it.subgroup && it.subgroup !== lastSub) { d.appendChild(el('p', 'sub', it.subgroup)); }
+      lastSub = it.subgroup || null;
+      var n = el('div', 'item'); n.id = 'i-' + it._i; n.dataset.i = it._i;
+      var b = el('div', 'body'); b.appendChild(el('div', 'text', it.text));
+      var m = el('div', 'meta'); m.appendChild(el('span', 'id', it.id));
+      (it.tags || []).forEach(function (t) { m.appendChild(el('span', 'chip', t)); });
+      b.appendChild(m);
+      if (it.note) b.appendChild(el('p', 'note', it.note));
+      n.appendChild(b);
+      var c = el('div', 'ctl');
+      if (LISTEN) { var bl2 = el('button', 'listen', 'Listen'); bl2.type = 'button'; bl2.dataset.i = it._i; c.appendChild(bl2); }
+      var seg = el('div', 'seg'); seg.setAttribute('role', 'radiogroup'); seg.setAttribute('aria-label', 'Verdict for ' + it.id);
+      [['pass', 'Pass', 'lp'], ['reject', 'Reject', 'lr']].forEach(function (o) {
+        var l = el('label', o[2]); var r = document.createElement('input');
+        r.type = 'radio'; r.name = 'v' + it._i; r.value = o[0]; r.id = 'r-' + o[0] + '-' + it._i;
+        l.appendChild(r); l.appendChild(document.createTextNode(o[1])); seg.appendChild(l);
+      });
+      c.appendChild(seg); n.appendChild(c);
+      var ci = document.createElement('input'); ci.type = 'text'; ci.className = 'cmt'; ci.id = 'c-' + it._i;
+      ci.placeholder = 'Comment'; ci.setAttribute('aria-label', 'Comment on ' + it.id); ci.autocomplete = 'off';
+      n.appendChild(ci);
+      d.appendChild(n); nodes[it.id] = n;
+    });
+    list.appendChild(d);
+  });
+  var empty = el('p', 'none', 'Nothing matches the filters.'); empty.hidden = true; list.appendChild(empty);
+
+  function paint(it) {
+    var n = nodes[it.id], d = get(it.id);
+    n.classList.toggle('v-pass', d.v === 'pass'); n.classList.toggle('v-reject', d.v === 'reject');
+    n.querySelectorAll('input[type=radio]').forEach(function (r) { r.checked = r.value === d.v; });
+    var ci = n.querySelector('.cmt'); if (document.activeElement !== ci) ci.value = d.c || '';
+  }
+  ITEMS.forEach(paint);
+
+  // ---- counts and filters --------------------------------------------------
+  function counts() {
+    var p = 0, r = 0, c = 0;
+    ITEMS.forEach(function (it) { var d = get(it.id); if (d.v === 'pass') p++; if (d.v === 'reject') r++; if (d.c) c++; });
+    return { total: ITEMS.length, reviewed: p + r, pass: p, reject: r, comment: c };
+  }
+  function refresh() {
+    var c = counts();
+    var box = $('counts'); box.textContent = '';
+    [['', 'reviewed ' + c.reviewed + '/' + c.total], ['p', 'passed ' + c.pass], ['r', 'rejected ' + c.reject], ['c', 'commented ' + c.comment]].forEach(function (x) {
+      box.appendChild(el('span', 'cnt ' + x[0], x[1]));
+    });
+    var gv = sel.value, st = $('st').value, q = $('q').value.trim().toLowerCase(), shown = 0;
+    groups.forEach(function (g) {
+      var n = 0, dn = 0;
+      g.items.forEach(function (it) {
+        var d = get(it.id), ok = (gv === '' || gv === String(g.idx));
+        if (ok && st) ok = st === 'open' ? !d.v : st === 'comment' ? !!d.c : d.v === st;
+        if (ok && q) ok = (it.text + ' ' + it.id + ' ' + (it.subgroup || '') + ' ' + (it.note || '') + ' ' + (it.tags || []).join(' ') + ' ' + (d.c || '')).toLowerCase().indexOf(q) >= 0;
+        nodes[it.id].hidden = !ok; if (ok) { n++; if (d.v) dn++; }
+      });
+      g.countEl.textContent = n + ' shown, ' + dn + ' decided';
+      g.node.hidden = n === 0; shown += n;
+      if (q && n > 0 && !g.node.open) g.node.open = true;
+    });
+    empty.hidden = shown !== 0;
+  }
+  ['grp', 'st'].forEach(function (id) { $(id).addEventListener('change', refresh); });
+  $('q').addEventListener('input', refresh);
+  refresh();
+
+  // ---- verdicts and keyboard -----------------------------------------------
+  var active = -1;
+  function visible() { return ITEMS.filter(function (it) { return !nodes[it.id].hidden && !nodes[it.id].parentNode.hidden; }); }
+  function activate(i, scroll) {
+    if (active >= 0 && ITEMS[active]) nodes[ITEMS[active].id].classList.remove('active');
+    active = i; if (i < 0) return;
+    var n = nodes[ITEMS[i].id]; n.classList.add('active');
+    var det = n.closest('details'); if (det && !det.open) det.open = true;
+    if (scroll) {
+      var bar = document.querySelector('header.bar').getBoundingClientRect().bottom, r = n.getBoundingClientRect();
+      if (r.top < bar + 8 || r.bottom > window.innerHeight - 8) window.scrollTo({ top: window.scrollY + r.top - bar - 24 });
+    }
+  }
+  function verdict(i, v) {
+    var it = ITEMS[i], cur = get(it.id).v;
+    setDec(it.id, { v: cur === v ? '' : v }); paint(it); refresh();
+  }
+  list.addEventListener('click', function (e) {
+    var n = e.target.closest('.item'); if (n) activate(+n.dataset.i, false);
+    var r = e.target.closest('input[type=radio]');
+    if (r) {
+      // the browser has already checked the radio; compare with the saved verdict so a second click on it clears it
+      var i = +n.dataset.i, saved = get(ITEMS[i].id).v;
+      setDec(ITEMS[i].id, { v: saved === r.value ? '' : r.value }); paint(ITEMS[i]); refresh();
+    }
+    var b = e.target.closest('button.listen');
+    if (b) toggleListen(+b.dataset.i);
+  });
+  list.addEventListener('input', function (e) {
+    if (!e.target.classList.contains('cmt')) return;
+    var i = +e.target.id.slice(2); setDec(ITEMS[i].id, { c: e.target.value.trim() }); refresh();
+  });
+  list.addEventListener('focusin', function (e) { var n = e.target.closest('.item'); if (n && +n.dataset.i !== active) activate(+n.dataset.i, false); });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    var t = e.target, typing = t && ((t.tagName === 'INPUT' && t.type !== 'radio') || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT');
+    if (typing) { if (e.key === 'Escape') t.blur(); return; }
+    var k = e.key.toLowerCase(), vis = visible();
+    if ('jkprlc'.indexOf(k) < 0 || k.length !== 1 || !vis.length) return;
+    var pos = vis.findIndex(function (it) { return it._i === active; });
+    if (k === 'j') activate(vis[Math.min(vis.length - 1, pos + 1)]._i, true);
+    else if (k === 'k') activate(vis[Math.max(0, pos < 0 ? 0 : pos - 1)]._i, true);
+    else if (k === 'p' || k === 'r') {
+      if (pos < 0) { activate(vis[0]._i, true); pos = 0; }
+      verdict(active, k === 'p' ? 'pass' : 'reject');
+      if (get(ITEMS[active].id).v && pos < vis.length - 1) activate(vis[pos + 1]._i, true);
+    }
+    else if (k === 'l') { if (LISTEN) { if (pos < 0) activate(vis[0]._i, true); toggleListen(active); } }
+    else if (k === 'c') { if (pos < 0) activate(vis[0]._i, true); $('c-' + active).focus(); }
+    e.preventDefault();
+  });
+
+  // ---- listen --------------------------------------------------------------
+  var synth = window.speechSynthesis, can = !!synth && typeof SpeechSynthesisUtterance !== 'undefined';
+  var voice = null, speakingIdx = -1, queue = null, token = 0;
+  function pickVoice() {
+    var vs = can ? synth.getVoices() : [];
+    voice = vs.find(function (v) { return v.lang && v.lang.replace('_', '-') === 'en-US'; }) || vs.find(function (v) { return v.lang && v.lang.replace('_', '-') === 'en-GB'; }) ||
+      vs.find(function (v) { return v.lang && /^en/i.test(v.lang); }) || null;
+    var msg = $('voicemsg');
+    if (!LISTEN) { msg.hidden = true; return; }
+    if (!can) {
+      msg.hidden = false; msg.textContent = 'This browser cannot read aloud, so the Listen buttons are off. Read the lines instead.';
+      document.querySelectorAll('button.listen, button.glisten, #lg').forEach(function (b) { b.disabled = true; b.title = 'No speech synthesis in this browser'; });
+    } else if (vs.length && !voice) {
+      msg.hidden = false; msg.textContent = 'No English voice on this device. Listen uses the default voice, which may mispronounce.';
+    } else if (!vs.length && late) {
+      msg.hidden = false; msg.textContent = 'This device reports no speech voice. If Listen stays silent, read the lines instead.';
+    } else msg.hidden = true;
+  }
+  var late = false; setTimeout(function () { late = true; pickVoice(); }, 1500);
+  if (!LISTEN) $('lg').hidden = true;
+  if (can && synth.addEventListener) synth.addEventListener('voiceschanged', pickVoice);
+  pickVoice();
+  function clearPlaying() { document.querySelectorAll('.item.playing').forEach(function (n) { n.classList.remove('playing'); }); }
+  function stopAll() {
+    token++; queue = null; speakingIdx = -1; clearPlaying();
+    if (can) { try { synth.cancel(); } catch (e) {} }
+    document.querySelectorAll('button.glisten').forEach(function (b) { b.textContent = 'Listen'; }); $('lg').textContent = 'Listen group';
+  }
+  function say(i, done) {
+    var it = ITEMS[i], my = ++token; speakingIdx = i; clearPlaying(); nodes[it.id].classList.add('playing');
+    var u = new SpeechSynthesisUtterance(it.text + (LISTEN_NOTE && it.note ? '. ' + it.note : ''));
+    if (voice) { u.voice = voice; u.lang = voice.lang; } else u.lang = 'en-US';
+    u.rate = 1.0;
+    var fin = function () { if (my !== token) return; speakingIdx = -1; clearPlaying(); if (done) done(); };
+    u.onend = fin; u.onerror = function () { if (my !== token) return; if (queue) stopAll(); else fin(); };
+    try { synth.cancel(); synth.speak(u); } catch (e) { fin(); }
+  }
+  function toggleListen(i) {
+    if (!can) return;
+    if (speakingIdx === i && !queue) { stopAll(); return; }
+    stopAll(); activate(i, true); say(i);
+  }
+  function toggleGroupListen(g) {
+    if (!can) return;
+    if (queue === g) { stopAll(); return; }
+    stopAll(); queue = g; g.node.open = true;
+    var seq = g.items.filter(function (it) { return !nodes[it.id].hidden; }), k = 0;
+    var btn = g.node.querySelector('.glisten'); if (btn) btn.textContent = 'Stop';
+    $('lg').textContent = 'Stop';
+    (function next() {
+      if (queue !== g) return;
+      if (k >= seq.length) { stopAll(); return; }
+      var it = seq[k++]; activate(it._i, true); say(it._i, next);
+    })();
+  }
+  $('lg').addEventListener('click', function () {
+    if (queue) { stopAll(); return; }
+    var gv = sel.value, g = gv !== '' ? groups[+gv] : (active >= 0 ? gIndex[ITEMS[active].group] : groups[0]);
+    if (g) toggleGroupListen(g);
+  });
+  window.addEventListener('pagehide', stopAll);
+
+  // ---- export --------------------------------------------------------------
+  function decisions() {
+    var out = [];
+    ITEMS.forEach(function (it) {
+      var d = get(it.id); if (!d.v && !d.c) return;
+      var o = { id: it.id }; if (d.v) o.verdict = d.v; if (d.c) o.comment = d.c; out.push(o);
+    });
+    return out;
+  }
+  function jsonText() { return JSON.stringify({ title: TITLE, decided_at: new Date().toISOString(), decisions: decisions() }, null, 2); }
+  function mdText() {
+    var c = counts(), ds = decisions(), byId = {}; ITEMS.forEach(function (it) { byId[it.id] = it; });
+    var L = ['# ' + TITLE + ': decisions', '',
+      'Reviewed ' + c.reviewed + ' of ' + c.total + ': ' + c.pass + ' passed, ' + c.reject + ' rejected, ' + c.comment + ' commented, ' + (c.total - c.reviewed) + ' undecided.', ''];
+    var rej = ds.filter(function (d) { return d.verdict === 'reject'; });
+    L.push('## Rejected (' + rej.length + ')');
+    rej.forEach(function (d) { L.push('- `' + d.id + '` ' + byId[d.id].text); });
+    if (!rej.length) L.push('- none');
+    var cm = ds.filter(function (d) { return d.comment; });
+    L.push('', '## Comments (' + cm.length + ')');
+    cm.forEach(function (d) { L.push('- `' + d.id + '` (' + (d.verdict || 'no verdict') + ') ' + byId[d.id].text + ' -- ' + d.comment); });
+    if (!cm.length) L.push('- none');
+    return L.join('\n') + '\n';
+  }
+  function exportTo(text, what) {
+    var out = $('out'), s = $('xs'); out.value = text;
+    var done = function (ok) {
+      s.textContent = ok ? what + ' copied to the clipboard. Paste it back to the chat.' : 'Copy was blocked here. The ' + what + ' is selected below; copy it with Ctrl+C.';
+      if (!ok) { out.focus(); out.select(); }
+    };
+    try { navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); }); } catch (e) { done(false); }
+  }
+  $('xj').addEventListener('click', function () { exportTo(jsonText(), 'JSON'); });
+  $('xm').addEventListener('click', function () { exportTo(mdText(), 'Markdown summary'); });
+  var armed = 0;
+  $('xc').addEventListener('click', function () {
+    var b = $('xc');
+    if (!armed) { armed = 1; b.textContent = 'Click again to clear'; setTimeout(function () { armed = 0; b.textContent = 'Clear all decisions'; }, 4000); return; }
+    armed = 0; b.textContent = 'Clear all decisions'; dec = {}; save(); ITEMS.forEach(paint); refresh(); $('xs').textContent = 'All decisions cleared.';
+  });
+})();
+</script>

@@ -1,10 +1,10 @@
 {
   "schema": "tj.cartridge/1",
   "id": "take-7",
-  "title": "Wide Shot",
+  "title": "Slow Motion",
   "seed": 1,
   "theme": {
-    "name": "Wide Shot",
+    "name": "Slow Motion",
     "mood_words": [
       "night",
       "crisp",
@@ -118,7 +118,41 @@
       "corner_radius_m": 5.83,
       "board_restitution": 0.4,
       "ice_friction": 0.015,
-      "goal_width_m": 4
+      "goal_width_m": 4,
+      "zones": [
+        {
+          "id": "centre-slow",
+          "shape": "circle",
+          "x": 0,
+          "z": 0,
+          "r": 10,
+          "kind": "slow_ice",
+          "strength": 0.6,
+          "visible": true
+        },
+        {
+          "id": "north-fast",
+          "shape": "rect",
+          "x": 0,
+          "z": 29,
+          "w": 60,
+          "d": 6,
+          "kind": "fast_ice",
+          "strength": 0.6,
+          "visible": true
+        },
+        {
+          "id": "south-fast",
+          "shape": "rect",
+          "x": 0,
+          "z": -29,
+          "w": 60,
+          "d": 6,
+          "kind": "fast_ice",
+          "strength": 0.6,
+          "visible": true
+        }
+      ]
     },
     "skater": {
       "speed": 8,
@@ -128,7 +162,7 @@
       "mass": 80,
       "glide_drag": 0.147,
       "brake_decel": 6,
-      "check_enabled": false
+      "check_enabled": true
     },
     "puck": {
       "radius_m": 0.12,
@@ -147,7 +181,7 @@
       "score_to_win": 3,
       "goal_pause_frames": 120,
       "offside": false,
-      "penalties": false
+      "penalties": true
     },
     "teams": [
       {

@@ -38,6 +38,7 @@ namespace JamBarks
 	const FName SpeakerOpponent(TEXT("opponent"));
 	const FName SpeakerTeammate(TEXT("teammate"));
 	const FName ToneMock(TEXT("mock"));
+	const FName ToneSavage(TEXT("savage"));
 	const FName ToneComplain(TEXT("complain"));
 	const FName ToneBravado(TEXT("bravado"));
 	const FName ToneEncourage(TEXT("encourage"));
@@ -252,8 +253,9 @@ FName FJamBarkPicker::ChooseTone(FName Situation, EJamBarkSpeaker Side)
 	const bool bLoud = Settings.Intensity == JamBarks::IntensityLoud;
 	if (Side == EJamBarkSpeaker::Opponent)
 	{
+		// R-0015: quiet = complain only; normal = mock and the rest (never savage); loud = savage allowed.
 		if (bQuiet) return JamBarks::ToneComplain;
-		if (bLoud) return Roll < 65 ? JamBarks::ToneMock : Roll < 90 ? JamBarks::ToneBravado : JamBarks::ToneComplain;
+		if (bLoud) return Roll < 45 ? JamBarks::ToneSavage : Roll < 75 ? JamBarks::ToneMock : Roll < 90 ? JamBarks::ToneBravado : JamBarks::ToneComplain;
 		return Roll < 50 ? JamBarks::ToneMock : Roll < 80 ? JamBarks::ToneComplain : JamBarks::ToneBravado;
 	}
 	// Teammates: signal acknowledgements and praise replies are encouragement first.
@@ -286,11 +288,15 @@ bool FJamBarkPicker::Pick(FName Situation, EJamBarkSpeaker Side, int32 SpeakerIn
 	{
 		// Fall back to any tone of this side that has lines.
 		static const FName OppTones[] = { JamBarks::ToneMock, JamBarks::ToneComplain, JamBarks::ToneBravado };
+		static const FName OppTonesQuiet[] = { JamBarks::ToneComplain };
 		static const FName MateTones[] = { JamBarks::ToneEncourage, JamBarks::TonePraise, JamBarks::ToneComplain };
 		Tone = NAME_None;
-		for (const FName& T : (Side == EJamBarkSpeaker::Opponent ? OppTones : MateTones))
+		const bool bQuietOpp = Side == EJamBarkSpeaker::Opponent && Settings.Intensity == JamBarks::IntensityQuiet;
+		const FName* Begin = bQuietOpp ? OppTonesQuiet : (Side == EJamBarkSpeaker::Opponent ? OppTones : MateTones);
+		const int32 Num = bQuietOpp ? 1 : 3;
+		for (int32 i = 0; i < Num; ++i)
 		{
-			if (Bank.Count(Situation, SpeakerName, T) > 0) { Tone = T; break; }
+			if (Bank.Count(Situation, SpeakerName, Begin[i]) > 0) { Tone = Begin[i]; break; }
 		}
 		if (Tone.IsNone()) return false;
 	}

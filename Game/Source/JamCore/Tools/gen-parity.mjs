@@ -62,6 +62,17 @@ const mut = {
   'rink too long': (c) => { c.game.rink.length_m = 200; },
   'pickup ok': (c) => { c.game.pickups = [{ kind: 'speed', spawn_every_frames: 600, duration_frames: 300 }]; },
   'pickup bad kind': (c) => { c.game.pickups = [{ kind: 'jetpack', spawn_every_frames: 600, duration_frames: 300 }]; },
+  // C-0005 (lane A14): effects and the extended pickups; the C++ mirror is CheckGame in JamCartridge.cpp.
+  'effects ok': (c) => { c.game.effects = [{ id: 'slow-them', target: 'other_team', duration_frames: 300, trigger: 'goal_for', stats: [{ stat: 'skater_speed', multiply: 0.7 }] }]; },
+  'effect unknown stat': (c) => { c.game.effects = [{ id: 'jump', target: 'self', duration_frames: 300, trigger: 'pickup', stats: [{ stat: 'jump_height', multiply: 2 }] }]; },
+  'effect builtin id': (c) => { c.game.effects = [{ id: 'speed', target: 'self', duration_frames: 300, trigger: 'pickup', stats: [{ stat: 'skater_speed', multiply: 2 }] }]; },
+  'effect duplicate id': (c) => { const e = { id: 'dup', target: 'self', duration_frames: 300, trigger: 'pickup', stats: [{ stat: 'skater_speed', multiply: 2 }] }; c.game.effects = [e, { ...e }]; },
+  'effect add too large': (c) => { c.game.effects = [{ id: 'heavy', target: 'everyone', duration_frames: 300, trigger: 'period_start', stats: [{ stat: 'skater_mass', add: 200 }] }]; },
+  'effect zone without zones': (c) => { c.game.effects = [{ id: 'lane', target: 'self', duration_frames: 120, trigger: 'zone_enter', zone: 'lane', stats: [{ stat: 'skater_speed', multiply: 1.5 }] }]; },
+  'effect zone wrong trigger': (c) => { c.game.effects = [{ id: 'lane', target: 'self', duration_frames: 120, trigger: 'pickup', zone: 'lane', stats: [{ stat: 'skater_speed', multiply: 1.5 }] }]; },
+  'pickup custom kind ok': (c) => { c.game.effects = [{ id: 'sticky-puck', target: 'puck', duration_frames: 300, trigger: 'pickup', stats: [{ stat: 'puck_drag', multiply: 3 }] }]; c.game.pickups = [{ kind: 'sticky-puck', spawn_every_frames: 600, duration_frames: 300, max_on_ice: 2 }]; },
+  'pickup zone missing': (c) => { c.game.pickups = [{ kind: 'speed', spawn_every_frames: 600, duration_frames: 300, zone: 'lane' }]; },
+  'pickup max_on_ice high': (c) => { c.game.pickups = [{ kind: 'speed', spawn_every_frames: 600, duration_frames: 300, max_on_ice: 9 }]; },
   'camera unknown key': (c) => { c.game.camera.zoom = 2; },
   'look missing tier': (c) => { delete c.game.look.tier; },
 };

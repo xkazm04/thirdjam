@@ -39,7 +39,7 @@ test('LadderValidates: difficulty never falls across the season', () => {
 const bad = (edit) => { const o = season(); edit(o); return validateLadder(o, { dir: DIR }).errors.join('\n'); };
 
 test('LadderValidates: unknown keys are errors', () => {
-  assert.match(bad((o) => { o.ladder.takes[0].fallback = 'take-2'; }), /\/ladder\/takes\/0\/fallback: unknown key/);
+  assert.match(bad((o) => { o.ladder.takes[0].fall_back = 'take-2'; }), /\/ladder\/takes\/0\/fall_back: unknown key/);
   assert.match(bad((o) => { o.extra = 1; }), /\/extra: unknown key/);
 });
 
@@ -53,10 +53,18 @@ test('LadderValidates: the first take must be open', () => {
 
 test('LadderValidates: unknown unlock, duplicate and missing cartridges', () => {
   assert.match(bad((o) => { o.ladder.takes[2].unlock = 'stars'; }), /\/ladder\/takes\/2\/unlock: "stars" is not allowed/);
-  assert.match(bad((o) => { o.ladder.takes[3].cartridge = 'take-1'; }), /\/ladder\/takes\/3\/cartridge: "take-1" is already take 1/);
+  assert.match(bad((o) => { o.ladder.takes[3].cartridge = 'take-1'; }), /\/ladder\/takes\/3\/cartridge: "take-1" is already used by take 1/);
   assert.match(bad((o) => { o.ladder.takes[4].cartridge = 'take-99'; }), /no file take-99\.cartridge\.json/);
 });
 
 test('LadderValidates: an empty season is rejected', () => {
   assert.match(bad((o) => { o.ladder.takes = []; }), /\/ladder\/takes: the list has 0 items/);
+});
+
+test('LadderValidates: fallbacks (R-0014) exist, validate and are not shared', () => {
+  const s = season();
+  assert.ok(s.ladder.takes.slice(4).every((t) => typeof t.fallback === 'string'), 'takes 5-8 name a fallback');
+  assert.match(bad((o) => { o.ladder.takes[4].fallback = 'take-1'; }), /\/ladder\/takes\/4\/fallback: "take-1" is already used by take 1/);
+  assert.match(bad((o) => { o.ladder.takes[5].fallback = 'take-99'; }), /\/ladder\/takes\/5\/fallback: no file take-99/);
+  assert.match(bad((o) => { o.ladder.takes[6].fallback = null; }), /\/ladder\/takes\/6\/fallback: expected a string/);
 });

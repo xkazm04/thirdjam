@@ -1,1385 +1,1526 @@
-# Bark bank review (model claude-haiku-5-5, trimmed to 20 lines per combination)
+# Bark bank review (R-0015 register, model claude-sonnet-5-5, generated 2026-11-12T12:50:40.384Z)
 
-Skim every line; delete any you dislike from barks.json and run node tools/barks/embed.mjs, then node --test tools/barks/*.test.mjs.
-Three generation runs: 1518 raw lines, 48 rejected by tools/barks/filter.mjs (22 word-list hits: cheat, dead/died, drunk, useless, money, punch, blood; 26 duplicates), 63 removed by the reviewer regex (goalies, crowd, referees, offside, penalty box, coach), surplus over 20 per combination trimmed, 1225 shipped.
+Skim every line; delete any you dislike from barks.json, then run node tools/barks/embed.mjs and node --test tools/barks/*.test.mjs.
+Two sonnet runs (26 + 6 calls, $0.36): 1,582 raw lines; the filter rejected the hard list (25 + 4), over-length (28), duplicates (12),
+one "ass" outside a kick-your-ass phrase and four off-world words (goalie, rent...), then capped every combination at 20 and the mild words at one in ten.
+Shipped: 1340 lines, 56 with a mild word (damn, hell, crap, kick your ass: 4.2%, quota 10%), 89 combinations of 12..20 lines.
+Tones: opponent mock / savage / complain / bravado, teammate encourage / complain / praise. Intensity: quiet = complain (opponents) and encourage/praise/complain (teammates),
+normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw ships loud.
 
-## check_landed / opponent / bravado (14)
-- our line never misses a shift, watch and learn
-- I'm the lead in this picture, sit down
-- this team plays like a sold out premiere
-- every check I throw is a headline
-- we're the cast everyone wants on the poster
-- steady hands, steady nerves, steady wins
-- I hit harder than your highlight reel
-- our bench is the best seat in the building
-- we write the ending, you just read the lines
-- a clean cut from us every single time
-- I'm the one they cast when it matters
-- our top line is the feature, the rest is trailers
-- I don't miss my mark, ever
-- we're the blockbuster, you're the matinee
+## check_landed / opponent / bravado (20)
+- Cute shove, now watch real hockey
+- Down for a second, up for the win
+- Enjoy it, my line has been better since the opening cut
+- Enjoy the moment, it's the last one you'll get
+- Hit all you like, the scoreboard stays ours
+- I'll get up, and then we'll finish the scene
+- Knock me down, I'll still be scoring first
+- My line has seen better rookies get lost at center
+- My line makes that hit look like an accident
+- One check doesn't change who runs this cut
+- One hit won't save you from a line this good
+- Our line doesn't flinch, it just collects
+- Take your hit, my line still owns this ice
+- That's the best you've got? We're barely warm
+- We make this look easy, you make it look accidental
+- We'll be back up before your next lucky swing
+- We're three steps ahead and you're still lacing up
+- We've done this longer than you've had a stick
+- You swing once, we score four, that's the math
+- You won a moment, we're taking the whole take
 
-## check_landed / opponent / complain (13)
-- the ice is greasy, that is not a real hit
-- he slipped, the ice tripped him, obviously
-- unlucky, the boards jumped right in the way
-- who sanded this rink, it's a trap
-- I was set up, the lighting was wrong
-- my skate caught a bad bounce, that's all
-- the whistle should have blown ages ago
-- they always let the big ones get away with it
-- that check was cheap and the replay proves it
-- the rink hates me, I can feel it
-- not fair, the puck wandered over on purpose
-- I want a rematch, this cut was rigged
-- the boards moved, I'd swear it on my stick
+## check_landed / opponent / complain (20)
+- Fine, hit me, see if the director cares
+- Great, now I have to get up off the ice again
+- Great, now I'm eating ice because of that clown
+- I didn't see you coming, nobody ever does
+- I'm too old to be flattened by a rookie
+- My knees have filed a complaint about you
+- Next time I'm bringing a map of where you skate
+- Of course the bounce goes his way again
+- Of course the one time I look away
+- Oh come on, that one was clean as mud
+- Perfect, flat on the ice and the puck is gone
+- Somebody tell me how that even connected
+- That bounce was garbage and you know it
+- That one was all luck and bad timing
+- That's what I get for trusting the ice today
+- This ice grabs my skates every single time
+- Tired of cleaning up after your wild swings
+- Typical, the ice always favors the clumsy one
+- Unreal, I got hit by the guy who can't steer
+- Unreal, the boards were practically on his side
 
-## check_landed / opponent / mock (13)
-- nice hit, did you rehearse that one
-- that check had the subtlety of a dropped anvil
-- you hit him like a door slamming in a cheap film
-- bold move, shame the script wanted a clean play
-- wow, a whole scene just to knock him over
-- careful, you almost looked like you meant that
-- great hit, now do it again without the fanfare
-- he's still doing the stunt walk back to the bench
-- that was a dramatic exit for someone who just stood there
-- you call that a check or a sneeze
-- a slow motion replay would be kinder to you
-- bravo, now get back on your mark
-- that fall was better acted than your entire shift
+## check_landed / opponent / mock (20)
+- Big hero moment, shame the net is still empty
+- Bold move, considering you skated the long way around
+- Bold, hitting me after three minutes of hiding
+- Cute, now go back to skating in circles
+- Even your body check had to ask for directions
+- Finally, a decision that wasn't a total disaster
+- Great, one hit, and the puck is still not yours
+- Look at you, using the boards as a plan
+- Nice hit, did you plan it or just lose the brakes?
+- Nice hit, now try that near the puck
+- One hit and you skate like you invented it
+- That's the first thing you've hit all night
+- That's your highlight reel, all four seconds of it
+- Thrilling stuff, maybe next you'll find the net
+- Was that a check or did you trip on purpose?
+- Was that a check or did you trip on the ice?
+- Wow, a body check, and only three tries to find me
+- You hit him like you were apologizing in advance
+- You hit like a man apologising in advance
+- You lined that up for ten seconds, I watched
 
-## check_landed / teammate / complain (13)
-- the ice is so slick today, unbelievable
-- did that bounce have to happen now
-- the puck always finds the worst spot
-- who greased the boards out there
-- my stick just gets tangled every shift
-- this rink is a total mess tonight
-- the lighting makes everything blurry
-- you always hit like a freight train
-- of course the puck took that funny hop
-- the skates feel wobbly, not my fault
-- the whole play was rigged from the start
-- why does the boards always get in the way
-- that wasn't even a real hit, come on
+## check_landed / opponent / savage (20)
+- Cute hit, now go lose the puck again like always
+- Enjoy that hit, it's the only highlight you'll get
+- Enjoy that hit, it's the only thing you'll land
+- Great, you can hit people and still can't score
+- Hit me again, it still won't help your aim
+- Hitting is easy, rookie, playing well is the hard part
+- I've seen better aim from a puck sliding downhill
+- Keep celebrating, I'll be scoring in ten seconds
+- One lucky bump does not fix that skating
+- One lucky check doesn't fix how badly you skate
+- Sure, celebrate, you're still the worst skater out here
+- That hit was a fluke and everyone here knows it
+- That was your whole career, and it's already over
+- That's the peak of your career, enjoy the view
+- You couldn't hit the net with a map and a week
+- You got one hit in, I got your number
+- You hit like a closing door and skate like a stuck one
+- You hit like that and still can't find the net
+- You're a speed bump with a stick, nothing more
+- Your whole game is one accident per period
 
-## check_landed / teammate / encourage (13)
-- shake it off, you're still in the scene
-- good hit, now get back in the play
-- that's just a bump, get your skates under you
-- back on your feet, we need you
-- stay with it, the next shift is yours
-- you got this, take a breath and go
-- down but not out, get up and skate
-- one bad bounce, that's all it was
-- pick it up, we're counting on you
-- still in this, let's roll
-- get up, the puck still needs you
-- brush it off, we're rolling again
-- dust off and drive it back up the ice
+## check_landed / teammate / complain (20)
+- Cute check, but who's covering the net now?
+- Every time you hit someone I lose the play
+- Great check, shame the puck rolled the other way again.
+- Great, now the whole rink is leaning your way
+- Hit him all you want, the bounce still hates us.
+- I asked for a pass, not a demolition
+- I'd cheer, but the post just ate our best chance.
+- Nice hit, pity it changed nothing on the scoreboard.
+- Nice, now he's down and we're out of position
+- Of course you hit him and the puck goes the other way
+- Of course you hit him now, with the puck ten feet behind us.
+- Sure, hit him, while I skate back for the whole play.
+- The ice is slick and so is your timing
+- This ice never gives us anything, not even a clean pickup.
+- Typical, all that effort and the bounce hates us
+- Wonderful hit, shame it bought us nothing
+- Wonderful, he's down and we're still out of position.
+- You flatten him and I'm the one chasing the puck, as usual.
+- You hit like a wrecking ball with no map
+- You knock him down and leave me the dirty work, great.
 
-## check_landed / teammate / praise (13)
-- that hit was clean, great timing
-- nice check, you flattened them
-- wow, that was a perfect body check
-- you cut right through their defense
-- that's how you take the play back
-- great read, you shut that down
-- you just rewrote the scene, nice
-- now that's a director's cut moment
-- textbook check, couldn't have been better
-- you sent them flying, impressive
-- that was a power move, well done
-- you own that corner now
-- smooth hit, you read that perfectly
+## check_landed / teammate / encourage (20)
+- Do that again, but this time near the net.
+- Don't admire it, grab the puck
+- Don't admire it, that's a wrap for him, not for you.
+- Don't get sentimental, line up the next one.
+- Fine, that worked. Now repeat it with some purpose.
+- Fine, you can hit, now try skating at the same time
+- Good hit, now hit the next one before he gets up
+- Good, now get up the ice before the puck forgets you.
+- Great, you found someone to hit. Now find the net.
+- He's down, so use the space, that's the whole point.
+- He's on the ice, you're not, so go go go.
+- Less staring, more skating, the puck's loose.
+- Nice hit. Now skate like you meant it.
+- One hit doesn't make a career, so keep moving
+- One hit. Now do it again, and try facing the puck.
+- One lucky check doesn't make a career, keep moving.
+- Stop posing and chase the pickup
+- Stop posing and grab the puck, rookie.
+- That was the easy part, rookie, now score
+- That's the easy part, now try finishing something.
 
-## check_received / opponent / bravado (14)
-- we run this rink, the scoreboard agrees
-- my line hits harder than your whole bench
-- I'm the reason this cut is worth watching
-- three checks, three skaters on the ice
-- our defense never takes a day off
-- watch us finish, we always close scenes
-- I hit like a closing credits theme
-- this line is the star of the show
-- we don't rehearse, we just win
-- my stick is the sharpest on the set
-- our team wins the final take every time
-- I'm the headliner, you're the extra
-- we command the ice, so take notes
-- one more shift and this game is ours
+## check_landed / teammate / praise (20)
+- Clean hit, I almost clapped
+- Decent. Don't let it go to your skates.
+- Fine, I'll admit that hit had some weight.
+- Fine, that was proper hockey
+- He felt that, and so did the boards
+- Huh, that actually landed
+- Huh. That one actually landed.
+- I blinked and he was on the ice, nicely done.
+- Not bad, I've seen worse from guys who meant it.
+- Not bad, I've seen worse from veterans
+- Not terrible, rookie, not terrible at all.
+- Okay, that one I'd put in the highlight reel.
+- Okay, that one I'll remember
+- Solid, don't let it go to your head
+- Surprised me, and that's not easy anymore.
+- That was almost on purpose, wasn't it?
+- That's the first thing you've done I'd call hockey.
+- Took you long enough, but that was a proper check.
+- Well, look at that, the rookie has a pulse.
+- Well, look at that, you meant it
 
-## check_received / opponent / complain (13)
-- the ice is slick and I'm not even mad
-- that bounce was rigged, obviously
-- my skate caught a ridge out of nowhere
-- why does the puck always hop right then
-- the lights glared at me during that play
-- the boards reached out and grabbed me
-- that was not even a real hit, honest
-- my edge got stuck on a bad patch
-- somebody sprinkled wax on this rink
-- the wind swirled right when I checked
-- I swear the net shifted by an inch
-- the timing buzzer went off too early
-- this rink hates me, I can feel it
+## check_received / opponent / bravado (13)
+- Class is in session and you're the demonstration
+- Every shift you take only proves our point
+- Fast, mean and ready, that's the cast list
+- Our line doesn't need luck, only your open ice
+- That's how a real line plays, take notes
+- The scoreboard will agree with me soon
+- This is a lead role, and you're not in it
+- Three of us, zero doubts, one of you down
+- We hit, we score, you watch from the floor
+- We play the whole rink, you play the floor part
+- You can't match our pace, so you can't match our hits
+- You're background extras in our picture
+- Your line's a rough draft, ours is the final cut
+
+## check_received / opponent / complain (14)
+- Can you at least fall somewhere useful?
+- Crap, now I have to skate around your wreckage  [mild]
+- Every time I get a clean hit, it's wasted on you
+- Great, you're on the ice and I'm out of position
+- I did all the work and you took the fall
+- Ice is rough tonight, and so is your defence
+- Of course you drop right in my lane
+- That puck bounced wrong and you still lost it
+- This rink keeps handing me rookies, I'm worn out
+- Tired of hitting someone who doesn't fight back
+- Ugh, took forever to find you, you're so slow
+- Why do they always fall right where I'm skating?
+- You block my path even when you're flat
+- Your teammates will sulk and I'll hear about it
 
 ## check_received / opponent / mock (13)
-- that check was a little too personal, rookie
-- down you go, nice view of the ice
-- the ice missed you, I did not
-- you went down like a dropped prop
-- stay down, the scene is still rolling
-- bold move, falling in the spotlight
-- that landing needs a second take
-- I've seen better falls in the blooper reel
-- careful, the ice is ticklish today
-- you're the reason we shoot twice
-- nice dive, want a pillow for that
-- keep the stick, lose the balance
-- that's a wrap on your footwork
+- Another rookie angle, another nap on the ice
+- Bold of you to skate where the hitting happens
+- Cut and print, that fall was your best take
+- Gravity again, huh, you two should get a room
+- Great stance, shame it ended horizontal
+- Nice landing, very committed to the ice
+- Stay down, it's the only play you've mastered
+- That's the fastest you've moved all period
+- The ice called, it wants its rookie back
+- Try standing up, it's the trick after falling
+- Was that a dive or just your usual skating?
+- You saw me coming and chose the floor anyway
+- You went down like it was in the script
 
-## check_received / teammate / complain (12)
-- the ice is slick and somebody greased it
-- unbelievable, the puck bounced off your shin
-- did you see that, the boards hit back
-- my skates are ruined by that scrape
-- the lights in this arena are blinding me
-- that bounce hates us personally today
-- why does the ice always pick on you
-- ugh, the net moved again during that whistle
-- this scene is rigged against our line
-- somebody left a crack in the glass right there
-- my stick snapped in sympathy with you
-- this game keeps booting us off the rink
+## check_received / opponent / savage (12)
+- Crawl back to the bench, rookie, the net is mine
+- Damn, you folded like a cheap prop set  [mild]
+- Get up, I want to do that again
+- Hell, I barely touched you and you quit  [mild]
+- I'd say you're a speed bump, but speed bumps slow me down
+- I've hit bigger threats than you in warmups
+- Stay down there, the view suits your game
+- That check was free, you should be embarrassed
+- That hit was the best acting you'll ever do
+- You bring nothing but a landing pad to this rink
+- You skate like a dropped prop, and land like one
+- You're the stunt double nobody wanted
 
-## check_received / teammate / encourage (13)
-- get up, we need you on this shift
-- up you go, the puck is still ours
-- shake it off, that check was loud not real
-- one more lap, the cut is not over yet
-- stay down and the director yells cut
-- grab your stick, we still have a power play
-- they hit you once, now hit them back
-- breathe, stand up, we are still in this
-- that was a bump, not a bruise, go
-- the net is still open, get moving
-- lift the stick, the next take starts now
-- you got this, one clean pass and we tie it
-- back on your feet, the scene needs you
+## check_received / teammate / complain (14)
+- Another check, another turnover, same old show
+- Damn, you saw him coming from across the ice  [mild]
+- Every shift, the same fall and the same excuse
+- Great, now we're playing two on three again
+- Hell of a way to hand them the puck  [mild]
+- I pass you the puck and you give it to the boards
+- Of course you went down, you always lead with your face
+- One job: stay upright. Just one
+- That bounce was rotten, and so was your positioning
+- This ice hates us, but you're not helping
+- Tired of watching you decorate the ice
+- Typical. The check lands and the puck goes with it
+- Why do I even bother passing to you
+- You skate straight at the biggest guy, every time
 
-## check_received / teammate / praise (13)
-- nice stick work, that pass was pure poetry
-- clean dangle, the defense never saw it coming
-- that backhand was a perfect close up shot
-- you read that play like a script
-- that spin was the best take of the period
-- flawless setup, you gave me an open lane
-- you made that look easy, director style
-- great vision, that pass hit my tape exactly
-- that shot was pure cinema, print it
-- you stole that puck like it was yours
-- beautiful give and go, you owned that cut
-- those hands are special, keep rolling
-- that was a highlight reel, nice work
+## check_received / teammate / encourage (14)
+- Back on your skates, this is take three, not a nap
+- Get up and make him regret it, if you can
+- Get up, the puck won't wait for your feelings
+- Hit him back, or at least hit something
+- Learn the lesson and get off my ice
+- Look up before you skate, it's free advice
+- Next time see the check coming, they're not subtle
+- Quit napping and get back in the play
+- Shake it off, then go hit someone back
+- Skates under you, rookie, that's the whole trick
+- Stop admiring the ice and stand up
+- The ice is cold, so move your feet
+- Up you get, we're short a skater down there
+- Up. You're lying on my passing lane
 
-## directors_call / opponent / bravado (19)
-- our line adjusts faster than any director can edit
-- we read this new cut like a script we wrote
-- give us the rink and we'll make it our stage
-- three skaters, one plan, zero fear of a rewrite
-- change the ice all you want, we already know the ending
-- our passes stay sharp even when the physics shift
-- we thrive on bad cuts and better shots
-- the slower ice just gives our hands more time
-- every new rule is another chance to shine for us
-- we are the main feature and the cut proves it
-- adjust the friction, we will still skate circles around you
-- our team looks sharpest when the director gets nervous
-- we turned your edit into our highlight reel
-- our line skates like the rink was built for us
-- faster ice just means more highlight reel for us
-- we were made for this cut, watch us shine
-- bigger rink, bigger stage, bigger finish
-- I read the new rules and smiled
-- our stick work is the feature film
+## check_received / teammate / praise (14)
+- Alright, you've got some nerve after all
+- Didn't think you'd take that and still hold the puck
+- Fine, that was a decent hit to survive
+- Good fall. I've seen far worse from veterans
+- Huh, you might actually belong on this ice
+- Huh. You went down well, almost graceful
+- Not bad, you took that one like a pro
+- Not the worst way to eat a body check
+- Respectable. The ice only won on points
+- Surprised you didn't fold, I'll admit that
+- That check should've ended you, and it didn't
+- Took it on the chin and kept the line, fair enough
+- You bounce well, rookie, I'll give you that
+- You got up faster than I expected
 
-## directors_call / opponent / complain (20)
-- the ice got slicker and somehow it's my fault
-- who approved this friction, because it's not fair
-- every time the director pauses, my legs get cursed
-- the new rink is tiny and my stick is still huge
-- I was set up for a shot and the rules moved
-- the puck is heavier now and nobody warned me
-- why does the cut always favour the one with the remote
-- I lost my footing before the whistle even blew
-- the ice keeps changing and my line never does
-- every rule shift lands right on my helmet
-- I swear the boards moved closer just for me
-- this ice is cursed, who greased the rink
-- faster ice, slower feet, perfect
-- the bounce hates me personally
-- why does the rink always shrink on us
-- every cut lands on our side somehow
-- that shot power is a joke, nobody can aim
-- the rules changed mid shift, not fair
-- I had the puck and the ice ate it
-- this friction is wild, my skates are gone
+## directors_call / opponent / bravado (13)
+- Any rule set, same result, we win
+- Change whatever you want, my line owns every version
+- Class doesn't care about the settings
+- Go on, tweak it, we'll still look good
+- Make it faster, make it slower, we're still ahead
+- Our line has seen harder cuts than this
+- This is our rink, whatever you call it
+- We adapt faster than you can pause
+- We don't need luck, just a puck and your defense
+- We were winning before the change and we'll win after
+- You rewrite the rules, we rewrite the scoreboard
+- You touched the dial, we kept the lead
+- Your edit just gave us a better highlight reel
 
-## directors_call / opponent / mock (18)
-- cut that rink again and you still skate like it's wet cement
-- the director moved the ice and forgot to move your feet
-- rule change and still the same slow tape to the puck
-- you rewrote the physics and kept the bad angles
-- new friction, same sad slide into the boards
-- the rink shrank and so did your confidence
-- bold edit, shame the footage still shows you lost
-- you changed the cut but not the ending
-- that power boost went straight into the glass
-- faster ice for you, still a backward turn
-- you made the rink smaller, now hide from me
-- good cut, bad performance, same final score
-- the director changed the ice and still cannot skate
-- new cut, same result: you are still losing
-- rink shrank and your aim still did not
-- nice rule change, shame it does not help you
-- you asked for faster ice and still fell down
-- the director blinked and you still missed
+## directors_call / opponent / complain (14)
+- Can we play one full take without edits?
+- Crap, that new setting ruined a perfectly good rush  [mild]
+- Every time I read the ice, you rewrite it
+- Fine, new rules, but the bounces still owe me
+- Funny how the rules only change when you're losing
+- Great, another rule change, just what this shift needed
+- I was fine with the old physics, thanks
+- I'm too old to relearn the rink every five minutes
+- My skates just learned this ice and now it's gone
+- Nothing bounces right anymore, and I blame the director
+- Pausing again, really? My legs were just waking up
+- This is the third change and I've barely warmed up
+- Tired of chasing a puck that behaves differently each minute
+- Who keeps touching the rules mid-shift?
 
-## directors_call / teammate / complain (20)
-- who approved this ice, honestly
-- the puck is sliding like it's on vacation
-- that bounce hated us personally
-- great, the rink got longer and slower
-- my skates have no grip and no mercy
-- the shot power went up and so did my doubt
-- why does the ice keep changing its mind
-- I was set for a sprint, not a slide
-- this cut is making everything feel wrong
-- the luck just went to the other bench
-- I'd complain louder if I could stop sliding
-- whose idea was this rink, anyway
-- the new rules are a bit too dramatic
-- I'm all for drama, not for this
-- this ice is greased, somebody tell the director
-- the puck hates me, I swear it moved
-- my skates have no grip, none at all
-- that bounce came out of nowhere, unbelievable
-- I'm sliding into the boards like a dropped prop
-- the rink got bigger, now I'm running a marathon
+## directors_call / opponent / mock (13)
+- Bold edit, same footwork
+- Changing the rules won't change the skater, director
+- Did the rewrite include learning to aim?
+- Fresh rules, same hesitation at the blue line
+- I'd say nice try, but I watched it
+- Keep editing, maybe the puck will start liking you
+- Nice cut, shame about the lead actor
+- Oh good, a new rule for you to ignore
+- Pause all you like, the net stays the same size
+- Sure, tweak the ice, that was clearly the problem
+- Take two and you still turn like a parked truck
+- The script changed, your skating didn't
+- You paused to think and that's what you came up with?
 
-## directors_call / teammate / encourage (20)
-- the ice changed, not your nerve
-- new cut, same captain, let's go
-- shake it off, we still have the puck
-- you read this rink better than anyone
-- adjust, skate, we're still in this
-- one bad bounce is not the whole film
-- stay calm, the new rules favor patience
-- hey, we have done this before, go
-- keep your feet moving and trust them
-- that's a rough take, now take the next one
-- you've got this, watch the boards
-- the new friction is ours to figure out
-- breathe, then press them hard
-- we're with you, make it count
-- keep your head up, the next shift is ours
-- shake it off, we have the legs for this
-- new cut, same us, let's go get it
-- skate it off, rookie, the ice still likes you
-- eyes up, pass to me and watch it work
-- we adjust, we adapt, we score
+## directors_call / opponent / savage (14)
+- Cut it however you like, you're still the blooper reel
+- Damn, you can't even lose consistently  [mild]
+- Edit the ice all you want, I'll still flatten you
+- Every rule you pick makes my job easier
+- Go ahead, rewrite it, I'll still bury you
+- Hell, the posts are embarrassed to know you  [mild]
+- I'll kick your ass under any setting you pick  [mild]
+- I've scraped better players off the boards
+- Keep stalling, the boards are saving a spot for you
+- New rule, same loser, same ending
+- You couldn't hit the net if it hugged the puck
+- You pause like a man hiding from the next check
+- Your aim is the real special effect, it vanishes
+- Your stick works great as a decoration
 
-## directors_call / teammate / praise (19)
-- that pass was pure director's vision
-- you cut that play like a pro
-- gorgeous shot, the camera loved it
-- you read the new ice perfectly
-- that's a scene stealer right there
-- clean stick work, very well directed
-- you turned that chaos into a highlight
-- textbook move, print that one
-- you made the new rules look easy
-- that save was pure cinema
-- smooth as a final cut, great finish
-- you just stole the scene from them
-- that deke deserves a standing ovation
-- that move was pure highlight reel material
-- nice read, you saw that gap before anyone
-- clean finish, that was pure instinct
-- you adapted faster than the new cut did
-- that was sharp, hard to believe you did it
-- slick hands, that pass was perfect
+## directors_call / teammate / complain (12)
+- Damn, every time I get comfortable, you touch something.  [mild]
+- Every pause costs me a perfectly good grudge.
+- Hell of a time to rewrite the rulebook, boss.  [mild]
+- I was open for six seconds and you called a pause.
+- I've lost count of the cuts. Not the bad passes, though.
+- My stick hated the old rules and it hates these more.
+- Same rookie, new physics, worse results.
+- The ice felt fine until you got your hands on it.
+- This rink was a mess before you started tinkering.
+- Tweak, tweak, tweak. Meanwhile, nobody can hit the net.
+- Who asked for that? Not my knees.
+- You fix the rules, I fix your mistakes. Fair deal?
 
-## faceoff / opponent / bravado (14)
-- we're the cast nobody can replace
-- our line is the main feature tonight
-- this is our rink, sit down and watch
-- we don't rehearse, we just score
-- my line plays like a sold out premiere
-- we own this ice, every inch of it
-- give us the spotlight, we'll steal it
-- nobody out-skates this three-man crew
-- I'm the star and the stunt double both
-- we write the ending, you just watch it
-- our passing could win an award
-- every shift here is a headline
-- we don't miss our marks, ever
-- I came to play and to take the lead
+## directors_call / teammate / encourage (14)
+- Adapt or sit on the boards, rookie.
+- Director, you asked for this. Now go use it.
+- Eyes up, stick down, and stop drifting.
+- Fresh cut, fresh chance to miss the net. Try not to.
+- Hit someone. The rule change won't do it for you.
+- I carried worse rookies through harder cuts. Skate.
+- Lead the play or get out of my lane.
+- Less thinking, more checking. Go.
+- Move your skates, the puck won't chase itself.
+- New rule, same excuse. Go get the puck.
+- Quit admiring the scoreboard and start skating.
+- Shoot early, shoot often, and aim this time.
+- The rules changed, your skating didn't. Fix that.
+- You changed the rules, so now earn them.
 
-## faceoff / opponent / complain (12)
-- the ice is slick, the lights are wrong
-- that bounce was rigged, I'm sure of it
-- the puck hit a rut, that's not fair
-- my skates feel like they're on the wrong set
-- the boards moved, I swear they did
-- who sets the ice this slippery anyway
-- luck is a bad co-star today
-- that deflection came from nowhere, unfair
-- the lighting on this rink is blinding me
-- the puck is cursed, I think
-- another stick break, the gear is cheap
-- the camera angle hid that hit
+## directors_call / teammate / praise (14)
+- Better than your skating, anyway.
+- Decent. Do it again and I might nod.
+- Even the boards looked impressed. Barely.
+- Fair enough, rookie. That one worked.
+- Fine, you earned that one. Don't let it go to your head.
+- Huh, the new rules suit you. Suspicious.
+- Huh. That rule change actually helped.
+- I'll admit it, that was a decent call.
+- I've seen worse directors. Not many, but a few.
+- Not bad, director. Almost looked planned.
+- Okay, I didn't hate that cut.
+- That's the first smart pause I've seen from you.
+- Well, look at that. You can skate and edit.
+- You surprised me. Annoying, but true.
 
-## faceoff / opponent / mock (13)
-- nice stick, shame about the aim
-- that's a wrap, rookie
-- you skated like a deleted scene
-- your passing plan was a blooper reel
-- cut! that one goes on the floor
-- bold move, shame the script said no
-- you just starred in your own flop
-- was that your stunt double skating
-- take the dolly back to the studio
-- you'd make a great extra in this game
-- director's cut: you're the outtake
-- nice try, that one's a bloopers reel
-- you blinked and the puck left the set
+## faceoff / opponent / bravado (13)
+- Class is in session, and you're sitting at the front.
+- Drop it. We'll finish before you find your stick.
+- Nobody on my line is worried. Look around, rookie.
+- Pick any of us. You'll still be second to the puck.
+- This is our ice. You're just renting the view.
+- Three of us, one plan, and you're not in it.
+- Watch closely. This is what a real line looks like.
+- We cut you in rehearsal. The rest is just filming.
+- We don't chase pucks. Pucks come looking for us.
+- We skate in sync. You skate in circles, apologetically.
+- Win the faceoff? Please. We win the game before it starts.
+- You're the opening scene, we're the whole picture.
+- Your best play is our warm up.
 
-## faceoff / teammate / complain (13)
-- this ice is slower than my patience
-- that bounce had a personal grudge
-- the puck hates me personally today
-- my stick is cursed, I swear it
-- who waxed this ice, it's sticky
-- unbelievable, the net moved again
-- the puck has a flight plan against us
-- that goal was a lucky dog bounce
-- why does every bounce go sideways
-- this rink tilts toward their bench
-- I was open, the pass was not
-- my skates have feelings about this ice
-- fine, blame the ice like always
+## faceoff / opponent / complain (14)
+- Again? We just did this, and it was dull the first time.
+- Every bounce goes your way. Nobody earned it.
+- Fine. Reset the shot. Let's pretend that never happened.
+- Honestly, I expected more from my own line there.
+- I'm tired of cleaning up after this whole line.
+- I've lost to better players than you. Just not today.
+- Is the net really that hard to defend for us? Apparently.
+- One lucky shot and the rookie thinks he's a star.
+- Someone fix this ice before my skates file a complaint.
+- That last one was luck, and I'm sick of your luck.
+- The posts hate me, the puck hates me, and you're smug.
+- This ice is garbage and your line is worse.
+- We gave that away like a free pickup. Real smooth.
+- Why do I always get the bad side of this faceoff?
+
+## faceoff / opponent / mock (12)
+- Ah, the director's favourite extra. Blink and you're cut.
+- Another take, another rookie leaning on the wrong foot.
+- Big breath in. Now forget everything you practised.
+- Bold of you to show up with a stick like that.
+- Centre ice, where your confidence goes to retire.
+- I'll go easy. You'll still find a way to lose the puck.
+- I've seen scoreboards with more attack in them.
+- Is that your skating face or are you just thinking?
+- Line up, rookie, try to face the right net this time.
+- Nice stance. Shame it's the only part that moves right.
+- Sure, take the faceoff. Somebody has to lose it.
+- Try hitting the puck first. The net is step two.
+
+## faceoff / opponent / savage (14)
+- Crap, I almost forgot you were on the ice.  [mild]
+- Damn, you look scared. Good instincts, honestly.  [mild]
+- Drop the puck, I'm already bored of watching you lose.
+- Enjoy the faceoff. It's the last time you'll touch the puck.
+- Hell, I'd feel bad if you ever made it hard.  [mild]
+- I came for a game and got a rookie. Disappointing.
+- I'll body check you into next season's deleted scenes.
+- I'll kick your ass to the boards and back, twice.  [mild]
+- Keep the stick up, it'll help you hide behind it.
+- Stand still, that's the closest you get to defending.
+- You're not a threat, you're a speed bump with a stick.
+- You're the blooper reel, and we haven't even started.
+- Your skating makes the ice want to melt out of shame.
+- Your whole line is a bad stunt double for hockey.
+
+## faceoff / teammate / complain (14)
+- Damn, the ice gave you that bounce and you still blew it  [mild]
+- Every cut starts with hope and ends with you
+- Great, back to centre, just like old times
+- Hell of a way to waste a perfectly good puck  [mild]
+- I'm too old to watch you miss that open net
+- I've seen posts with better timing than you
+- Lucky bounces skip us and find you doing nothing
+- Next time pass it, the puck didn't deserve that
+- Nobody dumps it like you do, and not in a good way
+- Same faceoff, same sad ending, I've lost count
+- Tell me again how that was the ice's fault
+- That puck had a mind of its own, same as your stick
+- The bounce was bad, but your skating was worse
+- We keep restarting because somebody can't finish
 
 ## faceoff / teammate / encourage (14)
-- you've got this, stay low and steal it
-- one clean win here, let's take it
-- keep your feet moving, we're with you
-- pucks bounce for those who chase them
-- watch the blue line, we'll feed you
-- hold the stick steady and stay sharp
-- stay calm, we run this faceoff together
-- next shift is ours, just keep moving
-- breathe, pick your spot, then strike
-- trust your edges, the ice is ours
-- you're the best pick in this lineup
-- dig in, we've got your back out here
-- clean ice ahead, go make some noise
-- play it smart and we'll finish it
+- Be useful for ten seconds, I'm begging you
+- Body check somebody, it's the only thing you do well
+- Don't think, you're bad at it, just hit someone
+- Get the puck, then get it to me, in that order
+- Hold the centre and try not to wave at the puck
+- Just once, aim at the net instead of the boards
+- Keep up, or I'll start passing to the posts
+- Less drifting, more checking, we're on the clock
+- Move your feet, the ice isn't getting any younger
+- Skate like you mean it, rookie
+- Stick on the ice, head in the game, in that order
+- Stop admiring the scoreboard and go get the puck
+- Take two is already looming, so wake up
+- Win the faceoff this time, or stay out of my way
 
-## faceoff / teammate / praise (12)
-- that spin move was pure cinema
-- you read that pass before it existed
-- textbook steal, now that's directing
-- absolute wizardry with that release
-- you own this ice, keep rolling
-- perfect angle, that was a masterpiece
-- sharp stick work, the aim was brutal
-- that was a scene stealer right there
-- you made that look effortless
-- that goal was poetry on skates
-- crisp passing, the lane was yours
-- you're stealing the whole show
+## faceoff / teammate / praise (14)
+- Decent shot, I'd have said so sooner if I'd expected it
+- Didn't see that coming, and neither did they
+- Fine, that one was clean
+- Huh, so you can find the net after all
+- I've seen worse, mostly from you
+- Keep that up and I might learn your name
+- Look at that, the stick does more than hold your hands
+- Not bad, for someone who skates like that
+- Okay, that check had some mean in it
+- One good play, don't make it a habit I have to explain
+- That goes in the highlight reel, a short one
+- That was almost professional, don't let it go to your head
+- Well, the radar finally had something worth showing
+- You did the thing, I'll allow it
 
 ## goal_against / opponent / bravado (13)
-- our top line is the best cut in town
-- we've got hot hands and a cold glare
-- this team blocks shots like a fortress
-- I skate faster than my own reflection
-- every shift is a sold out premiere for us
-- call me the lead, steady as a long take
-- our blue line is a wall nobody scores through
-- the scoreboard will catch up, it always does
-- three of us, one plan, zero doubts
-- we run a shift like a well oiled machine
-- the replay shows us winning every time
-- our passing lanes are wider than the rink
-- give me the puck and watch the highlight reel
+- Class shows, and you just saw it.
+- Get used to the sound of that horn.
+- Keep up, or enjoy the view of our backs.
+- Next one is already in the script.
+- Nobody on your side can touch what we do.
+- One shift, one goal, no sweat.
+- That's what a real line looks like.
+- This is our rink, you're just renting the ice.
+- We don't chase the puck, it comes to us.
+- We make it look easy because it is.
+- We score, you watch, and the cycle continues.
+- Write it down, director, we're the main cast.
+- Your line is the extras, ours is the lead.
 
 ## goal_against / opponent / complain (13)
-- the ice is slanted and nobody told me
-- that bounce was rigged against my blades
-- the puck hit a seam I swear it saw
-- my skates squeaked and that threw my timing
-- that net moved, I'm putting it on record
-- the boards grabbed my stick like a fan
-- the lighting in here hides every puck
-- why does the puck always find the crease
-- that deflection came off a ghost, I'm sure
-- this ice is too thin for proper cutting
-- the lamp above us blinked on my shot
-- I'd have scored if the seats stayed still
-- unlucky again, the universe hates my wrists
+- Crap, I had a cleaner shot a minute ago and you stole it.  [mild]
+- Every shift it's the same, and I'm sick of it.
+- Fine, it counts, but nobody enjoyed that one.
+- I skated my legs off for that one tap-in.
+- I'm tired of carrying this line through your mess.
+- I've scored uglier goals, but not many.
+- That bounce off the post nearly ruined a perfect play.
+- That puck rolled like it was scared to score.
+- The boards ate my first pass, so that's on them.
+- This ice has a mind of its own, and so do you.
+- Ugh, the ice was bad there, and the puck was worse.
+- Who keeps changing these rules mid-shift? It's exhausting.
+- You made that harder than it needed to be, somehow.
 
 ## goal_against / opponent / mock (13)
-- you skated like a rumor that got cancelled
-- was that a pass or a sneeze
-- even the puck wanted out of your zone
-- bold of you to call that a screen
-- you held that stick like a rental
-- the replay will be kinder to me
-- that save was slower than your reaction
-- bad lighting, rookie, bad lighting
-- rookie energy, veteran stumble
-- skate to the puck, not the bench
-- I'd ask for a retake but you blew it
-- your stick work needs a script rewrite
-- you chased that like a lost prop
+- Bold strategy, leaving the whole net to me.
+- Cute little glide there, right past the whole play.
+- I'd call that defense, but the word has standards.
+- Impressive, you found the one spot the puck wasn't.
+- Keep that angle, it works great for us.
+- Nice effort, if effort meant standing near the puck.
+- Oh, you were defending? I thought that was a rehearsal.
+- Take your time, we only scored while you thought about it.
+- That was a scoring chance, and you were the escort.
+- Was that a check or a polite wave?
+- You skate like the ice owes you an apology.
+- You turned the wrong way with real confidence.
+- Your stick is lovely. Does it ever touch the puck?
 
-## goal_against / teammate / complain (12)
-- that bounce was cursed, the rink hates us
-- the puck hit the boards and chose them
-- my skates are slower than my patience
-- the lighting is making me dizzy
-- the net shrank, I swear it did
-- that deflection came from nowhere, rude
-- the ice is greasy, I keep slipping
-- unbelievable luck, the puck loves them
-- rewind that, the bounce was fake
-- I'd call a reshoot if I could
-- who wrote this script, it's rigged
-- my stick is cursed, I need a new one
+## goal_against / opponent / savage (12)
+- Another one for the highlight reel, and you're the blooper.
+- Come get the puck back, if you can find it.
+- Damn, I've seen cones put up a better fight.  [mild]
+- Hell, we didn't even need a plan against you.  [mild]
+- I'd kick your ass on defense, but you're not even on it.  [mild]
+- That goal had your name on it, and your skates were nowhere.
+- That was not a defense, that was a welcome mat.
+- Try hitting something that isn't your own teammate.
+- We walked through you like you were a painted line.
+- You blinked and the scoreboard changed. Typical.
+- You got burned so fast the ice steamed.
+- Your whole line is a speed bump with a stick.
 
-## goal_against / teammate / encourage (14)
-- shake it off, we still have the cut
-- one goal down, the scene is not over
-- reset your feet and find your lane
-- keep your head up, they're rattled too
-- next shift is ours, stay with me
-- still time to rewrite this ending
-- breathe, then pressure their defense
-- good shifts coming, stay sharp
-- we roll again, same energy
-- this is a long take, plenty of footage left
-- wipe the frost off your visor and go
-- they got lucky, we get the rematch
-- back to work, the director wants a comeback
-- we score next, I promise
+## goal_against / teammate / complain (13)
+- Cool, so that's how we're playing it tonight
+- Damn, that was our net, not a loading dock  [mild]
+- Every time I turn around, it's behind us again
+- Great, another puck in our net, just like the script said
+- I carry the whole zone and you wave at the puck
+- I've seen better defense from a stack of cones
+- Of course it went in, nobody was home to argue
+- That post should've saved it, even it gave up on us
+- The ice is bad, the bounce is bad, and you're worse
+- This take is cursed, and I'm blaming your skating
+- Tired of this, we keep giving them free practice
+- Unreal, we got out-skated by guys who barely tried
+- Where were you? Never mind, I saw where you were
 
-## goal_against / teammate / praise (13)
-- nice read, you saw that lane coming
-- that pass was clean, perfect timing
-- you froze their defense with one feint
-- sharp work, that's a highlight reel
-- that check was beautiful, you're on fire
-- wow, you steal the puck like a pro
-- that shot had real velocity, good aim
-- you read their line change like a book
-- brilliant footwork, do that again
-- quick hands, you're making this look easy
-- great vision, you found the open man
-- that's the cut we needed, well done
-- you carried that shift, thank you
+## goal_against / teammate / encourage (13)
+- Back to center, and try arriving before the puck does
+- Cover your man this time, it's not a hard concept
+- Get the puck back, that's the whole job
+- Hustle back, the cut isn't over until I say it is
+- Less staring at the scoreboard, more skating at the puck
+- Move your skates, the next one is not going to stop itself
+- One mistake is fine, you're working on a collection
+- Shake it off and get back on defense, rookie
+- Stop admiring the replay and body check someone
+- Tighten up, this is not a guided tour of our net
+- Use your stick, it's not just for decoration
+- Win the next pickup or get out of my lane
+- You can sulk later, right now go hit somebody
 
-## goal_for / opponent / bravado (20)
-- our top line never misses a cue
-- we do the scoring here, sit down and watch
-- one more goal and this cut is a wrap
-- my stick is hotter than the rink lights
-- we have the best closer on this ice
-- our defence shuts doors like a pro director
-- we are the main feature, not the trailer
-- one goal does not rewrite the script for us
-- our line plays like it owns the set
-- watch us hit the next beat, same energy
-- we pull ahead and keep rolling, no mercy
-- my hands are the reason this rink has lights
-- our squad never blinks when the spotlight hits
-- we came to win the final cut, not the warm up
-- our line cuts cleaner than anyone on this ice
-- my team plays like the final take of a blockbuster
-- we don't miss twice, that's the whole script
-- I was born to finish, that goal was typed in
-- our passing looks rehearsed because it is perfect
-- this line is the director's favorite cast
+## goal_against / teammate / praise (14)
+- Decent stick work, even a broken clock gets lucky
+- Fine, that was a decent shift, don't get cocky
+- Huh, you actually checked someone, noted
+- I'd clap, but my gloves are busy
+- Not bad, the ice almost looked impressed
+- Not terrible out there, and I'm as surprised as you
+- Okay, rookie, that pickup was clean
+- One good play, now try making it a habit
+- Respectable, for someone who usually skates in circles
+- So you can hit, who knew, keep doing it
+- That was almost the right read, almost counts
+- That was good, and I hate saying that out loud
+- You covered back, I may have to rewrite my notes
+- You skated like you meant it, welcome to the job
 
-## goal_for / opponent / complain (20)
-- that bounce was rigged, the ice hates us
-- the puck jumped right into the net, unfair
-- my stick snapped, that's why I'm sulking
-- the boards pushed that puck, I saw it
-- lighting on this rink is blinding, I swear
-- that deflection came off a skate, not fair
-- why does the wind only help the other side
-- I had the angle, the net just moved
-- the zamboni should have resurfaced slower
-- that was a cheap goal and I'm not over it
-- the puck hit a pebble, nothing else explains it
-- this ice is slower on our side, I'm sure
-- the ice was wet on purpose, I can feel it
-- that bounce came from nowhere, unfair scene
-- my stick snapped right when I needed it
-- who wrote this luck, I want a rewrite
-- the board moved, I swear it moved
-- every puck hits my skate tonight, come on
-- I was set, the ice just slid out from under me
-- that deflection was pure coincidence, not a play
+## goal_for / opponent / bravado (14)
+- Cute goal, now watch how it's done
+- Don't mistake one goal for a comeback
+- Enjoy the lead, it has an expiry date
+- I've already got the next three goals planned
+- Our line has done this a thousand times
+- Our line skates circles around yours, even now
+- Take your moment, I'll take the period
+- That was a warmup, nothing more
+- That's your one goal, we'll take the rest
+- This cut ends our way, it always does
+- We score when we feel like it, you'll see
+- We're better and you both know it
+- You got lucky, we get paid in skill
+- You scored, we'll answer before you stop smiling
 
-## goal_for / opponent / mock (20)
-- that goal was a rerun, rookie, we saw it coming
-- nice finish, shame the net had to save it
-- did you practise that or did it just happen
-- bold move, sloppy follow through though
-- you look thrilled for a lucky bounce
-- that was a fluke with a good haircut
-- you scored? someone check the replay
-- smooth hands, shaky plan, a rare combo
-- enjoy it, director, the edit comes later
-- that goal gets a one star review from me
-- that goal was a gift, you just unwrapped it
-- nice finish, shame it was on our side of the ice
-- lucky bounce, want me to reshoot the scene
-- that shot had the aim of a sleepy cameraman
-- you scored, now please stop doing that little dance
-- good hands, shame the rest of you wasn't in frame
-- that was the director's luck, not your skill
-- you finally found the net, want a map next
-- pretty goal, zero chance of a repeat take
-- you call that a finish, we call it a rehearsal
+## goal_for / opponent / complain (13)
+- Bad ice, bad luck, same old story
+- Crap ice, crap angle, crap everything  [mild]
+- Every single bounce goes their way, every time
+- I told you to close the lane, nobody listens
+- I'm tired of covering for this mess
+- My legs are done with this nonsense
+- Of course it went in, nothing else ever does for us
+- That shouldn't have gone in, it just shouldn't
+- The ice is chewed up and that puck knew it
+- Typical, the human gets the lucky bounce
+- Unreal, that bounce was pure garbage
+- We had that one, and the puck just quit
+- Who let that one through, seriously
 
-## goal_for / teammate / complain (20)
-- that bounce was pure ice spite
-- unbelievable, the puck just stopped
-- my skates slipped right at the wrong time
-- lucky shot, the net moved, I swear
-- who keeps painting the ice this slick
-- that deflection came out of nowhere
-- my stick blade snapped on the pass
-- that ice is slower than my patience
-- the crossbar owes me one
-- fine, the puck found you, good luck
-- my visor fogged right before that
-- the ice was slick, that was not my fault
-- the puck took a bad bounce, pure luck
-- who painted these boards, they are sticky
-- my skate slipped, the ice is cursed today
-- that bounce hated me, I swear
-- the stick is too short for this rink
-- why does the puck always ride the boards
-- the camera angle hid my good move
-- the lights are glaring, I could not see
+## goal_for / opponent / mock (14)
+- Bold move, standing near the net for once
+- Careful, you might start thinking you can skate
+- Congratulations, even a broken clock gets a goal
+- Cute, the puck did all the work
+- Enjoy it, the highlight reel is one clip long
+- I'd clap, but my stick is busy
+- Look at you, doing the bare minimum
+- Nice shot, shame about the other fifty
+- One goal, and you still look lost out there
+- Pretty sure the post helped you with that one
+- That went in by accident, and you know it
+- Was that on purpose, or did the puck get lost?
+- Wow, you touched the puck and it went in
+- You celebrate like the net moved by itself
 
-## goal_for / teammate / encourage (20)
-- shake it off, we're still rolling
-- you're the reason this cut works
-- again, same energy, one more
-- keep your stick low and your head up
-- big moment, now stay locked in
-- reset your edges, we need another
-- you've got the puck, now own it
-- they're rattled, press the advantage
-- stay sharp, the next shift is ours
-- breathe, then get back in the play
-- that's the spirit, keep the pressure on
-- we're in this, let's make it louder
-- fresh legs, let's go finish this
-- shake it off, the next one is ours
-- keep your head up, we are just warming up
-- nice bounce back, go again
-- you have the feel now, stay on it
-- one more cut like that
-- eyes up, the next puck is yours
-- we are right there, keep pushing
+## goal_for / opponent / savage (14)
+- Damn, that was ugly, and somehow it counted  [mild]
+- Don't get comfortable, I'm coming for you next shift
+- Enjoy it, because I'm about to kick your ass  [mild]
+- Hell, even a lucky bounce looks better than your game  [mild]
+- I've seen better hands on a snowman
+- Next time try scoring on purpose
+- One goal does not fix a whole career of bad ice
+- Savor it, it's the only thing you'll hit all night
+- That goal was a fluke and your skating is the proof
+- That was luck wearing your jersey
+- The net was open and you still looked scared
+- You skate like a folding chair on wheels
+- You're the reason my highlight reel needs filler
+- Your shot was bad, the puck just took pity
 
-## goal_for / teammate / praise (20)
-- that finish was pure highlight reel
-- clean pass, clean shot, clean goal
-- you read that play before it happened
-- nice stick, and the aim was perfect
-- textbook move, you ran that cut
-- you made that look way too easy
-- smooth hands, that was pure skill
-- that's a goal you'll replay all night
-- you turned that defense into a cameo
-- perfect timing on that one-timer
-- that was a director's cut-worthy finish
-- you owned that corner like a pro
-- great vision, you found the open lane
-- that shot was a masterpiece, rookie
-- that finish was pure director level stuff
-- clean cut, you made that look easy
-- perfect timing, the net never saw it coming
-- that was a masterpiece, print it
-- sharp hands, sharp eyes, sharp finish
-- that shot had real style
+## goal_for / teammate / complain (13)
+- Don't get used to it, the boards did half of that.
+- Every goal with you feels like a coin toss.
+- Hell of a way to score, sideways and by accident.  [mild]
+- I did all the work and you got the credit.
+- I set that up and you almost wasted it.
+- I'm tired of winning ugly with you.
+- Ice is chewed up and we still scored, go figure.
+- Of course it goes in off the post, never off a plan.
+- That bounce was the only thing on our side.
+- That puck went in by pure luck, not by your aim.
+- Took you long enough, my stick was getting cold.
+- Typical, the bounce finally helps and it's an accident.
+- You scored, and I'm still the one skating back.
 
-## lose / opponent / bravado (20)
-- we run this rink, every shift
-- my line is the main event tonight
-- I win the close ones, always have
-- our top line is a headline act
-- watch us, we set the pace from here
-- this team has the best timing on ice
-- I am the sharpest blade in this building
-- we own the third period, every time
-- our passing plays like a sold out show
-- I read the play before it starts
-- give us the puck and we finish the story
-- my stick does the talking, and it talks loud
-- we are the cast everyone wants back
-- next match we rewrite the whole ending
-- our line is the cut everyone wants to watch
-- we skate like we own the final edit
-- three skaters, one script, zero wasted shifts
-- I'm the lead role and I never miss my mark
-- our passing was a masterpiece, sorry about the score
-- we rehearse harder than anyone on this ice
+## goal_for / teammate / encourage (14)
+- Again, and this time aim on purpose.
+- Don't celebrate, hustle back and cover your side.
+- Don't frame it, just go get the next one.
+- Fine, now skate like you meant it.
+- Good, now do it without needing a miracle.
+- Great, now find the puck before they do.
+- Keep that up and we might call it a plan.
+- Less staring, more skating, we're not done.
+- Nice, now repeat it before you forget how.
+- One goal. Try doing it again before the ice melts.
+- One good shot doesn't fix the rest of your game.
+- Quit grinning and get back on the ice.
+- Shot's in, so stop admiring it and keep moving.
+- That's one. The scoreboard wants more than one.
 
-## lose / opponent / complain (20)
-- that bounce was scripted against us
-- the ice is slick today, not my fault
-- the puck hit a rut, that's a robbery
-- lucky stick, lucky break, nothing more
-- they got the rebound by pure accident
-- the boards sprang the wrong way on purpose
-- the lights blinded me for that whole shift
-- the net shifted right as I shot
-- the puck came off a skate, that doesn't count
-- the rink is tilted toward their bench
-- I was held, nobody saw it but me
-- the wind in this arena is unfair
-- the ice was sticky and nobody warned me
-- that bounce was rigged, I saw it clearly
-- my skates never betrayed me until today
-- the puck hit a rut, it's obviously the rink
-- somebody sanded the boards before my shift
-- that gust off the ice was pure bad luck
-- the lights were in my eyes all period
-- my stick was fine until that deflection
+## goal_for / teammate / praise (14)
+- Clean enough, I'll allow it.
+- Decent shot, don't let it go to your skates.
+- Didn't think you had that in you, rookie.
+- Fine, you earned that one.
+- Good, you found the net and the net was cooperative.
+- Huh, so the stick does more than hold your hands.
+- I take it back, a little.
+- Keep doing that and I might stop sighing.
+- Not bad. I've seen worse from better skaters.
+- Not the worst finish I've watched today.
+- Okay, that was a real shot, I noticed.
+- Passable. Mark it down, it won't happen often.
+- That one even looked planned.
+- Well, that was almost on purpose.
 
-## lose / opponent / mock (20)
-- your passes went on a longer vacation than you did
-- cut! print that one, the blooper reel needs it
-- take two, same ending for you
-- even the puck ducked your shot
-- you rushed that like the director yelled action early
-- maybe try the other end of the rink next time
-- your footwork needs a rewrite
-- nice effort, wrong script
-- did you practice that move or just hope
-- you're the lead role in our highlight reel
-- wrap party is over, director, pack your sticks
-- great hustle, shame the net had no idea
-- your edit was shorter than your lead
-- you scripted that loss all by yourself
-- even the boards dodged that shot
-- was that the plot or just your skating
-- your playbook has one page and it's blank
-- bold script, terrible casting for you
-- who wrote this, a puck with a plan
-- rewind it, we still won the rematch
+## lose / opponent / bravado (13)
+- Admire us from the bench, it's the best angle
+- Come back when you can keep up with the camera
+- Our line doesn't win, it simply finishes
+- Our line wrote the script and you read the credits
+- Smooth, cold, finished, that's how we close a cut
+- Take it as a lesson, we do it nightly
+- That's what a real line looks like, rookie
+- This ice has our name on it
+- Three of us, no wasted motion, no mercy
+- We skate, you watch, and the scoreboard agrees
+- We were the headline and you were the footnote
+- You brought a stick, we brought a clinic
+- You were never in the shot, we owned the frame
 
-## lose / teammate / complain (20)
-- the ice was sliding like a dodgy set
-- who painted the boards so slippery
-- the puck hit a rut and jumped away
-- we got robbed by a lucky deflection
-- the net must have shrunk during play
-- the ice is faster than my patience
-- that goal had no business going in
-- the lights were in my eyes all match
-- who keeps moving the blue line
-- the puck has a grudge against us
-- that ice was slower than a rewind
-- who painted this rink, it's all wrong
-- the bounce hated us, plain and simple
-- that puck had a mind of its own
-- unreal, the post just laughed at us
-- we got robbed by the lights, obviously
-- that check came out of nowhere, nowhere
-- why does the puck always skip for them
-- the ice got greasy right when we needed it
-- that bounce was scripted, I know it
+## lose / opponent / complain (13)
+- Hell of a way to waste my evening  [mild]
+- I carried this cut and you still got in the way
+- I skated three miles for one lazy shot
+- I've had smoother ice and smarter opponents
+- Next time pick a side of the ice and stay there
+- Nobody told me this was a charity match
+- That bounce was nothing, you were the real problem
+- That whole cut felt like pushing a parked sled
+- The ice was fine, so that's not your excuse
+- Tired of dragging a rookie through every take
+- Wasted a whole period on someone who skates sideways
+- Why does the director keep handing you the stick
+- Your wild shots kept ruining my clean checks
 
-## lose / teammate / encourage (20)
-- one bad period is not the whole film
-- shake it off, we reshoot tomorrow
-- you still got the good stick, rookie
-- keep your head up, the next cut is ours
-- we lost the match, not the story
-- tough loss, but you were our best take
-- chin up, we have the second act
-- that was a rough scene, let's fix it
-- they got lucky, we got better
-- back on the ice, same crew, new plan
-- every director loses a cut or two
-- you held the line, that counts
-- okay, reset, we run it again
-- heads up, we are still in this series
-- shake it off, we still have the next cut
-- heads up, rookie, the next take is ours
-- we lost this one, not the whole picture
-- reset your stick and get back in the scene
-- one bad take does not sink the film
-- grab a breath, we are rolling again soon
+## lose / opponent / mock (13)
+- Bold strategy, arriving after the puck left
+- Brave of you to skate near the action, never into it
+- Careful out there, the boards bruise easy and so do you
+- Great hustle, shame it pointed at the wrong end
+- I'd say good game, but you weren't in most of it
+- I've seen cardboard cutouts cover more ice
+- Nice effort, if effort were measured in wrong turns
+- Take three is where you find the puck, right?
+- That was a highlight reel, for the wrong team
+- The scoreboard asked me to stop laughing
+- You passed to the ice. It caught it, at least
+- You skated all that way to miss the net by a mile
+- Your stick spent the night as decoration
 
-## lose / teammate / praise (20)
-- that backcheck was pure director's cut
-- your stick work was the best scene
-- the save you made was the highlight reel
-- nice shift, you carried the whole line
-- that deke was pure cinema, rookie
-- you kept us alive with that defense
-- best pass of the match, no question
-- your speed made their wings look slow
-- that bodycheck was a perfect camera shot
-- you owned the faceoff circle all game
-- the goal you set up was a masterpiece
-- sharp hands, sharp eyes, sharp play
-- you were the star of this cut, rookie
-- that deke was pure director's cut magic
-- you carried the whole line tonight
-- textbook pickup, you made it look easy
-- nobody else saw that lane but you
-- your backhand was the best scene today
-- clean check, the other guy never got up
-- you read that play like a pro
+## lose / opponent / savage (14)
+- Crap, I forgot you were even out there  [mild]
+- Damn, you made the net look like a stranger  [mild]
+- Even your stick wants a trade
+- Hell, I've had warmups tougher than you  [mild]
+- Keep skating, maybe the ice will finally let you win
+- Pucks flew past you like you were a traffic cone
+- That wasn't a loss, that was a demonstration
+- We played keep-away and you never found the keys
+- We'd kick your ass again, but you barely showed up  [mild]
+- You bring the effort and we take the points
+- You got skated around so much I got dizzy
+- You hit the boards more than the puck, congratulations
+- You lost so hard the radar gave up tracking you
+- Your shot had the courage of a wet sock
 
-## near_miss / opponent / bravado (14)
-- our line is just warming up
-- we run this ice, not you
-- my stick never misses a cue
-- watch us script the next goal
-- three of us, one clean story
-- I am the lead in this cast
-- our passes write the better plot
-- the top shelf has our name on it
-- we don't miss second takes
-- our line is the main event
-- you can't handle this much skill
-- I'm the star of this rink
-- next shot is a sure thing, rookie
-- our team owns every cut tonight
+## lose / teammate / complain (14)
+- Another loss, and the ice still takes the blame
+- Cold ice, cold luck, colder passing from you
+- Damn, I've carried heavier teams than this one  [mild]
+- Even the posts looked embarrassed for us
+- Every time I looked up, you were somewhere else
+- I passed you the puck and you passed it to nobody
+- I've seen better defense from a stack of sticks
+- Thanks for the tour of the boards, very scenic
+- That bounce was bad, but your read was worse
+- That was a wrap, and not the good kind
+- Three skaters, one brain cell, guess who had it
+- Unreal, the puck bounced everywhere but in
+- We lost that one before the first faceoff, I swear
+- You gave the puck away like a free sample
 
-## near_miss / opponent / complain (13)
-- that post jumped in front of it
-- this ice is cursed, I swear
-- bad bounce, total rigged bounce
-- the boards are on their side, obviously
-- that puck hates me personally
-- unbelievable, the net moved right there
-- the ice is slanted, I'm sure of it
-- that was a robbery by the wood
-- who builds posts this close anyway
-- zero luck, all bounce, no justice
-- the puck bounced off my frustration
-- that rebound had a grudge against me
-- the rink is clearly tilted today
+## lose / teammate / encourage (14)
+- Again, and this time skate like you mean it
+- Back on the ice, and bring some nerve this time
+- Fix your angles or fix your hobby
+- Get in the corners, the puck won't come to you
+- Get your head up and find the net, it's not hiding
+- Hit someone, anyone, it's allowed here
+- Less sightseeing, more checking, rookie
+- Next TAKE, try shooting before the puck gets bored
+- Pick up the puck first, then be brilliant
+- Quit drifting and go finish a check for once
+- Shoot sooner, think later, it's not a chess game
+- Skate harder next cut, we're not paying you to glide
+- Stop admiring the replay and win the next one
+- You've got legs, so use them for more than standing
 
-## near_miss / opponent / mock (13)
-- that post had more accuracy than you
-- wow, the boards got the assist there
-- you almost scored, almost counts for nothing
-- nice shot, the net just wasn't invited
-- aim for the net next time, director
-- the post is the only one cheering you
-- close only counts in horseshoes, rookie
-- that puck took one look at you and left
-- bold cut, terrible framing
-- your shot needs a stunt double
-- you missed by an inch, the post is smug
-- is that a shot or a suggestion
-- you hit metal and still lost the scene
+## lose / teammate / praise (14)
+- Didn't expect that pickup, color me mildly surprised
+- Fair play, you earned one nod and that's it
+- Fine, that was a real shot, I noticed
+- Hell of a hit, shame about the rest  [mild]
+- Huh, you actually skated like you belonged there
+- Nice stick work, kid, now do it twice
+- Not terrible, and I mean that as a compliment
+- Okay, you've got a pulse after all
+- Respectable, and I don't say that often
+- That check was decent, don't let it go to your head
+- That pass found me, so the day wasn't a total loss
+- That was almost a highlight, keep going
+- You almost made me look good, almost
+- You showed up for once, I'll allow it
 
-## near_miss / teammate / complain (14)
-- that post has it out for us
-- the ice is sticky, I swear it
-- unbelievable, the boards grabbed that one
-- who painted this net so skinny
-- the bounce hates us today
-- that puck has a mind of its own
-- every rebound is cursed by this rink
-- I was sure that was going in
-- the wood of this rink is rigged
-- bad luck, not bad hands, promise
-- the net is shrinking, I'm sure of it
-- that puck took a wrong turn
-- clearly the post is on their side
-- the frame needs a director's note
+## near_miss / opponent / bravado (20)
+- Close shots are for those who can't finish, we finish
+- Enjoy the near miss, it's the best you'll get this take
+- I'll show you how that shot ends, with a red light
+- Keep hitting iron, we'll keep hitting the lead
+- My line makes that shot look easy, yours makes it look lost
+- My line makes the net sing, yours makes the post ring
+- My line scores on that without even looking
+- My line would have buried that, and then yawned
+- Next time we'll show you where the net actually is
+- Nice try, kid, my line doesn't miss from there
+- Real shooters hit the twine, you hit the hardware
+- That shot clanged off, and my line would've buried it
+- That's the difference between us, I hit the net on purpose
+- The post is the only one on your team doing its job
+- The post was the closest you came to a good play
+- We don't need luck, the post only helps the weak
+- We hit posts on purpose, you do it by accident
+- We'd have scored and skated off without a glance
+- You can have the post, we'll take the net
+- You rang the post, I'd have rung the scoreboard
 
-## near_miss / teammate / encourage (14)
-- that post owes you one, keep firing
-- close enough to count, next one's ours
-- shake it off, the net is still there
-- that was almost it, go again
-- good shot, the puck just wants a rematch
-- keep that wrist loose, it'll go in
-- we're getting closer, stay on it
-- post got lucky, you didn't miss by much
-- pick it up, we're still in this scene
-- same shot again, the net will move
-- breathe, reset, the goal is coming
-- one more look like that and it's in
-- don't sulk, that was the right idea
-- the boards got in the way, not you
+## near_miss / opponent / complain (20)
+- Another loose puck and nobody's home, great teamwork
+- Another post, another reason I hate this rink
+- Every bounce goes the wrong way and nobody fixes it
+- Every shot rings off something, and it's always loud
+- Fine, the post took it, but we keep wasting these chances
+- I skated all the way back for that nonsense
+- I'm tired of hitting iron and getting nothing for it
+- Ice is chewed up, the bounces are garbage, and now this
+- Long shift, bad ice, worse shots, I'm over it
+- Nobody on this line picks up the rebound, I'm done asking
+- Of course it hits the post and bounces out, typical
+- Of course it rang off the post, nothing goes my way tonight
+- One more inch and I'd be done for the night, but no
+- One more inch and I'd have had to watch a goal, ugh
+- Rattled the post and got a faceful of nothing, great
+- That bounce was a coin flip and we lost it anyway
+- That puck should have gone in for us and you know it
+- The post keeps getting more action than my linemates
+- This rink hates all of us equally and I'm tired of it
+- Why do the posts always side with the human?
 
-## near_miss / teammate / praise (14)
-- great shot, the post just got lucky
-- that snap was pure poetry on ice
-- you read that angle perfectly
-- gorgeous release, shame about the wood
-- nice aim, the post was in the way
-- that was a shot worth the replay
-- you put that right where it belongs
-- sharp shooting, the boards stole it
-- your timing on that was spot on
-- that's the kind of shot I love to see
-- clean wrist work, the net just dodged
-- best shot of the period so far
-- you had that net beat, great effort
-- smooth shot, that frame got lucky
+## near_miss / opponent / mock (20)
+- Almost a goal, in the same way a nap is almost a career
+- Another masterpiece, signed in ringing metal
+- Bold choice, shooting at the frame instead of the hole
+- Close only counts in horseshoes, and that was the post
+- Even the post flinched, and it's been hit by better
+- Hit the iron, huh? Even the net looked relieved
+- I'd clap, but the post already did
+- Nice shot, if the plan was to scare the post
+- So close, and yet so very you
+- Ten feet wide would've been more honest
+- That post is the only one who's talking to you now
+- That shot had speed and no sense of direction
+- The post sends its regards and a polite refusal
+- The post stopped that one, so you don't have to feel bad
+- Was that a shot, or an introduction to the post?
+- Wide of the net, and still the best thing you did all night
+- You aimed at the net like it owed you something, then missed
+- You found the post. Tell me when you find the net
+- You hit the post like it owed you a pass
+- You're a natural at hitting everything but the net
 
-## praise_reply / teammate / complain (19)
-- the ice is slicker than my confidence
-- that bounce had it out for me
-- my stick chose the wrong moment
-- that rebound was personal, I swear
-- the boards moved, I'm sure of it
-- the lighting in here is ruining my shot
-- we'd have scored if the net were bigger
-- this rink's cold, my fingers are gone
-- the puck jumped right off my blade
-- my skates got an unfair kick off the wall
-- the ice is slick and nobody warned me
-- my stick turned into a noodle mid play
-- the puck has a grudge against my blade
-- why does the boards always win
-- the lighting on this rink is terrible
-- that deflection came straight out of nowhere
-- my skates are fighting me today
-- the puck jumped like it had somewhere better to be
-- unbelievable luck, truly a cursed sheet
+## near_miss / opponent / savage (20)
+- Damn, you missed a net the size of a barn door  [mild]
+- Embarrassing, and that's the nice word for it
+- Even the post wants nothing to do with you
+- Hell, I almost felt sorry for you, then you shot again  [mild]
+- Hit the post, and you still looked bad doing it
+- Hit the post? Damn, even your luck has bad aim  [mild]
+- I'll kick your ass to the net and you still won't score  [mild]
+- I've seen better aim from a puck stuck in the corner
+- Keep shooting at the post, it's the only thing you can beat
+- Keep shooting like that and I'll kick your ass at my leisure  [mild]
+- Nearly scoring is how you lose slowly
+- That shot was so bad the boards flinched
+- That shot was so bad the post sent it back
+- That was your big moment and the post wiped its feet on it
+- The post has more offense than your entire line
+- The post saved you from my laughing, not from the scoreboard
+- You couldn't score if I held the net open for you
+- You had the whole net and picked the iron, brilliant
+- You miss like it's a job and you're good at it
+- You skate in, you shoot, you fail, and we all get to watch
 
-## praise_reply / teammate / encourage (19)
-- keep your stick on the puck, director
-- next cut is yours, go get it
-- one good shift and we own this ice
-- shake it off, we still have the frame
-- you saw the lane, now take it
-- reset your feet and run it back
-- they don't see you coming, use that
-- stay sharp, this scene is far from over
-- we need your hands on the next play
-- breathe, then go find the gap
-- you made the play once, do it again
-- keep the pressure on, they're tiring
-- our top line is ready when you are
-- shake it off, the next one is yours
-- one good shift and we are back in it
-- that was a warm up, the real cut starts now
-- stay with me, we have plenty of ice left
-- you have the touch, trust it again
-- reset your feet and go find the puck
+## near_miss / teammate / complain (20)
+- Another inch and I'd have something to smile about
+- Another inch and I'd have stopped being tired
+- Every shot rings off something, never into anything
+- Great, a fancy noise and no goal
+- Half the rink is posts and you hit one
+- Hit the post and called it a shot, huh
+- I carried that puck across the ice for the post?
+- I passed you that for a bang, not a goal
+- I'm too old for near misses
+- I've watched that bounce ruin better shots than yours
+- Of course it hit the post, nothing here goes our way
+- Of course the post got in the way again
+- Ringing the post, the loudest way to fail
+- Tell the post it's not supposed to be there
+- That bounce was as unlucky as your aim
+- That ice is lying to us again
+- The bounce hates us, and you're not helping
+- The ice hates us today, and so do you
+- This net has the posts and you found them all
+- Why does the puck always pick the board?
 
-## praise_reply / teammate / praise (19)
-- that move was pure director's cut
-- clean finish, the whole rink saw it
-- sharp hands, sharper eye, nice work
-- you made that look easy, cheers
-- that pass landed like it was rehearsed
-- perfect timing, you stole the scene
-- brilliant read, you own this ice
-- that was a highlight reel moment
-- you put that top corner on a plate
-- smooth as glass, what a finish
-- you turned that into art out there
-- best shift you've had, keep it rolling
-- that move was pure cinema, director
-- flawless read, you saw the lane early
-- clean finish, the net never had a chance
-- you carried that whole shift on your own
-- sharp stick work, that was a masterclass
-- perfect timing on that pickup
-- you turned that rebound into gold
+## near_miss / teammate / encourage (20)
+- Adjust your aim, the net didn't move
+- Again, and this time hit something that counts
+- Again, and this time hit the part with no metal
+- Close counts for nothing, so make it count
+- Close only counts on the scoreboard if it goes in
+- Don't sulk, steal the puck and try again
+- Get the rebound, don't just stand there admiring it
+- Get the rebound, or are you busy?
+- Good angle, bad finish, fix the finish
+- Half an inch left, rookie, find it
+- Post is not the net, try the other part
+- Quit admiring it and get back in the play
+- Same shot, two inches over, go
+- Shoot sooner, the net won't wait for your feelings
+- That one only needed a little courage
+- The post is a hint, take the hint
+- The post is not the target, the net is
+- You found the iron, now find the twine
+- You found the post, now find the hole next to it
+- You were close, now be accurate
 
-## signal_ack_defend / teammate / complain (13)
-- the ice is greased tonight, unbelievable
-- that bounce hated us specifically
-- their stick found the only gap
-- the puck has a grudge against me
-- who put that rut in the crease
-- my skates just slid for no reason
-- that deflection came from nowhere
-- unlucky, the net jumped into it
-- this rink is faster than it looks
-- the boards ate that pass whole
-- the puck took the scenic route
-- that wobble was pure bad luck
-- the ice keeps changing its mind
+## near_miss / teammate / praise (20)
+- Almost good, and that's a start for you
+- Close, and I mean that, which surprises me
+- Closer than I expected, and I expected little
+- Decent power, shame about the geometry
+- Fine, that was a real attempt
+- Fine, that's the first aim I've respected
+- Hit the post, fine, at least it was the right area
+- Hm, that was nearly a shot, I'll allow it
+- Huh, you found the net's neighbourhood
+- Look at you, threatening the net
+- Not bad, the post felt that one
+- Not bad, you almost scared the post
+- Not terrible, that nearly counted
+- Okay, that one had some snap
+- Post, but a respectable post
+- That one had some real life in it
+- That ping had some class, I'll allow it
+- That was almost a shot, I'm impressed
+- The post flinched, give yourself a moment
+- You almost made me stop yawning
+
+## praise_reply / teammate / complain (14)
+- Damn ice grabbed my skates all night, so spare me  [mild]
+- Don't flatter me, the last shift cost us plenty
+- Every bounce goes against me, and you want to chat?
+- Great, the one bounce that went our way and it's yours
+- I carried that play and you're handing out medals
+- I've skated this shift on bad ice and worse support
+- Kind words, bad timing, worse passing
+- Nice one, he says, after the third lost puck
+- Nice one, now where was that all game?
+- Sure, nice one, shame about everything before it
+- Thanks, I'd enjoy it more if we weren't losing
+- The ice is rotten and you pick now to wake up
+- This rink hates me and you hate the pass
+- You clap now? I've been open for ten minutes
+
+## praise_reply / teammate / encourage (14)
+- Compliments don't put pucks in the net, hustle does
+- Do it again, and try not to look surprised
+- Don't get comfortable, the next shift is already here
+- Don't thank me, get back on the play
+- Fine, now do it with your eyes open
+- Good. Now stay off the boards for a change
+- Keep your head up, the boards are coming for you
+- Less talking, more skating, rookie
+- Nice one was one. Go find another
+- One good play, and now you want a parade?
+- Save the thank-you, skate faster
+- Stop admiring it and chase the puck
+- That was luck until you repeat it
+- You got one. The scoreboard wants more
+
+## praise_reply / teammate / praise (13)
+- Acceptable. From you, that's practically a trophy
+- Decent work. Now do it twice
+- Didn't think you had that in you
+- Fine, I'll admit it, that was clean
+- Huh. So you can skate after all
+- I've seen worse. Today, that's a compliment
+- Keep that up and I might stop sighing
+- Look at that, a decision that paid off
+- Not bad, rookie. Don't let it go to your head
+- Respectable, and I barely had to yell
+- That was almost professional
+- Well, the stick does work after all
+- You surprised me, and nobody does that
+
+## signal_ack_defend / teammate / complain (14)
+- Back again, the ice hates me and you don't help
+- Back to the net, where your mistakes pile up
+- Defend, defend, you could've said that before the turnover
+- Defend, he says, after losing the puck twice
+- Every puck you lose ends up in my lap
+- Falling back, because someone skated into a wall
+- Great, now I clean up after you again
+- Heading back, same mess, different shift
+- I fall back every time you wander off, damn it  [mild]
+- I was warm up front, now I'm babysitting the posts
+- Of course it's me back here, it's always me
+- Sure, I'll guard the net you left wide open
+- This bounce, this ice, this teammate, all terrible
+- Tired of covering for that stick of yours, honestly
 
 ## signal_ack_defend / teammate / encourage (14)
-- hold the line, we've got this
-- stay low, the net needs you
-- good read, keep that stick down
-- breathe, we're square on the play
-- you're the wall, stay wide
-- eyes up, they're coming through
-- steady feet, nobody gets past
-- tight gap, make them earn it
-- we ride this one out together
-- slow it down, make them cut back
-- that's the spot, sit right there
-- one more block and we're golden
-- lean in, the puck's ours
-- calm hands, clean clear coming
+- Back at the net, your turn to look busy
+- Back I go, now do something useful up there
+- Covering the net, so quit gifting them the open ice
+- Defend, sure, now earn the rebound I'm about to make
+- Defending, yes, now win it back before I get bored
+- Dropping back, and you bring that puck home
+- Falling back, so try keeping up for once
+- Fine, I defend, you stop skating in circles
+- Going back, and try not to feed them the puck
+- Heading back, so check somebody for a change
+- I'll hold the posts, you hold your own for a change
+- I'm back, so make your next pass count
+- I'm on the net, you're on the puck, try it
+- Shout less, skate more, I'm already on it
 
 ## signal_ack_defend / teammate / praise (14)
-- that sweep was textbook, nice work
-- you read that play before it started
-- great stick check, that stopped them cold
-- perfect positioning, the net thanks you
-- clean block, you're a brick wall
-- that poke check was pure instinct
-- you shut that lane down fast
-- slick footwork, they never saw you
-- that save was worth the price of admission
-- you kept your cool and held the crease
-- sharp reads, director's cut worthy
-- nice lift on that pass, well timed
-- you own the crease right now
-- that's the defense we needed, well done
+- Back I go, and credit where it's due
+- Defend, yes, finally a shout worth hearing
+- Falling back, and for once I agree with you
+- Fine, that was a veteran move, almost
+- Good call, that one was actually smart
+- Huh, you read that right, I'm almost impressed
+- I'd have called it too, so, well done
+- Not bad, that's the first useful thing you've said
+- Okay, that was decent, don't let it go to your head
+- Right call, I'll admit it, just this once
+- Smart, I didn't think you had that in you
+- Somebody's been watching the replays, good
+- That's the right shout, took you long enough
+- Well, look at that, the rookie has instincts
 
-## signal_ack_pass / teammate / complain (19)
-- that bounce was personal
-- lucky deflection, unlucky timing
-- somebody sand this rink, please
-- was that a stick or a sneeze
-- my skates are sliding like jelly
-- that rebound hopped like it was cursed
-- this puck hates everyone on our side
-- my blade caught a crack, what a joke
-- the ice is wet and so is my mood
-- why does every bounce go their way
-- the ice is sticky today, great
-- why does the puck always hate me
-- I was open for half a second
-- that rebound came out of nowhere
-- my skate caught a crack, unreal
-- the boards grabbed it, of course
-- I'm skating in circles here
-- that pass came in slower than my nap
-- the lighting is glaring on the ice
+## signal_ack_pass / teammate / complain (14)
+- Coming your way, damn, I hate this part  [mild]
+- Fine, but if you trip, I'm filing that under tradition
+- Here, and spare me the stumbling this time
+- Here, try not to feed it straight to the boards
+- I pass, you panic, and we call it teamwork
+- Passing again, I must enjoy disappointment
+- Passing it, and yes, I already regret it
+- Passing, because shouting at me is apparently the plan
+- Passing, though I know how this scene ends
+- Puck's yours, guess I'm the one doing the hoping
+- Sending it over, hope your stick shows up too
+- Sure, here, I'll hand you another chance to lose it
+- Sure, I'll pass, the ice is cold and so is my hope
+- Ugh, fine, it's yours, break it gently
 
-## signal_ack_pass / teammate / encourage (20)
-- you got this, take the shot
-- I've got your back, fire away
-- come on, make them pay for that
-- eyes up, you're open, let's go
-- trust your stick, the net is waiting
-- one more rush, we can do this
-- shoot it now, don't overthink it
-- you're the one I want on this
-- keep your head up, the lane is clear
-- come on, pick it up and go
-- stay with it, the goal is coming
-- our line needs you, let's roll
-- back you up, go make a play
-- shake it off, next shift is ours
-- you got this, keep your stick on the puck
-- heads up, I'm wide open, send it
-- one touch and we're rolling
-- ice is yours, make the move
-- steady now, the net is waiting
-- come on, go take the shot
+## signal_ack_pass / teammate / encourage (14)
+- Catch it this time, I'm not doing a second take
+- Coming your way, try looking at the puck
+- Fine, puck's coming, try not to fumble it
+- Heads up, you wanted it, now go earn it
+- Here it comes, don't make me regret it
+- Here you go, and shoot before the ice melts
+- Open your stick, rookie, it's not a decoration
+- Passing it, so don't skate into the boards again
+- Passing now, so be somewhere useful
+- Passing, so aim for the net, not the scenery
+- Puck's on its way, move your skates for once
+- Sending it, now skate like you meant to be there
+- Taking the risk on you, so make it worth the cut
+- You called for it, so do something with it
 
-## signal_ack_pass / teammate / praise (20)
-- that pass was pure poetry
-- textbook move, I'm taking notes
-- you made that look easy
-- clean finish, nobody else could do that
-- best feet on the ice right now
-- now that's how a director cuts a play
-- smooth hands, smoother finish
-- you're on fire, keep rolling
-- that was a masterpiece, take a bow
-- perfect read, you saw it before it happened
-- more of that, please, that was great
-- wow, you just stole the scene
-- you didn't just score, you made art
-- that move was pure poetry on ice
-- clean dish, great hands, nice work
-- that was a masterclass, director
-- perfect pass, you saw everything
-- wow, that spin left them spinning
-- sharp pivot, you owned that lane
-- that deke was a real showstopper
+## signal_ack_pass / teammate / praise (14)
+- Coming your way, that's the first good shout all night
+- Fine, you read that one right
+- Good call, that was almost smart
+- Here it comes, you've stopped skating in circles, nice
+- Here you go, you've been less awful lately
+- Huh, you were actually open, I'll allow it
+- Not bad, rookie, puck's yours
+- Okay, that shout was justified, don't let it go to your head
+- Passing it, you may be getting the hang of this
+- Passing, guess you do look up sometimes
+- Passing, you found the open ice, color me surprised
+- Passing, you've earned it, barely
+- Right place, right time, who would have guessed
+- Sending it, your positioning has improved, shockingly
 
 ## signal_ack_space / teammate / complain (13)
-- the ice is slicker than my patience
-- rigged, the puck just swerved away
-- who greased this rink, seriously
-- unreal luck, the puck took a detour
-- the boards jumped in front of me
-- I was open, the puck had other plans
-- the crease got my skate, great
-- ice took that one, not my fault
-- the puck chose the worst angle again
-- my stick snapped on a flat pass
-- that bounce was a villain's move
-- the rink is working against us
-- why does the puck hate my blade
+- Bad bounces, bad ice, and now you want me open
+- Do I get a pass or just the exercise
+- Every time you yell, I have to fix your mess
+- Funny how space is only my job
+- Great, another sprint for a pass that won't come
+- I do all the running and you get the credit
+- I'm out here wearing a groove for you, rookie
+- I've skated this lane ten times, and not one pass
+- Open ice, as if you'll find me with that aim
+- Space, space, space, and nobody ever sends the puck
+- Sure, shout space, then lose the puck anyway
+- This ice is slush and I'm still the one hustling
+- Your calling is louder than your passing, damn it  [mild]
 
-## signal_ack_space / teammate / encourage (13)
-- pick it up, the ice is still ours
-- one more take, we can flip this
-- keep your head up and find the lane
-- good call, I'm open, feed me now
-- reset, breathe, the next rush is ours
-- that miss happens, we roll again
-- we got time, stay calm and skate
-- stick on the ice, we still got this
-- eyes up, the play is still alive
-- come on, one clean pass and we score
-- forget it, the next shift is ours
-- you're fine, I'm right here, go
-- tighten up, we're still in this cut
+## signal_ack_space / teammate / encourage (14)
+- Don't just stand there, a pass is a free gift
+- Eyes up, stick down, and try not to miss me
+- Fine, I'm open, now do one thing right with it
+- Hit me in stride, not in the skates
+- I moved, now you move the puck, simple as that
+- I'm open, so try passing before you panic again
+- Look up, I'm right here and I'm not getting younger
+- Make the pass before the defender finds his legs
+- Open ice, rookie, now put the puck where I'm skating
+- Pass it clean this time, or don't bother calling
+- Quit admiring me and get the puck over here
+- Shouted for space, so use it, hotshot
+- Space is made, so don't waste it like the last one
+- You asked, I skated, now earn it
 
-## signal_ack_space / teammate / praise (12)
-- that was a clean move, director
-- you read that lane like a pro
-- smooth stop, perfect timing on that
-- that pass was pure poetry on ice
-- great vision, you saw the gap early
-- sharp cut to the net, well played
-- clean stick work, keep that energy
-- you own this shift, keep rolling
-- that snap shot was a thing of beauty
-- quick call, great read, wonderful skating
-- that's a print-worthy play, director
-- you're the best cut on this ice
+## signal_ack_space / teammate / praise (14)
+- Clean call, I might even keep skating for you
+- Decent call, rookie, the old guys noticed
+- Fine, I'll admit that was a good shout
+- Huh, that was almost a smart call
+- Not bad, you called for space and meant it
+- Not terrible, and from you that's a rave review
+- Okay, that's the right read, don't let it go to your head
+- Somebody's been watching film, nicely done
+- Space well asked for, I'll give you that
+- That's a usable instinct, keep it handy
+- That's how it's done, try doing it twice
+- Well, look who learned to read the ice
+- You found the gap, I'm mildly impressed
+- You spotted it before I did, don't tell anyone
 
 ## stall / opponent / bravado (13)
-- our line is the whole show, sit back
-- we own this corner, watch us reset it
-- pure class on this ice, nobody matches us
-- I could do this all day and still win
-- three of us, one plan, zero worries
-- we run this rink, you just skate on it
-- watch the master at work, learn something
-- our best scene is coming, get ready
-- I am the lead, the rest of you are extras
-- we make the plays, you make the excuses
-- this is our house, polite guests only
-- stick skills in every single frame
-- hold the puck and the title, easy
+- Any time you want to lose faster, go ahead
+- Class is permanent, and you are plainly temporary
+- Let the puck sit. We'll still take it from you
+- My linemates play better asleep than you awake
+- Take your time, our lead isn't going anywhere
+- This is our rink, you're just in the shot
+- Watch us wake up and finish this in ten seconds
+- We could nap and still outplay you three to one
+- We don't circle, we wait for you to blink
+- We're patient because we know how this ends
+- We've already won this scene, you're just standing in it
+- You stall, we score. It's a simple script
+- Your whole line is a warm-up for ours
 
-## stall / opponent / complain (12)
-- this ice is sticky and somebody greased it
-- the puck bounced off nothing and hit me anyway
-- my stick has a mind of its own today
-- the boards are rigged, I swear they moved
-- unlucky again, the puck hates my skates
-- why does the puck always pick the wrong side
-- this corner is cursed, I am sure of it
-- I had the angle and the bounce ate it
-- the lighting is in my eyes, that's the problem
-- fine, the ice is slow and I am not to blame
-- that deflection was a fluke, a cheap fluke
-- stuck again, the universe owes me one
+## stall / opponent / complain (13)
+- Another dull stretch, and I know whose fault it is
+- Do something, anything, I'm bored of my own skates
+- Every time I get set, you drift off somewhere
+- Hard to hustle when nobody else is even trying
+- I didn't come out here to watch you wander
+- I've skated more laps than plays in this stretch
+- Nothing bounces right on this sheet, nothing at all
+- Somebody touch the puck, I'm aging out here
+- The puck stuck again. Great. Just great
+- This take is dragging and you're the anchor
+- Tired of circling around a player who won't commit
+- Why is the puck always hiding in that corner?
+- Worst pace I've seen, and I've seen rough ones
 
-## stall / opponent / mock (13)
-- the puck is stuck and so is your plan
-- still circling? the rink is not a carousel
-- you are directing a very long silent scene
-- is this the slow motion part of the cut
-- we could all retire before you make a move
-- two-word jab: stand still, director
-- your big play is a loop, try a new scene
-- the puck wants out. so do we
-- all that cornering and no goal to show
-- bold choice, doing nothing for thirty seconds
-- you call this a plot twist? it is a standstill
-- lights up, camera on, and still no action
-- nobody told the puck it was a silent film
+## stall / opponent / mock (14)
+- Ah, the famous patient wait for a mistake. Yours
+- Brave stuff, standing near the puck and fearing it
+- Circling again? Bold choice for a man with a stick
+- Don't rush, the director loves a long dull shot
+- Fast skater, shame it's in no direction at all
+- I'd cheer, but you haven't done anything yet
+- Is this a strategy or are you just lost?
+- Keep gliding, maybe the puck will apologize first
+- Nice loop. Do it again, I'm almost impressed
+- Take your time, the puck isn't going anywhere either
+- That corner has seen more action than your stick
+- Wow, a corner. Nobody has ever thought of that
+- You could touch the puck, it's allowed
+- Your plan is working, nothing is happening at all
 
-## stall / teammate / complain (13)
-- this ice is slower than a bad script
-- that bounce hated us, I swear
-- seriously, is the puck glued to the boards
-- we've been circling longer than the credits
-- who painted this rink, it grabs every skate
-- that was a bounce, not a play, ugh
-- the puck has a grudge against this corner
-- we're going in circles like a bad sequel
-- that one was on the ice, not on you
-- every time we touch it, it slides away
-- this shift is dragging like a rough cut
-- unbelievable, the boards keep eating our pass
-- I could've sworn that was a clean pass
+## stall / opponent / savage (14)
+- Come get it. Oh right, you can't
+- Crap skating, crap nerve, and the puck knows it  [mild]
+- Damn, I've seen statues forecheck harder than you  [mild]
+- Go on, hit me. I'll wait until you find the nerve
+- Hell, even the corner wants you to leave  [mild]
+- I could kick your ass from the other end of the ice  [mild]
+- Keep circling, it's the only thing you finish
+- Stand there, I'll take the puck and your dignity
+- The boards have more offense than you do
+- Waiting for your courage? It's still in makeup
+- You skate like a lost shopping cart with a stick
+- You're so scared of the puck it's starting to notice
+- You're the reason this take needs a rewrite
+- Your whole game fits inside that one lonely corner
 
-## stall / teammate / encourage (14)
-- come on, grab that puck and skate it out
-- we're still in this, let's go get it back
-- shake it off, the next shift is ours
-- you're the one who can break this open
-- dig in, the net is right there
-- one good rush and we're back in the cut
-- don't stop now, keep your feet moving
-- okay reset, we go again
-- you've got the angle, use it
-- hey, find the gap and I'll find you
-- stay with it, the bounce will turn
-- we need you on this one, go
-- wake up, this puck is still live
-- take a breath and attack the corner
+## stall / teammate / complain (14)
+- Bounces like that only happen when you're involved
+- Damn, even the puck gave up and went to sleep  [mild]
+- Every shift with you is a long, quiet wait
+- Everyone's circling like it's a rehearsal nobody wanted
+- Great, another scene where nothing happens
+- I carried this team all night and you carried the water
+- I've waited for a play longer than a bad reshoot
+- Nobody wants the puck, and honestly I get it
+- Stuck in the corner again, like the plot of this cut
+- The posts have done more work than you this take
+- This corner has seen more action than your stick
+- This ice is slow, but you're somehow slower
+- Tired of watching you skate in perfect circles
+- Twenty seconds of skating and not one useful thing
 
-## stall / teammate / praise (13)
-- nice hands, that was pure director stuff
-- perfect read, you cut right through them
-- that pass was spotless, keep it coming
-- you made that look easy, nice work
-- that's a wrap on their defense, nice
-- beautiful feet, you owned that corner
-- clean finish setup, you saw it early
-- that was a masterclass in puck control
-- you stole that shift, well done
-- sharp thinking, you opened the lane
-- pure poise right there, nice one
-- that's the cut we wanted, great job
-- look at you, slicing through like a pro
+## stall / teammate / encourage (13)
+- Body check someone, it's the one thing that's free
+- Go get the puck, it's not going to bite you
+- Hit somebody, the boards are getting lonely
+- Less thinking, more skating, you're bad at the first one
+- Nobody scores from the bench, and you're close to it
+- Pick a direction and commit, even a wrong one helps
+- Shoot something, anything, I'll even clap
+- Skate somewhere, anywhere, I'm not picky
+- Stop admiring the ice and move your skates
+- Take the corner, rookie, it's just a puck in a corner
+- Wake up, director's watching and he's not impressed
+- We're circling like a bad screen test, break it up
+- You wanted ice time, so use some of it
 
-## steal / opponent / bravado (14)
-- we run this line, you just watch
-- our top line never loses a battle
-- that puck belongs to us, always
-- I am the lead in this whole production
-- we win the big scenes, every time
-- my stick is the star of the rink
-- I steal pucks like I own the arena
-- our team plays the good ending
-- nobody out-skates this line today
-- I was built for the final cut
-- watch how we turn defence into offence
-- the spotlight follows our blades
-- we are the premiere, not the rehearsal
-- my hands are the best in the house
+## stall / teammate / praise (14)
+- Alright, you earned a nod, just the one
+- Even I'd have kept that one, and I'm picky
+- Fair enough, that one belongs in the final cut
+- Fine, that one counts, don't let it go to your head
+- Huh, that was almost competent
+- I've seen worse, and today I'm saying it kindly
+- Keep that up and I'll stop sighing at you
+- Nice hands, who knew you came with a pair
+- Not bad, I may have blinked and missed the luck
+- Okay, rookie, that was clean, don't ruin it
+- That was a real play, I'm as shocked as you are
+- That's the first smart thing you've done all take
+- Took you long enough, but it was decent
+- Well, look who found the puck
 
-## steal / opponent / complain (12)
-- the ice is slick and I hate it
-- lucky stick, lucky ice, lucky everything
-- why does the ice always favour the other side
-- that was a fluke and a half
-- my skates slipped, that is on the rink
-- the boards grabbed it, unfair
-- this rink needs a new director
-- I had that, the ice took it away
-- my stick was fine, the puck was not
-- the wind on this rink is a menace
-- that puck has a grudge against me
-- I want a retake, this scene is ruined
+## steal / opponent / bravado (12)
+- Class is in session, and you're late again
+- Enjoy the view from behind us, it never changes
+- I could do that blindfolded and still beat you
+- Pucks come to us, they run away from you
+- That's what a real line does with a loose puck
+- The scoreboard knows who owns this ice
+- Try to keep up, it'll be educational
+- We don't chase pucks, they find us
+- We make this look easy because it is
+- We take it, we keep it, you watch
+- Your best shift is our warm-up
+- Your line is a rough draft. Ours is the final cut
 
-## steal / opponent / mock (15)
-- that puck saw you coming from the blue line
-- nice pass, shame it went to me
-- you handed that over like a free sample
-- my grandmother skates faster than that
-- the ice just laughed at your turn
-- you gave it away like a bad review
-- careful, that stick is getting nervous
-- was that a pass or a surrender
-- that was a cut nobody asked for
-- you lost that one before the faceoff
-- say goodbye to that puck, director
-- your footwork is in the blooper reel
-- that puck left you like a bad date
-- still waiting on your highlight reel
-- even the boards looked away
+## steal / opponent / complain (14)
+- Another scrappy shift, another puck rolling away
+- Can we get one clean bounce before the cut ends?
+- Cover the lane next time, you let that slide by
+- Every bounce lately goes the wrong way, tired of it
+- Hell of a time for the ice to go soft  [mild]
+- I called for it, but sure, ignore me
+- I'm too old to chase loose pucks like these
+- Nobody on this line reads a play anymore
+- Of course the puck bounced there, it hates us
+- That rebound off the boards was pure spite
+- This ice is garbage, and so is that last pass
+- Whoever laid that ice should have to skate on it
+- Why does the puck always find the human first?
+- You turned a simple play into a headache
 
-## steal / teammate / complain (13)
-- the ice is slicker than a bad review
-- that bounce had no business being real
-- unreal, the puck just hates us today
-- who sold this rink a crooked boards
-- the script was ours, the ice rewrote it
-- seriously, the puck took a wrong turn
-- my stick hates this rink, no question
-- that was a lucky bounce and nothing else
-- the puck picked the wrong skate again
-- that rebound had a plot twist nobody wanted
-- the whistle should have caught that one
-- every rink has a lucky side, not ours
-- the ice moves when you blink, I swear
+## steal / opponent / mock (13)
+- Bold strategy, handing it over before we asked
+- Careful, you almost kept it for a full second
+- I almost felt bad. Almost
+- Nice touch, if the goal was to give it away
+- Oh, you wanted that? Should have said something
+- Slow as a rewind on a broken tape
+- Stickhandling, or an interpretive dance about losing?
+- Take the puck back? Sure, when you learn to carry it
+- That turn took longer than most movies
+- Was that a pass, or did you just lose the puck politely?
+- You saw me coming and still chose that. Fascinating
+- You skate like the plan is to be a spectator
+- Your backcheck arrives right after the credits
+
+## steal / opponent / savage (13)
+- Damn, I thought you were fighting for it  [mild]
+- Even the posts are embarrassed to stand near you
+- Every touch you take is a gift to my line
+- Hell, I barely had to move, you just handed it over  [mild]
+- I'd feel sorry for you, but you keep doing it
+- I've taken pucks from statues with more resistance
+- Keep skating in circles, it's the only thing you finish
+- Kick your ass? You'd have to show up first  [mild]
+- That was less a turnover, more a donation
+- You couldn't hold that puck with glue and a prayer
+- You got robbed by your own stick, and I just watched
+- You lose pucks like it's your whole career
+- Your whole game is a blooper reel and I'm the editor
+
+## steal / teammate / complain (14)
+- Another turnover, another long skate for the rest of us
+- Damn, it was right on your stick and you still missed  [mild]
+- Every shift the same, I carry you and you drop it
+- Great, now I'm the one skating back again
+- Hell of a giveaway, I almost admired the commitment  [mild]
+- I'd blame the ice, but you did that one yourself
+- I've seen better puck control from a broken stick
+- Nice carry, shame it ended at their stick
+- Of course you lost it, the ice looked too easy
+- That bounce was bad, but your stick was worse
+- That puck was safer in my hands, wasn't it
+- The puck bounced wrong, and you bounced right along with it
+- Tired of watching you donate pucks to the other side
+- Wonderful, you handed it over with a bow on it
 
 ## steal / teammate / encourage (14)
-- shake it off, we still own this cut
-- next shift is yours, get back on it
-- one bounce doesn't end the scene
-- eyes up, the puck comes back
-- reset your feet and hunt it down
-- they got lucky, now get it back
-- stick on ice, head in the game
-- we run this line, get back in it
-- that was a read, now make the next one
-- hold your lane, the puck finds you
-- still with us, keep your legs moving
-- fair steal, now steal it back
-- walk it off, we go again
-- chin up, the ice owes us one
+- Don't hug it, just pass it or shoot it
+- Don't stand there admiring it, go take it back
+- Fast, rookie, faster than whatever that was
+- Forget the apology and get back on defense
+- Get it back, rookie, nobody's going to ask twice
+- Good, you've got it, now do something with it
+- Hands up, head up, and chase that puck down
+- Hit him now, while he still thinks he's clever
+- Move your skates, the puck won't wait for you
+- Next time protect the puck like it matters
+- Quit sulking and make him regret that pass
+- Skate through him if you have to, the boards can wait
+- Stick on the ice, rookie, it's not a decoration
+- You gave it away, so go and earn it back
 
-## steal / teammate / praise (13)
-- clean takeaway, that was pure film work
-- you read that pass like a pro
-- stick work worthy of the final cut
-- that steal was the scene stealer
-- perfect timing on that poke check
-- the puck never saw you coming, nice
-- that intercept was pure directing
-- you took that one like you owned it
-- textbook lift, the cut is yours
-- that pickpocket was seriously sharp
-- you stole that puck with style
-- beautiful read, you cut right through
-- that's how you reclaim a puck, director
+## steal / teammate / praise (14)
+- Fine, that was a decent steal
+- Good pickup, don't let it go to your head
+- Huh, you actually took it clean
+- I've seen worse hands on better players
+- Keep that up and I might stop watching you
+- Nice stick work, I'd say it twice but I won't
+- Not bad, rookie, that almost looked planned
+- Not terrible, and from you that's a medal
+- Okay, that one I won't complain about
+- That check was clean, I'll allow it
+- That was almost professional, almost
+- Well, look at that, the toy figure can skate
+- You held on to it, I'm mildly shocked
+- You took it back and nobody had to ask
 
 ## win / opponent / bravado (20)
-- our line is the real main event tonight
-- we own this ice and every frame of it
-- three of us, one story, and we wrote it
-- our defense is a wall with better hair
-- we cut the scene and kept the best take
-- watch us, we were born for this rink
-- our passing looks like choreography
-- the scoreboard agrees with the director
-- we play like the headline act every shift
-- nobody on this ice skates cleaner than us
-- this win was scripted and we starred in it
-- we crushed it and we know it
-- call us the feature, not the extras
-- we run this rink, plain and simple
-- our line stays sharp under any spotlight
-- we make the big saves look easy
-- my squad never misses a cue
-- give us the puck and watch us cook
-- we came, we skated, we owned the cut
-- our power play is a feature film
+- Call it a fluke, because my line already does
+- Don't confuse a scoreboard with talent, rookie
+- Don't get comfortable, my line has plenty of ice left
+- Enjoy the trophy moment, we'll be back for the next take
+- Enjoy the win, my line will remember it for you
+- Hold that scoreboard tight, it won't be yours long
+- My line could beat you with our sticks tied together
+- Next take, we skate through you like open ice
+- One win doesn't make you a veteran, it makes you lucky
+- One win, and you act like it was earned
+- Our worst night beats your best on any ice
+- Rookies win a cut, veterans win the season
+- That was our mercy cut, don't expect a sequel
+- This win doesn't change who owns the ice
+- We lose one and still skate circles around you
+- We lost the score, not the standing
+- We were warming up, you just didn't notice
+- You beat us once, we'll beat you every time after
+- You celebrate, we study, and next time we win
+- Your line got lucky, ours gets results
 
 ## win / opponent / complain (20)
-- the ice was slick and somebody greased it
-- that bounce was clearly rigged against us
-- our skates are cursed, I swear it
-- that puck hit a rut and changed its mind
-- the lights were in my eyes the whole period
-- we lost the cut because of one lucky bounce
-- the boards moved, I felt it happen
-- that was a fluke and everyone knows it
-- my stick is too short for this rink
-- the goal judge needs glasses, obviously
-- they got a break and we got a shadow
-- the whistle came too early, just wrong
-- this rink hates visitors, I am certain
-- the ice was sticky, that's on the ice
-- that bounce was clearly rehearsed
-- the puck hit a seam, pure bad luck
-- the lighting was in their favor
-- my stick had a bad day, not me
-- the rink felt slower than usual today
-- that shot deflected off a ghost
+- Another cut ruined by a lucky deflection
+- Every rebound landed on your side, every single one
+- Every rebound went their way, every single one
+- Forty shots of effort and the post still said no
+- I passed perfectly and my line forgot how to finish
+- I'll be thinking about that last miss until next take
+- I'm done with these bounces, they never bounce for me
+- I'm tired of losing to guys who can't aim
+- My stick feels cursed after that mess
+- My stick felt like wet cardboard all night
+- That last puck had no business going in
+- The one skater who can't aim, and he wins anyway
+- The puck keeps picking favorites, and it's never us
+- This ice has hated me since the first face-off
+- Three bad bounces in a row, that's not luck, that's spite
+- Unreal, the ice gave you every bounce tonight
+- Unreal, we outplayed them and still lose to this
+- We deserved that one, and the scoreboard disagrees
+- We did everything right and the scoreboard disagrees
+- We played the better game and still got robbed
 
 ## win / opponent / mock (20)
-- that stick had a better day than you did
-- nice finish, shame it was the wrong net
-- did you rehearse that celebration or just panic
-- you looked lost out there, rookie
-- your footwork needs a script and a director
-- you scored, but the replay is hilarious
-- i saw more grace in a dropped puck
-- take a bow, you earned one bad take
-- you swung like you were hunting a fly
-- even the boards were laughing at that turn
-- lucky goal, director's cut will not be kind
-- our net had more action than your highlight reel
-- cut! print the part where you tripped
-- you won, but the replay will be brutal
-- your passing was a two-act tragedy
-- come back next take, bring a better script
-- you celebrated like it was a final cut
-- the puck was looking for a better lead
-- took the trophy, lost the plot
-- that goal needed a rehearsal
+- Careful, a win like that might go to your head
+- Congratulations, you won by accident again
+- Do you always celebrate before you touch the puck?
+- Even a broken clock scores twice a day, and you scored once
+- Fine, take the win, the puck probably felt sorry for you
+- Good game, I mean that about everyone but you
+- Great cut, shame nobody directed any of it
+- I'd clap, but the boards already did it for me
+- Lovely win, the net was just standing there
+- Nice trophy run, you only fell over four times
+- Slow, scared, and somehow ahead, quite the combination
+- Take that win home and ask your teammates how it happened
+- That was a comeback? Your team did the work, you watched
+- That was a win? I blinked and missed the effort
+- Well, even a broken clock scores once in a while
+- You found the net once, I assume it was a typo
+- You skated in circles and the puck felt sorry for you
+- You skated like a rumor and still got the win
+- You won the way a lost puck finds the net
+- Your aim was awful, luckily so was the rest of the ice
+
+## win / opponent / savage (20)
+- Crap, did you even know where the net was?  [mild]
+- Damn, I've seen cones with more nerve than you  [mild]
+- Enjoy it, rookie, it's the only scoreboard you'll ever lead
+- Enjoy it, rookie, it's the only win you'll steal this week
+- Every pass you made was a prayer, and a bad one
+- Every time you touched the puck, it begged to leave
+- I've scraped better plays off my skate blades
+- Savor it, because that was pure charity on our part
+- Take the win, it's the only thing you took all night
+- That win has your name on it, and everyone else's work
+- Three of us lost to two skaters and one decoration
+- You couldn't hit a net if it body checked you
+- You didn't win, your teammates carried you like luggage
+- You hide behind your line like a puck behind the boards
+- You skate like a dropped prop, and just as useful
+- You won because your team carried you, we all saw it
+- You're the reason the posts look so relaxed
+- Your aim is a crime and your team covered for you
+- Your best play was staying out of the way
+- Your teammates did the work, you just wore the jersey
 
 ## win / teammate / complain (20)
-- this ice is slicker than a bad script
-- who waxed this rink, my skates keep wobbling
-- the puck took a sneaky wrong bounce right there
-- I called that puck to the corner and it ignored me
-- my stick has more luck than my shot
-- the boards jumped in front of me, total setup
-- that deflection was a plot twist nobody asked for
-- this rink keeps stealing my edges, it is personal
-- this rink has a grudge against my blades
-- that goal was a fluke and a cheap one
-- the fog machine got me, I can't see a thing
-- the lights up there are blinding, I'm squinting
-- that was a rigged take, I want a reshoot
-- That ice is slicker than a freshly waxed floor
-- Their bounce off the boards was pure luck
-- The puck hopped like it had a grudge
-- My stick got tangled in the net again
-- Who painted this ice, it grips like soup
-- That bounce owed me one and never paid
-- Whoever set those boards low should fix them
+- Even the posts rang out in protest at your shots.
+- Every time you spun in circles, I aged a year.
+- Every time you touched the puck, I aged a little.
+- Half those bounces were pure luck, and none were yours.
+- Half those passes went to the boards. Great teamwork.
+- I called for the pass three times. Three. Hello?
+- I did the checking, you did the posing.
+- I did the work and you got the credit. Typical.
+- I'm winning games and still feel like I lost something.
+- My skates are tired and your aim is why.
+- My skates are worn out from fixing your mistakes.
+- Nice win. Shame I spent it covering for your turnovers.
+- That puck bounced like it hated us, and it still went in.
+- The posts did more work than you did out there.
+- We won by accident, and the accident was me.
+- We won in spite of that last period, not because of it.
+- We won, and I still lost patience somewhere in the second.
+- Won the game, lost a year of my life watching you.
+- Won ugly, and you were most of the ugly.
+- You hogged the puck like it owed you a favor.
 
 ## win / teammate / encourage (20)
-- you held the blue line like a pro, keep rolling
-- one bad shift is just a bloop reel, we move on
-- hey director, the next cut is ours, let's go
-- sharp reads out there, keep that energy up
-- you got this, same energy for the next take
-- still got the wheels, ride that momentum
-- rough patch? nah, just a blooper for the reel
-- stick up, chin up, we are not done filming
-- next period, same squad, same swagger
-- you were in the zone, go find it again
-- lean on me, we make this cut together
-- one more win like that and we shoot a sequel
-- keep your head in the game, rookie
-- We won so take a bow, director
-- Nice work out there, let's run it back
-- You carried that cut, thanks for the lift
-- Rest up, we shoot the rematch soon
-- Good call on that last shift, boss
-- Keep that energy, the next match is ours
-- You kept us in it, that was huge
+- Don't get comfortable, rookie, that was mostly us.
+- Don't get comfortable, rookie, the next cut is harder.
+- Enjoy it for a second, then get back on the ice.
+- Fine, we won. Now earn the spot you're standing on.
+- Good. Now find the net without three tries first.
+- Good. Now try skating before the puck gets there.
+- Keep your head up, and your stick down, for once.
+- Next cut, try skating toward the puck on purpose.
+- Next take, shoot sooner. The net isn't going anywhere.
+- One win and you're humming? Sit down and watch the replay.
+- One win doesn't fix that backhand, so go practice it.
+- Pass the puck. It's not a family heirloom.
+- Tighten up your turns, you take corners like a lost bus.
+- We won. Now do it again without the near misses.
+- We won. Now do it again without the sightseeing.
+- Winning is fine, but your positioning still needs work.
+- Winning is the minimum. Show me something extra next time.
+- You can do better, and we both know it.
+- You got lucky once. Make it a habit.
+- You got lucky today, so make it a habit next time.
 
 ## win / teammate / praise (20)
-- that backhand dish was pure gold, director
-- clean cut through the middle, nice work
-- you read that pass before it even existed
-- textbook one timer, print it and frame it
-- that stop was a masterpiece, encore please
-- you carried us, I owe you a sandwich, seriously
-- pure poise under pressure, what a finish
-- three slick passes, that was a full feature
-- you made that look easy, show off
-- your timing was perfect on every single take
-- best shift of the night, no retakes needed
-- that top corner shot was pure cinema
-- you are the reason we cut this match clean
-- That backhand was a perfect cut, director
-- Textbook pass, you saw the whole rink
-- That spin move deserves an encore
-- You threaded that puck like a pro
-- Clean finish, the net never saw it coming
-- Your read on that rebound was unreal
-- That body check was pure poetry
+- Didn't think you had that shot in you.
+- Fine, you earned that one. Quietly, though.
+- Good cut. Don't make me say it twice.
+- Huh, the rookie can actually play a little.
+- Huh. Not bad, rookie.
+- Huh. You actually knew where the net was.
+- I'd skate with you again. Don't let it go to your head.
+- I've seen worse directors. Slightly worse.
+- Not a disaster. Honestly, that's high praise from me.
+- Not bad. I've seen worse from players with more practice.
+- Okay, I'll admit it, nice skating out there.
+- Okay, that was a real play. Almost looked intentional.
+- That check was decent. Do it again.
+- That last goal was almost professional.
+- That last shot was decent. Don't let it go to your head.
+- Well, I didn't expect that, but I'll take it.
+- Well, that was cleaner than your usual mess.
+- You finally found the net. Good for you.
+- You read that play better than I expected.
+- You skated like you meant it. Noted.

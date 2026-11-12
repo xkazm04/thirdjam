@@ -1,10 +1,10 @@
 {
   "schema": "tj.cartridge/1",
   "id": "take-8",
-  "title": "Everything We Shot",
+  "title": "The Final Cut",
   "seed": 1,
   "theme": {
-    "name": "Everything We Shot",
+    "name": "The Final Cut",
     "mood_words": [
       "neon",
       "electric",
@@ -122,7 +122,21 @@
       "corner_radius_m": 3.75,
       "board_restitution": 0.4,
       "ice_friction": 0.015,
-      "goal_width_m": 4
+      "goal_width_m": 4,
+      "obstacles": [
+        {
+          "kind": "bumper",
+          "x": -15,
+          "z": -8,
+          "size": 2
+        },
+        {
+          "kind": "bumper",
+          "x": 15,
+          "z": 8,
+          "size": 2
+        }
+      ]
     },
     "skater": {
       "speed": 11,
@@ -153,7 +167,10 @@
       "score_to_win": 3,
       "goal_pause_frames": 120,
       "offside": false,
-      "penalties": false
+      "penalties": true,
+      "variants": {
+        "shrink_per_goal": 0.1
+      }
     },
     "teams": [
       {

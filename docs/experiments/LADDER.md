@@ -21,28 +21,29 @@ Judging (PLAN.md 2, "level design and game progression", 5 points): eight distin
 | 2 | The Big Room | Large Rink 120 x 60, speed 8 | rookie | **the clock**: most goals in 3:00 (a draw is a retake) | "We moved to the big stage. More ice, and the clock is rolling." | today |
 | 3 | Rough Cut | Regular 90 x 45 + checks | pro | **body checks** on (check speed 5 m/s, knockdown 90 frames) | "Drop the manners. Hit them, but keep the puck in frame." | today |
 | 4 | Set Pieces | Regular 90 x 45 + 4 pillars | pro | **props on the ice**: four pillars between the blue lines | "The art department dressed the set. Play around the props, or off them." | today |
-| 5 | Second Wind | Boost Cut + custom effect | pro | **an effect**: scoring gives your team +25 % speed for 5 s; built-in pickups spawn | "Score, and the whole crew gets a second wind. Grab what props throws on." | A14 |
-| 6 | The Last Word | Regular 90 x 45 | pro | **a rule variant**: the last goal counts double | "The last line is the one they remember. The final goal counts twice." | A15 |
-| 7 | Slow Motion | Regular 90 x 45 + zones | pro | **zones**: a slow-ice circle at centre, two fast-ice lanes on the boards | "I want the middle in slow motion and the wings at full speed." | A15 |
-| 8 | The Final Cut | Neon 90 x 45 + hooks + zones + effects | all_star | **chaos**: the rink shrinks 10 % per goal, two bumpers, one slow circle | "Final cut. The set closes in with every goal. Make it count." | A14 + A15 |
+| 5 | Second Wind | Regular 90 x 45, boards 0.8, neon + effect `second-wind` | pro | **an effect**: every goal gives your team +25 % skating speed for 300 frames | "Rubber boards, and every goal gives your crew a second wind. Bank it in." | A14 |
+| 6 | The Last Word | Regular 90 x 45, first to 3 | pro | **a rule variant**: `last_goal_double` | "The last goal is the one they remember. Make it yours." | A15 |
+| 7 | Slow Motion | Wide Rink 140 x 70 + zones | pro | **zones**: slow-ice circle (r 10) at centre, two fast-ice lanes on the boards | "Widescreen. The far net is a long way off: take the fast way round." | A15 |
+| 8 | The Final Cut | Regular 90 x 45, checks, neon + `shrink_per_goal` 0.1 + 2 bumpers | all_star | **the set closes in**: the rink shrinks 10 % per goal, two bumpers | "Final cut against the best cast: hits allowed, and the set may close in." | A15 |
 
-Fallbacks (takes 5-8 ship as these cuts until their lane lands; the ladder entry, slot and unlock rule do not change, only the cartridge file and the
-title/note, which the ladder file carries):
+Fallbacks (R-0014: `takes[].fallback`; the fallback plays when the loader rejects the designed cut). Rule: each designed take 5-8 is its fallback plus the
+one primitive that may not have landed (take 6 swaps the variant for first-to-1), so the one director's note fits both and the ladder title stays. Files `take-N-fallback.cartridge.json`:
 
-| # | Fallback title | Fallback cut (today's primitives only) | Level | Fallback twist | Fallback note |
+| # | Fallback title | Fallback cut (today's primitives only) | Level | Fallback twist | Earlier note (superseded: the ladder's note plays) |
 |---|---|---|---|---|---|
 | 5 | Rubber Boards | Regular 90 x 45, board restitution 0.8, neon look | pro | **live boards**: everything bounces back into play | "Somebody swapped the boards for rubber. Bank it in." |
 | 6 | One Goal | Regular 90 x 45, first to 1 | pro | **sudden death**: one goal ends the scene | "One take, one goal. Whoever scores wins the scene." |
 | 7 | Wide Shot | Wide Rink 140 x 70, speed 8, first to 3 | pro | **the widest set** | "Widescreen. The far net is a long way off: get there first, three times." |
 | 8 | Everything We Shot | Regular 90 x 45, body checks, neon look | all_star | **the best cast**, hits allowed, lights up | "Final cut. Hits allowed, lights up, against the best cast we have." |
 
-The shipped `season.ladder.json` and `take-5..8.cartridge.json` are the fallbacks today. When A14 lands, take 5's file and line become "Second Wind";
-when A15 lands, 6 and 7; when both, 8. The full versions are sketched at the end of this file.
+At 13:40 all four designed takes 5-8 validate in Node (A14/A15 schema landed); whether they play is decided at load by the C++ loader. Measured curve for the designed 5-8: pending the 14:00 build.
+
 
 Why this order (the curve):
 - Difficulty: rookie 1-2, pro 3-7, all_star 8. Two easy takes teach the controls, five middle takes teach one system each at a fair level
   (the wide rink of take 7 is the hardest of them), take 8 is the final boss. A retake costs one match, so 25 % is a fair final boss.
   (Design had all_star on 7-8; the wide rink measured 0 % at all_star, so take 7 plays at pro.)
+- Take 3 note (R-0013): once lane A16's stick duels land (poke checks, lifts, fouls; bots check at pro and all_star, R-0014 2), take 3 becomes "stick duels": Regular, pro, checks and `rules.penalties` on. Same slot, same note.
 - Twist rhythm: rules of the match (1, 2) -> the body (3) -> the set (4) -> the player's power (5) -> the rules again, now as a twist (6) ->
   the ice itself (7) -> all of it (8). No take adds two new things; take 8 recombines.
 - Every take changes how a goal is scored, not only how the rink looks: shorter scene, the clock, the hit, the bank shot off a pillar, the boost

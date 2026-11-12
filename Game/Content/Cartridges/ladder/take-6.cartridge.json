@@ -1,10 +1,10 @@
 {
   "schema": "tj.cartridge/1",
   "id": "take-6",
-  "title": "One Goal",
+  "title": "The Last Word",
   "seed": 1,
   "theme": {
-    "name": "One Goal",
+    "name": "The Last Word",
     "mood_words": [
       "night",
       "crisp",
@@ -128,7 +128,7 @@
       "mass": 80,
       "glide_drag": 0.147,
       "brake_decel": 6,
-      "check_enabled": false
+      "check_enabled": true
     },
     "puck": {
       "radius_m": 0.12,
@@ -144,10 +144,13 @@
     },
     "rules": {
       "mode": "first_to",
-      "score_to_win": 1,
+      "score_to_win": 3,
       "goal_pause_frames": 120,
       "offside": false,
-      "penalties": false
+      "penalties": true,
+      "variants": {
+        "last_goal_double": true
+      }
     },
     "teams": [
       {

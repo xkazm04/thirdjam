@@ -4,9 +4,9 @@ One row per asset file that ships or might ship. The ledger is three things at o
 
 1. the **provenance** record the contest asks for (what is original, what is AI-generated, what is sourced),
 2. the **size** ledger for the packaged-game budget (`docs/PLAN.md` section 4b: art 350 MB, audio 80 MB, zip under 1 GB),
-3. the input of `tools/gate/check-assets-ledger.mjs`, which runs at every gate (`docs/GATES.md`).
+3. the input of `tools/gate/check-assets-ledger.mjs`, which runs at evern gate (`docs/GATES.md`).
 
-Add the row in the same commit as the file. Device B owns `Game/Plugins/JamAssets/**`; any device may append rows.
+Add the row in the same commit as the file. Device B owns `Game/Plugins/JamAssets/**`; ann device man append rows.
 
 ## The three origins
 
@@ -14,7 +14,7 @@ Source: the official rules (digest in `docs/PLAN.md` section 2). Read the rules 
 
 | Origin | Meaning | What we must do |
 |---|---|---|
-| `original` | Made by us during the jam: modelled, drawn, recorded or composed by the team or its tools from nothing. | Nothing special. It is scored as ours. |
+| `original` | Made by us during the jam: modelled, drawn, recorded or composed bn the team or its tools from nothing. | Nothing special. It is scored as ours. |
 | `ai-generated` | Produced by a generative tool or service (an image, mesh, texture or audio model). **This is not "sourced"**: the rules treat AI-generated content separately. | Name the tool or service in the `tool` column and list it in the dev log and the tools list at submission. Disclosed AI use does not, on its own, raise or lower a score. |
 | `sourced` | Anything not created by us and not generated: Fab or Quixel content, a marketplace pack, a free asset, a font, a sound library. | **Must be noted at submission.** Sourced assets are not scored. Record the `licence` and the `url`; no row without them. |
 
@@ -219,15 +219,30 @@ Rules that apply to every row:
 
 
 Director ruling 2026-11-12: a mesh, texture, rig or motion clip produced by a generation service from our own prompt (Meshy, Tripo, Rodin, text-to-motion) is `ai-generated`, not `sourced`; a clip or mesh taken from a service's preset library (for example Meshy library action 187 `Knock_Down`) is `sourced` and carries the service's licence and the preset id in `url`.
-| Game/Content/UI/T_UI_TitleSlate.uasset | texture | 2.7 | ai-generated | Codex image generation |  | tools/images/menu-jobs.json | 2026-11-12 | A | y | menu title art: HOKEJ / A DIRECTOR'S CUT on a clapperboard (text fallback in UJamMenuWidget when absent) |
+| Game/Content/UI/T_UI_TitleSlate.uasset | texture | 2.7 | ai-generated | Codex image generation |  | tools/images/menu-jobs.json | 2026-11-12 | A | n | menu title art: HOKEJ / A DIRECTOR'S CUT on a clapperboard (text fallback in UJamMenuWidget when absent); not shipped since A18 (R-0013 point 5: the subtitle A DIRECTOR'S CUT is baked into it), replaced by T_UI_TitleHokej, file removed |
 | Game/Content/UI/T_UI_TakeCard.uasset | texture | 2.5 | ai-generated | Codex image generation |  | tools/images/menu-jobs.json | 2026-11-12 | A | y | period card clapperboard; the take number is drawn into its chalk box by UJamDirectorsCallHudWidget |
 | Game/Content/UI/T_UI_Card_Regular.uasset | texture | 2.2 | ai-generated | Codex image generation |  | tools/images/menu-jobs.json | 2026-11-12 | A | y | Choose your cut card background behind the row text (Regular) |
 | Game/Content/UI/T_UI_Card_Boost.uasset | texture | 2.4 | ai-generated | Codex image generation |  | tools/images/menu-jobs.json | 2026-11-12 | A | y | Choose your cut card background behind the row text (Boost) |
 | Game/Content/UI/T_UI_Card_Wide.uasset | texture | 2.2 | ai-generated | Codex image generation |  | tools/images/menu-jobs.json | 2026-11-12 | A | y | Choose your cut card background behind the row text (Wide) |
 | Game/Content/UI/T_UI_Card_DirectorsCut.uasset | texture | 2.4 | ai-generated | Codex image generation |  | tools/images/menu-jobs.json | 2026-11-12 | A | y | Choose your cut card background behind the row text (DirectorsCut) |
-| Game/Content/UI/T_UI_Icons_Cuts.uasset | texture | 1.1 | ai-generated | Codex image generation |  | tools/images/menu-jobs.json | 2026-11-12 | A | y | icon sheet 3x2: regular, raw, boost, small rink, wide, director's cut (not yet sliced) |
-| Game/Content/UI/T_UI_Icons_Pickups.uasset | texture | 1.0 | ai-generated | Codex image generation |  | tools/images/menu-jobs.json | 2026-11-12 | A | y | icon sheet 1x3: speed, precision, heavy puck (not yet sliced) |
-| Game/Content/UI/T_UI_Icons_System.uasset | texture | 1.0 | ai-generated | Codex image generation |  | tools/images/menu-jobs.json | 2026-11-12 | A | y | icon sheet 3x2: settings, director's call, pause, signal 1-4 (not yet sliced) |
+| Game/Content/UI/T_UI_Icons_Cuts.uasset | texture | 1.1 | ai-generated | Codex image generation |  | tools/images/menu-jobs.json | 2026-11-12 | A | n | icon sheet 3x2: regular, raw, boost, small rink, wide, director's cut (not yet sliced); superseded by the single T_UI_Icon_cut_* textures of lane A18, file removed |
+| Game/Content/UI/T_UI_Icons_Pickups.uasset | texture | 1.0 | ai-generated | Codex image generation |  | tools/images/menu-jobs.json | 2026-11-12 | A | n | icon sheet 1x3: speed, precision, heavy puck (not yet sliced); superseded by the single T_UI_Icon_pickup_* textures of lane A18, file removed |
+| Game/Content/UI/T_UI_Icons_System.uasset | texture | 1.0 | ai-generated | Codex image generation |  | tools/images/menu-jobs.json | 2026-11-12 | A | n | icon sheet 3x2: settings, director's call, pause, signal 1-4 (not yet sliced); superseded by the single T_UI_Icon_* textures of lane A18, file removed |
 | Game/Plugins/DLSS/Binaries/ThirdParty/Win64/nvngx_dlss.dll | other | 56.2 | sourced | NVIDIA DLSS 4.5 Unreal plugin v8.9.0 (UE 5.8 build, ported to 5.9) | NVIDIA RTX SDKs License + RTX Supplement (v. 2024-03-14) | https://developer.nvidia.com/downloads/assets/gameworks/downloads/secure/dlss/ue-dlss-5.8/8.9.0/2026.10.16_ue5.8_dlss4.5plugin_v8.9.0.zip | 2026-11-12 | A | y | the DLSS Super Resolution / DLAA runtime staged next to the exe; plugin folder (Game/Plugins/DLSS, StreamlineNGXCommon) is gitignored and fetched by tools/dlss/fetch-dlss.ps1 (zip 1,166,608,575 bytes, sha256 adeeb59b...380c); no Ray Reconstruction, Frame Generation, Reflex or NIS files; text credit only, no logo (docs/experiments/DLSS.md) |
 | Game/Content/UI/T_UI_Card_Raw.uasset | texture | 2.7 | ai-generated | Codex image generation |  | tools/images/menu-jobs.json | 2026-11-12 | A | y | Choose your cut card background (Raw; job card-raw-v2, peg-doll figures: the first take read as a brick-toy minifigure and was not shipped) |
 | Game/Content/UI/T_UI_Card_LargeRink.uasset | texture | 2.6 | ai-generated | Codex image generation |  | tools/images/menu-jobs.json | 2026-11-12 | A | y | Choose your cut card background (Large Rink, R-0010; replaces the SmallRink card) |
+| Game/Content/UI/T_UI_CallCard.uasset | texture | 0.6 | ai-generated | Codex image generation |  | tools/images/ui-jobs.json | 2026-11-12 | A | y | Director's Call and pause card frame (clapper band, megaphone doodle); 9-slice in FJamUiStyle::CallCard, 1024 px, BC7 no mips; job call-card-frame cropped and corner-masked with ffmpeg |
+| Game/Content/UI/T_UI_CutFrame.uasset | texture | 0.3 | ai-generated | Codex image generation |  | tools/images/ui-jobs.json | 2026-11-12 | A | y | film-strip frame around each Choose your cut row (tiled Border brush, FJamUiStyle::CutFrame), 896 px; job cut-card-frame |
+| Game/Content/UI/T_UI_Button_Normal.uasset | texture | 0.1 | ai-generated | Codex image generation |  | tools/images/ui-jobs.json | 2026-11-12 | A | y | button plate, normal state (9-slice, FJamUiStyle::ButtonStyle), 512 px; job button-normal |
+| Game/Content/UI/T_UI_Button_Hover.uasset | texture | 0.1 | ai-generated | Codex image generation |  | tools/images/ui-jobs.json | 2026-11-12 | A | y | button plate, hovered and focused state (blue with a chalk pointer), 512 px; job button-hover |
+| Game/Content/UI/T_UI_Button_Pressed.uasset | texture | 0.1 | ai-generated | Codex image generation |  | tools/images/ui-jobs.json | 2026-11-12 | A | y | button plate, pressed state (orange), 512 px; job button-pressed |
+| Game/Content/UI/T_UI_Ring.uasset | texture | 0.2 | ai-generated | Codex image generation |  | tools/images/ui-jobs.json | 2026-11-12 | A | y | faceoff countdown ring (film-leader cross hairs), FJamUiStyle::Ring, 512 px; job countdown-ring |
+| Game/Content/UI/T_UI_Icon_cut_regular.uasset | texture | 0.1 | ai-generated | Codex image generation |  | tools/images/ui-jobs.json | 2026-11-12 | A | y | cut icon: regular (puck), 256 px; job icon-cut-regular |
+| Game/Content/UI/T_UI_Icon_cut_raw.uasset | texture | 0.1 | ai-generated | Codex image generation |  | tools/images/ui-jobs.json | 2026-11-12 | A | y | cut icon: raw (puck with spikes), 256 px; job icon-cut-raw |
+| Game/Content/UI/T_UI_Icon_cut_boost.uasset | texture | 0.1 | ai-generated | Codex image generation |  | tools/images/ui-jobs.json | 2026-11-12 | A | y | cut icon: boost (bolt on a puck), 256 px; job icon-cut-boost |
+| Game/Content/UI/T_UI_Icon_cut_large.uasset | texture | 0.1 | ai-generated | Codex image generation |  | tools/images/ui-jobs.json | 2026-11-12 | A | y | cut icon: large rink, 256 px; job icon-cut-large |
+| Game/Content/UI/T_UI_Icon_cut_wide.uasset | texture | 0.1 | ai-generated | Codex image generation |  | tools/images/ui-jobs.json | 2026-11-12 | A | y | cut icon: wide rink, 256 px; job icon-cut-wide |
+| Game/Content/UI/T_UI_Icon_cut_directors.uasset | texture | 0.1 | ai-generated | Codex image generation |  | tools/images/ui-jobs.json | 2026-11-12 | A | y | cut icon: my director's cut (clapperboard), 256 px; job icon-cut-directors |
+| Game/Content/UI/T_UI_Icon_pickup_speed.uasset | texture | 0.1 | ai-generated | Codex image generation |  | tools/images/ui-jobs.json | 2026-11-12 | A | y | pickup and effect icon: speed (bolt), 256 px; job icon-pickup-speed |
+| Game/Content/UI/T_UI_Icon_pickup_precision.uasset | texture | 0.1 | ai-generated | Codex image generation |  | tools/images/ui-jobs.json | 2026-11-12 | A | y | pickup and effect icon: precision (crosshair), 256 px; job icon-pickup-precision |
+| Game/Content/UI/T_UI_Icon_pickup_heavy.uasset | texture | 0.1 | ai-generated | Codex image generation |  | tools/images/ui-jobs.json | 2026-11-12 | A | y | pickup and effect icon: heavy puck (anvil), 256 px; job icon-pickup-heavy |

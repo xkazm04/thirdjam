@@ -169,3 +169,60 @@ to be implemented to start the game. / No need to mention Director's cut in the 
 1. `game.ladder.takes[].fallback` (a preset id) is added to C-0005: the take plays its fallback when its designed cartridge fails validation or references a primitive that has not landed.
 2. The ladder as measured ships: levels rookie 1-2, pro 3-7, all_star 8; take 3's checks become a two-sided feature when lane A16's brain patch (bots check at pro and all_star) lands.
 3. "Take" names both the in-match period and a season level; the menu and the end card use the take's title to keep them apart. Accepted.
+
+## R-0015 (H7.7, 2026-11-12 13:45): bark register (operator: "you can be also more offensive with the mockery. The current scripts are too safe and childish")
+1. The bank is regenerated at a **harsher register**: cutting sarcasm about the player's skating, aim, speed, courage and decisions; bravado; gloating; genuine annoyance from teammates;
+   the voice of a bored veteran, not a kids' show. **Mild language is allowed sparingly** ("damn", "hell", "crap", "ass" as in "kick your ass"; at most one in ten lines), which the official
+   rules' Teen (13+) bar tolerates. Still forbidden: slurs of any kind, sexual content, threats of real harm, references to real people, brands, teams, bodies or identities, anything targeting
+   who the player is rather than how they play.
+2. Tones become `mock`, `savage`, `complain`, `bravado`, `encourage`, `praise`; `game.barks.intensity`: `quiet` = encourage/praise/complain only, `normal` = mock + the rest, `loud` = savage
+   allowed. Regular ships `normal`; Raw ships `loud`. The filter keeps its hard list and adds the mild-words quota; `REVIEW.md` is regenerated for the Director's skim.
+
+## R-0016 (H8, 2026-11-12 14:05): answers to device B's handoffs B-to-A-0007..0011 (second merge window, dev-b at 5886a1b)
+1. **0007 wiring accepted.** The binder (A5, R-0002) already sets `User.Strength`, `User.Colour` and the MetaSound `Strength` on exactly B's names; lane A16 (owner of the pawns) attaches the
+   puck kit: `SM_PuckDisc` as a child of the puck with `bAffectDynamicIndirectLighting=false`, `CastShadow=false`, stencil 0, no collision, plus `NS_puck_trail`. A one-editor PIE check on A proves both.
+2. **0008 accepted:** track T-B1 is **B's scripted original skater** (5.3k tris, 24 mannequin-named bones with a real root, ten exactly-looping clips, a real stick; `original` in the ledger);
+   the Fab pack is out of the plan. `game.skater.visual` IS read since `432791b`: `AHokejGameMode` loads `/JamAssets/Skaters/BP_SkaterVisual_TB1.BP_SkaterVisual_TB1_C` for `humanoid_b1` and
+   `..._TB2_C` for `generated_b2` (B's paths match). The promotion rule runs with `hockey.test.visual-b2` through the Jam.Bot suite: lane A16 adds `Jam.Bot.VisualSwap` (both tracks load, bots pass).
+3. **0009 answered:** (1) toy `Emissive` reset bug: A16 fixes `SetBoost(NAME_None)` to restore 2.2; (2) the persistent sky light and the off directional light in `Rink.umap` are hidden by
+   `ULookTierSwitcher::SetTier` when a rig is loaded (lane A15); (3) A's under-ice floor moves to z = -20 cm (A15, `RinkActor`); (4) the puck is **radius 0.12 m = 24 cm diameter** by design,
+   nothing to do; `GAME.md` says "0.12 m" meaning radius; (5) blue lines: the rule is **one third of the half-length** on every rink, goal lines at `half-length - 4 m`; A15 drives `BlueLineFrac`
+   (0.3333) and a new `GoalLineOffsetCm` (400) on the dynamic ice instance so B's paint and A's triggers agree at any size.
+4. **0010 closed:** `MenuStyle.h` and `Menu.umap` have been in git since `ec82e81` (12:40); B's check ran two minutes earlier.
+5. **0011 accepted:** `SetTier` streams the rig with uniform scale `s = rink.length_m / 90`, then scales every `ULocalLightComponent`'s intensity by `s*s` and attenuation by `s`; re-applied on
+   cartridge load and on a Director's Call that changes the rink (lane A15). B authors rigs for 90 x 45 from now on.
+6. **GPU hang verdict:** B could not reproduce it in 7 single-editor runs and hardened the rig anyway (dressing casters off, spots tightened, VSM load about 80 pages); A's dumps were page faults under
+   4-5 editors. **Lane A10 runs the one-editor 60 s soak on A in the 14:30 window** with B's grep list and `stat gpu`; the shipped tier stays `l2_night` unless it hangs with one editor.
+7. **Operator items from B:** Hyper3D's licence wording for shipping Rodin output from this account, and whether the prize needs Rodin content in the build or only in the pipeline (B shipped
+   seven props and the T-B2 base mesh through Rodin, so both readings are covered); the voice test on B needs a human at the microphone.
+
+## R-0017 (H8.1, 2026-11-12 14:15): lane A14's names and seams; lane A12's register
+1. Accepted as implemented: `effects[].zone`, `kind` enum (five looks + `custom`), `icon` enum (12), `max_on_ice` default 1, custom-effect magnitude as a deviation scale, `director` as any live
+   cut or call with the human as source, triggers read from the sim's frame events (the bus stays cosmetic). Built-ins live under `Game/Content/Designer/builtin-effects.json` (A's folder).
+2. `reverse_other` gets a real stat: lane A16 adds `EJamStat::SkaterControlsSign` (the sim multiplies the human's and bots' move input by it); until then the half-speed fallback stands.
+3. The editor crash on `jam.say` (LoadCut from the Designer callback inside the TEDS processing window): lane A7 defers `LoadCut` to the next tick.
+4. Brain: `FJamAIWorld` gains `Pickups[] { Kind, Pos }` filled by the game mode; only `all_star` detours for a pickup within 8 m, never while carrying and never when the puck is closer
+   (lane A3 resumes for this, for pass awareness and interception once A16's pass lands, for poke/lift use at pro and all_star, foul avoidance, and the last-man-as-goalie rule).
+5. Barks: the regenerated register ships; Regular `normal`, Raw `loud`; the Director skims `REVIEW.md` for cuts before H24. A's TextToSpeech package delta is measured at the next green Shipping package.
+
+## R-0018 (H8.2, 2026-11-12 14:20): lane A16's names (seams, stick, faceoff)
+Accepted as implemented: `FJamRuleRequest { Cause, Action }` as the queued form of SpawnPickup / ApplyModifier; `FJamSimEvent::Text` as the announce side channel; `OnFrame` fires every
+frame and the hook filters by `every_frames`; first-to mode's `Period` advances only on `EndPeriod` (the TAKE card's "1 + lead" stays presentation); `ShrinkRink` with Value > 1 reads as
+1/Value and `GrowRink` the mirror; `UJamCartridge::ApplyValueKey` as the one values-to-config mapping; `game.stick` defaults (reach 1.6 m, poke window 8 frames, lift 1.0 m, stumble 20,
+sensitivity 1); the faceoff as a sim phase with a 90-frame countdown; fouls park the fouler 300 frames at the side boards and give a faceoff at the fouler's end. The Determinism
+baseline hash moves with R-0013 (the faceoff changes play from frame 1); the new baseline is recorded by A16's `Jam.Core.Determinism` once linked.
+
+## R-0019 (H8.3, 2026-11-12 14:25): lane A15's names and the zone seam
+Accepted: `rules.hooks[].after_frame`; `score: { at_least, at_most, lead_at_least }`; event `shot_blocked` (Who = shooter, Kind = zone id) joins C-0003; B assets `MI_Zone_<kind>` and
+`MI_Toon_Bumper` (handoff to B). The zone seam `IJamZoneSource` (`JamZones.h`) is implemented by lane A16 in the sim: `SetZoneSource`, ice speed/friction multipliers per skater and puck,
+`BumpPuck` per substep, `BlocksShot` in `TryShoot`, pickups through `AllowsPickupAt`; obstacles `bumper` as a circle with restitution 1.6, `goal_shield` as a 0.3 m box. Brain (A3):
+`FJamAIWorld` gains `SlowIce[] { Centre, Radius }`; the carrier steers around a slow circle within 3 m of its line to the net; bots never shoot from inside `no_shoot`.
+
+## R-0020 (H8.4, 2026-11-12 14:30): operator decisions on licence, voice and verdict lists
+1. **Rodin licence agreed**: Rodin output ships; `docs/SUBMISSION.md` lists Hyper3D Rodin under tools used; the ledger rows stand.
+2. **Voice parked behind keys**: team signals ship on keys 1-4 and the d-pad; the SAPI voice path stays off by default and is not tested until the keyed signals prove fun in play
+   (handoff A-to-B-0005 moves to "later"); the Settings row stays with its status caption.
+3. **Verdict lists go to the operator as review pages**: any list of items that needs a human verdict (bark lines, feel proposals, generated art, cut sentences, cut lines) is rendered by
+   `tools/review/build.mjs` into one self-contained HTML page: grouped items, pass / reject / comment per item, a "listen" button for text lines (browser speech synthesis), filters by
+   group, a running count, and an export line (JSON and a markdown summary) the operator pastes back; decisions are remembered in the browser. The Director publishes it as a private
+   artifact and applies the exported decisions. First instance: the bark bank.
