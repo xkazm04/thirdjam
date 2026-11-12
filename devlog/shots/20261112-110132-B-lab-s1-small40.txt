@@ -1,0 +1,1 @@
+S1 figures at ~40 px tall (4x nearest), front+side each: A, B, C, figure 1
