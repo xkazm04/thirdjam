@@ -1,5 +1,6 @@
 #include "CameraFollow.h"
 #include "Engine/World.h"
+#include "Engine/GameInstance.h"
 #include "JamCartridge.h"
 
 FJamCameraSettings FJamCameraSettings::FromCartridge(const FJamCameraConfig& C)
@@ -111,6 +112,13 @@ void UJamFollowCamera::BeginPlay()
 			StepSimFrame(P->GetFrame());
 		}
 	}
+	// Lane A33: the punch listens to the bus for the human's checks (DeliverEvents runs before PushPresentation, so the kick starts in the same sim frame).
+	if (UWorld* W = GetWorld())
+	{
+		UGameInstance* GI = W->GetGameInstance();
+		Bus = GI ? GI->GetSubsystem<UJamEventBus>() : nullptr;
+		if (Bus) Bus->OnJamEvent.AddDynamic(this, &UJamFollowCamera::OnJamEvent);
+	}
 }
 
 void UJamFollowCamera::EndPlay(const EEndPlayReason::Type Reason)
@@ -119,7 +127,46 @@ void UJamFollowCamera::EndPlay(const EEndPlayReason::Type Reason)
 	{
 		P->OnSimFrame.Remove(FrameHandle);
 	}
+	if (Bus)
+	{
+		Bus->OnJamEvent.RemoveDynamic(this, &UJamFollowCamera::OnJamEvent);
+		Bus = nullptr;
+	}
 	Super::EndPlay(Reason);
+}
+
+void UJamFollowCamera::PunchOffset(int32 FrameIndex, float Strength, float Sign, float& OutRightCm, float& OutRollDeg)
+{
+	OutRightCm = 0.f;
+	OutRollDeg = 0.f;
+	if (FrameIndex < 0 || FrameIndex >= PunchFrames) return;
+	const float K = 1.f - (float)FrameIndex / (float)PunchFrames;   // 1, 5/6, ... 1/6, then nothing
+	const float S = FMath::Max(0.5f, FMath::Clamp(Strength, 0.f, 1.f));
+	const float Sg = Sign < 0.f ? -1.f : 1.f;
+	OutRightCm = PunchCm * S * K * Sg;
+	OutRollDeg = PunchRollDeg * S * K * Sg;
+}
+
+void UJamFollowCamera::StartPunch(float Strength, float Sign)
+{
+	PunchLeft = PunchFrames;
+	PunchStrength = FMath::Clamp(Strength, 0.f, 1.f);
+	PunchSign = Sign < 0.f ? -1.f : 1.f;
+}
+
+void UJamFollowCamera::OnJamEvent(FName Event, const FJamEventPayload& Payload)
+{
+	// A check the human lands (check, Who = checker) or takes (knockdown, Who = victim, Kind = check). AI checks out of frame kick nothing.
+	if (LastHumanIndex < 0 || Payload.Who != LastHumanIndex) return;
+	const bool bLanded = Event == JamEvents::Check;
+	const bool bTaken = Event == JamEvents::Knockdown && Payload.Kind == FName(TEXT("check"));
+	if (!bLanded && !bTaken) return;
+	// The side of the contact seen by the camera decides the kick's direction.
+	const float Yaw = FMath::DegreesToRadians(Filter.YawDeg);
+	const FVector2D Right(-FMath::Sin(Yaw), FMath::Cos(Yaw));
+	const FVector2D ToContact(Payload.Where.X / 100.f - LastHumanPosM.X, Payload.Where.Y / 100.f - LastHumanPosM.Y);
+	const float Side = FVector2D::DotProduct(ToContact, Right);
+	StartPunch(Payload.Strength, Side < 0.f ? -1.f : 1.f);
 }
 
 void UJamFollowCamera::StepSimFrame(const FJamPresentationFrame& Frame)
@@ -136,11 +183,23 @@ void UJamFollowCamera::StepSimFrame(const FJamPresentationFrame& Frame)
 			return;
 		}
 		const FJamPresentationSkater& S = Frame.Skaters[Frame.HumanIndex];
+		LastHumanIndex = Frame.HumanIndex;
+		LastHumanPosM = S.PosM;
 		Filter.Step(S.PosM, S.YawDeg, Config.LagFrames);
 		PoseCurrent = ComputeThirdPersonPose(Config, Filter.PivotM, Filter.YawDeg);
 		// Never outside the boards: pull in along the view axis (focus = the filtered pivot at shoulder height).
 		const FVector Focus(Filter.PivotM.X * 100.0, Filter.PivotM.Y * 100.0, 90.0);
 		PoseCurrent.SetLocation(ClampInsideBoards(Focus, PoseCurrent.GetLocation(), Frame.RinkLengthM, Frame.RinkWidthM));
+	}
+	// Lane A33: the punch, one sim frame at a time, on top of the clamped pose (interpolated like the rest by TickComponent).
+	if (PunchLeft > 0)
+	{
+		float RightCm = 0.f, RollDeg = 0.f;
+		PunchOffset(PunchFrames - PunchLeft, PunchStrength, PunchSign, RightCm, RollDeg);
+		--PunchLeft;
+		const FQuat Rot = PoseCurrent.GetRotation();
+		PoseCurrent.SetLocation(PoseCurrent.GetLocation() + Rot.GetRightVector() * RightCm);
+		PoseCurrent.SetRotation(Rot * FRotator(0.f, 0.f, RollDeg).Quaternion());
 	}
 	if (!bHavePose)
 	{

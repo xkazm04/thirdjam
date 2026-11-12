@@ -153,3 +153,11 @@
 - RESOURCES 19:44 cpu 96% ram 30.6/63GB gpu 75 %, 9338 MiB, 46 editors 3 cmd 0 ubt 0 free 624GB
 
 - link green 19:52: main 356dc63 (humanoid_b1 default, foul grace, lockstep v2) pushed.
+
+- link green 20:03: main 74c7c0f (A3, A31, A32, A37) pushed.
+
+## H12 (20:07) four lanes on main at 74c7c0f; H13 and H14 packages; B's blend space reverted
+- 74c7c0f: A3's rookie calibrations (novice 80 % at rookie, 17 of 20 inside two minutes) with the playtester gates (R-0029, 10 % faceoff budget), A31 (B-to-A-0019/0021/0023/0024/0025 done: figure class per tier, numbers, floor, glass, stanchions, bot charge, goalie stance, p4_broadcast tier with its cost, pickup props), A32 (the commentator, 340 lines embedded, seven new events, music and skate loops), A37 (50 cuts play, 3 fixed). Earlier tonight: 356dc63 humanoid_b1 default + foul grace + lockstep v2; a1530e5/R-0030 bake-off.
+- Packages: `Hokej_Hokej_H13` (19:56, 258.2 MB) and `Hokej_Hokej_H14` (20:05, 258.3 MB), no usage-flag or load errors. H12 failed on build-tool collisions; packages now pass `-ubtargs=-WaitMutex`.
+- **B: A-to-B-0010 is urgent**: your `BS_SkaterTB2_P4_Skate` at 9c65f51 fails the cook (sample with no animation); reverted on main to d464291 until you fix it. B-to-A-0019..0027 answered; A31's answers in `docs/experiments/B-ASKS-2.md`; remove your 66 `Con_` stanchions (A's RinkActor spawns them).
+- running: A3 pass 2 (pro / all_star vs the regular and good playtesters), A39 payoffs, A40 camera clamp, A41 zone trigger and sweep wiring. A33 (tackling that reads) is on disk, next gate. Lanes A30, A31, A32, A34, A37, A38 closed.

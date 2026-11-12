@@ -10,6 +10,8 @@
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
 #include "NiagaraSystem.h"
+#include "JamEventBus.h"
+#include "Engine/GameInstance.h"
 
 namespace
 {
@@ -337,9 +339,45 @@ void AJamPuck::InitPuck(double RadiusM, const FLinearColor& Colour)
 	}
 }
 
+double AJamPuck::PopLiftM(double FramesSincePop, double Strength01)
+{
+	if (FramesSincePop < 0.0 || FramesSincePop >= (double)PopFrames) return 0.0;
+	const double S = 0.5 + 0.5 * FMath::Clamp(Strength01, 0.0, 1.0);
+	return PopHeightM * S * FMath::Sin(PI * FramesSincePop / (double)PopFrames);
+}
+
+bool AJamPuck::IsStrip(int32 PrevLastTouch, const FJamPuckState& P)
+{
+	// A check strip (UJamSim::KnockDown) clears LastTouch and leaves the puck moving from where it was; a faceoff reset clears it too but pins the puck still on the dot.
+	return PrevLastTouch >= 0 && P.LastTouch == -1 && P.Vel.Size() > 0.2 && FVector2D::Distance(P.Pos, P.PrevPos) < 0.5;
+}
+
 void AJamPuck::ApplyRender(const FJamPuckState& P, float Alpha)
 {
-	SetActorLocation(Lerp2D(P.PrevPos, P.Pos, Alpha, HalfHeightM));
+	// Lane A33: the sim frame comes from the bus (set by the game mode before the visuals are driven); the pop counts those frames, never wall clock.
+	int64 SimFrame = LastSimFrame;
+	if (UGameInstance* GI = GetGameInstance())
+	{
+		if (const UJamEventBus* Bus = GI->GetSubsystem<UJamEventBus>()) SimFrame = Bus->GetSimFrame();
+	}
+	if (SimFrame != LastSimFrame)
+	{
+		if (IsStrip(PrevLastTouch, P))
+		{
+			PopStartFrame = SimFrame;
+			PopStrength = FMath::Clamp(P.Vel.Size() / 6.0, 0.0, 1.0);
+		}
+		PrevLastTouch = P.LastTouch;
+		LastSimFrame = SimFrame;
+	}
+	double LiftM = 0.0;
+	if (PopStartFrame >= 0 && SimFrame >= 0)
+	{
+		const double Since = (double)(SimFrame - PopStartFrame) + FMath::Clamp(Alpha, 0.f, 1.f);
+		LiftM = PopLiftM(Since, PopStrength);
+		if (Since >= (double)PopFrames) PopStartFrame = -1;
+	}
+	SetActorLocation(Lerp2D(P.PrevPos, P.Pos, Alpha, HalfHeightM + LiftM));
 }
 
 void AJamPuck::ApplyRenderAt(const FVector& WorldCm)

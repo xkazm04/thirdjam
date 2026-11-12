@@ -1,0 +1,93 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-12T18:52:13.152Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a33/docs/experiments/img/tackling/a33-hit3-behind-f1406.jpg",
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "label": "B",
+          "path": ".claude/worktrees/a33/Game/Saved/Screenshots/WindowsEditor/a33-win-f001412.png",
+          "width": 1280,
+          "height": 720
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2297,
+      "usage": {
+        "prompt": 2897,
+        "output": 457,
+        "thoughts": 0,
+        "total": 3354,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00389,
+      "ms": 7104,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [
+              {
+                "where": "Center and bottom-left quadrant, skater figures",
+                "what": "Both skaters are completely unlit pure black silhouettes with zero diffuse shading, highlights, or team jersey colors rendered.",
+                "severity": 5,
+                "confidence": 0.99
+              },
+              {
+                "where": "Bottom-left quadrant, left skater",
+                "what": "The left skater figure appears cut off and sunken into the ice surface without visible legs or skates.",
+                "severity": 4,
+                "confidence": 0.95
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still B",
+            "findings": [
+              {
+                "where": "Center and bottom-left quadrant, skater figures",
+                "what": "Both skater figures are rendered as completely unlit solid black silhouettes with no jersey textures or surface shading.",
+                "severity": 5,
+                "confidence": 0.99
+              },
+              {
+                "where": "Center quadrant, central skater figure",
+                "what": "The central skater is floating significantly above the ice surface well above its circular particle effect.",
+                "severity": 4,
+                "confidence": 0.95
+              },
+              {
+                "where": "Bottom-left quadrant, left skater",
+                "what": "The left skater is partially submerged below the ice plane, clipping off the lower body.",
+                "severity": 4,
+                "confidence": 0.95
+              },
+              {
+                "where": "Bottom-left quadrant, above the left skater",
+                "what": "Two disconnected black geometric fragments or chevrons are floating in mid-air above the head of the left skater.",
+                "severity": 3,
+                "confidence": 0.9
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=a33-hit3-behind-f1406.jpg B=a33-win-f001412.png (gemini-3.8-flash, in 2897 out 457 tokens, ~$0.0039, 7.1 s)\n- stills:\n  - label: Still A; clean: false\n    - findings:\n      - where: Center and bottom-left quadrant, skater figures; what: Both skaters are completely unlit pure black silhouettes with zero diffuse shading, highlights, or team jersey colors rendered.; severity: 5; confidence: 0.99\n      - where: Bottom-left quadrant, left skater; what: The left skater figure appears cut off and sunken into the ice surface without visible legs or skates.; severity: 4; confidence: 0.95\n  - label: Still B; clean: false\n    - findings:\n      - where: Center and bottom-left quadrant, skater figures; what: Both skater figures are rendered as completely unlit solid black silhouettes with no jersey textures or surface shading.; severity: 5; confidence: 0.99\n      - where: Center quadrant, central skater figure; what: The central skater is floating significantly above the ice surface well above its circular particle effect.; severity: 4; confidence: 0.95\n      - where: Bottom-left quadrant, left skater; what: The left skater is partially submerged below the ice plane, clipping off the lower body.; severity: 4; confidence: 0.95\n      - where: Bottom-left quadrant, above the left skater; what: Two disconnected black geometric fragments or chevrons are floating in mid-air above the head of the left skater.; severity: 3; confidence: 0.9"
+    }
+  ]
+}

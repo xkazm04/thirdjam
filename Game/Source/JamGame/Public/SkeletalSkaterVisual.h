@@ -8,6 +8,7 @@
 #include "CoreMinimal.h"
 #include "Components/PoseableMeshComponent.h"
 #include "JamSkaterVisual.h"
+#include "JamEventBus.h"
 #include "SkeletalSkaterVisual.generated.h"
 
 class UAnimSequence;
@@ -21,6 +22,11 @@ enum class ESkaterSeq : uint8
 	Idle, Skate, Carry, AimLeft, AimRight, Poke, Lift, ShootWindup, ShootRelease, Check, KnockedDown, GetUp, FaceoffReady, Draw,
 	GoalieLeft, GoalieCentre, GoalieRight, SkateLeft, SkateRight, Count
 };
+
+// Lane A33 (R-0028 point 3): where a hit came from, seen from the one who takes it (the sim's rule in UJamSim::CollideSkaters: the push along the
+// facing is a hit from behind, against it from the front, else the side the checker came from). Front plays the authored backward fall;
+// the other three tip the whole toy toward the push, because the figure has one fall sequence (docs/experiments/TACKLING.md).
+enum class ESkaterHitKind : uint8 { Front, SideL, SideR, Behind };
 
 // Everything the layer choice needs for one sim frame. Frames since a trigger are -1 when it never happened.
 struct JAMGAME_API FSkelInputs
@@ -43,6 +49,23 @@ struct JAMGAME_API FSkelInputs
 	bool bPokeClean = true;
 	int32 SinceLift = -1;
 	int32 SinceDraw = -1;
+	// Lane A33: the hit that knocked this skater down (kind from the push direction, strength 0..1 from the knockdown event, 0.5 when none arrived), the
+	// frames the fall holds its first frame (jam.HitHoldFrames, 0 = off), a board hit (frames since, strength), a mistimed poke's stumble length.
+	ESkaterHitKind HitKind = ESkaterHitKind::Front;
+	float HitStrength = 0.5f;
+	int32 KnockHold = 0;
+	int32 SinceBoard = -1;
+	float BoardStrength = 0.f;
+};
+
+// Lane A33: the whole-body reaction on top of the sampled pose, degrees and centimetres, a pure function of the inputs (tests read it).
+struct JAMGAME_API FSkelReaction
+{
+	float TipDeg = 0.f;          // the toy tips this far toward the push (side / behind falls; 0 for the authored front fall)
+	float BoardLeanDeg = 0.f;    // lean into the boards after a hard board hit (12 frames)
+	float StumblePitchDeg = 0.f; // forward pitch during the stumble after a mistimed poke
+	float StumbleYawDeg = 0.f;   // yaw wobble during the stumble
+	float StickDropCm = 0.f;     // the stick root drops this far (the stick reads low during the stumble)
 };
 
 // The whole-body layer for one frame: which sequence, at which frame, and how much the stick aim blend may still move the stick bones.
@@ -71,6 +94,14 @@ public:
 	static const TCHAR* SeqName(ESkaterSeq Seq);
 	static FSkelLayer ChooseLayer(const FSkelInputs& In);
 	static float LeanTarget(float Speed, float TurnRate);
+	// Lane A33: the hit kind from the push direction (rink x, z; unit) and the facing yaw (degrees, Unreal); the sim's thresholds (0.5 along the facing).
+	static ESkaterHitKind HitKindFor(float DirX, float DirZ, float FacingYawDeg);
+	static const TCHAR* HitKindName(ESkaterHitKind Kind);
+	static FSkelReaction ReactionFor(const FSkelInputs& In);
+	// Frames of the stumble after a mistimed poke (schema stick.stumble_frames default; the sim's own value is not visible to the visual) and the fast poke before it.
+	static constexpr int32 StumbleFrames = 20;
+	static constexpr int32 MissPokeFrames = 6;
+	static constexpr int32 BoardLeanFrames = 12;
 
 	// ---- IJamSkaterVisual ----
 	virtual void SetTeam_Implementation(int32 TeamId, FLinearColor Colour) override;
@@ -102,14 +133,21 @@ public:
 
 	int32 GetLocalFrame() const { return LocalFrame; }
 	const FSkelLayer& GetLastLayer() const { return LastLayer; }
+	const FSkelReaction& GetLastReaction() const { return LastReaction; }
+	ESkaterHitKind GetHitKind() const { return HitKind; }
+	float GetHitStrength() const { return HitStrength; }
 	float GetLastLeanDeg() const { return Lean; }
 	bool IsFigureReady() const { return bReady; }
 
 protected:
 	virtual void OnRegister() override;
+	virtual void OnUnregister() override;
 
 private:
 	void BuildFigure();
+	// Lane A33: cosmetic read of the event bus (knockdown strength, board hits for this skater); nothing feeds back.
+	UFUNCTION() void OnJamEvent(FName Event, const FJamEventPayload& Payload);
+	int32 OwnerSimIndex() const;
 	void ApplyPose(const FRotator& Facing);
 	void SampleLocal(ESkaterSeq Seq, float Frame, int32 MeshBone, FTransform& Out) const;
 	FSkelInputs MakeInputs() const;
@@ -156,6 +194,17 @@ private:
 	FLinearColor TeamColour = FLinearColor(0.5f, 0.5f, 0.5f);
 	int32 Number = 0;
 	FSkelLayer LastLayer;
+	FSkelReaction LastReaction;
+	// Lane A33 reaction state.
+	ESkaterHitKind HitKind = ESkaterHitKind::Front;
+	float HitStrength = 0.5f;
+	float PendingHitStrength = -1.f;   // the knockdown event's strength, consumed by the next SetKnockedDown(true)
+	int32 KnockHold = 0;
+	float FacingYawDeg = 0.f;
+	int32 BoardStart = -1;
+	FVector2D BoardDir = FVector2D(0.f, 1.f);
+	float BoardStrength = 0.f;
+	UPROPERTY(Transient) TObjectPtr<UJamEventBus> Bus;
 	bool bReady = false;
 	bool bBuildTried = false;
 	// Cost probe (log only, never feeds the pose): seconds spent in ApplyPose since the last SKELVIS line, printed every 600 frames.

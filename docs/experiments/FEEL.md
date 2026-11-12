@@ -229,3 +229,28 @@ port 8010 free, no other editor running at any point of the soak.
 | charged shot | tap 17.85, half hold 21.81, full 25.78 m/s (speed 18 + bonus 8, cap 30) | measured in Jam.Core.FeelDepth |
 | faceoff countdown | 90 frames, clock paused, puck pinned, early press loses, bot centres press at 6..18 frames, passive human = seeded coin | R-0013 point 2; the brain patch (A3) replaces the sim's bot timing |
 | foul grace (`stick.foul_grace_frames` 12) | a check on a skater that carried the puck within the last 12 frames is not `foul_no_puck` (from behind still is) | R-0029 point 3: the A34 playtester took two of three rookie fouls right after the victim lost the puck; Jam.Core.Stick: clean at +6 frames, a foul at +20 |
+
+## Lane A33: tackling that reads (R-0028 point 3; cosmetic over the sim, no calibration applied; 2026-11-12 19:40)
+
+Full page: `docs/experiments/TACKLING.md` (payloads, the reaction table, proof, eyes, B's handoff draft). The sim changed only in what it announces; **the Determinism
+baseline is unchanged and re-recorded here**: `Jam.Core.Determinism` hockey.regular seed 1 frame 600 `884f1c9a85793dd5`, hockey.raw `6027ac7eba473026` (headless,
+`Game/logs/a33-tests-1.log` in worktree a33, 19:27); `Jam.Bot.VisualSwap` `1871c1d348fa8b41` on generated_b2 / humanoid_b1 / toy_skeletal.
+
+| What | Value | Measured / why |
+|---|---|---|
+| check direction (`check` Kind) | `front` / `side_l` / `side_r` / `behind` from the push against the victim's facing, 0.5 bands (60 degrees) | 15 of 15 scripted collisions classify as set up (Jam.Core.TacklingEvents: 5 directions x 6 / 9 / 12 m/s) |
+| check strength | closing / `skater.speed` (unchanged): raw 6 m/s start -> 0.698 (5.6 m/s at contact after 5 frames of glide, raw's top speed 8.0), 9 and 12 -> 1.0; the proof hit at 9.3 m/s head-on -> 1.0 | the clamp at 1 flattens every hit above the top speed: a harder skater reads the same as a top-speed one (fine for P2) |
+| skater `board` event | >= 4 m/s into the boards; Strength = normal speed / `skater.speed` | a 6 m/s start 2 m out arrives at 4.15 m/s (0.519 on raw's 8.0); bots hit the end boards at 0.83-1.0 in bunches when a puck is dumped (3 within 7 frames in the proof run) |
+| front fall | authored 40-frame fall at 0.85 + 0.3 x strength (a 1.0 hit lands 2 frames sooner than a 0.5 one), back to the push over 6 frames, 20-frame get-up | the only authored fall; strength is read from the `knockdown` event on the bus |
+| side / behind fall | the toy tips 88 degrees toward the push over 14 frames (3 + 3 bounce), untips over 20 | the code figure's `KnockTipDeg` curve on the skeletal toy |
+| board lean | 12 frames, 10 + 6 x strength degrees into the boards | |
+| stumble (mistimed poke) | sim 20 frames (unchanged); visual: 6-frame jab, then 20 frames of 12 degree pitch, 5 degree wobble, stick 25 cm low | the old visual showed 8 frames of get_up |
+| camera punch | 6 frames, 2 cm / 0.6 degrees x max(0.5, strength), linear decay; human's checks only; no time dilation | |
+| puck pop | 18 frames (0.3 s), 12.5-25 cm by the puck's speed after the strip | |
+| hit hold (`jam.HitHoldFrames`) | default 0; judged in TACKLING.md section 4 | |
+
+Before / after pair: `docs/experiments/img/tackling/a33-hit1-front-s100-strip.png` (after: the fall by direction, the burst, the camera kick) against the A10 still
+`devlog/shots/20261112-102957-A-a5-knockdown-right.png` (before: the toy figure's single backward fall, no direction, no kick, no pop).
+Proposed, not applied (calibrations that change the hash; TACKLING.md sections 2 and 4): (1) a stay-up stagger instead of a knock-down below a strength band;
+(2) a check lands on the checker's own speed along the normal but its strength is the closing speed, so a chase-down on a skater moving the same way landed at
+strength 0.03 in the proof run (frame 1074) and still cost the victim 90 frames: land on the closing speed too, or floor the knockdown strength at 0.3.

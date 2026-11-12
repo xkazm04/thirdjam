@@ -12,6 +12,13 @@
 #include "NiagaraSystem.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
+#include "JamPawns.h"
+#include "Engine/GameInstance.h"
+#include "HAL/IConsoleManager.h"
+
+// Lane A33: a hold of the fall's first frame on a knockdown (the "3-frame visual freeze" R-0028 lets the lane judge; 0 = off, never a time dilation).
+static TAutoConsoleVariable<int32> CVarJamHitHoldFrames(TEXT("jam.HitHoldFrames"), 0,
+	TEXT("Frames the skeletal figure holds the first frame of its fall after a knockdown (cosmetic; 0 = off). Lane A33."));
 
 namespace SkeletalSkater
 {
@@ -101,15 +108,22 @@ FSkelLayer USkeletalSkaterVisual::ChooseLayer(const FSkelInputs& In)
 	auto Within = [](int32 Since, int32 Len) { return Since >= 0 && Since < Len; };
 	auto Loop = [](int32 Frame, ESkaterSeq Seq) { const int32 N = SeqFrames(Seq); return (float)(((Frame % N) + N) % N); };
 
+	// Lane A33: the fall by direction. Front: the authored backward fall (the figure's back faces the push), faster for a harder hit; side and behind: a stiff
+	// toy that tips toward the push (ReactionFor), so the limbs hold the idle pose. jam.HitHoldFrames freezes the first fall frame that long.
+	const bool bTipFall = In.HitKind != ESkaterHitKind::Front;
+	const float FallRate = 0.85f + 0.3f * FMath::Clamp(In.HitStrength, 0.f, 1.f);
 	if (In.bDown)
 	{
+		if (bTipFall) { L.Seq = ESkaterSeq::Idle; L.Frame = 0.f; L.StickAimWeight = 0.f; return L; }
+		const int32 Since = In.SinceKnock < 0 ? SeqFrames(ESkaterSeq::KnockedDown) - 1 : FMath::Max(0, In.SinceKnock - FMath::Max(0, In.KnockHold));
 		L.Seq = ESkaterSeq::KnockedDown;
-		L.Frame = (float)FMath::Clamp(In.SinceKnock < 0 ? SeqFrames(ESkaterSeq::KnockedDown) - 1 : In.SinceKnock, 0, SeqFrames(ESkaterSeq::KnockedDown) - 1);   // hold the last frame while down
+		L.Frame = FMath::Clamp((float)Since * FallRate, 0.f, (float)(SeqFrames(ESkaterSeq::KnockedDown) - 1));   // hold the last frame while down
 		L.StickAimWeight = 0.f;
 		return L;
 	}
 	if (Within(In.SinceKnock, SeqFrames(ESkaterSeq::GetUp)))
 	{
+		if (bTipFall) { L.Seq = ESkaterSeq::Idle; L.Frame = 0.f; L.StickAimWeight = 0.f; return L; }
 		L.Seq = ESkaterSeq::GetUp; L.Frame = (float)In.SinceKnock; L.StickAimWeight = 0.f; return L;
 	}
 	if (Within(In.SinceCheck, SeqFrames(ESkaterSeq::Check)))
@@ -128,13 +142,19 @@ FSkelLayer USkeletalSkaterVisual::ChooseLayer(const FSkelInputs& In)
 	{
 		L.Seq = ESkaterSeq::ShootRelease; L.Frame = FMath::Min(PassFromFrame + (float)In.SincePass * PassRate, (float)SeqFrames(ESkaterSeq::ShootRelease) - 1.f); L.StickAimWeight = 0.f; return L;
 	}
-	if (Within(In.SincePoke, SeqFrames(ESkaterSeq::Poke)))
+	// Lane A33: a clean poke plays whole; a mistimed one (the sim's stumble starts on this frame) is a quick jab (MissPokeFrames at rate 3) and then
+	// StumbleFrames of stumble: the first get_up frames held at frame 7, with the forward pitch, the yaw wobble and the low stick from ReactionFor.
+	if (In.bPokeClean && Within(In.SincePoke, SeqFrames(ESkaterSeq::Poke)))
 	{
 		L.Seq = ESkaterSeq::Poke; L.Frame = (float)In.SincePoke; L.StickAimWeight = 0.f; return L;
 	}
-	if (!In.bPokeClean && Within(In.SincePoke - SeqFrames(ESkaterSeq::Poke), PokeStumbleFrames))
+	if (!In.bPokeClean && Within(In.SincePoke, MissPokeFrames))
 	{
-		L.Seq = ESkaterSeq::GetUp; L.Frame = (float)(In.SincePoke - SeqFrames(ESkaterSeq::Poke)); L.StickAimWeight = 0.f; return L;
+		L.Seq = ESkaterSeq::Poke; L.Frame = FMath::Min((float)In.SincePoke * 3.f, (float)(SeqFrames(ESkaterSeq::Poke) - 1)); L.StickAimWeight = 0.f; return L;
+	}
+	if (!In.bPokeClean && Within(In.SincePoke - MissPokeFrames, StumbleFrames))
+	{
+		L.Seq = ESkaterSeq::GetUp; L.Frame = (float)FMath::Min(In.SincePoke - MissPokeFrames, PokeStumbleFrames - 1); L.StickAimWeight = 0.f; return L;
 	}
 	if (Within(In.SinceLift, SeqFrames(ESkaterSeq::Lift)))
 	{
@@ -172,6 +192,70 @@ FSkelLayer USkeletalSkaterVisual::ChooseLayer(const FSkelInputs& In)
 	return L;
 }
 
+ESkaterHitKind USkeletalSkaterVisual::HitKindFor(float DirX, float DirZ, float FacingYawDeg)
+{
+	// The same rule as UJamSim::CollideSkaters (rink x = Unreal X, rink z = Unreal Y, the yaw grows to the right so the left is (sin, -cos)).
+	FVector2D Dir(DirX, DirZ);
+	if (Dir.IsNearlyZero()) return ESkaterHitKind::Front;
+	Dir.Normalize();
+	const float Yaw = FMath::DegreesToRadians(FacingYawDeg);
+	const FVector2D Fwd(FMath::Cos(Yaw), FMath::Sin(Yaw));
+	const float Along = Dir.X * Fwd.X + Dir.Y * Fwd.Y;
+	if (Along > 0.5f) return ESkaterHitKind::Behind;
+	if (Along < -0.5f) return ESkaterHitKind::Front;
+	const FVector2D Left(Fwd.Y, -Fwd.X);
+	return (Dir.X * Left.X + Dir.Y * Left.Y) < 0.f ? ESkaterHitKind::SideL : ESkaterHitKind::SideR;
+}
+
+const TCHAR* USkeletalSkaterVisual::HitKindName(ESkaterHitKind Kind)
+{
+	switch (Kind)
+	{
+	case ESkaterHitKind::SideL: return TEXT("side_l");
+	case ESkaterHitKind::SideR: return TEXT("side_r");
+	case ESkaterHitKind::Behind: return TEXT("behind");
+	default: return TEXT("front");
+	}
+}
+
+// The whole-body reaction for this frame (docs/experiments/TACKLING.md, reaction table). Every curve is in frames since its trigger.
+FSkelReaction USkeletalSkaterVisual::ReactionFor(const FSkelInputs& In)
+{
+	using namespace SkeletalSkater;
+	FSkelReaction R;
+	const float Strength = FMath::Clamp(In.HitStrength, 0.f, 1.f);
+	// Side and behind falls: the toy tips 88 degrees toward the push over 14 frames with the 3 + 3 bounce of the authored fall (the code figure's curve), holds,
+	// and comes back up over the 20 get-up frames. A harder hit tips faster (the frame index runs at 0.85 + 0.3 x strength).
+	if (In.HitKind != ESkaterHitKind::Front && In.SinceKnock >= 0)
+	{
+		if (In.bDown)
+		{
+			const int32 Since = FMath::Max(0, In.SinceKnock - FMath::Max(0, In.KnockHold));
+			R.TipDeg = UToySkaterVisualComponent::KnockTipDeg(FMath::RoundToInt32((float)Since * (0.85f + 0.3f * Strength)), true);
+		}
+		else if (In.SinceKnock < SeqFrames(ESkaterSeq::GetUp))
+		{
+			R.TipDeg = UToySkaterVisualComponent::KnockTipDeg(In.SinceKnock, false);
+		}
+	}
+	// A hard board hit: a lean into the boards, 3 frames in and 9 out, 10 to 16 degrees by strength; not while down.
+	if (!In.bDown && In.SinceBoard >= 0 && In.SinceBoard < BoardLeanFrames)
+	{
+		const float Env = In.SinceBoard <= 3 ? SmoothStep01((float)In.SinceBoard / 3.f) : 1.f - SmoothStep01((float)(In.SinceBoard - 3) / (float)(BoardLeanFrames - 3));
+		R.BoardLeanDeg = (10.f + 6.f * FMath::Clamp(In.BoardStrength, 0.f, 1.f)) * Env;
+	}
+	// The stumble after a mistimed poke: a forward pitch that peaks at 12 degrees mid-way, a 5 degree yaw wobble (two cycles, dying out), the stick 25 cm low.
+	if (!In.bDown && !In.bPokeClean && In.SincePoke >= MissPokeFrames && In.SincePoke < MissPokeFrames + StumbleFrames)
+	{
+		const float T = (float)(In.SincePoke - MissPokeFrames) / (float)StumbleFrames;
+		const float Bell = FMath::Sin(PI * T);
+		R.StumblePitchDeg = 12.f * Bell;
+		R.StumbleYawDeg = 5.f * FMath::Sin(4.f * PI * T) * (1.f - T);
+		R.StickDropCm = 25.f * Bell;
+	}
+	return R;
+}
+
 // ---------------------------------------------------------------- construction
 
 void USkeletalSkaterVisual::OnRegister()
@@ -180,6 +264,48 @@ void USkeletalSkaterVisual::OnRegister()
 	if (!IsTemplate() && GetOwner() && GetWorld() && GetWorld()->WorldType != EWorldType::EditorPreview)
 	{
 		BuildFigure();
+		// Lane A33: the strength of the hit and a board hit arrive on the event bus (DeliverEvents runs before ApplySimFrame, so the knockdown's strength is
+		// in hand when SetKnockedDown(true) follows in the same sim frame). Cosmetic read only.
+		if (!Bus)
+		{
+			UGameInstance* GI = GetWorld()->GetGameInstance();
+			Bus = GI ? GI->GetSubsystem<UJamEventBus>() : nullptr;
+			if (Bus) Bus->OnJamEvent.AddDynamic(this, &USkeletalSkaterVisual::OnJamEvent);
+		}
+	}
+}
+
+void USkeletalSkaterVisual::OnUnregister()
+{
+	if (Bus)
+	{
+		Bus->OnJamEvent.RemoveDynamic(this, &USkeletalSkaterVisual::OnJamEvent);
+		Bus = nullptr;
+	}
+	Super::OnUnregister();
+}
+
+int32 USkeletalSkaterVisual::OwnerSimIndex() const
+{
+	const AJamSkater* Sk = Cast<AJamSkater>(GetOwner());
+	return Sk ? Sk->GetSimIndex() : -1;
+}
+
+void USkeletalSkaterVisual::OnJamEvent(FName Event, const FJamEventPayload& Payload)
+{
+	const int32 Me = OwnerSimIndex();
+	if (Me < 0 || Payload.Who != Me) return;
+	if (Event == JamEvents::Knockdown)
+	{
+		PendingHitStrength = FMath::Clamp(Payload.Strength, 0.f, 1.f);
+	}
+	else if (Event == JamEvents::Board && Payload.Kind == FName(TEXT("skater")))
+	{
+		BoardStart = LocalFrame;
+		BoardStrength = FMath::Clamp(Payload.Strength, 0.f, 1.f);
+		const FVector D = Payload.Where - GetComponentLocation();
+		const FVector2D D2(D.X, D.Y);
+		BoardDir = D2.IsNearlyZero() ? FVector2D(0.f, 1.f) : D2.GetSafeNormal();
 	}
 }
 
@@ -340,6 +466,11 @@ FSkelInputs USkeletalSkaterVisual::MakeInputs() const
 	In.bPokeClean = bPokeClean;
 	In.SinceLift = Since(LiftStart);
 	In.SinceDraw = Since(DrawStart);
+	In.HitKind = HitKind;
+	In.HitStrength = HitStrength;
+	In.KnockHold = KnockHold;
+	In.SinceBoard = Since(BoardStart);
+	In.BoardStrength = BoardStrength;
 	return In;
 }
 
@@ -352,6 +483,7 @@ void USkeletalSkaterVisual::ApplyPose(const FRotator& Facing)
 	const double T0 = FPlatformTime::Seconds();
 	const FSkelInputs In = MakeInputs();
 	LastLayer = ChooseLayer(In);
+	LastReaction = ReactionFor(In);
 
 	const FReferenceSkeleton& Ref = GetSkinnedAsset()->GetRefSkeleton();
 	const int32 NumBones = BoneSpaceTransforms.Num();
@@ -400,13 +532,20 @@ void USkeletalSkaterVisual::ApplyPose(const FRotator& Facing)
 			BoneSpaceTransforms[StickRootBone].AddToTranslation(ParentCS.InverseTransformVectorNoScale(FVector(ExtraCm, 0.f, 0.f)));
 		}
 	}
+	// Lane A33: the stick drops low during the stumble (the stick root slides down and a little forward in the parent bone's frame).
+	if (StickRootBone != INDEX_NONE && StickRootBone < NumBones && LastReaction.StickDropCm > 0.5f)
+	{
+		FTransform ParentCS = FTransform::Identity;
+		for (int32 B = Ref.GetParentIndex(StickRootBone); B != INDEX_NONE; B = Ref.GetParentIndex(B)) ParentCS = ParentCS * BoneSpaceTransforms[B];
+		BoneSpaceTransforms[StickRootBone].AddToTranslation(ParentCS.InverseTransformVectorNoScale(FVector(10.f, 0.f, -LastReaction.StickDropCm)));
+	}
 	MarkRefreshTransformDirty();
 	RefreshBoneTransforms();
 
 	// The whole figure: facing yaw, a yaw toward the knock direction while down (the sequence falls backward, so the back faces it),
 	// the lean into turns as a roll about the skates, the boost scale pulse.
 	float YawOff = 0.f;
-	if (KnockStart >= 0 && (bDown || In.SinceKnock < SeqFrames(ESkaterSeq::GetUp)))
+	if (KnockStart >= 0 && HitKind == ESkaterHitKind::Front && (bDown || In.SinceKnock < SeqFrames(ESkaterSeq::GetUp)))
 	{
 		const float DirYaw = FMath::RadiansToDegrees(FMath::Atan2(KnockDir.Y, KnockDir.X)) + 180.f;
 		const float Off = FRotator::NormalizeAxis(DirYaw - Facing.Yaw);
@@ -416,7 +555,20 @@ void USkeletalSkaterVisual::ApplyPose(const FRotator& Facing)
 	}
 	const FQuat Yaw = FRotator(0.f, Facing.Yaw + YawOff, 0.f).Quaternion();
 	const FQuat Roll = FRotator(0.f, 0.f, -FMath::Clamp(Lean, -MaxRollDeg, MaxRollDeg)).Quaternion();   // positive lean = left side down = negative Unreal roll; capped, the rest is in the sequences
-	SetWorldRotation(Yaw * Roll);
+	// Lane A33: the reactions are world-axis tips about the skates (the component origin is on the ice): the head moves toward the direction given.
+	auto TipToward = [](const FVector2D& Dir2, float Deg)
+	{
+		if (FMath::Abs(Deg) < 0.01f || Dir2.IsNearlyZero()) return FQuat::Identity;
+		const FVector Dir(Dir2.X, Dir2.Y, 0.f);
+		const FVector Axis = FVector::CrossProduct(FVector::UpVector, Dir).GetSafeNormal();
+		return FQuat(Axis.IsNearlyZero() ? FVector::RightVector : Axis, FMath::DegreesToRadians(Deg));
+	};
+	const float FacingRad = FMath::DegreesToRadians(Facing.Yaw);
+	const FVector2D FwdDir(FMath::Cos(FacingRad), FMath::Sin(FacingRad));
+	const FQuat Tip = TipToward(KnockDir, LastReaction.TipDeg);
+	const FQuat BoardLean = TipToward(BoardDir, LastReaction.BoardLeanDeg);
+	const FQuat Stumble = TipToward(FwdDir, LastReaction.StumblePitchDeg) * FRotator(0.f, LastReaction.StumbleYawDeg, 0.f).Quaternion();
+	SetWorldRotation(Tip * BoardLean * Stumble * Yaw * Roll);
 
 	if (Boost != NAME_None)
 	{
@@ -494,6 +646,7 @@ void USkeletalSkaterVisual::UpdateMotion_Implementation(float InSpeed, float InT
 	++LocalFrame;
 	Speed = FMath::Max(0.f, InSpeed);
 	TurnRate = InTurnRate;
+	FacingYawDeg = Facing.Yaw;
 	const float Follow = 1.f - FMath::Exp(-12.f / 60.f);
 	Lean += (LeanTarget(Speed, TurnRate) - Lean) * Follow;
 	Phase += Speed / 2.4f / 60.f;
@@ -542,6 +695,14 @@ void USkeletalSkaterVisual::SetKnockedDown_Implementation(bool bDownNow, float D
 	{
 		const FVector2D D(DirX, DirZ);
 		KnockDir = D.IsNearlyZero() ? FVector2D(-1.f, 0.f) : D.GetSafeNormal();
+		// Lane A33: the kind from the push against the facing the pawn gave last frame; the strength from the knockdown event that arrived this frame (0.5 when
+		// no event came: a scene that calls the interface by hand); the optional hold of the first fall frame.
+		HitKind = HitKindFor(KnockDir.X, KnockDir.Y, FacingYawDeg);
+		HitStrength = PendingHitStrength >= 0.f ? PendingHitStrength : 0.5f;
+		PendingHitStrength = -1.f;
+		KnockHold = FMath::Clamp(CVarJamHitHoldFrames.GetValueOnGameThread(), 0, 30);
+		UE_LOG(LogTemp, Log, TEXT("SKELVIS %s knocked down kind=%s strength=%.2f hold=%d dir=(%.2f, %.2f) facing=%.0f"), GetOwner() ? *GetOwner()->GetName() : TEXT("?"),
+			HitKindName(HitKind), HitStrength, KnockHold, KnockDir.X, KnockDir.Y, FacingYawDeg);
 	}
 }
 

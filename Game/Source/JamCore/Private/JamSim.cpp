@@ -24,6 +24,12 @@ namespace
 	const FName KindCoast(TEXT("coast"));
 	const FName KindLast10s(TEXT("last_10s"));
 	const FName KindSuddenDeath(TEXT("sudden_death"));
+	// Lane A33 (R-0028 point 3, tackling that reads): the check's direction seen from the victim, and a skater's board hit. Read-outs only: no state changes.
+	const FName CheckFront(TEXT("front"));
+	const FName CheckSideL(TEXT("side_l"));
+	const FName CheckSideR(TEXT("side_r"));
+	const FName CheckBehind(TEXT("behind"));
+	const FName KindSkater(TEXT("skater"));
 
 	constexpr double Gravity = 9.8;
 	// Lane A32 read-outs: a shot counts as "on goal" for this many frames, a possession becomes a "carry" after this many, a post rings at most this often.
@@ -38,6 +44,7 @@ namespace
 	constexpr double BoardTangentKeep = 0.9;
 	constexpr double BoardEventMinSpeed = 3.0;   // m/s normal impact before a "board" event
 	constexpr int32 BoardEventGapFrames = 6;
+	constexpr double SkaterBoardEventMinSpeed = 4.0;   // lane A33: a skater's normal speed into the boards before a "board" event (Who = skater, Kind = skater)
 	constexpr double ReferenceIceFriction = 0.015; // the ice friction glide_drag was measured on
 
 	double WrapPi(double A)
@@ -1111,6 +1118,8 @@ void UJamSim::CollideSkaterStatic(FJamSkaterState& S)
 	{
 		S.Pos -= N * (D + R);
 		const double Vn = Dot(S.Vel, N);
+		// Lane A33: a hard board hit is announced (cosmetic read-out; Strength = normal speed / skater.speed, Kind = skater, Where = the contact on the boards).
+		if (Vn >= SkaterBoardEventMinSpeed) Emit(JamEvents::Board, S.Index, S.Pos + N * R, static_cast<float>(Vn / FMath::Max(1e-6, Config.Skater.Speed)), KindSkater);
 		if (Vn > 0) S.Vel -= N * ((1.0 + SkaterBoardBounce) * Vn);
 	}
 	// Nets as solid boxes behind each goal line. A skater is pushed out along the shortest axis; the speed it pressed into the hull with becomes a slide
@@ -1196,7 +1205,12 @@ void UJamSim::CollideSkaters()
 				auto Landed = [&](FJamSkaterState& Checker, FJamSkaterState& Victim, const FVector2D& Dir)
 				{
 					Checker.CheckWindow = 0;
-					Emit(JamEvents::Check, Checker.Index, Contact, Strength);
+					// Lane A33: the direction of the hit seen from the victim (Dir = the push, checker towards victim): along the facing = behind, against it = front,
+					// else the side the checker came from (the sim's yaw grows to the right, so the left is (sin yaw, -cos yaw)). Same thresholds as the foul rule below.
+					const FVector2D VF = Victim.Forward();
+					const double Along = Dot(Dir, VF);
+					const FName CheckKind = Along > 0.5 ? CheckBehind : Along < -0.5 ? CheckFront : (Dot(Dir, FVector2D(VF.Y, -VF.X)) < 0.0 ? CheckSideL : CheckSideR);
+					Emit(JamEvents::Check, Checker.Index, Contact, Strength, CheckKind);
 					FireRule(EJamRuleTrigger::OnCheck, Checker.Index, Checker.Team, NAME_None, Strength);
 					// R-0029 point 3: a victim that carried the puck within game.stick.foul_grace_frames still counts as the carrier (the puck just left it).
 					const bool bVictimHasPuck = CarrierIndex() == Victim.Index || (Frame - Victim.LastCarryFrame) <= Config.Stick.FoulGraceFrames;

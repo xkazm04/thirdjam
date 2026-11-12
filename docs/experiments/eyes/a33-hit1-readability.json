@@ -1,0 +1,110 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "readability",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-12T18:37:06.022Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "readability",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a33/docs/experiments/img/tackling/a33-hit1-front-f705.jpg",
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "label": "B",
+          "path": ".claude/worktrees/a33/Game/Saved/Screenshots/WindowsEditor/a33-win-f000697.png",
+          "width": 1280,
+          "height": 720
+        }
+      ],
+      "distance": 24,
+      "thumbnails": [],
+      "prompt_chars": 2744,
+      "usage": {
+        "prompt": 3066,
+        "output": 671,
+        "thoughts": 0,
+        "total": 3737,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00482,
+      "ms": 10456,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A (a33-hit1-front-f705.jpg)",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "The puck is not visible anywhere on the ice or near the sticks."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "No figure can be identified as carrying the puck due to all skaters being undifferentiated black silhouettes."
+              },
+              "team_colours": {
+                "score": 1,
+                "evidence": "All figures appear as solid black or very dark grey silhouettes, with neither blue nor orange visible."
+              },
+              "far_net": {
+                "score": 5,
+                "evidence": "The bright red goal frame on the right side is fully visible, high contrast against the ice, and around 240 pixels wide."
+              },
+              "zone_strips": {
+                "score": 4,
+                "evidence": "Thin red goal crease and goal lines are clearly drawn on the ice, but no blue zone lines are visible."
+              }
+            },
+            "first_look": "cluster of black silhouette skaters encircled by white particles",
+            "noise": [
+              "floating white particle ring around the skaters",
+              "bright yellow illuminated strip along the boards",
+              "numbers painted on the boards behind the figures"
+            ],
+            "overall": 2
+          },
+          {
+            "label": "Still B (a33-win-f000697.png)",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "The puck is not visible anywhere on the playing surface."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "No carrier can be determined as all skaters are nearly pure black shapes with no puck in sight."
+              },
+              "team_colours": {
+                "score": 1,
+                "evidence": "All figures are rendered in near-identical black and dark charcoal shading without distinguishable blue or orange jerseys."
+              },
+              "far_net": {
+                "score": 5,
+                "evidence": "The red net on the right edge is unmistakable, sharply outlined and measuring over 300 pixels across."
+              },
+              "zone_strips": {
+                "score": 4,
+                "evidence": "Red goal lines and crease arcs are crisp and bright on the white ice, though no blue lines appear."
+              }
+            },
+            "first_look": "red net on the right foreground",
+            "noise": [
+              "glowing yellow strip at the top of the dasher boards",
+              "faint white dots clustered between skater feet",
+              "numbers printed directly onto the dasher boards"
+            ],
+            "overall": 2
+          }
+        ]
+      },
+      "markdown": "**eyes/readability** A=a33-hit1-front-f705.jpg B=a33-win-f000697.png at 24 m (gemini-3.8-flash, in 3066 out 671 tokens, ~$0.0048, 10.5 s)\n- stills:\n  - label: Still A (a33-hit1-front-f705.jpg); first_look: cluster of black silhouette skaters encircled by white particles; overall: 2\n    - elements:\n      - puck: score 1, evidence The puck is not visible anywhere on the ice or near the sticks.\n      - carrier: score 1, evidence No figure can be identified as carrying the puck due to all skaters being undifferentiated black silhouettes.\n      - team_colours: score 1, evidence All figures appear as solid black or very dark grey silhouettes, with neither blue nor orange visible.\n      - far_net: score 5, evidence The bright red goal frame on the right side is fully visible, high contrast against the ice, and around 240 pixels wide.\n      - zone_strips: score 4, evidence Thin red goal crease and goal lines are clearly drawn on the ice, but no blue zone lines are visible.\n    - noise: floating white particle ring around the skaters; bright yellow illuminated strip along the boards; numbers painted on the boards behind the figures\n  - label: Still B (a33-win-f000697.png); first_look: red net on the right foreground; overall: 2\n    - elements:\n      - puck: score 1, evidence The puck is not visible anywhere on the playing surface.\n      - carrier: score 1, evidence No carrier can be determined as all skaters are nearly pure black shapes with no puck in sight.\n      - team_colours: score 1, evidence All figures are rendered in near-identical black and dark charcoal shading without distinguishable blue or orange jerseys.\n      - far_net: score 5, evidence The red net on the right edge is unmistakable, sharply outlined and measuring over 300 pixels across.\n      - zone_strips: score 4, evidence Red goal lines and crease arcs are crisp and bright on the white ice, though no blue lines appear.\n    - noise: glowing yellow strip at the top of the dasher boards; faint white dots clustered between skater feet; numbers printed directly onto the dasher boards"
+    }
+  ]
+}
