@@ -21,7 +21,7 @@ emulation: they work, about 1.3 to 2 times slower than device A's numbers. Use g
    Before starting an editor, check free memory: under 24 GB free, do not start one; report instead.
 3. **After MCP first answers the editor still refuses tools for 5 to 10 seconds** (`Not run: the Unreal Editor is running a slow task`). Retry `toolsets`
    every 5 s until it passes before the first real call. `tools/run/smoke.ps1` does not retry and reports FAIL here although nothing is wrong: do not use it.
-4. **Stopping an editor**: save, then call `EditorAppToolset.ExitEditor {}` through MCP. `editor.ps1 -Stop` force-stops after its grace period, and then the
+4. **Stopping an editor**: save, then call `EditorToolset.EditorAppToolset.ExitEditor {}` through MCP (full name; it exits cleanly and frees the port at once). `editor.ps1 -Stop` force-stops after its grace period, and then the
    port stays LISTENING (owner pid 0) for about 100 s and `editor.ps1` refuses to start on it (exit 2). If that happens, wait for
    `netstat -ano | findstr :<port>` to show no LISTENING line.
 5. **A modal `Wait for ZenServer?` box** can block the first editor start after a reboot (the cache server takes over 20 s to come up). The editor log

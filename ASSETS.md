@@ -34,7 +34,7 @@ Rules that apply to every row:
 | path | kind | size_mb | origin | tool | licence | url | date | device | shipped | note |
 |---|---|---|---|---|---|---|---|---|---|---|
 | Game/Plugins/JamAssets/Content/Rigs/LR_L1_Day.umap | other | 0.0 | original | UE 5.9 editor via MCP |  |  | 2026-11-12 | A | y | empty placeholder sub-level made by lane A0 (C-0002); B fills it |
-| Game/Plugins/JamAssets/Content/Rigs/LR_L2_Night.umap | other | 0.0 | original | UE 5.9 editor via MCP/Python |  |  | 2026-11-12 | B | y | night rig, filled by lane B1: PPV_L2_Night, Sky_L2_Night, Spot_L2_Night_1-4, Room_L2_Night_1-6 (placeholder by lane A0) |
+| Game/Plugins/JamAssets/Content/Rigs/LR_L2_Night.umap | other | 0.6 | original | UE 5.9 editor via MCP/Python |  |  | 2026-11-12 | B | y | night rig: PPV, sky, 4 spots, room (lane B1) and 289 Dress_L2_Night actors of engine basic shapes: truss, film lights, slate, chair, crane, cases (lane B2); placeholder by lane A0 |
 | Game/Plugins/JamAssets/Content/Rigs/LR_L3_Neon.umap | other | 0.0 | original | UE 5.9 editor via MCP |  |  | 2026-11-12 | A | y | empty placeholder sub-level made by lane A0 (C-0002); B fills it |
 | Game/Plugins/JamAssets/Content/Look/MI_Ice_Night.uasset | material | 0.0 | original | UE 5.9 editor via MCP/Python (recipe tools/skills/look-painted-cel.md) |  |  | 2026-11-12 | B | y | instance |
 | Game/Plugins/JamAssets/Content/Look/MI_PP_Outline.uasset | material | 0.0 | original | UE 5.9 editor via MCP/Python (recipe tools/skills/look-painted-cel.md) |  |  | 2026-11-12 | B | y | instance |
@@ -58,6 +58,12 @@ Rules that apply to every row:
 | Game/Plugins/JamAssets/Content/Look/M_PP_ToonRamp.uasset | material | 0.0 | original | UE 5.9 editor via MCP/Python (recipe tools/skills/look-painted-cel.md) |  |  | 2026-11-12 | B | y | post-process master (painted-cel look) |
 | Game/Plugins/JamAssets/Content/Look/M_Toon.uasset | material | 0.0 | original | UE 5.9 editor via MCP/Python (recipe tools/skills/look-painted-cel.md) |  |  | 2026-11-12 | B | y | master material (painted-cel look) |
 | Game/Plugins/JamAssets/Content/Look/M_Trim.uasset | material | 0.0 | original | UE 5.9 editor via MCP/Python (recipe tools/skills/look-painted-cel.md) |  |  | 2026-11-12 | B | y | master material (painted-cel look) |
+| Game/Plugins/JamAssets/Content/Arena/MI_Dress_Case.uasset | material | 0.0 | original | UE 5.9 editor via MCP/Python |  |  | 2026-11-12 | B | y | dressing colour, instance of M_Toon or M_Trim (lane B2) |
+| Game/Plugins/JamAssets/Content/Arena/MI_Dress_Cream.uasset | material | 0.0 | original | UE 5.9 editor via MCP/Python |  |  | 2026-11-12 | B | y | dressing colour, instance of M_Toon or M_Trim (lane B2) |
+| Game/Plugins/JamAssets/Content/Arena/MI_Dress_ExitGreen.uasset | material | 0.0 | original | UE 5.9 editor via MCP/Python |  |  | 2026-11-12 | B | y | dressing colour, instance of M_Toon or M_Trim (lane B2) |
+| Game/Plugins/JamAssets/Content/Arena/MI_Dress_Ink.uasset | material | 0.0 | original | UE 5.9 editor via MCP/Python |  |  | 2026-11-12 | B | y | dressing colour, instance of M_Toon or M_Trim (lane B2) |
+| Game/Plugins/JamAssets/Content/Arena/MI_Dress_Lens.uasset | material | 0.0 | original | UE 5.9 editor via MCP/Python |  |  | 2026-11-12 | B | y | dressing colour, instance of M_Toon or M_Trim (lane B2) |
+| Game/Plugins/JamAssets/Content/Arena/MI_Dress_Steel.uasset | material | 0.0 | original | UE 5.9 editor via MCP/Python |  |  | 2026-11-12 | B | y | dressing colour, instance of M_Toon or M_Trim (lane B2) |
 
 
 Director ruling 2026-11-12: a mesh, texture, rig or motion clip produced by a generation service from our own prompt (Meshy, Tripo, Rodin, text-to-motion) is `ai-generated`, not `sourced`; a clip or mesh taken from a service's preset library (for example Meshy library action 187 `Knock_Down`) is `sourced` and carries the service's licence and the preset id in `url`.
