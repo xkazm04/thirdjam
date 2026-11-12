@@ -96,3 +96,12 @@ situation in game. Ideal state would be to shout at AI teammates for short strat
    hardware with the text path as the fallback everywhere else.
 5. Ownership: lane A12 owns `Game/Source/JamGame/Bark*`, `Game/Source/JamGame/Signal*`, `Game/Content/Barks/**`, `docs/experiments/ACE.md`, `tools/barks/**`; the brain hook
    (`FJamTeamIntent` consumption) is a one-struct seam lane A3 implements in `JamBrain` from A12's header.
+
+## R-0008 (H5.4, 2026-11-12 11:20): Codex image generation and editing for in-jam 2D content (operator: "allowed to use codex and its image generation or edit at any capacity")
+1. From now on Codex image generation and editing may produce **shipped 2D content**: title and menu art (film slate, clapperboard, "Choose your cut" cards), UI icons (cuts, pickups,
+   signals, settings), jersey crests and number decals (generic, invented), ice markings and board decals, scoreboard faces, painted texture tiles for the cel look (2K cap, tileable),
+   pickup glyphs, the itch page cover and screenshots' frames, trailer title cards. The pre-jam reference stills stay reference only (nothing from `prep-reference/` is used).
+2. Every generated image that ships is `ai-generated` in `ASSETS.md` with tool `Codex image generation`, the prompt file path in `url`, and `size_mb`; the tool is listed in "Tools you used".
+3. Content law applies: no text that reads as a real brand, team, league or person; no logos but ours (invented); English; teen-appropriate. Prompts are kept with the generator.
+4. The generator is `tools/images/gen.mjs` (lane A8 lifts it from `prep-reference/tools/gen.mjs`, one image per run, a job list file per batch, outputs to a scratch folder, only the picked
+   files are imported). Lane A8 owns menu/UI art on A; device B owns textures, decals, crests and scoreboard faces (handoff A-to-B-0002); A6 owns the itch page and trailer cards.
