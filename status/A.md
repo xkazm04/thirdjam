@@ -116,3 +116,6 @@
 ## H10.2 (16:58) H10 package 249.5 MB; look lab and Blender figures to the operator
 - `Hokej_Hokej_H10.zip` 249.5 MB (16:41, first with B's clay rig, zone and pickup looks, new effects and sounds, the new curve, stick reach 1.2). A23 look lab: seven measured recommendations, handoff A-to-B-0008 to B, proposal materials under `Game/Content/LookLab/`. A22: parametric Blender skater (toy / clay / broadcast) with 17 animations and seven props, toy variant imported under `Game/Content/Figures/` (not on the ice). Review tool gains an `image` field; page `docs/reviews/look-figures-2026-11-12.html` published for the operator.
 - next: operator verdicts on figures and look; lane A25 (rink construction bands and net frame in RinkActor) when the look verdict is in; B on A-to-B-0007 and 0008.
+
+## H10.3 (17:08) R-0024: Director's judgement replaces verdicts for adjustments; Gemini eyes
+- Operator: no verdicts for adjustments while the game is unplayable; Gemini (`GOOGLE_AI_API_KEY` in `.env`) as a second pair of eyes. Approved by the Director: A23's seven look changes (B: A-to-B-0008 proceeds, no verdict needed), the Blender toy figure goes on the ice for a PIE comparison (A26), rink construction in code (A25), the eyes tool (A27). Three lanes started 17:08 in their own worktrees.
