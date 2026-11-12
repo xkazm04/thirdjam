@@ -217,3 +217,12 @@ Accepted: `rules.hooks[].after_frame`; `score: { at_least, at_most, lead_at_leas
 `MI_Toon_Bumper` (handoff to B). The zone seam `IJamZoneSource` (`JamZones.h`) is implemented by lane A16 in the sim: `SetZoneSource`, ice speed/friction multipliers per skater and puck,
 `BumpPuck` per substep, `BlocksShot` in `TryShoot`, pickups through `AllowsPickupAt`; obstacles `bumper` as a circle with restitution 1.6, `goal_shield` as a 0.3 m box. Brain (A3):
 `FJamAIWorld` gains `SlowIce[] { Centre, Radius }`; the carrier steers around a slow circle within 3 m of its line to the net; bots never shoot from inside `no_shoot`.
+
+## R-0020 (H8.4, 2026-11-12 14:30): operator decisions on licence, voice and verdict lists
+1. **Rodin licence agreed**: Rodin output ships; `docs/SUBMISSION.md` lists Hyper3D Rodin under tools used; the ledger rows stand.
+2. **Voice parked behind keys**: team signals ship on keys 1-4 and the d-pad; the SAPI voice path stays off by default and is not tested until the keyed signals prove fun in play
+   (handoff A-to-B-0005 moves to "later"); the Settings row stays with its status caption.
+3. **Verdict lists go to the operator as review pages**: any list of items that needs a human verdict (bark lines, feel proposals, generated art, cut sentences, cut lines) is rendered by
+   `tools/review/build.mjs` into one self-contained HTML page: grouped items, pass / reject / comment per item, a "listen" button for text lines (browser speech synthesis), filters by
+   group, a running count, and an export line (JSON and a markdown summary) the operator pastes back; decisions are remembered in the browser. The Director publishes it as a private
+   artifact and applies the exported decisions. First instance: the bark bank.
