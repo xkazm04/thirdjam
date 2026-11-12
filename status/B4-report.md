@@ -195,3 +195,15 @@ Columns as in lane B5's report (path | kind | version | source type | tool | url
 - `d766df5` import: mesh, skeleton, 15 clips, 9 material instances, sockets
 - `2c1c8bb` AnimBP, blend space, montages, `BP_SkaterVisual_TB1`, lean re-export, stills
 - the commit holding this report (hash in the final message)
+
+---
+
+# Phase 2 (in progress; this first note is for the lead at once)
+
+**Unreal rejects lane S4's track-stripped FBX.** Importing `C:/Users/kazda/jam/skater-lab/s4/export/SK_Skater_S4_loopcut.fbx` (12:09, after
+`strip_tracks.py`) fails in the FBX SDK: `Cannot open FBX file ... FInterchangeFbxParser::LoadFbxFile: Cannot load the FBX file. There was an error
+when parsing the file.` Nothing is imported. Fallback used (S4's own advice, not my phase 1 route): I ran unmodified copies of lane S4's
+`build_skater.py` and `build_clips.py` with my scratch folder as the lab dir, **without** `strip_tracks.py`
+(`$S4B/s4lab/export/SK_Skater_S4_loopcut.fbx`). That file imports cleanly: `root` at identity rotation and scale 1.0, every bone at world scale 1,
+`root` keeps identity keys (harmless). **Lane S5 must not run the strip step on the hybrid file either.** Lane S4 should drop `strip_tracks.py`
+from `run_all.sh` (or make it optional) so its published export is the importable one. T-B1 refresh committed as `131000e`.
