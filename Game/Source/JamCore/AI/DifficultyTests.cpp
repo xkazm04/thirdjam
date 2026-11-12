@@ -78,8 +78,8 @@ bool FJamDifficultyProfilesResolve::RunTest(const FString& Parameters)
 		TestTrue(TEXT("shot range rookie <= pro <= all_star"), R.Opp.ShootExtraM <= P.Opp.ShootExtraM && P.Opp.ShootExtraM <= S.Opp.ShootExtraM);
 		TestTrue(TEXT("all_star intercepts"), S.Opp.bIntercept);
 		TestTrue(TEXT("R-0017: rookie never pokes, pro and all_star do, all_star sooner"), R.Opp.PokeFrames < 0 && P.Opp.PokeFrames >= 0 && S.Opp.PokeFrames >= 0 && S.Opp.PokeFrames <= P.Opp.PokeFrames);
-		TestTrue(TEXT("R-0013 draws: rookie jumps early sometimes, pro never, all_star presses early sometimes"),
-			R.Opp.DrawJumpPct > 0 && P.Opp.DrawJumpPct == 0 && P.Opp.DrawPressPct == 0 && S.Opp.DrawPressPct > 0 && S.Opp.DrawJumpPct == 0);
+		TestTrue(TEXT("R-0013 draws: the opposing centre jumps early least often at all_star (the human's opening touch)"),
+			S.Opp.DrawJumpPct <= P.Opp.DrawJumpPct && S.Opp.DrawJumpPct <= R.Opp.DrawJumpPct && S.Opp.DrawJumpPct > 0);
 		TestTrue(TEXT("R-0017: only all_star seeks pickups"), !R.Opp.bSeekPickups && !P.Opp.bSeekPickups && S.Opp.bSeekPickups);
 		TestTrue(TEXT("R-0017: all_star passes; pro and all_star read lanes"), S.Opp.bPassOut && P.Opp.bReadLanes && S.Opp.bReadLanes);
 		TestTrue(TEXT("reaction inside the ring"), R.Opp.ReactionFrames <= kMaxReactionFrames);

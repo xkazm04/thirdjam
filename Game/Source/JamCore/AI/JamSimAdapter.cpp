@@ -3,6 +3,7 @@
 
 #include "JamEventBus.h"
 #include "JamSim.h"
+#include "JamEffectSystem.h"
 
 namespace JamAI
 {
@@ -99,6 +100,23 @@ namespace JamAI
 		W.GoalHalfWidth = G.Rink.GoalWidthM * 0.5;
 		W.ShotReach = G.Shot.ReachM;
 		W.bDrawOpen = S.IsDrawOpen();
+		// R-0017: the pickups on the ice, from the sim's effect system (lane A14's UJamEffectSystem is the only IJamModifierSource
+		// and binds itself with SetModifierSource), so every caller of BuildWorld sees them: game mode, tests, tournaments
+		W.NumPickups = 0;
+		if (const IJamModifierSource* Src = S.GetModifierSource())
+		{
+			const UJamEffectSystem* Fx = static_cast<const UJamEffectSystem*>(Src);
+			if (Fx->GetSim() == &S)
+			{
+				for (const FJamPickupOnIce& P : Fx->GetPickups())
+				{
+					if (W.NumPickups >= FJamAIWorld::kMaxPickups) { break; }
+					W.PickupKind[W.NumPickups] = P.PickupIndex;
+					W.PickupPos[W.NumPickups] = FVec2(P.Pos.X, P.Pos.Y);
+					++W.NumPickups;
+				}
+			}
+		}
 		W.bFaceoffPhase = S.GetPhase() == EJamSimPhase::Faceoff;
 		W.FaceoffCountdown = S.GetFaceoffCountdown();
 		// R-0017: stick facts and the carrier

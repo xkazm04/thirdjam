@@ -19,7 +19,7 @@ of them out explicitly, but a Designer or hand-written cartridge may leave them 
 | `skater.brake_decel` | 6 | |
 | `skater.check_enabled` | true | R-0013: the body check is in every cut (was false before H7) | |
 | `skater.check_speed_min` | 5 | only read when `check_enabled` is true |
-| `stick.reach_m` | 1.6 | lane A16 (R-0013) |
+| `stick.reach_m` | 1.2 | lane A16 (R-0013); 1.2 by R-0022 point 3 (rest 1.0 m, full aim 1.6 m) |
 | `stick.poke_window_frames` | 8 | lane A16 (R-0013) |
 | `stick.lift_range_m` | 1.0 | lane A16 (R-0013) |
 | `stick.stumble_frames` | 20 | lane A16 (R-0013); 0 in `hockey.raw` |

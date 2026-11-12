@@ -368,6 +368,8 @@ namespace JamAI
 			if (SinceFaceoff > St.MaxFaceoffToTouch) { St.MaxFaceoffToTouch = static_cast<int>(SinceFaceoff); }
 		}
 		St.Stalls = Brain.StallCount();
+		St.DrawJumps = Brain.GetDrawJumps();
+		St.DrawPresses = Brain.GetDrawPresses();
 		St.bOver = Sim.IsOver();
 		St.Winner = Sim.Winner();
 		St.Hash = Sim.StateHash();
@@ -379,10 +381,10 @@ namespace JamAI
 		int N = std::snprintf(Buf, static_cast<size_t>(BufLen),
 			"{\"tool\":\"thirdjam.tournament/1\",\"cartridge\":\"%s\",\"mode\":\"%s\",\"seed\":%llu,\"goals\":[%d,%d],\"winner\":%d,\"over\":%s,"
 			"\"frames\":%lld,\"play_frames\":%lld,\"puck_path_m\":%.1f,\"stalls\":%d,\"faceoffs\":%d,\"faceoffs_without_player_touch\":%d,"
-			"\"max_faceoff_to_touch\":%d,\"max_board_distance\":%.3f,\"hash\":\"%016llx\",\"player\":%d",
+			"\"max_faceoff_to_touch\":%d,\"max_board_distance\":%.3f,\"hash\":\"%016llx\",\"player\":%d,\"draw_jumps\":%d,\"draw_presses\":%d",
 			Cartridge, Mode, static_cast<unsigned long long>(S.Seed), S.Goals[0], S.Goals[1], S.Winner, S.bOver ? "true" : "false",
 			static_cast<long long>(S.Frames), static_cast<long long>(S.PlayFrames), S.PuckPathM, S.Stalls, S.Faceoffs, S.FaceoffsWithoutPlayerTouch,
-			S.MaxFaceoffToTouch, S.MaxBoardDistance, static_cast<unsigned long long>(S.Hash), S.PlayerIndex);
+			S.MaxFaceoffToTouch, S.MaxBoardDistance, static_cast<unsigned long long>(S.Hash), S.PlayerIndex, S.DrawJumps, S.DrawPresses);
 		auto Arr = [&](const char* Name, const int* I, const double* D)
 		{
 			N += std::snprintf(Buf + N, static_cast<size_t>(BufLen - N), ",\"%s\":[", Name);

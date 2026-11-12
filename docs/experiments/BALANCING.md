@@ -37,6 +37,28 @@ What the sweeps taught:
 - A2's 4.5 m hold radius was why pro was 90% before this lane. A contested puck also gives the human more touches, not fewer.
 - A teammate yielding more (4 / 25 at all_star) makes the human's side weaker. That is why all_star shares rookie's yield numbers, for the opposite reason.
 
+## Phase 2, final (worktree a3, 16:33): stick reach 1.2 (R-0022), A16's net slide, 60 seeds
+
+Changes since the 15:30 tree:
+- Opposing carriers yield under the human's forecheck (pro 20 frames, all_star 12): they pass, else dump.
+- The draw knobs hash on the faceoff's start frame, so they vary per match. Before this fix every match got the same jump pattern.
+- The opposing centre jumps the draw early: rookie and pro always, all_star in 75% of faceoffs. This is what brings the faceoffs without a human touch to 0 at pro.
+- Rookie: speed 0.96 / red 0.88, stall 60; on the large rink (>= 110 m) speed 1.0 / red 0.93 (R-0009 point 4 offsets).
+- Pro: shot range reach + 13 m.
+- The scripted human goes round the side of a net instead of pushing into its back.
+
+| rink | level | W-L-unf | human win % | goals/match | shots AI | human touches/min (min) | match s | faceoffs without a human touch |
+|---|---|---|---|---|---|---|---|---|
+| regular | rookie | 51-9-0 | **85** | 4.1 | 7.1 | 29.4 (17.1) | 234 | 0 |
+| regular | pro | 33-27-0 | **55** | 4.0 | 8.4 | 40.1 (22.3) | 167 | 0 |
+| regular | all_star | 17-43-0 | **28** | 4.0 | 10.3 | 36.9 (16.5) | 138 | 2 |
+| large | rookie | 52-8-0 | **87** | 2.3 | 4.3 | 17.6 (7.7) | 200 | 0 |
+| large | pro | 29-31-0 | **48** | 3.0 | 5.5 | 29.9 (11.3) | 199 | 0 |
+| large | all_star | 15-45-0 | **25** | 3.7 | 9.5 | 27.5 (9.3) | 204 | 2 |
+
+Targets: regular 85 / 50 / 25 and large 85 / 45 / 25 within 5 points; faceoffs without a human touch 0 at pro and at most 2 at all_star. All met; regular pro (55) sits on the upper edge.
+The Jam.Bot gates (AiBotPlays, DifficultyProfilesResolve, HumanHasSomethingToDo, PlayerBotWins, SeasonTakes, VisualSwap), Jam.Slow.DifficultyCurve and Jam.Core.LiveConfig pass in the worktree.
+
 ## Phase 2 brain (R-0013 point 3, R-0017 point 4, R-0019)
 
 | behaviour | rookie | pro | all_star | where |
@@ -61,8 +83,6 @@ The game mode fills the inputs in `AHokejGameMode::GatherInputs`:
 - intents from `UJamSignalSystem`.
 
 The headless tournament has none of these, so the sweep measures stick play, passing and the goalie rule only.
-
-## Phase 2 rookie fix (15:36): speed 0.95, red 0.9, stall tolerance 60 frames, so rookie bots shoot in every match (SeasonTakes needs one AI shot). Rookie measured over 30 seeds: regular 83% (25-5-0), large 100%. Takes 1 and 2, seeds 1-7: every match has at least 1 AI shot, take-1 seeds 1, 2 and 7 won.
 
 ## Phase 2 sweep (15:15, gate binary of 15:00, rookie speed 0.85 / red 0.8, pro without pass-out; 20 seeds)
 

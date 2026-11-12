@@ -27,11 +27,15 @@ namespace JamAI
 		int StallFrames;          // stall tolerance: frames the puck may sit (2 m) before a support joins the chase
 		FJamBotSkill Opp;         // the opposing bots' skill
 		bool bMatesPass;          // the human's teammates pass to the human (FJamBotSkill::bPassToHuman)
+		// R-0009 point 4: per-level offsets for a large rink (length >= LargeRinkM), applied by ResolveDifficulty; 0 = same as above
+		double LargeSpeedScale = 0.0;
+		double LargeRedSkill = 0.0;
 	};
 
 	// The three profiles. Never null; an out-of-range level returns pro.
 	const FJamDifficultyProfile& GetDifficultyProfile(EDifficulty Level);
 	const char* DifficultyName(EDifficulty Level);
+	constexpr double LargeRinkM = 110.0;   // hockey.arena.large is 120 m; regular 90
 	// "rookie" | "pro" | "all_star" (exact, case-sensitive, as the schema). False on anything else.
 	bool ParseDifficulty(const char* Name, EDifficulty& Out);
 
