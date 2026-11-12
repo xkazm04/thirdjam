@@ -1,0 +1,1 @@
+B16 check: dark-volume sky (SkyA) shown, SkyB and Snow hidden, 24 m: still works

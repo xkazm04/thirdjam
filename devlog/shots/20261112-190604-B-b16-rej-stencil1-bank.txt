@@ -1,0 +1,1 @@
+B16 rejected: banks at stencil 1 (ramp + ink) quantise to black under the toon ramp; top half of cmp is stencil 0

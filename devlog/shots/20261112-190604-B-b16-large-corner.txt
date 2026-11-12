@@ -1,0 +1,1 @@
+B16 check on hockey.arena.large: bank stays outside the 120 x 60 boards at the corner gap

@@ -1,0 +1,1 @@
+B16 variant: hills on, horizon glow off (HorizonGlow 0), 24 m

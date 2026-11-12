@@ -1,0 +1,1 @@
+B16 check on hockey.arena.large (rig scale 1.333): ground and banks scale, no hole
