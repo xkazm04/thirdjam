@@ -105,6 +105,45 @@ namespace JamDesignerPromptImpl
 		return Copy;
 	}
 
+	// Lane A44: the game schema excerpt the Designer sees, cut down to the parts of `game` it may change (JamDesignerGameEditable), so the
+	// system prompt stays under 70 KB as keys are added. Mirror of trimGameSchema in tools/designer-eval/assemble.mjs, key order kept
+	// (Jam.Designer.PromptParity): a top-level key named whole stays whole; one named through sub-keys keeps those and loses the rest, its
+	// additionalProperties and the required entries that went; a key never named goes.
+	static FJPtr TrimGameSchema(const FJ& Schema)
+	{
+		FJPtr Out = Clone(Schema);
+		FJPtr Props = Out->Get(TEXT("properties"));
+		if (!Props || !Props->IsObject()) return Out;
+		TArray<FString> Keys;
+		for (const TPair<FString, FJPtr>& P : Props->Object) Keys.Add(P.Key);
+		for (const FString& Key : Keys)
+		{
+			TArray<FString> Mine;
+			for (const TCHAR* P : JamDesignerGameEditable) { const FString S(P); if (S == Key || S.StartsWith(Key + TEXT("."))) Mine.Add(S); }
+			if (Mine.Num() == 0) { Props->Object.RemoveAll([&](const TPair<FString, FJPtr>& P) { return P.Key == Key; }); continue; }
+			if (Mine.Contains(Key)) continue;
+			FJPtr Node = Props->Get(Key);
+			FJPtr Sub = Node && Node->IsObject() ? Node->Get(TEXT("properties")) : FJPtr();
+			if (!Sub || !Sub->IsObject()) continue;
+			TSet<FString> Keep;
+			for (const FString& M : Mine) { TArray<FString> Parts; M.ParseIntoArray(Parts, TEXT(".")); if (Parts.Num() > 1) Keep.Add(Parts[1]); }
+			Sub->Object.RemoveAll([&](const TPair<FString, FJPtr>& P) { return !Keep.Contains(P.Key); });
+			Node->Object.RemoveAll([](const TPair<FString, FJPtr>& P) { return P.Key == TEXT("additionalProperties"); });
+			if (FJPtr Req = Node->Get(TEXT("required")); Req && Req->IsArray())
+			{
+				Req->Array.RemoveAll([&](const FJPtr& R) { return !(R && R->IsString() && Keep.Contains(R->String)); });
+				if (Req->Array.Num() == 0) Node->Object.RemoveAll([](const TPair<FString, FJPtr>& P) { return P.Key == TEXT("required"); });
+			}
+		}
+		Out->Object.RemoveAll([](const TPair<FString, FJPtr>& P) { return P.Key == TEXT("additionalProperties"); });
+		if (FJPtr Req = Out->Get(TEXT("required")); Req && Req->IsArray())
+		{
+			Req->Array.RemoveAll([&](const FJPtr& R) { return !(R && R->IsString() && Props->Has(R->String)); });
+			if (Req->Array.Num() == 0) Out->Object.RemoveAll([](const TPair<FString, FJPtr>& P) { return P.Key == TEXT("required"); });
+		}
+		return Out;
+	}
+
 	static void FindDiffs(const FJ* X, const FJ* Y, const FString& Ptr, TArray<FString>& Out)
 	{
 		const bool bObjs = X && Y && X->IsObject() && Y->IsObject();
@@ -218,7 +257,7 @@ const FString& FJamDesignerPrompt::GetSystemText()
 		TMap<FString, FString> Vars;
 		Vars.Add(TEXT("LIMITS"), Pretty(*Limits));
 		Vars.Add(TEXT("ENVELOPE_SCHEMA"), Pretty(*Envelope));
-		Vars.Add(TEXT("GAME_SCHEMA"), Pretty(*Game));
+		Vars.Add(TEXT("GAME_SCHEMA"), Pretty(*TrimGameSchema(*Game)));
 		FString Out, Err;
 		if (!Fill(GetEmbeddedFile(TEXT("designer.system.md")), Vars, Out, Err)) return FString();
 		return Out;
