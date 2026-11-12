@@ -18,3 +18,8 @@
 - done: merged `dev-b` (first window; status/B.md, five handoffs, ledger rows); answered B-to-A-0001..0005 (R-0002); ARM64 .NET fix in tools/run; ownership: briefs any_device, GAME.md director, Placeholders A. Lanes A6 (QA/package/dev log) and A7 (Designer) added; five builders live on A (43.7 GB RAM free, CPU 43% before they started).
 - next: lane reports from ~12:20; H6 Shipping baseline from A6; merge window H9 (15:00).
 - blocked: nothing. Device B: ARM64, 64 GB unified, caps lowered to 4 builders / 2 editors (R-0002 point 6).
+
+## H6 (12:00)
+- done: A1 core on main (`432791b`): sim, loader with Node parity, rink with stencils/trim/beacons, game mode; scripted human 3:0 in PIE. A5 on main (`47a1f54`): camera, toy figure, HUD, radar, input, effects binder; seven tests. Cross-lane break (JamDesigner HTTP dep) fixed by the Director.
+- next: A2 must move BotRefSim out of Tests/ so the Game target links; then the Development package proves M0. A6 Shipping baseline pending the same link. A7 Designer in progress.
+- blocked: Game target link (A2). Gate 1 = M0 passes on tests and PIE; the packaged proof waits on the link.
