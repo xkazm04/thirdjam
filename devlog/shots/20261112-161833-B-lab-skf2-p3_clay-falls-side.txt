@@ -1,0 +1,1 @@
+SKF second pass (p3_clay, export2): from the side, Fall, Fall_Forward, GetUp, GetUp_Front, Goalie_Block_Left (8 frames each). Twist-continuous limbs, foot pitch limited to 20 deg dorsi / 25 deg plantar relative to the shin.

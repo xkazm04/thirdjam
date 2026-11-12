@@ -367,3 +367,136 @@ Outputs:
 | Stop | 37 / 37 | one-shot | n/a | 0 / 0.88 / 0 | 19.5 | 0.965 | 0.17 | 0 | 8.1 |
 | Stride | 61 / 60 | loop | 0 / 0.688 | 0.01 / -0.33 / -0.33 | 5.2 | 0.83 | one hand | 0 | 0 |
 | Stumble | 21 / 21 | one-shot | n/a | 0 / 1.06 / 0 | 10.4 | 0.965 | 0.1 | 0 | 8.1 |
+
+## Second pass: twist continuity and foot pitch (16:04 to 16:20)
+
+The coordinator asked for this pass after the retarget lane (SKH, `status/B-skater-skh.md`) found limb bones flipping 180 degrees about their own axis.
+Blender only, no credits.
+- `skf/export/` is untouched: its files are still from 15:27 to 15:30, and the engine lane imports from it.
+- `s4/` is untouched.
+- New files are in `C:\Users\kazda\jam\skater-lab\skf\export2\<style>\`, with the same file names: `SK_Skater_<style>.fbx`, `SK_Skater_<style>_loopcut.fbx`, `SM_Stick_<style>.fbx`.
+- Work files, checks and comparisons are in `skf\work2\<style>\`.
+- Rebuild with `SKF_SUFFIX=2 bash C:/Users/kazda/jam/skater-lab/skf/run_all.sh`, about 1 min. That writes `export2/ work2/ r2/ sheets2/ logs2/`; without the suffix the script writes the first-pass folders.
+- `node C:/Users/kazda/jam/skater-lab/skf/compare2.mjs`, run from `skf/`, prints the comparison below.
+
+**Bind.** Bone names, hierarchy and rest bone heads match `export/` exactly in all three styles. Triangle counts are unchanged (6,746 / 11,968 / 9,636).
+- p2_cel and p4_broadcast: rest bounds also identical.
+- p3_clay: rest bounds differ by 3 mm at the left edge (y 69.9 to 69.6 cm), so its clay surface is not bit-identical between runs. I have not found the cause.
+- An animation-only re-import onto the existing skeletons should be safe in all three. For P3 the mesh itself differs by a few millimetres.
+
+### 1. Measurement (added to `check_fbx.py`, run on the re-imported FBX)
+
+For every take, bone and frame step (including the wrap from the last frame to the first in looping takes), the check measures:
+- the total rotation angle;
+- its twist about the bone's own axis.
+
+It lists every step over 45 degrees and counts those over 60. It also measures foot pitch relative to the shin per take. "Before" is the first-pass `export/`, re-checked in `skf/before2/`.
+
+| Style | Steps > 60 deg, before -> after | Steps > 45 deg | **Twist > 60 deg** | **Twist > 45 deg** | Loopcut file, twist > 45 |
+|---|---|---|---|---|---|
+| p2_cel | 110 -> **4** | 129 -> 18 | 84 -> **0** | 93 -> **0** | 93 -> 0 |
+| p3_clay | 114 -> **4** | 139 -> 31 | 84 -> **0** | 97 -> **0** | 97 -> 0 |
+| p4_broadcast | 109 -> **3** | 130 -> 26 | 92 -> **0** | 99 -> **0** | 99 -> 0 |
+
+Before, takes with steps over 60 deg (counts per style P2 / P3 / P4):
+
+| Take | Before | After |
+|---|---|---|
+| Stumble | 21 / 21 / 21 | 1 / 1 / 1 |
+| Shot_Slap | 19 / 12 / 17 | 2 / 2 / 1 |
+| Fall | 15 / 24 / 14 | 0 or 1 |
+| Foul_Reaction | 14 / 14 / 14 | 0 |
+| GetUp | 8 / 9 / 8 | 0 |
+| GetUp_Front | 4 / 6 / 6 | 0 |
+| Fall_Forward | 6 / 4 / 6 | 0 or 1 |
+| Celebrate, Check | 5 each | 0 |
+| Stride | 2 / 4 / 4 | 0 |
+| Poke, Crossover_Left, Goalie_Block_L/R | 2 each | 0 |
+| Shot_Wrist | 3 / 2 / 1 | 0 |
+
+The full per-take list, with foot pitch, is in `skf/work2/<style>/compare.md`.
+
+**P4 `Stride` (the retarget lane's case)**: no step over 45 deg remains. The largest is 22.4 deg (`lowerarm_l`, frames 25 to 26), and the wrap is clean.
+
+**Every step still over 45 deg is a swing, not a twist** (twist at most 12 deg per frame for limb bones). Each comes from a fast move in the pose table:
+
+| Take, frame | Bones, largest step | Why |
+|---|---|---|
+| `Shot_Slap` f20 | spine_03, neck_01, clavicles 46.2 deg; left forearm and hand up to 70 deg | The downswing: key 19 eases "in" to the hit at 23, so the body unwinds fastest here. spine and neck carry 39 to 43 deg of authored yaw. |
+| `Stumble` f1-3; `Fall` and `Fall_Forward` f1-3 | upper arms up to 70 deg, forearms up to 50 deg | These one-shots leave Glide with an "out" ease to the hit key at frame 6, so the arms fling out fastest in the first frames. |
+| `Poke` f6 | free upper arm 46 to 58 deg | Thrown back for balance; key 5 to 10 eases "out". |
+| `Celebrate` f4 | right forearm 45 to 54 deg | The stick comes up fast into the arms-up key. |
+
+The 45-deg target is met for twist everywhere. For swing it is met everywhere except these authored fast moves. If skinned figures need them slower, retime or ease those keys in the pose table.
+
+### 2. The solver fix (`build_clips.py`, applies to all three styles)
+
+Root cause: the IK fixes each limb bone's direction, but takes the roll and the bend side from the pole projected off the bone, or off the root-to-target line. When the pole nearly lines up with that line, the projection swings round in one frame:
+- a twist flip of up to 180 deg about the bone (invisible on ball joints);
+- or the elbow or knee flipping sides (up to 144 deg forearm swing in `Foul_Reaction` and `Stumble`).
+
+Fixes:
+- **Twist continuity** (`Solver.enforce_twist`). For thigh, calf, upper arm, forearm and hand, on both sides, the twist relative to the previous frame (after removing the swing) is limited to 12 deg per frame. The bone follows the IK roll at that rate, unwrapped, never snapped.
+  - Children keep their world pose. They sit on the bone's axis, so no joint position moves.
+  - The stick stays exactly where it was, because it is placed in world space.
+- **Bend-direction continuity** (`Solver.limb`). The knee or elbow bend direction may swing at most 30 deg per frame towards the pole.
+- **Loops** run two warm-up laps before the recorded lap, so frame 0 continues from the end of the loop. Frame 0 and the last frame still agree exactly (main seams 0.000 cm), and the loopcut wrap is one ordinary frame step.
+
+### 3. Foot pitch limit (relative to the shin): 20 deg dorsiflexion, 25 deg plantar flexion
+
+- **Flat skates** (authored skate pitch under 10 deg) whose shin leans too far forward: the blade stays flat and the ankle slides forward under the knee, at most 6 cm. The knee and hip take up the difference through the IK; the pelvis does not move.
+- **Pitched skates** (kneels, falls): the skate turns about the ankle to the limit, and the ankle is raised only if a blade point would go under the ice.
+- Between 10 and 20 deg of authored pitch the two blend, so nothing toggles.
+
+Largest foot pitch, dorsi / plantar in degrees (positive plantar = toes away from the shin):
+
+| Style | All takes, before -> after | Fall | GetUp | Goalie_Block_L/R | Glide | Stride (dorsi) |
+|---|---|---|---|---|---|---|
+| p2_cel | 80.8 / 34.8 -> **20.2 / 25.1** | 32 / 30 -> 20 / 25 | 81 / 34 -> 20 / 25 | 42 / 35 -> 20 / 25 | 32 -> 20 | 34 -> 20 |
+| p3_clay | 81.3 / 37.9 -> **20.8 / 25.0** | 32 / 29 -> 20 / 25 | 81 / 25 -> 20 / 25 | 42 / 38 -> 20 / 25 | 32 -> 20 | 33 -> 20 |
+| p4_broadcast | 80.7 / 47.2 -> **21.2 / 25.1** | 35 / 47 -> 20 / 25 | 81 / 35 -> 20 / 25 | 45 / 41 -> 20 / 25 | 35 -> 20 | 37 -> 20 |
+
+Fall_Forward and GetUp_Front went from 58 to 65 deg of dorsiflexion to 20. The worst remaining is 21.2 deg (P4 crossovers: the slide cap is reached and the turn takes the rest).
+Lowest skate point in the lying and kneeling takes after the fix: 0.0 to 0.25 cm, so no skate dips into the ice. I did not measure the skinned-figure skate lift that the retarget lane reported (9 to 20 cm); that needs a retarget run on `export2/`.
+
+### 4. Other checks re-run (first pass -> second pass)
+
+**Unchanged** in all three styles:
+- pelvis horizontal travel and root movement 0.000 cm (both files, all 31 takes);
+- loop seams 0.000 cm in the main file;
+- 24 bones, 31 / 31 takes;
+- reaches exactly as before: Aim_Front, Aim_Left, Aim_Right 1.000 m; Aim_FarReach and Poke 1.600 m; same blade heights (4.5 to 5.2 cm and 8.9 to 9.4 cm);
+- the bottom hand off the shaft is unchanged except P2 `Shot_Slap`, which improved from 2.74 to 0.10 cm;
+- the right-arm extension is unchanged.
+
+**Moved:**
+
+| Style | Take | Number | First pass -> second pass |
+|---|---|---|---|
+| p2_cel | Lean_Left / Lean_Right | lowest skate | 1.2 -> 0.41 cm (better) |
+| p2_cel | Stumble | first vs last frame | 0 -> **4.4 cm** (see below) |
+| p3_clay | Aim_Front | lowest skate | 0.14 -> 0.65 cm (the dorsiflexion limit tips the boot slightly) |
+| p3_clay | Aim_Right | lowest skate | 0.14 -> 1.11 cm |
+| p3_clay | Stumble | first vs last frame | 0 -> 1.3 cm |
+| p4_broadcast | Lean_Left / Lean_Right | lowest skate | 1.11 -> 0.36 cm (better) |
+| p4_broadcast | Stumble | first vs last frame | 0 -> 3.4 cm |
+| p4_broadcast | Goalie_Block_Left | first vs last frame | 59.3 -> 60.4 cm (ends in the block by design) |
+
+`Stumble` does not end exactly in Glide any more: its 20 frames are too short for the elbow bend direction to finish swinging back at 30 deg per frame. A blend out of the one-shot hides 1 to 4 cm.
+
+One intermediate attempt was wrong and is gone: pivoting the skate on the touching blade end made the ankle jump 17 cm in `GetUp` and the P4 crossover wrap jump 21 cm. The final version pivots about the ankle and caps the slide; the numbers above are from it.
+
+### Sheets (only where the picture changed)
+
+- `devlog/shots/20261112-161833-B-lab-skf2-p2_cel-falls-side.png`
+- `devlog/shots/20261112-161833-B-lab-skf2-p3_clay-falls-side.png`
+- `devlog/shots/20261112-161833-B-lab-skf2-p4_broadcast-falls-side.png`
+
+Each is from the side, from `export2/`: Fall, Fall_Forward, GetUp, GetUp_Front, Goalie_Block_Left, 8 frames each. Boots now stay in line with the shin when lying and kneeling.
+
+### Not verified
+
+- **Skinned figures.** My figures are rigid. Whether the hand jumps (18 to 80 cm) and the skate lift on skinned figures are gone needs the retarget lane to re-run on `export2/`. Nothing in the bone data now turns more than 12 deg per frame about its own axis.
+- **Unreal.** Nothing was imported there.
+- **Authored fast moves.** The swing steps over 45 deg listed above (slap downswing, the starts of Stumble and the falls, the poke's free arm) are authored. I left them as they are.
+- **Skate lift.** The dorsiflexion limit lifts P3's skate 0.65 to 1.1 cm in two aim holds.
