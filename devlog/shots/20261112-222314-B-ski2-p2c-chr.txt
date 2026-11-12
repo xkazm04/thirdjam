@@ -1,0 +1,1 @@
+SKI2 Check_Hit_Right on P2C at the game camera (6 m behind, 3.5 m up), slomo 0.06: Blender flagged the stick inside the helmet radius; at this camera the stick stands up beside the helmet for about 0.2 s, it does not read as going through it

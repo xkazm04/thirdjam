@@ -1,0 +1,1 @@
+SKH7 R (export7), side: Fall_Forward, Knockdown_Back, Trip, GetUp_Front (face-down legs rule: skates on the ice), then Board_Hit and GetUp_Side_Left (stick as export5)
