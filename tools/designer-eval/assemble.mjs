@@ -10,6 +10,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { DESIGNER_GAME_EDITABLE } from '../../schema/validate.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 export const ROOT = resolve(HERE, '..', '..');
@@ -47,6 +48,36 @@ function fill(template, vars) {
 const escapeText = (s) => s.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const escapeJson = (s) => s.replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
 
+// Lane A44: the game schema excerpt the Designer sees is cut down to the parts of `game` it may change (DESIGNER_GAME_EDITABLE), so the
+// system prompt stays under 70 KB as keys are added. A top-level key named whole in the list (pickups, effects, barks, commentary) stays whole;
+// one named only through sub-keys (rink.length_m, shot.one_timer, camera.end_height_m) keeps those sub-keys and loses the others, its
+// `additionalProperties: false` and the `required` entries that went (the real `game` keeps those keys: the prompt says copy them). A key the
+// list never names (teams, puck) goes. The C++ twin is TrimGameSchema in JamDesignerPrompt.cpp; Jam.Designer.PromptParity keeps the two equal.
+export function trimGameSchema(schema, paths = DESIGNER_GAME_EDITABLE) {
+  const out = JSON.parse(JSON.stringify(schema));
+  const props = out.properties ?? {};
+  for (const key of Object.keys(props)) {
+    const mine = paths.filter((p) => p === key || p.startsWith(`${key}.`));
+    if (mine.length === 0) { delete props[key]; continue; }
+    if (mine.includes(key)) continue;
+    const node = props[key];
+    if (!node || typeof node !== 'object' || !node.properties) continue;
+    const keep = new Set(mine.map((p) => p.split('.')[1]));
+    for (const k of Object.keys(node.properties)) if (!keep.has(k)) delete node.properties[k];
+    delete node.additionalProperties;
+    if (Array.isArray(node.required)) {
+      node.required = node.required.filter((r) => keep.has(r));
+      if (node.required.length === 0) delete node.required;
+    }
+  }
+  delete out.additionalProperties;
+  if (Array.isArray(out.required)) {
+    out.required = out.required.filter((r) => r in props);
+    if (out.required.length === 0) delete out.required;
+  }
+  return out;
+}
+
 export function buildSystemText({ limits, envelopeSchema, gameSchema, prompts = loadPrompts() } = {}) {
   const lim = limits ?? JSON.parse(read('schema', 'limits.json'));
   // blocked_terms stay out of the prompt on purpose: they are a program-side net, not instructions to the model.
@@ -54,7 +85,7 @@ export function buildSystemText({ limits, envelopeSchema, gameSchema, prompts = 
   return fill(prompts.system, {
     LIMITS: JSON.stringify(visible, null, 2),
     ENVELOPE_SCHEMA: JSON.stringify(envelopeSchema ?? JSON.parse(read('schema', 'cartridge.schema.json')), null, 2),
-    GAME_SCHEMA: JSON.stringify(gameSchema ?? JSON.parse(read('schema', 'game.schema.json')), null, 2),
+    GAME_SCHEMA: JSON.stringify(trimGameSchema(gameSchema ?? JSON.parse(read('schema', 'game.schema.json'))), null, 2),
   });
 }
 

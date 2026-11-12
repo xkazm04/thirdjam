@@ -1,0 +1,71 @@
+{
+  "tool": "thirdjam.cuts/1",
+  "seeds": "1-5",
+  "max_frames": 36000,
+  "late_frames": 18000,
+  "difficulty": "the cut's own",
+  "counts": {
+    "cuts": 1,
+    "plays": 1,
+    "ends late": 0,
+    "no human touch": 0,
+    "never ends": 0,
+    "loader rejects": 0,
+    "no goals": 0
+  },
+  "rows": [
+    {
+      "id": "shield-cut",
+      "group": "cuts",
+      "name": "Shield Cut",
+      "sentence": "a two metre shield in front of each net and a four minute clock",
+      "file": "C:/Users/kazda/kiro/thirdjam/.claude/worktrees/a44/tools/cuts/out/cuts/shield-cut.cartridge.json",
+      "verdict": "plays",
+      "detail": "",
+      "level": "pro",
+      "rules_mode": "timer",
+      "score_to_win": 3,
+      "timer_frames": 14400,
+      "seeds": 5,
+      "over": 5,
+      "wins": 5,
+      "losses": 0,
+      "draws": 0,
+      "goals_mean": 2.2,
+      "goals_human_mean": 2,
+      "frames_mean": 14954,
+      "frames_max": 15334,
+      "human_touches_mean": 154.4,
+      "human_shots_mean": 18,
+      "faceoffs": 21,
+      "faceoffs_without_touch": 0,
+      "max_faceoff_to_touch": 12,
+      "pickups_spawned": 0,
+      "pickups_taken": 0,
+      "human_pickups": 0,
+      "effects_started": 0,
+      "hooks": 0,
+      "rule_fires": 0,
+      "end_match_actions": 0,
+      "zones": 0,
+      "zone_enters": 0,
+      "periods": 3,
+      "end_cause": "timer",
+      "checks": 0,
+      "shots_blocked": 0,
+      "rink_m": [
+        90,
+        45
+      ],
+      "outside_rink": 0,
+      "effect_errors": "",
+      "hashes": [
+        "ca7e28ca27e2eaf8",
+        "e46df4a475d41fc7",
+        "511af4443df79667",
+        "d81a9a63c881dd00",
+        "2cb124db49c64fb5"
+      ]
+    }
+  ]
+}

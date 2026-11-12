@@ -118,7 +118,7 @@ The loader applies overrides after validation, before defaults for absent game k
 
 ## Designer editing
 
-`DESIGNER_GAME_EDITABLE` in `validate.mjs` lists the `game` paths a Designer reply may change; any other difference in `game`, notably any skater `role`, any `spawn`,
+`DESIGNER_GAME_EDITABLE` in `validate.mjs` lists the `game` paths a Designer reply may change (lane A44 added `shot.one_timer`, `skater.breakaway`, `stick.deke`, `stick.foul_grace_frames`, `commentary`, `look.trim_emissive`, `camera.boards_margin_m` / `end_height_m` / `far_net_bias`; the prompt's game schema excerpt is trimmed to this list); any other difference in `game`, notably any skater `role`, any `spawn`,
 and `camera.mode`, is rejected with the pointer of the changed value. The game does not need this check at load time (a human-authored cartridge may set anything valid);
 it applies to `validateDesignerOutput` and the C++ `JamDesigner` mirror of it.
 

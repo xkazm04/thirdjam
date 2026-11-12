@@ -43,7 +43,7 @@ struct JAMDESIGNER_API FJamDesignerPrompt
 	static FString GetEmbeddedFile(const FString& Name);
 
 	// buildSystemText(): designer.system.md with {{LIMITS}} (limits.json without blocked_terms), {{ENVELOPE_SCHEMA}} and
-	// {{GAME_SCHEMA}} as JSON.stringify(x, null, 2). Built once.
+	// {{GAME_SCHEMA}} (the game schema trimmed to the Designer-editable paths, lane A44) as JSON.stringify(x, null, 2). Built once.
 	static const FString& GetSystemText();
 
 	// assembleRequest(): the request body as compact JSON. Previous empty = first attempt; otherwise a repair attempt with
