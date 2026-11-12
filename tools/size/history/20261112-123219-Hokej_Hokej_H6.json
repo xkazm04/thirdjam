@@ -1,0 +1,285 @@
+{
+ "staged_mb": 548,
+ "folders_mb": {
+  "paks": 233.7,
+  "code": 212.2,
+  "plugins": 72.8,
+  "redist": 28.9,
+  "engine-loose": 0.2,
+  "other": 0.2
+ },
+ "classes_mb": {
+  "nne-models": 98.4,
+  "shaders": 81.3,
+  "textures": 20.9,
+  "engine-other": 16.2,
+  "container-meta": 3.6,
+  "materials": 0.2,
+  "audio": 0.2,
+  "meshes": 0.1,
+  "ui": 0,
+  "maps": 0
+ },
+ "classes_raw_mb": {
+  "nne-models": 106.1,
+  "shaders": 81.3,
+  "engine-other": 62.5,
+  "textures": 62.4,
+  "container-meta": 3.6,
+  "audio": 2.4,
+  "materials": 1.2,
+  "meshes": 0.6,
+  "maps": 0.2,
+  "ui": 0.1
+ },
+ "sources_mb": {
+  "engine-plugin:NNEDenoiser": 98.4,
+  "shader-code": 84.5,
+  "game:UI": 20.6,
+  "engine:EngineMaterials": 6.3,
+  "engine:MapTemplates": 4.3,
+  "engine-plugin:Assets": 2.7,
+  "engine-plugin:ControlRig": 0.9,
+  "engine:VREditor": 0.8,
+  "engine-plugin:SpeedTreeImporter": 0.7,
+  "shader-library": 0.4,
+  "engine:EditorResources": 0.2,
+  "engine:BasicShapes": 0.1,
+  "engine:EngineMeshes": 0.1,
+  "engine:EditorMeshes": 0.1,
+  "engine:EditorMaterials": 0.1,
+  "engine-plugin:ToolsetRegistry": 0.1,
+  "engine-plugin:Water": 0.1,
+  "engine-plugin:MovieRenderPipeline": 0.1
+ },
+ "container_entries": 2175,
+ "largest_files": [
+  {
+   "path": "ThirdJam/Content/Paks/ThirdJam-Windows.ucas",
+   "mb": 218.9
+  },
+  {
+   "path": "ThirdJam/Binaries/Win64/ThirdJam-Win64-Shipping.exe",
+   "mb": 171.7
+  },
+  {
+   "path": "ThirdJam/Plugins/DLSS/Binaries/ThirdParty/Win64/nvngx_dlss.dll",
+   "mb": 56.2
+  },
+  {
+   "path": "Engine/Extras/Redist/en-us/vc_redist.x64.exe",
+   "mb": 17.7
+  },
+  {
+   "path": "ThirdJam/Binaries/Win64/DML/x64/DirectML.dll",
+   "mb": 17.7
+  },
+  {
+   "path": "Engine/Plugins/NNE/NNERuntimeORT/Binaries/ThirdParty/Onnxruntime/Win64/onnxruntime.dll",
+   "mb": 16.5
+  },
+  {
+   "path": "Engine/Extras/Redist/en-us/vc_redist.arm64.exe",
+   "mb": 11.2
+  },
+  {
+   "path": "ThirdJam/Content/Paks/ThirdJam-Windows.pak",
+   "mb": 10.9
+  },
+  {
+   "path": "Engine/Binaries/ThirdParty/NVIDIA/NVaftermath/Win64/GFSDK_Aftermath_Lib.x64.dll",
+   "mb": 5.5
+  },
+  {
+   "path": "ThirdJam/Binaries/Win64/D3D12/x64/D3D12Core.dll",
+   "mb": 4.8
+  }
+ ],
+ "largest_assets": [
+  {
+   "name": "<ShaderCode chunks>",
+   "class": "shaders",
+   "mb": 80.8,
+   "raw_mb": 80.8
+  },
+  {
+   "name": "Engine/Plugins/NNE/NNEDenoiser/Content/NNE_oidn2-3-0_rt_hdr_calb_cnrm_large__dyn__fp16_opset11_DenoiseAlpha",
+   "class": "nne-models",
+   "mb": 44.2,
+   "raw_mb": 47.6
+  },
+  {
+   "name": "Engine/Plugins/NNE/NNEDenoiser/Content/NNE_oidn2-3-0_rt_hdr_calb_cnrm_large__dyn__fp16_opset11_ForwardAlpha",
+   "class": "nne-models",
+   "mb": 40.9,
+   "raw_mb": 44.1
+  },
+  {
+   "name": "Engine/Plugins/NNE/NNEDenoiser/Content/NNE_oidn2-3-0_rt_hdr_alb_nrm__dyn__fp16_opset11_DenoiseAlpha",
+   "class": "nne-models",
+   "mb": 6.5,
+   "raw_mb": 7.1
+  },
+  {
+   "name": "Engine/Content/MapTemplates/Sky/DaylightAmbientCubemap",
+   "class": "engine-other",
+   "mb": 4.3,
+   "raw_mb": 16
+  },
+  {
+   "name": "<ScriptObjects>",
+   "class": "container-meta",
+   "mb": 3.6,
+   "raw_mb": 3.6
+  },
+  {
+   "name": "Engine/Plugins/NNE/NNEDenoiser/Content/NNE_oidn2-3-0_rt_hdr_alb_nrm__dyn__fp16_opset11_ForwardAlpha",
+   "class": "nne-models",
+   "mb": 3.3,
+   "raw_mb": 3.5
+  },
+  {
+   "name": "ThirdJam/Content/UI/T_UI_TitleSlate",
+   "class": "textures",
+   "mb": 2.9,
+   "raw_mb": 6
+  },
+  {
+   "name": "ThirdJam/Content/UI/T_UI_Card_SmallRink",
+   "class": "textures",
+   "mb": 2.8,
+   "raw_mb": 6
+  },
+  {
+   "name": "ThirdJam/Content/UI/T_UI_TakeCard",
+   "class": "textures",
+   "mb": 2.7,
+   "raw_mb": 6
+  },
+  {
+   "name": "Engine/Plugins/Interchange/Assets/Content/Utilities/New_LUT",
+   "class": "engine-other",
+   "mb": 2.5,
+   "raw_mb": 8.7
+  },
+  {
+   "name": "ThirdJam/Content/UI/T_UI_Card_DirectorsCut",
+   "class": "textures",
+   "mb": 2.5,
+   "raw_mb": 6
+  },
+  {
+   "name": "ThirdJam/Content/UI/T_UI_Card_Boost",
+   "class": "textures",
+   "mb": 2.5,
+   "raw_mb": 6
+  },
+  {
+   "name": "Engine/Plugins/NNE/NNEDenoiser/Content/NNE_oidn2-3-0_rt_hdr_alb_nrm_small__dyn__fp16_opset11_DenoiseAlpha",
+   "class": "nne-models",
+   "mb": 2.3,
+   "raw_mb": 2.5
+  },
+  {
+   "name": "ThirdJam/Content/UI/T_UI_Card_Regular",
+   "class": "textures",
+   "mb": 2.2,
+   "raw_mb": 6
+  },
+  {
+   "name": "ThirdJam/Content/UI/T_UI_Card_Wide",
+   "class": "textures",
+   "mb": 2.1,
+   "raw_mb": 6
+  },
+  {
+   "name": "Engine/Content/EngineMaterials/FastBlueNoise_vec2_128x128x64",
+   "class": "engine-other",
+   "mb": 2,
+   "raw_mb": 4
+  },
+  {
+   "name": "Engine/Plugins/NNE/NNEDenoiser/Content/NNE_oidn2-3-0_rt_hdr_alb_nrm_small__dyn__fp16_opset11_ForwardAlpha",
+   "class": "nne-models",
+   "mb": 1.1,
+   "raw_mb": 1.3
+  },
+  {
+   "name": "Engine/Content/EngineMaterials/FastBlueNoise_scalar_128x128x64",
+   "class": "engine-other",
+   "mb": 1,
+   "raw_mb": 1
+  },
+  {
+   "name": "ThirdJam/Content/UI/T_UI_Icons_Cuts",
+   "class": "textures",
+   "mb": 1,
+   "raw_mb": 6
+  },
+  {
+   "name": "ThirdJam/Content/UI/T_UI_Icons_System",
+   "class": "textures",
+   "mb": 1,
+   "raw_mb": 6
+  },
+  {
+   "name": "ThirdJam/Content/UI/T_UI_Icons_Pickups",
+   "class": "textures",
+   "mb": 0.9,
+   "raw_mb": 6
+  },
+  {
+   "name": "Engine/Content/EngineMaterials/Substrate/Glints2/AGlintTex2dArray2",
+   "class": "engine-other",
+   "mb": 0.8,
+   "raw_mb": 2
+  },
+  {
+   "name": "Engine/Plugins/Editor/SpeedTreeImporter/Content/SpeedTree9/game_wind_noise",
+   "class": "engine-other",
+   "mb": 0.7,
+   "raw_mb": 1.3
+  },
+  {
+   "name": "Engine/Content/VREditor/TransformGizmo/TransformGizmoFreeRotation",
+   "class": "engine-other",
+   "mb": 0.5,
+   "raw_mb": 2.5
+  },
+  {
+   "name": "Engine/Content/EngineMaterials/Substrate/GLints/AGlintTex2dArray",
+   "class": "engine-other",
+   "mb": 0.5,
+   "raw_mb": 1
+  },
+  {
+   "name": "Engine/Content/EngineMaterials/DefaultDiffuse",
+   "class": "engine-other",
+   "mb": 0.5,
+   "raw_mb": 0.7
+  },
+  {
+   "name": "Engine/Content/EngineMaterials/DefaultBloomKernel",
+   "class": "engine-other",
+   "mb": 0.3,
+   "raw_mb": 2
+  },
+  {
+   "name": "Engine/Content/EngineMaterials/Hair/Hair_DirectionalAlbedo",
+   "class": "engine-other",
+   "mb": 0.2,
+   "raw_mb": 0.5
+  },
+  {
+   "name": "ThirdJam/Content/ShaderArchive-Global-PCD3D_SM6-PCD3D_SM6.ushaderbytecode",
+   "class": "shaders",
+   "mb": 0.2,
+   "raw_mb": 0.2
+  }
+ ],
+ "errors": [],
+ "zip_mb": 376.2,
+ "label": "Hokej_Hokej_H6",
+ "input": "C:\\Users\\kazda\\AppData\\Local\\Temp\\a6pkg3\\_stage\\Windows",
+ "at": "2026-11-12T11:32:19.410Z"
+}
