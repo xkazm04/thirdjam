@@ -353,3 +353,123 @@ Each sheet has these rows:
 - **Twist flips in the sources.** S4 and all three SKF sets carry 156 to 178 frame-to-frame 180-degree twists on arm bones (`flips.py`). On the retargeted figures they show as hand pops of up to 58 to 80 cm in one frame in GetUp, Fall and Stumble. **These were in the first-pass exports too**; they are not new, but they are not fixed. The fix belongs in the source solver (SKF/S4: keep IK twist continuous). My retarget-side untwist made things worse and is off.
 - **Toe-standing** in kneels and lying poses on the generated meshes (9 to 20 cm): unchanged; it needs a foot-pitch limit.
 - **Reach on aims seen from the side:** `Aim_Left` and `Aim_Right` are foreshortened in the side view. Their numbers come from `verify.py`, not the picture.
+
+## Third pass: twist-fixed clips (16:33)
+
+**Short answer:**
+- **`export3` should replace `export2` in the engine for R, P3A and P4B.**
+- **For P4B the matched source `p4_broadcast` now wins:** the Stride pop is gone (loop wrap 0.5 cm hand, 0.3 cm blade; was 18.5 and 15.1 cm).
+- **Lying and kneeling skate lift is mostly fixed** by the source's foot-pitch limit.
+- **Skeleton, bind and mesh equal `skh/export/`**, so only the animations change.
+
+All of this is measured in Blender on the re-imported FBX. Unreal is unverified.
+
+Paths:
+
+| What | Where |
+|---|---|
+| Exports | `C:\Users\kazda\jam\skater-lab\skh\export3\{R,P3A,P4B,P4B_ctl_p2}\SK_Skater_<asset>.fbx` and `_loopcut.fbx`, each with its base-colour PNG |
+| Measurements | `skh\out3\<folder>\`; the hand jumps in `skh\jump\` |
+| The table | `skh\three_final.md` |
+| Inputs | copies of `skf/export2` (16:17) in `skh\in\skf2\` |
+| Configs | `cfg/3_*.json` |
+| Rebuild one figure | `bash skh/build3.sh <folder>` |
+
+### Incident: `export2` was overwritten for 91 s and restored
+
+My first third-pass configs kept `"export_dir": "export2"` (a sed slip). From **16:21:53 to 16:22:05** the third-pass builds wrote the files listed below into `skh/export2/`, replacing the second-pass files there:
+- `R/SK_Skater_R.fbx` and `_loopcut`
+- `P3A/SK_Skater_P3A.fbx` and `_loopcut`
+- `P4B/SK_Skater_P4B.fbx` and `_loopcut`
+- `P4B_ctl_p2/SK_Skater_P4B.fbx` and `_loopcut`
+
+I moved those files to `export3/` and rebuilt `export2/` from the unchanged second-pass configs. The rebuild finished at **16:23:24**.
+
+The restored files are proven identical to the 16:00 files:
+- **sizes:** byte counts identical;
+- **verification:** re-verifying all 31 takes gives numbers identical to the 16:00 `out2/verify.json`.
+
+**Any import from `skh/export2/` that read files between 16:21:53 and 16:23:24 should be re-run.**
+
+### Did the source fix remove the jumps?
+
+`handjump.py` measures the largest one-frame move of `hand_l` and `hand_r` and of the blade centre. It reads the main file, whose last step is the loop wrap.
+- **Most of the remaining "over 15 cm" steps are real speed.** The fixed sources themselves have 120 to 124 such steps; a slap blade moves 80 to 90 cm in one frame at 60 fps.
+- **The big hand pops were mine.** GetUp frame 3 (58 to 80 cm) and Fall frame 27 (55 to 66 cm) were in every pass. They were not source twists: the left-hand IK weight jumped from 1 to 0 in one frame, when S4's glove-to-shaft distance crossed the 5 to 12 cm band.
+- **New rule, this pass:** the grip weight may now change by at most 0.10 per frame, forward and backward, cyclic on loops.
+- **Result:** the largest hand step is now 31 / 32 / 38 cm (R / P3A / P4B), in Shot_Slap and Fall. The source's own largest is 40 cm, in Shot_Slap.
+- **The price:** the left mitten blends onto the shaft over about 10 frames, so the two-handed grip means rise by 1 to 2 cm, and Stumble's maximum rises to 30 to 34 cm.
+
+### Continuity fixes
+
+- **Left on, but no longer needed for the pop they targeted:** the slide fade and the 5-frame slide median from the second pass. Their target, the P4B Stride flip, came from the source and is gone. I did not test whether they still change anything.
+- **Left off:** the tilt median and the untwist pass.
+- **R regression:** still 0.00000 cm from `s5/export` (`out_reg/compare_s5.json`).
+
+### Bind check (`out3/<c>/bindcheck.json`, against `skh/export/`)
+
+| Compared | Result |
+|---|---|
+| Bone names and parents | equal |
+| Rest matrices | max difference 0.0 |
+| Body and stick vertices | difference 0.0 |
+| Weights, polygons | hashes equal |
+| UVs | difference 0.0 |
+
+This holds for R, P3A, P4B and the P4B control (against `export/P4B`).
+
+### Old / second / third (re-imported main files)
+
+How to read the columns:
+- *Grip*: left mitten to shaft on two-handed frames, mean / max (take).
+- *Lift*: skate lift on frames where S4's skate is on the ice, for Fall / Fall_Forward / GetUp / GetUp_Front / Goalie_Block_Left / Goalie_Block_Right.
+- *Reach*: before the rule -> after.
+- *Jump*: largest one-frame move of hand (take) / blade (take); then the number of steps over 15 cm; then Stride's own maximum hand and blade step / its loop wrap.
+
+| Cand. | Pass (source) | Grip mean / max | Slap/wrist max | Stick/mitt in head | Lift: Fall / Fall_Fwd / GetUp / GetUp_Front / Block L / Block R | Goalie stick (S4 16-19) | Blade err max | Reach err: Front / Left / Right / FarReach / Poke | Largest jump: hand / blade | Steps > 15 cm | Stride max / wrap |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| R | export (S4) | 6.9 / 18.8 (GetUp) | 17.7 | 0 | 9.5 / 10.3 / 6.0 / 6.5 / 1.9 / 1.8 | 26.3 | 20.7 | 3.3 / 3.2 / 5.2 / 9.0 / 32.8 | 57.8 (GetUp) / 78.9 (Slap) | 130 | 4.0, 3.9 / 0.4, 0.2 |
+| R | export2 (p2_cel) | 4.4 / 22.9 (GetUp) | 11.9 | 0 | 9.1 / 10.3 / 6.0 / 6.5 / 1.9 / 1.8 | 27.9 | 1.9 | 4.7 / 4.2 / 8.0->0.0 / 5.2->0.5 / 4.2 | 58.2 (GetUp) / 90.5 (Slap) | 119 | 3.5, 2.9 / 0.4, 0.2 |
+| R | **export3** (p2_cel fixed) | 6.5 / 29.8 (Stumble) | 11.4 | 0 | **0.3 / 5.1 / 0.9 / 5.1 / 0.2 / 0.2** | 27.9 | 2.3 | 3.4 / 0.7 / 6.9->0.7 / 5.2->0.5 / 3.7 | **30.8 (Slap)** / 90.4 (Slap) | 121 | 3.2, 2.9 / 0.4, 0.2 |
+| P3A | export (S4) | 13.2 / 28.4 (Shot_Charge) | 30.2 | 9 | 16.2 / 0.8 / 16.2 / 7.4 / 9.7 / 8.9 | 31.7 | 1.5 | -0.6 / -0.9 / -4.7 / 14.0 / 44.5 | 56.8 (GetUp) / 99.7 (Slap) | 168 | 8.2, 3.8 / 0.4, 0.2 |
+| P3A | export2 (p3_clay) | 9.7 / 25.9 (Crossover_R) | 20.7 | 8 | 13.6 / 0.3 / 13.1 / 0.3 / 9.5 / 8.6 | 34.3 | 2.2 | 3.1 / 5.6->1.4 / -1.1 / 30.6->0.0 / 28.1->0.0 | 57.3 (GetUp) / 94.5 (Slap) | 144 | 8.3, 5.7 / 0.4, 0.2 |
+| P3A | **export3** (p3_clay fixed) | 11.4 / 32.3 (Stumble) | 19.7 | 7 | **0.3 / 0.4 / 0.4 / 0.4 / 0.3 / 0.4** | 34.3 | 2.0 | 2.1 / 1.1 / -1.2 / 30.6->0.0 / 26.3->0.0 | **32.2 (Fall)** / 93.7 (Slap) | 147 | 4.7, 5.9 / 0.4, 0.2 |
+| P4B | export (S4) | 4.4 / 18.9 (Crossover_R) | 10.6 | 0 | 0.5 / 18.2 / 10.9 / 18.2 / 16.8 / 16.7 | 19.7 | 1.6 | 10.9 / 9.3 / 14.3 / -1.0 / 36.1 | 78.6 (GetUp) / 78.3 (Slap) | 157 | 18.6, 3.7 / 0.5, 0.2 |
+| P4B | export2 (p4_broadcast) | 1.3 / 15.7 (GetUp) | 13.0 | 0 | 0.4 / 14.9 / 13.5 / 17.3 / 20.0 / 19.9 | 16.5 | 1.2 | 6.7->0.8 / -10.8->0.0 / 10.4->0.0 / -4.4 / -8.7->0.0 | 80.2 (GetUp) / 87.4 (Slap) | 153 | 18.9, 15.1 / **18.5, 15.1** |
+| P4B | **export3** (p4_broadcast fixed) | 3.6 / 33.7 (Stumble) | 14.5 | 0 | **1.3 / 14.9 / 0.2 / 14.9 / 0.2 / 0.2** | **16.8** | 1.9 | 8.1->1.7 / 8.9->0.8 / 11.5->0.8 / -4.4 / -8.0->0.0 | **38.2 (Slap)** / 87.5 (Slap) | 128 | 6.5, 3.8 / **0.5, 0.3** |
+| P4B | export2 ctl (p2_cel) | 1.6 / 17.3 (GetUp) | 10.0 | 0 | 0.5 / 17.6 / 10.9 / 17.6 / 16.8 / 16.7 | 21.6 | 1.9 | 14.7->0.9 / 11.2->0.0 / 16.9->1.9 / -0.3 / -3.5 | 78.9 (GetUp) / 97.5 (Slap) | 147 | 18.8, 4.4 / 0.5, 0.2 |
+| P4B | export3 ctl (p2_cel fixed) | 3.2 / 34.0 (Stumble) | 8.8 | 0 | 1.0 / 17.6 / 0.3 / 17.6 / 0.3 / 0.3 | 21.6 | 2.1 | 13.8->3.8 / 13.1->0.0 / 16.9->1.9 / -0.3 / -3.1 | 51.9 (Fall) / 93.0 (Slap) | 136 | 6.5, 3.6 / 0.5, 0.2 |
+
+**On every `export3` file:**
+- 31 takes; pelvis travel 0; root 0; loop seams 0.000 cm in the main file.
+- Lowest stick vertex at least -0.01 cm.
+- Standing skate error at most 0.5 cm on R and P3A, and 6.4 cm on P4B (Check).
+
+### Skate lift: before against after
+
+- **Kneels, the goalie blocks and GetUp:** now 0.2 to 0.9 cm on every figure. Before: 1.8 to 20 cm.
+- **Fall:** 0.3 to 1.3 cm. Before: 0.4 to 16 cm.
+- **Fall_Forward and GetUp_Front on the tall figures** still lift 5.1 cm (R) and 14.9 cm (P4B; 17.6 cm in the control). The chest and arms touch first when lying face down, so the skates are held up by the body, not by the foot. P3A is at 0.4 cm.
+
+### Per candidate
+
+| Candidate | Replace the engine's import with `export3`? |
+|---|---|
+| **R** | **Yes, from `export3/R/`.** Lying lift down from 10 cm to 5 cm and below; the hand pops are gone. The grip mean rises from 4.4 to 6.5 cm (the slower blend). |
+| **P3A** | **Yes, from `export3/P3A/`.** Every lift 0.4 cm or less, hand pops gone, reaches fixed. The grip mean rises from 9.7 to 11.4 cm. |
+| **P4B** | **Yes, from `export3/P4B/`. The matched source `p4_broadcast` now wins** over the `p2_cel` control: goalie stick 16.8 against 21.6 cm (inside S4's range), lying lift 14.9 against 17.6 cm, and no Stride pop. The control's remaining advantage is a lower slap and wrist maximum (8.8 against 14.5 cm). |
+
+### Sheets (filed)
+
+| Shot file | What it shows |
+|---|---|
+| `devlog/shots/20261112-163202-B-lab-skh3-r-falls.png` | R: Fall, Fall_Forward, GetUp, GetUp_Front from the side |
+| `devlog/shots/20261112-163202-B-lab-skh3-p3a-falls.png` | P3A: the same four takes |
+| `devlog/shots/20261112-163203-B-lab-skh3-p4b-falls.png` | P4B: the same four takes |
+| `devlog/shots/20261112-163203-B-lab-skh3-p4b-stride.png` | P4B Stride from 3/4, side and behind |
+
+### What I could not verify
+
+- **Anything in Unreal**, including whether the importer read `export2` during the 16:21:53 to 16:23:24 window.
+- **Whether the continuity fixes still change anything** (slide fade, slide median): left on, not re-tested against the fixed sources.
+- **The grip-rate trade:** 0.10 per frame removes the pops but holds the left mitten off the shaft for longer. A rule that rate-limits the hand *target* instead of the weight might keep both; not tried.
