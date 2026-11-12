@@ -450,6 +450,7 @@ FJamInput AHokejGameMode::ReadHumanInput()
 	In.Stick = Fwd * Aim.Y + Right * Aim.X;
 	In.bPoke = Pi->ConsumePokePressed();
 	In.bLift = Pi->ConsumeLiftPressed();
+	In.bDeke = Pi->ConsumeDekePressed();   // lane A39 (R-0029 point 4): IA_Deke, Q / gamepad Y
 	return In;
 }
 
@@ -517,6 +518,7 @@ void AHokejGameMode::GatherInputs()
 			I.Stick = FVector2D(Out[i].Stick.X, Out[i].Stick.Y);
 			I.bPoke = Out[i].bPoke;
 			I.bLift = Out[i].bLift;
+			I.bDeke = Out[i].bDeke;   // lane A39: the bots' deke
 			// Lane A31 (B-to-A-0024 point 3, C-0001 v3): the brain's owner calls SetGoalieStance for the last man in the crease, on a change only.
 			int8 Goalie = Out[i].bGoalie ? static_cast<int8>(FMath::Clamp(Out[i].GoalieSide, -1, 1)) : GoalieOff;
 			// The brain's crease rule flickers at its edge (on/off every 3 frames in the 19:58 proof): once on, the stance holds at least GoalieHoldFrames

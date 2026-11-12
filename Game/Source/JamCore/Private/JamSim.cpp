@@ -30,6 +30,10 @@ namespace
 	const FName CheckSideR(TEXT("side_r"));
 	const FName CheckBehind(TEXT("behind"));
 	const FName KindSkater(TEXT("skater"));
+	// R-0029 point 4 (lane A39): the one-timer shot kind and the deke side.
+	const FName KindOneTimer(TEXT("one_timer"));
+	const FName KindLeft(TEXT("left"));
+	const FName KindRight(TEXT("right"));
 
 	constexpr double Gravity = 9.8;
 	// Lane A32 read-outs: a shot counts as "on goal" for this many frames, a possession becomes a "carry" after this many, a post rings at most this often.
@@ -164,8 +168,19 @@ void UJamSim::Restart()
 		S.PenaltyFrames = 0;
 		S.StumbleFrames = 0;
 		S.LastCarryFrame = -1000;
+		S.OneTimers = S.Breakaways = S.Dekes = 0;
+		S.PassReceivedFrame = -1;
+		S.BreakawayFrames = 0;
+		S.bBreakawayUsed = false;
+		S.CarryFrames = 0;
+		S.DekeFrames = 0;
+		S.DekeSide = 0;
+		S.DekeReadyFrame = 0;
 	}
 	PendingFaceoffDot = FVector2D::ZeroVector;
+	DekeCommitFrames = 0;
+	DekeCommitSide = 0;
+	DekeCommitSkater = -1;
 	Puck = FJamPuckState();
 	FrameEvents.Reset();
 	// C-0005: rule state back to defaults; a shrunk or grown rink goes back to the geometry of the cartridge.
@@ -605,6 +620,13 @@ void UJamSim::FaceoffReset()
 		S.DrawFrame = -1;
 		S.Vel = FVector2D::ZeroVector;
 		S.YawRate = 0;
+		// R-0029 point 4: a faceoff ends every payoff window; the next possession may burst again.
+		S.PassReceivedFrame = -1;
+		S.BreakawayFrames = 0;
+		S.bBreakawayUsed = false;
+		S.CarryFrames = 0;
+		S.DekeFrames = 0;
+		S.DekeSide = 0;
 		if (S.InBox()) { S.Pos = S.PrevPos = BoxPos(S.Team); continue; }
 		S.Pos = FaceoffDot + S.SpawnPos * Shift;
 		FVector2D N;
@@ -633,6 +655,9 @@ void UJamSim::FaceoffReset()
 	Puck.Pos = Puck.PrevPos = FaceoffDot + Dir * Rng.Range(0.0, FaceoffDropM);
 	Puck.Vel = FVector2D::ZeroVector;
 	Puck.LastTouch = -1;
+	DekeCommitFrames = 0;
+	DekeCommitSide = 0;
+	DekeCommitSkater = -1;
 	Phase = EJamSimPhase::Faceoff;
 	FaceoffCountdown = FaceoffCountdownFrames;
 	PauseFrames = 0;
@@ -810,6 +835,9 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 		S.DrawResult = 0;
 		S.bFoulThisFrame = false;
 		S.bAtFaceoff = false;
+		S.bOneTimerThisFrame = false;
+		S.bBreakawayThisFrame = false;
+		S.bDekeThisFrame = false;
 	}
 	Puck.PrevPos = Puck.Pos;
 
@@ -899,6 +927,7 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 		if (In.bShoot) TryShoot(S, 0.f);
 		StepCharge(S, In);
 		if (In.bPass) TryPass(S);
+		if (In.bDeke) TryDeke(S);
 		if (In.bCheck && Config.Skater.bCheckEnabled)
 		{
 			S.CheckWindow = CheckWindowFrames;
@@ -910,6 +939,7 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 	for (FJamSkaterState& S : Skaters)
 	{
 		const FJamInput& In = Inputs.IsValidIndex(S.Index) ? Inputs[S.Index] : FJamInput();
+		StepBreakaway(S);   // R-0029 point 4: decided on the positions the player saw, before anyone moves
 		StepSkater(S, In);
 		StepStick(S, In);
 		CollideSkaterStatic(S);
@@ -917,6 +947,8 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 	CollideSkaters();
 	StepPuck();
 	ResolvePokes();
+	for (FJamSkaterState& S : Skaters) StepPayoffWindows(S);
+	if (DekeCommitFrames > 0 && --DekeCommitFrames == 0) { DekeCommitSide = 0; DekeCommitSkater = -1; }
 
 	if (Phase == EJamSimPhase::Playing && Config.Rules.Mode == RuleTimer && !bOvertime)
 	{
@@ -953,8 +985,10 @@ void UJamSim::StepSkater(FJamSkaterState& S, const FJamInput& In)
 	const FJamSkaterConfig& C = Config.Skater;
 	const double OldYaw = S.Yaw;
 	// C-0005: per-skater effective stats (base values when no modifier touches them).
-	const double Speed = Eff(EJamStat::SkaterSpeed, S.Index);
-	const double Accel = Eff(EJamStat::SkaterAccel, S.Index);
+	// R-0029 point 4 (lane A39): the breakaway burst lifts top speed and thrust by speed_bonus while it runs.
+	const double Burst = S.BreakawayFrames > 0 ? 1.0 + FMath::Max(0.0, Config.Skater.BreakawaySpeedBonus) : 1.0;
+	const double Speed = Eff(EJamStat::SkaterSpeed, S.Index) * Burst;
+	const double Accel = Eff(EJamStat::SkaterAccel, S.Index) * Burst;
 	const double TurnRate = Eff(EJamStat::SkaterTurnRate, S.Index);
 	const double Grip = Eff(EJamStat::SkaterGrip, S.Index);
 	// Glide friction scales with the ice: glide_drag was measured at ice_friction 0.015 (DEFAULTS.md). R-0019: the zone under the skater scales speed and glide.
@@ -1294,11 +1328,17 @@ void UJamSim::TryShoot(FJamSkaterState& S, float Charge)
 		return;
 	}
 
+	// R-0029 point 4 (lane A39): a one-timer (a shot inside the window after a received pass) gets the full charge without the hold and a wider cone.
+	const bool bOneTimer = Config.Shot.OneTimerWindowFrames > 0 && S.PassReceivedFrame >= 0 && Frame - S.PassReceivedFrame <= Config.Shot.OneTimerWindowFrames;
+	if (bOneTimer) Charge = 1.f;
 	FVector2D Aim = Fwd;
-	const double Cone = Eff(EJamStat::ShotAimConeDeg, S.Index);   // 0 = no aim help (absent aim_cone_deg)
+	double Cone = Eff(EJamStat::ShotAimConeDeg, S.Index);   // 0 = no aim help (absent aim_cone_deg)
+	if (bOneTimer) Cone += FMath::Max(0.0, Config.Shot.OneTimerConeBonusDeg);
 	if (Cone > 0.0)
 	{
-		const FVector2D Target(AttackGoalX(S.Team), 0.0);
+		// A deked puck (inside the commit window) aims at the open post on the deke side; otherwise the goal centre.
+		FVector2D Target(AttackGoalX(S.Team), 0.0);
+		if (S.DekeFrames > 0 && S.DekeSide != 0) Target.Y = S.DekeSide * FMath::Max(0.0, Config.Rink.GoalWidthM * 0.5 - DekePostInsetM);
 		const FVector2D ToGoal = (Target - Puck.Pos).GetSafeNormal();
 		const double Cos = FMath::Clamp(Dot(Fwd, ToGoal), -1.0, 1.0);
 		if (!ToGoal.IsNearlyZero() && FMath::RadiansToDegrees(FMath::Acos(Cos)) <= Cone)
@@ -1314,11 +1354,130 @@ void UJamSim::TryShoot(FJamSkaterState& S, float Charge)
 	S.bShotThisFrame = true;
 	S.LastShotCharge = FMath::Clamp(Charge, 0.f, 1.f);
 	++S.Shots;
-	Emit(JamEvents::Shot, S.Index, Puck.Pos, static_cast<float>(Speed / MaxSpeed));
+	// The payoff windows close with the shot: a second shot is no one-timer, the deke is spent. A shot inside the deke window keeps the back committed
+	// until the puck has crossed the goal line (a beaten goalie does not recover for that shot): the flight at this speed, braked by the drag, plus 3 frames.
+	S.PassReceivedFrame = -1;
+	if (S.DekeFrames > 0 && S.DekeSide != 0 && DekeCommitSkater == S.Index)
+	{
+		const double DistToLine = FMath::Abs(AttackGoalX(S.Team) - Puck.Pos.X);
+		const int32 Flight = FMath::CeilToInt32(DistToLine / FMath::Max(1.0, Speed * 0.8) / DT) + 3;
+		DekeCommitFrames = FMath::Max(DekeCommitFrames, Flight);
+	}
+	S.DekeFrames = 0;
+	S.DekeSide = 0;
+	if (bOneTimer) { S.bOneTimerThisFrame = true; ++S.OneTimers; }
+	Emit(JamEvents::Shot, S.Index, Puck.Pos, static_cast<float>(Speed / MaxSpeed), bOneTimer ? KindOneTimer : NAME_None);
 	// Lane A32: the shot in flight, for "save".
 	ShotFrame = Frame;
 	ShotBy = S.Index;
 	ShotStrength = static_cast<float>(FMath::Clamp(Speed / MaxSpeed, 0.0, 1.0));
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// R-0029 point 4 (lane A39): the three payoffs. Each a calibration under its cartridge key (DEFAULTS.md); every number here is deterministic.
+// ---------------------------------------------------------------------------------------------------------------------
+
+double UJamSim::EffectiveDekeOffsetM() const
+{
+	// The deked puck sits DekeAheadM ahead of the body and offset_m to the side; it must stay inside shot reach (CarrierIndex) or the carry ends.
+	const double Reach = Eff(EJamStat::ShotReach, -1) - 0.1;
+	const double MaxSide = FMath::Sqrt(FMath::Max(0.0, Reach * Reach - DekeAheadM * DekeAheadM));
+	return FMath::Clamp(Config.Stick.DekeOffsetM, 0.0, MaxSide);
+}
+
+FVector2D UJamSim::DekeOffset(const FJamSkaterState& S) const
+{
+	if (S.DekeFrames <= 0 || S.DekeSide == 0) return FVector2D::ZeroVector;
+	const FVector2D Fwd = S.Forward();
+	FVector2D Side(-Fwd.Y, Fwd.X);   // across the body, turned so that it points to +z: DekeSide is the side in rink z
+	if (Side.Y < 0.0) Side = -Side;
+	const int32 Total = FMath::Max(DekeMoveFrames, Config.Stick.DekeCommitFrames);
+	const double Progress = FMath::Clamp(static_cast<double>(Total - S.DekeFrames + 1) / static_cast<double>(DekeMoveFrames), 0.0, 1.0);
+	return Side * (S.DekeSide * EffectiveDekeOffsetM() * Progress);
+}
+
+// The deke: a tap by the carrier moves the puck to the blade side (the side the stick is aimed to; the middle of the ice when it is not aimed) over
+// DekeMoveFrames and opens the commit window; a second tap inside DekeLockoutFrames does nothing. The crease back reads DekeFrames (the brain's goalie
+// stance and blade follow the puck's old side) and TryShoot aims a shot inside the window at the post on the deke side.
+void UJamSim::TryDeke(FJamSkaterState& S)
+{
+	if (Config.Stick.DekeOffsetM <= 0.0 || Config.Stick.DekeCommitFrames <= 0) return;
+	if (Frame < S.DekeReadyFrame) return;
+	if (CarrierIndex() != S.Index || S.DekeFrames > 0) return;
+	const FVector2D Fwd = S.Forward();
+	// The blade side in rink z (so the goalie's commit and the shot's post agree): Cross > 0 = the blade is on the (-Fwd.Y, Fwd.X) side of the body,
+	// which points to +z when Fwd.X >= 0. No aim: towards the middle of the ice (+z when already near the middle).
+	const double Cross = Fwd.X * (S.BladePos.Y - S.Pos.Y) - Fwd.Y * (S.BladePos.X - S.Pos.X);
+	if (S.bStickAimed && FMath::Abs(Cross) > 0.05) S.DekeSide = (Cross > 0.0 ? 1 : -1) * (Fwd.X >= 0.0 ? 1 : -1);
+	else S.DekeSide = S.Pos.Y > 0.5 ? -1 : 1;
+	S.DekeFrames = FMath::Max(DekeMoveFrames, Config.Stick.DekeCommitFrames);
+	S.DekeReadyFrame = Frame + DekeLockoutFrames;
+	DekeCommitFrames = S.DekeFrames;
+	DekeCommitSide = S.DekeSide;
+	DekeCommitSkater = S.Index;
+	S.bDekeThisFrame = true;
+	S.ChargeFrames = 0;
+	++S.Dekes;
+	Emit(JamEvents::Deke, S.Index, Puck.Pos, 0.f, S.DekeSide > 0 ? KindRight : KindLeft);
+}
+
+bool UJamSim::PastLastDefender(int32 Skater) const
+{
+	if (!Skaters.IsValidIndex(Skater) || CarrierIndex() != Skater) return false;
+	const FJamSkaterState& S = Skaters[Skater];
+	const double Sign = AttackGoalX(S.Team) > 0.0 ? 1.0 : -1.0;
+	const FVector2D Attack(Sign, 0.0);
+	if (S.Pos.X * Sign <= 0.0) return false;                         // past centre ice
+	if (Dot(S.Forward(), Attack) < 0.5) return false;                 // skating at the net
+	const FVector2D Goal(AttackGoalX(S.Team), 0.0);
+	const FVector2D ToGoal = Goal - S.Pos;
+	const double L = ToGoal.Size();
+	if (L < BreakawayMinGoalM) return false;                          // already at the crease
+	const FVector2D U = ToGoal / L;
+	for (const FJamSkaterState& O : Skaters)
+	{
+		if (O.Team == S.Team || O.InBox() || O.IsDown()) continue;
+		const FVector2D Rel = O.Pos - S.Pos;
+		const double Along = Dot(Rel, U);
+		const double Side = FMath::Abs(Rel.X * U.Y - Rel.Y * U.X);
+		// Between: in the corridor from the carrier to the edge of the crease (the back holding the crease is the goalie, not the last man).
+		if (Along > -0.5 && Along < L - BreakawayCreaseM && Side < BreakawayCorridorM) return false;
+	}
+	return true;
+}
+
+// The burst: once per possession, when the carrier is past the last defender with the net ahead; event breakaway. Counts the running burst down.
+void UJamSim::StepBreakaway(FJamSkaterState& S)
+{
+	if (S.BreakawayFrames > 0) --S.BreakawayFrames;
+	const bool bOn = Config.Skater.BreakawaySpeedBonus > 0.0 && Config.Skater.BreakawayFrames > 0;
+	S.CarryFrames = (bOn && CarrierIndex() == S.Index) ? S.CarryFrames + 1 : 0;   // counted only while the burst is on, so a cut without it hashes as before
+	if (Puck.LastTouch != S.Index) { S.bBreakawayUsed = false; return; }   // the puck changed hands: a new possession may burst again
+	if (!bOn || S.bBreakawayUsed || !S.CanAct()) return;
+	if (S.CarryFrames <= BreakawayCarryFrames) return;   // a carry, not a touch: a touch-and-shoot never bursts (and a scripted attacker never outruns its own shot)
+	if (!PastLastDefender(S.Index)) return;
+	S.BreakawayFrames = Config.Skater.BreakawayFrames;
+	S.bBreakawayUsed = true;
+	S.bBreakawayThisFrame = true;
+	++S.Breakaways;
+	// One `breakaway` per rush: lane A32's read-out (StepReadouts) calls the rush when every standing defender is behind the carrier; if it has not called this
+	// one yet, the burst does, and marks it so the read-out stays quiet. BreakawayFor is read-out state (never hashed).
+	if (BreakawayFor != S.Index)
+	{
+		BreakawayFor = S.Index;
+		Emit(JamEvents::Breakaway, S.Index, S.Pos, 1.f);
+	}
+}
+
+// After the puck moved: the deke window counts down and ends at once when the puck is no longer carried.
+void UJamSim::StepPayoffWindows(FJamSkaterState& S)
+{
+	if (S.DekeFrames > 0)
+	{
+		--S.DekeFrames;
+		if (S.DekeFrames == 0 || CarrierIndex() != S.Index) { S.DekeFrames = 0; S.DekeSide = 0; }
+	}
+	if (S.PassReceivedFrame >= 0 && (Config.Shot.OneTimerWindowFrames <= 0 || Frame - S.PassReceivedFrame > Config.Shot.OneTimerWindowFrames)) S.PassReceivedFrame = -1;
 }
 
 // C-0005 pass: the best teammate ahead of the puck with an open lane. The aim is where the receiver will be when the puck gets there
@@ -1384,6 +1543,9 @@ void UJamSim::TryPass(FJamSkaterState& S)
 	Puck.LastTouch = S.Index;
 	S.ShotReadyFrame = Frame + PassCooldownFrames;
 	S.ChargeFrames = 0;
+	S.DekeFrames = 0;
+	S.DekeSide = 0;
+	S.PassReceivedFrame = -1;
 	S.bPassThisFrame = true;
 	S.LastShotCharge = 0.f;
 	S.LastPassStrength = static_cast<float>(Speed / MaxSpeed);
@@ -1492,6 +1654,9 @@ void UJamSim::StepPuck()
 						// Reception: the pass is seated on the blade and moves with the receiver (R-0021: the puck stays on the stick).
 						Puck.Pos = S.BladePos;
 						Puck.Vel = S.Vel;
+						// R-0029 point 4 (lane A39): the one-timer window opens on a received teammate's puck (kept only while one-timers are on, so a cut
+						// with window_frames 0 hashes as before).
+						if (Config.Shot.OneTimerWindowFrames > 0) S.PassReceivedFrame = Frame;
 					}
 					else if (Config.Shot.bDeflect && S.bStickAimed)   // a passive blade is no goalie: aim the stick to block
 					{
@@ -1527,7 +1692,9 @@ void UJamSim::StepPuck()
 				// The puck closes on the blade by a fraction per substep (assist 1 = on the blade within a frame, 0.6 = within three) and moves with the carrier.
 				const FJamSkaterState& C = Skaters[Ci];
 				const double K = FMath::Min(1.0, 100.0 * Assist * H);
-				Puck.Pos += (C.BladePos - Puck.Pos) * K;
+				// R-0029 point 4 (lane A39): a deked puck rides DekeAheadM ahead of the body and DekeOffset to the side instead of on the blade.
+				const FVector2D Target = (C.DekeFrames > 0 && C.DekeSide != 0) ? C.Pos + C.Forward() * DekeAheadM + DekeOffset(C) : C.BladePos;
+				Puck.Pos += (Target - Puck.Pos) * K;
 				Puck.Vel = C.Vel;
 			}
 		}
@@ -1660,7 +1827,14 @@ uint64 UJamSim::StateHash() const
 		H.AddI(S.DrawFrame);
 		H.AddI(S.ChargeFrames);
 		H.AddI(S.DeflectCooldown);
+		// R-0029 point 4 (lane A39): payoff state only when it left its default, so a cut with the three keys at 0 hashes as before.
+		if (S.PassReceivedFrame >= 0) H.AddI(S.PassReceivedFrame);
+		if (S.BreakawayFrames != 0 || S.bBreakawayUsed) { H.AddI(S.BreakawayFrames); H.AddI(S.bBreakawayUsed ? 1 : 0); }
+		if (S.CarryFrames != 0) H.AddI(S.CarryFrames);
+		if (S.DekeFrames != 0) { H.AddI(S.DekeFrames); H.AddI(S.DekeSide); }
+		if (S.DekeReadyFrame != 0) H.AddI(S.DekeReadyFrame);
 	}
+	if (DekeCommitFrames != 0) { H.AddI(DekeCommitFrames); H.AddI(DekeCommitSide); H.AddI(DekeCommitSkater); }
 	H.AddI(FaceoffCountdown);
 	H.AddV(FaceoffDot, 1000.0);
 	H.AddV(PendingFaceoffDot, 1000.0);

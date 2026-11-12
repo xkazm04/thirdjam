@@ -1007,6 +1007,12 @@ namespace
 		ReadName(Sk, TEXT("visual"), C.Skater.Visual);
 		ReadNumber(Sk, TEXT("pass_speed"), C.Skater.PassSpeed);
 		ReadInteger(Sk, TEXT("pass_lead_frames"), C.Skater.PassLeadFrames);
+		// R-0029 point 4 (lane A39): game.skater.breakaway { speed_bonus, frames }
+		if (const FJPtr Ba = Obj(Sk, TEXT("breakaway")))
+		{
+			ReadNumber(Ba, TEXT("speed_bonus"), C.Skater.BreakawaySpeedBonus);
+			ReadInteger(Ba, TEXT("frames"), C.Skater.BreakawayFrames);
+		}
 
 		const FJPtr St = G->Get(TEXT("stick"));
 		ReadNumber(St, TEXT("reach_m"), C.Stick.ReachM);
@@ -1015,6 +1021,12 @@ namespace
 		ReadInteger(St, TEXT("stumble_frames"), C.Stick.StumbleFrames);
 		ReadInteger(St, TEXT("foul_grace_frames"), C.Stick.FoulGraceFrames);
 		ReadNumber(St, TEXT("mouse_sensitivity"), C.Stick.MouseSensitivity);
+		// R-0029 point 4 (lane A39): game.stick.deke { offset_m, commit_frames }
+		if (const FJPtr Dk = Obj(St, TEXT("deke")))
+		{
+			ReadNumber(Dk, TEXT("offset_m"), C.Stick.DekeOffsetM);
+			ReadInteger(Dk, TEXT("commit_frames"), C.Stick.DekeCommitFrames);
+		}
 
 		FJPtr Pk = Obj(G, TEXT("puck"));
 		UJamCartridge::HexToLinear(TEXT("#111111"), C.Puck.Colour);
@@ -1033,6 +1045,12 @@ namespace
 		ReadInteger(Shot, TEXT("charge_frames_max"), C.Shot.ChargeFramesMax);
 		ReadNumber(Shot, TEXT("charge_speed_bonus"), C.Shot.ChargeSpeedBonus);
 		ReadBool(Shot, TEXT("deflect"), C.Shot.bDeflect);
+		// R-0029 point 4 (lane A39): game.shot.one_timer { window_frames, cone_bonus_deg }
+		if (const FJPtr Ot = Obj(Shot, TEXT("one_timer")))
+		{
+			ReadInteger(Ot, TEXT("window_frames"), C.Shot.OneTimerWindowFrames);
+			ReadNumber(Ot, TEXT("cone_bonus_deg"), C.Shot.OneTimerConeBonusDeg);
+		}
 
 		FJPtr Rules = Obj(G, TEXT("rules"));
 		ReadName(Rules, TEXT("mode"), C.Rules.Mode);
