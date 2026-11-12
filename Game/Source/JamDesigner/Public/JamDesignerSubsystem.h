@@ -127,12 +127,15 @@ public:
 
 	// The cached sentences (Content/Designer/cached-cuts.json), for the offline UI.
 	UFUNCTION(BlueprintCallable, Category = "Jam|Designer") TArray<FString> GetCachedSentences() const;
+	// The cached cuts as name + sentence (Path empty), for the offline UI's list.
+	UFUNCTION(BlueprintCallable, Category = "Jam|Designer") TArray<FJamCutInfo> GetCachedCuts() const;
 
 	// ---- the key (lane A5's settings screen calls SetApiKey) ----
 	// Stores the key in Saved/Config (GameUserSettings.ini via GConfig), never in content, never in a log. Empty clears it.
 	UFUNCTION(BlueprintCallable, Category = "Jam|Designer") void SetApiKey(const FString& Key);
 	UFUNCTION(BlueprintPure, Category = "Jam|Designer") bool HasApiKey() const { return !ResolveKey().IsEmpty(); }
-	UFUNCTION(BlueprintPure, Category = "Jam|Designer") bool IsLiveAvailable() const { return HasApiKey(); }
+	// True with a key (HTTP) or with the CLI transport available (R-0004: development and the operator's demo build).
+	UFUNCTION(BlueprintPure, Category = "Jam|Designer") bool IsLiveAvailable() const { return HasApiKey() || !ResolveCliExe().IsEmpty(); }
 
 	UPROPERTY(BlueprintAssignable, Category = "Jam|Designer") FJamDesignerResultSignature OnDesignerResult;
 	UPROPERTY(BlueprintAssignable, Category = "Jam|Designer") FJamCutChangedSignature OnCutChanged;
@@ -140,12 +143,18 @@ public:
 
 	// Per-request total timeout in seconds, and the delay before the one retry of a 429/5xx.
 	UPROPERTY(EditAnywhere, Category = "Jam|Designer") float TimeoutSec = 60.f;
+	// Per-attempt timeout of the CLI transport (process start plus the model call).
+	UPROPERTY(EditAnywhere, Category = "Jam|Designer") float CliTimeoutSec = 120.f;
 	UPROPERTY(EditAnywhere, Category = "Jam|Designer") float RetryDelaySec = 1.5f;
 
 	// ---- test hooks ----
 	void SetTransport(TSharedPtr<IJamDesignerTransport> InTransport);
 	// Replaces config + environment as the key source (empty = no key). Nothing is written anywhere.
 	void SetKeyOverrideForTest(const FString& Key) { bKeyOverride = true; KeyOverride = Key; }
+	// Forces the CLI transport off, or on with Exe (empty Exe = look on PATH, ignoring the Shipping/config gate).
+	void SetCliForTest(bool bEnable, const FString& Exe = FString()) { bCliOverride = true; bCliOverrideEnabled = bEnable; CliExeOverride = Exe; }
+	// The claude executable the CLI transport would use; empty when the CLI route is off.
+	FString ResolveCliExe() const;
 	void SetEventBusForTest(UJamEventBus* Bus) { BusOverride = Bus; }
 	void SetSavedCutsDirForTest(const FString& Dir) { SavedCutsDirOverride = Dir; }
 	FString GetSavedCutsDir() const;
@@ -171,6 +180,9 @@ private:
 	FString KeyOverride;
 	FString SavedCutsDirOverride;
 	bool bKeyOverride = false;
+	bool bCliOverride = false;
+	bool bCliOverrideEnabled = false;
+	FString CliExeOverride;
 	bool bCallUsedThisPeriod = false;
 	bool bBusy = false;
 };

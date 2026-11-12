@@ -359,6 +359,19 @@ FString UJamDesignerSubsystem::ResolveKey() const
 	return K;
 }
 
+FString UJamDesignerSubsystem::ResolveCliExe() const
+{
+	if (bCliOverride)
+	{
+		if (!bCliOverrideEnabled) return FString();
+		return CliExeOverride.IsEmpty() ? FJamCliTransport::FindClaudeOnPath() : CliExeOverride;
+	}
+	bool bAllowed = !UE_BUILD_SHIPPING;
+	bool bConfig = false;
+	if (GConfig && GConfig->GetBool(ConfigSection, TEXT("bAllowCliTransport"), bConfig, GGameIni) && bConfig) bAllowed = true;
+	return bAllowed ? FJamCliTransport::FindClaudeOnPath() : FString();
+}
+
 void UJamDesignerSubsystem::SetApiKey(const FString& Key)
 {
 	SessionKey = Key.TrimStartAndEnd();
@@ -621,6 +634,19 @@ FString UJamDesignerSubsystem::CurrentJsonOrDefault() const
 	return Text;
 }
 
+TArray<FJamCutInfo> UJamDesignerSubsystem::GetCachedCuts() const
+{
+	TArray<FJamCutInfo> Out;
+	for (const FCachedCut& C : CachedCuts())
+	{
+		FJamCutInfo I;
+		I.Name = C.Name;
+		I.Sentence = C.Sentence;
+		Out.Add(I);
+	}
+	return Out;
+}
+
 TArray<FString> UJamDesignerSubsystem::GetCachedSentences() const
 {
 	TArray<FString> Out;
@@ -637,10 +663,12 @@ FJamDesignerResult UJamDesignerSubsystem::ResolveOffline(const FString& Sentence
 	FString BestJson, BestName;
 	auto Consider = [&](const FString& Name, const FString& CutSentence, const TArray<FString>& Keywords, const FString& Json)
 	{
-		TSet<FString> Bag = Words(CutSentence);
-		for (const FString& K : Keywords) Bag.Append(Words(K));
+		// A word of the cut's own sentence scores 2, a keyword 1; the first best cut wins a tie.
+		const TSet<FString> Own = Words(CutSentence);
+		TSet<FString> Extra;
+		for (const FString& K : Keywords) Extra.Append(Words(K));
 		int32 Score = 0;
-		for (const FString& W : Query) if (Bag.Contains(W)) ++Score;
+		for (const FString& W : Query) Score += Own.Contains(W) ? 2 : (Extra.Contains(W) ? 1 : 0);
 		if (Score > BestScore) { BestScore = Score; BestJson = Json; BestName = Name; }
 	};
 	for (const FCachedCut& C : CachedCuts()) Consider(C.Name, C.Sentence, C.Keywords, C.Json);
@@ -692,10 +720,12 @@ void UJamDesignerSubsystem::RequestCut(const FString& Sentence, const FString& C
 		return;
 	}
 	bBusy = true;
+	// Route (R-0004): API key -> HTTP; else the claude CLI (not Shipping, or bAllowCliTransport) -> CLI; else offline.
 	const FString Key = ResolveKey();
-	if (Key.IsEmpty())
+	const FString CliExe = Key.IsEmpty() ? ResolveCliExe() : FString();
+	if (Key.IsEmpty() && CliExe.IsEmpty())
 	{
-		// No key: no network, ever. Resolve from the cache in the same frame.
+		// No key and no CLI: no network, ever. Resolve from the cache in the same frame.
 		FJamDesignerResult R = ResolveOffline(Sentence);
 		UE_LOG(LogJamDesigner, Log, TEXT("JAMDESIGNER offline outcome=%s cut=\"%s\""), *StaticEnum<EJamDesignerOutcome>()->GetNameStringByValue(static_cast<int64>(R.Outcome)), *R.CutName);
 		Finish(R, Done);
@@ -703,12 +733,13 @@ void UJamDesignerSubsystem::RequestCut(const FString& Sentence, const FString& C
 	}
 	TSharedRef<FJamDesignerJob> Job = MakeShared<FJamDesignerJob>();
 	Job->Owner = this;
-	Job->Transport = Transport;
+	Job->Transport = CliExe.IsEmpty() ? Transport : TSharedPtr<IJamDesignerTransport>(MakeShared<FJamCliTransport>(CliExe));
 	Job->Done = MoveTemp(Done);
 	Job->Sentence = Sentence;
 	Job->BaseJson = CurrentCartridgeJson.IsEmpty() ? CurrentJsonOrDefault() : CurrentCartridgeJson;
 	Job->Key = Key;
-	Job->TimeoutSec = TimeoutSec;
+	Job->TimeoutSec = CliExe.IsEmpty() ? TimeoutSec : CliTimeoutSec;
+	UE_LOG(LogJamDesigner, Log, TEXT("JAMDESIGNER route=%s"), CliExe.IsEmpty() ? TEXT("http") : TEXT("cli"));
 	Job->RetryDelaySec = RetryDelaySec;
 	Job->Result.Sentence = Sentence;
 	Job->Start();

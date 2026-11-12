@@ -76,17 +76,12 @@ namespace JamDesignerPromptImpl
 	}
 
 	static const TCHAR* Immutable[] = { TEXT("schema"), TEXT("id"), TEXT("title"), TEXT("seed"), TEXT("tunables") };
-	static const TCHAR* Editable = TEXT("values, theme, rules, entities, ai");
-	static const TCHAR* GameEditable[] = {
-		TEXT("rink.length_m"), TEXT("rink.width_m"), TEXT("rink.corner_radius_m"), TEXT("rink.board_restitution"), TEXT("rink.ice_friction"),
-		TEXT("rink.goal_width_m"), TEXT("rink.obstacles"), TEXT("pickups"), TEXT("rules.mode"), TEXT("rules.score_to_win"), TEXT("rules.timer_frames"),
-		TEXT("look.tier"),
-	};
+	// Editable lists come from schema/validate.mjs through JamDesignerData.inl (JamDesignerGameEditable, JamDesignerEditableList).
 
 	static FJPtr WithoutPaths(const FJ& Game)
 	{
 		FJPtr Copy = Clone(Game);
-		for (const TCHAR* Path : GameEditable)
+		for (const TCHAR* Path : JamDesignerGameEditable)
 		{
 			TArray<FString> Parts;
 			FString(Path).ParseIntoArray(Parts, TEXT("."));
@@ -99,6 +94,12 @@ namespace JamDesignerPromptImpl
 			if (Node && Node->IsObject())
 			{
 				Node->Object.RemoveAll([&](const TPair<FString, FJPtr>& P) { return P.Key == Parts.Last(); });
+			}
+			// validate.mjs (lane A3): an object emptied by the removal counts as absent (adding `ai` around `difficulty` is no change).
+			if (Parts.Num() == 2)
+			{
+				FJPtr Top = Copy->Get(Parts[0]);
+				if (Top && Top->IsObject() && Top->Object.Num() == 0) Copy->Object.RemoveAll([&](const TPair<FString, FJPtr>& P) { return P.Key == Parts[0]; });
 			}
 		}
 		return Copy;
@@ -292,7 +293,7 @@ void FJamDesignerPrompt::CheckDesignerEdits(const FJamJson& Base, const FJamJson
 		if (A && B && !DeepEqual(A.Get(), B.Get()))
 		{
 			OutErrors.Add(FString::Printf(TEXT("at %s: the Designer may not change \"%s\". Restore it exactly as it was in the current cartridge. Only %s (and some of \"game\") may change."),
-				*FJamJson::PointerChild(FString(), K), K, Editable));
+				*FJamJson::PointerChild(FString(), K), K, JamDesignerEditableList));
 		}
 	}
 	FJPtr BG = Base.Get(TEXT("game")), OG = Out.Get(TEXT("game"));
@@ -304,7 +305,7 @@ void FJamDesignerPrompt::CheckDesignerEdits(const FJamJson& Base, const FJamJson
 			TArray<FString> Diffs;
 			FindDiffs(A.Get(), B.Get(), TEXT("/game"), Diffs);
 			TArray<FString> Paths;
-			for (const TCHAR* P : GameEditable) Paths.Add(P);
+			for (const TCHAR* P : JamDesignerGameEditable) Paths.Add(P);
 			const FString List = FString::Join(Paths, TEXT(", "));
 			for (const FString& Ptr : Diffs)
 			{

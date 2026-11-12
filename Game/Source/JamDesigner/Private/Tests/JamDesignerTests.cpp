@@ -11,6 +11,10 @@
 #include "JamEventBus.h"
 #include "JamJson.h"
 #include "Engine/GameInstance.h"
+#include "HAL/PlatformMisc.h"
+#include "HAL/PlatformProcess.h"
+#include "HAL/PlatformTime.h"
+#include "Async/TaskGraphInterfaces.h"
 
 #include "../JamDesignerData.inl"
 
@@ -60,6 +64,7 @@ namespace JamDesignerTests
 		// A subsystem must live inside a game instance; a bare one (never Init) is enough here.
 		UJamDesignerSubsystem* S = NewObject<UJamDesignerSubsystem>(NewObject<UGameInstance>());
 		S->SetKeyOverrideForTest(Key);
+		S->SetCliForTest(false);
 		S->RetryDelaySec = 0.f;
 		if (Mock) S->SetTransport(Mock);
 		S->SetSavedCutsDirForTest(FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation"), TEXT("DesignerCuts")));
@@ -104,11 +109,17 @@ bool FJamDesignerOfflineResolves::RunTest(const FString& Parameters)
 	TestTrue(TEXT("outcome"), R.Outcome == EJamDesignerOutcome::Offline);
 	TestTrue(TEXT("has a validated cartridge"), R.HasCartridge());
 	TestEqual(TEXT("cut"), R.CutName, FString(TEXT("Fast Cut")));
-	if (R.Cartridge) TestEqual(TEXT("faster skaters"), R.Cartridge->Game.Skater.Speed, 11.0);
+	if (R.Cartridge) TestTrue(TEXT("faster skaters than hockey.regular"), R.Cartridge->Game.Skater.Speed > 8.0);
 	TestEqual(TEXT("no transport call"), Mock->Calls, 0);
 
 	const FJamDesignerResult Calm = RunSync(S, TEXT("something calm for a kid please"), FString());
-	TestEqual(TEXT("calm cut"), Calm.CutName, FString(TEXT("Calm Cut")));
+	TestEqual(TEXT("calm cut"), Calm.CutName, FString(TEXT("Family Cut")));
+	// Paraphrases a judge might type reach the right cut through the keywords.
+	const TPair<const TCHAR*, const TCHAR*> Paraphrases[] = {
+		{ TEXT("harder bots please"), TEXT("All-Star Cut") }, { TEXT("slippery ice"), TEXT("Glass Ice Cut") }, { TEXT("halloween"), TEXT("Midnight Cut") },
+		{ TEXT("turbo"), TEXT("Turbo Cut") }, { TEXT("a huge arena"), TEXT("Big Glass Cut") }, { TEXT("first goal wins"), TEXT("Sudden Death Cut") },
+	};
+	for (const auto& P : Paraphrases) TestEqual(FString::Printf(TEXT("\"%s\""), P.Key), S->ResolveOffline(P.Key).CutName, FString(P.Value));
 	const FJamDesignerResult None = RunSync(S, TEXT("zebra xylophone"), FString());
 	TestTrue(TEXT("no match"), None.Outcome == EJamDesignerOutcome::OfflineNoMatch);
 	TestFalse(TEXT("no match lists the cached sentences"), None.Message.IsEmpty());
@@ -236,8 +247,10 @@ bool FJamDesignerNoKeyNoNetwork::RunTest(const FString& Parameters)
 	// The real HTTP transport too: no request object is created without a key.
 	UJamDesignerSubsystem* Real = Make(nullptr, FString());
 	const int32 Before = FJamDesignerHttpTransport::GetRequestsCreated();
+	const int32 CliBefore = FJamCliTransport::GetProcessesStarted();
 	RunSync(Real, TEXT("make it faster"), FString());
 	TestEqual(TEXT("no IHttpRequest created"), FJamDesignerHttpTransport::GetRequestsCreated(), Before);
+	TestEqual(TEXT("no CLI process started"), FJamCliTransport::GetProcessesStarted(), CliBefore);
 	return true;
 }
 
@@ -291,11 +304,14 @@ bool FJamDesignerCutsRoundTrip::RunTest(const FString& Parameters)
 
 	// Every cached sentence resolves to its own cut, and every cached cut is a legal Designer edit of hockey.regular.
 	const TArray<FString> Sentences = S->GetCachedSentences();
-	TestTrue(TEXT("6 to 8 cached cuts"), Sentences.Num() >= 6 && Sentences.Num() <= 8);
+	TestTrue(TEXT("24 to 40 cached cuts (R-0004)"), Sentences.Num() >= 24 && Sentences.Num() <= 40);
 	for (const FString& Sentence : Sentences)
 	{
 		const FJamDesignerResult R = S->ResolveOffline(Sentence);
 		TestTrue(FString::Printf(TEXT("\"%s\" resolves"), *Sentence), R.Outcome == EJamDesignerOutcome::Offline);
+		const TArray<FJamCutInfo> Cached = S->GetCachedCuts();
+		const FJamCutInfo* Own = Cached.FindByPredicate([&](const FJamCutInfo& I) { return I.Sentence == Sentence; });
+		TestTrue(FString::Printf(TEXT("\"%s\" resolves to its own cut"), *Sentence), Own && Own->Name == R.CutName);
 		const FJamDesignerParsedReply P = FJamDesignerPrompt::ParseReply(R.CartridgeJson, Base);
 		TestTrue(FString::Printf(TEXT("\"%s\" is a legal Designer edit"), *Sentence), P.Kind == EJamDesignerReplyKind::Cartridge);
 		for (const FString& E : P.Errors) AddError(E);
@@ -305,7 +321,7 @@ bool FJamDesignerCutsRoundTrip::RunTest(const FString& Parameters)
 	TestTrue(TEXT("shipped presets listed"), Before.ContainsByPredicate([](const FJamCutInfo& I) { return I.Name == TEXT("hockey.regular") && !I.bSaved; }));
 	TestFalse(TEXT("test cartridges hidden"), Before.ContainsByPredicate([](const FJamCutInfo& I) { return I.Name.Contains(TEXT(".test.")); }));
 
-	const FJamDesignerResult Neon = S->ResolveOffline(TEXT("neon pillars"));
+	const FJamDesignerResult Neon = S->ResolveOffline(TEXT("a neon party"));
 	FString Err;
 	TestTrue(TEXT("apply saves and loads My Director's Cut"), S->ApplyResult(Neon, Err));
 	const TArray<FJamCutInfo> After = S->ListCuts();
@@ -313,7 +329,7 @@ bool FJamDesignerCutsRoundTrip::RunTest(const FString& Parameters)
 	if (TestNotNull(TEXT("saved cut listed"), Mine))
 	{
 		TestEqual(TEXT("saved name"), Mine->Name, UJamDesignerSubsystem::MyDirectorsCutName);
-		TestEqual(TEXT("saved sentence"), Mine->Sentence, FString(TEXT("neon pillars")));
+		TestEqual(TEXT("saved sentence"), Mine->Sentence, FString(TEXT("a neon party")));
 	}
 	TestTrue(TEXT("load by name"), S->LoadCut(UJamDesignerSubsystem::MyDirectorsCutName, Err));
 	TestTrue(TEXT("neon look"), S->GetCurrentCartridge() && S->GetCurrentCartridge()->Game.Look.Tier == TEXT("l3_neon"));
@@ -321,6 +337,103 @@ bool FJamDesignerCutsRoundTrip::RunTest(const FString& Parameters)
 	TestFalse(TEXT("unknown cut"), S->LoadCut(TEXT("no-such-cut"), Err));
 	TestFalse(TEXT("an invalid cut is not saved"), !S->SaveCut(TEXT("Bad"), TEXT("{\"schema\":\"tj.cartridge/1\"}"), FString(), Err).IsEmpty());
 	IFileManager::Get().DeleteDirectory(*S->GetSavedCutsDir(), false, true);
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamDesignerCliTransportParsesResult, "Jam.Designer.CliTransportParsesResult", JamDesignerTests::Flags)
+bool FJamDesignerCliTransportParsesResult::RunTest(const FString& Parameters)
+{
+	// A fake `claude` on PATH: records its arguments and stdin, answers with reply.json. No real CLI, no network.
+	const FString Dir = FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("Automation"), TEXT("FakeClaude")));
+	IFileManager::Get().DeleteDirectory(*Dir, false, true);
+	IFileManager::Get().MakeDirectory(*Dir, true);
+	FFileHelper::SaveStringToFile(TEXT("@echo off\r\necho %*> \"%~dp0args.txt\"\r\nfindstr \"^\" > \"%~dp0stdin.txt\"\r\ntype \"%~dp0reply.json\"\r\n"),
+		*FPaths::Combine(Dir, TEXT("claude.cmd")), FFileHelper::EEncodingOptions::ForceAnsi);
+	const FString Good = Edit(Regular(), [](FJamJson& R) { SetNum(*R.Get(TEXT("values")), TEXT("skater_speed"), 11); });
+	TSharedPtr<FJamJson> Text = MakeShared<FJamJson>();
+	Text->Type = FJamJson::EType::String;
+	Text->String = Good;
+	auto WriteReply = [&](const FString& Json) { FFileHelper::SaveStringToFile(Json, *FPaths::Combine(Dir, TEXT("reply.json")), FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM); };
+	WriteReply(FString::Printf(TEXT("{\"type\":\"result\",\"subtype\":\"success\",\"is_error\":false,\"result\":%s,\"stop_reason\":\"end_turn\",\"usage\":{\"input_tokens\":3,\"cache_creation_input_tokens\":9000,\"output_tokens\":1200}}"), *Text->ToCompact()));
+
+	const FString OldPath = FPlatformMisc::GetEnvironmentVariable(TEXT("PATH"));
+	FPlatformMisc::SetEnvironmentVar(TEXT("PATH"), *(Dir + TEXT(";") + OldPath));
+	const FString Found = FJamCliTransport::FindClaudeOnPath();
+	TestEqual(TEXT("fake claude found first on PATH"), FPaths::GetCleanFilename(Found), FString(TEXT("claude.cmd")));
+
+	auto Run = [&](UJamDesignerSubsystem* S, const FString& Sentence)
+	{
+		FJamDesignerResult Out;
+		bool bDone = false;
+		S->RequestCut(Sentence, Regular(), [&](const FJamDesignerResult& R) { Out = R; bDone = true; });
+		const double Start = FPlatformTime::Seconds();
+		while (!bDone && FPlatformTime::Seconds() - Start < 30.0)
+		{
+			FTaskGraphInterface::Get().ProcessThreadUntilIdle(ENamedThreads::GameThread);
+			FPlatformProcess::Sleep(0.01f);
+		}
+		TestTrue(TEXT("the CLI request finished"), bDone);
+		return Out;
+	};
+
+	UJamDesignerSubsystem* S = Make(nullptr, FString());
+	S->SetCliForTest(true);
+	TestTrue(TEXT("live available through the CLI"), S->IsLiveAvailable());
+	const int32 Before = FJamCliTransport::GetProcessesStarted();
+	const FJamDesignerResult R = Run(S, TEXT("make it faster"));
+	TestTrue(TEXT("first try"), R.Outcome == EJamDesignerOutcome::FirstTry);
+	TestTrue(TEXT("validated cartridge"), R.Cartridge && R.Cartridge->Game.Skater.Speed == 11.0);
+	TestEqual(TEXT("one process"), FJamCliTransport::GetProcessesStarted(), Before + 1);
+	TestEqual(TEXT("tokens in (with cache)"), R.TokensIn, (int64)9003);
+	TestEqual(TEXT("tokens out"), R.TokensOut, (int64)1200);
+
+	FString Args, Stdin;
+	FFileHelper::LoadFileToString(Args, *FPaths::Combine(Dir, TEXT("args.txt")));
+	FFileHelper::LoadFileToString(Stdin, *FPaths::Combine(Dir, TEXT("stdin.txt")));
+	TestTrue(TEXT("argv: print, haiku, json, one turn, system prompt file"), Args.Contains(TEXT("-p --model claude-haiku-5-5 --output-format json --max-turns 1 --system-prompt-file")));
+	TestTrue(TEXT("argv: no tools, effort low"), Args.Contains(TEXT("--tools \"\"")) && Args.Contains(TEXT("--effort low")));
+	TestFalse(TEXT("the sentence is never on argv"), Args.Contains(TEXT("faster")));
+	TestTrue(TEXT("the sentence is on stdin"), Stdin.Contains(TEXT("<player_sentence>")) && Stdin.Contains(TEXT("make it faster")));
+
+	// An error result with a fatal status stops the chain after one process.
+	WriteReply(TEXT("{\"type\":\"result\",\"is_error\":true,\"result\":\"Invalid API key\",\"api_error_status\":401}"));
+	const int32 Before2 = FJamCliTransport::GetProcessesStarted();
+	const FJamDesignerResult E = Run(S, TEXT("zebra xylophone"));
+	TestTrue(TEXT("failed"), E.Outcome == EJamDesignerOutcome::Failed);
+	TestEqual(TEXT("fatal error: one process"), FJamCliTransport::GetProcessesStarted(), Before2 + 1);
+
+	int32 Status = 0;
+	FJamCliTransport::ToApiBody(TEXT("not json"), 1, Status);
+	TestEqual(TEXT("garbage stdout is a 502"), Status, 502);
+	const FJamDesignerApiReply Api = FJamDesignerPrompt::ParseApiResponse(FJamCliTransport::ToApiBody(TEXT("{\"is_error\":false,\"result\":\"{}\",\"stop_reason\":\"refusal\"}"), 0, Status));
+	TestTrue(TEXT("result and stop_reason carried"), Status == 200 && Api.Text == TEXT("{}") && Api.StopReason == TEXT("refusal"));
+
+	FPlatformMisc::SetEnvironmentVar(TEXT("PATH"), *OldPath);
+	IFileManager::Get().DeleteDirectory(*Dir, false, true);
+	return true;
+}
+
+// Opt-in (spends the operator's CLI subscription): set TJ_DESIGNER_CLI_LIVE=1. The real claude executable through CreateProc.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamDesignerCliLive, "Jam.Designer.CliLive", JamDesignerTests::Flags)
+bool FJamDesignerCliLive::RunTest(const FString& Parameters)
+{
+	if (FPlatformMisc::GetEnvironmentVariable(TEXT("TJ_DESIGNER_CLI_LIVE")) != TEXT("1")) { AddInfo(TEXT("skipped: set TJ_DESIGNER_CLI_LIVE=1 to run")); return true; }
+	UJamDesignerSubsystem* S = Make(nullptr, FString());
+	S->SetCliForTest(true);
+	if (!TestFalse(TEXT("claude on PATH"), S->ResolveCliExe().IsEmpty())) return false;
+	FJamDesignerResult Out;
+	bool bDone = false;
+	S->RequestCut(TEXT("make it faster"), Regular(), [&](const FJamDesignerResult& R) { Out = R; bDone = true; });
+	const double Start = FPlatformTime::Seconds();
+	while (!bDone && FPlatformTime::Seconds() - Start < 400.0)
+	{
+		FTaskGraphInterface::Get().ProcessThreadUntilIdle(ENamedThreads::GameThread);
+		FPlatformProcess::Sleep(0.05f);
+	}
+	TestTrue(TEXT("finished"), bDone);
+	TestTrue(TEXT("a validated cut from the real CLI"), Out.HasCartridge());
+	AddInfo(FString::Printf(TEXT("outcome=%s attempts=%d tokens_in=%lld tokens_out=%lld ms=%.0f"), *StaticEnum<EJamDesignerOutcome>()->GetNameStringByValue((int64)Out.Outcome), Out.Attempts, Out.TokensIn, Out.TokensOut, Out.Ms));
+	for (const FString& E : Out.Errors) AddInfo(E);
 	return true;
 }
 
