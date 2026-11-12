@@ -1,0 +1,1 @@
+T-B1 turn lean from behind: blue TurnRate +3 rad/s (Lean_Left), orange -3 (Lean_Right), 3 m/s, lean clips re-exported 30 frames

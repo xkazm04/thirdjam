@@ -1,0 +1,1 @@
+T-B1 after SetKnockedDown(false): GetUp then Skate at 4 m/s, mesh yaw easing back to facing
