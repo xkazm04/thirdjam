@@ -53,6 +53,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Proof")
 	float RinkWidthM = 60.f;
 
+	// A40: the corner arc radius the camera clamp follows (game.rink.corner_radius_m; 120 x 60 cuts use 5).
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Proof")
+	float CornerRadiusM = 5.f;
+
+	// A40: the scripted human laps the rink 1.2 m inside the boards (corner arcs included) while weaving +-35 degrees, the case the board clamp is for.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Proof")
+	bool bHugBoards = false;
+
 	// Possess a spawned AJamProofPawn and show the HUD at BeginPlay.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Proof")
 	bool bSpawnPawnAndHud = true;
@@ -65,6 +73,13 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Jam|Proof")
 	void PlaceHumanAt(float XM, float ZM, float YawDeg);
+
+	// A40: switch the script between the centre weave and the board lap at run time (the human stays scripted).
+	UFUNCTION(BlueprintCallable, Category = "Jam|Proof")
+	void SetHugBoards(bool bHug);
+
+	// A40: a point and the tangent heading on the rink's inset loop (rounded rectangle InsetM inside the boards), U metres along it from the bottom-left straight.
+	static void LapPoint(float RinkLengthM, float RinkWidthM, float CornerRadiusM, float InsetM, float U, FVector2D& OutPosM, float& OutHeadingDeg);
 
 	// Advances n simulation frames at once (tests and screenshots); same code path as the accumulator.
 	UFUNCTION(BlueprintCallable, Category = "Jam|Proof")
@@ -127,4 +142,5 @@ private:
 	int32 ScoreAway = 0;
 	bool bArenaMode = false;
 	bool bManual = false;
+	float LapU = 0.f;
 };

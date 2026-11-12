@@ -89,6 +89,9 @@ of them out explicitly, but a Designer or hand-written cartridge may leave them 
 | `camera.lag_frames` | 4 |
 | `camera.fov_deg` | 70 |
 | `camera.radar` | true |
+| `camera.boards_margin_m` | 0.8 | lane A40: the camera never crosses the boards' inner face minus this, corner arcs included |
+| `camera.end_height_m` | 5 | lane A40: the lift when the boards take the arm (proportional to the arm lost), looking along the rink at an end board |
+| `camera.far_net_bias` | 0.5 | lane A40: the yaw lead toward the far net when heading for it, fading in from 8 to 20 m |
 
 Wide option (not a default): 8 / 4 / 6 / 6 frames / fov 85. Pitch is derived, never stored: `-atan(height_m / (distance_m + look_ahead_m))`.
 In `arena` mode the distance, height, look-ahead and lag keys are ignored.

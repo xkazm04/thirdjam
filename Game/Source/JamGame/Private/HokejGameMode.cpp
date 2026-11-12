@@ -601,6 +601,7 @@ void AHokejGameMode::PushPresentation()
 	// Lane A15 (C-0005): the sim's rink, not the cartridge's: ShrinkRink / GrowRink change it at a faceoff and the radar and net markers follow.
 	F.RinkLengthM = Sim->GetConfig().Rink.LengthM;
 	F.RinkWidthM = Sim->GetConfig().Rink.WidthM;
+	F.CornerRadiusM = Sim->GetConfig().Rink.CornerRadiusM;  // A40: the camera clamp follows the corner arcs
 	for (const FJamSkaterState& S : Sim->GetSkaters())
 	{
 		FJamPresentationSkater Ps;

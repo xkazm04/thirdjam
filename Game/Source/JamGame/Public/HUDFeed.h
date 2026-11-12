@@ -58,6 +58,10 @@ struct JAMGAME_API FJamPresentationFrame
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Presentation")
 	float RinkWidthM = 60.f;
 
+	// A40: the rink's corner arc radius, metres (game.rink.corner_radius_m); 0 = sharp corners. The board camera clamp follows the arcs.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Presentation")
+	float CornerRadiusM = 0.f;
+
 	// Team 0's skaters first, in game.teams order.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Presentation")
 	TArray<FJamPresentationSkater> Skaters;
