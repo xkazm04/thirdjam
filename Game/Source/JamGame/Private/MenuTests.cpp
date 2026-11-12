@@ -16,6 +16,7 @@
 #include "SettingsWidget.h"
 #include "DirectorsCallWidget.h"
 #include "DirectorsCallController.h"
+#include "BarkWidget.h"
 #include "HokejGameMode.h"
 #include "JamCartridge.h"
 #include "JamJson.h"
@@ -156,6 +157,14 @@ bool FJamDirectorsCallOncePerPeriod::RunTest(const FString&)
 
 	TestEqual(TEXT("scoreboard line"), UJamDirectorsCallWidget::AnnouncementLine(TEXT("Director's Call: ice is now glass")), FString(TEXT("DIRECTOR'S CALL: ice is now glass")));
 	TestEqual(TEXT("scoreboard line without prefix"), UJamDirectorsCallWidget::AnnouncementLine(TEXT("shot power up (18 -> 20)")), FString(TEXT("DIRECTOR'S CALL: shot power up (18 -> 20)")));
+
+	// Lane A42 (y-slots): the MATCH banner's band at 1080p and a bark bubble pushed out of it (above when it fits, else below).
+	float Top = 0.f, Bottom = 0.f;
+	UJamDirectorsCallHudWidget::BannerBandPx(1080.f, Top, Bottom);
+	TestTrue(TEXT("banner band around 0.4 of the height"), Top < 432.f && Bottom > 432.f + 180.f);
+	TestEqual(TEXT("bubble above the banner"), static_cast<float>(UJamBarkWidget::PushOutOfBand(FVector2D(600, Top + 40.f), 54.f, Top, Bottom, 170.f).Y), Top - 4.f);
+	TestEqual(TEXT("bubble below when the top is taken"), static_cast<float>(UJamBarkWidget::PushOutOfBand(FVector2D(600, Top + 40.f), 54.f, Top, Bottom, Top - 20.f).Y), Bottom + 4.f + 54.f);
+	TestEqual(TEXT("bubble clear of the banner stays"), UJamBarkWidget::PushOutOfBand(FVector2D(600, Bottom + 100.f), 54.f, Top, Bottom, 170.f), FVector2D(600, Bottom + 100.f));
 
 	// Settings round trip of the difficulty strings (lane A3's contract).
 	EJamMenuDifficulty D;

@@ -199,7 +199,7 @@ bool FJamDifficultyCurve::RunTest(const FString& Parameters)
 			const int32 Us = Cfg.Skaters[Pi].Team;
 			for (uint64 Seed = 1; Seed <= 5; ++Seed)
 			{
-				FJamSimAdapter Sim(C->Game);
+				FJamSimAdapter Sim(*C);   // lane A41: with the game mode's systems
 				const FJamMatchStats S = RunMatch(Sim, Cfg, Seed, EJamPlayerMode::PlayerBot, 36000, 600);
 				Wins[k] += (S.bOver && S.Winner == Us) ? 1 : 0;
 				Diff[k] += S.Goals[Us] - S.Goals[1 - Us];

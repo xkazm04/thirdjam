@@ -48,7 +48,7 @@ bool FJamBotVisualSwap::RunTest(const FString& Parameters)
 	int32 K = 0;
 	for (UJamCartridge* Cart : { B2, B1, Sk })
 	{
-		JamAI::FJamSimAdapter Sim(Cart->Game);
+		JamAI::FJamSimAdapter Sim(*Cart);   // lane A41: with the game mode's systems
 		const JamAI::FJamMatchStats S = JamAI::RunMatch(Sim, JamAI::ToMatchConfigResolved(*Cart, nullptr), 1, JamAI::EJamPlayerMode::PlayerBotAI, 36000, 60);
 		const int32 Pi = JamAI::ToMatchConfig(Cart->Game).PlayerIndex();
 		bool bMoved = true;

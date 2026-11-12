@@ -1,0 +1,108 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "readability",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-12T19:18:45.758Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "readability",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a40/docs/experiments/img/camera/a40-legacy-f01127.jpg",
+          "width": 2560,
+          "height": 1440
+        },
+        {
+          "label": "B",
+          "path": ".claude/worktrees/a40/docs/experiments/img/camera/a40-clamp-f01127.jpg",
+          "width": 2560,
+          "height": 1440
+        }
+      ],
+      "distance": 6,
+      "thumbnails": [],
+      "prompt_chars": 2742,
+      "usage": {
+        "prompt": 3063,
+        "output": 640,
+        "thoughts": 0,
+        "total": 3703,
+        "calls": 1
+      },
+      "cost_usd_est": 0.0047,
+      "ms": 9003,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "elements": {
+              "puck": {
+                "score": 4,
+                "evidence": "The puck is a black disc roughly 25 pixels wide near the boards, clearly highlighted by an emissive yellow-green glow circle underneath it."
+              },
+              "carrier": {
+                "score": 4,
+                "evidence": "The orange figure #12 directly ahead has its stick contacting the glowing puck area."
+              },
+              "team_colours": {
+                "score": 5,
+                "evidence": "The foreground skater wears saturated deep blue while the two visible opponents wear bright warm orange."
+              },
+              "far_net": {
+                "score": 2,
+                "evidence": "The far net is cut off at the extreme upper-left edge of the frame, showing only a sliver of red post behind an orange skater."
+              },
+              "zone_strips": {
+                "score": 4,
+                "evidence": "A bold dark blue line spans horizontally across the middle of the frame, clearly contrasting against the ice."
+              }
+            },
+            "first_look": "bright blue skater in the foreground",
+            "noise": [
+              "intense yellow glow strip along the top of the right boards",
+              "bright yellow bench structure outside the rink glass"
+            ],
+            "overall": 3
+          },
+          {
+            "label": "Still B",
+            "elements": {
+              "puck": {
+                "score": 4,
+                "evidence": "The puck is a distinct black disc about 20 pixels wide on the ice, clearly accentuated by a bright pale-green glow ring."
+              },
+              "carrier": {
+                "score": 4,
+                "evidence": "The orange player #12 has its stick blade right beside the illuminated puck."
+              },
+              "team_colours": {
+                "score": 5,
+                "evidence": "The nearest player is vibrant blue while the two distant players are clearly recognizable warm orange."
+              },
+              "far_net": {
+                "score": 4,
+                "evidence": "The far net is fully visible in the upper-left ice area as a red rectangular frame about 160 pixels wide."
+              },
+              "zone_strips": {
+                "score": 4,
+                "evidence": "A sharp dark blue zone line stretches completely across the middle of the rink."
+              }
+            },
+            "first_look": "blue player in the lower right foreground",
+            "noise": [
+              "overly luminous yellow strip running along the dasher board edge",
+              "yellow bench seating visible through the transparent glass"
+            ],
+            "overall": 4
+          }
+        ]
+      },
+      "markdown": "**eyes/readability** A=a40-legacy-f01127.jpg B=a40-clamp-f01127.jpg at 6 m (gemini-3.8-flash, in 3063 out 640 tokens, ~$0.0047, 9 s)\n- stills:\n  - label: Still A; first_look: bright blue skater in the foreground; overall: 3\n    - elements:\n      - puck: score 4, evidence The puck is a black disc roughly 25 pixels wide near the boards, clearly highlighted by an emissive yellow-green glow circle underneath it.\n      - carrier: score 4, evidence The orange figure #12 directly ahead has its stick contacting the glowing puck area.\n      - team_colours: score 5, evidence The foreground skater wears saturated deep blue while the two visible opponents wear bright warm orange.\n      - far_net: score 2, evidence The far net is cut off at the extreme upper-left edge of the frame, showing only a sliver of red post behind an orange skater.\n      - zone_strips: score 4, evidence A bold dark blue line spans horizontally across the middle of the frame, clearly contrasting against the ice.\n    - noise: intense yellow glow strip along the top of the right boards; bright yellow bench structure outside the rink glass\n  - label: Still B; first_look: blue player in the lower right foreground; overall: 4\n    - elements:\n      - puck: score 4, evidence The puck is a distinct black disc about 20 pixels wide on the ice, clearly accentuated by a bright pale-green glow ring.\n      - carrier: score 4, evidence The orange player #12 has its stick blade right beside the illuminated puck.\n      - team_colours: score 5, evidence The nearest player is vibrant blue while the two distant players are clearly recognizable warm orange.\n      - far_net: score 4, evidence The far net is fully visible in the upper-left ice area as a red rectangular frame about 160 pixels wide.\n      - zone_strips: score 4, evidence A sharp dark blue zone line stretches completely across the middle of the rink.\n    - noise: overly luminous yellow strip running along the dasher board edge; yellow bench seating visible through the transparent glass"
+    }
+  ]
+}

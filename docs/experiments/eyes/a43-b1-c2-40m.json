@@ -1,0 +1,72 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "readability",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-12T19:44:59.262Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "readability",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a43/Game/Saved/Screenshots/WindowsEditor/a43-b1-c2-40m.png",
+          "width": 2560,
+          "height": 1354
+        }
+      ],
+      "distance": 40,
+      "thumbnails": [],
+      "prompt_chars": 2709,
+      "usage": {
+        "prompt": 1921,
+        "output": 406,
+        "thoughts": 0,
+        "total": 2327,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00296,
+      "ms": 11247,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A: a43-b1-c2-40m.png",
+            "elements": {
+              "puck": {
+                "score": 2,
+                "evidence": "The physical puck itself is barely a couple of dark pixels obscured in front of the blue skater, traceable only by the bright pale-yellow trajectory line ending at his stick."
+              },
+              "carrier": {
+                "score": 4,
+                "evidence": "The blue figure near the lower-middle ice is immediately identifiable as the carrier because the angled light-yellow pass/aim line connects directly to his stick blade."
+              },
+              "team_colours": {
+                "score": 5,
+                "evidence": "The vivid royal blue and bright warm orange jerseys contrast sharply against each other and the ice surface."
+              },
+              "far_net": {
+                "score": 5,
+                "evidence": "The bright red goal frame is clearly positioned at the top center of the rink against the white ice spotlight and dark background."
+              },
+              "zone_strips": {
+                "score": 4,
+                "evidence": "The dark blue and thin red transverse ice lines are prominent across the width of the rink, though the red line is somewhat dark against the blue-tinted ice."
+              }
+            },
+            "first_look": "The bright concentric white spotlight circles across the right side of the ice surface",
+            "noise": [
+              "Bright concentric oval spotlight rings on the right half of the rink",
+              "High-contrast neon cyan and yellow glow along the dasher board tops",
+              "Vast empty dark landscape surrounding the rink that unbalances the composition"
+            ],
+            "overall": 3
+          }
+        ]
+      },
+      "markdown": "**eyes/readability** A=a43-b1-c2-40m.png at 40 m (gemini-3.8-flash, in 1921 out 406 tokens, ~$0.0030, 11.2 s)\n- stills:\n  - label: Still A: a43-b1-c2-40m.png; first_look: The bright concentric white spotlight circles across the right side of the ice surface; overall: 3\n    - elements:\n      - puck: score 2, evidence The physical puck itself is barely a couple of dark pixels obscured in front of the blue skater, traceable only by the bright pale-yellow trajectory line ending at his stick.\n      - carrier: score 4, evidence The blue figure near the lower-middle ice is immediately identifiable as the carrier because the angled light-yellow pass/aim line connects directly to his stick blade.\n      - team_colours: score 5, evidence The vivid royal blue and bright warm orange jerseys contrast sharply against each other and the ice surface.\n      - far_net: score 5, evidence The bright red goal frame is clearly positioned at the top center of the rink against the white ice spotlight and dark background.\n      - zone_strips: score 4, evidence The dark blue and thin red transverse ice lines are prominent across the width of the rink, though the red line is somewhat dark against the blue-tinted ice.\n    - noise: Bright concentric oval spotlight rings on the right half of the rink; High-contrast neon cyan and yellow glow along the dasher board tops; Vast empty dark landscape surrounding the rink that unbalances the composition"
+    }
+  ]
+}

@@ -135,7 +135,7 @@ int32 UJamTournamentCommandlet::Main(const FString& Params)
 		const FTCHARToUTF8 LevelUtf8(*Level);
 		for (int32 Seed = SeedLo; Seed <= SeedHi; ++Seed)
 		{
-			JamAI::FJamSimAdapter Sim(Cart->Game);
+			JamAI::FJamSimAdapter Sim(*Cart);   // lane A41: with the game mode's rule, zone and effect systems
 			const JamAI::FJamPlaytestStats St = JamAI::RunPlaytestMatch(Sim, Cfg, static_cast<uint64_t>(Seed), Kind, MaxFrames, Cart->Game.Shot.ChargeFramesMax);
 			JamAI::FormatPlaytestJson(St, CartUtf8.Get(), LevelUtf8.Get(), Kind, Line, sizeof(Line));
 			UE_LOG(LogJamAI, Display, TEXT("%s"), UTF8_TO_TCHAR(Line));
@@ -148,7 +148,7 @@ int32 UJamTournamentCommandlet::Main(const FString& Params)
 		JamAI::FJamMatchStats St;
 		if (Cart)
 		{
-			JamAI::FJamSimAdapter Sim(Cart->Game);
+			JamAI::FJamSimAdapter Sim(*Cart);   // lane A41: with the game mode's rule, zone and effect systems
 			St = JamAI::RunMatch(Sim, Cfg, static_cast<uint64_t>(Seed), Mode, MaxFrames, 600, TraceEvery > 0 ? &JamTournamentLocal::TraceToLog : nullptr, nullptr, TraceEvery);
 		}
 		else

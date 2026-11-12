@@ -1,0 +1,72 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "readability",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-12T19:34:12.464Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "readability",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a43/Game/Saved/Screenshots/WindowsEditor/a43-b1-base-40m.png",
+          "width": 2560,
+          "height": 1354
+        }
+      ],
+      "distance": 40,
+      "thumbnails": [],
+      "prompt_chars": 2711,
+      "usage": {
+        "prompt": 1919,
+        "output": 417,
+        "thoughts": 0,
+        "total": 2336,
+        "calls": 1
+      },
+      "cost_usd_est": 0.003,
+      "ms": 17958,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A (a43-b1-base-40m.png)",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "There is no visible puck disc, shadow, or highlight near the orange figure's stick blade around (1330, 630)."
+              },
+              "carrier": {
+                "score": 3,
+                "evidence": "The orange skater at (1338, 622) is facing a blue skater in a contested stance with stick down, but lack of a puck makes identification an educated guess."
+              },
+              "team_colours": {
+                "score": 4,
+                "evidence": "Bright warm orange and saturated royal blue jerseys contrast clearly against each other and the ice, though figures are very small (about 35 px tall)."
+              },
+              "far_net": {
+                "score": 5,
+                "evidence": "The red goal frame is clearly visible at the top center of the rink (1630, 386), measuring approximately 100 pixels wide against the bright ice."
+              },
+              "zone_strips": {
+                "score": 5,
+                "evidence": "Both deep blue lines and the center red line span horizontally across the full rink width with strong contrast against the ice."
+              }
+            },
+            "first_look": "Bright white elliptical floodlight circles along the right half of the rink",
+            "noise": [
+              "Bright concentric oval light pools on the ice surface",
+              "Glowing neon edges along the dasher board tops",
+              "Empty dark terrain taking up the entire left third and top third of the frame"
+            ],
+            "overall": 2
+          }
+        ]
+      },
+      "markdown": "**eyes/readability** A=a43-b1-base-40m.png at 40 m (gemini-3.8-flash, in 1919 out 417 tokens, ~$0.0030, 18 s)\n- stills:\n  - label: Still A (a43-b1-base-40m.png); first_look: Bright white elliptical floodlight circles along the right half of the rink; overall: 2\n    - elements:\n      - puck: score 1, evidence There is no visible puck disc, shadow, or highlight near the orange figure's stick blade around (1330, 630).\n      - carrier: score 3, evidence The orange skater at (1338, 622) is facing a blue skater in a contested stance with stick down, but lack of a puck makes identification an educated guess.\n      - team_colours: score 4, evidence Bright warm orange and saturated royal blue jerseys contrast clearly against each other and the ice, though figures are very small (about 35 px tall).\n      - far_net: score 5, evidence The red goal frame is clearly visible at the top center of the rink (1630, 386), measuring approximately 100 pixels wide against the bright ice.\n      - zone_strips: score 5, evidence Both deep blue lines and the center red line span horizontally across the full rink width with strong contrast against the ice.\n    - noise: Bright concentric oval light pools on the ice surface; Glowing neon edges along the dasher board tops; Empty dark terrain taking up the entire left third and top third of the frame"
+    }
+  ]
+}

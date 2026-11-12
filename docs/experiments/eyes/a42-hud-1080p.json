@@ -1,0 +1,400 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "hud",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-12T19:49:50.992Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "hud",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a42/docs/experiments/img/hud2/a42-match-start-1080p.png",
+          "width": 1920,
+          "height": 1082
+        },
+        {
+          "label": "B",
+          "path": ".claude/worktrees/a42/docs/experiments/img/hud2/a42-banner-countdown-1080p.png",
+          "width": 1920,
+          "height": 1082
+        },
+        {
+          "label": "C",
+          "path": ".claude/worktrees/a42/docs/experiments/img/hud2/a42-faceoff-countdown-1080p.png",
+          "width": 1920,
+          "height": 1082
+        },
+        {
+          "label": "D",
+          "path": ".claude/worktrees/a42/docs/experiments/img/hud2/a42-draw-lost-1080p.png",
+          "width": 1920,
+          "height": 1082
+        },
+        {
+          "label": "E",
+          "path": ".claude/worktrees/a42/docs/experiments/img/hud2/a42-bark-and-commentary-1080p.png",
+          "width": 1920,
+          "height": 1082
+        },
+        {
+          "label": "F",
+          "path": ".claude/worktrees/a42/docs/experiments/img/hud2/a42-own-net-b-1080p.png",
+          "width": 1920,
+          "height": 1082
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2565,
+      "usage": {
+        "prompt": 16634,
+        "output": 6040,
+        "thoughts": 0,
+        "total": 22674,
+        "calls": 2
+      },
+      "cost_usd_est": 0.03513,
+      "ms": 74577,
+      "retried": true,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A: a42-match-start-1080p.png",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Speech bubble",
+                "position": "center ice above players",
+                "legible": true,
+                "text": "Nice stance. Shame it's the only part that moves right."
+              },
+              {
+                "name": "Player indicator",
+                "position": "above blue skater #7",
+                "legible": true,
+                "text": "YOU"
+              },
+              {
+                "name": "Subtitle bar",
+                "position": "bottom center above control bar",
+                "legible": true,
+                "text": "Welcome to the rink: blue against orange, first period."
+              },
+              {
+                "name": "Controls bar",
+                "position": "bottom center full width",
+                "legible": true,
+                "text": "MOVE WASD / L-STICK SHOOT SPACE / A CHECK SHIFT / B BRAKE CTRL / LT PAUSE ESC"
+              },
+              {
+                "name": "Target net marker",
+                "position": "mid-left edge",
+                "legible": true,
+                "text": "41 m"
+              },
+              {
+                "name": "Own net marker",
+                "position": "top right below boards",
+                "legible": false,
+                "text": "own 41 m"
+              },
+              {
+                "name": "Director call prompt",
+                "position": "bottom left corner",
+                "legible": true,
+                "text": "ESC / START DIRECTOR'S CALL READY"
+              }
+            ],
+            "collisions": [
+              "Speech bubble pointer touches blue skater #7 helmet outline",
+              "Player reticle overlaps orange skater skates and stick blade"
+            ],
+            "missing": [
+              "Match timer or period countdown clock in the center scoreboard header",
+              "Clear visual mapping showing which net belongs to which team"
+            ],
+            "smallest_text_px": 13,
+            "legibility": 4
+          },
+          {
+            "label": "Still B: a42-banner-countdown-1080p.png",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Clapperboard banner",
+                "position": "screen center",
+                "legible": true,
+                "text": "MATCH 1"
+              },
+              {
+                "name": "Faceoff countdown reticle",
+                "position": "center ice over blue skater",
+                "legible": true,
+                "text": "PERIOD 1 - FACEOFF 1 HOLD"
+              },
+              {
+                "name": "Target net marker",
+                "position": "center top over far net",
+                "legible": true,
+                "text": "49 m"
+              },
+              {
+                "name": "Own net marker",
+                "position": "mid-left edge",
+                "legible": false,
+                "text": "own 34 m"
+              },
+              {
+                "name": "Controls bar",
+                "position": "bottom center full width",
+                "legible": true,
+                "text": "MOVE WASD / L-STICK SHOOT SPACE / A CHECK SHIFT / B BRAKE CTRL / LT PAUSE ESC"
+              },
+              {
+                "name": "Director call prompt",
+                "position": "bottom left corner",
+                "legible": true,
+                "text": "ESC / START DIRECTOR'S CALL READY"
+              }
+            ],
+            "collisions": [
+              "Clapperboard banner completely occludes center ice and overlaps faceoff reticle",
+              "Faceoff countdown circle collides directly with player character model",
+              "Target net marker 49 m overlaps the physical far net mesh"
+            ],
+            "missing": [
+              "Puck visibility during countdown setup",
+              "Explicit indication of input required for 'HOLD' faceoff mechanic"
+            ],
+            "smallest_text_px": 12,
+            "legibility": 3
+          },
+          {
+            "label": "Still C: a42-faceoff-countdown-1080p.png",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Speech bubble",
+                "position": "upper left ice above boards",
+                "legible": true,
+                "text": "Nobody on this line reads a play anymore"
+              },
+              {
+                "name": "Faceoff countdown reticle",
+                "position": "center ice over blue skater #7",
+                "legible": true,
+                "text": "4 HOLD"
+              },
+              {
+                "name": "Target net marker",
+                "position": "top left ice edge",
+                "legible": true,
+                "text": "78 m"
+              },
+              {
+                "name": "Own net marker",
+                "position": "mid-left above ice near boards",
+                "legible": false,
+                "text": "own 23 m"
+              },
+              {
+                "name": "Director call prompt",
+                "position": "bottom left corner",
+                "legible": true,
+                "text": "ESC / START DIRECTOR'S CALL READY"
+              }
+            ],
+            "collisions": [
+              "Faceoff countdown reticle directly covers blue skater #7 torso and jersey number",
+              "Own net marker sits low contrast against dark ice shadow"
+            ],
+            "missing": [
+              "Faceoff control input button prompt explaining what to hold",
+              "Controls reminder bar along the bottom"
+            ],
+            "smallest_text_px": 12,
+            "legibility": 3
+          },
+          {
+            "label": "Still D: a42-draw-lost-1080p.png",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Draw result announcement",
+                "position": "center over skater reticle",
+                "legible": true,
+                "text": "LOST"
+              },
+              {
+                "name": "Far net marker",
+                "position": "center ice top above net crossbar",
+                "legible": false,
+                "text": "own 52 m"
+              },
+              {
+                "name": "Target net marker",
+                "position": "mid-right edge",
+                "legible": true,
+                "text": "30 m"
+              },
+              {
+                "name": "Commentary subtitle",
+                "position": "bottom center ice",
+                "legible": true,
+                "text": "Long carry up the ice."
+              },
+              {
+                "name": "Director call prompt",
+                "position": "bottom left corner",
+                "legible": true,
+                "text": "ESC / START DIRECTOR'S CALL READY"
+              }
+            ],
+            "collisions": [
+              "'LOST' text reticle overlaps the skates and legs of blue skater #7",
+              "Far net marker 'own 52 m' overlaps the red crossbar and netting"
+            ],
+            "missing": [
+              "Immediate indication of who has possession of the puck",
+              "Active gameplay control reminders"
+            ],
+            "smallest_text_px": 13,
+            "legibility": 3
+          },
+          {
+            "label": "Still E: a42-bark-and-commentary-1080p.png",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Speech bubble",
+                "position": "center upper ice below net",
+                "legible": true,
+                "text": "We make this look easy because it is"
+              },
+              {
+                "name": "Draw result announcement",
+                "position": "center ice over reticle",
+                "legible": true,
+                "text": "LOST"
+              },
+              {
+                "name": "Far net marker",
+                "position": "top center over net mouth",
+                "legible": false,
+                "text": "own 29 m"
+              },
+              {
+                "name": "Target net marker",
+                "position": "mid-left edge",
+                "legible": true,
+                "text": "53 m"
+              },
+              {
+                "name": "Commentary subtitle",
+                "position": "bottom center ice",
+                "legible": true,
+                "text": "All yours now!"
+              },
+              {
+                "name": "Director call prompt",
+                "position": "bottom left corner",
+                "legible": true,
+                "text": "ESC / START DIRECTOR'S CALL READY"
+              }
+            ],
+            "collisions": [
+              "'LOST' HUD reticle obscures blue skater #7 legs and skates",
+              "Far net marker text overlaps the physical net framing"
+            ],
+            "missing": [
+              "Arrow indicator pointing directly to puck location",
+              "Possession indicator on current ball/puck carrier"
+            ],
+            "smallest_text_px": 13,
+            "legibility": 3
+          },
+          {
+            "label": "Still F: a42-own-net-b-1080p.png",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Speech bubble",
+                "position": "upper center ice along boards",
+                "legible": true,
+                "text": "You saw me coming and still chose that. Fascinating"
+              },
+              {
+                "name": "Commentary subtitle",
+                "position": "bottom center ice behind reticle",
+                "legible": false,
+                "text": "Quick stick, puck gone."
+              },
+              {
+                "name": "Target net marker",
+                "position": "mid-right edge",
+                "legible": true,
+                "text": "88 m"
+              },
+              {
+                "name": "Own net marker",
+                "position": "mid-right edge above 88m",
+                "legible": false,
+                "text": "own 19 m"
+              },
+              {
+                "name": "Director call prompt",
+                "position": "bottom left corner",
+                "legible": true,
+                "text": "ESC / START DIRECTOR'S CALL READY"
+              }
+            ],
+            "collisions": [
+              "Commentary subtitle 'Quick stick, puck gone.' is occluded by the player ring reticle and orange skater stick",
+              "Own net marker 'own 19 m' collides directly against target net marker icon and '88 m' text"
+            ],
+            "missing": [
+              "Controls hint bar for puck recovery or checking",
+              "Visual highlight or glow on the loose puck"
+            ],
+            "smallest_text_px": 12,
+            "legibility": 2
+          }
+        ]
+      },
+      "markdown": "**eyes/hud** A=a42-match-start-1080p.png B=a42-banner-countdown-1080p.png C=a42-faceoff-countdown-1080p.png D=a42-draw-lost-1080p.png E=a42-bark-and-commentary-1080p.png F=a42-own-net-b-1080p.png (gemini-3.8-flash, in 16634 out 6040 tokens, ~$0.0351, 74.6 s, 1 retry)\n- stills:\n  - label: Still A: a42-match-start-1080p.png; smallest_text_px: 13; legibility: 4\n    - elements:\n      - name: Scoreboard; position: top center; legible: true; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Speech bubble; position: center ice above players; legible: true; text: Nice stance. Shame it's the only part that moves right.\n      - name: Player indicator; position: above blue skater #7; legible: true; text: YOU\n      - name: Subtitle bar; position: bottom center above control bar; legible: true; text: Welcome to the rink: blue against orange, first period.\n      - name: Controls bar; position: bottom center full width; legible: true; text: MOVE WASD / L-STICK SHOOT SPACE / A CHECK SHIFT / B BRAKE CTRL / LT PAUSE ESC\n      - name: Target net marker; position: mid-left edge; legible: true; text: 41 m\n      - name: Own net marker; position: top right below boards; legible: false; text: own 41 m\n      - name: Director call prompt; position: bottom left corner; legible: true; text: ESC / START DIRECTOR'S CALL READY\n    - collisions: Speech bubble pointer touches blue skater #7 helmet outline; Player reticle overlaps orange skater skates and stick blade\n    - missing: Match timer or period countdown clock in the center scoreboard header; Clear visual mapping showing which net belongs to which team\n  - label: Still B: a42-banner-countdown-1080p.png; smallest_text_px: 12; legibility: 3\n    - elements:\n      - name: Scoreboard; position: top center; legible: true; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Clapperboard banner; position: screen center; legible: true; text: MATCH 1\n      - name: Faceoff countdown reticle; position: center ice over blue skater; legible: true; text: PERIOD 1 - FACEOFF 1 HOLD\n      - name: Target net marker; position: center top over far net; legible: true; text: 49 m\n      - name: Own net marker; position: mid-left edge; legible: false; text: own 34 m\n      - name: Controls bar; position: bottom center full width; legible: true; text: MOVE WASD / L-STICK SHOOT SPACE / A CHECK SHIFT / B BRAKE CTRL / LT PAUSE ESC\n      - name: Director call prompt; position: bottom left corner; legible: true; text: ESC / START DIRECTOR'S CALL READY\n    - collisions: Clapperboard banner completely occludes center ice and overlaps faceoff reticle; Faceoff countdown circle collides directly with player character model; Target net marker 49 m overlaps the physical far net mesh\n    - missing: Puck visibility during countdown setup; Explicit indication of input required for 'HOLD' faceoff mechanic\n  - label: Still C: a42-faceoff-countdown-1080p.png; smallest_text_px: 12; legibility: 3\n    - elements:\n      - name: Scoreboard; position: top center; legible: true; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Speech bubble; position: upper left ice above boards; legible: true; text: Nobody on this line reads a play anymore\n      - name: Faceoff countdown reticle; position: center ice over blue skater #7; legible: true; text: 4 HOLD\n      - name: Target net marker; position: top left ice edge; legible: true; text: 78 m\n      - name: Own net marker; position: mid-left above ice near boards; legible: false; text: own 23 m\n      - name: Director call prompt; position: bottom left corner; legible: true; text: ESC / START DIRECTOR'S CALL READY\n    - collisions: Faceoff countdown reticle directly covers blue skater #7 torso and jersey number; Own net marker sits low contrast against dark ice shadow\n    - missing: Faceoff control input button prompt explaining what to hold; Controls reminder bar along the bottom\n  - label: Still D: a42-draw-lost-1080p.png; smallest_text_px: 13; legibility: 3\n    - elements:\n      - name: Scoreboard; position: top center; legible: true; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Draw result announcement; position: center over skater reticle; legible: true; text: LOST\n      - name: Far net marker; position: center ice top above net crossbar; legible: false; text: own 52 m\n      - name: Target net marker; position: mid-right edge; legible: true; text: 30 m\n      - name: Commentary subtitle; position: bottom center ice; legible: true; text: Long carry up the ice.\n      - name: Director call prompt; position: bottom left corner; legible: true; text: ESC / START DIRECTOR'S CALL READY\n    - collisions: 'LOST' text reticle overlaps the skates and legs of blue skater #7; Far net marker 'own 52 m' overlaps the red crossbar and netting\n    - missing: Immediate indication of who has possession of the puck; Active gameplay control reminders\n  - label: Still E: a42-bark-and-commentary-1080p.png; smallest_text_px: 13; legibility: 3\n    - elements:\n      - name: Scoreboard; position: top center; legible: true; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Speech bubble; position: center upper ice below net; legible: true; text: We make this look easy because it is\n      - name: Draw result announcement; position: center ice over reticle; legible: true; text: LOST\n      - name: Far net marker; position: top center over net mouth; legible: false; text: own 29 m\n      - name: Target net marker; position: mid-left edge; legible: true; text: 53 m\n      - name: Commentary subtitle; position: bottom center ice; legible: true; text: All yours now!\n      - name: Director call prompt; position: bottom left corner; legible: true; text: ESC / START DIRECTOR'S CALL READY\n    - collisions: 'LOST' HUD reticle obscures blue skater #7 legs and skates; Far net marker text overlaps the physical net framing\n    - missing: Arrow indicator pointing directly to puck location; Possession indicator on current ball/puck carrier\n  - label: Still F: a42-own-net-b-1080p.png; smallest_text_px: 12; legibility: 2\n    - elements:\n      - name: Scoreboard; position: top center; legible: true; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Speech bubble; position: upper center ice along boards; legible: true; text: You saw me coming and still chose that. Fascinating\n      - name: Commentary subtitle; position: bottom center ice behind reticle; legible: false; text: Quick stick, puck gone.\n      - name: Target net marker; position: mid-right edge; legible: true; text: 88 m\n      - name: Own net marker; position: mid-right edge above 88m; legible: false; text: own 19 m\n      - name: Director call prompt; position: bottom left corner; legible: true; text: ESC / START DIRECTOR'S CALL READY\n    - collisions: Commentary subtitle 'Quick stick, puck gone.' is occluded by the player ring reticle and orange skater stick; Own net marker 'own 19 m' collides directly against target net marker icon and '88 m' text\n    - missing: Controls hint bar for puck recovery or checking; Visual highlight or glow on the loose puck"
+    }
+  ]
+}

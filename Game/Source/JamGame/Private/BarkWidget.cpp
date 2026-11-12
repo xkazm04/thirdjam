@@ -11,6 +11,8 @@
 #include "Components/OverlaySlot.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/Actor.h"
+#include "DirectorsCallWidget.h"
+#include "UObject/UObjectIterator.h"
 
 // Lane A18 (visual layer): the generated bubble (T_UI_Bubble, chalk paper with an ink edge and a tail at the bottom left) drawn as a
 // 9-slice, mirrored when the figure is on the right half of the screen so the tail stays inside the picture; the team colour tints the
@@ -56,6 +58,17 @@ float UJamBarkWidget::OpacityFor(int64 ShownFrame, int64 NowFrame)
 	const int64 Fade = Age - JamBarks::BubbleHoldFrames;
 	if (Fade >= JamBarks::BubbleFadeFrames) return 0.f;
 	return 1.f - static_cast<float>(Fade) / static_cast<float>(JamBarks::BubbleFadeFrames);
+}
+
+FVector2D UJamBarkWidget::PushOutOfBand(FVector2D Pos, float Height, float Top, float Bottom, float MinY)
+{
+	if (Bottom <= Top) return Pos;
+	const float BoxTop = Pos.Y - Height, BoxBottom = Pos.Y;
+	if (BoxBottom <= Top || BoxTop >= Bottom) return Pos;   // clear already
+	// Above the band when the bubble still fits under the scoreboard, else below it.
+	if (Top - 4.f - Height >= MinY) Pos.Y = Top - 4.f;
+	else Pos.Y = Bottom + 4.f + Height;
+	return Pos;
 }
 
 TSharedRef<SWidget> UJamBarkWidget::RebuildWidget()
@@ -108,7 +121,8 @@ void UJamBarkWidget::BuildTree()
 	Bubbles.SetNum(MaxBubbles);
 	for (int32 i = 0; i < MaxBubbles; ++i) MakeBubble(*FString::Printf(TEXT("Bubble%d"), i), Bubbles[i]);
 
-	// The strip: a dark pill at the bottom with the speaker number and the line in chalk.
+	// The strip: lane A12's dark pill at the bottom. Lane A42: barks stay in their bubbles and the commentator's line is the HUD's strip
+	// (UJamHudWidget), so this one is built but never shown; kept so GetStripText and the layout keep their shape.
 	StripBox = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("BarkStrip"));
 	StripBox->SetBrush(S::Pill(0.82f));
 	StripBox->SetPadding(FMargin(18, 7));
@@ -151,8 +165,8 @@ void UJamBarkWidget::ShowBark(const FJamBarkPick& P, AActor* Anchor, int32 Team)
 	}
 	if (B.Tail) B.Tail->SetBrush(S::Rounded(S::Paper(), 2.f, Edge, 2.f));
 	if (B.Text) B.Text->SetColorAndOpacity(FSlateColor(Team == 0 ? FLinearColor::FromSRGBColor(FColor(0x12, 0x2E, 0x7A)) : FLinearColor::FromSRGBColor(FColor(0x7A, 0x33, 0x0C))));
-	if (StripText) StripText->SetText(FText::FromString(FString::Printf(TEXT("#%d   %s"), P.Speaker, *P.Text)));
-	StripFrame = P.Frame;
+	// Lane A42: the bark shows in its bubble only; the commentator's line is the HUD's strip (UJamHudWidget, always on screen), so this
+	// widget's strip stays dark (StripFrame never set).
 	Now = FMath::Max(Now, P.Frame);
 	Layout();
 }
@@ -182,6 +196,13 @@ void UJamBarkWidget::Layout()
 	const float VW = VS.X / Scale, VH = VS.Y / Scale;
 	FSlateBrush Art;
 	const bool bArt = BubbleArt(Art);
+	// Lane A42: the y-slot the MATCH banner holds (the overlay is found once and remembered; a new one is looked for every 60 ticks).
+	if (!Overlay.IsValid() && (OverlaySearchTick++ % 60) == 0)
+	{
+		for (TObjectIterator<UJamDirectorsCallHudWidget> It; It; ++It) if (It->GetWorld() == GetWorld() && !It->HasAnyFlags(RF_ClassDefaultObject)) { Overlay = *It; break; }
+	}
+	float BandTop = 0.f, BandBottom = 0.f;
+	const bool bBand = Overlay.IsValid() && Overlay->GetBannerBandPx(VH, BandTop, BandBottom);
 	for (FJamBarkBubble& B : Bubbles)
 	{
 		if (!B.Box) continue;
@@ -204,10 +225,14 @@ void UJamBarkWidget::Layout()
 				// The tail sits at the figure's x; the bubble shifts aside so the tail is on its left or right end.
 				bTailLeft = Sp.X <= VW * 0.5f;
 				const float Shift = bTailLeft ? 60.f : -60.f;
-				Pos = FVector2D(FMath::Clamp(Sp.X + Shift, 120.f, VW - 120.f), FMath::Clamp(Sp.Y, 170.f, VH - 60.f));
+				// Lane A42: the whole bubble stays on screen (it was clamped by its centre and cut at the edge).
+				const float HalfW = FMath::Max(120.f, static_cast<float>(B.Box->GetDesiredSize().X) * 0.5f + 16.f);
+				Pos = FVector2D(FMath::Clamp(Sp.X + Shift, HalfW, VW - HalfW), FMath::Clamp(Sp.Y, 170.f, VH - 60.f));
+				// Lane A42: never over the MATCH banner (the bubble is about 54 px tall: text, padding and the tail).
+				if (bBand) Pos = PushOutOfBand(Pos, FMath::Max(54.f, static_cast<float>(B.Box->GetDesiredSize().Y)), BandTop, BandBottom, 170.f);
 			}
 		}
-		// Off-screen speakers are heard through the strip only.
+		// Off-screen speakers are heard, not seen (the strip is the commentator's).
 		B.Box->SetRenderOpacity(bOn ? Alpha : 0.f);
 		if (!bOn) B.Box->SetVisibility(ESlateVisibility::Collapsed);
 		CS->SetPosition(Pos);
@@ -225,10 +250,10 @@ void UJamBarkWidget::Layout()
 	}
 	if (StripBox)
 	{
+		// Lane A42: dark unless a caller sets StripFrame (nobody does now: the HUD's strip carries the commentator).
 		const float StripAlpha = OpacityFor(StripFrame, Now);
 		StripBox->SetRenderOpacity(StripAlpha);
 		StripBox->SetVisibility(StripAlpha > 0.f ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
-		// Above the HUD's controls strip (bottom 96 px) and the radar frame's top edge.
 		if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(StripBox->Slot)) CS->SetPosition(FVector2D(VW * 0.5f, VH - 110.f));
 	}
 }

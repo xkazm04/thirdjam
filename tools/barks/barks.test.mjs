@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { checkLine, filterBank, filmWords, mildCount, MAX_CHARS, MILD_QUOTA } from './filter.mjs';
+import { checkLine, filterBank, filmWords, mildCount, ALLOW_PHRASES, MAX_CHARS, MILD_QUOTA } from './filter.mjs';
 import { SITUATIONS, SPEAKERS, TONES } from './generate.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -88,4 +88,16 @@ test('R-0021 point 2: barks are hockey first; film words are rejected, hockey se
   // The committed bank has no hard film word and its directors_call lines speak of rules, never of directors.
   for (const l of bank.lines) assert.deepEqual(filmWords(l.text).hard, [], l.id);
   for (const l of bank.lines.filter((l) => l.situation === 'directors_call')) assert.ok(!/\b(director|cut|scene)s?\b/i.test(l.text), l.id);
+});
+
+test('A41: "sudden death" is hockey vocabulary; "death" alone and every other banned word stay banned', () => {
+  assert.deepEqual(ALLOW_PHRASES, ['sudden death']);
+  assert.deepEqual(checkLine('sudden death, next goal wins it'), []);
+  assert.deepEqual(checkLine('we are in Sudden Death now, boys'), [], 'the phrase capitalised mid-line is not a name');
+  assert.deepEqual(checkLine('SUDDEN DEATH: that goal wins it'), [], "the loader's own announce line");
+  assert.deepEqual(checkLine('Sudden Death Cut'.replace(/ Cut$/, '')), [], 'the cut name without its menu word');
+  assert.ok(checkLine('death to the other line').some((r) => /banned word "death"/.test(r)), 'death alone');
+  assert.ok(checkLine('slow death on the big ice').some((r) => /banned word "death"/.test(r)), 'another phrase');
+  assert.ok(checkLine('sudden death, then we kill the clock').some((r) => /banned word "kill/.test(r)), 'the rest of the list still bites');
+  assert.ok(checkLine('sudden death for the Leafs').some((r) => /banned word "leafs"/.test(r)), 'a team after the phrase');
 });

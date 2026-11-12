@@ -185,6 +185,25 @@ void AJamProofScene::StepSim()
 		bShoot = Pawn->Input->ConsumeShootPressed();
 		bCheck = Pawn->Input->ConsumeCheckPressed();
 	}
+	else if (bScriptedHuman && bHugBoards)
+	{
+		// A40: the lap 1.2 m inside the boards at top speed, facing the tangent plus a +-35 degree weave (into the rink and into the glass in turn).
+		LapU += TopSpeed * SimDt;
+		FVector2D LapPos;
+		float Tangent = 0.f;
+		LapPoint(L, W, CornerRadiusM, 1.2f, LapU, LapPos, Tangent);
+		H.Pos = LapPos;
+		H.YawDeg = FMath::UnwindDegrees(Tangent + 35.f * FMath::Sin(F / 25.f));
+		H.Speed = TopSpeed;
+		H.TurnRate = 0.f;
+		bShoot = false;
+		bCheck = false;
+		TargetSpeed = TopSpeed;
+		YawRate = 0.f;
+		// position and yaw are set above; the integration below must not move him again
+		const float Yr0 = FMath::DegreesToRadians(H.YawDeg);
+		H.Pos -= FVector2D(FMath::Cos(Yr0), FMath::Sin(Yr0)) * H.Speed * SimDt;
+	}
 	else if (bScriptedHuman)
 	{
 		YawRate = 2.2f * FMath::Sin(F / 70.f);
@@ -294,6 +313,7 @@ void AJamProofScene::PushFrame()
 	Fr.SimFrame = SimFrame;
 	Fr.RinkLengthM = RinkLengthM;
 	Fr.RinkWidthM = RinkWidthM;
+	Fr.CornerRadiusM = CornerRadiusM;
 	for (int32 I = 0; I < 6; ++I)
 	{
 		FJamPresentationSkater S;
@@ -367,6 +387,47 @@ void AJamProofScene::SetArenaMode(bool bArena)
 		Pawn->Camera->ApplyConfig(CameraConfig);
 		PushFrame();
 	}
+}
+
+void AJamProofScene::SetHugBoards(bool bHug)
+{
+	bHugBoards = bHug;
+	bScriptedHuman = true;
+	bManual = false;
+	LapU = 0.f;
+}
+
+void AJamProofScene::LapPoint(float L, float W, float Rc, float Inset, float U, FVector2D& OutPos, float& OutHeading)
+{
+	const float A = FMath::Max(0.f, L * 0.5f - Inset), B = FMath::Max(0.f, W * 0.5f - Inset);
+	const float R = FMath::Clamp(Rc - Inset, 0.f, FMath::Min(A, B));
+	const float Sx = 2.f * (A - R), Sy = 2.f * (B - R), Arc = 0.5f * PI * R;
+	const float Per = 2.f * Sx + 2.f * Sy + 4.f * Arc;
+	float V = FMath::Fmod(U, Per);
+	if (V < 0.f) { V += Per; }
+	// bottom side (+X), arc (+,-), right side (+Y), arc (+,+), top side (-X), arc (-,+), left side (-Y), arc (-,-)
+	auto ArcAt = [&](float Cx, float Cy, float FromDeg, float T)
+	{
+		const float Deg = FromDeg + 90.f * (Arc > 0.f ? T / Arc : 1.f);
+		const float Rad = FMath::DegreesToRadians(Deg);
+		OutPos = FVector2D(Cx + R * FMath::Cos(Rad), Cy + R * FMath::Sin(Rad));
+		OutHeading = FMath::UnwindDegrees(Deg + 90.f);
+	};
+	if (V < Sx) { OutPos = FVector2D(-(A - R) + V, -B); OutHeading = 0.f; return; }
+	V -= Sx;
+	if (V < Arc) { ArcAt(A - R, -(B - R), -90.f, V); return; }
+	V -= Arc;
+	if (V < Sy) { OutPos = FVector2D(A, -(B - R) + V); OutHeading = 90.f; return; }
+	V -= Sy;
+	if (V < Arc) { ArcAt(A - R, B - R, 0.f, V); return; }
+	V -= Arc;
+	if (V < Sx) { OutPos = FVector2D((A - R) - V, B); OutHeading = 180.f; return; }
+	V -= Sx;
+	if (V < Arc) { ArcAt(-(A - R), B - R, 90.f, V); return; }
+	V -= Arc;
+	if (V < Sy) { OutPos = FVector2D(-A, (B - R) - V); OutHeading = -90.f; return; }
+	V -= Sy;
+	ArcAt(-(A - R), -(B - R), 180.f, FMath::Min(V, Arc));
 }
 
 void AJamProofScene::PlaceHumanAt(float XM, float ZM, float YawDeg)

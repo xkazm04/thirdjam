@@ -1,8 +1,10 @@
 // Lane A14 (C-0005): UJamEffectSystem, the only IJamModifierSource. Owns the active modifiers (stack policy, deterministic order
-// by frame then id), the triggers (the sim's frame events: goal, check, knockdown, zone_enter/exit; period changes; pickup takes;
-// a live Director's Call or Designer cut; the rule system's ApplyModifier requests) and the pickup spawner (table-driven, the
-// seeded stream, optional zone, max_on_ice). Engine-free: no world, no bus, no actors; the game mode steps it right after
-// UJamSim::Step and hands its events to the bus, AJamPickupActor draws the pickups. Same cartridge + seed + inputs = same StateHash().
+// by frame then id), the triggers (the sim's frame events: goal, check, knockdown; the zone system's zone_enter / zone_exit, read
+// from the sim's IJamZoneSource (lane A41: the sim never carries zone events itself); period changes; pickup takes; a live Director's
+// Call or Designer cut; the rule system's ApplyModifier requests) and the pickup spawner (table-driven, the seeded stream, optional
+// zone, max_on_ice). Engine-free: no world, no bus, no actors; the host steps it right after UJamSim::Step and UJamZoneSystem::Update
+// (that order: the zone events of the frame must be fresh) and hands its events to the bus, AJamPickupActor draws the pickups.
+// Same cartridge + seed + inputs = same StateHash().
 //
 // Order inside one frame: the sim collected last frame's modifiers at the start of its Step; this Step then expires, applies and
 // spawns for the frame that just ran, so a modifier added here is in force from the next sim frame (deterministic one-frame latency).
@@ -37,7 +39,9 @@ public:
 	// `director` trigger. Returns false (and logs) when the text does not parse; the old lists then stay.
 	bool ApplyLiveConfig(const FString& RawCartridgeJson);
 
-	// Once per frame, right after UJamSim::Step.
+	// Once per frame, right after UJamSim::Step and the host's UJamZoneSystem::Update (the zone_enter / zone_exit triggers read that
+	// system's frame events through the sim's zone source; the puck's zone events fire puck / rink / everyone targets, a skater's fire
+	// self / own_team / other_team / everyone with the skater as self).
 	void Step();
 
 	// IJamModifierSource: every modifier active for Frame, in (start frame, id) order.

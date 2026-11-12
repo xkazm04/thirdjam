@@ -196,6 +196,10 @@ struct JAMCORE_API FJamCameraConfig
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 LagFrames = 4;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double FovDeg = 70;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") bool bRadar = true;
+	// A40: the board clamp margin, the end-board height and the far-net lead (DEFAULTS.md).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double BoardsMarginM = 0.8;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double EndHeightM = 5;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double FarNetBias = 0.5;
 };
 
 // The hockey `game` object with every default applied and every `values` override folded in.
