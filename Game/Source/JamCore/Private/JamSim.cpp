@@ -132,6 +132,34 @@ void UJamSim::Restart()
 	FaceoffReset();
 }
 
+TArray<FString> UJamSim::ApplyLiveConfig(const FJamGameConfig& N)
+{
+	TArray<FString> Held;
+	const FJamRinkConfig& R = Config.Rink;
+	if (N.Rink.LengthM != R.LengthM) Held.Add(TEXT("rink.length_m"));
+	if (N.Rink.WidthM != R.WidthM) Held.Add(TEXT("rink.width_m"));
+	if (N.Rink.CornerRadiusM != R.CornerRadiusM) Held.Add(TEXT("rink.corner_radius_m"));
+	if (N.Rink.GoalWidthM != R.GoalWidthM) Held.Add(TEXT("rink.goal_width_m"));
+	if (N.Rink.Obstacles.Num() != R.Obstacles.Num()) Held.Add(TEXT("rink.obstacles"));
+	if (N.Teams.Num() != Config.Teams.Num()) Held.Add(TEXT("teams"));
+	if (N.Rules.Mode != Config.Rules.Mode || N.Rules.ScoreToWin != Config.Rules.ScoreToWin || N.Rules.TimerFrames != Config.Rules.TimerFrames) Held.Add(TEXT("rules"));
+
+	Config.Rink.IceFriction = N.Rink.IceFriction;
+	Config.Rink.BoardRestitution = N.Rink.BoardRestitution;
+	Config.Skater = N.Skater;
+	Config.Puck = N.Puck;
+	Config.Shot = N.Shot;
+	Config.Rules.GoalPauseFrames = N.Rules.GoalPauseFrames;
+	Config.Ai = N.Ai;
+	Config.Pickups = N.Pickups;
+	Config.Look = N.Look;
+	Config.Camera = N.Camera;
+	// A shorter cooldown or knockdown takes effect from the next shot or check; running counters are left alone.
+	UE_LOG(LogJamSim, Log, TEXT("JAMSIM live config at frame %lld: skater.speed=%g shot.speed=%g ice_friction=%g held back: %s"), Frame, Config.Skater.Speed, Config.Shot.Speed,
+		Config.Rink.IceFriction, Held.Num() ? *FString::Join(Held, TEXT(", ")) : TEXT("none"));
+	return Held;
+}
+
 void UJamSim::FaceoffReset()
 {
 	for (FJamSkaterState& S : Skaters)

@@ -38,6 +38,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Jam|Game")
 	bool LoadCut(const FString& NameOrPath);
 
+	// R-0003 3: a Director's Call or a Designer cut applied to the running match without a reset. Live-changeable tunables
+	// (skater, shot, puck, ice friction, board restitution, goal pause, ai, pickups, look) apply at once; rink geometry, teams
+	// and the rules mode are held back (logged) and take effect at the next LoadCut. Called by UJamDesignerSubsystem by name.
+	UFUNCTION(BlueprintCallable, Category = "Jam|Game")
+	bool ApplyCartridgeLive(UJamCartridge* NewCartridge);
+
+	// Current TAKE (period), 1-based: thirds of timer_frames in timer mode, 1 + the leading score in first_to mode.
+	UFUNCTION(BlueprintPure, Category = "Jam|Game") int32 GetTake() const { return Take; }
+
 	// New match, same cartridge and seed.
 	UFUNCTION(BlueprintCallable, Category = "Jam|Game")
 	void RestartMatch();
@@ -61,6 +70,8 @@ private:
 	void DeliverEvents();
 	void PushPresentation();
 	void PossessHuman(APlayerController* PC);
+	int32 ComputeTake() const;
+	void UpdateTake(bool bForce);
 	UClass* ResolveVisualClass(FName Visual) const;
 	FJamInput ReadHumanInput();
 	FJamInput ScriptedHumanInput() const;
@@ -83,4 +94,5 @@ private:
 	double StepMsMax = 0.0;
 	int64 Steps = 0;
 	bool bBuilt = false;
+	int32 Take = 0;
 };

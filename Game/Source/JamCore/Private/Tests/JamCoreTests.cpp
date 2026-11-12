@@ -334,3 +334,38 @@ bool FJamFeel::RunTest(const FString& Parameters)
 }
 
 #endif
+
+#if WITH_DEV_AUTOMATION_TESTS
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamLiveConfig, "Jam.Core.LiveConfig", JamCoreTests::Flags)
+bool FJamLiveConfig::RunTest(const FString& Parameters)
+{
+	UJamCartridge* C = JamCoreTests::LoadPreset(*this, TEXT("hockey.regular"));
+	if (!C) return false;
+	UJamSim* Sim = JamCoreTests::MakeSim(C->Game, 1);
+	TArray<FJamInput> In;
+	In.SetNum(Sim->GetSkaters().Num());
+	for (int32 F = 0; F < 120; ++F) Sim->Step(In);
+	const int64 FrameBefore = Sim->GetFrame();
+	const FVector2D PosBefore = Sim->GetSkaters()[0].Pos;
+	FJamGameConfig N = C->Game;
+	N.Skater.Speed = 12;
+	N.Shot.Speed = 25;
+	N.Rink.IceFriction = 0.05;
+	N.Rink.LengthM = 90; // geometry: must be held back
+	const TArray<FString> Held = Sim->ApplyLiveConfig(N);
+	TestEqual(TEXT("frame kept"), Sim->GetFrame(), FrameBefore);
+	TestEqual(TEXT("positions kept"), Sim->GetSkaters()[0].Pos, PosBefore);
+	TestEqual(TEXT("skater.speed live"), Sim->GetConfig().Skater.Speed, 12.0);
+	TestEqual(TEXT("shot.speed live"), Sim->GetConfig().Shot.Speed, 25.0);
+	TestEqual(TEXT("ice_friction live"), Sim->GetConfig().Rink.IceFriction, 0.05);
+	TestEqual(TEXT("rink length held back"), Sim->GetConfig().Rink.LengthM, 120.0);
+	TestTrue(TEXT("held list names rink.length_m"), Held.Contains(TEXT("rink.length_m")));
+	// The new top speed is reachable.
+	In[Sim->GetHumanIndex()].Move = FVector2D(1, 0);
+	for (int32 F = 0; F < 120; ++F) Sim->Step(In);
+	const double V = Sim->GetSkaters()[Sim->GetHumanIndex()].Vel.Size();
+	AddInfo(FString::Printf(TEXT("after a live skater.speed 12: %.2f m/s"), V));
+	TestTrue(TEXT("skater goes faster than the old 8 m/s"), V > 9.0);
+	return true;
+}
+#endif

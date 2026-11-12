@@ -151,6 +151,15 @@ public:
 	// New match with the same config and seed (restart on R).
 	void Restart();
 
+	// Director's Call / Designer cut applied live (R-0003 3): takes the live-changeable tunables of NewConfig (skater, shot, puck,
+	// ice friction, board restitution, goal pause, ai, pickups, look, camera) without resetting the match. Rink geometry
+	// (length, width, corner, goal width, obstacles), teams, spawns and the rules mode/end condition never change mid-match;
+	// returns the dotted names of the fields that were held back because they differ (empty = everything applied).
+	TArray<FString> ApplyLiveConfig(const FJamGameConfig& NewConfig);
+
+	// Timer mode: frames of play elapsed (timer_frames - frames left); 0 in first_to mode.
+	int32 GetTimerElapsed() const { return Config.Rules.TimerFrames > 0 ? Config.Rules.TimerFrames - TimerLeft : 0; }
+
 	// Advances exactly one frame (1/60 s). Inputs[i] drives skater i; missing entries are zero input.
 	void Step(const TArray<FJamInput>& Inputs);
 

@@ -21,6 +21,8 @@ namespace JamEvents
 	JAMCORE_API extern const FName PickupTake;   // "pickup_take"
 	JAMCORE_API extern const FName Win;          // "win"
 	JAMCORE_API extern const FName Lose;         // "lose"
+	JAMCORE_API extern const FName DirectorsCall; // "directors_call" (R-0001 7, R-0003 3): Who -1, Where zero, Strength = new value's position in the tunable range 0..1, Kind = tunable key
+	JAMCORE_API extern const FName Period;       // "period" (R-0003 3): a TAKE starts; Who -1, Where centre ice, Strength 0, Kind = "take_<n>"
 }
 
 USTRUCT(BlueprintType)
@@ -62,7 +64,7 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Jam|Events")
 	static bool IsKnownEvent(FName Event);
 
-	// The ten event names, in contract order.
+	// The known event names, in contract order (the ten of C-0003, then directors_call and period).
 	UFUNCTION(BlueprintPure, Category = "Jam|Events")
 	static TArray<FName> GetKnownEvents();
 

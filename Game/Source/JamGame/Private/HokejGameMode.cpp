@@ -12,6 +12,8 @@
 #include "CameraFollow.h"
 #include "EffectsBinder.h"
 #include "ToySkaterVisual.h"
+#include "JamDesignerSubsystem.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "Engine/World.h"
 #include "Engine/GameInstance.h"
 #include "GameFramework/PlayerController.h"
@@ -76,8 +78,56 @@ bool AHokejGameMode::LoadCut(const FString& NameOrPath)
 	CutName = NameOrPath;
 	UE_LOG(LogHokej, Log, TEXT("JAMCART loaded %s id=%s title=\"%s\" seed=%lld rink=%gx%g visual=%s tier=%s"), *Path, *C->Id, *C->Title, C->Seed,
 		C->Game.Rink.LengthM, C->Game.Rink.WidthM, *C->Game.Skater.Visual.ToString(), *C->Game.Look.Tier);
+	if (UGameInstance* GI = GetGameInstance()) if (UJamDesignerSubsystem* D = GI->GetSubsystem<UJamDesignerSubsystem>()) D->SetCurrentCartridge(C);
 	BuildMatch();
 	return true;
+}
+
+bool AHokejGameMode::ApplyCartridgeLive(UJamCartridge* NewCartridge)
+{
+	if (!NewCartridge || !Sim || !bBuilt) return false;
+	const TArray<FString> Held = Sim->ApplyLiveConfig(NewCartridge->Game);
+	const FJamGameConfig& G = Sim->GetConfig();
+	Brain->YieldMarginM = G.Ai.YieldMarginM;
+	Brain->YieldRadiusM = G.Ai.YieldRadiusM;
+	Brain->HoldRadiusM = G.Ai.HoldRadiusM;
+	Brain->SpeedScale = G.Ai.SpeedScale;
+	Brain->RedSkill = G.Ai.RedSkill;
+	Brain->ApplyParams();
+	if (Rink && Rink->IceMid) Rink->IceMid->SetScalarParameterValue(TEXT("Wet"), G.Look.bWetIce ? 1.f : 0.f);
+	if (ULookTierSwitcher* Look = GetWorld()->GetSubsystem<ULookTierSwitcher>()) Look->SetTier(G.Look.Tier);
+	Cartridge = NewCartridge;
+	if (UGameInstance* GI = GetGameInstance()) if (UJamDesignerSubsystem* D = GI->GetSubsystem<UJamDesignerSubsystem>()) D->SetCurrentCartridge(NewCartridge);
+	UE_LOG(LogHokej, Log, TEXT("JAMGAME live cut id=%s at frame %lld; held back until the next match: %s"), *NewCartridge->Id, Sim->GetFrame(), Held.Num() ? *FString::Join(Held, TEXT(", ")) : TEXT("none"));
+	PushPresentation();
+	return true;
+}
+
+int32 AHokejGameMode::ComputeTake() const
+{
+	if (!Sim) return 1;
+	const FJamRulesConfig& R = Sim->GetConfig().Rules;
+	if (R.Mode == FName(TEXT("timer")) && R.TimerFrames > 0)
+	{
+		return FMath::Clamp(1 + (Sim->GetTimerElapsed() * 3) / R.TimerFrames, 1, 3);
+	}
+	const int32 Lead = FMath::Max(Sim->GetScore(0), Sim->GetScore(1));
+	return R.ScoreToWin > 0 ? FMath::Clamp(1 + Lead, 1, R.ScoreToWin) : 1 + Lead;
+}
+
+void AHokejGameMode::UpdateTake(bool bForce)
+{
+	const int32 T = ComputeTake();
+	if (!bForce && T == Take) return;
+	Take = T;
+	UGameInstance* GI = GetGameInstance();
+	if (UJamEventBus* Bus = GI ? GI->GetSubsystem<UJamEventBus>() : nullptr)
+	{
+		FJamEventPayload P;
+		P.Kind = FName(*FString::Printf(TEXT("take_%d"), Take));
+		Bus->Broadcast(JamEvents::Period, P);
+	}
+	if (UJamDesignerSubsystem* D = GI ? GI->GetSubsystem<UJamDesignerSubsystem>() : nullptr) D->NotifyPeriodStarted(Take);
 }
 
 UClass* AHokejGameMode::ResolveVisualClass(FName Visual) const
@@ -142,8 +192,9 @@ void AHokejGameMode::BuildMatch()
 	StepMsSum = StepMsMax = 0.0;
 	Steps = 0;
 	bBuilt = true;
-	// The opening faceoff event and the first presentation frame.
+	// The opening faceoff event, TAKE 1 and the first presentation frame.
 	DeliverEvents();
+	UpdateTake(true);
 	for (AJamSkater* A : Skaters) A->ApplySimFrame(Sim->GetSkaters()[A->GetSimIndex()]);
 	PushPresentation();
 	for (AJamSkater* A : Skaters) A->ApplyRender(Sim->GetSkaters()[A->GetSimIndex()], 1.f);
@@ -208,6 +259,7 @@ void AHokejGameMode::RestartMatch()
 	Accumulator = 0.0;
 	UE_LOG(LogHokej, Log, TEXT("JAMGAME restart (%s)"), *CutName);
 	DeliverEvents();
+	UpdateTake(true);
 	PushPresentation();
 }
 
@@ -315,7 +367,7 @@ void AHokejGameMode::PushPresentation()
 	// Home = the human's team.
 	F.ScoreHome = Sim->GetScore(Sim->GetHumanTeam());
 	F.ScoreAway = Sim->GetScore(1 - Sim->GetHumanTeam());
-	F.Take = 1;
+	F.Take = FMath::Max(1, Take);
 	F.bHasTimer = G.Rules.Mode == FName(TEXT("timer"));
 	F.FramesRemaining = Sim->GetTimerFrames();
 	switch (Sim->GetPhase())
@@ -338,6 +390,7 @@ void AHokejGameMode::StepOnce()
 	StepMsMax = FMath::Max(StepMsMax, Ms);
 	++Steps;
 	DeliverEvents();
+	if (Sim->GetPhase() == EJamSimPhase::Playing) UpdateTake(false);
 	for (AJamSkater* A : Skaters) A->ApplySimFrame(Sim->GetSkaters()[A->GetSimIndex()]);
 	PushPresentation();
 	if (Sim->GetFrame() % 600 == 0)
