@@ -190,3 +190,5 @@
 - Packages: `Hokej_Hokej_H16` (20:55) and `Hokej_Hokej_H17` (21:00, 258.5 MB): H17 is the build to play (payoffs, HUD pass 2, commentator, tackling, camera clamp, curve by playtester class).
 - running: A44 (the Designer learns tonight's keys, six new cuts), A45 (C-0001 v4 + bots check). Then: A3's next pass on the curve with bot checks, B's figure A/B sheets at 23:30.
 - gate rule from 20:45: a push needs build, node tests and automation green (one push went out with a red node test at 20:43; fixed at bf26485).
+
+- RESOURCES 21:15 cpu 6% ram 16.8/63GB gpu 0 %, 1432 MiB, 39 editors 0 cmd 0 ubt 0 free 578GB
