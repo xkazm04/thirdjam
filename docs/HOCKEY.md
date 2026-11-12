@@ -82,8 +82,8 @@ UE4 -> UE5 mannequin works in one Python script (`run_batch_retarget`), no human
 | Track | Owner | Window | What | Promotion rule |
 |---|---|---|---|---|
 | T-A toy figure (MVP) | device A | H1-H24 | capsule body, round head, stick, jersey colour and number as material params; lean into turns, bob with speed, stick swing and knockdown tip-over by code; deterministic | ships in M1; stays the fallback forever |
-| T-B1 humanoid, sourced clips | device B | H12-H36 | a Fab or generated humanoid, skeleton, retargeted skate / shoot / check / fall clips from Fab or an animation service (ledgered as sourced); implements the same interface | swap into a test cartridge at H36; promoted only if the player bot still wins and the frame gate holds; else stays in the dev log as an experiment |
-| T-B2 generated rigged (Meshy / Tripo / Rodin) | device B | H24-H48 | partner-tool rigged and animated figure; counts toward partner prizes | same rule as T-B1; evaluated at H48 |
+| T-B2 generated rigged (Meshy), **now first** | device B | H8-H24 | proven on 2026-11-12 (lane E1, `docs/experiments/MESHY.md`): text-to-3D toy skater in the P2 look, 20.8k tris, one 2K texture, `ue5_mannequin` bone names, text-to-motion skating stride, slap shot, library knock-down; about 55 credits and 5 minutes of API time per figure; strip the pelvis drift; attach the stick to `hand_r`; counts toward partner prizes | swap into a test cartridge at H24; promoted only if the player bot still wins and the frame gate holds |
+| T-B1 humanoid, sourced clips (fallback) | device B | H24-H40 | the Fab "Hockey Player Animated" pack retargeted UE4 -> UE5 by the one-script path R2 proved, plus Mannequin falls; implements the same interface | same rule; evaluated at H40; only if T-B2 failed its gate or its clips do not loop |
 
 Both device-B tracks are experiments by design: the game ships on T-A unless a track clears its gate.
 

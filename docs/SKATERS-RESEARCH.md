@@ -367,3 +367,10 @@ https://docs.meshy.ai/en/webapp/guides/animate · https://docs.meshy.ai/pricing 
 https://developers.tripo3d.com/en/docs/animations-retarget · https://hyper3d.ai/use-cases/animation ·
 https://www.costbench.com/compare/meshy-vs-rodin-hyper3d/ · https://deepmotion.com/post/create-and-animate-figure-skaters-using-gen-ai-in-minutes ·
 https://forums.unrealengine.com/t/altercode-text-to-anim-local-ai-text-to-animation/2838544
+
+
+## Corrections from lane E1 (measured against the Meshy API on 2026-11-12)
+- Rigging and animation are **not free** through the API: rig 5 credits, each animation action 3, text-to-motion prime 10 / swift 3, preview 5 (6-lite, t2.5) or 20 (7.1), texture 10.
+- The `skeleton_template: ue5_mannequin` rig (added 2026-11-10) carries UE5 bone **names** on 28 bones (`pelvis` at the top, no `root`, no twist/IK/finger bones, extra `_End` bones): it is not the UE5 Mannequin skeleton, so Manny clips still need a retarget; the matching names should make it quick. Unreal import untested (not allowed before the jam).
+- Meshy text-to-motion produced a skating stride that reads as skating; library clip 187 `Knock_Down` works as a check-fall; the stride carries 0.9 m forward / 0.38 m sideways drift on `pelvis` over 4 s that must be stripped (no root bone).
+- Full numbers, task ids and the device-B command sequence (about 55 credits per figure with four clips): `docs/experiments/MESHY.md`.
