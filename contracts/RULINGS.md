@@ -43,3 +43,14 @@
 5. **Shared Source tree:** two lanes broke the build for all others this hour (a missing module dependency, a missing include). Rule: a lane runs `tools/run/build.ps1` before every pause and
    every report, and never leaves a half-written file in `Game/Source`. The Director fixes a cross-lane break on sight and names it here.
 6. **`A2`'s private build copy** `C:/Users/kazda/kiro/a2-build` is deleted by the Director. Lanes that need a private copy use a git worktree under `.worktrees/` (TRACKS.md 5), not an ad-hoc folder.
+
+## R-0004 (H5, 2026-11-12 11:00): operator decisions on rink size and the Designer's transport
+1. **Rink:** `hockey.regular` stays **120 x 60** as the default cut. `hockey.arena.small` (90 x 45, speed 11) stays in every test and sweep and in development as the comparison; lanes A3 and A10
+   keep reporting both. No lane changes the default without a new ruling.
+2. **Designer transport without a charged API key:** the operator has no billed key; the Claude Code CLI subscription is available for development. The Designer gains a second transport,
+   **`FJamCliTransport`**, which spawns `claude -p --model claude-haiku-5-5 --output-format json --max-turns 1` (fallbacks `claude-sonnet-5-5`) with the same assembled prompt on stdin, parses the
+   `result` field as the reply, and applies the same validation and repair chain as the HTTP transport. Selection order at runtime: API key present -> HTTP; else `claude` executable found on PATH
+   and the build is not Shipping (or `bAllowCliTransport=True` in `DefaultGame.ini` for the operator's demo build) -> CLI; else offline cuts. The **submitted build ships with CLI off**
+   (rule 7f: no additional software; subscription terms for a shipped service are not ours to assume) and relies on offline cuts plus the key field. The CLI transport is also used **now** to
+   generate the shipped offline cut library (24-40 sentence -> cut pairs, validated, committed under `Game/Content/Designer/`), and to run the Designer eval for real first-try numbers.
+   The dev log says plainly how the live feature was developed and what the judge's build does without a key.
