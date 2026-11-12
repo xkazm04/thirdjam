@@ -1,0 +1,1 @@
+Same frame as near-figure with RampOn 0: smooth spot falloff, outline still on

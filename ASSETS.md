@@ -34,7 +34,7 @@ Rules that apply to every row:
 | path | kind | size_mb | origin | tool | licence | url | date | device | shipped | note |
 |---|---|---|---|---|---|---|---|---|---|---|
 | Game/Plugins/JamAssets/Content/Rigs/LR_L1_Day.umap | other | 0.0 | original | UE 5.9 editor via MCP |  |  | 2026-11-12 | A | y | empty placeholder sub-level made by lane A0 (C-0002); B fills it |
-| Game/Plugins/JamAssets/Content/Rigs/LR_L2_Night.umap | other | 0.0 | original | UE 5.9 editor via MCP |  |  | 2026-11-12 | A | y | empty placeholder sub-level made by lane A0 (C-0002); B fills it first |
+| Game/Plugins/JamAssets/Content/Rigs/LR_L2_Night.umap | other | 0.0 | original | UE 5.9 editor via MCP/Python |  |  | 2026-11-12 | B | y | night rig, filled by lane B1: PPV_L2_Night, Sky_L2_Night, Spot_L2_Night_1-4, Room_L2_Night_1-6 (placeholder by lane A0) |
 | Game/Plugins/JamAssets/Content/Rigs/LR_L3_Neon.umap | other | 0.0 | original | UE 5.9 editor via MCP |  |  | 2026-11-12 | A | y | empty placeholder sub-level made by lane A0 (C-0002); B fills it |
 | Game/Plugins/JamAssets/Content/Look/MI_Ice_Night.uasset | material | 0.0 | original | UE 5.9 editor via MCP/Python (recipe tools/skills/look-painted-cel.md) |  |  | 2026-11-12 | B | y | instance |
 | Game/Plugins/JamAssets/Content/Look/MI_PP_Outline.uasset | material | 0.0 | original | UE 5.9 editor via MCP/Python (recipe tools/skills/look-painted-cel.md) |  |  | 2026-11-12 | B | y | instance |

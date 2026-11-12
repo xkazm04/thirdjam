@@ -1,0 +1,1 @@
+Same frame after both toggles restored to 1 (RampOn 1, OutlineOn 1)
