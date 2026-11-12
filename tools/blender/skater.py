@@ -42,14 +42,15 @@ BASE = dict(
     body_w=0.64, hip_w=0.46, body_bottom=0.14, body_top=1.02, cap_h=0.30,   # tapered torso from hip_w at the bottom to body_w at the shoulders, a dome of cap_h on top
     head_r=0.245, head_z=1.345, helmet_band=True, band_h=0.13, visor=True, helmet=False, cage=False, neck=False,
     legs=False, leg_r=0.09, leg_bottom=0.06, leg_top=0.22, leg_y=0.13, knees=False, knee_z=0.0, thigh_r=0.0, shin_r=0.0,
-    plate=True, plate_x=0.46, plate_y=0.40, plate_h=0.025, runners=True,
+    plate=True, plate_x=0.46, plate_y=0.40, plate_h=0.025, runners=True, runner_h=0.01,
     skate_len=0.32, skate_w=0.09, skate_h=0.09, skate_y=0.13,
-    shoulder_y=0.30, shoulder_z=0.98, arm_r=0.065, elbows=True, elbow_offset=(0.24, 0.0, -0.14),   # elbows forward: both arms cross in front of the chest to the stick
+    shoulder_y=0.30, shoulder_z=0.98, arm_r=0.065, elbow_offset=(0.30, 0.0, -0.20),   # elbows forward: both arms cross in front of the chest to the stick (two-bone IK arms, baked)
     # stick: the shaft top (grip end) is at the top hand; the shaft runs forward and down to the ice at the lie angle
-    stick_shaft=1.30, stick_blade=0.32, stick_lie_deg=42.0, blade_out_deg=30.0, stick_r_top=0.032, stick_r_heel=0.024,
+    stick_shaft=1.30, stick_blade=0.35, stick_lie_deg=42.0, blade_out_deg=30.0, stick_r_top=0.032, stick_r_heel=0.024,
     stick_top=(0.33, -0.38, 0.88),                                  # the grip in front of the right shoulder, outside the torso                                   # Blender space: -Y is the skater's right
-    blade_h=0.08, blade_t=0.035, heel_r=0.045, tape_len=0.15, knob=True,
-    hand_upper=0.07, hand_lower=0.43, hand_r=0.085, gloves=False,
+    blade_h=0.08, blade_h_toe=0.055, blade_t=0.03, blade_t_toe=0.018, heel_r=0.045, tape_len=0.15, knob=True,   # the blade tapers toward the toe
+    hand_upper=0.07, hand_lower=0.43, hand_r=0.085, gloves=True,
+    lean_deg=15.0,                                                  # the skate_left / skate_right lean; the game caps the roll it adds on top
     puck_front=0.12,                                                # puck_socket this far in front of the blade face, on the ice
     # look
     clay=False, seam=False, dimple_strength=0.035, dimple_scale=0.16,    # thumb dents: a 10 cm miniature's fingerprints scaled to 1.6 m
@@ -65,7 +66,7 @@ VARIANTS = {
         head_r=0.13, head_z=1.64, helmet_band=False, visor=False, helmet=True, cage=True, neck=True,
         legs=True, leg_r=0.0, leg_bottom=0.08, leg_top=0.86, leg_y=0.14, knees=True, knee_z=0.48, thigh_r=0.095, shin_r=0.075,
         plate=False, runners=True, skate_y=0.14, skate_len=0.32, skate_w=0.09, skate_h=0.08,
-        shoulder_y=0.29, shoulder_z=1.40, arm_r=0.055, elbows=True, elbow_offset=(0.12, 0.0, -0.06),
+        shoulder_y=0.29, shoulder_z=1.40, arm_r=0.055, elbow_offset=(0.22, 0.0, -0.16),
         stick_shaft=1.55, stick_lie_deg=48.0, stick_top=(0.30, -0.34, 1.16), hand_upper=0.07, hand_lower=0.52, hand_r=0.08, gloves=True,
         height=1.85, number_z=1.12, number_size=0.28,
     ),
@@ -77,7 +78,9 @@ COLOURS = dict(
     number=(0.95, 0.95, 0.95, 1.0),   # number patch on the back
     stick=(0.62, 0.46, 0.26, 1.0),    # shaft and blade wood; the tape band and the knob are trim
     head=(0.48, 0.58, 0.92, 1.0),     # a lighter team colour (the toy code lerps TeamColour 45 % toward white)
+    steel=(0.74, 0.76, 0.80, 1.0),    # skate blade strips and the cage line (never the number slot: the game puts a digits material there)
 )
+SLOT_ORDER = ["base", "number", "head", "trim", "stick", "steel"]   # material slot names and order in the exported mesh
 
 FPS = 60
 CELL_PX = 1024
@@ -182,7 +185,7 @@ class Build:
     def material(self, key):
         if key in self.materials:
             return self.materials[key]
-        m = bpy.data.materials.new("M_Skater" + key.capitalize())
+        m = bpy.data.materials.new(key)   # the slot name the game sees: base, number, head, trim, stick, steel
         m.use_nodes = True
         bsdf = m.node_tree.nodes.get("Principled BSDF")
         bsdf.inputs["Base Color"].default_value = COLOURS[key]
@@ -244,39 +247,50 @@ class Build:
         return self._finish(o, name, mat, bone, group, smooth=False)
 
     def number_patch(self, group):
-        # a curved patch on the back (-X side) of the body cylinder, UV 0..1, its own material slot
+        # a flat square patch standing off the back (-X side), UV 0..1 with u running left to right as seen from behind, its own slot "number"
         p = self.p
-        R = cm(self._body_r_at(p["number_z"]) + 0.016)
-        half = cm(p["number_size"] * 0.5)
-        zc = cm(p["number_z"])
-        amax = math.asin(min(0.95, half / R))
-        nu, nv = 8, 2
+        x = -(self._body_r_at(p["number_z"]) + 0.02)
+        half = p["number_size"] * 0.5
+        zc = p["number_z"]
         bm = bmesh.new()
         uv_layer = bm.loops.layers.uv.new("UVMap")
-        grid = []
-        for j in range(nv + 1):
-            row = []
-            z = zc - half + (2 * half) * j / nv
-            for i in range(nu + 1):
-                a = -amax + 2 * amax * i / nu
-                row.append(bm.verts.new((-R * math.cos(a), R * math.sin(a), z)))
-            grid.append(row)
-        bm.verts.ensure_lookup_table()
-        for j in range(nv):
-            for i in range(nu):
-                f = bm.faces.new((grid[j][i], grid[j][i + 1], grid[j + 1][i + 1], grid[j + 1][i]))
-                for loop in f.loops:
-                    v = loop.vert
-                    # u runs left to right as seen from behind (looking along +X): +Y is the viewer's left from behind... keep 0..1 across the patch
-                    ang = math.atan2(v.co.y, -v.co.x)
-                    loop[uv_layer].uv = (0.5 - ang / (2 * amax), (v.co.z - (zc - half)) / (2 * half))
+        # seen from behind (looking along +X) the viewer's right is -Y in Blender, and the FBX Y flip keeps "right" on the right in Unreal
+        pts = [(x, half, zc - half), (x, -half, zc - half), (x, -half, zc + half), (x, half, zc + half)]
+        uvs = [(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)]
+        verts = [bm.verts.new(tuple(V(*q))) for q in pts]
+        f = bm.faces.new(verts)
+        for loop, uv in zip(f.loops, uvs):
+            loop[uv_layer].uv = uv
         me = bpy.data.meshes.new("number")
         bm.to_mesh(me)
         bm.free()
         o = bpy.data.objects.new("number", me)
         bpy.context.collection.objects.link(o)
         bpy.context.view_layer.objects.active = o
-        return self._finish(o, "number", "number", "torso", group)
+        return self._finish(o, "number", "number", "torso", group, smooth=False)
+
+    def tapered_blade(self, name, mat, bone, group, heel, bdir, out, length, t0, t1, h0, h1):
+        """a blade box that tapers in thickness and height from the heel (t0, h0) to the toe (t1, h1), lying on the ice"""
+        bm = bmesh.new()
+        q = []
+        for end, t, h in ((0.0, t0, h0), (length, t1, h1)):
+            c = heel + bdir * end
+            for sgn in (-1, 1):
+                for z in (0.0, h):
+                    pt = c + out * (sgn * t * 0.5) + Vector((0, 0, z))
+                    q.append(bm.verts.new(tuple(V(*pt))))
+        # q index: end(0/1)*4 + sgn(0/1)*2 + z(0/1)
+        faces = [(0, 1, 5, 4), (2, 6, 7, 3), (0, 4, 6, 2), (1, 3, 7, 5), (0, 2, 3, 1), (4, 5, 7, 6)]
+        for fc in faces:
+            bm.faces.new([q[i] for i in fc])
+        bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+        me = bpy.data.meshes.new(name)
+        bm.to_mesh(me)
+        bm.free()
+        o = bpy.data.objects.new(name, me)
+        bpy.context.collection.objects.link(o)
+        bpy.context.view_layer.objects.active = o
+        return self._finish(o, name, mat, bone, group, smooth=False)
 
     # ---- the figure
     def stick_frame(self):
@@ -319,8 +333,8 @@ class Build:
         if p["cage"]:
             # a cage line: a thin bright bar across the face and a vertical bar, in front of the helmet
             fx = p["head_r"] * 1.2
-            self.box("cage_h", "number", "head", body, (0.02, p["head_r"] * 1.6, 0.025), (fx, 0, p["head_z"] - 0.03))
-            self.box("cage_v", "number", "head", body, (0.02, 0.025, p["head_r"] * 0.9), (fx, 0, p["head_z"] - 0.1))
+            self.box("cage_h", "steel", "head", body, (0.02, p["head_r"] * 1.6, 0.025), (fx, 0, p["head_z"] - 0.03))
+            self.box("cage_v", "steel", "head", body, (0.02, 0.025, p["head_r"] * 0.9), (fx, 0, p["head_z"] - 0.1))
         # legs, knees and skates
         if p["legs"]:
             for sgn, nm in ((1, "l"), (-1, "r")):
@@ -333,11 +347,13 @@ class Build:
                 self.cylinder(nm, "trim", "pelvis", body, p["leg_r"], p["leg_bottom"], p["leg_top"], y=sgn * p["leg_y"], verts=12)
         if p["plate"]:
             self.box("skate_plate", "trim", "pelvis", body, (p["plate_x"], p["plate_y"], p["plate_h"]), (0, 0, p["plate_h"] * 0.5 + 0.02))
-        z0 = (p["plate_h"] + 0.02) if p["plate"] else 0.03
+        z0 = (p["plate_h"] + 0.02) if p["plate"] else 0.0
+        rh = p["runner_h"] if p["runners"] else 0.0
         for sgn, nm in ((1, "skate_l"), (-1, "skate_r")):
-            self.box(nm, "trim", "pelvis", body, (p["skate_len"], p["skate_w"], p["skate_h"]), (0, sgn * p["skate_y"], z0 + p["skate_h"] * 0.5))
+            # the black skate block sits on a light steel strip (the blade line), which sits on the plate or the ice
+            self.box(nm, "trim", "pelvis", body, (p["skate_len"], p["skate_w"], p["skate_h"]), (0, sgn * p["skate_y"], z0 + rh + p["skate_h"] * 0.5))
             if p["runners"]:
-                self.box(nm + "_runner", "number", "pelvis", body, (p["skate_len"] * 0.9, 0.012, z0), (0, sgn * p["skate_y"], z0 * 0.5))
+                self.box(nm + "_runner", "steel", "pelvis", body, (p["skate_len"] * 0.92, 0.014, rh), (0, sgn * p["skate_y"], z0 + rh * 0.5))
         # stick: tapered shaft, knob, heel sphere, wooden blade with a dark tape band
         top, d, heel, bdir, out = self.stick_frame()
         self.cone_between("stick_shaft", "stick", "stick_root", stick, top, heel, p["stick_r_top"], p["stick_r_heel"], verts=10)
@@ -346,9 +362,11 @@ class Build:
         self.sphere("heel", "stick", "stick_root", stick, p["heel_r"], heel.x, heel.y, p["blade_h"] * 0.5, seg=12, rings=6)
         bc = heel + bdir * (p["stick_blade"] * 0.5)
         ang = math.degrees(math.atan2(bdir.y, bdir.x))
-        self.box("blade", "stick", "stick_root", stick, (p["stick_blade"], p["blade_t"], p["blade_h"]), (bc.x, bc.y, p["blade_h"] * 0.5), rot_z_deg=ang)
+        self.tapered_blade("blade", "stick", "stick_root", stick, heel, bdir, out, p["stick_blade"], p["blade_t"], p["blade_t_toe"], p["blade_h"], p["blade_h_toe"])
         tc = heel + bdir * (p["stick_blade"] - p["tape_len"] * 0.5 - 0.06)
-        self.box("tape", "trim", "stick_root", stick, (p["tape_len"], p["blade_t"] + 0.012, p["blade_h"] + 0.012), (tc.x, tc.y, p["blade_h"] * 0.5), rot_z_deg=ang)
+        tt = lerp(p["blade_t"], p["blade_t_toe"], (p["stick_blade"] - p["tape_len"] * 0.5 - 0.06) / p["stick_blade"])
+        th = lerp(p["blade_h"], p["blade_h_toe"], (p["stick_blade"] - p["tape_len"] * 0.5 - 0.06) / p["stick_blade"])
+        self.box("tape", "trim", "stick_root", stick, (p["tape_len"], tt + 0.01, th + 0.008), (tc.x, tc.y, th * 0.5), rot_z_deg=ang)
         # two mitten hands: the upper at the top of the shaft, the lower a third down, with a cuff each on the broadcast figure
         self.hands = {}
         for nm, t in (("hand_upper", p["hand_upper"]), ("hand_lower", p["hand_lower"])):
@@ -361,18 +379,18 @@ class Build:
         # arms: shoulder to hand, left arm to the upper hand (a right-handed shooter), right arm to the lower hand
         self.shoulders = {"arm_l": Vector((0.0, p["shoulder_y"], p["shoulder_z"])), "arm_r": Vector((0.0, -p["shoulder_y"], p["shoulder_z"]))}
         self.arm_hand = {"arm_l": "hand_upper", "arm_r": "hand_lower"}
+        self.elbows = {}
         for bone, hand in self.arm_hand.items():
             sh, hp = self.shoulders[bone], self.hands[hand]
             self.sphere(bone + "_shoulder", "base", "torso", body, p["arm_r"] * 1.15, sh.x, sh.y, sh.z, seg=12, rings=6)
-            if p["elbows"]:
-                mid = (sh + hp) * 0.5
-                ox, oy, oz = p["elbow_offset"]
-                el = mid + Vector((ox, oy if bone == "arm_l" else -oy, oz))
-                self.cylinder_between(bone + "_upper", "base", bone, body, sh, el, p["arm_r"], verts=12)
-                self.sphere(bone + "_elbow", "base", bone, body, p["arm_r"] * 1.1, el.x, el.y, el.z, seg=12, rings=6)
-                self.cylinder_between(bone + "_fore", "base", bone, body, el, hp, p["arm_r"] * 0.9, verts=12)
-            else:
-                self.cylinder_between(bone, "base", bone, body, sh, hp, p["arm_r"], verts=12)
+            mid = (sh + hp) * 0.5
+            ox, oy, oz = p["elbow_offset"]
+            el = mid + Vector((ox, oy if bone == "arm_l" else -oy, oz))
+            self.elbows[bone] = el
+            # two bones per arm: <arm>_upper (shoulder to elbow) and <arm>_fore (elbow to hand), posed by IK and baked to plain keys
+            self.cylinder_between(bone + "_upper", "base", bone + "_upper", body, sh, el, p["arm_r"], verts=12)
+            self.sphere(bone + "_elbow", "base", bone + "_fore", body, p["arm_r"] * 1.1, el.x, el.y, el.z, seg=12, rings=6)
+            self.cylinder_between(bone + "_fore", "base", bone + "_fore", body, el, hp, p["arm_r"] * 0.9, verts=12)
         self.puck_socket_pos = bc + out * (p["blade_t"] * 0.5 + p["puck_front"])
         self.puck_socket_pos.z = 0.0
         self.stick_socket_pos = top.copy()
@@ -478,9 +496,13 @@ class Build:
             ("pelvis", (0, 0, 0.02), (0, 0, hip_z), "root", True),
             ("torso", (0, 0, hip_z), (0, 0, p["body_top"]), "pelvis", True),
             ("head", (0, 0, p["body_top"]), (0, 0, p["head_z"] + p["head_r"]), "torso", True),
-            ("arm_l", tuple(self.shoulders["arm_l"]), tuple(self.hands["hand_upper"]), "torso", True),
-            ("arm_r", tuple(self.shoulders["arm_r"]), tuple(self.hands["hand_lower"]), "torso", True),
+            ("arm_l_upper", tuple(self.shoulders["arm_l"]), tuple(self.elbows["arm_l"]), "torso", True),
+            ("arm_l_fore", tuple(self.elbows["arm_l"]), tuple(self.hands["hand_upper"]), "arm_l_upper", True),
+            ("arm_r_upper", tuple(self.shoulders["arm_r"]), tuple(self.elbows["arm_r"]), "torso", True),
+            ("arm_r_fore", tuple(self.elbows["arm_r"]), tuple(self.hands["hand_lower"]), "arm_r_upper", True),
             ("stick_root", tuple(top), tuple(heel), "torso", True),
+            ("ik_hand_l", tuple(self.hands["hand_upper"]), tuple(self.hands["hand_upper"] + Vector((0, 0, 0.05))), "stick_root", False),
+            ("ik_hand_r", tuple(self.hands["hand_lower"]), tuple(self.hands["hand_lower"] + Vector((0, 0, 0.05))), "stick_root", False),
             ("stick_socket", tuple(top), tuple(top + Vector((0, 0, 0.05))), "stick_root", False),
             ("puck_socket", tuple(self.puck_socket_pos), tuple(self.puck_socket_pos + Vector((0, 0, 0.05))), "stick_root", False),
             ("head_socket", (0, 0, p["head_z"] + p["head_r"] + 0.25), (0, 0, p["head_z"] + p["head_r"] + 0.30), "head", False),
@@ -499,16 +521,15 @@ class Build:
         self.rest = {b.name: b.matrix_local.copy() for b in arm.data.bones}
         for pb in arm.pose.bones:
             pb.rotation_mode = "QUATERNION"
-        # arms stretch to their hand on the stick; the FBX bake writes the stretch as bone scale
-        for bone, hand in self.arm_hand.items():
-            pb = arm.pose.bones[bone]
-            c = pb.constraints.new("STRETCH_TO")
+        # arms reach their hand on the stick by a two-bone IK to a helper bone that rides stick_root; bake_arms() turns the result into plain keys
+        for bone in ("arm_l", "arm_r"):
+            pb = arm.pose.bones[bone + "_fore"]
+            c = pb.constraints.new("IK")
             c.target = arm
-            c.subtarget = "stick_root"
-            c.head_tail = p[hand] / p["stick_shaft"]
-            c.rest_length = (self.hands[hand] - self.shoulders[bone]).length * 100.0
-            c.volume = "NO_VOLUME"
-            c.keep_axis = "PLANE_X"
+            c.subtarget = "ik_hand_" + bone[-1]
+            c.chain_count = 2
+            c.use_tail = True
+            c.use_stretch = False
         # skin
         mesh = self.mesh
         mesh.parent = arm
@@ -538,7 +559,7 @@ class Build:
         # the torso's pitch also carries the grip forward and down, which is cancelled so the blade stays where it is (the hands slide on the body instead)
         gm = (M["torso"] @ grip.to_4d()).to_3d()
         delta = gm - grip
-        slide_world = V(g("stick_fwd"), g("stick_side"), g("stick_up")) - Vector((delta.x, 0.0, delta.z))
+        slide_world = V(g("stick_fwd"), g("stick_side"), g("stick_up")) - Vector((0.0, 0.0, delta.z))   # only the drop is cancelled: a crouch may push the stick forward
         slide = (R_pitch(-g("body_pitch")) @ R_yaw(-g("sway")) @ slide_world.to_4d()).to_3d()
         M["stick_root"] = T(slide) @ about(grip, R_yaw(g("stick_yaw")) @ R_pitch(g("stick_pitch") - g("body_pitch")) @ R_roll(g("stick_roll")))
         for name, m in M.items():
@@ -578,7 +599,7 @@ class Build:
         # ToySkaterVisual.cpp: ShotStickYaw keys 0/18/25/34/40/51 -> 0/-100/10/75/75/0, smoothstep between keys
         def shot_yaw(f):
             kf = [0, 18, 25, 34, 40, 51]
-            kv = [0.0, -100.0, 10.0, 75.0, 75.0, 0.0]
+            kv = [0.0, -65.0, 6.0, 50.0, 50.0, 0.0]   # the code's -100/10/75 scaled to what two-bone arms reach around the body
             if f <= 0 or f >= 51:
                 return 0.0
             for i in range(5):
@@ -606,28 +627,34 @@ class Build:
             w = 2 * math.pi * f / 60.0
             return dict(body_pitch=REST_PITCH + 0.6 * math.sin(w), bob=0.004 * math.sin(w), stick_yaw=1.5 * math.sin(w), head_pitch=2.0 * math.sin(w))
 
-        def skate(f):
-            ph = f / 36.0
-            return dict(body_pitch=-16.0, sway=4.0 * math.sin(2 * math.pi * ph), bob=0.04 * abs(math.sin(math.pi * ph)),
-                        roll=-4.0 * math.sin(2 * math.pi * ph), stick_yaw=-3.0 * math.sin(2 * math.pi * ph), stick_fwd=0.02 * math.sin(2 * math.pi * ph))
+        def skate_fn(lean):
+            # lean: Unreal roll of the whole figure, negative = left side down = a left turn; at most lean_deg, the game caps what it adds on top
+            def skate(f):
+                ph = f / 36.0
+                return dict(body_pitch=-16.0, sway=4.0 * math.sin(2 * math.pi * ph) + 0.3 * lean, bob=0.04 * abs(math.sin(math.pi * ph)),
+                            roll=lean - 4.0 * math.sin(2 * math.pi * ph), stick_yaw=-3.0 * math.sin(2 * math.pi * ph) - 0.4 * lean,
+                            stick_fwd=0.02 * math.sin(2 * math.pi * ph), head_pitch=0.0)
+            return skate
+        skate = skate_fn(0.0)
+        LEAN = self.p["lean_deg"]
 
         def carry(f):
             w = 2 * math.pi * f / 60.0
             return dict(body_pitch=-13.0, stick_yaw=-10.0 + 8.0 * math.sin(w), stick_fwd=0.10, stick_side=0.02 * math.sin(w), head_pitch=-6.0)
 
         def aim_left(f):
-            return dict(body_pitch=-12.0, sway=-15.0, stick_yaw=-70.0, stick_fwd=0.30, stick_side=0.10, head_pitch=-4.0)
+            return dict(body_pitch=-12.0, sway=-15.0, stick_yaw=-70.0, stick_fwd=0.20, stick_side=0.10, head_pitch=-4.0)
 
         def aim_right(f):
-            return dict(body_pitch=-12.0, sway=15.0, stick_yaw=70.0, stick_fwd=0.30, stick_side=-0.10, head_pitch=-4.0)
+            return dict(body_pitch=-12.0, sway=15.0, stick_yaw=70.0, stick_fwd=0.20, stick_side=-0.10, head_pitch=-4.0)
 
         def poke(f):
             k = smooth01(f / 6.0) if f <= 6 else 1.0 - smooth01((f - 6) / 12.0)
-            return dict(body_pitch=-12.0 - 10.0 * k, stick_fwd=0.55 * k, stick_pitch=6.0 * k, stick_yaw=-8.0 * k, shift=0.05 * k)
+            return dict(body_pitch=-12.0 - 10.0 * k, stick_fwd=0.30 * k, stick_pitch=6.0 * k, stick_yaw=-8.0 * k, shift=0.08 * k)
 
         def lift(f):
             k = math.sin(math.pi * f / 20.0)
-            return dict(body_pitch=-12.0, stick_pitch=22.0 * k, stick_fwd=0.15 * k, stick_yaw=-5.0 * k)
+            return dict(body_pitch=-12.0, stick_pitch=22.0 * k, stick_fwd=0.05 * k, stick_yaw=-5.0 * k)
 
         def shoot_windup(f):
             k = smooth01(f / 18.0)
@@ -656,7 +683,7 @@ class Build:
 
         def draw(f):
             k = smooth01(f / 6.0) if f <= 6 else 1.0 - smooth01((f - 6) / 9.0)
-            return dict(body_pitch=-35.0 - 5.0 * k, bob=-0.08 - 0.02 * k, stick_fwd=0.25 - 0.30 * k, stick_pitch=8.0, stick_yaw=20.0 - 70.0 * k, head_pitch=14.0)
+            return dict(body_pitch=-35.0 - 5.0 * k, bob=-0.08 - 0.02 * k, stick_fwd=0.25 - 0.25 * k, stick_pitch=8.0, stick_yaw=20.0 - 50.0 * k, head_pitch=14.0)
 
         def goalie(side):
             def fn(f):
@@ -672,6 +699,8 @@ class Build:
         plan = [
             ("idle", 60, idle, 6, True),
             ("skate", 36, skate, 3, True),
+            ("skate_left", 36, skate_fn(-LEAN), 3, True),
+            ("skate_right", 36, skate_fn(LEAN), 3, True),
             ("carry", 60, carry, 6, True),
             ("aim_left", 30, aim_left, 30, False),
             ("aim_right", 30, aim_right, 30, False),
@@ -691,8 +720,61 @@ class Build:
         self.actions = {}
         for name, n, fn, step, loop in plan:
             self.actions[name] = self.make_action(name, n, fn, step=step, loop=loop)
+        self.bake_arms()
         self.arm.animation_data.action = self.actions["idle"]
         self.stats["actions"] = {k: int(v.frame_end) for k, v in self.actions.items()}
+
+    def bake_arms(self):
+        """write the IK result of the four arm bones into every action as plain location/rotation keys per frame, then drop the IK constraints
+        so the FBX carries nothing a game engine has to re-solve (the first pass's STRETCH_TO scale did not survive the import, lane A26).
+        Done by hand (evaluate, convert the constrained pose to the bone's local basis, key it) because nla.bake wrote rest values headless."""
+        arm = self.arm
+        arm_bones = ("arm_l_upper", "arm_l_fore", "arm_r_upper", "arm_r_fore")
+        baked = {}
+        worst = 0.0
+        per_action = {}
+        for name, act in self.actions.items():
+            arm.animation_data.action = act
+            frames = {}
+            per_action[name] = 0.0
+            for f in range(0, int(act.frame_end) + 1):
+                self.scene.frame_set(f)
+                bpy.context.view_layer.update()
+                frames[f] = {bn: arm.convert_space(pose_bone=arm.pose.bones[bn], matrix=arm.pose.bones[bn].matrix, from_space="POSE", to_space="LOCAL").copy() for bn in arm_bones}
+                for fore, hand in (("arm_l_fore", "ik_hand_l"), ("arm_r_fore", "ik_hand_r")):
+                    gap = (arm.pose.bones[fore].tail - arm.pose.bones[hand].head).length
+                    worst = max(worst, gap)
+                    per_action[name] = max(per_action[name], gap)
+            baked[name] = frames
+        self.stats["ik_worst_gap_cm"] = round(worst, 2)
+        self.stats["ik_gap_cm"] = {k: round(v, 1) for k, v in per_action.items()}
+        for bn in ("arm_l_fore", "arm_r_fore"):
+            pb = arm.pose.bones[bn]
+            for c in list(pb.constraints):
+                pb.constraints.remove(c)
+        for name, act in self.actions.items():
+            arm.animation_data.action = act
+            for f, per_bone in baked[name].items():
+                for bn, m in per_bone.items():
+                    pb = arm.pose.bones[bn]
+                    pb.matrix_basis = m
+                    pb.keyframe_insert("location", frame=f)
+                    pb.keyframe_insert("rotation_quaternion", frame=f)
+                    pb.keyframe_insert("scale", frame=f)
+            for fc in act.fcurves:
+                for kp in fc.keyframe_points:
+                    kp.interpolation = "LINEAR"
+        # proof: with the constraints gone, the keyed arms must still end at the mittens
+        post = 0.0
+        for name, act in self.actions.items():
+            arm.animation_data.action = act
+            for f in range(0, int(act.frame_end) + 1, 3):
+                self.scene.frame_set(f)
+                bpy.context.view_layer.update()
+                for fore, hand in (("arm_l_fore", "ik_hand_l"), ("arm_r_fore", "ik_hand_r")):
+                    post = max(post, (arm.pose.bones[fore].tail - arm.pose.bones[hand].head).length)
+        self.stats["baked_worst_gap_cm"] = round(post, 2)
+        self.stats["arms_baked"] = len(self.actions)
 
     # ---- export
     def export_fbx(self, path):

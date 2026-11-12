@@ -129,3 +129,5 @@
 - 547699c rink construction (A25), a284b0a skeletal skater visual (A26, `game.skater.visual: toy_skeletal`, VisualSwap on three tracks), both clean-built and pushed. Eyes tool on main (A27). Lanes A25, A26, A27 closed.
 - running: A22 pass 3 (mittens on the shaft, lean in the skate cycle, head 0.30, blade line, number slot) -> then `toy_skeletal` becomes the default and the H11 package goes out; A28 (P4 figures through Meshy, Rodin, Tripo via fal, Hyper3D rigging), A29 (P4 motion set, YouTube candidates for Rokoko Vision); B on A-to-B-0007 and 0008.
 - B: the rink construction loads your `MI_Toon_KickPlate`, `MI_Toon_GlassRail`, `MI_Toon_Glass`, `MI_Toon_Bench`, `MI_Toon_GoalLight` by name when they exist; A26's figure needs the SkeletalMesh usage flag on `M_Toon` (it uses a flagged copy under `Game/Content/Figures/` until then).
+
+- link green 17:49: main a284b0a / a1a1048 pushed, no link planned before 18:10; A22 may import now.
