@@ -360,3 +360,11 @@ Accepted: `rules.hooks[].after_frame`; `score: { at_least, at_most, lead_at_leas
 3. **The figure recipe** (A-to-B-0009) runs on B for a cel toy, the broadcast figure and a clay figure, each with an A/B sheet against the figure it would replace; the Director
    decides the swap per tier from the sheets with the eyes tool.
 4. The glass hit (`HitWobble` on B's glass instances) is bound by A's effects binder for 12 frames on the nearest panel when B's lane lands it (A45 leaves the hook).
+
+## R-0032 (H12.9, 2026-11-12 22:50): the operator's H18 playtest: unplayable; controls first
+The operator: "Camera does not stay where player moves, mouse is not binded to work with the stick, the stick blinks back and forth. Player should have option with mouse to tackle or
+cross-check instead of the shift. Using shift rather for sprint. No player reaction on tackle making impossible to take puck from opponent. Difficulty does not matter if the game is
+trash." Rulings: (1) lane A49 owns input, the control path, the follow camera and the stick aim until it reports; no other lane edits them; (2) the bindings are the operator's:
+mouse aims the stick, left button shoots (hold to charge), right button tackles, middle or mouse 4 cross-checks (lift), Shift sprints (new mechanic with a stamina bar, a cartridge
+key), Space pokes, E passes, Q dekes; gamepad mirrors it; (3) every control proof comes from a packaged build through the real input path, not from PIE; (4) no calibration
+verdicts are asked of the operator until a person can play; the playtester keeps measuring in the background.
