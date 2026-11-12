@@ -1,0 +1,1 @@
+Default skater figure in PIE before the fix: M_Toon lacks the SkeletalMesh usage flag, so the figure renders in the engine Default Material (grey)

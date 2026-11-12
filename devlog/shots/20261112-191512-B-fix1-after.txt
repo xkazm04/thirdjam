@@ -1,0 +1,1 @@
+Same view after setting used_with_skeletal_mesh on M_Toon: team colours and toon look, zero usage-flag warnings
