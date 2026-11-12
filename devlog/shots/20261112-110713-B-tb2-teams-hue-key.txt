@@ -1,0 +1,1 @@
+M_SkaterTB2 hue-key recolour: orange (0.95,0.30,0.03) left with Emissive 0.5, deep blue (0.02,0.10,0.55) right, default-colour figure middle; stripe, face, gloves, skates untouched. Figure 1, test only: number on sleeve
