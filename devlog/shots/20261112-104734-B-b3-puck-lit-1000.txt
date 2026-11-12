@@ -1,0 +1,1 @@
+Puck kit at 10 m horizontal, camera 4 m high, FOV 70, in the lit pool at x 15 m, LR_L2_Night: puck (MI_Toon_Puck, stencil 3) on SM_PuckDisc (MI_Trim_PuckHalo) with NS_puck_trail, puck circling at 12 m/s game time
