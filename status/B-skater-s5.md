@@ -295,3 +295,123 @@ bash C:/Users/kazda/jam/skater-lab/s5/run_all.sh
 ```
 
 It takes about 4 min: retarget, strip on both files, the node and track dump into `fbx_nodes.txt`, `verify.py` on both files, `inspect.py`, then the sheets.
+
+## Stick verbs on the hybrid (lead's request, 14:15 to 14:25)
+
+**Result.** All 31 of S4's takes now play on R, measured on the re-imported files in Blender. Unreal has not seen these files.
+- Pelvis horizontal travel and root motion: 0.000 cm on every take.
+- Loop seams: 0.000 cm in the main file.
+- Lower skate: on the ice within 0.12 cm on every new standing take; the two goalie blocks kneel and are off by 1.9 cm.
+- The aim poses work on R. R's short arms do show, in three places:
+  - **Aims:** the stick slides through the mitten to keep the blade on the ice. As a result R reaches about 10 cm farther than S4 in the two-handed aims and 21 cm farther in Aim_FarReach.
+  - **Goalie:** the flat stick rides about 17 cm higher than S4's.
+  - **Grip:** the left mitten is 3 to 13 cm off the shaft.
+
+**Input.** S4's `export/SK_Skater_S4.fbx` from 14:09, 31 takes (sha256 `f72929cb...`), with its loopcut file, copied to `s5/in/`. The 12:09 snapshot is kept as `in/SK_Skater_S4_1209*.fbx`.
+
+**Track strip.** It stays **disabled**: the lead disabled it at 12:35 in `s5/run_all.sh`, and I left it so. Every take carries `root` identity keys again; the file has 93 curve nodes on `root` over 31 stacks.
+
+**Fixed during this pass.** My loop test, "first pose equals last pose", also caught Poke, Stumble, Lift, Pass and Foul_Reaction, which start and end in Glide. The loopcut file then dropped their last frame. Loops now come from S4's list: the 14 holds and locomotion loops. In the final loopcut, those five one-shots are full length again.
+
+### Files (14:23)
+
+| File | Bytes |
+|---|---|
+| `C:\Users\kazda\jam\skater-lab\s5\export\SK_Skater_S5.fbx` | 9,119,436 |
+| `C:\Users\kazda\jam\skater-lab\s5\export\SK_Skater_S5_loopcut.fbx` | 9,085,500 |
+
+### Export and re-import checks
+
+Export settings are unchanged from the rerun section, except that there is no strip step:
+- `UnitScaleFactor` 1.0 (centimetres).
+- `root` rotation (0, 0, 0), scale 1; its rest matrix is the identity.
+- One base-colour slot for the body, referencing `s6/T_SkaterTB2_BaseColor_clean.png` by path; the stick keeps its `Trim` and `Stick` slots.
+
+On re-import, both files have 32 bones, are 170.0 cm tall and hold 31 takes. Frames, main file:
+
+| Kind | Takes |
+|---|---|
+| Locomotion | Idle_Faceoff 121, Stride 61, Glide 121, Stop 37, Crossover_Left 41, Crossover_Right 41, Lean_Left 31, Lean_Right 31 |
+| Shots | Shot_Slap 43, Shot_Wrist 22, Shot_Charge 31 |
+| Contact | Check 31, Fall 37, Fall_Forward 37, GetUp 73, GetUp_Front 73, Celebrate 73 |
+| Stick verbs | Poke 22, Stumble 21, Lift 19, Pass 19, Foul_Reaction 49 |
+| Faceoff | Faceoff_Ready 31, Faceoff_Draw 19 |
+| Goalie | Goalie_Hold 31, Goalie_Block_Left 25, Goalie_Block_Right 25 |
+| Aims | Aim_Front 31, Aim_Left 31, Aim_Right 31, Aim_FarReach 31 |
+
+In the loopcut file the 14 loops have one frame fewer. The 16 older takes measure exactly as in the sections above.
+
+### New takes (retarget report plus the re-imported main file)
+
+How to read the columns:
+- *Skate err*: R's lower skate height on frames where S4's lower skate is on the ice.
+- *Low skate* and *Low stick*: the lowest boot vertex and the lowest stick vertex over the take.
+- *Blade err*: R's blade height minus S4's, on frames where S4's blade is within 3 cm of the ice.
+- *Slide*: how far the stick slides through the mitten.
+- *Grip*: frames with the left hand on the shaft, and the largest gap left after IK.
+- *Clamp/tilt*: frames with the head clamp and frames with the stick tilt.
+- *Mitt / stick to helmet*: the nearest approach, in cm, of a mitten centre and of any stick vertex to the helmet centre. The helmet half-size is about 28 to 30 cm.
+
+| Take | Frames main / loopcut | Seam main / loopcut (cm) | Pelvis horiz. (cm) | Skate err (cm) | Low skate (cm) | Low stick (cm) | Blade err (cm) | Slide (cm) | Grip frames, gap (cm) | Clamp/tilt | Mitt / stick to helmet (cm) |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| Poke | 22 / 22 | one-shot | 0.000 | 0.00 | 0.00 | 1.34 | 0.0 | -2 to 7 | 9, 9.2 | 0/0 | 50 / 48 |
+| Stumble | 21 / 21 | one-shot | 0.000 | 0.12 | 0.00 | 1.68 | 0.0 | 0 to 1 | 3, 8.9 | 0/0 | 44 / 51 |
+| Lift | 19 / 19 | one-shot | 0.000 | 0.00 | 0.00 | 1.13 | 0.0 | 0 to 8 | 19, 11.1 | 0/0 | 64 / 70 |
+| Pass | 19 / 19 | one-shot | 0.000 | 0.00 | 0.00 | 0.62 | 0.0 | -2 to 8 | 19, 10.2 | 0/0 | 69 / 66 |
+| Foul_Reaction | 49 / 49 | one-shot | 0.000 | 0.00 | 0.00 | 1.64 | 0.0 | 0 to 1 | 4, 8.9 | 0/0 | 54 / 48 |
+| Faceoff_Ready | 31 / 30 | 0.000 / 0.005 | 0.000 | 0.03 | 0.02 | 0.56 | 0.0 | -1 | 31, 4.5 | 0/0 | 66 / 81 |
+| Faceoff_Draw | 19 / 19 | one-shot | 0.000 | 0.03 | 0.00 | 0.59 | 0.0 | -2 to 2 | 19, 10.1 | 0/0 | 66 / 70 |
+| Goalie_Hold | 31 / 30 | 0.000 / 0.005 | 0.000 | 0.12 | 0.12 | **26.27** | n/a | 0 | 0 | 0/0 | 44 / 85 |
+| Goalie_Block_Left | 25 / 25 | one-shot | 0.000 | 1.91 | 0.11 | **26.27** | n/a | 0 | 0 | 21/0 | 40 / 85 |
+| Goalie_Block_Right | 25 / 25 | one-shot | 0.000 | 1.84 | 0.11 | **25.46** | n/a | 0 | 0 | 0/0 | 44 / 80 |
+| Shot_Charge | 31 / 30 | 0.000 / 0.004 | 0.000 | 0.00 | 0.00 | 85.56 (stick up) | n/a | 0 | 31, 12.6 | 0/0 | 43 / 57 |
+| Aim_Front | 31 / 30 | 0.000 / 0.005 | 0.000 | 0.00 | 0.00 | 1.78 | 0.0 | 2 | 31, 10.4 | 0/0 | 71 / 70 |
+| Aim_Left | 31 / 30 | 0.000 / 0.005 | 0.000 | 0.00 | 0.00 | 1.68 | 0.0 | 5 | 31, 2.9 | 0/0 | 63 / 61 |
+| Aim_Right | 31 / 30 | 0.000 / 0.005 | 0.000 | 0.00 | 0.00 | 1.41 | 0.0 | 3 | 31, 8.8 | 0/0 | 72 / 70 |
+| Aim_FarReach | 31 / 30 | 0.000 / 0.005 | 0.000 | 0.00 | 0.00 | 4.26 | 2.4 | **25 (max)** | 0 (one hand) | 0/0 | 70 / 66 |
+
+### R's aim numbers, for device A's blend
+
+The blade centre is measured relative to the pelvis, on R's solved pose after all passes. The angle is from the skater's forward (+ is left); the reach is horizontal. S4's numbers come from the same code on S4's own pose.
+
+| Pose (frame) | R angle | R reach | R blade height | S4 angle | S4 reach | Left mitten gap on R |
+|---|---|---|---|---|---|---|
+| Aim_Front (1) | **+3.6 deg** | **1.03 m** | 7.4 cm | +3.0 deg | 0.94 m | 10.4 cm |
+| Aim_Left (1) | **+70.3 deg** | **1.03 m** | 7.3 cm | +68.3 deg | 0.93 m | 2.9 cm |
+| Aim_Right (1) | **-63.0 deg** | **1.05 m** | 7.0 cm | -63.5 deg | 0.95 m | 8.6 cm |
+| Aim_FarReach (1) | **+3.7 deg** | **1.69 m** | 13.3 cm | +2.2 deg | 1.48 m | one hand |
+| Poke (10, the thrust) | -0.4 deg | 1.93 m | 28.6 cm | -1.9 deg | 2.14 m | one hand |
+| Pass (11, the release) | -1.7 deg | 1.19 m | 9.4 cm | -0.2 deg | 1.08 m | 8.2 cm |
+| Lift (10, the flick top) | +1.6 deg | 1.20 m | 56.2 cm | +0.8 deg | 1.16 m | 7.7 cm |
+| Faceoff_Ready (1) | +2.4 deg | 0.96 m | 5.8 cm | +2.7 deg | 0.90 m | 4.5 cm |
+| Goalie_Hold (1) | +72.0 deg | 1.29 m | 29.1 cm | +66.5 deg | 1.27 m | free glove |
+| Goalie_Block_Left (25) | +86.7 deg | 1.39 m | 35.6 cm | +84.2 deg | 1.37 m | |
+| Goalie_Block_Right (25) | -63.4 deg | 1.81 m | 30.7 cm | -61.3 deg | 1.98 m | |
+
+- **Blend range on R:** by angle, Right -63.0, Front +3.6, Left +70.3. Then blend toward Aim_FarReach by (reach - 1.03) / (1.69 - 1.03).
+- **Why S4's numbers differ here:** S4's report gives 0.97 m / 1.51 m for its aims, but the same code measures 0.94 / 1.48 m on S4's own pose here. I used S4's stick-blade vertex mean and the pelvis head as the centre, so the angles agree within 2 deg; the definitions differ by about 3 cm.
+- **Why R reaches farther:** R's pelvis sits 4.4 cm behind the origin. R's hands are higher because its arms are shorter, so the stick slides 2 to 5 cm through the mitten to keep the blade on the ice; in Aim_FarReach it slides the full 25 cm. The stick's direction is S4's exactly.
+
+### Sheets (from the re-imported main file)
+
+- `devlog/shots/20261112-142324-B-lab-s5c-stick-verbs.png`: Poke, Stumble, Lift, Pass, Foul_Reaction.
+- `devlog/shots/20261112-142324-B-lab-s5c-faceoff-goalie.png`: Faceoff_Draw; Goalie_Block_Left and _Right; the holds Faceoff_Ready, Goalie_Hold and Shot_Charge.
+- `devlog/shots/20261112-142324-B-lab-s5c-aims-top.png`: the four aims from straight above (forward is up) and from the 3/4 front.
+
+### Looked at; what still looks wrong
+
+- **Goalie stick floats.** In Goalie_Hold and both blocks the stick lies flat, but its lowest point is 25 to 26 cm above the ice; S4's is 16 to 19 cm. The flat stick is 17 to 18 cm higher than S4's. R's mitten cannot reach as low, and the slide rule does nothing for a flat shaft. The free glove is up near the cage, as in S4 (mitten to helmet centre 40 to 44 cm, so touching, not inside). The head clamp fires on 21 frames of Goalie_Block_Left. A fix needs arm work: an IK pull of the right hand down to S4's stick height. That is not a clamp; I did not do it.
+- **Aim_FarReach.** It relies on the full 25 cm slide, so the butt of the stick sticks out about 30 cm behind the mitten. The blade is still 2.4 cm higher than S4's. R's one arm cannot lunge as far as S4's.
+- **Poke.** The thrust's blade is 28.6 cm up at frame 10, 4.5 cm above S4's, at 1.93 m reach. It reads as a thrust at 160 px.
+- **Two-handed aims.** The left mitten misses the shaft by 3 to 10 cm on Aim_Front and Aim_Right; it is visible at 160 px and not at 40 px.
+- **Faceoff_Ready: clean.** The nearest stick vertex is 81 cm from the helmet centre and the nearest mitten 66 cm, so no helmet-and-stick contact. Faceoff_Draw stays 70 cm clear.
+- **Shot_Charge.** Same wind-up as the slap; the stick stays 57 cm from the helmet centre; the left mitten is 12.6 cm off the shaft.
+- **Small motions.** Lift and Pass are small, as in S4, and read only at 160 px.
+
+### Rebuild
+
+```
+bash C:/Users/kazda/jam/skater-lab/s5/run_all.sh
+```
+
+About 8 min with the new sheets. The strip step stays disabled.

@@ -144,7 +144,15 @@ clips = {}
 for a in bpy.data.actions:
     clips[a.name.split("|")[-1]] = a
 ORDER = ["Idle_Faceoff", "Stride", "Glide", "Stop", "Shot_Slap", "Shot_Wrist", "Check", "Fall", "GetUp", "Celebrate",
-         "Fall_Forward", "GetUp_Front", "Crossover_Left", "Crossover_Right", "Lean_Left", "Lean_Right"]
+         "Fall_Forward", "GetUp_Front", "Crossover_Left", "Crossover_Right", "Lean_Left", "Lean_Right",
+         "Poke", "Stumble", "Lift", "Pass", "Foul_Reaction", "Faceoff_Ready", "Faceoff_Draw", "Goalie_Hold",
+         "Goalie_Block_Left", "Goalie_Block_Right", "Shot_Charge", "Aim_Front", "Aim_Left", "Aim_Right", "Aim_FarReach"]
+# loops as S4 ships them (its loopcut file trims exactly these); one-shots that start and end in Glide are NOT loops
+LOOPS = {"Idle_Faceoff", "Stride", "Glide", "Crossover_Left", "Crossover_Right", "Lean_Left", "Lean_Right", "Faceoff_Ready",
+         "Goalie_Hold", "Shot_Charge", "Aim_Front", "Aim_Left", "Aim_Right", "Aim_FarReach"}
+# frame (1-based in the clip) at which the stick pose is measured: the hold, the thrust, the block
+MEASURE_AT = {"Aim_Front": 1, "Aim_Left": 1, "Aim_Right": 1, "Aim_FarReach": 1, "Poke": 10, "Faceoff_Ready": 1,
+              "Goalie_Hold": 1, "Goalie_Block_Left": 25, "Goalie_Block_Right": 25, "Shot_Charge": 1, "Lift": 10, "Pass": 11}
 ORDER = [c for c in ORDER if c in clips] + sorted(c for c in clips if c not in ORDER)
 log("S4 clips", ORDER)
 sR = {b.name: Wm(b.matrix_local) for b in sarm.data.bones}
@@ -395,7 +403,7 @@ for cname in ORDER:
     sarm.animation_data_create(); sarm.animation_data.action = sa
     ra = bpy.data.actions.new(cname); ra.use_fake_user = True
     rarm.animation_data_create(); rarm.animation_data.action = ra
-    Ms, stats, s4low, s4skate, s4blade = [], [], [], [], []
+    Ms, stats, s4low, s4skate, s4blade, s4sock, s4pel = [], [], [], [], [], [], []
     for f in frames:
         sc.frame_set(f)
         S = {n: Wm(sarm.pose.bones[n].matrix) for n in MAP}
@@ -404,7 +412,7 @@ for cname in ORDER:
         lo, co = lowest(sbody)
         s4low.append(lo)
         s4skate.append(min(float(co[s4_skate["l"], 2].min()), float(co[s4_skate["r"], 2].min())))
-        sk = Wm(sarm.pose.bones["stick_socket"].matrix)
+        sk = Wm(sarm.pose.bones["stick_socket"].matrix); s4sock.append(sk.copy()); s4pel.append(S["pelvis"].translation.copy())
         s4blade.append(min((sk @ p).z for p in blade_local))
     # first key (no foot pass yet) to measure R's lowest point
     key_action(ra, frames, [{n: basis_of(M, n) for n in all_names} for M in Ms], all_names)
@@ -419,7 +427,7 @@ for cname in ORDER:
     n_f = len(dz); raw_dz = list(dz)
     sc.frame_set(frames[0]); s_a = {n: sarm.pose.bones[n].head.copy() for n in MAP}
     sc.frame_set(frames[-1]); s_b = {n: sarm.pose.bones[n].head.copy() for n in MAP}
-    cyc = n_f > 2 and max((s_a[n] - s_b[n]).length for n in MAP) < 1e-4
+    cyc = cname in LOOPS
     dz = [max(raw_dz[j] - DZ_RATE * (min(abs(i - j), n_f - 1 - abs(i - j)) if cyc else abs(i - j)) for j in range(n_f))
           for i in range(n_f)]
     # foot pass: shift pelvis (and so everything) by dz; stick pass: slide along the shaft
@@ -459,7 +467,7 @@ for cname in ORDER:
     # loop = S4's first and last poses are identical (S4 copies frame 1 into the last frame)
     sc.frame_set(frames[0]); s_first = {n: sarm.pose.bones[n].head.copy() for n in MAP}
     sc.frame_set(frames[-1]); s_last = {n: sarm.pose.bones[n].head.copy() for n in MAP}
-    is_loop = len(frames) > 2 and max((s_first[n] - s_last[n]).length for n in MAP) < 1e-4
+    is_loop = cname in LOOPS and len(frames) > 2 and max((s_first[n] - s_last[n]).length for n in MAP) < 1e-4
     loops[cname] = is_loop
     rec = {
         "frames": len(frames), "seconds": round((len(frames) - 1) / 60, 3), "loop": is_loop,
@@ -485,6 +493,29 @@ for cname in ORDER:
         "stick_tilt_frames": sum(1 for s in stats if s["stick_tilt_deg"] > 0),
         "stick_tilt_max_deg": round(max(s["stick_tilt_deg"] for s in stats), 1),
     }
+    # stick vs helmet over the clip: nearest stick vertex to the helmet centre (helmet half-size about 0.28-0.30 m)
+    hc_all = [M["head"] @ head_local for M in Ms]
+    rec["stick_to_helmet_centre_min_cm"] = round(min(min(((M["stick_socket"] @ p) - hc).length for p in stick_local)
+                                                     for M, hc in zip(Ms, hc_all)) * 100, 1)
+    rec["mitten_to_helmet_centre_min_cm"] = round(min(min(((M["hand_" + s] @ mit_local[s]) - hc).length for s in "lr")
+                                                      for M, hc in zip(Ms, hc_all)) * 100, 1)
+    if cname in MEASURE_AT:
+        i = min(MEASURE_AT[cname], len(frames)) - 1
+        bc_local = sum(blade_local, Vector()) / len(blade_local)
+        def aim(sock, pel):
+            b = sock @ bc_local; d = b - pel
+            return {"angle_deg": round(math.degrees(math.atan2(d.y, d.x)), 1), "reach_m": round(math.hypot(d.x, d.y), 3),
+                    "blade_centre_z_cm": round(b.z * 100, 1)}
+        M = Ms[i]
+        rec["measure_frame"] = frames[i]
+        rec["aim_R"] = aim(M["stick_socket"], M["pelvis"].translation)
+        rec["aim_S4"] = aim(s4sock[i], s4pel[i])
+        zs = [(M["stick_socket"] @ p).z for p in stick_local]
+        rec["stick_z_cm_at_measure"] = [round(min(zs) * 100, 1), round(max(zs) * 100, 1)]
+        zs4 = [(s4sock[i] @ p).z for p in stick_local]
+        rec["stick_z_cm_at_measure_S4"] = [round(min(zs4) * 100, 1), round(max(zs4) * 100, 1)]
+        rec["left_grip_gap_cm_at_measure"] = round(stats[i]["grip_gap"] * 100, 1)
+        rec["left_grip_w_at_measure"] = round(stats[i]["grip_w"], 2)
     report["clips"][cname] = rec
     log("CLIP", cname, json.dumps(rec))
 
