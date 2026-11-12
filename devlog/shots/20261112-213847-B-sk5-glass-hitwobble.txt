@@ -1,0 +1,1 @@
+SK5 M_Glass HitWobble 0 | 1: diagonal bright sweep and stronger top edge, no vertex motion

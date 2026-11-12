@@ -1,0 +1,1 @@
+SK5 match (humanoid_b1, night): human delivers Check_Deliver_Left, victim Knockdown_Back from behind (strength 0.17 -> rate 0.98), held, early GetUp_Front; slomo 0.07, side camera

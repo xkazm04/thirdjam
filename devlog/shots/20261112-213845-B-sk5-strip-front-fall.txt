@@ -1,0 +1,1 @@
+SK5 match: front check strength 0.89, Check_Deliver_Right, victim Fall backward away from the checker at rate 1.13, held at 0.52 s

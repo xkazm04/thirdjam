@@ -1,0 +1,1 @@
+P3C GetUp_Side_Left, GetUp_Side_Right, Goalie_Block_Left: before (pass 1) and after (pass 2) per pair

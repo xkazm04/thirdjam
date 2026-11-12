@@ -1,0 +1,1 @@
+P4B, P4C, P4D in the same pose and camera: Glide 3/4 and Idle_Faceoff front close up, then 40 px game camera and face-on 40 px (2x); head radius 0.137 / 0.143 / 0.171 m
