@@ -380,3 +380,11 @@ verdicts are asked of the operator until a person can play; the playtester keeps
    (the stick only moved with a button held), the camera's lead and lift turned away from the player, the raw blade angle flipped at the clamp behind a turning skater, Shift
    was the check, and the check needed a bot's speed and a 6-frame press. Bindings as the operator asked; a sprint on Shift with a stamina bar; the human's check lands from
    2 m/s with a 12-frame window. H19 is the first package with it. `FJamInput::bSprint` needs a lockstep flag bit (A50).
+
+## R-0034 (H13.2, 2026-11-13 00:40): stick handling with the mouse, the spin on E, the pass on F
+The operator asks for advanced stick and puck control with the mouse so a player beats a defender by movement and the blade, and a special move on a key such as E. Director's
+decisions (lane A51): (1) the carried puck lives where the blade is: its offset follows the mouse aim every frame within `game.stick.reach_m`; a fast sweep shields the puck
+from a poke on the side it left for `game.stick.sweep.shield_frames`, and a defending bot pokes at where the puck was `bot_react_frames` ago by difficulty, so the mechanic
+is real in the sim and not an animation; (2) a spin move (`game.skater.spin`: 24 frames, cooldown 90, speed 0.7, a quarter of the stamina bar) on **E** and gamepad B; the puck
+rides the far side of the body; a check landing mid-spin knocks the carrier down longer; (3) the **pass moves to F** (gamepad X unchanged); A39's tap deke stays on Q and the
+wheel; (4) the spin takes lockstep flag bit 512 (protocol 5); (5) every step is proven in a packaged Development build through SendInput, as R-0032 requires for all controls work.

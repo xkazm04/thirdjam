@@ -323,6 +323,7 @@ TArray<FString> UJamSim::ApplyLiveConfig(const FJamGameConfig& N)
 	if (N.Rink.WidthM != R.WidthM) Held.Add(TEXT("rink.width_m"));
 	if (N.Rink.CornerRadiusM != R.CornerRadiusM) Held.Add(TEXT("rink.corner_radius_m"));
 	if (N.Rink.GoalWidthM != R.GoalWidthM) Held.Add(TEXT("rink.goal_width_m"));
+	if (N.Rink.GoalHeightM != R.GoalHeightM) Held.Add(TEXT("rink.goal_height_m"));   // R-0033 (lane A50): net geometry, held like the width
 	if (N.Rink.Obstacles.Num() != R.Obstacles.Num()) Held.Add(TEXT("rink.obstacles"));
 	if (N.Teams.Num() != Config.Teams.Num()) Held.Add(TEXT("teams"));
 	if (N.Rules.Mode != Config.Rules.Mode || N.Rules.ScoreToWin != Config.Rules.ScoreToWin || N.Rules.TimerFrames != Config.Rules.TimerFrames) Held.Add(TEXT("rules"));
@@ -793,8 +794,10 @@ double UJamSim::AttackGoalX(int32 Team) const
 	return ((Team == 0) != bNetsSwapped) ? GoalLineX() : -GoalLineX();
 }
 
-bool UJamSim::InGoal(const FVector2D& P, int32 Side) const
+bool UJamSim::InGoal(const FVector2D& P, int32 Side, double HeightM) const
 {
+	// R-0033 point 2 (lane A50): the opening is goal_height_m tall; a puck centre at or above the crossbar is over the net, not in it.
+	if (HeightM >= Config.Rink.GoalHeightM) return false;
 	const double X = P.X * Side;
 	const double GL = GoalLineX();
 	return X > GL + Eff(EJamStat::PuckRadius, -1) && X < GL + NetDepth && FMath::Abs(P.Y) < Config.Rink.GoalWidthM * 0.5;

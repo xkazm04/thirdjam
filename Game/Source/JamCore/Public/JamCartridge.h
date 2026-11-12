@@ -32,6 +32,9 @@ struct JAMCORE_API FJamRinkConfig
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double BoardRestitution = 0.4;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double IceFriction = 0.015;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double GoalWidthM = 4;
+	// R-0033 point 2 (lane A50): the height of the net opening; 0.61 is the operator's half-height net for a game without goalies (a real net is 1.22).
+	// One number for the net frame, the netting, the goal triggers and the sim's goal test for a lifted puck (UJamSim::InGoal with a height).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double GoalHeightM = 0.61;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") TArray<FJamObstacle> Obstacles;
 	// game.rink.zones (C-0005, lane A15): painted areas that change play inside them. Absent = none.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") TArray<FJamZoneConfig> Zones;

@@ -254,6 +254,33 @@ FLinearColor UJamEffectsBinder::ColourFor(FName Event, const FJamEventPayload& P
 	return FLinearColor::White;
 }
 
+int32 UJamEffectsBinder::ResolveScoringTeam(const int32 Before[2], const int32 After[2], int32 FallbackTeam)
+{
+	if (After[0] > Before[0] && After[1] <= Before[1]) return 0;
+	if (After[1] > Before[1] && After[0] <= Before[0]) return 1;
+	return (FallbackTeam == 0 || FallbackTeam == 1) ? FallbackTeam : -1;
+}
+
+float UJamEffectsBinder::GoalVariantFor(const FJamEventPayload& Payload)
+{
+	// R-0033 point 4 (lane A50). The payload carries Who = the last touch and no team; the scoring team is the one whose score grew since the last goal
+	// this binder saw (a restart or LoadCut lowers the scores: the memory resyncs). The team of Who is the fallback.
+	const UWorld* World = GetWorld();
+	const AHokejGameMode* GM = World ? World->GetAuthGameMode<AHokejGameMode>() : nullptr;
+	const UJamSim* Sim = GM ? GM->GetSim() : nullptr;
+	if (!Sim) return 0.f;
+	const int32 After[2] = { Sim->GetScore(0), Sim->GetScore(1) };
+	if (After[0] < PrevScore[0] || After[1] < PrevScore[1]) { PrevScore[0] = PrevScore[1] = 0; }
+	const TArray<FJamSkaterState>& Skaters = Sim->GetSkaters();
+	const int32 WhoTeam = Skaters.IsValidIndex(Payload.Who) ? Skaters[Payload.Who].Team : -1;
+	const int32 Scorer = ResolveScoringTeam(PrevScore, After, WhoTeam);
+	PrevScore[0] = After[0];
+	PrevScore[1] = After[1];
+	const float Variant = GoalVariant(Scorer, Sim->GetHumanTeam());
+	UE_LOG(LogJamFx, Log, TEXT("JAMFX goal scorer_team=%d human_team=%d variant=%d"), Scorer, Sim->GetHumanTeam(), static_cast<int32>(Variant));
+	return Variant;
+}
+
 void UJamEffectsBinder::HandleEvent(FName Event, const FJamEventPayload& Payload)
 {
 	++HandledEvents;
@@ -262,7 +289,8 @@ void UJamEffectsBinder::HandleEvent(FName Event, const FJamEventPayload& Payload
 	{
 		return;
 	}
-	const float Variant = VariantFor(Event, Payload.Kind);
+	float Variant = VariantFor(Event, Payload.Kind);
+	if (Event == JamEvents::Goal) Variant = GoalVariantFor(Payload);   // R-0033 point 4 (lane A50): 0 the human's team scored, 1 it conceded
 	if (const TObjectPtr<UNiagaraSystem>* N = Niagara.Find(Event))
 	{
 		if (UNiagaraSystem* Sys = N->Get())

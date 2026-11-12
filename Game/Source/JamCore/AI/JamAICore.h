@@ -246,6 +246,14 @@ namespace JamAI
 		bool Active(int64_t Frame) const { return Kind != ETeamIntent::None && Frame >= IssuedFrame && Frame < IssuedFrame + Frames; }
 	};
 
+	// R-0033 point 2 (lane A50): any skater covering its own crease takes the goalie stance, the human included (no dedicated goalies; the operator's
+	// "last and any player acts like a goalie"). True when skater Id stands within CreaseStanceM of its own goal centre on the ice side of the goal line,
+	// is not down and not the carrier, and an opposing carrier is inside its blue line (the outer third on its side). OutSide as the back's goalie intent:
+	// where the carrier is, seen from the goalie facing up-ice (-1 left, 0 centre within a metre, +1 right). Pure: the brain applies it to every bot after
+	// Decide (steering untouched), the game mode to the human on the same world.
+	constexpr double CreaseStanceM = 3.0;
+	JAMCORE_API bool CreaseStance(const FJamAIWorld& W, int Id, int& OutSide);
+
 	// The brain for every non-player skater. One instance per match (holds only the stall anchor).
 	class FJamBrain
 	{

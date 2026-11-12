@@ -216,3 +216,14 @@
 - RESOURCES 23:56 cpu 4% ram 20.8/63GB gpu 6 %, 852 MiB, 48 editors 0 cmd 0 ubt 0 free 555GB
 
 - link green 00:06: main 37f306a (A49 controls, dev-b merged, R-0033) pushed.
+- link green 00:09: main bb48ee7 (Shipping logging flag reverted so H19 packages).
+
+## H13.2 (00:10) main bb48ee7: controls that work (A49) landed; H19 packaging; A50 on the operator's decisions
+- 37f306a: A49 (match input mode so the mouse reaches the stick in a package, blade at the cursor, aim smoothing, bounded camera, the operator's bindings with Shift sprint and a stamina bar, human check from 2 m/s; proved in a packaged Development build through SendInput), sprint on the wire (lockstep protocol 4, WireBytes 10), tackling test split bot/human, R-0033, 0032/0033 answered, brief A50. bb48ee7: Shipping logging flag reverted (installed engine refuses it; H19's first package failed in 4 s on it).
+- gate 94/94 (ownership FAIL on contracts/RULINGS.md is the Director's own edit, as before). Clean build green.
+- running: A50 (goal height 0.61 key, any-skater goalie stance, commentary variety, MS_goal Variant, crowd bed, clay class row; Fable), package H19.
+- B: A-to-B-0013 (merge main: protocol 4, controls; 0012 still open). B's overnight: B19 clay, B20 P4 lab narrowed to skater + ice, SKP4; reports in the morning.
+- package 00:12: `Hokej_Hokej_H19.zip` (260.8 MB) from main bb48ee7: the controls fix (A49) is in; smoke launch of the Shipping exe done.
+
+- RESOURCES 00:27 cpu 2% ram 20/63GB gpu 3 %, 854 MiB, 39 editors 0 cmd 0 ubt 0 free 551GB
+- running 00:36: A51 stick handling (mouse sweep beats a poke, spin on E, pass to F, protocol 5; brief briefs/A51-stick-handling.md, R-0034) beside A50.
