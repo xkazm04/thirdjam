@@ -208,3 +208,103 @@ In Python the `unreal.Rotator` constructor takes (roll, pitch, yaw): a mistake t
 5. The picks of the preview (operator may overrule from the filed thumbnails).
 
 Commits on `lane/b-skater`: b937ff1 (import), then the commit that holds this report (hash in the final message).
+
+---
+
+# Phase 2: Rodin skater R
+
+Phase 2, about 11:10 to 11:45 local. Zero Meshy or Rodin credits spent (all generation was lane S2 and S3's). Same worktree, editor on port 8002 (restarted, closed at the end,
+`Rink` changes discarded). Scratch scripts for this phase are in `$S/r2/`, where `$S` is `C:/Users/kazda/AppData/Local/Temp/claude/6d8eaecb999746c2/1f5c7b1e-557b-4c70-b752-8370d9dbef0b/scratchpad/b5`.
+
+## Per point
+
+1. **Figure 1 is gone, folder flattened.** Route chosen: delete everything and rebuild with scripts (`00_clean.py`), not reimport. The folder move (`contracts/assets-naming.md` has no `TB2/` level, only
+   `Skaters/`) and a new skeleton (root bone `root` instead of `Armature`) would have broken every reference anyway, and a rebuild also tests that the scripts re-run. Everything is now directly under
+   `Game/Plugins/JamAssets/Content/Skaters/`; `Skaters/TB2/` no longer exists. Names as before, plus `BS_SkaterTB2_Skate` and S2's clip names (`AS_SkaterTB2_Idle_Faceoff`, `_Shot_Slap`, `_Shot_Wrist`).
+   Nothing from figure 1 remains: mesh, texture, skeleton, clips, ABP, BP, montages and material were all rebuilt from R's files.
+2. **Scaled `Armature` root: solved.** `rootfix.py` (headless Blender, about 10 minutes of trial) applies the importer's 90 degree armature rotation into the armature data, scales the bones to centimetres
+   (scaling only the armature gave the right result; scaling mesh and armature gave a 100 times larger mesh), names the armature object `root`, turns the figure 90 degrees about Z so that it
+   faces +X, and exports FBX with `FBX_SCALE_NONE` and a 0.01 scene unit. Result in Unreal: bones `root`, `pelvis`, ... (29 bones), root and every bone at scale 1.0 (read through the socket world scale), figure 170 cm,
+   facing +X, `hand_r` on the +Y side. The sockets need no 0.01 scale and the mesh component needs no yaw (phase 1 needed -90). Details that cost time and are in the script:
+   - applying a rotation to a parent needs the mesh unparented first (clear parent keeping the transform, apply, re-parent without inverse);
+   - the same script runs on every clip: bone-local location curves are multiplied by 100 to follow the bone lengths, and the baked range is set from the action's frame range (otherwise 249 frames);
+   - the clip export bakes a 90 degree roll into a `root` track that tipped the figure on its side; `04b_drop_root_track.py` removes the `root` track from every clip after import (28 tracks left), and the root keeps its reference pose.
+3. **Texture and material.** Only Rodin's diffuse map, extracted from `base_basic_pbr.glb` of the no-TAPose task (Blender image save, 2048 x 2048 PNG, `T_SkaterTB2_BaseColor`, 2,510,160 bytes as `.uasset`); no normal or ORM map.
+   `M_SkaterTB2` rebuilt by `02_texture_material.py` (hue-key recolour as in phase 1). The scalars **KeyGain 6, KeyBias 0.15, JerseyLum 0.08 were kept**: on R's blue they separate jersey and helmet and leave
+   the white stripes, the face, the mitts and the skates untouched (still `tb2r-teams`). Default `Emissive` is now 0.5 in the material.
+4. **Clips and AnimBP.** Imported: Stride, Glide, Idle_Faceoff, Shot_Slap, Shot_Wrist, Fall, GetUp, Celebrate (Celebrate unused), from `skater-lab/s2/engine/R/` through `rootfix.py`; no strip step run.
+   `ABP_SkaterTB2` (variables `Speed`, `TurnRate`, `bKnockedDown`) has the states **Idle** (`Idle_Faceoff`), **Skate** (1D blend space `BS_SkaterTB2_Skate`: Glide at 0 and 1.5 m/s, Stride at 4.5 m/s with sample rate 0.75 and at 8 m/s with rate 1.1),
+   **Fall** (no loop, holds the last frame) and **GetUp** (no loop). Transitions: Idle to Skate at Speed > 0.3 (0.3 s), Skate to Idle at Speed < 0.15 (0.4 s), Idle or Skate to Fall on `bKnockedDown`, Fall to GetUp when it clears,
+   and **GetUp to Skate** (automatic rule at the end of the clip, 0.3 s blend, i.e. into the Glide crouch, as S2 advised). After the state machine: a turn lean (LocalToComponent, `Transform (Modify) Bone` on `spine_01`, component space, additive,
+   roll = MapRangeClamped(TurnRate, -3.75..3.75 to +15..-15), ComponentToLocal), then `Slot DefaultSlot`. `AM_SkaterTB2_Shoot` (Shot_Slap) serves `PlayShoot`, `AM_SkaterTB2_Check` (Shot_Wrist) is the placeholder for `PlayCheck`.
+   **Deviation:** the blend space's play rate follows speed through the per-sample rate scales (0.75 at 4.5 m/s to 1.1 at 8 m/s), not through a continuous `PlayRate` pin: the pin cannot be exposed from Python (the struct is empty there) and no MCP tool does it.
+   Glide below 1.5 m/s and full stride at 4.5 m/s, not at 8 as asked, because a pose blend from 1.5 to 8 would leave the figure half-glide at normal speeds; change the sample positions in `06_blendspace.py` if you want it linear to 8.
+5. **`SetTeam` before BeginPlay:** stores `PendingColour` and `bHasColour`, applies the colour when the dynamic material exists (in BeginPlay) and at once when it already exists (`IsValid`). The before-BeginPlay path was **not exercised** (every call in PIE came after BeginPlay).
+6. **Stills** (`devlog/shots/`, 1920 x 1085, PIE floating window set to 1920 x 1080 through `LevelEditorPlaySettings`, `LR_L2_Night` as sub-level, stencil 1 on the mesh, stencil 2 on the ice):
+   `tb2r-skate-behind` (6 m behind, game-camera style), `tb2r-skate-front`, `tb2r-shoot`, `tb2r-fall`, `tb2r-getup`, `tb2r-teams` (blue and orange side by side), `tb2r-six` (six figures at 10 to 60 m, readable at 60 m), `tb2r-lean`.
+   What I see:
+   - **The figure is good**: chunky toy, round face, big mitts, clean flat colours, the hue key keeps the white stripes; orange reads amber under `Emissive` 0.5.
+   - **Marks remain in the texture**: dark, glyph-like scribbles on both shins and on the side of the skates (visible in `tb2r-teams`, `tb2r-skate-front`, `tb2r-getup`). They are not a readable number but they look like lettering. Lab lane S3 reported no marks. The operator should decide.
+   - **Two-handed shot from the side**: only `hand_r` holds the stick, the left fist swings free. In the wind-up (`tb2r-shoot`) the stick rises behind and beside the helmet and the right fist sits next to it; I see no fist or stick through the helmet, but the clearance is a few centimetres.
+   - **Stride from behind**: arms swing wide, the stick trails on the right; the stick is a bladeless cylinder.
+   - **Fall**: the figure slides back and ends flat; the skate-blade shadows float apart from the boots. GetUp ends in a crouch that the Glide blend takes over, as expected.
+   - **Turn lean** is visible at +6 and -6 rad/s (opposite sides), subtle.
+   - Idle_Faceoff is a deep bend with fists on the ice; seen from the front the head hides the chest.
+7. **Ledger and commit:** below.
+
+## What changed against phase 1
+
+Root bone `root` at unit scale (was `Armature` at scale 100); no socket scale; mesh yaw 0; flat `Skaters/` folder; 19,748 triangles (was 20,733); a blend space, GetUp, a turn lean and `PendingColour` in the BP.
+`Emissive` default 0.5. Clips come from S2's engine set (pelvis travel already stripped, stride loop already blended), not from my strip script.
+
+## Numbers
+
+`Skaters/` is 8,709,990 bytes of `.uasset` in 17 files: `SK_SkaterTB2` 3,735,334, `T_SkaterTB2_BaseColor` 2,510,160, `ABP_SkaterTB2` 238,104, `BP_SkaterVisual_TB2` 175,635, the clips 152,166 to 411,696 each,
+`M_SkaterTB2` 21,695, `SKEL_SkaterTB2` 12,704, `BS_SkaterTB2_Skate` 8,083, the two montages about 8,100 each. Six-figure frame cost was **not** re-measured in phase 2 (phase 1: no difference from six stand-ins, inside the noise).
+
+## Ledger rows (shipped = y; check the column order against `ASSETS.md`)
+
+```
+| Game/Plugins/JamAssets/Content/Skaters/SK_SkaterTB2.uasset | skeletal mesh | 0.1 | ai-generated | Hyper3D Rodin (mesh, texture) + Meshy (rig) | | | 2026-11-12 | B | y | Rodin task c07557c7-cf01-462a-97a3-9f0336c0ff31 (no TAPose), Meshy rig 01a1cf39-74e0-7496-9b7c-cd8a09ffe4d3, root bone added by lane B5 in Blender (lane S3, lane B5) |
+| Game/Plugins/JamAssets/Content/Skaters/SKEL_SkaterTB2.uasset | skeleton | 0.1 | ai-generated | Hyper3D Rodin (mesh, texture) + Meshy (rig) | | | 2026-11-12 | B | y | from the rig 01a1cf39-74e0-7496-9b7c-cd8a09ffe4d3 |
+| Game/Plugins/JamAssets/Content/Skaters/T_SkaterTB2_BaseColor.uasset | texture | 0.1 | ai-generated | Hyper3D Rodin (mesh, texture) + Meshy (rig) | | | 2026-11-12 | B | y | Rodin task c07557c7-cf01-462a-97a3-9f0336c0ff31, diffuse map only; glyph-like marks on the shins, see the report |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB2_Stride.uasset | animation | 0.1 | ai-generated | Meshy | | | 2026-11-12 | B | y | text-to-motion 01a1cf31-78f9-7509-8281-bbf499e0f6f1, animate 01a1cf3d-00c6-7157-8856-411d5bc66b29, trimmed and looped by lane S2 |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB2_Glide.uasset | animation | 0.1 | ai-generated | Meshy | | | 2026-11-12 | B | y | text-to-motion 01a1cf32-2f66-7333-b8e1-4a5dc6bbe2f4, animate 01a1cf3d-3c65-7627-abdb-2f0dd0a9c489 |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB2_Idle_Faceoff.uasset | animation | 0.1 | ai-generated | Meshy | | | 2026-11-12 | B | y | text-to-motion 01a1cf35-5f26-75cb-9275-1aa837765138, animate 01a1cf3e-2352-7158-b188-5f00899cde66 |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB2_Shot_Slap.uasset | animation | 0.1 | ai-generated | Meshy | | | 2026-11-12 | B | y | text-to-motion 01a1cf22-8a91-7712-8132-b7f0bb2bd0b1, animate 01a1cf3d-76a8-70f8-bdd3-d31f7c09c724, trim 18-66 |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB2_Shot_Wrist.uasset | animation | 0.1 | ai-generated | Meshy | | | 2026-11-12 | B | y | same motion and animate task as Shot_Slap, trim 33-45; placeholder for the check |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB2_GetUp.uasset | animation | 0.1 | ai-generated | Meshy | | | 2026-11-12 | B | y | text-to-motion 01a1cf34-42dc-73c5-b6c6-f45b0c6c433e, animate 01a1cf3d-b154-75e2-addf-ca1891dac672, trim 58-180 |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB2_Celebrate.uasset | animation | 0.1 | ai-generated | Meshy | | | 2026-11-12 | B | y | text-to-motion 01a1cf34-d1ca-7152-aef9-d20ff77e677b, animate 01a1cf3d-ea98-722d-9c07-a4e497141449; imported, unused |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB2_Fall.uasset | animation | 0.1 | sourced | Meshy library | preset 187 (Knock_Down) | | 2026-11-12 | B | y | animate 01a1cf3e-5c1e-7478-b2b5-fcd1f931f9a0; Meshy paid-plan licence |
+| Game/Plugins/JamAssets/Content/Skaters/BS_SkaterTB2_Skate.uasset | blend space | 0.1 | original | UE 5.9 editor via MCP/Python | | | 2026-11-12 | B | y | Glide to Stride over Speed |
+| Game/Plugins/JamAssets/Content/Skaters/AM_SkaterTB2_Shoot.uasset | montage | 0.1 | original | UE 5.9 editor via MCP/Python | | | 2026-11-12 | B | y | wraps Shot_Slap |
+| Game/Plugins/JamAssets/Content/Skaters/AM_SkaterTB2_Check.uasset | montage | 0.1 | original | UE 5.9 editor via MCP/Python | | | 2026-11-12 | B | y | wraps Shot_Wrist; placeholder |
+| Game/Plugins/JamAssets/Content/Skaters/M_SkaterTB2.uasset | material | 0.1 | original | UE 5.9 editor via MCP/Python | | | 2026-11-12 | B | y | hue-key team recolour; copy of M_Toon |
+| Game/Plugins/JamAssets/Content/Skaters/ABP_SkaterTB2.uasset | animation blueprint | 0.1 | original | UE 5.9 editor via MCP/Python | | | 2026-11-12 | B | y | idle, skate blend, fall, get up, turn lean, DefaultSlot |
+| Game/Plugins/JamAssets/Content/Skaters/BP_SkaterVisual_TB2.uasset | blueprint | 0.1 | original | UE 5.9 editor via MCP/Python | | | 2026-11-12 | B | y | implements IJamSkaterVisual |
+```
+
+The phase 1 rows for the `Skaters/TB2/...` paths are void (those files are deleted), including the figure-1 mesh, texture and skeleton rows and the library Idle and Golf clips.
+
+## Re-runnable scripts, phase 2, in order (`$S/r2/`; run from the worktree, editor on 8002)
+
+| # | Script | Does | What a next figure changes |
+|---|---|---|---|
+| 0 | `rootfix.py` (Blender) | mesh: `--in RIG.fbx --out X.fbx --mesh --cm --yaw 90`; clips: the same without `--mesh` | input paths; `--yaw` (this mesh faced +Y after import, +90 turns it to +X) |
+| 0b | `glbtex.py` (Blender, in `$S`) | saves the Rodin `diffuse` image as PNG | GLB path |
+| 1 | `00_clean.py`, `01_mesh.py` | delete figure 1, import the mesh, rename the skeleton | FBX path |
+| 2 | `02_texture_material.py` (first line `KG=6.0; KB=0.15; JL=0.08`) | texture import, `M_SkaterTB2` | PNG path, the three scalars |
+| 3 | `03_rootfix_clips.sh`, `04_clips.py`, `04b_drop_root_track.py` | S2's clips through rootfix, import, drop the root track | clip folder, clip list |
+| 4 | `05_sockets.mjs`, `05b_socket_offsets.py` | the three sockets at unit scale | head target height (190 cm), puck offset (60 cm) |
+| 5 | `06_blendspace.py` | blend space | sample speeds and rates |
+| 6 | `build_abp.sh` (runs `07a`, `07a2`, `07b`, `07c`), then `07d_abp_lean.mjs`, `07e_run.mjs` (`07e_abp_props.py`) | the AnimBP; run `build_abp.sh` once per fresh asset (a second run duplicates nodes) | clip names in `07c`, thresholds |
+| 7 | `08a_montages.py`, `08b_bp_create.mjs`, `08c_run.py`, `08d_bp.dsl` (through `$S/dsl.mjs`), `08e_stick.py` | montages, BP, components, event graphs, stick offset | stick offset from `09c_stick.py` (in PIE, idle pose) |
+| 8 | `09_level.py`, `09b_spawn.py`, `10_drive.py`, `camto.sh`, `cap.sh` | test level, figures, camera, capture | the figures stand under the spot at x = 15 m (`place()` adds 1500) |
+
+Lessons: a stray `python3 -` in a shell line blocks on stdin (cost two stalled runs); `unreal.Rotator` takes (roll, pitch, yaw); between the light pools of the night rig (spots at x = +-15 and +-45 m) the ice is black.
+
+## Not verified
+
+- `SetTeam` before BeginPlay; the cartridge swap and bot tests (still no consumer in the game); the frame cost of six figures in phase 2; foot sliding; the open stride's wrap (S2 measured 11 degrees);
+  `PlayCheck` with `Shot_Wrist` in PIE (only `PlayShoot` was played); `Celebrate` (imported only); whether the clips play correctly on a differently proportioned mesh (same open question as phase 1).
+- The turn lean was looked at only at a turn rate of 6 rad/s together with the stride, not at the 15 degree clamp.
