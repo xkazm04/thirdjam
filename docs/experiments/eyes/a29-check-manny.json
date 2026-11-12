@@ -1,0 +1,51 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-12T17:21:47.898Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "devlog/shots/20261112-181934-A-a29-check-manny.png",
+          "width": 5760,
+          "height": 558
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2280,
+      "usage": {
+        "prompt": 1742,
+        "output": 107,
+        "thoughts": 285,
+        "total": 2134,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00278,
+      "ms": 7011,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [
+              {
+                "where": "Right half across the background (frames 6 through 8)",
+                "what": "Distinct vertical rectangular banding/luminance steps in the background clear color across frame borders.",
+                "severity": 1,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=20261112-181934-A-a29-check-manny.png (gemini-3.8-flash, in 1742 out 107 think 285 tokens, ~$0.0028, 7 s)\n- stills:\n  - label: Still A; clean: false\n    - findings:\n      - where: Right half across the background (frames 6 through 8); what: Distinct vertical rectangular banding/luminance steps in the background clear color across frame borders.; severity: 1; confidence: 0.85"
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-12T17:21:46.084Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "devlog/shots/20261112-181934-A-a29-crossover-l.png",
+          "width": 5760,
+          "height": 558
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2280,
+      "usage": {
+        "prompt": 1742,
+        "output": 239,
+        "thoughts": 0,
+        "total": 1981,
+        "calls": 1
+      },
+      "cost_usd_est": 0.0022,
+      "ms": 5270,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A: 20261112-181934-A-a29-crossover-l.png",
+            "findings": [
+              {
+                "where": "Top-left corner, x=0 to 300 px, y=0 to 20 px",
+                "what": "Engine debug/proof overlay text ('AS_P4_crossover_l: ... UE5 Manny...') is baked into the top-left margin.",
+                "severity": 1,
+                "confidence": 0.98
+              },
+              {
+                "where": "Across all 8 skater poses horizontally along the center line",
+                "what": "The character mesh completely lacks an environment, ice surface, and contact shadows, floating in an empty black void with no hockey stick or skates visible.",
+                "severity": 4,
+                "confidence": 0.95
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=20261112-181934-A-a29-crossover-l.png (gemini-3.8-flash, in 1742 out 239 tokens, ~$0.0022, 5.3 s)\n- stills:\n  - label: Still A: 20261112-181934-A-a29-crossover-l.png; clean: false\n    - findings:\n      - where: Top-left corner, x=0 to 300 px, y=0 to 20 px; what: Engine debug/proof overlay text ('AS_P4_crossover_l: ... UE5 Manny...') is baked into the top-left margin.; severity: 1; confidence: 0.98\n      - where: Across all 8 skater poses horizontally along the center line; what: The character mesh completely lacks an environment, ice surface, and contact shadows, floating in an empty black void with no hockey stick or skates visible.; severity: 4; confidence: 0.95"
+    }
+  ]
+}

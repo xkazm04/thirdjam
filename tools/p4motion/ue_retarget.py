@@ -203,6 +203,14 @@ if not lib.does_asset_exist(RTG):
     rc.assign_ik_rig_to_all_ops(S, src_rig); rc.assign_ik_rig_to_all_ops(T, tgt_rig)
     rc.auto_map_chains(unreal.AutoMapChainType.EXACT, True)
     rc.auto_align_all_bones(S); rc.auto_align_all_bones(T)
+    # Root-locked op stack (Director, pass 2, 18:14): only FK Chains and Remap Curves stay on. The Pelvis Motion op scaled the source pelvis translation by
+    # the pelvis-height ratio of a skeleton whose armature node carries scale 100 in the animation (pelvis at 80 m), the Root Motion op moved the Meshy rig's
+    # pelvis (its root) the same way, and Run IK Rig placed goals from those positions. The sim owns displacement anyway; the cost is no pelvis bob and no
+    # pelvis tilt or drop in the falls (docs/experiments/P4-MOTION.md section 8).
+    for i in range(rc.get_num_retarget_ops()):
+        t = str(rc.get_op_type_by_name(rc.get_op_name(i)))
+        if "PelvisMotion" in t or "RunIKRig" in t or "RootMotion" in t:
+            rc.set_retarget_op_enabled(i, False)
     lib.save_asset(RTG, only_if_is_dirty=False)
 rtg = lib.load_asset(RTG)
 out["retargeter"] = RTG

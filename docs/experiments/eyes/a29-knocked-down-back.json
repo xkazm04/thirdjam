@@ -1,0 +1,69 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-12T17:21:53.590Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "devlog/shots/20261112-181934-A-a29-knocked-down-back.png",
+          "width": 5760,
+          "height": 558
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2286,
+      "usage": {
+        "prompt": 1746,
+        "output": 347,
+        "thoughts": 709,
+        "total": 2802,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00527,
+      "ms": 12733,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A: 20261112-181934-A-a29-knocked-down-back.png",
+            "findings": [
+              {
+                "where": "Top-left quadrant, top edge above the first figure",
+                "what": "Engine debug / sequence proof text is burned into the render ('AS_P4_knocked_down_back...').",
+                "severity": 1,
+                "confidence": 0.95
+              },
+              {
+                "where": "Center, fifth figure from left, directly above the head/shoulder",
+                "what": "A detached floating white mesh fragment or rendering artifact is visible suspended in the air above the head.",
+                "severity": 3,
+                "confidence": 0.9
+              },
+              {
+                "where": "Right half, seventh figure from left, above the raised arm and shoulder",
+                "what": "Floating detached noise pixels and artifact flecks hover in the air around the raised arm.",
+                "severity": 2,
+                "confidence": 0.85
+              },
+              {
+                "where": "Right quadrant, vertical slices in the background",
+                "what": "Visible vertical seam lines and brightness mismatch between tiled frame columns across the rightmost third of the canvas.",
+                "severity": 1,
+                "confidence": 0.8
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=20261112-181934-A-a29-knocked-down-back.png (gemini-3.8-flash, in 1746 out 347 think 709 tokens, ~$0.0053, 12.7 s)\n- stills:\n  - label: Still A: 20261112-181934-A-a29-knocked-down-back.png; clean: false\n    - findings:\n      - where: Top-left quadrant, top edge above the first figure; what: Engine debug / sequence proof text is burned into the render ('AS_P4_knocked_down_back...').; severity: 1; confidence: 0.95\n      - where: Center, fifth figure from left, directly above the head/shoulder; what: A detached floating white mesh fragment or rendering artifact is visible suspended in the air above the head.; severity: 3; confidence: 0.9\n      - where: Right half, seventh figure from left, above the raised arm and shoulder; what: Floating detached noise pixels and artifact flecks hover in the air around the raised arm.; severity: 2; confidence: 0.85\n      - where: Right quadrant, vertical slices in the background; what: Visible vertical seam lines and brightness mismatch between tiled frame columns across the rightmost third of the canvas.; severity: 1; confidence: 0.8"
+    }
+  ]
+}
