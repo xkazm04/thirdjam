@@ -1,0 +1,1 @@
+B13 subject 1 variant B looking up 25 degrees from 2 m: stars are 2-3 px points, not outlined (stencil 0), no TSR smearing in the still.

@@ -1,0 +1,199 @@
+{
+ "a": "C:/Users/kazda/jam/skater-lab/s5/export/SK_Skater_S5.fbx",
+ "b": "C:/Users/kazda/jam/skater-lab/skh/export_reg/R/SK_Skater_R.fbx",
+ "takes": {
+  "Aim_FarReach": {
+   "frames": 31,
+   "bone_max_cm": 0.0,
+   "body_vert_max_cm": 0.0,
+   "stick_vert_max_cm": 0.0
+  },
+  "Aim_Front": {
+   "frames": 31,
+   "bone_max_cm": 0.0,
+   "body_vert_max_cm": 0.0,
+   "stick_vert_max_cm": 0.0
+  },
+  "Aim_Left": {
+   "frames": 31,
+   "bone_max_cm": 0.0,
+   "body_vert_max_cm": 0.0,
+   "stick_vert_max_cm": 0.0
+  },
+  "Aim_Right": {
+   "frames": 31,
+   "bone_max_cm": 0.0,
+   "body_vert_max_cm": 0.0,
+   "stick_vert_max_cm": 0.0
+  },
+  "Celebrate": {
+   "frames": 73,
+   "bone_max_cm": 0.0,
+   "body_vert_max_cm": 0.0,
+   "stick_vert_max_cm": 0.0
+  },
+  "Check": {
+   "frames": 31,
+   "bone_max_cm": 0.0,
+   "body_vert_max_cm": 0.0,
+   "stick_vert_max_cm": 0.0
+  },
+  "Crossover_Left": {
+   "frames": 41,
+   "bone_max_cm": 0.0,
+   "body_vert_max_cm": 0.0,
+   "stick_vert_max_cm": 0.0
+  },
+  "Crossover_Right": {
+   "frames": 41,
+   "bone_max_cm": 0.0,
+   "body_vert_max_cm": 0.0,
+   "stick_vert_max_cm": 0.0
+  },
+  "Faceoff_Draw": {
+   "frames": 19,
+   "bone_max_cm": 0.0,
+   "body_vert_max_cm": 0.0,
+   "stick_vert_max_cm": 0.0
+  },
+  "Faceoff_Ready": {
+   "frames": 31,
+   "bone_max_cm": 0.0,
+   "body_vert_max_cm": 0.0,
+   "stick_vert_max_cm": 0.0
+  },
+  "Fall": {
+   "frames": 37,
+   "bone_max_cm": 0.0,
+   "body_vert_max_cm": 0.0,
+   "stick_vert_max_cm": 0.0
+  },
+  "Fall_Forward": {
+   "frames": 37,
+   "bone_max_cm": 0.0,
+   "body_vert_max_cm": 0.0,
+   "stick_vert_max_cm": 0.0
+  },
+  "Foul_Reaction": {
+   "frames": 49,
+   "bone_max_cm": 0.0,
+   "body_vert_max_cm": 0.0,
+   "stick_vert_max_cm": 0.0
+  },
+  "GetUp": {
+   "frames": 73,
+   "bone_max_cm": 0.0,
+   "body_vert_max_cm": 0.0,
+   "stick_vert_max_cm": 0.0
+  },
+  "GetUp_Front": {
+   "frames": 73,
+   "bone_max_cm": 0.0,
+   "body_vert_max_cm": 0.0,
+   "stick_vert_max_cm": 0.0
+  },
+  "Glide": {
+   "frames": 121,
+   "bone_max_cm": 0.0,
+   "body_vert_max_cm": 0.0,
+   "stick_vert_max_cm": 0.0
+  },
+  "Goalie_Block_Left": {
+   "frames": 25,
+   "bone_max_cm": 0.0,
+   "body_vert_max_cm": 0.0,
+   "stick_vert_max_cm": 0.0
+  },
+  "Goalie_Block_Right": {
+   "frames": 25,
+   "bone_max_cm": 0.0,
+   "body_vert_max_cm": 0.0,
+   "stick_vert_max_cm": 0.0
+  },
+  "Goalie_Hold": {
+   "frames": 31,
+   "bone_max_cm": 0.0,
+   "body_vert_max_cm": 0.0,
+   "stick_vert_max_cm": 0.0
+  },
+  "Idle_Faceoff": {
+   "frames": 121,
+   "bone_max_cm": 0.0,
+   "body_vert_max_cm": 0.0,
+   "stick_vert_max_cm": 0.0
+  },
+  "Lean_Left": {
+   "frames": 31,
+   "bone_max_cm": 0.0,
+   "body_vert_max_cm": 0.0,
+   "stick_vert_max_cm": 0.0
+  },
+  "Lean_Right": {
+   "frames": 31,
+   "bone_max_cm": 0.0,
+   "body_vert_max_cm": 0.0,
+   "stick_vert_max_cm": 0.0
+  },
+  "Lift": {
+   "frames": 19,
+   "bone_max_cm": 0.0,
+   "body_vert_max_cm": 0.0,
+   "stick_vert_max_cm": 0.0
+  },
+  "Pass": {
+   "frames": 19,
+   "bone_max_cm": 0.0,
+   "body_vert_max_cm": 0.0,
+   "stick_vert_max_cm": 0.0
+  },
+  "Poke": {
+   "frames": 22,
+   "bone_max_cm": 0.0,
+   "body_vert_max_cm": 0.0,
+   "stick_vert_max_cm": 0.0
+  },
+  "Shot_Charge": {
+   "frames": 31,
+   "bone_max_cm": 0.0,
+   "body_vert_max_cm": 0.0,
+   "stick_vert_max_cm": 0.0
+  },
+  "Shot_Slap": {
+   "frames": 43,
+   "bone_max_cm": 0.0,
+   "body_vert_max_cm": 0.0,
+   "stick_vert_max_cm": 0.0
+  },
+  "Shot_Wrist": {
+   "frames": 22,
+   "bone_max_cm": 0.0,
+   "body_vert_max_cm": 0.0,
+   "stick_vert_max_cm": 0.0
+  },
+  "Stop": {
+   "frames": 37,
+   "bone_max_cm": 0.0,
+   "body_vert_max_cm": 0.0,
+   "stick_vert_max_cm": 0.0
+  },
+  "Stride": {
+   "frames": 61,
+   "bone_max_cm": 0.0,
+   "body_vert_max_cm": 0.0,
+   "stick_vert_max_cm": 0.0
+  },
+  "Stumble": {
+   "frames": 21,
+   "bone_max_cm": 0.0,
+   "body_vert_max_cm": 0.0,
+   "stick_vert_max_cm": 0.0
+  }
+ },
+ "takes_a": 31,
+ "takes_b": 31,
+ "worst_cm": {
+  "bone": 0.0,
+  "body": 0.0,
+  "stick": 0.0
+ }
+}

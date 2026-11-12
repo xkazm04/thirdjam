@@ -1,0 +1,1 @@
+B13 subject 2 after: same camera; MI_Ice_Night ScuffZones 1, ScratchAmount 0.8, FrostBand 1 (160 cm), IceRoughMin 0.34.

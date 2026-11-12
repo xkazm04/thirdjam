@@ -1,0 +1,1 @@
+Zone tiles at 10 m: left procedural only (as B10 left it), right with the optional tile under the pattern (TileAlpha 0.5, TileEmissive 3, 2 m repeat). Rows: slow_ice, fast_ice, bumper. Kept: fast_ice only.

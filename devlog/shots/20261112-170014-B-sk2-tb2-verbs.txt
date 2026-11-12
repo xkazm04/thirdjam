@@ -1,0 +1,1 @@
+SK2: tb2, rows: poke, lift, pass, foul reaction / shot charge 0, 0.5, 1, release / faceoff ready, faceoff draw, last man in the crease (hold, block left); all driven through the C-0001 v3 calls in PIE

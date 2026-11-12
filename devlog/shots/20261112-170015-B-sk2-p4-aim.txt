@@ -1,0 +1,1 @@
+SK2: p4 aim holds through SetStickAim in PIE: left 66, front 0, right -63 at 1.0 m, far reach 1.6 m

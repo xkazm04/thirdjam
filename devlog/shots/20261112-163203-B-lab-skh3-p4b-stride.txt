@@ -1,0 +1,1 @@
+SKH3 P4B from fixed p4_broadcast: Stride 3/4, side, behind; loop wrap now 0.5 cm hand / 0.3 cm blade (was 18.5 / 15.1)

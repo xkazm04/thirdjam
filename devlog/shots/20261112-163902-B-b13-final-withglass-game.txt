@@ -1,0 +1,1 @@
+B13 final with MI_Glass on A's glass component (PIE only; A must switch the material): glass reads clear with a lit top edge.

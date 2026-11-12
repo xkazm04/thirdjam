@@ -1,0 +1,1 @@
+Pickup glyphs on SM_Pickup_Token via the new optional GlyphTex input of M_Pickup (untinted, GlyphEmissive 1). Rows 1-3 at about 4 m in three spin phases; row 4 at 10 m. Left to right: reverse_other, big_puck, heavy_puck, precision, speed.

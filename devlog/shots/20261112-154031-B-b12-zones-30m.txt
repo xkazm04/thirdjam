@@ -1,0 +1,1 @@
+Zones at 30 m: slow pair (left, cut), fast pair (procedural, tiled), bumper pair (right). The fast tile makes fast_ice darker and distinct from slow_ice.

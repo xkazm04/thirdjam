@@ -1,0 +1,1 @@
+SKF p2_cel: Aim_Front (1.0 m, side), Aim_FarReach (1.6 m, front), Poke tip frame 10 (1.6 m, side).

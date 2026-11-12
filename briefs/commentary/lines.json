@@ -162,7 +162,7 @@
     "team": "any",
     "priority": 2,
     "cooldown_s": 30,
-    "text": "Fresh scene at centre ice."
+    "text": "Fresh start at centre ice."
   },
   {
     "id": "shot.blue.01",
@@ -502,7 +502,7 @@
     "team": "any",
     "priority": 4,
     "cooldown_s": 0,
-    "text": "And the first one is in the can."
+    "text": "And the first one is on the board."
   },
   {
     "id": "goal.tie.01",
@@ -532,7 +532,7 @@
     "team": "any",
     "priority": 4,
     "cooldown_s": 0,
-    "text": "Tied up! Start the scene over."
+    "text": "Tied up! We start again."
   },
   {
     "id": "goal.lead.01",
@@ -612,7 +612,7 @@
     "team": "any",
     "priority": 4,
     "cooldown_s": 0,
-    "text": "Somebody call for a rewrite."
+    "text": "Somebody call a timeout."
   },
   {
     "id": "goal.blowout.03",
@@ -642,7 +642,7 @@
     "team": "any",
     "priority": 4,
     "cooldown_s": 0,
-    "text": "One goal from a wrap."
+    "text": "One goal from the win."
   },
   {
     "id": "goal.match_point.03",
@@ -722,7 +722,7 @@
     "team": "any",
     "priority": 5,
     "cooldown_s": 0,
-    "text": "Just before the cut!"
+    "text": "Just before the horn!"
   },
   {
     "id": "goal.pause.01",
@@ -742,7 +742,7 @@
     "team": "any",
     "priority": 2,
     "cooldown_s": 20,
-    "text": "The counter clicks over, and the set resets."
+    "text": "The counter clicks over, and they line up again."
   },
   {
     "id": "goal.pause.03",
@@ -752,7 +752,7 @@
     "team": "any",
     "priority": 2,
     "cooldown_s": 20,
-    "text": "A clean take. The director will keep that one."
+    "text": "A clean finish. That one goes on the highlights."
   },
   {
     "id": "save.any.01",
@@ -1882,7 +1882,7 @@
     "team": "any",
     "priority": 1,
     "cooldown_s": 20,
-    "text": "The props team drops one in."
+    "text": "A pickup drops onto the ice."
   },
   {
     "id": "pickup_spawn.any.03",
@@ -2247,7 +2247,7 @@
     "team": "any",
     "priority": 2,
     "cooldown_s": 15,
-    "text": "A new effect is rolling."
+    "text": "A new effect is in play."
   },
   {
     "id": "effect_end.any.01",
@@ -2484,7 +2484,7 @@
     "team": "any",
     "priority": 3,
     "cooldown_s": 10,
-    "text": "The script just changed."
+    "text": "The rules just changed."
   },
   {
     "id": "directors_call.any.01",
@@ -2494,7 +2494,7 @@
     "team": "any",
     "priority": 4,
     "cooldown_s": 0,
-    "text": "The director has made a call."
+    "text": "The rules have changed."
   },
   {
     "id": "directors_call.any.02",
@@ -2504,7 +2504,7 @@
     "team": "any",
     "priority": 4,
     "cooldown_s": 0,
-    "text": "A rule change, live on set."
+    "text": "A rule change, live on the ice."
   },
   {
     "id": "directors_call.any.03",
@@ -2514,7 +2514,7 @@
     "team": "any",
     "priority": 4,
     "cooldown_s": 0,
-    "text": "New direction for this take."
+    "text": "New rule for this period."
   },
   {
     "id": "directors_call.skater_speed_up.01",
@@ -2723,7 +2723,7 @@
     "team": "any",
     "priority": 5,
     "cooldown_s": 0,
-    "text": "Director's call! The ice is now glass."
+    "text": "New rule! The ice is now glass."
   },
   {
     "id": "directors_call.ice_friction_down.02",
@@ -2910,7 +2910,7 @@
     "team": "any",
     "priority": 5,
     "cooldown_s": 0,
-    "text": "Easier opponents for this take."
+    "text": "Easier opponents for this period."
   },
   {
     "id": "period.take_1.01",
@@ -2921,7 +2921,7 @@
     "team": "any",
     "priority": 4,
     "cooldown_s": 0,
-    "text": "Welcome to the sound stage: blue against orange, take one."
+    "text": "Welcome to the rink: blue against orange, first period."
   },
   {
     "id": "period.take_1.02",
@@ -2932,7 +2932,7 @@
     "team": "any",
     "priority": 4,
     "cooldown_s": 0,
-    "text": "Lights are up, the ice is fresh. Take one is rolling."
+    "text": "Lights are up, the ice is fresh. First period is under way."
   },
   {
     "id": "period.take_1.03",
@@ -2943,7 +2943,7 @@
     "team": "any",
     "priority": 4,
     "cooldown_s": 0,
-    "text": "Good evening from the stage. Let us see what this cut can do."
+    "text": "Good evening from the rink. Let us see what these two can do."
   },
   {
     "id": "period.take_2.01",
@@ -2954,7 +2954,7 @@
     "team": "any",
     "priority": 4,
     "cooldown_s": 0,
-    "text": "Take two. Same set, new chances."
+    "text": "Second period. Same ice, new chances."
   },
   {
     "id": "period.take_2.02",
@@ -2965,7 +2965,7 @@
     "team": "any",
     "priority": 4,
     "cooldown_s": 0,
-    "text": "Back for take two."
+    "text": "Back for the second period."
   },
   {
     "id": "period.take_2.03",
@@ -2976,7 +2976,7 @@
     "team": "any",
     "priority": 4,
     "cooldown_s": 0,
-    "text": "Second take is rolling."
+    "text": "Second period is under way."
   },
   {
     "id": "period.take_3.01",
@@ -2987,7 +2987,7 @@
     "team": "any",
     "priority": 4,
     "cooldown_s": 0,
-    "text": "Take three. This is where it gets decided."
+    "text": "Third period. This is where it gets decided."
   },
   {
     "id": "period.take_3.02",
@@ -2998,7 +2998,7 @@
     "team": "any",
     "priority": 4,
     "cooldown_s": 0,
-    "text": "Third take. No more rehearsals."
+    "text": "Third period. No more warm-ups."
   },
   {
     "id": "period.take_3.03",
@@ -3009,7 +3009,7 @@
     "team": "any",
     "priority": 4,
     "cooldown_s": 0,
-    "text": "Final take of the match. Here we go."
+    "text": "Final period of the match. Here we go."
   },
   {
     "id": "period.take_n.01",
@@ -3019,7 +3019,7 @@
     "team": "any",
     "priority": 4,
     "cooldown_s": 0,
-    "text": "Another take. They are not done yet."
+    "text": "Another period. They are not done yet."
   },
   {
     "id": "period.take_n.02",
@@ -3029,7 +3029,7 @@
     "team": "any",
     "priority": 4,
     "cooldown_s": 0,
-    "text": "Still rolling. Another take."
+    "text": "Still going. Another period."
   },
   {
     "id": "period.take_tied.01",
@@ -3039,7 +3039,7 @@
     "team": "any",
     "priority": 3,
     "cooldown_s": 0,
-    "text": "Level at the start of this take."
+    "text": "Level at the start of this period."
   },
   {
     "id": "period.take_tied.02",
@@ -3059,7 +3059,7 @@
     "team": "any",
     "priority": 4,
     "cooldown_s": 0,
-    "text": "And that is the end of the take."
+    "text": "And that is the end of the period."
   },
   {
     "id": "period_end.any.02",
@@ -3069,7 +3069,7 @@
     "team": "any",
     "priority": 4,
     "cooldown_s": 0,
-    "text": "Cut. End of the take."
+    "text": "There is the horn. End of the period."
   },
   {
     "id": "period_end.any.03",
@@ -3079,7 +3079,7 @@
     "team": "any",
     "priority": 4,
     "cooldown_s": 0,
-    "text": "That take is in the can."
+    "text": "That period is in the books."
   },
   {
     "id": "period_end.tied.01",
@@ -3089,7 +3089,7 @@
     "team": "any",
     "priority": 4,
     "cooldown_s": 0,
-    "text": "End of the take, and still level."
+    "text": "End of the period, and still level."
   },
   {
     "id": "period_end.tied.02",
@@ -3099,7 +3099,7 @@
     "team": "any",
     "priority": 4,
     "cooldown_s": 0,
-    "text": "All square at the cut."
+    "text": "All square at the horn."
   },
   {
     "id": "period_end.lead.01",
@@ -3109,7 +3109,7 @@
     "team": "any",
     "priority": 4,
     "cooldown_s": 0,
-    "text": "End of the take. One side in front."
+    "text": "End of the period. One side in front."
   },
   {
     "id": "period_end.lead.02",
@@ -3130,7 +3130,7 @@
     "team": "any",
     "priority": 4,
     "cooldown_s": 0,
-    "text": "Ten seconds left in the take."
+    "text": "Ten seconds left in the period."
   },
   {
     "id": "clock.last_10.02",
@@ -3280,7 +3280,7 @@
     "team": "blue",
     "priority": 4,
     "cooldown_s": 0,
-    "text": "And that's a wrap! Blue takes it."
+    "text": "And that is the game! Blue takes it."
   },
   {
     "id": "win.blue.02",
@@ -3300,7 +3300,7 @@
     "team": "orange",
     "priority": 4,
     "cooldown_s": 0,
-    "text": "And that's a wrap! Orange takes it."
+    "text": "And that is the game! Orange takes it."
   },
   {
     "id": "win.orange.02",
@@ -3330,7 +3330,7 @@
     "team": "any",
     "priority": 5,
     "cooldown_s": 0,
-    "text": "Shutout! A spotless take."
+    "text": "Shutout! A spotless night."
   },
   {
     "id": "win.comeback.01",
@@ -3340,7 +3340,7 @@
     "team": "any",
     "priority": 5,
     "cooldown_s": 0,
-    "text": "From behind to the win! What a script."
+    "text": "From behind to the win! What a finish."
   },
   {
     "id": "win.comeback.02",
@@ -3450,7 +3450,7 @@
     "team": "any",
     "priority": 5,
     "cooldown_s": 0,
-    "text": "That one needs a full rewrite."
+    "text": "That one will sting for a while."
   },
   {
     "id": "season_take.level_1.01",
@@ -3461,7 +3461,7 @@
     "team": "any",
     "priority": 4,
     "cooldown_s": 0,
-    "text": "Take one of the season. The read-through. Nobody is judging yet."
+    "text": "Match one of the season. The opener. Nobody is judging yet."
   },
   {
     "id": "season_take.level_2.01",
@@ -3472,7 +3472,7 @@
     "team": "any",
     "priority": 4,
     "cooldown_s": 0,
-    "text": "The big room tonight. More ice, and the clock is rolling."
+    "text": "The big rink tonight. More ice, and the clock is running."
   },
   {
     "id": "season_take.level_3.01",
@@ -3483,7 +3483,7 @@
     "team": "any",
     "priority": 4,
     "cooldown_s": 0,
-    "text": "Rough cut. Checks are in, manners are out."
+    "text": "Rough stuff tonight. Checks are in, manners are out."
   },
   {
     "id": "season_take.level_4.01",
@@ -3494,7 +3494,7 @@
     "team": "any",
     "priority": 4,
     "cooldown_s": 0,
-    "text": "Set pieces tonight. Watch the props out there."
+    "text": "Tricky ice tonight. Watch what is lying out there."
   },
   {
     "id": "season_take.level_5.01",
@@ -3516,7 +3516,7 @@
     "team": "any",
     "priority": 4,
     "cooldown_s": 0,
-    "text": "One goal tonight. Whoever scores takes the scene."
+    "text": "One goal tonight. Whoever scores takes the game."
   },
   {
     "id": "season_take.level_7.01",
@@ -3527,7 +3527,7 @@
     "team": "any",
     "priority": 4,
     "cooldown_s": 0,
-    "text": "Wide shot. That far net is a long way off."
+    "text": "Wide rink tonight. That far net is a long way off."
   },
   {
     "id": "season_take.level_8.01",
@@ -3538,7 +3538,7 @@
     "team": "any",
     "priority": 4,
     "cooldown_s": 0,
-    "text": "The final cut of the season. Everything they have, right here."
+    "text": "The final match of the season. Everything they have, right here."
   },
   {
     "id": "win.season.01",
@@ -3548,7 +3548,7 @@
     "team": "any",
     "priority": 5,
     "cooldown_s": 0,
-    "text": "That is the season. A wrap on the whole thing."
+    "text": "That is the season. What a run it was."
   },
   {
     "id": "dir.action.01",

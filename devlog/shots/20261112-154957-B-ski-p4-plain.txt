@@ -1,0 +1,1 @@
+SKI: the same P4B pair and frame with MI_PP_ToonRamp and MI_PP_Outline removed from PPV_L2_Night in memory (PIE only): the figure as a broadcast-look candidate under plain lighting

@@ -1,0 +1,1 @@
+{"name": "P4B", "asset": "P4B", "rig_fbx": "in/P4B/P4B_rigged.fbx", "base_color": "export3/P4B/T_Skater_P4B_BaseColor.png", "clips_fbx": "in/skf2/SK_Skater_p4_broadcast.fbx", "stick_fbx": "in/SK_Skater_S4.fbx", "export_dir": "export3", "out_dir": "out3", "reach_rule": true, "stick_ice_tilt": true , "override": {}}

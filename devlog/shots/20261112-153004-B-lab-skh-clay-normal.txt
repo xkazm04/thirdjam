@@ -1,0 +1,1 @@
+R head and torso, without and with the 1K thumb-dent normal map (EEVEE), front then back

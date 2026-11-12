@@ -1,0 +1,1 @@
+SKF family side by side, same pose tables: top Glide frame 0 (3/4 front), bottom Shot_Slap frame 16 wind-up top (side). Left p2_cel, middle p3_clay, right p4_broadcast.

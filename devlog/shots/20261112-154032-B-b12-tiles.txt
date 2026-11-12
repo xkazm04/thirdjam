@@ -1,0 +1,1 @@
+Zone tiles after the seam crop, 2 x 2 tiled (scratch preview): slow_ice, fast_ice, bumper (crop to whole chevron periods).

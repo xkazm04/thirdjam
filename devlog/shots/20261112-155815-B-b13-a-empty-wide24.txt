@@ -1,0 +1,1 @@
+Lane B13 step A: the empty arena from 24 m (camera at y -24 m, 8 m up, pitch -16, FOV 70), real game in PIE, LR_L2_Night with every film prop, hockey prop and practical removed; truss kept as bare structure with four basic-shape lamp cans.

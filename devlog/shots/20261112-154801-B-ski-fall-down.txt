@@ -1,0 +1,1 @@
+SKI: SetKnockedDown(true) 2.5 s earlier, LR_L2_Night, figures facing away from the camera. Left to right: TB2 blue, P3A orange, P3A blue, P4B orange, P4B blue. Backward Fall: TB2, P3A blue, P4B blue; Fall_Forward: P3A orange, P4B orange (skates point up: the SKH toe fault)
