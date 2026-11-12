@@ -204,3 +204,10 @@ to be implemented to start the game. / No need to mention Director's cut in the 
 4. Brain: `FJamAIWorld` gains `Pickups[] { Kind, Pos }` filled by the game mode; only `all_star` detours for a pickup within 8 m, never while carrying and never when the puck is closer
    (lane A3 resumes for this, for pass awareness and interception once A16's pass lands, for poke/lift use at pro and all_star, foul avoidance, and the last-man-as-goalie rule).
 5. Barks: the regenerated register ships; Regular `normal`, Raw `loud`; the Director skims `REVIEW.md` for cuts before H24. A's TextToSpeech package delta is measured at the next green Shipping package.
+
+## R-0018 (H8.2, 2026-11-12 14:20): lane A16's names (seams, stick, faceoff)
+Accepted as implemented: `FJamRuleRequest { Cause, Action }` as the queued form of SpawnPickup / ApplyModifier; `FJamSimEvent::Text` as the announce side channel; `OnFrame` fires every
+frame and the hook filters by `every_frames`; first-to mode's `Period` advances only on `EndPeriod` (the TAKE card's "1 + lead" stays presentation); `ShrinkRink` with Value > 1 reads as
+1/Value and `GrowRink` the mirror; `UJamCartridge::ApplyValueKey` as the one values-to-config mapping; `game.stick` defaults (reach 1.6 m, poke window 8 frames, lift 1.0 m, stumble 20,
+sensitivity 1); the faceoff as a sim phase with a 90-frame countdown; fouls park the fouler 300 frames at the side boards and give a faceoff at the fouler's end. The Determinism
+baseline hash moves with R-0013 (the faceoff changes play from frame 1); the new baseline is recorded by A16's `Jam.Core.Determinism` once linked.
