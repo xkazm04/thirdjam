@@ -133,3 +133,7 @@
 - link green 17:49: main a284b0a / a1a1048 pushed, no link planned before 18:10; A22 may import now.
 
 - link green 18:10: main 2ba616e pushed; A28/A29 may restart editors.
+
+## H11 (18:14) H11 package 249.7 MB; skeletal toy figure is the default; P4 slices on main
+- `Game/Packaged/Hokej_Hokej_H11/Hokej_Hokej_H11.zip` 249.7 MB (18:11): skeletal toy figure default (A26 + A22 pass 3), rink construction (A25), A3's curve, net slide, B's clay rig and looks. Pass-4 figure and the P4 pipelines (A28 figures, A29 motion) committed after the package.
+- running: A28 pass 2 (image-to-3D figures, blockers), A29 pass 2 (pelvis translation in the retarget, proof strips), B on A-to-B-0007/0008. Lanes A22, A25, A26, A27 closed.
