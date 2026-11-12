@@ -1,0 +1,1 @@
+B9 Clay-0 proof: l2_night with humanoid visuals (hockey.test.visual-b2), masters with MPC_Look reads at Clay 0.
