@@ -358,3 +358,15 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - waiting on the operator (back about 22:45): clay or broadcast as the tier to push (`devlog/shots/20261112-172129-B-b14-tiers-strip.png`); goalies (kit and 14 clips in
   Blender, R-0013 says no goalie figure); the night sky variant; the commentary delivery check and listening to the mix; a goal horn pick.
 - ledger: 913 rows
+
+## H16.9 (22:55) the operator's decisions at 22:50
+- "The middle - clay as next priority, but we had already art concepts of P2,P3,P4 to chase. I would say Clay is closer to P3 than other. Broadcast looks horrible and we
+  will need more experiments with other techniques to see whether we can find way to get closer to P4 which was the original highest tier to chase."
+- "No dedicated goalie, last and any player in the team acts like a goalie to cover space and with body and stick. We can have smaller goals for this case when no real
+  goalie is there (height in half)."
+- (commentary) "You can use full mix and randomly change the lines to prevent repetition. All accepted."
+- "Goal horns are horrible, rather create variants of crowd cheering."
+- The lead's reading and what follows from each: `handoff/B-to-A-0032.md`. On B: lanes SKI2 and SKI3 finish the cel toy and the two clay figures and defer the
+  broadcast figures; AU2 generates crowd reactions; B19 rebuilds the clay tier against `prep-reference/images/path-p3-*` (B's clay tier is a cream tabletop; the
+  concept is a dark arena with warm lamps, glossy scratched ice and felt figures); B20 is a P4 lab, not a tier. The goalie kit stays in Blender.
+- The night sky variant was not answered: the star dome with the snow ground stays.

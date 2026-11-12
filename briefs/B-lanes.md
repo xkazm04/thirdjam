@@ -1,30 +1,29 @@
 # Device B lane board (the lead rewrites this file whenever a lane starts or reports)
 
-Updated 2026-11-12 22:25 CET (H16.4; times on this board before 20:30 ran up to 25 minutes ahead of the machine clock). Two editors at most by the operator's decision. **Device A merged `dev-b` at 19:35 and 20:02; the shipped default figure is `humanoid_b1` (R-0030).** The operator is away until about 22:45 (R-0028). Directions in force: the operator to B at 14:55 (**hyped commentary; Blender and the P2, P3, P4
-skaters**), and the operator's verdicts through device A at 14:40 (R-0021, `handoff/A-to-B-0007.md`: **props out of the arena; night sky, ice surface, construction, lighting; both hands on a hockey stick**). Reports land in `status/`.
+Updated 2026-11-12 22:55 CET (H16.9).
 
 ## Running
 
 | Lane | What | Editor | Started | Due | Report (when done) |
 |---|---|---|---|---|---|
-| SKI2 | Import of the three concept-sheet figures from `skc/export2/` behind `BP_SkaterVisual_TB2`, `_TB2_P3`, `_TB2_P4` (class names unchanged; the old Blueprints kept as `_old`): new skeletons, 72 takes, hue-key material with number and crest, the aim grid and stick correction, every call and reaction; the cel toy first | port 8000, main tree | 22:00 | 01:00 | `status/SKI2-checkpoint.md`, `status/SKI2-report.md` |
-| SKI3 | The shipped scripted figure's clay and broadcast versions from the Blender family (`p3_clay`, `p4_broadcast`; 72 takes each) as `BP_SkaterVisual_TB1_P3` and `_TB1_P4`, so `humanoid_b1` has a class per tier; clay first | port 8002, `wt-vfx` | 22:25 | 00:55 | `status/SKI3-checkpoint.md`, `status/SKI3-report.md` |
+| SKI2 | Import of the concept-sheet figures: the cel toy `P2C` behind `BP_SkaterVisual_TB2`, then the clay figure `P3C` behind `_TB2_P3`; the broadcast figure `P4D` is deferred | port 8000, main tree | 22:00 | 00:30 | `status/SKI2-checkpoint.md`, `status/SKI2-report.md` |
+| SKI3 | The shipped scripted figure's **clay** version from the Blender family as `BP_SkaterVisual_TB1_P3` (felt jersey, cream stitches, clay helmet and gloves, as the P3 concept shows); the broadcast version is deferred | port 8002, `wt-vfx` | 22:25 | 00:10 | `status/SKI3-checkpoint.md`, `status/SKI3-report.md` |
+| AU2 | Crowd reactions instead of horns: cheering variants for a goal, a groan for a goal against, an "ooh" for a save, applause for period end and win, a quiet crowd bed; a pick page | none | 22:55 | 23:45 | `status/B-audio-crowd.md` |
 
 ## Waiting for the operator's ears or eyes (pages on device B)
 
 | Page | What to decide |
 |---|---|
-| `C:\Users\kazda\jam\audio-lab\ready\picks.html` | the picked effects and music in import-ready form: two boosted takes (clapperboard 05, puck post 01) and three loops to confirm |
-| `C:Userskazdajamaudio-labox2listen.html` | the commentator bank (340 lines, voice C1): the first section asks whether the bank's delivery (normal capitals, speed 1.15) is right or the bank is regenerated as the picked v3 exactly; then spot-check, untick to reject |
-| decision | **Goalie:** lane SKG built a goalie kit and 14 goalie clips for all three styles (`status/B-skater-skg.md`), but the rules say "no goalies" (`docs/HOCKEY.md`) and R-0013 point 3 says the last man acts as goalie with no goalie figure. The lead's brief was wrong about the rules. Options: (a) clips only on the last man, no kit; (b) the kit appears on the last man while he holds the crease; (c) a dedicated goalie per team (a rule change for device A). Nothing is imported until the operator chooses |
-| stills | **Night sky:** open sky with stars (saved) or the dark volume (one-line switch): `devlog/shots/20261112-163901-B-b13-final-over.png` against `-final-variantA-over.png`. **Atmosphere** (haze and shafts, veto until 21:00): `devlog/shots/20261112-163703-B-b13-atmo-variant-wide.png` |
-| decision | **Which higher tier to push, clay or broadcast:** the same faceoff in night, clay and broadcast: `devlog/shots/20261112-172129-B-b14-tiers-strip.png`; clay: `...-170836-B-b14-clay-final-game.png`, `-clay-final-over.png`; broadcast: `...-172126-B-b14-bcast-game.png`, `-172127-B-b14-bcast-wide24.png`, `-bcast-close6.png` |
-| no page yet | no pick was made for the director's voice, the goal horn, the room tone and the menu theme |
+| `C:Userskazdajamaudio-labcrowdpick.html` (when lane AU2 reports) | which crowd takes: up to three cheers for a goal, one each for the other situations |
+| `C:Userskazdajamaudio-labeadypicks.html` | two boosted takes and three loops of the first audio picks (used as delivered until told otherwise) |
 
 ## Queued (needs an editor slot)
 
 | Lane | What | Waits for |
 |---|---|---|
+| B19 | **Clay tier pass 3, against the P3 concept**: a dark arena with warm hanging lamps and visible cones, glossy scratched ice reflecting warm board lights, plaster-and-clay boards with a warm light strip, felt figures; the cream tabletop goes | the first free editor (lane SKI3, about 00:10) |
+| B20 | **P4 lab** (not a shipped tier): reflective scratched ice, volumetric beams, LED rails on the glass, striped jerseys and real figure materials, a filmic grade; each technique as a measured before and after | the second free editor (lane SKI2, about 00:30) |
+| AU3 | The crowd takes into the engine: the horn out of `MS_goal` and `MS_period_end`, three random cheers on a goal, the bed loop | lane AU2; an editor |
 | P2b | Atmosphere: haze and faded shafts (lighting, may proceed by R-0021); the backdrop flats wait with the props | the operator's veto window (21:00); lane B13 prepares the stills |
 
 ## Done today (newest first; every one has a report under `status/`)
@@ -41,6 +40,6 @@ B1 painted-cel look and night rig.
 
 - Assets: everything under `Game/Plugins/JamAssets/Content/` on `dev-b`, ledgered in `ASSETS.md` (913 rows; on disk: art about 58 MB, audio 36.4 MB (the bank is 22 MB; 2 to 4 MB cooked), vfx/other 9.3 MB, audio 4.1 MB, vfx/other 8.4 MB). **The night rig on `dev-b` is without props since lane B13's checkpoint (16:05): A-to-B-0007 point 1 is met; the look work on sky, ice, construction and lighting follows in the same lane.**
 - **`main` 6a2681e builds on device B from a clean state: PASS in 137 s at 15:49** (closes B-to-A-0017 and 0020 on B's side). For A's UI: crests, glyphs and the digit atlas are under `/JamAssets/UI/` (`status/B12-report.md`, paths and atlas layout); `SetNumber` must be called for a jersey number to show.
-- Open requests to A: `handoff/B-to-A-0031` (silent and sound-only events, 2D, the clock variant), **`handoff/B-to-A-0030` (the end-to-end check's faults on A's side, ranked)**, `handoff/B-to-A-0029` (optional: hit direction on `check` and `knockdown`, board normal on `board`), `handoff/B-to-A-0028` (four reaction calls for the interface, `knockdown_frames` to the visual, do the bots check), `0026` and `0022` if not closed by A32 and R-0027. Answered by A at 18:45 to 20:07 (R-0027, lanes A31, A32, `docs/experiments/B-ASKS-2.md`): 0019, 0021, 0023, 0024, 0025, 0027.
+- Open requests to A: **`handoff/B-to-A-0032` (the operator's decisions: goal height halved, random commentary pick, the stance for any skater, no broadcast in shipped cuts)**, `handoff/B-to-A-0031` (silent and sound-only events, 2D, the clock variant), **`handoff/B-to-A-0030` (the end-to-end check's faults on A's side, ranked)**, `handoff/B-to-A-0029` (optional: hit direction on `check` and `knockdown`, board normal on `board`), `handoff/B-to-A-0028` (four reaction calls for the interface, `knockdown_frames` to the visual, do the bots check), `0026` and `0022` if not closed by A32 and R-0027. Answered by A at 18:45 to 20:07 (R-0027, lanes A31, A32, `docs/experiments/B-ASKS-2.md`): 0019, 0021, 0023, 0024, 0025, 0027.
 - Answered by B: `A-to-B-0001` to `0008` done or parked as before; **`0009` accepted (lane SKC)**, **`0011` accepted (jersey emissive 2.5 at night and the 24 m puck still: lane SK5)**, **`0010` done (the blend space cooks; a cook-only check now precedes every push that touches `Skaters/`)**.
 - Device B cannot package (the linker hangs under x64 emulation); it checks its assets with a cook-only run. Packaging stays device A's.
