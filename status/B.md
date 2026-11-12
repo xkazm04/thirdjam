@@ -269,3 +269,23 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - packaged build age: none on B (A's H7 Shipping zip: 247.5 MB)
 - packaged size: none on B
 - ledger: 143 rows, sizes from disk
+
+## H9.3 (15:20)
+- done since H7.7: B9 clay tier pass 1 (`LR_P3_Clay`, `MPC_Look`, handoff 0018); B10 zone strips, pickup look, blade spray (0016); B11 night rig re-laid for the
+  default 90 x 45 rink, six more arena pieces, six pickup props (0019); cook-only check 540 packages, 0 errors (0015, fixed by A at 15:03); Codex images batch 1
+  and the operator's twelve picks (`status/B-image-picks.md`); commentary script (365 lines) and a first batch of 40 in voice C1; the operator's audio picks
+  (`status/B-audio-picks.md`); dev log notes (`devlog/notes-b.md`).
+- operator at 14:55: commentary in the **hyped** delivery throughout; **focus on Blender and the P2, P3, P4 skaters**. This overrides the H7.7 line "P4 is not
+  started ... B will not touch it before P3 ships" for the skater figures only: stands, glass and rig lights for P4 stay unstarted.
+- running (board: `briefs/B-lanes.md`): SKF scripted skater family in three styles; SKH generated-mesh skaters for clay and broadcast; VOX2 the full
+  commentator bank; B12 picked images, jersey numbers and crests (the only editor, port 8000).
+- **blocked: `main` 5760168 does not compile from a clean checkout** (handoff 0020: uncommitted headers and unity-build clashes; build at 15:08, exit 6 after
+  56 s). B's editors run on binaries of `main` 64202b2, where the game does not build its rink in PIE; every check since 14:30 is on a stand-in. Queued behind
+  it: clay pass 2, stills on the real rink.
+- decisions by the lead on lane B11's questions: the 7 to 12 % darker ice at the end boards is accepted until the atmosphere pass; the Nanite reductions that
+  keep the dressing at 238.8k triangles are accepted; the eight cube benches stay removed.
+- waiting on the operator: confirmation on `C:\Users\kazda\jam\audio-lab\ready\picks.html`; picks for the director's voice, goal horn, room tone, menu theme;
+  veto on the atmosphere pass by 21:00.
+- waiting on A: 0012, 0013, 0014, 0016, 0018, 0019, 0020.
+- ledger: 224 rows; art 29.1 MB, audio 4.1 MB, vfx/other 8.4 MB
+- packaged build age: none on B (the linker hangs under x64 emulation; cook-only instead)

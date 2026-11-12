@@ -11,7 +11,6 @@ commentary, and **"keep focusing on Blender and P2, P3, P4 skater development"**
 | SKH | Generated-mesh skaters for clay and broadcast: retarget made generic, Meshy lean athlete and new Rodin meshes for P4, clay Rodin meshes and a clay surface on the P2 hybrid for P3 | none | 14:58 | 17:30 | `status/B-skater-skh.md` |
 | VOX2 | The whole commentator bank (340 lines) in voice C1, hyped delivery, with a length rule found first; manifest and a spot-check page | none | 14:58 | 16:45 | `status/B-audio-vox2.md` |
 | B12 | The operator's twelve picked images imported; jersey numbers (`SetNumber`) and team crests on both skater visuals; glyphs on pickup tokens; zone tiles tried; backdrop flat material | port 8000, main tree | 14:58 | 17:15 | `status/B12-report.md` |
-| BUILD | Editor build of `main` 5760168 in `wt-vfx` to confirm device A's fix for handoff 0017 on a clean tree | none (compiler) | 15:08 | 15:40 | `status/B.md` |
 
 ## Waiting for the operator's ears or eyes (pages on device B)
 
@@ -25,8 +24,8 @@ commentary, and **"keep focusing on Blender and P2, P3, P4 skater development"**
 | Lane | What | Waits for |
 |---|---|---|
 | SKI | Import of the best P3 and P4 skaters from lanes SKF and SKH as visuals behind `IJamSkaterVisual`; the 15 stick-verb clips into the P2 visuals | lanes SKF and SKH; device A's answer to B-to-A-0014 for the calls |
-| B9b | Clay tier pass 2: stronger clay at game distance, the skaters in clay, readability stills, focus that follows the player | the build above; the editor on port 8002 |
-| RINK | Stills of the re-laid rig, the pickups and both skaters on the real rink at 90 x 45 and on the large cut | the build above; the editor on port 8002 |
+| B9b | Clay tier pass 2: stronger clay at game distance, the skaters in clay, readability stills, focus that follows the player | `main` compiling on B (handoff 0020); the editor on port 8002 |
+| RINK | Stills of the re-laid rig, the pickups and both skaters on the real rink at 90 x 45 and on the large cut | `main` compiling on B (handoff 0020); the editor on port 8002 |
 | P2b | Atmosphere pass applied: backdrop flats (the picked hills image), haze, faded shafts (tested in `status/B2c-report.md`) | the operator's veto window (21:00) |
 | AUD | Import of the operator's picks (`status/B-audio-picks.md`) as `SFX_*` / `MUS_*`; MetaSounds layered or swapped; the rebuilt `MS_faceoff`; the commentary bank as sound waves with its manifest | the operator's confirmation on the ready page; lane VOX2; an editor slot |
 
@@ -44,8 +43,8 @@ B1 painted-cel look and night rig.
 
 - Assets: everything under `Game/Plugins/JamAssets/Content/` on `dev-b`, ledgered in `ASSETS.md` (224 rows; art 29.1 MB, audio 4.1 MB, vfx/other 8.4 MB).
 - Open requests to A: `handoff/B-to-A-0012` (the `Variant` input), `0013` (dev log notes), `0014` (interface calls for the stick verbs), `0016` (zones, pickups,
-  obstacles), `0018` (tier value `p3_clay`), `0019` (pickup props to attach; rig check on the real rink). `0015` (cook list) and `0017` (clean-checkout build)
-  were fixed by A in `main` 5760168 at 15:03; B confirms with its own build and closes them in `status/B.md`.
+  obstacles), `0018` (tier value `p3_clay`), `0019` (pickup props to attach; rig check on the real rink), **`0020` (`main` 5760168 still does not compile from a clean checkout: uncommitted headers and
+  unity-build clashes; B's build at 15:08 failed after 56 s)**. `0015` (cook list) is fixed in `main` 5760168; `0017` is answered in part and continued as `0020`.
 - Answered by B: `A-to-B-0001` done, `0002` accepted (images generated, the operator's picks in `status/B-image-picks.md`, import in lane B12), `0003` done,
   `0004` done (needs `bFinalUsesRDO=True` in A's config), `0005` parked by R-0020, `0006` accepted.
 - Device B cannot package (the linker hangs under x64 emulation); it checks its assets with a cook-only run. Packaging stays device A's.
