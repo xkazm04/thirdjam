@@ -1,0 +1,1 @@
+NS_win: confetti in the two trim colours (blue 0.05,0.3,1.0 and orange 1.0,0.35,0.05) falling over centre ice, camera 24 m back and 6 m up. Throwaway layout with LR_L2_Night, PIE capture 1920x1085, spawned from Python with set_variable_float('Strength') and set_variable_linear_color('Colour').

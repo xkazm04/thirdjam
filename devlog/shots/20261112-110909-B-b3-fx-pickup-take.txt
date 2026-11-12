@@ -1,0 +1,1 @@
+NS_pickup_take, Colour magenta (1.0,0.2,0.8): ring expanding from the skater at 4.5 m/s, 0.6 m above the ice, time dilation 0.25. Throwaway layout with LR_L2_Night, PIE capture 1920x1085, spawned from Python.

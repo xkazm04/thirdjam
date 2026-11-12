@@ -1,0 +1,1 @@
+NS_goal, Strength 1.0, Colour orange (1,0.35,0.05), about 0.4 s after spawn at 0.2 m above centre ice, camera 10 m back and 4 m up. Throwaway layout with LR_L2_Night, PIE capture 1920x1085, spawned from Python with set_variable_float('Strength') and set_variable_linear_color('Colour').
