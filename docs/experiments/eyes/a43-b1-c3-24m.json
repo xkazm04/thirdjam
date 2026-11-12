@@ -1,0 +1,71 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "readability",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-12T19:44:47.922Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "readability",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a43/Game/Saved/Screenshots/WindowsEditor/a43-b1-c3-24m.png",
+          "width": 2560,
+          "height": 1354
+        }
+      ],
+      "distance": 24,
+      "thumbnails": [],
+      "prompt_chars": 2709,
+      "usage": {
+        "prompt": 1921,
+        "output": 364,
+        "thoughts": 0,
+        "total": 2285,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00281,
+      "ms": 12025,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "The physical puck disc is invisible under or near the blue skater, obscured entirely by a white ice-spray effect and the bright yellow passing guide line."
+              },
+              "carrier": {
+                "score": 4,
+                "evidence": "The blue figure (number 7) near center-left is clearly indicated as the carrier by the bright yellow aim line extending from its skates and the white skate-spray under it."
+              },
+              "team_colours": {
+                "score": 5,
+                "evidence": "The warm orange jersey of the defending skater strongly contrasts against the bright cyan/deep blue jerseys of the carrier and distant teammates."
+              },
+              "far_net": {
+                "score": 5,
+                "evidence": "The red net frame is crisp, distinct, and high-contrast against the white illuminated ice at the far left-center boards."
+              },
+              "zone_strips": {
+                "score": 5,
+                "evidence": "Both the dark red goal line and the dark blue blue line run cleanly horizontally across the blue ice surface with high contrast."
+              }
+            },
+            "first_look": "The bright yellow trajectory line leading to the blue skater",
+            "noise": [
+              "Bright circular spotlight patches on the ice surface",
+              "Glowing cyan and yellow LED strips running along the top of the boards"
+            ],
+            "overall": 4
+          }
+        ]
+      },
+      "markdown": "**eyes/readability** A=a43-b1-c3-24m.png at 24 m (gemini-3.8-flash, in 1921 out 364 tokens, ~$0.0028, 12 s)\n- stills:\n  - label: Still A; first_look: The bright yellow trajectory line leading to the blue skater; overall: 4\n    - elements:\n      - puck: score 1, evidence The physical puck disc is invisible under or near the blue skater, obscured entirely by a white ice-spray effect and the bright yellow passing guide line.\n      - carrier: score 4, evidence The blue figure (number 7) near center-left is clearly indicated as the carrier by the bright yellow aim line extending from its skates and the white skate-spray under it.\n      - team_colours: score 5, evidence The warm orange jersey of the defending skater strongly contrasts against the bright cyan/deep blue jerseys of the carrier and distant teammates.\n      - far_net: score 5, evidence The red net frame is crisp, distinct, and high-contrast against the white illuminated ice at the far left-center boards.\n      - zone_strips: score 5, evidence Both the dark red goal line and the dark blue blue line run cleanly horizontally across the blue ice surface with high contrast.\n    - noise: Bright circular spotlight patches on the ice surface; Glowing cyan and yellow LED strips running along the top of the boards"
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 #include "JamEffectSystem.h"
 #include "JamEventBus.h"
+#include "JamZones.h"
 
 DEFINE_LOG_CATEGORY(LogJamEffects);
 
@@ -104,8 +105,20 @@ void UJamEffectSystem::Step()
 	{
 		if (E.Name == JamEvents::Check) Fire(EJamEffectTrigger::CheckLanded, E.Who, TeamOf(E.Who));
 		else if (E.Name == JamEvents::Knockdown && E.Kind == TEXT("check")) Fire(EJamEffectTrigger::CheckReceived, E.Who, TeamOf(E.Who));
-		else if (E.Name == JamEvents::ZoneEnter) Fire(EJamEffectTrigger::ZoneEnter, E.Who, TeamOf(E.Who), E.Kind);
-		else if (E.Name == JamEvents::ZoneExit) Fire(EJamEffectTrigger::ZoneExit, E.Who, TeamOf(E.Who), E.Kind);
+	}
+	// 2b. Zone triggers (lane A41). The sim never carries zone_enter / zone_exit: UJamZoneSystem computes membership after the sim's
+	// step and keeps the events of that frame in its own list. The only IJamZoneSource is that system (R-0019), bound to the sim by
+	// the host before Init, so its events are read from there. The puck's events (Who = PuckWho) fire puck / rink targets only.
+	if (const IJamZoneSource* Src = Sim->GetZoneSource())
+	{
+		const UJamZoneSystem* Zones = static_cast<const UJamZoneSystem*>(Src);
+		for (const FJamSimEvent& E : Zones->GetFrameEvents())
+		{
+			const bool bEnter = E.Name == JamEvents::ZoneEnter;
+			if (!bEnter && E.Name != JamEvents::ZoneExit) continue;
+			if (E.Frame != Frame) continue;   // a stale list (the host did not update the zones this frame) fires nothing
+			Fire(bEnter ? EJamEffectTrigger::ZoneEnter : EJamEffectTrigger::ZoneExit, E.Who, TeamOf(E.Who), E.Kind);
+		}
 	}
 	for (int32 T = 0; T < 2; ++T)
 	{
@@ -193,7 +206,15 @@ void UJamEffectSystem::Fire(EJamEffectTrigger Trigger, int32 SourceSkater, int32
 	for (const FJamEffectDef& Def : Config.Effects)
 	{
 		if (Def.Trigger != Trigger) continue;
-		if ((Trigger == EJamEffectTrigger::ZoneEnter || Trigger == EJamEffectTrigger::ZoneExit) && !Def.Zone.IsNone() && Def.Zone != ZoneId) continue;
+		if (Trigger == EJamEffectTrigger::ZoneEnter || Trigger == EJamEffectTrigger::ZoneExit)
+		{
+			if (!Def.Zone.IsNone() && Def.Zone != ZoneId) continue;
+			// Who entered decides the reach: the puck's events fire puck / rink / everyone targets (self and the teams have nobody
+			// to attach to); a skater's events fire self / own_team / other_team / everyone (the puck did not move onto the zone).
+			const bool bPuckEvent = SourceSkater < 0;
+			const bool bPuckTarget = Def.Target == EJamTarget::Puck || Def.Target == EJamTarget::Rink;
+			if (bPuckEvent ? !(bPuckTarget || Def.Target == EJamTarget::Everyone) : bPuckTarget) continue;
+		}
 		Apply(Def, SourceSkater, Team, Def.DurationFrames, false, 1.0);
 	}
 }

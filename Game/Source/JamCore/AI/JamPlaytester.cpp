@@ -613,7 +613,7 @@ namespace JamPlaytestTestsLocal
 
 	JamAI::FJamPlaytestStats Run(const UJamCartridge& Cart, uint64 Seed, JamAI::EPlaytester Kind, const TCHAR* Level)
 	{
-		JamAI::FJamSimAdapter Sim(Cart.Game);
+		JamAI::FJamSimAdapter Sim(Cart);   // lane A41: with the game mode's systems
 		return JamAI::RunPlaytestMatch(Sim, JamAI::ToMatchConfigResolved(Cart, Level), Seed, Kind, MaxFrames, Cart.Game.Shot.ChargeFramesMax);
 	}
 

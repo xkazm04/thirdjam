@@ -39,7 +39,7 @@ bool FJamBotSeasonTakes::RunTest(const FString& Parameters)
 		int32 Wins = 0;
 		for (const uint64 Seed : { 1ull, 2ull, 7ull })
 		{
-			JamAI::FJamSimAdapter SimA(Cart->Game), SimB(Cart->Game);
+			JamAI::FJamSimAdapter SimA(*Cart), SimB(*Cart);   // lane A41: the takes play with their hooks, zones and pickups
 			const JamAI::FJamMatchStats A = JamAI::RunMatch(SimA, C, Seed, JamAI::EJamPlayerMode::PlayerBot, MaxFrames, 60);
 			const JamAI::FJamMatchStats B = JamAI::RunMatch(SimB, C, Seed, JamAI::EJamPlayerMode::PlayerBot, MaxFrames, 60);
 			bool bMoved = true;

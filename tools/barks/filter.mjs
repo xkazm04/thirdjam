@@ -43,6 +43,18 @@ const BANNED = [
   'covid*', 'virus*', 'cancer*', 'disease*', 'vomit*', 'puke*', 'fart*', 'poop*', 'pee', 'toilet*', 'diaper*',
 ];
 
+// Lane A41 (A37's CUTS.md finding): phrases that carry a banned word in a hockey sense. A line passes the word list when every hit of a
+// banned word sits inside one of these phrases, and the phrase's words are not read as names by the proper-noun rule ("Sudden Death").
+// "death" alone, or in any other phrase, is still banned.
+export const ALLOW_PHRASES = ['sudden death'];
+const ALLOW_PHRASE_RULES = ALLOW_PHRASES.map((p) => new RegExp(`(^|[^a-z'])${p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?=$|[^a-z'])`, 'gi'));
+// The text with every allowed phrase blanked (same length, so nothing else moves).
+function withoutAllowedPhrases(lower) {
+  let out = lower;
+  for (const r of ALLOW_PHRASE_RULES) out = out.replace(r, (m, lead) => lead + ' '.repeat(m.length - lead.length));
+  return out;
+}
+
 // R-0015: mild language the Teen bar tolerates, at most one line in ten (bank quota, enforced by filterBank) and never two in one line.
 // "ass" only inside a "kick your ass" phrase; "damn" and "hell" as interjections; "crap" as a noun.
 const MILD = ['damn', 'hell', 'crap', 'kick your ass', 'kicked your ass', 'kicking your ass', 'kick their ass', 'kick some ass'];
@@ -108,7 +120,8 @@ export function checkLine(text) {
   if (/[#*_`<>{}\[\]\\|~^]/.test(t)) reasons.push('markup character');
   if (/\d{3,}/.test(t)) reasons.push('long number');
   const lower = t.toLowerCase();
-  for (const r of RULES) if (r.re.test(lower)) { reasons.push(`banned word "${r.word}"`); break; }
+  const scan = withoutAllowedPhrases(lower);
+  for (const r of RULES) if (r.re.test(scan)) { reasons.push(`banned word "${r.word}"`); break; }
   if (mildCount(t) > 1) reasons.push('two mild words in one line');
   if (BARE_ASS.test(lower) && !ASS_PHRASE.test(lower)) reasons.push('"ass" outside a kick-your-ass phrase');
   for (let i = 0; i < OFFWORLD_RULES.length; i += 1) if (OFFWORLD_RULES[i].test(lower)) { reasons.push(`not in this game: "${OFFWORLD[i]}"`); break; }
@@ -116,12 +129,22 @@ export function checkLine(text) {
   if (film.hard.length) reasons.push(`film word "${film.hard[0]}" (R-0021: barks are hockey first)`);
   // Proper nouns: a capitalised word that does not start a sentence and is not allowed.
   const words = t.split(/\s+/);
+  const clean = words.map((raw) => raw.replace(/^[("]+|[)",.!?;:]+$/g, ''));
+  // Words inside an allowed phrase ("Sudden Death") are vocabulary, not names.
+  const inPhrase = new Set();
+  for (const p of ALLOW_PHRASES) {
+    const pw = p.split(' ');
+    for (let i = 0; i + pw.length <= clean.length; i += 1) {
+      if (pw.every((w, k) => clean[i + k].toLowerCase() === w)) for (let k = 0; k < pw.length; k += 1) inPhrase.add(i + k);
+    }
+  }
   let sentenceStart = true;
-  for (const raw of words) {
-    const w = raw.replace(/^[("]+|[)",.!?;:]+$/g, '');
+  for (let i = 0; i < words.length; i += 1) {
+    const raw = words[i];
+    const w = clean[i];
     if (!w) continue;
     const isCap = /^[A-Z][a-z'’-]*$/.test(w) || /^[A-Z]{2,}$/.test(w);
-    if (isCap && !sentenceStart && !ALLOW_CAPS.has(w)) { reasons.push(`capitalised word "${w}" looks like a name, brand or team`); break; }
+    if (isCap && !sentenceStart && !ALLOW_CAPS.has(w) && !inPhrase.has(i)) { reasons.push(`capitalised word "${w}" looks like a name, brand or team`); break; }
     sentenceStart = /[.!?]$/.test(raw);
   }
   // A capitalised word with an apostrophe-s at sentence start can still be a name ("Gretzky's"): require a lower-case follower? Kept simple: the

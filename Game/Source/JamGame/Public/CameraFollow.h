@@ -1,5 +1,5 @@
-// Third-person follow camera with frame-based lag (game.camera). Lane A5.
-// Recipe and measurements: tools/skills/camera-third-person.md, docs/experiments/CAMERA-120M.md.
+// Third-person follow camera with frame-based lag (game.camera). Lane A5; the board clamp, the end-board lift and the far-net bias are lane A40.
+// Recipe and measurements: tools/skills/camera-third-person.md, docs/experiments/CAMERA-120M.md, docs/experiments/CAMERA.md.
 #pragma once
 
 #include "CoreMinimal.h"
@@ -45,21 +45,79 @@ struct JAMGAME_API FJamCameraSettings
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
 	float OffAxisM = 0.7f;
 
-	// From the cartridge's game.camera (JamCore's FJamCameraConfig): mode, distance, height, look-ahead, lag, fov. Off-axis stays 0.7 m.
+	// A40, game.camera.boards_margin_m: the camera never crosses the boards' inner face minus this, on any side (corner arcs included).
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
+	float BoardsMarginM = 0.8f;
+
+	// A40, game.camera.end_height_m: the height the camera lifts to when the boards take the whole arm (it rises in proportion to the arm lost).
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
+	float EndHeightM = 5.f;
+
+	// A40, game.camera.far_net_bias (0..1): how much of the angle to the far net the framing leads by when the skater heads for it.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
+	float FarNetBias = 0.5f;
+
+	// Not cartridge keys (constants of the recipe): the critically damped spring's time constant in sim frames (lift and yaw offset), the metres of
+	// look-ahead added per metre of arm the boards take (tilts the lifted camera up the rink instead of down at the skater's back), and the distance
+	// band over which the far-net bias fades in (none inside the near edge, full beyond the far edge; the slot is where the lead matters).
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
+	float SpringFrames = 8.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
+	float LiftLookAheadGain = 1.5f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
+	float FarNetBiasNearM = 8.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
+	float FarNetBiasFarM = 20.f;
+
+	// From the cartridge's game.camera (JamCore's FJamCameraConfig): mode, distance, height, look-ahead, lag, fov, boards margin, end height, far-net bias. Off-axis stays 0.7 m.
 	static FJamCameraSettings FromCartridge(const struct FJamCameraConfig& Cartridge);
 };
 
-// The lag filter, a pure value type stepped once per SIMULATION frame (never by DeltaSeconds).
+// A critically damped spring stepped once per SIMULATION frame (dt = 1 frame, never DeltaSeconds): exact solution x(t) = target + (j0 + j1 t) e^(-w t).
+// Never overshoots a step; reaches 95 % of it in about 4.7 / Omega frames.
+struct JAMGAME_API FJamSpring
+{
+	float X = 0.f;
+	float V = 0.f;
+	bool bInit = false;
+
+	void Reset(float Value);
+	void Step(float Target, float OmegaPerFrame);
+};
+
+// The lag filter and the clamp state, a pure value type stepped once per SIMULATION frame (never by DeltaSeconds).
 struct JAMGAME_API FJamCameraFilter
 {
 	FVector2D PivotM = FVector2D::ZeroVector;
 	float YawDeg = 0.f;
 	bool bInit = false;
 
+	// A40: the lift (0 = the normal rig, 1 = end_height_m, the whole arm displaced) and the yaw offset (degrees, far-net lead plus along-the-rink at an end board)
+	// follow their targets through springs.
+	FJamSpring Lift;
+	FJamSpring YawOffsetDeg;
+
+	// Diagnostics of the last step (not state): the displacement the boards imposed over the arm length (0 = free, 1 = a whole arm) and its direction (into the rink).
+	float LastClampS = 0.f;
+	FVector2D LastClampNormal = FVector2D::ZeroVector;
+
 	// alpha = 1 - exp(-1 / lag_frames), 1 when lag_frames == 0.
 	static float AlphaForLag(int32 LagFrames);
 	void Reset(const FVector2D& TargetM, float TargetYawDeg);
 	void Step(const FVector2D& TargetM, float TargetYawDeg, int32 LagFrames);
+};
+
+// The rink the camera is boxed in by: metres, boards at +-length/2 and +-width/2, corner arcs of CornerRadiusM (0 = sharp corners).
+struct JAMGAME_API FJamCameraRink
+{
+	float LengthM = 120.f;
+	float WidthM = 60.f;
+	float CornerRadiusM = 0.f;
+
+	static FJamCameraRink FromFrame(const FJamPresentationFrame& Frame);
 };
 
 UCLASS(ClassGroup = (Jam), meta = (BlueprintSpawnableComponent))
@@ -86,13 +144,29 @@ public:
 	// camera_pitch = -atan(height / (distance + look_ahead)), degrees.
 	static float DerivedPitchDeg(const FJamCameraSettings& C);
 
-	// Camera transform (centimetres) for a filtered pivot (rink metres) and yaw. Third-person mode.
+	// Camera transform (centimetres) for a filtered pivot (rink metres) and yaw. Third-person mode, the open-ice rig (no clamp, no lift).
 	static FTransform ComputeThirdPersonPose(const FJamCameraSettings& C, const FVector2D& PivotM, float YawDeg);
 
-	// Pulls a camera location (cm) in along the line from the focus point (the skater, cm) so it never leaves the boards:
-	// the largest t in [0,1] with focus + t * (camera - focus) inside +-(half length - margin) x +-(half width - margin) (metres).
-	// The focus is assumed inside. Rounded corners are not modelled (the rectangle is slightly generous there).
+	// A40. True when P (metres) is inside the rink's inner face pulled in by MarginM on every side, corner arcs included (radius = corner - margin, at least 0).
+	static bool IsInsideBoards(const FVector2D& PM, const FJamCameraRink& Rink, float MarginM);
+
+	// A40. The nearest point of that inset region to P (P itself when inside).
+	static FVector2D NearestInsideBoards(const FVector2D& PM, const FJamCameraRink& Rink, float MarginM);
+
+	// A40. The boards' answer to a desired camera point: the nearest point of the inset region (the camera slides along the glass, never through it). OutS is the
+	// displacement over ArmM (0 untouched, clamped to 1), OutDir its unit direction (zero when untouched). The projection onto a convex set is non-expansive, so
+	// the camera never moves more per frame than the point it wanted to be at: no pops from the clamp itself.
+	static FVector2D ClampToBoards(const FVector2D& WantM, const FJamCameraRink& Rink, float MarginM, float ArmM, float& OutS, FVector2D& OutDir);
+
+	// H11 behaviour, kept for the before stills and the legacy test (jam.camera.Legacy 1): pull in along the view axis to 0.3 m inside a rectangle, nothing else.
 	static FVector ClampInsideBoards(const FVector& FocusCm, const FVector& CameraCm, float RinkLengthM, float RinkWidthM, float MarginM = 0.3f);
+
+	// A40. One SIMULATION frame of the third-person camera: lag filter, far-net bias, board clamp, lift and yaw springs, pose (centimetres).
+	// Pure: tests and scripted movers call it with their own state and frame. The frame's HumanIndex must be valid.
+	static FTransform StepThirdPerson(const FJamCameraSettings& C, FJamCameraFilter& State, const FJamPresentationFrame& Frame);
+
+	// A40. The yaw lead toward the far net, degrees, before the spring: bias * toward * distance band * (yaw to net - yaw), 0 when skating away or near the net.
+	static float FarNetLeadDeg(const FJamCameraSettings& C, const FVector2D& PivotM, float YawDeg, const FVector2D& FarNetM);
 
 	// Fixed high camera framing both nets (Arena mode): looks at the rink centre from the +Y side, so rink +X is on the right (like the radar).
 	static FTransform ComputeArenaPose(const FJamCameraSettings& C, float RinkLengthM, float RinkWidthM);

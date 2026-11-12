@@ -1,0 +1,72 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "readability",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-12T19:46:37.296Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "readability",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a43/Game/Saved/Screenshots/WindowsEditor/a43-b2-c2-24m.png",
+          "width": 2560,
+          "height": 1354
+        }
+      ],
+      "distance": 24,
+      "thumbnails": [],
+      "prompt_chars": 2709,
+      "usage": {
+        "prompt": 1921,
+        "output": 387,
+        "thoughts": 0,
+        "total": 2308,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00289,
+      "ms": 13076,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "A tiny dark speck may be near the orange skater's stick blade, but at under 3 pixels across with no glow or highlight on the dark textured ice, it is effectively not visible."
+              },
+              "carrier": {
+                "score": 3,
+                "evidence": "The orange player in mid-ice faces the blue defender with stick on the ice, but lack of a visible puck leaves possession ambiguous between the two foreground skaters."
+              },
+              "team_colours": {
+                "score": 5,
+                "evidence": "Bright saturated cyan-blue and warm orange jerseys are instantly distinguishable against the blue-tinted ice surface."
+              },
+              "far_net": {
+                "score": 4,
+                "evidence": "The red net frame at the far end is roughly 75 pixels wide and stands out clearly inside the bright white spotlight on the ice."
+              },
+              "zone_strips": {
+                "score": 5,
+                "evidence": "The thick dark red center line and deep blue zone lines span the full rink width with strong edge contrast against the lighter blue ice."
+              }
+            },
+            "first_look": "the pair of blue and orange skaters confronting each other in the center ice",
+            "noise": [
+              "bright glowing yellow and cyan LED strips on the dasher boards",
+              "intense circular white spotlight pools on the ice surface",
+              "scratched blue texture banding across the foreground ice"
+            ],
+            "overall": 3
+          }
+        ]
+      },
+      "markdown": "**eyes/readability** A=a43-b2-c2-24m.png at 24 m (gemini-3.8-flash, in 1921 out 387 tokens, ~$0.0029, 13.1 s)\n- stills:\n  - label: Still A; first_look: the pair of blue and orange skaters confronting each other in the center ice; overall: 3\n    - elements:\n      - puck: score 1, evidence A tiny dark speck may be near the orange skater's stick blade, but at under 3 pixels across with no glow or highlight on the dark textured ice, it is effectively not visible.\n      - carrier: score 3, evidence The orange player in mid-ice faces the blue defender with stick on the ice, but lack of a visible puck leaves possession ambiguous between the two foreground skaters.\n      - team_colours: score 5, evidence Bright saturated cyan-blue and warm orange jerseys are instantly distinguishable against the blue-tinted ice surface.\n      - far_net: score 4, evidence The red net frame at the far end is roughly 75 pixels wide and stands out clearly inside the bright white spotlight on the ice.\n      - zone_strips: score 5, evidence The thick dark red center line and deep blue zone lines span the full rink width with strong edge contrast against the lighter blue ice.\n    - noise: bright glowing yellow and cyan LED strips on the dasher boards; intense circular white spotlight pools on the ice surface; scratched blue texture banding across the foreground ice"
+    }
+  ]
+}

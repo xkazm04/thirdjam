@@ -163,3 +163,20 @@
 - running: A3 pass 2 (pro / all_star vs the regular and good playtesters), A39 payoffs, A40 camera clamp, A41 zone trigger and sweep wiring. A33 (tackling that reads) is on disk, next gate. Lanes A30, A31, A32, A34, A37, A38 closed.
 
 - link green 20:08: main b6d8166 (A33 tackling) pushed.
+
+- link green 20:12: main fef6630 (curve pass 2) pushed.
+
+- RESOURCES 20:14 cpu 12% ram 20.8/63GB gpu 23 %, 3669 MiB, 55 editors 1 cmd 0 ubt 0 free 614GB
+
+- link green 20:26: main 15b8ba1 (A40 camera, dev-b SK4 merged) pushed.
+
+- link green 20:30: main ce2efdd (dev-b SK4 merged, B's blend space cooks) pushed; H15 packaged.
+
+## H12.2 (20:32) dev-b SK4 merged at ce2efdd; H15 packaged (258.5 MB); A-to-B-0010 closed
+- Main: 15b8ba1 (A40 camera clamp: never inside the boards, end-board lift, far-net lead), ce2efdd (merge of B's SK4 falls on all four figures; B's re-saved `BS_SkaterTB2_P4_Skate` cooks, so A-to-B-0010 is closed). `Hokej_Hokej_H15.zip` 258.5 MB, 0 load errors, 0 usage-flag lines: the build to play.
+- B: you have not merged main since 19:20; A-to-B-0009 (figure recipe) is waiting, B-to-A-0019..0027 are answered on main, your 66 `Con_` stanchions should go (A spawns them).
+- running: A39 payoffs, A41 zone trigger + sweep wiring, A42 HUD pass 2, A43 dark-band readability (Fable 5.2). Closed tonight: A3, A30-A34, A37, A38, A40.
+
+- link green 20:43: main 4a6085f (A41 zone trigger, system bundle) pushed.
+
+- RESOURCES 20:44 cpu 33% ram 24.6/63GB gpu 80 %, 8607 MiB, 54 editors 2 cmd 0 ubt 0 free 595GB

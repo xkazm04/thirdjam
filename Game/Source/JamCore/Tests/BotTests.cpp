@@ -33,7 +33,7 @@ namespace JamBotTestsLocal
 	// lane A3: the bots play the cartridge's game.ai.difficulty (every preset is pro) unless Level names another level.
 	JamAI::FJamMatchStats Run(const UJamCartridge& Cart, uint64 Seed, JamAI::EJamPlayerMode Mode, const TCHAR* Level = nullptr)
 	{
-		JamAI::FJamSimAdapter Sim(Cart.Game);
+		JamAI::FJamSimAdapter Sim(Cart);   // lane A41: with the game mode's rule, zone and effect systems
 		return JamAI::RunMatch(Sim, JamAI::ToMatchConfigResolved(Cart, Level), Seed, Mode, MaxFrames, 60);
 	}
 
@@ -152,7 +152,7 @@ bool FJamBotHumanHasSomethingToDo::RunTest(const FString& Parameters)
 		int32 Without = 0, Faceoffs = 0;
 		for (uint64 Seed = 1; Seed <= 20; ++Seed)
 		{
-			JamAI::FJamSimAdapter Sim(Cart->Game);
+			JamAI::FJamSimAdapter Sim(*Cart);
 			const JamAI::FJamPlaytestStats S = JamAI::RunPlaytestMatch(Sim, JamAI::ToMatchConfigResolved(*Cart, TEXT("rookie")), Seed, JamAI::EPlaytester::Novice,
 				MaxFrames, Cart->Game.Shot.ChargeFramesMax);
 			Without += S.FaceoffsWithoutTouch;

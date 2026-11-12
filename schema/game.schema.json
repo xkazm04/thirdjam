@@ -1034,6 +1034,24 @@
           "maximum": 110,
           "description": "Horizontal field of view in degrees."
         },
+        "boards_margin_m": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 5,
+          "description": "The chase camera never crosses the boards' inner face minus this margin, in metres, on any side (corner arcs included)."
+        },
+        "end_height_m": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 15,
+          "description": "Height in metres the chase camera lifts to when the boards take its whole arm; it rises in proportion to the arm lost and looks along the rink at an end board."
+        },
+        "far_net_bias": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "How much of the angle to the far net the framing leads by when the skater heads for it (0 = none, 1 = aim at the net)."
+        },
         "radar": {
           "type": "boolean",
           "description": "Show the mini-rink radar in the HUD."

@@ -24,8 +24,9 @@ test('the committed manifest passes the check; every sound is on disk', () => {
   assert.deepEqual(r.errors, []);
   assert.equal(r.lines, 340);
   assert.ok(r.situations >= 130, `${r.situations} situations`);
-  // The three allowances B's register needs are the only ones.
-  assert.equal(r.infos.length, 3, r.infos.join('; '));
+  // The two allowances B's register needs are the only ones (two stoppage lines over 60 characters; "sudden death" is
+  // hockey vocabulary and allowed by the bark filter since lane A41, so it no longer counts as an allowance).
+  assert.equal(r.infos.length, 2, r.infos.join('; '));
 });
 
 test('the check rejects what the manifest contract forbids', () => {

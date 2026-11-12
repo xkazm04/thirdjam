@@ -1,0 +1,71 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "readability",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-12T19:46:48.751Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "readability",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a43/Game/Saved/Screenshots/WindowsEditor/a43-b2-c2-40m.png",
+          "width": 2560,
+          "height": 1354
+        }
+      ],
+      "distance": 40,
+      "thumbnails": [],
+      "prompt_chars": 2709,
+      "usage": {
+        "prompt": 1921,
+        "output": 325,
+        "thoughts": 0,
+        "total": 2246,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00266,
+      "ms": 11337,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "The puck is not visible near any of the skaters or on the ice surface at this camera distance."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "Neither the mid-ice blue and orange figures nor the distant skaters show possession or proximity to a visible puck."
+              },
+              "team_colours": {
+                "score": 5,
+                "evidence": "The cyan/bright blue and warm orange jerseys are instantly distinguishable against each other and the ice surface."
+              },
+              "far_net": {
+                "score": 5,
+                "evidence": "The bright red goal frame is sharply defined against the white goal crease and dark background at the far end of the rink."
+              },
+              "zone_strips": {
+                "score": 5,
+                "evidence": "The red center line and dark blue zone lines stretch clearly across the rink with high contrast."
+              }
+            },
+            "first_look": "The bright circular spotlight pools across the center of the ice",
+            "noise": [
+              "Bright circular spotlight reflections on the ice",
+              "Glowing neon-blue light strip along the left dasher board"
+            ],
+            "overall": 3
+          }
+        ]
+      },
+      "markdown": "**eyes/readability** A=a43-b2-c2-40m.png at 40 m (gemini-3.8-flash, in 1921 out 325 tokens, ~$0.0027, 11.3 s)\n- stills:\n  - label: Still A; first_look: The bright circular spotlight pools across the center of the ice; overall: 3\n    - elements:\n      - puck: score 1, evidence The puck is not visible near any of the skaters or on the ice surface at this camera distance.\n      - carrier: score 1, evidence Neither the mid-ice blue and orange figures nor the distant skaters show possession or proximity to a visible puck.\n      - team_colours: score 5, evidence The cyan/bright blue and warm orange jerseys are instantly distinguishable against each other and the ice surface.\n      - far_net: score 5, evidence The bright red goal frame is sharply defined against the white goal crease and dark background at the far end of the rink.\n      - zone_strips: score 5, evidence The red center line and dark blue zone lines stretch clearly across the rink with high contrast.\n    - noise: Bright circular spotlight reflections on the ice; Glowing neon-blue light strip along the left dasher board"
+    }
+  ]
+}

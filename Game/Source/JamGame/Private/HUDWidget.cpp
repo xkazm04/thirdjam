@@ -22,7 +22,13 @@
 #include "HokejGameMode.h"
 #include "JamEffectSystem.h"
 #include "JamCartridge.h"
+#include "JamSim.h"
+#include "CommentarySystem.h"
 #include "Progression.h"
+#include "Engine/GameInstance.h"
+#include "Camera/PlayerCameraManager.h"
+
+int32 UJamHudWidget::FaceoffsThisSession = 0;
 
 // Lane A18 (visual layer, R-0013 point 4): the slate kit of FJamUiStyle over lane A5's elements. Logic (markers, frames, feed) is A5's;
 // the effects strip is lane A14's feed drawn as a slot row; the faceoff countdown reads lane A16's FaceoffCountdownFrames when it lands.
@@ -76,12 +82,56 @@ namespace
 		return B;
 	}
 
+	// Lane A42: a chevron (two thin bars meeting at the bottom, a "V" pointing down) in a colour with an ink edge; the caller rotates it
+	// to point another way. Size is the box side in Slate units.
+	UWidget* MakeChevron(UWidgetTree* Tree, const TCHAR* Name, const FLinearColor& Colour, float Size)
+	{
+		USizeBox* Box = Tree->ConstructWidget<USizeBox>(USizeBox::StaticClass(), Name);
+		Box->SetWidthOverride(Size);
+		Box->SetHeightOverride(Size);
+		UOverlay* O = Tree->ConstructWidget<UOverlay>(UOverlay::StaticClass());
+		const float BarW = FMath::Max(3.f, Size * 0.2f), BarH = Size * 0.78f;
+		for (int32 i = 0; i < 2; ++i)
+		{
+			UBorder* Bar = Tree->ConstructWidget<UBorder>(UBorder::StaticClass());
+			Bar->SetBrush(S::Rounded(Colour, BarW * 0.5f, FLinearColor(0, 0, 0, 0.9f), 1.5f));
+			Bar->SetPadding(FMargin(BarW * 0.5f, BarH * 0.5f));
+			Bar->SetRenderTransformPivot(FVector2D(0.5f, 0.5f));
+			// Each bar leans 40 degrees and slides so the two lower ends meet at the bottom centre (half the bar's height times sin 40).
+			Bar->SetRenderTransformAngle(i == 0 ? -40.f : 40.f);
+			Bar->SetRenderTranslation(FVector2D((i == 0 ? -1.f : 1.f) * BarH * 0.5f * 0.643f, 0.f));
+			Bar->SetVisibility(ESlateVisibility::HitTestInvisible);
+			S::AddO(O, Bar, HAlign_Center, VAlign_Center);
+		}
+		Box->AddChild(O);
+		Box->SetRenderTransformPivot(FVector2D(0.5f, 0.5f));
+		Box->SetVisibility(ESlateVisibility::HitTestInvisible);
+		return Box;
+	}
+	// The ground ring (the chalk ring of the kit, tinted; a rounded outline without the art), drawn as the ellipse the caller sizes.
+	UImage* MakeGroundRing(UWidgetTree* Tree, const TCHAR* Name, const FLinearColor& Colour)
+	{
+		UImage* I = Tree->ConstructWidget<UImage>(UImage::StaticClass(), Name);
+		I->SetBrush(S::Ring(64.f));
+		I->SetColorAndOpacity(Colour);
+		I->SetVisibility(ESlateVisibility::Collapsed);
+		return I;
+	}
+
 	// QA previews for the proof shots (jam.ui.faceoff <frames>, jam.ui.effects icon:label,icon:label).
 	FAutoConsoleCommand GPreviewFaceoff(TEXT("jam.ui.faceoff"), TEXT("Preview the faceoff countdown on every HUD: jam.ui.faceoff <frames>"),
 		FConsoleCommandWithArgsDelegate::CreateLambda([](const TArray<FString>& Args)
 		{
 			const int32 Frames = Args.Num() ? FCString::Atoi(*Args[0]) : 90;
 			for (TObjectIterator<UJamHudWidget> It; It; ++It) if (It->GetWorld() && !It->HasAnyFlags(RF_ClassDefaultObject)) It->PreviewFaceoff(Frames);
+		}));
+	// Lane A42: jam.ui.draw won|lost [frames] previews the draw result in the ring (the live one lasts 40 frames: too short for a capture call).
+	FAutoConsoleCommand GPreviewDraw(TEXT("jam.ui.draw"), TEXT("Preview the faceoff draw result on every HUD: jam.ui.draw won|lost [frames]"),
+		FConsoleCommandWithArgsDelegate::CreateLambda([](const TArray<FString>& Args)
+		{
+			const bool bWon = Args.Num() == 0 || Args[0].Equals(TEXT("won"), ESearchCase::IgnoreCase);
+			const int32 Frames = Args.Num() > 1 ? FCString::Atoi(*Args[1]) : UJamHudWidget::DrawResultFrames;
+			for (TObjectIterator<UJamHudWidget> It; It; ++It) if (It->GetWorld() && !It->HasAnyFlags(RF_ClassDefaultObject)) It->PreviewDraw(bWon, Frames);
 		}));
 	FAutoConsoleCommand GPreviewEffects(TEXT("jam.ui.effects"), TEXT("Preview the effect slots on every HUD: jam.ui.effects pickup-speed:speed,pickup-heavy:heavy (empty clears)"),
 		FConsoleCommandWithArgsDelegate::CreateLambda([](const TArray<FString>& Args)
@@ -213,17 +263,40 @@ void UJamHudWidget::BuildTree()
 	EffectsText->SetVisibility(ESlateVisibility::Collapsed);
 	Place(Root, EffectsText, FVector2D(0.5, 0), FVector2D(0.5, 0), FVector2D(0, 158));
 
+	// ---- Lane A42: the rings on the ice go first so every other element draws over them.
+	YouRing = MakeGroundRing(T, TEXT("YouRing"), S::Blue());
+	Place(Root, YouRing, FVector2D(0, 0), FVector2D(0.5, 0.5), FVector2D(0, 0), FVector2D(64, 20));
+	CarrierRing = MakeGroundRing(T, TEXT("CarrierRing"), S::Paper());
+	Place(Root, CarrierRing, FVector2D(0, 0), FVector2D(0.5, 0.5), FVector2D(0, 0), FVector2D(48, 16));
+
 	// ---- Far-net marker: a take-yellow diamond with an ink edge and the distance in outlined type.
 	NetDiamond = MakeDiamond(T, TEXT("NetDiamond"), S::Yellow(), 2.f);
 	Place(Root, NetDiamond, FVector2D(0, 0), FVector2D(0.5, 0.5), FVector2D(0, 0), FVector2D(22, 22));
 	NetText = MakeText(T, TEXT("NetText"), S::LabelFont(true), S::Paper());
 	Place(Root, NetText, FVector2D(0, 0), FVector2D(0.5, 0), FVector2D(0, 0));
+	NetArrow = MakeChevron(T, TEXT("NetArrow"), S::Yellow(), 22.f);
+	NetArrow->SetVisibility(ESlateVisibility::Collapsed);
+	Place(Root, NetArrow, FVector2D(0, 0), FVector2D(0.5, 0.5), FVector2D(0, 0));
 
 	// ---- Own-net marker: smaller and muted, so it never competes with the far-net one.
 	OwnDiamond = MakeDiamond(T, TEXT("OwnDiamond"), S::Muted(), 1.5f);
 	Place(Root, OwnDiamond, FVector2D(0, 0), FVector2D(0.5, 0.5), FVector2D(0, 0), FVector2D(12, 12));
 	OwnText = MakeText(T, TEXT("OwnText"), S::CaptionFont(true), S::Muted());
 	Place(Root, OwnText, FVector2D(0, 0), FVector2D(0.5, 0), FVector2D(0, 0));
+	OwnArrow = MakeChevron(T, TEXT("OwnArrow"), S::Muted(), 16.f);
+	OwnArrow->SetVisibility(ESlateVisibility::Collapsed);
+	Place(Root, OwnArrow, FVector2D(0, 0), FVector2D(0.5, 0.5), FVector2D(0, 0));
+
+	// ---- Lane A42: the chevron over the human's head when the ring has faded (past 24 m), and the YOU tag above it.
+	YouChevron = MakeChevron(T, TEXT("YouChevron"), S::Blue(), 26.f);
+	YouChevron->SetVisibility(ESlateVisibility::Collapsed);
+	Place(Root, YouChevron, FVector2D(0, 0), FVector2D(0.5, 1), FVector2D(0, 0));
+	YouTag = S::Plate(T, S::Rounded(S::Blue(), 8.f, FLinearColor(0, 0, 0, 0.9f), 2.f), FMargin(12, 3, 12, 4));
+	YouTag->SetVisibility(ESlateVisibility::Collapsed);
+	YouTagText = MakeText(T, TEXT("YouTagText"), S::Font(S::Label - 2, FName("Black"), S::TrackLabel, true), S::Paper());
+	YouTagText->SetText(FText::FromString(TEXT("YOU")));
+	YouTag->SetContent(YouTagText);
+	Place(Root, YouTag, FVector2D(0, 0), FVector2D(0.5, 1), FVector2D(0, 0));
 
 	// ---- Controls hint: a bottom strip for the first 10 s, fading out over the last 2 s.
 	ControlsStrip = S::Plate(T, S::Pill(0.72f, 0.f), FMargin(0, 8));
@@ -237,6 +310,17 @@ void UJamHudWidget::BuildTree()
 	StripSlot->SetAnchors(FAnchors(0, 1, 1, 1));
 	StripSlot->SetAlignment(FVector2D(0, 1));
 	StripSlot->SetOffsets(FMargin(0, -96, 0, 44));
+
+	// ---- Lane A42: the commentator's strip, bottom centre, above the controls strip; two lines at most.
+	CommentaryStrip = S::Plate(T, S::Pill(0.82f), FMargin(18, 7));
+	CommentaryStrip->SetVisibility(ESlateVisibility::Collapsed);
+	CommentaryText = MakeText(T, TEXT("CommentaryText"), S::Font(S::Body, FName("Bold")), S::Paper());
+	CommentaryText->SetJustification(ETextJustify::Center);
+	// A fixed wrap width (auto-wrap in an auto-sized slot wraps every word).
+	CommentaryText->SetAutoWrapText(false);
+	CommentaryText->SetWrapTextAt(880.f);
+	CommentaryStrip->SetContent(CommentaryText);
+	Place(Root, CommentaryStrip, FVector2D(0.5, 1), FVector2D(0.5, 1), FVector2D(0, -110));
 
 	// ---- Radar 200 x 100 on a framed panel, bottom-right.
 	Radar = T->ConstructWidget<UJamRadarWidget>(UJamRadarWidget::StaticClass(), TEXT("Radar"));
@@ -261,13 +345,28 @@ void UJamHudWidget::BuildTree()
 	RingArt->SetBrush(S::Ring(220.f));
 	RingArt->SetVisibility(ESlateVisibility::HitTestInvisible);
 	S::AddO(Ring, RingArt, HAlign_Center, VAlign_Center);
-	CountdownText = MakeText(T, TEXT("CountdownText"), S::Font(96, FName("Black"), 0, true), S::Paper());
+	// Lane A42: the digit and the word (HOLD) stack inside the ring; DROP / WON / LOST take the digit's block alone.
+	UVerticalBox* RingStack = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass());
+	CountdownText = MakeText(T, TEXT("CountdownText"), S::Font(72, FName("Black"), 0, true), S::Paper());
 	CountdownText->SetJustification(ETextJustify::Center);
-	S::AddO(Ring, CountdownText, HAlign_Center, VAlign_Center);
+	S::AddV(RingStack, CountdownText, FMargin(0), HAlign_Center);
+	FaceoffWord = MakeText(T, TEXT("FaceoffWord"), S::Font(S::Label, FName("Black"), S::TrackTitle, true), S::Yellow());
+	FaceoffWord->SetJustification(ETextJustify::Center);
+	FaceoffWord->SetVisibility(ESlateVisibility::Collapsed);
+	S::AddV(RingStack, FaceoffWord, FMargin(0, -6, 0, 0), HAlign_Center);
+	S::AddO(Ring, RingStack, HAlign_Center, VAlign_Center);
 	Ring->SetVisibility(ESlateVisibility::Collapsed);
 	CountdownBox = Ring;
 	// Below the TAKE card's slot (0.4): at a match start lane A16's countdown and lane A8's card are up together.
 	Place(Root, Ring, FVector2D(0.5, 0.66), FVector2D(0.5, 0.5), FVector2D(0, 0));
+	// The one-line hint under the ring for the first three faceoffs of a session (R-0013 point 2 in the player's words).
+	FaceoffHintPlate = S::Plate(T, S::Pill(0.78f), FMargin(18, 6));
+	FaceoffHintPlate->SetVisibility(ESlateVisibility::Collapsed);
+	UTextBlock* HintLine = MakeText(T, TEXT("FaceoffHint"), S::Font(S::Body, FName("Bold"), 20), S::Paper());
+	HintLine->SetText(FText::FromString(FaceoffHintText()));
+	HintLine->SetJustification(ETextJustify::Center);
+	FaceoffHintPlate->SetContent(HintLine);
+	Place(Root, FaceoffHintPlate, FVector2D(0.5, 0.66), FVector2D(0.5, 0), FVector2D(0, 124));
 
 	// ---- Win / lose cards on a slate plate with a clapper stripe, and the restart hint under it.
 	CardPlate = S::Plate(T, S::Panel(0.94f), FMargin(0, 0, 0, 18));
@@ -400,31 +499,234 @@ void UJamHudWidget::RefreshFromFrame(const FJamPresentationFrame& F)
 		ControlsStrip->SetRenderOpacity(Left >= FadeFrames ? 1.f : static_cast<float>(Left) / static_cast<float>(FadeFrames));
 	}
 
+	// A restart (R, the pause menu, the season's next match) resets the frame count: the drop and draw memories belong to the old match.
+	if (F.SimFrame < LastSimFrame) { LastDropFrame = -1; DrawResultUntil = -1; }
+	const bool bSimAdvanced = F.SimFrame != LastSimFrame;
+	LastSimFrame = F.SimFrame;
+
 	// Faceoff countdown: the feed's frames (lane A16) or the preview; seconds while counting, DROP for DropFrames at zero.
+	// Lane A42: the preview counts sim frames (it used to count render ticks), so a time-dilation freeze holds it for a capture.
 	int32 Frames = FaceoffFramesOf(F);
-	if (FaceoffPreview > 0) { Frames = FaceoffPreview; --FaceoffPreview; }
-	if (Frames <= 0 && LastFaceoffFrames > 0) DropUntil = F.SimFrame + DropFrames;
+	if (FaceoffPreview > 0) { Frames = FaceoffPreview; if (bSimAdvanced) --FaceoffPreview; }
+	if (DrawPreviewFrames > 0) { if (bSimAdvanced) --DrawPreviewFrames; if (DrawResultUntil < F.SimFrame + 1) { DrawResultUntil = F.SimFrame + 1; } }
+	if (Frames <= 0 && LastFaceoffFrames > 0) { DropUntil = F.SimFrame + DropFrames; if (LastDropFrame < 0 || LastDropFrame > F.SimFrame) LastDropFrame = F.SimFrame; }
 	if (F.SimFrame < LastFaceoffFrames - 1 && Frames <= 0) DropUntil = -1;   // a restart reset the frame count
+	// Count the faceoffs of this session on the countdown's first frame (the hint shows for the first three).
+	if (Frames > 0 && !bCountdownSeen) { ++FaceoffsThisSession; bCountdownSeen = true; }
+	if (Frames <= 0) bCountdownSeen = false;
 	LastFaceoffFrames = Frames;
-	const bool bDrop = Frames <= 0 && DropUntil >= 0 && F.SimFrame < DropUntil && F.Phase == EJamPhase::Play;
+	const bool bResult = DrawResultUntil >= 0 && F.SimFrame < DrawResultUntil && F.Phase == EJamPhase::Play;
+	const bool bDrop = !bResult && Frames <= 0 && DropUntil >= 0 && F.SimFrame < DropUntil && F.Phase == EJamPhase::Play;
 	const bool bCount = Frames > 0 && F.Phase == EJamPhase::Play;
+	const FLinearColor HumanColour = F.Skaters.IsValidIndex(F.HumanIndex) ? F.GetTeamColour(F.Skaters[F.HumanIndex].TeamId) : S::Blue();
 	if (bCount)
 	{
+		// Lane A42: the digit over the word HOLD (R-0013 point 2: an early press loses the draw).
 		CountdownText->SetText(FText::FromString(FString::FromInt(FMath::DivideAndRoundUp(Frames, 60))));
 		CountdownText->SetColorAndOpacity(FSlateColor(S::Paper()));
-		CountdownText->SetFont(S::Font(96, FName("Black"), 0, true));
+		CountdownText->SetFont(S::Font(72, FName("Black"), 0, true));
+		FaceoffWord->SetText(FText::FromString(FaceoffCue(Frames, false)));
+	}
+	else if (bResult)
+	{
+		CountdownText->SetText(FText::FromString(DrawResultText(bLastDrawWon)));
+		CountdownText->SetColorAndOpacity(FSlateColor(HumanColour));
+		CountdownText->SetFont(S::Font(S::Title + 8, FName("Black"), S::TrackTitle, true));
 	}
 	else if (bDrop)
 	{
-		CountdownText->SetText(FText::FromString(TEXT("DROP")));
+		CountdownText->SetText(FText::FromString(FaceoffCue(0, true)));
 		CountdownText->SetColorAndOpacity(FSlateColor(S::Yellow()));
 		CountdownText->SetFont(S::Font(S::Title + 8, FName("Black"), S::TrackTitle, true));
 	}
-	CountdownBox->SetVisibility(bCount || bDrop ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+	FaceoffWord->SetVisibility(bCount ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+	CountdownBox->SetVisibility(bCount || bDrop || bResult ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+	FaceoffHintPlate->SetVisibility(bCount && FaceoffsThisSession <= FaceoffHintCount ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 
 	Radar->SetFrame(F);
 	UpdateMarker(F);
 	UpdateOwnMarker(F);
+	UpdateYours(F);
+	UpdateCommentary(F);
+}
+
+void UJamHudWidget::UpdateCommentary(const FJamPresentationFrame& F)
+{
+	if (!CommentaryStrip || !CommentaryText) return;
+	if (const UJamCommentarySystem* C = UJamCommentarySystem::Get(this))
+	{
+		const FJamCommentaryPick& L = C->GetLastLine();
+		if (!L.Text.IsEmpty() && L.Frame != CommentaryFrame)
+		{
+			CommentaryText->SetText(FText::FromString(L.Text));
+			CommentaryFrame = L.Frame;
+			CommentaryDuration = L.DurationFrames;
+		}
+	}
+	const float Alpha = CommentaryOpacityFor(CommentaryFrame, CommentaryDuration, F.SimFrame);
+	CommentaryStrip->SetRenderOpacity(Alpha);
+	CommentaryStrip->SetVisibility(Alpha > 0.f ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+	if (Alpha > 0.f)
+	{
+		// Clear of the radar frame on the right and the ready pill on the left at every width; above the controls strip while that shows.
+		const FVector2D VS = UWidgetLayoutLibrary::GetViewportSize(this);
+		const float VW = VS.X / FMath::Max(UWidgetLayoutLibrary::GetViewportScale(this), 0.01f);
+		CommentaryText->SetWrapTextAt(FMath::Clamp(VW - 600.f, 560.f, 880.f));
+		if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(CommentaryStrip->Slot)) CS->SetPosition(FVector2D(0, ShowControlsHint(F) ? -150.f : -110.f));
+	}
+}
+
+FString UJamHudWidget::GetCommentaryText() const
+{
+	return CommentaryText && CommentaryStrip && CommentaryStrip->GetVisibility() != ESlateVisibility::Collapsed ? CommentaryText->GetText().ToString() : FString();
+}
+
+void UJamHudWidget::NativeConstruct()
+{
+	Super::NativeConstruct();
+	if (UGameInstance* GI = GetGameInstance()) Bus = GI->GetSubsystem<UJamEventBus>();
+	if (Bus) Bus->OnJamEvent.AddUniqueDynamic(this, &UJamHudWidget::HandleJamEvent);
+}
+
+void UJamHudWidget::NativeDestruct()
+{
+	if (Bus) Bus->OnJamEvent.RemoveDynamic(this, &UJamHudWidget::HandleJamEvent);
+	Bus = nullptr;
+	Super::NativeDestruct();
+}
+
+void UJamHudWidget::HandleJamEvent(FName Event, const FJamEventPayload& Payload)
+{
+	if (Event != JamEvents::Faceoff) return;
+	const UJamPresentation* P = UJamPresentation::Get(this);
+	if (!P || !P->HasFrame()) return;
+	const FJamPresentationFrame& F = P->GetFrame();
+	static const FName KindDrop(TEXT("drop")), KindWon(TEXT("won"));
+	if (Payload.Kind == KindDrop)
+	{
+		LastDropFrame = F.SimFrame;
+	}
+	else if (Payload.Kind == KindWon && F.Skaters.IsValidIndex(Payload.Who) && F.Skaters.IsValidIndex(F.HumanIndex))
+	{
+		// WON when the centre that won skates for the human's team (the human or a teammate), LOST otherwise.
+		bLastDrawWon = F.Skaters[Payload.Who].TeamId == F.Skaters[F.HumanIndex].TeamId;
+		DrawResultUntil = F.SimFrame + DrawResultFrames;
+	}
+}
+
+FString UJamHudWidget::GetFaceoffCue() const
+{
+	if (!CountdownBox || CountdownBox->GetVisibility() == ESlateVisibility::Collapsed) return FString();
+	if (FaceoffWord && FaceoffWord->GetVisibility() != ESlateVisibility::Collapsed) return FaceoffWord->GetText().ToString();
+	return CountdownText ? CountdownText->GetText().ToString() : FString();
+}
+
+bool UJamHudWidget::IsYouTagVisible() const { return YouTag && YouTag->GetVisibility() != ESlateVisibility::Collapsed; }
+
+bool UJamHudWidget::ProjectGroundRing(const FVector2D& PosM, float RadiusM, FVector2D& OutCentre, FVector2D& OutSize, float& OutCameraDistM) const
+{
+	APlayerController* PC = GetOwningPlayer();
+	if (!PC || !PC->PlayerCameraManager) return false;
+	const FVector Foot = UJamSim::ToWorld(PosM, 0.03);
+	const FVector CamLoc = PC->PlayerCameraManager->GetCameraLocation();
+	const FVector Local = FRotationMatrix(PC->PlayerCameraManager->GetCameraRotation()).GetTransposed().TransformVector(Foot - CamLoc);
+	if (Local.X <= 50.f) return false;
+	OutCameraDistM = static_cast<float>(FVector::Dist(Foot, CamLoc) / 100.0);
+	FVector2D Centre;
+	if (!UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(PC, Foot, Centre, false)) return false;
+	// Four points of the circle on the ice give the ellipse's box; the ring art stretches into it.
+	const float R = RadiusM * 100.f;
+	FVector2D Min = Centre, Max = Centre;
+	for (const FVector& Off : { FVector(R, 0, 0), FVector(-R, 0, 0), FVector(0, R, 0), FVector(0, -R, 0) })
+	{
+		FVector2D Sp;
+		if (!UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(PC, Foot + Off, Sp, false)) return false;
+		Min = FVector2D::Min(Min, Sp);
+		Max = FVector2D::Max(Max, Sp);
+	}
+	OutCentre = (Min + Max) * 0.5f;
+	OutSize = FVector2D(FMath::Max(Max.X - Min.X, 8.f), FMath::Max(Max.Y - Min.Y, 4.f));
+	return true;
+}
+
+void UJamHudWidget::UpdateYours(const FJamPresentationFrame& F)
+{
+	if (!YouRing || !CarrierRing || !YouChevron || !YouTag) return;
+	auto Hide = [](UWidget* W) { if (W) W->SetVisibility(ESlateVisibility::Collapsed); };
+	const bool bPlay = F.Phase == EJamPhase::Play || F.Phase == EJamPhase::GoalPause;
+	if (!bPlay || !F.Skaters.IsValidIndex(F.HumanIndex)) { Hide(YouRing); Hide(CarrierRing); Hide(YouChevron); Hide(YouTag); return; }
+	const FJamPresentationSkater& Me = F.Skaters[F.HumanIndex];
+	const FLinearColor Team = F.GetTeamColour(Me.TeamId);
+	APlayerController* PC = GetOwningPlayer();
+
+	// The ring under the human: team colour, 1.1 m; from 20 m it fades and the chevron over the head takes over (24 m: ring gone).
+	FVector2D Centre, Size;
+	float DistM = 0.f;
+	const bool bOn = ProjectGroundRing(Me.PosM, YouRingRadiusM, Centre, Size, DistM);
+	const float RingAlpha = bOn ? RingAlphaAt(DistM) : 0.f;
+	if (RingAlpha > 0.f)
+	{
+		YouRing->SetColorAndOpacity(FLinearColor(Team.R, Team.G, Team.B, RingAlpha));
+		YouRing->SetVisibility(ESlateVisibility::HitTestInvisible);
+		if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(YouRing->Slot)) { CS->SetPosition(Centre); CS->SetSize(Size); }
+	}
+	else Hide(YouRing);
+
+	// Over the head: the chevron (team colour) past the fade, the YOU tag the first 5 s and 2 s after every drop.
+	FVector2D Head;
+	// Just over the helmet (the toy figure's head socket is at 1.65 m; the bark bubbles sit higher, at 2.35 m, so the two never meet).
+	const bool bHead = bOn && PC && UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(PC, UJamSim::ToWorld(Me.PosM, 1.9), Head, false);
+	const float ChevronAlpha = 1.f - RingAlpha;
+	if (bHead && ChevronAlpha > 0.f)
+	{
+		YouChevron->SetRenderOpacity(ChevronAlpha);
+		YouChevron->SetVisibility(ESlateVisibility::HitTestInvisible);
+		if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(YouChevron->Slot)) CS->SetPosition(Head + FVector2D(0, -6));
+		// Two bars in the team colour (the maker built them blue; retint every frame costs nothing measurable).
+		if (USizeBox* Box = Cast<USizeBox>(YouChevron)) if (UOverlay* O = Box->GetChildAt(0) ? Cast<UOverlay>(Box->GetChildAt(0)) : nullptr)
+			for (int32 i = 0; i < O->GetChildrenCount(); ++i) if (UBorder* Bar = Cast<UBorder>(O->GetChildAt(i))) Bar->SetBrush(S::Rounded(Team, 2.5f, FLinearColor(0, 0, 0, 0.9f), 1.5f));
+	}
+	else Hide(YouChevron);
+	if (bHead && ShowYouTag(F.SimFrame, LastDropFrame))
+	{
+		YouTag->SetBrush(S::Rounded(Team, 8.f, FLinearColor(0, 0, 0, 0.9f), 2.f));
+		YouTag->SetVisibility(ESlateVisibility::HitTestInvisible);
+		if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(YouTag->Slot)) CS->SetPosition(Head + FVector2D(0, ChevronAlpha > 0.f ? -34.f : -8.f));
+	}
+	else Hide(YouTag);
+
+	// The puck carrier, when it is not you: a thin white ring (the sim's carrier when the game mode has one, else the skater on the puck).
+	int32 Carrier = -1;
+	const AHokejGameMode* GM = GetWorld() ? GetWorld()->GetAuthGameMode<AHokejGameMode>() : nullptr;
+	if (GM && GM->GetSim()) Carrier = GM->GetSim()->CarrierIndex();
+	else
+	{
+		float Best = 1.2f;
+		for (int32 i = 0; i < F.Skaters.Num(); ++i) { const float D = FVector2D::Distance(F.Skaters[i].PosM, F.PuckM); if (D < Best) { Best = D; Carrier = i; } }
+	}
+	if (Carrier >= 0 && Carrier != F.HumanIndex && F.Skaters.IsValidIndex(Carrier) && ProjectGroundRing(F.Skaters[Carrier].PosM, CarrierRingRadiusM, Centre, Size, DistM))
+	{
+		CarrierRing->SetColorAndOpacity(FLinearColor(S::Paper().R, S::Paper().G, S::Paper().B, 0.9f));
+		CarrierRing->SetVisibility(ESlateVisibility::HitTestInvisible);
+		if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(CarrierRing->Slot)) { CS->SetPosition(Centre); CS->SetSize(Size); }
+	}
+	else Hide(CarrierRing);
+}
+
+void UJamHudWidget::PlaceMarkerArrow(UWidget* Arrow, const FVector2D& Raw, const FVector2D& Clamped, bool bBehind, float VW)
+{
+	if (!Arrow) return;
+	const FVector2D D = Raw - Clamped;
+	const bool bClamped = bBehind || !D.IsNearlyZero(0.5f);
+	if (!bClamped) { Arrow->SetVisibility(ESlateVisibility::Collapsed); return; }
+	// The chevron is built pointing down; -90 turns it right, 90 left, 180 up. Side edges win over the top (the net is beside us, not above).
+	float Angle = 0.f;
+	FVector2D Off(0, 22);
+	if (bBehind || FMath::Abs(D.X) >= FMath::Abs(D.Y)) { const bool bRight = bBehind ? Clamped.X > VW * 0.5f : D.X > 0; Angle = bRight ? -90.f : 90.f; Off = FVector2D(bRight ? 22 : -22, 0); }
+	else if (D.Y < 0) { Angle = 180.f; Off = FVector2D(0, -22); }
+	Arrow->SetRenderTransformAngle(Angle);
+	Arrow->SetVisibility(ESlateVisibility::HitTestInvisible);
+	if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(Arrow->Slot)) CS->SetPosition(Clamped + Off);
 }
 
 void UJamHudWidget::UpdateMarker(const FJamPresentationFrame& F)
@@ -465,8 +767,9 @@ void UJamHudWidget::UpdateMarker(const FJamPresentationFrame& F)
 	{
 		Sp = FVector2D(VW * 0.5f, VH * 0.5f);
 	}
-	// 60 px side margins keep the distance text on screen; the top margin keeps the marker below the scoreboard.
-	Marker.ScreenPos = FVector2D(FMath::Clamp(Sp.X, 60.0, VW - 60.0), FMath::Clamp(Sp.Y, 150.0, VH - 50.0));
+	// Lane A42: MarkerEdgePx inside every edge plus the arrow's room on the sides; the top margin keeps the marker below the scoreboard,
+	// the bottom one above the strips (the distance text hangs 18 + 30 px under the diamond).
+	Marker.ScreenPos = ClampMarker(Sp, VW, VH, 44.f, 150.f, 64.f);
 
 	if (UCanvasPanelSlot* DS = Cast<UCanvasPanelSlot>(NetDiamond->Slot))
 	{
@@ -477,6 +780,7 @@ void UJamHudWidget::UpdateMarker(const FJamPresentationFrame& F)
 	{
 		TS->SetPosition(Marker.ScreenPos + FVector2D(0, 18));
 	}
+	PlaceMarkerArrow(NetArrow, Sp, Marker.ScreenPos, bBehind, VW);
 }
 
 FString UJamHudWidget::GetCardText() const { return CardTextBlock ? CardTextBlock->GetText().ToString() : FString(); }
@@ -511,8 +815,11 @@ void UJamHudWidget::UpdateOwnMarker(const FJamPresentationFrame& F)
 		}
 	}
 	OwnMarker.bOnScreen = !bBehind && Sp.X >= 0 && Sp.X <= VW && Sp.Y >= 0 && Sp.Y <= VH;
-	OwnMarker.ScreenPos = FVector2D(FMath::Clamp(Sp.X, 60.0, VW - 60.0), FMath::Clamp(Sp.Y, 150.0, VH - 50.0));
+	// Lane A42: the own-net marker was flush on the screen edge (eyes pass); it stays MarkerEdgePx inside with an arrow towards the net.
+	// The bottom room (56) keeps its caption above the ready pill (bottom-left, 40 px tall at the 24 px edge).
+	OwnMarker.ScreenPos = ClampMarker(Sp, VW, VH, 40.f, 150.f, 56.f);
 	if (UCanvasPanelSlot* DS = Cast<UCanvasPanelSlot>(OwnDiamond->Slot)) { DS->SetPosition(OwnMarker.ScreenPos); }
 	OwnText->SetText(FText::FromString(OwnMarker.Text));
 	if (UCanvasPanelSlot* TS = Cast<UCanvasPanelSlot>(OwnText->Slot)) { TS->SetPosition(OwnMarker.ScreenPos + FVector2D(0, 10)); }
+	PlaceMarkerArrow(OwnArrow, Sp, OwnMarker.ScreenPos, bBehind, VW);
 }

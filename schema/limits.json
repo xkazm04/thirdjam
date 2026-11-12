@@ -119,6 +119,9 @@
     "camera.height_m": "1..15",
     "camera.look_ahead_m": "0..20",
     "camera.lag_frames": "0..30",
-    "camera.fov_deg": "40..110"
+    "camera.fov_deg": "40..110",
+    "camera.boards_margin_m": "0..5",
+    "camera.end_height_m": "1..15",
+    "camera.far_net_bias": "0..1"
   }
 }

@@ -1119,6 +1119,9 @@ namespace
 		ReadInteger(Cam, TEXT("lag_frames"), C.Camera.LagFrames);
 		ReadNumber(Cam, TEXT("fov_deg"), C.Camera.FovDeg);
 		ReadBool(Cam, TEXT("radar"), C.Camera.bRadar);
+		ReadNumber(Cam, TEXT("boards_margin_m"), C.Camera.BoardsMarginM);
+		ReadNumber(Cam, TEXT("end_height_m"), C.Camera.EndHeightM);
+		ReadNumber(Cam, TEXT("far_net_bias"), C.Camera.FarNetBias);
 	}
 
 	// schema/README.md "Tunables": a tunable named after a game field dials that field.
