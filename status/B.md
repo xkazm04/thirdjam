@@ -181,3 +181,27 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - packaged build age: none yet on B
 - packaged size: none yet
 - ledger: 6 `MI_Dress_*` rows; `LR_L2_Night` row now 0.6 MB
+
+## H5.3 Effects and audio in; first skater path proven; Rodin route proven
+
+- done since H5.1 (all pushed, `dev-b` at the commit after `cf5e937`; ownership and assets gates PASS, 61 ledger rows, audio 2 MB, vfx/other 4.1 MB):
+  - **B3 merged** (`status/B3-report.md`): `SM_PuckDisc`, `NS_puck_trail`; `NS_`/`MS_` for all eleven events including `directors_call`; `MS_skate_loop`,
+    `MS_arena_room`; sound classes and a mix. MetaSound graphs and Niagara stacks were built entirely through MCP (the calls are in the report). Nobody has
+    listened to the sounds yet: they are checked by recorded level and length only. Handoff **B-to-A-0007** tells A's binder and puck what to set.
+  - **B5 phase 1** (`lane/b-skater`, not merged): the whole import path for a generated skater works: mesh, 29-bone skeleton (importer adds a root),
+    clips, hue-key team-colour material, `ABP_SkaterTB2`, `BP_SkaterVisual_TB2` answering all eight interface calls, PIE stills. Figure 1 itself is test
+    only (numbers and marks on its texture). The promotion gate could not run: nothing on `main` reads `game.skater.visual` yet.
+  - **Skater lab**: S1 three more Meshy styles (pick: big-head mascot; orange refine has different UVs, so team colour is a hue-key in the material);
+    S2 clips for nine needs (generated strides do not loop: 53 to 85 degrees seam, 1.8 to 6 m drift; wrist shot and check unusable; a Blender script now
+    strips, trims and loops); S3 **mesh in Hyper3D Rodin, rig in Meshy works** (0.5 Rodin credit, same 28 bones; the lead's first pick) plus seven Rodin set
+    props for dressing pass 2 (`briefs/B2b-props-rodin.md`).
+- lanes now: B5 phase 2 (the Rodin skater through the proven path, editor 8002, box 13:15); S2 follow-up (engine-ready clip sets for the Rodin skater and
+  the mascot, 12:15); S4 scripted original skater (13:15); V1 visual-upgrade plan (12:45); B2b prop pass starts on port 8000 when the main tree has rebuilt.
+- credits: Meshy balance 860 at 11:07 (1204 at the start; the lab's caps total 375); Rodin 415 of 421.
+- next: merge `lane/b-skater` when phase 2 reports; verify the look on A's rink in `Rink` (handoff 0005 acceptance) and do the lighting pass; first package on B.
+- blocked: none. Operator: Hyper3D licence wording for shipping Rodin output, and the prize criteria.
+- lfs size: about 7 MB from B
+- engine build: 5.9.0 CL 60351404
+- packaged build age: none yet on B (A's Shipping baseline: 322.5 MB zip)
+- packaged size: none yet on B
+- ledger: 30 rows from lane B3
