@@ -231,3 +231,41 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - packaged build age: none yet on B
 - packaged size: none yet on B
 - ledger: reconciled with disk at `3291d19` (T-B2 rows replaced by the hybrid's, T-B1 rows `shipped` n until the ruling)
+
+## H7.7 GPU hang answered; rig re-laid for 90 x 45; phase 2 lane plan (answers A-to-B-0006)
+
+- B's miss: `handoff/A-to-B-0001..0006` and R-0006..R-0013 went unread on B from 11:10 to 13:00 (B read only the answers to its own handoffs). B now reads open
+  `A-to-B` files, the tail of `contracts/RULINGS.md` and `status/A.md` after every fetch.
+- done since H6.6 (pushed, `dev-b` at `4c415cc`; ownership and ledger gates PASS, 143 rows, art 17.4 MB, audio 1.8 MB):
+  - **A-to-B-0003 (GPU hang): answered, status done on B's side.** One editor, 7 PIE runs, 11.5 minutes, four mid-PIE rig reloads: no hang before or after. Hardened:
+    no dressing or room piece casts a shadow, spot attenuation 40 -> 30 m, shadow resolution scale 0.5, ray-traced shadows off per light. `ShadowDepths` 1.09 -> 0.84 ms,
+    VSM pool never above 180 of 4096 pages. **First single-editor numbers on B: GPU 11.5 to 12.1 ms median, 13.1 to 13.4 ms p99 on `l2_night` (device B numbers);
+    Lumen GI is the large cost, not shadows.** The one-editor check on A's 4090 is A's (commands in the handoff's Response).
+  - **Pools re-laid for the default 90 x 45 rink** (R-0010): spots at x = +-11.25, +-33.75 m, 24 m pools touching, centre brightness unchanged (218 of 255).
+    The 120 and 140 m cuts now have unlit ends: handoff **B-to-A-0011** asks the look switch to scale the rig by `length_m / 90`.
+  - Stage light and hero prop groups (B2c); plan test 2 passed for backdrop flats, haze and faded light shafts (not applied yet; operator veto until 21:00).
+  - Both skater visuals played full bot matches in the real game through `game.skater.visual` (B6s): the hybrid (T-B2: Rodin mesh, our scripted clips) and the
+    scripted original (T-B1). Clips: `C:\Users\kazda\jam\skater-lab\match\`.
+  - Audio lab (ElevenLabs, outside the repo): director's voice in two stock voices, five designed commentator voices, 13 effects in two takes, two music tracks;
+    listening page for the operator's triage; nothing imported yet. `status/B-audio-au1.md`.
+  - Answered: A-to-B-0001 (done: seven Rodin props and the T-B2 mesh ship), 0002 (accepted), 0005 (needs the operator's voice). Opened: B-to-A-0010 (clean-checkout
+    build break; since fixed on `main`), 0011 (rig scale). B's first package attempt hung in UBT at a compile step after 16 minutes and was stopped: still unproven on ARM64.
+- **Phase 2 lane plan (two editors by the operator's decision; R-0005 allows three):**
+
+  | When | Editor 1 (main tree, port 8000) | Editor 2 (worktree, port 8002) | No editor |
+  |---|---|---|---|
+  | now to 15:15 | B8: A-to-B-0004 import rules on every texture + a re-runnable script; skater tweaks (lean by speed, orange in the dark bands, puck socket) | B3b: `NS_`/`MS_` for the new events (`poke`, `lift`, `foul`, faceoff kinds, `pass`, `effect_*`, `zone_*`, `announce`, `bark`, `signal`) | P3 clay brief; Codex batch 1 prompts (backdrop flats, crests, pickup glyphs) |
+  | 15:15 to 18:00 | P2 polish: dressing moved in for 90 x 45 (after A answers 0011), backdrop flats + haze + shafts applied, truss over the new pools; audio import after the operator's picks | **P3 clay, pass 1**: `M_Clay` family, `LR_P3_Clay` rig (warm key, soft shadow, depth-of-field band), toy figure and both humanoids in clay instances | Codex batch 1 generated and triaged; first package of the plugin on B (retry, alone) |
+  | 18:00 to 24:00 | zone strips and pickup looks when A15 asks; `LR_L1_Day` as a switch | P3 pass 2 and its readability tests (puck at 10/24/40 m, team colours, far net) | commentary lines if the operator picks a voice; music loop edit |
+  | overnight | soak and frame tables per tier with ONE editor; stills for the dev log | P3 complete by H36 (Fri 18:00) as A-to-B-0006 asks; `LR_L3_Neon` as a poster tier only if P3 is on time | |
+
+  Builders: two editor lanes plus up to three without an editor. P4 (broadcast) is not started: its humanoids already exist (T-B1, T-B2) and play in the real game,
+  so P4's remaining cost is stands, glass and rig lights; B will not touch it before P3 ships. When `LR_P3_Clay` exists B says so here and asks A for the tier value `p3_clay`.
+- blocked: nothing. Waiting on A: 0007 (binder parameters, puck kit), 0008 (T-B1 ruling, puck at `puck_socket`), 0009 (five look defects on A's side), 0011 (rig scale).
+  Waiting on the operator: audio triage (`C:\Users\kazda\jam\audio-lab\listen.html`); the microphone test for A-to-B-0005; Hyper3D and ElevenLabs-music licence wording;
+  veto on the atmosphere pass by 21:00.
+- lfs size: about 35 MB from B
+- engine build: 5.9.0 CL 60351404
+- packaged build age: none on B (A's H7 Shipping zip: 247.5 MB)
+- packaged size: none on B
+- ledger: 143 rows, sizes from disk
