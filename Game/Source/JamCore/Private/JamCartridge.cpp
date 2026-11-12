@@ -1013,6 +1013,13 @@ namespace
 			ReadNumber(Ba, TEXT("speed_bonus"), C.Skater.BreakawaySpeedBonus);
 			ReadInteger(Ba, TEXT("frames"), C.Skater.BreakawayFrames);
 		}
+		// Lane A49: game.skater.sprint { bonus, drain_frames, refill_frames }
+		if (const FJPtr Sp = Obj(Sk, TEXT("sprint")))
+		{
+			ReadNumber(Sp, TEXT("bonus"), C.Skater.SprintBonus);
+			ReadInteger(Sp, TEXT("drain_frames"), C.Skater.SprintDrainFrames);
+			ReadInteger(Sp, TEXT("refill_frames"), C.Skater.SprintRefillFrames);
+		}
 
 		const FJPtr St = G->Get(TEXT("stick"));
 		ReadNumber(St, TEXT("reach_m"), C.Stick.ReachM);
@@ -1020,6 +1027,7 @@ namespace
 		ReadNumber(St, TEXT("lift_range_m"), C.Stick.LiftRangeM);
 		ReadInteger(St, TEXT("stumble_frames"), C.Stick.StumbleFrames);
 		ReadInteger(St, TEXT("foul_grace_frames"), C.Stick.FoulGraceFrames);
+		ReadNumber(St, TEXT("reception_m"), C.Stick.ReceptionM);   // lane A46
 		ReadNumber(St, TEXT("mouse_sensitivity"), C.Stick.MouseSensitivity);
 		// R-0029 point 4 (lane A39): game.stick.deke { offset_m, commit_frames }
 		if (const FJPtr Dk = Obj(St, TEXT("deke")))

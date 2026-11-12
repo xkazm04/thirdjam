@@ -219,10 +219,25 @@ bool FJamInputMapTest::RunTest(const FString&)
 	}
 	TestTrue(TEXT("W moves"), M->IsKeyMapped(M->Move, EKeys::W));
 	TestTrue(TEXT("left stick moves"), M->IsKeyMapped(M->Move, EKeys::Gamepad_Left2D));
-	TestTrue(TEXT("space shoots"), M->IsKeyMapped(M->Shoot, EKeys::SpaceBar));
-	TestTrue(TEXT("pad A shoots"), M->IsKeyMapped(M->Shoot, EKeys::Gamepad_FaceButton_Bottom));
-	TestTrue(TEXT("shift checks"), M->IsKeyMapped(M->Check, EKeys::LeftShift));
-	TestTrue(TEXT("pad B checks"), M->IsKeyMapped(M->Check, EKeys::Gamepad_FaceButton_Right));
+	// Lane A49: the operator's mapping (CONTROLS.md).
+	TestTrue(TEXT("left mouse shoots"), M->IsKeyMapped(M->Shoot, EKeys::LeftMouseButton));
+	TestTrue(TEXT("RT shoots"), M->IsKeyMapped(M->Shoot, EKeys::Gamepad_RightTriggerAxis));
+	TestFalse(TEXT("space no longer shoots"), M->IsKeyMapped(M->Shoot, EKeys::SpaceBar));
+	TestTrue(TEXT("right mouse checks"), M->IsKeyMapped(M->Check, EKeys::RightMouseButton));
+	TestTrue(TEXT("RB checks"), M->IsKeyMapped(M->Check, EKeys::Gamepad_RightShoulder));
+	TestFalse(TEXT("shift no longer checks"), M->IsKeyMapped(M->Check, EKeys::LeftShift));
+	TestTrue(TEXT("shift sprints"), M->IsKeyMapped(M->Sprint, EKeys::LeftShift));
+	TestTrue(TEXT("LT sprints"), M->IsKeyMapped(M->Sprint, EKeys::Gamepad_LeftTriggerAxis));
+	TestTrue(TEXT("middle mouse lifts"), M->IsKeyMapped(M->Lift, EKeys::MiddleMouseButton));
+	TestTrue(TEXT("mouse 4 lifts"), M->IsKeyMapped(M->Lift, EKeys::ThumbMouseButton));
+	TestTrue(TEXT("LB lifts"), M->IsKeyMapped(M->Lift, EKeys::Gamepad_LeftShoulder));
+	TestTrue(TEXT("space pokes"), M->IsKeyMapped(M->Poke, EKeys::SpaceBar));
+	TestTrue(TEXT("pad A pokes"), M->IsKeyMapped(M->Poke, EKeys::Gamepad_FaceButton_Bottom));
+	TestTrue(TEXT("wheel dekes"), M->IsKeyMapped(M->Deke, EKeys::MouseScrollUp) && M->IsKeyMapped(M->Deke, EKeys::MouseScrollDown));
+	TestTrue(TEXT("Q dekes"), M->IsKeyMapped(M->Deke, EKeys::Q));
+	TestTrue(TEXT("E passes"), M->IsKeyMapped(M->Pass, EKeys::E));
+	TestTrue(TEXT("mouse aims"), M->IsKeyMapped(M->StickMouse, EKeys::Mouse2D));
+	TestTrue(TEXT("right stick aims"), M->IsKeyMapped(M->StickAim, EKeys::Gamepad_Right2D));
 	TestTrue(TEXT("R restarts"), M->IsKeyMapped(M->Restart, EKeys::R));
 	TestTrue(TEXT("Esc pauses"), M->IsKeyMapped(M->Pause, EKeys::Escape));
 	return true;
@@ -395,7 +410,7 @@ bool FJamCameraBoardsClamp::RunTest(const FString&)
 					AddError(FString::Printf(TEXT("camera outside the boards at spot (%.1f, %.1f) yaw %.0f frame %d: (%.2f, %.2f)"), Spot.X, Spot.Y, Yaw, F, P.X, P.Y));
 				}
 				const float Z = T.GetLocation().Z / 100.f;
-				if (!(Z >= C.HeightM - Eps && Z <= C.EndHeightM + Eps)) { AddError(FString::Printf(TEXT("height %.2f outside [height_m, end_height_m]"), Z)); }
+				if (!(Z >= C.HeightM - Eps && Z <= FMath::Max(C.EndHeightM, C.HeightM) + Eps)) { AddError(FString::Printf(TEXT("height %.2f outside [height_m, max(height_m, end_height_m)]"), Z)); }
 				if (State.LastClampS > 0.01f) { ++Clamped; }
 			}
 		}
@@ -448,6 +463,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamCameraEndBoards, "Jam.Camera.EndBoardsLift"
 bool FJamCameraEndBoards::RunTest(const FString&)
 {
 	FJamCameraSettings C;
+	C.EndHeightM = 5.f;   // A40's lift mechanism under test with A40's value (the A49 default of 3 m lifts nothing: the budget keeps the human framed instead)
 	// The skater 1.2 m from his own end board (x = -45), skating away from it (yaw 35 degrees off the rink axis), attacking +X: the far net is at (41, 0, 3).
 	const FJamPresentationFrame Fr = JamA40Test::Frame(90, 45, 3.75f, FVector2D(-43.8, 3.0), 35.f);
 	FJamCameraFilter State;
@@ -461,12 +477,18 @@ bool FJamCameraEndBoards::RunTest(const FString&)
 		if (F > 30 && !(JamA5Test::Project(T, C.FovDeg, Fr.GetFarNetWorldCm(), Px) && Px.X >= 0 && Px.X <= 1920 && Px.Y >= 0 && Px.Y <= 1080)) { bNetAlways = false; }
 	}
 	const float Z = T.GetLocation().Z / 100.f;
-	TestTrue(*FString::Printf(TEXT("lifted toward end_height_m (%.2f m; 4.5 m of the 6 m arm displaced)"), Z), Z > 4.4f && Z <= C.EndHeightM + 1e-3f);
-	TestTrue(*FString::Printf(TEXT("looks along the rink (yaw %.1f, skater 35)"), T.Rotator().Yaw), FMath::Abs(T.Rotator().Yaw) < 12.f);
-	TestTrue(TEXT("the far net stays in frame from frame 30 on"), bNetAlways);
+	// A40 measured 4.5 m of the 6 m arm displaced; with A49's bounded yaw target the boards take a little less of the arm (3.98 m): still a lift above the rig.
+	TestTrue(*FString::Printf(TEXT("lifted toward end_height_m (%.2f m; above the 3.5 m rig, at most end_height_m)"), Z), Z > 3.8f && Z <= C.EndHeightM + 1e-3f);
+	AddInfo(FString::Printf(TEXT("end board yaw %.1f (skater 35; A40 looked along the rink, A49 keeps the human in the middle third)"), T.Rotator().Yaw));
+	{
+		const FVector2D Fh = UJamFollowCamera::FrameFraction(T, C.FovDeg, 16.f / 9.f, FVector(-43.8 * 100.0, 3.0 * 100.0, C.ChestM * 100.0));
+		TestTrue(*FString::Printf(TEXT("end board: the human in the middle third (x %.3f, y %.3f)"), Fh.X, Fh.Y), FMath::Abs(Fh.X) <= 1.f / 3.f && FMath::Abs(Fh.Y) <= 1.f / 3.f);
+	}
+	// A49: the end-board rule now works inside the middle-third budget; the far net may leave the frame, the human may not (Jam.Camera.MiddleThird).
+	AddInfo(FString::Printf(TEXT("far net in frame from frame 30 on: %s (informational since A49)"), bNetAlways ? TEXT("yes") : TEXT("no")));
 	FVector2D Px;
 	TestTrue(TEXT("far net projects"), JamA5Test::Project(T, C.FovDeg, Fr.GetFarNetWorldCm(), Px));
-	TestTrue(*FString::Printf(TEXT("far net inside 1920x1080 (%.0f, %.0f)"), Px.X, Px.Y), Px.X >= 0 && Px.X <= 1920 && Px.Y >= 0 && Px.Y <= 1080);
+	AddInfo(FString::Printf(TEXT("far net at (%.0f, %.0f) of 1920x1080 (informational since A49)"), Px.X, Px.Y));
 
 	// At a side board (far from the ends) the yaw stays the skater's: the along-the-rink rule is an end-board rule (far-net bias off to isolate it).
 	FJamCameraSettings NoBias = C;
@@ -479,7 +501,11 @@ bool FJamCameraEndBoards::RunTest(const FString&)
 	FTransform Tc;
 	for (int32 F = 0; F < 150; ++F) { Tc = UJamFollowCamera::StepThirdPerson(NoBias, Cross, JamA40Test::Frame(90, 45, 3.75f, FVector2D(-43.8, 5.0), -90.f)); }
 	TestTrue(*FString::Printf(TEXT("crossing the end zone: yaw stays near -90 (%.1f)"), Tc.Rotator().Yaw), FMath::Abs(FMath::UnwindDegrees(Tc.Rotator().Yaw + 90.f)) < 5.f);
-	TestTrue(*FString::Printf(TEXT("side board: yaw stays near the skater's -60 (%.1f)"), Ts.Rotator().Yaw), FMath::Abs(FMath::UnwindDegrees(Ts.Rotator().Yaw + 60.f)) < 8.f);
+	AddInfo(FString::Printf(TEXT("side board: yaw %.1f (skater -60; informational since A49, the human's framing rules)"), Ts.Rotator().Yaw));
+	{
+		const FVector2D Fs = UJamFollowCamera::FrameFraction(Ts, NoBias.FovDeg, 16.f / 9.f, FVector(0.0, 21.3 * 100.0, NoBias.ChestM * 100.0));
+		TestTrue(*FString::Printf(TEXT("side board: the human in the middle third (x %.3f, y %.3f)"), Fs.X, Fs.Y), FMath::Abs(Fs.X) <= 1.f / 3.f && FMath::Abs(Fs.Y) <= 1.f / 3.f);
+	}
 	TestTrue(TEXT("side board: inside"), Ts.GetLocation().Y <= 2170.0 + 0.1);
 	TestTrue(*FString::Printf(TEXT("side board: rose above the rig height (%.2f)"), Ts.GetLocation().Z / 100.f), Ts.GetLocation().Z > 360.0);
 	return true;
@@ -492,7 +518,7 @@ bool FJamCameraFarNetBias::RunTest(const FString&)
 	FJamCameraSettings C;
 	const FVector2D Net(41.0, 0.0);
 	const float Lead = UJamFollowCamera::FarNetLeadDeg(C, FVector2D(17, -12), 0.f, Net);
-	TestEqual(TEXT("lead = bias * toward * band * delta"), Lead, 0.5f * FMath::Cos(FMath::DegreesToRadians(26.565f)) * 26.565f, 0.05f);
+	TestEqual(TEXT("lead = bias * toward * band * delta"), Lead, C.FarNetBias * FMath::Cos(FMath::DegreesToRadians(26.565f)) * 26.565f, 0.05f);
 	TestEqual(TEXT("no lead when skating away"), UJamFollowCamera::FarNetLeadDeg(C, FVector2D(17, -12), 180.f, Net), 0.f);
 	TestEqual(TEXT("no lead inside the near band"), UJamFollowCamera::FarNetLeadDeg(C, FVector2D(36, -3), 0.f, Net), 0.f);
 	FJamCameraSettings Zero = C;
@@ -536,7 +562,56 @@ bool FJamHudRules::RunTest(const FString&)
 	TestTrue(TEXT("call after a goal"), UJamHudWidget::ShowDirectorsCall(F));
 	UJamInputMap* M = UJamInputMap::Get();
 	TestTrue(TEXT("ctrl brakes"), M->IsKeyMapped(M->Brake, EKeys::LeftControl));
-	TestTrue(TEXT("left trigger brakes"), M->IsKeyMapped(M->Brake, EKeys::Gamepad_LeftTriggerAxis));
+	TestTrue(TEXT("pad B brakes (A49: the left trigger sprints)"), M->IsKeyMapped(M->Brake, EKeys::Gamepad_FaceButton_Right));
+	return true;
+}
+
+// ---- lane A49: the human never leaves the frame's middle third (the lead, the end boards, a corner), pure StepThirdPerson + FrameFraction.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamCameraMiddleThird, "Jam.Camera.MiddleThird", EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+bool FJamCameraMiddleThird::RunTest(const FString&)
+{
+	FJamCameraSettings C;
+	FJamCameraFilter State;
+	int32 Frames = 0, Outside = 0;
+	float MaxX = 0.f, MaxY = 0.f;
+	auto Run = [&](FVector2D Pos, const FVector2D& VelMs, float YawDeg, int32 N)
+	{
+		for (int32 i = 0; i < N; ++i)
+		{
+			Pos += VelMs / 60.0;
+			const FJamPresentationFrame F = JamA40Test::Frame(120.f, 60.f, 8.5f, Pos, YawDeg);
+			const FTransform T = UJamFollowCamera::StepThirdPerson(C, State, F);
+			const FVector2D Fr = UJamFollowCamera::FrameFraction(T, C.FovDeg, 16.f / 9.f, FVector(Pos.X * 100.0, Pos.Y * 100.0, C.ChestM * 100.0));
+			++Frames;
+			MaxX = FMath::Max(MaxX, FMath::Abs((float)Fr.X));
+			MaxY = FMath::Max(MaxY, FMath::Abs((float)Fr.Y));
+			if (FMath::Abs(Fr.X) > 1.f / 3.f || FMath::Abs(Fr.Y) > 1.f / 3.f) ++Outside;
+		}
+	};
+	// Paths a skater can take (inside the boards and the 8.5 m corner arcs): across the slot toward the far net, into the end boards, along them, out of a corner.
+	Run(FVector2D(10, -20), FVector2D(0, 8), 90.f, 300);     // crossing the slot sideways, 30 m from the far net: the lead wants to turn toward it
+	Run(FVector2D(30, 4), FVector2D(8, 0), 0.f, 200);        // straight into the end boards (stops 0.7 m short of the glass)
+	Run(FVector2D(55, -18), FVector2D(0, 8), 90.f, 270);     // along the end boards from arc to arc
+	Run(FVector2D(48, 24), FVector2D(-8, 0), 180.f, 150);    // out of the corner, back up the rink
+	// The same with the old defaults (lead 0.5, lift 5 m): the budget must hold there too.
+	FJamCameraSettings Old = C;
+	Old.FarNetBias = 0.5f;
+	Old.EndHeightM = 5.f;
+	FJamCameraSettings Keep = C;
+	C = Old;
+	State = FJamCameraFilter();
+	Run(FVector2D(10, -20), FVector2D(0, 8), 90.f, 300);
+	Run(FVector2D(30, 4), FVector2D(8, 0), 0.f, 200);
+	Run(FVector2D(55, -18), FVector2D(0, 8), 90.f, 270);
+	C = Keep;
+	TestEqual(TEXT("frames with the chest outside the middle third"), Outside, 0);
+	AddInfo(FString::Printf(TEXT("%d frames; max |x| %.3f, max |y| %.3f (edge 0.333)"), Frames, MaxX, MaxY));
+	// Open ice: the F1 rig is untouched by the budget (the pitch is the derived pitch, the yaw the skater's).
+	FJamCameraFilter S2;
+	FTransform T2;
+	for (int32 i = 0; i < 120; ++i) T2 = UJamFollowCamera::StepThirdPerson(Keep, S2, JamA40Test::Frame(120.f, 60.f, 8.5f, FVector2D(-10.0 + i * 0.1, 0.0), 0.f));
+	TestEqual(TEXT("open ice yaw = the skater's"), (float)T2.Rotator().Yaw, 0.f, 0.05f);
+	TestEqual(TEXT("open ice pitch = the derived pitch"), (float)T2.Rotator().Pitch, UJamFollowCamera::DerivedPitchDeg(Keep), 0.05f);
 	return true;
 }
 

@@ -101,21 +101,37 @@ bool FJamTacklingEvents::RunTest(const FString& Parameters)
 			TestTrue(*FString::Printf(TEXT("%s: strength %.2f near %.2f"), *Label, E.Strength, Expect), FMath::Abs(E.Strength - Expect) < 0.08f);
 			// The knockdown follows with the same strength and the victim is down for knockdown_frames.
 			bool bKnock = false;
-			for (const FJamSimEvent& K : Sim->GetFrameEvents()) if (K.Name == JamEvents::Knockdown && K.Who == 3) { bKnock = true; TestEqual(*FString::Printf(TEXT("%s: knockdown strength"), *Label), K.Strength, E.Strength, 0.001f); }
+			for (const FJamSimEvent& K : Sim->GetFrameEvents()) if (K.Name == JamEvents::Knockdown && K.Who == 3)
+			{
+				bKnock = true;
+				TestEqual(*FString::Printf(TEXT("%s: knockdown strength"), *Label), K.Strength, E.Strength, 0.001f);
+				// Lane A47 (B-to-A-0029 ask 1): the read-out Dir on knockdown is the victim's KnockDir, on check the same contact normal (checker towards victim), unit length.
+				TestTrue(*FString::Printf(TEXT("%s: knockdown Dir = KnockDir"), *Label), K.Dir.Equals(Sim->GetSkaters()[3].KnockDir, 0.001));
+				TestTrue(*FString::Printf(TEXT("%s: check Dir = the push (unit)"), *Label), E.Dir.Equals(K.Dir, 0.001) && FMath::IsNearlyEqual(E.Dir.Size(), 1.0, 0.001));
+			}
 			TestTrue(*FString::Printf(TEXT("%s: knockdown event"), *Label), bKnock);
 			TestEqual(*FString::Printf(TEXT("%s: victim down for knockdown_frames"), *Label), Sim->GetSkaters()[3].KnockFrames, Sim->GetConfig().Skater.KnockdownFrames);
 			AddInfo(FString::Printf(TEXT("%s: check kind=%s strength=%.3f at frame %lld, hash %016llx"), *Label, *E.Kind.ToString(), E.Strength, E.Frame, static_cast<unsigned long long>(Hash)));
 		}
 	}
 
-	// Below check_speed_min nothing lands (and no event of any kind is emitted by the contact).
+	// Below check_speed_min nothing lands for a bot (and no event of any kind is emitted by the contact); the human lands from
+	// HumanCheckSpeedMinMs (lane A49, R-0032: the operator skates slowly into the carrier and the hit must land).
+	{
+		UJamSim* Sim = MakeRaw(*this);
+		ClearIce(Sim, 1, 3);
+		Sim->SetSkater(3, FVector2D::ZeroVector, FVector2D::ZeroVector, 0.0);
+		Sim->SetSkater(1, FVector2D(1.2, 0.0), FVector2D(-3.0, 0.0), PI);
+		const FJamSimEvent E = RunUntil(Sim, JamEvents::Check, 1, 30, nullptr);
+		TestTrue(TEXT("bot at 3 m/s: no check lands (below check_speed_min 5)"), E.Name.IsNone());
+	}
 	{
 		UJamSim* Sim = MakeRaw(*this);
 		ClearIce(Sim, 0, 3);
 		Sim->SetSkater(3, FVector2D::ZeroVector, FVector2D::ZeroVector, 0.0);
 		Sim->SetSkater(0, FVector2D(1.2, 0.0), FVector2D(-3.0, 0.0), PI);
 		const FJamSimEvent E = RunUntil(Sim, JamEvents::Check, 0, 30, nullptr);
-		TestTrue(TEXT("3 m/s: no check lands (below check_speed_min 5)"), E.Name.IsNone());
+		TestTrue(TEXT("human at 3 m/s: the check lands (HumanCheckSpeedMinMs 2, lane A49)"), E.Name == JamEvents::Check);
 	}
 
 	// The boards: a skater sliding into the side boards at 6 m/s emits board (Who = skater, Kind = skater, Strength 6 / speed); at 3 m/s nothing.
@@ -137,6 +153,8 @@ bool FJamTacklingEvents::RunTest(const FString& Parameters)
 		{
 			TestEqual(TEXT("6 m/s into the boards: board event for the skater"), Found.Name.ToString(), JamEvents::Board.ToString());
 			TestEqual(TEXT("6 m/s: kind skater"), Found.Kind.ToString(), FString(TEXT("skater")));
+			// Lane A47 (B-to-A-0029 ask 2): the read-out Dir on board is the board normal pointing into the rink: unit, and it points from the contact towards the rink centre.
+			TestTrue(TEXT("board Dir is a unit vector into the rink"), FMath::IsNearlyEqual(Found.Dir.Size(), 1.0, 0.001) && FVector2D::DotProduct(Found.Dir, -Found.Where.GetSafeNormal()) > 0.5);
 			// The skater glides 2 m before the boards, so it arrives between the 4 m/s threshold and its 6 m/s start (hockey.raw: 4.5 m/s measured, 0.52 of its 8.6 m/s top speed).
 			TestTrue(*FString::Printf(TEXT("6 m/s start: strength %.2f between %.2f (the threshold) and %.2f"), Found.Strength, 4.0 / MaxSpeed, 6.0 / MaxSpeed),
 				Found.Strength >= static_cast<float>(4.0 / MaxSpeed) - 0.001f && Found.Strength <= static_cast<float>(6.0 / MaxSpeed) + 0.001f);

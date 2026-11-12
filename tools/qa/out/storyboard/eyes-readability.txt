@@ -1,0 +1,40 @@
+PASS readability a48-05-match-card-regular.jpg + a48-06-you-tag.jpg + a48-07-far-net-marker.jpg + a48-08-bark-and-commentary.jpg: 1 call, in 5359 out 1344 tokens, ~$0.0091, 18483 ms
+
+**eyes/readability** A=a48-05-match-card-regular.jpg B=a48-06-you-tag.jpg C=a48-07-far-net-marker.jpg D=a48-08-bark-and-commentary.jpg at 6 m (gemini-3.8-flash, in 5359 out 1344 tokens, ~$0.0091, 18.5 s)
+- stills:
+  - label: Still A: a48-05-match-card-regular.jpg; first_look: giant central Match 1 clapperboard overlay; overall: 2
+    - elements:
+      - puck: score 1, evidence The puck is not visible anywhere on the ice surface or behind the central overlay.
+      - carrier: score 1, evidence No player has possession as the game is frozen on a pre-faceoff screen.
+      - team_colours: score 4, evidence Deep blue (foreground skater, left scoreboard tile) and warm orange (distant skaters, right scoreboard tile) are easily distinguishable.
+      - far_net: score 3, evidence The red frame sits at top-center under the scoreboard, partially occluded by the large clapperboard graphic and measuring roughly 110 px wide.
+      - zone_strips: score 4, evidence A thin blue line and a prominent dark red line cross the rink horizontally, visible to either side of the clapperboard.
+    - noise: large Match 1 clapperboard obscuring mid-ice; faceoff countdown reticle and prompt directly over player; bottom controller keybinding bar
+  - label: Still B: a48-06-you-tag.jpg; first_look: blue player back with blue target reticle; overall: 4
+    - elements:
+      - puck: score 4, evidence A small dark disc surrounded by a bright yellowish glow ring (about 30 px across) sits at the stick blade between the two central skaters.
+      - carrier: score 4, evidence The orange skater labeled 'YOU' has their stick touching the glowing puck, though the close blue skater competes for immediate focus.
+      - team_colours: score 5, evidence Skaters clearly display vivid deep blue and saturated warm orange jerseys with high-contrast outlines.
+      - far_net: score 4, evidence Centered in the upper third with a red outline, yellow diamond icon, and a '49 m' text box, spanning about 110 px wide.
+      - zone_strips: score 5, evidence Horizontal red center line and blue zone line span the full width of the rink ice.
+    - noise: dialogue speech bubble 'Nice stance...' below scoreboard; persistent blue targeting reticle under the foreground skater; bottom keybinding bar
+  - label: Still C: a48-07-far-net-marker.jpg; first_look: blue player back with large ground reticle; overall: 3
+    - elements:
+      - puck: score 1, evidence The puck is not visible on the ice surface.
+      - carrier: score 1, evidence No carrier visible; the only skaters are isolated without possession.
+      - team_colours: score 4, evidence Vibrant blue on the foreground figure and warm orange on the mid-distance skater are sharply separated.
+      - far_net: score 4, evidence The red net frame is fully visible dead center at 49 m, highlighted with a yellow directional pip.
+      - zone_strips: score 5, evidence Clear red line spans horizontally through the mid-ice, with an unobstructed blue line further up.
+    - noise: oversized blue crosshair reticle on the ice; concentric gradient circles on the ice surface; bottom control prompt bar
+  - label: Still D: a48-08-bark-and-commentary.jpg; first_look: commentary banner below the scoreboard; overall: 3
+    - elements:
+      - puck: score 1, evidence The puck is not visible in the frame.
+      - carrier: score 1, evidence No player visibly controls a puck; distant players at the far net are too small to discern stick contact.
+      - team_colours: score 4, evidence Foreground blue is unmistakable, and distant tiny clusters still resolve into distinct blue and orange patches.
+      - far_net: score 4, evidence Red net frame clearly visible at top-center under the '49 m' badge, flanked by distant skaters.
+      - zone_strips: score 5, evidence Both the transverse red line and blue zone line are fully visible across the ice.
+    - noise: wide white-and-orange speech banner 'You saw me coming...'; oversized blue targeting ring under foreground skater; bottom keybinding banner
+
+wrote docs/experiments/eyes/a48-readability.json
+{"tool":"thirdjam.eyes/1","ok":true,"preset":"readability","model":"gemini-3.8-flash","stills":4,"calls":1,"prompt_tokens":5359,"output_tokens":1344,"cost_usd_est":0.00906,"json":"docs/experiments/eyes/a48-readability.json"}
+exit 0

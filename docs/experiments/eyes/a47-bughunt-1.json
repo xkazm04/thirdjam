@@ -1,0 +1,116 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-12T22:18:33.756Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "tools/qa/out/a47-shoot-reg/banner-f20.png",
+          "width": 1920,
+          "height": 1082
+        },
+        {
+          "label": "B",
+          "path": "tools/qa/out/a47-shoot-raw1/board-skater-f1465.png",
+          "width": 1920,
+          "height": 1082
+        },
+        {
+          "label": "C",
+          "path": "tools/qa/out/a47-shoot-raw1/board-puck-f2574.png",
+          "width": 1920,
+          "height": 1082
+        },
+        {
+          "label": "D",
+          "path": "tools/qa/out/a47-shoot-reg/windup-f523.png",
+          "width": 1920,
+          "height": 1082
+        },
+        {
+          "label": "E",
+          "path": "tools/qa/out/a47-shoot-reg/board-f417.png",
+          "width": 1920,
+          "height": 1082
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2368,
+      "usage": {
+        "prompt": 6296,
+        "output": 528,
+        "thoughts": 0,
+        "total": 6824,
+        "calls": 1
+      },
+      "cost_usd_est": 0.0067,
+      "ms": 18026,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A: banner-f20.png",
+            "findings": [],
+            "clean": true
+          },
+          {
+            "label": "Still B: board-skater-f1465.png",
+            "findings": [
+              {
+                "where": "Top-left quadrant, at the boards directly in front of skater 42",
+                "what": "Skater 42's stick blade and front skate are clipping directly into and through the yellow kickplate/boards mesh.",
+                "severity": 3,
+                "confidence": 0.95
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still C: board-puck-f2574.png",
+            "findings": [
+              {
+                "where": "Center quadrant, along the yellow kickplate beside skater 42",
+                "what": "Skater 42's right skate and stick are penetrating into the yellow board base, causing contact glow to clip through the board geometry.",
+                "severity": 3,
+                "confidence": 0.9
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still D: windup-f523.png",
+            "findings": [
+              {
+                "where": "Bottom-right quadrant, skaters 9 and 7 along the boards",
+                "what": "Skater 9's stick and right skate blade penetrate through the yellow kickplate, while the meshes of skater 9 and skater 7 intersect heavily with overlapping black outlines.",
+                "severity": 4,
+                "confidence": 0.95
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still E: board-f417.png",
+            "findings": [
+              {
+                "where": "Center-bottom quadrant, skater 7 facing the boards",
+                "what": "Skater 7's right leg, skate, and stick blade clip entirely into the yellow kickplate and wall mesh.",
+                "severity": 4,
+                "confidence": 0.98
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=banner-f20.png B=board-skater-f1465.png C=board-puck-f2574.png D=windup-f523.png E=board-f417.png (gemini-3.8-flash, in 6296 out 528 tokens, ~$0.0067, 18 s)\n- stills:\n  - label: Still A: banner-f20.png; clean: true\n    - findings: (none)\n  - label: Still B: board-skater-f1465.png; clean: false\n    - findings:\n      - where: Top-left quadrant, at the boards directly in front of skater 42; what: Skater 42's stick blade and front skate are clipping directly into and through the yellow kickplate/boards mesh.; severity: 3; confidence: 0.95\n  - label: Still C: board-puck-f2574.png; clean: false\n    - findings:\n      - where: Center quadrant, along the yellow kickplate beside skater 42; what: Skater 42's right skate and stick are penetrating into the yellow board base, causing contact glow to clip through the board geometry.; severity: 3; confidence: 0.9\n  - label: Still D: windup-f523.png; clean: false\n    - findings:\n      - where: Bottom-right quadrant, skaters 9 and 7 along the boards; what: Skater 9's stick and right skate blade penetrate through the yellow kickplate, while the meshes of skater 9 and skater 7 intersect heavily with overlapping black outlines.; severity: 4; confidence: 0.95\n  - label: Still E: board-f417.png; clean: false\n    - findings:\n      - where: Center-bottom quadrant, skater 7 facing the boards; what: Skater 7's right leg, skate, and stick blade clip entirely into the yellow kickplate and wall mesh.; severity: 4; confidence: 0.98"
+    }
+  ]
+}

@@ -72,9 +72,10 @@ AJamPickupActor::AJamPickupActor()
 	Prop->SetRenderCustomDepth(true);
 	Prop->SetCustomDepthStencilValue(1);
 	Prop->SetVisibility(false);
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> Capsule(TEXT("/Engine/BasicShapes/Capsule.Capsule"));
+	// Lane A47 (B-to-A-0030 fault 10): a cylinder puck-shaped token, not the capsule (the capsule read as a pill standing on the ice).
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> Cylinder(TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> Sphere(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
-	if (Capsule.Succeeded()) Mesh->SetStaticMesh(Capsule.Object);
+	if (Cylinder.Succeeded()) Mesh->SetStaticMesh(Cylinder.Object);
 	else if (Sphere.Succeeded()) Mesh->SetStaticMesh(Sphere.Object);
 }
 
@@ -130,8 +131,8 @@ void AJamPickupActor::InitPickup(const FJamPickupOnIce& P)
 	}
 	else
 	{
-		// Basic shapes are 100 cm across: a 0.5 m capsule standing up (sphere 0.6 m).
-		Mesh->SetRelativeScale3D(FVector(0.5, 0.5, 0.7));
+		// Basic shapes are 100 cm across and tall: a 0.5 m cylinder token, 0.2 m thick (sphere 0.6 m).
+		Mesh->SetRelativeScale3D(FVector(0.5, 0.5, 0.2));
 		UMaterialInterface* Base = LoadObject<UMaterialInterface>(nullptr, TEXT("/JamAssets/Look/MI_Toon_Pickup.MI_Toon_Pickup"), nullptr, LOAD_NoWarn | LOAD_Quiet);
 		if (!Base) Base = LoadObject<UMaterialInterface>(nullptr, TEXT("/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial"));
 		if (Base)

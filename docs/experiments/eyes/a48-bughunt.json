@@ -1,0 +1,153 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-12T21:49:02.873Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/storyboard/a48-01-menu.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/storyboard/a48-02-cuts-library.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/storyboard/a48-05-match-card-regular.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/storyboard/a48-06-you-tag.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/storyboard/a48-07-far-net-marker.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "F",
+          "path": "docs/experiments/img/storyboard/a48-08-bark-and-commentary.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2433,
+      "usage": {
+        "prompt": 7475,
+        "output": 734,
+        "thoughts": 0,
+        "total": 8209,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00836,
+      "ms": 13038,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [
+              {
+                "where": "Bottom center, along the bottom edge of the frame",
+                "what": "Controller prompt text 'STICK / ARROWS move A / ENTER select B / ESC back' clips through the white border outline of the menu card.",
+                "severity": 2,
+                "confidence": 0.95
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still B",
+            "findings": [
+              {
+                "where": "Center inside both filmstrip cards",
+                "what": "Stat text lines such as 'speed 11 m/s shot 13 m/s...' overlap and clip directly into the bottom row of filmstrip sprocket holes.",
+                "severity": 3,
+                "confidence": 0.98
+              },
+              {
+                "where": "Bottom center, along the bottom edge of the frame",
+                "what": "Controller prompt text clips into the bottom white border outline of the menu slate.",
+                "severity": 2,
+                "confidence": 0.95
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still C",
+            "findings": [
+              {
+                "where": "Bottom-center, below the MATCH 1 slate",
+                "what": "The 'PERIOD 1 - FACEOFF' banner, countdown reticle '1 HOLD', and the 'press shoot at the drop, not before' tooltip overlap into an unreadable stack.",
+                "severity": 4,
+                "confidence": 0.99
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still D",
+            "findings": [
+              {
+                "where": "Center, directly above the opposing orange player at faceoff",
+                "what": "The blue 'YOU' tag is positioned over an opposing orange skater rather than the player-controlled blue skater.",
+                "severity": 4,
+                "confidence": 0.95
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still E",
+            "findings": [
+              {
+                "where": "Bottom center, player skater",
+                "what": "The foreground skater model has completely lost its hockey stick mesh while in skating stance.",
+                "severity": 3,
+                "confidence": 0.9
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still F",
+            "findings": [
+              {
+                "where": "Top center, dialogue bark bubble",
+                "what": "The orange dialogue bark bubble overlaps and obscures the bottom half of the period/score HUD banner.",
+                "severity": 3,
+                "confidence": 0.95
+              },
+              {
+                "where": "Bottom center, player skater",
+                "what": "The foreground skater model is missing its hockey stick mesh.",
+                "severity": 3,
+                "confidence": 0.9
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=a48-01-menu.jpg B=a48-02-cuts-library.jpg C=a48-05-match-card-regular.jpg D=a48-06-you-tag.jpg E=a48-07-far-net-marker.jpg F=a48-08-bark-and-commentary.jpg (gemini-3.8-flash, in 7475 out 734 tokens, ~$0.0084, 13 s)\n- stills:\n  - label: Still A; clean: false\n    - findings:\n      - where: Bottom center, along the bottom edge of the frame; what: Controller prompt text 'STICK / ARROWS move A / ENTER select B / ESC back' clips through the white border outline of the menu card.; severity: 2; confidence: 0.95\n  - label: Still B; clean: false\n    - findings:\n      - where: Center inside both filmstrip cards; what: Stat text lines such as 'speed 11 m/s shot 13 m/s...' overlap and clip directly into the bottom row of filmstrip sprocket holes.; severity: 3; confidence: 0.98\n      - where: Bottom center, along the bottom edge of the frame; what: Controller prompt text clips into the bottom white border outline of the menu slate.; severity: 2; confidence: 0.95\n  - label: Still C; clean: false\n    - findings:\n      - where: Bottom-center, below the MATCH 1 slate; what: The 'PERIOD 1 - FACEOFF' banner, countdown reticle '1 HOLD', and the 'press shoot at the drop, not before' tooltip overlap into an unreadable stack.; severity: 4; confidence: 0.99\n  - label: Still D; clean: false\n    - findings:\n      - where: Center, directly above the opposing orange player at faceoff; what: The blue 'YOU' tag is positioned over an opposing orange skater rather than the player-controlled blue skater.; severity: 4; confidence: 0.95\n  - label: Still E; clean: false\n    - findings:\n      - where: Bottom center, player skater; what: The foreground skater model has completely lost its hockey stick mesh while in skating stance.; severity: 3; confidence: 0.9\n  - label: Still F; clean: false\n    - findings:\n      - where: Top center, dialogue bark bubble; what: The orange dialogue bark bubble overlaps and obscures the bottom half of the period/score HUD banner.; severity: 3; confidence: 0.95\n      - where: Bottom center, player skater; what: The foreground skater model is missing its hockey stick mesh.; severity: 3; confidence: 0.9"
+    }
+  ]
+}

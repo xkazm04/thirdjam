@@ -6,6 +6,7 @@
 #include "Misc/Paths.h"
 #include "CommentarySystem.h"
 #include "JamCommentaryData.h"
+#include "HUDWidget.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
 
@@ -77,6 +78,9 @@ namespace JamCommentaryTests
 		L.Add(Line(TEXT("pass.to_human.01"), TEXT("pass"), TEXT(""), TEXT("any"), 2, 20, TEXT("Here it comes.")));
 		L.Add(Line(TEXT("pass.any.01"), TEXT("pass"), TEXT(""), TEXT("any"), 1, 15, TEXT("Tape to tape.")));
 		for (int32 i = 1; i <= 4; ++i) L.Add(Line(*FString::Printf(TEXT("board.hard.%02d"), i), TEXT("board"), TEXT(""), TEXT("any"), 1, 0, *FString::Printf(TEXT("Off the glass number %d."), i)));
+		// Lane A47: B's condition-tagged lines (kind = the condition, B-to-A-0030 fault 4).
+		L.Add(Line(TEXT("board.bank.01"), TEXT("board"), TEXT("bank"), TEXT("any"), 4, 0, TEXT("Banked it in off the boards!")));
+		L.Add(Line(TEXT("board.rim.01"), TEXT("board"), TEXT("rim"), TEXT("any"), 2, 0, TEXT("Round the rim.")));
 		return TEXT("{\"schema\":\"hokej.commentary/1\",\"count\":") + FString::FromInt(L.Num()) + TEXT(",\"lines\":[") + FString::Join(L, TEXT(",")) + TEXT("]}");
 	}
 
@@ -259,14 +263,16 @@ bool FJamCommentaryStoppage::RunTest(const FString&)
 	TestTrue(TEXT("a score-state or mood line, not the colour, not goal.pause"), P.Situation == FName(TEXT("goal.for")) || P.Situation == FName(TEXT("goal.first")));
 	TestEqual(TEXT("the beat is a goal line"), P.Event, JamEvents::Goal);
 	TestFalse(TEXT("no third beat"), R.Idle(3300, P, true, Scored));
-	// A goal with the gate closed: the colour call is dropped, the second beat still comes. (The score before orange's goal is 1:0.)
+	// A goal with the gate closed behind a shot line: lane A47 (B-to-A-0030 fault 3) made the colour call a must-play that cuts the lower-priority line
+	// (A32 had it dropped here, its open point 1); the second beat still follows when the gate reopens. (The score before orange's goal is 1:0.)
 	TestTrue(TEXT("a shot right before"), R.Frame(4000, JamEvents::Shot, Payload(4, FVector2D(-20, 0), 0.9f), P, false, nullptr, Scored));
 	auto Scored2 = [](FJamCommentaryWorld& W) { W.Score[0] = 1; W.Score[1] = 1; };
 	FString Skip;
-	TestFalse(TEXT("goal inside the gate is dropped"), R.Frame(4060, JamEvents::Goal, Payload(4, FVector2D(-43, 0), 1.f), P, true, &Skip, Scored2));
-	TestEqual(TEXT("reason gate"), Skip, FString(TEXT("gate")));
+	TestTrue(TEXT("goal inside the gate cuts in (must-play)"), R.Frame(4060, JamEvents::Goal, Payload(4, FVector2D(-43, 0), 1.f), P, true, &Skip, Scored2));
+	TestEqual(TEXT("the colour call"), P.Situation, FName(TEXT("goal.orange")));
+	TestFalse(TEXT("nothing to cut: the 60-frame shot line had just ended, only the gate was skipped"), R.Picker->TakeCutRequest());
 	TestFalse(TEXT("the beat waits for the gate"), R.Idle(4100, P, true, Scored2));
-	TestTrue(TEXT("the beat plays once the gate opens"), R.Idle(4160, P, true, Scored2));
+	TestTrue(TEXT("the beat plays once the gate opens"), R.Idle(4210, P, true, Scored2));
 	TestTrue(TEXT("orange's goal: goal.against or goal.first"), P.Situation == FName(TEXT("goal.against")) || P.Situation == FName(TEXT("goal.first")));
 	// The beat expires when play resumes.
 	TestTrue(TEXT("another goal"), R.Frame(6000, JamEvents::Goal, Payload(0, FVector2D(43, 0), 1.f), P, true, nullptr, [](FJamCommentaryWorld& W) { W.Score[0] = 2; W.Score[1] = 1; }));
@@ -327,6 +333,140 @@ bool FJamCommentaryYield::RunTest(const FString&)
 	TestEqual(TEXT("forced line"), P.LineId, FName(TEXT("save.big.01")));
 	TestFalse(TEXT("unknown id"), R.Picker->Force(TEXT("nope.any.01"), 3000, P));
 	TestFalse(TEXT("the forced line holds the gate"), R.Frame(3100, JamEvents::Shot, Payload(4, FVector2D(-20, 0), 0.9f), P));
+	return true;
+}
+
+// Lane A47 (B-to-A-0030 fault 3): a bark never cuts a line under 0.5 s old; the line plays on and the booth still holds after it. An older line is cut,
+// and the end frame the HUD's caption reads moves to the cut frame (fault 7: the caption clears when the line ends).
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamCommentaryCutFloor, "Jam.Commentary.CutFloor", JamCommentaryTests::Flags)
+bool FJamCommentaryCutFloor::RunTest(const FString&)
+{
+	FRig R;
+	FJamCommentaryPick P;
+	FString Skip;
+	// A 3 s take line starts at 1000; a bark at the human 10 frames in: no cut, the line keeps playing to its end (1180).
+	TestTrue(TEXT("take line"), R.Frame(1000, JamEvents::Period, Payload(-1, FVector2D::ZeroVector, 0.f, TEXT("take_1")), P, true));
+	{
+		FJamCommentaryWorld W = World(1010, true);
+		R.Picker->ObserveBark(1010, true);
+		TestFalse(TEXT("nothing starts on the bark frame"), R.Picker->Resolve(W, P, &Skip));
+	}
+	TestFalse(TEXT("a line 10 frames old is not cut"), R.Picker->TakeCutRequest());
+	TestTrue(TEXT("the young line plays on"), R.Picker->IsLinePlaying(1100));
+	TestEqual(TEXT("its end frame is unchanged"), R.Picker->GetLastEndFrame(), static_cast<int64>(1180));
+	// The booth waits for the line: a shot while it still plays is dropped as playing; once it has ended (and the bark's 150 frames are up) the booth is free.
+	TestFalse(TEXT("nothing cuts in while the young line plays"), R.Frame(1100, JamEvents::Shot, Payload(4, FVector2D(-20, 0), 0.9f), P, false, &Skip));
+	TestEqual(TEXT("reason playing"), Skip, FString(TEXT("playing")));
+	TestTrue(TEXT("free after the line and the hold"), R.Frame(1185, JamEvents::Shot, Payload(4, FVector2D(-20, 0), 0.9f), P));
+	// A bark exactly at the floor (30 frames) cuts: the end frame becomes the cut frame and the caption fades from it.
+	TestTrue(TEXT("second take line"), R.Frame(2000, JamEvents::Period, Payload(-1, FVector2D::ZeroVector, 0.f, TEXT("take_1")), P, true));
+	{
+		FJamCommentaryWorld W = World(2030, true);
+		R.Picker->ObserveBark(2030, true);
+		R.Picker->Resolve(W, P, &Skip);
+	}
+	TestTrue(TEXT("a line 30 frames old is cut"), R.Picker->TakeCutRequest());
+	TestEqual(TEXT("cut reason"), FString(R.Picker->GetCutReason()), FString(TEXT("bark_at_human")));
+	TestEqual(TEXT("end frame = cut frame"), R.Picker->GetLastEndFrame(), static_cast<int64>(2030));
+	const int32 Shown = static_cast<int32>(R.Picker->GetLastEndFrame() - 2000);
+	TestEqual(TEXT("caption full while the voice plays"), UJamHudWidget::CommentaryOpacityFor(2000, Shown, 2029, 0), 1.f);
+	TestEqual(TEXT("caption gone 30 frames after the cut"), UJamHudWidget::CommentaryOpacityFor(2000, Shown, 2060, 0), 0.f);
+	return true;
+}
+
+// Lane A47 (B-to-A-0030 fault 3, A32's open point 1): a must-play line (priority 5) cuts a playing lower-priority line and skips the gate behind one;
+// it never cuts another priority-5 line and still waits out a bark hold.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamCommentaryMustPlay, "Jam.Commentary.MustPlay", JamCommentaryTests::Flags)
+bool FJamCommentaryMustPlay::RunTest(const FString&)
+{
+	FRig R;
+	FJamCommentaryPick P;
+	FString Skip;
+	auto Scored = [](FJamCommentaryWorld& W) { W.Score[0] = 1; };
+	// A hard shot line (3, 60 frames) at 1000; the goal 19 frames later is called: the shot line is cut with the reason must_play.
+	TestTrue(TEXT("shot line"), R.Frame(1000, JamEvents::Shot, Payload(0, FVector2D(30, 0), 0.9f), P));
+	TestEqual(TEXT("shot.hard"), P.Situation, FName(TEXT("shot.hard")));
+	TestTrue(TEXT("the goal call cuts in"), R.Frame(1019, JamEvents::Goal, Payload(0, FVector2D(43, 0), 1.f), P, true, &Skip, Scored));
+	TestEqual(TEXT("goal.blue"), P.Situation, FName(TEXT("goal.blue")));
+	TestTrue(TEXT("the shot line was cut"), R.Picker->TakeCutRequest());
+	TestEqual(TEXT("cut reason"), FString(R.Picker->GetCutReason()), FString(TEXT("must_play")));
+	TestEqual(TEXT("the goal call owns the booth"), R.Picker->GetLastEndFrame(), static_cast<int64>(1019 + 60));
+	// The second beat still follows in the pause once the gate reopens.
+	TestTrue(TEXT("second beat"), R.Idle(1019 + 150, P, true, Scored));
+	TestEqual(TEXT("a goal line"), P.Event, JamEvents::Goal);
+	// A lower-priority line that ended but whose 2.5 s gate is still closed: the goal call skips the gate.
+	TestTrue(TEXT("pass line"), R.Frame(3000, JamEvents::Pass, Payload(4, FVector2D::ZeroVector, 0.5f, TEXT("to_5")), P, false, nullptr, Scored));
+	TestEqual(TEXT("1 s line"), P.DurationFrames, 60);
+	auto Scored2 = [](FJamCommentaryWorld& W) { W.Score[0] = 1; W.Score[1] = 1; };
+	TestTrue(TEXT("goal call inside the gate, after the line"), R.Frame(3100, JamEvents::Goal, Payload(4, FVector2D(-43, 0), 1.f), P, true, &Skip, Scored2));
+	TestEqual(TEXT("goal.orange"), P.Situation, FName(TEXT("goal.orange")));
+	TestFalse(TEXT("nothing to cut: the pass line had ended"), R.Picker->TakeCutRequest());
+	// A priority-5 line never cuts another priority-5 line.
+	TestTrue(TEXT("win line (5)"), R.Frame(5000, JamEvents::Win, Payload(-1, FVector2D::ZeroVector, 1.f), P, true));
+	TestFalse(TEXT("a goal call does not cut the win line"), R.Frame(5020, JamEvents::Goal, Payload(0, FVector2D(43, 0), 1.f), P, true, &Skip, [](FJamCommentaryWorld& W) { W.Score[0] = 2; W.Score[1] = 1; }));
+	TestEqual(TEXT("reason playing"), Skip, FString(TEXT("playing")));
+	// A bark hold silences everything but a must-play: the goal call plays through it (first PIE proof: a bark 61 frames before a goal had silenced the call).
+	{
+		FJamCommentaryWorld W = World(7000, false);
+		R.Picker->ObserveBark(7000, true);
+		R.Picker->Resolve(W, P);
+	}
+	TestFalse(TEXT("a pass inside the bark hold is dropped"), R.Frame(7030, JamEvents::Pass, Payload(4, FVector2D::ZeroVector, 0.5f, TEXT("to_5")), P, false, &Skip));
+	TestEqual(TEXT("reason yield"), Skip, FString(TEXT("yield")));
+	TestTrue(TEXT("goal call inside a bark hold plays"), R.Frame(7050, JamEvents::Goal, Payload(0, FVector2D(43, 0), 1.f), P, true, &Skip, [](FJamCommentaryWorld& W) { W.Score[0] = 3; W.Score[1] = 1; }));
+	TestEqual(TEXT("goal.blue"), P.Situation, FName(TEXT("goal.blue")));
+	// A bark on the goal's own frame: the goal call still wins (the bark's bubble shows regardless).
+	{
+		FJamCommentaryWorld W = World(9000, true);
+		W.Score[0] = 3; W.Score[1] = 2;
+		R.Picker->Observe(JamEvents::Goal, Payload(4, FVector2D(-43, 0), 1.f), FVector2D(-43, 0), W);
+		R.Picker->ObserveBark(9000, true);
+		TestTrue(TEXT("same frame: the goal call beats the bark"), R.Picker->Resolve(W, P, &Skip));
+		TestEqual(TEXT("goal.orange"), P.Situation, FName(TEXT("goal.orange")));
+	}
+	return true;
+}
+
+// Lane A47 (B-to-A-0030 fault 4): the bank's when conditions. board.bank holds at a goal within a second of a board hit and never on a board event;
+// a kind that names the condition (B's bank / rim tags) is a condition, not a payload kind; board.rim needs the hit behind a goal line.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamCommentaryBankWhen, "Jam.Commentary.BankWhen", JamCommentaryTests::Flags)
+bool FJamCommentaryBankWhen::RunTest(const FString&)
+{
+	FRig R;
+	FJamCommentaryPick P;
+	const int32 BankIdx = R.Bank.Find(TEXT("board.bank.01"));
+	const int32 RimIdx = R.Bank.Find(TEXT("board.rim.01"));
+	TestTrue(TEXT("the tagged lines parsed"), BankIdx != INDEX_NONE && RimIdx != INDEX_NONE);
+	// Two puck board hits 20 frames apart along the side boards (the QA1 case): neither picks the bank line or the rim line.
+	TestTrue(TEXT("first board hit plays"), R.Frame(1000, JamEvents::Board, Payload(-1, FVector2D(0, 22), 0.9f), P));
+	TestTrue(TEXT("a plain board line"), P.Situation == FName(TEXT("board.hard")));
+	{
+		FJamCommentaryWorld W = World(1020, false);
+		FJamCommentaryEvent E;
+		E.Event = JamEvents::Board; E.Who = -1; E.WhereM = FVector2D(0, 22); E.Strength = 0.9f; E.Frame = 1020; E.Team = -1;
+		TArray<int32> C;
+		R.Picker->Candidates(E, W, C);
+		TestFalse(TEXT("board.bank is never a candidate on a board event"), C.Contains(BankIdx));
+		TestFalse(TEXT("board.rim needs a hit behind the goal line"), C.Contains(RimIdx));
+		TestFalse(TEXT("bank does not hold on a board event even 20 frames after a board hit"), R.Picker->WhenHolds(R.Bank.Lines[BankIdx], E, W));
+		// The same hit behind the goal line: rim holds (the kind tag is a condition, not a kind to match).
+		E.WhereM = FVector2D(43, 10);
+		R.Picker->Candidates(E, W, C);
+		TestTrue(TEXT("board.rim is a candidate behind the goal line"), C.Contains(RimIdx));
+		// A goal 20 frames after the board hit: bank holds.
+		FJamCommentaryEvent G;
+		G.Event = JamEvents::Goal; G.Who = 0; G.WhereM = FVector2D(43, 0); G.Strength = 1.f; G.Frame = 1020; G.Team = 0;
+		G.ScoreAfter[0] = 1;
+		TestTrue(TEXT("bank holds at a goal within a second of a board hit"), R.Picker->WhenHolds(R.Bank.Lines[BankIdx], G, W));
+		G.Frame = 1100;
+		TestFalse(TEXT("not 100 frames after"), R.Picker->WhenHolds(R.Bank.Lines[BankIdx], G, W));
+	}
+	// Through the rules: a board hit at 3000, the goal at 3030 in the pause: the colour call (5) wins; board.bank (4) was among the goal's candidates
+	// only because of the goal (Observe's goal-time path), never from the board event itself.
+	TestTrue(TEXT("board hit"), R.Frame(3000, JamEvents::Board, Payload(-1, FVector2D(0, -22), 0.9f), P));
+	TestTrue(TEXT("board line, not bank"), P.Situation != FName(TEXT("board.bank")));
+	TestTrue(TEXT("the goal is called"), R.Frame(3030, JamEvents::Goal, Payload(0, FVector2D(43, 0), 1.f), P, true, nullptr, [](FJamCommentaryWorld& W) { W.Score[0] = 1; }));
+	TestEqual(TEXT("colour call"), P.Situation, FName(TEXT("goal.blue")));
 	return true;
 }
 

@@ -44,7 +44,7 @@ namespace JamDifficultyTestsLocal
 	bool SameSkill(const JamAI::FJamBotSkill& A, const JamAI::FJamBotSkill& B)
 	{
 		return A.ReactionFrames == B.ReactionFrames && A.AimErrorDeg == B.AimErrorDeg && A.ShootExtraM == B.ShootExtraM && A.AimToleranceDeg == B.AimToleranceDeg
-			&& A.LeadFrames == B.LeadFrames && A.bIntercept == B.bIntercept && A.bUseAimCone == B.bUseAimCone && A.bPassToHuman == B.bPassToHuman && A.bClearLane == B.bClearLane && A.bBlockShots == B.bBlockShots && A.BlockMinDistM == B.BlockMinDistM
+			&& A.LeadFrames == B.LeadFrames && A.bIntercept == B.bIntercept && A.bUseAimCone == B.bUseAimCone && A.PassToHuman == B.PassToHuman && A.bClearLane == B.bClearLane && A.bBlockShots == B.bBlockShots && A.BlockMinDistM == B.BlockMinDistM
 			&& A.PokeFrames == B.PokeFrames && A.bLift == B.bLift && A.bPassOut == B.bPassOut && A.bReadLanes == B.bReadLanes && A.bSeekPickups == B.bSeekPickups
 			&& A.DrawJumpPct == B.DrawJumpPct && A.DrawPressPct == B.DrawPressPct && A.DrawPressFrames == B.DrawPressFrames;
 	}
@@ -105,7 +105,7 @@ bool FJamDifficultyProfilesResolve::RunTest(const FString& Parameters)
 		TestTrue(FString::Printf(TEXT("%s: level read from the cartridge"), Names[k]), R.bLevelWritten && R.Level == Levels[k]);
 		TestTrue(FString::Printf(TEXT("%s: numbers are the profile's"), Names[k]), R.Params.SpeedScale == P.SpeedScale && R.Params.RedSkill == P.RedSkill
 			&& R.Params.YieldMarginM == P.YieldMarginM && R.Params.YieldRadiusM == P.YieldRadiusM && R.Params.HoldRadiusM == P.HoldRadiusM
-			&& R.Params.StallFrames == P.StallFrames && SameSkill(R.Params.Opp, P.Opp) && R.Params.Mate.bPassToHuman == P.bMatesPass);
+			&& R.Params.StallFrames == P.StallFrames && SameSkill(R.Params.Opp, P.Opp) && R.Params.Mate.PassToHuman == P.MatesPassShare);
 		TestEqual(FString::Printf(TEXT("%s: nothing explicit"), Names[k]), R.ExplicitKeys.Num(), 0);
 		TestEqual(TEXT("intercept speed is skater.speed"), R.Params.InterceptSpeed, C->Game.Skater.Speed);
 		TestEqual(TEXT("aim cone from shot.aim_cone_deg"), R.Params.AimConeDeg, C->Game.Shot.bHasAimCone ? C->Game.Shot.AimConeDeg : 0.0);

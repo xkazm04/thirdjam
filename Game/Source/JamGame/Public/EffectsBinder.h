@@ -6,7 +6,9 @@
 // signal defend 0, space 1, pass 2, praise 3 (EJamTeamIntent order); every other event 0. bark, signal, announce are 2D sounds.
 // zone_enter / zone_exit carry the zone id in Kind; the binder looks the kind up in the game mode's sim config and sends the kind's
 // colour as User.Colour; pickup_* and effect_* send the pickup kind's colour. shot_blocked reuses NS_foul / MS_foul at Variant 0
-// until B makes its own (B-to-A-0016); period is silent on purpose.
+// until B makes its own (B-to-A-0016); period and carry are silent on purpose. Lane A47 (B-to-A-0029, 0031): check and knockdown send the sim's
+// contact normal as User.Dir, board sends the board normal into the rink as User.Normal; period_end, clock, season_take are sound-only and 2D;
+// clock Kind sudden_death is Variant 1; a goal's burst takes the scoring team's colour (the side of the net, not Who).
 #pragma once
 
 #include "CoreMinimal.h"

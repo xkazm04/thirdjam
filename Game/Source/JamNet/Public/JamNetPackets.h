@@ -15,7 +15,7 @@ namespace JamNet
 {
 	constexpr uint32 Magic = 0x4A4E4554u;  // 'JNET'
 	// 1: Move + shoot/check/brake (H6). 2: every FJamInput field, 32-bit frames in the header (H11.5, lane A38).
-	constexpr uint8 Version = 3;   // lane A39: FJamInput::bDeke travels (flag bit 128)
+	constexpr uint8 Version = 4;   // the Director: FJamInput::bSprint travels (flag 256, two flag bytes);   // lane A39: FJamInput::bDeke travels (flag bit 128)
 	// Frames between a local input being read and the frame it is applied on both sides.
 	constexpr int32 InputDelay = 3;
 	// Inputs per packet (the last Window frames of local input); loss is covered by the next packet, never by retransmit.
@@ -52,12 +52,12 @@ struct JAMNET_API FJamNetQuantInput
 	int16 Y = 0;       // Move.Y
 	int16 StickX = 0;  // Stick.X (R-0013)
 	int16 StickY = 0;  // Stick.Y
-	uint8 Flags = 0;
+	uint16 Flags = 0;
 
-	enum EFlag : uint8 { Shoot = 1, Check = 2, Brake = 4, ShootHeld = 8, Pass = 16, Poke = 32, Lift = 64, Deke = 128 };   // Deke: lane A39 (R-0029 point 4)
+	enum EFlag : uint16 { Shoot = 1, Check = 2, Brake = 4, ShootHeld = 8, Pass = 16, Poke = 32, Lift = 64, Deke = 128, Sprint = 256 };   // Sprint: lane A49 (R-0032), a held level   // Deke: lane A39 (R-0029 point 4)
 	// Edge presses: the driver keeps one read during a stall; the held levels (ShootHeld, Brake) are re-read every frame.
-	static constexpr uint8 EdgeFlags = Shoot | Check | Pass | Poke | Lift | Deke;
-	static constexpr int32 WireBytes = 9;
+	static constexpr uint16 EdgeFlags = Shoot | Check | Pass | Poke | Lift | Deke;
+	static constexpr int32 WireBytes = 10;   // two flag bytes since protocol 4
 
 	static FJamNetQuantInput From(const FJamInput& In);
 	FJamInput ToInput() const;

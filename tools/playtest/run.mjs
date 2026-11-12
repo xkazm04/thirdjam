@@ -125,6 +125,8 @@ export function summarize(rink, cartridge, level, player, ms) {
     fouls_from_behind: r1(avg(ms.map((m) => m.fouls_from_behind || 0))), fouls_no_puck: r1(avg(ms.map((m) => m.fouls_no_puck || 0))),
     box_s: r1(sec(avg(ms.map((m) => m.box_frames)))), pokes: r1(avg(ms.map((m) => m.pokes))), pokes_clean: r1(avg(ms.map((m) => m.pokes_clean))),
     lifts: r1(avg(ms.map((m) => m.lifts))), passes: r1(avg(ms.map((m) => m.passes))),
+    // lane A46: teammates' passes seated on the human's blade (lines from before A46 read as 0)
+    passes_received: r1(avg(ms.map((m) => m.passes_received || 0))),
     // R-0029 point 4 (lane A39): the payoffs the human used per match and the human's goals within 3 s of one (lines from before A39 read as 0)
     one_timers: r1(avg(ms.map((m) => m.one_timers || 0))), breakaways: r1(avg(ms.map((m) => m.breakaways || 0))), dekes: r1(avg(ms.map((m) => m.dekes || 0))),
     payoff_goals: r1(avg(ms.map((m) => m.payoff_goals || 0))),
@@ -135,11 +137,11 @@ export function summarize(rink, cartridge, level, player, ms) {
 
 export function table(rows) {
   const head = ['rink', 'level', 'player', 'W-L-D-unf', 'win %', 'GF / GA', 'by human', 'touch/min (min)', 'carries 3 s', 'carry %', 'shots', 'SOT %', 'shots opp', 'lead chg',
-    'first touch s', 'first shot s', 'first goal s (n / <2 min)', 'fo w/o touch', 'checks L/T', 'fouls behind/no puck (box s)', 'pokes (clean)', 'passes', 'payoffs OT/BA/DK (goals)', 'idle spells (s)', 'max no touch s', 'match s'];
+    'first touch s', 'first shot s', 'first goal s (n / <2 min)', 'fo w/o touch', 'checks L/T', 'fouls behind/no puck (box s)', 'pokes (clean)', 'passes (rcv)', 'payoffs OT/BA/DK (goals)', 'idle spells (s)', 'max no touch s', 'match s'];
   const body = rows.map((s) => [s.rink, s.level, s.player, `${s.wins}-${s.losses}-${s.draws}-${s.unfinished}`, `**${s.win_pct}**`, `${s.goals_for} / ${s.goals_against}`, s.goals_by_human,
     `${s.touches_per_min} (${s.touches_per_min_min})`, s.carries_3s, s.carry_pct, s.shots, s.shots_on_target_pct, s.shots_opp, s.lead_changes, s.first_touch_s, s.first_shot_s,
     `${s.first_goal_s} (${s.scored} / ${s.scored_2min})`, s.faceoffs_without_touch, `${s.checks_landed} / ${s.checks_taken}`, `${s.fouls_from_behind} / ${s.fouls_no_puck} (${s.box_s})`, `${s.pokes} (${s.pokes_clean})`,
-    s.passes, `${s.one_timers} / ${s.breakaways} / ${s.dekes} (${s.payoff_goals})`, `${s.idle_spells} (${s.idle_s})`, s.max_no_touch_s, s.match_s].map(String));
+    `${s.passes} (${s.passes_received})`, `${s.one_timers} / ${s.breakaways} / ${s.dekes} (${s.payoff_goals})`, `${s.idle_spells} (${s.idle_s})`, s.max_no_touch_s, s.match_s].map(String));
   const line = (cells) => `| ${cells.join(' | ')} |`;
   return [line(head), `|${head.map(() => '---').join('|')}|`, ...body.map(line)].join('\n');
 }

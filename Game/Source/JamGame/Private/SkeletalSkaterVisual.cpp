@@ -654,7 +654,7 @@ void USkeletalSkaterVisual::UpdateMotion_Implementation(float InSpeed, float InT
 	ApplyPose(Facing);
 
 	// Blade spray hook on a hard turn (|lean| >= 25 deg): a request every 8 frames, device B's placeholder Niagara system by soft path.
-	if (FMath::Abs(Lean) >= 25.f && LocalFrame % 8 == 0 && !bDown)
+	if (FMath::Abs(Lean) >= 25.f && LocalFrame % 12 == 0 && !bDown)
 	{
 		++BladeSprayRequests;
 		if (!bSprayTried)

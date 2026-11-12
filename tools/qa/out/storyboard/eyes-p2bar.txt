@@ -1,0 +1,14 @@
+PASS p2-bar a48-06-you-tag.jpg: 1 call, in 2020 out 397 think 1571 tokens, ~$0.0277, 21887 ms
+
+**eyes/p2-bar** A=a48-06-you-tag.jpg at 6 m (gemini-3.1-pro-preview, in 2020 out 397 think 1571 tokens, ~$0.0277, 21.9 s)
+- score: 5
+- gaps:
+  - rank: 1; element: pools; gap: The ice is dominated by a single massive circular gradient pattern rather than four distinct, soft light pools separated by shadows.; change: Remove the global circular light/texture and place four distinct spotlights aimed at the ice quadrants, lowering the ambient light to create shadows between them.
+  - rank: 2; element: outline; gap: The black ink outlines on the figures do not scale with distance, causing the players further away to turn into messy black blobs.; change: Multiply the line width in the outline post-process shader by the inverse of the scene depth so lines get thinner further from the camera.
+  - rank: 3; element: construction; gap: The boards have a yellow top and bottom line, missing the specified ochre kick plate, dark glass rail, and team-coloured emissive trim.; change: Update the board material to feature an ochre band at the base, a dark band at the top, and change the glowing trim to deep blue and warm orange.
+- works: Chunky toy proportions and clear deep blue/warm orange jersey separation.; The puck is successfully highlighted by a saturated glowing disc.; The far net is immediately findable thanks to the red frame and HUD marker.; The deep-blue night dome sits well above the dark silhouette line.
+- lead_sentence: We have the toy proportions and the basic palette working well, but the flat global lighting and uniform outlines are killing the painted cel night-time vibe.
+
+wrote docs/experiments/eyes/a48-p2bar-you-tag.json
+{"tool":"thirdjam.eyes/1","ok":true,"preset":"p2-bar","model":"gemini-3.1-pro-preview","stills":1,"calls":1,"prompt_tokens":2020,"output_tokens":1968,"cost_usd_est":0.02766,"json":"docs/experiments/eyes/a48-p2bar-you-tag.json"}
+exit 0

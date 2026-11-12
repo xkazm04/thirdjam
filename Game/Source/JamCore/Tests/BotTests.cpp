@@ -9,7 +9,9 @@
 #include "../AI/JamSimAdapter.h"
 #include "../AI/DifficultyResolve.h"
 #include "../AI/JamPlaytester.h"
+#include "../AI/JamAICore.h"
 #include "JamCartridge.h"
+#include "JamSim.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
 
@@ -43,6 +45,55 @@ namespace JamBotTestsLocal
 		JamAI::FormatStatsJson(S, Cart, JamAI::ModeName(Mode), Buf, sizeof(Buf));
 		return UTF8_TO_TCHAR(Buf);
 	}
+}
+
+// Lane A47 (B-to-A-0030 fault 9): pro bots wind their shots up. A default pro match (hockey.regular, the brain on every skater) is stepped by hand
+// and every bot shot's charge is read from the sim: with ShotChargeFrames 10 over charge_frames_max 30 a charged shot reads 0.33; QA1 saw 0.00 to
+// 0.07 before the fix. The bar: at least half of the bots' shots carry 0.3 or more, and at least one does.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamBotProCharge, "Jam.Bot.ProCharge",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::CommandletContext | EAutomationTestFlags::EngineFilter)
+
+bool FJamBotProCharge::RunTest(const FString& Parameters)
+{
+	using namespace JamBotTestsLocal;
+	UJamCartridge* Cart = Load(*this, 0);
+	if (!Cart) return false;
+	const JamAI::FJamMatchConfig C = JamAI::ToMatchConfigResolved(*Cart, TEXT("pro"));
+	JamAI::FJamSimAdapter Sim(*Cart);
+	Sim.Reset(C, 1);
+	JamAI::FJamBrain Brain;
+	Brain.Reset();
+	Brain.Params = C.AI;
+	Brain.Params.InterceptSpeed = C.Speed;
+	Brain.Params.AimConeDeg = C.AimConeDeg;
+	JamAI::FJamAIWorld W;
+	JamAI::FJamAIInput In[JamAI::kMaxSkaters];
+	int32 Shots = 0, Charged = 0;
+	float Sum = 0.f, Best = 0.f;
+	for (int64 F = 0; F < 18000 && !Sim.IsOver(); ++F)
+	{
+		Sim.View(W);
+		W.PlayerIndex = -1;   // no human: the brain plays every skater
+		for (int32 i = 0; i < JamAI::kMaxSkaters; ++i) In[i] = JamAI::FJamAIInput();
+		Brain.Think(W, In);
+		Sim.Step(In);
+		if (const UJamSim* S = Sim.GetSim())
+		{
+			for (const FJamSkaterState& K : S->GetSkaters())
+			{
+				if (!K.bShotThisFrame) continue;
+				++Shots;
+				Sum += K.LastShotCharge;
+				Best = FMath::Max(Best, K.LastShotCharge);
+				if (K.LastShotCharge >= 0.3f) ++Charged;
+			}
+		}
+	}
+	AddInfo(FString::Printf(TEXT("hockey.regular pro, brain on all six, seed 1: %d shots, %d charged (>= 0.3), mean charge %.2f, best %.2f"), Shots, Charged, Shots ? Sum / Shots : 0.f, Best));
+	TestTrue(TEXT("the bots shot at all"), Shots >= 3);
+	TestTrue(TEXT("at least one charged shot (the wind-up shows)"), Charged >= 1);
+	TestTrue(TEXT("at least half of the bots' shots are charged"), Charged * 2 >= Shots);
+	return true;
 }
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamBotPlayerBotWins, "Jam.Bot.PlayerBotWins",

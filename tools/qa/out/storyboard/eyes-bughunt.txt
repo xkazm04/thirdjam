@@ -1,0 +1,28 @@
+PASS bug-hunt a48-01-menu.jpg + a48-02-cuts-library.jpg + a48-05-match-card-regular.jpg + a48-06-you-tag.jpg + a48-07-far-net-marker.jpg + a48-08-bark-and-commentary.jpg: 1 call, in 7475 out 734 tokens, ~$0.0084, 13038 ms
+
+**eyes/bug-hunt** A=a48-01-menu.jpg B=a48-02-cuts-library.jpg C=a48-05-match-card-regular.jpg D=a48-06-you-tag.jpg E=a48-07-far-net-marker.jpg F=a48-08-bark-and-commentary.jpg (gemini-3.8-flash, in 7475 out 734 tokens, ~$0.0084, 13 s)
+- stills:
+  - label: Still A; clean: false
+    - findings:
+      - where: Bottom center, along the bottom edge of the frame; what: Controller prompt text 'STICK / ARROWS move A / ENTER select B / ESC back' clips through the white border outline of the menu card.; severity: 2; confidence: 0.95
+  - label: Still B; clean: false
+    - findings:
+      - where: Center inside both filmstrip cards; what: Stat text lines such as 'speed 11 m/s shot 13 m/s...' overlap and clip directly into the bottom row of filmstrip sprocket holes.; severity: 3; confidence: 0.98
+      - where: Bottom center, along the bottom edge of the frame; what: Controller prompt text clips into the bottom white border outline of the menu slate.; severity: 2; confidence: 0.95
+  - label: Still C; clean: false
+    - findings:
+      - where: Bottom-center, below the MATCH 1 slate; what: The 'PERIOD 1 - FACEOFF' banner, countdown reticle '1 HOLD', and the 'press shoot at the drop, not before' tooltip overlap into an unreadable stack.; severity: 4; confidence: 0.99
+  - label: Still D; clean: false
+    - findings:
+      - where: Center, directly above the opposing orange player at faceoff; what: The blue 'YOU' tag is positioned over an opposing orange skater rather than the player-controlled blue skater.; severity: 4; confidence: 0.95
+  - label: Still E; clean: false
+    - findings:
+      - where: Bottom center, player skater; what: The foreground skater model has completely lost its hockey stick mesh while in skating stance.; severity: 3; confidence: 0.9
+  - label: Still F; clean: false
+    - findings:
+      - where: Top center, dialogue bark bubble; what: The orange dialogue bark bubble overlaps and obscures the bottom half of the period/score HUD banner.; severity: 3; confidence: 0.95
+      - where: Bottom center, player skater; what: The foreground skater model is missing its hockey stick mesh.; severity: 3; confidence: 0.9
+
+wrote docs/experiments/eyes/a48-bughunt.json
+{"tool":"thirdjam.eyes/1","ok":true,"preset":"bug-hunt","model":"gemini-3.8-flash","stills":6,"calls":1,"prompt_tokens":7475,"output_tokens":734,"cost_usd_est":0.00836,"json":"docs/experiments/eyes/a48-bughunt.json"}
+exit 0

@@ -49,13 +49,25 @@ struct JAMGAME_API FJamCameraSettings
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
 	float BoardsMarginM = 0.8f;
 
-	// A40, game.camera.end_height_m: the height the camera lifts to when the boards take the whole arm (it rises in proportion to the arm lost).
+	// A40, game.camera.end_height_m: the height the camera lifts to when the boards take the whole arm (it rises in proportion to the arm lost). A49: 3 (was 5).
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
-	float EndHeightM = 5.f;
+	float EndHeightM = 3.f;
 
-	// A40, game.camera.far_net_bias (0..1): how much of the angle to the far net the framing leads by when the skater heads for it.
+	// A40, game.camera.far_net_bias (0..1): how much of the angle to the far net the framing leads by when the skater heads for it. A49: 0.2 (was 0.5).
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
-	float FarNetBias = 0.5f;
+	float FarNetBias = 0.2f;
+
+	// Lane A49 (complaint 2, "the camera does not stay where the player moves"): the human never leaves the frame's middle third. The yaw may differ from the
+	// bearing camera -> pivot by at most MiddleThirdYawDeg (the horizontal third's edge at 70 degrees of FOV is 13.1 degrees), the pitch from the bearing to the
+	// chest point (ChestM up) by at most MiddleThirdPitchDeg (the vertical third's edge at 16:9 is 7.5 degrees). The lead and the end-board yaw work inside that.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
+	float MiddleThirdYawDeg = 12.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
+	float MiddleThirdPitchDeg = 6.5f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
+	float ChestM = 1.f;
 
 	// Not cartridge keys (constants of the recipe): the critically damped spring's time constant in sim frames (lift and yaw offset), the metres of
 	// look-ahead added per metre of arm the boards take (tilts the lifted camera up the rink instead of down at the skater's back), and the distance
@@ -99,6 +111,8 @@ struct JAMGAME_API FJamCameraFilter
 	// follow their targets through springs.
 	FJamSpring Lift;
 	FJamSpring YawOffsetDeg;
+	// A49: the pitch follows its budgeted target through a spring too (no pop when the chest bearing moves fast next to the boards).
+	FJamSpring PitchDeg;
 
 	// Diagnostics of the last step (not state): the displacement the boards imposed over the arm length (0 = free, 1 = a whole arm) and its direction (into the rink).
 	float LastClampS = 0.f;
@@ -164,6 +178,10 @@ public:
 	// A40. One SIMULATION frame of the third-person camera: lag filter, far-net bias, board clamp, lift and yaw springs, pose (centimetres).
 	// Pure: tests and scripted movers call it with their own state and frame. The frame's HumanIndex must be valid.
 	static FTransform StepThirdPerson(const FJamCameraSettings& C, FJamCameraFilter& State, const FJamPresentationFrame& Frame);
+
+	// Lane A49. Where a world point (cm) lands in the frame of a pose: x, y in [-1, 1] across the frame (0 = centre), for a horizontal FOV and an aspect ratio;
+	// a point behind the camera returns (+-9, +-9). |x| <= 1/3 and |y| <= 1/3 is the middle third.
+	static FVector2D FrameFraction(const FTransform& Pose, float HFovDeg, float Aspect, const FVector& WorldCm);
 
 	// A40. The yaw lead toward the far net, degrees, before the spring: bias * toward * distance band * (yaw to net - yaw), 0 when skating away or near the net.
 	static float FarNetLeadDeg(const FJamCameraSettings& C, const FVector2D& PivotM, float YawDeg, const FVector2D& FarNetM);

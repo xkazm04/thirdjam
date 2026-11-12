@@ -69,16 +69,17 @@ FString UJamMenuFlow::DescribeCut(const UJamCartridge& C)
 {
 	const FJamGameConfig& G = C.Game;
 	TArray<FString> Bits;
-	// The envelope has no description key (R-0010): the shipped cuts carry a line here, keyed by cartridge id; others say their rink size.
+	// The envelope has no description key (R-0010): every cut prints its own rink size (lane A47, B-to-A-0030 fault 10: Raw and Boost are 120 x 60,
+	// the old fixed strings said 90 x 45); the shipped cuts add a word, keyed by cartridge id.
 	static const TMap<FString, FString> ById = {
-		{ TEXT("hockey-regular"), TEXT("90 x 45 m, fast") },
-		{ TEXT("hockey-arena-large"), TEXT("120 x 60 m, open ice") },
-		{ TEXT("hockey-arena-wide"), TEXT("140 x 70 m") },
-		{ TEXT("hockey-raw"), TEXT("90 x 45 m, no rules") },
-		{ TEXT("hockey-boost"), TEXT("90 x 45 m, pickups on the ice") },
+		{ TEXT("hockey-regular"), TEXT("fast") },
+		{ TEXT("hockey-arena-large"), TEXT("open ice") },
+		{ TEXT("hockey-raw"), TEXT("no rules") },
+		{ TEXT("hockey-boost"), TEXT("pickups on the ice") },
 	};
 	const FString* Lead = ById.Find(C.Id);
-	Bits.Add(Lead ? *Lead : FString::Printf(TEXT("%g x %g m"), G.Rink.LengthM, G.Rink.WidthM));
+	const FString Size = FString::Printf(TEXT("%g x %g m"), G.Rink.LengthM, G.Rink.WidthM);
+	Bits.Add(Lead ? FString::Printf(TEXT("%s, %s"), *Size, **Lead) : Size);
 	if (G.Rules.Mode == FName(TEXT("timer")))
 	{
 		const int32 Secs = G.Rules.TimerFrames / 60;
