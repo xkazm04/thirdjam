@@ -910,3 +910,69 @@ Collisions and knockdowns: 6 frames each from the game camera (left half) and fr
 - **Contacts.** Contact between the bodies is not modelled; the receiver and the checker are separate takes.
 - **Skate lift on skinned figures.** It needs the retarget lane on `export4/`.
 - **Static holds in Unreal.** Whether a constant 30-frame take imports correctly (B4 saw 2-frame holds lose their pose). The holds are 31 frames of identical keys, not 2.
+
+## Fifth pass: lift, stumble, stronger contact takes (20:17 to 20:35)
+
+The coordinator asked for this pass: the scripted figure is now the shipped default, and device A's bake-off and the engine lane named takes to fix. Blender only.
+
+**Where the files are**
+- New files: `C:\Users\kazda\jam\skater-lab\skf\export5\<style>\`, same three file names, **72 takes** (70 plus `Stumble_Short` and `Idle`).
+- `export/` to `export4/` were not touched; nor was `s4/`.
+- Work files: `skf\work5\<style>\` (`summary5.md`, `check_fbx*.json`, `clips_report.json`).
+- Old-beside-new sheets: `skf\sheets5\<style>_old_new.png`.
+- Rebuild: `SKF_SUFFIX=5 bash C:/Users/kazda/jam/skater-lab/skf/run_all.sh`, then `bash skf/sheet5.sh` (old-beside-new renders and the Stumble_Short start check).
+- Summaries: `node summary5.mjs` and `node wrap5.mjs`, run from `skf/`.
+
+### Take table
+
+| Take | Frames (main file) / s | Contact | What changed |
+|---|---|---|---|
+| `Lift` | 22 / 0.35 | flick top at 8, held 8 to 10 | **Reworked as a hockey lift.** Knees bent and the chest down (pelvis drop 0.19 / 0.15), the blade low in front (heel 0.82 m ahead), then a flick up 36 to 40 cm with the bottom hand. The shaft stays mostly flat across the body (tilt 70 to 76 deg, leaning 32 deg to the left), not standing up as before (tilt 58 to 80 with the heel 42 cm up). Both hands on. Back to the carry at 21 (0.35 s). Iteration 2: deeper reach, the chest rises with the flick, 40 cm. |
+| `Stumble_Short` (new) | 21 / 0.33 | frame 0 = `Poke` frame 6 | Exactly 20 frames from `Poke` frame 6, measured **0.0 cm** apart on every joint in all three styles. Weight thrown over the front (left) skate (pelvis pitch 40, back skate up), the stick dragging low, extreme 5 to 7, recovering at 13, Glide at 20. The solver starts from Poke's state at frame 5, so the elbows and twist match. `Stumble` is unchanged. |
+| `Check_Hit_Left` / `_Right` / `_Back` | 29 / 0.47 | 3 | Displacement doubled: spine, head and clavicles twice as far, head lag plus a turn of 25 deg. The extreme reaches frame 5 and **holds 5 to 8**. A visible step at 14: 46 cm out to the side, or 34 cm forward for the hit from behind. Glide at 28. |
+| `Poke_Hit` | 25 / 0.4 | 3 | The stick knocked far out to the right (heel 0.78 m right, yaw -85 deg), shoulders twisted (pelvis yaw -22, head 30), **held 5 to 8**, a half step of 42 cm at 14, Glide at 24. |
+| `Lift_Hit` | 21 / 0.33 | 3 | The stick rises to 40 cm with the hands, the body jolts back (pelvis pitch 4, spine -6), **held 5 to 8**, Glide at 20. Iteration 2 carries the hands up with the stick; iteration 3 (final) keeps the bottom hand on the shaft. |
+| `Board_Hit` | 31 / 0.5 | 4 | A bigger impact: pelvis drop 0.23, pelvis pitch 40 deg with hip roll and yaw (the hips follow), forearms and the near shoulder in, head turned 70 deg away, **held 6 to 9**. Rebound step **back 30 cm** at 17, Glide at 30. |
+| `Check_Deliver_Left` | 31 / 0.5 | 16 | The stick now moves across to the left side with the hands. The stick and hand targets are mirrored about the body as well as the body itself. It starts from the real Glide, not a mirrored one. |
+| `Trip` | 31 / 0.5 | 2 | **Unmistakable now.** The right leg is swept out sideways and up (skate 62 cm out, 42 cm up, frames 2 to 4), a half twist in the air (pelvis yaw 70 deg at 10), and it lands **on the left forearm and hip**. It ends in `Knockdown_Right`'s lying pose, so **`GetUp_Side_Right`** starts from it exactly. Before, it went flat onto the chest like `Knockdown_Back` and used `GetUp_Front`. |
+| `Idle` (new) | 121 / 2.0 loop | - | Standing still in the carry pose, stance 19 cm each side, with a 2 s weight shift (pelvis roll ±3 deg). Hips **76.5..77.0 / 72.5..72.9 / 81.1..81.7 cm** (P2 / P3 / P4) against Glide's 76..77 / 72..72.9 / 80.4..81.7. `Idle_Faceoff` is unchanged for the faceoff (65.8..67 / 62.7..63.8 / 67.1..68.7). |
+
+The main file repeats the last frame, so a 20-frame take has 21 frames (as every one-shot since s4); 0.33 s is frames 0 to 20.
+
+**Iterations on my own sheets** (`sheets5/<style>_old_new.png`):
+1. In the first build, `Lift` barely read from the game camera, and `Lift_Hit` looked almost unchanged. Iteration 2 gave `Lift` a deeper reach and a 40 cm flick, and carried the hands up with the stick in `Lift_Hit`.
+2. That `Lift_Hit` took the bottom hand 19 to 26 cm off the shaft. Iteration 3 (final) keeps a 40 cm blade lift with both hands on and the body jolting back.
+3. My first check of `Stumble_Short` against `Poke` frame 6 read 27 cm apart. The check was wrong: it read absolute frames, and the re-imported actions do not start at 0. Measured from each action's first frame, the match is 0.0 cm.
+
+### Checks (re-imported main and loopcut files, all 72 takes)
+
+**Unchanged:**
+- pelvis and root travel 0.000 cm and loop seams 0.000 cm;
+- wrap-speed offenders 0 in all styles;
+- aim grid: holds within 0.04 cm, blend test 0 failures;
+- old reaches exact;
+- foot pitch max 20.3 to 21.8 / 25.0 to 25.1 deg;
+- skate target miss 0;
+- no body part below the ice;
+- bottom hand on the shaft within 0.2 cm in the changed two-handed takes, except P3 `Lift` at 1.4 cm.
+
+**Moved:**
+- **Stick in the ice:** `Check_Hit_*` now dip the stick up to 0.9 cm (P3 `Check_Hit_Back` -0.93 cm, the stick blade grazing the ice in the stronger lean).
+- **Steps over 45 deg** grew (P2 88 -> 107, P3 91 -> 112, P4 93 -> 117). These are the stronger extremes, reached in 2 frames and held 3.
+- **New twist steps over 45 deg**, the same in all three styles:
+  - `Check_Hit_Back` clavicles 52.5 deg at frame 4, the shoulders thrown forward in 2 frames;
+  - `Poke_Hit` stick_socket 55.8 deg at frame 4, the stick knocked out (the stick bone, not a limb).
+  - P4's two skate steps in `GetUp_Side_*` from the fourth pass remain.
+
+### What is still weak
+
+- **`Lift_Hit`.** Still mostly a stick motion: the body jolt is small at the game camera.
+- **`Lift`.** The flick reads best from the side. From behind, the shaft across the body hides some of it.
+- **Twist steps.** The two-frame extremes produce the clavicle and stick twist steps above. A skinned figure may show the shoulders snapping in `Check_Hit_Back`; a 3-frame rise would halve them.
+- **`Stumble_Short`.** Its frame 0 is Poke frame 6 exactly, but the engine's cut will still blend; the takes are built for a hard cut.
+- **`Trip` / `Knockdown_Right`.** Both now end in the same lying pose, on the left hip, so both use `GetUp_Side_Right`.
+- **Not verified:** anything in Unreal (the bake-off's own look at the new `Lift`, the engine's cut timing for `Stumble_Short`), and skinned figures.
+
+### Sheets
+
+- `devlog/shots/20261112-203453-B-lab-skf5-p2_cel-old-new.png`, `20261112-203454-B-lab-skf5-p3_clay-old-new.png`, `20261112-203454-B-lab-skf5-p4_broadcast-old-new.png`
