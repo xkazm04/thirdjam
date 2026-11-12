@@ -1,0 +1,1 @@
+B2c test 2 VER b: depth haze HazeDensity 0.0003, HazeMax 0.5: far-end black lifted +13.7 luma, beacon unchanged
