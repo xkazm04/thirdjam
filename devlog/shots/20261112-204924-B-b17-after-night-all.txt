@@ -1,0 +1,1 @@
+B17 after: every NS_ event on the night tier at the game camera (25 m), frame 3 of each strip, same layout as b17-before-night-all; all on the tier-aware translucent M_Fx_Tier

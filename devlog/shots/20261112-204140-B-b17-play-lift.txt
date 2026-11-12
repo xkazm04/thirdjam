@@ -1,0 +1,1 @@
+B17 proof: lift as it fired in a 90 s bot match on night (hockey.regular, default figure): game camera frame, then 6 frames from 25 m behind the event, time dilation 0.02 set from the event bus callback
