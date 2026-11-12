@@ -4,6 +4,8 @@
 #include "JamEventBus.h"
 #include "JamSim.h"
 #include "JamEffectSystem.h"
+#include "JamRuleSystem.h"
+#include "JamZones.h"
 
 namespace JamAI
 {
@@ -68,18 +70,132 @@ namespace JamAI
 		return C;
 	}
 
+	// ---- lane A41: the game mode's systems as one bundle ----
+
+	void FJamSystems::BuildBeforeInit(UJamSim& Sim, const FJamGameConfig& G, IJamRuleHook* Hook)
+	{
+		Release();
+		// Lane A15 (C-0005 seam B): the only IJamRuleHook, set before Init so the opening faceoff reaches it.
+		Rules.Reset(NewObject<UJamRuleSystem>());
+		Rules->Init(G);
+		Sim.SetRuleHook(Hook);
+		// R-0019: the sim reads ice factors, no_shoot and bumper zones from the zone system.
+		Zones.Reset(NewObject<UJamZoneSystem>());
+		Zones->Init(G);
+		Sim.SetZoneSource(Zones.Get());
+		EndMatchActions = EndPeriodActions = 0;
+	}
+
+	void FJamSystems::BuildAfterInit(UJamSim& Sim, const FString& RawCartridgeJson)
+	{
+		// Lane A14 (C-0005): the effect system binds itself as the sim's modifier source and owns the pickups.
+		Effects.Reset(NewObject<UJamEffectSystem>());
+		EffectErrors.Reset();
+		Effects->Init(&Sim, RawCartridgeJson, EffectErrors);
+	}
+
+	void FJamSystems::BeforeStep(const UJamSim& Sim)
+	{
+		if (!Rules.IsValid()) { return; }
+		Rules->SetScore(0, Sim.GetScore(0));
+		Rules->SetScore(1, Sim.GetScore(1));
+	}
+
+	void FJamSystems::AfterStep(const UJamSim& Sim)
+	{
+		if (Zones.IsValid()) { Zones->Update(Sim.GetFrame(), Sim.GetSkaters(), Sim.GetPuck()); }   // membership and zone events for this frame
+		if (Effects.IsValid()) { Effects->Step(); }   // after the sim's frame and the zone update (its zone triggers read that list)
+	}
+
+	void FJamSystems::View(FJamAIWorld& W) const
+	{
+		if (!Zones.IsValid()) { return; }
+		// lane A3 (R-0019): slow-ice circles (rects by half diagonal) and who stands in a no_shoot zone, as AHokejGameMode::GatherInputs adds them.
+		W.NumSlowIce = 0;
+		static const FName SlowIce(TEXT("slow_ice")), Rect(TEXT("rect"));
+		for (const FJamZoneConfig& Z : Zones->GetZones())
+		{
+			if (Z.Kind != SlowIce || W.NumSlowIce >= FJamAIWorld::kMaxSlowIce) { continue; }
+			W.SlowIceCentre[W.NumSlowIce] = FVec2(Z.X, Z.Z);
+			W.SlowIceRadius[W.NumSlowIce] = Z.Shape == Rect ? 0.5 * FMath::Sqrt(Z.W * Z.W + Z.D * Z.D) : Z.R;
+			++W.NumSlowIce;
+		}
+		for (int32 i = 0; i < W.NumSkaters; ++i)
+		{
+			FName ZoneId;
+			W.Skaters[i].bNoShoot = Zones->BlocksShot(FVector2D(W.Skaters[i].Pos.X, W.Skaters[i].Pos.Y), ZoneId);
+		}
+	}
+
+	void FJamSystems::OnRuleEvent(const FJamRuleEventIn& In, TArray<FJamRuleActionOut>& Out)
+	{
+		if (!Rules.IsValid()) { return; }
+		const int32 Before = Out.Num();
+		Rules->OnRuleEvent(In, Out);
+		for (int32 i = Before; i < Out.Num(); ++i)
+		{
+			if (Out[i].Action == EJamRuleAction::EndMatch) { ++EndMatchActions; }
+			else if (Out[i].Action == EJamRuleAction::EndPeriod) { ++EndPeriodActions; }
+		}
+	}
+
+	uint64 FJamSystems::StateHash() const
+	{
+		if (!IsBuilt()) { return 0; }
+		uint64 H = 14695981039346656037ull;
+		const uint64 Parts[3] = { Rules->StateHash(), Zones->StateHash(), Effects->StateHash() };
+		for (const uint64 V : Parts)
+		{
+			for (int32 i = 0; i < 8; ++i) { H ^= (V >> (i * 8)) & 0xFF; H *= 1099511628211ull; }
+		}
+		return H;
+	}
+
+	void FJamSystems::Release()
+	{
+		Effects.Reset();
+		Zones.Reset();
+		Rules.Reset();
+		EffectErrors.Reset();
+	}
+
+	// ---- the adapter ----
+
 	FJamSimAdapter::FJamSimAdapter(const FJamGameConfig& InGame)
 		: Game(InGame)
 	{
 		Sim.Reset(NewObject<UJamSim>());
 	}
 
-	FJamSimAdapter::~FJamSimAdapter() = default;
+	FJamSimAdapter::FJamSimAdapter(const UJamCartridge& Cart)
+		: Game(Cart.Game), RawJson(Cart.RawJson), bWithSystems(true)
+	{
+		Sim.Reset(NewObject<UJamSim>());
+	}
+
+	FJamSimAdapter::~FJamSimAdapter()
+	{
+		// The sim keeps raw pointers to the hook, the zone source and the modifier source: clear them before the systems go.
+		if (Sim.IsValid())
+		{
+			Sim->SetRuleHook(nullptr);
+			Sim->SetZoneSource(nullptr);
+			Sim->SetModifierSource(nullptr);
+		}
+		Systems.Release();
+	}
 
 	void FJamSimAdapter::Reset(const FJamMatchConfig& C, uint64_t Seed)
 	{
 		(void)C;   // the sim reads the full cartridge config; C is the runner's view of the same cartridge
+		if (bWithSystems) { Systems.BuildBeforeInit(*Sim, Game, this); }
 		Sim->Init(Game, Seed);
+		if (bWithSystems) { Systems.BuildAfterInit(*Sim, RawJson); }
+	}
+
+	void FJamSimAdapter::OnRuleEvent(const FJamRuleEventIn& In, TArray<FJamRuleActionOut>& Out)
+	{
+		Systems.OnRuleEvent(In, Out);
 	}
 
 	void FJamSimAdapter::BuildWorld(const UJamSim& S, FJamAIWorld& W)
@@ -157,6 +273,7 @@ namespace JamAI
 	{
 		BuildWorld(*Sim, W);
 		W.FramesSinceDrop = (W.bDrawOpen && LastDropFrame >= 0) ? static_cast<int>(W.Frame - LastDropFrame) : -1;
+		if (bWithSystems) { Systems.View(W); }   // lane A41: slow-ice circles and no_shoot flags, as the game mode adds them
 	}
 
 	FJamAIStepEvents FJamSimAdapter::Step(const FJamAIInput* In)
@@ -187,7 +304,9 @@ namespace JamAI
 			I.bPoke = In[i].bPoke;
 			I.bLift = In[i].bLift;
 		}
+		if (bWithSystems) { Systems.BeforeStep(*Sim); }   // lane A41: score mirror, sim step, zone update, effect step (the game mode's order)
 		Sim->Step(Inputs);
+		if (bWithSystems) { Systems.AfterStep(*Sim); }
 		const TArray<FJamSkaterState>& After = Sim->GetSkaters();
 		for (int32 i = 0; i < N; ++i)
 		{

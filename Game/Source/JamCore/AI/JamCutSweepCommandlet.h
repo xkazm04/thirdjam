@@ -5,7 +5,8 @@
 // end_period actions, pickups spawned and taken (and by the human), effects started, zone enters, periods, announces, shots blocked,
 // checks, knockdowns, fouls, rink revision, end cause (score | timer | rule | none), effect-system errors. A cartridge the loader rejects
 // prints one line with "load_error" and the commandlet still returns 0 (the sweep's verdict is "loader rejects").
-// JamTournament (lane A2) is untouched: it runs the bare sim, which has no rule hooks, zones or pickups.
+// Lane A41: the wiring moved into FJamSimAdapter (JamSimAdapter.h, FJamSystems); JamTournament, the playtester and the Jam.Bot tests run
+// the same bundle now. This commandlet only adds the counters.
 #pragma once
 
 #include "CoreMinimal.h"

@@ -16,91 +16,49 @@ DEFINE_LOG_CATEGORY_STATIC(LogJamCutSweep, Log, All);
 
 namespace JamCutSweepLocal
 {
-	// The headless match as the game mode builds it (HokejGameMode::BuildMatch / StepOnce): rule hook set before Init so the
-	// opening faceoff reaches it, zone source before Init, effect system bound after Init; per frame: score mirror, sim step,
-	// zone update, effect step. The brain's world view gains the slow-ice circles and the no_shoot flags the game mode adds.
-	class FJamCutSim : public JamAI::FJamSimAdapter, public IJamRuleHook
+	// Lane A41: the headless match with the game mode's systems is FJamSimAdapter built from the cartridge (JamSimAdapter.h, FJamSystems:
+	// rule hook before Init, zone source before Init, effects after; per frame score mirror, sim step, zone update, effect step; the
+	// brain's view with slow-ice circles and no_shoot). This class only counts what the sweep's JSON line reports.
+	class FJamCutSim : public JamAI::FJamSimAdapter
 	{
 	public:
 		explicit FJamCutSim(const UJamCartridge& InCart)
-			: FJamSimAdapter(InCart.Game), Cart(&InCart)
+			: FJamSimAdapter(InCart), Cart(&InCart)
 		{
 		}
 
 		virtual void Reset(const JamAI::FJamMatchConfig& C, uint64_t Seed) override
 		{
-			Rules.Reset(NewObject<UJamRuleSystem>());
-			Rules->Init(Cart->Game);
-			GetSim()->SetRuleHook(this);
-			Zones.Reset(NewObject<UJamZoneSystem>());
-			Zones->Init(Cart->Game);
-			GetSim()->SetZoneSource(Zones.Get());
 			FJamSimAdapter::Reset(C, Seed);
-			Effects.Reset(NewObject<UJamEffectSystem>());
-			EffectErrors.Reset();
-			Effects->Init(GetSim(), Cart->RawJson, EffectErrors);
 			Count = FCounts();
 			CountSimEvents();   // the opening faceoff / TAKE 1 events
 		}
 
-		virtual void View(JamAI::FJamAIWorld& W) const override
-		{
-			FJamSimAdapter::View(W);
-			if (!Zones.IsValid()) { return; }
-			W.NumSlowIce = 0;
-			for (const FJamZoneConfig& Z : Zones->GetZones())
-			{
-				if (Z.Kind != FName(TEXT("slow_ice")) || W.NumSlowIce >= JamAI::FJamAIWorld::kMaxSlowIce) { continue; }
-				const bool bRect = Z.Shape == FName(TEXT("rect"));
-				W.SlowIceCentre[W.NumSlowIce] = JamAI::FVec2(Z.X, Z.Z);
-				W.SlowIceRadius[W.NumSlowIce] = bRect ? 0.5 * FMath::Sqrt(Z.W * Z.W + Z.D * Z.D) : Z.R;
-				++W.NumSlowIce;
-			}
-			for (int32 i = 0; i < W.NumSkaters; ++i)
-			{
-				FName ZoneId;
-				W.Skaters[i].bNoShoot = Zones->BlocksShot(FVector2D(W.Skaters[i].Pos.X, W.Skaters[i].Pos.Y), ZoneId);
-			}
-		}
-
 		virtual JamAI::FJamAIStepEvents Step(const JamAI::FJamAIInput* In) override
 		{
-			UJamSim* S = GetSim();
-			Rules->SetScore(0, S->GetScore(0));
-			Rules->SetScore(1, S->GetScore(1));
 			const JamAI::FJamAIStepEvents Ev = FJamSimAdapter::Step(In);
-			Zones->Update(S->GetFrame(), S->GetSkaters(), S->GetPuck());
-			Effects->Step();
 			CountSimEvents();
-			const int32 Human = S->GetHumanIndex();
-			for (const FJamSimEvent& E : Effects->GetFrameEvents())
+			const int32 Human = GetSim()->GetHumanIndex();
+			if (const UJamEffectSystem* Fx = GetSystems().Effects.Get())
 			{
-				if (E.Name == JamEvents::PickupTake && E.Who == Human) { ++Count.HumanPickups; }
+				for (const FJamSimEvent& E : Fx->GetFrameEvents())
+				{
+					if (E.Name == JamEvents::PickupTake && E.Who == Human) { ++Count.HumanPickups; }
+				}
 			}
 			return Ev;
 		}
 
-		// IJamRuleHook: forward to the rule system and count the actions it emits.
-		virtual void OnRuleEvent(const FJamRuleEventIn& In, TArray<FJamRuleActionOut>& Out) override
-		{
-			const int32 Before = Out.Num();
-			Rules->OnRuleEvent(In, Out);
-			for (int32 i = Before; i < Out.Num(); ++i)
-			{
-				if (Out[i].Action == EJamRuleAction::EndMatch) { ++Count.EndMatchActions; }
-				else if (Out[i].Action == EJamRuleAction::EndPeriod) { ++Count.EndPeriodActions; }
-			}
-		}
-
 		struct FCounts
 		{
-			int32 Periods = 0, Announces = 0, ShotsBlocked = 0, Checks = 0, Knockdowns = 0, Fouls = 0, HumanPickups = 0, EndMatchActions = 0, EndPeriodActions = 0;
+			int32 Periods = 0, Announces = 0, ShotsBlocked = 0, Checks = 0, Knockdowns = 0, Fouls = 0, HumanPickups = 0;
 		};
 
 		// The "sweep" object of the JSON line.
 		FString SweepJson(const FString& Level) const
 		{
 			const UJamSim* S = GetSim();
+			const JamAI::FJamSystems& Sys = GetSystems();
 			const FJamRulesConfig& R = Cart->Game.Rules;
 			const bool bOver = S->GetPhase() == EJamSimPhase::Over;
 			const bool bFirstTo = R.Mode == FName(TEXT("first_to"));
@@ -109,18 +67,22 @@ namespace JamCutSweepLocal
 			FString Cause = TEXT("none");
 			if (bOver)
 			{
-				if (Count.EndMatchActions > 0) { Cause = TEXT("rule"); }
+				if (Sys.EndMatchActions > 0) { Cause = TEXT("rule"); }
 				else if (bFirstTo && R.ScoreToWin > 0 && Top >= R.ScoreToWin) { Cause = TEXT("score"); }
 				else if (bTimer && S->GetTimerFrames() <= 0) { Cause = TEXT("timer"); }
 				else { Cause = TEXT("other"); }
 			}
 			FString Errs;
-			for (const FString& E : EffectErrors) { Errs += (Errs.IsEmpty() ? TEXT("") : TEXT(" | ")) + E.ReplaceCharWithEscapedChar(); }
+			for (const FString& E : Sys.EffectErrors) { Errs += (Errs.IsEmpty() ? TEXT("") : TEXT(" | ")) + E.ReplaceCharWithEscapedChar(); }
+			const UJamRuleSystem* Rules = Sys.Rules.Get();
+			const UJamZoneSystem* Zones = Sys.Zones.Get();
+			const UJamEffectSystem* Effects = Sys.Effects.Get();
 			return FString::Printf(TEXT("{\"level\":\"%s\",\"rules_mode\":\"%s\",\"score_to_win\":%d,\"timer_frames\":%d,\"hooks\":%d,\"rule_fires\":%d,\"end_match_actions\":%d,\"end_period_actions\":%d,")
 				TEXT("\"pickups_spawned\":%d,\"pickups_taken\":%d,\"human_pickups\":%d,\"effects_started\":%d,\"zones\":%d,\"zone_enters\":%d,\"periods\":%d,\"period_events\":%d,")
 				TEXT("\"announces\":%d,\"shots_blocked\":%d,\"checks\":%d,\"knockdowns\":%d,\"fouls\":%d,\"rink_revision\":%d,\"rink_m\":[%g,%g],\"end_cause\":\"%s\",\"effect_errors\":\"%s\"}"),
-				*Level, *R.Mode.ToString(), R.ScoreToWin, R.TimerFrames, Rules->GetHookCount(), Rules->GetTotalFires(), Count.EndMatchActions, Count.EndPeriodActions,
-				Effects->GetPickupsSpawned(), Effects->GetPickupsTaken(), Count.HumanPickups, Effects->GetEffectsStarted(), Zones->GetZoneCount(), Zones->GetEnterCount(),
+				*Level, *R.Mode.ToString(), R.ScoreToWin, R.TimerFrames, Rules ? Rules->GetHookCount() : 0, Rules ? Rules->GetTotalFires() : 0, Sys.EndMatchActions, Sys.EndPeriodActions,
+				Effects ? Effects->GetPickupsSpawned() : 0, Effects ? Effects->GetPickupsTaken() : 0, Count.HumanPickups, Effects ? Effects->GetEffectsStarted() : 0,
+				Zones ? Zones->GetZoneCount() : 0, Zones ? Zones->GetEnterCount() : 0,
 				S->GetPeriod(), Count.Periods, Count.Announces, Count.ShotsBlocked, Count.Checks, Count.Knockdowns, Count.Fouls, S->GetRinkRevision(),
 				S->GetConfig().Rink.LengthM, S->GetConfig().Rink.WidthM, *Cause, *Errs);
 		}
@@ -140,10 +102,6 @@ namespace JamCutSweepLocal
 		}
 
 		const UJamCartridge* Cart = nullptr;
-		TStrongObjectPtr<UJamRuleSystem> Rules;
-		TStrongObjectPtr<UJamZoneSystem> Zones;
-		TStrongObjectPtr<UJamEffectSystem> Effects;
-		TArray<FString> EffectErrors;
 		FCounts Count;
 	};
 }
