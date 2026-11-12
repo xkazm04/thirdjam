@@ -1,6 +1,6 @@
 # Hokej: the game on one page (H4, 2026-11-12 10:05)
 
-**Pitch.** Ice hockey 3 vs 3 on a wide-open rink, played from behind your skater, where every match is a *cut* you can direct: pick a cut, or tell the Designer
+**Pitch.** HOKEJ: ice hockey 3 vs 3 on a wide-open rink, played from behind your skater with a mouse-aimed stick, where every match is a *cut* you can direct: pick a cut, or tell the Designer
 in one sentence how you want it, and play your Director's Cut. Theme: Director's Cut (`docs/THEME.md`).
 
 **Core loop (the 2-minute first play).** Faceoff at centre ice; you skate (WASD or left stick), shoot (space / A), check (shift / B, in Raw Cut only).

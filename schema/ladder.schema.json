@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ladder.schema.json",
+  "title": "tj.ladder/1: a season of takes (C-0005 section 4, game.ladder; lane A17)",
+  "$comment": "The ladder lives in its own file (Game/Content/Cartridges/ladder/*.ladder.json), never in a play cut. The ladder object is C-0005's game.ladder; the envelope adds only the schema tag. Cross-file checks (each cartridge exists and validates, its id equals the preset id) are in ladder.mjs.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "ladder"],
+  "properties": {
+    "schema": { "const": "tj.ladder/1" },
+    "ladder": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "takes"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$", "maxLength": 48, "description": "a kebab-case id such as season-one" },
+        "takes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 12,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["title", "cartridge", "twist_text", "unlock"],
+            "properties": {
+              "title": { "type": "string", "minLength": 1, "maxLength": 32 },
+              "cartridge": { "type": "string", "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$", "maxLength": 48, "description": "a preset id: the file ladder/<id>.cartridge.json" },
+              "twist_text": { "type": "string", "minLength": 1, "maxLength": 90 },
+              "unlock": { "enum": ["always", "previous_won"] }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -142,3 +142,30 @@ situation in game. Ideal state would be to shout at AI teammates for short strat
 2. Device B: P2 to full polish and P3 clay in parallel from now; P4 only after P3 ships, bar = "regular hockey works and looks broadcast-like"; the L2 GPU hang first (handoff 0006).
 3. "Ahead of schedule" is retired as a status word: the milestones are met, the dimensions are first drafts. Gate 2 (H24) now reads: M1 plus effects, rules, feel and the season playable
    on P2, the operator's playtest done, P3 rig in progress.
+
+## R-0013 (H7.3, 2026-11-12 13:15): the operator's first playtest of Hokej_Hokej_H7 (247.5 MB)
+Operator's notes, verbatim: "Control: Ability to control stick with mouse and without puck with the mouse. Without to tackle with stick to make player fall, missing also clean tackles to take
+over the puck with stick. It should also help last player in field to goalie. With stick to clean tackles. The tackles and hard fouls will be key for dynamic gameplay as now it is hard to take
+puck from another player. / HUD elements and typography are ugly to look and read, with image generation tool we have cheap way how to create nice interface from the start. / Face-off needs
+to be implemented to start the game. / No need to mention Director's cut in the name of the game."
+1. **The stick is the core verb (lane A16, ahead of everything else in its brief):** the stick is aimed by the **mouse** (right stick on gamepad) relative to the skater: angle and reach;
+   with the puck it steers the carry (dribble, drag, protect); without the puck it does **clean stick tackles**: a **poke check** that takes the puck when the blade reaches it inside a timing
+   window (mistimed = a stumble, 20 frames of lost control), a **stick lift** at contact range that strips the carrier; **body check** (existing) stays the hard tackle that drops the carrier and
+   becomes available in every cut (`check_enabled` default true; `hockey.raw` removes the stumble penalty and lengthens knockdowns); **hard fouls**: a check from behind or on a player without the
+   puck is a foul: the fouled team gets a free faceoff at the fouler's end and the fouler sits 300 frames (`rules.penalties` becomes a real switch, default true in regular, false in raw).
+   Wire names: `game.stick: { reach_m, poke_window_frames, lift_range_m, stumble_frames, mouse_sensitivity }`, input `IA_StickAim` (mouse delta / right stick), `IA_Poke` (left mouse / RB),
+   `IA_Lift` (right mouse / LB), `IA_Check` stays (shift / B). Events `poke`, `lift`, `foul` join C-0003 (Who = actor, Kind = `clean | miss | foul_from_behind | foul_no_puck`).
+2. **Faceoff (lane A16):** a real drop: both centres at the dot, a 90-frame countdown on the HUD, the puck drops, the first clean stick input after the drop wins it (early input = that skater
+   loses the draw); bots draw with difficulty-based timing. `faceoff` event gains `Kind = drop | won | lost`.
+3. **Last man as goalie (lane A3 patch, A16 proposes):** the `back` role, when the puck carrier is inside its blue line and no teammate is between, holds the crease, squares to the
+   shooter and uses the stick (poke range) to block; the human can do the same with the mouse stick. No goalie figure, no new role.
+4. **UI pass (new lane A18, Fable):** typography and HUD/menu visuals redone with generated art (R-0008): a consistent slate/film-counter kit (panels, 9-slices, score plates, TAKE card,
+   bubbles, Director's Call card, cut cards), icons, a readable type scale from the engine's Roboto (sizes, weights, tracking, outlines over ice), high-contrast scoreboard at the top, bark
+   bubbles with tails, faceoff countdown. A18 takes over the visual layer of `HUDWidget`, `BarkWidget`, `DirectorsCallWidget`, `MenuWidget`, `MenuStyle.h` and `Game/Content/UI/**`; logic stays.
+5. **Name:** the game is **HOKEJ**. The subtitle "a director's cut" is removed from the slate and every screen; the Director's Call feature keeps its name; the theme is shown through the cuts,
+   the takes and the Director's Call, not in the title.
+
+## R-0014 (H7.6, 2026-11-12 13:35): season ladder details (lane A17)
+1. `game.ladder.takes[].fallback` (a preset id) is added to C-0005: the take plays its fallback when its designed cartridge fails validation or references a primitive that has not landed.
+2. The ladder as measured ships: levels rookie 1-2, pro 3-7, all_star 8; take 3's checks become a two-sided feature when lane A16's brain patch (bots check at pro and all_star) lands.
+3. "Take" names both the in-match period and a season level; the menu and the end card use the take's title to keep them apart. Accepted.

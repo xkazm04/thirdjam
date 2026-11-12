@@ -15,13 +15,14 @@ const PRESETS = [
   'hockey.test.visual-b2.cartridge.json',
   'hockey.regular.cartridge.json', 'hockey.raw.cartridge.json', 'hockey.boost.cartridge.json',
   'hockey.arena.large.cartridge.json', 'hockey.arena.wide.cartridge.json',
+  'hockey.chaos.cartridge.json',   // lane A15 (C-0005): sudden death, shrink per goal, two bumpers, one slow circle
 ];
 
 const has = (errors, pointer, fragment) => errors.some((e) => e.startsWith(`at ${pointer}:`) && e.includes(fragment));
 const errorsOf = (c) => validateCartridge(c).errors;
 
 test('the preset folder holds exactly the six presets', () => {
-  assert.deepEqual(readdirSync(CART_DIR).sort(), [...PRESETS].sort());
+  assert.deepEqual(readdirSync(CART_DIR).filter((f) => f.endsWith('.json')).sort(), [...PRESETS].sort());
 });
 
 for (const f of PRESETS) {
@@ -47,7 +48,7 @@ test('preset ids are unique and kebab-case; tunable defaults equal the game fiel
 test('preset numbers match the brief', () => {
   const r = regular().game;
   assert.deepEqual([r.rink.length_m, r.rink.width_m], [90, 45]);   // R-0010
-  assert.deepEqual(r.skater, { speed: 11, accel: 12, turn_rate: 5, lateral_grip: 3, mass: 80, glide_drag: 0.147, brake_decel: 6, check_enabled: false });
+  assert.deepEqual(r.skater, { speed: 11, accel: 12, turn_rate: 5, lateral_grip: 3, mass: 80, glide_drag: 0.147, brake_decel: 6, check_enabled: true });   // R-0013: the body check is in every cut
   assert.deepEqual(r.puck, { radius_m: 0.12, max_speed: 30, drag: 0.5, colour_hex: '#111111' });   // R-0011: carrying needs drag
   assert.deepEqual(r.shot, { reach_m: 1.5, speed: 18, cooldown_frames: 24, aim_cone_deg: 8 });
   assert.equal(r.rules.mode, 'first_to'); assert.equal(r.rules.score_to_win, 3); assert.equal(r.rules.goal_pause_frames, 120);
@@ -56,7 +57,7 @@ test('preset numbers match the brief', () => {
   assert.deepEqual(r.teams[0].skaters.map((s) => s.role), ['player', 'chaser', 'back']);
   assert.deepEqual(r.teams[1].skaters.map((s) => s.role), ['chaser', 'support', 'back']);
   const raw = read('hockey.raw.cartridge.json').game.skater;
-  assert.deepEqual([raw.check_enabled, raw.check_speed_min, raw.knockdown_frames], [true, 5, 90]);
+  assert.deepEqual([raw.check_enabled, raw.check_speed_min, raw.knockdown_frames], [true, 5, 150]);   // R-0013: raw lengthens knockdowns
   assert.equal(read('hockey.boost.cartridge.json').game.pickups.length, 3);
   // R-0010: regular is 90 x 45 at speed 11; the old 120 x 60 at speed 8 is hockey.arena.large
   const s = regular().game;
