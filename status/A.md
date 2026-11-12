@@ -42,3 +42,9 @@
 - reading: the engine slice is 166.6 MB exe + 58.4 MB redist (prep measured 316 MB zip on an empty map); the 198 MB ucas is the cooked content of the current skeleton (engine content plus Rink), not yet game art. The 230 MB reserve of plan 4b is untouched.
 - note: the schedule script's own test round wrote the block "H4 package" above (hour from the clock); the numbers are the same package family, this block is the baseline of record.
 - artifacts: zip kept at C:\Users\kazda\AppData\Local\Temp\a6pkg2\Hokej_Hokej_H4.zip (scratch, not in the repo)
+
+## H5 (11:05)
+- done: A1 live Director's Call + takes + package from pak (`433f624`); A6 Shipping baseline 322.5 MB zip, premerge gate, schedule, dev log, SUBMISSION.md (`083a265`); dev-b merged early (`0bf3047`: painted-cel masters, LR_L2_Night, arena dressing); B-to-A-0006 accepted (R-0005). CLI transport probed (haiku via `claude -p`, 3 s).
+- next: lanes A3 (difficulties), A7 (CLI transport + 30 offline cuts), A8 (menu), A9 (multiplayer proof), A10 (feel QA) running; next merge window 14:00 (H8), Shipping package at H6 via schedule.
+- blocked: nothing. Editor target transiently red while A3 edits the brain (R-0003 point 5 applies).
+- machine: 46 GB free, CPU low between builds; editors up on A: lanes A8/A9/A10 as they start.
