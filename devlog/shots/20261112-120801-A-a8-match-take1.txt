@@ -1,0 +1,1 @@
+Match start: TAKE 1 period card (number over the clapper, text fallback size) with ACTION, Director's Call ready hint bottom-left

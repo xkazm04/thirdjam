@@ -1,0 +1,1 @@
+Direct a cut: sentence box, ROLL, live hint, the cached sentences as buttons (gamepad path)

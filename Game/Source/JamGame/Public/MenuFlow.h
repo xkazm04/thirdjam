@@ -1,0 +1,74 @@
+// Menu flow and cut text (lane A8). The one place that opens the match map with a chosen cut and returns to the menu, plus the
+// pure helpers that turn the Designer's ListCuts() rows and cartridges into the film-slate's words (the Jam.Menu tests call them).
+// Flow: Menu.umap (AJamMenuGameMode) -> StartMatch -> Rink.umap (AHokejGameMode reads the jam.Cut console variable) -> ReturnToMenu.
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Kismet/BlueprintFunctionLibrary.h"
+#include "JamDesignerSubsystem.h"
+#include "MenuFlow.generated.h"
+
+class UJamCartridge;
+
+// One row of "Choose your cut".
+USTRUCT(BlueprintType)
+struct JAMGAME_API FJamMenuCutRow
+{
+	GENERATED_BODY()
+	// The ListCuts() name: "hockey.regular" for a shipped cut, the saved name ("My Director's Cut") for a saved one.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Menu") FString Name;
+	// "Regular Cut", "Large Rink Cut", "My Director's Cut".
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Menu") FString Display;
+	// One line: rink, rules, what is special.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Menu") FString Description;
+	// The key tunables: "speed 8 m/s   shot 18 m/s   ice 0.015   bounce 0.4".
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Menu") FString Tunables;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Menu") FString Path;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Menu") bool bSaved = false;
+	// The sentence a saved cut was directed from (empty for shipped cuts).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Menu") FString Sentence;
+};
+
+UCLASS()
+class JAMGAME_API UJamMenuFlow : public UBlueprintFunctionLibrary
+{
+	GENERATED_BODY()
+
+public:
+	static const TCHAR* MenuMap;   // "/Game/Maps/Menu"
+	static const TCHAR* RinkMap;   // "/Game/Maps/Rink"
+
+	// Sets the jam.Cut console variable (AHokejGameMode reads it at InitGame when no -cut= argument is given) and opens the rink.
+	// CutNameOrPath: a shipped name ("hockey.raw") or the absolute path of a saved cut's .cartridge.json.
+	UFUNCTION(BlueprintCallable, Category = "Jam|Menu", meta = (WorldContext = "WorldContext"))
+	static void StartMatch(UObject* WorldContext, const FString& CutNameOrPath);
+
+	// Unpauses and opens the menu map.
+	UFUNCTION(BlueprintCallable, Category = "Jam|Menu", meta = (WorldContext = "WorldContext"))
+	static void ReturnToMenu(UObject* WorldContext);
+
+	// "hockey.regular" -> "Regular Cut", "hockey.arena.large" -> "Large Rink Cut" (R-0010); a saved cut keeps its own name.
+	UFUNCTION(BlueprintPure, Category = "Jam|Menu")
+	static FString DisplayNameFor(const FJamCutInfo& Cut);
+
+	// One line: "Night Rink: 120 x 60 m, first to 3, body checks, 3 pickup kinds".
+	static FString DescribeCut(const UJamCartridge& C);
+	// "speed 8 m/s   shot 18 m/s   ice 0.015   bounce 0.4"
+	static FString KeyTunables(const UJamCartridge& C);
+	// Loads every cut once to describe it; a cut that fails to load is listed with the error as its description.
+	static TArray<FJamMenuCutRow> BuildCutRows(const TArray<FJamCutInfo>& Cuts);
+
+	// The N biggest changes between two cartridge texts, largest relative change first, as "skater speed 8 -> 12".
+	// Compares the numeric, boolean and string leaves under "game" plus theme.name.
+	static TArray<FString> BiggestChanges(const FString& BaseJson, const FString& NewJson, int32 N = 3);
+
+	// Tunable key or dotted game path -> words: "skater_speed" -> "skater speed", "ai_red_skill" -> "opponents' skill".
+	static FString LabelFor(const FString& KeyOrPath);
+
+	// Writes a cartridge text to Saved/Preview/directors-preview.cartridge.json (outside Saved/Cuts, so it is not listed as a
+	// saved cut) and returns the path, or empty when it could not be written. "Play" without "Save" goes through here.
+	static FString WritePreviewCut(const FString& Json);
+
+	// Current cartridge JSON for the Designer's diff: the Designer's current cut, else the shipped regular cut.
+	static FString BaseCartridgeJson(const UJamDesignerSubsystem* Designer);
+};
