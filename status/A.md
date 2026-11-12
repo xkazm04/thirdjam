@@ -78,3 +78,9 @@
 - applied (12:44): NNEDenoiser and 38 other unused engine plugins disabled in `Game/ThirdJam.uproject`; pak compression Oodle Leviathan level 7, and five `+DirectoriesToNeverCook` engine folders in `DefaultGame.ini`. Measured alone: -113.3, -4.2, -16.3 and -1.0 MB zipped.
 - breakdown: pak 74.1 MB shader code, 19.6 MB textures (19.4 MB of it uncompressed UI cards), 12.8 MB engine content; exe 164.8 MB, DLSS dll 56.2, VC++ redistributable 28.9. History: `tools/size/history/20261112-130142-Hokej_Hokej_H7.json` (every package now writes one).
 - next: asset-side rules handed to B (`handoff/A-to-B-0004.md`). Emergency ladder in SIZE.md section 3 (SM6 only -7.0, arm64 redistributable -11.0, UI cards to BC7 about -10 to -14, ...).
+
+## H8 (14:20)
+- done since H7: operator playtest -> R-0013 (mouse stick, pokes, lifts, fouls, faceoff, UI pass, name HOKEJ); phase 2 contract C-0005 and lanes A14-A18; A13 size playbook (zip 376 -> 247.5 MB, H7 build for the operator); A14 effects shipped; A12 barks at the harsher register; A17 season (8 takes) data and progression; A15 rules/zones green on tests; dev-b merged at the H8 window (effects, audio, two skater visuals, Rodin props, hardened night rig; 143 ledger rows, B art 17.3 MB); B's handoffs 0007-0011 answered (R-0016); R-0017.
+- running: A16 (seams landed on disk, stick and faceoff in progress), A15 (proof), A17 (PIE proof at the window), A18 (UI kit), A7 (defer LoadCut, library regen), A3 (brain: pickups, passes, stick, goalie), A10 (one-editor GPU soak at 14:30). Device B: P2 polish + P3 clay from 15:15, two editors.
+- blocked: nothing. Tree: lanes keep breaking each other's compile between windows; R-0003 point 5 re-stated to A18.
+- operator items: Hyper3D licence wording for shipping Rodin output; the voice test needs a human at device B's mic; skim Game/Content/Barks/REVIEW.md for cuts.
