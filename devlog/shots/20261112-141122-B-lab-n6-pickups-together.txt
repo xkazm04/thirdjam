@@ -1,0 +1,1 @@
+N6: six pickups together, 128 px (top) and 40 px x4 on dark (bottom)

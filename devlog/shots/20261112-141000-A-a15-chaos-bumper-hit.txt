@@ -1,0 +1,1 @@
+﻿A15 rules and arena: the puck at a bumper obstacle (magenta, centre-ice scratch cut with bumpers at +-6 m) inside the slow-ice circle, after the rink shrank to 81 x 40.5 m. The bumper cylinder shows its inside: the pillar/bumper quads wind inward (fix in the next link). PIE through MCP port 8003, scripted human.

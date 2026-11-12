@@ -11,22 +11,22 @@ export const MIN_CHARS = 6;
 // Lower-case stems; a match is a whole word (or the stem followed by letters for the ones marked with *).
 const BANNED = [
   // profanity
-  'fuck*', 'shit*', 'bitch*', 'bastard*', 'asshole*', 'arse*', 'ass', 'asses', 'damn*', 'goddamn*', 'crap*', 'piss*', 'dick*', 'cock', 'cocks', 'prick*',
-  'wanker*', 'bollocks', 'bugger*', 'bloody', 'hell', 'jerk*', 'suck*', 'screw*', 'douche*', 'twat*', 'turd*', 'pussy', 'pussies', 'balls',
+  'fuck*', 'shit*', 'bitch*', 'bastard*', 'asshole*', 'arse*', 'asses', 'goddamn*', 'piss*', 'dick*', 'cock', 'cocks', 'prick*',
+  'wanker*', 'bollocks', 'bugger*', 'bloody', 'jerk*', 'suck*', 'screw*', 'douche*', 'twat*', 'turd*', 'pussy', 'pussies', 'balls',
   'frick*', 'freak*', 'friggin*', 'effing', 'wtf', 'omg', 'lmao', 'lol',
   // slurs and identity (any hit is a rejection; the bank is not the place for these words in any sense)
   'retard*', 'spaz*', 'gay', 'fag*', 'homo*', 'tranny', 'dyke*', 'nigg*', 'negro*', 'chink*', 'gook*', 'spic*', 'kike*', 'wetback*', 'cracker*',
   'redneck*', 'gypsy', 'gypsies', 'jew*', 'muslim*', 'christian*', 'jesus', 'christ', 'god', 'allah', 'nazi*', 'hitler', 'terrorist*',
-  'cripple*', 'midget*', 'dwarf*', 'fatty', 'fatso', 'dumb', 'lame', 'psycho*', 'girly', 'sissy', 'mom', 'mommy', 'mama', 'dad', 'daddy',
+  'cripple*', 'midget*', 'dwarf*', 'fatty', 'fatso', 'psycho*', 'girly', 'sissy', 'mom', 'mommy', 'mama', 'dad', 'daddy',
   // sexual
-  'sex*', 'sexy', 'porn*', 'nude*', 'naked', 'boob*', 'tit', 'tits', 'butt*', 'penis', 'vagina', 'horny', 'orgasm*', 'erect*',
+  'sex*', 'sexy', 'porn*', 'nude*', 'naked', 'boob*', 'tit', 'tits', 'penis', 'vagina', 'horny', 'orgasm*', 'erect*',
   'dating', 'girlfriend*', 'boyfriend*', 'wife', 'husband', 'hooker*', 'whore*', 'slut*', 'pimp*', 'virgin*', 'bedroom',
   // threats and violence beyond the game's own checks
-  'kill*', 'murder*', 'die', 'dies', 'died', 'dying', 'dead', 'death', 'corpse*', 'blood*', 'bleed*', 'stab*', 'shoot you', 'shot you',
-  'gun*', 'knife', 'knives', 'weapon*', 'punch*', 'fist*', 'hurt*', 'break your', 'break you', 'snap your', 'smash your',
+  'kill*', 'murder*', 'butt', 'butts', 'punch you', 'punched you', 'punch him', 'hurt you', 'hurting you', 'death', 'corpse*', 'blood*', 'bleed*', 'stab*', 'shoot you', 
+  'gun*', 'knife', 'knives', 'weapon*', 'fist*', 'break your', 'break you', 'snap your', 'smash your',
   'crush your', 'destroy you', 'end you', 'wreck you', 'strangle*', 'hospital*', 'ambulance*', 'injur*', 'cripp*',
-  'concuss*', 'skull*', 'spine*', 'bomb*', 'explode*', 'torture*', 'suffer*', 'idiot*', 'moron*', 'stupid*', 'dumbass*', 'pathetic', 'worthless', 'useless',
-  'shut up', 'go home', 'uninstall*', 'noob*', 'scrub*', 'cheat*', 'hack*',
+  'concuss*', 'skull*', 'spine*', 'bomb*', 'explode*', 'torture*', 'suffer*', 'idiot*', 'moron*', 'dumbass*', 
+  'uninstall*', 'noob*', 'scrub*', 'cheat*', 'hack*',
   // drugs, alcohol, gambling
   'drunk*', 'beer*', 'booze*', 'vodka', 'whisk*', 'wine', 'weed', 'drug*', 'stoned', 'dope', 'smoke*', 'cigar*', 'vape*', 'betting',
   'casino*', 'gamble*',
@@ -39,9 +39,30 @@ const BANNED = [
   'boston', 'chicago', 'detroit', 'vegas', 'moscow', 'prague', 'stockholm', 'helsinki', 'leafs', 'habs', 'bruins', 'penguins', 'oilers',
   'canucks', 'avalanche', 'canadiens', 'blackhawks', 'kraken', 'coyotes', 'sabres', 'islanders', 'flyers', 'predators',
   // politics, money, religion-adjacent, sickness
-  'trump', 'biden', 'putin', 'obama', 'president*', 'election*', 'vote*', 'politic*', 'tax*', 'dollar*', 'euro*', 'cash', 'money',
+  'trump', 'biden', 'putin', 'obama', 'president*', 'election*', 'vote*', 'politic*', 'tax*', 'dollar*', 'euro*', 'cash', 
   'covid*', 'virus*', 'cancer*', 'disease*', 'vomit*', 'puke*', 'fart*', 'poop*', 'pee', 'toilet*', 'diaper*',
 ];
+
+// R-0015: mild language the Teen bar tolerates, at most one line in ten (bank quota, enforced by filterBank) and never two in one line.
+// "ass" only inside a "kick your ass" phrase; "damn" and "hell" as interjections; "crap" as a noun.
+const MILD = ['damn', 'hell', 'crap', 'kick your ass', 'kicked your ass', 'kicking your ass', 'kick their ass', 'kick some ass'];
+export const MILD_QUOTA = 0.1;
+const esc = (w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\// Capitalised words allowed anywhere');
+const MILD_RULES = MILD.map((w) => new RegExp(`(^|[^a-z'])${esc(w)}(?=$|[^a-z'])`, 'i'));
+const BARE_ASS = /(^|[^a-z'])ass(?=$|[^a-z'])/i;
+const ASS_PHRASE = /kick(ed|ing)? (your|their|some|your own) ass/i;
+
+// Things this game does not have: a line about them reads wrong on the ice (the R-0007 reviewer pass, now in the filter).
+const OFFWORLD = ['goalie', 'goalies', 'goaltender', 'keeper', 'crowd', 'fans', 'ref', 'refs', 'referee', 'referees', 'penalty', 'penalties', 'offside',
+  'coach', 'coaches', 'tooth', 'teeth', 'overtime', 'shootout', 'zamboni', 'helmet cam', 'replay booth'];
+const OFFWORLD_RULES = OFFWORLD.map((w) => new RegExp(`(^|[^a-z'])${esc(w)}(?=$|[^a-z'])`, 'i'));
+
+// Number of distinct mild words in a line (0 for a clean line).
+export function mildCount(text) {
+  let n = 0;
+  for (const r of MILD_RULES) if (r.test(text)) n += 1;
+  return n;
+}
 
 // Capitalised words allowed anywhere (hockey and film terms the theme uses, pronoun I, interjections).
 const ALLOW_CAPS = new Set([
@@ -70,6 +91,9 @@ export function checkLine(text) {
   if (/\d{3,}/.test(t)) reasons.push('long number');
   const lower = t.toLowerCase();
   for (const r of RULES) if (r.re.test(lower)) { reasons.push(`banned word "${r.word}"`); break; }
+  if (mildCount(t) > 1) reasons.push('two mild words in one line');
+  if (BARE_ASS.test(lower) && !ASS_PHRASE.test(lower)) reasons.push('"ass" outside a kick-your-ass phrase');
+  for (let i = 0; i < OFFWORLD_RULES.length; i += 1) if (OFFWORLD_RULES[i].test(lower)) { reasons.push(`not in this game: "${OFFWORLD[i]}"`); break; }
   // Proper nouns: a capitalised word that does not start a sentence and is not allowed.
   const words = t.split(/\s+/);
   let sentenceStart = true;
@@ -87,18 +111,33 @@ export function checkLine(text) {
 
 export const isClean = (text) => checkLine(text).length === 0;
 
-export function filterBank(lines) {
+// maxPerCombo caps every situation x speaker x tone (the bank ships 12..20); the mild quota is MILD_QUOTA of the kept lines.
+export function filterBank(lines, { maxPerCombo = 20 } = {}) {
   const kept = [];
   const rejected = [];
   const seen = new Set();
+  const perCombo = {};
+  const clean = [];
   for (const l of lines) {
     const reasons = checkLine(l.text);
     const key = l.text.trim().toLowerCase().replace(/[^a-z0-9 ]/g, '');
     if (reasons.length === 0 && seen.has(key)) reasons.push('duplicate');
     if (reasons.length) rejected.push({ ...l, reasons });
-    else { seen.add(key); kept.push(l); }
+    else { seen.add(key); clean.push(l); }
   }
-  return { kept, rejected };
+  // Clean lines first, then mild ones up to the quota (one in ten of the bank) and the per-combination cap.
+  let mildKept = 0;
+  const ordered = [...clean.filter((l) => mildCount(l.text) === 0), ...clean.filter((l) => mildCount(l.text) > 0)];
+  for (const l of ordered) {
+    const combo = `${l.situation}.${l.speaker}.${l.tone}`;
+    if ((perCombo[combo] ?? 0) >= maxPerCombo) { rejected.push({ ...l, reasons: ['surplus over the per-combination cap'] }); continue; }
+    if (mildCount(l.text) > 0 && mildKept + 1 > Math.floor((kept.length + 1) * MILD_QUOTA)) { rejected.push({ ...l, reasons: ['mild-word quota (one in ten)'] }); continue; }
+    if (mildCount(l.text) > 0) mildKept += 1;
+    perCombo[combo] = (perCombo[combo] ?? 0) + 1;
+    kept.push(l);
+  }
+  kept.sort((a, b) => (`${a.situation}.${a.speaker}.${a.tone}`).localeCompare(`${b.situation}.${b.speaker}.${b.tone}`) || a.text.localeCompare(b.text));
+  return { kept, rejected, mildKept };
 }
 
 // Reason histogram for the review file and the report.

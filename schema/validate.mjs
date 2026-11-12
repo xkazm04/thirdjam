@@ -337,6 +337,17 @@ function insideRink(x, z, length, width, corner) {
   return !(dx > 0 && dz > 0 && dx * dx + dz * dz > r * r);
 }
 
+// C-0005 section 4 (lane A14). The five built-in pickup kinds are shipped effect definitions (Game/Content/Designer/builtin-effects.json).
+export const BUILTIN_EFFECTS = ['speed', 'precision', 'heavy_puck', 'big_puck', 'reverse_other'];
+// EJamStat (snake_case) -> the game field whose schema range clamps it; add must stay within the range width. Mirrored in C++ (JamCartridge.cpp CheckGame and JamCore/Effects).
+export const EFFECT_STAT_FIELD = {
+  skater_speed: 'skater.speed', skater_accel: 'skater.accel', skater_turn_rate: 'skater.turn_rate', skater_grip: 'skater.lateral_grip', skater_mass: 'skater.mass',
+  shot_speed: 'shot.speed', shot_aim_cone_deg: 'shot.aim_cone_deg', shot_reach: 'shot.reach_m', check_speed_min: 'skater.check_speed_min', knockdown_frames: 'skater.knockdown_frames',
+  puck_drag: 'puck.drag', puck_max_speed: 'puck.max_speed', puck_radius: 'puck.radius_m', ice_friction: 'rink.ice_friction', board_restitution: 'rink.board_restitution',
+};
+// shot_aim_cone_deg: the seam (JamModifiers.h JamStats::Range) clamps to 0..45 because absent = 0 = no aim help; the field's own range starts at 1.
+const EFFECT_STAT_RANGE = Object.fromEntries(Object.entries(EFFECT_STAT_FIELD).map(([stat, field]) => [stat, stat === 'shot_aim_cone_deg' ? [0, 45] : String(loadLimits().game_ranges[field]).split('..').map(Number)]));
+
 function checkGame(game, errors) {
   if (!isObj(game)) return;
   const rink = isObj(game.rink) ? game.rink : {};
@@ -359,7 +370,31 @@ function checkGame(game, errors) {
     });
   }
 
+  // C-0005 (lane A15): zones sit inside the rink and carry the size their shape needs.
+  if (Array.isArray(rink.zones)) {
+    checkUniqueIds(rink.zones, '/game/rink/zones', 'zone', errors);
+    rink.zones.forEach((z, i) => {
+      if (!isObj(z)) return;
+      const p = `/game/rink/zones/${i}`;
+      if (haveSize && typeof z.x === 'number' && typeof z.z === 'number' && !insideRink(z.x, z.z, L, W, corner)) {
+        errors.push(`at ${p}: the zone centre [${z.x}, ${z.z}] is outside the rink (x within ${-L / 2} to ${L / 2}, z within ${-W / 2} to ${W / 2}, allowing ${SPAWN_MARGIN_M} m for the boards and the rounded corners).`);
+      }
+      if (z.shape === 'rect') {
+        if (z.w === undefined) errors.push(`at ${p}/w: a rect zone needs w (its length along the rink, 1 to 160 m).`);
+        if (z.d === undefined) errors.push(`at ${p}/d: a rect zone needs d (its depth across the rink, 1 to 80 m).`);
+        if (z.r !== undefined) errors.push(`at ${p}/r: a rect zone has no radius; remove r or make the shape circle.`);
+      } else if (z.shape === 'circle') {
+        if (z.r === undefined) errors.push(`at ${p}/r: a circle zone needs r (its radius, 0.5 to 40 m).`);
+        if (z.w !== undefined || z.d !== undefined) errors.push(`at ${p}: a circle zone has no w or d; remove them or make the shape rect.`);
+      }
+    });
+  }
+
   const rules = isObj(game.rules) ? game.rules : {};
+  if (Array.isArray(rules.hooks)) {
+    checkUniqueIds(rules.hooks, '/game/rules/hooks', 'hook', errors);
+    rules.hooks.forEach((h, i) => isObj(h) && checkHook(h, `/game/rules/hooks/${i}`, errors));
+  }
   if (rules.mode === 'first_to' && rules.score_to_win === undefined) {
     errors.push('at /game/rules/score_to_win: mode "first_to" needs score_to_win (1 to 9).');
   }
@@ -372,11 +407,40 @@ function checkGame(game, errors) {
     errors.push(`at /game/skater/check_speed_min: ${sk.check_speed_min} is above the skater's top speed ${sk.speed}, so no check could ever land; lower it.`);
   }
 
+  // C-0005 (lane A14): effects reference known stats only (the enum does that), ids are unique and never a built-in kind,
+  // an add stays within the width of its stat's range, zone refers to a rink.zones id; a pickup names a built-in or a declared effect.
+  const zoneIds = new Set(Array.isArray(rink.zones) ? rink.zones.filter((z) => isObj(z) && typeof z.id === 'string').map((z) => z.id) : []);
+  const zoneList = () => (zoneIds.size ? `Zones are: ${[...zoneIds].join(', ')}.` : 'There are no zones in game.rink.zones.');
+  const effectIds = new Set();
+  if (Array.isArray(game.effects)) {
+    checkUniqueIds(game.effects, '/game/effects', 'effect', errors);
+    game.effects.forEach((e, i) => {
+      if (!isObj(e)) return;
+      if (typeof e.id === 'string') {
+        if (BUILTIN_EFFECTS.includes(e.id)) errors.push(`at /game/effects/${i}/id: "${e.id}" is a built-in effect; a custom effect needs another id (the built-ins are ${BUILTIN_EFFECTS.map((b) => `"${b}"`).join(', ')}).`);
+        else effectIds.add(e.id);
+      }
+      if (Array.isArray(e.stats)) {
+        e.stats.forEach((st, j) => {
+          if (!isObj(st) || typeof st.add !== 'number' || !(st.stat in EFFECT_STAT_RANGE)) return;
+          const [lo, hi] = EFFECT_STAT_RANGE[st.stat];
+          if (Math.abs(st.add) > hi - lo) errors.push(`at /game/effects/${i}/stats/${j}/add: ${st.add} is more than the width of the ${st.stat} range (${lo} to ${hi}, width ${hi - lo}); keep add within ${-(hi - lo)} to ${hi - lo}.`);
+        });
+      }
+      if (typeof e.zone === 'string' && !zoneIds.has(e.zone)) errors.push(`at /game/effects/${i}/zone: "${e.zone}" is not the id of any zone. ${zoneList()}`);
+      if (typeof e.zone === 'string' && e.trigger !== undefined && e.trigger !== 'zone_enter' && e.trigger !== 'zone_exit') errors.push(`at /game/effects/${i}/zone: zone only applies to the triggers "zone_enter" and "zone_exit", not "${e.trigger}"; remove it or change the trigger.`);
+    });
+  }
   if (Array.isArray(game.pickups)) {
     game.pickups.forEach((p, i) => {
-      if (isObj(p) && typeof p.duration_frames === 'number' && !(p.duration_frames > 0)) {
+      if (!isObj(p)) return;
+      if (typeof p.duration_frames === 'number' && !(p.duration_frames > 0)) {
         errors.push(`at /game/pickups/${i}/duration_frames: a pickup effect must last at least 1 frame, found ${p.duration_frames}.`);
       }
+      if (typeof p.kind === 'string' && !BUILTIN_EFFECTS.includes(p.kind) && !effectIds.has(p.kind)) {
+        errors.push(`at /game/pickups/${i}/kind: "${p.kind}" is not allowed: use a built-in (${BUILTIN_EFFECTS.map((b) => `"${b}"`).join(', ')}) or the id of an effect declared in game.effects (declared: ${effectIds.size ? [...effectIds].join(', ') : 'none'}).`);
+      }
+      if (typeof p.zone === 'string' && !zoneIds.has(p.zone)) errors.push(`at /game/pickups/${i}/zone: "${p.zone}" is not the id of any zone. ${zoneList()}`);
     });
   }
 
@@ -411,6 +475,76 @@ function checkGame(game, errors) {
       errors.push(`at /game/teams: exactly one skater across both teams must have role "player", found ${players.length}${where}.`);
     }
   }
+}
+
+// C-0005 (lane A15): what each trigger and action needs beyond the schema. Mirrored by JamValidate::CheckHook in JamCartridge.cpp.
+const ACTION_NEEDS = {
+  add_score: ['value'], set_score_multiplier: ['value'], shrink_rink: ['value'], grow_rink: ['value'],
+  set_param: ['param', 'value'], spawn_pickup: ['kind'], apply_modifier: ['kind', 'frames'], announce: ['text'],
+};
+function checkHook(h, ptr, errors) {
+  if (h.when === 'on_frame' && h.every_frames === undefined) errors.push(`at ${ptr}/every_frames: a hook with when "on_frame" needs every_frames (60 to 18000 frames, 60 per second).`);
+  if (h.when !== undefined && h.when !== 'on_frame' && h.every_frames !== undefined) errors.push(`at ${ptr}/every_frames: every_frames only applies to when "on_frame"; remove it.`);
+  if (h.when === 'on_score_reached' && !(isObj(h.score) && h.score.at_least !== undefined)) errors.push(`at ${ptr}/score: a hook with when "on_score_reached" needs score.at_least (the score that triggers it).`);
+  if (isObj(h.score) && typeof h.score.at_least === 'number' && typeof h.score.at_most === 'number' && h.score.at_least > h.score.at_most) {
+    errors.push(`at ${ptr}/score/at_least: at_least ${h.score.at_least} is above at_most ${h.score.at_most}; no score could ever match.`);
+  }
+  if (!Array.isArray(h.then)) return;
+  h.then.forEach((a, j) => {
+    if (!isObj(a) || typeof a.do !== 'string') return;
+    const p = `${ptr}/then/${j}`;
+    for (const k of ACTION_NEEDS[a.do] ?? []) {
+      if (a[k] === undefined) errors.push(`at ${p}/${k}: the action "${a.do}" needs ${k}.`);
+    }
+    if (typeof a.value === 'number') {
+      if (a.do === 'add_score' && !Number.isInteger(a.value)) errors.push(`at ${p}/value: add_score adds whole goals; ${a.value} is not a whole number.`);
+      if (a.do === 'set_score_multiplier' && (a.value < 1 || a.value > 5)) errors.push(`at ${p}/value: a score multiplier is 1 to 5, found ${a.value}.`);
+      if ((a.do === 'shrink_rink' || a.do === 'grow_rink') && (a.value < 0.05 || a.value > 0.5)) errors.push(`at ${p}/value: ${a.do} takes the fraction to change the rink by, 0.05 to 0.5 (0.1 is 10 percent), found ${a.value}.`);
+    }
+  });
+}
+
+// True when a hook can end the match before physics frame 600 (10 seconds): the Designer may not write such a hook.
+// A hook is safe when it is armed after frame 600, fires on a frame cadence of at least 600, waits for a period to end,
+// or needs a second goal (at_least or lead_at_least of 2 or more).
+export function hookEndsMatchEarly(h) {
+  if (!isObj(h) || !Array.isArray(h.then) || !h.then.some((a) => isObj(a) && a.do === 'end_match')) return false;
+  if (typeof h.after_frame === 'number' && h.after_frame >= 600) return false;
+  if (h.when === 'on_frame' && typeof h.every_frames === 'number' && h.every_frames >= 600) return false;
+  if (h.when === 'on_period_end') return false;
+  const s = isObj(h.score) ? h.score : {};
+  if ((typeof s.at_least === 'number' && s.at_least >= 2) || (typeof s.lead_at_least === 'number' && s.lead_at_least >= 2)) return false;
+  return true;
+}
+
+// The loader's expansion of game.rules.variants into hooks (the C++ mirror is ExpandVariants in JamCartridge.cpp; the
+// test rules.test.mjs keeps the two in step through the hockey.chaos preset). Returns the hooks the variants add, in order.
+export function expandVariants(game) {
+  const out = [];
+  if (!isObj(game) || !isObj(game.rules) || !isObj(game.rules.variants)) return out;
+  const v = game.rules.variants;
+  const rules = game.rules;
+  if (v.sudden_death === true) {
+    out.push({ id: 'variant-sudden-death', when: 'on_goal', after_frame: 600, team: 'scoring',
+      then: [{ do: 'end_match', team: 'scoring' }, { do: 'announce', text: 'SUDDEN DEATH: that goal wins it' }] });
+  }
+  if (v.last_goal_double === true && rules.mode === 'first_to' && Number.isInteger(rules.score_to_win)) {
+    out.push({ id: 'variant-last-goal-double', when: 'on_goal', team: 'scoring', score: { at_least: rules.score_to_win },
+      then: [{ do: 'add_score', team: 'scoring', value: 1 }, { do: 'announce', text: 'LAST GOAL COUNTS DOUBLE' }] });
+  }
+  if (Number.isInteger(v.mercy_goals)) {
+    out.push({ id: 'variant-mercy', when: 'on_goal', team: 'scoring', score: { lead_at_least: v.mercy_goals },
+      then: [{ do: 'end_match', team: 'scoring' }, { do: 'announce', text: `MERCY: a lead of ${v.mercy_goals} ends it` }] });
+  }
+  if (Number.isInteger(v.period_count) && v.period_count > 1) {
+    const every = rules.mode === 'timer' && Number.isInteger(rules.timer_frames) ? Math.max(60, Math.floor(rules.timer_frames / v.period_count)) : 3600;
+    out.push({ id: 'variant-periods', when: 'on_frame', every_frames: every, team: 'any', then: [{ do: 'end_period' }] });
+  }
+  if (typeof v.shrink_per_goal === 'number') {
+    out.push({ id: 'variant-shrink-per-goal', when: 'on_goal', team: 'any',
+      then: [{ do: 'shrink_rink', value: v.shrink_per_goal }, { do: 'announce', text: `THE RINK SHRINKS ${Math.round(v.shrink_per_goal * 100)}%` }] });
+  }
+  return out;
 }
 
 function checkEngine(obj, limits, errors) {
@@ -492,8 +626,10 @@ export const DESIGNER_EDITABLE = ['values', 'theme', 'rules', 'entities', 'ai'];
 export const DESIGNER_GAME_EDITABLE = [
   'rink.length_m', 'rink.width_m', 'rink.corner_radius_m', 'rink.board_restitution', 'rink.ice_friction',
   'rink.goal_width_m', 'rink.obstacles',
-  'pickups',
+  'pickups', 'effects',
   'rules.mode', 'rules.score_to_win', 'rules.timer_frames',
+  // C-0005 (lane A15): rule hooks, variants and zones are the Designer's parts too, within the limits and the frame-600 guard
+  'rules.hooks', 'rules.variants', 'rink.zones',
   'look.tier',
   'ai.difficulty',
   'barks',
@@ -537,6 +673,11 @@ export function validateDesignerOutput(base, out, opts = {}) {
     } else if ('game' in base && !deepEqual(base.game, out.game)) {
       errors.push('at /game: the Designer may not change "game" as a whole. Restore it exactly as it was.');
     }
+    // C-0005 (lane A15): the Designer may not create a hook that ends the match before frame 600 (10 seconds).
+    const hooks = isObj(out.game) && isObj(out.game.rules) && Array.isArray(out.game.rules.hooks) ? out.game.rules.hooks : [];
+    hooks.forEach((h, i) => {
+      if (hookEndsMatchEarly(h)) errors.push(`at /game/rules/hooks/${i}: this hook could end the match before frame 600 (10 seconds). Add "after_frame": 600, make it wait for a second goal (score.at_least or lead_at_least of 2), or fire it on_period_end.`);
+    });
   }
   return { ok: errors.length === 0, errors: [...new Set(errors)] };
 }
@@ -609,5 +750,7 @@ function cli(argv) {
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  process.exitCode = cli(process.argv);
+  // A *.ladder.json file is a season (lane A17, C-0005 game.ladder): schema/ladder.mjs validates it and its take cartridges.
+  if (/\.ladder\.json$/.test(process.argv[2] ?? '')) import('./ladder.mjs').then((m) => { process.exitCode = m.ladderCli(process.argv); });
+  else process.exitCode = cli(process.argv);
 }

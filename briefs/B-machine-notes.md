@@ -55,3 +55,13 @@ emulation: they work, about 1.3 to 2 times slower than device A's numbers. Use g
 Run no git command unless your lane prompt allows commits on your lane branch. Never edit `tools/**`, `docs/**`, `contracts/**`, `Game/Source/**`,
 `Game/Config/**`, `Game/Content/**`, `ASSETS.md` (ledger rows go into your report; the lead pastes them). Never kill a process you did not start. Download and
 install nothing. Import nothing from `prep-reference/`. No text, letters, numbers, logos or brand shapes in any asset. Textures 2K at most.
+
+## Added H8 (14:05)
+
+11. **One build or package at a time on the whole machine, not per tree.** `RunUAT BuildCookRun` starts UnrealBuildTool without `-WaitMutex`: if any other
+    UnrealBuildTool is running anywhere (a `build.ps1` in another worktree), the package dies in 12 s with `ConflictingInstance` and the misleading exit
+    `Error_SDKNotFound`. `build.ps1` itself waits for the lock. Check `Get-CimInstance Win32_Process | ? CommandLine -match 'UnrealBuildTool|AutomationTool'` first.
+12. **The GPU is the scarce resource** (measured 13:59: one editor in PIE = 87 % GPU; RAM 41 GB free; CPU 28 % of 20 cores). Lanes without an editor are nearly
+    free. Keep viewport realtime off unless you are capturing; frame numbers need a solo window (R-0005 point 1).
+13. **Read device A's requests after every fetch**: `handoff/A-to-B-*.md` with `status: open`, the tail of `contracts/RULINGS.md`, the tail of `status/A.md`.
+14. The default rink is **90 x 45 m** (R-0010); `hockey.arena.large` is 120 x 60, `hockey.arena.wide` 140 x 70. Rigs are authored for 90 x 45.

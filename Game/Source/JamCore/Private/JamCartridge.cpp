@@ -1,7 +1,9 @@
 #include "JamCartridge.h"
+#include "JamModifiers.h"
 #include "JamJson.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
+#include "UObject/Package.h"
 #include "Internationalization/Regex.h"
 
 #include "JamSchemaData.inl"
@@ -477,6 +479,51 @@ namespace JamValidate
 		return 0;
 	}
 
+	// C-0005 (lane A15): the C++ mirror of checkHook in schema/validate.mjs (same pointers, same kinds of failure).
+	static void CheckHook(const FJPtr& H, const FString& Ptr, TArray<FString>& Errors)
+	{
+		if (!H || !H->IsObject()) return;
+		FJPtr WhenV = H->Get(TEXT("when"));
+		const FString When = WhenV && WhenV->IsString() ? WhenV->String : FString();
+		const bool bEvery = H->Has(TEXT("every_frames"));
+		if (When == TEXT("on_frame") && !bEvery) Errors.Add(FString::Printf(TEXT("at %s/every_frames: a hook with when \"on_frame\" needs every_frames (60 to 18000 frames, 60 per second)."), *Ptr));
+		if (!When.IsEmpty() && When != TEXT("on_frame") && bEvery) Errors.Add(FString::Printf(TEXT("at %s/every_frames: every_frames only applies to when \"on_frame\"; remove it."), *Ptr));
+		FJPtr Score = H->Get(TEXT("score"));
+		if (Score && !Score->IsObject()) Score.Reset();
+		if (When == TEXT("on_score_reached") && !(Score && Score->Has(TEXT("at_least")))) Errors.Add(FString::Printf(TEXT("at %s/score: a hook with when \"on_score_reached\" needs score.at_least (the score that triggers it)."), *Ptr));
+		{
+			bool bLo, bHi;
+			const double Lo = NumOr(Score, TEXT("at_least"), bLo), Hi = NumOr(Score, TEXT("at_most"), bHi);
+			if (bLo && bHi && Lo > Hi) Errors.Add(FString::Printf(TEXT("at %s/score/at_least: at_least %s is above at_most %s; no score could ever match."), *Ptr, *Num(Lo), *Num(Hi)));
+		}
+		FJPtr Then = H->Get(TEXT("then"));
+		if (!Then || !Then->IsArray()) return;
+		for (int32 j = 0; j < Then->Array.Num(); ++j)
+		{
+			const FJPtr& A = Then->Array[j];
+			if (!A || !A->IsObject()) continue;
+			FJPtr DoV = A->Get(TEXT("do"));
+			if (!DoV || !DoV->IsString()) continue;
+			const FString Do = DoV->String;
+			const FString P = FString::Printf(TEXT("%s/then/%d"), *Ptr, j);
+			TArray<FString> Needs;
+			if (Do == TEXT("add_score") || Do == TEXT("set_score_multiplier") || Do == TEXT("shrink_rink") || Do == TEXT("grow_rink")) Needs = { TEXT("value") };
+			else if (Do == TEXT("set_param")) Needs = { TEXT("param"), TEXT("value") };
+			else if (Do == TEXT("spawn_pickup")) Needs = { TEXT("kind") };
+			else if (Do == TEXT("apply_modifier")) Needs = { TEXT("kind"), TEXT("frames") };
+			else if (Do == TEXT("announce")) Needs = { TEXT("text") };
+			for (const FString& K : Needs) if (!A->Has(K)) Errors.Add(FString::Printf(TEXT("at %s/%s: the action \"%s\" needs %s."), *P, *K, *Do, *K));
+			bool bV;
+			const double V = NumOr(A, TEXT("value"), bV);
+			if (bV)
+			{
+				if (Do == TEXT("add_score") && FMath::FloorToDouble(V) != V) Errors.Add(FString::Printf(TEXT("at %s/value: add_score adds whole goals; %s is not a whole number."), *P, *Num(V)));
+				if (Do == TEXT("set_score_multiplier") && (V < 1 || V > 5)) Errors.Add(FString::Printf(TEXT("at %s/value: a score multiplier is 1 to 5, found %s."), *P, *Num(V)));
+				if ((Do == TEXT("shrink_rink") || Do == TEXT("grow_rink")) && (V < 0.05 || V > 0.5)) Errors.Add(FString::Printf(TEXT("at %s/value: %s takes the fraction to change the rink by, 0.05 to 0.5 (0.1 is 10 percent), found %s."), *P, *Do, *Num(V)));
+			}
+		}
+	}
+
 	static void CheckGame(const FJPtr& Game, TArray<FString>& Errors)
 	{
 		if (!Game || !Game->IsObject()) return;
@@ -509,9 +556,44 @@ namespace JamValidate
 			}
 		}
 
+		// C-0005 (lane A15): zones sit inside the rink and carry the size their shape needs (validate.mjs checkGame).
+		if (Rink) if (FJPtr Zones = Rink->Get(TEXT("zones")); Zones && Zones->IsArray())
+		{
+			CheckUniqueIds(Zones, TEXT("/game/rink/zones"), TEXT("zone"), Errors);
+			for (int32 i = 0; i < Zones->Array.Num(); ++i)
+			{
+				const FJPtr& Zn = Zones->Array[i];
+				if (!Zn || !Zn->IsObject()) continue;
+				const FString P = FString::Printf(TEXT("/game/rink/zones/%d"), i);
+				bool bX, bZ;
+				const double X = NumOr(Zn, TEXT("x"), bX), Z = NumOr(Zn, TEXT("z"), bZ);
+				if (bSize && bX && bZ && !InsideRink(X, Z, L, W, Corner))
+					Errors.Add(FString::Printf(TEXT("at %s: the zone centre [%s, %s] is outside the rink (x within %s to %s, z within %s to %s, allowing %s m for the boards and the rounded corners)."),
+						*P, *Num(X), *Num(Z), *Num(-L / 2), *Num(L / 2), *Num(-W / 2), *Num(W / 2), *Num(SpawnMarginM)));
+				FJPtr ShapeV = Zn->Get(TEXT("shape"));
+				const FString Shape = ShapeV && ShapeV->IsString() ? ShapeV->String : FString();
+				if (Shape == TEXT("rect"))
+				{
+					if (!Zn->Has(TEXT("w"))) Errors.Add(FString::Printf(TEXT("at %s/w: a rect zone needs w (its length along the rink, 1 to 160 m)."), *P));
+					if (!Zn->Has(TEXT("d"))) Errors.Add(FString::Printf(TEXT("at %s/d: a rect zone needs d (its depth across the rink, 1 to 80 m)."), *P));
+					if (Zn->Has(TEXT("r"))) Errors.Add(FString::Printf(TEXT("at %s/r: a rect zone has no radius; remove r or make the shape circle."), *P));
+				}
+				else if (Shape == TEXT("circle"))
+				{
+					if (!Zn->Has(TEXT("r"))) Errors.Add(FString::Printf(TEXT("at %s/r: a circle zone needs r (its radius, 0.5 to 40 m)."), *P));
+					if (Zn->Has(TEXT("w")) || Zn->Has(TEXT("d"))) Errors.Add(FString::Printf(TEXT("at %s: a circle zone has no w or d; remove them or make the shape rect."), *P));
+				}
+			}
+		}
+
 		FJPtr Rules = Game->Get(TEXT("rules"));
 		if (Rules && Rules->IsObject())
 		{
+			if (FJPtr Hooks = Rules->Get(TEXT("hooks")); Hooks && Hooks->IsArray())
+			{
+				CheckUniqueIds(Hooks, TEXT("/game/rules/hooks"), TEXT("hook"), Errors);
+				for (int32 i = 0; i < Hooks->Array.Num(); ++i) CheckHook(Hooks->Array[i], FString::Printf(TEXT("/game/rules/hooks/%d"), i), Errors);
+			}
 			FJPtr Mode = Rules->Get(TEXT("mode"));
 			const FString M = Mode && Mode->IsString() ? Mode->String : FString();
 			if (M == TEXT("first_to") && !Rules->Has(TEXT("score_to_win")))
@@ -528,14 +610,69 @@ namespace JamValidate
 				Errors.Add(FString::Printf(TEXT("at /game/skater/check_speed_min: %s is above the skater's top speed %s, so no check could ever land; lower it."), *Num(CMin), *Num(Speed)));
 		}
 
+		// C-0005 (lane A14), the mirror of validate.mjs checkGame: effect ids unique and never a built-in, add within the stat's range
+		// width (JamStats::Range), zone only with zone_enter/zone_exit and only a rink.zones id; a pickup kind is a built-in or a declared effect id.
+		static const TCHAR* Builtins[] = { TEXT("speed"), TEXT("precision"), TEXT("heavy_puck"), TEXT("big_puck"), TEXT("reverse_other") };
+		auto IsBuiltin = [](const FString& K) { for (const TCHAR* B : Builtins) if (K == B) return true; return false; };
+		const FString BuiltinList = TEXT("\"speed\", \"precision\", \"heavy_puck\", \"big_puck\", \"reverse_other\"");
+		TArray<FString> ZoneIds;
+		if (Rink) if (FJPtr Zones = Rink->Get(TEXT("zones")); Zones && Zones->IsArray())
+			for (const FJPtr& Z : Zones->Array) if (Z->IsObject()) if (FJPtr Id = Z->Get(TEXT("id")); Id && Id->IsString()) ZoneIds.Add(Id->String);
+		auto ZoneList = [&]() { return ZoneIds.Num() ? FString::Printf(TEXT("Zones are: %s."), *FString::Join(ZoneIds, TEXT(", "))) : FString(TEXT("There are no zones in game.rink.zones.")); };
+		TArray<FString> EffectIds;
+		if (FJPtr Effects = Game->Get(TEXT("effects")); Effects && Effects->IsArray())
+		{
+			CheckUniqueIds(Effects, TEXT("/game/effects"), TEXT("effect"), Errors);
+			for (int32 i = 0; i < Effects->Array.Num(); ++i)
+			{
+				const FJPtr& E = Effects->Array[i];
+				if (!E->IsObject()) continue;
+				if (FJPtr Id = E->Get(TEXT("id")); Id && Id->IsString())
+				{
+					if (IsBuiltin(Id->String)) Errors.Add(FString::Printf(TEXT("at /game/effects/%d/id: \"%s\" is a built-in effect; a custom effect needs another id (the built-ins are %s)."), i, *Id->String, *BuiltinList));
+					else EffectIds.Add(Id->String);
+				}
+				if (FJPtr Stats = E->Get(TEXT("stats")); Stats && Stats->IsArray())
+				{
+					for (int32 j = 0; j < Stats->Array.Num(); ++j)
+					{
+						const FJPtr& St = Stats->Array[j];
+						bool bAdd;
+						const double Add = NumOr(St, TEXT("add"), bAdd);
+						FJPtr Name = St->IsObject() ? St->Get(TEXT("stat")) : nullptr;
+						EJamStat Stat;
+						if (!bAdd || !Name || !Name->IsString() || !JamStats::FromName(FName(*Name->String), Stat)) continue;
+						double Lo, Hi;
+						JamStats::Range(Stat, Lo, Hi);
+						if (FMath::Abs(Add) > Hi - Lo)
+							Errors.Add(FString::Printf(TEXT("at /game/effects/%d/stats/%d/add: %s is more than the width of the %s range (%s to %s, width %s); keep add within %s to %s."),
+								i, j, *Num(Add), *Name->String, *Num(Lo), *Num(Hi), *Num(Hi - Lo), *Num(-(Hi - Lo)), *Num(Hi - Lo)));
+					}
+				}
+				if (FJPtr Zone = E->Get(TEXT("zone")); Zone && Zone->IsString())
+				{
+					if (!ZoneIds.Contains(Zone->String)) Errors.Add(FString::Printf(TEXT("at /game/effects/%d/zone: \"%s\" is not the id of any zone. %s"), i, *Zone->String, *ZoneList()));
+					FJPtr Tr = E->Get(TEXT("trigger"));
+					if (Tr && Tr->IsString() && Tr->String != TEXT("zone_enter") && Tr->String != TEXT("zone_exit"))
+						Errors.Add(FString::Printf(TEXT("at /game/effects/%d/zone: zone only applies to the triggers \"zone_enter\" and \"zone_exit\", not \"%s\"; remove it or change the trigger."), i, *Tr->String));
+				}
+			}
+		}
 		if (FJPtr Pickups = Game->Get(TEXT("pickups")); Pickups && Pickups->IsArray())
 		{
 			for (int32 i = 0; i < Pickups->Array.Num(); ++i)
 			{
+				const FJPtr& P = Pickups->Array[i];
 				bool bD;
-				const double D = NumOr(Pickups->Array[i], TEXT("duration_frames"), bD);
+				const double D = NumOr(P, TEXT("duration_frames"), bD);
 				if (bD && !(D > 0))
 					Errors.Add(FString::Printf(TEXT("at /game/pickups/%d/duration_frames: a pickup effect must last at least 1 frame, found %s."), i, *Num(D)));
+				if (!P->IsObject()) continue;
+				if (FJPtr K = P->Get(TEXT("kind")); K && K->IsString() && !IsBuiltin(K->String) && !EffectIds.Contains(K->String))
+					Errors.Add(FString::Printf(TEXT("at /game/pickups/%d/kind: \"%s\" is not allowed: use a built-in (%s) or the id of an effect declared in game.effects (declared: %s)."),
+						i, *K->String, *BuiltinList, EffectIds.Num() ? *FString::Join(EffectIds, TEXT(", ")) : TEXT("none")));
+				if (FJPtr Z = P->Get(TEXT("zone")); Z && Z->IsString() && !ZoneIds.Contains(Z->String))
+					Errors.Add(FString::Printf(TEXT("at /game/pickups/%d/zone: \"%s\" is not the id of any zone. %s"), i, *Z->String, *ZoneList()));
 			}
 		}
 
@@ -723,6 +860,95 @@ namespace
 	void ReadStr(const FJPtr& O, const TCHAR* Key, FString& Out) { if (O) if (FJPtr V = O->Get(Key); V && V->IsString()) Out = V->String; }
 	void ReadColour(const FJPtr& O, const TCHAR* Key, FLinearColor& Out) { if (O) if (FJPtr V = O->Get(Key); V && V->IsString()) UJamCartridge::HexToLinear(V->String, Out); }
 
+	// C-0005 (lane A15): one game.rules.hooks[] entry.
+	FJamRuleHookConfig ReadHook(const FJPtr& H)
+	{
+		FJamRuleHookConfig Out;
+		ReadStr(H, TEXT("id"), Out.Id);
+		ReadName(H, TEXT("when"), Out.When);
+		ReadInt(H, TEXT("every_frames"), Out.EveryFrames);
+		ReadInt(H, TEXT("after_frame"), Out.AfterFrame);
+		ReadName(H, TEXT("team"), Out.Team);
+		if (FJPtr Sc = Obj(H, TEXT("score")))
+		{
+			Out.Score.bHas = true;
+			ReadInt(Sc, TEXT("at_least"), Out.Score.AtLeast);
+			ReadInt(Sc, TEXT("at_most"), Out.Score.AtMost);
+			ReadInt(Sc, TEXT("lead_at_least"), Out.Score.LeadAtLeast);
+		}
+		if (H) if (FJPtr Then = H->Get(TEXT("then")); Then && Then->IsArray())
+		{
+			for (const FJPtr& A : Then->Array)
+			{
+				FJamRuleActionConfig Ac;
+				ReadName(A, TEXT("do"), Ac.Do);
+				ReadName(A, TEXT("team"), Ac.Team);
+				if (A && A->Has(TEXT("value"))) { Ac.bHasValue = true; ReadNum(A, TEXT("value"), Ac.Value); }
+				ReadName(A, TEXT("param"), Ac.Param);
+				ReadName(A, TEXT("kind"), Ac.Kind);
+				ReadInt(A, TEXT("frames"), Ac.Frames);
+				ReadStr(A, TEXT("text"), Ac.Text);
+				Out.Then.Add(Ac);
+			}
+		}
+		return Out;
+	}
+
+	FJamRuleActionConfig MakeAction(const TCHAR* Do, const TCHAR* Team = nullptr, bool bHasValue = false, double Value = 0, const FString& Text = FString())
+	{
+		FJamRuleActionConfig A;
+		A.Do = FName(Do);
+		if (Team) A.Team = FName(Team);
+		A.bHasValue = bHasValue;
+		A.Value = Value;
+		A.Text = Text;
+		return A;
+	}
+
+	// C-0005 (lane A15): game.rules.variants -> hooks, appended after the explicit hooks. Mirror of expandVariants in schema/validate.mjs
+	// (the test rules.test.mjs checks the two agree on hockey.chaos). sudden_death is armed from frame 600 so every match lasts 10 s.
+	void ExpandVariants(FJamRulesConfig& R)
+	{
+		const FJamRuleVariantsConfig& V = R.Variants;
+		if (V.bSuddenDeath)
+		{
+			FJamRuleHookConfig H; H.Id = TEXT("variant-sudden-death"); H.When = TEXT("on_goal"); H.AfterFrame = 600; H.bFromVariant = true;
+			H.Then.Add(MakeAction(TEXT("end_match"), TEXT("scoring")));
+			H.Then.Add(MakeAction(TEXT("announce"), nullptr, false, 0, TEXT("SUDDEN DEATH: that goal wins it")));
+			R.Hooks.Add(H);
+		}
+		if (V.bLastGoalDouble && R.Mode == FName(TEXT("first_to")) && R.ScoreToWin > 0)
+		{
+			FJamRuleHookConfig H; H.Id = TEXT("variant-last-goal-double"); H.When = TEXT("on_goal"); H.bFromVariant = true;
+			H.Score.bHas = true; H.Score.AtLeast = R.ScoreToWin;
+			H.Then.Add(MakeAction(TEXT("add_score"), TEXT("scoring"), true, 1));
+			H.Then.Add(MakeAction(TEXT("announce"), nullptr, false, 0, TEXT("LAST GOAL COUNTS DOUBLE")));
+			R.Hooks.Add(H);
+		}
+		if (V.MercyGoals > 0)
+		{
+			FJamRuleHookConfig H; H.Id = TEXT("variant-mercy"); H.When = TEXT("on_goal"); H.bFromVariant = true;
+			H.Score.bHas = true; H.Score.LeadAtLeast = V.MercyGoals;
+			H.Then.Add(MakeAction(TEXT("end_match"), TEXT("scoring")));
+			H.Then.Add(MakeAction(TEXT("announce"), nullptr, false, 0, FString::Printf(TEXT("MERCY: a lead of %d ends it"), V.MercyGoals)));
+			R.Hooks.Add(H);
+		}
+		if (V.PeriodCount > 1)
+		{
+			FJamRuleHookConfig H; H.Id = TEXT("variant-periods"); H.When = TEXT("on_frame"); H.Team = TEXT("any"); H.bFromVariant = true;
+			H.EveryFrames = (R.Mode == FName(TEXT("timer")) && R.TimerFrames > 0) ? FMath::Max(60, R.TimerFrames / V.PeriodCount) : 3600;
+			H.Then.Add(MakeAction(TEXT("end_period")));
+			R.Hooks.Add(H);
+		}
+		if (V.ShrinkPerGoal > 0)
+		{
+			FJamRuleHookConfig H; H.Id = TEXT("variant-shrink-per-goal"); H.When = TEXT("on_goal"); H.Team = TEXT("any"); H.bFromVariant = true;
+			H.Then.Add(MakeAction(TEXT("shrink_rink"), nullptr, true, V.ShrinkPerGoal));
+			H.Then.Add(MakeAction(TEXT("announce"), nullptr, false, 0, FString::Printf(TEXT("THE RINK SHRINKS %d%%"), FMath::RoundToInt32(V.ShrinkPerGoal * 100))));
+			R.Hooks.Add(H);
+		}
+	}
+
 	void FillGame(const FJPtr& G, FJamGameConfig& C)
 	{
 		// Defaults are the struct initialisers (schema/DEFAULTS.md); a present key overrides them.
@@ -745,6 +971,25 @@ namespace
 				C.Rink.Obstacles.Add(Ob);
 			}
 		}
+		// C-0005 (lane A15): zones.
+		if (Rink) if (FJPtr Zones = Rink->Get(TEXT("zones")); Zones && Zones->IsArray())
+		{
+			for (const FJPtr& Zn : Zones->Array)
+			{
+				FJamZoneConfig Zc;
+				ReadStr(Zn, TEXT("id"), Zc.Id);
+				ReadName(Zn, TEXT("shape"), Zc.Shape);
+				ReadNum(Zn, TEXT("x"), Zc.X);
+				ReadNum(Zn, TEXT("z"), Zc.Z);
+				ReadNum(Zn, TEXT("w"), Zc.W);
+				ReadNum(Zn, TEXT("d"), Zc.D);
+				ReadNum(Zn, TEXT("r"), Zc.R);
+				ReadName(Zn, TEXT("kind"), Zc.Kind);
+				ReadNum(Zn, TEXT("strength"), Zc.Strength);
+				ReadBool(Zn, TEXT("visible"), Zc.bVisible);
+				C.Rink.Zones.Add(Zc);
+			}
+		}
 
 		FJPtr Sk = Obj(G, TEXT("skater"));
 		ReadNum(Sk, TEXT("speed"), C.Skater.Speed);
@@ -758,6 +1003,15 @@ namespace
 		ReadNum(Sk, TEXT("check_speed_min"), C.Skater.CheckSpeedMin);
 		ReadInt(Sk, TEXT("knockdown_frames"), C.Skater.KnockdownFrames);
 		ReadName(Sk, TEXT("visual"), C.Skater.Visual);
+		ReadNum(Sk, TEXT("pass_speed"), C.Skater.PassSpeed);
+		ReadInt(Sk, TEXT("pass_lead_frames"), C.Skater.PassLeadFrames);
+
+		const FJPtr St = G->Get(TEXT("stick"));
+		ReadNum(St, TEXT("reach_m"), C.Stick.ReachM);
+		ReadInt(St, TEXT("poke_window_frames"), C.Stick.PokeWindowFrames);
+		ReadNum(St, TEXT("lift_range_m"), C.Stick.LiftRangeM);
+		ReadInt(St, TEXT("stumble_frames"), C.Stick.StumbleFrames);
+		ReadNum(St, TEXT("mouse_sensitivity"), C.Stick.MouseSensitivity);
 
 		FJPtr Pk = Obj(G, TEXT("puck"));
 		UJamCartridge::HexToLinear(TEXT("#111111"), C.Puck.Colour);
@@ -765,18 +1019,38 @@ namespace
 		ReadNum(Pk, TEXT("max_speed"), C.Puck.MaxSpeed);
 		ReadNum(Pk, TEXT("drag"), C.Puck.Drag);
 		ReadColour(Pk, TEXT("colour_hex"), C.Puck.Colour);
+		ReadNum(Pk, TEXT("carry_assist"), C.Puck.CarryAssist);
+		ReadInt(Pk, TEXT("count"), C.Puck.Count);
 
 		FJPtr Shot = Obj(G, TEXT("shot"));
 		ReadNum(Shot, TEXT("reach_m"), C.Shot.ReachM);
 		ReadNum(Shot, TEXT("speed"), C.Shot.Speed);
 		ReadInt(Shot, TEXT("cooldown_frames"), C.Shot.CooldownFrames);
 		if (Shot && Shot->Has(TEXT("aim_cone_deg"))) { C.Shot.bHasAimCone = true; ReadNum(Shot, TEXT("aim_cone_deg"), C.Shot.AimConeDeg); }
+		ReadInt(Shot, TEXT("charge_frames_max"), C.Shot.ChargeFramesMax);
+		ReadNum(Shot, TEXT("charge_speed_bonus"), C.Shot.ChargeSpeedBonus);
+		ReadBool(Shot, TEXT("deflect"), C.Shot.bDeflect);
 
 		FJPtr Rules = Obj(G, TEXT("rules"));
 		ReadName(Rules, TEXT("mode"), C.Rules.Mode);
 		ReadInt(Rules, TEXT("score_to_win"), C.Rules.ScoreToWin);
 		ReadInt(Rules, TEXT("timer_frames"), C.Rules.TimerFrames);
 		ReadInt(Rules, TEXT("goal_pause_frames"), C.Rules.GoalPauseFrames);
+		ReadBool(Rules, TEXT("penalties"), C.Rules.bPenalties);
+		// C-0005 (lane A15): hooks as written, then the variants expanded into hooks (schema/validate.mjs expandVariants is the Node mirror).
+		if (Rules) if (FJPtr Hooks = Rules->Get(TEXT("hooks")); Hooks && Hooks->IsArray())
+		{
+			for (const FJPtr& Hk : Hooks->Array) C.Rules.Hooks.Add(ReadHook(Hk));
+		}
+		if (FJPtr Var = Obj(Rules, TEXT("variants")))
+		{
+			ReadBool(Var, TEXT("sudden_death"), C.Rules.Variants.bSuddenDeath);
+			ReadBool(Var, TEXT("last_goal_double"), C.Rules.Variants.bLastGoalDouble);
+			ReadInt(Var, TEXT("mercy_goals"), C.Rules.Variants.MercyGoals);
+			ReadInt(Var, TEXT("period_count"), C.Rules.Variants.PeriodCount);
+			ReadNum(Var, TEXT("shrink_per_goal"), C.Rules.Variants.ShrinkPerGoal);
+			ExpandVariants(C.Rules);
+		}
 
 		if (FJPtr Teams = G->Get(TEXT("teams")); Teams && Teams->IsArray())
 		{
@@ -850,20 +1124,27 @@ namespace
 		for (const auto& KV : Values->Object)
 		{
 			if (!KV.Value->IsNumber()) continue;
-			const double V = KV.Value->Number;
-			const FString& K = KV.Key;
-			if (K == TEXT("skater_speed")) C.Skater.Speed = V;
-			else if (K == TEXT("skater_turn_rate")) C.Skater.TurnRate = V;
-			else if (K == TEXT("shot_speed")) C.Shot.Speed = V;
-			else if (K == TEXT("puck_max_speed")) C.Puck.MaxSpeed = V;
-			else if (K == TEXT("ice_friction")) C.Rink.IceFriction = V;
-			else if (K == TEXT("board_restitution")) C.Rink.BoardRestitution = V;
-			else if (K == TEXT("ai_speed_scale")) C.Ai.SpeedScale = V;
-			else if (K == TEXT("ai_red_skill")) C.Ai.RedSkill = V;
-			else if (K == TEXT("goal_pause_frames")) C.Rules.GoalPauseFrames = static_cast<int32>(V);
-			else UE_LOG(LogJamCartridge, Verbose, TEXT("value \"%s\" names no game field; kept for the Designer only"), *K);
+			if (!UJamCartridge::ApplyValueKey(C, KV.Key, KV.Value->Number))
+			{
+				UE_LOG(LogJamCartridge, Verbose, TEXT("value \"%s\" names no game field; kept for the Designer only"), *KV.Key);
+			}
 		}
 	}
+}
+
+bool UJamCartridge::ApplyValueKey(FJamGameConfig& C, const FString& K, double V)
+{
+	if (K == TEXT("skater_speed")) C.Skater.Speed = V;
+	else if (K == TEXT("skater_turn_rate")) C.Skater.TurnRate = V;
+	else if (K == TEXT("shot_speed")) C.Shot.Speed = V;
+	else if (K == TEXT("puck_max_speed")) C.Puck.MaxSpeed = V;
+	else if (K == TEXT("ice_friction")) C.Rink.IceFriction = V;
+	else if (K == TEXT("board_restitution")) C.Rink.BoardRestitution = V;
+	else if (K == TEXT("ai_speed_scale")) C.Ai.SpeedScale = V;
+	else if (K == TEXT("ai_red_skill")) C.Ai.RedSkill = V;
+	else if (K == TEXT("goal_pause_frames")) C.Rules.GoalPauseFrames = static_cast<int32>(V);
+	else return false;
+	return true;
 }
 
 bool UJamCartridge::HexToLinear(const FString& Hex, FLinearColor& Out)

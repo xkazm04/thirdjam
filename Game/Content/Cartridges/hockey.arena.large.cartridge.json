@@ -128,7 +128,7 @@
       "mass": 80,
       "glide_drag": 0.147,
       "brake_decel": 6,
-      "check_enabled": false
+      "check_enabled": true
     },
     "puck": {
       "radius_m": 0.12,
@@ -147,7 +147,7 @@
       "timer_frames": 10800,
       "goal_pause_frames": 120,
       "offside": false,
-      "penalties": false
+      "penalties": true
     },
     "teams": [
       {

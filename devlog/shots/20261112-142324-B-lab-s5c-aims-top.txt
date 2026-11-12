@@ -1,0 +1,1 @@
+S5 hybrid aim holds, Aim_Left, Aim_Front, Aim_FarReach, Aim_Right: from straight above (forward up, ortho 3.6 m) and 3/4 front

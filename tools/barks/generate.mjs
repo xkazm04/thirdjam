@@ -38,15 +38,16 @@ export const SITUATIONS = {
   praise_reply: 'the human player just complimented this teammate ("nice one!") and the teammate answers',
 };
 export const SPEAKERS = ['opponent', 'teammate'];
-export const TONES = { opponent: ['mock', 'complain', 'bravado'], teammate: ['encourage', 'complain', 'praise'] };
+export const TONES = { opponent: ['mock', 'savage', 'complain', 'bravado'], teammate: ['encourage', 'complain', 'praise'] };
 const TEAMMATE_ONLY = new Set(['signal_ack_defend', 'signal_ack_space', 'signal_ack_pass', 'praise_reply']);
 
 const TONE_HINT = {
-  mock: 'mock the human player: sharp, playful trash talk about what just happened',
-  complain: 'complain or whine about what just happened (the ice, the luck, the human, the bounce)',
-  bravado: 'brag about your own team or yourself',
-  encourage: 'encourage the human player: pick them up, rally them',
-  praise: 'praise the human player for what they just did',
+  mock: 'mock the human player: cutting sarcasm about their skating, aim, speed, courage or decisions; dry, deadpan, bored-veteran voice',
+  savage: 'go for the throat: merciless gloating and ridicule of how badly the human plays, the harshest clean trash talk a bored veteran uses; a few lines may use damn, hell, crap or "kick your ass"',
+  complain: 'genuinely annoyed, bitter complaining about what just happened (the ice, the luck, the bounce, the human) in a tired-veteran voice, never whiny or cute',
+  bravado: 'cold, arrogant gloating about how much better your line is; contempt, not cheer',
+  encourage: 'a gruff veteran teammate pushing the human to do better: blunt, impatient, no sugar',
+  praise: 'grudging respect from a veteran teammate: dry, understated, a little surprised the human managed it',
 };
 
 export function systemPrompt() {
@@ -54,14 +55,19 @@ export function systemPrompt() {
 Theme of the game: "Director's Cut" (matches are cuts, periods are TAKEs, the human is the director); hockey flavour and film-set jokes are welcome.
 The game has no goalies, no referees, no crowd, no penalties and no money: never mention them. It has nets, boards, posts, pucks, sticks, skates, ice,
 body checks, pickups, a scoreboard, a radar and the director's live rule changes.
+Register: harsh. These are not kids'-show lines. The speakers are bored veterans who have seen a thousand rookies and find this one funny: cutting sarcasm
+about the human's skating, aim, speed, courage and decisions; gloating; cold contempt; teammates who are genuinely annoyed. Never cute, never "golly".
 Rules (every line is filtered by a machine and a human reviewer; broken lines are thrown away):
-- Teen-appropriate (13+), sharp but clean. No profanity (not even mild: no damn, hell, crap, sucks), no slurs, no sexual content, no threats or violence
-  beyond the game's own body checks, no insults about a person's body, mind, gender, family, origin or faith. No alcohol, drugs, money, politics, religion.
+- Teen-appropriate (13+). Mild language is allowed in about one line in ten and never two in one line: damn, hell, crap, "kick your ass". Nothing stronger.
+  No slurs, no sexual content, no threats of real harm (gloating about the game's own body checks is fine), nothing about who the player is (body, mind,
+  gender, age, family, origin, faith, looks): only about how they play. No alcohol, drugs, money, politics, religion.
 - No real people, brands, teams, leagues, countries or cities. No capitalised words except the first word of a sentence and "I". No emoji, no quotes,
   no markup, no hashtags, no numbers above 99.
 - English only, plain ASCII, ${MAX_CHARS} characters at most per line, one sentence, spoken aloud by a skater during play. Each line must be different in
   wording and idea from the others; vary rhythm (questions, two-word jabs, longer quips).
-- Examples of the voice: "that's a wrap, rookie" / "nice stick, shame about the aim" / "take two, same ending" / "the ice is faster than you" / "cut! print it!"
+- Examples of the voice: "that's a wrap, rookie" / "nice stick, shame about the aim" / "you skate like the ice owes you an apology" /
+  "aim for the net next time, it's the big thing with the posts" / "I've seen pucks make braver decisions" / "take two, same ending, same excuse" /
+  "damn, even the boards felt sorry for that one"
 Output: JSON only, no prose, no code fence: {"lines": {"<tone>": ["line", ...], ...}} with exactly the tones asked for.`;
 }
 
@@ -154,7 +160,7 @@ async function main() {
 
   let previous = [];
   if (keep && existsSync(bankPath)) previous = JSON.parse(readFileSync(bankPath, 'utf8')).lines;
-  const { kept, rejected } = filterBank([...previous, ...raw]);
+  const { kept, rejected, mildKept } = filterBank([...previous, ...raw]);
   // Stable ids: situation.speaker.tone.NN in bank order.
   const counters = {};
   for (const l of kept) {
@@ -176,7 +182,7 @@ async function main() {
 
   // Review file: every kept line grouped, then the rejections with reasons.
   let md = `# Bark bank review (generated ${bank.generated}, model ${model})\n\nSkim every line; delete any you dislike from barks.json and run node tools/barks/embed.mjs.\n` +
-    `Generated ${previous.length + raw.length} lines, kept ${kept.length}, rejected ${rejected.length}. Reasons: ${JSON.stringify(stats(rejected))}\n\n`;
+    `Generated ${previous.length + raw.length} lines, kept ${kept.length} (${mildKept} with a mild word, quota one in ten), rejected ${rejected.length}. Reasons: ${JSON.stringify(stats(rejected))}\n\n`;
   let group = '';
   for (const l of kept) {
     const g = `${l.situation} / ${l.speaker} / ${l.tone}`;
@@ -191,7 +197,7 @@ async function main() {
   const short = Object.entries(counters).filter(([, n]) => n < 12).map(([k, n]) => `${k}=${n}`);
   embed();
   console.log(`${errors.length ? 'WARN' : 'PASS'} generate: ${kept.length} kept, ${rejected.length} rejected, ${usage.calls} calls, ${Math.round(usage.ms / 1000)} s, $${usage.cost.toFixed(3)}, in ${usage.in} out ${usage.out} tokens; short combos: ${short.length ? short.join(' ') : 'none'}`);
-  console.log(JSON.stringify({ tool: 'thirdjam.barks.generate/1', ok: errors.length === 0, kept: kept.length, rejected: rejected.length, calls: usage.calls, cost_usd: usage.cost, reasons: stats(rejected), short, errors }));
+  console.log(JSON.stringify({ tool: 'thirdjam.barks.generate/1', ok: errors.length === 0, kept: kept.length, mild: mildKept, rejected: rejected.length, calls: usage.calls, cost_usd: usage.cost, reasons: stats(rejected), short, errors }));
   process.exit(errors.length ? 1 : 0);
 }
 

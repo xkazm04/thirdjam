@@ -1,0 +1,1 @@
+S4 rows: Faceoff_Draw; holds (front + top view each) Faceoff_Ready, Goalie_Hold, Shot_Charge, then Faceoff_Draw mid and end; Goalie_Block_Left; Goalie_Block_Right; aim holds (front + top) Aim_Front 3 deg 0.97 m, Aim_Left 69 deg 0.96 m, Aim_Right -63 deg 0.98 m, Aim_FarReach 2 deg 1.51 m

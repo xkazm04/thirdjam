@@ -41,6 +41,7 @@ namespace JamBarks
 	JAMGAME_API extern const FName SpeakerTeammate; // "teammate"
 
 	JAMGAME_API extern const FName ToneMock;        // "mock"
+	JAMGAME_API extern const FName ToneSavage;      // "savage" (R-0015: loud only)
 	JAMGAME_API extern const FName ToneComplain;    // "complain"
 	JAMGAME_API extern const FName ToneBravado;     // "bravado"
 	JAMGAME_API extern const FName ToneEncourage;   // "encourage"

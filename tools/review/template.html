@@ -1,0 +1,385 @@
+<title>{{TITLE}}</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="{{DESCRIPTION}}">
+<style>
+  /* Layout: a sticky control bar (title, counts, filters), then an optional note and collapsible groups of item rows; the export panel closes the page. */
+  :root {
+    --bg:#f1f4f7; --panel:#ffffff; --ink:#15202b; --muted:#566676; --line:#d8e0e8; --soft:#e8eef4;
+    --accent:#1f5fbf; --accent-ink:#ffffff;
+    --pass:#1f7a4d; --pass-bg:#dff3e8; --reject:#b3372a; --reject-bg:#f9e1dd; --note:#8a5a00; --note-bg:#fbefd2;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"Cascadia Mono",Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --bg:#0e151d; --panel:#16202b; --ink:#e6edf4; --muted:#93a3b3; --line:#27364a; --soft:#1d2a38;
+    --accent:#6aa3f5; --accent-ink:#0e151d;
+    --pass:#5fcf94; --pass-bg:#173a2b; --reject:#f0806f; --reject-bg:#44211d; --note:#e5b04a; --note-bg:#3a2e12; color-scheme:dark; } }
+  :root[data-theme="dark"] {
+    --bg:#0e151d; --panel:#16202b; --ink:#e6edf4; --muted:#93a3b3; --line:#27364a; --soft:#1d2a38;
+    --accent:#6aa3f5; --accent-ink:#0e151d;
+    --pass:#5fcf94; --pass-bg:#173a2b; --reject:#f0806f; --reject-bg:#44211d; --note:#e5b04a; --note-bg:#3a2e12; color-scheme:dark; }
+  * { box-sizing:border-box; }
+  body { background:var(--bg); color:var(--ink); font:16px/1.5 var(--sans); margin:0; }
+  body::before { content:""; position:fixed; inset:0 0 auto; height:env(safe-area-inset-top,0px); z-index:30; background:var(--panel); }
+  .side { padding-left:max(16px,env(safe-area-inset-left,0px)); padding-right:max(16px,env(safe-area-inset-right,0px)); }
+  header.bar { position:sticky; top:env(safe-area-inset-top,0px); z-index:20; background:var(--panel); border-bottom:1px solid var(--line); }
+  .bar-in { max-width:960px; margin:0 auto; padding-block:10px; display:flex; flex-direction:column; gap:8px; }
+  .row { display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; }
+  h1 { font-size:1.15rem; margin:0; letter-spacing:-0.01em; text-wrap:balance; }
+  .counts { display:flex; flex-wrap:wrap; gap:6px; margin-left:auto; font-variant-numeric:tabular-nums; }
+  .cnt { font:600 .78rem/1 var(--sans); padding:5px 8px; border-radius:999px; border:1px solid var(--line); background:var(--soft); white-space:nowrap; }
+  .cnt.p { color:var(--pass); } .cnt.r { color:var(--reject); } .cnt.c { color:var(--note); }
+  .tools input, .tools select { font:inherit; font-size:.9rem; padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--ink); min-width:0; }
+  .tools input[type=search] { flex:1 1 140px; }
+  .tools select { flex:0 1 190px; }
+  button { font:inherit; font-size:.88rem; padding:6px 11px; border-radius:8px; border:1px solid var(--line); background:var(--panel); color:var(--ink); cursor:pointer; }
+  button:hover { background:var(--soft); }
+  button.prime { background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+  button[disabled] { opacity:.5; cursor:not-allowed; }
+  button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible, .seg label:has(input:focus-visible) { outline:3px solid var(--accent); outline-offset:2px; }
+  .bar-msg { margin:0; font-size:.8rem; color:var(--muted); }
+  main { max-width:960px; margin:0 auto; padding-block:16px 24px; display:flex; flex-direction:column; gap:14px; }
+  .intro { background:var(--panel); border:1px solid var(--line); border-left:4px solid var(--accent); border-radius:0 10px 10px 0; padding:12px 16px; max-width:80ch; font-size:.93rem; }
+  .intro p { margin:0 0 8px; } .intro p:last-child { margin:0; } .intro ul { margin:0 0 8px; padding-left:1.2em; } .intro li { margin:2px 0; }
+  .keys { color:var(--muted); font-size:.82rem; margin:0; }
+  kbd { font:600 .78rem var(--mono); border:1px solid var(--line); border-bottom-width:2px; border-radius:5px; padding:1px 5px; background:var(--panel); }
+  #list { display:flex; flex-direction:column; gap:12px; }
+  details.group { background:var(--panel); border:1px solid var(--line); border-radius:12px; min-width:0; }
+  details.group > summary { list-style:none; cursor:pointer; padding:12px 14px; display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; }
+  details.group > summary::-webkit-details-marker { display:none; }
+  details.group > summary::before { content:"\25B8"; color:var(--muted); width:1em; }
+  details.group[open] > summary::before { content:"\25BE"; }
+  .g-name { font-weight:700; font-size:1.02rem; overflow-wrap:anywhere; }
+  .g-count { font:.8rem var(--sans); color:var(--muted); font-variant-numeric:tabular-nums; }
+  .g-actions { margin-left:auto; display:flex; gap:6px; flex-wrap:wrap; }
+  .g-actions button { font-size:.78rem; padding:4px 9px; }
+  .sub { margin:0; padding:10px 14px 4px; font:700 .72rem/1.2 var(--sans); letter-spacing:.08em; text-transform:uppercase; color:var(--muted); border-top:1px solid var(--line); }
+  .item { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px 14px; padding:10px 14px; border-top:1px solid var(--line); align-items:start; }
+  .item.active { background:var(--soft); box-shadow:inset 4px 0 0 var(--accent); }
+  .item.v-pass { box-shadow:inset 4px 0 0 var(--pass); } .item.v-reject { box-shadow:inset 4px 0 0 var(--reject); }
+  .item.playing { background:var(--note-bg); }
+  .body { min-width:0; display:flex; flex-direction:column; gap:4px; }
+  .text { font-size:1.18rem; line-height:1.35; overflow-wrap:anywhere; text-wrap:pretty; }
+  .item.v-reject .text { text-decoration:line-through; text-decoration-thickness:1px; color:var(--muted); }
+  .meta { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+  .id { font:.7rem var(--mono); color:var(--muted); overflow-wrap:anywhere; }
+  .chip { font:600 .68rem/1 var(--sans); padding:3px 6px; border-radius:4px; border:1px solid var(--note); color:var(--note); background:var(--note-bg); }
+  .note { margin:2px 0 0; font-size:.88rem; color:var(--muted); white-space:pre-wrap; overflow-wrap:anywhere; max-width:80ch; }
+  .ctl { display:flex; flex-wrap:wrap; justify-content:flex-end; align-items:center; gap:6px; }
+  .seg { display:inline-flex; border:1px solid var(--line); border-radius:9px; overflow:hidden; position:relative; }
+  .seg label { cursor:pointer; padding:7px 13px; font-weight:600; font-size:.9rem; user-select:none; background:var(--panel); }
+  .seg label + label { border-left:1px solid var(--line); }
+  .seg input { position:absolute; opacity:0; pointer-events:none; }
+  .seg .lp:has(input:checked) { background:var(--pass-bg); color:var(--pass); }
+  .seg .lr:has(input:checked) { background:var(--reject-bg); color:var(--reject); }
+  .cmt { grid-column:1 / -1; font:inherit; font-size:.9rem; padding:6px 9px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--ink); width:100%; min-width:0; }
+  .none { color:var(--muted); padding:20px 14px; margin:0; }
+  footer.exp { max-width:960px; margin:0 auto; padding-block:8px 80px; display:flex; flex-direction:column; gap:10px; }
+  footer h2 { font-size:1.05rem; margin:0; }
+  textarea#out { width:100%; min-height:9em; font:.8rem/1.4 var(--mono); padding:9px; border:1px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); resize:vertical; }
+  .status { font-size:.85rem; color:var(--muted); min-height:1.3em; margin:0; }
+  @media (max-width:560px) { .item { grid-template-columns:minmax(0,1fr); } .ctl { justify-content:flex-start; } .counts { margin-left:0; } }
+  @media (prefers-reduced-motion: no-preference) { .item { transition:background .15s; } }
+</style>
+<header class="bar">
+  <div class="bar-in side">
+    <div class="row"><h1>{{TITLE}}</h1><div class="counts" id="counts" aria-live="polite"></div></div>
+    <div class="row tools">
+      <select id="grp" aria-label="Group filter"></select>
+      <select id="st" aria-label="Status filter"><option value="">All items</option><option value="open">Undecided</option><option value="pass">Passed</option><option value="reject">Rejected</option><option value="comment">With a comment</option></select>
+      <input id="q" type="search" placeholder="Search" aria-label="Search items">
+      <button id="lg" type="button">Listen group</button>
+    </div>
+    <p class="bar-msg" id="voicemsg" hidden></p>
+  </div>
+</header>
+<div class="side">
+<main>
+  {{INTRO}}
+  <p class="keys"><kbd>J</kbd> next <kbd>K</kbd> previous <kbd>P</kbd> pass <kbd>R</kbd> reject <kbd>L</kbd> listen <kbd>C</kbd> comment <kbd>Esc</kbd> leave the comment. P and R move to the next item; press the same key again on an item to clear it. Decisions are saved in this browser.</p>
+  <div id="list"></div>
+</main>
+<footer class="exp">
+  <h2>Send the decisions back</h2>
+  <div class="row">
+    <button id="xj" type="button" class="prime">Copy JSON</button>
+    <button id="xm" type="button">Copy markdown summary</button>
+    <button id="xc" type="button">Clear all decisions</button>
+  </div>
+  <p class="status" id="xs" role="status"></p>
+  <textarea id="out" readonly aria-label="Exported decisions" placeholder="The export appears here. Paste it back to the chat."></textarea>
+</footer>
+</div>
+<script type="application/json" id="data">{{DATA}}</script>
+<script>
+(function () {
+  'use strict';
+  var CFG = JSON.parse(document.getElementById('data').textContent);
+  var ITEMS = CFG.items, TITLE = CFG.title, LISTEN = CFG.listen, LISTEN_NOTE = CFG.listenNote;
+  var KEY = 'review:' + TITLE;
+  var dec = {};
+  try { var raw = localStorage.getItem(KEY); if (raw) dec = JSON.parse(raw) || {}; } catch (e) { dec = {}; }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(dec)); } catch (e) {} }
+  function $(id) { return document.getElementById(id); }
+  function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+  function get(id) { return dec[id] || {}; }
+  function setDec(id, patch) {
+    var d = Object.assign({}, dec[id], patch);
+    if (!d.v) delete d.v;
+    if (!d.c) delete d.c;
+    if (d.v || d.c) dec[id] = d; else delete dec[id];
+    save();
+  }
+
+  // ---- build the DOM -------------------------------------------------------
+  var groups = [], gIndex = {};
+  ITEMS.forEach(function (it, i) {
+    it._i = i;
+    var g = gIndex[it.group];
+    if (!g) { g = gIndex[it.group] = { name: it.group, items: [] }; g.idx = groups.length; groups.push(g); }
+    g.items.push(it);
+  });
+  var list = $('list'), nodes = {};
+  var openAll = ITEMS.length <= 60;
+  var sel = $('grp'); sel.appendChild(new Option('All groups', ''));
+  groups.forEach(function (g, gi) {
+    sel.appendChild(new Option(g.name + ' (' + g.items.length + ')', String(gi)));
+    var d = el('details', 'group'); d.open = openAll || gi === 0; g.node = d;
+    var s = el('summary'); s.appendChild(el('span', 'g-name', g.name));
+    g.countEl = el('span', 'g-count'); s.appendChild(g.countEl);
+    var act = el('span', 'g-actions');
+    var bl = el('button', 'glisten', 'Listen'); bl.type = 'button';
+    if (!LISTEN) bl.hidden = true;
+    var bp = el('button', null, 'Pass the rest'); bp.type = 'button'; bp.title = 'Mark every undecided item shown in this group as passed';
+    act.appendChild(bl); act.appendChild(bp); s.appendChild(act); d.appendChild(s);
+    bp.addEventListener('click', function (e) {
+      e.preventDefault(); e.stopPropagation();
+      g.items.forEach(function (it) { if (!nodes[it.id].hidden && !get(it.id).v) { setDec(it.id, { v: 'pass' }); paint(it); } });
+      refresh();
+    });
+    bl.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); toggleGroupListen(g); });
+    var lastSub = null;
+    g.items.forEach(function (it) {
+      if (it.subgroup && it.subgroup !== lastSub) { d.appendChild(el('p', 'sub', it.subgroup)); }
+      lastSub = it.subgroup || null;
+      var n = el('div', 'item'); n.id = 'i-' + it._i; n.dataset.i = it._i;
+      var b = el('div', 'body'); b.appendChild(el('div', 'text', it.text));
+      var m = el('div', 'meta'); m.appendChild(el('span', 'id', it.id));
+      (it.tags || []).forEach(function (t) { m.appendChild(el('span', 'chip', t)); });
+      b.appendChild(m);
+      if (it.note) b.appendChild(el('p', 'note', it.note));
+      n.appendChild(b);
+      var c = el('div', 'ctl');
+      if (LISTEN) { var bl2 = el('button', 'listen', 'Listen'); bl2.type = 'button'; bl2.dataset.i = it._i; c.appendChild(bl2); }
+      var seg = el('div', 'seg'); seg.setAttribute('role', 'radiogroup'); seg.setAttribute('aria-label', 'Verdict for ' + it.id);
+      [['pass', 'Pass', 'lp'], ['reject', 'Reject', 'lr']].forEach(function (o) {
+        var l = el('label', o[2]); var r = document.createElement('input');
+        r.type = 'radio'; r.name = 'v' + it._i; r.value = o[0]; r.id = 'r-' + o[0] + '-' + it._i;
+        l.appendChild(r); l.appendChild(document.createTextNode(o[1])); seg.appendChild(l);
+      });
+      c.appendChild(seg); n.appendChild(c);
+      var ci = document.createElement('input'); ci.type = 'text'; ci.className = 'cmt'; ci.id = 'c-' + it._i;
+      ci.placeholder = 'Comment'; ci.setAttribute('aria-label', 'Comment on ' + it.id); ci.autocomplete = 'off';
+      n.appendChild(ci);
+      d.appendChild(n); nodes[it.id] = n;
+    });
+    list.appendChild(d);
+  });
+  var empty = el('p', 'none', 'Nothing matches the filters.'); empty.hidden = true; list.appendChild(empty);
+
+  function paint(it) {
+    var n = nodes[it.id], d = get(it.id);
+    n.classList.toggle('v-pass', d.v === 'pass'); n.classList.toggle('v-reject', d.v === 'reject');
+    n.querySelectorAll('input[type=radio]').forEach(function (r) { r.checked = r.value === d.v; });
+    var ci = n.querySelector('.cmt'); if (document.activeElement !== ci) ci.value = d.c || '';
+  }
+  ITEMS.forEach(paint);
+
+  // ---- counts and filters --------------------------------------------------
+  function counts() {
+    var p = 0, r = 0, c = 0;
+    ITEMS.forEach(function (it) { var d = get(it.id); if (d.v === 'pass') p++; if (d.v === 'reject') r++; if (d.c) c++; });
+    return { total: ITEMS.length, reviewed: p + r, pass: p, reject: r, comment: c };
+  }
+  function refresh() {
+    var c = counts();
+    var box = $('counts'); box.textContent = '';
+    [['', 'reviewed ' + c.reviewed + '/' + c.total], ['p', 'passed ' + c.pass], ['r', 'rejected ' + c.reject], ['c', 'commented ' + c.comment]].forEach(function (x) {
+      box.appendChild(el('span', 'cnt ' + x[0], x[1]));
+    });
+    var gv = sel.value, st = $('st').value, q = $('q').value.trim().toLowerCase(), shown = 0;
+    groups.forEach(function (g) {
+      var n = 0, dn = 0;
+      g.items.forEach(function (it) {
+        var d = get(it.id), ok = (gv === '' || gv === String(g.idx));
+        if (ok && st) ok = st === 'open' ? !d.v : st === 'comment' ? !!d.c : d.v === st;
+        if (ok && q) ok = (it.text + ' ' + it.id + ' ' + (it.subgroup || '') + ' ' + (it.note || '') + ' ' + (it.tags || []).join(' ') + ' ' + (d.c || '')).toLowerCase().indexOf(q) >= 0;
+        nodes[it.id].hidden = !ok; if (ok) { n++; if (d.v) dn++; }
+      });
+      g.countEl.textContent = n + ' shown, ' + dn + ' decided';
+      g.node.hidden = n === 0; shown += n;
+      if (q && n > 0 && !g.node.open) g.node.open = true;
+    });
+    empty.hidden = shown !== 0;
+  }
+  ['grp', 'st'].forEach(function (id) { $(id).addEventListener('change', refresh); });
+  $('q').addEventListener('input', refresh);
+  refresh();
+
+  // ---- verdicts and keyboard -----------------------------------------------
+  var active = -1;
+  function visible() { return ITEMS.filter(function (it) { return !nodes[it.id].hidden && !nodes[it.id].parentNode.hidden; }); }
+  function activate(i, scroll) {
+    if (active >= 0 && ITEMS[active]) nodes[ITEMS[active].id].classList.remove('active');
+    active = i; if (i < 0) return;
+    var n = nodes[ITEMS[i].id]; n.classList.add('active');
+    var det = n.closest('details'); if (det && !det.open) det.open = true;
+    if (scroll) {
+      var bar = document.querySelector('header.bar').getBoundingClientRect().bottom, r = n.getBoundingClientRect();
+      if (r.top < bar + 8 || r.bottom > window.innerHeight - 8) window.scrollTo({ top: window.scrollY + r.top - bar - 24 });
+    }
+  }
+  function verdict(i, v) {
+    var it = ITEMS[i], cur = get(it.id).v;
+    setDec(it.id, { v: cur === v ? '' : v }); paint(it); refresh();
+  }
+  list.addEventListener('click', function (e) {
+    var n = e.target.closest('.item'); if (n) activate(+n.dataset.i, false);
+    var r = e.target.closest('input[type=radio]');
+    if (r) {
+      // the browser has already checked the radio; compare with the saved verdict so a second click on it clears it
+      var i = +n.dataset.i, saved = get(ITEMS[i].id).v;
+      setDec(ITEMS[i].id, { v: saved === r.value ? '' : r.value }); paint(ITEMS[i]); refresh();
+    }
+    var b = e.target.closest('button.listen');
+    if (b) toggleListen(+b.dataset.i);
+  });
+  list.addEventListener('input', function (e) {
+    if (!e.target.classList.contains('cmt')) return;
+    var i = +e.target.id.slice(2); setDec(ITEMS[i].id, { c: e.target.value.trim() }); refresh();
+  });
+  list.addEventListener('focusin', function (e) { var n = e.target.closest('.item'); if (n && +n.dataset.i !== active) activate(+n.dataset.i, false); });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    var t = e.target, typing = t && ((t.tagName === 'INPUT' && t.type !== 'radio') || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT');
+    if (typing) { if (e.key === 'Escape') t.blur(); return; }
+    var k = e.key.toLowerCase(), vis = visible();
+    if ('jkprlc'.indexOf(k) < 0 || k.length !== 1 || !vis.length) return;
+    var pos = vis.findIndex(function (it) { return it._i === active; });
+    if (k === 'j') activate(vis[Math.min(vis.length - 1, pos + 1)]._i, true);
+    else if (k === 'k') activate(vis[Math.max(0, pos < 0 ? 0 : pos - 1)]._i, true);
+    else if (k === 'p' || k === 'r') {
+      if (pos < 0) { activate(vis[0]._i, true); pos = 0; }
+      verdict(active, k === 'p' ? 'pass' : 'reject');
+      if (get(ITEMS[active].id).v && pos < vis.length - 1) activate(vis[pos + 1]._i, true);
+    }
+    else if (k === 'l') { if (LISTEN) { if (pos < 0) activate(vis[0]._i, true); toggleListen(active); } }
+    else if (k === 'c') { if (pos < 0) activate(vis[0]._i, true); $('c-' + active).focus(); }
+    e.preventDefault();
+  });
+
+  // ---- listen --------------------------------------------------------------
+  var synth = window.speechSynthesis, can = !!synth && typeof SpeechSynthesisUtterance !== 'undefined';
+  var voice = null, speakingIdx = -1, queue = null, token = 0;
+  function pickVoice() {
+    var vs = can ? synth.getVoices() : [];
+    voice = vs.find(function (v) { return v.lang && v.lang.replace('_', '-') === 'en-US'; }) || vs.find(function (v) { return v.lang && v.lang.replace('_', '-') === 'en-GB'; }) ||
+      vs.find(function (v) { return v.lang && /^en/i.test(v.lang); }) || null;
+    var msg = $('voicemsg');
+    if (!LISTEN) { msg.hidden = true; return; }
+    if (!can) {
+      msg.hidden = false; msg.textContent = 'This browser cannot read aloud, so the Listen buttons are off. Read the lines instead.';
+      document.querySelectorAll('button.listen, button.glisten, #lg').forEach(function (b) { b.disabled = true; b.title = 'No speech synthesis in this browser'; });
+    } else if (vs.length && !voice) {
+      msg.hidden = false; msg.textContent = 'No English voice on this device. Listen uses the default voice, which may mispronounce.';
+    } else if (!vs.length && late) {
+      msg.hidden = false; msg.textContent = 'This device reports no speech voice. If Listen stays silent, read the lines instead.';
+    } else msg.hidden = true;
+  }
+  var late = false; setTimeout(function () { late = true; pickVoice(); }, 1500);
+  if (!LISTEN) $('lg').hidden = true;
+  if (can && synth.addEventListener) synth.addEventListener('voiceschanged', pickVoice);
+  pickVoice();
+  function clearPlaying() { document.querySelectorAll('.item.playing').forEach(function (n) { n.classList.remove('playing'); }); }
+  function stopAll() {
+    token++; queue = null; speakingIdx = -1; clearPlaying();
+    if (can) { try { synth.cancel(); } catch (e) {} }
+    document.querySelectorAll('button.glisten').forEach(function (b) { b.textContent = 'Listen'; }); $('lg').textContent = 'Listen group';
+  }
+  function say(i, done) {
+    var it = ITEMS[i], my = ++token; speakingIdx = i; clearPlaying(); nodes[it.id].classList.add('playing');
+    var u = new SpeechSynthesisUtterance(it.text + (LISTEN_NOTE && it.note ? '. ' + it.note : ''));
+    if (voice) { u.voice = voice; u.lang = voice.lang; } else u.lang = 'en-US';
+    u.rate = 1.0;
+    var fin = function () { if (my !== token) return; speakingIdx = -1; clearPlaying(); if (done) done(); };
+    u.onend = fin; u.onerror = function () { if (my !== token) return; if (queue) stopAll(); else fin(); };
+    try { synth.cancel(); synth.speak(u); } catch (e) { fin(); }
+  }
+  function toggleListen(i) {
+    if (!can) return;
+    if (speakingIdx === i && !queue) { stopAll(); return; }
+    stopAll(); activate(i, true); say(i);
+  }
+  function toggleGroupListen(g) {
+    if (!can) return;
+    if (queue === g) { stopAll(); return; }
+    stopAll(); queue = g; g.node.open = true;
+    var seq = g.items.filter(function (it) { return !nodes[it.id].hidden; }), k = 0;
+    var btn = g.node.querySelector('.glisten'); if (btn) btn.textContent = 'Stop';
+    $('lg').textContent = 'Stop';
+    (function next() {
+      if (queue !== g) return;
+      if (k >= seq.length) { stopAll(); return; }
+      var it = seq[k++]; activate(it._i, true); say(it._i, next);
+    })();
+  }
+  $('lg').addEventListener('click', function () {
+    if (queue) { stopAll(); return; }
+    var gv = sel.value, g = gv !== '' ? groups[+gv] : (active >= 0 ? gIndex[ITEMS[active].group] : groups[0]);
+    if (g) toggleGroupListen(g);
+  });
+  window.addEventListener('pagehide', stopAll);
+
+  // ---- export --------------------------------------------------------------
+  function decisions() {
+    var out = [];
+    ITEMS.forEach(function (it) {
+      var d = get(it.id); if (!d.v && !d.c) return;
+      var o = { id: it.id }; if (d.v) o.verdict = d.v; if (d.c) o.comment = d.c; out.push(o);
+    });
+    return out;
+  }
+  function jsonText() { return JSON.stringify({ title: TITLE, decided_at: new Date().toISOString(), decisions: decisions() }, null, 2); }
+  function mdText() {
+    var c = counts(), ds = decisions(), byId = {}; ITEMS.forEach(function (it) { byId[it.id] = it; });
+    var L = ['# ' + TITLE + ': decisions', '',
+      'Reviewed ' + c.reviewed + ' of ' + c.total + ': ' + c.pass + ' passed, ' + c.reject + ' rejected, ' + c.comment + ' commented, ' + (c.total - c.reviewed) + ' undecided.', ''];
+    var rej = ds.filter(function (d) { return d.verdict === 'reject'; });
+    L.push('## Rejected (' + rej.length + ')');
+    rej.forEach(function (d) { L.push('- `' + d.id + '` ' + byId[d.id].text); });
+    if (!rej.length) L.push('- none');
+    var cm = ds.filter(function (d) { return d.comment; });
+    L.push('', '## Comments (' + cm.length + ')');
+    cm.forEach(function (d) { L.push('- `' + d.id + '` (' + (d.verdict || 'no verdict') + ') ' + byId[d.id].text + ' -- ' + d.comment); });
+    if (!cm.length) L.push('- none');
+    return L.join('\n') + '\n';
+  }
+  function exportTo(text, what) {
+    var out = $('out'), s = $('xs'); out.value = text;
+    var done = function (ok) {
+      s.textContent = ok ? what + ' copied to the clipboard. Paste it back to the chat.' : 'Copy was blocked here. The ' + what + ' is selected below; copy it with Ctrl+C.';
+      if (!ok) { out.focus(); out.select(); }
+    };
+    try { navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); }); } catch (e) { done(false); }
+  }
+  $('xj').addEventListener('click', function () { exportTo(jsonText(), 'JSON'); });
+  $('xm').addEventListener('click', function () { exportTo(mdText(), 'Markdown summary'); });
+  var armed = 0;
+  $('xc').addEventListener('click', function () {
+    var b = $('xc');
+    if (!armed) { armed = 1; b.textContent = 'Click again to clear'; setTimeout(function () { armed = 0; b.textContent = 'Clear all decisions'; }, 4000); return; }
+    armed = 0; b.textContent = 'Clear all decisions'; dec = {}; save(); ITEMS.forEach(paint); refresh(); $('xs').textContent = 'All decisions cleared.';
+  });
+})();
+</script>

@@ -329,3 +329,104 @@ unchanged: `export/SK_Skater_S4.fbx`, `export/SK_Skater_S4_loopcut.fbx`, `export
   The FBX SDK in Unreal has not read such a file yet; if it rejects it, run with the strip step removed (only root's identity keys come back,
   which are harmless now that the reference pose is identity at scale 1).
 - `SM_S4_Stick.fbx` is unchanged (metres, `FBX_SCALE_ALL`).
+
+## Stick verbs (lane N5, ruling R-0013; 14:07 to 14:14)
+
+Blender only, same rules. Unreal has not seen these clips yet. Both FBX files (`export/SK_Skater_S4.fbx`, `export/SK_Skater_S4_loopcut.fbx`)
+are re-exported **without the track-strip step** (the line stays disabled in `run_all.sh`).
+
+**Export check from the files themselves** (`fbx_nodes.txt`): `UnitScaleFactor` 1.0 (centimetres); `root` has translation 0, rotation
+(0, 0, 0) and scaling 1; the `Armature` null has scaling 1 and the usual -90 deg X axis turn that Unreal cancels.
+
+**Blender re-import** (`check_fbx*.json`): `root` rest matrix is the identity, 24 bones, 172.7 cm tall. Every take now carries `root` keys
+again. They are identity keys, equal to the reference pose, so they are harmless.
+
+**Measurements over all 31 takes in both files:** pelvis horizontal travel and root movement are 0.000 cm. Loop seams are 0.000 cm in the
+main file (one frame of motion in loopcut). The lowest point is 0.0 cm or higher in the new clips; `Goalie_*` lowest point is 0.2 cm.
+
+### New clips (60 Hz, in place)
+
+| Clip | Frames (main file) | Seconds | Kind | Starts from / returns to |
+|---|---|---|---|---|
+| Poke | 22 | 0.35 | one-shot | Glide → one-handed thrust along the ice (frame 10) → Glide |
+| Stumble | 21 | 0.33 | one-shot (the miss after a mistimed poke) | Glide → pitched forward, arms out, one skate up (frame 6) → catch (13) → Glide |
+| Lift | 19 | 0.3 | one-shot | Glide → blade low and forward (6) → flick up to about 40 cm (10) → Glide |
+| Faceoff_Ready | 31 (30 in loopcut) | hold | 30-frame loop, 0.1 deg wobble | crouched over the dot, blade on the ice in front, weight forward |
+| Faceoff_Draw | 19 | 0.3 | one-shot | Faceoff_Ready → blade swept back to the left-behind (7) → Glide |
+| Goalie_Hold | 31 (30) | hold | 30-frame loop, wobble | wide stance, knees deep, stick flat across the front, free glove up |
+| Goalie_Block_Left | 25 | 0.4 | one-shot, **holds the last frame** | Goalie_Hold → down on the right knee, left leg out, stick flat to the left (frame 12, held to 24) |
+| Goalie_Block_Right | 25 | 0.4 | one-shot, holds the last frame | mirror: down on the left knee, stick flat to the right |
+| Pass | 19 | 0.3 | one-shot | Glide → blade loaded at the left side (6) → push through low to the front (11) → Glide |
+| Shot_Charge | 31 (30) | hold | 30-frame loop, wobble | **identical to `Shot_Slap` frame 16** (the top of the wind-up) |
+| Foul_Reaction | 49 | 0.8 | one-shot | Glide → arms spread, head tilting side to side → Glide |
+| Aim_Front / Aim_Left / Aim_Right / Aim_FarReach | 31 (30) each | hold | 30-frame loops, wobble | aim poses (below) |
+
+**Charged slap shot:** play `Shot_Charge` while the shot is held, then start `Shot_Slap` **at frame 16**. That frame is the wind-up top and is
+identical to `Shot_Charge`. The swing runs from frame 16 to 42, contact at frame 23, 0.45 s in total.
+
+### Aim poses (built from the glide stance, stick low; the body turns 30 % of the aim angle)
+
+Angles and reaches are **measured** on the solved pose: the blade centre relative to the pelvis, in degrees from the skater's forward
+(+ = left) and horizontal metres.
+
+| Pose | Angle | Reach | Blade height | Grip |
+|---|---|---|---|---|
+| Aim_Front | +3.2 deg | 0.97 m | 7 cm | both hands |
+| Aim_Left | +68.5 deg | 0.96 m | 7 cm | both hands |
+| Aim_Right | -63.2 deg | 0.98 m | 7 cm | both hands |
+| Aim_FarReach | +2.3 deg | 1.51 m | 11 cm | one hand, the free arm back for balance |
+
+Suggested blend: a 1D blend space by angle (Right -63, Front 0, Left +69), then blend towards `Aim_FarReach` by
+(reach - 0.97) / (1.51 - 0.97), applied as an additive or upper-body layer over Glide or Stride. Aims beyond about 70 deg or behind the skater
+are not covered.
+
+### Existing clips
+
+No existing clip or name changed, and no bone or rest pose changed.
+
+### Rebuild
+
+```
+bash C:/Users/kazda/jam/skater-lab/s4/run_all.sh
+```
+
+About 4.5 min now: 31 takes, plus the extra renders. The strip step stays disabled.
+
+### Sheets
+
+- `devlog/shots/20261112-141357-B-lab-s4d-stick-verbs.png`: Poke, Stumble, Lift, Pass, Foul_Reaction
+- `devlog/shots/20261112-141357-B-lab-s4d-faceoff-goalie-aim.png`: Faceoff_Draw; the holds Faceoff_Ready, Goalie_Hold and Shot_Charge (front
+  and top view); Goalie_Block_Left and Goalie_Block_Right; the four aims (front and top view)
+
+### Weak
+
+- `Lift` and `Pass` are small motions: they read at 160 px, but at 40 px only the stick end moves.
+- `Poke` reach is limited by the arm IK (the stick stays rigid on the hand), so the thrust is about 1.3 m, not a lunge.
+- `Stumble` does not travel: the figure loses balance on the spot, and the game moves the pawn.
+- `Goalie_Hold`'s free glove is up near the cage, not out to the side.
+- In `Goalie_Block_*` the stick lies flat but rides about 15 cm above the ice at the shaft's top end.
+- The blade of `Aim_Front` is hidden by the body in the high view from behind; Left and Right read clearly.
+- None of the new clips has been seen in Unreal.
+
+### For device A: interface calls a visual would need (proposal for C-0001; parameters assumed)
+
+The calls below would let a visual play these clips; each is deterministic and driven per sim frame like the existing ones.
+
+- **`PlayPoke(bool bClean)`**: plays `Poke`. When `bClean` is false, `Stumble` follows on frame 10 of `Poke`, the thrust's end (or plays at
+  once if the game decides the miss at once). The stumble length is 20 frames, matching `game.stick.stumble_frames`. If that value changes,
+  set the play rate to 20 / `stumble_frames`.
+- **`PlayLift()`**: plays `Lift`. The flick peaks at frame 10 (0.167 s), the moment to hand the puck over.
+- **`SetStickAim(float AngleDeg, float ReachM)`**: angle around the skater relative to facing (+ = left, -180..180), reach from the pelvis to
+  the blade in metres (about 0.6 to 1.5, matching `game.stick.reach_m`). The visual blends the Aim holds; outside about -63..+69 deg it clamps.
+- **`SetFaceoff(bool bReady)`**: true loops `Faceoff_Ready` over the 90-frame countdown. The draw is a separate one-shot,
+  **`PlayFaceoffDraw()`** (`Faceoff_Draw`), on the winning stick input. False returns to locomotion.
+- **`SetGoalieStance(bool bOn, int32 Side)`**: `bOn` loops `Goalie_Hold`. `Side` is -1 (right), 0 (none) or +1 (left); a non-zero side plays
+  `Goalie_Block_Left` or `_Right` and holds its last frame until `Side` returns to 0, which blends back to `Goalie_Hold` in about 0.15 s.
+- **`PlayPass(float Strength)`**: plays `Pass`. The puck should leave at frame 11 (0.183 s). `Strength` (the pass speed in m/s) could scale the
+  play rate, for example 1.0 at 14 m/s.
+- **`SetShotCharge(float Charge01)`**: when it rises from 0, play `Shot_Slap` frames 0 to 16 and then loop `Shot_Charge`. `PlayShoot(Charge01)`,
+  as `depth.md` proposes, then plays `Shot_Slap` from frame 16. A charge of 0 keeps today's `Shot_Wrist` or full `Shot_Slap`. A visual could
+  also shake the wind-up by the charge amount.
+- **`PlayFoul()`**: plays `Foul_Reaction`, on the fouled skater or the fouler; that is device A's choice.
+- `PlayCheck`, `SetKnockedDown` (`Fall` / `Fall_Forward`, then `GetUp` / `GetUp_Front`) and `UpdateMotion` (with `Lean_*` and `Crossover_*`)
+  are unchanged.

@@ -1,0 +1,1 @@
+Hybrid in the real match after B8: carried puck still left of the pawn (A has not moved it to puck_socket yet)

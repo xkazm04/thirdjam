@@ -130,7 +130,7 @@
       "brake_decel": 6,
       "check_enabled": true,
       "check_speed_min": 5,
-      "knockdown_frames": 90
+      "knockdown_frames": 150
     },
     "puck": {
       "radius_m": 0.12,
@@ -210,6 +210,10 @@
     "ai": {
       "difficulty": "pro"
     },
+    "barks": {
+      "enabled": true,
+      "intensity": "loud"
+    },
     "look": {
       "tier": "l2_night",
       "trim_colour_hex": "#38BDF8",
@@ -224,6 +228,9 @@
       "lag_frames": 4,
       "fov_deg": 70,
       "radar": true
+    },
+    "stick": {
+      "stumble_frames": 0
     }
   }
 }
