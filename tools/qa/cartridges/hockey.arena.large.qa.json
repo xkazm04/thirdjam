@@ -1,7 +1,7 @@
 {
   "schema": "tj.cartridge/1",
-  "id": "hockey-arena-small",
-  "title": "Hockey Arena Small",
+  "id": "hockey-arena-large",
+  "title": "Large Rink Cut (QA copy)",
   "seed": 1,
   "theme": {
     "name": "Night Rink",
@@ -113,15 +113,15 @@
   "ai": [],
   "game": {
     "rink": {
-      "length_m": 90,
-      "width_m": 45,
+      "length_m": 120,
+      "width_m": 60,
       "corner_radius_m": 3.75,
       "board_restitution": 0.4,
       "ice_friction": 0.015,
       "goal_width_m": 4
     },
     "skater": {
-      "speed": 11,
+      "speed": 8,
       "accel": 12,
       "turn_rate": 5,
       "lateral_grip": 3,
