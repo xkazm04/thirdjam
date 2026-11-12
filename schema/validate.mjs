@@ -320,8 +320,102 @@ function collectStrings(v, ptr, out) {
   else if (isObj(v)) for (const [k, x] of Object.entries(v)) collectStrings(x, child(ptr, k), out);
 }
 
+
+// ---------- hockey game object checks (cross-field; ranges and enums are in game.schema.json) ----------
+
+// The engine applies the defaults for absent keys (schema/DEFAULTS.md). This validator only checks what is written.
+const SPAWN_MARGIN_M = 0.5; // a skater stands at least this far from the boards
+const DEFAULT_CORNER_M = 5; // used only to check positions when corner_radius_m is absent (see DEFAULTS.md)
+
+function insideRink(x, z, length, width, corner) {
+  const hx = length / 2 - SPAWN_MARGIN_M;
+  const hz = width / 2 - SPAWN_MARGIN_M;
+  if (Math.abs(x) > hx || Math.abs(z) > hz) return false;
+  const r = Math.max(0, Math.min(corner - SPAWN_MARGIN_M, hx, hz));
+  const dx = Math.abs(x) - (hx - r);
+  const dz = Math.abs(z) - (hz - r);
+  return !(dx > 0 && dz > 0 && dx * dx + dz * dz > r * r);
+}
+
+function checkGame(game, errors) {
+  if (!isObj(game)) return;
+  const rink = isObj(game.rink) ? game.rink : {};
+  const L = rink.length_m;
+  const W = rink.width_m;
+  const haveSize = typeof L === 'number' && typeof W === 'number';
+  const corner = typeof rink.corner_radius_m === 'number' ? rink.corner_radius_m : DEFAULT_CORNER_M;
+
+  if (haveSize && typeof rink.corner_radius_m === 'number' && rink.corner_radius_m > Math.min(L, W) / 2) {
+    errors.push(`at /game/rink/corner_radius_m: ${rink.corner_radius_m} is more than half of the shorter rink side (${Math.min(L, W) / 2}); lower it.`);
+  }
+  if (haveSize && typeof rink.goal_width_m === 'number' && rink.goal_width_m >= W) {
+    errors.push(`at /game/rink/goal_width_m: the net (${rink.goal_width_m} m) must be narrower than the rink (${W} m).`);
+  }
+  if (haveSize && Array.isArray(rink.obstacles)) {
+    rink.obstacles.forEach((o, i) => {
+      if (isObj(o) && typeof o.x === 'number' && typeof o.z === 'number' && !insideRink(o.x, o.z, L, W, corner)) {
+        errors.push(`at /game/rink/obstacles/${i}: the obstacle at [${o.x}, ${o.z}] is outside the rink (x within ${-L / 2} to ${L / 2}, z within ${-W / 2} to ${W / 2}, allowing ${SPAWN_MARGIN_M} m for the boards and the rounded corners).`);
+      }
+    });
+  }
+
+  const rules = isObj(game.rules) ? game.rules : {};
+  if (rules.mode === 'first_to' && rules.score_to_win === undefined) {
+    errors.push('at /game/rules/score_to_win: mode "first_to" needs score_to_win (1 to 9).');
+  }
+  if (rules.mode === 'timer' && rules.timer_frames === undefined) {
+    errors.push('at /game/rules/timer_frames: mode "timer" needs timer_frames (600 to 18000 frames, 60 per second).');
+  }
+
+  const sk = isObj(game.skater) ? game.skater : {};
+  if (typeof sk.check_speed_min === 'number' && typeof sk.speed === 'number' && sk.check_speed_min > sk.speed) {
+    errors.push(`at /game/skater/check_speed_min: ${sk.check_speed_min} is above the skater's top speed ${sk.speed}, so no check could ever land; lower it.`);
+  }
+
+  if (Array.isArray(game.pickups)) {
+    game.pickups.forEach((p, i) => {
+      if (isObj(p) && typeof p.duration_frames === 'number' && !(p.duration_frames > 0)) {
+        errors.push(`at /game/pickups/${i}/duration_frames: a pickup effect must last at least 1 frame, found ${p.duration_frames}.`);
+      }
+    });
+  }
+
+  if (Array.isArray(game.teams)) {
+    checkUniqueIds(game.teams, '/game/teams', 'team', errors);
+    const colours = game.teams.map((t) => (isObj(t) && typeof t.colour_hex === 'string' ? t.colour_hex.toLowerCase() : undefined));
+    if (colours.length === 2 && colours[0] && colours[0] === colours[1]) {
+      errors.push('at /game/teams/1/colour_hex: both teams have the same jersey colour; players could not tell them apart.');
+    }
+    const players = [];
+    const spawns = [];
+    game.teams.forEach((t, ti) => {
+      if (!isObj(t) || !Array.isArray(t.skaters)) return;
+      t.skaters.forEach((s, si) => {
+        if (!isObj(s)) return;
+        const p = `/game/teams/${ti}/skaters/${si}`;
+        if (s.role === 'player') players.push(`${p}/role`);
+        if (Array.isArray(s.spawn) && s.spawn.length === 2 && s.spawn.every((n) => typeof n === 'number')) {
+          const [x, z] = s.spawn;
+          if (haveSize && !insideRink(x, z, L, W, corner)) {
+            errors.push(`at ${p}/spawn: the spawn [${x}, ${z}] is outside the rink (x within ${-(L / 2 - SPAWN_MARGIN_M)} to ${L / 2 - SPAWN_MARGIN_M}, z within ${-(W / 2 - SPAWN_MARGIN_M)} to ${W / 2 - SPAWN_MARGIN_M}, and inside the rounded corners). Move it toward the centre or enlarge the rink.`);
+          }
+          for (const o of spawns) {
+            if (Math.hypot(o.x - x, o.z - z) < 1) errors.push(`at ${p}/spawn: the spawn [${x}, ${z}] is less than 1 m from the spawn at ${o.p}; skaters would start inside each other.`);
+          }
+          spawns.push({ x, z, p: `${p}/spawn` });
+        }
+      });
+    });
+    if (players.length !== 1) {
+      const where = players.length ? ` (found at ${players.join(', ')})` : '';
+      errors.push(`at /game/teams: exactly one skater across both teams must have role "player", found ${players.length}${where}.`);
+    }
+  }
+}
+
 function checkEngine(obj, limits, errors) {
   if (!isObj(obj)) return;
+  checkGame(obj.game, errors);
   const size = JSON.stringify(obj).length;
   if (size > limits.max_json_bytes) errors.push(`at /: the cartridge is ${size} characters; the engine allows at most ${limits.max_json_bytes}. Shorten lists and text.`);
 
@@ -389,19 +483,55 @@ export function validateCartridge(obj, opts = {}) {
   return { ok: errors.length === 0, errors: [...new Set(errors)] };
 }
 
-// What the Designer must leave exactly as the host gave it.
+// What the Designer must leave exactly as the host gave it. `game` is compared separately, see below.
 export const DESIGNER_IMMUTABLE = ['schema', 'id', 'title', 'seed', 'tunables', 'game'];
-// What it may edit: values, theme, and the contents of rules, entities and ai.
+// What it may edit: values, theme, the contents of rules, entities and ai, and the game paths listed below.
 export const DESIGNER_EDITABLE = ['values', 'theme', 'rules', 'entities', 'ai'];
+// Paths inside `game` the Designer may change (HOCKEY.md section 4). Everything else in `game`, notably
+// teams[].skaters[].role and camera.mode, stays exactly as the host gave it.
+export const DESIGNER_GAME_EDITABLE = [
+  'rink.length_m', 'rink.width_m', 'rink.corner_radius_m', 'rink.board_restitution', 'rink.ice_friction',
+  'rink.goal_width_m', 'rink.obstacles',
+  'pickups',
+  'rules.mode', 'rules.score_to_win', 'rules.timer_frames',
+  'look.tier',
+];
+
+function withoutPaths(game, paths) {
+  const copy = JSON.parse(JSON.stringify(game));
+  for (const path of paths) {
+    const parts = path.split('.');
+    let node = copy;
+    for (const p of parts.slice(0, -1)) node = isObj(node) ? node[p] : undefined;
+    if (isObj(node)) delete node[parts.at(-1)];
+  }
+  return copy;
+}
 
 export function validateDesignerOutput(base, out, opts = {}) {
   const res = validateCartridge(out, opts);
   const errors = [...res.errors];
   if (isObj(base) && isObj(out)) {
     for (const k of DESIGNER_IMMUTABLE) {
+      if (k === 'game') continue;
       if (k in base && k in out && !deepEqual(base[k], out[k])) {
-        errors.push(`at ${show(child('', k))}: the Designer may not change "${k}". Restore it exactly as it was in the current cartridge. Only ${DESIGNER_EDITABLE.join(', ')} may change.`);
+        errors.push(`at ${show(child('', k))}: the Designer may not change "${k}". Restore it exactly as it was in the current cartridge. Only ${DESIGNER_EDITABLE.join(', ')} (and some of "game") may change.`);
       }
+    }
+    if (isObj(base.game) && isObj(out.game)) {
+      const a = withoutPaths(base.game, DESIGNER_GAME_EDITABLE);
+      const b = withoutPaths(out.game, DESIGNER_GAME_EDITABLE);
+      if (!deepEqual(a, b)) {
+        const diff = [];
+        const find = (x, y, ptr) => {
+          if ((isObj(x) && isObj(y)) || (Array.isArray(x) && Array.isArray(y) && x.length === y.length)) for (const k of new Set([...Object.keys(x), ...Object.keys(y)])) find(x[k], y[k], child(ptr, k));
+          else if (!deepEqual(x, y)) diff.push(ptr);
+        };
+        find(a, b, '/game');
+        for (const ptr of diff) errors.push(`at ${ptr}: the Designer may not change this part of "game". Restore it exactly as it was. In "game" only these may change: ${DESIGNER_GAME_EDITABLE.join(', ')}.`);
+      }
+    } else if ('game' in base && !deepEqual(base.game, out.game)) {
+      errors.push('at /game: the Designer may not change "game" as a whole. Restore it exactly as it was.');
     }
   }
   return { ok: errors.length === 0, errors: [...new Set(errors)] };

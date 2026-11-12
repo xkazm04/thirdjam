@@ -65,6 +65,8 @@ game.camera: { mode: "third_person" | "arena", distance_m, height_m, look_ahead_
   trail and a contact-shadow disc (emissive rim marginal).
 ```
 
+Binding of `values` to `game` (lane A4, accepted): a tunable whose key names a game field (`skater_speed`, `shot_speed`, `ice_friction`, ...) dials that field; `values[key]` overrides the field when present; the engine loader mirrors `schema/validate.mjs` exactly (`schema/README.md`). `rink.obstacles[].kind` is `box | pillar`; `rules.offside` and `rules.penalties` are always `false`.
+
 Presets shipped as D0 cartridges: `hockey.regular` (M1), `hockey.raw` (M2), `hockey.boost` (M3), three `hockey.arena.*` (M3b).
 The Designer may change `values`, `theme`, `pickups`, `rules.mode/score_to_win/timer_frames`, `look.tier`, `rink` numbers inside limits.
 

@@ -1,8 +1,489 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$comment": "PLACEHOLDER. Accepts only an empty object. Hour 1 of the jam replaces this file with the real game-specific fields once the game exists. Until then a cartridge can say nothing about any particular game.",
-  "title": "tj.cartridge/1 game object (placeholder)",
+  "$comment": "Hockey game object of tj.cartridge/1 (HOCKEY.md section 4). Every range here is mirrored in limits.json under game_ranges (a test keeps them equal); the reasons are in README.md. Absent value = omit the key; the engine applies the defaults listed in DEFAULTS.md. Cross-field checks (one player, spawns inside the rink, mode needs its end condition) live in validate.mjs.",
+  "title": "tj.cartridge/1 game object (hockey 3v3)",
   "type": "object",
   "additionalProperties": false,
-  "properties": {}
+  "required": [
+    "rink",
+    "skater",
+    "rules",
+    "teams",
+    "look"
+  ],
+  "properties": {
+    "rink": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "length_m",
+        "width_m"
+      ],
+      "properties": {
+        "length_m": {
+          "type": "number",
+          "minimum": 40,
+          "maximum": 160,
+          "description": "Rink length along x in metres (the nets are at the two ends)."
+        },
+        "width_m": {
+          "type": "number",
+          "minimum": 20,
+          "maximum": 80,
+          "description": "Rink width along z in metres."
+        },
+        "corner_radius_m": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 15,
+          "description": "Radius of the rounded corners in metres; at most half the width."
+        },
+        "board_restitution": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "How much speed the boards give back: 0 dead, 1 perfect bounce."
+        },
+        "ice_friction": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.1,
+          "description": "Glide friction coefficient of the ice; 0.015 is real ice, 0 never slows down."
+        },
+        "goal_width_m": {
+          "type": "number",
+          "minimum": 2,
+          "maximum": 10,
+          "description": "Width of each net opening in metres."
+        },
+        "obstacles": {
+          "type": "array",
+          "maxItems": 12,
+          "description": "Static obstacles standing on the ice.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "x",
+              "z",
+              "size"
+            ],
+            "properties": {
+              "kind": {
+                "enum": [
+                  "box",
+                  "pillar"
+                ],
+                "description": "box is a square block, pillar is a round post"
+              },
+              "x": {
+                "type": "number",
+                "minimum": -80,
+                "maximum": 80,
+                "description": "Centre along the rink length in metres, 0 is the middle."
+              },
+              "z": {
+                "type": "number",
+                "minimum": -40,
+                "maximum": 40,
+                "description": "Centre across the rink in metres, 0 is the middle."
+              },
+              "size": {
+                "type": "number",
+                "minimum": 0.5,
+                "maximum": 10,
+                "description": "Side of the box or diameter of the pillar in metres."
+              }
+            }
+          }
+        }
+      }
+    },
+    "skater": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "speed"
+      ],
+      "properties": {
+        "speed": {
+          "type": "number",
+          "minimum": 3,
+          "maximum": 16,
+          "description": "Top skating speed in metres per second."
+        },
+        "accel": {
+          "type": "number",
+          "minimum": 4,
+          "maximum": 40,
+          "description": "Acceleration in metres per second squared."
+        },
+        "turn_rate": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 12,
+          "description": "Turn speed in radians per second."
+        },
+        "lateral_grip": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 12,
+          "description": "How quickly sideways sliding is killed; low slides more."
+        },
+        "mass": {
+          "type": "number",
+          "minimum": 40,
+          "maximum": 160,
+          "description": "Skater mass in kilograms; matters for checks."
+        },
+        "glide_drag": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Slowdown while gliding with no input, metres per second squared."
+        },
+        "brake_decel": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 30,
+          "description": "Slowdown while braking, metres per second squared."
+        },
+        "check_enabled": {
+          "type": "boolean",
+          "description": "Whether the check button works (raw play)."
+        },
+        "check_speed_min": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 12,
+          "description": "Closing speed in metres per second above which a check knocks the target down."
+        },
+        "knockdown_frames": {
+          "type": "integer",
+          "minimum": 15,
+          "maximum": 300,
+          "description": "How long a knocked-down skater stays down, in physics frames."
+        }
+      }
+    },
+    "puck": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "radius_m": {
+          "type": "number",
+          "minimum": 0.06,
+          "maximum": 0.4,
+          "description": "Puck radius in metres; large pucks made the player lose, readability comes from colour."
+        },
+        "max_speed": {
+          "type": "number",
+          "minimum": 10,
+          "maximum": 60,
+          "description": "Puck speed cap in metres per second."
+        },
+        "drag": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 2,
+          "description": "Puck slowdown per second, 0 means none."
+        },
+        "colour_hex": {
+          "type": "string",
+          "pattern": "^#[0-9A-Fa-f]{6}$",
+          "description": "Puck colour; a colour must be written as #RRGGBB, six hexadecimal digits"
+        }
+      }
+    },
+    "shot": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "reach_m": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 4,
+          "description": "How far from the skater the puck can be hit, in metres."
+        },
+        "speed": {
+          "type": "number",
+          "minimum": 5,
+          "maximum": 40,
+          "description": "Puck speed after a shot in metres per second."
+        },
+        "cooldown_frames": {
+          "type": "integer",
+          "minimum": 6,
+          "maximum": 120,
+          "description": "Frames before the next shot is possible."
+        },
+        "aim_cone_deg": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 45,
+          "description": "Half-angle of the auto-aim cone in degrees; leave the key out for no aim help."
+        }
+      }
+    },
+    "rules": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "first_to",
+            "timer"
+          ],
+          "description": "first_to ends at score_to_win goals, timer ends when timer_frames run out"
+        },
+        "score_to_win": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9,
+          "description": "Goals needed to win; required when mode is first_to."
+        },
+        "timer_frames": {
+          "type": "integer",
+          "minimum": 600,
+          "maximum": 18000,
+          "description": "Match length in physics frames (60 per second); required when mode is timer."
+        },
+        "goal_pause_frames": {
+          "type": "integer",
+          "minimum": 30,
+          "maximum": 600,
+          "description": "Frames of pause after a goal before the faceoff."
+        },
+        "offside": {
+          "const": false,
+          "description": "Offside is not implemented; only false is allowed."
+        },
+        "penalties": {
+          "const": false,
+          "description": "Penalties are not implemented; only false is allowed."
+        }
+      }
+    },
+    "teams": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "description": "Exactly two teams. Exactly one skater across both teams has the role player.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "colour_hex",
+          "skaters"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "cartridge.schema.json#/$defs/kebab_id"
+          },
+          "colour_hex": {
+            "type": "string",
+            "pattern": "^#[0-9A-Fa-f]{6}$",
+            "description": "Jersey colour; a colour must be written as #RRGGBB, six hexadecimal digits"
+          },
+          "skaters": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 5,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "role",
+                "spawn"
+              ],
+              "properties": {
+                "role": {
+                  "enum": [
+                    "player",
+                    "chaser",
+                    "support",
+                    "back"
+                  ],
+                  "description": "player is the human, the others are bot roles"
+                },
+                "spawn": {
+                  "type": "array",
+                  "minItems": 2,
+                  "maxItems": 2,
+                  "items": {
+                    "type": "number"
+                  },
+                  "description": "[x, z] in metres from the rink centre; must be inside the rink."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "ai": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "yield_margin_m": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 6,
+          "description": "Blue-side bots yield the puck when the human is this much nearer, in metres."
+        },
+        "yield_radius_m": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 40,
+          "description": "Yield only applies within this distance of the puck, in metres."
+        },
+        "hold_radius_m": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 15,
+          "description": "Opposing non-back bots hold when the human is within this distance of the puck, in metres."
+        },
+        "speed_scale": {
+          "type": "number",
+          "minimum": 0.3,
+          "maximum": 1.5,
+          "description": "Bot speed as a fraction of skater.speed."
+        },
+        "red_skill": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Skill of the opposing bots: 0 clumsy, 1 sharp."
+        }
+      }
+    },
+    "pickups": {
+      "type": "array",
+      "maxItems": 8,
+      "description": "Pickups that spawn on the ice (boost play). Leave the key out for none.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "spawn_every_frames",
+          "duration_frames"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "speed",
+              "precision",
+              "heavy_puck",
+              "big_puck",
+              "reverse_other"
+            ],
+            "description": "what the pickup does"
+          },
+          "spawn_every_frames": {
+            "type": "integer",
+            "minimum": 120,
+            "maximum": 7200,
+            "description": "Frames between spawns of this pickup."
+          },
+          "duration_frames": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3600,
+            "description": "Frames the effect lasts; at least 1."
+          },
+          "magnitude": {
+            "type": "number",
+            "minimum": 0.1,
+            "maximum": 4,
+            "description": "Strength multiplier of the effect; 1 is no change; ignored by reverse_other."
+          }
+        }
+      }
+    },
+    "look": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tier"
+      ],
+      "properties": {
+        "tier": {
+          "enum": [
+            "l1_day",
+            "l2_night",
+            "l3_neon"
+          ],
+          "description": "light and art tier of the arena"
+        },
+        "trim_colour_hex": {
+          "type": "string",
+          "pattern": "^#[0-9A-Fa-f]{6}$",
+          "description": "Colour of the emissive board trim; a colour must be written as #RRGGBB, six hexadecimal digits"
+        },
+        "fog_density": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.1,
+          "description": "Fog density; 0 is none, L2 ships with none."
+        },
+        "wet_ice": {
+          "type": "boolean",
+          "description": "Wet reflective ice (neon tier)."
+        }
+      }
+    },
+    "camera": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "enum": [
+            "third_person",
+            "arena"
+          ],
+          "description": "third_person follows the player skater; arena is a fixed camera over the rink"
+        },
+        "distance_m": {
+          "type": "number",
+          "minimum": 2,
+          "maximum": 20,
+          "description": "Camera distance behind the skater in metres."
+        },
+        "height_m": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 15,
+          "description": "Camera height above the ice in metres."
+        },
+        "look_ahead_m": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 20,
+          "description": "How far ahead of the skater the camera aims, in metres."
+        },
+        "lag_frames": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 30,
+          "description": "Follow lag in physics frames."
+        },
+        "fov_deg": {
+          "type": "number",
+          "minimum": 40,
+          "maximum": 110,
+          "description": "Horizontal field of view in degrees."
+        },
+        "radar": {
+          "type": "boolean",
+          "description": "Show the mini-rink radar in the HUD."
+        }
+      }
+    }
+  }
 }

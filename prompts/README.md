@@ -11,7 +11,7 @@ The first-attempt user message is built in code, not templated: `<player_sentenc
 
 ## Reply contract
 
-The reply is exactly one JSON object, either the **full modified cartridge** or `{"refusal": "<text>"}` (that key only, at most `max_refusal_chars`). `parseDesignerReply` in `schema/validate.mjs` is strict: prose around the JSON, a markdown fence, a bad key, a value out of range, or a change to `schema`, `id`, `title`, `seed`, `tunables` or `game` makes the reply invalid, and the validator's sentences go to the repair prompt. The Designer may change `values`, `theme`, and the contents of `rules`, `entities`, `ai`.
+The reply is exactly one JSON object, either the **full modified cartridge** or `{"refusal": "<text>"}` (that key only, at most `max_refusal_chars`). `parseDesignerReply` in `schema/validate.mjs` is strict: prose around the JSON, a markdown fence, a bad key, a value out of range, or a change to `schema`, `id`, `title`, `seed`, `tunables` or a protected part of `game` makes the reply invalid, and the validator's sentences go to the repair prompt. The Designer may change `values`, `theme`, the contents of `rules`, `entities`, `ai`, and the hockey `game` paths listed in `DESIGNER_GAME_EDITABLE` (`schema/validate.mjs`): rink numbers and obstacles, pickups, rules.mode / score_to_win / timer_frames, look.tier. Never roles, spawns, camera.mode.
 
 Refusal policy (a design decision, easy to change in the system prompt): if nothing in the sentence can be expressed, refuse; if only part can, apply that part. If any part is inappropriate for 13+ or names a real person, company or brand, refuse the whole sentence.
 
