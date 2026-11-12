@@ -40,5 +40,6 @@ namespace JamAI
 		FJamGameConfig Game;
 		TStrongObjectPtr<UJamSim> Sim;
 		TArray<FJamInput> Inputs;
+		int64 LastDropFrame = -1;   // lane A3: frame of the last faceoff drop (for FJamAIWorld::FramesSinceDrop)
 	};
 }

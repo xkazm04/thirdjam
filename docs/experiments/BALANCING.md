@@ -37,6 +37,46 @@ What the sweeps taught:
 - A2's 4.5 m hold radius was why pro was 90% before this lane. A contested puck also gives the human more touches, not fewer.
 - A teammate yielding more (4 / 25 at all_star) makes the human's side weaker. That is why all_star shares rookie's yield numbers, for the opposite reason.
 
+## Phase 2 brain (R-0013 point 3, R-0017 point 4, R-0019)
+
+| behaviour | rookie | pro | all_star | where |
+|---|---|---|---|---|
+| poke check (blade aimed at the puck; pokes after the puck sat N frames inside blade reach) | never | N = 6 | N = 2 | `FJamBrain::StickPlay`, skill `PokeFrames` |
+| stick lift at contact range | no | yes | yes | `StickPlay`, `bLift` |
+| pass (`bPass`) when a defender is within 2 m and a teammate within 25 m has no opponent within 3 m | no | yes | yes | `StickPlay`, `bPassOut` |
+| the support stands in the pass lane from the opposing carrier to its nearest teammate | no | yes | yes | `Decide`, `bReadLanes` |
+| detour for a pickup within 8 m, nearer than the puck, never while carrying | no | no | yes | `Decide`, `bSeekPickups` |
+| faceoff draw (opposing centre; the sim's own bot timing is 6-18 frames after the drop; the scripted human presses 12 frames after it) | jumps early in 45% of faceoffs (loses those draws) | sim timing | takes 40% of draws 8 frames after the drop | Think, `DrawJumpPct` / `DrawPressPct` |
+| the scripted human forechecks: against an opposing carrier its blade follows the puck and it pokes once the puck is in reach | | | | `FJamPlayerBot::Think` |
+| body checks | never at any level, so no check from behind and no check on a skater without the puck | | | `StickPlay` |
+| last man as goalie: the carrier is inside our blue line (the outer third) and no teammate is within 2.5 m of the line from our net to the carrier: the `back` holds the crease 1.5 m out, squared to the carrier, and pokes at its level | holds, never pokes | holds, pokes | holds, pokes | `LastManGoalie` |
+| the carrier steers round a slow-ice circle whose edge is within 3 m of its line to the net; others cut through | yes | yes | yes | `Attack`, `FJamAIWorld::SlowIce*` |
+| never shoots from inside a no_shoot zone | yes | yes | yes | `StickPlay`, `FJamAISkater::bNoShoot` |
+
+The human's teammates keep A2's skill: they never poke, lift or read lanes, and they pass to the human at rookie.
+
+The game mode fills the inputs in `AHokejGameMode::GatherInputs`:
+- pickups from `UJamEffectSystem::GetPickups`;
+- slow ice and no_shoot from `UJamZoneSystem` (`GetZones`, `BlocksShot`);
+- intents from `UJamSignalSystem`.
+
+The headless tournament has none of these, so the sweep measures stick play, passing and the goalie rule only.
+
+## Phase 2 sweep (15:15, gate binary of 15:00, rookie speed 0.85 / red 0.8, pro without pass-out; 20 seeds)
+
+| rink | level | W-L-unf | human win % | goals/match | shots AI | human touches/min (min) | match s | faceoffs without a human touch |
+|---|---|---|---|---|---|---|---|---|
+| regular | rookie | 17-1-2 | **85** | 3.6 | 12.8 | 32.1 (19.6) | 284 | 0 |
+| regular | pro | 9-11-0 | **45** | 4.4 | 18.6 | 44.8 (23.1) | 233 | 2 |
+| regular | all_star | 6-14-0 | **30** | 4.3 | 18.7 | 40.5 (18.0) | 224 | 7 |
+| large | rookie | 19-1-0 | 95 | 3.0 | 2.7 | 22.4 (14.3) | 195 | 0 |
+| large | pro | 6-14-0 | 30 | 1.9 | 12.5 | 25.6 (9.8) | 232 | 5 |
+| large | all_star | 8-11-1 | 40 | 2.0 | 9.7 | 24.6 (7.5) | 236 | 9 |
+
+The curve holds on regular. Large misses at pro and all_star, and all_star still keeps the puck past 600 frames after some faceoffs.
+The rookie early-jump draw knob changed nothing (90% gave the baseline numbers exactly); it doesn't take effect as built and is under investigation.
+The tables below are the pre-phase-2 history (R-0011).
+
 ## Sweep table, final (regular 90 x 45 speed 11 first-to-3; large 120 x 60 speed 8 timer 3 min), scripted human vs AI, seeds 1-20
 
 | rink | level | W-L-unfinished | human win % | goals/match | GF | GA | shots human | shots mates | shots AI opp | human touches/min (min) | match s (max) | s/goal | faceoffs without a human touch |

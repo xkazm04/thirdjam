@@ -72,6 +72,8 @@ public:
 	static TArray<FJamCallTunable> PickTunables(const FString& CartridgeJson, int32 Max = 5);
 	// "Director's Call: ice is now glass" -> "DIRECTOR'S CALL: ice is now glass".
 	static FString AnnouncementLine(const FString& Announcement);
+	// Lane A15 (C-0005): a rule's announce text -> "RULE: <text>", the sibling of the Director's Call line on the same scoreboard slot.
+	static FString RuleLine(const FString& Text);
 
 	// Applies the first slider the player moved (one change per TAKE). Not applied (with the reason) when nothing moved.
 	UFUNCTION(BlueprintCallable, Category = "Jam|DirectorsCall") FJamDirectorsCall ApplySelected();

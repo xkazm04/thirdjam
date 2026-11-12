@@ -30,7 +30,9 @@ namespace JamAI
 			Opp.LeadFrames = 15;
 			Opp.bIntercept = false;
 			Opp.bUseAimCone = true;
-			return FJamDifficultyProfile{"rookie", 1.0, 1.0, 4.0, 25.0, 0.0, 180, Opp, true};
+			Opp.PokeFrames = -1;   // R-0017: rookie bots never poke
+			Opp.DrawJumpPct = 45;  // R-0013 / Director 14:45: the rookie centre jumps early in 45% of faceoffs (bot draw wins ~30%)
+			return FJamDifficultyProfile{"rookie", 0.85, 0.8, 4.0, 25.0, 0.0, 180, Opp, true};   // 15:12 sweep on the phase-2 sim
 		}
 
 		FJamDifficultyProfile MakeAllStar()
@@ -42,6 +44,13 @@ namespace JamAI
 			Opp.AimToleranceDeg = 20.0;
 			Opp.LeadFrames = 60;
 			Opp.bClearLane = true;
+			Opp.PokeFrames = 2;
+			Opp.bLift = true;
+			Opp.bPassOut = true;
+			Opp.bReadLanes = true;
+			Opp.bSeekPickups = true;
+			Opp.DrawPressPct = 40; // takes 40% of draws 8 frames after the drop (bot draw wins ~65-70%)
+			Opp.DrawPressFrames = 8;
 			Opp.bIntercept = true;
 			Opp.bUseAimCone = true;
 			return FJamDifficultyProfile{"all_star", 1.0, 1.0, 4.0, 25.0, 0.0, 60, Opp, false};
@@ -67,6 +76,14 @@ namespace JamAI
 			if (std::strcmp(Key, "block_shots") == 0) { K.bBlockShots = V != 0.0; return true; }
 			if (std::strcmp(Key, "block_min_dist_m") == 0) { K.BlockMinDistM = V; return true; }
 			if (std::strcmp(Key, "clear_lane") == 0) { K.bClearLane = V != 0.0; return true; }
+			if (std::strcmp(Key, "poke_frames") == 0) { K.PokeFrames = static_cast<int>(V); return true; }
+			if (std::strcmp(Key, "lift") == 0) { K.bLift = V != 0.0; return true; }
+			if (std::strcmp(Key, "pass_out") == 0) { K.bPassOut = V != 0.0; return true; }
+			if (std::strcmp(Key, "read_lanes") == 0) { K.bReadLanes = V != 0.0; return true; }
+			if (std::strcmp(Key, "seek_pickups") == 0) { K.bSeekPickups = V != 0.0; return true; }
+			if (std::strcmp(Key, "draw_jump_pct") == 0) { K.DrawJumpPct = static_cast<int>(V); return true; }
+			if (std::strcmp(Key, "draw_press_pct") == 0) { K.DrawPressPct = static_cast<int>(V); return true; }
+			if (std::strcmp(Key, "draw_press_frames") == 0) { K.DrawPressFrames = static_cast<int>(V); return true; }
 			if (std::strcmp(Key, "pass_to_human") == 0) { K.bPassToHuman = V != 0.0; return true; }
 			return false;
 		}

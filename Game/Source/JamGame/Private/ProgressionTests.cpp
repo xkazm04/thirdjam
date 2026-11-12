@@ -4,6 +4,7 @@
 // Progress.json in a temp folder; SeasonRoundTrip loads all eight takes and wins the season through the subsystem.
 // The bot suite on takes 1-4 is Jam.Bot.SeasonTakes (JamCore/Tests/SeasonBotTests.cpp: the bot match runner is JamCore-internal).
 #include "CoreMinimal.h"
+#include "UObject/Package.h"   // GetTransientPackage() outside the unity blob (lane A18, R-0021 pass)
 #include "Misc/AutomationTest.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
@@ -107,7 +108,7 @@ bool FJamProgressionUnlocks::RunTest(const FString& Parameters)
 	TestFalse(TEXT("another cut is not"), P->IsSeasonMatch(UJamCartridge::ResolveCartridgePath(TEXT("hockey.regular"))));
 	P->RecordResult(Take1, false);
 	TestEqual(TEXT("loss keeps take 1"), P->GetSeasonState().CurrentTake, 0);
-	TestEqual(TEXT("loss hint"), P->EndHint(Take1), FString(TEXT("R  RETAKE      ESC  PAUSE")));
+	TestEqual(TEXT("loss hint"), P->EndHint(Take1), FString(TEXT("R  REMATCH      ESC  PAUSE")));
 	TestFalse(TEXT("loss: R restarts the same cut"), P->HandleRestart(nullptr));
 	TestFalse(TEXT("take 2 still locked"), P->GetSeasonState().Takes[1].bUnlocked);
 
@@ -118,7 +119,7 @@ bool FJamProgressionUnlocks::RunTest(const FString& Parameters)
 	TestEqual(TEXT("win moves to take 2"), S.CurrentTake, 1);
 	TestTrue(TEXT("take 2 unlocked"), S.Takes[1].bUnlocked);
 	TestEqual(TEXT("two attempts on take 1"), S.Takes[0].Attempts, 2);
-	TestEqual(TEXT("win hint"), P->EndHint(Take1), FString(TEXT("R  NEXT TAKE: THE BIG ROOM      ESC  PAUSE")));
+	TestEqual(TEXT("win hint"), P->EndHint(Take1), FString(TEXT("R  NEXT MATCH: THE BIG ROOM      ESC  PAUSE")));
 
 	// A result for a cut that is not the running take is ignored.
 	P->RecordResult(P->TakePath(5), true);
@@ -182,7 +183,7 @@ bool FJamSeasonRoundTrip::RunTest(const FString& Parameters)
 	TestTrue(TEXT("season complete"), S.bComplete);
 	TestEqual(TEXT("eight won"), S.TakesWon, 8);
 	TestEqual(TEXT("wrapped season replays the final take"), S.CurrentTake, 7);
-	TestEqual(TEXT("wrapped hint"), P->EndHint(P->TakePath(7)), FString(TEXT("SEASON WRAPPED      R  MENU")));
+	TestEqual(TEXT("wrapped hint"), P->EndHint(P->TakePath(7)), FString(TEXT("SEASON COMPLETE      R  MENU")));
 	// Text round trip of the progress file.
 	FJamSeasonProgress Back;
 	TArray<FString> Errors;

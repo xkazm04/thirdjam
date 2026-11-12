@@ -114,14 +114,15 @@ export function renderPage(model, opts) {
     const cx = x(e.hour) + CELL / 2;
     let off = 0;
     const slots = [];
-    if (e.notes.length) slots.push('note');
+    // B-to-A-0013: one note mark per device that wrote this hour (a note without a device counts as A's).
+    for (const dv of DEVICES) if (e.notes.some((n) => (n.device || 'A') === dv)) slots.push('note-' + dv.toLowerCase());
     for (const dv of DEVICES) if (e.shots.some((s) => s.device === dv)) slots.push('shot-' + dv.toLowerCase());
     if (e.status.length) slots.push('status');
     const start = cx - ((slots.length - 1) * 8) / 2;
     for (const sl of slots) {
       const px = start + off;
       off += 8;
-      if (sl === 'note') svg += `<rect class="mk-note" x="${px - 3.5}" y="${my - 3.5}" width="7" height="7" rx="1"/>`;
+      if (sl.startsWith('note-')) svg += `<rect class="mk-note mk-note-${sl.slice(-1)}" x="${px - 3.5}" y="${my - 3.5}" width="7" height="7" rx="1"/>`;
       else if (sl === 'status') svg += `<circle class="mk-status" cx="${px}" cy="${my}" r="3.5"/>`;
       else svg += `<circle class="mk-shot-${sl.slice(-1)}" cx="${px}" cy="${my}" r="4.5"/>`;
     }
@@ -203,7 +204,9 @@ export function renderPage(model, opts) {
     const body = [];
     for (const g of e.gates) body.push(`<div class="gate-banner"><strong>${esc(g.name)}</strong>${g.sub ? ' &middot; ' + esc(g.sub) : ''}</div>`);
     for (const n of e.notes) {
-      body.push(`<article class="note">${n.title ? `<h4>${esc(n.title)}</h4>` : ''}${markdownToHtml(n.body, redact)}</article>`);
+      // B-to-A-0013: a note carries its device (notes.md A, notes-b.md B); the badge keeps the lane visible in the journal.
+      const nd = n.device || 'A';
+      body.push(`<article class="note note-${esc(nd.toLowerCase())}">${n.title ? `<h4>${devBadge(nd)} ${esc(n.title)}</h4>` : devBadge(nd)}${markdownToHtml(n.body, redact)}</article>`);
     }
     if (e.shots.length) body.push(`<div class="shots">${e.shots.map(shotFig).join('')}</div>`);
     if (e.status.length) body.push(`<div class="status">${e.status.map(statusCard).join('')}</div>`);

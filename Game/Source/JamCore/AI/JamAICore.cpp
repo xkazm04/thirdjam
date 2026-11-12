@@ -101,6 +101,7 @@ namespace JamAI
 		for (int i = 0; i < kMaxSkaters; ++i)
 		{
 			Used[i] = ERole::Chaser;
+			InReach[i] = 0;
 			for (int k = 0; k <= kMaxReactionFrames; ++k)
 			{
 				Hist[i][k] = FJamAIInput();
@@ -108,6 +109,9 @@ namespace JamAI
 		}
 		Tick = 0;
 		TeamIntent = FJamAIIntent();
+		PlayThinks = 0;
+		Faceoffs = 0;
+		bWasFaceoff = false;
 	}
 
 	const FJamBotSkill& FJamBrain::SkillOf(const FJamAIWorld& W, int Id) const
@@ -162,8 +166,11 @@ namespace JamAI
 		// lane A3: reaction delay. While frozen (goal pause) the ring is cleared, so after a faceoff a bot with delay N stands
 		// for N frames; while playing, the input sent is the one decided N thinks ago.
 		constexpr int Ring = kMaxReactionFrames + 1;
+		if (W.bFaceoffPhase && !bWasFaceoff) { ++Faceoffs; }
+		bWasFaceoff = W.bFaceoffPhase;
 		if (W.bFrozen)
 		{
+			PlayThinks = 0;
 			for (int i = 0; i < kMaxSkaters; ++i)
 			{
 				for (int k = 0; k < Ring; ++k)
@@ -175,6 +182,7 @@ namespace JamAI
 		else
 		{
 			++Tick;
+			++PlayThinks;
 		}
 		const int Head = static_cast<int>(Tick % Ring);
 		for (int i = 0; i < W.NumSkaters; ++i)
@@ -186,6 +194,14 @@ namespace JamAI
 			FJamAIInput In;
 			if (W.bFrozen || W.Skaters[i].bDown)
 			{
+				InReach[i] = 0;
+				// R-0013 draw: a centre that jumps early (pokes in the countdown) loses the draw; rookie does it at its rate
+				const FJamBotSkill& K = SkillOf(W, i);
+				if (W.bFaceoffPhase && W.Skaters[i].bCentre && W.FaceoffCountdown == 6 && K.DrawJumpPct > 0
+					&& static_cast<int>((Hash11(static_cast<uint64_t>(Faceoffs) * 7 + 1, static_cast<uint64_t>(i)) + 1.0) * 50.0) < K.DrawJumpPct)
+				{
+					In.bPoke = true;
+				}
 				Hist[i][Head] = In;
 				Out[i] = In;
 				continue;
@@ -207,6 +223,16 @@ namespace JamAI
 			}
 			In.Move = Dir * Sc;
 			In.bShoot = bShoot;
+			StickPlay(W, i, In);
+			// R-0013 draw: the opposing centre takes the draw early at the level's rate (else the sim's bot timing decides)
+			{
+				const FJamBotSkill& K = SkillOf(W, i);
+				if (W.bDrawOpen && W.Skaters[i].bCentre && K.DrawPressPct > 0 && PlayThinks >= K.DrawPressFrames
+					&& static_cast<int>((Hash11(static_cast<uint64_t>(Faceoffs) * 7 + 3, static_cast<uint64_t>(i)) + 1.0) * 50.0) < K.DrawPressPct)
+				{
+					In.bPoke = true;
+				}
+			}
 			Hist[i][Head] = In;
 			int Delay = bBackRole ? 0 : SkillOf(W, i).ReactionFrames;
 			if (TeamIntent.Kind == ETeamIntent::Praise && TeamIntent.Active(W.Frame) && W.PlayerIndex >= 0 && W.Skaters[i].Team == PlayerTeam
@@ -219,6 +245,10 @@ namespace JamAI
 			// reach and facing gate: in the sweep any delay >= 2 frames stopped the AI from scoring at all)
 			Out[i] = Hist[i][(Head - Delay + Ring) % Ring];
 			Out[i].bShoot = In.bShoot;
+			Out[i].bPass = In.bPass;
+			Out[i].Stick = In.Stick;
+			Out[i].bPoke = In.bPoke;
+			Out[i].bLift = In.bLift;
 		}
 	}
 
@@ -233,6 +263,23 @@ namespace JamAI
 		const FVec2 Dirg = (OppGoal - Pp).Normalized();
 		double D = Me.DistTo(Pp);
 		FVec2 Out;
+
+		// R-0017: a pickup within 8 m, nearer than the puck, while not carrying (all_star only)
+		if (SkillOf(W, Id).bSeekPickups && W.Carrier != Id)
+		{
+			int Best = -1;
+			double Bd = 8.0;
+			for (int p = 0; p < W.NumPickups; ++p)
+			{
+				const double Pd = W.PickupPos[p].DistTo(Me);
+				if (Pd < Bd && Pd < D) { Bd = Pd; Best = p; }
+			}
+			if (Best >= 0)
+			{
+				Used[Id] = S.Role;
+				return Arrive(Me, W.PickupPos[Best], 0.5) + Separate(Me, W, Id, Params.SeparateRadius) * 1.2;
+			}
+		}
 
 		bool bHasMateChaser = false;
 		FVec2 MateChaser;
@@ -311,6 +358,16 @@ namespace JamAI
 			{
 				Out = Attack(W, Id, Me, Pp, Dirg, D, bShoot);
 			}
+			else if (LastManGoalie(W, Id))
+			{
+				// R-0013 point 3: the carrier is inside our blue line and nobody stands between: hold the crease, squared to the
+				// carrier (on the line goal centre -> carrier, 1.5 m out); the stick (StickPlay) pokes when the puck comes into reach
+				const FVec2 C = W.Skaters[W.Carrier].Pos;
+				FVec2 T = OwnGoal + (C - OwnGoal).Normalized() * 1.5;
+				if (std::fabs(T.X) > W.GoalX) { T.X = OwnGoal.X; }
+				Used[Id] = ERole::Back;
+				Out = Arrive(Me, T - S.Vel * 0.25, 1.0);
+			}
 			else
 			{
 				FVec2 T;
@@ -359,9 +416,108 @@ namespace JamAI
 				Between += (Between - MateChaser).Normalized() * Params.MinSeparation;
 			}
 			Out = Arrive(Me, Between, Params.ArriveSlowRadius);
+			// R-0017: a support that reads lanes stands in the pass lane from the opposing carrier to its nearest teammate
+			const int C = W.Carrier;
+			if (SkillOf(W, Id).bReadLanes && C >= 0 && W.Skaters[C].Team != S.Team)
+			{
+				int Mate = -1;
+				double Best = 1e18;
+				for (int o = 0; o < W.NumSkaters; ++o)
+				{
+					if (o == C || W.Skaters[o].Team != W.Skaters[C].Team || W.Skaters[o].bDown) { continue; }
+					const double Dd = W.Skaters[o].Pos.DistTo(W.Skaters[C].Pos);
+					if (Dd < Best) { Best = Dd; Mate = o; }
+				}
+				if (Mate >= 0 && Best < 30.0)
+				{
+					const FVec2 PassLane = LerpV(W.Skaters[C].Pos, W.Skaters[Mate].Pos, 0.45);
+					Out = Arrive(Me, PassLane - S.Vel * 0.2, Params.ArriveSlowRadius);
+				}
+			}
 		}
 		Out += Separate(Me, W, Id, Params.SeparateRadius) * 1.2;
 		return Out;
+	}
+
+	bool FJamBrain::LastManGoalie(const FJamAIWorld& W, int Id) const
+	{
+		const int C = W.Carrier;
+		const FJamAISkater& S = W.Skaters[Id];
+		if (C < 0 || W.Skaters[C].Team == S.Team)
+		{
+			return false;
+		}
+		const FVec2 OwnGoal = W.OwnGoal(S.Team);
+		const FVec2 Cp = W.Skaters[C].Pos;
+		// inside our blue line: the outer third of the rink on our side
+		if (Cp.X * OwnGoal.X <= 0.0 || std::fabs(Cp.X) < W.HalfLength / 3.0)
+		{
+			return false;
+		}
+		const FVec2 Line = Cp - OwnGoal;
+		const double L = Line.Length();
+		if (L < 1e-6) { return false; }
+		const FVec2 U = Line * (1.0 / L);
+		for (int o = 0; o < W.NumSkaters; ++o)
+		{
+			if (o == Id || W.Skaters[o].Team != S.Team || W.Skaters[o].bDown) { continue; }
+			const FVec2 Rel = W.Skaters[o].Pos - OwnGoal;
+			const double Along = Rel.Dot(U);
+			if (Along > 0.0 && Along < L && std::fabs(Rel.Cross(U)) < 2.5) { return false; }   // a teammate stands between
+		}
+		return true;
+	}
+
+	void FJamBrain::StickPlay(const FJamAIWorld& W, int Id, FJamAIInput& In)
+	{
+		const FJamAISkater& S = W.Skaters[Id];
+		const FJamBotSkill& K = SkillOf(W, Id);
+		const FVec2 To = W.PuckPos - S.Pos;
+		const double D = To.Length();
+		const double Blade = W.SkaterRadius + W.StickReach;
+		// the blade follows the puck when it is near (zero aim = the sim's default, ahead at half reach)
+		if (D > 1e-6 && D < Blade + 1.0)
+		{
+			In.Stick = To * (1.0 / D) * Clamp((D - W.SkaterRadius) / (W.StickReach > 0.01 ? W.StickReach : 0.01), 0.2, 1.0);
+		}
+		const int C = W.Carrier;
+		const bool bOppCarrier = C >= 0 && W.Skaters[C].Team != S.Team;
+		InReach[Id] = (bOppCarrier && D <= Blade) ? InReach[Id] + 1 : 0;
+		// poke: the level's timing (frames the puck must sit inside reach); rookie never pokes
+		if (K.PokeFrames >= 0 && bOppCarrier && S.bCanPoke && InReach[Id] > K.PokeFrames)
+		{
+			In.bPoke = true;
+			InReach[Id] = 0;
+		}
+		// lift at contact
+		if (K.bLift && bOppCarrier && S.bCanLift && W.Skaters[C].Pos.DistTo(S.Pos) <= 2.0 * W.SkaterRadius + W.LiftRange * 0.9)
+		{
+			In.bLift = true;
+		}
+		// pass out of pressure: a defender within 2 m and an open teammate (no opponent within 3 m of it, within 25 m)
+		if (K.bPassOut && C == Id && !In.bShoot)
+		{
+			bool bPressure = false, bOpen = false;
+			for (int o = 0; o < W.NumSkaters; ++o)
+			{
+				if (W.Skaters[o].Team != S.Team && !W.Skaters[o].bDown && W.Skaters[o].Pos.DistTo(S.Pos) < 2.0) { bPressure = true; }
+			}
+			for (int t = 0; t < W.NumSkaters && bPressure && !bOpen; ++t)
+			{
+				if (t == Id || W.Skaters[t].Team != S.Team || W.Skaters[t].bDown || W.Skaters[t].Pos.DistTo(S.Pos) > 25.0) { continue; }
+				bool bFree = true;
+				for (int o = 0; o < W.NumSkaters; ++o)
+				{
+					if (W.Skaters[o].Team != S.Team && W.Skaters[o].Pos.DistTo(W.Skaters[t].Pos) < 3.0) { bFree = false; }
+				}
+				bOpen = bFree;
+			}
+			In.bPass = bPressure && bOpen;
+		}
+		// bots never body-check (R-0013 fouls: no check from behind or on a skater without the puck is ever thrown)
+		In.bCheck = false;
+		// R-0019: never shoot from inside a no_shoot zone
+		if (S.bNoShoot) { In.bShoot = false; }
 	}
 
 	FVec2 FJamBrain::Attack(const FJamAIWorld& W, int Id, const FVec2& Me, const FVec2& Pp, const FVec2& Dirg, double D, bool& bShoot) const
@@ -444,6 +600,25 @@ namespace JamAI
 		// Approach direction: towards the goal, or off the boards when the puck lies on them (lane A2 addition: the
 		// Godot brain only aimed at the goal, which on an end board puts the approach point outside the rink).
 		FVec2 Push = Aim;
+		// R-0019: the carrier takes the puck round any slow-ice circle whose edge comes within 3 m of its straight line to the net
+		if (W.Carrier == Id)
+		{
+			for (int z = 0; z < W.NumSlowIce; ++z)
+			{
+				const FVec2 Rel = W.SlowIceCentre[z] - Pp;
+				const double Along = Rel.Dot(Dirg);
+				if (Along <= 0.0 || Along > Dgoal) { continue; }
+				const double Side = Rel.Cross(Dirg);   // > 0: the centre lies to one side of the line
+				const double R = W.SlowIceRadius[z];
+				if (std::fabs(Side) - R < 3.0)
+				{
+					const FVec2 Off = Dirg.Perp() * (Side > 0.0 ? 1.0 : -1.0);   // towards the far side from the centre
+					const FVec2 Round = W.SlowIceCentre[z] + Off * (R + 3.5);
+					Push = (Round - Pp).Normalized();
+					break;
+				}
+			}
+		}
 		if (bBoardPeel)
 		{
 			BoardPeel(W, Pp, OppGoal.X >= 0.0 ? 1.0 : -1.0, Push);
@@ -506,6 +681,24 @@ namespace JamAI
 			return In;
 		}
 		const FJamAISkater& Me = W.Skaters[W.PlayerIndex];
+		// lane A3 (R-0013): a centre takes the draw with a person's reaction time after the drop
+		if (W.bDrawOpen && Me.bCentre && W.FramesSinceDrop >= DrawReactionFrames)
+		{
+			In.bPoke = true;
+		}
+		// lane A3 (R-0013 / Director 14:45): forecheck: against an opposing carrier the blade follows the puck and pokes once it is in reach
+		if (W.Carrier >= 0 && W.Skaters[W.Carrier].Team != Me.Team)
+		{
+			const FVec2 Tp = W.PuckPos - Me.Pos;
+			const double Dp = Tp.Length();
+			if (Dp > 1e-6 && Dp < W.SkaterRadius + W.StickReach + 1.0)
+			{
+				In.Stick = Tp * (1.0 / Dp) * (Dp - W.SkaterRadius < W.StickReach ? (Dp - W.SkaterRadius > 0.2 * W.StickReach ? (Dp - W.SkaterRadius) / W.StickReach : 0.2) : 1.0);
+				if (Me.bCanPoke && Dp <= W.SkaterRadius + W.StickReach) { In.bPoke = true; }
+				// and lifts the carrier's stick at contact range
+				if (Me.bCanLift && W.Skaters[W.Carrier].Pos.DistTo(Me.Pos) <= 2.0 * W.SkaterRadius + W.LiftRange * 0.9) { In.bLift = true; }
+			}
+		}
 		// Work in the attacking frame: the opponents' goal at +x (rotate 180 deg for team 1; keeps handedness).
 		const double Sg = Me.Team == 0 ? 1.0 : -1.0;
 		const double Gx = W.GoalX;

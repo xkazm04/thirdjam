@@ -75,7 +75,7 @@ const ENUMS = [
   ['rules.mode', (g) => { g.rules.mode = 'sudden_death'; }, '/game/rules/mode', '"first_to", "timer"'],
   ['teams[].skaters[].role', (g) => { g.teams[0].skaters[1].role = 'goalie'; }, '/game/teams/0/skaters/1/role', '"player", "chaser", "support", "back"'],
   ['pickups[].kind', (g) => { g.pickups = [{ kind: 'rocket', spawn_every_frames: 600, duration_frames: 60 }]; }, '/game/pickups/0/kind', '"speed", "precision", "heavy_puck", "big_puck", "reverse_other"'],
-  ['look.tier', (g) => { g.look.tier = 'l4_ultra'; }, '/game/look/tier', '"l1_day", "l2_night", "l3_neon"'],
+  ['look.tier', (g) => { g.look.tier = 'l4_ultra'; }, '/game/look/tier', '"l1_day", "l2_night", "l3_neon", "p3_clay"'],
   ['camera.mode', (g) => { g.camera.mode = 'first_person'; }, '/game/camera/mode', '"third_person", "arena"'],
   ['rink.obstacles[].kind', (g) => { g.rink.obstacles = [{ kind: 'wall', x: 0, z: 0, size: 2 }]; }, '/game/rink/obstacles/0/kind', '"box", "pillar"'],
 ];
@@ -94,7 +94,10 @@ test('every enum value the brief lists is accepted', () => {
     const c = regular(); c.game.rules.mode = mode; c.game.rules.timer_frames = 3600;
     assert.deepEqual(errorsOf(c), []);
   }
-  for (const tier of ['l1_day', 'l2_night', 'l3_neon']) { const c = regular(); c.game.look.tier = tier; assert.deepEqual(errorsOf(c), []); }
+  for (const tier of ['l1_day', 'l2_night', 'l3_neon', 'p3_clay']) { const c = regular(); c.game.look.tier = tier; assert.deepEqual(errorsOf(c), []); }
+  // B-to-A-0018 point 5: look.trim_emissive 0..100, absent = the tier's default.
+  { const c = regular(); c.game.look.trim_emissive = 12; assert.deepEqual(errorsOf(c), []); }
+  { const c = regular(); c.game.look.trim_emissive = 101; assert.ok(errorsOf(c).some((e) => e.includes('/game/look/trim_emissive'))); }
   for (const mode of ['third_person', 'arena']) { const c = regular(); c.game.camera.mode = mode; assert.deepEqual(errorsOf(c), []); }
   for (const kind of ['speed', 'precision', 'heavy_puck', 'big_puck', 'reverse_other']) {
     const c = regular(); c.game.pickups = [{ kind, spawn_every_frames: 600, duration_frames: 60 }]; assert.deepEqual(errorsOf(c), []);

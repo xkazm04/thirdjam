@@ -2,6 +2,7 @@
 #include "MenuStyle.h"
 #include "SettingsWidget.h"
 #include "JamCartridge.h"
+#include "Progression.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/Overlay.h"
@@ -19,12 +20,16 @@
 #include "Engine/World.h"
 
 using namespace JamMenuStyle;
+using S = FJamUiStyle;
 
 DEFINE_LOG_CATEGORY_STATIC(LogJamMenuUi, Log, All);
 
+// Lane A18 (visual layer, R-0013 point 5): the slate says HOKEJ and nothing under it; the theme lives in the cuts, the takes and the
+// Director's Call. Cut rows sit in the film-strip frame of the kit with their icon; type and plates from FJamUiStyle. Logic is lane A8's
+// and A17's.
 namespace
 {
-	// Which painted card a cut row shows (R-0008 art); the raw cut has none yet.
+	// Which painted card a cut row shows (R-0008 art).
 	FString CardTextureFor(const FJamMenuCutRow& R)
 	{
 		if (R.bSaved) return TEXT("T_UI_Card_DirectorsCut");
@@ -34,6 +39,16 @@ namespace
 		if (R.Name == TEXT("hockey.arena.large")) return TEXT("T_UI_Card_LargeRink");
 		if (R.Name == TEXT("hockey.arena.wide")) return TEXT("T_UI_Card_Wide");
 		return TEXT("T_UI_Card_Regular");
+	}
+	// The kit icon of a cut row.
+	FString IconFor(const FJamMenuCutRow& R)
+	{
+		if (R.bSaved) return TEXT("cut-directors");
+		if (R.Name == TEXT("hockey.raw")) return TEXT("cut-raw");
+		if (R.Name == TEXT("hockey.boost")) return TEXT("cut-boost");
+		if (R.Name == TEXT("hockey.arena.large")) return TEXT("cut-large");
+		if (R.Name == TEXT("hockey.arena.wide")) return TEXT("cut-wide");
+		return TEXT("cut-regular");
 	}
 }
 
@@ -89,47 +104,41 @@ void UJamMenuWidget::BuildTree()
 	UOverlay* Root = T->ConstructWidget<UOverlay>(UOverlay::StaticClass(), TEXT("MenuRoot"));
 	T->RootWidget = Root;
 	UBorder* Backdrop = Plate(T, Black(), FMargin(0));
-	UOverlaySlot* BS = Root->AddChildToOverlay(Backdrop);
-	BS->SetHorizontalAlignment(HAlign_Fill);
-	BS->SetVerticalAlignment(VAlign_Fill);
+	S::AddO(Root, Backdrop);
 
 	USizeBox* CardBox = T->ConstructWidget<USizeBox>(USizeBox::StaticClass());
-	CardBox->SetWidthOverride(860.f);
-	UOverlaySlot* CS = Root->AddChildToOverlay(CardBox);
-	CS->SetHorizontalAlignment(HAlign_Center);
-	CS->SetVerticalAlignment(VAlign_Center);
+	CardBox->SetWidthOverride(880.f);
+	S::AddO(Root, CardBox, HAlign_Center, VAlign_Center);
 
-	UBorder* Card = Plate(T, Slate(), FMargin(0, 0, 0, 18));
+	UBorder* Card = S::Plate(T, S::Panel(1.f), FMargin(0, 0, 0, 18));
 	CardBox->AddChild(Card);
 	UVerticalBox* CardBody = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass());
 	Card->SetContent(CardBody);
-	AddV(CardBody, Clapper(T), FMargin(0));
+	AddV(CardBody, Clapper(T), FMargin(6, 6, 6, 0));
 
 	// Slate header: production and scene lines like a real slate, then the title.
 	UHorizontalBox* Head = T->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
-	AddH(Head, Text(T, TEXT("PROD.  HOKEJ"), 14, Dim()), FMargin(22, 0, 0, 0), true);
-	AddH(Head, Text(T, TEXT("SCENE  3 v 3"), 14, Dim()), FMargin(0), true);
-	AddH(Head, Text(T, TEXT("TAKE  YOURS"), 14, Dim()), FMargin(0, 0, 22, 0));
+	AddH(Head, S::Text(T, TEXT("PROD.  HOKEJ"), S::CaptionFont(), S::Muted()), FMargin(28, 0, 0, 0), true);
+	AddH(Head, S::Text(T, TEXT("SCENE  3 v 3"), S::CaptionFont(), S::Muted()), FMargin(0), true);
+	AddH(Head, S::Text(T, TEXT("TAKE  YOURS"), S::CaptionFont(), S::Muted()), FMargin(0, 0, 28, 0));
 	AddV(CardBody, Head, FMargin(0, 10, 0, 0));
 
-	// The title: the generated slate art when it is there (it carries HOKEJ / A DIRECTOR'S CUT), the chalk text otherwise.
-	if (UTexture2D* TitleArt = Art(TEXT("T_UI_TitleSlate")))
+	// The title: HOKEJ only (R-0013 point 5). The generated HOKEJ slate when it is there, the chalk letters otherwise.
+	if (UTexture2D* TitleArt = Art(TEXT("T_UI_TitleHokej")))
 	{
 		TitlePicture = Picture(T, TitleArt, 560.f);
 		AddV(CardBody, TitlePicture, FMargin(0, 6, 0, 4), HAlign_Center);
 	}
 	else
 	{
-		UTextBlock* Title = Text(T, TEXT("HOKEJ"), 96, Chalk());
+		UTextBlock* Title = S::Text(T, TEXT("HOKEJ"), S::Font(104, FName("Black"), 80), S::Chalk());
 		Title->SetJustification(ETextJustify::Center);
-		AddV(CardBody, Title, FMargin(0, 4, 0, 0));
-		UTextBlock* Sub = Text(T, TEXT("a director's cut"), 26, Yellow(), FName("Italic"));
-		Sub->SetJustification(ETextJustify::Center);
-		AddV(CardBody, Sub, FMargin(0, -8, 0, 10));
+		TitlePicture = Title;
+		AddV(CardBody, Title, FMargin(0, 2, 0, 6));
 	}
 
 	Switcher = T->ConstructWidget<UWidgetSwitcher>(UWidgetSwitcher::StaticClass(), TEXT("Screens"));
-	AddV(CardBody, Switcher, FMargin(28, 6, 28, 0));
+	AddV(CardBody, Switcher, FMargin(32, 6, 32, 0));
 	Switcher->AddChild(BuildMain());
 	Switcher->AddChild(BuildCuts());
 	Switcher->AddChild(BuildDirect());
@@ -137,7 +146,7 @@ void UJamMenuWidget::BuildTree()
 	Switcher->AddChild(BuildCredits());
 	Switcher->SetActiveWidgetIndex(0);
 
-	UTextBlock* Keys = Text(T, TEXT("STICK / ARROWS  move      A / ENTER  select      B / ESC  back"), 14, Dim());
+	UTextBlock* Keys = S::Text(T, TEXT("STICK / ARROWS  move      A / ENTER  select      B / ESC  back"), S::CaptionFont(), S::Muted());
 	Keys->SetJustification(ETextJustify::Center);
 	AddV(CardBody, Keys, FMargin(0, 14, 0, 0));
 }
@@ -147,13 +156,17 @@ UWidget* UJamMenuWidget::BuildMain()
 	UWidgetTree* T = WidgetTree;
 	UVerticalBox* Box = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("MainScreen"));
 	UTextBlock* Txt = nullptr;
-	auto Add = [&](TObjectPtr<UButton>& Target, const FString& Label)
+	auto Add = [&](TObjectPtr<UButton>& Target, const FString& LabelText)
 	{
-		UButton* B = Button(T, Label, 26, Txt);
+		UButton* B = Button(T, LabelText, S::Label, Txt);
 		Target = B;
 		AddTinted(B, Txt);
-		AddV(Box, B, FMargin(120, 5));
+		AddV(Box, B, FMargin(130, 4));
 	};
+	// Lane A17: the season of takes (docs/experiments/LADDER.md); the label says which take is next.
+	Add(SeasonButton, TEXT("PLAY THE SEASON"));
+	SeasonText = Txt;
+	SeasonButton->OnClicked.AddDynamic(this, &UJamMenuWidget::OnSeasonClicked);
 	Add(ChooseButton, TEXT("CHOOSE YOUR CUT"));
 	ChooseButton->OnClicked.AddDynamic(this, &UJamMenuWidget::OnChooseClicked);
 	Add(DirectButton, TEXT("DIRECT A CUT"));
@@ -167,7 +180,7 @@ UWidget* UJamMenuWidget::BuildMain()
 	CreditsButton->OnClicked.AddDynamic(this, &UJamMenuWidget::OnCreditsClicked);
 	Add(QuitButton, TEXT("QUIT"));
 	QuitButton->OnClicked.AddDynamic(this, &UJamMenuWidget::OnQuitClicked);
-	MainStatus = Text(T, TEXT(""), 15, Dim(), FName("Regular"));
+	MainStatus = S::Text(T, TEXT(""), S::BodyFont(), S::Muted());
 	MainStatus->SetJustification(ETextJustify::Center);
 	AddV(Box, MainStatus, FMargin(0, 8, 0, 0));
 	return Box;
@@ -177,17 +190,16 @@ UWidget* UJamMenuWidget::BuildCuts()
 {
 	UWidgetTree* T = WidgetTree;
 	UVerticalBox* Box = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("CutsScreen"));
-	UTextBlock* H = Text(T, TEXT("CHOOSE YOUR CUT"), 24, Yellow());
-	AddV(Box, H, FMargin(0, 0, 0, 4));
+	AddV(Box, S::Section(T, TEXT("CHOOSE YOUR CUT")), FMargin(0, 0, 0, 6));
 	CutList = T->ConstructWidget<UScrollBox>(UScrollBox::StaticClass(), TEXT("CutList"));
 	USizeBox* ListBox = T->ConstructWidget<USizeBox>(USizeBox::StaticClass());
-	ListBox->SetMaxDesiredHeight(430.f);
+	ListBox->SetMaxDesiredHeight(440.f);
 	ListBox->AddChild(CutList);
 	AddV(Box, ListBox, FMargin(0, 0));
-	CutsStatus = Text(T, TEXT(""), 15, Dim(), FName("Regular"));
+	CutsStatus = S::Text(T, TEXT(""), S::BodyFont(), S::Muted());
 	AddV(Box, CutsStatus, FMargin(0, 6, 0, 0));
 	UTextBlock* Txt = nullptr;
-	UButton* Back = Button(T, TEXT("BACK"), 18, Txt);
+	UButton* Back = Button(T, TEXT("BACK"), S::Body, Txt);
 	Back->OnClicked.AddDynamic(this, &UJamMenuWidget::OnBackClicked);
 	AddTinted(Back, Txt);
 	BackButtons.Add(Back);
@@ -199,50 +211,54 @@ UWidget* UJamMenuWidget::BuildDirect()
 {
 	UWidgetTree* T = WidgetTree;
 	UVerticalBox* Box = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("DirectScreen"));
-	AddV(Box, Text(T, TEXT("DIRECT A CUT"), 24, Yellow()), FMargin(0, 0, 0, 2));
-	AddV(Box, Text(T, TEXT("Tell the Designer in one sentence how you want this cut. It edits the rules, the ice, the shots, the look."), 15, Dim(), FName("Regular")), FMargin(0, 0, 0, 6));
+	AddV(Box, S::Section(T, TEXT("DIRECT A CUT")), FMargin(0, 0, 0, 4));
+	UTextBlock* Intro = S::Text(T, TEXT("Tell the Designer in one sentence how you want this cut. It edits the rules, the ice, the shots, the look."), S::BodyFont(), S::Muted());
+	Intro->SetAutoWrapText(true);
+	AddV(Box, Intro, FMargin(0, 0, 0, 8));
 
 	UHorizontalBox* Row = T->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
 	SentenceBox = T->ConstructWidget<UEditableTextBox>(UEditableTextBox::StaticClass(), TEXT("SentenceBox"));
 	SentenceBox->SetHintText(FText::FromString(TEXT("make it faster and meaner")));
 	SentenceBox->SetMinDesiredWidth(520.f);
+	SentenceBox->WidgetStyle.SetFont(S::BodyFont());
+	SentenceBox->WidgetStyle.SetPadding(FMargin(12, 8));
 	SentenceBox->OnTextCommitted.AddDynamic(this, &UJamMenuWidget::OnSentenceCommitted);
 	AddH(Row, SentenceBox, FMargin(0, 0, 8, 0), true);
 	UTextBlock* Txt = nullptr;
-	RollButton = Button(T, TEXT("ROLL"), 20, Txt);
+	RollButton = Button(T, TEXT("ROLL"), S::Body + 2, Txt);
 	RollButton->OnClicked.AddDynamic(this, &UJamMenuWidget::OnRollClicked);
 	AddTinted(RollButton, Txt);
 	AddH(Row, RollButton, FMargin(0));
 	AddV(Box, Row, FMargin(0, 0, 0, 4));
 
-	DirectStatus = Text(T, TEXT(""), 16, Yellow(), FName("Regular"));
+	DirectStatus = S::Text(T, TEXT(""), S::BodyFont(), S::Yellow());
 	DirectStatus->SetAutoWrapText(true);
 	AddV(Box, DirectStatus, FMargin(0, 2, 0, 2));
-	DirectHint = Text(T, TEXT(""), 14, Dim(), FName("Regular"));
+	DirectHint = S::Text(T, TEXT(""), S::CaptionFont(), S::Muted());
 	DirectHint->SetAutoWrapText(true);
 	AddV(Box, DirectHint, FMargin(0, 0, 0, 4));
 
 	// The result: the cut's name, its three biggest changes, and what to do with it.
 	ResultBox = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("ResultBox"));
-	UBorder* ResultPlate = Plate(T, SlateDark(), FMargin(14, 10));
+	UBorder* ResultPlate = S::Plate(T, S::Rounded(S::SlateDark(), S::Radius, S::Yellow(), 1.5f), FMargin(16, 12));
 	ResultPlate->SetContent(ResultBox);
-	ResultName = Text(T, TEXT(""), 28, Chalk());
+	ResultName = S::Text(T, TEXT(""), S::Font(S::Label + 4, FName("Black"), S::TrackLabel), S::Chalk());
 	AddV(ResultBox, ResultName, FMargin(0, 0, 0, 2));
-	ResultChanges = Text(T, TEXT(""), 16, Chalk(), FName("Regular"));
+	ResultChanges = S::Text(T, TEXT(""), S::BodyFont(), S::Chalk());
 	ResultChanges->SetAutoWrapText(true);
-	AddV(ResultBox, ResultChanges, FMargin(0, 0, 0, 8));
+	AddV(ResultBox, ResultChanges, FMargin(0, 0, 0, 10));
 	UHorizontalBox* Actions = T->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
-	PlayResultButton = Button(T, TEXT("PLAY"), 18, Txt);
+	PlayResultButton = Button(T, TEXT("PLAY"), S::Body, Txt);
 	PlayResultButton->OnClicked.AddDynamic(this, &UJamMenuWidget::OnPlayResultClicked);
 	AddTinted(PlayResultButton, Txt);
 	AddH(Actions, PlayResultButton, FMargin(0, 0, 8, 0));
 	UTextBlock* SaveTxt = nullptr;
-	SaveResultButton = Button(T, TEXT("SAVE AS MY DIRECTOR'S CUT"), 18, SaveTxt);
+	SaveResultButton = Button(T, TEXT("SAVE AS MY DIRECTOR'S CUT"), S::Body, SaveTxt);
 	SaveResultText = SaveTxt;
 	SaveResultButton->OnClicked.AddDynamic(this, &UJamMenuWidget::OnSaveResultClicked);
 	AddTinted(SaveResultButton, SaveTxt);
 	AddH(Actions, SaveResultButton, FMargin(0, 0, 8, 0));
-	TryAgainButton = Button(T, TEXT("TRY AGAIN"), 18, Txt);
+	TryAgainButton = Button(T, TEXT("TRY AGAIN"), S::Body, Txt);
 	TryAgainButton->OnClicked.AddDynamic(this, &UJamMenuWidget::OnTryAgainClicked);
 	AddTinted(TryAgainButton, Txt);
 	AddH(Actions, TryAgainButton, FMargin(0));
@@ -251,7 +267,7 @@ UWidget* UJamMenuWidget::BuildDirect()
 	ResultPlate->SetVisibility(ESlateVisibility::Collapsed);
 	ResultBox->SetVisibility(ESlateVisibility::Collapsed);
 
-	AddV(Box, Text(T, TEXT("OR PICK A SENTENCE THE DESIGNER ALREADY SHOT"), 14, Dim()), FMargin(0, 6, 0, 2));
+	AddV(Box, S::Text(T, TEXT("OR PICK A SENTENCE THE DESIGNER ALREADY SHOT"), S::CaptionFont(), S::Muted()), FMargin(0, 8, 0, 2));
 	SentenceList = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("SentenceList"));
 	// Scrolls: the cache has a dozen sentences and the card must fit 720p.
 	UScrollBox* SentenceScroll = T->ConstructWidget<UScrollBox>(UScrollBox::StaticClass(), TEXT("SentenceScroll"));
@@ -261,7 +277,7 @@ UWidget* UJamMenuWidget::BuildDirect()
 	SentenceClip->AddChild(SentenceScroll);
 	AddV(Box, SentenceClip, FMargin(0));
 
-	UButton* Back = Button(T, TEXT("BACK"), 18, Txt);
+	UButton* Back = Button(T, TEXT("BACK"), S::Body, Txt);
 	Back->OnClicked.AddDynamic(this, &UJamMenuWidget::OnBackClicked);
 	AddTinted(Back, Txt);
 	BackButtons.Add(Back);
@@ -273,11 +289,11 @@ UWidget* UJamMenuWidget::BuildSettings()
 {
 	UWidgetTree* T = WidgetTree;
 	UVerticalBox* Box = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("SettingsScreen"));
-	AddV(Box, Text(T, TEXT("SETTINGS"), 24, Yellow()), FMargin(0, 0, 0, 2));
+	AddV(Box, S::Section(T, TEXT("SETTINGS")), FMargin(0, 0, 0, 2));
 	SettingsPanel = CreateWidget<UJamSettingsWidget>(this, UJamSettingsWidget::StaticClass());
 	if (SettingsPanel) AddV(Box, SettingsPanel, FMargin(0));
 	UTextBlock* Txt = nullptr;
-	UButton* Back = Button(T, TEXT("BACK"), 18, Txt);
+	UButton* Back = Button(T, TEXT("BACK"), S::Body, Txt);
 	Back->OnClicked.AddDynamic(this, &UJamMenuWidget::OnBackClicked);
 	AddTinted(Back, Txt);
 	BackButtons.Add(Back);
@@ -289,19 +305,19 @@ UWidget* UJamMenuWidget::BuildCredits()
 {
 	UWidgetTree* T = WidgetTree;
 	UVerticalBox* Box = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("CreditsScreen"));
-	AddV(Box, Text(T, TEXT("CREDITS"), 24, Yellow()), FMargin(0, 0, 0, 6));
-	UTextBlock* Body = Text(T,
-		TEXT("HOKEJ, a director's cut. Team Hokej, 2026 Epic MegaJam, theme Director's Cut.\n\n")
+	AddV(Box, S::Section(T, TEXT("CREDITS")), FMargin(0, 0, 0, 8));
+	UTextBlock* Body = S::Text(T,
+		TEXT("HOKEJ. Team Hokej, 2026 Epic MegaJam, theme Director's Cut.\n\n")
 		TEXT("Built with Unreal Engine.\n\n")
 		TEXT("One human directed two machines of agents; the agents wrote the game, the cuts and this menu. ")
 		TEXT("The Designer turns your sentence into a cut through the Claude API with a key you type yourself; without a key it answers from cuts it shot earlier.\n\n")
-		TEXT("Tools used: Unreal Engine 5.9, Claude Code and the Claude API, Node.js, Git with LFS, Meshy for generated figures, PowerShell.\n\n")
+		TEXT("Tools used: Unreal Engine 5.9, Claude Code and the Claude API, Codex image generation for the menu and HUD art, Node.js, Git with LFS, Meshy for generated figures, PowerShell.\n\n")
 		TEXT("No goalies were harmed. No logos were used."),
-		16, Chalk(), FName("Regular"));
+		S::BodyFont(), S::Chalk());
 	Body->SetAutoWrapText(true);
 	AddV(Box, Body, FMargin(0, 0, 0, 6));
 	UTextBlock* Txt = nullptr;
-	UButton* Back = Button(T, TEXT("BACK"), 18, Txt);
+	UButton* Back = Button(T, TEXT("BACK"), S::Body, Txt);
 	Back->OnClicked.AddDynamic(this, &UJamMenuWidget::OnBackClicked);
 	AddTinted(Back, Txt);
 	BackButtons.Add(Back);
@@ -316,12 +332,13 @@ void UJamMenuWidget::ShowScreen(EJamMenuScreen InScreen)
 	Screen = InScreen;
 	if (!Switcher) return;
 	Switcher->SetActiveWidgetIndex(static_cast<int32>(Screen));
-	// The slate art heads the main and credits screens; the tall screens (cuts, direct, settings) keep the card inside 720p.
+	// The title heads the main and credits screens; the tall screens (cuts, direct, settings) keep the card inside 720p.
 	if (TitlePicture) TitlePicture->SetVisibility(Screen == EJamMenuScreen::Main || Screen == EJamMenuScreen::Credits ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	switch (Screen)
 	{
 	case EJamMenuScreen::Main:
-		PendingFocus = ChooseButton.Get();
+		RefreshSeason();
+		PendingFocus = SeasonButton ? SeasonButton.Get() : ChooseButton.Get();
 		break;
 	case EJamMenuScreen::Cuts:
 		RefreshCuts();
@@ -346,46 +363,59 @@ void UJamMenuWidget::RefreshCuts()
 	CutList->ClearChildren();
 	Tinted.RemoveAll([](const TPair<TWeakObjectPtr<UButton>, TWeakObjectPtr<UTextBlock>>& P) { return !P.Key.IsValid() || P.Key->IsA<UJamMenuRowButton>(); });
 	UJamDesignerSubsystem* D = Designer();
-	Rows = D ? UJamMenuFlow::BuildCutRows(D->ListCuts()) : TArray<FJamMenuCutRow>();
+	Rows = D ? UJamMenuFlow::BuildCutRows(ListCutsWithSeason()) : TArray<FJamMenuCutRow>();
 	UWidgetTree* T = WidgetTree;
+	const bool bFrame = S::Art(TEXT("T_UI_CutFrame")) != nullptr;
 	for (const FJamMenuCutRow& R : Rows)
 	{
 		UJamMenuRowButton* B = T->ConstructWidget<UJamMenuRowButton>(UJamMenuRowButton::StaticClass());
-		B->SetStyle(ButtonStyle());
-
+		FButtonStyle RowStyle = ButtonStyle();
+		// Rows are framed by the film strip; the button itself only tints on hover and press.
+		RowStyle.SetNormal(S::Rounded(FLinearColor::Transparent, 4.f));
+		RowStyle.SetHovered(S::Rounded(FLinearColor(S::Blue().R, S::Blue().G, S::Blue().B, 0.35f), 4.f));
+		RowStyle.SetPressed(S::Rounded(FLinearColor(S::Orange().R, S::Orange().G, S::Orange().B, 0.5f), 4.f));
+		RowStyle.SetNormalPadding(FMargin(0));
+		RowStyle.SetPressedPadding(FMargin(0));
+		B->SetStyle(RowStyle);
 		B->Bind(this, EJamMenuRowKind::Cut, R.Name);
+
+		// The words: name, one line, the key tunables; the cut's icon at the left.
+		UHorizontalBox* Line = T->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
+		AddH(Line, S::Icon(T, IconFor(R), 44.f), FMargin(0, 0, 14, 0));
 		UVerticalBox* Body = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass());
-		UTextBlock* Name = Text(T, R.Display.ToUpper(), 22, Chalk());
+		UTextBlock* Name = S::Text(T, R.Display.ToUpper(), S::Font(S::Label, FName("Black"), S::TrackLabel), S::Chalk());
 		B->TintText = Name;
 		AddV(Body, Name, FMargin(0, 0, 0, 1));
-		AddV(Body, Text(T, R.Description, 15, Chalk(), FName("Regular")), FMargin(0, 0));
-		AddV(Body, Text(T, R.Tunables, 13, Dim(), FName("Regular")), FMargin(0, 1, 0, 0));
-		// The cut's painted card behind the words when it exists (text stays on top and reads without it).
+		AddV(Body, S::Text(T, R.Description, S::BodyFont(), S::Chalk()), FMargin(0, 0));
+		AddV(Body, S::Text(T, R.Tunables, S::CaptionFont(), S::Muted()), FMargin(0, 1, 0, 0));
+		AddH(Line, Body, FMargin(0), true);
+
+		// The painted card behind the words, clipped to the row, inside the film-strip frame.
+		UOverlay* Stack = T->ConstructWidget<UOverlay>(UOverlay::StaticClass());
 		if (UTexture2D* CardArt = Art(*CardTextureFor(R)))
 		{
-			UOverlay* Stack = T->ConstructWidget<UOverlay>(UOverlay::StaticClass());
-			// The card's upper band (rink and skaters) shows; its lower, emptier half is clipped away under the text.
-			UWidget* Pic = Picture(T, CardArt, 780.f, 300.f, 0.5f);
+			UWidget* Pic = Picture(T, CardArt, 800.f, 300.f, 0.55f);
 			USizeBox* Clip = T->ConstructWidget<USizeBox>(USizeBox::StaticClass());
-			Clip->SetHeightOverride(88.f);
+			Clip->SetHeightOverride(bFrame ? 184.f : 92.f);
 			Clip->SetClipping(EWidgetClipping::ClipToBounds);
 			Clip->AddChild(Pic);
 			if (USizeBoxSlot* PS = Cast<USizeBoxSlot>(Pic->Slot)) { PS->SetHorizontalAlignment(HAlign_Fill); PS->SetVerticalAlignment(VAlign_Top); }
-			UOverlaySlot* S0 = Stack->AddChildToOverlay(Clip);
-			S0->SetHorizontalAlignment(HAlign_Fill);
-			S0->SetVerticalAlignment(VAlign_Fill);
-			UOverlaySlot* S1 = Stack->AddChildToOverlay(Body);
-			S1->SetHorizontalAlignment(HAlign_Fill);
-			S1->SetVerticalAlignment(VAlign_Center);
-			S1->SetPadding(FMargin(8, 2));
-			B->AddChild(Stack);
+			S::AddO(Stack, Clip);
 		}
-		else
+		if (bFrame)
 		{
-			B->AddChild(Body);
+			FSlateBrush Frame = S::CutFrame();
+			Frame.DrawAs = ESlateBrushDrawType::Border;   // the sprocket rows tile instead of stretching
+			Frame.ImageSize = Frame.ImageSize / 6.f;
+			UBorder* FrameBorder = S::Plate(T, Frame, FMargin(0));
+			FrameBorder->SetVisibility(ESlateVisibility::HitTestInvisible);
+			S::AddO(Stack, FrameBorder);
 		}
+		// The sprocket rows of the frame tile at about 45 px top and bottom of a 184 px row: the words sit between them.
+		S::AddO(Stack, Line, HAlign_Fill, VAlign_Center, bFrame ? FMargin(24, 54, 24, 54) : FMargin(12, 6));
+		B->AddChild(Stack);
 		CutList->AddChild(B);
-		if (UPanelSlot* S = B->Slot) if (UScrollBoxSlot* SS = Cast<UScrollBoxSlot>(S)) SS->SetPadding(FMargin(0, 3));
+		if (UPanelSlot* PS = B->Slot) if (UScrollBoxSlot* SS = Cast<UScrollBoxSlot>(PS)) SS->SetPadding(FMargin(0, 3));
 		AddTinted(B, Name);
 	}
 	CutsStatus->SetText(FText::FromString(Rows.Num() ? FString::Printf(TEXT("%d cuts. Pick one to play it."), Rows.Num()) : TEXT("No cuts found in Content/Cartridges.")));
@@ -412,13 +442,15 @@ void UJamMenuWidget::RefreshDirect()
 			UWidgetTree* T = WidgetTree;
 			TArray<FString> Sentences = D->GetCachedSentences();
 			for (const FJamCutInfo& I : D->ListCuts()) if (I.bSaved && !I.Sentence.IsEmpty()) Sentences.AddUnique(I.Sentence);
-			for (const FString& S : Sentences)
+			for (const FString& Sentence : Sentences)
 			{
 				UJamMenuRowButton* B = T->ConstructWidget<UJamMenuRowButton>(UJamMenuRowButton::StaticClass());
-				B->SetStyle(ButtonStyle());
-
-				B->Bind(this, EJamMenuRowKind::Sentence, S);
-				UTextBlock* Txt = Text(T, FString::Printf(TEXT("\"%s\""), *S), 15, Chalk(), FName("Regular"));
+				FButtonStyle RowStyle = ButtonStyle();
+				RowStyle.SetNormalPadding(FMargin(14, 5));
+				RowStyle.SetPressedPadding(FMargin(14, 6, 14, 4));
+				B->SetStyle(RowStyle);
+				B->Bind(this, EJamMenuRowKind::Sentence, Sentence);
+				UTextBlock* Txt = S::Text(T, FString::Printf(TEXT("\"%s\""), *Sentence), S::Font(S::Body, FName("Italic")), S::Chalk());
 				B->TintText = Txt;
 				B->AddChild(Txt);
 				AddV(SentenceList, B, FMargin(0, 2), HAlign_Left);
@@ -434,7 +466,7 @@ bool UJamMenuWidget::ChooseCut(const FString& Name)
 {
 	UJamDesignerSubsystem* D = Designer();
 	if (!D) { CutsStatus->SetText(FText::FromString(TEXT("The Designer subsystem is missing."))); return false; }
-	if (!Rows.Num()) Rows = UJamMenuFlow::BuildCutRows(D->ListCuts());
+	if (!Rows.Num()) Rows = UJamMenuFlow::BuildCutRows(ListCutsWithSeason());
 	const FJamMenuCutRow* Row = Rows.FindByPredicate([&](const FJamMenuCutRow& R) { return R.Name == Name; });
 	FString Err;
 	if (!D->LoadCut(Row ? (Row->bSaved ? Row->Path : Row->Name) : Name, Err))
@@ -460,8 +492,8 @@ void UJamMenuWidget::OnRowClicked(EJamMenuRowKind Kind, const FString& Payload)
 void UJamMenuWidget::Direct(const FString& Sentence)
 {
 	UJamDesignerSubsystem* D = Designer();
-	const FString S = Sentence.TrimStartAndEnd();
-	if (!D || S.IsEmpty()) { DirectStatus->SetText(FText::FromString(TEXT("Type one sentence first."))); return; }
+	const FString Trimmed = Sentence.TrimStartAndEnd();
+	if (!D || Trimmed.IsEmpty()) { DirectStatus->SetText(FText::FromString(TEXT("Type one sentence first."))); return; }
 	if (bRolling) return;
 	bRolling = true;
 	bHasResult = false;
@@ -471,7 +503,7 @@ void UJamMenuWidget::Direct(const FString& Sentence)
 	DirectStatus->SetText(FText::FromString(TEXT("rolling...")));
 	RollButton->SetIsEnabled(false);
 	TWeakObjectPtr<UJamMenuWidget> Weak(this);
-	D->RequestCut(S, FString(), [Weak](const FJamDesignerResult& R) { if (Weak.IsValid()) Weak->OnResult(R); });
+	D->RequestCut(Trimmed, FString(), [Weak](const FJamDesignerResult& R) { if (Weak.IsValid()) Weak->OnResult(R); });
 }
 
 void UJamMenuWidget::OnResult(const FJamDesignerResult& R)
@@ -545,6 +577,41 @@ void UJamMenuWidget::OnTryAgainClicked()
 }
 
 void UJamMenuWidget::OnChooseClicked() { ShowScreen(EJamMenuScreen::Cuts); }
+
+TArray<FJamCutInfo> UJamMenuWidget::ListCutsWithSeason() const
+{
+	UJamDesignerSubsystem* D = Designer();
+	TArray<FJamCutInfo> Cuts = D ? D->ListCuts() : TArray<FJamCutInfo>();
+	// Lane A17: a played season take is listed as a cut of its own.
+	if (const UJamProgression* P = UJamProgression::Get(this)) Cuts = P->AppendPlayedTakes(Cuts);
+	return Cuts;
+}
+
+void UJamMenuWidget::RefreshSeason()
+{
+	if (!SeasonText) return;
+	UJamProgression* P = UJamProgression::Get(this);
+	const FJamSeasonState St = P ? P->GetSeasonState() : FJamSeasonState();
+	FString LabelText = TEXT("PLAY THE SEASON");
+	if (St.bLoaded && St.bComplete) LabelText += TEXT(": WRAPPED");
+	else if (St.bLoaded) LabelText += FString::Printf(TEXT(": TAKE %d OF %d"), St.CurrentTake + 1, St.TakeCount);
+	SeasonText->SetText(FText::FromString(LabelText));
+	if (SeasonButton) SeasonButton->SetIsEnabled(St.bLoaded);
+	if (MainStatus && St.bLoaded) MainStatus->SetText(FText::FromString(St.MenuLine));
+}
+
+bool UJamMenuWidget::PlaySeason()
+{
+	UJamProgression* P = UJamProgression::Get(this);
+	if (!P || !P->StartSeason(this))
+	{
+		if (MainStatus) MainStatus->SetText(FText::FromString(P ? FString::Printf(TEXT("The season cannot start: %s"), *P->GetSeasonState().Error) : FString(TEXT("The season subsystem is missing."))));
+		return false;
+	}
+	return true;
+}
+
+void UJamMenuWidget::OnSeasonClicked() { PlaySeason(); }
 void UJamMenuWidget::OnDirectClicked() { ShowScreen(EJamMenuScreen::Direct); }
 
 void UJamMenuWidget::OnFriendClicked()

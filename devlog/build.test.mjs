@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { buildPage } from './build.mjs';
+import { buildPage, loadNotes, notesFilesIn, deviceOfNotesFile } from './build.mjs';
 import { parseArgs } from './lib/cli.mjs';
 import { writeFixtureShots, makePng, FAKE_KEY, FAKE_EMAIL, FAKE_GH_TOKEN } from './fixtures/make-fixtures.mjs';
 import { parseNotes, markdownToHtml } from './lib/markdown.mjs';
@@ -250,6 +250,42 @@ test('notes: blocks by hour, markdown subset', () => {
   assert.match(h, /<code>a&lt;b<\/code>/);
   assert.match(h, /<a href="https:\/\/e\.com" rel="noopener noreferrer">l<\/a>/);
   assert.ok(!h.includes('href="javascript'));
+});
+
+test('notes of both devices (B-to-A-0013): every notes*.md is read, blocks keep their device and lane', () => {
+  const root = fs.mkdtempSync(path.join(tmp, 'notes-root-'));
+  const dl = path.join(root, 'devlog');
+  fs.mkdirSync(dl);
+  fs.writeFileSync(path.join(dl, 'notes.md'), '## H4 A first\n\nalpha\n\n## H6 A later\n\nsix\n');
+  fs.writeFileSync(path.join(dl, 'notes-b.md'), '## H4 B first\n\nbravo\n\n## H4.5 B second\n\nbravo two\n\n## H8.3 B closing\n\nend\n');
+  fs.writeFileSync(path.join(dl, 'notes-extra.md'), '## H5 A extra\n\nextra\n');
+  assert.equal(deviceOfNotesFile(path.join(dl, 'notes.md')), 'A');
+  assert.equal(deviceOfNotesFile(path.join(dl, 'notes-b.md')), 'B');
+  assert.equal(deviceOfNotesFile(path.join(dl, 'NOTES-B.md')), 'B');
+  assert.equal(deviceOfNotesFile(path.join(dl, 'notes-extra.md')), 'A');
+  const files = notesFilesIn(dl).map((f) => path.basename(f));
+  assert.deepEqual(files, ['notes.md', 'notes-b.md', 'notes-extra.md'], 'A\'s notes.md first, then the rest by name');
+  assert.deepEqual(notesFilesIn(path.join(root, 'nowhere')), []);
+  const notes = loadNotes(notesFilesIn(dl));
+  assert.deepEqual(
+    notes.map((n) => [n.hour, n.device, n.title]),
+    [[4, 'A', 'A first'], [4, 'B', 'B first'], [4.5, 'B', 'B second'], [5, 'A', 'A extra'], [6, 'A', 'A later'], [8.3, 'B', 'B closing']],
+  );
+  // a missing file in the list is skipped, not an error
+  assert.equal(loadNotes([path.join(dl, 'none.md')]).length, 0);
+  // the page: root override picks up both files without --notes; B's blocks carry the B badge and the B note mark
+  const { html, model } = buildPage({
+    ...parseArgs(['--out', path.join(root, 'o.html'), '--shots', path.join(root, 'none'), '--status', path.join(root, 'none'), '--gates', path.join(root, 'none-gates.md')]),
+    root,
+  });
+  assert.equal(model.hours.find((h) => h.hour === 4).notes.length, 3);
+  assert.ok(html.includes('<article class="note note-b"><h4><span class="dev dev-B" title="Device B">B</span> B first</h4>'));
+  assert.ok(html.includes('<article class="note note-a"><h4><span class="dev dev-A" title="Device A">A</span> A first</h4>'));
+  assert.ok(html.includes('class="mk-note mk-note-b"') && html.includes('class="mk-note mk-note-a"'));
+  assert.ok(html.includes('bravo two') && html.includes('<p>end</p>'));
+  // --notes <file> still means that one file alone
+  const one = buildPage({ ...parseArgs(['--out', path.join(root, 'o2.html'), '--notes', path.join(dl, 'notes-b.md'), '--shots', path.join(root, 'none'), '--status', path.join(root, 'none'), '--gates', path.join(root, 'none-gates.md')]), root });
+  assert.deepEqual(one.model.hours.flatMap((h) => h.notes.map((n) => n.device)), ['B', 'B', 'B']);
 });
 
 test('gates and screenshot names', () => {

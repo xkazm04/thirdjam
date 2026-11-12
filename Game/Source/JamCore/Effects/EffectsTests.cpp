@@ -146,7 +146,7 @@ bool FJamEffectsStackPolicies::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamPickupSpawnsDeterministic, "Jam.Effects.PickupSpawnsDeterministic", JamEffectsTests::TestFlags)
 bool FJamPickupSpawnsDeterministic::RunTest(const FString& Parameters)
 {
-	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.boost"));
+	UJamCartridge* C = JamEffectsTests::LoadPreset(*this, TEXT("hockey.boost"));
 	if (!C) return false;
 	// Nobody moves: pickups spawn from the table and lie there; same seed same frames = same hash, another seed another hash.
 	FRig A, B, Other;
@@ -194,7 +194,7 @@ bool FJamEffectsLoaderParity::RunTest(const FString& Parameters)
 	TestEqual(TEXT("five built-ins"), FJamEffectsConfig::Builtins().Num(), 5);
 	for (const TCHAR* K : { TEXT("speed"), TEXT("precision"), TEXT("heavy_puck"), TEXT("big_puck"), TEXT("reverse_other") }) TestTrue(K, FJamEffectsConfig::IsBuiltin(K));
 	// hockey.boost reads as three pickups and no effects.
-	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.boost"));
+	UJamCartridge* C = JamEffectsTests::LoadPreset(*this, TEXT("hockey.boost"));
 	if (!C) return false;
 	FJamEffectsConfig Cfg;
 	TArray<FString> Errors;
@@ -220,14 +220,14 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamBotMatchWithEffects, "Jam.Effects.BotMatchW
 bool FJamBotMatchWithEffects::RunTest(const FString& Parameters)
 {
 	// hockey.boost with bots on every skater and the effect system in the loop: the match ends, pickups are taken, two runs agree.
-	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.boost"));
+	UJamCartridge* C = JamEffectsTests::LoadPreset(*this, TEXT("hockey.boost"));
 	if (!C) return false;
 	auto Run = [&](uint64 Seed, int32& OutTaken, int32& OutFrames, int32& OutStarted) -> uint64
 	{
 		FRig R;
 		R.Make(*this, C, Seed);
 		UJamBrain* Brain = NewObject<UJamBrain>();
-		Brain->ApplyCartridge(*C);
+		Brain->ApplyCartridge(*C, TEXT("all_star")); // R-0017 point 4: only all_star detours for pickups; the test wants pickups taken
 		Brain->ResetBrain();
 		OutFrames = 0;
 		while (R.Sim->GetPhase() != EJamSimPhase::Over && OutFrames < 36000)

@@ -84,7 +84,7 @@ namespace JamAI
 			const size_t Len = End ? static_cast<size_t>(End - P) : std::strlen(P);
 			if (Len >= sizeof(Pair))
 			{
-				SetErr(Err, ErrLen, "pair too long", "");
+				BotMatchLocal::SetErr(Err, ErrLen, "pair too long", "");
 				return false;
 			}
 			std::memcpy(Pair, P, Len);
@@ -97,7 +97,7 @@ namespace JamAI
 			char* Eq = std::strchr(Pair, '=');
 			if (!Eq)
 			{
-				SetErr(Err, ErrLen, "no '=' in pair", Pair);
+				BotMatchLocal::SetErr(Err, ErrLen, "no '=' in pair", Pair);
 				return false;
 			}
 			*Eq = 0;
@@ -125,7 +125,7 @@ namespace JamAI
 				if (N != 4 || !ParseRole(Tok[1], Role) || NumSkaters >= kMaxSkaters)
 				{
 					*Eq = '=';
-					SetErr(Err, ErrLen, "bad skater", Pair);
+					BotMatchLocal::SetErr(Err, ErrLen, "bad skater", Pair);
 					return false;
 				}
 				AddSkater(*this, std::atoi(Tok[0]), Role, std::atof(Tok[2]), std::atof(Tok[3]));
@@ -137,7 +137,7 @@ namespace JamAI
 				if (!ParseDifficulty(Val, Level) || bAiNumberSeen)
 				{
 					*Eq = '=';
-					SetErr(Err, ErrLen, bAiNumberSeen ? "ai.difficulty must come before the ai numbers" : "bad ai.difficulty", Pair);
+					BotMatchLocal::SetErr(Err, ErrLen, bAiNumberSeen ? "ai.difficulty must come before the ai numbers" : "bad ai.difficulty", Pair);
 					return false;
 				}
 				ApplyDifficultyProfile(GetDifficultyProfile(Level), AI);
@@ -152,7 +152,7 @@ namespace JamAI
 				char TuneErr[200] = {};
 				if (!ApplyDifficultyTune(Tune, AI, TuneErr, sizeof(TuneErr)))
 				{
-					SetErr(Err, ErrLen, "bad ai.tune", TuneErr);
+					BotMatchLocal::SetErr(Err, ErrLen, "bad ai.tune", TuneErr);
 					return false;
 				}
 				continue;
@@ -161,7 +161,7 @@ namespace JamAI
 			{
 				if (std::strcmp(Val, "timer") == 0) { bTimer = true; }
 				else if (std::strcmp(Val, "first_to") == 0) { bTimer = false; }
-				else { *Eq = '='; SetErr(Err, ErrLen, "bad rules.mode", Pair); return false; }
+				else { *Eq = '='; BotMatchLocal::SetErr(Err, ErrLen, "bad rules.mode", Pair); return false; }
 				continue;
 			}
 			char* NumEnd = nullptr;
@@ -169,7 +169,7 @@ namespace JamAI
 			if (NumEnd == Val || *NumEnd != 0)
 			{
 				*Eq = '=';
-				SetErr(Err, ErrLen, "not a number", Pair);
+				BotMatchLocal::SetErr(Err, ErrLen, "not a number", Pair);
 				return false;
 			}
 			struct FKey { const char* Name; double* D; int* I; };
@@ -199,7 +199,7 @@ namespace JamAI
 			if (!bFound)
 			{
 				*Eq = '=';
-				SetErr(Err, ErrLen, "unknown key", Pair);
+				BotMatchLocal::SetErr(Err, ErrLen, "unknown key", Pair);
 				return false;
 			}
 		}

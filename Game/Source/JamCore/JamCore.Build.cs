@@ -12,6 +12,7 @@ public class JamCore : ModuleRules
 		// Lane A15 (C-0005): rule hooks, variants and zones (JamRulesConfig.h is reached by JamCartridge.h; UJamRuleSystem by the game mode).
 		PublicIncludePaths.Add(System.IO.Path.Combine(ModuleDirectory, "Rules"));
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine" });
-		PrivateDependencyModuleNames.AddRange(new string[] {  });
+		// Lane A16 (R-0016): the puck actor spawns device B's NS_puck_trail.
+		PrivateDependencyModuleNames.AddRange(new string[] { "Niagara" });
 	}
 }

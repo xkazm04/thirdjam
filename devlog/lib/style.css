@@ -158,6 +158,8 @@ section.block { margin: clamp(2.5rem, 6vw, 4rem) 0 0; }
 .ruler .mk-shot-a { fill: var(--a); stroke: var(--bg-raised); stroke-width: 2; }
 .ruler .mk-shot-b { fill: var(--b); stroke: var(--bg-raised); stroke-width: 2; }
 .ruler .mk-note { fill: var(--ink); }
+.ruler .mk-note-a { fill: var(--a); }
+.ruler .mk-note-b { fill: var(--b); }
 .ruler .mk-status { fill: none; stroke: var(--ink-2); stroke-width: 1.5; }
 .ruler .hit { fill: transparent; }
 .ruler a:hover .hit, .ruler a:focus-visible .hit { fill: var(--ink); opacity: 0.07; }

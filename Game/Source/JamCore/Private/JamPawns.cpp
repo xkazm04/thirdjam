@@ -5,6 +5,11 @@
 #include "Materials/MaterialInterface.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Components/SceneComponent.h"
+#include "GameFramework/Actor.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
+#include "NiagaraSystem.h"
 
 namespace
 {
@@ -146,7 +151,7 @@ void AJamSkater::ApplySimFrame(const FJamSkaterState& S)
 {
 	if (!VisualObject) return;
 	UObject* V = VisualObject;
-	if (S.bShotThisFrame) IJamSkaterVisual::Execute_PlayShoot(V);
+	if (S.bShotThisFrame || S.bPassThisFrame) IJamSkaterVisual::Execute_PlayShoot(V, S.bShotThisFrame ? S.LastShotCharge : 0.f);
 	if (S.bCheckThisFrame) IJamSkaterVisual::Execute_PlayCheck(V);
 	if (S.IsDown() != bWasDown)
 	{
@@ -161,6 +166,61 @@ void AJamSkater::ApplySimFrame(const FJamSkaterState& S)
 	// Contract: turn rate positive = turning left seen from above; the sim's yaw grows to the right (Unreal yaw).
 	IJamSkaterVisual::Execute_UpdateMotion(V, static_cast<float>(S.Vel.Size()), static_cast<float>(-S.YawRate),
 		FRotator(0.0, FMath::RadiansToDegrees(S.Yaw), 0.0));
+
+	// C-0001 v3 (B-to-A-0014): the stick verbs. Aim: the blade relative to the facing, positive = left (the sim's yaw grows to the right).
+	{
+		const FVector2D D = S.BladePos - S.Pos;
+		const double Rel = FMath::UnwindRadians(FMath::Atan2(D.Y, D.X) - S.Yaw);
+		const float AimDeg = static_cast<float>(-FMath::RadiansToDegrees(Rel));
+		const float Reach = static_cast<float>(D.Size());
+		if (!FMath::IsNearlyEqual(AimDeg, LastAimDeg, 0.01f) || !FMath::IsNearlyEqual(Reach, LastAimReach, 0.001f))
+		{
+			LastAimDeg = AimDeg;
+			LastAimReach = Reach;
+		}
+		IJamSkaterVisual::Execute_SetStickAim(V, AimDeg, Reach);
+	}
+	{
+		const int32 Max = 30;   // the visual gets 0..1; the sim's charge_frames_max is applied by LastShotCharge on release
+		const float Charge = S.ChargeFrames > 0 ? FMath::Clamp(static_cast<float>(S.ChargeFrames) / static_cast<float>(Max), 0.f, 1.f) : 0.f;
+		if (Charge != LastCharge) { LastCharge = Charge; }
+		IJamSkaterVisual::Execute_SetShotCharge(V, Charge);
+	}
+	if (S.PokeResult != 0) IJamSkaterVisual::Execute_PlayPoke(V, S.PokeResult > 0);
+	if (S.bLiftThisFrame) IJamSkaterVisual::Execute_PlayLift(V);
+	if (S.bPassThisFrame) IJamSkaterVisual::Execute_PlayPass(V, S.LastPassStrength);
+	if (S.bAtFaceoff != bWasAtFaceoff)
+	{
+		bWasAtFaceoff = S.bAtFaceoff;
+		IJamSkaterVisual::Execute_SetFaceoff(V, bWasAtFaceoff);
+	}
+	if (S.DrawResult != 0) IJamSkaterVisual::Execute_PlayFaceoffDraw(V, S.DrawResult > 0);
+	if (S.bFoulThisFrame) IJamSkaterVisual::Execute_PlayFoulReaction(V);
+}
+
+bool AJamSkater::GetPuckSocketWorld(FVector& Out) const
+{
+	if (!VisualObject) return false;
+	TArray<USceneComponent*> Candidates;
+	if (USceneComponent* SC = Cast<USceneComponent>(VisualObject))
+	{
+		Candidates.Add(SC);
+		SC->GetChildrenComponents(true, Candidates);
+	}
+	else if (AActor* A = Cast<AActor>(VisualObject))
+	{
+		A->GetComponents<USceneComponent>(Candidates);
+	}
+	// A mesh socket first (B's figures), then a scene component named puck_socket (the toy figure).
+	for (USceneComponent* C : Candidates)
+	{
+		if (C && C->DoesSocketExist(JamSkaterSockets::Puck)) { Out = C->GetSocketLocation(JamSkaterSockets::Puck); return true; }
+	}
+	for (USceneComponent* C : Candidates)
+	{
+		if (C && C->GetFName() == JamSkaterSockets::Puck) { Out = C->GetComponentLocation(); return true; }
+	}
+	return false;
 }
 
 void AJamSkater::ApplyRender(const FJamSkaterState& S, float Alpha)
@@ -202,9 +262,52 @@ void AJamPuck::InitPuck(double RadiusM, const FLinearColor& Colour)
 		Mid->SetVectorParameterValue(TEXT("Color"), Colour);
 		Mesh->SetMaterial(0, Mid);
 	}
+
+	// R-0016 (B-to-A-0007): the puck kit. SM_PuckDisc under the puck, on the ice: no shadow, no dynamic indirect, stencil 0, no collision.
+	// The puck mesh is a unit cylinder scaled to 2r x 2r x 0.08 m and centred 4 cm up, so parent-local z = -0.5 is the ice; the disc keeps its own scale.
+	if (!Disc)
+	{
+		if (UStaticMesh* DiscMesh = LoadObject<UStaticMesh>(nullptr, TEXT("/JamAssets/Props/SM_PuckDisc.SM_PuckDisc"), nullptr, LOAD_NoWarn | LOAD_Quiet))
+		{
+			Disc = NewObject<UStaticMeshComponent>(this, TEXT("PuckDisc"));
+			Disc->SetStaticMesh(DiscMesh);
+			Disc->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			Disc->SetGenerateOverlapEvents(false);
+			Disc->CastShadow = false;
+			Disc->bAffectDynamicIndirectLighting = false;
+			Disc->SetRenderCustomDepth(false);
+			Disc->SetCustomDepthStencilValue(0);
+			Disc->SetUsingAbsoluteScale(true);
+			Disc->SetupAttachment(Mesh);
+			Disc->SetRelativeLocation(FVector(0.0, 0.0, -0.45));
+			Disc->SetWorldScale3D(FVector::OneVector);
+			Disc->RegisterComponent();
+		}
+		else
+		{
+			UE_LOG(LogJamSim, Log, TEXT("JAMPUCK /JamAssets/Props/SM_PuckDisc not found; the puck has no disc"));
+		}
+	}
+	if (!Trail)
+	{
+		if (UNiagaraSystem* Sys = LoadObject<UNiagaraSystem>(nullptr, TEXT("/JamAssets/VFX/NS_puck_trail.NS_puck_trail"), nullptr, LOAD_NoWarn | LOAD_Quiet))
+		{
+			Trail = UNiagaraFunctionLibrary::SpawnSystemAttached(Sys, Mesh, NAME_None, FVector(0.0, 0.0, -0.5), FRotator::ZeroRotator, EAttachLocation::KeepRelativeOffset, false);
+			if (Trail) { Trail->SetUsingAbsoluteScale(true); Trail->SetWorldScale3D(FVector::OneVector); }
+		}
+		else
+		{
+			UE_LOG(LogJamSim, Log, TEXT("JAMPUCK /JamAssets/VFX/NS_puck_trail not found; the puck has no trail"));
+		}
+	}
 }
 
 void AJamPuck::ApplyRender(const FJamPuckState& P, float Alpha)
 {
 	SetActorLocation(Lerp2D(P.PrevPos, P.Pos, Alpha, HalfHeightM));
+}
+
+void AJamPuck::ApplyRenderAt(const FVector& WorldCm)
+{
+	SetActorLocation(FVector(WorldCm.X, WorldCm.Y, HalfHeightM * 100.0));
 }

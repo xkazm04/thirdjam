@@ -1,6 +1,6 @@
 {
   "schema": "tj.designer-cache/1",
-  "base_sha256": "5419d7a882e43360bf743b62b89b00699301f760fb380e6b482dda05f7354187",
+  "base_sha256": "dfc7b19caf629c5925344b682211e03fd504fcfb240ff5f64356ecb2f7757548",
   "generated_by": "claude CLI, tools/designer-eval/loop.mjs chain over hockey.regular",
   "cuts": [
     {
@@ -16,7 +16,7 @@
         "zoom"
       ],
       "base": "hockey.regular",
-      "outcome": "repaired",
+      "outcome": "first_try",
       "cartridge": {
         "schema": "tj.cartridge/1",
         "id": "hockey-regular",
@@ -127,7 +127,7 @@
           }
         ],
         "values": {
-          "skater_speed": 15
+          "skater_speed": 14.5
         },
         "rules": [],
         "entities": [],
@@ -149,7 +149,7 @@
             "mass": 80,
             "glide_drag": 0.147,
             "brake_decel": 6,
-            "check_enabled": false
+            "check_enabled": true
           },
           "puck": {
             "radius_m": 0.12,
@@ -168,7 +168,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": false
+            "penalties": true
           },
           "teams": [
             {
@@ -229,6 +229,10 @@
           "ai": {
             "difficulty": "pro"
           },
+          "barks": {
+            "enabled": true,
+            "intensity": "normal"
+          },
           "look": {
             "tier": "l2_night",
             "trim_colour_hex": "#38BDF8",
@@ -259,7 +263,7 @@
         "chill"
       ],
       "base": "hockey.regular",
-      "outcome": "repaired",
+      "outcome": "first_try",
       "cartridge": {
         "schema": "tj.cartridge/1",
         "id": "hockey-regular",
@@ -371,9 +375,8 @@
         ],
         "values": {
           "skater_speed": 8,
-          "shot_speed": 14,
           "puck_max_speed": 22,
-          "ai_speed_scale": 0.8
+          "shot_speed": 14
         },
         "rules": [],
         "entities": [],
@@ -395,7 +398,7 @@
             "mass": 80,
             "glide_drag": 0.147,
             "brake_decel": 6,
-            "check_enabled": false
+            "check_enabled": true
           },
           "puck": {
             "radius_m": 0.12,
@@ -414,7 +417,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": false
+            "penalties": true
           },
           "teams": [
             {
@@ -473,7 +476,11 @@
             }
           ],
           "ai": {
-            "difficulty": "rookie"
+            "difficulty": "pro"
+          },
+          "barks": {
+            "enabled": true,
+            "intensity": "normal"
           },
           "look": {
             "tier": "l2_night",
@@ -620,9 +627,8 @@
           "skater_speed": 8,
           "shot_speed": 14,
           "puck_max_speed": 22,
-          "ai_speed_scale": 0.75,
-          "ai_red_skill": 0.5,
-          "goal_pause_frames": 180
+          "ai_speed_scale": 0.8,
+          "ai_red_skill": 0.6
         },
         "rules": [],
         "entities": [],
@@ -644,7 +650,7 @@
             "mass": 80,
             "glide_drag": 0.147,
             "brake_decel": 6,
-            "check_enabled": false
+            "check_enabled": true
           },
           "puck": {
             "radius_m": 0.12,
@@ -663,7 +669,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": false
+            "penalties": true
           },
           "teams": [
             {
@@ -759,7 +765,7 @@
         "madness"
       ],
       "base": "hockey.regular",
-      "outcome": "first_try",
+      "outcome": "repaired",
       "cartridge": {
         "schema": "tj.cartridge/1",
         "id": "hockey-regular",
@@ -770,7 +776,9 @@
           "mood_words": [
             "night",
             "crisp",
-            "bright"
+            "bright",
+            "chaotic",
+            "pinball"
           ],
           "palette": [
             {
@@ -870,7 +878,8 @@
           }
         ],
         "values": {
-          "board_restitution": 0.9
+          "board_restitution": 0.95,
+          "puck_max_speed": 42
         },
         "rules": [],
         "entities": [],
@@ -880,45 +889,33 @@
             "length_m": 90,
             "width_m": 45,
             "corner_radius_m": 3.75,
-            "board_restitution": 0.9,
+            "board_restitution": 0.95,
             "ice_friction": 0.015,
             "goal_width_m": 4,
             "obstacles": [
               {
-                "kind": "pillar",
-                "x": -12,
+                "kind": "bumper",
+                "x": -3,
                 "z": -12,
-                "size": 2.5
+                "size": 2
               },
               {
-                "kind": "pillar",
-                "x": 12,
+                "kind": "bumper",
+                "x": 3,
                 "z": 12,
-                "size": 2.5
+                "size": 2
               },
               {
-                "kind": "pillar",
-                "x": 0,
-                "z": -14,
-                "size": 2.5
+                "kind": "bumper",
+                "x": -16,
+                "z": 10,
+                "size": 2
               },
               {
-                "kind": "pillar",
-                "x": 0,
-                "z": 14,
-                "size": 2.5
-              },
-              {
-                "kind": "pillar",
-                "x": -32,
-                "z": 12,
-                "size": 2.5
-              },
-              {
-                "kind": "pillar",
-                "x": 32,
-                "z": -12,
-                "size": 2.5
+                "kind": "bumper",
+                "x": 16,
+                "z": -10,
+                "size": 2
               }
             ]
           },
@@ -930,7 +927,7 @@
             "mass": 80,
             "glide_drag": 0.147,
             "brake_decel": 6,
-            "check_enabled": false
+            "check_enabled": true
           },
           "puck": {
             "radius_m": 0.12,
@@ -949,7 +946,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": false
+            "penalties": true
           },
           "teams": [
             {
@@ -1009,6 +1006,10 @@
           ],
           "ai": {
             "difficulty": "pro"
+          },
+          "barks": {
+            "enabled": true,
+            "intensity": "normal"
           },
           "look": {
             "tier": "l2_night",
@@ -1173,7 +1174,7 @@
             "mass": 80,
             "glide_drag": 0.147,
             "brake_decel": 6,
-            "check_enabled": false
+            "check_enabled": true
           },
           "puck": {
             "radius_m": 0.12,
@@ -1192,7 +1193,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": false
+            "penalties": true
           },
           "teams": [
             {
@@ -1252,6 +1253,10 @@
           ],
           "ai": {
             "difficulty": "pro"
+          },
+          "barks": {
+            "enabled": true,
+            "intensity": "normal"
           },
           "look": {
             "tier": "l2_night",
@@ -1400,9 +1405,9 @@
         "ai": [],
         "game": {
           "rink": {
-            "length_m": 60,
-            "width_m": 30,
-            "corner_radius_m": 3.75,
+            "length_m": 50,
+            "width_m": 26,
+            "corner_radius_m": 3,
             "board_restitution": 0.4,
             "ice_friction": 0.015,
             "goal_width_m": 4
@@ -1415,7 +1420,7 @@
             "mass": 80,
             "glide_drag": 0.147,
             "brake_decel": 6,
-            "check_enabled": false
+            "check_enabled": true
           },
           "puck": {
             "radius_m": 0.12,
@@ -1434,7 +1439,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": false
+            "penalties": true
           },
           "teams": [
             {
@@ -1494,6 +1499,10 @@
           ],
           "ai": {
             "difficulty": "pro"
+          },
+          "barks": {
+            "enabled": true,
+            "intensity": "normal"
           },
           "look": {
             "tier": "l2_night",
@@ -1641,8 +1650,8 @@
         "ai": [],
         "game": {
           "rink": {
-            "length_m": 130,
-            "width_m": 65,
+            "length_m": 120,
+            "width_m": 60,
             "corner_radius_m": 3.75,
             "board_restitution": 0.4,
             "ice_friction": 0.015,
@@ -1656,7 +1665,7 @@
             "mass": 80,
             "glide_drag": 0.147,
             "brake_decel": 6,
-            "check_enabled": false
+            "check_enabled": true
           },
           "puck": {
             "radius_m": 0.12,
@@ -1675,7 +1684,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": false
+            "penalties": true
           },
           "teams": [
             {
@@ -1735,6 +1744,10 @@
           ],
           "ai": {
             "difficulty": "pro"
+          },
+          "barks": {
+            "enabled": true,
+            "intensity": "normal"
           },
           "look": {
             "tier": "l2_night",
@@ -1899,7 +1912,7 @@
             "mass": 80,
             "glide_drag": 0.147,
             "brake_decel": 6,
-            "check_enabled": false
+            "check_enabled": true
           },
           "puck": {
             "radius_m": 0.12,
@@ -1918,7 +1931,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": false
+            "penalties": true
           },
           "teams": [
             {
@@ -1979,6 +1992,10 @@
           "ai": {
             "difficulty": "pro"
           },
+          "barks": {
+            "enabled": true,
+            "intensity": "normal"
+          },
           "look": {
             "tier": "l2_night",
             "trim_colour_hex": "#38BDF8",
@@ -2008,7 +2025,7 @@
         "grip"
       ],
       "base": "hockey.regular",
-      "outcome": "repaired",
+      "outcome": "first_try",
       "cartridge": {
         "schema": "tj.cartridge/1",
         "id": "hockey-regular",
@@ -2019,7 +2036,8 @@
           "mood_words": [
             "night",
             "crisp",
-            "bright"
+            "bright",
+            "plush"
           ],
           "palette": [
             {
@@ -2041,6 +2059,10 @@
             {
               "name": "dark",
               "hex": "#0B1220"
+            },
+            {
+              "name": "carpet",
+              "hex": "#6B2D5C"
             }
           ]
         },
@@ -2118,10 +2140,7 @@
             "description": "How long the game pauses after a goal, in physics frames (60 per second)."
           }
         ],
-        "values": {
-          "ice_friction": 0.05,
-          "skater_speed": 8
-        },
+        "values": {},
         "rules": [],
         "entities": [],
         "ai": [],
@@ -2131,8 +2150,21 @@
             "width_m": 45,
             "corner_radius_m": 3.75,
             "board_restitution": 0.4,
-            "ice_friction": 0.05,
-            "goal_width_m": 4
+            "ice_friction": 0.015,
+            "goal_width_m": 4,
+            "zones": [
+              {
+                "id": "carpet-band",
+                "shape": "rect",
+                "x": 0,
+                "z": 0,
+                "w": 40,
+                "d": 45,
+                "kind": "slow_ice",
+                "strength": 0.6,
+                "visible": true
+              }
+            ]
           },
           "skater": {
             "speed": 11,
@@ -2142,7 +2174,7 @@
             "mass": 80,
             "glide_drag": 0.147,
             "brake_decel": 6,
-            "check_enabled": false
+            "check_enabled": true
           },
           "puck": {
             "radius_m": 0.12,
@@ -2156,12 +2188,30 @@
             "cooldown_frames": 24,
             "aim_cone_deg": 8
           },
+          "effects": [
+            {
+              "id": "carpet-stick",
+              "kind": "custom",
+              "target": "puck",
+              "duration_frames": 60,
+              "trigger": "zone_enter",
+              "zone": "carpet-band",
+              "stack": "refresh",
+              "icon": "anchor",
+              "stats": [
+                {
+                  "stat": "puck_drag",
+                  "multiply": 3
+                }
+              ]
+            }
+          ],
           "rules": {
             "mode": "first_to",
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": false
+            "penalties": true
           },
           "teams": [
             {
@@ -2221,6 +2271,10 @@
           ],
           "ai": {
             "difficulty": "pro"
+          },
+          "barks": {
+            "enabled": true,
+            "intensity": "normal"
           },
           "look": {
             "tier": "l2_night",
@@ -2383,7 +2437,7 @@
             "mass": 80,
             "glide_drag": 0.147,
             "brake_decel": 6,
-            "check_enabled": false
+            "check_enabled": true
           },
           "puck": {
             "radius_m": 0.12,
@@ -2402,8 +2456,26 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": false
+            "penalties": true,
+            "hooks": [],
+            "variants": {}
           },
+          "pickups": [
+            {
+              "kind": "speed",
+              "spawn_every_frames": 600,
+              "duration_frames": 300,
+              "magnitude": 1.5,
+              "max_on_ice": 1
+            },
+            {
+              "kind": "big_puck",
+              "spawn_every_frames": 900,
+              "duration_frames": 300,
+              "magnitude": 1.5,
+              "max_on_ice": 1
+            }
+          ],
           "teams": [
             {
               "id": "blue",
@@ -2460,22 +2532,12 @@
               ]
             }
           ],
-          "pickups": [
-            {
-              "kind": "speed",
-              "spawn_every_frames": 900,
-              "duration_frames": 300,
-              "magnitude": 1.5
-            },
-            {
-              "kind": "precision",
-              "spawn_every_frames": 1200,
-              "duration_frames": 300,
-              "magnitude": 1.5
-            }
-          ],
           "ai": {
             "difficulty": "pro"
+          },
+          "barks": {
+            "enabled": true,
+            "intensity": "normal"
           },
           "look": {
             "tier": "l2_night",
@@ -2636,7 +2698,7 @@
             "mass": 80,
             "glide_drag": 0.147,
             "brake_decel": 6,
-            "check_enabled": false
+            "check_enabled": true
           },
           "puck": {
             "radius_m": 0.12,
@@ -2655,7 +2717,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": false
+            "penalties": true
           },
           "teams": [
             {
@@ -2716,6 +2778,10 @@
           "ai": {
             "difficulty": "pro"
           },
+          "barks": {
+            "enabled": true,
+            "intensity": "normal"
+          },
           "look": {
             "tier": "l2_night",
             "trim_colour_hex": "#38BDF8",
@@ -2734,17 +2800,20 @@
           "pickups": [
             {
               "kind": "speed",
-              "spawn_every_frames": 360,
-              "duration_frames": 420,
-              "magnitude": 1.8
+              "spawn_every_frames": 300,
+              "duration_frames": 240,
+              "magnitude": 1.5,
+              "max_on_ice": 3
             },
             {
               "kind": "speed",
               "spawn_every_frames": 600,
-              "duration_frames": 300,
-              "magnitude": 1.5
+              "duration_frames": 180,
+              "magnitude": 1.5,
+              "max_on_ice": 2
             }
-          ]
+          ],
+          "effects": []
         }
       }
     },
@@ -2890,7 +2959,7 @@
             "mass": 80,
             "glide_drag": 0.147,
             "brake_decel": 6,
-            "check_enabled": false
+            "check_enabled": true
           },
           "puck": {
             "radius_m": 0.12,
@@ -2909,8 +2978,34 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": false
+            "penalties": true
           },
+          "effects": [
+            {
+              "id": "giant-puck",
+              "kind": "custom",
+              "target": "puck",
+              "duration_frames": 300,
+              "trigger": "pickup",
+              "stack": "refresh",
+              "icon": "circle",
+              "stats": [
+                {
+                  "stat": "puck_radius",
+                  "multiply": 3
+                }
+              ]
+            }
+          ],
+          "pickups": [
+            {
+              "kind": "giant-puck",
+              "spawn_every_frames": 900,
+              "duration_frames": 300,
+              "magnitude": 1,
+              "max_on_ice": 1
+            }
+          ],
           "teams": [
             {
               "id": "blue",
@@ -2970,14 +3065,10 @@
           "ai": {
             "difficulty": "pro"
           },
-          "pickups": [
-            {
-              "kind": "big_puck",
-              "spawn_every_frames": 900,
-              "duration_frames": 600,
-              "magnitude": 2.5
-            }
-          ],
+          "barks": {
+            "enabled": true,
+            "intensity": "normal"
+          },
           "look": {
             "tier": "l2_night",
             "trim_colour_hex": "#38BDF8",
@@ -3008,7 +3099,7 @@
         "colorful"
       ],
       "base": "hockey.regular",
-      "outcome": "first_try",
+      "outcome": "repaired",
       "cartridge": {
         "schema": "tj.cartridge/1",
         "id": "hockey-regular",
@@ -3019,29 +3110,29 @@
           "mood_words": [
             "neon",
             "party",
-            "bright",
+            "electric",
             "loud"
           ],
           "palette": [
             {
               "name": "ice",
-              "hex": "#E6F7FF"
+              "hex": "#1A0B2E"
             },
             {
-              "name": "pink",
-              "hex": "#FF2E9A"
+              "name": "magenta",
+              "hex": "#FF2BD6"
             },
             {
               "name": "cyan",
-              "hex": "#22D3EE"
+              "hex": "#00F0FF"
             },
             {
               "name": "lime",
-              "hex": "#A3FF12"
+              "hex": "#B6FF00"
             },
             {
               "name": "dark",
-              "hex": "#0B0717"
+              "hex": "#070312"
             }
           ]
         },
@@ -3119,7 +3210,10 @@
             "description": "How long the game pauses after a goal, in physics frames (60 per second)."
           }
         ],
-        "values": {},
+        "values": {
+          "board_restitution": 0.6,
+          "puck_max_speed": 34
+        },
         "rules": [],
         "entities": [],
         "ai": [],
@@ -3128,9 +3222,21 @@
             "length_m": 90,
             "width_m": 45,
             "corner_radius_m": 3.75,
-            "board_restitution": 0.4,
+            "board_restitution": 0.6,
             "ice_friction": 0.015,
-            "goal_width_m": 4
+            "goal_width_m": 4,
+            "zones": [
+              {
+                "id": "neon-boost",
+                "shape": "circle",
+                "x": 0,
+                "z": 0,
+                "r": 6,
+                "kind": "fast_ice",
+                "strength": 0.4,
+                "visible": true
+              }
+            ]
           },
           "skater": {
             "speed": 11,
@@ -3140,7 +3246,7 @@
             "mass": 80,
             "glide_drag": 0.147,
             "brake_decel": 6,
-            "check_enabled": false
+            "check_enabled": true
           },
           "puck": {
             "radius_m": 0.12,
@@ -3159,7 +3265,20 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": false
+            "penalties": true,
+            "hooks": [
+              {
+                "id": "neon-goal-flash",
+                "when": "on_goal",
+                "team": "scoring",
+                "then": [
+                  {
+                    "do": "announce",
+                    "text": "NEON GOAL! PARTY TIME"
+                  }
+                ]
+              }
+            ]
           },
           "teams": [
             {
@@ -3219,6 +3338,10 @@
           ],
           "ai": {
             "difficulty": "pro"
+          },
+          "barks": {
+            "enabled": true,
+            "intensity": "loud"
           },
           "look": {
             "tier": "l3_neon",
@@ -3250,7 +3373,7 @@
         "morning"
       ],
       "base": "hockey.regular",
-      "outcome": "repaired",
+      "outcome": "first_try",
       "cartridge": {
         "schema": "tj.cartridge/1",
         "id": "hockey-regular",
@@ -3259,9 +3382,8 @@
         "theme": {
           "name": "Matinee Cut",
           "mood_words": [
-            "daytime",
+            "day",
             "bright",
-            "sunny",
             "crisp"
           ],
           "palette": [
@@ -3278,12 +3400,12 @@
               "hex": "#F97316"
             },
             {
-              "name": "sky",
+              "name": "trim",
               "hex": "#38BDF8"
             },
             {
-              "name": "slate",
-              "hex": "#334155"
+              "name": "dark",
+              "hex": "#1E293B"
             }
           ]
         },
@@ -3382,7 +3504,7 @@
             "mass": 80,
             "glide_drag": 0.147,
             "brake_decel": 6,
-            "check_enabled": false
+            "check_enabled": true
           },
           "puck": {
             "radius_m": 0.12,
@@ -3401,7 +3523,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": false
+            "penalties": true
           },
           "teams": [
             {
@@ -3461,6 +3583,10 @@
           ],
           "ai": {
             "difficulty": "pro"
+          },
+          "barks": {
+            "enabled": true,
+            "intensity": "normal"
           },
           "look": {
             "tier": "l1_day",
@@ -3603,7 +3729,8 @@
           }
         ],
         "values": {
-          "shot_speed": 21
+          "shot_speed": 24,
+          "ai_red_skill": 0.6
         },
         "rules": [],
         "entities": [],
@@ -3615,7 +3742,7 @@
             "corner_radius_m": 3.75,
             "board_restitution": 0.4,
             "ice_friction": 0.015,
-            "goal_width_m": 4
+            "goal_width_m": 6
           },
           "skater": {
             "speed": 11,
@@ -3625,7 +3752,7 @@
             "mass": 80,
             "glide_drag": 0.147,
             "brake_decel": 6,
-            "check_enabled": false
+            "check_enabled": true
           },
           "puck": {
             "radius_m": 0.12,
@@ -3644,7 +3771,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": false
+            "penalties": true
           },
           "teams": [
             {
@@ -3703,7 +3830,11 @@
             }
           ],
           "ai": {
-            "difficulty": "rookie"
+            "difficulty": "pro"
+          },
+          "barks": {
+            "enabled": true,
+            "intensity": "normal"
           },
           "look": {
             "tier": "l2_night",
@@ -3869,7 +4000,7 @@
             "mass": 80,
             "glide_drag": 0.147,
             "brake_decel": 6,
-            "check_enabled": false
+            "check_enabled": true
           },
           "puck": {
             "radius_m": 0.12,
@@ -3888,7 +4019,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": false
+            "penalties": true
           },
           "teams": [
             {
@@ -3948,6 +4079,10 @@
           ],
           "ai": {
             "difficulty": "all_star"
+          },
+          "barks": {
+            "enabled": true,
+            "intensity": "normal"
           },
           "look": {
             "tier": "l2_night",
@@ -4111,7 +4246,7 @@
             "mass": 80,
             "glide_drag": 0.147,
             "brake_decel": 6,
-            "check_enabled": false
+            "check_enabled": true
           },
           "puck": {
             "radius_m": 0.12,
@@ -4130,7 +4265,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": false
+            "penalties": true
           },
           "teams": [
             {
@@ -4190,6 +4325,10 @@
           ],
           "ai": {
             "difficulty": "rookie"
+          },
+          "barks": {
+            "enabled": true,
+            "intensity": "normal"
           },
           "look": {
             "tier": "l2_night",
@@ -4332,7 +4471,9 @@
             "description": "How long the game pauses after a goal, in physics frames (60 per second)."
           }
         ],
-        "values": {},
+        "values": {
+          "skater_speed": 13
+        },
         "rules": [],
         "entities": [],
         "ai": [],
@@ -4353,7 +4494,7 @@
             "mass": 80,
             "glide_drag": 0.147,
             "brake_decel": 6,
-            "check_enabled": false
+            "check_enabled": true
           },
           "puck": {
             "radius_m": 0.12,
@@ -4373,7 +4514,7 @@
             "timer_frames": 3600,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": false
+            "penalties": true
           },
           "teams": [
             {
@@ -4433,6 +4574,10 @@
           ],
           "ai": {
             "difficulty": "pro"
+          },
+          "barks": {
+            "enabled": true,
+            "intensity": "normal"
           },
           "look": {
             "tier": "l2_night",
@@ -4594,7 +4739,7 @@
             "mass": 80,
             "glide_drag": 0.147,
             "brake_decel": 6,
-            "check_enabled": false
+            "check_enabled": true
           },
           "puck": {
             "radius_m": 0.12,
@@ -4613,7 +4758,7 @@
             "score_to_win": 9,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": false
+            "penalties": true
           },
           "teams": [
             {
@@ -4673,6 +4818,10 @@
           ],
           "ai": {
             "difficulty": "pro"
+          },
+          "barks": {
+            "enabled": true,
+            "intensity": "normal"
           },
           "look": {
             "tier": "l2_night",
@@ -4834,7 +4983,7 @@
             "mass": 80,
             "glide_drag": 0.147,
             "brake_decel": 6,
-            "check_enabled": false
+            "check_enabled": true
           },
           "puck": {
             "radius_m": 0.12,
@@ -4853,7 +5002,10 @@
             "score_to_win": 1,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": false
+            "penalties": true,
+            "variants": {
+              "sudden_death": true
+            }
           },
           "teams": [
             {
@@ -4913,6 +5065,10 @@
           ],
           "ai": {
             "difficulty": "pro"
+          },
+          "barks": {
+            "enabled": true,
+            "intensity": "normal"
           },
           "look": {
             "tier": "l2_night",
@@ -5068,20 +5224,26 @@
               {
                 "kind": "pillar",
                 "x": 0,
-                "z": -12,
+                "z": -6,
                 "size": 2
               },
               {
                 "kind": "pillar",
                 "x": 0,
-                "z": 12,
+                "z": 6,
                 "size": 2
               },
               {
                 "kind": "pillar",
                 "x": -15,
-                "z": -16,
-                "size": 1.5
+                "z": 10,
+                "size": 2
+              },
+              {
+                "kind": "pillar",
+                "x": 15,
+                "z": -10,
+                "size": 2
               }
             ]
           },
@@ -5093,7 +5255,7 @@
             "mass": 80,
             "glide_drag": 0.147,
             "brake_decel": 6,
-            "check_enabled": false
+            "check_enabled": true
           },
           "puck": {
             "radius_m": 0.12,
@@ -5112,7 +5274,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": false
+            "penalties": true
           },
           "teams": [
             {
@@ -5172,6 +5334,10 @@
           ],
           "ai": {
             "difficulty": "pro"
+          },
+          "barks": {
+            "enabled": true,
+            "intensity": "normal"
           },
           "look": {
             "tier": "l2_night",
@@ -5327,74 +5493,74 @@
             "obstacles": [
               {
                 "kind": "box",
-                "x": -15,
-                "z": -12,
+                "x": -12,
+                "z": 10,
                 "size": 3
               },
               {
                 "kind": "box",
-                "x": -15,
-                "z": 0,
+                "x": -12,
+                "z": -10,
                 "size": 3
               },
               {
                 "kind": "box",
-                "x": -15,
+                "x": -3,
                 "z": 12,
                 "size": 3
               },
               {
                 "kind": "box",
-                "x": 0,
-                "z": -18,
-                "size": 3
-              },
-              {
-                "kind": "box",
-                "x": 0,
-                "z": -6,
-                "size": 3
-              },
-              {
-                "kind": "box",
-                "x": 0,
-                "z": 6,
-                "size": 3
-              },
-              {
-                "kind": "box",
-                "x": 0,
-                "z": 18,
-                "size": 3
-              },
-              {
-                "kind": "box",
-                "x": 15,
+                "x": -3,
                 "z": -12,
                 "size": 3
               },
               {
                 "kind": "box",
-                "x": 15,
+                "x": 0,
+                "z": 4,
+                "size": 3
+              },
+              {
+                "kind": "box",
+                "x": 0,
+                "z": -4,
+                "size": 3
+              },
+              {
+                "kind": "box",
+                "x": -15,
+                "z": -4,
+                "size": 3
+              },
+              {
+                "kind": "box",
+                "x": 3,
+                "z": -10,
+                "size": 3
+              },
+              {
+                "kind": "box",
+                "x": 12,
+                "z": 10,
+                "size": 3
+              },
+              {
+                "kind": "box",
+                "x": 12,
+                "z": -10,
+                "size": 3
+              },
+              {
+                "kind": "box",
+                "x": 16,
                 "z": 0,
                 "size": 3
               },
               {
                 "kind": "box",
-                "x": 15,
-                "z": 12,
-                "size": 3
-              },
-              {
-                "kind": "box",
-                "x": -30,
-                "z": -8,
-                "size": 3
-              },
-              {
-                "kind": "box",
-                "x": 30,
-                "z": 8,
+                "x": 0,
+                "z": 0,
                 "size": 3
               }
             ]
@@ -5407,7 +5573,7 @@
             "mass": 80,
             "glide_drag": 0.147,
             "brake_decel": 6,
-            "check_enabled": false
+            "check_enabled": true
           },
           "puck": {
             "radius_m": 0.12,
@@ -5426,7 +5592,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": false
+            "penalties": true
           },
           "teams": [
             {
@@ -5486,6 +5652,10 @@
           ],
           "ai": {
             "difficulty": "pro"
+          },
+          "barks": {
+            "enabled": true,
+            "intensity": "normal"
           },
           "look": {
             "tier": "l2_night",
@@ -5628,8 +5798,8 @@
           }
         ],
         "values": {
-          "shot_speed": 30,
-          "puck_max_speed": 45
+          "shot_speed": 32,
+          "puck_max_speed": 40
         },
         "rules": [],
         "entities": [],
@@ -5651,7 +5821,7 @@
             "mass": 80,
             "glide_drag": 0.147,
             "brake_decel": 6,
-            "check_enabled": false
+            "check_enabled": true
           },
           "puck": {
             "radius_m": 0.12,
@@ -5670,7 +5840,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": false
+            "penalties": true
           },
           "teams": [
             {
@@ -5731,6 +5901,10 @@
           "ai": {
             "difficulty": "pro"
           },
+          "barks": {
+            "enabled": true,
+            "intensity": "normal"
+          },
           "look": {
             "tier": "l2_night",
             "trim_colour_hex": "#38BDF8",
@@ -5760,7 +5934,7 @@
         "high"
       ],
       "base": "hockey.regular",
-      "outcome": "repaired",
+      "outcome": "first_try",
       "cartridge": {
         "schema": "tj.cartridge/1",
         "id": "hockey-regular",
@@ -5871,7 +6045,7 @@
           }
         ],
         "values": {
-          "shot_speed": 26
+          "shot_speed": 22
         },
         "rules": [],
         "entities": [],
@@ -5883,7 +6057,7 @@
             "corner_radius_m": 3.75,
             "board_restitution": 0.4,
             "ice_friction": 0.015,
-            "goal_width_m": 6.5
+            "goal_width_m": 5.5
           },
           "skater": {
             "speed": 11,
@@ -5893,7 +6067,7 @@
             "mass": 80,
             "glide_drag": 0.147,
             "brake_decel": 6,
-            "check_enabled": false
+            "check_enabled": true
           },
           "puck": {
             "radius_m": 0.12,
@@ -5912,7 +6086,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": false
+            "penalties": true
           },
           "teams": [
             {
@@ -5972,6 +6146,10 @@
           ],
           "ai": {
             "difficulty": "pro"
+          },
+          "barks": {
+            "enabled": true,
+            "intensity": "normal"
           },
           "look": {
             "tier": "l2_night",
@@ -6134,7 +6312,7 @@
             "mass": 80,
             "glide_drag": 0.147,
             "brake_decel": 6,
-            "check_enabled": false
+            "check_enabled": true
           },
           "puck": {
             "radius_m": 0.12,
@@ -6153,7 +6331,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": false
+            "penalties": true
           },
           "teams": [
             {
@@ -6214,6 +6392,10 @@
           "ai": {
             "difficulty": "pro"
           },
+          "barks": {
+            "enabled": true,
+            "intensity": "normal"
+          },
           "look": {
             "tier": "l2_night",
             "trim_colour_hex": "#38BDF8",
@@ -6245,7 +6427,7 @@
         "lake"
       ],
       "base": "hockey.regular",
-      "outcome": "first_try",
+      "outcome": "repaired",
       "cartridge": {
         "schema": "tj.cartridge/1",
         "id": "hockey-regular",
@@ -6255,30 +6437,29 @@
           "name": "Pond Cut",
           "mood_words": [
             "cozy",
-            "winter",
             "snowy",
             "calm",
-            "warm"
+            "soft"
           ],
           "palette": [
             {
               "name": "snow",
-              "hex": "#F4F9FF"
+              "hex": "#F4F8FB"
             },
             {
-              "name": "pond",
-              "hex": "#7FB3D5"
+              "name": "pond-blue",
+              "hex": "#7FA7C9"
             },
             {
               "name": "pine",
-              "hex": "#1F4D3A"
+              "hex": "#2F5D50"
             },
             {
-              "name": "cocoa",
-              "hex": "#6B4423"
+              "name": "ember",
+              "hex": "#E0853D"
             },
             {
-              "name": "dusk",
+              "name": "night",
               "hex": "#1B2A3A"
             }
           ]
@@ -6358,9 +6539,274 @@
           }
         ],
         "values": {
-          "skater_speed": 7.5,
-          "ai_red_skill": 0.6
+          "skater_speed": 8,
+          "skater_turn_rate": 3.5,
+          "shot_speed": 14,
+          "puck_max_speed": 22,
+          "ice_friction": 0.005,
+          "board_restitution": 0.6,
+          "ai_speed_scale": 0.7,
+          "ai_red_skill": 0.4,
+          "goal_pause_frames": 240
         },
+        "rules": [],
+        "entities": [],
+        "ai": [],
+        "game": {
+          "rink": {
+            "length_m": 90,
+            "width_m": 45,
+            "corner_radius_m": 3.75,
+            "board_restitution": 0.6,
+            "ice_friction": 0.005,
+            "goal_width_m": 4,
+            "zones": [
+              {
+                "id": "warm-pond",
+                "shape": "circle",
+                "x": 0,
+                "z": 0,
+                "r": 8,
+                "kind": "slow_ice",
+                "strength": 0.3,
+                "visible": true
+              }
+            ]
+          },
+          "skater": {
+            "speed": 11,
+            "accel": 12,
+            "turn_rate": 5,
+            "lateral_grip": 3,
+            "mass": 80,
+            "glide_drag": 0.147,
+            "brake_decel": 6,
+            "check_enabled": true
+          },
+          "puck": {
+            "radius_m": 0.12,
+            "max_speed": 30,
+            "drag": 0.5,
+            "colour_hex": "#111111"
+          },
+          "shot": {
+            "reach_m": 1.5,
+            "speed": 18,
+            "cooldown_frames": 24,
+            "aim_cone_deg": 8
+          },
+          "rules": {
+            "mode": "first_to",
+            "score_to_win": 3,
+            "goal_pause_frames": 120,
+            "offside": false,
+            "penalties": true
+          },
+          "teams": [
+            {
+              "id": "blue",
+              "colour_hex": "#1D4ED8",
+              "skaters": [
+                {
+                  "role": "player",
+                  "spawn": [
+                    -7.5,
+                    0
+                  ]
+                },
+                {
+                  "role": "chaser",
+                  "spawn": [
+                    -7.5,
+                    -7.5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    -22.5,
+                    0
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "orange",
+              "colour_hex": "#E8651A",
+              "skaters": [
+                {
+                  "role": "chaser",
+                  "spawn": [
+                    7.5,
+                    0
+                  ]
+                },
+                {
+                  "role": "support",
+                  "spawn": [
+                    7.5,
+                    7.5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    22.5,
+                    0
+                  ]
+                }
+              ]
+            }
+          ],
+          "ai": {
+            "difficulty": "rookie"
+          },
+          "barks": {
+            "enabled": true,
+            "intensity": "quiet"
+          },
+          "look": {
+            "tier": "l2_night",
+            "trim_colour_hex": "#38BDF8",
+            "fog_density": 0,
+            "wet_ice": false
+          },
+          "camera": {
+            "mode": "third_person",
+            "distance_m": 6,
+            "height_m": 3.5,
+            "look_ahead_m": 5,
+            "lag_frames": 4,
+            "fov_deg": 70,
+            "radar": true
+          }
+        }
+      }
+    },
+    {
+      "name": "Final Cut",
+      "sentence": "a sunset championship final",
+      "keywords": [
+        "sunset",
+        "championship",
+        "final",
+        "warm",
+        "golden",
+        "trophy"
+      ],
+      "base": "hockey.regular",
+      "outcome": "repaired",
+      "cartridge": {
+        "schema": "tj.cartridge/1",
+        "id": "hockey-regular",
+        "title": "Regular Cut",
+        "seed": 1,
+        "theme": {
+          "name": "Final Cut",
+          "mood_words": [
+            "sunset",
+            "golden",
+            "championship",
+            "warm"
+          ],
+          "palette": [
+            {
+              "name": "ice",
+              "hex": "#FCE8D5"
+            },
+            {
+              "name": "blue",
+              "hex": "#1D4ED8"
+            },
+            {
+              "name": "orange",
+              "hex": "#E8651A"
+            },
+            {
+              "name": "gold",
+              "hex": "#FFB703"
+            },
+            {
+              "name": "dusk",
+              "hex": "#2B1B3D"
+            }
+          ]
+        },
+        "tunables": [
+          {
+            "key": "skater_speed",
+            "type": "number",
+            "min": 3,
+            "max": 16,
+            "default": 11,
+            "description": "Top skating speed in metres per second. Higher is faster and harder to control."
+          },
+          {
+            "key": "skater_turn_rate",
+            "type": "number",
+            "min": 1,
+            "max": 12,
+            "default": 5,
+            "description": "How sharply skaters turn, in radians per second."
+          },
+          {
+            "key": "shot_speed",
+            "type": "number",
+            "min": 5,
+            "max": 40,
+            "default": 18,
+            "description": "How fast the puck leaves the stick after a shot, in metres per second."
+          },
+          {
+            "key": "puck_max_speed",
+            "type": "number",
+            "min": 10,
+            "max": 60,
+            "default": 30,
+            "description": "The fastest the puck can ever travel, in metres per second."
+          },
+          {
+            "key": "ice_friction",
+            "type": "number",
+            "min": 0,
+            "max": 0.1,
+            "default": 0.015,
+            "description": "How slippery the ice is. 0 never slows down, 0.015 is real ice."
+          },
+          {
+            "key": "board_restitution",
+            "type": "number",
+            "min": 0,
+            "max": 1,
+            "default": 0.4,
+            "description": "How bouncy the boards are. 0 is dead, 1 is a perfect bounce."
+          },
+          {
+            "key": "ai_speed_scale",
+            "type": "number",
+            "min": 0.3,
+            "max": 1.5,
+            "default": 1,
+            "description": "How fast the bots skate compared with you. 1 is equal."
+          },
+          {
+            "key": "ai_red_skill",
+            "type": "number",
+            "min": 0,
+            "max": 1,
+            "default": 1,
+            "description": "How sharp the opposing bots are. 0 is clumsy, 1 is sharp."
+          },
+          {
+            "key": "goal_pause_frames",
+            "type": "integer",
+            "min": 30,
+            "max": 600,
+            "default": 120,
+            "description": "How long the game pauses after a goal, in physics frames (60 per second)."
+          }
+        ],
+        "values": {},
         "rules": [],
         "entities": [],
         "ai": [],
@@ -6381,7 +6827,7 @@
             "mass": 80,
             "glide_drag": 0.147,
             "brake_decel": 6,
-            "check_enabled": false
+            "check_enabled": true
           },
           "puck": {
             "radius_m": 0.12,
@@ -6397,10 +6843,10 @@
           },
           "rules": {
             "mode": "first_to",
-            "score_to_win": 3,
+            "score_to_win": 5,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": false
+            "penalties": true
           },
           "teams": [
             {
@@ -6463,250 +6909,7 @@
           },
           "barks": {
             "enabled": true,
-            "intensity": "quiet"
-          },
-          "look": {
-            "tier": "l2_night",
-            "trim_colour_hex": "#38BDF8",
-            "fog_density": 0,
-            "wet_ice": false
-          },
-          "camera": {
-            "mode": "third_person",
-            "distance_m": 6,
-            "height_m": 3.5,
-            "look_ahead_m": 5,
-            "lag_frames": 4,
-            "fov_deg": 70,
-            "radar": true
-          }
-        }
-      }
-    },
-    {
-      "name": "Final Cut",
-      "sentence": "a sunset championship final",
-      "keywords": [
-        "sunset",
-        "championship",
-        "final",
-        "warm",
-        "golden",
-        "trophy"
-      ],
-      "base": "hockey.regular",
-      "outcome": "repaired",
-      "cartridge": {
-        "schema": "tj.cartridge/1",
-        "id": "hockey-regular",
-        "title": "Regular Cut",
-        "seed": 1,
-        "theme": {
-          "name": "Final Cut",
-          "mood_words": [
-            "sunset",
-            "warm",
-            "championship",
-            "final",
-            "glow"
-          ],
-          "palette": [
-            {
-              "name": "sky",
-              "hex": "#FDBA74"
-            },
-            {
-              "name": "ember",
-              "hex": "#E8651A"
-            },
-            {
-              "name": "rose",
-              "hex": "#BE185D"
-            },
-            {
-              "name": "gold",
-              "hex": "#FACC15"
-            },
-            {
-              "name": "dusk",
-              "hex": "#1E1B4B"
-            }
-          ]
-        },
-        "tunables": [
-          {
-            "key": "skater_speed",
-            "type": "number",
-            "min": 3,
-            "max": 16,
-            "default": 11,
-            "description": "Top skating speed in metres per second. Higher is faster and harder to control."
-          },
-          {
-            "key": "skater_turn_rate",
-            "type": "number",
-            "min": 1,
-            "max": 12,
-            "default": 5,
-            "description": "How sharply skaters turn, in radians per second."
-          },
-          {
-            "key": "shot_speed",
-            "type": "number",
-            "min": 5,
-            "max": 40,
-            "default": 18,
-            "description": "How fast the puck leaves the stick after a shot, in metres per second."
-          },
-          {
-            "key": "puck_max_speed",
-            "type": "number",
-            "min": 10,
-            "max": 60,
-            "default": 30,
-            "description": "The fastest the puck can ever travel, in metres per second."
-          },
-          {
-            "key": "ice_friction",
-            "type": "number",
-            "min": 0,
-            "max": 0.1,
-            "default": 0.015,
-            "description": "How slippery the ice is. 0 never slows down, 0.015 is real ice."
-          },
-          {
-            "key": "board_restitution",
-            "type": "number",
-            "min": 0,
-            "max": 1,
-            "default": 0.4,
-            "description": "How bouncy the boards are. 0 is dead, 1 is a perfect bounce."
-          },
-          {
-            "key": "ai_speed_scale",
-            "type": "number",
-            "min": 0.3,
-            "max": 1.5,
-            "default": 1,
-            "description": "How fast the bots skate compared with you. 1 is equal."
-          },
-          {
-            "key": "ai_red_skill",
-            "type": "number",
-            "min": 0,
-            "max": 1,
-            "default": 1,
-            "description": "How sharp the opposing bots are. 0 is clumsy, 1 is sharp."
-          },
-          {
-            "key": "goal_pause_frames",
-            "type": "integer",
-            "min": 30,
-            "max": 600,
-            "default": 120,
-            "description": "How long the game pauses after a goal, in physics frames (60 per second)."
-          }
-        ],
-        "values": {},
-        "rules": [],
-        "entities": [],
-        "ai": [],
-        "game": {
-          "rink": {
-            "length_m": 90,
-            "width_m": 45,
-            "corner_radius_m": 3.75,
-            "board_restitution": 0.4,
-            "ice_friction": 0.015,
-            "goal_width_m": 4
-          },
-          "skater": {
-            "speed": 11,
-            "accel": 12,
-            "turn_rate": 5,
-            "lateral_grip": 3,
-            "mass": 80,
-            "glide_drag": 0.147,
-            "brake_decel": 6,
-            "check_enabled": false
-          },
-          "puck": {
-            "radius_m": 0.12,
-            "max_speed": 30,
-            "drag": 0.5,
-            "colour_hex": "#111111"
-          },
-          "shot": {
-            "reach_m": 1.5,
-            "speed": 18,
-            "cooldown_frames": 24,
-            "aim_cone_deg": 8
-          },
-          "rules": {
-            "mode": "first_to",
-            "score_to_win": 3,
-            "goal_pause_frames": 120,
-            "offside": false,
-            "penalties": false
-          },
-          "teams": [
-            {
-              "id": "blue",
-              "colour_hex": "#1D4ED8",
-              "skaters": [
-                {
-                  "role": "player",
-                  "spawn": [
-                    -7.5,
-                    0
-                  ]
-                },
-                {
-                  "role": "chaser",
-                  "spawn": [
-                    -7.5,
-                    -7.5
-                  ]
-                },
-                {
-                  "role": "back",
-                  "spawn": [
-                    -22.5,
-                    0
-                  ]
-                }
-              ]
-            },
-            {
-              "id": "orange",
-              "colour_hex": "#E8651A",
-              "skaters": [
-                {
-                  "role": "chaser",
-                  "spawn": [
-                    7.5,
-                    0
-                  ]
-                },
-                {
-                  "role": "support",
-                  "spawn": [
-                    7.5,
-                    7.5
-                  ]
-                },
-                {
-                  "role": "back",
-                  "spawn": [
-                    22.5,
-                    0
-                  ]
-                }
-              ]
-            }
-          ],
-          "ai": {
-            "difficulty": "pro"
+            "intensity": "normal"
           },
           "look": {
             "tier": "l2_night",
@@ -6755,24 +6958,24 @@
           ],
           "palette": [
             {
-              "name": "cream",
-              "hex": "#F5E6C8"
+              "name": "phosphor",
+              "hex": "#39FF14"
             },
             {
               "name": "magenta",
-              "hex": "#E0218A"
+              "hex": "#FF2E9A"
             },
             {
               "name": "cyan",
-              "hex": "#22D3EE"
+              "hex": "#00E5FF"
             },
             {
               "name": "yellow",
-              "hex": "#FACC15"
+              "hex": "#FFE600"
             },
             {
               "name": "black",
-              "hex": "#14051F"
+              "hex": "#05050A"
             }
           ]
         },
@@ -6871,7 +7074,7 @@
             "mass": 80,
             "glide_drag": 0.147,
             "brake_decel": 6,
-            "check_enabled": false
+            "check_enabled": true
           },
           "puck": {
             "radius_m": 0.12,
@@ -6890,7 +7093,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": false
+            "penalties": true
           },
           "teams": [
             {
@@ -6951,8 +7154,12 @@
           "ai": {
             "difficulty": "pro"
           },
+          "barks": {
+            "enabled": true,
+            "intensity": "normal"
+          },
           "look": {
-            "tier": "l2_night",
+            "tier": "l3_neon",
             "trim_colour_hex": "#38BDF8",
             "fog_density": 0,
             "wet_ice": false
@@ -7113,7 +7320,7 @@
             "mass": 80,
             "glide_drag": 0.147,
             "brake_decel": 6,
-            "check_enabled": false
+            "check_enabled": true
           },
           "puck": {
             "radius_m": 0.12,
@@ -7132,7 +7339,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": false
+            "penalties": true
           },
           "teams": [
             {
@@ -7193,6 +7400,10 @@
           "ai": {
             "difficulty": "pro"
           },
+          "barks": {
+            "enabled": true,
+            "intensity": "normal"
+          },
           "look": {
             "tier": "l2_night",
             "trim_colour_hex": "#38BDF8",
@@ -7234,12 +7445,13 @@
           "mood_words": [
             "spooky",
             "midnight",
-            "eerie"
+            "eerie",
+            "moody"
           ],
           "palette": [
             {
               "name": "ghost",
-              "hex": "#E6E6FA"
+              "hex": "#CBD5E1"
             },
             {
               "name": "violet",
@@ -7247,15 +7459,15 @@
             },
             {
               "name": "pumpkin",
-              "hex": "#E8651A"
+              "hex": "#F97316"
             },
             {
-              "name": "moon",
-              "hex": "#FDE68A"
+              "name": "glow",
+              "hex": "#A3E635"
             },
             {
-              "name": "graveyard",
-              "hex": "#0F0A1F"
+              "name": "midnight",
+              "hex": "#0A0716"
             }
           ]
         },
@@ -7354,7 +7566,7 @@
             "mass": 80,
             "glide_drag": 0.147,
             "brake_decel": 6,
-            "check_enabled": false
+            "check_enabled": true
           },
           "puck": {
             "radius_m": 0.12,
@@ -7373,7 +7585,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": false
+            "penalties": true
           },
           "teams": [
             {
@@ -7433,6 +7645,10 @@
           ],
           "ai": {
             "difficulty": "pro"
+          },
+          "barks": {
+            "enabled": true,
+            "intensity": "normal"
           },
           "look": {
             "tier": "l2_night",

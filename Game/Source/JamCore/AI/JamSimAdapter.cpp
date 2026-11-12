@@ -98,6 +98,19 @@ namespace JamAI
 		W.GoalX = S.GoalLineX();
 		W.GoalHalfWidth = G.Rink.GoalWidthM * 0.5;
 		W.ShotReach = G.Shot.ReachM;
+		W.bDrawOpen = S.IsDrawOpen();
+		W.bFaceoffPhase = S.GetPhase() == EJamSimPhase::Faceoff;
+		W.FaceoffCountdown = S.GetFaceoffCountdown();
+		// R-0017: stick facts and the carrier
+		{
+			// the same rule as UJamSim::CarrierIndex (private): the last toucher, able to act, with the puck within shot reach
+			const int32 Lt = S.GetPuck().LastTouch;
+			const TArray<FJamSkaterState>& All = S.GetSkaters();
+			W.Carrier = (All.IsValidIndex(Lt) && All[Lt].CanAct() && FVector2D::Distance(All[Lt].Pos, S.GetPuck().Pos) <= G.Shot.ReachM) ? Lt : -1;
+		}
+		W.SkaterRadius = UJamSim::SkaterRadius;
+		W.StickReach = G.Stick.ReachM;
+		W.LiftRange = G.Stick.LiftRangeM;
 		const int64 NextFrame = S.GetFrame() + 1;   // UJamSim::Step increments the frame before shots are tried
 		for (int32 i = 0; i < W.NumSkaters; ++i)
 		{
@@ -111,6 +124,9 @@ namespace JamAI
 			O.Role = RoleOf(K.Role);
 			O.bHasPuck = K.bHasPuck;
 			O.bDown = K.IsDown();
+			O.bCentre = K.bCentre;
+			O.bCanPoke = K.CanAct() && NextFrame >= K.PokeReadyFrame && K.PokeWindow <= 0;
+			O.bCanLift = K.CanAct() && NextFrame >= K.LiftReadyFrame;
 			// the same gate as UJamSim::TryShoot
 			const FVector2D To = S.GetPuck().Pos - K.Pos;
 			const double D = To.Size();
@@ -122,6 +138,7 @@ namespace JamAI
 	void FJamSimAdapter::View(FJamAIWorld& W) const
 	{
 		BuildWorld(*Sim, W);
+		W.FramesSinceDrop = (W.bDrawOpen && LastDropFrame >= 0) ? static_cast<int>(W.Frame - LastDropFrame) : -1;
 	}
 
 	FJamAIStepEvents FJamSimAdapter::Step(const FJamAIInput* In)
@@ -146,6 +163,10 @@ namespace JamAI
 			I.bShoot = In[i].bShoot;
 			I.bCheck = In[i].bCheck;
 			I.bBrake = In[i].bBrake;
+			I.bPass = In[i].bPass;
+			I.Stick = FVector2D(In[i].Stick.X, In[i].Stick.Y);
+			I.bPoke = In[i].bPoke;
+			I.bLift = In[i].bLift;
 		}
 		Sim->Step(Inputs);
 		const TArray<FJamSkaterState>& After = Sim->GetSkaters();
@@ -159,9 +180,11 @@ namespace JamAI
 		else if (Sim->GetScore(1) > S1) { Ev.GoalTeam = 1; }
 		for (const FJamSimEvent& E : Sim->GetFrameEvents())
 		{
-			if (E.Name == JamEvents::Faceoff)
+			// R-0013: a faceoff is now a drop followed by won / lost events; count the drop (or a kindless faceoff) once
+			if (E.Name == JamEvents::Faceoff && (E.Kind == NAME_None || E.Kind == FName(TEXT("drop"))))
 			{
 				Ev.bFaceoff = true;
+				LastDropFrame = Sim->GetFrame();
 			}
 		}
 		return Ev;

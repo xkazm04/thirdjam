@@ -34,3 +34,6 @@ Game/Packaged/
 Game/Plugins/DLSS*/
 Game/Plugins/Streamline*/
 Game/Plugins/NIS*/
+
+# lane outputs that are binaries
+tools/tournament/out/*.exe

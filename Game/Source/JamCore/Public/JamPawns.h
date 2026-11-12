@@ -13,6 +13,7 @@
 
 class UStaticMeshComponent;
 class UMaterialInstanceDynamic;
+class UNiagaraComponent;
 
 UCLASS(ClassGroup = (Jam), meta = (BlueprintSpawnableComponent))
 class JAMCORE_API UJamPlaceholderVisual : public USceneComponent, public IJamSkaterVisual
@@ -26,7 +27,7 @@ public:
 	virtual void SetTeam_Implementation(int32 TeamId, FLinearColor Colour) override;
 	virtual void SetNumber_Implementation(int32 N) override {}
 	virtual void UpdateMotion_Implementation(float Speed, float TurnRate, FRotator Facing) override;
-	virtual void PlayShoot_Implementation() override { SwingFrames = 10; }
+	virtual void PlayShoot_Implementation(float Charge) override { SwingFrames = 10 + FMath::RoundToInt32(10.f * FMath::Clamp(Charge, 0.f, 1.f)); }
 	virtual void PlayCheck_Implementation() override {}
 	virtual void SetKnockedDown_Implementation(bool bDown, float DirX, float DirZ) override;
 	virtual void SetHasPuck_Implementation(bool bHasPuck) override {}
@@ -66,6 +67,11 @@ public:
 	// The object that implements IJamSkaterVisual (a component, or an attached actor).
 	UFUNCTION(BlueprintPure, Category = "Jam|Skater") UObject* GetVisualObject() const { return VisualObject; }
 
+	// C-0001 v3 / B-to-A-0014: the world position (cm) of the visual's puck_socket when it exposes one (a mesh socket on any of its components, or a scene
+	// component named puck_socket); false when the visual has none. The game mode draws a carried puck there.
+	bool GetPuckSocketWorld(FVector& Out) const;
+
+
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Skater") TObjectPtr<USceneComponent> Root;
 	UPROPERTY(Transient) TObjectPtr<UObject> VisualObject;
@@ -73,6 +79,10 @@ private:
 	int32 Team = 0;
 	bool bWasDown = false;
 	bool bHadPuck = false;
+	bool bWasAtFaceoff = false;
+	float LastCharge = 0.f;
+	float LastAimDeg = 0.f;
+	float LastAimReach = 0.f;
 };
 
 UCLASS()
@@ -84,8 +94,13 @@ public:
 	AJamPuck();
 	void InitPuck(double RadiusM, const FLinearColor& Colour);
 	void ApplyRender(const FJamPuckState& P, float Alpha);
+	// C-0001 v3: a carried puck drawn at the carrier visual's puck_socket (world cm; the puck keeps its own height above the ice).
+	void ApplyRenderAt(const FVector& WorldCm);
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Puck") TObjectPtr<UStaticMeshComponent> Mesh;
+	// R-0016: device B's puck kit. The disc lies on the ice under the puck; the trail follows it. Either may be absent (logged once, never an error).
+	UPROPERTY(Transient) TObjectPtr<UStaticMeshComponent> Disc;
+	UPROPERTY(Transient) TObjectPtr<UNiagaraComponent> Trail;
 	double HalfHeightM = 0.04;
 };

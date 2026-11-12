@@ -29,6 +29,13 @@ public:
 	UPROPERTY() TObjectPtr<UInputAction> Restart;  // bool
 	UPROPERTY() TObjectPtr<UInputAction> Pause;    // bool
 	UPROPERTY() TObjectPtr<UInputAction> Brake;    // bool, held: Ctrl / left trigger
+	// R-0013 (lane A16): the stick. IA_StickAim: right stick, absolute; IA_StickMouse: mouse delta, accumulated; IA_Poke: left mouse / RB; IA_Lift: right mouse / LB.
+	UPROPERTY() TObjectPtr<UInputAction> StickAim;
+	UPROPERTY() TObjectPtr<UInputAction> StickMouse;
+	UPROPERTY() TObjectPtr<UInputAction> Poke;
+	UPROPERTY() TObjectPtr<UInputAction> Lift;
+	// C-0005 (lane A16): IA_Pass, E / X: a lead pass to the best open teammate.
+	UPROPERTY() TObjectPtr<UInputAction> Pass;
 	UPROPERTY() TObjectPtr<UInputMappingContext> Context;
 
 	// Keys mapped to an action, for tests ("is the gamepad A button on Shoot").
@@ -60,6 +67,23 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Jam|Input")
 	bool IsBrakeHeld() const { return bBrake; }
 
+
+	// R-0013 stick aim: right stick in [-1, 1]^2 (X right, Y forward), zero when idle.
+	UFUNCTION(BlueprintPure, Category = "Jam|Input")
+	FVector2D GetStickAxis() const { return StickAxis; }
+
+	// Accumulated mouse delta in pixels (X right, Y up), clamped to a 200 px radius; the game mode scales it by game.stick.mouse_sensitivity.
+	UFUNCTION(BlueprintPure, Category = "Jam|Input")
+	FVector2D GetMouseAimPx() const { return MouseAimPx; }
+
+	UFUNCTION(BlueprintCallable, Category = "Jam|Input")
+	bool ConsumePokePressed();
+
+	UFUNCTION(BlueprintCallable, Category = "Jam|Input")
+	bool ConsumeLiftPressed();
+
+	UFUNCTION(BlueprintCallable, Category = "Jam|Input")
+	bool ConsumePassPressed();
 
 	// True once after each press (latched until read): a shot or check is an event, not a level.
 	UFUNCTION(BlueprintCallable, Category = "Jam|Input")
@@ -96,6 +120,12 @@ private:
 	void OnCheckDone() { bCheck = false; }
 	void OnBrakeStarted() { bBrake = true; }
 	void OnBrakeDone() { bBrake = false; }
+	void OnStickAim(const FInputActionValue& V);
+	void OnStickAimDone(const FInputActionValue& V);
+	void OnStickMouse(const FInputActionValue& V);
+	void OnPokeStarted() { bPokeLatch = true; }
+	void OnLiftStarted() { bLiftLatch = true; }
+	void OnPassStarted() { bPassLatch = true; }
 	void OnRestartStarted() { OnRestart.Broadcast(); }
 	void OnPauseStarted() { OnPause.Broadcast(); }
 
@@ -105,6 +135,11 @@ private:
 	bool bBrake = false;
 	bool bShootLatch = false;
 	bool bCheckLatch = false;
+	bool bPokeLatch = false;
+	bool bLiftLatch = false;
+	bool bPassLatch = false;
+	FVector2D StickAxis = FVector2D::ZeroVector;
+	FVector2D MouseAimPx = FVector2D::ZeroVector;
 	bool bBound = false;
 	TWeakObjectPtr<APlayerController> BoundPC;
 };

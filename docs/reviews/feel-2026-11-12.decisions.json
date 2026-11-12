@@ -1,0 +1,17 @@
+{
+  "title": "Feel Proposals Review",
+  "decided_at": "2026-11-12T13:27:50.233Z",
+  "decisions": [
+    { "id": "feel.00", "verdict": "pass", "comment": "Hard to say, the stick does not have hockey stick shape, we have no hands on players. The puck does not stick with the stick." },
+    { "id": "feel.01", "verdict": "pass" },
+    { "id": "feel.02", "verdict": "pass" },
+    { "id": "feel.2b", "verdict": "pass" },
+    { "id": "feel.03", "verdict": "pass" },
+    { "id": "feel.04", "verdict": "pass" },
+    { "id": "feel.05", "verdict": "pass" },
+    { "id": "feel.06", "verdict": "pass" },
+    { "id": "feel.07", "verdict": "pass" },
+    { "id": "feel.08", "verdict": "pass" },
+    { "id": "feel.all", "verdict": "pass" }
+  ]
+}

@@ -31,7 +31,7 @@ export const SITUATIONS = {
   faceoff: 'a faceoff at centre ice is about to start (match start or after a goal)',
   win: 'the match is over and the human player\'s team won',
   lose: 'the match is over and the human player\'s team lost',
-  directors_call: 'the human player, the "director", just paused the match and changed one rule live (ice friction, shot power, rink size...) and the scoreboard announced the new cut',
+  directors_call: 'the human player just paused the match and changed one rule live (ice friction, shot power, rink size...) and the scoreboard announced the new rule; speak of "the rules changed", "new rule", "your tweak", never of directors, cuts or scenes',
   signal_ack_defend: 'the human player just shouted "defend!" and this teammate confirms they are falling back to protect the net',
   signal_ack_space: 'the human player just shouted "space!" and this teammate confirms they are skating to open ice to be passable',
   signal_ack_pass: 'the human player just shouted "pass!" and this teammate confirms they will pass the puck to the human',
@@ -52,9 +52,11 @@ const TONE_HINT = {
 
 export function systemPrompt() {
   return `You write short in-game one-liners ("barks") for cartoon toy-figure hockey players in a 3-on-3 arcade ice hockey game called Hokej.
-Theme of the game: "Director's Cut" (matches are cuts, periods are TAKEs, the human is the director); hockey flavour and film-set jokes are welcome.
+The barks are hockey first (ruling R-0021): rink talk only. The game's menu has a film theme, but on the ice nobody says cut, take, director, script, scene,
+reel, blooper, rehearsal, camera, movie, wrap, credits or any film-set word; the lines are rejected. Lean on shift, line, bench, boards, glass, crease, slot,
+blue line, faceoff, forecheck, backcheck, rebound, one-timer, snipe, dangle, deke, top shelf, five-hole, pylon, turnover, warm-up, scrimmage, playoff, season.
 The game has no goalies, no referees, no crowd, no penalties and no money: never mention them. It has nets, boards, posts, pucks, sticks, skates, ice,
-body checks, pickups, a scoreboard, a radar and the director's live rule changes.
+body checks, pickups, a scoreboard, a radar and the human's live rule changes (speak of "the rules changed", "new rule", "your tweak").
 Register: harsh. These are not kids'-show lines. The speakers are bored veterans who have seen a thousand rookies and find this one funny: cutting sarcasm
 about the human's skating, aim, speed, courage and decisions; gloating; cold contempt; teammates who are genuinely annoyed. Never cute, never "golly".
 Rules (every line is filtered by a machine and a human reviewer; broken lines are thrown away):
@@ -65,8 +67,8 @@ Rules (every line is filtered by a machine and a human reviewer; broken lines ar
   no markup, no hashtags, no numbers above 99.
 - English only, plain ASCII, ${MAX_CHARS} characters at most per line, one sentence, spoken aloud by a skater during play. Each line must be different in
   wording and idea from the others; vary rhythm (questions, two-word jabs, longer quips).
-- Examples of the voice: "that's a wrap, rookie" / "nice stick, shame about the aim" / "you skate like the ice owes you an apology" /
-  "aim for the net next time, it's the big thing with the posts" / "I've seen pucks make braver decisions" / "take two, same ending, same excuse" /
+- Examples of the voice: "back to the bench, rookie" / "nice stick, shame about the aim" / "you skate like the ice owes you an apology" /
+  "aim for the net next time, it's the big thing with the posts" / "I've seen pucks make braver decisions" / "new rule, same ending, same excuse" /
   "damn, even the boards felt sorry for that one"
 Output: JSON only, no prose, no code fence: {"lines": {"<tone>": ["line", ...], ...}} with exactly the tones asked for.`;
 }

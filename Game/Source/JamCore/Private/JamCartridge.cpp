@@ -853,8 +853,10 @@ namespace
 		return (V && V->IsObject()) ? V : nullptr;
 	}
 
-	void ReadNum(const FJPtr& O, const TCHAR* Key, double& Out) { if (O) if (FJPtr V = O->Get(Key); V && V->IsNumber()) Out = V->Number; }
-	void ReadInt(const FJPtr& O, const TCHAR* Key, int32& Out) { if (O) if (FJPtr V = O->Get(Key); V && V->IsNumber()) Out = static_cast<int32>(V->Number); }
+	// Named ReadNumber / ReadInteger (not ReadNum / ReadInt): lane A14 defines ReadNum / ReadInt with another return type in Effects/JamEffectTypes.cpp,
+	// and UBT unity builds put both files in one translation unit (C2264), lane A16, R-0003 point 5.
+	void ReadNumber(const FJPtr& O, const TCHAR* Key, double& Out) { if (O) if (FJPtr V = O->Get(Key); V && V->IsNumber()) Out = V->Number; }
+	void ReadInteger(const FJPtr& O, const TCHAR* Key, int32& Out) { if (O) if (FJPtr V = O->Get(Key); V && V->IsNumber()) Out = static_cast<int32>(V->Number); }
 	void ReadBool(const FJPtr& O, const TCHAR* Key, bool& Out) { if (O) if (FJPtr V = O->Get(Key); V && V->IsBool()) Out = V->Bool; }
 	void ReadName(const FJPtr& O, const TCHAR* Key, FName& Out) { if (O) if (FJPtr V = O->Get(Key); V && V->IsString()) Out = FName(*V->String); }
 	void ReadStr(const FJPtr& O, const TCHAR* Key, FString& Out) { if (O) if (FJPtr V = O->Get(Key); V && V->IsString()) Out = V->String; }
@@ -866,15 +868,15 @@ namespace
 		FJamRuleHookConfig Out;
 		ReadStr(H, TEXT("id"), Out.Id);
 		ReadName(H, TEXT("when"), Out.When);
-		ReadInt(H, TEXT("every_frames"), Out.EveryFrames);
-		ReadInt(H, TEXT("after_frame"), Out.AfterFrame);
+		ReadInteger(H, TEXT("every_frames"), Out.EveryFrames);
+		ReadInteger(H, TEXT("after_frame"), Out.AfterFrame);
 		ReadName(H, TEXT("team"), Out.Team);
 		if (FJPtr Sc = Obj(H, TEXT("score")))
 		{
 			Out.Score.bHas = true;
-			ReadInt(Sc, TEXT("at_least"), Out.Score.AtLeast);
-			ReadInt(Sc, TEXT("at_most"), Out.Score.AtMost);
-			ReadInt(Sc, TEXT("lead_at_least"), Out.Score.LeadAtLeast);
+			ReadInteger(Sc, TEXT("at_least"), Out.Score.AtLeast);
+			ReadInteger(Sc, TEXT("at_most"), Out.Score.AtMost);
+			ReadInteger(Sc, TEXT("lead_at_least"), Out.Score.LeadAtLeast);
 		}
 		if (H) if (FJPtr Then = H->Get(TEXT("then")); Then && Then->IsArray())
 		{
@@ -883,10 +885,10 @@ namespace
 				FJamRuleActionConfig Ac;
 				ReadName(A, TEXT("do"), Ac.Do);
 				ReadName(A, TEXT("team"), Ac.Team);
-				if (A && A->Has(TEXT("value"))) { Ac.bHasValue = true; ReadNum(A, TEXT("value"), Ac.Value); }
+				if (A && A->Has(TEXT("value"))) { Ac.bHasValue = true; ReadNumber(A, TEXT("value"), Ac.Value); }
 				ReadName(A, TEXT("param"), Ac.Param);
 				ReadName(A, TEXT("kind"), Ac.Kind);
-				ReadInt(A, TEXT("frames"), Ac.Frames);
+				ReadInteger(A, TEXT("frames"), Ac.Frames);
 				ReadStr(A, TEXT("text"), Ac.Text);
 				Out.Then.Add(Ac);
 			}
@@ -953,21 +955,21 @@ namespace
 	{
 		// Defaults are the struct initialisers (schema/DEFAULTS.md); a present key overrides them.
 		FJPtr Rink = Obj(G, TEXT("rink"));
-		ReadNum(Rink, TEXT("length_m"), C.Rink.LengthM);
-		ReadNum(Rink, TEXT("width_m"), C.Rink.WidthM);
-		ReadNum(Rink, TEXT("corner_radius_m"), C.Rink.CornerRadiusM);
-		ReadNum(Rink, TEXT("board_restitution"), C.Rink.BoardRestitution);
-		ReadNum(Rink, TEXT("ice_friction"), C.Rink.IceFriction);
-		ReadNum(Rink, TEXT("goal_width_m"), C.Rink.GoalWidthM);
+		ReadNumber(Rink, TEXT("length_m"), C.Rink.LengthM);
+		ReadNumber(Rink, TEXT("width_m"), C.Rink.WidthM);
+		ReadNumber(Rink, TEXT("corner_radius_m"), C.Rink.CornerRadiusM);
+		ReadNumber(Rink, TEXT("board_restitution"), C.Rink.BoardRestitution);
+		ReadNumber(Rink, TEXT("ice_friction"), C.Rink.IceFriction);
+		ReadNumber(Rink, TEXT("goal_width_m"), C.Rink.GoalWidthM);
 		if (Rink) if (FJPtr Obs = Rink->Get(TEXT("obstacles")); Obs && Obs->IsArray())
 		{
 			for (const FJPtr& O : Obs->Array)
 			{
 				FJamObstacle Ob;
 				ReadName(O, TEXT("kind"), Ob.Kind);
-				ReadNum(O, TEXT("x"), Ob.X);
-				ReadNum(O, TEXT("z"), Ob.Z);
-				ReadNum(O, TEXT("size"), Ob.Size);
+				ReadNumber(O, TEXT("x"), Ob.X);
+				ReadNumber(O, TEXT("z"), Ob.Z);
+				ReadNumber(O, TEXT("size"), Ob.Size);
 				C.Rink.Obstacles.Add(Ob);
 			}
 		}
@@ -979,63 +981,63 @@ namespace
 				FJamZoneConfig Zc;
 				ReadStr(Zn, TEXT("id"), Zc.Id);
 				ReadName(Zn, TEXT("shape"), Zc.Shape);
-				ReadNum(Zn, TEXT("x"), Zc.X);
-				ReadNum(Zn, TEXT("z"), Zc.Z);
-				ReadNum(Zn, TEXT("w"), Zc.W);
-				ReadNum(Zn, TEXT("d"), Zc.D);
-				ReadNum(Zn, TEXT("r"), Zc.R);
+				ReadNumber(Zn, TEXT("x"), Zc.X);
+				ReadNumber(Zn, TEXT("z"), Zc.Z);
+				ReadNumber(Zn, TEXT("w"), Zc.W);
+				ReadNumber(Zn, TEXT("d"), Zc.D);
+				ReadNumber(Zn, TEXT("r"), Zc.R);
 				ReadName(Zn, TEXT("kind"), Zc.Kind);
-				ReadNum(Zn, TEXT("strength"), Zc.Strength);
+				ReadNumber(Zn, TEXT("strength"), Zc.Strength);
 				ReadBool(Zn, TEXT("visible"), Zc.bVisible);
 				C.Rink.Zones.Add(Zc);
 			}
 		}
 
 		FJPtr Sk = Obj(G, TEXT("skater"));
-		ReadNum(Sk, TEXT("speed"), C.Skater.Speed);
-		ReadNum(Sk, TEXT("accel"), C.Skater.Accel);
-		ReadNum(Sk, TEXT("turn_rate"), C.Skater.TurnRate);
-		ReadNum(Sk, TEXT("lateral_grip"), C.Skater.LateralGrip);
-		ReadNum(Sk, TEXT("mass"), C.Skater.Mass);
-		ReadNum(Sk, TEXT("glide_drag"), C.Skater.GlideDrag);
-		ReadNum(Sk, TEXT("brake_decel"), C.Skater.BrakeDecel);
+		ReadNumber(Sk, TEXT("speed"), C.Skater.Speed);
+		ReadNumber(Sk, TEXT("accel"), C.Skater.Accel);
+		ReadNumber(Sk, TEXT("turn_rate"), C.Skater.TurnRate);
+		ReadNumber(Sk, TEXT("lateral_grip"), C.Skater.LateralGrip);
+		ReadNumber(Sk, TEXT("mass"), C.Skater.Mass);
+		ReadNumber(Sk, TEXT("glide_drag"), C.Skater.GlideDrag);
+		ReadNumber(Sk, TEXT("brake_decel"), C.Skater.BrakeDecel);
 		ReadBool(Sk, TEXT("check_enabled"), C.Skater.bCheckEnabled);
-		ReadNum(Sk, TEXT("check_speed_min"), C.Skater.CheckSpeedMin);
-		ReadInt(Sk, TEXT("knockdown_frames"), C.Skater.KnockdownFrames);
+		ReadNumber(Sk, TEXT("check_speed_min"), C.Skater.CheckSpeedMin);
+		ReadInteger(Sk, TEXT("knockdown_frames"), C.Skater.KnockdownFrames);
 		ReadName(Sk, TEXT("visual"), C.Skater.Visual);
-		ReadNum(Sk, TEXT("pass_speed"), C.Skater.PassSpeed);
-		ReadInt(Sk, TEXT("pass_lead_frames"), C.Skater.PassLeadFrames);
+		ReadNumber(Sk, TEXT("pass_speed"), C.Skater.PassSpeed);
+		ReadInteger(Sk, TEXT("pass_lead_frames"), C.Skater.PassLeadFrames);
 
 		const FJPtr St = G->Get(TEXT("stick"));
-		ReadNum(St, TEXT("reach_m"), C.Stick.ReachM);
-		ReadInt(St, TEXT("poke_window_frames"), C.Stick.PokeWindowFrames);
-		ReadNum(St, TEXT("lift_range_m"), C.Stick.LiftRangeM);
-		ReadInt(St, TEXT("stumble_frames"), C.Stick.StumbleFrames);
-		ReadNum(St, TEXT("mouse_sensitivity"), C.Stick.MouseSensitivity);
+		ReadNumber(St, TEXT("reach_m"), C.Stick.ReachM);
+		ReadInteger(St, TEXT("poke_window_frames"), C.Stick.PokeWindowFrames);
+		ReadNumber(St, TEXT("lift_range_m"), C.Stick.LiftRangeM);
+		ReadInteger(St, TEXT("stumble_frames"), C.Stick.StumbleFrames);
+		ReadNumber(St, TEXT("mouse_sensitivity"), C.Stick.MouseSensitivity);
 
 		FJPtr Pk = Obj(G, TEXT("puck"));
 		UJamCartridge::HexToLinear(TEXT("#111111"), C.Puck.Colour);
-		ReadNum(Pk, TEXT("radius_m"), C.Puck.RadiusM);
-		ReadNum(Pk, TEXT("max_speed"), C.Puck.MaxSpeed);
-		ReadNum(Pk, TEXT("drag"), C.Puck.Drag);
+		ReadNumber(Pk, TEXT("radius_m"), C.Puck.RadiusM);
+		ReadNumber(Pk, TEXT("max_speed"), C.Puck.MaxSpeed);
+		ReadNumber(Pk, TEXT("drag"), C.Puck.Drag);
 		ReadColour(Pk, TEXT("colour_hex"), C.Puck.Colour);
-		ReadNum(Pk, TEXT("carry_assist"), C.Puck.CarryAssist);
-		ReadInt(Pk, TEXT("count"), C.Puck.Count);
+		ReadNumber(Pk, TEXT("carry_assist"), C.Puck.CarryAssist);
+		ReadInteger(Pk, TEXT("count"), C.Puck.Count);
 
 		FJPtr Shot = Obj(G, TEXT("shot"));
-		ReadNum(Shot, TEXT("reach_m"), C.Shot.ReachM);
-		ReadNum(Shot, TEXT("speed"), C.Shot.Speed);
-		ReadInt(Shot, TEXT("cooldown_frames"), C.Shot.CooldownFrames);
-		if (Shot && Shot->Has(TEXT("aim_cone_deg"))) { C.Shot.bHasAimCone = true; ReadNum(Shot, TEXT("aim_cone_deg"), C.Shot.AimConeDeg); }
-		ReadInt(Shot, TEXT("charge_frames_max"), C.Shot.ChargeFramesMax);
-		ReadNum(Shot, TEXT("charge_speed_bonus"), C.Shot.ChargeSpeedBonus);
+		ReadNumber(Shot, TEXT("reach_m"), C.Shot.ReachM);
+		ReadNumber(Shot, TEXT("speed"), C.Shot.Speed);
+		ReadInteger(Shot, TEXT("cooldown_frames"), C.Shot.CooldownFrames);
+		if (Shot && Shot->Has(TEXT("aim_cone_deg"))) { C.Shot.bHasAimCone = true; ReadNumber(Shot, TEXT("aim_cone_deg"), C.Shot.AimConeDeg); }
+		ReadInteger(Shot, TEXT("charge_frames_max"), C.Shot.ChargeFramesMax);
+		ReadNumber(Shot, TEXT("charge_speed_bonus"), C.Shot.ChargeSpeedBonus);
 		ReadBool(Shot, TEXT("deflect"), C.Shot.bDeflect);
 
 		FJPtr Rules = Obj(G, TEXT("rules"));
 		ReadName(Rules, TEXT("mode"), C.Rules.Mode);
-		ReadInt(Rules, TEXT("score_to_win"), C.Rules.ScoreToWin);
-		ReadInt(Rules, TEXT("timer_frames"), C.Rules.TimerFrames);
-		ReadInt(Rules, TEXT("goal_pause_frames"), C.Rules.GoalPauseFrames);
+		ReadInteger(Rules, TEXT("score_to_win"), C.Rules.ScoreToWin);
+		ReadInteger(Rules, TEXT("timer_frames"), C.Rules.TimerFrames);
+		ReadInteger(Rules, TEXT("goal_pause_frames"), C.Rules.GoalPauseFrames);
 		ReadBool(Rules, TEXT("penalties"), C.Rules.bPenalties);
 		// C-0005 (lane A15): hooks as written, then the variants expanded into hooks (schema/validate.mjs expandVariants is the Node mirror).
 		if (Rules) if (FJPtr Hooks = Rules->Get(TEXT("hooks")); Hooks && Hooks->IsArray())
@@ -1046,9 +1048,9 @@ namespace
 		{
 			ReadBool(Var, TEXT("sudden_death"), C.Rules.Variants.bSuddenDeath);
 			ReadBool(Var, TEXT("last_goal_double"), C.Rules.Variants.bLastGoalDouble);
-			ReadInt(Var, TEXT("mercy_goals"), C.Rules.Variants.MercyGoals);
-			ReadInt(Var, TEXT("period_count"), C.Rules.Variants.PeriodCount);
-			ReadNum(Var, TEXT("shrink_per_goal"), C.Rules.Variants.ShrinkPerGoal);
+			ReadInteger(Var, TEXT("mercy_goals"), C.Rules.Variants.MercyGoals);
+			ReadInteger(Var, TEXT("period_count"), C.Rules.Variants.PeriodCount);
+			ReadNumber(Var, TEXT("shrink_per_goal"), C.Rules.Variants.ShrinkPerGoal);
 			ExpandVariants(C.Rules);
 		}
 
@@ -1079,11 +1081,11 @@ namespace
 		}
 
 		FJPtr Ai = Obj(G, TEXT("ai"));
-		ReadNum(Ai, TEXT("yield_margin_m"), C.Ai.YieldMarginM);
-		ReadNum(Ai, TEXT("yield_radius_m"), C.Ai.YieldRadiusM);
-		ReadNum(Ai, TEXT("hold_radius_m"), C.Ai.HoldRadiusM);
-		ReadNum(Ai, TEXT("speed_scale"), C.Ai.SpeedScale);
-		ReadNum(Ai, TEXT("red_skill"), C.Ai.RedSkill);
+		ReadNumber(Ai, TEXT("yield_margin_m"), C.Ai.YieldMarginM);
+		ReadNumber(Ai, TEXT("yield_radius_m"), C.Ai.YieldRadiusM);
+		ReadNumber(Ai, TEXT("hold_radius_m"), C.Ai.HoldRadiusM);
+		ReadNumber(Ai, TEXT("speed_scale"), C.Ai.SpeedScale);
+		ReadNumber(Ai, TEXT("red_skill"), C.Ai.RedSkill);
 
 		if (FJPtr Pickups = G->Get(TEXT("pickups")); Pickups && Pickups->IsArray())
 		{
@@ -1091,11 +1093,11 @@ namespace
 			{
 				FJamPickupConfig Pc;
 				ReadName(P, TEXT("kind"), Pc.Kind);
-				ReadInt(P, TEXT("spawn_every_frames"), Pc.SpawnEveryFrames);
-				ReadInt(P, TEXT("duration_frames"), Pc.DurationFrames);
+				ReadInteger(P, TEXT("spawn_every_frames"), Pc.SpawnEveryFrames);
+				ReadInteger(P, TEXT("duration_frames"), Pc.DurationFrames);
 				const FString K = Pc.Kind.ToString();
 				Pc.Magnitude = K == TEXT("speed") ? 1.5 : K == TEXT("precision") ? 2.0 : K == TEXT("heavy_puck") ? 2.0 : K == TEXT("big_puck") ? 1.5 : 1.0;
-				ReadNum(P, TEXT("magnitude"), Pc.Magnitude);
+				ReadNumber(P, TEXT("magnitude"), Pc.Magnitude);
 				C.Pickups.Add(Pc);
 			}
 		}
@@ -1104,16 +1106,17 @@ namespace
 		UJamCartridge::HexToLinear(TEXT("#38BDF8"), C.Look.TrimColour);
 		ReadStr(Look, TEXT("tier"), C.Look.Tier);
 		ReadColour(Look, TEXT("trim_colour_hex"), C.Look.TrimColour);
-		ReadNum(Look, TEXT("fog_density"), C.Look.FogDensity);
+		ReadNumber(Look, TEXT("fog_density"), C.Look.FogDensity);
 		ReadBool(Look, TEXT("wet_ice"), C.Look.bWetIce);
+		ReadNumber(Look, TEXT("trim_emissive"), C.Look.TrimEmissive);   // B-to-A-0018 point 5 (lane A21): absent stays -1 = the tier's default
 
 		FJPtr Cam = Obj(G, TEXT("camera"));
 		ReadName(Cam, TEXT("mode"), C.Camera.Mode);
-		ReadNum(Cam, TEXT("distance_m"), C.Camera.DistanceM);
-		ReadNum(Cam, TEXT("height_m"), C.Camera.HeightM);
-		ReadNum(Cam, TEXT("look_ahead_m"), C.Camera.LookAheadM);
-		ReadInt(Cam, TEXT("lag_frames"), C.Camera.LagFrames);
-		ReadNum(Cam, TEXT("fov_deg"), C.Camera.FovDeg);
+		ReadNumber(Cam, TEXT("distance_m"), C.Camera.DistanceM);
+		ReadNumber(Cam, TEXT("height_m"), C.Camera.HeightM);
+		ReadNumber(Cam, TEXT("look_ahead_m"), C.Camera.LookAheadM);
+		ReadInteger(Cam, TEXT("lag_frames"), C.Camera.LagFrames);
+		ReadNumber(Cam, TEXT("fov_deg"), C.Camera.FovDeg);
 		ReadBool(Cam, TEXT("radar"), C.Camera.bRadar);
 	}
 

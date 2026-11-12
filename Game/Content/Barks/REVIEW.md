@@ -1,23 +1,25 @@
-# Bark bank review (R-0015 register, model claude-sonnet-5-5, generated 2026-11-12T12:50:40.384Z)
+# Bark bank review (R-0015 register, hockey first per R-0021 point 2, model claude-sonnet-5-5, generated 2026-11-12T12:50:40.384Z)
 
 Skim every line; delete any you dislike from barks.json, then run node tools/barks/embed.mjs and node --test tools/barks/*.test.mjs.
 Two sonnet runs (26 + 6 calls, $0.36): 1,582 raw lines; the filter rejected the hard list (25 + 4), over-length (28), duplicates (12),
 one "ass" outside a kick-your-ass phrase and four off-world words (goalie, rent...), then capped every combination at 20 and the mild words at one in ten.
-Shipped: 1340 lines, 56 with a mild word (damn, hell, crap, kick your ass: 4.2%, quota 10%), 89 combinations of 12..20 lines.
+Lane A20 (R-0021 point 2, 2026-11-12 13:44): 118 lines that leaned on film vocabulary (cut, take, director, script, scene, reel...) were rewritten by hand as rink talk,
+same id, situation, speaker, tone, register and mild budget; they are marked (rewritten) below. The filter now rejects director, cut, scene, script, reel, take two, take three.
+Shipped: 1340 lines, 56 with a mild word (damn, hell, crap, kick your ass: 4.2%, quota 10%), 89 combinations of 12..20 lines, 38 lines with a soft film word in its hockey sense (take the puck, the lead, the frame of the net).
 Tones: opponent mock / savage / complain / bravado, teammate encourage / complain / praise. Intensity: quiet = complain (opponents) and encourage/praise/complain (teammates),
 normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw ships loud.
 
 ## check_landed / opponent / bravado (20)
 - Cute shove, now watch real hockey
 - Down for a second, up for the win
-- Enjoy it, my line has been better since the opening cut
+- Enjoy it, my line has owned this ice since warm-up (rewritten)
 - Enjoy the moment, it's the last one you'll get
 - Hit all you like, the scoreboard stays ours
-- I'll get up, and then we'll finish the scene
+- I'll get up, and then we'll finish the shift (rewritten)
 - Knock me down, I'll still be scoring first
 - My line has seen better rookies get lost at center
 - My line makes that hit look like an accident
-- One check doesn't change who runs this cut
+- One check doesn't change who runs this rink (rewritten)
 - One hit won't save you from a line this good
 - Our line doesn't flinch, it just collects
 - Take your hit, my line still owns this ice
@@ -27,10 +29,10 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - We're three steps ahead and you're still lacing up
 - We've done this longer than you've had a stick
 - You swing once, we score four, that's the math
-- You won a moment, we're taking the whole take
+- You won a moment, we're winning the whole period (rewritten)
 
 ## check_landed / opponent / complain (20)
-- Fine, hit me, see if the director cares
+- Fine, hit me, see if the scoreboard cares (rewritten)
 - Great, now I have to get up off the ice again
 - Great, now I'm eating ice because of that clown
 - I didn't see you coming, nobody ever does
@@ -64,7 +66,7 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - Nice hit, now try that near the puck
 - One hit and you skate like you invented it
 - That's the first thing you've hit all night
-- That's your highlight reel, all four seconds of it
+- That's your whole highlight, all four seconds of it (rewritten)
 - Thrilling stuff, maybe next you'll find the net
 - Was that a check or did you trip on purpose?
 - Was that a check or did you trip on the ice?
@@ -120,7 +122,7 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 ## check_landed / teammate / encourage (20)
 - Do that again, but this time near the net.
 - Don't admire it, grab the puck
-- Don't admire it, that's a wrap for him, not for you.
+- Don't admire it, he's done for the shift, you're not. (rewritten)
 - Don't get sentimental, line up the next one.
 - Fine, that worked. Now repeat it with some purpose.
 - Fine, you can hit, now try skating at the same time
@@ -151,7 +153,7 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - Not bad, I've seen worse from guys who meant it.
 - Not bad, I've seen worse from veterans
 - Not terrible, rookie, not terrible at all.
-- Okay, that one I'd put in the highlight reel.
+- Okay, that one I'd show the whole bench. (rewritten)
 - Okay, that one I'll remember
 - Solid, don't let it go to your head
 - Surprised me, and that's not easy anymore.
@@ -164,21 +166,21 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 ## check_received / opponent / bravado (13)
 - Class is in session and you're the demonstration
 - Every shift you take only proves our point
-- Fast, mean and ready, that's the cast list
+- Fast, mean and ready, that's our top line (rewritten)
 - Our line doesn't need luck, only your open ice
 - That's how a real line plays, take notes
 - The scoreboard will agree with me soon
-- This is a lead role, and you're not in it
+- This is the first line, and you're not on it (rewritten)
 - Three of us, zero doubts, one of you down
 - We hit, we score, you watch from the floor
 - We play the whole rink, you play the floor part
 - You can't match our pace, so you can't match our hits
-- You're background extras in our picture
-- Your line's a rough draft, ours is the final cut
+- You're the warm-up cones we skate around (rewritten)
+- Your line's a scrimmage, ours is the playoff (rewritten)
 
 ## check_received / opponent / complain (14)
 - Can you at least fall somewhere useful?
-- Crap, now I have to skate around your wreckage  [mild]
+- Crap, now I have to skate around your wreckage
 - Every time I get a clean hit, it's wasted on you
 - Great, you're on the ice and I'm out of position
 - I did all the work and you took the fall
@@ -195,7 +197,7 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 ## check_received / opponent / mock (13)
 - Another rookie angle, another nap on the ice
 - Bold of you to skate where the hitting happens
-- Cut and print, that fall was your best take
+- Mark that fall, it's your best move all night (rewritten)
 - Gravity again, huh, you two should get a room
 - Great stance, shame it ended horizontal
 - Nice landing, very committed to the ice
@@ -205,28 +207,28 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - Try standing up, it's the trick after falling
 - Was that a dive or just your usual skating?
 - You saw me coming and chose the floor anyway
-- You went down like it was in the script
+- You went down like you practised it in warm-up (rewritten)
 
 ## check_received / opponent / savage (12)
 - Crawl back to the bench, rookie, the net is mine
-- Damn, you folded like a cheap prop set  [mild]
+- Damn, you folded like a cheap pylon (rewritten)
 - Get up, I want to do that again
-- Hell, I barely touched you and you quit  [mild]
+- Hell, I barely touched you and you quit
 - I'd say you're a speed bump, but speed bumps slow me down
 - I've hit bigger threats than you in warmups
 - Stay down there, the view suits your game
 - That check was free, you should be embarrassed
-- That hit was the best acting you'll ever do
+- That fall was the best backcheck you'll ever do (rewritten)
 - You bring nothing but a landing pad to this rink
-- You skate like a dropped prop, and land like one
-- You're the stunt double nobody wanted
+- You skate like a dropped stick, and land like one (rewritten)
+- You're the spare pylon nobody asked for (rewritten)
 
 ## check_received / teammate / complain (14)
 - Another check, another turnover, same old show
-- Damn, you saw him coming from across the ice  [mild]
+- Damn, you saw him coming from across the ice
 - Every shift, the same fall and the same excuse
 - Great, now we're playing two on three again
-- Hell of a way to hand them the puck  [mild]
+- Hell of a way to hand them the puck
 - I pass you the puck and you give it to the boards
 - Of course you went down, you always lead with your face
 - One job: stay upright. Just one
@@ -238,7 +240,7 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - You skate straight at the biggest guy, every time
 
 ## check_received / teammate / encourage (14)
-- Back on your skates, this is take three, not a nap
+- Back on your skates, this is a shift, not a nap (rewritten)
 - Get up and make him regret it, if you can
 - Get up, the puck won't wait for your feelings
 - Hit him back, or at least hit something
@@ -275,54 +277,54 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - Class doesn't care about the settings
 - Go on, tweak it, we'll still look good
 - Make it faster, make it slower, we're still ahead
-- Our line has seen harder cuts than this
+- Our line has seen harder rule changes than this (rewritten)
 - This is our rink, whatever you call it
 - We adapt faster than you can pause
 - We don't need luck, just a puck and your defense
 - We were winning before the change and we'll win after
-- You rewrite the rules, we rewrite the scoreboard
+- You change the rules, we change the scoreboard (rewritten)
 - You touched the dial, we kept the lead
-- Your edit just gave us a better highlight reel
+- Your new rule just gave us a better one-timer (rewritten)
 
 ## directors_call / opponent / complain (14)
-- Can we play one full take without edits?
-- Crap, that new setting ruined a perfectly good rush  [mild]
-- Every time I read the ice, you rewrite it
+- Can we play one full period without a new rule? (rewritten)
+- Crap, that new setting ruined a perfectly good rush
+- Every time I read the ice, you change it (rewritten)
 - Fine, new rules, but the bounces still owe me
 - Funny how the rules only change when you're losing
 - Great, another rule change, just what this shift needed
 - I was fine with the old physics, thanks
 - I'm too old to relearn the rink every five minutes
 - My skates just learned this ice and now it's gone
-- Nothing bounces right anymore, and I blame the director
+- Nothing bounces right anymore, and I blame your tweak (rewritten)
 - Pausing again, really? My legs were just waking up
 - This is the third change and I've barely warmed up
 - Tired of chasing a puck that behaves differently each minute
 - Who keeps touching the rules mid-shift?
 
 ## directors_call / opponent / mock (13)
-- Bold edit, same footwork
-- Changing the rules won't change the skater, director
-- Did the rewrite include learning to aim?
+- Bold new rule, same footwork (rewritten)
+- Changing the rules won't change the skater, rookie (rewritten)
+- Did the new rule include learning to aim? (rewritten)
 - Fresh rules, same hesitation at the blue line
 - I'd say nice try, but I watched it
 - Keep editing, maybe the puck will start liking you
-- Nice cut, shame about the lead actor
+- Nice tweak, shame about the skater (rewritten)
 - Oh good, a new rule for you to ignore
 - Pause all you like, the net stays the same size
 - Sure, tweak the ice, that was clearly the problem
-- Take two and you still turn like a parked truck
-- The script changed, your skating didn't
+- New rule and you still turn like a parked truck (rewritten)
+- The rules changed, your skating didn't (rewritten)
 - You paused to think and that's what you came up with?
 
 ## directors_call / opponent / savage (14)
-- Cut it however you like, you're still the blooper reel
-- Damn, you can't even lose consistently  [mild]
-- Edit the ice all you want, I'll still flatten you
+- Tweak it however you like, you're still the turnover (rewritten)
+- Damn, you can't even lose consistently
+- Tweak the ice all you want, I'll still flatten you (rewritten)
 - Every rule you pick makes my job easier
-- Go ahead, rewrite it, I'll still bury you
-- Hell, the posts are embarrassed to know you  [mild]
-- I'll kick your ass under any setting you pick  [mild]
+- Go ahead, change the rule, I'll still bury you (rewritten)
+- Hell, the posts are embarrassed to know you
+- I'll kick your ass under any setting you pick
 - I've scraped better players off the boards
 - Keep stalling, the boards are saving a spot for you
 - New rule, same loser, same ending
@@ -332,11 +334,11 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - Your stick works great as a decoration
 
 ## directors_call / teammate / complain (12)
-- Damn, every time I get comfortable, you touch something.  [mild]
+- Damn, every time I get comfortable, you touch something.
 - Every pause costs me a perfectly good grudge.
-- Hell of a time to rewrite the rulebook, boss.  [mild]
+- Hell of a time to change the rulebook, boss. (rewritten)
 - I was open for six seconds and you called a pause.
-- I've lost count of the cuts. Not the bad passes, though.
+- I've lost count of the rule changes. Not the bad passes. (rewritten)
 - My stick hated the old rules and it hates these more.
 - Same rookie, new physics, worse results.
 - The ice felt fine until you got your hands on it.
@@ -347,11 +349,11 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 
 ## directors_call / teammate / encourage (14)
 - Adapt or sit on the boards, rookie.
-- Director, you asked for this. Now go use it.
+- Your tweak, you asked for this. Now go use it. (rewritten)
 - Eyes up, stick down, and stop drifting.
-- Fresh cut, fresh chance to miss the net. Try not to.
+- New rule, fresh chance to miss the net. Try not to. (rewritten)
 - Hit someone. The rule change won't do it for you.
-- I carried worse rookies through harder cuts. Skate.
+- I carried worse rookies through harder seasons. Skate. (rewritten)
 - Lead the play or get out of my lane.
 - Less thinking, more checking. Go.
 - Move your skates, the puck won't chase itself.
@@ -370,11 +372,11 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - Huh, the new rules suit you. Suspicious.
 - Huh. That rule change actually helped.
 - I'll admit it, that was a decent call.
-- I've seen worse directors. Not many, but a few.
-- Not bad, director. Almost looked planned.
-- Okay, I didn't hate that cut.
+- I've seen worse rule changes. Not many, but a few. (rewritten)
+- Not bad, that tweak. Almost looked planned. (rewritten)
+- Okay, I didn't hate that new rule. (rewritten)
 - That's the first smart pause I've seen from you.
-- Well, look at that. You can skate and edit.
+- Well, look at that. You can skate and think. (rewritten)
 - You surprised me. Annoying, but true.
 
 ## faceoff / opponent / bravado (13)
@@ -385,11 +387,11 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - This is our ice. You're just renting the view.
 - Three of us, one plan, and you're not in it.
 - Watch closely. This is what a real line looks like.
-- We cut you in rehearsal. The rest is just filming.
+- We beat you in warm-up. The rest is just the clock. (rewritten)
 - We don't chase pucks. Pucks come looking for us.
 - We skate in sync. You skate in circles, apologetically.
 - Win the faceoff? Please. We win the game before it starts.
-- You're the opening scene, we're the whole picture.
+- You're the opening faceoff, we're the whole season. (rewritten)
 - Your best play is our warm up.
 
 ## faceoff / opponent / complain (14)
@@ -409,8 +411,8 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - Why do I always get the bad side of this faceoff?
 
 ## faceoff / opponent / mock (12)
-- Ah, the director's favourite extra. Blink and you're cut.
-- Another take, another rookie leaning on the wrong foot.
+- Ah, the bench's favourite pylon. Blink and you're done. (rewritten)
+- Another faceoff, another rookie on the wrong foot. (rewritten)
 - Big breath in. Now forget everything you practised.
 - Bold of you to show up with a stick like that.
 - Centre ice, where your confidence goes to retire.
@@ -423,26 +425,26 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - Try hitting the puck first. The net is step two.
 
 ## faceoff / opponent / savage (14)
-- Crap, I almost forgot you were on the ice.  [mild]
-- Damn, you look scared. Good instincts, honestly.  [mild]
+- Crap, I almost forgot you were on the ice.
+- Damn, you look scared. Good instincts, honestly.
 - Drop the puck, I'm already bored of watching you lose.
 - Enjoy the faceoff. It's the last time you'll touch the puck.
-- Hell, I'd feel bad if you ever made it hard.  [mild]
+- Hell, I'd feel bad if you ever made it hard.
 - I came for a game and got a rookie. Disappointing.
-- I'll body check you into next season's deleted scenes.
-- I'll kick your ass to the boards and back, twice.  [mild]
+- I'll body check you clean into next season. (rewritten)
+- I'll kick your ass to the boards and back, twice.
 - Keep the stick up, it'll help you hide behind it.
 - Stand still, that's the closest you get to defending.
 - You're not a threat, you're a speed bump with a stick.
-- You're the blooper reel, and we haven't even started.
+- You're the turnover, and we haven't even started. (rewritten)
 - Your skating makes the ice want to melt out of shame.
-- Your whole line is a bad stunt double for hockey.
+- Your whole line is a bad warm-up for real hockey. (rewritten)
 
 ## faceoff / teammate / complain (14)
-- Damn, the ice gave you that bounce and you still blew it  [mild]
-- Every cut starts with hope and ends with you
+- Damn, the ice gave you that bounce and you still blew it
+- Every faceoff starts with hope and ends with you (rewritten)
 - Great, back to centre, just like old times
-- Hell of a way to waste a perfectly good puck  [mild]
+- Hell of a way to waste a perfectly good puck
 - I'm too old to watch you miss that open net
 - I've seen posts with better timing than you
 - Lucky bounces skip us and find you doing nothing
@@ -467,7 +469,7 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - Skate like you mean it, rookie
 - Stick on the ice, head in the game, in that order
 - Stop admiring the scoreboard and go get the puck
-- Take two is already looming, so wake up
+- Second period is already looming, so wake up (rewritten)
 - Win the faceoff this time, or stay out of my way
 
 ## faceoff / teammate / praise (14)
@@ -481,7 +483,7 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - Not bad, for someone who skates like that
 - Okay, that check had some mean in it
 - One good play, don't make it a habit I have to explain
-- That goes in the highlight reel, a short one
+- That one's a highlight, on a very short list (rewritten)
 - That was almost professional, don't let it go to your head
 - Well, the radar finally had something worth showing
 - You did the thing, I'll allow it
@@ -490,7 +492,7 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - Class shows, and you just saw it.
 - Get used to the sound of that horn.
 - Keep up, or enjoy the view of our backs.
-- Next one is already in the script.
+- Next one is already on the scoreboard. (rewritten)
 - Nobody on your side can touch what we do.
 - One shift, one goal, no sweat.
 - That's what a real line looks like.
@@ -498,11 +500,11 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - We don't chase the puck, it comes to us.
 - We make it look easy because it is.
 - We score, you watch, and the cycle continues.
-- Write it down, director, we're the main cast.
-- Your line is the extras, ours is the lead.
+- Write it down, rookie, we're the first line. (rewritten)
+- Your line is the warm-up, ours is the game. (rewritten)
 
 ## goal_against / opponent / complain (13)
-- Crap, I had a cleaner shot a minute ago and you stole it.  [mild]
+- Crap, I had a cleaner shot a minute ago and you stole it.
 - Every shift it's the same, and I'm sick of it.
 - Fine, it counts, but nobody enjoyed that one.
 - I skated my legs off for that one tap-in.
@@ -523,7 +525,7 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - Impressive, you found the one spot the puck wasn't.
 - Keep that angle, it works great for us.
 - Nice effort, if effort meant standing near the puck.
-- Oh, you were defending? I thought that was a rehearsal.
+- Oh, you were defending? I thought that was a scrimmage. (rewritten)
 - Take your time, we only scored while you thought about it.
 - That was a scoring chance, and you were the escort.
 - Was that a check or a polite wave?
@@ -532,11 +534,11 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - Your stick is lovely. Does it ever touch the puck?
 
 ## goal_against / opponent / savage (12)
-- Another one for the highlight reel, and you're the blooper.
+- Another goal for my collection, and you're the giveaway. (rewritten)
 - Come get the puck back, if you can find it.
-- Damn, I've seen cones put up a better fight.  [mild]
-- Hell, we didn't even need a plan against you.  [mild]
-- I'd kick your ass on defense, but you're not even on it.  [mild]
+- Damn, I've seen cones put up a better fight.
+- Hell, we didn't even need a plan against you.
+- I'd kick your ass on defense, but you're not even on it.
 - That goal had your name on it, and your skates were nowhere.
 - That was not a defense, that was a welcome mat.
 - Try hitting something that isn't your own teammate.
@@ -547,15 +549,15 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 
 ## goal_against / teammate / complain (13)
 - Cool, so that's how we're playing it tonight
-- Damn, that was our net, not a loading dock  [mild]
+- Damn, that was our net, not a loading dock
 - Every time I turn around, it's behind us again
-- Great, another puck in our net, just like the script said
+- Great, another puck in our net, just like last shift (rewritten)
 - I carry the whole zone and you wave at the puck
 - I've seen better defense from a stack of cones
 - Of course it went in, nobody was home to argue
 - That post should've saved it, even it gave up on us
 - The ice is bad, the bounce is bad, and you're worse
-- This take is cursed, and I'm blaming your skating
+- This period is cursed, and I'm blaming your skating (rewritten)
 - Tired of this, we keep giving them free practice
 - Unreal, we got out-skated by guys who barely tried
 - Where were you? Never mind, I saw where you were
@@ -564,7 +566,7 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - Back to center, and try arriving before the puck does
 - Cover your man this time, it's not a hard concept
 - Get the puck back, that's the whole job
-- Hustle back, the cut isn't over until I say it is
+- Hustle back, the shift isn't over until I say it is (rewritten)
 - Less staring at the scoreboard, more skating at the puck
 - Move your skates, the next one is not going to stop itself
 - One mistake is fine, you're working on a collection
@@ -588,7 +590,7 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - So you can hit, who knew, keep doing it
 - That was almost the right read, almost counts
 - That was good, and I hate saying that out loud
-- You covered back, I may have to rewrite my notes
+- You covered back, I may have to change my notes (rewritten)
 - You skated like you meant it, welcome to the job
 
 ## goal_for / opponent / bravado (14)
@@ -601,7 +603,7 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - Take your moment, I'll take the period
 - That was a warmup, nothing more
 - That's your one goal, we'll take the rest
-- This cut ends our way, it always does
+- This match ends our way, it always does (rewritten)
 - We score when we feel like it, you'll see
 - We're better and you both know it
 - You got lucky, we get paid in skill
@@ -609,7 +611,7 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 
 ## goal_for / opponent / complain (13)
 - Bad ice, bad luck, same old story
-- Crap ice, crap angle, crap everything  [mild]
+- Crap ice, crap angle, crap everything
 - Every single bounce goes their way, every time
 - I told you to close the lane, nobody listens
 - I'm tired of covering for this mess
@@ -627,7 +629,7 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - Careful, you might start thinking you can skate
 - Congratulations, even a broken clock gets a goal
 - Cute, the puck did all the work
-- Enjoy it, the highlight reel is one clip long
+- Enjoy it, your highlight list is one goal long (rewritten)
 - I'd clap, but my stick is busy
 - Look at you, doing the bare minimum
 - Nice shot, shame about the other fifty
@@ -639,10 +641,10 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - You celebrate like the net moved by itself
 
 ## goal_for / opponent / savage (14)
-- Damn, that was ugly, and somehow it counted  [mild]
+- Damn, that was ugly, and somehow it counted
 - Don't get comfortable, I'm coming for you next shift
-- Enjoy it, because I'm about to kick your ass  [mild]
-- Hell, even a lucky bounce looks better than your game  [mild]
+- Enjoy it, because I'm about to kick your ass
+- Hell, even a lucky bounce looks better than your game
 - I've seen better hands on a snowman
 - Next time try scoring on purpose
 - One goal does not fix a whole career of bad ice
@@ -651,13 +653,13 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - That was luck wearing your jersey
 - The net was open and you still looked scared
 - You skate like a folding chair on wheels
-- You're the reason my highlight reel needs filler
+- You're the filler between my real highlights (rewritten)
 - Your shot was bad, the puck just took pity
 
 ## goal_for / teammate / complain (13)
 - Don't get used to it, the boards did half of that.
 - Every goal with you feels like a coin toss.
-- Hell of a way to score, sideways and by accident.  [mild]
+- Hell of a way to score, sideways and by accident.
 - I did all the work and you got the credit.
 - I set that up and you almost wasted it.
 - I'm tired of winning ugly with you.
@@ -703,32 +705,32 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 
 ## lose / opponent / bravado (13)
 - Admire us from the bench, it's the best angle
-- Come back when you can keep up with the camera
+- Come back when you can keep up with the puck (rewritten)
 - Our line doesn't win, it simply finishes
-- Our line wrote the script and you read the credits
-- Smooth, cold, finished, that's how we close a cut
+- Our line wrote the scoreboard and you just read it (rewritten)
+- Smooth, cold, finished, that's how we close a match (rewritten)
 - Take it as a lesson, we do it nightly
 - That's what a real line looks like, rookie
 - This ice has our name on it
 - Three of us, no wasted motion, no mercy
 - We skate, you watch, and the scoreboard agrees
-- We were the headline and you were the footnote
+- We were the goals and you were the turnovers (rewritten)
 - You brought a stick, we brought a clinic
-- You were never in the shot, we owned the frame
+- You were never in the play, we owned the slot (rewritten)
 
 ## lose / opponent / complain (13)
-- Hell of a way to waste my evening  [mild]
-- I carried this cut and you still got in the way
+- Hell of a way to waste my evening
+- I carried this match and you still got in the way (rewritten)
 - I skated three miles for one lazy shot
 - I've had smoother ice and smarter opponents
 - Next time pick a side of the ice and stay there
 - Nobody told me this was a charity match
 - That bounce was nothing, you were the real problem
-- That whole cut felt like pushing a parked sled
+- That whole match felt like pushing a parked sled (rewritten)
 - The ice was fine, so that's not your excuse
-- Tired of dragging a rookie through every take
+- Tired of dragging a rookie through every shift (rewritten)
 - Wasted a whole period on someone who skates sideways
-- Why does the director keep handing you the stick
+- Why does your bench keep handing you the stick (rewritten)
 - Your wild shots kept ruining my clean checks
 
 ## lose / opponent / mock (13)
@@ -739,23 +741,23 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - I'd say good game, but you weren't in most of it
 - I've seen cardboard cutouts cover more ice
 - Nice effort, if effort were measured in wrong turns
-- Take three is where you find the puck, right?
-- That was a highlight reel, for the wrong team
+- Third period is where you find the puck, right? (rewritten)
+- That was a highlight night, for the wrong team (rewritten)
 - The scoreboard asked me to stop laughing
 - You passed to the ice. It caught it, at least
 - You skated all that way to miss the net by a mile
 - Your stick spent the night as decoration
 
 ## lose / opponent / savage (14)
-- Crap, I forgot you were even out there  [mild]
-- Damn, you made the net look like a stranger  [mild]
+- Crap, I forgot you were even out there
+- Damn, you made the net look like a stranger
 - Even your stick wants a trade
-- Hell, I've had warmups tougher than you  [mild]
+- Hell, I've had warmups tougher than you
 - Keep skating, maybe the ice will finally let you win
 - Pucks flew past you like you were a traffic cone
 - That wasn't a loss, that was a demonstration
 - We played keep-away and you never found the keys
-- We'd kick your ass again, but you barely showed up  [mild]
+- We'd kick your ass again, but you barely showed up
 - You bring the effort and we take the points
 - You got skated around so much I got dizzy
 - You hit the boards more than the puck, congratulations
@@ -765,14 +767,14 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 ## lose / teammate / complain (14)
 - Another loss, and the ice still takes the blame
 - Cold ice, cold luck, colder passing from you
-- Damn, I've carried heavier teams than this one  [mild]
+- Damn, I've carried heavier teams than this one
 - Even the posts looked embarrassed for us
 - Every time I looked up, you were somewhere else
 - I passed you the puck and you passed it to nobody
 - I've seen better defense from a stack of sticks
 - Thanks for the tour of the boards, very scenic
 - That bounce was bad, but your read was worse
-- That was a wrap, and not the good kind
+- That was a final buzzer, and not the good kind (rewritten)
 - Three skaters, one brain cell, guess who had it
 - Unreal, the puck bounced everywhere but in
 - We lost that one before the first faceoff, I swear
@@ -786,11 +788,11 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - Get your head up and find the net, it's not hiding
 - Hit someone, anyone, it's allowed here
 - Less sightseeing, more checking, rookie
-- Next TAKE, try shooting before the puck gets bored
+- Next period, try shooting before the puck gets bored (rewritten)
 - Pick up the puck first, then be brilliant
 - Quit drifting and go finish a check for once
 - Shoot sooner, think later, it's not a chess game
-- Skate harder next cut, we're not paying you to glide
+- Skate harder next match, we're not paying you to glide (rewritten)
 - Stop admiring the replay and win the next one
 - You've got legs, so use them for more than standing
 
@@ -798,7 +800,7 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - Didn't expect that pickup, color me mildly surprised
 - Fair play, you earned one nod and that's it
 - Fine, that was a real shot, I noticed
-- Hell of a hit, shame about the rest  [mild]
+- Hell of a hit, shame about the rest
 - Huh, you actually skated like you belonged there
 - Nice stick work, kid, now do it twice
 - Not terrible, and I mean that as a compliment
@@ -812,7 +814,7 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 
 ## near_miss / opponent / bravado (20)
 - Close shots are for those who can't finish, we finish
-- Enjoy the near miss, it's the best you'll get this take
+- Enjoy the near miss, it's the best you'll get this shift (rewritten)
 - I'll show you how that shot ends, with a red light
 - Keep hitting iron, we'll keep hitting the lead
 - My line makes that shot look easy, yours makes it look lost
@@ -877,16 +879,16 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - You're a natural at hitting everything but the net
 
 ## near_miss / opponent / savage (20)
-- Damn, you missed a net the size of a barn door  [mild]
+- Damn, you missed a net the size of a barn door
 - Embarrassing, and that's the nice word for it
 - Even the post wants nothing to do with you
-- Hell, I almost felt sorry for you, then you shot again  [mild]
+- Hell, I almost felt sorry for you, then you shot again
 - Hit the post, and you still looked bad doing it
-- Hit the post? Damn, even your luck has bad aim  [mild]
-- I'll kick your ass to the net and you still won't score  [mild]
+- Hit the post? Damn, even your luck has bad aim
+- I'll kick your ass to the net and you still won't score
 - I've seen better aim from a puck stuck in the corner
 - Keep shooting at the post, it's the only thing you can beat
-- Keep shooting like that and I'll kick your ass at my leisure  [mild]
+- Keep shooting like that and I'll kick your ass at my leisure
 - Nearly scoring is how you lose slowly
 - That shot was so bad the boards flinched
 - That shot was so bad the post sent it back
@@ -965,7 +967,7 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - You almost made me stop yawning
 
 ## praise_reply / teammate / complain (14)
-- Damn ice grabbed my skates all night, so spare me  [mild]
+- Damn ice grabbed my skates all night, so spare me
 - Don't flatter me, the last shift cost us plenty
 - Every bounce goes against me, and you want to chat?
 - Great, the one bounce that went our way and it's yours
@@ -1020,7 +1022,7 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - Falling back, because someone skated into a wall
 - Great, now I clean up after you again
 - Heading back, same mess, different shift
-- I fall back every time you wander off, damn it  [mild]
+- I fall back every time you wander off, damn it
 - I was warm up front, now I'm babysitting the posts
 - Of course it's me back here, it's always me
 - Sure, I'll guard the net you left wide open
@@ -1060,7 +1062,7 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - Well, look at that, the rookie has instincts
 
 ## signal_ack_pass / teammate / complain (14)
-- Coming your way, damn, I hate this part  [mild]
+- Coming your way, damn, I hate this part
 - Fine, but if you trip, I'm filing that under tradition
 - Here, and spare me the stumbling this time
 - Here, try not to feed it straight to the boards
@@ -1068,7 +1070,7 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - Passing again, I must enjoy disappointment
 - Passing it, and yes, I already regret it
 - Passing, because shouting at me is apparently the plan
-- Passing, though I know how this scene ends
+- Passing, though I know how this shift ends (rewritten)
 - Puck's yours, guess I'm the one doing the hoping
 - Sending it over, hope your stick shows up too
 - Sure, here, I'll hand you another chance to lose it
@@ -1076,7 +1078,7 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - Ugh, fine, it's yours, break it gently
 
 ## signal_ack_pass / teammate / encourage (14)
-- Catch it this time, I'm not doing a second take
+- Catch it this time, I'm not doing a second pass (rewritten)
 - Coming your way, try looking at the puck
 - Fine, puck's coming, try not to fumble it
 - Heads up, you wanted it, now go earn it
@@ -1088,7 +1090,7 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - Passing, so aim for the net, not the scenery
 - Puck's on its way, move your skates for once
 - Sending it, now skate like you meant to be there
-- Taking the risk on you, so make it worth the cut
+- Taking the risk on you, so make it worth the shift (rewritten)
 - You called for it, so do something with it
 
 ## signal_ack_pass / teammate / praise (14)
@@ -1120,7 +1122,7 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - Space, space, space, and nobody ever sends the puck
 - Sure, shout space, then lose the puck anyway
 - This ice is slush and I'm still the one hustling
-- Your calling is louder than your passing, damn it  [mild]
+- Your calling is louder than your passing, damn it
 
 ## signal_ack_space / teammate / encourage (14)
 - Don't just stand there, a pass is a free gift
@@ -1144,7 +1146,7 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - Fine, I'll admit that was a good shout
 - Huh, that was almost a smart call
 - Not bad, you called for space and meant it
-- Not terrible, and from you that's a rave review
+- Not terrible, and from me that's high praise (rewritten)
 - Okay, that's the right read, don't let it go to your head
 - Somebody's been watching film, nicely done
 - Space well asked for, I'll give you that
@@ -1165,8 +1167,8 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - We could nap and still outplay you three to one
 - We don't circle, we wait for you to blink
 - We're patient because we know how this ends
-- We've already won this scene, you're just standing in it
-- You stall, we score. It's a simple script
+- We've already won this shift, you're just standing in it (rewritten)
+- You stall, we score. It's a simple game (rewritten)
 - Your whole line is a warm-up for ours
 
 ## stall / opponent / complain (13)
@@ -1179,7 +1181,7 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - Nothing bounces right on this sheet, nothing at all
 - Somebody touch the puck, I'm aging out here
 - The puck stuck again. Great. Just great
-- This take is dragging and you're the anchor
+- This shift is dragging and you're the anchor (rewritten)
 - Tired of circling around a player who won't commit
 - Why is the puck always hiding in that corner?
 - Worst pace I've seen, and I've seen rough ones
@@ -1188,7 +1190,7 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - Ah, the famous patient wait for a mistake. Yours
 - Brave stuff, standing near the puck and fearing it
 - Circling again? Bold choice for a man with a stick
-- Don't rush, the director loves a long dull shot
+- Don't rush, the scoreboard loves a long dull shift (rewritten)
 - Fast skater, shame it's in no direction at all
 - I'd cheer, but you haven't done anything yet
 - Is this a strategy or are you just lost?
@@ -1202,31 +1204,31 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 
 ## stall / opponent / savage (14)
 - Come get it. Oh right, you can't
-- Crap skating, crap nerve, and the puck knows it  [mild]
-- Damn, I've seen statues forecheck harder than you  [mild]
+- Crap skating, crap nerve, and the puck knows it
+- Damn, I've seen statues forecheck harder than you
 - Go on, hit me. I'll wait until you find the nerve
-- Hell, even the corner wants you to leave  [mild]
-- I could kick your ass from the other end of the ice  [mild]
+- Hell, even the corner wants you to leave
+- I could kick your ass from the other end of the ice
 - Keep circling, it's the only thing you finish
 - Stand there, I'll take the puck and your dignity
 - The boards have more offense than you do
-- Waiting for your courage? It's still in makeup
+- Waiting for your courage? It's still in the locker room (rewritten)
 - You skate like a lost shopping cart with a stick
 - You're so scared of the puck it's starting to notice
-- You're the reason this take needs a rewrite
+- You're the reason this shift needs a line change (rewritten)
 - Your whole game fits inside that one lonely corner
 
 ## stall / teammate / complain (14)
 - Bounces like that only happen when you're involved
-- Damn, even the puck gave up and went to sleep  [mild]
+- Damn, even the puck gave up and went to sleep
 - Every shift with you is a long, quiet wait
-- Everyone's circling like it's a rehearsal nobody wanted
-- Great, another scene where nothing happens
+- Everyone's circling like it's a warm-up nobody wanted (rewritten)
+- Great, another shift where nothing happens (rewritten)
 - I carried this team all night and you carried the water
-- I've waited for a play longer than a bad reshoot
+- I've waited for a play longer than a full intermission (rewritten)
 - Nobody wants the puck, and honestly I get it
-- Stuck in the corner again, like the plot of this cut
-- The posts have done more work than you this take
+- Stuck in the corner again, like the rest of this match (rewritten)
+- The posts have done more work than you this shift (rewritten)
 - This corner has seen more action than your stick
 - This ice is slow, but you're somehow slower
 - Tired of watching you skate in perfect circles
@@ -1243,14 +1245,14 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - Skate somewhere, anywhere, I'm not picky
 - Stop admiring the ice and move your skates
 - Take the corner, rookie, it's just a puck in a corner
-- Wake up, director's watching and he's not impressed
-- We're circling like a bad screen test, break it up
+- Wake up, the bench is watching and it's not impressed (rewritten)
+- We're circling like a bad warm-up drill, break it up (rewritten)
 - You wanted ice time, so use some of it
 
 ## stall / teammate / praise (14)
 - Alright, you earned a nod, just the one
 - Even I'd have kept that one, and I'm picky
-- Fair enough, that one belongs in the final cut
+- Fair enough, that one belongs on the first line (rewritten)
 - Fine, that one counts, don't let it go to your head
 - Huh, that was almost competent
 - I've seen worse, and today I'm saying it kindly
@@ -1259,7 +1261,7 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - Not bad, I may have blinked and missed the luck
 - Okay, rookie, that was clean, don't ruin it
 - That was a real play, I'm as shocked as you are
-- That's the first smart thing you've done all take
+- That's the first smart thing you've done all shift (rewritten)
 - Took you long enough, but it was decent
 - Well, look who found the puck
 
@@ -1275,14 +1277,14 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - We make this look easy because it is
 - We take it, we keep it, you watch
 - Your best shift is our warm-up
-- Your line is a rough draft. Ours is the final cut
+- Your line is the practice squad. Ours is the real thing (rewritten)
 
 ## steal / opponent / complain (14)
 - Another scrappy shift, another puck rolling away
-- Can we get one clean bounce before the cut ends?
+- Can we get one clean bounce before the buzzer? (rewritten)
 - Cover the lane next time, you let that slide by
 - Every bounce lately goes the wrong way, tired of it
-- Hell of a time for the ice to go soft  [mild]
+- Hell of a time for the ice to go soft
 - I called for it, but sure, ignore me
 - I'm too old to chase loose pucks like these
 - Nobody on this line reads a play anymore
@@ -1299,36 +1301,36 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - I almost felt bad. Almost
 - Nice touch, if the goal was to give it away
 - Oh, you wanted that? Should have said something
-- Slow as a rewind on a broken tape
+- Slow as a line change with a broken bench door (rewritten)
 - Stickhandling, or an interpretive dance about losing?
 - Take the puck back? Sure, when you learn to carry it
-- That turn took longer than most movies
+- That turn took longer than most intermissions (rewritten)
 - Was that a pass, or did you just lose the puck politely?
 - You saw me coming and still chose that. Fascinating
 - You skate like the plan is to be a spectator
-- Your backcheck arrives right after the credits
+- Your backcheck arrives right after the buzzer (rewritten)
 
 ## steal / opponent / savage (13)
-- Damn, I thought you were fighting for it  [mild]
+- Damn, I thought you were fighting for it
 - Even the posts are embarrassed to stand near you
 - Every touch you take is a gift to my line
-- Hell, I barely had to move, you just handed it over  [mild]
+- Hell, I barely had to move, you just handed it over
 - I'd feel sorry for you, but you keep doing it
 - I've taken pucks from statues with more resistance
 - Keep skating in circles, it's the only thing you finish
-- Kick your ass? You'd have to show up first  [mild]
+- Kick your ass? You'd have to show up first
 - That was less a turnover, more a donation
 - You couldn't hold that puck with glue and a prayer
 - You got robbed by your own stick, and I just watched
 - You lose pucks like it's your whole career
-- Your whole game is a blooper reel and I'm the editor
+- Your whole game is a turnover and I'm the forecheck (rewritten)
 
 ## steal / teammate / complain (14)
 - Another turnover, another long skate for the rest of us
-- Damn, it was right on your stick and you still missed  [mild]
+- Damn, it was right on your stick and you still missed
 - Every shift the same, I carry you and you drop it
 - Great, now I'm the one skating back again
-- Hell of a giveaway, I almost admired the commitment  [mild]
+- Hell of a giveaway, I almost admired the commitment
 - I'd blame the ice, but you did that one yourself
 - I've seen better puck control from a broken stick
 - Nice carry, shame it ended at their stick
@@ -1375,16 +1377,16 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - Call it a fluke, because my line already does
 - Don't confuse a scoreboard with talent, rookie
 - Don't get comfortable, my line has plenty of ice left
-- Enjoy the trophy moment, we'll be back for the next take
+- Enjoy the trophy moment, we'll be back for the next match (rewritten)
 - Enjoy the win, my line will remember it for you
 - Hold that scoreboard tight, it won't be yours long
 - My line could beat you with our sticks tied together
-- Next take, we skate through you like open ice
+- Next match, we skate through you like open ice (rewritten)
 - One win doesn't make you a veteran, it makes you lucky
 - One win, and you act like it was earned
 - Our worst night beats your best on any ice
-- Rookies win a cut, veterans win the season
-- That was our mercy cut, don't expect a sequel
+- Rookies win a match, veterans win the season (rewritten)
+- That was our mercy match, don't expect a rematch (rewritten)
 - This win doesn't change who owns the ice
 - We lose one and still skate circles around you
 - We lost the score, not the standing
@@ -1394,12 +1396,12 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - Your line got lucky, ours gets results
 
 ## win / opponent / complain (20)
-- Another cut ruined by a lucky deflection
+- Another match ruined by a lucky deflection (rewritten)
 - Every rebound landed on your side, every single one
 - Every rebound went their way, every single one
 - Forty shots of effort and the post still said no
 - I passed perfectly and my line forgot how to finish
-- I'll be thinking about that last miss until next take
+- I'll be thinking about that last miss until next match (rewritten)
 - I'm done with these bounces, they never bounce for me
 - I'm tired of losing to guys who can't aim
 - My stick feels cursed after that mess
@@ -1422,7 +1424,7 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - Even a broken clock scores twice a day, and you scored once
 - Fine, take the win, the puck probably felt sorry for you
 - Good game, I mean that about everyone but you
-- Great cut, shame nobody directed any of it
+- Great match, shame none of it was on purpose (rewritten)
 - I'd clap, but the boards already did it for me
 - Lovely win, the net was just standing there
 - Nice trophy run, you only fell over four times
@@ -1438,8 +1440,8 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - Your aim was awful, luckily so was the rest of the ice
 
 ## win / opponent / savage (20)
-- Crap, did you even know where the net was?  [mild]
-- Damn, I've seen cones with more nerve than you  [mild]
+- Crap, did you even know where the net was?
+- Damn, I've seen cones with more nerve than you
 - Enjoy it, rookie, it's the only scoreboard you'll ever lead
 - Enjoy it, rookie, it's the only win you'll steal this week
 - Every pass you made was a prayer, and a bad one
@@ -1452,7 +1454,7 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 - You couldn't hit a net if it body checked you
 - You didn't win, your teammates carried you like luggage
 - You hide behind your line like a puck behind the boards
-- You skate like a dropped prop, and just as useful
+- You skate like a dropped glove, and just as useful (rewritten)
 - You won because your team carried you, we all saw it
 - You're the reason the posts look so relaxed
 - Your aim is a crime and your team covered for you
@@ -1483,14 +1485,14 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 
 ## win / teammate / encourage (20)
 - Don't get comfortable, rookie, that was mostly us.
-- Don't get comfortable, rookie, the next cut is harder.
+- Don't get comfortable, rookie, the next match is harder. (rewritten)
 - Enjoy it for a second, then get back on the ice.
 - Fine, we won. Now earn the spot you're standing on.
 - Good. Now find the net without three tries first.
 - Good. Now try skating before the puck gets there.
 - Keep your head up, and your stick down, for once.
-- Next cut, try skating toward the puck on purpose.
-- Next take, shoot sooner. The net isn't going anywhere.
+- Next match, try skating toward the puck on purpose. (rewritten)
+- Next match, shoot sooner. The net isn't going anywhere. (rewritten)
 - One win and you're humming? Sit down and watch the replay.
 - One win doesn't fix that backhand, so go practice it.
 - Pass the puck. It's not a family heirloom.
@@ -1506,12 +1508,12 @@ normal = mock and the rest, loud = savage allowed. Regular ships normal, Raw shi
 ## win / teammate / praise (20)
 - Didn't think you had that shot in you.
 - Fine, you earned that one. Quietly, though.
-- Good cut. Don't make me say it twice.
+- Good match. Don't make me say it twice. (rewritten)
 - Huh, the rookie can actually play a little.
 - Huh. Not bad, rookie.
 - Huh. You actually knew where the net was.
 - I'd skate with you again. Don't let it go to your head.
-- I've seen worse directors. Slightly worse.
+- I've seen worse rookies. Slightly worse. (rewritten)
 - Not a disaster. Honestly, that's high praise from me.
 - Not bad. I've seen worse from players with more practice.
 - Okay, I'll admit it, nice skating out there.

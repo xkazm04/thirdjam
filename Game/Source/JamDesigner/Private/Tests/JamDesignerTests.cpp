@@ -15,6 +15,7 @@
 #include "HAL/PlatformProcess.h"
 #include "HAL/PlatformTime.h"
 #include "Async/TaskGraphInterfaces.h"
+#include "Containers/Ticker.h"
 
 #include "../JamDesignerData.inl"
 
@@ -334,6 +335,10 @@ bool FJamDesignerCutsRoundTrip::RunTest(const FString& Parameters)
 		TestEqual(TEXT("saved sentence"), Mine->Sentence, FString(TEXT("a neon party")));
 	}
 	TestTrue(TEXT("load by name"), S->LoadCut(UJamDesignerSubsystem::MyDirectorsCutName, Err));
+	// R-0017: the match rebuild waits for the next frame, never runs inside the caller (a Designer callback).
+	TestTrue(TEXT("apply deferred to the next tick"), S->IsCutApplyPending());
+	FTSTicker::GetCoreTicker().Tick(0.f);
+	TestFalse(TEXT("applied on the next tick"), S->IsCutApplyPending());
 	TestTrue(TEXT("neon look"), S->GetCurrentCartridge() && S->GetCurrentCartridge()->Game.Look.Tier == TEXT("l3_neon"));
 	TestTrue(TEXT("load a preset"), S->LoadCut(TEXT("hockey.raw"), Err));
 	TestFalse(TEXT("unknown cut"), S->LoadCut(TEXT("no-such-cut"), Err));

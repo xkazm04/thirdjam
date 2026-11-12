@@ -29,6 +29,11 @@ struct JAMGAME_API FToyInputs
 	bool bDown = false;
 	// Frames since the trigger, or -1 when it has never happened.
 	int32 FramesSinceShoot = -1;
+	float ShootCharge = 0.f;
+	// C-0001 v3: the live charge (wind-up while holding) and the stick aim (yaw left-positive in degrees, reach from the body centre in metres).
+	float ChargeHold01 = 0.f;
+	float AimDeg = 0.f;
+	float AimReachM = 1.2f;
 	int32 FramesSinceCheck = -1;
 	int32 FramesSinceKnock = -1;
 	int32 Frame = 0;
@@ -59,9 +64,12 @@ public:
 
 	// ---- pure pose functions (tests call these without a world) ----
 	static constexpr float MaxLeanDeg = 35.f;
+	// The painted-cel emissive base (contracts/look-tiers.md); boosts multiply it and SetBoost(NAME_None) restores it (R-0016).
+	static constexpr float BaseEmissive = 2.2f;
 	static float LeanTarget(float Speed, float TurnRate);
 	static void AdvanceState(FToyPoseState& State, float Speed, float TurnRate);
 	static float ShotStickYaw(int32 FramesSince);
+	static float ShotStickYaw(int32 FramesSince, float Charge) { return ShotStickYaw(FramesSince) * (1.f + 0.6f * FMath::Clamp(Charge, 0.f, 1.f)); }
 	static float CheckCurve01(int32 FramesSince);
 	static float KnockTipDeg(int32 FramesSince, bool bDown);
 	static FToyPose ComputePose(const FToyPoseState& State, const FToyInputs& In);
@@ -70,11 +78,13 @@ public:
 	virtual void SetTeam_Implementation(int32 TeamId, FLinearColor Colour) override;
 	virtual void SetNumber_Implementation(int32 N) override;
 	virtual void UpdateMotion_Implementation(float Speed, float TurnRate, FRotator Facing) override;
-	virtual void PlayShoot_Implementation() override;
+	virtual void PlayShoot_Implementation(float Charge) override;
 	virtual void PlayCheck_Implementation() override;
 	virtual void SetKnockedDown_Implementation(bool bDown, float DirX, float DirZ) override;
 	virtual void SetHasPuck_Implementation(bool bHasPuck) override;
 	virtual void SetBoost_Implementation(FName Kind) override;
+	virtual void SetStickAim_Implementation(float AngleDeg, float ReachM) override;
+	virtual void SetShotCharge_Implementation(float Charge01) override;
 
 	// Sockets of the contract (JamSkaterSockets): scene components named stick_socket, puck_socket, head_socket.
 	UFUNCTION(BlueprintCallable, Category = "Jam|SkaterVisual")
@@ -122,6 +132,10 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UStaticMeshComponent> HelmetBand;
 	UPROPERTY(Transient) TObjectPtr<UStaticMeshComponent> Stick;
 	UPROPERTY(Transient) TObjectPtr<UStaticMeshComponent> Blade;
+	// R-0021 feel.00: a hockey stick reads as shaft + heel + blade with two gloved hands on the shaft.
+	UPROPERTY(Transient) TObjectPtr<UStaticMeshComponent> BladeHeel;
+	UPROPERTY(Transient) TObjectPtr<UStaticMeshComponent> HandUpper;
+	UPROPERTY(Transient) TObjectPtr<UStaticMeshComponent> HandLower;
 	UPROPERTY(Transient) TObjectPtr<UStaticMeshComponent> SkateL;
 	UPROPERTY(Transient) TObjectPtr<UStaticMeshComponent> SkateR;
 	UPROPERTY(Transient) TObjectPtr<UTextRenderComponent> NumberText;
@@ -133,6 +147,7 @@ private:
 	FRotator LastFacing = FRotator::ZeroRotator;
 	int32 LocalFrame = 0;
 	int32 ShootStart = -1;
+	float ShootCharge = 0.f;   // C-0005: the swing grows with the charge
 	int32 CheckStart = -1;
 	int32 KnockStart = -1;
 	bool bDown = false;
@@ -141,6 +156,9 @@ private:
 	float TurnRate = 0.f;
 	bool bHasPuck = false;
 	FName Boost = NAME_None;
+	float AimDeg = 0.f;
+	float AimReachM = 1.2f;
+	float ChargeHold01 = 0.f;
 	FLinearColor TeamColour = FLinearColor(0.5f, 0.5f, 0.5f);
 	int32 Number = 0;
 	bool bBuilt = false;

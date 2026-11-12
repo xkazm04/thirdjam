@@ -1,4 +1,5 @@
 #include "DirectorsCallWidget.h"
+#include "Progression.h"
 #include "DirectorsCallController.h"
 #include "MenuStyle.h"
 #include "MenuFlow.h"
@@ -11,19 +12,24 @@
 #include "Components/OverlaySlot.h"
 #include "Components/WidgetSwitcher.h"
 #include "Components/SizeBox.h"
+#include "Components/Image.h"
 #include "GameFramework/PlayerController.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
 
 using namespace JamMenuStyle;
+using S = FJamUiStyle;
+
+// Lane A18 (visual layer): the pause card and the call card sit on the generated call-card frame (T_UI_CallCard; a slate plate with a
+// clapper stripe without it); the scoreboard line is a pill under the score; type from FJamUiStyle. Logic is lane A8's and A15's.
 
 // ---------------------------------------------------------------- tunables
 
-double FJamCallTunable::FromNormalized(float S) const
+double FJamCallTunable::FromNormalized(float V) const
 {
-	double V = Min + (Max - Min) * FMath::Clamp(static_cast<double>(S), 0.0, 1.0);
-	if (bInteger) V = FMath::RoundToDouble(V);
-	return FMath::Clamp(V, Min, Max);
+	double R = Min + (Max - Min) * FMath::Clamp(static_cast<double>(V), 0.0, 1.0);
+	if (bInteger) R = FMath::RoundToDouble(R);
+	return FMath::Clamp(R, Min, Max);
 }
 
 void UJamCallSlider::Bind(UJamDirectorsCallWidget* InOwner, int32 InRow)
@@ -98,6 +104,14 @@ FString UJamDirectorsCallWidget::AnnouncementLine(const FString& Announcement)
 	return FString::Printf(TEXT("DIRECTOR'S CALL: %s"), *Rest);
 }
 
+FString UJamDirectorsCallWidget::RuleLine(const FString& Text)
+{
+	FString Rest = Text.TrimStartAndEnd();
+	const FString Prefix(TEXT("rule:"));
+	if (Rest.Left(Prefix.Len()).ToLower() == Prefix) Rest = Rest.Mid(Prefix.Len()).TrimStartAndEnd();
+	return FString::Printf(TEXT("RULE: %s"), *Rest);
+}
+
 // ---------------------------------------------------------------- pause menu and call card
 
 UJamDirectorsCallWidget* UJamDirectorsCallWidget::CreateAndAdd(APlayerController* PC, UJamDirectorsCallController* InOwner)
@@ -136,79 +150,79 @@ void UJamDirectorsCallWidget::BuildTree()
 	UOverlay* Root = T->ConstructWidget<UOverlay>(UOverlay::StaticClass(), TEXT("PauseRoot"));
 	T->RootWidget = Root;
 	UBorder* Dimmer = Plate(T, FLinearColor(0, 0, 0, 0.62f), FMargin(0));
-	UOverlaySlot* DS = Root->AddChildToOverlay(Dimmer);
-	DS->SetHorizontalAlignment(HAlign_Fill);
-	DS->SetVerticalAlignment(VAlign_Fill);
+	S::AddO(Root, Dimmer);
 
 	USizeBox* CardBox = T->ConstructWidget<USizeBox>(USizeBox::StaticClass());
-	CardBox->SetWidthOverride(780.f);
-	UOverlaySlot* CS = Root->AddChildToOverlay(CardBox);
-	CS->SetHorizontalAlignment(HAlign_Center);
-	CS->SetVerticalAlignment(VAlign_Center);
-	UBorder* Card = Plate(T, Slate(), FMargin(0, 0, 0, 16));
+	CardBox->SetWidthOverride(800.f);
+	S::AddO(Root, CardBox, HAlign_Center, VAlign_Center);
+	const bool bFrameArt = S::Art(TEXT("T_UI_CallCard")) != nullptr;
+	// The generated frame carries its own clapper stripe (the top 7 %), so the body starts under it.
+	UBorder* Card = S::Plate(T, S::CallCard(), bFrameArt ? FMargin(28, 58, 28, 26) : FMargin(0, 0, 0, 18));
 	CardBox->AddChild(Card);
 	UVerticalBox* Body = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass());
 	Card->SetContent(Body);
-	AddV(Body, Clapper(T, 10, 14), FMargin(0));
+	if (!bFrameArt) AddV(Body, Clapper(T, 10, 14), FMargin(0));
 
 	Switcher = T->ConstructWidget<UWidgetSwitcher>(UWidgetSwitcher::StaticClass(), TEXT("PauseScreens"));
-	AddV(Body, Switcher, FMargin(26, 10, 26, 0));
+	AddV(Body, Switcher, bFrameArt ? FMargin(0) : FMargin(26, 10, 26, 0));
 
 	// Screen 0: the pause menu.
 	UVerticalBox* Pause = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("PauseScreen"));
-	UTextBlock* Paused = Text(T, TEXT("CUT!"), 54, Chalk());
+	UTextBlock* Paused = S::Text(T, TEXT("TIME OUT"), S::DisplayFont(), S::Chalk());
 	Paused->SetJustification(ETextJustify::Center);
 	AddV(Pause, Paused, FMargin(0));
-	TakeText = Text(T, TEXT("TAKE 1"), 22, Yellow());
+	TakeText = S::Text(T, TEXT("PERIOD 1"), S::LabelFont(), S::Yellow());
 	TakeText->SetJustification(ETextJustify::Center);
-	AddV(Pause, TakeText, FMargin(0, -6, 0, 8));
+	AddV(Pause, TakeText, FMargin(0, -4, 0, 10));
 	UTextBlock* Txt = nullptr;
-	ResumeButton = Button(T, TEXT("RESUME"), 24, Txt);
+	ResumeButton = Button(T, TEXT("RESUME"), S::Label, Txt);
 	ResumeButton->OnClicked.AddDynamic(this, &UJamDirectorsCallWidget::OnResumeClicked);
 	Tinted.Add(TPair<TWeakObjectPtr<UButton>, TWeakObjectPtr<UTextBlock>>(ResumeButton, Txt));
-	AddV(Pause, ResumeButton, FMargin(110, 4));
+	AddV(Pause, ResumeButton, FMargin(120, 4));
 	UTextBlock* CallTxt = nullptr;
-	CallButton = Button(T, TEXT("DIRECTOR'S CALL"), 24, CallTxt);
+	CallButton = Button(T, TEXT("DIRECTOR'S CALL"), S::Label, CallTxt);
 	CallButtonText = CallTxt;
 	CallButton->OnClicked.AddDynamic(this, &UJamDirectorsCallWidget::OnCallClicked);
 	Tinted.Add(TPair<TWeakObjectPtr<UButton>, TWeakObjectPtr<UTextBlock>>(CallButton, CallTxt));
-	AddV(Pause, CallButton, FMargin(110, 4));
-	RestartButton = Button(T, TEXT("RESTART"), 24, Txt);
+	AddV(Pause, CallButton, FMargin(120, 4));
+	RestartButton = Button(T, TEXT("RESTART"), S::Label, Txt);
 	RestartButton->OnClicked.AddDynamic(this, &UJamDirectorsCallWidget::OnRestartClicked);
 	Tinted.Add(TPair<TWeakObjectPtr<UButton>, TWeakObjectPtr<UTextBlock>>(RestartButton, Txt));
-	AddV(Pause, RestartButton, FMargin(110, 4));
-	QuitButton = Button(T, TEXT("QUIT TO MENU"), 24, Txt);
+	AddV(Pause, RestartButton, FMargin(120, 4));
+	QuitButton = Button(T, TEXT("QUIT TO MENU"), S::Label, Txt);
 	QuitButton->OnClicked.AddDynamic(this, &UJamDirectorsCallWidget::OnQuitClicked);
 	Tinted.Add(TPair<TWeakObjectPtr<UButton>, TWeakObjectPtr<UTextBlock>>(QuitButton, Txt));
-	AddV(Pause, QuitButton, FMargin(110, 4));
-	PauseStatus = Text(T, TEXT(""), 16, Yellow(), FName("Regular"));
+	AddV(Pause, QuitButton, FMargin(120, 4));
+	PauseStatus = S::Text(T, TEXT(""), S::BodyFont(), S::Yellow());
 	PauseStatus->SetJustification(ETextJustify::Center);
 	PauseStatus->SetAutoWrapText(true);
-	AddV(Pause, PauseStatus, FMargin(0, 8, 0, 0));
-	UTextBlock* Keys = Text(T, TEXT("ESC / START  resume      STICK  move      A  select      B  back"), 13, Dim());
+	AddV(Pause, PauseStatus, FMargin(0, 10, 0, 0));
+	UTextBlock* Keys = S::Text(T, TEXT("ESC / START  resume      STICK  move      A  select      B  back"), S::CaptionFont(), S::Muted());
 	Keys->SetJustification(ETextJustify::Center);
 	AddV(Pause, Keys, FMargin(0, 8, 0, 0));
 	Switcher->AddChild(Pause);
 
 	// Screen 1: the Director's Call card.
 	UVerticalBox* Call = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("CallScreen"));
-	CallTitle = Text(T, TEXT("DIRECTOR'S CALL"), 34, Yellow());
+	// Kept clear of the frame's megaphone doodle (top right): symmetric side padding and a smaller black face.
+	CallTitle = S::Text(T, TEXT("DIRECTOR'S CALL"), S::Font(28, FName("Black"), S::TrackTitle), S::Yellow());
 	CallTitle->SetJustification(ETextJustify::Center);
-	AddV(Call, CallTitle, FMargin(0));
-	UTextBlock* Rule = Text(T, TEXT("One change per take. Move one slider, then APPLY. The scoreboard announces the cut."), 15, Dim(), FName("Regular"));
+	AddV(Call, CallTitle, FMargin(30, 0, 150, 0));
+	UTextBlock* Rule = S::Text(T, TEXT("One change per period. Move one slider, then APPLY. The scoreboard announces the new rule."), S::BodyFont(), S::Muted());
 	Rule->SetJustification(ETextJustify::Center);
-	AddV(Call, Rule, FMargin(0, 0, 0, 8));
+	Rule->SetAutoWrapText(true);
+	AddV(Call, Rule, FMargin(30, 0, 150, 10));
 	RowsBox = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("CallRows"));
 	AddV(Call, RowsBox, FMargin(0));
-	CallStatus = Text(T, TEXT(""), 16, Yellow(), FName("Regular"));
+	CallStatus = S::Text(T, TEXT(""), S::BodyFont(), S::Yellow());
 	CallStatus->SetAutoWrapText(true);
 	AddV(Call, CallStatus, FMargin(0, 6, 0, 4));
 	UHorizontalBox* Actions = T->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
-	ApplyButton = Button(T, TEXT("APPLY"), 22, Txt);
+	ApplyButton = Button(T, TEXT("APPLY"), S::Label, Txt);
 	ApplyButton->OnClicked.AddDynamic(this, &UJamDirectorsCallWidget::OnApplyClicked);
 	Tinted.Add(TPair<TWeakObjectPtr<UButton>, TWeakObjectPtr<UTextBlock>>(ApplyButton, Txt));
 	AddH(Actions, ApplyButton, FMargin(0, 0, 10, 0));
-	BackButton = Button(T, TEXT("BACK"), 22, Txt);
+	BackButton = Button(T, TEXT("BACK"), S::Label, Txt);
 	BackButton->OnClicked.AddDynamic(this, &UJamDirectorsCallWidget::OnBackClicked);
 	Tinted.Add(TPair<TWeakObjectPtr<UButton>, TWeakObjectPtr<UTextBlock>>(BackButton, Txt));
 	AddH(Actions, BackButton, FMargin(0));
@@ -234,29 +248,28 @@ void UJamDirectorsCallWidget::RebuildRows()
 		FRow R;
 		UVerticalBox* RowBox = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass());
 		UHorizontalBox* Head = T->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
-		R.Label = Text(T, C.Label.ToUpper(), 18, Chalk());
+		R.Label = S::Text(T, C.Label.ToUpper(), S::Font(S::Body, FName("Bold"), S::TrackLabel), S::Chalk());
 		AddH(Head, R.Label, FMargin(0, 0, 10, 0), true);
-		R.Value = Text(T, ValueText(C, C.Current), 18, Yellow());
+		R.Value = S::Text(T, ValueText(C, C.Current), S::Font(S::Body + 2, FName("Bold")), S::Yellow());
 		AddH(Head, R.Value, FMargin(0));
 		AddV(RowBox, Head, FMargin(0));
-		UJamCallSlider* S = T->ConstructWidget<UJamCallSlider>(UJamCallSlider::StaticClass());
-		S->RequiresControllerLock = false;
-		S->IsFocusable = true;
-		S->SetStepSize(C.bInteger && C.Max > C.Min ? static_cast<float>(1.0 / (C.Max - C.Min)) : 0.02f);
-		S->SetSliderBarColor(Dim());
-		S->SetSliderHandleColor(Chalk());
-		S->SetValue(C.ToNormalized(C.Current));
-		S->Bind(this, i);
-		R.Slider = S;
-		R.Start = S->GetValue();
-		AddV(RowBox, S, FMargin(0, 2, 0, 0));
-		UTextBlock* Desc = Text(T, FString::Printf(TEXT("%s  (%s .. %s)"), *C.Description, *FJamJson::NumberToString(C.Min), *FJamJson::NumberToString(C.Max)), 12, Dim(), FName("Regular"));
+		UJamCallSlider* Sl = T->ConstructWidget<UJamCallSlider>(UJamCallSlider::StaticClass());
+		Sl->RequiresControllerLock = false;
+		Sl->IsFocusable = true;
+		Sl->SetWidgetStyle(S::SliderStyle());
+		Sl->SetStepSize(C.bInteger && C.Max > C.Min ? static_cast<float>(1.0 / (C.Max - C.Min)) : 0.02f);
+		Sl->SetValue(C.ToNormalized(C.Current));
+		Sl->Bind(this, i);
+		R.Slider = Sl;
+		R.Start = Sl->GetValue();
+		AddV(RowBox, Sl, FMargin(0, 2, 0, 0));
+		UTextBlock* Desc = S::Text(T, FString::Printf(TEXT("%s  (%s .. %s)"), *C.Description, *FJamJson::NumberToString(C.Min), *FJamJson::NumberToString(C.Max)), S::CaptionFont(), S::Muted());
 		Desc->SetAutoWrapText(true);
 		AddV(RowBox, Desc, FMargin(0, 0, 0, 2));
-		AddV(RowsBox, RowBox, FMargin(0, 3));
+		AddV(RowsBox, RowBox, FMargin(0, 4));
 		Rows.Add(R);
 	}
-	if (!Tunables.Num()) CallStatus->SetText(FText::FromString(TEXT("This cut has no number tunables to call.")));
+	if (!Tunables.Num()) CallStatus->SetText(FText::FromString(TEXT("This match has no numbers to call.")));
 }
 
 FString UJamDirectorsCallWidget::ValueText(const FJamCallTunable& C, double V) const
@@ -304,14 +317,14 @@ void UJamDirectorsCallWidget::RefreshState()
 	const bool bAvailable = D && D->IsDirectorsCallAvailable();
 	int32 Take = 1;
 	if (Owner.IsValid()) if (AHokejGameMode* GM = Owner->GetGameMode()) Take = FMath::Max(1, GM->GetTake());
-	if (TakeText) TakeText->SetText(FText::FromString(FString::Printf(TEXT("TAKE %d"), Take)));
-	if (CallTitle) CallTitle->SetText(FText::FromString(FString::Printf(TEXT("DIRECTOR'S CALL  -  TAKE %d"), Take)));
+	if (TakeText) TakeText->SetText(FText::FromString(FString::Printf(TEXT("PERIOD %d"), Take)));
+	if (CallTitle) CallTitle->SetText(FText::FromString(FString::Printf(TEXT("DIRECTOR'S CALL  -  PERIOD %d"), Take)));
 	if (CallButton)
 	{
 		CallButton->SetIsEnabled(bAvailable);
-		CallButtonText->SetText(FText::FromString(bAvailable ? TEXT("DIRECTOR'S CALL") : TEXT("DIRECTOR'S CALL  (used this take)")));
+		CallButtonText->SetText(FText::FromString(bAvailable ? TEXT("DIRECTOR'S CALL") : TEXT("DIRECTOR'S CALL  (used this period)")));
 	}
-	if (PauseStatus) PauseStatus->SetText(FText::FromString(bAvailable ? TEXT("Your call is ready: change one thing about this cut.") : LastAnnouncement));
+	if (PauseStatus) PauseStatus->SetText(FText::FromString(bAvailable ? TEXT("Your call is ready: change one thing about this match.") : LastAnnouncement));
 	if (ApplyButton) ApplyButton->SetIsEnabled(bAvailable);
 	for (FRow& R : Rows) if (R.Slider) R.Slider->SetIsEnabled(bAvailable);
 }
@@ -396,8 +409,7 @@ void UJamDirectorsCallWidget::NativeTick(const FGeometry& MyGeometry, float InDe
 	{
 		if (!R.Slider || !R.Label) continue;
 		const bool bHot = R.Slider->HasAnyUserFocus() || R.Slider->IsHovered();
-		R.Label->SetColorAndOpacity(FSlateColor(bHot ? Yellow() : Chalk()));
-		R.Slider->SetSliderHandleColor(bHot ? Yellow() : Chalk());
+		R.Label->SetColorAndOpacity(FSlateColor(bHot ? S::Yellow() : S::Chalk()));
 	}
 }
 
@@ -434,6 +446,18 @@ TSharedRef<SWidget> UJamDirectorsCallHudWidget::RebuildWidget()
 	return Super::RebuildWidget();
 }
 
+namespace
+{
+	// The pills around the scoreboard line and the ready hint are the text's parent; show and hide both together.
+	void SetLine(UTextBlock* Txt, bool bVisible)
+	{
+		if (!Txt) return;
+		const ESlateVisibility V = bVisible ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed;
+		Txt->SetVisibility(V);
+		if (UWidget* P = Txt->GetParent()) P->SetVisibility(V);
+	}
+}
+
 void UJamDirectorsCallHudWidget::BuildTree()
 {
 	if (!WidgetTree) WidgetTree = NewObject<UWidgetTree>(this, TEXT("WidgetTree"), RF_Transient);
@@ -443,44 +467,67 @@ void UJamDirectorsCallHudWidget::BuildTree()
 	T->RootWidget = Root;
 	auto Place = [&](UWidget* W, FVector2D Anchor, FVector2D Align, FVector2D Pos)
 	{
-		UCanvasPanelSlot* S = Root->AddChildToCanvas(W);
-		S->SetAnchors(FAnchors(Anchor.X, Anchor.Y, Anchor.X, Anchor.Y));
-		S->SetAlignment(Align);
-		S->SetPosition(Pos);
-		S->SetAutoSize(true);
+		UCanvasPanelSlot* CS = Root->AddChildToCanvas(W);
+		CS->SetAnchors(FAnchors(Anchor.X, Anchor.Y, Anchor.X, Anchor.Y));
+		CS->SetAlignment(Align);
+		CS->SetPosition(Pos);
+		CS->SetAutoSize(true);
 	};
 	// The period card, where lane A5 draws its win/lose card (never at the same time: this one shows only in play).
 	// With the generated clapperboard (R-0008) the number is chalked into its box; without it the text says "TAKE n".
 	TakeArt = nullptr;
-	if (UTexture2D* Slate = Art(TEXT("T_UI_TakeCard")))
+	if (UTexture2D* Slate = Art(TEXT("T_UI_MatchCard")))
 	{
 		TakeArt = Picture(T, Slate, 640.f, 360.f);
 		TakeArt->SetVisibility(ESlateVisibility::Collapsed);
 		Place(TakeArt, FVector2D(0.5, 0.4), FVector2D(0.5, 0.5), FVector2D(0, 0));
 	}
-	TakeCard = Text(T, TEXT(""), TakeArt ? 96 : 84, Chalk());
-	TakeCard->SetShadowOffset(FVector2D(3, 3));
+	TakeCard = S::IceText(T, TEXT(""), S::Font(TakeArt ? 110 : 84, FName("Black"), S::TrackTitle, true), S::Chalk());
 	TakeCard->SetVisibility(ESlateVisibility::Collapsed);
 	// The chalk box of the slate art sits at 66% of its height: 0.16 * 360 px below the centre of a 640 px wide card.
 	Place(TakeCard, FVector2D(0.5, 0.4), FVector2D(0.5, 0.5), FVector2D(0, TakeArt ? 58 : 0));
-	TakeSub = Text(T, TEXT("ACTION"), 24, Yellow());
+	TakeSub = S::IceText(T, TEXT("FACEOFF"), S::LabelFont(true), S::Yellow());
 	TakeSub->SetVisibility(ESlateVisibility::Collapsed);
 	Place(TakeSub, FVector2D(0.5, 0.4), FVector2D(0.5, 0), FVector2D(0, TakeArt ? 190 : 56));
-	// The scoreboard line, under lane A5's score and take row.
-	Announcement = Text(T, TEXT(""), 26, Yellow());
+	// The scoreboard line: a pill directly under the scoreboard (whose plates end near y 104 at 1080p).
+	UBorder* LinePill = S::Plate(T, S::Pill(0.86f), FMargin(18, 6));
+	LinePill->SetVisibility(ESlateVisibility::Collapsed);
+	Announcement = S::IceText(T, TEXT(""), S::Font(S::Label - 2, FName("Bold"), 30), S::Yellow());
 	Announcement->SetVisibility(ESlateVisibility::Collapsed);
-	// Below lane A5's take row (y 82) and lane A10's bark line (about y 165 in Slate units at 1080p).
-	Place(Announcement, FVector2D(0.5, 0), FVector2D(0.5, 0), FVector2D(0, 200));
-	ReadyHint = Text(T, TEXT("ESC / START   DIRECTOR'S CALL READY"), 16, Yellow());
+	LinePill->SetContent(Announcement);
+	Place(LinePill, FVector2D(0.5, 0), FVector2D(0.5, 0), FVector2D(0, 112));
+	UBorder* HintPill = S::Plate(T, S::Pill(0.8f), FMargin(14, 5));
+	HintPill->SetVisibility(ESlateVisibility::Collapsed);
+	ReadyHint = S::IceText(T, TEXT("ESC / START   DIRECTOR'S CALL READY"), S::CaptionFont(), S::Yellow());
 	ReadyHint->SetVisibility(ESlateVisibility::Collapsed);
-	Place(ReadyHint, FVector2D(0, 1), FVector2D(0, 1), FVector2D(24, -24));
+	HintPill->SetContent(ReadyHint);
+	Place(HintPill, FVector2D(0, 1), FVector2D(0, 1), FVector2D(S::EdgePx, -S::EdgePx));
 }
 
 void UJamDirectorsCallHudWidget::ShowTake(int32 Take, int64 UntilFrame)
 {
 	if (!TakeCard) return;
-	TakeCard->SetText(FText::FromString(TakeArt ? FString::FromInt(FMath::Max(1, Take)) : FString::Printf(TEXT("TAKE %d"), FMath::Max(1, Take))));
 	TakeUntil = UntilFrame;
+	// R-0021 point 3: a match card. The big number is the season's match (1 outside a season); the small type carries the season's
+	// count, the period (Take is lane A1's period number) and FACEOFF; lane A17's season note replaces that line on the first period.
+	int32 Match = 1, Count = 0;
+	FString Note;
+	const AHokejGameMode* GM = GetWorld() ? GetWorld()->GetAuthGameMode<AHokejGameMode>() : nullptr;
+	if (const UJamProgression* P = UJamProgression::Get(this); P && GM && GM->GetCartridge())
+	{
+		const FString Path = GM->GetCartridge()->SourcePath;
+		if (!P->ActiveTitle(Path).IsEmpty())
+		{
+			const FJamSeasonState St = P->GetSeasonState();
+			if (St.bLoaded) { Match = (St.ActiveTake >= 0 ? St.ActiveTake : St.CurrentTake) + 1; Count = St.TakeCount; }
+		}
+		if (Take <= 1) Note = P->ActiveNote(Path);
+	}
+	TakeCard->SetText(FText::FromString(TakeArt ? FString::FromInt(Match) : FString::Printf(TEXT("MATCH %d"), Match)));
+	const FString Line = Count > 0 ? FString::Printf(TEXT("OF %d   -   PERIOD %d   -   FACEOFF"), Count, FMath::Max(1, Take)) : FString::Printf(TEXT("PERIOD %d   -   FACEOFF"), FMath::Max(1, Take));
+	TakeSub->SetText(FText::FromString(Note.IsEmpty() ? Line : FString::Printf(TEXT("COACH'S NOTE: %s"), *Note)));
+	// A note needs reading time: the card stays twice as long (2 x TakeCardFrames).
+	if (!Note.IsEmpty()) TakeUntil = UntilFrame + UJamDirectorsCallController::TakeCardFrames;
 	TakeCard->SetVisibility(ESlateVisibility::HitTestInvisible);
 	TakeSub->SetVisibility(ESlateVisibility::HitTestInvisible);
 	if (TakeArt) TakeArt->SetVisibility(ESlateVisibility::HitTestInvisible);
@@ -491,14 +538,36 @@ void UJamDirectorsCallHudWidget::ShowAnnouncement(const FString& Line, int64 Unt
 	if (!Announcement) return;
 	Announcement->SetText(FText::FromString(Line));
 	AnnouncementUntil = UntilFrame;
-	Announcement->SetVisibility(ESlateVisibility::HitTestInvisible);
+	// Lane A15's "RULE: ..." shares the slot: paper on a blue-edged pill; the Director's Call stays take-yellow on the plain pill.
+	const bool bRule = Line.StartsWith(TEXT("RULE:"));
+	Announcement->SetColorAndOpacity(FSlateColor(bRule ? S::Paper() : S::Yellow()));
+	if (UBorder* Pill = Cast<UBorder>(Announcement->GetParent()))
+	{
+		Pill->SetBrush(bRule ? S::Rounded(FLinearColor(S::Ink().R, S::Ink().G, S::Ink().B, 0.86f), S::Radius, S::Blue(), 2.f) : S::Pill(0.86f));
+	}
+	SetLine(Announcement, true);
 }
 
 void UJamDirectorsCallHudWidget::TickFrame(const FJamPresentationFrame& F, bool bCallReady)
 {
 	if (!TakeCard) return;
-	// A restart resets the simulation frame: cards timed against the old count end now.
-	if (F.SimFrame < LastFrame) { TakeUntil = -1; AnnouncementUntil = -1; }
+	// A restart (R, the pause menu, the season's next take) resets the simulation frame. The opening TAKE card of the new match was
+	// requested against the old count (the controller's CurrentSimFrame still read it), so a card with frames left is rebased onto
+	// the new count instead of cleared; the scoreboard line belonged to the old match and ends now.
+	if (F.SimFrame < LastFrame)
+	{
+		AnnouncementUntil = -1;
+		if (TakeUntil > LastFrame)
+		{
+			TakeUntil = F.SimFrame + (TakeUntil - LastFrame);   // requested against the old count: keep what is left
+		}
+		else if (!(IsTakeCardVisible() && TakeUntil > F.SimFrame))
+		{
+			// No fresh request (the restart's period event is not relayed, or came before the reset): the overlay opens the
+			// new match's card itself from the feed's take number, for the usual TakeCardFrames.
+			ShowTake(F.Take, F.SimFrame + UJamDirectorsCallController::TakeCardFrames);
+		}
+	}
 	LastFrame = F.SimFrame;
 	const bool bEnd = F.Phase == EJamPhase::Win || F.Phase == EJamPhase::Lose;
 	const bool bTake = !bEnd && TakeUntil >= 0 && F.SimFrame < TakeUntil;
@@ -506,15 +575,15 @@ void UJamDirectorsCallHudWidget::TickFrame(const FJamPresentationFrame& F, bool 
 	TakeSub->SetVisibility(bTake ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	if (TakeArt) TakeArt->SetVisibility(bTake ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	const bool bLine = AnnouncementUntil >= 0 && F.SimFrame < AnnouncementUntil;
-	Announcement->SetVisibility(bLine ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
-	ReadyHint->SetVisibility(bCallReady && !bEnd && !bLine ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+	SetLine(Announcement, bLine);
+	SetLine(ReadyHint, bCallReady && !bEnd && !bLine);
 }
 
 FString UJamDirectorsCallHudWidget::GetTakeCardText() const
 {
 	if (!TakeCard) return FString();
-	// With the slate art the text block holds only the number; the card still reads "TAKE n" to callers.
-	return TakeArt ? FString::Printf(TEXT("TAKE %s"), *TakeCard->GetText().ToString()) : TakeCard->GetText().ToString();
+	// With the slate art the text block holds only the number; the card still reads "MATCH n" to callers.
+	return TakeArt ? FString::Printf(TEXT("MATCH %s"), *TakeCard->GetText().ToString()) : TakeCard->GetText().ToString();
 }
 FString UJamDirectorsCallHudWidget::GetAnnouncementText() const { return Announcement ? Announcement->GetText().ToString() : FString(); }
 bool UJamDirectorsCallHudWidget::IsTakeCardVisible() const { return TakeCard && TakeCard->GetVisibility() != ESlateVisibility::Collapsed; }

@@ -24,10 +24,12 @@ namespace JamCoreTests
 		return C;
 	}
 
-	UJamSim* MakeSim(const FJamGameConfig& Config, uint64 Seed)
+	UJamSim* MakeSim(const FJamGameConfig& Config, uint64 Seed, bool bSkipFaceoff = true)
 	{
 		UJamSim* Sim = NewObject<UJamSim>();
 		Sim->Init(Config, Seed);
+		// R-0013: a match opens with a 90-frame faceoff countdown; scripted scenes skip it (the Determinism test keeps it).
+		if (bSkipFaceoff) Sim->SkipFaceoff();
 		return Sim;
 	}
 
@@ -83,7 +85,7 @@ bool FJamCartridgeRoundTrip::RunTest(const FString& Parameters)
 
 	// Defaults for absent keys and values overrides (schema/DEFAULTS.md, README "Tunables").
 	{
-		UJamCartridge* Reg = LoadPreset(*this, TEXT("hockey.regular"));
+		UJamCartridge* Reg = JamCoreTests::LoadPreset(*this, TEXT("hockey.regular"));
 		if (Reg)
 		{
 			FString Text = Reg->RawJson;
@@ -168,7 +170,7 @@ bool FJamCartridgeParity::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamScoreOnEmptyNet, "Jam.Core.ScoreOnEmptyNet", JamCoreTests::Flags)
 bool FJamScoreOnEmptyNet::RunTest(const FString& Parameters)
 {
-	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
+	UJamCartridge* C = JamCoreTests::LoadPreset(*this, TEXT("hockey.regular"));
 	if (!C) return false;
 	UJamSim* Sim = MakeSim(C->Game, 1);
 	const int32 Me = Sim->GetHumanIndex();
@@ -197,12 +199,12 @@ bool FJamScoreOnEmptyNet::RunTest(const FString& Parameters)
 	// The pause ends in a faceoff at centre.
 	TArray<FJamInput> None;
 	bool bFaceoff = false;
-	for (int32 F = 0; F < C->Game.Rules.GoalPauseFrames + 2 && !bFaceoff; ++F)
+	for (int32 F = 0; F < C->Game.Rules.GoalPauseFrames + UJamSim::FaceoffCountdownFrames + 2 && !bFaceoff; ++F)
 	{
 		Sim->Step(None);
 		for (const FJamSimEvent& E : Sim->GetFrameEvents()) bFaceoff |= (E.Name == JamEvents::Faceoff);
 	}
-	TestTrue(TEXT("faceoff after goal_pause_frames"), bFaceoff);
+	TestTrue(TEXT("faceoff drop after goal_pause_frames + the countdown (R-0013)"), bFaceoff);
 	TestTrue(TEXT("puck dropped near centre"), Sim->GetPuck().Pos.Size() <= UJamSim::FaceoffDropM + 1e-9);
 	return true;
 }
@@ -235,20 +237,20 @@ bool FJamDeterminism::RunTest(const FString& Parameters)
 {
 	for (const TCHAR* Preset : { TEXT("hockey.regular"), TEXT("hockey.raw") })
 	{
-		UJamCartridge* C = LoadPreset(*this, Preset);
+		UJamCartridge* C = JamCoreTests::LoadPreset(*this, Preset);
 		if (!C) continue;
 		TArray<uint64> A, B, Other;
 		const double T0 = FPlatformTime::Seconds();
-		RunScripted(MakeSim(C->Game, 1), 1, 600, &A);
+		RunScripted(MakeSim(C->Game, 1, false), 1, 600, &A);
 		const double Ms = (FPlatformTime::Seconds() - T0) * 1000.0;
-		RunScripted(MakeSim(C->Game, 1), 1, 600, &B);
-		RunScripted(MakeSim(C->Game, 2), 2, 600, &Other);
+		RunScripted(MakeSim(C->Game, 1, false), 1, 600, &B);
+		RunScripted(MakeSim(C->Game, 2, false), 2, 600, &Other);
 		int32 FirstDiff = -1;
 		for (int32 i = 0; i < A.Num(); ++i) if (A[i] != B[i]) { FirstDiff = i; break; }
 		TestEqual(*FString::Printf(TEXT("%s: two runs at seed 1 agree on every frame"), Preset), FirstDiff, -1);
 		TestNotEqual(*FString::Printf(TEXT("%s: seed 2 differs from seed 1 by frame 600"), Preset), A.Last(), Other.Last());
 		// Restart() reproduces the match from frame 0.
-		UJamSim* Sim = MakeSim(C->Game, 1);
+		UJamSim* Sim = MakeSim(C->Game, 1, false);
 		RunScripted(Sim, 1, 300, nullptr);
 		Sim->Restart();
 		TestEqual(*FString::Printf(TEXT("%s: restart reproduces the run"), Preset), RunScripted(Sim, 1, 600, nullptr), A.Last());
@@ -260,7 +262,7 @@ bool FJamDeterminism::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamPuckNeverTunnels, "Jam.Core.PuckNeverTunnels", JamCoreTests::Flags)
 bool FJamPuckNeverTunnels::RunTest(const FString& Parameters)
 {
-	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
+	UJamCartridge* C = JamCoreTests::LoadPreset(*this, TEXT("hockey.regular"));
 	if (!C) return false;
 	FJamGameConfig Cfg = C->Game;
 	for (const double MaxSpeed : { 30.0, 60.0 })
@@ -293,7 +295,7 @@ bool FJamPuckNeverTunnels::RunTest(const FString& Parameters)
 			const int32 Before = Sim->GetScore(0) + Sim->GetScore(1);
 			Sim->Step(None);
 			if (Sim->GetScore(0) + Sim->GetScore(1) > Before && bFromBehind) ++BackDoorGoals;
-			if (Sim->GetPhase() != EJamSimPhase::Playing) Sim->Restart(), Sim->SetPuck(Sim->GetPuck().Pos, FVector2D::ZeroVector);
+			if (Sim->GetPhase() != EJamSimPhase::Playing) { Sim->Restart(); Sim->SkipFaceoff(); Sim->SetPuck(Sim->GetPuck().Pos, FVector2D::ZeroVector); }
 			FVector2D N;
 			const double D = Sim->BoardDistance(Sim->GetPuck().Pos, N) + Cfg.Puck.RadiusM;
 			MaxSeen = FMath::Max(MaxSeen, D);
@@ -310,7 +312,7 @@ bool FJamPuckNeverTunnels::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamFeel, "Jam.Core.Feel", JamCoreTests::Flags)
 bool FJamFeel::RunTest(const FString& Parameters)
 {
-	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
+	UJamCartridge* C = JamCoreTests::LoadPreset(*this, TEXT("hockey.regular"));
 	if (!C) return false;
 	UJamSim* Sim = MakeSim(C->Game, 1);
 	const int32 Me = Sim->GetHumanIndex();

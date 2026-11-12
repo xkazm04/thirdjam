@@ -26,7 +26,7 @@ All inputs are optional; with none, you get the empty page (gates only). Flags:
 | `--repo [A=\|B=]<path>` | a git repository; read-only `git log --branches --remotes`. Repeatable, commits are de-duplicated by hash. Without a label a commit counts for B when it was reached from a branch named `dev-b`, otherwise A |
 | `--shots <dir>` | screenshots (default `devlog/shots`) |
 | `--status <dir>` | `A.md` and `B.md` (default `status`) |
-| `--notes <file>` | notes (default `devlog/notes.md`) |
+| `--notes <file>` | one notes file. Without it every `devlog/notes*.md` is read: `notes.md` (device A) first, then the rest by name; a file whose name ends in `-b` (`notes-b.md`) is device B's and its blocks sit on B's lane (B-to-A-0013) |
 | `--gates <file>` | gate list (default `docs/GATES.md`, headings of the form `## Gate 1 (H6): ...`) |
 | `--title <text>` | page title (default `Third Jam dev log`) |
 | `--embed` | put screenshots inside the page as base64, so the file stands alone. Without it, images are relative links and must be published next to the page |
@@ -54,7 +54,9 @@ File name: `YYYYMMDD-HHMMSS-<A|B>-<label>.png`, where the time is the **CET wall
 
 ## Notes
 
-`devlog/notes.md` holds one block per entry, `## H12 title`; decimals place a note within an hour (`## H12.5`). Markdown subset: paragraphs, bulleted and
+`devlog/notes.md` (device A) and `devlog/notes-b.md` (device B; each device appends to its own file so the two machines never edit one file at once)
+hold one block per entry, `## H12 title`; decimals place a note within an hour (`## H12.5`). Every `devlog/notes*.md` is read; within an hour A's blocks come
+before B's, each in the order written, and each block carries its device badge and note mark. Markdown subset: paragraphs, bulleted and
 numbered lists, fenced code, `**bold**`, `*italic*`, `` `code` ``, `[links](https://...)`. Raw HTML is shown as text. Quotes are curled and `...` becomes an ellipsis.
 
 ## Status

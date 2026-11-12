@@ -19,6 +19,9 @@ struct FJamBarkBubble
 	GENERATED_BODY()
 	UPROPERTY(Transient) TObjectPtr<UBorder> Box;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> Text;
+	// Lane A18: the bubble body (the brush carries the team edge) and the tail under it, pointing at the figure.
+	UPROPERTY(Transient) TObjectPtr<UBorder> Body;
+	UPROPERTY(Transient) TObjectPtr<UBorder> Tail;
 	UPROPERTY(Transient) TWeakObjectPtr<AActor> Anchor;
 	int32 Speaker = -1;
 	int64 ShownFrame = -1000000;

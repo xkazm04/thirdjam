@@ -101,6 +101,10 @@ struct JAMGAME_API FJamPresentationFrame
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Presentation")
 	EJamPhase Phase = EJamPhase::Play;
 
+	// R-0013 (lane A16): frames left of the faceoff countdown; 0 = no countdown running. The HUD counts it down over the dot.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Presentation")
+	int32 FaceoffCountdownFrames = 0;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Presentation")
 	bool bDirectorsCallReady = false;
 

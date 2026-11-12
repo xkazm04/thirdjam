@@ -1,0 +1,175 @@
+{
+  "tool": "thirdjam.qa.soak/1",
+  "name": "soak-2",
+  "vsm0": false,
+  "seconds": 60,
+  "hung": false,
+  "marks": [
+    {
+      "t": 0.1,
+      "label": "console jam.ScriptHuman 1",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "t": 2.3,
+      "label": "StartPIE",
+      "ok": true,
+      "detail": "2160 ms"
+    },
+    {
+      "t": 5.5,
+      "label": "cartridge",
+      "detail": "LogJamLook: JAMLOOK rig loaded: 12 local lights scaled (intensity x 1.000, attenuation x 1.000) | LogHokej: JAMCART loaded ../../../../../../Users/kazda/kiro/thirdjam/Game/Content/Cartridges/hockey.regular.cartridge.json id=hockey-regular title=\"Regular Cut\" seed=1 rink=90x45 visual=toy tier=l2_night | LogJamLook: JAMLOOK persistent lights hidden: 2 actors (sky light, directional light) | LogJamLook: JAMLOOK floor StaticMeshActor_0 lowered by 15.0 cm to a top of -20.0 cm | LogJamLook: JAMLOOK tier=l2_night map=/JamAssets/Rigs/LR_L2_Night.LR_L2_Night scale=1.000 (rink 90.0 m) | LogJamLook: JAMLOOK rig loaded: 12 local lights scaled (intensity x 1.000, attenuation x 1.000)"
+    },
+    {
+      "t": 5.6,
+      "label": "console stat gpu",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "t": 7.9,
+      "label": "capture t05-stat-gpu",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "t": 8,
+      "label": "console ProfileGPU",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "t": 28.4,
+      "label": "console jam.playcut hockey.boost",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "t": 31.2,
+      "label": "capture t22-hockey.boost",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "t": 31.3,
+      "label": "console ProfileGPU",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "t": 48.8,
+      "label": "console jam.playcut hockey.regular",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "t": 51.6,
+      "label": "capture t43-hockey.regular",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "t": 51.7,
+      "label": "console ProfileGPU",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "t": 68.4,
+      "label": "capture t60-end",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "t": 68.5,
+      "label": "console stat gpu",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "t": 68.8,
+      "label": "StopPIE",
+      "ok": true,
+      "detail": "225 ms"
+    }
+  ],
+  "log": {
+    "crash": [],
+    "vsm_warnings": [],
+    "dump": [],
+    "driver": [
+      "LogD3D12RHI: Found D3D12 adapter 0: NVIDIA GeForce RTX 4090 (VendorId: 10de, DeviceId: 2684, SubSysId: f29710b0, Revision: 00a1",
+      "LogD3D12RHI:   Driver Version: 610.88 (internal:32.0.16.1088, unified:610.88)",
+      "LogD3D12RHI: Found D3D12 adapter 1: AMD Radeon(TM) Graphics (VendorId: 1002, DeviceId: 164e, SubSysId: d0001458, Revision: 00cb",
+      "LogD3D12RHI:   Driver Version: AMD Software: Adrenalin Edition 23.20.44 (internal:31.0.22044.1, unified:31.0.22044.1)",
+      "LogD3D12RHI: Found D3D12 adapter 2: Microsoft Basic Render Driver (VendorId: 1414, DeviceId: 008c, SubSysId: 0000, Revision: 0000",
+      "[2026.11.12-13.31.59:143][  0]LogD3D12RHI: NVIDIA Architecture=400"
+    ],
+    "jamcart": [
+      "[2026.11.12-13.32.43:398][186]LogHokej: JAMCART loaded ../../../../../../Users/kazda/kiro/thirdjam/Game/Content/Cartridges/hockey.regular.cartridge.json id=hockey-regular title=\"Regular Cut\" seed=1 rink=90x45 visual=toy tier=l2_night",
+      "[2026.11.12-13.32.43:478][186]LogJamLook: JAMLOOK persistent lights hidden: 2 actors (sky light, directional light)",
+      "[2026.11.12-13.32.43:479][186]LogJamLook: JAMLOOK floor StaticMeshActor_0 lowered by 15.0 cm to a top of -20.0 cm",
+      "[2026.11.12-13.32.43:479][186]LogJamLook: JAMLOOK tier=l2_night map=/JamAssets/Rigs/LR_L2_Night.LR_L2_Night scale=1.000 (rink 90.0 m)",
+      "[2026.11.12-13.32.43:833][197]LogJamLook: JAMLOOK rig loaded: 12 local lights scaled (intensity x 1.000, attenuation x 1.000)",
+      "[2026.11.12-13.33.11:549][824]LogHokej: JAMCART loaded ../../../../../../Users/kazda/kiro/thirdjam/Game/Content/Cartridges/hockey.boost.cartridge.json id=hockey-boost title=\"Hockey Boost\" seed=1 rink=120x60 visual=toy tier=l3_neon",
+      "[2026.11.12-13.33.11:557][824]LogJamLook: JAMLOOK tier=l3_neon map=/JamAssets/Rigs/LR_L3_Neon.LR_L3_Neon scale=1.333 (rink 120.0 m)",
+      "[2026.11.12-13.33.11:595][827]LogJamLook: JAMLOOK rig loaded: 0 local lights scaled (intensity x 1.778, attenuation x 1.333)",
+      "[2026.11.12-13.33.31:939][ 36]LogHokej: JAMCART loaded ../../../../../../Users/kazda/kiro/thirdjam/Game/Content/Cartridges/hockey.regular.cartridge.json id=hockey-regular title=\"Regular Cut\" seed=1 rink=90x45 visual=toy tier=l2_night",
+      "[2026.11.12-13.33.31:947][ 36]LogJamLook: JAMLOOK tier=l2_night map=/JamAssets/Rigs/LR_L2_Night.LR_L2_Night scale=1.000 (rink 90.0 m)",
+      "[2026.11.12-13.33.32:036][ 41]LogJamLook: JAMLOOK rig loaded: 12 local lights scaled (intensity x 1.000, attenuation x 1.000)",
+      "[2026.11.12-13.34.11:497][350]LogHokej: JAMCART loaded ../../../../../../Users/kazda/kiro/thirdjam/Game/Content/Cartridges/hockey.regular.cartridge.json id=hockey-regular title=\"Regular Cut\" seed=1 rink=90x45 visual=toy tier=l2_night",
+      "[2026.11.12-13.34.11:502][350]LogJamLook: JAMLOOK persistent lights hidden: 2 actors (sky light, directional light)",
+      "[2026.11.12-13.34.11:503][350]LogJamLook: JAMLOOK floor StaticMeshActor_0 lowered by 15.0 cm to a top of -20.0 cm",
+      "[2026.11.12-13.34.11:503][350]LogJamLook: JAMLOOK tier=l2_night map=/JamAssets/Rigs/LR_L2_Night.LR_L2_Night scale=1.000 (rink 90.0 m)",
+      "[2026.11.12-13.34.11:670][354]LogJamLook: JAMLOOK rig loaded: 12 local lights scaled (intensity x 1.000, attenuation x 1.000)",
+      "[2026.11.12-13.34.39:628][ 16]LogHokej: JAMCART loaded ../../../../../../Users/kazda/kiro/thirdjam/Game/Content/Cartridges/hockey.boost.cartridge.json id=hockey-boost title=\"Hockey Boost\" seed=1 rink=120x60 visual=toy tier=l3_neon",
+      "[2026.11.12-13.34.39:636][ 16]LogJamLook: JAMLOOK tier=l3_neon map=/JamAssets/Rigs/LR_L3_Neon.LR_L3_Neon scale=1.333 (rink 120.0 m)",
+      "[2026.11.12-13.34.39:670][ 19]LogJamLook: JAMLOOK rig loaded: 0 local lights scaled (intensity x 1.778, attenuation x 1.333)",
+      "[2026.11.12-13.35.00:006][214]LogHokej: JAMCART loaded ../../../../../../Users/kazda/kiro/thirdjam/Game/Content/Cartridges/hockey.regular.cartridge.json id=hockey-regular title=\"Regular Cut\" seed=1 rink=90x45 visual=toy tier=l2_night",
+      "[2026.11.12-13.35.00:015][214]LogJamLook: JAMLOOK tier=l2_night map=/JamAssets/Rigs/LR_L2_Night.LR_L2_Night scale=1.000 (rink 90.0 m)",
+      "[2026.11.12-13.35.00:108][219]LogJamLook: JAMLOOK rig loaded: 12 local lights scaled (intensity x 1.000, attenuation x 1.000)"
+    ],
+    "profilegpu": [
+      "[2026.11.12-13.32.51:183][626]LogRHI: Display:     ┃     0 │      0 │    0 │    0 │  0.1% ┊          │ 0.002 ms ┃     0 │      1 │    0 │    0 │   1.3% ┊          │ 0.018 ms ┃                      Lights                                                                                       ┃",
+      "[2026.11.12-13.32.51:194][626]LogRHI: Display:     ┃     0 │      0 │     0 │     0 │ 0.1% ┊          │ 0.002 ms ┃     0 │      2 │     0 │     0 │   0.6% ┊          │ 0.019 ms ┃                   CullLights 14x8x32 NumLights 4 NumCaptures 0                                           ┃",
+      "[2026.11.12-13.32.51:196][626]LogRHI: Display:     ┃     0 │      0 │     0 │     0 │ 0.1% ┊          │ 0.002 ms ┃    28 │     84 │     0 │     0 │  13.2% ┊ █        │ 0.408 ms ┃                ShadowDepths                                                                              ┃",
+      "[2026.11.12-13.32.51:199][626]LogRHI: Display:     ┃     0 │      0 │     0 │     0 │ 0.0% ┊          │ 0.000 ms ┃     4 │      1 │  3168 │  1728 │   2.0% ┊ ▏        │ 0.061 ms ┃                   Lights                                                                                 ┃",
+      "[2026.11.12-13.32.51:199][626]LogRHI: Display:     ┃     0 │      0 │     0 │     0 │ 0.0% ┊          │ 0.000 ms ┃     2 │      0 │  1584 │   864 │   0.3% ┊          │ 0.010 ms ┃                         BatchedLights                                                                    ┃",
+      "[2026.11.12-13.32.51:199][626]LogRHI: Display:     ┃     0 │      0 │     0 │     0 │ 0.0% ┊          │ 0.000 ms ┃     2 │      0 │  1584 │   864 │   0.2% ┊          │ 0.007 ms ┃                         UnbatchedLights                                                                  ┃",
+      "[2026.11.12-13.33.14:448][989]LogRHI: Display:     ┃     0 │      0 │    0 │    0 │  0.0% ┊          │ 0.000 ms ┃     0 │      1 │    0 │    0 │   0.7% ┊          │ 0.009 ms ┃                      Lights                                                                                       ┃",
+      "[2026.11.12-13.33.14:456][989]LogRHI: Display:     ┃     0 │      0 │     0 │     0 │  0.1% ┊          │ 0.002 ms ┃     0 │      2 │      0 │      0 │   0.6% ┊          │ 0.018 ms ┃                   CullLights 14x8x32 NumLights 0 NumCaptures 0                                           ┃",
+      "[2026.11.12-13.33.14:458][989]LogRHI: Display:     ┃     0 │      0 │     0 │     0 │  0.1% ┊          │ 0.003 ms ┃     0 │      2 │      0 │      0 │   1.3% ┊          │ 0.038 ms ┃                ShadowDepths                                                                              ┃",
+      "[2026.11.12-13.33.34:828][201]LogRHI: Display:     ┃     0 │      0 │    0 │    0 │  0.1% ┊          │ 0.001 ms ┃     0 │      1 │    0 │    0 │   1.4% ┊          │ 0.026 ms ┃                      Lights                                                                                       ┃",
+      "[2026.11.12-13.33.34:838][201]LogRHI: Display:     ┃     0 │      0 │     0 │     0 │ 0.0% ┊          │ 0.001 ms ┃     0 │      2 │     0 │      0 │   0.5% ┊          │ 0.022 ms ┃                   CullLights 14x8x32 NumLights 6 NumCaptures 0                                           ┃",
+      "[2026.11.12-13.33.34:839][201]LogRHI: Display:     ┃     0 │      0 │     0 │     0 │ 0.0% ┊          │ 0.002 ms ┃    36 │     84 │     0 │      0 │  12.6% ┊ █        │ 0.525 ms ┃                ShadowDepths                                                                              ┃",
+      "[2026.11.12-13.33.34:842][201]LogRHI: Display:     ┃     0 │      0 │     0 │     0 │ 0.0% ┊          │ 0.000 ms ┃     6 │      1 │  4752 │   2592 │   2.8% ┊ ▏        │ 0.117 ms ┃                   Lights                                                                                 ┃",
+      "[2026.11.12-13.33.34:842][201]LogRHI: Display:     ┃     0 │      0 │     0 │     0 │ 0.0% ┊          │ 0.000 ms ┃     3 │      0 │  2376 │   1296 │   0.3% ┊          │ 0.012 ms ┃                         BatchedLights                                                                    ┃",
+      "[2026.11.12-13.33.34:842][201]LogRHI: Display:     ┃     0 │      0 │     0 │     0 │ 0.0% ┊          │ 0.001 ms ┃     3 │      0 │  2376 │   1296 │   0.3% ┊          │ 0.013 ms ┃                         UnbatchedLights                                                                  ┃",
+      "[2026.11.12-13.34.19:217][794]LogRHI: Display:     ┃     0 │      0 │    0 │    0 │  0.0% ┊          │ 0.000 ms ┃     0 │      1 │    0 │    0 │   1.2% ┊          │ 0.025 ms ┃                      Lights                                                                                       ┃",
+      "[2026.11.12-13.34.19:228][794]LogRHI: Display:     ┃     0 │      0 │     0 │     0 │ 0.1% ┊          │ 0.003 ms ┃     0 │      2 │     0 │     0 │   0.6% ┊          │ 0.023 ms ┃                   CullLights 14x8x32 NumLights 4 NumCaptures 0                                           ┃",
+      "[2026.11.12-13.34.19:232][794]LogRHI: Display:     ┃     0 │      0 │     0 │     0 │ 0.0% ┊          │ 0.002 ms ┃    28 │     84 │     0 │     0 │  12.5% ┊ █        │ 0.504 ms ┃                ShadowDepths                                                                              ┃",
+      "[2026.11.12-13.34.19:234][794]LogRHI: Display:     ┃     0 │      0 │     0 │     0 │ 0.0% ┊          │ 0.000 ms ┃     4 │      1 │  3168 │  1728 │   1.9% ┊ ▏        │ 0.077 ms ┃                   Lights                                                                                 ┃",
+      "[2026.11.12-13.34.19:234][794]LogRHI: Display:     ┃     0 │      0 │     0 │     0 │ 0.0% ┊          │ 0.001 ms ┃     2 │      0 │  1584 │   864 │   0.3% ┊          │ 0.013 ms ┃                         BatchedLights                                                                    ┃",
+      "[2026.11.12-13.34.19:235][794]LogRHI: Display:     ┃     0 │      0 │     0 │     0 │ 0.0% ┊          │ 0.000 ms ┃     2 │      0 │  1584 │   864 │   0.2% ┊          │ 0.009 ms ┃                         UnbatchedLights                                                                  ┃",
+      "[2026.11.12-13.34.42:528][182]LogRHI: Display:     ┃     0 │      0 │    0 │    0 │  0.0% ┊          │ 0.001 ms ┃     0 │      1 │    0 │    0 │   0.6% ┊          │ 0.021 ms ┃                      Lights                                                                                       ┃",
+      "[2026.11.12-13.34.42:536][182]LogRHI: Display:     ┃     0 │      0 │     0 │     0 │  0.1% ┊          │ 0.005 ms ┃     0 │      2 │     0 │     0 │   0.6% ┊          │ 0.033 ms ┃                   CullLights 14x8x32 NumLights 0 NumCaptures 0                                           ┃",
+      "[2026.11.12-13.34.42:537][182]LogRHI: Display:     ┃     0 │      0 │     0 │     0 │  0.1% ┊          │ 0.003 ms ┃     0 │      2 │     0 │     0 │   0.8% ┊          │ 0.044 ms ┃                ShadowDepths                                                                              ┃",
+      "[2026.11.12-13.35.02:919][378]LogRHI: Display:     ┃     0 │      0 │    0 │    0 │  0.1% ┊          │ 0.001 ms ┃     0 │      1 │    0 │    0 │   1.3% ┊          │ 0.022 ms ┃                      Lights                                                                                       ┃",
+      "[2026.11.12-13.35.02:933][379]LogRHI: Display:     ┃     0 │      0 │     0 │     0 │ 0.0% ┊          │ 0.002 ms ┃     0 │      2 │     0 │      0 │   0.5% ┊          │ 0.022 ms ┃                   CullLights 14x8x32 NumLights 6 NumCaptures 0                                           ┃",
+      "[2026.11.12-13.35.02:936][379]LogRHI: Display:     ┃     0 │      0 │     0 │     0 │ 0.0% ┊          │ 0.002 ms ┃    36 │     84 │     0 │      0 │  12.4% ┊ ▉        │ 0.523 ms ┃                ShadowDepths                                                                              ┃",
+      "[2026.11.12-13.35.02:939][379]LogRHI: Display:     ┃     0 │      0 │     0 │     0 │ 0.0% ┊          │ 0.000 ms ┃     6 │      1 │  4752 │   2592 │   2.7% ┊ ▏        │ 0.112 ms ┃                   Lights                                                                                 ┃",
+      "[2026.11.12-13.35.02:939][379]LogRHI: Display:     ┃     0 │      0 │     0 │     0 │ 0.0% ┊          │ 0.001 ms ┃     3 │      0 │  2376 │   1296 │   0.3% ┊          │ 0.012 ms ┃                         BatchedLights                                                                    ┃",
+      "[2026.11.12-13.35.02:940][379]LogRHI: Display:     ┃     0 │      0 │     0 │     0 │ 0.0% ┊          │ 0.000 ms ┃     3 │      0 │  2376 │   1296 │   0.3% ┊          │ 0.013 ms ┃                         UnbatchedLights                                                                  ┃"
+    ],
+    "last": [
+      "[2026.11.12-13.35.19:875][378]LogAudioMixer: Display: FAudioMixerWasapi::StopAudioStream() InstanceID=3, StreamState=4",
+      "[2026.11.12-13.35.19:884][378]LogAudioMixerWasapi: Display: FWasapiServiceWatcher stopped.",
+      "[2026.11.12-13.35.19:890][378]LogUObjectHash: Compacting FUObjectHashTables data took   0.61ms",
+      "[2026.11.12-13.35.19:972][379]LogUObjectHash: Compacting FUObjectHashTables data took   0.52ms",
+      "[2026.11.12-13.35.20:154][382]LogDLSSNGXRHI: Destroying NGX DLSS Feature SrcRect=[0x0->852x467], DestRect=[0x0->1276x700], ScaleX=0.667712, ScaleY=0.667143, NGXDLSSPreset=Default(0), NGXDLSSRRPreset=D",
+      ""
+    ]
+  }
+}

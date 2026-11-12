@@ -1,0 +1,1 @@
+Settings at 1080p in two columns (key, difficulty, look | volume, voice, barks) with the controls under them; most heading icons were not imported yet in this build. Lane A18.

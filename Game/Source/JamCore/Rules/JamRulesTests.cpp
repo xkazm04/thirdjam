@@ -142,6 +142,7 @@ bool FJamRulesHooksFire::RunTest(const FString& Parameters)
 	{
 		UJamSim* Sim = NewObject<UJamSim>();
 		Sim->Init(C->Game, 1);
+		Sim->SkipFaceoff(); // R-0013: the match opens with a 90-frame faceoff; these scenes shoot at once
 		UJamRuleSystem* R2 = NewObject<UJamRuleSystem>();
 		R2->Init(C->Game);
 		Sim->SetRuleHook(R2);
@@ -174,6 +175,7 @@ bool FJamRulesShrinkAtFaceoff::RunTest(const FString& Parameters)
 	{
 		UJamSim* Sim = NewObject<UJamSim>();
 		Sim->Init(C->Game, 7);
+		Sim->SkipFaceoff(); // R-0013: the match opens with a 90-frame faceoff; these scenes shoot at once
 		UJamRuleSystem* R = NewObject<UJamRuleSystem>();
 		R->Init(C->Game);
 		Sim->SetRuleHook(R);
@@ -185,7 +187,7 @@ bool FJamRulesShrinkAtFaceoff::RunTest(const FString& Parameters)
 		TestEqual(TEXT("length unchanged during the goal pause"), Sim->GetConfig().Rink.LengthM, L0);
 		TArray<FJamInput> In; In.SetNum(Sim->GetSkaters().Num());
 		bool bFaceoff = false;
-		for (int32 f = 0; f < 200 && !bFaceoff; ++f)
+		for (int32 f = 0; f < 400 && !bFaceoff; ++f) // goal pause 120 + faceoff countdown 90 (R-0013): the drop comes after frame 200
 		{
 			Sim->Step(In);
 			for (const FJamSimEvent& E : Sim->GetFrameEvents()) if (E.Name == JamEvents::Faceoff) bFaceoff = true;
@@ -367,7 +369,7 @@ bool FJamRulesVariants::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamRulesChaosLoads, "Jam.Rules.ChaosLoads", JamRulesTests::Flags)
 bool FJamRulesChaosLoads::RunTest(const FString& Parameters)
 {
-	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.chaos"));
+	UJamCartridge* C = JamRulesTests::LoadPreset(*this, TEXT("hockey.chaos"));
 	if (!C) return false;
 	TestEqual(TEXT("two bumpers"), C->Game.Rink.Obstacles.Num(), 2);
 	for (const FJamObstacle& O : C->Game.Rink.Obstacles) TestEqual(TEXT("obstacle is a bumper"), O.Kind, FName(TEXT("bumper")));
@@ -391,7 +393,7 @@ bool FJamRulesBotChaos::RunTest(const FString& Parameters)
 	// nobody leaves the rink, hashes repeat per seed. The AiBotPlays shape of Jam.Bot, on the new preset.
 	for (const TCHAR* Name : { TEXT("hockey.chaos"), TEXT("hockey.raw") })
 	{
-		UJamCartridge* C = LoadPreset(*this, Name);
+		UJamCartridge* C = JamRulesTests::LoadPreset(*this, Name);
 		if (!C) continue;
 		uint64 Hash[2] = { 0, 0 };
 		for (int32 k = 0; k < 2; ++k)

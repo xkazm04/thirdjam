@@ -1,4 +1,5 @@
 #include "Progression.h"
+#include "UObject/Package.h"   // GetTransientPackage() outside the unity blob (lane A18, R-0021 pass)
 #include "MenuFlow.h"
 #include "JamJson.h"
 #include "JamCartridge.h"
@@ -448,9 +449,9 @@ bool UJamProgression::HandleRestart(UObject* WorldContext)
 FString UJamProgression::EndHint(const FString& CartridgePath) const
 {
 	if (!IsSeasonMatch(CartridgePath) || LastResult == EJamTakeResult::None) return FString();
-	if (LastResult == EJamTakeResult::Lost) return TEXT("R  RETAKE      ESC  PAUSE");
-	if (!Ladder.Takes.IsValidIndex(ActiveTake + 1)) return TEXT("SEASON WRAPPED      R  MENU");
-	return FString::Printf(TEXT("R  NEXT TAKE: %s      ESC  PAUSE"), *Ladder.Takes[ActiveTake + 1].Title.ToUpper());
+	if (LastResult == EJamTakeResult::Lost) return TEXT("R  REMATCH      ESC  PAUSE");
+	if (!Ladder.Takes.IsValidIndex(ActiveTake + 1)) return TEXT("SEASON COMPLETE      R  MENU");
+	return FString::Printf(TEXT("R  NEXT MATCH: %s      ESC  PAUSE"), *Ladder.Takes[ActiveTake + 1].Title.ToUpper());
 }
 
 FString UJamProgression::ActiveNote(const FString& CartridgePath) const

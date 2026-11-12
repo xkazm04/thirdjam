@@ -44,7 +44,9 @@ namespace JamDifficultyTestsLocal
 	bool SameSkill(const JamAI::FJamBotSkill& A, const JamAI::FJamBotSkill& B)
 	{
 		return A.ReactionFrames == B.ReactionFrames && A.AimErrorDeg == B.AimErrorDeg && A.ShootExtraM == B.ShootExtraM && A.AimToleranceDeg == B.AimToleranceDeg
-			&& A.LeadFrames == B.LeadFrames && A.bIntercept == B.bIntercept && A.bUseAimCone == B.bUseAimCone && A.bPassToHuman == B.bPassToHuman && A.bClearLane == B.bClearLane && A.bBlockShots == B.bBlockShots && A.BlockMinDistM == B.BlockMinDistM;
+			&& A.LeadFrames == B.LeadFrames && A.bIntercept == B.bIntercept && A.bUseAimCone == B.bUseAimCone && A.bPassToHuman == B.bPassToHuman && A.bClearLane == B.bClearLane && A.bBlockShots == B.bBlockShots && A.BlockMinDistM == B.BlockMinDistM
+			&& A.PokeFrames == B.PokeFrames && A.bLift == B.bLift && A.bPassOut == B.bPassOut && A.bReadLanes == B.bReadLanes && A.bSeekPickups == B.bSeekPickups
+			&& A.DrawJumpPct == B.DrawJumpPct && A.DrawPressPct == B.DrawPressPct && A.DrawPressFrames == B.DrawPressFrames;
 	}
 }
 
@@ -75,6 +77,11 @@ bool FJamDifficultyProfilesResolve::RunTest(const FString& Parameters)
 		TestTrue(TEXT("teammate yield rookie >= pro"), R.YieldMarginM >= P.YieldMarginM && R.YieldRadiusM >= P.YieldRadiusM);
 		TestTrue(TEXT("shot range rookie <= pro <= all_star"), R.Opp.ShootExtraM <= P.Opp.ShootExtraM && P.Opp.ShootExtraM <= S.Opp.ShootExtraM);
 		TestTrue(TEXT("all_star intercepts"), S.Opp.bIntercept);
+		TestTrue(TEXT("R-0017: rookie never pokes, pro and all_star do, all_star sooner"), R.Opp.PokeFrames < 0 && P.Opp.PokeFrames >= 0 && S.Opp.PokeFrames >= 0 && S.Opp.PokeFrames <= P.Opp.PokeFrames);
+		TestTrue(TEXT("R-0013 draws: rookie jumps early sometimes, pro never, all_star presses early sometimes"),
+			R.Opp.DrawJumpPct > 0 && P.Opp.DrawJumpPct == 0 && P.Opp.DrawPressPct == 0 && S.Opp.DrawPressPct > 0 && S.Opp.DrawJumpPct == 0);
+		TestTrue(TEXT("R-0017: only all_star seeks pickups"), !R.Opp.bSeekPickups && !P.Opp.bSeekPickups && S.Opp.bSeekPickups);
+		TestTrue(TEXT("R-0017: all_star passes; pro and all_star read lanes"), S.Opp.bPassOut && P.Opp.bReadLanes && S.Opp.bReadLanes);
 		TestTrue(TEXT("reaction inside the ring"), R.Opp.ReactionFrames <= kMaxReactionFrames);
 	}
 	// names

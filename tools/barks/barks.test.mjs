@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { checkLine, filterBank, mildCount, MAX_CHARS, MILD_QUOTA } from './filter.mjs';
+import { checkLine, filterBank, filmWords, mildCount, MAX_CHARS, MILD_QUOTA } from './filter.mjs';
 import { SITUATIONS, SPEAKERS, TONES } from './generate.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -14,7 +14,7 @@ const bank = JSON.parse(readFileSync(resolve(repo, 'Game/Content/Barks/barks.jso
 const TEAMMATE_ONLY = new Set(['signal_ack_defend', 'signal_ack_space', 'signal_ack_pass', 'praise_reply']);
 
 test('the filter rejects what the content law forbids and keeps hockey flavour', () => {
-  assert.deepEqual(checkLine("that's a wrap, rookie"), []);
+  assert.deepEqual(checkLine('back to the bench, rookie'), []);
   assert.deepEqual(checkLine('nice stick, shame about the aim'), []);
   assert.deepEqual(checkLine('this ice is damn slow'), [], 'mild word allowed (R-0015)');
   assert.ok(checkLine('this ice is shit').length, 'hard profanity');
@@ -76,4 +76,16 @@ test('R-0015: mild words are at most one line in ten, never two in a line, and t
   assert.ok(checkLine('you ass').length, 'bare ass');
   assert.ok(checkLine('that was fucking bad').length, 'hard list');
   assert.ok(checkLine('the goalie fell asleep').length, 'off-world word');
+});
+
+test('R-0021 point 2: barks are hockey first; film words are rejected, hockey senses of take, lead and frame stay', () => {
+  for (const bad of ["that's a wrap, director", 'cut and print, rookie', 'you went down like it was in the script', 'take two, same ending', 'another one for the highlight reel', 'back to the scene'])
+    assert.ok(checkLine(bad).some((r) => /film word/.test(r)), bad);
+  for (const ok of ['take the puck back, if you can', 'we kept the lead', 'shooting at the frame instead of the hole', 'new rule, same footwork', 'that was a wrap, and not the good kind'])
+    assert.deepEqual(checkLine(ok), [], ok);
+  assert.deepEqual(filmWords('cut it, director').hard, ['director', 'cut']);
+  assert.deepEqual(filmWords('take the puck').soft, ['take']);
+  // The committed bank has no hard film word and its directors_call lines speak of rules, never of directors.
+  for (const l of bank.lines) assert.deepEqual(filmWords(l.text).hard, [], l.id);
+  for (const l of bank.lines.filter((l) => l.situation === 'directors_call')) assert.ok(!/\b(director|cut|scene)s?\b/i.test(l.text), l.id);
 });

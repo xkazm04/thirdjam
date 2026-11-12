@@ -1,0 +1,1 @@
+1.2 s after the restart: play has resumed, still no TAKE card (same defect, fixed in code after this shot). Lane A18.

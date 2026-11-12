@@ -61,9 +61,10 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Jam|SkaterVisual")
 	void UpdateMotion(float Speed, float TurnRate, FRotator Facing);
 
-	// One-shot: a shot left this skater's stick on this frame.
+	// One-shot: a shot (or a pass) left this skater's stick on this frame. Charge 0..1 (C-0005): 0 = a tap or a pass, 1 = a fully wound-up
+	// charged shot; the visual scales its swing with it.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Jam|SkaterVisual")
-	void PlayShoot();
+	void PlayShoot(float Charge);
 
 	// One-shot: this skater threw a body check on this frame.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Jam|SkaterVisual")
@@ -80,4 +81,50 @@ public:
 	// Active boost kind (JamBoostKinds) or NAME_None when the boost ends.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Jam|SkaterVisual")
 	void SetBoost(FName Kind);
+
+	// ---- C-0001 v3 (B-to-A-0014, R-0013 stick verbs; proposed by lane A16, cosmetic only, empty defaults so every visual keeps compiling) ----
+	// Every simulation frame: where the blade is held. AngleDeg: 0 = the skater's forward, positive = to its left; ReachM: skater centre to the blade on the ice.
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Jam|SkaterVisual")
+	void SetStickAim(float AngleDeg, float ReachM);
+	virtual void SetStickAim_Implementation(float AngleDeg, float ReachM) {}
+
+	// One-shot on the frame a poke resolves: true = the blade took the puck, false = mistimed (a stumble of game.stick.stumble_frames follows).
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Jam|SkaterVisual")
+	void PlayPoke(bool bClean);
+	virtual void PlayPoke_Implementation(bool bClean) {}
+
+	// One-shot: a stick lift (clean or not).
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Jam|SkaterVisual")
+	void PlayLift();
+	virtual void PlayLift_Implementation() {}
+
+	// One-shot: a pass left the stick; Strength = pass speed / puck.max_speed (0..1).
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Jam|SkaterVisual")
+	void PlayPass(float Strength);
+	virtual void PlayPass_Implementation(float Strength) {}
+
+	// Every frame: the shot charge 0..1 while shoot is held with the puck (0 when not charging); PlayShoot(Charge) then releases it.
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Jam|SkaterVisual")
+	void SetShotCharge(float Charge01);
+	virtual void SetShotCharge_Implementation(float Charge01) {}
+
+	// True while this skater stands at the dot as a centre before the drop; false at the drop and for everybody else.
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Jam|SkaterVisual")
+	void SetFaceoff(bool bReady);
+	virtual void SetFaceoff_Implementation(bool bReady) {}
+
+	// One-shot on the frame the draw resolves, for the two centres: won or lost.
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Jam|SkaterVisual")
+	void PlayFaceoffDraw(bool bWon);
+	virtual void PlayFaceoffDraw_Implementation(bool bWon) {}
+
+	// The last man holding the crease (R-0013 point 3); Side -1 left, 0 centre, +1 right plays and holds a block. Called by the brain's owner, not the sim.
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Jam|SkaterVisual")
+	void SetGoalieStance(bool bOn, int32 Side);
+	virtual void SetGoalieStance_Implementation(bool bOn, int32 Side) {}
+
+	// One-shot on the fouler when a foul is called (the fouler then sits in the box).
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Jam|SkaterVisual")
+	void PlayFoulReaction();
+	virtual void PlayFoulReaction_Implementation() {}
 };

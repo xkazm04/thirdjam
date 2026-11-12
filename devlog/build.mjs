@@ -17,6 +17,31 @@ import { writeFixtureShots } from './fixtures/make-fixtures.mjs';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 export const ROOT = path.resolve(HERE, '..');
 
+// B-to-A-0013 (lane A21): the notes of both devices. Without --notes every `devlog/notes*.md` is read, A's `notes.md` first and
+// then the rest by name (`notes-b.md` is device B's; a file whose name ends in `-b` is B's, anything else is A's). Each block keeps
+// its device, so the page shows it on that device's lane. With --notes <file> only that file is read, as before.
+export function deviceOfNotesFile(file) {
+  return /-b\.md$/i.test(path.basename(file)) ? 'B' : 'A';
+}
+
+export function notesFilesIn(dir) {
+  if (!fs.existsSync(dir)) return [];
+  const names = fs.readdirSync(dir).filter((n) => /^notes.*\.md$/i.test(n)).sort((a, b) => a.localeCompare(b));
+  const first = names.filter((n) => n.toLowerCase() === 'notes.md');
+  return [...first, ...names.filter((n) => n.toLowerCase() !== 'notes.md')].map((n) => path.join(dir, n));
+}
+
+export function loadNotes(files) {
+  const out = [];
+  files.forEach((file, fi) => {
+    if (!fs.existsSync(file)) return;
+    const device = deviceOfNotesFile(file);
+    for (const b of parseNotes(fs.readFileSync(file, 'utf8'))) out.push({ ...b, device, file: fi });
+  });
+  // One timeline: by hour, then A before B within the hour, then the order written in the file.
+  return out.sort((a, b) => a.hour - b.hour || a.file - b.file || a.order - b.order);
+}
+
 /**
  * Build a page. Returns {html, stats, warnings, counts}. Throws on unreadable input.
  * @param {object} o parsed arguments (see lib/cli.mjs); `root` overrides the repository root for defaults
@@ -32,7 +57,7 @@ export function buildPage(o) {
   let repos = o.repos.map((r) => ({ device: r.device, dir: abs(r.dir) }));
   let shotsDir = o.shots ? abs(o.shots) : path.join(root, 'devlog', 'shots');
   let statusDir = o.status ? abs(o.status) : path.join(root, 'status');
-  let notesFile = o.notes ? abs(o.notes) : path.join(root, 'devlog', 'notes.md');
+  let notesFiles = o.notes ? [abs(o.notes)] : notesFilesIn(path.join(root, 'devlog'));
   const gatesFile = o.gates ? abs(o.gates) : path.join(root, 'docs', 'GATES.md');
 
   if (o.fixtures) {
@@ -44,7 +69,7 @@ export function buildPage(o) {
     shotsDir = path.join(root, 'devlog', 'out', 'fixture-shots');
     writeFixtureShots(shotsDir);
     statusDir = path.join(fx, 'status');
-    notesFile = path.join(fx, 'notes.md');
+    notesFiles = [path.join(fx, 'notes.md')];
   }
 
   for (const t of transcriptSrc) if (!fs.existsSync(t.dir)) warnings.push(`transcript path not found: ${redact(path.basename(t.dir))}`);
@@ -65,7 +90,7 @@ export function buildPage(o) {
   warnings.push(...shotResult.warnings);
   const statusResult = loadStatus(statusDir, redact);
   warnings.push(...statusResult.warnings);
-  const notes = fs.existsSync(notesFile) ? parseNotes(fs.readFileSync(notesFile, 'utf8')) : [];
+  const notes = loadNotes(notesFiles);
   const gates = loadGates(gatesFile);
   if (!gates.length) warnings.push('no gates found (docs/GATES.md missing or without "## Name (H<hour>)" headings)');
 
