@@ -100,6 +100,123 @@ Risks to test in Phase 2:
 - HTTP headers of the download URLs (HEAD only, 2026-11-12): sizes and Last-Modified in 1.2.
 - Local: `UE_5.9/Engine/Build/Build.version`, `UE_5.9/Engine/Plugins/Runtime/Nvidia/`, `nvidia-smi`.
 
-## 2. Integration (Phase 2, pending approval)
+## 2. Integration (Phase 2, 2026-11-12, approved by the operator at about 11:10)
 
-## 3. NVIDIA questions draft (Phase 2)
+### 2.1 What was fetched and what went in
+
+- Zip `2026.10.16_UE5.8_DLSS4.5Plugin_v8.9.0.zip`: 1,166,608,575 bytes, sha256 `adeeb59b9635794e05252438bf01307bf8a629769e8f0517237363f690bb380c`, 1104 entries.
+  It contains no scripts or executables (`.bat/.cmd/.ps1/.exe/.py/.sh`), only plugins, PDFs, a sample project and `.reg` helper files. The listing was read before anything was unpacked.
+- Contents: `Plugins/DLSS` (SR + RR + DLAA), `StreamlineNGXCommon` (a small common module, no DLLs), `StreamlineCore` / `StreamlineDLSSG` / `StreamlineReflex` / `StreamlineDeepDVC` (Frame Generation, Reflex, DeepDVC),
+  `NIS`, `DLSSMoviePipelineSupport`, a `Samples/DLSS4Sample` project, `Documentation/*.pdf` (EULA, SR guide, release notes), and `Platforms/WinGDK`.
+- **Installed into `Game/Plugins/`: only `DLSS` and `StreamlineNGXCommon`.** DLSS-SR does not need the Streamline DLLs (`DLSS.uplugin` depends only on `StreamlineNGXCommon`).
+  Left out: Frame Generation, Reflex, NIS, DeepDVC, the movie pipeline module, the sample, the docs, the arm64 files, the `Intermediate/` folders, the `.pdb` files and the prebuilt 5.8 editor binaries.
+  **`nvngx_dlssd.dll` (Ray Reconstruction, 48 MB) was deleted.** `NGX.Build.cs` stages only DLLs that exist, so Shipping stages `nvngx_dlss.dll` (56.2 MB) alone, and RR reports unsupported (`DLSS-RR=0` in the log, as intended).
+- On disk: 130 MB of source plus DLLs, and the editor binaries built by UBT. Gitignored (`Game/Plugins/DLSS*/`, `Game/Plugins/Streamline*/`, added by the Director).
+- `tools/dlss/fetch-dlss.ps1` repeats all of this for device B: download (or `-Zip <path>`), sha256 check, filtered extraction in .NET (nothing from the archive runs), and the 5.9 port edits.
+  Tested into a scratch tree, the result is identical to the hand install except for line endings.
+
+### 2.2 The 5.9 port (compile result: PASS, at about 11:22; the 45-minute cap started 11:18)
+
+- Both `.uplugin` files: `"EngineVersion": "5.8.0"` became `"5.9.0"`.
+- UE 5.9's compile-time format-string checker rejects enum and `int64` arguments for `%d`/`%u`. That needed **ten one-line fixes in two files** (log and `checkf` message arguments only), each marked `Third Jam 5.9 port` (§2b of the licence: the files keep NVIDIA's header).
+  `DLSSLibrary.cpp`: two `%d` -> `%lld`, one `int32(...)` cast, one `uint32(...)` cast. `DLSSUpscaler.cpp`: one `int32(...)` cast and five `uint32(...)` casts. No behaviour change.
+- All ten plugin modules then compiled and linked: DLSSUtility, DLSS, DLSSBlueprint, NGXRHI, NGXD3D11RHI, NGXD3D12RHI, NGXVulkanRHI, NGXVulkanRHIPreInit, DLSSEditor and StreamlineNGXCommon.
+  No other API breaks between 5.8 and 5.9 hit this plugin.
+- Editor load: `LogDLSSBlueprint: Loaded DLSS-SR plugin version 8.9.0-NGX310.9.16`, then `NVIDIA NGX DLSS supported DLSS-SR=1 DLSS-RR=0` on the RTX 4090 (driver 610.88, D3D12).
+  **NGX reports the minimum driver for DLSS-SR as 470.0.** Supported quality fractions: Ultra Performance 0.333, Performance 0.50, Balanced 0.58, Quality 0.667, DLAA 1.0. Ultra Quality is unsupported.
+- Engine-side files touched:
+  - `Game/ThirdJam.uproject`: `{ "Name": "DLSS", "Enabled": true, "Optional": true, "PlatformAllowList": ["Win64"] }`. With `Optional`, a checkout without the plugin (device B before running the fetch script) still opens.
+  - `Game/Source/JamGame/JamGame.Build.cs`: adds `DLSSBlueprint` and defines `JAM_WITH_DLSS=1` only when `Game/Plugins/DLSS/DLSS.uplugin` exists and the target is Win64. Otherwise `JAM_WITH_DLSS=0` and DLSS is compiled out.
+  - `Game/Config/DefaultEngine.ini`: **one line added**, at the end under a new `[SystemSettings]` section: `r.NGX.Enable.AllowCommandLine=1`.
+    Without it the plugin ignores `-ngxdisable` / `-ngxenable`. With it they work as a support kill switch in the shipped game and as the unsupported-hardware test. Otherwise the plugin's defaults stand.
+
+### 2.3 `UJamDlssSettings` (JamGame, `Public/DlssJam.h`, `Private/DlssJam.cpp`)
+
+The file is named `DlssJam.h`, not `DlssSettings.h`: UHT refuses two headers with the same name, and the plugin has `DLSSSettings.h`. The first name broke the editor target for other lanes for a few minutes around 11:14 to 11:20.
+
+API for lane A8 (static, BlueprintCallable/Pure, category `Jam|DLSS`):
+- `UJamDlssSettings::IsSupported()`: bool.
+- `GetUnsupportedReason()`: FString. For example "needs an NVIDIA RTX GPU", "NVIDIA driver too old", "not in this build"; empty when supported.
+- `GetAvailableModes()`: `TArray<EJamDlssMode>`. Returns all six modes when supported, otherwise only `Off`.
+- `SetMode(EJamDlssMode)`: applies the mode and saves it as `[/Script/JamGame.JamDlssSettings] Mode=quality` in `GameUserSettings.ini`.
+- `GetMode()`: the saved mode, default `Auto`. `GetEffectiveMode()`: what is running now (`Off` when unsupported).
+- `ModeToString` / `ModeFromString`: `auto | quality | balanced | performance | dlaa | off`.
+- `ApplySaved()`: re-applies the saved mode. Call it after a resolution change so `Auto` re-picks.
+- `EJamDlssMode { Auto, Quality, Balanced, Performance, DLAA, Off }`.
+- Console: `jam.dlss [mode]` sets the mode; with no argument it prints support and the saved and effective modes.
+
+How a mode is applied:
+- `Auto`: the plugin's recommendation for the current viewport size (`GetDLSSModeInformation(Auto, size)`). Quality, Balanced and Performance use the plugin's optimal screen percentage for that mode. DLAA runs at 100 %.
+- Every on-mode sets `r.ScreenPercentage` (priority `SetByGameSetting`) and calls `UDLSSLibrary::EnableDLSS(true)`.
+- `Off`, or any mode on unsupported hardware: `EnableDLSS(false)` and `r.ScreenPercentage 100`, so the engine keeps TSR.
+
+`UJamDlssSubsystem` (a GameInstanceSubsystem) applies the saved mode once per game instance. In `-game` and packaged builds the game instance exists before the DLSS module loads.
+The subsystem therefore waits for `FCoreDelegates::OnFEngineLoopInitComplete`. `OnPostEngineInit` is too early: UE 5.9 broadcasts it before it loads the PostEngineInit-phase modules (LaunchEngineLoop.cpp lines 4977 / 5005).
+The first `-game` runs logged "IsDLSSSupported should not be called before PostEngineInit" and fell back to off. After the fix (editor build at 12:01), a `-game` run with no command logged `DLSS on: mode quality, screen percentage 66.7` at startup from the saved mode.
+
+### 2.4 Measured (`-game` from the editor binaries, Rink map, CSV profiler `-csvGpuStats`, median and spread of the last 600 of 900 frames)
+
+The game is capped at 60 fps, so FrameTime is 16.67 ms everywhere and GPU ms is the comparison. **Caveat: three or four other lanes' editors were running on the same RTX 4090 the whole time.**
+Repeated runs of the same setting moved by up to 2x (1440p TSR measured 14.0 ms once and 6.8 ms the next time), so these numbers show trends only, not a final answer.
+
+| Run | GPU ms p10 / p50 / p90 | Upscaler pass ms |
+|---|---|---|
+| 1080p TSR, `-ngxdisable` | 4.47 / 4.56 / 4.69 | TSR 0.58 |
+| 1080p TSR (`jam.dlss off`), run 1 / run 2 | 4.21 / 4.99 / 5.43 ; 4.16 / 4.24 / 4.59 | TSR 0.53 |
+| 1080p DLSS Quality (66.7 %), run 1 / run 2 | 4.73 / 6.09 / 6.91 ; 3.70 / 4.26 / 4.79 | DLSS 0.43 |
+| 1440p TSR, run 1 / run 2 | 11.91 / 14.03 / 15.44 ; 5.89 / 6.77 / 9.21 | TSR 2.40 (run 1) |
+| 1440p DLSS Quality, run 1 / run 2 | 6.12 / 8.57 / 10.88 ; 4.99 / 7.29 / 8.94 | DLSS 0.61 |
+| 1440p DLAA (100 %) | 5.74 / 6.03 / 6.48 | DLSS 0.84 |
+
+Reading:
+- The game uses 4 to 7 ms of a 4090 at 60 fps, so DLSS has little to save here. The DLSS pass (0.4 to 0.6 ms) costs about what TSR costs.
+- The passes that scale with resolution do shrink with DLSS Quality: Lumen reflections went from 0.79-1.02 ms to 0.45-0.53 ms at 1080p, and the base pass from 0.42-0.49 ms to 0.13 ms at 1440p.
+- On a mid-range RTX card (the jury's machines are unknown) that saving is the real gain. On this 4090 it is inside the noise.
+- A clean A/B with the other editors closed (a :00 or :30 link window) is the follow-up if the number is wanted for the NVIDIA questions.
+- `stat gpu` on screen was not used: the CSV GPU columns are the same timers in a form that can be recorded.
+
+Screenshots at 1080p after 25 s of the opening take (the AI skaters are moving, so the frames differ in their positions): `docs/experiments/img/DLSS-off-1080p.png` (TSR 100 %) and `docs/experiments/img/DLSS-quality-1080p.png` (DLSS Quality 66.7 %).
+Same scene, no artefacts visible at this size.
+
+### 2.5 Unsupported hardware
+
+`-ngxdisable` is the plugin's switch for simulating a machine without NGX. **It only works with `r.NGX.Enable.AllowCommandLine=1`, whose default is 0.** So the earlier "`-ngxdisable`" rows (2.4, and the first package in 2.6) did not disable NGX.
+The 1080p "`-ngxdisable`" row in 2.4 is TSR only because the apply had not run yet.
+With the ini line, `-game -ngxdisable` logged:
+- `NVIDIA NGX library loading has been disabled with r.NGX.Enable=0`
+- `DLSS-SR=0`
+- `LogJamDlss: DLSS off (requested quality, unsupported: not available on this machine)`
+
+That run did 900 frames on TSR (GPU 5.31 ms, TSR 0.66 ms) with no error and no crash.
+The DLL is loaded only through NGX on NVIDIA drivers. On AMD or Intel, `QueryDLSSSupport` returns `NotSupportedIncompatibleHardware`, `auto` resolves to off, and Settings shows only "Off" with the reason.
+
+One crash during these runs: `-game` with `jam.dlss off`, at frame 0, `EXCEPTION_ACCESS_VIOLATION` in Engine under MoviePlayer, while first-run shaders were compiling (no symbols).
+The identical command did not reproduce it in the next eight runs. Logged, not explained.
+
+### 2.6 Shipping package (`tools/run/package.ps1 -Config Shipping -Zip`, output in the A11 scratchpad, not shipped)
+
+**Package of record, 12:04** (after the startup fix and the ini line):
+- PASS. Build, cook and stage took 68 s. **Zip 376.2 MB, staged 548 MB**, under the 1000 MB limit. The A6 baseline was 322.5 MB / 465.9 MB at about 10:00, before this morning's content and code.
+- **DLSS adds exactly one staged file: `ThirdJam/Plugins/DLSS/Binaries/ThirdParty/Win64/nvngx_dlss.dll`, 56.2 MB (29.7 MB deflated)**, plus the plugin's code linked into the Shipping exe. That code is about 1.5 MB, judging by the editor module sizes; the exe is 171.7 MB.
+  Nothing from Streamline, Frame Generation, Ray Reconstruction or NIS is staged.
+  **Budget: about 57 MB staged / about 30 MB zipped.** It belongs in the engine/runtime slice (A) of PLAN 4b and comes out of the 230 MB reserve.
+- `run-packaged.ps1 -Seconds 10` with the default mode: PASS, stayed up 10.4 s. On this RTX 4090 the default is Auto, so DLSS is on.
+  Shipping writes no log, so this run proves only that the Shipping exe runs with the plugin. The startup apply itself is proven by the `-game` run in 2.3, which uses the same code.
+- `run-packaged.ps1 -Seconds 10 -ExtraArgs "... -ngxdisable"` (NGX really off now): PASS, stayed up 10.4 s.
+
+Earlier package at 11:47: PASS, but the zip was 611.2 MB. The stage picked up a stale Development game build (`ThirdJam.exe` 330 MB + `ThirdJam.pdb` 373 MB) that another lane had left in `Game/Binaries/Win64`; it was gone by 12:04.
+**For the Director:** `package.ps1` should exclude or clean those files, because whichever lane packages next can ship 700 MB of debug build.
+
+### 2.7 Post-jam items
+
+- File NVIDIA's release notification (developer.nvidia.com/sw-notification, Supplement §4) if the game is ever released commercially or publicly beyond the jam. The Director chose not to file it now.
+- A logo needs NVIDIA's written approval (§7.2c). Until then the credit is text only.
+
+## 3. NVIDIA questions draft (for submission; to be checked against the actual form)
+
+- **Which NVIDIA technology does the game use?** NVIDIA DLSS 4.5 Super Resolution and DLAA, through NVIDIA's official DLSS Unreal Engine plugin v8.9.0 (NGX 310.9.16). The plugin was rebuilt for Unreal Engine 5.9 with ten one-line format-string fixes.
+- **How is it used?** DLSS is on by default (Auto) on any RTX GPU. Settings offers Auto / Quality / Balanced / Performance / DLAA / Off. On non-NVIDIA hardware the game runs with Unreal's TSR and the option shows as unavailable.
+- **What did it bring?** Higher output resolution at the same GPU cost on mid-range RTX cards: Quality renders 66.7 % of the pixels and the resolution-scaled passes (Lumen reflections, base pass) shrink accordingly. DLAA gives the best anti-aliasing on fast cards.
+  Numbers: section 2.4, to be refreshed with a clean A/B.
+- **Not used:** Frame Generation, Ray Reconstruction, Reflex, NvRTX, ACE. These are kept out deliberately for size and latency in a 60 Hz arcade game.
+- **Credit line** (title and credits screens, lane A8): `NVIDIA DLSS` as text, no logo.

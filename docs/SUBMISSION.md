@@ -31,6 +31,7 @@ Checklists are copied from `docs/GATES.md` (Submission candidate H84, Submission
 - Meshy: generated skater figure (listed as AI-generated, never as sourced)
 - Blender: evaluation of generated meshes
 - ffmpeg: capture and video encoding
+- NVIDIA DLSS 4.5 (Unreal plugin v8.9.0, Super Resolution and DLAA; plugin built for UE 5.8, ported to 5.9 by ten one-line format-string fixes): Settings > DLSS, on by default on RTX GPUs (`docs/experiments/DLSS.md`)
 - Anthropic API: the Designer's live sentence-to-cartridge call (key typed by the player; no key is bundled)
 
 ## Sourced assets
