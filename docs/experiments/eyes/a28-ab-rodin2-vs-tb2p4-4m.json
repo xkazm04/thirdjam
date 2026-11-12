@@ -1,0 +1,74 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "ab-pair",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T18:04:50.098Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "ab-pair",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": "tools/p4/out/ab/cap/ab_Rodin2_f08_chase.png",
+          "width": 960,
+          "height": 720
+        },
+        {
+          "label": "B",
+          "path": "tools/p4/out/ab/cap/ab_TB2P4_f08_chase.png",
+          "width": 960,
+          "height": 720
+        }
+      ],
+      "distance": 4,
+      "thumbnails": [],
+      "prompt_chars": 3514,
+      "usage": {
+        "prompt": 3160,
+        "output": 346,
+        "thoughts": 1990,
+        "total": 5496,
+        "calls": 1
+      },
+      "cost_usd_est": 0.03435,
+      "ms": 23166,
+      "retried": false,
+      "answer": {
+        "elements": {
+          "sky": {
+            "closer": "tie",
+            "why": "Both images use the exact same dark blue cloudy night sky backdrop."
+          },
+          "ice": {
+            "closer": "tie",
+            "why": "Both images display a placeholder brown grid texture rather than the requested scuffed, painted ice."
+          },
+          "pools": {
+            "closer": "tie",
+            "why": "Both images use a single harsh directional light casting a sharp black shadow instead of soft spot cones."
+          },
+          "figures": {
+            "closer": "a",
+            "why": "Still A features a character with a large round head, short body, a deep blue jersey, and a hockey stick, matching the toy proportions, while B shows a deformed athletic model without a stick."
+          },
+          "construction": {
+            "closer": "tie",
+            "why": "Neither image contains the requested boards, nets, or emissive trim."
+          },
+          "outline": {
+            "closer": "tie",
+            "why": "Neither image features the required visible ink-like outlines on the character or environment."
+          }
+        },
+        "verdict": "a",
+        "confidence": 0.95,
+        "reason": "Still A successfully implements the required chunky toy proportions and deep blue jersey for the character, whereas Still B uses a broken, deformed athletic model.",
+        "loser_keeps": "The clear separation of the skate blade from the boot, which is slightly more defined than in A."
+      },
+      "markdown": "**eyes/ab-pair** A=ab_Rodin2_f08_chase.png B=ab_TB2P4_f08_chase.png at 4 m (gemini-3.1-pro-preview, in 3160 out 346 think 1990 tokens, ~$0.0343, 23.2 s)\n- elements:\n  - sky: closer tie, why Both images use the exact same dark blue cloudy night sky backdrop.\n  - ice: closer tie, why Both images display a placeholder brown grid texture rather than the requested scuffed, painted ice.\n  - pools: closer tie, why Both images use a single harsh directional light casting a sharp black shadow instead of soft spot cones.\n  - figures: closer a, why Still A features a character with a large round head, short body, a deep blue jersey, and a hockey stick, matching the toy proportions, while B shows a deformed athletic model without a stick.\n  - construction: closer tie, why Neither image contains the requested boards, nets, or emissive trim.\n  - outline: closer tie, why Neither image features the required visible ink-like outlines on the character or environment.\n- verdict: a\n- confidence: 0.95\n- reason: Still A successfully implements the required chunky toy proportions and deep blue jersey for the character, whereas Still B uses a broken, deformed athletic model.\n- loser_keeps: The clear separation of the skate blade from the boot, which is slightly more defined than in A."
+    }
+  ]
+}

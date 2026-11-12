@@ -1,0 +1,39 @@
+{
+ "tool": "thirdjam.p4-abcap/1",
+ "tag": "rag",
+ "frame": 8,
+ "figures": {
+  "Rodin2": {
+   "clip": "/Game/P4/Rodin2/Anims/MF_Unarmed_Walk_Fwd_P4_Rodin2",
+   "pelvis_z_at_frame": 59.6,
+   "clip_len_s": 1.5,
+   "mass_kg": 38.2,
+   "ragdoll_pelvis_z": [
+    59.6,
+    65.0,
+    59.7,
+    51.5,
+    37.2,
+    19.1
+   ],
+   "back_pelvis_z": 59.6,
+   "ragdoll_max_pelvis_z": 65.0
+  }
+ },
+ "Rodin2": {
+  "clip": "/Game/P4/Rodin2/Anims/MF_Unarmed_Walk_Fwd_P4_Rodin2",
+  "pelvis_z_at_frame": 59.6,
+  "clip_len_s": 1.5,
+  "mass_kg": 38.2,
+  "ragdoll_pelvis_z": [
+   59.6,
+   65.0,
+   59.7,
+   51.5,
+   37.2,
+   19.1
+  ],
+  "back_pelvis_z": 59.6,
+  "ragdoll_max_pelvis_z": 65.0
+ }
+}

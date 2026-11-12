@@ -130,7 +130,50 @@ One figure with a rig and five falls: Rodin + Meshy 20.5 cr, 4 minutes; Tripo + 
   rigs only with `meshyrig`, 24 Mixamo-style bones, `bonemap-meshyrig.json`). Both imported (`SK_P4_Rodin2`, `SK_P4_Tripo3`) and walking; eyes: toy 4/5 on both, hockey 2/5 for the
   T-pose arms. The look is solved by the concept sheet; the rig is now the blocker. Per figure: Rodin 0.5 + Meshy 5 cr + one Codex image, 6 minutes; Tripo (fal) + Meshy 5 cr, 5 minutes.
 
-## 8. Open questions for the Director
+## 8. Pass 3 (18:59-19:04): the image-route figures against B's TB2_P4, and capsules by hand [run]
+
+**Setup.** One lab map (`/Game/P4/Maps/P4_Lab`), one frozen frame (game frame 8 of each figure's clip, fixed 60 Hz), the same two cameras (chase 4.2 m, far 24 m), each
+figure revealed alone: `SK_P4_Rodin2` on the retargeted Manny walk, `SK_P4_Tripo3` on its vendor walk, B's `/JamAssets/Skaters/SK_SkaterTB2_P4` on B's `AS_SkaterTB2_P4_Stride`
+(the bare skeletal mesh: B's Blueprint attaches the stick, so B's still has none; a fair second pass would spawn `BP_SkaterVisual_TB2_P4`). Stills:
+`devlog/shots/20261112-190327-A-a28-ab-{rodin2,tripo3,tb2p4}-f08-{chase,far}.png`. Tripo3 was **not judged**: its asset measured 0.7 cm tall in this lab (bounds and pelvis at
+0.3 cm; the meshyrig import came in at 1/100 after the second normalize), so its still is empty; the pass-2 sheet `20261112-182525-A-a28-tripo3-walk2-chase.png` stands for its look.
+
+**Eyes (A27, gemini-3.1-pro-preview).** `figure` on B's TB2_P4 at 4 m: hockey player 2/5 full, 2/5 small; toy 3/5, 3/5 ("the head is far too small ... a pinhead bruiser";
+no stick in the bare mesh). Rodin2 at 4 m (pass 2 sheet, same preset): hockey 2/5 (stick in one hand, T-pose arms), toy 4/5 full, 3/5 small; Rodin (text route, pass 2):
+hockey 4/5, toy 5/5. `ab-pair` Rodin2 (A) against TB2_P4 (B) with the P2 bar: **A at 4 m and A at 24 m, confidence 0.95 both** ("large round head, short body, a deep blue
+jersey and a hockey stick, matching the toy proportions, while B shows a realistically proportioned athletic model"); every other element (sky, ice, pools, construction) a
+tie because the lab is the same placeholder for both; at 24 m the outline element also goes to A (the dark rim of the toy reads as an ink line). JSON:
+`docs/experiments/eyes/a28-ab-{tb2p4-figure,rodin2-vs-tb2p4-4m,rodin2-vs-tb2p4-24m,tripo3-vs-tb2p4-4m}.json`.
+
+**Verdict.** Yes: the concept-sheet route beats B's TB2_P4 on look, by one eyes grade on the toy scale (4/5 against 3/5 at full size, 3/5 against 3/5 at 128 px) and by a
+decisive A/B at both game distances (0.95). It loses on motion: B's figure has 31 scripted takes on a skeleton its Blueprint drives; Rodin2 walks a retargeted Manny clip with
+T-pose arms and a one-hand stick. The recommendation is therefore the recipe below into B's pipeline (B's rig, takes and visual; the concept-sheet mesh), not a second visual.
+
+**Recipe for B (the mesh only; everything after the rig is B's).**
+1. Concept sheet: `node tools/images/gen.mjs tools/p4/jobs/concept-jobs.json` (Codex, one image; the prompt is the job file and sits beside the output as
+   `p4-skater-7-sheet.prompt.txt`): "A stylized hockey player with toy proportions (big round head about one third of the height, short thick limbs, chunky rounded hands and
+   feet), wearing a deep blue hockey jersey with white trim at the collar, cuffs and hem and a large white number 7 on the chest, blue hockey gloves, dark blue hockey pants,
+   blue socks, black ice skates with silver blades, a blue helmet with a white metal cage visor, holding a wooden hockey stick in both hands with the blade on the ice. Painted
+   cel-shaded toy look, flat solid colours, matte plastic surfaces, A-pose-like stance with arms clearly separated from the body." + the style line (front and side on one
+   sheet, white background, no text). Ask for **no stick** next time (the sheet drew one per hand and both came through as mesh).
+2. Crops: left half = front, right half = side (`tools/p4/out/concept/a28-concept/p4-skater-7-{front,side}.png`).
+3. Rodin: `node tools/p4/rodin.mjs generate --tier Gen-2.5-Low --format glb --mesh-mode Quad --quality-override 18000 --tapose --image front.png --image side.png --prompt
+   "stylized toy hockey player from the concept sheet, blue jersey with white trim and a white number 7, blue gloves, blue cage helmet, black skates, no stick, A-pose"`
+   (0.5 cr, 68 s, 36.5k tris, 3 x 2K maps). The whole sheet as one image gives a two-body mesh (Tripo did); send the crops.
+4. Rig: Meshy `rig --model-url <the Rodin GLB link> --template ue5_mannequin --height 1.8` (5 cr, 25 s; `ue5_mannequin` is refused on a mesh with sticks fused to the hands:
+   then `meshyrig`, 24 Mixamo-style bones). B's own route from here.
+5. If the FBX goes through Blender: `tools/p4/normalize_fbx.py <in> <out> root zup -90 one 0` (bake transforms, centimetres, pre-rotate -90 deg X, armature named `root`),
+   else the IK Retargeter writes pelvis heights 100x too big and the physics asset gets two bodies.
+6. Grip (if the stick is a separate mesh on `hand_r`): socket relative rotation (pitch, yaw, roll) **[-19.3, -51.2, 178.7]** on `SK_P4_Rodin2`; computed per skeleton by
+   `tools/p4/ue_grip.py` (inverse(hand_r world) x make_rot_from_xz(shaft direction, up)); the shaft is the stick's local +X.
+7. Physics asset by hand (`tools/p4/ue_pa_plan.py` + `window5.sh`): 13 bodies: spheres pelvis r 16, head r 20 at +12 along the bone, gloves r 10; capsules on spine_02,
+   upperarm_l/r, lowerarm_l/r, thigh_l/r, calf_l/r along the bone (radius 0.22 x length, 5-14 cm), constraints child -> parent through `PhysicsAssetToolset` (`bone1Name` child,
+   `bone2Name` parent). Result on Rodin2: mass 38 kg (auto bodies: 378), ragdoll pelvis 60 -> 65 (peak) -> 19 cm over 20 frames, back to 60 after the restore: **it stays on the
+   ice** (`20261112-190327-A-a28-rag-rodin2-rag0x-chase.png`).
+
+**Two-hand grip:** left open; it is not one socket on the left hand (the left glove has to reach the shaft, which is an IK or a hand pose in the clip).
+
+## 9. Open questions for the Director
 
 1. Which figure goes forward for the A29 night-rig stills: Tripo (look) or Rodin (cost)? Both share the rig and the retargets; the swap is one config file.
 2. `Game/Content/Characters/Mannequins/` already held the Manny set when this lane started (another lane's copy); this lane added `Meshes/SK_Mannequin`, `SKM_Manny_Simple`,

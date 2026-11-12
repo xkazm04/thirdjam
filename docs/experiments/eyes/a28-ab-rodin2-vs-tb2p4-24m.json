@@ -1,0 +1,74 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "ab-pair",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T18:05:05.199Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "ab-pair",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": "tools/p4/out/ab/cap/ab_Rodin2_f08_far.png",
+          "width": 960,
+          "height": 720
+        },
+        {
+          "label": "B",
+          "path": "tools/p4/out/ab/cap/ab_TB2P4_f08_far.png",
+          "width": 960,
+          "height": 720
+        }
+      ],
+      "distance": 24,
+      "thumbnails": [],
+      "prompt_chars": 3511,
+      "usage": {
+        "prompt": 3157,
+        "output": 355,
+        "thoughts": 1009,
+        "total": 4521,
+        "calls": 1
+      },
+      "cost_usd_est": 0.02268,
+      "ms": 15007,
+      "retried": false,
+      "answer": {
+        "elements": {
+          "sky": {
+            "closer": "tie",
+            "why": "Both images feature an identical deep-blue gradient void above the horizon line."
+          },
+          "ice": {
+            "closer": "tie",
+            "why": "Both images use an identical grey-and-brown checkerboard placeholder texture instead of the requested painted ice."
+          },
+          "pools": {
+            "closer": "tie",
+            "why": "Neither image contains any spot cones or soft light pools on the ground surface."
+          },
+          "figures": {
+            "closer": "a",
+            "why": "Still A features a character with the requested chunky toy proportions (large round head, short body) and a visible stick, whereas B uses a realistically proportioned athletic model."
+          },
+          "construction": {
+            "closer": "tie",
+            "why": "Neither image contains boards, nets, or any arena construction elements."
+          },
+          "outline": {
+            "closer": "a",
+            "why": "Still A applies a visible dark ink-like outline around the character model, which is completely absent in B."
+          }
+        },
+        "verdict": "a",
+        "confidence": 0.95,
+        "reason": "Still A successfully implements the core stylistic pillars for the characters (toy proportions and cel outlines), whereas B uses a generic realistic model that ignores the art direction.",
+        "loser_keeps": "Still B's character is in a much more recognizable, dynamic hockey ready-stance with a wide base and deep knee bend."
+      },
+      "markdown": "**eyes/ab-pair** A=ab_Rodin2_f08_far.png B=ab_TB2P4_f08_far.png at 24 m (gemini-3.1-pro-preview, in 3157 out 355 think 1009 tokens, ~$0.0227, 15 s)\n- elements:\n  - sky: closer tie, why Both images feature an identical deep-blue gradient void above the horizon line.\n  - ice: closer tie, why Both images use an identical grey-and-brown checkerboard placeholder texture instead of the requested painted ice.\n  - pools: closer tie, why Neither image contains any spot cones or soft light pools on the ground surface.\n  - figures: closer a, why Still A features a character with the requested chunky toy proportions (large round head, short body) and a visible stick, whereas B uses a realistically proportioned athletic model.\n  - construction: closer tie, why Neither image contains boards, nets, or any arena construction elements.\n  - outline: closer a, why Still A applies a visible dark ink-like outline around the character model, which is completely absent in B.\n- verdict: a\n- confidence: 0.95\n- reason: Still A successfully implements the core stylistic pillars for the characters (toy proportions and cel outlines), whereas B uses a generic realistic model that ignores the art direction.\n- loser_keeps: Still B's character is in a much more recognizable, dynamic hockey ready-stance with a wide base and deep knee bend."
+    }
+  ]
+}

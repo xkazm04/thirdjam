@@ -1,0 +1,294 @@
+{
+  "tools": {
+    "PhysicsToolsets.PhysicsAssetToolset.SetSphere": {
+      "description": "Adds or replaces a sphere collision primitive on a body.\nIf any shape with the given name already exists on the body it is removed first.",
+      "name": "PhysicsToolsets.PhysicsAssetToolset.SetSphere",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "physicsAsset": {
+            "type": "object",
+            "title": "/Script/Engine.PhysicsAsset",
+            "required": [
+              "refPath"
+            ],
+            "properties": {
+              "refPath": {
+                "type": "string",
+                "description": "The reference stored as a soft path string."
+              }
+            },
+            "description": "The physics asset to modify."
+          },
+          "boneName": {
+            "type": "string",
+            "description": "The name of the bone whose body to modify."
+          },
+          "shapeName": {
+            "type": "string",
+            "description": "A name that uniquely identifies this shape on the body."
+          },
+          "center": {
+            "title": "Vector",
+            "description": "Center of the sphere in bone-local space (cm).",
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "default": 0
+              },
+              "y": {
+                "type": "number",
+                "default": 0
+              },
+              "z": {
+                "type": "number",
+                "default": 0
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ]
+          },
+          "radius": {
+            "type": "number",
+            "description": "Radius of the sphere (cm). Must be greater than zero."
+          }
+        },
+        "required": [
+          "physicsAsset",
+          "boneName",
+          "shapeName",
+          "center",
+          "radius"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "accessMode": "write",
+        "readOnlyHint": false
+      }
+    },
+    "PhysicsToolsets.PhysicsAssetToolset.SetCapsule": {
+      "description": "Adds or replaces a capsule collision primitive on a body.\nIf any shape with the given name already exists on the body it is removed first.\nThe capsule's long axis is its local Z after applying Rotation.",
+      "name": "PhysicsToolsets.PhysicsAssetToolset.SetCapsule",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "physicsAsset": {
+            "type": "object",
+            "title": "/Script/Engine.PhysicsAsset",
+            "required": [
+              "refPath"
+            ],
+            "properties": {
+              "refPath": {
+                "type": "string",
+                "description": "The reference stored as a soft path string."
+              }
+            },
+            "description": "The physics asset to modify."
+          },
+          "boneName": {
+            "type": "string",
+            "description": "The name of the bone whose body to modify."
+          },
+          "shapeName": {
+            "type": "string",
+            "description": "A name that uniquely identifies this shape on the body."
+          },
+          "center": {
+            "title": "Vector",
+            "description": "Center of the capsule in bone-local space (cm).",
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "default": 0
+              },
+              "y": {
+                "type": "number",
+                "default": 0
+              },
+              "z": {
+                "type": "number",
+                "default": 0
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ]
+          },
+          "rotation": {
+            "title": "Rotator",
+            "description": "Orientation of the capsule in bone-local space.",
+            "type": "object",
+            "properties": {
+              "pitch": {
+                "type": "number",
+                "description": "Pitch (degrees) around Y axis",
+                "default": 0
+              },
+              "yaw": {
+                "type": "number",
+                "description": "Yaw (degrees) around Z axis",
+                "default": 0
+              },
+              "roll": {
+                "type": "number",
+                "description": "Roll (degrees) around X axis",
+                "default": 0
+              }
+            },
+            "required": [
+              "pitch",
+              "yaw",
+              "roll"
+            ]
+          },
+          "radius": {
+            "type": "number",
+            "description": "Radius of the capsule end-caps (cm). Must be greater than zero."
+          },
+          "length": {
+            "type": "number",
+            "description": "Length of the cylindrical section (cm). Must be non-negative. Total capsule height = Length + 2 * Radius."
+          }
+        },
+        "required": [
+          "physicsAsset",
+          "boneName",
+          "shapeName",
+          "center",
+          "rotation",
+          "radius",
+          "length"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "accessMode": "write",
+        "readOnlyHint": false
+      }
+    },
+    "PhysicsToolsets.PhysicsAssetToolset.RemoveBody": {
+      "description": "Removes the body for the given bone along with any constraints that reference it.\nRaises a script error if PhysicsAsset is null or no body exists for BoneName.",
+      "name": "PhysicsToolsets.PhysicsAssetToolset.RemoveBody",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "physicsAsset": {
+            "type": "object",
+            "title": "/Script/Engine.PhysicsAsset",
+            "required": [
+              "refPath"
+            ],
+            "properties": {
+              "refPath": {
+                "type": "string",
+                "description": "The reference stored as a soft path string."
+              }
+            },
+            "description": "The physics asset to modify."
+          },
+          "boneName": {
+            "type": "string",
+            "description": "The name of the bone whose body to remove."
+          }
+        },
+        "required": [
+          "physicsAsset",
+          "boneName"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "accessMode": "write",
+        "readOnlyHint": false
+      }
+    },
+    "PhysicsToolsets.PhysicsAssetToolset.AddConstraint": {
+      "description": "Adds a new constraint between two bodies. Both bodies must already exist.",
+      "name": "PhysicsToolsets.PhysicsAssetToolset.AddConstraint",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "physicsAsset": {
+            "type": "object",
+            "title": "/Script/Engine.PhysicsAsset",
+            "required": [
+              "refPath"
+            ],
+            "properties": {
+              "refPath": {
+                "type": "string",
+                "description": "The reference stored as a soft path string."
+              }
+            },
+            "description": "The physics asset to modify."
+          },
+          "bone1Name": {
+            "type": "string",
+            "description": "Name of the child bone."
+          },
+          "bone2Name": {
+            "type": "string",
+            "description": "Name of the parent bone."
+          }
+        },
+        "required": [
+          "physicsAsset",
+          "bone1Name",
+          "bone2Name"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "accessMode": "write",
+        "readOnlyHint": false
+      }
+    },
+    "PhysicsToolsets.PhysicsAssetToolset.AddBody": {
+      "description": "Adds a new empty body for the given bone.",
+      "name": "PhysicsToolsets.PhysicsAssetToolset.AddBody",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "physicsAsset": {
+            "type": "object",
+            "title": "/Script/Engine.PhysicsAsset",
+            "required": [
+              "refPath"
+            ],
+            "properties": {
+              "refPath": {
+                "type": "string",
+                "description": "The reference stored as a soft path string."
+              }
+            },
+            "description": "The physics asset to modify."
+          },
+          "boneName": {
+            "type": "string",
+            "description": "The name of the bone to add a body for."
+          }
+        },
+        "required": [
+          "physicsAsset",
+          "boneName"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "accessMode": "write",
+        "readOnlyHint": false
+      }
+    }
+  },
+  "errors": {}
+}
+{"tool":"thirdjam.mcp/1","cmd":"tools","verdict":"pass","ms":49}

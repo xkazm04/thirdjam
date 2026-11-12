@@ -1,0 +1,38 @@
+AddBody {"physicsAsset": {"refPath": "/Game/P4/Rodin2/PA_P4_Rodin2.PA_P4_Rodin2"}, "boneName": "pelvis"}
+SetSphere {"physicsAsset": {"refPath": "/Game/P4/Rodin2/PA_P4_Rodin2.PA_P4_Rodin2"}, "boneName": "pelvis", "shapeName": "pelvis", "center": {"x": 0, "y": 0, "z": 0}, "radius": 16.2}
+AddBody {"physicsAsset": {"refPath": "/Game/P4/Rodin2/PA_P4_Rodin2.PA_P4_Rodin2"}, "boneName": "spine_02"}
+SetCapsule {"physicsAsset": {"refPath": "/Game/P4/Rodin2/PA_P4_Rodin2.PA_P4_Rodin2"}, "boneName": "spine_02", "shapeName": "cap", "center": {"x": 5.2, "y": 0.0, "z": -0.0}, "rotation": {"pitch": 0.0, "yaw": 90.0, "roll": -90.0}, "radius": 5.0, "length": 0.4}
+AddConstraint {"physicsAsset": {"refPath": "/Game/P4/Rodin2/PA_P4_Rodin2.PA_P4_Rodin2"}, "bone1Name": "spine_02", "bone2Name": "pelvis"}
+AddBody {"physicsAsset": {"refPath": "/Game/P4/Rodin2/PA_P4_Rodin2.PA_P4_Rodin2"}, "boneName": "head"}
+SetSphere {"physicsAsset": {"refPath": "/Game/P4/Rodin2/PA_P4_Rodin2.PA_P4_Rodin2"}, "boneName": "head", "shapeName": "head", "center": {"x": 11.88, "y": 0, "z": 0}, "radius": 19.8}
+AddConstraint {"physicsAsset": {"refPath": "/Game/P4/Rodin2/PA_P4_Rodin2.PA_P4_Rodin2"}, "bone1Name": "head", "bone2Name": "spine_02"}
+AddBody {"physicsAsset": {"refPath": "/Game/P4/Rodin2/PA_P4_Rodin2.PA_P4_Rodin2"}, "boneName": "upperarm_l"}
+SetCapsule {"physicsAsset": {"refPath": "/Game/P4/Rodin2/PA_P4_Rodin2.PA_P4_Rodin2"}, "boneName": "upperarm_l", "shapeName": "cap", "center": {"x": 8.3, "y": -0.0, "z": -0.0}, "rotation": {"pitch": -0.0, "yaw": 90.0, "roll": -90.0}, "radius": 5.0, "length": 6.5}
+AddConstraint {"physicsAsset": {"refPath": "/Game/P4/Rodin2/PA_P4_Rodin2.PA_P4_Rodin2"}, "bone1Name": "upperarm_l", "bone2Name": "spine_02"}
+AddBody {"physicsAsset": {"refPath": "/Game/P4/Rodin2/PA_P4_Rodin2.PA_P4_Rodin2"}, "boneName": "lowerarm_l"}
+SetCapsule {"physicsAsset": {"refPath": "/Game/P4/Rodin2/PA_P4_Rodin2.PA_P4_Rodin2"}, "boneName": "lowerarm_l", "shapeName": "cap", "center": {"x": 7.5, "y": 0.0, "z": 0.0}, "rotation": {"pitch": 0.0, "yaw": 90.0, "roll": -90.0}, "radius": 5.0, "length": 5.0}
+AddConstraint {"physicsAsset": {"refPath": "/Game/P4/Rodin2/PA_P4_Rodin2.PA_P4_Rodin2"}, "bone1Name": "lowerarm_l", "bone2Name": "upperarm_l"}
+AddBody {"physicsAsset": {"refPath": "/Game/P4/Rodin2/PA_P4_Rodin2.PA_P4_Rodin2"}, "boneName": "upperarm_r"}
+SetCapsule {"physicsAsset": {"refPath": "/Game/P4/Rodin2/PA_P4_Rodin2.PA_P4_Rodin2"}, "boneName": "upperarm_r", "shapeName": "cap", "center": {"x": 9.2, "y": 0.0, "z": 0.0}, "rotation": {"pitch": 0.0, "yaw": 90.0, "roll": -90.0}, "radius": 5.0, "length": 8.4}
+AddConstraint {"physicsAsset": {"refPath": "/Game/P4/Rodin2/PA_P4_Rodin2.PA_P4_Rodin2"}, "bone1Name": "upperarm_r", "bone2Name": "spine_02"}
+AddBody {"physicsAsset": {"refPath": "/Game/P4/Rodin2/PA_P4_Rodin2.PA_P4_Rodin2"}, "boneName": "lowerarm_r"}
+SetCapsule {"physicsAsset": {"refPath": "/Game/P4/Rodin2/PA_P4_Rodin2.PA_P4_Rodin2"}, "boneName": "lowerarm_r", "shapeName": "cap", "center": {"x": 9.3, "y": 0.0, "z": -0.0}, "rotation": {"pitch": 0.0, "yaw": 90.0, "roll": -90.0}, "radius": 5.0, "length": 8.6}
+AddConstraint {"physicsAsset": {"refPath": "/Game/P4/Rodin2/PA_P4_Rodin2.PA_P4_Rodin2"}, "bone1Name": "lowerarm_r", "bone2Name": "upperarm_r"}
+AddBody {"physicsAsset": {"refPath": "/Game/P4/Rodin2/PA_P4_Rodin2.PA_P4_Rodin2"}, "boneName": "thigh_l"}
+SetCapsule {"physicsAsset": {"refPath": "/Game/P4/Rodin2/PA_P4_Rodin2.PA_P4_Rodin2"}, "boneName": "thigh_l", "shapeName": "cap", "center": {"x": 11.5, "y": -0.0, "z": 0.0}, "rotation": {"pitch": -0.0, "yaw": 90.0, "roll": -90.0}, "radius": 5.0, "length": 12.8}
+AddConstraint {"physicsAsset": {"refPath": "/Game/P4/Rodin2/PA_P4_Rodin2.PA_P4_Rodin2"}, "bone1Name": "thigh_l", "bone2Name": "pelvis"}
+AddBody {"physicsAsset": {"refPath": "/Game/P4/Rodin2/PA_P4_Rodin2.PA_P4_Rodin2"}, "boneName": "calf_l"}
+SetCapsule {"physicsAsset": {"refPath": "/Game/P4/Rodin2/PA_P4_Rodin2.PA_P4_Rodin2"}, "boneName": "calf_l", "shapeName": "cap", "center": {"x": 9.8, "y": 0.0, "z": 0.0}, "rotation": {"pitch": 0.0, "yaw": 90.0, "roll": -90.0}, "radius": 5.0, "length": 9.7}
+AddConstraint {"physicsAsset": {"refPath": "/Game/P4/Rodin2/PA_P4_Rodin2.PA_P4_Rodin2"}, "bone1Name": "calf_l", "bone2Name": "thigh_l"}
+AddBody {"physicsAsset": {"refPath": "/Game/P4/Rodin2/PA_P4_Rodin2.PA_P4_Rodin2"}, "boneName": "thigh_r"}
+SetCapsule {"physicsAsset": {"refPath": "/Game/P4/Rodin2/PA_P4_Rodin2.PA_P4_Rodin2"}, "boneName": "thigh_r", "shapeName": "cap", "center": {"x": 11.9, "y": 0.0, "z": -0.0}, "rotation": {"pitch": 0.0, "yaw": 90.0, "roll": -90.0}, "radius": 5.2, "length": 13.3}
+AddConstraint {"physicsAsset": {"refPath": "/Game/P4/Rodin2/PA_P4_Rodin2.PA_P4_Rodin2"}, "bone1Name": "thigh_r", "bone2Name": "pelvis"}
+AddBody {"physicsAsset": {"refPath": "/Game/P4/Rodin2/PA_P4_Rodin2.PA_P4_Rodin2"}, "boneName": "calf_r"}
+SetCapsule {"physicsAsset": {"refPath": "/Game/P4/Rodin2/PA_P4_Rodin2.PA_P4_Rodin2"}, "boneName": "calf_r", "shapeName": "cap", "center": {"x": 9.6, "y": 0.0, "z": -0.0}, "rotation": {"pitch": 0.0, "yaw": 90.0, "roll": -90.0}, "radius": 5.0, "length": 9.2}
+AddConstraint {"physicsAsset": {"refPath": "/Game/P4/Rodin2/PA_P4_Rodin2.PA_P4_Rodin2"}, "bone1Name": "calf_r", "bone2Name": "thigh_r"}
+AddBody {"physicsAsset": {"refPath": "/Game/P4/Rodin2/PA_P4_Rodin2.PA_P4_Rodin2"}, "boneName": "hand_l"}
+SetSphere {"physicsAsset": {"refPath": "/Game/P4/Rodin2/PA_P4_Rodin2.PA_P4_Rodin2"}, "boneName": "hand_l", "shapeName": "glove", "center": {"x": 4.95, "y": 0, "z": 0}, "radius": 9.9}
+AddConstraint {"physicsAsset": {"refPath": "/Game/P4/Rodin2/PA_P4_Rodin2.PA_P4_Rodin2"}, "bone1Name": "hand_l", "bone2Name": "lowerarm_l"}
+AddBody {"physicsAsset": {"refPath": "/Game/P4/Rodin2/PA_P4_Rodin2.PA_P4_Rodin2"}, "boneName": "hand_r"}
+SetSphere {"physicsAsset": {"refPath": "/Game/P4/Rodin2/PA_P4_Rodin2.PA_P4_Rodin2"}, "boneName": "hand_r", "shapeName": "glove", "center": {"x": 4.95, "y": 0, "z": 0}, "radius": 9.9}
+AddConstraint {"physicsAsset": {"refPath": "/Game/P4/Rodin2/PA_P4_Rodin2.PA_P4_Rodin2"}, "bone1Name": "hand_r", "bone2Name": "lowerarm_r"}

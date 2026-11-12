@@ -1,0 +1,74 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "ab-pair",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T18:05:24.287Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "ab-pair",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": "tools/p4/out/ab/cap/ab_Tripo3_f08_chase.png",
+          "width": 960,
+          "height": 720
+        },
+        {
+          "label": "B",
+          "path": "tools/p4/out/ab/cap/ab_TB2P4_f08_chase.png",
+          "width": 960,
+          "height": 720
+        }
+      ],
+      "distance": 4,
+      "thumbnails": [],
+      "prompt_chars": 3514,
+      "usage": {
+        "prompt": 3160,
+        "output": 321,
+        "thoughts": 1099,
+        "total": 4580,
+        "calls": 1
+      },
+      "cost_usd_est": 0.02336,
+      "ms": 19007,
+      "retried": false,
+      "answer": {
+        "elements": {
+          "sky": {
+            "closer": "tie",
+            "why": "Both stills feature the exact same deep-blue night dome with painted-looking clouds."
+          },
+          "ice": {
+            "closer": "tie",
+            "why": "Neither still features scuffed ice with frost patches; both use a placeholder brown checkerboard."
+          },
+          "pools": {
+            "closer": "tie",
+            "why": "Neither still shows shadowed spot cones or soft light pools on the ground."
+          },
+          "figures": {
+            "closer": "b",
+            "why": "Still B includes a figure with chunky proportions in a deep blue jersey, whereas Still A is empty."
+          },
+          "construction": {
+            "closer": "tie",
+            "why": "Neither still contains boards, nets, or emissive trim."
+          },
+          "outline": {
+            "closer": "b",
+            "why": "Still B applies flat cel-like shading steps to the figure, whereas Still A has no subject to shade or outline."
+          }
+        },
+        "verdict": "b",
+        "confidence": 0.9,
+        "reason": "Still B introduces a player character that aligns with the chunky toy proportions and team color requirements, making it closer to the target than the empty Still A.",
+        "loser_keeps": "The deep-blue night dome sky backdrop."
+      },
+      "markdown": "**eyes/ab-pair** A=ab_Tripo3_f08_chase.png B=ab_TB2P4_f08_chase.png at 4 m (gemini-3.1-pro-preview, in 3160 out 321 think 1099 tokens, ~$0.0234, 19 s)\n- elements:\n  - sky: closer tie, why Both stills feature the exact same deep-blue night dome with painted-looking clouds.\n  - ice: closer tie, why Neither still features scuffed ice with frost patches; both use a placeholder brown checkerboard.\n  - pools: closer tie, why Neither still shows shadowed spot cones or soft light pools on the ground.\n  - figures: closer b, why Still B includes a figure with chunky proportions in a deep blue jersey, whereas Still A is empty.\n  - construction: closer tie, why Neither still contains boards, nets, or emissive trim.\n  - outline: closer b, why Still B applies flat cel-like shading steps to the figure, whereas Still A has no subject to shade or outline.\n- verdict: b\n- confidence: 0.9\n- reason: Still B introduces a player character that aligns with the chunky toy proportions and team color requirements, making it closer to the target than the empty Still A.\n- loser_keeps: The deep-blue night dome sky backdrop."
+    }
+  ]
+}
