@@ -196,3 +196,102 @@ Tunables sit at the top of `retarget.py`: `HEAD_CLEAR` 0.40, `STICK_HEAD_CLEAR` 
 3. Ask S4 for an R-proportioned pose pass (arm length 0.37 m, hip-to-ankle 0.42 m) for Celebrate, the two-hand grips and GetUp, or accept the
    gaps listed above.
 4. Confirm Hyper3D export rights before the mesh ships (open from S3).
+
+## Rerun on the fixed S4 export (lead's request, 12:13 to 12:23)
+
+**Result: done.** Both files carry all 16 takes, are written in centimetres, have `root` with an identity rest at scale 1, carry no tracks on `root` or `Armature`, and embed no textures. Everything below is measured on the files as written and re-imported in Blender; **Unreal is still the real test**.
+
+**Input:** S4's `export/SK_Skater_S4.fbx` written 12:09:54 (sha256 `AC97F221...961E`, cm, 16 takes), copied to `s5/in/` together with `SK_Skater_S4_loopcut.fbx`, `strip_tracks.py`, `fbx_nodes.py` and `fbx_tracks.py`. The 11:32 snapshot is kept as `in/SK_Skater_S4_1132.fbx`.
+
+### Files
+
+| File | Bytes |
+|---|---|
+| `C:\Users\kazda\jam\skater-lab\s5\export\SK_Skater_S5.fbx` | 5,351,644 |
+| `C:\Users\kazda\jam\skater-lab\s5\export\SK_Skater_S5_loopcut.fbx` | 5,337,228 |
+
+Both are written with no embedded images.
+
+### What changed in `retarget.py`
+
+- **S4 input:** the cm S4 file re-imports with an armature object scale of 0.01. Every S4 matrix and vertex is now taken in world space (metres, rotation normalised). The retarget maths and all tunables are unchanged.
+- **`root`:** head at the origin, tail 15 cm along +Y, roll 0. Its rest `matrix_local` is the identity.
+- **Centimetres (S4's recipe):** after baking, the bones, body mesh and stick mesh are scaled by 100, every location key is scaled by 100, and the scene unit is set to 0.01 m.
+- **Export settings:** `apply_unit_scale=True`, `apply_scale_options=FBX_SCALE_NONE`, `global_scale=1.0`, `bake_anim_use_all_bones=False`, `path_mode=AUTO`, `embed_textures=False`. The file is written from the rest pose. Axes, bone axes, leaf bones, smoothing, take, step and simplify settings are as before.
+- **Track strip:** S4's `strip_tracks.py` runs on both files (`run_all.sh`) and removes 96 curve nodes and 288 curves per file, for `root` and `Armature`.
+- **Material slots:** the three slots do **not** share one base-colour map.
+  - Body: one slot, `Material_0`, which now holds only a base-colour image node. That node references `C:/Users/kazda/jam/skater-lab/s6/T_SkaterTB2_BaseColor_clean.png` by path, not embedded. The normal, metallic and roughness references are removed.
+  - Stick: two slots, `Trim` (white tape) and `Stick` (wood), flat colours with no texture, inherited from S4's stick.
+  - I checked the cleaned PNG against R's original base colour: same 2048 atlas layout, so it fits R's UVs.
+- **Unchanged:** bone names, sockets as bones, the stick in the file.
+
+### Proof from the file itself (`s5/fbx_nodes.txt`)
+
+- `UnitScaleFactor` is 1.0 (centimetres).
+- The `Armature` null has translation 0, rotation (-90, 0, 0) and scaling 1. This is the axis turn, as in S4.
+- `root` has translation 0, rotation **(0, 0, 0)** and scaling **1**.
+- `pelvis` sits at (-4.36, -0.37, 76.05) cm.
+- Over 16 stacks, every bone except `root` has 48 curve nodes; `root` and `Armature` have **none**.
+
+### Proof on re-import (`verify.json`, `verify_loopcut.json`, `inspect.jsonl`)
+
+- Bones: 32, with `root` the only top bone.
+- **`root` rest `matrix_local` is the identity.** The armature object scale is 0.01: Blender turns the cm file back into metres, exactly as with S4's file.
+- **Rest height 170.0 cm**, lowest rest point 0.0 cm.
+- Tris: 19,748 body + 196 stick.
+- 60 fps, 16 takes.
+- No take keys `root` or the armature object.
+- Root motion is 0.0000 cm on every take.
+
+### Takes (main / loopcut frames; numbers from the re-imported main file)
+
+| Take | Frames | Loop seam main / loopcut (cm) | Pelvis horizontal max | Lowest skate (cm) | Lowest body (cm) | Lowest stick (cm) |
+|---|---|---|---|---|---|---|
+| Idle_Faceoff | 121 / 120 | 0.000 / 0.005 | 0.000 | 0.02 | 0.02 | 0.64 |
+| Stride | 61 / 60 | 0.000 / 0.442 | 0.000 | 0.01 | 0.01 | 0.00 |
+| Glide | 121 / 120 | 0.000 / 0.005 | 0.000 | 0.00 | 0.00 | 1.63 |
+| Stop | 37 | one-shot | 0.000 | 0.00 | 0.00 | 1.68 |
+| Shot_Slap | 43 | one-shot | 0.000 | 0.00 | 0.00 | 0.63 |
+| Shot_Wrist | 22 | one-shot | 0.000 | 0.00 | 0.00 | 0.48 |
+| Check | 31 | one-shot | 0.000 | 0.00 | 0.00 | 0.00 |
+| Fall | 37 | one-shot | 0.000 | 0.00 | 0.00 | 1.68 |
+| GetUp | 73 | one-shot | 0.000 | 0.00 | 0.00 | 0.81 |
+| Celebrate | 73 | one-shot | 0.000 | 0.00 | 0.00 | 1.68 |
+| Fall_Forward | 37 | one-shot | 0.000 | 0.00 | -0.67 | 1.68 |
+| **GetUp_Front** (new) | 73 | one-shot | 0.000 | 0.00 | -0.67 | 0.12 |
+| Crossover_Left | 41 / 40 | 0.000 / 1.085 | 0.000 | 0.13 | 0.13 | 8.00 |
+| Crossover_Right | 41 / 40 | 0.000 / 1.089 | 0.000 | 0.13 | 0.13 | 0.30 |
+| **Lean_Left** (now a 30-frame loop) | 31 / 30 | 0.000 / 0.005 | 0.000 | 0.70 | 0.70 | 10.70 |
+| **Lean_Right** (now a 30-frame loop) | 31 / 30 | 0.000 / 0.005 | 0.000 | 0.70 | 0.70 | 6.02 |
+
+Notes on the table:
+- "Lowest skate" is the minimum over the take of the lowest boot vertex. A loopcut seam above 0 is one frame of motion, not a jump.
+- The lowest body points of -0.67 cm in Fall_Forward and GetUp_Front are K × S4's own -1.14 cm, which is the chest at the end of Fall_Forward.
+- In the lying poses the skates sit well above the ice where S4's touch it (the lower skate's height on frames where S4's lower skate touches; not in the table above, which shows the lowest boot vertex over the whole take):
+  - Fall 9.5 cm
+  - Fall_Forward 10.3 cm
+  - GetUp 6.0 cm
+  - GetUp_Front 6.5 cm
+- On every standing take the lower skate stays within 0.29 cm of the ice, as before.
+
+### Sheets (from the re-imported file, textured with the cleaned PNG)
+
+- `devlog/shots/20261112-122329-B-lab-s5b-getup-front.png`: Fall_Forward side, GetUp_Front side, GetUp_Front 3/4. It reads as a push-up on the hands, a kneel and a rise into the glide crouch, with the stick flat under the right mitten.
+- `devlog/shots/20261112-122329-B-lab-s5b-leans.png`: Lean_Left and Lean_Right from behind and from the front. They mirror, with the stick trailing on the outside.
+- The other sheets in `s5/sheets/` were re-rendered from the new file and look as before. They were not re-filed.
+
+### What got worse or is new
+
+- **The leans** float 0.7 cm, which is K × S4's own 1.2 cm float. The stick slide is at its 25 cm maximum and the blade stays 6 to 11 cm above the ice: R's arm cannot reach S4's lean stick position. In Lean_Right the left mitten misses the shaft by 20 cm.
+- **GetUp_Front** inherits R's lying-pose problems: skates up to 6.5 cm off the ice while S4's touch, and a left-mitten gap of up to 11.5 cm. Its stick is never below the ice (0.12 cm).
+- **The material** now references a texture by absolute path on this machine. If Unreal finds it, it may build a texture from it; if not, it warns. The importer is assigning the PNG anyway.
+- **The strip step is new:** the files are rewritten by Blender's FBX writer through S4's `strip_tracks.py`. Blender re-imports them correctly; Unreal's FBX SDK has not read such a file yet (the same risk S4 named).
+- Nothing else changed: the retarget numbers for the 15 older takes are identical to the earlier table.
+
+### Rebuild
+
+```
+bash C:/Users/kazda/jam/skater-lab/s5/run_all.sh
+```
+
+It takes about 4 min: retarget, strip on both files, the node and track dump into `fbx_nodes.txt`, `verify.py` on both files, `inspect.py`, then the sheets.
