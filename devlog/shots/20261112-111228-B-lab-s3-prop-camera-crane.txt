@@ -1,0 +1,1 @@
+S3 prop: camera-crane, 4-view turntable
