@@ -45,7 +45,12 @@ public:
 
 	// Pure text helpers (tests call them).
 	static FString FormatTimer(int32 FramesRemaining);
-	static FString FormatTake(int32 Take);
+	static FString FormatTake(int32 Take, int32 ScoreToWin = 0);
+	// Frames of a match during which the controls hint shows (10 s).
+	static constexpr int64 ControlsHintFrames = 600;
+	static bool ShowControlsHint(const FJamPresentationFrame& F) { return F.SimFrame < ControlsHintFrames && F.Phase == EJamPhase::Play; }
+	// The Directors Call prompt shows only after the first goal.
+	static bool ShowDirectorsCall(const FJamPresentationFrame& F) { return F.bDirectorsCallReady && (F.ScoreHome + F.ScoreAway) > 0 && F.Phase != EJamPhase::Win && F.Phase != EJamPhase::Lose; }
 	static FString CardFor(EJamPhase Phase);
 
 	// Applies one frame to every element; called from NativeTick with the latest frame.
@@ -53,6 +58,9 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Jam|Hud")
 	const FJamNetMarker& GetNetMarker() const { return Marker; }
+
+	UFUNCTION(BlueprintPure, Category = "Jam|Hud")
+	const FJamNetMarker& GetOwnNetMarker() const { return OwnMarker; }
 
 	UFUNCTION(BlueprintPure, Category = "Jam|Hud")
 	UJamRadarWidget* GetRadar() const { return Radar; }
@@ -76,6 +84,7 @@ protected:
 private:
 	void BuildTree();
 	void UpdateMarker(const FJamPresentationFrame& Frame);
+	void UpdateOwnMarker(const FJamPresentationFrame& Frame);
 
 	UPROPERTY(Transient) TObjectPtr<UCanvasPanel> Root;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> ScoreHome;
@@ -86,10 +95,14 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> TimerText;
 	UPROPERTY(Transient) TObjectPtr<UBorder> NetDiamond;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> NetText;
+	UPROPERTY(Transient) TObjectPtr<UBorder> OwnDiamond;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> OwnText;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> ControlsText;
 	UPROPERTY(Transient) TObjectPtr<UJamRadarWidget> Radar;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> CallText;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> CardTextBlock;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> HintText;
 
 	FJamNetMarker Marker;
+	FJamNetMarker OwnMarker;
 };

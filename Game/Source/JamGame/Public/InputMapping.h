@@ -28,6 +28,7 @@ public:
 	UPROPERTY() TObjectPtr<UInputAction> Check;    // bool
 	UPROPERTY() TObjectPtr<UInputAction> Restart;  // bool
 	UPROPERTY() TObjectPtr<UInputAction> Pause;    // bool
+	UPROPERTY() TObjectPtr<UInputAction> Brake;    // bool, held: Ctrl / left trigger
 	UPROPERTY() TObjectPtr<UInputMappingContext> Context;
 
 	// Keys mapped to an action, for tests ("is the gamepad A button on Shoot").
@@ -54,6 +55,11 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Jam|Input")
 	bool IsCheckHeld() const { return bCheck; }
+
+	// Held while Ctrl or the left trigger is down; the game mode copies it into FJamInput::bBrake.
+	UFUNCTION(BlueprintPure, Category = "Jam|Input")
+	bool IsBrakeHeld() const { return bBrake; }
+
 
 	// True once after each press (latched until read): a shot or check is an event, not a level.
 	UFUNCTION(BlueprintCallable, Category = "Jam|Input")
@@ -88,12 +94,15 @@ private:
 	void OnShootDone() { bShoot = false; }
 	void OnCheckStarted() { bCheck = true; bCheckLatch = true; }
 	void OnCheckDone() { bCheck = false; }
+	void OnBrakeStarted() { bBrake = true; }
+	void OnBrakeDone() { bBrake = false; }
 	void OnRestartStarted() { OnRestart.Broadcast(); }
 	void OnPauseStarted() { OnPause.Broadcast(); }
 
 	FVector2D Axis = FVector2D::ZeroVector;
 	bool bShoot = false;
 	bool bCheck = false;
+	bool bBrake = false;
 	bool bShootLatch = false;
 	bool bCheckLatch = false;
 	bool bBound = false;

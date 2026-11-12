@@ -88,6 +88,11 @@ public:
 	// Camera transform (centimetres) for a filtered pivot (rink metres) and yaw. Third-person mode.
 	static FTransform ComputeThirdPersonPose(const FJamCameraSettings& C, const FVector2D& PivotM, float YawDeg);
 
+	// Pulls a camera location (cm) in along the line from the focus point (the skater, cm) so it never leaves the boards:
+	// the largest t in [0,1] with focus + t * (camera - focus) inside +-(half length - margin) x +-(half width - margin) (metres).
+	// The focus is assumed inside. Rounded corners are not modelled (the rectangle is slightly generous there).
+	static FVector ClampInsideBoards(const FVector& FocusCm, const FVector& CameraCm, float RinkLengthM, float RinkWidthM, float MarginM = 0.3f);
+
 	// Fixed high camera framing both nets (Arena mode): looks at the rink centre from the +Y side, so rink +X is on the right (like the radar).
 	static FTransform ComputeArenaPose(const FJamCameraSettings& C, float RinkLengthM, float RinkWidthM);
 

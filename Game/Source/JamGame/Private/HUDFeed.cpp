@@ -48,6 +48,7 @@ void UJamPresentation::BuildFrameFromSim(const UJamSim& Sim, FJamPresentationFra
 	Out.ScoreHome = Sim.GetScore(0);
 	Out.ScoreAway = Sim.GetScore(1);
 	Out.Take = 1;
+	Out.ScoreToWin = C.Rules.Mode == TEXT("first_to") ? C.Rules.ScoreToWin : 0;
 	Out.bHasTimer = C.Rules.Mode == TEXT("timer");
 	Out.FramesRemaining = Sim.GetTimerFrames();
 	if (C.Teams.Num() > 0) { Out.TeamColour0 = C.Teams[0].Colour; }
