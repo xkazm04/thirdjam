@@ -1,0 +1,63 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-12T17:21:46.443Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "devlog/shots/20261112-181934-A-a29-stop.png",
+          "width": 5760,
+          "height": 558
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2273,
+      "usage": {
+        "prompt": 1736,
+        "output": 316,
+        "thoughts": 0,
+        "total": 2052,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00249,
+      "ms": 5608,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "20261112-181934-A-a29-stop.png",
+            "findings": [
+              {
+                "where": "Top-left edge (spanning y: 0 to ~15 px)",
+                "what": "Engine debug overlay text reading 'AS_P4_stop: 2.9667 s 8 frames over 2 s (sequence time), UE5 Manny, three-quarter front, proof level' is burned directly into the image canvas.",
+                "severity": 1,
+                "confidence": 1
+              },
+              {
+                "where": "Across the entire filmstrip ground plane beneath all 8 Manny poses",
+                "what": "Completely missing ground plane, ice surface, and contact shadows, leaving the mannequins floating in pitch black void.",
+                "severity": 3,
+                "confidence": 0.95
+              },
+              {
+                "where": "On the figure meshes in all 8 frames",
+                "what": "The character is rendered as a default grey/white Unreal Engine mannequin (Manny) without hockey skates, stick, pads, or team jersey textures.",
+                "severity": 3,
+                "confidence": 0.95
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=20261112-181934-A-a29-stop.png (gemini-3.8-flash, in 1736 out 316 tokens, ~$0.0025, 5.6 s)\n- stills:\n  - label: 20261112-181934-A-a29-stop.png; clean: false\n    - findings:\n      - where: Top-left edge (spanning y: 0 to ~15 px); what: Engine debug overlay text reading 'AS_P4_stop: 2.9667 s 8 frames over 2 s (sequence time), UE5 Manny, three-quarter front, proof level' is burned directly into the image canvas.; severity: 1; confidence: 1\n      - where: Across the entire filmstrip ground plane beneath all 8 Manny poses; what: Completely missing ground plane, ice surface, and contact shadows, leaving the mannequins floating in pitch black void.; severity: 3; confidence: 0.95\n      - where: On the figure meshes in all 8 frames; what: The character is rendered as a default grey/white Unreal Engine mannequin (Manny) without hockey skates, stick, pads, or team jersey textures.; severity: 3; confidence: 0.95"
+    }
+  ]
+}

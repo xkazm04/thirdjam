@@ -1,0 +1,1 @@
+T-B1 aim sweep from above at reach 1.6 m, angles -63 -46 -30 0 +35 +70 (left to right), bilinear 24-hold grid plus blade-on-ice correction

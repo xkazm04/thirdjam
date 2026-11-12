@@ -92,6 +92,9 @@ if 'P4_Cam' not in labels:
     camA.capture_component2d.set_editor_property('capture_on_movement', False)
     added.append('P4_Cam')
 for a in eas.get_all_level_actors():
+    if a.get_actor_label() == 'P4_Sky' and a.light_component.get_editor_property('real_time_capture'):
+        a.light_component.set_editor_property('real_time_capture', False)   # no SkyAtmosphere in the proof level: real-time capture prints a red warning across the frame
+        added.append('sky capture off')
     if a.get_actor_label() == 'P4_Floor' and a.static_mesh_component.get_material(0).get_name() != 'BasicShapeMaterial':
         a.static_mesh_component.set_material(0, unreal.load_asset('/Engine/BasicShapes/BasicShapeMaterial'))
         added.append('floor material')
@@ -134,7 +137,11 @@ json.dumps({'length_s': round(unreal.AnimationLibrary.get_sequence_length(seq), 
       const sc = py(`import unreal
 world = unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem).get_game_world()
 comp = [a for a in unreal.GameplayStatics.get_all_actors_of_class(world, unreal.SkeletalMeshActor) if a.get_actor_label().startswith('P4_Figure')][0].skeletal_mesh_component
-comp.override_animation_data(unreal.load_asset(${JSON.stringify(path)}), True, False, ${t.toFixed(4)}, 0.0)
+comp.set_animation_mode(unreal.AnimationMode.ANIMATION_SINGLE_NODE)
+comp.set_animation(unreal.load_asset(${JSON.stringify(path)}))
+comp.set_position(${t.toFixed(4)}, False)
+comp.set_play_rate(0.0)
+comp.play(True)
 'ok'`, 60);
       spawnSync(process.execPath, ['-e', 'setTimeout(()=>{}, 150)']);
       if (!sc.ok) { rec.error = 'scrub: ' + sc.error; break; }

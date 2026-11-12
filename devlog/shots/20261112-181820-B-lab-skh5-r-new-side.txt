@@ -1,0 +1,1 @@
+SKH5 R (export5) new takes from the side, 6 frames each; rows: Check_Hit_Left, Check_Hit_Back, Knockdown_Left, Knockdown_Right, Knockdown_Back, Trip, GetUp_Side_Left, GetUp_Side_Right, Board_Hit, Board_Pin, Check_Deliver_Left, Poke_Hit

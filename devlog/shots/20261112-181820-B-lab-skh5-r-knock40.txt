@@ -1,0 +1,1 @@
+SKH5 R knockdowns at about 40 px from the chase camera (2x nearest), deep blue: Knockdown_Left, Knockdown_Right, Knockdown_Back
