@@ -1,0 +1,1 @@
+SKH2 R (P2 hybrid) from skf p2_cel, export2: Stride 3/4, side, behind; slap side; Goalie_Hold front+side; side: Aim_Front, Aim_Left, Aim_Right, Aim_FarReach, Poke f10 (whole stick)
