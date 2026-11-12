@@ -1,0 +1,1 @@
+{"name": "P3A", "asset": "P3A", "rig_fbx": "in/P3A/P3A_rigged.fbx", "base_color": "export2/P3A/T_Skater_P3A_BaseColor.png", "clips_fbx": "in/skf/SK_Skater_p3_clay.fbx", "stick_fbx": "in/SK_Skater_S4.fbx", "export_dir": "export2", "out_dir": "out2", "reach_rule": true, "stick_ice_tilt": true , "override": {}}

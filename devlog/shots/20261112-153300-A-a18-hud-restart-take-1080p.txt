@@ -1,0 +1,1 @@
+0.6 s after jam.pausemenu restart: the opening MATCH 1 card (T_UI_MatchCard, R-0021) with PERIOD 1 - FACEOFF under it, lane A16's faceoff ring at 1 below, the scoreboard reading PERIOD 1: FIRST TO 3. The restart bug of 14:41 is fixed: the overlay opens the card itself on a frame reset. Lane A18.

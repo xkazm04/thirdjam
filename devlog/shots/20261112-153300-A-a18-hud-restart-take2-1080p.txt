@@ -1,0 +1,1 @@
+About 2.5 s after the restart: the card has run its 150 frames and play is on; the HUD copy is hockey (PERIOD, the score, the controls). Lane A18.

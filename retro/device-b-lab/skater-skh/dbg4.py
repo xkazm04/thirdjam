@@ -1,0 +1,11 @@
+import bpy, sys
+f = sys.argv[-1]
+bpy.ops.wm.read_factory_settings(use_empty=True)
+bpy.ops.import_scene.fbx(filepath=f, automatic_bone_orientation=False)
+arm = next(o for o in bpy.data.objects if o.type == "ARMATURE"); sc = bpy.context.scene
+a = [x for x in bpy.data.actions if x.name.split("|")[-1] == "Stride"][0]; arm.animation_data_create(); arm.animation_data.action = a
+print("D4 range", tuple(a.frame_range))
+for fc in a.fcurves:
+    if "clavicle_r" in fc.data_path or "upperarm_r" in fc.data_path:
+        k = fc.keyframe_points
+        print("D4", fc.data_path, fc.array_index, len(k), [round(k[i].co[0],1) for i in (0,1,2)], [round(k[i].co[1],3) for i in (0,1,2,-2,-1)])

@@ -1,0 +1,1 @@
+HUD at 1280x720 (DPI 2/3): controls strip 12 px, far-net distance 16 px, scoreboard digits 37 px; everything readable. Lane A18.

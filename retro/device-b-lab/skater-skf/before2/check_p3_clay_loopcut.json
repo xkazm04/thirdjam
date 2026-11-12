@@ -1,0 +1,1801 @@
+{
+ "file": "export/p3_clay/SK_Skater_p3_clay_loopcut.fbx",
+ "armature_object": "Armature",
+ "armature_matrix_world": [
+  [
+   0.01,
+   0.0,
+   0.0,
+   0.0
+  ],
+  [
+   0.0,
+   0.01,
+   0.0,
+   0.0
+  ],
+  [
+   0.0,
+   -0.0,
+   0.01,
+   0.0
+  ],
+  [
+   0.0,
+   0.0,
+   0.0,
+   1.0
+  ]
+ ],
+ "root_rest_matrix_local": [
+  [
+   1.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  [
+   0.0,
+   1.0,
+   0.0,
+   0.0
+  ],
+  [
+   0.0,
+   0.0,
+   1.0,
+   0.0
+  ],
+  [
+   0.0,
+   0.0,
+   0.0,
+   1.0
+  ]
+ ],
+ "unit_scale_length": 1.0,
+ "bone_count": 24,
+ "bones": [
+  "root",
+  "pelvis",
+  "spine_01",
+  "spine_02",
+  "spine_03",
+  "neck_01",
+  "head",
+  "head_socket",
+  "clavicle_l",
+  "upperarm_l",
+  "lowerarm_l",
+  "hand_l",
+  "clavicle_r",
+  "upperarm_r",
+  "lowerarm_r",
+  "hand_r",
+  "stick_socket",
+  "thigh_l",
+  "calf_l",
+  "foot_l",
+  "thigh_r",
+  "calf_r",
+  "foot_r",
+  "puck_socket"
+ ],
+ "root_bones": [
+  "root"
+ ],
+ "triangles": {
+  "body": 11556,
+  "stick": 412
+ },
+ "materials": [
+  "Blade",
+  "Gloves",
+  "Helmet",
+  "Jersey",
+  "Pads",
+  "Skate",
+  "Skin",
+  "Stick",
+  "Trim"
+ ],
+ "fps": 60,
+ "takes": {
+  "Aim_FarReach": {
+   "max_step_deg": 0.0,
+   "max_step_twist_deg": 0.0,
+   "max_step_where": "",
+   "max_dorsiflexion_deg": 49.9,
+   "max_plantar_flexion_deg": 11.5,
+   "frames": 30,
+   "pelvis_horizontal_max_cm": 0.0,
+   "root_moves_cm": 0.0,
+   "seam_first_last_max_joint_cm": 0.004,
+   "lowest_skate_cm": 0.14,
+   "lowest_stick_cm": 0.49,
+   "lowest_point_cm": 0.14,
+   "top_cm": 139.2
+  },
+  "Aim_Front": {
+   "max_step_deg": 0.1,
+   "max_step_twist_deg": -0.0,
+   "max_step_where": "upperarm_l f7->8",
+   "max_dorsiflexion_deg": 36.9,
+   "max_plantar_flexion_deg": -30.7,
+   "frames": 30,
+   "pelvis_horizontal_max_cm": 0.0,
+   "root_moves_cm": 0.0,
+   "seam_first_last_max_joint_cm": 0.004,
+   "lowest_skate_cm": 0.14,
+   "lowest_stick_cm": 0.88,
+   "lowest_point_cm": 0.14,
+   "top_cm": 140.2
+  },
+  "Aim_Left": {
+   "max_step_deg": 0.1,
+   "max_step_twist_deg": -0.0,
+   "max_step_where": "upperarm_r f9->10",
+   "max_dorsiflexion_deg": 39.2,
+   "max_plantar_flexion_deg": -27.9,
+   "frames": 30,
+   "pelvis_horizontal_max_cm": 0.0,
+   "root_moves_cm": 0.0,
+   "seam_first_last_max_joint_cm": 0.004,
+   "lowest_skate_cm": 0.14,
+   "lowest_stick_cm": 0.96,
+   "lowest_point_cm": 0.14,
+   "top_cm": 140.2
+  },
+  "Aim_Right": {
+   "max_step_deg": 0.0,
+   "max_step_twist_deg": 0.0,
+   "max_step_where": "",
+   "max_dorsiflexion_deg": 34.5,
+   "max_plantar_flexion_deg": -33.3,
+   "frames": 30,
+   "pelvis_horizontal_max_cm": 0.0,
+   "root_moves_cm": 0.0,
+   "seam_first_last_max_joint_cm": 0.004,
+   "lowest_skate_cm": 0.14,
+   "lowest_stick_cm": 0.93,
+   "lowest_point_cm": 0.14,
+   "top_cm": 140.2
+  },
+  "Celebrate": {
+   "max_step_deg": 159.6,
+   "max_step_twist_deg": -158.4,
+   "max_step_where": "upperarm_r f3->4",
+   "max_dorsiflexion_deg": 32.0,
+   "max_plantar_flexion_deg": -10.6,
+   "frames": 73,
+   "pelvis_horizontal_max_cm": 0.0,
+   "root_moves_cm": 0.0,
+   "seam_first_last_max_joint_cm": 97.14,
+   "lowest_skate_cm": 0.14,
+   "lowest_stick_cm": 0.94,
+   "lowest_point_cm": 0.14,
+   "top_cm": 175.7
+  },
+  "Check": {
+   "max_step_deg": 177.4,
+   "max_step_twist_deg": -177.4,
+   "max_step_where": "upperarm_l f14->15",
+   "max_dorsiflexion_deg": 47.7,
+   "max_plantar_flexion_deg": 29.5,
+   "frames": 31,
+   "pelvis_horizontal_max_cm": 0.0,
+   "root_moves_cm": 0.0,
+   "seam_first_last_max_joint_cm": 59.284,
+   "lowest_skate_cm": 0.14,
+   "lowest_stick_cm": -0.42,
+   "lowest_point_cm": -0.42,
+   "top_cm": 146.3
+  },
+  "Crossover_Left": {
+   "max_step_deg": 179.4,
+   "max_step_twist_deg": -179.4,
+   "max_step_where": "upperarm_l f15->16",
+   "max_dorsiflexion_deg": 43.7,
+   "max_plantar_flexion_deg": 1.0,
+   "frames": 40,
+   "pelvis_horizontal_max_cm": 0.0,
+   "root_moves_cm": 0.0,
+   "seam_first_last_max_joint_cm": 1.285,
+   "lowest_skate_cm": 0.22,
+   "lowest_stick_cm": 1.85,
+   "lowest_point_cm": 0.22,
+   "top_cm": 141.3
+  },
+  "Crossover_Right": {
+   "max_step_deg": 18.3,
+   "max_step_twist_deg": -1.3,
+   "max_step_where": "thigh_l f3->4",
+   "max_dorsiflexion_deg": 43.7,
+   "max_plantar_flexion_deg": 1.0,
+   "frames": 40,
+   "pelvis_horizontal_max_cm": 0.0,
+   "root_moves_cm": 0.0,
+   "seam_first_last_max_joint_cm": 1.285,
+   "lowest_skate_cm": 0.23,
+   "lowest_stick_cm": -0.47,
+   "lowest_point_cm": -0.47,
+   "top_cm": 141.2
+  },
+  "Faceoff_Draw": {
+   "max_step_deg": 21.0,
+   "max_step_twist_deg": -17.7,
+   "max_step_where": "stick_socket f1->2",
+   "max_dorsiflexion_deg": 34.3,
+   "max_plantar_flexion_deg": -11.0,
+   "frames": 19,
+   "pelvis_horizontal_max_cm": 0.0,
+   "root_moves_cm": 0.0,
+   "seam_first_last_max_joint_cm": 36.632,
+   "lowest_skate_cm": 0.14,
+   "lowest_stick_cm": -0.37,
+   "lowest_point_cm": -0.37,
+   "top_cm": 146.3
+  },
+  "Faceoff_Ready": {
+   "max_step_deg": 0.0,
+   "max_step_twist_deg": 0.0,
+   "max_step_where": "",
+   "max_dorsiflexion_deg": 31.4,
+   "max_plantar_flexion_deg": -18.1,
+   "frames": 30,
+   "pelvis_horizontal_max_cm": 0.0,
+   "root_moves_cm": 0.0,
+   "seam_first_last_max_joint_cm": 0.004,
+   "lowest_skate_cm": 0.14,
+   "lowest_stick_cm": -0.21,
+   "lowest_point_cm": -0.21,
+   "top_cm": 128.2
+  },
+  "Fall": {
+   "max_step_deg": 178.7,
+   "max_step_twist_deg": 178.7,
+   "max_step_where": "thigh_l f27->28",
+   "max_dorsiflexion_deg": 32.0,
+   "max_plantar_flexion_deg": 29.2,
+   "frames": 37,
+   "pelvis_horizontal_max_cm": 0.0,
+   "root_moves_cm": 0.0,
+   "seam_first_last_max_joint_cm": 145.826,
+   "lowest_skate_cm": 0.14,
+   "lowest_stick_cm": 0.94,
+   "lowest_point_cm": 0.14,
+   "top_cm": 153.8
+  },
+  "Fall_Forward": {
+   "max_step_deg": 179.8,
+   "max_step_twist_deg": 179.8,
+   "max_step_where": "calf_l f23->24",
+   "max_dorsiflexion_deg": 61.9,
+   "max_plantar_flexion_deg": -16.3,
+   "frames": 37,
+   "pelvis_horizontal_max_cm": 0.0,
+   "root_moves_cm": 0.0,
+   "seam_first_last_max_joint_cm": 117.863,
+   "lowest_skate_cm": 0.14,
+   "lowest_stick_cm": 0.94,
+   "lowest_point_cm": 0.14,
+   "top_cm": 146.3
+  },
+  "Foul_Reaction": {
+   "max_step_deg": 179.5,
+   "max_step_twist_deg": 179.5,
+   "max_step_where": "upperarm_r f10->11",
+   "max_dorsiflexion_deg": 32.0,
+   "max_plantar_flexion_deg": -15.7,
+   "frames": 49,
+   "pelvis_horizontal_max_cm": 0.0,
+   "root_moves_cm": 0.0,
+   "seam_first_last_max_joint_cm": 0.0,
+   "lowest_skate_cm": 0.14,
+   "lowest_stick_cm": 0.94,
+   "lowest_point_cm": 0.14,
+   "top_cm": 157.6
+  },
+  "GetUp": {
+   "max_step_deg": 179.8,
+   "max_step_twist_deg": 179.8,
+   "max_step_where": "calf_l f42->43",
+   "max_dorsiflexion_deg": 81.3,
+   "max_plantar_flexion_deg": 24.8,
+   "frames": 73,
+   "pelvis_horizontal_max_cm": 0.0,
+   "root_moves_cm": 0.0,
+   "seam_first_last_max_joint_cm": 145.826,
+   "lowest_skate_cm": 0.14,
+   "lowest_stick_cm": -0.73,
+   "lowest_point_cm": -0.73,
+   "top_cm": 146.3
+  },
+  "GetUp_Front": {
+   "max_step_deg": 178.8,
+   "max_step_twist_deg": 178.8,
+   "max_step_where": "calf_r f29->30",
+   "max_dorsiflexion_deg": 58.6,
+   "max_plantar_flexion_deg": -14.3,
+   "frames": 73,
+   "pelvis_horizontal_max_cm": 0.0,
+   "root_moves_cm": 0.0,
+   "seam_first_last_max_joint_cm": 117.863,
+   "lowest_skate_cm": 0.14,
+   "lowest_stick_cm": -1.38,
+   "lowest_point_cm": -1.38,
+   "top_cm": 146.3
+  },
+  "Glide": {
+   "max_step_deg": 3.3,
+   "max_step_twist_deg": 0.4,
+   "max_step_where": "upperarm_l f4->5",
+   "max_dorsiflexion_deg": 32.0,
+   "max_plantar_flexion_deg": -24.7,
+   "frames": 120,
+   "pelvis_horizontal_max_cm": 0.0,
+   "root_moves_cm": 0.0,
+   "seam_first_last_max_joint_cm": 0.004,
+   "lowest_skate_cm": 0.14,
+   "lowest_stick_cm": 0.94,
+   "lowest_point_cm": 0.14,
+   "top_cm": 147.3
+  },
+  "Goalie_Block_Left": {
+   "max_step_deg": 178.3,
+   "max_step_twist_deg": -178.3,
+   "max_step_where": "calf_r f7->8",
+   "max_dorsiflexion_deg": 42.3,
+   "max_plantar_flexion_deg": 37.9,
+   "frames": 25,
+   "pelvis_horizontal_max_cm": 0.0,
+   "root_moves_cm": 0.0,
+   "seam_first_last_max_joint_cm": 48.668,
+   "lowest_skate_cm": 0.25,
+   "lowest_stick_cm": 18.64,
+   "lowest_point_cm": 0.25,
+   "top_cm": 130.3
+  },
+  "Goalie_Block_Right": {
+   "max_step_deg": 178.3,
+   "max_step_twist_deg": 178.3,
+   "max_step_where": "calf_l f7->8",
+   "max_dorsiflexion_deg": 42.3,
+   "max_plantar_flexion_deg": 37.9,
+   "frames": 25,
+   "pelvis_horizontal_max_cm": 0.0,
+   "root_moves_cm": 0.0,
+   "seam_first_last_max_joint_cm": 50.289,
+   "lowest_skate_cm": 0.25,
+   "lowest_stick_cm": 15.54,
+   "lowest_point_cm": 0.25,
+   "top_cm": 130.3
+  },
+  "Goalie_Hold": {
+   "max_step_deg": 0.0,
+   "max_step_twist_deg": 0.0,
+   "max_step_where": "",
+   "max_dorsiflexion_deg": 19.1,
+   "max_plantar_flexion_deg": -19.0,
+   "frames": 30,
+   "pelvis_horizontal_max_cm": 0.0,
+   "root_moves_cm": 0.0,
+   "seam_first_last_max_joint_cm": 0.004,
+   "lowest_skate_cm": 0.25,
+   "lowest_stick_cm": 20.19,
+   "lowest_point_cm": 0.25,
+   "top_cm": 130.3
+  },
+  "Idle_Faceoff": {
+   "max_step_deg": 4.9,
+   "max_step_twist_deg": -0.3,
+   "max_step_where": "upperarm_r f26->27",
+   "max_dorsiflexion_deg": 32.8,
+   "max_plantar_flexion_deg": -18.5,
+   "frames": 120,
+   "pelvis_horizontal_max_cm": 0.0,
+   "root_moves_cm": 0.0,
+   "seam_first_last_max_joint_cm": 0.005,
+   "lowest_skate_cm": 0.14,
+   "lowest_stick_cm": 0.43,
+   "lowest_point_cm": 0.14,
+   "top_cm": 125.9
+  },
+  "Lean_Left": {
+   "max_step_deg": 0.0,
+   "max_step_twist_deg": 0.0,
+   "max_step_where": "",
+   "max_dorsiflexion_deg": 35.5,
+   "max_plantar_flexion_deg": -18.2,
+   "frames": 30,
+   "pelvis_horizontal_max_cm": 0.0,
+   "root_moves_cm": 0.0,
+   "seam_first_last_max_joint_cm": 0.004,
+   "lowest_skate_cm": 1.19,
+   "lowest_stick_cm": 3.16,
+   "lowest_point_cm": 1.19,
+   "top_cm": 139.4
+  },
+  "Lean_Right": {
+   "max_step_deg": 0.0,
+   "max_step_twist_deg": 0.0,
+   "max_step_where": "",
+   "max_dorsiflexion_deg": 35.5,
+   "max_plantar_flexion_deg": -18.2,
+   "frames": 30,
+   "pelvis_horizontal_max_cm": 0.0,
+   "root_moves_cm": 0.0,
+   "seam_first_last_max_joint_cm": 0.004,
+   "lowest_skate_cm": 1.19,
+   "lowest_stick_cm": 1.01,
+   "lowest_point_cm": 1.01,
+   "top_cm": 139.4
+  },
+  "Lift": {
+   "max_step_deg": 17.6,
+   "max_step_twist_deg": -0.7,
+   "max_step_where": "lowerarm_l f8->9",
+   "max_dorsiflexion_deg": 35.5,
+   "max_plantar_flexion_deg": -26.1,
+   "frames": 19,
+   "pelvis_horizontal_max_cm": 0.0,
+   "root_moves_cm": 0.0,
+   "seam_first_last_max_joint_cm": 0.0,
+   "lowest_skate_cm": 0.14,
+   "lowest_stick_cm": 0.9,
+   "lowest_point_cm": 0.14,
+   "top_cm": 146.3
+  },
+  "Pass": {
+   "max_step_deg": 24.6,
+   "max_step_twist_deg": 19.2,
+   "max_step_where": "upperarm_r f7->8",
+   "max_dorsiflexion_deg": 38.0,
+   "max_plantar_flexion_deg": -24.0,
+   "frames": 19,
+   "pelvis_horizontal_max_cm": 0.0,
+   "root_moves_cm": 0.0,
+   "seam_first_last_max_joint_cm": 0.0,
+   "lowest_skate_cm": 0.14,
+   "lowest_stick_cm": 0.35,
+   "lowest_point_cm": 0.14,
+   "top_cm": 146.3
+  },
+  "Poke": {
+   "max_step_deg": 178.6,
+   "max_step_twist_deg": -178.6,
+   "max_step_where": "upperarm_l f16->17",
+   "max_dorsiflexion_deg": 53.0,
+   "max_plantar_flexion_deg": 13.9,
+   "frames": 22,
+   "pelvis_horizontal_max_cm": 0.0,
+   "root_moves_cm": 0.0,
+   "seam_first_last_max_joint_cm": 0.0,
+   "lowest_skate_cm": 0.14,
+   "lowest_stick_cm": 0.06,
+   "lowest_point_cm": 0.06,
+   "top_cm": 146.3
+  },
+  "Shot_Charge": {
+   "max_step_deg": 0.0,
+   "max_step_twist_deg": -0.0,
+   "max_step_where": "lowerarm_l f6->7",
+   "max_dorsiflexion_deg": 28.2,
+   "max_plantar_flexion_deg": 8.9,
+   "frames": 30,
+   "pelvis_horizontal_max_cm": 0.0,
+   "root_moves_cm": 0.0,
+   "seam_first_last_max_joint_cm": 0.003,
+   "lowest_skate_cm": 0.14,
+   "lowest_stick_cm": 77.95,
+   "lowest_point_cm": 0.14,
+   "top_cm": 150.9
+  },
+  "Shot_Slap": {
+   "max_step_deg": 171.6,
+   "max_step_twist_deg": -171.3,
+   "max_step_where": "upperarm_r f27->28",
+   "max_dorsiflexion_deg": 43.9,
+   "max_plantar_flexion_deg": 8.9,
+   "frames": 43,
+   "pelvis_horizontal_max_cm": 0.0,
+   "root_moves_cm": 0.0,
+   "seam_first_last_max_joint_cm": 80.783,
+   "lowest_skate_cm": 0.14,
+   "lowest_stick_cm": 0.24,
+   "lowest_point_cm": 0.14,
+   "top_cm": 151.1
+  },
+  "Shot_Wrist": {
+   "max_step_deg": 173.8,
+   "max_step_twist_deg": -173.7,
+   "max_step_where": "upperarm_r f10->11",
+   "max_dorsiflexion_deg": 41.2,
+   "max_plantar_flexion_deg": -6.3,
+   "frames": 22,
+   "pelvis_horizontal_max_cm": 0.0,
+   "root_moves_cm": 0.0,
+   "seam_first_last_max_joint_cm": 60.521,
+   "lowest_skate_cm": 0.14,
+   "lowest_stick_cm": 0.41,
+   "lowest_point_cm": 0.14,
+   "top_cm": 150.9
+  },
+  "Stop": {
+   "max_step_deg": 12.1,
+   "max_step_twist_deg": 8.1,
+   "max_step_where": "calf_l f10->11",
+   "max_dorsiflexion_deg": 32.0,
+   "max_plantar_flexion_deg": -22.1,
+   "frames": 37,
+   "pelvis_horizontal_max_cm": 0.0,
+   "root_moves_cm": 0.0,
+   "seam_first_last_max_joint_cm": 54.87,
+   "lowest_skate_cm": 0.14,
+   "lowest_stick_cm": 0.73,
+   "lowest_point_cm": 0.14,
+   "top_cm": 146.6
+  },
+  "Stride": {
+   "max_step_deg": 176.8,
+   "max_step_twist_deg": -176.8,
+   "max_step_where": "upperarm_l f20->21",
+   "max_dorsiflexion_deg": 33.4,
+   "max_plantar_flexion_deg": -14.4,
+   "frames": 60,
+   "pelvis_horizontal_max_cm": 0.0,
+   "root_moves_cm": 0.0,
+   "seam_first_last_max_joint_cm": 0.79,
+   "lowest_skate_cm": 0.16,
+   "lowest_stick_cm": -0.72,
+   "lowest_point_cm": -0.72,
+   "top_cm": 135.5
+  },
+  "Stumble": {
+   "max_step_deg": 179.8,
+   "max_step_twist_deg": -179.8,
+   "max_step_where": "upperarm_l f13->14",
+   "max_dorsiflexion_deg": 47.1,
+   "max_plantar_flexion_deg": -8.7,
+   "frames": 21,
+   "pelvis_horizontal_max_cm": 0.0,
+   "root_moves_cm": 0.0,
+   "seam_first_last_max_joint_cm": 0.0,
+   "lowest_skate_cm": 0.14,
+   "lowest_stick_cm": 0.94,
+   "lowest_point_cm": 0.14,
+   "top_cm": 146.4
+  }
+ },
+ "rot_over_45": {
+  "Aim_FarReach": [],
+  "Aim_Front": [],
+  "Aim_Left": [],
+  "Aim_Right": [],
+  "Celebrate": [
+   [
+    "upperarm_r",
+    3,
+    4,
+    159.6,
+    -158.4
+   ],
+   [
+    "upperarm_r",
+    4,
+    5,
+    85.3,
+    77.0
+   ],
+   [
+    "lowerarm_r",
+    4,
+    5,
+    84.1,
+    -39.5
+   ],
+   [
+    "hand_r",
+    4,
+    5,
+    84.1,
+    -39.5
+   ],
+   [
+    "upperarm_r",
+    5,
+    6,
+    143.5,
+    -141.0
+   ]
+  ],
+  "Check": [
+   [
+    "upperarm_l",
+    14,
+    15,
+    177.4,
+    -177.4
+   ],
+   [
+    "lowerarm_r",
+    14,
+    15,
+    147.6,
+    146.8
+   ],
+   [
+    "hand_r",
+    14,
+    15,
+    147.6,
+    146.8
+   ],
+   [
+    "upperarm_r",
+    15,
+    16,
+    47.0,
+    5.4
+   ],
+   [
+    "lowerarm_r",
+    15,
+    16,
+    137.1,
+    136.5
+   ],
+   [
+    "hand_r",
+    15,
+    16,
+    137.1,
+    136.5
+   ]
+  ],
+  "Crossover_Left": [
+   [
+    "upperarm_l",
+    15,
+    16,
+    179.4,
+    -179.4
+   ],
+   [
+    "upperarm_l",
+    26,
+    27,
+    179.4,
+    179.4
+   ]
+  ],
+  "Crossover_Right": [],
+  "Faceoff_Draw": [],
+  "Faceoff_Ready": [],
+  "Fall": [
+   [
+    "upperarm_l",
+    1,
+    2,
+    66.3,
+    -8.4
+   ],
+   [
+    "upperarm_r",
+    1,
+    2,
+    169.8,
+    -168.6
+   ],
+   [
+    "upperarm_l",
+    2,
+    3,
+    150.6,
+    147.9
+   ],
+   [
+    "upperarm_l",
+    3,
+    4,
+    74.1,
+    -64.0
+   ],
+   [
+    "lowerarm_l",
+    3,
+    4,
+    75.3,
+    -6.8
+   ],
+   [
+    "hand_l",
+    3,
+    4,
+    75.3,
+    -6.8
+   ],
+   [
+    "upperarm_r",
+    3,
+    4,
+    89.8,
+    72.6
+   ],
+   [
+    "lowerarm_r",
+    3,
+    4,
+    89.7,
+    42.2
+   ],
+   [
+    "hand_r",
+    3,
+    4,
+    89.7,
+    42.2
+   ],
+   [
+    "upperarm_l",
+    5,
+    6,
+    170.9,
+    170.8
+   ],
+   [
+    "thigh_l",
+    15,
+    16,
+    174.9,
+    174.9
+   ],
+   [
+    "thigh_r",
+    16,
+    17,
+    175.5,
+    -175.5
+   ],
+   [
+    "upperarm_r",
+    18,
+    19,
+    172.9,
+    -172.8
+   ],
+   [
+    "upperarm_r",
+    22,
+    23,
+    178.4,
+    178.4
+   ],
+   [
+    "upperarm_l",
+    23,
+    24,
+    177.8,
+    -177.8
+   ],
+   [
+    "upperarm_l",
+    27,
+    28,
+    76.2,
+    67.2
+   ],
+   [
+    "lowerarm_l",
+    27,
+    28,
+    76.2,
+    59.8
+   ],
+   [
+    "hand_l",
+    27,
+    28,
+    76.2,
+    59.8
+   ],
+   [
+    "upperarm_r",
+    27,
+    28,
+    70.8,
+    -61.4
+   ],
+   [
+    "lowerarm_r",
+    27,
+    28,
+    70.8,
+    -55.7
+   ],
+   [
+    "hand_r",
+    27,
+    28,
+    70.8,
+    -55.7
+   ],
+   [
+    "thigh_l",
+    27,
+    28,
+    178.7,
+    178.7
+   ],
+   [
+    "thigh_l",
+    28,
+    29,
+    177.7,
+    -177.7
+   ],
+   [
+    "thigh_l",
+    35,
+    36,
+    178.7,
+    178.7
+   ]
+  ],
+  "Fall_Forward": [
+   [
+    "upperarm_l",
+    1,
+    2,
+    50.1,
+    -10.9
+   ],
+   [
+    "upperarm_r",
+    1,
+    2,
+    160.3,
+    -157.8
+   ],
+   [
+    "upperarm_r",
+    2,
+    3,
+    53.9,
+    49.8
+   ],
+   [
+    "lowerarm_r",
+    2,
+    3,
+    50.5,
+    -9.9
+   ],
+   [
+    "hand_r",
+    2,
+    3,
+    50.5,
+    -9.9
+   ],
+   [
+    "upperarm_r",
+    4,
+    5,
+    165.8,
+    -165.5
+   ],
+   [
+    "calf_l",
+    17,
+    18,
+    169.4,
+    169.4
+   ],
+   [
+    "calf_l",
+    23,
+    24,
+    179.8,
+    179.8
+   ]
+  ],
+  "Foul_Reaction": [
+   [
+    "upperarm_r",
+    2,
+    3,
+    178.4,
+    178.3
+   ],
+   [
+    "upperarm_l",
+    3,
+    4,
+    168.2,
+    168.0
+   ],
+   [
+    "upperarm_r",
+    5,
+    6,
+    98.4,
+    -92.6
+   ],
+   [
+    "lowerarm_r",
+    5,
+    6,
+    98.5,
+    -22.8
+   ],
+   [
+    "hand_r",
+    5,
+    6,
+    98.5,
+    -22.8
+   ],
+   [
+    "upperarm_l",
+    10,
+    11,
+    177.1,
+    177.1
+   ],
+   [
+    "upperarm_r",
+    10,
+    11,
+    179.5,
+    179.5
+   ],
+   [
+    "upperarm_l",
+    33,
+    34,
+    176.5,
+    -176.5
+   ],
+   [
+    "upperarm_r",
+    33,
+    34,
+    179.4,
+    -179.4
+   ],
+   [
+    "upperarm_r",
+    38,
+    39,
+    78.9,
+    72.9
+   ],
+   [
+    "lowerarm_r",
+    38,
+    39,
+    78.9,
+    17.6
+   ],
+   [
+    "hand_r",
+    38,
+    39,
+    78.9,
+    17.6
+   ],
+   [
+    "upperarm_l",
+    41,
+    42,
+    172.7,
+    -172.6
+   ],
+   [
+    "upperarm_r",
+    43,
+    44,
+    179.3,
+    -179.3
+   ]
+  ],
+  "GetUp": [
+   [
+    "thigh_l",
+    2,
+    3,
+    179.7,
+    179.7
+   ],
+   [
+    "upperarm_r",
+    8,
+    9,
+    177.7,
+    177.7
+   ],
+   [
+    "upperarm_l",
+    9,
+    10,
+    177.0,
+    -177.0
+   ],
+   [
+    "upperarm_r",
+    27,
+    28,
+    175.6,
+    175.6
+   ],
+   [
+    "thigh_l",
+    33,
+    34,
+    174.9,
+    -174.9
+   ],
+   [
+    "upperarm_r",
+    35,
+    36,
+    170.5,
+    170.5
+   ],
+   [
+    "calf_l",
+    38,
+    39,
+    178.8,
+    178.8
+   ],
+   [
+    "calf_l",
+    42,
+    43,
+    179.8,
+    179.8
+   ],
+   [
+    "thigh_r",
+    48,
+    49,
+    179.4,
+    179.4
+   ]
+  ],
+  "GetUp_Front": [
+   [
+    "calf_l",
+    24,
+    25,
+    178.1,
+    -178.1
+   ],
+   [
+    "calf_l",
+    28,
+    29,
+    175.1,
+    -175.1
+   ],
+   [
+    "calf_r",
+    29,
+    30,
+    178.8,
+    178.8
+   ],
+   [
+    "calf_r",
+    45,
+    46,
+    177.2,
+    177.2
+   ],
+   [
+    "upperarm_r",
+    47,
+    48,
+    161.0,
+    161.0
+   ],
+   [
+    "upperarm_r",
+    49,
+    50,
+    163.5,
+    163.4
+   ]
+  ],
+  "Glide": [],
+  "Goalie_Block_Left": [
+   [
+    "thigh_l",
+    4,
+    5,
+    175.3,
+    175.3
+   ],
+   [
+    "calf_r",
+    7,
+    8,
+    178.3,
+    -178.3
+   ]
+  ],
+  "Goalie_Block_Right": [
+   [
+    "thigh_r",
+    4,
+    5,
+    175.3,
+    -175.3
+   ],
+   [
+    "calf_l",
+    7,
+    8,
+    178.3,
+    178.3
+   ]
+  ],
+  "Goalie_Hold": [],
+  "Idle_Faceoff": [],
+  "Lean_Left": [],
+  "Lean_Right": [],
+  "Lift": [],
+  "Pass": [],
+  "Poke": [
+   [
+    "upperarm_l",
+    6,
+    7,
+    57.8,
+    -1.5
+   ],
+   [
+    "upperarm_r",
+    6,
+    7,
+    49.3,
+    20.2
+   ],
+   [
+    "lowerarm_r",
+    6,
+    7,
+    46.5,
+    -3.5
+   ],
+   [
+    "hand_r",
+    6,
+    7,
+    46.5,
+    -3.5
+   ],
+   [
+    "upperarm_l",
+    7,
+    8,
+    176.3,
+    176.1
+   ],
+   [
+    "upperarm_l",
+    16,
+    17,
+    178.6,
+    -178.6
+   ]
+  ],
+  "Shot_Charge": [],
+  "Shot_Slap": [
+   [
+    "upperarm_l",
+    10,
+    11,
+    142.1,
+    141.9
+   ],
+   [
+    "upperarm_l",
+    11,
+    12,
+    55.4,
+    -55.3
+   ],
+   [
+    "lowerarm_l",
+    11,
+    12,
+    55.5,
+    -52.3
+   ],
+   [
+    "hand_l",
+    11,
+    12,
+    55.5,
+    -52.3
+   ],
+   [
+    "upperarm_l",
+    12,
+    13,
+    154.2,
+    154.1
+   ],
+   [
+    "upperarm_l",
+    19,
+    20,
+    65.5,
+    63.5
+   ],
+   [
+    "lowerarm_l",
+    19,
+    20,
+    66.0,
+    53.6
+   ],
+   [
+    "hand_l",
+    19,
+    20,
+    66.0,
+    53.6
+   ],
+   [
+    "spine_03",
+    20,
+    21,
+    46.2,
+    -38.9
+   ],
+   [
+    "neck_01",
+    20,
+    21,
+    46.2,
+    -43.0
+   ],
+   [
+    "clavicle_l",
+    20,
+    21,
+    46.2,
+    5.3
+   ],
+   [
+    "upperarm_l",
+    20,
+    21,
+    58.1,
+    52.6
+   ],
+   [
+    "lowerarm_l",
+    20,
+    21,
+    78.5,
+    12.2
+   ],
+   [
+    "hand_l",
+    20,
+    21,
+    78.5,
+    12.2
+   ],
+   [
+    "clavicle_r",
+    20,
+    21,
+    46.2,
+    -7.7
+   ],
+   [
+    "lowerarm_r",
+    20,
+    21,
+    45.5,
+    3.4
+   ],
+   [
+    "hand_r",
+    20,
+    21,
+    45.5,
+    3.4
+   ],
+   [
+    "upperarm_l",
+    21,
+    22,
+    52.8,
+    13.5
+   ],
+   [
+    "upperarm_r",
+    22,
+    23,
+    171.2,
+    171.2
+   ],
+   [
+    "upperarm_r",
+    24,
+    25,
+    49.3,
+    28.1
+   ],
+   [
+    "upperarm_r",
+    25,
+    26,
+    88.6,
+    66.5
+   ],
+   [
+    "lowerarm_r",
+    25,
+    26,
+    89.0,
+    36.6
+   ],
+   [
+    "hand_r",
+    25,
+    26,
+    89.0,
+    36.6
+   ],
+   [
+    "upperarm_r",
+    27,
+    28,
+    171.6,
+    -171.3
+   ]
+  ],
+  "Shot_Wrist": [
+   [
+    "upperarm_r",
+    8,
+    9,
+    166.4,
+    -166.4
+   ],
+   [
+    "upperarm_r",
+    10,
+    11,
+    173.8,
+    -173.7
+   ]
+  ],
+  "Stop": [],
+  "Stride": [
+   [
+    "upperarm_l",
+    20,
+    21,
+    176.8,
+    -176.8
+   ],
+   [
+    "upperarm_l",
+    29,
+    30,
+    175.7,
+    -175.7
+   ],
+   [
+    "upperarm_l",
+    32,
+    33,
+    175.7,
+    175.7
+   ],
+   [
+    "upperarm_l",
+    41,
+    42,
+    176.8,
+    176.8
+   ]
+  ],
+  "Stumble": [
+   [
+    "upperarm_l",
+    1,
+    2,
+    70.0,
+    -3.0
+   ],
+   [
+    "upperarm_r",
+    1,
+    2,
+    170.8,
+    169.6
+   ],
+   [
+    "upperarm_l",
+    2,
+    3,
+    144.6,
+    140.2
+   ],
+   [
+    "lowerarm_l",
+    2,
+    3,
+    47.8,
+    7.9
+   ],
+   [
+    "hand_l",
+    2,
+    3,
+    47.8,
+    7.9
+   ],
+   [
+    "upperarm_r",
+    2,
+    3,
+    53.9,
+    -34.1
+   ],
+   [
+    "upperarm_l",
+    3,
+    4,
+    106.1,
+    -84.2
+   ],
+   [
+    "lowerarm_l",
+    3,
+    4,
+    104.5,
+    -22.8
+   ],
+   [
+    "hand_l",
+    3,
+    4,
+    104.5,
+    -22.8
+   ],
+   [
+    "upperarm_r",
+    3,
+    4,
+    80.0,
+    -65.4
+   ],
+   [
+    "lowerarm_r",
+    3,
+    4,
+    80.0,
+    -29.6
+   ],
+   [
+    "hand_r",
+    3,
+    4,
+    80.0,
+    -29.6
+   ],
+   [
+    "upperarm_l",
+    5,
+    6,
+    176.8,
+    176.7
+   ],
+   [
+    "upperarm_r",
+    5,
+    6,
+    175.1,
+    175.0
+   ],
+   [
+    "upperarm_r",
+    10,
+    11,
+    177.6,
+    177.6
+   ],
+   [
+    "upperarm_l",
+    13,
+    14,
+    179.8,
+    -179.8
+   ],
+   [
+    "upperarm_l",
+    16,
+    17,
+    99.2,
+    78.3
+   ],
+   [
+    "lowerarm_l",
+    16,
+    17,
+    98.6,
+    33.1
+   ],
+   [
+    "hand_l",
+    16,
+    17,
+    98.6,
+    33.1
+   ],
+   [
+    "upperarm_r",
+    16,
+    17,
+    115.0,
+    106.1
+   ],
+   [
+    "lowerarm_r",
+    16,
+    17,
+    115.2,
+    48.8
+   ],
+   [
+    "hand_r",
+    16,
+    17,
+    115.2,
+    48.8
+   ],
+   [
+    "upperarm_l",
+    17,
+    18,
+    47.7,
+    29.2
+   ],
+   [
+    "upperarm_l",
+    18,
+    19,
+    173.6,
+    -173.3
+   ],
+   [
+    "upperarm_r",
+    18,
+    19,
+    177.0,
+    -176.9
+   ]
+  ]
+ },
+ "rot_over_60_count": {
+  "Aim_FarReach": 0,
+  "Aim_Front": 0,
+  "Aim_Left": 0,
+  "Aim_Right": 0,
+  "Celebrate": 5,
+  "Check": 5,
+  "Crossover_Left": 2,
+  "Crossover_Right": 0,
+  "Faceoff_Draw": 0,
+  "Faceoff_Ready": 0,
+  "Fall": 24,
+  "Fall_Forward": 4,
+  "Foul_Reaction": 14,
+  "GetUp": 9,
+  "GetUp_Front": 6,
+  "Glide": 0,
+  "Goalie_Block_Left": 2,
+  "Goalie_Block_Right": 2,
+  "Goalie_Hold": 0,
+  "Idle_Faceoff": 0,
+  "Lean_Left": 0,
+  "Lean_Right": 0,
+  "Lift": 0,
+  "Pass": 0,
+  "Poke": 2,
+  "Shot_Charge": 0,
+  "Shot_Slap": 12,
+  "Shot_Wrist": 2,
+  "Stop": 0,
+  "Stride": 4,
+  "Stumble": 21
+ },
+ "foot_pitch": {
+  "Aim_FarReach": {
+   "max_dorsiflexion_deg": 49.9,
+   "max_plantar_flexion_deg": 11.5
+  },
+  "Aim_Front": {
+   "max_dorsiflexion_deg": 36.9,
+   "max_plantar_flexion_deg": -30.7
+  },
+  "Aim_Left": {
+   "max_dorsiflexion_deg": 39.2,
+   "max_plantar_flexion_deg": -27.9
+  },
+  "Aim_Right": {
+   "max_dorsiflexion_deg": 34.5,
+   "max_plantar_flexion_deg": -33.3
+  },
+  "Celebrate": {
+   "max_dorsiflexion_deg": 32.0,
+   "max_plantar_flexion_deg": -10.6
+  },
+  "Check": {
+   "max_dorsiflexion_deg": 47.7,
+   "max_plantar_flexion_deg": 29.5
+  },
+  "Crossover_Left": {
+   "max_dorsiflexion_deg": 43.7,
+   "max_plantar_flexion_deg": 1.0
+  },
+  "Crossover_Right": {
+   "max_dorsiflexion_deg": 43.7,
+   "max_plantar_flexion_deg": 1.0
+  },
+  "Faceoff_Draw": {
+   "max_dorsiflexion_deg": 34.3,
+   "max_plantar_flexion_deg": -11.0
+  },
+  "Faceoff_Ready": {
+   "max_dorsiflexion_deg": 31.4,
+   "max_plantar_flexion_deg": -18.1
+  },
+  "Fall": {
+   "max_dorsiflexion_deg": 32.0,
+   "max_plantar_flexion_deg": 29.2
+  },
+  "Fall_Forward": {
+   "max_dorsiflexion_deg": 61.9,
+   "max_plantar_flexion_deg": -16.3
+  },
+  "Foul_Reaction": {
+   "max_dorsiflexion_deg": 32.0,
+   "max_plantar_flexion_deg": -15.7
+  },
+  "GetUp": {
+   "max_dorsiflexion_deg": 81.3,
+   "max_plantar_flexion_deg": 24.8
+  },
+  "GetUp_Front": {
+   "max_dorsiflexion_deg": 58.6,
+   "max_plantar_flexion_deg": -14.3
+  },
+  "Glide": {
+   "max_dorsiflexion_deg": 32.0,
+   "max_plantar_flexion_deg": -24.7
+  },
+  "Goalie_Block_Left": {
+   "max_dorsiflexion_deg": 42.3,
+   "max_plantar_flexion_deg": 37.9
+  },
+  "Goalie_Block_Right": {
+   "max_dorsiflexion_deg": 42.3,
+   "max_plantar_flexion_deg": 37.9
+  },
+  "Goalie_Hold": {
+   "max_dorsiflexion_deg": 19.1,
+   "max_plantar_flexion_deg": -19.0
+  },
+  "Idle_Faceoff": {
+   "max_dorsiflexion_deg": 32.8,
+   "max_plantar_flexion_deg": -18.5
+  },
+  "Lean_Left": {
+   "max_dorsiflexion_deg": 35.5,
+   "max_plantar_flexion_deg": -18.2
+  },
+  "Lean_Right": {
+   "max_dorsiflexion_deg": 35.5,
+   "max_plantar_flexion_deg": -18.2
+  },
+  "Lift": {
+   "max_dorsiflexion_deg": 35.5,
+   "max_plantar_flexion_deg": -26.1
+  },
+  "Pass": {
+   "max_dorsiflexion_deg": 38.0,
+   "max_plantar_flexion_deg": -24.0
+  },
+  "Poke": {
+   "max_dorsiflexion_deg": 53.0,
+   "max_plantar_flexion_deg": 13.9
+  },
+  "Shot_Charge": {
+   "max_dorsiflexion_deg": 28.2,
+   "max_plantar_flexion_deg": 8.9
+  },
+  "Shot_Slap": {
+   "max_dorsiflexion_deg": 43.9,
+   "max_plantar_flexion_deg": 8.9
+  },
+  "Shot_Wrist": {
+   "max_dorsiflexion_deg": 41.2,
+   "max_plantar_flexion_deg": -6.3
+  },
+  "Stop": {
+   "max_dorsiflexion_deg": 32.0,
+   "max_plantar_flexion_deg": -22.1
+  },
+  "Stride": {
+   "max_dorsiflexion_deg": 33.4,
+   "max_plantar_flexion_deg": -14.4
+  },
+  "Stumble": {
+   "max_dorsiflexion_deg": 47.1,
+   "max_plantar_flexion_deg": -8.7
+  }
+ },
+ "rest_bounds_cm": {
+  "x": [
+   -18.8,
+   154.2
+  ],
+  "y": [
+   -69.3,
+   69.9
+  ],
+  "z": [
+   0.1,
+   163.7
+  ]
+ },
+ "rest_pose_bone_heads_cm": {
+  "root": [
+   0.0,
+   0.0,
+   0.0
+  ],
+  "pelvis": [
+   0.0,
+   0.0,
+   83.0
+  ],
+  "head": [
+   0.0,
+   0.0,
+   130.0
+  ],
+  "hand_r": [
+   0.0,
+   -55.0,
+   82.5
+  ],
+  "stick_socket": [
+   0.0,
+   -59.5,
+   77.1
+  ],
+  "puck_socket": [
+   78.0,
+   10.0,
+   -0.0
+  ],
+  "head_socket": [
+   0.0,
+   0.0,
+   179.0
+  ]
+ }
+}

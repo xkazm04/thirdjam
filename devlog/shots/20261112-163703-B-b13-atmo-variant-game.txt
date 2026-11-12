@@ -1,0 +1,1 @@
+B13 atmosphere VARIANT from the game camera: the camera sits inside the first shaft's fade zone, so the near shaft does not veil the view; far end slightly hazier.

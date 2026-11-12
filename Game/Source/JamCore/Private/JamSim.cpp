@@ -986,7 +986,8 @@ void UJamSim::CollideSkaterStatic(FJamSkaterState& S)
 		const double Vn = Dot(S.Vel, N);
 		if (Vn > 0) S.Vel -= N * ((1.0 + SkaterBoardBounce) * Vn);
 	}
-	// Nets as solid boxes behind each goal line.
+	// Nets as solid boxes behind each goal line. A skater is pushed out along the shortest axis; the speed it pressed into the hull with becomes a slide
+	// along the face towards the nearer open side, so a skater steering straight into a net (A3's trace: pro seed 15, 400 frames at (42.9, -1.6)) goes round it.
 	const double GL = GoalLineX();
 	const double Hw = Config.Rink.GoalWidthM * 0.5;
 	for (int32 Side = -1; Side <= 1; Side += 2)
@@ -996,7 +997,12 @@ void UJamSim::CollideSkaterStatic(FJamSkaterState& S)
 		if (PushOutOfBox(S.Pos, R, FVector2D(X0, -Hw), FVector2D(X1, Hw), N))
 		{
 			const double Vn = Dot(S.Vel, N);
-			if (Vn < 0) S.Vel -= N * Vn;
+			if (Vn < 0)
+			{
+				S.Vel -= N * Vn;
+				const FVector2D Slide = FMath::Abs(N.X) > 0.5 ? FVector2D(0.0, S.Pos.Y >= 0.0 ? 1.0 : -1.0) : FVector2D(S.Pos.X >= 0.0 ? 1.0 : -1.0, 0.0);
+				S.Vel += Slide * (-Vn * 0.8);
+			}
 		}
 	}
 	for (const FJamObstacle& O : Config.Rink.Obstacles)

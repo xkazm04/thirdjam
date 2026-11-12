@@ -1,0 +1,1 @@
+B13 subject 1 variant B (open night sky, saved default): procedural star dome and horizon glow (M_NightSky, unlit, no texture), room walls invisible but still occluding the sky light for Lumen; same camera.

@@ -1,0 +1,4 @@
+{"name": "R", "rig_fbx": "in/R/R_rigged.fbx", "base_color": "export/R/T_Skater_R_BaseColor.png",
+ "note": "The P2 hybrid (S5). Overrides keep S5's hand-tuned values so the rebuild is identical; the measured values are in the report (run Rm for the measured-only build).",
+ "stick_ice_tilt": false, "export_dir": "export_reg", "out_dir": "out_reg", "dz_rate": 0.02,
+ "override": {"ankle_z": 0.30, "head_clear": 0.40, "stick_head_clear": 0.36, "grip_min": 0.22}}
