@@ -32,7 +32,9 @@ namespace JamAI
 			Opp.bUseAimCone = true;
 			Opp.PokeFrames = -1;   // R-0017: rookie bots never poke
 			Opp.DrawJumpPct = 45;  // R-0013 / Director 14:45: the rookie centre jumps early in 45% of faceoffs (bot draw wins ~30%)
-			return FJamDifficultyProfile{"rookie", 0.85, 0.8, 4.0, 25.0, 0.0, 180, Opp, true};   // 15:12 sweep on the phase-2 sim
+			// 15:36 sweep: speed 0.95 / red 0.9 and a 60-frame stall tolerance (the stall rule lets a rookie shoot when facing the net; at 180
+			// frames rookie bots went whole matches without a shot, SeasonTakes)
+			return FJamDifficultyProfile{"rookie", 0.95, 0.9, 4.0, 25.0, 0.0, 60, Opp, true};
 		}
 
 		FJamDifficultyProfile MakeAllStar()
