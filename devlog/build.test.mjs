@@ -166,6 +166,8 @@ test('git history: commits placed by hour, lanes by branch, subjects redacted', 
     assert.equal(model.ruler[4].B.commits, 1);
     assert.equal(model.ruler[30].A.commits, 1);
     assert.equal(model.outside.pre.commits.length, 1);
+    // a commit that main and dev-b share is A's, whichever branch git names first (real-data finding, H6)
+    assert.equal(model.outside.pre.commits[0].device, 'A');
     assert.ok(html.includes('id="pre"'), 'pre-jam bucket rendered');
     assert.ok(html.includes('<section class="hour" id="h4"'));
     assert.ok(!html.includes('test.person@example.com') && !html.includes('sk-ant'));

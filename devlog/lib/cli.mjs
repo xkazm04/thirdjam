@@ -2,7 +2,7 @@
 // label as "A=<path>" or "B=<path>"; without a label a transcript directory counts as device A and a
 // repo infers the device from the branch a commit was reached from (see gitlog.mjs).
 
-const VALUE_FLAGS = new Set(['--out', '--transcripts', '--repo', '--shots', '--status', '--notes', '--gates', '--title']);
+const VALUE_FLAGS = new Set(['--out', '--transcripts', '--repo', '--shots', '--status', '--notes', '--gates', '--title', '--since']);
 const BOOL_FLAGS = new Set(['--embed', '--fixtures', '--help', '-h']);
 
 export function labelled(v) {
@@ -48,6 +48,7 @@ export const HELP = `usage: node devlog/build.mjs --out <file.html> [options]
   --status <dir>           status/A.md and status/B.md (default status)
   --notes <file>           notes with "## H12 title" blocks (default devlog/notes.md)
   --gates <file>           gate list (default docs/GATES.md)
+  --since <ISO time>       ignore transcript turns and prompts before this instant (e.g. 2026-11-12T05:00:00Z); a project folder may hold older sessions
   --title <text>           page title (default "Third Jam dev log")
   --embed                  put screenshots inside the page as base64 (otherwise relative links)
   --fixtures               build from devlog/fixtures (fake data) for a smoke test

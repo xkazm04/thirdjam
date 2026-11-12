@@ -35,13 +35,13 @@ const check = () => {
   return { code, out: lines.join('\n') };
 };
 
-test('the shipped ASSETS.md template parses, has no rows, and passes against an absent folder', () => {
+test('the shipped ASSETS.md parses and passes against an absent folder', () => {
   const { rows } = parseLedger(REAL_LEDGER);
-  assert.equal(rows.length, 0);
+  assert.ok(Array.isArray(rows)); // lanes add rows during the jam; the count is not fixed
   fs.writeFileSync(path.join(root, 'ASSETS.md'), REAL_LEDGER);
   const r = check();
   assert.equal(r.code, 0, r.out);
-  assert.match(r.out, /PASS assets ledger: 0 row/);
+  assert.match(r.out, /PASS assets ledger: \d+ row/);
   // and through the real CLI against the real repository files
   const cli = spawnSync(process.execPath, [SCRIPT, '--root', path.join(HERE, '..', '..')], { encoding: 'utf8' });
   assert.equal(cli.status, 0, cli.stdout + cli.stderr);

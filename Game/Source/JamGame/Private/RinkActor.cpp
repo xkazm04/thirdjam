@@ -1,0 +1,363 @@
+#include "RinkActor.h"
+#include "JamSim.h"
+#include "ProceduralMeshComponent.h"
+#include "Components/BoxComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "Engine/StaticMesh.h"
+#include "UObject/ConstructorHelpers.h"
+#include "Materials/MaterialInterface.h"
+#include "Materials/MaterialInstanceDynamic.h"
+
+namespace
+{
+	constexpr double UU = 100.0; // metres -> Unreal units
+	constexpr bool kFrontAlongCross = false; // engine convention: GenerateBoxMesh top face (0,1,3) has cross(B-A, C-A) opposite its normal
+
+	struct FMeshBuf
+	{
+		TArray<FVector> V;
+		TArray<int32> T;
+		TArray<FVector> N;
+		TArray<FVector2D> UV;
+		TArray<FLinearColor> C;
+		TArray<FProcMeshTangent> Tan;
+
+		// Quad A B C D (in order around the face); Normal is the side it faces. Both windings are emitted only when bTwoSided.
+		void Quad(const FVector& A, const FVector& B, const FVector& Cc, const FVector& D, const FVector& Normal, bool bTwoSided = false)
+		{
+			const int32 I = V.Num();
+			V.Append({ A, B, Cc, D });
+			for (int32 k = 0; k < 4; ++k) { N.Add(Normal); C.Add(FLinearColor::White); Tan.Add(FProcMeshTangent()); }
+			UV.Append({ FVector2D(A.X, A.Y) / 1000.0 + FVector2D(0, A.Z / 1000.0), FVector2D(B.X, B.Y) / 1000.0 + FVector2D(0, B.Z / 1000.0),
+				FVector2D(Cc.X, Cc.Y) / 1000.0 + FVector2D(0, Cc.Z / 1000.0), FVector2D(D.X, D.Y) / 1000.0 + FVector2D(0, D.Z / 1000.0) });
+			// Front face: the triangle whose cross(B - A, C - A) points along Normal (kFrontAlongCross; flip it if faces vanish).
+			const FVector Cross = FVector::CrossProduct(B - A, Cc - A);
+			if ((FVector::DotProduct(Cross, Normal) > 0) == kFrontAlongCross) T.Append({ I, I + 1, I + 2, I, I + 2, I + 3 });
+			else T.Append({ I, I + 2, I + 1, I, I + 3, I + 2 });
+			if (bTwoSided)
+			{
+				const int32 J = V.Num();
+				V.Append({ A, B, Cc, D });
+				for (int32 k = 0; k < 4; ++k) { N.Add(-Normal); C.Add(FLinearColor::White); Tan.Add(FProcMeshTangent()); UV.Add(FVector2D::ZeroVector); }
+				if ((FVector::DotProduct(Cross, Normal) > 0) == kFrontAlongCross) T.Append({ J, J + 2, J + 1, J, J + 3, J + 2 });
+				else T.Append({ J, J + 1, J + 2, J, J + 2, J + 3 });
+			}
+		}
+
+		// Axis-aligned box (all six faces, outward normals).
+		void Box(const FVector& Min, const FVector& Max)
+		{
+			const FVector P[8] = {
+				{ Min.X, Min.Y, Min.Z }, { Max.X, Min.Y, Min.Z }, { Max.X, Max.Y, Min.Z }, { Min.X, Max.Y, Min.Z },
+				{ Min.X, Min.Y, Max.Z }, { Max.X, Min.Y, Max.Z }, { Max.X, Max.Y, Max.Z }, { Min.X, Max.Y, Max.Z } };
+			Quad(P[4], P[5], P[6], P[7], FVector::UpVector);
+			Quad(P[0], P[3], P[2], P[1], -FVector::UpVector);
+			Quad(P[0], P[1], P[5], P[4], -FVector::RightVector);
+			Quad(P[3], P[7], P[6], P[2], FVector::RightVector);
+			Quad(P[0], P[4], P[7], P[3], -FVector::ForwardVector);
+			Quad(P[1], P[2], P[6], P[5], FVector::ForwardVector);
+		}
+
+		// Flat ring or disc on the ice (Z = H), from radius R0 to R1, centre C (cm).
+		void Ring(const FVector2D& Cc, double R0, double R1, double H, int32 Seg = 48)
+		{
+			for (int32 i = 0; i < Seg; ++i)
+			{
+				const double A0 = 2.0 * UE_DOUBLE_PI * i / Seg, A1 = 2.0 * UE_DOUBLE_PI * (i + 1) / Seg;
+				const FVector2D D0(FMath::Cos(A0), FMath::Sin(A0)), D1(FMath::Cos(A1), FMath::Sin(A1));
+				const FVector2D P0 = Cc + D0 * R0, P1 = Cc + D0 * R1, P2 = Cc + D1 * R1, P3 = Cc + D1 * R0;
+				Quad(FVector(P0, H), FVector(P1, H), FVector(P2, H), FVector(P3, H), FVector::UpVector);
+			}
+		}
+
+		void Strip(const FVector2D& A, const FVector2D& B, double HalfW, double H)
+		{
+			const FVector2D Dir = (B - A).GetSafeNormal();
+			const FVector2D Side(-Dir.Y * HalfW, Dir.X * HalfW);
+			Quad(FVector(A - Side, H), FVector(B - Side, H), FVector(B + Side, H), FVector(A + Side, H), FVector::UpVector);
+		}
+
+		void Commit(UProceduralMeshComponent* Pm, int32 Section)
+		{
+			Pm->CreateMeshSection_LinearColor(Section, V, T, N, UV, C, Tan, false);
+			*this = FMeshBuf();
+		}
+	};
+}
+
+ARinkActor::ARinkActor()
+{
+	PrimaryActorTick.bCanEverTick = false;
+	USceneComponent* Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+	RootComponent = Root;
+	auto MakePm = [this, Root](const TCHAR* Name)
+	{
+		UProceduralMeshComponent* P = CreateDefaultSubobject<UProceduralMeshComponent>(Name);
+		P->SetupAttachment(Root);
+		P->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		P->bUseAsyncCooking = true;
+		return P;
+	};
+	Ice = MakePm(TEXT("Ice"));
+	Markings = MakePm(TEXT("Markings"));
+	Boards = MakePm(TEXT("Boards"));
+	Glass = MakePm(TEXT("Glass"));
+	Trim = MakePm(TEXT("Trim"));
+	TrimOrange = MakePm(TEXT("TrimOrange"));
+	Nets = MakePm(TEXT("Nets"));
+	Obstacles = MakePm(TEXT("Obstacles"));
+	Glass->SetCastShadow(false);
+	// R-0002 (B-to-A-0005): stencil 1 = toon ramp + outline, 2 = banded ice without outline, 0 = untouched.
+	for (UProceduralMeshComponent* P : { Boards.Get(), Nets.Get(), Obstacles.Get() }) { P->SetRenderCustomDepth(true); P->SetCustomDepthStencilValue(1); }
+	Ice->SetRenderCustomDepth(true);
+	Ice->SetCustomDepthStencilValue(2);
+	for (UProceduralMeshComponent* P : { Trim.Get(), TrimOrange.Get() }) { P->SetRenderCustomDepth(false); P->SetCustomDepthStencilValue(0); P->SetCastShadow(false); }
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> Cyl(TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
+	for (int32 i = 0; i < 2; ++i)
+	{
+		UStaticMeshComponent* Bc = CreateDefaultSubobject<UStaticMeshComponent>(i == 0 ? TEXT("BeaconPos") : TEXT("BeaconNeg"));
+		Bc->SetupAttachment(Root);
+		if (Cyl.Succeeded()) Bc->SetStaticMesh(Cyl.Object);
+		Bc->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		Bc->SetCastShadow(false);
+		Bc->SetRenderCustomDepth(false);
+		Bc->SetCustomDepthStencilValue(0);
+		(i == 0 ? BeaconPos : BeaconNeg) = Bc;
+	}
+	GoalTriggerPos = CreateDefaultSubobject<UBoxComponent>(TEXT("GoalTriggerPos"));
+	GoalTriggerNeg = CreateDefaultSubobject<UBoxComponent>(TEXT("GoalTriggerNeg"));
+	for (UBoxComponent* B : { GoalTriggerPos.Get(), GoalTriggerNeg.Get() })
+	{
+		B->SetupAttachment(Root);
+		B->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		B->SetHiddenInGame(true);
+	}
+}
+
+UMaterialInterface* ARinkActor::LoadMat(const TCHAR* Path) const
+{
+	if (UMaterialInterface* Mi = LoadObject<UMaterialInterface>(nullptr, Path, nullptr, LOAD_NoWarn | LOAD_Quiet)) return Mi;
+	return LoadObject<UMaterialInterface>(nullptr, TEXT("/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial"));
+}
+
+UMaterialInterface* ARinkActor::LoadLook(const TCHAR* LookName, const TCHAR* FallbackPath, bool* bOutFromLook) const
+{
+	// R-0002: device B's instance at /JamAssets/Look/<name>.<name> when it exists; else our placeholder; never fail.
+	const FString Path = FString::Printf(TEXT("/JamAssets/Look/%s.%s"), LookName, LookName);
+	UMaterialInterface* Mi = LoadObject<UMaterialInterface>(nullptr, *Path, nullptr, LOAD_NoWarn | LOAD_Quiet);
+	if (bOutFromLook) *bOutFromLook = Mi != nullptr;
+	return Mi ? Mi : LoadMat(FallbackPath);
+}
+
+void ARinkActor::Outline(double LengthM, double WidthM, double CornerM, int32 ArcSegments, TArray<FVector2D>& Out)
+{
+	Out.Reset();
+	const double Hx = LengthM * 0.5, Hz = WidthM * 0.5;
+	const double Rc = FMath::Clamp(CornerM, 0.0, FMath::Min(Hx, Hz));
+	const FVector2D Centres[4] = { { Hx - Rc, Hz - Rc }, { -(Hx - Rc), Hz - Rc }, { -(Hx - Rc), -(Hz - Rc) }, { Hx - Rc, -(Hz - Rc) } };
+	for (int32 c = 0; c < 4; ++c)
+	{
+		const double Start = c * UE_DOUBLE_PI * 0.5;
+		const int32 Segs = Rc > 0 ? ArcSegments : 1;
+		for (int32 i = 0; i <= Segs; ++i)
+		{
+			const double A = Start + (UE_DOUBLE_PI * 0.5) * i / Segs;
+			Out.Add(Centres[c] + FVector2D(FMath::Cos(A), FMath::Sin(A)) * Rc);
+		}
+	}
+}
+
+void ARinkActor::Build(const FJamGameConfig& Game)
+{
+	const FJamRinkConfig& R = Game.Rink;
+	const double GL = R.GoalLineX();
+	const double Hw = R.GoalWidthM * 0.5;
+	const double Depth = UJamSim::NetDepth, NetH = UJamSim::NetHeight;
+	FMeshBuf B;
+
+	// Ice: a fan over the outline.
+	TArray<FVector2D> Line;
+	Outline(R.LengthM, R.WidthM, R.CornerRadiusM, 12, Line);
+	{
+		B.V.Add(FVector::ZeroVector); B.N.Add(FVector::UpVector); B.UV.Add(FVector2D::ZeroVector); B.C.Add(FLinearColor::White); B.Tan.Add(FProcMeshTangent());
+		for (const FVector2D& P : Line) { B.V.Add(FVector(P * UU, 0)); B.N.Add(FVector::UpVector); B.UV.Add(P / 10.0); B.C.Add(FLinearColor::White); B.Tan.Add(FProcMeshTangent()); }
+		for (int32 i = 0; i < Line.Num(); ++i)
+		{
+			const int32 A = 1 + i, Bn = 1 + (i + 1) % Line.Num();
+			const FVector Cross = FVector::CrossProduct(B.V[A] - B.V[0], B.V[Bn] - B.V[0]);
+			if ((Cross.Z > 0) == kFrontAlongCross) B.T.Append({ 0, A, Bn }); else B.T.Append({ 0, Bn, A });
+		}
+		B.Commit(Ice, 0);
+		IceMid = UMaterialInstanceDynamic::Create(LoadLook(TEXT("MI_Ice_Night"), IceMaterialPath, &bLookIce), this);
+		IceMid->SetScalarParameterValue(TEXT("Wet"), Game.Look.bWetIce ? 1.f : 0.f);
+		IceMid->SetScalarParameterValue(TEXT("RinkHalfLength"), static_cast<float>(R.LengthM * 0.5 * UU));
+		IceMid->SetScalarParameterValue(TEXT("RinkHalfWidth"), static_cast<float>(R.WidthM * 0.5 * UU));
+		IceMid->SetVectorParameterValue(TEXT("Color"), FLinearColor(0.80f, 0.86f, 0.92f));
+		Ice->SetMaterial(0, IceMid);
+	}
+
+	// Boards: inner face, top cap, outer face; glass band above; trim strip along the inner top edge.
+	{
+		FMeshBuf G, TrB, TrO;
+		const double H = BoardHeightM * UU, T = BoardThicknessM * UU, GH = (BoardHeightM + GlassHeightM) * UU;
+		// Split the outline at x = 0 so each trim strip is wholly on the blue (x < 0) or the orange (x > 0) half.
+		TArray<FVector2D> Split;
+		for (int32 i = 0; i < Line.Num(); ++i)
+		{
+			const FVector2D A = Line[i], Bp = Line[(i + 1) % Line.Num()];
+			Split.Add(A);
+			if ((A.X < 0 && Bp.X > 0) || (A.X > 0 && Bp.X < 0)) Split.Add(FMath::Lerp(A, Bp, A.X / (A.X - Bp.X)));
+		}
+		for (int32 i = 0; i < Split.Num(); ++i)
+		{
+			const FVector2D P0 = Split[i] * UU, P1 = Split[(i + 1) % Split.Num()] * UU;
+			if (FVector2D::Distance(P0, P1) < 1.0) continue;
+			const FVector2D Dir = (P1 - P0).GetSafeNormal();
+			const FVector2D Out(Dir.Y, -Dir.X); // outward for a counter-clockwise outline
+			const FVector2D Q0 = P0 + Out * T, Q1 = P1 + Out * T;
+			const FVector Nin(-Out, 0), Nout(Out, 0);
+			B.Quad(FVector(P0, 0), FVector(P1, 0), FVector(P1, H), FVector(P0, H), Nin);
+			B.Quad(FVector(P0, H), FVector(P1, H), FVector(Q1, H), FVector(Q0, H), FVector::UpVector);
+			B.Quad(FVector(Q0, 0), FVector(Q0, H), FVector(Q1, H), FVector(Q1, 0), Nout);
+			const FVector2D M0 = P0 + Out * (T * 0.5), M1 = P1 + Out * (T * 0.5);
+			G.Quad(FVector(M0, H), FVector(M1, H), FVector(M1, GH), FVector(M0, GH), Nin, true);
+			// R-0002: a 10 cm emissive strip on top of the board, along its inner edge (a box: top, inner and outer faces).
+			const FVector2D I0 = P0 + Out * 1.0, I1 = P1 + Out * 1.0, O0 = P0 + Out * 11.0, O1 = P1 + Out * 11.0;
+			FMeshBuf& Tr = ((P0.X + P1.X) * 0.5 < 0) ? TrB : TrO;
+			Tr.Quad(FVector(I0, H + 10.0), FVector(I1, H + 10.0), FVector(O1, H + 10.0), FVector(O0, H + 10.0), FVector::UpVector);
+			Tr.Quad(FVector(I0, H), FVector(I1, H), FVector(I1, H + 10.0), FVector(I0, H + 10.0), Nin);
+			Tr.Quad(FVector(O0, H), FVector(O0, H + 10.0), FVector(O1, H + 10.0), FVector(O1, H), Nout);
+		}
+		B.Commit(Boards, 0);
+		Boards->SetMaterial(0, LoadLook(TEXT("MI_Toon_Board"), BoardsMaterialPath));
+		G.Commit(Glass, 0);
+		Glass->SetMaterial(0, LoadMat(NetMaterialPath));
+		TrB.Commit(Trim, 0);
+		TrO.Commit(TrimOrange, 0);
+		const FLinearColor Blue = Game.Teams.Num() == 2 ? Game.Teams[0].Colour : FLinearColor(0.012f, 0.07f, 0.69f);
+		const FLinearColor Orange = Game.Teams.Num() == 2 ? Game.Teams[1].Colour : FLinearColor(0.80f, 0.13f, 0.01f);
+		auto TrimMat = [this](const TCHAR* LookName, const FLinearColor& Fallback) -> UMaterialInterface*
+		{
+			bool bLook = false;
+			UMaterialInterface* Mi = LoadLook(LookName, TrimMaterialPath, &bLook);
+			if (bLook) return Mi;
+			UMaterialInstanceDynamic* D = UMaterialInstanceDynamic::Create(Mi, const_cast<ARinkActor*>(this));
+			D->SetVectorParameterValue(TEXT("TeamColour"), Fallback);
+			D->SetVectorParameterValue(TEXT("Color"), Fallback);
+			D->SetScalarParameterValue(TEXT("Emissive"), 4.f);
+			return D;
+		};
+		Trim->SetMaterial(0, TrimMat(TEXT("MI_Trim_Blue"), Blue));
+		TrimOrange->SetMaterial(0, TrimMat(TEXT("MI_Trim_Orange"), Orange));
+		TrimMid = Cast<UMaterialInstanceDynamic>(Trim->GetMaterial(0));
+
+		// R-0002: far-net beacon posts, d 12 cm, 8 m tall, 1 m behind each net (basic cylinder: 100 cm across and tall).
+		const UMaterialInterface* BeaconMat = TrimMat(TEXT("MI_Trim_Beacon"), Game.Look.TrimColour);
+		for (int32 S = -1; S <= 1; S += 2)
+		{
+			UStaticMeshComponent* Bc = S > 0 ? BeaconPos : BeaconNeg;
+			Bc->SetRelativeLocation(FVector(S * (GL + Depth + 1.0) * UU, 0, 400.0));
+			Bc->SetRelativeScale3D(FVector(0.12, 0.12, 8.0));
+			Bc->SetMaterial(0, const_cast<UMaterialInterface*>(BeaconMat));
+		}
+	}
+
+	// Markings: section 0 red (centre line, goal lines, faceoff dots), section 1 blue (blue lines, centre circle).
+	{
+		const double Hz = R.WidthM * 0.5 * UU, Z = 0.6;
+		const double Inset = R.CornerRadiusM; // goal lines stop where the corner starts curving (approximate)
+		B.Strip(FVector2D(0, -Hz), FVector2D(0, Hz), 15.0, Z);
+		for (int32 S = -1; S <= 1; S += 2)
+		{
+			const double X = S * GL * UU;
+			const double Ext = FMath::Max(Hz - FMath::Max(0.0, Inset - (R.LengthM * 0.5 - GL)) * UU, Hz * 0.6);
+			B.Strip(FVector2D(X, -Ext), FVector2D(X, Ext), 3.0, Z);
+			for (int32 Zs = -1; Zs <= 1; Zs += 2)
+			{
+				B.Ring(FVector2D(S * (GL - 6.0) * UU, Zs * FMath::Min(7.0, R.WidthM * 0.3) * UU), 0.0, 30.0, Z, 16);
+			}
+		}
+		B.Ring(FVector2D::ZeroVector, 0.0, 15.0, Z + 0.1, 16);
+		B.Commit(Markings, 0);
+		FMeshBuf Blue;
+		for (int32 S = -1; S <= 1; S += 2) Blue.Strip(FVector2D(S * R.LengthM / 6.0 * UU, -Hz), FVector2D(S * R.LengthM / 6.0 * UU, Hz), 15.0, Z);
+		Blue.Ring(FVector2D::ZeroVector, 450.0, 460.0, Z, 64);
+		Blue.Commit(Markings, 1);
+		UMaterialInterface* Base = LoadObject<UMaterialInterface>(nullptr, TEXT("/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial"));
+		UMaterialInstanceDynamic* Red = UMaterialInstanceDynamic::Create(Base, this);
+		Red->SetVectorParameterValue(TEXT("Color"), FLinearColor(0.6f, 0.02f, 0.02f));
+		UMaterialInstanceDynamic* BlueM = UMaterialInstanceDynamic::Create(Base, this);
+		BlueM->SetVectorParameterValue(TEXT("Color"), FLinearColor(0.02f, 0.08f, 0.6f));
+		Markings->SetMaterial(0, Red);
+		Markings->SetMaterial(1, BlueM);
+		// B's ice material paints the lines itself from RinkHalfLength / RinkHalfWidth; ours would double them.
+		Markings->SetVisibility(!bLookIce);
+	}
+
+	// Nets: posts and crossbar (frame, section 0) and the mesh (section 1), open towards the centre.
+	{
+		FMeshBuf Mesh;
+		const double PR = 5.0; // post half size, cm
+		for (int32 S = -1; S <= 1; S += 2)
+		{
+			const double X0 = S * GL * UU, X1 = S * (GL + Depth) * UU;
+			const double Y0 = -Hw * UU, Y1 = Hw * UU, Hh = NetH * UU;
+			B.Box(FVector(X0 - PR, Y0 - PR, 0), FVector(X0 + PR, Y0 + PR, Hh));
+			B.Box(FVector(X0 - PR, Y1 - PR, 0), FVector(X0 + PR, Y1 + PR, Hh));
+			B.Box(FVector(X0 - PR, Y0 - PR, Hh - PR * 2), FVector(X0 + PR, Y1 + PR, Hh));
+			B.Box(FVector(FMath::Min(X0, X1) - PR, Y0 - PR, 0), FVector(FMath::Max(X0, X1) + PR, Y0 + PR, 2 * PR));
+			B.Box(FVector(FMath::Min(X0, X1) - PR, Y1 - PR, 0), FVector(FMath::Max(X0, X1) + PR, Y1 + PR, 2 * PR));
+			B.Box(FVector(X1 - PR, Y0 - PR, 0), FVector(X1 + PR, Y1 + PR, 2 * PR));
+			const FVector In(-S, 0, 0);
+			Mesh.Quad(FVector(X1, Y0, 0), FVector(X1, Y1, 0), FVector(X1, Y1, Hh), FVector(X1, Y0, Hh), In, true);
+			Mesh.Quad(FVector(X0, Y0, 0), FVector(X1, Y0, 0), FVector(X1, Y0, Hh), FVector(X0, Y0, Hh), FVector(0, 1, 0), true);
+			Mesh.Quad(FVector(X0, Y1, 0), FVector(X1, Y1, 0), FVector(X1, Y1, Hh), FVector(X0, Y1, Hh), FVector(0, -1, 0), true);
+			Mesh.Quad(FVector(X0, Y0, Hh), FVector(X1, Y0, Hh), FVector(X1, Y1, Hh), FVector(X0, Y1, Hh), FVector(0, 0, -1), true);
+		}
+		B.Commit(Nets, 0);
+		Mesh.Commit(Nets, 1);
+		bool bLookFrame = false;
+		UMaterialInterface* FrameMat = LoadLook(TEXT("MI_Toon_NetFrame"), TEXT("/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial"), &bLookFrame);
+		if (!bLookFrame)
+		{
+			UMaterialInstanceDynamic* Frame = UMaterialInstanceDynamic::Create(FrameMat, this);
+			Frame->SetVectorParameterValue(TEXT("Color"), FLinearColor(0.7f, 0.03f, 0.02f));
+			FrameMat = Frame;
+		}
+		Nets->SetMaterial(0, FrameMat);
+		Nets->SetMaterial(1, LoadLook(TEXT("MI_Toon_NetMesh"), NetMaterialPath));
+	}
+
+	// Obstacles (M3b): boxes and pillars, 1.2 m tall like the boards.
+	{
+		for (const FJamObstacle& O : R.Obstacles)
+		{
+			const double Hs = O.Size * 0.5 * UU;
+			const FVector C(O.X * UU, O.Z * UU, 0);
+			if (O.Kind == FName(TEXT("pillar")))
+			{
+				const int32 Seg = 20;
+				for (int32 i = 0; i < Seg; ++i)
+				{
+					const double A0 = 2 * UE_DOUBLE_PI * i / Seg, A1 = 2 * UE_DOUBLE_PI * (i + 1) / Seg;
+					const FVector D0(FMath::Cos(A0), FMath::Sin(A0), 0), D1(FMath::Cos(A1), FMath::Sin(A1), 0);
+					B.Quad(C + D0 * Hs, C + D1 * Hs, C + D1 * Hs + FVector(0, 0, BoardHeightM * UU), C + D0 * Hs + FVector(0, 0, BoardHeightM * UU), (D0 + D1).GetSafeNormal());
+				}
+			}
+			else
+			{
+				B.Box(C - FVector(Hs, Hs, 0), C + FVector(Hs, Hs, BoardHeightM * UU));
+			}
+		}
+		Obstacles->ClearAllMeshSections();
+		if (B.V.Num()) { B.Commit(Obstacles, 0); Obstacles->SetMaterial(0, LoadLook(TEXT("MI_Toon_Board"), BoardsMaterialPath)); }
+	}
+
+	// Goal triggers behind each line (cosmetic markers of the goal volume the simulation uses).
+	GoalTriggerPos->SetRelativeLocation(FVector((GL + Depth * 0.5) * UU, 0, NetH * 0.5 * UU));
+	GoalTriggerPos->SetBoxExtent(FVector(Depth * 0.5 * UU, Hw * UU, NetH * 0.5 * UU));
+	GoalTriggerNeg->SetRelativeLocation(FVector(-(GL + Depth * 0.5) * UU, 0, NetH * 0.5 * UU));
+	GoalTriggerNeg->SetBoxExtent(FVector(Depth * 0.5 * UU, Hw * UU, NetH * 0.5 * UU));
+
+	UE_LOG(LogJamSim, Log, TEXT("JAMRINK built %gx%g m corner %g goal %g m, %d obstacles, outline %d points"), R.LengthM, R.WidthM, R.CornerRadiusM, R.GoalWidthM, R.Obstacles.Num(), Line.Num());
+}

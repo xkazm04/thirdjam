@@ -14,12 +14,14 @@ namespace JamEvents
 	const FName PickupTake(TEXT("pickup_take"));
 	const FName Win(TEXT("win"));
 	const FName Lose(TEXT("lose"));
+	const FName DirectorsCall(TEXT("directors_call"));
+	const FName Period(TEXT("period"));
 }
 
 TArray<FName> UJamEventBus::GetKnownEvents()
 {
 	return { JamEvents::Shot, JamEvents::Board, JamEvents::Goal, JamEvents::Faceoff, JamEvents::Check,
-		JamEvents::Knockdown, JamEvents::PickupSpawn, JamEvents::PickupTake, JamEvents::Win, JamEvents::Lose };
+		JamEvents::Knockdown, JamEvents::PickupSpawn, JamEvents::PickupTake, JamEvents::Win, JamEvents::Lose, JamEvents::DirectorsCall, JamEvents::Period };
 }
 
 bool UJamEventBus::IsKnownEvent(FName Event)
@@ -35,11 +37,14 @@ bool UJamEventBus::Broadcast(FName Event, const FJamEventPayload& Payload)
 		return false;
 	}
 	++BroadcastCount;
+	// FName keeps the first spelling the process saw (the engine already has "Period"); every contract name and kind is
+	// lower case, so the log prints them lower case for the tests that grep it.
 	if (bLogEvents)
 	{
-		UE_LOG(LogJamEvents, Log, TEXT("JAMEVENT %s who=%d where=(%.1f,%.1f,%.1f) strength=%.3f frame=%llu"),
-			*Event.ToString(), Payload.Who, Payload.Where.X, Payload.Where.Y, Payload.Where.Z, Payload.Strength,
-			static_cast<unsigned long long>(GFrameCounter));
+		UE_LOG(LogJamEvents, Log, TEXT("JAMEVENT %s who=%d where=(%.1f,%.1f,%.1f) strength=%.3f frame=%llu kind=%s"),
+			*Event.ToString().ToLower(), Payload.Who, Payload.Where.X, Payload.Where.Y, Payload.Where.Z, Payload.Strength,
+			static_cast<unsigned long long>(SimFrame >= 0 ? static_cast<uint64>(SimFrame) : GFrameCounter),
+			Payload.Kind.IsNone() ? TEXT("none") : *Payload.Kind.ToString().ToLower());
 	}
 	OnJamEvent.Broadcast(Event, Payload);
 	return true;

@@ -50,7 +50,15 @@ export function buildPage(o) {
   for (const t of transcriptSrc) if (!fs.existsSync(t.dir)) warnings.push(`transcript path not found: ${redact(path.basename(t.dir))}`);
   for (const r of repos) if (!fs.existsSync(r.dir)) throw new Error(`repository not found: ${redact(r.dir)}`);
 
-  const sessions = loadTranscripts(transcriptSrc, redact);
+  let sessions = loadTranscripts(transcriptSrc, redact);
+  if (o.since) {
+    const sinceMs = Date.parse(o.since);
+    if (Number.isNaN(sinceMs)) throw new Error(`--since is not a time: ${redact(o.since)}`);
+    sessions = sessions
+      .map((s) => ({ ...s, turns: s.turns.filter((t) => t.ms >= sinceMs), prompts: s.prompts.filter((p) => p.ms >= sinceMs) }))
+      .filter((s) => s.turns.length || s.prompts.length)
+      .map((s) => ({ ...s, firstMs: Math.max(s.firstMs ?? sinceMs, sinceMs) }));
+  }
   for (const s of sessions) if (s.badLines) warnings.push(`${s.badLines} unreadable line(s) skipped in a transcript (${redact(s.id)})`);
   const commits = loadCommits(repos, redact);
   const shotResult = loadShots(shotsDir, redact);

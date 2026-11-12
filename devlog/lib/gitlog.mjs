@@ -24,6 +24,23 @@ export function deviceForRef(ref) {
  * @param {string|undefined} device 'A' | 'B' | undefined (infer from branch name)
  * @returns {{hash:string, ms:number, subject:string, device:string, repo:string}[]}
  */
+/**
+ * Hashes reachable from refs that do not look like device B's. `--source` alone names whichever ref git met first,
+ * so a commit that main and dev-b share could be called B; a commit is B only when no other ref reaches it.
+ * Returns undefined when there is nothing to partition (then the `--source` name decides).
+ */
+function hashesOfNonBRefs(repo) {
+  try {
+    const run = (a) => execFileSync('git', ['-C', repo, '--no-pager', ...a], { env: cleanEnv(), encoding: 'utf8', maxBuffer: 256 * 1024 * 1024, stdio: ['ignore', 'pipe', 'pipe'] });
+    const refs = run(['for-each-ref', '--format=%(refname)', 'refs/heads', 'refs/remotes']).split(/\r?\n/).filter((r) => r && !/\/HEAD$/.test(r));
+    const a = refs.filter((r) => deviceForRef(r) === 'A');
+    if (!a.length || a.length === refs.length) return undefined;
+    return new Set(run(['log', '--format=%H', ...a]).split(/\r?\n/).filter(Boolean));
+  } catch {
+    return undefined;
+  }
+}
+
 export function readGitLog(repo, device, redact = (s) => s) {
   const fmt = ['%H', '%aI', '%S', '%s'].join(F) + R;
   let out;
@@ -39,6 +56,7 @@ export function readGitLog(repo, device, redact = (s) => s) {
     if (/does not have any commits yet|bad default revision|unknown revision/i.test(msg)) return [];
     throw new Error(`git log failed for ${redact(repo)}: ${redact(msg)}`);
   }
+  const nonB = device ? undefined : hashesOfNonBRefs(repo);
   const commits = [];
   for (const rec of out.split(R)) {
     const r = rec.replace(/^\n+/, '');
@@ -51,7 +69,7 @@ export function readGitLog(repo, device, redact = (s) => s) {
       full: hash,
       ms,
       subject: redact(rest.join(F).trim()),
-      device: device || deviceForRef(ref),
+      device: device || (nonB ? (nonB.has(hash) ? 'A' : 'B') : deviceForRef(ref)),
     });
   }
   return commits;

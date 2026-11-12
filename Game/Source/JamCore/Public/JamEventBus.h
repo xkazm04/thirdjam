@@ -21,6 +21,8 @@ namespace JamEvents
 	JAMCORE_API extern const FName PickupTake;   // "pickup_take"
 	JAMCORE_API extern const FName Win;          // "win"
 	JAMCORE_API extern const FName Lose;         // "lose"
+	JAMCORE_API extern const FName DirectorsCall; // "directors_call" (R-0001 7, R-0003 3): Who -1, Where zero, Strength = new value's position in the tunable range 0..1, Kind = tunable key
+	JAMCORE_API extern const FName Period;       // "period" (R-0003 3): a TAKE starts; Who -1, Where centre ice, Strength 0, Kind = "take_<n>"
 }
 
 USTRUCT(BlueprintType)
@@ -39,6 +41,10 @@ struct JAMCORE_API FJamEventPayload
 	// Event-specific magnitude, 0..1 (contracts/events.md says what it means per event).
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Events")
 	float Strength = 0.f;
+
+	// R-0001 item 3: pickup kind for pickup_spawn / pickup_take, cause ("check" | "boost") for knockdown; NAME_None otherwise.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Events")
+	FName Kind = NAME_None;
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FJamEventSignature, FName, Event, const FJamEventPayload&, Payload);
@@ -50,7 +56,7 @@ class JAMCORE_API UJamEventBus : public UGameInstanceSubsystem
 
 public:
 	// Delivers a known event to every listener and logs it as
-	// "JAMEVENT <name> who=<int> where=(x,y,z) strength=<float> frame=<uint64>". Returns false (and logs an error) for an unknown name.
+	// "JAMEVENT <name> who=<int> where=(x,y,z) strength=<float> frame=<uint64> kind=<name>". Returns false (and logs an error) for an unknown name.
 	UFUNCTION(BlueprintCallable, Category = "Jam|Events")
 	bool Broadcast(FName Event, const FJamEventPayload& Payload);
 
@@ -58,7 +64,7 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Jam|Events")
 	static bool IsKnownEvent(FName Event);
 
-	// The ten event names, in contract order.
+	// The known event names, in contract order (the ten of C-0003, then directors_call and period).
 	UFUNCTION(BlueprintPure, Category = "Jam|Events")
 	static TArray<FName> GetKnownEvents();
 
@@ -73,6 +79,15 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Events")
 	bool bLogEvents = true;
 
+	// The simulation frame the game mode is delivering events for; the log line prints it as frame= (contracts/events.md open
+	// question 3). -1 (default, no simulation running) prints the engine frame counter instead.
+	UFUNCTION(BlueprintCallable, Category = "Jam|Events")
+	void SetSimFrame(int64 InFrame) { SimFrame = InFrame; }
+
+	UFUNCTION(BlueprintPure, Category = "Jam|Events")
+	int64 GetSimFrame() const { return SimFrame; }
+
 private:
 	int32 BroadcastCount = 0;
+	int64 SimFrame = -1;
 };
