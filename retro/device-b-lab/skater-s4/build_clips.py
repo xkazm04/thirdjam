@@ -444,6 +444,60 @@ GUF_RISE = mk(GLIDE, pz=-0.24, pel=(30, 0, 0), sp1=(12, 0, 0), sp2=(10, 0, 0), s
               fl=(0.08, 0.20, 0.13, 10, 0, 0), fr=(-0.10, -0.20, 0.13, -10, 0, 0),
               stick={"h": (0.70, -0.10, 0.0), "yaw": -5, "tilt": 50, "twist": 0}, hl=("rel", 0.25, 0.05, -0.45))
 
+# ---- stick verbs (R-0013): poke, stumble, lift, faceoff, goalie, pass, charge, foul, aim
+POKE_LOAD = mk(GLIDE, pz=-0.14, pel=(22, 0, 4), sp1=(10, 0, 2), stick={"h": (0.55, 0.02, 0.0), "yaw": 8, "tilt": 52, "twist": 0},
+               hl=("grip", 0.42))
+POKE_OUT = mk(GLIDE, pz=-0.20, pel=(32, 0, -6), sp1=(12, 0, -4), sp2=(10, 0, -2), sp3=(6, 0, 0), neck=(-18, 0, 0), head=(-34, 0, 0),
+              fl=(0.22, 0.20, 0.13, 10, 0, 0), fr=(-0.14, -0.20, 0.13, -12, 0, 0), clav_r=(20, 0, 15),
+              stick={"gs": (0.50, 0.04, -0.34), "yaw": 4, "tilt": 72, "twist": 0}, hl=("rel", -0.20, 0.36, -0.25))
+STUMBLE_A = mk(GLIDE, pz=-0.20, pel=(36, -10, 8), sp1=(10, -6, 0), sp2=(8, 0, 0), neck=(-20, 0, 0), head=(-30, 0, 0),
+               fl=(0.18, 0.24, 0.13, 14, 0, -10), fr=(-0.32, -0.16, 0.24, -10, 25, 0),
+               stick={"gs": (0.05, -0.45, -0.05), "yaw": -60, "tilt": 78, "twist": 0}, hl=("rel", 0.10, 0.48, 0.02),
+               el=(-0.3, 0.6, -0.7), er=(-0.3, -0.6, -0.7))
+STUMBLE_B = mk(STUMBLE_A, pz=-0.16, pel=(10, 8, -4), sp1=(4, 4, 0), head=(-20, 0, 0),
+               fl=(0.04, 0.26, 0.13, 12, 0, 0), fr=(0.02, -0.24, 0.13, -12, 0, 0),
+               stick={"gs": (0.05, -0.42, -0.15), "yaw": -40, "tilt": 70, "twist": 0}, hl=("rel", 0.05, 0.42, -0.08))
+LIFT_LOW = mk(GLIDE, pz=-0.15, pel=(24, 0, 0), sp1=(10, 0, 0), stick={"h": (0.92, 0.06, 0.0), "yaw": 6, "tilt": 58, "twist": 0},
+              hl=("grip", 0.45))
+LIFT_UP = mk(LIFT_LOW, pz=-0.12, pel=(18, 0, 0), stick={"h": (0.98, 0.06, 0.42), "yaw": 6, "tilt": 80, "twist": -20},
+             hl=("grip", 0.45))
+FACEOFF_READY = mk(FACEOFF, pel=(34, 0, 0), stick={"h": (0.62, 0.06, 0.0), "yaw": 6, "tilt": 50, "twist": 0}, hl=("grip", 0.47))
+DRAW_SWEEP = mk(FACEOFF_READY, pz=-0.19, pel=(30, 0, 18), sp1=(12, 0, 8), stick={"h": (0.18, 0.42, 0.0), "yaw": 70, "tilt": 52, "twist": 15},
+                hl=("grip", 0.45))
+GOALIE_HOLD = mk(GLIDE, pz=-0.28, pel=(22, 0, 0), sp1=(8, 0, 0), sp2=(6, 0, 0), sp3=(4, 0, 0), neck=(-18, 0, 0), head=(-30, 0, 0),
+                 fl=(0.04, 0.40, 0.13, 22, 0, -10), fr=(0.04, -0.40, 0.13, -22, 0, 10), kl=0.6, kr=0.6,
+                 stick={"g": (0.42, -0.30, 0.30), "yaw": 82, "tilt": 84, "twist": 80}, hl=("rel", 0.30, 0.22, 0.02),
+                 el=(-0.4, 0.8, -0.4))
+def goalie_block(s):
+    """s = +1 left, -1 right: drop onto the far knee, slide the near leg out, lay the stick flat to that side."""
+    near = (0.10, s * 0.62, 0.13, s * 70, 0, -s * 12)
+    knee = (-0.42, -s * 0.16, 0.12, -s * 10, 60, 0)
+    fl, fr = (near, knee) if s == 1 else (knee, near)
+    return mk(GOALIE_HOLD, pz=-0.46, pel=(14, -s * 10, s * 20), sp1=(8, -s * 6, s * 8), sp2=(6, -s * 4, 4), head=(-26, 0, s * 15),
+              fl=fl, fr=fr, kl=0.3, kr=0.3,
+              stick={"g": (0.38, -0.10 if s == 1 else -0.40, 0.16), "yaw": 95 if s == 1 else -70, "tilt": 88, "twist": 85},
+              hl=("rel", 0.25, 0.30, 0.10) if s == 1 else ("rel", 0.35, -0.05, -0.20))
+PASS_LOAD = mk(GLIDE, pz=-0.14, pel=(20, 0, 16), sp1=(8, 0, 8), stick={"h": (0.38, 0.38, 0.0), "yaw": 45, "tilt": 52, "twist": 0},
+               hl=("grip", 0.45))
+PASS_PUSH = mk(GLIDE, pz=-0.13, pel=(20, 0, -10), sp1=(8, 0, -8), stick={"h": (0.98, -0.02, 0.03), "yaw": -2, "tilt": 58, "twist": -15},
+               hl=("grip", 0.45))
+FOUL_SPREAD = mk(GLIDE, pz=-0.05, pel=(4, 0, 0), sp1=(-2, 0, 0), sp2=(-2, 0, 0), sp3=(0, 0, 0), neck=(-4, 6, 0), head=(-8, 10, 0),
+                 clav_l=(0, -12, 0), clav_r=(0, 12, 0),
+                 stick={"gs": (0.10, -0.46, -0.12), "yaw": -70, "tilt": 78, "twist": 0}, hl=("rel", 0.12, 0.46, -0.10),
+                 el=(-0.3, 0.6, -0.7), er=(-0.3, -0.6, -0.7))
+FOUL_SPREAD_B = mk(FOUL_SPREAD, neck=(-4, -6, 0), head=(-8, -10, 0), pz=-0.07)
+
+def aim_pose(angle, reach, one_hand=False):
+    """Stick held low, blade heel at `reach` m from the pelvis axis in direction `angle` (deg from forward, + = left); the body turns 30% with it."""
+    a = math.radians(angle)
+    heel = (reach * math.cos(a), reach * math.sin(a), 0.0)
+    body = 0.3 * angle
+    return mk(GLIDE, pz=-0.16 if not one_hand else -0.20, pel=(22 if not one_hand else 30, 0, body * 0.5), sp1=(10, 0, body * 0.3),
+              sp2=(8, 0, body * 0.2), head=(-26, 0, -body * 0.5),
+              stick={"h": heel, "yaw": angle + 8, "tilt": 52 if not one_hand else 68, "twist": 0},
+              hl=("grip", 0.45) if not one_hand else ("rel", -0.20, 0.36, -0.25))
+AIM_DEF = {"Aim_Front": (0, 0.80, False), "Aim_Left": (65, 0.75, False), "Aim_Right": (-65, 0.80, False), "Aim_FarReach": (0, 1.35, True)}
+
 def breathe(base, amt):
     return mk(base, pz=base["pz"] - 0.012 * amt, sp2=(base["sp2"][0] + 2.0 * amt, 0, 0), sp3=(base["sp3"][0] + 1.5 * amt, 0, 0))
 
@@ -478,6 +532,21 @@ CLIPS = {
                                               (31, FALL_BOUNCE, "out"), (36, FALL_DOWN, "io")]),
     "GetUp": dict(frames=72, loop=False, keys=[(0, FALL_DOWN, "io"), (22, GETUP_SIT, "io"), (44, GETUP_KNEEL, "io"),
                                                (72, GLIDE, "io")]),
+    "Poke": dict(frames=21, loop=False, keys=[(0, GLIDE, "io"), (5, POKE_LOAD, "io"), (10, POKE_OUT, "out"), (21, GLIDE, "io")]),
+    "Stumble": dict(frames=20, loop=False, keys=[(0, GLIDE, "io"), (6, STUMBLE_A, "out"), (13, STUMBLE_B, "io"), (20, GLIDE, "io")]),
+    "Lift": dict(frames=18, loop=False, keys=[(0, GLIDE, "io"), (6, LIFT_LOW, "io"), (10, LIFT_UP, "out"), (18, GLIDE, "io")]),
+    "Faceoff_Ready": dict(frames=30, loop=True, keys=hold_keys(FACEOFF_READY)),
+    "Faceoff_Draw": dict(frames=18, loop=False, keys=[(0, FACEOFF_READY, "io"), (7, DRAW_SWEEP, "out"), (18, GLIDE, "io")]),
+    "Goalie_Hold": dict(frames=30, loop=True, keys=hold_keys(GOALIE_HOLD)),
+    "Goalie_Block_Left": dict(frames=24, loop=False, keys=[(0, GOALIE_HOLD, "io"), (12, goalie_block(1), "out"), (24, goalie_block(1), "io")]),
+    "Goalie_Block_Right": dict(frames=24, loop=False, keys=[(0, GOALIE_HOLD, "io"), (12, goalie_block(-1), "out"), (24, goalie_block(-1), "io")]),
+    "Pass": dict(frames=18, loop=False, keys=[(0, GLIDE, "io"), (6, PASS_LOAD, "io"), (11, PASS_PUSH, "out"), (18, GLIDE, "io")]),
+    "Shot_Charge": dict(frames=30, loop=True, keys=hold_keys(SLAP_UP)),
+    "Foul_Reaction": dict(frames=48, loop=False, keys=[(0, GLIDE, "io"), (12, FOUL_SPREAD, "out"), (30, FOUL_SPREAD_B, "io"), (48, GLIDE, "io")]),
+    "Aim_Front": dict(frames=30, loop=True, keys=hold_keys(aim_pose(*AIM_DEF["Aim_Front"]))),
+    "Aim_Left": dict(frames=30, loop=True, keys=hold_keys(aim_pose(*AIM_DEF["Aim_Left"]))),
+    "Aim_Right": dict(frames=30, loop=True, keys=hold_keys(aim_pose(*AIM_DEF["Aim_Right"]))),
+    "Aim_FarReach": dict(frames=30, loop=True, keys=hold_keys(aim_pose(*AIM_DEF["Aim_FarReach"]))),
     "Celebrate": dict(frames=72, loop=False, keys=[(0, GLIDE, "io"),
                                                    (7, mk(CELEB_UP, pz=-0.06, stick={"gs": (0.42, -0.22, -0.05), "yaw": 90, "tilt": 95, "twist": 0}), "io"),
                                                    (14, CELEB_UP, "out"), (30, CELEB_PUMP, "io"),
@@ -549,6 +618,14 @@ for act in acts:
                             seam_max_joint_cm=round(seam * 100, 4))
 arm.animation_data.action = bpy.data.actions["Glide"]
 scn.frame_set(0)
+for n in AIM_DEF:
+    s = Solver(sample(CLIPS[n], 0)).solve()
+    W = s.W["stick_socket"] @ RS0
+    mid = s.H["stick_socket"] + W @ (Vector((0, 0, -STICK_L)) + _RB @ Vector((0.15, 0, 0.03)))
+    pel = s.H["pelvis"]
+    report[n]["aim_blade_centre_angle_deg"] = round(math.degrees(math.atan2(mid.y - pel.y, mid.x - pel.x)), 1)
+    report[n]["aim_blade_centre_reach_m"] = round(math.hypot(mid.x - pel.x, mid.y - pel.y), 3)
+    report[n]["aim_blade_centre_height_m"] = round(mid.z, 3)
 print("S4 CLIPS", json.dumps(report, indent=1))
 with open(os.path.join(LAB, "clips_report.json"), "w") as fh:
     json.dump(report, fh, indent=1)
