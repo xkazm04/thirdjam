@@ -1,0 +1,1 @@
+T-B1 SetTeam(orange) called on the editor actor before PIE BeginPlay: colour applied at BeginPlay
