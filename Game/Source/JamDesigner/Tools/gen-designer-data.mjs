@@ -6,6 +6,7 @@
 //    cached cuts as bytes (a packaged game has no repo folders), plus parity hashes of what tools/designer-eval/assemble.mjs
 //    builds, so the C++ test Jam.Designer.PromptParity proves the C++ request body is byte-identical to the Node one.
 import { readFileSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { validateDesignerOutput, DESIGNER_GAME_EDITABLE, DESIGNER_EDITABLE } from '../../../../schema/validate.mjs';
@@ -17,6 +18,13 @@ const base = JSON.parse(readFileSync(resolve(repo, 'Game/Content/Cartridges/hock
 
 // ---------- 1. cached cuts: made by gen-cut-library.mjs (the real Designer through the CLI), re-validated here ----------
 const cache = JSON.parse(readFileSync(resolve(repo, 'Game/Content/Designer/cached-cuts.json'), 'utf8'));
+// Refuse a library made over another hockey.regular (same hash as gen-cut-library.mjs: sha256 of the compact JSON).
+const baseHash = createHash('sha256').update(JSON.stringify(base)).digest('hex');
+if (cache.base_sha256 !== baseHash) {
+  console.log(`FAIL cached-cuts.json was made over hockey.regular ${String(cache.base_sha256).slice(0, 12)}, the current one is ${baseHash.slice(0, 12)}: run gen-cut-library.mjs`);
+  console.log(JSON.stringify({ tool: 'gen-designer-data', ok: false, stale_base: true }));
+  process.exit(1);
+}
 let bad = 0;
 for (const c of cache.cuts) {
   const res = validateDesignerOutput(base, c.cartridge);

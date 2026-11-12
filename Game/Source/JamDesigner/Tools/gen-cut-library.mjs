@@ -6,6 +6,7 @@
 // Names and keywords are hand-written per sentence (the name becomes theme.name): the offline matcher (UJamDesignerSubsystem::ResolveOffline) scores a player's words
 // against the sentence (2 points a word) and the keywords (1 point).
 import { readFileSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { validateDesignerOutput } from '../../../../schema/validate.mjs';
@@ -14,7 +15,12 @@ import { createCliModel } from '../../../../tools/designer-eval/cli-model.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '..', '..', '..', '..');
-const base = JSON.parse(readFileSync(resolve(repo, 'Game/Content/Cartridges/hockey.regular.cartridge.json'), 'utf8'));
+const REGULAR = resolve(repo, 'Game/Content/Cartridges/hockey.regular.cartridge.json');
+const base = JSON.parse(readFileSync(REGULAR, 'utf8'));
+// The library is only valid over the exact hockey.regular it was made from (a Designer may not move spawns, so a changed
+// preset invalidates every cut). Hash of the parsed JSON, compact: whitespace and line endings do not count.
+export const cartridgeHash = (obj) => createHash('sha256').update(JSON.stringify(obj)).digest('hex');
+const baseHash = cartridgeHash(base);
 
 export const LIBRARY = [
   ['make it faster', 'Fast Cut', 'fast quick speed speedy rapid hurry zoom'],
@@ -90,8 +96,13 @@ async function main() {
     names.add(name);
     cuts.push({ name, sentence: x.sentence, keywords: x.keywords, base: 'hockey.regular', outcome: x.r.outcome, cartridge: x.r.cartridge });
   }
+  const nowHash = cartridgeHash(JSON.parse(readFileSync(REGULAR, 'utf8')));
+  if (nowHash !== baseHash) {
+    console.log(`FAIL hockey.regular changed during the run (${baseHash.slice(0, 12)} -> ${nowHash.slice(0, 12)}); nothing written, run again`);
+    return 1;
+  }
   if (only === undefined) {
-    writeFileSync(resolve(repo, 'Game/Content/Designer/cached-cuts.json'), JSON.stringify({ schema: 'tj.designer-cache/1', generated_by: 'claude CLI, tools/designer-eval/loop.mjs chain over hockey.regular', cuts }, null, 2) + '\n');
+    writeFileSync(resolve(repo, 'Game/Content/Designer/cached-cuts.json'), JSON.stringify({ schema: 'tj.designer-cache/1', base_sha256: baseHash, generated_by: 'claude CLI, tools/designer-eval/loop.mjs chain over hockey.regular', cuts }, null, 2) + '\n');
   }
   console.log(JSON.stringify({ tool: 'gen-cut-library', kept: cuts.length, of: items.length, ...totals }));
   return cuts.length >= 24 || only !== undefined ? 0 : 1;

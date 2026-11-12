@@ -109,7 +109,9 @@ bool FJamDesignerOfflineResolves::RunTest(const FString& Parameters)
 	TestTrue(TEXT("outcome"), R.Outcome == EJamDesignerOutcome::Offline);
 	TestTrue(TEXT("has a validated cartridge"), R.HasCartridge());
 	TestEqual(TEXT("cut"), R.CutName, FString(TEXT("Fast Cut")));
-	if (R.Cartridge) TestTrue(TEXT("faster skaters than hockey.regular"), R.Cartridge->Game.Skater.Speed > 8.0);
+	TArray<FString> RegErrors;
+	const UJamCartridge* Reg = UJamCartridge::LoadFromFile(UJamCartridge::ResolveCartridgePath(TEXT("hockey.regular")), RegErrors);
+	if (R.Cartridge && Reg) TestTrue(TEXT("faster skaters than hockey.regular"), R.Cartridge->Game.Skater.Speed > Reg->Game.Skater.Speed);
 	TestEqual(TEXT("no transport call"), Mock->Calls, 0);
 
 	const FJamDesignerResult Calm = RunSync(S, TEXT("something calm for a kid please"), FString());
@@ -131,7 +133,7 @@ bool FJamDesignerValidatesOutput::RunTest(const FString& Parameters)
 {
 	const FString Base = Regular();
 	const FString Bad = Edit(Base, [](FJamJson& R) { SetNum(*R.Get(TEXT("values")), TEXT("skater_speed"), 99); });
-	const FString Good = Edit(Base, [](FJamJson& R) { SetNum(*R.Get(TEXT("values")), TEXT("skater_speed"), 11); });
+	const FString Good = Edit(Base, [](FJamJson& R) { SetNum(*R.Get(TEXT("values")), TEXT("skater_speed"), 13); });
 
 	// A canned bad JSON every time: the chain repairs (haiku), retries (sonnet), then rejects. Nothing is applied.
 	{
@@ -166,7 +168,7 @@ bool FJamDesignerValidatesOutput::RunTest(const FString& Parameters)
 		const FJamDesignerResult R = RunSync(S, TEXT("make it faster"), Base);
 		TestTrue(TEXT("repaired"), R.Outcome == EJamDesignerOutcome::Repaired);
 		TestEqual(TEXT("two attempts"), Mock->Calls, 2);
-		TestTrue(TEXT("validated cartridge"), R.Cartridge && R.Cartridge->Game.Skater.Speed == 11.0);
+		TestTrue(TEXT("validated cartridge"), R.Cartridge && R.Cartridge->Game.Skater.Speed == 13.0);
 	}
 	// Prose around the JSON, a protected change, and a refusal.
 	{
@@ -349,7 +351,7 @@ bool FJamDesignerCliTransportParsesResult::RunTest(const FString& Parameters)
 	IFileManager::Get().MakeDirectory(*Dir, true);
 	FFileHelper::SaveStringToFile(TEXT("@echo off\r\necho %*> \"%~dp0args.txt\"\r\nfindstr \"^\" > \"%~dp0stdin.txt\"\r\ntype \"%~dp0reply.json\"\r\n"),
 		*FPaths::Combine(Dir, TEXT("claude.cmd")), FFileHelper::EEncodingOptions::ForceAnsi);
-	const FString Good = Edit(Regular(), [](FJamJson& R) { SetNum(*R.Get(TEXT("values")), TEXT("skater_speed"), 11); });
+	const FString Good = Edit(Regular(), [](FJamJson& R) { SetNum(*R.Get(TEXT("values")), TEXT("skater_speed"), 13); });
 	TSharedPtr<FJamJson> Text = MakeShared<FJamJson>();
 	Text->Type = FJamJson::EType::String;
 	Text->String = Good;
@@ -382,7 +384,7 @@ bool FJamDesignerCliTransportParsesResult::RunTest(const FString& Parameters)
 	const int32 Before = FJamCliTransport::GetProcessesStarted();
 	const FJamDesignerResult R = Run(S, TEXT("make it faster"));
 	TestTrue(TEXT("first try"), R.Outcome == EJamDesignerOutcome::FirstTry);
-	TestTrue(TEXT("validated cartridge"), R.Cartridge && R.Cartridge->Game.Skater.Speed == 11.0);
+	TestTrue(TEXT("validated cartridge"), R.Cartridge && R.Cartridge->Game.Skater.Speed == 13.0);
 	TestEqual(TEXT("one process"), FJamCliTransport::GetProcessesStarted(), Before + 1);
 	TestEqual(TEXT("tokens in (with cache)"), R.TokensIn, (int64)9003);
 	TestEqual(TEXT("tokens out"), R.TokensOut, (int64)1200);
