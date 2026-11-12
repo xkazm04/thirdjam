@@ -42,7 +42,7 @@ painted-cel look, the camera at 120 m, animation sources and Meshy; their recipe
 4. Create the Unreal project: `Game/ThirdJam.uproject`, blank **C++** project (not a template), engine association "5.9", modules `JamCore`, `JamGame`, `JamDesigner`
    (JamDesigner may be a stub), plugins `ModelContextProtocol`, `ToolsetRegistry`, `AllToolsets` enabled (editor only), a content-only plugin `Game/Plugins/JamAssets`
    (empty, with its `.uplugin`), `Config/DefaultEditorPerProjectUserSettings.ini` with `bAutoStartServer=True`, `DefaultGame.ini` with an explicit `+MapsToCook`
-   list, `DefaultEngine.ini` with **Use Fixed Frame Rate = True, 60** (the setting `tools/mcp/PHYSICS.md` proved; two `SetSectionProperties` calls, then restart), and an
+   list, `DefaultEngine.ini` with **DX12 as the default RHI and the SM6 shader format** (a config-less project runs SM5, where Lumen and virtual shadow maps are silently off; lane E3 lost an hour to this), `r.GenerateMeshDistanceFields=True`, `r.CustomDepth=3` (the toon ramp and outline passes select objects by custom stencil), **Use Fixed Frame Rate = True, 60** (the setting `tools/mcp/PHYSICS.md` proved; two `SetSectionProperties` calls, then restart), and an
 **editor module `JamEditor`** carrying `UTJAnimGraphEdLibrary` from `tools/mcp/ANIMATION.md` (the only way an agent adds AnimBP states; Live Coding cannot add a module later).
 Build with `tools/run/build.ps1`. Commit.
 5. Commit the four seam stubs from TRACKS.md section 3: `IJamSkaterVisual` (C++ interface with the exact calls from HOCKEY.md section 5), three empty light-rig
