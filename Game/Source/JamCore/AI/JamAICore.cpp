@@ -223,14 +223,15 @@ namespace JamAI
 			{
 				Sc *= 1.1;
 			}
-			bool bShoot = false, bAimed = false;
-			FVec2 Dir = Decide(W, i, bShoot, bAimed);
+			bool bShoot = false, bAimed = false, bDeke = false;
+			FVec2 Dir = Decide(W, i, bShoot, bAimed, bDeke);
 			if (Dir.Length() > 1.0)
 			{
 				Dir = Dir.Normalized();
 			}
 			In.Move = Dir * Sc;
 			In.bShoot = bShoot;
+			In.bDeke = bDeke;   // R-0029 point 4 (lane A39)
 			StickPlay(W, i, In);
 			// Lane A31 (B-to-A-0024 point 1): the carrier charges an aimed shot on the net. While the lined-up decision holds, shoot is held
 			// (bShootHeld, never the edge) for the skill's window; at the window's end, or the frame the line-up is lost, the hold is dropped and
@@ -280,10 +281,11 @@ namespace JamAI
 			Out[i].bLift = In.bLift;
 			Out[i].bGoalie = In.bGoalie;
 			Out[i].GoalieSide = In.GoalieSide;
+			Out[i].bDeke = In.bDeke;   // lane A39: live, like the shot: a delayed deke would miss the moment
 		}
 	}
 
-	FVec2 FJamBrain::Decide(const FJamAIWorld& W, int Id, bool& bShoot, bool& bAimed)
+	FVec2 FJamBrain::Decide(const FJamAIWorld& W, int Id, bool& bShoot, bool& bAimed, bool& bDeke)
 	{
 		const FJamAISkater& S = W.Skaters[Id];
 		const FVec2 Pp = W.PuckPos;
@@ -383,13 +385,13 @@ namespace JamAI
 
 		if (Role == ERole::Chaser || (Role == ERole::Support && D < Params.PounceRadius))
 		{
-			Out = Attack(W, Id, Me, Pp, Dirg, D, bShoot, bAimed);
+			Out = Attack(W, Id, Me, Pp, Dirg, D, bShoot, bAimed, bDeke);
 		}
 		else if (Role == ERole::Back)
 		{
 			if (D < 2.5)
 			{
-				Out = Attack(W, Id, Me, Pp, Dirg, D, bShoot, bAimed);
+				Out = Attack(W, Id, Me, Pp, Dirg, D, bShoot, bAimed, bDeke);
 			}
 			else if (LastManGoalie(W, Id))
 			{
@@ -426,18 +428,21 @@ namespace JamAI
 					T = Gl + (Pp - Gl).LimitLength(Params.BackRadius);
 				}
 				Out = Arrive(Me, T - S.Vel * 0.25, Params.ArriveSlowRadius);   // damped: stop on the post, do not slide through it
-				// lane A3 (R-0009): a shot on our net: step onto its path (the closest point of the puck's line)
+				// lane A3 (R-0009): a shot on our net: step onto its path (the closest point of the puck's line). R-0029 point 4 (lane A39): a back
+				// committed by an opponent's deke steps onto the line the puck's old side would have taken (it is beaten to the other post).
 				const double Pv = W.PuckVel.Length();
+				const bool bCommitted = W.DekeCommitFrames > 0 && W.DekeCommitSkater >= 0 && W.DekeCommitSkater < W.NumSkaters && W.Skaters[W.DekeCommitSkater].Team != S.Team;
+				const FVec2 Pb = bCommitted ? Pp - W.DekeCommitOffset : Pp;
 				if (SkillOf(W, Id).bBlockShots && Pp.DistTo(OwnGoal) >= SkillOf(W, Id).BlockMinDistM && Pv > 6.0 && W.PuckVel.Dot(OwnGoal - Pp) > 0.0)
 				{
 					const FVec2 Dir = W.PuckVel * (1.0 / Pv);
-					const double Tg = std::fabs(Dir.X) > 1e-6 ? (OwnGoal.X - Pp.X) / Dir.X : -1.0;
-					const double Yg = Pp.Y + Dir.Y * Tg;
+					const double Tg = std::fabs(Dir.X) > 1e-6 ? (OwnGoal.X - Pb.X) / Dir.X : -1.0;
+					const double Yg = Pb.Y + Dir.Y * Tg;
 					if (Tg > 0.0 && std::fabs(Yg) < W.GoalHalfWidth + 1.0)
 					{
-						double Along = (Me - Pp).Dot(Dir);
+						double Along = (Me - Pb).Dot(Dir);
 						Along = Along < 0.0 ? 0.0 : (Along > Tg ? Tg : Along);
-						const FVec2 Block = Pp + Dir * Along;
+						const FVec2 Block = Pb + Dir * Along;
 						// damped: aim ahead of our own drift so the skater stops on the line instead of sliding through it
 						Out = Arrive(Me, Block - S.Vel * 0.25, 1.0);
 					}
@@ -511,7 +516,13 @@ namespace JamAI
 	{
 		const FJamAISkater& S = W.Skaters[Id];
 		const FJamBotSkill& K = SkillOf(W, Id);
-		const FVec2 To = W.PuckPos - S.Pos;
+		const int C = W.Carrier;
+		const bool bOppCarrier = C >= 0 && W.Skaters[C].Team != S.Team;
+		// R-0029 point 4 (lane A39): during an opponent's deke commit the blade and the poke follow the puck's old side: the back reads where the
+		// puck was, not where it went, for deke.commit_frames (and the flight of a shot released inside the window).
+		const bool bCommitted = W.DekeCommitFrames > 0 && W.DekeCommitSkater >= 0 && W.DekeCommitSkater < W.NumSkaters && W.Skaters[W.DekeCommitSkater].Team != S.Team;
+		const FVec2 PuckRef = bCommitted ? W.PuckPos - W.DekeCommitOffset : W.PuckPos;
+		const FVec2 To = PuckRef - S.Pos;
 		const double D = To.Length();
 		const double Blade = W.SkaterRadius + W.StickReach;
 		// the blade follows the puck when it is near (zero aim = the sim's default, ahead at half reach)
@@ -519,8 +530,6 @@ namespace JamAI
 		{
 			In.Stick = To * (1.0 / D) * Clamp((D - W.SkaterRadius) / (W.StickReach > 0.01 ? W.StickReach : 0.01), 0.2, 1.0);
 		}
-		const int C = W.Carrier;
-		const bool bOppCarrier = C >= 0 && W.Skaters[C].Team != S.Team;
 		InReach[Id] = (bOppCarrier && D <= Blade) ? InReach[Id] + 1 : 0;
 		// poke: the level's timing (frames the puck must sit inside reach); rookie never pokes
 		if (K.PokeFrames >= 0 && bOppCarrier && S.bCanPoke && InReach[Id] > K.PokeFrames)
@@ -574,7 +583,7 @@ namespace JamAI
 		if (S.bNoShoot) { In.bShoot = false; }
 	}
 
-	FVec2 FJamBrain::Attack(const FJamAIWorld& W, int Id, const FVec2& Me, const FVec2& Pp, const FVec2& Dirg, double D, bool& bShoot, bool& bAimed) const
+	FVec2 FJamBrain::Attack(const FJamAIWorld& W, int Id, const FVec2& Me, const FVec2& Pp, const FVec2& Dirg, double D, bool& bShoot, bool& bAimed, bool& bDeke) const
 	{
 		const FJamAISkater& S = W.Skaters[Id];
 		const FJamBotSkill& K = SkillOf(W, Id);
@@ -618,6 +627,33 @@ namespace JamAI
 		{
 			bShoot = true;
 			bAimed = true;   // lane A31: the one shot worth charging
+		}
+		// R-0029 point 4 (lane A39): the one-timer. A pass just landed on the blade: shoot at once while the window is open, the net is in range and the
+		// facing is inside the widened cone (the sim adds one_timer.cone_bonus_deg; the brain assumes the default 8 on top of the aim cone).
+		if (K.bOneTimer && S.OneTimerFrames > 0 && S.bCanShoot && D < W.ShotReach && Dgoal < W.ShotReach + K.ShootExtraM + 10.0 && !bNearWall
+			&& Fwd.Dot(Dirg) > std::cos(DegToRad((Params.AimConeDeg > 0.0 ? Params.AimConeDeg : 0.0) + 8.0)))
+		{
+			bShoot = true;
+		}
+		// The deke against the last man: the carrier inside 12 m of the net, facing it, with an opponent holding the crease on its line: one tap, no shot
+		// until the puck has moved, then the shot (the sim aims it at the open post).
+		if (K.bDeke && W.Carrier == Id)
+		{
+			if (S.DekeFrames > 0)
+			{
+				bShoot = S.bDekeSettled && S.bCanShoot && Fwd.Dot(Dirg) > std::cos(DegToRad(20.0));
+			}
+			else if (S.bCanDeke && Dgoal > 5.0 && Dgoal < 12.0 && Fwd.Dot(Dirg) > std::cos(DegToRad(20.0)))
+			{
+				for (int o = 0; o < W.NumSkaters; ++o)
+				{
+					const FJamAISkater& O = W.Skaters[o];
+					if (O.Team == S.Team || O.bDown) { continue; }
+					const FVec2 Rel = O.Pos - Pp;
+					const double Along = Rel.Dot(Dirg);
+					if (Along > 0.0 && Along < Dgoal && std::fabs(Rel.Cross(Dirg)) < 2.0 && O.Pos.DistTo(OppGoal) < 5.0) { bDeke = true; bShoot = false; break; }
+				}
+			}
 		}
 		// lane A3: a teammate that holds the puck and faces the human with a clear lane passes it (shot = pass, no pass button)
 		const bool bPassIntent = TeamIntent.Kind == ETeamIntent::Pass && TeamIntent.Active(W.Frame);

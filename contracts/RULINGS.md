@@ -348,3 +348,15 @@ Accepted: `rules.hooks[].after_frame`; `score: { at_least, at_most, lead_at_leas
    default grid material in every build since H11; restored from a284b0a. The gate's new "missing usage flag" check would have caught it; it is on from 969fbc3.
 3. **Camera**: every bake-off strip shows the game camera inside the boards along the glass (severity 4). Lane A40 implements the board camera clamp (FEEL proposal feel.07, approved
    R-0021) and the camera height at the end boards.
+
+## R-0031 (H12.4, 2026-11-12 21:02): C-0001 v4 (B's tackling calls), bots check at the top levels, the figure recipe runs on B
+1. **C-0001 v4** (B-to-A-0028): `IJamSkaterVisual` gains `PlayHitReaction(DirX, DirZ)`, `PlayBoardHit()`, `SetBoardPin(bOn)`, `PlayStickHit(bLifted)` as BlueprintNativeEvents with
+   empty defaults, called from the pawn on A33's read-outs (a landed check that does not knock down or a collision over 3 m/s closing; the skater `board` event at 4 m/s; ten frames
+   on the boards with an opponent within 1.2 m; a clean poke or a lift that takes the puck); `SetKnockedDown(true, DirX, DirZ, KnockdownFrames)` carries the down time so B's get-up
+   ends when the sim releases the skater. Lane A45. `SetTripped` waits for a leg foul that does not exist.
+2. **Bots check at pro and all_star** (ends R-0017 point 4's "no bot ever body-checks" for those levels): from the front or the side only, never from behind, only at closing speed
+   above `check_speed_min` and only on the carrier; rookie bots never check. The curve is re-measured with the playtester after it lands (lane A3's next pass); the aim is that
+   tackling reads in both directions, as the operator asked.
+3. **The figure recipe** (A-to-B-0009) runs on B for a cel toy, the broadcast figure and a clay figure, each with an A/B sheet against the figure it would replace; the Director
+   decides the swap per tier from the sheets with the eyes tool.
+4. The glass hit (`HitWobble` on B's glass instances) is bound by A's effects binder for 12 frames on the nearest panel when B's lane lands it (A45 leaves the hook).

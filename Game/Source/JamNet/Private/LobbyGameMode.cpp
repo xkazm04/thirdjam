@@ -162,6 +162,7 @@ FJamInput ALobbyGameMode::ReadLocalInput()
 	In.Stick = Fwd * Aim.Y + Right * Aim.X;
 	In.bPoke = Pi->ConsumePokePressed();
 	In.bLift = Pi->ConsumeLiftPressed();
+	In.bDeke = Pi->ConsumeDekePressed();   // lane A39 (R-0029 point 4)
 	return In;
 }
 
@@ -212,6 +213,7 @@ void ALobbyGameMode::GatherBotInputs()
 		I.Stick = FVector2D(Out[i].Stick.X, Out[i].Stick.Y);
 		I.bPoke = Out[i].bPoke;
 		I.bLift = Out[i].bLift;
+		I.bDeke = Out[i].bDeke;   // lane A39
 		I.bShootHeld = false;
 	}
 }

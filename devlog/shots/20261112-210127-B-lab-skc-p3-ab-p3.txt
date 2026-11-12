@@ -1,0 +1,1 @@
+A/B new P3C against current P3A (skh/export5): same pose and camera, close and 40 px (3x); Workbench, not EEVEE

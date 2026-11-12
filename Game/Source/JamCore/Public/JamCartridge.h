@@ -60,6 +60,10 @@ struct JAMCORE_API FJamSkaterConfig
 	// C-0005 (lane A16): the pass button.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double PassSpeed = 14;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 PassLeadFrames = 20;
+	// game.skater.breakaway (R-0029 point 4, lane A39): a carrier past centre ice with no opponent between it and the net gets this fraction more
+	// top speed and acceleration for BreakawayFrames, once per possession (event breakaway). speed_bonus 0 = off.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double BreakawaySpeedBonus = 0.2;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 BreakawayFrames = 60;
 };
 
 // game.stick (R-0013, lane A16): the mouse / right-stick aimed stick.
@@ -79,6 +83,10 @@ struct JAMCORE_API FJamStickConfig
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double MouseSensitivity = 1.0;
 	// R-0029 point 3: a check on a skater that carried the puck within this many frames is not a foul_no_puck (the puck just left it).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 FoulGraceFrames = 12;
+	// game.stick.deke (R-0029 point 4, lane A39): a deke tap (FJamInput::bDeke) moves the carried puck DekeOffsetM to the blade side within 6 frames and
+	// commits the crease back for DekeCommitFrames; a shot inside that window aims at the post on the deke side. offset_m 0 = off.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double DekeOffsetM = 1.0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 DekeCommitFrames = 15;
 };
 
 USTRUCT(BlueprintType)
@@ -108,6 +116,10 @@ struct JAMCORE_API FJamShotConfig
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 ChargeFramesMax = 30;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double ChargeSpeedBonus = 8;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") bool bDeflect = true;
+	// game.shot.one_timer (R-0029 point 4, lane A39): a shot released within OneTimerWindowFrames of receiving a teammate's pass gets the full
+	// charge without the hold and aim_cone_deg + OneTimerConeBonusDeg of aim help; the shot event carries Kind one_timer. window_frames 0 = off.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 OneTimerWindowFrames = 10;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double OneTimerConeBonusDeg = 8;
 };
 
 USTRUCT(BlueprintType)

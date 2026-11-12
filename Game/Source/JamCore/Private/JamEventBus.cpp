@@ -35,6 +35,7 @@ namespace JamEvents
 	const FName PeriodEnd(TEXT("period_end"));
 	const FName Clock(TEXT("clock"));
 	const FName SeasonTake(TEXT("season_take"));
+	const FName Deke(TEXT("deke"));   // lane A39
 }
 
 TArray<FName> UJamEventBus::GetKnownEvents()
@@ -45,7 +46,8 @@ TArray<FName> UJamEventBus::GetKnownEvents()
 		JamEvents::Announce, JamEvents::Pass, JamEvents::EffectStart, JamEvents::EffectEnd, JamEvents::ZoneEnter, JamEvents::ZoneExit,
 		JamEvents::Poke, JamEvents::Lift, JamEvents::Foul, JamEvents::ShotBlocked,
 		// Lane A32 (B-to-A-0026): the commentator's seven, proposed for C-0003.
-		JamEvents::Save, JamEvents::Post, JamEvents::Breakaway, JamEvents::Carry, JamEvents::PeriodEnd, JamEvents::Clock, JamEvents::SeasonTake };
+		JamEvents::Save, JamEvents::Post, JamEvents::Breakaway, JamEvents::Carry, JamEvents::PeriodEnd, JamEvents::Clock, JamEvents::SeasonTake,
+		JamEvents::Deke };   // lane A39 (R-0029 point 4)
 }
 
 bool UJamEventBus::IsKnownEvent(FName Event)

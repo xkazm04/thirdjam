@@ -1,0 +1,1 @@
+SK5 test figure in PIE: PlayPoke(false) -> Poke, hard cut 6 frames in to Stumble_Short (weight over the front skate, stick low), back to Glide; slomo 0.04

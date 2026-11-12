@@ -25,9 +25,13 @@ of them out explicitly, but a Designer or hand-written cartridge may leave them 
 | `stick.stumble_frames` | 20 | lane A16 (R-0013); 0 in `hockey.raw` |
 | `stick.mouse_sensitivity` | 1 | lane A16 (R-0013) |
 | `stick.foul_grace_frames` | 12 | lane A16 (R-0029 point 3): no `foul_no_puck` on a skater that carried within the last 12 frames |
+| `stick.deke.offset_m` | 1.0 | lane A39 (R-0029 point 4): a deke tap (`bDeke`) moves the carried puck this far to the blade side (the side the stick is aimed to; the middle of the ice when it is not aimed) within 6 frames; a shot inside the commit window aims at the post on that side; a second tap inside 30 frames does nothing; 0 = off |
+| `stick.deke.commit_frames` | 15 | lane A39: the crease back's stance and blade follow the puck's old side this long |
 | `skater.knockdown_frames` | 90 | only read when `check_enabled` is true |
 | `skater.pass_speed` | 14 | lane A16 (C-0005) |
 | `skater.pass_lead_frames` | 20 | lane A16 (C-0005) |
+| `skater.breakaway.speed_bonus` | 0.2 | lane A39 (R-0029 point 4): a carrier past centre ice with no opponent between it and the net gets this fraction more top speed and acceleration for `frames`, once per possession (event `breakaway`); 0 = off |
+| `skater.breakaway.frames` | 60 | lane A39 |
 | `skater.visual` | `humanoid_b1` | which figure is drawn: `toy_skeletal` (the Blender toy figure as a skeletal mesh, lane A26, the default since H11.7), `toy` (the code-built figure), `humanoid_b1`, `generated_b2`; gameplay is identical; the Designer may not change it (R-0001) |
 | `puck.radius_m` | 0.12 | |
 | `puck.max_speed` | 30 | |
@@ -42,6 +46,8 @@ of them out explicitly, but a Designer or hand-written cartridge may leave them 
 | `shot.charge_frames_max` | 30 | lane A16 (C-0005): hold shoot up to this many frames for the bonus |
 | `shot.charge_speed_bonus` | 8 | lane A16 (C-0005): m/s at full charge |
 | `shot.deflect` | true | lane A16 (C-0005): a shot into a skater within 0.6 m of its stick keeps 70 % of its speed |
+| `shot.one_timer.window_frames` | 10 | lane A39 (R-0029 point 4): a shot inside this many frames of a received pass is a one-timer (full charge without the hold, `aim_cone_deg` + `cone_bonus_deg`, `shot` event kind `one_timer`); 0 = off |
+| `shot.one_timer.cone_bonus_deg` | 8 | lane A39 |
 | `rules.goal_pause_frames` | 120 | |
 | `rules.offside` | false | only false is accepted |
 | `rules.penalties` | true | R-0013: fouls (from behind, or on a skater without the puck) = 300 frames in the box + a free faceoff at the fouler's end; `hockey.raw` sets false |

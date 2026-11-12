@@ -61,6 +61,7 @@ namespace JamAI
 		// seen from the goalie facing up-ice (the side the carrier is on). The game mode turns it into C-0001 v3's SetGoalieStance.
 		bool bGoalie = false;
 		int GoalieSide = 0;
+		bool bDeke = false;        // R-0029 point 4 (lane A39): the deke tap (FJamInput::bDeke); the adapter copies it like the others
 	};
 
 	// lane A3: how well one side's bots play. The defaults are A2's brain, which is what the human's teammates play at every
@@ -101,6 +102,9 @@ namespace JamAI
 		// applies to every skater: speed + charge x bonus, charge = held / shot.charge_frames_max). 0 = a tap (rookie); pro 10, all_star 18.
 		// Board chips, dumps under a forecheck and the pass-by-shot to the human stay taps.
 		int ShotChargeFrames = 10;
+		// R-0029 point 4 (lane A39): the payoffs the bots use. pro: the one-timer; all_star: the one-timer and the deke; rookie: neither.
+		bool bOneTimer = false;        // shoots at once inside the one-timer window after a received pass (full charge, wider cone)
+		bool bDeke = false;            // dekes the crease back inside 12 m, then shoots at the open post
 	};
 	constexpr int kMaxReactionFrames = 30;
 
@@ -119,6 +123,7 @@ namespace JamAI
 		K.ForecheckYieldFrames = 20;   // Director 15:16
 		K.bIntercept = true;
 		K.bUseAimCone = true;
+		K.bOneTimer = true;    // R-0029 point 4 (lane A39): pro bots use the one-timer
 		return K;
 	}
 
@@ -166,6 +171,13 @@ namespace JamAI
 		bool bCanLift = false;    // R-0017: lift ready
 		bool bCentre = false;     // R-0013: takes the faceoff draw
 		bool bNoShoot = false;    // R-0019: standing inside a no_shoot zone (UJamZoneSystem::BlocksShot): never shoots from here
+		// R-0029 point 4 (lane A39): the payoff windows (FJamSimAdapter::BuildWorld fills them from UJamSim's skater state)
+		int OneTimerFrames = 0;   // frames left (including the next one) in which a shot is a one-timer; 0 = no received pass in the window
+		bool bBreakaway = false;  // the burst runs
+		int DekeFrames = 0;       // frames left of the deke commit window (0 = none)
+		bool bDekeSettled = false; // the deked puck has moved to the side (the shot at the open post may go)
+		bool bCanDeke = false;    // a deke tap would take (carrying, lockout over, the cut has the deke)
+		FVec2 DekeOffset;         // the puck's sideways offset from the body line while deked; the crease back follows PuckPos - DekeOffset (the old side)
 	};
 
 	// Read-only view of the simulation for one frame.
@@ -196,6 +208,11 @@ namespace JamAI
 		bool bDrawOpen = false;         // R-0013: the faceoff draw is open (first clean stick input wins)
 		int FramesSinceDrop = -1;       // frames since the drop while the draw is open (-1 unknown; set by FJamSimAdapter::View)
 		int Carrier = -1;               // UJamSim::CarrierIndex: a skater that can act with the puck within shot reach, else -1
+		// R-0029 point 4 (lane A39): the goalie commit of the latest deke (UJamSim::GetDekeCommit): while it runs, the deker's opponents' blades, pokes
+		// and shot blocks follow PuckPos - DekeCommitOffset (the puck's old side) instead of the puck.
+		int DekeCommitFrames = 0;
+		int DekeCommitSkater = -1;
+		FVec2 DekeCommitOffset;
 		double SkaterRadius = 0.4;
 		double StickReach = 1.6;        // game.stick.reach_m
 		double LiftRange = 1.0;         // game.stick.lift_range_m
@@ -274,8 +291,9 @@ namespace JamAI
 
 		const FJamBotSkill& SkillOf(const FJamAIWorld& W, int Id) const;
 		// bAimed (lane A31): the shot is the lined-up shot on the net (the one worth charging), not a board chip, a dump or a pass-by-shot.
-		FVec2 Decide(const FJamAIWorld& W, int Id, bool& bShoot, bool& bAimed);
-		FVec2 Attack(const FJamAIWorld& W, int Id, const FVec2& Me, const FVec2& Pp, const FVec2& Dirg, double D, bool& bShoot, bool& bAimed) const;
+		// bDeke (lane A39, R-0029 point 4): the carrier taps the deke this frame (live, like the shot).
+		FVec2 Decide(const FJamAIWorld& W, int Id, bool& bShoot, bool& bAimed, bool& bDeke);
+		FVec2 Attack(const FJamAIWorld& W, int Id, const FVec2& Me, const FVec2& Pp, const FVec2& Dirg, double D, bool& bShoot, bool& bAimed, bool& bDeke) const;
 	};
 
 	// Scripted input for the human's skater, used only by tests and tournaments (Godot bot_hockey.gd).

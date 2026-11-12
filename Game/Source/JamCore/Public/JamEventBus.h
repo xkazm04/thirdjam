@@ -46,6 +46,9 @@ namespace JamEvents
 	JAMCORE_API extern const FName PeriodEnd;    // "period_end": a take ends (not the match); Who -1, Where centre ice, Strength 0, Kind = "take_<n>" of the take that ended
 	JAMCORE_API extern const FName Clock;        // "clock": Who -1, Where centre ice, Strength 0, Kind = last_10s (600 frames left in a timed take) | sudden_death (a tie at the horn plays on)
 	JAMCORE_API extern const FName SeasonTake;   // "season_take": a season match is built, before its first drop (the game mode sends it); Who -1, Where centre ice, Strength 0, Kind = "level_<n>"
+	// Lane A39 (R-0029 point 4): the breakaway burst reuses `breakaway` above (one event per rush: whichever of the read-out and the burst comes first);
+	// `shot` gains Kind = one_timer for a shot inside the one-timer window; the deke is new (proposed C-0003 addition).
+	JAMCORE_API extern const FName Deke;         // "deke": the puck moves to the blade side; Who = the carrier, Where = puck, Strength = 0, Kind = left | right (the side in rink z)
 	// R-0013: `faceoff` gains Kind = drop (the puck is live, Who -1) | won (Who = the centre that won) | lost (Who = the centre that lost).
 }
 

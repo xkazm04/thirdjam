@@ -51,12 +51,16 @@ Cartridge errors are sentences that start `at <JSON pointer>:`, because the Desi
 | `skater.knockdown_frames` | 15..300 | 90 (1.5 s); 15 is a stumble, 300 (5 s) is a penalty |
 | `skater.pass_speed` | 5..30 | 14 (C-0005); below a shot, above skating, so a pass arrives before the lane closes |
 | `skater.pass_lead_frames` | 0..60 | 20 (C-0005); the receiver's position a third of a second ahead |
+| `skater.breakaway.speed_bonus` | 0..1 | 0.2 (lane A39, R-0029 point 4): top speed and acceleration bonus of the breakaway burst (a carrier past centre ice with no opponent between it and the net, once per possession; event `breakaway`); 0 = off |
+| `skater.breakaway.frames` | 0..300 | 60 (lane A39): how long the burst lasts |
 | `stick.reach_m` | 0.8..3 | 1.2 (R-0022 point 3; was 1.6 in R-0013): rest 1.0 m, full aim 1.6 m from the skater centre, which both of B's figures can pose |
 | `stick.poke_window_frames` | 2..30 | 8; the timing window of a clean poke |
 | `stick.lift_range_m` | 0.5..2.5 | 1.0; contact range of a stick lift beyond the two bodies |
 | `stick.stumble_frames` | 0..90 | 20; `hockey.raw` sets 0 |
 | `stick.mouse_sensitivity` | 0.1..5 | 1; 100 px = one reach |
 | `stick.foul_grace_frames` | 0..120 | 12 (R-0029); a check right after a strip is not a check on a player without the puck |
+| `stick.deke.offset_m` | 0..2 | 1.0 (lane A39, R-0029 point 4): a deke tap (`FJamInput::bDeke`) moves the carried puck this far to the blade side within 6 frames; a shot inside the commit window aims at the open post; 0 = off |
+| `stick.deke.commit_frames` | 0..60 | 15 (lane A39): the crease back stays committed to the puck's old side this long; a second tap inside 30 frames does nothing |
 | `puck.radius_m` | 0.06..0.4 | 0.12 measured; 0.35 made the player lose 1:3, so the cap is just above it for the big_puck look |
 | `puck.max_speed` | 10..60 | 30 measured, 4 sub-steps per frame hold to 60 m/s without tunnelling a post (1 m per frame) |
 | `puck.drag` | 0..2 | per second; 0 measured |
@@ -68,6 +72,8 @@ Cartridge errors are sentences that start `at <JSON pointer>:`, because the Desi
 | `shot.aim_cone_deg` | 1..45 | half-angle; 8 in presets; the "must face within 60 deg" rule is engine-fixed |
 | `shot.charge_frames_max` | 0..120 | 30 (C-0005); 0 = no charge; 120 is a two-second wind-up |
 | `shot.charge_speed_bonus` | 0..20 | 8 (C-0005); capped by `puck.max_speed` |
+| `shot.one_timer.window_frames` | 0..60 | 10 (lane A39, R-0029 point 4): a shot inside this many frames of a received pass is a one-timer (full charge, wider cone, `shot` event kind `one_timer`); 0 = off |
+| `shot.one_timer.cone_bonus_deg` | 0..30 | 8 (lane A39): added to `aim_cone_deg` for a one-timer |
 | `rules.score_to_win` | 1..9 | one digit on the HUD |
 | `rules.timer_frames` | 600..18000 | 10 s to 5 min at 60 Hz |
 | `rules.goal_pause_frames` | 30..600 | 120 measured |
