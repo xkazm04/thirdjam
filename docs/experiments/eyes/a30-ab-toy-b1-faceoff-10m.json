@@ -1,0 +1,74 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "ab-pair",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T18:27:01.584Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "ab-pair",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a30/docs/experiments/img/bakeoff/a30-toy-faceoff-10m.jpg",
+          "width": 2560,
+          "height": 1440
+        },
+        {
+          "label": "B",
+          "path": ".claude/worktrees/a30/docs/experiments/img/bakeoff/a30-b1-faceoff-10m.jpg",
+          "width": 2560,
+          "height": 1440
+        }
+      ],
+      "distance": 10,
+      "thumbnails": [],
+      "prompt_chars": 3515,
+      "usage": {
+        "prompt": 3237,
+        "output": 242,
+        "thoughts": 1635,
+        "total": 5114,
+        "calls": 1
+      },
+      "cost_usd_est": 0.029,
+      "ms": 23236,
+      "retried": false,
+      "answer": {
+        "elements": {
+          "sky": {
+            "closer": "tie",
+            "why": "Both use the identical deep-blue night dome."
+          },
+          "ice": {
+            "closer": "tie",
+            "why": "Both feature the same scuffed ice textures."
+          },
+          "pools": {
+            "closer": "tie",
+            "why": "Both show identical stepped light pools."
+          },
+          "figures": {
+            "closer": "b",
+            "why": "Still B uses the required blue and orange colors."
+          },
+          "construction": {
+            "closer": "tie",
+            "why": "Both have identical boards and nets."
+          },
+          "outline": {
+            "closer": "tie",
+            "why": "Both apply the same outlines to models."
+          }
+        },
+        "verdict": "b",
+        "confidence": 0.8,
+        "reason": "Still B correctly implements the specified team colors.",
+        "loser_keeps": "The identical environment rendering."
+      },
+      "markdown": "**eyes/ab-pair** A=a30-toy-faceoff-10m.jpg B=a30-b1-faceoff-10m.jpg at 10 m (gemini-3.1-pro-preview, in 3237 out 242 think 1635 tokens, ~$0.0290, 23.2 s)\n- elements:\n  - sky: closer tie, why Both use the identical deep-blue night dome.\n  - ice: closer tie, why Both feature the same scuffed ice textures.\n  - pools: closer tie, why Both show identical stepped light pools.\n  - figures: closer b, why Still B uses the required blue and orange colors.\n  - construction: closer tie, why Both have identical boards and nets.\n  - outline: closer tie, why Both apply the same outlines to models.\n- verdict: b\n- confidence: 0.8\n- reason: Still B correctly implements the specified team colors.\n- loser_keeps: The identical environment rendering."
+    }
+  ]
+}

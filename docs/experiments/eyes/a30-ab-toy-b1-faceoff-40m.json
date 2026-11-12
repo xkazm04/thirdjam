@@ -1,0 +1,74 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "ab-pair",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T18:27:51.363Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "ab-pair",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a30/docs/experiments/img/bakeoff/a30-toy-faceoff-40m.jpg",
+          "width": 2560,
+          "height": 1440
+        },
+        {
+          "label": "B",
+          "path": ".claude/worktrees/a30/docs/experiments/img/bakeoff/a30-b1-faceoff-40m.jpg",
+          "width": 2560,
+          "height": 1440
+        }
+      ],
+      "distance": 40,
+      "thumbnails": [],
+      "prompt_chars": 3515,
+      "usage": {
+        "prompt": 3237,
+        "output": 274,
+        "thoughts": 1767,
+        "total": 5278,
+        "calls": 1
+      },
+      "cost_usd_est": 0.03097,
+      "ms": 25147,
+      "retried": false,
+      "answer": {
+        "elements": {
+          "sky": {
+            "closer": "tie",
+            "why": "Both show an identical deep-blue starry dome over a black horizon."
+          },
+          "ice": {
+            "closer": "tie",
+            "why": "Both share the same painted texture with visible scuffs."
+          },
+          "pools": {
+            "closer": "tie",
+            "why": "Both use identical flat-shaded concentric bands for spotlights."
+          },
+          "figures": {
+            "closer": "b",
+            "why": "Still B uses the required blue and orange jerseys, while A uses grey models."
+          },
+          "construction": {
+            "closer": "tie",
+            "why": "Both have identical boards, kick plates, and red nets."
+          },
+          "outline": {
+            "closer": "tie",
+            "why": "Both exhibit identical dark strokes on rink markings."
+          }
+        },
+        "verdict": "b",
+        "confidence": 0.8,
+        "reason": "Still B applies the required team colours to the figures, whereas A uses placeholder grey.",
+        "loser_keeps": "The identical environment and lighting setup."
+      },
+      "markdown": "**eyes/ab-pair** A=a30-toy-faceoff-40m.jpg B=a30-b1-faceoff-40m.jpg at 40 m (gemini-3.1-pro-preview, in 3237 out 274 think 1767 tokens, ~$0.0310, 25.1 s)\n- elements:\n  - sky: closer tie, why Both show an identical deep-blue starry dome over a black horizon.\n  - ice: closer tie, why Both share the same painted texture with visible scuffs.\n  - pools: closer tie, why Both use identical flat-shaded concentric bands for spotlights.\n  - figures: closer b, why Still B uses the required blue and orange jerseys, while A uses grey models.\n  - construction: closer tie, why Both have identical boards, kick plates, and red nets.\n  - outline: closer tie, why Both exhibit identical dark strokes on rink markings.\n- verdict: b\n- confidence: 0.8\n- reason: Still B applies the required team colours to the figures, whereas A uses placeholder grey.\n- loser_keeps: The identical environment and lighting setup."
+    }
+  ]
+}

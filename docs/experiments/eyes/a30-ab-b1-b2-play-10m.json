@@ -1,0 +1,74 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "ab-pair",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T18:31:18.747Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "ab-pair",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a30/docs/experiments/img/bakeoff/a30-b1-play-10m.jpg",
+          "width": 2560,
+          "height": 1440
+        },
+        {
+          "label": "B",
+          "path": ".claude/worktrees/a30/docs/experiments/img/bakeoff/a30-b2-play-10m.jpg",
+          "width": 2560,
+          "height": 1440
+        }
+      ],
+      "distance": 10,
+      "thumbnails": [],
+      "prompt_chars": 3508,
+      "usage": {
+        "prompt": 3235,
+        "output": 360,
+        "thoughts": 2625,
+        "total": 6220,
+        "calls": 1
+      },
+      "cost_usd_est": 0.04229,
+      "ms": 27466,
+      "retried": false,
+      "answer": {
+        "elements": {
+          "sky": {
+            "closer": "tie",
+            "why": "Both images use the exact same deep-blue night dome with scattered stars above a dark horizon."
+          },
+          "ice": {
+            "closer": "tie",
+            "why": "Both images feature identical scuffed ice textures with painted brush streaks and frost patches."
+          },
+          "pools": {
+            "closer": "tie",
+            "why": "Both images render the spotlight pools with the exact same flat, concentric cel-shaded bands."
+          },
+          "figures": {
+            "closer": "b",
+            "why": "Still B applies flat cel lighting steps to the jerseys and features simple toy faces, whereas A uses smooth gradients and realistic athletic cages."
+          },
+          "construction": {
+            "closer": "tie",
+            "why": "Both images share the identical board design with an ochre kick plate, dark glass rail, and thick red nets."
+          },
+          "outline": {
+            "closer": "tie",
+            "why": "Both images apply the same visible, ink-like black outlines around the character models and sticks."
+          }
+        },
+        "verdict": "b",
+        "confidence": 0.95,
+        "reason": "Still B fully commits to the 'painted cel toy' style by applying hard-edged cel shading to the characters and removing realistic athletic details like helmet cages.",
+        "loser_keeps": "The black pants and gloves in Still A provide stronger contrast and separation against the bright ice than the team-colored pants and brown gloves in Still B."
+      },
+      "markdown": "**eyes/ab-pair** A=a30-b1-play-10m.jpg B=a30-b2-play-10m.jpg at 10 m (gemini-3.1-pro-preview, in 3235 out 360 think 2625 tokens, ~$0.0423, 27.5 s)\n- elements:\n  - sky: closer tie, why Both images use the exact same deep-blue night dome with scattered stars above a dark horizon.\n  - ice: closer tie, why Both images feature identical scuffed ice textures with painted brush streaks and frost patches.\n  - pools: closer tie, why Both images render the spotlight pools with the exact same flat, concentric cel-shaded bands.\n  - figures: closer b, why Still B applies flat cel lighting steps to the jerseys and features simple toy faces, whereas A uses smooth gradients and realistic athletic cages.\n  - construction: closer tie, why Both images share the identical board design with an ochre kick plate, dark glass rail, and thick red nets.\n  - outline: closer tie, why Both images apply the same visible, ink-like black outlines around the character models and sticks.\n- verdict: b\n- confidence: 0.95\n- reason: Still B fully commits to the 'painted cel toy' style by applying hard-edged cel shading to the characters and removing realistic athletic details like helmet cages.\n- loser_keeps: The black pants and gloves in Still A provide stronger contrast and separation against the bright ice than the team-colored pants and brown gloves in Still B."
+    }
+  ]
+}

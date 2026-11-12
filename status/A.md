@@ -145,3 +145,9 @@
 - running: A30 figure bake-off (Fable 5.2, editor 8019), A31 B's asks round 2 (editor 8017), A32 commentary player (editor 8018), A34 human-like playtester (headless), A38 lockstep re-proof (headless), A28 pass 3 (editor when the cap allows). Queued for editor capacity: A33 tackling that reads (Fable 5.2), A37 every cut plays.
 - B: 0019-0026 answered on main; A25's RinkActor spawns the stanchions (remove your 66); the bake-off decides the default figure within the hour; A22's props are FBX under `tools/blender/out/`.
 - machine check every 30 minutes from 19:14 in this file; next package when A31's items 1-2 land.
+
+- RESOURCES 19:13 cpu 40% ram 22.8/63GB gpu 29 %, 2957 MiB, 52 editors 1 cmd 0 ubt 0 free 649GB
+
+- link green 19:35: main 969fbc3 (dev-b merged incl. 0027 M_Toon flag, A34 playtester) pushed.
+
+- RESOURCES 19:44 cpu 96% ram 30.6/63GB gpu 75 %, 9338 MiB, 46 editors 3 cmd 0 ubt 0 free 624GB

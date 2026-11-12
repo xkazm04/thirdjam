@@ -97,7 +97,7 @@ bool UJamLockstepDriver::TryStep(const FJamInput& Local, FJamInput& OutLocal, FJ
 	FJamNetQuantInput Q = FJamNetQuantInput::From(Local);
 	if (!R)
 	{
-		PendingFlags |= Q.Flags;  // keep a press read during a stall
+		PendingFlags |= Q.Flags & FJamNetQuantInput::EdgeFlags;  // keep a press read during a stall (held levels are re-read)
 		return false;
 	}
 	Q.Flags |= PendingFlags;

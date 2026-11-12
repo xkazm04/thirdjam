@@ -154,6 +154,8 @@ struct JAMCORE_API FJamSkaterState
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bFoulThisFrame = false;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") float LastPassStrength = 0.f;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bAtFaceoff = false;
+	// R-0029 point 3: the last frame this skater carried the puck (-1000 = never); a check within game.stick.foul_grace_frames of it is not a foul_no_puck.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int64 LastCarryFrame = -1000;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bTouchingPuck = false;
 	// Last toucher of the puck and the puck within shot reach.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bHasPuck = false;

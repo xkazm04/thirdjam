@@ -51,6 +51,7 @@
     "stick.lift_range_m": "0.5..2.5",
     "stick.stumble_frames": "0..90",
     "stick.mouse_sensitivity": "0.1..5",
+    "stick.foul_grace_frames": "0..120",
     "puck.radius_m": "0.06..0.4",
     "puck.max_speed": "10..60",
     "puck.drag": "0..2",

@@ -56,6 +56,7 @@ Cartridge errors are sentences that start `at <JSON pointer>:`, because the Desi
 | `stick.lift_range_m` | 0.5..2.5 | 1.0; contact range of a stick lift beyond the two bodies |
 | `stick.stumble_frames` | 0..90 | 20; `hockey.raw` sets 0 |
 | `stick.mouse_sensitivity` | 0.1..5 | 1; 100 px = one reach |
+| `stick.foul_grace_frames` | 0..120 | 12 (R-0029); a check right after a strip is not a check on a player without the puck |
 | `puck.radius_m` | 0.06..0.4 | 0.12 measured; 0.35 made the player lose 1:3, so the cap is just above it for the big_puck look |
 | `puck.max_speed` | 10..60 | 30 measured, 4 sub-steps per frame hold to 60 m/s without tunnelling a post (1 m per frame) |
 | `puck.drag` | 0..2 | per second; 0 measured |

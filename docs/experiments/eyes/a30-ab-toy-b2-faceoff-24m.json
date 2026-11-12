@@ -1,0 +1,74 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "ab-pair",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T18:30:37.479Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "ab-pair",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a30/docs/experiments/img/bakeoff/a30-toy-faceoff-24m.jpg",
+          "width": 2560,
+          "height": 1440
+        },
+        {
+          "label": "B",
+          "path": ".claude/worktrees/a30/docs/experiments/img/bakeoff/a30-b2-faceoff-24m.jpg",
+          "width": 2560,
+          "height": 1440
+        }
+      ],
+      "distance": 24,
+      "thumbnails": [],
+      "prompt_chars": 3515,
+      "usage": {
+        "prompt": 3237,
+        "output": 358,
+        "thoughts": 2732,
+        "total": 6327,
+        "calls": 1
+      },
+      "cost_usd_est": 0.04355,
+      "ms": 28310,
+      "retried": false,
+      "answer": {
+        "elements": {
+          "sky": {
+            "closer": "tie",
+            "why": "Both stills feature the identical deep-blue night dome fading to black above the dark ceiling line."
+          },
+          "ice": {
+            "closer": "tie",
+            "why": "Both stills use the exact same scuffed ice texture with painted brush streaks and frost patches."
+          },
+          "pools": {
+            "closer": "tie",
+            "why": "Both stills display identical stepped, flat cel lighting pools from the four spot cones."
+          },
+          "figures": {
+            "closer": "b",
+            "why": "Still B applies the required deep blue and warm orange jersey colors to the chunky toy figures, whereas Still A uses untextured grey placeholders."
+          },
+          "construction": {
+            "closer": "tie",
+            "why": "Both stills feature the same boards with an ochre kick plate, dark glass rail, and red nets."
+          },
+          "outline": {
+            "closer": "b",
+            "why": "Still B features the requested visible ink-like black outlines around the characters, which are entirely absent in Still A."
+          }
+        },
+        "verdict": "b",
+        "confidence": 0.95,
+        "reason": "Still B implements the crucial team colors and cel-shaded outlines on the figures, moving it from a greybox state to the requested painted cel style.",
+        "loser_keeps": "Still A's lack of thick outlines keeps the far figures from looking noisy or cluttered at this 24m camera distance."
+      },
+      "markdown": "**eyes/ab-pair** A=a30-toy-faceoff-24m.jpg B=a30-b2-faceoff-24m.jpg at 24 m (gemini-3.1-pro-preview, in 3237 out 358 think 2732 tokens, ~$0.0435, 28.3 s)\n- elements:\n  - sky: closer tie, why Both stills feature the identical deep-blue night dome fading to black above the dark ceiling line.\n  - ice: closer tie, why Both stills use the exact same scuffed ice texture with painted brush streaks and frost patches.\n  - pools: closer tie, why Both stills display identical stepped, flat cel lighting pools from the four spot cones.\n  - figures: closer b, why Still B applies the required deep blue and warm orange jersey colors to the chunky toy figures, whereas Still A uses untextured grey placeholders.\n  - construction: closer tie, why Both stills feature the same boards with an ochre kick plate, dark glass rail, and red nets.\n  - outline: closer b, why Still B features the requested visible ink-like black outlines around the characters, which are entirely absent in Still A.\n- verdict: b\n- confidence: 0.95\n- reason: Still B implements the crucial team colors and cel-shaded outlines on the figures, moving it from a greybox state to the requested painted cel style.\n- loser_keeps: Still A's lack of thick outlines keeps the far figures from looking noisy or cluttered at this 24m camera distance."
+    }
+  ]
+}

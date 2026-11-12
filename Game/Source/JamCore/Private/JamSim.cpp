@@ -145,6 +145,7 @@ void UJamSim::Restart()
 		S.PokeReadyFrame = S.LiftReadyFrame = 0;
 		S.PenaltyFrames = 0;
 		S.StumbleFrames = 0;
+		S.LastCarryFrame = -1000;
 	}
 	PendingFaceoffDot = FVector2D::ZeroVector;
 	Puck = FJamPuckState();
@@ -811,6 +812,7 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 	for (FJamSkaterState& S : Skaters)
 	{
 		S.bHasPuck = (Puck.LastTouch == S.Index) && CarrierIndex() == S.Index;
+		if (S.bHasPuck) S.LastCarryFrame = Frame;
 	}
 }
 
@@ -1071,7 +1073,8 @@ void UJamSim::CollideSkaters()
 					Checker.CheckWindow = 0;
 					Emit(JamEvents::Check, Checker.Index, Contact, Strength);
 					FireRule(EJamRuleTrigger::OnCheck, Checker.Index, Checker.Team, NAME_None, Strength);
-					const bool bVictimHasPuck = CarrierIndex() == Victim.Index;
+					// R-0029 point 3: a victim that carried the puck within game.stick.foul_grace_frames still counts as the carrier (the puck just left it).
+					const bool bVictimHasPuck = CarrierIndex() == Victim.Index || (Frame - Victim.LastCarryFrame) <= Config.Stick.FoulGraceFrames;
 					const bool bFromBehind = Dot(Dir, Victim.Forward()) > 0.5;
 					KnockDown(Victim.Index, Dir, Strength, CauseCheck);
 					if (Config.Rules.bPenalties && (!bVictimHasPuck || bFromBehind)) CallFoul(Checker, Victim, Contact, Strength, bVictimHasPuck ? FoulFromBehind : FoulNoPuck);

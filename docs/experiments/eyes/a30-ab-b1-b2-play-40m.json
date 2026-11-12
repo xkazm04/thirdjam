@@ -1,0 +1,74 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "ab-pair",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T18:32:09.700Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "ab-pair",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a30/docs/experiments/img/bakeoff/a30-b1-play-40m.jpg",
+          "width": 2560,
+          "height": 1440
+        },
+        {
+          "label": "B",
+          "path": ".claude/worktrees/a30/docs/experiments/img/bakeoff/a30-b2-play-40m.jpg",
+          "width": 2560,
+          "height": 1440
+        }
+      ],
+      "distance": 40,
+      "thumbnails": [],
+      "prompt_chars": 3508,
+      "usage": {
+        "prompt": 3235,
+        "output": 355,
+        "thoughts": 2596,
+        "total": 6186,
+        "calls": 1
+      },
+      "cost_usd_est": 0.04188,
+      "ms": 25027,
+      "retried": false,
+      "answer": {
+        "elements": {
+          "sky": {
+            "closer": "tie",
+            "why": "Both stills feature the identical deep-blue gradient dome with stars above a dark horizon line."
+          },
+          "ice": {
+            "closer": "tie",
+            "why": "Both images use the exact same texture showing painted brush streaks and frost patches."
+          },
+          "pools": {
+            "closer": "tie",
+            "why": "Both stills display identical light pools with distinct, flat cel-shaded concentric bands."
+          },
+          "figures": {
+            "closer": "b",
+            "why": "The foreground players in B have thicker, more pronounced black outlines that better fit the chunky toy and painted cel aesthetic."
+          },
+          "construction": {
+            "closer": "tie",
+            "why": "Both images show identical rink boards with the required ochre kick plate, dark glass rail, and emissive trim."
+          },
+          "outline": {
+            "closer": "b",
+            "why": "Still B clearly demonstrates ink-like outlines that are thick in the foreground and thin in the distance, whereas A's outlines are uniformly thin."
+          }
+        },
+        "verdict": "b",
+        "confidence": 0.95,
+        "reason": "Still B implements the requested distance-scaled ink outlines, which significantly enhances the painted cel toy aesthetic compared to the uniformly thin lines in A.",
+        "loser_keeps": "The crisp rendering of the flat cel lighting bands in the light pools, which is identical in both but essential to the style."
+      },
+      "markdown": "**eyes/ab-pair** A=a30-b1-play-40m.jpg B=a30-b2-play-40m.jpg at 40 m (gemini-3.1-pro-preview, in 3235 out 355 think 2596 tokens, ~$0.0419, 25 s)\n- elements:\n  - sky: closer tie, why Both stills feature the identical deep-blue gradient dome with stars above a dark horizon line.\n  - ice: closer tie, why Both images use the exact same texture showing painted brush streaks and frost patches.\n  - pools: closer tie, why Both stills display identical light pools with distinct, flat cel-shaded concentric bands.\n  - figures: closer b, why The foreground players in B have thicker, more pronounced black outlines that better fit the chunky toy and painted cel aesthetic.\n  - construction: closer tie, why Both images show identical rink boards with the required ochre kick plate, dark glass rail, and emissive trim.\n  - outline: closer b, why Still B clearly demonstrates ink-like outlines that are thick in the foreground and thin in the distance, whereas A's outlines are uniformly thin.\n- verdict: b\n- confidence: 0.95\n- reason: Still B implements the requested distance-scaled ink outlines, which significantly enhances the painted cel toy aesthetic compared to the uniformly thin lines in A.\n- loser_keeps: The crisp rendering of the flat cel lighting bands in the light pools, which is identical in both but essential to the style."
+    }
+  ]
+}

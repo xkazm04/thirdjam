@@ -228,3 +228,4 @@ port 8010 free, no other editor running at any point of the soak.
 | draw push | 2.5 m/s back towards the winner's side (was 4) | the player bot never presses at the draw; after a lost draw it needed 660-867 frames to the first touch (gate: 600) |
 | charged shot | tap 17.85, half hold 21.81, full 25.78 m/s (speed 18 + bonus 8, cap 30) | measured in Jam.Core.FeelDepth |
 | faceoff countdown | 90 frames, clock paused, puck pinned, early press loses, bot centres press at 6..18 frames, passive human = seeded coin | R-0013 point 2; the brain patch (A3) replaces the sim's bot timing |
+| foul grace (`stick.foul_grace_frames` 12) | a check on a skater that carried the puck within the last 12 frames is not `foul_no_puck` (from behind still is) | R-0029 point 3: the A34 playtester took two of three rookie fouls right after the victim lost the puck; Jam.Core.Stick: clean at +6 frames, a foul at +20 |

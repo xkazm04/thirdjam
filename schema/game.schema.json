@@ -252,7 +252,7 @@
             "generated_b2",
             "toy_skeletal"
           ],
-          "description": "Which skater figure is drawn: toy_skeletal (default: the Blender toy figure as a skeletal mesh, lane A26), toy (the code-built figure), humanoid_b1 or generated_b2. Gameplay is identical. The Designer may not change it."
+          "description": "Which skater figure is drawn: humanoid_b1 (default since R-0030: device B's rebuilt scripted figure, the bake-off winner), toy_skeletal (the Blender toy figure as a skeletal mesh, lane A26), toy (the code-built figure), humanoid_b1 or generated_b2. Gameplay is identical. The Designer may not change it."
         },
         "pass_speed": {
           "type": "number",
@@ -302,6 +302,12 @@
           "minimum": 0.1,
           "maximum": 5,
           "description": "Mouse aim scale: 1 means 100 pixels move the blade one full reach."
+        },
+        "foul_grace_frames": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 120,
+          "description": "A check on a skater that carried the puck within this many frames is not a foul for hitting a player without the puck."
         }
       }
     },

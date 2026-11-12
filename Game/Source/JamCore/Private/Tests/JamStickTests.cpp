@@ -243,6 +243,45 @@ bool FJamStick::RunTest(const FString& Parameters)
 		TestEqual(TEXT("penalties off: nobody in the box"), S2->GetSkaters()[Me].PenaltyFrames, 0);
 	}
 
+	// 5b. R-0029 point 3, foul grace: the human lifts the puck off O, then checks O from the side. Six frames after the strip the check is clean
+	// (O carried within foul_grace_frames); twenty frames after, the same check is foul_no_puck.
+	for (const int32 Wait : { 6, 20 })
+	{
+		UJamSim* Sim = MakeSim(G, 1, true);
+		const int32 Me = Sim->GetHumanIndex();
+		const int32 O = FirstOpponent(Sim, Me);
+		Park(Sim, { Me, O });
+		Sim->SetSkater(O, FVector2D(0, 0), FVector2D::ZeroVector, 0);
+		Sim->SetSkater(Me, FVector2D(0.0, 1.2), FVector2D::ZeroVector, 0);
+		GivePuck(Sim, O);
+		TArray<FJamInput> In;
+		In.SetNum(Sim->GetSkaters().Num());
+		In[Me].bLift = true;
+		Sim->Step(In);
+		In[Me].bLift = false;
+		TestEqual(*FString::Printf(TEXT("grace %d: the lift stripped O"), Wait), CountEvents(Sim, JamEvents::Lift, FName(TEXT("clean")), Me), 1);
+		const int64 StripFrame = Sim->GetFrame();
+		for (int32 F = 0; F < Wait; ++F) Sim->Step(In);
+		// Charge O from the side (not from behind): O faces +x, the hit comes along -z.
+		Sim->SetSkater(Me, FVector2D(0.0, 1.3), FVector2D(0, -8), -UE_DOUBLE_PI * 0.5);
+		In[Me].Move = FVector2D(0, -1);
+		In[Me].bCheck = true;
+		int32 Checks = 0, Fouls = 0;
+		int64 HitFrame = -1;
+		for (int32 F = 0; F < 8; ++F)
+		{
+			Sim->Step(In);
+			In[Me].bCheck = (F % 4 == 3);
+			if (CountEvents(Sim, JamEvents::Check, NAME_None, Me) > 0 && HitFrame < 0) HitFrame = Sim->GetFrame();
+			Checks += CountEvents(Sim, JamEvents::Check, NAME_None, Me);
+			Fouls += CountEvents(Sim, JamEvents::Foul, FName(TEXT("foul_no_puck")), Me);
+		}
+		AddInfo(FString::Printf(TEXT("grace %d: strip at frame %lld, hit at %lld (%lld frames after; grace %d), fouls %d"), Wait, StripFrame, HitFrame, HitFrame - StripFrame, G.Stick.FoulGraceFrames, Fouls));
+		TestTrue(*FString::Printf(TEXT("grace %d: the check landed"), Wait), Checks >= 1);
+		if (Wait <= G.Stick.FoulGraceFrames - 2) TestEqual(*FString::Printf(TEXT("grace %d: no foul right after the strip"), Wait), Fouls, 0);
+		else TestEqual(*FString::Printf(TEXT("grace %d: a foul once the grace is over"), Wait), Fouls, 1);
+	}
+
 	// 6. Carry (R-0021 feel.00): the puck stays on the blade through a gentle 90 and through an instant 180 at full speed; a check takes it away.
 	{
 		UJamSim* Sim = MakeSim(G, 1, true);
