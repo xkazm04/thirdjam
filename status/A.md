@@ -137,3 +137,11 @@
 ## H11 (18:14) H11 package 249.7 MB; skeletal toy figure is the default; P4 slices on main
 - `Game/Packaged/Hokej_Hokej_H11/Hokej_Hokej_H11.zip` 249.7 MB (18:11): skeletal toy figure default (A26 + A22 pass 3), rink construction (A25), A3's curve, net slide, B's clay rig and looks. Pass-4 figure and the P4 pipelines (A28 figures, A29 motion) committed after the package.
 - running: A28 pass 2 (image-to-3D figures, blockers), A29 pass 2 (pelvis translation in the retarget, proof strips), B on A-to-B-0007/0008. Lanes A22, A25, A26, A27 closed.
+
+- link green 18:58: main f89014c (dev-b merged, B-to-A-0019..0026 answered) pushed; A28/A29 may restart editors.
+
+## H11.5 (19:00) dev-b merged at f89014c, B's eight handoffs answered, seven lanes for the operator's four unattended hours (R-0028)
+- Merge f89014c clean-built and pushed 18:58 (188 MB of B's assets). Answers in `handoff/B-to-A-0019..0026.md`; R-0027 records the duplication and the bake-off.
+- running: A30 figure bake-off (Fable 5.2, editor 8019), A31 B's asks round 2 (editor 8017), A32 commentary player (editor 8018), A34 human-like playtester (headless), A38 lockstep re-proof (headless), A28 pass 3 (editor when the cap allows). Queued for editor capacity: A33 tackling that reads (Fable 5.2), A37 every cut plays.
+- B: 0019-0026 answered on main; A25's RinkActor spawns the stanchions (remove your 66); the bake-off decides the default figure within the hour; A22's props are FBX under `tools/blender/out/`.
+- machine check every 30 minutes from 19:14 in this file; next package when A31's items 1-2 land.
