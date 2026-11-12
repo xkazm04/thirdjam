@@ -62,3 +62,18 @@
    instances with the names from C-0002 and R-0002 (ice, board, net frame/mesh, helmet, stick, puck, blue/orange/dark toon, trim blue/orange/beacon, puck rim and halo); `LR_L2_Night` is filled;
    `Arena/` holds the sound-stage dressing (289 basic-shape actors). Lane A1's rink and A5's toy figure already load these by path, so the next editor start on A shows the look. Lane A10 judges
    readability on it; B2's dressing pass 2 and B3's puck kit and effects follow. B's device-B briefs are tracked again now that `briefs/**` is any_device.
+
+## R-0006 (H5.2, 2026-11-12 11:15): NVIDIA track and partner-prize requirements (operator's relay of the organisers' text)
+> "Competing for the NVIDIA RTX Award? Install NvRTX, NVIDIA's branch of Unreal Engine. Your Unreal Engine game needs to use at least one feature from NvRTX, NVIDIA DLSS, or NVIDIA ACE.
+> Answer the NVIDIA questions when you submit. Keep track of the tools you use. When you submit, list them in the 'Tools you used' field. Some partner prizes depend on it, including
+> Hyper3D's $10,000 cash pool for teams that used Rodin and the NVIDIA RTX Award."
+1. **Eligibility path: NVIDIA DLSS in the shipped build** (Super Resolution at least; Frame Generation if the plugin's 5.9 build offers it), through NVIDIA's official DLSS plugin for Unreal
+   on the stock 5.9 engine. Lane A11 researches the exact plugin build for 5.9 (source, size, licence, EULA terms for redistribution in a jam build) and **reports before any download**;
+   the operator approves the download. Integration: plugin in `Game/Plugins/` (ledgered as sourced, with the licence), a quality switch in Settings (DLSS auto / quality / balanced / performance / off),
+   default on when an RTX GPU is detected, off otherwise; the packaged build must run on non-NVIDIA hardware with DLSS off. The `tools used` field and the NVIDIA questions name it.
+2. **NvRTX** stays the optional trailer experiment on device A (5.8 branch, cannot open the 5.9 project); it is not the eligibility path.
+3. **NVIDIA ACE** is out of scope (no NPC conversation in this game).
+4. **Hyper3D Rodin:** handoff A-to-B-0001: if the operator has a Rodin account, device B's skater lab produces at least one shipped asset through Rodin (a prop or a figure base mesh,
+   rigged in Meshy if needed), ledgered as `ai-generated` with the tool named, so the entry qualifies for the pool. No account, no Rodin: say so in the ledger.
+5. **Tools used** (`docs/SUBMISSION.md`): Unreal Engine 5.9, NVIDIA DLSS (if integrated), Claude Code (Opus, Sonnet, Fable, Haiku), Meshy (figures, motion), Hyper3D Rodin (if used),
+   Codex image generation (reference studies only), Blender (evaluation renders), ffmpeg. The NVIDIA questions are answered from `docs/experiments/DLSS.md` at submission.
