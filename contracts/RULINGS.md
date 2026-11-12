@@ -177,3 +177,21 @@ to be implemented to start the game. / No need to mention Director's cut in the 
    who the player is rather than how they play.
 2. Tones become `mock`, `savage`, `complain`, `bravado`, `encourage`, `praise`; `game.barks.intensity`: `quiet` = encourage/praise/complain only, `normal` = mock + the rest, `loud` = savage
    allowed. Regular ships `normal`; Raw ships `loud`. The filter keeps its hard list and adds the mild-words quota; `REVIEW.md` is regenerated for the Director's skim.
+
+## R-0016 (H8, 2026-11-12 14:05): answers to device B's handoffs B-to-A-0007..0011 (second merge window, dev-b at 5886a1b)
+1. **0007 wiring accepted.** The binder (A5, R-0002) already sets `User.Strength`, `User.Colour` and the MetaSound `Strength` on exactly B's names; lane A16 (owner of the pawns) attaches the
+   puck kit: `SM_PuckDisc` as a child of the puck with `bAffectDynamicIndirectLighting=false`, `CastShadow=false`, stencil 0, no collision, plus `NS_puck_trail`. A one-editor PIE check on A proves both.
+2. **0008 accepted:** track T-B1 is **B's scripted original skater** (5.3k tris, 24 mannequin-named bones with a real root, ten exactly-looping clips, a real stick; `original` in the ledger);
+   the Fab pack is out of the plan. `game.skater.visual` IS read since `432791b`: `AHokejGameMode` loads `/JamAssets/Skaters/BP_SkaterVisual_TB1.BP_SkaterVisual_TB1_C` for `humanoid_b1` and
+   `..._TB2_C` for `generated_b2` (B's paths match). The promotion rule runs with `hockey.test.visual-b2` through the Jam.Bot suite: lane A16 adds `Jam.Bot.VisualSwap` (both tracks load, bots pass).
+3. **0009 answered:** (1) toy `Emissive` reset bug: A16 fixes `SetBoost(NAME_None)` to restore 2.2; (2) the persistent sky light and the off directional light in `Rink.umap` are hidden by
+   `ULookTierSwitcher::SetTier` when a rig is loaded (lane A15); (3) A's under-ice floor moves to z = -20 cm (A15, `RinkActor`); (4) the puck is **radius 0.12 m = 24 cm diameter** by design,
+   nothing to do; `GAME.md` says "0.12 m" meaning radius; (5) blue lines: the rule is **one third of the half-length** on every rink, goal lines at `half-length - 4 m`; A15 drives `BlueLineFrac`
+   (0.3333) and a new `GoalLineOffsetCm` (400) on the dynamic ice instance so B's paint and A's triggers agree at any size.
+4. **0010 closed:** `MenuStyle.h` and `Menu.umap` have been in git since `ec82e81` (12:40); B's check ran two minutes earlier.
+5. **0011 accepted:** `SetTier` streams the rig with uniform scale `s = rink.length_m / 90`, then scales every `ULocalLightComponent`'s intensity by `s*s` and attenuation by `s`; re-applied on
+   cartridge load and on a Director's Call that changes the rink (lane A15). B authors rigs for 90 x 45 from now on.
+6. **GPU hang verdict:** B could not reproduce it in 7 single-editor runs and hardened the rig anyway (dressing casters off, spots tightened, VSM load about 80 pages); A's dumps were page faults under
+   4-5 editors. **Lane A10 runs the one-editor 60 s soak on A in the 14:30 window** with B's grep list and `stat gpu`; the shipped tier stays `l2_night` unless it hangs with one editor.
+7. **Operator items from B:** Hyper3D's licence wording for shipping Rodin output from this account, and whether the prize needs Rodin content in the build or only in the pipeline (B shipped
+   seven props and the T-B2 base mesh through Rodin, so both readings are covered); the voice test on B needs a human at the microphone.
