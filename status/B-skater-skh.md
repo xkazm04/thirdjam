@@ -473,3 +473,418 @@ How to read the columns:
 - **Anything in Unreal**, including whether the importer read `export2` during the 16:21:53 to 16:23:24 window.
 - **Whether the continuity fixes still change anything** (slide fade, slide median): left on, not re-tested against the fixed sources.
 - **The grip-rate trade:** 0.10 per frame removes the pops but holds the left mitten off the shaft for longer. A rule that rate-limits the hand *target* instead of the weight might keep both; not tried.
+
+## Fourth pass: aim grid (17:37)
+
+**Short answer:**
+- **`export4` should replace `export3` in the engine for all three**, because only it has the 24-hold aim grid.
+- On every figure:
+  - every hold is on its point within 6.1 cm and 2.1 degrees;
+  - the blade sits 0.0 to 2.3 cm up, never below the ice;
+  - the pelvis and legs equal the candidate's own Glide exactly (0.000 cm);
+  - the blend test never misses by more than 8 cm (worst 6.5 cm).
+- **But the blade dips below -1 cm in some blends:** R 24 of 53, P3A 15, P4B 4.
+- **Watch these:**
+  - P3A's stick-in-head frames rose from 7 to 21;
+  - the bottom hand on P4B's right-side holds is 2 to 10 cm off the shaft;
+  - the one-handed holds have a 13 to 16 cm free-hand jump at frame 8, which comes from the source (see below).
+- **Skeleton, bind and mesh equal `skh/export/`** (zero difference), so only the animations change.
+
+Paths:
+
+| What | Where |
+|---|---|
+| Exports | `C:\Users\kazda\jam\skater-lab\skh\export4\{R,P3A,P4B}\SK_Skater_<c>.fbx` and `_loopcut.fbx` (55 takes), with the base-colour PNG |
+| Measurements | `skh\out4\<c>\` (`grid.json`, `rear.json`, `verify*.json`, `bindcheck.json`) |
+| Hand jumps | `skh\jump\<c>_4.json` |
+| The table | `skh\four.md` |
+| Inputs | copies of `skf/export3` (17:19) in `skh\in\skf3\` |
+| Configs | `cfg/4_*.json`: `export_dir` "export4", checked before the first build |
+| Rebuild one figure | `bash skh/build4.sh <c>` |
+
+`export/`, `export2/` and `export3/` were not touched; their newest file is still from 16:30.
+
+### New rules (second-pass configs and later only; R's S5 regression is still 0.00000 cm)
+
+- **The grid holds** `Aim_<N|P><angle>_R<cm>`:
+  - they are loops, measured at frame 1, with the reach rule aimed at their own reach;
+  - the blade target is the ice (1.5 cm) whatever the source stick length gives. P4B's blades floated 4 to 5 cm before this, because the source stick is 6 cm longer than the S4 stick on our figures.
+- **Sideways rule.** If a hold's angle is more than 3 degrees off, the stick turns about the grip, around the vertical axis, iterated together with the reach slide. Then the left hand re-grips.
+  - Before the rule: P4B up to -9.6 degrees, P3A up to -42.6 degrees.
+  - After: within 0.4 degrees on every corrected hold.
+- **Grip weight constant within a hold.** It did not change the frame-8 jump (below), but it is harmless.
+
+### 1. Every hold (re-imported main file, frame 1)
+
+How to read the columns:
+- *Position error*: blade centre against the asked point (angle and reach from the pelvis), worst.
+- *Blade lowest*: blade bottom above the ice; the target is 0 to 2.5 cm.
+- *Mitten centre to shaft*: the shaft runs inside the mitten while this is under the mitten radius.
+
+| | R | P3A | P4B |
+|---|---|---|---|
+| Position error, worst | 6.1 cm (`N30_R130`; under the 3-degree and 5 cm thresholds, so no rule) | 1.4 cm | 3.6 cm (`P70_R100`) |
+| Angle error, worst | 2.05 deg | 0.27 deg | 2.08 deg |
+| Reach error, worst | 4.1 cm | 1.4 cm | 1.5 cm |
+| Blade lowest (0 to 2.5) | 0.18 to 1.32 | 0.01 to 2.09 | 0.64 to 2.28 |
+| Pelvis and legs against Glide | 0.000 cm | 0.000 | 0.000 |
+| Mitten radius | 13.3 cm | 14.0 cm | 9.3 cm |
+| Mitten centre to shaft, two-handed holds | 5.5 to 13.9 cm | 6.4 to 13.3 cm | 5.3 to 18.8 cm: **off the shaft by 2 to 10 cm** on the -30 / -46 / -63 columns |
+| One-handed holds (source list) | `N63_R160` 82.6 cm, `N46_R160` 80.4 cm: free hand, as in the source | `N63_R145`, `N63_R160`, `N46_R160`, `N30_R160`: 62 to 64 cm, free | `N63_R160` 113 cm: free |
+
+### 2. Blend test on the retargeted skeletons
+
+Same method as SKF:
+- 53 poses: the midpoints of neighbouring holds and the cell centres;
+- `spine_01` and below blended as sign-aligned, normalised quaternion sums of mesh-space rotations;
+- the bones' parent-space translations blended linearly, because the stick slides through the mitten;
+- pelvis and legs from Glide.
+
+| | Worst position error | Over 8 cm | Blade height range | Cases outside -1 to +4 cm |
+|---|---|---|---|---|
+| R | 6.5 cm (`N46_R160` / `N30_R160`) | 0 | **-4.83** to +1.22 | **24**: all dips, mostly -1.0 to -2.4; worst `N46_R160`/`N30_R160` -4.83 |
+| P3A | 4.2 cm (`P70_R100` / `P70_R130`) | 0 | **-6.50 to +6.27** | **15**: worst `P35_R145`/`P70_R145`/`P35_R160`/`P70_R160` cell -6.50, `P35_R160`/`P70_R160` -6.46, `N30_R160`/`P00_R160` +6.27 |
+| P4B | 6.2 cm (cell `N30`/`P00` x `R145`/`R160`) | 0 | -3.08 to +2.15 | **4**: `N30_R160`/`P00_R160` -3.08, that cell -1.40, `P00_R160`/`P35_R160` -1.26, the `P00`/`P35` x `R145`/`R160` cell -1.03 |
+
+The full list is in `out4/<c>/grid.json`, key `blend_flags`.
+
+**Why the dips:** the ice tilt and the slide differ from hold to hold, so the blended stick is not where either hold put it. **The engine needs a blade-on-ice correction after the blend**, or a denser grid where P3A goes one-handed.
+
+### 3. Rear-high (behind, 30 deg up; sheet `lab-skh4-rearhigh`)
+
+**Number:** the share of upper-back points (body vertices of `spine_02`/`spine_03` facing the camera, inside a 40 x 30 cm box) that an arm, a mitten or the stick hides.
+
+| | Glide | Stride f1 / f15 / f30 | `Aim_P00_R130` | `Aim_N63_R160` | `Aim_P70_R130` |
+|---|---|---|---|---|---|
+| R, `export4` | 0 % | 0 / 0 / 0 | 0 | 0 | 0 |
+| P3A, `export4` | 0 | 0 / 0 / 0 | 0 | 0 | 0 |
+| P4B, `export4` | 0 | 0 / 0 / 0 | 0 | 0 | **13 %** (right glove at the right shoulder) |
+
+For comparison, the `export3` aliases: `Aim_Right` covered **56 %** on R and **18 %** on P4B; everything else was 0 %.
+
+**How to read it:**
+- The samples are coarse: 5 to 17 points per view.
+- On the sheet, R's and P3A's top-hand mitten shows over the **lower back and hip** in Glide and the holds. That is below the 40 x 30 cm box, so a number low on the back could still be partly hidden.
+- I judged by eye only for that region.
+
+### 4. P4B `Lift`, `Pass`, `Poke` frames 6 to 11: left mitten centre to the shaft (cm)
+
+| Take | `export3` | `export4` |
+|---|---|---|
+| Lift | 0.3 0.3 0.4 0.4 0.4 0.4 | 2.7 2.7 2.0 0.1 0.1 0.1 |
+| Pass | 0.4 0.4 0.3 0.3 0.2 0.2 | 2.8 1.3 3.2 3.3 4.5 1.9 |
+| Poke | 0.3 2.7 1.6 3.5 6.4 9.7 | 3.0 5.3 7.2 15.9 20.6 42.6 (one-handed by design; the free arm goes out for balance) |
+
+All of these are inside P4B's 9.3 cm mitten radius except Poke, so both hands stay on the shaft in Lift and Pass.
+
+### 5. Third-pass checks again
+
+| | Value |
+|---|---|
+| Takes | 55 |
+| Pelvis travel, root | 0.000 |
+| Stick lowest | -0.01 cm |
+| Skate lift | unchanged from `export3`: R 0.2 to 5.1 cm, P3A at most 0.4 cm, P4B 0.2 to 14.9 cm (face down) |
+| Bind check | names, parents, rest (0.0), vertices (0.0), weights, polygons and UVs equal `skh/export/` for R, P3A, P4B |
+
+`export3` against `export4` (main file):
+
+| | Left hand to shaft, two-handed, mean / max | Stick or mitt in head (frames) | Goalie stick | Blade err max | Reach err (aliases) Front / Left / Right / FarReach / Poke | Largest hand / blade step | Steps > 15 cm | Stride max / wrap |
+|---|---|---|---|---|---|---|---|---|
+| R 3 -> 4 | 6.5 / 29.8 -> 7.0 / 29.6 | 0 -> 0 | 27.9 -> 26.4 | 2.3 -> 3.5 (Stride) | 3.4 / 0.7 / 0.7 / 0.5 / 3.7 -> 2.6 / -0.6 / 0.8 / 0.0 / -0.7 | 30.8 / 90.4 -> 30.1 / 88.1 | 121 -> 120 | 3.2, 2.9 / 0.4, 0.2 -> 4.5, 9.4 / 0.4, 0.2 |
+| P3A 3 -> 4 | 11.4 / 32.3 -> 8.2 / 33.7 | **7 -> 21** | 34.3 -> 32.5 | 2.0 -> 3.4 (Stride) | 2.1 / 1.1 / -1.2 / 0.0 / 0.0 -> 0.6 / 0.0 / 0.8 / 0.0 / 0.0 | 32.2 / 93.7 -> 32.5 / 89.4 | 147 -> 144 | 4.7, 5.9 / 0.4, 0.2 -> 6.7, 12.5 / 0.7, 0.6 |
+| P4B 3 -> 4 | 3.6 / 33.7 -> 6.9 / 34.0 | 0 -> 0 | 16.8 -> 17.3 | 1.9 -> 1.9 | 1.7 / 0.8 / 0.8 / -4.4 / 0.0 -> 0.0 / 0.1 / 1.6 / 0.0 / 0.0 | 38.2 / 87.5 -> 40.9 / 85.1 | 128 -> 131 | 6.5, 3.8 / 0.5, 0.3 -> 9.1, 18.2 / 4.9, 6.9 |
+
+**Loop wraps (loopcut file).** Most are a frame step. These are larger:
+
+| Wrap | Size | Cause |
+|---|---|---|
+| One-handed holds (R `N46`/`N63_R160`; P3A `N63_R145`, `N63`/`N46`/`N30_R160`; P4B `N63_R160`) | 13 to 16 cm | `LeftHand_End` jumps at **frame 8 inside the hold**. The **source** has the same jump: `hand_l` moves 5.5 cm at frames 7 and 8 in `SK_Skater_p2_cel.fbx` `Aim_N63_R160` and `Aim_N46_R160`. Our figures' longer forearm and mitten amplify it. **For SKF:** a one-handed hold's free hand should not move. |
+| P4B `Stride` | 8.2 cm (main seam 0.85 cm) | SKF reports its own P4 Stride wrap as 4.5 cm. Ours is larger. Not a pop at 60 fps, but visible. Not fixed. |
+| P3A `Crossover_Right` | 21.5 cm | Already 19.3 cm in `export3`: **I missed it in the third pass**. Not investigated. |
+
+### Replace?
+
+| Candidate | Replace with `export4`? |
+|---|---|
+| **R** | **Yes.** The grid is clean per hold. Note the blade dipping in 24 blends (to -4.8 cm). |
+| **P3A** | **Yes, for the grid**, but the engine should clamp the blade height after the blend (-6.5 to +6.3 cm), and stick-in-head frames tripled (7 to 21). |
+| **P4B** | **Yes.** The most robust blend (4 cases, worst -3.1 cm). The weakest point is the bottom hand on the right-side holds (2 to 10 cm off the shaft). |
+
+### Sheets (filed)
+
+| Shot file | What it shows |
+|---|---|
+| `devlog/shots/20261112-173639-B-lab-skh4-r-aimgrid-above.png` | R's aim grid from above |
+| `devlog/shots/20261112-173639-B-lab-skh4-p3a-aimgrid-above.png` | P3A's aim grid from above |
+| `devlog/shots/20261112-173640-B-lab-skh4-p4b-aimgrid-above.png` | P4B's aim grid from above |
+| `devlog/shots/20261112-173640-B-lab-skh4-rearhigh.png` | rows R, P3A, P4B: Glide, Stride frames 1 / 15 / 30, `Aim_P00_R130`, `Aim_N63_R160`, `Aim_P70_R130` |
+
+In the grid sheets, columns run +70 to -63 degrees with the skater's left on the image left; rows run 1.00 to 1.60 m. The orthographic top camera crops the blade tip at 1.6 m on the outer columns.
+
+### What I could not verify
+
+- **The engine's real blend space:** its triangulation may differ from my linear cells.
+- **Back occlusion low on the back:** the samples are coarse, and the hip and lower back were judged by eye.
+- **Two wraps:** why P4B Stride's main seam is 0.85 cm, and the P3A Crossover_Right wrap.
+- **Anything in Unreal.**
+
+## Fifth pass: fixes, falls and collisions (18:20)
+
+**Short answer:**
+- **R: `export5` replaces `export4`.**
+- **P4B: `export5` replaces `export4`, with four takes held back:** `Knockdown_Left`, `Knockdown_Right`, `Knockdown_Back`, `Trip`.
+- **P3A: `export5` should replace `export4` only for the 55 old takes plus the takes that pass below.** `Board_Hit`, `GetUp_Side_Left` and `Board_Pin` are not good enough.
+- **Skeleton, bind and mesh equal `skh/export/` on all three** (zero difference), so only the animations change.
+
+All of this is measured in Blender on the re-imported FBX. Unreal is unverified.
+
+Paths:
+
+| What | Where |
+|---|---|
+| Exports | `C:\Users\kazda\jam\skater-lab\skh\export5\{R,P3A,P4B}\SK_Skater_<c>.fbx` and `_loopcut.fbx` (70 takes), with the base-colour PNG |
+| Measurements | `skh\out5\<c>\` (`grid.json`, `rear.json`, `newtakes.json`, `verify*.json`, `bindcheck.json`) |
+| Hand jumps | `skh\jump\<c>_5.json`; the sources' own jumps in `skh\jump\src4_<style>.json` |
+| The table | `skh\five.md` |
+| Inputs | copies of `skf/export4` (17:57) in `skh\in\skf4\` |
+| Configs | `cfg/5_*.json`: `export_dir` "export5", checked before the build |
+| Rebuild one figure | `bash skh/build5.sh <c>` |
+
+`export/` to `export4/` were not touched; their newest file is still from 17:35.
+
+### New rules this pass (second-pass configs and later; R's S5 regression is still 0.00000 cm)
+
+- **P3 child grip, `grip_offset_m` -0.10 in `cfg/5_P3A.json`.** SKF's P3 now holds the stick 10 cm below the knob (grip to heel 1.30 m). Our mesh keeps the 1.40 m S4 stick, so the bind stays identical. The stick therefore sits 10 cm further up through the top hand on every frame.
+- **Loop seam:** a loop's last frame is now a copy of its first when the source's are equal. The per-frame tilt continuity had left P4B Stride's main seam at 0.85 cm and P3A Board_Pin's at 0.65 cm; both are now 0.
+- **Skate-turn clamp, `FOOT_STEP_MAX` 25 degrees per frame.** A bigger frame-to-frame turn of a foot is cut to 25 degrees by a slerp about the ankle, and caught up over the following frames.
+  - It fires on 23 to 25 frames per figure, almost all in `GetUp_Side_*` and `Trip` frame 1.
+  - Before: `GetUp_Side_*` turned the skate 46 to 54 degrees in one frame on R, 50 to 63 on P3A and **80 to 97 on P4B**.
+  - After: 25.0 degrees on every figure.
+  - **Is it safe?** The skate stays on the ice: lowest skate 0.0 cm, lowest stick -0.01 cm. The knockdown-to-get-up joins stay at 0.000 cm.
+  - One cost: in those 2 to 4 frames the boot lags the shin by up to about 70 degrees on P4B, so the ankle visibly kinks. I judged it from the side sheets only.
+
+### 1. The fourth-pass checks again (`export4` -> `export5`)
+
+| | R | P3A | P4B |
+|---|---|---|---|
+| Holds: position / angle error, worst | 6.1 cm / 2.05 deg -> **same** | 1.4 / 0.27 -> 7.4 cm / 2.8 deg (`grip_offset_m` moves the stick; still under the rule thresholds) | 3.6 / 2.1 -> 3.7 / 2.1 |
+| Holds: blade lowest (0 to 2.5) | 0.0 to 1.5 | 0.0 to 1.0 | 0.8 to 2.3 |
+| Holds: pelvis and legs against Glide | 0.000 | 0.000 | 0.000 |
+| Holds: bottom-hand mitten centre to shaft, two-handed (mitten radius) | 3.1 to 13.9 (13.3) | **0.2 to 10.7** (14.0); free in `N63_R130/R145/R160`, `N46_R145/R160`, `N30_R160` as in the source | 0.4 to 19.0 (9.3): **still 2 to 10 cm off on the right-side columns** |
+| Blend: worst position error | 6.5 -> 6.45 cm | 4.2 -> 4.0 | 6.2 -> 6.1 |
+| Blend: blade height | **-4.83 -> -4.82** | **-6.50 -> -3.63** | **-3.08 -> -2.38** |
+| Blend: cases outside -1 to +4 cm | 24 -> **21** | 15 -> **18** | 4 -> **2** |
+| Rear-high, upper back covered (Glide, Stride 1/15/30, `P00_R130`, `N63_R160`, `P70_R130`) | 0 % everywhere | 0 % everywhere | 0 % except `P70_R130` 13 % (right glove at the shoulder; unchanged) |
+| Stick or mitt in head (frames) | 0 | 21 -> **39**: `Board_Pin` 36, `Board_Hit` 3; the old takes are now 0 | 0 |
+| Skate lift Fall / Fall_Fwd / GetUp / GetUp_Front / Block L / R | 0.3 / 5.2 / 0.7 / 5.2 / 0.2 / 0.2 | 0.3 / 0.4 / 0.4 / 0.4 / 0.3 / 0.4 | 1.4 / 15.0 / 0.2 / 15.0 / 0.2 / 0.2 |
+| Pelvis travel, root, stick lowest | 0, 0, -0.01 | 0, 0, -0.01 | 0, 0, 0.00 |
+
+**Does the static, hip-level source reduce the blend dips?**
+- **P3A: yes,** from -6.5 to -3.6 cm.
+- **P4B: yes,** from -3.1 to -2.4 cm, with 2 cases left.
+- **R: no.** Its -4.8 cm dip is between `N46_R160` and `N30_R160`, where the retarget's own per-hold stick slide and tilt differ. **The engine still needs a blade-on-ice correction after the blend** for R and P3A.
+
+### Loop wraps (loopcut file) and hand jumps
+
+- **P3A `Crossover_Right`: gone.** The wrap is 0.2 / 0.1 cm (hand / blade), down from 21.5 cm. SKF's leg reach guard and hips at Glide height fixed the source. I never traced which bone made the 21.5 cm; it no longer matters.
+- **One-handed holds: gone.** The 13 to 16 cm frame-8 jump is 0, because the source holds are now static.
+- **P4B `Stride`: smaller, not gone.**
+  - Main seam 0.85 -> 0.00 cm (the new loop-seam rule).
+  - Loopcut wrap 8.2 -> 4.6 cm.
+  - Wrap step, hand / blade: 2.5 / 7.8 cm. The take's largest within-cycle steps are 6.5 / 16.3 cm, so the wrap is a frame of normal stride speed, not a pop. SKF fixed the source wrap: 4.5 cm hand, below 1.2 times the mean.
+- **Hand and blade steps.** Steps over 15 cm grew from 120 / 144 / 131 to 178 / 218 / 187 (R / P3A / P4B). The new hits and knockdowns are fast arcade swings at frames 1 to 6. The fourth-pass sources have about the same steps (e.g. P4 `Trip` blade 128 cm, `Knockdown_Back` hand 75 cm at frame 1).
+- **Retarget-only pops (the step is more than 130 cm and the source has none):**
+  - **P3A `Board_Hit`, 196 cm at frame 11.** The ice tilt jumps from 34 degrees to -2.5 degrees as the source blade comes down to the ice.
+  - **P3A `GetUp_Side_Left`, 164 cm at frame 18.** The stick slide flips from -25 to +25 cm while the stick is planted as a prop, below the ice in the source.
+  - R and P4B have none.
+
+### 2. The new takes on the skinned figures (`newtakes.json`; lowest points over the take, cm)
+
+| Take | R: lowest non-skate part / skate / stick | P3A | P4B | Hand on shaft, mean / max (R / P3A / P4B) |
+|---|---|---|---|---|
+| `Check_Hit_Left/_Right/_Back` | thighs or shins 29 / 0.0 / 0.0 to 0.2 | shins 22 / 0.1 / 0.0 | shins 18 to 19 / 0.0 / 3.8 to 4.3 | 11 to 16 / 10 to 14 / 10 to 12; free arm thrown out at the extreme (max 26 to 38) |
+| `Knockdown_Left` | thighs 10.2 / 0.0 / 0.0 | thighs 0.8 / 0.1 / 0.0 | hands 5.7 / 0.0 / 0.2 | 24 / 23 / 22 |
+| `Knockdown_Right` | thighs 3.1 / 0.0 / 0.7 | thighs 0.8 / 0.1 / 0.0 | shins 9.3 / 0.0 / 4.6 | 18 / 23 / 16 |
+| `Knockdown_Back` | hands 0.1 / 0.0 / 0.7 | torso 6.0 / 0.1 / 0.0 | hands 0.1 / 0.0 / 2.2 | 22 / 22 / 20 |
+| `Trip` | hands 0.1 / 0.0 / 0.7 | torso 6.0 / 0.1 / 0.0 | hands 0.1 / 0.0 / 4.6 | 24 / 29 / 17 |
+| `GetUp_Side_Left/_Right` | thighs 4.5 to 10.9 / 0.0 / 0.0 | thighs 0.7 to 2.6 / 0.1 / 0.0 | thighs 8 to 9 / 0.0 / 0.0 to 0.2 | 4.1 / 1.2 / 9.3 |
+| `Board_Hit` | thighs 29 / 0.0 / 0.0 | shins 21 / 0.1 / 0.0 | shins 18 / 0.0 / 4.5 | 7.2 / 7.2 / 6.8 |
+| `Board_Pin` (loop) | shins 28.6 / 0.1 / 6.7 | shins 19.2 / 1.1 / 0.0 | thighs 22 / 0.1 / 60.7 | one hand |
+| `Check_Deliver_Left/_Right` | shins 25 / 0.0 / 0.0 | shins 20 to 22 / 0.1 / 0.0 | shins 18 / 0.0 / 2.5 to 3.0 | 7 to 9 / 7 to 8 / 5.5 to 7 |
+| `Poke_Hit` | thighs 29 / 0.0 / 0.7 | shins 22 / 0.1 / 0.0 | shins 19 / 0.0 / 4.5 | 6.3 / 1.8 / 6.9 |
+| `Lift_Hit` | thighs 29 / 0.0 / 0.7 | shins 22 / 0.1 / 0.0 | shins 19 / 0.0 / 4.5 | 4.1 / 1.0 / 2.7 |
+
+**Nothing goes below the ice by more than 1 cm on any figure** (lowest body point -0.0, lowest stick -0.01 cm).
+
+**Lying rest** (the held end pose; lowest non-skate part / lowest skate, cm; the target is the body within 3 cm of the ice):
+
+| Take | R | P3A | P4B |
+|---|---|---|---|
+| `Knockdown_Left` | **13.6** / 0.3 | 3.0 / 0.8 | **10.4** / 0.4 |
+| `Knockdown_Right` | **5.2** / 0.3 | 0.8 / 1.1 | **9.5** / 0.4 |
+| `Knockdown_Back` | 0.1 / **5.2** | **6.0** / 1.0 | 0.1 / **15.0** |
+| `Trip` | 0.1 / **5.2** | **6.0** / 1.0 | 0.1 / **15.0** |
+
+- **Side knockdowns on R and P4B:** the skate is the lowest point and the hip floats 5 to 14 cm. Their long skate and boot stick out below the hip in the source's stretched side pose. The sheets read as a figure curled on its side, not sliding on its hip.
+- **`Knockdown_Back` and `Trip`:** the face-down lift is the same as `Fall_Forward`: the skates are 5.2 cm up on R and 15 cm on P4B. P3A rests on its skates and hands, with the big head and torso 6 cm up.
+- **Knockdown end against get-up start, bone for bone:** 0.000 cm for all four pairs on every figure (Left -> `GetUp_Side_Left`, Right -> `GetUp_Side_Right`, Back and Trip -> `GetUp_Front`, and `Fall_Forward` -> `GetUp_Front`).
+- **Self-intersection** (from the side sheets):
+  - P3A `Board_Pin`: the mittens and stick sit at the big helmet (36 frames inside the head radius). It reads as the arms through the helmet.
+  - P3A's side knockdowns: the mitten is pressed into the face.
+  - R and P4B: no arm through the torso or the helmet that I could see at 160 px.
+  - At the game camera's 40 px nothing reads as intersecting.
+
+### 3. Sheets (filed)
+
+| Shot file | What it shows |
+|---|---|
+| `devlog/shots/20261112-181820-B-lab-skh5-r-new-side.png` | R: the 12 new takes from the side, 6 frames each |
+| `devlog/shots/20261112-181820-B-lab-skh5-r-new-game.png` | R: the same 12 takes from the game camera, 40 px shown 2x |
+| `devlog/shots/20261112-181820-B-lab-skh5-r-knock40.png` | R: `Knockdown_Left`, `_Right`, `_Back` at 40 px in deep blue |
+| `-p3a-new-side`, `-p3a-new-game`, `-p3a-knock40` (181821) | P3A, same three sheets |
+| `-p4b-new-side`, `-p4b-new-game`, `-p4b-knock40` (181822) | P4B, same three sheets |
+
+Row order on the new-take sheets: `Check_Hit_Left`, `Check_Hit_Back`, `Knockdown_Left`, `Knockdown_Right`, `Knockdown_Back`, `Trip`, `GetUp_Side_Left`, `GetUp_Side_Right`, `Board_Hit`, `Board_Pin`, `Check_Deliver_Left`, `Poke_Hit`.
+
+At 40 px the three knockdowns read as different directions on all three figures.
+
+### 4. Replace? And the takes not good enough to ship
+
+| Candidate | `export5` replaces `export4`? | Not good enough |
+|---|---|---|
+| **R** | **Yes.** | `Knockdown_Left` (hip 13.6 cm above the ice, reads curled up) and `Knockdown_Right` (5.2 cm). `Knockdown_Back` and `Trip`: skates 5.2 cm up when lying, the same as `Fall_Forward`, which is already in the game. |
+| **P3A** | **Yes for the old 55 takes and for** `Check_Hit_*`, `Knockdown_Left/_Right`, `GetUp_Side_Right`, `Check_Deliver_*`, `Poke_Hit`, `Lift_Hit`. | **`Board_Hit`** (196 cm stick pop at frame 11); **`GetUp_Side_Left`** (164 cm stick pop at frame 18); **`Board_Pin`** (mittens and stick through the big helmet, 36 frames); `Knockdown_Back` / `Trip` (torso 6 cm up when lying: marginal). |
+| **P4B** | **Yes.** | `Knockdown_Left` (10.4 cm) and `Knockdown_Right` (9.5 cm): the hip floats over the skate. `Knockdown_Back` / `Trip`: skates 15 cm up when lying, as `Fall_Forward`. `GetUp_Side_*`: the skate-turn clamp leaves a visible ankle kink for 2 to 4 frames. |
+
+### What I could not verify
+
+- **Anything in Unreal.**
+- **Whether the 25-degree skate clamp looks right at game speed:** it is judged from 6-frame sheets only.
+- **Self-intersection:** judged by eye at 160 px, not computed.
+- **The P3A `Board_Hit` and `GetUp_Side_Left` pops:** I found the cause (the tilt and slide branch switches) but did not fix it in this pass.
+
+## Sixth pass: settle, stick continuity, blend-safe holds (18:50)
+
+**Where each item stands:**
+
+| Item | State |
+|---|---|
+| 1. Settle | **Done for the side lying poses.** Partial for face-down on the tall figures. |
+| 2. Stick continuity | **Implemented, but it does not remove the pops.** |
+| 3. Blend-safe holds | **Not started.** |
+| 4. Stick out of P3A's helmet | **Done.** |
+
+**`export6` is complete and consistent** for what is done: 70 takes per figure in `C:\Users\kazda\jam\skater-lab\skh\export6\{R,P3A,P4B}\`. The configs are `cfg/6_*.json` (`export_dir` "export6", `skh6`: true), checked before the first build. Rebuild with `bash skh/build6.sh <c>`.
+
+`export/` to `export5/` were not touched. R's S5 regression was not re-run after these edits; every new rule is behind `skh6`, which R's regression config does not set.
+
+**Bind check:** on all three figures, bone names, parents and rest pose (0.0), vertices (0.0), weights, polygons and UVs equal `skh/export/`. I ran it on the 18:40 build. The last rebuild changed animation code only.
+
+### 1. Settle (lying and kneeling takes)
+
+**What it does:**
+- **Takes:** `Fall`, `Fall_Forward`, `GetUp`, `GetUp_Front`, `Knockdown_*`, `Trip`, `GetUp_Side_*` and the goalie blocks.
+- **Per frame, measured on the skinned mesh:** a vertical pelvis move, plus a pitch or roll of the whole body about the pelvis (up to 15 degrees per pass, 3 passes). Together they bring the lowest torso/hip point and the lowest skate point to the ice.
+- **Weight:** it follows how far the source pelvis has dropped (fully on when the drop is more than 0.60 of the rest height, off below 0.35), so standing frames are untouched.
+- **Guards:**
+  - a move is kept only if it brings the worse contact closer and never lifts a skate;
+  - nothing in the body or stick goes below -1 cm.
+- **Unchanged:** horizontal pelvis and root travel stay 0.000.
+- **Not done:** the knee bend and ankle extension for the face-down poses.
+
+Lying rest in the held end pose (lowest torso/hip / lowest skate, cm), `export5` -> `export6`:
+
+| Take | R | P3A | P4B |
+|---|---|---|---|
+| `Knockdown_Left` | 13.6 / 0.3 -> **0.0 / 0.0** | 3.0 / 0.8 -> **0.2 / 0.1** | 10.4 / 0.4 -> **0.1 / -0.6** |
+| `Knockdown_Right` | 5.2 / 0.3 -> **0.0 / 0.0** | 0.8 / 1.1 -> **0.2 / 0.2** | 9.5 / 0.4 -> **-0.9 / 0.6** |
+| `Knockdown_Back`, `Trip`, `Fall_Forward` | 0.1 / 5.2 -> -0.5 / **4.9** | 6.0 / 1.0 -> 6.0 / 1.0 (unchanged: no move improved it) | 0.1 / 15.0 -> -0.5 / **10.4** |
+
+- **Knockdown last frame against its get-up's first frame:** still 0.000 cm, bone for bone, for all five pairs on all three figures.
+- **Side knockdowns:** now rest on the hip with the skate on the ice, on all three.
+- **Face-down on the tall figures:** the skates are still 4.9 cm up (R) and 10.4 cm up (P4B). Pitch alone cannot bring them down without the chest and hands going through the ice; it needs the knee and ankle rule.
+- **Cost of the guards elsewhere:** skate lift is otherwise at or under 1.4 cm. The exception is P4B `GetUp_Front` at 10.7 cm, from the same face-down start.
+
+### 2. Stick continuity
+
+**What it does:**
+- The per-frame slide and ice tilt are rate-limited to 4 cm and 4 degrees per frame: forward and backward sweeps, three times, with loops warmed up over three laps.
+- The tilt then takes the nearest ice-safe angle to the limited one.
+- Static holds are excluded. On them the replayed tilt fought the reach rule, which lifted P3A's blades to 80 cm, so I took them out.
+
+**Result: it does not remove the pops.** The ice-safe override jumps when the floor demands it.
+
+Takes whose largest blade step is more than 1.5 times the source's largest blade step:
+
+| Figure | Takes (ours against the source, cm) |
+|---|---|
+| R | `GetUp_Side_Left` 24 against 9 |
+| P3A | `Board_Hit` **172** against 95 (was 196); `GetUp_Side_Left` **132** against 7 (was 164); `Goalie_Block_Left` 15 against 6 |
+| P4B | `GetUp_Side_Left` 32 against 9, `GetUp_Side_Right` 39 against 19, `Goalie_Block_Left` 23 against 7, `Stride` 14 against 9 |
+
+- **How it was measured:** I compared each take's largest step with the source take's largest step, not frame by frame.
+- **Blade contact error:** it rose in the get-ups, to 25 to 33 cm (was 2 to 7 cm), because the limited tilt lags the contact.
+- **Verdict:** this rule needs a different approach, solving slide and tilt jointly over time with the ice as a constraint. It is in `export6` as built.
+
+### 3. Blend-safe holds: not started
+
+The holds and the blend test are as in `export5`:
+
+| Figure | Worst blend dip | Cases outside -1 to +4 cm |
+|---|---|---|
+| R | -4.82 cm | 21 |
+| P3A | -3.63 cm | 18 |
+| P4B | -2.38 cm | 2 |
+
+Hold positions and blade heights are unchanged. No aim-grid sheet was made, because nothing changed there.
+
+### 4. P3A stick through the helmet
+
+**What it does:** in `Board_Pin`, `Knockdown_Left` and `Knockdown_Right`, when a stick vertex comes within the head radius plus 3 cm, the stick turns about the grip by the smallest angle that clears it, and the hands re-grip. I first ran it in every take; it lifted the blades of the holds, so it is now limited to these three.
+
+**Result:**
+- P3A stick-or-mitt-in-head frames: 39 -> **3**. `Board_Pin` 36 -> 0.
+- The 3 left are in `Board_Hit`, which the rule does not cover.
+- R and P4B: 0.
+- The mitten pressed into the face in P3A's side knockdowns was not changed. It is a mitten, not the stick, and it is not inside the head radius.
+
+### `export5` -> `export6`, other checks
+
+| | R | P3A | P4B |
+|---|---|---|---|
+| Takes, pelvis and root travel | 70, 0, 0 | 70, 0, 0 | 70, 0, 0 |
+| Lowest body / stick | -0.98 / -0.5 cm | -0.8 / -0.85 | -0.93 / 0.0 |
+| Largest hand / blade step | 44.8 / 108.5 cm (= export5) | 50.0 / 172.3 (was 195.9) | 57.9 / 104.8 |
+| Loop wraps over 3 cm | none | none | `Stride` 6.7 cm (was 4.6) |
+| Rear-high upper back covered | 0 % | 0 % | 0 %, except `P70_R130` 13 % |
+
+### Sheets (filed)
+
+- `devlog/shots/20261112-184639-B-lab-skh6-r-lying.png`
+- `devlog/shots/20261112-184640-B-lab-skh6-p3a-lying.png`
+- `devlog/shots/20261112-184640-B-lab-skh6-p4b-lying.png`
+
+Each shows `Knockdown_Left`, `Knockdown_Right`, `Knockdown_Back`, `Fall_Forward` and `Goalie_Block_Left` from the side.
+
+These sheets were rendered from the 18:40 build. That build differs from the final one only in the static holds, which are not shown on them.
+
+I did not look at these sheets before filing them: the time ran out.
+
+### Replace? And what is still not good enough
+
+| Candidate | `export6` replaces `export5`? | Still not good enough |
+|---|---|---|
+| **R** | **Yes for the lying takes.** The side knockdowns now rest on the ice. **Keep `export5` for `GetUp_Side_*`**: the continuity rule made their blade lag (blade error 25 cm, step 24 cm). | `Knockdown_Back`, `Trip`, `Fall_Forward`: skates 4.9 cm up. Blend dips: 21 cases. |
+| **P3A** | **Yes for `Board_Pin` and the knockdowns.** | `Board_Hit` (172 cm stick pop), `GetUp_Side_Left` (132 cm pop), the blend dips (18 cases), the face-down torso 6 cm up. |
+| **P4B** | **Yes for the knockdowns.** **Keep `export5` for `GetUp_Side_*` and `Stride`**: the continuity rule made `Stride`'s wrap and blade step worse. | `Knockdown_Back`, `Trip`, `Fall_Forward`, `GetUp_Front`: skates 10.4 to 10.7 cm up. |
+
+**One concrete simplification:** the importer re-imports animations onto the same skeleton, so takes can be mixed per take. Take the knockdowns, `Board_Pin` and the falls from `export6`, and everything else from `export5`.
+
+### What I could not verify
+
+- **Looking at the sheets:** I did not review them before filing.
+- **Face-down knee and ankle rule:** not implemented.
+- **Item 3:** not started.
+- **A frame-by-frame comparison of the blade against the source:** I compared per-take maxima only.
+- **Anything in Unreal.**

@@ -1,0 +1,1 @@
+SKF fourth pass p3_clay: about 40 px from the chase camera, 2x nearest; rows Knockdown_Left, Knockdown_Right, Knockdown_Back, Trip; blue left half, orange right half.

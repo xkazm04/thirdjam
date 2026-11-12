@@ -1,0 +1,1 @@
+SKH4 rear-high (behind, 30 deg up) rows R, P3A, P4B: Glide, Stride f1/15/30, Aim_P00_R130, Aim_N63_R160, Aim_P70_R130
