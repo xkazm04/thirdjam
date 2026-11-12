@@ -179,6 +179,7 @@ namespace JamAI
 			FJamInput& I = Inputs[i];
 			I.Move = FVector2D(In[i].Move.X, In[i].Move.Y);
 			I.bShoot = In[i].bShoot;
+			I.bShootHeld = In[i].bShootHeld;   // lane A34: the playtester's charged shot
 			I.bCheck = In[i].bCheck;
 			I.bBrake = In[i].bBrake;
 			I.bPass = In[i].bPass;

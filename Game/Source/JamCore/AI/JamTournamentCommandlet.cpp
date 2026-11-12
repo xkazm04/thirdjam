@@ -6,6 +6,7 @@
 #include "JamCartridge.h"
 #include "JamBotRefSim.h"
 #include "DifficultyResolve.h"
+#include "JamPlaytester.h"
 #include "Misc/Parse.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogJamAI, Log, All);
@@ -114,6 +115,34 @@ int32 UJamTournamentCommandlet::Main(const FString& Params)
 	const int32 SeedHi = FCString::Atoi(*Hi);
 	static char Line[8192];
 	const FTCHARToUTF8 CartUtf8(*Cartridge);
+	// lane A34: -player=novice|regular|good puts the human-like playtester in the human's slot (needs the jam sim) and prints
+	// one thirdjam.playtest/1 line per match (the fun metrics) instead of the tournament line.
+	FString PlayerArg;
+	FParse::Value(*Params, TEXT("-player="), PlayerArg, false);
+	if (!PlayerArg.IsEmpty())
+	{
+		JamAI::EPlaytester Kind = JamAI::EPlaytester::Regular;
+		if (!JamAI::ParsePlaytester(TCHAR_TO_UTF8(*PlayerArg), Kind))
+		{
+			UE_LOG(LogJamAI, Error, TEXT("FAIL tournament bad -player=%s (novice | regular | good)"), *PlayerArg);
+			return 2;
+		}
+		if (!Cart)
+		{
+			UE_LOG(LogJamAI, Error, TEXT("FAIL tournament -player needs -sim=jam (the playtester reads UJamSim's events)"));
+			return 2;
+		}
+		const FTCHARToUTF8 LevelUtf8(*Level);
+		for (int32 Seed = SeedLo; Seed <= SeedHi; ++Seed)
+		{
+			JamAI::FJamSimAdapter Sim(Cart->Game);
+			const JamAI::FJamPlaytestStats St = JamAI::RunPlaytestMatch(Sim, Cfg, static_cast<uint64_t>(Seed), Kind, MaxFrames, Cart->Game.Shot.ChargeFramesMax);
+			JamAI::FormatPlaytestJson(St, CartUtf8.Get(), LevelUtf8.Get(), Kind, Line, sizeof(Line));
+			UE_LOG(LogJamAI, Display, TEXT("%s"), UTF8_TO_TCHAR(Line));
+		}
+		Cart->RemoveFromRoot();
+		return 0;
+	}
 	for (int32 Seed = SeedLo; Seed <= SeedHi; ++Seed)
 	{
 		JamAI::FJamMatchStats St;

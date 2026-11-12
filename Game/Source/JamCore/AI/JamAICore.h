@@ -47,6 +47,7 @@ namespace JamAI
 	{
 		FVec2 Move;
 		bool bShoot = false;
+		bool bShootHeld = false;   // lane A34: shoot held (level) for the charged shot, as the pawn sends it (FJamInput::bShootHeld); bots send the edge above
 		bool bCheck = false;
 		bool bBrake = false;
 		// R-0013 / R-0017 (lane A16's FJamInput): pass, stick aim (|Stick| <= 1 of stick reach, zero = no aim), poke, lift
