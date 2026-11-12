@@ -1,0 +1,1 @@
+S5 hybrid: Stride 3/4 front, Stride side, Stride from behind, Glide, Idle_Faceoff (S4 clips on mesh R, 8 frames each)
