@@ -169,3 +169,11 @@ to be implemented to start the game. / No need to mention Director's cut in the 
 1. `game.ladder.takes[].fallback` (a preset id) is added to C-0005: the take plays its fallback when its designed cartridge fails validation or references a primitive that has not landed.
 2. The ladder as measured ships: levels rookie 1-2, pro 3-7, all_star 8; take 3's checks become a two-sided feature when lane A16's brain patch (bots check at pro and all_star) lands.
 3. "Take" names both the in-match period and a season level; the menu and the end card use the take's title to keep them apart. Accepted.
+
+## R-0015 (H7.7, 2026-11-12 13:45): bark register (operator: "you can be also more offensive with the mockery. The current scripts are too safe and childish")
+1. The bank is regenerated at a **harsher register**: cutting sarcasm about the player's skating, aim, speed, courage and decisions; bravado; gloating; genuine annoyance from teammates;
+   the voice of a bored veteran, not a kids' show. **Mild language is allowed sparingly** ("damn", "hell", "crap", "ass" as in "kick your ass"; at most one in ten lines), which the official
+   rules' Teen (13+) bar tolerates. Still forbidden: slurs of any kind, sexual content, threats of real harm, references to real people, brands, teams, bodies or identities, anything targeting
+   who the player is rather than how they play.
+2. Tones become `mock`, `savage`, `complain`, `bravado`, `encourage`, `praise`; `game.barks.intensity`: `quiet` = encourage/praise/complain only, `normal` = mock + the rest, `loud` = savage
+   allowed. Regular ships `normal`; Raw ships `loud`. The filter keeps its hard list and adds the mild-words quota; `REVIEW.md` is regenerated for the Director's skim.
