@@ -1,0 +1,1 @@
+T-B2 hybrid at the faceoff (RestartMatch, time dilation 0.02), game camera, four skaters in frame (real match, PIE on /Game/Maps/Rink with device A's HokejGameMode, jam.Cut hockey.test.visual-b2).

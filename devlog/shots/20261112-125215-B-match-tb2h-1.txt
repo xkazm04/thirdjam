@@ -1,0 +1,1 @@
+T-B2 hybrid in play, game camera (real match, PIE on /Game/Maps/Rink with device A's HokejGameMode, jam.Cut hockey.test.visual-b2, jam.ScriptHuman 1): blue carrier with the puck, orange checker; between light pools the figures go dark.

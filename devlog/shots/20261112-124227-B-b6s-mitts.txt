@@ -1,0 +1,1 @@
+T-B2 mitts, PIE, LR_L2_Night. Left: before (GloveKeyGain 0, yellow mitts on both teams). Right: after (M_SkaterTB2 GloveKey: GloveColour 0.10,0.08,0.07, GloveKeyGain 6, GloveKeyBias 1). Face, stripes, helmet, skates, stick unchanged; the warm knee band above the boot cuff also turns leather.
