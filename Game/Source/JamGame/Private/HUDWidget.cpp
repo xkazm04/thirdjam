@@ -66,8 +66,12 @@ FString UJamHudWidget::FormatTimer(int32 FramesRemaining)
 	return FString::Printf(TEXT("%d:%02d"), Secs / 60, Secs % 60);
 }
 
-FString UJamHudWidget::FormatTake(int32 Take)
+FString UJamHudWidget::FormatTake(int32 Take, int32 ScoreToWin)
 {
+	if (ScoreToWin > 0)
+	{
+		return FString::Printf(TEXT("TAKE %d: first to %d"), FMath::Max(1, Take), ScoreToWin);
+	}
 	return FString::Printf(TEXT("TAKE %d"), FMath::Max(1, Take));
 }
 
@@ -136,6 +140,22 @@ void UJamHudWidget::BuildTree()
 	NetText = MakeText(T, TEXT("NetText"), 22, FLinearColor::White);
 	Place(Root, NetText, FVector2D(0, 0), FVector2D(0.5, 0), FVector2D(0, 0));
 
+	// Own-net marker: smaller and muted, so it never competes with the far-net one.
+	OwnDiamond = T->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("OwnDiamond"));
+	OwnDiamond->SetBrushColor(FLinearColor(0.55f, 0.45f, 0.6f, 0.7f));
+	OwnDiamond->SetRenderTransformAngle(45.f);
+	OwnDiamond->SetRenderTransformPivot(FVector2D(0.5, 0.5));
+	OwnDiamond->SetVisibility(ESlateVisibility::HitTestInvisible);
+	Place(Root, OwnDiamond, FVector2D(0, 0), FVector2D(0.5, 0.5), FVector2D(0, 0), FVector2D(12, 12));
+	OwnText = MakeText(T, TEXT("OwnText"), 14, FLinearColor(0.8f, 0.75f, 0.85f, 0.75f));
+	Place(Root, OwnText, FVector2D(0, 0), FVector2D(0.5, 0), FVector2D(0, 0));
+
+	// Controls hint for the first 10 s of a match.
+	ControlsText = MakeText(T, TEXT("ControlsText"), 22, FLinearColor(1.f, 1.f, 1.f, 0.92f));
+	ControlsText->SetText(FText::FromString(TEXT("MOVE  WASD / L-STICK      SHOOT  SPACE / A      CHECK  SHIFT / B      BRAKE  CTRL / LT      PAUSE  ESC")));
+	ControlsText->SetVisibility(ESlateVisibility::Collapsed);
+	Place(Root, ControlsText, FVector2D(0.5, 1), FVector2D(0.5, 1), FVector2D(0, -140));
+
 	// Radar 200 x 100, bottom-right with a 24 px margin.
 	Radar = T->ConstructWidget<UJamRadarWidget>(UJamRadarWidget::StaticClass(), TEXT("Radar"));
 	Place(Root, Radar, FVector2D(1, 1), FVector2D(0, 0), FVector2D(-224, -124), FVector2D(UJamRadarWidget::RadarWidthPx, UJamRadarWidget::RadarHeightPx));
@@ -178,7 +198,7 @@ void UJamHudWidget::RefreshFromFrame(const FJamPresentationFrame& F)
 	ScoreAway->SetText(FText::FromString(FString::Printf(TEXT("%02d"), F.ScoreAway)));
 	HomeBox->SetBrushColor(F.TeamColour0);
 	AwayBox->SetBrushColor(F.TeamColour1);
-	TakeText->SetText(FText::FromString(FormatTake(F.Take)));
+	TakeText->SetText(FText::FromString(FormatTake(F.Take, F.ScoreToWin)));
 	TimerText->SetText(FText::FromString(F.bHasTimer ? FormatTimer(F.FramesRemaining) : FString()));
 	TimerText->SetVisibility(F.bHasTimer ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 
@@ -187,10 +207,12 @@ void UJamHudWidget::RefreshFromFrame(const FJamPresentationFrame& F)
 	CardTextBlock->SetVisibility(Card.IsEmpty() ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
 	const bool bEnd = F.Phase == EJamPhase::Win || F.Phase == EJamPhase::Lose;
 	HintText->SetVisibility(bEnd ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
-	CallText->SetVisibility(F.bDirectorsCallReady && !bEnd ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+	CallText->SetVisibility(ShowDirectorsCall(F) ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+	ControlsText->SetVisibility(ShowControlsHint(F) ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 
 	Radar->SetFrame(F);
 	UpdateMarker(F);
+	UpdateOwnMarker(F);
 }
 
 void UJamHudWidget::UpdateMarker(const FJamPresentationFrame& F)
@@ -249,3 +271,36 @@ FString UJamHudWidget::GetCardText() const { return CardTextBlock ? CardTextBloc
 FString UJamHudWidget::GetScoreText() const { return ScoreHome && ScoreAway ? ScoreHome->GetText().ToString() + TEXT(" : ") + ScoreAway->GetText().ToString() : FString(); }
 FString UJamHudWidget::GetTimerText() const { return TimerText ? TimerText->GetText().ToString() : FString(); }
 FString UJamHudWidget::GetTakeText() const { return TakeText ? TakeText->GetText().ToString() : FString(); }
+
+void UJamHudWidget::UpdateOwnMarker(const FJamPresentationFrame& F)
+{
+	APlayerController* PC = GetOwningPlayer();
+	const FVector Own(-F.AttackSign * (F.RinkLengthM * 0.5f - F.NetInsetM) * 100.f, 0.f, 150.f);
+	float DistM = 0.f;
+	if (F.Skaters.IsValidIndex(F.HumanIndex))
+	{
+		DistM = FVector2D::Distance(F.Skaters[F.HumanIndex].PosM, FVector2D(Own.X / 100.f, 0.f));
+	}
+	OwnMarker.DistanceM = FMath::RoundToInt32(DistM);
+	OwnMarker.Text = FString::Printf(TEXT("own %d m"), OwnMarker.DistanceM);
+	const FVector2D VS = UWidgetLayoutLibrary::GetViewportSize(this);
+	const float Scale = FMath::Max(UWidgetLayoutLibrary::GetViewportScale(this), 0.01f);
+	const float VW = VS.X / Scale, VH = VS.Y / Scale;
+	FVector2D Sp(VW * 0.5f, VH * 0.5f);
+	bool bProj = PC && UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(PC, Own, Sp, false);
+	bool bBehind = !bProj;
+	if (PC && PC->PlayerCameraManager)
+	{
+		const FVector Local = FRotationMatrix(PC->PlayerCameraManager->GetCameraRotation()).GetTransposed().TransformVector(Own - PC->PlayerCameraManager->GetCameraLocation());
+		if (Local.X <= 1.f)
+		{
+			bBehind = true;
+			Sp = FVector2D(Local.Y >= 0.f ? VW : 0.f, VH * 0.5f);  // behind us: park it on the side edge towards the net
+		}
+	}
+	OwnMarker.bOnScreen = !bBehind && Sp.X >= 0 && Sp.X <= VW && Sp.Y >= 0 && Sp.Y <= VH;
+	OwnMarker.ScreenPos = FVector2D(FMath::Clamp(Sp.X, 60.0, VW - 60.0), FMath::Clamp(Sp.Y, 130.0, VH - 50.0));
+	if (UCanvasPanelSlot* DS = Cast<UCanvasPanelSlot>(OwnDiamond->Slot)) { DS->SetPosition(OwnMarker.ScreenPos); }
+	OwnText->SetText(FText::FromString(OwnMarker.Text));
+	if (UCanvasPanelSlot* TS = Cast<UCanvasPanelSlot>(OwnText->Slot)) { TS->SetPosition(OwnMarker.ScreenPos + FVector2D(0, 10)); }
+}

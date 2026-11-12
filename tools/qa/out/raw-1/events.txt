@@ -1,0 +1,24 @@
+[2026.11.12-10.31.04:247][696]LogHokej: JAMCART loaded C:/Users/kazda/kiro/thirdjam/tools/qa/cartridges/hockey.raw.qa.json id=hockey-raw title="Hockey Raw" seed=1 rink=120x60 visual=toy tier=l1_day
+[2026.11.12-10.31.04:247][696]LogJamSim: JAMRINK built 120x60 m corner 5 goal 4 m, 0 obstacles, outline 52 points
+[2026.11.12-10.31.04:252][696]LogJamLook: JAMLOOK tier=l1_day map=/JamAssets/Rigs/LR_L1_Day.LR_L1_Day
+[2026.11.12-10.31.04:252][696]LogJamEvents: JAMEVENT faceoff who=-1 where=(0.0,0.0,0.0) strength=0.000 frame=0 kind=none
+[2026.11.12-10.31.04:252][696]LogJamEvents: JAMEVENT period who=-1 where=(0.0,0.0,0.0) strength=0.000 frame=0 kind=take_1
+[2026.11.12-10.31.09:565][  7]LogJamEvents: JAMEVENT shot who=3 where=(-1.9,-1.5,4.0) strength=0.600 frame=311 kind=none
+[2026.11.12-10.31.12:715][196]LogJamEvents: JAMEVENT board who=-1 where=(204.9,3000.0,4.0) strength=0.381 frame=500 kind=none
+[2026.11.12-10.31.14:500][296]LogHokej: JAMSIM frame=600 hash=c7f60fda3e934387 score=0:0 phase=0 step_ms mean=0.0040 worst=0.0206
+[2026.11.12-10.31.19:534][585]LogJamEvents: JAMEVENT check who=0 where=(2455.0,714.0,0.0) strength=1.000 frame=889 kind=none
+[2026.11.12-10.31.19:534][585]LogJamEvents: JAMEVENT knockdown who=3 where=(2487.5,715.9,0.0) strength=1.000 frame=889 kind=check
+[2026.11.12-10.31.21:883][726]LogJamEvents: JAMEVENT shot who=0 where=(3999.5,-110.7,4.0) strength=0.600 frame=1030 kind=none
+[2026.11.12-10.31.24:832][896]LogHokej: JAMSIM frame=1200 hash=e7adba52c1e4893f score=0:0 phase=0 step_ms mean=0.0041 worst=0.0920
+[2026.11.12-10.31.25:881][959]LogJamEvents: JAMEVENT board who=-1 where=(6000.0,2283.6,4.0) strength=0.176 frame=1263 kind=none
+[2026.11.12-10.31.26:973][ 14]LogJamEvents: JAMEVENT board who=-1 where=(5803.2,2897.6,4.0) strength=0.131 frame=1318 kind=none
+[2026.11.12-10.31.35:129][496]LogHokej: JAMSIM frame=1800 hash=9600285e2dbce0c7 score=0:0 phase=0 step_ms mean=0.0042 worst=0.0920
+[2026.11.12-10.31.44:668][ 39]LogJamEvents: JAMEVENT board who=-1 where=(-5971.7,2666.0,4.0) strength=0.199 frame=2343 kind=none
+[2026.11.12-10.31.45:618][ 96]LogHokej: JAMSIM frame=2400 hash=428806fd459e9872 score=0:0 phase=0 step_ms mean=0.0043 worst=0.0920
+[2026.11.12-10.31.55:999][696]LogHokej: JAMSIM frame=3000 hash=270b63ee67396890 score=0:0 phase=0 step_ms mean=0.0042 worst=0.0920
+[2026.11.12-10.31.58:022][811]LogJamEvents: JAMEVENT board who=-1 where=(2070.1,-3000.0,4.0) strength=0.149 frame=3115 kind=none
+[2026.11.12-10.32.04:024][164]LogJamEvents: JAMEVENT board who=-1 where=(6000.0,-1580.1,4.0) strength=0.253 frame=3468 kind=none
+[2026.11.12-10.32.04:509][188]LogJamEvents: JAMEVENT shot who=0 where=(5872.3,-1465.7,4.0) strength=0.600 frame=3492 kind=none
+[2026.11.12-10.32.06:560][296]LogHokej: JAMSIM frame=3600 hash=67626a04ff18f8c6 score=0:0 phase=0 step_ms mean=0.0042 worst=0.0920
+[2026.11.12-10.32.09:563][462]LogJamEvents: JAMEVENT board who=-1 where=(141.2,3000.0,4.0) strength=0.292 frame=3766 kind=none
+[2026.11.12-10.32.15:005][786]LogJamEvents: JAMEVENT board who=-1 where=(-6000.0,1151.4,4.0) strength=0.365 frame=4090 kind=none

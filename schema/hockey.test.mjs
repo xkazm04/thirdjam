@@ -9,10 +9,12 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const CART_DIR = resolve(HERE, '..', 'Game', 'Content', 'Cartridges');
 const read = (f) => JSON.parse(readFileSync(resolve(CART_DIR, f), 'utf8'));
 const regular = () => read('hockey.regular.cartridge.json');
+// R-0010: the old 120 x 60 regular, kept as hockey.arena.large (geometry tests below were written for it)
+const large = () => read('hockey.arena.large.cartridge.json');
 const PRESETS = [
   'hockey.test.visual-b2.cartridge.json',
   'hockey.regular.cartridge.json', 'hockey.raw.cartridge.json', 'hockey.boost.cartridge.json',
-  'hockey.arena.small.cartridge.json', 'hockey.arena.wide.cartridge.json',
+  'hockey.arena.large.cartridge.json', 'hockey.arena.wide.cartridge.json',
 ];
 
 const has = (errors, pointer, fragment) => errors.some((e) => e.startsWith(`at ${pointer}:`) && e.includes(fragment));
@@ -36,15 +38,16 @@ test('preset ids are unique and kebab-case; tunable defaults equal the game fiel
     assert.ok(!ids.has(c.id)); ids.add(c.id);
     const get = { skater_speed: c.game.skater.speed, skater_turn_rate: c.game.skater.turn_rate, shot_speed: c.game.shot.speed,
       puck_max_speed: c.game.puck.max_speed, ice_friction: c.game.rink.ice_friction, board_restitution: c.game.rink.board_restitution,
-      ai_speed_scale: c.game.ai.speed_scale, ai_red_skill: c.game.ai.red_skill, goal_pause_frames: c.game.rules.goal_pause_frames };
+      // absent ai numbers come from the difficulty profile; pro (and DEFAULTS.md) is 1 for both
+      ai_speed_scale: c.game.ai?.speed_scale ?? 1, ai_red_skill: c.game.ai?.red_skill ?? 1, goal_pause_frames: c.game.rules.goal_pause_frames };
     for (const t of c.tunables) assert.equal(t.default, get[t.key], `${f} ${t.key}`);
   }
 });
 
 test('preset numbers match the brief', () => {
   const r = regular().game;
-  assert.deepEqual([r.rink.length_m, r.rink.width_m], [120, 60]);
-  assert.deepEqual(r.skater, { speed: 8, accel: 12, turn_rate: 5, lateral_grip: 3, mass: 80, glide_drag: 0.147, brake_decel: 6, check_enabled: false });
+  assert.deepEqual([r.rink.length_m, r.rink.width_m], [90, 45]);   // R-0010
+  assert.deepEqual(r.skater, { speed: 11, accel: 12, turn_rate: 5, lateral_grip: 3, mass: 80, glide_drag: 0.147, brake_decel: 6, check_enabled: false });
   assert.deepEqual(r.puck, { radius_m: 0.12, max_speed: 30, drag: 0, colour_hex: '#111111' });
   assert.deepEqual(r.shot, { reach_m: 1.5, speed: 18, cooldown_frames: 24, aim_cone_deg: 8 });
   assert.equal(r.rules.mode, 'first_to'); assert.equal(r.rules.score_to_win, 3); assert.equal(r.rules.goal_pause_frames, 120);
@@ -55,8 +58,11 @@ test('preset numbers match the brief', () => {
   const raw = read('hockey.raw.cartridge.json').game.skater;
   assert.deepEqual([raw.check_enabled, raw.check_speed_min, raw.knockdown_frames], [true, 5, 90]);
   assert.equal(read('hockey.boost.cartridge.json').game.pickups.length, 3);
-  const s = read('hockey.arena.small.cartridge.json').game;
+  // R-0010: regular is 90 x 45 at speed 11; the old 120 x 60 at speed 8 is hockey.arena.large
+  const s = regular().game;
   assert.deepEqual([s.rink.length_m, s.rink.width_m, s.skater.speed], [90, 45, 11]);
+  const l = read('hockey.arena.large.cartridge.json').game;
+  assert.deepEqual([l.rink.length_m, l.rink.width_m, l.skater.speed], [120, 60, 8]);
   const w = read('hockey.arena.wide.cartridge.json').game.rink;
   assert.deepEqual([w.length_m, w.width_m], [140, 70]);
 });
@@ -109,7 +115,7 @@ test('skater.visual: valid values pass, a wrong value fails with a pointer, the 
   assert.equal(b2.id, 'hockey-test-visual-b2');
   assert.equal(b2.game.skater.visual, 'generated_b2');
   const { visual, ...rest } = b2.game.skater;
-  assert.deepEqual(rest, regular().game.skater);
+  assert.deepEqual(rest, large().game.skater);
 });
 
 test('exactly one player: zero and two are both rejected', () => {
@@ -127,13 +133,13 @@ test('a team count other than two is rejected', () => {
 });
 
 test('spawns outside the rink fail, including the rounded corners and the boards margin', () => {
-  const c = regular(); c.game.teams[1].skaters[2].spawn = [70, 0];
+  const c = large(); c.game.teams[1].skaters[2].spawn = [70, 0];
   assert.ok(has(errorsOf(c), '/game/teams/1/skaters/2/spawn', 'outside the rink'));
-  const z = regular(); z.game.teams[0].skaters[1].spawn = [-10, 30.2];
+  const z = large(); z.game.teams[0].skaters[1].spawn = [-10, 30.2];
   assert.ok(has(errorsOf(z), '/game/teams/0/skaters/1/spawn', 'outside the rink'));
-  const corner = regular(); corner.game.teams[0].skaters[1].spawn = [-59, -29]; // inside the box, outside the round corner
+  const corner = large(); corner.game.teams[0].skaters[1].spawn = [-59, -29]; // inside the box, outside the round corner
   assert.ok(has(errorsOf(corner), '/game/teams/0/skaters/1/spawn', 'outside the rink'));
-  const edge = regular(); edge.game.teams[0].skaters[1].spawn = [-59.4, 0];
+  const edge = large(); edge.game.teams[0].skaters[1].spawn = [-59.4, 0];
   assert.deepEqual(errorsOf(edge), []);
 });
 
@@ -242,4 +248,52 @@ test('Designer: may change the listed game paths, not the roles or the camera mo
   const tun = regular(); tun.tunables[0].max = 12;
   assert.ok(has(validateDesignerOutput(base, tun).errors, '/tunables', 'may not change'));
   assert.ok(DESIGNER_GAME_EDITABLE.includes('look.tier') && !DESIGNER_GAME_EDITABLE.some((p) => p.includes('camera') || p.includes('role')));
+});
+
+test('ai.difficulty: rookie | pro | all_star, absent = pro; every preset names it; the Designer may change it', () => {
+  for (const f of PRESETS) assert.equal(read(f).game.ai.difficulty, 'pro', f);
+  for (const d of ['rookie', 'pro', 'all_star']) { const c = regular(); c.game.ai.difficulty = d; assert.deepEqual(errorsOf(c), [], d); }
+  const bad = regular(); bad.game.ai.difficulty = 'hard';
+  assert.ok(has(errorsOf(bad), '/game/ai/difficulty', 'is not allowed'));
+  const cap = regular(); cap.game.ai.difficulty = 'All_Star';
+  assert.ok(has(errorsOf(cap), '/game/ai/difficulty', 'is not allowed'));
+  const nul = regular(); nul.game.ai.difficulty = null;
+  assert.ok(has(errorsOf(nul), '/game/ai/difficulty', 'null'));
+  const absent = regular(); delete absent.game.ai.difficulty;
+  assert.deepEqual(errorsOf(absent), []);
+  // explicit numbers sit next to the level (they override its profile)
+  const mixed = regular(); mixed.game.ai = { difficulty: 'rookie', speed_scale: 0.8 };
+  assert.deepEqual(errorsOf(mixed), []);
+  assert.ok(DESIGNER_GAME_EDITABLE.includes('ai.difficulty'));
+  const base = regular();
+  for (const d of ['rookie', 'all_star']) {
+    const easier = regular(); easier.game.ai.difficulty = d;
+    assert.deepEqual(validateDesignerOutput(base, easier).errors, [], d);
+  }
+  const dropped = regular(); delete dropped.game.ai;
+  assert.deepEqual(validateDesignerOutput(base, dropped).errors, []);
+  const noAi = regular(); delete noAi.game.ai;
+  const added = regular(); added.game.ai = { difficulty: 'rookie' };
+  assert.deepEqual(validateDesignerOutput(noAi, added).errors, []);
+  // the level is editable, the numbers next to it are not
+  const nums = regular(); nums.game.ai.hold_radius_m = 9;
+  assert.ok(has(validateDesignerOutput(base, nums).errors, '/game/ai', 'may not change'));
+});
+
+test('barks: enabled and intensity quiet | normal | loud; absent = enabled normal; unknown keys and values fail; the Designer may change it', () => {
+  for (const intensity of ['quiet', 'normal', 'loud']) { const c = regular(); c.game.barks = { enabled: true, intensity }; assert.deepEqual(errorsOf(c), [], intensity); }
+  const off = regular(); off.game.barks = { enabled: false }; assert.deepEqual(errorsOf(off), []);
+  const empty = regular(); empty.game.barks = {}; assert.deepEqual(errorsOf(empty), []);
+  const bad = regular(); bad.game.barks = { intensity: 'screaming' };
+  assert.ok(has(errorsOf(bad), '/game/barks/intensity', 'is not allowed'));
+  const cap = regular(); cap.game.barks = { intensity: 'Loud' };
+  assert.ok(has(errorsOf(cap), '/game/barks/intensity', 'is not allowed'));
+  const extra = regular(); extra.game.barks = { volume: 3 };
+  assert.ok(has(errorsOf(extra), '/game/barks/volume', 'unknown key'));
+  const nul = regular(); nul.game.barks = { enabled: null };
+  assert.ok(has(errorsOf(nul), '/game/barks/enabled', 'null'));
+  const base = regular();
+  const loud = regular(); loud.game.barks = { enabled: true, intensity: 'loud' };
+  assert.deepEqual(validateDesignerOutput(base, loud).errors, []);
+  assert.ok(DESIGNER_GAME_EDITABLE.includes('barks'));
 });

@@ -1,0 +1,146 @@
+{
+  "run": "C:\\Users\\kazda\\kiro\\thirdjam\\tools\\qa\\out\\play-3",
+  "plan": "play",
+  "frames": 3601,
+  "first_frame": 251,
+  "last_frame": 3851,
+  "status": {
+    "plan": "play",
+    "n": 3601,
+    "phase": 39,
+    "phase_name": "chase",
+    "phase_start": 3154,
+    "done": true,
+    "err": null,
+    "flushed": 3601,
+    "first_touch": 319,
+    "goal_frames": [],
+    "shots": 16,
+    "had_puck_frames": 665,
+    "hardturn": 1896,
+    "lost_after_hardturn": false,
+    "checks_pressed": 0,
+    "faceoffs": 0,
+    "far_frames": 0,
+    "pickups_taken": 0,
+    "shot_log": [
+      [
+        2941,
+        21.9
+      ],
+      [
+        2942,
+        21.8
+      ],
+      [
+        2943,
+        21.7
+      ],
+      [
+        2944,
+        21.6
+      ],
+      [
+        3077,
+        4.7
+      ],
+      [
+        3095,
+        2.8
+      ],
+      [
+        3096,
+        2.8
+      ],
+      [
+        3097,
+        2.7
+      ],
+      [
+        3098,
+        2.7
+      ],
+      [
+        3099,
+        2.7
+      ],
+      [
+        3100,
+        2.6
+      ],
+      [
+        3101,
+        2.6
+      ],
+      [
+        3102,
+        2.5
+      ],
+      [
+        3103,
+        2.5
+      ],
+      [
+        3104,
+        2.4
+      ],
+      [
+        3105,
+        2.4
+      ]
+    ],
+    "teleports": 0,
+    "wall_s": 69.2,
+    "last_frame": 3851
+  },
+  "play": {
+    "first_touch_frame": 319,
+    "first_touch_s": 5.32,
+    "goal_frames": [],
+    "first_goal_s": null,
+    "final_score": [
+      0,
+      0
+    ],
+    "play_frames": 3601,
+    "far_from_puck_pct": 0,
+    "on_puck_pct": 12.3,
+    "longest_carry_frames": 58,
+    "carries": 19,
+    "hardturn_frame": 1896,
+    "puck_lost_after_hard_turn": false,
+    "shots_pressed": 16,
+    "events": {
+      "touches_human": 0,
+      "shots_all": 4,
+      "shots_human": 2,
+      "goals": 0,
+      "knockdowns": 0,
+      "knockdowns_human": 0,
+      "checks": 0,
+      "checks_human": 0,
+      "faceoffs": 1,
+      "names": [
+        "faceoff",
+        "period",
+        "shot",
+        "board"
+      ]
+    },
+    "flights": [
+      {
+        "frame": 2943,
+        "dist_to_goal_line_m": 0.6,
+        "puck_speed_after_mps": 18,
+        "goal_after_frames": null
+      },
+      {
+        "frame": 3079,
+        "dist_to_goal_line_m": 0.9,
+        "puck_speed_after_mps": 18,
+        "goal_after_frames": null
+      }
+    ],
+    "teleports": 0
+  }
+}

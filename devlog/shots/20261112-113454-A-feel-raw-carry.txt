@@ -1,0 +1,1 @@
+﻿A10 feel QA, raw plan on the QA copy of hockey.raw, frame 3339: carrying the puck near the far net; this run had one human check that knocked down the orange chaser (frame 889), two human shots at 18 m/s that missed from the side, the hard-turn probe lost the puck as it should

@@ -31,6 +31,7 @@ Checklists are copied from `docs/GATES.md` (Submission candidate H84, Submission
 - Meshy: generated skater figure (listed as AI-generated, never as sourced)
 - Blender: evaluation of generated meshes
 - ffmpeg: capture and video encoding
+- NVIDIA DLSS 4.5 (Unreal plugin v8.9.0, Super Resolution and DLAA; plugin built for UE 5.8, ported to 5.9 by ten one-line format-string fixes): Settings > DLSS, on by default on RTX GPUs (`docs/experiments/DLSS.md`)
 - Anthropic API: the Designer's live sentence-to-cartridge call (key typed by the player; no key is bundled)
 
 ## Sourced assets
@@ -85,3 +86,9 @@ node tools/gate/check-assets-ledger.mjs     # exit 0 first; then copy the source
 | `Hokej_Hokej.zip` | TBD | TBD | TBD |
 
 `Get-FileHash Hokej_Hokej.zip -Algorithm SHA256` gives the hash.
+
+
+## NVIDIA track (organisers' text relayed by the operator, 2026-11-12; ruling R-0006)
+Eligibility for the NVIDIA RTX Award needs at least one feature from NvRTX, NVIDIA DLSS or NVIDIA ACE in the game, plus the NVIDIA questions answered at submission. Our path: **NVIDIA DLSS**
+in the shipped build (lane A11; `docs/experiments/DLSS.md` holds the answers). NvRTX is an optional trailer experiment. Partner pools depend on the "Tools you used" field: list NVIDIA DLSS,
+Meshy, and Hyper3D Rodin only if the ledger shows a shipped Rodin asset (handoff A-to-B-0001).

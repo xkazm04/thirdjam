@@ -62,3 +62,75 @@
    instances with the names from C-0002 and R-0002 (ice, board, net frame/mesh, helmet, stick, puck, blue/orange/dark toon, trim blue/orange/beacon, puck rim and halo); `LR_L2_Night` is filled;
    `Arena/` holds the sound-stage dressing (289 basic-shape actors). Lane A1's rink and A5's toy figure already load these by path, so the next editor start on A shows the look. Lane A10 judges
    readability on it; B2's dressing pass 2 and B3's puck kit and effects follow. B's device-B briefs are tracked again now that `briefs/**` is any_device.
+
+## R-0006 (H5.2, 2026-11-12 11:15): NVIDIA track and partner-prize requirements (operator's relay of the organisers' text)
+> "Competing for the NVIDIA RTX Award? Install NvRTX, NVIDIA's branch of Unreal Engine. Your Unreal Engine game needs to use at least one feature from NvRTX, NVIDIA DLSS, or NVIDIA ACE.
+> Answer the NVIDIA questions when you submit. Keep track of the tools you use. When you submit, list them in the 'Tools you used' field. Some partner prizes depend on it, including
+> Hyper3D's $10,000 cash pool for teams that used Rodin and the NVIDIA RTX Award."
+1. **Eligibility path: NVIDIA DLSS in the shipped build** (Super Resolution at least; Frame Generation if the plugin's 5.9 build offers it), through NVIDIA's official DLSS plugin for Unreal
+   on the stock 5.9 engine. Lane A11 researches the exact plugin build for 5.9 (source, size, licence, EULA terms for redistribution in a jam build) and **reports before any download**;
+   the operator approves the download. Integration: plugin in `Game/Plugins/` (ledgered as sourced, with the licence), a quality switch in Settings (DLSS auto / quality / balanced / performance / off),
+   default on when an RTX GPU is detected, off otherwise; the packaged build must run on non-NVIDIA hardware with DLSS off. The `tools used` field and the NVIDIA questions name it.
+2. **NvRTX** stays the optional trailer experiment on device A (5.8 branch, cannot open the 5.9 project); it is not the eligibility path.
+3. **NVIDIA ACE** is out of scope (no NPC conversation in this game).
+4. **Hyper3D Rodin:** handoff A-to-B-0001: if the operator has a Rodin account, device B's skater lab produces at least one shipped asset through Rodin (a prop or a figure base mesh,
+   rigged in Meshy if needed), ledgered as `ai-generated` with the tool named, so the entry qualifies for the pool. No account, no Rodin: say so in the ledger.
+5. **Tools used** (`docs/SUBMISSION.md`): Unreal Engine 5.9, NVIDIA DLSS (if integrated), Claude Code (Opus, Sonnet, Fable, Haiku), Meshy (figures, motion), Hyper3D Rodin (if used),
+   Codex image generation (reference studies only), Blender (evaluation renders), ffmpeg. The NVIDIA questions are answered from `docs/experiments/DLSS.md` at submission.
+
+## R-0007 (H5.4, 2026-11-12 11:25): AI voice side track (operator): barks, shouted signals, ACE
+Operator's words: "experiment with ACE too as a side track - think about AI extensions, first phase purely for trash talking PG15+, opponents would mock or complain based on the
+situation in game. Ideal state would be to shout at AI teammates for short strategy signals and get understanding for defending, going to free space, or just free complimenting."
+1. **Content law:** the entry must be teen-appropriate (official rules, 13+). "PG15" is read as sharp but clean: mockery, complaints, bravado and praise with no profanity, slurs, sexual
+   content, threats, or references to real people, brands or teams. Lines come from a **reviewed bank** generated offline (through the Claude Code CLI transport, R-0004) and filtered by a
+   word list and a reviewer pass; **no raw model text reaches the player at runtime**. The bank is English, tagged by situation and tone, and committed as data.
+2. **Phase 1, barks (ships at M2):** `UJamBarkSystem` (JamGame) listens to the event bus and the sim (goal for/against, check landed/received, puck stolen, stall, near miss, win/lose, a
+   Director's Call) and picks a line for the speaking skater (opponents mock and complain, teammates encourage and complain at the human, the human's own figure stays silent), with a
+   cooldown and no repeats; shown as a speech bubble over the figure and in a HUD strip; optional voice through the engine's own text-to-speech if any is free of downloads, else text only.
+   Cartridge key `game.barks: { enabled, intensity: "quiet" | "normal" | "loud" }`; the Designer may set it ("make them talk trash").
+3. **Phase 2, shouted signals (M3 stretch):** intents `defend | space | pass | praise` as `FJamTeamIntent` events the brain honours for N frames (teammates fall back, spread to free ice,
+   the puck carrier looks for the human, a praised teammate gets a brief skill boost); inputs in this order: keyboard/gamepad (1-4 or d-pad, always shipped, judges have no mic), then
+   **voice through Windows' built-in speech recognition** (no download, offline-capable), then NVIDIA ACE's ASR if phase 3 exists. Teammates answer with a bark ("got it", "on him").
+4. **Phase 3, ACE (NVIDIA eligibility, experiment):** lane A12 researches whether an ACE for Games plugin exists for UE 5.9 (local NIM/LLM, Riva ASR, TTS, Audio2Face), its downloads, sizes,
+   licence and GPU requirement, and whether a jam build can ship it; **reports before any download** (operator approves). If it ships, ACE voices the barks and hears the signals on NVIDIA
+   hardware with the text path as the fallback everywhere else.
+5. Ownership: lane A12 owns `Game/Source/JamGame/Bark*`, `Game/Source/JamGame/Signal*`, `Game/Content/Barks/**`, `docs/experiments/ACE.md`, `tools/barks/**`; the brain hook
+   (`FJamTeamIntent` consumption) is a one-struct seam lane A3 implements in `JamBrain` from A12's header.
+
+## R-0008 (H5.4, 2026-11-12 11:20): Codex image generation and editing for in-jam 2D content (operator: "allowed to use codex and its image generation or edit at any capacity")
+1. From now on Codex image generation and editing may produce **shipped 2D content**: title and menu art (film slate, clapperboard, "Choose your cut" cards), UI icons (cuts, pickups,
+   signals, settings), jersey crests and number decals (generic, invented), ice markings and board decals, scoreboard faces, painted texture tiles for the cel look (2K cap, tileable),
+   pickup glyphs, the itch page cover and screenshots' frames, trailer title cards. The pre-jam reference stills stay reference only (nothing from `prep-reference/` is used).
+2. Every generated image that ships is `ai-generated` in `ASSETS.md` with tool `Codex image generation`, the prompt file path in `url`, and `size_mb`; the tool is listed in "Tools you used".
+3. Content law applies: no text that reads as a real brand, team, league or person; no logos but ours (invented); English; teen-appropriate. Prompts are kept with the generator.
+4. The generator is `tools/images/gen.mjs` (lane A8 lifts it from `prep-reference/tools/gen.mjs`, one image per run, a job list file per batch, outputs to a scratch folder, only the picked
+   files are imported). Lane A8 owns menu/UI art on A; device B owns textures, decals, crests and scoreboard faces (handoff A-to-B-0002); A6 owns the itch page and trailer cards.
+
+## R-0009 (H5.7, 2026-11-12 11:40): link windows on device A, and lane A3's gate changes
+1. **Link windows.** Five editors held the project DLLs at 11:36 and no lane could link. From now on, on device A: **every lane closes its editor at :00 and :30 for five minutes**
+   (`tools/run/editor.ps1 -Stop`, or `ExitEditor` through MCP), and keeps the editor closed whenever it is not actively in PIE or capturing. A lane that needs to link outside a window
+   builds its own git worktree copy (TRACKS.md 5) instead of the shared tree. Partial builds with `-ModuleWithSuffix` are forbidden (they removed `UnrealEditor.modules` once).
+2. **Lane A3's deviations accepted:** `PlayerBotWins` (WIN at seeds 1, 2, 7 with identical hashes) is gated at `rookie`; at `pro` the gate is "the human scores at least once and the match
+   has a result or reaches 36,000 frames with the human ahead or level in at least 2 of 3 seeds". `HumanHasSomethingToDo` treats the 10-minute window as a full match.
+3. **Difficulty resolution** (A3): profile `rookie | pro | all_star` -> explicit `game.ai` numbers -> Designer values; presets carry `ai: { difficulty: "pro" }`; the game mode calls
+   `Brain->ApplyCartridge(*Cartridge); Brain->ResetBrain();` (patch applied by the Director), or the game plays `pro` with the old hold radius whatever the cut says.
+4. **Curve target restated** (from A3's first measurement, 20 seeds, scripted human): regular rookie 85 % / pro 50 % / all_star 25 % holds; small rink is too easy at every level (95 / 65 / 55)
+   and gets its own profile offsets. `FJamAIIntent` (the R-0007 hook) already consumes defend / space / pass / praise.
+
+## R-0010 (H5.8, 2026-11-12 11:45): the default rink is 90 x 45 (operator: "lets then keep 90x45 as default")
+1. `hockey.regular` becomes **90 x 45 m, skater speed 11** (the measured small-rink cell: a goal every 70 s with the scripted human, 16 of 20 bot matches finish, the two-minute first
+   play exists). Lane A3 makes the change in the presets (it is editing them) and re-targets the difficulty curve on it: rookie 85 % / pro 50 % / all_star 25 % on the new regular.
+2. **120 x 60 stays a shipped cut**: `hockey.arena.large` (120 x 60, speed 8) replaces `hockey.arena.small`; `hockey.arena.wide` (140 x 70) stays. Tests and sweeps run on regular and large.
+3. `GAME.md`, `HOCKEY.md` section 2 and the menu descriptions follow (Director edits the docs; lane A8 reads descriptions from the cartridges).
+4. The camera defaults are unchanged (measured for 120 m; on 90 m the far net is nearer, which only helps); the far-net marker stays.
+
+## R-0011 (H6.5, 2026-11-12 12:35): puck carrying, the instant goal, and the gates (lane A3's final report)
+1. **Adopt `puck.drag` 0.5** in every preset: carrying is the fun (A10) and it gives +45 % touches and 40 % shorter matches (A3). It hands the human every match at the current
+   profiles, so lane A3 **re-tunes the three profiles on drag 0.5** to the same targets (rookie 85 / pro 50 / all_star 25 on regular). The other four feel changes (glide drag 0.3, grip 4,
+   accel 16, reach 2.0) are **not** adopted together; A3 may take at most one more if the curve needs it and says which.
+2. **Net guarding:** rookie's back blocks long shots only (as shipped); pro and all_star block all. The curve wins over the clause.
+3. **Gates:** `PlayerBotWins` runs on **regular only** at rookie (seeds 1, 2, 7: WIN, identical hashes), with **no** first-goal-frame clause at rookie; the clause "first goal after frame 600
+   in at least 2 of 3 seeds" applies at **pro**, where the backs block. `AiBotPlays` on `hockey.arena.large` requires movement, puck path and shots only (no goal clause): guarding backs make
+   bot-only big-rink matches goalless, which is fine for a cut nobody plays bot-only.
+4. **Large Rink cut ships in timer mode** (`rules.mode timer`, 3 minutes = 10,800 frames) so it always ends; regular stays first-to-3.
+5. Lane A3's `LiveConfig` fix (loads `hockey.arena.large` for the held-back-geometry check) and the intent plumbing (`FJamAIWorld` intent fields filled by `GatherInputs`) are accepted.

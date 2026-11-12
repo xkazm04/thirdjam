@@ -1,19 +1,19 @@
 {
   "schema": "tj.cartridge/1",
-  "id": "hockey-arena-small",
-  "title": "Hockey Arena Small",
+  "id": "hockey-boost",
+  "title": "Hockey Boost",
   "seed": 1,
   "theme": {
-    "name": "Night Rink",
+    "name": "Neon Rink",
     "mood_words": [
-      "night",
-      "crisp",
-      "bright"
+      "neon",
+      "electric",
+      "wet"
     ],
     "palette": [
       {
-        "name": "ice",
-        "hex": "#DCE9F5"
+        "name": "wet ice",
+        "hex": "#9FB6D6"
       },
       {
         "name": "blue",
@@ -24,12 +24,16 @@
         "hex": "#E8651A"
       },
       {
-        "name": "trim",
-        "hex": "#38BDF8"
+        "name": "neon",
+        "hex": "#22F5E1"
+      },
+      {
+        "name": "magenta",
+        "hex": "#FF2BD6"
       },
       {
         "name": "dark",
-        "hex": "#0B1220"
+        "hex": "#070B16"
       }
     ]
   },
@@ -39,7 +43,7 @@
       "type": "number",
       "min": 3,
       "max": 16,
-      "default": 11,
+      "default": 8,
       "description": "Top skating speed in metres per second. Higher is faster and harder to control."
     },
     {
@@ -113,15 +117,15 @@
   "ai": [],
   "game": {
     "rink": {
-      "length_m": 90,
-      "width_m": 45,
-      "corner_radius_m": 3.75,
+      "length_m": 120,
+      "width_m": 60,
+      "corner_radius_m": 5,
       "board_restitution": 0.4,
       "ice_friction": 0.015,
       "goal_width_m": 4
     },
     "skater": {
-      "speed": 11,
+      "speed": 8,
       "accel": 12,
       "turn_rate": 5,
       "lateral_grip": 3,
@@ -157,21 +161,21 @@
           {
             "role": "player",
             "spawn": [
-              -7.5,
+              -10,
               0
             ]
           },
           {
             "role": "chaser",
             "spawn": [
-              -7.5,
-              -7.5
+              -10,
+              -10
             ]
           },
           {
             "role": "back",
             "spawn": [
-              -22.5,
+              -30,
               0
             ]
           }
@@ -184,39 +188,33 @@
           {
             "role": "chaser",
             "spawn": [
-              7.5,
+              10,
               0
             ]
           },
           {
             "role": "support",
             "spawn": [
-              7.5,
-              7.5
+              10,
+              10
             ]
           },
           {
             "role": "back",
             "spawn": [
-              22.5,
+              30,
               0
             ]
           }
         ]
       }
     ],
-    "ai": {
-      "yield_margin_m": 2,
-      "yield_radius_m": 15,
-      "hold_radius_m": 4.5,
-      "speed_scale": 1,
-      "red_skill": 1
-    },
+    "ai": {},
     "look": {
-      "tier": "l2_night",
-      "trim_colour_hex": "#38BDF8",
-      "fog_density": 0,
-      "wet_ice": false
+      "tier": "l1_day",
+      "trim_colour_hex": "#22F5E1",
+      "fog_density": 0.02,
+      "wet_ice": true
     },
     "camera": {
       "mode": "third_person",
@@ -226,6 +224,26 @@
       "lag_frames": 4,
       "fov_deg": 70,
       "radar": true
-    }
+    },
+    "pickups": [
+      {
+        "kind": "speed",
+        "spawn_every_frames": 900,
+        "duration_frames": 300,
+        "magnitude": 1.5
+      },
+      {
+        "kind": "precision",
+        "spawn_every_frames": 1200,
+        "duration_frames": 480,
+        "magnitude": 2
+      },
+      {
+        "kind": "heavy_puck",
+        "spawn_every_frames": 1500,
+        "duration_frames": 360,
+        "magnitude": 2
+      }
+    ]
   }
 }

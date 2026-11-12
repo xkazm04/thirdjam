@@ -67,6 +67,30 @@ if ($Map) {
 }
 if ($Ddc) { $a += ('-ddc={0}' -f $Ddc) }
 if ($ExtraArgs) { $a += $ExtraArgs }
+# A Shipping stage must not pick up another build's leftovers: a Development or DebugGame Game-target exe and its pdb in
+# <project>\Binaries\Win64 (found at 611 MB instead of ~320 MB). They are moved (never deleted) to
+# <project>\Intermediate\StaleBinaries\<stamp>. Only this Game target's files are touched: never UnrealEditor*, never
+# <Name>Editor.*, never the Shipping files, so editors that other lanes have open keep running.
+$staleMoved = @()
+if ($Config -eq 'Shipping') {
+    $bin = Join-Path $projDir 'Binaries\Win64'
+    if (Test-Path $bin) {
+        $esc = [regex]::Escape($projName)
+        $stale = @(Get-ChildItem -Path $bin -File -ErrorAction SilentlyContinue | Where-Object {
+                $_.Name -match ('^{0}(-Win64-(DebugGame|Test))?\.(exe|pdb|exp|lib|target|map)$' -f $esc) -or
+                $_.Name -match ('^{0}-Win64-(DebugGame|Test)\.' -f $esc)
+            })
+        if ($stale.Count -gt 0) {
+            $dest = Join-Path $projDir ('Intermediate\StaleBinaries\' + (Get-Stamp))
+            New-Item -ItemType Directory -Force -Path $dest | Out-Null
+            foreach ($f in $stale) {
+                try { Move-Item -Path $f.FullName -Destination $dest -Force -ErrorAction Stop; $staleMoved += $f.Name }
+                catch { Write-Host "WARN package: could not move stale $($f.Name) ($($_.Exception.Message)); the staged-folder check will decide" }
+            }
+            if ($staleMoved.Count -gt 0) { Write-Host ("INFO package: moved {0} stale non-Shipping file(s) of the Game target to {1}: {2}" -f $staleMoved.Count, $dest, ($staleMoved -join ', ')) }
+        }
+    }
+}
 $argLine = $a -join ' '
 Write-Host "INFO package: $uat $argLine"
 Write-Host "INFO package: log $log"
@@ -95,6 +119,17 @@ $staged = @('Windows', 'WindowsNoEditor', 'Win64') | ForEach-Object { Join-Path 
 if (-not $staged) { Write-Step 'FAIL' 'stage' "no Windows folder under $Out"; Exit-WithResult 'package' 1 $extra }
 $exe = Get-ChildItem -Path $staged -Filter '*.exe' -File | Select-Object -First 1
 $stagedMB = Get-DirSizeMB $staged
+if ($staleMoved.Count -gt 0) { $extra['stale_moved'] = $staleMoved }
+if ($Config -eq 'Shipping') {
+    # A Shipping stage holds no pdb and only Shipping game exes (the launcher stub at the root is fine).
+    $pdbs = @(Get-ChildItem -Path $staged -Recurse -File -Filter '*.pdb' -Force -ErrorAction SilentlyContinue)
+    $badExe = @(Get-ChildItem -Path $staged -Recurse -File -Filter '*.exe' -Force -ErrorAction SilentlyContinue | Where-Object {
+            $_.DirectoryName -match '\\Binaries\\Win64$' -and $_.Name -notmatch '-Win64-Shipping\.exe$' })
+    foreach ($p in $pdbs) { Write-Step 'FAIL' 'stage-clean' ('pdb in the staged folder: {0} ({1:N1} MB)' -f $p.FullName.Substring($staged.Length + 1), ($p.Length / 1MB)) }
+    foreach ($p in $badExe) { Write-Step 'FAIL' 'stage-clean' ('non-Shipping exe in the staged folder: {0} ({1:N1} MB)' -f $p.FullName.Substring($staged.Length + 1), ($p.Length / 1MB)) }
+    if ($pdbs.Count -eq 0 -and $badExe.Count -eq 0) { Write-Step 'PASS' 'stage-clean' 'no pdb, only Shipping exes' }
+    else { $extra['stage_dirty'] = @($pdbs + $badExe | ForEach-Object { $_.Name }) }
+}
 $extra['staged'] = $staged
 $extra['staged_mb'] = $stagedMB
 if ($exe) { $extra['exe'] = $exe.FullName }
@@ -130,5 +165,19 @@ if ($Zip) {
 if ($checkMB -gt $LimitMB) { Write-Step 'FAIL' 'size' ("{0} is {1} MB, over the {2} MB limit" -f $checkWhat, $checkMB, $LimitMB) }
 elseif ($checkMB -gt $WarnMB) { Write-Host ("WARN size {0} is {1} MB, above the {2} MB warning line" -f $checkWhat, $checkMB, $WarnMB); Write-Step 'PASS' 'size' ("{0} {1} MB (warn)" -f $checkWhat, $checkMB) }
 else { Write-Step 'PASS' 'size' ("{0} {1} MB, limit {2} MB" -f $checkWhat, $checkMB, $LimitMB) }
+# Size breakdown (lane A13, tools/size/report.mjs): by folder, by asset class, the 30 largest packages, the delta against the
+# previous report. History: tools\size\history\ for the repo's own project, <Out>\size-history\ for any other copy. Never fails the package.
+$sizeTool = Join-Path $PSScriptRoot '..\size\report.mjs'
+if ((Test-Path $sizeTool) -and (Get-Command node -ErrorAction SilentlyContinue)) {
+    $repoGame = (Resolve-Path (Join-Path $PSScriptRoot '..\..\Game') -ErrorAction SilentlyContinue)
+    $histDir = if ($repoGame -and ($projDir -eq $repoGame.Path)) { Join-Path $PSScriptRoot '..\size\history' } else { Join-Path $Out 'size-history' }
+    $sizeLabel = if ($Name) { $Name } else { $Config }
+    $sizeArgs = @($sizeTool, $staged, '--label', $sizeLabel, '--save', '--history', $histDir)
+    if ($extra.Contains('zip_mb')) { $sizeArgs += @('--zip-mb', [string]$extra['zip_mb']) }
+    $sizeOut = @(& node @sizeArgs 2>&1 | ForEach-Object { "$_" })
+    foreach ($l in $sizeOut) { if ($l -notmatch '^\{') { Write-Host $l } }
+    $sj = $sizeOut | Where-Object { $_ -match '^\{' } | Select-Object -Last 1
+    if ($sj) { try { $so = $sj | ConvertFrom-Json; if ($so.saved) { $extra['size_report'] = $so.saved }; if ($so.classes_mb) { $extra['classes_mb'] = $so.classes_mb } } catch {} }
+} else { Write-Host 'WARN size: tools\size\report.mjs or node not found; no size breakdown' }
 $extra['free_gb'] = (Get-FreeGB $uproject)
 Exit-WithResult 'package' -1 $extra

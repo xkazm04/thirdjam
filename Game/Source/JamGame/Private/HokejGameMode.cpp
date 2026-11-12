@@ -4,6 +4,7 @@
 #include "JamPawns.h"
 #include "JamBrain.h"
 #include "JamSimAdapter.h"
+#include "SignalSystem.h"
 #include "RinkActor.h"
 #include "LookTierSwitcher.h"
 #include "HUDFeed.h"
@@ -88,12 +89,8 @@ bool AHokejGameMode::ApplyCartridgeLive(UJamCartridge* NewCartridge)
 	if (!NewCartridge || !Sim || !bBuilt) return false;
 	const TArray<FString> Held = Sim->ApplyLiveConfig(NewCartridge->Game);
 	const FJamGameConfig& G = Sim->GetConfig();
-	Brain->YieldMarginM = G.Ai.YieldMarginM;
-	Brain->YieldRadiusM = G.Ai.YieldRadiusM;
-	Brain->HoldRadiusM = G.Ai.HoldRadiusM;
-	Brain->SpeedScale = G.Ai.SpeedScale;
-	Brain->RedSkill = G.Ai.RedSkill;
-	Brain->ApplyParams();
+	// R-0009 point 3: the brain resolves difficulty profile -> explicit game.ai -> Designer values itself (lane A3).
+	Brain->ApplyCartridge(*NewCartridge);
 	if (Rink && Rink->IceMid) Rink->IceMid->SetScalarParameterValue(TEXT("Wet"), G.Look.bWetIce ? 1.f : 0.f);
 	if (ULookTierSwitcher* Look = GetWorld()->GetSubsystem<ULookTierSwitcher>()) Look->SetTier(G.Look.Tier);
 	Cartridge = NewCartridge;
@@ -164,12 +161,8 @@ void AHokejGameMode::BuildMatch()
 	Inputs.SetNum(Sim->GetSkaters().Num());
 
 	Brain = NewObject<UJamBrain>(this);
-	Brain->YieldMarginM = G.Ai.YieldMarginM;
-	Brain->YieldRadiusM = G.Ai.YieldRadiusM;
-	Brain->HoldRadiusM = G.Ai.HoldRadiusM;
-	Brain->SpeedScale = G.Ai.SpeedScale;
-	Brain->RedSkill = G.Ai.RedSkill;
-	Brain->ApplyParams();
+	// R-0009 point 3: the brain resolves difficulty profile -> explicit game.ai -> Designer values itself (lane A3).
+	Brain->ApplyCartridge(*Cartridge);
 	Brain->ResetBrain();
 
 	UClass* VisualClass = ResolveVisualClass(G.Skater.Visual);
@@ -300,6 +293,7 @@ FJamInput AHokejGameMode::ReadHumanInput()
 	In.Move = Fwd * Axis.Y + Right * Axis.X;
 	In.bShoot = Pi->ConsumeShootPressed();
 	In.bCheck = Pi->ConsumeCheckPressed();
+	In.bBrake = Pi->IsBrakeHeld();  // A5: Ctrl / left trigger (FEEL.md proposal 6)
 	return In;
 }
 
@@ -307,6 +301,18 @@ void AHokejGameMode::GatherInputs()
 {
 	JamAI::FJamAIWorld W;
 	JamAI::FJamSimAdapter::BuildWorld(*Sim, W);
+	// lane A3 (R-0009): the human's active team signal into the world the brain reads (FJamAIWorld::Intent*, frames, deterministic)
+	if (const UWorld* World = GetWorld())
+	{
+		FJamTeamIntent Intent;
+		const UJamSignalSystem* Signals = World->GetSubsystem<UJamSignalSystem>();
+		if (Signals && Signals->GetActiveIntent(Intent))
+		{
+			W.IntentKind = static_cast<int32>(Intent.Intent);   // EJamTeamIntent: None 0, Defend 1, Space 2, Pass 3, Praise 4
+			W.IntentTarget = Intent.TargetIndex;
+			W.IntentFramesLeft = Intent.FramesLeft(Sim->GetFrame());
+		}
+	}
 	JamAI::FJamAIInput Out[JamAI::kMaxSkaters];
 	Brain->Think(W, Out);
 	const int32 Human = Sim->GetHumanIndex();
@@ -368,6 +374,7 @@ void AHokejGameMode::PushPresentation()
 	F.ScoreHome = Sim->GetScore(Sim->GetHumanTeam());
 	F.ScoreAway = Sim->GetScore(1 - Sim->GetHumanTeam());
 	F.Take = FMath::Max(1, Take);
+	F.ScoreToWin = G.Rules.Mode == FName(TEXT("first_to")) ? G.Rules.ScoreToWin : 0;  // A5: the TAKE card reads the rule
 	F.bHasTimer = G.Rules.Mode == FName(TEXT("timer"));
 	F.FramesRemaining = Sim->GetTimerFrames();
 	switch (Sim->GetPhase())

@@ -1,0 +1,1 @@
+﻿A10 feel QA, glide at frame 465 (scene capture, no HUD): far net at about 45 m reads by its beacon and outline, the puck does not read anywhere on the L1 day ice texture

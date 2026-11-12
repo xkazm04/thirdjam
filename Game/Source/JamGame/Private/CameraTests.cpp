@@ -252,4 +252,46 @@ bool FJamHudText::RunTest(const FString&)
 	return true;
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamCameraInsideBoards, "Jam.Camera.InsideBoards", EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+bool FJamCameraInsideBoards::RunTest(const FString&)
+{
+	FJamCameraSettings C;
+	for (float Yaw : { 0.f, 30.f, -30.f, 180.f, 90.f })
+	{
+		for (float X : { -58.f, -40.f, 0.f, 58.f })
+		{
+			const FVector2D P(X, 25.0);
+			const FTransform T = UJamFollowCamera::ComputeThirdPersonPose(C, P, Yaw);
+			const FVector Focus(P.X * 100.0, P.Y * 100.0, 90.0);
+			const FVector Cl = UJamFollowCamera::ClampInsideBoards(Focus, T.GetLocation(), 120.f, 60.f);
+			TestTrue(*FString::Printf(TEXT("inside boards x=%.0f yaw=%.0f"), X, Yaw), FMath::Abs(Cl.X) <= 5970.01 && FMath::Abs(Cl.Y) <= 2970.01);
+			if (FMath::Abs(T.GetLocation().X) < 5900 && FMath::Abs(T.GetLocation().Y) < 2900)
+			{
+				TestTrue(TEXT("untouched when already inside"), Cl.Equals(T.GetLocation(), 0.01));
+			}
+		}
+	}
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamHudRules, "Jam.Hud.RuleAndHints", EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+bool FJamHudRules::RunTest(const FString&)
+{
+	TestEqual(TEXT("first to"), UJamHudWidget::FormatTake(1, 3), FString(TEXT("TAKE 1: first to 3")));
+	TestEqual(TEXT("timer rule"), UJamHudWidget::FormatTake(1, 0), FString(TEXT("TAKE 1")));
+	FJamPresentationFrame F;
+	F.SimFrame = 100;
+	TestTrue(TEXT("hint at 100"), UJamHudWidget::ShowControlsHint(F));
+	F.SimFrame = 600;
+	TestFalse(TEXT("no hint at 600"), UJamHudWidget::ShowControlsHint(F));
+	F.bDirectorsCallReady = true;
+	TestFalse(TEXT("no call before a goal"), UJamHudWidget::ShowDirectorsCall(F));
+	F.ScoreAway = 1;
+	TestTrue(TEXT("call after a goal"), UJamHudWidget::ShowDirectorsCall(F));
+	UJamInputMap* M = UJamInputMap::Get();
+	TestTrue(TEXT("ctrl brakes"), M->IsKeyMapped(M->Brake, EKeys::LeftControl));
+	TestTrue(TEXT("left trigger brakes"), M->IsKeyMapped(M->Brake, EKeys::Gamepad_LeftTriggerAxis));
+	return true;
+}
+
 #endif

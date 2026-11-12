@@ -73,6 +73,21 @@ FTransform UJamFollowCamera::ComputeThirdPersonPose(const FJamCameraSettings& C,
 	return FTransform(FRotator(DerivedPitchDeg(C), YawDeg, 0.f), FVector(Pos.X * 100.f, Pos.Y * 100.f, C.HeightM * 100.f));
 }
 
+FVector UJamFollowCamera::ClampInsideBoards(const FVector& Focus, const FVector& Cam, float L, float W, float Margin)
+{
+	const double Hx = (L * 0.5f - Margin) * 100.0, Hy = (W * 0.5f - Margin) * 100.0;
+	double T = 1.0;
+	const FVector D = Cam - Focus;
+	auto Axis = [&](double F, double Dd, double H)
+	{
+		if (Dd > KINDA_SMALL_NUMBER && F + Dd > H) { T = FMath::Min(T, (H - F) / Dd); }
+		else if (Dd < -KINDA_SMALL_NUMBER && F + Dd < -H) { T = FMath::Min(T, (-H - F) / Dd); }
+	};
+	Axis(Focus.X, D.X, Hx);
+	Axis(Focus.Y, D.Y, Hy);
+	return Focus + D * FMath::Clamp(T, 0.0, 1.0);
+}
+
 FTransform UJamFollowCamera::ComputeArenaPose(const FJamCameraSettings& C, float RinkLengthM, float RinkWidthM)
 {
 	// Looking -Y from the +Y side (rink +X is then on the right, like the radar) at a downward pitch; the horizontal field of view spans the rink length plus 10 %.
@@ -123,6 +138,9 @@ void UJamFollowCamera::StepSimFrame(const FJamPresentationFrame& Frame)
 		const FJamPresentationSkater& S = Frame.Skaters[Frame.HumanIndex];
 		Filter.Step(S.PosM, S.YawDeg, Config.LagFrames);
 		PoseCurrent = ComputeThirdPersonPose(Config, Filter.PivotM, Filter.YawDeg);
+		// Never outside the boards: pull in along the view axis (focus = the filtered pivot at shoulder height).
+		const FVector Focus(Filter.PivotM.X * 100.0, Filter.PivotM.Y * 100.0, 90.0);
+		PoseCurrent.SetLocation(ClampInsideBoards(Focus, PoseCurrent.GetLocation(), Frame.RinkLengthM, Frame.RinkWidthM));
 	}
 	if (!bHavePose)
 	{

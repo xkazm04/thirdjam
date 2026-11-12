@@ -83,6 +83,10 @@ struct JAMGAME_API FJamPresentationFrame
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Presentation")
 	int32 ScoreAway = 0;
 
+	// first_to rule: the score that wins (0 = absent: a timer rule, or none).
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Presentation")
+	int32 ScoreToWin = 0;
+
 	// Period number (TAKE n), 1-based.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Presentation")
 	int32 Take = 1;

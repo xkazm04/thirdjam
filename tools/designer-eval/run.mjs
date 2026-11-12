@@ -3,6 +3,7 @@
 //   node tools/designer-eval/run.mjs                 mock model (default): deterministic, no network, no key
 //   node tools/designer-eval/run.mjs --mock
 //   node tools/designer-eval/run.mjs --live          real API, only if the key is in the environment, else exit 2
+//   node tools/designer-eval/run.mjs --cli           real model through the Claude Code CLI login (R-0004), only if `claude` is on PATH, else exit 2
 //   options: --sentences file.json  --cartridge file.json  --only <id>  --verbose
 //
 // Exit codes: 0 every sentence passed, 1 at least one FAIL, 2 could not run (bad arguments, no key for --live).
@@ -14,6 +15,7 @@ import { fileURLToPath } from 'node:url';
 import { runDesigner } from './loop.mjs';
 import { createMockModel } from './mock-model.mjs';
 import { createLiveModel, hasKey, MissingKeyError } from './live-model.mjs';
+import { createCliModel, hasCli } from './cli-model.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const short = (m) => m.replace(/^claude-/, '').replace(/-\d+-\d+$/, '');
@@ -24,6 +26,7 @@ export function parseArgs(argv) {
     const a = argv[i];
     if (a === '--mock') o.mode = 'mock';
     else if (a === '--live') o.mode = 'live';
+    else if (a === '--cli') o.mode = 'cli';
     else if (a === '--verbose') o.verbose = true;
     else if (a === '--sentences') o.sentences = resolve(argv[++i] ?? '');
     else if (a === '--cartridge') o.cartridge = resolve(argv[++i] ?? '');
@@ -50,7 +53,7 @@ export async function evaluate({ sentences, cartridge, callModel, limits, log = 
     const pass = (s.expect === 'cartridge' && gotCartridge) || (s.expect === 'refusal' && r.outcome === 'refused');
     if (!pass) anyFail = true;
     const via = r.attempts.map((a) => `${short(a.model)}:${a.kind}`).join(' > ');
-    log(`${pass ? 'PASS' : 'FAIL'} ${s.id} [${r.outcome}] ${via}${pass ? '' : ` (expected ${s.expect})`}`);
+    log(`${pass ? 'PASS' : 'FAIL'} ${s.id} [${r.outcome}] ${r.ms} ms ${via}${pass ? '' : ` (expected ${s.expect})`}`);
     if (verbose || !pass) {
       for (const a of r.attempts) for (const e of a.errors ?? []) log(`     ${short(a.model)}: ${e}`);
       if (r.refusal) log(`     refusal: ${r.refusal}`);
@@ -83,6 +86,9 @@ async function main() {
   if (opts.mode === 'live') {
     if (!hasKey()) { console.error(new MissingKeyError().message); return 2; }
     callModel = createLiveModel();
+  } else if (opts.mode === 'cli') {
+    if (!hasCli()) { console.error('no claude executable on PATH (--cli needs the Claude Code CLI, logged in)'); return 2; }
+    callModel = createCliModel();
   } else {
     callModel = createMockModel();
   }

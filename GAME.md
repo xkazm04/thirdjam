@@ -1,14 +1,14 @@
 # Hokej: the game on one page (H4, 2026-11-12 10:05)
 
-**Pitch.** Ice hockey 3 vs 3 on a huge rink, played from behind your skater, where every match is a *cut* you can direct: pick a cut, or tell the Designer
+**Pitch.** Ice hockey 3 vs 3 on a wide-open rink, played from behind your skater, where every match is a *cut* you can direct: pick a cut, or tell the Designer
 in one sentence how you want it, and play your Director's Cut. Theme: Director's Cut (`docs/THEME.md`).
 
 **Core loop (the 2-minute first play).** Faceoff at centre ice; you skate (WASD or left stick), shoot (space / A), check (shift / B, in Raw Cut only).
 Two bot teammates play roles (chaser, back); three bot opponents do the same with the yield rules so you always get the puck within seconds. First to 3
 goals, or a 3-minute timer. Goal: 2-second pause, scoreboard counter clicks, faceoff. Win: "THAT'S A WRAP"; lose: "RETAKE?" and restart on R.
 
-**Cuts shipped (cartridges, `Game/Content/Cartridges/`).** Regular (M1, L2 night painted-cel arena, 120 x 60 m), Raw (M2: checks, no rules), Boost (M3: pickups),
-Small Rink (90 x 45, faster skaters), Wide (140 x 70), and `My Director's Cut` (whatever the Designer last produced).
+**Cuts shipped (cartridges, `Game/Content/Cartridges/`).** Regular (M1, L2 night painted-cel arena, **90 x 45 m**, skater speed 11; decided 2026-11-12 11:45 on measured pacing), Raw (M2: checks, no rules), Boost (M3: pickups),
+Large Rink (120 x 60, speed 8), Wide (140 x 70), and `My Director's Cut` (whatever the Designer last produced).
 
 **The twist: Director's Call.** Once per period, pause and change one tunable live; the scoreboard announces the cut. Data over existing systems.
 

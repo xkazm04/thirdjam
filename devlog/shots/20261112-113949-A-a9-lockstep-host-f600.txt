@@ -1,0 +1,1 @@
+Lockstep match, host window at frame 600 (hockey.arena.small, two -game processes on loopback, hashes agreeing every 60 frames)

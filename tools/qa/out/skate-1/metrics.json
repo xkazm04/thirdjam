@@ -1,0 +1,59 @@
+{
+  "run": "C:\\Users\\kazda\\kiro\\thirdjam\\tools\\qa\\out\\skate-1",
+  "plan": "skate",
+  "frames": 720,
+  "first_frame": 275,
+  "last_frame": 994,
+  "status": {
+    "plan": "skate",
+    "n": 720,
+    "phase": 3,
+    "phase_name": "circle",
+    "phase_start": 875,
+    "done": false,
+    "err": null,
+    "flushed": 720,
+    "first_touch": 327,
+    "goal_frames": [],
+    "shots": 0,
+    "had_puck_frames": 0,
+    "hardturn": null,
+    "lost_after_hardturn": null,
+    "checks_pressed": 0,
+    "faceoffs": 0,
+    "far_frames": 0,
+    "pickups_taken": 0,
+    "shot_log": [],
+    "teleports": 0,
+    "wall_s": 116.2,
+    "last_frame": 994
+  },
+  "accel": {
+    "top_speed_mps": 7.998,
+    "frames_to_95pct": 40,
+    "frames_to_99pct": 42,
+    "s_to_95pct": 0.67,
+    "dist_to_95pct_m": 2.57,
+    "start_pos": [
+      -10,
+      0
+    ]
+  },
+  "glide": {
+    "v_start_mps": 7.998,
+    "v_end_mps": 7.267,
+    "seconds": 4.97,
+    "decel_mps2": 0.1472,
+    "dist_m": 38.04,
+    "stop_distance_if_released_at_top_m": 217.4,
+    "seconds_to_stop_from_top": 54.4
+  },
+  "reverse_stop": {
+    "v_at_reverse_mps": 7.26,
+    "frames_to_stop": 41,
+    "s_to_stop": 0.68,
+    "along_distance_m": 3.43,
+    "side_drift_m": 2.23,
+    "min_speed_mps": 2.6
+  }
+}

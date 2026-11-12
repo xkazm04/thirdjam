@@ -309,6 +309,7 @@ void AJamProofScene::PushFrame()
 	Fr.ScoreHome = ScoreHome;
 	Fr.ScoreAway = ScoreAway;
 	Fr.Take = 1;
+	Fr.ScoreToWin = 3;
 	Fr.bHasTimer = true;
 	Fr.FramesRemaining = FMath::Max(0, 180 * 60 - (int32)SimFrame);
 	Fr.Phase = Phase;

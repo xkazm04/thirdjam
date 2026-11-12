@@ -1,0 +1,1 @@
+{"args":"-windowed -ResX=1280 -ResY=720 -log -abslog=\"C:\\Users\\kazda\\kiro\\thirdjam\\tools\\qa\\out\\game-regular-l1\\game.log\" -cut=C:/Users/kazda/kiro/thirdjam/tools/qa/cartridges/hockey.regular.qa.json -dpcvars=jam.ScriptHuman=1 -ExecCmds=\"jam.ScriptHuman 1\"","lane":"A10","pid":27956,"start":"2026-11-12T11:23:37.1943255+01:00"}

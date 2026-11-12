@@ -1,0 +1,1 @@
+﻿A10 feel QA, reverse-stick stop at 7.3 m/s: 0.68 s, 3.4 m along, 2.2 m sideways drift from the camera-relative stick; the lean reads as skating; the far-net marker clamps to the edge (13 m)

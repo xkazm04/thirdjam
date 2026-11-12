@@ -108,3 +108,10 @@ None.
 1. `pickup_spawn` / `pickup_take` do not say which kind; proposal for v2: add `FName Kind` to the payload (`NAME_None` for other events).
 2. Where `BP_EventFx` lives at runtime: placed in `Rink` (A owns the map) or spawned by the game mode from a class path. Proposal: the game mode spawns it from a soft class path B names here.
 3. `frame` in the log line is the engine frame counter (`GFrameCounter`), not the simulation frame; the skater lane should switch it to the simulation frame once that exists.
+
+## Additions (Director, H6, from R-0007 and lane A12)
+| Event | When | Who | Where | Strength | Kind |
+|---|---|---|---|---|---|
+| `bark` | the bark system picks a line | speaker skater index | speaker | 0 | the situation (`goal_for`, `goal_against`, `check_landed`, `check_received`, `steal`, `stall`, `near_miss`, `faceoff`, `win`, `lose`, `directors_call`, `signal_ack_*`, `praise_reply`) |
+| `signal` | the human issues a team signal (keys 1-4, d-pad, later voice) | the human's skater | human | frames / 600 | `defend` / `space` / `pass` / `praise` |
+The bark text itself travels in the bark system's own side channel, not in the payload. The `TextToSpeech` engine plugin (Flite, offline) is enabled for `jam.BarkVoice 1`.

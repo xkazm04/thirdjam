@@ -8,6 +8,6 @@ public class ThirdJamTarget : TargetRules
 		Type = TargetType.Game;
 		DefaultBuildSettings = BuildSettingsVersion.V8;
 		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_9;
-		ExtraModuleNames.AddRange(new string[] { "JamCore", "JamGame", "JamDesigner" });
+		ExtraModuleNames.AddRange(new string[] { "JamCore", "JamGame", "JamDesigner", "JamNet" });
 	}
 }

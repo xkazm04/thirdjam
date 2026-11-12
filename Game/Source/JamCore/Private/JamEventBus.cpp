@@ -16,12 +16,15 @@ namespace JamEvents
 	const FName Lose(TEXT("lose"));
 	const FName DirectorsCall(TEXT("directors_call"));
 	const FName Period(TEXT("period"));
+	const FName Bark(TEXT("bark"));
+	const FName Signal(TEXT("signal"));
 }
 
 TArray<FName> UJamEventBus::GetKnownEvents()
 {
 	return { JamEvents::Shot, JamEvents::Board, JamEvents::Goal, JamEvents::Faceoff, JamEvents::Check,
-		JamEvents::Knockdown, JamEvents::PickupSpawn, JamEvents::PickupTake, JamEvents::Win, JamEvents::Lose, JamEvents::DirectorsCall, JamEvents::Period };
+		JamEvents::Knockdown, JamEvents::PickupSpawn, JamEvents::PickupTake, JamEvents::Win, JamEvents::Lose, JamEvents::DirectorsCall, JamEvents::Period,
+		JamEvents::Bark, JamEvents::Signal };
 }
 
 bool UJamEventBus::IsKnownEvent(FName Event)

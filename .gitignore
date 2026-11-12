@@ -29,3 +29,8 @@ Game/Packaged/
 .env
 .env.*
 *.key
+
+# NVIDIA DLSS plugin: 1 GB, fetched by tools/dlss/fetch-dlss.ps1, never committed (ledger row in ASSETS.md)
+Game/Plugins/DLSS*/
+Game/Plugins/Streamline*/
+Game/Plugins/NIS*/

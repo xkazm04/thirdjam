@@ -339,7 +339,8 @@ bool FJamFeel::RunTest(const FString& Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamLiveConfig, "Jam.Core.LiveConfig", JamCoreTests::Flags)
 bool FJamLiveConfig::RunTest(const FString& Parameters)
 {
-	UJamCartridge* C = JamCoreTests::LoadPreset(*this, TEXT("hockey.regular"));
+	// R-0010: the 120 x 60 speed-8 rink this test was written for is hockey.arena.large now (regular is 90 x 45 speed 11)
+	UJamCartridge* C = JamCoreTests::LoadPreset(*this, TEXT("hockey.arena.large"));
 	if (!C) return false;
 	UJamSim* Sim = JamCoreTests::MakeSim(C->Game, 1);
 	TArray<FJamInput> In;

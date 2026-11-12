@@ -26,6 +26,15 @@
 			]
 		},
 		{
+			"Name": "JamNet",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"JamCore",
+				"JamGame"
+			]
+		},
+		{
 			"Name": "JamEditor",
 			"Type": "Editor",
 			"LoadingPhase": "Default"
@@ -53,6 +62,18 @@
 		{
 			"Name": "JamAssets",
 			"Enabled": true
+		},
+		{
+			"Name": "TextToSpeech",
+			"Enabled": true
+		},
+		{
+			"Name": "DLSS",
+			"Enabled": true,
+			"Optional": true,
+			"PlatformAllowList": [
+				"Win64"
+			]
 		}
 	]
 }

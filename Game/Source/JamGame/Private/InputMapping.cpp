@@ -52,6 +52,7 @@ void UJamInputMap::Build()
 	Shoot = MakeAction(this, TEXT("IA_Shoot"), EInputActionValueType::Boolean);
 	Check = MakeAction(this, TEXT("IA_Check"), EInputActionValueType::Boolean);
 	Restart = MakeAction(this, TEXT("IA_Restart"), EInputActionValueType::Boolean);
+	Brake = MakeAction(this, TEXT("IA_Brake"), EInputActionValueType::Boolean);
 	Pause = MakeAction(this, TEXT("IA_Pause"), EInputActionValueType::Boolean);
 	Context = NewObject<UInputMappingContext>(this, TEXT("IMC_Hokej"));
 
@@ -76,6 +77,10 @@ void UJamInputMap::Build()
 	Context->MapKey(Shoot, EKeys::Gamepad_FaceButton_Bottom);   // A
 	Context->MapKey(Check, EKeys::LeftShift);
 	Context->MapKey(Check, EKeys::Gamepad_FaceButton_Right);    // B
+	Context->MapKey(Brake, EKeys::LeftControl);
+	Context->MapKey(Brake, EKeys::Gamepad_LeftTriggerAxis);  // left trigger (analog key, pressed past the default threshold)
+	Context->MapKey(Brake, EKeys::LeftControl);
+	Context->MapKey(Brake, EKeys::Gamepad_LeftTriggerAxis);  // left trigger (analog key, actuation threshold 0.5)
 	Context->MapKey(Restart, EKeys::R);
 	Context->MapKey(Restart, EKeys::Gamepad_Special_Left);      // Back / View
 	Context->MapKey(Pause, EKeys::Escape);
@@ -163,6 +168,8 @@ void UJamPlayerInput::TryBind()
 	EIC->BindAction(M->Shoot, ETriggerEvent::Completed, this, &UJamPlayerInput::OnShootDone);
 	EIC->BindAction(M->Check, ETriggerEvent::Started, this, &UJamPlayerInput::OnCheckStarted);
 	EIC->BindAction(M->Check, ETriggerEvent::Completed, this, &UJamPlayerInput::OnCheckDone);
+	EIC->BindAction(M->Brake, ETriggerEvent::Started, this, &UJamPlayerInput::OnBrakeStarted);
+	EIC->BindAction(M->Brake, ETriggerEvent::Completed, this, &UJamPlayerInput::OnBrakeDone);
 	EIC->BindAction(M->Restart, ETriggerEvent::Started, this, &UJamPlayerInput::OnRestartStarted);
 	EIC->BindAction(M->Pause, ETriggerEvent::Started, this, &UJamPlayerInput::OnPauseStarted);
 	BoundPC = PC;

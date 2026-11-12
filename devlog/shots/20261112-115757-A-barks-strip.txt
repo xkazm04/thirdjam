@@ -1,0 +1,1 @@
+﻿Lane A12: teammate praise after the human's goal (goal_for) in the HUD strip; the speaker is behind the camera so no bubble.
