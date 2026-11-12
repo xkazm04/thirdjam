@@ -1,0 +1,1 @@
+SKF sixth pass p3_clay at 8 m: old, new with fuzz, new without fuzz.

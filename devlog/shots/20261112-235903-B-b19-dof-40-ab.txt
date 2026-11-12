@@ -1,0 +1,1 @@
+B19 40 m: old depth of field (11 m f/3.2 + depth blur, top) against 16 m f/4 no depth blur (bottom)
