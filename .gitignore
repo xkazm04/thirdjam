@@ -37,3 +37,4 @@ Game/Plugins/NIS*/
 
 # lane outputs that are binaries
 tools/tournament/out/*.exe
+.claude/worktrees/

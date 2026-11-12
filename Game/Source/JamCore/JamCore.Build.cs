@@ -5,6 +5,7 @@ public class JamCore : ModuleRules
 	public JamCore(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+		bUseUnity = false; // R-0022: every file compiles alone, as in a clean checkout (anonymous-namespace helpers collided in unity blobs)
 		// Lane A2's bot brain headers (UJamBrain, JamAI::*) are reached by the game mode in JamGame.
 		PublicIncludePaths.Add(System.IO.Path.Combine(ModuleDirectory, "AI"));
 		// Lane A14 (C-0005): the effect system and the pickup actor live in Effects/ (UJamEffectSystem, AJamPickupActor).

@@ -5,6 +5,7 @@ public class JamGame : ModuleRules
 	public JamGame(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+		bUseUnity = false; // R-0022: every file compiles alone, as in a clean checkout (anonymous-namespace helpers collided in unity blobs)
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "JamCore", "UMG", "Slate", "SlateCore", "Niagara", "NiagaraCore", "ProceduralMeshComponent", "JamDesigner" });
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 
