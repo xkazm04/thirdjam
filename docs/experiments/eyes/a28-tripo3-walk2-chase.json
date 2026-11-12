@@ -1,0 +1,78 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "figure",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T17:27:23.176Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "figure",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": "devlog/shots/20261112-182525-A-a28-tripo3-walk2-chase.png",
+          "width": 2560,
+          "height": 740
+        }
+      ],
+      "thumbnails": [
+        "A: 128x37"
+      ],
+      "prompt_chars": 2704,
+      "usage": {
+        "prompt": 2992,
+        "output": 456,
+        "thoughts": 2235,
+        "total": 5683,
+        "calls": 1
+      },
+      "cost_usd_est": 0.03828,
+      "ms": 22968,
+      "retried": false,
+      "answer": {
+        "hockey_player": {
+          "full": 2,
+          "small": 1,
+          "parts": {
+            "stick": true,
+            "blade": true,
+            "hands": true,
+            "skates": true,
+            "helmet": true
+          },
+          "evidence": "The figure possesses the necessary equipment like a stick, helmet, and skates, but the rigid T-pose with the stick dangling vertically completely breaks the illusion of a hockey player."
+        },
+        "toy": {
+          "full": 4,
+          "small": 3,
+          "evidence": "The oversized head, thick cylindrical limbs, and blocky extremities strongly suggest a plastic toy figure, though the dark colors muddy the read at a distance."
+        },
+        "best_row": "All rows display the same flawed T-pose walk cycle, making none particularly better for reading as a hockey player.",
+        "proportions": {
+          "head_of_height": 0.35,
+          "shoulder_of_height": 0.5,
+          "stick_of_height": 0.85
+        },
+        "changes": [
+          "pose -> change from T-pose to a forward-leaning hockey stance",
+          "arms -> bend elbows and bring hands together to grip the stick with both hands",
+          "stick -> angle the stick diagonally across the body with the blade on the ice",
+          "colors -> lighten the deep blue jersey to improve visibility against dark backgrounds at small scales"
+        ],
+        "worst": [
+          "The T-pose with outstretched arms prevents any read of hockey action.",
+          "The stick is held in a single hand pointing straight down, looking like a crutch.",
+          "The dark blue jersey blends into the shadows and background when downscaled."
+        ],
+        "works": [
+          "The chunky, exaggerated proportions effectively communicate the toy concept.",
+          "The bright orange accents on the skates and blade draw the eye and contrast well.",
+          "The simple, rounded geometry of the helmet and body fits the arcade style."
+        ]
+      },
+      "markdown": "**eyes/figure** A=20261112-182525-A-a28-tripo3-walk2-chase.png (gemini-3.1-pro-preview, in 2992 out 456 think 2235 tokens, ~$0.0383, 23 s)\n- hockey_player:\n  - full: 2\n  - small: 1\n  - parts:\n    - stick: true\n    - blade: true\n    - hands: true\n    - skates: true\n    - helmet: true\n  - evidence: The figure possesses the necessary equipment like a stick, helmet, and skates, but the rigid T-pose with the stick dangling vertically completely breaks the illusion of a hockey player.\n- toy:\n  - full: 4\n  - small: 3\n  - evidence: The oversized head, thick cylindrical limbs, and blocky extremities strongly suggest a plastic toy figure, though the dark colors muddy the read at a distance.\n- best_row: All rows display the same flawed T-pose walk cycle, making none particularly better for reading as a hockey player.\n- proportions:\n  - head_of_height: 0.35\n  - shoulder_of_height: 0.5\n  - stick_of_height: 0.85\n- changes: pose -> change from T-pose to a forward-leaning hockey stance; arms -> bend elbows and bring hands together to grip the stick with both hands; stick -> angle the stick diagonally across the body with the blade on the ice; colors -> lighten the deep blue jersey to improve visibility against dark backgrounds at small scales\n- worst: The T-pose with outstretched arms prevents any read of hockey action.; The stick is held in a single hand pointing straight down, looking like a crutch.; The dark blue jersey blends into the shadows and background when downscaled.\n- works: The chunky, exaggerated proportions effectively communicate the toy concept.; The bright orange accents on the skates and blade draw the eye and contrast well.; The simple, rounded geometry of the helmet and body fits the arcade style."
+    }
+  ]
+}

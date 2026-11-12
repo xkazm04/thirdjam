@@ -95,8 +95,20 @@ for a in eas.get_all_level_actors():
     if a.get_actor_label() == 'P4_Sky' and a.light_component.get_editor_property('real_time_capture'):
         a.light_component.set_editor_property('real_time_capture', False)   # no SkyAtmosphere in the proof level: real-time capture prints a red warning across the frame
         added.append('sky capture off')
-    if a.get_actor_label() == 'P4_Floor' and a.static_mesh_component.get_material(0).get_name() != 'BasicShapeMaterial':
-        a.static_mesh_component.set_material(0, unreal.load_asset('/Engine/BasicShapes/BasicShapeMaterial'))
+    if a.get_actor_label() == 'P4_Floor' and a.static_mesh_component.get_material(0).get_name() != 'M_P4_ProofFloor':
+        # an unlit mid-grey floor so the strips read (pass 3): made once with the material editing library
+        mp = '/Game/P4/Anim/Proof/M_P4_ProofFloor'
+        if not lib.does_asset_exist(mp):
+            at = unreal.AssetToolsHelpers.get_asset_tools()
+            m = at.create_asset('M_P4_ProofFloor', '/Game/P4/Anim/Proof', unreal.Material, unreal.MaterialFactoryNew())
+            m.set_editor_property('shading_model', unreal.MaterialShadingModel.MSM_UNLIT)
+            mel = unreal.MaterialEditingLibrary
+            c = mel.create_material_expression(m, unreal.MaterialExpressionConstant3Vector, -300, 0)
+            c.set_editor_property('constant', unreal.LinearColor(0.35, 0.36, 0.38, 1.0))
+            mel.connect_material_property(c, '', unreal.MaterialProperty.MP_EMISSIVE_COLOR)
+            mel.recompile_material(m)
+            lib.save_asset(mp, only_if_is_dirty=False)
+        a.static_mesh_component.set_material(0, lib.load_asset(mp))
         added.append('floor material')
 if added:
     les.save_current_level()   # never leave the level dirty: a force-stopped editor then shows a modal "Restore Packages" dialog on the next start, which blocks every MCP tool

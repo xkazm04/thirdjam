@@ -203,16 +203,18 @@ if not lib.does_asset_exist(RTG):
     rc.assign_ik_rig_to_all_ops(S, src_rig); rc.assign_ik_rig_to_all_ops(T, tgt_rig)
     rc.auto_map_chains(unreal.AutoMapChainType.EXACT, True)
     rc.auto_align_all_bones(S); rc.auto_align_all_bones(T)
-    # Root-locked op stack (Director, pass 2, 18:14): only FK Chains and Remap Curves stay on. The Pelvis Motion op scaled the source pelvis translation by
-    # the pelvis-height ratio of a skeleton whose armature node carries scale 100 in the animation (pelvis at 80 m), the Root Motion op moved the Meshy rig's
-    # pelvis (its root) the same way, and Run IK Rig placed goals from those positions. The sim owns displacement anyway; the cost is no pelvis bob and no
-    # pelvis tilt or drop in the falls (docs/experiments/P4-MOTION.md section 8).
-    for i in range(rc.get_num_retarget_ops()):
-        t = str(rc.get_op_type_by_name(rc.get_op_name(i)))
-        if "PelvisMotion" in t or "RunIKRig" in t or "RootMotion" in t:
-            rc.set_retarget_op_enabled(i, False)
     lib.save_asset(RTG, only_if_is_dirty=False)
 rtg = lib.load_asset(RTG)
+# op policy, applied on every run (pass 3): Pelvis Motion ON (the source is normalized by clip.py --normalize: bones in cm, rest skeleton on the ground),
+# Root Motion OFF (the sim owns displacement; clip.py strips the pelvis X/Y travel and keeps Z), Run IK Rig OFF (FK only for now).
+rc = unreal.IKRetargeterController.get_controller(rtg)
+ops = []
+for i in range(rc.get_num_retarget_ops()):
+    t = str(rc.get_op_type_by_name(rc.get_op_name(i)))
+    rc.set_retarget_op_enabled(i, not ("RunIKRig" in t or "RootMotion" in t))
+    ops.append([str(rc.get_op_name(i)), rc.get_retarget_op_enabled(i)])
+out["retarget_ops"] = ops
+lib.save_asset(RTG, only_if_is_dirty=False)
 out["retargeter"] = RTG
 
 # 5. retarget the clip
@@ -233,6 +235,12 @@ if lib.does_asset_exist(OUT):
     except Exception as e:
         out["out_frames_err"] = str(e)[:80]
     out["out_skeleton"] = str(o.get_editor_property("skeleton").get_path_name())
+    try:
+        L = unreal.AnimationLibrary.get_sequence_length(o)
+        zs = [round(unreal.AnimationLibrary.get_bone_pose_for_time(o, "pelvis", min(k * L / 24.0, L), False).translation.z, 1) for k in range(25)]
+        out["out_pelvis_z_cm"] = {"t0": zs[0], "min": min(zs), "max": max(zs), "end": zs[-1]}
+    except Exception as e:
+        out["out_pelvis_err"] = str(e)[:80]
     # moving? sample thigh_l over time
     try:
         ps = [unreal.AnimationLibrary.get_bone_pose_for_time(o, "thigh_l", t, False).rotation.euler() for t in (0.0, 0.5, 1.0)]
