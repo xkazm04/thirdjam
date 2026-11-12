@@ -151,3 +151,33 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - packaged build age: none yet on B
 - packaged size: none yet
 - ledger: 22 material rows, `LR_L2_Night` row updated
+
+## H5.1 Two editors, seven builders: the skater lab is open
+
+- done: lane B2 pass 1 reported and is pushed (`775457b`): the night rig now carries 289 `Dress_L2_Night_*` actors of engine basic shapes (truss and lamp
+  heads, eight film lights, slate, director's chair, crane, dolly track, cases, benches, exit signs), 48.8k triangles, about +0.3 ms on B, everything
+  outside the 140 x 70 m footprint; six `MI_Dress_*` instances under `Arena/`; three stills. Doors in the boards not built (the boards are A's). Merged `main`
+  at `7b22c39` (R-0002: all five handoffs answered; the .NET fix is in `tools/run`). Ownership and assets gates PASS at the push. Operator added
+  `RODIN_API_KEY`; a Rodin client was written outside the repo (`C:\Users\kazda\jam\rodin-tools\rodin.mjs`; balance 421 credits; only `balance` has run for real).
+- operator decision at 10:55: **two editors**, more builders without an editor, to test skater approaches against the plan's baseline; lower priority, a
+  plan for a higher visual tier tomorrow. The main-tree editor was closed at 10:57 through `EditorToolset.EditorAppToolset.ExitEditor` (clean, port free at once).
+- lanes now:
+
+  | Lane | Editor | Model | Reports by |
+  |---|---|---|---|
+  | B3 puck kit, M1 effects and MetaSounds, plus `directors_call` | port 8001 | Opus | 14:30 |
+  | B5 Meshy skater figure 1: import, material, sockets, AnimBP | port 8002 | Sonnet | 14:45 |
+  | S1 three more figure styles in Meshy (mascot, lean athlete, wooden toy) | none | Sonnet | 12:30 |
+  | S2 motion clips: nine needs, text-to-motion against library presets, loop seams | none | Sonnet | 12:45 |
+  | S3 Rodin mesh, Meshy rig and clip: does the Hyper3D route work | none | Sonnet | 12:30 |
+  | S4 Blender-scripted original articulated skater with scripted looping clips | none | Opus | 13:15 |
+  | V1 plan for tomorrow's visual upgrade, with ready-to-run test scripts | none | Opus | 12:45 |
+
+  Shared brief and rubric: `briefs/B-skater-lab.md`. Lab output lives in `C:\Users\kazda\jam\skater-lab\`; reports come to `status/B-skater-<lane>.md`.
+- next: rank the lab candidates when they report; queue the best one or two for import on port 8002 after B5; lighting pass on the rig once A's rink is in.
+- blocked: none. Open: B-to-A-0006 (how the builder cap counts lanes without an editor).
+- lfs size: under 1 MB from B (31 files)
+- engine build: 5.9.0 CL 60351404
+- packaged build age: none yet on B
+- packaged size: none yet
+- ledger: 6 `MI_Dress_*` rows; `LR_L2_Night` row now 0.6 MB
