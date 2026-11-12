@@ -124,7 +124,7 @@ bool UJamProgression::ParseLadder(const FString& Text, FJamLadder& Out, TArray<F
 				const FString P = FJ::PointerChild(TEXT("/ladder/takes"), i);
 				const FJPtr E = T->Array[i];
 				if (!E || !E->IsObject()) { OutErrors.Add(FString::Printf(TEXT("at %s: expected an object."), *P)); continue; }
-				CheckKeys(*E, P, { TEXT("title"), TEXT("cartridge"), TEXT("twist_text"), TEXT("unlock") }, { TEXT("title"), TEXT("cartridge"), TEXT("twist_text"), TEXT("unlock") }, OutErrors);
+				CheckKeys(*E, P, { TEXT("title"), TEXT("cartridge"), TEXT("twist_text"), TEXT("unlock"), TEXT("fallback") }, { TEXT("title"), TEXT("cartridge"), TEXT("twist_text"), TEXT("unlock") }, OutErrors);
 				FJamLadderTake Take;
 				ReadString(*E, P, TEXT("title"), 1, 32, Take.Title, OutErrors);
 				if (ReadString(*E, P, TEXT("cartridge"), 1, 48, Take.Cartridge, OutErrors) && !IsKebab(Take.Cartridge))
@@ -132,6 +132,10 @@ bool UJamProgression::ParseLadder(const FString& Text, FJamLadder& Out, TArray<F
 					OutErrors.Add(FString::Printf(TEXT("at %s/cartridge: must be a preset id (kebab-case)."), *P));
 				}
 				ReadString(*E, P, TEXT("twist_text"), 1, 90, Take.TwistText, OutErrors);
+				if (ReadString(*E, P, TEXT("fallback"), 1, 48, Take.Fallback, OutErrors) && !IsKebab(Take.Fallback))
+				{
+					OutErrors.Add(FString::Printf(TEXT("at %s/fallback: must be a preset id (kebab-case)."), *P));
+				}
 				FString Unlock;
 				if (ReadString(*E, P, TEXT("unlock"), 1, 32, Unlock, OutErrors))
 				{
@@ -142,13 +146,22 @@ bool UJamProgression::ParseLadder(const FString& Text, FJamLadder& Out, TArray<F
 				{
 					OutErrors.Add(TEXT("at /ladder/takes/0/unlock: the first take must unlock \"always\", or the season can never start."));
 				}
-				for (int32 j = 0; j < Out.Takes.Num(); ++j)
+				// Every preset id (cartridge and fallback) belongs to one take only.
+				auto Claim = [&](const FString& Id, const TCHAR* Key, bool bSameTakeToo)
 				{
-					if (!Take.Cartridge.IsEmpty() && Out.Takes[j].Cartridge == Take.Cartridge)
+					if (Id.IsEmpty()) return;
+					for (int32 j = 0; j < Out.Takes.Num(); ++j)
 					{
-						OutErrors.Add(FString::Printf(TEXT("at %s/cartridge: \"%s\" is already take %d; each take is its own cut."), *P, *Take.Cartridge, j + 1));
+						if (Out.Takes[j].Cartridge == Id || Out.Takes[j].Fallback == Id)
+						{
+							OutErrors.Add(FString::Printf(TEXT("at %s/%s: \"%s\" is already used by take %d; each take is its own cut."), *P, Key, *Id, j + 1));
+							return;
+						}
 					}
-				}
+					if (bSameTakeToo && Id == Take.Cartridge) OutErrors.Add(FString::Printf(TEXT("at %s/%s: \"%s\" is already used by take %d; each take is its own cut."), *P, Key, *Id, i + 1));
+				};
+				Claim(Take.Cartridge, TEXT("cartridge"), false);
+				Claim(Take.Fallback, TEXT("fallback"), true);
 				Out.Takes.Add(Take);
 			}
 		}
@@ -349,16 +362,32 @@ FJamSeasonState UJamProgression::GetSeasonState() const
 	return S;
 }
 
-FString UJamProgression::TakePath(int32 Index) const
+FString UJamProgression::TakeFilePath(int32 Index, bool bFallback) const
 {
 	if (!Ladder.Takes.IsValidIndex(Index)) return FString();
+	const FString& Id = bFallback ? Ladder.Takes[Index].Fallback : Ladder.Takes[Index].Cartridge;
+	if (Id.IsEmpty()) return FString();
 	const FString LP = LadderPath.IsEmpty() ? DefaultLadderPath() : LadderPath;
-	return FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::GetPath(LP), Ladder.Takes[Index].Cartridge + TEXT(".cartridge.json")));
+	return FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::GetPath(LP), Id + TEXT(".cartridge.json")));
+}
+
+FString UJamProgression::TakePath(int32 Index, bool* bOutFallback) const
+{
+	if (bOutFallback) *bOutFallback = false;
+	const FString Designed = TakeFilePath(Index, false);
+	if (Designed.IsEmpty() || Ladder.Takes[Index].Fallback.IsEmpty()) return Designed;
+	// R-0014: the designed cut plays when the loader accepts it; otherwise the fallback.
+	TArray<FString> Errors;
+	if (UJamCartridge::LoadFromFile(Designed, Errors, GetTransientPackage())) return Designed;
+	UE_LOG(LogJamProgression, Log, TEXT("JAMSEASON take %d plays its fallback %s: %s"), Index + 1, *Ladder.Takes[Index].Fallback, Errors.Num() ? *Errors[0] : TEXT("rejected"));
+	if (bOutFallback) *bOutFallback = true;
+	return TakeFilePath(Index, true);
 }
 
 void UJamProgression::BeginTake(int32 Index)
 {
 	ActiveTake = Ladder.Takes.IsValidIndex(Index) ? Index : -1;
+	ActivePath = ActiveTake >= 0 ? TakePath(ActiveTake) : FString();
 	LastResult = EJamTakeResult::None;
 }
 
@@ -370,8 +399,8 @@ bool UJamProgression::StartTake(UObject* WorldContext, int32 Index)
 		return false;
 	}
 	BeginTake(Index);
-	UE_LOG(LogJamProgression, Log, TEXT("JAMSEASON start take %d of %d: %s (%s)"), Index + 1, Ladder.Takes.Num(), *Ladder.Takes[Index].Title, *Ladder.Takes[Index].Cartridge);
-	UJamMenuFlow::StartMatch(WorldContext, TakePath(Index));
+	UE_LOG(LogJamProgression, Log, TEXT("JAMSEASON start take %d of %d: %s (%s)"), Index + 1, Ladder.Takes.Num(), *Ladder.Takes[Index].Title, *FPaths::GetCleanFilename(ActivePath));
+	UJamMenuFlow::StartMatch(WorldContext, ActivePath);
 	return true;
 }
 
@@ -385,12 +414,13 @@ void UJamProgression::EndSeasonRun()
 {
 	if (ActiveTake >= 0) UE_LOG(LogJamProgression, Log, TEXT("JAMSEASON season run ends at take %d"), ActiveTake + 1);
 	ActiveTake = -1;
+	ActivePath.Reset();
 	LastResult = EJamTakeResult::None;
 }
 
 bool UJamProgression::IsSeasonMatch(const FString& CartridgePath) const
 {
-	return ActiveTake >= 0 && !CartridgePath.IsEmpty() && FPaths::IsSamePath(FPaths::ConvertRelativePathToFull(CartridgePath), TakePath(ActiveTake));
+	return ActiveTake >= 0 && !CartridgePath.IsEmpty() && !ActivePath.IsEmpty() && FPaths::IsSamePath(FPaths::ConvertRelativePathToFull(CartridgePath), ActivePath);
 }
 
 void UJamProgression::RecordResult(const FString& CartridgePath, bool bWon)
