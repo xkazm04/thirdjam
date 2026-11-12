@@ -8,6 +8,7 @@ skaters**), and the operator's verdicts through device A at 14:40 (R-0021, `hand
 | Lane | What | Editor | Started | Due | Report (when done) |
 |---|---|---|---|---|---|
 | SKF3 | Aim grid in Blender (5 angles x 3 reaches, blade on the ice in the blends), the broadcast figure's arms off the number and on the shaft, stride pelvis height; then a fourth retarget and an engine lane on port 8002 | none | 17:10 | 18:10 | `status/B-skater-skf.md` (third pass) |
+| AUD | The operator's eleven effects and the music loop wired into the event sounds (film-set sounds held for the menu: hockey first); `MS_shot_blocked`; the commentator bank as 340 sound waves with its table | port 8002, `wt-vfx` | 17:08 | 18:20 | `status/AUD-report.md` |
 | B14 | Look tiers on the real rink: clay tier pass 2 (clay at game distance, the clay figure, the arena without props in clay), then a first broadcast rig (`LR_P4_Broadcast`: arena light, no cel pass, the broadcast figure) so tomorrow's tier decision has stills of all three | port 8000, main tree | 17:00 | 19:30 | `status/B14-report.md` |
 
 ## Waiting for the operator's ears or eyes (pages on device B)
@@ -26,7 +27,6 @@ skaters**), and the operator's verdicts through device A at 14:40 (R-0021, `hand
 | Lane | What | Waits for |
 |---|---|---|
 | P2b | Atmosphere: haze and faded shafts (lighting, may proceed by R-0021); the backdrop flats wait with the props | the operator's veto window (21:00); lane B13 prepares the stills |
-| AUD | Import of the operator's picks (`status/B-audio-picks.md`) as `SFX_*` / `MUS_*`; MetaSounds layered or swapped; the rebuilt `MS_faceoff`; the commentary bank as sound waves with its manifest | the operator's confirmation on the ready page; lane VOX2; an editor slot |
 
 ## Done today (newest first; every one has a report under `status/`)
 
