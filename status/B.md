@@ -370,3 +370,11 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
   broadcast figures; AU2 generates crowd reactions; B19 rebuilds the clay tier against `prep-reference/images/path-p3-*` (B's clay tier is a cream tabletop; the
   concept is a dark arena with warm lamps, glossy scratched ice and felt figures); B20 is a P4 lab, not a tier. The goalie kit stays in Blender.
 - The night sky variant was not answered: the star dome with the snow ground stays.
+
+## H17.9 (23:57) the operator on P4, 23:55
+- "From P4 try to chase only the skater with ice surface to see over night how close we can get to the art concept. Based on the experiment and achievements we will
+  decide in the morning whether worthy to chase, or we go full focus on P3 and its perfecting for next two days."
+- So overnight on B: lane B20 (port 8002) is narrowed to the ice surface and the skater on it; lane SKP4 (Blender and the services) chases the P4 skater's mesh and
+  texture with other generators and settings; lane B19 (port 8000) rebuilds the clay tier against `path-p3-t3`. In the morning: `status/B20-report.md`,
+  `status/B-skater-p4-figure.md`, `status/B19-report.md`, each with stills and an honest distance to its concept. The decision between P4 and a full P3 focus is the
+  operator's.

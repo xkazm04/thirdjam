@@ -1,6 +1,6 @@
 # Device B lane board (the lead rewrites this file whenever a lane starts or reports)
 
-Updated 2026-11-12 23:35 CET (H17.6).
+Updated 2026-11-12 23:57 CET (H17.9).
 
 ## Running
 
@@ -8,7 +8,8 @@ Updated 2026-11-12 23:35 CET (H17.6).
 |---|---|---|---|---|---|
 | B19 | **Clay tier pass 3 against the P3 concept** (the barn with string lights, `path-p3-t3`): glossy scratched ice with reflections, a dark warm barn with strings of bulbs and lamp keys, painted clay boards with a yellow kick strip and red rail, zones and pickups glowing on the ice, the felt figures under that light; the cream tabletop goes; the T2 and T1 settings as variant stills | port 8000, main tree | 23:10 | 02:10 | `status/B19-checkpoint.md`, `status/B19-report.md` |
 | SKF6 | Blender, the scripted clay figure: cream sleeve, sock, hem and collar bands, stitches resized to read at the game camera (4.0 x 1.4 cm), felt as fine displacement and a sparse fuzz shell, vertex colours for felt amount and occlusion, a wrapped stick blade | none | 23:35 | 00:35 | `status/B-skater-skf.md` (sixth pass) |
-| B20 | **P4 lab** (not a shipped tier; `path-p4-*` as the target): a dark arena with volumetric spot beams, reflective scratched ice, LED rails on the boards and glass, a filmic grade, striped jerseys; lab materials of its own applied in PIE, each technique as a before and after with its expected cost | port 8002, `wt-vfx` | 23:25 | 02:25 | `status/B20-checkpoint.md`, `status/B20-report.md` |
+| B20 | **P4 lab, narrowed by the operator at 23:55 to the skater and the ice surface**: the ice in depth (body, three scales of scratches, wet sheen, reflections of lamps and skater, snow spray) and the skater on it (the `P4D` figure with a striped jersey, sock bands, glove and helmet materials); stills at the concept's own framing; a judgement of how close and what is left | port 8002, `wt-vfx` | 23:25 | 03:00 | `status/B20-checkpoint.md`, `status/B20-report.md` |
+| SKP4 | P4 skater meshes by other techniques, overnight: natural proportions with stripes in the concept sheet, Rodin's higher settings and PBR textures, Meshy's and Tripo's own generation from the same sheet, stripes and cloth painted on the mesh in Blender, rig and 72 takes on the best; renders at the concept's framing beside the current figures (budget 15 images, 30 Rodin, 150 Meshy credits) | none | 23:57 | 03:30 | `status/B-skater-p4-figure.md` |
 
 ## Waiting for the operator's ears or eyes (pages on device B)
 
