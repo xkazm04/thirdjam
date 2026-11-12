@@ -37,9 +37,10 @@ bool UJamEventBus::Broadcast(FName Event, const FJamEventPayload& Payload)
 	++BroadcastCount;
 	if (bLogEvents)
 	{
-		UE_LOG(LogJamEvents, Log, TEXT("JAMEVENT %s who=%d where=(%.1f,%.1f,%.1f) strength=%.3f frame=%llu"),
+		UE_LOG(LogJamEvents, Log, TEXT("JAMEVENT %s who=%d where=(%.1f,%.1f,%.1f) strength=%.3f frame=%llu kind=%s"),
 			*Event.ToString(), Payload.Who, Payload.Where.X, Payload.Where.Y, Payload.Where.Z, Payload.Strength,
-			static_cast<unsigned long long>(GFrameCounter));
+			static_cast<unsigned long long>(SimFrame >= 0 ? static_cast<uint64>(SimFrame) : GFrameCounter),
+			Payload.Kind.IsNone() ? TEXT("none") : *Payload.Kind.ToString());
 	}
 	OnJamEvent.Broadcast(Event, Payload);
 	return true;
