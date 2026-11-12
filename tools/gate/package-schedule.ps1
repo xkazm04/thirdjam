@@ -101,12 +101,14 @@ function Invoke-Round([int]$Hour) {
 
     # Keep the last three zips; the new one moves out of the staging folder.
     $zipSrc = Join-Path $stage ($zipName + '.zip')
+    $sha = 'n/a'; $zipBytes = 'n/a'
+    if (Test-Path $zipSrc) { $sha = (Get-FileHash -Path $zipSrc -Algorithm SHA256).Hash.ToLower(); $zipBytes = (Get-Item $zipSrc).Length }
     if ($code -eq 0 -and (Test-Path $zipSrc)) { Move-Item -Path $zipSrc -Destination (Join-Path $OutRoot ($zipName + '.zip')) -Force }
     $zips = @(Get-ChildItem -Path $OutRoot -Filter ($Name + '_H*.zip') -File | Sort-Object LastWriteTime -Descending)
     for ($i = $Keep; $i -lt $zips.Count; $i++) { Remove-Item $zips[$i].FullName -Force; Write-Host "INFO removed old zip $($zips[$i].Name)" }
     if (Test-Path $stage) { Remove-Item $stage -Recurse -Force -ErrorAction SilentlyContinue }
 
-    $lines = @("## H$Hour package", "- config: Shipping, $zipName.zip, verdict $verdict", "- staged_mb: $stagedMB", "- zip_mb: $zipMB", "- cook_s: $cookS (whole package $totalS s)", "- run: $runNote")
+    $lines = @("## H$Hour package", "- config: Shipping, $zipName.zip, verdict $verdict", "- staged_mb: $stagedMB", "- zip_mb: $zipMB ($zipBytes bytes)", "- zip_sha256: $sha", "- cook_s: $cookS (whole package $totalS s)", "- run: $runNote")
     if ($json -and $json.PSObject.Properties['largest']) {
         $top = @($json.largest | Select-Object -First 5 | ForEach-Object { '{0} {1} MB' -f ($_.path -replace '\\$', ''), $_.mb })
         $lines += ('- largest: ' + ($top -join '; '))

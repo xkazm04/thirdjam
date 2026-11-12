@@ -55,3 +55,12 @@
 - running: A3 sweep + presets, A8 menu tour, A11 DLSS 5.9 rebuild, A12 barks; B: B2 dressing pass 2, B3 effects, B5 Meshy skater, handoff 0003 (GPU hang) open.
 - blocked: nothing on A. Risk: the shipped night rig hangs the GPU until B answers 0003; L1 day is the fallback tier.
 - machine: NvRTX 5.8 built (276 GB), idle; editors on A observe link windows at :00 and :30.
+
+## H6 package
+- config: Shipping, Hokej_Hokej_H6.zip, verdict pass
+- staged_mb: 548
+- zip_mb: 376.2 (394472063 bytes)
+- zip_sha256: 39b92e1986085954215b0fc9df6cc29924e6ff9839b426429643e23b40cf3b4b
+- cook_s: 13.39 (whole package 44.2 s)
+- run: stayed up 10 s
+- largest: ThirdJam 489.3 MB; ThirdJam\Content\Paks 233.7 MB; ThirdJam\Content 233.7 MB; ThirdJam\Content\Paks\ThirdJam-Windows.ucas 218.9 MB; ThirdJam\Binaries 199.4 MB
