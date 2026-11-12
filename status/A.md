@@ -206,3 +206,9 @@
 - link green 23:09: main 4c60b6f (A46 passing, A42b HUD fixes) pushed.
 
 - RESOURCES 23:26 cpu 18% ram 23/63GB gpu 23 %, 3006 MiB, 46 editors 0 cmd 0 ubt 0 free 555GB
+
+- link green 23:30: main d96ac1d (A47 QA1 fixes, handoff 0012) pushed.
+
+## H13.1 (23:32) main d96ac1d: QA1's ten faults fixed, gate 92/92; controls lane A49 proving in a package
+- Since H12.7: 54a4b43 Designer pass 2 (A44); 0dae80f H17 storyboard (A48; logging on in Shipping); 4c60b6f passes reach the human (A46) + HUD fixes (A42b); d96ac1d QA1 fixes (A47: motion blur off, plain banner, CALL READY, commentary cut floor and must-play goal calls, bank when-conditions, boost on l2_night, no ghost figures, own-goal colour, pro bots charge; binder round 3). R-0032: the operator's H18 playtest (unplayable: mouse not on the stick, stick blinking, camera, tackles not taking the puck): lane A49 owns the control path; H19 follows its proof.
+- B: A-to-B-0012: C-0001 v4 is on branch `lane/a45` (push in progress); move your four figure events onto the interface, then one merge lands both. 0029-0031 answered and done in A47.
