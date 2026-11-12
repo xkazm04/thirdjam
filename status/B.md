@@ -205,3 +205,29 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - packaged build age: none yet on B (A's Shipping baseline: 322.5 MB zip)
 - packaged size: none yet on B
 - ledger: 30 rows from lane B3
+
+## H6.6 Both skater visuals in the engine; look fixed on the real rink; props in
+
+- done since H5.3 (all pushed; `dev-b` at `3291d19`; ownership gate PASS; ledger 132 rows, art 17.3 MB of 350, audio 1.8 MB):
+  - **Look on the real rink** (B1b, `status/B1b-report.md`): ice between the pools 1 -> 47 of 255 through `IceAmbient` in `M_Ice`, pools unchanged; blue-line
+    blotch fixed; net mesh darkened; `PPV_L2_Night` on screen-space reflections (lighting pass about 8 -> 1.3 ms on B, unconfirmed, two editors up); handoff 0005
+    accepted on A's meshes. Handoff **0009** lists five look defects on A's side (skater Emissive reset, two sky lights, coplanar floors, puck size, line positions).
+  - **Dressing pass 2** (B2b): seven Hyper3D Rodin props imported base-colour-only at 1K with Nanite; 188.7k triangles of dressing; blue lines at a third of the half-length.
+  - **Skater lab closed out**: S4 a Blender-scripted original skater with 16 exact-looping clips; S5 the same clips retargeted onto the Rodin mesh ("the hybrid");
+    S6 the Rodin texture cleaned of lace-like marks. **T-B2 is now the hybrid** and **T-B1 the scripted original**, both behind `IJamSkaterVisual` with the same AnimBP
+    structure (idle, glide-to-stride by speed, leans and crossovers by turn rate, slap shot and check montages, falls both ways with their get-ups), verified in PIE
+    with stills (`devlog/shots/*-B-tb1-*`, `*-B-tb2h-*`). Finding for anyone exporting FBX: Unreal 5.9's importer rejects files rewritten by the labs' track-strip
+    step; the step is disabled in both lab scripts.
+  - Handoffs open: 0007 (wiring effects, sounds, puck kit), 0008 (T-B1 redefined; who reads `game.skater.visual`), 0009. None answered yet (A's last merge was 11:05).
+- lanes now (two editors): B2c stage light on the real rig plus plan test 2 on scratch (port 8000, 13:15); B6s skater polish (mitt colour key, one boot mark)
+  and a **real-match preview**: both visuals attached to A's pawns in PIE from Python, stills and a short clip (port 8002, 13:50).
+- next: merge `main` (A is at `4043884`: DLSS plugin, barks) when the main editor is free, rebuild; first package on B; plan tests 2 and 3 results into
+  `briefs/B7-visual-upgrade-plan.md`; the 15:00 merge window.
+- blocked: the promotion rule for either skater track waits for A to consume `game.skater.visual` (0008). Operator: Hyper3D licence wording for shipping Rodin
+  output (T-B2's mesh and seven props depend on it; T-B1 and the basic-shape dressing do not); `C:\r` (eight stray PNGs from a lab lane) to delete by hand.
+- credits: Meshy 806 at 11:20 (lab spent about 400 of the 1204), Rodin 415 of 421.
+- lfs size: about 30 MB from B
+- engine build: 5.9.0 CL 60351404
+- packaged build age: none yet on B
+- packaged size: none yet on B
+- ledger: reconciled with disk at `3291d19` (T-B2 rows replaced by the hybrid's, T-B1 rows `shipped` n until the ruling)
