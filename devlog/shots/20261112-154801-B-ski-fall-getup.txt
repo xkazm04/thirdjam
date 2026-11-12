@@ -1,0 +1,1 @@
+SKI: 0.6 s after SetKnockedDown(false): GetUp / GetUp_Front, same five figures and order as ski-fall-down

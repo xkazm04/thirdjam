@@ -1,0 +1,1 @@
+SKI: Goalie_Hold played as a DefaultSlot dynamic montage (not wired in the AnimBP), front, LR_L2_Night. Left to right: P3A orange (cut), P3A blue, P4B orange, P4B blue (cut)

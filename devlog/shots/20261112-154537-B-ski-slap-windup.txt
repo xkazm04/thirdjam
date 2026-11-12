@@ -1,0 +1,1 @@
+SKI: slap shot (PlayShoot montage) frozen at 0.27 s, side view, LR_L2_Night. Left to right: P3A orange (AM_SkaterTB2_P3_Shot_Slap), P4B blue (AM_SkaterTB2_P4_Shot_Slap), existing TB2 blue. P3A skates still had KeyBias 0.15 here (brown-red skates on orange)
