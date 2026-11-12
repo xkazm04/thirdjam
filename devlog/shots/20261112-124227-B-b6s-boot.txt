@@ -1,0 +1,1 @@
+T-B2 boot mark. Left: orange figure with a flat material (no texture): the lace bars are modelled geometry. Right: close-up of the boot with the texture: the 'three dark strokes' are the outlined lace bars, not texture pixels. No texture patch made.
