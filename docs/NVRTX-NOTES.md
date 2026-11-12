@@ -51,3 +51,8 @@ Guardrails:
 - https://developer.nvidia.com/blog/optimize-your-ray-tracing-graphics-with-the-new-nvidia-rtx-branch-of-unreal-engine-5/
 - https://forums.developer.nvidia.com/t/unreal-engine-nvrtx-branch/337739
 - https://forums.developer.nvidia.com/t/official-dlss-5-neural-rendering-plugin-access-for-unreal-engine-5-8-2/382731
+
+## Closed at H10 (2026-11-12 16:15): NvRTX 5.8 cannot open the 5.9 project
+Lane A24 (`docs/experiments/NVRTX-LAB.md`): the C++ builds against 5.8.3 in 86 s, but every 5.9-saved package is refused (custom versions FortniteMain 273 > 268, UE5-Main 127 > 123,
+Niagara 94 > 93, InterchangeAssetImportData 6 > 5); no flag or re-save lowers them. Decision: nothing ships from NvRTX; the NVIDIA track stays DLSS SR + DLAA on 5.9 (R-0006);
+the P4 broadcast look is pursued in 5.9 (Lumen hardware ray tracing, ray-traced ice reflections, DLAA) inside lane A23's look lab. The 276 GB tree stays until the operator deletes it.
