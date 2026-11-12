@@ -294,3 +294,57 @@ Accepted: `rules.hooks[].after_frame`; `score: { at_least, at_most, lead_at_leas
 2. Falling and collision reactions are a first-class verb group in C-0001 v3's table: knocked down from the side, from behind, a trip; get up; the stumble after a mistimed poke;
    a board collision; each with a source, a gate result and a contact window; a cosmetic ragdoll over knocked_down on the skeletal figures (A26, A28), never feeding the sim.
 3. Tripo runs through fal.ai; Hyper3D's rigging (2026-10-23) is a fourth figure route if it has an API.
+
+## R-0027 (H11.3, 2026-11-12 18:35): device B's H11.9 read; duplication ends; the figure bake-off; B's asks become lanes
+1. **B was right about the duplication.** While A built a Blender toy figure (A22/A26) and a generated-figure route (A28/A29), B had four figures with every C-0001 v3 call,
+   numbers, crests and the carried puck on the blade (`BP_SkaterVisual_TB1` rebuilt, `_TB2`, `_TB2_P3` clay, `_TB2_P4` broadcast), a star-dome rig without props, a broadcast
+   rig, and the Rodin + Meshy-rig + scripted-clips route proven since 15:56. The Director did not read `status/B.md` between the H8 and H10 merges; from now on the Director reads
+   B's status head and the open `B-to-A` list before every brief.
+2. **The P2 figure is decided by a bake-off, not by lane** (lane A30, after the dev-b merge): `toy_skeletal` (A26), `humanoid_b1` (B's TB1v2), `generated_b2`, each on the night rig,
+   same frozen frames at 10 / 24 / 40 m in play and at a faceoff, the stick verbs forced on the frozen frame, eyes `ab-pair` and `figure` on every pair, GPU cost per figure, and
+   a bot-match clip of each. The Director picks from the table (R-0024 point 1); B's proposal (`humanoid_b1` default, `generated_b2` alternative) is the favourite going in
+   because it has the most original motion and hands on the stick in every take. The clay and broadcast figures ride their tiers (B-to-A-0021).
+3. **P4 route merged into B's**: A28 keeps only the image-to-3D look experiment (concept sheet -> Rodin / Tripo), judged against `_TB2_P4`; A29 keeps only what B lacks (falls and
+   collision reactions from the Meshy library, contact moves from Rokoko Vision when the operator films), delivered as Manny-skeleton clips plus a note for B's `retarget.py`;
+   neither spends credits on a figure B already has.
+4. **B's asks become device A lanes**: A31 (code: figure class per tier and `SetNumber` at spawn with fixed numbers 7/13/42 and 9/21/88; floor Movable; `MI_Glass`; stanchions spawned
+   with the glass by `RinkActor` so B removes its 66; rim 1.3 on the toy; `PlayShoot` no longer fired with every pass; `SetGoalieStance` from the brain's owner; bots charge
+   their shots; tier `p4_broadcast` with `MI_Bcast_Glass` and `MPC_Look.Clay` reset in `SetTier`; pickup props at `PickupTop` with spin and bob, B's props preferred over
+   the token; `CornerRadiusCm` on the dynamic ice), A32 (audio: stage and cook the VO bank, a commentary player beside the barks with B's rules, music and skate-loop hooks,
+   the seven missing events). A22's props go to B as FBX (B-to-A-0022 point 2). B-to-A-0020 is answered by R-0022 (clean builds, unity off).
+
+## R-0028 (H11.5, 2026-11-12 18:45): four unattended hours; Fable 5.2 on the 3D lanes; more scope for fun
+1. The operator is away from 18:45 to about 22:45 CET. The Director runs unattended: a machine check every 30 minutes (CPU, RAM, GPU, disk, editors, build-tool instances) written to
+   `status/A.md`; the dev-b merge, clean build and push at every window where B has pushed; a Shipping package every hour or so when the gate is fully green; B's status head and
+   open handoffs read before every brief (R-0027 point 1). No destructive step without the operator: no deletes outside lane outputs, no force pushes, no contract rewrite.
+2. **Fable 5.2 runs the 3D lanes** (figures, rigs, animation, scene and look work through the editor and Blender): the bake-off (A30), tackling that reads (A33), and any lane whose
+   deliverable is judged by a still or a clip. Code and tooling lanes stay on the default model.
+3. **Scope added for "fun first" (R-0025 point 1)**, started as editor capacity allows (three editors): A33 tackling that reads (hit reactions by direction, board collisions as an
+   event with sound and reaction, stumbles, puck loss and spray, camera punch, all cosmetic over the sim); A34 a human-like playtester through the real input path with fun
+   metrics per difficulty (touches, shots, goals, lead changes, time to first goal) and calibration proposals; A37 every shipped cut plays (the 30 Designer cuts and the eight
+   takes through the bot sweep and the eyes tool on each cut's look); A38 lockstep multiplayer re-proven on the new sim. Queued behind them: HUD pass 2 (EYES.md), goalie saves
+   as events for the commentator.
+
+## R-0029 (H11.7, 2026-11-12 19:38): the curve is measured with the playtester, not the scripted human; three payoffs become scope
+1. Lane A34's human-like playtester (novice / regular / good through the real input path) is the measure of the curve from now on. Targets: the novice wins 85 % at rookie and
+   scores inside two minutes in at least half of 20 seeds (the M1 bar), the regular player about 50 % at pro, the good player about 25 % at all_star and never idles 15 s at
+   all_star. Today's numbers: novice 15 / 5 / 10, regular 60 / 40 / 30, good 70 / 50 / 40 on the regular rink: rookie is far too hard for a first-time player.
+2. **Calibrations applied** (R-0021 point 1, lane A3 in its worktree, reported in BALANCING.md and PLAYTEST.md): P1 the back's guard post 5 / 45 -> 10 / 20 m at rookie (per side
+   if the sim allows, else global at rookie); P2 rookie speed 0.85 / red skill 0.75; P3 rookie shot range +5 m. Measured together: novice 85 %, 10 of 20 inside two minutes.
+   The large-rink offsets get their own numbers from the same grid. Pro and all_star untouched until the regular and good players are measured against them again.
+3. **Sim rule** (lane A16): no `foul_no_puck` when the victim carried the puck within the last 12 frames (today two of three fouls on a novice are this one). Until then the rookie
+   cut keeps `rules.penalties` true; the rule lands with A16's change. `puck.drag` stays 0.5.
+4. **Three payoffs become scope** (lane A39): the one-timer (a shot within 10 frames of a received pass gets the full charge and a wider cone), the breakaway burst (+20 % speed for
+   60 frames once past the last man, once per possession), the deke (a tap moves the puck 1 m to the blade side and commits the crease back for 15 frames). Each a calibration
+   with a cartridge key, a test, and the playtester grid before and after.
+5. The gate: `Jam.Playtest.NoviceScoresAtRookie` becomes the 20-seed form (`scored_2min` at least 10 of 20) and `HumanHasSomethingToDo` runs with `-player=novice` with a budget of
+   at most 2 faceoffs without a touch per 20 matches; lane A3 wires both when the calibrations land.
+
+## R-0030 (H11.8, 2026-11-12 19:50): the shipped figure is humanoid_b1; the toy's materials were lost in a commit; a camera lane
+1. **Bake-off result** (lane A30, `docs/experiments/FIGURE-BAKEOFF.md`): B's rebuilt scripted figure `humanoid_b1` is the shipped default (absent key = `humanoid_b1`), `generated_b2`
+   the alternative (it took four of six pairs on toy-ness, b1 both faceoff pairs and the hockey read with legible numbers), `toy_skeletal` and `toy` stay values. Cost decided
+   nothing (all within noise). B's figures carry two faults for B: no far-reach side aim holds (in progress on B), the lift take goes vertical.
+2. The toy's three materials (`M_ToonFigure`, `MI_SkaterFigure_Trim`, `MI_SkaterFigure_Stick`) were deleted by the pass-3 import commit (0882dab) and never restored, so the toy drew the
+   default grid material in every build since H11; restored from a284b0a. The gate's new "missing usage flag" check would have caught it; it is on from 969fbc3.
+3. **Camera**: every bake-off strip shows the game camera inside the boards along the glass (severity 4). Lane A40 implements the board camera clamp (FEEL proposal feel.07, approved
+   R-0021) and the camera height at the end boards.

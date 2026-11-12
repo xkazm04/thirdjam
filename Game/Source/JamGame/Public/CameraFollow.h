@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Camera/CameraComponent.h"
 #include "HUDFeed.h"
+#include "JamEventBus.h"
 #include "CameraFollow.generated.h"
 
 UENUM(BlueprintType)
@@ -99,6 +100,18 @@ public:
 	// One simulation frame of the camera. Public so tests and scripted movers can drive it without a world.
 	void StepSimFrame(const FJamPresentationFrame& Frame);
 
+	// Lane A33 (R-0028 point 3): the camera punch on a check the human lands or takes. Six sim frames: a kick of PunchCm along the camera's right (the side the
+	// contact is on) and PunchRollDeg of roll, both decaying linearly to zero; scaled by max(0.5, strength). Never a time dilation (fixed step). Pure for tests:
+	// FrameIndex 0..5 -> the offsets of that frame; anything else -> 0.
+	static constexpr int32 PunchFrames = 6;
+	static constexpr float PunchCm = 2.f;
+	static constexpr float PunchRollDeg = 0.6f;
+	static void PunchOffset(int32 FrameIndex, float Strength, float Sign, float& OutRightCm, float& OutRollDeg);
+	// Starts a punch (also callable by proof scripts): Sign +1 kicks right, -1 left.
+	UFUNCTION(BlueprintCallable, Category = "Jam|Camera")
+	void StartPunch(float Strength, float Sign);
+	int32 GetPunchFramesLeft() const { return PunchLeft; }
+
 	const FJamCameraFilter& GetFilter() const { return Filter; }
 	const FTransform& GetCurrentSimPose() const { return PoseCurrent; }
 
@@ -108,9 +121,18 @@ protected:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 private:
+	UFUNCTION() void OnJamEvent(FName Event, const FJamEventPayload& Payload);
+
 	FJamCameraFilter Filter;
 	FTransform PosePrev;
 	FTransform PoseCurrent;
 	bool bHavePose = false;
 	FDelegateHandle FrameHandle;
+	// Lane A33 punch state (stepped per sim frame in StepSimFrame).
+	int32 PunchLeft = 0;
+	float PunchStrength = 0.f;
+	float PunchSign = 1.f;
+	int32 LastHumanIndex = -1;
+	FVector2D LastHumanPosM = FVector2D::ZeroVector;
+	UPROPERTY(Transient) TObjectPtr<UJamEventBus> Bus;
 };

@@ -1,0 +1,1 @@
+﻿Lane A31: hockey.boost at 30 s, paused: probe reads lookB true / prop true on Pickup_1_speed, Pickup_2_precision, Pickup_3_heavy_puck (B SM_Pickup_<kind> on the base at PickupTop, spun and bobbed by sim frame), no JAMFX missing line.

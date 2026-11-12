@@ -1,0 +1,5 @@
+Use the built-in image_gen tool (imagegen skill) to generate exactly ONE image, landscape. A stylized hockey player with toy proportions (big round head about one third of the height, short thick limbs, chunky rounded hands and feet), wearing a deep blue hockey jersey with white trim at the collar, cuffs and hem and a large white number 7 on the chest, blue hockey gloves, dark blue hockey pants, blue socks, black ice skates with silver blades, a blue helmet with a white metal cage visor, holding a wooden hockey stick in both hands with the blade on the ice. Painted cel-shaded toy look, flat solid colours, matte plastic surfaces, A-pose-like stance with arms clearly separated from the body.
+
+Clean concept sheet for 3D modelling: one character shown twice side by side, a full front view on the left and a full side (profile) view on the right, same scale, feet on the same baseline, plain pure white background, soft even studio lighting, no shadows on the ground, no text, no labels, no logos, no watermark, nothing else in the frame.
+
+Then copy the generated file to ./out/p4-skater-7-sheet.png and print the original path. Do not generate more than one image.

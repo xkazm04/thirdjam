@@ -1,0 +1,74 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "ab-pair",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T18:29:29.980Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "ab-pair",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a30/docs/experiments/img/bakeoff/a30-toy-play-24m.jpg",
+          "width": 2560,
+          "height": 1440
+        },
+        {
+          "label": "B",
+          "path": ".claude/worktrees/a30/docs/experiments/img/bakeoff/a30-b2-play-24m.jpg",
+          "width": 2560,
+          "height": 1440
+        }
+      ],
+      "distance": 24,
+      "thumbnails": [],
+      "prompt_chars": 3509,
+      "usage": {
+        "prompt": 3233,
+        "output": 377,
+        "thoughts": 1095,
+        "total": 4705,
+        "calls": 1
+      },
+      "cost_usd_est": 0.02413,
+      "ms": 15759,
+      "retried": false,
+      "answer": {
+        "elements": {
+          "sky": {
+            "closer": "tie",
+            "why": "Both stills feature the exact same deep-blue night dome with scattered stars above a dark horizon line."
+          },
+          "ice": {
+            "closer": "tie",
+            "why": "Both stills use the identical painted texture with visible brush streaks and frost patches under the blue lines."
+          },
+          "pools": {
+            "closer": "tie",
+            "why": "Both stills show the same four overlapping circular light pools with distinct, flat cel-shaded brightness steps."
+          },
+          "figures": {
+            "closer": "b",
+            "why": "Still B features the required deep blue and warm orange team jerseys, whereas Still A uses untextured dark grey models."
+          },
+          "construction": {
+            "closer": "tie",
+            "why": "Both stills have the same board design with an ochre kick plate, dark glass rail, and thick red net frames."
+          },
+          "outline": {
+            "closer": "b",
+            "why": "Still B's ink-like outlines successfully define the toy shapes and separate them from the ice, whereas Still A's dark grey models swallow their own outlines."
+          }
+        },
+        "verdict": "b",
+        "confidence": 0.99,
+        "reason": "Still B implements the required team jersey colors (deep blue and warm orange) which are completely missing in Still A, making the teams identifiable.",
+        "loser_keeps": "Still A's environment, including the ice texture, lighting pools, and sky dome, is identical to B and perfectly matches the painted cel night arena requirements."
+      },
+      "markdown": "**eyes/ab-pair** A=a30-toy-play-24m.jpg B=a30-b2-play-24m.jpg at 24 m (gemini-3.1-pro-preview, in 3233 out 377 think 1095 tokens, ~$0.0241, 15.8 s)\n- elements:\n  - sky: closer tie, why Both stills feature the exact same deep-blue night dome with scattered stars above a dark horizon line.\n  - ice: closer tie, why Both stills use the identical painted texture with visible brush streaks and frost patches under the blue lines.\n  - pools: closer tie, why Both stills show the same four overlapping circular light pools with distinct, flat cel-shaded brightness steps.\n  - figures: closer b, why Still B features the required deep blue and warm orange team jerseys, whereas Still A uses untextured dark grey models.\n  - construction: closer tie, why Both stills have the same board design with an ochre kick plate, dark glass rail, and thick red net frames.\n  - outline: closer b, why Still B's ink-like outlines successfully define the toy shapes and separate them from the ice, whereas Still A's dark grey models swallow their own outlines.\n- verdict: b\n- confidence: 0.99\n- reason: Still B implements the required team jersey colors (deep blue and warm orange) which are completely missing in Still A, making the teams identifiable.\n- loser_keeps: Still A's environment, including the ice texture, lighting pools, and sky dome, is identical to B and perfectly matches the painted cel night arena requirements."
+    }
+  ]
+}

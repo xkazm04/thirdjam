@@ -1,0 +1,105 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-12T18:37:03.744Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a33/docs/experiments/img/tackling/a33-hit1-front-f705.jpg",
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "label": "B",
+          "path": ".claude/worktrees/a33/Game/Saved/Screenshots/WindowsEditor/a33-win-f000715.png",
+          "width": 1280,
+          "height": 720
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2295,
+      "usage": {
+        "prompt": 2895,
+        "output": 616,
+        "thoughts": 0,
+        "total": 3511,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00448,
+      "ms": 11100,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [
+              {
+                "where": "Center to lower-left quadrant, clustered skaters",
+                "what": "Figures are rendered almost entirely unlit/pure black silhouette, losing their deep blue or warm orange jersey materials completely.",
+                "severity": 4,
+                "confidence": 0.95
+              },
+              {
+                "where": "Center quadrant, middle skater tilted sideways",
+                "what": "The knocked-down or tilted skater is completely missing skate blades and legs, floating truncated above the ice.",
+                "severity": 4,
+                "confidence": 0.9
+              },
+              {
+                "where": "Top-right quadrant, just above the glass partition",
+                "what": "A small grey and red rectangular box is floating in the empty black space above the glass with no visible mounting or support.",
+                "severity": 3,
+                "confidence": 0.85
+              },
+              {
+                "where": "Upper-center, inner side of the rink board",
+                "what": "Inverted black numbers '12' and '11' appear mirrored/backwards on the rink board surface.",
+                "severity": 2,
+                "confidence": 0.8
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still B",
+            "findings": [
+              {
+                "where": "Center and bottom-center quadrants, all visible skaters",
+                "what": "Player models are completely pitch black silhouettes without team jersey colors or shading detail.",
+                "severity": 4,
+                "confidence": 0.95
+              },
+              {
+                "where": "Center quadrant, fallen figure and kneeling skater",
+                "what": "The fallen skater's torso is truncated and clipping directly into the ice, while the adjacent skater is sunk up to their hips into the ice surface.",
+                "severity": 4,
+                "confidence": 0.95
+              },
+              {
+                "where": "Top-right quadrant, above the glass",
+                "what": "The small grey and red box asset is floating detached in empty air above the rink glass.",
+                "severity": 3,
+                "confidence": 0.85
+              },
+              {
+                "where": "Center quadrant, on the rink board behind the fallen skater",
+                "what": "Black floating bracket-like marks or detached text remnants ('11') float ambiguously on the inner board wall.",
+                "severity": 2,
+                "confidence": 0.75
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=a33-hit1-front-f705.jpg B=a33-win-f000715.png (gemini-3.8-flash, in 2895 out 616 tokens, ~$0.0045, 11.1 s)\n- stills:\n  - label: Still A; clean: false\n    - findings:\n      - where: Center to lower-left quadrant, clustered skaters; what: Figures are rendered almost entirely unlit/pure black silhouette, losing their deep blue or warm orange jersey materials completely.; severity: 4; confidence: 0.95\n      - where: Center quadrant, middle skater tilted sideways; what: The knocked-down or tilted skater is completely missing skate blades and legs, floating truncated above the ice.; severity: 4; confidence: 0.9\n      - where: Top-right quadrant, just above the glass partition; what: A small grey and red rectangular box is floating in the empty black space above the glass with no visible mounting or support.; severity: 3; confidence: 0.85\n      - where: Upper-center, inner side of the rink board; what: Inverted black numbers '12' and '11' appear mirrored/backwards on the rink board surface.; severity: 2; confidence: 0.8\n  - label: Still B; clean: false\n    - findings:\n      - where: Center and bottom-center quadrants, all visible skaters; what: Player models are completely pitch black silhouettes without team jersey colors or shading detail.; severity: 4; confidence: 0.95\n      - where: Center quadrant, fallen figure and kneeling skater; what: The fallen skater's torso is truncated and clipping directly into the ice, while the adjacent skater is sunk up to their hips into the ice surface.; severity: 4; confidence: 0.95\n      - where: Top-right quadrant, above the glass; what: The small grey and red box asset is floating detached in empty air above the rink glass.; severity: 3; confidence: 0.85\n      - where: Center quadrant, on the rink board behind the fallen skater; what: Black floating bracket-like marks or detached text remnants ('11') float ambiguously on the inner board wall.; severity: 2; confidence: 0.75"
+    }
+  ]
+}

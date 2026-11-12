@@ -114,7 +114,7 @@ namespace JamAI
 		FaceoffStart = 0;
 		DrawJumps = 0;
 		DrawPresses = 0;
-		for (int i = 0; i < kMaxSkaters; ++i) { Pressed[i] = 0; }
+		for (int i = 0; i < kMaxSkaters; ++i) { Pressed[i] = 0; Charging[i] = 0; bGoalieNow[i] = false; GoalieSideNow[i] = 0; }
 		bWasFaceoff = false;
 	}
 
@@ -199,6 +199,8 @@ namespace JamAI
 			if (W.bFrozen || W.Skaters[i].bDown)
 			{
 				InReach[i] = 0;
+				Charging[i] = 0;
+				bGoalieNow[i] = false;
 				// R-0013 draw: a centre that jumps early (pokes in the countdown) loses the draw; rookie does it at its rate
 				const FJamBotSkill& K = SkillOf(W, i);
 				if (W.bFaceoffPhase && W.Skaters[i].bCentre && W.FaceoffCountdown == 6 && K.DrawJumpPct > 0
@@ -221,8 +223,8 @@ namespace JamAI
 			{
 				Sc *= 1.1;
 			}
-			bool bShoot = false;
-			FVec2 Dir = Decide(W, i, bShoot);
+			bool bShoot = false, bAimed = false;
+			FVec2 Dir = Decide(W, i, bShoot, bAimed);
 			if (Dir.Length() > 1.0)
 			{
 				Dir = Dir.Normalized();
@@ -230,6 +232,25 @@ namespace JamAI
 			In.Move = Dir * Sc;
 			In.bShoot = bShoot;
 			StickPlay(W, i, In);
+			// Lane A31 (B-to-A-0024 point 1): the carrier charges an aimed shot on the net. While the lined-up decision holds, shoot is held
+			// (bShootHeld, never the edge) for the skill's window; at the window's end, or the frame the line-up is lost, the hold is dropped and
+			// the sim fires the charged shot on the release (StepCharge). Rookie's window is 0: a tap, as before. Taps by StickPlay (the dump
+			// under a forecheck) and Attack's board chip and pass-by-shot never charge.
+			{
+				const int Window = SkillOf(W, i).ShotChargeFrames;
+				if (Window > 0 && W.Carrier == i && In.bShoot && bAimed && !W.Skaters[i].bNoShoot)
+				{
+					In.bShoot = false;
+					if (Charging[i] < Window) { In.bShootHeld = true; ++Charging[i]; }
+					else { Charging[i] = 0; }   // release
+				}
+				else
+				{
+					Charging[i] = 0;   // a hold in progress is released here (the sim fires whatever charge it has)
+				}
+			}
+			In.bGoalie = bGoalieNow[i];
+			In.GoalieSide = bGoalieNow[i] ? GoalieSideNow[i] : 0;
 			// R-0013 draw: the opposing centre takes the draw early at the level's rate (else the sim's bot timing decides)
 			{
 				const FJamBotSkill& K = SkillOf(W, i);
@@ -252,14 +273,17 @@ namespace JamAI
 			// reach and facing gate: in the sweep any delay >= 2 frames stopped the AI from scoring at all)
 			Out[i] = Hist[i][(Head - Delay + Ring) % Ring];
 			Out[i].bShoot = In.bShoot;
+			Out[i].bShootHeld = In.bShootHeld;   // lane A31: the charge is live like the shot
 			Out[i].bPass = In.bPass;
 			Out[i].Stick = In.Stick;
 			Out[i].bPoke = In.bPoke;
 			Out[i].bLift = In.bLift;
+			Out[i].bGoalie = In.bGoalie;
+			Out[i].GoalieSide = In.GoalieSide;
 		}
 	}
 
-	FVec2 FJamBrain::Decide(const FJamAIWorld& W, int Id, bool& bShoot)
+	FVec2 FJamBrain::Decide(const FJamAIWorld& W, int Id, bool& bShoot, bool& bAimed)
 	{
 		const FJamAISkater& S = W.Skaters[Id];
 		const FVec2 Pp = W.PuckPos;
@@ -270,6 +294,8 @@ namespace JamAI
 		const FVec2 Dirg = (OppGoal - Pp).Normalized();
 		double D = Me.DistTo(Pp);
 		FVec2 Out;
+		bGoalieNow[Id] = false;
+		GoalieSideNow[Id] = 0;
 
 		// R-0017: a pickup within 8 m, nearer than the puck, while not carrying (all_star only)
 		if (SkillOf(W, Id).bSeekPickups && W.Carrier != Id)
@@ -357,13 +383,13 @@ namespace JamAI
 
 		if (Role == ERole::Chaser || (Role == ERole::Support && D < Params.PounceRadius))
 		{
-			Out = Attack(W, Id, Me, Pp, Dirg, D, bShoot);
+			Out = Attack(W, Id, Me, Pp, Dirg, D, bShoot, bAimed);
 		}
 		else if (Role == ERole::Back)
 		{
 			if (D < 2.5)
 			{
-				Out = Attack(W, Id, Me, Pp, Dirg, D, bShoot);
+				Out = Attack(W, Id, Me, Pp, Dirg, D, bShoot, bAimed);
 			}
 			else if (LastManGoalie(W, Id))
 			{
@@ -374,17 +400,23 @@ namespace JamAI
 				if (std::fabs(T.X) > W.GoalX) { T.X = OwnGoal.X; }
 				Used[Id] = ERole::Back;
 				Out = Arrive(Me, T - S.Vel * 0.25, 1.0);
+				// Lane A31 (B-to-A-0024 point 3): the goalie intent for the visual. Side = where the carrier is, seen from the goalie facing
+				// up-ice (Unreal frame: facing +x, left is -y; team 1 faces -x). Within a metre of the centre line: centre.
+				bGoalieNow[Id] = true;
+				const double Cy = C.Y;
+				GoalieSideNow[Id] = std::fabs(Cy) < 1.0 ? 0 : static_cast<int>(Sign(Cy)) * (S.Team == 0 ? 1 : -1);
 			}
 			else
 			{
 				FVec2 T;
-				if (Pp.X * OwnGoal.X > 0.0 || Pp.DistTo(OwnGoal) < Params.GuardRangeM)
+				const FJamBotSkill& Gk = SkillOf(W, Id);
+				if (Pp.X * OwnGoal.X > 0.0 || Pp.DistTo(OwnGoal) < Gk.GuardRangeM)
 				{
 					// lane A3 (R-0009, feel QA): puck in our half or in shooting range: guard the net, on the line goal centre -> puck, at most
 					// GuardRadiusM from the goal centre, so a long shot meets a body (no goalies in this game)
 					const FVec2 ToPuck = Pp - OwnGoal;
 					const double L = ToPuck.Length();
-					const double R = L * 0.5 < Params.GuardRadiusM ? L * 0.5 : Params.GuardRadiusM;
+					const double R = L * 0.5 < Gk.GuardRadiusM ? L * 0.5 : Gk.GuardRadiusM;
 					T = OwnGoal + ToPuck.Normalized() * R;
 					if (std::fabs(T.X) > W.GoalX) { T.X = OwnGoal.X; }
 				}
@@ -542,7 +574,7 @@ namespace JamAI
 		if (S.bNoShoot) { In.bShoot = false; }
 	}
 
-	FVec2 FJamBrain::Attack(const FJamAIWorld& W, int Id, const FVec2& Me, const FVec2& Pp, const FVec2& Dirg, double D, bool& bShoot) const
+	FVec2 FJamBrain::Attack(const FJamAIWorld& W, int Id, const FVec2& Me, const FVec2& Pp, const FVec2& Dirg, double D, bool& bShoot, bool& bAimed) const
 	{
 		const FJamAISkater& S = W.Skaters[Id];
 		const FJamBotSkill& K = SkillOf(W, Id);
@@ -585,6 +617,7 @@ namespace JamAI
 		if (D < W.ShotReach && bOkShot && S.bCanShoot)
 		{
 			bShoot = true;
+			bAimed = true;   // lane A31: the one shot worth charging
 		}
 		// lane A3: a teammate that holds the puck and faces the human with a clear lane passes it (shot = pass, no pass button)
 		const bool bPassIntent = TeamIntent.Kind == ETeamIntent::Pass && TeamIntent.Active(W.Frame);

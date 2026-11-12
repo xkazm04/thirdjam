@@ -1,0 +1,78 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "figure",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T18:33:39.297Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "figure",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a30/docs/experiments/img/bakeoff/a30-toy-verbs-sheet.png",
+          "width": 2559,
+          "height": 960
+        }
+      ],
+      "thumbnails": [
+        "A: 128x48"
+      ],
+      "prompt_chars": 2683,
+      "usage": {
+        "prompt": 2999,
+        "output": 481,
+        "thoughts": 1789,
+        "total": 5269,
+        "calls": 1
+      },
+      "cost_usd_est": 0.03324,
+      "ms": 25046,
+      "retried": false,
+      "answer": {
+        "hockey_player": {
+          "full": 3,
+          "small": 2,
+          "parts": {
+            "stick": true,
+            "blade": true,
+            "hands": true,
+            "skates": false,
+            "helmet": true
+          },
+          "evidence": "The figure holds a stick with a blade and has a helmeted head, but the complete lack of skates makes it look like a peg gliding on a flat base."
+        },
+        "toy": {
+          "full": 4,
+          "small": 3,
+          "evidence": "The cylindrical body, spherical head, and simple sphere hands strongly convey a chunky peg-toy aesthetic, though the dark color obscures the volume."
+        },
+        "best_row": "Bottom row, because the isolated figures against the white ice provide better contrast to read the silhouette and stick angle compared to the clustered top row.",
+        "proportions": {
+          "head_of_height": 0.33,
+          "shoulder_of_height": 0.35,
+          "stick_of_height": 1.3
+        },
+        "changes": [
+          "Add visible skates to the bottom of the cylinder to clarify the hockey theme.",
+          "Change the dark grey material to the intended deep blue or warm orange to improve contrast.",
+          "Increase the thickness of the stick shaft by 50% so it remains visible at downscaled sizes.",
+          "head 0.33 of height -> 0.40 to further emphasize the toy-like proportions."
+        ],
+        "worst": [
+          "The absence of skates breaks the hockey player read, making it look like a generic board game peg.",
+          "The uniform dark grey color blends into its own shadows, flattening the forms.",
+          "At the downscaled size, the thin stick shaft becomes nearly invisible or reads as noise."
+        ],
+        "works": [
+          "The cylindrical body and spherical head successfully establish a chunky, toy-like aesthetic.",
+          "The helmet visor shape is simple but effective at indicating the front of the head.",
+          "The simple sphere hands fit the toy style perfectly while clearly holding the stick."
+        ]
+      },
+      "markdown": "**eyes/figure** A=a30-toy-verbs-sheet.png (gemini-3.1-pro-preview, in 2999 out 481 think 1789 tokens, ~$0.0332, 25 s)\n- hockey_player:\n  - full: 3\n  - small: 2\n  - parts:\n    - stick: true\n    - blade: true\n    - hands: true\n    - skates: false\n    - helmet: true\n  - evidence: The figure holds a stick with a blade and has a helmeted head, but the complete lack of skates makes it look like a peg gliding on a flat base.\n- toy:\n  - full: 4\n  - small: 3\n  - evidence: The cylindrical body, spherical head, and simple sphere hands strongly convey a chunky peg-toy aesthetic, though the dark color obscures the volume.\n- best_row: Bottom row, because the isolated figures against the white ice provide better contrast to read the silhouette and stick angle compared to the clustered top row.\n- proportions:\n  - head_of_height: 0.33\n  - shoulder_of_height: 0.35\n  - stick_of_height: 1.3\n- changes: Add visible skates to the bottom of the cylinder to clarify the hockey theme.; Change the dark grey material to the intended deep blue or warm orange to improve contrast.; Increase the thickness of the stick shaft by 50% so it remains visible at downscaled sizes.; head 0.33 of height -> 0.40 to further emphasize the toy-like proportions.\n- worst: The absence of skates breaks the hockey player read, making it look like a generic board game peg.; The uniform dark grey color blends into its own shadows, flattening the forms.; At the downscaled size, the thin stick shaft becomes nearly invisible or reads as noise.\n- works: The cylindrical body and spherical head successfully establish a chunky, toy-like aesthetic.; The helmet visor shape is simple but effective at indicating the front of the head.; The simple sphere hands fit the toy style perfectly while clearly holding the stick."
+    }
+  ]
+}

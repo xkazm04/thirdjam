@@ -159,3 +159,18 @@ Asset names, as on `dev-b`: `NS_` / `MS_` for `poke`, `lift`, `foul`, `faceoff`,
 (sound only); `NS_pickup_idle` (the pickup actor, `User.Colour`); `NS_blade_spray` (the toy figure, `User.Strength` = |lean| / 35 deg, 0..1). `lose`, `bark`, `signal` and
 `announce` are **sound-only by design** (`UJamEffectsBinder::IsSoundOnlyEvent`): the binder skips their Niagara lookup, so a bot match logs no "missing NS_" line for them
 (Director, H9.4). A custom effect id on `effect_start` / `effect_end` gets a white burst: colouring it by the effect's `kind` needs the kind in the payload, a C-0003 addition for the Director. (The Director signs this in a ruling.)
+
+## Proposed, for the Director (lane A32, B-to-A-0026 ask 3, H12.9): the commentator's seven events
+Registered on the bus as `JamEvents::Save`, `Post`, `Breakaway`, `Carry`, `PeriodEnd`, `Clock`, `SeasonTake`; the first six are emitted by `UJamSim` from state it already
+has, `season_take` by `AHokejGameMode` through `UJamCommentarySystem::OnMatchBuilt`. All are read-outs: the state they keep is not hashed and nothing in play reads them
+(the Determinism test and `JAMSIM hash=` are unchanged). Definitions and thresholds in `docs/experiments/COMMENTARY.md` section 4.
+| Event | When | Who | Where | Strength | Kind |
+|---|---|---|---|---|---|
+| `save` | a shot by the other team left within 90 frames, the puck's line still crosses the attacked goal line inside the mouth plus a metre, and the defender about to touch it (an aimed blade or the body) is its team's last man; once per shot | the blocker | the puck | the shot's Strength | none |
+| `post` | the puck hits a goal post at 3 m/s or more, at most once per 20 frames | -1 | the post | puck speed / `game.puck.max_speed` | none |
+| `breakaway` | the carrier has every standing opponent behind it, the net 5 to 45 m ahead, and skates at it from centre ice or beyond; once per rush | the carrier | the carrier | gap to the nearest defender / 10 m | none |
+| `carry` | one skater has carried the puck for 300 consecutive frames; once per possession | the carrier | the puck | metres carried / rink length | `long`, or `coast` (from the own net area past the far blue line) |
+| `period_end` | a take ends and the match goes on | -1 | zero | 0 | `take_<n>` of the take that ended |
+| `clock` | 600 frames or fewer left in a timed take (once per take); a tie at the horn plays on | -1 | zero | 0 | `last_10s` / `sudden_death` |
+| `season_take` | a match is built whose cartridge is the running season take, after `period` and before the first frame | -1 | zero | 0 | `level_<n>` (1-based ladder index) |
+Assets by the rule: `MS_post` exists on `dev-b` and plays through the binder; `NS_` / `MS_` for the other six are B's to make or to declare silent (`UJamEffectsBinder::IsSilentEvent`).

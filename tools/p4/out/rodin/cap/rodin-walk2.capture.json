@@ -1,0 +1,248 @@
+{
+ "tool": "thirdjam.p4-capture/1",
+ "vendor": "Rodin",
+ "clip": "/Game/P4/Rodin/Anims/MF_Unarmed_Walk_Fwd_P4_Rodin",
+ "tag": "rodin-walk2",
+ "frames": [
+  {
+   "name": "f00",
+   "game_frame": 0,
+   "anim_pos_s": 0.0,
+   "pelvis_z": 89.1,
+   "foot_r_z": 18.2,
+   "hand_l_from_pelvis_xy": 49.7,
+   "hand_r_from_pelvis_xy": 50.9
+  },
+  {
+   "name": "f01",
+   "game_frame": 8,
+   "anim_pos_s": 0.133,
+   "pelvis_z": 80.3,
+   "foot_r_z": 13.7,
+   "hand_l_from_pelvis_xy": 42.7,
+   "hand_r_from_pelvis_xy": 46.2
+  },
+  {
+   "name": "f02",
+   "game_frame": 16,
+   "anim_pos_s": 0.267,
+   "pelvis_z": 80.1,
+   "foot_r_z": 15.7,
+   "hand_l_from_pelvis_xy": 43.9,
+   "hand_r_from_pelvis_xy": 45.5
+  },
+  {
+   "name": "f03",
+   "game_frame": 24,
+   "anim_pos_s": 0.4,
+   "pelvis_z": 85.5,
+   "foot_r_z": 19.4,
+   "hand_l_from_pelvis_xy": 33.6,
+   "hand_r_from_pelvis_xy": 41.2
+  },
+  {
+   "name": "f04",
+   "game_frame": 32,
+   "anim_pos_s": 0.533,
+   "pelvis_z": 78.9,
+   "foot_r_z": 21.4,
+   "hand_l_from_pelvis_xy": 41.1,
+   "hand_r_from_pelvis_xy": 42.3
+  },
+  {
+   "name": "f05",
+   "game_frame": 40,
+   "anim_pos_s": 0.667,
+   "pelvis_z": 80.7,
+   "foot_r_z": 35.1,
+   "hand_l_from_pelvis_xy": 35.8,
+   "hand_r_from_pelvis_xy": 41.2
+  },
+  {
+   "name": "f06",
+   "game_frame": 48,
+   "anim_pos_s": 0.8,
+   "pelvis_z": 84.9,
+   "foot_r_z": 25.9,
+   "hand_l_from_pelvis_xy": 38.8,
+   "hand_r_from_pelvis_xy": 41.2
+  },
+  {
+   "name": "f07",
+   "game_frame": 56,
+   "anim_pos_s": 0.933,
+   "pelvis_z": 78.2,
+   "foot_r_z": 11.7,
+   "hand_l_from_pelvis_xy": 44.1,
+   "hand_r_from_pelvis_xy": 46.7
+  },
+  {
+   "name": "f08",
+   "game_frame": 64,
+   "anim_pos_s": 1.067,
+   "pelvis_z": 82.0,
+   "foot_r_z": 17.4,
+   "hand_l_from_pelvis_xy": 42.9,
+   "hand_r_from_pelvis_xy": 43.4
+  },
+  {
+   "name": "f09",
+   "game_frame": 72,
+   "anim_pos_s": 1.2,
+   "pelvis_z": 84.4,
+   "foot_r_z": 19.2,
+   "hand_l_from_pelvis_xy": 33.8,
+   "hand_r_from_pelvis_xy": 40.4
+  },
+  {
+   "name": "f10",
+   "game_frame": 80,
+   "anim_pos_s": 1.333,
+   "pelvis_z": 79.5,
+   "foot_r_z": 24.7,
+   "hand_l_from_pelvis_xy": 39.0,
+   "hand_r_from_pelvis_xy": 43.4
+  },
+  {
+   "name": "f11",
+   "game_frame": 88,
+   "anim_pos_s": 1.467,
+   "pelvis_z": 83.8,
+   "foot_r_z": 36.1,
+   "hand_l_from_pelvis_xy": 32.0,
+   "hand_r_from_pelvis_xy": 39.5
+  },
+  {
+   "name": "f12",
+   "game_frame": 96,
+   "anim_pos_s": 0.1,
+   "pelvis_z": 82.3,
+   "foot_r_z": 17.5,
+   "hand_l_from_pelvis_xy": 40.5,
+   "hand_r_from_pelvis_xy": 44.2
+  },
+  {
+   "name": "f13",
+   "game_frame": 104,
+   "anim_pos_s": 0.233,
+   "pelvis_z": 78.8,
+   "foot_r_z": 12.4,
+   "hand_l_from_pelvis_xy": 44.3,
+   "hand_r_from_pelvis_xy": 46.2
+  },
+  {
+   "name": "f14",
+   "game_frame": 112,
+   "anim_pos_s": 0.367,
+   "pelvis_z": 85.3,
+   "foot_r_z": 18.9,
+   "hand_l_from_pelvis_xy": 36.3,
+   "hand_r_from_pelvis_xy": 42.2
+  },
+  {
+   "name": "f15",
+   "game_frame": 120,
+   "anim_pos_s": 0.5,
+   "pelvis_z": 80.5,
+   "foot_r_z": 20.5,
+   "hand_l_from_pelvis_xy": 38.1,
+   "hand_r_from_pelvis_xy": 41.4
+  },
+  {
+   "name": "rag00",
+   "game_frame": 120,
+   "anim_pos_s": 0.5,
+   "pelvis_z": 80.5,
+   "foot_r_z": 20.5,
+   "hand_l_from_pelvis_xy": 38.1,
+   "hand_r_from_pelvis_xy": 41.4
+  },
+  {
+   "name": "rag01",
+   "game_frame": 124,
+   "anim_pos_s": 0.567,
+   "pelvis_z": 77.8,
+   "foot_r_z": 23.2,
+   "hand_l_from_pelvis_xy": 51.4,
+   "hand_r_from_pelvis_xy": 55.8
+  },
+  {
+   "name": "rag02",
+   "game_frame": 128,
+   "anim_pos_s": 0.633,
+   "pelvis_z": 57.6,
+   "foot_r_z": 22.1,
+   "hand_l_from_pelvis_xy": 41.8,
+   "hand_r_from_pelvis_xy": 51.3
+  },
+  {
+   "name": "rag03",
+   "game_frame": 132,
+   "anim_pos_s": 0.7,
+   "pelvis_z": 48.6,
+   "foot_r_z": 24.1,
+   "hand_l_from_pelvis_xy": 35.0,
+   "hand_r_from_pelvis_xy": 65.7
+  },
+  {
+   "name": "rag04",
+   "game_frame": 136,
+   "anim_pos_s": 0.767,
+   "pelvis_z": 42.9,
+   "foot_r_z": 27.6,
+   "hand_l_from_pelvis_xy": 38.4,
+   "hand_r_from_pelvis_xy": 56.6
+  },
+  {
+   "name": "rag05",
+   "game_frame": 140,
+   "anim_pos_s": 0.833,
+   "pelvis_z": 53.3,
+   "foot_r_z": 25.1,
+   "hand_l_from_pelvis_xy": 51.3,
+   "hand_r_from_pelvis_xy": 89.2
+  },
+  {
+   "name": "back00",
+   "game_frame": 140,
+   "anim_pos_s": 0.0,
+   "pelvis_z": 80.5,
+   "foot_r_z": 44.6,
+   "hand_l_from_pelvis_xy": 65.2,
+   "hand_r_from_pelvis_xy": 78.7
+  },
+  {
+   "name": "back01",
+   "game_frame": 148,
+   "anim_pos_s": 0.133,
+   "pelvis_z": 80.3,
+   "foot_r_z": 13.7,
+   "hand_l_from_pelvis_xy": 42.7,
+   "hand_r_from_pelvis_xy": 46.2
+  },
+  {
+   "name": "back02",
+   "game_frame": 156,
+   "anim_pos_s": 0.267,
+   "pelvis_z": 80.1,
+   "foot_r_z": 15.7,
+   "hand_l_from_pelvis_xy": 43.9,
+   "hand_r_from_pelvis_xy": 45.5
+  },
+  {
+   "name": "back03",
+   "game_frame": 164,
+   "anim_pos_s": 0.4,
+   "pelvis_z": 85.5,
+   "foot_r_z": 19.4,
+   "hand_l_from_pelvis_xy": 33.6,
+   "hand_r_from_pelvis_xy": 41.2
+  }
+ ],
+ "clip_len_s": 1.5,
+ "clip_frames": 16,
+ "physics_asset": "/Game/P4/Rodin/PA_P4_Rodin.PA_P4_Rodin",
+ "ragdoll_mass_kg": 297.6,
+ "ragdoll_frames": 20,
+ "last_game_frame": 164
+}

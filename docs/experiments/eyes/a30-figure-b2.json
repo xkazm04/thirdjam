@@ -1,0 +1,77 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "figure",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T18:34:36.946Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "figure",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a30/docs/experiments/img/bakeoff/a30-b2-verbs-sheet.png",
+          "width": 2559,
+          "height": 960
+        }
+      ],
+      "thumbnails": [
+        "A: 128x48"
+      ],
+      "prompt_chars": 2682,
+      "usage": {
+        "prompt": 3001,
+        "output": 452,
+        "thoughts": 2974,
+        "total": 6427,
+        "calls": 1
+      },
+      "cost_usd_est": 0.04711,
+      "ms": 30260,
+      "retried": false,
+      "answer": {
+        "hockey_player": {
+          "full": 4,
+          "small": 2,
+          "parts": {
+            "stick": true,
+            "blade": true,
+            "hands": true,
+            "skates": true,
+            "helmet": true
+          },
+          "evidence": "Helmets, skates, and gloves are clearly visible at full size, but the stick shaft is too thin and the blade is too small, causing the hockey read to vanish at small scales."
+        },
+        "toy": {
+          "full": 5,
+          "small": 5,
+          "evidence": "Massive heads, stubby limbs, bright flat colors, and thick outlines strongly convey a plastic toy or bobblehead aesthetic at all scales."
+        },
+        "best_row": "Bottom row, because the forward-leaning skating poses and sliding pose clearly communicate hockey momentum, unlike the stiff vertical poses in the top row.",
+        "proportions": {
+          "head_of_height": 0.4,
+          "shoulder_of_height": 0.3,
+          "stick_of_height": 0.85
+        },
+        "changes": [
+          "stick thickness 0.02 of height -> 0.08 of height",
+          "blade length 0.10 of height -> 0.25 of height",
+          "shoulder width 0.30 of height -> 0.40 of height"
+        ],
+        "worst": [
+          "Stick shafts are too thin and completely disappear at the downscaled size.",
+          "Stick blades are too short and lack the distinct L-shape of a hockey stick.",
+          "Top-left orange player holds the stick perfectly vertical like a staff, breaking the hockey silhouette."
+        ],
+        "works": [
+          "High contrast between the warm orange and deep blue jerseys makes team identification instant.",
+          "Oversized helmets with thick padding perfectly sell the toy look.",
+          "Thick black outlines help the figures pop against the white ice."
+        ]
+      },
+      "markdown": "**eyes/figure** A=a30-b2-verbs-sheet.png (gemini-3.1-pro-preview, in 3001 out 452 think 2974 tokens, ~$0.0471, 30.3 s)\n- hockey_player:\n  - full: 4\n  - small: 2\n  - parts:\n    - stick: true\n    - blade: true\n    - hands: true\n    - skates: true\n    - helmet: true\n  - evidence: Helmets, skates, and gloves are clearly visible at full size, but the stick shaft is too thin and the blade is too small, causing the hockey read to vanish at small scales.\n- toy:\n  - full: 5\n  - small: 5\n  - evidence: Massive heads, stubby limbs, bright flat colors, and thick outlines strongly convey a plastic toy or bobblehead aesthetic at all scales.\n- best_row: Bottom row, because the forward-leaning skating poses and sliding pose clearly communicate hockey momentum, unlike the stiff vertical poses in the top row.\n- proportions:\n  - head_of_height: 0.4\n  - shoulder_of_height: 0.3\n  - stick_of_height: 0.85\n- changes: stick thickness 0.02 of height -> 0.08 of height; blade length 0.10 of height -> 0.25 of height; shoulder width 0.30 of height -> 0.40 of height\n- worst: Stick shafts are too thin and completely disappear at the downscaled size.; Stick blades are too short and lack the distinct L-shape of a hockey stick.; Top-left orange player holds the stick perfectly vertical like a staff, breaking the hockey silhouette.\n- works: High contrast between the warm orange and deep blue jerseys makes team identification instant.; Oversized helmets with thick padding perfectly sell the toy look.; Thick black outlines help the figures pop against the white ice."
+    }
+  ]
+}

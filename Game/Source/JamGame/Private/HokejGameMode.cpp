@@ -14,6 +14,7 @@
 #include "InputMapping.h"
 #include "CameraFollow.h"
 #include "EffectsBinder.h"
+#include "CommentarySystem.h"
 #include "JamEffectSystem.h"
 #include "JamPickupActor.h"
 #include "ToySkaterVisual.h"
@@ -35,6 +36,18 @@ static TAutoConsoleVariable<FString> CVarJamCut(TEXT("jam.Cut"), TEXT("hockey.re
 	TEXT("Cartridge the Hokej game mode loads at start (name in Content/Cartridges or a path). The -cut=<name> launch argument wins."));
 static TAutoConsoleVariable<int32> CVarJamScriptHuman(TEXT("jam.ScriptHuman"), 0,
 	TEXT("1: the human's skater plays itself (skate behind the puck, shoot when lined up). For PIE proofs through MCP."));
+// Lane A31: a Director's Call from the console: load a cartridge (name or path) and apply it to the running match without a reset
+// (AHokejGameMode::ApplyCartridgeLive), the way the Designer does. A tier change swaps the rig and respawns the figures in place.
+static FAutoConsoleCommandWithWorldAndArgs CmdJamLiveCut(TEXT("jam.livecut"), TEXT("jam.livecut <name-or-path>: apply a cartridge to the running match live (Director's Call); no reset"),
+	FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
+	{
+		AHokejGameMode* GM = World ? Cast<AHokejGameMode>(World->GetAuthGameMode()) : nullptr;
+		if (!GM || Args.Num() < 1) { UE_LOG(LogHokej, Warning, TEXT("jam.livecut: needs a running Hokej match and a cartridge name or path")); return; }
+		TArray<FString> Errors;
+		UJamCartridge* C = UJamCartridge::LoadFromFile(UJamCartridge::ResolveCartridgePath(Args[0]), Errors, GM);
+		if (!C) { for (const FString& E : Errors) UE_LOG(LogHokej, Error, TEXT("JAMCART %s %s"), *Args[0], *E); return; }
+		UE_LOG(LogHokej, Log, TEXT("jam.livecut %s -> %s"), *Args[0], GM->ApplyCartridgeLive(C) ? TEXT("applied") : TEXT("refused"));
+	}));
 
 namespace
 {
@@ -43,6 +56,11 @@ namespace
 	const FName VisualB2(TEXT("generated_b2"));
 	const FName VisualSkeletal(TEXT("toy_skeletal"));   // lane A26 (R-0024): the Blender toy figure as a skeletal visual
 	constexpr int32 MaxStepsPerFrame = 4;
+	// Lane A31 (B-to-A-0021 / 0025): the tiers that carry their own generated_b2 figure.
+	const TCHAR* TierClay = TEXT("p3_clay");
+	const TCHAR* TierBroadcast = TEXT("p4_broadcast");
+	constexpr int8 GoalieOff = -2;
+	constexpr int64 GoalieHoldFrames = 24;   // the stance stays at least 0.4 s once it came on
 }
 
 AHokejGameMode::AHokejGameMode()
@@ -105,6 +123,8 @@ bool AHokejGameMode::ApplyCartridgeLive(UJamCartridge* NewCartridge)
 		Look->SetTrimEmissiveOverride(static_cast<float>(G.Look.TrimEmissive));   // B-to-A-0018 point 5 (lane A21): -1 = the tier's default
 		Look->SetTier(G.Look.Tier, G.Rink.LengthM);   // R-0016 point 5: the rig scales with the rink
 	}
+	// Lane A31 (B-to-A-0021 point 1): the figure follows the tier at once; a changed class respawns the visuals with the setup calls repeated.
+	RespawnVisualsIfClassChanged(NewCartridge->Game);
 	Cartridge = NewCartridge;
 	if (UGameInstance* GI = GetGameInstance()) if (UJamDesignerSubsystem* D = GI->GetSubsystem<UJamDesignerSubsystem>()) D->SetCurrentCartridge(NewCartridge);
 	UE_LOG(LogHokej, Log, TEXT("JAMGAME live cut id=%s at frame %lld; held back until the next match: %s"), *NewCartridge->Id, Sim->GetFrame(), Held.Num() ? *FString::Join(Held, TEXT(", ")) : TEXT("none"));
@@ -139,19 +159,57 @@ void AHokejGameMode::UpdateTake(bool bForce)
 	if (UJamDesignerSubsystem* D = GI ? GI->GetSubsystem<UJamDesignerSubsystem>() : nullptr) D->NotifyPeriodStarted(Take);
 }
 
-UClass* AHokejGameMode::ResolveVisualClass(FName Visual) const
+UClass* AHokejGameMode::ResolveVisualClass(FName Visual, const FString& Tier) const
 {
 	// contracts/skater-visual.md: BP_SkaterVisual_<track>; R-0001 item 1: game.skater.visual picks it.
 	if (Visual == VisualSkeletal) return USkeletalSkaterVisual::StaticClass();
-	const TCHAR* Path = nullptr;
-	if (Visual == VisualB1) Path = TEXT("/JamAssets/Skaters/BP_SkaterVisual_TB1.BP_SkaterVisual_TB1_C");
-	else if (Visual == VisualB2) Path = TEXT("/JamAssets/Skaters/BP_SkaterVisual_TB2.BP_SkaterVisual_TB2_C");
-	if (Path)
+	TArray<const TCHAR*> Paths;   // in order of preference; the first that loads wins
+	if (Visual == VisualB1) Paths.Add(TEXT("/JamAssets/Skaters/BP_SkaterVisual_TB1.BP_SkaterVisual_TB1_C"));
+	else if (Visual == VisualB2)
 	{
-		if (UClass* Cls = LoadClass<UObject>(nullptr, Path, nullptr, LOAD_NoWarn | LOAD_Quiet)) return Cls;
-		UE_LOG(LogHokej, Warning, TEXT("JAMVISUAL %s not found at %s; using the toy figure"), *Visual.ToString(), Path);
+		// B-to-A-0021 point 1 (lane A31): the figure follows the look tier; the hybrid figure is the fallback of both tier figures.
+		if (Tier == TierClay) Paths.Add(TEXT("/JamAssets/Skaters/BP_SkaterVisual_TB2_P3.BP_SkaterVisual_TB2_P3_C"));
+		else if (Tier == TierBroadcast) Paths.Add(TEXT("/JamAssets/Skaters/BP_SkaterVisual_TB2_P4.BP_SkaterVisual_TB2_P4_C"));
+		Paths.Add(TEXT("/JamAssets/Skaters/BP_SkaterVisual_TB2.BP_SkaterVisual_TB2_C"));
+	}
+	for (int32 i = 0; i < Paths.Num(); ++i)
+	{
+		if (UClass* Cls = LoadClass<UObject>(nullptr, Paths[i], nullptr, LOAD_NoWarn | LOAD_Quiet))
+		{
+			UE_LOG(LogHokej, Log, TEXT("JAMVISUAL %s tier=%s class=%s%s"), *Visual.ToString(), *Tier, *Cls->GetPathName(), i > 0 ? TEXT(" (fallback)") : TEXT(""));
+			return Cls;
+		}
+		UE_LOG(LogHokej, Warning, TEXT("JAMVISUAL %s tier=%s: %s not found; %s"), *Visual.ToString(), *Tier, Paths[i], i + 1 < Paths.Num() ? TEXT("trying the next class") : TEXT("using the toy figure"));
 	}
 	return UToySkaterVisualComponent::StaticClass();
+}
+
+int32 AHokejGameMode::JerseyNumberFor(int32 Team, int32 SlotInTeam)
+{
+	static const int32 Numbers[2][3] = { { 7, 13, 42 }, { 9, 21, 88 } };
+	if (SlotInTeam >= 0 && SlotInTeam < 3 && (Team == 0 || Team == 1)) return Numbers[Team][SlotInTeam];
+	return FMath::Clamp(Team * 10 + SlotInTeam + 1, 0, 99);
+}
+
+void AHokejGameMode::RespawnVisualsIfClassChanged(const FJamGameConfig& G)
+{
+	if (!Sim) return;
+	UClass* NewClass = ResolveVisualClass(G.Skater.Visual, G.Look.Tier);
+	if (!NewClass || NewClass == SpawnedVisualClass) return;
+	int32 N = 0;
+	for (AJamSkater* A : Skaters)
+	{
+		if (!A) continue;
+		const FJamSkaterState& S = Sim->GetSkaters()[A->GetSimIndex()];
+		const int32 InTeam = S.Index - (S.Team == 0 ? 0 : G.Teams[0].Skaters.Num());
+		if (A->ResetVisual(G.Teams[S.Team].Colour, JerseyNumberFor(S.Team, InTeam), NewClass)) ++N;
+		// the boost and the goalie stance are re-sent by the next step (they compare against these)
+		if (LastBoost.IsValidIndex(S.Index)) LastBoost[S.Index] = FName(TEXT("__respawn"));
+		if (LastGoalie.IsValidIndex(S.Index)) LastGoalie[S.Index] = GoalieOff - 1;
+		A->ApplySimFrame(S);
+	}
+	SpawnedVisualClass = NewClass;
+	UE_LOG(LogHokej, Log, TEXT("JAMVISUAL respawned %d skater visuals as %s for tier %s at frame %lld (setup calls repeated)"), N, *NewClass->GetPathName(), *G.Look.Tier, Sim->GetFrame());
 }
 
 void AHokejGameMode::BuildMatch()
@@ -196,12 +254,15 @@ void AHokejGameMode::BuildMatch()
 	Brain->ApplyCartridge(*Cartridge);
 	Brain->ResetBrain();
 
-	UClass* VisualClass = ResolveVisualClass(G.Skater.Visual);
+	UClass* VisualClass = ResolveVisualClass(G.Skater.Visual, G.Look.Tier);
+	SpawnedVisualClass = VisualClass;
+	LastGoalie.Init(GoalieOff, Sim->GetSkaters().Num());
+	GoalieOnFrame.Init(0, Sim->GetSkaters().Num());
 	for (const FJamSkaterState& S : Sim->GetSkaters())
 	{
 		AJamSkater* A = World->SpawnActor<AJamSkater>(AJamSkater::StaticClass(), FTransform(FRotator(0, FMath::RadiansToDegrees(S.Yaw), 0), UJamSim::ToWorld(S.Pos)), P);
 		const int32 InTeam = S.Index - (S.Team == 0 ? 0 : G.Teams[0].Skaters.Num());
-		A->InitSkater(S.Index, S.Team, G.Teams[S.Team].Colour, S.Team * 10 + InTeam + 1, VisualClass);
+		A->InitSkater(S.Index, S.Team, G.Teams[S.Team].Colour, JerseyNumberFor(S.Team, InTeam), VisualClass);   // B-to-A-0021 point 2: 7/13/42 and 9/21/88
 #if WITH_EDITOR
 		A->SetActorLabel(FString::Printf(TEXT("Skater_%d_%s_%s"), S.Index, *G.Teams[S.Team].Id, *S.Role.ToString()));
 #endif
@@ -224,6 +285,8 @@ void AHokejGameMode::BuildMatch()
 	// The opening faceoff event, TAKE 1 and the first presentation frame.
 	DeliverEvents();
 	UpdateTake(true);
+	// Lane A32 (B-to-A-0026): the commentator's loops (MS_music_match, MS_skate_loop) and the season_take event, after the period event and before the first frame.
+	if (UJamCommentarySystem* Commentary = UJamCommentarySystem::Get(this)) Commentary->OnMatchBuilt(this);
 	for (AJamSkater* A : Skaters)
 	{
 		A->ApplySimFrame(Sim->GetSkaters()[A->GetSimIndex()]);
@@ -447,12 +510,25 @@ void AHokejGameMode::GatherInputs()
 		{
 			I.Move = FVector2D(Out[i].Move.X, Out[i].Move.Y);
 			I.bShoot = Out[i].bShoot;
+			I.bShootHeld = Out[i].bShootHeld;   // lane A31 (B-to-A-0024 point 1): the bots' charged shot
 			I.bCheck = Out[i].bCheck;
 			I.bBrake = Out[i].bBrake;
 			I.bPass = Out[i].bPass;   // lane A3 (R-0017): pass, stick aim, poke, lift
 			I.Stick = FVector2D(Out[i].Stick.X, Out[i].Stick.Y);
 			I.bPoke = Out[i].bPoke;
 			I.bLift = Out[i].bLift;
+			// Lane A31 (B-to-A-0024 point 3, C-0001 v3): the brain's owner calls SetGoalieStance for the last man in the crease, on a change only.
+			int8 Goalie = Out[i].bGoalie ? static_cast<int8>(FMath::Clamp(Out[i].GoalieSide, -1, 1)) : GoalieOff;
+			// The brain's crease rule flickers at its edge (on/off every 3 frames in the 19:58 proof): once on, the stance holds at least GoalieHoldFrames
+			// before it may drop (cosmetic only; the brain's steering is untouched).
+			if (Goalie == GoalieOff && LastGoalie.IsValidIndex(i) && LastGoalie[i] != GoalieOff && Sim->GetFrame() - GoalieOnFrame[i] < GoalieHoldFrames) Goalie = LastGoalie[i];
+			if (LastGoalie.IsValidIndex(i) && LastGoalie[i] != Goalie)
+			{
+				if (LastGoalie[i] == GoalieOff) GoalieOnFrame[i] = Sim->GetFrame();
+				LastGoalie[i] = Goalie;
+				if (Skaters.IsValidIndex(i) && Skaters[i]) if (UObject* V = Skaters[i]->GetVisualObject()) IJamSkaterVisual::Execute_SetGoalieStance(V, Out[i].bGoalie, Out[i].bGoalie ? Goalie : 0);
+				UE_LOG(LogHokej, Log, TEXT("JAMGOALIE frame=%lld skater=%d on=%d side=%d"), Sim->GetFrame(), i, Out[i].bGoalie ? 1 : 0, Out[i].bGoalie ? Goalie : 0);   // on a change only (B-to-A-0024 point 3 proof)
+			}
 		}
 	}
 	Inputs[Human] = (bScriptedHuman || CVarJamScriptHuman.GetValueOnGameThread() != 0) ? ScriptedHumanInput() : ReadHumanInput();
@@ -590,7 +666,11 @@ void AHokejGameMode::StepOnce()
 	}
 	for (AJamSkater* A : Skaters)
 	{
-		A->ApplySimFrame(Sim->GetSkaters()[A->GetSimIndex()]);
+		const FJamSkaterState& St = Sim->GetSkaters()[A->GetSimIndex()];
+		// Lane A31 (B-to-A-0024 points 1 and 2): one line per shot (with its charge) and per pass, a few per minute, so B can read what the visual was sent.
+		if (St.bShotThisFrame) UE_LOG(LogHokej, Log, TEXT("JAMSHOT frame=%lld skater=%d team=%d charge=%.2f %s"), Sim->GetFrame(), St.Index, St.Team, St.LastShotCharge, St.bHuman ? TEXT("human") : TEXT("bot"));
+		if (St.bPassThisFrame) UE_LOG(LogHokej, Log, TEXT("JAMPASS frame=%lld skater=%d team=%d strength=%.2f %s (PlayPass only, no PlayShoot)"), Sim->GetFrame(), St.Index, St.Team, St.LastPassStrength, St.bHuman ? TEXT("human") : TEXT("bot"));
+		A->ApplySimFrame(St);
 		if (Effects && LastBoost.IsValidIndex(A->GetSimIndex()))
 		{
 			const FName Boost = Effects->GetBoostKindFor(A->GetSimIndex());   // lane A14: the toy figure glows while boosted

@@ -99,6 +99,7 @@ FString FJamSettings::TierLabel(const FString& Tier)
 	if (Tier == TEXT("l2_night")) return TEXT("NIGHT (L2)");
 	if (Tier == TEXT("l3_neon")) return TEXT("NEON (L3)");
 	if (Tier == TEXT("p3_clay")) return TEXT("CLAY (P3)");   // B-to-A-0018 (lane A21)
+	if (Tier == TEXT("p4_broadcast")) return TEXT("BROADCAST (P4)");   // B-to-A-0025 (lane A31)
 	return Tier.ToUpper();
 }
 

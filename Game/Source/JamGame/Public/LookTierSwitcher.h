@@ -30,9 +30,14 @@ public:
 	// Where A's under-ice floor goes while a rig is loaded (R-0016 point 3).
 	static constexpr double FloorZCm = -20.0;
 
-	// Tier strings of game.look.tier, in ladder order: "l1_day", "l2_night", "l3_neon", "p3_clay".
+	// Tier strings of game.look.tier, in ladder order: "l1_day", "l2_night", "l3_neon", "p3_clay", "p4_broadcast" (B-to-A-0025, lane A31).
 	UFUNCTION(BlueprintPure, Category = "Jam|Look")
 	static TArray<FString> GetKnownTiers();
+
+	// B-to-A-0025 point 3: the current value of /JamAssets/Look/MPC_Look's Clay scalar in this world (1 clay, 0 cel, -1 broadcast; 0 when the collection is absent).
+	// SetTier resets it to 0 before streaming a rig; the rig's BP_LookParams writes its own value on BeginPlay.
+	UFUNCTION(BlueprintPure, Category = "Jam|Look")
+	float GetLookClay() const;
 
 	// Rig map for a tier ("/JamAssets/Rigs/LR_L2_Night.LR_L2_Night" for "l2_night"); empty for an unknown tier.
 	UFUNCTION(BlueprintPure, Category = "Jam|Look")
@@ -43,7 +48,7 @@ public:
 	static float RigScaleFor(float RinkLengthM);
 
 	// B-to-A-0018 point 5: the trim strips' Emissive a tier ships with (schema default of look.trim_emissive per tier):
-	// l1_day 30, l2_night 30, l3_neon 30, p3_clay 12. Unknown tier: 30.
+	// l1_day 30, l2_night 30, l3_neon 30, p3_clay 12, p4_broadcast 30. Unknown tier: 30.
 	UFUNCTION(BlueprintPure, Category = "Jam|Look")
 	static float DefaultTrimEmissiveFor(const FString& Tier);
 
@@ -88,6 +93,8 @@ private:
 	void HidePersistentLights(bool bHide);
 	void LowerFloor();
 	void PushTrimEmissive();
+	void PushGlass();              // lane A31: the glass instance per tier to every rink (ARinkActor::SetGlassForTier)
+	void ResetLookCollection();    // lane A31: MPC_Look.Clay = 0 before a rig streams
 
 	UPROPERTY(Transient)
 	TMap<FString, TObjectPtr<ULevelStreamingDynamic>> LoadedRigs;

@@ -44,11 +44,27 @@ public:
 	// Every non-loopback IPv4 of this machine (for the host's code list); the first is the default-route one when known.
 	static TArray<uint32> LocalAddresses();
 
+	// Lane A38: a simulated bad link for measurements (console jam.net.SimDelayMs / jam.net.SimLoss, read by the lobby when it opens the
+	// socket): every outgoing datagram is held DelayMs before it goes out and a Loss fraction is dropped (seeded). Wall clock on purpose:
+	// it imitates the wire, the sim never reads it. 0 / 0 = the real wire. Both peers set it = DelayMs each way.
+	void SetImpairment(double DelayMs, double Loss, uint64 Seed);
+	int32 GetSimDropped() const { return SimDropped; }
+	double GetSimDelayMs() const { return SimDelayMs; }
+	double GetSimLoss() const { return SimLoss; }
+
 private:
+	void FlushHeld();
+
 	FSocket* Socket = nullptr;
 	TSharedPtr<FInternetAddr> Peer;
 	int32 BoundPort = -1;
 	TArray<uint8> Scratch;
+	struct FHeld { double ReadyAt; TArray<uint8> Bytes; };
+	TArray<FHeld> Held;
+	double SimDelayMs = 0.0;
+	double SimLoss = 0.0;
+	int32 SimDropped = 0;
+	FJamRandom SimRng;
 };
 
 // Two endpoints joined by a simulated link: a datagram sent at tick T is receivable at tick T + DelayTicks, and is dropped

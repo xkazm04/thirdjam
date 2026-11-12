@@ -1,0 +1,1 @@
+{"script":{"content":"A28_LAB={'vendor':'Meshy','mesh':'/Game/P4/Meshy/SK_P4_Meshy','stick':'/Game/P4/Props/SM_P4_Stick','stick_rot':[0,0,0],'alias':{}}\nexec(open(r'C:/Users/kazda/kiro/thirdjam/tools/p4/ue_lab.py').read())\n","language":"Python"}}

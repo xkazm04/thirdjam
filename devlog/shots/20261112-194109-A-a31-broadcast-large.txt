@@ -1,0 +1,1 @@
+﻿Lane A31: hockey.arena.large switched live to p4_broadcast: rig at scale 1.333 (10 local lights x1.778), MI_Bcast_Glass, Clay -1, BP_SkaterVisual_TB2_P4.

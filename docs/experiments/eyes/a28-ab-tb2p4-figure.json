@@ -1,0 +1,78 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "figure",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T18:04:26.805Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "figure",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": "tools/p4/out/ab/cap/ab_TB2P4_f08_chase.png",
+          "width": 960,
+          "height": 720
+        }
+      ],
+      "thumbnails": [
+        "A: 128x96"
+      ],
+      "prompt_chars": 2682,
+      "usage": {
+        "prompt": 2974,
+        "output": 467,
+        "thoughts": 1631,
+        "total": 5072,
+        "calls": 1
+      },
+      "cost_usd_est": 0.03112,
+      "ms": 20456,
+      "retried": false,
+      "answer": {
+        "hockey_player": {
+          "full": 2,
+          "small": 2,
+          "parts": {
+            "stick": false,
+            "blade": false,
+            "hands": false,
+            "skates": true,
+            "helmet": true
+          },
+          "evidence": "The figure wears skates and a helmet, but the complete lack of a hockey stick and indistinguishable gloves make it look more like a speed skater than a hockey player."
+        },
+        "toy": {
+          "full": 3,
+          "small": 3,
+          "evidence": "The smooth, untextured blue surfaces and chunky limbs suggest plastic, but the tiny head and massive shoulders lean more toward a stylized superhero than a classic, cute toy figure."
+        },
+        "best_row": "N/A - only a single image was provided.",
+        "proportions": {
+          "head_of_height": 0.15,
+          "shoulder_of_height": 0.55,
+          "stick_of_height": 0
+        },
+        "changes": [
+          "head 0.15 of height -> 0.30",
+          "shoulder 0.55 of height -> 0.40",
+          "stick 0.0 of height -> 1.10",
+          "gloves blue -> black or warm orange to separate them from the jersey"
+        ],
+        "worst": [
+          "The hockey stick is completely missing, which is the most critical prop for readability.",
+          "The head is far too small, breaking the intended toy aesthetic and making the character look like a pinhead bruiser.",
+          "The hands/gloves are the exact same shade of blue as the jersey, turning the arms into featureless stumps."
+        ],
+        "works": [
+          "The skates have excellent contrast (black boots, white holders) and read clearly even at the downscaled size.",
+          "The solid, bold blue color is vibrant and fits an arcade aesthetic perfectly.",
+          "The wide, deep skating stance conveys forward momentum and weight well."
+        ]
+      },
+      "markdown": "**eyes/figure** A=ab_TB2P4_f08_chase.png (gemini-3.1-pro-preview, in 2974 out 467 think 1631 tokens, ~$0.0311, 20.5 s)\n- hockey_player:\n  - full: 2\n  - small: 2\n  - parts:\n    - stick: false\n    - blade: false\n    - hands: false\n    - skates: true\n    - helmet: true\n  - evidence: The figure wears skates and a helmet, but the complete lack of a hockey stick and indistinguishable gloves make it look more like a speed skater than a hockey player.\n- toy:\n  - full: 3\n  - small: 3\n  - evidence: The smooth, untextured blue surfaces and chunky limbs suggest plastic, but the tiny head and massive shoulders lean more toward a stylized superhero than a classic, cute toy figure.\n- best_row: N/A - only a single image was provided.\n- proportions:\n  - head_of_height: 0.15\n  - shoulder_of_height: 0.55\n  - stick_of_height: 0\n- changes: head 0.15 of height -> 0.30; shoulder 0.55 of height -> 0.40; stick 0.0 of height -> 1.10; gloves blue -> black or warm orange to separate them from the jersey\n- worst: The hockey stick is completely missing, which is the most critical prop for readability.; The head is far too small, breaking the intended toy aesthetic and making the character look like a pinhead bruiser.; The hands/gloves are the exact same shade of blue as the jersey, turning the arms into featureless stumps.\n- works: The skates have excellent contrast (black boots, white holders) and read clearly even at the downscaled size.; The solid, bold blue color is vibrant and fits an arcade aesthetic perfectly.; The wide, deep skating stance conveys forward momentum and weight well."
+    }
+  ]
+}

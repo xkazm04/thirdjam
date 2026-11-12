@@ -1,0 +1,74 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "ab-pair",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T18:33:14.053Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "ab-pair",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a30/docs/experiments/img/bakeoff/a30-b1-faceoff-40m.jpg",
+          "width": 2560,
+          "height": 1440
+        },
+        {
+          "label": "B",
+          "path": ".claude/worktrees/a30/docs/experiments/img/bakeoff/a30-b2-faceoff-40m.jpg",
+          "width": 2560,
+          "height": 1440
+        }
+      ],
+      "distance": 40,
+      "thumbnails": [],
+      "prompt_chars": 3514,
+      "usage": {
+        "prompt": 3239,
+        "output": 364,
+        "thoughts": 2462,
+        "total": 6065,
+        "calls": 1
+      },
+      "cost_usd_est": 0.04039,
+      "ms": 26999,
+      "retried": false,
+      "answer": {
+        "elements": {
+          "sky": {
+            "closer": "tie",
+            "why": "Both stills feature the identical deep-blue night dome with stars above a dark ceiling line."
+          },
+          "ice": {
+            "closer": "tie",
+            "why": "Both stills use the same scuffed ice texture with painted brush streaks and frost patches."
+          },
+          "pools": {
+            "closer": "tie",
+            "why": "Both stills show identical flat cel lighting steps forming soft light pools on the ice."
+          },
+          "figures": {
+            "closer": "b",
+            "why": "Still B applies flat, hard-edged cel lighting steps to the jerseys and helmets, whereas Still A uses softer, smoother gradients."
+          },
+          "construction": {
+            "closer": "tie",
+            "why": "The boards, emissive trims, and red nets are identical across both images."
+          },
+          "outline": {
+            "closer": "b",
+            "why": "Still B features thick, ink-like black outlines on the nearest figure that noticeably reduce in width on the farther players, matching the distance falloff requirement."
+          }
+        },
+        "verdict": "b",
+        "confidence": 0.95,
+        "reason": "Still B successfully implements the requested flat cel shading and distance-scaled ink outlines on the figures, fully realizing the 'painted cel toy' aesthetic that Still A misses with its soft gradients.",
+        "loser_keeps": "Still A's thinner outline on the foreground character prevents the black stroke from swallowing small details like the stick shaft and hands."
+      },
+      "markdown": "**eyes/ab-pair** A=a30-b1-faceoff-40m.jpg B=a30-b2-faceoff-40m.jpg at 40 m (gemini-3.1-pro-preview, in 3239 out 364 think 2462 tokens, ~$0.0404, 27 s)\n- elements:\n  - sky: closer tie, why Both stills feature the identical deep-blue night dome with stars above a dark ceiling line.\n  - ice: closer tie, why Both stills use the same scuffed ice texture with painted brush streaks and frost patches.\n  - pools: closer tie, why Both stills show identical flat cel lighting steps forming soft light pools on the ice.\n  - figures: closer b, why Still B applies flat, hard-edged cel lighting steps to the jerseys and helmets, whereas Still A uses softer, smoother gradients.\n  - construction: closer tie, why The boards, emissive trims, and red nets are identical across both images.\n  - outline: closer b, why Still B features thick, ink-like black outlines on the nearest figure that noticeably reduce in width on the farther players, matching the distance falloff requirement.\n- verdict: b\n- confidence: 0.95\n- reason: Still B successfully implements the requested flat cel shading and distance-scaled ink outlines on the figures, fully realizing the 'painted cel toy' aesthetic that Still A misses with its soft gradients.\n- loser_keeps: Still A's thinner outline on the foreground character prevents the black stroke from swallowing small details like the stick shaft and hands."
+    }
+  ]
+}

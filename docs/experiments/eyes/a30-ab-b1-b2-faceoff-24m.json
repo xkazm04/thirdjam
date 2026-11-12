@@ -1,0 +1,74 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "ab-pair",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T18:32:46.883Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "ab-pair",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a30/docs/experiments/img/bakeoff/a30-b1-faceoff-24m.jpg",
+          "width": 2560,
+          "height": 1440
+        },
+        {
+          "label": "B",
+          "path": ".claude/worktrees/a30/docs/experiments/img/bakeoff/a30-b2-faceoff-24m.jpg",
+          "width": 2560,
+          "height": 1440
+        }
+      ],
+      "distance": 24,
+      "thumbnails": [],
+      "prompt_chars": 3514,
+      "usage": {
+        "prompt": 3239,
+        "output": 373,
+        "thoughts": 1267,
+        "total": 4879,
+        "calls": 1
+      },
+      "cost_usd_est": 0.02616,
+      "ms": 16291,
+      "retried": false,
+      "answer": {
+        "elements": {
+          "sky": {
+            "closer": "tie",
+            "why": "Both stills feature the identical deep-blue night dome with stars above a solid black ceiling line."
+          },
+          "ice": {
+            "closer": "tie",
+            "why": "Both stills use the exact same ice texture with visible painted brush streaks and lighter frost patches."
+          },
+          "pools": {
+            "closer": "tie",
+            "why": "Both stills display the same four spot cones with distinct, flat cel-shaded lighting steps."
+          },
+          "figures": {
+            "closer": "a",
+            "why": "The figures in A look more like painted cel toys because they have the requested ink-like outlines."
+          },
+          "construction": {
+            "closer": "tie",
+            "why": "Both stills have identical boards with the ochre kick plate, dark glass rail, emissive trim, and thick red nets."
+          },
+          "outline": {
+            "closer": "a",
+            "why": "Still A features distinct black outlines on the players that correctly scale down in width on the distant orange figures, whereas B lacks them entirely."
+          }
+        },
+        "verdict": "a",
+        "confidence": 0.95,
+        "reason": "Still A successfully implements the ink-like outlines on the characters, which is a mandatory component of the requested 'painted cel' style.",
+        "loser_keeps": "Without the heavy black outlines, the dark blue jerseys in B look slightly brighter and less muddy, suggesting the outlines in A might need to be slightly thinner or colored rather than pure black to maintain readability."
+      },
+      "markdown": "**eyes/ab-pair** A=a30-b1-faceoff-24m.jpg B=a30-b2-faceoff-24m.jpg at 24 m (gemini-3.1-pro-preview, in 3239 out 373 think 1267 tokens, ~$0.0262, 16.3 s)\n- elements:\n  - sky: closer tie, why Both stills feature the identical deep-blue night dome with stars above a solid black ceiling line.\n  - ice: closer tie, why Both stills use the exact same ice texture with visible painted brush streaks and lighter frost patches.\n  - pools: closer tie, why Both stills display the same four spot cones with distinct, flat cel-shaded lighting steps.\n  - figures: closer a, why The figures in A look more like painted cel toys because they have the requested ink-like outlines.\n  - construction: closer tie, why Both stills have identical boards with the ochre kick plate, dark glass rail, emissive trim, and thick red nets.\n  - outline: closer a, why Still A features distinct black outlines on the players that correctly scale down in width on the distant orange figures, whereas B lacks them entirely.\n- verdict: a\n- confidence: 0.95\n- reason: Still A successfully implements the ink-like outlines on the characters, which is a mandatory component of the requested 'painted cel' style.\n- loser_keeps: Without the heavy black outlines, the dark blue jerseys in B look slightly brighter and less muddy, suggesting the outlines in A might need to be slightly thinner or colored rather than pure black to maintain readability."
+    }
+  ]
+}

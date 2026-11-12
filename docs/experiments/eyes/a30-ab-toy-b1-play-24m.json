@@ -1,0 +1,74 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "ab-pair",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T18:26:22.265Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "ab-pair",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a30/docs/experiments/img/bakeoff/a30-toy-play-24m.jpg",
+          "width": 2560,
+          "height": 1440
+        },
+        {
+          "label": "B",
+          "path": ".claude/worktrees/a30/docs/experiments/img/bakeoff/a30-b1-play-24m.jpg",
+          "width": 2560,
+          "height": 1440
+        }
+      ],
+      "distance": 24,
+      "thumbnails": [],
+      "prompt_chars": 3509,
+      "usage": {
+        "prompt": 3233,
+        "output": 363,
+        "thoughts": 1975,
+        "total": 5571,
+        "calls": 1
+      },
+      "cost_usd_est": 0.03452,
+      "ms": 20714,
+      "retried": false,
+      "answer": {
+        "elements": {
+          "sky": {
+            "closer": "tie",
+            "why": "Both stills feature the exact same deep-blue night dome with stars above a dark horizon line."
+          },
+          "ice": {
+            "closer": "tie",
+            "why": "Both stills use identical textures for the ice, showing the required painted brush streaks and frost patches."
+          },
+          "pools": {
+            "closer": "tie",
+            "why": "Both stills display the same four stepped light pools from the shadowed spot cones."
+          },
+          "figures": {
+            "closer": "b",
+            "why": "Still B correctly applies the specified deep blue and warm orange jersey colours to the toy figures, whereas Still A uses untextured grey models."
+          },
+          "construction": {
+            "closer": "tie",
+            "why": "Both stills have identical rink construction, including the ochre kick plate, dark glass rail, and red nets."
+          },
+          "outline": {
+            "closer": "tie",
+            "why": "Both stills apply the same visible ink-like outline shader to the figures and objects."
+          }
+        },
+        "verdict": "b",
+        "confidence": 1,
+        "reason": "Still B successfully implements the required deep blue and warm orange team colours on the figures, which is essential for gameplay readability and matching the art direction, unlike the grey placeholders in Still A.",
+        "loser_keeps": "The environment assets, including the ice texture, lighting pools, and rink construction, are identical and successfully meet the 'painted cel toy hockey at night' bar."
+      },
+      "markdown": "**eyes/ab-pair** A=a30-toy-play-24m.jpg B=a30-b1-play-24m.jpg at 24 m (gemini-3.1-pro-preview, in 3233 out 363 think 1975 tokens, ~$0.0345, 20.7 s)\n- elements:\n  - sky: closer tie, why Both stills feature the exact same deep-blue night dome with stars above a dark horizon line.\n  - ice: closer tie, why Both stills use identical textures for the ice, showing the required painted brush streaks and frost patches.\n  - pools: closer tie, why Both stills display the same four stepped light pools from the shadowed spot cones.\n  - figures: closer b, why Still B correctly applies the specified deep blue and warm orange jersey colours to the toy figures, whereas Still A uses untextured grey models.\n  - construction: closer tie, why Both stills have identical rink construction, including the ochre kick plate, dark glass rail, and red nets.\n  - outline: closer tie, why Both stills apply the same visible ink-like outline shader to the figures and objects.\n- verdict: b\n- confidence: 1\n- reason: Still B successfully implements the required deep blue and warm orange team colours on the figures, which is essential for gameplay readability and matching the art direction, unlike the grey placeholders in Still A.\n- loser_keeps: The environment assets, including the ice texture, lighting pools, and rink construction, are identical and successfully meet the 'painted cel toy hockey at night' bar."
+    }
+  ]
+}

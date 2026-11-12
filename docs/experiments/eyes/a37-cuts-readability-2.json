@@ -1,0 +1,186 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "readability",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-12T18:44:03.566Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "readability",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a37/docs/experiments/img/cuts/take-7-24m.png",
+          "width": 1275,
+          "height": 700
+        },
+        {
+          "label": "B",
+          "path": ".claude/worktrees/a37/docs/experiments/img/cuts/pinball-cut-24m.png",
+          "width": 1275,
+          "height": 700
+        },
+        {
+          "label": "C",
+          "path": ".claude/worktrees/a37/docs/experiments/img/cuts/maze-cut-24m.png",
+          "width": 1275,
+          "height": 700
+        },
+        {
+          "label": "D",
+          "path": ".claude/worktrees/a37/docs/experiments/img/cuts/power-up-cut-24m.png",
+          "width": 1275,
+          "height": 700
+        }
+      ],
+      "distance": 24,
+      "thumbnails": [],
+      "prompt_chars": 2791,
+      "usage": {
+        "prompt": 5244,
+        "output": 1339,
+        "thoughts": 2190,
+        "total": 8773,
+        "calls": 1
+      },
+      "cost_usd_est": 0.01717,
+      "ms": 38965,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A: take-7-24m.png",
+            "elements": {
+              "puck": {
+                "score": 3,
+                "evidence": "The puck is a tiny 5 px dark disc resting inside a 14 px pale yellow glow oval at bottom center, partly obscured by player shadows."
+              },
+              "carrier": {
+                "score": 2,
+                "evidence": "Two figures overlap into a single dark silhouette cluster at bottom center, obscuring whose stick controls the puck."
+              },
+              "team_colours": {
+                "score": 1,
+                "evidence": "All skaters are rendered in uniform dark charcoal and black shading; neither deep blue nor warm orange jersey colours are identifiable."
+              },
+              "far_net": {
+                "score": 3,
+                "evidence": "The far net is a small 24x12 px red frame centered against the far boards below the 68 m distance label."
+              },
+              "zone_strips": {
+                "score": 4,
+                "evidence": "The thin red center line and blue zone line span clearly across the ice despite dark circular ice shading."
+              }
+            },
+            "first_look": "cyan patterned targeting grid",
+            "noise": [
+              "large cyan wireframe circular grid overlay",
+              "glowing cyan rectangular pads along boards",
+              "floating orange-bordered speech bubble popup",
+              "heavy concentric circular grey ice shading"
+            ],
+            "overall": 2
+          },
+          {
+            "label": "Still B: pinball-cut-24m.png",
+            "elements": {
+              "puck": {
+                "score": 4,
+                "evidence": "The puck is a distinct 6 px black disc highlighted by a pale yellow glow circle and aim line at bottom left."
+              },
+              "carrier": {
+                "score": 3,
+                "evidence": "Three dark figures cluster closely together, but the lowest figure's stick connects directly to the yellow puck glow."
+              },
+              "team_colours": {
+                "score": 1,
+                "evidence": "All skaters are shaded in monotone dark grey and black cel-shading, completely lacking blue or orange team differentiation."
+              },
+              "far_net": {
+                "score": 4,
+                "evidence": "A red rectangular frame roughly 30x15 px sits in clear view at the far boards below the yellow 48 m marker."
+              },
+              "zone_strips": {
+                "score": 4,
+                "evidence": "Both the dark red center line and deep blue zone line cut cleanly across the width of the rink."
+              }
+            },
+            "first_look": "bright magenta curved bumpers",
+            "noise": [
+              "vivid magenta curved barrier props",
+              "floating speech bubble text box",
+              "clipped skater torso at bottom right edge"
+            ],
+            "overall": 3
+          },
+          {
+            "label": "Still C: maze-cut-24m.png",
+            "elements": {
+              "puck": {
+                "score": 3,
+                "evidence": "A small 5 px black disc sits inside a faint yellow-green glow circle at bottom center between two player figures."
+              },
+              "carrier": {
+                "score": 2,
+                "evidence": "Several grey figures are grouped tightly around the puck at the bottom, partially hidden behind white obstacle blocks."
+              },
+              "team_colours": {
+                "score": 1,
+                "evidence": "All visible skater models appear in desaturated medium and dark grey with black outlines, showing no blue or orange."
+              },
+              "far_net": {
+                "score": 3,
+                "evidence": "A small red net outline measuring about 26x14 px is visible at the far end directly under the 54 m tag."
+              },
+              "zone_strips": {
+                "score": 3,
+                "evidence": "The blue line and red center line are visible across the ice but are heavily segmented and obscured by large white blocks."
+              }
+            },
+            "first_look": "large white maze blocks",
+            "noise": [
+              "high-contrast white rectangular maze blocks",
+              "floating orange-framed dialogue bubble"
+            ],
+            "overall": 2
+          },
+          {
+            "label": "Still D: power-up-cut-24m.png",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "The puck is not visible anywhere on the ice."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "No puck carrier is visible, as only one lone player stands at the far end of the rink."
+              },
+              "team_colours": {
+                "score": 1,
+                "evidence": "Only one distant skater is present as a tiny 20 px black silhouette, offering no visible team colour."
+              },
+              "far_net": {
+                "score": 4,
+                "evidence": "The red net frame stands unobstructed at the far boards measuring about 28x15 px beneath the 83 m indicator."
+              },
+              "zone_strips": {
+                "score": 5,
+                "evidence": "The blue zone line and red center line run completely unobstructed across the entire width of the rink."
+              }
+            },
+            "first_look": "vast empty ice surface",
+            "noise": [
+              "dark radial concentric ice bands",
+              "isolated red faceoff dot at bottom left",
+              "bottom subtitle text banner"
+            ],
+            "overall": 2
+          }
+        ]
+      },
+      "markdown": "**eyes/readability** A=take-7-24m.png B=pinball-cut-24m.png C=maze-cut-24m.png D=power-up-cut-24m.png at 24 m (gemini-3.8-flash, in 5244 out 1339 think 2190 tokens, ~$0.0172, 39 s)\n- stills:\n  - label: Still A: take-7-24m.png; first_look: cyan patterned targeting grid; overall: 2\n    - elements:\n      - puck: score 3, evidence The puck is a tiny 5 px dark disc resting inside a 14 px pale yellow glow oval at bottom center, partly obscured by player shadows.\n      - carrier: score 2, evidence Two figures overlap into a single dark silhouette cluster at bottom center, obscuring whose stick controls the puck.\n      - team_colours: score 1, evidence All skaters are rendered in uniform dark charcoal and black shading; neither deep blue nor warm orange jersey colours are identifiable.\n      - far_net: score 3, evidence The far net is a small 24x12 px red frame centered against the far boards below the 68 m distance label.\n      - zone_strips: score 4, evidence The thin red center line and blue zone line span clearly across the ice despite dark circular ice shading.\n    - noise: large cyan wireframe circular grid overlay; glowing cyan rectangular pads along boards; floating orange-bordered speech bubble popup; heavy concentric circular grey ice shading\n  - label: Still B: pinball-cut-24m.png; first_look: bright magenta curved bumpers; overall: 3\n    - elements:\n      - puck: score 4, evidence The puck is a distinct 6 px black disc highlighted by a pale yellow glow circle and aim line at bottom left.\n      - carrier: score 3, evidence Three dark figures cluster closely together, but the lowest figure's stick connects directly to the yellow puck glow.\n      - team_colours: score 1, evidence All skaters are shaded in monotone dark grey and black cel-shading, completely lacking blue or orange team differentiation.\n      - far_net: score 4, evidence A red rectangular frame roughly 30x15 px sits in clear view at the far boards below the yellow 48 m marker.\n      - zone_strips: score 4, evidence Both the dark red center line and deep blue zone line cut cleanly across the width of the rink.\n    - noise: vivid magenta curved barrier props; floating speech bubble text box; clipped skater torso at bottom right edge\n  - label: Still C: maze-cut-24m.png; first_look: large white maze blocks; overall: 2\n    - elements:\n      - puck: score 3, evidence A small 5 px black disc sits inside a faint yellow-green glow circle at bottom center between two player figures.\n      - carrier: score 2, evidence Several grey figures are grouped tightly around the puck at the bottom, partially hidden behind white obstacle blocks.\n      - team_colours: score 1, evidence All visible skater models appear in desaturated medium and dark grey with black outlines, showing no blue or orange.\n      - far_net: score 3, evidence A small red net outline measuring about 26x14 px is visible at the far end directly under the 54 m tag.\n      - zone_strips: score 3, evidence The blue line and red center line are visible across the ice but are heavily segmented and obscured by large white blocks.\n    - noise: high-contrast white rectangular maze blocks; floating orange-framed dialogue bubble\n  - label: Still D: power-up-cut-24m.png; first_look: vast empty ice surface; overall: 2\n    - elements:\n      - puck: score 1, evidence The puck is not visible anywhere on the ice.\n      - carrier: score 1, evidence No puck carrier is visible, as only one lone player stands at the far end of the rink.\n      - team_colours: score 1, evidence Only one distant skater is present as a tiny 20 px black silhouette, offering no visible team colour.\n      - far_net: score 4, evidence The red net frame stands unobstructed at the far boards measuring about 28x15 px beneath the 83 m indicator.\n      - zone_strips: score 5, evidence The blue zone line and red center line run completely unobstructed across the entire width of the rink.\n    - noise: dark radial concentric ice bands; isolated red faceoff dot at bottom left; bottom subtitle text banner"
+    }
+  ]
+}

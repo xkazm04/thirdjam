@@ -252,7 +252,7 @@
             "generated_b2",
             "toy_skeletal"
           ],
-          "description": "Which skater figure is drawn: toy_skeletal (default: the Blender toy figure as a skeletal mesh, lane A26), toy (the code-built figure), humanoid_b1 or generated_b2. Gameplay is identical. The Designer may not change it."
+          "description": "Which skater figure is drawn: humanoid_b1 (default since R-0030: device B's rebuilt scripted figure, the bake-off winner), toy_skeletal (the Blender toy figure as a skeletal mesh, lane A26), toy (the code-built figure), humanoid_b1 or generated_b2. Gameplay is identical. The Designer may not change it."
         },
         "pass_speed": {
           "type": "number",
@@ -302,6 +302,12 @@
           "minimum": 0.1,
           "maximum": 5,
           "description": "Mouse aim scale: 1 means 100 pixels move the blade one full reach."
+        },
+        "foul_grace_frames": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 120,
+          "description": "A check on a skater that carried the puck within this many frames is not a foul for hitting a player without the puck."
         }
       }
     },
@@ -928,6 +934,25 @@
         }
       }
     },
+    "commentary": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "The play-by-play commentator in the booth (lane A32, B-to-A-0026): recorded lines picked per event from a reviewed bank. Absent = enabled, normal.",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether the commentator speaks at all. Absent = true."
+        },
+        "intensity": {
+          "enum": [
+            "quiet",
+            "normal",
+            "loud"
+          ],
+          "description": "quiet: only the big calls (priority 3 and up), double cooldowns; normal: the bank's own priorities and cooldowns; loud: half the cooldowns. One line at a time and at most one every 2.5 s in every case. Absent = normal."
+        }
+      }
+    },
     "look": {
       "type": "object",
       "additionalProperties": false,
@@ -940,15 +965,16 @@
             "l1_day",
             "l2_night",
             "l3_neon",
-            "p3_clay"
+            "p3_clay",
+            "p4_broadcast"
           ],
-          "description": "light and art tier of the arena; p3_clay is the clay-figure look (B-to-A-0018)"
+          "description": "light and art tier of the arena; p3_clay is the clay-figure look (B-to-A-0018), p4_broadcast the broadcast look (B-to-A-0025)"
         },
         "trim_emissive": {
           "type": "number",
           "minimum": 0,
           "maximum": 100,
-          "description": "Emissive strength of the board trim strips. Absent = the tier's default: l1_day 30, l2_night 30, l3_neon 30, p3_clay 12 (bright clay ice reads 30 as a thin gold line). The far-net beacon stays at 40."
+          "description": "Emissive strength of the board trim strips. Absent = the tier's default: l1_day 30, l2_night 30, l3_neon 30, p3_clay 12 (bright clay ice reads 30 as a thin gold line), p4_broadcast 30. The far-net beacon stays at 40."
         },
         "trim_colour_hex": {
           "type": "string",

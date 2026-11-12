@@ -22,11 +22,18 @@
         "frames": 120,
         "fps": 30,
         "skeleton": "Reference (SMPL-H, 52 bones)",
-        "root_travel_m": [-0.097, -1.96, 0.001],
+        "root_travel_m": [
+          -0.097,
+          -1.96,
+          0.001
+        ],
         "loop_err_m": 0.734
       },
       "cut": {
-        "trim": [45, 85],
+        "trim": [
+          45,
+          85
+        ],
         "loop_blend": 6,
         "frames": 41,
         "note": "the gate's best cut: one stride cycle, 1.37 s; six frames blended toward frame 1 to close the loop"
@@ -44,7 +51,10 @@
         "frames_60": 80,
         "seconds": 1.3333,
         "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshy_Manny",
-        "unmapped_core": []
+        "unmapped_core": [],
+        "pass3": {
+          "note": "Reference rig: root-locked retarget kept (pass 2); strides are device B's since R-0027 point 3"
+        }
       }
     },
     {
@@ -64,7 +74,11 @@
         "frames": 76,
         "fps": 30,
         "skeleton": "Meshy ue5_mannequin (28 bones)",
-        "root_travel_m": [0.022, 0.581, -0.58]
+        "root_travel_m": [
+          0.022,
+          0.581,
+          -0.58
+        ]
       },
       "cut": {
         "frames": 76,
@@ -77,12 +91,22 @@
         "note": "the slide is the knock-back itself: the feet leave the ice as the body is thrown; acceptable for a reaction"
       },
       "ue": {
-        "src": "/Game/P4/Anim/Src/Meshyrig/AS_P4_knocked_down_back_src",
+        "src": "/Game/P4/Anim/Src/Meshyrig3/AS_P4_knocked_down_back_src",
         "out": "/Game/P4/Anim/AS_P4_knocked_down_back",
         "frames_60": 150,
         "seconds": 2.5,
-        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshyrig_Manny",
-        "unmapped_core": []
+        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshyrig3_Manny",
+        "unmapped_core": [],
+        "pass3": {
+          "normalize": "clip.py --normalize 0 --zup",
+          "pelvis_z_cm": {
+            "t0": 92.6,
+            "min": 27.1,
+            "max": 149.4,
+            "end": 27.4
+          },
+          "ops": "Pelvis Motion on, Root Motion off, Run IK Rig off"
+        }
       }
     },
     {
@@ -104,7 +128,11 @@
         "frames": 120,
         "fps": 30,
         "skeleton": "Reference (SMPL-H, 52 bones)",
-        "root_travel_m": [-0.376, 0.729, -0.16],
+        "root_travel_m": [
+          -0.376,
+          0.729,
+          -0.16
+        ],
         "loop_err_m": 0.578,
         "best_cut": {
           "first_frame": 13,
@@ -115,7 +143,10 @@
       "cut": {
         "frames": 22,
         "seconds": 0.7,
-        "trim": [13, 34],
+        "trim": [
+          13,
+          34
+        ],
         "loop_blend": 6,
         "note": "the gate's best cut; six frames blended toward the first frame"
       },
@@ -132,7 +163,10 @@
         "frames_60": 42,
         "seconds": 0.7,
         "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshy_Manny",
-        "unmapped_core": []
+        "unmapped_core": [],
+        "pass3": {
+          "note": "Reference rig: root-locked retarget kept (pass 2); strides are device B's since R-0027 point 3"
+        }
       }
     },
     {
@@ -154,7 +188,11 @@
         "frames": 120,
         "fps": 30,
         "skeleton": "Reference (SMPL-H, 52 bones)",
-        "root_travel_m": [0.12, -1.324, -0.007],
+        "root_travel_m": [
+          0.12,
+          -1.324,
+          -0.007
+        ],
         "loop_err_m": 0.832,
         "best_cut": {
           "first_frame": 54,
@@ -165,7 +203,10 @@
       "cut": {
         "frames": 32,
         "seconds": 1.033,
-        "trim": [54, 85],
+        "trim": [
+          54,
+          85
+        ],
         "loop_blend": 6,
         "note": "the gate's best cut; six frames blended toward the first frame"
       },
@@ -182,7 +223,10 @@
         "frames_60": 62,
         "seconds": 1.033,
         "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshy_Manny",
-        "unmapped_core": []
+        "unmapped_core": [],
+        "pass3": {
+          "note": "Reference rig: root-locked retarget kept (pass 2); strides are device B's since R-0027 point 3"
+        }
       }
     },
     {
@@ -204,7 +248,11 @@
         "frames": 120,
         "fps": 30,
         "skeleton": "Reference (SMPL-H, 52 bones)",
-        "root_travel_m": [-5.301, 1.405, -0.138],
+        "root_travel_m": [
+          -5.301,
+          1.405,
+          -0.138
+        ],
         "loop_err_m": 1.033,
         "best_cut": {
           "first_frame": 52,
@@ -215,7 +263,10 @@
       "cut": {
         "frames": 28,
         "seconds": 0.9,
-        "trim": [52, 79],
+        "trim": [
+          52,
+          79
+        ],
         "loop_blend": 6,
         "note": "the gate's best cut; six frames blended toward the first frame"
       },
@@ -232,7 +283,10 @@
         "frames_60": 54,
         "seconds": 0.9,
         "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshy_Manny",
-        "unmapped_core": []
+        "unmapped_core": [],
+        "pass3": {
+          "note": "Reference rig: root-locked retarget kept (pass 2); strides are device B's since R-0027 point 3"
+        }
       }
     },
     {
@@ -254,7 +308,11 @@
         "frames": 90,
         "fps": 30,
         "skeleton": "Reference (SMPL-H, 52 bones)",
-        "root_travel_m": [-0.345, -1.734, -0.028],
+        "root_travel_m": [
+          -0.345,
+          -1.734,
+          -0.028
+        ],
         "loop_err_m": 0.344,
         "best_cut": {
           "first_frame": 9,
@@ -265,7 +323,10 @@
       "cut": {
         "frames": 21,
         "seconds": 0.667,
-        "trim": [9, 29],
+        "trim": [
+          9,
+          29
+        ],
         "loop_blend": 6,
         "note": "the gate's best cut; six frames blended toward the first frame"
       },
@@ -282,7 +343,10 @@
         "frames_60": 40,
         "seconds": 0.667,
         "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshy_Manny",
-        "unmapped_core": []
+        "unmapped_core": [],
+        "pass3": {
+          "note": "Reference rig: root-locked retarget kept (pass 2); strides are device B's since R-0027 point 3"
+        }
       }
     },
     {
@@ -303,7 +367,11 @@
         "frames": 90,
         "fps": 30,
         "skeleton": "Reference (SMPL-H, 52 bones)",
-        "root_travel_m": [0, 0, -0.218]
+        "root_travel_m": [
+          0,
+          0,
+          -0.218
+        ]
       },
       "cut": {
         "frames": 90,
@@ -342,7 +410,11 @@
         "frames": 120,
         "fps": 30,
         "skeleton": "Reference (SMPL-H, 52 bones)",
-        "root_travel_m": [-0.032, -0.046, -0.01],
+        "root_travel_m": [
+          -0.032,
+          -0.046,
+          -0.01
+        ],
         "loop_err_m": 0.398,
         "best_cut": {
           "first_frame": 28,
@@ -353,7 +425,10 @@
       "cut": {
         "frames": 81,
         "seconds": 2.667,
-        "trim": [28, 108],
+        "trim": [
+          28,
+          108
+        ],
         "loop_blend": 6,
         "note": "the gate's best cut; six frames blended toward the first frame"
       },
@@ -385,13 +460,20 @@
       "wall_ms": 12382,
       "server_ms": 10110,
       "requested_at": "2026-11-12T17:37-17:40+02:00",
-      "contact_window": [20, 45],
+      "contact_window": [
+        20,
+        45
+      ],
       "route": "animation library action undefined undefined on the E1 ue5_mannequin rig 01a1cd14-2963-73ea-bcdb-3ca6ef260654",
       "raw": {
         "frames": 75,
         "fps": 30,
         "skeleton": "Reference (SMPL-H, 52 bones)",
-        "root_travel_m": [0, 0, 0.018]
+        "root_travel_m": [
+          0,
+          0,
+          0.018
+        ]
       },
       "cut": {
         "frames": 75,
@@ -400,7 +482,10 @@
       "gate": {
         "verdict": "WARN",
         "contact": {
-          "window": [20, 45],
+          "window": [
+            20,
+            45
+          ],
           "peak_hand_frame": 36,
           "peak_hand_mps": 4.03
         },
@@ -434,7 +519,11 @@
         "frames": 141,
         "fps": 30,
         "skeleton": "Meshy ue5_mannequin (28 bones)",
-        "root_travel_m": [0, 0, -0.623]
+        "root_travel_m": [
+          0,
+          0,
+          -0.623
+        ]
       },
       "cut": {
         "frames": 141,
@@ -447,12 +536,22 @@
         "root_after_m": 0
       },
       "ue": {
-        "src": "/Game/P4/Anim/Src/Meshyrig/AS_P4_knocked_down_behind_src",
+        "src": "/Game/P4/Anim/Src/Meshyrig3/AS_P4_knocked_down_behind_src",
         "out": "/Game/P4/Anim/AS_P4_knocked_down_behind",
         "frames_60": 280,
         "seconds": 4.667,
-        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshyrig_Manny",
-        "unmapped_core": []
+        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshyrig3_Manny",
+        "unmapped_core": [],
+        "pass3": {
+          "normalize": "clip.py --normalize 0 --zup",
+          "pelvis_z_cm": {
+            "t0": 97.2,
+            "min": 27.2,
+            "max": 99.8,
+            "end": 27.2
+          },
+          "ops": "Pelvis Motion on, Root Motion off, Run IK Rig off"
+        }
       }
     },
     {
@@ -472,7 +571,11 @@
         "frames": 66,
         "fps": 30,
         "skeleton": "Meshy ue5_mannequin (28 bones)",
-        "root_travel_m": [0, 0, -0.557]
+        "root_travel_m": [
+          0,
+          0,
+          -0.557
+        ]
       },
       "cut": {
         "frames": 66,
@@ -485,12 +588,22 @@
         "root_after_m": 0
       },
       "ue": {
-        "src": "/Game/P4/Anim/Src/Meshyrig/AS_P4_knocked_down_front_src",
+        "src": "/Game/P4/Anim/Src/Meshyrig3/AS_P4_knocked_down_front_src",
         "out": "/Game/P4/Anim/AS_P4_knocked_down_front",
         "frames_60": 130,
         "seconds": 2.167,
-        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshyrig_Manny",
-        "unmapped_core": []
+        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshyrig3_Manny",
+        "unmapped_core": [],
+        "pass3": {
+          "normalize": "clip.py --normalize 0 --zup",
+          "pelvis_z_cm": {
+            "t0": 93.5,
+            "min": 30.5,
+            "max": 93.5,
+            "end": 30.8
+          },
+          "ops": "Pelvis Motion on, Root Motion off, Run IK Rig off"
+        }
       }
     },
     {
@@ -510,7 +623,11 @@
         "frames": 99,
         "fps": 30,
         "skeleton": "Meshy ue5_mannequin (28 bones)",
-        "root_travel_m": [0, 0, -0.608]
+        "root_travel_m": [
+          0,
+          0,
+          -0.608
+        ]
       },
       "cut": {
         "frames": 99,
@@ -523,12 +640,22 @@
         "root_after_m": 0
       },
       "ue": {
-        "src": "/Game/P4/Anim/Src/Meshyrig/AS_P4_knocked_down_side_src",
+        "src": "/Game/P4/Anim/Src/Meshyrig3/AS_P4_knocked_down_side_src",
         "out": "/Game/P4/Anim/AS_P4_knocked_down_side",
         "frames_60": 196,
         "seconds": 3.267,
-        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshyrig_Manny",
-        "unmapped_core": []
+        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshyrig3_Manny",
+        "unmapped_core": [],
+        "pass3": {
+          "normalize": "clip.py --normalize 0 --zup",
+          "pelvis_z_cm": {
+            "t0": 91.8,
+            "min": 22.9,
+            "max": 92.9,
+            "end": 23.4
+          },
+          "ops": "Pelvis Motion on, Root Motion off, Run IK Rig off"
+        }
       }
     },
     {
@@ -548,7 +675,11 @@
         "frames": 76,
         "fps": 30,
         "skeleton": "Meshy ue5_mannequin (28 bones)",
-        "root_travel_m": [0, 0, 0.077]
+        "root_travel_m": [
+          0,
+          0,
+          0.077
+        ]
       },
       "cut": {
         "frames": 76,
@@ -561,12 +692,22 @@
         "root_after_m": 0
       },
       "ue": {
-        "src": "/Game/P4/Anim/Src/Meshyrig/AS_P4_hit_in_back_skating_src",
+        "src": "/Game/P4/Anim/Src/Meshyrig3/AS_P4_hit_in_back_skating_src",
         "out": "/Game/P4/Anim/AS_P4_hit_in_back_skating",
         "frames_60": 150,
         "seconds": 2.5,
-        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshyrig_Manny",
-        "unmapped_core": []
+        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshyrig3_Manny",
+        "unmapped_core": [],
+        "pass3": {
+          "normalize": "clip.py --normalize 0 --zup",
+          "pelvis_z_cm": {
+            "t0": 90.9,
+            "min": 88.7,
+            "max": 101.9,
+            "end": 99.6
+          },
+          "ops": "Pelvis Motion on, Root Motion off, Run IK Rig off"
+        }
       }
     },
     {
@@ -586,7 +727,11 @@
         "frames": 69,
         "fps": 30,
         "skeleton": "Meshy ue5_mannequin (28 bones)",
-        "root_travel_m": [0, 0, -0.63]
+        "root_travel_m": [
+          0,
+          0,
+          -0.63
+        ]
       },
       "cut": {
         "frames": 69,
@@ -599,12 +744,22 @@
         "root_after_m": 0
       },
       "ue": {
-        "src": "/Game/P4/Anim/Src/Meshyrig/AS_P4_trip_fall_src",
+        "src": "/Game/P4/Anim/Src/Meshyrig3/AS_P4_trip_fall_src",
         "out": "/Game/P4/Anim/AS_P4_trip_fall",
         "frames_60": 136,
         "seconds": 2.267,
-        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshyrig_Manny",
-        "unmapped_core": []
+        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshyrig3_Manny",
+        "unmapped_core": [],
+        "pass3": {
+          "normalize": "clip.py --normalize 0 --zup",
+          "pelvis_z_cm": {
+            "t0": 95.7,
+            "min": 24.1,
+            "max": 95.7,
+            "end": 24.9
+          },
+          "ops": "Pelvis Motion on, Root Motion off, Run IK Rig off"
+        }
       }
     },
     {
@@ -624,7 +779,11 @@
         "frames": 21,
         "fps": 30,
         "skeleton": "Meshy ue5_mannequin (28 bones)",
-        "root_travel_m": [0, 0, 0]
+        "root_travel_m": [
+          0,
+          0,
+          0
+        ]
       },
       "cut": {
         "frames": 21,
@@ -637,12 +796,22 @@
         "root_after_m": 0
       },
       "ue": {
-        "src": "/Game/P4/Anim/Src/Meshyrig/AS_P4_fall_2_src",
+        "src": "/Game/P4/Anim/Src/Meshyrig3/AS_P4_fall_2_src",
         "out": "/Game/P4/Anim/AS_P4_fall_2",
         "frames_60": 40,
         "seconds": 0.667,
-        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshyrig_Manny",
-        "unmapped_core": []
+        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshyrig3_Manny",
+        "unmapped_core": [],
+        "pass3": {
+          "normalize": "clip.py --normalize 0 --zup",
+          "pelvis_z_cm": {
+            "t0": 69.1,
+            "min": 69.1,
+            "max": 69.2,
+            "end": 69.1
+          },
+          "ops": "Pelvis Motion on, Root Motion off, Run IK Rig off"
+        }
       }
     },
     {
@@ -663,7 +832,11 @@
         "frames": 50,
         "fps": 30,
         "skeleton": "Meshy ue5_mannequin (28 bones)",
-        "root_travel_m": [0, 0, 0]
+        "root_travel_m": [
+          0,
+          0,
+          0
+        ]
       },
       "cut": {
         "frames": 50,
@@ -676,12 +849,22 @@
         "root_after_m": 0
       },
       "ue": {
-        "src": "/Game/P4/Anim/Src/Meshyrig/AS_P4_hit_reaction_src",
+        "src": "/Game/P4/Anim/Src/Meshyrig3/AS_P4_hit_reaction_src",
         "out": "/Game/P4/Anim/AS_P4_hit_reaction",
         "frames_60": 98,
         "seconds": 1.633,
-        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshyrig_Manny",
-        "unmapped_core": []
+        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshyrig3_Manny",
+        "unmapped_core": [],
+        "pass3": {
+          "normalize": "clip.py --normalize 0 --zup",
+          "pelvis_z_cm": {
+            "t0": 92.3,
+            "min": 87,
+            "max": 92.3,
+            "end": 92.3
+          },
+          "ops": "Pelvis Motion on, Root Motion off, Run IK Rig off"
+        }
       }
     },
     {
@@ -701,7 +884,11 @@
         "frames": 342,
         "fps": 30,
         "skeleton": "Meshy ue5_mannequin (28 bones)",
-        "root_travel_m": [0, 0, -0.255]
+        "root_travel_m": [
+          0,
+          0,
+          -0.255
+        ]
       },
       "cut": {
         "frames": 342,
@@ -714,12 +901,22 @@
         "root_after_m": 0
       },
       "ue": {
-        "src": "/Game/P4/Anim/Src/Meshyrig/AS_P4_stumble_src",
+        "src": "/Game/P4/Anim/Src/Meshyrig3/AS_P4_stumble_src",
         "out": "/Game/P4/Anim/AS_P4_stumble",
         "frames_60": 682,
         "seconds": 11.367,
-        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshyrig_Manny",
-        "unmapped_core": []
+        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshyrig3_Manny",
+        "unmapped_core": [],
+        "pass3": {
+          "normalize": "clip.py --normalize 0 --zup",
+          "pelvis_z_cm": {
+            "t0": 128,
+            "min": 50.9,
+            "max": 128,
+            "end": 99.3
+          },
+          "ops": "Pelvis Motion on, Root Motion off, Run IK Rig off"
+        }
       }
     },
     {
@@ -739,7 +936,11 @@
         "frames": 249,
         "fps": 30,
         "skeleton": "Meshy ue5_mannequin (28 bones)",
-        "root_travel_m": [0, 0, 0.632]
+        "root_travel_m": [
+          0,
+          0,
+          0.632
+        ]
       },
       "cut": {
         "frames": 249,
@@ -752,12 +953,22 @@
         "root_after_m": 0
       },
       "ue": {
-        "src": "/Game/P4/Anim/Src/Meshyrig/AS_P4_get_up_1_src",
+        "src": "/Game/P4/Anim/Src/Meshyrig3/AS_P4_get_up_1_src",
         "out": "/Game/P4/Anim/AS_P4_get_up_1",
         "frames_60": 496,
         "seconds": 8.267,
-        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshyrig_Manny",
-        "unmapped_core": []
+        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshyrig3_Manny",
+        "unmapped_core": [],
+        "pass3": {
+          "normalize": "clip.py --normalize 0 --zup",
+          "pelvis_z_cm": {
+            "t0": 21,
+            "min": 20.5,
+            "max": 92.1,
+            "end": 92
+          },
+          "ops": "Pelvis Motion on, Root Motion off, Run IK Rig off"
+        }
       }
     },
     {
@@ -777,7 +988,11 @@
         "frames": 93,
         "fps": 30,
         "skeleton": "Meshy ue5_mannequin (28 bones)",
-        "root_travel_m": [0, 0, 0.355]
+        "root_travel_m": [
+          0,
+          0,
+          0.355
+        ]
       },
       "cut": {
         "frames": 93,
@@ -790,12 +1005,22 @@
         "root_after_m": 0
       },
       "ue": {
-        "src": "/Game/P4/Anim/Src/Meshyrig/AS_P4_get_up_2_src",
+        "src": "/Game/P4/Anim/Src/Meshyrig3/AS_P4_get_up_2_src",
         "out": "/Game/P4/Anim/AS_P4_get_up_2",
         "frames_60": 184,
         "seconds": 3.067,
-        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshyrig_Manny",
-        "unmapped_core": []
+        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshyrig3_Manny",
+        "unmapped_core": [],
+        "pass3": {
+          "normalize": "clip.py --normalize 0 --zup",
+          "pelvis_z_cm": {
+            "t0": 52.8,
+            "min": 52.7,
+            "max": 92.8,
+            "end": 92.7
+          },
+          "ops": "Pelvis Motion on, Root Motion off, Run IK Rig off"
+        }
       }
     },
     {
@@ -815,7 +1040,11 @@
         "frames": 121,
         "fps": 30,
         "skeleton": "Meshy ue5_mannequin (28 bones)",
-        "root_travel_m": [0, 0, 0]
+        "root_travel_m": [
+          0,
+          0,
+          0
+        ]
       },
       "cut": {
         "frames": 121,
@@ -828,13 +1057,24 @@
         "root_after_m": 0
       },
       "ue": {
-        "src": "/Game/P4/Anim/Src/Meshyrig/AS_P4_idle_src",
+        "src": "/Game/P4/Anim/Src/Meshyrig3/AS_P4_idle_src",
         "out": "/Game/P4/Anim/AS_P4_idle",
         "frames_60": 240,
         "seconds": 4,
-        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshyrig_Manny",
-        "unmapped_core": []
+        "retargeter": "/Game/P4/Anim/Rigs/RTG_P4_Meshyrig3_Manny",
+        "unmapped_core": [],
+        "pass3": {
+          "normalize": "clip.py --normalize 0 --zup",
+          "pelvis_z_cm": {
+            "t0": 91,
+            "min": 88.9,
+            "max": 91.9,
+            "end": 91
+          },
+          "ops": "Pelvis Motion on, Root Motion off, Run IK Rig off"
+        }
       }
     }
-  ]
+  ],
+  "status_2026_11_12T18_37": "pass 3: the falls group (Meshyrig3) retargets with the pelvis drop (ue.pass3.pelvis_z_cm per clip); the Reference-rig strides keep the root-locked retarget"
 }

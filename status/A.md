@@ -137,3 +137,29 @@
 ## H11 (18:14) H11 package 249.7 MB; skeletal toy figure is the default; P4 slices on main
 - `Game/Packaged/Hokej_Hokej_H11/Hokej_Hokej_H11.zip` 249.7 MB (18:11): skeletal toy figure default (A26 + A22 pass 3), rink construction (A25), A3's curve, net slide, B's clay rig and looks. Pass-4 figure and the P4 pipelines (A28 figures, A29 motion) committed after the package.
 - running: A28 pass 2 (image-to-3D figures, blockers), A29 pass 2 (pelvis translation in the retarget, proof strips), B on A-to-B-0007/0008. Lanes A22, A25, A26, A27 closed.
+
+- link green 18:58: main f89014c (dev-b merged, B-to-A-0019..0026 answered) pushed; A28/A29 may restart editors.
+
+## H11.5 (19:00) dev-b merged at f89014c, B's eight handoffs answered, seven lanes for the operator's four unattended hours (R-0028)
+- Merge f89014c clean-built and pushed 18:58 (188 MB of B's assets). Answers in `handoff/B-to-A-0019..0026.md`; R-0027 records the duplication and the bake-off.
+- running: A30 figure bake-off (Fable 5.2, editor 8019), A31 B's asks round 2 (editor 8017), A32 commentary player (editor 8018), A34 human-like playtester (headless), A38 lockstep re-proof (headless), A28 pass 3 (editor when the cap allows). Queued for editor capacity: A33 tackling that reads (Fable 5.2), A37 every cut plays.
+- B: 0019-0026 answered on main; A25's RinkActor spawns the stanchions (remove your 66); the bake-off decides the default figure within the hour; A22's props are FBX under `tools/blender/out/`.
+- machine check every 30 minutes from 19:14 in this file; next package when A31's items 1-2 land.
+
+- RESOURCES 19:13 cpu 40% ram 22.8/63GB gpu 29 %, 2957 MiB, 52 editors 1 cmd 0 ubt 0 free 649GB
+
+- link green 19:35: main 969fbc3 (dev-b merged incl. 0027 M_Toon flag, A34 playtester) pushed.
+
+- RESOURCES 19:44 cpu 96% ram 30.6/63GB gpu 75 %, 9338 MiB, 46 editors 3 cmd 0 ubt 0 free 624GB
+
+- link green 19:52: main 356dc63 (humanoid_b1 default, foul grace, lockstep v2) pushed.
+
+- link green 20:03: main 74c7c0f (A3, A31, A32, A37) pushed.
+
+## H12 (20:07) four lanes on main at 74c7c0f; H13 and H14 packages; B's blend space reverted
+- 74c7c0f: A3's rookie calibrations (novice 80 % at rookie, 17 of 20 inside two minutes) with the playtester gates (R-0029, 10 % faceoff budget), A31 (B-to-A-0019/0021/0023/0024/0025 done: figure class per tier, numbers, floor, glass, stanchions, bot charge, goalie stance, p4_broadcast tier with its cost, pickup props), A32 (the commentator, 340 lines embedded, seven new events, music and skate loops), A37 (50 cuts play, 3 fixed). Earlier tonight: 356dc63 humanoid_b1 default + foul grace + lockstep v2; a1530e5/R-0030 bake-off.
+- Packages: `Hokej_Hokej_H13` (19:56, 258.2 MB) and `Hokej_Hokej_H14` (20:05, 258.3 MB), no usage-flag or load errors. H12 failed on build-tool collisions; packages now pass `-ubtargs=-WaitMutex`.
+- **B: A-to-B-0010 is urgent**: your `BS_SkaterTB2_P4_Skate` at 9c65f51 fails the cook (sample with no animation); reverted on main to d464291 until you fix it. B-to-A-0019..0027 answered; A31's answers in `docs/experiments/B-ASKS-2.md`; remove your 66 `Con_` stanchions (A's RinkActor spawns them).
+- running: A3 pass 2 (pro / all_star vs the regular and good playtesters), A39 payoffs, A40 camera clamp, A41 zone trigger and sweep wiring. A33 (tackling that reads) is on disk, next gate. Lanes A30, A31, A32, A34, A37, A38 closed.
+
+- link green 20:08: main b6d8166 (A33 tackling) pushed.

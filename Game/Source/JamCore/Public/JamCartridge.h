@@ -56,7 +56,7 @@ struct JAMCORE_API FJamSkaterConfig
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double CheckSpeedMin = 5;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 KnockdownFrames = 90;
 	// game.skater.visual (R-0001, R-0024): "toy" | "humanoid_b1" | "generated_b2" | "toy_skeletal"; absent = "toy_skeletal" (the Director, H11.7; "toy" stays a value).
-	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") FName Visual = TEXT("toy_skeletal");
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") FName Visual = TEXT("humanoid_b1");   // R-0030: the bake-off (lane A30) picked B's rebuilt scripted figure
 	// C-0005 (lane A16): the pass button.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double PassSpeed = 14;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 PassLeadFrames = 20;
@@ -77,6 +77,8 @@ struct JAMCORE_API FJamStickConfig
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 StumbleFrames = 20;
 	// Mouse delta to aim: 1 = 100 pixels move the blade one full reach.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double MouseSensitivity = 1.0;
+	// R-0029 point 3: a check on a skater that carried the puck within this many frames is not a foul_no_puck (the puck just left it).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 FoulGraceFrames = 12;
 };
 
 USTRUCT(BlueprintType)

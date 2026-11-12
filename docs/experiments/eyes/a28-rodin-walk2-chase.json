@@ -1,0 +1,78 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "figure",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T17:27:48.775Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "figure",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": "devlog/shots/20261112-182416-A-a28-rodin-walk2-chase.png",
+          "width": 3200,
+          "height": 740
+        }
+      ],
+      "thumbnails": [
+        "A: 128x30"
+      ],
+      "prompt_chars": 2703,
+      "usage": {
+        "prompt": 3090,
+        "output": 413,
+        "thoughts": 1746,
+        "total": 5249,
+        "calls": 1
+      },
+      "cost_usd_est": 0.03209,
+      "ms": 25390,
+      "retried": false,
+      "answer": {
+        "hockey_player": {
+          "full": 4,
+          "small": 2,
+          "parts": {
+            "stick": true,
+            "blade": true,
+            "hands": true,
+            "skates": true,
+            "helmet": true
+          },
+          "evidence": "All necessary hockey gear is present, but the stick is too thin and dark, completely vanishing when downscaled."
+        },
+        "toy": {
+          "full": 5,
+          "small": 4,
+          "evidence": "The oversized head, thick cylindrical limbs, and stiff posture strongly convey a plastic toy figure."
+        },
+        "best_row": "The bottom row (ragdoll) reads best because the splayed limbs break the blocky silhouette, making the individual parts easier to identify.",
+        "proportions": {
+          "head_of_height": 0.33,
+          "shoulder_of_height": 0.5,
+          "stick_of_height": 0.8
+        },
+        "changes": [
+          "stick thickness -> increase by 3x",
+          "stick color -> change to light wood or white for contrast",
+          "skate blades -> scale up by 2x",
+          "gloves -> change color to contrast with the stick"
+        ],
+        "worst": [
+          "The thin black stick disappears against the dark background and at small sizes.",
+          "The dark gloves blend into the stick, making the grip unclear.",
+          "At small scale, the figure's limbs merge into the torso, turning it into an illegible blue blob."
+        ],
+        "works": [
+          "The oversized helmet immediately establishes the toy scale.",
+          "The bold blue and white jersey stripes read clearly.",
+          "The orange face/visor area provides a good directional cue for where the figure is looking."
+        ]
+      },
+      "markdown": "**eyes/figure** A=20261112-182416-A-a28-rodin-walk2-chase.png (gemini-3.1-pro-preview, in 3090 out 413 think 1746 tokens, ~$0.0321, 25.4 s)\n- hockey_player:\n  - full: 4\n  - small: 2\n  - parts:\n    - stick: true\n    - blade: true\n    - hands: true\n    - skates: true\n    - helmet: true\n  - evidence: All necessary hockey gear is present, but the stick is too thin and dark, completely vanishing when downscaled.\n- toy:\n  - full: 5\n  - small: 4\n  - evidence: The oversized head, thick cylindrical limbs, and stiff posture strongly convey a plastic toy figure.\n- best_row: The bottom row (ragdoll) reads best because the splayed limbs break the blocky silhouette, making the individual parts easier to identify.\n- proportions:\n  - head_of_height: 0.33\n  - shoulder_of_height: 0.5\n  - stick_of_height: 0.8\n- changes: stick thickness -> increase by 3x; stick color -> change to light wood or white for contrast; skate blades -> scale up by 2x; gloves -> change color to contrast with the stick\n- worst: The thin black stick disappears against the dark background and at small sizes.; The dark gloves blend into the stick, making the grip unclear.; At small scale, the figure's limbs merge into the torso, turning it into an illegible blue blob.\n- works: The oversized helmet immediately establishes the toy scale.; The bold blue and white jersey stripes read clearly.; The orange face/visor area provides a good directional cue for where the figure is looking."
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "ab-pair",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T18:32:30.425Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "ab-pair",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a30/docs/experiments/img/bakeoff/a30-b1-faceoff-10m.jpg",
+          "width": 2560,
+          "height": 1440
+        },
+        {
+          "label": "B",
+          "path": ".claude/worktrees/a30/docs/experiments/img/bakeoff/a30-b2-faceoff-10m.jpg",
+          "width": 2560,
+          "height": 1440
+        }
+      ],
+      "distance": 10,
+      "thumbnails": [],
+      "prompt_chars": 3514,
+      "usage": {
+        "prompt": 3239,
+        "output": 313,
+        "thoughts": 1443,
+        "total": 4995,
+        "calls": 1
+      },
+      "cost_usd_est": 0.02755,
+      "ms": 20580,
+      "retried": false,
+      "answer": {
+        "elements": {
+          "sky": {
+            "closer": "tie",
+            "why": "Both feature the identical deep-blue starry dome over a dark ceiling line."
+          },
+          "ice": {
+            "closer": "tie",
+            "why": "Both use the exact same painted texture with scuffs and frost patches."
+          },
+          "pools": {
+            "closer": "tie",
+            "why": "Both show the same four soft spotlight cones illuminating the rink."
+          },
+          "figures": {
+            "closer": "a",
+            "why": "The black outlines in A make the toy figures pop more distinctly against the ice."
+          },
+          "construction": {
+            "closer": "tie",
+            "why": "Both have identical boards, emissive trims, and thick red nets."
+          },
+          "outline": {
+            "closer": "a",
+            "why": "The black outlines in A better match the 'ink-like' description than the coloured outlines in B."
+          }
+        },
+        "verdict": "a",
+        "confidence": 0.9,
+        "reason": "Still A's black outlines perfectly capture the requested 'ink-like' cel style, providing better contrast and definition for the figures.",
+        "loser_keeps": "The coloured outlines in B provide a softer look that integrates well with the base colours."
+      },
+      "markdown": "**eyes/ab-pair** A=a30-b1-faceoff-10m.jpg B=a30-b2-faceoff-10m.jpg at 10 m (gemini-3.1-pro-preview, in 3239 out 313 think 1443 tokens, ~$0.0276, 20.6 s)\n- elements:\n  - sky: closer tie, why Both feature the identical deep-blue starry dome over a dark ceiling line.\n  - ice: closer tie, why Both use the exact same painted texture with scuffs and frost patches.\n  - pools: closer tie, why Both show the same four soft spotlight cones illuminating the rink.\n  - figures: closer a, why The black outlines in A make the toy figures pop more distinctly against the ice.\n  - construction: closer tie, why Both have identical boards, emissive trims, and thick red nets.\n  - outline: closer a, why The black outlines in A better match the 'ink-like' description than the coloured outlines in B.\n- verdict: a\n- confidence: 0.9\n- reason: Still A's black outlines perfectly capture the requested 'ink-like' cel style, providing better contrast and definition for the figures.\n- loser_keeps: The coloured outlines in B provide a softer look that integrates well with the base colours."
+    }
+  ]
+}

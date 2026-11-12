@@ -28,6 +28,13 @@ namespace JamEvents
 	const FName Lift(TEXT("lift"));
 	const FName Foul(TEXT("foul"));
 	const FName ShotBlocked(TEXT("shot_blocked"));
+	const FName Save(TEXT("save"));
+	const FName Post(TEXT("post"));
+	const FName Breakaway(TEXT("breakaway"));
+	const FName Carry(TEXT("carry"));
+	const FName PeriodEnd(TEXT("period_end"));
+	const FName Clock(TEXT("clock"));
+	const FName SeasonTake(TEXT("season_take"));
 }
 
 TArray<FName> UJamEventBus::GetKnownEvents()
@@ -36,7 +43,9 @@ TArray<FName> UJamEventBus::GetKnownEvents()
 		JamEvents::Knockdown, JamEvents::PickupSpawn, JamEvents::PickupTake, JamEvents::Win, JamEvents::Lose, JamEvents::DirectorsCall, JamEvents::Period,
 		JamEvents::Bark, JamEvents::Signal,
 		JamEvents::Announce, JamEvents::Pass, JamEvents::EffectStart, JamEvents::EffectEnd, JamEvents::ZoneEnter, JamEvents::ZoneExit,
-		JamEvents::Poke, JamEvents::Lift, JamEvents::Foul, JamEvents::ShotBlocked };
+		JamEvents::Poke, JamEvents::Lift, JamEvents::Foul, JamEvents::ShotBlocked,
+		// Lane A32 (B-to-A-0026): the commentator's seven, proposed for C-0003.
+		JamEvents::Save, JamEvents::Post, JamEvents::Breakaway, JamEvents::Carry, JamEvents::PeriodEnd, JamEvents::Clock, JamEvents::SeasonTake };
 }
 
 bool UJamEventBus::IsKnownEvent(FName Event)

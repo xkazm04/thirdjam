@@ -1,0 +1,1 @@
+﻿Lane A31 rig check (B-to-A-0019): hockey.arena.large 120x60 on LR_L2_Night at scale 1.333 (6 local lights x1.778), game camera, paused at 10.5 s. Floor top -20 cm Movable; no Dress_ actor inside the boards; the only actors the footprint check flags are B Con_L2_Night_Stanchion_* on the board line (the 66 B removes). 98 A stanchions at 3.6 m.

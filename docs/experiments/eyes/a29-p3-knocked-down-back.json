@@ -1,0 +1,63 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-12T17:36:20.765Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "devlog/shots/20261112-183430-A-a29-knocked-down-back.png",
+          "width": 5760,
+          "height": 558
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2286,
+      "usage": {
+        "prompt": 1746,
+        "output": 294,
+        "thoughts": 0,
+        "total": 2040,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00241,
+      "ms": 5575,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A: 20261112-183430-A-a29-knocked-down-back.png",
+            "findings": [
+              {
+                "where": "Top-left edge across the entire top border",
+                "what": "Debug text overlay reading 'AS_P4_knocked_down_back: 2.6 s, 8 frames over 2 s (sequence time), UE5 Manny, three-quarter front, proof level' is burned into the render.",
+                "severity": 2,
+                "confidence": 1
+              },
+              {
+                "where": "Right half, background horizon line",
+                "what": "Vertical seam lines and faceted polygonal segmentation are visibly dividing lighting panels across the curved ground/dome mesh.",
+                "severity": 2,
+                "confidence": 0.95
+              },
+              {
+                "where": "Bottom half across all frames",
+                "what": "Completely missing contact shadows or cast shadows on the floor beneath the mannequin throughout the falling animation sequence.",
+                "severity": 3,
+                "confidence": 0.9
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=20261112-183430-A-a29-knocked-down-back.png (gemini-3.8-flash, in 1746 out 294 tokens, ~$0.0024, 5.6 s)\n- stills:\n  - label: Still A: 20261112-183430-A-a29-knocked-down-back.png; clean: false\n    - findings:\n      - where: Top-left edge across the entire top border; what: Debug text overlay reading 'AS_P4_knocked_down_back: 2.6 s, 8 frames over 2 s (sequence time), UE5 Manny, three-quarter front, proof level' is burned into the render.; severity: 2; confidence: 1\n      - where: Right half, background horizon line; what: Vertical seam lines and faceted polygonal segmentation are visibly dividing lighting panels across the curved ground/dome mesh.; severity: 2; confidence: 0.95\n      - where: Bottom half across all frames; what: Completely missing contact shadows or cast shadows on the floor beneath the mannequin throughout the falling animation sequence.; severity: 3; confidence: 0.9"
+    }
+  ]
+}

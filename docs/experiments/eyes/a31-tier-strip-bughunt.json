@@ -1,0 +1,105 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-12T18:34:18.897Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "C:/Users/kazda/AppData/Local/Temp/claude/0251139bc1345a0c/48af0463-7240-47b1-8c2e-69eaa026e6a0/scratchpad/shots/strip2-01-base.png",
+          "width": 2560,
+          "height": 1354
+        },
+        {
+          "label": "B",
+          "path": "C:/Users/kazda/AppData/Local/Temp/claude/0251139bc1345a0c/48af0463-7240-47b1-8c2e-69eaa026e6a0/scratchpad/shots/strip2-02-live1.png",
+          "width": 2560,
+          "height": 1354
+        },
+        {
+          "label": "C",
+          "path": "C:/Users/kazda/AppData/Local/Temp/claude/0251139bc1345a0c/48af0463-7240-47b1-8c2e-69eaa026e6a0/scratchpad/shots/strip2-03-live2.png",
+          "width": 2560,
+          "height": 1354
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2319,
+      "usage": {
+        "prompt": 4028,
+        "output": 502,
+        "thoughts": 1544,
+        "total": 6074,
+        "calls": 1
+      },
+      "cost_usd_est": 0.01069,
+      "ms": 39799,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [
+              {
+                "where": "Center to top-right rink surface",
+                "what": "Ice surface displays a massive dark blue reflective rendering artifact with sharp boundaries, resembling flooded water or missing ice diffuse texture.",
+                "severity": 4,
+                "confidence": 0.95
+              },
+              {
+                "where": "Center-bottom, blue skater #7",
+                "what": "The hockey stick is detached from the skater's hands, floating freely near the puck while the skater's hands are pulled back against his waist.",
+                "severity": 3,
+                "confidence": 0.9
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still B",
+            "findings": [
+              {
+                "where": "Top half background",
+                "what": "The arena backdrop and stadium seating are replaced by an unlit, flat beige wall/void with visible vertical panel seams.",
+                "severity": 4,
+                "confidence": 0.95
+              },
+              {
+                "where": "Center-bottom, around blue and orange skaters",
+                "what": "Both hockey sticks are completely detached from player hands and float loosely on the ice beside and underneath the figures.",
+                "severity": 4,
+                "confidence": 0.95
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still C",
+            "findings": [
+              {
+                "where": "Center-bottom, blue and orange skaters",
+                "what": "Both skaters have hockey sticks clipping directly through their groins and lower torsos in a broken socket/attachment pose.",
+                "severity": 5,
+                "confidence": 1
+              },
+              {
+                "where": "Bottom-center ice surface",
+                "what": "Complete absence of player cast shadows on the ice, leaving both skaters appearing ungrounded and floating.",
+                "severity": 4,
+                "confidence": 0.98
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=strip2-01-base.png B=strip2-02-live1.png C=strip2-03-live2.png (gemini-3.8-flash, in 4028 out 502 think 1544 tokens, ~$0.0107, 39.8 s)\n- stills:\n  - label: Still A; clean: false\n    - findings:\n      - where: Center to top-right rink surface; what: Ice surface displays a massive dark blue reflective rendering artifact with sharp boundaries, resembling flooded water or missing ice diffuse texture.; severity: 4; confidence: 0.95\n      - where: Center-bottom, blue skater #7; what: The hockey stick is detached from the skater's hands, floating freely near the puck while the skater's hands are pulled back against his waist.; severity: 3; confidence: 0.9\n  - label: Still B; clean: false\n    - findings:\n      - where: Top half background; what: The arena backdrop and stadium seating are replaced by an unlit, flat beige wall/void with visible vertical panel seams.; severity: 4; confidence: 0.95\n      - where: Center-bottom, around blue and orange skaters; what: Both hockey sticks are completely detached from player hands and float loosely on the ice beside and underneath the figures.; severity: 4; confidence: 0.95\n  - label: Still C; clean: false\n    - findings:\n      - where: Center-bottom, blue and orange skaters; what: Both skaters have hockey sticks clipping directly through their groins and lower torsos in a broken socket/attachment pose.; severity: 5; confidence: 1\n      - where: Bottom-center ice surface; what: Complete absence of player cast shadows on the ice, leaving both skaters appearing ungrounded and floating.; severity: 4; confidence: 0.98"
+    }
+  ]
+}

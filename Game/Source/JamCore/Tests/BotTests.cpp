@@ -8,6 +8,7 @@
 #include "../AI/JamBotMatch.h"
 #include "../AI/JamSimAdapter.h"
 #include "../AI/DifficultyResolve.h"
+#include "../AI/JamPlaytester.h"
 #include "JamCartridge.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
@@ -143,6 +144,25 @@ bool FJamBotHumanHasSomethingToDo::RunTest(const FString& Parameters)
 			else { AddError(TEXT("FAIL ") + Msg); bOk = false; }
 		}
 	}
+	// R-0029 point 5 (amended): the same window for lane A34's novice playtester at rookie on hockey.regular, 20 seeds, with a budget of
+	// 10 % of the faceoffs without a human touch inside 600 frames (frames in the penalty box do not count: nobody touches the puck from there).
+	// Measured 19:53: 12 of 126, 74 % of the lost windows a loose-puck chase.
+	if (UJamCartridge* Cart = Load(*this, 0))
+	{
+		int32 Without = 0, Faceoffs = 0;
+		for (uint64 Seed = 1; Seed <= 20; ++Seed)
+		{
+			JamAI::FJamSimAdapter Sim(Cart->Game);
+			const JamAI::FJamPlaytestStats S = JamAI::RunPlaytestMatch(Sim, JamAI::ToMatchConfigResolved(*Cart, TEXT("rookie")), Seed, JamAI::EPlaytester::Novice,
+				MaxFrames, Cart->Game.Shot.ChargeFramesMax);
+			Without += S.FaceoffsWithoutTouch;
+			Faceoffs += S.Faceoffs;
+		}
+		const int32 Budget = Faceoffs / 10;
+		const FString Msg = FString::Printf(TEXT("hockey.regular rookie novice, seeds 1-20: %d of %d faceoffs without a human touch inside 600 frames (budget 10 %%: %d)"), Without, Faceoffs, Budget);
+		if (Without <= Budget) { AddInfo(TEXT("PASS ") + Msg); } else { AddError(TEXT("FAIL ") + Msg); bOk = false; }
+	}
+	else { bOk = false; }
 	return bOk;
 }
 

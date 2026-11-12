@@ -56,6 +56,12 @@ public:
 	// null or invalid falls back to UJamPlaceholderVisual.
 	void InitSkater(int32 InSimIndex, int32 InTeam, const FLinearColor& Colour, int32 Number, UClass* VisualClass);
 
+	// Lane A31 (B-to-A-0021): replaces the visual mid-match (a Director's Call changed game.look.tier and with it the figure class): the old
+	// component or attached actor is destroyed, the new one created and the setup calls (SetTeam, SetNumber, SetHasPuck, SetBoost) repeated;
+	// the per-frame state flags are cleared so the next ApplySimFrame re-sends knocked-down, puck and faceoff state. Same class: no-op, false.
+	bool ResetVisual(const FLinearColor& Colour, int32 Number, UClass* VisualClass);
+	UClass* GetVisualClass() const { return VisualObject ? VisualObject->GetClass() : nullptr; }
+
 	// After every sim step: drives the visual (UpdateMotion every frame, one-shots on the frame they happen).
 	void ApplySimFrame(const FJamSkaterState& S);
 
@@ -73,6 +79,8 @@ public:
 
 
 private:
+	UObject* CreateVisual(UClass* VisualClass);
+	void SetupVisual(UObject* Visual, const FLinearColor& Colour, int32 Number);
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Skater") TObjectPtr<USceneComponent> Root;
 	UPROPERTY(Transient) TObjectPtr<UObject> VisualObject;
 	int32 SimIndex = -1;
@@ -97,8 +105,20 @@ public:
 	// C-0001 v3: a carried puck drawn at the carrier visual's puck_socket (world cm; the puck keeps its own height above the ice).
 	void ApplyRenderAt(const FVector& WorldCm);
 
+	// Lane A33 (R-0028 point 3): the pop. When a check strips the puck (LastTouch goes to -1 while the puck keeps moving on a continuous path, which a faceoff
+	// reset never does), the drawn puck hops PopHeightM x sin over PopFrames sim frames. Cosmetic: the sim's puck stays on the ice. Pure for tests.
+	static constexpr int32 PopFrames = 18;
+	static constexpr double PopHeightM = 0.25;
+	static double PopLiftM(double FramesSincePop, double Strength01);
+	static bool IsStrip(int32 PrevLastTouch, const FJamPuckState& P);
+	int32 GetPopStartFrame() const { return PopStartFrame; }
+
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Puck") TObjectPtr<UStaticMeshComponent> Mesh;
+	int32 PrevLastTouch = -1;
+	int64 PopStartFrame = -1;
+	int64 LastSimFrame = -1;
+	double PopStrength = 0.5;
 	// R-0016: device B's puck kit. The disc lies on the ice under the puck; the trail follows it. Either may be absent (logged once, never an error).
 	UPROPERTY(Transient) TObjectPtr<UStaticMeshComponent> Disc;
 	UPROPERTY(Transient) TObjectPtr<UNiagaraComponent> Trail;

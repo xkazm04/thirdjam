@@ -1,0 +1,74 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "ab-pair",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T18:26:38.075Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "ab-pair",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a30/docs/experiments/img/bakeoff/a30-toy-play-40m.jpg",
+          "width": 2560,
+          "height": 1440
+        },
+        {
+          "label": "B",
+          "path": ".claude/worktrees/a30/docs/experiments/img/bakeoff/a30-b1-play-40m.jpg",
+          "width": 2560,
+          "height": 1440
+        }
+      ],
+      "distance": 40,
+      "thumbnails": [],
+      "prompt_chars": 3509,
+      "usage": {
+        "prompt": 3233,
+        "output": 357,
+        "thoughts": 1137,
+        "total": 4727,
+        "calls": 1
+      },
+      "cost_usd_est": 0.02439,
+      "ms": 15669,
+      "retried": false,
+      "answer": {
+        "elements": {
+          "sky": {
+            "closer": "tie",
+            "why": "Both stills feature the exact same deep-blue starry dome above a black horizon line."
+          },
+          "ice": {
+            "closer": "tie",
+            "why": "Both images use the identical painted-looking brush streaks and frost patches on the rink surface."
+          },
+          "pools": {
+            "closer": "tie",
+            "why": "Both stills display the same four spot cones with distinct, flat cel-shaded lighting steps."
+          },
+          "figures": {
+            "closer": "b",
+            "why": "Still B colors the players in the required deep blue and warm orange jerseys, whereas Still A leaves them as unreadable dark grey silhouettes."
+          },
+          "construction": {
+            "closer": "tie",
+            "why": "Both feature the same boards with ochre kick plates, dark glass rails, emissive trim, and thick red nets."
+          },
+          "outline": {
+            "closer": "tie",
+            "why": "Both apply the same visible ink-like black outlines to the figures and the nets."
+          }
+        },
+        "verdict": "b",
+        "confidence": 0.95,
+        "reason": "Still B successfully implements the two distinct team colors (deep blue and warm orange) on the toy figures, which is essential for gameplay readability and matches the brief, whereas Still A leaves them uncolored.",
+        "loser_keeps": "The stepped cel-shaded light pools on the ice are highly effective and should be maintained."
+      },
+      "markdown": "**eyes/ab-pair** A=a30-toy-play-40m.jpg B=a30-b1-play-40m.jpg at 40 m (gemini-3.1-pro-preview, in 3233 out 357 think 1137 tokens, ~$0.0244, 15.7 s)\n- elements:\n  - sky: closer tie, why Both stills feature the exact same deep-blue starry dome above a black horizon line.\n  - ice: closer tie, why Both images use the identical painted-looking brush streaks and frost patches on the rink surface.\n  - pools: closer tie, why Both stills display the same four spot cones with distinct, flat cel-shaded lighting steps.\n  - figures: closer b, why Still B colors the players in the required deep blue and warm orange jerseys, whereas Still A leaves them as unreadable dark grey silhouettes.\n  - construction: closer tie, why Both feature the same boards with ochre kick plates, dark glass rails, emissive trim, and thick red nets.\n  - outline: closer tie, why Both apply the same visible ink-like black outlines to the figures and the nets.\n- verdict: b\n- confidence: 0.95\n- reason: Still B successfully implements the two distinct team colors (deep blue and warm orange) on the toy figures, which is essential for gameplay readability and matches the brief, whereas Still A leaves them uncolored.\n- loser_keeps: The stepped cel-shaded light pools on the ice are highly effective and should be maintained."
+    }
+  ]
+}
