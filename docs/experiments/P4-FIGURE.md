@@ -22,10 +22,12 @@ Marks: **[run]** = done on this machine today, numbers from the logs; **[vendor]
    (Meshy has three spine bones and one neck), plus all twist, IK and finger bones. The retarget copes; the shortfall shows as a stiff upper back and mitten hands.
 5. **Cost per figure** (mesh + rig + 5 library falls): Meshy 40 cr (5 + 10 + 5 + 15 + 5 for a wasted rig of the preview), Rodin 0.5 cr + 20 Meshy cr, Tripo (fal: priced on the
    dashboard, not in the response) + 20 Meshy cr. **Per team of six** on one mesh: one figure plus material instances; six distinct figures: Rodin 3 cr + 120 Meshy cr, about 15 minutes.
-6. **Three blockers, in order:** (1) a stick in the hand (every eyes verdict: "the absence of a stick destroys the silhouette"): the socket exists, the attached plain stick needs its
-   grip rotation set by eye in the editor; (2) the `puck_socket` and root motion: the vendor skeleton has no `root` of its own, the normalizer makes one from the armature node, so the
-   puck socket rides it, but the Meshy library clips carry pelvis travel that must be stripped (MESHY.md section 4); (3) the retarget onto a big-headed toy clips arms into the body in
-   the walk (Rodin, Tripo) and needs the retarget pose fixed by hand, or shorter arm chains, before it goes past 24 m.
+6. **Three blockers, in order:** (1) **the stick in the hand**: `stick_socket` on `hand_r` exists on all three and `SM_P4_Stick` is attached (`*-walk-stick-*` sheets), but the
+   grip rotation is unset, so the shaft points out of the back of the glove and every eyes verdict still says "no stick" (hockey player 2/5); the grip rotation must be set once per
+   skeleton by eye in the editor (socket relative rotation, three numbers). (2) **Library clips lose their pelvis travel through the normalizer**: the walk/run clips exported one
+   action per file keep the pelvis bob, the five falls exported as takes of one file came through as one take (`falling_down`) with rotations only, so the fall spins around a fixed
+   pelvis (`*-fall-*` sheets): export one action per file and strip the X/Y travel there (MESHY.md section 4). (3) **The retarget onto a big-headed toy** crosses the arms through the
+   torso in the walk (Rodin, Tripo) and the ragdoll impulse tuned for the Meshy adult throws the toys 1-2 m up (`rag05` pelvis 175 / 233 cm): retarget pose and impulse per figure.
 
 ## 1. Vendor table [run]
 
@@ -49,7 +51,9 @@ arms and legs clearly separated from the body, game-ready low poly, clean topolo
 | size check vs Manny (pelvis / head / hand span / foot span, ratio) | 1.04 / 0.96 / 0.79 / 1.13 | 0.93 / 0.84 / 1.05 / 1.87 | 0.93 / 0.84 / 0.91 / 1.44 |
 | the three hardest things wrong | adult proportions (head 0.14 of height); bare hands in the preview, gloves only painted; no cage, a visor-less open face | mitten hands with no fingers, arms thick as thighs; grey, dull texture under the normal map; the visor is a slab | T-pose with arms straight out (the rig still took it); hands and head blend into the torso (one colour); a 7 on the front and back but the white trim smears |
 | eyes [eyes] hockey player full / small, toy full / small | 2 / 1, 2 / 1 | 3 / 2, 4 / 3 | 2 / 2, 4 / 3 |
-| stills | `20261112-172933-A-a28-meshy-walk-{chase,far}.png` | `20261112-173143-A-a28-rodin-walk-{chase,far}.png` | `20261112-173209-A-a28-tripo-walk-{chase,far}.png` |
+| stills | `20261112-172933-A-a28-meshy-walk-{chase,far}.png`, `-175044-…-meshy-walk-stick-*`, `-175102-…-meshy-fall-*` | `20261112-173143-A-a28-rodin-walk-{chase,far}.png`, `-175120-…-rodin-walk-stick-*`, `-175137-…-rodin-fall-*` | `20261112-173209-A-a28-tripo-walk-{chase,far}.png`, `-175156-…-tripo-walk-stick-*`, `-175213-…-tripo-fall-*` |
+| sockets | stick_socket (hand_r), puck_socket (root), head_socket (head) | same | same |
+| on disk (`Game/Content/P4/<Vendor>/`, 17 files each) | 11 MB | 11 MB | 11 MB |
 
 Route four, Hyper3D's own rigging (Director's addition): `docs.hyper3d.ai` (index, features, quick-start, API spec, check-status, download-results, read 17:04) documents
 `POST /api/v2/rodin`, `/status`, `/download` and nothing else; the changelog entry says only "Added rigging support for 3D models" and the quick-start calls rigging an account
@@ -77,8 +81,12 @@ What the retarget leaves: the toy figures' arms cross the torso in the walk (no 
 
 A physics asset per figure (`PA_P4_<Vendor>`, auto bodies on pelvis, spine, head, clavicles, upper and lower arms, thighs, calves, feet). The capture drives the ragdoll only from
 the knocked_down window: physics on for 20 frames, then off, the component's relative transform reset (the pawn owns the transform; the ragdoll never moves it) and the sequence
-resumed. Nothing reads back into the sim: the sim's `SetKnockedDown` is the only trigger, as C-0001 v3 demands. Not yet proven in a bot match through A26's skeletal visual:
-`status/A26.md` at 17:02 had the component in progress; this is the next step once A26 reports the visual works.
+resumed. Second window (17:50-17:52): sockets `stick_socket` (hand_r), `puck_socket` (root, 115 cm ahead on the ice), `head_socket` (head, +30 cm) on all three meshes
+(`tools/p4/sockets.sh`); `SM_P4_Stick` (40 tris) attached at `stick_socket`; the Meshy library fall `falling_down` (366) imported on each skeleton
+(`/Game/P4/<Vendor>/Falls/AS_P4_<Vendor>_fall_root_Armature_falling_down`, 2.267 s) and captured with the ragdoll window: `20261112-1751xx/1752xx-A-a28-<vendor>-fall-{chase,far}.png`
+and `-walk-stick-*`. Falls on the Rodin and Tripo rigs: animate 01a1d09e-4379-7301-bba7-e3763880da4a (97 s) and 01a1d09f-c9b4-720e-a984-f8ed47b32057 (57 s), 15 cr each. Nothing reads back into the sim: the sim's `SetKnockedDown` is the only trigger, as C-0001 v3 demands. Not yet proven in a bot match through A26's skeletal visual: A26's final report (17:36) says `USkeletalSkaterVisual` works on the toy skeleton
+(VisualSwap green, same hash), so the next step is a `game.skater.visual` value that points it at `SK_P4_<Vendor>` with a call-to-sequence map for the retargeted clips
+(idle, walk, jog, fall) and the physics asset blend on `SetKnockedDown`; that needs A26's C++ built, which this lane did not do (editor closed outside import windows, R-0009).
 
 ## 4. Free assets on Fab (research only, nothing downloaded)
 
@@ -90,7 +98,8 @@ Fab renders prices and licence tiers in the browser; the fetched pages show `Sel
 
 ## 5. Costs and the per-team estimate
 
-Meshy balance 786 -> about 700 (this lane: 5 + 10 + 5 + 5 + 5 + 5 + 15 + 15 + 15 = 80 cr; one rig of the preview wasted); Rodin 0.5 cr; fal unpriced in the response.
+Meshy balance 786 at 17:00 -> 610 at 17:45 (this lane: 5 + 10 + 5 + 5 + 5 + 5 + 15 + 15 + 15 = 80 cr, one rig of the preview wasted; the rest is other lanes on the shared key);
+Rodin 0.5 cr; fal unpriced in the response. Eyes: 5 calls, about $0.14.
 One figure with a rig and five falls: Rodin + Meshy 20.5 cr, 4 minutes; Tripo + Meshy 20 cr + fal; Meshy only 35 cr. Six distinct figures through Rodin: about 123 cr and
 15 minutes of API time plus 3 minutes of editor time; one mesh with team material instances (the P2 way) is the cheaper path and keeps both teams identical.
 

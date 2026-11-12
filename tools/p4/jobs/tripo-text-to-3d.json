@@ -1,0 +1,8 @@
+{
+  "prompt": "stylized hockey player, toy-like proportions, helmet with visor, blue jersey with white trim, number 7, hockey gloves, no stick, A-pose with arms and legs clearly separated from the body, game-ready low poly, clean topology, flat solid colours, no text, no logos",
+  "texture": "standard",
+  "pbr": false,
+  "face_limit": 20000,
+  "auto_size": true,
+  "quad": false
+}

@@ -1,0 +1,1 @@
+{"script":{"content":"A28_CLIPS={'vendor':'Meshy','dest':'/Game/P4/Meshy/Falls','skeleton':'/Game/P4/Meshy/SKEL_P4_Meshy','clips':[{'fbx':r'C:/Users/kazda/kiro/thirdjam/tools/p4/out/meshy/NORM/falls.fbx','name':'AS_P4_Meshy_fall'}]}\nexec(open(r'C:/Users/kazda/kiro/thirdjam/tools/p4/ue_clips.py').read())\n","language":"Python"}}

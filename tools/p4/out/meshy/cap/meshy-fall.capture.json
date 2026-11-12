@@ -1,0 +1,195 @@
+{
+ "tool": "thirdjam.p4-capture/1",
+ "vendor": "Meshy",
+ "clip": "/Game/P4/Meshy/Falls/AS_P4_Meshy_fall_root_Armature_falling_down",
+ "tag": "meshy-fall",
+ "frames": [
+  {
+   "name": "f00",
+   "game_frame": 0,
+   "anim_pos_s": 0.0,
+   "pelvis_z": 99.6,
+   "foot_r_z": 21.3
+  },
+  {
+   "name": "f01",
+   "game_frame": 8,
+   "anim_pos_s": 0.133,
+   "pelvis_z": 99.6,
+   "foot_r_z": 19.3
+  },
+  {
+   "name": "f02",
+   "game_frame": 16,
+   "anim_pos_s": 0.267,
+   "pelvis_z": 99.5,
+   "foot_r_z": 23.8
+  },
+  {
+   "name": "f03",
+   "game_frame": 24,
+   "anim_pos_s": 0.4,
+   "pelvis_z": 99.5,
+   "foot_r_z": 42.1
+  },
+  {
+   "name": "f04",
+   "game_frame": 32,
+   "anim_pos_s": 0.533,
+   "pelvis_z": 99.4,
+   "foot_r_z": 47.1
+  },
+  {
+   "name": "f05",
+   "game_frame": 40,
+   "anim_pos_s": 0.667,
+   "pelvis_z": 99.2,
+   "foot_r_z": 60.8
+  },
+  {
+   "name": "f06",
+   "game_frame": 48,
+   "anim_pos_s": 0.8,
+   "pelvis_z": 99.0,
+   "foot_r_z": 83.3
+  },
+  {
+   "name": "f07",
+   "game_frame": 56,
+   "anim_pos_s": 0.933,
+   "pelvis_z": 98.9,
+   "foot_r_z": 98.4
+  },
+  {
+   "name": "f08",
+   "game_frame": 64,
+   "anim_pos_s": 1.067,
+   "pelvis_z": 98.9,
+   "foot_r_z": 112.3
+  },
+  {
+   "name": "f09",
+   "game_frame": 72,
+   "anim_pos_s": 1.2,
+   "pelvis_z": 98.9,
+   "foot_r_z": 119.3
+  },
+  {
+   "name": "f10",
+   "game_frame": 80,
+   "anim_pos_s": 1.333,
+   "pelvis_z": 98.9,
+   "foot_r_z": 122.2
+  },
+  {
+   "name": "f11",
+   "game_frame": 88,
+   "anim_pos_s": 1.467,
+   "pelvis_z": 98.9,
+   "foot_r_z": 121.2
+  },
+  {
+   "name": "f12",
+   "game_frame": 96,
+   "anim_pos_s": 1.6,
+   "pelvis_z": 98.9,
+   "foot_r_z": 114.0
+  },
+  {
+   "name": "f13",
+   "game_frame": 104,
+   "anim_pos_s": 1.733,
+   "pelvis_z": 98.8,
+   "foot_r_z": 104.7
+  },
+  {
+   "name": "f14",
+   "game_frame": 112,
+   "anim_pos_s": 1.867,
+   "pelvis_z": 98.8,
+   "foot_r_z": 95.9
+  },
+  {
+   "name": "f15",
+   "game_frame": 120,
+   "anim_pos_s": 2.0,
+   "pelvis_z": 98.8,
+   "foot_r_z": 94.5
+  },
+  {
+   "name": "rag00",
+   "game_frame": 120,
+   "anim_pos_s": 2.0,
+   "pelvis_z": 98.8,
+   "foot_r_z": 94.5
+  },
+  {
+   "name": "rag01",
+   "game_frame": 124,
+   "anim_pos_s": 2.067,
+   "pelvis_z": 49.1,
+   "foot_r_z": 114.4
+  },
+  {
+   "name": "rag02",
+   "game_frame": 128,
+   "anim_pos_s": 2.133,
+   "pelvis_z": 28.6,
+   "foot_r_z": 68.1
+  },
+  {
+   "name": "rag03",
+   "game_frame": 132,
+   "anim_pos_s": 2.2,
+   "pelvis_z": 38.0,
+   "foot_r_z": 48.4
+  },
+  {
+   "name": "rag04",
+   "game_frame": 136,
+   "anim_pos_s": 2.267,
+   "pelvis_z": 76.6,
+   "foot_r_z": 41.7
+  },
+  {
+   "name": "rag05",
+   "game_frame": 140,
+   "anim_pos_s": 0.067,
+   "pelvis_z": 116.9,
+   "foot_r_z": 67.3
+  },
+  {
+   "name": "back00",
+   "game_frame": 140,
+   "anim_pos_s": 0.0,
+   "pelvis_z": 98.8,
+   "foot_r_z": 131.5
+  },
+  {
+   "name": "back01",
+   "game_frame": 148,
+   "anim_pos_s": 0.133,
+   "pelvis_z": 99.6,
+   "foot_r_z": 19.3
+  },
+  {
+   "name": "back02",
+   "game_frame": 156,
+   "anim_pos_s": 0.267,
+   "pelvis_z": 99.5,
+   "foot_r_z": 23.8
+  },
+  {
+   "name": "back03",
+   "game_frame": 164,
+   "anim_pos_s": 0.4,
+   "pelvis_z": 99.5,
+   "foot_r_z": 42.1
+  }
+ ],
+ "clip_len_s": 2.267,
+ "clip_frames": 16,
+ "physics_asset": "/Game/P4/Meshy/PA_P4_Meshy.PA_P4_Meshy",
+ "ragdoll_frames": 20,
+ "last_game_frame": 164
+}

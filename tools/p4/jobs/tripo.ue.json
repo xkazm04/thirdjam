@@ -1,0 +1,69 @@
+{
+  "vendor": "Tripo",
+  "dest": "/Game/P4/Tripo",
+  "sk_name": "SK_P4_Tripo",
+  "mesh_fbx": "C:/Users/kazda/kiro/thirdjam/tools/p4/out/tripo/NORM/rigged_character_fbx_url.fbx",
+  "texture_png": "C:/Users/kazda/kiro/thirdjam/tools/p4/out/tripo/RIG/tex/Color_12678a9a-55d1-422b-b16b-2a9bb75a6db5.png",
+  "clips": [
+    {
+      "fbx": "C:/Users/kazda/kiro/thirdjam/tools/p4/out/tripo/NORM/basic_animations.walking_fbx_url.fbx",
+      "name": "AS_P4_Tripo_vendor_walk"
+    },
+    {
+      "fbx": "C:/Users/kazda/kiro/thirdjam/tools/p4/out/tripo/NORM/basic_animations.running_fbx_url.fbx",
+      "name": "AS_P4_Tripo_vendor_run"
+    }
+  ],
+  "manny_clips": [
+    "/Game/Characters/Mannequins/Anims/Unarmed/Walk/MF_Unarmed_Walk_Fwd",
+    "/Game/Characters/Mannequins/Anims/Unarmed/Jog/MF_Unarmed_Jog_Fwd",
+    "/Game/Characters/Mannequins/Anims/Unarmed/MM_Idle"
+  ],
+  "chains": {
+    "root": "pelvis",
+    "chains": [
+      [
+        "Spine",
+        "spine_01",
+        "spine_03"
+      ],
+      [
+        "Head",
+        "neck_01",
+        "head"
+      ],
+      [
+        "LeftClavicle",
+        "clavicle_l",
+        "clavicle_l"
+      ],
+      [
+        "LeftArm",
+        "upperarm_l",
+        "hand_l"
+      ],
+      [
+        "RightClavicle",
+        "clavicle_r",
+        "clavicle_r"
+      ],
+      [
+        "RightArm",
+        "upperarm_r",
+        "hand_r"
+      ],
+      [
+        "LeftLeg",
+        "thigh_l",
+        "ball_l"
+      ],
+      [
+        "RightLeg",
+        "thigh_r",
+        "ball_r"
+      ]
+    ]
+  },
+  "report": "C:/Users/kazda/kiro/thirdjam/tools/p4/out/tripo/ue_setup.report.json",
+  "meshes_in_bone_hierarchy": true
+}

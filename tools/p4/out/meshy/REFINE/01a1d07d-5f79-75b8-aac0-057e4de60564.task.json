@@ -1,0 +1,27 @@
+{
+  "id": "01a1d07d-5f79-75b8-aac0-057e4de60564",
+  "type": "text-to-3d-preview",
+  "mode": "preview",
+  "name": "",
+  "model_type": "standard",
+  "seed": 1889499499,
+  "prompt": "stylized hockey player, toy-like proportions, helmet with visor, blue jersey with white trim, number 7, hockey gloves, no stick, A-pose, arms and legs clearly separated from the body, game-ready low poly, clean topology, no text, no logos",
+  "texture_prompt": "",
+  "texture_image_url": "",
+  "status": "SUCCEEDED",
+  "created_at": 1794499243273,
+  "progress": 100,
+  "started_at": 1794499243285,
+  "finished_at": 1794499388053,
+  "task_error": null,
+  "model_urls": {
+    "glb": "https://assets.meshy.ai/09c5f443-49ef-4a30-bd7c-3d7a388d2e69/tasks/01a1d07d-5f79-75b8-aac0-057e4de60564/output/model.glb?Expires=4948041600&Signature=X-j9rkerNkTLgyxX7sgNn9ApPM2EmiVklXWbIrcnbwETb-jv~MyaNrL9sMoC7R0rhl6Gou1sfT115U62a3XWCY-NNab40Aw9SzI3GWgsqkFi~3Msgz3wEnCdQSsUywhoqhqT9U2sN~VZf1rgAV66lecARnUtVLubSVLLc0xXIL5cEN~ZI83dz5Sdphl5V~N1jpnBo4YMBwaarnBZb34vdxKGMzMyeOOQqYWIFCZPclg4OaH~RW1USyqMEnAPD8tBYJpCGq~R5IR2TNWn0zqciP80aW8Y0Pxi3yat~PD-vK944KEl9ukPVlQTP7VSuGE3E2X4f0460WdW7fY-2stmLQ__&Key-Pair-Id=K1VGYTHIYLM9UM",
+    "fbx": "https://assets.meshy.ai/09c5f443-49ef-4a30-bd7c-3d7a388d2e69/tasks/01a1d07d-5f79-75b8-aac0-057e4de60564/output/model.fbx?Expires=4948041600&Signature=n-l7WdgECYVg1lcmEEbz3CrGW5I-J7Y-yKzLl2UAS7I79Ra5dEzqmx4HFvdz6~rGlf4hQqFQ4BzdNgTeomEZ9tjDR7uSoewYmXsAR2vMHnpbf1xE9Dobupu4~jxB-b9ulO~jo7BJNNsGzEP6Tkfmx4OONI~DQBwjfC9WsBEnR4I-GtdFSvgiXv1N4j~MnDIdRfMsez7a0vsEyshMGUUlmUz~ict~~EaRX4p6laVXUsiYPhbxSTDVJefUg83Csn5aStBW6MLzLmfi92Z09JscKwS7nDJkdbLJmT55z5nAuXd6HgFOrdNn1ob4QFWqc3cPUDsMRTWG21UMSZMF1jBkxw__&Key-Pair-Id=K1VGYTHIYLM9UM",
+    "usdz": "https://assets.meshy.ai/09c5f443-49ef-4a30-bd7c-3d7a388d2e69/tasks/01a1d07d-5f79-75b8-aac0-057e4de60564/output/model.usdz?Expires=4948041600&Signature=iv23vzZRNAMZdUSarfvrF2oDzIIqMoIF6w9qBQF-dGPn5Nb3FhMoeFF2cMdF0Kw1ZTXp09jbMIc6yTBhB~-loqXViAlmHi7p7Axb1voW01H8INS8ZzFvTXP3terYbR9JdcXan6s5GE36IqGSQrVH~22HhM7dqWLn8TuCW0o8Prw~1rpL9ej9CYLPC6OLgYcEMIIJp~-ssJW30lpQNbcOlLUxR2VZLxpfachguWt4utIIJLxoPdyBnimZD~GRjZrOQHkSxyb6euLzBE2Ib8z5YpxbPplAGXoGCqCP2IOMexEQ08zOqSYVX4eS4LN5ohDZhs1hOPLtOMFtU1pWo9nuPA__&Key-Pair-Id=K1VGYTHIYLM9UM",
+    "obj": "https://assets.meshy.ai/09c5f443-49ef-4a30-bd7c-3d7a388d2e69/tasks/01a1d07d-5f79-75b8-aac0-057e4de60564/output/model.obj?Expires=4948041600&Signature=jE2l19u8czcSINdsE83pJ81meiAPqPYgHV2953EQndSmaJlDqCLzPoivbxNA~yychLc2B27iUsuBB~t0~Q7NOZUDkvBSxE1RQ4GQqtWg21OZ7X9P9uQVNZiGpLQgagT2XbAge-4k1704c52QBByTjEIFjz3v63S~RWC-Umdz4qR5BPJ4pPOMQNcBG4bJi6FvAd5eGpyggr-Qz9laY0jTFyfdY-Ni68Kf-AeYh~Upt4cWgngR3vbsqmMLWOSAe9pUfx~PVaNVUMvkKvn39X7hWBU8yL4uHBY5nwz7MhDBjyrIIxnb5KSyv3TvAHDGNa6SGALkcKtcKY1fV9ZUhL2FTA__&Key-Pair-Id=K1VGYTHIYLM9UM",
+    "stl": "https://assets.meshy.ai/09c5f443-49ef-4a30-bd7c-3d7a388d2e69/tasks/01a1d07d-5f79-75b8-aac0-057e4de60564/output/model.stl?Expires=4948041600&Signature=nFj~LGbidoKkTVWB49TD9nQWWgHaKf7gyFHJJQgb7ahA9gdG1t9hqb52CIsw0XrQT4pFtQ5kysCNGtrdVNgVs9y3unjtoK9ZNiM72DWiqo9JdsouJO2eLz3YJysouxT-aNzp0NjGaBeSKmJBeh8aF0dpsTerTl37aUu8E6dEezhLYZ~fx1vlSQKeTa5P14PCvqj629G3WjfAk8gl9YSs-aWaqU-GtYnpwQSXuMXnMJNV3szpJ53Re30GaQIoWO2r0VvyrLvGJpwy-RhBY9Dy6caqAK4dWv-~Qfb9cwvnoYz8-qPMX9ukpZ7NK-RfjrMLGL8g1uJxJufVwqslPpybhA__&Key-Pair-Id=K1VGYTHIYLM9UM"
+  },
+  "thumbnail_url": "https://assets.meshy.ai/09c5f443-49ef-4a30-bd7c-3d7a388d2e69/tasks/01a1d07d-5f79-75b8-aac0-057e4de60564/output/preview.png?Expires=4948041600&Signature=Ga507p-Z-EP-dElSHe1-qXaQq3Ux6auMT9ZUZZTa9Tq0I3mTBa~pCW6FrwNnH2YBHVcFCqah7fwQrWGC-IDfXrpaK0GVC8g52Vfo3LdLpLxR0fTtjUGzznR1kDm4nnnKklt4ACNMjtxBZmn3-1JfBp~nEUK6lOHbUCQ8g9hm8uk2jszAhjkzMVcNkYFHHWcsCCS7NuA1sQ9C-y8~UpiWUAC3a5ESwIc3354Z-q1s-gn9w9YsvsF7gXACIva9fm67Zv2wrxn7qEHCGMCsTJV8I~iia23Brno-6iSi2m7vw0fIgU-pnWm6MMMAQ7Qx6ZE5o2F2qlGd9WsBheBuZcmj0g__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "texture_urls": [],
+  "consumed_credits": 5
+}

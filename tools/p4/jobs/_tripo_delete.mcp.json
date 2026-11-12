@@ -1,0 +1,1 @@
+{"script":{"content":"import unreal\nlib=unreal.EditorAssetLibrary\nprint('A28 Tripo delete', lib.delete_directory('/Game/P4/Tripo') if lib.does_directory_exist('/Game/P4/Tripo') else 'absent')\n","language":"Python"}}

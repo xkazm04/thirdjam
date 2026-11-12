@@ -1,0 +1,69 @@
+{
+  "vendor": "Rodin",
+  "dest": "/Game/P4/Rodin",
+  "sk_name": "SK_P4_Rodin",
+  "mesh_fbx": "C:/Users/kazda/kiro/thirdjam/tools/p4/out/rodin/NORM/rigged_character_fbx_url.fbx",
+  "texture_png": "C:/Users/kazda/kiro/thirdjam/tools/p4/out/rodin/RIG/tex/texture_diffuse.png",
+  "clips": [
+    {
+      "fbx": "C:/Users/kazda/kiro/thirdjam/tools/p4/out/rodin/NORM/basic_animations.walking_fbx_url.fbx",
+      "name": "AS_P4_Rodin_vendor_walk"
+    },
+    {
+      "fbx": "C:/Users/kazda/kiro/thirdjam/tools/p4/out/rodin/NORM/basic_animations.running_fbx_url.fbx",
+      "name": "AS_P4_Rodin_vendor_run"
+    }
+  ],
+  "manny_clips": [
+    "/Game/Characters/Mannequins/Anims/Unarmed/Walk/MF_Unarmed_Walk_Fwd",
+    "/Game/Characters/Mannequins/Anims/Unarmed/Jog/MF_Unarmed_Jog_Fwd",
+    "/Game/Characters/Mannequins/Anims/Unarmed/MM_Idle"
+  ],
+  "chains": {
+    "root": "pelvis",
+    "chains": [
+      [
+        "Spine",
+        "spine_01",
+        "spine_03"
+      ],
+      [
+        "Head",
+        "neck_01",
+        "head"
+      ],
+      [
+        "LeftClavicle",
+        "clavicle_l",
+        "clavicle_l"
+      ],
+      [
+        "LeftArm",
+        "upperarm_l",
+        "hand_l"
+      ],
+      [
+        "RightClavicle",
+        "clavicle_r",
+        "clavicle_r"
+      ],
+      [
+        "RightArm",
+        "upperarm_r",
+        "hand_r"
+      ],
+      [
+        "LeftLeg",
+        "thigh_l",
+        "ball_l"
+      ],
+      [
+        "RightLeg",
+        "thigh_r",
+        "ball_r"
+      ]
+    ]
+  },
+  "report": "C:/Users/kazda/kiro/thirdjam/tools/p4/out/rodin/ue_setup.report.json",
+  "meshes_in_bone_hierarchy": true
+}
