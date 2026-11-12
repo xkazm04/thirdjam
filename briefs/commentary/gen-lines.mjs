@@ -190,5 +190,62 @@ D('win', 'win', null, 'the human\'s team wins', 5, 0, ['That\'s a wrap!', 'Cut, 
 D('lose', 'lose', null, 'the human\'s team loses', 5, 0, ['Retake?', 'Again. Retake.']);
 D('menu', 'menu', null, 'the main menu opens', 5, 0, ['Quiet on the set.', 'Choose your cut.']);
 
+// ---------------- HOCKEY FIRST (R-0021 points 2 and 3, 2026-11-12) ----------------
+// The operator: "it should be hockey first theme, keeping director cut in the menu". Commentator lines that leaned on film vocabulary are replaced here by id,
+// so ids, events, priorities and cooldowns stay as generated above. The director's lines keep their film words: they are menu-only now (see README).
+const HOCKEY_FIRST = {
+  'faceoff.after_goal.03': 'Fresh start at centre ice.',
+  'goal.first.02': 'And the first one is on the board.',
+  'goal.tie.03': 'Tied up! We start again.',
+  'goal.blowout.02': 'Somebody call a timeout.',
+  'goal.match_point.02': 'One goal from the win.',
+  'goal.late.03': 'Just before the horn!',
+  'goal.pause.02': 'The counter clicks over, and they line up again.',
+  'goal.pause.03': 'A clean finish. That one goes on the highlights.',
+  'pickup_spawn.any.02': 'A pickup drops onto the ice.',
+  'effect_start.any.02': 'A new effect is in play.',
+  'announce.rule.03': 'The rules just changed.',
+  'directors_call.any.01': 'The rules have changed.',
+  'directors_call.any.02': 'A rule change, live on the ice.',
+  'directors_call.any.03': 'New rule for this period.',
+  'directors_call.ice_friction_down.01': 'New rule! The ice is now glass.',
+  'directors_call.ai_red_skill_down.02': 'Easier opponents for this period.',
+  'period.take_1.01': 'Welcome to the rink: blue against orange, first period.',
+  'period.take_1.02': 'Lights are up, the ice is fresh. First period is under way.',
+  'period.take_1.03': 'Good evening from the rink. Let us see what these two can do.',
+  'period.take_2.01': 'Second period. Same ice, new chances.',
+  'period.take_2.02': 'Back for the second period.',
+  'period.take_2.03': 'Second period is under way.',
+  'period.take_3.01': 'Third period. This is where it gets decided.',
+  'period.take_3.02': 'Third period. No more warm-ups.',
+  'period.take_3.03': 'Final period of the match. Here we go.',
+  'period.take_n.01': 'Another period. They are not done yet.',
+  'period.take_n.02': 'Still going. Another period.',
+  'period.take_tied.01': 'Level at the start of this period.',
+  'period_end.any.01': 'And that is the end of the period.',
+  'period_end.any.02': 'There is the horn. End of the period.',
+  'period_end.any.03': 'That period is in the books.',
+  'period_end.tied.01': 'End of the period, and still level.',
+  'period_end.tied.02': 'All square at the horn.',
+  'period_end.lead.01': 'End of the period. One side in front.',
+  'clock.last_10.01': 'Ten seconds left in the period.',
+  'win.blue.01': 'And that is the game! Blue takes it.',
+  'win.orange.01': 'And that is the game! Orange takes it.',
+  'win.shutout.02': 'Shutout! A spotless night.',
+  'win.comeback.01': 'From behind to the win! What a finish.',
+  'lose.blowout.02': 'That one will sting for a while.',
+  'season_take.level_1.01': 'Match one of the season. The opener. Nobody is judging yet.',
+  'season_take.level_2.01': 'The big rink tonight. More ice, and the clock is running.',
+  'season_take.level_3.01': 'Rough stuff tonight. Checks are in, manners are out.',
+  'season_take.level_4.01': 'Tricky ice tonight. Watch what is lying out there.',
+  'season_take.level_6.01': 'One goal tonight. Whoever scores takes the game.',
+  'season_take.level_7.01': 'Wide rink tonight. That far net is a long way off.',
+  'season_take.level_8.01': 'The final match of the season. Everything they have, right here.',
+  'win.season.01': 'That is the season. What a run it was.',
+};
+const seen = new Set();
+for (const l of out) if (l.speaker === 'commentator' && HOCKEY_FIRST[l.id]) { l.text = HOCKEY_FIRST[l.id]; seen.add(l.id); }
+for (const id of Object.keys(HOCKEY_FIRST)) if (!seen.has(id)) throw new Error('HOCKEY_FIRST: no such commentator line ' + id);
+
 writeFileSync(process.argv[2], JSON.stringify(out, null, 2) + '\n');
 console.log('wrote', out.length);

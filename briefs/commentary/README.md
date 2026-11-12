@@ -28,11 +28,11 @@ Unknown keys are errors; an absent value is an omitted key (never `null` or `""`
 3. Colour calls first: "Blue scores!" is the line; the mood line ("What a finish!") is the second beat in the goal pause.
 4. A quiet home lean toward the human's team (`goal.for` is warm, `goal.against` is fair: "Credit where it is due"), never cheering against anyone.
 5. Dry humour, one wink at a time ("Felt that one up here.", "Somebody call for a rewrite."); no pun in every line.
-6. The film set comes through in the nouns: take, cut, scene, the set, the director, rehearsals. Use it in stoppages, not on every shot.
+6. **Hockey first (R-0021, 2026-11-12).** The commentator speaks rink talk only: period, horn, match, the board, the rules changed. No film vocabulary on the ice (cut, take, scene, set, director, script, wrap, rolling, props, rewrite, in the can). The 48 lines that had it are replaced by id in `gen-lines.mjs` (`HOCKEY_FIRST`); hockey idioms that share a word stay ("tape to tape", "takes a seat", "set up nicely").
 7. Teams are only "blue" and "orange"; skaters are unnamed and ungendered ("the carrier", "the last man", the colour).
 8. No player names, numbers above ten, real teams, leagues, people, brands, or a real broadcaster's catchphrase (so not the classic "he shoots, he scores").
 9. Rated for 13: hits are "big", fouls are "called"; the players' barks (R-0015) carry the trash talk, the commentator never repeats or answers it.
-10. The director is a different person on the set floor: one to five words, imperative, film-crew vocabulary only ("Action!", "Cut!", "Take two.", "That's a wrap!").
+10. The director is a different person on the set floor: one to five words, imperative, film-crew vocabulary only ("Action!", "Cut!", "Take two.", "That's a wrap!"). **Since R-0021 point 3 the director's lines are menu and Designer only; none plays during a match, and no director voice has been picked.**
 
 ## 3. How a runtime picks a line
 
