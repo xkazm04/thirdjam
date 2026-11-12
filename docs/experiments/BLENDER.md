@@ -1,6 +1,6 @@
 # Blender pipeline for the skater figures, the stick and the props (lane A22, H9.9-H11.9)
 
-Status: experiment notes, 2026-11-12 15:57-17:50 CET. Scripts in `tools/blender/` (README there is the job list), FBX sources in `tools/blender/out/`,
+Status: experiment notes, 2026-11-12 15:57-16:50 CET (first pass to 16:33, second pass after the Director's review 16:33-16:50). Scripts in `tools/blender/` (README there is the job list), FBX sources in `tools/blender/out/`,
 the toy variant imported to `Game/Content/Figures/`. The swap of the code-built figure for the skeletal one is the Director's call after the review
 (brief A22); nothing here touches `ToySkaterVisual.cpp` or the cartridges.
 
@@ -18,26 +18,32 @@ the toy variant imported to `Game/Content/Figures/`. The swap of the code-built 
 Full size (cells 1024 px): `docs/experiments/img/blender-sheet.png` (3.1 MB). Turntables (2 s, 30 fps, 512 px, H.264): `img/blender-turntable-toy.mp4` (70 KB),
 `img/blender-turntable-clay.mp4` (76 KB), `img/blender-turntable-broadcast.mp4` (65 KB). Props overview: `img/blender-props.png`.
 
-What the sheet shows: the toy figure is the code-built one (capsule torso, dome, ball head with the dark helmet band, skate plate), now with a stick that
-reads as a hockey stick: a 1.3 m shaft at a 45 degree lie, a 0.3 m blade lying flat on the ice turned 30 degrees out, a heel, and two mitten hands on the
-shaft with stub arms from the shoulders (feel.00 of R-0021). Clay keeps the shape and adds thumb-sized dents and a felt stitch seam around the waist and
-over the head. Broadcast stretches to 1.9 m with legs, a helmet without a face, and a longer 1.5 m stick held below the shoulder.
+What the sheet shows (second pass, after the Director's review of the first): the toy figure at 1.6 m with toy proportions (a 49 cm head on a torso
+tapered from 46 cm at the hips to 64 cm at the shoulders, a dark helmet dome and 13 cm band with a visor box, a skate plate with two bright blade runners,
+a white number patch standing off the back), two arms with forward elbows and two mitten hands on the stick, the upper hand at the top of the shaft and the
+lower a third down, in every pose (the arms are STRETCH_TO bones so they follow the stick). The stick: a shaft tapered from 32 to 24 mm at a 42 degree lie,
+a heel ball, a 32 cm wooden blade lying flat and turned 30 degrees out with a dark tape band on its outer half, a knob at the top; the carry cell shows a
+puck at `puck_socket` (a render prop, not exported). Clay: the same figure with 3.5 cm thumb dents on the torso (simple subdivision level 2, torso only,
+22.7k tris) and a felt stitch seam around the waist and over the head, lifted by a warm rim light. Broadcast: a 1.85 m humanoid with a neck, upper and
+lower arms with elbows, gloves with cuffs, thighs, knees and shins, a helmet with a cage line and no face, a 1.55 m stick held below the shoulder.
+First-pass sheet (kept for the record): bottle-shaped toy, one visible arm, no visible blade; superseded.
 
 ## 2. Figures: what the script makes
 
 | Variant | Triangles | Vertices | FBX | Bones | Actions | Build + export | Renders (3 cells + 60 turntable frames) |
 |---|---|---|---|---|---|---|---|
-| toy | 1,992 | 1,039 | 1.45 MB | 10 (7 deform + 3 sockets) | 17 | 0.9 s | 9 s |
-| clay | 7,308 | 3,739 | 1.61 MB | 10 | 17 | 0.8 s | 8 s |
-| broadcast | 3,068 | 1,579 | 1.47 MB | 10 | 17 | 0.7 s | 10 s |
+| toy | 3,808 | ~1,900 | 1.49 MB | 10 (7 deform + 3 sockets) | 17 | 0.6 s | 9 s |
+| clay | 22,692 | ~11,500 | 2.01 MB | 10 | 17 | 0.9 s | 9 s |
+| broadcast | 4,360 | ~2,200 | 1.50 MB | 10 | 17 | 0.7 s | 9 s |
 
 Armature: `root` > `pelvis` > `torso` > {`head` > `head_socket`, `arm_l`, `arm_r`, `stick_root` > {`stick_socket`, `puck_socket`}}. The arms are
 STRETCH_TO constraints on the stick bone (head_tail at the two hand positions), so the mittens stay on the shaft in every pose and the FBX bake writes the
 stretch as bone scale. The sockets of C-0001 are leaf bones: Unreal answers `DoesSocketExist("puck_socket")` on a skeletal mesh component from bone names, so
 `AJamSkater::GetPuckSocketWorld` finds them without a socket asset. `puck_socket` is 12 cm in front of the blade's face on the ice and rides the stick.
 
-Material slots (section order in the import log): `M_SkaterBase` 708 tris (jersey: `TeamColour`), `M_SkaterNumber` 32 (a curved UV 0..1 patch on the back
-for `NumberTens` / `NumberOnes`), `M_SkaterHead` 528, `M_SkaterTrim` 688 (helmet band, gloves, skates, blade, legs), `M_SkaterStick` 36. Materials and
+Material slots: `M_SkaterBase` (jersey, arms, shoulders: `TeamColour`), `M_SkaterNumber` (the curved UV 0..1 patch on the back for `NumberTens` /
+`NumberOnes`, plus the blade runners and the cage line in white), `M_SkaterHead`, `M_SkaterTrim` (helmet, band, visor, mittens, skates, plate, legs, tape, knob),
+`M_SkaterStick` (shaft, heel, blade wood). Materials and
 textures are not imported; B's `M_Toon` instances go on the slots in the Blueprint (R-0002 item 5).
 
 Actions (60 fps, frame counts; timings from `ToySkaterVisual.cpp`): idle 60 (loop), skate 36 (loop, one stride cycle: at 8 m/s the code's phase makes one
@@ -47,7 +53,8 @@ knocked_down 40 (88 degrees backward in 14 frames, a 3 + 3 bounce, hold), get_up
 
 Two lessons that cost the most time: (1) the stick is a child of the torso, so the torso's 10 degree forward pitch at idle dropped the blade 17 cm under the
 ice (the first sheet showed a stick without a blade); the script now counter-pitches the stick about the grip so a pose's `stick_pitch` is relative to the ice,
-and pre-rotates the forward slide so a poke stays horizontal. (2) A Blender text label parented to the camera never rendered in headless EEVEE; the labels are
+pre-rotates the forward slide so a poke stays horizontal, and cancels the grip's own displacement under the torso pitch (with the grip 33 cm ahead of the hip
+the lean alone sank the blade 7 cm): the blade stays put and the hands slide on the body instead. (2) A Blender text label parented to the camera never rendered in headless EEVEE; the labels are
 drawn by ffmpeg `drawtext` on the tiled sheet instead.
 
 ## 3. Props
@@ -70,13 +77,13 @@ and glass. Not imported (B owns `Props/` and `Arena/`; the FBX and PNG are in `t
 ## 4. Import result (toy)
 
 Headless, `UnrealEditor-Cmd ThirdJam.uproject -run=ImportAssets -importsettings=tools/blender/import_toy.json -NullRHI`, legacy `FbxFactory` with
-`bImportMaterials` and `bImportTextures` false, 60 fps sample rate: `/Game/Figures/SK_SkaterToy` (11 bones digested, 5 sections, 1,992 triangles),
+`bImportMaterials` and `bImportTextures` false, 60 fps sample rate: `/Game/Figures/SK_SkaterToy` (11 bones digested, 5 sections, 3,808 triangles after the second pass),
 its skeleton and 17 animation sequences, written in about 10 s of commandlet time after a 25 s editor start. The one-group import names the sequences
 `SK_SkaterToy_Anim_AS_SkaterToy_<action>` and the skeleton `SK_SkaterToy_Skeleton`; a second headless run (`-run=pythonscript -script=tools/blender/verify_toy.py`)
 renamed them to `AS_SkaterToy_<action>` and `SKEL_SkaterToy` (C-0004 open question 1; 19 files, no redirector left, the mesh and every sequence reference
-`/Game/Figures/SKEL_SkaterToy`, 0.9 MB in all) and printed: 11 bones (`AS_SkaterToy` armature root, root, pelvis, torso, head, head_socket, arm_l, arm_r,
-stick_root, stick_socket, puck_socket); `DoesSocketExist` true for `stick_socket`, `puck_socket`, `head_socket`; bounds origin (44, 15, 68) cm, extent (72, 43, 72)
-cm, so the mesh spans x -28..117 (the blade ahead: forward is +X) and y -27..58 (the stick on +Y, the right side, as the code's `StickPivot`); five material
+`/Game/Figures/SKEL_SkaterToy`, 1.2 MB in all after the second pass, the mesh 0.6 MB) and printed: 11 bones (`AS_SkaterToy` armature root, root, pelvis, torso, head, head_socket, arm_l, arm_r,
+stick_root, stick_socket, puck_socket); `DoesSocketExist` true for `stick_socket`, `puck_socket`, `head_socket`; bounds origin (62, 15, 80) cm, extent (94, 53, 80)
+cm, so the mesh spans x -32..156 (the blade ahead: forward is +X), y -37..68 (the stick on +Y, the right side, as the code's `StickPivot`) and z 0..160 (the 1.6 m toy); five material
 slots in the order base, number, head, trim, stick; 17 sequences with the exact frame counts of the actions (idle 60, skate 36, carry 60, aim 30 + 30, poke 18,
 lift 20, shoot_windup 24, shoot_release 51, check 20, knocked_down 40, get_up 20, faceoff_ready 30, draw 15, goalie 3 x 30) at 60 fps. What did not work: an animation-only second import group
 (`bImportMesh` false, `Skeleton` set) is routed to Interchange by 5.9 and re-imports the mesh instead of the takes; so one group, then rename.

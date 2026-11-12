@@ -1,0 +1,74 @@
+2026-11-12 16:13:18 PASS skater_toy 13 s
+2026-11-12 16:13:33 PASS skater_clay 14 s
+2026-11-12 16:13:46 PASS skater_broadcast 13 s
+2026-11-12 16:13:52 PASS props 6 s
+2026-11-12 16:13:53 PASS sheet docs/experiments/img/blender-sheet.png 3483036 bytes
+2026-11-12 16:13:53 PASS turntable toy 76658 bytes
+2026-11-12 16:13:54 PASS turntable clay 90668 bytes
+2026-11-12 16:13:54 PASS turntable broadcast 71391 bytes
+2026-11-12 16:13:54 PASS props overview docs/experiments/img/blender-props.png
+2026-11-12 16:13:54 done (all)
+2026-11-12 16:15:35 PASS skater_toy 15 s
+2026-11-12 16:15:49 PASS skater_clay 14 s
+2026-11-12 16:16:07 PASS skater_broadcast 18 s
+2026-11-12 16:16:08 PASS sheet docs/experiments/img/blender-sheet.png 3275275 bytes
+2026-11-12 16:16:08 PASS turntable toy 80749 bytes
+2026-11-12 16:16:09 PASS turntable clay 88804 bytes
+2026-11-12 16:16:09 PASS turntable broadcast 76676 bytes
+2026-11-12 16:16:09 done (figures)
+2026-11-12 16:19:01 PASS skater_toy 16 s
+2026-11-12 16:19:21 PASS skater_clay 20 s
+2026-11-12 16:19:37 PASS skater_broadcast 16 s
+2026-11-12 16:19:38 PASS sheet docs/experiments/img/blender-sheet.png 3402350 bytes
+2026-11-12 16:19:38 PASS turntable toy 87819 bytes
+2026-11-12 16:19:38 PASS turntable clay 95795 bytes
+2026-11-12 16:19:39 PASS turntable broadcast 81421 bytes
+2026-11-12 16:19:39 done (figures)
+2026-11-12 16:20:37 PASS skater_toy 15 s
+2026-11-12 16:20:52 PASS skater_clay 15 s
+2026-11-12 16:21:08 PASS skater_broadcast 15 s
+2026-11-12 16:21:09 PASS sheet docs/experiments/img/blender-sheet.png 2996653 bytes
+2026-11-12 16:21:09 PASS turntable toy 70669 bytes
+2026-11-12 16:21:09 PASS turntable clay 76872 bytes
+2026-11-12 16:21:09 PASS turntable broadcast 66076 bytes
+2026-11-12 16:21:10 done (figures)
+2026-11-12 16:22:28 PASS skater_toy 17 s
+2026-11-12 16:22:45 PASS skater_clay 17 s
+2026-11-12 16:23:15 PASS skater_broadcast 30 s
+2026-11-12 16:23:16 PASS sheet docs/experiments/img/blender-sheet.png 3091751 bytes
+2026-11-12 16:23:16 PASS turntable toy 70669 bytes
+2026-11-12 16:23:17 PASS turntable clay 76451 bytes
+2026-11-12 16:23:17 PASS turntable broadcast 65994 bytes
+2026-11-12 16:23:17 done (figures)
+2026-11-12 16:24:33 PASS skater_toy 17 s
+2026-11-12 16:24:48 PASS skater_clay 15 s
+2026-11-12 16:25:06 PASS skater_broadcast 18 s
+2026-11-12 16:25:07 PASS sheet docs/experiments/img/blender-sheet.png 3121718 bytes
+2026-11-12 16:25:07 PASS turntable toy 70064 bytes
+2026-11-12 16:25:08 PASS turntable clay 75638 bytes
+2026-11-12 16:25:08 PASS turntable broadcast 65447 bytes
+2026-11-12 16:25:08 done (figures)
+2026-11-12 16:36:29 PASS skater_toy 14 s
+2026-11-12 16:36:43 PASS skater_clay 14 s
+2026-11-12 16:36:59 PASS skater_broadcast 16 s
+2026-11-12 16:37:00 PASS sheet docs/experiments/img/blender-sheet.png 2370543 bytes
+2026-11-12 16:37:00 PASS turntable toy 68628 bytes
+2026-11-12 16:37:00 PASS turntable clay 74688 bytes
+2026-11-12 16:37:01 PASS turntable broadcast 62873 bytes
+2026-11-12 16:37:01 done (figures)
+2026-11-12 16:38:06 PASS skater_toy 16 s
+2026-11-12 16:38:22 PASS skater_clay 16 s
+2026-11-12 16:38:38 PASS skater_broadcast 15 s
+2026-11-12 16:38:38 PASS sheet docs/experiments/img/blender-sheet.png 2605369 bytes
+2026-11-12 16:38:38 PASS turntable toy 77224 bytes
+2026-11-12 16:38:39 PASS turntable clay 88208 bytes
+2026-11-12 16:38:39 PASS turntable broadcast 70189 bytes
+2026-11-12 16:38:39 done (figures)
+2026-11-12 16:39:43 PASS skater_toy 9 s
+2026-11-12 16:39:53 PASS skater_clay 10 s
+2026-11-12 16:40:03 PASS skater_broadcast 10 s
+2026-11-12 16:40:04 PASS sheet docs/experiments/img/blender-sheet.png 2598608 bytes
+2026-11-12 16:40:04 PASS turntable toy 77309 bytes
+2026-11-12 16:40:04 PASS turntable clay 86024 bytes
+2026-11-12 16:40:04 PASS turntable broadcast 70197 bytes
+2026-11-12 16:40:04 done (figures)

@@ -1,6 +1,6 @@
 // Lane A19 (ruling R-0020 point 3): turn a list of items that need a human verdict into one self-contained review page.
 //   node tools/review/build.mjs --in items.json --out page.html --title "Bark Bank Review" [--intro note.txt] [--description "..."] [--no-listen] [--listen-note]
-// items.json: [{ id, group, subgroup?, text, note?, tags?: [] }]  (unknown keys are errors; absent value = omit the key)
+// items.json: [{ id, group, subgroup?, text, note?, tags?: [], image? }]  (image: a relative path published next to the page, or a URL)  (unknown keys are errors; absent value = omit the key)
 // The page has no external requests and no dependencies; decisions export as JSON and as a markdown summary (see README.md).
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
 export const MAX_BYTES = 3 * 1024 * 1024;
-const KEYS = new Set(['id', 'group', 'subgroup', 'text', 'note', 'tags']);
+const KEYS = new Set(['id', 'group', 'subgroup', 'text', 'note', 'tags', 'image']);
 
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
@@ -21,7 +21,7 @@ export function validateItems(items) {
     if (!it || typeof it !== 'object' || Array.isArray(it)) { errors.push(`${at}: not an object`); return; }
     for (const k of Object.keys(it)) if (!KEYS.has(k)) errors.push(`${at}: unknown key "${k}"`);
     for (const k of ['id', 'group', 'text']) if (typeof it[k] !== 'string' || !it[k].trim()) errors.push(`${at}: "${k}" must be a non-empty string`);
-    for (const k of ['subgroup', 'note']) if (k in it && (typeof it[k] !== 'string' || !it[k].trim())) errors.push(`${at}: "${k}" must be a non-empty string or omitted`);
+    for (const k of ['subgroup', 'note', 'image']) if (k in it && (typeof it[k] !== 'string' || !it[k].trim())) errors.push(`${at}: "${k}" must be a non-empty string or omitted`);
     if ('tags' in it && (!Array.isArray(it.tags) || !it.tags.length || it.tags.some((t) => typeof t !== 'string' || !t))) errors.push(`${at}: "tags" must be a non-empty array of strings or omitted`);
     if (typeof it.id === 'string') { if (seen.has(it.id)) errors.push(`${at}: duplicate id`); seen.add(it.id); }
   });

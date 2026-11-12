@@ -1,0 +1,42 @@
+{
+  "ImportGroups": [
+    {
+      "GroupName": "SkaterToy",
+      "Filenames": [
+        "C:/Users/kazda/kiro/thirdjam/tools/blender/out/SK_SkaterToy.fbx"
+      ],
+      "DestinationPath": "/Game/Figures",
+      "bReplaceExisting": true,
+      "bSkipReadOnly": true,
+      "FactoryName": "FbxFactory",
+      "ImportSettings": {
+        "bImportMesh": true,
+        "bImportAnimations": true,
+        "bImportMaterials": false,
+        "bImportTextures": false,
+        "bImportAsSkeletal": true,
+        "bCreatePhysicsAsset": false,
+        "bAutomatedImportShouldDetectType": false,
+        "MeshTypeToImport": "FBXIT_SkeletalMesh",
+        "OriginalImportType": "FBXIT_SkeletalMesh",
+        "SkeletalMeshImportData": {
+          "ImportUniformScale": 1.0,
+          "bConvertScene": true,
+          "bConvertSceneUnit": true,
+          "bForceFrontXAxis": false,
+          "bUseT0AsRefPose": false,
+          "bImportMorphTargets": false,
+          "bImportMeshesInBoneHierarchy": true,
+          "NormalImportMethod": "FBXNIM_ImportNormals"
+        },
+        "AnimSequenceImportData": {
+          "AnimationLength": "FBXALIT_ExportedTime",
+          "bImportCustomAttribute": false,
+          "bUseDefaultSampleRate": false,
+          "CustomSampleRate": 60,
+          "bSnapToClosestFrameBoundary": true
+        }
+      }
+    }
+  ]
+}
