@@ -211,3 +211,9 @@ frame and the hook filters by `every_frames`; first-to mode's `Period` advances 
 1/Value and `GrowRink` the mirror; `UJamCartridge::ApplyValueKey` as the one values-to-config mapping; `game.stick` defaults (reach 1.6 m, poke window 8 frames, lift 1.0 m, stumble 20,
 sensitivity 1); the faceoff as a sim phase with a 90-frame countdown; fouls park the fouler 300 frames at the side boards and give a faceoff at the fouler's end. The Determinism
 baseline hash moves with R-0013 (the faceoff changes play from frame 1); the new baseline is recorded by A16's `Jam.Core.Determinism` once linked.
+
+## R-0019 (H8.3, 2026-11-12 14:25): lane A15's names and the zone seam
+Accepted: `rules.hooks[].after_frame`; `score: { at_least, at_most, lead_at_least }`; event `shot_blocked` (Who = shooter, Kind = zone id) joins C-0003; B assets `MI_Zone_<kind>` and
+`MI_Toon_Bumper` (handoff to B). The zone seam `IJamZoneSource` (`JamZones.h`) is implemented by lane A16 in the sim: `SetZoneSource`, ice speed/friction multipliers per skater and puck,
+`BumpPuck` per substep, `BlocksShot` in `TryShoot`, pickups through `AllowsPickupAt`; obstacles `bumper` as a circle with restitution 1.6, `goal_shield` as a 0.3 m box. Brain (A3):
+`FJamAIWorld` gains `SlowIce[] { Centre, Radius }`; the carrier steers around a slow circle within 3 m of its line to the net; bots never shoot from inside `no_shoot`.

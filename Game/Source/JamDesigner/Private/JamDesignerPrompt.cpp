@@ -284,6 +284,32 @@ bool FJamDesignerPrompt::AssembleBody(const FString& Sentence, const FString& Ca
 	return true;
 }
 
+// C-0005 (lane A15): true when a hook with an end_match action is not guarded (after_frame >= 600, on_frame every_frames >= 600,
+// on_period_end, or a score needing a second goal). Mirror of hookEndsMatchEarly in schema/validate.mjs.
+bool FJamDesignerPrompt::HookEndsMatchEarly(const TSharedPtr<FJamJson>& H)
+{
+	if (!H || !H->IsObject()) return false;
+	FJPtr Then = H->Get(TEXT("then"));
+	if (!Then || !Then->IsArray()) return false;
+	bool bEnds = false;
+	for (const FJPtr& A : Then->Array)
+	{
+		FJPtr Do = A && A->IsObject() ? A->Get(TEXT("do")) : FJPtr();
+		if (Do && Do->IsString() && Do->String == TEXT("end_match")) bEnds = true;
+	}
+	if (!bEnds) return false;
+	auto NumOf = [&](const FJPtr& O, const TCHAR* K, double& V) { FJPtr X = O && O->IsObject() ? O->Get(K) : FJPtr(); if (X && X->IsNumber()) { V = X->Number; return true; } return false; };
+	double V = 0;
+	if (NumOf(H, TEXT("after_frame"), V) && V >= 600) return false;
+	FJPtr When = H->Get(TEXT("when"));
+	const FString W = When && When->IsString() ? When->String : FString();
+	if (W == TEXT("on_frame") && NumOf(H, TEXT("every_frames"), V) && V >= 600) return false;
+	if (W == TEXT("on_period_end")) return false;
+	FJPtr Score = H->Get(TEXT("score"));
+	if ((NumOf(Score, TEXT("at_least"), V) && V >= 2) || (NumOf(Score, TEXT("lead_at_least"), V) && V >= 2)) return false;
+	return true;
+}
+
 void FJamDesignerPrompt::CheckDesignerEdits(const FJamJson& Base, const FJamJson& Out, TArray<FString>& OutErrors)
 {
 	if (!Base.IsObject() || !Out.IsObject()) return;
@@ -316,6 +342,22 @@ void FJamDesignerPrompt::CheckDesignerEdits(const FJamJson& Base, const FJamJson
 	else if (BG && !DeepEqual(BG.Get(), OG.Get()))
 	{
 		OutErrors.Add(TEXT("at /game: the Designer may not change \"game\" as a whole. Restore it exactly as it was."));
+	}
+	// C-0005 (lane A15): the Designer may not create a hook that ends the match before frame 600 (validate.mjs hookEndsMatchEarly).
+	if (OG && OG->IsObject())
+	{
+		FJPtr Rules = OG->Get(TEXT("rules"));
+		FJPtr Hooks = Rules && Rules->IsObject() ? Rules->Get(TEXT("hooks")) : FJPtr();
+		if (Hooks && Hooks->IsArray())
+		{
+			for (int32 i = 0; i < Hooks->Array.Num(); ++i)
+			{
+				if (HookEndsMatchEarly(Hooks->Array[i]))
+				{
+					OutErrors.Add(FString::Printf(TEXT("at /game/rules/hooks/%d: this hook could end the match before frame 600 (10 seconds). Add \"after_frame\": 600, make it wait for a second goal (score.at_least or lead_at_least of 2), or fire it on_period_end."), i));
+				}
+			}
+		}
 	}
 }
 

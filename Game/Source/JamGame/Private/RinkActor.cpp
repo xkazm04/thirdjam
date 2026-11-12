@@ -106,11 +106,16 @@ ARinkActor::ARinkActor()
 	TrimOrange = MakePm(TEXT("TrimOrange"));
 	Nets = MakePm(TEXT("Nets"));
 	Obstacles = MakePm(TEXT("Obstacles"));
+	Zones = MakePm(TEXT("Zones"));
 	Glass->SetCastShadow(false);
 	// R-0002 (B-to-A-0005): stencil 1 = toon ramp + outline, 2 = banded ice without outline, 0 = untouched.
 	for (UProceduralMeshComponent* P : { Boards.Get(), Nets.Get(), Obstacles.Get() }) { P->SetRenderCustomDepth(true); P->SetCustomDepthStencilValue(1); }
 	Ice->SetRenderCustomDepth(true);
 	Ice->SetCustomDepthStencilValue(2);
+	// C-0005 / A15: zone decals lie on the ice, so they take the ice's stencil (banded, no outline) and cast nothing.
+	Zones->SetRenderCustomDepth(true);
+	Zones->SetCustomDepthStencilValue(2);
+	Zones->SetCastShadow(false);
 	for (UProceduralMeshComponent* P : { Trim.Get(), TrimOrange.Get() }) { P->SetRenderCustomDepth(false); P->SetCustomDepthStencilValue(0); P->SetCastShadow(false); }
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> Cyl(TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
 	for (int32 i = 0; i < 2; ++i)
@@ -192,6 +197,10 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 		IceMid->SetScalarParameterValue(TEXT("Wet"), Game.Look.bWetIce ? 1.f : 0.f);
 		IceMid->SetScalarParameterValue(TEXT("RinkHalfLength"), static_cast<float>(R.LengthM * 0.5 * UU));
 		IceMid->SetScalarParameterValue(TEXT("RinkHalfWidth"), static_cast<float>(R.WidthM * 0.5 * UU));
+		// R-0016 point 3 (5): B's paint and A's markings and goal triggers follow one rule on every rink size: blue lines at a third of the half-length,
+		// goal lines at half-length - 4 m (FJamRinkConfig::GoalLineX). A's own markings below use the same numbers (LengthM / 6 and GL).
+		IceMid->SetScalarParameterValue(TEXT("BlueLineFrac"), 0.3333f);
+		IceMid->SetScalarParameterValue(TEXT("GoalLineOffsetCm"), 400.f);
 		IceMid->SetVectorParameterValue(TEXT("Color"), FLinearColor(0.80f, 0.86f, 0.92f));
 		Ice->SetMaterial(0, IceMid);
 	}
@@ -294,6 +303,72 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 		Markings->SetVisibility(!bLookIce);
 	}
 
+	// Zones (C-0005 / A15): flat decals at 0.8 cm (above the markings at 0.6), one fill section and one rim section per zone kind,
+	// in the order the kinds first appear. Circle = disc + 25 cm rim ring; rect = quad + 25 cm border of four strips.
+	int32 ZonesDrawn = 0;
+	{
+		struct FZoneKindBuf { FName Kind; FMeshBuf Fill, Rim; double StrengthSum = 0; int32 Count = 0; };
+		TArray<FZoneKindBuf> Kinds;
+		const double ZH = 0.8, RimW = 25.0;
+		for (const FJamZoneConfig& Zn : R.Zones)
+		{
+			if (!Zn.bVisible) continue;
+			FZoneKindBuf* K = Kinds.FindByPredicate([&Zn](const FZoneKindBuf& E) { return E.Kind == Zn.Kind; });
+			if (!K) { K = &Kinds.AddDefaulted_GetRef(); K->Kind = Zn.Kind; }
+			K->StrengthSum += Zn.Strength; ++K->Count; ++ZonesDrawn;
+			const FVector2D C(Zn.X * UU, Zn.Z * UU);
+			if (Zn.Shape == FName(TEXT("rect")))
+			{
+				const double Hx = Zn.W * 0.5 * UU, Hy = Zn.D * 0.5 * UU, Hb = RimW * 0.5;
+				const double X0 = C.X - Hx, X1 = C.X + Hx, Y0 = C.Y - Hy, Y1 = C.Y + Hy;
+				K->Fill.Quad(FVector(X0, Y0, ZH), FVector(X1, Y0, ZH), FVector(X1, Y1, ZH), FVector(X0, Y1, ZH), FVector::UpVector);
+				// Border strips run the full edge length, centred Hb inside it, so the corners are covered.
+				K->Rim.Strip(FVector2D(X0, Y0 + Hb), FVector2D(X1, Y0 + Hb), Hb, ZH + 0.1);
+				K->Rim.Strip(FVector2D(X0, Y1 - Hb), FVector2D(X1, Y1 - Hb), Hb, ZH + 0.1);
+				K->Rim.Strip(FVector2D(X0 + Hb, Y0), FVector2D(X0 + Hb, Y1), Hb, ZH + 0.1);
+				K->Rim.Strip(FVector2D(X1 - Hb, Y0), FVector2D(X1 - Hb, Y1), Hb, ZH + 0.1);
+			}
+			else
+			{
+				const double Rad = Zn.R * UU;
+				K->Fill.Ring(C, 0.0, Rad, ZH, 64);
+				K->Rim.Ring(C, FMath::Max(0.0, Rad - RimW), Rad, ZH + 0.1, 64);
+			}
+		}
+		auto ZoneTint = [](const FName& Kind) -> FLinearColor
+		{
+			if (Kind == FName(TEXT("slow_ice"))) return FLinearColor(0.35f, 0.55f, 0.95f);
+			if (Kind == FName(TEXT("fast_ice"))) return FLinearColor(0.95f, 0.45f, 0.15f);
+			if (Kind == FName(TEXT("bumper"))) return FLinearColor(0.9f, 0.2f, 0.6f);
+			if (Kind == FName(TEXT("no_shoot"))) return FLinearColor(0.85f, 0.15f, 0.15f);
+			if (Kind == FName(TEXT("boost_only"))) return FLinearColor(0.2f, 0.85f, 0.4f);
+			return FLinearColor(0.6f, 0.6f, 0.6f); // unknown kind: neutral grey rather than nothing
+		};
+		Zones->ClearAllMeshSections();
+		for (int32 k = 0; k < Kinds.Num(); ++k)
+		{
+			FZoneKindBuf& K = Kinds[k];
+			// Brighter for a stronger zone: tint * (0.5 + 0.5 * Strength), Strength averaged over this kind's zones (one material per section).
+			const float Scale = static_cast<float>(0.5 + 0.5 * (K.Count ? K.StrengthSum / K.Count : 0.5));
+			const FLinearColor Base = ZoneTint(K.Kind);
+			const FLinearColor FillTint(Base.R * Scale, Base.G * Scale, Base.B * Scale);
+			const FLinearColor RimTint(FillTint.R * 1.35f, FillTint.G * 1.35f, FillTint.B * 1.35f);
+			bool bLook = false;
+			UMaterialInterface* LookMat = LoadLook(*FString::Printf(TEXT("MI_Zone_%s"), *K.Kind.ToString()), TEXT("/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial"), &bLook);
+			auto Tinted = [this, bLook, LookMat](const FLinearColor& Tint) -> UMaterialInterface*
+			{
+				if (bLook) return LookMat;
+				UMaterialInstanceDynamic* D = UMaterialInstanceDynamic::Create(LookMat, this);
+				D->SetVectorParameterValue(TEXT("Color"), Tint);
+				return D;
+			};
+			K.Fill.Commit(Zones, 2 * k);
+			Zones->SetMaterial(2 * k, Tinted(FillTint));
+			K.Rim.Commit(Zones, 2 * k + 1);
+			Zones->SetMaterial(2 * k + 1, Tinted(RimTint));
+		}
+	}
+
 	// Nets: posts and crossbar (frame, section 0) and the mesh (section 1), open towards the centre.
 	{
 		FMeshBuf Mesh;
@@ -328,21 +403,38 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 		Nets->SetMaterial(1, LoadLook(TEXT("MI_Toon_NetMesh"), NetMaterialPath));
 	}
 
-	// Obstacles (M3b): boxes and pillars, 1.2 m tall like the boards.
+	// Obstacles (M3b): boxes and pillars, 1.2 m tall like the boards (section 0); C-0005 / A15 adds goal shields (section 0,
+	// a wall Size wide across the rink, 0.3 m deep) and bumpers (a pillar in its own magenta section 1).
 	{
+		FMeshBuf Bump;
+		auto Cylinder = [](FMeshBuf& Buf, const FVector& C, double Hs)
+		{
+			const int32 Seg = 20;
+			for (int32 i = 0; i < Seg; ++i)
+			{
+				const double A0 = 2 * UE_DOUBLE_PI * i / Seg, A1 = 2 * UE_DOUBLE_PI * (i + 1) / Seg;
+				const FVector D0(FMath::Cos(A0), FMath::Sin(A0), 0), D1(FMath::Cos(A1), FMath::Sin(A1), 0);
+				// Lane A15: listed clockwise seen from outside so the front face points outward (the PIE proof showed pillars and bumpers inside out).
+				Buf.Quad(C + D1 * Hs, C + D0 * Hs, C + D0 * Hs + FVector(0, 0, BoardHeightM * UU), C + D1 * Hs + FVector(0, 0, BoardHeightM * UU), (D0 + D1).GetSafeNormal());
+			}
+		};
 		for (const FJamObstacle& O : R.Obstacles)
 		{
 			const double Hs = O.Size * 0.5 * UU;
 			const FVector C(O.X * UU, O.Z * UU, 0);
 			if (O.Kind == FName(TEXT("pillar")))
 			{
-				const int32 Seg = 20;
-				for (int32 i = 0; i < Seg; ++i)
-				{
-					const double A0 = 2 * UE_DOUBLE_PI * i / Seg, A1 = 2 * UE_DOUBLE_PI * (i + 1) / Seg;
-					const FVector D0(FMath::Cos(A0), FMath::Sin(A0), 0), D1(FMath::Cos(A1), FMath::Sin(A1), 0);
-					B.Quad(C + D0 * Hs, C + D1 * Hs, C + D1 * Hs + FVector(0, 0, BoardHeightM * UU), C + D0 * Hs + FVector(0, 0, BoardHeightM * UU), (D0 + D1).GetSafeNormal());
-				}
+				Cylinder(B, C, Hs);
+			}
+			else if (O.Kind == FName(TEXT("bumper")))
+			{
+				Cylinder(Bump, C, Hs);
+			}
+			else if (O.Kind == FName(TEXT("goal_shield")))
+			{
+				// Size metres wide along the rink's z (Unreal Y), 0.3 m deep along x, standing across the rink.
+				const double Hd = 0.15 * UU;
+				B.Box(C - FVector(Hd, Hs, 0), C + FVector(Hd, Hs, BoardHeightM * UU));
 			}
 			else
 			{
@@ -351,6 +443,19 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 		}
 		Obstacles->ClearAllMeshSections();
 		if (B.V.Num()) { B.Commit(Obstacles, 0); Obstacles->SetMaterial(0, LoadLook(TEXT("MI_Toon_Board"), BoardsMaterialPath)); }
+		if (Bump.V.Num())
+		{
+			Bump.Commit(Obstacles, 1);
+			bool bLookBumper = false;
+			UMaterialInterface* BumperMat = LoadLook(TEXT("MI_Toon_Bumper"), TEXT("/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial"), &bLookBumper);
+			if (!bLookBumper)
+			{
+				UMaterialInstanceDynamic* D = UMaterialInstanceDynamic::Create(BumperMat, this);
+				D->SetVectorParameterValue(TEXT("Color"), FLinearColor(0.9f, 0.2f, 0.6f));
+				BumperMat = D;
+			}
+			Obstacles->SetMaterial(1, BumperMat);
+		}
 	}
 
 	// Goal triggers behind each line (cosmetic markers of the goal volume the simulation uses).
@@ -359,5 +464,5 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 	GoalTriggerNeg->SetRelativeLocation(FVector(-(GL + Depth * 0.5) * UU, 0, NetH * 0.5 * UU));
 	GoalTriggerNeg->SetBoxExtent(FVector(Depth * 0.5 * UU, Hw * UU, NetH * 0.5 * UU));
 
-	UE_LOG(LogJamSim, Log, TEXT("JAMRINK built %gx%g m corner %g goal %g m, %d obstacles, outline %d points"), R.LengthM, R.WidthM, R.CornerRadiusM, R.GoalWidthM, R.Obstacles.Num(), Line.Num());
+	UE_LOG(LogJamSim, Log, TEXT("JAMRINK built %gx%g m corner %g goal %g m, %d obstacles, %d zones, outline %d points"), R.LengthM, R.WidthM, R.CornerRadiusM, R.GoalWidthM, R.Obstacles.Num(), ZonesDrawn, Line.Num());
 }
