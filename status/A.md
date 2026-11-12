@@ -119,3 +119,8 @@
 
 ## H10.3 (16:52) R-0024: Director's judgement replaces verdicts for adjustments; Gemini eyes
 - Operator: no verdicts for adjustments while the game is unplayable; Gemini (`GOOGLE_AI_API_KEY` in `.env`) as a second pair of eyes. Approved by the Director: A23's seven look changes (B: A-to-B-0008 proceeds, no verdict needed), the Blender toy figure goes on the ice for a PIE comparison (A26), rink construction in code (A25), the eyes tool (A27). Three lanes started 17:08 in their own worktrees.
+
+## H10.5 (17:12) eyes tool in; queue for the next lanes
+- A27 done: `tools/eyes` (Gemini 3.1 Pro for judgement, 3.8 Flash for batch, about $0.03 per still), six presets, findings in `docs/experiments/EYES.md`. Lanes A25 and A26 use it on their proofs.
+- Queued (editor cap, after A25/A26 land): **A30 HUD pass 2** from EYES.md: mark which skater is yours, show how a faceoff is won, bark drawn once (bubble or strip), own-net marker off the screen edge; **A22 pass 3** figure proportions (head 0.35, blade line, thinner longer blade, cuffs) only if A26's comparison picks the skeletal figure.
+- Operator: Fab pack descoped (R-0026); waiting for A29's three YouTube candidates for Rokoko Vision.
