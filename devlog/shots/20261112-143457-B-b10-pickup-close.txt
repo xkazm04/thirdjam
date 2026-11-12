@@ -1,0 +1,1 @@
+SM_Pickup_Base (MI_Pickup_Base tinted per kind) and SM_Pickup_Token (MI_Pickup_precision) spinning and bobbing by WPO, stencil 1 ink outline, on a lit pool
