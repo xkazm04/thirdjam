@@ -1,0 +1,1 @@
+B1b after: same staging as before-band; band YAVG 1.2 -> 46.9, puck (min 0) 46 levels under its surround, blue and orange figures readable

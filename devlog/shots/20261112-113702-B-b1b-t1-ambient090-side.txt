@@ -1,0 +1,1 @@
+B1b test 1 adopted variant: emissive = base colour x AmbientColour x IceAmbient 0.9: band YAVG 46.5, smooth

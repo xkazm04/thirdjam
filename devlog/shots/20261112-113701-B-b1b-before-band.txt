@@ -1,0 +1,1 @@
+B1b before: real Rink PIE paused, camera (-44,15.3,3.5); blue figure at (-38,16), puck moved to (-20,17) in the dark band: invisible (band YAVG 1.2)

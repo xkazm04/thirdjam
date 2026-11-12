@@ -69,7 +69,7 @@ Rules that apply to every row:
 | Game/Plugins/JamAssets/Content/VFX/M_Fx_Ribbon.uasset | material | 0.0 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | unlit additive ribbon with soft edges, ParticleColor x Glow 15 (13748 bytes) |
 | Game/Plugins/JamAssets/Content/VFX/NS_puck_trail.uasset | vfx | 0.3 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | puck ribbon trail; user params Speed (m/s), Colour (311628 bytes) |
 | Game/Plugins/JamAssets/Content/VFX/NS_shot.uasset | vfx | 0.3 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | event shot (331864 bytes) |
-| Game/Plugins/JamAssets/Content/VFX/NS_board.uasset | vfx | 0.6 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | event board (dust puff + flash) (564054 bytes) |
+| Game/Plugins/JamAssets/Content/VFX/NS_board.uasset | vfx | 0.5 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | event board (dust puff + flash) (564054 bytes) |
 | Game/Plugins/JamAssets/Content/VFX/NS_goal.uasset | vfx | 0.3 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | event goal (331173 bytes) |
 | Game/Plugins/JamAssets/Content/VFX/NS_directors_call.uasset | vfx | 0.3 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | event directors_call (ring) (318476 bytes) |
 | Game/Plugins/JamAssets/Content/VFX/NS_win.uasset | vfx | 0.5 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | event win (confetti) (542894 bytes) |
@@ -78,10 +78,10 @@ Rules that apply to every row:
 | Game/Plugins/JamAssets/Content/VFX/NS_pickup_spawn.uasset | vfx | 0.3 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | event pickup_spawn (M3) (323118 bytes) |
 | Game/Plugins/JamAssets/Content/VFX/NS_pickup_take.uasset | vfx | 0.3 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | event pickup_take (M3) (322740 bytes) |
 | Game/Plugins/JamAssets/Content/Audio/MS_arena_room.uasset | audio | 0.1 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | MetaSound source synthesised in-engine (no waves) (119715 bytes) |
-| Game/Plugins/JamAssets/Content/Audio/MS_board.uasset | audio | 0.2 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | MetaSound source synthesised in-engine (no waves) (154023 bytes) |
+| Game/Plugins/JamAssets/Content/Audio/MS_board.uasset | audio | 0.1 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | MetaSound source synthesised in-engine (no waves) (154023 bytes) |
 | Game/Plugins/JamAssets/Content/Audio/MS_check.uasset | audio | 0.1 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | MetaSound source synthesised in-engine (no waves) (142017 bytes) |
 | Game/Plugins/JamAssets/Content/Audio/MS_directors_call.uasset | audio | 0.2 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | MetaSound source synthesised in-engine (no waves) (239073 bytes) |
-| Game/Plugins/JamAssets/Content/Audio/MS_faceoff.uasset | audio | 0.2 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | MetaSound source synthesised in-engine (no waves) (154032 bytes) |
+| Game/Plugins/JamAssets/Content/Audio/MS_faceoff.uasset | audio | 0.1 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | MetaSound source synthesised in-engine (no waves) (154032 bytes) |
 | Game/Plugins/JamAssets/Content/Audio/MS_goal.uasset | audio | 0.2 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | MetaSound source synthesised in-engine (no waves) (228158 bytes) |
 | Game/Plugins/JamAssets/Content/Audio/MS_knockdown.uasset | audio | 0.1 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | MetaSound source synthesised in-engine (no waves) (135832 bytes) |
 | Game/Plugins/JamAssets/Content/Audio/MS_lose.uasset | audio | 0.2 | original | UE 5.9 Niagara / MetaSounds via MCP/Python |  |  | 2026-11-12 | B | y | MetaSound source synthesised in-engine (no waves) (167504 bytes) |

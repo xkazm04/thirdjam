@@ -1,0 +1,1 @@
+B1b net pair (same PIE frame, old values put back on a PIE-only MID): MI_Toon_NetMesh 0.85 grey Emissive 1.5: mesh 168.8 vs boards 164.2

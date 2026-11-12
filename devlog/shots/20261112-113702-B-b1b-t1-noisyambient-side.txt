@@ -1,0 +1,1 @@
+B1b test 1 rejected variant: the script's IceAmbient (noise-modulated emissive) 0.6: ramp cuts it into blotches
