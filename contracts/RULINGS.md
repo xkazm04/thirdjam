@@ -312,3 +312,15 @@ Accepted: `rules.hooks[].after_frame`; `score: { at_least, at_most, lead_at_leas
    their shots; tier `p4_broadcast` with `MI_Bcast_Glass` and `MPC_Look.Clay` reset in `SetTier`; pickup props at `PickupTop` with spin and bob, B's props preferred over
    the token; `CornerRadiusCm` on the dynamic ice), A32 (audio: stage and cook the VO bank, a commentary player beside the barks with B's rules, music and skate-loop hooks,
    the seven missing events). A22's props go to B as FBX (B-to-A-0022 point 2). B-to-A-0020 is answered by R-0022 (clean builds, unity off).
+
+## R-0028 (H11.5, 2026-11-12 18:45): four unattended hours; Fable 5.2 on the 3D lanes; more scope for fun
+1. The operator is away from 18:45 to about 22:45 CET. The Director runs unattended: a machine check every 30 minutes (CPU, RAM, GPU, disk, editors, build-tool instances) written to
+   `status/A.md`; the dev-b merge, clean build and push at every window where B has pushed; a Shipping package every hour or so when the gate is fully green; B's status head and
+   open handoffs read before every brief (R-0027 point 1). No destructive step without the operator: no deletes outside lane outputs, no force pushes, no contract rewrite.
+2. **Fable 5.2 runs the 3D lanes** (figures, rigs, animation, scene and look work through the editor and Blender): the bake-off (A30), tackling that reads (A33), and any lane whose
+   deliverable is judged by a still or a clip. Code and tooling lanes stay on the default model.
+3. **Scope added for "fun first" (R-0025 point 1)**, started as editor capacity allows (three editors): A33 tackling that reads (hit reactions by direction, board collisions as an
+   event with sound and reaction, stumbles, puck loss and spray, camera punch, all cosmetic over the sim); A34 a human-like playtester through the real input path with fun
+   metrics per difficulty (touches, shots, goals, lead changes, time to first goal) and calibration proposals; A37 every shipped cut plays (the 30 Designer cuts and the eight
+   takes through the bot sweep and the eyes tool on each cut's look); A38 lockstep multiplayer re-proven on the new sim. Queued behind them: HUD pass 2 (EYES.md), goalie saves
+   as events for the commentator.
