@@ -1,0 +1,1 @@
+﻿Lane A12: key 4 (praise) at sim frame 600 through the real input stack; the nearest teammate answers with a praise_reply bubble and the strip (-game window, scripted human).

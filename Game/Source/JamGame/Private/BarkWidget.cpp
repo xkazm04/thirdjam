@@ -132,6 +132,8 @@ void UJamBarkWidget::Layout()
 		if (!B.Box) continue;
 		const float Alpha = OpacityFor(B.ShownFrame, Now);
 		B.Box->SetRenderOpacity(Alpha);
+		// Render opacity does not hide a rounded-box outline: collapse the bubble when it is not showing.
+		B.Box->SetVisibility(Alpha > 0.f ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 		if (Alpha <= 0.f) continue;
 		UCanvasPanelSlot* S = Cast<UCanvasPanelSlot>(B.Box->Slot);
 		if (!S) continue;
@@ -148,11 +150,14 @@ void UJamBarkWidget::Layout()
 		}
 		// Off-screen speakers are heard through the strip only.
 		B.Box->SetRenderOpacity(bOn ? Alpha : 0.f);
+		if (!bOn) B.Box->SetVisibility(ESlateVisibility::Collapsed);
 		S->SetPosition(Pos);
 	}
 	if (StripBox)
 	{
-		StripBox->SetRenderOpacity(OpacityFor(StripFrame, Now));
+		const float StripAlpha = OpacityFor(StripFrame, Now);
+		StripBox->SetRenderOpacity(StripAlpha);
+		StripBox->SetVisibility(StripAlpha > 0.f ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 		if (UCanvasPanelSlot* S = Cast<UCanvasPanelSlot>(StripBox->Slot)) S->SetPosition(FVector2D(VW * 0.5f, VH - 72.f));
 	}
 }

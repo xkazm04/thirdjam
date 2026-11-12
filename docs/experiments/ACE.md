@@ -106,6 +106,13 @@ on RTX machines. Phase 1 ships text barks with the engine's own Flite TTS behind
 SAPI voice as 2b. If the operator still wants ACE as an experiment for the NVIDIA questions, approve the **TTS zip only** (1.83 GiB), time box the port
 at 45 minutes of compile fixes like DLSS, and let ACE voice the barks on RTX with Flite as the fallback. This thread stops here until a ruling.
 
+### 1.7 Ruling (Director, 2026-11-12 ~12:05, on lane A12's 60-minute report)
+
+**No ACE download.** There is no 5.9 plugin, the bundled models would exceed the zip budget, and DLSS is the NVIDIA path (R-0006). ACE stays a
+research note; the voice side track ships on the engine's own TextToSpeech plugin (Flite, no download) for barks and on SAPI 5.4 for shouted signals,
+keyboard and gamepad first. The Director adds the `bark` and `signal` event names to `JamEventBus` and `contracts/events.md` and the `TextToSpeech`
+plugin line to the `.uproject`; lane A12 measures the package delta of the plugin once and reports it in section 3.
+
 ## 2. The brain seam for lane A3: `FJamTeamIntent` (Phase 2)
 
 Header: `Game/Source/JamGame/Public/SignalIntent.h` (lane A12 owns it; A3 consumes it in `JamBrain`). The struct is in the file; the consumption rules:
@@ -182,3 +189,29 @@ intensity, no repeats within 10 picks, bubble opacity by frames). Node: `tools/b
 - Console `jam.signal <defend|space|pass|praise>`; log `JAMSIGNAL intent=<name> frame=<f> frames=<n> issuer=<i> target=<t>`.
 - Test `Jam.Signals.SignalsRouteToIntent`: slots and keys to intents, acknowledgement situations, the frame window, the key map. Passing.
 - Phase 2b (Windows speech recognition through SAPI 5.4, section 1.5 b) is not started.
+
+### 3.5 Proofs after the ruling (12:15): signals through the real input stack, voice on, SAPI status, settings API for lane A8
+
+- **Signal proof** (`tools/barks/pieshot.ps1 ... -ExtraArgs '-dpcvars=jam.SignalScript=600:1;1200:4,jam.BarkVoice=1,jam.VoiceSignals=1'`, a windowed
+  `-game` process of the editor build, scripted human, no editor on 8012): the test hook `jam.SignalScript` presses key 1 at sim frame 600 and key 4 at
+  1200 through `UJamPlayerInput::DebugInjectKey` (lane A5's real input path), and the log shows
+  `JAMSIGNAL intent=defend frame=600 ... target=-1` -> `JAMBARK who=2 situation=signal_ack_defend ... "steady feet, nobody gets past"` and
+  `JAMSIGNAL intent=praise frame=1200 ... target=1` -> `JAMBARK who=1 situation=praise_reply ... "perfect timing on that pickup"`; the bus logged
+  `JAMEVENT signal who=0 ... kind=defend` and `JAMEVENT bark who=2 ... kind=signal_ack_defend` (the names the Director added). Screenshots:
+  `devlog/shots/20261112-121457-A-signal-praise-reply.jpg` (bubble over the praised teammate + strip), `20261112-121458-A-signal-defend-ack.jpg`.
+  The acknowledgement skips the bark cooldown on purpose (an answer always comes).
+- **Voice (barks):** with the `TextToSpeech` plugin enabled the log shows `JAMBARK voice on (engine TextToSpeech)` and the audio mixer registers
+  `Flite Text-To-Speech Listener`: `jam.BarkVoice 1` speaks every bark through the reflection path, no module dependency, no download.
+- **Voice signals (SAPI):** this machine has the English recognizer (`MS-1033-80-DESK Microsoft Speech Recognizer 8.0 for Windows (English - US)`)
+  but **no microphone endpoint** (only monitor speakers), so `FJamSignalVoice::Start` stops at `no microphone: Windows has no default audio input device`
+  and the game stays on the keyboard path, as designed. The recognizer, grammar (17 phrases: defend / fall back / get back / cover the net; space /
+  spread out / open ice / get open; pass / pass it / give me the puck / puck; nice one / nice / good job / well done / great) and event polling are
+  untested on real speech until a machine with a microphone runs `jam.VoiceSignals 1`; the phrase -> intent routing is unit-tested.
+- **Settings row for lane A8** ("Voice signals", off by default): `UJamSignalSystem::SetVoiceSignalsEnabled(bool)` /
+  `IsVoiceSignalsEnabled()` (static, persisted in `GameUserSettings.ini` under `[/Script/JamGame.JamSignalSystem] bVoiceSignals`), and on the
+  world's subsystem `GetVoiceStatus()` ("listening" | "off" | the reason it could not start) for the row's caption. Console override `jam.VoiceSignals -1|0|1`.
+- **Shipping compile:** `BarkSystem.cpp`, `SignalSystem.cpp`, `SignalVoice.cpp` compile in the Shipping game target (package log 12:14; the package
+  itself stopped on lane A8's `MenuWidget.cpp(258)` C4458). Package delta of the plugin: see 3.6 once a package passes; the plugin has no content,
+  its Flite static library is 31.8 MB (`lib/Win64/VS2019/Release/libFlite.lib`, voice data included) and the editor module DLL is 4.6 MB, so the
+  expected delta in the monolithic Shipping exe is a few MB.
+- Widget fix after the proof: a parked bubble's rounded outline stayed visible at render opacity 0; bubbles and the strip now collapse when not showing.

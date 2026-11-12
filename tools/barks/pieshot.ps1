@@ -1,8 +1,10 @@
 # Lane A12: run the rink map in a windowed -game process from the editor build (no editor UI, no MCP port), with the scripted human so goals and
 # checks happen, force a few barks through the console at given seconds, capture the window, then stop only that process and list the JAMBARK log lines.
 #   powershell -NoProfile -ExecutionPolicy Bypass -File tools\barks\pieshot.ps1 [-Map /Game/Maps/Rink] [-Seconds 45] [-ShotAt 20,30,40] [-Cut hockey.regular]
-param([string]$Map = '/Game/Maps/Rink', [int]$Seconds = 45, [int[]]$ShotAt = @(20, 30, 40), [string]$Cut = 'hockey.regular', [string]$Name = 'barks')
+#   -KeyAt @{ 24 = '1'; 36 = '4' } sends a key to the game window at those seconds (a signal proof: 1 defend, 2 space, 3 pass, 4 praise).
+param([string]$Map = '/Game/Maps/Rink', [int]$Seconds = 45, [int[]]$ShotAt = @(20, 30, 40), [string]$Cut = 'hockey.regular', [string]$Name = 'barks', [hashtable]$KeyAt = @{}, [string]$ExtraArgs = '')
 Add-Type -AssemblyName System.Drawing
+Add-Type -AssemblyName System.Windows.Forms
 Add-Type -ReferencedAssemblies System.Drawing -TypeDefinition @"
 using System; using System.Runtime.InteropServices;
 public struct RECT { public int Left, Top, Right, Bottom; }
@@ -17,7 +19,7 @@ $exe = 'C:\Program Files\Epic Games\UE_5.9\Engine\Binaries\Win64\UnrealEditor.ex
 $out = Join-Path $repo "tools\barks\out\$Name"
 New-Item -ItemType Directory -Force $out | Out-Null
 $log = Join-Path $out 'game.log'
-$args = "`"$repo\Game\ThirdJam.uproject`" $Map -game -windowed -ResX=1280 -ResY=720 -log -abslog=`"$log`" -cut=$Cut -ExecCmds=`"jam.ScriptHuman 1`""
+$args = "`"$repo\Game\ThirdJam.uproject`" $Map -game -windowed -ResX=1280 -ResY=720 -log -abslog=`"$log`" -cut=$Cut -ExecCmds=`"jam.ScriptHuman 1`" $ExtraArgs"
 $p = Start-Process -FilePath $exe -ArgumentList $args -PassThru
 "started pid $($p.Id)" | Set-Content (Join-Path $out 'capture.log')
 $sw = [Diagnostics.Stopwatch]::StartNew()
@@ -27,6 +29,16 @@ while ($sw.Elapsed.TotalSeconds -lt $Seconds) {
   $p.Refresh()
   if ($p.HasExited) { "game exited at $([int]$sw.Elapsed.TotalSeconds) s code $($p.ExitCode)" | Add-Content (Join-Path $out 'capture.log'); break }
   $t = [int]$sw.Elapsed.TotalSeconds
+  if ($KeyAt.ContainsKey($t) -and -not $done["k$t"]) {
+    $done["k$t"] = $true
+    $h = $p.MainWindowHandle
+    if ($h -ne [IntPtr]::Zero) {
+      [W32]::SetForegroundWindow($h) | Out-Null
+      Start-Sleep -Milliseconds 150
+      [System.Windows.Forms.SendKeys]::SendWait([string]$KeyAt[$t])
+      "sent key $($KeyAt[$t]) at $t s" | Add-Content (Join-Path $out 'capture.log')
+    }
+  }
   if (($ShotAt -contains $t) -and -not $done[$t]) {
     $done[$t] = $true
     $h = $p.MainWindowHandle
@@ -50,7 +62,7 @@ if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force -Confirm:$false; "stopped
 Start-Sleep -Seconds 2
 Get-Content (Join-Path $out 'capture.log')
 if (Test-Path $log) {
-  $barks = Select-String -Path $log -Pattern 'JAMBARK' | ForEach-Object { $_.Line }
+  $barks = Select-String -Path $log -Pattern 'JAMBARK|JAMSIGNAL|JAMVOICE' | ForEach-Object { $_.Line }
   "JAMBARK lines: $($barks.Count)"
   $barks | Select-Object -First 30 | ForEach-Object { $_.Substring([Math]::Min(30, $_.Length)) }
   $events = Select-String -Path $log -Pattern 'JAMEVENT (goal|faceoff|check|knockdown|win|lose)' | Measure-Object

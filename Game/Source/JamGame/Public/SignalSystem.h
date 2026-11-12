@@ -7,6 +7,7 @@
 #include "CoreMinimal.h"
 #include "Subsystems/WorldSubsystem.h"
 #include "SignalIntent.h"
+#include "SignalVoice.h"
 #include "SignalSystem.generated.h"
 
 class UInputAction;
@@ -74,10 +75,27 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Jam|Signals") const FJamTeamIntent& GetLastIntent() const { return Last; }
 	UFUNCTION(BlueprintPure, Category = "Jam|Signals") bool IsInputBound() const { return bBound; }
 
+	// ---- Phase 2b: voice signals (Windows speech recognition, SAPI). For lane A8's settings row "Voice signals". ----
+	// Persisted in GameUserSettings.ini ([/Script/JamGame.JamSignalSystem] bVoiceSignals); the console variable jam.VoiceSignals overrides (-1 = setting).
+	UFUNCTION(BlueprintCallable, Category = "Jam|Signals") static void SetVoiceSignalsEnabled(bool bEnabled);
+	UFUNCTION(BlueprintPure, Category = "Jam|Signals") static bool IsVoiceSignalsEnabled();
+	// True while the recognizer listens; GetVoiceStatus is "listening" | "off" | the reason it could not start (no recognizer, no microphone).
+	UFUNCTION(BlueprintPure, Category = "Jam|Signals") bool IsVoiceListening() const;
+	UFUNCTION(BlueprintPure, Category = "Jam|Signals") FString GetVoiceStatus() const;
+	// The last phrase the recognizer heard (for the HUD or the settings row), empty when none.
+	UFUNCTION(BlueprintPure, Category = "Jam|Signals") const FString& GetLastHeard() const { return LastHeard; }
+	UFUNCTION(BlueprintPure, Category = "Jam|Signals") int32 GetHeardCount() const { return HeardCount; }
+
 	FJamIntentDelegate OnIntent;
 
 private:
+	// Test hook: jam.SignalScript "<frame>:<slot>;..." presses key <slot> (1-4) through the real input stack at that sim frame (PIE proofs).
+	void RunSignalScript();
+	TArray<TPair<int64, int32>> Script;
+	bool bScriptParsed = false;
+	int32 PendingRelease = -1;
 	void HandleSimFrame(const FJamPresentationFrame& Frame);
+	void UpdateVoice();
 	void TryBind();
 	void OnSlot1() { Issue(EJamTeamIntent::Defend); }
 	void OnSlot2() { Issue(EJamTeamIntent::Space); }
@@ -87,8 +105,12 @@ private:
 
 	FDelegateHandle FrameHandle;
 	TWeakObjectPtr<APlayerController> BoundPC;
+	TUniquePtr<FJamSignalVoice> Voice;
 	FJamTeamIntent Last;
+	FString LastHeard;
 	int64 Frame = 0;
 	int32 SignalCount = 0;
+	int32 HeardCount = 0;
 	bool bBound = false;
+	bool bVoiceWanted = false;
 };

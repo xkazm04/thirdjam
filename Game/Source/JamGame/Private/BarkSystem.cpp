@@ -515,18 +515,22 @@ void UJamBarkSystem::Show(const FJamBarkPick& P)
 		Widget = CreateWidget<UJamBarkWidget>(PC, UJamBarkWidget::StaticClass());
 		if (Widget) Widget->AddToViewport(50);
 	}
-	if (Widget)
+	AJamSkater* Actor = nullptr;
+	if (World) for (TActorIterator<AJamSkater> It(World); It; ++It) if (It->GetSimIndex() == P.Speaker) { Actor = *It; break; }
+	FVector SpeakerWorld = FVector::ZeroVector;
+	int32 Team = 0;
+	if (const AHokejGameMode* GM = GameMode()) if (const UJamSim* Sim = GM->GetSim()) if (Sim->GetSkaters().IsValidIndex(P.Speaker))
 	{
-		AJamSkater* Actor = nullptr;
-		if (World) for (TActorIterator<AJamSkater> It(World); It; ++It) if (It->GetSimIndex() == P.Speaker) { Actor = *It; break; }
-		int32 Team = 0;
-		if (const AHokejGameMode* GM = GameMode()) if (const UJamSim* Sim = GM->GetSim()) if (Sim->GetSkaters().IsValidIndex(P.Speaker)) Team = Sim->GetSkaters()[P.Speaker].Team;
-		Widget->ShowBark(P, Actor, Team);
+		Team = Sim->GetSkaters()[P.Speaker].Team;
+		SpeakerWorld = UJamSim::ToWorld(Sim->GetSkaters()[P.Speaker].Pos);
 	}
+	if (Widget) Widget->ShowBark(P, Actor, Team);
 	if (Bus && UJamEventBus::IsKnownEvent(JamBarks::BusEvent))
 	{
+		// contracts/events.md "bark": Who = speaker, Where = speaker, Strength 0, Kind = situation.
 		FJamEventPayload Pl;
 		Pl.Who = P.Speaker;
+		Pl.Where = SpeakerWorld;
 		Pl.Kind = P.Situation;
 		Bus->Broadcast(JamBarks::BusEvent, Pl);
 	}

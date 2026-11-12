@@ -1,5 +1,8 @@
 #include "SignalSystem.h"
+#include "SignalVoice.h"
 #include "BarkSystem.h"
+#include "InputMapping.h"
+#include "Misc/ConfigCacheIni.h"
 #include "HokejGameMode.h"
 #include "HUDFeed.h"
 #include "JamEventBus.h"
@@ -121,6 +124,7 @@ void UJamSignalSystem::OnWorldBeginPlay(UWorld& InWorld)
 
 void UJamSignalSystem::Deinitialize()
 {
+	if (Voice.IsValid()) { Voice->Stop(); Voice.Reset(); }
 	if (UWorld* World = GetWorld()) if (UJamPresentation* Pres = UJamPresentation::Get(World)) Pres->OnSimFrame.Remove(FrameHandle);
 	if (BoundPC.IsValid())
 	{
@@ -136,6 +140,97 @@ void UJamSignalSystem::HandleSimFrame(const FJamPresentationFrame& F)
 {
 	Frame = F.SimFrame;
 	if (!bBound) TryBind();
+	UpdateVoice();
+	RunSignalScript();
+}
+
+static TAutoConsoleVariable<FString> CVarJamSignalScript(TEXT("jam.SignalScript"), TEXT(""),
+	TEXT("Test hook: <frame>:<slot>;<frame>:<slot> presses signal key <slot> (1-4) through the real input stack at that sim frame."));
+
+void UJamSignalSystem::RunSignalScript()
+{
+	if (!bScriptParsed)
+	{
+		bScriptParsed = true;
+		TArray<FString> Parts;
+		CVarJamSignalScript.GetValueOnGameThread().ParseIntoArray(Parts, TEXT(";"));
+		for (const FString& P : Parts)
+		{
+			FString F, S;
+			if (P.Split(TEXT(":"), &F, &S)) Script.Add({ FCString::Atoi64(*F), FCString::Atoi(*S) });
+		}
+		if (Script.Num()) UE_LOG(LogJamSignals, Log, TEXT("JAMSIGNAL script: %d key presses"), Script.Num());
+	}
+	UWorld* World = GetWorld();
+	APlayerController* PC = World ? World->GetFirstPlayerController() : nullptr;
+	if (!PC) return;
+	static const FKey Keys[] = { EKeys::One, EKeys::Two, EKeys::Three, EKeys::Four };
+	if (PendingRelease >= 1 && PendingRelease <= 4) { UJamPlayerInput::DebugInjectKey(PC, Keys[PendingRelease - 1], 0.f, false); PendingRelease = -1; }
+	for (int32 i = Script.Num() - 1; i >= 0; --i)
+	{
+		if (Script[i].Key <= Frame && Script[i].Value >= 1 && Script[i].Value <= 4)
+		{
+			UE_LOG(LogJamSignals, Log, TEXT("JAMSIGNAL script key %d at frame %lld"), Script[i].Value, Frame);
+			UJamPlayerInput::DebugInjectKey(PC, Keys[Script[i].Value - 1], 1.f, false);
+			PendingRelease = Script[i].Value;
+			Script.RemoveAt(i);
+		}
+	}
+}
+
+// ---------------------------------------------------------------- voice (Phase 2b) ----------------------------------------------------------------
+
+static TAutoConsoleVariable<int32> CVarJamVoiceSignals(TEXT("jam.VoiceSignals"), -1,
+	TEXT("Voice signals through Windows speech recognition: -1 = the saved setting (default off), 0 = off, 1 = on."));
+
+static const TCHAR* VoiceSection = TEXT("/Script/JamGame.JamSignalSystem");
+
+void UJamSignalSystem::SetVoiceSignalsEnabled(bool bEnabled)
+{
+	if (!GConfig) return;
+	GConfig->SetBool(VoiceSection, TEXT("bVoiceSignals"), bEnabled, GGameUserSettingsIni);
+	GConfig->Flush(false, GGameUserSettingsIni);
+}
+
+bool UJamSignalSystem::IsVoiceSignalsEnabled()
+{
+	const int32 Override = CVarJamVoiceSignals.GetValueOnGameThread();
+	if (Override == 0) return false;
+	if (Override == 1) return true;
+	bool bSaved = false;
+	if (GConfig) GConfig->GetBool(VoiceSection, TEXT("bVoiceSignals"), bSaved, GGameUserSettingsIni);
+	return bSaved;
+}
+
+bool UJamSignalSystem::IsVoiceListening() const { return Voice.IsValid() && Voice->IsListening(); }
+
+FString UJamSignalSystem::GetVoiceStatus() const
+{
+	if (!IsVoiceSignalsEnabled()) return TEXT("off");
+	return Voice.IsValid() ? Voice->GetStatus() : TEXT("off");
+}
+
+void UJamSignalSystem::UpdateVoice()
+{
+	const bool bWant = IsVoiceSignalsEnabled();
+	if (bWant != bVoiceWanted)
+	{
+		bVoiceWanted = bWant;
+		if (bWant)
+		{
+			if (!Voice.IsValid()) Voice = MakeUnique<FJamSignalVoice>();
+			Voice->Start();
+		}
+		else if (Voice.IsValid()) Voice->Stop();
+	}
+	if (!bWant || !Voice.IsValid() || !Voice->IsListening()) return;
+	for (const FJamVoiceHeard& H : Voice->Poll())
+	{
+		++HeardCount;
+		LastHeard = H.Phrase;
+		UE_LOG(LogJamSignals, Log, TEXT("JAMVOICE heard \"%s\" -> %s (confidence %.2f)"), *H.Phrase, *FJamTeamIntent::NameOf(H.Intent).ToString(), H.Confidence);
+		if (H.Intent != EJamTeamIntent::None) Issue(H.Intent);
+	}
 }
 
 void UJamSignalSystem::TryBind()
