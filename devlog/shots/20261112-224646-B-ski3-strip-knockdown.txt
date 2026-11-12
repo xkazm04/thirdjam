@@ -1,0 +1,1 @@
+SKI3: TB1_P3 SetKnockedDown push (0,1) Knockdown_Left, then GetUp_Side_Left, slomo 0.25 (crop cuts the lowest frames)
