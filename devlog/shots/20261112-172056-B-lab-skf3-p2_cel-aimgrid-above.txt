@@ -1,0 +1,1 @@
+SKF third pass p2_cel: the 24-hold aim grid from straight above (forward = up). Columns -63 -46 -30 0 +35 +70 deg (+ = the skater's left, image left), rows 1.00 1.30 1.45 1.60 m from the top.

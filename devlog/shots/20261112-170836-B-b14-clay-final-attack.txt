@@ -1,0 +1,1 @@
+B14 clay pass 2 final: game-camera geometry 17 m from the far net (emulated pose, 6 m behind a player at x 30): the net is inside the sharp band
