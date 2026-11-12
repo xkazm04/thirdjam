@@ -1,0 +1,1 @@
+SKI2 P3C Knockdown_Left then GetUp_Side_Left at the game camera on clay

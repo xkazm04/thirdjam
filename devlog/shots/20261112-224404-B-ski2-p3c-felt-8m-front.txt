@@ -1,0 +1,1 @@
+SKI2 P3C with the felt jersey path (JerseyFelt 1, FeltBump 2, FeltRimBoost 4, FeltTile 4 cm, FeltMaxZ 99 cm) on p3_clay, 8 m in front: old P3A orange, new P3C orange, old P3A blue, new P3C blue

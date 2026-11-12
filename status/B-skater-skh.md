@@ -888,3 +888,109 @@ I did not look at these sheets before filing them: the time ran out.
 - **Item 3:** not started.
 - **A frame-by-frame comparison of the blade against the source:** I compared per-take maxima only.
 - **Anything in Unreal.**
+
+## Seventh pass: face-down poses, blade pops
+
+**Short answer:**
+- **Face-down skates now rest on the ice** on R and P4B: 0.5 cm, was 4.9 to 15 cm. The legs are bent at the hip, knee and ankle.
+- **The blade pops are not fixed.** My zero-phase low-pass made those takes worse than `export5`, so I turned it off. In `export7` the stick behaves exactly as in `export5`, except where the settle moves the body.
+- **The settle still makes `GetUp_Side_*` worse than `export5`.** I kept it because those takes must start where the settled knockdowns end.
+
+**Where the files are:**
+- `C:\Users\kazda\jam\skater-lab\skh\export7\{R,P3A,P4B}\`, 70 takes each.
+- Configs `cfg/7_*.json` (`export_dir` "export7", `skh6` and `skh7` true), checked before the build.
+- Rebuild one figure: `bash skh/build7.sh <c>`.
+- `export/` to `export6/` were not touched.
+
+**Checks on every `export7` file:**
+- **Bind:** names, parents, rest pose (0.0), vertices (0.0), weights, polygons and UVs equal `skh/export/` on all three.
+- **Joins:** each knockdown's last frame equals its get-up's first frame, 0.000 cm for all five pairs on all three.
+- **Travel:** pelvis and root 0.
+
+### 1. Face-down legs (`Fall_Forward`, `GetUp_Front`, `Knockdown_Back`, `Trip`)
+
+The rule runs after the sixth pass's settle, weighted by the same pelvis-drop weight. It is predicted on the rigidly moved mesh points, and no vertex goes below -0.5 cm. Per leg:
+1. the thigh turns about the hip until the knee or shin touches the ice;
+2. the shin turns about the knee until the skate comes down;
+3. the foot turns about the ankle (25 degrees at most) until the lowest skate point is within 1.5 cm.
+
+Held lying frame (the end of the knockdowns and `Fall_Forward`, the start of `GetUp_Front`). The values are the lowest torso / knee or shin / skate / any body point, in cm. All four takes measure the same.
+
+| | R | P3A | P4B |
+|---|---|---|---|
+| `export5` | 5.5 / 14.5 / **5.2** / 0.1 | 6.0 / 20.4 / 1.0 / 1.0 | 10.7 / 27.8 / **15.0** / 0.1 |
+| `export6` | 4.9 / 14.0 / **4.9** / -0.5 | same as `export5` | 10.4 / 25.2 / **10.4** / -0.5 |
+| `export7` | 5.2 / 11.0 / **0.5** / -0.5 | same as `export5` | 10.4 / 18.8 / **0.5** / -0.5 |
+
+- **R and P4B:** the toes rest on the ice. The knees do not reach it: they are 11 and 19 cm up, because the thighs are too long for knees and toes together. The hips stay up a little, and the chest and hands are on the ice. On the side sheets this reads as lying face down with the legs angled down to the toes.
+- **P3A: not done.** Its belly is 6 cm up while the skates and mittens are already on the ice (1.0 cm), so no settle move improves it; I did not write the belly rule. It reads as lying on the hands and toes.
+- **Stick:** in the face-down takes it now dips to -0.6 to -0.85 cm (was 0 to 0.7), inside the 1 cm limit.
+
+### 2. Blade pops: not fixed
+
+**What I tried:** a 7-frame centred moving average of the per-frame slide and tilt in `Board_Hit`, `GetUp_Side_*` and `Goalie_Block_Left`. Then each frame took the nearest ice-safe tilt to the smoothed one.
+
+**Result:** worse than `export5`, so it is off (`POP_TAKES` is empty).
+- `GetUp_Side_*` blade error rose to 15 to 30 cm.
+- `Goalie_Block_Left`'s blade step tripled.
+- P3A `Board_Hit` still popped (181 cm).
+- The fix needs a joint solve over time with the ice as a constraint. I did not build it.
+
+I also took the goalie blocks out of the settle. They already rested at 0.2 to 0.9 cm, and settling them moved the stick.
+
+**`export7` against `export5`, takes that got worse** (all from the settle's body move):
+
+| Figure | Take: what got worse |
+|---|---|
+| R | `GetUp_Side_Left`: blade error 2.0 -> 25.3, blade step 13 -> 24, hand step 6 -> 13 |
+| R | `Knockdown_Back`, `GetUp_Front`: stick low to -0.8 / -0.6 cm |
+| P3A | `GetUp_Side_Left`: blade error 6.5 -> 24.4 |
+| P3A | `GetUp_Side_Right`: blade error 6.4 -> 11.6 |
+| P3A | `GetUp`: skate error 0.4 -> 1.0 |
+| P3A | `Knockdown_Left`, `GetUp_Front`: stick low to -0.85 / -0.5 |
+| P4B | `GetUp_Side_Left`: blade error 0.8 -> 29.9, step 9 -> 32 |
+| P4B | `GetUp_Side_Right`: step 18 -> 39 |
+| P4B | `Knockdown_Left`: blade error 0.7 -> 9.6 |
+| P4B | `Knockdown_Right`: blade step 64 -> 78 |
+| P4B | `Fall`: hand step 34 -> 45 |
+| P4B | `GetUp`: hand step 17 -> 26, skate error 0.15 -> 0.96 |
+
+**Takes whose largest blade step is still more than 1.5 times the source's:**
+
+| Figure | Takes (ours / source largest step, cm) |
+|---|---|
+| R | `GetUp_Side_Left` 24 / 9 |
+| P3A | `Board_Hit` 196 / 95; `GetUp_Side_Left` 164 / 7; `GetUp_Side_Right` 29 / 17; `GetUp_Front` 20 / 10 |
+| P4B | `GetUp_Side_Left` 32 / 9; `GetUp_Side_Right` 39 / 19; `Lift_Hit` 24 / 16 (as in `export5`); `Stride` 16 / 8.5 (as in `export5`; the loopcut wrap is 7.8 cm, as in `export5`) |
+
+### Sheets (looked at before filing)
+
+| Shot file | Candidate |
+|---|---|
+| `devlog/shots/20261112-223457-B-lab-skh7-r-facedown.png` | R |
+| `devlog/shots/20261112-223458-B-lab-skh7-p3a-facedown.png` | P3A |
+| `devlog/shots/20261112-223458-B-lab-skh7-p4b-facedown.png` | P4B |
+
+Each is a side view with rows `Fall_Forward`, `Knockdown_Back`, `Trip`, `GetUp_Front`, `Board_Hit`, `GetUp_Side_Left`. What I saw:
+- **R and P4B:** face down, chest and hands on the ice, skates touching the ice.
+- **P3A:** lying on its hands and toes.
+- **P3A `Board_Hit`:** at the sampled frame 4 the stick stands up through the face (the pop).
+
+### Final import list (70 takes per figure)
+
+**Default for every take: `export5`.** The importer re-imports animations onto the same skeleton, so takes can be mixed per take.
+
+| Candidate | Take from `export7` | Still not good enough to ship |
+|---|---|---|
+| **R** | `Knockdown_Left`, `Knockdown_Right`, `Knockdown_Back`, `Trip`, `Fall_Forward`, `GetUp_Front`, `GetUp_Side_Left`, `GetUp_Side_Right` (8). The get-ups go with the knockdowns, so that the join is exact. | `GetUp_Side_Left`: the propped stick is 25 cm off the ice and its blade steps 24 cm. The aim-grid blend dips: 21 of 53. |
+| **P3A** | `Knockdown_Left`, `Knockdown_Right`, `GetUp_Side_Left`, `GetUp_Side_Right`, `Board_Pin` (the helmet rule) (5). Its face-down takes are identical in `export5`. | `Board_Hit`: a 196 cm stick pop, and 3 stick-in-head frames. `GetUp_Side_Left`: a 164 cm pop and blade error 24 cm. `GetUp_Side_Right`: blade error 12 cm. The face-down belly 6 cm up. The blend dips: 18. |
+| **P4B** | `Knockdown_Left`, `Knockdown_Right`, `Knockdown_Back`, `Trip`, `Fall_Forward`, `GetUp_Front`, `GetUp_Side_Left`, `GetUp_Side_Right` (8) | `GetUp_Side_Left/_Right`: blade error 30 cm, steps 32 and 39. `Knockdown_Left`: blade error 9.6. Face down, the hips are up with the knees 19 cm off the ice. `Stride`: blade step 16 against the source's 8.5, and a 7.8 cm loop wrap (as in `export5`). The blend dips: 2. |
+
+**One alternative:** take `GetUp_Side_*` from `export5` to keep its better stick. The join with the `export7` knockdowns would then jump by the settle's move (up to 14 cm at the hip on R, 10 cm on P4B).
+
+### What I could not verify
+
+- **The P3A belly rule:** not implemented.
+- **A continuous stick solve:** not implemented.
+- **Anything in Unreal.**
+- **The clock:** this machine's clock jumped from about 19:20 to 22:30 during the pass, so the times above are its readings.

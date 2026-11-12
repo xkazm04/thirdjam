@@ -1,0 +1,1 @@
+SKI2 Knockdown_Back (push from behind) then GetUp_Front on P2C, game camera, slomo 0.1
