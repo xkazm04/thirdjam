@@ -163,3 +163,7 @@
 - running: A3 pass 2 (pro / all_star vs the regular and good playtesters), A39 payoffs, A40 camera clamp, A41 zone trigger and sweep wiring. A33 (tackling that reads) is on disk, next gate. Lanes A30, A31, A32, A34, A37, A38 closed.
 
 - link green 20:08: main b6d8166 (A33 tackling) pushed.
+
+- link green 20:12: main fef6630 (curve pass 2) pushed.
+
+- RESOURCES 20:14 cpu 12% ram 20.8/63GB gpu 23 %, 3669 MiB, 55 editors 1 cmd 0 ubt 0 free 614GB
