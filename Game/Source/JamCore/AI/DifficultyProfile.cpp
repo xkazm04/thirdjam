@@ -15,7 +15,8 @@ namespace JamAI
 		FJamDifficultyProfile MakePro()
 		{
 			const FJamAIParams D;
-			FJamDifficultyProfile P{"pro", D.SpeedScale, D.RedSkill, D.YieldMarginM, D.YieldRadiusM, D.HoldRadiusM, D.StallFrames, D.Opp, D.Mate.bPassToHuman};
+			// Lane A46 (PAYOFFS.md section 6): the human's teammates pass to the open human in 0.4 of the chances at pro (0 before: the one-timer never reached the human).
+			FJamDifficultyProfile P{"pro", D.SpeedScale, D.RedSkill, D.YieldMarginM, D.YieldRadiusM, D.HoldRadiusM, D.StallFrames, D.Opp, 0.4};
 			P.LargeRedSkill = 0.9;   // R-0029 pass 2: the regular playtester on 120 x 60 (35 % at 0.94, 55 % at 0.9)
 			return P;
 		}
@@ -39,7 +40,7 @@ namespace JamAI
 			Opp.DrawJumpPct = 100; // 16:23: the rookie centre always jumps early (the human takes the opening touch)
 			// R-0029 P2: speed 0.85 / red skill 0.75 (0.96 / 0.88 before, tuned against the scripted human); measured with lane A34's novice.
 			// Stall 60: the stall rule is what lets a rookie shoot at all (SeasonTakes needs one AI shot per match).
-			FJamDifficultyProfile P{"rookie", 0.85, 0.75, 4.0, 25.0, 0.0, 60, Opp, true};
+			FJamDifficultyProfile P{"rookie", 0.85, 0.75, 4.0, 25.0, 0.0, 60, Opp, 0.6};   // lane A46: mates pass to the open human in 0.6 of the chances (every chance before)
 			P.LargeSpeedScale = 0.9;   // R-0029: large-rink rookie offsets from the playtester grid (novice 85 %, 19:43); 1.0 / 0.93 before
 			P.LargeRedSkill = 0.8;
 			return P;
@@ -70,7 +71,7 @@ namespace JamAI
 			Opp.bDeke = true;
 			// R-0029 pass 2 (with A31's charge): speed 1.08 (bots may push past 1, the sim clamps them at 1.5): the good playtester 30 % / 25 %
 			// R-0029 with A39's payoffs on (one-timer, burst, deke): speed 1.15 brings the good playtester back to 23 % at 40 seeds (1.08 measured 38 %, 1.12 33 %); A39 section 9.
-			return FJamDifficultyProfile{"all_star", 1.15, 1.0, 4.0, 25.0, 0.0, 60, Opp, false};
+			return FJamDifficultyProfile{"all_star", 1.15, 1.0, 4.0, 25.0, 0.0, 60, Opp, 0.2};   // lane A46: mates pass to the open human in 0.2 of the chances
 		}
 
 		void SetErr(char* Err, int ErrLen, const char* Msg, const char* Pair)
@@ -105,7 +106,7 @@ namespace JamAI
 			if (std::strcmp(Key, "guard_range_m") == 0) { K.GuardRangeM = V; return true; }
 			if (std::strcmp(Key, "carry_speed") == 0) { K.CarrySpeed = V; return true; }
 			if (std::strcmp(Key, "forecheck_yield_frames") == 0) { K.ForecheckYieldFrames = static_cast<int>(V); return true; }
-			if (std::strcmp(Key, "pass_to_human") == 0) { K.bPassToHuman = V != 0.0; return true; }
+			if (std::strcmp(Key, "pass_to_human") == 0) { K.PassToHuman = V; return true; }   // lane A46: a 0..1 share (was 0 | 1)
 			if (std::strcmp(Key, "shot_charge_frames") == 0) { K.ShotChargeFrames = static_cast<int>(V); return true; }   // lane A31
 			if (std::strcmp(Key, "one_timer") == 0) { K.bOneTimer = V != 0.0; return true; }   // R-0029 point 4 (lane A39)
 			if (std::strcmp(Key, "deke") == 0) { K.bDeke = V != 0.0; return true; }
@@ -151,7 +152,7 @@ namespace JamAI
 		P.StallFrames = Profile.StallFrames;
 		P.Opp = Profile.Opp;
 		P.Mate = FJamBotSkill();
-		P.Mate.bPassToHuman = Profile.bMatesPass;
+		P.Mate.PassToHuman = Profile.MatesPassShare;
 	}
 
 	bool ApplyDifficultyTune(const char* Text, FJamAIParams& P, char* Err, int ErrLen)

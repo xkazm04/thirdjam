@@ -61,6 +61,7 @@ Cartridge errors are sentences that start `at <JSON pointer>:`, because the Desi
 | `stick.foul_grace_frames` | 0..120 | 12 (R-0029); a check right after a strip is not a check on a player without the puck |
 | `stick.deke.offset_m` | 0..2 | 1.0 (lane A39, R-0029 point 4): a deke tap (`FJamInput::bDeke`) moves the carried puck this far to the blade side within 6 frames; a shot inside the commit window aims at the open post; 0 = off |
 | `stick.deke.commit_frames` | 0..60 | 15 (lane A39): the crease back stays committed to the puck's old side this long; a second tap inside 30 frames does nothing |
+| `stick.reception_m` | 0..3 | 0.9 (lane A46, PAYOFFS.md section 6): a teammate's pass that reaches the body within this radius at 6-14 m/s is seated on the blade (4-frame settle, the one-timer window opens); faster passes bounce off the body unless the blade meets them; 0 = only the 0.6 m blade disc receives |
 | `puck.radius_m` | 0.06..0.4 | 0.12 measured; 0.35 made the player lose 1:3, so the cap is just above it for the big_puck look |
 | `puck.max_speed` | 10..60 | 30 measured, 4 sub-steps per frame hold to 60 m/s without tunnelling a post (1 m per frame) |
 | `puck.drag` | 0..2 | per second; 0 measured |

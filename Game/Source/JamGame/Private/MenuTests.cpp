@@ -161,9 +161,12 @@ bool FJamDirectorsCallOncePerPeriod::RunTest(const FString&)
 	// Lane A42 (y-slots): the MATCH banner's band at 1080p and a bark bubble pushed out of it (above when it fits, else below).
 	float Top = 0.f, Bottom = 0.f;
 	UJamDirectorsCallHudWidget::BannerBandPx(1080.f, Top, Bottom);
-	TestTrue(TEXT("banner band around 0.4 of the height"), Top < 432.f && Bottom > 432.f + 180.f);
-	TestEqual(TEXT("bubble above the banner"), static_cast<float>(UJamBarkWidget::PushOutOfBand(FVector2D(600, Top + 40.f), 54.f, Top, Bottom, 170.f).Y), Top - 4.f);
-	TestEqual(TEXT("bubble below when the top is taken"), static_cast<float>(UJamBarkWidget::PushOutOfBand(FVector2D(600, Top + 40.f), 54.f, Top, Bottom, Top - 20.f).Y), Bottom + 4.f + 54.f);
+	// A48's storyboard finding 3: the card lives in the top band under the scoreboard (0.12 to 0.42 of 1080), never over the ring at 0.66.
+	TestTrue(TEXT("card band under the scoreboard"), Top >= 110.f && Top < UJamDirectorsCallHudWidget::MatchCardCentreY && Bottom > UJamDirectorsCallHudWidget::MatchCardCentreY && Bottom <= 0.42f * 1080.f);
+	TestTrue(TEXT("card clear of the countdown ring"), Bottom < 0.66f * 1080.f - 110.f);
+	TestEqual(TEXT("bubble above the card when there is room"), static_cast<float>(UJamBarkWidget::PushOutOfBand(FVector2D(600, Top + 40.f), 54.f, Top, Bottom, 60.f).Y), Top - 4.f);
+	// With the card in the top band the bubbles' own floor (170) leaves no room above: they go under the card.
+	TestEqual(TEXT("bubble below the card in play"), static_cast<float>(UJamBarkWidget::PushOutOfBand(FVector2D(600, Top + 40.f), 54.f, Top, Bottom, 170.f).Y), Bottom + 4.f + 54.f);
 	TestEqual(TEXT("bubble clear of the banner stays"), UJamBarkWidget::PushOutOfBand(FVector2D(600, Bottom + 100.f), 54.f, Top, Bottom, 170.f), FVector2D(600, Bottom + 100.f));
 
 	// Settings round trip of the difficulty strings (lane A3's contract).

@@ -12,6 +12,8 @@
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/Actor.h"
 #include "DirectorsCallWidget.h"
+#include "HUDFeed.h"
+#include "Camera/PlayerCameraManager.h"
 #include "UObject/UObjectIterator.h"
 
 // Lane A18 (visual layer): the generated bubble (T_UI_Bubble, chalk paper with an ink edge and a tail at the bottom left) drawn as a
@@ -203,6 +205,14 @@ void UJamBarkWidget::Layout()
 	}
 	float BandTop = 0.f, BandBottom = 0.f;
 	const bool bBand = Overlay.IsValid() && Overlay->GetBannerBandPx(VH, BandTop, BandBottom);
+	// Lane A42 (A48's storyboard, still 9): the pause card clears every bubble; nothing comes back on resume. The pause menu pauses the
+	// world (UGameplayStatics::SetGamePaused), so the world's flag is the signal; the feed's Paused phase is honoured too.
+	const UJamPresentation* P = UJamPresentation::Get(this);
+	if ((GetWorld() && GetWorld()->IsPaused()) || (P && P->HasFrame() && P->GetFrame().Phase == EJamPhase::Paused))
+	{
+		for (FJamBarkBubble& B : Bubbles) { B.ShownFrame = -1000000; if (B.Box) B.Box->SetVisibility(ESlateVisibility::Collapsed); }
+	}
+	const FVector CamLoc = PC && PC->PlayerCameraManager ? PC->PlayerCameraManager->GetCameraLocation() : FVector::ZeroVector;
 	for (FJamBarkBubble& B : Bubbles)
 	{
 		if (!B.Box) continue;
@@ -219,15 +229,20 @@ void UJamBarkWidget::Layout()
 		if (PC && B.Anchor.IsValid())
 		{
 			FVector2D Sp;
-			if (UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(PC, B.Anchor->GetActorLocation() + FVector(0, 0, BubbleHeightCm), Sp, false))
+			// A48's storyboard (findings 5 and 9): a speaker beyond MaxBubbleDistanceM from the camera or outside the frame gets no bubble
+			// (it floated at the top of the frame over the far net); the voice still plays.
+			const bool bNear = PC->PlayerCameraManager ? FVector::Dist(B.Anchor->GetActorLocation(), CamLoc) <= MaxBubbleDistanceM * 100.f : true;
+			if (bNear && UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(PC, B.Anchor->GetActorLocation() + FVector(0, 0, BubbleHeightCm), Sp, false))
 			{
-				bOn = Sp.X > -50.f && Sp.X < VW + 50.f && Sp.Y > 0.f && Sp.Y < VH;
+				bOn = Sp.X > 0.f && Sp.X < VW && Sp.Y > 0.f && Sp.Y < VH;
 				// The tail sits at the figure's x; the bubble shifts aside so the tail is on its left or right end.
 				bTailLeft = Sp.X <= VW * 0.5f;
 				const float Shift = bTailLeft ? 60.f : -60.f;
 				// Lane A42: the whole bubble stays on screen (it was clamped by its centre and cut at the edge).
 				const float HalfW = FMath::Max(120.f, static_cast<float>(B.Box->GetDesiredSize().X) * 0.5f + 16.f);
 				Pos = FVector2D(FMath::Clamp(Sp.X + Shift, HalfW, VW - HalfW), FMath::Clamp(Sp.Y, 170.f, VH - 60.f));
+				// Clear of the radar frame (bottom right, 264 x 140 from the edge) and the ready pill (bottom left).
+				if (Pos.X + HalfW > VW - 300.f || Pos.X - HalfW < 420.f) Pos.Y = FMath::Min(Pos.Y, VH - 180.f);
 				// Lane A42: never over the MATCH banner (the bubble is about 54 px tall: text, padding and the tail).
 				if (bBand) Pos = PushOutOfBand(Pos, FMath::Max(54.f, static_cast<float>(B.Box->GetDesiredSize().Y)), BandTop, BandBottom, 170.f);
 			}

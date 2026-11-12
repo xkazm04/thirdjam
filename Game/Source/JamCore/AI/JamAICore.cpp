@@ -223,8 +223,8 @@ namespace JamAI
 			{
 				Sc *= 1.1;
 			}
-			bool bShoot = false, bAimed = false, bDeke = false;
-			FVec2 Dir = Decide(W, i, bShoot, bAimed, bDeke);
+			bool bShoot = false, bAimed = false, bDeke = false, bPass = false;
+			FVec2 Dir = Decide(W, i, bShoot, bAimed, bDeke, bPass);
 			if (Dir.Length() > 1.0)
 			{
 				Dir = Dir.Normalized();
@@ -232,6 +232,7 @@ namespace JamAI
 			In.Move = Dir * Sc;
 			In.bShoot = bShoot;
 			In.bDeke = bDeke;   // R-0029 point 4 (lane A39)
+			In.bPass = bPass;   // lane A46: the pass to the human
 			StickPlay(W, i, In);
 			// Lane A31 (B-to-A-0024 point 1): the carrier charges an aimed shot on the net. While the lined-up decision holds, shoot is held
 			// (bShootHeld, never the edge) for the skill's window; at the window's end, or the frame the line-up is lost, the hold is dropped and
@@ -285,7 +286,7 @@ namespace JamAI
 		}
 	}
 
-	FVec2 FJamBrain::Decide(const FJamAIWorld& W, int Id, bool& bShoot, bool& bAimed, bool& bDeke)
+	FVec2 FJamBrain::Decide(const FJamAIWorld& W, int Id, bool& bShoot, bool& bAimed, bool& bDeke, bool& bPass)
 	{
 		const FJamAISkater& S = W.Skaters[Id];
 		const FVec2 Pp = W.PuckPos;
@@ -385,13 +386,13 @@ namespace JamAI
 
 		if (Role == ERole::Chaser || (Role == ERole::Support && D < Params.PounceRadius))
 		{
-			Out = Attack(W, Id, Me, Pp, Dirg, D, bShoot, bAimed, bDeke);
+			Out = Attack(W, Id, Me, Pp, Dirg, D, bShoot, bAimed, bDeke, bPass);
 		}
 		else if (Role == ERole::Back)
 		{
 			if (D < 2.5)
 			{
-				Out = Attack(W, Id, Me, Pp, Dirg, D, bShoot, bAimed, bDeke);
+				Out = Attack(W, Id, Me, Pp, Dirg, D, bShoot, bAimed, bDeke, bPass);
 			}
 			else if (LastManGoalie(W, Id))
 			{
@@ -560,7 +561,7 @@ namespace JamAI
 				}
 				bOpen = bFree;
 			}
-			In.bPass = bPressure && bOpen;
+			In.bPass = In.bPass || (bPressure && bOpen);   // lane A46: Attack's pass to the human stays
 		}
 		// Director 15:16: a carrier under the human's forecheck gives the puck up after the level's frames: pass, else dump it
 		if (C == Id && W.PlayerIndex >= 0 && W.Skaters[W.PlayerIndex].Team != S.Team && !W.Skaters[W.PlayerIndex].bDown
@@ -583,7 +584,7 @@ namespace JamAI
 		if (S.bNoShoot) { In.bShoot = false; }
 	}
 
-	FVec2 FJamBrain::Attack(const FJamAIWorld& W, int Id, const FVec2& Me, const FVec2& Pp, const FVec2& Dirg, double D, bool& bShoot, bool& bAimed, bool& bDeke) const
+	FVec2 FJamBrain::Attack(const FJamAIWorld& W, int Id, const FVec2& Me, const FVec2& Pp, const FVec2& Dirg, double D, bool& bShoot, bool& bAimed, bool& bDeke, bool& bPass) const
 	{
 		const FJamAISkater& S = W.Skaters[Id];
 		const FJamBotSkill& K = SkillOf(W, Id);
@@ -655,14 +656,28 @@ namespace JamAI
 				}
 			}
 		}
-		// lane A3: a teammate that holds the puck and faces the human with a clear lane passes it (shot = pass, no pass button)
+		// lane A3 / lane A46 (PAYOFFS.md section 6): a teammate carrying the puck passes to the human in a share of the chances when the human is open: standing,
+		// 5-25 m away, ahead of or level with the puck up the ice, no opponent within 2 m of the lane (lane A3's lane check). The share is mate.pass_to_human
+		// (rookie 0.6, pro 0.4, all_star 0.2); the human's `pass` signal (R-0007) makes it 0.9 while it runs. The coin is a fixed function of the skater and the
+		// 2-second window (no randomness). The chaser and the support pass; the back only while the human calls `space` or `pass`. The pass itself is the sim's
+		// (bPass: the lead solved for the receiver) when the sim would pick the human (W.CarrierBestPass); else lane A3's aimed tap at the human, from 8 m or more
+		// (17.9 m/s minus puck.drag 0.5 per metre arrives under the 14 m/s cap of the body reception). A shot decided above (one-timer, aimed shot) comes first.
 		const bool bPassIntent = TeamIntent.Kind == ETeamIntent::Pass && TeamIntent.Active(W.Frame);
-		if ((K.bPassToHuman || bPassIntent) && W.PlayerIndex >= 0 && W.Skaters[W.PlayerIndex].Team == S.Team && S.bCanShoot && D < W.ShotReach)
+		const bool bSpaceIntent = TeamIntent.Kind == ETeamIntent::Space && TeamIntent.Active(W.Frame);
+		const double Share = bPassIntent ? 0.9 : K.PassToHuman;
+		if (Share > 0.0 && W.PlayerIndex >= 0 && W.Skaters[W.PlayerIndex].Team == S.Team && W.Carrier == Id && S.bCanShoot && !bShoot
+			&& (S.Role != ERole::Back || bPassIntent || bSpaceIntent))
 		{
 			const FJamAISkater& H = W.Skaters[W.PlayerIndex];
 			const FVec2 To = H.Pos + H.Vel * 0.3 - Pp;
 			const double Dh = To.Length();
-			if (Dh > 5.0 && Dh < 25.0 && !H.bDown && Fwd.Dot(To * (1.0 / Dh)) > std::cos(DegToRad(15.0)))
+			const double Coin = (Hash11(static_cast<uint64_t>(Id) + 101, static_cast<uint64_t>(W.Frame / 120)) + 1.0) * 0.5;   // [0, 1) per 2-second window
+			const bool bAheadOrLevel = (H.Pos.X - Pp.X) * (OppGoal.X >= 0.0 ? 1.0 : -1.0) > -1.0;
+			// set up for a shot: inside 26 m of the net and squared to it within 15 degrees (a one-timer position: PASSING.md section 2)
+			const FVec2 HToGoal = OppGoal - H.Pos;
+			const bool bSetUp = HToGoal.Length() < 26.0 && H.Facing.Normalized().Dot(HToGoal.Normalized()) > std::cos(DegToRad(15.0));
+			// A set-up human is passed to in every chance (the pass every player makes); the share decides the other open chances.
+			if ((bSetUp || (Coin < Share && bAheadOrLevel)) && Dh > 5.0 && Dh < 25.0 && !H.bDown)
 			{
 				bool bClear = true;
 				for (int o = 0; o < W.NumSkaters && bClear; ++o)
@@ -672,7 +687,11 @@ namespace JamAI
 					const double Along = Rel.Dot(To) / Dh;
 					bClear = !(Along > 0.0 && Along < Dh && std::fabs(Rel.Cross(To) / Dh) < 2.0);
 				}
-				if (bClear) { bShoot = true; }
+				if (bClear)
+				{
+					if (W.CarrierBestPass == W.PlayerIndex) { bPass = true; }
+					else if (Dh > 8.0 && Fwd.Dot(To * (1.0 / Dh)) > std::cos(DegToRad(15.0))) { bShoot = true; }
+				}
 			}
 		}
 		// R-0007 pass intent: the carrier turns to face the human (lead 1.5 x velocity) so the pass above can fire

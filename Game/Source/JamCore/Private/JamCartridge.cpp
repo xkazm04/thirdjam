@@ -1020,6 +1020,7 @@ namespace
 		ReadNumber(St, TEXT("lift_range_m"), C.Stick.LiftRangeM);
 		ReadInteger(St, TEXT("stumble_frames"), C.Stick.StumbleFrames);
 		ReadInteger(St, TEXT("foul_grace_frames"), C.Stick.FoulGraceFrames);
+		ReadNumber(St, TEXT("reception_m"), C.Stick.ReceptionM);   // lane A46
 		ReadNumber(St, TEXT("mouse_sensitivity"), C.Stick.MouseSensitivity);
 		// R-0029 point 4 (lane A39): game.stick.deke { offset_m, commit_frames }
 		if (const FJPtr Dk = Obj(St, TEXT("deke")))

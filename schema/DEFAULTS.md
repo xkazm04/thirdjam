@@ -27,6 +27,7 @@ of them out explicitly, but a Designer or hand-written cartridge may leave them 
 | `stick.foul_grace_frames` | 12 | lane A16 (R-0029 point 3): no `foul_no_puck` on a skater that carried within the last 12 frames |
 | `stick.deke.offset_m` | 1.0 | lane A39 (R-0029 point 4): a deke tap (`bDeke`) moves the carried puck this far to the blade side (the side the stick is aimed to; the middle of the ice when it is not aimed) within 6 frames; a shot inside the commit window aims at the post on that side; a second tap inside 30 frames does nothing; 0 = off |
 | `stick.deke.commit_frames` | 15 | lane A39: the crease back's stance and blade follow the puck's old side this long |
+| `stick.reception_m` | 0.9 | lane A46 (PAYOFFS.md section 6): a teammate's pass reaching the body within this radius at 6-14 m/s seats on the blade with a 4-frame settle; faster passes bounce off the body unless the blade meets them; 0 = blade reception only |
 | `skater.knockdown_frames` | 90 | only read when `check_enabled` is true |
 | `skater.pass_speed` | 14 | lane A16 (C-0005) |
 | `skater.pass_lead_frames` | 20 | lane A16 (C-0005) |

@@ -83,6 +83,9 @@ struct JAMCORE_API FJamStickConfig
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double MouseSensitivity = 1.0;
 	// R-0029 point 3: a check on a skater that carried the puck within this many frames is not a foul_no_puck (the puck just left it).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 FoulGraceFrames = 12;
+	// game.stick.reception_m (lane A46, PAYOFFS.md section 6): a teammate's pass reaching the body within this radius at 6-14 m/s is seated on the blade
+	// (4 frames of settle; the one-timer window opens); faster passes bounce off the body unless the blade meets them. 0 = blade reception only.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double ReceptionM = 0.9;
 	// game.stick.deke (R-0029 point 4, lane A39): a deke tap (FJamInput::bDeke) moves the carried puck DekeOffsetM to the blade side within 6 frames and
 	// commits the crease back for DekeCommitFrames; a shot inside that window aims at the post on the deke side. offset_m 0 = off.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double DekeOffsetM = 1.0;

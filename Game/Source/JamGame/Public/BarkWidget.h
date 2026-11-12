@@ -45,6 +45,8 @@ public:
 	// below it; Pos is the bubble's bottom-centre. Pure (tests call it). The bark's second copy on the strip is gone: the strip at the
 	// bottom centre is the commentator's line, drawn by UJamHudWidget.
 	static FVector2D PushOutOfBand(FVector2D Pos, float Height, float Top, float Bottom, float MinY);
+	// Lane A42 (A48's storyboard finding 5): a speaker farther than this from the camera, or outside the frame, gets no bubble.
+	static constexpr float MaxBubbleDistanceM = 24.f;
 
 	int32 GetVisibleBubbleCount() const;
 	FString GetStripText() const;

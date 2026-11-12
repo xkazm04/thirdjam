@@ -160,7 +160,10 @@ struct JAMCORE_API FJamSkaterState
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 DekeSide = 0;
 	// First frame a deke is allowed again (a second tap inside DekeLockoutFrames does nothing).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int64 DekeReadyFrame = 0;
-	// Match statistics of the payoffs.
+	// Lane A46: frames left of the settle after a body reception (the carry assist holds the puck on the blade; 0 = none). Hashed only while it runs.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 SettleFrames = 0;
+	// Match statistics of the payoffs; PassesReceived (lane A46) counts teammates' passes seated on this skater's blade (blade or body reception).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 PassesReceived = 0;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 OneTimers = 0;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 Breakaways = 0;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 Dekes = 0;
@@ -268,6 +271,10 @@ public:
 	static constexpr double BreakawayMinGoalM = 8.0;
 	static constexpr int32 BreakawayCarryFrames = 30;
 	static constexpr double DekePostInsetM = 0.6;
+	// Lane A46 (PAYOFFS.md section 6): body reception. A teammate's puck reaching the body within stick.reception_m at up to this speed is seated on the blade,
+	// held there for ReceptionSettleFrames of settle (a shot inside A39's window is a one-timer); a faster puck bounces off the body unless the blade meets it.
+	static constexpr double BodyReceptionMaxSpeed = 14.0;
+	static constexpr int32 ReceptionSettleFrames = 4;
 
 	// Builds the match from a validated config: skaters at their spawns, puck at centre, score 0, phase Playing.
 	// Queues the opening "faceoff" event. Returns false (and logs) if the config has no player.

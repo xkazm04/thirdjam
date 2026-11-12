@@ -169,6 +169,8 @@ void UJamSim::Restart()
 		S.StumbleFrames = 0;
 		S.LastCarryFrame = -1000;
 		S.OneTimers = S.Breakaways = S.Dekes = 0;
+		S.PassesReceived = 0;
+		S.SettleFrames = 0;
 		S.PassReceivedFrame = -1;
 		S.BreakawayFrames = 0;
 		S.bBreakawayUsed = false;
@@ -622,6 +624,7 @@ void UJamSim::FaceoffReset()
 		S.YawRate = 0;
 		// R-0029 point 4: a faceoff ends every payoff window; the next possession may burst again.
 		S.PassReceivedFrame = -1;
+		S.SettleFrames = 0;
 		S.BreakawayFrames = 0;
 		S.bBreakawayUsed = false;
 		S.CarryFrames = 0;
@@ -1357,6 +1360,7 @@ void UJamSim::TryShoot(FJamSkaterState& S, float Charge)
 	// The payoff windows close with the shot: a second shot is no one-timer, the deke is spent. A shot inside the deke window keeps the back committed
 	// until the puck has crossed the goal line (a beaten goalie does not recover for that shot): the flight at this speed, braked by the drag, plus 3 frames.
 	S.PassReceivedFrame = -1;
+	S.SettleFrames = 0;   // lane A46: the shot spends the settle (its carry assist must not pull the shot back onto the blade)
 	if (S.DekeFrames > 0 && S.DekeSide != 0 && DekeCommitSkater == S.Index)
 	{
 		const double DistToLine = FMath::Abs(AttackGoalX(S.Team) - Puck.Pos.X);
@@ -1478,6 +1482,8 @@ void UJamSim::StepPayoffWindows(FJamSkaterState& S)
 		if (S.DekeFrames == 0 || CarrierIndex() != S.Index) { S.DekeFrames = 0; S.DekeSide = 0; }
 	}
 	if (S.PassReceivedFrame >= 0 && (Config.Shot.OneTimerWindowFrames <= 0 || Frame - S.PassReceivedFrame > Config.Shot.OneTimerWindowFrames)) S.PassReceivedFrame = -1;
+	// Lane A46: the settle after a body reception counts down and ends at once when the puck is no longer carried.
+	if (S.SettleFrames > 0) { --S.SettleFrames; if (CarrierIndex() != S.Index) S.SettleFrames = 0; }
 }
 
 // C-0005 pass: the best teammate ahead of the puck with an open lane. The aim is where the receiver will be when the puck gets there
@@ -1546,6 +1552,7 @@ void UJamSim::TryPass(FJamSkaterState& S)
 	S.DekeFrames = 0;
 	S.DekeSide = 0;
 	S.PassReceivedFrame = -1;
+	S.SettleFrames = 0;   // lane A46
 	S.bPassThisFrame = true;
 	S.LastShotCharge = 0.f;
 	S.LastPassStrength = static_cast<float>(Speed / MaxSpeed);
@@ -1654,6 +1661,7 @@ void UJamSim::StepPuck()
 						// Reception: the pass is seated on the blade and moves with the receiver (R-0021: the puck stays on the stick).
 						Puck.Pos = S.BladePos;
 						Puck.Vel = S.Vel;
+						++S.PassesReceived;   // lane A46
 						// R-0029 point 4 (lane A39): the one-timer window opens on a received teammate's puck (kept only while one-timers are on, so a cut
 						// with window_frames 0 hashes as before).
 						if (Config.Shot.OneTimerWindowFrames > 0) S.PassReceivedFrame = Frame;
@@ -1664,6 +1672,28 @@ void UJamSim::StepPuck()
 						Puck.Vel = (Puck.Vel - Nb * (2.0 * Dot(Puck.Vel, Nb))) * DeflectKeep;
 					}
 					else continue;
+					Puck.LastTouch = S.Index;
+					S.DeflectCooldown = 10;
+					Touched[S.Index] = true;
+					continue;
+				}
+			}
+			// Lane A46 (PAYOFFS.md section 6): body reception. A teammate's pass in flight (nobody carries it) that reaches the body within stick.reception_m,
+			// not only the blade disc, at DeflectMinSpeed..BodyReceptionMaxSpeed is seated on the blade like a blade reception, with ReceptionSettleFrames of
+			// settle in which the carry assist holds it there; a faster pass bounces off the body as before (the blade above still takes it). reception_m 0 = off.
+			if (Config.Stick.ReceptionM > 0.0 && S.DeflectCooldown == 0 && Puck.LastTouch != S.Index && S.CanAct()
+				&& Skaters.IsValidIndex(Puck.LastTouch) && Skaters[Puck.LastTouch].Team == S.Team && CarrierIndex() < 0)
+			{
+				const FVector2D FromBody = Puck.Pos - S.Pos;
+				const double Dbody = FromBody.Size();
+				const double SpP = Puck.Vel.Size();
+				if (Dbody < Config.Stick.ReceptionM && Dbody > 1e-6 && SpP > DeflectMinSpeed && SpP <= BodyReceptionMaxSpeed && Dot(Puck.Vel - S.Vel, FromBody) < 0.0)
+				{
+					Puck.Pos = S.BladePos;
+					Puck.Vel = S.Vel;
+					S.SettleFrames = ReceptionSettleFrames;
+					++S.PassesReceived;
+					if (Config.Shot.OneTimerWindowFrames > 0) S.PassReceivedFrame = Frame;
 					Puck.LastTouch = S.Index;
 					S.DeflectCooldown = 10;
 					Touched[S.Index] = true;
@@ -1687,7 +1717,7 @@ void UJamSim::StepPuck()
 			const double Assist = Config.Puck.CarryAssist;
 			// R-0021 (operator, feel.00): a carried puck stays on the blade through every turn and leaves only on a shot, a pass, a poke, a lift or a
 			// check. Only a puck that rides with the carrier is carried: a shot or pass that just left the stick (fast relative to the body) is not pulled back.
-			if (Ci >= 0 && Assist > 0.0 && !bDrawOpen && !Skaters[Ci].bShotThisFrame && !Skaters[Ci].bPassThisFrame && (Puck.Vel - Skaters[Ci].Vel).Size() < 4.0)
+			if (Ci >= 0 && Assist > 0.0 && !bDrawOpen && !Skaters[Ci].bShotThisFrame && !Skaters[Ci].bPassThisFrame && ((Puck.Vel - Skaters[Ci].Vel).Size() < 4.0 || Skaters[Ci].SettleFrames > 0))   // lane A46: the settle holds it
 			{
 				// The puck closes on the blade by a fraction per substep (assist 1 = on the blade within a frame, 0.6 = within three) and moves with the carrier.
 				const FJamSkaterState& C = Skaters[Ci];
@@ -1833,6 +1863,7 @@ uint64 UJamSim::StateHash() const
 		if (S.CarryFrames != 0) H.AddI(S.CarryFrames);
 		if (S.DekeFrames != 0) { H.AddI(S.DekeFrames); H.AddI(S.DekeSide); }
 		if (S.DekeReadyFrame != 0) H.AddI(S.DekeReadyFrame);
+		if (S.SettleFrames != 0) H.AddI(S.SettleFrames);   // lane A46: only while a body reception settles
 	}
 	if (DekeCommitFrames != 0) { H.AddI(DekeCommitFrames); H.AddI(DekeCommitSide); H.AddI(DekeCommitSkater); }
 	H.AddI(FaceoffCountdown);

@@ -328,6 +328,12 @@
           "maximum": 120,
           "description": "A check on a skater that carried the puck within this many frames is not a foul for hitting a player without the puck."
         },
+        "reception_m": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 3,
+          "description": "Lane A46: a teammate's pass that reaches the body within this radius (metres) at 6-14 m/s is seated on the blade with a 4-frame settle; faster passes bounce off the body unless the blade meets them. 0 = only the blade receives."
+        },
         "deke": {
           "type": "object",
           "additionalProperties": false,

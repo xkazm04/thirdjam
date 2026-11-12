@@ -1,0 +1,84 @@
+WARN hud: answer did not match the shape (11 errors: $.stills[0].elements[10].text: must be a non-empty string; $.stills[0].elements[11].text: must be a non-empty string; $.stills[1].elements[9].text: must be a non-empty string); retrying once
+PASS hud a48-03-season-match-card-hold.jpg + a48-04-faceoff-won.jpg + a48-05-match-card-regular.jpg + a48-06-you-tag.jpg + a48-08-bark-and-commentary.jpg + a48-09-pause-time-out.jpg: 2 calls, in 16649 out 7709 tokens, ~$0.0414, 76187 ms
+
+**eyes/hud** A=a48-03-season-match-card-hold.jpg B=a48-04-faceoff-won.jpg C=a48-05-match-card-regular.jpg D=a48-06-you-tag.jpg E=a48-08-bark-and-commentary.jpg F=a48-09-pause-time-out.jpg (gemini-3.8-flash, in 16649 out 7709 tokens, ~$0.0414, 76.2 s, 1 retry)
+- stills:
+  - label: Still A (a48-03-season-match-card-hold.jpg); smallest_text_px: 14; legibility: 3
+    - elements:
+      - name: Scoreboard; position: top center; legible: true; text: 00 PERIOD 1: FIRST TO 2 00
+      - name: Far Net Distance Marker; position: upper center below scoreboard; legible: true; text: 49 m
+      - name: Own Net Indicator; position: mid-left screen edge; legible: true; text: own 34 m
+      - name: Match Clapper Card; position: center screen; legible: true; text: MATCH 1
+      - name: Coach's Note; position: center below clapper card; legible: true; text: COACH'S NOTE: Take one. Nobody is judging yet: find the net twice.
+      - name: Faceoff Reticle Countdown; position: center directly above player skater; legible: true; text: 1 HOLD
+      - name: Faceoff Timing Prompt; position: lower center above commentary banner; legible: true; text: press shoot at the drop, not before
+      - name: Commentary Subtitle; position: lower center above controls strip; legible: true; text: Lights are up, the ice is fresh. First period is under way.
+      - name: Controls Bar; position: bottom screen strip; legible: true; text: MOVE WASD / L-STICK SHOOT SPACE / A CHECK SHIFT / B BRAKE CTRL / LT PAUSE ESC
+      - name: Director's Call Readiness Tag; position: bottom left corner on curved blue meter; legible: true; text: ESC / START DIRECTOR'S CALL READY
+    - collisions: Match clapper card completely blocks the center ice faceoff point and opposing center skater.; Coach's Note and Faceoff countdown reticle overlap the controlled player skater's upper body.; Own net distance marker sits immediately next to the left screen boundary margin.
+    - missing: No indicator stating which team color belongs to the human player on the scoreboard.; No visible game period countdown clock.
+  - label: Still B (a48-04-faceoff-won.jpg); smallest_text_px: 14; legibility: 3
+    - elements:
+      - name: Scoreboard; position: top center; legible: true; text: 00 PERIOD 1: FIRST TO 2 00
+      - name: Bark Speech Bubble; position: upper center below scoreboard; legible: true; text: Nice stance. Shame it's the only part that moves right.
+      - name: Own Net Indicator; position: mid-left screen edge; legible: true; text: own 34 m
+      - name: Match Clapper Card; position: center screen; legible: true; text: MATCH 1
+      - name: Coach's Note; position: center below clapper card; legible: true; text: COACH'S NOTE: Take one. Nobody is judging yet: find the net twice.
+      - name: Faceoff Result Reticle; position: center directly above player skater; legible: true; text: WON
+      - name: Commentary Subtitle; position: lower center above controls strip; legible: true; text: Lights are up, the ice is fresh. First period is under way.
+      - name: Controls Bar; position: bottom screen strip; legible: true; text: MOVE WASD / L-STICK SHOOT SPACE / A CHECK SHIFT / B BRAKE CTRL / LT PAUSE ESC
+      - name: Director's Call Readiness Tag; position: bottom left corner on curved blue meter; legible: true; text: ESC / START DIRECTOR'S CALL READY
+    - collisions: Match clapper card blocks view of the puck and the orange center skater after faceoff resolution.; Coach's Note text overlaps the player skater's helmet and shoulders.; Bark speech bubble covers the center boards and far-net region.
+    - missing: No indicator confirming who won possession or where the puck traveled.; No explicit team label identifying player side on the score banner.
+  - label: Still C (a48-05-match-card-regular.jpg); smallest_text_px: 14; legibility: 3
+    - elements:
+      - name: Scoreboard; position: top center; legible: true; text: 00 PERIOD 1: FIRST TO 3 00
+      - name: Far Net Distance Marker; position: upper center below scoreboard; legible: true; text: 49 m
+      - name: Own Net Indicator; position: mid-left screen edge; legible: true; text: own 34 m
+      - name: Match Clapper Card; position: center screen; legible: true; text: MATCH 1
+      - name: Faceoff Phase Header; position: center below clapper card; legible: true; text: PERIOD 1 - FACEOFF
+      - name: Faceoff Reticle Countdown; position: center directly above player skater; legible: true; text: 1 HOLD
+      - name: Faceoff Timing Prompt; position: lower center above commentary banner; legible: true; text: press shoot at the drop, not before
+      - name: Commentary Subtitle; position: lower center above controls strip; legible: true; text: Welcome to the rink: blue against orange, first period.
+      - name: Controls Bar; position: bottom screen strip; legible: true; text: MOVE WASD / L-STICK SHOOT SPACE / A CHECK SHIFT / B BRAKE CTRL / LT PAUSE ESC
+      - name: Director's Call Readiness Tag; position: bottom left corner on curved blue meter; legible: true; text: ESC / START DIRECTOR'S CALL READY
+    - collisions: Match card obstructs opposing center skater and center-ice faceoff action.; PERIOD 1 - FACEOFF text directly collides with the top segment of the faceoff countdown reticle.; Countdown reticle overlaps the player skater's upper torso.
+    - missing: No indicator showing which side the player controls on the top scoreboard.; No puck drop shadow or drop indicator prior to the shoot trigger.
+  - label: Still D (a48-06-you-tag.jpg); smallest_text_px: 14; legibility: 4
+    - elements:
+      - name: Scoreboard; position: top center; legible: true; text: 00 PERIOD 1: FIRST TO 3 00
+      - name: Bark Speech Bubble; position: upper center below scoreboard; legible: true; text: Nice stance. Shame it's the only part that moves right.
+      - name: Far Net Distance Marker; position: upper center below bark bubble; legible: true; text: 49 m
+      - name: Own Net Indicator; position: mid-left screen edge; legible: true; text: own 34 m
+      - name: Opponent You Tag; position: center screen above orange skater; legible: true; text: YOU
+      - name: Commentary Subtitle; position: lower center above controls strip; legible: true; text: Welcome to the rink: blue against orange, first period.
+      - name: Controls Bar; position: bottom screen strip; legible: true; text: MOVE WASD / L-STICK SHOOT SPACE / A CHECK SHIFT / B BRAKE CTRL / LT PAUSE ESC
+      - name: Director's Call Readiness Tag; position: bottom left corner on curved blue meter; legible: true; text: ESC / START DIRECTOR'S CALL READY
+    - collisions: YOU tag is positioned above the orange opponent skater rather than the foreground blue player skater.; Bark speech bubble obscures the background rink boards and upper portion of the far net.; Puck highlight glow intersects with the stick blade in low contrast against light ice.
+    - missing: Clear tag or arrow distinguishing the actively controlled foreground skater from the marked target.; Puck possession state display.
+  - label: Still E (a48-08-bark-and-commentary.jpg); smallest_text_px: 14; legibility: 4
+    - elements:
+      - name: Scoreboard; position: top center; legible: true; text: 00 PERIOD 1: FIRST TO 3 00
+      - name: Bark Speech Bubble; position: upper center below scoreboard; legible: true; text: You saw me coming and still chose that. Fascinating
+      - name: Far Net Distance Marker; position: upper center below bark bubble; legible: true; text: 49 m
+      - name: Own Net Indicator; position: mid-left screen edge; legible: true; text: own 34 m
+      - name: Director's Call Readiness Tag; position: bottom left corner on curved blue meter; legible: true; text: ESC / START DIRECTOR'S CALL READY
+    - collisions: Bark speech bubble occludes the top portion of the far net and goal area.; Far net 49m marker is wedged directly between the bark bubble border and the red goal frame.; Own net indicator is pinned right on the screen's left edge.
+    - missing: Bottom controls bar is entirely absent during active play.; No indicator pinpointing puck location when play is clustered in the distance.; Player identity tag above the foreground skater.
+  - label: Still F (a48-09-pause-time-out.jpg); smallest_text_px: 13; legibility: 3
+    - elements:
+      - name: Scoreboard; position: top center; legible: true; text: 00 PERIOD 1: FIRST TO 3 00
+      - name: Bark Speech Bubble; position: upper left-center below scoreboard; legible: true; text: You skate like the plan is to be a spectator
+      - name: Far Net Distance Marker; position: upper center behind modal; legible: true; text: 82 m
+      - name: Pause Menu Header; position: center screen on modal clapper; legible: true; text: TIME OUT PERIOD 1
+      - name: Pause Menu Buttons; position: center modal interior; legible: true; text: RESUME DIRECTOR'S CALL RESTART QUIT TO MENU
+      - name: Pause Menu Subtitle and Prompt; position: lower modal area; legible: true; text: Your call is ready: change one thing about this match. ESC / START resume STICK move A select B back
+      - name: Floating Commentary Capsule; position: lower center above player skater head; legible: true; text: Used the boards like a teammate.
+      - name: Own Net Proximity Marker; position: lower center above player skater helmet; legible: true; text: own 1 m
+      - name: Director's Call Readiness Tag; position: bottom left corner on black footer strip; legible: true; text: ESC / START DIRECTOR'S CALL READY
+    - collisions: Time Out modal covers the central ice and overlaps the far net distance indicator.; Floating commentary capsule and own 1 m marker collide directly with the player skater's helmet.; Bark speech bubble persists on screen over active pause menu state.
+    - missing: Score plate lacks clear home and away team ownership labels.; Clear separation between world-space barks and pause menu interface.
+
+wrote docs/experiments/eyes/a48-hud.json
+{"tool":"thirdjam.eyes/1","ok":true,"preset":"hud","model":"gemini-3.8-flash","stills":6,"calls":2,"prompt_tokens":16649,"output_tokens":7709,"cost_usd_est":0.0414,"json":"docs/experiments/eyes/a48-hud.json"}
+exit 0

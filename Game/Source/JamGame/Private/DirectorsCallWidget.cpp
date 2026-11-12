@@ -475,20 +475,23 @@ void UJamDirectorsCallHudWidget::BuildTree()
 	};
 	// The period card, where lane A5 draws its win/lose card (never at the same time: this one shows only in play).
 	// With the generated clapperboard (R-0008) the number is chalked into its box; without it the text says "TAKE n".
+	// Lane A42 (A48's storyboard finding 3): the card sits in the top band under the scoreboard at 0.7 scale (448 x 252, centre at y
+	// MatchCardCentreY), so the human and the countdown ring at 0.66 stay clear for its 150 frames.
 	TakeArt = nullptr;
+	const float CardY = MatchCardCentreY;
 	if (UTexture2D* Slate = Art(TEXT("T_UI_MatchCard")))
 	{
-		TakeArt = Picture(T, Slate, 640.f, 360.f);
+		TakeArt = Picture(T, Slate, MatchCardW, MatchCardH);
 		TakeArt->SetVisibility(ESlateVisibility::Collapsed);
-		Place(TakeArt, FVector2D(0.5, 0.4), FVector2D(0.5, 0.5), FVector2D(0, 0));
+		Place(TakeArt, FVector2D(0.5, 0), FVector2D(0.5, 0.5), FVector2D(0, CardY));
 	}
-	TakeCard = S::IceText(T, TEXT(""), S::Font(TakeArt ? 110 : 84, FName("Black"), S::TrackTitle, true), S::Chalk());
+	TakeCard = S::IceText(T, TEXT(""), S::Font(TakeArt ? 77 : 60, FName("Black"), S::TrackTitle, true), S::Chalk());
 	TakeCard->SetVisibility(ESlateVisibility::Collapsed);
-	// The chalk box of the slate art sits at 66% of its height: 0.16 * 360 px below the centre of a 640 px wide card.
-	Place(TakeCard, FVector2D(0.5, 0.4), FVector2D(0.5, 0.5), FVector2D(0, TakeArt ? 58 : 0));
-	TakeSub = S::IceText(T, TEXT("FACEOFF"), S::LabelFont(true), S::Yellow());
+	// The chalk box of the slate art sits at 66% of its height: 0.16 * 252 px below the centre of the card.
+	Place(TakeCard, FVector2D(0.5, 0), FVector2D(0.5, 0.5), FVector2D(0, CardY + (TakeArt ? 41 : 0)));
+	TakeSub = S::IceText(T, TEXT("FACEOFF"), S::Font(S::Label - 4, FName("Bold"), S::TrackLabel, true), S::Yellow());
 	TakeSub->SetVisibility(ESlateVisibility::Collapsed);
-	Place(TakeSub, FVector2D(0.5, 0.4), FVector2D(0.5, 0), FVector2D(0, TakeArt ? 190 : 56));
+	Place(TakeSub, FVector2D(0.5, 0), FVector2D(0.5, 0), FVector2D(0, CardY + (TakeArt ? MatchCardH * 0.5f + 6.f : 40.f)));
 	// The scoreboard line: a pill directly under the scoreboard (whose plates end near y 104 at 1080p).
 	UBorder* LinePill = S::Plate(T, S::Pill(0.86f), FMargin(18, 6));
 	LinePill->SetVisibility(ESlateVisibility::Collapsed);
