@@ -1,0 +1,74 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "ab-pair",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T16:56:48.877Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "ab-pair",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a26/docs/experiments/img/figure/skel-24m.jpg",
+          "width": 2560,
+          "height": 1440
+        },
+        {
+          "label": "B",
+          "path": ".claude/worktrees/a26/docs/experiments/img/figure/skel3-24m.jpg",
+          "width": 2560,
+          "height": 1440
+        }
+      ],
+      "distance": 24,
+      "thumbnails": [],
+      "prompt_chars": 3495,
+      "usage": {
+        "prompt": 3213,
+        "output": 373,
+        "thoughts": 1945,
+        "total": 5531,
+        "calls": 1
+      },
+      "cost_usd_est": 0.03424,
+      "ms": 49899,
+      "retried": false,
+      "answer": {
+        "elements": {
+          "sky": {
+            "closer": "tie",
+            "why": "Both images feature a pure black void rather than the requested deep-blue night dome above a dark ceiling line."
+          },
+          "ice": {
+            "closer": "tie",
+            "why": "Both images use the identical ice texture featuring the requested painted-looking brush streaks and frost patches."
+          },
+          "pools": {
+            "closer": "tie",
+            "why": "Both images show the exact same flat cel lighting steps with three distinct bands in the spotlight cones."
+          },
+          "figures": {
+            "closer": "b",
+            "why": "Still B adds black rectangular shapes to represent the requested 'big hands' holding the sticks, whereas Still A leaves the sticks floating."
+          },
+          "construction": {
+            "closer": "tie",
+            "why": "Both images have the emissive trim and thick red nets, but both are missing the requested ochre kick plate and dark glass rail on the boards."
+          },
+          "outline": {
+            "closer": "tie",
+            "why": "Both images feature identical ink-like outlines on the figures that appropriately fall off with distance."
+          }
+        },
+        "verdict": "b",
+        "confidence": 0.85,
+        "reason": "Still B is the only image that attempts to fulfill the 'big hands' requirement for the toy figures, connecting the bodies to the sticks.",
+        "loser_keeps": "The clean, uncluttered look of the cylindrical bodies, which might be visually preferable until proper 3D hand geometry is modeled to replace the flat black decals."
+      },
+      "markdown": "**eyes/ab-pair** A=skel-24m.jpg B=skel3-24m.jpg at 24 m (gemini-3.1-pro-preview, in 3213 out 373 think 1945 tokens, ~$0.0342, 49.9 s)\n- elements:\n  - sky: closer tie, why Both images feature a pure black void rather than the requested deep-blue night dome above a dark ceiling line.\n  - ice: closer tie, why Both images use the identical ice texture featuring the requested painted-looking brush streaks and frost patches.\n  - pools: closer tie, why Both images show the exact same flat cel lighting steps with three distinct bands in the spotlight cones.\n  - figures: closer b, why Still B adds black rectangular shapes to represent the requested 'big hands' holding the sticks, whereas Still A leaves the sticks floating.\n  - construction: closer tie, why Both images have the emissive trim and thick red nets, but both are missing the requested ochre kick plate and dark glass rail on the boards.\n  - outline: closer tie, why Both images feature identical ink-like outlines on the figures that appropriately fall off with distance.\n- verdict: b\n- confidence: 0.85\n- reason: Still B is the only image that attempts to fulfill the 'big hands' requirement for the toy figures, connecting the bodies to the sticks.\n- loser_keeps: The clean, uncluttered look of the cylindrical bodies, which might be visually preferable until proper 3D hand geometry is modeled to replace the flat black decals."
+    }
+  ]
+}

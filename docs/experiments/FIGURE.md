@@ -157,6 +157,25 @@ the things a player looks at (who has the puck, where the blade is, who is pokin
 - outside the listed scope, for the Director: `Game/Source/JamCore/Tests/VisualSwapTests.cpp` (the third track, 8 lines).
 - main tree: `status/A26.md`.
 
+## 7b. Pass 3 (H12.0, the Director's 17:37 and 17:52 messages, A22's third import)
+
+- A22's figure (15 bones, 19 sequences with `skate_left` / `skate_right` carrying an authored 15 degree lean, two-bone arms baked to plain keys, mittens skinned to
+  `stick_root`, slots base / number / head / trim / steel / stick) copied from the shared tree. The component assigns materials by slot name (import order as the
+  fallback), blends `skate_left` / `skate_right` over `skate` per bone by the lean state (|lean| / 35, which follows the sim's turn rate) and caps the component roll at
+  5 degrees (`MaxRollDeg`); the lean no longer reads as a fall and the mittens stay on the shaft (`skel3-verbs-5m.jpg`).
+- `toy_skeletal` is the default: absent `game.skater.visual` = `toy_skeletal` (JamCartridge.h, JamCoreTests, DEFAULTS.md, README.md, the schema description; embedded
+  schema and parity regenerated), `toy` stays a value for the code figure. `hockey.regular` with no key spawns the skeletal figure; hash at frame 600 unchanged
+  (`034316ec7ef27999`); VisualSwap PASS with the three tracks (`1871c1d348fa8b41`).
+- `M_SkaterNumber` (unlit, skeletal flag, a seven-segment two-digit mask from `NumberTens` / `NumberOnes` in one Custom HLSL node, no texture, built by Python in the
+  editor) renders the whole patch as ink in PIE (`skel3-10m.jpg`), so it is switched off behind `SkeletalSkater::bUseDigitsMaterial = false`: the patch stays white and the
+  white text render carries the number, readable from behind (`1` on the blue figure). The earlier "mirrored" digits were the text's back side showing past the shoulder
+  of figures facing the camera (the text quad is two-sided), not a bone issue. Open: the patch's UV range (channel 0, 0..1?) before the material goes on.
+- Eyes ab-pair, A = pass 2, B = pass 3 (`docs/experiments/eyes/A26-ab-pass3-*.json`): 10 m A (0.95) for the black square and the text artifact; 24 m B (0.85) for the hands
+  on the sticks. Stills: `skel3-{10,24}m.jpg`, `skel3-verbs-{10,5}m.jpg`.
+- A22's forearm gap (11-16 cm at the extremes of poke / draw / shoot_release / check): visible at 5 m on the poking figure's lower hand, not at 10 m. Not hidden here.
+- Cost: 32 us per figure per sim frame (JamSkater_0, 600-frame mean; the side-blend samples a second sequence only while turning); GPU on the frozen frame at 10 m,
+  one sample: frame 3.51 ms, BasePass 0.160, CustomDepth 0.348, ShadowDepths 0.427 (pass 2 medians 3.33 / 0.140 / 0.137 / 0.416).
+
 ## 8. Errors met
 
 - `Jam.Bot.VisualSwap` first failed on the new value: the C++ loader validates against the schema embedded by `gen-schema-data.mjs`, so a schema edit needs that script and a rebuild.

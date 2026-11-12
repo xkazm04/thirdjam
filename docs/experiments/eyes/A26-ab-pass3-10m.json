@@ -1,0 +1,74 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "ab-pair",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T16:55:58.884Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "ab-pair",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a26/docs/experiments/img/figure/skel-10m.jpg",
+          "width": 2560,
+          "height": 1440
+        },
+        {
+          "label": "B",
+          "path": ".claude/worktrees/a26/docs/experiments/img/figure/skel3-10m.jpg",
+          "width": 2560,
+          "height": 1440
+        }
+      ],
+      "distance": 10,
+      "thumbnails": [],
+      "prompt_chars": 3495,
+      "usage": {
+        "prompt": 3213,
+        "output": 339,
+        "thoughts": 2103,
+        "total": 5655,
+        "calls": 1
+      },
+      "cost_usd_est": 0.03573,
+      "ms": 20492,
+      "retried": false,
+      "answer": {
+        "elements": {
+          "sky": {
+            "closer": "tie",
+            "why": "Both images feature a black void rather than the requested deep-blue night dome above a dark ceiling line."
+          },
+          "ice": {
+            "closer": "tie",
+            "why": "Both images display identical scuffed ice textures with painted-looking brush streaks."
+          },
+          "pools": {
+            "closer": "tie",
+            "why": "Both images use the exact same three-band flat cel lighting steps for the spotlight cones."
+          },
+          "figures": {
+            "closer": "a",
+            "why": "Still A keeps the blue jersey as a solid, readable block of colour, whereas B adds a distracting black square and a floating red text artifact."
+          },
+          "construction": {
+            "closer": "tie",
+            "why": "Both images show identical boards that lack the requested ochre kick plate and dark glass rail."
+          },
+          "outline": {
+            "closer": "tie",
+            "why": "Both images feature identical ink-like outlines around the characters and objects."
+          }
+        },
+        "verdict": "a",
+        "confidence": 0.95,
+        "reason": "Still A provides a cleaner read of the toy figures by maintaining solid jersey colours, avoiding the visual clutter of Still B's decals and floating artifacts.",
+        "loser_keeps": "The flat cel lighting steps in the spotlight pools are effective and should be retained."
+      },
+      "markdown": "**eyes/ab-pair** A=skel-10m.jpg B=skel3-10m.jpg at 10 m (gemini-3.1-pro-preview, in 3213 out 339 think 2103 tokens, ~$0.0357, 20.5 s)\n- elements:\n  - sky: closer tie, why Both images feature a black void rather than the requested deep-blue night dome above a dark ceiling line.\n  - ice: closer tie, why Both images display identical scuffed ice textures with painted-looking brush streaks.\n  - pools: closer tie, why Both images use the exact same three-band flat cel lighting steps for the spotlight cones.\n  - figures: closer a, why Still A keeps the blue jersey as a solid, readable block of colour, whereas B adds a distracting black square and a floating red text artifact.\n  - construction: closer tie, why Both images show identical boards that lack the requested ochre kick plate and dark glass rail.\n  - outline: closer tie, why Both images feature identical ink-like outlines around the characters and objects.\n- verdict: a\n- confidence: 0.95\n- reason: Still A provides a cleaner read of the toy figures by maintaining solid jersey colours, avoiding the visual clutter of Still B's decals and floating artifacts.\n- loser_keeps: The flat cel lighting steps in the spotlight pools are effective and should be retained."
+    }
+  ]
+}

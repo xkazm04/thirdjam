@@ -45,8 +45,12 @@ mitten is the same before and after the bake (`ik_worst_gap_cm` = `baked_worst_g
 clean Blender and measures the same gap per action from the plain keys (PASS, 0.7 cm over 19 actions). What the arms cannot do: reach around the body at
 the extremes of the long verbs; the forearm tip falls short of the mitten by up to 16 cm in `poke` (frame 6), 15 in `draw`, 12 in `shoot_release`, 11 in
 `check` (toy; broadcast only `poke` 12). The shot swing is already scaled from the code's -100/10/75 degrees to -65/6/50 and the poke slide from 55 to 30 cm
-to get there; the rest is the price of a 1.3 m stick on a 1.6 m toy. Next step if it shows on the ice: a short IK stretch allowance (`ik_stretch` 0.2) or
-a 10 cm shorter shaft for the toy. The sockets of C-0001 are leaf bones: Unreal answers `DoesSocketExist("puck_socket")` on a skeletal mesh component from bone names, so
+to get there; the rest is the price of a 1.3 m stick on a 1.6 m toy. Pass 4 (18:00-18:07) did both: the toy shaft is 1.20 m with the grip at z 0.81 (blade still on the ice), and the IK may stretch the arm
+bones with the baked scale clamped at 1.10 (Blender's `ik_stretch` is a stiffness, not a cap: uncapped it reached 2.7x in `draw`). Measured from the baked keys
+with the constraints removed, the worst gaps are now poke 5.5 cm, draw 9.2, check 5.3, shoot_release 4.1, lift 1.0 (broadcast: poke 2.4, check 1.6, lift 1.2),
+with the arm scale at exactly 1.10 at those peaks. `check_fbx.py` also audits the `number` slot in the re-imported FBX (one square, UVs exactly 0..1, nothing
+else in the slot) and `skater.py --checker` renders Blender's COLOR_GRID on that slot from behind (`out/render/<variant>_number_check.png`) to prove the
+orientation: letters left to right as seen from behind, numbers bottom to top. The sockets of C-0001 are leaf bones: Unreal answers `DoesSocketExist("puck_socket")` on a skeletal mesh component from bone names, so
 `AJamSkater::GetPuckSocketWorld` finds them without a socket asset. `puck_socket` is 12 cm in front of the blade's face on the ice and rides the stick.
 
 Material slots (third pass, plain names in the mesh's first-use order): `base` (jersey, arms, shoulders: `TeamColour`), `number` (a **flat UV 0..1

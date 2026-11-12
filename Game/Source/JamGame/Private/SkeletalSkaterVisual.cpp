@@ -18,9 +18,9 @@ namespace SkeletalSkater
 	// Asset names of the sequences (lane A22, docs/experiments/BLENDER.md section 4), in ESkaterSeq order.
 	const TCHAR* SeqNames[] = { TEXT("idle"), TEXT("skate"), TEXT("carry"), TEXT("aim_left"), TEXT("aim_right"), TEXT("poke"), TEXT("lift"),
 		TEXT("shoot_windup"), TEXT("shoot_release"), TEXT("check"), TEXT("knocked_down"), TEXT("get_up"), TEXT("faceoff_ready"), TEXT("draw"),
-		TEXT("goalie_left"), TEXT("goalie_centre"), TEXT("goalie_right") };
+		TEXT("goalie_left"), TEXT("goalie_centre"), TEXT("goalie_right"), TEXT("skate_left"), TEXT("skate_right") };
 	// Authored lengths in frames at 60 fps (BLENDER.md section 2).
-	const int32 SeqLen[] = { 60, 36, 60, 30, 30, 18, 20, 24, 51, 20, 40, 20, 30, 15, 30, 30, 30 };
+	const int32 SeqLen[] = { 60, 36, 60, 30, 30, 18, 20, 24, 51, 20, 40, 20, 30, 15, 30, 30, 30, 36, 36 };
 	static_assert(UE_ARRAY_COUNT(SeqNames) == (int32)ESkaterSeq::Count, "sequence table");
 	static_assert(UE_ARRAY_COUNT(SeqLen) == (int32)ESkaterSeq::Count, "sequence table");
 
@@ -40,6 +40,7 @@ namespace SkeletalSkater
 	constexpr int32 KnockYawInFrames = 6;
 	// The contract's aim is left-positive; aim_left was authored as the Unreal yaw -70 pose (the blade on the skater's left).
 	constexpr bool bAimLeftIsPositive = true;
+	constexpr bool bUseDigitsMaterial = false;
 
 	float SmoothStep01(float T)
 	{
@@ -234,13 +235,29 @@ void USkeletalSkaterVisual::BuildFigure()
 	UMaterialInterface* StickMi = Load(TEXT("/Game/Figures/MI_SkaterFigure_Stick.MI_SkaterFigure_Stick"));
 	if (!StickMi) StickMi = Load(TEXT("/JamAssets/Look/MI_Toon_Stick.MI_Toon_Stick"));
 	if (!Toon) UJamEffectsBinder::LoadOrLogOnce(FSoftObjectPath(TEXT("/JamAssets/Look/M_Toon.M_Toon")));
+	// The digits material for the 0..1 patch (M_SkaterNumber: a seven-segment mask from NumberTens / NumberOnes in one Custom HLSL node) renders the whole
+	// patch as ink in the first PIE (skel3-10m.jpg); off until the patch UVs are checked (A26 next), the patch stays white and the text render carries the number.
+	UMaterialInterface* NumberMat = SkeletalSkater::bUseDigitsMaterial ? Load(TEXT("/Game/Figures/M_SkaterNumber.M_SkaterNumber")) : nullptr;
 	const int32 NumSlots = GetNumMaterials();
 	Mids.SetNum(NumSlots);
+	SlotKinds.SetNum(NumSlots);
+	const TArray<FSkeletalMaterial>& SlotTable = Mesh->GetMaterials();
 	for (int32 S = 0; S < NumSlots; ++S)
 	{
+		// By slot name (A22 pass 3: base, number, head, trim, steel, stick); an unnamed slot falls back to the import order.
+		const FString SlotName = SlotTable.IsValidIndex(S) ? SlotTable[S].MaterialSlotName.ToString().ToLower() : FString();
+		ESlotKind Kind = ESlotKind::Base;
+		if (SlotName.Contains(TEXT("number"))) Kind = ESlotKind::Number;
+		else if (SlotName.Contains(TEXT("head"))) Kind = ESlotKind::Head;
+		else if (SlotName.Contains(TEXT("trim"))) Kind = ESlotKind::Trim;
+		else if (SlotName.Contains(TEXT("steel"))) Kind = ESlotKind::Steel;
+		else if (SlotName.Contains(TEXT("stick"))) Kind = ESlotKind::Stick;
+		else if (!SlotName.Contains(TEXT("base"))) Kind = (ESlotKind)FMath::Clamp(S, 0, (int32)ESlotKind::Stick);
+		SlotKinds[S] = Kind;
 		UMaterialInterface* Base = Toon ? Toon : Fallback;
-		if (S == 3 && HelmetMi) Base = HelmetMi;   // trim: helmet, band, mittens, skates, legs
-		if (S == 4 && StickMi) Base = StickMi;     // shaft, heel, blade wood
+		if (Kind == ESlotKind::Trim && HelmetMi) Base = HelmetMi;    // helmet, band, mittens, skates, legs
+		if (Kind == ESlotKind::Stick && StickMi) Base = StickMi;     // shaft, heel, blade wood
+		if (Kind == ESlotKind::Number && NumberMat) Base = NumberMat;
 		UMaterialInstanceDynamic* Mid = UMaterialInstanceDynamic::Create(Base, this);
 		SetMaterial(S, Mid);
 		Mids[S] = Mid;
@@ -342,6 +359,18 @@ void USkeletalSkaterVisual::ApplyPose(const FRotator& Facing)
 	{
 		SampleLocal(LastLayer.Seq, LastLayer.Frame, B, BoneSpaceTransforms[B]);
 	}
+	// The lean into a turn is authored (A22 pass 3): skate_left / skate_right carry 15 degrees; blend them in by the lean state, which follows the sim's turn rate.
+	if (LastLayer.Seq == ESkaterSeq::Skate && FMath::Abs(Lean) > 0.5f)
+	{
+		const ESkaterSeq Side = Lean > 0.f ? ESkaterSeq::SkateLeft : ESkaterSeq::SkateRight;
+		const float W = FMath::Clamp(FMath::Abs(Lean) / MaxLeanDeg, 0.f, 1.f);
+		for (int32 B = 0; B < NumBones; ++B)
+		{
+			FTransform Sd;
+			SampleLocal(Side, LastLayer.Frame, B, Sd);
+			BoneSpaceTransforms[B].BlendWith(Sd, W);
+		}
+	}
 
 	// C-0001 v3 stick aim: a per-bone blend of stick_root and the two stretch arms toward the held aim pose (never a whole-action blend,
 	// BLENDER.md risk 2), weighted by the angle and by how much the current layer leaves the stick to the aim.
@@ -386,7 +415,7 @@ void USkeletalSkaterVisual::ApplyPose(const FRotator& Facing)
 		YawOff = Off * K;
 	}
 	const FQuat Yaw = FRotator(0.f, Facing.Yaw + YawOff, 0.f).Quaternion();
-	const FQuat Roll = FRotator(0.f, 0.f, -Lean).Quaternion();   // positive lean = into a left turn = left side down = negative Unreal roll
+	const FQuat Roll = FRotator(0.f, 0.f, -FMath::Clamp(Lean, -MaxRollDeg, MaxRollDeg)).Quaternion();   // positive lean = left side down = negative Unreal roll; capped, the rest is in the sequences
 	SetWorldRotation(Yaw * Roll);
 
 	if (Boost != NAME_None)
@@ -429,11 +458,18 @@ void USkeletalSkaterVisual::SetTeam_Implementation(int32 TeamId, FLinearColor Co
 		Mids[Slot]->SetVectorParameterValue(JamMaterialParams::TeamColour, C);
 		Mids[Slot]->SetVectorParameterValue(TEXT("Color"), C);   // the basic shape material's parameter
 	};
-	Paint(0, Colour);                                                   // jersey, arms, shoulders
-	Paint(1, FLinearColor(0.95f, 0.95f, 0.95f));                        // number patch, blade runners
-	Paint(2, FMath::Lerp(Colour, FLinearColor::White, 0.45f));          // a lighter head, as the toy
-	Paint(3, FLinearColor(0.04f, 0.04f, 0.045f));                       // helmet, band, mittens, skates, legs
-	Paint(4, FLinearColor(0.6f, 0.45f, 0.25f));                         // stick wood
+	for (int32 S = 0; S < SlotKinds.Num(); ++S)
+	{
+		switch (SlotKinds[S])
+		{
+		case ESlotKind::Base:   Paint(S, Colour); break;                                             // jersey, arms, shoulders
+		case ESlotKind::Number: Paint(S, FLinearColor(0.95f, 0.95f, 0.95f)); break;                  // the patch behind the digits
+		case ESlotKind::Head:   Paint(S, FMath::Lerp(Colour, FLinearColor::White, 0.45f)); break;   // a lighter head, as the toy
+		case ESlotKind::Trim:   Paint(S, FLinearColor(0.04f, 0.04f, 0.045f)); break;                 // helmet, band, mittens, skates, legs
+		case ESlotKind::Steel:  Paint(S, FLinearColor(0.85f, 0.87f, 0.9f)); break;                   // blade runners
+		case ESlotKind::Stick:  Paint(S, FLinearColor(0.6f, 0.45f, 0.25f)); break;                   // stick wood
+		}
+	}
 }
 
 void USkeletalSkaterVisual::SetNumber_Implementation(int32 N)

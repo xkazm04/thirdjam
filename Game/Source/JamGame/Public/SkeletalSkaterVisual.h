@@ -19,7 +19,7 @@ class UNiagaraSystem;
 enum class ESkaterSeq : uint8
 {
 	Idle, Skate, Carry, AimLeft, AimRight, Poke, Lift, ShootWindup, ShootRelease, Check, KnockedDown, GetUp, FaceoffReady, Draw,
-	GoalieLeft, GoalieCentre, GoalieRight, Count
+	GoalieLeft, GoalieCentre, GoalieRight, SkateLeft, SkateRight, Count
 };
 
 // Everything the layer choice needs for one sim frame. Frames since a trigger are -1 when it never happened.
@@ -62,7 +62,8 @@ public:
 	USkeletalSkaterVisual();
 
 	// ---- pure functions (tests call these without a world) ----
-	static constexpr float MaxLeanDeg = 35.f;
+	static constexpr float MaxLeanDeg = 35.f;       // the lean state (blade spray, skate_left / skate_right blend)
+	static constexpr float MaxRollDeg = 5.f;        // the component roll is capped here: the lean is authored into skate_left / skate_right (A22 pass 3)
 	static constexpr float BaseEmissive = 2.2f;     // R-0016: the painted-cel base, as the toy figure
 	static constexpr float MaxAimDeg = 70.f;        // aim_left / aim_right hold 70 degrees
 	// Sequence lengths in frames (the actions as authored; the sampler clamps to the asset's own length).
@@ -116,6 +117,8 @@ private:
 
 	UPROPERTY(Transient) TArray<TObjectPtr<UAnimSequence>> Sequences;   // indexed by ESkaterSeq
 	UPROPERTY(Transient) TArray<TObjectPtr<UMaterialInstanceDynamic>> Mids;
+	enum class ESlotKind : uint8 { Base, Number, Head, Trim, Steel, Stick };
+	TArray<ESlotKind> SlotKinds;   // per material slot, by slot name
 	UPROPERTY(Transient) TObjectPtr<UTextRenderComponent> NumberText;
 	UPROPERTY(Transient) TObjectPtr<UNiagaraSystem> BladeSpray;
 
