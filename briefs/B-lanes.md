@@ -1,6 +1,6 @@
 # Device B lane board (the lead rewrites this file whenever a lane starts or reports)
 
-Updated 2026-11-12 22:35 CET (H16.6). Two editors at most by the operator's decision. **Device A merged `dev-b` at 19:35 and 20:02; the shipped default figure is `humanoid_b1` (R-0030).** The operator is away until about 22:45 (R-0028). Directions in force: the operator to B at 14:55 (**hyped commentary; Blender and the P2, P3, P4
+Updated 2026-11-12 22:25 CET (H16.4; times on this board before 20:30 ran up to 25 minutes ahead of the machine clock). Two editors at most by the operator's decision. **Device A merged `dev-b` at 19:35 and 20:02; the shipped default figure is `humanoid_b1` (R-0030).** The operator is away until about 22:45 (R-0028). Directions in force: the operator to B at 14:55 (**hyped commentary; Blender and the P2, P3, P4
 skaters**), and the operator's verdicts through device A at 14:40 (R-0021, `handoff/A-to-B-0007.md`: **props out of the arena; night sky, ice surface, construction, lighting; both hands on a hockey stick**). Reports land in `status/`.
 
 ## Running
@@ -8,6 +8,7 @@ skaters**), and the operator's verdicts through device A at 14:40 (R-0021, `hand
 | Lane | What | Editor | Started | Due | Report (when done) |
 |---|---|---|---|---|---|
 | SKI2 | Import of the three concept-sheet figures from `skc/export2/` behind `BP_SkaterVisual_TB2`, `_TB2_P3`, `_TB2_P4` (class names unchanged; the old Blueprints kept as `_old`): new skeletons, 72 takes, hue-key material with number and crest, the aim grid and stick correction, every call and reaction; the cel toy first | port 8000, main tree | 22:00 | 01:00 | `status/SKI2-checkpoint.md`, `status/SKI2-report.md` |
+| SKI3 | The shipped scripted figure's clay and broadcast versions from the Blender family (`p3_clay`, `p4_broadcast`; 72 takes each) as `BP_SkaterVisual_TB1_P3` and `_TB1_P4`, so `humanoid_b1` has a class per tier; clay first | port 8002, `wt-vfx` | 22:25 | 00:55 | `status/SKI3-checkpoint.md`, `status/SKI3-report.md` |
 
 ## Waiting for the operator's ears or eyes (pages on device B)
 
