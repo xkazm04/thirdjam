@@ -1,0 +1,3 @@
+{"name": "Rm", "rig_fbx": "in/R/R_rigged.fbx", "base_color": "export/R/T_Skater_R_BaseColor.png",
+ "note": "R with measured values only, except ankle_z (the sock band is a texture feature, not measurable from the skeleton).",
+ "override": {"ankle_z": 0.30}}

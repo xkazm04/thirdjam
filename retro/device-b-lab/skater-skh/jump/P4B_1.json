@@ -1,0 +1,315 @@
+{
+ "file": "C:/Users/kazda/jam/skater-lab/skh/export/P4B/SK_Skater_P4B.fbx",
+ "takes": {
+  "Aim_FarReach": {
+   "hand_max_cm": 0.0,
+   "hand_max_step": 8,
+   "blade_max_cm": 0.0,
+   "blade_max_step": 7,
+   "steps_over_15cm": 0,
+   "steps": 30,
+   "wrap_hand_cm": 0.0,
+   "wrap_blade_cm": 0.0
+  },
+  "Aim_Front": {
+   "hand_max_cm": 0.0,
+   "hand_max_step": 8,
+   "blade_max_cm": 0.0,
+   "blade_max_step": 7,
+   "steps_over_15cm": 0,
+   "steps": 30,
+   "wrap_hand_cm": 0.0,
+   "wrap_blade_cm": 0.0
+  },
+  "Aim_Left": {
+   "hand_max_cm": 0.0,
+   "hand_max_step": 8,
+   "blade_max_cm": 0.0,
+   "blade_max_step": 9,
+   "steps_over_15cm": 0,
+   "steps": 30,
+   "wrap_hand_cm": 0.0,
+   "wrap_blade_cm": 0.0
+  },
+  "Aim_Right": {
+   "hand_max_cm": 0.0,
+   "hand_max_step": 8,
+   "blade_max_cm": 0.0,
+   "blade_max_step": 8,
+   "steps_over_15cm": 0,
+   "steps": 30,
+   "wrap_hand_cm": 0.0,
+   "wrap_blade_cm": 0.0
+  },
+  "Celebrate": {
+   "hand_max_cm": 33.6,
+   "hand_max_step": 2,
+   "blade_max_cm": 55.7,
+   "blade_max_step": 4,
+   "steps_over_15cm": 6,
+   "steps": 72,
+   "wrap_hand_cm": 0.6,
+   "wrap_blade_cm": 0.8
+  },
+  "Check": {
+   "hand_max_cm": 24.7,
+   "hand_max_step": 14,
+   "blade_max_cm": 41.6,
+   "blade_max_step": 16,
+   "steps_over_15cm": 5,
+   "steps": 30,
+   "wrap_hand_cm": 1.0,
+   "wrap_blade_cm": 7.2
+  },
+  "Crossover_Left": {
+   "hand_max_cm": 22.3,
+   "hand_max_step": 26,
+   "blade_max_cm": 6.0,
+   "blade_max_step": 36,
+   "steps_over_15cm": 2,
+   "steps": 40,
+   "wrap_hand_cm": 0.5,
+   "wrap_blade_cm": 0.5
+  },
+  "Crossover_Right": {
+   "hand_max_cm": 20.7,
+   "hand_max_step": 27,
+   "blade_max_cm": 6.2,
+   "blade_max_step": 35,
+   "steps_over_15cm": 2,
+   "steps": 40,
+   "wrap_hand_cm": 0.4,
+   "wrap_blade_cm": 0.4
+  },
+  "Faceoff_Draw": {
+   "hand_max_cm": 11.8,
+   "hand_max_step": 1,
+   "blade_max_cm": 25.7,
+   "blade_max_step": 1,
+   "steps_over_15cm": 3,
+   "steps": 18,
+   "wrap_hand_cm": 1.4,
+   "wrap_blade_cm": 2.1
+  },
+  "Faceoff_Ready": {
+   "hand_max_cm": 0.0,
+   "hand_max_step": 8,
+   "blade_max_cm": 0.0,
+   "blade_max_step": 9,
+   "steps_over_15cm": 0,
+   "steps": 30,
+   "wrap_hand_cm": 0.0,
+   "wrap_blade_cm": 0.0
+  },
+  "Fall": {
+   "hand_max_cm": 47.5,
+   "hand_max_step": 1,
+   "blade_max_cm": 68.1,
+   "blade_max_step": 1,
+   "steps_over_15cm": 10,
+   "steps": 36,
+   "wrap_hand_cm": 0.9,
+   "wrap_blade_cm": 1.1
+  },
+  "Fall_Forward": {
+   "hand_max_cm": 31.2,
+   "hand_max_step": 2,
+   "blade_max_cm": 41.1,
+   "blade_max_step": 1,
+   "steps_over_15cm": 4,
+   "steps": 36,
+   "wrap_hand_cm": 0.1,
+   "wrap_blade_cm": 0.2
+  },
+  "Foul_Reaction": {
+   "hand_max_cm": 33.8,
+   "hand_max_step": 1,
+   "blade_max_cm": 48.9,
+   "blade_max_step": 1,
+   "steps_over_15cm": 20,
+   "steps": 48,
+   "wrap_hand_cm": 2.4,
+   "wrap_blade_cm": 1.1
+  },
+  "GetUp": {
+   "hand_max_cm": 78.6,
+   "hand_max_step": 3,
+   "blade_max_cm": 59.8,
+   "blade_max_step": 11,
+   "steps_over_15cm": 35,
+   "steps": 72,
+   "wrap_hand_cm": 2.6,
+   "wrap_blade_cm": 3.1
+  },
+  "GetUp_Front": {
+   "hand_max_cm": 17.9,
+   "hand_max_step": 66,
+   "blade_max_cm": 21.2,
+   "blade_max_step": 42,
+   "steps_over_15cm": 2,
+   "steps": 72,
+   "wrap_hand_cm": 2.8,
+   "wrap_blade_cm": 3.0
+  },
+  "Glide": {
+   "hand_max_cm": 0.6,
+   "hand_max_step": 38,
+   "blade_max_cm": 1.5,
+   "blade_max_step": 38,
+   "steps_over_15cm": 0,
+   "steps": 120,
+   "wrap_hand_cm": 0.0,
+   "wrap_blade_cm": 0.0
+  },
+  "Goalie_Block_Left": {
+   "hand_max_cm": 5.4,
+   "hand_max_step": 1,
+   "blade_max_cm": 7.6,
+   "blade_max_step": 1,
+   "steps_over_15cm": 0,
+   "steps": 24,
+   "wrap_hand_cm": 0.0,
+   "wrap_blade_cm": 0.0
+  },
+  "Goalie_Block_Right": {
+   "hand_max_cm": 6.9,
+   "hand_max_step": 1,
+   "blade_max_cm": 61.2,
+   "blade_max_step": 1,
+   "steps_over_15cm": 9,
+   "steps": 24,
+   "wrap_hand_cm": 0.0,
+   "wrap_blade_cm": 0.0
+  },
+  "Goalie_Hold": {
+   "hand_max_cm": 0.0,
+   "hand_max_step": 8,
+   "blade_max_cm": 0.0,
+   "blade_max_step": 7,
+   "steps_over_15cm": 0,
+   "steps": 30,
+   "wrap_hand_cm": 0.0,
+   "wrap_blade_cm": 0.0
+  },
+  "Idle_Faceoff": {
+   "hand_max_cm": 0.8,
+   "hand_max_step": 49,
+   "blade_max_cm": 1.5,
+   "blade_max_step": 49,
+   "steps_over_15cm": 0,
+   "steps": 120,
+   "wrap_hand_cm": 0.0,
+   "wrap_blade_cm": 0.0
+  },
+  "Lean_Left": {
+   "hand_max_cm": 0.0,
+   "hand_max_step": 8,
+   "blade_max_cm": 0.0,
+   "blade_max_step": 8,
+   "steps_over_15cm": 0,
+   "steps": 30,
+   "wrap_hand_cm": 0.0,
+   "wrap_blade_cm": 0.0
+  },
+  "Lean_Right": {
+   "hand_max_cm": 0.0,
+   "hand_max_step": 8,
+   "blade_max_cm": 0.0,
+   "blade_max_step": 8,
+   "steps_over_15cm": 0,
+   "steps": 30,
+   "wrap_hand_cm": 0.0,
+   "wrap_blade_cm": 0.0
+  },
+  "Lift": {
+   "hand_max_cm": 24.0,
+   "hand_max_step": 7,
+   "blade_max_cm": 45.0,
+   "blade_max_step": 7,
+   "steps_over_15cm": 4,
+   "steps": 18,
+   "wrap_hand_cm": 1.2,
+   "wrap_blade_cm": 1.3
+  },
+  "Pass": {
+   "hand_max_cm": 10.3,
+   "hand_max_step": 8,
+   "blade_max_cm": 30.7,
+   "blade_max_step": 7,
+   "steps_over_15cm": 3,
+   "steps": 18,
+   "wrap_hand_cm": 0.8,
+   "wrap_blade_cm": 1.6
+  },
+  "Poke": {
+   "hand_max_cm": 33.4,
+   "hand_max_step": 19,
+   "blade_max_cm": 47.4,
+   "blade_max_step": 6,
+   "steps_over_15cm": 7,
+   "steps": 21,
+   "wrap_hand_cm": 3.6,
+   "wrap_blade_cm": 4.0
+  },
+  "Shot_Charge": {
+   "hand_max_cm": 0.0,
+   "hand_max_step": 8,
+   "blade_max_cm": 0.0,
+   "blade_max_step": 8,
+   "steps_over_15cm": 0,
+   "steps": 30,
+   "wrap_hand_cm": 0.0,
+   "wrap_blade_cm": 0.0
+  },
+  "Shot_Slap": {
+   "hand_max_cm": 43.2,
+   "hand_max_step": 20,
+   "blade_max_cm": 78.3,
+   "blade_max_step": 19,
+   "steps_over_15cm": 25,
+   "steps": 42,
+   "wrap_hand_cm": 0.0,
+   "wrap_blade_cm": 0.0
+  },
+  "Shot_Wrist": {
+   "hand_max_cm": 20.7,
+   "hand_max_step": 8,
+   "blade_max_cm": 31.9,
+   "blade_max_step": 11,
+   "steps_over_15cm": 4,
+   "steps": 21,
+   "wrap_hand_cm": 0.0,
+   "wrap_blade_cm": 0.0
+  },
+  "Stop": {
+   "hand_max_cm": 12.5,
+   "hand_max_step": 34,
+   "blade_max_cm": 22.7,
+   "blade_max_step": 34,
+   "steps_over_15cm": 2,
+   "steps": 36,
+   "wrap_hand_cm": 0.1,
+   "wrap_blade_cm": 0.1
+  },
+  "Stride": {
+   "hand_max_cm": 18.6,
+   "hand_max_step": 41,
+   "blade_max_cm": 3.7,
+   "blade_max_step": 48,
+   "steps_over_15cm": 2,
+   "steps": 60,
+   "wrap_hand_cm": 0.5,
+   "wrap_blade_cm": 0.2
+  },
+  "Stumble": {
+   "hand_max_cm": 33.2,
+   "hand_max_step": 19,
+   "blade_max_cm": 62.0,
+   "blade_max_step": 1,
+   "steps_over_15cm": 12,
+   "steps": 20,
+   "wrap_hand_cm": 3.6,
+   "wrap_blade_cm": 8.9
+  }
+ }
+}

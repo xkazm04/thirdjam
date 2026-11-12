@@ -1,0 +1,10 @@
+| Candidate | Clip source | Left mitt to shaft, two-handed takes: mean / max (take) | Slap + wrist: max | Stick or mitt in head (frames) | Skate lift lying/kneeling: max (take) | Fall / Fall_Forward / GetUp / GetUp_Front / Block L / Block R | Standing skate err max | Goalie_Hold stick min (S4 16-19) | Blade err max (take) | Reach error cm: Front / Left / Right / FarReach / Poke (before rule -> after) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| P4B | old: S4 clips | 4.4 / 18.9 (Crossover_Right) | 10.6 | 0 | 18.2 (Fall_Forward) | 0.5 / 18.2 / 10.9 / 18.2 / 16.8 / 16.7 | 6.51 | 19.7 | 1.61 (Crossover_Right) | 10.9 / 9.3 / 14.3 / -1.0 / 36.1 |
+| P4B | new: p2_cel (control) | 1.6 / 17.3 (GetUp) | 10.0 | 0 | 17.6 (Fall_Forward) | 0.5 / 17.6 / 10.9 / 17.6 / 16.8 / 16.7 | 6.51 | 21.6 | 1.94 (Crossover_Right) | 14.7->0.9 / 11.2->0.0 / 16.9->1.9 / -0.3 / -3.5 |
+| P4B | new: p4_broadcast | 1.3 / 15.7 (GetUp) | 13.0 | 0 | 20.0 (Goalie_Block_Left) | 0.4 / 14.9 / 13.5 / 17.3 / 20.0 / 19.9 | 7.91 | 16.5 | 1.18 (GetUp_Front) | 6.7->0.8 / -10.8->0.0 / 10.4->0.0 / -4.4 / -8.7->0.0 |
+| P3A | old: S4 clips | 13.2 / 28.4 (Shot_Charge) | 30.2 | 9 | 16.2 (Fall) | 16.2 / 0.8 / 16.2 / 7.4 / 9.7 / 8.9 | 2.23 | 31.7 | 1.47 (Crossover_Right) | -0.6 / -0.9 / -4.7 / 14.0 / 44.5 |
+| P3A | new: p2_cel (control) | 10.7 / 29.3 (GetUp) | 23.6 | 11 | 16.2 (Fall) | 16.2 / 0.3 / 16.2 / 7.4 / 9.7 / 8.9 | 2.23 | 34.1 | 2.19 (GetUp_Front) | 2.5 / 0.7 / 1.6 / 31.4->0.0 / 28.5->0.0 |
+| P3A | new: p3_clay | 9.7 / 25.9 (Crossover_Right) | 20.7 | 8 | 13.6 (Fall) | 13.6 / 0.3 / 13.1 / 0.3 / 9.5 / 8.6 | 1.47 | 34.3 | 2.17 (GetUp_Front) | 3.1 / 5.6->1.4 / -1.1 / 30.6->0.0 / 28.1->0.0 |
+| R | old: S4 clips (= S5) | 6.9 / 18.8 (GetUp) | 17.7 | 0 | 10.3 (Fall_Forward) | 9.5 / 10.3 / 6.0 / 6.5 / 1.9 / 1.8 | 0.29 | 26.3 | 20.69 (GetUp_Front) | 3.3 / 3.2 / 5.2 / 9.0 / 32.8 |
+| R | new: p2_cel | 4.4 / 22.9 (GetUp) | 11.9 | 0 | 10.3 (Fall_Forward) | 9.1 / 10.3 / 6.0 / 6.5 / 1.9 / 1.8 | 0.29 | 27.9 | 1.91 (Crossover_Right) | 4.7 / 4.2 / 8.0->0.0 / 5.2->0.5 / 4.2 |

@@ -1,0 +1,1 @@
+{"name": "R", "asset": "R", "rig_fbx": "in/R/R_rigged.fbx", "base_color": "export3/R/T_Skater_R_BaseColor.png", "clips_fbx": "in/skf2/SK_Skater_p2_cel.fbx", "stick_fbx": "in/SK_Skater_S4.fbx", "export_dir": "export3", "out_dir": "out3", "reach_rule": true, "stick_ice_tilt": true , "override": {"ankle_z": 0.30, "head_clear": 0.40, "stick_head_clear": 0.36, "grip_min": 0.22}}
