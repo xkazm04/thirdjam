@@ -21,16 +21,16 @@ namespace JamAI
 		FJamDifficultyProfile MakeRookie()
 		{
 			FJamBotSkill Opp;
-			Opp.ReactionFrames = 2;
-			Opp.AimErrorDeg = 3.0;
+			Opp.ReactionFrames = 0;
+			Opp.AimErrorDeg = 0.0;
 			Opp.ShootExtraM = 13.0;
 			Opp.bBlockShots = true;
 			Opp.BlockMinDistM = 35.0;   // only a shot from near centre ice (90 x 45: 41 m to the net) is blocked
 			Opp.AimToleranceDeg = 20.0;
 			Opp.LeadFrames = 15;
 			Opp.bIntercept = false;
-			Opp.bUseAimCone = false;
-			return FJamDifficultyProfile{"rookie", 0.9, 0.85, 4.0, 25.0, 0.0, 180, Opp, true};
+			Opp.bUseAimCone = true;
+			return FJamDifficultyProfile{"rookie", 1.0, 1.0, 4.0, 25.0, 0.0, 180, Opp, true};
 		}
 
 		FJamDifficultyProfile MakeAllStar()
@@ -38,12 +38,13 @@ namespace JamAI
 			FJamBotSkill Opp;
 			Opp.ReactionFrames = 0;
 			Opp.AimErrorDeg = 0.0;
-			Opp.ShootExtraM = 30.0;
+			Opp.ShootExtraM = 40.0;
 			Opp.AimToleranceDeg = 20.0;
-			Opp.LeadFrames = 45;
+			Opp.LeadFrames = 60;
+			Opp.bClearLane = true;
 			Opp.bIntercept = true;
 			Opp.bUseAimCone = true;
-			return FJamDifficultyProfile{"all_star", 1.0, 1.0, 1.5, 12.0, 0.0, 90, Opp, false};
+			return FJamDifficultyProfile{"all_star", 1.0, 1.0, 4.0, 25.0, 0.0, 60, Opp, false};
 		}
 
 		void SetErr(char* Err, int ErrLen, const char* Msg, const char* Pair)

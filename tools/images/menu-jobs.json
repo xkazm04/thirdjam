@@ -1,0 +1,71 @@
+{
+  "batch": "menu",
+  "style": "Style: painted-cel night hockey rink, flat saturated paint strokes with soft ink outlines, deep navy and black darks, electric blue (#1D4ED8) and warm orange (#E8651A) accents, chalk-white highlights. Film-production motif: clapperboards, slate cards, take numbers. Clean composition with empty margins so UI text can sit on top. No real brands, teams, leagues, logos or people; any lettering is invented English and spelled exactly as given. Teen-appropriate.",
+  "jobs": [
+    {
+      "name": "title-slate",
+      "aspect": "landscape",
+      "prompt": "A film-slate title card for an arcade ice-hockey game. A slate-grey clapperboard with the black-and-white striped clapper across the top, the big chalk letters HOKEJ written on it by hand, and under it, smaller, the words A DIRECTOR'S CUT. Behind the slate a night hockey rink seen from behind the net: blue and orange trim lights, four spot cones over scuffed ice, no crowd. Only these words appear: HOKEJ, A DIRECTOR'S CUT."
+    },
+    {
+      "name": "card-regular",
+      "aspect": "landscape",
+      "prompt": "A wide painted card background for a menu entry named REGULAR CUT: a calm night rink seen from centre ice, two skaters as toy figures, one blue one orange, a puck between them, blue and orange board trim glowing, lots of dark empty ice in the lower half for text. No lettering at all."
+    },
+    {
+      "name": "card-raw",
+      "aspect": "landscape",
+      "prompt": "A wide painted card background for a menu entry named RAW CUT: a gritty night rink, a blue toy-figure skater body-checking an orange one into the boards, ice spray, scuffed scratched ice, harsher spotlights, lots of dark empty ice in the lower half for text. No lettering at all."
+    },
+    {
+      "name": "card-boost",
+      "aspect": "landscape",
+      "prompt": "A wide painted card background for a menu entry named BOOST CUT: a night rink with glowing pickup discs scattered on the ice (a lightning disc, a target disc, a heavy anvil disc), a blue toy-figure skater streaking through with a speed trail, lots of dark empty ice in the lower half for text. No lettering at all."
+    },
+    {
+      "name": "card-small-rink",
+      "aspect": "landscape",
+      "prompt": "A wide painted card background for a menu entry named SMALL RINK CUT: a compact, tight night rink where both nets are visible close together, six toy-figure skaters crowded around the puck, fast motion, lots of dark empty ice in the lower half for text. No lettering at all."
+    },
+    {
+      "name": "card-wide",
+      "aspect": "landscape",
+      "prompt": "A wide painted card background for a menu entry named WIDE CUT: an enormous night rink stretching to a far distant net, a lone blue toy-figure skater small in the frame with a long way to skate, wide empty ice, lots of dark empty ice in the lower half for text. No lettering at all."
+    },
+    {
+      "name": "card-directors-cut",
+      "aspect": "landscape",
+      "prompt": "A wide painted card background for a menu entry named MY DIRECTOR'S CUT: a night rink seen through a director's viewfinder frame, a chair and a megaphone at the boards, a clapperboard lying on the ice, blue and orange trim lights, lots of dark empty ice in the lower half for text. No lettering at all."
+    },
+    {
+      "name": "take-card",
+      "aspect": "landscape",
+      "prompt": "A period card for a hockey match framed as a film take: a slate-grey clapperboard filling the frame, clapper stripes on top, chalk writing that says only TAKE and a large empty chalk box where a number will be drawn by the game, a small hockey puck doodle in the corner. Only the word TAKE appears."
+    },
+    {
+      "name": "icon-set-cuts",
+      "aspect": "square",
+      "prompt": "A sheet of six flat UI icons on a plain black background, arranged in a 3 by 2 grid with even spacing, each icon inside its own thin chalk circle: a plain hockey puck (regular), a puck with impact spikes (raw), a lightning bolt over a puck (boost), a small rink outline (small rink), a wide rink outline (wide), a clapperboard (director's cut). Chalk-white strokes with one blue and one orange accent each. No lettering."
+    },
+    {
+      "name": "icon-set-pickups",
+      "aspect": "square",
+      "prompt": "A sheet of three flat UI icons on a plain black background in a row with even spacing, each inside a thin chalk circle: a lightning bolt (speed), a crosshair target (precision), an anvil-heavy puck (heavy puck). Chalk-white strokes with blue and orange accents. No lettering."
+    },
+    {
+      "name": "icon-set-system",
+      "aspect": "square",
+      "prompt": "A sheet of six flat UI icons on a plain black background in a 3 by 2 grid with even spacing, each inside a thin chalk circle: a gear (settings), a megaphone (director's call), a pause sign, and three signal-strength glyphs of one, two and three rising bars, plus one of four bars. Chalk-white strokes with blue and orange accents. No lettering."
+    },
+    {
+      "name": "card-raw-v2",
+      "aspect": "landscape",
+      "prompt": "A wide painted card background for a menu entry named RAW CUT: a gritty night rink, two skaters painted as simple wooden peg-doll toy figures (rounded one-piece bodies, no separate limbs, no studs, not brick-toy minifigures), the blue one body-checking the orange one into the boards, ice spray, scuffed scratched ice, harsher spotlights, lots of dark empty ice in the lower half for text. No lettering at all."
+    },
+    {
+      "name": "card-large-rink",
+      "aspect": "landscape",
+      "prompt": "A wide painted card background for a menu entry named LARGE RINK CUT: a big full-size night rink with open ice and both nets far apart, three toy-figure skaters painted as simple wooden peg dolls spread out across the ice, long skate trails, blue and orange board trim glowing, lots of dark empty ice in the lower half for text. No lettering at all."
+    }
+  ]
+}

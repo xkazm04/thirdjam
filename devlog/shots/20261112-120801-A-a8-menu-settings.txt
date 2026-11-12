@@ -1,0 +1,1 @@
+Settings: masked API key, AI difficulty placeholder, look tier override, volume, controls summary

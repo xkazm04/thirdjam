@@ -1,0 +1,1 @@
+Settings with the Voice signals row (status from UJamSignalSystem) and the Barks row (jam.Barks); overflow fixed by hiding the title art here

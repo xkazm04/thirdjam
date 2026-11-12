@@ -12,7 +12,7 @@
 
 namespace JamBarkTests
 {
-	constexpr EAutomationTestFlags Flags = EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter;
+	constexpr EAutomationTestFlags BarkTestFlags = EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter;
 
 	// Six skaters as in hockey.regular: team 0 = indices 0..2 (human is 0), team 1 = 3..5.
 	FJamBarkWorld World()
@@ -56,7 +56,7 @@ using namespace JamBarkTests;
 
 // The embedded bank parses, matches the file on disk, has no duplicates, every line is short ASCII, and every situation x speaker x tone
 // the design names has at least 12 lines (the word-list filter itself runs in Node: tools/barks/barks.test.mjs).
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamBarkBankClean, "Jam.Barks.BankClean", JamBarkTests::Flags)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamBarkBankClean, "Jam.Barks.BankClean", JamBarkTests::BarkTestFlags)
 bool FJamBarkBankClean::RunTest(const FString&)
 {
 	FJamBarkBank Bank;
@@ -100,7 +100,7 @@ bool FJamBarkBankClean::RunTest(const FString&)
 }
 
 // Events map to the expected situation and speaker side; the speaker is the nearest skater of that side; the human never speaks.
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamBarkPicksBySituation, "Jam.Barks.PicksBySituation", JamBarkTests::Flags)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamBarkPicksBySituation, "Jam.Barks.PicksBySituation", JamBarkTests::BarkTestFlags)
 bool FJamBarkPicksBySituation::RunTest(const FString&)
 {
 	FJamBarkBank Bank;
@@ -172,7 +172,7 @@ bool FJamBarkPicksBySituation::RunTest(const FString&)
 }
 
 // Global cooldown 240 frames, per-speaker 480 (normal), scaled by the intensity; no line repeats within 10 picks; the bubble fades by frames.
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamBarkCooldown, "Jam.Barks.Cooldown", JamBarkTests::Flags)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamBarkCooldown, "Jam.Barks.Cooldown", JamBarkTests::BarkTestFlags)
 bool FJamBarkCooldown::RunTest(const FString&)
 {
 	FJamBarkBank Bank;

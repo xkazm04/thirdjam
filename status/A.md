@@ -64,3 +64,9 @@
 - cook_s: 13.39 (whole package 44.2 s)
 - run: stayed up 10 s
 - largest: ThirdJam 489.3 MB; ThirdJam\Content\Paks 233.7 MB; ThirdJam\Content 233.7 MB; ThirdJam\Content\Paks\ThirdJam-Windows.ucas 218.9 MB; ThirdJam\Binaries 199.4 MB
+
+## H7 (12:50)
+- done since H6: A3 final (curve 90/45/25 and 85/45/25 on drag 0.5, all Jam.Bot gates green, Large Rink on a timer); A8 final (menu, cuts, Direct a cut, Settings, TAKE card, Director's Call card; eleven Codex textures; Shipping target green); A12 final (barks, signals, Flite voice, SAPI voice untested: no mic on A); A11 DLSS (376 MB zip); A6 packaging hardening; A9 multiplayer; Designer library regenerated twice (rink, then drag). Rulings R-0011.
+- M1 status: bots pass, scripted human scores within 2 minutes, L2 look merged, Shipping package under 700 MB. **Open for M1: the operator's own playtest** (a fresh human scoring within 2 minutes) and B's answer on the L2 GPU hang (handoff 0003).
+- running: A13 size playbook; device B lanes B2/B3/B5 and handoffs 0001-0005.
+- next: 13:00 window package (A13 re-baseline to Game/Packaged/Hokej_Hokej_H7.zip for the operator); 14:00 merge window with a full gate.

@@ -1,0 +1,145 @@
+// The main menu (lane A8): a film slate. Title HOKEJ, "a director's cut", then Choose your cut (the Designer's ListCuts),
+// Direct a cut (one sentence -> RequestCut, async, with Play / Save as My Director's Cut / Try again), Settings, Credits, Quit.
+// C++-drawn UMG, no widget blueprints; every screen walks with the stick or arrows, A / Enter selects, B / Esc goes back.
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Blueprint/UserWidget.h"
+#include "Components/Button.h"
+#include "Components/TextBlock.h"
+#include "MenuFlow.h"
+#include "MenuWidget.generated.h"
+
+class UWidgetSwitcher;
+class UVerticalBox;
+class UScrollBox;
+class UEditableTextBox;
+class UJamSettingsWidget;
+class UJamMenuWidget;
+
+UENUM(BlueprintType)
+enum class EJamMenuScreen : uint8
+{
+	Main,
+	Cuts,
+	Direct,
+	Settings,
+	Credits
+};
+
+UENUM()
+enum class EJamMenuRowKind : uint8
+{
+	Cut,
+	Sentence
+};
+
+// A button that carries what it stands for (a cut name or a cached sentence) back to the menu.
+UCLASS()
+class JAMGAME_API UJamMenuRowButton : public UButton
+{
+	GENERATED_BODY()
+
+public:
+	void Bind(UJamMenuWidget* InOwner, EJamMenuRowKind InKind, const FString& InPayload);
+
+	UFUNCTION() void HandleClicked();
+
+	FString Payload;
+	EJamMenuRowKind Kind = EJamMenuRowKind::Cut;
+	UPROPERTY(Transient) TObjectPtr<UJamMenuWidget> Owner;
+	// The text the focus tint colours.
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> TintText;
+};
+
+UCLASS()
+class JAMGAME_API UJamMenuWidget : public UUserWidget
+{
+	GENERATED_BODY()
+
+public:
+	static UJamMenuWidget* CreateAndAdd(APlayerController* PC);
+
+	UFUNCTION(BlueprintCallable, Category = "Jam|Menu") void ShowScreen(EJamMenuScreen Screen);
+	UFUNCTION(BlueprintPure, Category = "Jam|Menu") EJamMenuScreen GetScreen() const { return Screen; }
+
+	// Picks a cut by its ListCuts() name, validates it through the Designer and starts the match. False (with the error on
+	// screen) when the cut is rejected. The MenuToMatchAndBack automation calls this.
+	UFUNCTION(BlueprintCallable, Category = "Jam|Menu") bool ChooseCut(const FString& Name);
+
+	// Sends one sentence to the Designer (live with a key, cached without); the result fills the Direct screen.
+	UFUNCTION(BlueprintCallable, Category = "Jam|Menu") void Direct(const FString& Sentence);
+	UFUNCTION(BlueprintPure, Category = "Jam|Menu") bool IsRolling() const { return bRolling; }
+	const FJamDesignerResult& GetLastResult() const { return Last; }
+	const TArray<FJamMenuCutRow>& GetCutRows() const { return Rows; }
+
+	// Called by UJamMenuRowButton.
+	void OnRowClicked(EJamMenuRowKind Kind, const FString& Payload);
+
+protected:
+	virtual TSharedRef<SWidget> RebuildWidget() override;
+	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+	virtual FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
+
+private:
+	void BuildTree();
+	UWidget* BuildMain();
+	UWidget* BuildCuts();
+	UWidget* BuildDirect();
+	UWidget* BuildSettings();
+	UWidget* BuildCredits();
+	void RefreshCuts();
+	void RefreshDirect();
+	void OnResult(const FJamDesignerResult& R);
+	UJamDesignerSubsystem* Designer() const;
+	void AddTinted(UButton* B, UTextBlock* T) { Tinted.Add(TPair<TWeakObjectPtr<UButton>, TWeakObjectPtr<UTextBlock>>(B, T)); }
+
+	UFUNCTION() void OnChooseClicked();
+	UFUNCTION() void OnDirectClicked();
+	UFUNCTION() void OnFriendClicked();
+	UFUNCTION() void OnSettingsClicked();
+	UFUNCTION() void OnCreditsClicked();
+	UFUNCTION() void OnQuitClicked();
+	UFUNCTION() void OnBackClicked();
+	UFUNCTION() void OnRollClicked();
+	UFUNCTION() void OnSentenceCommitted(const FText& Text, ETextCommit::Type Commit);
+	UFUNCTION() void OnPlayResultClicked();
+	UFUNCTION() void OnSaveResultClicked();
+	UFUNCTION() void OnTryAgainClicked();
+
+	EJamMenuScreen Screen = EJamMenuScreen::Main;
+	TArray<FJamMenuCutRow> Rows;
+	FJamDesignerResult Last;
+	bool bRolling = false;
+	bool bHasResult = false;
+	bool bResultSaved = false;
+	FString SavedResultPath;
+	TArray<TPair<TWeakObjectPtr<UButton>, TWeakObjectPtr<UTextBlock>>> Tinted;
+	TWeakObjectPtr<UWidget> PendingFocus;
+
+	UPROPERTY(Transient) TObjectPtr<UWidgetSwitcher> Switcher;
+	UPROPERTY(Transient) TObjectPtr<UWidget> TitlePicture;
+	UPROPERTY(Transient) TObjectPtr<UButton> ChooseButton;
+	UPROPERTY(Transient) TObjectPtr<UButton> DirectButton;
+	UPROPERTY(Transient) TObjectPtr<UButton> FriendButton;
+	UPROPERTY(Transient) TObjectPtr<UButton> SettingsButton;
+	UPROPERTY(Transient) TObjectPtr<UButton> CreditsButton;
+	UPROPERTY(Transient) TObjectPtr<UButton> QuitButton;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> MainStatus;
+	UPROPERTY(Transient) TObjectPtr<UScrollBox> CutList;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> CutsStatus;
+	UPROPERTY(Transient) TObjectPtr<UEditableTextBox> SentenceBox;
+	UPROPERTY(Transient) TObjectPtr<UButton> RollButton;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> DirectStatus;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> DirectHint;
+	UPROPERTY(Transient) TObjectPtr<UVerticalBox> SentenceList;
+	UPROPERTY(Transient) TObjectPtr<UVerticalBox> ResultBox;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> ResultName;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> ResultChanges;
+	UPROPERTY(Transient) TObjectPtr<UButton> PlayResultButton;
+	UPROPERTY(Transient) TObjectPtr<UButton> SaveResultButton;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> SaveResultText;
+	UPROPERTY(Transient) TObjectPtr<UButton> TryAgainButton;
+	UPROPERTY(Transient) TObjectPtr<UJamSettingsWidget> SettingsPanel;
+	UPROPERTY(Transient) TArray<TObjectPtr<UButton>> BackButtons;
+};

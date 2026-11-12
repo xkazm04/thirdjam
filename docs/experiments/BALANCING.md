@@ -1,6 +1,6 @@
 # Balancing: three AI difficulties (lane A3, H5-H6)
 
-Status: 2026-11-12 12:30. All numbers come from the real `UJamSim` through `tools/sweep/run.mjs --runner ue` (commandlet `-run=JamTournament`), 20 seeds per cell.
+Status: 2026-11-12 12:40, final for R-0011.
 The scripted human is A2's player bot (`bot_hockey.gd` port): it is the stand-in for a person, and its habits (long centre shots, no deking) shape every number here.
 
 ## What a level is
@@ -10,64 +10,64 @@ The human's two teammates keep A2's skill at every level (they also pass to the 
 numbers the cartridge writes -> the Designer's `values` (`ai_speed_scale`, `ai_red_skill`). Code: `Game/Source/JamCore/AI/DifficultyProfile.*` (data, engine-free),
 `DifficultyResolve.*` (reads which keys a cartridge wrote, from `RawJson`), `UJamBrain::ApplyCartridge`. Every preset says `"ai": { "difficulty": "pro" }` and no numbers.
 
-## Profiles (final)
+## Profiles (final, R-0011: every preset has `puck.drag` 0.5; no other feel change adopted)
 
 | field | rookie | pro (= `FJamAIParams` defaults) | all_star |
 |---|---|---|---|
-| `speed_scale` (all bots) | 0.9 | 1.0 | 1.0 |
-| `red_skill` (opponents' extra speed factor; never applied to a `back`) | 0.85 | 1.0 | 1.0 |
-| teammates' yield margin / radius (m) | 4 / 25 | 2 / 15 | 1.5 / 12 |
-| opponents' hold radius (m) | 0 | 2 | 0 |
-| stall tolerance (frames) | 180 | 120 | 90 |
-| opponents' reaction delay (frames, steering only; shots stay live; backs 0) | 2 | 0 | 0 |
-| opponents' aim error (deg, max; per skater and 2-s window) | 3 | 0 | 0 |
-| opponents' shot range (reach + m) | 13 | 16 | 30 |
-| opponents' lead cap (frames) / intercept solve | 15 / no | 45 / yes | 45 / yes |
-| opponents know the aim assist (`shot.aim_cone_deg`) | no | yes | yes |
+| `speed_scale` / `red_skill` | 1.0 / 1.0 | 1.0 / 1.0 | 1.0 / 1.0 |
+| teammates' yield margin / radius (m) | 4 / 25 | 2 / 15 | 4 / 25 |
+| opponents' hold radius (m) | 0 | 0 | 0 |
+| stall tolerance (frames) | 180 | 60 | 60 |
+| opponents' reaction delay (frames, steering only; shots live; backs 0) | 0 | 0 | 0 |
+| opponents' aim error (deg) | 0 | 0 | 0 |
+| opponents' shot range (reach + m) | 13 | 30 | 40 |
+| opponents' lead cap (frames) / intercept solve | 15 / no | 60 / yes | 60 / yes |
+| opponents know the aim assist | yes | yes | yes |
+| opponents hold a shot while a defender is in the lane | no | no | yes |
 | opponents' back blocks shots | only from >= 35 m | yes | yes |
 | teammates pass to the human | yes | no | no |
 
 At every level (R-0009): a `back` guards its net. When the puck is in its half or within 45 m of its net, it stands on the line from the goal centre to the puck,
-at most 5 m out, damped so it stops on the post instead of sliding through. It runs at full speed and reacts without delay. Teammates honour the human's
-team signals (R-0007; `FJamAIWorld::IntentKind/Target/FramesLeft`, copied in by `AHokejGameMode::GatherInputs`).
+at most 5 m out, damped. It runs at full speed and reacts without delay. Teammates honour the human's team signals (R-0007: `FJamAIWorld::IntentKind/Target/FramesLeft`,
+copied in by `AHokejGameMode::GatherInputs`).
 
-Two findings shaped the table:
-- A steering delay of 2 frames or more stopped the opponents from ever winning the puck (100% human wins). Delaying the shot as well made the AI stop scoring
-  at all, because a delayed shot misses the sim's reach and facing gate. Reaction is therefore small, and shots are never delayed.
-- The opponents' hold radius (A2's 4.5 m) was the reason pro was 90% before this lane. With 0 the human touches the puck more (contested pucks), not less.
+What the sweeps taught:
+- Reaction delay and aim error are cliffs. A 2-frame steering delay or a 3-degree aim error already gives the scripted human 90-100%, so neither is used.
+  Levels differ by shot range, anticipation (lead, intercept), stall tolerance, lane discipline, shot blocking, and how much the human's own teammates leave the puck to the human.
+- A2's 4.5 m hold radius was why pro was 90% before this lane. A contested puck also gives the human more touches, not fewer.
+- A teammate yielding more (4 / 25 at all_star) makes the human's side weaker. That is why all_star shares rookie's yield numbers, for the opposite reason.
 
-## Sweep table, final profiles (R-0010 rinks: regular 90 x 45 speed 11, large 120 x 60 speed 8), scripted human vs AI, seeds 1-20
+## Sweep table, final (regular 90 x 45 speed 11 first-to-3; large 120 x 60 speed 8 timer 3 min), scripted human vs AI, seeds 1-20
 
 | rink | level | W-L-unfinished | human win % | goals/match | GF | GA | shots human | shots mates | shots AI opp | human touches/min (min) | match s (max) | s/goal | faceoffs without a human touch |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| regular | rookie | 17-3-0 | **85** | 3.8 | 2.8 | 1.1 | 8.7 | 0.5 | 5.3 | 9.7 (6.2) | 271 (562) | 70 | 0 |
-| regular | pro | 9-5-6 | **45** | 3.1 | 1.8 | 1.4 | 8.9 | 1.2 | 12.2 | 8.6 (6.6) | 399 (600) | 154 | 0 |
-| regular | all_star | 6-14-0 | **30** | 4.0 | 1.5 | 2.5 | 5.1 | 2.4 | 14.3 | 9.6 (7.2) | 232 (383) | 58 | 0 |
-| large | rookie | 7-1-12 | 35 | 2.6 | 1.8 | 0.9 | 7.7 | 3.0 | 9.6 | 6.2 (3.8) | 504 (600) | 238 | 0 |
-| large | pro | 4-5-11 | 20 | 2.6 | 1.3 | 1.4 | 6.8 | 0.9 | 11.8 | 4.8 (3.5) | 514 (600) | 246 | 0 |
-| large | all_star | 1-15-4 | 5 | 3.3 | 0.6 | 2.7 | 4.0 | 1.6 | 15.4 | 6.4 (4.5) | 405 (600) | 137 | 0 |
+| regular | rookie | 18-2-0 | **90** | 3.5 | 2.9 | 0.7 | 8.2 | 0.1 | 3.7 | 14.7 (11.3) | 134 (302) | 36 | 0 |
+| regular | pro | 9-11-0 | **45** | 4.1 | 2.0 | 2.0 | 6.8 | 0.5 | 12.8 | 15.0 (10.4) | 138 (245) | 32 | 0 |
+| regular | all_star | 5-15-0 | **25** | 4.3 | 1.9 | 2.4 | 5.7 | 0.8 | 13.4 | 14.7 (11.3) | 131 (226) | 29 | 0 |
+| large | rookie | 17-3-0 | 85 | 2.2 | 1.8 | 0.4 | 5.9 | 0.6 | 3.9 | 14.6 (11.0) | 196 (290) | 126 | 0 |
+| large | pro | 9-11-0 | 45 | 3.4 | 1.6 | 1.8 | 4.9 | 1.9 | 16.9 | 13.4 (8.3) | 197 (309) | 72 | 0 |
+| large | all_star | 5-15-0 | 25 | 4.0 | 1.5 | 2.5 | 5.3 | 1.1 | 15.1 | 13.5 (10.3) | 190 (212) | 55 | 0 |
 
-The target curve holds on the regular rink: rookie 85% (target 85), pro 45% (target 50, within 10), all_star 30% (target 25). The human touches the puck
-at least 6.2 times per minute in every regular match, and never waits more than 600 frames for a touch after a faceoff (`HumanHasSomethingToDo` holds at every level).
+The curve holds on both rinks: rookie 90 / 85, pro 45 / 45, all_star 25 / 25 (targets 85 / 50 / 25, slack 10). The human touches the puck at least 8.3 times per
+minute in every match, and never waits more than 600 frames after a faceoff. On the large rink, a draw at the
+3-minute timer counts as not won.
 
-Pure bot-vs-bot (`--mode brain`, the opposing side at the level):
-- regular: pro 5-3-12, all_star 5-10-5.
-- large: pro 0-0-20, all_star 1-0-19.
+Bot-vs-bot (`--mode brain`): regular pro 8-11-1 and all_star 11-7-2; large pro 10-10-0 and all_star 7-12-1. Every big-rink match ends (timer).
 
-The guarding backs make bot-vs-bot on 120 x 60 nearly goalless (R-0003's "all_star should finish" no longer holds there).
+## Rink size at pro
 
-## Rink size at pro (the operator's question; the operator ruled R-0010 in the meantime)
+| rink | human win % | goals/match | match s | s/goal | human touches/min |
+|---|---|---|---|---|---|
+| 90 x 45, speed 11 (regular, first to 3) | 45 | 4.1 | 138 | 32 | 15.0 |
+| 120 x 60, speed 8 (large, 3-minute timer) | 45 | 3.4 | 197 | 72 | 13.4 |
 
-| rink | human win % | goals/match | match s | s/goal | human touches/min | unfinished in 10 min |
-|---|---|---|---|---|---|---|
-| 90 x 45, speed 11 (regular) | 45 | 3.1 | 399 | 154 | 8.6 | 6 / 20 |
-| 120 x 60, speed 8 (large) | 20 | 2.6 | 514 | 246 | 4.8 | 11 / 20 |
+With carrying possible (drag 0.5), the two rinks play at the same difficulty. The big rink still needs more than twice the time per goal, and the human touches the
+puck about 10% less. 90 x 45 is the livelier game; 120 x 60 works as a timed cut.
 
-The big rink is the slower and emptier game by every measure: goals take 60% longer, the human touches the puck about half as often, and more than half the
-matches do not finish in 10 minutes. With backs that guard their net, the big rink also turns against the scripted human: it shoots from far, the back has time to set.
-R-0010 (90 x 45 as regular) is what the numbers support. 120 x 60 needs its own profile, or a longer timer, before it is a fair cut.
+Earlier rink-size numbers, at drag 0 and before the backs guarded (the evidence behind R-0010): at pro, 90 x 45 gave 45% wins and 154 s per goal; 120 x 60 gave 20% wins,
+246 s per goal, and 11 of 20 matches unfinished in 10 minutes.
 
-## Feel proposals (lane A10, R-0009), each measured alone and all together
+## Feel proposals (lane A10, R-0009), measured before R-0011, at drag 0, each alone and all together
 
 Measured on the 12:11 build, whose rookie did not block shots. Pro and all_star rows are the final profiles; rookie differs from the final table.
 
