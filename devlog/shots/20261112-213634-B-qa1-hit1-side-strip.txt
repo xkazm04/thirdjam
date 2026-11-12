@@ -1,0 +1,1 @@
+QA1: night T-B1 check side_r 0.97: star, chips, blue ring; victim falls right

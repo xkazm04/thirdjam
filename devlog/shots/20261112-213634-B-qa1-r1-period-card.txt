@@ -1,0 +1,1 @@
+QA1: MATCH 1 clapperboard card on the ice between periods (film-set HUD in a match)
