@@ -133,7 +133,7 @@
     "puck": {
       "radius_m": 0.12,
       "max_speed": 30,
-      "drag": 0,
+      "drag": 0.5,
       "colour_hex": "#111111"
     },
     "shot": {
@@ -143,8 +143,8 @@
       "aim_cone_deg": 8
     },
     "rules": {
-      "mode": "first_to",
-      "score_to_win": 3,
+      "mode": "timer",
+      "timer_frames": 10800,
       "goal_pause_frames": 120,
       "offside": false,
       "penalties": false

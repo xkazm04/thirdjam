@@ -135,7 +135,7 @@
     "puck": {
       "radius_m": 0.12,
       "max_speed": 30,
-      "drag": 0,
+      "drag": 0.5,
       "colour_hex": "#111111"
     },
     "shot": {

@@ -48,7 +48,7 @@ test('preset numbers match the brief', () => {
   const r = regular().game;
   assert.deepEqual([r.rink.length_m, r.rink.width_m], [90, 45]);   // R-0010
   assert.deepEqual(r.skater, { speed: 11, accel: 12, turn_rate: 5, lateral_grip: 3, mass: 80, glide_drag: 0.147, brake_decel: 6, check_enabled: false });
-  assert.deepEqual(r.puck, { radius_m: 0.12, max_speed: 30, drag: 0, colour_hex: '#111111' });
+  assert.deepEqual(r.puck, { radius_m: 0.12, max_speed: 30, drag: 0.5, colour_hex: '#111111' });   // R-0011: carrying needs drag
   assert.deepEqual(r.shot, { reach_m: 1.5, speed: 18, cooldown_frames: 24, aim_cone_deg: 8 });
   assert.equal(r.rules.mode, 'first_to'); assert.equal(r.rules.score_to_win, 3); assert.equal(r.rules.goal_pause_frames, 120);
   assert.equal(r.look.tier, 'l2_night'); assert.equal(r.pickups, undefined);
@@ -63,6 +63,8 @@ test('preset numbers match the brief', () => {
   assert.deepEqual([s.rink.length_m, s.rink.width_m, s.skater.speed], [90, 45, 11]);
   const l = read('hockey.arena.large.cartridge.json').game;
   assert.deepEqual([l.rink.length_m, l.rink.width_m, l.skater.speed], [120, 60, 8]);
+  assert.deepEqual([l.rules.mode, l.rules.timer_frames, l.rules.score_to_win], ['timer', 10800, undefined]);   // R-0011 point 4
+  for (const f of PRESETS) assert.equal(read(f).game.puck.drag, 0.5, f);
   const w = read('hockey.arena.wide.cartridge.json').game.rink;
   assert.deepEqual([w.length_m, w.width_m], [140, 70]);
 });

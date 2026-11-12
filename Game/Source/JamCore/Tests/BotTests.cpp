@@ -49,39 +49,41 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamBotPlayerBotWins, "Jam.Bot.PlayerBotWins",
 
 bool FJamBotPlayerBotWins::RunTest(const FString& Parameters)
 {
+	// R-0011 point 3: the win gate is hockey.regular at rookie (seeds 1, 2, 7: WIN, >= 3 shots, identical hashes), no first-goal clause;
+	// at pro, where the backs block every shot, the first goal comes after frame 600 in at least 2 of the 3 seeds.
 	using namespace JamBotTestsLocal;
 	bool bOk = true;
-	for (int32 P = 0; P < 2; ++P)
+	UJamCartridge* Cart = Load(*this, 0);
+	if (!Cart) { return false; }
+	const JamAI::FJamMatchConfig C = JamAI::ToMatchConfig(Cart->Game);
+	const int32 Pi = C.PlayerIndex();
+	const int32 PlayerTeam = C.Skaters[Pi].Team;
+	int32 NotInstant = 0;
+	for (const uint64 Seed : {1ull, 2ull, 7ull})
 	{
-		UJamCartridge* Cart = Load(*this, P);
-		if (!Cart) { bOk = false; continue; }
-		const JamAI::FJamMatchConfig C = JamAI::ToMatchConfig(Cart->Game);
-		const int32 Pi = C.PlayerIndex();
-		const int32 PlayerTeam = C.Skaters[Pi].Team;
-		for (const uint64 Seed : {1ull, 2ull, 7ull})
+		const JamAI::FJamMatchStats A = Run(*Cart, Seed, JamAI::EJamPlayerMode::PlayerBot, TEXT("rookie"));
+		const JamAI::FJamMatchStats B = Run(*Cart, Seed, JamAI::EJamPlayerMode::PlayerBot, TEXT("rookie"));
+		AddInfo(Line(A, PresetName(0), JamAI::EJamPlayerMode::PlayerBot));
+		bool bSame = A.Hash == B.Hash && A.NumHashes == B.NumHashes && A.Frames == B.Frames;
+		for (int32 h = 0; bSame && h < A.NumHashes; ++h)
 		{
-			// lane A3: the win gate runs at rookie. pro is tuned so the scripted human wins about 55% (brief A3), so a fixed
-			// three-seed WIN cannot hold there; "a human-like player can win" is the rookie promise (Director to confirm).
-			const JamAI::FJamMatchStats A = Run(*Cart, Seed, JamAI::EJamPlayerMode::PlayerBot, TEXT("rookie"));
-			const JamAI::FJamMatchStats B = Run(*Cart, Seed, JamAI::EJamPlayerMode::PlayerBot, TEXT("rookie"));
-			AddInfo(Line(A, PresetName(P), JamAI::EJamPlayerMode::PlayerBot));
-			bool bSame = A.Hash == B.Hash && A.NumHashes == B.NumHashes && A.Frames == B.Frames;
-			for (int32 h = 0; bSame && h < A.NumHashes; ++h)
-			{
-				bSame = A.Hashes[h] == B.Hashes[h];
-			}
-			const bool bWin = A.bOver && A.Winner == PlayerTeam;
-			const bool bShots = A.Shots[Pi] >= 3;
-			// R-0009 (feel QA): no goal in the first 10 s of a match (a centre-ice shot into an unguarded net)
-			const int32 FirstGoal = A.Goals[0] + A.Goals[1] > 0 ? A.GoalFrames[0] : -1;
-			const bool bNotInstant = FirstGoal > 600;
-			const FString Msg = FString::Printf(TEXT("%hs seed %llu (rookie): %d:%d in %lld frames, first goal at frame %d, player shots %d, hash %016llx (%s on the second run)"),
-				PresetName(P), Seed, A.Goals[PlayerTeam], A.Goals[1 - PlayerTeam], A.Frames, FirstGoal, A.Shots[Pi], A.Hash, bSame ? TEXT("same") : TEXT("DIFFERENT"));
-			// the gate is hockey.regular; the large rink is reported, and fails the test too (it is a shipped cartridge)
-			if (bWin && bShots && bSame && bNotInstant) { AddInfo(TEXT("PASS ") + Msg); }
-			else { AddError(TEXT("FAIL ") + Msg); bOk = false; }
+			bSame = A.Hashes[h] == B.Hashes[h];
 		}
+		const bool bWin = A.bOver && A.Winner == PlayerTeam;
+		const bool bShots = A.Shots[Pi] >= 3;
+		const FString Msg = FString::Printf(TEXT("%hs seed %llu (rookie): %d:%d in %lld frames, player shots %d, hash %016llx (%s on the second run)"),
+			PresetName(0), Seed, A.Goals[PlayerTeam], A.Goals[1 - PlayerTeam], A.Frames, A.Shots[Pi], A.Hash, bSame ? TEXT("same") : TEXT("DIFFERENT"));
+		if (bWin && bShots && bSame) { AddInfo(TEXT("PASS ") + Msg); }
+		else { AddError(TEXT("FAIL ") + Msg); bOk = false; }
+
+		const JamAI::FJamMatchStats Pro = Run(*Cart, Seed, JamAI::EJamPlayerMode::PlayerBot);   // the preset's level: pro
+		const int32 FirstGoal = Pro.Goals[0] + Pro.Goals[1] > 0 ? Pro.GoalFrames[0] : -1;
+		NotInstant += (FirstGoal < 0 || FirstGoal > 600) ? 1 : 0;
+		AddInfo(FString::Printf(TEXT("%hs seed %llu (pro): %d:%d, first goal at frame %d"), PresetName(0), Seed, Pro.Goals[PlayerTeam], Pro.Goals[1 - PlayerTeam], FirstGoal));
 	}
+	const FString Msg = FString::Printf(TEXT("%hs (pro): first goal after frame 600 in %d of 3 seeds (need 2)"), PresetName(0), NotInstant);
+	if (NotInstant >= 2) { AddInfo(TEXT("PASS ") + Msg); }
+	else { AddError(TEXT("FAIL ") + Msg); bOk = false; }
 	return bOk;
 }
 
@@ -109,10 +111,9 @@ bool FJamBotAiBotPlays::RunTest(const FString& Parameters)
 			AiShots += i == Pi ? 0 : S.Shots[i];
 		}
 		const bool bInside = S.MaxBoardDistance <= 0.01;
-		// R-0003 point 1: on the 120 x 60 rink (hockey.arena.large since R-0010) the finish clause is relaxed to "at least one goal
-		// within 18,000 frames"; the 90 x 45 rink (hockey.regular) keeps "the match ends within 36,000 frames".
-		const bool bFirstGoal = S.Goals[0] + S.Goals[1] > 0 && S.GoalFrames[0] <= 18000;
-		const bool bFinish = P == 1 ? (S.bOver || bFirstGoal) : S.bOver;
+		// R-0003 / R-0011: hockey.regular (90 x 45) must end within 36,000 frames; hockey.arena.large has no goal clause.
+		// R-0011 point 3: on hockey.arena.large (timer mode, guarding backs) movement, puck path and shots only, no goal clause
+		const bool bFinish = P == 1 ? true : S.bOver;
 		const FString Msg = FString::Printf(TEXT("%hs seed 1: least moved %.1f m, puck path %.1f m, AI shots %d, worst board distance %.3f m, over %s, first goal at frame %d"),
 			PresetName(P), MinMoved, S.PuckPathM, AiShots, S.MaxBoardDistance, S.bOver ? TEXT("yes") : TEXT("no"), S.Goals[0] + S.Goals[1] > 0 ? S.GoalFrames[0] : -1);
 		if (bMoved && S.PuckPathM > 30.0 && AiShots >= 1 && bInside && bFinish) { AddInfo(TEXT("PASS ") + Msg); }

@@ -34,7 +34,7 @@ of them out explicitly, but a Designer or hand-written cartridge may leave them 
 | `ai.difficulty` | `pro` | lane A3; the five numbers below, when absent, come from the level's profile (`docs/experiments/BALANCING.md`), not from this table |
 | `ai.yield_margin_m` | 2 (pro) | |
 | `ai.yield_radius_m` | 15 | |
-| `ai.hold_radius_m` | 2 (pro; 4.5 before the difficulty sweep) | |
+| `ai.hold_radius_m` | 0 (pro; 4.5 before the difficulty sweep) | |
 | `ai.speed_scale` | 1 | |
 | `ai.red_skill` | 1 | |
 | `pickups` | none | |

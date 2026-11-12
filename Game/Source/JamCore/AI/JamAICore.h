@@ -69,13 +69,13 @@ namespace JamAI
 	};
 	constexpr int kMaxReactionFrames = 30;
 
-	// lane A3: the opposing bots at pro (tools/sweep, docs/experiments/BALANCING.md): they shoot from reach + 16 m, know the
+	// lane A3: the opposing bots at pro (tools/sweep, docs/experiments/BALANCING.md): they shoot from reach + 30 m, know the
 	// aim assist, and run to where the puck will be.
 	inline FJamBotSkill ProOppSkill()
 	{
 		FJamBotSkill K;
-		K.ShootExtraM = 16.0;
-		K.LeadFrames = 45;
+		K.ShootExtraM = 30.0;
+		K.LeadFrames = 60;
 		K.bIntercept = true;
 		K.bUseAimCone = true;
 		return K;
@@ -86,7 +86,7 @@ namespace JamAI
 	{
 		double YieldMarginM = 2.0;     // game.ai.yield_margin_m
 		double YieldRadiusM = 15.0;    // game.ai.yield_radius_m
-		double HoldRadiusM = 2.0;      // game.ai.hold_radius_m (lane A3: pro profile 2; the A2 / DEFAULTS.md value 4.5 handed the human the puck)
+		double HoldRadiusM = 0.0;      // game.ai.hold_radius_m (lane A3: pro profile 0 on puck.drag 0.5; A2's 4.5 handed the human the puck)
 		double SpeedScale = 1.0;       // game.ai.speed_scale
 		double RedSkill = 1.0;         // game.ai.red_skill (drives the side without the player)
 		// lane A3: skill per side. Opp = the side without the human (team 1 in pure bot-vs-bot); Mate = the human's side.
@@ -104,7 +104,7 @@ namespace JamAI
 		double SwayM = 1.5;
 		double SeparateRadius = 1.5;
 		double ArriveSlowRadius = 1.5;
-		int StallFrames = 120;
+		int StallFrames = 60;          // lane A3: pro profile (A2: 120)
 		double StallMoveM = 2.0;
 		// lane A2: until anyone touches the puck after a faceoff, opposing non-backs hold (the human takes the opening touch)
 		bool bFaceoffCourtesy = true;
