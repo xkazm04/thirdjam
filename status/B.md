@@ -124,3 +124,30 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - packaged size: none yet
 - ledger: none
 - machine: 64 GB unified memory, 50.6 GB free at 10:02 (ComfyUI is gone with the restart), C: 348 GB free, no editor running except the toolchain proof below
+
+## H5 Look lane done, three lanes running in parallel
+
+- done: lane B1 finished in 10 minutes (report `status/B1-report.md`, six stills in `devlog/shots/`): five masters, seventeen instances, `LR_L2_Night` with
+  `PPV_L2_Night`, `Sky_L2_Night`, four spots and a dark room sized for the 140 x 70 cut; `M_Ice` takes `RinkHalfLength` / `RinkHalfWidth`. The painted-cel
+  look works on this GPU: banded pools, ink outlines, both post passes 0.04 ms each. PIE GPU time on B 10.5 ms median with a second editor view in the frame
+  (device B number, not the gate's). Pushed `dev-b` at `ff0a382` (materials, rig, stills, ledger 25 rows; assets gate PASS). Operator: Meshy key placed
+  (balance 1204), Blender 4.2.16 installed, expired task `ThirdJam-H0-B` removed.
+- lanes now (the operator asked for more builders; measured headroom allows it: 43 GB free and 3.9 of 64 GB GPU memory with one editor up, CPU idle):
+
+  | Lane | Where | Editor | Model | Box ends |
+  |---|---|---|---|---|
+  | B2 dressing, pass 1 (sound-stage set from basic shapes into the rig) | main tree | port 8000 | Sonnet | 12:45 |
+  | B3 puck kit, then the M1 effects and MetaSounds | `C:\Users\kazda\jam\wt\b-vfx`, `lane/b-vfx` | port 8001 | Opus | 14:30 |
+  | B5 Meshy skater T-B2, started early (generation needs no editor) | `C:\Users\kazda\jam\wt\b-skater`, `lane/b-skater` | port 8002, after download | Sonnet | 14:45 |
+
+  Worktrees live outside the repo (`.worktrees/` is not in `.gitignore`, so inside the repo they would show as unowned files to the ownership gate).
+  Machine rules for every lane: `briefs/B-machine-notes.md` (local, like the other B briefs, until handoff 0003 is answered).
+- next: merge lane branches into `dev-b` as they report; a lighting pass on `LR_L2_Night` once A's rink is in `Rink` (the ice between the four pools is
+  pure black in B1's stills: fill light or wider cones, and the blue line blotches under the ramp close to the camera); first package on this machine.
+- blocked: none. Open: B-to-A-0001, 0003, 0004, 0005 (no answers on `origin/main` at 10:40). Operator: `unreal-mcp` still shows "Pending approval" in `Game/`
+  (not blocking: lanes use `tools/mcp/mcp.mjs`); pausing Windows Update.
+- lfs size: 22 material files and one rig map from B, under 0.3 MB together
+- engine build: 5.9.0 CL 60351404
+- packaged build age: none yet on B
+- packaged size: none yet
+- ledger: 22 material rows, `LR_L2_Night` row updated
