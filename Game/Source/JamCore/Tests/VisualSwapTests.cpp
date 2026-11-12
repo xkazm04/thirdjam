@@ -37,10 +37,16 @@ bool FJamBotVisualSwap::RunTest(const FString& Parameters)
 	UJamCartridge* B1 = UJamCartridge::LoadFromString(B1Text, Errors);
 	if (!B1) { AddError(TEXT("FAIL the humanoid_b1 variant does not load: ") + FString::Join(Errors, TEXT("; "))); return false; }
 	TestEqual(TEXT("variant carries humanoid_b1"), B1->Game.Skater.Visual, FName(TEXT("humanoid_b1")));
+	// Lane A26 (R-0024): the skeletal toy figure is a third track; it must leave the hash alone too.
+	FString SkText = B2->RawJson;
+	SkText.ReplaceInline(TEXT("\"generated_b2\""), TEXT("\"toy_skeletal\""));
+	UJamCartridge* Sk = UJamCartridge::LoadFromString(SkText, Errors);
+	if (!Sk) { AddError(TEXT("FAIL the toy_skeletal variant does not load: ") + FString::Join(Errors, TEXT("; "))); return false; }
+	TestEqual(TEXT("variant carries toy_skeletal"), Sk->Game.Skater.Visual, FName(TEXT("toy_skeletal")));
 
-	uint64 Hashes[2] = { 0, 0 };
+	uint64 Hashes[3] = { 0, 0, 0 };
 	int32 K = 0;
-	for (UJamCartridge* Cart : { B2, B1 })
+	for (UJamCartridge* Cart : { B2, B1, Sk })
 	{
 		JamAI::FJamSimAdapter Sim(Cart->Game);
 		const JamAI::FJamMatchStats S = JamAI::RunMatch(Sim, JamAI::ToMatchConfigResolved(*Cart, nullptr), 1, JamAI::EJamPlayerMode::PlayerBotAI, 36000, 60);
@@ -59,9 +65,10 @@ bool FJamBotVisualSwap::RunTest(const FString& Parameters)
 			*Cart->Game.Skater.Visual.ToString(), MinMoved, S.PuckPathM, AiShots, S.MaxBoardDistance, S.bOver ? TEXT("yes") : TEXT("no"), static_cast<unsigned long long>(S.Hash));
 		if (bMoved && S.PuckPathM > 30.0 && AiShots >= 1 && bInside) { AddInfo(TEXT("PASS ") + Msg); }
 		else { AddError(TEXT("FAIL ") + Msg); bOk = false; }
-		if (K < 2) Hashes[K++] = S.Hash;
+		if (K < 3) Hashes[K++] = S.Hash;
 	}
 	TestEqual(TEXT("the visual never feeds the simulation: same hash on both tracks"), Hashes[0], Hashes[1]);
+	TestEqual(TEXT("the visual never feeds the simulation: same hash with toy_skeletal"), Hashes[0], Hashes[2]);
 	return bOk;
 }
 

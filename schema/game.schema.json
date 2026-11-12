@@ -249,9 +249,10 @@
           "enum": [
             "toy",
             "humanoid_b1",
-            "generated_b2"
+            "generated_b2",
+            "toy_skeletal"
           ],
-          "description": "Which skater figure is drawn: toy (default), humanoid_b1 or generated_b2. Gameplay is identical. The Designer may not change it."
+          "description": "Which skater figure is drawn: toy (default), humanoid_b1, generated_b2 or toy_skeletal (the Blender toy figure as a skeletal mesh, lane A26). Gameplay is identical. The Designer may not change it."
         },
         "pass_speed": {
           "type": "number",

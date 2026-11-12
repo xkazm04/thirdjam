@@ -17,6 +17,7 @@
 #include "JamEffectSystem.h"
 #include "JamPickupActor.h"
 #include "ToySkaterVisual.h"
+#include "SkeletalSkaterVisual.h"
 #include "JamDesignerSubsystem.h"
 #include "Progression.h"
 #include "Materials/MaterialInstanceDynamic.h"
@@ -40,6 +41,7 @@ namespace
 	const FName VisualToy(TEXT("toy"));
 	const FName VisualB1(TEXT("humanoid_b1"));
 	const FName VisualB2(TEXT("generated_b2"));
+	const FName VisualSkeletal(TEXT("toy_skeletal"));   // lane A26 (R-0024): the Blender toy figure as a skeletal visual
 	constexpr int32 MaxStepsPerFrame = 4;
 }
 
@@ -140,6 +142,7 @@ void AHokejGameMode::UpdateTake(bool bForce)
 UClass* AHokejGameMode::ResolveVisualClass(FName Visual) const
 {
 	// contracts/skater-visual.md: BP_SkaterVisual_<track>; R-0001 item 1: game.skater.visual picks it.
+	if (Visual == VisualSkeletal) return USkeletalSkaterVisual::StaticClass();
 	const TCHAR* Path = nullptr;
 	if (Visual == VisualB1) Path = TEXT("/JamAssets/Skaters/BP_SkaterVisual_TB1.BP_SkaterVisual_TB1_C");
 	else if (Visual == VisualB2) Path = TEXT("/JamAssets/Skaters/BP_SkaterVisual_TB2.BP_SkaterVisual_TB2_C");

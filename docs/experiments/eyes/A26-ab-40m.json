@@ -1,0 +1,74 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "ab-pair",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T16:28:54.755Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "ab-pair",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a26/docs/experiments/img/figure/toy-40m.jpg",
+          "width": 2560,
+          "height": 1440
+        },
+        {
+          "label": "B",
+          "path": ".claude/worktrees/a26/docs/experiments/img/figure/skel-40m.jpg",
+          "width": 2560,
+          "height": 1440
+        }
+      ],
+      "distance": 40,
+      "thumbnails": [],
+      "prompt_chars": 3493,
+      "usage": {
+        "prompt": 3209,
+        "output": 352,
+        "thoughts": 2002,
+        "total": 5563,
+        "calls": 1
+      },
+      "cost_usd_est": 0.03467,
+      "ms": 20323,
+      "retried": false,
+      "answer": {
+        "elements": {
+          "sky": {
+            "closer": "tie",
+            "why": "Both stills display a black void instead of the requested deep-blue night dome above a dark ceiling line."
+          },
+          "ice": {
+            "closer": "tie",
+            "why": "Both stills feature the exact same ice texture with painted-looking brush streaks and frost patches."
+          },
+          "pools": {
+            "closer": "tie",
+            "why": "Both stills show identical soft light pools with distinct, flat cel lighting steps."
+          },
+          "figures": {
+            "closer": "b",
+            "why": "Still B includes distinct round heads and arms, matching the chunky toy proportions better than Still A's featureless cylinders."
+          },
+          "construction": {
+            "closer": "tie",
+            "why": "Both stills feature the emissive trim but lack the specified ochre kick plate and dark glass rail on the boards."
+          },
+          "outline": {
+            "closer": "b",
+            "why": "Still B applies visible black outlines to the figures, whereas Still A lacks outlines entirely."
+          }
+        },
+        "verdict": "b",
+        "confidence": 0.9,
+        "reason": "Still B successfully introduces the required toy-like anatomy and ink-like outlines on the characters, moving significantly closer to the painted cel art style.",
+        "loser_keeps": "Still A's lack of black helmets preserves a larger, uninterrupted mass of pure jersey colour, which slightly improves team separation at a distance."
+      },
+      "markdown": "**eyes/ab-pair** A=toy-40m.jpg B=skel-40m.jpg at 40 m (gemini-3.1-pro-preview, in 3209 out 352 think 2002 tokens, ~$0.0347, 20.3 s)\n- elements:\n  - sky: closer tie, why Both stills display a black void instead of the requested deep-blue night dome above a dark ceiling line.\n  - ice: closer tie, why Both stills feature the exact same ice texture with painted-looking brush streaks and frost patches.\n  - pools: closer tie, why Both stills show identical soft light pools with distinct, flat cel lighting steps.\n  - figures: closer b, why Still B includes distinct round heads and arms, matching the chunky toy proportions better than Still A's featureless cylinders.\n  - construction: closer tie, why Both stills feature the emissive trim but lack the specified ochre kick plate and dark glass rail on the boards.\n  - outline: closer b, why Still B applies visible black outlines to the figures, whereas Still A lacks outlines entirely.\n- verdict: b\n- confidence: 0.9\n- reason: Still B successfully introduces the required toy-like anatomy and ink-like outlines on the characters, moving significantly closer to the painted cel art style.\n- loser_keeps: Still A's lack of black helmets preserves a larger, uninterrupted mass of pure jersey colour, which slightly improves team separation at a distance."
+    }
+  ]
+}

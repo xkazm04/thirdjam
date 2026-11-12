@@ -55,7 +55,7 @@ struct JAMCORE_API FJamSkaterConfig
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") bool bCheckEnabled = true;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double CheckSpeedMin = 5;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 KnockdownFrames = 90;
-	// game.skater.visual (R-0001): "toy" | "humanoid_b1" | "generated_b2"; absent = "toy".
+	// game.skater.visual (R-0001, R-0024): "toy" | "humanoid_b1" | "generated_b2" | "toy_skeletal"; absent = "toy".
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") FName Visual = TEXT("toy");
 	// C-0005 (lane A16): the pass button.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double PassSpeed = 14;

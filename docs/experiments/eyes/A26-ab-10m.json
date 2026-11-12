@@ -1,0 +1,74 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "ab-pair",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T16:28:12.215Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "ab-pair",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a26/docs/experiments/img/figure/toy-10m.jpg",
+          "width": 2560,
+          "height": 1440
+        },
+        {
+          "label": "B",
+          "path": ".claude/worktrees/a26/docs/experiments/img/figure/skel-10m.jpg",
+          "width": 2560,
+          "height": 1440
+        }
+      ],
+      "distance": 10,
+      "thumbnails": [],
+      "prompt_chars": 3493,
+      "usage": {
+        "prompt": 3209,
+        "output": 353,
+        "thoughts": 1191,
+        "total": 4753,
+        "calls": 1
+      },
+      "cost_usd_est": 0.02495,
+      "ms": 14193,
+      "retried": false,
+      "answer": {
+        "elements": {
+          "sky": {
+            "closer": "tie",
+            "why": "Both stills feature a black void rather than the requested deep-blue night dome."
+          },
+          "ice": {
+            "closer": "tie",
+            "why": "Both stills use the exact same scuffed ice texture with painted-looking brush streaks and frost patches."
+          },
+          "pools": {
+            "closer": "tie",
+            "why": "Both stills display identical soft light pools with flat cel lighting steps from the four spot cones."
+          },
+          "figures": {
+            "closer": "b",
+            "why": "Still B features chunky toy proportions with distinct round heads, big hands, and visible stick blades, whereas Still A uses literal placeholder capsules."
+          },
+          "construction": {
+            "closer": "tie",
+            "why": "Both stills feature identical boards with emissive trim, ochre kick plates, dark glass rails, and red nets."
+          },
+          "outline": {
+            "closer": "b",
+            "why": "Still B features thicker, more visible ink-like outlines on the figures compared to the thin, uniform lines on Still A's capsules."
+          }
+        },
+        "verdict": "b",
+        "confidence": 0.95,
+        "reason": "Still B successfully implements the required chunky toy figure proportions with distinct heads and hands, whereas Still A relies on basic capsule placeholders.",
+        "loser_keeps": "The extremely clean, uncluttered color separation of the simple capsule shapes makes team identification instantaneous."
+      },
+      "markdown": "**eyes/ab-pair** A=toy-10m.jpg B=skel-10m.jpg at 10 m (gemini-3.1-pro-preview, in 3209 out 353 think 1191 tokens, ~$0.0249, 14.2 s)\n- elements:\n  - sky: closer tie, why Both stills feature a black void rather than the requested deep-blue night dome.\n  - ice: closer tie, why Both stills use the exact same scuffed ice texture with painted-looking brush streaks and frost patches.\n  - pools: closer tie, why Both stills display identical soft light pools with flat cel lighting steps from the four spot cones.\n  - figures: closer b, why Still B features chunky toy proportions with distinct round heads, big hands, and visible stick blades, whereas Still A uses literal placeholder capsules.\n  - construction: closer tie, why Both stills feature identical boards with emissive trim, ochre kick plates, dark glass rails, and red nets.\n  - outline: closer b, why Still B features thicker, more visible ink-like outlines on the figures compared to the thin, uniform lines on Still A's capsules.\n- verdict: b\n- confidence: 0.95\n- reason: Still B successfully implements the required chunky toy figure proportions with distinct heads and hands, whereas Still A relies on basic capsule placeholders.\n- loser_keeps: The extremely clean, uncluttered color separation of the simple capsule shapes makes team identification instantaneous."
+    }
+  ]
+}
