@@ -64,6 +64,10 @@
 			"Enabled": true
 		},
 		{
+			"Name": "TextToSpeech",
+			"Enabled": true
+		},
+		{
 			"Name": "DLSS",
 			"Enabled": true,
 			"Optional": true,

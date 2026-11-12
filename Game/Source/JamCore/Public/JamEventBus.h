@@ -23,6 +23,8 @@ namespace JamEvents
 	JAMCORE_API extern const FName Lose;         // "lose"
 	JAMCORE_API extern const FName DirectorsCall; // "directors_call" (R-0001 7, R-0003 3): Who -1, Where zero, Strength = new value's position in the tunable range 0..1, Kind = tunable key
 	JAMCORE_API extern const FName Period;       // "period" (R-0003 3): a TAKE starts; Who -1, Where centre ice, Strength 0, Kind = "take_<n>"
+	JAMCORE_API extern const FName Bark;         // "bark" (R-0007, lane A12): Who = speaker skater index, Where = speaker, Strength 0, Kind = situation (goal_for, steal, ...)
+	JAMCORE_API extern const FName Signal;       // "signal" (R-0007, lane A12): Who = the human's skater, Where = human, Strength = frames/600, Kind = defend | space | pass | praise
 }
 
 USTRUCT(BlueprintType)

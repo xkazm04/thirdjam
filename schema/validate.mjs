@@ -495,6 +495,8 @@ export const DESIGNER_GAME_EDITABLE = [
   'pickups',
   'rules.mode', 'rules.score_to_win', 'rules.timer_frames',
   'look.tier',
+  'ai.difficulty',
+  'barks',
 ];
 
 function withoutPaths(game, paths) {
@@ -504,6 +506,8 @@ function withoutPaths(game, paths) {
     let node = copy;
     for (const p of parts.slice(0, -1)) node = isObj(node) ? node[p] : undefined;
     if (isObj(node)) delete node[parts.at(-1)];
+    // lane A3: an object emptied by the removal counts as absent, so adding or removing `ai` around `difficulty` is not a change
+    if (parts.length === 2 && isObj(copy[parts[0]]) && Object.keys(copy[parts[0]]).length === 0) delete copy[parts[0]];
   }
   return copy;
 }

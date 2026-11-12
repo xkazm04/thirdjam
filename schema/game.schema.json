@@ -338,6 +338,11 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "difficulty": {
+          "type": "string",
+          "enum": ["rookie", "pro", "all_star"],
+          "description": "How hard the bots play: rookie (easier: slower reactions, wider shots, more room for the human), pro (the default), all_star (harder: faster reactions, sharp shots, they read the puck). Absent = pro. The numbers below, when present, override the level's profile."
+        },
         "yield_margin_m": {
           "type": "number",
           "minimum": 0,
@@ -411,6 +416,25 @@
             "maximum": 4,
             "description": "Strength multiplier of the effect; 1 is no change; ignored by reverse_other."
           }
+        }
+      }
+    },
+    "barks": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Situational one-liners the bot skaters say (opponents mock and complain, teammates encourage and praise). Lines come from a reviewed bank; the Designer may set this (\"make them talk trash\" = loud, \"keep them quiet\" = quiet or enabled false). Absent = enabled, normal.",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether the skaters talk at all. Absent = true."
+        },
+        "intensity": {
+          "enum": [
+            "quiet",
+            "normal",
+            "loud"
+          ],
+          "description": "quiet: rare, no mockery, double cooldowns; normal: the default mix; loud: mostly mockery, half the cooldowns. Absent = normal."
         }
       }
     },

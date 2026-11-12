@@ -31,9 +31,10 @@ of them out explicitly, but a Designer or hand-written cartridge may leave them 
 | `shot.aim_cone_deg` | absent = no aim assist | |
 | `rules.goal_pause_frames` | 120 | |
 | `rules.offside`, `rules.penalties` | false | only false is accepted |
-| `ai.yield_margin_m` | 2 | |
+| `ai.difficulty` | `pro` | lane A3; the five numbers below, when absent, come from the level's profile (`docs/experiments/BALANCING.md`), not from this table |
+| `ai.yield_margin_m` | 2 (pro) | |
 | `ai.yield_radius_m` | 15 | |
-| `ai.hold_radius_m` | 4.5 | |
+| `ai.hold_radius_m` | 2 (pro; 4.5 before the difficulty sweep) | |
 | `ai.speed_scale` | 1 | |
 | `ai.red_skill` | 1 | |
 | `pickups` | none | |
@@ -41,6 +42,8 @@ of them out explicitly, but a Designer or hand-written cartridge may leave them 
 | `look.fog_density` | 0 | |
 | `look.wet_ice` | false | |
 | `camera` (whole object) | see below | measured by lane E4, `docs/experiments/CAMERA-120M.md` |
+| `barks.enabled` | true | lane A12, ruling R-0007; read by `UJamBarkSystem` from the cartridge's raw JSON |
+| `barks.intensity` | `normal` | `quiet` doubles the cooldowns and never mocks, `loud` halves them |
 
 ## Camera defaults (when `game.camera` or any of its keys is absent)
 
