@@ -1,0 +1,74 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "ab-pair",
+  "model": "gemini-3.1-pro-preview",
+  "at": "2026-11-12T16:03:15.794Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "ab-pair",
+      "model": "gemini-3.1-pro-preview",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/look-lab/play-b-24m.jpg",
+          "width": 1920,
+          "height": 1081
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/look-lab/proof-play-24m.jpg",
+          "width": 2560,
+          "height": 1442
+        }
+      ],
+      "distance": 24,
+      "thumbnails": [],
+      "prompt_chars": 3502,
+      "usage": {
+        "prompt": 3215,
+        "output": 391,
+        "thoughts": 1320,
+        "total": 4926,
+        "calls": 1
+      },
+      "cost_usd_est": 0.02696,
+      "ms": 18770,
+      "retried": false,
+      "answer": {
+        "elements": {
+          "sky": {
+            "closer": "b",
+            "why": "Still B features a deep-blue textured dome above a dark horizon line, whereas Still A is a pure black void."
+          },
+          "ice": {
+            "closer": "b",
+            "why": "Still B uses visible, directional brush streaks to render the ice, while Still A relies on a generic cloudy noise texture."
+          },
+          "pools": {
+            "closer": "b",
+            "why": "Still B's light pools have painted, brush-stroked edges on their cel bands, whereas Still A's bands are perfectly smooth mathematical circles."
+          },
+          "figures": {
+            "closer": "tie",
+            "why": "Both stills use the exact same chunky, cylindrical toy models in the correct deep blue and warm orange palettes."
+          },
+          "construction": {
+            "closer": "b",
+            "why": "Still B includes the requested ochre kick plate and dark glass rail on the boards, which Still A leaves as blank white."
+          },
+          "outline": {
+            "closer": "b",
+            "why": "Still B's outlines correctly scale down on distant figures (like the far orange player), whereas Still A's remain thick and swallow the distant models."
+          }
+        },
+        "verdict": "b",
+        "confidence": 0.95,
+        "reason": "Still B successfully implements the specific 'painted cel' textures, the night sky dome, and the architectural board details requested in the art direction.",
+        "loser_keeps": "Still A's less aggressive ice texture creates less overall visual noise, which helps the small puck and its glow pop a bit more clearly."
+      },
+      "markdown": "**eyes/ab-pair** A=play-b-24m.jpg B=proof-play-24m.jpg at 24 m (gemini-3.1-pro-preview, in 3215 out 391 think 1320 tokens, ~$0.0270, 18.8 s)\n- elements:\n  - sky: closer b, why Still B features a deep-blue textured dome above a dark horizon line, whereas Still A is a pure black void.\n  - ice: closer b, why Still B uses visible, directional brush streaks to render the ice, while Still A relies on a generic cloudy noise texture.\n  - pools: closer b, why Still B's light pools have painted, brush-stroked edges on their cel bands, whereas Still A's bands are perfectly smooth mathematical circles.\n  - figures: closer tie, why Both stills use the exact same chunky, cylindrical toy models in the correct deep blue and warm orange palettes.\n  - construction: closer b, why Still B includes the requested ochre kick plate and dark glass rail on the boards, which Still A leaves as blank white.\n  - outline: closer b, why Still B's outlines correctly scale down on distant figures (like the far orange player), whereas Still A's remain thick and swallow the distant models.\n- verdict: b\n- confidence: 0.95\n- reason: Still B successfully implements the specific 'painted cel' textures, the night sky dome, and the architectural board details requested in the art direction.\n- loser_keeps: Still A's less aggressive ice texture creates less overall visual noise, which helps the small puck and its glow pop a bit more clearly."
+    }
+  ]
+}

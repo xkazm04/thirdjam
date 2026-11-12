@@ -1,0 +1,186 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "readability",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-12T16:05:39.191Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "readability",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/look-lab/proof-play-10m.jpg",
+          "width": 2560,
+          "height": 1442
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/look-lab/proof-play-24m.jpg",
+          "width": 2560,
+          "height": 1442
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/look-lab/proof-play-40m.jpg",
+          "width": 2560,
+          "height": 1442
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/look-lab/play-b-24m.jpg",
+          "width": 1920,
+          "height": 1081
+        }
+      ],
+      "distance": 24,
+      "thumbnails": [],
+      "prompt_chars": 2790,
+      "usage": {
+        "prompt": 5322,
+        "output": 1427,
+        "thoughts": 2136,
+        "total": 8885,
+        "calls": 1
+      },
+      "cost_usd_est": 0.01335,
+      "ms": 46558,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "proof-play-10m.jpg",
+            "elements": {
+              "puck": {
+                "score": 4,
+                "evidence": "Located at mid-left (x=745, y=715), the near-black disc is roughly 16 pixels wide and highlighted by a faint greenish ground ring."
+              },
+              "carrier": {
+                "score": 4,
+                "evidence": "Orange skater #11 stands immediately adjacent to the glowing puck indicator at the center line."
+              },
+              "team_colours": {
+                "score": 5,
+                "evidence": "The saturated warm orange and deep cobalt blue jerseys contrast sharply against each other and the white ice."
+              },
+              "far_net": {
+                "score": 4,
+                "evidence": "The red goal frame is centered along the far boards (140 pixels wide) and framed by a bright vertical beam."
+              },
+              "zone_strips": {
+                "score": 5,
+                "evidence": "The dark red center red line and far blue line cleanly span the full width of the rink across the ice."
+              }
+            },
+            "first_look": "the two large skaters at the center circle",
+            "noise": [
+              "vertical white light shaft ascending from the far net",
+              "stepped concentric brightness rings on the ice surface",
+              "camera crane and studio lighting equipment behind the far boards"
+            ],
+            "overall": 4
+          },
+          {
+            "label": "proof-play-24m.jpg",
+            "elements": {
+              "puck": {
+                "score": 3,
+                "evidence": "The black disc is reduced to roughly 8 pixels wide near x=1010, y=715, discernible mainly by its surrounding green circle."
+              },
+              "carrier": {
+                "score": 3,
+                "evidence": "Orange #11 is next to the puck marker at center ice, but the two massive foreground blue skaters draw attention away."
+              },
+              "team_colours": {
+                "score": 5,
+                "evidence": "Deep blue and vivid warm orange remain instantly separable across all visible figures."
+              },
+              "far_net": {
+                "score": 4,
+                "evidence": "The red goal frame is centered at the far end, measuring about 110 pixels wide against the illuminated white crease."
+              },
+              "zone_strips": {
+                "score": 5,
+                "evidence": "The foreground blue line, dark red center line, and far blue line clearly divide the ice horizontally."
+              }
+            },
+            "first_look": "the large illuminated white spotlight oval in the foreground",
+            "noise": [
+              "massive stepped concentric spotlight rings dominating the ice",
+              "bright vertical light column over the far goal",
+              "studio equipment and crane fixtures along the upper perimeter"
+            ],
+            "overall": 3
+          },
+          {
+            "label": "proof-play-40m.jpg",
+            "elements": {
+              "puck": {
+                "score": 2,
+                "evidence": "At 40 meters distance the puck is a minute 4-pixel dot at x=1110, y=718, nearly lost despite the faint green indicator ring."
+              },
+              "carrier": {
+                "score": 3,
+                "evidence": "Orange figure #11 is next to the puck indicator, but all players are shrunk to tiny silhouettes on the vast ice sheet."
+              },
+              "team_colours": {
+                "score": 4,
+                "evidence": "Blue and orange hues remain distinct, though the small figure size reduces rapid peripheral identification."
+              },
+              "far_net": {
+                "score": 3,
+                "evidence": "The red frame at the far end is only about 70 pixels wide, visible primarily due to its central placement beneath the vertical beam."
+              },
+              "zone_strips": {
+                "score": 5,
+                "evidence": "The three colored transverse lines (near blue, center red, far blue) remain fully legible across the entire rink."
+              }
+            },
+            "first_look": "the bright vertical beam of light above the center of the rink",
+            "noise": [
+              "prominent overhead lighting truss and bright vertical light beam",
+              "extensive concentric light banding across the rink surface",
+              "studio lights, crane, and track equipment lining the upper and side boundaries"
+            ],
+            "overall": 3
+          },
+          {
+            "label": "play-b-24m.jpg",
+            "elements": {
+              "puck": {
+                "score": 3,
+                "evidence": "The puck is a small 8-pixel dark dot at x=760, y=535, identifiable primarily by the faint green ring on the ice."
+              },
+              "carrier": {
+                "score": 3,
+                "evidence": "Orange player #11 is positioned beside the puck halo, but the two large foreground blue figures dominate visual weight."
+              },
+              "team_colours": {
+                "score": 5,
+                "evidence": "Warm orange and deep royal blue figures provide immediate, high-contrast team differentiation."
+              },
+              "far_net": {
+                "score": 4,
+                "evidence": "The red goal frame is clearly visible at center top (roughly 85 pixels wide) directly over the illuminated white crease."
+              },
+              "zone_strips": {
+                "score": 5,
+                "evidence": "The bold blue foreground line, red center line, and upper blue line cleanly demarcate rink zones edge to edge."
+              }
+            },
+            "first_look": "the bright white foreground ice patch framing the two blue skaters",
+            "noise": [
+              "concentric banded spotlight circles on the ice",
+              "bright vertical light pillar rising from behind the far goal",
+              "camera crane, floodlights, and set dressing beyond the dasher boards"
+            ],
+            "overall": 3
+          }
+        ]
+      },
+      "markdown": "**eyes/readability** A=proof-play-10m.jpg B=proof-play-24m.jpg C=proof-play-40m.jpg D=play-b-24m.jpg at 24 m (gemini-3.8-flash, in 5322 out 1427 think 2136 tokens, ~$0.0134, 46.6 s)\n- stills:\n  - label: proof-play-10m.jpg; first_look: the two large skaters at the center circle; overall: 4\n    - elements:\n      - puck: score 4, evidence Located at mid-left (x=745, y=715), the near-black disc is roughly 16 pixels wide and highlighted by a faint greenish ground ring.\n      - carrier: score 4, evidence Orange skater #11 stands immediately adjacent to the glowing puck indicator at the center line.\n      - team_colours: score 5, evidence The saturated warm orange and deep cobalt blue jerseys contrast sharply against each other and the white ice.\n      - far_net: score 4, evidence The red goal frame is centered along the far boards (140 pixels wide) and framed by a bright vertical beam.\n      - zone_strips: score 5, evidence The dark red center red line and far blue line cleanly span the full width of the rink across the ice.\n    - noise: vertical white light shaft ascending from the far net; stepped concentric brightness rings on the ice surface; camera crane and studio lighting equipment behind the far boards\n  - label: proof-play-24m.jpg; first_look: the large illuminated white spotlight oval in the foreground; overall: 3\n    - elements:\n      - puck: score 3, evidence The black disc is reduced to roughly 8 pixels wide near x=1010, y=715, discernible mainly by its surrounding green circle.\n      - carrier: score 3, evidence Orange #11 is next to the puck marker at center ice, but the two massive foreground blue skaters draw attention away.\n      - team_colours: score 5, evidence Deep blue and vivid warm orange remain instantly separable across all visible figures.\n      - far_net: score 4, evidence The red goal frame is centered at the far end, measuring about 110 pixels wide against the illuminated white crease.\n      - zone_strips: score 5, evidence The foreground blue line, dark red center line, and far blue line clearly divide the ice horizontally.\n    - noise: massive stepped concentric spotlight rings dominating the ice; bright vertical light column over the far goal; studio equipment and crane fixtures along the upper perimeter\n  - label: proof-play-40m.jpg; first_look: the bright vertical beam of light above the center of the rink; overall: 3\n    - elements:\n      - puck: score 2, evidence At 40 meters distance the puck is a minute 4-pixel dot at x=1110, y=718, nearly lost despite the faint green indicator ring.\n      - carrier: score 3, evidence Orange figure #11 is next to the puck indicator, but all players are shrunk to tiny silhouettes on the vast ice sheet.\n      - team_colours: score 4, evidence Blue and orange hues remain distinct, though the small figure size reduces rapid peripheral identification.\n      - far_net: score 3, evidence The red frame at the far end is only about 70 pixels wide, visible primarily due to its central placement beneath the vertical beam.\n      - zone_strips: score 5, evidence The three colored transverse lines (near blue, center red, far blue) remain fully legible across the entire rink.\n    - noise: prominent overhead lighting truss and bright vertical light beam; extensive concentric light banding across the rink surface; studio lights, crane, and track equipment lining the upper and side boundaries\n  - label: play-b-24m.jpg; first_look: the bright white foreground ice patch framing the two blue skaters; overall: 3\n    - elements:\n      - puck: score 3, evidence The puck is a small 8-pixel dark dot at x=760, y=535, identifiable primarily by the faint green ring on the ice.\n      - carrier: score 3, evidence Orange player #11 is positioned beside the puck halo, but the two large foreground blue figures dominate visual weight.\n      - team_colours: score 5, evidence Warm orange and deep royal blue figures provide immediate, high-contrast team differentiation.\n      - far_net: score 4, evidence The red goal frame is clearly visible at center top (roughly 85 pixels wide) directly over the illuminated white crease.\n      - zone_strips: score 5, evidence The bold blue foreground line, red center line, and upper blue line cleanly demarcate rink zones edge to edge.\n    - noise: concentric banded spotlight circles on the ice; bright vertical light pillar rising from behind the far goal; camera crane, floodlights, and set dressing beyond the dasher boards"
+    }
+  ]
+}

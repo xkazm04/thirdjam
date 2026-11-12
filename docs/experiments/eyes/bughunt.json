@@ -1,0 +1,115 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-12T16:08:25.433Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/look-lab/proof-play-10m.jpg",
+          "width": 2560,
+          "height": 1442
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/look-lab/base2-b-10m.jpg",
+          "width": 1920,
+          "height": 1081
+        },
+        {
+          "label": "C",
+          "path": "tools/qa/out/play-2/shots/hud-16-carry-f1564.png",
+          "width": 1275,
+          "height": 700
+        },
+        {
+          "label": "D",
+          "path": "devlog/shots/20261112-153300-A-a18-hud-play-1080p.png",
+          "width": 1920,
+          "height": 1082
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2368,
+      "usage": {
+        "prompt": 5191,
+        "output": 371,
+        "thoughts": 3385,
+        "total": 8947,
+        "calls": 1
+      },
+      "cost_usd_est": 0.01386,
+      "ms": 46138,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [],
+            "clean": true
+          },
+          {
+            "label": "Still B",
+            "findings": [],
+            "clean": true
+          },
+          {
+            "label": "Still C",
+            "findings": [
+              {
+                "where": "bottom-center, along the lower rink board",
+                "what": "Blue skater #1 is clipping heavily through the solid white board mesh, with its lower body embedded inside the wall.",
+                "severity": 4,
+                "confidence": 0.95
+              },
+              {
+                "where": "top-center, extending vertically from behind the far board into the black void",
+                "what": "A vertical pillar displays severe black-and-white dithered moire and z-fighting texture patterns instead of a clean light beam or mesh.",
+                "severity": 3,
+                "confidence": 0.9
+              },
+              {
+                "where": "top-left quadrant, above the ice surface",
+                "what": "Two blurred blue block meshes float mid-air above the ice without figure geometry or shadows, appearing as orphaned LODs or proxy boxes.",
+                "severity": 3,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still D",
+            "findings": [
+              {
+                "where": "bottom-left quadrant, against the rink board",
+                "what": "Orange skater #13 is clipping directly into the white rink board, with the left third of its cylindrical torso submerged inside the barrier mesh.",
+                "severity": 4,
+                "confidence": 0.95
+              },
+              {
+                "where": "top-right quadrant, along the illuminated upper trim of the rink board",
+                "what": "The glowing yellow neon light strip has an offset, jagged seam discontinuity where the straight board meets the corner curve.",
+                "severity": 2,
+                "confidence": 0.85
+              },
+              {
+                "where": "bottom-center, between Blue #1 and the right orange skater",
+                "what": "The stick handles and arm joints of both colliding figures clip through one another into an intersecting mesh tangle.",
+                "severity": 2,
+                "confidence": 0.8
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=proof-play-10m.jpg B=base2-b-10m.jpg C=hud-16-carry-f1564.png D=20261112-153300-A-a18-hud-play-1080p.png (gemini-3.8-flash, in 5191 out 371 think 3385 tokens, ~$0.0139, 46.1 s)\n- stills:\n  - label: Still A; clean: true\n    - findings: (none)\n  - label: Still B; clean: true\n    - findings: (none)\n  - label: Still C; clean: false\n    - findings:\n      - where: bottom-center, along the lower rink board; what: Blue skater #1 is clipping heavily through the solid white board mesh, with its lower body embedded inside the wall.; severity: 4; confidence: 0.95\n      - where: top-center, extending vertically from behind the far board into the black void; what: A vertical pillar displays severe black-and-white dithered moire and z-fighting texture patterns instead of a clean light beam or mesh.; severity: 3; confidence: 0.9\n      - where: top-left quadrant, above the ice surface; what: Two blurred blue block meshes float mid-air above the ice without figure geometry or shadows, appearing as orphaned LODs or proxy boxes.; severity: 3; confidence: 0.85\n  - label: Still D; clean: false\n    - findings:\n      - where: bottom-left quadrant, against the rink board; what: Orange skater #13 is clipping directly into the white rink board, with the left third of its cylindrical torso submerged inside the barrier mesh.; severity: 4; confidence: 0.95\n      - where: top-right quadrant, along the illuminated upper trim of the rink board; what: The glowing yellow neon light strip has an offset, jagged seam discontinuity where the straight board meets the corner curve.; severity: 2; confidence: 0.85\n      - where: bottom-center, between Blue #1 and the right orange skater; what: The stick handles and arm joints of both colliding figures clip through one another into an intersecting mesh tangle.; severity: 2; confidence: 0.8"
+    }
+  ]
+}

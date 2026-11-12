@@ -1,0 +1,73 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "ab-pair",
+  "model": "gemini-4-carbon",
+  "at": "2026-11-12T16:10:17.040Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "ab-pair",
+      "model": "gemini-4-carbon",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/look-lab/base2-b-24m.jpg",
+          "width": 1920,
+          "height": 1081
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/look-lab/proof-faceoff-24m.jpg",
+          "width": 2560,
+          "height": 1442
+        }
+      ],
+      "distance": 24,
+      "thumbnails": [],
+      "prompt_chars": 3506,
+      "usage": {
+        "prompt": 3315,
+        "output": 559,
+        "thoughts": 2804,
+        "total": 6678,
+        "calls": 1
+      },
+      "ms": 52112,
+      "retried": false,
+      "answer": {
+        "elements": {
+          "sky": {
+            "closer": "b",
+            "why": "Still B replaces Still A's pure-black #000000 void with a deep-blue outer surround (#082454) meeting a distinct dark ceiling line near y=260 beneath a dark navy dome (#020612)."
+          },
+          "ice": {
+            "closer": "b",
+            "why": "Still B renders directional painted-looking horizontal brush streaks across the blue and lit ice instead of Still A's cloudy marble noise, despite a stray cyan reflection glitch near x=1750, y=400."
+          },
+          "pools": {
+            "closer": "b",
+            "why": "Still B breaks up the three concentric cel lighting bands with painterly brushed edges and tighter radii that leave the left blue skater on the outer rim instead of swallowed by the white core as in Still A."
+          },
+          "figures": {
+            "closer": "tie",
+            "why": "Both stills render identical headless cylindrical pill placeholders with thin sticks in the same deep-blue and warm-orange colours, lacking round heads, big hands, and visible stick blades."
+          },
+          "construction": {
+            "closer": "b",
+            "why": "Still B adds an ochre-tinted kick plate along the foot of the boards (y=340 to y=630) that Still A lacks, though both stills show only warm-orange emissive trim without the deep-blue team trim."
+          },
+          "outline": {
+            "closer": "tie",
+            "why": "Both stills apply matching 1 to 2 px dark outlines on the skaters, sticks, studio props, and far red net, while Still B introduces broken black vertical comb artifacts along the far corner board curves."
+          }
+        },
+        "verdict": "b",
+        "confidence": 0.85,
+        "reason": "Still B establishes the deep-blue night surround, brush-streaked ice texture, painterly stepped light pools, and board kick plate, whereas Still A sits in a pure-black void with smooth geometric rings over cloudy noise.",
+        "loser_keeps": "Still A keeps clean far-corner board tops without Still B's dashed black vertical artifacts (x=640-760 and x=1760-1910), avoids the upper-right cyan ice glitch, and has broader patchy frost variation near the corners."
+      },
+      "markdown": "**eyes/ab-pair** A=base2-b-24m.jpg B=proof-faceoff-24m.jpg at 24 m (gemini-4-carbon, in 3315 out 559 think 2804 tokens, cost n/a, 52.1 s)\n- elements:\n  - sky: closer b, why Still B replaces Still A's pure-black #000000 void with a deep-blue outer surround (#082454) meeting a distinct dark ceiling line near y=260 beneath a dark navy dome (#020612).\n  - ice: closer b, why Still B renders directional painted-looking horizontal brush streaks across the blue and lit ice instead of Still A's cloudy marble noise, despite a stray cyan reflection glitch near x=1750, y=400.\n  - pools: closer b, why Still B breaks up the three concentric cel lighting bands with painterly brushed edges and tighter radii that leave the left blue skater on the outer rim instead of swallowed by the white core as in Still A.\n  - figures: closer tie, why Both stills render identical headless cylindrical pill placeholders with thin sticks in the same deep-blue and warm-orange colours, lacking round heads, big hands, and visible stick blades.\n  - construction: closer b, why Still B adds an ochre-tinted kick plate along the foot of the boards (y=340 to y=630) that Still A lacks, though both stills show only warm-orange emissive trim without the deep-blue team trim.\n  - outline: closer tie, why Both stills apply matching 1 to 2 px dark outlines on the skaters, sticks, studio props, and far red net, while Still B introduces broken black vertical comb artifacts along the far corner board curves.\n- verdict: b\n- confidence: 0.85\n- reason: Still B establishes the deep-blue night surround, brush-streaked ice texture, painterly stepped light pools, and board kick plate, whereas Still A sits in a pure-black void with smooth geometric rings over cloudy noise.\n- loser_keeps: Still A keeps clean far-corner board tops without Still B's dashed black vertical artifacts (x=640-760 and x=1760-1910), avoids the upper-right cyan ice glitch, and has broader patchy frost variation near the corners."
+    }
+  ]
+}
