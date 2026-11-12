@@ -36,6 +36,7 @@ param(
 $uproject = Resolve-UProject $Project
 if (-not $uproject) { Write-Step 'FAIL' 'project' "no .uproject at '$Project'"; Exit-WithResult 'package' 2 }
 $engine = Get-EngineRoot $uproject
+Set-EngineDotnet $engine
 if (-not $engine) { Write-Step 'FAIL' 'engine' 'Unreal Engine install not found (set UE_ROOT)'; Exit-WithResult 'package' 2 }
 $uat = Join-Path $engine 'Engine\Build\BatchFiles\RunUAT.bat'
 if (-not (Test-Path $uat)) { Write-Step 'FAIL' 'engine' "missing $uat"; Exit-WithResult 'package' 2 }

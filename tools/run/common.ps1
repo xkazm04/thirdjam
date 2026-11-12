@@ -165,3 +165,6 @@ function Get-ErrorLines {
     $hits = Select-String -Path $LogFile -Pattern '(error|Error:|ERROR|fatal|Fatal|exception|Exception|missing|could not|Unable to)' -ErrorAction SilentlyContinue | Select-Object -Last $Max
     return @($hits | ForEach-Object { $_.Line.Trim() })
 }
+
+# Device B (ARM64) needs the bundled x64 .NET; see engine-dotnet.ps1
+. (Join-Path $PSScriptRoot "engine-dotnet.ps1")

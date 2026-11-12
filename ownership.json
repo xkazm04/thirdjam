@@ -12,7 +12,8 @@
       "prompts/**",
       "Game/*.uproject",
       "Game/Content/Blueprints/**",
-      "Game/Content/UI/**"
+      "Game/Content/UI/**",
+      "Game/Content/Placeholders/**"
     ],
     "B": [
       "Game/Plugins/JamAssets/**",
@@ -27,7 +28,8 @@
       "status/**",
       "ASSETS.md",
       "devlog/**",
-      "retro/**"
+      "retro/**",
+      "briefs/**"
     ],
     "director_only": [
       "docs/**",
@@ -37,7 +39,8 @@
       ".gitignore",
       ".gitattributes",
       ".mcp.json",
-      "prep-reference/**"
+      "prep-reference/**",
+      "GAME.md"
     ]
   }
 }
