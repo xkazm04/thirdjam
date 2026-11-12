@@ -1,0 +1,1 @@
+S5 hybrid: Faceoff_Draw side; Goalie_Block_Left and _Right front (stick flat but about 33-42 cm up); holds: Faceoff_Ready 3/4 and side, Goalie_Hold front and side, Shot_Charge side and 3/4

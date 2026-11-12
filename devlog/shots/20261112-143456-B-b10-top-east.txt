@@ -1,0 +1,1 @@
+Top view from 26 m, east half: boost_only dotted ring, no_shoot hazard stripes, bumper chevrons (rect and circle); the boost and no_shoot circles overlap because of my placement, not the material

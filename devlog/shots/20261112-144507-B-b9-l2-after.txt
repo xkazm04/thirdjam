@@ -1,0 +1,1 @@
+B9 Clay-0 proof: l2_night, masters with the MPC_Look reads at Clay 0, same view; mean |d| 1.29 vs noise floor 1.22 between two sessions with the original masters.

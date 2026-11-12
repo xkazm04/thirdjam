@@ -1,0 +1,1 @@
+Game-camera geometry (3.5 m up, pitch -18, FOV 70): slow_ice cross-hatch at 10 m in a dark band with a stand-in puck, fast_ice streaks at 25 m, bumper and no_shoot beyond

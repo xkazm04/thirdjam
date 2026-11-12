@@ -1,0 +1,1 @@
+Top view from 26 m (image right = -X, up = +Y), west half: zone strips at y +12 (rect 12x8 m) and y -12 (circle r 5 m), stand-in pucks with halo on three rects; PIE on Rink, 90x45 cut, night rig

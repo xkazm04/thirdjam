@@ -1,0 +1,1 @@
+NS_pickup_idle sparks (cyan, User.Colour) in a dark band; on lit ice the additive sparks barely show

@@ -1,0 +1,1 @@
+no_shoot at 10 m (Emissive 3.5, red with ink hazard stripes) over a pool edge and the blue line, stand-in puck on it; boost_only at 25 m

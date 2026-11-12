@@ -1,0 +1,1 @@
+Looking -X from the east end: boost_only at 14 m, no_shoot at 29 m, bumper and fast_ice further; pickups at right (big_puck yellow, custom white, precision and heavy)

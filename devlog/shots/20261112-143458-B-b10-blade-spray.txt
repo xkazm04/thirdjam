@@ -1,0 +1,1 @@
+NS_blade_spray, two bursts at time dilation 0.1 (one at yaw 0, one at yaw 90): white-blue fan low to the ice, sideways along the skater's local Y

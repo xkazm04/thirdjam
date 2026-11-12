@@ -1,0 +1,1 @@
+B9 pass 1: P3 clay tier, real game (hockey.regular, toy figures), game camera at the faceoff, LR_P3_Clay streamed in PIE, LR_L2_Night switched off, Rink sky and directional light hidden, HUD removed. Final rig values. Far end softened by the depth of field.
