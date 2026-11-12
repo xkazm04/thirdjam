@@ -1,6 +1,6 @@
 # Device B lane board (the lead rewrites this file whenever a lane starts or reports)
 
-Updated 2026-11-12 20:56 CET. Two editors at most by the operator's decision. **Device A merged `dev-b` at 19:35 and 20:02; the shipped default figure is `humanoid_b1` (R-0030).** The operator is away until about 22:45 (R-0028). Directions in force: the operator to B at 14:55 (**hyped commentary; Blender and the P2, P3, P4
+Updated 2026-11-12 21:10 CET (H15.2). Two editors at most by the operator's decision. **Device A merged `dev-b` at 19:35 and 20:02; the shipped default figure is `humanoid_b1` (R-0030).** The operator is away until about 22:45 (R-0028). Directions in force: the operator to B at 14:55 (**hyped commentary; Blender and the P2, P3, P4
 skaters**), and the operator's verdicts through device A at 14:40 (R-0021, `handoff/A-to-B-0007.md`: **props out of the arena; night sky, ice surface, construction, lighting; both hands on a hockey stick**). Reports land in `status/`.
 
 ## Running
@@ -9,6 +9,7 @@ skaters**), and the operator's verdicts through device A at 14:40 (R-0021, `hand
 |---|---|---|---|---|---|
 | SKC | Concept-sheet figures (A-to-B-0009): device A's recipe (Codex concept sheet, Rodin multi-view, Meshy rig) through B's retarget with all 70 takes, for the cel toy, the broadcast figure and the clay figure; A/B against the figure each would replace | none | 20:30 | 23:30 | `status/B-skater-skc.md` |
 | SK5 | Polish on the shipped figure `humanoid_b1`: the reworked lift, a 20-frame stumble cut in 6 frames after the poke, stronger hit takes, an idle with level hips, trip into a side get-up; haze cards on after 21:00; a dark ring so the puck reads on white and clay ice; `HitWobble` on the glass | port 8000, main tree | 20:50 | 22:50 | `status/SK5-checkpoint.md`, `status/SK5-report.md` |
+| QA1 | End-to-end look at B's content in the game as it ships tonight (no asset changed): default cartridge and cuts, the three tiers and switching between them, the larger rinks, effects in play, the sound mix and commentary by measurement, film-set leftovers on the ice; a ranked fault list | port 8002, `wt-vfx` | 21:10 | 23:10 | `status/QA1-report.md` |
 | SKH7 | Seventh retarget pass: face-down poses (skates 5 to 10 cm up on the tall figures), blade pops on the clay figure | none | 19:25 | 20:10 | `status/B-skater-skh.md` (seventh pass) |
 
 ## Waiting for the operator's ears or eyes (pages on device B)
@@ -43,5 +44,5 @@ B1 painted-cel look and night rig.
 - Assets: everything under `Game/Plugins/JamAssets/Content/` on `dev-b`, ledgered in `ASSETS.md` (899 rows; on disk: art about 58 MB, audio 36.4 MB (the bank is 22 MB; 2 to 4 MB cooked), vfx/other 9.3 MB, audio 4.1 MB, vfx/other 8.4 MB). **The night rig on `dev-b` is without props since lane B13's checkpoint (16:05): A-to-B-0007 point 1 is met; the look work on sky, ice, construction and lighting follows in the same lane.**
 - **`main` 6a2681e builds on device B from a clean state: PASS in 137 s at 15:49** (closes B-to-A-0017 and 0020 on B's side). For A's UI: crests, glyphs and the digit atlas are under `/JamAssets/UI/` (`status/B12-report.md`, paths and atlas layout); `SetNumber` must be called for a jersey number to show.
 - Open requests to A: `handoff/B-to-A-0029` (optional: hit direction on `check` and `knockdown`, board normal on `board`), `handoff/B-to-A-0028` (four reaction calls for the interface, `knockdown_frames` to the visual, do the bots check), `0026` and `0022` if not closed by A32 and R-0027. Answered by A at 18:45 to 20:07 (R-0027, lanes A31, A32, `docs/experiments/B-ASKS-2.md`): 0019, 0021, 0023, 0024, 0025, 0027.
-- Answered by B: `A-to-B-0001` to `0008` done or parked as before; **`0009` accepted (lane SKC)**, **`0010` done (the blend space cooks; a cook-only check now precedes every push that touches `Skaters/`)**.
+- Answered by B: `A-to-B-0001` to `0008` done or parked as before; **`0009` accepted (lane SKC)**, **`0011` accepted (jersey emissive 2.5 at night and the 24 m puck still: lane SK5)**, **`0010` done (the blend space cooks; a cook-only check now precedes every push that touches `Skaters/`)**.
 - Device B cannot package (the linker hangs under x64 emulation); it checks its assets with a cook-only run. Packaging stays device A's.
