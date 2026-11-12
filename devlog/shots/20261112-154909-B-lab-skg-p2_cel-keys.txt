@@ -1,0 +1,1 @@
+SKG p2_cel key frame of all 14 goalie clips; top two rows from the front (shooter's view), bottom two rows from the game camera (high, in front). Order: Stance, ShuffleL, ShuffleR, Butterfly_Drop, Butterfly_Hold, Butterfly_Recover, GloveSave, BlockerSave, PadSaveL, PadSaveR, PokeCheck, Freeze, Beaten, Celebrate_Save
