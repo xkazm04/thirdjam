@@ -395,3 +395,13 @@ vertical speed, hashed; a shot's release height follows the charge (`game.skater
 0.61 bar from distance by design (amended 01:40: the default full charge arrives at 0.6, just under the bar, after the novice gate fell to 8 of 20 with 0.95; a cartridge may set full_m 0.95 for the sailing shot); the goal test uses the height; posts and the bar ring and reflect; a skater in the crease stance saves a puck under its block height within
 its reach (`game.skater.goalie`), the human included; bots charge by the net's height. The carried puck stays on the ice. The determinism baseline is re-recorded by the lane
 and once more by the Director after A51 and A52 merge.
+
+## R-0036 (H14, 2026-11-13 09:56): P4 descoped; P3 is the tier to master
+The operator: "P4 descoped as it seems the realistic output is not worth the chase. P3 remains target to master - physics and animations especially around collisions,
+gameplay mechanics, director's choices -> ways/modes to change character of the game for creative variations of possibilities." Rulings: (1) `p4_broadcast` leaves the
+plan: no lane on A or B spends time on it; the tier stays in the code as a lab row until the Director removes it, never in a cut; (2) `p3_clay` is the shipped look of the
+jam entry: B perfects it against the concept, A's remaining ask for it is the ring meshes for zones (B-to-A-0035); (3) the work of the last two days, in this order of
+value: collisions (the body check, the board hit, the knockdown and the get-up, the stick lift, the poke: sim rule and figure reaction together, C-0001 v4 landed from
+`dev-b-a45`), gameplay mechanics (the sweep, the spin, the lifted shot, passes, one-timers, dekes: each proven in a package through the real input path), Director's
+choices: modes that change the character of a match (cartridge-defined, chosen from the menu as a Director's cut: rules, rink, team size, physics, bots, look) so a
+player makes creative variations without editing JSON; (4) P2 stays what it is: the fallback tier, no further look work.

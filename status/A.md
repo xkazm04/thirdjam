@@ -248,3 +248,4 @@
 - B overnight: 38 commits on dev-b (B19-B26: clay tier against the concept, P4 lab at the game camera, SK6-SK9 figures; `dev-b-a45` = lane/a45 v4 + B's assets, the
   landing rule: take `Game/Plugins/JamAssets/Content/Skaters/` whole from `dev-b-a45`). Handoffs B-to-A-0034 (clay asks) and 0035 (0034 point 1 withdrawn; ring meshes for
   zones on clay is the one open ask). Next merge window: after H20.
+- link green 09:55: main e99e005 (A51 stick handling + A66 fix, A55, A54, A58) pushed.
