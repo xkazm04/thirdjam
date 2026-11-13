@@ -1,0 +1,1 @@
+Clay, real knockdown in drill 6 with jam.hitstop 3, game camera: +0, +1, +2 held (the figures do not move) and +3 released; the B30 check/knockdown effects show as small low chips and puffs at the skates during the hold, nothing over the trunks or faces
