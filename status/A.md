@@ -326,3 +326,9 @@
 
 - RESOURCES 13:56 cpu 83% ram 27.6/63GB gpu 5 %, 793 MiB, 39 editors 0 cmd 8 ubt 0 free 617GB
 - 13:59: A83 done: 5 v 5 plays and performs on 90 x 45 (win 37 % pro vs 47 at 3 v 3; matches 348 s; ten figures inside the frame); its patch is held for A85's carrier-reach fix (the same SeasonTakes coin), then both land and a final curve pass sets the budgets on 5 v 5. Director: first to 3 stays (the 348 s match is hockey; the modes carry clocks).
+
+## H20 (14:15) the plan reconciled (R-0043, docs/PLAN-RECONCILED.md) after the plan and model switch
+- A85 resumed (died on the old plan's limit at 14:05); A84 survived; A79 landing (all_star: speed 1.2, hunt 10 m, poke at once). New: A87 the acceptance run (a human hand plays five minutes in the package; no H package without it from H25), A88 the submission (video, page, dev log, ledger, clean profile). A86 the one curve pass on the real player after A85 + A83 land. Freezes: sim Sat 12:00, content Sat 22:00, submit Sun 22:00.
+- link green 14:15: main 35511c2 (All-star by aggression (A79, R-0041): speed 1.3 -> 1.2, the bots poke at once and a suppor) pushed.
+
+- RESOURCES 14:27 cpu 31% ram 26.8/63GB gpu 2 %, 814 MiB, 44 editors 0 cmd 0 ubt 3 free 611GB

@@ -125,8 +125,8 @@ void UJamMenuWidget::BuildTree()
 	// Slate header: production and scene lines like a real slate, then the title.
 	UHorizontalBox* Head = T->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
 	AddH(Head, S::Text(T, TEXT("PROD.  HOKEJ"), S::CaptionFont(), S::Muted()), FMargin(28, 0, 0, 0), true);
-	AddH(Head, S::Text(T, TEXT("SCENE  3 v 3"), S::CaptionFont(), S::Muted()), FMargin(0), true);
-	AddH(Head, S::Text(T, TEXT("TAKE  YOURS"), S::CaptionFont(), S::Muted()), FMargin(0, 0, 28, 0));
+	AddH(Head, S::Text(T, TEXT("SCENE  ROUGH"), S::CaptionFont(), S::Muted()), FMargin(0), true);
+	AddH(Head, S::Text(T, TEXT("TAKE  A HIT"), S::CaptionFont(), S::Muted()), FMargin(0, 0, 28, 0));
 	AddV(CardBody, Head, FMargin(0, 10, 0, 0));
 
 	// The title: HOKEJ only (R-0013 point 5). The generated HOKEJ slate when it is there, the chalk letters otherwise.
@@ -178,7 +178,7 @@ UWidget* UJamMenuWidget::BuildMain()
 	Add(DirectButton, TEXT("DIRECT A CUT"));
 	DirectButton->OnClicked.AddDynamic(this, &UJamMenuWidget::OnDirectClicked);
 	// Lane A9's lobby: one entry that runs its console command (JamGame does not depend on JamNet).
-	Add(FriendButton, TEXT("PLAY WITH A FRIEND"));
+	Add(FriendButton, TEXT("BRAWL WITH A FRIEND"));
 	FriendButton->OnClicked.AddDynamic(this, &UJamMenuWidget::OnFriendClicked);
 	Add(SettingsButton, TEXT("SETTINGS"));
 	SettingsButton->OnClicked.AddDynamic(this, &UJamMenuWidget::OnSettingsClicked);
@@ -223,7 +223,7 @@ UWidget* UJamMenuWidget::BuildDirect()
 	UWidgetTree* T = WidgetTree;
 	UVerticalBox* Box = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("DirectScreen"));
 	AddV(Box, S::Section(T, TEXT("DIRECT A CUT")), FMargin(0, 0, 0, 4));
-	UTextBlock* Intro = S::Text(T, TEXT("Tell the Designer in one sentence how you want this cut. It edits the rules, the ice, the shots, the look."), S::BodyFont(), S::Muted());
+	UTextBlock* Intro = S::Text(T, TEXT("Tell the Designer in one sentence how you want this cut. It rewrites the rules, the ice, the hits, the look."), S::BodyFont(), S::Muted());
 	Intro->SetAutoWrapText(true);
 	AddV(Box, Intro, FMargin(0, 0, 0, 8));
 
@@ -323,7 +323,7 @@ UWidget* UJamMenuWidget::BuildCredits()
 		TEXT("One human directed two machines of agents; the agents wrote the game, the cuts and this menu. ")
 		TEXT("The Designer turns your sentence into a cut through the Claude API with a key you type yourself; without a key it answers from cuts it shot earlier.\n\n")
 		TEXT("Tools used: Unreal Engine 5.9, Claude Code and the Claude API, Codex image generation for the menu and HUD art, Node.js, Git with LFS, Meshy for generated figures, PowerShell.\n\n")
-		TEXT("No goalies were harmed. No logos were used."),
+		TEXT("No goalies harmed. Skaters flattened. No logos."),
 		S::BodyFont(), S::Chalk());
 	Body->SetAutoWrapText(true);
 	AddV(Box, Body, FMargin(0, 0, 0, 6));

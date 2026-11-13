@@ -230,7 +230,7 @@
       "radar": true
     },
     "meta": {
-      "pitch": "Slow bots in the fog. Slip past, hit soft.",
+      "pitch": "Slow bots in the fog. Slip by, then hit.",
       "facts": [
         "bots 0.2 s late",
         "checks from 1 m/s",

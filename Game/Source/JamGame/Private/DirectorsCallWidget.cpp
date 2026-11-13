@@ -217,7 +217,7 @@ void UJamDirectorsCallWidget::BuildTree()
 	CallTitle = S::Text(T, TEXT("DIRECTOR'S CALL"), S::Font(28, FName("Black"), S::TrackTitle), S::Yellow());
 	CallTitle->SetJustification(ETextJustify::Center);
 	AddV(Call, CallTitle, FMargin(30, 0, 150, 0));
-	UTextBlock* Rule = S::Text(T, TEXT("One change per period. Move one slider, then APPLY. The scoreboard announces the new rule."), S::BodyFont(), S::Muted());
+	UTextBlock* Rule = S::Text(T, TEXT("One change per period. Move one slider, hit APPLY. The scoreboard tells everyone the new rule."), S::BodyFont(), S::Muted());
 	Rule->SetJustification(ETextJustify::Center);
 	Rule->SetAutoWrapText(true);
 	AddV(Call, Rule, FMargin(30, 0, 150, 10));
@@ -333,7 +333,7 @@ void UJamDirectorsCallWidget::RefreshState()
 		CallButton->SetIsEnabled(bAvailable);
 		CallButtonText->SetText(FText::FromString(bAvailable ? TEXT("DIRECTOR'S CALL") : TEXT("DIRECTOR'S CALL  (used this period)")));
 	}
-	if (PauseStatus) PauseStatus->SetText(FText::FromString(bAvailable ? TEXT("Your call is ready: change one thing about this match.") : LastAnnouncement));
+	if (PauseStatus) PauseStatus->SetText(FText::FromString(bAvailable ? TEXT("Your call is ready: change one thing. Make them pay.") : LastAnnouncement));
 	if (ApplyButton) ApplyButton->SetIsEnabled(bAvailable);
 	for (FRow& R : Rows) if (R.Slider) R.Slider->SetIsEnabled(bAvailable);
 }

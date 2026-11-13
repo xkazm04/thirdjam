@@ -243,11 +243,11 @@
       "foul_grace_frames": 30
     },
     "meta": {
-      "pitch": "Dekes that fool the back, checks that stick.",
+      "pitch": "Juke the back. Do not get blindsided.",
       "facts": [
         "a 2 m deke",
         "bots react late",
-        "checks from 2 m/s"
+        "down for 4 s a hit"
       ]
     }
   }
