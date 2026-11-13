@@ -42,7 +42,8 @@ Cartridge errors are sentences that start `at <JSON pointer>:`, because the Desi
 | `rink.goal_height_m` | 0.3..1.5 | 0.61 default (R-0033: half a real net, no goalies); 1.22 a real net; 0.3 is a puck-and-a-half slot, 1.5 the old frame height |
 | `skater.goalie.reach_m` / `block_height_m` | 0..3 / 0..2 | lane A52 (R-0035): the crease skater's save by height; 0.9 / 0.4 default (0.7 until the Director's 01:30 calibration); reach 0 turns it off |
 | `puck.gravity_mps2` / `ice_restitution` | 0..30 / 0..1 | lane A52: 9.81 Earth, 0 a floating puck; 0.3 bounce, 1 a rubber ball |
-| `shot.lift.tap_m` / `half_m` / `full_m` / `half_frames` | 0..0.5 / 0..1.5 / 0..2 / 0..120 | lane A52: the lifted shot's arrival heights by charge (0.05 / 0.45 / 0.6 / 8); full_m 2 is the glass |
+| `shot.lift.tap_m` / `half_m` / `full_m` / `half_frames` | 0..0.5 / 0..1.5 / 0..2 / 0..120 | lane A52: the lifted shot's arrival heights by charge (0 / 0.45 / 0.47 / 8; tap_m 0 since R-0042: a tap stays on the ice; full_m 0.47 since R-0044: under the bar's ring from every range); full_m 2 is the glass |
+| `shot.tap_frames` | 0..30 | 4 (R-0044, lane A91): a hold of this many frames or fewer is a tap (charge 0, flat); 0 = every held frame charges |
 | `rink.obstacles[]` | 0..12 items, size 0.5..10, x/z within +-80/+-40 | clutter beyond 12 breaks the bot path planner and the view |
 | `skater.speed` | 3..16 | 8 is the measured Godot value; 3 is walking pace; above 16 a skater crosses the rink faster than the camera lag recovers |
 | `skater.accel` | 4..40 | 12 measured; 4 is a heavy slide, 40 is instant |
@@ -57,9 +58,19 @@ Cartridge errors are sentences that start `at <JSON pointer>:`, because the Desi
 | `skater.pass_lead_frames` | 0..60 | 20 (C-0005); the receiver's position a third of a second ahead |
 | `skater.breakaway.speed_bonus` | 0..1 | 0.2 (lane A39, R-0029 point 4): top speed and acceleration bonus of the breakaway burst (a carrier past centre ice with no opponent between it and the net, once per possession; event `breakaway`); 0 = off |
 | `skater.breakaway.frames` | 0..300 | 60 (lane A39): how long the burst lasts |
+| `skater.reverse_brake_decel` | 0..40 | 20 (lane A93, R-0045 law 3): move input against the velocity (W then S) stops the skater at this rate, then the input accelerates the other way; 0 = off |
+| `skater.burst.frames` | 0..60 | 20 (lane A93): the first-step burst runs this long after the skater was under 2 m/s or cut more than 60 degrees inside 10 frames; 0 = off |
+| `skater.burst.accel_mult` | 1..3 | 1.8 (lane A93): acceleration multiplier during the burst; the top speed is unchanged |
+| `skater.sprint.carry_bonus` | 0..1 | 0.08 (lane A93, R-0045 law 4): the carrier's sprint on top of `carry_speed_mult`, always under a free skater's sprint (capped at 0.97 x (1 + `sprint.bonus`)); 0 = the carrier cannot sprint |
+| `stick.carry_reach_mult` | 0.5..1 | 0.75 (lane A93, R-0045 law 4): a carrier that is not sprinting holds the blade and the puck at this fraction of the full distance (1.2 m of 1.6 m); sprinting, the full distance; 1 = always full |
+| `stick.sweep.sprint_shield_mult` | 0..1 | 0.5 (lane A93): a sprinting carrier's sweep shield lasts this fraction of `sweep.shield_frames`; 1 = no difference |
+| `stick.body_shield` | true, false | true (lane A102, track F2): puck protection with the body, no button. While the carrier's body is between a defender's stick and the puck (the defender within 2 m, the puck on the far side of the carrier's body, the carrier turned more than 60 degrees away from the defender), that defender's poke or stick lift does not take the puck; a carrier that faces the defender shields nothing, and a body check is never shielded. true or absent = on; false = the neutral value (the game before the lane). |
+| `stick.passive_take` | true, false | false (lane A102, R-0048): false or absent = a carried puck is not taken by an unpressed blade or by a body's touch: it leaves its carrier only by a shot, a pass, a poke, a lift, a check or stumble that loosens it, or the carrier's own release. true = the neutral value (the game before the lane): an aimed opposing blade within 0.6 m deflects a carried puck moving faster than 6 m/s and any body's touch takes it. A teammate never takes a carried puck by touch under either value. |
+| `skater.carry_speed_mult` | 0.6..1 | 0.92 (lane A82, R-0041 point 6): the carrier's top speed and acceleration as a fraction of a free skater's; the carrier cannot sprint; 0.6 is a crawl that makes every carry a pass, 1 is no penalty |
 | `stick.reach_m` | 0.8..3 | 1.2 (R-0022 point 3; was 1.6 in R-0013): rest 1.0 m, full aim 1.6 m from the skater centre, which both of B's figures can pose |
 | `stick.poke_window_frames` | 2..30 | 8; the timing window of a clean poke |
 | `stick.lift_range_m` | 0.5..2.5 | 1.0; contact range of a stick lift beyond the two bodies |
+| `stick.lift_cone_deg` | 10..180 | 70 (lane A95, B-to-A-0037): The cone of the stick lift and of the cross-check's shove, in degrees off the attacker's facing: a carrier farther off than this is neither lifted nor shoved (the swing is a miss), bots and the human alike (B-to-A-0037, lane A95). 180 = no cone (before A95). |
 | `stick.stumble_frames` | 0..90 | 20; `hockey.raw` sets 0 |
 | `stick.mouse_sensitivity` | 0.1..5 | 1; 100 px = one reach |
 | `stick.foul_grace_frames` | 0..120 | 12 (R-0029); a check right after a strip is not a check on a player without the puck |
@@ -79,6 +90,28 @@ Cartridge errors are sentences that start `at <JSON pointer>:`, because the Desi
 | `shot.charge_speed_bonus` | 0..20 | 8 (C-0005); capped by `puck.max_speed` |
 | `shot.one_timer.window_frames` | 0..60 | 10 (lane A39, R-0029 point 4): a shot inside this many frames of a received pass is a one-timer (full charge, wider cone, `shot` event kind `one_timer`); 0 = off |
 | `shot.one_timer.cone_bonus_deg` | 0..30 | 8 (lane A39): added to `aim_cone_deg` for a one-timer |
+| `pass.saucer.half_frames` | 0..60 | 8 (lane A77, R-0036): frames of pass held for the saucer; the tap stays flat; 0 = off |
+| `pass.saucer.lift_m` | 0..1 | 0.35 (lane A77): the saucer's apex; over a blade (0.2 m), under a body (1.8 m); 0 = off |
+| `contact.momentum` | true, false | true (lane A92, R-0045): false = the neutral value: the check rule before lane A92 (a pressed check lands when the checker's own speed along the contact passes skater.check_speed_min and always knocks down for skater.knockdown_frames; the cross-check is the lift only); true or absent = contact by momentum (impulse against stability, three outcomes). |
+| `contact.carrier_can_hit` | true, false | false (lane A92, R-0045): true = the neutral value: a skater carrying the puck may body-check as before lane A92; false or absent = the carrier's check press is refused (read-out bCheckRefused). |
+| `contact.lunge_mps` | 0..6 | 1.5 (lane A92, R-0045): Speed a pressed body check adds to the closing speed along the contact line, in m/s; the checker gives half of it away. |
+| `contact.thrust_mps` | 0..10 | 3 (lane A92, R-0045): Speed a cross-check (the lift at an opposing carrier in range) adds to the closing speed, in m/s; 0 = the cross-check has no body hit (the lift only). |
+| `contact.cross_reach_m` | 0..1.5 | 0.5 (lane A92, R-0045): The gap between the two bodies, in metres, inside which the lift at a carrier is a cross-check (the stick's shaft at arm's length: the thrust lands); farther out, up to stick.lift_range_m, it is the stick lift only. stick.lift_range_m or more = every lift in range shoves. |
+| `contact.stability_mps` | 1..30 | 6 (lane A92, R-0045): The stability of a skater of the reference mass that moves slowly, sees the hit and is not braced, as the closing speed (m/s) of an equal-mass hit that puts it down at down_ratio 1. |
+| `contact.stand_speed_mps` | 0..5 | 1 (lane A92, R-0045): Under this speed a skater stands braced (stand_brace); above it the stability falls with the speed (speed_stability). |
+| `contact.stand_brace` | 1..3 | 1.5 (lane A92, R-0045): Stability factor of a standing skater against a hit it can see; a cross-check inside its front arc ignores it; 1 = no brace. |
+| `contact.speed_stability` | 0.3..1 | 0.85 (lane A92, R-0045): Stability factor at skater.speed; linear from 1 at stand_speed_mps; 1 = pace costs nothing. |
+| `contact.sprint_stability` | 0.3..1 | 0.7 (lane A92, R-0045): Stability factor while sprinting; 1 = the sprint costs nothing. |
+| `contact.spin_stability` | 0.3..1 | 0.8 (lane A92, R-0045): Stability factor during a spin or with a full shot wind-up; 1 = no cost. |
+| `contact.unseen_stability` | 0.3..1 | 0.8 (lane A92, R-0045): Stability factor against a hit from behind the victim's facing (the push runs along its facing); such a hit also finds a standing skater unbraced; 1 = no cost. |
+| `contact.bump_ratio` | 0..1 | 0.4 (lane A92, R-0045): Impulse over stability under this is a bump: both keep their feet and their control. |
+| `contact.loose_ratio` | 0..3 | 0.7 (lane A92, R-0045): A stumble at this ratio or more knocks the carried puck loose. |
+| `contact.down_ratio` | 0.2..5 | 1 (lane A92, R-0045): At this ratio or more the victim goes down; between bump_ratio and it the victim stumbles (half its speed, stagger_frames without control). |
+| `contact.down_full_ratio` | 1..10 | 3 (lane A92, R-0045): The ratio at which the knockdown lasts down_frames_max; linear from down_frames_min at down_ratio. |
+| `contact.down_frames_min` | 15..300 | 60 (lane A92, R-0045): Frames down at down_ratio, at skater.knockdown_frames 90 (the frames scale with skater.knockdown_frames / 90). |
+| `contact.down_frames_max` | 15..300 | 150 (lane A92, R-0045): Frames down at down_full_ratio and above, at skater.knockdown_frames 90; never under down_frames_min. |
+| `contact.stagger_frames` | 0..60 | 16 (lane A92, R-0045): Frames a stumbling skater glides without thrust, steering or stick. |
+| `contact.board_bonus` | 1..2 | 1.25 (lane A101, track F1): The boards are a body: the impulse of a hit that pushes a victim standing within 1.5 m of the boards into them counts this much higher (the full bonus inside 60 degrees of straight in, none along the boards), and the victim's board read-out fires. 1 = the neutral value: no bonus, no read-out. |
 | `rules.score_to_win` | 1..9 | one digit on the HUD |
 | `rules.timer_frames` | 600..36000 | 10 s to 10 min at 60 Hz (lane A72, ask A1: 5 min before; the HUD clock reads 10:00) |
 | `rules.penalty_frames` | 60..600 | 1 s to 10 s in the box (lane A72, ask A8); 300 when absent |
@@ -92,6 +125,7 @@ Cartridge errors are sentences that start `at <JSON pointer>:`, because the Desi
 | `ai.sprint` | 0..1 | lane A72 (ask A2): a share of two-second windows on a chase |
 | `ai.body_check` | 0..1 | lane A72 (ask A5): a share of the chances; 0 never, 1 every chance at `skater.check_speed_min` |
 | `pickups[]` | 0..8 items, `spawn_every_frames` 120..7200, `duration_frames` 1..3600, `magnitude` 0.1..4, `max_on_ice` 1..4, `zone` a `rink.zones` id | 2 s to 2 min between spawns; effect up to 1 min; more than 4 of one kind on the ice is clutter (C-0005, A14) |
+| `abilities[]` | 0..4 items: `kind` shotgun\|hip_check\|shield\|slow_puck, `trigger` mode\|pickup, `charges` 1..9, `cooldown_frames` 60..3600, `duration_frames` 1..600, `magnitude` 0.1..4; at most one `mode` entry; a `pickup` entry needs `game.pickups` | lane A84 (R-0041 point 3, A81's ask A12): F is one key, so one mode ability; 1 s to 1 min between uses; a 10 s shield or slow puck at most (docs/experiments/ABILITIES.md) |
 | `effects[]` | 0..12 items, `duration_frames` 60..7200, 1..4 `stats`, `multiply` 0.25..4, `add` within the stat's range width (per stat, `checkGame`) | C-0005 section 4: 12 is the HUD strip's limit; a quarter to four times a stat is the widest change that still reads as the same game; 1 s to 2 min |
 | `look.fog_density` | 0..0.1 | engine exponential fog density; 0.02 neon; L2 ships with none |
 | `meta.pitch` / `meta.facts[]` | 1..48 characters / 1..3 items of 1..20 characters | lane A81 (A67 ask A11): the words of a Director's choice card in the menu; at six cards a row 48 characters are two lines and about 18 one line (measured on the 1080p and 720p stills); informational, the sim never reads it |

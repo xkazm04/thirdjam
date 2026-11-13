@@ -46,6 +46,12 @@ struct JAMCORE_API FJamInput
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Sim")
 	bool bPass = false;
 
+	// Lane A77 (R-0036): pass held (level). While held with the puck in reach the pass charges to game.pass.saucer.half_frames; the pass fires on the
+	// release: held half_frames or more it is a saucer (the puck lifts pass.saucer.lift_m, flies over a blade in the lane and lands before the receiver),
+	// shorter it stays flat. The human's game mode sends the level here and never the edge above; bots hold it for half_frames. LOCKSTEP: flag bit 1024 (protocol 6).
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Sim")
+	bool bPassHeld = false;
+
 	// Check pressed on this frame (edge). Opens a 6-frame check window; only lands when game.skater.check_enabled.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Sim")
 	bool bCheck = false;
@@ -84,6 +90,11 @@ struct JAMCORE_API FJamInput
 	// LOCKSTEP: FJamNetQuantInput carries it as flag bit 512 (protocol 5).
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Sim")
 	bool bSpin = false;
+
+	// Lane A84 (R-0041 point 3): the held ability used this frame (edge): F / gamepad D-pad down. Does nothing unless the skater holds one of game.abilities[]
+	// (a mode grant from the drop, or a pickup grant). LOCKSTEP: FJamNetQuantInput carries it as flag bit 2048 (protocol 7).
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Sim")
+	bool bAbility = false;
 };
 
 // (Named EJamSimPhase, not EJamPhase: lane A5's presentation enum EJamPhase lives in JamGame/HUDFeed.h.)
@@ -100,6 +111,7 @@ USTRUCT(BlueprintType)
 struct JAMCORE_API FJamSkaterState
 {
 	GENERATED_BODY()
+	FJamSkaterState() { for (FVector2D& M : MoveHist) M = FVector2D::ZeroVector; }   // lane A110: the reflected MoveHist ring starts zeroed (was "= {}")
 
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 Index = 0;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 Team = 0;
@@ -128,8 +140,23 @@ struct JAMCORE_API FJamSkaterState
 	// Lane A49 sprint stamina in ticks: full = drain_frames * refill_frames; a sprinting frame takes refill_frames, a resting frame gives drain_frames back.
 	// Starts full; hashed only once it left full, so a match without a sprint hashes as before.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 Stamina = -1;
-	// Read-out: the sprint applied this frame.
+	// Read-out: the sprint applied this frame (lane A93: the carrier's too; the contact's stability reads it).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bSprinting = false;
+	// Lane A93 (R-0045 law 3) read-outs, never hashed: a brake took speed off this frame at more than 1 m/s: Ctrl / L-stick click (brake_decel) or the move
+	// input against the velocity (reverse_brake_decel); bReverseBraking = the second kind. For the figure's stop pose, spray and sound.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bBraking = false;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bReverseBraking = false;
+	UPROPERTY() bool bReverseBrakeLast = false;   // last frame's bReverseBraking (counts ReverseBrakes once per stop); lane A110: reflected (Jam.Net.HashCoverage)
+	// Lane A93 (R-0045 law 3): frames left of the first-step burst (acceleration x skater.burst.accel_mult). Full while the speed is under BurstSlowSpeed and on
+	// the frame the move input turned more than 60 degrees inside BurstCutFrames; counts down otherwise. Hashed only while it runs (burst.frames 0 = never).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 BurstLeft = 0;
+	// The move input's direction over the last BurstCutFrames frames (unit, or zero for a frame without input), a ring written at MoveHistAt. Burst only.
+	// Lane A110: reflected, so the soak's field compare and Jam.Net.HashCoverage see them (every member of this struct is a UPROPERTY: the lint checks the layout).
+	UPROPERTY() FVector2D MoveHist[10];
+	UPROPERTY() int32 MoveHistAt = 0;
+	// Match statistics (not hashed): frames this skater sprinted while carrying the puck; reverse brakes started.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 CarrySprintFrames = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 ReverseBrakes = 0;
 	// Frames left knocked down; 0 = standing.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 KnockFrames = 0;
 	// Direction of the fall (rink x, z), unit; valid while KnockFrames > 0.
@@ -177,7 +204,8 @@ struct JAMCORE_API FJamSkaterState
 	// First frame a deke is allowed again (a second tap inside DekeLockoutFrames does nothing).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int64 DekeReadyFrame = 0;
 	// Lane A51 (R-0034) stick handling. The sweep: frames left of the shield after the blade crossed fast with the puck (0 = none) and the side the puck
-	// left as the sign of Cross(Forward, blade - body) (+1 or -1; 0 = none): an opponent's poke whose blade is on that side misses while the shield runs.
+	// left as the sign of Cross(Forward, blade - body) (+1 or -1; 0 = none): a read-out since R-0044 was amended (lane A93): an opponent's poke or lift from either
+	// side misses while the shield runs.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 SweepFrames = 0;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 SweepSide = 0;
 	// The spin (game.skater.spin): frames left (0 = none), the whole length, the turn direction (+1 = the sim's yaw sense, to the right), the first frame
@@ -190,6 +218,10 @@ struct JAMCORE_API FJamSkaterState
 	// Match statistics of the stick handling (not hashed, like Dekes).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 Sweeps = 0;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 Spins = 0;
+	// Lane A77 (R-0036): frames pass has been held with the puck in reach (0..pass.saucer.half_frames); saucers passed; the pass that left this frame was a saucer.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 PassChargeFrames = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 Saucers = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bSaucerThisFrame = false;
 	// Lane A46: frames left of the settle after a body reception (the carry assist holds the puck on the blade; 0 = none). Hashed only while it runs.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 SettleFrames = 0;
 	// Match statistics of the payoffs; PassesReceived (lane A46) counts teammates' passes seated on this skater's blade (blade or body reception).
@@ -230,6 +262,28 @@ struct JAMCORE_API FJamSkaterState
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bBoardPinned = false;
 	// This carrier lost the puck to an opponent's stick this frame: 1 a clean poke (ResolvePokes), 2 a lift (TryLift); 0 otherwise.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 StickHitResult = 0;
+	// Lane A92 (R-0045 law 1) read-outs, never hashed, never read by the sim. ContactOutcome: the hit this skater took this frame from a pressed check or a
+	// cross-check: 0 none, 1 bump, 2 stumble, 3 down (UJamSim::ContactBump..ContactDown); ContactRatio its impulse / stability. bCheckRefused: this skater pressed
+	// check while carrying the puck (game.contact.carrier_can_hit false) and the press was refused: the HUD's cue. bRecoilThisFrame: its own hit made it stumble
+	// (it ran into a skater more stable than itself). The counters are match statistics: hits taken by outcome, recoils, refused presses.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 ContactOutcome = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") float ContactRatio = 0.f;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bContactCross = false;   // that hit was a cross-check (the lift's body part), not a body check
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bCheckRefused = false;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bRecoilThisFrame = false;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 ContactBumps = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 ContactStumbles = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 ContactDowns = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 ContactRecoils = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 ChecksRefused = 0;
+	// Lane A101 (track F1) read-outs, never hashed, never read by the sim. ContactBy: the skater whose hit ContactOutcome reports (-1 with none): the hit-stop,
+	// the camera and the HUD find both ends of a stumble with it (a stumble emits no event that names its victim). bContactBoard: that hit landed within
+	// UJamSim::ContactBoardRangeM of the boards and pushed into them, so the boards answered as a second body (game.contact.board_bonus above 1); the victim's
+	// bBoardHitThisFrame and a `board` event (Kind skater, Strength = the check's) go out with it. ContactBoardHits counts them (a match statistic).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 ContactBy = -1;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bContactBoard = false;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 ContactBoardHits = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int64 LastContactBoardFrame = -1000;   // the frame of the last such hit: its echo on the boards is not a second board hit
 	// R-0029 point 3: the last frame this skater carried the puck (-1000 = never); a check within game.stick.foul_grace_frames of it is not a foul_no_puck.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int64 LastCarryFrame = -1000;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bTouchingPuck = false;
@@ -241,6 +295,16 @@ struct JAMCORE_API FJamSkaterState
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 Touches = 0;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 Goals = 0;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") double DistanceM = 0;
+	// Lane A84 (R-0041 point 3): the held ability. AbilitySlot indexes game.abilities[] (-1 = none held); AbilityCharges left (-1 = unlimited); usable from
+	// AbilityReadyFrame (the cooldown); AbilityArmed is the kind waiting for the next shot / check / pass (NAME_None = nothing armed); ShieldFrames left of a
+	// shield. Hashed only while they left their defaults, so a cartridge without abilities hashes as before.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 AbilitySlot = -1;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 AbilityCharges = -1;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int64 AbilityReadyFrame = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") FName AbilityArmed;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 ShieldFrames = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 AbilitiesUsed = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bAbilityThisFrame = false;
 
 	FVector2D Forward() const { return FVector2D(FMath::Cos(Yaw), FMath::Sin(Yaw)); }
 	bool IsDown() const { return KnockFrames > 0; }
@@ -271,6 +335,14 @@ struct JAMCORE_API FJamPuckState
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 LastTouch = -1;
 	// Total distance travelled this match.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") double PathM = 0;
+	// Lane A84: a shotgun shot in flight (frames left, the shooter, its speed multiplier) and a slow puck (frames left, the passer or shooter, the speed share).
+	// Zero frames = none; hashed only while one runs.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 ShotgunFrames = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 ShotgunBy = -1;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") double ShotgunMul = 1;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 SlowFrames = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 SlowBy = -1;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") double SlowMul = 1;
 };
 
 // An event the step produced; the game mode hands it to UJamEventBus (converting Where to centimetres).
@@ -301,6 +373,16 @@ public:
 	static constexpr double DT = 1.0 / 60.0;
 	static constexpr int32 PuckSubsteps = 4;
 	static constexpr double SkaterRadius = 0.4;
+	// Lane A93 (R-0045 laws 3 and 4). The first-step burst: armed under this speed (m/s), or by a move input that turned more than 60 degrees (dot under
+	// BurstCutDot) inside BurstCutFrames. The reverse brake: the move input more than 120 degrees from the velocity (dot under ReverseBrakeDot); a skater slower
+	// than PivotSpeed whose facing is that far from the input turns on the spot instead of thrusting away from where it wants to go. The carrier's sprint:
+	// carry_speed_mult x (1 + carry_bonus) never passes CarrierSprintCap of a free skater's 1 + sprint.bonus, whatever the cartridge says.
+	static constexpr double BurstSlowSpeed = 2.0;
+	static constexpr int32 BurstCutFrames = 10;
+	static constexpr double BurstCutDot = 0.5;
+	static constexpr double ReverseBrakeDot = -0.5;
+	static constexpr double PivotSpeed = 0.5;
+	static constexpr double CarrierSprintCap = 0.97;
 	static constexpr double NetDepth = 1.5;
 	// R-0033 point 2 (lane A50): the net's height is the cartridge's game.rink.goal_height_m (FJamRinkConfig::GoalHeightM, 0.61 by default), no longer a constant.
 	static constexpr double PostRadius = 0.05;
@@ -350,6 +432,16 @@ public:
 	static constexpr double BarRingM = 0.05;
 	static constexpr double BounceDeadM = 0.02;
 	static constexpr double BodyHeightM = 1.8;
+	// Lane A77 (R-0036): a puck this high or higher is over the blades: no deflection, no reception, no poke takes it (the body still stops it under BodyHeightM).
+	static constexpr double BladeClearM = 0.2;
+	// A saucer lands this share of the way to its aim point when the way is short; on a long way it flies the apex pass.saucer.lift_m allows and slides the rest.
+	static constexpr double SaucerLandFrac = 0.75;
+	// The saucer's receiver may have a blade in the lane: the opponent's body must stay this far off the line (the puck flies over the stick, not the body).
+	// Lane A82 (R-0040 point 2): 0.9 (A77 measured 0.55 too tight for live bots: 3 of 4 saucers taken 8 cm up). Note: 0.9 is the flat pass's own refusal, so the
+	// saucer's receiver set equals the flat pass's; what the saucer buys is the flight over a blade that would deflect the flat pass (MECHANICS-2.md section 3).
+	static constexpr double SaucerLaneMinM = 0.9;
+	// Lane A82 (R-0040 point 2): the saucer is airborne from this far along the lane (it leaves at 14 m/s and is 0.2 m up after 1.3 m); a blade nearer than this takes it.
+	static constexpr double SaucerAirFromM = 1.5;
 	static constexpr double CreaseStanceM = 3.0;
 	static constexpr double LiftFlightMaxS = 2.0;
 	static constexpr double LiftApexMaxM = 2.0;
@@ -360,6 +452,26 @@ public:
 	// the carried puck rides this far from the body centre on the far side from the nearest opponent (inside shot reach, outside the body).
 	static constexpr double SpinKnockdownMult = 1.5;
 	static constexpr double SpinPuckM = 0.7;
+	// Lane A84 (R-0041 point 3): the abilities' fixed geometry. A shotgun knocks down every skater (not the shooter) within ShotgunPathM of the puck's path while
+	// it flies (at most ShotgunFlightFrames, until another skater touches it or it slows under DeflectMinSpeed); a hip check pushes the victim HipCheckPushM
+	// (the knocked-down glide halves the speed every 0.5 s: a push of v slides v / 2 metres).
+	static constexpr double ShotgunPathM = 1.0;
+	static constexpr int32 ShotgunFlightFrames = 120;
+	static constexpr double HipCheckPushM = 3.0;
+
+	// Lane A84: the ability a skater holds (nullptr = none) and the kind's resolved numbers (absent keys = the kind's defaults, ABILITIES.md).
+	const FJamAbilityConfig* HeldAbility(int32 Skater) const;
+	static int32 AbilityDefaultCooldown(FName Kind);
+	static int32 AbilityDefaultDuration(FName Kind);
+	static double AbilityDefaultMagnitude(FName Kind);
+	// Lane A84: hands Skater the ability game.abilities[Slot] (a mode at the drop, a pickup on a take); emits `ability` with Strength 0. False for a bad slot.
+	bool GrantAbility(int32 Skater, int32 Slot);
+	// Lane A110 (track Q1): the online guest's seat plays as a human. The lobby's guest drives a skater the cartridge made a bot slot; SeatGuest marks it bHuman
+	// (Restart keeps it), so it gets what the host's human gets: the mode's ability from the drop and a pickup's on a take, the human's check window, move
+	// clamp and check-speed floor, and no seeded bot press at the draw (the opening draw's bot press of its team is withdrawn when it is the centre). Call it
+	// on both peers at frame 0, before the first Step. False (and nothing changes) for a bad index, the cartridge's own human, or after frame 0.
+	// Never called in single player: the Determinism baseline does not move.
+	bool SeatGuest(int32 Skater);
 
 	// Builds the match from a validated config: skaters at their spawns, puck at centre, score 0, phase Playing.
 	// Queues the opening "faceoff" event. Returns false (and logs) if the config has no player.
@@ -420,6 +532,12 @@ public:
 
 	// FNV-1a 64 over all integer-quantised state (1 mm, 1 mm/s, 1 mrad, counters, score, rng).
 	uint64 StateHash() const;
+	// Lane A104 (track Q1): the lockstep checkpoint's hash. StateHash() folded with the cross-frame state the rules read but StateHash() leaves out (so the
+	// Determinism baseline and the neutral proofs pinned on StateHash() stay valid): LastCarryFrame (foul grace, lift, carrier-cannot-hit), last frame's
+	// bSprinting (TryLift's cross-check reads it before StepSkater), last frame's bStickAimed (TryDeke reads it before StepStick), bPokeArmed (the miss stumble),
+	// the burst's MoveHist ring, BotDrawFrame while the draw is open. Equal LockstepStateHash() = equal future for equal inputs. A field a lane adds that
+	// persists across frames and is read by a rule goes into StateHash() (behind its default) or here.
+	uint64 LockstepStateHash() const;
 	FString StateHashHex() const { return FString::Printf(TEXT("%016llx"), static_cast<unsigned long long>(StateHash())); }
 
 	// Events produced by the last Step (cleared at the start of every Step).
@@ -443,8 +561,38 @@ public:
 	FVector2D GetFaceoffDot() const { return FaceoffDot; }
 	// True between the drop and the moment a centre won the puck.
 	bool IsDrawOpen() const { return bDrawOpen; }
+	// Lane A92 (R-0045, docs/VISION.md law 1, docs/experiments/CONTACT.md): contact by momentum. The kinds of hit and the three outcomes.
+	enum class EContactKind : uint8 { Body, Cross };
+	static constexpr int32 ContactNone = 0;
+	static constexpr int32 ContactBump = 1;
+	static constexpr int32 ContactStumble = 2;
+	static constexpr int32 ContactDown = 3;
+	// The stability an impulse must beat, in kg m/s: mass x game.contact.stability_mps, times: stand_brace when the skater stands or glides under stand_speed_mps
+	// and sees the hit (a cross-check inside its front arc ignores the brace; a hit from behind finds it unbraced); else the loss with speed (1 at stand_speed_mps
+	// to speed_stability at its top speed); sprint_stability while sprinting; spin_stability in a spin or at a full shot wind-up; unseen_stability from behind.
+	// HitDir = the push, attacker towards victim (unit). The brain and the tests read it.
+	double StabilityOf(const FJamSkaterState& S, const FVector2D& HitDir, EContactKind Kind) const;
+	// The impulse a hit by Attacker on Victim along HitDir carries, in kg m/s: mass x max(0, closing speed along HitDir + lunge_mps (Body) or thrust_mps (Cross)).
+	double ContactImpulse(const FJamSkaterState& Attacker, const FJamSkaterState& Victim, const FVector2D& HitDir, EContactKind Kind) const;
+	// Lane A101 (track F1): the boards are a body. A victim whose centre is within ContactBoardRangeM of the boards cannot give way into them: the impulse of a
+	// hit that pushes it there counts x BoardFactor = 1 + (game.contact.board_bonus - 1) x clamp(2 x dot(HitDir, the boards' outward normal), 0, 1): the full bonus
+	// inside 60 degrees of straight in, none for a hit along the boards or away from them. 1 at board_bonus 1 (the neutral value). ResolveContact reads it.
+	static constexpr double ContactBoardRangeM = 1.5;
+	double BoardFactor(const FJamSkaterState& Victim, const FVector2D& HitDir) const;
+	// The carrier cannot hit (game.contact.carrier_can_hit false): true when S carries the puck and no opponent carried it within stick.foul_grace_frames, so a
+	// take off an opponent's stick in the same breath still finishes its hit (the mirror of R-0029 point 3, where the victim that just lost the puck still counts
+	// as the carrier). The brain reads it.
+	bool CarrierMayNotHit(const FJamSkaterState& S) const;
 	// The skater carrying the puck right now (last toucher, standing and in control, puck within its reach), -1 when the puck is loose. The brain reads it.
 	int32 CarrierIndex() const;
+	// Lane A102 (R-0048): the carrier whose puck rides with it right now (the carry assist's own test: carried, not just shot or passed, moving with the
+	// carrier or settling on its blade), -1 otherwise. With game.stick.passive_take false nobody else's blade or body takes that puck without a press.
+	int32 RidingCarrier() const;
+	// R-0042 (lane A85): the carrier's one reach for carrying, charging, shooting and passing: max(shot.reach_m, body radius + stick.reach_m) + 0.05.
+	// Since A51 the carried puck lives at the blade (0.4 + stick.reach_m 1.2 = 1.6 m), beyond shot.reach_m 1.5, so every carrier test in the sim reads this
+	// (CarrierIndex, StepCharge, StepPassCharge, TryShoot, TryPass, the deke's offset, the knockdown strip); the brain's copy is FJamAIWorld::CarrierReach().
+	// Skater -1 = the base value (no modifier).
+	double CarrierReachM(int32 Skater) const;
 	// R-0029 point 4 (lane A39): true when Skater carries the puck past centre ice, skates at the net and no standing opponent stands in the corridor
 	// between it and the crease (the rule of the breakaway burst). The brain and the tests read it.
 	bool PastLastDefender(int32 Skater) const;
@@ -460,10 +608,21 @@ public:
 	// Lane A51 (R-0034): true when Poker's poke cannot reach the puck Carrier holds: the carrier spins (the body is between), or a sweep shield runs and
 	// the poker's blade is on the side the puck left. Tests and the brain read it.
 	bool IsPokeShielded(const FJamSkaterState& Poker, const FJamSkaterState& Carrier) const;
+	// Lane A82 (R-0040 point 1): the lift is shielded like the poke: a spinning carrier's body is between; a sweep shields the side the puck left for shield_frames.
+	bool IsLiftShielded(const FJamSkaterState& Lifter, const FJamSkaterState& Carrier) const { return IsPokeShielded(Lifter, Carrier); }
+	// Lane A102 (track F2): puck protection, no button (game.stick.body_shield). True when Carrier's body is between Poker's stick and the puck: Poker's body
+	// within BodyShieldRangeM of Carrier's, the puck on the far side of Carrier's body from Poker (inside BodyShieldFarDeg of the line Poker -> Carrier carried on),
+	// and Carrier turned: Poker is more than BodyShieldFrontDeg off its facing (a carrier that faces the defender shields nothing). IsPokeShielded includes it,
+	// so the poke, the lift and the cross-check's shove are all refused, as for a spinning carrier. No state: nothing new in the hash.
+	bool IsBodyShielded(const FJamSkaterState& Poker, const FJamSkaterState& Carrier) const;
+	static constexpr double BodyShieldRangeM = 2.0;
+	static constexpr double BodyShieldFarDeg = 60.0;
+	static constexpr double BodyShieldFrontDeg = 60.0;
+	bool OutsideLiftCone(const FJamSkaterState& Lifter, const FJamSkaterState& Victim) const;   // lane A95 (B-to-A-0037): stick.lift_cone_deg
 	// Lane A51: the nearest standing opponent of S (-1 none).
 	int32 NearestOpponent(const FJamSkaterState& S) const;
 	// The teammate a pass from Skater would go to right now (the rule of TryPass) and the aim point; -1 when nobody is open. Scripts and the brain read it.
-	int32 BestPass(int32 Skater, FVector2D& OutAim) const { return Skaters.IsValidIndex(Skater) ? PickReceiver(Skaters[Skater], OutAim) : -1; }
+	int32 BestPass(int32 Skater, FVector2D& OutAim, bool bSaucer = false) const { return Skaters.IsValidIndex(Skater) ? PickReceiver(Skaters[Skater], OutAim, bSaucer) : -1; }
 	// Timer mode: frames left (0 when not in timer mode). In timer mode a tie at 0 plays on to the next goal.
 	int32 GetTimerFrames() const { return TimerLeft; }
 	bool IsOvertime() const { return bOvertime; }
@@ -507,21 +666,35 @@ private:
 	FVector2D BoxPos(int32 Team) const;
 	void CollideSkaterStatic(FJamSkaterState& S);
 	void CollideSkaters();
+	// Lane A92: one hit resolved by momentum (a pressed check at contact, or a cross-check): the outcome by impulse / stability, the stumble or the knockdown,
+	// the loose puck, the speed that changes hands, the attacker's recoil, the check event and the foul. Returns ContactBump / ContactStumble / ContactDown.
+	int32 ResolveContact(FJamSkaterState& Attacker, FJamSkaterState& Victim, const FVector2D& Dir, const FVector2D& Contact, EContactKind Kind);
 	void TryShoot(FJamSkaterState& S, float Charge);
 	void StepCharge(FJamSkaterState& S, const FJamInput& In);
-	void TryPass(FJamSkaterState& S);
+	// Lane A77 (R-0036): the held pass charges like the shot and fires on the release; a saucer when held pass.saucer.half_frames or more.
+	void StepPassCharge(FJamSkaterState& S, const FJamInput& In);
+	void TryPass(FJamSkaterState& S, bool bSaucer = false);
+	// The saucer's flight: VZ so the puck lands SaucerLandFrac of the way to the aim (or at the apex pass.saucer.lift_m when the way is long), with the drag as ApplyShotLift solves it.
+	void ApplySaucerLift(double DistM, double Speed);
 	// R-0029 point 4 (lane A39): the deke tap, the burst decision (before the skater moves), and the window bookkeeping after the puck moved.
 	void TryDeke(FJamSkaterState& S);
 	void StepBreakaway(FJamSkaterState& S);
 	void StepPayoffWindows(FJamSkaterState& S);
 	// Lane A51 (R-0034): the spin tap, the spin's frame (speed scale, the puck on the far side) after the skater moved, the sweep shield's countdown.
 	void TrySpin(FJamSkaterState& S);
+	// Lane A84: F pressed: the held ability's use, its cooldown and charge; the shotgun puck's knockdowns per substep; the slow puck's clock after the puck moved.
+	void TryAbility(FJamSkaterState& S);
+	void StepShotgun(const FVector2D& Prev);
+	void StepSlowPuck();
+	void ApplySlowPuck(FJamSkaterState& S);
 	void StepSpin(FJamSkaterState& S);
 	void StepSweepShield(FJamSkaterState& S);
 	FVector2D SpinPuckTarget(const FJamSkaterState& S) const;
 	void ArmSweepShield(FJamSkaterState& S, int32 Side);
+	// Lane A93 (R-0045 law 4): the sweep shield's length for S now: stick.sweep.shield_frames, times sweep.sprint_shield_mult while S sprints.
+	int32 SweepShieldFramesFor(const FJamSkaterState& S) const;
 	// The teammate a pass from S goes to, and where to aim (lead); -1 when nobody is open.
-	int32 PickReceiver(const FJamSkaterState& S, FVector2D& OutAim) const;
+	int32 PickReceiver(const FJamSkaterState& S, FVector2D& OutAim, bool bSaucer = false) const;
 	void StepPuck();
 	// R-0035 (lane A52): the free puck's height. StepPuckVertical integrates gravity and the ice bounce for one substep and pins a carried puck to the ice;
 	// ApplyShotLift gives the shot that just left its VZ for LiftForCharge(Charge) over the goal line; TryGoalieSave is the crease skater's save by height

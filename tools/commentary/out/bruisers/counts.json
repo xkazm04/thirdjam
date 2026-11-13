@@ -1,0 +1,52 @@
+﻿{
+    "tool":  "thirdjam.commentary.match/1",
+    "cut":  "modes/hockey.mode.bruisers",
+    "frames":  10769,
+    "jamvo":  {
+                  "post.any":  1,
+                  "shot.long":  3,
+                  "period.take_1":  1,
+                  "knockdown.human":  2,
+                  "board.hard":  3,
+                  "shot.close":  1,
+                  "goal.against":  1,
+                  "knockdown.massacre":  1,
+                  "shot.orange":  7,
+                  "pass.any":  4,
+                  "goal.orange":  1,
+                  "shot.blue":  1,
+                  "board.rim":  6,
+                  "carry.long":  1
+              },
+    "events":  {
+                   "faceoff.won":  2,
+                   "faceoff.drop":  2,
+                   "period.take_1":  1,
+                   "check.side_l":  1,
+                   "pass.to_1":  3,
+                   "goal.none":  1,
+                   "faceoff.lost":  2,
+                   "shot.none":  41,
+                   "check.front":  1,
+                   "bark.stall":  1,
+                   "pass.to_3":  2,
+                   "pass.to_2":  3,
+                   "post.none":  2,
+                   "bark.steal":  14,
+                   "check.side_r":  3,
+                   "knockdown.check":  5,
+                   "board.none":  35,
+                   "board.skater":  29,
+                   "period.take_2":  1,
+                   "carry.long":  6,
+                   "bark.faceoff":  2,
+                   "pass.to_4":  2
+               },
+    "rough_missing":  [
+                          "check.light",
+                          "check.solid",
+                          "knockdown.big",
+                          "check.cross",
+                          "goal.after_hit"
+                      ]
+}

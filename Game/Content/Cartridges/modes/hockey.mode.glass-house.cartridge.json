@@ -235,7 +235,7 @@
       "foul_grace_frames": 0
     },
     "meta": {
-      "pitch": "Every hit is a risk. Fouls cost 10 s.",
+      "pitch": "Every hit is a gamble. Fouls cost 10 s.",
       "facts": [
         "10 s in the box",
         "bots always hit",

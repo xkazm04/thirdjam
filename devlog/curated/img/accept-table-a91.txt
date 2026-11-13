@@ -1,0 +1,23 @@
+THE ACCEPTANCE RUN - package A91-dev2, Fri 13 Nov 16:10
+18 of 18 verbs PASS, exit 0, through the cursor and buttons
+
+ 1 skate         PASS
+ 1 sprint        PASS
+ 1 sprint_carry  PASS
+ 2 aim           PASS
+ 3 carry         PASS
+ 4 shoot_tap     PASS   charge 3 frames, goal
+ 4 shoot_half    PASS   charge 10 frames, 0.33, goal
+ 4 shoot_full    PASS   charge 30 frames, 1.00, goal
+ 5 pass          PASS   received in 22 frames
+ 5 saucer        PASS   received in 22 frames
+ 6 onetimer      PASS   2 of 2, goals
+ 7 check         PASS
+ 7 crosscheck    PASS
+ 8 checked       PASS
+ 9 deke          PASS
+ 9 spin          PASS
+ 9 sweep         PASS
+10 resume_aim    PASS
+
+Rendered from status/A91.md (not a screenshot)

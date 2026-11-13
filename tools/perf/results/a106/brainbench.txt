@@ -1,0 +1,2 @@
+3v3 preset {"schema":"a106.brainbench/1","skaters":6,"frames":8778,"think_mean_us":0.945,"think_p50_us":0.900,"think_p99_us":1.700,"think_max_us":15.000,"space_read_mean_us":0.1281} 
+5v5 hockey.regular teams {"schema":"a106.brainbench/1","skaters":10,"frames":11707,"think_mean_us":1.684,"think_p50_us":1.800,"think_p99_us":2.400,"think_max_us":29.900,"space_read_mean_us":0.1206} 

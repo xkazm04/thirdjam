@@ -7,6 +7,9 @@
 #include "JamRuleSystem.h"
 #include "JamZones.h"
 
+#include <cstdlib>
+#include <cstring>
+
 namespace JamAI
 {
 	namespace SimAdapterLocal
@@ -221,6 +224,7 @@ namespace JamAI
 		W.LiftHalfM = G.Shot.LiftHalfM;
 		W.LiftFullM = G.Shot.LiftFullM;
 		W.LiftHalfFrames = G.Shot.LiftHalfFrames;
+		W.SaucerHalfFrames = G.Pass.SaucerHalfFrames;   // lane A77 (R-0036)
 		W.ChargeFramesMax = G.Shot.ChargeFramesMax;
 		W.bDrawOpen = S.IsDrawOpen();
 		// R-0017: the pickups on the ice, from the sim's effect system (lane A14's UJamEffectSystem is the only IJamModifierSource
@@ -244,17 +248,34 @@ namespace JamAI
 		W.FaceoffCountdown = S.GetFaceoffCountdown();
 		// R-0017: stick facts and the carrier
 		{
-			// the same rule as UJamSim::CarrierIndex (private): the last toucher, able to act, with the puck within shot reach
+			// the same rule as UJamSim::CarrierIndex (private): the last toucher, able to act, with the puck within the carrier reach
 			const int32 Lt = S.GetPuck().LastTouch;
 			const TArray<FJamSkaterState>& All = S.GetSkaters();
-			W.Carrier = (All.IsValidIndex(Lt) && All[Lt].CanAct() && FVector2D::Distance(All[Lt].Pos, S.GetPuck().Pos) <= G.Shot.ReachM) ? Lt : -1;
+			// Lane A86 (R-0042 point 1, R-0043 point 2): the brain sees the carrier at UJamSim::CarrierReachM, the sim's own rule. On shot.reach_m (A85 left it there) a human
+			// who carries at the mouse's reach (0.4 + stick.reach_m = 1.6 m) was a loose puck to every bot: the rookie bots, which never poke a carrier, pounced on it
+			// (the novice playtester with the mouse's stick: 56 % at rookie, 97 % with this rule; CURVE-4.md section 1). A66's cap on the bots' own blade stays (R-0044).
+			// JAM_BRAIN_CARRIER=shot replays the old view (measurement only).
+			static const bool bA86ShotReach = [] { const char* E = std::getenv("JAM_BRAIN_CARRIER"); return E && std::strcmp(E, "shot") == 0; }();
+			const double BrainReach = (!bA86ShotReach && All.IsValidIndex(Lt)) ? S.CarrierReachM(Lt) : G.Shot.ReachM;
+			W.Carrier = (All.IsValidIndex(Lt) && All[Lt].CanAct() && FVector2D::Distance(All[Lt].Pos, S.GetPuck().Pos) <= BrainReach) ? Lt : -1;
 			// lane A46: whom the sim's pass would go to from the carrier right now (the brain passes to the human only when it is this teammate)
 			W.CarrierBestPass = -1;
 			if (W.Carrier >= 0) { FVector2D Aim; W.CarrierBestPass = S.BestPass(W.Carrier, Aim); }
+			W.CarrierBestSaucer = -1;   // lane A77 (R-0036): whom a saucer would go to (a blade in the lane allowed)
+			if (W.Carrier >= 0) { FVector2D Aim; W.CarrierBestSaucer = S.BestPass(W.Carrier, Aim, true); }
+			// lane A94 (R-0045 law 2): the holder at the sim's own carrier reach (UJamSim::CarrierIndex: the blade's full length) and its best pass. Only the
+			// hockey sense reads these (W.Carrier stays on shot.reach_m for every older decision, A85's note above).
+			W.Holder = S.CarrierIndex();
+			W.HolderBestPass = -1;
+			if (W.Holder >= 0) { FVector2D Aim; W.HolderBestPass = S.BestPass(W.Holder, Aim); }
 		}
 		W.SkaterRadius = UJamSim::SkaterRadius;
 		W.StickReach = G.Stick.ReachM;
 		W.LiftRange = G.Stick.LiftRangeM;
+		W.LiftConeDeg = G.Stick.LiftConeDeg;   // lane A95 (B-to-A-0037)
+		W.ReverseBrakeDecel = G.Skater.ReverseBrakeDecel;   // lane A95: the movement verbs the playtester uses only when they exist
+		W.BurstFrames = G.Skater.BurstFrames;
+		W.SprintCarryBonus = G.Skater.SprintCarryBonus;
 		W.SweepBotReactFrames = G.Stick.SweepBotReactFrames;   // lane A51
 		// R-0029 point 4 (lane A39): the goalie commit of the latest deke
 		{
@@ -275,7 +296,7 @@ namespace JamAI
 			O.Team = K.Team;
 			O.Role = RoleOf(K.Role);
 			O.bHasPuck = K.bHasPuck;
-			O.bDown = K.IsDown();
+			O.bDown = K.IsDown() || K.InBox();   // lane A105: a boxed skater is off the ice for every brain read (pressure, outlets, jobs), like one knocked down
 			O.bCentre = K.bCentre;
 			O.bCanPoke = K.CanAct() && NextFrame >= K.PokeReadyFrame && K.PokeWindow <= 0;
 			O.bCanLift = K.CanAct() && NextFrame >= K.LiftReadyFrame;
@@ -295,7 +316,7 @@ namespace JamAI
 			// the same gate as UJamSim::TryShoot
 			const FVector2D To = S.GetPuck().Pos - K.Pos;
 			const double D = To.Size();
-			O.bCanShoot = !W.bFrozen && !K.IsDown() && NextFrame >= K.ShotReadyFrame && D <= G.Shot.ReachM
+			O.bCanShoot = !W.bFrozen && !K.IsDown() && NextFrame >= K.ShotReadyFrame && D <= S.CarrierReachM(K.Index)   // R-0042 (lane A85): TryShoot's reach
 				&& (D < 0.05 || FVector2D::DotProduct(K.Forward(), To / D) >= UJamSim::ShotFrontDot);
 		}
 	}
@@ -331,12 +352,14 @@ namespace JamAI
 			I.bCheck = In[i].bCheck;
 			I.bBrake = In[i].bBrake;
 			I.bPass = In[i].bPass;
+			I.bPassHeld = In[i].bPassHeld;   // lane A77 (R-0036): the saucer hold
 			I.Stick = FVector2D(In[i].Stick.X, In[i].Stick.Y);
 			I.bPoke = In[i].bPoke;
 			I.bLift = In[i].bLift;
 			I.bDeke = In[i].bDeke;   // R-0029 point 4 (lane A39): the deke tap
 			I.bSpin = In[i].bSpin;   // lane A51 (R-0034): the spin tap
 			I.bSprint = In[i].bSprint;   // lane A72 (asks A2, A3): the bots' and the playtester's sprint
+			I.bAbility = In[i].bAbility;   // lane A84 (R-0041 point 3): the playtester's F
 		}
 		if (bWithSystems) { Systems.BeforeStep(*Sim); }   // lane A41: score mirror, sim step, zone update, effect step (the game mode's order)
 		Sim->Step(Inputs);

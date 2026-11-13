@@ -1,0 +1,3 @@
+| rink | level | player | W-L-D-unf | win % | GF / GA | by human | touch/min (min) | carries 3 s | carry % | shots | SOT % | shots opp | lead chg | first touch s | first shot s | first goal s (n / <2 min) | fo w/o touch | checks L/T | fouls behind/no puck (box s) | pokes (clean) | passes (rcv) | payoffs OT/BA/DK (goals) | idle spells (s) | max no touch s | match s |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| regular | rookie | novice | 56-4-0-0 | **93** | 2.9 / 0.9 | 2.4 | 14.4 (8.7) | 3.9 | 17 | 7.8 | 55 | 14.1 | 0.3 | 1.8 | 31.6 | 85.1 (60 / 38) | 51 | 4.7 / 0 | 1.8 / 0.6 (11.8) | 25.4 (3.3) | 0.2 (3) | 0 / 5.1 / 0 (2.1) | 2.8 (19.4) | 65.6 | 292.9 |

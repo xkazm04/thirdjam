@@ -20,11 +20,12 @@ proof lines, the drill), `Game/Source/JamCore/{Public,Private}/JamPawns.{h,cpp}`
 | Shoot | **left button**, hold to charge, release to shoot | RT | `bShootHeld` | `shot.charge_frames_max`, `charge_speed_bonus` as before |
 | Body check / tackle | **right button** | RB | `bCheck` | opens the check window: 12 frames for the human (bots 6); lands from 2 m/s of the human's own speed (bots `check_speed_min`) |
 | Cross-check (stick lift) | **middle button** or **mouse 4** | LB | `bLift` | strips an opposing carrier within `stick.lift_range_m` (1.2 m beyond the two bodies); 30-frame cooldown |
-| Deke | **mouse wheel** (either way) or Q | Y | `bDeke` | lane A39's deke: the one-tap sweep (it arms the same poke shield, lane A51) |
+| Deke | **mouse wheel** (either way) | Y | `bDeke` | lane A39's deke: the one-tap sweep (it arms the same poke shield, lane A51); lane A84 (R-0041 point 3): Q went to the pass |
 | Spin | **E** | B | `bSpin` | **lane A51 (R-0034)**: a full turn over 24 frames, the puck on the far side of the body from the nearest opponent (no poke reaches it), speed x0.7, a quarter of the stamina bar, 90-frame cooldown; a check landing mid-spin knocks down 1.5x longer |
 | Sprint | **Shift** (held) | LT | `bSprint` | **new**: +15 % top speed and thrust while moving and the stamina lasts; drains in 3 s (180 frames), refills in 6 s (360); `game.skater.sprint { bonus, drain_frames, refill_frames }`; a bar bottom-centre of the HUD while it is not full |
 | Poke | Space | A | `bPoke` | |
-| Pass | **F** | X | `bPass` | lane A51 (R-0034): moved from E (E is the spin) |
+| Pass | **Q** (tap: flat; hold: saucer) | X | `bPassHeld` | lane A51 (R-0034) moved it from E to F; lane A84 (R-0041 point 3) from F to Q; the held saucer (lane A77) moves with it |
+| Ability | **F** | right stick click (R3) | `bAbility` | lane A84 (R-0041 point 3): the held ability of `game.abilities[]` (shotgun, hip check, shield, slow puck); does nothing without one; R3 because the D-pad is the signals and LT the sprint; proof lines `JAMCTRL frame=N btn=ability kind=K (F / R3)` and `JAMCTRL frame=N ability used kind=K charges=C ready=F` |
 | Team signals | 1 2 3 4 | D-pad | (signal system) | unchanged (lane A3) |
 | Brake | Ctrl | left stick click | `bBrake` | the left trigger went to the sprint (A49), B to the spin (A51) |
 | Restart | R | View / Back | | |

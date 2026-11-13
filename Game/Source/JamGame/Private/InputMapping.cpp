@@ -71,6 +71,7 @@ void UJamInputMap::Build()
 	Pass = MakeAction(this, TEXT("IA_Pass"), EInputActionValueType::Boolean);
 	Sprint = MakeAction(this, TEXT("IA_Sprint"), EInputActionValueType::Boolean);   // lane A49
 	Spin = MakeAction(this, TEXT("IA_Spin"), EInputActionValueType::Boolean);   // lane A51 (R-0034)
+	Ability = MakeAction(this, TEXT("IA_Ability"), EInputActionValueType::Boolean);   // lane A84 (R-0041 point 3)
 	Context = NewObject<UInputMappingContext>(this, TEXT("IMC_Hokej"));
 
 	// WASD and arrows: a 1D key feeds X; W / Up swizzle it onto Y, S / Down swizzle and negate, A / Left negate.
@@ -109,15 +110,19 @@ void UJamInputMap::Build()
 	Context->MapKey(Lift, EKeys::MiddleMouseButton);              // the cross-check
 	Context->MapKey(Lift, EKeys::ThumbMouseButton);               // mouse 4
 	Context->MapKey(Lift, EKeys::Gamepad_LeftShoulder);           // LB
-	Context->MapKey(Deke, EKeys::Q);                              // lane A39 (R-0029 point 4): the deke
+	// Lane A39 (R-0029 point 4): the deke. Lane A84 (R-0041 point 3): Q went to the pass; the deke keeps the wheel and gamepad Y.
 	Context->MapKey(Deke, EKeys::MouseScrollUp);
 	Context->MapKey(Deke, EKeys::MouseScrollDown);
 	Context->MapKey(Deke, EKeys::Gamepad_FaceButton_Top);         // Y
 	// Lane A51 (R-0034): the spin on E / gamepad B; the pass moves to F (gamepad X unchanged).
 	Context->MapKey(Spin, EKeys::E);
 	Context->MapKey(Spin, EKeys::Gamepad_FaceButton_Right);  // B
-	Context->MapKey(Pass, EKeys::F);
+	// Lane A84 (R-0041 point 3): the pass (and its held saucer) moves to Q, gamepad X unchanged; F is the held ability. The gamepad's ability is the right
+	// stick click (R3): the D-pad is the four signals (lane A12) and LT the sprint (lane A49), so R3 is the one free button.
+	Context->MapKey(Pass, EKeys::Q);
 	Context->MapKey(Pass, EKeys::Gamepad_FaceButton_Left);   // X
+	Context->MapKey(Ability, EKeys::F);
+	Context->MapKey(Ability, EKeys::Gamepad_RightThumbstick);   // R3
 	Context->MapKey(Pause, EKeys::Escape);
 	Context->MapKey(Pause, EKeys::Gamepad_Special_Right);       // Start / Menu
 }
@@ -127,9 +132,9 @@ FString UJamInputMap::BindingTableText(bool bOneLine)
 	// Kept by hand next to Build() so the strip, the pause card and CONTROLS.md say the same thing.
 	static const TCHAR* Rows[][2] = {
 		{ TEXT("SKATE"), TEXT("WASD / L-STICK") }, { TEXT("AIM STICK"), TEXT("MOUSE / R-STICK") }, { TEXT("SHOOT"), TEXT("HOLD LMB / RT") },
-		{ TEXT("CHECK"), TEXT("RMB / RB") }, { TEXT("CROSS-CHECK"), TEXT("MMB, MOUSE4 / LB") }, { TEXT("DEKE"), TEXT("WHEEL, Q / Y") },
-		{ TEXT("SPIN"), TEXT("E / B") }, { TEXT("SPRINT"), TEXT("SHIFT / LT") }, { TEXT("POKE"), TEXT("SPACE / A") }, { TEXT("PASS"), TEXT("F / X") }, { TEXT("SIGNALS"), TEXT("1-4 / D-PAD") },
-		{ TEXT("BRAKE"), TEXT("CTRL / L-STICK CLICK") }, { TEXT("RESTART"), TEXT("R / VIEW") }, { TEXT("PAUSE"), TEXT("ESC / MENU") } };
+		{ TEXT("CHECK"), TEXT("RMB / RB") }, { TEXT("CROSS-CHECK"), TEXT("MMB, MOUSE4 / LB") }, { TEXT("DEKE"), TEXT("WHEEL / Y") },
+		{ TEXT("SPIN"), TEXT("E / B") }, { TEXT("SPRINT"), TEXT("SHIFT / LT") }, { TEXT("POKE"), TEXT("SPACE / A") }, { TEXT("PASS"), TEXT("Q / X") }, { TEXT("ABILITY"), TEXT("F / R3") }, { TEXT("SIGNALS"), TEXT("1-4 / D-PAD") },
+		{ TEXT("BRAKE"), TEXT("REVERSE / CTRL / L-STICK CLICK") }, { TEXT("RESTART"), TEXT("R / VIEW") }, { TEXT("PAUSE"), TEXT("ESC / MENU") } };
 	FString Out;
 	for (const auto& R : Rows)
 	{
@@ -232,7 +237,9 @@ void UJamPlayerInput::TryBind()
 	EIC->BindAction(M->Lift, ETriggerEvent::Started, this, &UJamPlayerInput::OnLiftStarted);
 	EIC->BindAction(M->Deke, ETriggerEvent::Started, this, &UJamPlayerInput::OnDekeStarted);
 	EIC->BindAction(M->Pass, ETriggerEvent::Started, this, &UJamPlayerInput::OnPassStarted);
+	EIC->BindAction(M->Pass, ETriggerEvent::Completed, this, &UJamPlayerInput::OnPassDone);   // lane A77 (R-0036): the held pass
 	EIC->BindAction(M->Spin, ETriggerEvent::Started, this, &UJamPlayerInput::OnSpinStarted);   // lane A51
+	EIC->BindAction(M->Ability, ETriggerEvent::Started, this, &UJamPlayerInput::OnAbilityStarted);   // lane A84
 	EIC->BindAction(M->Restart, ETriggerEvent::Started, this, &UJamPlayerInput::OnRestartStarted);
 	EIC->BindAction(M->Pause, ETriggerEvent::Started, this, &UJamPlayerInput::OnPauseStarted);
 	BoundPC = PC;
@@ -277,6 +284,13 @@ bool UJamPlayerInput::ConsumePassPressed()
 {
 	const bool B = bPassLatch;
 	bPassLatch = false;
+	return B;
+}
+
+bool UJamPlayerInput::ConsumeAbilityPressed()
+{
+	const bool B = bAbilityLatch;
+	bAbilityLatch = false;
 	return B;
 }
 

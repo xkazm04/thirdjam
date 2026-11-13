@@ -19,7 +19,11 @@
       "Game/Source/JamNet/**",
       "Game/Source/JamCore/Effects/**",
       "Game/Source/JamCore/Rules/**",
-      "Game/Content/Cartridges/ladder/**"
+      "Game/Content/Cartridges/ladder/**",
+      "Game/Content/Arena/**",
+      "Game/Content/Commentary/**",
+      "submission/**",
+      "docs/design/**"
     ],
     "B": [
       "Game/Plugins/JamAssets/**",

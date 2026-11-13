@@ -1,0 +1,21 @@
+Build.bat is already running, waiting for existing script to terminate...
+Using bundled DotNet SDK version: 10.0 win-x64
+Running UnrealBuildTool: dotnet "..\..\Engine\Binaries\DotNET\UnrealBuildTool\UnrealBuildTool.dll" -Mode=ValidatePlatforms -OutputSDKs  -AllPlatforms  -project="C:/Users/kazda/kiro/thirdjam/.claude/worktrees/a89/Game/ThirdJam.uproject" -log="C:/Users/kazda/kiro/thirdjam/.claude/worktrees/a89/Game/Saved/Logs/AutoSDKInfo.txt" -verbose -timestamps
+Log file: C:\Users\kazda\kiro\thirdjam\.claude\worktrees\a89\Game\Saved\Logs\AutoSDKInfo.txt
+##PlatformValidate: Win64 VALID 10.0.26100.0
+##PlatformValidate: Mac INVALID 26.1.1
+##PlatformValidate: IOS INVALID 26.1.1
+##PlatformValidate: Android VALID r27c
+##PlatformValidate: Linux INVALID v26_clang-20.1.8-rockylinux8
+##PlatformValidate: LinuxArm64 INVALID <UNKNOWN>
+##PlatformValidate: TVOS INVALID 26.1.1
+##PlatformValidate: VisionOS INVALID <UNKNOWN>
+##PlatformValidate: Wasm INVALID 6.0.10
+Unable to find required SDK version 'MainVersion' for platform LinuxArm64. Check your SDK.json files
+Unable to find required SDK version 'MainVersion' for platform VisionOS. Check your SDK.json files
+Trace written to file C:\Users\kazda\AppData\Local\UnrealBuildTool\Trace.uba with size 1.1kb
+Using bundled DotNet SDK version: 10.0 win-x64
+Running UnrealBuildTool: dotnet "..\..\Engine\Binaries\DotNET\UnrealBuildTool\UnrealBuildTool.dll" -Mode=ValidatePlatforms -OutputSDKs   -Platforms=Android  -project="C:/Users/kazda/kiro/thirdjam/.claude/worktrees/a89/Game/ThirdJam.uproject" -log="C:/Users/kazda/kiro/thirdjam/.claude/worktrees/a89/Game/Saved/Logs/AutoSDKInfo.txt" -verbose -timestamps
+Log file: C:\Users\kazda\kiro\thirdjam\.claude\worktrees\a89\Game\Saved\Logs\AutoSDKInfo.txt
+A conflicting instance of Global\UnrealBuildTool_Mutex_378d63e9ac398c1efe71ea771c4ddb2cf9e71a3d is already running.
+Trace written to file C:\Users\kazda\AppData\Local\UnrealBuildTool\Trace.uba with size 496b

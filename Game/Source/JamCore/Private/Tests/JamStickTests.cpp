@@ -176,7 +176,7 @@ bool FJamStick::RunTest(const FString& Parameters)
 		const int32 O = FirstOpponent(Sim, Me);
 		Park(Sim, { Me, O });
 		Sim->SetSkater(O, FVector2D(0, 0), FVector2D::ZeroVector, 0);
-		Sim->SetSkater(Me, FVector2D(0.0, 1.2), FVector2D::ZeroVector, 0);
+		Sim->SetSkater(Me, FVector2D(0.0, 1.2), FVector2D::ZeroVector, -UE_DOUBLE_PI / 6.0);   // lane A95 (B-to-A-0037): 60 degrees off the line to the carrier, inside stick.lift_cone_deg 70 (was 90)
 		GivePuck(Sim, O);
 		TArray<FJamInput> In;
 		In.SetNum(Sim->GetSkaters().Num());
@@ -253,7 +253,7 @@ bool FJamStick::RunTest(const FString& Parameters)
 		const int32 O = FirstOpponent(Sim, Me);
 		Park(Sim, { Me, O });
 		Sim->SetSkater(O, FVector2D(0, 0), FVector2D::ZeroVector, 0);
-		Sim->SetSkater(Me, FVector2D(0.0, 1.2), FVector2D::ZeroVector, 0);
+		Sim->SetSkater(Me, FVector2D(0.0, 1.2), FVector2D::ZeroVector, -UE_DOUBLE_PI / 6.0);   // lane A95 (B-to-A-0037): 60 degrees off the line to the carrier, inside stick.lift_cone_deg 70 (was 90)
 		GivePuck(Sim, O);
 		TArray<FJamInput> In;
 		In.SetNum(Sim->GetSkaters().Num());
@@ -264,6 +264,8 @@ bool FJamStick::RunTest(const FString& Parameters)
 		const int64 StripFrame = Sim->GetFrame();
 		for (int32 F = 0; F < Wait; ++F) Sim->Step(In);
 		// Charge O from the side (not from behind): O faces +x, the hit comes along -z.
+		// Lane A92 (R-0045): the puck the lift sent the human's way is parked, so the charger does not carry it (the carrier cannot hit once the grace is over).
+		Sim->SetPuck(FVector2D(-15.0, -10.0), FVector2D::ZeroVector);
 		Sim->SetSkater(Me, FVector2D(0.0, 1.3), FVector2D(0, -8), -UE_DOUBLE_PI * 0.5);
 		In[Me].Move = FVector2D(0, -1);
 		In[Me].bCheck = true;

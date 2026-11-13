@@ -1,0 +1,26 @@
+[
+ {
+  "label": "idle-regular-rookie",
+  "cls": "regular",
+  "lvl": "rookie",
+  "cart": "hockey.regular",
+  "seeds": "regularband:100",
+  "trace": true
+ },
+ {
+  "label": "idle-regular-pro",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "hockey.regular",
+  "seeds": "regularband:100",
+  "trace": true
+ },
+ {
+  "label": "idle-regular-all_star",
+  "cls": "regular",
+  "lvl": "all_star",
+  "cart": "hockey.regular",
+  "seeds": "regularband:100",
+  "trace": true
+ }
+]

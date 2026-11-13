@@ -1,0 +1,105 @@
+# Credits and provenance (from ASSETS.md, built by tools/media/credits.mjs)
+
+Rows: 1654; shipped: 976. Origin counts (all rows): {"original":1011,"ai-generated":581,"sourced":62}. Shipped: {"original":524,"ai-generated":451,"sourced":1}.
+
+## Sourced (not original, not AI-generated): 62 rows, 1 shipped
+
+| path | kind | shipped | tool / origin | licence | url |
+|---|---|---|---|---|---|
+| Game/Plugins/DLSS/Binaries/ThirdParty/Win64/nvngx_dlss.dll | other | y | NVIDIA DLSS 4.5 Unreal plugin v8.9.0 (UE 5.8 build, ported to 5.9) | NVIDIA RTX SDKs License + RTX Supplement (v. 2024-03-14) | https://developer.nvidia.com/downloads/assets/gameworks/downloads/secure/dlss/ue-dlss-5.8/8.9.0/2026.10.16_ue5.8_dlss4.5plugin_v8.9.0.zip |
+| Game/Content/P4/Meshy/Anims/MF_Unarmed_Jog_Fwd_P4_Meshy.uasset | anim | n | Epic template Manny clip, retargeted by us | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/P4/Meshy/Anims/MF_Unarmed_Walk_Fwd_P4_Meshy.uasset | anim | n | Epic template Manny clip, retargeted by us | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/P4/Meshy/Anims/MM_Idle_P4_Meshy.uasset | anim | n | Epic template Manny clip, retargeted by us | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/P4/Rodin/Anims/MF_Unarmed_Jog_Fwd_P4_Rodin.uasset | anim | n | Epic template Manny clip, retargeted by us | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/P4/Rodin/Anims/MF_Unarmed_Walk_Fwd_P4_Rodin.uasset | anim | n | Epic template Manny clip, retargeted by us | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/P4/Rodin/Anims/MM_Idle_P4_Rodin.uasset | anim | n | Epic template Manny clip, retargeted by us | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/P4/Tripo/Anims/MF_Unarmed_Jog_Fwd_P4_Tripo.uasset | anim | n | Epic template Manny clip, retargeted by us | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/P4/Tripo/Anims/MF_Unarmed_Walk_Fwd_P4_Tripo.uasset | anim | n | Epic template Manny clip, retargeted by us | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/P4/Tripo/Anims/MM_Idle_P4_Tripo.uasset | anim | n | Epic template Manny clip, retargeted by us | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Anims/Death/MM_Death_Back_01.uasset | anim | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Anims/Death/MM_Death_Front_01.uasset | anim | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Anims/Death/MM_Death_Front_02.uasset | anim | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Anims/Death/MM_Death_Front_03.uasset | anim | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Anims/Death/MM_Death_Left_01.uasset | anim | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Anims/Death/MM_Death_Right_01.uasset | anim | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Anims/Rifle/HitReact/MM_HitReact_Back_Med_01.uasset | anim | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Anims/Rifle/HitReact/MM_HitReact_Front_Hvy_01.uasset | anim | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Anims/Rifle/HitReact/MM_HitReact_Front_Lgt_01.uasset | anim | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Anims/Rifle/HitReact/MM_HitReact_Front_Lgt_02.uasset | anim | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Anims/Rifle/HitReact/MM_HitReact_Front_Lgt_03.uasset | anim | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Anims/Rifle/HitReact/MM_HitReact_Front_Lgt_04.uasset | anim | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Anims/Rifle/HitReact/MM_HitReact_Front_Med_01.uasset | anim | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Anims/Rifle/HitReact/MM_HitReact_Front_Med_02.uasset | anim | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Anims/Unarmed/Attack/MM_Attack_01.uasset | anim | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Anims/Unarmed/Attack/MM_Attack_02.uasset | anim | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Anims/Unarmed/Attack/MM_Attack_03.uasset | anim | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Anims/Unarmed/Attack/MM_ChargedAttack.uasset | anim | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Anims/Unarmed/Jog/MF_Unarmed_Jog_Fwd.uasset | anim | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Anims/Unarmed/MM_Idle.uasset | anim | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Anims/Unarmed/Walk/MF_Unarmed_Walk_Fwd.uasset | anim | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Materials/M_Mannequin.uasset | material | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Materials/Manny/MI_Manny_01_New.uasset | material | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Materials/Manny/MI_Manny_02_New.uasset | material | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Materials/Quinn/MI_Quinn_01.uasset | material | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Materials/Quinn/MI_Quinn_02.uasset | material | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Meshes/SKM_Manny_Simple.uasset | mesh | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Meshes/SKM_Quinn_Simple.uasset | mesh | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Meshes/SK_Mannequin.uasset | mesh | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Rigs/PA_Mannequin.uasset | mesh | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Textures/Manny/T_Manny_01_BN.uasset | texture | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Textures/Manny/T_Manny_01_D.uasset | texture | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Textures/Manny/T_Manny_01_MRA.uasset | texture | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Textures/Manny/T_Manny_02_BN.uasset | texture | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Textures/Manny/T_Manny_02_D.uasset | texture | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Textures/Manny/T_Manny_02_MRA.uasset | texture | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Textures/Manny/T_Manny_02_N.uasset | texture | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Textures/Quinn/T_Quinn_01_D.uasset | texture | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Textures/Quinn/T_Quinn_01_MRA.uasset | texture | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Textures/Quinn/T_Quinn_01_N.uasset | texture | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Textures/Quinn/T_Quinn_02_D.uasset | texture | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Textures/Quinn/T_Quinn_02_MRA.uasset | texture | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Textures/Quinn/T_Quinn_02_N.uasset | texture | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/Characters/Mannequins/Textures/Shared/T_UE_Logo_M.uasset | texture | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/P4/Anim/AS_P4_check_manny.uasset | anim | n | duplicate of an engine Manny clip with force_root_lock (tools/p4motion/ue_summary.py) | Unreal Engine EULA (Epic content) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/P4/Anim/AS_P4_fall_left_manny.uasset | anim | n | duplicate of an engine Manny clip with force_root_lock (tools/p4motion/ue_summary.py) | Unreal Engine EULA (Epic content) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/P4/Anim/AS_P4_fall_right_manny.uasset | anim | n | duplicate of an engine Manny clip with force_root_lock (tools/p4motion/ue_summary.py) | Unreal Engine EULA (Epic content) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/P4/Anim/AS_P4_hit_reaction_manny.uasset | anim | n | duplicate of an engine Manny clip with force_root_lock (tools/p4motion/ue_summary.py) | Unreal Engine EULA (Epic content) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/P4/Anim/AS_P4_knocked_down_back_w1.uasset | anim | n | duplicate of an engine Manny clip with force_root_lock (tools/p4motion/ue_summary.py) | Unreal Engine EULA (Epic content) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/P4/Anim/AS_P4_knocked_down_back_w2.uasset | anim | n | duplicate of an engine Manny clip with force_root_lock (tools/p4motion/ue_summary.py) | Unreal Engine EULA (Epic content) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/P4/Anim/AS_P4_skate_fwd_w1.uasset | anim | n | duplicate of an engine Manny clip with force_root_lock (tools/p4motion/ue_summary.py) | Unreal Engine EULA (Epic content) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/P4/Anim/AS_P4_skate_fwd_w2.uasset | anim | n | duplicate of an engine Manny clip with force_root_lock (tools/p4motion/ue_summary.py) | Unreal Engine EULA (Epic content) | https://www.unrealengine.com/en-US/eula/unreal |
+
+## Findings
+
+- Sourced rows with an empty licence or url: 0 of 62.
+
+## AI-generated content (declared as such, not "sourced"), by tool
+
+- ElevenLabs TTS: 340 rows
+- Codex image generation: 52 rows
+- Meshy: 50 rows
+- Hyper3D Rodin: 48 rows
+- ElevenLabs sound effects: 27 rows
+- Codex concept sheet: 10 rows
+- Meshy text-to-3d meshy-6-lite: 10 rows
+- Hyper3D Rodin Gen-2.5-Low: 10 rows
+- Tripo3D v2.5 text-to-3d through fal.ai: 10 rows
+- Meshy Text to Motion: 6 rows
+- ElevenLabs music: 1 rows
+- Meshy rig: 1 rows
+- Hyper3D Rodin texture repainted by skc/p4/tools/tex_p4.py: 1 rows
+- Hyper3D Rodin texture, repainted by lane SKT scripts: 1 rows
+- Meshy animation library; task 01a1d0a0-352b-7132-813e-29dae2aa6e62; 3 credits; retargeted onto SK_Mannequin by tools/p4motion/retarget.mjs: 1 rows
+- Meshy animation library; task 01a1d0a0-c300-705b-8d73-770b0942365e; 3 credits; retargeted onto SK_Mannequin by tools/p4motion/retarget.mjs: 1 rows
+- Meshy animation library; task 01a1d0a0-f1cd-706b-a4df-247e1ecb1476; 3 credits; retargeted onto SK_Mannequin by tools/p4motion/retarget.mjs: 1 rows
+- Meshy animation library; task 01a1d09f-d677-71f0-9736-f2c21678fad2; 3 credits; retargeted onto SK_Mannequin by tools/p4motion/retarget.mjs: 1 rows
+- Meshy animation library; task 01a1d0a0-64f4-7013-b207-a3e26a625727; 3 credits; retargeted onto SK_Mannequin by tools/p4motion/retarget.mjs: 1 rows
+- Meshy animation library; task 01a1d0a1-20ef-7752-8ab8-0d5f0d326735; 3 credits; retargeted onto SK_Mannequin by tools/p4motion/retarget.mjs: 1 rows
+- Meshy animation library; task 01a1d089-9151-70bc-87eb-0fd0dfcc4809; 3 credits; retargeted onto SK_Mannequin by tools/p4motion/retarget.mjs: 1 rows
+- Meshy animation library; task 01a1d09f-3935-73ea-9cd3-c527cd326f5a; 3 credits; retargeted onto SK_Mannequin by tools/p4motion/retarget.mjs: 1 rows
+- Meshy animation library; task 01a1d09f-6969-7189-986c-c7ca40eb078a; 3 credits; retargeted onto SK_Mannequin by tools/p4motion/retarget.mjs: 1 rows
+- Meshy animation library; task 01a1d09f-a534-7263-8688-95c4821cffbf; 3 credits; retargeted onto SK_Mannequin by tools/p4motion/retarget.mjs: 1 rows
+- Meshy animation library; task 01a1d0a0-93d7-7733-ad13-3efeefde4490; 3 credits; retargeted onto SK_Mannequin by tools/p4motion/retarget.mjs: 1 rows
+- Meshy animation library; task 01a1d0a0-067e-7684-b77a-0caa92b3bc7b; 3 credits; retargeted onto SK_Mannequin by tools/p4motion/retarget.mjs: 1 rows
+- Meshy animation library; task 01a1d0b8-b36a-7371-ab6e-59447b8387ca; 10 credits; retargeted onto SK_Mannequin by tools/p4motion/retarget.mjs: 1 rows
+- Meshy animation library; task 01a1d0b9-2745-728b-9cc7-0bf55217ec8e; 10 credits; retargeted onto SK_Mannequin by tools/p4motion/retarget.mjs: 1 rows

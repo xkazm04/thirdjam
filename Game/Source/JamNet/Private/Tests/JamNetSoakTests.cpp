@@ -167,7 +167,7 @@ namespace JamNetSoak
 
 	struct FSnap
 	{
-		uint64 Lock = 0, SimH = 0, FxH = 0, RulesH = 0, ZonesH = 0;
+		uint64 Lock = 0, SimH = 0, FxH = 0, RulesH = 0, ZonesH = 0, SimLockH = 0;
 		TArray<FJamSkaterState> Skaters;
 		FJamPuckState Puck;
 		int32 Phase = 0, Score0 = 0, Score1 = 0, Timer = 0;
@@ -187,6 +187,7 @@ namespace JamNetSoak
 		I.bShoot = A.bShoot; I.bShootHeld = A.bShootHeld; I.bCheck = A.bCheck; I.bBrake = A.bBrake; I.bPass = A.bPass;
 		I.Stick = FVector2D(A.Stick.X, A.Stick.Y);
 		I.bPoke = A.bPoke; I.bLift = A.bLift; I.bDeke = A.bDeke; I.bSpin = A.bSpin;
+		I.bPassHeld = A.bPassHeld; I.bSprint = A.bSprint; I.bAbility = A.bAbility;   // lane A104: the saucer hold, the sprint and F reach the wire too
 		return I;
 	}
 
@@ -210,6 +211,10 @@ namespace JamNetSoak
 		int32 EdgeLost[16] = {};
 		int64 FirstEdgeLostFrame = -1;
 		int32 Spins = 0;   // spin presses that reached the sim (either human)
+		// Lane A104: what the two humans' new verbs did on the wire: frames with a sprint held, frames with a pass held, ability presses applied (either human).
+		int32 Verbs[3] = {};
+		bool bSprintOn = true;   // -SoakSprint=0 gives back A56's playtesters (no Shift)
+		bool bSeatGuest = true;  // lane A110: ALobbyGameMode seats the guest as a human (UJamSim::SeatGuest); -SoakSeatGuest=0 gives back A104's bot seat
 
 		void Init(FAutomationTestBase& T, const UJamCartridge& C, uint64 Seed, IJamLink& Link, int32 InLocal, int32 InRemote, JamAI::EPlaytester Kind)
 		{
@@ -223,6 +228,8 @@ namespace JamNetSoak
 			Zones->Init(G);
 			Sim->SetZoneSource(Zones.Get());
 			Sim->Init(G, Seed);
+			// Lane A110: as ALobbyGameMode::StartPlay, both machines seat the guest (the seat that is not the cartridge's human) before the first step.
+			if (bSeatGuest) Sim->SeatGuest(InLocal == Sim->GetHumanIndex() ? InRemote : InLocal);
 			Fx.Reset(NewObject<UJamEffectSystem>());
 			TArray<FString> Errors;
 			Fx->Init(Sim.Get(), C.RawJson, Errors);
@@ -234,11 +241,53 @@ namespace JamNetSoak
 			Driver->Start(&Link, JamNet::InputDelay);
 			Tester.Reset(Kind, Seed);
 			Tester.ChargeFramesMax = G.Shot.ChargeFramesMax;
+			Tester.bSprint = bSprintOn;   // lane A104: the playtesters press Shift (A72's SprintPct, A95's carry sprint)
 			LocalSlot = InLocal; RemoteSlot = InRemote;
 			Inputs.SetNum(Sim->GetSkaters().Num());
 		}
 
-		uint64 LockHash() const { return Sim->StateHash() ^ (Fx->StateHash() * 31); }   // ALobbyGameMode::LockstepHash
+		uint64 LockHash() const { return JamNetLockstepHash(Sim.Get(), Fx.Get(), Rules.Get(), Zones.Get()); }   // ALobbyGameMode::LockstepHash (lane A104: one function)
+
+		// Lane A104: FJamPlaytester's F, as RunPlaytestMatch decides it (JamPlaytester.cpp, lane A84): the shotgun on a shot or into a crowd, the hip check on
+		// a check or an opposing carrier within 1.2 m, the slow puck while carrying, the shield while carrying with an opponent within 4 m. No draws.
+		static bool PlaytesterAbility(const UJamSim& Sm, int32 P, const FJamInput& I)
+		{
+			const FJamAbilityConfig* A = Sm.HeldAbility(P);
+			if (!A) return false;
+			const FJamSkaterState& K = Sm.GetSkaters()[P];
+			if (K.AbilityCharges == 0 || Sm.GetFrame() + 1 < K.AbilityReadyFrame || !K.AbilityArmed.IsNone() || K.ShieldFrames > 0 || !K.CanAct()) return false;
+			const bool bCarry = Sm.CarrierIndex() == P;
+			const FVector2D Fwd = K.Forward();
+			if (A->Kind == FName(TEXT("shotgun")))
+			{
+				if (!bCarry) return false;
+				if (I.bShoot || (I.bShootHeld && K.ChargeFrames == 0)) return true;
+				const FVector2D ToGoal = (FVector2D(Sm.AttackGoalX(K.Team), 0.0) - K.Pos).GetSafeNormal();
+				if (FVector2D::DotProduct(Fwd, ToGoal) < 0.7) return false;
+				for (const FJamSkaterState& O : Sm.GetSkaters())
+				{
+					if (O.Team == K.Team || O.IsDown() || O.InBox()) continue;
+					const FVector2D D = O.Pos - K.Pos;
+					const double Along = FVector2D::DotProduct(D, Fwd);
+					if (Along > 0.5 && Along < 15.0 && FMath::Abs(FVector2D::CrossProduct(Fwd, D)) <= 1.0) return true;
+				}
+				return false;
+			}
+			if (A->Kind == FName(TEXT("hip_check")))
+			{
+				if (I.bCheck) return true;
+				const int32 C = Sm.CarrierIndex();
+				return C >= 0 && Sm.GetSkaters()[C].Team != K.Team && FVector2D::Distance(Sm.GetSkaters()[C].Pos, K.Pos) <= 1.2;
+			}
+			if (A->Kind == FName(TEXT("slow_puck"))) return bCarry;
+			if (A->Kind == FName(TEXT("shield")))
+			{
+				if (!bCarry) return false;
+				const int32 O = Sm.NearestOpponent(K);
+				return O >= 0 && FVector2D::Distance(Sm.GetSkaters()[O].Pos, K.Pos) <= 4.0;
+			}
+			return false;
+		}
 
 		// ALobbyGameMode::GatherBotInputs' world: the adapter's view plus pickups and slow ice / no-shoot zones.
 		void BuildWorld(JamAI::FJamAIWorld& W) const
@@ -281,7 +330,8 @@ namespace JamNetSoak
 			BuildWorld(W);
 			JamAI::FJamAIWorld Mine = W;
 			Mine.PlayerIndex = LocalSlot;   // the playtester plays this machine's seat (the guest's is a bot slot in the sim)
-			const FJamInput Local = ToInput(Tester.Think(Mine));
+			FJamInput Local = ToInput(Tester.Think(Mine));
+			Local.bAbility = PlaytesterAbility(*Sim, LocalSlot, Local);   // lane A104: F, as RunPlaytestMatch presses it
 			const uint16 Edges = FJamNetQuantInput::From(Local).Flags & FJamNetQuantInput::EdgeFlags;
 			const int64 F0 = Driver->GetFrame();
 			FJamInput L, R;
@@ -304,6 +354,9 @@ namespace JamNetSoak
 				ExpectedEdges.Remove(F0);
 			}
 			if (L.bSpin || R.bSpin) ++Spins;
+			Verbs[0] += (L.bSprint ? 1 : 0) + (R.bSprint ? 1 : 0);
+			Verbs[1] += (L.bPassHeld ? 1 : 0) + (R.bPassHeld ? 1 : 0);
+			Verbs[2] += (L.bAbility ? 1 : 0) + (R.bAbility ? 1 : 0);
 
 			const uint64 C1 = FPlatformTime::Cycles64();
 			JamAI::FJamAIInput Out[JamAI::kMaxSkaters];
@@ -316,7 +369,8 @@ namespace JamNetSoak
 				I.bShoot = Out[i].bShoot; I.bCheck = Out[i].bCheck; I.bBrake = Out[i].bBrake; I.bPass = Out[i].bPass;
 				I.Stick = FVector2D(Out[i].Stick.X, Out[i].Stick.Y);
 				I.bPoke = Out[i].bPoke; I.bLift = Out[i].bLift; I.bDeke = Out[i].bDeke;
-				I.bShootHeld = false;
+				// Lane A104: ALobbyGameMode::GatherBotInputs now copies every field the brain sends (FJamSimAdapter::Step's copy).
+				I.bShootHeld = Out[i].bShootHeld; I.bPassHeld = Out[i].bPassHeld; I.bSprint = Out[i].bSprint; I.bSpin = Out[i].bSpin; I.bAbility = Out[i].bAbility;
 			}
 			Inputs[LocalSlot] = L;
 			Inputs[RemoteSlot] = R;
@@ -328,7 +382,7 @@ namespace JamNetSoak
 			Driver->RecordHash(Sim->GetFrame(), LockHash());
 
 			FSnap& S = Snaps.Add(Sim->GetFrame());
-			S.Lock = LockHash(); S.SimH = Sim->StateHash(); S.FxH = Fx->StateHash(); S.RulesH = Rules->StateHash(); S.ZonesH = Zones->StateHash();
+			S.Lock = LockHash(); S.SimH = Sim->StateHash(); S.SimLockH = Sim->LockstepStateHash(); S.FxH = Fx->StateHash(); S.RulesH = Rules->StateHash(); S.ZonesH = Zones->StateHash();
 			S.Skaters = Sim->GetSkaters();
 			S.Puck = Sim->GetPuck();
 			S.Phase = static_cast<int32>(Sim->GetPhase()); S.Score0 = Sim->GetScore(0); S.Score1 = Sim->GetScore(1); S.Timer = Sim->GetTimerFrames();
@@ -375,6 +429,7 @@ namespace JamNetSoak
 				return FString::Printf(TEXT("puck.%s %s / %s"), *It->GetName(), *PropText(*It, &X.Puck), *PropText(*It, &Y.Puck));
 		}
 		if (X.SimH != Y.SimH) return FString::Printf(TEXT("sim.StateHash (unreflected sim state: modifiers, faceoff, rule flags) %016llx / %016llx"), static_cast<unsigned long long>(X.SimH), static_cast<unsigned long long>(Y.SimH));
+		if (X.SimLockH != Y.SimLockH) return FString::Printf(TEXT("sim.LockstepStateHash (unreflected cross-frame state: MoveHist, BotDrawFrame) %016llx / %016llx"), static_cast<unsigned long long>(X.SimLockH), static_cast<unsigned long long>(Y.SimLockH));
 		if (X.FxH != Y.FxH) return FString::Printf(TEXT("effects.StateHash %016llx / %016llx"), static_cast<unsigned long long>(X.FxH), static_cast<unsigned long long>(Y.FxH));
 		if (X.RulesH != Y.RulesH) return FString::Printf(TEXT("rules.StateHash %016llx / %016llx"), static_cast<unsigned long long>(X.RulesH), static_cast<unsigned long long>(Y.RulesH));
 		if (X.ZonesH != Y.ZonesH) return FString::Printf(TEXT("zones.StateHash %016llx / %016llx"), static_cast<unsigned long long>(X.ZonesH), static_cast<unsigned long long>(Y.ZonesH));
@@ -405,6 +460,8 @@ namespace JamNetSoak
 		FString Profiles;
 		FString OutFile;
 		FString Cut = TEXT("hockey.regular");
+		bool bSprint = true;   // lane A104: -SoakSprint=0 = A56's playtesters without Shift
+		bool bSeatGuest = true;   // lane A110: -SoakSeatGuest=0 = A104's bot seat for the guest
 	};
 
 	FOptions ReadOptions(int32 DefaultSeeds)
@@ -418,6 +475,8 @@ namespace JamNetSoak
 		FParse::Value(Cmd, TEXT("SoakProfiles="), O.Profiles, false);
 		FParse::Value(Cmd, TEXT("SoakOut="), O.OutFile, false);
 		FParse::Value(Cmd, TEXT("SoakCut="), O.Cut);
+		FParse::Bool(Cmd, TEXT("SoakSprint="), O.bSprint);
+		FParse::Bool(Cmd, TEXT("SoakSeatGuest="), O.bSeatGuest);
 		if (O.OutFile.IsEmpty()) O.OutFile = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("SoakLockstep"), FString::Printf(TEXT("soak-%s.jsonl"), *FDateTime::Now().ToString(TEXT("%Y%m%d-%H%M%S"))));
 		return O;
 	}
@@ -447,6 +506,7 @@ namespace JamNetSoak
 		case FJamNetQuantInput::Lift: return TEXT("lift");
 		case FJamNetQuantInput::Deke: return TEXT("deke");
 		case FJamNetQuantInput::Spin: return TEXT("spin");
+		case FJamNetQuantInput::Ability: return TEXT("ability");   // lane A104
 		default: return TEXT("bit");
 		}
 	}
@@ -469,6 +529,9 @@ namespace JamNetSoak
 		int32 EdgePressed[16] = {}, EdgeLost[16] = {};
 		int64 FirstEdgeLost = -1;
 		int32 Spins = 0;
+		int32 Verbs[3] = {};   // lane A104: sprint frames, pass-held frames, ability presses applied
+		int32 ReverseBrakes = 0, AbilitiesUsed = 0;   // lane A104: the sims' own counters (peer A)
+		int32 GuestAbilitiesUsed = 0;   // lane A110: the guest seat's share of AbilitiesUsed
 		int32 Score0 = 0, Score1 = 0;
 		double WallS = 0.0;
 		FString DumpPath;
@@ -485,12 +548,12 @@ namespace JamNetSoak
 		return FString::Printf(TEXT("{\"schema\":\"thirdjam.soaklock/1\",\"profile\":\"%s\",\"seed\":%llu,\"frames\":[%lld,%lld],\"ticks\":%lld,\"desync\":%s,\"driver_desync_frame\":%lld,")
 			TEXT("\"first_diff_frame\":%lld,\"first_diff_field\":\"%s\",\"first_lockhash_diff\":%lld,\"lost\":%s,\"final_equal\":%s,\"agreed\":[%d,%d],\"expected\":%d,")
 			TEXT("\"stalls\":[%d,%d],\"max_stall\":%d,\"max_gap\":%d,\"dropped\":%d,\"blacked\":%d,\"dup\":%d,\"reordered\":%d,\"twice\":%d,\"max_loss_run\":%d,\"corrupted\":%d,")
-			TEXT("\"edges\":{%s},\"first_edge_lost\":%lld,\"spins_applied\":%d,\"score\":\"%d:%d\",\"wall_s\":%.2f%s}"),
+			TEXT("\"edges\":{%s},\"first_edge_lost\":%lld,\"spins_applied\":%d,\"verbs_applied\":{\"sprint_frames\":%d,\"pass_held_frames\":%d,\"ability\":%d},\"reverse_brakes\":%d,\"abilities_used\":%d,\"guest_abilities_used\":%d,\"score\":\"%d:%d\",\"wall_s\":%.2f%s}"),
 			*M.Profile, static_cast<unsigned long long>(M.Seed), M.FramesA, M.FramesB, M.Ticks, M.bDesyncDriver ? TEXT("true") : TEXT("false"), M.DriverDesyncFrame,
 			M.FirstDiffFrame, *M.FirstDiffField.ReplaceCharWithEscapedChar().Replace(TEXT("\""), TEXT("'")), M.FirstLockHashDiff, M.bLost ? TEXT("true") : TEXT("false"),
 			M.bFinalEqual ? TEXT("true") : TEXT("false"), M.AgreedA, M.AgreedB, M.Expected,
 			M.StallsA, M.StallsB, M.MaxStall, M.MaxGap, M.Dropped, M.Blacked, M.Duplicated, M.Reordered, M.Twice, M.MaxRun, M.Corrupted,
-			*Edges, M.FirstEdgeLost, M.Spins, M.Score0, M.Score1, M.WallS,
+			*Edges, M.FirstEdgeLost, M.Spins, M.Verbs[0], M.Verbs[1], M.Verbs[2], M.ReverseBrakes, M.AbilitiesUsed, M.GuestAbilitiesUsed, M.Score0, M.Score1, M.WallS,
 			M.DumpPath.IsEmpty() ? TEXT("") : *FString::Printf(TEXT(",\"dump\":\"%s\""), *M.DumpPath.Replace(TEXT("\\"), TEXT("/"))));
 	}
 
@@ -519,6 +582,8 @@ namespace JamNetSoak
 			LA = UA.Get(); LB = UB.Get();
 		}
 		FPeer A, B;
+		A.bSprintOn = B.bSprintOn = O.bSprint;
+		A.bSeatGuest = B.bSeatGuest = O.bSeatGuest;
 		A.Init(T, C, Seed, *LA, Host, Guest, JamAI::EPlaytester::Regular);
 		B.Init(T, C, Seed, *LB, Guest, Host, JamAI::EPlaytester::Good);
 		double NextAt = FPlatformTime::Seconds();
@@ -585,6 +650,9 @@ namespace JamNetSoak
 		for (int32 b = 0; b < 16; ++b) { M.EdgePressed[b] = A.EdgePressed[b] + B.EdgePressed[b]; M.EdgeLost[b] = A.EdgeLost[b] + B.EdgeLost[b]; }
 		M.FirstEdgeLost = A.FirstEdgeLostFrame >= 0 ? A.FirstEdgeLostFrame : B.FirstEdgeLostFrame;
 		M.Spins = A.Spins;
+		for (int32 v = 0; v < 3; ++v) M.Verbs[v] = A.Verbs[v];
+		for (const FJamSkaterState& Sk : A.Sim->GetSkaters()) { M.ReverseBrakes += Sk.ReverseBrakes; M.AbilitiesUsed += Sk.AbilitiesUsed; }
+		M.GuestAbilitiesUsed = A.Sim->GetSkaters().IsValidIndex(Guest) ? A.Sim->GetSkaters()[Guest].AbilitiesUsed : 0;
 		M.Score0 = A.Sim->GetScore(0); M.Score1 = A.Sim->GetScore(1);
 		return M;
 	}
@@ -597,6 +665,8 @@ namespace JamNetSoak
 		int64 Dropped = 0, Dup = 0, Reordered = 0;
 		int64 EdgePressed[16] = {}, EdgeLost[16] = {};
 		int64 Spins = 0;
+		int64 Verbs[3] = {}, ReverseBrakes = 0, AbilitiesUsed = 0;   // lane A104
+		int64 GuestAbilitiesUsed = 0;   // lane A110
 		TArray<FString> DesyncLines;
 		double Wall = 0.0;
 
@@ -615,6 +685,8 @@ namespace JamNetSoak
 			for (int32 b = 0; b < 16; ++b) { EdgePressed[b] += M.EdgePressed[b]; EdgeLost[b] += M.EdgeLost[b]; bEdge |= M.EdgeLost[b] > 0; }
 			EdgeLossMatches += bEdge ? 1 : 0;
 			Spins += M.Spins;
+			for (int32 v = 0; v < 3; ++v) Verbs[v] += M.Verbs[v];
+			ReverseBrakes += M.ReverseBrakes; AbilitiesUsed += M.AbilitiesUsed; GuestAbilitiesUsed += M.GuestAbilitiesUsed;
 			Wall += M.WallS;
 		}
 		FString Edges() const
@@ -677,9 +749,9 @@ namespace JamNetSoak
 		const double Speed = Agg.Ticks > 0 ? static_cast<double>(Agg.Frames) / Agg.Ticks : 0.0;
 		const FString Sum = FString::Printf(TEXT("{\"schema\":\"thirdjam.soaklock.summary/1\",\"profile\":\"%s\",\"seeds\":\"%d..%d\",\"matches\":%d,\"desyncs\":%d,\"silent_drifts\":%d,\"lost\":%d,\"missed_checkpoints\":%d,")
 			TEXT("\"frames\":%lld,\"ticks\":%lld,\"speed\":%.4f,\"stall_attempts\":%lld,\"max_stall\":%d,\"max_gap\":%d,\"max_loss_run\":%d,\"dropped\":%lld,\"dup\":%lld,\"reordered\":%lld,")
-			TEXT("\"edge_loss_matches\":%d,\"edges\":\"%s\",\"spins_applied\":%lld,\"wall_s\":%.1f}"),
+			TEXT("\"edge_loss_matches\":%d,\"edges\":\"%s\",\"spins_applied\":%lld,\"verbs_applied\":{\"sprint_frames\":%lld,\"pass_held_frames\":%lld,\"ability\":%lld},\"reverse_brakes\":%lld,\"abilities_used\":%lld,\"guest_abilities_used\":%lld,\"wall_s\":%.1f}"),
 			*(O.Cut == TEXT("hockey.regular") ? Fa.Name : Fa.Name + TEXT("@") + O.Cut), O.SeedFirst, O.SeedFirst + O.Seeds - 1, Agg.Matches, Agg.Desyncs, Agg.Drifts, Agg.Lost, Agg.Missed, Agg.Frames, Agg.Ticks, Speed, Agg.Stalls, Agg.MaxStall, Agg.MaxGap, Agg.MaxRun,
-			Agg.Dropped, Agg.Dup, Agg.Reordered, Agg.EdgeLossMatches, *Agg.Edges().TrimStart(), Agg.Spins, Agg.Wall);
+			Agg.Dropped, Agg.Dup, Agg.Reordered, Agg.EdgeLossMatches, *Agg.Edges().TrimStart(), Agg.Spins, Agg.Verbs[0], Agg.Verbs[1], Agg.Verbs[2], Agg.ReverseBrakes, Agg.AbilitiesUsed, Agg.GuestAbilitiesUsed, Agg.Wall);
 		Emit(O, Sum);
 		T.AddInfo(Sum);
 		for (const FString& L : Agg.DesyncLines) T.AddInfo(Fa.Name + TEXT(" ") + L);

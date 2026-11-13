@@ -58,6 +58,7 @@ The payload is a C++ struct with defaults, not JSON; "absent" here means the def
 |---|---|---|---|---|---|
 | `shot` | `Shot` | a shot leaves the stick | shooter | puck position | exit speed / `game.puck.max_speed` |
 | `board` | `Board` | the puck hits the boards | -1 | contact point | normal impact speed / `game.puck.max_speed` |
+| `board` | `Board` | a skater hits the boards at 4 m/s or more, or is checked into them (lane A101; Kind `skater`, Dir = the boards' normal into the rink) | the skater | the skater's position | normal speed / `skater.speed`, or the check's strength when checked into the boards |
 | `goal` | `Goal` | the puck enters a goal trigger | last skater to touch the puck, or -1 | puck position | 1 |
 | `faceoff` | `Faceoff` | a faceoff reset ends and play resumes | -1 | centre ice | 0 |
 | `check` | `Check` | a body check makes contact | the checker | contact point | closing speed / `game.skater.speed` (clamped to 1) |
@@ -174,3 +175,20 @@ has, `season_take` by `AHokejGameMode` through `UJamCommentarySystem::OnMatchBui
 | `clock` | 600 frames or fewer left in a timed take (once per take); a tie at the horn plays on | -1 | zero | 0 | `last_10s` / `sudden_death` |
 | `season_take` | a match is built whose cartridge is the running season take, after `period` and before the first frame | -1 | zero | 0 | `level_<n>` (1-based ladder index) |
 Assets by the rule: `MS_post` exists on `dev-b` and plays through the binder; `NS_` / `MS_` for the other six are B's to make or to declare silent (`UJamEffectsBinder::IsSilentEvent`).
+
+## `ability` (added 14:51, 13 Nov, R-0041 point 3, lane A84)
+| field | value |
+|---|---|
+| Who | the skater that used the ability |
+| Pos | the skater's position on the ice |
+| Kind | `shotgun`, `hip_check`, `shield`, `slow_puck` |
+| Strength | 1 |
+Fired on the frame F (gamepad R3) uses the held ability. A knockdown caused by the shotgun carries Kind `shotgun` on the `knockdown` event. B binds `NS_ability` and
+`MS_ability` to it (Variant by Kind order above) when the assets exist; the binder is silent until then.
+
+## Contact by momentum and directed stick events (added 18:39, 13 Nov, R-0045 / R-0046, lanes A92, A95)
+- `check` now fires for every resolved hit: a bump is silent; a **stumble** and a **knockdown** both carry `Strength` (the ratio of impulse to stability, clamped to 1) and
+  `Dir` (attacker to victim). A cross-check's shove inside arm's length fires `check` with Kind `cross`.
+- `knockdown`: `KnockdownFrames` on `SetKnockedDown` runs **60 to 150** by the hit's strength (it was a constant 90).
+- `lift` and `poke` carry `Dir` (the unit vector attacker to victim); the binder sends it as `User.Dir`, as for `check`. The clean `lift` event is in the frame of the lift.
+- A press refused because the presser carries the puck sets the read-out `bCheckRefused` (no event).

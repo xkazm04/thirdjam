@@ -39,12 +39,14 @@ public:
 	UPROPERTY() TObjectPtr<UInputAction> StickMouse;
 	UPROPERTY() TObjectPtr<UInputAction> Poke;
 	UPROPERTY() TObjectPtr<UInputAction> Lift;
-	// R-0029 point 4 (lane A39): IA_Deke, Q / gamepad Y: the carrier's deke tap (FJamInput::bDeke).
+	// R-0029 point 4 (lane A39): IA_Deke, mouse wheel / gamepad Y: the carrier's deke tap (FJamInput::bDeke). Lane A84: Q left it for the pass.
 	UPROPERTY() TObjectPtr<UInputAction> Deke;
-	// C-0005 (lane A16): IA_Pass, F / X (lane A51, R-0034: the pass moved from E to F): a lead pass to the best open teammate.
+	// C-0005 (lane A16): IA_Pass, Q / X (lane A51 moved it from E to F, lane A84 from F to Q, R-0041 point 3): a lead pass; held, a saucer.
 	UPROPERTY() TObjectPtr<UInputAction> Pass;
 	// Lane A51 (R-0034): IA_Spin, E / gamepad B: the spin move (FJamInput::bSpin). The brake left B for the left stick click.
 	UPROPERTY() TObjectPtr<UInputAction> Spin;
+	// Lane A84 (R-0041 point 3): IA_Ability, F / gamepad right stick click (R3): the held ability (FJamInput::bAbility).
+	UPROPERTY() TObjectPtr<UInputAction> Ability;
 	UPROPERTY() TObjectPtr<UInputMappingContext> Context;
 
 	// Keys mapped to an action, for tests ("is the gamepad A button on Shoot").
@@ -77,6 +79,10 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Jam|Input")
 	bool IsCheckHeld() const { return bCheck; }
 
+	// Lane A77 (R-0036): pass (F / X) held, a level like the shot: the sim charges the saucer while it is held and passes on the release.
+	UFUNCTION(BlueprintPure, Category = "Jam|Input")
+	bool IsPassHeld() const { return bPassHeld; }
+
 	// Held while Ctrl or the left trigger is down; the game mode copies it into FJamInput::bBrake.
 	UFUNCTION(BlueprintPure, Category = "Jam|Input")
 	bool IsBrakeHeld() const { return bBrake; }
@@ -102,6 +108,9 @@ public:
 	// Lane A51: the spin tap (E / B) since the last read.
 	UFUNCTION(BlueprintCallable, Category = "Jam|Input")
 	bool ConsumeSpinPressed();
+	// Lane A84: the ability tap (F / R3) since the last read.
+	UFUNCTION(BlueprintCallable, Category = "Jam|Input")
+	bool ConsumeAbilityPressed();
 
 	UFUNCTION(BlueprintCallable, Category = "Jam|Input")
 	bool ConsumeLiftPressed();
@@ -155,8 +164,10 @@ private:
 	void OnPokeStarted() { bPokeLatch = true; }
 	void OnLiftStarted() { bLiftLatch = true; }
 	void OnDekeStarted() { bDekeLatch = true; }
-	void OnPassStarted() { bPassLatch = true; }
+	void OnPassStarted() { bPassLatch = true; bPassHeld = true; }
+	void OnPassDone() { bPassHeld = false; }   // lane A77
 	void OnSpinStarted() { bSpinLatch = true; }   // lane A51
+	void OnAbilityStarted() { bAbilityLatch = true; }   // lane A84
 	void OnRestartStarted() { OnRestart.Broadcast(); }
 	void OnPauseStarted() { OnPause.Broadcast(); }
 
@@ -171,7 +182,9 @@ private:
 	bool bLiftLatch = false;
 	bool bDekeLatch = false;
 	bool bPassLatch = false;
+	bool bPassHeld = false;   // lane A77 (R-0036)
 	bool bSpinLatch = false;   // lane A51
+	bool bAbilityLatch = false;   // lane A84
 	FVector2D StickAxis = FVector2D::ZeroVector;
 	FVector2D MouseAimPx = FVector2D::ZeroVector;
 	bool bBound = false;

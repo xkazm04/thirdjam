@@ -74,7 +74,7 @@ export function runCell({ uproject, cartridge, level, player, seeds, maxFrames, 
   const cmd = join(ue, 'Engine', 'Binaries', 'Win64', 'UnrealEditor-Cmd.exe');
   const cartArg = set ? writeVariant(cartridge, set) : cartridge;
   const args = [uproject, '-run=JamTournament', '-sim=jam', `-cartridge=${cartArg}`, `-difficulty=${level}`, `-player=${player}`, `-seeds=${seeds}`,
-    `-maxframes=${maxFrames}`, '-nullrhi', '-unattended', '-nopause', '-nosplash', '-stdout', '-FullStdOutLogOutput'];
+    `-maxframes=${maxFrames}`, '-nullrhi', '-Multiprocess', '-unattended', '-nopause', '-nosplash', '-stdout', '-FullStdOutLogOutput'];
   if (tune) args.push(`-aitune=${tune}`);
   if (sprint) args.push('-playersprint');   // lane A72 (ask A3): the regular and good players press sprint
   return new Promise((res, rej) => {

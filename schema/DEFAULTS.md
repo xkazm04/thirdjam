@@ -23,13 +23,18 @@ of them out explicitly, but a Designer or hand-written cartridge may leave them 
 | `stick.reach_m` | 1.2 | lane A16 (R-0013); 1.2 by R-0022 point 3; the range 0.6..1.6 by R-0034 (lane A51): the carried puck sits at the blade, forehand to backhand as the aim sweeps (the brief's 1.1 halved the regular player's passes received at pro: kept 1.2, STICK.md section 6) |
 | `stick.poke_window_frames` | 8 | lane A16 (R-0013) |
 | `stick.lift_range_m` | 1.0 | lane A16 (R-0013) |
+| `stick.lift_cone_deg` | 70 | lane A95 (B-to-A-0037): The cone of the stick lift and of the cross-check's shove, in degrees off the attacker's facing: a carrier farther off than this is neither lifted nor shoved (the swing is a miss), bots and the human alike (B-to-A-0037, lane A95). 180 = no cone (before A95). |
 | `stick.stumble_frames` | 20 | lane A16 (R-0013); 0 in `hockey.raw` |
 | `stick.mouse_sensitivity` | 1 | lane A16 (R-0013) |
 | `stick.foul_grace_frames` | 12 | lane A16 (R-0029 point 3): no `foul_no_puck` on a skater that carried within the last 12 frames |
 | `stick.deke.offset_m` | 1.0 | lane A39 (R-0029 point 4): a deke tap (`bDeke`) moves the carried puck this far to the blade side (the side the stick is aimed to; the middle of the ice when it is not aimed) within 6 frames; a shot inside the commit window aims at the post on that side; a second tap inside 30 frames does nothing; 0 = off |
 | `stick.deke.commit_frames` | 15 | lane A39: the crease back's stance and blade follow the puck's old side this long |
 | `stick.sweep.min_deg_per_frame` | 6 | lane A51 (R-0034): an aim turning more than this in one frame on the carrier is a sweep (read-out flag `bSweepThisFrame`) |
-| `stick.sweep.shield_frames` | 12 | lane A51: frames after a sweep (or a deke tap) in which an opponent's poke from the side the puck left misses; 0 = off |
+| `stick.sweep.shield_frames` | 12 | lane A51: frames after a sweep (or a deke tap) in which an opponent's poke or lift misses, from either side of the body (R-0044 as amended, lane A93; only the side the puck left, before); 0 = off |
+| `stick.carry_reach_mult` | 0.75 | lane A93 (R-0045 law 4): the carried puck rides at this fraction of the blade's full distance unless the carrier sprints (1.2 m against 1.6 m at full aim); 1 = always full (neutral) |
+| `stick.sweep.sprint_shield_mult` | 0.5 | lane A93 (R-0045 law 4): a sprinting carrier's sweep shield lasts this fraction of `shield_frames` (6 of 12); 1 = no difference (neutral) |
+| `stick.body_shield` | true | lane A102 (track F2): puck protection with the body, no button. While the carrier's body is between a defender's stick and the puck (the defender within 2 m, the puck on the far side of the carrier's body, the carrier turned more than 60 degrees away from the defender), that defender's poke or stick lift does not take the puck; a carrier that faces the defender shields nothing, and a body check is never shielded. true or absent = on; false = the neutral value (the game before the lane). |
+| `stick.passive_take` | false | lane A102 (R-0048): false or absent = a carried puck is not taken by an unpressed blade or by a body's touch: it leaves its carrier only by a shot, a pass, a poke, a lift, a check or stumble that loosens it, or the carrier's own release. true = the neutral value (the game before the lane): an aimed opposing blade within 0.6 m deflects a carried puck moving faster than 6 m/s and any body's touch takes it. A teammate never takes a carried puck by touch under either value. |
 | `stick.sweep.bot_react_frames` | absent | lane A51: a defending bot reads the puck's place on the carrier this many frames late; absent = the difficulty profile (rookie 14, pro 8, all_star 5) |
 | `stick.reception_m` | 0.9 | lane A46 (PAYOFFS.md section 6): a teammate's pass reaching the body within this radius at 6-14 m/s seats on the blade with a 4-frame settle; faster passes bounce off the body unless the blade meets them; 0 = blade reception only |
 | `skater.knockdown_frames` | 90 | only read when `check_enabled` is true |
@@ -37,9 +42,14 @@ of them out explicitly, but a Designer or hand-written cartridge may leave them 
 | `skater.pass_lead_frames` | 20 | lane A16 (C-0005) |
 | `skater.breakaway.speed_bonus` | 0.2 | lane A39 (R-0029 point 4): a carrier past centre ice with no opponent between it and the net gets this fraction more top speed and acceleration for `frames`, once per possession (event `breakaway`); 0 = off |
 | `skater.breakaway.frames` | 60 | lane A39 |
+| `skater.carry_speed_mult` | 0.92 | lane A82 (R-0041 point 6): the carrier's top speed and acceleration as a fraction of a free skater's, bots and the human alike; the carrier cannot sprint and its bar does not drain; 1 = no carry penalty |
 | `skater.sprint.bonus` | 0.15 | lane A49: Shift / LT held adds this fraction to top speed and acceleration while the skater moves and the stamina lasts; bots only with `ai.sprint` (lane A72); 0 = off |
 | `skater.sprint.drain_frames` | 180 | lane A49: frames of sprint from full to empty (3 s) |
 | `skater.sprint.refill_frames` | 360 | lane A49: frames at rest from empty to full (6 s) |
+| `skater.sprint.carry_bonus` | 0.08 | lane A93 (R-0045 law 4, replacing R-0041 point 6): the carrier may sprint for this much on top of `carry_speed_mult` (0.92 x 1.08 = 0.994 of the base speed against a free sprint's 1.15); its bar drains as anyone's; 0 = the carrier cannot sprint (neutral) |
+| `skater.reverse_brake_decel` | 20 | lane A93 (R-0045 law 3): move input against the velocity is a hard stop at this rate (8 m/s to still in 24 frames), then the input accelerates the other way; 0 = off (neutral) |
+| `skater.burst.frames` | 20 | lane A93 (R-0045 law 3): the first-step burst after a stop (under 2 m/s) or a sharp cut (the input turned more than 60 degrees inside 10 frames); 0 = off (neutral) |
+| `skater.burst.accel_mult` | 1.8 | lane A93: acceleration multiplier while the burst runs; 1 = none (neutral) |
 | `skater.goalie.reach_m` | 0.9 | lane A52 (R-0035): a skater in the crease stance (within 3 m of its own goal centre, the human included) saves a loose shot passing within this of it; 0 = off |
 | `skater.goalie.block_height_m` | 0.4 | lane A52 (R-0035), Director 01:30: a shot at or above this height passes the crease skater; below the 0.61 bar so a half charge (0.45) is the skill shot: over the pads, under the bar (0.7 saved everything the net could take; the novice gate failed 8 of 20) |
 | `skater.spin.frames` | 24 | lane A51 (R-0034): the spin on E / gamepad B: a full turn of the figure over this many frames, the puck on the far side of the body from the nearest opponent (a poke never reaches it); a check landing mid-spin knocks down 1.5x longer; 0 = off |
@@ -64,10 +74,33 @@ of them out explicitly, but a Designer or hand-written cartridge may leave them 
 | `shot.deflect` | true | lane A16 (C-0005): a shot into a skater within 0.6 m of its stick keeps 70 % of its speed |
 | `shot.one_timer.window_frames` | 10 | lane A39 (R-0029 point 4): a shot inside this many frames of a received pass is a one-timer (full charge without the hold, `aim_cone_deg` + `cone_bonus_deg`, `shot` event kind `one_timer`); 0 = off |
 | `shot.one_timer.cone_bonus_deg` | 8 | lane A39 |
-| `shot.lift.tap_m` | 0.05 | lane A52 (R-0035): the height a tap arrives at over the goal line |
+| `shot.lift.tap_m` | 0 | lane A52 (R-0035): the height a tap arrives at over the goal line; R-0042 (lane A85): 0, a tap stays on the ice the whole flight (0.05 made it a 0.5 m lob from 10 m that cleared every blade) |
 | `shot.lift.half_m` | 0.45 | lane A52: the height of a shot held `half_frames` |
-| `shot.lift.full_m` | 0.6 | lane A52 (0.95), Director 01:40: the height of a full charge: just under the 0.61 bar (top shelf); at 0.95 every hold past 8 frames flew over the low net; a cartridge may still choose 0.95 for a sailing full charge |
+| `shot.lift.full_m` | 0.47 | lane A52 (0.95), Director 01:40 (0.6), R-0044 (lane A91; the ruling said 0.5, the measurement 0.47): the height of a full charge: the top shelf clearly under the 0.61 bar, whose ring starts at 0.51. At 0.6 every full charge from 4 to 24 m rang the bar; at 0.5 those from 15 to 24 m; 0.47 scores from every metre of 3..30 at every hold; a cartridge may still choose 0.95 for a sailing full charge |
+| `shot.tap_frames` | 4 | R-0044 (lane A91): a hold of this many frames or fewer is a tap (charge 0: no speed bonus, flat at `tap_m` 0); a human's click is 2 to 4 frames long; the human and the bots alike; 0 = every held frame charges |
 | `shot.lift.half_frames` | 8 | lane A52: frames of hold that reach `half_m`; linear tap -> half -> full |
+| `pass.saucer.half_frames` | 8 | lane A77 (R-0036): pass (F / X) held this many frames with the puck in reach is a saucer; a shorter hold or the tap is the flat pass; 0 = off |
+| `pass.saucer.lift_m` | 0.35 | lane A77: the saucer's apex height; it clears a blade (0.2 m) in the lane and lands three quarters of the way to the receiver; 0 = off |
+| `contact.momentum` | true | lane A92 (R-0045): false = the neutral value: the check rule before lane A92 (a pressed check lands when the checker's own speed along the contact passes skater.check_speed_min and always knocks down for skater.knockdown_frames; the cross-check is the lift only); true or absent = contact by momentum (impulse against stability, three outcomes). |
+| `contact.carrier_can_hit` | false | lane A92 (R-0045): true = the neutral value: a skater carrying the puck may body-check as before lane A92; false or absent = the carrier's check press is refused (read-out bCheckRefused). |
+| `contact.lunge_mps` | 1.5 | lane A92 (R-0045): Speed a pressed body check adds to the closing speed along the contact line, in m/s; the checker gives half of it away. |
+| `contact.thrust_mps` | 3 | lane A92 (R-0045): Speed a cross-check (the lift at an opposing carrier in range) adds to the closing speed, in m/s; 0 = the cross-check has no body hit (the lift only). |
+| `contact.cross_reach_m` | 0.5 | lane A92 (R-0045): The gap between the two bodies, in metres, inside which the lift at a carrier is a cross-check (the stick's shaft at arm's length: the thrust lands); farther out, up to stick.lift_range_m, it is the stick lift only. stick.lift_range_m or more = every lift in range shoves. |
+| `contact.stability_mps` | 6 | lane A92 (R-0045): The stability of a skater of the reference mass that moves slowly, sees the hit and is not braced, as the closing speed (m/s) of an equal-mass hit that puts it down at down_ratio 1. |
+| `contact.stand_speed_mps` | 1 | lane A92 (R-0045): Under this speed a skater stands braced (stand_brace); above it the stability falls with the speed (speed_stability). |
+| `contact.stand_brace` | 1.5 | lane A92 (R-0045): Stability factor of a standing skater against a hit it can see; a cross-check inside its front arc ignores it; 1 = no brace. |
+| `contact.speed_stability` | 0.85 | lane A92 (R-0045): Stability factor at skater.speed; linear from 1 at stand_speed_mps; 1 = pace costs nothing. |
+| `contact.sprint_stability` | 0.7 | lane A92 (R-0045): Stability factor while sprinting; 1 = the sprint costs nothing. |
+| `contact.spin_stability` | 0.8 | lane A92 (R-0045): Stability factor during a spin or with a full shot wind-up; 1 = no cost. |
+| `contact.unseen_stability` | 0.8 | lane A92 (R-0045): Stability factor against a hit from behind the victim's facing (the push runs along its facing); such a hit also finds a standing skater unbraced; 1 = no cost. |
+| `contact.bump_ratio` | 0.4 | lane A92 (R-0045): Impulse over stability under this is a bump: both keep their feet and their control. |
+| `contact.loose_ratio` | 0.7 | lane A92 (R-0045): A stumble at this ratio or more knocks the carried puck loose. |
+| `contact.down_ratio` | 1 | lane A92 (R-0045): At this ratio or more the victim goes down; between bump_ratio and it the victim stumbles (half its speed, stagger_frames without control). |
+| `contact.down_full_ratio` | 3 | lane A92 (R-0045): The ratio at which the knockdown lasts down_frames_max; linear from down_frames_min at down_ratio. |
+| `contact.down_frames_min` | 60 | lane A92 (R-0045): Frames down at down_ratio, at skater.knockdown_frames 90 (the frames scale with skater.knockdown_frames / 90). |
+| `contact.down_frames_max` | 150 | lane A92 (R-0045): Frames down at down_full_ratio and above, at skater.knockdown_frames 90; never under down_frames_min. |
+| `contact.stagger_frames` | 16 | lane A92 (R-0045): Frames a stumbling skater glides without thrust, steering or stick. |
+| `contact.board_bonus` | 1.25 | lane A101 (track F1): The boards are a body: the impulse of a hit that pushes a victim standing within 1.5 m of the boards into them counts this much higher (the full bonus inside 60 degrees of straight in, none along the boards), and the victim's board read-out fires. 1 = the neutral value: no bonus, no read-out. |
 | `rules.goal_pause_frames` | 120 | |
 | `rules.offside` | false | only false is accepted |
 | `rules.penalties` | true | R-0013: fouls (from behind, or on a skater without the puck) = 300 frames in the box + a free faceoff at the fouler's end; `hockey.raw` sets false |
@@ -84,6 +117,11 @@ of them out explicitly, but a Designer or hand-written cartridge may leave them 
 | `pickups` | none | |
 | `pickups[].max_on_ice` | 1 | lane A14 (C-0005) |
 | `pickups[].zone` | absent = anywhere on the ice | |
+| `abilities` | none (nobody holds an ability; F does nothing) | lane A84 (R-0041 point 3) |
+| `abilities[].charges` | unlimited for `trigger` mode, 1 for `trigger` pickup | lane A84 |
+| `abilities[].cooldown_frames` | 1200 (20 s) | lane A84 |
+| `abilities[].duration_frames` | 360 shield (6 s), 120 slow_puck (2 s); unused by shotgun and hip_check | lane A84 |
+| `abilities[].magnitude` | 1.5 shotgun (shot speed x), 1.5 hip_check (knockdown frames x), 0.5 slow_puck (the puck's speed share); unused by shield | lane A84 |
 | `effects` | none (the five built-ins are always available to pickups) | lane A14; `Game/Content/Designer/builtin-effects.json` |
 | `effects[].kind` | `custom` | the visual family; built-ins carry their own |
 | `effects[].stack` | `refresh` | |

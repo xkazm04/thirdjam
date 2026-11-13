@@ -1,0 +1,7 @@
+/JamAssets/Audio/VO/VO_Commentator_check_cross_02 frame=843 row=402 frame_ms=17.1 game_ms=7.1
+/JamAssets/Audio/VO/VO_Commentator_check_cross_10 frame=1654 row=1213 frame_ms=16.7 game_ms=3.1
+/JamAssets/Audio/VO/VO_Commentator_knockdown_human_06 frame=1661 row=1220 frame_ms=16.7 game_ms=3.5
+/JamAssets/Audio/VO/VO_Commentator_knockdown_human_10 frame=3588 row=3147 frame_ms=17.3 game_ms=2.4
+/JamAssets/Audio/VO/VO_Commentator_knockdown_massacre_04 frame=7054 row=6613 frame_ms=16.7 game_ms=4.6
+/JamAssets/Audio/VO/VO_Commentator_check_cross_08 frame=7724 row=7283 frame_ms=16.7 game_ms=3.2
+/JamAssets/Audio/VO/VO_Commentator_check_solid_07 frame=7733 row=7292 frame_ms=16.7 game_ms=4.2

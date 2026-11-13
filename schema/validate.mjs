@@ -444,6 +444,16 @@ function checkGame(game, errors) {
     });
   }
 
+  // Lane A84 (R-0041 point 3): one mode ability at most (F is one key); a pickup ability needs pickups to arrive by.
+  if (Array.isArray(game.abilities)) {
+    let modes = 0;
+    game.abilities.forEach((a, i) => {
+      if (!isObj(a)) return;
+      if (a.trigger === 'mode' && ++modes > 1) errors.push(`at /game/abilities/${i}/trigger: only one ability may have trigger "mode" (F is one key); make this one "pickup" or remove it.`);
+      if (a.trigger === 'pickup' && !(Array.isArray(game.pickups) && game.pickups.length > 0)) errors.push(`at /game/abilities/${i}/trigger: a "pickup" ability is granted by a boost take, but game.pickups is empty; add a pickup or use trigger "mode".`);
+    });
+  }
+
   if (Array.isArray(game.teams)) {
     checkUniqueIds(game.teams, '/game/teams', 'team', errors);
     const colours = game.teams.map((t) => (isObj(t) && typeof t.colour_hex === 'string' ? t.colour_hex.toLowerCase() : undefined));

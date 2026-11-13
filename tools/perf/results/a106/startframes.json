@@ -1,0 +1,319 @@
+[
+ {
+  "run": "a106-l2_night_5v5-csv",
+  "load": {
+   "row": 6,
+   "frame_ms": 96.22,
+   "game_ms": 80.55,
+   "flush_async_ms": 23.38,
+   "engine_tick_misc_ms": 31.62,
+   "audio_gt_ms": 0.02
+  },
+  "first_lit_hitches": [
+   {
+    "row": 7,
+    "frame_ms": 37.23,
+    "game_ms": 4.78,
+    "render_ms": 10.43,
+    "gpu_ms": 5.77,
+    "shadow_init_ms": 0,
+    "tsr_ms": 1.8
+   },
+   {
+    "row": 10,
+    "frame_ms": 62.64,
+    "game_ms": 2.77,
+    "render_ms": 9.78,
+    "gpu_ms": 17.62,
+    "shadow_init_ms": 0.05,
+    "tsr_ms": 2.31
+   },
+   {
+    "row": 41,
+    "frame_ms": 34.77,
+    "game_ms": 11.87,
+    "render_ms": 3.27,
+    "gpu_ms": 2.91,
+    "shadow_init_ms": 0.04,
+    "tsr_ms": 0.24
+   }
+  ],
+  "first_lit_sum_ms": 134.64,
+  "first_lit_max_ms": 62.64,
+  "first_lit_window": {
+   "shadow_init_max_ms": 9.76,
+   "render_max_ms": 62.61,
+   "gpu_max_ms": 49.8,
+   "tsr_max_ms": 4.12
+  },
+  "steady": {
+   "rows": 7173,
+   "gpu_ms": 4.81,
+   "tsr_ms": 0.5,
+   "game_ms": 2.41,
+   "render_ms": 4.42,
+   "physical_mb": 1662.93
+  }
+ },
+ {
+  "run": "a106-p3_clay_5v5-csv",
+  "load": {
+   "row": 2,
+   "frame_ms": 168.74,
+   "game_ms": 116.97,
+   "flush_async_ms": 61.89,
+   "engine_tick_misc_ms": 31.65,
+   "audio_gt_ms": 0.02
+  },
+  "first_lit_hitches": [],
+  "first_lit_sum_ms": 0,
+  "first_lit_max_ms": 0,
+  "first_lit_window": {
+   "shadow_init_max_ms": 8.78,
+   "render_max_ms": 33.55,
+   "gpu_max_ms": 22.36,
+   "tsr_max_ms": 1.93
+  },
+  "steady": {
+   "rows": 7271,
+   "gpu_ms": 4.68,
+   "tsr_ms": 0.38,
+   "game_ms": 2.41,
+   "render_ms": 4.56,
+   "physical_mb": 1532.44
+  }
+ },
+ {
+  "run": "a106-start-l2_night_5v5-2",
+  "load": {
+   "row": 32,
+   "frame_ms": 161.46,
+   "game_ms": 119.94,
+   "flush_async_ms": 49.51,
+   "engine_tick_misc_ms": 35.94,
+   "audio_gt_ms": 0.02
+  },
+  "first_lit_hitches": [
+   {
+    "row": 33,
+    "frame_ms": 35.66,
+    "game_ms": 5.53,
+    "render_ms": 27.01,
+    "gpu_ms": 6.86,
+    "shadow_init_ms": 0,
+    "tsr_ms": 1.78
+   },
+   {
+    "row": 36,
+    "frame_ms": 64.37,
+    "game_ms": 3.32,
+    "render_ms": 13.87,
+    "gpu_ms": 18.48,
+    "shadow_init_ms": 0.05,
+    "tsr_ms": 2.14
+   },
+   {
+    "row": 38,
+    "frame_ms": 33.61,
+    "game_ms": 2.74,
+    "render_ms": 19.6,
+    "gpu_ms": 21.39,
+    "shadow_init_ms": 0.04,
+    "tsr_ms": 2.65
+   }
+  ],
+  "first_lit_sum_ms": 133.64,
+  "first_lit_max_ms": 64.37,
+  "first_lit_window": {
+   "shadow_init_max_ms": 9.53,
+   "render_max_ms": 64.36,
+   "gpu_max_ms": 56.1,
+   "tsr_max_ms": 2.65
+  },
+  "steady": {
+   "rows": 508,
+   "gpu_ms": 4.56,
+   "tsr_ms": 0.47,
+   "game_ms": 2.72,
+   "render_ms": 3.91,
+   "physical_mb": 1660.9
+  }
+ },
+ {
+  "run": "a106-start-l2_night_5v5-3",
+  "load": {
+   "row": 2,
+   "frame_ms": 191.07,
+   "game_ms": 148.76,
+   "flush_async_ms": 88.19,
+   "engine_tick_misc_ms": 36.18,
+   "audio_gt_ms": 0.03
+  },
+  "first_lit_hitches": [
+   {
+    "row": 3,
+    "frame_ms": 45.18,
+    "game_ms": 7.29,
+    "render_ms": 27.49,
+    "gpu_ms": 5.71,
+    "shadow_init_ms": 0,
+    "tsr_ms": 1.85
+   },
+   {
+    "row": 6,
+    "frame_ms": 54.39,
+    "game_ms": 3.67,
+    "render_ms": 65.14,
+    "gpu_ms": 27.89,
+    "shadow_init_ms": 0.05,
+    "tsr_ms": 1.11
+   },
+   {
+    "row": 7,
+    "frame_ms": 84.32,
+    "game_ms": 31.54,
+    "render_ms": 25.31,
+    "gpu_ms": 27.89,
+    "shadow_init_ms": 0.04,
+    "tsr_ms": 0.95
+   },
+   {
+    "row": 8,
+    "frame_ms": 34.1,
+    "game_ms": 2.51,
+    "render_ms": 17.04,
+    "gpu_ms": 9.8,
+    "shadow_init_ms": 0.04,
+    "tsr_ms": 1.01
+   },
+   {
+    "row": 9,
+    "frame_ms": 39.74,
+    "game_ms": 2.85,
+    "render_ms": 3.41,
+    "gpu_ms": 8.23,
+    "shadow_init_ms": 0.04,
+    "tsr_ms": 0.93
+   },
+   {
+    "row": 10,
+    "frame_ms": 36.41,
+    "game_ms": 2.54,
+    "render_ms": 4.65,
+    "gpu_ms": 8.23,
+    "shadow_init_ms": 0.05,
+    "tsr_ms": 0.94
+   }
+  ],
+  "first_lit_sum_ms": 294.14,
+  "first_lit_max_ms": 84.32,
+  "first_lit_window": {
+   "shadow_init_max_ms": 9.35,
+   "render_max_ms": 65.14,
+   "gpu_max_ms": 59.24,
+   "tsr_max_ms": 2.17
+  },
+  "steady": {
+   "rows": 496,
+   "gpu_ms": 4.38,
+   "tsr_ms": 0.43,
+   "game_ms": 2.58,
+   "render_ms": 4.17,
+   "physical_mb": 1653.17
+  }
+ },
+ {
+  "run": "a106-start-p3_clay_5v5-2",
+  "load": {
+   "row": 2,
+   "frame_ms": 99.2,
+   "game_ms": 99.7,
+   "flush_async_ms": 17.2,
+   "engine_tick_misc_ms": 59.36,
+   "audio_gt_ms": 0
+  },
+  "first_lit_hitches": [
+   {
+    "row": 5,
+    "frame_ms": 44.14,
+    "game_ms": 3.12,
+    "render_ms": 8.32,
+    "gpu_ms": 11.5,
+    "shadow_init_ms": 0.05,
+    "tsr_ms": 1.01
+   }
+  ],
+  "first_lit_sum_ms": 44.14,
+  "first_lit_max_ms": 44.14,
+  "first_lit_window": {
+   "shadow_init_max_ms": 8.89,
+   "render_max_ms": 44.32,
+   "gpu_max_ms": 26.69,
+   "tsr_max_ms": 2.2
+  },
+  "steady": {
+   "rows": 499,
+   "gpu_ms": 4.78,
+   "tsr_ms": 0.41,
+   "game_ms": 2.32,
+   "render_ms": 3.93,
+   "physical_mb": 1549.64
+  }
+ },
+ {
+  "run": "a106-start-p3_clay_5v5-3",
+  "load": {
+   "row": 2,
+   "frame_ms": 107.89,
+   "game_ms": 68.34,
+   "flush_async_ms": 15.27,
+   "engine_tick_misc_ms": 31.53,
+   "audio_gt_ms": 0.02
+  },
+  "first_lit_hitches": [
+   {
+    "row": 3,
+    "frame_ms": 58.35,
+    "game_ms": 5.19,
+    "render_ms": 29.61,
+    "gpu_ms": 6.02,
+    "shadow_init_ms": 9.69,
+    "tsr_ms": 2.72
+   },
+   {
+    "row": 5,
+    "frame_ms": 66.13,
+    "game_ms": 4.26,
+    "render_ms": 11.56,
+    "gpu_ms": 19.82,
+    "shadow_init_ms": 0.05,
+    "tsr_ms": 0.24
+   },
+   {
+    "row": 7,
+    "frame_ms": 45.12,
+    "game_ms": 2.53,
+    "render_ms": 7.66,
+    "gpu_ms": 5.13,
+    "shadow_init_ms": 0.04,
+    "tsr_ms": 0.24
+   }
+  ],
+  "first_lit_sum_ms": 169.6,
+  "first_lit_max_ms": 66.13,
+  "first_lit_window": {
+   "shadow_init_max_ms": 9.69,
+   "render_max_ms": 66.13,
+   "gpu_max_ms": 50.28,
+   "tsr_max_ms": 2.72
+  },
+  "steady": {
+   "rows": 491,
+   "gpu_ms": 4.66,
+   "tsr_ms": 0.39,
+   "game_ms": 2.21,
+   "render_ms": 3.81,
+   "physical_mb": 1440.61
+  }
+ }
+]

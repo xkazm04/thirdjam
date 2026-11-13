@@ -37,7 +37,7 @@ $abslog = Join-Path $logDir ("soak-{0}-ue-{1}.log" -f $stem, (Get-Stamp))
 $soak = "-SoakSeedFirst=$SeedFirst -SoakSeeds=$Seeds -SoakFrames=$Frames -SoakOut=`"$Out`""
 if ($Profiles) { $soak += " -SoakProfiles=$Profiles" }
 if ($Cut -ne 'hockey.regular') { $soak += " -SoakCut=$Cut" }
-$ue = ('"{0}" -ExecCmds="Automation RunTests Bar.Net.{1}; Quit" -nullrhi -unattended -nopause -nosplash -log -ABSLOG="{2}" {3}' -f $uproject, $Test, $abslog, $soak)
+$ue = ('"{0}" -ExecCmds="Automation RunTests Bar.Net.{1}; Quit" -nullrhi -Multiprocess -unattended -nopause -nosplash -log -ABSLOG="{2}" {3}' -f $uproject, $Test, $abslog, $soak)
 Write-Host "INFO soak: $Test seeds $SeedFirst..$($SeedFirst + $Seeds - 1) frames $Frames profiles '$Profiles' -> $Out"
 $w = Invoke-Watched -FilePath $cmd -Arguments $ue -LogFile $log -TimeoutSec $TimeoutSec -MinFreeGB (Get-MinFreeGB 40) -DiskPath $uproject -Label 'soak'
 $src = $log; if (Test-Path $abslog) { $src = $abslog }

@@ -99,7 +99,7 @@ try {
         else {
             $log = Join-Path $logDir ("premerge-automation-{0}.log" -f $stamp)
             $abslog = Join-Path $logDir ("premerge-automation-ue-{0}.log" -f $stamp)
-            $ue = ('"{0}" -ExecCmds="Automation RunTests {1}; Quit" -nullrhi -unattended -nopause -nosplash -log -ABSLOG="{2}"' -f $uproject, $Filter, $abslog)
+            $ue = ('"{0}" -ExecCmds="Automation RunTests {1}; Quit" -nullrhi -Multiprocess -unattended -nopause -nosplash -log -ABSLOG="{2}"' -f $uproject, $Filter, $abslog)
             $w = Invoke-Watched -FilePath $cmd -Arguments $ue -LogFile $log -TimeoutSec $AutomationTimeoutSec -MinFreeGB (Get-MinFreeGB 40) -DiskPath $uproject -Label 'automation'
             $src = $log
             if (Test-Path $abslog) { $src = $abslog }

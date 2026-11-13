@@ -1,0 +1,86 @@
+[
+ {
+  "label": "t-take-1",
+  "cls": "regular",
+  "lvl": "rookie",
+  "cart": "ladder/take-1",
+  "seeds": "1-200"
+ },
+ {
+  "label": "t-take-2",
+  "cls": "regular",
+  "lvl": "rookie",
+  "cart": "ladder/take-2",
+  "seeds": "1-200"
+ },
+ {
+  "label": "t-take-3",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "ladder/take-3",
+  "seeds": "1-200"
+ },
+ {
+  "label": "t-take-4",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "ladder/take-4",
+  "seeds": "1-200"
+ },
+ {
+  "label": "t-take-5-fallback",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "ladder/take-5-fallback",
+  "seeds": "1-200"
+ },
+ {
+  "label": "t-take-5",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "ladder/take-5",
+  "seeds": "1-200"
+ },
+ {
+  "label": "t-take-6-fallback",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "ladder/take-6-fallback",
+  "seeds": "1-200"
+ },
+ {
+  "label": "t-take-6",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "ladder/take-6",
+  "seeds": "1-200"
+ },
+ {
+  "label": "t-take-7-fallback",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "ladder/take-7-fallback",
+  "seeds": "1-200"
+ },
+ {
+  "label": "t-take-7",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "ladder/take-7",
+  "seeds": "1-200"
+ },
+ {
+  "label": "t-take-8-fallback",
+  "cls": "regular",
+  "lvl": "all_star",
+  "cart": "ladder/take-8-fallback",
+  "seeds": "1-200"
+ },
+ {
+  "label": "t-take-8",
+  "cls": "regular",
+  "lvl": "all_star",
+  "cart": "ladder/take-8",
+  "seeds": "1-200"
+ }
+]

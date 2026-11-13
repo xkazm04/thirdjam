@@ -1,6 +1,12 @@
 // Lane A2: see JamBrain.h.
 #include "JamBrain.h"
 #include "DifficultyResolve.h"
+#include "ProfilingDebugging/CpuProfilerTrace.h"
+#include "ProfilingDebugging/CsvProfiler.h"
+
+// Lane A106 (track Q3): the brain's cost per frame, measurable in a Development package (CSV column Jam/BrainThink, Insights timer JamBrainThink).
+// Instrumentation only: no decision reads it.
+CSV_DEFINE_CATEGORY(Jam, true);
 
 void UJamBrain::ApplyCartridge(const UJamCartridge& Cart, const TCHAR* DifficultyOverride)
 {
@@ -32,6 +38,8 @@ void UJamBrain::ResetBrain()
 
 void UJamBrain::Think(const JamAI::FJamAIWorld& W, JamAI::FJamAIInput* Out)
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(JamBrainThink);
+	CSV_SCOPED_TIMING_STAT(Jam, BrainThink);
 	Core.Think(W, Out);
 }
 

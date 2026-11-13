@@ -312,3 +312,84 @@
 
 - RESOURCES 13:18 cpu 98% ram 37.3/63GB gpu 38 %, 2464 MiB, 42 editors 1 cmd 8 ubt 2 free 602GB
 - link green 13:22: main 2d9c033 (Collisions pass 2 (A80): A73's counts hold on B's SK12 takes, nothing under the ice, the s) pushed.
+
+- 13:29: the Director's process restarted at 13:23; lanes A57, A79, A83 were lost mid-run, A82 survived. Resumed: A79 and A83 with new agents on their worktrees and status files; A57's hourly package loop restarted in `.claude/worktrees/nightly` until 16:00 (its parity results landing with A81's modes). The resource timer re-armed.
+- link green 13:30: main cba1327 (Director's modes pass 2 (A81): six more modes (Sudden Death, Outnumbered, Glass House, Pin) pushed.
+- package 13:38: `Hokej_Hokej_H24.zip` from main cba1327 (twelve Director's modes with card words in the cartridge, A80 collisions pass 2, the knockdown frames unreduced).
+- link green 13:49: main 8fc69d3 (Mechanics pass 2 (A82, R-0040/R-0041): the saucer pass and protocol 6 (A77's work), the sp) pushed.
+
+## H19 (13:51) A82 landed (8fc69d3): the saucer, the lift shield, the carrier slower and no sprint; the shooting fault found (R-0042); A85 and A84 started
+- A82's release read-out: with the blade extended the carried puck sits at 1.6 m and every shot/pass test uses 1.5 m, so nothing fires while the player aims and the puck
+  slips off the blade (H24 ships with it). A85 (Fable, top priority): one carrier reach, a flat tap, the five bars re-proven; H25 packages the fix. A84 (Opus): abilities on F,
+  the pass to Q. A79 and A83 resumed and running; the hourly package loop runs to 16:00.
+- H24 packaged 13:38 (cba1327): twelve modes, A80's collision pass.
+
+- RESOURCES 13:56 cpu 83% ram 27.6/63GB gpu 5 %, 793 MiB, 39 editors 0 cmd 8 ubt 0 free 617GB
+- 13:59: A83 done: 5 v 5 plays and performs on 90 x 45 (win 37 % pro vs 47 at 3 v 3; matches 348 s; ten figures inside the frame); its patch is held for A85's carrier-reach fix (the same SeasonTakes coin), then both land and a final curve pass sets the budgets on 5 v 5. Director: first to 3 stays (the 348 s match is hockey; the modes carry clocks).
+
+## H20 (14:15) the plan reconciled (R-0043, docs/PLAN-RECONCILED.md) after the plan and model switch
+- A85 resumed (died on the old plan's limit at 14:05); A84 survived; A79 landing (all_star: speed 1.2, hunt 10 m, poke at once). New: A87 the acceptance run (a human hand plays five minutes in the package; no H package without it from H25), A88 the submission (video, page, dev log, ledger, clean profile). A86 the one curve pass on the real player after A85 + A83 land. Freezes: sim Sat 12:00, content Sat 22:00, submit Sun 22:00.
+- link green 14:15: main 35511c2 (All-star by aggression (A79, R-0041): speed 1.3 -> 1.2, the bots poke at once and a suppor) pushed.
+
+- RESOURCES 14:27 cpu 31% ram 26.8/63GB gpu 2 %, 814 MiB, 44 editors 0 cmd 0 ubt 3 free 611GB
+- link green 14:39: main 36d5f97 (The game speaks rough (A89, R-0041 point 4): a voice guide (ten rules, the rating's line, ) pushed.
+- link green 14:45: main 7e20aeb (The submission, first version from H24 (A88, R-0043 point 4): the rules checklist, a 39.5 ) pushed.
+- 14:45: A88 landed the submission v1 (submission/README.md is the checklist). Open for Sunday: the video has no audio (no capture device on this machine), no cross-check, no human goal, no 5 v 5 (needs H25+); zip to be named Hokej_Hokej.zip; a readme for vc_redist; team names on the page; ledger: T_UI_RingPlain origin "generated" is not an allowed origin, nine unshipped sourced rows lack a URL; dev log needs --repo and a curated shot set (2,606 shots break --embed); Windows Firewall prompt on first launch from a new path.
+- link green 14:50: main e230ffb (Abilities on F (A84, R-0041 point 3): game.abilities[] (shotgun, hip check, shield, slow p) pushed.
+- link green 14:53: main 9233914 (Shotgun and Arsenal on the Director's choices row (Blind Side and Pinball parked under mod) pushed.
+
+- RESOURCES 14:57 cpu 10% ram 20.1/63GB gpu 4 %, 867 MiB, 43 editors 0 cmd 0 ubt 0 free 622GB
+- link green 15:10: main 449c98a (The player shoots and passes with the blade extended (A85, R-0042): one carrier reach (1.6) pushed.
+- link green 15:12: main c1da890 (The acceptance run (A87, R-0043 point 1): drill 20 and a driver that play the first five m) pushed.
+- link green 15:14: main 0f51082 (5 v 5 is the regular game (A83, R-0041 point 2): hockey.regular and the thirteen ladder ta) pushed.
+
+## H21 (15:16) main 0f51082: the reach fix (A85), the acceptance run (A87), abilities on F (A84), 5 v 5 (A83), all_star by aggression (A79), the voice (A89)
+- The acceptance run on the pre-fix build failed shooting, passing and the one-timer as it should; on a stand-in for the fix 17 of 18 verbs green; the red one is the full
+  charge on the crossbar. R-0044: full_m 0.5, a 4-frame tap window, the mechanics' bars restated. A91 (Fable) makes them and takes the acceptance run to green: H25's gate.
+- A86 (Opus): the one curve pass on 5 v 5, the playtester's stick like the mouse first. A90 (Opus): the rough commentary's lines and picker rules.
+- B: A-to-B-0020 (protocol 7, the ability effect and sound, a take with audio). Gate 127 tests.
+
+- RESOURCES 15:27 cpu 29% ram 29/63GB gpu 6 %, 874 MiB, 40 editors 0 cmd 3 ubt 0 free 626GB
+- link green 15:42: main 8f6b157 (The commentator calls the hits (A90, R-0041 point 4): A89's sixty lines as a second supple) pushed.
+
+## H22 (15:49) the vision (R-0045, docs/VISION.md): three lanes in parallel
+- A92 contact by inertia (Fable), A93 braking, burst, the carrier's sprint, the puck's distance by pace (Fable), A94 the hockey brain (Opus). A91 still on the shot calibrations and the acceptance run (H25's gate). A86 told to stop after job 0 and the baseline; the final curve is a new lane after the three land. Main 8f6b157 (132 tests).
+
+- RESOURCES 15:58 cpu 36% ram 28.3/63GB gpu 32 %, 2524 MiB, 52 editors 0 cmd 9 ubt 1 free 605GB
+- 16:00: the hourly package loop ended at 16:00 as set (last row cba1327 13:29; it packaged nothing after its restart: not chased). Retired: lanes package on every proof and H packages are gated by the acceptance run (R-0043). Its table is docs/experiments/NIGHTLY.md.
+- link green 16:15: main b93f05f (The curve's player is the player (A86, R-0043 point 2): the playtester classes hold the st) pushed.
+- link green 16:21: main 034f9ac (The acceptance run is green (A91, R-0044): 18 of 18 verbs through the cursor and the butto) pushed.
+
+- RESOURCES 16:28 cpu 85% ram 27.5/63GB gpu 41 %, 2053 MiB, 48 editors 0 cmd 1 ubt 2 free 613GB
+- package 16:30: `Hokej_Hokej_H25.zip` from main 034f9ac, acceptance run green (18 verbs through the cursor and the buttons).
+- link green 16:37: main bb18439 (The bots play hockey (A94, R-0045 law 2): a space read, carry or pass by it, an attack sha) pushed.
+
+## H23 (16:54) H25 out (acceptance green); the vision on one tree
+- main bb18439: A91 (acceptance 18/18), A86 (the mouse-style playtester, the bots' carrier view), A90 (rough commentary), A94 (hockey brain; pro for the regular player 38 -> 80 %). H25 packaged 16:30 from 034f9ac through the release chain (acceptance run on main's package first).
+- A92 (contact by inertia) and A93 (brake, burst, carrier sprint, puck distance) done and applied together in worktree a95 without conflicts; A95 (Opus) makes the tree green, teaches the playtester and the bots the new verbs and sets the ladder once. A96 (Sonnet): submission pass 2 without game windows.
+
+- RESOURCES 16:58 cpu 4% ram 16.7/63GB gpu 0 %, 707 MiB, 41 editors 0 cmd 0 ubt 0 free 608GB
+- link green 17:01: main 0c53d5b (B-to-A-0037 answered (the lift's cone and Dir on lift and poke go to A95); status) pushed.
+- link green 17:11: main 53ef097 (Submission pass 2 (A96): package.ps1 -Submission writes Hokej_Hokej.zip with forward-slash) pushed.
+
+- RESOURCES 17:29 cpu 71% ram 24.6/63GB gpu 0 %, 804 MiB, 39 editors 0 cmd 7 ubt 1 free 606GB
+
+- RESOURCES 17:59 cpu 3% ram 16.8/63GB gpu 4 %, 792 MiB, 38 editors 0 cmd 0 ubt 0 free 607GB
+
+- RESOURCES 18:29 cpu 36% ram 17/63GB gpu 1 %, 792 MiB, 38 editors 0 cmd 8 ubt 1 free 607GB
+- link green 18:41: main ee14438 (The vision on main (R-0045, R-0046): contact by inertia (A92: impulse against stability, b) pushed.
+
+## H25 (18:47) evolution tracks started (R-0047, docs/EVOLUTION.md); the vision on main ee14438; H26 re-releasing
+- Ten lanes A100-A109 on tracks F0 design eye, F1 contact feel, F2 carrier skill, F3 arena in Blender (Fable); Q1 determinism and lockstep, Q2 review and repair, Q3 performance at five (Opus); S1 soak, S2 acceptance matrix (cursor owner), S3 fuzz (Sonnet). Band: 38-50 GB in use.
+- H26: the acceptance run was green 19/19 on ee14438, then the Shipping target failed to compile (a test outside its guard); fixed; the release chain now compiles Shipping first.
+
+- RESOURCES 19:00 cpu 26% ram 50.8/63GB gpu 3 %, 794 MiB, 40 editors 0 cmd 26 ubt 2 free 596GB
+- 19:12: the landing chain's clean build could not link (the soak lane runs its matches on the clean-main worktree's binaries, which locks the DLL: not a code error; the gate build passed, 156 tests). clean-main is the soak's now; the chain uses a new worktree clean-b. H26 release re-run started.
+
+- RESOURCES 19:30 cpu 100% ram 50.7/63GB gpu 1 %, 811 MiB, 47 editors 0 cmd 26 ubt 2 free 575GB
+- package 19:46: `Hokej_Hokej_H26.zip` from main a1c712f, acceptance run green (18 verbs through the cursor and the buttons).
+- link green 20:03: main 941b8d4 (Two online peers check everything the rules read (A104, track Q1): the lockstep checkpoint) pushed.
+- 20:05: **found: the main checkout sat on a detached HEAD from 13:39** (a checkout of cba1327 after the 13:23 restart), so every "pushed" line since then pushed the stale branch: origin/main stayed at cba1327 for six and a half hours and device B never received the vision, handoffs A-to-B-0020 to 0022 or anything else. Fixed 20:03: main switched onto the head commit, 70 commits pushed and verified against the remote (941b8d4); the landing script now refuses to run off the branch and checks the remote after each push.
+- link green 20:05: main 941b8d4 (A104: two online peers check everything the rules read; protocol 8) pushed, verified.
+- RESOURCES 20:00 [exited with code 0]
+- link green 20:12: main 7f4d501 (Six evolutions in one landing: every contact outcome reads and the boards are a body (A101) pushed.

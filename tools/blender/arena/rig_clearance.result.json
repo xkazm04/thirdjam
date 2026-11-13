@@ -1,0 +1,415 @@
+{
+  "rink_m": [
+    90.0,
+    45.0
+  ],
+  "volumes_cm": [
+    [
+      "bench_neg",
+      -1205.7,
+      -293.70000000000005,
+      2271.0,
+      2441.0,
+      0.0,
+      190.0
+    ],
+    [
+      "bench_pos",
+      293.70000000000005,
+      1205.7,
+      2271.0,
+      2441.0,
+      0.0,
+      190.0
+    ],
+    [
+      "box_neg",
+      -526.0,
+      -74.0,
+      -2441.0,
+      -2271.0,
+      0.0,
+      266.0
+    ],
+    [
+      "box_pos",
+      74.0,
+      526.0,
+      -2441.0,
+      -2271.0,
+      0.0,
+      266.0
+    ]
+  ],
+  "rigs": {
+    "LR_L2_Night": {
+      "loaded": true,
+      "actors": 165,
+      "sized": 155,
+      "crossing": [
+        {
+          "actor": "SkyB_L2_Night_Dome",
+          "class": "StaticMeshActor",
+          "hidden_in_game": false,
+          "min_cm": [
+            -30000,
+            -30000,
+            -30000
+          ],
+          "max_cm": [
+            30000,
+            30000,
+            30000
+          ],
+          "volume": "bench_neg"
+        },
+        {
+          "actor": "SkyB_L2_Night_Dome",
+          "class": "StaticMeshActor",
+          "hidden_in_game": false,
+          "min_cm": [
+            -30000,
+            -30000,
+            -30000
+          ],
+          "max_cm": [
+            30000,
+            30000,
+            30000
+          ],
+          "volume": "bench_pos"
+        },
+        {
+          "actor": "SkyB_L2_Night_Dome",
+          "class": "StaticMeshActor",
+          "hidden_in_game": false,
+          "min_cm": [
+            -30000,
+            -30000,
+            -30000
+          ],
+          "max_cm": [
+            30000,
+            30000,
+            30000
+          ],
+          "volume": "box_neg"
+        },
+        {
+          "actor": "SkyB_L2_Night_Dome",
+          "class": "StaticMeshActor",
+          "hidden_in_game": false,
+          "min_cm": [
+            -30000,
+            -30000,
+            -30000
+          ],
+          "max_cm": [
+            30000,
+            30000,
+            30000
+          ],
+          "volume": "box_pos"
+        },
+        {
+          "actor": "Snow_L2_Night_Bank_3",
+          "class": "StaticMeshActor",
+          "hidden_in_game": false,
+          "min_cm": [
+            -4420,
+            -2530,
+            -1
+          ],
+          "max_cm": [
+            4420,
+            -2319,
+            60
+          ],
+          "volume": "box_neg"
+        },
+        {
+          "actor": "Snow_L2_Night_Bank_3",
+          "class": "StaticMeshActor",
+          "hidden_in_game": false,
+          "min_cm": [
+            -4420,
+            -2530,
+            -1
+          ],
+          "max_cm": [
+            4420,
+            -2319,
+            60
+          ],
+          "volume": "box_pos"
+        },
+        {
+          "actor": "Snow_L2_Night_Bank_4",
+          "class": "StaticMeshActor",
+          "hidden_in_game": false,
+          "min_cm": [
+            -4420,
+            2319,
+            -1
+          ],
+          "max_cm": [
+            4420,
+            2530,
+            60
+          ],
+          "volume": "bench_neg"
+        },
+        {
+          "actor": "Snow_L2_Night_Bank_4",
+          "class": "StaticMeshActor",
+          "hidden_in_game": false,
+          "min_cm": [
+            -4420,
+            2319,
+            -1
+          ],
+          "max_cm": [
+            4420,
+            2530,
+            60
+          ],
+          "volume": "bench_pos"
+        }
+      ],
+      "near": []
+    },
+    "LR_P3_Clay": {
+      "loaded": true,
+      "actors": 124,
+      "sized": 101,
+      "crossing": [],
+      "near": []
+    },
+    "LR_P4_Broadcast": {
+      "loaded": true,
+      "actors": 342,
+      "sized": 308,
+      "crossing": [],
+      "near": [
+        {
+          "actor": "Con_P4_Broadcast_Stand_Sp_01",
+          "class": "StaticMeshActor",
+          "hidden_in_game": false,
+          "min_cm": [
+            -4800,
+            2500,
+            -3
+          ],
+          "max_cm": [
+            4800,
+            4100,
+            60
+          ],
+          "volume": "bench_neg",
+          "gap_cm": 59
+        },
+        {
+          "actor": "Con_P4_Broadcast_Stand_Sp_01",
+          "class": "StaticMeshActor",
+          "hidden_in_game": false,
+          "min_cm": [
+            -4800,
+            2500,
+            -3
+          ],
+          "max_cm": [
+            4800,
+            4100,
+            60
+          ],
+          "volume": "bench_pos",
+          "gap_cm": 59
+        },
+        {
+          "actor": "Con_P4_Broadcast_Stand_Sp_02",
+          "class": "StaticMeshActor",
+          "hidden_in_game": false,
+          "min_cm": [
+            -4800,
+            2650,
+            -3
+          ],
+          "max_cm": [
+            4800,
+            4100,
+            145
+          ],
+          "volume": "bench_neg",
+          "gap_cm": 209
+        },
+        {
+          "actor": "Con_P4_Broadcast_Stand_Sp_02",
+          "class": "StaticMeshActor",
+          "hidden_in_game": false,
+          "min_cm": [
+            -4800,
+            2650,
+            -3
+          ],
+          "max_cm": [
+            4800,
+            4100,
+            145
+          ],
+          "volume": "bench_pos",
+          "gap_cm": 209
+        },
+        {
+          "actor": "Con_P4_Broadcast_Stand_Sn_01",
+          "class": "StaticMeshActor",
+          "hidden_in_game": false,
+          "min_cm": [
+            -4800,
+            -4100,
+            -3
+          ],
+          "max_cm": [
+            4800,
+            -2500,
+            60
+          ],
+          "volume": "box_neg",
+          "gap_cm": 59
+        },
+        {
+          "actor": "Con_P4_Broadcast_Stand_Sn_01",
+          "class": "StaticMeshActor",
+          "hidden_in_game": false,
+          "min_cm": [
+            -4800,
+            -4100,
+            -3
+          ],
+          "max_cm": [
+            4800,
+            -2500,
+            60
+          ],
+          "volume": "box_pos",
+          "gap_cm": 59
+        },
+        {
+          "actor": "Con_P4_Broadcast_Stand_Sn_02",
+          "class": "StaticMeshActor",
+          "hidden_in_game": false,
+          "min_cm": [
+            -4800,
+            -4100,
+            -3
+          ],
+          "max_cm": [
+            4800,
+            -2650,
+            145
+          ],
+          "volume": "box_neg",
+          "gap_cm": 209
+        },
+        {
+          "actor": "Con_P4_Broadcast_Stand_Sn_02",
+          "class": "StaticMeshActor",
+          "hidden_in_game": false,
+          "min_cm": [
+            -4800,
+            -4100,
+            -3
+          ],
+          "max_cm": [
+            4800,
+            -2650,
+            145
+          ],
+          "volume": "box_pos",
+          "gap_cm": 209
+        },
+        {
+          "actor": "Led_P4_Broadcast_Side_-1_-1",
+          "class": "StaticMeshActor",
+          "hidden_in_game": true,
+          "min_cm": [
+            -4125,
+            -2262,
+            211
+          ],
+          "max_cm": [
+            0,
+            -2258,
+            215
+          ],
+          "volume": "box_neg",
+          "gap_cm": 9
+        },
+        {
+          "actor": "Led_P4_Broadcast_Side_-1_-1",
+          "class": "StaticMeshActor",
+          "hidden_in_game": true,
+          "min_cm": [
+            -4125,
+            -2262,
+            211
+          ],
+          "max_cm": [
+            0,
+            -2258,
+            215
+          ],
+          "volume": "box_pos",
+          "gap_cm": 74
+        },
+        {
+          "actor": "Led_P4_Broadcast_Side_-1_1",
+          "class": "StaticMeshActor",
+          "hidden_in_game": true,
+          "min_cm": [
+            0,
+            -2262,
+            211
+          ],
+          "max_cm": [
+            4125,
+            -2258,
+            215
+          ],
+          "volume": "box_neg",
+          "gap_cm": 74
+        },
+        {
+          "actor": "Led_P4_Broadcast_Side_-1_1",
+          "class": "StaticMeshActor",
+          "hidden_in_game": true,
+          "min_cm": [
+            0,
+            -2262,
+            211
+          ],
+          "max_cm": [
+            4125,
+            -2258,
+            215
+          ],
+          "volume": "box_pos",
+          "gap_cm": 9
+        }
+      ]
+    },
+    "LR_L1_Day": {
+      "loaded": true,
+      "actors": 2,
+      "sized": 0,
+      "crossing": [],
+      "near": []
+    },
+    "LR_L3_Neon": {
+      "loaded": true,
+      "actors": 2,
+      "sized": 0,
+      "crossing": [],
+      "near": []
+    }
+  }
+}

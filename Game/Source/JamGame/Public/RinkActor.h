@@ -6,6 +6,10 @@
 // Lane A25 (R-0024 point 1, LOOK-LAB.md recommendation 6): the construction layer on top of the greybox: a 25 cm kick plate at the board foot, a dark glass rail with
 // stanchions every 2.4 m, a 14 cm net frame with a back frame and braces, goal-light housings, benches and a penalty bench, and the ice markings B's paint does not
 // carry (faceoff circles with hash marks, dots, creases, trapezoids). Visual only: the sim's boards, nets and goal line are untouched. `jam.rink.construction 0` hides it.
+// Lane A103 (track F3, the arena in Blender): the benches and the penalty boxes as static meshes made by tools/blender/arena/arena.py and imported to /Game/Arena
+// (two team benches outside the +y boards where A25's code benches stand, two penalty boxes outside the -y boards at x = -3 and +3, where UJamSim::BoxPos pins a
+// boxed skater). Device B's instances by reference on the five slots. Shown on the dressed tiers, hidden on the bare ones; `jam.rink.arena 0` or a missing mesh
+// gives back A25's code benches. Visual only: no collision, no sim state. docs/experiments/ARENA.md.
 #pragma once
 
 #include "CoreMinimal.h"
@@ -48,6 +52,15 @@ public:
 	static constexpr double StanchionSpacingM = 3.6;   // 2.4 read as a black comb at 24 m (eyes tool, EYES.md finding 2; Director 17:17)
 	static constexpr double NetBarM = 0.14;
 	static constexpr double NetBackHeightM = 0.9;
+	// Lane A103: the Blender-made arena dressing. The bench mesh is built 12 m long (0.1 x a 120 m rink) and scaled along the boards to 0.1 x the rink's length;
+	// the penalty box is 4.4 m on every rink, centred where the sim boxes a skater (UJamSim::BoxPos: x = -3 team 0, +3 team 1, on the -y side).
+	static constexpr const TCHAR* TeamBenchMeshPath = TEXT("/Game/Arena/SM_Arena_TeamBench.SM_Arena_TeamBench");
+	static constexpr const TCHAR* PenaltyBoxMeshPath = TEXT("/Game/Arena/SM_Arena_PenaltyBox.SM_Arena_PenaltyBox");
+	static constexpr double ArenaBenchBuiltLengthM = 12.0;
+	static constexpr double ArenaBenchLengthFactor = 0.1;
+	static constexpr double ArenaBenchCentreFactor = 0.0833;
+	static constexpr double PenaltyBoxCentreXM = 3.0;
+	static constexpr double ArenaGapM = 0.05;   // between the board's outer face and a piece (A25's benches: the same 5 cm)
 
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UProceduralMeshComponent> Ice;
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UProceduralMeshComponent> Markings;
@@ -74,6 +87,12 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UProceduralMeshComponent> GlassRail;
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UProceduralMeshComponent> GoalLights;
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UProceduralMeshComponent> Benches;
+	// Lane A103: the Blender-made benches (+y side; Neg = x < 0, team 0, blue; Pos = x > 0, team 1, orange) and penalty boxes (-y side, turned 180 degrees).
+	// Stencil 1, no collision. The mesh is loaded at Build; without it the component stays empty and hidden and A25's code benches show.
+	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UStaticMeshComponent> ArenaBenchNeg;
+	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UStaticMeshComponent> ArenaBenchPos;
+	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UStaticMeshComponent> ArenaBoxNeg;
+	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UStaticMeshComponent> ArenaBoxPos;
 	// Behind the +x goal line (team 0 scores here) and behind the -x line (team 1 scores here).
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UBoxComponent> GoalTriggerPos;
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UBoxComponent> GoalTriggerNeg;
@@ -115,6 +134,19 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Jam|Rink")
 	void SetConstructionVisible(bool bVisible);
 	static bool IsConstructionEnabled();
+
+	// Lane A103: the arena dressing's switch (`jam.rink.arena`, default 1) and the tier rule. A bare tier is one whose rig C-0002 lists as an empty placeholder
+	// (l1_day, l3_neon): nothing lights or dresses the outside of the boards there, so the Blender pieces hide and A25's code benches stay.
+	static bool IsArenaDressingEnabled();
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	static bool IsBareTier(const FString& Tier);
+	// True when the four Blender pieces are what the rink shows (meshes loaded, construction on, the cvar on, a dressed tier); A25's code benches are hidden then.
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	bool IsArenaDressingShown() const { return bArenaShown; }
+	// Where a boxed skater of Team (0 or 1) would stand inside its penalty box, facing the rink: the box mesh's socket `Seat` in world space.
+	// False when the box is not shown (the caller keeps the sim's place on the ice). Presentation only: UJamSim::BoxPos is not changed by this lane.
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	bool GetPenaltyBoxSeat(int32 Team, FVector& OutLocation, FRotator& OutRotation) const;
 	// Lane A25 (Director 17:17, eyes finding 3): the far-net beacon column read as noise and as a dithered artefact. `jam.rink.beacon` 0 = off, 1 = B's MI_Trim_Beacon
 	// (translucent, as before), 2 = an opaque emissive column (lab flat instance in the trim colour). Build and the cvar sink apply it.
 	void ApplyBeaconMode();
@@ -130,6 +162,9 @@ private:
 	// LabEmissive >= 0 lifts the lab instance's Emissive in a dynamic copy (the flat lab master has no ambient floor); -1 uses the instance as it is.
 	// bLabTint also writes Tint into that copy (the lab instance's own colour is replaced: benches, goal-light housings).
 	UMaterialInterface* LoadConstructionMat(const TCHAR* LookName, const TCHAR* LabName, const FLinearColor& Tint, float LabEmissive = -1.f, bool bLabTint = false);
+	void ApplyArenaDressing();   // lane A103: shows the Blender pieces or A25's code benches, never both
+	FString ArenaTier;           // lane A103: the tier the dressing was last decided for (Build and SetZoneRingsForTier write it)
+	bool bArenaShown = false;
 	bool bClayTier = false;   // lane A69: the tier the rink shows is p3_clay (rings on, decal quads off, glass and rail not drawn)
 	bool bLookIce = false;
 	bool bLookTrim = false;

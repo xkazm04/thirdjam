@@ -1,0 +1,32 @@
+tools/perf/results/a106/gt-play-l2-hudtrim0.csv: 3144 frames
+  HokejGameMode                            incl 0.7644  excl 0.0990  calls/f 1.0
+  ExecuteUbergraph_BP_SkaterVisual_TB1     incl 0.5726  excl 0.2921  calls/f 80.5
+  Total Slate Tick Time                    incl 0.5517  excl 0.0061  calls/f 2.0
+  Slate::DrawWindows                       incl 0.4084  excl 0.0142  calls/f 1.0
+  JamHudWidget /Engine/Transient.GameEngin incl 0.1015  excl 0.0035  calls/f 1.0
+  JamHud_Tick                              incl 0.0980  excl 0.0007  calls/f 1.0
+  JamHud_Refresh                           incl 0.0969  excl 0.0321  calls/f 1.0
+  JamHudWidget /Engine/Transient.GameEngin incl 0.0704  excl 0.0024  calls/f 1.0
+  JamHud_Yours                             incl 0.0257  excl 0.0253  calls/f 1.0
+  JamHud_NetMarkers                        incl 0.0254  excl 0.0248  calls/f 1.0
+  JamBrainThink                            incl 0.0145  excl 0.0145  calls/f 1.0
+  JamHud_PuckMarker                        incl 0.0100  excl 0.0100  calls/f 1.0
+  JamHud_Commentary                        incl 0.0022  excl 0.0022  calls/f 1.0
+  JamHud_Radar                             incl 0.0015  excl 0.0011  calls/f 1.0
+  JamHud_EffectsFeed                       incl 0.0005  excl 0.0005  calls/f 1.0
+tools/perf/results/a106/gt-play-l2-hudtrim1.csv: 2634 frames
+  HokejGameMode                            incl 0.7777  excl 0.0984  calls/f 1.0
+  ExecuteUbergraph_BP_SkaterVisual_TB1     incl 0.5888  excl 0.3059  calls/f 80.5
+  Total Slate Tick Time                    incl 0.5463  excl 0.0057  calls/f 2.0
+  Slate::DrawWindows                       incl 0.4058  excl 0.0139  calls/f 1.0
+  JamHudWidget /Engine/Transient.GameEngin incl 0.0962  excl 0.0034  calls/f 1.0
+  JamHud_Tick                              incl 0.0928  excl 0.0007  calls/f 1.0
+  JamHud_Refresh                           incl 0.0915  excl 0.0256  calls/f 1.0
+  JamHudWidget /Engine/Transient.GameEngin incl 0.0720  excl 0.0022  calls/f 1.0
+  JamHud_Yours                             incl 0.0264  excl 0.0260  calls/f 1.0
+  JamHud_NetMarkers                        incl 0.0261  excl 0.0255  calls/f 1.0
+  JamBrainThink                            incl 0.0151  excl 0.0151  calls/f 1.0
+  JamHud_PuckMarker                        incl 0.0100  excl 0.0099  calls/f 1.0
+  JamHud_Commentary                        incl 0.0020  excl 0.0020  calls/f 1.0
+  JamHud_Radar                             incl 0.0014  excl 0.0010  calls/f 1.0
+  JamHud_EffectsFeed                       incl 0.0006  excl 0.0006  calls/f 1.0

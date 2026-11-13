@@ -263,10 +263,10 @@
       "poke_window_frames": 2
     },
     "meta": {
-      "pitch": "A tight box, live boards. Hit, don't poke.",
+      "pitch": "Tight box, live boards. Hit or get hit.",
       "facts": [
         "70 x 35 m, pillars",
-        "stick reach 0.6 m",
+        "short stick, 0.6 m",
         "bots hit back"
       ]
     }

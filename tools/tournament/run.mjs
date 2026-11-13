@@ -94,7 +94,7 @@ function runOne(runner, exe, cfg, cartridge, seeds, mode, maxFrames, sim) {
     const cmd = join(ue, 'Engine', 'Binaries', 'Win64', 'UnrealEditor-Cmd.exe');
     const uproject = arg('uproject', join(repo, 'Game', 'ThirdJam.uproject'));
     r = spawnSync(cmd, [uproject, '-run=JamTournament', `-sim=${sim}`, `-cfg=${cfg}`, `-cartridge=${cartridge}`, `-seeds=${seeds}`, `-mode=${mode}`, `-maxframes=${maxFrames}`,
-      '-nullrhi', '-unattended', '-nopause', '-nosplash', '-stdout', '-FullStdOutLogOutput'], { encoding: 'utf8', maxBuffer: 256 << 20, timeout: 1800000 });
+      '-nullrhi', '-Multiprocess', '-unattended', '-nopause', '-nosplash', '-stdout', '-FullStdOutLogOutput'], { encoding: 'utf8', maxBuffer: 256 << 20, timeout: 1800000 });
   }
   if (r.error) die(2, `${runner} runner did not start: ${r.error.message}`);
   const lines = (r.stdout || '').split(/\r?\n/).map((l) => { const i = l.indexOf('{"tool":"thirdjam.tournament/1"'); return i >= 0 ? l.slice(i) : null; }).filter(Boolean);

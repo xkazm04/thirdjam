@@ -98,6 +98,10 @@ public:
 	bool IsHitStopped() const { return HoldLeft > 0; }
 	// jam.hitstop (0..6, default 3): the frames the visuals hold on a knockdown that involves the human. 0 = off.
 	static int32 HitStopFrames();
+	// Lane A101 (track F1): the hold by the hit's outcome and ratio (UJamSim::ContactOutcome / ContactRatio), at jam.hitstop's default 3: a bump 0; a stumble 1,
+	// 2 from the middle of the stumble band (bump_ratio..down_ratio); a knockdown 2 at down_ratio to 5 at down_full_ratio and above. Base = jam.hitstop scales it
+	// (x Base / 3, a landed hit never under 1, never over 6; 0 = off). A knockdown the model did not resolve (Outcome 0: contact.momentum false) holds Base.
+	static int32 HitStopFramesFor(int32 Outcome, float Ratio, const FJamContactConfig& Contact, int32 Base);
 
 private:
 	void SetVisualTimeDilation(float Dilation);

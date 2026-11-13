@@ -212,8 +212,12 @@ bool FJamBotHumanHasSomethingToDo::RunTest(const FString& Parameters)
 			Without += S.FaceoffsWithoutTouch;
 			Faceoffs += S.Faceoffs;
 		}
-		const int32 Budget = Faceoffs * 104 / 1000;
-		const FString Msg = FString::Printf(TEXT("hockey.regular rookie novice, seeds 1-20: %d of %d faceoffs without a human touch inside 600 frames (budget 10.4 %%: %d)"), Without, Faceoffs, Budget);
+		// Lane A86 (CURVE-4.md): with the playtester holding the stick the way the mouse does and the bots seeing a blade-length puck as carried, the share over
+		// 2,000 matches on 5 v 5 is 13.1 %; the budget is that share plus 2 points (R-0039's rule), 15.1 %, until the final curve pass re-measures it.
+		// Lane A95 (CURVE-5.md, the vision on one tree and the final profiles): the soak's share over 2,000 matches is 7.26 % (rookie, novice, hockey.regular); the
+		// budget is that share plus 2 points (R-0039's rule), 9.3 %.
+		const int32 Budget = Faceoffs * 93 / 1000;
+		const FString Msg = FString::Printf(TEXT("hockey.regular rookie novice, seeds 1-20: %d of %d faceoffs without a human touch inside 600 frames (budget 9.3 %%: %d)"), Without, Faceoffs, Budget);
 		if (Without <= Budget) { AddInfo(TEXT("PASS ") + Msg); } else { AddError(TEXT("FAIL ") + Msg); bOk = false; }
 	}
 	else { bOk = false; }

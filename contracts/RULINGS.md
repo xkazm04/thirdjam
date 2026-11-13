@@ -454,3 +454,108 @@ shield, the slow puck; the **pass moves to Q** (the deke keeps the mouse wheel a
 `game.abilities[]`, unknown keys errors, with a bark and a HUD slot. (4) **The brand goes raw and brutal within the jam's teen rating** (R-0021: no gore, clay figures, mild
 words at most one in ten): the title, the logo, the banner, the menu copy, the commentator's tone and the crowd sell a rough game, not a cruel one; device B owns the logo and
 the banner (A-to-B-0019), A owns the copy and the commentary tone. (5) P3 stays the shipped look; nothing here reopens P4. (6) **The carrier is slower and cannot sprint** (the operator, 13:15: "skater with puck will need slight speed reduction and inability to sprint, to incentivize passing with other players and ability to defend"): `game.skater.carry_speed_mult` (default 0.92, range 0.6..1) scales the carrier's top speed and acceleration; the sprint is refused while carrying (the bar does not drain); bots and the human alike; a calibration with the hash re-recorded (lane A82), the curve re-measured after (A79).
+
+## R-0042 (H19, 2026-11-13 13:47): the carrier's reach; the tap stays on the ice
+Lane A82's release read-out found why the human's shots, passes and saucers never fire with the blade extended: since A51 the carried puck lives at the blade (0.4 +
+`stick.reach_m` 1.2 = 1.6 m) and every carrier test uses `shot.reach_m` 1.5, so nothing charges or fires while the player aims; the human also keeps losing a blade-length
+puck (A66 capped the bots' own blade to work around the same thing). Rulings (lane A85, top priority): (1) one carrier reach for shooting, passing, charging and carrying:
+`max(shot.reach_m, body radius + stick.reach_m) + 0.05`, used by every carrier test in the sim and by the brain; A66's cap goes if bots shoot without it; (2) a tap stays on the
+ice: `shot.lift.tap_m` 0 and a charge-0 shot flies flat, so a rookie bot's tap can be deflected by a stick again (A82's SeasonTakes coin lands the same way every time);
+`half_m` 0.45 and `full_m` 0.6 stand; (3) H24 ships with the fault; H25 packages the fix. The bars of R-0034 stand.
+
+## R-0043 (H20, 2026-11-13 14:14): the plan reconciled
+The operator after the plan and model switch: "please reconcile the plan as previous model may not lead into best possible directions we can achieve". The Director's read
+and the order of work are in `docs/PLAN-RECONCILED.md` (the live plan from now). Rulings: (1) **no H package from H25 on without the acceptance run green**: a script that
+plays the first five minutes in a package through the cursor and the buttons, pass or fail per verb (lane A87); H19 to H24 shipped unable to shoot or pass while aiming
+because no gate drives the real input; (2) **one curve pass on the real player** (A86): the playtester classes hold the stick the way the mouse does first; no other lane
+edits a difficulty number; (3) **no new mechanic after A84's abilities**; a mechanic whose bar still fails after A85 is cut to what passes; (4) **the submission has a lane
+from now** (A88: video, page text, dev log, ledger, clean-profile test); (5) **freezes**: the sim Saturday 12:00, content Saturday 22:00, Sunday is submission only; submit
+Sunday 22:00; (6) one lane per file family at a time (the sim, the profiles, the input mapping, the HUD).
+
+## R-0044 (H21, 2026-11-13 15:09): the reach fix landed; the last sim calibrations; the mechanics' bars restated
+Lane A85 landed R-0042 (one carrier reach, the flat tap; in the package 30 shots fired at three charges where A82 had none) and lane A87's acceptance run failed the old build
+on shooting, passing and the one-timer exactly as it should, and turned 17 of 18 verbs green on a stand-in for the fix. Rulings: (1) `shot.lift.full_m` 0.5 (the full charge
+at 0.6 rings the 0.61 bar from 10 m); (2) a hold of 4 frames or fewer is a tap, flat (`game.shot.tap_frames` 4): a human's click is never zero frames long; (3) the bars of
+R-0034 restated to what each mechanic is for (R-0043 point 3): the sweep and the spin are proven by their shield (every poke and lift inside the window refused; A85: 9 lift
+misses in the spin run), not by the puck kept against a body check, which is the risk the ruling gave them; the saucer by its flight over a blade when one is on the lane;
+(4) A66's bot blade cap stays: without it about thirty brain decisions lose the carrier (A85's measurement); it is the curve lane's to revisit, not before the submission;
+(5) the bots' round-the-net rule stays; (6) lane A91 makes these calibrations and takes the acceptance run to green: that run is H25's gate. Amended 16:35 on A91's measurement: `full_m` is 0.47 (at 0.5 the full charge still rang the bar from 15 to 24 m; 0.47 scores from every metre of 3..30 m, 728 shots asserted); the brain's long wind-up for a real net applies only to nets of 1 m or more; the sweep's shield covers both sides for its window (a cursor crossing read as two sweeps flipped a one-sided shield): lane A93 makes that last change.
+
+## R-0045 (H22, 2026-11-13 15:46): the vision: inertia, hockey principles, speed change, the stick and the sprint
+The operator gave four topics "so they become part of the vision of chasing"; they are written as laws with numbers in `docs/VISION.md`, which wins over older rulings where
+they differ. (1) **Physics**: a contact's strength is the closing speed along the contact line times mass (same direction and speed: almost nothing; head-on at full speed:
+the biggest hit), against the victim's stability (a standing braced skater resists a side hit; pace, the sprint, a spin lower it; a cross-check from the front beats the
+standing brace); three outcomes: bump, stumble, down; the attacker pays; **the carrier cannot body-check or cross-check** (lane A92). (2) **AI**: the bots read open ice and
+decide to carry or pass by it, with an attack shape, a defence shape and transitions; charging a set defence is the wrong decision (lane A94). (3) **Gameplay**: braking by
+reversing the input (W to S), a first-step burst; the carrier wins by changing speed and direction (lane A93). (4) **The stick and the sprint**: the puck rides closer when not
+sprinting; **the carrier may sprint** (replacing R-0041 point 6), with the puck farther out and easier to take, and a defender's sprint is always the faster; pace costs
+stability (A93 with A92). Process: each rule has a neutral value that gives back today's game and its lane proves it; the acceptance run and the gate stay the bar; the levels
+are tuned once more after the three lands (A86 stops after its job 0 and baseline); the sim freeze stays Saturday 12:00 and what is not green by Saturday 10:00 goes back to
+its neutral value. R-0043 point 6 is narrowed: one lane per function family in the sim, named in each brief.
+
+## R-0046 (H24, 2026-11-13 18:39): the vision is on main; the ladder set once on the real player
+Lanes A92 (contact by inertia), A93 (braking by reversing, the first-step burst, the carrier's sprint, the puck's distance by pace, the two-sided sweep shield) and A94 (the
+hockey brain) landed together through lane A95, which made the merged tree green (the full `Jam` filter 156 of 156; the acceptance run 19 of 19 through the cursor and the
+buttons), built device B's lift cone and directed stick events (B-to-A-0037), taught the playtester and the bots the new verbs, and set the ladder on 2,000 matches per cell
+(`docs/experiments/CURVE-5.md`): novice at rookie 85.3 / 86.0 on the large rink, regular at pro 48.3 / 48.4, good at all_star 26.3 / 24.9: all six inside their intervals
+of R-0029's targets (85 / 50 / 25). Rulings: (1) the profiles stand as measured: rookie knows the principles late and loosely, rarely hits (checks only from 6 m/s), sprints
+little; pro shoots from 30 m, hunts the carrier inside 8 m, checks from 2 m/s; all_star hunts inside 20 m, always sprints, checks from 2 m/s, carries through pressure, at
+bot speed 1.4 (1.22 on the large rink); (2) pro's shot range (13 to 30 m) is accepted as a lever: the hockey brain made the bots pass instead of shoot and cost them about
+40 points; shooting from range is hockey; (3) **all_star's speed of 1.4 is flagged to the operator**: aggression alone left the good player at about 37 %; the 25 % target
+was reached with speed; the operator may prefer 1.2 with the good player near 37 %; (4) the budgets follow the soak: the human-touch share plus 2 points (9.3 %), the novice's
+goal inside two minutes at 7 of 20 (the measured share is 44.8 %); (5) nothing went back to its neutral value; the neutral proofs hold on this tree; (6) the sim freeze of
+Saturday 12:00 stands: from here only fixes that the acceptance run or the gate demand, and the operator's read of H26.
+
+## R-0047 (H25, 2026-11-13 18:46): the difficulty accepted; evolution tracks until the freeze
+The operator: "difficulty setup fine for me" (R-0046 stands, all_star's speed included) and "We need to iterate on top of existing concepts and make evolution after
+evolution in tracks where possible. Next 24h will be key ... RAM 60-80% used, Fable agents thinking how to improve game mechanics and design, executing in blender. Opus
+subagents to improve the codebase and quality of implementation, Sonnet subagents to run tests and harden the game." Rulings: (1) ten standing tracks (`docs/EVOLUTION.md`):
+Fable F0 design eye, F1 contact feel, F2 carrier skill, F3 the arena in Blender; Opus Q1 determinism and lockstep, Q2 review and repair, Q3 performance at five a side;
+Sonnet S1 soak, S2 the acceptance matrix (the cursor's owner), S3 fuzz and the loader; each lane does one evolution, lands through the gate (and the acceptance run when a
+player's verb changes), and proposes the next three; the Director keeps every track busy; rules in `briefs/EVOLUTION-COMMON.md`; (2) the machine's band is 38 to 50 GB in
+use; soaks scale their workers to fill it; (3) **the freezes move**: rule changes in the sim land until Saturday 19:00, each with a neutral value and a green gate; content
+freezes Saturday 22:00; Sunday is the submission; submit Sunday 22:00; (4) the ladder of R-0046 is set: an evolution that moves a target cell by more than 4 points ships
+with its neutral value until the curve is re-set; (5) the release chain compiles the Shipping target before the acceptance run (H26's first try played green and then failed
+to compile for Shipping: a test outside its guard).
+
+## R-0048 (H26, 2026-11-13 19:34): what the design eye measured: the carried puck, the whistle, the first ten minutes
+Track F0's first review (`docs/design/REVIEW-1.md`, 924 headless matches on the vision's build) found the game's largest gap against `docs/VISION.md` law 3: **nobody keeps
+the puck**: the human's carry lasts a median 0.87 / 0.75 / 0.67 s at rookie / pro / all_star, because a carried puck is taken by any aimed blade or body that touches it,
+with no press, even by a teammate. Rulings: (1) **a carried puck leaves its carrier only by an action**: a shot, a pass, a poke, a lift, a check or stumble that loosens it,
+or the carrier's own release; never by an unpressed blade or a body's touch (`game.stick.passive_take`, default false, neutral true), never to a teammate by touch under
+either value (track F2, in its current evolution); the ladder is re-set right after on the track's report (a curve lane), since the human keeping the puck moves every cell;
+(2) **the whistle is taken out of the regular game**: `hockey.regular` and the season's first takes play with `rules.penalties` false (the newcomer's first hit was a foul
+in 37 of 60 first matches, under a banner that promises no whistle); modes that are about the whistle keep it (Glass House); (3) **the first ten minutes**: take-3 is no wall
+(it is pro today: the novice wins 22 % and has no shot in a third of them): the season's first three takes are rookie, measured (a content lane with the curve lane);
+(4) at all_star the speed scale is the opposing side's only: the human's own mates do not outskate him (15.5 against 11.3 m/s today); set with the curve; (5) the brain
+brakes by reversing 670 to 2,330 times a match and never sprints with the puck: track Q2's next two evolutions; (6) the screen says what the sim decides (track F1, in
+progress); (7) process: every editor or commandlet start takes a turn at the one build tool lock, so a measurement uses few processes with many seeds each.
+
+## R-0049 (H26, 2026-11-13 19:38): device B's play-through (B-to-A-0038): a tackle is an event, not a rhythm
+Device B played the build before the vision for 267 s and found the human knocked down every 7 seconds (7 of 15 within a second of his release) and the carrier losing the
+puck 1.4 times a second. The vision's contact law and R-0048 answer part of it; the rest is ruled here: (1) **release grace**: a skater released from a knockdown cannot be
+stumbled or knocked down for `game.contact.release_grace_frames` (default 90, neutral 0): a hit on it is a bump at most, and the brain does not start a check on it
+(track F1's next evolution; proof: in 100 s at pro no figure is down again within 2 s of its release, the human down fewer than five times); (2) **take grace**: a skater
+that has just won the puck cannot be lifted or poked for `game.stick.take_grace_frames` (default 30, neutral 0); a body check still loosens it (track F2's next, with
+R-0048's rule: together they are "the puck is kept"); (3) the fade-in waits for the light rig, the human's marker at five a side, the hint bar, the commentary box, the
+distance labels and the camera in the corners: a new track **U1 the screen** (Fable, lane A111); (4) the whistle's early release of a knocked-down figure stays where a
+mode keeps the whistle; the regular game loses the whistle (R-0048), and B's quick get-up covers the rest; (5) `NS_deke` / `MS_deke`: B builds them small (a flick of
+shavings at the blade, a short scrape): asked in the answer.
+
+## R-0050 (H26, 2026-11-13 20:14): the puck is kept, the ladder is off until the curve is re-set; process faults of the day
+Lane A102 built R-0048's rule (`game.stick.passive_take` false, plus `game.stick.body_shield` true: the carrier's body shields the puck from a stick behind it). On
+600 matches a cell it moves the ladder to 99.8 / 72.0 / 39.8 (targets 85 / 48 / 26): the human finally keeps the puck, and the bots have not learned to take it.
+Rulings: (1) the rule lands with its default as R-0048 set it (false), not at its neutral value: the game with it is the game the vision describes, and the curve
+track (C0, lane A112) starts on its landing; **no package is cut from main until the curve lands** (H26 stays the newest package); (2) **the body shield refuses
+the stick, never the shove**: a lift or a poke through the carrier's body is refused; a cross-check's shove from any side inside its cone is contact and obeys the
+contact law (track F1's next evolution; today `TryLift` refuses both); (3) the brain reads the shield and closes under control instead of charging head-on at
+11 m/s (track Q2, lane A115); (4) rookie cannot take a carried puck except by a hit (a straight charge at a rookie passes 53.5 %): the curve track decides what
+rookie may do with its stick; (5) track F2's next: the take grace of R-0049, the stop's grip (`reverse_brake_decel` 26), the first step that belongs to the
+carrier (lane A121); (6) lane A107's soak: three modes no longer differ from the regular game by a third (cage, outnumbered, shotgun), the marathon plays past its
+own horn, take-3 and take-6 play identically: a modes lane (M1) starts with the curve lane, on the same build; (7) lane A109's fuzz: seven fault classes go to
+lane A118 with the found cartridges as regression cases; a hook's `set_param` value lies inside the named parameter's range.
+**Process faults found today, and their guards:** (a) the main checkout sat on a detached HEAD from 13:39 to 20:03, so every push sent a stale branch and device B
+received nothing for six and a half hours: the landing script now refuses to run off the branch and reads the remote back after each push; (b) a running landing
+script was edited in place and derailed after its commit: scripts a chain is executing are never edited; (c) every headless start queued on the build tool's mutex
+for minutes: `-Multiprocess` on every headless start (lane A107: 5 m 17 s to 9.5 s; the gate's test step 398 s to 89 s); (d) landings go in batches through one
+gate (six evolutions in four minutes at 20:12), each lane having run the full filter on its own tree.

@@ -202,8 +202,8 @@ void UJamDirectorsCallWidget::BuildTree()
 	// Lane A49: the controls card on the pause menu (the same table as UJamInputMap::BindingTableText and docs/experiments/CONTROLS.md).
 	UTextBlock* Controls = S::Text(T,
 		TEXT("SKATE  WASD / L-STICK      AIM STICK  MOUSE / R-STICK      SHOOT  HOLD LMB / RT      CHECK  RMB / RB\n")
-		TEXT("CROSS-CHECK  MMB, MOUSE4 / LB      DEKE  WHEEL, Q / Y      SPIN  E / B      SPRINT  SHIFT / LT      POKE  SPACE / A\n")
-		TEXT("PASS  F / X      SIGNALS  1-4 / D-PAD      BRAKE  CTRL / L-STICK CLICK      RESTART  R / VIEW      PAUSE  ESC / MENU"), S::CaptionFont(), S::Chalk());   // lane A51 (R-0034): spin E / B, pass F
+		TEXT("CROSS-CHECK  MMB, MOUSE4 / LB      DEKE  WHEEL / Y      SPIN  E / B      SPRINT  SHIFT / LT      POKE  SPACE / A\n")
+		TEXT("PASS  Q / X      ABILITY  F / R3      SIGNALS  1-4 / D-PAD      BRAKE  REVERSE (W THEN S) OR CTRL / L-STICK CLICK      RESTART  R / VIEW      PAUSE  ESC / MENU"), S::CaptionFont(), S::Chalk());   // lane A51 (R-0034): spin E / B; lane A84 (R-0041 point 3): pass Q, ability F / R3; lane A93 (R-0045 law 3): braking by reversing
 	Controls->SetJustification(ETextJustify::Center);
 	AddV(Pause, Controls, FMargin(0, 12, 0, 0));
 	UTextBlock* Keys = S::Text(T, TEXT("ESC / START  resume      STICK  move      A  select      B  back"), S::CaptionFont(), S::Muted());
@@ -217,7 +217,7 @@ void UJamDirectorsCallWidget::BuildTree()
 	CallTitle = S::Text(T, TEXT("DIRECTOR'S CALL"), S::Font(28, FName("Black"), S::TrackTitle), S::Yellow());
 	CallTitle->SetJustification(ETextJustify::Center);
 	AddV(Call, CallTitle, FMargin(30, 0, 150, 0));
-	UTextBlock* Rule = S::Text(T, TEXT("One change per period. Move one slider, then APPLY. The scoreboard announces the new rule."), S::BodyFont(), S::Muted());
+	UTextBlock* Rule = S::Text(T, TEXT("One change per period. Move one slider, hit APPLY. The scoreboard tells everyone the new rule."), S::BodyFont(), S::Muted());
 	Rule->SetJustification(ETextJustify::Center);
 	Rule->SetAutoWrapText(true);
 	AddV(Call, Rule, FMargin(30, 0, 150, 10));
@@ -333,7 +333,7 @@ void UJamDirectorsCallWidget::RefreshState()
 		CallButton->SetIsEnabled(bAvailable);
 		CallButtonText->SetText(FText::FromString(bAvailable ? TEXT("DIRECTOR'S CALL") : TEXT("DIRECTOR'S CALL  (used this period)")));
 	}
-	if (PauseStatus) PauseStatus->SetText(FText::FromString(bAvailable ? TEXT("Your call is ready: change one thing about this match.") : LastAnnouncement));
+	if (PauseStatus) PauseStatus->SetText(FText::FromString(bAvailable ? TEXT("Your call is ready: change one thing. Make them pay.") : LastAnnouncement));
 	if (ApplyButton) ApplyButton->SetIsEnabled(bAvailable);
 	for (FRow& R : Rows) if (R.Slider) R.Slider->SetIsEnabled(bAvailable);
 }

@@ -101,14 +101,24 @@ private:
 
 	// Lane A49 (complaint 1): the match's input mode. The menu leaves the viewport in game-and-UI with capture only while a button is down, so the mouse delta never
 	// reached IA_StickMouse in the package; the match sets its own mode (cursor shown, locked to the viewport) and re-applies it after the pause menu's Resume.
-	void EnsureMatchInputMode(APlayerController* PC);
-	bool bMatchInputModeSet = false;
 	// Lane A49: the stick aim from the cursor: the cursor deprojected onto the ice, the vector from the skater to it. False when the cursor is hidden or off the ice;
 	// zero inside the dead zone (0.5 m in, 0.7 m out), |Stick| 0.5..1 over 0.5..3 m. The accumulated mouse delta stays as the fallback (right stick first).
+	// Lane A110 (track Q1): protected, so the lobby's guest aims as single player does (A49's fix never reached ALobbyGameMode); the ice math is the public static
+	// CursorAimFromRay (the ray from the camera through the cursor; bInOutAiming is the hysteresis state, this game mode's bCursorAiming).
+public:
+	static bool CursorAimFromRay(const FVector& RayOrigin, const FVector& RayDir, const FVector2D& SkaterPosM, bool& bInOutAiming, FVector2D& OutStick);
+protected:
+	void EnsureMatchInputMode(APlayerController* PC);   // lane A110: the lobby sets the same cursor mode (A49), or the cursor is hidden and never aims
+	bool bMatchInputModeSet = false;
 	bool CursorAimRink(APlayerController* PC, const FVector2D& SkaterPosM, FVector2D& OutStick);
 	bool bCursorAiming = false;
+private:
 	// Lane A49: the button edges logged once per press (JAMCTRL btn=...), the sprint level and brake level on change.
-	bool bLastSprint = false, bLastBrake = false, bLastShootHeld = false;
+	bool bLastSprint = false, bLastBrake = false, bLastShootHeld = false, bLastPassHeld = false;
+	// Lane A93 (R-0045 law 3): while the move input pulls back (S / left stick down) the move frame is the camera's yaw at the moment the pull began
+	// (ReadHumanInput): the third-person camera swings behind the turning skater, and a "back" read from the live camera would run away from it for ever.
+	bool bBackYawHeld = false;
+	double BackYawRad = 0.0;
 	// Lane A49 (complaint 5 proof, jam.ctrl.Drill 1 = tackle, 2 = cross-check): a scripted FJamInput that mirrors WASD + one right (middle) mouse press: chase the
 	// opposing carrier at full stick, press once within range, then read the sim's own events for 20 frames; 10 attempts, a JAMDRILL line each and a summary.
 	FJamInput DrillInput();
@@ -125,6 +135,25 @@ private:
 	int32 StickDrillKind = 0, StickDrillAttempts = 0, StickDrillKept = 0, StickDrillPoked = 0, StickDrillKnocked = 0, StickDrillKnockFrames = 0;
 	bool bStickDrillPokedThis = false, bStickDrillKnockThis = false;
 	int32 StickDrillKnockFramesThis = 0;
+	// Lane A77 (R-0036): the mechanics drills (jam.ctrl.Drill 7 = sweep past a defender, 8 = spin with the puck, 9 = saucer over a defender's blade, 10 = shots from
+	// 10 m, 11 = one-timers off a scripted teammate's pass). The cursor and the keys stay the real input path; the skating is scripted and JAMCUE lines tell the driver
+	// (tools/qa/ctrl/a77-prove.ps1) when a person would act. MechDrillObserve logs JAMDRILL saucer / shot / onetimer lines; MechDrillMate scripts the teammate of drill 11.
+	FJamInput MechDrillInput();
+	void MechDrillObserve();
+	void MechDrillMate(TArray<FJamInput>& AllInputs);
+	int64 MechCueReady = 0;
+	bool bMechAtPre = false;
+	int32 MechShotN = 0, MechShotTaps = 0, MechShotHalf = 0, MechShotFull = 0;
+	int64 MechShotFrame = -1;
+	float MechShotCharge = 0.f;
+	double MechShotPrevZ = 0.0;
+	bool bMechShotGoal = false, bMechShotSave = false, bMechShotPost = false;
+	int64 MechSaucerFrame = -1, MechSaucerLand = -1;
+	int32 MechSaucerN = 0, MechSaucerReceiver = -1, MechSaucerOver = 0, MechSaucerReceived = 0;
+	bool bMechSaucerOverThis = false;
+	double MechSaucerMinBladeAir = 1e9, MechSaucerZAtBlade = 0.0, MechSaucerMaxZ = 0.0, MechSaucerLandDist = -1.0;
+	int64 MechMatePassFrame = -1, MechMateReady = 0;
+	int32 MechOneTimers = 0, MechOtShots = 0;
 
 	UFUNCTION() void HandleRestartPressed();
 
@@ -145,6 +174,11 @@ private:
 	int32 KdCount = 0, KdGetUps = 0;
 	int64 KdDownFrame = -1;
 	bool bKdWasDown = false;
+	// Lane A87 (R-0043 point 1): the acceptance run (jam.ctrl.Drill 20, HokejAcceptDrill.cpp): the human plays through the real input path; the drill stages each
+	// step (the human, one mate, one opponent; the rest parked), tells the driver (tools/qa/accept/accept.ps1) where the cursor goes and what to press, and logs a
+	// JAMACCEPT step=<n> verb=<v> ok=<0|1> line per verb. State lives in the .cpp (file-local).
+	void AcceptDrillInputs(TArray<FJamInput>& AllInputs);
+	void AcceptDrillObserve();
 
 	UPROPERTY(Transient) TObjectPtr<UJamCartridge> Cartridge;
 	UPROPERTY(Transient) TObjectPtr<UJamSim> Sim;

@@ -1,4 +1,4 @@
-# Director's choices: the twelve mode cartridges (lanes A67 and A81, R-0036, R-0041)
+# Director's choices: the twelve mode cartridges, and two ability modes without a card yet (lanes A67, A81 and A84, R-0036, R-0041)
 
 Each file is a full `tj.cartridge/1` cut built from `hockey.regular` with only the keys below changed, plus `game.meta` (lane A81: the card's `pitch` and up to three
 `facts`; the card's name is the envelope `title`). The menu lists them in the "Director's choices" rows of Choose your cut, two rows of six (`UJamMenuFlow::ModeCards`,
@@ -21,6 +21,8 @@ and `Jam.Menu.DirectorsChoices`.
 | `hockey.mode.pinball.cartridge.json` | Pinball | Bumpers, live boards, a puck that never slows. | `rink.board_restitution` 1, `ice_friction` 0.005, 8 bumpers size 2 (+-30/+-12, +-15/0, 0/+-12); `puck.drag` 0, `max_speed` 50, `ice_restitution` 0.8; `shot.speed` 30; `look.tier` l3_neon | pro |
 | `hockey.mode.bruisers.cartridge.json` | Bruisers | Five a side, heavy bodies, no whistle. Hit. | rink 80 x 40; 5 v 5; `skater.mass` 130, `speed` 10, `accel` 9, `check_speed_min` 1.5, `knockdown_frames` 150; `rules.penalties` false; `ai.body_check` 1; `look.tier` l3_neon | rookie |
 | `hockey.mode.fog-of-war.cartridge.json` | Fog of War | Slow bots in the fog. Slip past, hit soft. | `ai.react_frames` 12; `skater.check_speed_min` 1; `look` l2_night, `fog_density` 0.04 | pro |
+| `hockey.mode.shotgun.cartridge.json` | Shotgun | (no card yet: the rows hold twelve; meta proposed in ABILITIES.md) | `abilities` [shotgun, mode, `cooldown_frames` 1200] (lane A84, R-0041 point 3); `look.tier` p3_clay | pro |
+| `hockey.mode.arsenal.cartridge.json` | Arsenal | (no card yet, as Shotgun) | `pickups` speed (480 / 300 / 1.5, 2 on the ice), precision (720 / 480 / 2, 2 on the ice); `abilities` shotgun, hip_check, shield, slow_puck, all `pickup` (lane A84); `look.tier` p3_clay | rookie |
 
 Adding a mode: write the file here with a `game.meta` (pitch, up to three facts of at most 40 characters); the menu picks it up after the twelve in file order
 (add its slug to the order in `UJamMenuFlow::ModeCards` to place it, and note the rows hold twelve at six a row); add its character number to `CHARACTER` in

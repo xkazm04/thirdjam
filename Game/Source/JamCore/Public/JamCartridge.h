@@ -63,6 +63,8 @@ struct JAMCORE_API FJamSkaterConfig
 	// C-0005 (lane A16): the pass button.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double PassSpeed = 14;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 PassLeadFrames = 20;
+	// game.skater.carry_speed_mult (lane A82, R-0041 point 6): the carrier's top speed and acceleration as a fraction of a free skater's; the carrier cannot sprint. 1 = off.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double CarrySpeedMult = 0.92;
 	// game.skater.breakaway (R-0029 point 4, lane A39): a carrier past centre ice with no opponent between it and the net gets this fraction more
 	// top speed and acceleration for BreakawayFrames, once per possession (event breakaway). speed_bonus 0 = off.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double BreakawaySpeedBonus = 0.2;
@@ -72,6 +74,16 @@ struct JAMCORE_API FJamSkaterConfig
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double SprintBonus = 0.15;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 SprintDrainFrames = 180;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 SprintRefillFrames = 360;
+	// game.skater.sprint.carry_bonus (lane A93, R-0045 law 4): the puck carrier may sprint; its sprint adds this fraction on top of carry_speed_mult (0.92 x 1.08
+	// of a free skater's speed), always under a free skater's sprint (the sim caps the product at CarrierSprintCap of 1 + bonus). 0 = the carrier cannot sprint (A82).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double SprintCarryBonus = 0.08;
+	// game.skater.reverse_brake_decel (lane A93, R-0045 law 3): move input against the velocity (more than 120 degrees from it) is a hard stop at this many
+	// m/s^2 until the skater is still; then the input accelerates the other way. 0 = off (only Ctrl brakes, at brake_decel).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double ReverseBrakeDecel = 20;
+	// game.skater.burst (lane A93, R-0045 law 3): the first-step burst. For frames after the speed was under 2 m/s, or after the move input turned more than
+	// 60 degrees inside 10 frames, the acceleration is accel_mult times normal (top speed unchanged). frames 0 = off.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 BurstFrames = 20;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double BurstAccelMult = 1.8;
 	// R-0035 (lane A52): game.skater.goalie { reach_m, block_height_m }: a skater in the crease stance saves a loose shot under block_height_m that passes
 	// within reach_m of it (the human included); a higher puck passes. reach_m 0 = no save by height (the body and the blade stop pucks as before).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double GoalieReachM = 0.9;
@@ -95,6 +107,8 @@ struct JAMCORE_API FJamStickConfig
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 PokeWindowFrames = 8;
 	// Centre-to-centre distance (beyond the two bodies) within which a stick lift strips the carrier.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double LiftRangeM = 1.0;
+	// Lane A95 (B-to-A-0037): no clean lift and no cross-check shove on a carrier more than this many degrees off the attacker's facing; 180 = no cone.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double LiftConeDeg = 70.0;
 	// Frames of lost control after a poke that was timed wrong next to a carrier (0 = no penalty, hockey.raw).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 StumbleFrames = 20;
 	// Mouse delta to aim: 1 = 100 pixels move the blade one full reach.
@@ -114,6 +128,29 @@ struct JAMCORE_API FJamStickConfig
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double SweepMinDegPerFrame = 6.0;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 SweepShieldFrames = 12;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 SweepBotReactFrames = -1;
+	// game.stick.carry_reach_mult (lane A93, R-0045 law 4): the puck's distance by pace. A carrier that is not sprinting holds its blade (and the puck on it) at
+	// this fraction of the full distance from the body (0.75: 1.2 m of 1.6 m at full aim); sprinting it rides at the full distance. 1 = always full (A51).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double CarryReachMult = 0.75;
+	// game.stick.sweep.sprint_shield_mult (lane A93): a sprinting carrier's sweep shield lasts this fraction of shield_frames (0.5: 6 of 12). 1 = no difference.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double SweepSprintShieldMult = 0.5;
+	// game.stick.body_shield (lane A102, track F2; docs/VISION.md law 3, docs/experiments/MOVEMENT-2.md): puck protection with the body, no button. While the
+	// carrier's body is between a defender's stick and the puck (the defender within 2 m, the puck on the far side of the body, the carrier turned away from the
+	// defender by more than 60 degrees) that defender's poke or lift does not take the puck. false = off (the neutral value: the game before the lane).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") bool bBodyShield = true;
+	// game.stick.passive_take (lane A102, R-0048): false (the default) = a carried puck is not taken by an unpressed blade or by a body's touch: it leaves its
+	// carrier only by a shot, a pass, a poke, a lift, a check or stumble that loosens it, or the carrier's own release (R-0021's sentence, now the rule).
+	// true = the neutral value (the game before the lane): an aimed opposing blade within 0.6 m deflects a carried puck moving faster than 6 m/s, and any
+	// body's touch makes that skater the last toucher.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") bool bPassiveTake = false;
+	// Not a cartridge key. R-0048 point 2: a teammate never takes a carried puck by touch, under either value of passive_take (a pass is a pass). true brings
+	// back the teammate's touch of the game before lane A102, which the neutral-block tests need to replay older commits' matches hash for hash.
+	bool bTeammateTouchTakes = false;
+	// Not a cartridge key (lane A102 measured it and it bought nothing, MOVEMENT-2.md section 3): the carried puck's distance while the carrier brakes, as a
+	// share of its distance by pace. 1 = no difference. Bar.Movement.StopAndGoSweep sets it.
+	double BrakeReachMult = 1.0;
+	// Not a cartridge key. R-0044 as amended (lane A93): the sweep's shield covers both sides of the body; true brings back the one-sided shield of main
+	// 8f6b157 (only the side the puck left), which Jam.Core.MovementNeutral needs to replay that commit's matches hash for hash.
+	bool bSweepShieldOneSided = false;
 };
 
 USTRUCT(BlueprintType)
@@ -152,10 +189,61 @@ struct JAMCORE_API FJamShotConfig
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double OneTimerConeBonusDeg = 8;
 	// game.shot.lift (R-0035, lane A52): the height a shot arrives at over the goal line by its charge: a tap tap_m, a hold of half_frames half_m, the full
 	// charge (charge_frames_max) full_m, linear between (UJamSim::LiftForCharge). All three at 0 = every shot on the ice (the old game).
-	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double LiftTapM = 0.05;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double LiftTapM = 0.0;   // R-0042 (lane A85): a tap stays on the ice (0.05 before: A52's solve made a tap from 10 m a 0.5 m lob that cleared every blade)
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double LiftHalfM = 0.45;
-	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double LiftFullM = 0.6;   // Director calibration 01:40 (R-0035 amended): just under the 0.61 bar, the top-shelf shot; at 0.95 every hold past 8 frames sailed over the low net and the novice gate fell to 8 of 20
+	// R-0044 (lane A91): the top shelf clearly under the bar: 0.47, by measurement. The bar's ring starts BarRingM + PostRadius = 0.10 m under its axis, at 0.51 m,
+	// and it is tested one puck radius before the line, where a long shot (falling at the line) is still higher. At 0.6 (the Director's 01:40 calibration) every
+	// full charge from 4 to 24 m rang the bar (A87's acceptance run, the one red verb of 18); at the ruling's 0.5 it scores from 3 to 14 m and rings from 15 to
+	// 24 m; 0.49: 20 to 24; 0.48: 22 and 23; 0.47 scores from every metre of 3..30 at every hold (Jam.Core.LiftedShot prints the table and asserts it).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double LiftFullM = 0.47;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 LiftHalfFrames = 8;
+	// game.shot.tap_frames (R-0044, lane A91): a hold of this many frames or fewer is a tap: charge 0 (no speed bonus, the tap's height: on the ice at tap_m 0).
+	// A human's click is never zero frames long: a 40 ms click reads as 2 to 4 charge frames and arrived 9 to 20 cm up (A85, MECHANICS-3 section 2). The human
+	// and the bots alike. 0 = off (every held frame charges, the game before R-0044).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 TapFrames = 4;
+};
+
+// Lane A77 (R-0036): game.pass. The saucer pass: a pass held saucer.half_frames or more lifts saucer.lift_m at its apex, flies over a blade in the lane and lands
+// before the receiver (UJamSim::ApplySaucerLift); a shorter hold or the edge is the flat pass. half_frames 0 or lift_m 0 = the saucer is off.
+USTRUCT(BlueprintType)
+struct JAMCORE_API FJamPassConfig
+{
+	GENERATED_BODY()
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 SaucerHalfFrames = 8;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double SaucerLiftM = 0.35;
+};
+
+// Lane A92 (R-0045, docs/VISION.md law 1): game.contact, contact by momentum (UJamSim::StabilityOf, UJamSim::ResolveContact; docs/experiments/CONTACT.md).
+// A pressed body check or a cross-check is an impulse (closing speed along the contact line + lunge or thrust, times the attacker's mass) against the victim's
+// stability; the ratio decides bump, stumble or down. Neutral block: momentum false + carrier_can_hit true = the rule before the lane (same state hash).
+USTRUCT(BlueprintType)
+struct JAMCORE_API FJamContactConfig
+{
+	GENERATED_BODY()
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") bool bMomentum = true;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") bool bCarrierCanHit = false;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double LungeMps = 1.5;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double ThrustMps = 3.0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double CrossReachM = 0.5;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double StabilityMps = 6.0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double StandSpeedMps = 1.0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double StandBrace = 1.5;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double SpeedStability = 0.85;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double SprintStability = 0.7;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double SpinStability = 0.8;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double UnseenStability = 0.8;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double BumpRatio = 0.4;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double LooseRatio = 0.7;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double DownRatio = 1.0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double DownFullRatio = 3.0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 DownFramesMin = 60;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 DownFramesMax = 150;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 StaggerFrames = 16;
+	// Lane A101 (track F1): the boards are a body. The impulse of a hit that pushes a victim within 1.5 m of the boards into them counts this much higher
+	// (UJamSim::BoardFactor). 1 = the neutral value: no bonus, no board read-out, the game before the lane (same state hash).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double BoardBonus = 1.25;
+	// The neutral block (contact.momentum false, contact.carrier_can_hit true): the check rule of main before lane A92.
+	void SetNeutral() { bMomentum = false; bCarrierCanHit = true; }
 };
 
 USTRUCT(BlueprintType)
@@ -228,6 +316,27 @@ struct JAMCORE_API FJamPickupConfig
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double Magnitude = 1;
 };
 
+// Lane A84 (R-0041 point 3, A81's ask A12): one entry of game.abilities[]: the human's special ability, used with F. Absent numbers are 0 here and the sim
+// applies the kind's default (UJamSim::AbilityDefault*): cooldown 1200 frames, shield 360 and slow_puck 120 frames, magnitude 1.5 shotgun (shot speed),
+// 1.5 hip_check (knockdown frames), 0.5 slow_puck (the puck's speed share), 1 shield (unused).
+USTRUCT(BlueprintType)
+struct JAMCORE_API FJamAbilityConfig
+{
+	GENERATED_BODY()
+	// shotgun | hip_check | shield | slow_puck
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") FName Kind;
+	// mode (held from the drop) | pickup (a boost take grants one of the pickup entries, held until its charges are spent)
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") FName Trigger;
+	// 1..9; 0 = absent (a mode grant: unlimited; a pickup grant: 1)
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 Charges = 0;
+	// 60..3600; 0 = absent (the kind's default)
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 CooldownFrames = 0;
+	// 1..600; 0 = absent (the kind's default)
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 DurationFrames = 0;
+	// 0.1..4; 0 = absent (the kind's default)
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double Magnitude = 0;
+};
+
 USTRUCT(BlueprintType)
 struct JAMCORE_API FJamLookConfig
 {
@@ -269,10 +378,13 @@ struct JAMCORE_API FJamGameConfig
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") FJamStickConfig Stick;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") FJamPuckConfig Puck;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") FJamShotConfig Shot;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") FJamPassConfig Pass;   // lane A77 (R-0036)
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") FJamContactConfig Contact;   // lane A92 (R-0045)
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") FJamRulesConfig Rules;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") TArray<FJamTeamConfig> Teams;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") FJamAiConfig Ai;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") TArray<FJamPickupConfig> Pickups;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") TArray<FJamAbilityConfig> Abilities;   // lane A84; empty = no ability (the default game)
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") FJamLookConfig Look;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") FJamCameraConfig Camera;
 };

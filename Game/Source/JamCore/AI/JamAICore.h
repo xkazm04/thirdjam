@@ -73,8 +73,44 @@ namespace JamAI
 		int GoalieSide = 0;
 		bool bDeke = false;        // R-0029 point 4 (lane A39): the deke tap (FJamInput::bDeke); the adapter copies it like the others
 		bool bSpin = false;        // lane A51 (R-0034): the spin tap (FJamInput::bSpin); the playtester sends it, the brain never does
+		bool bPassHeld = false;    // lane A77 (R-0036): pass held (FJamInput::bPassHeld) for the saucer: held W.SaucerHalfFrames then released; the sim lifts the pass
 		bool bSprint = false;      // lane A72 (asks A2, A3): sprint held (FJamInput::bSprint); the brain with game.ai.sprint, the playtester with -playersprint
+		bool bAbility = false;     // lane A84 (R-0041 point 3): the held ability on F (FJamInput::bAbility); the playtester sends it, the brain never does
 	};
+
+	// Lane A94 (R-0045 law 2, docs/VISION.md section 2, docs/experiments/BRAIN.md): the hockey principles. Every level knows them; the level decides how
+	// well a bot executes them (ShapeShare: loosely; LateFrames: late). All off (the default) is the brain before A94, bit for bit. Only teams of five or
+	// more play the shapes (the regular game); the carry-or-pass read runs for any carrier bot that has it on.
+	struct FJamHockeySense
+	{
+		bool bCarryOrPass = false;     // the carrier reads the lane ahead and its teammates: carries while open, passes under pressure, to a better-placed teammate, or into a wall
+		double PressureSec = 1.0;      // pass when the first opponent on the lane ahead arrives inside this many seconds
+		int MinCarryFrames = 12;       // a fresh carrier carries at least this long before passing to a better-placed teammate (pressure and the wall pass at once)
+		double BetterByM = 5.0;        // an open teammate this much nearer the opposing net than the carrier is better placed
+		bool bAttackShape = false;     // without the puck in attack: a close support, a far-side / net-front skater, the backs at the blue line, out of the lanes
+		bool bDefenceShape = false;    // one presses goal-side with gap control, the next covers the nearest pass, the rest slot and far side; nobody chases behind the play
+		bool bTransition = false;      // on a change of possession the nearest two react first (the puck and the lane) for TransitionFrames
+		int TransitionFrames = 90;
+		double ShapeShare = 1.0;       // the share of two-second windows a bot keeps its shape job (a fixed coin per bot and window); the rest it plays the job loosely (an off spot, three quarters pace)
+		int LateFrames = 0;            // the bot reads the change of possession this many frames late (0..kPhaseHist-1)
+		bool bReadHumanPressure = true; // an opposing carrier passes away from the human's pressure too (false: the human's forecheck is left to the old yield rule)
+		bool Any() const { return bCarryOrPass || bAttackShape || bDefenceShape || bTransition; }
+	};
+	// Lane A94: the sense each level plays (DifficultyProfile.cpp sets the opponents' per level; the human's teammates play ProHockeySense at every level).
+	inline FJamHockeySense ProHockeySense()
+	{
+		FJamHockeySense H;
+		H.bCarryOrPass = true;
+		H.bAttackShape = true;
+		H.bDefenceShape = true;
+		H.bTransition = true;
+		H.ShapeShare = 0.85;
+		H.LateFrames = 8;
+		H.PressureSec = 1.4;   // measured (BRAIN.md): 1.0 s with better-placed 2 m gave 11.7 passes/min but the human's touches -2.3; 1.4 s and 3 m: 11.6 and -1.7
+		H.BetterByM = 3.0;
+		H.bReadHumanPressure = false;   // pro and rookie leave the human's forecheck to ForecheckYieldFrames (the human's touches, brief A94 point 5)
+		return H;
+	}
 
 	// lane A3: how well one side's bots play. The defaults are A2's brain, which is what the human's teammates play at every
 	// level; the opposing side's pro skill is ProOppSkill() below (DifficultyProfile.h holds the other levels).
@@ -132,6 +168,18 @@ namespace JamAI
 		// Lane A72 (ask A5, game.ai.body_check): the share of the chances above that the bot takes; the coin is a fixed function of the skater and the
 		// one-second window. 1 = every chance (the levels' own rule), 0 = never. Only a cartridge that writes game.ai.body_check changes it.
 		double BodyCheckShare = 1.0;
+		// R-0041 point 1 (lane A79): all_star bots hunt the carrier. A support bot within this many metres of an opposing carrier leaves its lane and goes at
+		// it as a second chaser (stick, lift and body check as the chaser does); 0 = never (the brain's PounceRadius on the puck only), so rookie and pro do not move.
+		double HuntRadiusM = 0.0;
+		// Lane A94 (R-0045 law 2): the hockey principles (all off = the brain before A94)
+		FJamHockeySense Hk;
+		// Lane A95 (R-0045 law 4, VISION.md "a defender is always faster"): the share of two-second windows this side's bot sprints while it chases the puck or
+		// an opposing carrier from more than 6 m without carrying it (A72's rule, per side and level now). 0 = never (the default: A72's absent ai.sprint).
+		// game.ai.sprint, when the cartridge writes it, replaces it on both sides (FJamAIParams::SprintShare >= 0).
+		double SprintShare = 0.0;
+		// Lane A95 (B-to-A-0037 point 3): frames between two lift presses of one bot (B saw two figures trade cross-checks 2 to 10 frames apart for a whole match).
+		// The sim's own lift cooldown is 30 frames; 0 = the sim's alone (the brain before A95). Per level: rookie 0 (never lifts), pro 90, all_star 45.
+		int LiftCooldownFrames = 0;
 	};
 	constexpr int kMaxReactionFrames = 60;   // lane A72 (ask A4): game.ai.react_frames reaches one second (30 before; the ring is one entry longer than this)
 
@@ -140,7 +188,7 @@ namespace JamAI
 	inline FJamBotSkill ProOppSkill()
 	{
 		FJamBotSkill K;
-		K.ShootExtraM = 13.0;  // 16:30 worktree sweep, 60 seeds: regular 55 / large 48 (30 before 16:18)
+		K.ShootExtraM = 30.0;  // lane A95 (CURVE-5.md): 13 -> 30, the pro bot shoots from reach + 30 m (A94's carry-or-pass halved its shots; the single biggest lever, regular 82 -> 67). 16:30 sweep: 13
 		K.LeadFrames = 60;
 		K.DrawJumpPct = 100;   // 16:18: the pro centre never wins the draw outright (the sim's own bot timing still can); with it the human touches the puck inside 600 frames after every faceoff
 		K.PokeFrames = 6;      // R-0017: pokes after the puck has sat 6 frames inside blade reach
@@ -151,7 +199,11 @@ namespace JamAI
 		K.bIntercept = true;
 		K.bUseAimCone = true;
 		K.bOneTimer = true;    // R-0029 point 4 (lane A39): pro bots use the one-timer
-		K.CheckMinClosing = 4.0;   // R-0031 point 2 (lane A45): pro bots body-check the carrier from the front or the side at this closing speed and up (lane A70: 5 -> 4, knockdowns of the regular playtester 1.74 -> 1.96 a match, its win share unmoved, CURVE-2.md)
+		K.Hk = ProHockeySense();   // lane A94 (R-0045 law 2)
+		K.SprintShare = 0.35;   // lane A95 (R-0045 law 4): a pro bot sprints in a third of its chases (rookie 0.1, all_star 0.7)
+		K.LiftCooldownFrames = 90;   // lane A95 (B-to-A-0037 point 3): a pro bot lifts at most every 1.5 s
+		K.HuntRadiusM = 8.0;   // lane A95 (R-0041 "pro bots check and lift as a matter of course", CURVE-5.md): the support goes at an opposing carrier within 8 m (0 before)
+		K.CheckMinClosing = 2.0;   // lane A95 (CURVE-5.md): 4 -> 2 m/s: under A92's momentum model a low-speed press is a stumble, not a knockdown. R-0031 point 2 (lane A45): pro bots body-check the carrier from the front or the side at this closing speed and up (lane A70: 5 -> 4, knockdowns of the regular playtester 1.74 -> 1.96 a match, its win share unmoved, CURVE-2.md)
 		return K;
 	}
 
@@ -162,8 +214,8 @@ namespace JamAI
 		double YieldRadiusM = 15.0;    // game.ai.yield_radius_m
 		double HoldRadiusM = 0.0;      // game.ai.hold_radius_m (lane A3: pro profile 0 on puck.drag 0.5; A2's 4.5 handed the human the puck)
 		double SpeedScale = 1.0;       // game.ai.speed_scale
-		double SprintShare = 0.0;      // lane A72 (ask A2): game.ai.sprint, the share of two-second windows a chasing bot sprints (0 = never)
-		double RedSkill = 0.95;        // game.ai.red_skill (drives the side without the player); pro 0.95 by lane A70 (CURVE-2.md: regular playtester 50.6 % over 2,000 matches; 0.94 by R-0029 pass 2 measured 52.3 on main 7dfbeb5)
+		double SprintShare = -1.0;     // lane A72 (ask A2): game.ai.sprint, the share of two-second windows a chasing bot sprints (0 = never); lane A95: -1 (absent) = each side's FJamBotSkill::SprintShare (the level's)
+		double RedSkill = 1.07;        // lane A95 (CURVE-5.md): pro 0.95 -> 1.07. game.ai.red_skill (drives the side without the player); pro 0.95 by lane A70 (CURVE-2.md: regular playtester 50.6 % over 2,000 matches; 0.94 by R-0029 pass 2 measured 52.3 on main 7dfbeb5)
 		// lane A3: skill per side. Opp = the side without the human (team 1 in pure bot-vs-bot); Mate = the human's side.
 		FJamBotSkill Mate;
 		FJamBotSkill Opp = ProOppSkill();
@@ -232,7 +284,7 @@ namespace JamAI
 		// R-0035 (lane A52): the net's height and the lifted shot's rule (game.rink.goal_height_m, game.shot.lift, game.shot.charge_frames_max), so the
 		// shooter's charge picks the height it arrives at: the full charge at a real net, half_frames under the 0.61 bar, a tap from close.
 		double GoalHeightM = 0.61;
-		double LiftTapM = 0.05;
+		double LiftTapM = 0.0;    // R-0042 (lane A85): a tap stays on the ice
 		double LiftHalfM = 0.45;
 		double LiftFullM = 0.95;
 		int LiftHalfFrames = 8;
@@ -249,6 +301,13 @@ namespace JamAI
 		int FramesSinceDrop = -1;       // frames since the drop while the draw is open (-1 unknown; set by FJamSimAdapter::View)
 		int Carrier = -1;               // UJamSim::CarrierIndex: a skater that can act with the puck within shot reach, else -1
 		int CarrierBestPass = -1;       // lane A46: the teammate UJamSim::BestPass would send the carrier's pass to right now (-1: no carrier or nobody open); the adapter fills it
+		int CarrierBestSaucer = -1;     // lane A77 (R-0036): the teammate a saucer from the carrier would go to (a blade may be in the lane); -1 nobody
+		int SaucerHalfFrames = 8;       // lane A77: game.pass.saucer.half_frames (0 = the saucer is off)
+		// Lane A94 (R-0045 law 2): the holder of the puck at the sim's own carrier reach (UJamSim::CarrierIndex: the blade's full length, where a carried puck
+		// rides outside the shooting range) and the teammate its pass would go to; -1 none. Only the hockey sense reads them; W.Carrier is unchanged.
+		int Holder = -1;
+		int HolderBestPass = -1;
+		int CarrierOrHolder() const { return Carrier >= 0 ? Carrier : Holder; }
 		// R-0029 point 4 (lane A39): the goalie commit of the latest deke (UJamSim::GetDekeCommit): while it runs, the deker's opponents' blades, pokes
 		// and shot blocks follow PuckPos - DekeCommitOffset (the puck's old side) instead of the puck.
 		int DekeCommitFrames = 0;
@@ -256,7 +315,15 @@ namespace JamAI
 		FVec2 DekeCommitOffset;
 		double SkaterRadius = 0.4;
 		double StickReach = 1.6;        // game.stick.reach_m
+		// R-0042 (lane A85): the carrier's reach, UJamSim::CarrierReachM's rule: max(shot.reach_m, body radius + stick.reach_m) + 0.05. The brain's shot, one-timer
+		// and pass-intent tests read it (the adapter's bCanShoot is the sim's own test). W.Carrier is still the adapter's shot.reach_m test: see StickPlay's cap.
+		double CarrierReach() const { return (ShotReach > SkaterRadius + StickReach ? ShotReach : SkaterRadius + StickReach) + 0.05; }
 		double LiftRange = 1.0;         // game.stick.lift_range_m
+		double LiftConeDeg = 180.0;     // lane A95 (B-to-A-0037): game.stick.lift_cone_deg (the brain lifts only inside it)
+		// Lane A95 (R-0045 law 3 / 4): the movement verbs the sim offers (A93's keys; 0 = the verb is off). The playtester uses a verb only when it exists.
+		double ReverseBrakeDecel = 0.0; // game.skater.reverse_brake_decel
+		int BurstFrames = 0;            // game.skater.burst.frames
+		double SprintCarryBonus = 0.0;  // game.skater.sprint.carry_bonus (0 = the carrier cannot sprint)
 		int SweepBotReactFrames = -1;   // lane A51: game.stick.sweep.bot_react_frames (-1 = absent: the level's FJamBotSkill::SweepReactFrames)
 		static constexpr int kMaxPickups = 8;
 		int NumPickups = 0;
@@ -297,6 +364,26 @@ namespace JamAI
 	JAMCORE_API double LiftAtFrames(const FJamAIWorld& W, int F);
 	JAMCORE_API int ChargeWindowFor(const FJamAIWorld& W, int Id, const FJamBotSkill& K);
 
+	// Lane A94 (R-0045 law 2): the space read for a carrier (pure). Ahead is the way it means to carry (unit). The first opponent on the lane ahead (a cone
+	// 2.5 m wide plus a fifth of the distance, out to 15 m), the seconds until it arrives (its distance less a metre over the closing speed, at least 1.5 m/s;
+	// 0 when any opponent stands within 2.2 m), the opponents on that lane, and for each teammate its distance to the nearest opponent and whether the pass
+	// lane is open (no opponent's body or blade within 1.5 m of the line), open (lane open, 3 m free, 4-30 m away) and better placed (open and BetterByM
+	// nearer the opposing net than the carrier).
+	struct FJamSpaceRead
+	{
+		int FirstOpp = -1;
+		double FirstOppDist = 1e9;
+		double ArriveSec = 1e9;
+		int OnLane = 0;
+		double MateFree[kMaxSkaters] = {};
+		bool bLaneOpen[kMaxSkaters] = {};
+		bool bOpen[kMaxSkaters] = {};
+		bool bBetter[kMaxSkaters] = {};
+		int NumOpen = 0;
+		int NumBetter = 0;
+	};
+	JAMCORE_API FJamSpaceRead ReadSpace(const FJamAIWorld& W, int Carrier, const FVec2& Ahead, double BetterByM = 5.0, int IgnoreOpp = -1);
+
 	// The brain for every non-player skater. One instance per match (holds only the stall anchor).
 	class FJamBrain
 	{
@@ -327,13 +414,35 @@ namespace JamAI
 		int InReach[kMaxSkaters] = {};
 		int Pressed[kMaxSkaters] = {};   // frames the human's blade has been within reach of this carrier
 		int CheckCool[kMaxSkaters] = {};   // R-0031 point 2 (lane A45): frames before this bot may press check again (one press arms the sim's 6-frame window)
+		int64_t LiftLast[kMaxSkaters] = {};   // lane A95 (B-to-A-0037 point 3): the frame of this bot's last lift press (FJamBotSkill::LiftCooldownFrames)
 		int DrawJumps = 0;               // diagnostics: early draw presses sent
 		int DrawPresses = 0;   // R-0017: frames an opposing carrier's puck has been inside this bot's blade reach
 		// Lane A31: frames shoot has been held for the current aimed shot (0 = not charging); the goalie intent of the last Decide per skater.
 		int Charging[kMaxSkaters] = {};
+		int PassHold[kMaxSkaters] = {};   // lane A77 (R-0036): frames pass has been held for a saucer (0 = not holding)
 		bool bGoalieNow[kMaxSkaters] = {};
 		int GoalieSideNow[kMaxSkaters] = {};
 		void StickPlay(const FJamAIWorld& W, int Id, FJamAIInput& In);
+		// Lane A94 (R-0045 law 2): possession per frame (a ring, for the late read), the shape job per skater (AssignJobs, once per Think), and the frames
+		// each skater has carried its current puck.
+	public:
+		enum class EJob : uint8_t { None, Puck, Support, Far, Point, Press, Cover, Weak };
+		EJob LastJob(int i) const { return Job[i]; }
+	private:
+		static constexpr int kPhaseHist = 64;
+		struct FPoss { int Team = -1; int64_t Since = 0; };
+		FPoss PossHist[kPhaseHist] = {};
+		int64_t PossFrame = -1;
+		FPoss PossNow;
+		EJob Job[kMaxSkaters] = {};
+		bool JobLoose[kMaxSkaters] = {};  // the ShapeShare coin missed: the job is played loosely (an off spot, three quarters' pace)
+		int JobOrd[kMaxSkaters] = {};
+		int Owner[2] = {-1, -1};         // the skater (the human included) each attacking team has on the puck: the carrier, or the one nearest where a loose puck will be    // 0 for the first skater of a job on its team, 1 for the second (the second far / weak skater takes another spot)
+		int CarryFrames[kMaxSkaters] = {};
+		void ReadPossession(const FJamAIWorld& W);
+		FPoss PossAt(const FJamAIWorld& W, int Late) const;
+		void AssignJobs(const FJamAIWorld& W);
+		bool JobSteer(const FJamAIWorld& W, int Id, FVec2& Out, bool& bToPuck) const;
 		bool LastManGoalie(const FJamAIWorld& W, int Id) const;
 		// Lane A51 (R-0034): where the puck sat on the carrier's body, per frame (a ring of the last kPuckHist frames; recorded once per Think). A defending
 		// bot reads the carrier's body live and the puck's offset on it SweepReactFrames late, so a sweep inside its stick reach beats the poke and a

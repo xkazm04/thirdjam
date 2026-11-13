@@ -49,6 +49,9 @@ namespace JamEvents
 	// Lane A39 (R-0029 point 4): the breakaway burst reuses `breakaway` above (one event per rush: whichever of the read-out and the burst comes first);
 	// `shot` gains Kind = one_timer for a shot inside the one-timer window; the deke is new (proposed C-0003 addition).
 	JAMCORE_API extern const FName Deke;         // "deke": the puck moves to the blade side; Who = the carrier, Where = puck, Strength = 0, Kind = left | right (the side in rink z)
+	// Lane A84 (R-0041 point 3), proposed for C-0003: "ability": Who = the holder, Where = the holder, Kind = shotgun | hip_check | shield | slow_puck,
+	// Strength = 1 for a use (F), 0 for a grant (a mode at the drop, a boost take).
+	JAMCORE_API extern const FName Ability;
 	// R-0013: `faceoff` gains Kind = drop (the puck is live, Who -1) | won (Who = the centre that won) | lost (Who = the centre that lost).
 }
 

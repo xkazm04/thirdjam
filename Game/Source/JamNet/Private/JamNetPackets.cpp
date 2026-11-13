@@ -1,4 +1,7 @@
 #include "JamNetPackets.h"
+#include "JamEffectSystem.h"
+#include "JamRuleSystem.h"
+#include "JamZones.h"
 #include "Serialization/MemoryWriter.h"
 #include "Serialization/MemoryReader.h"
 
@@ -65,7 +68,8 @@ FJamNetQuantInput FJamNetQuantInput::From(const FJamInput& In)
 	Q.StickX = Q16(In.Stick.X);
 	Q.StickY = Q16(In.Stick.Y);
 	Q.Flags = (In.bShoot ? Shoot : 0) | (In.bCheck ? Check : 0) | (In.bBrake ? Brake : 0) | (In.bShootHeld ? ShootHeld : 0)
-		| (In.bPass ? Pass : 0) | (In.bPoke ? Poke : 0) | (In.bLift ? Lift : 0) | (In.bDeke ? Deke : 0) | (In.bSprint ? Sprint : 0) | (In.bSpin ? Spin : 0);
+		| (In.bPass ? Pass : 0) | (In.bPoke ? Poke : 0) | (In.bLift ? Lift : 0) | (In.bDeke ? Deke : 0) | (In.bSprint ? Sprint : 0) | (In.bSpin ? Spin : 0) | (In.bPassHeld ? PassHeld : 0)
+		| (In.bAbility ? Ability : 0);   // lane A84
 	return Q;
 }
 
@@ -84,13 +88,15 @@ FJamInput FJamNetQuantInput::ToInput() const
 	In.bSprint = (Flags & Sprint) != 0;
 	In.bDeke = (Flags & Deke) != 0;   // lane A39
 	In.bSpin = (Flags & Spin) != 0;   // lane A51
+	In.bPassHeld = (Flags & PassHeld) != 0;   // lane A77
+	In.bAbility = (Flags & Ability) != 0;   // lane A84 (R-0041 point 3)
 	return In;
 }
 
 TArray<FName> FJamNetQuantInput::CoveredFields()
 {
 	return { FName(TEXT("Move")), FName(TEXT("bShoot")), FName(TEXT("bShootHeld")), FName(TEXT("bPass")), FName(TEXT("bCheck")), FName(TEXT("bBrake")),
-		FName(TEXT("Stick")), FName(TEXT("bPoke")), FName(TEXT("bLift")), FName(TEXT("bDeke")), FName(TEXT("bSprint")), FName(TEXT("bSpin")) };
+		FName(TEXT("Stick")), FName(TEXT("bPoke")), FName(TEXT("bLift")), FName(TEXT("bDeke")), FName(TEXT("bSprint")), FName(TEXT("bSpin")), FName(TEXT("bPassHeld")), FName(TEXT("bAbility")) };
 }
 
 void FJamNetInputPacket::Write(TArray<uint8>& Out) const
@@ -244,7 +250,7 @@ FJamInput FJamNetScriptedHuman::Think(const UJamSim& Sim, int32 Me)
 	const FVector2D ToPuck = PuckPos - S.Pos;
 	const double Dist = ToPuck.Size();
 	const double GoalDist = FVector2D::Distance(PuckPos, Goal);
-	const bool bHave = Dist < Sim.GetConfig().Shot.ReachM && Dist > 1e-6 && FVector2D::DotProduct(S.Forward(), ToPuck / Dist) > 0.6;
+	const bool bHave = Dist < Sim.CarrierReachM(S.Index) && Dist > 1e-6 && FVector2D::DotProduct(S.Forward(), ToPuck / Dist) > 0.6;
 	const int64 Frame = Sim.GetFrame();
 	// In the faceoff: press at the drop (the first clean press wins the draw).
 	if (Sim.IsDrawOpen() && S.bCentre) { In.bPoke = true; return In; }
@@ -297,4 +303,46 @@ FJamInput FJamNetScriptedHuman::Think(const UJamSim& Sim, int32 Me)
 	if (Charge > 0 && bHave) { In.bShootHeld = true; ++Charge; if (Charge >= Max + 10) Charge = 0; return In; }   // keep the charge while turning in
 	Charge = 0;
 	return In;
+}
+
+uint64 JamNetLockstepHash(const UJamSim* Sim, const UJamEffectSystem* Fx, const UJamRuleSystem* Rules, const UJamZoneSystem* Zones)
+{
+	if (!Sim) return 0;
+	// FNV-1a 64 over the four 64-bit hashes in a fixed order (a xor of them would cancel two equal differences).
+	uint64 H = 1469598103934665603ull;
+	auto Add = [&H](uint64 V) { for (int32 i = 0; i < 8; ++i) { H ^= (V >> (i * 8)) & 0xFF; H *= 1099511628211ull; } };
+	Add(Sim->LockstepStateHash());
+	Add(Fx ? Fx->StateHash() : 0);
+	Add(Rules ? Rules->StateHash() : 0);
+	Add(Zones ? Zones->StateHash() : 0);
+	return H;
+}
+
+int32 JamNetPeekForeignVersion(const TArray<uint8>& Bytes, uint8& OutType)
+{
+	OutType = 0;
+	if (Bytes.Num() < 6) return -1;
+	uint32 Magic = 0;
+	FMemory::Memcpy(&Magic, Bytes.GetData(), 4);
+	if (Magic != JamNet::Magic || Bytes[4] == JamNet::Version) return -1;
+	OutType = Bytes[5];
+	return Bytes[4];
+}
+
+void JamNetWriteRefuse(TArray<uint8>& Out)
+{
+	Out.Reset();
+	FMemoryWriter W(Out);
+	WriteHeader(W, JamNet::EType::Refuse);
+}
+
+bool JamNetReadRefuse(const TArray<uint8>& Bytes, int32& OutHostVersion)
+{
+	OutHostVersion = -1;
+	if (Bytes.Num() < 6) return false;
+	uint32 Magic = 0;
+	FMemory::Memcpy(&Magic, Bytes.GetData(), 4);
+	if (Magic != JamNet::Magic || Bytes[5] != static_cast<uint8>(JamNet::EType::Refuse)) return false;
+	OutHostVersion = Bytes[4];
+	return true;
 }

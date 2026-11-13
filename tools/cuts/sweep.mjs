@@ -87,7 +87,7 @@ function runCommandlet({ uproject, file, seeds, maxFrames, difficulty, timeoutMs
   if (!ue) die(2, 'Unreal Engine not found (set UE_ROOT)');
   const cmd = join(ue, 'Engine', 'Binaries', 'Win64', 'UnrealEditor-Cmd.exe');
   const args = [uproject, '-run=JamCutSweep', `-cartridge=${file.split('\\').join('/')}`, `-seeds=${seeds}`, `-maxframes=${maxFrames}`,
-    '-nullrhi', '-unattended', '-nopause', '-nosplash', '-stdout', '-FullStdOutLogOutput'];
+    '-nullrhi', '-Multiprocess', '-unattended', '-nopause', '-nosplash', '-stdout', '-FullStdOutLogOutput'];
   if (difficulty) args.push(`-difficulty=${difficulty}`);
   return new Promise((res) => {
     const p = spawn(cmd, args, { windowsHide: true });

@@ -109,7 +109,7 @@ function runChunk(c, tag) {
   const logPath = join(out, 'logs', `${tag}.log`);
   const seeds = []; for (let s = c.lo; s <= c.hi; s++) seeds.push(s);
   const args = [uproject, '-run=JamTournament', '-sim=jam', `-cartridge=${c.cart}`, `-difficulty=${c.lvl}`, `-player=${c.cls}`, `-seeds=${c.lo}-${c.hi}`,
-    `-maxframes=${maxFrames}`, '-nullrhi', '-unattended', '-nopause', '-nosplash', '-stdout', '-FullStdOutLogOutput', `-ABSLOG=${logPath}.ue`];
+    `-maxframes=${maxFrames}`, '-nullrhi', '-Multiprocess', '-unattended', '-nopause', '-nosplash', '-stdout', '-FullStdOutLogOutput', `-ABSLOG=${logPath}.ue`];
   return new Promise((res) => {
     const p = spawn(exe, args, { windowsHide: true });
     let buf = '';

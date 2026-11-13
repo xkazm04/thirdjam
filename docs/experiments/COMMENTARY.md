@@ -157,3 +157,58 @@ post hit (none in these two runs; the sim tests cover the code paths only by com
 4. The worktree checkout carries `BarkData.inl` with CRLF (autocrlf), so `tools/barks/barks.test.mjs` fails there and passes on the main tree; `CommentaryData.inl`'s test
    tolerates CRLF. Not this lane's file; noted for the Director's gate.
 5. The eyes-free item is the log only: no movie capture was taken (the editor was shared time on a capped machine); `tools/commentary/out/run2/log.txt` is the record.
+
+## 9. The rough pass (lane A90, device A, 2026-11-13, R-0041 point 4)
+
+Lane A89's sixty lines (`tools/commentary/proposed/a89-lines.json`, voice in `docs/experiments/VOICE.md`) are in the shipped bank as A's second supplement,
+`Game/Content/Commentary/rough.commentary.json` (embedded by `node tools/commentary/embed.mjs` into `CommentaryRoughData.inl`; `FJamCommentaryBank::Embedded()` merges it
+after the ability supplement: **412 lines, 148 situations**). Ids and situations are A89's, unchanged (they already follow the bank's `<event>.<situation>.<nn>`);
+`knockdown.human.04..13` extend B's situation. One priority changed: `check.cross` 4 -> 3 (see the rule). Mild words in the whole bank: **2 of 412 (0.49 %)**
+(`check.solid.05` "Hell of a hit.", `check.cross.08` "Damn, ..."), never two in a line; the node test counts it on every gate run.
+
+### The picker rules (`FJamCommentaryPicker`, constants in `CommentarySystem.h`)
+
+| Situation | Holds when | Test |
+|---|---|---|
+| `check.light` / `check.solid` | the check's Strength < 0.4 / 0.4 to < 0.8 (`check.big` and `knockdown.big` stay >= 0.8; `knockdown.big` needed no code: kind `check` is the knockdown's cause and `.big` the existing rule) | `Jam.Commentary.CheckByStrength` |
+| `knockdown.massacre` | a per-team ring of knockdown frames (the knocking team = the victim's opponent, every cause counted); the third inside 1,200 frames. Priority 5 as proposed, so it is must-play | `Jam.Commentary.Massacre` |
+| `goal.after_hit` | a goal within 300 frames after a check landed by the scoring team. It is a **second-beat** line: the colour call keeps the goal frame, the payoff follows when the gate reopens in the pause (priority 5 beats the score-state lines there) | `Jam.Commentary.GoalAfterHit` |
+| `check.cross` | the sim has no cross-check Kind (A85 owns the sim; no rule added there); the game's cross-check is the stick lift (A49's drill 2, middle mouse). On a `lift` with Kind `clean` the picker offers the `check.cross` lines (event check, kind cross, which no body check's Kind matches) beside `lift.clean`, at the same priority 3; the line logs under `event=lift` | `Jam.Commentary.CrossCheck` |
+| **the hit is called** (new timing rule) | a line of a `check` or `knockdown` event may cut a playing line that is not about a hit, of the same or a lower priority, and skips the 2.5 s gate behind one (`JAMVO_CUT reason=hit`); never inside a bark hold, never over another hit's line. A47's must-play and cut-floor rules, A50's random / no-repeat / unheard rules are unchanged | `Jam.Commentary.HitCall` |
+
+Why the last row and the priority change: the first headless pro match (before them) spoke 0 of 6 knockdowns of the human. Every one fell to the gate behind the stick
+chatter that led to it (a clean lift's line 7 and 10 frames before, a poke's 50 before) or to a steal / check_received bark hold; pro bots made 111 clean lifts and 98 clean
+pokes in 3 minutes, so `check.cross` at priority 4 was the noisiest situation (8 of 41 lines) and is the routine steal, not the bigger knockdown A89 assumed.
+
+### Proof: headless bot matches (`tools/commentary/match.ps1`: `UnrealEditor-Cmd -game -nullrhi`, Rink, `-cut=`, `jam.ScriptHuman 1`, `t.MaxFPS 60`, stopped at frame 10,800)
+
+| Run (out dir under `tools/commentary/out/`) | Cut, bots | Frames | JAMVO | check.light | check.solid | knockdown.big | check.cross | knockdown.human | knockdown.massacre | goal.after_hit | Checks (all knockdowns) / goals |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| `pro` (before the hit rule, check.cross p4) | hockey.regular, pro 3 v 3 | 10,775 | 41 | 0 | 0 | 0 | 8 | 0 | 1 | 0 | 6 / 1 |
+| **`pro2` (the shipped rules: the 3-minute pro match)** | hockey.regular, pro 3 v 3 | 10,775 | 43 | 0 | 0 | 0 | 8 | 2 | 1 | 0 | 6 / 1 |
+| `allstar` | ladder/take-8, all_star 3 v 3 (over at 8,219: orange 3:0) | 8,219 | 33 | 0 | 0 | 1 | 2 | 0 | 1 | 0 | 5 / 3 |
+| `bruisers` | modes/hockey.mode.bruisers, 5 v 5 | 10,769 | 33 | 0 | 0 | 0 | 0 | 2 | 1 | 0 | 5 / 1 |
+| `drill` (`jam.ctrl.Drill 1`: the human tackles) | hockey.regular, pro (over at 2,950: orange 3) | 2,950 | 19 | 0 | 0 | 2 | 1 | 1 | 0 | 1 | 5 / 3 |
+| `bruisers-drill` (`jam.ctrl.Drill 1`) | modes/hockey.mode.bruisers | 10,484 | 37 | 0 | 2 | 0 | 0 | 0 | 1 | 1 | 10 / 2 |
+
+Pro2 in full: poke.clean 5, shot.orange 5, board.rim 4, lift.clean 4, check.cross 8, board.hard 3, pass.any 3, knockdown.human 2, carry.long 2, knockdown.massacre 1, goal.orange 1,
+goal.against 1, shot.hard 1, shot.close 1, shot.blue 1, period.take_1 1. The sim gave 111 clean lifts, 98 clean pokes, 6 checks (every one a pro bot knocking down the
+scripted human at the end boards, Strength 0.53 to 0.79), 1 goal (orange, no orange check in the 300 frames before). Of the 6 knockdowns of the human: 2 `knockdown.human`
+(both by the hit rule, cutting a lift and a cross-check line 10 and 23 frames old), 1 `knockdown.massacre`, 3 dropped inside a bark hold (steal barks 3 and 50 frames
+before, a check_received bark on the same frame). The match log is deterministic: `pro` and `pro2` have the same events frame for frame.
+
+Why a situation stayed silent where it did: **check.light** was never spoken in six runs: every bot check lands on the scripted human (`knockdown.human` outranks
+the check lines by specificity, VOICE rule 4: when the human is hit the booth winces), and the human's two light checks fell 3 frames inside the gate behind a priority-3
+shot line and under the massacre call; the rule is proven by `CheckByStrength` only. **check.solid** speaks when the human lands the hit (bruisers-drill, 2).
+**goal.after_hit** needs a goal within 5 s of the scorer's check: none in the plain matches, one in each drill run (as the second beat after the colour call).
+`JAMVO_CUT` lines do not appear headless: `CutLine` logs only while the voice component plays, and `-NoSound` plus the unrecorded waves leave it silent; `HitCall` proves the cut.
+
+### New line ids for B's recordings (60 waves, names `VO_Commentator_<id with _>` in `/JamAssets/Audio/VO/`)
+
+`check.light.01..06`, `check.solid.01..07`, `knockdown.big.01..07`, `check.cross.01..10`, `knockdown.human.04..13`, `knockdown.massacre.01..10`, `goal.after_hit.01..10`.
+Until a wave exists the line logs and captions with a silent voice (`JAMVO missing ... (logged once)`), as for the ability lines.
+
+### Open for the Director
+1. Six `check.cross` lines describe a fall ("sits down hard", "Down he goes", "Sent sprawling", "Bowled over", "the ice caught him", "He did not") but a clean lift knocks
+   nobody down. When A85 lands a real cross-check Kind on `check` / `knockdown`, the rule moves there (one line in `Observe`); until then B may record them as they are.
+2. Steal barks still hold the booth often (A32 open point 2); one knockdown of the human per match fell to them.

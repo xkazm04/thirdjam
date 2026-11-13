@@ -22,7 +22,8 @@ export const STOPPAGE_MAX_CHARS = 64;
 // Events the game sends (contracts/events.md) plus the seven this lane adds.
 export const KNOWN_EVENTS = ['shot', 'board', 'goal', 'faceoff', 'check', 'knockdown', 'pickup_spawn', 'pickup_take', 'win', 'lose', 'directors_call', 'period',
   'bark', 'signal', 'announce', 'pass', 'effect_start', 'effect_end', 'zone_enter', 'zone_exit', 'poke', 'lift', 'foul', 'shot_blocked',
-  'save', 'post', 'breakaway', 'carry', 'period_end', 'clock', 'season_take'];
+  'save', 'post', 'breakaway', 'carry', 'period_end', 'clock', 'season_take',
+  'ability'];   // lane A84 (R-0041 point 3): the human's ability on F (A's supplement, Game/Content/Commentary/abilities.commentary.json)
 
 export const situationOf = (id) => String(id).replace(/\.\d+$/, '');
 export const isStoppage = (line) => STOPPAGE_EVENTS.includes(line.event) || situationOf(line.id) === 'goal.pause';

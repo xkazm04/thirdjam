@@ -62,6 +62,9 @@ void ALobbyGameMode::StartPlay()
 	}
 	LocalIndex = Lobby->IsHost() ? Human : Guest;
 	RemoteIndex = Lobby->IsHost() ? Guest : Human;
+	// Lane A110 (track Q1): the guest's seat plays as a human on both machines, from frame 0 (the mode's ability, a pickup's, the human's check rules, no bot
+	// press at the draw). Both peers seat the same index (WELCOME's), so the sims stay equal; the checkpoint hashes the seat.
+	if (!TheSim->SeatGuest(Guest)) UE_LOG(LogJamNet, Warning, TEXT("JAMNET could not seat the guest at skater %d (frame %lld)"), Guest, TheSim->GetFrame());
 	LockInputs.SetNum(TheSim->GetSkaters().Num());
 
 	// Lane A38: the brain as single player builds it (R-0009 point 3: difficulty profile -> game.ai -> Designer values).
@@ -143,29 +146,54 @@ FJamInput ALobbyGameMode::ReadLocalInput()
 	double Yaw = GetSim()->GetSkaters()[LocalIndex].Yaw;
 	if (APlayerController* PC = Cast<APlayerController>(Mine->GetController())) if (PC->PlayerCameraManager) Yaw = FMath::DegreesToRadians(PC->PlayerCameraManager->GetCameraRotation().Yaw);
 	const FVector2D Axis = Pi->GetAxis();
-	const FVector2D Fwd(FMath::Cos(Yaw), FMath::Sin(Yaw));
-	const FVector2D Right(-FMath::Sin(Yaw), FMath::Cos(Yaw));
-	In.Move = Fwd * Axis.Y + Right * Axis.X;
+	// Lane A104: AHokejGameMode::ReadHumanInput's A93 latch (R-0045 law 3). While the move input pulls back, it is read in the camera's frame of the moment
+	// the pull began, so S is one direction on the ice and the reverse brake stops the skater; read from the live camera (which swings behind the turning
+	// skater) a held S circled online.
+	double MoveYaw = Yaw;
+	if (Axis.Y < -0.3)
+	{
+		if (!bBackYawHeld) { bBackYawHeld = true; BackYawRad = Yaw; }
+		MoveYaw = BackYawRad;
+	}
+	else bBackYawHeld = false;
+	In.Move = FVector2D(FMath::Cos(MoveYaw), FMath::Sin(MoveYaw)) * Axis.Y + FVector2D(-FMath::Sin(MoveYaw), FMath::Cos(MoveYaw)) * Axis.X;
 	// C-0005 charged shot: the held level travels; the sim charges while the puck is in reach and fires on release.
 	Pi->ConsumeShootPressed();
 	In.bShootHeld = Pi->IsShootHeld();
-	In.bPass = Pi->ConsumePassPressed();
+	// Lane A104: the pass is a held level as in AHokejGameMode::ReadHumanInput (lane A77, R-0036): the sim fires it on the release, a saucer on a long hold.
+	// Protocol 6 carried the level, but the lobby sent the press as the bPass edge: online, a human's pass was always flat and Q never made a saucer.
+	Pi->ConsumePassPressed();
+	In.bPassHeld = Pi->IsPassHeld();
 	In.bCheck = Pi->ConsumeCheckPressed();
 	In.bBrake = Pi->IsBrakeHeld();
-	// R-0013: the stick. Right stick absolute; the mouse accumulates pixels, 100 px = one reach at mouse_sensitivity 1. Camera-relative like Move.
-	FVector2D Aim = Pi->GetStickAxis();
-	if (Aim.SizeSquared() < 0.01)
-	{
-		Aim = Pi->GetMouseAimPx() * (0.01 * GetSim()->GetConfig().Stick.MouseSensitivity);
-		if (Aim.SizeSquared() > 1.0) Aim.Normalize();
-	}
-	In.Stick = Fwd * Aim.Y + Right * Aim.X;
+	// R-0013 + lane A49, as AHokejGameMode::ReadHumanInput: the right stick, then the cursor on the ice (the blade points at the cursor), then the mouse
+	// delta. Lane A110: before, online the stick followed the mouse delta only (CursorAimRink was private), so the guest's and the host's blade never sat
+	// under the cursor. The wire's quantised aim is unchanged.
+	APlayerController* PC = Cast<APlayerController>(Mine->GetController());
+	EnsureMatchInputMode(PC);
+	const FVector2D Pad = Pi->GetStickAxis();
+	FVector2D CursorStick = FVector2D::ZeroVector;
+	const bool bCursor = Pad.SizeSquared() < 0.01 && CursorAimRink(PC, GetSim()->GetSkaters()[LocalIndex].Pos, CursorStick);
+	if (bCursor) Pi->ResetMouseAim();
+	In.Stick = ComposeLocalStick(Pad, bCursor, CursorStick, bCursor ? FVector2D::ZeroVector : Pi->GetMouseAimPx(), GetSim()->GetConfig().Stick.MouseSensitivity, Yaw);
 	In.bPoke = Pi->ConsumePokePressed();
 	In.bLift = Pi->ConsumeLiftPressed();
 	In.bDeke = Pi->ConsumeDekePressed();   // lane A39 (R-0029 point 4)
 	In.bSprint = Pi->IsSprintHeld();        // R-0037 (A56 found them dead online): the sprint and the spin reach the lockstep driver
 	In.bSpin = Pi->ConsumeSpinPressed();
+	In.bAbility = Pi->ConsumeAbilityPressed();   // lane A84 (R-0041 point 3): F / R3
 	return In;
+}
+
+FVector2D ALobbyGameMode::ComposeLocalStick(const FVector2D& PadAim, bool bCursor, const FVector2D& CursorStick, const FVector2D& MouseDeltaPx, double Sensitivity, double YawRad)
+{
+	const FVector2D Fwd(FMath::Cos(YawRad), FMath::Sin(YawRad));
+	const FVector2D Right(-FMath::Sin(YawRad), FMath::Cos(YawRad));
+	if (PadAim.SizeSquared() >= 0.01) return Fwd * PadAim.Y + Right * PadAim.X;
+	if (bCursor) return CursorStick;
+	FVector2D Aim = MouseDeltaPx * (0.01 * Sensitivity);
+	if (Aim.SizeSquared() > 1.0) Aim.Normalize();
+	return Aim.SizeSquared() >= 0.0025 ? Fwd * Aim.Y + Right * Aim.X : FVector2D::ZeroVector;   // AHokejGameMode's dead zone for the delta
 }
 
 // Mirror of AHokejGameMode::GatherInputs for the bot slots (the team signals are not read: see the header).
@@ -217,15 +245,18 @@ void ALobbyGameMode::GatherBotInputs()
 		I.bLift = Out[i].bLift;
 		I.bDeke = Out[i].bDeke;   // lane A39
 		I.bSprint = Out[i].bSprint;   // lane A72 (ask A2): game.ai.sprint
-		I.bShootHeld = false;
+		// Lane A104: every field the brain sends, as FJamSimAdapter::Step copies it (the headless game the curve measures). Before, the lobby forced
+		// bShootHeld false and dropped bPassHeld: online bots never charged a shot (lane A31) nor lifted a saucer (lane A77).
+		I.bShootHeld = Out[i].bShootHeld;
+		I.bPassHeld = Out[i].bPassHeld;
+		I.bSpin = Out[i].bSpin;
+		I.bAbility = Out[i].bAbility;
 	}
 }
 
 uint64 ALobbyGameMode::LockstepHash() const
 {
-	const UJamSim* TheSim = GetSim();
-	const UJamEffectSystem* Fx = GetEffects();
-	return TheSim ? (TheSim->StateHash() ^ (Fx ? Fx->StateHash() * 31 : 0)) : 0;
+	return JamNetLockstepHash(GetSim(), GetEffects(), GetRules(), GetZones());   // lane A104: protocol 8's checkpoint
 }
 
 void ALobbyGameMode::CountProofEvents()
@@ -378,6 +409,29 @@ void ALobbyGameMode::PushLockstepPresentation()
 	}
 	F.PuckM = TheSim->GetPuck().Pos;
 	F.HumanIndex = LocalIndex;
+	// Lane A110 (track Q1): the local seat's stamina bar and ability slot, as AHokejGameMode::PushPresentation fills them for the human (A49, A84). Online
+	// the HUD showed neither, for the host or the guest: F's slot was hidden though the host held the mode's ability.
+	if (TheSim->GetSkaters().IsValidIndex(LocalIndex))
+	{
+		const FJamSkaterState& H = TheSim->GetSkaters()[LocalIndex];
+		F.HumanStamina01 = H.Stamina < 0 ? 1.f : FMath::Clamp((float)H.Stamina / (float)FMath::Max(1, TheSim->StaminaFull()), 0.f, 1.f);
+		F.bHumanSprinting = H.bSprinting;
+		const FJamAbilityConfig* Ab = TheSim->HeldAbility(H.Index);
+		const FName Kind = Ab ? Ab->Kind : (!H.AbilityArmed.IsNone() ? H.AbilityArmed : (H.ShieldFrames > 0 ? FName(TEXT("shield")) : NAME_None));
+		if (!Kind.IsNone())
+		{
+			F.HumanAbility = Kind.ToString().Replace(TEXT("_"), TEXT(" ")).ToUpper();
+			const int32 Cool = Ab ? (Ab->CooldownFrames > 0 ? Ab->CooldownFrames : UJamSim::AbilityDefaultCooldown(Kind)) : 1;
+			const int64 Left = FMath::Max<int64>(0, H.AbilityReadyFrame - TheSim->GetFrame());
+			if (H.ShieldFrames > 0) F.HumanAbilityState = FString::Printf(TEXT("SHIELD %.1fs"), H.ShieldFrames / 60.f);
+			else if (!H.AbilityArmed.IsNone()) F.HumanAbilityState = TEXT("ARMED");
+			else if (Left > 0) F.HumanAbilityState = FString::Printf(TEXT("%llds"), (Left + 59) / 60);
+			else F.HumanAbilityState = TEXT("READY");
+			if (H.AbilityCharges > 0) F.HumanAbilityState += FString::Printf(TEXT("  x%d"), H.AbilityCharges);
+			F.HumanAbilityReady01 = H.ShieldFrames > 0 ? 1.f : 1.f - FMath::Clamp((float)Left / (float)FMath::Max(1, Cool), 0.f, 1.f);
+			F.bHumanAbilityLive = H.ShieldFrames > 0 || !H.AbilityArmed.IsNone();
+		}
+	}
 	F.AttackSign = MyTeam == 0 ? 1 : -1;
 	F.NetInsetM = 4.f;
 	F.ScoreHome = TheSim->GetScore(MyTeam);

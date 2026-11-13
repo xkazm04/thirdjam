@@ -676,6 +676,25 @@ namespace JamValidate
 			}
 		}
 
+		// Lane A84 (R-0041 point 3), the mirror of validate.mjs: one mode ability at most; a pickup ability needs pickups to arrive by.
+		if (FJPtr Abilities = Game->Get(TEXT("abilities")); Abilities && Abilities->IsArray())
+		{
+			FJPtr PickupList = Game->Get(TEXT("pickups"));
+			const bool bHasPickups = PickupList && PickupList->IsArray() && PickupList->Array.Num() > 0;
+			int32 Modes = 0;
+			for (int32 i = 0; i < Abilities->Array.Num(); ++i)
+			{
+				const FJPtr& A = Abilities->Array[i];
+				if (!A->IsObject()) continue;
+				FJPtr Tr = A->Get(TEXT("trigger"));
+				if (!Tr || !Tr->IsString()) continue;
+				if (Tr->String == TEXT("mode") && ++Modes > 1)
+					Errors.Add(FString::Printf(TEXT("at /game/abilities/%d/trigger: only one ability may have trigger \"mode\" (F is one key); make this one \"pickup\" or remove it."), i));
+				if (Tr->String == TEXT("pickup") && !bHasPickups)
+					Errors.Add(FString::Printf(TEXT("at /game/abilities/%d/trigger: a \"pickup\" ability is granted by a boost take, but game.pickups is empty; add a pickup or use trigger \"mode\"."), i));
+			}
+		}
+
 		FJPtr Teams = Game->Get(TEXT("teams"));
 		if (Teams && Teams->IsArray())
 		{
@@ -1008,6 +1027,14 @@ namespace
 		ReadName(Sk, TEXT("visual"), C.Skater.Visual);
 		ReadNumber(Sk, TEXT("pass_speed"), C.Skater.PassSpeed);
 		ReadInteger(Sk, TEXT("pass_lead_frames"), C.Skater.PassLeadFrames);
+		ReadNumber(Sk, TEXT("carry_speed_mult"), C.Skater.CarrySpeedMult);   // lane A82 (R-0041 point 6)
+		ReadNumber(Sk, TEXT("reverse_brake_decel"), C.Skater.ReverseBrakeDecel);   // lane A93 (R-0045 law 3)
+		// Lane A93 (R-0045 law 3): game.skater.burst { frames, accel_mult }
+		if (const FJPtr Bu = Obj(Sk, TEXT("burst")))
+		{
+			ReadInteger(Bu, TEXT("frames"), C.Skater.BurstFrames);
+			ReadNumber(Bu, TEXT("accel_mult"), C.Skater.BurstAccelMult);
+		}
 		// R-0029 point 4 (lane A39): game.skater.breakaway { speed_bonus, frames }
 		if (const FJPtr Ba = Obj(Sk, TEXT("breakaway")))
 		{
@@ -1020,6 +1047,7 @@ namespace
 			ReadNumber(Sp, TEXT("bonus"), C.Skater.SprintBonus);
 			ReadInteger(Sp, TEXT("drain_frames"), C.Skater.SprintDrainFrames);
 			ReadInteger(Sp, TEXT("refill_frames"), C.Skater.SprintRefillFrames);
+			ReadNumber(Sp, TEXT("carry_bonus"), C.Skater.SprintCarryBonus);   // lane A93 (R-0045 law 4)
 		}
 		// R-0035 (lane A52): game.skater.goalie { reach_m, block_height_m }
 		if (const FJPtr Gk = Obj(Sk, TEXT("goalie")))
@@ -1040,10 +1068,14 @@ namespace
 		ReadNumber(St, TEXT("reach_m"), C.Stick.ReachM);
 		ReadInteger(St, TEXT("poke_window_frames"), C.Stick.PokeWindowFrames);
 		ReadNumber(St, TEXT("lift_range_m"), C.Stick.LiftRangeM);
+		ReadNumber(St, TEXT("lift_cone_deg"), C.Stick.LiftConeDeg);   // lane A95 (B-to-A-0037)
 		ReadInteger(St, TEXT("stumble_frames"), C.Stick.StumbleFrames);
 		ReadInteger(St, TEXT("foul_grace_frames"), C.Stick.FoulGraceFrames);
 		ReadNumber(St, TEXT("reception_m"), C.Stick.ReceptionM);   // lane A46
 		ReadNumber(St, TEXT("mouse_sensitivity"), C.Stick.MouseSensitivity);
+		ReadNumber(St, TEXT("carry_reach_mult"), C.Stick.CarryReachMult);   // lane A93 (R-0045 law 4)
+		ReadBool(St, TEXT("body_shield"), C.Stick.bBodyShield);   // lane A102 (track F2): puck protection with the body
+		ReadBool(St, TEXT("passive_take"), C.Stick.bPassiveTake);   // lane A102 (R-0048): false = a carried puck leaves its carrier only by a press
 		// R-0029 point 4 (lane A39): game.stick.deke { offset_m, commit_frames }
 		if (const FJPtr Dk = Obj(St, TEXT("deke")))
 		{
@@ -1056,6 +1088,7 @@ namespace
 			ReadNumber(Sw, TEXT("min_deg_per_frame"), C.Stick.SweepMinDegPerFrame);
 			ReadInteger(Sw, TEXT("shield_frames"), C.Stick.SweepShieldFrames);
 			ReadInteger(Sw, TEXT("bot_react_frames"), C.Stick.SweepBotReactFrames);
+			ReadNumber(Sw, TEXT("sprint_shield_mult"), C.Stick.SweepSprintShieldMult);   // lane A93 (R-0045 law 4)
 		}
 
 		FJPtr Pk = Obj(G, TEXT("puck"));
@@ -1077,6 +1110,7 @@ namespace
 		if (Shot && Shot->Has(TEXT("aim_cone_deg"))) { C.Shot.bHasAimCone = true; ReadNumber(Shot, TEXT("aim_cone_deg"), C.Shot.AimConeDeg); }
 		ReadInteger(Shot, TEXT("charge_frames_max"), C.Shot.ChargeFramesMax);
 		ReadNumber(Shot, TEXT("charge_speed_bonus"), C.Shot.ChargeSpeedBonus);
+		ReadInteger(Shot, TEXT("tap_frames"), C.Shot.TapFrames);   // R-0044 (lane A91)
 		ReadBool(Shot, TEXT("deflect"), C.Shot.bDeflect);
 		// R-0029 point 4 (lane A39): game.shot.one_timer { window_frames, cone_bonus_deg }
 		if (const FJPtr Ot = Obj(Shot, TEXT("one_timer")))
@@ -1091,6 +1125,39 @@ namespace
 			ReadNumber(Lf, TEXT("half_m"), C.Shot.LiftHalfM);
 			ReadNumber(Lf, TEXT("full_m"), C.Shot.LiftFullM);
 			ReadInteger(Lf, TEXT("half_frames"), C.Shot.LiftHalfFrames);
+		}
+		// Lane A77 (R-0036): game.pass.saucer { half_frames, lift_m }
+		if (const FJPtr Ps = Obj(G, TEXT("pass")))
+		{
+			if (const FJPtr Sc = Obj(Ps, TEXT("saucer")))
+			{
+				ReadInteger(Sc, TEXT("half_frames"), C.Pass.SaucerHalfFrames);
+				ReadNumber(Sc, TEXT("lift_m"), C.Pass.SaucerLiftM);
+			}
+		}
+		// Lane A92 (R-0045): game.contact, contact by momentum (absent = the defaults; the neutral block is momentum false + carrier_can_hit true).
+		if (const FJPtr Ct = Obj(G, TEXT("contact")))
+		{
+			ReadBool(Ct, TEXT("momentum"), C.Contact.bMomentum);
+			ReadBool(Ct, TEXT("carrier_can_hit"), C.Contact.bCarrierCanHit);
+			ReadNumber(Ct, TEXT("lunge_mps"), C.Contact.LungeMps);
+			ReadNumber(Ct, TEXT("thrust_mps"), C.Contact.ThrustMps);
+			ReadNumber(Ct, TEXT("cross_reach_m"), C.Contact.CrossReachM);
+			ReadNumber(Ct, TEXT("stability_mps"), C.Contact.StabilityMps);
+			ReadNumber(Ct, TEXT("stand_speed_mps"), C.Contact.StandSpeedMps);
+			ReadNumber(Ct, TEXT("stand_brace"), C.Contact.StandBrace);
+			ReadNumber(Ct, TEXT("speed_stability"), C.Contact.SpeedStability);
+			ReadNumber(Ct, TEXT("sprint_stability"), C.Contact.SprintStability);
+			ReadNumber(Ct, TEXT("spin_stability"), C.Contact.SpinStability);
+			ReadNumber(Ct, TEXT("unseen_stability"), C.Contact.UnseenStability);
+			ReadNumber(Ct, TEXT("bump_ratio"), C.Contact.BumpRatio);
+			ReadNumber(Ct, TEXT("loose_ratio"), C.Contact.LooseRatio);
+			ReadNumber(Ct, TEXT("down_ratio"), C.Contact.DownRatio);
+			ReadNumber(Ct, TEXT("down_full_ratio"), C.Contact.DownFullRatio);
+			ReadInteger(Ct, TEXT("down_frames_min"), C.Contact.DownFramesMin);
+			ReadInteger(Ct, TEXT("down_frames_max"), C.Contact.DownFramesMax);
+			ReadInteger(Ct, TEXT("stagger_frames"), C.Contact.StaggerFrames);
+			ReadNumber(Ct, TEXT("board_bonus"), C.Contact.BoardBonus);   // lane A101 (track F1): the boards are a body; 1 = the neutral value
 		}
 
 		FJPtr Rules = Obj(G, TEXT("rules"));
@@ -1163,6 +1230,22 @@ namespace
 				Pc.Magnitude = K == TEXT("speed") ? 1.5 : K == TEXT("precision") ? 2.0 : K == TEXT("heavy_puck") ? 2.0 : K == TEXT("big_puck") ? 1.5 : 1.0;
 				ReadNumber(P, TEXT("magnitude"), Pc.Magnitude);
 				C.Pickups.Add(Pc);
+			}
+		}
+
+		// Lane A84 (R-0041 point 3): game.abilities[]; absent numbers stay 0 and the sim applies the kind's default.
+		if (FJPtr Abilities = G->Get(TEXT("abilities")); Abilities && Abilities->IsArray())
+		{
+			for (const FJPtr& A : Abilities->Array)
+			{
+				FJamAbilityConfig Ac;
+				ReadName(A, TEXT("kind"), Ac.Kind);
+				ReadName(A, TEXT("trigger"), Ac.Trigger);
+				ReadInteger(A, TEXT("charges"), Ac.Charges);
+				ReadInteger(A, TEXT("cooldown_frames"), Ac.CooldownFrames);
+				ReadInteger(A, TEXT("duration_frames"), Ac.DurationFrames);
+				ReadNumber(A, TEXT("magnitude"), Ac.Magnitude);
+				C.Abilities.Add(Ac);
 			}
 		}
 

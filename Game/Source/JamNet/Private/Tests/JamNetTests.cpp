@@ -66,7 +66,7 @@ namespace JamNetTests
 			Inputs.SetNum(Sim->GetSkaters().Num());
 		}
 
-		uint64 Hash() const { return Sim->StateHash() ^ (Fx->StateHash() * 31); }
+		uint64 Hash() const { return JamNetLockstepHash(Sim.Get(), Fx.Get(), Rules.Get(), Zones.Get()); }   // ALobbyGameMode::LockstepHash (lane A104)
 
 		bool Step()
 		{
@@ -266,7 +266,16 @@ bool FJamNetInputCoverage::RunTest(const FString& Parameters)
 		TestEqual(TEXT("spin flag bit 512 alone"), static_cast<int32>(Qo.Flags), 512);
 		const FJamInput Back = Qo.ToInput();
 		TestTrue(TEXT("spin comes back alone"), Back.bSpin && !Back.bShoot && !Back.bCheck && !Back.bBrake && !Back.bShootHeld && !Back.bPass && !Back.bPoke && !Back.bLift && !Back.bDeke && !Back.bSprint);
-		TestEqual(TEXT("protocol 5 carries the spin"), static_cast<int32>(JamNet::Version), 5);
+		TestEqual(TEXT("protocol 8: the checkpoint is JamNetLockstepHash (lane A104); 7 the ability, 6 the held pass, 5 the spin"), static_cast<int32>(JamNet::Version), 8);
+	}
+	// Lane A84 (R-0041 point 3): the ability is flag bit 2048 (bit 11), an edge, alone, and comes back alone.
+	{
+		FJamInput One; One.bAbility = true;
+		const FJamNetQuantInput Qo = FJamNetQuantInput::From(One);
+		TestEqual(TEXT("ability flag bit 2048 alone"), static_cast<int32>(Qo.Flags), 2048);
+		TestTrue(TEXT("ability is an edge flag"), (FJamNetQuantInput::EdgeFlags & FJamNetQuantInput::Ability) != 0);
+		const FJamInput Back = Qo.ToInput();
+		TestTrue(TEXT("ability comes back alone"), Back.bAbility && !Back.bSpin && !Back.bPassHeld && !Back.bShoot && !Back.bCheck && !Back.bPass && !Back.bDeke && !Back.bSprint);
 	}
 	TestTrue(TEXT("an empty input is the zero wire value"), FJamNetQuantInput::From(FJamInput()) == FJamNetQuantInput());
 	return true;
@@ -337,6 +346,139 @@ bool FJamNetLockstepTwoPeers::RunTest(const FString& Parameters)
 	{ FExpect X; X.bFaceoff = true; RunPair(*this, TEXT("regular-slow-peer"), *Regular, JamNet::InputDelay, 1, 0.0, 2, 1800, X); }
 	// Minimum delay on a perfect link.
 	{ FExpect X; RunPair(*this, TEXT("regular-delay-1"), *Regular, 1, 0, 0.0, 1, 1200, X); }
+	return true;
+}
+
+// Lane A104 (track Q1): the lockstep checkpoint sees the cross-frame state StateHash() leaves out. Each field is changed alone on a live hockey.regular sim:
+// StateHash() stays (the hole it had; the Determinism baseline and the neutral proofs pinned on it do not move), LockstepStateHash() and the game's
+// JamNetLockstepHash change, and putting the field back gives the hash back. Then two sims fed the same busy inputs agree on the new hash every frame.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamNetLockstepHashCovers, "Jam.Net.LockstepHashCovers", JamNetTests::Flags)
+bool FJamNetLockstepHashCovers::RunTest(const FString& Parameters)
+{
+	UJamCartridge* C = Load(*this, TEXT("hockey.regular"));
+	if (!C) return false;
+	TStrongObjectPtr<UJamSim> Sim(NewObject<UJamSim>());
+	if (!TestTrue(TEXT("sim inits"), Sim->Init(C->Game, 1))) return false;
+	TArray<FJamInput> In;
+	In.SetNum(Sim->GetSkaters().Num());
+	for (int32 F = 0; F < 240; ++F) Sim->Step(In);
+	TestTrue(TEXT("hockey.regular runs the first-step burst (the MoveHist ring is live)"), C->Game.Skater.BurstFrames > 0);
+	FJamSkaterState& S = const_cast<FJamSkaterState&>(Sim->GetSkaters()[0]);   // test only: one field at a time
+	const uint64 Plain0 = Sim->StateHash(), Lock0 = Sim->LockstepStateHash(), Net0 = JamNetLockstepHash(Sim.Get(), nullptr, nullptr, nullptr);
+	auto Probe = [&](const TCHAR* Name, TFunctionRef<void()> Change, TFunctionRef<void()> Back)
+	{
+		Change();
+		TestEqual(*FString::Printf(TEXT("%s: StateHash() does not see it (the hole)"), Name), Sim->StateHash(), Plain0);
+		TestNotEqual(*FString::Printf(TEXT("%s: LockstepStateHash() sees it"), Name), Sim->LockstepStateHash(), Lock0);
+		TestNotEqual(*FString::Printf(TEXT("%s: the checkpoint (JamNetLockstepHash) sees it"), Name), JamNetLockstepHash(Sim.Get(), nullptr, nullptr, nullptr), Net0);
+		Back();
+		TestEqual(*FString::Printf(TEXT("%s: put back, the hash is back"), Name), Sim->LockstepStateHash(), Lock0);
+	};
+	const int64 Carry = S.LastCarryFrame;
+	Probe(TEXT("LastCarryFrame (inside the foul grace)"), [&] { S.LastCarryFrame = Sim->GetFrame(); }, [&] { S.LastCarryFrame = Carry; });
+	const bool bSpr = S.bSprinting, bAim = S.bStickAimed, bArm = S.bPokeArmed;
+	Probe(TEXT("bSprinting (read by TryLift's cross-check next frame)"), [&] { S.bSprinting = !bSpr; }, [&] { S.bSprinting = bSpr; });
+	Probe(TEXT("bStickAimed (read by TryDeke next frame)"), [&] { S.bStickAimed = !bAim; }, [&] { S.bStickAimed = bAim; });
+	Probe(TEXT("bPokeArmed (the miss stumble)"), [&] { S.bPokeArmed = !bArm; }, [&] { S.bPokeArmed = bArm; });
+	const FVector2D Hist = S.MoveHist[3];
+	Probe(TEXT("MoveHist (the burst's cut detector)"), [&] { S.MoveHist[3] = Hist.IsZero() ? FVector2D(1, 0) : FVector2D::ZeroVector; }, [&] { S.MoveHist[3] = Hist; });
+	const int32 At = S.MoveHistAt;
+	Probe(TEXT("MoveHistAt"), [&] { S.MoveHistAt = (At + 1) % UJamSim::BurstCutFrames; }, [&] { S.MoveHistAt = At; });
+	// A read-out stays out of both: the visual's bump flag.
+	S.bBumpThisFrame = !S.bBumpThisFrame;
+	TestEqual(TEXT("a read-out (bBumpThisFrame) is in neither hash"), Sim->LockstepStateHash(), Lock0);
+	S.bBumpThisFrame = !S.bBumpThisFrame;
+	// Same inputs on two fresh sims: equal lockstep hashes every frame (the new fields are deterministic).
+	TStrongObjectPtr<UJamSim> A(NewObject<UJamSim>()), B(NewObject<UJamSim>());
+	A->Init(C->Game, 7); B->Init(C->Game, 7);
+	int32 Differ = -1;
+	for (int32 F = 0; F < 900 && Differ < 0; ++F)
+	{
+		for (int32 i = 0; i < In.Num(); ++i)
+		{
+			FJamInput& I = In[i];
+			const double Ang = 0.37 * i + (F / 40) * 2.6;   // a sharp cut every 40 frames: the burst and the reverse brake fire
+			I.Move = FVector2D(FMath::Cos(Ang), FMath::Sin(Ang));
+			I.bSprint = (F / 90 + i) % 2 == 0;
+			I.Stick = FVector2D(FMath::Cos(Ang * 1.7), FMath::Sin(Ang * 1.7)) * ((F / 25) % 2 ? 1.0 : 0.0);
+			I.bPoke = (F + i) % 37 == 0; I.bLift = (F + i) % 53 == 0; I.bDeke = (F + i) % 61 == 0; I.bCheck = (F + i) % 29 == 0;
+			I.bPassHeld = (F + 3 * i) % 70 < 30;
+		}
+		A->Step(In); B->Step(In);
+		if (A->LockstepStateHash() != B->LockstepStateHash()) Differ = F;
+	}
+	TestEqual(TEXT("two sims, the same inputs: the lockstep hash agrees on every frame"), Differ, -1);
+	return true;
+}
+
+// Lane A104 (track Q1): Restart() is Init(). A match that sprints, cuts and holds passes, restarted, replays the fresh sim's match hash for hash (both hashes):
+// before, the stamina bar, the burst, the cut history and the pass hold carried into the rematch (AHokejGameMode's rematch calls Restart).
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamNetRestartIsInit, "Jam.Net.RestartIsInit", JamNetTests::Flags)
+bool FJamNetRestartIsInit::RunTest(const FString& Parameters)
+{
+	UJamCartridge* C = Load(*this, TEXT("hockey.regular"));
+	if (!C) return false;
+	auto Inputs = [](int32 F, int32 N)
+	{
+		TArray<FJamInput> In;
+		In.SetNum(N);
+		for (int32 i = 0; i < N; ++i)
+		{
+			const double Ang = 0.5 * i + (F / 45) * 2.4;
+			In[i].Move = FVector2D(FMath::Cos(Ang), FMath::Sin(Ang));
+			In[i].bSprint = true;
+			In[i].bPassHeld = (F + i) % 50 < 20;
+			In[i].Stick = FVector2D(FMath::Cos(Ang), FMath::Sin(Ang));
+		}
+		return In;
+	};
+	TStrongObjectPtr<UJamSim> Fresh(NewObject<UJamSim>()), Again(NewObject<UJamSim>());
+	Fresh->Init(C->Game, 3); Again->Init(C->Game, 3);
+	const int32 N = Fresh->GetSkaters().Num();
+	for (int32 F = 0; F < 500; ++F) Again->Step(Inputs(F + 1000, N));   // the first match: sprints the bars down, leaves holds and a cut history
+	int32 SpentBars = 0;
+	for (const FJamSkaterState& S : Again->GetSkaters()) SpentBars += (S.Stamina >= 0 && S.Stamina < Again->StaminaFull()) ? 1 : 0;
+	TestTrue(TEXT("the first match left stamina bars below full"), SpentBars > 0);
+	Again->Restart();
+	int32 Differ = -1;
+	for (int32 F = 0; F < 600 && Differ < 0; ++F)
+	{
+		Fresh->Step(Inputs(F, N)); Again->Step(Inputs(F, N));
+		if (Fresh->StateHash() != Again->StateHash() || Fresh->LockstepStateHash() != Again->LockstepStateHash()) Differ = F;
+	}
+	TestEqual(TEXT("the restarted sim replays the fresh sim's match on every frame"), Differ, -1);
+	return true;
+}
+
+
+// Lane A104 (A56's proposal): a HELLO from another protocol is seen as foreign (with its type), the REFUSE reads back from any version, and nothing of ours
+// is mistaken for either.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamNetRefuseMismatch, "Jam.Net.RefuseMismatch", JamNetTests::Flags)
+bool FJamNetRefuseMismatch::RunTest(const FString& Parameters)
+{
+	FJamNetLobbyMessage Hello;
+	Hello.Type = JamNet::EType::Hello;
+	Hello.Name = TEXT("guest");
+	TArray<uint8> Bytes;
+	Hello.Write(Bytes);
+	uint8 Type = 0;
+	TestEqual(TEXT("our own HELLO is not foreign"), JamNetPeekForeignVersion(Bytes, Type), -1);
+	Bytes[4] = 7;
+	TestEqual(TEXT("a protocol-7 HELLO is foreign, version 7"), JamNetPeekForeignVersion(Bytes, Type), 7);
+	TestEqual(TEXT("... and its type is HELLO"), static_cast<int32>(Type), static_cast<int32>(JamNet::EType::Hello));
+	FJamNetLobbyMessage M;
+	TestFalse(TEXT("... and FJamNetLobbyMessage::Read still refuses it"), FJamNetLobbyMessage::Read(Bytes, M));
+	TArray<uint8> Refuse;
+	JamNetWriteRefuse(Refuse);
+	TestEqual(TEXT("REFUSE is 6 bytes"), Refuse.Num(), 6);
+	int32 V = -1;
+	TestTrue(TEXT("REFUSE reads"), JamNetReadRefuse(Refuse, V));
+	TestEqual(TEXT("... with this build's version"), V, static_cast<int32>(JamNet::Version));
+	Refuse[4] = 9;
+	TestTrue(TEXT("a REFUSE from a protocol-9 build reads too"), JamNetReadRefuse(Refuse, V) && V == 9);
+	TestEqual(TEXT("JamNetPeekType never returns REFUSE"), static_cast<int32>(JamNetPeekType(Refuse)), static_cast<int32>(JamNet::EType::None));
+	TestFalse(TEXT("a HELLO is not a REFUSE"), JamNetReadRefuse(Bytes, V));
+	TestFalse(TEXT("5 bytes are nothing"), JamNetReadRefuse(TArray<uint8>(Refuse.GetData(), 5), V));
 	return true;
 }
 

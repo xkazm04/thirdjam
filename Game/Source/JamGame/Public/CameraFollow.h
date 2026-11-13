@@ -235,7 +235,15 @@ public:
 	static constexpr float KickRollDeg = 1.f;
 	static void KickOffset(int32 FrameIndex, float Strength, const FVector2D& DirWorld, float CamYawDeg, float Scale, FVector& OutOffsetCm, float& OutRollDeg);
 	UFUNCTION(BlueprintCallable, Category = "Jam|Camera")
-	void StartKick(float Strength, FVector2D DirWorld);
+	void StartKick(float Strength, FVector2D DirWorld, float Scale = 1.f);
+	// Lane A101 (track F1): a stumble kicks too, by its ratio: the kick's scale runs StumbleKickMin (3 cm) at bump_ratio to StumbleKickMax (6 cm, a knockdown's
+	// smallest) at down_ratio. Pure for tests. The camera reads the human's ContactOutcome / ContactBy / bRecoilThisFrame from the sim each sim frame
+	// (ContactKickObserve): a stumble the human takes, one it lands (replacing the knockdown-sized kick the `check` event started), and its own bounce.
+	static constexpr float StumbleKickMin = 0.5f;
+	static constexpr float StumbleKickMax = 1.0f;
+	static constexpr float StumbleKickStrength = 0.5f;
+	static float StumbleKickScale(float Ratio, float BumpRatio, float DownRatio);
+	float GetKickScale() const { return KickScale; }
 	int32 GetKickFramesLeft() const { return KickLeft; }
 
 	const FJamCameraFilter& GetFilter() const { return Filter; }
@@ -263,6 +271,8 @@ private:
 	// Lane A73 kick state (stepped per sim frame in StepSimFrame).
 	int32 KickLeft = 0;
 	float KickStrength = 0.f;
+	float KickScale = 1.f;   // lane A101: the stumble's share of the kick (1 for a knockdown)
+	void ContactKickObserve();
 	FVector2D KickDir = FVector2D(1, 0);
 	UPROPERTY(Transient) TObjectPtr<UJamEventBus> Bus;
 };

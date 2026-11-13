@@ -1,0 +1,128 @@
+[
+ {
+  "label": "a-regular-novice-rookie",
+  "cls": "novice",
+  "lvl": "rookie",
+  "cart": "hockey.regular",
+  "seeds": "regularband:2000"
+ },
+ {
+  "label": "a-regular-regular-rookie",
+  "cls": "regular",
+  "lvl": "rookie",
+  "cart": "hockey.regular",
+  "seeds": "regularband:2000"
+ },
+ {
+  "label": "a-regular-good-rookie",
+  "cls": "good",
+  "lvl": "rookie",
+  "cart": "hockey.regular",
+  "seeds": "regularband:2000"
+ },
+ {
+  "label": "a-regular-novice-pro",
+  "cls": "novice",
+  "lvl": "pro",
+  "cart": "hockey.regular",
+  "seeds": "regularband:2000"
+ },
+ {
+  "label": "a-regular-regular-pro",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "hockey.regular",
+  "seeds": "regularband:2000"
+ },
+ {
+  "label": "a-regular-good-pro",
+  "cls": "good",
+  "lvl": "pro",
+  "cart": "hockey.regular",
+  "seeds": "regularband:2000"
+ },
+ {
+  "label": "a-regular-novice-all_star",
+  "cls": "novice",
+  "lvl": "all_star",
+  "cart": "hockey.regular",
+  "seeds": "regularband:2000"
+ },
+ {
+  "label": "a-regular-regular-all_star",
+  "cls": "regular",
+  "lvl": "all_star",
+  "cart": "hockey.regular",
+  "seeds": "regularband:2000"
+ },
+ {
+  "label": "a-regular-good-all_star",
+  "cls": "good",
+  "lvl": "all_star",
+  "cart": "hockey.regular",
+  "seeds": "regularband:2000"
+ },
+ {
+  "label": "a-large-novice-rookie",
+  "cls": "novice",
+  "lvl": "rookie",
+  "cart": "hockey.arena.large",
+  "seeds": "1-2000"
+ },
+ {
+  "label": "a-large-regular-rookie",
+  "cls": "regular",
+  "lvl": "rookie",
+  "cart": "hockey.arena.large",
+  "seeds": "1-2000"
+ },
+ {
+  "label": "a-large-good-rookie",
+  "cls": "good",
+  "lvl": "rookie",
+  "cart": "hockey.arena.large",
+  "seeds": "1-2000"
+ },
+ {
+  "label": "a-large-novice-pro",
+  "cls": "novice",
+  "lvl": "pro",
+  "cart": "hockey.arena.large",
+  "seeds": "1-2000"
+ },
+ {
+  "label": "a-large-regular-pro",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "hockey.arena.large",
+  "seeds": "1-2000"
+ },
+ {
+  "label": "a-large-good-pro",
+  "cls": "good",
+  "lvl": "pro",
+  "cart": "hockey.arena.large",
+  "seeds": "1-2000"
+ },
+ {
+  "label": "a-large-novice-all_star",
+  "cls": "novice",
+  "lvl": "all_star",
+  "cart": "hockey.arena.large",
+  "seeds": "1-2000"
+ },
+ {
+  "label": "a-large-regular-all_star",
+  "cls": "regular",
+  "lvl": "all_star",
+  "cart": "hockey.arena.large",
+  "seeds": "1-2000"
+ },
+ {
+  "label": "a-large-good-all_star",
+  "cls": "good",
+  "lvl": "all_star",
+  "cart": "hockey.arena.large",
+  "seeds": "1-2000"
+ }
+]

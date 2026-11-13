@@ -15,7 +15,7 @@ namespace JamNet
 {
 	constexpr uint32 Magic = 0x4A4E4554u;  // 'JNET'
 	// 1: Move + shoot/check/brake (H6). 2: every FJamInput field, 32-bit frames in the header (H11.5, lane A38).
-	constexpr uint8 Version = 5;   // lane A51 (R-0034): FJamInput::bSpin travels (flag bit 512). 4: bSprint (flag 256, two flag bytes); 3: bDeke (flag 128, lane A39)
+	constexpr uint8 Version = 8;   // lane A104 (track Q1): the 60-frame checkpoint is JamNetLockstepHash (the sim's LockstepStateHash, the rules' and zones' hashes); a 7 peer would show a false DESYNC. 7: lane A84 (R-0041 point 3): FJamInput::bAbility travels (flag bit 2048, an edge). 6: lane A77 (R-0036): FJamInput::bPassHeld travels (flag bit 1024, a held level). 5: lane A51 (R-0034): FJamInput::bSpin travels (flag bit 512). 4: bSprint (flag 256, two flag bytes); 3: bDeke (flag 128, lane A39)
 	// Frames between a local input being read and the frame it is applied on both sides.
 	constexpr int32 InputDelay = 3;
 	// Inputs per packet (the last Window frames of local input); loss is covered by the next packet, never by retransmit.
@@ -37,6 +37,8 @@ namespace JamNet
 		Start = 3,    // host -> guest: load the rink now
 		Input = 4,    // both ways, every tick during the match
 		Bye = 5,      // either: leaving
+		Refuse = 6,   // lane A104: host -> guest: your HELLO carries another protocol version. 6 bytes (magic, the host's version, 6) whatever the version:
+		              // JamNetPeekType never returns it; JamNetReadRefuse reads it from any build that has it.
 	};
 }
 
@@ -54,9 +56,9 @@ struct JAMNET_API FJamNetQuantInput
 	int16 StickY = 0;  // Stick.Y
 	uint16 Flags = 0;
 
-	enum EFlag : uint16 { Shoot = 1, Check = 2, Brake = 4, ShootHeld = 8, Pass = 16, Poke = 32, Lift = 64, Deke = 128, Sprint = 256, Spin = 512 };   // Spin: lane A51 (R-0034), an edge   // Sprint: lane A49 (R-0032), a held level   // Deke: lane A39 (R-0029 point 4)
+	enum EFlag : uint16 { Shoot = 1, Check = 2, Brake = 4, ShootHeld = 8, Pass = 16, Poke = 32, Lift = 64, Deke = 128, Sprint = 256, Spin = 512, PassHeld = 1024, Ability = 2048 };   // Ability: lane A84 (R-0041 point 3), an edge   // PassHeld: lane A77 (R-0036), a held level   // Spin: lane A51 (R-0034), an edge   // Sprint: lane A49 (R-0032), a held level   // Deke: lane A39 (R-0029 point 4)
 	// Edge presses: the driver keeps one read during a stall; the held levels (ShootHeld, Brake, Sprint) are re-read every frame.
-	static constexpr uint16 EdgeFlags = Shoot | Check | Pass | Poke | Lift | Deke | Spin;
+	static constexpr uint16 EdgeFlags = Shoot | Check | Pass | Poke | Lift | Deke | Spin | Ability;
 	static constexpr int32 WireBytes = 10;   // two flag bytes since protocol 4
 
 	static FJamNetQuantInput From(const FJamInput& In);
@@ -110,6 +112,21 @@ struct JAMNET_API FJamInviteCode
 	static FString FormatIp(uint32 Ipv4);
 	static bool ParseIp(const FString& Dotted, uint32& Out);
 };
+
+// Lane A104 (track Q1): the hash both peers exchange every HashInterval frames. The sim's LockstepStateHash (StateHash plus the cross-frame state it leaves
+// out), the effects', the rules' and the zones' state hashes (protocol 7 and before: the sim's StateHash and the effects' only, so a rule or zone divergence
+// showed only once it moved the sim). ALobbyGameMode and the Bar.Net soak call this one function.
+class UJamEffectSystem;
+class UJamRuleSystem;
+class UJamZoneSystem;
+JAMNET_API uint64 JamNetLockstepHash(const UJamSim* Sim, const UJamEffectSystem* Fx, const UJamRuleSystem* Rules, const UJamZoneSystem* Zones);
+
+// Lane A104 (A56's proposal, SOAK-LOCKSTEP.md section 4): a guest on another build is told so instead of waiting 60 s for "no answer".
+// JamNetPeekForeignVersion: the version byte of a datagram with our magic and ANOTHER version (OutType = its type byte), or -1.
+JAMNET_API int32 JamNetPeekForeignVersion(const TArray<uint8>& Bytes, uint8& OutType);
+JAMNET_API void JamNetWriteRefuse(TArray<uint8>& Out);
+// True for a REFUSE of any version; OutHostVersion = the version of the build that sent it.
+JAMNET_API bool JamNetReadRefuse(const TArray<uint8>& Bytes, int32& OutHostVersion);
 
 // FNV-1a 64 over bytes (the cartridge hash in WELCOME).
 JAMNET_API uint64 JamNetFnv64(const TArray<uint8>& Bytes);

@@ -62,6 +62,13 @@ const mut = {
   'rink too long': (c) => { c.game.rink.length_m = 200; },
   'pickup ok': (c) => { c.game.pickups = [{ kind: 'speed', spawn_every_frames: 600, duration_frames: 300 }]; },
   'pickup bad kind': (c) => { c.game.pickups = [{ kind: 'jetpack', spawn_every_frames: 600, duration_frames: 300 }]; },
+  // lane A84 (R-0041 point 3): game.abilities[]
+  'abilities ok': (c) => { c.game.pickups = [{ kind: 'speed', spawn_every_frames: 600, duration_frames: 300 }]; c.game.abilities = [{ kind: 'shotgun', trigger: 'mode', cooldown_frames: 1200 }, { kind: 'shield', trigger: 'pickup', charges: 2, duration_frames: 180, magnitude: 1 }]; },
+  'ability bad kind': (c) => { c.game.abilities = [{ kind: 'flamethrower', trigger: 'mode' }]; },
+  'ability unknown key': (c) => { c.game.abilities = [{ kind: 'shield', trigger: 'mode', colour: 'red' }]; },
+  'ability two modes': (c) => { c.game.abilities = [{ kind: 'shield', trigger: 'mode' }, { kind: 'shotgun', trigger: 'mode' }]; },
+  'ability pickup without pickups': (c) => { c.game.abilities = [{ kind: 'slow_puck', trigger: 'pickup' }]; },
+  'ability cooldown low': (c) => { c.game.abilities = [{ kind: 'hip_check', trigger: 'mode', cooldown_frames: 59 }]; },
   // C-0005 (lane A14): effects and the extended pickups; the C++ mirror is CheckGame in JamCartridge.cpp.
   'effects ok': (c) => { c.game.effects = [{ id: 'slow-them', target: 'other_team', duration_frames: 300, trigger: 'goal_for', stats: [{ stat: 'skater_speed', multiply: 0.7 }] }]; },
   'effect unknown stat': (c) => { c.game.effects = [{ id: 'jump', target: 'self', duration_frames: 300, trigger: 'pickup', stats: [{ stat: 'jump_height', multiply: 2 }] }]; },
