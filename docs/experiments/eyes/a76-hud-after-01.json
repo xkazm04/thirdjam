@@ -1,0 +1,419 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "hud",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T11:22:36.916Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "hud",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a76/hockey.arena.large-l2-after-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/a76/hockey.arena.large-l2-after-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/a76/hockey.arena.large-l2-after-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/a76/hockey.boost-l3-after-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/a76/hockey.boost-l3-after-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "F",
+          "path": "docs/experiments/img/a76/hockey.boost-l3-after-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2608,
+      "usage": {
+        "prompt": 16557,
+        "output": 6332,
+        "thoughts": 0,
+        "total": 22889,
+        "calls": 2
+      },
+      "cost_usd_est": 0.03616,
+      "ms": 45245,
+      "retried": true,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "elements": [
+              {
+                "name": "Scoreboard and Timer",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1 3:00 00"
+              },
+              {
+                "name": "Target Net Distance Indicator",
+                "position": "below top scoreboard",
+                "legible": true,
+                "text": "66 m"
+              },
+              {
+                "name": "Center Announcement Card",
+                "position": "center upper half",
+                "legible": true,
+                "text": "MATCH 1 PERIOD 1 - FACEOFF"
+              },
+              {
+                "name": "Player Indicator Ring and Label",
+                "position": "around controlled player base",
+                "legible": true,
+                "text": "YOU"
+              },
+              {
+                "name": "Faceoff Countdown Reticle",
+                "position": "lower center right of player",
+                "legible": true,
+                "text": "1 HOLD"
+              },
+              {
+                "name": "Sub-reticle Prompt",
+                "position": "below faceoff reticle",
+                "legible": true,
+                "text": "press shoot at the drop, not before"
+              },
+              {
+                "name": "Announcement Subtitle Strip",
+                "position": "bottom center above control bar",
+                "legible": true,
+                "text": "Welcome to the rink: blue against orange, first period."
+              },
+              {
+                "name": "Controls Bar",
+                "position": "bottom center spanning horizontally",
+                "legible": true,
+                "text": "SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC"
+              },
+              {
+                "name": "Call Ready Prompt",
+                "position": "bottom left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              },
+              {
+                "name": "Own Goal Offscreen Distance Tracker",
+                "position": "mid-left edge",
+                "legible": false,
+                "text": "own 46 m"
+              }
+            ],
+            "collisions": [
+              "Center announcement card covers the opposing faceoff skater and center ice area",
+              "Player indicator YOU badge clips directly into the bottom of the player model",
+              "Subtitle banner touches the outer ring boundary of the player indicator"
+            ],
+            "missing": [
+              "No indicator clarifying which goal belongs to blue versus orange",
+              "Puck status or possession cue is absent prior to drop"
+            ],
+            "smallest_text_px": 14,
+            "legibility": 4
+          },
+          {
+            "label": "Still B",
+            "elements": [
+              {
+                "name": "Scoreboard and Timer",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1 2:56 00"
+              },
+              {
+                "name": "Target Net Distance Indicator",
+                "position": "below top scoreboard",
+                "legible": true,
+                "text": "66 m"
+              },
+              {
+                "name": "Offscreen Opponent Distance Pointer",
+                "position": "lower left edge",
+                "legible": true,
+                "text": "7 m"
+              },
+              {
+                "name": "Own Goal Offscreen Distance Tracker",
+                "position": "mid-left edge",
+                "legible": false,
+                "text": "own 46 m"
+              },
+              {
+                "name": "Controls Bar",
+                "position": "bottom center spanning horizontally",
+                "legible": true,
+                "text": "SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC"
+              },
+              {
+                "name": "Call Ready Prompt",
+                "position": "bottom left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              }
+            ],
+            "collisions": [
+              "The 7 m indicator overlaps the cut-off geometry of an offscreen skater on the far left edge",
+              "Distance tracker 66 m sits right above the far goal post line"
+            ],
+            "missing": [
+              "Clear visual pointer to the location of the live puck",
+              "Stamina or sprint meter to explain sprint mechanics"
+            ],
+            "smallest_text_px": 14,
+            "legibility": 4
+          },
+          {
+            "label": "Still C",
+            "elements": [
+              {
+                "name": "Scoreboard and Timer",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1 2:48 00"
+              },
+              {
+                "name": "Net Proximity Marker",
+                "position": "above defending net",
+                "legible": true,
+                "text": "10 m"
+              },
+              {
+                "name": "Own Goal Offscreen Distance Tracker",
+                "position": "mid-left edge",
+                "legible": false,
+                "text": "own 102 m"
+              },
+              {
+                "name": "Player Ring Distance Indicator",
+                "position": "bottom edge of player ring",
+                "legible": true,
+                "text": "103 m"
+              },
+              {
+                "name": "Speech Bubble Announcement",
+                "position": "bottom center",
+                "legible": true,
+                "text": "Textbook stick lift."
+              },
+              {
+                "name": "Call Ready Prompt",
+                "position": "bottom left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              }
+            ],
+            "collisions": [
+              "Call Ready prompt remains visible in bottom-left during active play",
+              "Player ring distance marker overlaps bottom ring stroke"
+            ],
+            "missing": [
+              "Puck highlight marker to distinguish the small dark puck against dark ice markings",
+              "Teammate off-screen location markers"
+            ],
+            "smallest_text_px": 13,
+            "legibility": 4
+          },
+          {
+            "label": "Still D",
+            "elements": [
+              {
+                "name": "Scoreboard and Target Rule",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Target Net Distance Indicator",
+                "position": "below top scoreboard",
+                "legible": true,
+                "text": "66 m"
+              },
+              {
+                "name": "Center Announcement Card",
+                "position": "center upper half",
+                "legible": true,
+                "text": "MATCH 1 PERIOD 1 - FACEOFF"
+              },
+              {
+                "name": "Player Indicator Ring and Label",
+                "position": "around controlled player base",
+                "legible": true,
+                "text": "YOU"
+              },
+              {
+                "name": "Faceoff Countdown Reticle",
+                "position": "lower center right of player",
+                "legible": true,
+                "text": "1 HOLD"
+              },
+              {
+                "name": "Sub-reticle Prompt",
+                "position": "below faceoff reticle",
+                "legible": true,
+                "text": "press shoot at the drop, not before"
+              },
+              {
+                "name": "Announcement Subtitle Strip",
+                "position": "bottom center above control bar",
+                "legible": true,
+                "text": "Lights are up, the ice is fresh. First period is under way."
+              },
+              {
+                "name": "Controls Bar",
+                "position": "bottom center spanning horizontally",
+                "legible": true,
+                "text": "SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC"
+              },
+              {
+                "name": "Call Ready Prompt",
+                "position": "bottom left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              },
+              {
+                "name": "Own Goal Offscreen Distance Tracker",
+                "position": "mid-left edge",
+                "legible": false,
+                "text": "own 46 m"
+              }
+            ],
+            "collisions": [
+              "Announcement banner MATCH 1 obscures the opposing skater at center faceoff spot",
+              "Player ring label YOU overlaps skater boots",
+              "Subtitle bar directly abuts the player selection circle"
+            ],
+            "missing": [
+              "Timer is replaced by FIRST TO 3 leaving no active clock visible",
+              "Team color ownership icons for the two nets"
+            ],
+            "smallest_text_px": 12,
+            "legibility": 4
+          },
+          {
+            "label": "Still E",
+            "elements": [
+              {
+                "name": "Scoreboard and Target Rule",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Target Net Distance Indicator",
+                "position": "below top scoreboard",
+                "legible": true,
+                "text": "66 m"
+              },
+              {
+                "name": "Puck Distance Tracker",
+                "position": "lower-left near player ring",
+                "legible": true,
+                "text": "5 m"
+              },
+              {
+                "name": "Own Goal Offscreen Distance Tracker",
+                "position": "mid-left edge",
+                "legible": false,
+                "text": "own 46 m"
+              },
+              {
+                "name": "Controls Bar",
+                "position": "bottom center spanning horizontally",
+                "legible": true,
+                "text": "SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC"
+              },
+              {
+                "name": "Call Ready Prompt",
+                "position": "bottom left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              }
+            ],
+            "collisions": [
+              "Distance tracker 66 m sits immediately adjacent to the opposing net",
+              "Call Ready prompt remains pinned at bottom-left despite action ongoing"
+            ],
+            "missing": [
+              "Puck graphic indicator showing puck location on the ice",
+              "Indication of boost charge or sprint meter"
+            ],
+            "smallest_text_px": 12,
+            "legibility": 4
+          },
+          {
+            "label": "Still F",
+            "elements": [
+              {
+                "name": "Scoreboard and Target Rule",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Net Proximity Marker",
+                "position": "above defending net",
+                "legible": true,
+                "text": "10 m"
+              },
+              {
+                "name": "Own Goal Offscreen Distance Tracker",
+                "position": "mid-left edge",
+                "legible": false,
+                "text": "own 102 m"
+              },
+              {
+                "name": "Player Ring Distance Indicator",
+                "position": "bottom edge of player ring",
+                "legible": true,
+                "text": "105 m"
+              },
+              {
+                "name": "Call Ready Prompt",
+                "position": "bottom left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              }
+            ],
+            "collisions": [
+              "Own goal tracker text at left edge is unreadable due to low contrast against the boards",
+              "Bottom radar element in bottom-right corner touches the frame boundary closely"
+            ],
+            "missing": [
+              "Controls reminder strip has disappeared leaving no control cues",
+              "No indicator for puck possession or stick interaction feedback"
+            ],
+            "smallest_text_px": 12,
+            "legibility": 3
+          }
+        ]
+      },
+      "markdown": "**eyes/hud** A=hockey.arena.large-l2-after-card.jpg B=hockey.arena.large-l2-after-faceoff.jpg C=hockey.arena.large-l2-after-farnet.jpg D=hockey.boost-l3-after-card.jpg E=hockey.boost-l3-after-faceoff.jpg F=hockey.boost-l3-after-farnet.jpg (gemini-3.8-flash, in 16557 out 6332 tokens, ~$0.0362, 45.2 s, 1 retry)\n- stills:\n  - label: Still A; smallest_text_px: 14; legibility: 4\n    - elements:\n      - name: Scoreboard and Timer; position: top center; legible: true; text: 00 PERIOD 1 3:00 00\n      - name: Target Net Distance Indicator; position: below top scoreboard; legible: true; text: 66 m\n      - name: Center Announcement Card; position: center upper half; legible: true; text: MATCH 1 PERIOD 1 - FACEOFF\n      - name: Player Indicator Ring and Label; position: around controlled player base; legible: true; text: YOU\n      - name: Faceoff Countdown Reticle; position: lower center right of player; legible: true; text: 1 HOLD\n      - name: Sub-reticle Prompt; position: below faceoff reticle; legible: true; text: press shoot at the drop, not before\n      - name: Announcement Subtitle Strip; position: bottom center above control bar; legible: true; text: Welcome to the rink: blue against orange, first period.\n      - name: Controls Bar; position: bottom center spanning horizontally; legible: true; text: SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC\n      - name: Call Ready Prompt; position: bottom left corner; legible: true; text: ESC / START CALL READY\n      - name: Own Goal Offscreen Distance Tracker; position: mid-left edge; legible: false; text: own 46 m\n    - collisions: Center announcement card covers the opposing faceoff skater and center ice area; Player indicator YOU badge clips directly into the bottom of the player model; Subtitle banner touches the outer ring boundary of the player indicator\n    - missing: No indicator clarifying which goal belongs to blue versus orange; Puck status or possession cue is absent prior to drop\n  - label: Still B; smallest_text_px: 14; legibility: 4\n    - elements:\n      - name: Scoreboard and Timer; position: top center; legible: true; text: 00 PERIOD 1 2:56 00\n      - name: Target Net Distance Indicator; position: below top scoreboard; legible: true; text: 66 m\n      - name: Offscreen Opponent Distance Pointer; position: lower left edge; legible: true; text: 7 m\n      - name: Own Goal Offscreen Distance Tracker; position: mid-left edge; legible: false; text: own 46 m\n      - name: Controls Bar; position: bottom center spanning horizontally; legible: true; text: SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC\n      - name: Call Ready Prompt; position: bottom left corner; legible: true; text: ESC / START CALL READY\n    - collisions: The 7 m indicator overlaps the cut-off geometry of an offscreen skater on the far left edge; Distance tracker 66 m sits right above the far goal post line\n    - missing: Clear visual pointer to the location of the live puck; Stamina or sprint meter to explain sprint mechanics\n  - label: Still C; smallest_text_px: 13; legibility: 4\n    - elements:\n      - name: Scoreboard and Timer; position: top center; legible: true; text: 00 PERIOD 1 2:48 00\n      - name: Net Proximity Marker; position: above defending net; legible: true; text: 10 m\n      - name: Own Goal Offscreen Distance Tracker; position: mid-left edge; legible: false; text: own 102 m\n      - name: Player Ring Distance Indicator; position: bottom edge of player ring; legible: true; text: 103 m\n      - name: Speech Bubble Announcement; position: bottom center; legible: true; text: Textbook stick lift.\n      - name: Call Ready Prompt; position: bottom left corner; legible: true; text: ESC / START CALL READY\n    - collisions: Call Ready prompt remains visible in bottom-left during active play; Player ring distance marker overlaps bottom ring stroke\n    - missing: Puck highlight marker to distinguish the small dark puck against dark ice markings; Teammate off-screen location markers\n  - label: Still D; smallest_text_px: 12; legibility: 4\n    - elements:\n      - name: Scoreboard and Target Rule; position: top center; legible: true; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Target Net Distance Indicator; position: below top scoreboard; legible: true; text: 66 m\n      - name: Center Announcement Card; position: center upper half; legible: true; text: MATCH 1 PERIOD 1 - FACEOFF\n      - name: Player Indicator Ring and Label; position: around controlled player base; legible: true; text: YOU\n      - name: Faceoff Countdown Reticle; position: lower center right of player; legible: true; text: 1 HOLD\n      - name: Sub-reticle Prompt; position: below faceoff reticle; legible: true; text: press shoot at the drop, not before\n      - name: Announcement Subtitle Strip; position: bottom center above control bar; legible: true; text: Lights are up, the ice is fresh. First period is under way.\n      - name: Controls Bar; position: bottom center spanning horizontally; legible: true; text: SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC\n      - name: Call Ready Prompt; position: bottom left corner; legible: true; text: ESC / START CALL READY\n      - name: Own Goal Offscreen Distance Tracker; position: mid-left edge; legible: false; text: own 46 m\n    - collisions: Announcement banner MATCH 1 obscures the opposing skater at center faceoff spot; Player ring label YOU overlaps skater boots; Subtitle bar directly abuts the player selection circle\n    - missing: Timer is replaced by FIRST TO 3 leaving no active clock visible; Team color ownership icons for the two nets\n  - label: Still E; smallest_text_px: 12; legibility: 4\n    - elements:\n      - name: Scoreboard and Target Rule; position: top center; legible: true; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Target Net Distance Indicator; position: below top scoreboard; legible: true; text: 66 m\n      - name: Puck Distance Tracker; position: lower-left near player ring; legible: true; text: 5 m\n      - name: Own Goal Offscreen Distance Tracker; position: mid-left edge; legible: false; text: own 46 m\n      - name: Controls Bar; position: bottom center spanning horizontally; legible: true; text: SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC\n      - name: Call Ready Prompt; position: bottom left corner; legible: true; text: ESC / START CALL READY\n    - collisions: Distance tracker 66 m sits immediately adjacent to the opposing net; Call Ready prompt remains pinned at bottom-left despite action ongoing\n    - missing: Puck graphic indicator showing puck location on the ice; Indication of boost charge or sprint meter\n  - label: Still F; smallest_text_px: 12; legibility: 3\n    - elements:\n      - name: Scoreboard and Target Rule; position: top center; legible: true; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Net Proximity Marker; position: above defending net; legible: true; text: 10 m\n      - name: Own Goal Offscreen Distance Tracker; position: mid-left edge; legible: false; text: own 102 m\n      - name: Player Ring Distance Indicator; position: bottom edge of player ring; legible: true; text: 105 m\n      - name: Call Ready Prompt; position: bottom left corner; legible: true; text: ESC / START CALL READY\n    - collisions: Own goal tracker text at left edge is unreadable due to low contrast against the boards; Bottom radar element in bottom-right corner touches the frame boundary closely\n    - missing: Controls reminder strip has disappeared leaving no control cues; No indicator for puck possession or stick interaction feedback"
+    }
+  ]
+}

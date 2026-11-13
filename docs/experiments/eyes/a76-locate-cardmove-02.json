@@ -1,0 +1,101 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "locate",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T11:30:44.485Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "locate",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a76/mode.marathon-l2-cardmove-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/a76/mode.marathon-l2-cardmove-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/a76/mode.marathon-l2-cardmove-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2756,
+      "usage": {
+        "prompt": 4182,
+        "output": 533,
+        "thoughts": 0,
+        "total": 4715,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00514,
+      "ms": 6095,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "puck": {
+              "score": 5,
+              "told_by": "The puck is directly visible at center ice inside a glowing faceoff spot circle."
+            },
+            "far_net": {
+              "score": 1,
+              "told_by": "The far net is completely obscured behind the MATCH 1 banner and skaters, with no badge or indicator pointing to it.",
+              "badge_covers_net": false
+            },
+            "overlapping_marks": [
+              "MATCH 1 banner overlaps bottom of top scoreboard",
+              "HOLD shot meter overlaps player selection ring and tutorial subtitle box"
+            ],
+            "match_card_in_middle_third": false,
+            "overall": 2
+          },
+          {
+            "label": "Still B",
+            "puck": {
+              "score": 4,
+              "told_by": "An orange left chevron arrow with label '29 m' on the left screen edge indicates the puck is off-screen to the left."
+            },
+            "far_net": {
+              "score": 4,
+              "told_by": "The tiny red far net is visible in the deep distance, marked directly above by a yellow diamond badge showing '87 m'.",
+              "badge_covers_net": false
+            },
+            "overlapping_marks": [],
+            "match_card_in_middle_third": false,
+            "overall": 4
+          },
+          {
+            "label": "Still C",
+            "puck": {
+              "score": 4,
+              "told_by": "The puck is visible on the ice directly in front of the orange skater defending the red goal frame."
+            },
+            "far_net": {
+              "score": 5,
+              "told_by": "The red net frame is fully visible directly ahead, accompanied by a yellow diamond badge reading '13 m' positioned clear above the crossbar.",
+              "badge_covers_net": false
+            },
+            "overlapping_marks": [
+              "6 m distance text touches/overlaps white targeting ring around orange skater 21"
+            ],
+            "match_card_in_middle_third": false,
+            "overall": 4
+          }
+        ]
+      },
+      "markdown": "**eyes/locate** A=mode.marathon-l2-cardmove-card.jpg B=mode.marathon-l2-cardmove-faceoff.jpg C=mode.marathon-l2-cardmove-farnet.jpg (gemini-3.8-flash, in 4182 out 533 tokens, ~$0.0051, 6.1 s)\n- stills:\n  - label: Still A; match_card_in_middle_third: false; overall: 2\n    - puck: score 5, told_by The puck is directly visible at center ice inside a glowing faceoff spot circle.\n    - far_net:\n      - score: 1\n      - told_by: The far net is completely obscured behind the MATCH 1 banner and skaters, with no badge or indicator pointing to it.\n      - badge_covers_net: false\n    - overlapping_marks: MATCH 1 banner overlaps bottom of top scoreboard; HOLD shot meter overlaps player selection ring and tutorial subtitle box\n  - label: Still B; match_card_in_middle_third: false; overall: 4\n    - puck: score 4, told_by An orange left chevron arrow with label '29 m' on the left screen edge indicates the puck is off-screen to the left.\n    - far_net:\n      - score: 4\n      - told_by: The tiny red far net is visible in the deep distance, marked directly above by a yellow diamond badge showing '87 m'.\n      - badge_covers_net: false\n    - overlapping_marks: (none)\n  - label: Still C; match_card_in_middle_third: false; overall: 4\n    - puck: score 4, told_by The puck is visible on the ice directly in front of the orange skater defending the red goal frame.\n    - far_net:\n      - score: 5\n      - told_by: The red net frame is fully visible directly ahead, accompanied by a yellow diamond badge reading '13 m' positioned clear above the crossbar.\n      - badge_covers_net: false\n    - overlapping_marks: 6 m distance text touches/overlaps white targeting ring around orange skater 21"
+    }
+  ]
+}

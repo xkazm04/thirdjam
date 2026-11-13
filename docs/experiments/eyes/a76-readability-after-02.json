@@ -1,0 +1,109 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "readability",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T11:24:14.744Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "readability",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a76/mode.marathon-l2-after-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/a76/mode.marathon-l2-after-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "distance": 6,
+      "thumbnails": [],
+      "prompt_chars": 2768,
+      "usage": {
+        "prompt": 3065,
+        "output": 751,
+        "thoughts": 0,
+        "total": 3816,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00512,
+      "ms": 7703,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "mode.marathon-l2-after-faceoff.jpg",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "Not visible; the extreme distance to the far end renders any small disc completely lost at sub-pixel resolution."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "Cannot be determined because the lone distant figure by the far boards is barely 10 pixels tall and lacks any visible puck or possession cue."
+              },
+              "team_colours": {
+                "score": 3,
+                "evidence": "The foreground skater is clearly bright cyan-blue, but the distant orange skater is reduced to an indistinct speck near the red goal frame."
+              },
+              "far_net": {
+                "score": 3,
+                "evidence": "Located at center top near the boards, but it appears as a flat red horizontal bar only about 30 pixels wide directly under an 86 m indicator."
+              },
+              "zone_strips": {
+                "score": 4,
+                "evidence": "A thin dark-red line spans horizontally across the middle of the frame over alternating blue-tinted concentric ice rings."
+              }
+            },
+            "first_look": "The back of the large blue player number 7 in the foreground",
+            "noise": [
+              "Wide concentric blue-and-white rings on the ice surface resembling curling targets",
+              "Large keybind legend strip spanning the lower screen width",
+              "Bold blue selection ring around the player's skates"
+            ],
+            "overall": 2
+          },
+          {
+            "label": "mode.marathon-l2-after-farnet.jpg",
+            "elements": {
+              "puck": {
+                "score": 4,
+                "evidence": "Found immediately to the right of the central scrum at the stick blade, highlighted by a bright yellowish glowing spot on the ice."
+              },
+              "carrier": {
+                "score": 4,
+                "evidence": "The orange skater facing right has their stick blade contacting the glowing puck and is encircled by a faint concentric target reticle."
+              },
+              "team_colours": {
+                "score": 5,
+                "evidence": "Two clear contrasting colours: vibrant sky blue on player 7 and a teammate, versus warm orange on the opposing skaters."
+              },
+              "far_net": {
+                "score": 4,
+                "evidence": "Centred directly behind the cluster of skaters, clearly rendered as a red rectangular frame roughly 110 pixels wide with visible white netting."
+              },
+              "zone_strips": {
+                "score": 2,
+                "evidence": "Only curved red faceoff circles and goal crease markings are visible; standard transverse blue/red zone divider lines are absent or out of frame."
+              }
+            },
+            "first_look": "The central cluster of orange and blue skaters fighting near the goal",
+            "noise": [
+              "Overlaid text subtitle 'Long carry up the ice.' directly under the foreground skater",
+              "Thick blue indicator ring around the controlled skater's base"
+            ],
+            "overall": 4
+          }
+        ]
+      },
+      "markdown": "**eyes/readability** A=mode.marathon-l2-after-faceoff.jpg B=mode.marathon-l2-after-farnet.jpg at 6 m (gemini-3.8-flash, in 3065 out 751 tokens, ~$0.0051, 7.7 s)\n- stills:\n  - label: mode.marathon-l2-after-faceoff.jpg; first_look: The back of the large blue player number 7 in the foreground; overall: 2\n    - elements:\n      - puck: score 1, evidence Not visible; the extreme distance to the far end renders any small disc completely lost at sub-pixel resolution.\n      - carrier: score 1, evidence Cannot be determined because the lone distant figure by the far boards is barely 10 pixels tall and lacks any visible puck or possession cue.\n      - team_colours: score 3, evidence The foreground skater is clearly bright cyan-blue, but the distant orange skater is reduced to an indistinct speck near the red goal frame.\n      - far_net: score 3, evidence Located at center top near the boards, but it appears as a flat red horizontal bar only about 30 pixels wide directly under an 86 m indicator.\n      - zone_strips: score 4, evidence A thin dark-red line spans horizontally across the middle of the frame over alternating blue-tinted concentric ice rings.\n    - noise: Wide concentric blue-and-white rings on the ice surface resembling curling targets; Large keybind legend strip spanning the lower screen width; Bold blue selection ring around the player's skates\n  - label: mode.marathon-l2-after-farnet.jpg; first_look: The central cluster of orange and blue skaters fighting near the goal; overall: 4\n    - elements:\n      - puck: score 4, evidence Found immediately to the right of the central scrum at the stick blade, highlighted by a bright yellowish glowing spot on the ice.\n      - carrier: score 4, evidence The orange skater facing right has their stick blade contacting the glowing puck and is encircled by a faint concentric target reticle.\n      - team_colours: score 5, evidence Two clear contrasting colours: vibrant sky blue on player 7 and a teammate, versus warm orange on the opposing skaters.\n      - far_net: score 4, evidence Centred directly behind the cluster of skaters, clearly rendered as a red rectangular frame roughly 110 pixels wide with visible white netting.\n      - zone_strips: score 2, evidence Only curved red faceoff circles and goal crease markings are visible; standard transverse blue/red zone divider lines are absent or out of frame.\n    - noise: Overlaid text subtitle 'Long carry up the ice.' directly under the foreground skater; Thick blue indicator ring around the controlled skater's base"
+    }
+  ]
+}

@@ -158,6 +158,12 @@ public:
 	// ---- Lane A74 (R-0038): the off-screen puck marker. The camera stays bound to the human; when the puck is outside the inner 85 % of the frame an
 	// arrow stands on the frame's edge at the puck's direction with the distance beside it, in the carrier's team colour (grey when loose). It fades in
 	// and out over PuckMarkerFadeFrames sim frames; hidden for the faceoff card / countdown, a goal pause, the pause menu, the end cards.
+	// ---- Lane A76: the far-net badge stands NetBadgeLiftCm over the crossbar (NetCrossbarCm: the sim default 0.61 m; a taller bar only adds gap) and at least
+	// NetBadgeGapPx over the crossbar's projection. EdgeSlotPx is the least distance between two edge elements (the puck keeps its place, the nets slide).
+	static constexpr float NetCrossbarCm = 61.f;
+	static constexpr float NetBadgeLiftCm = 120.f;
+	static constexpr float NetBadgeGapPx = 40.f;
+	static constexpr float EdgeSlotPx = 48.f;
 	static constexpr float PuckMarkerInnerFrac = 0.85f;
 	static constexpr int32 PuckMarkerFadeFrames = 6;
 	static constexpr int64 PuckMarkerCardFrames = 150;   // the MATCH card of a fresh match
@@ -255,6 +261,7 @@ private:
 	UPROPERTY(Transient) TObjectPtr<class UJamEventBus> Bus;
 	void UpdateCommentary(const FJamPresentationFrame& Frame);
 	void UpdatePuckMarker(const FJamPresentationFrame& Frame, bool bCovered);
+	void ResolveEdgeSlots();   // lane A76: one slot rule for the puck chevron, the net chevrons and their labels
 	UPROPERTY(Transient) TObjectPtr<UWidget> PuckArrow;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> PuckText;
 	float PuckMarkerAlpha = 0.f;

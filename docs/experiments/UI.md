@@ -160,3 +160,45 @@ smallest text 13-14 px; it reads "Player indicator ring tag, lower center, YOU" 
 half", and on the pause still lists no bubble and no strip; its collisions are the card over centre ice (it is in the top band now: the far ice behind it, not the human),
 the ring over the human's skates (by design) and the minimap flush with the margin (A18's 24 px edge). Not changed: InputMapping, CameraFollow, the pawn, the pause
 menu's controls card (R-0032, lane A49).
+
+## 8. HUD pass 3 (lane A76, from H16): the far-net badge, the edge slots, the MATCH card by rink size, and the one table of the HUD
+
+Presentation only (`HUDWidget.*`, `DirectorsCallWidget.*`); the sim hash, the input path and `CameraFollow.cpp` are untouched. `jam.hud.Pass3 0` brings back the A74 layout in the
+same package (the before column of the proof); default 1. Proof: `docs/experiments/img/a76/`, `docs/experiments/eyes/a76-*.json`, drivers `tools/qa/eyesgrid/a76grid.mjs`,
+`a76eyes.mjs`, `a76score.mjs`, the new eyes preset `tools/eyes/presets/locate.md`.
+
+| Gap | Before (A74) | After |
+|---|---|---|
+| Far-net badge on the crossbar ("badge covers the crossbar", 3 of 3) | the world point was 3 m up (`GetFarNetWorldCm`), the top clamp 150 px: at 49-66 m the badge was inside the net's pixels, and on the 120 / 140 m rinks it was **hidden under the MATCH card** (still `*-before-card.jpg`: no badge at all) | the point is 1.2 m over the crossbar (`NetCrossbarCm` 61 + `NetBadgeLiftCm` 120), and the badge stands at least `NetBadgeGapPx` (40) over the crossbar's own projection; clamp top 120 (the scoreboard plates end near 104), sides `ClampMarker`. Net off screen: the same element is the edge chevron with the label beside it (`PlaceMarkerArrow`, A74) |
+| Edge elements stacking (puck chevron beside "own 46 m" and a skater) | three independent placements | one rule, `ResolveEdgeSlots`: the puck chevron, the far-net and own-net chevrons are groups (marks plus label); placed puck first, far net, own net; two groups whose anchors are closer than `EdgeSlotPx` (48) or whose label rectangles meet slide along their own edge in 24 px steps, away from the blocker first, inside [130, VH-200] on a side edge and [100, VW-100] on a top / bottom edge. The puck never moves. A skater under a label is accepted (labels are over the world), a label over another label is not |
+| MATCH card over the far centre on the 120 m and 140 m rinks (A64 row 6, partial) | 50 pt everywhere, centre y 190 | `MatchCardPtFor`: 50 pt up to 90 m, **40 pt over 95 m** (120, 140), centre y 190 unchanged. The move variant (`jam.ui.CardMode 1`: 40 pt lifted to centre y 150) was shot too and **rejected**: it lands on the scoreboard's score plates (`*-cardmove-card.jpg`) |
+
+### The HUD, every element (Slate units; 720p is drawn at 2/3 of these, so a 24 px label reads 16 px)
+
+Order is draw order bottom to top. "Hides" is what takes the element away.
+
+| Element | Anchor (screen point -> element point, offset) | Size at 1080p | Size at 720p | Hides when |
+|---|---|---|---|---|
+| YOU ring / carrier ring | ground ellipse projected at the skater's feet (1.1 m / 0.8 m radius), canvas 0,0 centre | 64 x 20 minimum, grows with the projection | 2/3 | not Play or GoalPause; the YOU ring fades 20-24 m from the camera |
+| Far-net badge (diamond 22 px, distance in Label 24 outlined) | the world point 1.2 m over the far crossbar, clamped to x [92, VW-92], y [120, VH-112]; label to its right (left past VW-200) | 22 px + about 90 px label | 15 px + 60 px | never (the sim always has a far net); off screen it is the edge chevron |
+| Far-net chevron (22 px) | beside the clamped badge towards the edge the net lies beyond | 22 | 15 | the net is on screen with the badge on it |
+| Own-net marker (diamond 12, "own n m" Caption 14 muted) | the world point 1.5 m over the own goal line, clamped x [88, VW-88], y [150, VH-104]; label 10 px under it | 12 px + about 80 px label | 8 px + 53 px | never; its chevron only while clamped |
+| Own-net chevron (16 px) | beside the clamped marker | 16 | 11 | marker on screen |
+| Puck chevron (28 px) + distance (Label 24) | on the ray from the screen centre to the puck, where it meets x [64, VW-64], y [150, VH-170]; the radar corner (x > VW-330, y > VH-200) pushed up to VH-200; label 62 / 34 px behind it towards the centre | 28 + about 70 px label | 19 + 47 px | the puck is inside the inner 85 % of the frame; the MATCH card or countdown (first 150 frames), a goal pause, the pause menu, the end cards; `jam.hud.PuckMarker 0`; faded in / out over 6 sim frames |
+| YOU chevron / YOU tag | over the human's head (past 24 m); the tag inside the ring's top arc | 26 px chevron; tag Label 22 | 2/3 | not Play or GoalPause, or the ring shows (chevron) |
+| Scoreboard (home plate, take over timer, away plate) | top centre, y 14, to y 104 | plates 56 pt digits, timer 34 | 2/3 | never (Play, pause and cards) |
+| Effects strip (A14) | top centre, y 158 | slot row, icon + Caption | 2/3 | no effect on the human |
+| Director's Call line pill | top centre, y 112 | one line, Label 22 | 2/3 | no rule announced (A15 / A8) |
+| MATCH card (banner, "MATCH n" over "PERIOD n - FACEOFF") | top centre, centre y 190 (`MatchCardCentreY`), 50 pt up to 90 m rinks, 40 pt over 95 m | 448 x 130, band y 121 to 295 | 2/3 | after `TakeCardFrames` (150), the end cards, the pause menu |
+| Faceoff countdown ring + hint | screen 0.5 / 0.66, 260 px right of the centre (`RingOffsetXPx`), hint 124 px under it | ring 96 pt digit over HOLD | 2/3 | not a faceoff (HOLD / DROP / WON / LOST 40 frames); the hint after the third faceoff of a session |
+| Sprint bar | bottom centre, y -168 | 240 x 8 | 2/3 | full stamina is shown, never hidden in play |
+| Commentary strip (A32) | bottom centre, y -110 (-150 while the controls strip shows) | Body 18 Bold, wrap 560-880, two lines | 2/3 | no line, or 30 frames after it ends; the pause menu |
+| Controls strip | bottom, x 24 to VW-256 | Caption-over-ice 16 pt, one line | 2/3 | after 10 s (fades over the last 2) |
+| Radar | bottom right, 24 px margin | 200 x 100 on a 216 x 116 frame | 2/3 | never |
+| Ready pill ("ESC / START CALL READY") | bottom left, 24 px margin | Caption 14 on a pill | 2/3 | no Director's Call available |
+| Toast (rejected cut) | top left, 24 px margin | Body on a plate, 4 s | 2/3 | after 4 s |
+| Bark bubbles | over the speaker, y clamped out of the MATCH band | Body 18 Bold | 2/3 | speaker beyond 24 m or off frame; the pause menu |
+| Win / lose card, pause card, Director's Call card | screen 0.5 / 0.4 and centre | Display / Title | 2/3 | not their phase |
+
+The edge-slot rule applies to the three edge rows (puck, far net, own net) only; every other element has a fixed slot above, and the slots do not overlap by construction
+(scoreboard y 14-104, line pill 112, effects 158, MATCH band 121-295, commentary and strips from the bottom, radar and ready pill in the corners).

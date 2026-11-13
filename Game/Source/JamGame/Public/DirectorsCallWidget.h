@@ -160,6 +160,10 @@ public:
 	static constexpr float MatchCardH = 130.f;
 	static constexpr float MatchCardCentreY = 190.f;
 	static constexpr int32 MatchCardFontPt = 50;
+	// Lane A76 (EYES-GRID-FIXES row 6, partial): on the big rinks the far centre stands higher in the frame; the card's type follows the rink:
+	// 50 pt up to 90 m, 40 pt on 120 m and longer. jam.ui.CardMode 1 also lifts the card to y 150 on the big rinks (the proof compares the two).
+	static int32 MatchCardPtFor(float RinkLengthM) { return RinkLengthM > 95.f ? 40 : MatchCardFontPt; }
+	static float MatchCardCentreYFor(float RinkLengthM, bool bLift) { return (bLift && RinkLengthM > 95.f) ? 150.f : MatchCardCentreY; }
 	// Lane A42 (y-slots): the band of Slate y the MATCH card covers (card plus the line under it; VH kept for callers, the band is absolute),
 	// so the bark bubbles keep out of it. Pure (tests call it); GetBannerBandPx answers only while the card is up.
 	static void BannerBandPx(float VH, float& OutTop, float& OutBottom) { (void)VH; OutTop = MatchCardCentreY - MatchCardH * 0.5f - 4.f; OutBottom = MatchCardCentreY + MatchCardH * 0.5f + 40.f; }
@@ -179,6 +183,8 @@ private:
 	int64 TakeUntil = -1;
 	int64 AnnouncementUntil = -1;
 	int64 LastFrame = -1;
+	float CardRinkLen = -1.f;   // lane A76: the rink length and mode the card's type and place were last set for
+	int32 CardMode = -1;
 
 	UPROPERTY(Transient) TObjectPtr<UCanvasPanel> Root;
 	UPROPERTY(Transient) TObjectPtr<UWidget> TakeArt;

@@ -43,7 +43,7 @@ test('makeLogger passes every line through redact, objects included', () => {
 
 test('every shipped preset parses, has a role, a prompt with the stills placeholder, and a JSON shape', () => {
   const names = listPresets();
-  assert.deepEqual(names, ['ab-pair', 'bug-hunt', 'figure', 'hud', 'p2-bar', 'readability']);
+  assert.deepEqual(names, ['ab-pair', 'bug-hunt', 'figure', 'hud', 'locate', 'p2-bar', 'readability']);
   for (const n of names) {
     const p = loadPreset(n);
     assert.ok(['pro', 'flash'].includes(p.role), `${n} role`);

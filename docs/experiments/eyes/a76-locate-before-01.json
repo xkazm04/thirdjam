@@ -1,0 +1,175 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "locate",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T11:28:42.146Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "locate",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a76/hockey.arena.large-l2-before-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/a76/hockey.arena.large-l2-before-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/a76/hockey.arena.large-l2-before-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/a76/hockey.boost-l3-before-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/a76/hockey.boost-l3-before-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "F",
+          "path": "docs/experiments/img/a76/hockey.boost-l3-before-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2893,
+      "usage": {
+        "prompt": 7623,
+        "output": 1174,
+        "thoughts": 0,
+        "total": 8797,
+        "calls": 1
+      },
+      "cost_usd_est": 0.01012,
+      "ms": 10905,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "hockey.arena.large-l2-before-card.jpg",
+            "puck": {
+              "score": 5,
+              "told_by": "The glowing puck itself is plainly visible on the red center line directly ahead of the player."
+            },
+            "far_net": {
+              "score": 1,
+              "told_by": "The far net is completely obscured behind the MATCH 1 card with no visible badge or distance text.",
+              "badge_covers_net": false
+            },
+            "overlapping_marks": [
+              "MATCH 1 card overlaps the far net and faceoff circle",
+              "YOU label overlaps the blue player selection ring",
+              "HOLD crosshair widget touches the blue player selection ring"
+            ],
+            "match_card_in_middle_third": false,
+            "overall": 2
+          },
+          {
+            "label": "hockey.arena.large-l2-before-faceoff.jpg",
+            "puck": {
+              "score": 4,
+              "told_by": "An orange downward-pointing chevron below the skater with '13 m' indicates the puck's position behind the camera."
+            },
+            "far_net": {
+              "score": 5,
+              "told_by": "A yellow diamond badge labeled '66 m' with an upward chevron sits directly above the visible red net frame.",
+              "badge_covers_net": false
+            },
+            "overlapping_marks": [
+              "13 m text overlaps the orange puck chevron and player ring"
+            ],
+            "match_card_in_middle_third": false,
+            "overall": 4
+          },
+          {
+            "label": "hockey.arena.large-l2-before-farnet.jpg",
+            "puck": {
+              "score": 4,
+              "told_by": "A blue chevron and '22 m' label at the bottom of the player circle indicate the puck is behind and to the left."
+            },
+            "far_net": {
+              "score": 5,
+              "told_by": "The red net frame is directly visible in front of the skater, accompanied by a yellow diamond badge showing '7 m'.",
+              "badge_covers_net": false
+            },
+            "overlapping_marks": [
+              "22 m label overlaps the blue chevron and player ring"
+            ],
+            "match_card_in_middle_third": false,
+            "overall": 4
+          },
+          {
+            "label": "hockey.boost-l3-before-card.jpg",
+            "puck": {
+              "score": 5,
+              "told_by": "The glowing puck itself is directly visible resting on the red center line ahead of the player."
+            },
+            "far_net": {
+              "score": 1,
+              "told_by": "The far net is occluded by the MATCH 1 card with only the tip of an upward chevron peeking out behind it.",
+              "badge_covers_net": false
+            },
+            "overlapping_marks": [
+              "MATCH 1 card overlaps the far net and top chevron",
+              "YOU label overlaps the blue player selection ring",
+              "HOLD widget touches the blue player selection ring"
+            ],
+            "match_card_in_middle_third": false,
+            "overall": 2
+          },
+          {
+            "label": "hockey.boost-l3-before-faceoff.jpg",
+            "puck": {
+              "score": 4,
+              "told_by": "An orange chevron with '13 m' beneath the player indicates the puck is behind the skater off-screen."
+            },
+            "far_net": {
+              "score": 5,
+              "told_by": "A yellow diamond badge with '66 m' and an upward chevron marks the far red net visible on the boards.",
+              "badge_covers_net": false
+            },
+            "overlapping_marks": [
+              "13 m text overlaps the orange puck chevron and player ring"
+            ],
+            "match_card_in_middle_third": false,
+            "overall": 4
+          },
+          {
+            "label": "hockey.boost-l3-before-farnet.jpg",
+            "puck": {
+              "score": 4,
+              "told_by": "A blue chevron and '21 m' label at the bottom edge of the player ring point to the puck behind the skater."
+            },
+            "far_net": {
+              "score": 5,
+              "told_by": "The red net is fully visible on ice right ahead, with a yellow diamond badge reading '9 m' placed above on the wall.",
+              "badge_covers_net": false
+            },
+            "overlapping_marks": [
+              "21 m text overlaps the blue chevron and player ring"
+            ],
+            "match_card_in_middle_third": false,
+            "overall": 4
+          }
+        ]
+      },
+      "markdown": "**eyes/locate** A=hockey.arena.large-l2-before-card.jpg B=hockey.arena.large-l2-before-faceoff.jpg C=hockey.arena.large-l2-before-farnet.jpg D=hockey.boost-l3-before-card.jpg E=hockey.boost-l3-before-faceoff.jpg F=hockey.boost-l3-before-farnet.jpg (gemini-3.8-flash, in 7623 out 1174 tokens, ~$0.0101, 10.9 s)\n- stills:\n  - label: hockey.arena.large-l2-before-card.jpg; match_card_in_middle_third: false; overall: 2\n    - puck: score 5, told_by The glowing puck itself is plainly visible on the red center line directly ahead of the player.\n    - far_net:\n      - score: 1\n      - told_by: The far net is completely obscured behind the MATCH 1 card with no visible badge or distance text.\n      - badge_covers_net: false\n    - overlapping_marks: MATCH 1 card overlaps the far net and faceoff circle; YOU label overlaps the blue player selection ring; HOLD crosshair widget touches the blue player selection ring\n  - label: hockey.arena.large-l2-before-faceoff.jpg; match_card_in_middle_third: false; overall: 4\n    - puck: score 4, told_by An orange downward-pointing chevron below the skater with '13 m' indicates the puck's position behind the camera.\n    - far_net:\n      - score: 5\n      - told_by: A yellow diamond badge labeled '66 m' with an upward chevron sits directly above the visible red net frame.\n      - badge_covers_net: false\n    - overlapping_marks: 13 m text overlaps the orange puck chevron and player ring\n  - label: hockey.arena.large-l2-before-farnet.jpg; match_card_in_middle_third: false; overall: 4\n    - puck: score 4, told_by A blue chevron and '22 m' label at the bottom of the player circle indicate the puck is behind and to the left.\n    - far_net:\n      - score: 5\n      - told_by: The red net frame is directly visible in front of the skater, accompanied by a yellow diamond badge showing '7 m'.\n      - badge_covers_net: false\n    - overlapping_marks: 22 m label overlaps the blue chevron and player ring\n  - label: hockey.boost-l3-before-card.jpg; match_card_in_middle_third: false; overall: 2\n    - puck: score 5, told_by The glowing puck itself is directly visible resting on the red center line ahead of the player.\n    - far_net:\n      - score: 1\n      - told_by: The far net is occluded by the MATCH 1 card with only the tip of an upward chevron peeking out behind it.\n      - badge_covers_net: false\n    - overlapping_marks: MATCH 1 card overlaps the far net and top chevron; YOU label overlaps the blue player selection ring; HOLD widget touches the blue player selection ring\n  - label: hockey.boost-l3-before-faceoff.jpg; match_card_in_middle_third: false; overall: 4\n    - puck: score 4, told_by An orange chevron with '13 m' beneath the player indicates the puck is behind the skater off-screen.\n    - far_net:\n      - score: 5\n      - told_by: A yellow diamond badge with '66 m' and an upward chevron marks the far red net visible on the boards.\n      - badge_covers_net: false\n    - overlapping_marks: 13 m text overlaps the orange puck chevron and player ring\n  - label: hockey.boost-l3-before-farnet.jpg; match_card_in_middle_third: false; overall: 4\n    - puck: score 4, told_by A blue chevron and '21 m' label at the bottom edge of the player ring point to the puck behind the skater.\n    - far_net:\n      - score: 5\n      - told_by: The red net is fully visible on ice right ahead, with a yellow diamond badge reading '9 m' placed above on the wall.\n      - badge_covers_net: false\n    - overlapping_marks: 21 m text overlaps the blue chevron and player ring"
+    }
+  ]
+}

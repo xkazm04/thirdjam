@@ -1,0 +1,406 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "hud",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T11:29:57.258Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "hud",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a76/hockey.arena.large-l2-cardmove-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/a76/hockey.arena.large-l2-cardmove-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/a76/hockey.arena.large-l2-cardmove-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/a76/hockey.boost-l3-cardmove-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/a76/hockey.boost-l3-cardmove-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "F",
+          "path": "docs/experiments/img/a76/hockey.boost-l3-cardmove-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2626,
+      "usage": {
+        "prompt": 16563,
+        "output": 6099,
+        "thoughts": 0,
+        "total": 22662,
+        "calls": 2
+      },
+      "cost_usd_est": 0.03529,
+      "ms": 41882,
+      "retried": true,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1 3:00 00"
+              },
+              {
+                "name": "Match announcement banner",
+                "position": "upper center below scoreboard",
+                "legible": true,
+                "text": "MATCH 1 PERIOD 1 - FACEOFF"
+              },
+              {
+                "name": "Own net distance marker",
+                "position": "mid-left edge",
+                "legible": true,
+                "text": "own 46 m"
+              },
+              {
+                "name": "Player ring and tag",
+                "position": "bottom center around player figure",
+                "legible": true,
+                "text": "YOU"
+              },
+              {
+                "name": "Faceoff countdown reticle",
+                "position": "bottom center right of player",
+                "legible": true,
+                "text": "1 HOLD"
+              },
+              {
+                "name": "Speech bubble hint",
+                "position": "bottom center right below reticle",
+                "legible": true,
+                "text": "press shoot at the drop, not before"
+              },
+              {
+                "name": "Speech bubble narration",
+                "position": "bottom center below player ring",
+                "legible": true,
+                "text": "Welcome to the rink: blue against orange, first period."
+              },
+              {
+                "name": "Controls bar",
+                "position": "bottom full width",
+                "legible": true,
+                "text": "SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC"
+              },
+              {
+                "name": "Ready callout prompt",
+                "position": "bottom left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              }
+            ],
+            "collisions": [
+              "Match announcement banner covers part of the opposing center skater figure.",
+              "Player ring overlaps bottom edge of player skates and ice decal.",
+              "Narrative speech bubble nearly touches the controls bar."
+            ],
+            "missing": [
+              "Clear indicator showing which side player is attacking.",
+              "Explicit indication of teammate and opponent control status."
+            ],
+            "smallest_text_px": 11,
+            "legibility": 4
+          },
+          {
+            "label": "Still B",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1 2:56 00"
+              },
+              {
+                "name": "Opponent net distance marker",
+                "position": "top center below scoreboard",
+                "legible": true,
+                "text": "66 m"
+              },
+              {
+                "name": "Own net distance marker",
+                "position": "mid-left edge",
+                "legible": true,
+                "text": "own 46 m"
+              },
+              {
+                "name": "Puck distance indicator",
+                "position": "bottom center inside player ring",
+                "legible": true,
+                "text": "14 m"
+              },
+              {
+                "name": "Controls bar",
+                "position": "bottom full width",
+                "legible": true,
+                "text": "SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC"
+              },
+              {
+                "name": "Ready callout prompt",
+                "position": "bottom left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              }
+            ],
+            "collisions": [
+              "Opponent net marker (66 m) sits directly above the far orange figure and red net.",
+              "Puck distance indicator sits very close to player skates."
+            ],
+            "missing": [
+              "Clear visual tracking marker on the distant loose puck.",
+              "Sprint or stamina meter."
+            ],
+            "smallest_text_px": 11,
+            "legibility": 4
+          },
+          {
+            "label": "Still C",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1 2:47 00"
+              },
+              {
+                "name": "Opponent net distance marker",
+                "position": "upper center above net",
+                "legible": true,
+                "text": "9 m"
+              },
+              {
+                "name": "Own net distance marker",
+                "position": "mid-left edge",
+                "legible": true,
+                "text": "own 103 m"
+              },
+              {
+                "name": "Puck distance indicator",
+                "position": "bottom center inside player ring",
+                "legible": true,
+                "text": "20 m"
+              },
+              {
+                "name": "Speech bubble narration",
+                "position": "bottom center below player ring",
+                "legible": true,
+                "text": "Long carry up the ice."
+              },
+              {
+                "name": "Controls bar",
+                "position": "bottom full width",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              }
+            ],
+            "collisions": [
+              "Opponent net marker (9 m) sits directly on the glass railing above the net.",
+              "Puck indicator sits overlapping the player ring border."
+            ],
+            "missing": [
+              "Puck indicator cue on the puck itself which is off-screen or hidden.",
+              "Full controls reminder strip."
+            ],
+            "smallest_text_px": 12,
+            "legibility": 4
+          },
+          {
+            "label": "Still D",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Match announcement banner",
+                "position": "upper center below scoreboard",
+                "legible": true,
+                "text": "MATCH 1 PERIOD 1 - FACEOFF"
+              },
+              {
+                "name": "Own net distance marker",
+                "position": "mid-left edge",
+                "legible": true,
+                "text": "own 46 m"
+              },
+              {
+                "name": "Player ring and tag",
+                "position": "bottom center around player figure",
+                "legible": true,
+                "text": "YOU"
+              },
+              {
+                "name": "Faceoff countdown reticle",
+                "position": "bottom center right of player",
+                "legible": true,
+                "text": "1 HOLD"
+              },
+              {
+                "name": "Speech bubble hint",
+                "position": "bottom center right below reticle",
+                "legible": true,
+                "text": "press shoot at the drop, not before"
+              },
+              {
+                "name": "Speech bubble narration",
+                "position": "bottom center below player ring",
+                "legible": true,
+                "text": "Lights are up, the ice is fresh. First period is under way."
+              },
+              {
+                "name": "Controls bar",
+                "position": "bottom full width",
+                "legible": true,
+                "text": "SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC"
+              },
+              {
+                "name": "Ready callout prompt",
+                "position": "bottom left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              }
+            ],
+            "collisions": [
+              "Match announcement banner covers the upper torso of the opposing center skater.",
+              "Scoreboard timer area is blank black space with rule text crammed into the header."
+            ],
+            "missing": [
+              "Active game timer clock numbers.",
+              "Explicit indicator showing which team is blue vs orange."
+            ],
+            "smallest_text_px": 11,
+            "legibility": 3
+          },
+          {
+            "label": "Still E",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Opponent net distance marker",
+                "position": "top center below scoreboard",
+                "legible": true,
+                "text": "66 m"
+              },
+              {
+                "name": "Own net distance marker",
+                "position": "mid-left edge",
+                "legible": true,
+                "text": "own 46 m"
+              },
+              {
+                "name": "Puck distance indicator",
+                "position": "bottom center inside player ring",
+                "legible": true,
+                "text": "14 m"
+              },
+              {
+                "name": "Controls bar",
+                "position": "bottom full width",
+                "legible": true,
+                "text": "SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC"
+              },
+              {
+                "name": "Ready callout prompt",
+                "position": "bottom left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              }
+            ],
+            "collisions": [
+              "Opponent net marker (66 m) sits directly above the far orange figure.",
+              "Scoreboard center timer panel is completely empty."
+            ],
+            "missing": [
+              "Active match clock or period countdown in scoreboard center.",
+              "Direct highlighting of the puck location on the ice."
+            ],
+            "smallest_text_px": 11,
+            "legibility": 3
+          },
+          {
+            "label": "Still F",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Opponent net distance marker",
+                "position": "upper center above net",
+                "legible": true,
+                "text": "7 m"
+              },
+              {
+                "name": "Own net distance marker",
+                "position": "mid-left edge",
+                "legible": true,
+                "text": "own 105 m"
+              },
+              {
+                "name": "Puck distance indicator",
+                "position": "bottom center inside player ring",
+                "legible": true,
+                "text": "21 m"
+              },
+              {
+                "name": "Ready callout prompt",
+                "position": "bottom left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              }
+            ],
+            "collisions": [
+              "Opponent net marker (7 m) sits directly over the back dasher board rail.",
+              "Puck distance indicator overlaps the lower edge of the blue player circle."
+            ],
+            "missing": [
+              "Timer value inside the center scoreboard plate.",
+              "Main controls reference bar."
+            ],
+            "smallest_text_px": 11,
+            "legibility": 3
+          }
+        ]
+      },
+      "markdown": "**eyes/hud** A=hockey.arena.large-l2-cardmove-card.jpg B=hockey.arena.large-l2-cardmove-faceoff.jpg C=hockey.arena.large-l2-cardmove-farnet.jpg D=hockey.boost-l3-cardmove-card.jpg E=hockey.boost-l3-cardmove-faceoff.jpg F=hockey.boost-l3-cardmove-farnet.jpg (gemini-3.8-flash, in 16563 out 6099 tokens, ~$0.0353, 41.9 s, 1 retry)\n- stills:\n  - label: Still A; smallest_text_px: 11; legibility: 4\n    - elements:\n      - name: Scoreboard; position: top center; legible: true; text: 00 PERIOD 1 3:00 00\n      - name: Match announcement banner; position: upper center below scoreboard; legible: true; text: MATCH 1 PERIOD 1 - FACEOFF\n      - name: Own net distance marker; position: mid-left edge; legible: true; text: own 46 m\n      - name: Player ring and tag; position: bottom center around player figure; legible: true; text: YOU\n      - name: Faceoff countdown reticle; position: bottom center right of player; legible: true; text: 1 HOLD\n      - name: Speech bubble hint; position: bottom center right below reticle; legible: true; text: press shoot at the drop, not before\n      - name: Speech bubble narration; position: bottom center below player ring; legible: true; text: Welcome to the rink: blue against orange, first period.\n      - name: Controls bar; position: bottom full width; legible: true; text: SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC\n      - name: Ready callout prompt; position: bottom left corner; legible: true; text: ESC / START CALL READY\n    - collisions: Match announcement banner covers part of the opposing center skater figure.; Player ring overlaps bottom edge of player skates and ice decal.; Narrative speech bubble nearly touches the controls bar.\n    - missing: Clear indicator showing which side player is attacking.; Explicit indication of teammate and opponent control status.\n  - label: Still B; smallest_text_px: 11; legibility: 4\n    - elements:\n      - name: Scoreboard; position: top center; legible: true; text: 00 PERIOD 1 2:56 00\n      - name: Opponent net distance marker; position: top center below scoreboard; legible: true; text: 66 m\n      - name: Own net distance marker; position: mid-left edge; legible: true; text: own 46 m\n      - name: Puck distance indicator; position: bottom center inside player ring; legible: true; text: 14 m\n      - name: Controls bar; position: bottom full width; legible: true; text: SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC\n      - name: Ready callout prompt; position: bottom left corner; legible: true; text: ESC / START CALL READY\n    - collisions: Opponent net marker (66 m) sits directly above the far orange figure and red net.; Puck distance indicator sits very close to player skates.\n    - missing: Clear visual tracking marker on the distant loose puck.; Sprint or stamina meter.\n  - label: Still C; smallest_text_px: 12; legibility: 4\n    - elements:\n      - name: Scoreboard; position: top center; legible: true; text: 00 PERIOD 1 2:47 00\n      - name: Opponent net distance marker; position: upper center above net; legible: true; text: 9 m\n      - name: Own net distance marker; position: mid-left edge; legible: true; text: own 103 m\n      - name: Puck distance indicator; position: bottom center inside player ring; legible: true; text: 20 m\n      - name: Speech bubble narration; position: bottom center below player ring; legible: true; text: Long carry up the ice.\n      - name: Controls bar; position: bottom full width; legible: true; text: ESC / START CALL READY\n    - collisions: Opponent net marker (9 m) sits directly on the glass railing above the net.; Puck indicator sits overlapping the player ring border.\n    - missing: Puck indicator cue on the puck itself which is off-screen or hidden.; Full controls reminder strip.\n  - label: Still D; smallest_text_px: 11; legibility: 3\n    - elements:\n      - name: Scoreboard; position: top center; legible: true; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Match announcement banner; position: upper center below scoreboard; legible: true; text: MATCH 1 PERIOD 1 - FACEOFF\n      - name: Own net distance marker; position: mid-left edge; legible: true; text: own 46 m\n      - name: Player ring and tag; position: bottom center around player figure; legible: true; text: YOU\n      - name: Faceoff countdown reticle; position: bottom center right of player; legible: true; text: 1 HOLD\n      - name: Speech bubble hint; position: bottom center right below reticle; legible: true; text: press shoot at the drop, not before\n      - name: Speech bubble narration; position: bottom center below player ring; legible: true; text: Lights are up, the ice is fresh. First period is under way.\n      - name: Controls bar; position: bottom full width; legible: true; text: SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC\n      - name: Ready callout prompt; position: bottom left corner; legible: true; text: ESC / START CALL READY\n    - collisions: Match announcement banner covers the upper torso of the opposing center skater.; Scoreboard timer area is blank black space with rule text crammed into the header.\n    - missing: Active game timer clock numbers.; Explicit indicator showing which team is blue vs orange.\n  - label: Still E; smallest_text_px: 11; legibility: 3\n    - elements:\n      - name: Scoreboard; position: top center; legible: true; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Opponent net distance marker; position: top center below scoreboard; legible: true; text: 66 m\n      - name: Own net distance marker; position: mid-left edge; legible: true; text: own 46 m\n      - name: Puck distance indicator; position: bottom center inside player ring; legible: true; text: 14 m\n      - name: Controls bar; position: bottom full width; legible: true; text: SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC\n      - name: Ready callout prompt; position: bottom left corner; legible: true; text: ESC / START CALL READY\n    - collisions: Opponent net marker (66 m) sits directly above the far orange figure.; Scoreboard center timer panel is completely empty.\n    - missing: Active match clock or period countdown in scoreboard center.; Direct highlighting of the puck location on the ice.\n  - label: Still F; smallest_text_px: 11; legibility: 3\n    - elements:\n      - name: Scoreboard; position: top center; legible: true; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Opponent net distance marker; position: upper center above net; legible: true; text: 7 m\n      - name: Own net distance marker; position: mid-left edge; legible: true; text: own 105 m\n      - name: Puck distance indicator; position: bottom center inside player ring; legible: true; text: 21 m\n      - name: Ready callout prompt; position: bottom left corner; legible: true; text: ESC / START CALL READY\n    - collisions: Opponent net marker (7 m) sits directly over the back dasher board rail.; Puck distance indicator overlaps the lower edge of the blue player circle.\n    - missing: Timer value inside the center scoreboard plate.; Main controls reference bar."
+    }
+  ]
+}

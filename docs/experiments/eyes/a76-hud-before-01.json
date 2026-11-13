@@ -1,0 +1,413 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "hud",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T11:27:38.449Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "hud",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a76/hockey.arena.large-l2-before-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/a76/hockey.arena.large-l2-before-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/a76/hockey.arena.large-l2-before-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/a76/hockey.boost-l3-before-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/a76/hockey.boost-l3-before-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "F",
+          "path": "docs/experiments/img/a76/hockey.boost-l3-before-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2614,
+      "usage": {
+        "prompt": 16536,
+        "output": 6294,
+        "thoughts": 0,
+        "total": 22830,
+        "calls": 2
+      },
+      "cost_usd_est": 0.036,
+      "ms": 46301,
+      "retried": true,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A (hockey.arena.large-l2-before-card.jpg)",
+            "elements": [
+              {
+                "name": "Scoreboard / Timer",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1 3:00 00"
+              },
+              {
+                "name": "Match Announcement Card",
+                "position": "center upper midground",
+                "legible": true,
+                "text": "MATCH 1 PERIOD 1 - FACEOFF"
+              },
+              {
+                "name": "Faceoff Reticle / Countdown",
+                "position": "lower right of center player",
+                "legible": true,
+                "text": "1 HOLD"
+              },
+              {
+                "name": "Player Ring Label",
+                "position": "overlapping player feet",
+                "legible": true,
+                "text": "YOU"
+              },
+              {
+                "name": "Faceoff Instruction Bubble",
+                "position": "bottom right of player ring",
+                "legible": true,
+                "text": "press shoot at the drop, not before"
+              },
+              {
+                "name": "Commentary Banner",
+                "position": "bottom center-left",
+                "legible": true,
+                "text": "Good evening from the rink. Let us see what these two can do."
+              },
+              {
+                "name": "Controls Strip",
+                "position": "bottom screen bar",
+                "legible": true,
+                "text": "SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC"
+              },
+              {
+                "name": "Ready Prompt",
+                "position": "bottom left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              },
+              {
+                "name": "Own Goal Distance Marker",
+                "position": "middle left edge",
+                "legible": false,
+                "text": "< > own 46 m"
+              }
+            ],
+            "collisions": [
+              "Match announcement card directly covers the opposing center player and faceoff dot.",
+              "'YOU' label directly overlaps the skater's lower body and skates.",
+              "Commentary box sits uncomfortably close to both player ring and bottom control strip."
+            ],
+            "missing": [
+              "Clear visual indicator of which team's net you are defending versus attacking.",
+              "Visual highlight connecting the player ring colour to the scoreboard side."
+            ],
+            "smallest_text_px": 12,
+            "legibility": 3
+          },
+          {
+            "label": "Still B (hockey.arena.large-l2-before-faceoff.jpg)",
+            "elements": [
+              {
+                "name": "Scoreboard / Timer",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1 2:56 00"
+              },
+              {
+                "name": "Far Net Distance Marker",
+                "position": "top center, below scoreboard",
+                "legible": true,
+                "text": "66 m"
+              },
+              {
+                "name": "Puck Distance Indicator",
+                "position": "bottom inside player ring",
+                "legible": true,
+                "text": "13 m"
+              },
+              {
+                "name": "Own Goal Distance Marker",
+                "position": "middle left edge",
+                "legible": false,
+                "text": "< > own 46 m"
+              },
+              {
+                "name": "Controls Strip",
+                "position": "bottom screen bar",
+                "legible": true,
+                "text": "SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC"
+              },
+              {
+                "name": "Ready Prompt",
+                "position": "bottom left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              }
+            ],
+            "collisions": [
+              "Far net marker directly occludes the far red goal net and goalie/defending figure.",
+              "Puck distance indicator clips the bottom edge of the player selection ring."
+            ],
+            "missing": [
+              "Clear indicator for current puck possession state.",
+              "Definite visual team attribution for score blocks."
+            ],
+            "smallest_text_px": 12,
+            "legibility": 4
+          },
+          {
+            "label": "Still C (hockey.arena.large-l2-before-farnet.jpg)",
+            "elements": [
+              {
+                "name": "Scoreboard / Timer",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1 2:47 00"
+              },
+              {
+                "name": "Far Net Distance Marker",
+                "position": "top center boards",
+                "legible": true,
+                "text": "7 m"
+              },
+              {
+                "name": "Puck Distance Indicator",
+                "position": "bottom inside player ring",
+                "legible": true,
+                "text": "22 m"
+              },
+              {
+                "name": "Own Goal Distance Marker",
+                "position": "middle left edge",
+                "legible": false,
+                "text": "< > own 105 m"
+              },
+              {
+                "name": "Commentary Banner",
+                "position": "bottom center-right",
+                "legible": true,
+                "text": "Long carry up the ice."
+              },
+              {
+                "name": "Ready Prompt",
+                "position": "bottom left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              }
+            ],
+            "collisions": [
+              "Puck distance indicator overlaps the bottom boundary of the blue selection ring.",
+              "Commentary banner crowds the player ring boundary."
+            ],
+            "missing": [
+              "Stamina or sprint resource bar.",
+              "Targeting reticle or shot power meter for approaching the net."
+            ],
+            "smallest_text_px": 12,
+            "legibility": 4
+          },
+          {
+            "label": "Still D (hockey.boost-l3-before-card.jpg)",
+            "elements": [
+              {
+                "name": "Scoreboard / Target Goal Header",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Match Announcement Card",
+                "position": "center upper midground",
+                "legible": true,
+                "text": "MATCH 1 PERIOD 1 - FACEOFF"
+              },
+              {
+                "name": "Faceoff Reticle / Countdown",
+                "position": "lower right of center player",
+                "legible": true,
+                "text": "1 HOLD"
+              },
+              {
+                "name": "Player Ring Label",
+                "position": "overlapping player feet",
+                "legible": true,
+                "text": "YOU"
+              },
+              {
+                "name": "Faceoff Instruction Bubble",
+                "position": "bottom right of player ring",
+                "legible": true,
+                "text": "press shoot at the drop, not before"
+              },
+              {
+                "name": "Commentary Banner",
+                "position": "bottom center-left",
+                "legible": true,
+                "text": "Welcome to the rink: blue against orange, first period."
+              },
+              {
+                "name": "Controls Strip",
+                "position": "bottom screen bar",
+                "legible": true,
+                "text": "SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC"
+              },
+              {
+                "name": "Ready Prompt",
+                "position": "bottom left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              },
+              {
+                "name": "Own Goal Distance Marker",
+                "position": "middle left edge",
+                "legible": false,
+                "text": "< > own 46 m"
+              }
+            ],
+            "collisions": [
+              "Announcement banner occludes opposing skater at center ice.",
+              "'YOU' text is partially occluded by skater legs and skate blades.",
+              "Scoreboard center period box contains an empty black area beneath the header text."
+            ],
+            "missing": [
+              "Clock timer display inside center scoreboard box.",
+              "Control prompt explaining what 'CALL READY' accomplishes."
+            ],
+            "smallest_text_px": 11,
+            "legibility": 3
+          },
+          {
+            "label": "Still E (hockey.boost-l3-before-faceoff.jpg)",
+            "elements": [
+              {
+                "name": "Scoreboard / Target Goal Header",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Far Net Distance Marker",
+                "position": "top center, below scoreboard",
+                "legible": true,
+                "text": "66 m"
+              },
+              {
+                "name": "Puck Distance Indicator",
+                "position": "bottom inside player ring",
+                "legible": true,
+                "text": "13 m"
+              },
+              {
+                "name": "Own Goal Distance Marker",
+                "position": "middle left edge",
+                "legible": false,
+                "text": "< > own 46 m"
+              },
+              {
+                "name": "Controls Strip",
+                "position": "bottom screen bar",
+                "legible": true,
+                "text": "SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC"
+              },
+              {
+                "name": "Ready Prompt",
+                "position": "bottom left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              }
+            ],
+            "collisions": [
+              "Far net diamond marker and 66 m label obstruct view of opposing net and opposing skater.",
+              "Puck distance indicator clips the player ring perimeter line."
+            ],
+            "missing": [
+              "Match timer countdown or time elapsed inside the middle score plate.",
+              "Explicit indicator showing blue team controls player 7."
+            ],
+            "smallest_text_px": 11,
+            "legibility": 4
+          },
+          {
+            "label": "Still F (hockey.boost-l3-before-farnet.jpg)",
+            "elements": [
+              {
+                "name": "Scoreboard / Target Goal Header",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Far Net Distance Marker",
+                "position": "top center boards",
+                "legible": true,
+                "text": "9 m"
+              },
+              {
+                "name": "Puck Distance Indicator",
+                "position": "bottom inside player ring",
+                "legible": true,
+                "text": "21 m"
+              },
+              {
+                "name": "Own Goal Distance Marker",
+                "position": "middle left edge",
+                "legible": false,
+                "text": "< > own 103 m"
+              },
+              {
+                "name": "Commentary Banner",
+                "position": "bottom center-right",
+                "legible": true,
+                "text": "Long carry up the ice."
+              },
+              {
+                "name": "Ready Prompt",
+                "position": "bottom left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              }
+            ],
+            "collisions": [
+              "Distance indicator overlaps blue circular selection ring under skater.",
+              "Commentary text card sits very close to player selection ring."
+            ],
+            "missing": [
+              "Puck tracking highlight on ice surface (puck is off-screen).",
+              "Active game clock or period score progression indicator."
+            ],
+            "smallest_text_px": 11,
+            "legibility": 4
+          }
+        ]
+      },
+      "markdown": "**eyes/hud** A=hockey.arena.large-l2-before-card.jpg B=hockey.arena.large-l2-before-faceoff.jpg C=hockey.arena.large-l2-before-farnet.jpg D=hockey.boost-l3-before-card.jpg E=hockey.boost-l3-before-faceoff.jpg F=hockey.boost-l3-before-farnet.jpg (gemini-3.8-flash, in 16536 out 6294 tokens, ~$0.0360, 46.3 s, 1 retry)\n- stills:\n  - label: Still A (hockey.arena.large-l2-before-card.jpg); smallest_text_px: 12; legibility: 3\n    - elements:\n      - name: Scoreboard / Timer; position: top center; legible: true; text: 00 PERIOD 1 3:00 00\n      - name: Match Announcement Card; position: center upper midground; legible: true; text: MATCH 1 PERIOD 1 - FACEOFF\n      - name: Faceoff Reticle / Countdown; position: lower right of center player; legible: true; text: 1 HOLD\n      - name: Player Ring Label; position: overlapping player feet; legible: true; text: YOU\n      - name: Faceoff Instruction Bubble; position: bottom right of player ring; legible: true; text: press shoot at the drop, not before\n      - name: Commentary Banner; position: bottom center-left; legible: true; text: Good evening from the rink. Let us see what these two can do.\n      - name: Controls Strip; position: bottom screen bar; legible: true; text: SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC\n      - name: Ready Prompt; position: bottom left corner; legible: true; text: ESC / START CALL READY\n      - name: Own Goal Distance Marker; position: middle left edge; legible: false; text: < > own 46 m\n    - collisions: Match announcement card directly covers the opposing center player and faceoff dot.; 'YOU' label directly overlaps the skater's lower body and skates.; Commentary box sits uncomfortably close to both player ring and bottom control strip.\n    - missing: Clear visual indicator of which team's net you are defending versus attacking.; Visual highlight connecting the player ring colour to the scoreboard side.\n  - label: Still B (hockey.arena.large-l2-before-faceoff.jpg); smallest_text_px: 12; legibility: 4\n    - elements:\n      - name: Scoreboard / Timer; position: top center; legible: true; text: 00 PERIOD 1 2:56 00\n      - name: Far Net Distance Marker; position: top center, below scoreboard; legible: true; text: 66 m\n      - name: Puck Distance Indicator; position: bottom inside player ring; legible: true; text: 13 m\n      - name: Own Goal Distance Marker; position: middle left edge; legible: false; text: < > own 46 m\n      - name: Controls Strip; position: bottom screen bar; legible: true; text: SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC\n      - name: Ready Prompt; position: bottom left corner; legible: true; text: ESC / START CALL READY\n    - collisions: Far net marker directly occludes the far red goal net and goalie/defending figure.; Puck distance indicator clips the bottom edge of the player selection ring.\n    - missing: Clear indicator for current puck possession state.; Definite visual team attribution for score blocks.\n  - label: Still C (hockey.arena.large-l2-before-farnet.jpg); smallest_text_px: 12; legibility: 4\n    - elements:\n      - name: Scoreboard / Timer; position: top center; legible: true; text: 00 PERIOD 1 2:47 00\n      - name: Far Net Distance Marker; position: top center boards; legible: true; text: 7 m\n      - name: Puck Distance Indicator; position: bottom inside player ring; legible: true; text: 22 m\n      - name: Own Goal Distance Marker; position: middle left edge; legible: false; text: < > own 105 m\n      - name: Commentary Banner; position: bottom center-right; legible: true; text: Long carry up the ice.\n      - name: Ready Prompt; position: bottom left corner; legible: true; text: ESC / START CALL READY\n    - collisions: Puck distance indicator overlaps the bottom boundary of the blue selection ring.; Commentary banner crowds the player ring boundary.\n    - missing: Stamina or sprint resource bar.; Targeting reticle or shot power meter for approaching the net.\n  - label: Still D (hockey.boost-l3-before-card.jpg); smallest_text_px: 11; legibility: 3\n    - elements:\n      - name: Scoreboard / Target Goal Header; position: top center; legible: true; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Match Announcement Card; position: center upper midground; legible: true; text: MATCH 1 PERIOD 1 - FACEOFF\n      - name: Faceoff Reticle / Countdown; position: lower right of center player; legible: true; text: 1 HOLD\n      - name: Player Ring Label; position: overlapping player feet; legible: true; text: YOU\n      - name: Faceoff Instruction Bubble; position: bottom right of player ring; legible: true; text: press shoot at the drop, not before\n      - name: Commentary Banner; position: bottom center-left; legible: true; text: Welcome to the rink: blue against orange, first period.\n      - name: Controls Strip; position: bottom screen bar; legible: true; text: SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC\n      - name: Ready Prompt; position: bottom left corner; legible: true; text: ESC / START CALL READY\n      - name: Own Goal Distance Marker; position: middle left edge; legible: false; text: < > own 46 m\n    - collisions: Announcement banner occludes opposing skater at center ice.; 'YOU' text is partially occluded by skater legs and skate blades.; Scoreboard center period box contains an empty black area beneath the header text.\n    - missing: Clock timer display inside center scoreboard box.; Control prompt explaining what 'CALL READY' accomplishes.\n  - label: Still E (hockey.boost-l3-before-faceoff.jpg); smallest_text_px: 11; legibility: 4\n    - elements:\n      - name: Scoreboard / Target Goal Header; position: top center; legible: true; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Far Net Distance Marker; position: top center, below scoreboard; legible: true; text: 66 m\n      - name: Puck Distance Indicator; position: bottom inside player ring; legible: true; text: 13 m\n      - name: Own Goal Distance Marker; position: middle left edge; legible: false; text: < > own 46 m\n      - name: Controls Strip; position: bottom screen bar; legible: true; text: SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC\n      - name: Ready Prompt; position: bottom left corner; legible: true; text: ESC / START CALL READY\n    - collisions: Far net diamond marker and 66 m label obstruct view of opposing net and opposing skater.; Puck distance indicator clips the player ring perimeter line.\n    - missing: Match timer countdown or time elapsed inside the middle score plate.; Explicit indicator showing blue team controls player 7.\n  - label: Still F (hockey.boost-l3-before-farnet.jpg); smallest_text_px: 11; legibility: 4\n    - elements:\n      - name: Scoreboard / Target Goal Header; position: top center; legible: true; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Far Net Distance Marker; position: top center boards; legible: true; text: 9 m\n      - name: Puck Distance Indicator; position: bottom inside player ring; legible: true; text: 21 m\n      - name: Own Goal Distance Marker; position: middle left edge; legible: false; text: < > own 103 m\n      - name: Commentary Banner; position: bottom center-right; legible: true; text: Long carry up the ice.\n      - name: Ready Prompt; position: bottom left corner; legible: true; text: ESC / START CALL READY\n    - collisions: Distance indicator overlaps blue circular selection ring under skater.; Commentary text card sits very close to player selection ring.\n    - missing: Puck tracking highlight on ice surface (puck is off-screen).; Active game clock or period score progression indicator."
+    }
+  ]
+}

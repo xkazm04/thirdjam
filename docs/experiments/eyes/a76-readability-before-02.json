@@ -1,0 +1,109 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "readability",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T11:29:15.202Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "readability",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a76/mode.marathon-l2-before-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/a76/mode.marathon-l2-before-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "distance": 6,
+      "thumbnails": [],
+      "prompt_chars": 2770,
+      "usage": {
+        "prompt": 3065,
+        "output": 728,
+        "thoughts": 0,
+        "total": 3793,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00503,
+      "ms": 7784,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A: mode.marathon-l2-before-faceoff.jpg",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "Not visible on the ice surface or near any skater."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "Not visible because no skater possesses a puck."
+              },
+              "team_colours": {
+                "score": 3,
+                "evidence": "The foreground skater wears bright azure blue, while a tiny orange figure is visible far up the ice at center, though only about 12 pixels tall."
+              },
+              "far_net": {
+                "score": 2,
+                "evidence": "A tiny sliver of a red bar is barely discernible under the distant 88 m HUD marker, spanning roughly 20 pixels wide against the yellow boards."
+              },
+              "zone_strips": {
+                "score": 4,
+                "evidence": "A thin dark-red line spans horizontally across the mid-ice with a large blue center circle clearly visible across several hundred pixels."
+              }
+            },
+            "first_look": "Foreground blue skater ringed by a bold blue circle",
+            "noise": [
+              "Concentric circular light patterns across the ice surface",
+              "Dense keyboard control prompt bar across the bottom",
+              "High-contrast top scoreboard boxes"
+            ],
+            "overall": 2
+          },
+          {
+            "label": "Still B: mode.marathon-l2-before-farnet.jpg",
+            "elements": {
+              "puck": {
+                "score": 4,
+                "evidence": "Visible at the bottom right corner near the stick blade of the orange skater, highlighted with a bright pale-yellow glowing patch measuring roughly 40 pixels across."
+              },
+              "carrier": {
+                "score": 4,
+                "evidence": "The orange skater on the far right has a white selection ring underfoot, a stick touching the glowing puck, and an adjacent '6 m' distance marker."
+              },
+              "team_colours": {
+                "score": 5,
+                "evidence": "Skaters clearly display vivid bright cyan-blue and saturated warm orange jerseys with black cel-shaded outlines across 5 visible figures."
+              },
+              "far_net": {
+                "score": 4,
+                "evidence": "A bright red goal frame measuring roughly 100 pixels wide sits centrally near the upper boards directly below the 14 m HUD indicator."
+              },
+              "zone_strips": {
+                "score": 2,
+                "evidence": "Red goal crease and end-zone faceoff circles are visible, but the primary blue/red cross-rink zone dividing lines are not in frame."
+              }
+            },
+            "first_look": "Cluster of blue and orange skaters on the right side",
+            "noise": [
+              "Bright yellow trim along the dasher boards",
+              "HUD distance tags cluttering the ice view near players"
+            ],
+            "overall": 4
+          }
+        ]
+      },
+      "markdown": "**eyes/readability** A=mode.marathon-l2-before-faceoff.jpg B=mode.marathon-l2-before-farnet.jpg at 6 m (gemini-3.8-flash, in 3065 out 728 tokens, ~$0.0050, 7.8 s)\n- stills:\n  - label: Still A: mode.marathon-l2-before-faceoff.jpg; first_look: Foreground blue skater ringed by a bold blue circle; overall: 2\n    - elements:\n      - puck: score 1, evidence Not visible on the ice surface or near any skater.\n      - carrier: score 1, evidence Not visible because no skater possesses a puck.\n      - team_colours: score 3, evidence The foreground skater wears bright azure blue, while a tiny orange figure is visible far up the ice at center, though only about 12 pixels tall.\n      - far_net: score 2, evidence A tiny sliver of a red bar is barely discernible under the distant 88 m HUD marker, spanning roughly 20 pixels wide against the yellow boards.\n      - zone_strips: score 4, evidence A thin dark-red line spans horizontally across the mid-ice with a large blue center circle clearly visible across several hundred pixels.\n    - noise: Concentric circular light patterns across the ice surface; Dense keyboard control prompt bar across the bottom; High-contrast top scoreboard boxes\n  - label: Still B: mode.marathon-l2-before-farnet.jpg; first_look: Cluster of blue and orange skaters on the right side; overall: 4\n    - elements:\n      - puck: score 4, evidence Visible at the bottom right corner near the stick blade of the orange skater, highlighted with a bright pale-yellow glowing patch measuring roughly 40 pixels across.\n      - carrier: score 4, evidence The orange skater on the far right has a white selection ring underfoot, a stick touching the glowing puck, and an adjacent '6 m' distance marker.\n      - team_colours: score 5, evidence Skaters clearly display vivid bright cyan-blue and saturated warm orange jerseys with black cel-shaded outlines across 5 visible figures.\n      - far_net: score 4, evidence A bright red goal frame measuring roughly 100 pixels wide sits centrally near the upper boards directly below the 14 m HUD indicator.\n      - zone_strips: score 2, evidence Red goal crease and end-zone faceoff circles are visible, but the primary blue/red cross-rink zone dividing lines are not in frame.\n    - noise: Bright yellow trim along the dasher boards; HUD distance tags cluttering the ice view near players"
+    }
+  ]
+}
