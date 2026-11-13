@@ -480,3 +480,23 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - Running: SK10 (port 8000, `wt/b-vfx`): every file under `Skaters/` that changed on `dev-b-a45` **except the Blueprints** (144 takes, the felt clay meshes,
   materials, maps) checked against the v3 Blueprints in a real match; if it holds it goes to `dev-b`, and the faceoff stance and felt figures reach `main`
   without waiting for the v4 landing. The landing rule of H23.6 does not change (the branch stays a superset).
+
+## H27.7 (09:46, 13 Nov) FOR THE DIRECTOR: the operator made tackling the key feature; handoff 0036
+- The operator at 09:43: tackling a player to the ground, colliding, the fall and the get-up are "key for the game"; he asked B whether the scripted clay figure
+  and the P4 figure can get there in two days, otherwise the work goes into the scripted (modelled) figure only. B's answer to him: the scripted figure on
+  night and clay is one body with one take set, so yes for both; the P4 figure and the generated figures no (retargeting per change). His confirmation is open.
+- **Handoff B-to-A-0036**: land C-0001 v4 now (standing hits, board hits, pins and stick hits show nothing until then), the down skater slides on, the
+  check's contact frame, hit-stop and a camera kick.
+- Running: SKF11 (Blender: the knockdowns, falls, get-ups and check delivery reworked for the game camera and for 90 knockdown frames without speed-up),
+  SK10 (port 8000), B27 (clay pass 7, port 8002).
+
+## H27.8 (09:47, 13 Nov) FOR THE DIRECTOR: the operator's decisions of this morning: P4 out, the scripted figure on clay, calm ice
+- **P4 is out of the plan** (the operator: "I would agree to put P4 away from plan"). B stops the P4 lab and the P4 figure; `p4_broadcast`, `LR_P4_Broadcast`,
+  `Look/P4Lab/**` and `BP_SkaterVisual_P4Lab` stay in the repository unshipped (`shipped` n) and untouched. Two days go to `p3_clay` and `l2_night`.
+- **The clay tier's figure is the scripted one** ("for P3 I will listen your recommendation for Manual x Scripted skaters"; B recommends the scripted figure:
+  it is the default `humanoid_b1`, the game already selects `BP_SkaterVisual_TB1_P3` on `p3_clay`, and it shares the night figure's take set, so the
+  tackling work reaches both). Nothing for A to change. `generated_b2` stays selectable and frozen.
+- **The clay tier's light** (the operator on pass 6: "night arena small lights are too distracting on the ice, we will need larger reflectors with more subtle
+  effect to keep visibility but not complicating the gameplay experience"): lane B27 is redirected: no per-bulb reflections on the playing surface, a few
+  large lamps with one broad soft sheen each, even light into the corners, the puck and figures the most contrasted things on the ice. B read "night arena"
+  as the dark clay barn he was shown; if he meant `l2_night` as well, B applies the same rule there.

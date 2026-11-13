@@ -1,12 +1,14 @@
 # Device B lane board (the lead rewrites this file whenever a lane starts or reports)
 
-Updated 2026-11-13 09:36 CEST (H27.6; device B slept from 05:20 to 09:30).
+Updated 2026-11-13 09:47 CEST (H27.8). The operator this morning: tackling (knock down, collide, fall, get up) is the key feature; P4 is out of the plan; the scripted figure on clay; calm ice on clay.
 
 ## Running
 
 | Lane | What | Editor | Started | Due | Report (when done) |
 |---|---|---|---|---|---|
-| SK10 | The night's figure work that does not depend on C-0001 v4 (the 144 takes with the ready and faceoff stance, the felt-and-stitch clay meshes, materials and maps: every changed file under `Skaters/` except the Blueprints) checked on `dev-b` with the v3 Blueprints in a real match, so it reaches `main` without waiting for the landing | 8000, `wt/b-vfx` | 09:40 | 10:40 | `status/SK10-report.md` |
+| SK10 | The night's figure work that does not depend on C-0001 v4 (the 144 takes with the ready and faceoff stance, the felt-and-stitch clay meshes, materials and maps: every changed file under `Skaters/` except the Blueprints) checked on `dev-b` with the v3 Blueprints in a real match, so it reaches `main` without waiting for the landing | 8000, `wt/b-vfx` | 09:36 | 10:40 | `status/SK10-report.md` |
+| B27 | Clay tier pass 7, redirected by the operator at 09:46 ("small lights are too distracting on the ice, we will need larger reflectors with more subtle effect"): calm ice (no per-bulb reflections on the playing surface), a few large lamps with one broad soft sheen each, even light into the corners, the ice's own colour cool and pale, puck and figure contrast measured | 8002, the main tree (**no merges into `C:/Users/kazda/jam/thirdjam` while it runs**) | 09:37 | 11:10 | `status/B27-report.md` |
+| SKF11 | Blender, the scripted family (night and clay styles): the tackling takes (knockdowns, falls, get-ups, check delivery, standing hits) shown as strips at the game camera, then reworked to read small and to fit 90 knockdown frames without speed-up; same names and bones (animation-only re-import) | none | 09:45 | 11:30 | `status/B-skater-skf.md`, eleventh pass |
 
 ## Waiting for the operator's ears or eyes (pages on device B)
 
