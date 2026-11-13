@@ -261,6 +261,22 @@ int64 UJamSignalSystem::CurrentFrame() const
 	return Sim ? Sim->GetFrame() : Frame;
 }
 
+int32 UJamSignalSystem::AnswererFor(const UJamSim& Sim, int32 Seat)
+{
+	// The nearest bot teammate to the seat: the one that answers (and the target of praise and pass). Lane A129: never the other human (online both seats are).
+	const TArray<FJamSkaterState>& Skaters = Sim.GetSkaters();
+	if (!Skaters.IsValidIndex(Seat)) return -1;
+	int32 Nearest = -1;
+	double BestD = 1e30;
+	for (const FJamSkaterState& S : Skaters)
+	{
+		if (S.Index == Seat || S.bHuman || S.Team != Skaters[Seat].Team) continue;
+		const double D = FVector2D::DistSquared(S.Pos, Skaters[Seat].Pos);
+		if (D < BestD) { BestD = D; Nearest = S.Index; }
+	}
+	return Nearest;
+}
+
 bool UJamSignalSystem::GetActiveIntent(FJamTeamIntent& Out) const
 {
 	if (!Last.IsActive(CurrentFrame())) return false;
@@ -277,18 +293,10 @@ bool UJamSignalSystem::Issue(EJamTeamIntent Intent)
 	if (!Sim || Sim->GetPhase() != EJamSimPhase::Playing) return false;
 	const int64 Now = Sim->GetFrame();
 	if (Last.Intent != EJamTeamIntent::None && Now - Last.IssuedFrame < JamSignals::RepeatCooldownFrames) return false;
-	const int32 Human = Sim->GetHumanIndex();
-	const TArray<FJamSkaterState>& Skaters = Sim->GetSkaters();
-	if (!Skaters.IsValidIndex(Human)) return false;
-	// The nearest bot teammate to the human: the one that answers (and the target of praise and pass).
-	int32 Nearest = -1;
-	double BestD = 1e30;
-	for (const FJamSkaterState& S : Skaters)
-	{
-		if (S.Index == Human || S.Team != Skaters[Human].Team) continue;
-		const double D = FVector2D::DistSquared(S.Pos, Skaters[Human].Pos);
-		if (D < BestD) { BestD = D; Nearest = S.Index; }
-	}
+	// Lane A129 (track Q1): the local seat signals (the guest's on the guest's machine); was always the sim's human (the host's).
+	const int32 Human = GM->GetLocalSeat();
+	if (!Sim->GetSkaters().IsValidIndex(Human)) return false;
+	const int32 Nearest = AnswererFor(*Sim, Human);
 	if (Nearest < 0) return false;
 	const int32 Target = (Intent == EJamTeamIntent::Praise || Intent == EJamTeamIntent::Pass) ? Nearest : -1;
 	Last = Make(Intent, Now, Human, Target);
@@ -303,7 +311,7 @@ bool UJamSignalSystem::Issue(EJamTeamIntent Intent)
 			{
 				FJamEventPayload P;
 				P.Who = Human;
-				P.Where = UJamSim::ToWorld(Skaters[Human].Pos);
+				P.Where = UJamSim::ToWorld(Sim->GetSkaters()[Human].Pos);
 				P.Strength = FMath::Clamp(Last.Frames / 600.f, 0.f, 1.f);
 				P.Kind = FJamTeamIntent::NameOf(Intent);
 				Bus->Broadcast(JamSignals::BusEvent, P);

@@ -128,6 +128,17 @@ JAMNET_API void JamNetWriteRefuse(TArray<uint8>& Out);
 // True for a REFUSE of any version; OutHostVersion = the version of the build that sent it.
 JAMNET_API bool JamNetReadRefuse(const TArray<uint8>& Bytes, int32& OutHostVersion);
 
+// Lane A129 (track Q1): FJamPlaytester's F (lane A84's rule), shared by the soak and the lobby's scripted seat (jam.net.ScriptPlayer).
+JAMNET_API bool JamNetPlaytesterAbility(const UJamSim& Sim, int32 Seat, const FJamInput& In);
+
+// Lane A129 (track Q1): the rematch from the win / lose card, carried as lockstep input with no new wire field. While the sim is Over, a seat that wants the
+// rematch holds brake + pass held + shoot held (three levels no seat holds together in play); the frame both seats' applied inputs hold it, both machines restart.
+namespace JamNet
+{
+	inline void SetRematchReady(FJamInput& In) { In = FJamInput(); In.bBrake = true; In.bPassHeld = true; In.bShootHeld = true; }
+	inline bool IsRematchReady(const FJamInput& In) { return In.bBrake && In.bPassHeld && In.bShootHeld; }
+}
+
 // FNV-1a 64 over bytes (the cartridge hash in WELCOME).
 JAMNET_API uint64 JamNetFnv64(const TArray<uint8>& Bytes);
 

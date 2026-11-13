@@ -320,6 +320,46 @@ FJamInput FJamNetScriptedHuman::ThinkBase(const UJamSim& Sim, int32 Me)
 	return In;
 }
 
+// Lane A104 (moved here by lane A129 from Bar.Net.Soak*): FJamPlaytester's F, as RunPlaytestMatch decides it (JamPlaytester.cpp, lane A84).
+bool JamNetPlaytesterAbility(const UJamSim& Sm, int32 P, const FJamInput& I)
+{
+	const FJamAbilityConfig* A = Sm.HeldAbility(P);
+	if (!A) return false;
+	const FJamSkaterState& K = Sm.GetSkaters()[P];
+	if (K.AbilityCharges == 0 || Sm.GetFrame() + 1 < K.AbilityReadyFrame || !K.AbilityArmed.IsNone() || K.ShieldFrames > 0 || !K.CanAct()) return false;
+	const bool bCarry = Sm.CarrierIndex() == P;
+	const FVector2D Fwd = K.Forward();
+	if (A->Kind == FName(TEXT("shotgun")))
+	{
+		if (!bCarry) return false;
+		if (I.bShoot || (I.bShootHeld && K.ChargeFrames == 0)) return true;
+		const FVector2D ToGoal = (FVector2D(Sm.AttackGoalX(K.Team), 0.0) - K.Pos).GetSafeNormal();
+		if (FVector2D::DotProduct(Fwd, ToGoal) < 0.7) return false;
+		for (const FJamSkaterState& O : Sm.GetSkaters())
+		{
+			if (O.Team == K.Team || O.IsDown() || O.InBox()) continue;
+			const FVector2D D = O.Pos - K.Pos;
+			const double Along = FVector2D::DotProduct(D, Fwd);
+			if (Along > 0.5 && Along < 15.0 && FMath::Abs(FVector2D::CrossProduct(Fwd, D)) <= 1.0) return true;
+		}
+		return false;
+	}
+	if (A->Kind == FName(TEXT("hip_check")))
+	{
+		if (I.bCheck) return true;
+		const int32 C = Sm.CarrierIndex();
+		return C >= 0 && Sm.GetSkaters()[C].Team != K.Team && FVector2D::Distance(Sm.GetSkaters()[C].Pos, K.Pos) <= 1.2;
+	}
+	if (A->Kind == FName(TEXT("slow_puck"))) return bCarry;
+	if (A->Kind == FName(TEXT("shield")))
+	{
+		if (!bCarry) return false;
+		const int32 O = Sm.NearestOpponent(K);
+		return O >= 0 && FVector2D::Distance(Sm.GetSkaters()[O].Pos, K.Pos) <= 4.0;
+	}
+	return false;
+}
+
 uint64 JamNetLockstepHash(const UJamSim* Sim, const UJamEffectSystem* Fx, const UJamRuleSystem* Rules, const UJamZoneSystem* Zones)
 {
 	if (!Sim) return 0;

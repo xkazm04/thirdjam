@@ -17,6 +17,7 @@
 #include "CoreMinimal.h"
 #include "HokejGameMode.h"
 #include "JamNetPackets.h"
+#include "JamPlaytester.h"
 #include "LobbyGameMode.generated.h"
 
 class UJamLobbySubsystem;
@@ -47,6 +48,15 @@ public:
 	virtual int32 GetLocalSeat() const override { return LocalIndex >= 0 ? LocalIndex : Super::GetLocalSeat(); }
 	static int32 LocalSeatOf(bool bHost, int32 HumanIndex, int32 GuestIndex) { return bHost ? HumanIndex : GuestIndex; }
 
+	// Lane A129 (track Q1): one machine's sim never changes alone. In a lockstep match a live cut (the Designer's, a Director's Call, jam.livecut), a cut
+	// load and a restart are refused with a line on screen; the rematch from the card is the lockstep one (both seats ask, both machines restart).
+	virtual bool RefuseSimChange(const TCHAR* What) override;
+	static bool LiveChangeRefused(bool bInLockstep, const TCHAR* What, FString& OutLine);
+	// Lane A129: the frame both seats' applied inputs ask for the rematch (JamNet::IsRematchReady) while the sim is Over.
+	static bool RematchAgreed(EJamSimPhase Phase, const FJamInput& L, const FJamInput& R) { return Phase == EJamSimPhase::Over && JamNet::IsRematchReady(L) && JamNet::IsRematchReady(R); }
+	UFUNCTION() void OnRematchPressed();
+	UFUNCTION(BlueprintPure, Category = "Jam|Lobby") int32 GetMatchNumber() const { return MatchNumber; }
+
 	// Lane A38: what happened in this match so far (the proof asserts a faceoff, a foul, a pickup and a rule hook occurred).
 	UFUNCTION(BlueprintPure, Category = "Jam|Lobby") int32 GetFaceoffDrops() const { return FaceoffDrops; }
 	UFUNCTION(BlueprintPure, Category = "Jam|Lobby") int32 GetFouls() const { return Fouls; }
@@ -59,6 +69,9 @@ public:
 private:
 	bool StepLockstep();
 	void GatherBotInputs();
+	void BuildBrainWorld(JamAI::FJamAIWorld& W) const;   // lane A129: the brain's and the scripted playtester's view (pickups, slow ice, no-shoot zones)
+	void RestartLockstepMatch();
+	void ShowLine(const FString& Line);
 	FJamInput ReadLocalInput();
 	uint64 LockstepHash() const;
 	void CountProofEvents();
@@ -80,6 +93,12 @@ private:
 
 	TArray<FJamInput> LockInputs;
 	FJamNetScriptedHuman Script;
+	// Lane A129: jam.net.ScriptPlayer novice|regular|good: the scripted seat is the playtester of that class (it shoots on goal); empty = A38/A120's script.
+	JamAI::FJamPlaytester Tester;
+	bool bTesterSeat = false;
+	bool bLocalRematch = false;      // this machine's seat asks for the rematch (R on the card, or the scripted seat)
+	int64 OverAtDriverFrame = -1;    // the driver frame the sim reached Over (the scripted seat asks 120 frames later)
+	int32 MatchNumber = 1;
 	// Lane A104: AHokejGameMode's A93 back-pull latch (ReadLocalInput): the camera yaw when the move input began to pull back.
 	bool bBackYawHeld = false;
 	double BackYawRad = 0.0;

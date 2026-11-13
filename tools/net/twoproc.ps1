@@ -11,6 +11,12 @@
 #   -Mode refuse                      the guest's HELLO carries protocol byte -TestVersion (another build): PASS = refused in under 1 s, the reason on its screen.
 #   -Mode hostleaves                  the host quits at -LeaveAt (says BYE): PASS = the guest's card names it; -Mode hostkilled: the host process is stopped
 #                                     at -LeaveAt seconds (no BYE): PASS = the connection-lost card. Both print the seconds to the card.
+# Lane A129 (track Q1, evolution 4):
+#   -Player good                      the scripted seat on both machines is the playtester of that class (jam.net.ScriptPlayer): it carries, charges, shoots.
+#   -Rematch                          at the end both scripted seats ask for the rematch on the card (jam.net.ProofRematch 1); PASS also needs the card line for
+#                                     each machine's own seat, the rematch started on both on the same lockstep frame with the same hash, and the proof line
+#                                     600 frames into the second match.
+#   -LiveCutAt N                      the guest tries a live cut at lockstep frame N (jam.net.TestLiveCutAt): PASS needs it refused, on its screen, hashes equal.
 # Prints PASS/FAIL lines and one JSON line last ({"tool":"thirdjam.net/1", ...}); exit 0 pass, 1 fail, 2 could not run.
 # Only the two processes this script started are ever stopped. Logs: <OutDir>\host.log, <OutDir>\guest.log.
 param(
@@ -27,6 +33,9 @@ param(
     [ValidateSet('play', 'refuse', 'hostleaves', 'hostkilled')][string]$Mode = 'play',
     [int]$TestVersion = 7,
     [int]$LeaveAt = 1200,
+    [string]$Player = '',
+    [switch]$Rematch,
+    [int]$LiveCutAt = 0,
     [string]$Project = '',
     [string]$Exe = 'C:\Program Files\Epic Games\UE_5.9\Engine\Binaries\Win64\UnrealEditor-Cmd.exe',
     [string]$OutDir = ''
@@ -44,10 +53,13 @@ $quit = $Frames
 $dp = "t.MaxFPS=60,jam.ScriptHuman=1"
 if ($Verbs) { $dp = "$dp,jam.net.ScriptVerbs=1" }
 if ($HostPort -gt 0) { $dp = "$dp,jam.net.Loopback=1" }
+if ($Player) { $dp = "$dp,jam.net.ScriptPlayer=$Player" }
+if ($Rematch) { $dp = "$dp,jam.net.ProofRematch=1" }
 if ($Cvars) { $dp = "$dp,$Cvars" }
 $hostDp = "$dp,jam.net.QuitAtFrame=$quit"
 $guestDp = "$dp,jam.net.QuitAtFrame=$quit"
 if ($Mode -eq 'hostleaves') { $hostDp = "$dp,jam.net.QuitAtFrame=$LeaveAt"; $guestDp = "$dp,jam.net.QuitAtFrame=$([math]::Max($quit, $LeaveAt * 10))" }
+if ($LiveCutAt -gt 0) { $guestDp = "$guestDp,jam.net.TestLiveCutAt=$LiveCutAt" }
 if ($Mode -eq 'refuse') { $guestDp = "$guestDp,jam.net.TestVersion=$TestVersion" }
 if ($HostPort -gt 0) { $hostDp = "$hostDp,jam.net.Port=$HostPort" }
 if ($GuestPort -gt 0) { $guestDp = "$guestDp,jam.net.Port=$GuestPort" }
@@ -156,10 +168,32 @@ if ($Mode -eq 'refuse') {
     if ($ToEnd -and -not $over) { Write-Host "FAIL the match did not reach its end within $Frames frames"; $fail = $true }
     # The guest's F counts only where the cut gives its seat an ability (shotgun, arsenal pickups, ...): hockey.regular holds none.
     if ($Verbs -and $guestAb -le 0 -and $Cut -match 'shotgun') { Write-Host "FAIL guest abilities used $guestAb (want > 0)"; $fail = $true }
+    if ($ToEnd -and $over) {
+        $hCard = Last-Match $hostLog 'JAMNET card: (WIN|LOSE)'; $gCard = Last-Match $guestLog 'JAMNET card: (WIN|LOSE)'
+        if (-not $hCard -or -not $gCard) { Write-Host "FAIL a machine showed no win / lose card: host '$hCard', guest '$gCard'"; $fail = $true }
+        elseif (($hCard -match 'WIN') -eq ($gCard -match 'WIN')) { Write-Host "FAIL both cards say the same for opposite teams: host '$hCard', guest '$gCard'"; $fail = $true }
+        else { Write-Host "PASS cards: host '$($hCard -replace '^JAMNET card: ', '')' | guest '$($gCard -replace '^JAMNET card: ', '')'" }
+        $extra.card_host = $hCard; $extra.card_guest = $gCard
+    }
+    if ($Rematch) {
+        $hR = Last-Match $hostLog 'JAMNET rematch started'; $gR = Last-Match $guestLog 'JAMNET rematch started'
+        $hRk = if ($hR -match 'lockstep frame (\d+) sim_frame=\d+ hash=([0-9a-f]+)') { "$($Matches[1])/$($Matches[2])" } else { '' }
+        $gRk = if ($gR -match 'lockstep frame (\d+) sim_frame=\d+ hash=([0-9a-f]+)') { "$($Matches[1])/$($Matches[2])" } else { '' }
+        if (-not $hRk -or $hRk -ne $gRk) { Write-Host "FAIL rematch not started on both at the same frame and hash: host '$hR', guest '$gR'"; $fail = $true }
+        else { Write-Host "PASS rematch started on both at lockstep frame/hash $hRk" }
+        $extra.rematch_host = $hR; $extra.rematch_guest = $gR
+    }
+    if ($LiveCutAt -gt 0) {
+        $lc = Last-Match $guestLog 'JAMNET test live cut'; $ls = Last-Match $guestLog 'JAMNET screen: a live cut'
+        if ($lc -notmatch 'refused' -or -not $ls) { Write-Host "FAIL the guest's live cut was not refused on screen: '$lc' '$ls'"; $fail = $true }
+        else { Write-Host "PASS live cut refused on the guest: $($ls -replace '^JAMNET screen: ', '')" }
+        $extra.live_cut = $lc
+    }
     if (-not $fail) { Write-Host ("PASS final hash {0} at f{1} equal on host and guest, {2} checkpoint lines equal, {3}, {4}s wall" -f $hFinal, $hFrame, $agree, $(if ($over) { $over } else { 'stopped at the cap' }), $wall) }
     Write-Host "INFO host:  $hostDone"
     Write-Host "INFO guest: $guestDone"
     $extra.final_frame = $hFrame; $extra.final_hash_host = $hFinal; $extra.final_hash_guest = $gFinal; $extra.agree = $agree; $extra.differ = $differ.Count
+    $extra.goals = if ($hostDone -match 'score=(\d+):(\d+)') { "$($Matches[1]):$($Matches[2])" } else { '' }
     $extra.guest_seat = $guestSeat; $extra.guest_abilities_used = $guestAb; $extra.match_over = $over
 }
 $code = 0; if ($fail) { $code = 1 }

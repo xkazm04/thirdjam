@@ -71,6 +71,8 @@ public:
 
 	// The match side reports how it ended (the subsystem keeps the link open until Leave).
 	void NotifyMatchEnded(const FString& Reason);
+	// Lane A129 (track Q1): the lockstep rematch from the card started on both machines: Ended -> InMatch.
+	void NotifyMatchRestarted() { if (State == EJamLobbyState::Ended) SetState(EJamLobbyState::InMatch); }
 
 	UPROPERTY(BlueprintAssignable, Category = "Jam|Lobby") FJamLobbyChanged OnChanged;
 

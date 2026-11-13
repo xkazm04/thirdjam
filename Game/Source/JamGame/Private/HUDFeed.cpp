@@ -24,14 +24,16 @@ void UJamPresentation::PushFrame(const FJamPresentationFrame& Frame)
 	OnSimFrame.Broadcast(Latest);
 }
 
-void UJamPresentation::BuildFrameFromSim(const UJamSim& Sim, FJamPresentationFrame& Out)
+void UJamPresentation::BuildFrameFromSim(const UJamSim& Sim, FJamPresentationFrame& Out, int32 LocalSeat)
 {
 	const FJamGameConfig& C = Sim.GetConfig();
 	Out.SimFrame = Sim.GetFrame();
 	Out.RinkLengthM = (float)C.Rink.LengthM;
 	Out.RinkWidthM = (float)C.Rink.WidthM;
-	Out.HumanIndex = Sim.GetHumanIndex();
-	const int32 HumanTeam = Sim.GetHumanTeam();
+	// Lane A129 (track Q1): the local seat's (the guest's on the guest's machine), was always the sim's human (the host's).
+	const bool bSeat = LocalSeat >= 0 && Sim.GetSkaters().IsValidIndex(LocalSeat);
+	Out.HumanIndex = bSeat ? LocalSeat : Sim.GetHumanIndex();
+	const int32 HumanTeam = bSeat ? Sim.GetSkaters()[LocalSeat].Team : Sim.GetHumanTeam();
 	Out.AttackSign = Sim.AttackGoalX(HumanTeam) >= 0.0 ? 1 : -1;
 	Out.NetInsetM = (float)(C.Rink.LengthM * 0.5 - FMath::Abs(Sim.AttackGoalX(HumanTeam)));
 	Out.Skaters.Reset();
@@ -61,10 +63,10 @@ void UJamPresentation::BuildFrameFromSim(const UJamSim& Sim, FJamPresentationFra
 	}
 }
 
-void UJamPresentation::PushFromSim(const UJamSim& Sim)
+void UJamPresentation::PushFromSim(const UJamSim& Sim, int32 LocalSeat)
 {
 	FJamPresentationFrame F;
-	BuildFrameFromSim(Sim, F);
+	BuildFrameFromSim(Sim, F, LocalSeat);
 	F.bDirectorsCallReady = Latest.bDirectorsCallReady;  // set by the Director's Call system when it exists
 	PushFrame(F);
 }

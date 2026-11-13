@@ -239,7 +239,7 @@ namespace JamAI
 			for (int i = 0; i < W.NumSkaters; ++i)
 			{
 				const FJamAISkater& S = W.Skaters[i];
-				if (i == W.PlayerIndex || S.Role != ERole::Support)
+				if (W.IsHumanSeat(i) || S.Role != ERole::Support)
 				{
 					continue;
 				}
@@ -276,7 +276,7 @@ namespace JamAI
 		const int Head = static_cast<int>(Tick % Ring);
 		for (int i = 0; i < W.NumSkaters; ++i)
 		{
-			if (i == W.PlayerIndex)
+			if (W.IsHumanSeat(i))   // lane A129: the guest's seat too
 			{
 				continue;
 			}
@@ -1291,7 +1291,7 @@ namespace JamAI
 			{
 				if (W.Skaters[i].Team != Team) { continue; }
 				++N;
-				if (Bot < 0 && i != W.PlayerIndex) { Bot = i; }
+				if (Bot < 0 && !W.IsHumanSeat(i)) { Bot = i; }
 			}
 			if (Bot < 0 || N < 5) { continue; }
 			const FJamHockeySense& H = SkillOf(W, Bot).Hk;
@@ -1328,7 +1328,7 @@ namespace JamAI
 				return Best;
 			};
 			int Count[8] = {};
-			auto Give = [&](int i, EJob J) { const int c = Count[static_cast<int>(J)]++; if (i != W.PlayerIndex) { Job[i] = J; JobOrd[i] = c; } };
+			auto Give = [&](int i, EJob J) { const int c = Count[static_cast<int>(J)]++; if (!W.IsHumanSeat(i)) { Job[i] = J; JobOrd[i] = c; } };
 			if (bAttack)
 			{
 				int& Own = Owner[Team];

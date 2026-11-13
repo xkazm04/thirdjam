@@ -177,9 +177,11 @@ public:
 
 	// Adapter for lane A1's simulation: builds the frame from UJamSim state (positions, yaw, score, timer, phase, team colours).
 	// The game mode calls PushFromSim(Sim) once after every UJamSim::Step.
-	static void BuildFrameFromSim(const UJamSim& Sim, FJamPresentationFrame& Out);
+	// Lane A129 (track Q1): LocalSeat = this machine's seat (AHokejGameMode::GetLocalSeat); -1 = the sim's human (single player, as before). The frame's
+	// human, attack side, net inset and win / lose card are that seat's: on the guest's machine the guest's.
+	static void BuildFrameFromSim(const UJamSim& Sim, FJamPresentationFrame& Out, int32 LocalSeat = -1);
 
-	void PushFromSim(const UJamSim& Sim);
+	void PushFromSim(const UJamSim& Sim, int32 LocalSeat = -1);
 
 	FJamSimFrameDelegate OnSimFrame;
 

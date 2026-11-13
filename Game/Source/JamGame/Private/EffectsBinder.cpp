@@ -25,6 +25,8 @@
 #include "HAL/PlatformTime.h"
 #include "JamCartridge.h"
 #include "JamCommentaryData.h"
+#include "AudioDevice.h"
+#include "LookTierSwitcher.h"
 
 DEFINE_LOG_CATEGORY(LogJamFx);
 
@@ -486,12 +488,14 @@ void UJamPreloadSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	Super::Initialize(Collection);
 	PostLoadMapHandle = FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &UJamPreloadSubsystem::HandlePostLoadMap);
 	PreLoadMapHandle = FCoreUObjectDelegates::PreLoadMap.AddUObject(this, &UJamPreloadSubsystem::HandlePreLoadMap);
+	BeginFrameHandle = FCoreDelegates::OnBeginFrame.AddUObject(this, &UJamPreloadSubsystem::HandleBeginFrame);
 }
 
 void UJamPreloadSubsystem::Deinitialize()
 {
 	FCoreUObjectDelegates::PostLoadMapWithWorld.Remove(PostLoadMapHandle);
 	FCoreUObjectDelegates::PreLoadMap.Remove(PreLoadMapHandle);
+	FCoreDelegates::OnBeginFrame.Remove(BeginFrameHandle);
 	if (SyncLoadHandle.IsValid()) FCoreDelegates::OnSyncLoadPackage.Remove(SyncLoadHandle);
 	for (TSharedPtr<FStreamableHandle>& H : Handles) if (H.IsValid()) H->ReleaseHandle();
 	Handles.Reset();
@@ -501,6 +505,41 @@ void UJamPreloadSubsystem::Deinitialize()
 static TAutoConsoleVariable<int32> CVarJamPreloadMap(TEXT("jam.PreloadMap"), 1,
 	TEXT("1: the match map's package loads asynchronously while the menu is up (lane A114). 0: it loads synchronously in the menu -> match frame (before)."));
 static const TCHAR* const JamMatchMapPackage = TEXT("/Game/Maps/Rink");
+static TAutoConsoleVariable<int32> CVarJamStartQuietFrames(TEXT("jam.StartQuietFrames"), 0,
+	TEXT("Lane A124: frames the menu -> match travel waits after every sound is stopped (4 tried: LoadMap's audio flush waited 22-38 ms all the same, PROFILING-4.md). 0 (default): the travel at once (before)."));
+static TAutoConsoleVariable<int32> CVarJamPreloadRig(TEXT("jam.PreloadRig"), 0,
+	TEXT("Lane A124: 1: the likely tier's light rig map is loaded asynchronously behind the menu with the match assets (its level instance then finds its imports in memory). 0: before."));
+
+void UJamPreloadSubsystem::HandleBeginFrame()
+{
+	UGameInstance* GI = GetGameInstance();
+	FWorldContext* Ctx = GI ? GI->GetWorldContext() : nullptr;
+	if (!Ctx) return;
+	if (QuietFramesLeft > 0)
+	{
+		if (--QuietFramesLeft > 0) return;
+		// Hand the held travel back: UGameEngine::Tick's TickWorldTravel, later in this frame, opens the match map.
+		if (Ctx->TravelURL.IsEmpty())
+		{
+			Ctx->TravelURL = HeldTravelURL;
+			Ctx->TravelType = static_cast<ETravelType>(HeldTravelType);
+		}
+		UE_LOG(LogJamPreload, Log, TEXT("JAMPRELOAD quiet: travel released frame=%llu"), static_cast<unsigned long long>(GFrameCounter));
+		HeldTravelURL.Reset();
+		return;
+	}
+	if (Ctx->TravelURL.IsEmpty() || GIsEditor) return;
+	UWorld* W = Ctx->World();
+	if (!W || W->GetMapName() != TEXT("Menu") || !Ctx->TravelURL.Contains(TEXT("Rink"))) return;
+	const int32 Frames = CVarJamStartQuietFrames.GetValueOnGameThread();
+	if (Frames <= 0) return;
+	if (FAudioDeviceHandle Dev = W->GetAudioDevice()) Dev->StopAllSounds(true);   // queued to the audio thread; nothing waits here
+	HeldTravelURL = Ctx->TravelURL;
+	HeldTravelType = static_cast<int32>(Ctx->TravelType);
+	Ctx->TravelURL.Empty();
+	QuietFramesLeft = Frames;
+	UE_LOG(LogJamPreload, Log, TEXT("JAMPRELOAD quiet: sounds stopped, travel to %s held %d frames frame=%llu"), *HeldTravelURL, Frames, static_cast<unsigned long long>(GFrameCounter));
+}
 
 void UJamPreloadSubsystem::HandlePostLoadMap(UWorld* World)
 {
@@ -592,9 +631,15 @@ void UJamPreloadSubsystem::StartPreload(const FString& CutNameOrPath)
 		Visual = C->Game.Skater.Visual;
 		if (!C->Game.Look.Tier.IsEmpty()) Tier = C->Game.Look.Tier;
 	}
+	LikelyTier = Tier;
 	TArray<FSoftObjectPath> Want;
 	int32 Missing = 0;
-	for (const FSoftObjectPath& P : MatchPaths(Visual, Tier))
+	TArray<FSoftObjectPath> Paths = MatchPaths(Visual, Tier);
+	// Lane A124: the tier's light rig map (packaged and -game only; in the editor the rig is the editor's). The handle holds it as an Inactive world, which
+	// LoadMap's world-leak check exempts; the match's level instance loads its own renamed copy and finds the rig's meshes, materials and lights in memory.
+	const FString Rig = ULookTierSwitcher::GetRigMapPath(Tier);
+	if (!GIsEditor && !Rig.IsEmpty() && CVarJamPreloadRig.GetValueOnGameThread() != 0) Paths.Add(FSoftObjectPath(Rig));
+	for (const FSoftObjectPath& P : Paths)
 	{
 		const FString Pkg = P.GetLongPackageName();
 		if (FPackageName::DoesPackageExist(Pkg)) { Want.Add(P); continue; }

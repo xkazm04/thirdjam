@@ -255,44 +255,7 @@ namespace JamNetSoak
 
 		// Lane A104: FJamPlaytester's F, as RunPlaytestMatch decides it (JamPlaytester.cpp, lane A84): the shotgun on a shot or into a crowd, the hip check on
 		// a check or an opposing carrier within 1.2 m, the slow puck while carrying, the shield while carrying with an opponent within 4 m. No draws.
-		static bool PlaytesterAbility(const UJamSim& Sm, int32 P, const FJamInput& I)
-		{
-			const FJamAbilityConfig* A = Sm.HeldAbility(P);
-			if (!A) return false;
-			const FJamSkaterState& K = Sm.GetSkaters()[P];
-			if (K.AbilityCharges == 0 || Sm.GetFrame() + 1 < K.AbilityReadyFrame || !K.AbilityArmed.IsNone() || K.ShieldFrames > 0 || !K.CanAct()) return false;
-			const bool bCarry = Sm.CarrierIndex() == P;
-			const FVector2D Fwd = K.Forward();
-			if (A->Kind == FName(TEXT("shotgun")))
-			{
-				if (!bCarry) return false;
-				if (I.bShoot || (I.bShootHeld && K.ChargeFrames == 0)) return true;
-				const FVector2D ToGoal = (FVector2D(Sm.AttackGoalX(K.Team), 0.0) - K.Pos).GetSafeNormal();
-				if (FVector2D::DotProduct(Fwd, ToGoal) < 0.7) return false;
-				for (const FJamSkaterState& O : Sm.GetSkaters())
-				{
-					if (O.Team == K.Team || O.IsDown() || O.InBox()) continue;
-					const FVector2D D = O.Pos - K.Pos;
-					const double Along = FVector2D::DotProduct(D, Fwd);
-					if (Along > 0.5 && Along < 15.0 && FMath::Abs(FVector2D::CrossProduct(Fwd, D)) <= 1.0) return true;
-				}
-				return false;
-			}
-			if (A->Kind == FName(TEXT("hip_check")))
-			{
-				if (I.bCheck) return true;
-				const int32 C = Sm.CarrierIndex();
-				return C >= 0 && Sm.GetSkaters()[C].Team != K.Team && FVector2D::Distance(Sm.GetSkaters()[C].Pos, K.Pos) <= 1.2;
-			}
-			if (A->Kind == FName(TEXT("slow_puck"))) return bCarry;
-			if (A->Kind == FName(TEXT("shield")))
-			{
-				if (!bCarry) return false;
-				const int32 O = Sm.NearestOpponent(K);
-				return O >= 0 && FVector2D::Distance(Sm.GetSkaters()[O].Pos, K.Pos) <= 4.0;
-			}
-			return false;
-		}
+		static bool PlaytesterAbility(const UJamSim& Sm, int32 P, const FJamInput& I) { return JamNetPlaytesterAbility(Sm, P, I); }   // lane A129: one function, the lobby's scripted seat presses it too
 
 		// ALobbyGameMode::GatherBotInputs' world: the adapter's view plus pickups and slow ice / no-shoot zones.
 		void BuildWorld(JamAI::FJamAIWorld& W) const

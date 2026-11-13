@@ -170,6 +170,18 @@ private:
 	void HandlePreLoadMap(const FString& MapName);
 	void HandleSyncLoad(const FString& PackageName);
 
+	// Lane A124 (track Q3 evolution 3): the menu goes quiet before the match map opens. When a travel to the match map is pending while the menu is up,
+	// every sound stops and the travel waits jam.StartQuietFrames frames (default 0 = the travel at once, as before: measured no gain at 4), so LoadMap's audio flush
+	// (FAudioDevice::Flush: two waits on the audio render thread while the menu's sounds stop) finds nothing to stop. Hooked on FCoreDelegates::OnBeginFrame,
+	// which runs before UGameEngine::Tick's TickWorldTravel, so it catches a travel set by the menu, a remote console `open` or OpenLevel alike.
+	void HandleBeginFrame();
+	FDelegateHandle BeginFrameHandle;
+	FString HeldTravelURL;
+	int32 HeldTravelType = 0;
+	int32 QuietFramesLeft = 0;
+	// The tier of the cut the preload was last asked for (its light rig is requested behind the menu under jam.PreloadRig).
+	FString LikelyTier;
+
 	// Lane A114: the match map's package, loaded asynchronously while the menu is up and held until the match map has loaded (UEngine::LoadMap finds it in
 	// memory instead of loading it synchronously in the menu -> match frame). jam.PreloadMap=0: the map loads as before.
 	void StartMapPreload();
