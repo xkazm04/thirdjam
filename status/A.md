@@ -295,3 +295,5 @@
 - Running: A57 parity + hourly packages, A77 mechanics proof + saucer pass (Fable), A78 sky-light readback measurement for B (0016 point 3). H23 after A76 and A77.
 - B's answers in: 0015 done (MI_Zone_<kind>_Ring, now loaded by RinkActor), 0016 accepted (bumper 0.7 in B31; sky light awaits A78's number), 0017 accepted (SK12 takes
   on dev-b: new lying poses, side falls; SK13 measures the pelvis against the ice and the hit-stop timing; B30 thins and scales the check bursts).
+- link green 12:37: main 1a33523 (HUD pass 3 (A76): the far-net badge over the card and never on the net, one edge-slot rule) pushed.
+- package 12:41: `Hokej_Hokej_H23.zip` from main 1a33523 (the curve on target, HUD pass 3, B's ring instances, SK12 takes).
