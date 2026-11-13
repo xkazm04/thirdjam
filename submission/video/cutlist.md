@@ -1,3 +1,5 @@
+> **Lane A142, 2026-11-13 night: this file is the record of the fallback video `hokej-v1.mp4` (the H24 build, three a side, no goal by the human), not of the game on main.** Its captions say what the take shows and nothing more. The film we want is `script-v2.md`. Truth row VS15 in `submission/TRUTH.md`.
+
 # hokej-v1.mp4: cut list (A88, 2026-11-13 14:42; 39.5 s, 1920x1080, 30 fps, H.264 + silent AAC)
 
 Built by `tools/media/cut.sh` from takes recorded by `tools/media/take.ps1` (PrintWindow capture piped to ffmpeg NVENC: a window in front of the game cannot spoil it).

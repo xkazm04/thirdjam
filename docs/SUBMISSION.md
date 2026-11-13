@@ -1,5 +1,7 @@
 # Submission: Epic AI MegaJam 2026, Unreal Engine track
 
+**Lane A142 (2026-11-13 night): the form's fields are `submission/form.md`, the page is `submission/page.md`, every claim is checked in `submission/TRUTH.md`; this file keeps the checklists and the zip hash record. The rows below that said otherwise are corrected.**
+
 Skeleton of the submission form, filled as far as known at H4.7. Fields marked `TBD` are filled at H84; `<operator fills>` is for the human only.
 Checklists are copied from `docs/GATES.md` (Submission candidate H84, Submission H88); tick them here when done and record who looked and when in `status/`.
 
@@ -8,14 +10,14 @@ Checklists are copied from `docs/GATES.md` (Submission candidate H84, Submission
 | Field | Value |
 |---|---|
 | Team name | Hokej |
-| Members | 1 |
+| Members | `<TEAM: names and roles, operator>` (two devices; see `submission/form.md`) |
 | Contact (Epic Games account email) | `<operator fills>` |
 | Game name | Hokej |
 | Track | Unreal Engine |
 | Main prize category | TBD (Director decides at Gate 3, H48) |
 | Modifier prize (only one can be won) | TBD (Director decides at Gate 3, H48; recorded in the dev log) |
 | Theme | Director's Cut (`docs/THEME.md`) |
-| Pitch | TBD: one paragraph from `GAME.md` at H84. Hockey 3v3 where every variation of the game is a "cut" and the player directs their own cut from a sentence. |
+| Pitch | `submission/page.md` sections A and B: rough hockey for clay skaters, five a side; the speed you bring is the hit you get; twelve cuts and the Director's Call. |
 | How to play | TBD: from `GAME.md` first-play script |
 | What the Designer does | TBD: sentence to validated cartridge JSON (D1, with a player-supplied key) and cached preset cuts (D0, offline) |
 | What is original and what is not | TBD: from `ASSETS.md` at H84 (see below) |
@@ -27,8 +29,8 @@ Checklists are copied from `docs/GATES.md` (Submission candidate H84, Submission
 
 - Unreal Engine 5.9 (build id from `status/A.md` at H84)
 - Claude Code with Claude Opus, Sonnet and Fable models: planning, all C++ and tooling, the Designer prompts, the dev log builder
-- Codex image generation: reference images only (`prep-reference/`, never imported into the game)
-- Meshy: generated skater figure (listed as AI-generated, never as sourced)
+- Codex image generation: concept and menu images (the current list, with the ledger rows, is in `submission/form.md`)
+- Meshy and the other 3D and voice services: see `submission/form.md` and `submission/credits.md` (AI-generated, never sourced)
 - Blender: evaluation of generated meshes
 - ffmpeg: capture and video encoding
 - NVIDIA DLSS 4.5 (Unreal plugin v8.9.0, Super Resolution and DLAA; plugin built for UE 5.8, ported to 5.9 by ten one-line format-string fixes): Settings > DLSS, on by default on RTX GPUs (`docs/experiments/DLSS.md`)
