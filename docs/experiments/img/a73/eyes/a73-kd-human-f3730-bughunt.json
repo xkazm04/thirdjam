@@ -1,0 +1,63 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T10:32:49.037Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a73/a73-kd-human-f3730-strip.png",
+          "width": 1002,
+          "height": 855
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2271,
+      "usage": {
+        "prompt": 1729,
+        "output": 289,
+        "thoughts": 0,
+        "total": 2018,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00238,
+      "ms": 6309,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [
+              {
+                "where": "Top two rows, center of each frame (f3730 to f3754)",
+                "what": "The knocked-down blue player (number 7) clips directly into the ice surface during the fall animation, with limbs and torso partly sinking below the ice plane.",
+                "severity": 3,
+                "confidence": 0.95
+              },
+              {
+                "where": "Row 2, panel 2 (f3750 +20), bottom center",
+                "what": "A disconnected blue helmet mesh peeks up from the extreme bottom edge of the frame, partially clipped off by the viewport border.",
+                "severity": 2,
+                "confidence": 0.85
+              },
+              {
+                "where": "All frames, upper center directly below the top HUD banner",
+                "what": "In-world instructional dialogue banner ('We skate in sync...') visually clashes with and is placed directly on top of the central action and skater heads.",
+                "severity": 2,
+                "confidence": 0.75
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=a73-kd-human-f3730-strip.png (gemini-3.8-flash, in 1729 out 289 tokens, ~$0.0024, 6.3 s)\n- stills:\n  - label: Still A; clean: false\n    - findings:\n      - where: Top two rows, center of each frame (f3730 to f3754); what: The knocked-down blue player (number 7) clips directly into the ice surface during the fall animation, with limbs and torso partly sinking below the ice plane.; severity: 3; confidence: 0.95\n      - where: Row 2, panel 2 (f3750 +20), bottom center; what: A disconnected blue helmet mesh peeks up from the extreme bottom edge of the frame, partially clipped off by the viewport border.; severity: 2; confidence: 0.85\n      - where: All frames, upper center directly below the top HUD banner; what: In-world instructional dialogue banner ('We skate in sync...') visually clashes with and is placed directly on top of the central action and skater heads.; severity: 2; confidence: 0.75"
+    }
+  ]
+}

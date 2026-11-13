@@ -128,6 +128,24 @@ private:
 
 	UFUNCTION() void HandleRestartPressed();
 
+	// Lane A73 (B-to-A-0036 point 4): the hit-stop's routing (read-outs only; the sim never pauses). A knockdown by a check this frame that involves the human
+	// (victim or checker) tells both pawns and the puck to hold jam.hitstop frames (AJamSkater::BeginHitStop), and the presentation frame (camera, HUD, radar) is not
+	// pushed for the frames after the hit frame while they hold; the render alpha is 1 meanwhile so the camera sits on the hit frame's pose.
+	void HitStopRoute();
+	int64 HitStopStartFrame = -1, HitStopEndFrame = -1;
+	// Lane A73 proof: jam.ctrl.Stills 1 captures a screenshot every 4 sim frames after a knockdown that involves the human (24 stills: fall, lying, get-up), after the
+	// human's board hit and after a stick hit on the human (8 each), twice per kind at most; Saved/Screenshots/<platform>/a73-<kind>-<start>-f<frame>.png.
+	void StillsObserve();
+	FString StillKind;
+	int64 StillStart = -1;
+	int32 StillCount = 0, StillTaken = 0;
+	TMap<FString, int32> StillsPerKind;
+	// Lane A73 drill 6 (the human carries at the pro bots and is checked): knockdowns of the human and its get-ups, a summary after ten get-ups.
+	void KdObserve();
+	int32 KdCount = 0, KdGetUps = 0;
+	int64 KdDownFrame = -1;
+	bool bKdWasDown = false;
+
 	UPROPERTY(Transient) TObjectPtr<UJamCartridge> Cartridge;
 	UPROPERTY(Transient) TObjectPtr<UJamSim> Sim;
 	UPROPERTY(Transient) TObjectPtr<ARinkActor> Rink;

@@ -1,0 +1,63 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T10:33:03.920Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a73/a73-board-f712-strip.png",
+          "width": 1632,
+          "height": 474
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2267,
+      "usage": {
+        "prompt": 1759,
+        "output": 349,
+        "thoughts": 0,
+        "total": 2108,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00263,
+      "ms": 6804,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [
+              {
+                "where": "Top-right panel (f724 +12) and bottom panels (f728 through f740), around the moving puck along the boards",
+                "what": "The puck emits a bright yellow-green circular spotlight/glow directly onto the ice surface, which appears as an untextured flat bright yellow ring artifact rather than ambient lighting.",
+                "severity": 2,
+                "confidence": 0.8
+              },
+              {
+                "where": "Bottom row, second panel from right (f736 +24) and rightmost panel (f740 +28), lower right quadrant near the red net",
+                "what": "The orange player (#88) is standing directly inside or clipping right through the rear frame/netting of the red goal net.",
+                "severity": 4,
+                "confidence": 0.95
+              },
+              {
+                "where": "Top-left panel (f712 +0) through bottom-left panels, near bottom-right corner",
+                "what": "The red goal net in panels f712, f716, f720 is cut off abruptly at the bottom edge with parts of the frame mesh clipping or floating awkwardly next to the minimap overlay.",
+                "severity": 2,
+                "confidence": 0.7
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=a73-board-f712-strip.png (gemini-3.8-flash, in 1759 out 349 tokens, ~$0.0026, 6.8 s)\n- stills:\n  - label: Still A; clean: false\n    - findings:\n      - where: Top-right panel (f724 +12) and bottom panels (f728 through f740), around the moving puck along the boards; what: The puck emits a bright yellow-green circular spotlight/glow directly onto the ice surface, which appears as an untextured flat bright yellow ring artifact rather than ambient lighting.; severity: 2; confidence: 0.8\n      - where: Bottom row, second panel from right (f736 +24) and rightmost panel (f740 +28), lower right quadrant near the red net; what: The orange player (#88) is standing directly inside or clipping right through the rear frame/netting of the red goal net.; severity: 4; confidence: 0.95\n      - where: Top-left panel (f712 +0) through bottom-left panels, near bottom-right corner; what: The red goal net in panels f712, f716, f720 is cut off abruptly at the bottom edge with parts of the frame mesh clipping or floating awkwardly next to the minimap overlay.; severity: 2; confidence: 0.7"
+    }
+  ]
+}

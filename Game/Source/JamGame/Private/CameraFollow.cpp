@@ -11,6 +11,9 @@
 // A40: 1 = the H11 camera (pull in along the arm to 0.3 m inside a rectangle, no lift, no yaw rule, no far-net lead). Presentation only; the before stills of CAMERA.md use it.
 static TAutoConsoleVariable<int32> CVarJamCameraLegacy(TEXT("jam.camera.Legacy"), 0,
 	TEXT("1 = the pre-A40 chase camera (rectangle pull-in only). Presentation only, never read by the sim."));
+// Lane A73: the kick's scale (0 = no kick, 1 = 12 cm at full strength, up to 3). Presentation only.
+static TAutoConsoleVariable<float> CVarJamHitKick(TEXT("jam.hitkick"), 1.f,
+	TEXT("Scale of the camera kick along the hit direction on a knockdown that involves the human (0..3, default 1 = 12 cm over 8 frames at full strength). Presentation only."));
 
 FJamCameraSettings FJamCameraSettings::FromCartridge(const FJamCameraConfig& C)
 {
@@ -396,6 +399,30 @@ void UJamFollowCamera::StartPunch(float Strength, float Sign)
 	PunchSign = Sign < 0.f ? -1.f : 1.f;
 }
 
+void UJamFollowCamera::KickOffset(int32 FrameIndex, float Strength, const FVector2D& DirWorld, float CamYawDeg, float Scale, FVector& OutOffsetCm, float& OutRollDeg)
+{
+	OutOffsetCm = FVector::ZeroVector;
+	OutRollDeg = 0.f;
+	if (FrameIndex < 0 || FrameIndex >= KickFrames || Scale <= 0.f) return;
+	const FVector2D D = DirWorld.GetSafeNormal();
+	if (D.IsNearlyZero()) return;
+	const float K = FMath::Pow(1.f - (float)FrameIndex / (float)KickFrames, 1.5f);   // 1 on the hit frame, a soft settle
+	const float S = FMath::Max(0.5f, FMath::Clamp(Strength, 0.f, 1.f)) * FMath::Clamp(Scale, 0.f, 3.f);
+	OutOffsetCm = FVector(D.X, D.Y, 0.0) * (KickCm * S * K);
+	const float Yaw = FMath::DegreesToRadians(CamYawDeg);
+	const FVector2D Right(-FMath::Sin(Yaw), FMath::Cos(Yaw));
+	const float Side = FVector2D::DotProduct(D, Right);   // the push's component across the frame decides the roll's side
+	OutRollDeg = KickRollDeg * S * K * (Side < 0.f ? -1.f : 1.f) * FMath::Min(1.f, FMath::Abs(Side) * 2.f);
+}
+
+void UJamFollowCamera::StartKick(float Strength, FVector2D DirWorld)
+{
+	KickLeft = KickFrames;
+	KickStrength = FMath::Clamp(Strength, 0.f, 1.f);
+	KickDir = DirWorld.GetSafeNormal();
+	if (KickDir.IsNearlyZero()) KickLeft = 0;
+}
+
 void UJamFollowCamera::OnJamEvent(FName Event, const FJamEventPayload& Payload)
 {
 	// A check the human lands (check, Who = checker) or takes (knockdown, Who = victim, Kind = check). AI checks out of frame kick nothing.
@@ -403,6 +430,16 @@ void UJamFollowCamera::OnJamEvent(FName Event, const FJamEventPayload& Payload)
 	const bool bLanded = Event == JamEvents::Check;
 	const bool bTaken = Event == JamEvents::Knockdown && Payload.Kind == FName(TEXT("check"));
 	if (!bLanded && !bTaken) return;
+	// Lane A73: the kick along the hit direction when the event carries one (A47's Dir: the push, checker towards victim); the punch below stays for a Dir of zero.
+	const FVector2D Dir2(Payload.Dir.X, Payload.Dir.Y);
+	if (!Dir2.IsNearlyZero() && CVarJamHitKick.GetValueOnGameThread() > 0.f)
+	{
+		StartKick(Payload.Strength, Dir2);
+		UE_LOG(LogTemp, Log, TEXT("JAMKICK frame=%lld %s strength=%.2f dir=(%.2f, %.2f) cm=%.1f frames=%d scale=%.2f"), Bus ? Bus->GetSimFrame() : -1,
+			bLanded ? TEXT("landed") : TEXT("taken"), Payload.Strength, Dir2.X, Dir2.Y, KickCm * FMath::Max(0.5f, Payload.Strength) * CVarJamHitKick.GetValueOnGameThread(), KickFrames,
+			CVarJamHitKick.GetValueOnGameThread());
+		return;
+	}
 	// The side of the contact seen by the camera decides the kick's direction.
 	const float Yaw = FMath::DegreesToRadians(Filter.YawDeg);
 	const FVector2D Right(-FMath::Sin(Yaw), FMath::Cos(Yaw));
@@ -454,6 +491,24 @@ void UJamFollowCamera::StepSimFrame(const FJamPresentationFrame& Frame)
 		--PunchLeft;
 		const FQuat Rot = PoseCurrent.GetRotation();
 		PoseCurrent.SetLocation(PoseCurrent.GetLocation() + Rot.GetRightVector() * RightCm);
+		PoseCurrent.SetRotation(Rot * FRotator(0.f, 0.f, RollDeg).Quaternion());
+	}
+	// Lane A73: the kick along the hit direction, one sim frame at a time; the displaced point never leaves A40's boards inset (third-person mode only).
+	if (KickLeft > 0)
+	{
+		FVector OffsetCm = FVector::ZeroVector;
+		float RollDeg = 0.f;
+		KickOffset(KickFrames - KickLeft, KickStrength, KickDir, PoseCurrent.Rotator().Yaw, CVarJamHitKick.GetValueOnGameThread(), OffsetCm, RollDeg);
+		--KickLeft;
+		FVector Loc = PoseCurrent.GetLocation() + OffsetCm;
+		if (Config.Mode != EJamCameraMode::Arena)
+		{
+			const FVector2D Inside = NearestInsideBoards(FVector2D(Loc.X / 100.0, Loc.Y / 100.0), FJamCameraRink::FromFrame(Frame), Config.BoardsMarginM);
+			Loc.X = Inside.X * 100.0;
+			Loc.Y = Inside.Y * 100.0;
+		}
+		const FQuat Rot = PoseCurrent.GetRotation();
+		PoseCurrent.SetLocation(Loc);
 		PoseCurrent.SetRotation(Rot * FRotator(0.f, 0.f, RollDeg).Quaternion());
 	}
 	if (!bHavePose)

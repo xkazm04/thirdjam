@@ -225,6 +225,19 @@ public:
 	void StartPunch(float Strength, float Sign);
 	int32 GetPunchFramesLeft() const { return PunchLeft; }
 
+	// Lane A73 (B-to-A-0036 point 4): the kick along the hit direction on a knockdown the human lands or takes. KickFrames sim frames: the camera is displaced
+	// KickCm along the hit's Dir (world x/y, the push checker -> victim) times max(0.5, Strength) times jam.hitkick, decaying (1 - i / 8)^1.5 from the hit frame,
+	// with KickRollDeg of roll toward the side the push has in the camera's frame; the displaced point is clamped back inside A40's boards inset, and 12 cm at 6 m
+	// moves the skater by 0.03 of the frame, inside A49's middle-third budget (0.333; the worst measured was 0.237). Replaces A33's punch when the event carries
+	// a Dir (every check and knockdown does since A47); the punch stays for a Dir of zero. Pure for tests: FrameIndex 0..7 -> the offsets, anything else -> 0.
+	static constexpr int32 KickFrames = 8;
+	static constexpr float KickCm = 12.f;
+	static constexpr float KickRollDeg = 1.f;
+	static void KickOffset(int32 FrameIndex, float Strength, const FVector2D& DirWorld, float CamYawDeg, float Scale, FVector& OutOffsetCm, float& OutRollDeg);
+	UFUNCTION(BlueprintCallable, Category = "Jam|Camera")
+	void StartKick(float Strength, FVector2D DirWorld);
+	int32 GetKickFramesLeft() const { return KickLeft; }
+
 	const FJamCameraFilter& GetFilter() const { return Filter; }
 	const FTransform& GetCurrentSimPose() const { return PoseCurrent; }
 
@@ -247,5 +260,9 @@ private:
 	float PunchSign = 1.f;
 	int32 LastHumanIndex = -1;
 	FVector2D LastHumanPosM = FVector2D::ZeroVector;
+	// Lane A73 kick state (stepped per sim frame in StepSimFrame).
+	int32 KickLeft = 0;
+	float KickStrength = 0.f;
+	FVector2D KickDir = FVector2D(1, 0);
 	UPROPERTY(Transient) TObjectPtr<UJamEventBus> Bus;
 };
