@@ -502,6 +502,11 @@ public:
 	bool IsDrawOpen() const { return bDrawOpen; }
 	// The skater carrying the puck right now (last toucher, standing and in control, puck within its reach), -1 when the puck is loose. The brain reads it.
 	int32 CarrierIndex() const;
+	// R-0042 (lane A85): the carrier's one reach for carrying, charging, shooting and passing: max(shot.reach_m, body radius + stick.reach_m) + 0.05.
+	// Since A51 the carried puck lives at the blade (0.4 + stick.reach_m 1.2 = 1.6 m), beyond shot.reach_m 1.5, so every carrier test in the sim reads this
+	// (CarrierIndex, StepCharge, StepPassCharge, TryShoot, TryPass, the deke's offset, the knockdown strip); the brain's copy is FJamAIWorld::CarrierReach().
+	// Skater -1 = the base value (no modifier).
+	double CarrierReachM(int32 Skater) const;
 	// R-0029 point 4 (lane A39): true when Skater carries the puck past centre ice, skates at the net and no standing opponent stands in the corridor
 	// between it and the crease (the rule of the breakaway burst). The brain and the tests read it.
 	bool PastLastDefender(int32 Skater) const;

@@ -471,3 +471,12 @@ because no gate drives the real input; (2) **one curve pass on the real player**
 edits a difficulty number; (3) **no new mechanic after A84's abilities**; a mechanic whose bar still fails after A85 is cut to what passes; (4) **the submission has a lane
 from now** (A88: video, page text, dev log, ledger, clean-profile test); (5) **freezes**: the sim Saturday 12:00, content Saturday 22:00, Sunday is submission only; submit
 Sunday 22:00; (6) one lane per file family at a time (the sim, the profiles, the input mapping, the HUD).
+
+## R-0044 (H21, 2026-11-13 15:09): the reach fix landed; the last sim calibrations; the mechanics' bars restated
+Lane A85 landed R-0042 (one carrier reach, the flat tap; in the package 30 shots fired at three charges where A82 had none) and lane A87's acceptance run failed the old build
+on shooting, passing and the one-timer exactly as it should, and turned 17 of 18 verbs green on a stand-in for the fix. Rulings: (1) `shot.lift.full_m` 0.5 (the full charge
+at 0.6 rings the 0.61 bar from 10 m); (2) a hold of 4 frames or fewer is a tap, flat (`game.shot.tap_frames` 4): a human's click is never zero frames long; (3) the bars of
+R-0034 restated to what each mechanic is for (R-0043 point 3): the sweep and the spin are proven by their shield (every poke and lift inside the window refused; A85: 9 lift
+misses in the spin run), not by the puck kept against a body check, which is the risk the ruling gave them; the saucer by its flight over a blade when one is on the lane;
+(4) A66's bot blade cap stays: without it about thirty brain decisions lose the carrier (A85's measurement); it is the curve lane's to revisit, not before the submission;
+(5) the bots' round-the-net rule stays; (6) lane A91 makes these calibrations and takes the acceptance run to green: that run is H25's gate.

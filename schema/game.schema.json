@@ -592,7 +592,7 @@
               "type": "number",
               "minimum": 0,
               "maximum": 0.5,
-              "description": "Height over the goal line of a tap shot, in metres."
+              "description": "Height over the goal line of a tap shot, in metres. Default 0 (R-0042): a charge-0 shot flies flat on the ice the whole way, so a stick between the shooter and the net can deflect it."
             },
             "half_m": {
               "type": "number",

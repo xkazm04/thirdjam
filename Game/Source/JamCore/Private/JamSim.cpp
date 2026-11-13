@@ -821,10 +821,16 @@ int32 UJamSim::CarrierIndex() const
 	if (!S.CanAct()) return -1;
 	// Lane A51 (R-0034): the puck lives where the blade is, so a puck anywhere inside the stick's full reach of the body is carried: a sweep from the full
 	// reach on one side to the other (or the spin dragging it round to the far side) never drops it for the frame in which the blade has moved and the puck
-	// has not yet followed. Before this, a puck at the full reach sat exactly at shot.reach_m and fell off the carrier on every fast aim change.
-	if (FVector2D::Distance(S.Pos, Puck.Pos) <= SkaterRadius + Config.Stick.ReachM + 0.05) return C;
-	// Carried: within shot reach of the body, or on the blade (a long stick holds the puck beyond the body's reach).
-	return (FVector2D::Distance(S.Pos, Puck.Pos) <= Eff(EJamStat::ShotReach, C) || FVector2D::Distance(S.BladePos, Puck.Pos) <= DeflectRangeM) ? C : -1;
+	// has not yet followed. R-0042 (lane A85): that reach is CarrierReachM, the same number the shot, the charge and the pass test (before, a puck carried
+	// at the blade's 1.6 m sat beyond shot.reach_m 1.5 and nothing fired while the player aimed). Or on the blade (a long stick holds the puck beyond the body's reach).
+	return (FVector2D::Distance(S.Pos, Puck.Pos) <= CarrierReachM(C) || FVector2D::Distance(S.BladePos, Puck.Pos) <= DeflectRangeM) ? C : -1;
+}
+
+double UJamSim::CarrierReachM(int32 Skater) const
+{
+	// R-0042 (lane A85): one reach for every carrier test: the stick's full reach (where the carried puck lives since A51) or shot.reach_m, whichever is
+	// longer, plus 5 cm for the frame in which the blade has moved and the puck has not yet followed it.
+	return FMath::Max(Eff(EJamStat::ShotReach, Skater), SkaterRadius + FMath::Max(0.0, Config.Stick.ReachM)) + 0.05;
 }
 
 void UJamSim::Emit(FName Name, int32 Who, const FVector2D& Where, float Strength, FName Kind, const FVector2D& Dir)
@@ -1587,7 +1593,7 @@ void UJamSim::KnockDown(int32 Victim, const FVector2D& Dir, float Strength, FNam
 	Emit(JamEvents::Knockdown, V.Index, V.Pos, Strength, Cause, V.KnockDir);   // lane A47: Dir = KnockDir (B-to-A-0029 ask 1)
 	FireRule(EJamRuleTrigger::OnKnockdown, V.Index, V.Team, Cause, Strength);
 	// C-0005: a check that lands on the carrier always strips the puck; it squirts off the victim's line, a little back towards the checker.
-	if (Puck.LastTouch == V.Index && FVector2D::Distance(V.Pos, Puck.Pos) <= Eff(EJamStat::ShotReach, Victim))
+	if (Puck.LastTouch == V.Index && FVector2D::Distance(V.Pos, Puck.Pos) <= CarrierReachM(Victim))   // R-0042 (lane A85): the carrier's reach (a blade-length puck is carried too)
 	{
 		Puck.Vel = V.Vel * 0.5 + Rng.UnitVector2D() * 1.0 - V.KnockDir * 1.0;
 		Puck.LastTouch = -1;
@@ -1601,7 +1607,7 @@ void UJamSim::StepCharge(FJamSkaterState& S, const FJamInput& In)
 	if (In.bShootHeld)
 	{
 		if (Max <= 0) { if (S.ChargeFrames == 0) { TryShoot(S, 0.f); S.ChargeFrames = 1; } return; }   // charging off: a hold is one tap
-		const bool bInReach = FVector2D::Distance(S.Pos, Puck.Pos) <= Eff(EJamStat::ShotReach, S.Index);
+		const bool bInReach = FVector2D::Distance(S.Pos, Puck.Pos) <= CarrierReachM(S.Index);   // R-0042 (lane A85): the carrier's reach, the blade's full length included
 		if (bInReach && Frame >= S.ShotReadyFrame) S.ChargeFrames = FMath::Min(S.ChargeFrames + 1, Max);
 		return;
 	}
@@ -1618,7 +1624,7 @@ void UJamSim::TryShoot(FJamSkaterState& S, float Charge)
 	if (Frame < S.ShotReadyFrame) return;
 	const FVector2D ToPuck = Puck.Pos - S.Pos;
 	const double Dist = ToPuck.Size();
-	if (Dist > Eff(EJamStat::ShotReach, S.Index)) return;
+	if (Dist > CarrierReachM(S.Index)) return;   // R-0042 (lane A85): a puck carried at the blade's full reach is a shot
 	const FVector2D Fwd = S.Forward();
 	if (Dist >= 0.05 && Dot(Fwd, ToPuck / Dist) < ShotFrontDot) return;
 	// R-0019: a shot from inside a no_shoot zone is refused (the shooter keeps the puck; a short cooldown so the event does not spam).
@@ -1697,8 +1703,8 @@ void UJamSim::TryShoot(FJamSkaterState& S, float Charge)
 
 double UJamSim::EffectiveDekeOffsetM() const
 {
-	// The deked puck sits DekeAheadM ahead of the body and offset_m to the side; it must stay inside shot reach (CarrierIndex) or the carry ends.
-	const double Reach = Eff(EJamStat::ShotReach, -1) - 0.1;
+	// The deked puck sits DekeAheadM ahead of the body and offset_m to the side; it must stay inside the carrier's reach (CarrierIndex) or the carry ends.
+	const double Reach = CarrierReachM(-1) - 0.1;   // R-0042 (lane A85): the carrier's reach (offset_m 1.0 sat inside shot.reach_m too: unchanged at the defaults)
 	const double MaxSide = FMath::Sqrt(FMath::Max(0.0, Reach * Reach - DekeAheadM * DekeAheadM));
 	return FMath::Clamp(Config.Stick.DekeOffsetM, 0.0, MaxSide);
 }
@@ -1866,7 +1872,7 @@ void UJamSim::StepPassCharge(FJamSkaterState& S, const FJamInput& In)
 	const int32 Half = FMath::Max(0, Config.Pass.SaucerHalfFrames);
 	if (In.bPassHeld)
 	{
-		const bool bInReach = FVector2D::Distance(S.Pos, Puck.Pos) <= Eff(EJamStat::ShotReach, S.Index);
+		const bool bInReach = FVector2D::Distance(S.Pos, Puck.Pos) <= CarrierReachM(S.Index);   // R-0042 (lane A85)
 		if (bInReach && Frame >= S.ShotReadyFrame) S.PassChargeFrames = FMath::Min(S.PassChargeFrames + 1, FMath::Max(Half, 1));
 		return;
 	}
@@ -1881,7 +1887,7 @@ void UJamSim::StepPassCharge(FJamSkaterState& S, const FJamInput& In)
 void UJamSim::TryPass(FJamSkaterState& S, bool bSaucer)
 {
 	if (Frame < S.ShotReadyFrame) return;
-	if (FVector2D::Distance(S.Pos, Puck.Pos) > Eff(EJamStat::ShotReach, S.Index)) return;
+	if (FVector2D::Distance(S.Pos, Puck.Pos) > CarrierReachM(S.Index)) return;   // R-0042 (lane A85)
 	FVector2D Aim;
 	// Lane A77 (R-0036): a saucer may go to a receiver behind a blade in the lane; a flat pass never does.
 	const int32 To = PickReceiver(S, Aim, bSaucer && Config.Pass.SaucerLiftM > 0.0);

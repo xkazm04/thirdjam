@@ -495,7 +495,7 @@ FJamInput AHokejGameMode::ScriptedHumanInput()
 	const FVector2D ToPuck = PuckPos - S.Pos;
 	const double Dist = ToPuck.Size();
 	const double GoalDist = FVector2D::Distance(PuckPos, Goal);
-	const bool bHave = Dist < Sim->GetConfig().Shot.ReachM && Dist > 1e-6 && FVector2D::DotProduct(S.Forward(), ToPuck / Dist) > 0.6;
+	const bool bHave = Dist < Sim->CarrierReachM(S.Index) && Dist > 1e-6 && FVector2D::DotProduct(S.Forward(), ToPuck / Dist) > 0.6;
 	// In the faceoff: press at the drop (the first clean press wins the draw).
 	if (Sim->IsDrawOpen() && S.bCentre) { In.bPoke = true; return In; }
 	if (Sim->GetPhase() != EJamSimPhase::Playing) { ScriptCharge = 0; return In; }
@@ -584,6 +584,15 @@ FJamInput AHokejGameMode::ReadHumanInput()
 	if (In.bCheck) UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=check (right mouse / RB)"), Frame);
 	if (In.bPoke) UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=poke (space / A)"), Frame);
 	if (In.bLift) UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=lift (middle mouse, mouse 4 / LB)"), Frame);
+	// Lane A85: the pass's release as the sim will see it this step (A82's JAMSHOT release for the pass): the hold's charge, the cooldown, the puck against the
+	// carrier's reach, and whom a flat pass and a saucer would go to. A hold that fires nothing says why here.
+	if (!In.bPassHeld && bLastPassHeld && Sim->GetSkaters().IsValidIndex(Sim->GetHumanIndex()))
+	{
+		const FJamSkaterState& Hp = Sim->GetSkaters()[Sim->GetHumanIndex()];
+		FVector2D AimF, AimS;
+		UE_LOG(LogHokej, Log, TEXT("JAMPASS release frame=%lld pass_charge_frames=%d cooldown_left=%lld puck_dist=%.2f reach=%.2f carrier=%d flat_receiver=%d saucer_receiver=%d"), Frame, Hp.PassChargeFrames,
+			FMath::Max<int64>(0, Hp.ShotReadyFrame - Frame), FVector2D::Distance(Hp.Pos, Sim->GetPuck().Pos), Sim->CarrierReachM(Hp.Index), Sim->CarrierIndex(), Sim->BestPass(Hp.Index, AimF, false), Sim->BestPass(Hp.Index, AimS, true));
+	}
 	if (In.bPassHeld != bLastPassHeld) { bLastPassHeld = In.bPassHeld; UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=pass held=%d (Q / X)"), Frame, In.bPassHeld ? 1 : 0); }   // lane A77
 	if (In.bDeke) UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=deke (wheel / Y)"), Frame);
 	if (In.bSpin) UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=spin (E / B)"), Frame);   // lane A51 (R-0034)
@@ -603,7 +612,7 @@ FJamInput AHokejGameMode::ReadHumanInput()
 			const FVector2D ToPuck = Sim->GetPuck().Pos - H.Pos;
 			const double Dist = ToPuck.Size();
 			UE_LOG(LogHokej, Log, TEXT("JAMSHOT release frame=%lld charge_frames=%d shot_ready_frame=%lld cooldown_left=%lld puck_dist=%.2f reach=%.2f front_dot=%.2f carrier=%d"), Frame, H.ChargeFrames, H.ShotReadyFrame,
-				FMath::Max<int64>(0, H.ShotReadyFrame - Frame), Dist, Sim->GetEffectiveStat(EJamStat::ShotReach, H.Index), Dist > 1e-6 ? FVector2D::DotProduct(H.Forward(), ToPuck / Dist) : 1.0, Sim->CarrierIndex());
+				FMath::Max<int64>(0, H.ShotReadyFrame - Frame), Dist, Sim->CarrierReachM(H.Index), Dist > 1e-6 ? FVector2D::DotProduct(H.Forward(), ToPuck / Dist) : 1.0, Sim->CarrierIndex());
 		}
 	}
 	if (In.bSprint != bLastSprint) { bLastSprint = In.bSprint; UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=sprint held=%d (shift / LT)"), Frame, In.bSprint ? 1 : 0); }
@@ -913,7 +922,13 @@ void AHokejGameMode::GatherInputs()
 		if (F >= HandReady && MechShotFrame < 0 && C != Human)
 		{
 			int32 To = -1;
-			if (CVarJamCtrlDrill.GetValueOnGameThread() == 10) To = Human;
+			if (CVarJamCtrlDrill.GetValueOnGameThread() == 10)
+			{
+				// Lane A85: inside 1.5 m of its spot only (10 m out on the attacked net's centre line): a hand on the way there was a puck for the bots.
+				const double HGx = Sim->AttackGoalX(H.Team);
+				const FVector2D Spot(HGx - (HGx > 0 ? 1.0 : -1.0) * 10.0, 0.0);
+				if (FVector2D::Distance(H.Pos, Spot) <= 1.5) To = Human;
+			}
 			else
 			{
 				for (const FJamSkaterState& T : Sim->GetSkaters()) if (T.Team == H.Team && T.Index != Human && T.Role != FName(TEXT("back"))) { To = T.Index; break; }
@@ -1247,6 +1262,29 @@ FJamInput AHokejGameMode::MechDrillInput()
 	const double Dir = Gx > 0 ? 1.0 : -1.0;
 	const FVector2D HumanSpot(Gx - Dir * 10.0, Mode == 11 ? -2.0 : 0.0);
 	const FVector2D PreSpot(Gx - Dir * 14.0, HumanSpot.Y);
+	// Lane A85: with the hand on (jam.ctrl.HandPuck 1) the shots drill holds its set piece, carrying or not: stage 0 to the pre-spot 14 m out, stage 1 from there to
+	// the spot 10 m out (so the body, which turns only toward its move, arrives facing the net), stage 2 standing inside 1.5 m of the spot, turned to the net by a
+	// creep at it when the facing is off; beyond 1.5 m it starts over. No chase, no check: the hand puts the puck on it there, and the cue comes as soon as it
+	// carries facing the net. Before, it left the spot for every loose puck while the hand fed it on the way: A82's run reached the cue twice in 150 s (88 hands),
+	// A85's first run never (88 hands).
+	if (Mode == 10 && CVarJamCtrlHandPuck.GetValueOnGameThread() != 0)
+	{
+		static int32 Stage = 0;
+		const FVector2D ToPre = PreSpot - S.Pos, ToSpot = HumanSpot - S.Pos;
+		const FVector2D NetDir = (FVector2D(Gx, 0.0) - S.Pos).GetSafeNormal();
+		const bool bFaces = FVector2D::DotProduct(S.Forward(), NetDir) > FMath::Cos(FMath::DegreesToRadians(8.0));
+		if (Stage == 2 && ToSpot.Size() > 1.5) Stage = 0;
+		if (Stage == 0) { if (ToPre.Size() > 1.0) { In.Move = ToPre.GetSafeNormal() * 0.8; return In; } Stage = 1; }
+		if (Stage == 1) { if (ToSpot.Size() > 0.5) { In.Move = ToSpot.GetSafeNormal() * 0.6; return In; } Stage = 2; }
+		In.Move = bFaces ? FVector2D::ZeroVector : NetDir * 0.15;
+		if (C == Me && bFaces && F >= MechCueReady && F >= S.ShotReadyFrame && S.ChargeFrames == 0)
+		{
+			MechCueReady = F + 90;
+			const TCHAR* Kind = MechShotN % 3 == 0 ? TEXT("tap") : (MechShotN % 3 == 1 ? TEXT("half") : TEXT("full"));
+			UE_LOG(LogHokej, Log, TEXT("JAMCUE shot frame=%lld kind=%s dist_line=%.2f"), F, Kind, FMath::Abs(Gx - PuckPos.X));
+		}
+		return In;
+	}
 	if (C != Me)
 	{
 		bMechAtPre = false;

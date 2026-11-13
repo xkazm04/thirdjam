@@ -65,7 +65,7 @@ of them out explicitly, but a Designer or hand-written cartridge may leave them 
 | `shot.deflect` | true | lane A16 (C-0005): a shot into a skater within 0.6 m of its stick keeps 70 % of its speed |
 | `shot.one_timer.window_frames` | 10 | lane A39 (R-0029 point 4): a shot inside this many frames of a received pass is a one-timer (full charge without the hold, `aim_cone_deg` + `cone_bonus_deg`, `shot` event kind `one_timer`); 0 = off |
 | `shot.one_timer.cone_bonus_deg` | 8 | lane A39 |
-| `shot.lift.tap_m` | 0.05 | lane A52 (R-0035): the height a tap arrives at over the goal line |
+| `shot.lift.tap_m` | 0 | lane A52 (R-0035): the height a tap arrives at over the goal line; R-0042 (lane A85): 0, a tap stays on the ice the whole flight (0.05 made it a 0.5 m lob from 10 m that cleared every blade) |
 | `shot.lift.half_m` | 0.45 | lane A52: the height of a shot held `half_frames` |
 | `shot.lift.full_m` | 0.6 | lane A52 (0.95), Director 01:40: the height of a full charge: just under the 0.61 bar (top shelf); at 0.95 every hold past 8 frames flew over the low net; a cartridge may still choose 0.95 for a sailing full charge |
 | `shot.lift.half_frames` | 8 | lane A52: frames of hold that reach `half_m`; linear tap -> half -> full |

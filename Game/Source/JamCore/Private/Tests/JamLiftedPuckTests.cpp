@@ -99,15 +99,16 @@ namespace JamLiftedPuckTests
 
 using namespace JamLiftedPuckTests;
 
-// The lifted shot: the release height follows the charge (game.shot.lift): a tap arrives tap_m (0.05) over the goal line, a hold of half_frames (8)
-// half_m (0.45), the full charge full_m (0.6: top shelf under the 0.61 bar); the carried puck sits on the ice; a cartridge with full_m 0.95 clears the 0.61 bar and goes in at 1.22.
+// The lifted shot: the release height follows the charge (game.shot.lift): a tap stays on the ice the whole way (tap_m 0 since R-0042, lane A85: at A52's 0.05
+// the solve lobbed a tap from 10 m 0.5 m high and no blade could touch it), a hold of half_frames (8) arrives half_m (0.45) over the goal line, the full charge
+// full_m (0.6: top shelf under the 0.61 bar); the carried puck sits on the ice; a cartridge with full_m 0.95 clears the 0.61 bar and goes in at 1.22.
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamLiftedShot, "Jam.Core.LiftedShot", JamLiftedPuckTests::Flags)
 bool FJamLiftedShot::RunTest(const FString&)
 {
 	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
 	if (!C) return false;
 	FJamGameConfig Cfg = C->Game;
-	TestEqual(TEXT("defaults: tap_m"), Cfg.Shot.LiftTapM, 0.05);
+	TestEqual(TEXT("defaults: tap_m (0 since R-0042: a tap stays on the ice)"), Cfg.Shot.LiftTapM, 0.0);
 	TestEqual(TEXT("defaults: half_m"), Cfg.Shot.LiftHalfM, 0.45);
 	TestEqual(TEXT("defaults: full_m"), Cfg.Shot.LiftFullM, 0.6);
 	TestEqual(TEXT("defaults: half_frames"), Cfg.Shot.LiftHalfFrames, 8);
@@ -116,15 +117,15 @@ bool FJamLiftedShot::RunTest(const FString&)
 	Cfg.Rink.GoalHeightM = 1.22;   // a real net: every lift below goes in, so the flight is read to the line unhindered
 	{
 		UJamSim* Sim = MakeSim(Cfg, 1);
-		TestEqual(TEXT("LiftForCharge(0) = tap_m"), Sim->LiftForCharge(0.f), 0.05, 1e-9);
+		TestEqual(TEXT("LiftForCharge(0) = tap_m = 0"), Sim->LiftForCharge(0.f), 0.0, 1e-9);
 		TestEqual(TEXT("LiftForCharge(8/30) = half_m"), Sim->LiftForCharge(8.f / 30.f), 0.45, 1e-6);
 		TestEqual(TEXT("LiftForCharge(1) = full_m"), Sim->LiftForCharge(1.f), 0.6, 1e-9);
 		TestEqual(TEXT("LiftForCharge(19/30) = midway half -> full"), Sim->LiftForCharge(19.f / 30.f), 0.525, 1e-6);   // 0.45 + 11/22 of 0.15 (full_m 0.6 since 01:40)
-		TestEqual(TEXT("LiftForCharge(4/30) = midway tap -> half"), Sim->LiftForCharge(4.f / 30.f), 0.25, 1e-6);
+		TestEqual(TEXT("LiftForCharge(4/30) = midway tap -> half"), Sim->LiftForCharge(4.f / 30.f), 0.225, 1e-6);   // (0 + 0.45) / 2 since tap_m 0 (R-0042)
 	}
 	const double Gx = C->Game.Rink.GoalLineX();
 	struct FCase { int32 Hold; double Want; const TCHAR* Name; };
-	for (const FCase& K : { FCase{ 0, 0.05, TEXT("tap") }, FCase{ 8, 0.45, TEXT("half (8 frames)") }, FCase{ 30, 0.6, TEXT("full (30 frames)") } })
+	for (const FCase& K : { FCase{ 0, 0.0, TEXT("tap") }, FCase{ 8, 0.45, TEXT("half (8 frames)") }, FCase{ 30, 0.6, TEXT("full (30 frames)") } })
 	{
 		UJamSim* Sim = MakeSim(Cfg, 1);
 		Park(Sim);
@@ -139,6 +140,9 @@ bool FJamLiftedShot::RunTest(const FString&)
 		TestTrue(*FString::Printf(TEXT("%s: the puck crossed the goal line"), K.Name), F.bCrossed);
 		TestEqual(*FString::Printf(TEXT("%s: height over the goal line"), K.Name), F.ZAtLine, K.Want, 0.04);
 		TestEqual(*FString::Printf(TEXT("%s: a goal at 1.22"), K.Name), F.Goals, 1);
+		// R-0042 (lane A85): a charge-0 shot flies flat: Z 0 the whole way (no parabola), so a blade between the shooter and the net can deflect it again.
+		if (K.Hold == 0) TestEqual(TEXT("tap: on the ice the whole flight (apex 0)"), F.ZMax, 0.0, 1e-9);
+		else TestTrue(*FString::Printf(TEXT("%s: lifted (apex %.2f m over 0.2)"), K.Name, F.ZMax), F.ZMax > UJamSim::BladeClearM);
 		AddInfo(FString::Printf(TEXT("%s from 12 m: %.3f m over the line (apex %.2f m)"), K.Name, F.ZAtLine, F.ZMax));
 	}
 	// The one-timer window: a shot right after a received pass lifts full without the hold (TryShoot forces Charge 1): read through LiftForCharge(1) above.

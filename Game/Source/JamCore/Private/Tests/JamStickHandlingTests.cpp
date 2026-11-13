@@ -665,4 +665,130 @@ bool FJamCarrierSpeed::RunTest(const FString& Parameters)
 	return true;
 }
 
+// R-0042 (lane A85): CarrierReach. One reach for every carrier test: UJamSim::CarrierReachM = max(shot.reach_m, body radius + stick.reach_m) + 0.05 (1.65 m at
+// the defaults; the brain's FJamAIWorld::CarrierReach is the same number). A carrier with the blade at full aim holds the puck 1.6 m out, past shot.reach_m 1.5
+// (the seam lane A82's JAMSHOT release line found: nothing charged or fired while the player aimed): it now fires a tap, a charged shot, a pass and a saucer,
+// and the puck at 1.6 m stays carried through a fast aim change.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamCarrierReach, "Jam.Core.CarrierReach", JamStickHandlingTests::Flags)
+bool FJamCarrierReach::RunTest(const FString& Parameters)
+{
+	using namespace JamStickHandlingTests;
+	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
+	if (!C) return false;
+	const FJamGameConfig& G = C->Game;
+	const double Want = FMath::Max(G.Shot.ReachM, UJamSim::SkaterRadius + G.Stick.ReachM) + 0.05;
+	TestTrue(TEXT("the blade's full reach lies beyond shot.reach_m at the defaults (the seam)"), UJamSim::SkaterRadius + G.Stick.ReachM > G.Shot.ReachM);
+	{
+		UJamSim* Sim = MakeScene(G, 1, {});
+		TestEqual(TEXT("CarrierReachM = max(shot.reach_m, 0.4 + stick.reach_m) + 0.05"), Sim->CarrierReachM(-1), Want, 1e-9);
+		TestEqual(TEXT("... 1.65 m at the defaults"), Sim->CarrierReachM(Sim->GetHumanIndex()), 1.65, 1e-9);
+		JamAI::FJamAIWorld W;
+		W.ShotReach = G.Shot.ReachM; W.StickReach = G.Stick.ReachM; W.SkaterRadius = UJamSim::SkaterRadius;
+		TestEqual(TEXT("the brain's CarrierReach is the sim's"), W.CarrierReach(), Sim->CarrierReachM(-1), 1e-9);
+		// A short stick: shot.reach_m is the longer one and stands.
+		FJamGameConfig Short = G; Short.Stick.ReachM = 0.6;
+		UJamSim* S2 = MakeScene(Short, 1, {});
+		TestEqual(TEXT("stick.reach_m 0.6: the reach is shot.reach_m + 0.05"), S2->CarrierReachM(-1), G.Shot.ReachM + 0.05, 1e-9);
+	}
+	// The scene: the human at centre ice facing the net it attacks, the blade at full aim straight ahead (the puck seated on it, 1.6 m out), one teammate
+	// open 8 m up the ice and 6 m to the side, everyone else parked.
+	struct FScene { UJamSim* Sim = nullptr; int32 Me = -1; int32 Mate = -1; FVector2D Aim = FVector2D::ZeroVector; double Dir = 1.0; };
+	auto Scene = [&]() -> FScene
+	{
+		FScene K;
+		K.Sim = MakeScene(G, 1, {});
+		K.Me = K.Sim->GetHumanIndex();
+		const int32 Team = K.Sim->GetSkaters()[K.Me].Team;
+		for (const FJamSkaterState& S : K.Sim->GetSkaters()) if (S.Index != K.Me && S.Team == Team) { K.Mate = S.Index; break; }
+		K.Dir = K.Sim->AttackGoalX(Team) > 0 ? 1.0 : -1.0;
+		K.Aim = FVector2D(K.Dir, 0.0);
+		K.Sim->SetSkater(K.Me, FVector2D(0, 0), FVector2D::ZeroVector, K.Dir > 0 ? 0.0 : UE_DOUBLE_PI);
+		K.Sim->SetSkater(K.Mate, FVector2D(8.0 * K.Dir, 6.0), FVector2D::ZeroVector, K.Dir > 0 ? 0.0 : UE_DOUBLE_PI);
+		GivePuck(K.Sim, K.Me, K.Aim);
+		return K;
+	};
+	// Steps Frames frames with the human's stick at Stick and the given levels and edges; everyone else idle.
+	auto Step = [&](FScene& K, const FVector2D& Stick, int32 Frames, bool bShootHeld, bool bPassHeld, bool bShoot = false, bool bPass = false)
+	{
+		TArray<FJamInput> In;
+		In.SetNum(K.Sim->GetSkaters().Num());
+		for (int32 f = 0; f < Frames; ++f)
+		{
+			In[K.Me] = FJamInput();
+			In[K.Me].Stick = Stick; In[K.Me].bShootHeld = bShootHeld; In[K.Me].bPassHeld = bPassHeld; In[K.Me].bShoot = bShoot; In[K.Me].bPass = bPass;
+			K.Sim->Step(In);
+		}
+	};
+	auto PuckDist = [&](const FScene& K) { return FVector2D::Distance(K.Sim->GetSkaters()[K.Me].Pos, K.Sim->GetPuck().Pos); };
+	// The seam itself: the seated puck is beyond shot.reach_m and inside the carrier's reach, and it is carried.
+	{
+		FScene K = Scene();
+		Step(K, K.Aim, 10, false, false);
+		const double D = PuckDist(K);
+		AddInfo(FString::Printf(TEXT("the puck on the blade at full aim: %.3f m from the body (shot.reach_m %.2f, carrier reach %.2f)"), D, G.Shot.ReachM, K.Sim->CarrierReachM(K.Me)));
+		TestTrue(*FString::Printf(TEXT("the carried puck sits beyond shot.reach_m (%.3f > %.2f)"), D, G.Shot.ReachM), D > G.Shot.ReachM);
+		TestTrue(*FString::Printf(TEXT("... and inside the carrier's reach (%.3f <= %.2f)"), D, K.Sim->CarrierReachM(K.Me)), D <= K.Sim->CarrierReachM(K.Me));
+		TestEqual(TEXT("... carried by the human"), K.Sim->CarrierIndex(), K.Me);
+	}
+	// A tap (the shoot edge) fires.
+	{
+		FScene K = Scene();
+		Step(K, K.Aim, 1, false, false, true);
+		TestEqual(TEXT("tap at full aim: one shot"), K.Sim->GetSkaters()[K.Me].Shots, 1);
+		TestEqual(TEXT("tap at full aim: the puck is on the ice (R-0042: a tap flies flat)"), K.Sim->GetPuck().Z, 0.0, 1e-9);
+		TestTrue(TEXT("tap at full aim: the puck left for the net"), K.Sim->GetPuck().Vel.X * K.Dir > 10.0);
+	}
+	// A hold charges with the puck at the blade and the release fires the charged shot.
+	{
+		FScene K = Scene();
+		Step(K, K.Aim, 12, true, false);
+		TestEqual(TEXT("hold at full aim: the charge counts every held frame"), K.Sim->GetSkaters()[K.Me].ChargeFrames, 12);
+		Step(K, K.Aim, 1, false, false);
+		const FJamSkaterState& S = K.Sim->GetSkaters()[K.Me];
+		TestEqual(TEXT("release at full aim: one shot"), S.Shots, 1);
+		TestEqual(TEXT("release at full aim: charged 12 of 30"), static_cast<double>(S.LastShotCharge), 12.0 / G.Shot.ChargeFramesMax, 1e-4);
+		Step(K, K.Aim, 6, false, false);
+		TestTrue(*FString::Printf(TEXT("the charged shot is lifted (Z %.3f)"), K.Sim->GetPuck().Z), K.Sim->GetPuck().Z > 0.0);
+	}
+	// A pass (the edge) goes to the open teammate.
+	{
+		FScene K = Scene();
+		Step(K, K.Aim, 1, false, false, false, true);
+		TestEqual(TEXT("pass at full aim: one pass"), K.Sim->GetSkaters()[K.Me].Passes, 1);
+		TestEqual(TEXT("pass at full aim: no saucer"), K.Sim->GetSkaters()[K.Me].Saucers, 0);
+	}
+	// A held pass charges to pass.saucer.half_frames and the release is a saucer.
+	{
+		FScene K = Scene();
+		const int32 Half = G.Pass.SaucerHalfFrames;
+		Step(K, K.Aim, Half, false, true);
+		TestEqual(TEXT("pass hold at full aim: the charge reached half_frames"), K.Sim->GetSkaters()[K.Me].PassChargeFrames, Half);
+		Step(K, K.Aim, 1, false, false);
+		TestEqual(TEXT("saucer at full aim: one pass"), K.Sim->GetSkaters()[K.Me].Passes, 1);
+		TestEqual(TEXT("saucer at full aim: it was a saucer"), K.Sim->GetSkaters()[K.Me].Saucers, 1);
+		Step(K, K.Aim, 4, false, false);
+		TestTrue(*FString::Printf(TEXT("the saucer is in the air (Z %.3f)"), K.Sim->GetPuck().Z), K.Sim->GetPuck().Z > 0.0);
+	}
+	// The fast aim change: the blade from full aim ahead to full aim square to the side in one frame, and back 15 frames later: carried on every frame.
+	{
+		FScene K = Scene();
+		Step(K, K.Aim, 10, false, false);
+		int32 Dropped = 0;
+		double MaxD = 0.0;
+		const FVector2D Side(0.0, 1.0);
+		for (int32 f = 0; f < 30; ++f)
+		{
+			Step(K, f < 15 ? Side : K.Aim, 1, false, false);
+			if (K.Sim->CarrierIndex() != K.Me) ++Dropped;
+			MaxD = FMath::Max(MaxD, PuckDist(K));
+		}
+		AddInfo(FString::Printf(TEXT("fast aim change: farthest puck %.3f m, frames not carried %d of 30"), MaxD, Dropped));
+		TestEqual(TEXT("fast aim change: the puck is carried on every frame"), Dropped, 0);
+		TestTrue(*FString::Printf(TEXT("... while it rode beyond shot.reach_m (%.3f)"), MaxD), MaxD > G.Shot.ReachM);
+		Step(K, K.Aim, 1, false, false, true);
+		TestEqual(TEXT("... and the shot still fires after it"), K.Sim->GetSkaters()[K.Me].Shots, 1);
+	}
+	return true;
+}
+
 #endif

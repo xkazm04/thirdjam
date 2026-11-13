@@ -154,7 +154,7 @@ struct JAMCORE_API FJamShotConfig
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double OneTimerConeBonusDeg = 8;
 	// game.shot.lift (R-0035, lane A52): the height a shot arrives at over the goal line by its charge: a tap tap_m, a hold of half_frames half_m, the full
 	// charge (charge_frames_max) full_m, linear between (UJamSim::LiftForCharge). All three at 0 = every shot on the ice (the old game).
-	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double LiftTapM = 0.05;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double LiftTapM = 0.0;   // R-0042 (lane A85): a tap stays on the ice (0.05 before: A52's solve made a tap from 10 m a 0.5 m lob that cleared every blade)
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double LiftHalfM = 0.45;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double LiftFullM = 0.6;   // Director calibration 01:40 (R-0035 amended): just under the 0.61 bar, the top-shelf shot; at 0.95 every hold past 8 frames sailed over the low net and the novice gate fell to 8 of 20
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 LiftHalfFrames = 8;

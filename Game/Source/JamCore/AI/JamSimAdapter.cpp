@@ -248,7 +248,7 @@ namespace JamAI
 			// the same rule as UJamSim::CarrierIndex (private): the last toucher, able to act, with the puck within shot reach
 			const int32 Lt = S.GetPuck().LastTouch;
 			const TArray<FJamSkaterState>& All = S.GetSkaters();
-			W.Carrier = (All.IsValidIndex(Lt) && All[Lt].CanAct() && FVector2D::Distance(All[Lt].Pos, S.GetPuck().Pos) <= G.Shot.ReachM) ? Lt : -1;
+			W.Carrier = (All.IsValidIndex(Lt) && All[Lt].CanAct() && FVector2D::Distance(All[Lt].Pos, S.GetPuck().Pos) <= G.Shot.ReachM) ? Lt : -1;   // lane A85 (R-0042), measured and left on shot.reach_m: at UJamSim::CarrierReachM the brain sees every blade-length carry (about thirty decisions read W.Carrier) and three curve gates move (MECHANICS-3.md section 3); it goes with A66's cap and the curve
 			// lane A46: whom the sim's pass would go to from the carrier right now (the brain passes to the human only when it is this teammate)
 			W.CarrierBestPass = -1;
 			if (W.Carrier >= 0) { FVector2D Aim; W.CarrierBestPass = S.BestPass(W.Carrier, Aim); }
@@ -298,7 +298,7 @@ namespace JamAI
 			// the same gate as UJamSim::TryShoot
 			const FVector2D To = S.GetPuck().Pos - K.Pos;
 			const double D = To.Size();
-			O.bCanShoot = !W.bFrozen && !K.IsDown() && NextFrame >= K.ShotReadyFrame && D <= G.Shot.ReachM
+			O.bCanShoot = !W.bFrozen && !K.IsDown() && NextFrame >= K.ShotReadyFrame && D <= S.CarrierReachM(K.Index)   // R-0042 (lane A85): TryShoot's reach
 				&& (D < 0.05 || FVector2D::DotProduct(K.Forward(), To / D) >= UJamSim::ShotFrontDot);
 		}
 	}

@@ -293,6 +293,19 @@ namespace JamAI
 			{
 				Dir = Dir.Normalized();
 			}
+			// Lane A85 (found by Jam.Core.NetTrap once R-0042's flat tap re-rolled its match): a bot behind a net (between its back and the end boards, inside
+			// the net's width + 1.2 m) whose way leads back to the middle goes round the side of the net, not into its back: FJamPlayerBot's rule (lane A3,
+			// 16:12) for the bots. Before, a back whose guard spot lay through its own net pressed into the hull until the puck moved (47 frames, hockey.regular
+			// pro seed 15, frame 4627: a missed flat tap sliding along the end boards). The side: the one it stands on, or its way's when it stands on the centre line.
+			{
+				const FVec2 Bp = W.Skaters[i].Pos;
+				const double Len = Dir.Length();
+				if (std::fabs(Bp.X) > W.GoalX + 1.5 + 0.2 && std::fabs(Bp.Y) < W.GoalHalfWidth + 1.2 && Len > 0.05 && Dir.X * Sign(Bp.X) < 0.0)   // 1.5 = UJamSim::NetDepth: behind the back wall only, never inside or beside the net
+				{
+					const double Sy = std::fabs(Bp.Y) > 0.5 ? Sign(Bp.Y) : (Dir.Y >= 0.0 ? 1.0 : -1.0);
+					Dir = FVec2(0.0, Sy) * Len;
+				}
+			}
 			In.Move = Dir * Sc;
 			In.bShoot = bShoot;
 			In.bDeke = bDeke;   // R-0029 point 4 (lane A39)
@@ -662,6 +675,11 @@ namespace JamAI
 			// the blade's full reach (0.4 + stick.reach_m 1.2 = 1.6 m, past shot.reach_m 1.5), and a blade aimed at the puck's own distance held it
 			// there: carried, but beyond TryShoot's and the charge's reach, and the bot never shot (Jam.Bot.SeasonTakes take-3 / take-4 seed 1,
 			// docs/experiments/STICK.md section 8). Outside the range the long carry stays as A51 made it (the passes to the human come from there).
+			// R-0042 (lane A85): the sim's carrier reach now covers the blade's full length and the bots shoot without this cap (SeasonTakes take-1 AI shots
+			// 1 / 1 / 4, ProCharge green), but the cap stays, measured (docs/experiments/MECHANICS-3.md section 3): without it a bot carries in the 1.5-1.65 m
+			// band where the brain's W.Carrier (JamSimAdapter: shot.reach_m) does not see a carrier; with W.Carrier left there Jam.Core.NetTrap fails (a pro
+			// bot that does not know it carries presses into the net hull for 47 frames), and with W.Carrier moved to the carrier reach three curve gates
+			// move (HumanHasSomethingToDo, PassesToHuman at rookie, ModeKeys.Sprint). The cap and W.Carrier go together, with the curve (A79).
 			double MaxFrac = 1.0;
 			if (W.PuckLastTouch == Id && !bOppCarrier && W.StickReach > 0.01 && (W.PuckPos.DistTo(W.OppGoal(S.Team)) < W.ShotReach + K.ShootExtraM || PassHold[Id] > 0))   // PassHold: lane A77, the saucer's hold needs the puck in pass reach
 			{
@@ -792,14 +810,14 @@ namespace JamAI
 		{
 			bOkShot = true;
 		}
-		if (D < W.ShotReach && bOkShot && S.bCanShoot)
+		if (D < W.CarrierReach() && bOkShot && S.bCanShoot)   // R-0042 (lane A85): the carrier's reach (the blade's full length included)
 		{
 			bShoot = true;
 			bAimed = true;   // lane A31: the one shot worth charging
 		}
 		// R-0029 point 4 (lane A39): the one-timer. A pass just landed on the blade: shoot at once while the window is open, the net is in range and the
 		// facing is inside the widened cone (the sim adds one_timer.cone_bonus_deg; the brain assumes the default 8 on top of the aim cone).
-		if (K.bOneTimer && S.OneTimerFrames > 0 && S.bCanShoot && D < W.ShotReach && Dgoal < W.ShotReach + K.ShootExtraM + 10.0 && !bNearWall
+		if (K.bOneTimer && S.OneTimerFrames > 0 && S.bCanShoot && D < W.CarrierReach() && Dgoal < W.ShotReach + K.ShootExtraM + 10.0 && !bNearWall
 			&& Fwd.Dot(Dirg) > std::cos(DegToRad((Params.AimConeDeg > 0.0 ? Params.AimConeDeg : 0.0) + 8.0)))
 		{
 			bShoot = true;
@@ -863,7 +881,7 @@ namespace JamAI
 			}
 		}
 		// R-0007 pass intent: the carrier turns to face the human (lead 1.5 x velocity) so the pass above can fire
-		if (bPassIntent && W.PlayerIndex >= 0 && W.Skaters[W.PlayerIndex].Team == S.Team && D < W.ShotReach + 0.5)
+		if (bPassIntent && W.PlayerIndex >= 0 && W.Skaters[W.PlayerIndex].Team == S.Team && D < W.CarrierReach() + 0.5)   // R-0042 (lane A85)
 		{
 			const FJamAISkater& H = W.Skaters[W.PlayerIndex];
 			const FVec2 Lead = H.Pos + H.Vel * 1.5;

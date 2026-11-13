@@ -237,7 +237,7 @@ namespace JamAI
 		// R-0035 (lane A52): the net's height and the lifted shot's rule (game.rink.goal_height_m, game.shot.lift, game.shot.charge_frames_max), so the
 		// shooter's charge picks the height it arrives at: the full charge at a real net, half_frames under the 0.61 bar, a tap from close.
 		double GoalHeightM = 0.61;
-		double LiftTapM = 0.05;
+		double LiftTapM = 0.0;    // R-0042 (lane A85): a tap stays on the ice
 		double LiftHalfM = 0.45;
 		double LiftFullM = 0.95;
 		int LiftHalfFrames = 8;
@@ -263,6 +263,9 @@ namespace JamAI
 		FVec2 DekeCommitOffset;
 		double SkaterRadius = 0.4;
 		double StickReach = 1.6;        // game.stick.reach_m
+		// R-0042 (lane A85): the carrier's reach, UJamSim::CarrierReachM's rule: max(shot.reach_m, body radius + stick.reach_m) + 0.05. The brain's shot, one-timer
+		// and pass-intent tests read it (the adapter's bCanShoot is the sim's own test). W.Carrier is still the adapter's shot.reach_m test: see StickPlay's cap.
+		double CarrierReach() const { return (ShotReach > SkaterRadius + StickReach ? ShotReach : SkaterRadius + StickReach) + 0.05; }
 		double LiftRange = 1.0;         // game.stick.lift_range_m
 		int SweepBotReactFrames = -1;   // lane A51: game.stick.sweep.bot_react_frames (-1 = absent: the level's FJamBotSkill::SweepReactFrames)
 		static constexpr int kMaxPickups = 8;

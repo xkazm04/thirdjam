@@ -247,7 +247,7 @@ FJamInput FJamNetScriptedHuman::Think(const UJamSim& Sim, int32 Me)
 	const FVector2D ToPuck = PuckPos - S.Pos;
 	const double Dist = ToPuck.Size();
 	const double GoalDist = FVector2D::Distance(PuckPos, Goal);
-	const bool bHave = Dist < Sim.GetConfig().Shot.ReachM && Dist > 1e-6 && FVector2D::DotProduct(S.Forward(), ToPuck / Dist) > 0.6;
+	const bool bHave = Dist < Sim.CarrierReachM(S.Index) && Dist > 1e-6 && FVector2D::DotProduct(S.Forward(), ToPuck / Dist) > 0.6;
 	const int64 Frame = Sim.GetFrame();
 	// In the faceoff: press at the drop (the first clean press wins the draw).
 	if (Sim.IsDrawOpen() && S.bCentre) { In.bPoke = true; return In; }
