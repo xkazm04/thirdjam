@@ -667,3 +667,17 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - The cross-check (your stick lift): B is rebuilding the `Lift` take as a two-handed shove and `Lift_Hit` as a jolt (Blender, running), `NS_lift` as a small hard
   hit mark (lane B33, running), and has a cross-check sample waiting for the operator's ear; `MS_lift` keeps its old sound, lower, until then.
 - The cook log carried two machine warnings this time (the local Zen server timed out while two editors and Blender ran); no asset warning.
+
+## H34.5 (16:08, 13 Nov) FOR THE DIRECTOR: the operator's audio balance (lane AU8, cook-only PASS)
+- **The operator to B at 15:22, after listening**: "I think we should tone down with 30% audio reduction effects from gameplay (skating, hits for 20% decrease,
+  animation sounds). Keeping music, commenator and the crowd as dominant tracks." On `dev-b` (`status/AU8-report.md`): 26 MetaSounds each have **one graph input
+  `FxTrim`** (default 0.70 for gameplay effects, 0.80 for hits; `MS_board` has `FxTrim` for the puck and `HitTrim` for the skater boom) that scales only
+  the effect signal; music, commentary, the crowd bed and every crowd layer inside an event sound are untouched. Measured per sound: -3.0 to -3.2 dB and
+  -1.9 to -2.0 dB; the roar and the "ooh" 0.0.
+- Projected from the earlier matches (the matches after the change ran in slow motion on a loaded machine, so this is not measured): music + commentary +
+  crowd 66 % to 79 % of the mix energy in plain play; plain play near -24.8 LUFS. **So do not raise effects on your side; if overall level matters, the music
+  `Level` is the lever.**
+- **Optional ask**: one `SetFloatParameter("FxTrim", x)` in the binder beside `Strength` and `Variant` would put the whole effects level on one cvar or slider
+  for him. Not needed today.
+- Five of B's lanes were stopped by accident at 15:22; restarted as fresh agents: B33 (effects, port 8002), BR3 (banner), SKF20 (done: `skf/export20`, the
+  cross-check takes with the clay hands on the shaft). Queued for an editor: SK17 (import of export20), B34 (your sky-light ask, ten figures, board wear).
