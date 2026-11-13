@@ -1419,3 +1419,266 @@ Checks: pelvis 0 cm, root 0 cm, loop seams 0 cm, wrap-speed offenders 0, lowest 
 | p3_clay | `20261113-051013-B-lab-skf10-p3-clay-faceoff-draw.png` | Faceoff_Draw, old against new |
 | p3_clay | `20261113-051013-B-lab-skf10-p3-clay-aim-rest-side.png` | three aim holds from the side, old against new |
 | p4_broadcast | `20261113-051013-B-lab-skf10-p4-broadcast-faceoff-note.png` | the P4 faceoff fault, not built |
+
+## Eleventh pass: the tackling takes (SKF11, 09:45 to 09:58)
+
+The operator made tackling the key feature: "the ability to tackle other players to the ground, collide and animate fall, getting up". Styles `p2_cel` and `p3_clay`.
+
+**Where the files are**
+
+| What | Path |
+|---|---|
+| Exports | `skf/export11/<style>/`, full take sets |
+| `READY.txt` | `skf/export11/` |
+| Strips | `skf/sheets11/before/`, `skf/sheets11/after/` |
+| Before/after sheets | `skf/sheets11/ba/` |
+| Rebuild | `bash skf/run11.sh`, then `bash skf/part1.sh export11 r11p1n sheets11/after`, `bash skf/pairs.sh export11 r11pairn sheets11/after`, `bash skf/compose11.sh` |
+
+### Part 1: what export10 had (both styles move the same; the toy proportions differ)
+
+**Strips:** every 3rd frame, game camera (behind, 35 deg down, orthographic, figure about 110 px) and side (300 px).
+
+**Pair sheet assumption:** the sim knocks down at contact distance. I placed the victim 0.35 m ahead and 0.55 m to the side of the attacker, so the knocked side faces the attacker's driving shoulder (0.65 m straight ahead for the hit from behind). Contact is `Check_Deliver_*` frame 16 against `Knockdown_*` frame 2.
+
+At 0.65 m the toy bodies already overlap at contact, so the game's contact distance for these wide figures is probably larger, or the attacker's drive should stop shorter. I have not verified which.
+
+**Critique per take (before, judged at 110 px):**
+
+| Take | Verdict |
+|---|---|
+| `Knockdown_Left` / `_Right` | **Fail.** You can tell a hit and its side by frame 3, but the body crumples into a ball on the spot. No legs going out, no airborne or sliding moment, a soft landing, and the end pose reads as seated, not lying. |
+| `Knockdown_Back` | **Weak.** Pitched forward onto hands and knees, then chest: readable, but slow (31 frames), no bounce. |
+| `Fall` | **Fail.** Tips back like a board over 12 frames with the arms folded at the chest; no airborne moment; a long slow lie-down. |
+| `Fall_Forward` | **Weak.** Same board tip forward, arms out late. |
+| `Trip` | **Passable** since the fifth pass (leg swept, half twist, side landing), but 31 frames. |
+| `GetUp`, `GetUp_Front` | **Wrong length.** 73 frames: with the fall the game plays them 1.2x fast and there is no time lying. They do show stages (roll, sit, knee, up). |
+| `GetUp_Side_*` | 55 frames, same problem; sit, kneel on the stick, up. |
+| `Check`, `Check_Deliver_*` | **Weak.** Wind 9, drive 16, follow-through 21 to 30: the shoulder drive reads from the side, but from the game camera it is a body turn without a clear lunge; the recovery is fine. |
+| `Check_Hit_*` | **Passable** since the fifth pass: a 2-frame snap, head lag, a step; the extreme is held 3 frames. Small at 110 px. |
+| `Stumble`, `Stumble_Short` | **Passable.** Forward pitch, arms out; reads as a stumble. |
+| `Board_Hit` | **Weak.** The impact reads from the side, little from behind. `Board_Pin` is a static hold, fine. |
+| `Foul_Reaction` | Arms spread, head shake: reads, not a fall. |
+
+### Part 2: reworked (knockdowns, falls, trip, get-ups); NOT reworked this pass
+
+Not reworked: `Check_Deliver_*` / `Check`, `Check_Hit_*`, `Stumble`, `Board_Hit`. They are identical to export10.
+
+**Changes (style flag `ready`; p4 untouched)**
+
+*Falls* (`Fall`, `Fall_Forward`, `Knockdown_Back`, `Knockdown_Left`, `Knockdown_Right`, `Trip`), 26 frames each, contact at frame 2:
+- a 2-frame snap to the extreme, with the head and arms lagging and the stick swung wide (still in the top hand);
+- to frame 6, the legs going out from under (an airborne moment);
+- impact at 10, a bounce at 13, a settle at 17, lying to 26.
+- The side knockdowns now lie flatter on the hip and forearm (pelvis roll 80 instead of 66). The first rework still read as seated; this one also sank P2's torso 6.4 cm into the ice, so the hip drop is a style setting (-0.535 P2, -0.60 P3).
+- `Trip` keeps its sweep and twist, retimed.
+
+*Get-ups*, 44 frames each:
+- from the lying pose, hands push (sit or push up) at 8 to 9;
+- one knee at 18 to 20;
+- rise at 28 to 30;
+- a small overshoot into the ready stance at 36 to 37;
+- the ready Glide at 44.
+
+**Timing:** 26 + 44 = 70 of the Blueprint's 90 frames, so about 20 frames lying and no speed-up.
+
+**Lying pose per direction** (a fall's last frame is its get-up's first frame, exactly):
+
+| Fall | Lying pose | Get-up |
+|---|---|---|
+| `Fall` | on the back | `GetUp` |
+| `Fall_Forward`, `Knockdown_Back` | face down | `GetUp_Front` |
+| `Knockdown_Left` | right hip | `GetUp_Side_Left` |
+| `Knockdown_Right`, `Trip` | left hip | `GetUp_Side_Right` |
+
+Each fall starts from the ready Glide and each get-up ends in it, as before.
+
+**Proof**
+- **Takes that differ from export10:** exactly these 10 in each style (`compare_anim.py` now counts takes of a different length as different).
+- **Everything else:** identical (0.0), including the clay aim holds of export10.
+- **Mesh:** identical; stick FBX byte-identical.
+- **Travel and seams:** root and pelvis travel 0.000 cm, loop seams 0.
+
+**p2_cel** (export10 -> export11)
+
+| Take | Frames before -> after | Lowest body / skate / stick cm (after) | Worst part (cm) | Steps > 45 deg before -> after | Twist > 45 deg (bone, frame) |
+|---|---|---|---|---|---|
+| Fall | 37 -> 27 | 0 / 0 / 0.73 | skates 0 | 4 -> 12 | clavicle_l f1 -58.5, clavicle_r f1 58.5 |
+| Fall_Forward | 37 -> 27 | 0 / 0 / 0.73 | skates 0 | 2 -> 5 | none |
+| Knockdown_Back | 31 -> 27 | 0 / 0 / 0.58 | skates 0 | 9 -> 12 | clavicle_l f1 66.7, clavicle_r f1 -66.7 |
+| Knockdown_Left | 31 -> 27 | -0.5 / 0 / -0.5 | skates 0 | 6 -> 14 | none |
+| Knockdown_Right | 31 -> 27 | 0 / 0 / 0.73 | skates 0 | 6 -> 13 | none |
+| Trip | 31 -> 27 | 0 / 0 / 0.73 | skates 0 | 8 -> 9 | none |
+| GetUp | 73 -> 45 | 0 / 0 / 0.1 | skates 0 | 2 -> 5 | foot_l f14 45.5, foot_l f23 -48.9 |
+| GetUp_Front | 73 -> 45 | -1.41 / 0 / -1.41 | skates 0 | 0 -> 0 | none |
+| GetUp_Side_Left | 55 -> 45 | -0.63 / 0 / -0.63 | skates 0 | 2 -> 3 | foot_l f25 -48.9 |
+| GetUp_Side_Right | 55 -> 45 | -0.62 / 0 / -0.62 | skates 0 | 3 -> 3 | foot_l f25 -48.9 |
+
+All takes: pelvis horizontal 0 cm, root 0 cm, loop seams 0 cm, lowest anything -1.41 cm (export10 -1.41).
+
+**p3_clay** (export10 -> export11)
+
+| Take | Frames before -> after | Lowest body / skate / stick cm (after) | Worst part (cm) | Steps > 45 deg before -> after | Twist > 45 deg (bone, frame) |
+|---|---|---|---|---|---|
+| Fall | 37 -> 27 | 0.13 / 0.13 / 0.34 | skates 0.13 | 5 -> 13 | clavicle_l f1 -58.6, clavicle_r f1 58.5 |
+| Fall_Forward | 37 -> 27 | 0.13 / 0.13 / 0.34 | skates 0.13 | 2 -> 9 | none |
+| Knockdown_Back | 31 -> 27 | -0.63 / 0.13 / -0.63 | skates 0.13 | 9 -> 12 | clavicle_l f1 66.8, clavicle_r f1 -66.7 |
+| Knockdown_Left | 31 -> 27 | -0.37 / 0.13 / -0.37 | skates 0.13 | 7 -> 14 | none |
+| Knockdown_Right | 31 -> 27 | 0.13 / 0.13 / 0.34 | skates 0.13 | 6 -> 14 | none |
+| Trip | 31 -> 27 | 0.13 / 0.13 / 0.34 | skates 0.13 | 9 -> 10 | none |
+| GetUp | 73 -> 45 | 0.13 / 0.13 / 0.34 | skates 0.13 | 2 -> 4 | foot_l f14 49.8, foot_l f23 -52.7 |
+| GetUp_Front | 73 -> 45 | -0.91 / 0.13 / -0.91 | skates 0.13 | 0 -> 0 | none |
+| GetUp_Side_Left | 55 -> 45 | -0.55 / 0.13 / -0.55 | skates 0.13 | 2 -> 3 | foot_l f25 -52.7 |
+| GetUp_Side_Right | 55 -> 45 | 0.13 / 0.13 / 0.15 | skates 0.13 | 3 -> 3 | foot_l f25 -52.7 |
+
+All takes: pelvis horizontal 0 cm, root 0 cm, loop seams 0 cm, lowest anything -0.91 cm (export10 -0.91).
+
+### What still fails
+
+- **`Knockdown_Left` / `_Right` from the side.** The body falls away from the side camera and still reads as a heap. From the game camera it reads as down on the hip.
+- **Snap twist steps.** In `Fall` and `Knockdown_Back` the clavicles turn 58 to 67 deg about their own axis between frames 1 and 2. The left-shoulder reach rule switches off when the hands leave the stick. A skinned figure may show a shoulder pop.
+- **Get-up skate turns.** The left skate turns 45 to 53 deg in one frame at the kneel transitions of every get-up.
+- **No knee or elbow flips.** The bend limiter engaged a few frames per take.
+- **Unreworked takes are still weak.** `Check_Deliver_*`, `Check`, `Check_Hit_*`, `Stumble` and `Board_Hit`: the attacker's drive is the next job.
+- **Pairing distance.** The contact distance in the pair sheets overlaps the bodies; the game's real contact distance for these figures is unverified.
+- **Not verified:** nothing has been seen in the engine; the Blueprint's hold-and-get-up timing is assumed from the brief.
+
+### Stills (`C:\Users\kazda\jam\thirdjam\devlog\shots\`, prefix `20261113-0957xx-B-lab-skf11-`, each with a `.txt`)
+
+| Still | What it shows |
+|---|---|
+| `p2-cel-part1-gamecam`, `p2-cel-part1-side`, `p3-clay-part1-gamecam`, `p3-clay-part1-side` | all 21 takes before |
+| `p2-cel-pairs-before`, `-pairs-after`, `p3-clay-pairs-before`, `-pairs-after` | the attacker/victim pairs |
+| `<style>-<take>-ba` (20) | each reworked take, before above after |
+| `tackle-before-after` | the operator sheet |
+
+## Twelfth pass: the second tackling round (SKF12, 10:02 to 10:24)
+
+Delivered `C:\Users\kazda\jam\skater-lab\skf\export12\` (p2_cel, p3_clay, full sets) with `READY.txt`. Item 1 (the attacker) and item 2 (the falls) are complete. Item 3 (`Check_Hit_*`, `Stumble`, `Board_Hit`) is not started; those takes are identical to export10.
+
+**Difference list against export11 (both styles):** exactly 13 takes differ: `Check`, `Check_Deliver_Right`, `Check_Deliver_Left`, `Fall`, `Fall_Forward`, `Knockdown_Back`, `Knockdown_Left`, `Knockdown_Right`, `Trip`, `GetUp`, `GetUp_Front`, `GetUp_Side_Left`, `GetUp_Side_Right`. Every other take, the clay aim holds included, is identical. Meshes, bones, rest pose and sockets are identical (diff 0.0); `SM_Stick` is byte-identical; the root never moves.
+
+### What changed
+
+| Take | Before (export11) | After (export12) |
+|---|---|---|
+| `Check`, `Check_Deliver_Right`, `Check_Deliver_Left` | A body turn whose drive peaked at frame 16, after every possible hit | A lunge from the button press. Frame 3 is the extreme: hips 23 cm lower, trunk 65 deg forward (was 22), the lead shoulder low and ahead, the stick pulled back and across, the back leg straight behind as a push. Frame 12 is deeper still, so a hit anywhere in 0-12 meets the peak. Follow-through at 19, ready Glide at 28. 30 frames; `Check` keeps the `Deliver_Right` keys. |
+| `Fall` | Lands with the knees up | Legs thrown up above the pelvis line at frames 4-10 with the head snapping forward. Lies as a starfish on the back: legs straight and 73 cm apart, arms out, stick to the right. The body is thrown 30 cm back. |
+| `Fall_Forward`, `Knockdown_Back` | Face down with the knees bent | Skates up behind (above the pelvis at frames 6-9 / 7-9). Lies face down with the legs straight and spread 67 cm, arms out at the shoulders, stick ahead to the right. Thrown 30 cm forward. |
+| `Knockdown_Left` / `_Right` | A seated heap on the hip | Legs flung up and out to the hit side, above the pelvis at frames 4-10, head snapping the other way. Lies long on the far side across the camera: legs straight along the ice opposite the head, top leg and top arm out, the bottom arm stretched past the head, the stick flat. Thrown 30 cm away from the hit. |
+| `Trip` | | Same sweep and twist, ending in `Knockdown_Right`'s long lying pose |
+| The four get-ups | | Start exactly on the new lying poses. The 30 cm throw comes back by half at the push (frame 8-9) and fully at the kneel (18-20). Stages and 44 frames as in pass 11. |
+
+**Timing:**
+- Falls: 26 frames, contact at 2, airborne 5-8, impact 11, bounce 14, settle 18, lying 18-26.
+- Get-ups: 44 frames.
+- 26 + 44 = 70 of the 90 sim frames, so about 20 frames are spent lying.
+
+**Joins (fall's last frame equals the get-up's first, exact):**
+
+| Fall | Lying pose | Get-up |
+|---|---|---|
+| `Fall` | starfish on the back | `GetUp` |
+| `Fall_Forward`, `Knockdown_Back` | face down | `GetUp_Front` |
+| `Knockdown_Left` | long on the right side | `GetUp_Side_Left` |
+| `Knockdown_Right`, `Trip` | long on the left side | `GetUp_Side_Right` |
+
+**Solver changes:**
+- Body offset `px`/`py`: the pelvis and every armature-space target move together. Zero in every other take, so they are numerically unchanged.
+- Tackling takes only:
+  - the left clavicle's reach decays over a few frames instead of snapping back when the hands leave the stick;
+  - a skate turns at most 18 deg per frame in world space, unless that would put a blade under the ice.
+
+### Pops reported in pass 11
+
+| Pop | Result |
+|---|---|
+| Clavicle turn at frames 1-2 of `Fall` / `Knockdown_Back` | Their clavicles' local one-frame turn is now at most 8 deg. Across all 13 takes the largest is 23.5 deg (p2) / 32.7 deg (p3), in the `Check` lunge at frames 1-3. |
+| Skate turn in the get-ups | The largest local skate step in the get-ups went from 110 / 98 deg to 47-55 / 40-45 deg. In world space the skate turns at most 18 deg per frame except where that would cut the ice. |
+| Still open | The arms swing 106-149 deg in the one frame after contact (frame 1 to 2) in every fall: the 2-frame snap. The arms read as flung, but a skinned elbow may show it. |
+
+### Pair sheets at 0.8 m
+
+- **Setup:** the hit at attacker frame 2, 6 and 12 (`Deliver_Right` against `Knockdown_Left`), plus `Deliver_Left` against `Knockdown_Right` and the hit from behind at frame 6.
+- **Victim slide:** after contact the victim slides along the hit direction as the sim would move it. I assumed 60 % of a 4 m/s closing speed (2.4 m/s), losing 63 % every 0.5 s, so about 1.0 m by contact +24.
+- **Every case reads:** the attacker is in the lunge at contact, and the victim is airborne, then long on the ice and sliding away.
+- **Correction to pass 11:** its pair render left the victim at the attacker's spot. The victim's location was set before the frame change, and the take's object keys reset it to 0. So pass 11's "the bodies overlap at contact" came from that error, not from the distance. Fixed in `pair_render12.py`.
+
+### Per take (p2_cel)
+
+| Take | Frames | Lowest body (part) cm | Lowest skate / stick cm | Biggest one-frame step (bone) before -> after | Pelvis thrown cm | Trunk deg min/max | Skate spread cm |
+|---|---|---|---|---|---|---|---|
+| Check | 31 -> 31 | 13.96 (knees_shins) | -0.00 / -0.61 | 44 (upperarm_r f15->16) -> 83 (stick_socket f1->2) | 0 | 22/65 | 46.3 |
+| Check_Deliver_Right | 31 -> 31 | 13.96 (knees_shins) | -0.00 / -0.61 | 44 (upperarm_r f15->16) -> 83 (stick_socket f1->2) | 0 | 22/65 | 46.3 |
+| Check_Deliver_Left | 31 -> 31 | 13.94 (knees_shins) | -0.00 / 0.73 | 40 (clavicle_r f16->17) -> 96 (stick_socket f1->2) | 0 | 22/65 | 46.3 |
+| Fall | 27 -> 27 | 3.63 (hands) | -0.00 / 0.73 | 144 (lowerarm_l f1->2) -> 144 (lowerarm_l f1->2) | 30 | 22/86 | 72.7 |
+| Fall_Forward | 27 -> 27 | 1.60 (head) | -0.00 / 0.73 | 131 (lowerarm_r f1->2) -> 131 (lowerarm_r f1->2) | 30 | 22/89 | 67.3 |
+| Knockdown_Back | 27 -> 27 | 1.60 (head) | -0.00 / 0.58 | 122 (upperarm_l f1->2) -> 122 (upperarm_l f1->2) | 30 | 22/89 | 66.8 |
+| Knockdown_Left | 27 -> 27 | -0.62 (arms) | -0.00 / 0.18 | 108 (upperarm_l f1->2) -> 106 (upperarm_l f1->2) | 30 | 22/103 | 17.4 |
+| Knockdown_Right | 27 -> 27 | -0.62 (arms) | -0.00 / 0.73 | 128 (upperarm_l f1->2) -> 129 (upperarm_l f1->2) | 30 | 22/103 | 17.9 |
+| Trip | 27 -> 27 | -0.68 (arms) | -0.00 / 0.73 | 135 (lowerarm_l f1->2) -> 135 (lowerarm_l f1->2) | 30 | 22/87 | 37.3 |
+| GetUp | 45 -> 45 | 1.28 (hands) | -0.00 / 0.10 | 79 (foot_l f14->15) -> 47 (thigh_l f14->15) | 30 | 3/86 | 45.9 |
+| GetUp_Front | 45 -> 45 | 1.60 (head) | -0.00 / -1.41 | 31 (thigh_l f15->16) -> 31 (thigh_l f15->16) | 30 | 22/89 | 46.1 |
+| GetUp_Side_Left | 45 -> 45 | -0.62 (arms) | -0.00 / -1.05 | 75 (foot_l f25->26) -> 46 (foot_l f15->16) | 30 | 22/87 | 36.2 |
+| GetUp_Side_Right | 45 -> 45 | -0.62 (arms) | -0.00 / -0.62 | 75 (foot_l f25->26) -> 55 (foot_l f15->16) | 30 | 22/87 | 36.1 |
+
+### Per take (p3_clay)
+
+| Take | Frames | Lowest body (part) cm | Lowest skate / stick cm | Biggest one-frame step (bone) before -> after | Pelvis thrown cm | Trunk deg min/max | Skate spread cm |
+|---|---|---|---|---|---|---|---|
+| Check | 31 -> 31 | 12.39 (hands) | 0.13 / -0.80 | 44 (upperarm_r f15->16) -> 83 (stick_socket f1->2) | 0 | 23/65 | 49.5 |
+| Check_Deliver_Right | 31 -> 31 | 12.39 (hands) | 0.13 / -0.80 | 44 (upperarm_r f15->16) -> 83 (stick_socket f1->2) | 0 | 23/65 | 49.5 |
+| Check_Deliver_Left | 31 -> 31 | 13.05 (knees_shins) | 0.13 / 0.34 | 40 (neck_01 f16->17) -> 96 (stick_socket f1->2) | 0 | 23/65 | 49.5 |
+| Fall | 27 -> 27 | 2.96 (hands) | 0.13 / 0.34 | 145 (lowerarm_l f1->2) -> 143 (lowerarm_l f1->2) | 30 | 23/86 | 72.6 |
+| Fall_Forward | 27 -> 27 | 2.67 (hands) | 0.13 / 0.34 | 123 (hand_l f1->2) -> 126 (lowerarm_l f1->2) | 30 | 23/89 | 68.3 |
+| Knockdown_Back | 27 -> 27 | 2.67 (hands) | 0.13 / -0.63 | 109 (upperarm_l f1->2) -> 116 (upperarm_l f1->2) | 30 | 23/89 | 67.8 |
+| Knockdown_Left | 27 -> 27 | -1.19 (forearms) | 0.13 / 0.34 | 113 (upperarm_l f1->2) -> 110 (upperarm_l f1->2) | 30 | 23/103 | 16.0 |
+| Knockdown_Right | 27 -> 27 | -1.70 (arms) | 0.13 / 0.34 | 109 (upperarm_l f1->2) -> 93 (head f1->2) | 30 | 23/103 | 17.7 |
+| Trip | 27 -> 27 | -1.43 (arms) | -0.19 / 0.34 | 146 (lowerarm_l f1->2) -> 149 (lowerarm_l f1->2) | 30 | 23/87 | 36.3 |
+| GetUp | 45 -> 45 | 1.33 (hands) | 0.13 / 0.34 | 76 (foot_l f23->24) -> 42 (stick_socket f4->5) | 30 | 4/86 | 49.0 |
+| GetUp_Front | 45 -> 45 | 1.68 (hands) | 0.13 / -0.91 | 30 (thigh_l f15->16) -> 30 (thigh_l f15->16) | 30 | 23/89 | 49.2 |
+| GetUp_Side_Left | 45 -> 45 | -0.13 (forearms) | 0.13 / -0.78 | 76 (foot_l f25->26) -> 48 (upperarm_r f13->14) | 30 | 23/87 | 39.3 |
+| GetUp_Side_Right | 45 -> 45 | -0.44 (arms) | 0.12 / 0.15 | 76 (foot_l f25->26) -> 38 (lowerarm_r f15->16) | 30 | 23/87 | 39.3 |
+
+**How to read the tables:**
+- Frames are key counts, 31 = 30 frames.
+- Steps are whole-bone one-frame turns.
+- "Pelvis thrown" is the intended body throw. The root stays 0.
+- Airborne frames (Blender frames, 1 = take frame 0), ankles above the pelvis:
+
+  | Take | p2_cel | p3_clay |
+  |---|---|---|
+  | `Fall` | 5-11 | 5-11 |
+  | `Fall_Forward` | 6-10 | 7-9 |
+  | `Knockdown_Back` | 7-10 | 7-9 |
+  | `Knockdown_Left` / `_Right` | 5-11 | 5-11 |
+
+**Ground:**
+- Body and skates are at worst -0.62 cm (p2) and -1.70 cm (p3), both arms in the side lying pose.
+- The stick is at worst -1.41 cm (p2 `GetUp_Front`, as in export10).
+- The other takes are unchanged: -0.77 / -0.88 cm.
+
+### What still fails
+
+1. **Item 3 is not done:** `Check_Hit_*`, `Stumble`, `Board_Hit` are export10's.
+2. **Face-down arms:** the arms are spread at the shoulders rather than thrown forward past the head. The toy's short arms stop at about 0.5 m.
+3. **Arm swing at contact:** 106-149 deg in one frame (frame 1 to 2) in every fall.
+4. **Attacker's stick:** it whips from the carry to behind the body in 2 frames (83-96 deg per frame at frames 1-2).
+5. **Side lying arms:** the bottom shoulder's upper arm dips 0.6-1.7 cm into the ice.
+6. **Not verified in the engine:** the sim's slide and hit timing are taken from the coordinator's reading of `JamSim.cpp`.
+
+### Files
+
+- **Scripts** (`skater-lab\skf\`):
+  - `run12.sh` (build, checks, compare against export11)
+  - `summary12.py`, `steps12.py`, `air12.py`
+  - `pairs12.sh` + `pair_render12.py`
+  - `part1.sh export12`
+  - `compose12.sh`
+- **Sheets:** `sheets12\after`, `sheets12\before`, `sheets12\ba`.
+- **Stills** (`devlog\shots\20261113-1023xx-B-lab-skf12-*`, 29):
+
+  | Still | Content |
+  |---|---|
+  | `tackle-before-after` | the operator sheet: export10 above export12, both styles, attacker and victim at 0.8 m (hit at attacker frame 6), then `GetUp_Side_Left` |
+  | `<style>-pairs-before`, `-pairs-after` | the pairs at frames 2, 6, 12 plus the right and back cases |
+  | `<style>-<take>-ba` (24) | game camera, export10 above export12 |

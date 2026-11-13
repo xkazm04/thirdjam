@@ -1,0 +1,1 @@
+SKF pass 11, p3_clay Knockdown_Back at the game camera, every 3rd frame: export10 (before) above, export11 (after) below.

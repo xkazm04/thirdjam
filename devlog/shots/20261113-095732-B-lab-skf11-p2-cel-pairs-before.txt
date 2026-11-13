@@ -1,0 +1,1 @@
+SKF pass 11, p2_cel export10: attacker (blue) and victim (orange) aligned at contact, 11 frames from contact -6, every 3rd. Rows: Check_Deliver_Right + Knockdown_Left, Check_Deliver_Left + Knockdown_Right, Check_Deliver_Right + Knockdown_Back; top three at the game camera, bottom three from the side. Victim placed 0.35 m ahead, 0.55 m to the side (0.65 m ahead for the back hit).

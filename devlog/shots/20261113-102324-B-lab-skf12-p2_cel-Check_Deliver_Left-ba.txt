@@ -1,0 +1,1 @@
+SKF12 p2_cel Check_Deliver_Left at the game camera (behind, 35 deg down, ~110 px), every 3rd frame: export10 above, export12 below.

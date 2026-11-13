@@ -1,0 +1,1 @@
+SKF13 p2_cel GetUp_Side_Right at the game camera (behind, 35 deg down, ~110 px), every 3rd frame: export10 above, export13 below.

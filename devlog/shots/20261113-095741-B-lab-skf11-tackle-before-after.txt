@@ -1,0 +1,1 @@
+skf11-tackle-before-after, for the operator. Game camera. Each row: the delivered check (blue) and the left knockdown (orange) from contact -6 to +24, then the get-up from the side lying pose. Rows: p2_cel before (export10), p2_cel after (export11), p3_clay before, p3_clay after.

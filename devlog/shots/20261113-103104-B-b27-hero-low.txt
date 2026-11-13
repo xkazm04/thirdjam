@@ -1,0 +1,1 @@
+B27 hero for the operator: clay tier, low camera (x -17, y -7, z 2.2 m, pitch -10, yaw 25), faceoff, default scripted figure, saved assets

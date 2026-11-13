@@ -1,0 +1,1 @@
+SKF13 operator sheet, game camera, every 3rd frame: per style (p2_cel top, p3_clay bottom) export10 left, export13 right. Rows: standing hit from the left (pusher blue in plain Glide, victim orange at 0.8 m, contact = victim frame 0, pushed on at an assumed 1.2 m/s), standing hit from behind, Board_Hit, Stumble.

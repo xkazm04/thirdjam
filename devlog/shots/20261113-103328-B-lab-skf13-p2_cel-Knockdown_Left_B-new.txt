@@ -1,0 +1,1 @@
+SKF13 p2_cel new take Knockdown_Left_B (spin variant, below) under Knockdown_Left of export13 (above), game camera, every 3rd frame; both end on the same lying pose.

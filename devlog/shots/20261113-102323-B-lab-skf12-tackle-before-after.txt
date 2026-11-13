@@ -1,0 +1,1 @@
+SKF12 operator sheet, game camera: per style export10 above export12 (p2_cel rows 1-2, p3_clay rows 3-4). Left: Check_Deliver_Right (blue) and Knockdown_Left (orange) at 0.8 m, hit at attacker frame 6, victim sliding on as the sim moves it (assumed 2.4 m/s, 63 % loss per 0.5 s), every 3rd frame from contact -6; right: GetUp_Side_Left.
