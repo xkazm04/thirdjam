@@ -20,7 +20,7 @@ void UJamLockstepDriver::Start(IJamLink* InLink, int32 InDelay)
 	StallTicks = MaxStallTicks = 0;
 	Agreed = 0;
 	DesyncFrame = -1;
-	bDesynced = bLost = bHeard = false;
+	bDesynced = bLost = bHeard = bPeerLeft = false;
 	// The first Delay frames are played with no input on both sides, so the first real input lands at frame Delay.
 	for (int64 F = 0; F < Delay; ++F) LocalInputs.Add(F, FJamNetQuantInput());
 }
@@ -57,7 +57,15 @@ void UJamLockstepDriver::Receive()
 	FJamNetInputPacket P;
 	while (Link->Recv(Bytes))
 	{
-		if (JamNetPeekType(Bytes) != JamNet::EType::Input) continue;  // lobby leftovers
+		const JamNet::EType Type = JamNetPeekType(Bytes);
+		if (Type == JamNet::EType::Bye && bHeard && !bLost)
+		{
+			// Lane A120: the peer left (Esc to the menu, quit, its match ended and it closed): end now instead of waiting out the stall limit.
+			bPeerLeft = bLost = true;
+			UE_LOG(LogJamNet, Warning, TEXT("JAMNET lost frame=%lld peer said BYE"), Frame);
+			continue;
+		}
+		if (Type != JamNet::EType::Input) continue;  // lobby leftovers
 		if (!FJamNetInputPacket::Read(Bytes, P)) continue;
 		bHeard = true;
 		RemoteFrame = FMath::Max(RemoteFrame, P.SenderFrame);

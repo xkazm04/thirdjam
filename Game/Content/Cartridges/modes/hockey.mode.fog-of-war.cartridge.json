@@ -208,7 +208,7 @@
     ],
     "ai": {
       "difficulty": "pro",
-      "react_frames": 12
+      "react_frames": 6
     },
     "barks": {
       "enabled": true,
@@ -232,8 +232,8 @@
     "meta": {
       "pitch": "Slow bots in the fog. Slip by, then hit.",
       "facts": [
-        "bots 0.2 s late",
-        "checks from 1 m/s",
+        "bots 0.1 s late",
+        "hits 5x harder",
         "night rink, fog"
       ]
     }

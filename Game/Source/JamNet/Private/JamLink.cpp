@@ -1,4 +1,5 @@
 #include "JamLink.h"
+#include "HAL/IConsoleManager.h"
 #include "JamNetPackets.h"
 #include "Sockets.h"
 #include "SocketSubsystem.h"
@@ -16,6 +17,9 @@ FJamUdpLink::~FJamUdpLink()
 	}
 }
 
+// Lane A120 (track Q1): two processes on one machine bind 127.0.0.1 only (no firewall prompt, nothing reachable from the network).
+static TAutoConsoleVariable<int32> CVarJamNetLoopback(TEXT("jam.net.Loopback"), 0, TEXT("1: JamNet sockets bind 127.0.0.1 only (the two-process proof on one machine)."));
+
 int32 FJamUdpLink::Bind(int32 Port)
 {
 	ISocketSubsystem* SS = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM);
@@ -25,7 +29,7 @@ int32 FJamUdpLink::Bind(int32 Port)
 	Socket->SetNonBlocking(true);
 	Socket->SetReuseAddr(false);
 	TSharedRef<FInternetAddr> Addr = SS->CreateInternetAddr();
-	Addr->SetAnyAddress();
+	if (CVarJamNetLoopback.GetValueOnAnyThread() != 0) Addr->SetLoopbackAddress(); else Addr->SetAnyAddress();
 	Addr->SetPort(Port);
 	if (!Socket->Bind(*Addr))
 	{

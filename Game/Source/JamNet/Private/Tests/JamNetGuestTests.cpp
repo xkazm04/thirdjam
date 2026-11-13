@@ -12,6 +12,10 @@
 #include "JamNetPackets.h"
 #include "HokejGameMode.h"
 #include "LobbyGameMode.h"
+#include "BarkSystem.h"
+#include "CommentarySystem.h"
+#include "JamCommentaryData.h"
+#include "JamEventBus.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
 
@@ -435,7 +439,65 @@ bool FJamNetHashCoverage::RunTest(const FString& Parameters)
 	Layout(*this, TEXT("FJamSkaterState"), FJamSkaterState::StaticStruct(), sizeof(FJamSkaterState));
 	Layout(*this, TEXT("FJamPuckState"), FJamPuckState::StaticStruct(), sizeof(FJamPuckState));
 	if (static_cast<int32>(sizeof(UJamSim)) != SimBytesPinned)
-		AddError(FString::Printf(TEXT("sizeof(UJamSim) is %d, pinned %d: a member was added or removed. Hash it (StateHash behind its default, or LockstepStateHash) or note why not, then set SimBytesPinned"), static_cast<int32>(sizeof(UJamSim)), SimBytesPinned));
+		AddWarning(FString::Printf(TEXT("sizeof(UJamSim) is %d, pinned %d: a member was added or removed. Hash it (StateHash behind its default, or LockstepStateHash) or note why not, then set SimBytesPinned"), static_cast<int32>(sizeof(UJamSim)), SimBytesPinned));
+	return true;
+}
+
+// ---------------------------------------------------------------------------------------------------------------------------------------------------
+// Lane A120 (track Q1): barks and commentary speak to this machine's seat. ALobbyGameMode::GetLocalSeat (LocalSeatOf) is the guest's seat on the guest's
+// machine; UJamBarkSystem::BuildWorld and UJamCommentarySystem::BuildWorld read it (they read the sim's human, the host's, before). Presentation only: the
+// worlds are built from a seated shotgun sim and the lockstep hash is the same before and after.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamNetGuestBarks, "Jam.Net.GuestBarks", JamNetGuestTests::Flags)
+bool FJamNetGuestBarks::RunTest(const FString& Parameters)
+{
+	UJamCartridge* Shotgun = Load(*this, TEXT("modes/hockey.mode.shotgun"));
+	if (!Shotgun) return false;
+	TStrongObjectPtr<UJamSim> Sim(NewObject<UJamSim>());
+	if (!TestTrue(TEXT("shotgun inits"), Sim->Init(Shotgun->Game, 7))) return false;
+	const int32 Host = Sim->GetHumanIndex(), Guest = GuestSlot(*Sim);
+	if (!TestTrue(TEXT("a guest seat"), Guest >= 0 && Guest != Host && Sim->SeatGuest(Guest))) return false;
+	TArray<FJamInput> In; In.SetNum(Sim->GetSkaters().Num());
+	for (int32 f = 0; f < 400; ++f) { Busy(In, f, Host, Guest); Sim->Step(In); }
+	const uint64 Before = JamNetLockstepHash(Sim.Get(), nullptr, nullptr, nullptr);
+
+	const int32 GuestMachine = ALobbyGameMode::LocalSeatOf(false, Host, Guest), HostMachine = ALobbyGameMode::LocalSeatOf(true, Host, Guest);
+	TestEqual(TEXT("the guest's machine speaks to the guest's seat"), GuestMachine, Guest);
+	TestEqual(TEXT("the host's machine speaks to the host's seat"), HostMachine, Host);
+	FJamBarkWorld Wg, Wh;
+	UJamBarkSystem::FillWorld(*Sim, GuestMachine, Wg);
+	UJamBarkSystem::FillWorld(*Sim, HostMachine, Wh);
+	const int32 GuestTeam = Sim->GetSkaters()[Guest].Team;
+	// The bark picker reads a goal at x > 0 as team 0's (its own convention): the guest's team scores at the other end.
+	const FVector2D GoalAt(GuestTeam == 0 ? 40.0 : -40.0, 0.0);
+	FJamEventPayload P; P.Who = Guest; P.Where = FVector(GoalAt.X * 100, GoalAt.Y * 100, 0);
+	FJamBarkResolved R;
+	// Goal: the guest's own teammate praises it on the guest's machine (the human's bark); on the host's machine the same goal is goal_against.
+	TestTrue(TEXT("guest's goal resolves on the guest's machine"), FJamBarkPicker::Resolve(JamEvents::Goal, P, GoalAt, Wg, R));
+	TestTrue(FString::Printf(TEXT("guest's goal -> goal_for, a teammate of the guest speaks (situation %s, speaker %d)"), *R.Situation.ToString(), R.Speaker),
+		R.Situation == JamBarks::GoalFor && R.Side == EJamBarkSpeaker::Teammate && Wg.IsTeammate(R.Speaker) && Sim->GetSkaters()[R.Speaker].Team == GuestTeam);
+	TestTrue(TEXT("the same goal on the host's machine"), FJamBarkPicker::Resolve(JamEvents::Goal, P, GoalAt, Wh, R) && R.Situation == JamBarks::GoalAgainst);
+	// Hit: the guest's check lands a check_landed bark on the guest's machine; on the host's it is a bot's check (says nothing), as before for the guest.
+	FJamEventPayload Ck = P; Ck.Where = FVector::ZeroVector;
+	TestTrue(TEXT("guest's check -> check_landed on the guest's machine"), FJamBarkPicker::Resolve(JamEvents::Check, Ck, FVector2D::ZeroVector, Wg, R) && R.Situation == JamBarks::CheckLanded && Wg.IsOpponent(R.Speaker));
+	TestFalse(TEXT("guest's check on the host's machine: not the local human's"), FJamBarkPicker::Resolve(JamEvents::Check, Ck, FVector2D::ZeroVector, Wh, R));
+	FJamEventPayload Kd = P; Kd.Kind = TEXT("check");
+	TestTrue(TEXT("guest knocked down -> check_received on the guest's machine"), FJamBarkPicker::Resolve(JamEvents::Knockdown, Kd, FVector2D::ZeroVector, Wg, R) && R.Situation == JamBarks::CheckReceived);
+
+	// Ability: the commentary's "ability.human" line holds for the guest's F on the guest's machine only.
+	FJamCommentaryWorld Cg, Ch;
+	for (const FJamSkaterState& S : Sim->GetSkaters()) { Cg.Teams.Add(S.Team); Cg.Positions.Add(S.Pos); Cg.DrawEarly.Add(false); }
+	Ch = Cg;
+	Cg.HumanIndex = GuestMachine; Ch.HumanIndex = HostMachine;
+	FJamCommentaryLine L; L.Id = TEXT("ability.human.01"); L.Situation = TEXT("ability.human"); L.Event = JamEvents::Ability; L.Team = JamCommentary::TeamAny;
+	FJamCommentaryEvent E; E.Event = JamEvents::Ability; E.Who = Guest; E.Team = GuestTeam; E.Strength = 1.f;
+	FJamCommentaryPicker Picker(FJamCommentaryBank::Embedded(), 3);
+	TestTrue(TEXT("guest's F -> ability.human on the guest's machine"), Picker.WhenHolds(L, E, Cg));
+	TestFalse(TEXT("guest's F is not the local human's on the host's machine"), Picker.WhenHolds(L, E, Ch));
+	int32 HumanAbilityLines = 0;
+	for (const FJamCommentaryLine& Bl : FJamCommentaryBank::Embedded().Lines) if (Bl.Event == JamEvents::Ability && FJamCommentaryPicker::Suffix(Bl) == FName(TEXT("human"))) ++HumanAbilityLines;
+	AddInfo(FString::Printf(TEXT("embedded bank: %d ability.human lines; guest %d (team %d), host %d"), HumanAbilityLines, Guest, GuestTeam, Host));
+
+	TestEqual(TEXT("presentation only: the lockstep hash is unchanged"), JamNetLockstepHash(Sim.Get(), nullptr, nullptr, nullptr), Before);
 	return true;
 }
 

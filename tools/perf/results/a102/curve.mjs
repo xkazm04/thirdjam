@@ -54,7 +54,7 @@ function run([lo, hi]) {
 }
 const t0 = Date.now();
 let next = 0;
-async function worker() { while (next < jobs.length) { while (freeGB() < 12) await new Promise((r) => setTimeout(r, 15000)); const j = jobs[next++]; await run(j); } }
+async function worker() { while (next < jobs.length) { while (freeGB() < 12) await new Promise((r) => setTimeout(r, 15000)); const j = jobs[next++]; if (!j) break; await run(j); } }   // lane A121: "if (!j) break": a worker that waited for memory may find the list taken
 await Promise.all(Array.from({ length: workers }, worker));
 // dedupe by seed
 const by = new Map(); for (const m of lines) by.set(m.seed, m);

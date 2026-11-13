@@ -653,7 +653,7 @@ bool FJamContactGraceMatch::RunTest(const FString& Parameters)
 	for (uint64 Seed = 1; Seed <= 3; ++Seed)
 	{
 		FContactCount Cn;
-		const JamAI::FJamPlaytestStats Sn = Match(*this, TEXT("pro"), Seed, Cn, [](FJamGameConfig& G) { G.Contact.ReleaseGraceFrames = 0; G.Stick.bBodyShield = false; G.Stick.bPassiveTake = true; G.Stick.bTeammateTouchTakes = true; });   // lane A102's stick rules off: the baseline is lane A101's tree
+		const JamAI::FJamPlaytestStats Sn = Match(*this, TEXT("pro"), Seed, Cn, [](FJamGameConfig& G) { G.Contact.ReleaseGraceFrames = 0; G.Stick.bBodyShield = false; G.Stick.bPassiveTake = true; G.Stick.bTeammateTouchTakes = true; G.Stick.TakeGraceFrames = 0; G.Skater.ReverseBrakeDecel = 20; G.Skater.bBurstOwnStop = false; });   // lane A102's stick rules off: the baseline is lane A101's tree
 		AddInfo(Line(*FString::Printf(TEXT("JAMGRACE match pro seed %llu release_grace_frames 0"), static_cast<unsigned long long>(Seed)), Sn, Cn));
 		TestEqual(*FString::Printf(TEXT("pro seed %llu: release_grace_frames 0 hashes as the baseline did"), static_cast<unsigned long long>(Seed)), FString::Printf(TEXT("%016llx"), static_cast<unsigned long long>(Sn.Hash)),
 			FString::Printf(TEXT("%016llx"), static_cast<unsigned long long>(Baseline[Seed - 1])));
@@ -746,7 +746,7 @@ bool FJamContactBoardMatch::RunTest(const FString& Parameters)
 		AddInfo(Line(*FString::Printf(TEXT("JAMBOARDS match pro seed %llu board_bonus 1.25"), static_cast<unsigned long long>(Seed)), S, C));
 		AddInfo(FString::Printf(TEXT("JAMBOARDS boards pro seed %llu board_bonus 1.25: %s"), static_cast<unsigned long long>(Seed), *BoardLine(C)));
 		FContactCount Cn;
-		const JamAI::FJamPlaytestStats Sn = Match(*this, TEXT("pro"), Seed, Cn, [](FJamGameConfig& G) { G.Contact.BoardBonus = 1.0; G.Contact.ReleaseGraceFrames = 0; G.Stick.bBodyShield = false; G.Stick.bPassiveTake = true; G.Stick.bTeammateTouchTakes = true; });   // lanes A113 and A102: every later rule neutral = the game main had at ee14438
+		const JamAI::FJamPlaytestStats Sn = Match(*this, TEXT("pro"), Seed, Cn, [](FJamGameConfig& G) { G.Contact.BoardBonus = 1.0; G.Contact.ReleaseGraceFrames = 0; G.Stick.bBodyShield = false; G.Stick.bPassiveTake = true; G.Stick.bTeammateTouchTakes = true; G.Stick.TakeGraceFrames = 0; G.Skater.ReverseBrakeDecel = 20; G.Skater.bBurstOwnStop = false; });   // lanes A113 and A102: every later rule neutral = the game main had at ee14438
 		AddInfo(Line(*FString::Printf(TEXT("JAMBOARDS match pro seed %llu board_bonus 1.00"), static_cast<unsigned long long>(Seed)), Sn, Cn));
 		AddInfo(FString::Printf(TEXT("JAMBOARDS boards pro seed %llu board_bonus 1.00: %s"), static_cast<unsigned long long>(Seed), *BoardLine(Cn)));
 		TestEqual(*FString::Printf(TEXT("pro seed %llu: board_bonus 1 hashes as main did"), static_cast<unsigned long long>(Seed)), FString::Printf(TEXT("%016llx"), static_cast<unsigned long long>(Sn.Hash)),
@@ -1117,6 +1117,7 @@ bool FJamContactNeutral::RunTest(const FString& Parameters)
 		if (!C) continue;
 		C->Game.Stick.bSweepShieldOneSided = true;
 		C->Game.Stick.bBodyShield = false; C->Game.Stick.bPassiveTake = true; C->Game.Stick.bTeammateTouchTakes = true;   // lane A102: the game before its two stick rules
+		C->Game.Stick.TakeGraceFrames = 0;   // lane A121: and before the take grace (the block's burst.frames 0 and reverse_brake_decel 0 cover its other two)
 		FContactCount Count;
 		JamAI::FJamSimAdapter Sim(*C);
 		Count.Sim = &Sim;

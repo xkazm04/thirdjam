@@ -282,7 +282,7 @@
           "type": "number",
           "minimum": 0,
           "maximum": 40,
-          "description": "Lane A93 (R-0045 law 3): braking by reversing. Move input against the velocity (more than 120 degrees from it: W then S) stops the skater at this many metres per second squared until it is still; then the input accelerates the other way. Leave the key out for 20 (full speed to still in about 0.4 s); 0 = off (only the brake button brakes, at brake_decel)."
+          "description": "Lane A93 (R-0045 law 3): braking by reversing. Move input against the velocity (more than 120 degrees from it: W then S) stops the skater at this many metres per second squared until it is still; then the input accelerates the other way. Leave the key out for 26 (lane A121: 8 m/s to still in 19 frames, 11 m/s in 26; 20 before, the neutral value of that lane); 0 = off (only the brake button brakes, at brake_decel)."
         },
         "burst": {
           "type": "object",
@@ -300,6 +300,10 @@
               "minimum": 1,
               "maximum": 3,
               "description": "Acceleration multiplier while the burst runs; 1 = no burst."
+            },
+            "own_stop": {
+              "type": "boolean",
+              "description": "Lane A121 (track F2; docs/VISION.md law 3): the first step is earned. true or absent = being slower than 2 m/s arms the burst only after a stop of the skater's own (it braked on the way down, by reversing or with the brake button); a skater that merely stands (a waiting defender, the faceoff, a skater getting up) starts at the normal acceleration. A sharp cut arms the burst under either value. false = the neutral value (the game before the lane): any skater slower than 2 m/s has the burst."
             }
           }
         },
@@ -429,6 +433,12 @@
         "passive_take": {
           "type": "boolean",
           "description": "Lane A102 (R-0048): false or absent = a carried puck is not taken by an unpressed blade or by a body's touch: it leaves its carrier only by a shot, a pass, a poke, a lift, a check or stumble that loosens it, or the carrier's own release. true = the neutral value (the game before the lane): an aimed opposing blade within 0.6 m deflects a carried puck moving faster than 6 m/s and any body's touch takes it. A teammate never takes a carried puck by touch under either value."
+        },
+        "take_grace_frames": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 120,
+          "description": "Lane A121 (track F2; R-0049 point 2): the take grace. A skater that has just won the puck (by a poke, a lift, a loose puck, a pass or the draw: the puck came to it from somebody else) cannot be poked or stick-lifted for this many physics frames; a body check still loosens the puck, and a poke that runs out on it costs the poker no stumble. Leave the key out for 30 (half a second); 0 = off, the neutral value (the game before the lane)."
         },
         "poke_window_frames": {
           "type": "integer",

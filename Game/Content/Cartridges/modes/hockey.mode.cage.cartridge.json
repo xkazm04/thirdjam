@@ -113,8 +113,8 @@
   "ai": [],
   "game": {
     "rink": {
-      "length_m": 70,
-      "width_m": 35,
+      "length_m": 60,
+      "width_m": 28,
       "corner_radius_m": 2,
       "board_restitution": 0.95,
       "ice_friction": 0.015,
@@ -122,26 +122,26 @@
       "obstacles": [
         {
           "kind": "pillar",
-          "x": -12,
-          "z": -8,
+          "x": -10,
+          "z": -6,
           "size": 1.5
         },
         {
           "kind": "pillar",
-          "x": -12,
-          "z": 8,
+          "x": -10,
+          "z": 6,
           "size": 1.5
         },
         {
           "kind": "pillar",
-          "x": 12,
-          "z": -8,
+          "x": 10,
+          "z": -6,
           "size": 1.5
         },
         {
           "kind": "pillar",
-          "x": 12,
-          "z": 8,
+          "x": 10,
+          "z": 6,
           "size": 1.5
         }
       ]
@@ -155,8 +155,8 @@
       "glide_drag": 0.147,
       "brake_decel": 6,
       "check_enabled": true,
-      "check_speed_min": 3,
-      "knockdown_frames": 120
+      "check_speed_min": 2,
+      "knockdown_frames": 75
     },
     "puck": {
       "radius_m": 0.12,
@@ -174,9 +174,8 @@
       "mode": "timer",
       "goal_pause_frames": 120,
       "offside": false,
-      "penalties": true,
-      "timer_frames": 10800,
-      "penalty_frames": 120
+      "penalties": false,
+      "timer_frames": 10800
     },
     "teams": [
       {
@@ -186,21 +185,28 @@
           {
             "role": "player",
             "spawn": [
-              -6,
+              -5,
               0
             ]
           },
           {
             "role": "chaser",
             "spawn": [
-              -6,
-              -5
+              -5,
+              -4.67
+            ]
+          },
+          {
+            "role": "support",
+            "spawn": [
+              -5,
+              4.67
             ]
           },
           {
             "role": "back",
             "spawn": [
-              -18,
+              -15,
               0
             ]
           }
@@ -213,21 +219,28 @@
           {
             "role": "chaser",
             "spawn": [
-              6,
+              5,
               0
             ]
           },
           {
             "role": "support",
             "spawn": [
-              6,
-              5
+              5,
+              4.67
+            ]
+          },
+          {
+            "role": "support",
+            "spawn": [
+              5,
+              -4.67
             ]
           },
           {
             "role": "back",
             "spawn": [
-              18,
+              15,
               0
             ]
           }
@@ -263,12 +276,15 @@
       "poke_window_frames": 2
     },
     "meta": {
-      "pitch": "Tight box, live boards. Hit or get hit.",
+      "pitch": "Tight box, eight bodies. The boards hit back.",
       "facts": [
-        "70 x 35 m, pillars",
-        "short stick, 0.6 m",
-        "bots hit back"
+        "60 x 28 m, 4 v 4",
+        "boards hit 2x",
+        "no whistle, no box"
       ]
+    },
+    "contact": {
+      "board_bonus": 2
     }
   }
 }

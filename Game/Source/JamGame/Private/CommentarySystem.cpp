@@ -681,7 +681,7 @@ void UJamCommentarySystem::BuildWorld(FJamCommentaryWorld& Out) const
 	if (!Sim) return;
 	const FJamGameConfig& G = Sim->GetConfig();
 	Out.Frame = Sim->GetFrame();
-	Out.HumanIndex = Sim->GetHumanIndex();
+	Out.HumanIndex = GM->GetLocalSeat();   // lane A120 (track Q1): the local seat (the guest's on the guest's machine), was Sim->GetHumanIndex() (the host's)
 	for (const FJamSkaterState& S : Sim->GetSkaters()) { Out.Teams.Add(S.Team); Out.Positions.Add(S.Pos); Out.DrawEarly.Add(S.DrawFrame == -2); }
 	Out.PuckLastTouch = Sim->GetPuck().LastTouch;
 	Out.PuckPos = Sim->GetPuck().Pos;

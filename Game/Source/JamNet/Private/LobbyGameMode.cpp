@@ -31,6 +31,10 @@ static TAutoConsoleVariable<int32> CVarJamNetAutoShot(TEXT("jam.net.AutoShot"), 
 static TAutoConsoleVariable<int32> CVarJamNetQuitAtFrame(TEXT("jam.net.QuitAtFrame"), 0,
 	TEXT("> 0: a lockstep match logs its proof line and quits the process when the sim reaches this frame (headless two-process proof)."));
 
+// Lane A120 (track Q1): the scripted human (jam.ScriptHuman 1) also sprints, holds the saucer, brakes, spins and presses F (FJamNetScriptedHuman::bAllVerbs).
+static TAutoConsoleVariable<int32> CVarJamNetScriptVerbs(TEXT("jam.net.ScriptVerbs"), 0,
+	TEXT("1: the scripted lockstep human uses every verb (sprint, saucer, brake, spin, check, F); 0: A38's script (poke, pass, shot, check)."));
+
 namespace
 {
 	constexpr int32 MaxStepsPerTick = 4;
@@ -60,8 +64,9 @@ void ALobbyGameMode::StartPlay()
 		EndMatch(TEXT("NO SEAT"), TEXT("the cut has no skater for a guest"), TEXT("no guest seat"));
 		return;
 	}
-	LocalIndex = Lobby->IsHost() ? Human : Guest;
-	RemoteIndex = Lobby->IsHost() ? Guest : Human;
+	LocalIndex = LocalSeatOf(Lobby->IsHost(), Human, Guest);
+	RemoteIndex = LocalSeatOf(!Lobby->IsHost(), Human, Guest);
+	Script.bAllVerbs = CVarJamNetScriptVerbs.GetValueOnGameThread() != 0;
 	// Lane A110 (track Q1): the guest's seat plays as a human on both machines, from frame 0 (the mode's ability, a pickup's, the human's check rules, no bot
 	// press at the draw). Both peers seat the same index (WELCOME's), so the sims stay equal; the checkpoint hashes the seat.
 	if (!TheSim->SeatGuest(Guest)) UE_LOG(LogJamNet, Warning, TEXT("JAMNET could not seat the guest at skater %d (frame %lld)"), Guest, TheSim->GetFrame());
@@ -273,10 +278,19 @@ void ALobbyGameMode::LogProofLine(const TCHAR* Tag) const
 {
 	const UJamSim* TheSim = GetSim();
 	if (!TheSim || !Driver) return;
-	UE_LOG(LogJamNet, Log, TEXT("JAMNET %s frame=%lld hash=%016llx sim_hash=%s score=%d:%d phase=%d faceoffs=%d fouls=%d pickups=%d rule_fires=%d first_frame_s=%.2f %s"), Tag,
+	// Lane A120: each seat's verbs as applied (the same on both machines) and the sim's own counters for the seat.
+	FString Seats;
+	const int32 SeatIdx[2] = { Lobby && Lobby->IsHost() ? LocalIndex : RemoteIndex, Lobby && Lobby->IsHost() ? RemoteIndex : LocalIndex };
+	for (int32 s = 0; s < 2; ++s)
+	{
+		const FJamSkaterState* K = TheSim->GetSkaters().IsValidIndex(SeatIdx[s]) ? &TheSim->GetSkaters()[SeatIdx[s]] : nullptr;
+		Seats += FString::Printf(TEXT(" %s=[seat %d sprint %d pass_held %d brake %d spin %d check %d ability %d | saucers %d spins %d abilities_used %d]"), s ? TEXT("guest") : TEXT("host"), SeatIdx[s],
+			VerbFrames[s][0], VerbFrames[s][1], VerbFrames[s][2], VerbFrames[s][3], VerbFrames[s][4], VerbFrames[s][5], K ? K->Saucers : -1, K ? K->Spins : -1, K ? K->AbilitiesUsed : -1);
+	}
+	UE_LOG(LogJamNet, Log, TEXT("JAMNET %s frame=%lld hash=%016llx sim_hash=%s score=%d:%d phase=%d faceoffs=%d fouls=%d pickups=%d rule_fires=%d first_frame_s=%.2f %s%s"), Tag,
 		TheSim->GetFrame(), static_cast<unsigned long long>(LockstepHash()), *TheSim->StateHashHex(), TheSim->GetScore(0), TheSim->GetScore(1), static_cast<int32>(TheSim->GetPhase()),
 		FaceoffDrops, Fouls, PickupTakes, GetRules() ? GetRules()->GetTotalFires() : 0,
-		(FirstFrameAt > 0.0 && Lobby && Lobby->GetJoinedAtSeconds() > 0.0) ? FirstFrameAt - Lobby->GetJoinedAtSeconds() : -1.0, *Driver->DescribeStats());
+		(FirstFrameAt > 0.0 && Lobby && Lobby->GetJoinedAtSeconds() > 0.0) ? FirstFrameAt - Lobby->GetJoinedAtSeconds() : -1.0, *Driver->DescribeStats(), *Seats);
 }
 
 bool ALobbyGameMode::StepLockstep()
@@ -290,9 +304,15 @@ bool ALobbyGameMode::StepLockstep()
 		UE_LOG(LogJamNet, Log, TEXT("JAMNET first frame %.2f s after the %s (invite code to first frame)"), Lobby->GetJoinedAtSeconds() > 0.0 ? FirstFrameAt - Lobby->GetJoinedAtSeconds() : -1.0,
 			Lobby->IsHost() ? TEXT("guest's HELLO arrived") : TEXT("join was typed"));
 	}
+	LastFrameAt = FPlatformTime::Seconds();
 	GatherBotInputs();
 	LockInputs[LocalIndex] = L;
 	LockInputs[RemoteIndex] = R;
+	for (int32 s = 0; s < 2; ++s)
+	{
+		const FJamInput& V = ((s == 0) == Lobby->IsHost()) ? L : R;   // [0] the host's seat, [1] the guest's
+		VerbFrames[s][0] += V.bSprint; VerbFrames[s][1] += V.bPassHeld; VerbFrames[s][2] += V.bBrake; VerbFrames[s][3] += V.bSpin; VerbFrames[s][4] += V.bCheck; VerbFrames[s][5] += V.bAbility;
+	}
 	if (UJamRuleSystem* RuleSys = GetRules()) { RuleSys->SetScore(0, TheSim->GetScore(0)); RuleSys->SetScore(1, TheSim->GetScore(1)); }
 	TheSim->Step(LockInputs);
 	if (UJamZoneSystem* Z = GetZones()) Z->Update(TheSim->GetFrame(), TheSim->GetSkaters(), TheSim->GetPuck());
@@ -500,8 +520,15 @@ void ALobbyGameMode::Tick(float DeltaSeconds)
 	{
 		EndMatch(TEXT("DESYNC"), FString::Printf(TEXT("the two games disagreed at frame %lld; this cut is over"), Driver->GetDesyncFrame()), FString::Printf(TEXT("desync at frame %lld"), Driver->GetDesyncFrame()));
 	}
+	else if (Driver->HasPeerLeft() && !bEnded)
+	{
+		// Lane A120: the peer said BYE: a card at once, not the 3 s stall.
+		UE_LOG(LogJamNet, Warning, TEXT("JAMNET card: %s left, %.2f s after the last frame"), *Lobby->GetRemoteName(), LastFrameAt > 0.0 ? FPlatformTime::Seconds() - LastFrameAt : -1.0);
+		EndMatch(Lobby->IsHost() ? TEXT("YOUR FRIEND LEFT") : TEXT("THE HOST LEFT"), FString::Printf(TEXT("%s left the match"), *Lobby->GetRemoteName()), TEXT("peer left"));
+	}
 	else if (Driver->IsLost() && !bEnded)
 	{
+		UE_LOG(LogJamNet, Warning, TEXT("JAMNET card: connection lost, %.2f s after the last frame"), LastFrameAt > 0.0 ? FPlatformTime::Seconds() - LastFrameAt : -1.0);
 		EndMatch(TEXT("CONNECTION LOST"), FString::Printf(TEXT("no word from %s for 3 seconds"), *Lobby->GetRemoteName()), TEXT("connection lost"));
 	}
 	else if ((Driver->IsLost() || Driver->IsDesynced()) && bEnded && CVarJamNetQuitAtFrame.GetValueOnGameThread() > 0 && !bExitSent)
@@ -518,5 +545,12 @@ void ALobbyGameMode::Tick(float DeltaSeconds)
 		if (Lobby) Lobby->NotifyMatchEnded(FString::Printf(TEXT("%d:%d, agreed on %d checkpoints"), TheSim->GetScore(0), TheSim->GetScore(1), Driver->GetAgreedCheckpoints()));
 		UE_LOG(LogJamNet, Log, TEXT("JAMNET match over frame=%lld winner=%d %s"), TheSim->GetFrame(), TheSim->GetWinner(), *Driver->DescribeStats());
 		bEnded = true;
+		if (CVarJamNetQuitAtFrame.GetValueOnGameThread() > 0 && !bQuitRequested)
+		{
+			// Lane A120: the unattended proof plays a match to its end: the final line, then the same two-second grace as at QuitAtFrame.
+			bQuitRequested = true;
+			QuitAtTick = Driver->GetTicks() + 120;
+			LogProofLine(TEXT("proof done"));
+		}
 	}
 }

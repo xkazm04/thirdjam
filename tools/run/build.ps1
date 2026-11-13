@@ -40,10 +40,37 @@ $targetName = $name; if ($Target -eq 'Editor') { $targetName = $name + 'Editor' 
 $logDir = Get-LogDir $projDir
 $log = Join-Path $logDir ("build-{0}-{1}-{2}.log" -f $targetName, $Config, (Get-Stamp))
 
-$argLine = ('{0} Win64 {1} -Project="{2}" -WaitMutex -NoHotReloadFromIDE -FromMsBuild' -f $targetName, $Config, $uproject)
+# Parallel builds across worktrees (Director, 13 Nov 22:10). Build.bat takes a lock file under %TMP% and UBT a machine-wide mutex, so every worktree's build
+# queued behind every other (a one-minute rebuild waited up to 47 minutes with a dozen lanes). Each project now builds with its own TMP (its own Build.bat
+# lock), -NoMutex (no machine-wide UBT mutex: each worktree has its own Intermediate; the installed engine is read-only) and -NoUBA (the accelerator's
+# store wants exclusive access), in one of a few slots so the machine is not flooded. TJ_SERIAL_BUILD=1 gives back the old serial build.
+$mutexArgs = '-WaitMutex'
+$slot = $null
+$oldTmp = $env:TMP; $oldTemp = $env:TEMP
+if (-not $env:TJ_SERIAL_BUILD) {
+    $mutexArgs = '-NoMutex -NoUBA'
+    $md5 = [System.Security.Cryptography.MD5]::Create()
+    $key = ([System.BitConverter]::ToString($md5.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($projDir.ToLowerInvariant())))).Replace('-', '').Substring(0, 12)
+    $buildTmp = Join-Path (Join-Path $env:LOCALAPPDATA 'Temp') ('tj-build-' + $key)
+    New-Item -ItemType Directory -Force -Path $buildTmp | Out-Null
+    $env:TMP = $buildTmp; $env:TEMP = $buildTmp
+    $maxSlots = 3; if ($env:TJ_BUILD_SLOTS) { $maxSlots = [int]$env:TJ_BUILD_SLOTS }
+    $waited = 0
+    while (-not $slot) {
+        for ($i = 0; $i -lt $maxSlots -and -not $slot; $i++) {
+            $m = New-Object System.Threading.Mutex($false, "tj-build-slot-$i")
+            try { if ($m.WaitOne(0)) { $slot = $m } else { $m.Dispose() } } catch [System.Threading.AbandonedMutexException] { $slot = $m }
+        }
+        if (-not $slot) { if ($waited -eq 0) { Write-Host "INFO build: all $maxSlots build slots are taken; waiting" }; Start-Sleep -Seconds 5; $waited += 5 }
+    }
+    if ($waited -gt 0) { Write-Host "INFO build: got a slot after ${waited}s" }
+}
+$argLine = ('{0} Win64 {1} -Project="{2}" {3} -NoHotReloadFromIDE -FromMsBuild' -f $targetName, $Config, $uproject, $mutexArgs)
 Write-Host "INFO build: $buildBat $argLine"
 Write-Host "INFO build: log $log"
 $r = Invoke-Watched -FilePath $buildBat -Arguments $argLine -LogFile $log -TimeoutSec $TimeoutSec -MinFreeGB $floor -DiskPath $uproject -Label 'build'
+$env:TMP = $oldTmp; $env:TEMP = $oldTemp
+if ($slot) { try { $slot.ReleaseMutex() } catch {}; $slot.Dispose() }
 
 $extra = @{ target = $targetName; config = $Config; seconds = $r.seconds; log = $log; free_gb = (Get-FreeGB $uproject) }
 if ($r.timedOut) { Write-Step 'FAIL' 'build' ("timeout after {0}s (limit {1}s); see log" -f $r.seconds, $TimeoutSec); Exit-WithResult 'build' 1 $extra }

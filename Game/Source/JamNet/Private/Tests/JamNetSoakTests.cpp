@@ -60,6 +60,7 @@ namespace JamNetSoak
 		int32 UdpTickUs = 250;
 		int32 BEvery = 1;           // peer B steps only every BEvery ticks (a slower machine: 2 = B at 30 Hz)
 		bool bExpectLost = false;   // the profile is meant to end in "connection lost"
+		int64 InjectFrame = -1;     // lane A120: see FPeer::InjectFrame (the guest's machine, the guest's seat)
 		bool bExpectDesync = false;
 	};
 
@@ -215,6 +216,10 @@ namespace JamNetSoak
 		int32 Verbs[3] = {};
 		bool bSprintOn = true;   // -SoakSprint=0 gives back A56's playtesters (no Shift)
 		bool bSeatGuest = true;  // lane A110: ALobbyGameMode seats the guest as a human (UJamSim::SeatGuest); -SoakSeatGuest=0 gives back A104's bot seat
+		// Lane A120: a seeded one-field divergence (the field-compare proof): after stepping InjectFrame, this peer's skater InjectSkater gets
+		// MoveHist[InjectElement].X += 0.25. -1 = never (every real profile).
+		int64 InjectFrame = -1;
+		int32 InjectSkater = -1, InjectElement = 7;
 
 		void Init(FAutomationTestBase& T, const UJamCartridge& C, uint64 Seed, IJamLink& Link, int32 InLocal, int32 InRemote, JamAI::EPlaytester Kind)
 		{
@@ -378,6 +383,8 @@ namespace JamNetSoak
 			Sim->Step(Inputs);
 			Zones->Update(Sim->GetFrame(), Sim->GetSkaters(), Sim->GetPuck());
 			Fx->Step();
+			if (Sim->GetFrame() == InjectFrame && Sim->GetSkaters().IsValidIndex(InjectSkater))
+				const_cast<FJamSkaterState&>(Sim->GetSkaters()[InjectSkater]).MoveHist[InjectElement].X += 0.25;   // test only: the sim's own array, one element
 			Tm.Sim.Add(static_cast<uint32>(FPlatformTime::Cycles64() - C1));
 			Driver->RecordHash(Sim->GetFrame(), LockHash());
 
@@ -399,11 +406,24 @@ namespace JamNetSoak
 		return -1;
 	}
 
-	FString PropText(const FProperty* P, const void* Container)
+	FString PropText(const FProperty* P, const void* Container, int32 ArrayIndex = 0)
 	{
 		FString Out;
-		P->ExportTextItem_Direct(Out, P->ContainerPtrToValuePtr<void>(Container), nullptr, nullptr, PPF_None);
+		P->ExportTextItem_Direct(Out, P->ContainerPtrToValuePtr<void>(Container, ArrayIndex), nullptr, nullptr, PPF_None);
 		return Out;
+	}
+
+	// Lane A120 (track Q1): one reflected field compared whole. Identical_InContainer's ArrayIndex defaults to 0, so a C array (MoveHist[10]) was compared on
+	// element 0 only; every element now, named with its index. ("" = equal.)
+	FString FieldDiff(const FProperty* P, const void* X, const void* Y, const FString& Prefix)
+	{
+		for (int32 k = 0; k < P->ArrayDim; ++k)
+		{
+			if (P->Identical_InContainer(X, Y, k)) continue;
+			const FString Name = P->ArrayDim > 1 ? FString::Printf(TEXT("%s%s[%d]"), *Prefix, *P->GetName(), k) : Prefix + P->GetName();
+			return FString::Printf(TEXT("%s %s / %s"), *Name, *PropText(P, X, k), *PropText(P, Y, k));
+		}
+		return FString();
 	}
 
 	// The first field that differs between the two peers' states at one frame ("" = bit-identical). Reflection over FJamSkaterState and FJamPuckState,
@@ -419,14 +439,14 @@ namespace JamNetSoak
 		{
 			for (TFieldIterator<FProperty> It(FJamSkaterState::StaticStruct()); It; ++It)
 			{
-				if (!It->Identical_InContainer(&X.Skaters[i], &Y.Skaters[i]))
-					return FString::Printf(TEXT("skater[%d].%s %s / %s"), i, *It->GetName(), *PropText(*It, &X.Skaters[i]), *PropText(*It, &Y.Skaters[i]));
+				const FString D = FieldDiff(*It, &X.Skaters[i], &Y.Skaters[i], FString::Printf(TEXT("skater[%d]."), i));
+				if (!D.IsEmpty()) return D;
 			}
 		}
 		for (TFieldIterator<FProperty> It(FJamPuckState::StaticStruct()); It; ++It)
 		{
-			if (!It->Identical_InContainer(&X.Puck, &Y.Puck))
-				return FString::Printf(TEXT("puck.%s %s / %s"), *It->GetName(), *PropText(*It, &X.Puck), *PropText(*It, &Y.Puck));
+			const FString D = FieldDiff(*It, &X.Puck, &Y.Puck, TEXT("puck."));
+			if (!D.IsEmpty()) return D;
 		}
 		if (X.SimH != Y.SimH) return FString::Printf(TEXT("sim.StateHash (unreflected sim state: modifiers, faceoff, rule flags) %016llx / %016llx"), static_cast<unsigned long long>(X.SimH), static_cast<unsigned long long>(Y.SimH));
 		if (X.SimLockH != Y.SimLockH) return FString::Printf(TEXT("sim.LockstepStateHash (unreflected cross-frame state: MoveHist, BotDrawFrame) %016llx / %016llx"), static_cast<unsigned long long>(X.SimLockH), static_cast<unsigned long long>(Y.SimLockH));
@@ -586,6 +606,7 @@ namespace JamNetSoak
 		A.bSeatGuest = B.bSeatGuest = O.bSeatGuest;
 		A.Init(T, C, Seed, *LA, Host, Guest, JamAI::EPlaytester::Regular);
 		B.Init(T, C, Seed, *LB, Guest, Host, JamAI::EPlaytester::Good);
+		B.InjectFrame = Fa.InjectFrame; B.InjectSkater = Guest;   // lane A120
 		double NextAt = FPlatformTime::Seconds();
 		const int32 Target = O.Frames;
 		M.Expected = Target / JamNet::HashInterval;
@@ -723,6 +744,7 @@ namespace JamNetSoak
 		else if (Name == TEXT("slow30")) { F.BEvery = 2; }   // the guest's machine at 30 Hz, LAN link
 		else if (Name == TEXT("slow30-loss10-jitter0-6")) { F.BEvery = 2; F.Loss = 0.10; F.DelayMin = 0; F.DelayMax = 6; }
 		else if (Name == TEXT("blackout120")) { F.BlackoutAt = 1200; F.BlackoutTicks = 120; }   // 2 s without a datagram: inside the 3 s stall limit
+		else if (Name == TEXT("inject-movehist7")) { F.InjectFrame = 300; F.bExpectDesync = true; }   // lane A120: the field-compare proof (one element of a C array)
 		else if (Name == TEXT("blackout240")) { F.BlackoutAt = 1200; F.BlackoutTicks = 240; F.bExpectLost = true; }   // 4 s: the "connection lost" card
 		else { F.Name = TEXT("?") + Name; }
 		return F;
@@ -995,3 +1017,33 @@ bool FJamNetSoakMismatch::RunTest(const FString& Parameters)
 }
 
 #endif
+
+// Lane A120 (track Q1): the soak's field compare covers whole arrays. One element of one C array (the guest's MoveHist[7], the burst's ring) is nudged on
+// the guest's machine after frame 300 of a clean regular match: the compare must name that element at that frame (it compared element 0 only before), and
+// the lockstep hash must see it at the same frame (300 is a checkpoint), so the driver's DESYNC card comes up on it.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamNetSoakFieldArrays, "Jam.Net.SoakFieldArrays", JamNetSoak::Flags)
+bool FJamNetSoakFieldArrays::RunTest(const FString& Parameters)
+{
+	AddExpectedError(TEXT("JAMNET desync"), EAutomationExpectedErrorFlags::Contains, 0);
+	FOptions O;
+	O.Seeds = 1; O.Frames = 600;
+	O.OutFile = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("SoakLockstep"), TEXT("a120-fieldarrays.jsonl"));
+	UJamCartridge* C = Load(*this, O.Cut);
+	if (!C) return false;
+	UJamSim* Probe = NewObject<UJamSim>();
+	Probe->Init(C->Game, 1);
+	const int32 Guest = GuestSlot(*Probe);
+	FTiming Tm;
+	const FMatch Clean = RunMatch(*this, O, *C, 1, Profile(TEXT("clean")), Tm);
+	TestTrue(TEXT("the clean match has no differing field"), Clean.FirstDiffFrame < 0 && !Clean.bDesyncDriver && Clean.bFinalEqual);
+	const FMatch M = RunMatch(*this, O, *C, 1, Profile(TEXT("inject-movehist7")), Tm);
+	Emit(O, MatchJson(M));
+	const FString Want = FString::Printf(TEXT("skater[%d].MoveHist[7] "), Guest);
+	AddInfo(FString::Printf(TEXT("seeded MoveHist[7] of skater %d at frame 300: first diff frame %lld field '%s', lockstep hash from %lld, driver desync at %lld"), Guest, M.FirstDiffFrame,
+		*M.FirstDiffField, M.FirstLockHashDiff, M.DriverDesyncFrame));
+	TestEqual(TEXT("found at its exact frame"), M.FirstDiffFrame, static_cast<int64>(300));
+	TestTrue(FString::Printf(TEXT("named as %s... (got '%s')"), *Want, *M.FirstDiffField), M.FirstDiffField.StartsWith(Want));
+	TestEqual(TEXT("the lockstep hash differs from the same frame"), M.FirstLockHashDiff, static_cast<int64>(300));
+	TestTrue(TEXT("the driver raised DESYNC at the checkpoint"), M.bDesyncDriver && M.DriverDesyncFrame == 300);
+	return true;
+}

@@ -60,6 +60,8 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Jam|Game") UJamEffectSystem* GetEffects() const { return Effects; }
 	UFUNCTION(BlueprintPure, Category = "Jam|Game") UJamCartridge* GetCartridge() const { return Cartridge; }
 	UFUNCTION(BlueprintPure, Category = "Jam|Game") AJamSkater* GetHumanSkater() const;
+	// Lane A120 (track Q1): the seat this machine plays, for presentation only (barks, commentary): the sim's human here, ALobbyGameMode's LocalIndex online.
+	virtual int32 GetLocalSeat() const;
 	// Lane A15 (C-0005): the rule hook (announce text for the RULE: scoreboard line) and the zone system (membership, zone events).
 	UFUNCTION(BlueprintPure, Category = "Jam|Game") UJamRuleSystem* GetRules() const { return Rules; }
 	UFUNCTION(BlueprintPure, Category = "Jam|Game") UJamZoneSystem* GetZones() const { return ZoneSystem; }

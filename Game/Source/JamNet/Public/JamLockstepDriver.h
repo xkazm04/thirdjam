@@ -37,6 +37,8 @@ public:
 	int32 GetDelay() const { return Delay; }
 	bool IsDesynced() const { return bDesynced; }
 	bool IsLost() const { return bLost; }
+	// Lane A120 (track Q1): the peer said BYE in the match (it left the rink or quit): IsLost() is true at once, without the 3 s stall.
+	bool HasPeerLeft() const { return bPeerLeft; }
 	bool HasHeardPeer() const { return bHeard; }
 	int32 GetAgreedCheckpoints() const { return Agreed; }
 	int64 GetDesyncFrame() const { return DesyncFrame; }
@@ -77,4 +79,5 @@ private:
 	bool bDesynced = false;
 	bool bLost = false;
 	bool bHeard = false;
+	bool bPeerLeft = false;
 };

@@ -43,6 +43,9 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Jam|Lobby") bool IsLockstep() const { return bLockstep; }
 	UFUNCTION(BlueprintPure, Category = "Jam|Lobby") int32 GetLocalIndex() const { return LocalIndex; }
+	// Lane A120 (track Q1): barks, commentary and the HUD speak to this machine's seat: the guest's on the guest's machine (presentation only).
+	virtual int32 GetLocalSeat() const override { return LocalIndex >= 0 ? LocalIndex : Super::GetLocalSeat(); }
+	static int32 LocalSeatOf(bool bHost, int32 HumanIndex, int32 GuestIndex) { return bHost ? HumanIndex : GuestIndex; }
 
 	// Lane A38: what happened in this match so far (the proof asserts a faceoff, a foul, a pickup and a rule hook occurred).
 	UFUNCTION(BlueprintPure, Category = "Jam|Lobby") int32 GetFaceoffDrops() const { return FaceoffDrops; }
@@ -88,6 +91,9 @@ private:
 	int32 PickupTakes = 0;
 	double LockAccumulator = 0.0;
 	double FirstFrameAt = 0.0;   // FPlatformTime::Seconds() of the first stepped frame (0 = none yet)
+	double LastFrameAt = 0.0;    // lane A120: of the latest stepped frame (the seconds from the peer's last frame to the card)
+	// Lane A120: frames each seat's applied input held a verb: [0] host seat, [1] guest seat; sprint, pass held, brake, spin, check, ability.
+	int32 VerbFrames[2][6] = {};
 	bool bLockstep = false;
 	bool bEnded = false;
 	bool bShotTaken = false;
