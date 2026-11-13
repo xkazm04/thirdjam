@@ -1,0 +1,1 @@
+Lane QA4. A hard stop as the figure sees it: a clay test figure driven by UpdateMotion at 11 m/s, then the speed taken down at 20 m/s^2 (frames 60 to 93); frames 40, 58, 63, 69, 75, 81, 87, 93, 105, 125 in order (the labels count 0 to 9). The figure shows no brake: the stride blends down with the speed. Un-frozen, fixed camera.

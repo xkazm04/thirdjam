@@ -1,0 +1,1 @@
+Lane QA4, for the look lane. Left: the penalty boxes behind B's boards from the game camera in play (un-frozen, HUD). Middle: a test figure knocked down at the boards under the team bench. Right: the same beside the penalty boxes. Nothing clips: the pieces stand outside the boards. The walls are greyer than B's cream boards; the clock faces are the darkest thing in the frame.

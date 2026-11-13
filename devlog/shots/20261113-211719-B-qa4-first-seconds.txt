@@ -1,0 +1,1 @@
+Lane QA4. The first match of the editor session, 3 s of wall time after the play session started (un-frozen MCP capture with the HUD): the rink without the clay rig (pale blue ice, black beyond the boards, washed figures). The log has 5.7 s of wall time (86 rendered frames on a loaded machine) from the match build to 'rig loaded'; the next capture, at 8 s, is clay.

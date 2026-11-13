@@ -1,0 +1,1 @@
+Lane QA4. A 60-frame knockdown, every 3rd frame (f 0 to f 69): a clay test figure in a play session (SetKnockedDown true with 60 frames, released by the game clock; no hit-stop on a test figure), fixed camera, un-frozen console Screenshots from a tick callback. Fall 24 frames, get-up from f 25, the pelvis back at 90 % of standing at f 57; there is no lying hold.

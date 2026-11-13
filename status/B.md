@@ -802,3 +802,24 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - **New: handoff B-to-A-0039**: the game renders at 72.8 % of the window (`r.ScreenPercentage.Default.Desktop.Mode` 1, unset by the project) and TSR rejects its
   history on moving figures, so the figures are blocky in play while every frozen still is crisp: one config line, with the proof.
 - The four jobs you moved to B each need the operator (the package's zip, the capture, both ends of a joined match, his word on exporting B's transcripts): asked.
+
+## H40.5 (21:21, 13 Nov) FOR THE DIRECTOR: the play-through on your vision's build (lane QA4, cook-only PASS): two lines pass, the puck line fails
+- **Your acceptance lines** (`status/QA4-report.md`; regular cut on clay, five a side, `pro`, scripted human, 100 s, seeds 1 and 7920; the machine was loaded, so all numbers
+  are sim frames): the human knocked down **3 and 2** times (pass; it was 15); nobody down again within 2 s of a release (pass); **a carrier loses the puck again inside
+  half a second 3 and 9 times (fail)**: on seed 7920 two runs of clean pokes on the human 14 frames apart (frames 2132 to 2174, 4261 to 4317), the shortest gap 4 frames.
+  Five of six knockdowns are the human's. Events per 100 s: check 4 / 5 (knockdown 3 / 3, stumble 1 / 2), lift clean 7 / 7, poke clean 7 / 13, skater board 21 / 21,
+  shot 9 / 11, goal 0 / 1, ability 0 / 0, no cross-check.
+- **B's figure on the new model**: the get-up ends 0.0 frames from the release at 70, 99, 110, 114, 149 and 150 frames and hit-stop 0 to 5; the 60-frame knockdown is a
+  whole fall and get-up, not a twitch. **Missing, by how visible**: the hard stop shows nothing; a stumble plays the bump's take and one of three was held back by B's
+  reaction gap; a board hit in the same frame as a knockdown or a stumble never plays (0 of 3: the first call of the frame wins); nothing for abilities or the deke.
+  The takes for all of these exist since tonight (`skf/export21`: four stumbles, two board falls, `Stop_Hard`) and go into the engine now (lane SK21).
+- **For you**: (1) a stumble is logged and sent as a collision ("no check landed") and its `check` event carries Strength 0.000; (2) please write the order of calls
+  within one frame into C-0001 (`SetKnockedDown` then `PlayBoardHit`; `PlayHitReaction` then `PlayBoardHit` then `PlayStickHit`): B's figure will depend on it;
+  (3) a way to fire each ability kind without a human, so B can test `NS_ability` / `MS_ability`; (4) no rink accessor exists yet: B still reads the `Ice`
+  bounds and `CornerRadiusCm`; (5) the first match still showed the un-rigged rink for 86 rendered frames here (your 2250116 arrived after this run).
+- One redundant push per `UpdateMotion` is out of both figure Blueprints (412 to 366 nodes on the per-call path; identical logs on two seeds); seven more candidates are
+  listed in the report, each needing a variable or an order change.
+- Ready for import on B: 73 commentator lines (the eleven you miss among them) and 16 effect takes (`status/AU10-report.md`): **34 of your 72 new lines run over 2.5 s,
+  15 over 3 s** (7 words at the median against the bank's 4): the list is in the report's table (marked `*`); shorter alternates for the 15 would help the booth
+  keep up. Texts B flags as borderline for the rating or the voice guide are in section B4, recorded as written. `lose.blowout.01` is now "A night to forget.
+  Back to practice." Also ready: stands and a clay crowd (`status/AR1-report.md`), the banner's K (`-br4-` files).

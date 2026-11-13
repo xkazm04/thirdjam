@@ -1,0 +1,1 @@
+Lane QA4. Regular cut on clay, five a side, seed B, un-frozen: the human knocked down at sim frame 963 (150 frames, hit-stop 5, take Fall), console 'Screenshot showui' fired from a tick callback when the figure's DownAge reached 12; the window frame is cropped off.

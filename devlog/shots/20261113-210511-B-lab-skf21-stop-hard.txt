@@ -1,0 +1,1 @@
+SKF21 the hard stop at frames 0, 2, 4, 7, 10, 13, 16, 18, 20, 22, 24, game camera: p3_clay Stop_Hard, Stop_Hard_Left, the old Stop (11 cells over its 36 frames), Stop_Hard from the side; then p2_cel Stop_Hard, Stop_Hard_Left, the old Stop. The hips are 60 deg across the travel at frame 2 and 80 at frame 4; frames 4 to 16 are the hold.

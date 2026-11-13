@@ -1,0 +1,1 @@
+SKF21 a 60-frame knockdown with no lying hold, game camera, every 3rd frame: the fall from its contact frame (2 to 26, 9 cells) straight into the get-up (3 to 36, 12 cells). Rows: p2_cel Fall + GetUp, p2_cel Knockdown_Left + GetUp_Side_Left, then the same two for p3_clay. It reads as down and up: flat on the ice for about 17 frames.

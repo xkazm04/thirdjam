@@ -1,0 +1,1 @@
+SKF21 the stumble against the bump, game camera, p2_cel (top four rows) and p3_clay: per row a stumble over its 32 frames (12 cells: Stumble_Front, Stumble_Back, Stumble_Left, Stumble_Right) and beside it the bump of the same side over its 20 frames (8 cells: Check_Hit_Back, _Left, _Right; there is no front bump take, so that cell is black).
