@@ -263,6 +263,11 @@ namespace JamAI
 			if (W.Carrier >= 0) { FVector2D Aim; W.CarrierBestPass = S.BestPass(W.Carrier, Aim); }
 			W.CarrierBestSaucer = -1;   // lane A77 (R-0036): whom a saucer would go to (a blade in the lane allowed)
 			if (W.Carrier >= 0) { FVector2D Aim; W.CarrierBestSaucer = S.BestPass(W.Carrier, Aim, true); }
+			// lane A94 (R-0045 law 2): the holder at the sim's own carrier reach (UJamSim::CarrierIndex: the blade's full length) and its best pass. Only the
+			// hockey sense reads these (W.Carrier stays on shot.reach_m for every older decision, A85's note above).
+			W.Holder = S.CarrierIndex();
+			W.HolderBestPass = -1;
+			if (W.Holder >= 0) { FVector2D Aim; W.HolderBestPass = S.BestPass(W.Holder, Aim); }
 		}
 		W.SkaterRadius = UJamSim::SkaterRadius;
 		W.StickReach = G.Stick.ReachM;

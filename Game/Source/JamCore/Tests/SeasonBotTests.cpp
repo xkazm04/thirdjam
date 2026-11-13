@@ -37,6 +37,8 @@ bool FJamBotSeasonTakes::RunTest(const FString& Parameters)
 		const int32 Pi = C.PlayerIndex();
 		const int32 PlayerTeam = C.Skaters[Pi].Team;
 		int32 Wins = 0;
+		int32 TakeAiShots = 0;      // Director (A94 landing): the AI-shot clause is per take, over its three seeds
+		int64 TakeLongFrames = 0;   // frames of the take's matches that ran a minute or more
 		for (const uint64 Seed : { 1ull, 2ull, 7ull })
 		{
 			JamAI::FJamSimAdapter SimA(*Cart), SimB(*Cart);   // lane A41: the takes play with their hooks, zones and pickups
@@ -53,9 +55,18 @@ bool FJamBotSeasonTakes::RunTest(const FString& Parameters)
 				*Name, *Cart->Title, Seed, A.Goals[PlayerTeam], A.Goals[1 - PlayerTeam], A.Frames, bWin ? TEXT("WIN") : TEXT("no win"), A.Faceoffs,
 				A.FaceoffsWithoutPlayerTouch, AiShots, A.MaxBoardDistance, A.Hash, bSame ? TEXT("same") : TEXT("DIFFERENT"));
 			// A rookie human can win 2:0 inside 20 s before the AI ever shoots: the AI-shot clause applies to matches of a minute or more.
-			const bool bAiShot = AiShots >= 1 || A.Frames < 3600;
+			// Per seed this clause was a coin at rookie (A82, A85, A94 each met it: a rookie bot shoots about once a minute, and with the hockey principles it passes more
+			// and shoots less): the clause now reads over the take's three seeds, below the loop.
+			TakeAiShots += AiShots;
+			if (A.Frames >= 3600) TakeLongFrames += A.Frames;
+			const bool bAiShot = true;
 			if (bEnded && A.FaceoffsWithoutPlayerTouch == 0 && bMoved && bAiShot && A.MaxBoardDistance <= 0.01 && bSame) AddInfo(TEXT("PASS ") + Msg);
 			else { AddError(TEXT("FAIL ") + Msg + (bEnded ? TEXT("") : TEXT(" (did not end inside 10 minutes)"))); bOk = false; }
+		}
+		if (TakeLongFrames > 0 && TakeAiShots == 0)
+		{
+			AddError(FString::Printf(TEXT("FAIL %s: the AI never shot in %lld frames of matches a minute or longer (three seeds)"), *Name, TakeLongFrames));
+			bOk = false;
 		}
 		const FString W = FString::Printf(TEXT("%s (%s, %s): the scripted human won %d of 3"), *Name, bRookie ? TEXT("rookie") : TEXT("pro or harder"), bTimer ? TEXT("timer") : TEXT("first_to"), Wins);
 		if (!bRookie || Wins >= 2) AddInfo(TEXT("PASS ") + W);

@@ -38,6 +38,12 @@ namespace JamAI
 			Opp.PokeFrames = -1;   // R-0017: rookie bots never poke
 			Opp.SweepReactFrames = 14;   // lane A51 (R-0034): the rookie's blade reads the carried puck 14 frames late
 			Opp.ShotChargeFrames = 0;   // lane A31 (B-to-A-0024): rookie taps its shots
+			// Lane A94 (R-0045 law 2): the rookie knows the hockey principles and executes them late and loosely: it reads a change of possession 24 frames
+			// late, keeps its shape job in 0.6 of the two-second windows, and passes away from pressure only once it is 0.6 s out. A86 / the final curve tune these.
+			Opp.Hk = ProHockeySense();
+			Opp.Hk.ShapeShare = 0.6;
+			Opp.Hk.LateFrames = 24;
+			Opp.Hk.PressureSec = 0.6;
 			Opp.DrawJumpPct = 100; // 16:23: the rookie centre always jumps early (the human takes the opening touch)
 			// R-0029 P2: speed 0.85 / red skill 0.75 (0.96 / 0.88 before, tuned against the scripted human); measured with lane A34's novice.
 			// Stall 60: the stall rule is what lets a rookie shoot at all (SeasonTakes needs one AI shot per match).
@@ -74,6 +80,11 @@ namespace JamAI
 			Opp.bDeke = true;
 			Opp.CheckMinClosing = 3.0;   // R-0031 point 2 (lane A45): all_star body-checks the carrier (front or side, never from behind); rookie keeps -1 (never). Lane A70: 5 -> 3 (knockdowns of the good playtester 2.73 -> 3.00 a match at speed 1.3, its win share 26.5 -> 26.8)
 			Opp.HuntRadiusM = 10.0;   // lane A79 (R-0041 point 1, CURVE-3.md): the support goes at an opposing carrier within 10 m (good 26.8 -> 21.4, regular 13.3 -> 11.8 at speed 1.3)
+			// Lane A94 (R-0045 law 2): all_star executes the hockey principles at once and fully (pro: ProHockeySense, share 0.85, 8 frames late)
+			Opp.Hk = ProHockeySense();
+			Opp.Hk.ShapeShare = 1.0;
+			Opp.Hk.LateFrames = 0;
+			Opp.Hk.bReadHumanPressure = true;   // all_star passes away from the human's forecheck too (pro and rookie leave it to forecheck_yield_frames)
 			// R-0029 pass 2 (with A31's charge): speed 1.08 (bots may push past 1, the sim clamps them at 1.5): the good playtester 30 % / 25 %
 			// R-0029 with A39's payoffs on (one-timer, burst, deke): speed 1.15 brings the good playtester back to 23 % at 40 seeds (1.08 measured 38 %, 1.12 33 %); A39 section 9.
 			// Lane A70 (CURVE-2.md, 2,000 matches per number): speed 1.15 -> 1.3, the good playtester 40.5 -> 26.5 % (1.2 34.5, 1.32 23.9, 1.4 14.8; checks from
@@ -121,6 +132,18 @@ namespace JamAI
 			if (std::strcmp(Key, "check_min_closing") == 0) { K.CheckMinClosing = V; return true; }   // R-0031 point 2 (lane A45); -1 = never
 			if (std::strcmp(Key, "check_from_behind") == 0) { K.bCheckFromBehind = V != 0.0; return true; }
 			if (std::strcmp(Key, "hunt_radius_m") == 0) { K.HuntRadiusM = V; return true; }   // R-0041 point 1 (lane A79)
+			// Lane A94 (R-0045 law 2): the hockey principles. hk_on 0 | 1 switches all four; the others tune one.
+			if (std::strcmp(Key, "hk_on") == 0) { K.Hk.bCarryOrPass = K.Hk.bAttackShape = K.Hk.bDefenceShape = K.Hk.bTransition = V != 0.0; return true; }
+			if (std::strcmp(Key, "hk_carry_or_pass") == 0) { K.Hk.bCarryOrPass = V != 0.0; return true; }
+			if (std::strcmp(Key, "hk_attack_shape") == 0) { K.Hk.bAttackShape = V != 0.0; return true; }
+			if (std::strcmp(Key, "hk_defence_shape") == 0) { K.Hk.bDefenceShape = V != 0.0; return true; }
+			if (std::strcmp(Key, "hk_transition") == 0) { K.Hk.bTransition = V != 0.0; return true; }
+			if (std::strcmp(Key, "hk_share") == 0) { K.Hk.ShapeShare = V; return true; }
+			if (std::strcmp(Key, "hk_late_frames") == 0) { K.Hk.LateFrames = static_cast<int>(V); return true; }
+			if (std::strcmp(Key, "hk_pressure_s") == 0) { K.Hk.PressureSec = V; return true; }
+			if (std::strcmp(Key, "hk_min_carry_frames") == 0) { K.Hk.MinCarryFrames = static_cast<int>(V); return true; }
+			if (std::strcmp(Key, "hk_better_by_m") == 0) { K.Hk.BetterByM = V; return true; }
+			if (std::strcmp(Key, "hk_read_human_pressure") == 0) { K.Hk.bReadHumanPressure = V != 0.0; return true; }
 			return false;
 		}
 	}
@@ -164,6 +187,7 @@ namespace JamAI
 		P.Opp = Profile.Opp;
 		P.Mate = FJamBotSkill();
 		P.Mate.PassToHuman = Profile.MatesPassShare;
+		P.Mate.Hk = ProHockeySense();   // lane A94 (R-0045 law 2): the human's teammates play the pro hockey sense at every level
 	}
 
 	bool ApplyDifficultyTune(const char* Text, FJamAIParams& P, char* Err, int ErrLen)

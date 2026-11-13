@@ -358,3 +358,7 @@
 - RESOURCES 15:58 cpu 36% ram 28.3/63GB gpu 32 %, 2524 MiB, 52 editors 0 cmd 9 ubt 1 free 605GB
 - 16:00: the hourly package loop ended at 16:00 as set (last row cba1327 13:29; it packaged nothing after its restart: not chased). Retired: lanes package on every proof and H packages are gated by the acceptance run (R-0043). Its table is docs/experiments/NIGHTLY.md.
 - link green 16:15: main b93f05f (The curve's player is the player (A86, R-0043 point 2): the playtester classes hold the st) pushed.
+- link green 16:21: main 034f9ac (The acceptance run is green (A91, R-0044): 18 of 18 verbs through the cursor and the butto) pushed.
+
+- RESOURCES 16:28 cpu 85% ram 27.5/63GB gpu 41 %, 2053 MiB, 48 editors 0 cmd 1 ubt 2 free 613GB
+- package 16:30: `Hokej_Hokej_H25.zip` from main 034f9ac, acceptance run green (18 verbs through the cursor and the buttons).
