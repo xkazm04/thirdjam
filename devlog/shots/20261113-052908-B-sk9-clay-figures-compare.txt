@@ -1,0 +1,1 @@
+SK9 composite for the operator: which figure for the clay tier. Left the generated figure (BP_SkaterVisual_TB2_P3, what the game shows today), right the scripted figure (BP_SkaterVisual_TB1_P3, mirrored); rows: lane B22's low camera at the faceoff, the game camera at the faceoff, the game camera skating. Same match, seed and frames. Lane SK9, device B.

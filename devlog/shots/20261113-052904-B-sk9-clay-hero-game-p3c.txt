@@ -1,0 +1,1 @@
+SK9: clay tier, pass 5 boards, felt figures, contact plane: the generated clay figure (generated_b2, BP_SkaterVisual_TB2_P3) in a real clay match; the game camera at the faceoff (t 1.2 s, frozen), HUD removed. No reference pixels.

@@ -1,0 +1,1 @@
+SK9: BP_SkaterVisual_TB1_P3 at rest with the pass 10 aim holds: one-handed (free glove by the hip) at 0 deg / 1.6 m, -30 deg / 1.45 m and -63 deg / 1.0 m, two-handed at +35 deg / 1.3 m. With the export9 holds the first three were two-handed. Lane SK9, device B.

@@ -1,0 +1,1 @@
+SK9: clay tier, pass 5 boards, felt figures, contact plane: the scripted clay figure BP_SkaterVisual_TB1_P3 (SKF pass 10 takes) mirrored onto the six pawns of a real clay match (the game mode does not select it); the game camera in open skating (t 2.18 s, about 8 m/s, frozen), HUD removed. No reference pixels.
