@@ -332,3 +332,4 @@
 - link green 14:15: main 35511c2 (All-star by aggression (A79, R-0041): speed 1.3 -> 1.2, the bots poke at once and a suppor) pushed.
 
 - RESOURCES 14:27 cpu 31% ram 26.8/63GB gpu 2 %, 814 MiB, 44 editors 0 cmd 0 ubt 3 free 611GB
+- link green 14:39: main 36d5f97 (The game speaks rough (A89, R-0041 point 4): a voice guide (ten rules, the rating's line, ) pushed.
