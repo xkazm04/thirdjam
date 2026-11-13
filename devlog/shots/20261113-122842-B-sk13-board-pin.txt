@@ -1,0 +1,1 @@
+SK13: Board_Pin in a real clay match (seed 1, all_star, scripted human): the human (blue) pinned at the end boards by a bot, 15 frames after the pin started; game camera, HUD removed. Lane SK13, device B.

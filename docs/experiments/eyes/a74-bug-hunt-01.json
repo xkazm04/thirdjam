@@ -1,0 +1,177 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T10:46:06.448Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a74/hockey.arena.large-l2-call.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/a74/hockey.arena.large-l2-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/a74/hockey.arena.large-l2-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/a74/hockey.arena.large-l2-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/a74/hockey.arena.large-l2-pause.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "F",
+          "path": "docs/experiments/img/a74/hockey.boost-l3-call.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2473,
+      "usage": {
+        "prompt": 7467,
+        "output": 1054,
+        "thoughts": 0,
+        "total": 8521,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00955,
+      "ms": 12370,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [
+              {
+                "where": "bottom-left quadrant, at the red goal frame",
+                "what": "The goal frame top surface renders with a flat light grey fill rather than netting or frame geometry, clipping harshly against the ice markings.",
+                "severity": 3,
+                "confidence": 0.95
+              },
+              {
+                "where": "top-center scoreboard area",
+                "what": "The yellow distance marker diamond and '2 m' text float awkwardly beneath the scoreboard without clear context or anchoring to an object on ice.",
+                "severity": 2,
+                "confidence": 0.8
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still B",
+            "findings": [
+              {
+                "where": "bottom-center around player figure",
+                "what": "The player's hockey stick is missing or completely hidden inside the torso model during the hold animation.",
+                "severity": 3,
+                "confidence": 0.85
+              },
+              {
+                "where": "bottom-center, directly below the countdown circle",
+                "what": "The helper text 'press shoot at the drop, not before' overlaps directly onto the dark subtitle banner below it.",
+                "severity": 2,
+                "confidence": 0.9
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still C",
+            "findings": [
+              {
+                "where": "bottom-left quadrant",
+                "what": "The orange skater's selection ring base overlaps and clips with the left screen border, and the distance label text 'own 46 m' directly collides with '6 m'.",
+                "severity": 3,
+                "confidence": 0.95
+              },
+              {
+                "where": "top-center near the far boards",
+                "what": "The red goal net at the far end appears extremely tiny and flat, with a floating HUD diamond and '66 m' text obscuring its crossbar.",
+                "severity": 2,
+                "confidence": 0.8
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still D",
+            "findings": [
+              {
+                "where": "bottom-center, inside the player's blue selection ring",
+                "what": "The '100 m' distance text and blue bracket glyph overlap directly across the blue circular outline instead of being positioned clearly inside or outside it.",
+                "severity": 2,
+                "confidence": 0.9
+              },
+              {
+                "where": "top-center along the boards",
+                "what": "A stray horizontal dark red bar and floating '10 m' diamond sit disconnected above the goal net on the dasher boards.",
+                "severity": 2,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still E",
+            "findings": [
+              {
+                "where": "bottom-center, lower portion of the modal dialogue",
+                "what": "The gamepad and keyboard input control labels are placed directly across the bottom edge of the white modal frame, partly spilling out onto the ice.",
+                "severity": 3,
+                "confidence": 0.9
+              },
+              {
+                "where": "bottom-left quadrant, red goal frame",
+                "what": "The top of the goal net mesh renders as an opaque flat white polygon rather than translucent or wire net texture.",
+                "severity": 3,
+                "confidence": 0.95
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still F",
+            "findings": [
+              {
+                "where": "top-center scoreboard",
+                "what": "The middle scoreboard digit display is blank/missing any period timer text, showing only 'PERIOD 1: FIRST TO 3' with an empty dark box below it.",
+                "severity": 3,
+                "confidence": 0.9
+              },
+              {
+                "where": "far right ice surface (mid-right quadrant)",
+                "what": "A large isolated dark brown circular splotch or hole appears on the ice with no clear origin, player, or faceoff dot ring around it.",
+                "severity": 2,
+                "confidence": 0.75
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=hockey.arena.large-l2-call.jpg B=hockey.arena.large-l2-card.jpg C=hockey.arena.large-l2-faceoff.jpg D=hockey.arena.large-l2-farnet.jpg E=hockey.arena.large-l2-pause.jpg F=hockey.boost-l3-call.jpg (gemini-3.8-flash, in 7467 out 1054 tokens, ~$0.0095, 12.4 s)\n- stills:\n  - label: Still A; clean: false\n    - findings:\n      - where: bottom-left quadrant, at the red goal frame; what: The goal frame top surface renders with a flat light grey fill rather than netting or frame geometry, clipping harshly against the ice markings.; severity: 3; confidence: 0.95\n      - where: top-center scoreboard area; what: The yellow distance marker diamond and '2 m' text float awkwardly beneath the scoreboard without clear context or anchoring to an object on ice.; severity: 2; confidence: 0.8\n  - label: Still B; clean: false\n    - findings:\n      - where: bottom-center around player figure; what: The player's hockey stick is missing or completely hidden inside the torso model during the hold animation.; severity: 3; confidence: 0.85\n      - where: bottom-center, directly below the countdown circle; what: The helper text 'press shoot at the drop, not before' overlaps directly onto the dark subtitle banner below it.; severity: 2; confidence: 0.9\n  - label: Still C; clean: false\n    - findings:\n      - where: bottom-left quadrant; what: The orange skater's selection ring base overlaps and clips with the left screen border, and the distance label text 'own 46 m' directly collides with '6 m'.; severity: 3; confidence: 0.95\n      - where: top-center near the far boards; what: The red goal net at the far end appears extremely tiny and flat, with a floating HUD diamond and '66 m' text obscuring its crossbar.; severity: 2; confidence: 0.8\n  - label: Still D; clean: false\n    - findings:\n      - where: bottom-center, inside the player's blue selection ring; what: The '100 m' distance text and blue bracket glyph overlap directly across the blue circular outline instead of being positioned clearly inside or outside it.; severity: 2; confidence: 0.9\n      - where: top-center along the boards; what: A stray horizontal dark red bar and floating '10 m' diamond sit disconnected above the goal net on the dasher boards.; severity: 2; confidence: 0.85\n  - label: Still E; clean: false\n    - findings:\n      - where: bottom-center, lower portion of the modal dialogue; what: The gamepad and keyboard input control labels are placed directly across the bottom edge of the white modal frame, partly spilling out onto the ice.; severity: 3; confidence: 0.9\n      - where: bottom-left quadrant, red goal frame; what: The top of the goal net mesh renders as an opaque flat white polygon rather than translucent or wire net texture.; severity: 3; confidence: 0.95\n  - label: Still F; clean: false\n    - findings:\n      - where: top-center scoreboard; what: The middle scoreboard digit display is blank/missing any period timer text, showing only 'PERIOD 1: FIRST TO 3' with an empty dark box below it.; severity: 3; confidence: 0.9\n      - where: far right ice surface (mid-right quadrant); what: A large isolated dark brown circular splotch or hole appears on the ice with no clear origin, player, or faceoff dot ring around it.; severity: 2; confidence: 0.75"
+    }
+  ]
+}

@@ -1,0 +1,153 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T10:41:17.585Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a74/hockey.boost-l3-off-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/a74/hockey.boost-l3-off-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/a74/hockey.boost-l3-off-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/a74/hockey.boost-l3-off-pause.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/a74/hockey.regular-l2-off-call.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "F",
+          "path": "docs/experiments/img/a74/hockey.regular-l2-off-card.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2471,
+      "usage": {
+        "prompt": 7471,
+        "output": 749,
+        "thoughts": 0,
+        "total": 8220,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00841,
+      "ms": 9377,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [
+              {
+                "where": "Top-center, behind MATCH 1 banner",
+                "what": "A third skater or goal marker head is occluded directly behind the MATCH 1 banner, clipping with only feet visible beneath.",
+                "severity": 2,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still B",
+            "findings": [
+              {
+                "where": "Bottom-left quadrant, around the orange skater",
+                "what": "The orange skater has severe double-outline ghosting/smearing and detached white spray particles intersecting into the body mesh.",
+                "severity": 3,
+                "confidence": 0.95
+              },
+              {
+                "where": "Bottom-left quadrant, at y=708 x=30",
+                "what": "HUD text '5 m' overlaps directly on top of puck icon and near the skater's foot/skate spray trail.",
+                "severity": 2,
+                "confidence": 0.75
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still C",
+            "findings": [
+              {
+                "where": "Bottom-left corner, at screen border",
+                "what": "An orange figure's head or torso mesh is clipped abruptly off-screen at the very corner with no proper framing.",
+                "severity": 2,
+                "confidence": 0.8
+              },
+              {
+                "where": "Center, around player stick",
+                "what": "The player's hockey stick blade is clipping through the player model's hip/leg area.",
+                "severity": 3,
+                "confidence": 0.9
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still D",
+            "findings": [
+              {
+                "where": "Top-left quadrant, near boards",
+                "what": "Yellow objective marker '3 m' floats awkwardly against the upper board/glass boundary with no target visible beneath it.",
+                "severity": 2,
+                "confidence": 0.7
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still E",
+            "findings": [
+              {
+                "where": "Center-right quadrant, behind popup dialog",
+                "what": "The red net structure has severe cel-shading outline clipping and interior geometry z-fighting through the top mesh surface.",
+                "severity": 3,
+                "confidence": 0.9
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still F",
+            "findings": [
+              {
+                "where": "Center ice circle, surrounding center faceoff spot",
+                "what": "Severe stepped concentric banding/stepping rings on the ice texture around the center spot, indicating improper texture filtering or bit depth banding on the ice surface shader.",
+                "severity": 3,
+                "confidence": 0.92
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=hockey.boost-l3-off-card.jpg B=hockey.boost-l3-off-faceoff.jpg C=hockey.boost-l3-off-farnet.jpg D=hockey.boost-l3-off-pause.jpg E=hockey.regular-l2-off-call.jpg F=hockey.regular-l2-off-card.jpg (gemini-3.8-flash, in 7471 out 749 tokens, ~$0.0084, 9.4 s)\n- stills:\n  - label: Still A; clean: false\n    - findings:\n      - where: Top-center, behind MATCH 1 banner; what: A third skater or goal marker head is occluded directly behind the MATCH 1 banner, clipping with only feet visible beneath.; severity: 2; confidence: 0.85\n  - label: Still B; clean: false\n    - findings:\n      - where: Bottom-left quadrant, around the orange skater; what: The orange skater has severe double-outline ghosting/smearing and detached white spray particles intersecting into the body mesh.; severity: 3; confidence: 0.95\n      - where: Bottom-left quadrant, at y=708 x=30; what: HUD text '5 m' overlaps directly on top of puck icon and near the skater's foot/skate spray trail.; severity: 2; confidence: 0.75\n  - label: Still C; clean: false\n    - findings:\n      - where: Bottom-left corner, at screen border; what: An orange figure's head or torso mesh is clipped abruptly off-screen at the very corner with no proper framing.; severity: 2; confidence: 0.8\n      - where: Center, around player stick; what: The player's hockey stick blade is clipping through the player model's hip/leg area.; severity: 3; confidence: 0.9\n  - label: Still D; clean: false\n    - findings:\n      - where: Top-left quadrant, near boards; what: Yellow objective marker '3 m' floats awkwardly against the upper board/glass boundary with no target visible beneath it.; severity: 2; confidence: 0.7\n  - label: Still E; clean: false\n    - findings:\n      - where: Center-right quadrant, behind popup dialog; what: The red net structure has severe cel-shading outline clipping and interior geometry z-fighting through the top mesh surface.; severity: 3; confidence: 0.9\n  - label: Still F; clean: false\n    - findings:\n      - where: Center ice circle, surrounding center faceoff spot; what: Severe stepped concentric banding/stepping rings on the ice texture around the center spot, indicating improper texture filtering or bit depth banding on the ice surface shader.; severity: 3; confidence: 0.92"
+    }
+  ]
+}

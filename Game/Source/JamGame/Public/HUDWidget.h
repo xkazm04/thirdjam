@@ -155,6 +155,30 @@ public:
 	FString GetFaceoffCue() const;
 	UFUNCTION(BlueprintPure, Category = "Jam|Hud")
 	bool IsYouTagVisible() const;
+	// ---- Lane A74 (R-0038): the off-screen puck marker. The camera stays bound to the human; when the puck is outside the inner 85 % of the frame an
+	// arrow stands on the frame's edge at the puck's direction with the distance beside it, in the carrier's team colour (grey when loose). It fades in
+	// and out over PuckMarkerFadeFrames sim frames; hidden for the faceoff card / countdown, a goal pause, the pause menu, the end cards.
+	static constexpr float PuckMarkerInnerFrac = 0.85f;
+	static constexpr int32 PuckMarkerFadeFrames = 6;
+	static constexpr int64 PuckMarkerCardFrames = 150;   // the MATCH card of a fresh match
+	// True when Sp (Slate units) is outside the centred inner fraction of the viewport.
+	static bool OutsideInnerFrame(const FVector2D& Sp, float VW, float VH, float Frac = PuckMarkerInnerFrac)
+	{
+		return Sp.X < VW * (1.f - Frac) * 0.5f || Sp.X > VW * (1.f + Frac) * 0.5f || Sp.Y < VH * (1.f - Frac) * 0.5f || Sp.Y > VH * (1.f + Frac) * 0.5f;
+	}
+	// Where the marker stands: the ray from the screen centre along Dir meets the rectangle given by the four edges.
+	static FVector2D PuckMarkerEdgePoint(FVector2D Dir, float VW, float VH, float Left, float Right, float Top, float Bottom)
+	{
+		if (Dir.IsNearlyZero()) Dir = FVector2D(0.f, 1.f);
+		const FVector2D C(VW * 0.5f, VH * 0.5f);
+		const float TX = FMath::Abs(Dir.X) > KINDA_SMALL_NUMBER ? (Dir.X > 0 ? Right - C.X : C.X - Left) / FMath::Abs(Dir.X) : TNumericLimits<float>::Max();
+		const float TY = FMath::Abs(Dir.Y) > KINDA_SMALL_NUMBER ? (Dir.Y > 0 ? Bottom - C.Y : C.Y - Top) / FMath::Abs(Dir.Y) : TNumericLimits<float>::Max();
+		return C + Dir * FMath::Min(TX, TY);
+	}
+	UFUNCTION(BlueprintPure, Category = "Jam|Hud")
+	float GetPuckMarkerAlpha() const { return PuckMarkerAlpha; }
+	UFUNCTION(BlueprintPure, Category = "Jam|Hud")
+	FString GetPuckMarkerText() const { return PuckMarkerText; }
 	// Faceoffs seen this session (process), for the hint.
 	static int32 GetFaceoffsThisSession() { return FaceoffsThisSession; }
 	// The bus event handler: faceoff drop / won / lost (presentation only: nothing is written back).
@@ -230,6 +254,12 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> CommentaryText;
 	UPROPERTY(Transient) TObjectPtr<class UJamEventBus> Bus;
 	void UpdateCommentary(const FJamPresentationFrame& Frame);
+	void UpdatePuckMarker(const FJamPresentationFrame& Frame, bool bCovered);
+	UPROPERTY(Transient) TObjectPtr<UWidget> PuckArrow;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> PuckText;
+	float PuckMarkerAlpha = 0.f;
+	int64 PuckMarkerLastFrame = -1;
+	FString PuckMarkerText;
 	int64 CommentaryFrame = -1000000;
 	int32 CommentaryDuration = 0;
 	int64 LastSimFrame = -1;

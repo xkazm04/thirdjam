@@ -1,0 +1,262 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "readability",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T10:48:40.562Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "readability",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a74/hockey.arena.large-l2-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/a74/hockey.arena.large-l2-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/a74/hockey.boost-l3-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/a74/hockey.boost-l3-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/a74/hockey.regular-l2-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "F",
+          "path": "docs/experiments/img/a74/hockey.regular-l2-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "distance": 6,
+      "thumbnails": [],
+      "prompt_chars": 2916,
+      "usage": {
+        "prompt": 7637,
+        "output": 1887,
+        "thoughts": 0,
+        "total": 9524,
+        "calls": 1
+      },
+      "cost_usd_est": 0.0128,
+      "ms": 16507,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A (hockey.arena.large-l2-faceoff.jpg)",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "The puck is not visible anywhere on the ice surface or near sticks."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "No player is visibly possessing or carrying a puck."
+              },
+              "team_colours": {
+                "score": 5,
+                "evidence": "The foreground player wears bright royal blue, while the left and center-ice opponents wear distinct bright orange."
+              },
+              "far_net": {
+                "score": 3,
+                "evidence": "The red net frame is visible at center-far ice beneath a 66m marker, but it is only about 42 pixels wide."
+              },
+              "zone_strips": {
+                "score": 4,
+                "evidence": "The center red line and blue zone lines stretch clearly across the ice in full horizontal spans."
+              }
+            },
+            "first_look": "player 7 in blue jersey",
+            "noise": [
+              "heavy concentric circular rink markings",
+              "scoreboard with high-contrast colored boxes",
+              "wide control prompt bar at bottom"
+            ],
+            "overall": 3
+          },
+          {
+            "label": "Still B (hockey.arena.large-l2-farnet.jpg)",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "The puck is not visible near the sticks or around the crease."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "Neither the blue nor the orange player is shown controlling a puck."
+              },
+              "team_colours": {
+                "score": 5,
+                "evidence": "The two skaters right next to each other clearly display vivid blue and orange uniforms."
+              },
+              "far_net": {
+                "score": 5,
+                "evidence": "The red goal frame sits directly ahead across the goal line, measuring about 220 pixels wide."
+              },
+              "zone_strips": {
+                "score": 3,
+                "evidence": "Only the red goal line and parts of the red faceoff circles and crease boundary are visible, with no transverse blue lines."
+              }
+            },
+            "first_look": "two skaters battling in front of the net",
+            "noise": [
+              "bright yellow light strip on the boards",
+              "thick selection ring under blue player",
+              "large scoreboard blocks at screen top"
+            ],
+            "overall": 4
+          },
+          {
+            "label": "Still C (hockey.boost-l3-faceoff.jpg)",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "The puck is not visible on the ice."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "Neither the blue player nor distant orange players have a puck visible."
+              },
+              "team_colours": {
+                "score": 4,
+                "evidence": "Player 7 is bright blue and the distant skater is orange, although the far figure is rendered very small and soft."
+              },
+              "far_net": {
+                "score": 3,
+                "evidence": "The red net is visible under the 66m diamond indicator, but it occupies only about 40 pixels horizontally."
+              },
+              "zone_strips": {
+                "score": 4,
+                "evidence": "The dark red center transverse line and blue circle markings are immediately identifiable across the blue-tinted ice."
+              }
+            },
+            "first_look": "blue player 7 back and selection ring",
+            "noise": [
+              "orange glow streaks on far side boards",
+              "bottom control banner text",
+              "empty center scoreboard panel"
+            ],
+            "overall": 3
+          },
+          {
+            "label": "Still D (hockey.boost-l3-farnet.jpg)",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "The puck is not visible, despite the 'Orange scores!' announcement."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "No puck is attached to either player's stick or visible in the crease."
+              },
+              "team_colours": {
+                "score": 5,
+                "evidence": "The colliding skaters show high-contrast light blue and orange jerseys without black ink outlines."
+              },
+              "far_net": {
+                "score": 5,
+                "evidence": "The red goal frame is centered in the upper-mid screen, measuring roughly 230 pixels wide."
+              },
+              "zone_strips": {
+                "score": 2,
+                "evidence": "Only partial red lines and a goal line are visible; main transverse blue lines are outside the frame."
+              }
+            },
+            "first_look": "clashing blue and orange skaters",
+            "noise": [
+              "bright glowing yellow line across boards",
+              "'Orange scores!' popup label",
+              "oversized blue selection circle under player"
+            ],
+            "overall": 3
+          },
+          {
+            "label": "Still E (hockey.regular-l2-faceoff.jpg)",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "The puck is not visible on the ice surface."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "Neither the foreground player nor the distant orange player holds a puck."
+              },
+              "team_colours": {
+                "score": 4,
+                "evidence": "The foreground skater is bright blue, while the single tiny opposing skater near the far net is orange."
+              },
+              "far_net": {
+                "score": 3,
+                "evidence": "The red net is visible directly behind the far orange skater under the 49m marker, spanning about 60 pixels."
+              },
+              "zone_strips": {
+                "score": 4,
+                "evidence": "The transverse red line and blue zone lines span the rink clearly across the white ice."
+              }
+            },
+            "first_look": "blue skater 7 in foreground",
+            "noise": [
+              "concentric grey ice painted circles",
+              "'Loud one off the wall.' subtitle box",
+              "full-width bottom control guide"
+            ],
+            "overall": 3
+          },
+          {
+            "label": "Still F (hockey.regular-l2-farnet.jpg)",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "No puck is visible on the ice surface or inside the net."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "The blue player does not have a puck, and no other players are present."
+              },
+              "team_colours": {
+                "score": 3,
+                "evidence": "Only one team is on screen, wearing bright blue; the orange team is absent from the view."
+              },
+              "far_net": {
+                "score": 5,
+                "evidence": "The goal structure is directly in front of the camera, rendered with thick red framing spanning over 500 pixels wide."
+              },
+              "zone_strips": {
+                "score": 3,
+                "evidence": "The red goal line and crease arc are clearly visible, but transverse zone strips are absent."
+              }
+            },
+            "first_look": "flat gray top of the red net frame",
+            "noise": [
+              "glowing yellow horizontal board line",
+              "grey top netting surface lacking texture depth",
+              "thick blue circular highlight ring around skater"
+            ],
+            "overall": 2
+          }
+        ]
+      },
+      "markdown": "**eyes/readability** A=hockey.arena.large-l2-faceoff.jpg B=hockey.arena.large-l2-farnet.jpg C=hockey.boost-l3-faceoff.jpg D=hockey.boost-l3-farnet.jpg E=hockey.regular-l2-faceoff.jpg F=hockey.regular-l2-farnet.jpg at 6 m (gemini-3.8-flash, in 7637 out 1887 tokens, ~$0.0128, 16.5 s)\n- stills:\n  - label: Still A (hockey.arena.large-l2-faceoff.jpg); first_look: player 7 in blue jersey; overall: 3\n    - elements:\n      - puck: score 1, evidence The puck is not visible anywhere on the ice surface or near sticks.\n      - carrier: score 1, evidence No player is visibly possessing or carrying a puck.\n      - team_colours: score 5, evidence The foreground player wears bright royal blue, while the left and center-ice opponents wear distinct bright orange.\n      - far_net: score 3, evidence The red net frame is visible at center-far ice beneath a 66m marker, but it is only about 42 pixels wide.\n      - zone_strips: score 4, evidence The center red line and blue zone lines stretch clearly across the ice in full horizontal spans.\n    - noise: heavy concentric circular rink markings; scoreboard with high-contrast colored boxes; wide control prompt bar at bottom\n  - label: Still B (hockey.arena.large-l2-farnet.jpg); first_look: two skaters battling in front of the net; overall: 4\n    - elements:\n      - puck: score 1, evidence The puck is not visible near the sticks or around the crease.\n      - carrier: score 1, evidence Neither the blue nor the orange player is shown controlling a puck.\n      - team_colours: score 5, evidence The two skaters right next to each other clearly display vivid blue and orange uniforms.\n      - far_net: score 5, evidence The red goal frame sits directly ahead across the goal line, measuring about 220 pixels wide.\n      - zone_strips: score 3, evidence Only the red goal line and parts of the red faceoff circles and crease boundary are visible, with no transverse blue lines.\n    - noise: bright yellow light strip on the boards; thick selection ring under blue player; large scoreboard blocks at screen top\n  - label: Still C (hockey.boost-l3-faceoff.jpg); first_look: blue player 7 back and selection ring; overall: 3\n    - elements:\n      - puck: score 1, evidence The puck is not visible on the ice.\n      - carrier: score 1, evidence Neither the blue player nor distant orange players have a puck visible.\n      - team_colours: score 4, evidence Player 7 is bright blue and the distant skater is orange, although the far figure is rendered very small and soft.\n      - far_net: score 3, evidence The red net is visible under the 66m diamond indicator, but it occupies only about 40 pixels horizontally.\n      - zone_strips: score 4, evidence The dark red center transverse line and blue circle markings are immediately identifiable across the blue-tinted ice.\n    - noise: orange glow streaks on far side boards; bottom control banner text; empty center scoreboard panel\n  - label: Still D (hockey.boost-l3-farnet.jpg); first_look: clashing blue and orange skaters; overall: 3\n    - elements:\n      - puck: score 1, evidence The puck is not visible, despite the 'Orange scores!' announcement.\n      - carrier: score 1, evidence No puck is attached to either player's stick or visible in the crease.\n      - team_colours: score 5, evidence The colliding skaters show high-contrast light blue and orange jerseys without black ink outlines.\n      - far_net: score 5, evidence The red goal frame is centered in the upper-mid screen, measuring roughly 230 pixels wide.\n      - zone_strips: score 2, evidence Only partial red lines and a goal line are visible; main transverse blue lines are outside the frame.\n    - noise: bright glowing yellow line across boards; 'Orange scores!' popup label; oversized blue selection circle under player\n  - label: Still E (hockey.regular-l2-faceoff.jpg); first_look: blue skater 7 in foreground; overall: 3\n    - elements:\n      - puck: score 1, evidence The puck is not visible on the ice surface.\n      - carrier: score 1, evidence Neither the foreground player nor the distant orange player holds a puck.\n      - team_colours: score 4, evidence The foreground skater is bright blue, while the single tiny opposing skater near the far net is orange.\n      - far_net: score 3, evidence The red net is visible directly behind the far orange skater under the 49m marker, spanning about 60 pixels.\n      - zone_strips: score 4, evidence The transverse red line and blue zone lines span the rink clearly across the white ice.\n    - noise: concentric grey ice painted circles; 'Loud one off the wall.' subtitle box; full-width bottom control guide\n  - label: Still F (hockey.regular-l2-farnet.jpg); first_look: flat gray top of the red net frame; overall: 2\n    - elements:\n      - puck: score 1, evidence No puck is visible on the ice surface or inside the net.\n      - carrier: score 1, evidence The blue player does not have a puck, and no other players are present.\n      - team_colours: score 3, evidence Only one team is on screen, wearing bright blue; the orange team is absent from the view.\n      - far_net: score 5, evidence The goal structure is directly in front of the camera, rendered with thick red framing spanning over 500 pixels wide.\n      - zone_strips: score 3, evidence The red goal line and crease arc are clearly visible, but transverse zone strips are absent.\n    - noise: glowing yellow horizontal board line; grey top netting surface lacking texture depth; thick blue circular highlight ring around skater"
+    }
+  ]
+}

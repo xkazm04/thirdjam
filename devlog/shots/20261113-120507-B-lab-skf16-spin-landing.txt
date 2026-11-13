@@ -1,0 +1,1 @@
+SKF16 item 3 (optional export16s): the spin variants at the game camera, every 3rd frame: per take export16 above export16s (landing spread over frames 11-15). Rows: p2_cel Knockdown_Left_B, Knockdown_Right_B, then p3_clay.

@@ -1,0 +1,1 @@
+SKF16 p3_clay Knockdown_Right at the game camera, every 3rd frame: export14 above, export16 below (the stick in along the body from the landing on).

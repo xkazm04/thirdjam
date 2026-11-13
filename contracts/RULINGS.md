@@ -423,3 +423,11 @@ Lane A64's camera lead toward the puck fought the mouse aim (the cursor aims the
 aiming at), so it ships off (`jam.camera.KeepYaw` 0). Ruling: no camera lead, lift or turn is added that moves under the cursor while the player aims; what is off
 screen (the puck, its carrier, the far net) is pointed at by the HUD (lane A74: an edge arrow with the distance, the carrier's team colour), and the camera's bounds
 stay A49's. A camera that leaves the human (a replay, an end-zone shot) is a separate camera mode, never the play camera.
+
+## R-0039 (H16, 2026-11-13 12:25): the curve re-tuned on the soak (R-0029 amended)
+Lane A70, 2,000 matches per cell on A53's seeds (`docs/experiments/CURVE-2.md`): novice at rookie 85.8, regular at pro 51.0, good at all_star 26.8 on hockey.regular;
+84.7 / 51.1 / 27.2 on the large rink; every cell inside its interval of the R-0029 targets (85 / 50 / 25). Levers: rookie red skill 0.75 -> 0.8 (large 0.97); pro red
+skill 0.94 -> 0.95 (large 0.97); all_star speed 1.15 -> 1.3; bots check from 4 m/s at pro and 3 at all_star (A73's finding; +10-13 % knockdowns of the human, the win
+share barely moves). `HumanHasSomethingToDo`'s budget is the soak's measured share plus 2 points (10.4 %), as R-0037 point 2 intended. Flat and not adopted:
+`bot_react_frames`, rookie speed. Open: all_star is a steep step (a regular player wins 13 %, a novice 3 %); R-0029 names no target there; a skill lever that only the
+good player beats is the next curve ask if the operator wants all_star reachable for a regular player. The gate's 20-seed tests keep their bars (novice 14 of 20).
