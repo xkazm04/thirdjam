@@ -1,0 +1,1 @@
+B23 finding, not fixed: the dark band with a hard edge on the clay ice along the side boards (looking back from the far end) is the screen-space reflection of the dark barn above the boards: left SSR on, right r.SSR.Quality 0 in the same frozen frame (before the wider warm band was saved)

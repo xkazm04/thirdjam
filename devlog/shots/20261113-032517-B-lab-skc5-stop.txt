@@ -1,0 +1,1 @@
+Stop_Hockey_Left frames 0 6 12 18 24 32: OLD export2 above, NEW export3 below, blue

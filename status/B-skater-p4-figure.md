@@ -407,3 +407,63 @@ HEM_CM=96,96 SKIRT_RECT=1040,4,1400,60 SKIRT_SPLIT=0.62 python skc/p4/tools/tex_
 **Provenance:** the garment geometry, folds, skirt and repainted maps are `original` (our scripts), derived from the ai-generated Rodin mesh and texture. The takes are `original` (`skf`).
 
 **Could not verify:** anything in Unreal; cloth behaviour at game speed (judged from stills only).
+
+## Fifth pass: the posture-fixed takes (03:04 to 03:28)
+
+**Short answer.**
+- **Deliverable:** `C:\Users\kazda\jam\skater-lab\skc\p4\P4E\export3\P4E\`, with `READY.txt` beside it in `export3\`. It has all 75 takes from `skf/export8/p4_broadcast` on the same jersey mesh as export2. `export2` is untouched.
+- **The skeletal mesh must be re-imported, not only the animations.** I changed the skin weights of 887 skirt back-panel vertices (thigh to pelvis) to fix the hem folding up over the seat when face down. Vertices, UVs, triangles, material, bone names, hierarchy and rest pose are identical to export2: a 0.0 difference on re-import. The textures are unchanged; keep export2's maps.
+- **Two retarget rules keep what SKF fixed:**
+  - **Trunk alignment.** P4E's rest trunk leans 3.5 degrees back, so every take lost 4 to 6 degrees of forward lean. The spine rest orientations are now pre-tilted 5 degrees forward (`trunk_pitch_deg`). The loss is now 1.0 to 2.6 degrees.
+  - **Top-hand placement.** The generated arm put the top (right) hand about 18 cm too high against the shoulder. The right wrist now goes to the source's offset from the shoulder, scaled by the arm-length ratio 0.832, and the stick rides along (`top_hand_ik`). It is now 7 to 8 cm lower.
+- **Not done:** the grey inner sliver at the side hem in `Stop_Hockey_Right` (not quick).
+
+**Posture, measured on P4E** (`skc/p4/tools/posture.py`, source export8 against P4E):
+
+| Take | Lean source -> P4E (deg) | Top (right) palm to shaft max (cm) | Bottom (left) palm to shaft max (cm) | Right palm vs shoulder f0, x/z (cm) source -> P4E | Palm behind and above shoulder frames, source -> P4E | Head pitch vs rest (deg) | Knee outward max l/r (cm) source -> P4E |
+|---|---|---|---|---|---|---|---|
+| Stride | 50.6 -> 48.0 | 2.5 | 3.2 | [-58.1, -16.5] -> [-53.5, -9.9] | 10 -> 61 | -2.0 .. -1.1 | 12.3/12.3 -> 16.6/15.9 |
+| Glide | 27.6 -> 26.6 | 2.9 | 3.2 | [-49.4, -29.4] -> [-46.7, -21.3] | 0 -> 0 | -2.0 .. -2.0 | -9.5/-10.2 -> -7.5/-7.7 |
+| Idle | 26.0 -> 24.9 | 3.1 | 3.1 | [-48.8, -31.2] -> [-46.3, -23.1] | 0 -> 0 | -0.0 .. 0.2 | -9.4/-9.6 -> -6.6/-7.3 |
+| Stop_Hockey_Left | 26.7 -> 25.6 | 3.6 | 3.2 | [-49.4, -29.4] -> [-46.7, -21.3] | 0 -> 0 | -12.0 .. -2.0 | -5.4/-4.9 -> 8.7/0.2 |
+| Stop_Hockey_Right | 26.7 -> 26.0 | 3.8 | 4.2 | [-49.4, -29.4] -> [-46.7, -21.3] | 0 -> 0 | -12.4 .. -2.0 | -4.9/-5.4 -> 1.2/5.9 |
+| Shot_Wrist | 30.6 -> 28.8 | 3.3 | 4.1 | [-35.9, -14.4] -> [-33.1, -7.8] | 0 -> 6 | -6.5 .. 0.5 | -1.3/12.0 -> 0.2/17.0 |
+| Push_Start | 45.4 -> 43.6 | 3.0 | 3.5 | [-49.4, -29.4] -> [-46.7, -21.3] | 6 -> 30 | -2.0 .. 4.0 | 12.9/12.9 -> 13.6/12.9 |
+| Crossover_Left | 47.9 -> 45.4 | 2.9 | 12.6 | [-53.7, -14.6] -> [-49.4, -8.2] | 0 -> 17 | -6.0 .. -4.8 | 19.1/14.7 -> 11.4/10.3 |
+| Crossover_Right | 47.9 -> 45.7 | 2.5 | 13.0 | [-52.6, -10.8] -> [-48.5, -4.8] | 0 -> 41 | -6.1 .. -4.9 | 14.7/19.1 -> 8.5/15.4 |
+
+- **Top hand:** the right palm is within 2.5 to 3.8 cm of the shaft in every listed take, so on the stick. The stick slides through the top hand by 0 to 13 cm in Stride and about 7 cm in Glide and Idle, so the butt end sits that far above the palm.
+- **Bottom hand:** within 3.1 to 4.2 cm of the shaft in Stride, Glide, Idle, the stops and Shot_Wrist. The crossovers are at 12 to 13 cm; the engine's Blueprint pulls that hand on.
+- **Head in the stops:** -12 to -2 degrees from rest (chin slightly down). The source goes to -16. Not tipped back.
+- **Knees:** Glide and Idle track inward (-7 cm), as in the source. The stops come out 1 to 9 cm outward (the source is inward); Shot_Wrist 17 cm on one knee (source 12).
+
+**Checks** on the re-imported main file:
+
+| Check | Result |
+|---|---|
+| Pelvis and root travel | 0.000 |
+| Loop seams | 0.000 over 40 loops |
+| Loopcut wraps | all under 1 cm |
+| Joins (knockdowns to get-ups, Trip to `GetUp_Side_Right`, `Poke` frame 6 to `Stumble_Short`) | 0.000 cm |
+| Takes with a blade step over 1.5 times the source's | none |
+| Mitten or stick inside the head | 0 frames |
+| Hand steps over 1.5 times the source's (ours / source, cm) | GetUp 32/6, Goalie_Block_Left 21/7, Push_Start 17/11 |
+
+**What still looks wrong:**
+- **The open glove at shoulder height in the stride.** In Stride the top hand still sits behind the shoulder and at its height in every frame: 10 cm below it, against 16.5 cm in the source. The close view (`lab-skc5-close`, frame 22) still shows the top glove out at shoulder height, open-fingered. Two parts:
+  - **The pose:** the source itself carries the top hand there in Stride (10 such frames by my measure).
+  - **The open fingers:** the generated mesh's glove is modelled open, and the Meshy rig has no finger bones. No retarget closes it; it needs a mesh edit or a finger rig.
+- **The crossovers:** the bottom hand is 12 to 13 cm off the shaft.
+- **The stops:** the knees go slightly outward.
+
+**Renders** (old export2 against new export3, blue, at the concept framing):
+- `C:\Users\kazda\jam\thirdjam\devlog\shots\20261113-032516-B-lab-skc5-hero-stride.png`
+- `C:\Users\kazda\jam\thirdjam\devlog\shots\20261113-032517-B-lab-skc5-glide.png`
+- `C:\Users\kazda\jam\thirdjam\devlog\shots\20261113-032517-B-lab-skc5-stop.png`
+- `C:\Users\kazda\jam\thirdjam\devlog\shots\20261113-032517-B-lab-skc5-close.png`
+
+Each has a `.txt` caption beside it.
+
+**Rebuild:** `bash skc/build2.sh 6_P4E` (config `skc/cfg/6_P4E.json`, with `trunk_pitch_deg` 5, `top_hand_ik` and `skirt_back`). Renders: `bash skc/p4/tools/hero_v3.sh <export dir>`.
+
+No paid services, no git.
