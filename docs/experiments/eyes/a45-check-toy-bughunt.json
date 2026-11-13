@@ -1,0 +1,63 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-12T22:14:00.035Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a45/docs/experiments/img/tackling/a45-check-toy-f1872-strip.png",
+          "width": 6288,
+          "height": 453
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2272,
+      "usage": {
+        "prompt": 1641,
+        "output": 295,
+        "thoughts": 0,
+        "total": 1936,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00234,
+      "ms": 5766,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A: a45-check-toy-f1872-strip.png",
+            "findings": [
+              {
+                "where": "Top-left corner, debug text banner",
+                "what": "Engine debug / telemetry text printed across the top-left boundary of the viewport above the dark background.",
+                "severity": 2,
+                "confidence": 0.95
+              },
+              {
+                "where": "Panels 4, 5, 6, 7 (center to right panels), blue skater being body-checked",
+                "what": "The falling blue skater's body and stick clip heavily into the ice surface without proper contact or deformation, with the head/torso sinking directly below the ice plane in later frames.",
+                "severity": 4,
+                "confidence": 0.9
+              },
+              {
+                "where": "Panel 6, vertical boundary seam in the arena backdrop/boards",
+                "what": "Visible vertical seam/stitching artifact cutting through the arena boards and ice texture where strip panels or cubemap edges meet.",
+                "severity": 3,
+                "confidence": 0.8
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=a45-check-toy-f1872-strip.png (gemini-3.8-flash, in 1641 out 295 tokens, ~$0.0023, 5.8 s)\n- stills:\n  - label: Still A: a45-check-toy-f1872-strip.png; clean: false\n    - findings:\n      - where: Top-left corner, debug text banner; what: Engine debug / telemetry text printed across the top-left boundary of the viewport above the dark background.; severity: 2; confidence: 0.95\n      - where: Panels 4, 5, 6, 7 (center to right panels), blue skater being body-checked; what: The falling blue skater's body and stick clip heavily into the ice surface without proper contact or deformation, with the head/torso sinking directly below the ice plane in later frames.; severity: 4; confidence: 0.9\n      - where: Panel 6, vertical boundary seam in the arena backdrop/boards; what: Visible vertical seam/stitching artifact cutting through the arena boards and ice texture where strip panels or cubemap edges meet.; severity: 3; confidence: 0.8"
+    }
+  ]
+}

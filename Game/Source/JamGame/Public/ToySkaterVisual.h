@@ -37,6 +37,12 @@ struct JAMGAME_API FToyInputs
 	int32 FramesSinceCheck = -1;
 	int32 FramesSinceKnock = -1;
 	int32 Frame = 0;
+	// Lane A45 (C-0001 v4): a hit taken standing, a board hit, the board pin level, a stick hit on the carrier (lifted = the blade went up).
+	int32 FramesSinceHit = -1;
+	int32 FramesSinceBoard = -1;
+	bool bPinned = false;
+	int32 FramesSinceStickHit = -1;
+	bool bStickHitLifted = false;
 };
 
 struct JAMGAME_API FToyPose
@@ -49,6 +55,7 @@ struct JAMGAME_API FToyPose
 	float StickPitchDeg = 0.f;
 	float StickForwardCm = 0.f;
 	float TipAngleDeg = 0.f;     // 0..88 fall angle towards the knock direction
+	float HitTipDeg = 0.f;       // lane A45: a hit taken standing tips the toy toward the push on the check curve (8 in, 12 out), 14 degrees at most
 	float CheckShiftCm = 0.f;
 	float Emissive = 1.f;
 	float Scale = 1.f;
@@ -80,11 +87,17 @@ public:
 	virtual void UpdateMotion_Implementation(float Speed, float TurnRate, FRotator Facing) override;
 	virtual void PlayShoot_Implementation(float Charge) override;
 	virtual void PlayCheck_Implementation() override;
-	virtual void SetKnockedDown_Implementation(bool bDown, float DirX, float DirZ) override;
+	virtual void SetKnockedDown_Implementation(bool bDown, float DirX, float DirZ, int32 KnockdownFrames) override;
 	virtual void SetHasPuck_Implementation(bool bHasPuck) override;
 	virtual void SetBoost_Implementation(FName Kind) override;
 	virtual void SetStickAim_Implementation(float AngleDeg, float ReachM) override;
 	virtual void SetShotCharge_Implementation(float Charge01) override;
+	// Lane A45 (C-0001 v4): mapped onto the existing curves (nothing new to author): the hit = a short tip toward the push on the check curve; the board hit = the
+	// body pitched forward on the same curve; the pin = the pitch held; the stick hit = the stick knocked aside (poke) or up (lift) on the check curve.
+	virtual void PlayHitReaction_Implementation(float DirX, float DirZ) override;
+	virtual void PlayBoardHit_Implementation() override;
+	virtual void SetBoardPin_Implementation(bool bOn) override;
+	virtual void PlayStickHit_Implementation(bool bLifted) override;
 
 	// Sockets of the contract (JamSkaterSockets): scene components named stick_socket, puck_socket, head_socket.
 	UFUNCTION(BlueprintCallable, Category = "Jam|SkaterVisual")
@@ -152,6 +165,14 @@ private:
 	int32 KnockStart = -1;
 	bool bDown = false;
 	FVector2D KnockDir = FVector2D(-1.f, 0.f);
+	// Lane A45 (C-0001 v4) state.
+	int32 HitStart = -1;
+	FVector2D HitDir = FVector2D(-1.f, 0.f);
+	int32 BoardStart = -1;
+	bool bPinned = false;
+	int32 StickHitStart = -1;
+	bool bStickHitLifted = false;
+	int32 KnockdownFramesGiven = 0;
 	float Speed = 0.f;
 	float TurnRate = 0.f;
 	bool bHasPuck = false;

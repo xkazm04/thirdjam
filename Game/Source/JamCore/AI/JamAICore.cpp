@@ -101,6 +101,7 @@ namespace JamAI
 		{
 			Used[i] = ERole::Chaser;
 			InReach[i] = 0;
+			CheckCool[i] = 0;
 			for (int k = 0; k <= kMaxReactionFrames; ++k)
 			{
 				Hist[i][k] = FJamAIInput();
@@ -357,6 +358,7 @@ namespace JamAI
 			Out[i].bPass = In.bPass;
 			Out[i].Stick = In.Stick;
 			Out[i].bPoke = In.bPoke;
+			Out[i].bCheck = In.bCheck;   // R-0031 point 2 (lane A45): the check press is live like the shot (a delayed press misses the 6-frame window)
 			Out[i].bLift = In.bLift;
 			Out[i].bGoalie = In.bGoalie;
 			Out[i].GoalieSide = In.GoalieSide;
@@ -686,8 +688,34 @@ namespace JamAI
 			In.bPass = true;
 			if (Pressed[Id] > K.ForecheckYieldFrames + 8 && S.bCanShoot) { In.bShoot = true; }
 		}
-		// bots never body-check (R-0013 fouls: no check from behind or on a skater without the puck is ever thrown)
+		// R-0031 point 2 (lane A45; ends R-0017 point 4 for pro and all_star): the body check. Only on the opposing carrier, only when the closing speed along the
+		// line to it and the bot's own speed along that line are both at least the skill's CheckMinClosing (the sim lands on the checker's own speed above
+		// check_speed_min; the hit's strength is the closing speed), only from the front or the side (the push along the carrier's facing above 0.35 is left alone:
+		// the sim's foul_from_behind band is 0.5, the margin covers the frames to contact), only when standing. One press per CheckCoolFrames: bCheck is a level in
+		// the sim (held = re-armed and PlayCheck every frame). Pressed inside CheckArmGapM of contact: at 5 m/s that is the sim's 6-frame window. A skill with
+		// CheckMinClosing < 0 (rookie) never presses, so no bot earns the box for a check on a skater without the puck or from behind.
 		In.bCheck = false;
+		if (CheckCool[Id] > 0) { --CheckCool[Id]; }
+		if (K.CheckMinClosing >= 0.0 && bOppCarrier && !S.bDown && CheckCool[Id] <= 0 && !W.bFaceoffPhase)
+		{
+			constexpr int CheckCoolFrames = 30;
+			constexpr double CheckArmGapM = 0.5;
+			const FJamAISkater& T = W.Skaters[C];
+			const FVec2 Rel = T.Pos - S.Pos;
+			const double Dist = Rel.Length();
+			if (Dist > 1e-6 && Dist <= 2.0 * W.SkaterRadius + CheckArmGapM && !T.bDown)
+			{
+				const FVec2 N = Rel * (1.0 / Dist);   // the push: checker towards the carrier
+				const double Closing = (S.Vel - T.Vel).Dot(N);
+				const double Own = S.Vel.Dot(N);
+				const double Along = N.Dot(T.Facing.Normalized());
+				if (Closing >= K.CheckMinClosing && Own > K.CheckMinClosing && (K.bCheckFromBehind || Along <= 0.35))
+				{
+					In.bCheck = true;
+					CheckCool[Id] = CheckCoolFrames;
+				}
+			}
+		}
 		// R-0019: never shoot from inside a no_shoot zone
 		if (S.bNoShoot) { In.bShoot = false; }
 	}

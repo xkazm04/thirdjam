@@ -45,7 +45,11 @@ Calls arrive on the game thread from the simulation tick. Call from C++ as `IJam
 | `UpdateMotion` | `float Speed`, `float TurnRate`, `FRotator Facing` | speed m/s >= 0; turn rate rad/s, positive = turning left seen from above; facing yaw in degrees, pitch and roll 0 | every frame |
 | `PlayShoot` | `float Charge` | 0..1 | a shot (or a pass, Charge 0) left the stick this frame; Charge 1 = a fully wound-up charged shot (`shot.charge_frames_max` held). **v2 (C-0005, lane A16, H7):** was `none`; implementations must take the parameter (the toy figure scales its swing by 1 + 0.6 x Charge) |
 | `PlayCheck` | none | | this skater threw a body check this frame |
-| `SetKnockedDown` | `bool bDown`, `float DirX`, `float DirZ` | (DirX, DirZ) unit vector on the ice plane in rink coordinates (x along the rink, z across); ignored when `bDown` is false | fall towards that direction; false = get up |
+| `SetKnockedDown` | `bool bDown`, `float DirX`, `float DirZ`, `int32 KnockdownFrames` | (DirX, DirZ) unit vector on the ice plane in rink coordinates (x along the rink, z across); ignored when `bDown` is false. **v4:** `KnockdownFrames` = the sim's down time in frames (`knockdown_frames` after modifiers) when `bDown`, 0 when false | fall towards that direction; false = get up. The get-up must end `KnockdownFrames` after the fall began: `SetKnockedDown(false)` arrives exactly then |
+| `PlayHitReaction` **(v4)** | `float DirX`, `float DirZ` | the push on this skater (unit, rink x / z): the other skater towards this one; classify against the facing as `SetKnockedDown`'s direction (along = `behind`, against = `front`, else `side_l` / `side_r`) | one-shot: a hit taken standing: a check that landed without a knockdown (none in today's sim), or a skater-skater collision at 3 m/s closing or more with no check landed (one per skater per 20 frames) |
+| `PlayBoardHit` **(v4)** | none | | one-shot: this skater hit the boards at 4 m/s or more along the normal (the frame of the skater `board` event, Who = this skater; Strength is on the bus) |
+| `SetBoardPin` **(v4)** | `bool bOn` | | level, called on the change: true after 10 consecutive frames within 5 cm of the boards with a standing opponent within 1.2 m (centre to centre); false when either ends, or the skater goes down or sits in the box |
+| `PlayStickHit` **(v4)** | `bool bLifted` | false = a clean poke took the puck, true = a stick lift | one-shot on the carrier that lost the puck to an opponent's stick this frame (the poker's own `PlayPoke(true)` / `PlayLift()` play on the other skater) |
 | `SetHasPuck` | `bool bHasPuck` | | |
 | `SetBoost` | `FName Kind` | enum `BoostKind` or `NAME_None` | `NAME_None` = no boost active |
 
@@ -112,6 +116,18 @@ None yet. The swap goes through a cartridge key (open question 1).
 ## Version history
 
 - v1 (H4, lane A0): first version, with the compiled stub.
+- v4 (H12.4-H14, lane A45, R-0031 point 1, from handoff B-to-A-0028): the tackling calls B built the takes for, all `BlueprintNativeEvent` with empty native defaults
+  (a visual that ignores them keeps compiling): `PlayHitReaction(float DirX, float DirZ)` on a hit taken standing (a landed check without a knockdown, which today's sim
+  never produces, or a skater-skater collision at 3 m/s closing or more with no check landed; the direction is the push on the skater, classified as `SetKnockedDown`'s),
+  `PlayBoardHit()` on the frame of the skater `board` event (4 m/s and up), `SetBoardPin(bool bOn)` as a level (10 consecutive frames within 5 cm of the boards with a
+  standing opponent within 1.2 m; off when either ends or the skater goes down), `PlayStickHit(bool bLifted)` on the carrier that lost the puck to a clean poke (false) or a
+  lift (true). `SetKnockedDown` gains a fourth parameter, `int32 KnockdownFrames`: the sim's down time when `bDown` (0 when false), so a figure's get-up ends when the sim
+  releases the skater (B-to-A-0028 ask 2). The pawn (`AJamSkater::ApplySimFrame`) makes every call from one-frame read-outs on `FJamSkaterState` (`bBumpThisFrame` /
+  `BumpDir`, `bBoardHitThisFrame`, `bBoardPinned`, `StickHitResult`; none enters the state hash) and logs one `JAMVIS hit|board|pin|stickhit` line per call. The toy
+  (`UToySkaterVisualComponent`) and skeletal (`USkeletalSkaterVisual`) figures map the four onto their existing curves (docs/experiments/TACKLING.md section 8). **B's
+  `BP_SkaterVisual_TB1` / `TB2` already declare Blueprint events with these four names** (B-to-A-0028: "built and waiting for a caller"): until B moves them onto the interface
+  (its stated step within the hour of the commit), each Blueprint compiles with "more than one function with the same name" for the four, and `Jam.Bot.VisualSwap` reports
+  those compile errors (its own checks pass). `SetKnockedDown`'s new parameter is the v2 precedent: B re-implements the event with the four-parameter signature.
 - v3 (H9, proposed by lane A16 from handoff B-to-A-0014, awaiting the Director's signature): the stick verbs, all `BlueprintNativeEvent` with empty native defaults
   (a visual that ignores them keeps compiling): `SetStickAim(float AngleDeg, float ReachM)` every frame (0 = forward, positive = the skater's left; reach = skater centre
   to the blade on the ice; the sim's blade is at 0.4 m + aim x `game.stick.reach_m`, so 1.2 m at rest and 2.0 m at full aim with the default 1.6), `PlayPoke(bool bClean)` on the

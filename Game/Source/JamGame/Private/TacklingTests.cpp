@@ -3,6 +3,8 @@
 //   UnrealEditor-Cmd.exe Game/ThirdJam.uproject -ExecCmds="Automation RunTests Jam.Tackling; Quit" -unattended -nullrhi -nosplash -log
 #include "Misc/AutomationTest.h"
 #include "SkeletalSkaterVisual.h"
+#include "ToySkaterVisual.h"
+#include "EffectsBinder.h"
 #include "CameraFollow.h"
 #include "JamPawns.h"
 
@@ -118,5 +120,57 @@ bool FJamTacklingCameraPunch::RunTest(const FString&)
 }
 
 // Lane A33's Jam.Tackling.PuckPop (the cosmetic hop AJamPuck::PopLiftM) is gone with R-0035 (lane A52): the drawn puck follows the sim's height (Jam.Core.LiftedShot).
+
+// Lane A45 (C-0001 v4): the two figures' defaults for B's four calls sit on existing curves; the glass wobble runs down over 12 frames.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamTacklingV4Defaults, "Jam.Tackling.V4Defaults", EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+bool FJamTacklingV4Defaults::RunTest(const FString&)
+{
+	// Skeletal: the hit tip peaks at 14 degrees three frames in (the board lean's curve) and is gone at 12; the pin holds the lean at 10; a stick hit is the stumble bell
+	// with the stick up for a lift; nothing while down.
+	{
+		FSkelInputs In;
+		In.SinceHit = 3;
+		TestEqual(TEXT("hit tip peaks at 14 degrees at frame 3"), USkeletalSkaterVisual::ReactionFor(In).HitTipDeg, 14.f, 0.01f);
+		In.SinceHit = 12;
+		TestEqual(TEXT("hit tip is over at frame 12"), USkeletalSkaterVisual::ReactionFor(In).HitTipDeg, 0.f, 0.01f);
+		In.SinceHit = -1; In.bPinned = true;
+		TestEqual(TEXT("the pin holds the board lean at 10 degrees"), USkeletalSkaterVisual::ReactionFor(In).BoardLeanDeg, 10.f, 0.01f);
+		In.SinceBoard = 3; In.BoardStrength = 1.f;
+		TestEqual(TEXT("a fresh board hit still peaks over the pin"), USkeletalSkaterVisual::ReactionFor(In).BoardLeanDeg, 16.f, 0.01f);
+		In = FSkelInputs(); In.SinceStickHit = 10; In.bStickHitLifted = true;
+		const FSkelReaction R = USkeletalSkaterVisual::ReactionFor(In);
+		TestEqual(TEXT("a stick hit pitches 12 degrees at its middle"), R.StumblePitchDeg, 12.f, 0.01f);
+		TestEqual(TEXT("a lift knocks the stick up 25 cm"), R.StickDropCm, -25.f, 0.01f);
+		In.bStickHitLifted = false;
+		TestEqual(TEXT("a poke knocks the stick down 25 cm"), USkeletalSkaterVisual::ReactionFor(In).StickDropCm, 25.f, 0.01f);
+		In.bDown = true; In.SinceHit = 3; In.bPinned = true;
+		const FSkelReaction D = USkeletalSkaterVisual::ReactionFor(In);
+		TestTrue(TEXT("nothing of it while down"), D.HitTipDeg == 0.f && D.BoardLeanDeg == 0.f && D.StumblePitchDeg == 0.f);
+	}
+	// Toy: on the check curve (peak at frame 8).
+	{
+		FToyPoseState St;
+		FToyInputs Base;
+		const FToyPose P0 = UToySkaterVisualComponent::ComputePose(St, Base);
+		FToyInputs In = Base; In.FramesSinceHit = 8;
+		TestEqual(TEXT("toy hit tip peaks at 14 degrees at frame 8"), UToySkaterVisualComponent::ComputePose(St, In).HitTipDeg, 14.f, 0.01f);
+		In = Base; In.FramesSinceBoard = 8;
+		TestEqual(TEXT("toy board hit pitches the body 12 degrees forward"), UToySkaterVisualComponent::ComputePose(St, In).BodyPitchDeg, P0.BodyPitchDeg - 12.f, 0.01f);
+		In = Base; In.bPinned = true;
+		TestEqual(TEXT("toy pin holds 10 degrees"), UToySkaterVisualComponent::ComputePose(St, In).BodyPitchDeg, P0.BodyPitchDeg - 10.f, 0.01f);
+		In = Base; In.FramesSinceStickHit = 8; In.bStickHitLifted = true;
+		TestEqual(TEXT("toy lift raises the blade 20 degrees"), UToySkaterVisualComponent::ComputePose(St, In).StickPitchDeg, P0.StickPitchDeg + 20.f, 0.01f);
+		In.bStickHitLifted = false;
+		TestEqual(TEXT("toy poke knocks the stick 25 degrees aside"), UToySkaterVisualComponent::ComputePose(St, In).StickYawDeg, P0.StickYawDeg + 25.f, 0.01f);
+		In = Base; In.bDown = true; In.FramesSinceHit = 8;
+		TestEqual(TEXT("toy: no hit tip while down"), UToySkaterVisualComponent::ComputePose(St, In).HitTipDeg, 0.f, 0.01f);
+	}
+	// Glass wobble: Strength at the hit, linear to 0 over 12 frames.
+	TestEqual(TEXT("wobble at the hit"), UJamEffectsBinder::GlassWobbleAt(0, 0.8f), 0.8f, 0.001f);
+	TestEqual(TEXT("wobble half way"), UJamEffectsBinder::GlassWobbleAt(6, 0.8f), 0.4f, 0.001f);
+	TestEqual(TEXT("wobble over at 12"), UJamEffectsBinder::GlassWobbleAt(12, 0.8f), 0.f, 0.001f);
+	TestEqual(TEXT("no wobble before a hit"), UJamEffectsBinder::GlassWobbleAt(-1, 0.8f), 0.f, 0.001f);
+	return true;
+}
 
 #endif

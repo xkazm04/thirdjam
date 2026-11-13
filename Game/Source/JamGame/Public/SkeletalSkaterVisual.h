@@ -56,6 +56,11 @@ struct JAMGAME_API FSkelInputs
 	int32 KnockHold = 0;
 	int32 SinceBoard = -1;
 	float BoardStrength = 0.f;
+	// Lane A45 (C-0001 v4): a hit taken standing (PlayHitReaction), the board pin (SetBoardPin level), the stick hit on the carrier (PlayStickHit; lifted = the blade went up).
+	int32 SinceHit = -1;
+	bool bPinned = false;
+	int32 SinceStickHit = -1;
+	bool bStickHitLifted = false;
 };
 
 // Lane A33: the whole-body reaction on top of the sampled pose, degrees and centimetres, a pure function of the inputs (tests read it).
@@ -66,6 +71,7 @@ struct JAMGAME_API FSkelReaction
 	float StumblePitchDeg = 0.f; // forward pitch during the stumble after a mistimed poke
 	float StumbleYawDeg = 0.f;   // yaw wobble during the stumble
 	float StickDropCm = 0.f;     // the stick root drops this far (the stick reads low during the stumble)
+	float HitTipDeg = 0.f;       // lane A45: a hit taken standing tips the toy toward the push with the board lean's 12-frame curve (one recovery step)
 };
 
 // The whole-body layer for one frame: which sequence, at which frame, and how much the stick aim blend may still move the stick bones.
@@ -109,9 +115,15 @@ public:
 	virtual void UpdateMotion_Implementation(float Speed, float TurnRate, FRotator Facing) override;
 	virtual void PlayShoot_Implementation(float Charge) override;
 	virtual void PlayCheck_Implementation() override;
-	virtual void SetKnockedDown_Implementation(bool bDown, float DirX, float DirZ) override;
+	virtual void SetKnockedDown_Implementation(bool bDown, float DirX, float DirZ, int32 KnockdownFrames) override;
 	virtual void SetHasPuck_Implementation(bool bHasPuck) override;
 	virtual void SetBoost_Implementation(FName Kind) override;
+	// Lane A45 (C-0001 v4): mapped onto the existing reactions (nothing new to author): the hit = the board lean's curve toward the push; the board hit = the lean (the bus
+	// event already starts it; the call stands in when no event came); the pin = the lean held at its floor; the stick hit = the stumble layer, the stick up for a lift.
+	virtual void PlayHitReaction_Implementation(float DirX, float DirZ) override;
+	virtual void PlayBoardHit_Implementation() override;
+	virtual void SetBoardPin_Implementation(bool bOn) override;
+	virtual void PlayStickHit_Implementation(bool bLifted) override;
 	virtual void SetStickAim_Implementation(float AngleDeg, float ReachM) override;
 	virtual void PlayPoke_Implementation(bool bClean) override;
 	virtual void PlayLift_Implementation() override;
@@ -204,6 +216,13 @@ private:
 	int32 BoardStart = -1;
 	FVector2D BoardDir = FVector2D(0.f, 1.f);
 	float BoardStrength = 0.f;
+	// Lane A45 (C-0001 v4) state.
+	int32 HitStart = -1;
+	FVector2D HitDir = FVector2D(-1.f, 0.f);
+	bool bPinned = false;
+	int32 StickHitStart = -1;
+	bool bStickHitLifted = false;
+	int32 KnockdownFramesGiven = 0;   // the sim's down time from SetKnockedDown(true, ...); this figure holds its last fall frame, so it is logged, not used
 	UPROPERTY(Transient) TObjectPtr<UJamEventBus> Bus;
 	bool bReady = false;
 	bool bBuildTried = false;

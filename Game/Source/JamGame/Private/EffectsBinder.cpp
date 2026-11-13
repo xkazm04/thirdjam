@@ -12,8 +12,82 @@
 #include "JamSim.h"
 #include "Misc/ScopeLock.h"
 #include "UObject/UObjectGlobals.h"
+#include "Materials/MaterialInterface.h"
+#include "Materials/MaterialInstanceDynamic.h"
+#include "Components/MeshComponent.h"
+#include "EngineUtils.h"
+#include "RinkActor.h"
 
 DEFINE_LOG_CATEGORY(LogJamFx);
+
+UJamEffectsBinder::UJamEffectsBinder()
+{
+	// Lane A45: the glass wobble runs down over sim frames in TickComponent; the tick is enabled only while a wobble is live.
+	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bStartWithTickEnabled = false;
+}
+
+float UJamEffectsBinder::GlassWobbleAt(int64 FramesSinceHit, float Strength)
+{
+	if (FramesSinceHit < 0 || FramesSinceHit >= GlassWobbleFrames) return 0.f;
+	return FMath::Clamp(Strength, 0.f, 1.f) * (1.f - static_cast<float>(FramesSinceHit) / static_cast<float>(GlassWobbleFrames));
+}
+
+UMaterialInstanceDynamic* UJamEffectsBinder::GlassMid()
+{
+	if (!bGlassLooked)
+	{
+		bGlassLooked = true;
+		if (UWorld* World = GetWorld())
+		{
+			for (TActorIterator<ARinkActor> It(World); It; ++It)
+			{
+				TArray<UMeshComponent*> Meshes;
+				It->GetComponents<UMeshComponent>(Meshes);
+				for (UMeshComponent* M : Meshes) if (M && M->GetFName() == FName(TEXT("Glass"))) { GlassMesh = M; break; }
+				if (GlassMesh.IsValid()) break;
+			}
+		}
+	}
+	UMeshComponent* Mesh = GlassMesh.Get();
+	if (!Mesh) return nullptr;
+	UMaterialInterface* Current = Mesh->GetMaterial(0);
+	if (GlassInstance && Current == GlassInstance) return GlassInstance;
+	// A new material on the slot (B's instance arrived, or the look tier swapped it): only a material that carries HitWobble gets a dynamic instance.
+	GlassInstance = nullptr;
+	if (!Current) return nullptr;
+	float Probe = 0.f;
+	if (!Current->GetScalarParameterValue(FHashedMaterialParameterInfo(TEXT("HitWobble")), Probe))
+	{
+		return nullptr;
+	}
+	GlassInstance = UMaterialInstanceDynamic::Create(Current, this);
+	Mesh->SetMaterial(0, GlassInstance);
+	UE_LOG(LogJamFx, Log, TEXT("JAMFX glass %s carries HitWobble: dynamic instance bound for the board hits"), *Current->GetName());
+	return GlassInstance;
+}
+
+void UJamEffectsBinder::StartGlassWobble(const FJamEventPayload& Payload)
+{
+	UMaterialInstanceDynamic* Mid = GlassMid();
+	if (!Mid || !Bus) return;
+	GlassHitFrame = Bus->GetSimFrame();
+	GlassHitStrength = FMath::Clamp(Payload.Strength, 0.f, 1.f);
+	Mid->SetScalarParameterValue(TEXT("HitWobble"), GlassWobbleAt(0, GlassHitStrength));
+	FLinearColor ProbeV;
+	if (Mid->GetVectorParameterValue(FHashedMaterialParameterInfo(TEXT("HitPos")), ProbeV)) Mid->SetVectorParameterValue(TEXT("HitPos"), FLinearColor(Payload.Where.X, Payload.Where.Y, Payload.Where.Z, 1.f));
+	++GlassWobbles;
+	SetComponentTickEnabled(true);
+}
+
+void UJamEffectsBinder::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	if (GlassHitFrame < 0 || !Bus || !GlassInstance) { SetComponentTickEnabled(false); return; }
+	const int64 Since = Bus->GetSimFrame() - GlassHitFrame;
+	GlassInstance->SetScalarParameterValue(TEXT("HitWobble"), GlassWobbleAt(Since, GlassHitStrength));
+	if (Since >= GlassWobbleFrames) { GlassHitFrame = -1; SetComponentTickEnabled(false); }
+}
 
 namespace
 {
@@ -291,6 +365,8 @@ void UJamEffectsBinder::HandleEvent(FName Event, const FJamEventPayload& Payload
 	}
 	float Variant = VariantFor(Event, Payload.Kind);
 	if (Event == JamEvents::Goal) Variant = GoalVariantFor(Payload);   // R-0033 point 4 (lane A50): 0 the human's team scored, 1 it conceded
+	// Lane A45 (R-0031 point 4): a skater into the boards wobbles the glass for GlassWobbleFrames when B's glass carries HitWobble.
+	if (Event == JamEvents::Board && Payload.Kind == FName(TEXT("skater"))) StartGlassWobble(Payload);
 	if (const TObjectPtr<UNiagaraSystem>* N = Niagara.Find(Event))
 	{
 		if (UNiagaraSystem* Sys = N->Get())
