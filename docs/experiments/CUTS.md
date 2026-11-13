@@ -183,6 +183,12 @@ match (timer, nine, one, five), 3 difficulty, 1 zones + effect. No cut uses `no_
    off the shield. Keys: `game.rink.obstacles: [ { kind: "goal_shield", x: -40, z: 0, size: 3 }, { kind: "goal_shield", x: 40, z: 0, size: 3 } ]`, with
    `game.rules: { mode: "timer", timer_frames: 14400, hooks: [ first-to-three ] }` because the sweep says anything that slows scoring at pro needs the clock.
 
+## Note for cut authors: look keys that do nothing on `p3_clay` (A69, B-to-A-0035 point 2)
+
+`look.trim_emissive` has **no effect on `p3_clay`**, by design: B's `M_Trim` has a clay path (a matte red cap) and ignores the dynamic instances' `Emissive` there. A glow on
+clay would be `ClayCapGlow` on `MI_Trim_Blue` / `MI_Trim_Orange`, a B-side instance value, not a cut key. On `p3_clay` the glass pane, the glass rail and the stanchions
+are not drawn at all (hidden by the rink, A69), and a zone is drawn as an opaque ring (see `docs/experiments/CLAY-RINGS.md`), not as a decal.
+
 ## Questions for the Director
 
 - The two new C++ files are in `Game/Source/JamCore/AI/` (A2's folder), additive, no shared file touched: keep as the sweep's commandlet, or fold the wiring

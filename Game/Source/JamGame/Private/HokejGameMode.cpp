@@ -163,11 +163,9 @@ void AHokejGameMode::UpdateTake(bool bForce)
 	if (UJamDesignerSubsystem* D = GI ? GI->GetSubsystem<UJamDesignerSubsystem>() : nullptr) D->NotifyPeriodStarted(Take);
 }
 
-UClass* AHokejGameMode::ResolveVisualClass(FName Visual, const FString& Tier) const
+TArray<FString> AHokejGameMode::VisualClassPathsFor(FName Visual, const FString& Tier)
 {
-	// contracts/skater-visual.md: BP_SkaterVisual_<track>; R-0001 item 1: game.skater.visual picks it.
-	if (Visual == VisualSkeletal) return USkeletalSkaterVisual::StaticClass();
-	TArray<const TCHAR*> Paths;   // in order of preference; the first that loads wins
+	TArray<FString> Paths;   // in order of preference; the first that loads wins
 	if (Visual == VisualB1)
 	{
 		// B-to-A-0033 point 1 (R-0033, lane A50): the shipped figure's clay version BP_SkaterVisual_TB1_P3 on p3_clay, the night figure as its fallback;
@@ -182,14 +180,23 @@ UClass* AHokejGameMode::ResolveVisualClass(FName Visual, const FString& Tier) co
 		else if (Tier == TierBroadcast) Paths.Add(TEXT("/JamAssets/Skaters/BP_SkaterVisual_TB2_P4.BP_SkaterVisual_TB2_P4_C"));
 		Paths.Add(TEXT("/JamAssets/Skaters/BP_SkaterVisual_TB2.BP_SkaterVisual_TB2_C"));
 	}
+	return Paths;
+}
+
+UClass* AHokejGameMode::ResolveVisualClass(FName Visual, const FString& Tier) const
+{
+	// contracts/skater-visual.md: BP_SkaterVisual_<track>; R-0001 item 1: game.skater.visual picks it.
+	if (Visual == VisualSkeletal) return USkeletalSkaterVisual::StaticClass();
+	const TArray<FString> Paths = VisualClassPathsFor(Visual, Tier);
 	for (int32 i = 0; i < Paths.Num(); ++i)
 	{
-		if (UClass* Cls = LoadClass<UObject>(nullptr, Paths[i], nullptr, LOAD_NoWarn | LOAD_Quiet))
+		// Lane A65: the menu's preload has usually loaded the class already; LoadClass then finds it in memory without a synchronous load.
+		if (UClass* Cls = LoadClass<UObject>(nullptr, *Paths[i], nullptr, LOAD_NoWarn | LOAD_Quiet))
 		{
 			UE_LOG(LogHokej, Log, TEXT("JAMVISUAL %s tier=%s class=%s%s"), *Visual.ToString(), *Tier, *Cls->GetPathName(), i > 0 ? TEXT(" (fallback)") : TEXT(""));
 			return Cls;
 		}
-		UE_LOG(LogHokej, Warning, TEXT("JAMVISUAL %s tier=%s: %s not found; %s"), *Visual.ToString(), *Tier, Paths[i], i + 1 < Paths.Num() ? TEXT("trying the next class") : TEXT("using the toy figure"));
+		UE_LOG(LogHokej, Warning, TEXT("JAMVISUAL %s tier=%s: %s not found; %s"), *Visual.ToString(), *Tier, *Paths[i], i + 1 < Paths.Num() ? TEXT("trying the next class") : TEXT("using the toy figure"));
 	}
 	return UToySkaterVisualComponent::StaticClass();
 }

@@ -89,6 +89,17 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
 	int32 GetZoneQuadCount() const { return ZoneQuads.Num(); }
 
+	// Lane A69 (B-to-A-0034 point 3 / 0035 point 4a): on p3_clay each zone that has a ZoneQuad also gets an opaque ring mesh on its outline (6 cm high, 12 cm wide,
+	// B's MI_Zone_<kind> on it, so it shows in the ice's reflections); the decal quad is hidden there. Parallel to ZoneQuads (same index). Built with the rink,
+	// shown or hidden by SetZoneRingsForTier; there is no per-switch spawn, so a tier switch can leave nothing behind.
+	UPROPERTY(Transient, VisibleAnywhere, Category = "Jam|Rink") TArray<TObjectPtr<UProceduralMeshComponent>> ZoneRings;
+	UFUNCTION(BlueprintCallable, Category = "Jam|Rink")
+	void SetZoneRingsForTier(const FString& Tier);
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	int32 GetZoneRingCount() const { return ZoneRings.Num(); }
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	bool AreZoneRingsShown() const { return bClayTier; }
+
 	// Lane A31 (B-to-A-0023 point 2, 0025): the glass panel's instance per look tier: /JamAssets/Look/MI_Bcast_Glass on p4_broadcast, MI_Glass on every
 	// other tier (the net placeholder stands in when B's instance is absent). Build reads game.look.tier; ULookTierSwitcher::SetTier pushes a change.
 	UFUNCTION(BlueprintCallable, Category = "Jam|Rink")
@@ -117,6 +128,7 @@ private:
 	// LabEmissive >= 0 lifts the lab instance's Emissive in a dynamic copy (the flat lab master has no ambient floor); -1 uses the instance as it is.
 	// bLabTint also writes Tint into that copy (the lab instance's own colour is replaced: benches, goal-light housings).
 	UMaterialInterface* LoadConstructionMat(const TCHAR* LookName, const TCHAR* LabName, const FLinearColor& Tint, float LabEmissive = -1.f, bool bLabTint = false);
+	bool bClayTier = false;   // lane A69: the tier the rink shows is p3_clay (rings on, decal quads off, glass and rail not drawn)
 	bool bLookIce = false;
 	bool bLookTrim = false;
 	FString GlassLookName = TEXT("placeholder");

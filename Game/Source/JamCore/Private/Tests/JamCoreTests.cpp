@@ -62,6 +62,10 @@ bool FJamCartridgeRoundTrip::RunTest(const FString& Parameters)
 {
 	TArray<FString> Files;
 	IFileManager::Get().FindFiles(Files, *FPaths::Combine(UJamCartridge::GetCartridgeDir(), TEXT("*.json")), true, false);
+	// Lane A67 (R-0036): the Director's choices in modes/ go through the same loader and sim checks.
+	TArray<FString> Modes;
+	IFileManager::Get().FindFiles(Modes, *FPaths::Combine(UJamCartridge::GetCartridgeDir(), TEXT("modes"), TEXT("*.cartridge.json")), true, false);
+	for (const FString& M : Modes) Files.Add(FString(TEXT("modes/")) + M);
 	Files.Sort();
 	TestTrue(TEXT("the cartridge folder has files"), Files.Num() > 0);
 	for (const FString& F : Files)

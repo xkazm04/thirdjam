@@ -20,6 +20,18 @@ namespace JamTournamentLocal
 		JamAI::FormatTrace(W, In, Brain, Buf, sizeof(Buf));
 		UE_LOG(LogJamAI, Display, TEXT("%s"), UTF8_TO_TCHAR(Buf));
 	}
+
+	// lane A71: the playtester's per-frame line: the brain's trace plus the carrier, the last toucher and the human's frames since a touch
+	void PlaytestTraceToLog(void* Ctx, const JamAI::FJamAIWorld& W, const JamAI::FJamAIInput* In, const JamAI::FJamBrain& Brain, int64_t SinceTouch, bool bHumanTouch)
+	{
+		(void)Ctx;
+		static char Buf[4096];
+		int N = JamAI::FormatTrace(W, In, Brain, Buf, sizeof(Buf));
+		if (N < 0 || N > 3900) { N = 0; }
+		std::snprintf(Buf + N, sizeof(Buf) - N, " since=%lld ht=%d car=%d lt=%d fo=%d pk=%d", static_cast<long long>(SinceTouch), bHumanTouch ? 1 : 0, W.Carrier, W.PuckLastTouch,
+			W.bFaceoffPhase ? 1 : 0, W.NumPickups);
+		UE_LOG(LogJamAI, Display, TEXT("%s"), UTF8_TO_TCHAR(Buf));
+	}
 }
 
 UJamTournamentCommandlet::UJamTournamentCommandlet()
@@ -136,7 +148,8 @@ int32 UJamTournamentCommandlet::Main(const FString& Params)
 		for (int32 Seed = SeedLo; Seed <= SeedHi; ++Seed)
 		{
 			JamAI::FJamSimAdapter Sim(*Cart);   // lane A41: with the game mode's rule, zone and effect systems
-			const JamAI::FJamPlaytestStats St = JamAI::RunPlaytestMatch(Sim, Cfg, static_cast<uint64_t>(Seed), Kind, MaxFrames, Cart->Game.Shot.ChargeFramesMax);
+			const JamAI::FJamPlaytestStats St = JamAI::RunPlaytestMatch(Sim, Cfg, static_cast<uint64_t>(Seed), Kind, MaxFrames, Cart->Game.Shot.ChargeFramesMax,
+				TraceEvery > 0 ? &JamTournamentLocal::PlaytestTraceToLog : nullptr, nullptr, TraceEvery);
 			JamAI::FormatPlaytestJson(St, CartUtf8.Get(), LevelUtf8.Get(), Kind, Line, sizeof(Line));
 			UE_LOG(LogJamAI, Display, TEXT("%s"), UTF8_TO_TCHAR(Line));
 		}

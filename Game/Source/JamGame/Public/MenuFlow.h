@@ -29,6 +29,22 @@ struct JAMGAME_API FJamMenuCutRow
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Menu") FString Sentence;
 };
 
+// Lane A67 (R-0036): one Director's choice, a mode cartridge in Content/Cartridges/modes/ chosen like a cut. The pitch and the three facts that
+// differ from the Regular Cut are the menu's words (the envelope has no description key); docs/experiments/MODES.md has the numbers behind them.
+struct JAMGAME_API FJamModeCard
+{
+	// The cut name LoadCut / StartMatch take: "modes/hockey.mode.pond".
+	FString Name;
+	// The cartridge id: "hockey-mode-pond".
+	FString Id;
+	// "Pond".
+	FString Display;
+	// One line.
+	FString Pitch;
+	// Three facts against the Regular Cut.
+	TArray<FString> Facts;
+};
+
 UCLASS()
 class JAMGAME_API UJamMenuFlow : public UBlueprintFunctionLibrary
 {
@@ -68,6 +84,13 @@ public:
 	// Writes a cartridge text to Saved/Preview/directors-preview.cartridge.json (outside Saved/Cuts, so it is not listed as a
 	// saved cut) and returns the path, or empty when it could not be written. "Play" without "Save" goes through here.
 	static FString WritePreviewCut(const FString& Json);
+
+	// Lane A67: the six Director's choices in menu order (every entry, whether or not its file is on disk).
+	static const TArray<FJamModeCard>& ModeCards();
+	// The Director's choices whose cartridge file exists under Content/Cartridges/modes/.
+	static TArray<FJamModeCard> AvailableModeCards();
+	// The mode's display name for a cartridge id ("hockey-mode-pond" -> "Pond"); empty when the cartridge is not a mode.
+	static FString ModeDisplayForId(const FString& CartridgeId);
 
 	// Current cartridge JSON for the Designer's diff: the Designer's current cut, else the shipped regular cut.
 	static FString BaseCartridgeJson(const UJamDesignerSubsystem* Designer);

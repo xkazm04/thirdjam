@@ -155,7 +155,7 @@ void AJamSkater::SetupVisual(UObject* Visual, const FLinearColor& Colour, int32 
 	bHadPuck = false;
 	bWasAtFaceoff = false;
 	bWasPinned = false;
-	LastCharge = 0.f;
+	LastCharge = -1.f;   // lane A65: the first ApplySimFrame sends the charge (SetShotCharge goes only on change)
 	LastAimDeg = 0.f;
 	LastAimReach = 0.f;
 }
@@ -267,8 +267,13 @@ void AJamSkater::ApplySimFrame(const FJamSkaterState& S)
 	{
 		const int32 Max = 30;   // the visual gets 0..1; the sim's charge_frames_max is applied by LastShotCharge on release
 		const float Charge = S.ChargeFrames > 0 ? FMath::Clamp(static_cast<float>(S.ChargeFrames) / static_cast<float>(Max), 0.f, 1.f) : 0.f;
-		if (Charge != LastCharge) { LastCharge = Charge; }
-		IJamSkaterVisual::Execute_SetShotCharge(V, Charge);
+		// Lane A65 (PROFILING.md offender 8): sent only when it changed (it was sent every frame, one Blueprint event per skater per frame for a value
+		// that is 0 most of the match). SetupVisual sets LastCharge to -1 so a new or respawned visual gets the first value.
+		if (Charge != LastCharge)
+		{
+			LastCharge = Charge;
+			IJamSkaterVisual::Execute_SetShotCharge(V, Charge);
+		}
 	}
 	if (S.PokeResult != 0) IJamSkaterVisual::Execute_PlayPoke(V, S.PokeResult > 0);
 	if (S.bLiftThisFrame) IJamSkaterVisual::Execute_PlayLift(V);

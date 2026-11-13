@@ -481,7 +481,8 @@ namespace JamAI
 		return In;
 	}
 
-	FJamPlaytestStats RunPlaytestMatch(FJamSimAdapter& Sim, const FJamMatchConfig& C, uint64_t Seed, EPlaytester Kind, int64_t MaxFrames, int ChargeFramesMax)
+	FJamPlaytestStats RunPlaytestMatch(FJamSimAdapter& Sim, const FJamMatchConfig& C, uint64_t Seed, EPlaytester Kind, int64_t MaxFrames, int ChargeFramesMax,
+		FJamPlaytestTraceFn Trace, void* TraceCtx, int TraceEvery)
 	{
 		FJamPlaytestStats St;
 		St.Seed = Seed;
@@ -524,6 +525,7 @@ namespace JamAI
 			const bool bPlay = !W.bFrozen;
 			if (bPlay) { ++St.PlayFrames; }
 			if (Pi < 0) { continue; }
+			const bool bHumanTouch = ((Ev.TouchMask >> Pi) & 1u) != 0;
 			// touches and the two waits (after a faceoff, since the last touch)
 			if ((Ev.TouchMask >> Pi) & 1u)
 			{
@@ -632,6 +634,7 @@ namespace JamAI
 				const TArray<FJamSkaterState>& Sk = S->GetSkaters();
 				if (Sk.IsValidIndex(Pi) && Sk[Pi].InBox()) { ++St.BoxFrames; }
 			}
+			if (Trace && ((TraceEvery > 0 && St.Frames % TraceEvery == 0) || (TraceEvery > 0 && bHumanTouch))) { Trace(TraceCtx, W, In, Brain, SinceTouch, bHumanTouch); }
 		}
 		if (CarrySpell >= 180) { ++St.Carries3s; }
 		if (SinceTouch > St.MaxNoTouch) { St.MaxNoTouch = SinceTouch; }
@@ -763,6 +766,32 @@ bool FJamPlaytestGoodNeverIdlesAtAllStar::RunTest(const FString& Parameters)
 		const FString Msg = FString::Printf(TEXT("hockey.regular all_star good seed %llu: %d spells of 15 s without a touch (longest %lld frames), %d:%d in %lld frames, %s"),
 			Seed, S.IdleSpells, static_cast<long long>(S.MaxNoTouch), S.GoalsFor, S.GoalsAgainst, static_cast<long long>(S.Frames), S.bOver ? TEXT("over") : TEXT("unfinished"));
 		if (S.IdleSpells == 0 && (S.bOver || S.Frames >= MaxFrames)) { AddInfo(TEXT("PASS ") + Msg); } else { AddError(TEXT("FAIL ") + Msg); bOk = false; }
+	}
+	return bOk;
+}
+
+// Lane A71: the six soak seeds that reached the 36,000-frame cap (3 on hockey.regular, 3 on hockey.boost) end inside it, and the same match replays.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamMatchAlwaysEnds, "Jam.Core.MatchAlwaysEnds",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::CommandletContext | EAutomationTestFlags::EngineFilter)
+
+bool FJamMatchAlwaysEnds::RunTest(const FString& Parameters)
+{
+	using namespace JamPlaytestTestsLocal;
+	struct FCase { const TCHAR* Cart; JamAI::EPlaytester Kind; const TCHAR* Level; uint64 Seed; };
+	const FCase Cases[] = {
+		{TEXT("hockey.regular"), JamAI::EPlaytester::Novice, TEXT("rookie"), 346}, {TEXT("hockey.regular"), JamAI::EPlaytester::Novice, TEXT("rookie"), 349},
+		{TEXT("hockey.regular"), JamAI::EPlaytester::Regular, TEXT("all_star"), 387}, {TEXT("hockey.boost"), JamAI::EPlaytester::Regular, TEXT("pro"), 150},
+		{TEXT("hockey.boost"), JamAI::EPlaytester::Good, TEXT("all_star"), 251}, {TEXT("hockey.boost"), JamAI::EPlaytester::Regular, TEXT("pro"), 737}};
+	bool bOk = true;
+	for (const FCase& K : Cases)
+	{
+		UJamCartridge* Cart = Load(*this, K.Cart);
+		if (!Cart) { return false; }
+		const JamAI::FJamPlaytestStats A = Run(*Cart, K.Seed, K.Kind, K.Level);
+		const JamAI::FJamPlaytestStats B = Run(*Cart, K.Seed, K.Kind, K.Level);
+		const FString Msg = FString::Printf(TEXT("%s %s seed %llu: %s after %lld frames, %d:%d, hash %016llx (replay %016llx)"), K.Cart, K.Level, K.Seed, A.bOver ? TEXT("over") : TEXT("NOT OVER"),
+			static_cast<long long>(A.Frames), A.GoalsFor, A.GoalsAgainst, static_cast<unsigned long long>(A.Hash), static_cast<unsigned long long>(B.Hash));
+		if (A.bOver && A.Frames < MaxFrames && A.Hash == B.Hash) { AddInfo(TEXT("PASS ") + Msg); } else { AddError(TEXT("FAIL ") + Msg); bOk = false; }
 	}
 	return bOk;
 }

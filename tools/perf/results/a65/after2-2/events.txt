@@ -1,0 +1,15 @@
+10:45:08.992 t=0.113 other game/editor windows at start: ThirdJam:40480 ThirdJam-Win64-Shipping:37272
+10:45:09.096 t=0.216 start pid 27616 -cut="C:/Users/kazda/kiro/thirdjam/.claude/worktrees/a65/tools/perf/cuts/perf.l2_night.cartridge.json" -dpcvars=jam.ScriptHuman=1,r.GPUCsvStatsEnabled=1 -windowed -ResX=1920 -ResY=1080 -WinX=40 -WinY=40 -log -abslog="C:\Users\kazda\kiro\thirdjam\.claude\worktrees\a65\tools\perf\out\after2-2\game.log" -statnamedevents -RemoteConsoleIP=127.0.0.1 -RemoteConsolePort=4665
+10:45:11.461 t=2.580 menu map logged
+10:45:19.533 t=10.652 console 'csvprofile start' OK (try 1) {"id":2,"op":"exec","ok":true}
+10:45:20.850 t=11.969 enter posted
+10:45:21.067 t=12.186 JAMMENU start match seen
+10:45:21.070 t=12.189 JAMCART loaded seen
+10:45:31.301 t=22.420 sim frame 600 seen (10 s into the match)
+10:45:31.318 t=22.437 console 'csvprofile stop' OK (try 1) {"id":3,"op":"exec","ok":true}
+10:45:34.348 t=25.468 console 'quit' OK (try 1) {"id":4,"op":"exec","ok":true}
+10:45:35.867 t=26.986 game exited, code 0
+10:45:35.883 t=27.003 collected Profile(20261113_104519).csv
+10:45:35.884 t=27.004 no C:\Users\kazda\kiro\thirdjam\.claude\worktrees\a65\Game\Packaged\A65-after2\Windows\ThirdJam\Saved\Profiling\MemReports
+10:45:35.930 t=27.049 other game/editor windows at end: ThirdJam:40480
+10:45:35.932 t=27.051 done

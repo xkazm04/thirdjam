@@ -1,0 +1,69 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T09:44:33.571Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a69/a69-clay-10m.png",
+          "width": 1920,
+          "height": 1082
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2259,
+      "usage": {
+        "prompt": 1738,
+        "output": 347,
+        "thoughts": 1226,
+        "total": 3311,
+        "calls": 1
+      },
+      "cost_usd_est": 0.0072,
+      "ms": 19638,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [
+              {
+                "where": "bottom right quadrant, lower screen edge",
+                "what": "The horizontal controls bar text ('PASS F') extends directly into and overlaps with the minimap panel and its 'PAUSE ESC' label.",
+                "severity": 3,
+                "confidence": 0.95
+              },
+              {
+                "where": "top center, behind the MATCH 1 banner",
+                "what": "A floating distance marker (yellow diamond and '66 m' label) is partially occluded and split by the MATCH 1 banner, with the diamond peeking over the top edge.",
+                "severity": 2,
+                "confidence": 0.9
+              },
+              {
+                "where": "mid-left to mid-right ice surface",
+                "what": "Extraneous colored vector outlines (a red tilted rectangle, a yellow ring, and a cyan ring) overlap the standard ice markings like stray debug or tutorial volumes.",
+                "severity": 3,
+                "confidence": 0.85
+              },
+              {
+                "where": "bottom center, over the blue skater",
+                "what": "The 'YOU' billboard label and blue player indicator ring clash and overlap directly underneath the large circular faceoff countdown reticle ('1 HOLD').",
+                "severity": 2,
+                "confidence": 0.8
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=a69-clay-10m.png (gemini-3.8-flash, in 1738 out 347 think 1226 tokens, ~$0.0072, 19.6 s)\n- stills:\n  - label: Still A; clean: false\n    - findings:\n      - where: bottom right quadrant, lower screen edge; what: The horizontal controls bar text ('PASS F') extends directly into and overlaps with the minimap panel and its 'PAUSE ESC' label.; severity: 3; confidence: 0.95\n      - where: top center, behind the MATCH 1 banner; what: A floating distance marker (yellow diamond and '66 m' label) is partially occluded and split by the MATCH 1 banner, with the diamond peeking over the top edge.; severity: 2; confidence: 0.9\n      - where: mid-left to mid-right ice surface; what: Extraneous colored vector outlines (a red tilted rectangle, a yellow ring, and a cyan ring) overlap the standard ice markings like stray debug or tutorial volumes.; severity: 3; confidence: 0.85\n      - where: bottom center, over the blue skater; what: The 'YOU' billboard label and blue player indicator ring clash and overlap directly underneath the large circular faceoff countdown reticle ('1 HOLD').; severity: 2; confidence: 0.8"
+    }
+  ]
+}

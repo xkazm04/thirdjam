@@ -163,6 +163,8 @@ FJamInput ALobbyGameMode::ReadLocalInput()
 	In.bPoke = Pi->ConsumePokePressed();
 	In.bLift = Pi->ConsumeLiftPressed();
 	In.bDeke = Pi->ConsumeDekePressed();   // lane A39 (R-0029 point 4)
+	In.bSprint = Pi->IsSprintHeld();        // R-0037 (A56 found them dead online): the sprint and the spin reach the lockstep driver
+	In.bSpin = Pi->ConsumeSpinPressed();
 	return In;
 }
 

@@ -252,3 +252,19 @@
 - link green 10:09: main 59675fe (dev-b merged: B19-B26, SK6-SK9; R-0036) pushed.
 
 - RESOURCES 10:13 cpu 43% ram 31.9/63GB gpu 0 %, 626 MiB, 39 editors 0 cmd 9 ubt 2 free 625GB
+- link green 10:29: main dfb808f (C-0001 v4 landed: lane/a45 + Skaters from dev-b-a45 4441259) pushed.
+- package 10:43: `Hokej_Hokej_H21.zip` from main dfb808f (C-0001 v4 with B's Blueprints, dev-b B19-B26, A51/A52 mechanics).
+
+- RESOURCES 10:43 cpu 100% ram 38.4/63GB gpu 64 %, 8076 MiB, 48 editors 1 cmd 14 ubt 2 free 607GB
+- link green 10:49: main 0da18f2 (A67 Director's modes) pushed.
+- link green 10:53: main cf6b580 (A71 horn, A56 lockstep fix, A69 rings) pushed.
+- link green 10:58: main 7dfbeb5 (A65 match-start preload, shadow pool, TSR) pushed.
+- link green 11:00: main efaddb2 (dev-b B27/SK11-13 merged, 0036 answered) pushed.
+
+## H15 (11:03) the morning's landings: main efaddb2 pushed; H21 is the package to play
+- Landed since H14: dev-b (B19-B26, then B27 clay pass 7 + SK11-13), C-0001 v4 with B's Blueprints (dfb808f; H21 272.6 MB), A67 six Director's modes (0da18f2), A56 lockstep
+  fix + A69 clay rings + A71 match horn (cf6b580; R-0037), A65 match-start preload / shadow pool / TSR (7dfbeb5), 0036 answered (efaddb2). A53 soak tools chaining.
+- Soak (27,000 matches): novice at rookie 90.5, regular at pro 58.1, good at all_star 44.8 against 85 / 50 / 25: every level too easy; no crashes. Lane A70 re-tunes
+  the profiles against it. Idle stretches: p50 16 s, p90 32 s, a loose puck the novice does not reach (R-0037 point 2).
+- Running: A57 parity + hourly packages (Sonnet), A64 eyes-grid fixes (Opus), A70 curve (Opus), A72 mode keys (Opus), A73 tackling felt (Fable). H22 after A64/A72/A73.
+- B: A-to-B-0015 (ring material ask) open; B-to-A-0036 answered (v4 landed, knockdown 90 kept, A73 for the hit felt).

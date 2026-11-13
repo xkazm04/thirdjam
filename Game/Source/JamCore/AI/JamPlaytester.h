@@ -54,7 +54,7 @@ namespace JamAI
 	// What the playtester decided this frame (diagnostics; the match counts them).
 	enum class EPlaytesterAct : uint8_t { Idle, Draw, Chase, Carry, Charge, Pass, Support, Forecheck, Poke, Check, Lapse, OneTimer, Deke, Sweep, Spin, Count };
 
-	class FJamPlaytester
+	class JAMCORE_API FJamPlaytester   // lane A56: exported so the JamNet soak (Bar.Net.Soak*) can seat two playtesters as the two humans
 	{
 	public:
 		FJamPlaytesterProfile P;
@@ -124,7 +124,11 @@ namespace JamAI
 
 	class FJamSimAdapter;
 	// One match on UJamSim: the brain plays every other skater at the config's AI params, the playtester plays the human.
-	FJamPlaytestStats RunPlaytestMatch(FJamSimAdapter& Sim, const FJamMatchConfig& C, uint64_t Seed, EPlaytester Kind, int64_t MaxFrames, int ChargeFramesMax);
+	// lane A71: the per-frame log (tools/soak/playtest/idle.mjs). Called after a frame's step every TraceEvery frames and on every frame the human touches the puck;
+	// SinceTouch = play frames since the human's last touch. Null / 0 = no trace, and the match is the same either way.
+	using FJamPlaytestTraceFn = void (*)(void* Ctx, const FJamAIWorld& W, const FJamAIInput* In, const FJamBrain& Brain, int64_t SinceTouch, bool bHumanTouch);
+	FJamPlaytestStats RunPlaytestMatch(FJamSimAdapter& Sim, const FJamMatchConfig& C, uint64_t Seed, EPlaytester Kind, int64_t MaxFrames, int ChargeFramesMax,
+		FJamPlaytestTraceFn Trace = nullptr, void* TraceCtx = nullptr, int TraceEvery = 0);
 	// One thirdjam.playtest/1 JSON line (no newline) into Buf. Returns the length written.
 	int FormatPlaytestJson(const FJamPlaytestStats& S, const char* Cartridge, const char* Difficulty, EPlaytester Kind, char* Buf, int BufLen);
 }

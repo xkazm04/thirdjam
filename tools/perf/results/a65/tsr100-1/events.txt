@@ -1,0 +1,17 @@
+10:16:40.919 t=0.134 other game/editor windows at start: 
+10:16:41.036 t=0.250 start pid 25268 -cut="C:/Users/kazda/kiro/thirdjam/.claude/worktrees/a65/tools/perf/cuts/perf.l2_night.cartridge.json" -dpcvars=jam.ScriptHuman=1,r.GPUCsvStatsEnabled=1,r.TSR.History.ScreenPercentage=100 -windowed -ResX=1920 -ResY=1080 -WinX=40 -WinY=40 -log -abslog="C:\Users\kazda\kiro\thirdjam\.claude\worktrees\a65\tools\perf\out\tsr100-1\game.log" -statnamedevents -RemoteConsoleIP=127.0.0.1 -RemoteConsolePort=4665
+10:16:43.588 t=2.803 menu map logged
+10:16:51.638 t=10.852 console 'csvprofile start' OK (try 1) {"id":2,"op":"exec","ok":true}
+10:16:52.004 t=11.218 enter posted
+10:16:52.213 t=11.427 JAMMENU start match seen
+10:16:52.216 t=11.430 JAMCART loaded seen
+10:17:02.346 t=21.559 sim frame 600 seen (10 s into the match)
+10:17:02.408 t=21.622 console 'csvprofile stop' OK (try 1) {"id":3,"op":"exec","ok":true}
+10:17:07.461 t=26.675 saved C:\Users\kazda\kiro\thirdjam\.claude\worktrees\a65\docs\experiments\img\a65\tsr100-l2_night.png 1920x1080 ok=True
+10:17:07.531 t=26.745 console 'memreport -full' OK (try 1) {"id":4,"op":"exec","ok":true}
+10:17:10.860 t=30.074 console 'quit' OK (try 1) {"id":5,"op":"exec","ok":true}
+10:17:12.897 t=32.111 game exited, code 0
+10:17:12.917 t=32.131 collected Profile(20261113_101651).csv
+10:17:12.926 t=32.140 collected Rink-Windows-11.13-10.17.07_Pid25268_Rink-Windows-13-10.17.07.memreport
+10:17:12.994 t=32.208 other game/editor windows at end: 
+10:17:12.996 t=32.210 done

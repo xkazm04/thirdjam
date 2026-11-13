@@ -17,6 +17,14 @@
 #include "Components/MeshComponent.h"
 #include "EngineUtils.h"
 #include "RinkActor.h"
+#include "Engine/AssetManager.h"
+#include "Misc/PackageName.h"
+#include "Misc/CoreDelegates.h"
+#include "Misc/CommandLine.h"
+#include "HAL/IConsoleManager.h"
+#include "HAL/PlatformTime.h"
+#include "JamCartridge.h"
+#include "JamCommentaryData.h"
 
 DEFINE_LOG_CATEGORY(LogJamFx);
 
@@ -98,9 +106,19 @@ namespace
 		return S;
 	}
 
-	// Quiet load with no log line at all (used where a miss is expected and answered by an alias).
+	// Lane A65: packages the menu's preload looked up and found absent (filled on the game thread, read by the loads below).
+	FCriticalSection KnownMissingLock;
+	TSet<FString>& KnownMissingSet()
+	{
+		static TSet<FString> S;
+		return S;
+	}
+
+	// Quiet load with no log line at all (used where a miss is expected and answered by an alias). An object the menu's preload brought in is found in
+	// memory by StaticLoadObject without a synchronous load; a package the preload found absent is not looked up again (that lookup is synchronous too).
 	UObject* LoadSilently(const FSoftObjectPath& Path)
 	{
+		if (UJamPreloadSubsystem::IsKnownMissing(Path)) return nullptr;
 		return StaticLoadObject(UObject::StaticClass(), nullptr, *Path.ToString(), nullptr, LOAD_NoWarn | LOAD_Quiet);
 	}
 }
@@ -401,4 +419,150 @@ void UJamEffectsBinder::HandleEvent(FName Event, const FJamEventPayload& Payload
 			}
 		}
 	}
+}
+
+// ---- Lane A65: the match's assets, preloaded while the menu is up (PROFILING.md offenders 3 and 4) ----
+
+DEFINE_LOG_CATEGORY_STATIC(LogJamPreload, Log, All);
+
+bool UJamPreloadSubsystem::IsKnownMissing(const FSoftObjectPath& Path)
+{
+	FScopeLock Lock(&KnownMissingLock);
+	return KnownMissingSet().Contains(Path.GetLongPackageName());
+}
+
+FString UJamPreloadSubsystem::LikelyNextCut()
+{
+	FString Cut;
+	if (FParse::Value(FCommandLine::Get(), TEXT("-cut="), Cut) || FParse::Value(FCommandLine::Get(), TEXT("cut="), Cut)) return Cut;
+	if (IConsoleVariable* V = IConsoleManager::Get().FindConsoleVariable(TEXT("jam.Cut"))) return V->GetString();
+	return TEXT("hockey.regular");
+}
+
+TArray<FSoftObjectPath> UJamPreloadSubsystem::MatchPaths(FName Visual, const FString& Tier)
+{
+	TArray<FSoftObjectPath> P;
+	auto Add = [&P](const FString& S) { P.AddUnique(FSoftObjectPath(S)); };
+	auto Look = [&Add](const TCHAR* Name) { Add(FString::Printf(TEXT("/JamAssets/Look/%s.%s"), Name, Name)); };
+	// UJamEffectsBinder::BeginPlay: every known event's burst and sound (the same rules: silent events none, sound-only events no burst).
+	for (const FName& E : UJamEventBus::GetKnownEvents())
+	{
+		if (UJamEffectsBinder::IsSilentEvent(E)) continue;
+		if (!UJamEffectsBinder::IsSoundOnlyEvent(E)) P.AddUnique(UJamEffectsBinder::NiagaraPathFor(E));
+		P.AddUnique(UJamEffectsBinder::SoundPathFor(E));
+	}
+	// The puck (JamPawns.cpp), the figures' blade spray, the commentary system's players.
+	Add(TEXT("/JamAssets/VFX/NS_puck_trail.NS_puck_trail"));
+	Add(TEXT("/JamAssets/VFX/NS_blade_spray.NS_blade_spray"));
+	Add(TEXT("/JamAssets/Props/SM_PuckDisc.SM_PuckDisc"));
+	Add(TEXT("/JamAssets/Audio/MS_commentary.MS_commentary"));
+	Add(TEXT("/JamAssets/Audio/MS_music_match.MS_music_match"));
+	Add(TEXT("/JamAssets/Audio/MS_skate_loop.MS_skate_loop"));
+	Add(TEXT("/JamAssets/Audio/MS_crowd_bed.MS_crowd_bed"));
+	// The figure class for this visual and tier (AHokejGameMode::ResolveVisualClass), and the figure material of the C++ figures.
+	for (const FString& C : AHokejGameMode::VisualClassPathsFor(Visual, Tier)) Add(C);
+	Add(TEXT("/JamAssets/Look/M_Toon.M_Toon"));
+	// The rink's look instances (RinkActor.cpp LoadLook / LoadConstructionMat), the puck's, the glass of the tier, the look collection.
+	static const TCHAR* const LookNames[] = { TEXT("MI_Ice_Night"), TEXT("MI_Toon_Board"), TEXT("MI_Toon_KickPlate"), TEXT("MI_Toon_GlassRail"), TEXT("MI_Trim_Blue"),
+		TEXT("MI_Trim_Orange"), TEXT("MI_Toon_NetFrame"), TEXT("MI_Toon_NetMesh"), TEXT("MI_Toon_GoalLight"), TEXT("MI_Toon_Bench"), TEXT("MI_Toon_Bumper"),
+		TEXT("MI_Toon_GoalShield"), TEXT("MI_Trim_Beacon"), TEXT("MI_Trim_BeaconOpaque"), TEXT("MI_Toon_Puck"), TEXT("MI_Toon_Helmet"), TEXT("MI_Toon_Stick"),
+		TEXT("MPC_Look") };
+	for (const TCHAR* N : LookNames) Look(N);
+	Look(Tier == TEXT("p4_broadcast") ? TEXT("MI_Bcast_Glass") : TEXT("MI_Glass"));
+	Add(TEXT("/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial"));
+	Add(TEXT("/Engine/BasicShapes/Plane.Plane"));
+	// The HUD's and the pause card's textures (FJamUiStyle::Art): loaded in the menu too, but collected with the menu world, so the match loaded them again.
+	static const TCHAR* const UiNames[] = { TEXT("T_UI_Panel"), TEXT("T_UI_CallCard"), TEXT("T_UI_Button_Normal"), TEXT("T_UI_Button_Hover"),
+		TEXT("T_UI_Button_Pressed"), TEXT("T_UI_RingPlain"), TEXT("T_UI_Ring"), TEXT("T_UI_CutFrame"), TEXT("T_UI_TitleHokej") };
+	for (const TCHAR* N : UiNames) Add(FString::Printf(TEXT("/Game/UI/%s.%s"), N, N));
+	// The commentary waves (UJamCommentarySystem asks for them asynchronously at match start; the first line loaded synchronously).
+	for (const FJamCommentaryLine& L : FJamCommentaryBank::Embedded().Lines) if (!L.Sound.IsNull()) P.AddUnique(L.Sound);
+	return P;
+}
+
+void UJamPreloadSubsystem::Initialize(FSubsystemCollectionBase& Collection)
+{
+	Super::Initialize(Collection);
+	PostLoadMapHandle = FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &UJamPreloadSubsystem::HandlePostLoadMap);
+	PreLoadMapHandle = FCoreUObjectDelegates::PreLoadMap.AddUObject(this, &UJamPreloadSubsystem::HandlePreLoadMap);
+}
+
+void UJamPreloadSubsystem::Deinitialize()
+{
+	FCoreUObjectDelegates::PostLoadMapWithWorld.Remove(PostLoadMapHandle);
+	FCoreUObjectDelegates::PreLoadMap.Remove(PreLoadMapHandle);
+	if (SyncLoadHandle.IsValid()) FCoreDelegates::OnSyncLoadPackage.Remove(SyncLoadHandle);
+	for (TSharedPtr<FStreamableHandle>& H : Handles) if (H.IsValid()) H->ReleaseHandle();
+	Handles.Reset();
+	Super::Deinitialize();
+}
+
+void UJamPreloadSubsystem::HandlePostLoadMap(UWorld* World)
+{
+	if (!World || !World->IsGameWorld() || World->GetGameInstance() != GetGameInstance()) return;
+	if (World->GetMapName() == TEXT("Menu")) StartPreload(LikelyNextCut());
+}
+
+void UJamPreloadSubsystem::HandlePreLoadMap(const FString& MapName)
+{
+	if (!MapName.Contains(TEXT("Rink"))) return;
+	const double Now = FPlatformTime::Seconds();
+	const FString State = Handles.Num() == 0 ? FString(TEXT("no preload"))
+		: IsPreloadComplete() ? FString::Printf(TEXT("complete (%.0f ms after the request)"), (CompletedAt - RequestedAt) * 1000.0) : FString(TEXT("still loading"));
+	UE_LOG(LogJamPreload, Log, TEXT("JAMPRELOAD match start: %d assets requested %.2f s ago, %s"), Requested, RequestedAt > 0.0 ? Now - RequestedAt : -1.0, *State);
+}
+
+void UJamPreloadSubsystem::HandleSyncLoad(const FString& PackageName)
+{
+#if !UE_BUILD_SHIPPING
+	// Diagnostics for the next profiler: what the game thread still loads synchronously after the menu is up.
+	if (SyncLoadsLogged < 400)
+	{
+		++SyncLoadsLogged;
+		UE_LOG(LogJamPreload, Log, TEXT("JAMPRELOAD sync %s frame=%llu"), *PackageName, static_cast<unsigned long long>(GFrameCounter));
+	}
+#endif
+}
+
+void UJamPreloadSubsystem::StartPreload(const FString& CutNameOrPath)
+{
+	if (PreloadedCuts.Contains(CutNameOrPath) || !UAssetManager::IsInitialized()) return;
+	PreloadedCuts.Add(CutNameOrPath);
+#if !UE_BUILD_SHIPPING
+	if (!SyncLoadHandle.IsValid()) SyncLoadHandle = FCoreDelegates::OnSyncLoadPackage.AddUObject(this, &UJamPreloadSubsystem::HandleSyncLoad);
+#endif
+	FName Visual(TEXT("humanoid_b1"));
+	FString Tier(TEXT("l2_night"));
+	TArray<FString> Errors;
+	if (const UJamCartridge* C = UJamCartridge::LoadFromFile(UJamCartridge::ResolveCartridgePath(CutNameOrPath), Errors, GetTransientPackage()))
+	{
+		Visual = C->Game.Skater.Visual;
+		if (!C->Game.Look.Tier.IsEmpty()) Tier = C->Game.Look.Tier;
+	}
+	TArray<FSoftObjectPath> Want;
+	int32 Missing = 0;
+	for (const FSoftObjectPath& P : MatchPaths(Visual, Tier))
+	{
+		const FString Pkg = P.GetLongPackageName();
+		if (FPackageName::DoesPackageExist(Pkg)) { Want.Add(P); continue; }
+		FScopeLock Lock(&KnownMissingLock);
+		KnownMissingSet().Add(Pkg);
+		++Missing;
+	}
+	const int32 N = Want.Num();
+	Requested += N;
+	RequestedAt = FPlatformTime::Seconds();
+	CompletedAt = 0.0;
+	TWeakObjectPtr<UJamPreloadSubsystem> Weak(this);
+	TSharedPtr<FStreamableHandle> H = UAssetManager::GetStreamableManager().RequestAsyncLoad(MoveTemp(Want), FStreamableDelegate::CreateLambda([Weak, N]()
+	{
+		if (UJamPreloadSubsystem* Self = Weak.Get())
+		{
+			Self->CompletedAt = FPlatformTime::Seconds();
+			UE_LOG(LogJamPreload, Log, TEXT("JAMPRELOAD done: %d assets in %.0f ms"), N, (Self->CompletedAt - Self->RequestedAt) * 1000.0);
+		}
+	}), FStreamableManager::DefaultAsyncLoadPriority, false, false, FString(TEXT("JamMatchPreload")));
+	if (H.IsValid()) Handles.Add(H);
+	UE_LOG(LogJamPreload, Log, TEXT("JAMPRELOAD requested %d assets for cut %s (visual %s, tier %s); %d absent packages will not be looked up again"),
+		N, *CutNameOrPath, *Visual.ToString(), *Tier, Missing);
 }
