@@ -42,6 +42,11 @@ public:
 	// B-to-A-0012: the Kind -> Variant table (Niagara User.Variant, MetaSound Variant). 0 for every event or kind not in the table.
 	UFUNCTION(BlueprintPure, Category = "Jam|Fx")
 	static float VariantFor(FName Event, FName Kind);
+	// R-0033 point 4 (lane A50): MS_goal's Variant: 0 when the human's team scores, 1 when it concedes. Pure parts for the tests: the scoring team is the
+	// one whose score grew between Before and After (the payload's Who is the last touch, the wrong team on an own goal); FallbackTeam (Who's team, -1
+	// unknown) when neither grew; -1 when nothing tells, which plays Variant 1 (never the celebration for a goal that may not be ours).
+	static int32 ResolveScoringTeam(const int32 Before[2], const int32 After[2], int32 FallbackTeam);
+	static float GoalVariant(int32 ScoringTeam, int32 HumanTeam) { return ScoringTeam >= 0 && ScoringTeam == HumanTeam ? 0.f : 1.f; }
 
 	// B-to-A-0012 point 1: bark, signal and announce play as 2D sounds, not at Where.
 	UFUNCTION(BlueprintPure, Category = "Jam|Fx")
@@ -83,6 +88,10 @@ protected:
 private:
 	UFUNCTION()
 	void OnJamEvent(FName Event, const FJamEventPayload& Payload);
+
+	// The goal's Variant from the owning game mode's sim (score delta since the last goal this binder saw) and the human's team.
+	float GoalVariantFor(const FJamEventPayload& Payload);
+	int32 PrevScore[2] = { 0, 0 };
 
 	// The colour an event's burst takes: zone kind, pickup kind, or the team colour of Who (white when none applies).
 	FLinearColor ColourFor(FName Event, const FJamEventPayload& Payload) const;

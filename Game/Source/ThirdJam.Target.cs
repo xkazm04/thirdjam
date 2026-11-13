@@ -5,7 +5,7 @@ public class ThirdJamTarget : TargetRules
 {
 	public ThirdJamTarget(TargetInfo Target) : base(Target)
 	{
-		bUseLoggingInShipping = true;   // jam: the Shipping package writes a log so a packaged run can be measured (lane A48, R-0032 point 3)
+		// jam: bUseLoggingInShipping stays off: the installed engine shares its build environment with the Shipping target, so the flag fails UBT (H19, 00:06). Packaged proofs use the Development game build (A49, A48).
 		Type = TargetType.Game;
 		DefaultBuildSettings = BuildSettingsVersion.V8;
 		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_9;

@@ -1,0 +1,1 @@
+B22 item 3: top, 24 consecutive frames of one crop of the reflection streaks while the play runs under a held game camera (no shimmer: mean |d| 0.26); bottom, three consecutive frames of a fast yaw (2 deg per frame) before and after the scratch normal fades with the pixel footprint (ScratchNormFar 0.85): the far-ice glitter of screen-space reflections is gone

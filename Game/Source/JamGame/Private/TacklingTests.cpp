@@ -117,26 +117,6 @@ bool FJamTacklingCameraPunch::RunTest(const FString&)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamTacklingPuckPop, "Jam.Tackling.PuckPop", EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
-bool FJamTacklingPuckPop::RunTest(const FString&)
-{
-	TestEqual(TEXT("no lift before the pop"), AJamPuck::PopLiftM(-1.0, 1.0), 0.0, 1e-9);
-	TestEqual(TEXT("lift 0 at the first frame"), AJamPuck::PopLiftM(0.0, 1.0), 0.0, 1e-9);
-	TestEqual(TEXT("peak 25 cm at strength 1 mid-way"), AJamPuck::PopLiftM(9.0, 1.0), 0.25, 1e-6);
-	TestEqual(TEXT("peak 12.5 cm at strength 0"), AJamPuck::PopLiftM(9.0, 0.0), 0.125, 1e-6);
-	TestEqual(TEXT("over at frame 18 (0.3 s)"), AJamPuck::PopLiftM(18.0, 1.0), 0.0, 1e-9);
-	FJamPuckState P;
-	P.LastTouch = -1; P.Pos = FVector2D(1.0, 0.0); P.PrevPos = FVector2D(0.95, 0.0); P.Vel = FVector2D(3.0, 0.0);
-	TestTrue(TEXT("a strip: last touch cleared, puck moving on"), AJamPuck::IsStrip(2, P));
-	TestFalse(TEXT("no previous owner: not a strip"), AJamPuck::IsStrip(-1, P));
-	FJamPuckState F = P;
-	F.Vel = FVector2D::ZeroVector;
-	TestFalse(TEXT("a pinned puck (faceoff reset) is not a strip"), AJamPuck::IsStrip(2, F));
-	F = P; F.PrevPos = FVector2D(20.0, 5.0);
-	TestFalse(TEXT("a teleport to the dot is not a strip"), AJamPuck::IsStrip(2, F));
-	P.LastTouch = 3;
-	TestFalse(TEXT("a new owner is not a strip"), AJamPuck::IsStrip(2, P));
-	return true;
-}
+// Lane A33's Jam.Tackling.PuckPop (the cosmetic hop AJamPuck::PopLiftM) is gone with R-0035 (lane A52): the drawn puck follows the sim's height (Jam.Core.LiftedShot).
 
 #endif

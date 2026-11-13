@@ -21,6 +21,9 @@ namespace JamAI
 			return static_cast<double>(Z >> 11) * (2.0 / 9007199254740992.0) - 1.0;
 		}
 		inline FVec2 Rotate(const FVec2& V, double Rad) { const double C = std::cos(Rad), S = std::sin(Rad); return FVec2(V.X * C - V.Y * S, V.X * S + V.Y * C); }
+		// R-0035 (lane A52): the shooter's charge choice (ChargeWindowFor): inside ChargeCloseM of the net a tap; a lift level must clear the bar by ChargeBarMarginM.
+		constexpr double ChargeCloseM = 6.0;
+		constexpr double ChargeBarMarginM = 0.1;
 	}
 	using namespace AICoreLocal;
 
@@ -122,6 +125,44 @@ namespace JamAI
 	{
 		const int PlayerTeam = W.PlayerIndex >= 0 ? W.Skaters[W.PlayerIndex].Team : 0;
 		return W.Skaters[Id].Team != PlayerTeam ? Params.Opp : Params.Mate;
+	}
+
+	// R-0035 (lane A52): the shooter's charge reads the net's height. A bot whose profile charges at all (ShotChargeFrames > 0) holds for the window that
+	// lands the puck under the bar: the full charge when full_m clears the bar by the margin (a real 1.22 net), half_frames when half_m does (the 0.61
+	// bar), a tap from close (inside ChargeCloseM: the lob is not worth the hold) or when nothing fits. A bot with aim error (rookie's profile when it
+	// charges) mis-charges by up to that error in frames (a fixed function of the skater and the 2-second window, like the aim). Pure.
+	// UJamSim::LiftForCharge's rule on the brain's copy of the keys: the height a hold of F frames arrives at over the goal line.
+	double LiftAtFrames(const FJamAIWorld& W, int F)
+	{
+		const int Max = W.ChargeFramesMax;
+		const int Half = W.LiftHalfFrames;
+		if (Max <= 0) { return W.LiftTapM; }
+		const double C = static_cast<double>(F < 0 ? 0 : (F > Max ? Max : F));
+		if (Half <= 0 || Half >= Max) { return Lerp(W.LiftTapM, W.LiftFullM, C / Max); }
+		if (C <= Half) { return Lerp(W.LiftTapM, W.LiftHalfM, C / Half); }
+		return Lerp(W.LiftHalfM, W.LiftFullM, (C - Half) / (Max - Half));
+	}
+
+	int ChargeWindowFor(const FJamAIWorld& W, int Id, const FJamBotSkill& K)
+	{
+		if (K.ShotChargeFrames <= 0 || W.ChargeFramesMax <= 0) { return 0; }
+		const FJamAISkater& S = W.Skaters[Id];
+		const double Dgoal = W.PuckPos.DistTo(W.OppGoal(S.Team));
+		if (Dgoal < ChargeCloseM) { return 0; }
+		// The longest hold whose arrival stays under the bar by the margin (the lift grows with the hold).
+		int Best = -1;
+		for (int F = 0; F <= W.ChargeFramesMax; ++F)
+		{
+			if (LiftAtFrames(W, F) + ChargeBarMarginM < W.GoalHeightM) { Best = F; } else { break; }
+		}
+		if (Best <= 0) { return 0; }
+		// A real net takes the full charge; a low bar takes the profile's wind-up (pro 10, all_star 18) cut to what clears it (0.61: 10 frames, 0.495 m).
+		int Window = Best >= W.ChargeFramesMax ? W.ChargeFramesMax : (Best < K.ShotChargeFrames ? Best : K.ShotChargeFrames);
+		if (K.AimErrorDeg > 0.0 && Window > 0)
+		{
+			Window += static_cast<int>(std::lround(K.AimErrorDeg * Hash11(static_cast<uint64_t>(Id) + 17, static_cast<uint64_t>(W.Frame / 120))));
+		}
+		return Window < 0 ? 0 : (Window > W.ChargeFramesMax ? W.ChargeFramesMax : Window);
 	}
 
 	void FJamBrain::Think(const FJamAIWorld& W, FJamAIInput* Out)
@@ -239,7 +280,7 @@ namespace JamAI
 			// the sim fires the charged shot on the release (StepCharge). Rookie's window is 0: a tap, as before. Taps by StickPlay (the dump
 			// under a forecheck) and Attack's board chip and pass-by-shot never charge.
 			{
-				const int Window = SkillOf(W, i).ShotChargeFrames;
+				const int Window = ChargeWindowFor(W, i, SkillOf(W, i));   // R-0035 (lane A52): the hold picks the height under the bar (the profile's frames before)
 				// Lane A47 (B-to-A-0030 fault 9): QA1 saw pro charges of 0.00 to 0.07 with the window at 10. Two causes. (1) The hold asked for
 				// W.Carrier == i, and the carrier of record is the last toucher with the puck in reach: a bot arriving on a loose puck or a pass is aimed
 				// and in reach before it has touched it, so its first shot went out as a tap through In.bShoot. (2) A hold in progress was released the
@@ -258,6 +299,13 @@ namespace JamAI
 				{
 					Charging[i] = 0;   // a hold in progress is released here (the sim fires whatever charge it has)
 				}
+			}
+			// R-0033 point 2 (lane A50): any skater standing in its own crease takes the stance, not only the back on its LastManGoalie rule. The
+			// steering above is untouched: this is the visual intent only (the game mode sends SetGoalieStance on a change).
+			if (!bGoalieNow[i])
+			{
+				int Side = 0;
+				if (CreaseStance(W, i, Side)) { bGoalieNow[i] = true; GoalieSideNow[i] = Side; }
 			}
 			In.bGoalie = bGoalieNow[i];
 			In.GoalieSide = bGoalieNow[i] ? GoalieSideNow[i] : 0;
@@ -518,6 +566,24 @@ namespace JamAI
 			const double Along = Rel.Dot(U);
 			if (Along > 0.0 && Along < L && std::fabs(Rel.Cross(U)) < 2.5) { return false; }   // a teammate stands between
 		}
+		return true;
+	}
+
+	bool CreaseStance(const FJamAIWorld& W, int Id, int& OutSide)
+	{
+		OutSide = 0;
+		if (Id < 0 || Id >= W.NumSkaters || W.bFrozen) { return false; }
+		const FJamAISkater& S = W.Skaters[Id];
+		if (S.bDown || W.Carrier == Id) { return false; }
+		const int C = W.Carrier;
+		if (C < 0 || W.Skaters[C].Team == S.Team) { return false; }
+		const FVec2 OwnGoal = W.OwnGoal(S.Team);
+		const FVec2 Cp = W.Skaters[C].Pos;
+		// the carrier inside our blue line: the outer third of the rink on our side (LastManGoalie's rule)
+		if (Cp.X * OwnGoal.X <= 0.0 || std::fabs(Cp.X) < W.HalfLength / 3.0) { return false; }
+		// in the crease: within CreaseStanceM of the goal centre, on the ice side of the goal line
+		if (S.Pos.DistTo(OwnGoal) > CreaseStanceM || std::fabs(S.Pos.X) > W.GoalX) { return false; }
+		OutSide = std::fabs(Cp.Y) < 1.0 ? 0 : static_cast<int>(AICoreLocal::Sign(Cp.Y)) * (S.Team == 0 ? 1 : -1);
 		return true;
 	}
 

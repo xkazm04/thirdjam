@@ -32,6 +32,9 @@ struct JAMCORE_API FJamRinkConfig
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double BoardRestitution = 0.4;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double IceFriction = 0.015;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double GoalWidthM = 4;
+	// R-0033 point 2 (lane A50): the height of the net opening; 0.61 is the operator's half-height net for a game without goalies (a real net is 1.22).
+	// One number for the net frame, the netting, the goal triggers and the sim's goal test for a lifted puck (UJamSim::InGoal with a height).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double GoalHeightM = 0.61;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") TArray<FJamObstacle> Obstacles;
 	// game.rink.zones (C-0005, lane A15): painted areas that change play inside them. Absent = none.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") TArray<FJamZoneConfig> Zones;
@@ -69,6 +72,10 @@ struct JAMCORE_API FJamSkaterConfig
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double SprintBonus = 0.15;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 SprintDrainFrames = 180;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 SprintRefillFrames = 360;
+	// R-0035 (lane A52): game.skater.goalie { reach_m, block_height_m }: a skater in the crease stance saves a loose shot under block_height_m that passes
+	// within reach_m of it (the human included); a higher puck passes. reach_m 0 = no save by height (the body and the blade stop pucks as before).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double GoalieReachM = 0.9;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double GoalieBlockHeightM = 0.4;   // Director calibration 01:30 (R-0035): below the 0.61 bar, so a half-charged shot (0.45) clears the stance and stays under the bar; at 0.7 the stance saved everything the net could take and the novice stopped scoring in time
 };
 
 // game.stick (R-0013, lane A16): the mouse / right-stick aimed stick.
@@ -108,6 +115,9 @@ struct JAMCORE_API FJamPuckConfig
 	// C-0005 (lane A16): 0..1 pull of a carried puck towards the stick; number of pucks on the ice (1..3).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double CarryAssist = 0.6;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 Count = 1;
+	// R-0035 (lane A52): the lifted puck's gravity (m/s^2) and the bounce on the ice (a hop under 2 cm dies).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double GravityMps2 = 9.81;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double IceRestitution = 0.3;
 };
 
 USTRUCT(BlueprintType)
@@ -128,6 +138,12 @@ struct JAMCORE_API FJamShotConfig
 	// charge without the hold and aim_cone_deg + OneTimerConeBonusDeg of aim help; the shot event carries Kind one_timer. window_frames 0 = off.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 OneTimerWindowFrames = 10;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double OneTimerConeBonusDeg = 8;
+	// game.shot.lift (R-0035, lane A52): the height a shot arrives at over the goal line by its charge: a tap tap_m, a hold of half_frames half_m, the full
+	// charge (charge_frames_max) full_m, linear between (UJamSim::LiftForCharge). All three at 0 = every shot on the ice (the old game).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double LiftTapM = 0.05;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double LiftHalfM = 0.45;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double LiftFullM = 0.6;   // Director calibration 01:40 (R-0035 amended): just under the 0.61 bar, the top-shelf shot; at 0.95 every hold past 8 frames sailed over the low net and the novice gate fell to 8 of 20
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 LiftHalfFrames = 8;
 };
 
 USTRUCT(BlueprintType)

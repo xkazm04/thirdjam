@@ -1,0 +1,1 @@
+B22 before: lane B19's low camera on the zones cut (x -17 y -7 z 2.2 m, pitch -10, yaw 25), screen-space reflections only

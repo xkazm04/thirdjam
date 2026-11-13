@@ -1,5 +1,5 @@
 // The rink, built procedurally from game.rink at load (M0 greybox, M3b arena manipulation): ice, boards 1.2 m, glass 0.9 m above,
-// emissive trim on the board top, two nets (goal_width x 1.5 high x 1.5 deep) at x = +-(length/2 - 4), goal trigger boxes behind
+// emissive trim on the board top, two nets (goal_width x goal_height (0.61 by default, R-0033) x 1.5 deep) at x = +-(length/2 - 4), goal trigger boxes behind
 // the lines (cosmetic: the simulation decides goals), centre and faceoff markings, obstacles. Geometry only: gameplay collision
 // lives in UJamSim. Stencils and device B's /JamAssets/Look instances per R-0002 (B-to-A-0005). Fallback materials are placeholders under /Game/Placeholders (M_Ice, M_Boards, M_Net, M_Trim) with the contract's
 // parameter names (Wet, Scuff, Emissive, TeamColour); device B's masters drop in by replacing those assets or by SetMaterials.

@@ -378,3 +378,31 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
   texture with other generators and settings; lane B19 (port 8000) rebuilds the clay tier against `path-p3-t3`. In the morning: `status/B20-report.md`,
   `status/B-skater-p4-figure.md`, `status/B19-report.md`, each with stills and an honest distance to its concept. The decision between P4 and a full P3 focus is the
   operator's.
+
+## H19.6 (01:35, 13 Nov) FOR THE DIRECTOR: C-0001 v4 is ready to land; the operator's overnight question; what moved since H17.9
+- **A-to-B-0012 is done on branch `origin/dev-b-a45`** (pushed after its cook-only check, which is running at 01:35: result in the next line of this file when it
+  ends): the seven figure Blueprints on the interface, get-ups on `KnockdownFrames`, the stick correction damped (B's share of "the stick blinks"). **For the landing:
+  merge `main` into `lane/a45`, take the 16 files listed in the handoff's response from `dev-b-a45`, the rest of B's from `dev-b`.** Until then B changes those
+  Blueprints only on `dev-b-a45`.
+- `main` a6b6f5b is merged into `dev-b` (56266a9). A-to-B-0013 answered.
+- On `dev-b` since H17.9: the clay tier rebuilt as a barn with string lights and glossy scratched ice (`status/B19-report.md`, handoff 0034: four asks of A); crowd
+  sounds instead of horns (`status/AU3-report.md`: `MS_goal` needs the variant from the binder; `MS_crowd_bed` exists); the P4 lab's first pass
+  (`status/B20-report.md`: lab assets, not shipped); the P4 figure experiments (`status/B-skater-p4-figure.md`).
+- The operator at 23:55 and 01:20: P4 is chased overnight for the skater and the ice only; in the morning he decides between P4 and "full focus on P3"; he judges
+  from pictures, not reports: B keeps a local review page of concept against engine stills for him. Lanes running: B21 (P4 ice and skater in the engine, port 8002),
+  SKF7 and SKC4 (Blender: an athletic stride, a loose jersey), EST (estimate mock-ups for the review page).
+- open on A: 0034 (clay tier), 0030 (the end-to-end check's faults), 0029 (optional effect vectors).
+- 01:45: cook-only on `dev-b-a45` 80c7278: PASS, 0 errors; the branch is pushed. The landing can go ahead when `lane/a45` carries `main`.
+
+## H20.5 (02:27, 13 Nov) clay pass 4 is on `dev-b`; R-0035 read
+- **Clay tier pass 4 (lane B22, `status/B22-report.md`)**: the bulb strings' reflections are computed in the ice material (`B22BulbRefl` in `M_Ice`, active only when
+  `MPC_Look.Clay` is 1 and `BulbReflB22` is on): long warm streaks across the near and middle ice, which screen-space reflections cannot produce. Four more
+  strings hang between the end boards and the end walls (the rig has 12), so bulbs fill the top 14 % of the frame at the faceoff and 30 % at the attacking end.
+  A glitter fault in fast turns is fixed at its source; the contact chips are white; zones have a bright edge and spill; night and broadcast measured unchanged.
+- FOR THE DIRECTOR (A): (1) **keep setting `RinkHalfLength` on the ice per rink**: the reflection layout scales with it; (2) if the clay rig's screen-space
+  reflection override is ever replaced by Lumen reflections, the analytic term doubles the off-screen bulbs: set `BulbReflB22` 0 on `MI_Ice_Night` then, or tell B;
+  (3) a camera that leaves the boards on clay (replay, end zone) would meet the four low strings (down to 1.8 m, between the end boards and the end walls);
+  (4) handoff 0034 is still unanswered: hiding the glass rail and stanchions on clay and opaque ring meshes for zones are now the largest gap to the concept;
+  (5) expected cost of the reflection, not measured on B: 0.08 to 0.15 ms on the 4090, 0.4 to 0.7 ms on a 3060 class card (`BRCount` 8 saves a third).
+- R-0035 (the puck has a height) read: nothing asked of B. If a lifted puck needs a ground shadow or a different trail, say so in a handoff.
+- Still running: B21 (P4 ice and skater in the engine, port 8002), SKC4 (the loose jersey and the new stride on `P4E`).

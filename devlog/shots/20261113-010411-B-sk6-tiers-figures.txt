@@ -1,0 +1,1 @@
+SK6: figures visible after the interface move: generated_b2 on night (TB2/P2C), generated_b2 on clay (TB2_P3/P3C), and the seven figure Blueprints as test figures knocked down by SetKnockedDown(true,0,1,90)

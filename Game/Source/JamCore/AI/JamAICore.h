@@ -200,6 +200,14 @@ namespace JamAI
 		double GoalX = 56.0;      // |x| of the goal lines (length/2 - 4)
 		double GoalHalfWidth = 2.0;
 		double ShotReach = 1.5;
+		// R-0035 (lane A52): the net's height and the lifted shot's rule (game.rink.goal_height_m, game.shot.lift, game.shot.charge_frames_max), so the
+		// shooter's charge picks the height it arrives at: the full charge at a real net, half_frames under the 0.61 bar, a tap from close.
+		double GoalHeightM = 0.61;
+		double LiftTapM = 0.05;
+		double LiftHalfM = 0.45;
+		double LiftFullM = 0.95;
+		int LiftHalfFrames = 8;
+		int ChargeFramesMax = 30;
 		// R-0007 / R-0009 (lane A12's signal seam): the human's active team signal, copied in by the game mode from
 		// UJamSignalSystem::GetActiveIntent after BuildWorld; the brain reads only these. 0 none, 1 defend, 2 space, 3 pass, 4 praise.
 		int32_t IntentKind = 0;
@@ -245,6 +253,19 @@ namespace JamAI
 		int Target = -1;          // praise: the praised teammate (skater index), -1 = every teammate
 		bool Active(int64_t Frame) const { return Kind != ETeamIntent::None && Frame >= IssuedFrame && Frame < IssuedFrame + Frames; }
 	};
+
+	// R-0033 point 2 (lane A50): any skater covering its own crease takes the goalie stance, the human included (no dedicated goalies; the operator's
+	// "last and any player acts like a goalie"). True when skater Id stands within CreaseStanceM of its own goal centre on the ice side of the goal line,
+	// is not down and not the carrier, and an opposing carrier is inside its blue line (the outer third on its side). OutSide as the back's goalie intent:
+	// where the carrier is, seen from the goalie facing up-ice (-1 left, 0 centre within a metre, +1 right). Pure: the brain applies it to every bot after
+	// Decide (steering untouched), the game mode to the human on the same world.
+	constexpr double CreaseStanceM = 3.0;
+	JAMCORE_API bool CreaseStance(const FJamAIWorld& W, int Id, int& OutSide);
+	// R-0035 (lane A52): frames a bot holds shoot for an aimed shot, from the net's height and the lift rule in W (0 = a tap): the full charge at a real net
+	// (full_m clears the bar), else the profile's wind-up cut to the longest hold that clears the bar by 10 cm (0.61: 10 frames, 0.495 m), a tap inside 6 m;
+	// a profile that never charges (ShotChargeFrames 0) taps; aim error mis-charges by up to that many frames. LiftAtFrames is UJamSim::LiftForCharge's rule.
+	JAMCORE_API double LiftAtFrames(const FJamAIWorld& W, int F);
+	JAMCORE_API int ChargeWindowFor(const FJamAIWorld& W, int Id, const FJamBotSkill& K);
 
 	// The brain for every non-player skater. One instance per match (holds only the stall anchor).
 	class FJamBrain

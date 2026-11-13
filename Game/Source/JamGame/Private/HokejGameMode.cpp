@@ -170,10 +170,9 @@ UClass* AHokejGameMode::ResolveVisualClass(FName Visual, const FString& Tier) co
 	TArray<const TCHAR*> Paths;   // in order of preference; the first that loads wins
 	if (Visual == VisualB1)
 	{
-		// B-to-A-0030 (the Director's answer, lane A47): B imports the scripted figure per tier as BP_SkaterVisual_TB1_P3 (clay) and _TB1_P4 (broadcast);
-		// the night figure is the fallback of both until they land.
+		// B-to-A-0033 point 1 (R-0033, lane A50): the shipped figure's clay version BP_SkaterVisual_TB1_P3 on p3_clay, the night figure as its fallback;
+		// every other tier (the broadcast lab included, for now) the night figure. A TB1_P4 row returns when B imports one (R-0033 point 1: p4 is a lab).
 		if (Tier == TierClay) Paths.Add(TEXT("/JamAssets/Skaters/BP_SkaterVisual_TB1_P3.BP_SkaterVisual_TB1_P3_C"));
-		else if (Tier == TierBroadcast) Paths.Add(TEXT("/JamAssets/Skaters/BP_SkaterVisual_TB1_P4.BP_SkaterVisual_TB1_P4_C"));
 		Paths.Add(TEXT("/JamAssets/Skaters/BP_SkaterVisual_TB1.BP_SkaterVisual_TB1_C"));
 	}
 	else if (Visual == VisualB2)
@@ -681,6 +680,32 @@ void AHokejGameMode::GatherInputs()
 	JamAI::FJamAIInput Out[JamAI::kMaxSkaters];
 	Brain->Think(W, Out);
 	const int32 Human = Sim->GetHumanIndex();
+	// The goalie stance send (lane A31, R-0033 point 2 / lane A50 for every skater). The brain's crease rule flickers at its edge (on/off every 3 frames
+	// in the 19:58 proof): once on, the stance holds at least GoalieHoldFrames before it may drop (cosmetic only; the brain's steering is untouched).
+	// JAMGOALIE names the cartridge role, so a bot match log shows the stance on more than the back.
+	auto RoleName = [](JamAI::ERole R) -> const TCHAR*
+	{
+		switch (R)
+		{
+		case JamAI::ERole::Player: return TEXT("player");
+		case JamAI::ERole::Back: return TEXT("back");
+		case JamAI::ERole::Support: return TEXT("support");
+		default: return TEXT("chaser");
+		}
+	};
+	auto SendGoalieStance = [&](int32 i, bool bOn, int32 Side, const TCHAR* RoleTag)
+	{
+		int8 Goalie = bOn ? static_cast<int8>(FMath::Clamp(Side, -1, 1)) : GoalieOff;
+		if (Goalie == GoalieOff && LastGoalie.IsValidIndex(i) && LastGoalie[i] != GoalieOff && Sim->GetFrame() - GoalieOnFrame[i] < GoalieHoldFrames) Goalie = LastGoalie[i];
+		if (LastGoalie.IsValidIndex(i) && LastGoalie[i] != Goalie)
+		{
+			if (LastGoalie[i] == GoalieOff) GoalieOnFrame[i] = Sim->GetFrame();
+			LastGoalie[i] = Goalie;
+			const bool bSend = Goalie != GoalieOff;
+			if (Skaters.IsValidIndex(i) && Skaters[i]) if (UObject* V = Skaters[i]->GetVisualObject()) IJamSkaterVisual::Execute_SetGoalieStance(V, bSend, bSend ? Goalie : 0);
+			UE_LOG(LogHokej, Log, TEXT("JAMGOALIE frame=%lld skater=%d on=%d side=%d role=%s"), Sim->GetFrame(), i, bSend ? 1 : 0, bSend ? Goalie : 0, RoleTag);   // on a change only (B-to-A-0024 point 3 proof)
+		}
+	};
 	for (int32 i = 0; i < Inputs.Num(); ++i)
 	{
 		if (i == Human) continue;
@@ -697,19 +722,18 @@ void AHokejGameMode::GatherInputs()
 			I.bPoke = Out[i].bPoke;
 			I.bLift = Out[i].bLift;
 			I.bDeke = Out[i].bDeke;   // lane A39: the bots' deke
-			// Lane A31 (B-to-A-0024 point 3, C-0001 v3): the brain's owner calls SetGoalieStance for the last man in the crease, on a change only.
-			int8 Goalie = Out[i].bGoalie ? static_cast<int8>(FMath::Clamp(Out[i].GoalieSide, -1, 1)) : GoalieOff;
-			// The brain's crease rule flickers at its edge (on/off every 3 frames in the 19:58 proof): once on, the stance holds at least GoalieHoldFrames
-			// before it may drop (cosmetic only; the brain's steering is untouched).
-			if (Goalie == GoalieOff && LastGoalie.IsValidIndex(i) && LastGoalie[i] != GoalieOff && Sim->GetFrame() - GoalieOnFrame[i] < GoalieHoldFrames) Goalie = LastGoalie[i];
-			if (LastGoalie.IsValidIndex(i) && LastGoalie[i] != Goalie)
-			{
-				if (LastGoalie[i] == GoalieOff) GoalieOnFrame[i] = Sim->GetFrame();
-				LastGoalie[i] = Goalie;
-				if (Skaters.IsValidIndex(i) && Skaters[i]) if (UObject* V = Skaters[i]->GetVisualObject()) IJamSkaterVisual::Execute_SetGoalieStance(V, Out[i].bGoalie, Out[i].bGoalie ? Goalie : 0);
-				UE_LOG(LogHokej, Log, TEXT("JAMGOALIE frame=%lld skater=%d on=%d side=%d"), Sim->GetFrame(), i, Out[i].bGoalie ? 1 : 0, Out[i].bGoalie ? Goalie : 0);   // on a change only (B-to-A-0024 point 3 proof)
-			}
+			// Lane A31 (B-to-A-0024 point 3, C-0001 v3): the brain's owner calls SetGoalieStance for the skater covering the crease, on a change only.
+			// R-0033 point 2 (lane A50): any crease skater, not only the back (JamAI::CreaseStance after Decide); the human below through the same send.
+			SendGoalieStance(i, Out[i].bGoalie, Out[i].GoalieSide, RoleName(W.Skaters[i].Role));
 		}
+	}
+	// R-0033 point 2 (lane A50): the human standing in its crease without the puck while an opponent carries inside the blue line takes the stance too: the
+	// bots' rule on the world the brain just read (the human's own skater is in it). The hold and the change-only send are shared with the bots'.
+	if (Human >= 0 && Human < JamAI::kMaxSkaters && Human < W.NumSkaters)
+	{
+		int Side = 0;
+		const bool bOn = JamAI::CreaseStance(W, Human, Side);
+		SendGoalieStance(Human, bOn, Side, TEXT("player"));
 	}
 	if (CVarJamCtrlDrill.GetValueOnGameThread() != 0) Inputs[Human] = DrillInput();   // lane A49 proof drill
 	else Inputs[Human] = (bScriptedHuman || CVarJamScriptHuman.GetValueOnGameThread() != 0) ? ScriptedHumanInput() : ReadHumanInput();

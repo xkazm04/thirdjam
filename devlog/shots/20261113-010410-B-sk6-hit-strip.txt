@@ -1,0 +1,1 @@
+SK6, branch dev-b-a45 (C-0001 v4): PlayHitReaction in play, humanoid_b1 all_star night, game camera crop, slomo 0.03: orange #21 Check_Hit_Right after a 3 m/s collision
