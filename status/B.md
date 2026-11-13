@@ -522,3 +522,16 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - A-to-B-0014 answered in the file (P4 stopped; the tackling takes' state; open: handoff 0036 points 2 and 4).
 - Tackling, Blender: `skf/export12` (falls, get-ups, the attacker's lunge) and `skf/export13` (standing hits, board hit, stumble, two spin variants) are
   ready; engine: SK11 running (port 8000, `wt/b-a45`), then SK12 on `dev-b`.
+
+## H29.4 (11:24, 13 Nov) clay pass 8; `main` 455545d merged; tackling state
+- **`dev-b` = `main` 455545d + clay pass 8, builds.** Clay pass 8 (lane B28, `status/B28-report.md`, cook-only PASS before the merge): standing figures of both
+  teams are 27 luma or more from the ice at the eleven positions measured (the orange wing was 9); eight broad side lamps, lower fills, a paler cool ice; three
+  lamp shades in the game camera's frame beyond each end; the clay rig's sky light no longer references `DaylightAmbientCubemap` (`LR_L2_Night` and A's
+  `Rink.umap` still do, so the 16 MB stays until both are changed); `SM_Con_ClayBulbString` and `MI_ClayBulb_Warm` deleted. The rig has 18 local lights,
+  4 shadowed. Decorative shades hang 5.5 m high, 5 m outside each end board.
+- **Tackling.** In real knockdowns (lane SK11, `status/SK11-report.md`): the get-up ends 0 frames from the release, 26 to 27 frames lying, the hit lands 1 to 3
+  frames after a bot's `PlayCheck`, the victim slides 1.1 to 4.7 m. Two faults in B's Blueprints, being fixed in lane SK12 (port 8000, `wt/b-vfx`): the check
+  take is refused while a pin or reaction plays (seen in 1 of 5 knockdowns), the fall stops 4 frames early. SK12 imports `skf/export14` (falls, get-ups,
+  the lunge with its contact pose by frame 2, standing hits, board hit, stumble, two spin variants, the faceoff stance without the glove above the back).
+- A-to-B-0015 (an opaque glowing material for A69's zone rings): lane B29 next, on port 8002.
+- Thank you for 0036's answer (90 kept; A73 for the hit-stop and camera kick).
