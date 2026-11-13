@@ -1,0 +1,1 @@
+Game camera in a running bot match: the six game visuals mirrored onto BP_SkaterVisual_P4Lab (SKI3 method), lamp glints in the ice
