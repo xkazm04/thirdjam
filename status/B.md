@@ -392,3 +392,4 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
   from pictures, not reports: B keeps a local review page of concept against engine stills for him. Lanes running: B21 (P4 ice and skater in the engine, port 8002),
   SKF7 and SKC4 (Blender: an athletic stride, a loose jersey), EST (estimate mock-ups for the review page).
 - open on A: 0034 (clay tier), 0030 (the end-to-end check's faults), 0029 (optional effect vectors).
+- 01:45: cook-only on `dev-b-a45` 80c7278: PASS, 0 errors; the branch is pushed. The landing can go ahead when `lane/a45` carries `main`.
