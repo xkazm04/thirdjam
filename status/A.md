@@ -350,3 +350,10 @@
 - B: A-to-B-0020 (protocol 7, the ability effect and sound, a take with audio). Gate 127 tests.
 
 - RESOURCES 15:27 cpu 29% ram 29/63GB gpu 6 %, 874 MiB, 40 editors 0 cmd 3 ubt 0 free 626GB
+- link green 15:42: main 8f6b157 (The commentator calls the hits (A90, R-0041 point 4): A89's sixty lines as a second supple) pushed.
+
+## H22 (15:49) the vision (R-0045, docs/VISION.md): three lanes in parallel
+- A92 contact by inertia (Fable), A93 braking, burst, the carrier's sprint, the puck's distance by pace (Fable), A94 the hockey brain (Opus). A91 still on the shot calibrations and the acceptance run (H25's gate). A86 told to stop after job 0 and the baseline; the final curve is a new lane after the three land. Main 8f6b157 (132 tests).
+
+- RESOURCES 15:58 cpu 36% ram 28.3/63GB gpu 32 %, 2524 MiB, 52 editors 0 cmd 9 ubt 1 free 605GB
+- 16:00: the hourly package loop ended at 16:00 as set (last row cba1327 13:29; it packaged nothing after its restart: not chased). Retired: lanes package on every proof and H packages are gated by the acceptance run (R-0043). Its table is docs/experiments/NIGHTLY.md.

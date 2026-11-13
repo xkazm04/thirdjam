@@ -64,6 +64,8 @@ namespace JamAI
 		FJamPlaytesterProfile P;
 		int ChargeFramesMax = 30;        // game.shot.charge_frames_max (the sim's; FJamAIWorld does not carry it)
 		bool bSprint = false;            // lane A72 (ask A3): the profile's SprintPct applies (RunPlaytestMatch bSprint)
+		bool bRestStick = false;         // lane A86 (R-0043 point 2): the old stick (left at rest while carrying, the before arm); env JAM_PLAYTESTER_STICK=rest
+		int StickVariant = 0;            // lane A86 measurement arms (env JAM_PLAYTESTER_STICK): 0 aim, 2 carry (no cursor on a loose puck), 3 front (the carry aim within 60 deg of facing)
 
 		void Reset(EPlaytester Kind, uint64_t Seed);
 		// One frame: the decision on this frame's world, delayed by the reaction ring, then the analog ramp.

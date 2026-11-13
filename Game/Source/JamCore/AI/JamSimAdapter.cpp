@@ -7,6 +7,9 @@
 #include "JamRuleSystem.h"
 #include "JamZones.h"
 
+#include <cstdlib>
+#include <cstring>
+
 namespace JamAI
 {
 	namespace SimAdapterLocal
@@ -245,10 +248,16 @@ namespace JamAI
 		W.FaceoffCountdown = S.GetFaceoffCountdown();
 		// R-0017: stick facts and the carrier
 		{
-			// the same rule as UJamSim::CarrierIndex (private): the last toucher, able to act, with the puck within shot reach
+			// the same rule as UJamSim::CarrierIndex (private): the last toucher, able to act, with the puck within the carrier reach
 			const int32 Lt = S.GetPuck().LastTouch;
 			const TArray<FJamSkaterState>& All = S.GetSkaters();
-			W.Carrier = (All.IsValidIndex(Lt) && All[Lt].CanAct() && FVector2D::Distance(All[Lt].Pos, S.GetPuck().Pos) <= G.Shot.ReachM) ? Lt : -1;   // lane A85 (R-0042), measured and left on shot.reach_m: at UJamSim::CarrierReachM the brain sees every blade-length carry (about thirty decisions read W.Carrier) and three curve gates move (MECHANICS-3.md section 3); it goes with A66's cap and the curve
+			// Lane A86 (R-0042 point 1, R-0043 point 2): the brain sees the carrier at UJamSim::CarrierReachM, the sim's own rule. On shot.reach_m (A85 left it there) a human
+			// who carries at the mouse's reach (0.4 + stick.reach_m = 1.6 m) was a loose puck to every bot: the rookie bots, which never poke a carrier, pounced on it
+			// (the novice playtester with the mouse's stick: 56 % at rookie, 97 % with this rule; CURVE-4.md section 1). A66's cap on the bots' own blade stays (R-0044).
+			// JAM_BRAIN_CARRIER=shot replays the old view (measurement only).
+			static const bool bA86ShotReach = [] { const char* E = std::getenv("JAM_BRAIN_CARRIER"); return E && std::strcmp(E, "shot") == 0; }();
+			const double BrainReach = (!bA86ShotReach && All.IsValidIndex(Lt)) ? S.CarrierReachM(Lt) : G.Shot.ReachM;
+			W.Carrier = (All.IsValidIndex(Lt) && All[Lt].CanAct() && FVector2D::Distance(All[Lt].Pos, S.GetPuck().Pos) <= BrainReach) ? Lt : -1;
 			// lane A46: whom the sim's pass would go to from the carrier right now (the brain passes to the human only when it is this teammate)
 			W.CarrierBestPass = -1;
 			if (W.Carrier >= 0) { FVector2D Aim; W.CarrierBestPass = S.BestPass(W.Carrier, Aim); }

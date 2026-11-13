@@ -480,3 +480,15 @@ R-0034 restated to what each mechanic is for (R-0043 point 3): the sweep and the
 misses in the spin run), not by the puck kept against a body check, which is the risk the ruling gave them; the saucer by its flight over a blade when one is on the lane;
 (4) A66's bot blade cap stays: without it about thirty brain decisions lose the carrier (A85's measurement); it is the curve lane's to revisit, not before the submission;
 (5) the bots' round-the-net rule stays; (6) lane A91 makes these calibrations and takes the acceptance run to green: that run is H25's gate.
+
+## R-0045 (H22, 2026-11-13 15:46): the vision: inertia, hockey principles, speed change, the stick and the sprint
+The operator gave four topics "so they become part of the vision of chasing"; they are written as laws with numbers in `docs/VISION.md`, which wins over older rulings where
+they differ. (1) **Physics**: a contact's strength is the closing speed along the contact line times mass (same direction and speed: almost nothing; head-on at full speed:
+the biggest hit), against the victim's stability (a standing braced skater resists a side hit; pace, the sprint, a spin lower it; a cross-check from the front beats the
+standing brace); three outcomes: bump, stumble, down; the attacker pays; **the carrier cannot body-check or cross-check** (lane A92). (2) **AI**: the bots read open ice and
+decide to carry or pass by it, with an attack shape, a defence shape and transitions; charging a set defence is the wrong decision (lane A94). (3) **Gameplay**: braking by
+reversing the input (W to S), a first-step burst; the carrier wins by changing speed and direction (lane A93). (4) **The stick and the sprint**: the puck rides closer when not
+sprinting; **the carrier may sprint** (replacing R-0041 point 6), with the puck farther out and easier to take, and a defender's sprint is always the faster; pace costs
+stability (A93 with A92). Process: each rule has a neutral value that gives back today's game and its lane proves it; the acceptance run and the gate stay the bar; the levels
+are tuned once more after the three lands (A86 stops after its job 0 and baseline); the sim freeze stays Saturday 12:00 and what is not green by Saturday 10:00 goes back to
+its neutral value. R-0043 point 6 is narrowed: one lane per function family in the sim, named in each brief.

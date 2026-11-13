@@ -51,3 +51,10 @@ A81), the match-start and memory work (A65), the lockstep soak (A56), the operat
 - The eyes tool is blind: the Gemini key's prepaid credits are used up.
 - The tie rule at a match's hard stop (last touch wins) stands unless the operator wants a draw.
 - B's logo and banner by Saturday midday (A-to-B-0019).
+
+## 6. The vision's lanes (added 15:46, R-0045, `docs/VISION.md`)
+The operator's four topics (inertia in contact, hockey principles in the bots, speed change as the carrier's weapon, the stick and the sprint calibrated) became three
+parallel lanes from 16:00 Friday: A92 contact physics (Fable), A93 movement, sprint and puck distance (Fable), A94 the hockey brain (Opus). A91 finishes the shot calibrations
+and the acceptance run (H25's gate); A86 stops after making the playtester hold the stick like the mouse and measuring the baseline. Order after they land (target 19:00):
+one curve pass on the whole (levels differ by how well bots execute the principles and how hard they hit), the acceptance run, a soak, H26 tonight. Saturday 10:00: anything
+not green goes back to its neutral value; 12:00 the sim freezes as planned.

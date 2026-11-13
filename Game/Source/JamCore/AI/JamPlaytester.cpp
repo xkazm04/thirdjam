@@ -5,6 +5,7 @@
 #include "JamSim.h"
 
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 
 namespace JamAI
@@ -231,7 +232,11 @@ namespace JamAI
 		}
 
 		FVec2 Target = Puck;
-		const bool bCarrying = W.Carrier == Pi;
+		// Lane A86 (R-0043 point 2): a person knows he carries the puck at the blade's full reach (UJamSim::CarrierReachM, 1.65 m), where the brain's
+		// W.Carrier (shot.reach_m 1.5, A85 left it there for A66's cap) sees a loose puck. The real stick carries out there, so the class reads the sim's rule.
+		const bool bCarrying = W.Carrier == Pi || (!bRestStick && W.PuckLastTouch == Pi && W.PuckPos.DistTo(Me.Pos) <= W.CarrierReach()
+			&& (W.PuckVel - Me.Vel).Length() < 4.0);
+		FVec2 PassLook;   // lane A86: the pass target, rink frame (zero = no pass this frame)
 		// Lane A77 (R-0036): a saucer in progress: pass held for the sim's half_frames (the player stops for it), then released; dropped when the puck is gone.
 		if (SaucerHold > 0)
 		{
@@ -337,6 +342,7 @@ namespace JamAI
 						if (P.bStickHandling && W.SaucerHalfFrames > 0 && W.CarrierBestSaucer >= 0)
 						{
 							SaucerHold = 1;
+							PassLook = ToT * (1.0 / Dt);
 							In.bPassHeld = true;
 							bHolding = false;
 							HoldFrames = 0;
@@ -346,6 +352,7 @@ namespace JamAI
 						continue;
 					}
 					In.bPass = true;
+					PassLook = ToT * (1.0 / Dt);
 					LastPassFrame = W.Frame;
 					bHolding = false;
 					HoldFrames = 0;
@@ -501,6 +508,43 @@ namespace JamAI
 			Want = Want * (Scale / Dist);
 		}
 		In.Move = Want * Sg;
+		// Lane A86 (R-0043 point 2): the stick where the mouse holds it. A person aims the cursor where he looks, metres away, so the blade sits at full reach
+		// (HokejGameMode::CursorAimRink: magnitude 1 from 3 m out) in that direction, never at rest (the sim's rest is ahead at half reach): carrying, at the net
+		// while lining up a shot, at the mate while passing, otherwise where he skates, bent away from the nearest opponent inside the pressure distance; without
+		// the puck the cursor sits on the puck (magnitude by its distance, the cursor's rule). The class's aim noise turns it (the novice's 10 degrees: sloppy).
+		if (!bRestStick && In.Stick.Length() < 1e-3 && !bMateCarries && !Me.bDown)
+		{
+			const double StickNoise = DegToRad(P.AimNoiseDeg * Noise(W.Frame / (P.AimWindowFrames > 0 ? P.AimWindowFrames : 1), 31));
+			if (bCarrying)
+			{
+				FVec2 Look;
+				if (PassLook.Length() > 1e-4) { Look = PassLook; }
+				else if (Act == EPlaytesterAct::Charge || Act == EPlaytesterAct::OneTimer) { Look = AimDir * Sg; }   // AimDir carries the noise already
+				else if (Act != EPlaytesterAct::Deke)
+				{
+					Look = (Want.Length() > 1e-4 ? Want : Face) * Sg;
+					if (NearOpp >= 0 && NearOppDist < P.PressureM && NearOppDist > 1e-6)
+					{
+						const FVec2 Away = (Me.Pos - W.Skaters[NearOpp].Pos) * (1.0 / NearOppDist);
+						Look = (Look.Normalized() + Away * 0.8);
+					}
+					Look = Rotate(Look.Normalized(), StickNoise);
+					if (StickVariant == 3)
+					{
+						const double Ang = std::atan2(Face.Cross(Look * Sg), Face.Dot(Look * Sg));   // attack frame
+						const double Lim = DegToRad(60.0);
+						if (std::fabs(Ang) > Lim) { Look = Rotate(Face, Ang > 0.0 ? Lim : -Lim) * Sg; }
+					}
+				}
+				if (Look.Length() > 1e-4) { In.Stick = Look.Normalized() * (StickVariant == 4 ? 0.87 : 1.0); }   // 4 short: the blade inside shot.reach_m (the brain sees the carry)
+			}
+			else if (StickVariant != 2)
+			{
+				const FVec2 ToPk = W.PuckPos - Me.Pos;
+				const double Dk = ToPk.Length();
+				if (Dk > 0.7) { In.Stick = Rotate(ToPk * (1.0 / Dk), StickNoise) * (0.5 + 0.5 * Clamp((Dk - 0.5) / 2.5, 0.0, 1.0)); }
+			}
+		}
 		// lane A72 (ask A3): Shift on a breakaway or a long chase; the sim refuses it on an empty bar
 		if (bSprint && P.SprintPct > 0 && !W.bDrawOpen && Act != EPlaytesterAct::Charge)
 		{
@@ -571,6 +615,11 @@ namespace JamAI
 		Tester.Reset(Kind, Seed);
 		Tester.ChargeFramesMax = ChargeFramesMax;
 		Tester.bSprint = bSprint;
+		{
+			const char* StickEnv = std::getenv("JAM_PLAYTESTER_STICK");   // lane A86: the before arm of R-0043 point 2 (measurement only)
+			Tester.bRestStick = StickEnv && std::strcmp(StickEnv, "rest") == 0;
+			Tester.StickVariant = !StickEnv ? 0 : (std::strcmp(StickEnv, "carry") == 0 ? 2 : (std::strcmp(StickEnv, "front") == 0 ? 3 : (std::strcmp(StickEnv, "short") == 0 ? 4 : 0)));
+		}
 		FJamAIWorld W;
 		FJamAIInput In[kMaxSkaters];
 		int64_t SinceFaceoff = 0, SinceTouch = 0, CarrySpell = 0;
@@ -621,7 +670,8 @@ namespace JamAI
 				if (SinceTouch > IdleWindow) { ++St.IdleFrames; }
 			}
 			// carries
-			if (W.Carrier == Pi && bPlay) { ++CarrySpell; ++St.CarryFrames; }
+			const UJamSim* CarrySim = Sim.GetSim();   // lane A86: the sim's carrier (the blade's full reach), not the brain's shot-reach view
+			if ((CarrySim ? CarrySim->CarrierIndex() == Pi : W.Carrier == Pi) && bPlay) { ++CarrySpell; ++St.CarryFrames; }
 			else { if (CarrySpell >= 180) { ++St.Carries3s; } CarrySpell = 0; }
 			// shots
 			if (Ev.Shot == Pi)
