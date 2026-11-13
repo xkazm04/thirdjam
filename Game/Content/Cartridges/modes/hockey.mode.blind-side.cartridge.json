@@ -241,6 +241,14 @@
         "commit_frames": 60
       },
       "foul_grace_frames": 30
+    },
+    "meta": {
+      "pitch": "Dekes that fool the back, checks that stick.",
+      "facts": [
+        "a 2 m deke",
+        "bots react late",
+        "checks from 2 m/s"
+      ]
     }
   }
 }

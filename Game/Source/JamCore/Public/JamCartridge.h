@@ -305,6 +305,9 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") FString Id;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") FString Title;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") FString ThemeName;
+	// Lane A81 (A67 ask A11): game.meta, the menu's words for a Director's choice; informational, never read by the sim. Empty when absent.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") FString MetaPitch;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") TArray<FString> MetaFacts;
 	// 0..4294967295
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int64 Seed = 1;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") FString SourcePath;

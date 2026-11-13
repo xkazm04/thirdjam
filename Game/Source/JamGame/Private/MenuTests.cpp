@@ -251,7 +251,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamMenuDirectorsChoices, "Jam.Menu.DirectorsCh
 bool FJamMenuDirectorsChoices::RunTest(const FString&)
 {
 	const TArray<FJamModeCard> Cards = UJamMenuFlow::AvailableModeCards();
-	TestEqual(TEXT("six Director's choices on disk"), Cards.Num(), 6);
+	TestEqual(TEXT("twelve Director's choices on disk (lane A81: two rows of six)"), Cards.Num(), 12);
 	for (const FJamModeCard& M : Cards)
 	{
 		TArray<FString> Errors;

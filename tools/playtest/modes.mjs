@@ -22,6 +22,7 @@ const modesDir = join(repo, 'Game', 'Content', 'Cartridges', 'modes');
 const avg = (a) => (a.length ? a.reduce((s, x) => s + x, 0) / a.length : 0);
 const r1 = (x) => Math.round(x * 10) / 10;
 const r2 = (x) => Math.round(x * 100) / 100;
+const perPlayMin = (ms, f) => { const fr = ms.reduce((a, m) => a + m.play_frames, 0); return fr ? ms.reduce((a, m) => a + f(m), 0) / (fr / 3600) : 0; };
 
 // The character number of each mode, read from the thirdjam.playtest/1 lines of one cell (per match averages).
 export const CHARACTER = {
@@ -36,6 +37,16 @@ export const CHARACTER = {
   'marathon-pace': { label: 'minutes per goal', of: (ms) => { const g = ms.reduce((a, m) => a + m.goals[0] + m.goals[1], 0); return g ? ms.reduce((a, m) => a + m.frames, 0) / 3600 / g : 0; } },
   'power-play': { label: 'passes + received / match', of: (ms) => avg(ms.map((m) => (m.passes || 0) + (m.passes_received || 0))) },
   'blind-side': { label: 'dekes / match', of: (ms) => avg(ms.map((m) => m.dekes || 0)) },
+  // lane A81 (modes pass 2): six more characters, each its own number. Per play minute where the mode changes the match length (a timer or one goal).
+  'sudden-death': { label: 'match seconds', of: (ms) => avg(ms.map((m) => m.frames)) / 60 },
+  outnumbered: { label: 'shots against / play min', of: (ms) => perPlayMin(ms, (m) => m.shots_opp || 0) },
+  'glass-house': { label: 'human box seconds / match', of: (ms) => avg(ms.map((m) => m.box_frames || 0)) / 60 },
+  // the carry share moved only 17 % (r1); the puck that runs away shows in the human's touches (pinball-b, A81 r2)
+  pinball: { label: 'human touches / min', of: (ms) => avg(ms.map((m) => m.touches_per_min)) },
+  'tap-in': { label: 'goals (both) / play min', of: (ms) => perPlayMin(ms, (m) => m.goals[0] + m.goals[1]) },
+  // R-0041 (aggression is the character): hits = checks the human lands + checks the human takes, per play minute
+  bruisers: { label: 'hits (landed + taken) / play min', of: (ms) => perPlayMin(ms, (m) => (m.checks_landed || 0) + (m.checks_taken || 0)) },
+  'fog-of-war': { label: 'human breakaways / play min', of: (ms) => perPlayMin(ms, (m) => m.breakaways || 0) },
 };
 
 function arg(name, dflt) {
