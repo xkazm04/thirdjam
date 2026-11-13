@@ -362,3 +362,10 @@
 
 - RESOURCES 16:28 cpu 85% ram 27.5/63GB gpu 41 %, 2053 MiB, 48 editors 0 cmd 1 ubt 2 free 613GB
 - package 16:30: `Hokej_Hokej_H25.zip` from main 034f9ac, acceptance run green (18 verbs through the cursor and the buttons).
+- link green 16:37: main bb18439 (The bots play hockey (A94, R-0045 law 2): a space read, carry or pass by it, an attack sha) pushed.
+
+## H23 (16:54) H25 out (acceptance green); the vision on one tree
+- main bb18439: A91 (acceptance 18/18), A86 (the mouse-style playtester, the bots' carrier view), A90 (rough commentary), A94 (hockey brain; pro for the regular player 38 -> 80 %). H25 packaged 16:30 from 034f9ac through the release chain (acceptance run on main's package first).
+- A92 (contact by inertia) and A93 (brake, burst, carrier sprint, puck distance) done and applied together in worktree a95 without conflicts; A95 (Opus) makes the tree green, teaches the playtester and the bots the new verbs and sets the ladder once. A96 (Sonnet): submission pass 2 without game windows.
+
+- RESOURCES 16:58 cpu 4% ram 16.7/63GB gpu 0 %, 707 MiB, 41 editors 0 cmd 0 ubt 0 free 608GB
