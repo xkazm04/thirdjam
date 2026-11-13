@@ -1,14 +1,15 @@
 # Device B lane board (the lead rewrites this file whenever a lane starts or reports)
 
-Updated 2026-11-13 11:53 CEST (H29.9). The operator this morning: tackling (knock down, collide, fall, get up) is the key feature; P4 is out of the plan; the scripted figure on clay; calm ice on clay. dev-b = main 83fad8e (hit-stop, modes, clay rings) + B's work, builds.
+Updated 2026-11-13 13:40 CEST (H31.7). The operator today: tackling is the key feature; P4 out; the scripted figure on clay; calm ice; and through the Director at 13:00 (R-0041): aggression, 5 v 5, a raw brand. dev-b = main 2d9c033 + B's work, builds.
 
 ## Running
 
 | Lane | What | Editor | Started | Due | Report (when done) |
 |---|---|---|---|---|---|
-| SK13 | The new tackling takes under device A's hit-stop (`jam.hitstop` 0 / 3 / 6 against the get-up timing), the lying poses measured against the real ice, the human's own check through `jam.ctrl.Drill 5` (hits from behind and the front in a real match for the first time), `skf/export15` imported when ready; no Blueprint saves | 8002, the main tree (**no merges into `C:/Users/kazda/jam/thirdjam` while it runs**) | 11:53 | 12:50 | `status/SK13-report.md` |
-| B30 | Hit effects that leave the figures visible (`NS_check`, `NS_knockdown`, `NS_board`: today they cover both figures for 12 frames from the hit), bigger by `Strength`, a snow trail under a sliding knocked-down figure (a hook in the two scripted Blueprints) | 8000, `wt/b-vfx` | 11:45 | 12:45 | `status/B30-report.md` |
-| SKF15 | Blender: the right-hand arm swing in the falls, the standing hits' stick, a spin that reads from the game camera, the stick brought in along the body in the lying poses, two new fall variants (sit-down slide, belly slide) | none | 11:42 | 12:20 | `status/B-skater-skf.md`, fifteenth pass |
+| SK15 | Device A's unreduced knockdown frames (B's own hit-stop shift comes out), `skf/export18` (lying poses on the ice, get-ups of 36 frames so the figure stands at the release), the lunge forced into the frozen frame, B takes alternating, a wall trace for side falls at the boards, the pin that cut a get-up, a larger contact shade while down | 8002, the main tree (**no merges into `C:/Users/kazda/jam/thirdjam` while it runs**) | 13:31 | 14:25 | `status/SK15-report.md` |
+| AU6 | The tackle sounds of AU4 into the engine: `MS_check` (random hit, a big hit by Strength), `MS_knockdown` (landing at 0.17 s, slide, crowd reaction, get-up), the skater-into-boards boom, the bump; proven in a real match; unheard defaults, swappable | 8000, `wt/b-vfx` | 13:42 | 14:45 | `status/AU6-report.md` |
+| AU5 | No editor: a rougher crowd (roar on a knockdown, groan on a save, a wordless chant, a rougher bed and goal reaction), a cross-check hit, a glass rattle (A-to-B-0019 point 3) | none | 13:33 | 14:10 | `status/AU5-report.md` |
+| BR1 | No editor, Blender: three title treatments for HOKEJ for the operator's pick (plaster blocks and tape, gouged into the ice, stencilled on the boards), each also as a 512 square (A-to-B-0019 point 1) | none | 13:35 | 14:25 | `status/BR1-report.md` |
 
 ## Waiting for the operator's ears or eyes (pages on device B)
 
@@ -22,10 +23,17 @@ Updated 2026-11-13 11:53 CEST (H29.9). The operator this morning: tackling (knoc
 
 | Lane | What | Waits for |
 |---|---|---|
-| B31 | Clay look: pickups that read on the calm ice (materials only: an amber base ring, a warm rim on the props), `MI_Toon_Bumper` emissive 0.7 (A-to-B-0016), a lying figure against the ice on the wings, the night sky light after device A's measurement | an editor slot |
+| B33 | Look: both rigs' sky lights to the movable real-time capture (A-to-B-0016 point 3, device A measured the read-back still there), ten figures on the clay rink for look, the banner's collision still once the title is picked | an editor slot |
 
 ## Done today (newest first; every one has a report under `status/`)
 
+B32 (13:35, build and cook-only PASS): the slide trail as soft low snow and one dark scraped streak (new `M_Fx_SlideSoft`), a darker colour off the clay tier; the hit effects in real knockdowns with the hit-stop: under 5 to 8 % of the figures in the held frames (`status/B32-report.md`) ·
+SKF18 (13:36): every lying pose lowered on to the ice by each style's own skin (pelvis joint on the back 24.5 to 17.7 cm, on the side 41.5 to 27.5), the stick beside the body, get-ups of 36 frames with the pelvis at 90 % in the last 3 (`skf/export18`, eighteenth pass) ·
+SK14 (13:25, cook-only PASS): the human's lunge plays, falls start at their contact frame (the frozen frames show a hit in 6 of 8), `Fall_B` and `Knockdown_Back_B` wired, `skf/export17`; 8 knockdowns by the human on clay with every chain complete; found: a side fall 0.6 m from the boards goes through the wall; its hit-stop shift is N frames late against device A's change of the same hour (`status/SK14-report.md`) ·
+B31 clay tier pass 10 (13:05, build and cook-only PASS): pickups with an amber clay base and warm-rimmed props (`Props/M_PickupProp`), `MI_Toon_Bumper` emissive 0.7, a deeper blue slow-ice ring, lying figures 56 luma or more from the ice at six positions (`status/B31-report.md`) ·
+AU4 (13:13, no editor): 21 tackle takes from 40 generations (hit, big hit, landing, slide, boards, bump, crowd ooh, get-up), measured, with a listening page `C:/Users/kazda/jam/audio-lab/tackle/pick.html`; nobody has heard them (`status/AU4-report.md`) ·
+B30 (12:24, build and cook-only PASS): `NS_check`, `NS_knockdown`, `NS_board` thinned (figure coverage 21 to 46 % down to 0 to 8 %), scaled by Strength, a slide trail component on the scripted figures (`status/B30-report.md`) ·
+SK13 (12:32, cook-only PASS): `skf/export16`; the hit-stop and the held check key measured (`status/SK13-report.md`) ·
 B29 clay tier pass 9 (11:45, cook-only PASS): `M_ZoneRing` and five `MI_Zone_<kind>_Ring` for device A's clay zone rings (A-to-B-0015 done: solid coloured clay rings with a soft emissive, mirror image +0.4 luma on average), the clay rig run on all eight shipped rinks and modes (even to the boards everywhere, nothing to fix), end lamp shades twice as wide; pickups are B's and read small (`status/B29-report.md`) ·
 SK12 (11:38, build and cook-only PASS): `skf/export14` on both scripted figures (22 takes changed, 2 new each), `PlayCheck` cuts in at priority 7 and is no longer replaced by a pin, the fall plays 26 frames at 1.0, lying 21 to 22 frames, get-up ends on the release, a spin on every third side knockdown; the v4 calls pair one to one with `JAMVIS`; found: the stick through the boards at the wall, B's hit effects cover the hit for 12 frames (`status/SK12-report.md`) ·
 B28 clay tier pass 8 (11:17, cook-only PASS): standing figures of both teams 27 luma or more from the ice at eleven positions (eight broad side lamps, lower fills, paler ice), lamp shades in the frame beyond each end, the clay sky light off the 16 MB daylight cubemap, two unused bulb assets deleted; the night tier has no small lights (`status/B28-report.md`) ·
