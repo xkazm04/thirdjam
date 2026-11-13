@@ -1,0 +1,1 @@
+SK15: export18's 36-frame GetUp on a clay test figure (the SK15 Blueprint, knockdown of 90 frames, fixed side camera), take frames 18 to 31, that is 18 to 5 frames before the release; each tile carries the pelvis height read from the figure. At release -5 the pelvis is at 85 % of standing (it stood at -12 before). Frames 32 to 36 were not captured.

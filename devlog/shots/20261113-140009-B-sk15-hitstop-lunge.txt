@@ -1,0 +1,1 @@
+SK15: the held frame when the human's press and the hit fall in the same sim frame (clay, real match, sim frame 158, hit-stop 3, A's game camera). Left: SK14, the lunge at frame 0, the human upright. Middle and right: SK15, the lunge restarted at frame 6 on the sim's check event, first and third held frame.
