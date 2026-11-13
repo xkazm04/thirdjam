@@ -84,6 +84,7 @@
     "shot.aim_cone_deg": "1..45",
     "shot.charge_frames_max": "0..120",
     "shot.charge_speed_bonus": "0..20",
+    "shot.tap_frames": "0..30",
     "shot.one_timer.window_frames": "0..60",
     "shot.one_timer.cone_bonus_deg": "0..30",
     "shot.lift.tap_m": "0..0.5",

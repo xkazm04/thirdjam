@@ -560,6 +560,12 @@
           "maximum": 20,
           "description": "Extra puck speed in metres per second at full charge."
         },
+        "tap_frames": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 30,
+          "description": "R-0044 (lane A91): a hold of shoot of this many frames or fewer is a tap: charge 0, no speed bonus, the tap's height (lift.tap_m: on the ice by default). A human's click is 2 to 4 frames long. Default 4; 0 makes every held frame charge."
+        },
         "deflect": {
           "type": "boolean",
           "description": "Whether a shot that hits a skater near its stick deflects (70 percent of its speed) instead of stopping dead."
@@ -604,7 +610,7 @@
               "type": "number",
               "minimum": 0,
               "maximum": 2,
-              "description": "Height over the goal line of a full charge, in metres."
+              "description": "Height over the goal line of a full charge, in metres. Default 0.47 (R-0044, measured): the top shelf under the 0.61 bar, whose ring starts at 0.51 and catches a long falling shot from 0.48 up."
             },
             "half_frames": {
               "type": "integer",

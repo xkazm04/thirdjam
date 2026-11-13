@@ -45,7 +45,7 @@ per machine. With another lane's game driven the same way, aim targets never arr
 | 1 | sprint_carry | W + Shift 2 s with the puck handed | carried >= 60 frames, 0 sprinting frames while carrying, top < sprint top - 0.2 (R-0041 point 6) |
 | 2 | aim | the cursor at 4 points (ahead, left, behind, right; 2.5 m, pulled in to stay on screen) | the blade's world angle within 15 deg of the point inside 12 frames of the cursor's arrival, all 4 |
 | 3 | carry | the puck handed; the cursor swept left-right-left at full reach x3 | the puck never leaves the human (last touch and carrier) for 300 frames |
-| 4 | shoot_tap / shoot_half / shoot_full | the cursor 6 m ahead toward the empty net from 10 m; the left button 0 / 8 / 30 frames | a shot and a goal; charge frames <= 3 / 5..12 / >= 26 |
+| 4 | shoot_tap / shoot_half / shoot_full | the cursor 6 m ahead toward the empty net from 10 m; the left button 0 / 8 / 30 frames | a shot and a goal; charge frames <= `game.shot.tap_frames` (4) and the shot released as charge 0 / 5..12 / >= 26 (lane A91, R-0044: the tap band was <= 3; a 4-frame click is the flat tap the ruling asks for) |
 | 5 | pass / saucer | the cursor toward the mate 8 m away; the pass key tapped / held 14 frames (saucer half 8 + 6) | a pass event and the mate's reception / a pass with the saucer flag |
 | 6 | onetimer | the mate passes back (scripted); the left button pressed 10 frames before the ETA, released on the reception line | a goal, or a shot with the one-timer flag, in 1 of 2 tries |
 | 7 | check | W held, 4 m/s start at the carrying opponent; RMB on the contact cue | a check, a knockdown, the puck stripped, the get-up 90 +-10 frames later |

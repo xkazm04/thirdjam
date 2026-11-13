@@ -67,7 +67,8 @@ of them out explicitly, but a Designer or hand-written cartridge may leave them 
 | `shot.one_timer.cone_bonus_deg` | 8 | lane A39 |
 | `shot.lift.tap_m` | 0 | lane A52 (R-0035): the height a tap arrives at over the goal line; R-0042 (lane A85): 0, a tap stays on the ice the whole flight (0.05 made it a 0.5 m lob from 10 m that cleared every blade) |
 | `shot.lift.half_m` | 0.45 | lane A52: the height of a shot held `half_frames` |
-| `shot.lift.full_m` | 0.6 | lane A52 (0.95), Director 01:40: the height of a full charge: just under the 0.61 bar (top shelf); at 0.95 every hold past 8 frames flew over the low net; a cartridge may still choose 0.95 for a sailing full charge |
+| `shot.lift.full_m` | 0.47 | lane A52 (0.95), Director 01:40 (0.6), R-0044 (lane A91; the ruling said 0.5, the measurement 0.47): the height of a full charge: the top shelf clearly under the 0.61 bar, whose ring starts at 0.51. At 0.6 every full charge from 4 to 24 m rang the bar; at 0.5 those from 15 to 24 m; 0.47 scores from every metre of 3..30 at every hold; a cartridge may still choose 0.95 for a sailing full charge |
+| `shot.tap_frames` | 4 | R-0044 (lane A91): a hold of this many frames or fewer is a tap (charge 0: no speed bonus, flat at `tap_m` 0); a human's click is 2 to 4 frames long; the human and the bots alike; 0 = every held frame charges |
 | `shot.lift.half_frames` | 8 | lane A52: frames of hold that reach `half_m`; linear tap -> half -> full |
 | `pass.saucer.half_frames` | 8 | lane A77 (R-0036): pass (F / X) held this many frames with the puck in reach is a saucer; a shorter hold or the tap is the flat pass; 0 = off |
 | `pass.saucer.lift_m` | 0.35 | lane A77: the saucer's apex height; it clears a blade (0.2 m) in the lane and lands three quarters of the way to the receiver; 0 = off |

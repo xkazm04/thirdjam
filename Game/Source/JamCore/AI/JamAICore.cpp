@@ -20,6 +20,7 @@ namespace JamAI
 		// R-0035 (lane A52): the shooter's charge choice (ChargeWindowFor): inside ChargeCloseM of the net a tap; a lift level must clear the bar by ChargeBarMarginM.
 		constexpr double ChargeCloseM = 6.0;
 		constexpr double ChargeBarMarginM = 0.1;
+		constexpr double ChargeRealNetM = 1.0;   // R-0044 (lane A91): the full wind-up is the bots' shot only at a net of real height (sniper's 1.22)
 	}
 	using namespace AICoreLocal;
 	// Lane A83: the five-a-side parts of the support and the back (defined after Decide)
@@ -182,7 +183,11 @@ namespace JamAI
 		}
 		if (Best <= 0) { return 0; }
 		// A real net takes the full charge; a low bar takes the profile's wind-up (pro 10, all_star 18) cut to what clears it (0.61: 10 frames, 0.495 m).
-		int Window = Best >= W.ChargeFramesMax ? W.ChargeFramesMax : (Best < K.ShotChargeFrames ? Best : K.ShotChargeFrames);
+		// R-0044 (lane A91): "a real net" is now said by its height (ChargeRealNetM), not only by the full charge clearing the bar: with shot.lift.full_m 0.5
+		// the full charge clears the 0.61 bar by the margin too, and this line gave every charging bot the 30-frame wind-up (ProCharge's mean charge 0.29 ->
+		// 0.54): a difficulty change no ruling asked for. Under a low bar the profile's wind-up stands (pro 10, all_star 18), cut to what clears the bar.
+		const bool bRealNet = W.GoalHeightM >= ChargeRealNetM;
+		int Window = Best >= W.ChargeFramesMax && bRealNet ? W.ChargeFramesMax : (Best < K.ShotChargeFrames ? Best : K.ShotChargeFrames);
 		if (K.AimErrorDeg > 0.0 && Window > 0)
 		{
 			Window += static_cast<int>(std::lround(K.AimErrorDeg * Hash11(static_cast<uint64_t>(Id) + 17, static_cast<uint64_t>(W.Frame / 120))));

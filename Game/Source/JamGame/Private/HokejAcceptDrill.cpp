@@ -476,7 +476,12 @@ void AHokejGameMode::AcceptDrillObserve()
 		{
 			static const TCHAR* Verb[3] = { TEXT("shoot_tap"), TEXT("shoot_half"), TEXT("shoot_full") };
 			const int32 i = (G.K - 1) % 3;
-			const bool bBand = i == 0 ? G.ChargeMax <= 3 : (i == 1 ? (G.ChargeMax >= 5 && G.ChargeMax <= 12) : G.ChargeMax >= FMath::Min(Cfg.Shot.ChargeFramesMax, 30) - 4);
+			// Lane A91 (R-0044 point 2): the tap's band is the sim's: a hold of game.shot.tap_frames (4) or fewer, released as charge 0 (flat). A click through the
+			// real input is 2 to 4 frames long; the old band (<= 3) failed a 4-frame click that the sim fired as the flat tap the ruling asks for. The half band
+			// starts above the tap's.
+			const int32 TapMax = FMath::Max(3, Cfg.Shot.TapFrames);
+			const bool bTapFlat = Cfg.Shot.TapFrames <= 0 || G.ShotCharge <= 1e-6f;
+			const bool bBand = i == 0 ? (G.ChargeMax <= TapMax && bTapFlat) : (i == 1 ? (G.ChargeMax > TapMax && G.ChargeMax <= 12) : G.ChargeMax >= FMath::Min(Cfg.Shot.ChargeFramesMax, 30) - 4);
 			Verdict(Verb[i], G.bShot && G.bGoal && bBand, FString::Printf(TEXT("shot=%d goal=%d charge_frames_max=%d charge=%.2f puck_dist_at_act=%.2f reach=%.2f"), G.bShot ? 1 : 0, G.bGoal ? 1 : 0, G.ChargeMax, G.ShotCharge, G.PuckDistAtAct, Sim->GetEffectiveStat(EJamStat::ShotReach, Me)));
 		}
 		else

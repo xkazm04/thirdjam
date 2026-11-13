@@ -647,11 +647,19 @@ void AHokejGameMode::StickDrillObserve()
 {
 	const int32 Me = Sim->GetHumanIndex();
 	const FJamSkaterState& S = Sim->GetSkaters()[Me];
+	// Lane A91 (R-0044 point 3): the sweep and the spin are proven by their shield: inside the window the move opened (stick.sweep.shield_frames, the spin's
+	// frames) every opponent's poke and lift near the human is counted: refused (the event's kind miss) or clean on the human (it carried the frame before).
+	static int32 ShieldLen = 0, ShieldRefused = 0, ShieldClean = 0;
+	static bool bCarriedBefore = false;
+	const bool bCarriedPrev = bCarriedBefore;
+	bCarriedBefore = Sim->CarrierIndex() == Me;
 	if (StickDrillFrame < 0)
 	{
 		if (!(S.bSweepThisFrame || S.bSpinThisFrame)) return;
 		StickDrillFrame = Sim->GetFrame();
 		StickDrillKind = S.bSpinThisFrame ? 2 : 1;
+		ShieldLen = S.bSpinThisFrame ? S.SpinFrames : S.SweepFrames;
+		ShieldRefused = ShieldClean = 0;
 		bStickDrillPokedThis = bStickDrillKnockThis = false;
 		StickDrillKnockFramesThis = 0;
 		int32 Opp = -1;
@@ -665,6 +673,11 @@ void AHokejGameMode::StickDrillObserve()
 	{
 		if (E.Name == JamEvents::Poke && E.Who != Me && Sim->GetSkaters().IsValidIndex(E.Who) && Sim->GetSkaters()[E.Who].Team != S.Team && E.Kind == FName(TEXT("clean"))) bStickDrillPokedThis = true;
 		if (E.Name == JamEvents::Knockdown && E.Who == Me) { bStickDrillKnockThis = true; StickDrillKnockFramesThis = S.KnockFrames; }
+		if ((E.Name == JamEvents::Poke || E.Name == JamEvents::Lift) && E.Who != Me && Sim->GetSkaters().IsValidIndex(E.Who) && Sim->GetSkaters()[E.Who].Team != S.Team
+			&& Sim->GetFrame() - StickDrillFrame <= ShieldLen && FVector2D::Distance(Sim->GetSkaters()[E.Who].Pos, S.Pos) <= 3.5)
+		{
+			if (E.Kind == FName(TEXT("clean"))) { if (bCarriedPrev) ++ShieldClean; } else ++ShieldRefused;
+		}
 	}
 	if (Sim->GetFrame() - StickDrillFrame < 30) return;
 	++StickDrillAttempts;
@@ -673,8 +686,8 @@ void AHokejGameMode::StickDrillObserve()
 	StickDrillPoked += bStickDrillPokedThis ? 1 : 0;
 	StickDrillKnocked += bStickDrillKnockThis ? 1 : 0;
 	StickDrillKnockFrames = FMath::Max(StickDrillKnockFrames, StickDrillKnockFramesThis);
-	UE_LOG(LogHokej, Log, TEXT("JAMDRILL stick_result %s n=%d kept=%d poked_clean=%d knocked=%d knock_frames=%d"), StickDrillKind == 2 ? TEXT("spin") : TEXT("sweep"), StickDrillAttempts,
-		bKept ? 1 : 0, bStickDrillPokedThis ? 1 : 0, bStickDrillKnockThis ? 1 : 0, StickDrillKnockFramesThis);
+	UE_LOG(LogHokej, Log, TEXT("JAMDRILL stick_result %s n=%d kept=%d poked_clean=%d knocked=%d knock_frames=%d shield_frames=%d shield_refused=%d shield_clean=%d"), StickDrillKind == 2 ? TEXT("spin") : TEXT("sweep"), StickDrillAttempts,
+		bKept ? 1 : 0, bStickDrillPokedThis ? 1 : 0, bStickDrillKnockThis ? 1 : 0, StickDrillKnockFramesThis, ShieldLen, ShieldRefused, ShieldClean);
 	StickDrillFrame = -1;
 	if (StickDrillAttempts >= 10)
 	{
@@ -913,26 +926,42 @@ void AHokejGameMode::GatherInputs()
 	// Lane A82: drills 10 and 11 hand the puck (jam.ctrl.HandPuck 1): A77's human reached its 10 m spot carrying twice in 150 s and the one-timer's set piece never formed.
 	// The shots drill puts the puck on the human's blade whenever it is not carrying and no shot of its is being measured; the one-timer drill puts it on the scripted
 	// teammate's blade whenever nobody on the human's team carries, no pass of the teammate's is in flight and no shot is being measured. A drill change, not a mechanic one.
-	if (CVarJamCtrlHandPuck.GetValueOnGameThread() != 0 && (CVarJamCtrlDrill.GetValueOnGameThread() == 10 || CVarJamCtrlDrill.GetValueOnGameThread() == 11) && Sim->GetPhase() == EJamSimPhase::Playing && Sim->GetSkaters().IsValidIndex(Human))
+	// Lane A91 (R-0044): the hand also serves drill 9 (the human, after a second without the puck) and stages drill 11's set piece: the puck goes to the
+	// scripted teammate only when both stand at their spots (the mate 6 m out and 6 m aside, the human 10 m out), and a human left holding the puck for a
+	// second gives it back through the hand. Drill 10 as lane A85 left it (inside 1.5 m of the spot only).
+	const int32 HandDrill = CVarJamCtrlDrill.GetValueOnGameThread();
+	if (CVarJamCtrlHandPuck.GetValueOnGameThread() != 0 && (HandDrill == 9 || HandDrill == 10 || HandDrill == 11) && Sim->GetPhase() == EJamSimPhase::Playing && Sim->GetSkaters().IsValidIndex(Human))
 	{
 		static int64 HandReady = 0;
+		static int32 HumanCarryFrames = 0, HumanLooseFrames = 0;
 		const int64 F = Sim->GetFrame();
 		const int32 C = Sim->CarrierIndex();
 		const FJamSkaterState& H = Sim->GetSkaters()[Human];
-		if (F >= HandReady && MechShotFrame < 0 && C != Human)
+		HumanCarryFrames = C == Human ? HumanCarryFrames + 1 : 0;
+		HumanLooseFrames = C != Human ? HumanLooseFrames + 1 : 0;
+		const double HGx = Sim->AttackGoalX(H.Team);
+		const double HDir = HGx > 0 ? 1.0 : -1.0;
+		if (F >= HandReady && MechShotFrame < 0 && MechSaucerFrame < 0)
 		{
 			int32 To = -1;
-			if (CVarJamCtrlDrill.GetValueOnGameThread() == 10)
+			if (HandDrill == 9)
+			{
+				if (HumanLooseFrames >= 60) To = Human;
+			}
+			else if (HandDrill == 10)
 			{
 				// Lane A85: inside 1.5 m of its spot only (10 m out on the attacked net's centre line): a hand on the way there was a puck for the bots.
-				const double HGx = Sim->AttackGoalX(H.Team);
-				const FVector2D Spot(HGx - (HGx > 0 ? 1.0 : -1.0) * 10.0, 0.0);
-				if (FVector2D::Distance(H.Pos, Spot) <= 1.5) To = Human;
+				const FVector2D Spot(HGx - HDir * 10.0, 0.0);
+				if (C != Human && FVector2D::Distance(H.Pos, Spot) <= 1.5) To = Human;
 			}
 			else
 			{
-				for (const FJamSkaterState& T : Sim->GetSkaters()) if (T.Team == H.Team && T.Index != Human && T.Role != FName(TEXT("back"))) { To = T.Index; break; }
-				if (C == To || (MechMatePassFrame >= 0 && F - MechMatePassFrame < 90)) To = -1;
+				int32 Mate = -1;
+				for (const FJamSkaterState& T : Sim->GetSkaters()) if (T.Team == H.Team && T.Index != Human && T.Role != FName(TEXT("back"))) { Mate = T.Index; break; }
+				const FVector2D MateSpot(HGx - HDir * 6.0, 6.0), HumanSpot(HGx - HDir * 10.0, -2.0);
+				const bool bSet = Mate >= 0 && FVector2D::Distance(Sim->GetSkaters()[Mate].Pos, MateSpot) <= 1.5 && FVector2D::Distance(H.Pos, HumanSpot) <= 1.5;
+				const bool bFlight = MechMatePassFrame >= 0 && F - MechMatePassFrame < 90;
+				if (bSet && C != Mate && !bFlight && (C != Human || HumanCarryFrames >= 60)) To = Mate;
 			}
 			if (To >= 0 && Sim->GetSkaters()[To].CanAct())
 			{
@@ -1269,21 +1298,45 @@ FJamInput AHokejGameMode::MechDrillInput()
 	// creep at it when the facing is off; beyond 1.5 m it starts over. No chase, no check: the hand puts the puck on it there, and the cue comes as soon as it
 	// carries facing the net. Before, it left the spot for every loose puck while the hand fed it on the way: A82's run reached the cue twice in 150 s (88 hands),
 	// A85's first run never (88 hands).
-	if (Mode == 10 && CVarJamCtrlHandPuck.GetValueOnGameThread() != 0)
+	// Lane A91 (R-0044): the stand is a standstill, and drill 11's human stands the same way (the one-timer's set piece). A85's stage 2 commanded Move 0 after
+	// arriving at 0.6 of top speed with no brake: the body glided on through the spot (the ice only has glide drag); a 39-frame full hold glided 3 m nearer the
+	// net, left the 1.5 m ring, the stage fell back to 0 and the body turned to skate back to the pre-spot; TryShoot aims along the body, so the release went up
+	// the ice (A85: 0 of 10 full charges reached the line, two met the side boards 17 and 30 m back). Now: the last 2 m at 0.3, the brake in stage 2 while the
+	// body moves or the button is held, no stage change during a hold, and the cue only at a standstill. JAMDRILL stage logs each stage change.
+	if ((Mode == 10 || Mode == 11) && CVarJamCtrlHandPuck.GetValueOnGameThread() != 0)
 	{
 		static int32 Stage = 0;
 		const FVector2D ToPre = PreSpot - S.Pos, ToSpot = HumanSpot - S.Pos;
 		const FVector2D NetDir = (FVector2D(Gx, 0.0) - S.Pos).GetSafeNormal();
 		const bool bFaces = FVector2D::DotProduct(S.Forward(), NetDir) > FMath::Cos(FMath::DegreesToRadians(8.0));
-		if (Stage == 2 && ToSpot.Size() > 1.5) Stage = 0;
-		if (Stage == 0) { if (ToPre.Size() > 1.0) { In.Move = ToPre.GetSafeNormal() * 0.8; return In; } Stage = 1; }
-		if (Stage == 1) { if (ToSpot.Size() > 0.5) { In.Move = ToSpot.GetSafeNormal() * 0.6; return In; } Stage = 2; }
-		In.Move = bFaces ? FVector2D::ZeroVector : NetDir * 0.15;
-		if (C == Me && bFaces && F >= MechCueReady && F >= S.ShotReadyFrame && S.ChargeFrames == 0)
+		const bool bHolding = In.bShootHeld || S.ChargeFrames > 0;
+		const double SpeedNow = S.Vel.Size();
+		static int32 StageLogged = -1;
+		if (Stage == 2 && ToSpot.Size() > 1.5 && !bHolding) Stage = 0;
+		if (Stage != StageLogged)
+		{
+			StageLogged = Stage;
+			UE_LOG(LogHokej, Log, TEXT("JAMDRILL stage frame=%lld stage=%d pos=(%.2f,%.2f) to_spot=%.2f speed=%.2f faces=%d holding=%d carrier=%d"), F, Stage, S.Pos.X, S.Pos.Y, ToSpot.Size(), SpeedNow, bFaces ? 1 : 0, bHolding ? 1 : 0, C);
+		}
+		// The arrival: the speed a 3 m/s2 stop from here allows; over it the brake (the body only loses speed by glide drag otherwise: the first A91 package
+		// reached stage 2 at 6.5 to 9 m/s, 0.3 m from the spot, and was out of the ring 14 frames later: a 246-frame cycle, never a stand).
+		const double TopSpeed = FMath::Max(1.0, Sim->GetEffectiveStat(EJamStat::SkaterSpeed, Me));
+		auto Arrive = [&](const FVector2D& To)
+		{
+			const double Dd = To.Size();
+			const double Want = FMath::Sqrt(2.0 * 3.0 * FMath::Max(0.0, Dd - 0.2));
+			if (SpeedNow > Want + 0.5) { In.Move = FVector2D::ZeroVector; In.bBrake = true; }
+			else In.Move = To.GetSafeNormal() * FMath::Clamp(Want / TopSpeed, 0.1, 0.8);
+		};
+		if (Stage == 0) { if (ToPre.Size() > 1.0 || SpeedNow > 3.0) { Arrive(ToPre); return In; } Stage = 1; }
+		if (Stage == 1) { if (ToSpot.Size() > 0.5 || SpeedNow > 1.0) { Arrive(ToSpot); return In; } Stage = 2; }
+		if (bHolding || SpeedNow > 0.3) { In.Move = FVector2D::ZeroVector; In.bBrake = true; }
+		else In.Move = bFaces ? FVector2D::ZeroVector : NetDir * 0.15;
+		if (Mode == 10 && C == Me && bFaces && SpeedNow < 0.5 && F >= MechCueReady && F >= S.ShotReadyFrame && S.ChargeFrames == 0)
 		{
 			MechCueReady = F + 90;
 			const TCHAR* Kind = MechShotN % 3 == 0 ? TEXT("tap") : (MechShotN % 3 == 1 ? TEXT("half") : TEXT("full"));
-			UE_LOG(LogHokej, Log, TEXT("JAMCUE shot frame=%lld kind=%s dist_line=%.2f"), F, Kind, FMath::Abs(Gx - PuckPos.X));
+			UE_LOG(LogHokej, Log, TEXT("JAMCUE shot frame=%lld kind=%s dist_line=%.2f speed=%.2f"), F, Kind, FMath::Abs(Gx - PuckPos.X), SpeedNow);
 		}
 		return In;
 	}
@@ -1364,17 +1417,32 @@ FJamInput AHokejGameMode::MechDrillInput()
 				const double DistAim = To.Size();
 				const FVector2D Ldir = To.GetSafeNormal();
 				double Lane = 1e9, Along = 0.0;
+				// Lane A91 (R-0044): the saucer is proven by its flight over a blade when one is on the lane, so the cue asks for an opponent's BLADE within
+				// SaucerCueBladeM of the lane inside the airborne part (A85's cue asked for a body within 1.6 m: 1 saucer of 6 met a blade, the nearest 0.35 to 3.3 m off).
+				const double SaucerCueBladeM = 0.45;
+				double BladeLane = 1e9, BladeAlong = 0.0;
+				// The launch must be clear: the saucer is under BladeClearM for its first SaucerAirFromM, where any blade or body takes it (the first A91 run: 2
+				// saucers, both taken 0.07 to 0.08 m up by an opponent at the passer's shoulder). No opponent body within 1.3 m, no blade within 0.9 m, of the
+				// lane's first 2 m.
+				const double LaunchM = UJamSim::SaucerAirFromM + 0.5;
+				bool bLaunchBlocked = false;
 				for (const FJamSkaterState& Op : Sim->GetSkaters())
 				{
 					if (Op.Team == S.Team || Op.InBox()) continue;
 					const double T0 = FMath::Clamp(FVector2D::DotProduct(Op.Pos - PuckPos, Ldir), 0.0, DistAim);
 					const double Dl = FVector2D::Distance(PuckPos + Ldir * T0, Op.Pos);
 					if (Dl < Lane) { Lane = Dl; Along = T0; }
+					if (T0 < LaunchM && Dl < 1.3) bLaunchBlocked = true;
+					if (!Op.CanAct()) continue;
+					const double Tb = FMath::Clamp(FVector2D::DotProduct(Op.BladePos - PuckPos, Ldir), 0.0, DistAim);
+					const double Db = FVector2D::Distance(PuckPos + Ldir * Tb, Op.BladePos);
+					if (Tb < LaunchM && Db < 0.9) bLaunchBlocked = true;
+					if (Db < BladeLane) { BladeLane = Db; BladeAlong = Tb; }
 				}
-				if (Lane < 1.6 && Along > UJamSim::SaucerAirFromM && Along < DistAim * UJamSim::SaucerLandFrac - 0.5)   // lane A82 (R-0040): the sim's own window
+				if (!bLaunchBlocked && BladeLane < SaucerCueBladeM && BladeAlong > UJamSim::SaucerAirFromM + 0.5 && BladeAlong < DistAim * UJamSim::SaucerLandFrac - 1.0)   // inside the sim's airborne window (lane A82), half a metre in from both ends
 				{
 					MechCueReady = F + 60;
-					UE_LOG(LogHokej, Log, TEXT("JAMCUE saucer frame=%lld receiver=%d flat_receiver=%d lane_m=%.2f along_m=%.2f dist_m=%.2f"), F, RS, RF, Lane, Along, DistAim);
+					UE_LOG(LogHokej, Log, TEXT("JAMCUE saucer frame=%lld receiver=%d flat_receiver=%d lane_m=%.2f along_m=%.2f dist_m=%.2f blade_lane_m=%.2f blade_along_m=%.2f"), F, RS, RF, Lane, Along, DistAim, BladeLane, BladeAlong);
 				}
 			}
 		}
@@ -1424,6 +1492,41 @@ void AHokejGameMode::MechDrillMate(TArray<FJamInput>& AllInputs)
 	const int32 C = Sim->CarrierIndex();
 	const int64 F = Sim->GetFrame();
 	FJamInput In;
+	// Lane A91 (R-0044): with the hand on the set piece is staged like drill 10's. The mate goes to its spot and stands there (the brake, no chase, no check); the
+	// hand gives it the puck when both stand at their spots (the block after the human's input); settled, it passes: the sim's own pass when the sim would send
+	// it to the human (kind=sim), else the hand sends the puck from the mate's blade at the human at the pass speed (kind=hand: in 5 v 5 the sim's best receiver
+	// from 6 m out is almost never the skater standing behind the passer; A85's set piece formed once in 120 s). The reception is the sim's either way (a
+	// teammate's puck in flight onto the blade or the body: PassReceivedFrame), and JAMCUE onetimer_recv tells the driver to release.
+	if (CVarJamCtrlHandPuck.GetValueOnGameThread() != 0)
+	{
+		static int32 MateCarry = 0;
+		MateCarry = C == Mate ? MateCarry + 1 : 0;
+		const FVector2D To = MateSpot - M.Pos;
+		const double Dm = To.Size();
+		if (Dm > 0.5) In.Move = To.GetSafeNormal() * (Dm > 2.0 ? 0.8 : 0.3);
+		else if (M.Vel.Size() > 0.3) In.bBrake = true;
+		In.Stick = (H.Pos - M.Pos).GetSafeNormal() * 0.5;
+		const bool bHumanSet = FVector2D::Distance(H.Pos, HumanSpot) < 1.5 && H.Vel.Size() < 1.0 && H.CanAct();
+		if (C == Mate && MateCarry >= 20 && Dm <= 1.2 && M.Vel.Size() < 1.0 && bHumanSet && F >= MechMateReady && F >= M.ShotReadyFrame && MechShotFrame < 0)
+		{
+			FVector2D Aim;
+			const int32 Best = Sim->BestPass(Mate, Aim);
+			const double Speed = FMath::Max(1.0, Sim->GetConfig().Skater.PassSpeed);
+			const FVector2D PuckAt = Sim->GetPuck().Pos;
+			if (Best == Me) In.bPass = true;
+			else
+			{
+				Aim = (H.Pos + H.BladePos) * 0.5;
+				Sim->SetPuck(PuckAt, (Aim - PuckAt).GetSafeNormal() * Speed);
+			}
+			MechMateReady = F + 150;
+			MechMatePassFrame = F;
+			const double Dist = FVector2D::Distance(Aim, PuckAt);
+			UE_LOG(LogHokej, Log, TEXT("JAMCUE onetimer frame=%lld mate=%d dist=%.2f eta_frames=%d kind=%s best_pass=%d"), F, Mate, Dist, FMath::CeilToInt32(Dist / (Speed * 0.85) / UJamSim::DT), Best == Me ? TEXT("sim") : TEXT("hand"), Best);
+		}
+		AllInputs[Mate] = In;
+		return;
+	}
 	if (C == Mate)
 	{
 		const FVector2D To = MateSpot - M.Pos;
@@ -1475,6 +1578,16 @@ void AHokejGameMode::MechDrillObserve()
 	const int64 F = Sim->GetFrame();
 	const double Gx = Sim->AttackGoalX(S.Team);
 	const double Dir = Gx > 0 ? 1.0 : -1.0;
+	// Lane A91: drill 11's reception, the frame the one-timer window opens: the driver holds the left button over it and releases on this line.
+	if (Mode == 11)
+	{
+		static int64 LastRecv = -1;
+		if (S.PassReceivedFrame != LastRecv)
+		{
+			if (S.PassReceivedFrame >= 0) UE_LOG(LogHokej, Log, TEXT("JAMCUE onetimer_recv frame=%lld recv_frame=%lld since_pass=%lld charge_frames=%d"), F, S.PassReceivedFrame, MechMatePassFrame >= 0 ? F - MechMatePassFrame : -1, S.ChargeFrames);
+			LastRecv = S.PassReceivedFrame;
+		}
+	}
 	// The human's shot (drills 10 and 11): its charge, then the puck's height when it crosses the goal line (or the goal / save / post that ended the flight).
 	if ((Mode == 10 || Mode == 11) && S.bShotThisFrame && MechShotFrame < 0)
 	{

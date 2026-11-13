@@ -79,13 +79,13 @@ bool FJamGoalHeight::RunTest(const FString&)
 		TestEqual(TEXT("a puck on the ice into the +x net scores for team 0"), Sim->GetScore(0), 1);
 	}
 	// R-0035 (lane A52): a real lifted shot. Skater 0 (team 0, attacking +x) charges shoot for the full charge_frames_max from 12 m out and releases: the
-	// puck arrives shot.lift.full_m over the goal line; this scene sets full_m 0.95 (a cartridge may: the default is 0.6, under the bar), so it sails over the 0.61 bar (no goal, the puck flies over the net) and goes in at 1.22
+	// puck arrives shot.lift.full_m over the goal line; this scene sets full_m 0.95 (a cartridge may: the default is 0.47 since R-0044, under the bar), so it sails over the 0.61 bar (no goal, the puck flies over the net) and goes in at 1.22
 	// (the same seed, the same scene).
 	for (const double Bar : { 0.61, 1.22 })
 	{
 		FJamGameConfig Lifted = C->Game;
 		Lifted.Rink.GoalHeightM = Bar;
-		Lifted.Shot.LiftFullM = 0.95;   // the sailing full charge is a cartridge choice since the 01:40 calibration (default 0.6)
+		Lifted.Shot.LiftFullM = 0.95;   // the sailing full charge is a cartridge choice since the 01:40 calibration (default 0.47 since R-0044)
 		UJamSim* Sim = MakeSim(Lifted, 1);
 		const double Gx = Sim->AttackGoalX(0);
 		for (const FJamSkaterState& S : Sim->GetSkaters()) Sim->SetSkater(S.Index, FVector2D(-30.0, 12.0 + 2.5 * S.Index), FVector2D::ZeroVector, 0.0);

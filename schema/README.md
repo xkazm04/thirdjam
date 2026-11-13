@@ -42,7 +42,8 @@ Cartridge errors are sentences that start `at <JSON pointer>:`, because the Desi
 | `rink.goal_height_m` | 0.3..1.5 | 0.61 default (R-0033: half a real net, no goalies); 1.22 a real net; 0.3 is a puck-and-a-half slot, 1.5 the old frame height |
 | `skater.goalie.reach_m` / `block_height_m` | 0..3 / 0..2 | lane A52 (R-0035): the crease skater's save by height; 0.9 / 0.4 default (0.7 until the Director's 01:30 calibration); reach 0 turns it off |
 | `puck.gravity_mps2` / `ice_restitution` | 0..30 / 0..1 | lane A52: 9.81 Earth, 0 a floating puck; 0.3 bounce, 1 a rubber ball |
-| `shot.lift.tap_m` / `half_m` / `full_m` / `half_frames` | 0..0.5 / 0..1.5 / 0..2 / 0..120 | lane A52: the lifted shot's arrival heights by charge (0 / 0.45 / 0.6 / 8; tap_m 0 since R-0042: a tap stays on the ice); full_m 2 is the glass |
+| `shot.lift.tap_m` / `half_m` / `full_m` / `half_frames` | 0..0.5 / 0..1.5 / 0..2 / 0..120 | lane A52: the lifted shot's arrival heights by charge (0 / 0.45 / 0.47 / 8; tap_m 0 since R-0042: a tap stays on the ice; full_m 0.47 since R-0044: under the bar's ring from every range); full_m 2 is the glass |
+| `shot.tap_frames` | 0..30 | 4 (R-0044, lane A91): a hold of this many frames or fewer is a tap (charge 0, flat); 0 = every held frame charges |
 | `rink.obstacles[]` | 0..12 items, size 0.5..10, x/z within +-80/+-40 | clutter beyond 12 breaks the bot path planner and the view |
 | `skater.speed` | 3..16 | 8 is the measured Godot value; 3 is walking pace; above 16 a skater crosses the rink faster than the camera lag recovers |
 | `skater.accel` | 4..40 | 12 measured; 4 is a heavy slide, 40 is instant |

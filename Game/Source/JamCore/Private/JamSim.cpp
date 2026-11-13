@@ -1613,7 +1613,12 @@ void UJamSim::StepCharge(FJamSkaterState& S, const FJamInput& In)
 	}
 	if (S.ChargeFrames > 0)
 	{
-		const float Charge = Max > 0 ? static_cast<float>(S.ChargeFrames) / static_cast<float>(Max) : 0.f;
+		// R-0044 (lane A91): a hold of shot.tap_frames or fewer is a tap: charge 0, so no speed bonus and the tap's height (on the ice at tap_m 0). A human's
+		// click is never zero frames long (a 40 ms click is 2 to 4 charge frames and arrived 9 to 20 cm up, MECHANICS-3 section 2); the bots' holds alike. A
+		// hold that reached the full charge is never a tap (a cartridge whose charge_frames_max is at or under tap_frames still has its full shot). The
+		// one-timer is untouched: TryShoot gives it the full charge whatever the hold.
+		const bool bTap = S.ChargeFrames <= Config.Shot.TapFrames && S.ChargeFrames < Max;
+		const float Charge = Max > 0 && !bTap ? static_cast<float>(S.ChargeFrames) / static_cast<float>(Max) : 0.f;
 		S.ChargeFrames = 0;
 		if (Max > 0) TryShoot(S, Charge);
 	}

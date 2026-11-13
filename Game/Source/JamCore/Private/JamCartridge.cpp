@@ -1097,6 +1097,7 @@ namespace
 		if (Shot && Shot->Has(TEXT("aim_cone_deg"))) { C.Shot.bHasAimCone = true; ReadNumber(Shot, TEXT("aim_cone_deg"), C.Shot.AimConeDeg); }
 		ReadInteger(Shot, TEXT("charge_frames_max"), C.Shot.ChargeFramesMax);
 		ReadNumber(Shot, TEXT("charge_speed_bonus"), C.Shot.ChargeSpeedBonus);
+		ReadInteger(Shot, TEXT("tap_frames"), C.Shot.TapFrames);   // R-0044 (lane A91)
 		ReadBool(Shot, TEXT("deflect"), C.Shot.bDeflect);
 		// R-0029 point 4 (lane A39): game.shot.one_timer { window_frames, cone_bonus_deg }
 		if (const FJPtr Ot = Obj(Shot, TEXT("one_timer")))

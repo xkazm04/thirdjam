@@ -156,8 +156,16 @@ struct JAMCORE_API FJamShotConfig
 	// charge (charge_frames_max) full_m, linear between (UJamSim::LiftForCharge). All three at 0 = every shot on the ice (the old game).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double LiftTapM = 0.0;   // R-0042 (lane A85): a tap stays on the ice (0.05 before: A52's solve made a tap from 10 m a 0.5 m lob that cleared every blade)
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double LiftHalfM = 0.45;
-	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double LiftFullM = 0.6;   // Director calibration 01:40 (R-0035 amended): just under the 0.61 bar, the top-shelf shot; at 0.95 every hold past 8 frames sailed over the low net and the novice gate fell to 8 of 20
+	// R-0044 (lane A91): the top shelf clearly under the bar: 0.47, by measurement. The bar's ring starts BarRingM + PostRadius = 0.10 m under its axis, at 0.51 m,
+	// and it is tested one puck radius before the line, where a long shot (falling at the line) is still higher. At 0.6 (the Director's 01:40 calibration) every
+	// full charge from 4 to 24 m rang the bar (A87's acceptance run, the one red verb of 18); at the ruling's 0.5 it scores from 3 to 14 m and rings from 15 to
+	// 24 m; 0.49: 20 to 24; 0.48: 22 and 23; 0.47 scores from every metre of 3..30 at every hold (Jam.Core.LiftedShot prints the table and asserts it).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double LiftFullM = 0.47;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 LiftHalfFrames = 8;
+	// game.shot.tap_frames (R-0044, lane A91): a hold of this many frames or fewer is a tap: charge 0 (no speed bonus, the tap's height: on the ice at tap_m 0).
+	// A human's click is never zero frames long: a 40 ms click reads as 2 to 4 charge frames and arrived 9 to 20 cm up (A85, MECHANICS-3 section 2). The human
+	// and the bots alike. 0 = off (every held frame charges, the game before R-0044).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 TapFrames = 4;
 };
 
 // Lane A77 (R-0036): game.pass. The saucer pass: a pass held saucer.half_frames or more lifts saucer.lift_m at its apex, flies over a blade in the lane and lands

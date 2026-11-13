@@ -479,7 +479,7 @@ at 0.6 rings the 0.61 bar from 10 m); (2) a hold of 4 frames or fewer is a tap, 
 R-0034 restated to what each mechanic is for (R-0043 point 3): the sweep and the spin are proven by their shield (every poke and lift inside the window refused; A85: 9 lift
 misses in the spin run), not by the puck kept against a body check, which is the risk the ruling gave them; the saucer by its flight over a blade when one is on the lane;
 (4) A66's bot blade cap stays: without it about thirty brain decisions lose the carrier (A85's measurement); it is the curve lane's to revisit, not before the submission;
-(5) the bots' round-the-net rule stays; (6) lane A91 makes these calibrations and takes the acceptance run to green: that run is H25's gate.
+(5) the bots' round-the-net rule stays; (6) lane A91 makes these calibrations and takes the acceptance run to green: that run is H25's gate. Amended 16:35 on A91's measurement: `full_m` is 0.47 (at 0.5 the full charge still rang the bar from 15 to 24 m; 0.47 scores from every metre of 3..30 m, 728 shots asserted); the brain's long wind-up for a real net applies only to nets of 1 m or more; the sweep's shield covers both sides for its window (a cursor crossing read as two sweeps flipped a one-sided shield): lane A93 makes that last change.
 
 ## R-0045 (H22, 2026-11-13 15:46): the vision: inertia, hockey principles, speed change, the stick and the sprint
 The operator gave four topics "so they become part of the vision of chasing"; they are written as laws with numbers in `docs/VISION.md`, which wins over older rulings where
