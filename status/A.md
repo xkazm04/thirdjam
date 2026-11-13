@@ -256,3 +256,4 @@
 - package 10:43: `Hokej_Hokej_H21.zip` from main dfb808f (C-0001 v4 with B's Blueprints, dev-b B19-B26, A51/A52 mechanics).
 
 - RESOURCES 10:43 cpu 100% ram 38.4/63GB gpu 64 %, 8076 MiB, 48 editors 1 cmd 14 ubt 2 free 607GB
+- link green 10:49: main 0da18f2 (A67 Director's modes) pushed.

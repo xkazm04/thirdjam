@@ -1,0 +1,72 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "readability",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T09:44:52.455Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "readability",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a69/a69-clay-game-camera.png",
+          "width": 1920,
+          "height": 1082
+        }
+      ],
+      "distance": 24,
+      "thumbnails": [],
+      "prompt_chars": 2716,
+      "usage": {
+        "prompt": 1909,
+        "output": 373,
+        "thoughts": 1260,
+        "total": 3542,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00756,
+      "ms": 18721,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A: a69-clay-game-camera.png",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "The puck is not visible anywhere on the rink as the faceoff has not yet occurred."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "No figure possesses the puck during the pre-faceoff countdown state."
+              },
+              "team_colours": {
+                "score": 4,
+                "evidence": "The foreground skater wears bright royal blue and the distant skater on the right wears warm orange, reinforced by the blue and orange scoreboard cards."
+              },
+              "far_net": {
+                "score": 1,
+                "evidence": "The far net is completely occluded behind the central 'MATCH 1' splash banner."
+              },
+              "zone_strips": {
+                "score": 2,
+                "evidence": "A faint red center line crosses the ice at mid-distance, but regulation zone lines are heavily obscured by vertical light streaks and stray geometric shapes."
+              }
+            },
+            "first_look": "The massive white 'MATCH 1' banner in the center",
+            "noise": [
+              "Severe vertical glare shafts streaking downward across the ice surface",
+              "Large colored overlay outlines (red square, yellow circle, teal circle) drawn over the ice",
+              "Massive 'MATCH 1' banner occluding the center of the rink and opposing goal area"
+            ],
+            "overall": 2
+          }
+        ]
+      },
+      "markdown": "**eyes/readability** A=a69-clay-game-camera.png at 24 m (gemini-3.8-flash, in 1909 out 373 think 1260 tokens, ~$0.0076, 18.7 s)\n- stills:\n  - label: Still A: a69-clay-game-camera.png; first_look: The massive white 'MATCH 1' banner in the center; overall: 2\n    - elements:\n      - puck: score 1, evidence The puck is not visible anywhere on the rink as the faceoff has not yet occurred.\n      - carrier: score 1, evidence No figure possesses the puck during the pre-faceoff countdown state.\n      - team_colours: score 4, evidence The foreground skater wears bright royal blue and the distant skater on the right wears warm orange, reinforced by the blue and orange scoreboard cards.\n      - far_net: score 1, evidence The far net is completely occluded behind the central 'MATCH 1' splash banner.\n      - zone_strips: score 2, evidence A faint red center line crosses the ice at mid-distance, but regulation zone lines are heavily obscured by vertical light streaks and stray geometric shapes.\n    - noise: Severe vertical glare shafts streaking downward across the ice surface; Large colored overlay outlines (red square, yellow circle, teal circle) drawn over the ice; Massive 'MATCH 1' banner occluding the center of the rink and opposing goal area"
+    }
+  ]
+}

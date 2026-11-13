@@ -65,7 +65,9 @@ private:
 	TMap<int64, uint64> RemoteHashes;
 	int64 LatestLocalHashFrame = -1;
 	int64 LastCheckedHashFrame = -1;
-	uint8 PendingFlags = 0;  // edge presses read while stalled are not lost
+	// Lane A56: the flags word's own type. It was uint8, so a spin (flag 512, protocol 5) pressed during a stall was cut off and never reached either sim
+	// (Bar.Net.SoakLossy: 49 of 1636 spins lost at 30 % loss, 137 of 1727 on a 0..6-tick jitter, 200 seeds each).
+	decltype(FJamNetQuantInput::Flags) PendingFlags = 0;  // edge presses read while stalled are not lost
 	int64 RemoteFrame = 0;
 	int32 MaxFrameGap = 0;
 	int32 StallTicks = 0;

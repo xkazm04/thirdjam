@@ -480,6 +480,8 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 		// no collision, stencil 0. A kind without its instance on this machine falls through to A's decal below, so play never waits on an asset.
 		for (UStaticMeshComponent* Q : ZoneQuads) if (Q) Q->DestroyComponent();
 		ZoneQuads.Reset();
+		for (UProceduralMeshComponent* Rg : ZoneRings) if (Rg) Rg->DestroyComponent();
+		ZoneRings.Reset();
 		UStaticMesh* PlaneMesh = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Plane.Plane"));   // engine content, cached after the first load; not held across GC
 		TMap<FName, UMaterialInterface*> ZoneLooks;   // kind -> B's instance (null = missing, looked up once per Build)
 		auto ZoneLookFor = [this, &ZoneLooks](const FName& Kind) -> UMaterialInterface*
@@ -522,6 +524,61 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 				Q->SetMaterial(0, D);
 				Q->RegisterComponent();
 				ZoneQuads.Add(Q);
+				// Lane A69: the clay tier's ring for this zone (same index as the quad). A flat ring 6 cm high and 12 cm wide centred on the outline; a circle is
+				// 64 segments with an outer wall, an inner wall and a top, a rect is four boxes. UVs are the quad's (0..1 over the zone's bounding box) so the
+				// material reads the same mask. Its own dynamic instance of the same MI_Zone_<kind>; hidden until the tier says clay.
+				{
+					constexpr double RingH = 6.0, RingHalfW = 15.0;   // A69 measurement: 12 cm read as a 2 px wire at 10 m (eyes), 30 cm reads as a ring
+					FMeshBuf RB;
+					const double Cx = Zn.X * UU, Cy = Zn.Z * UU;
+					if (bCircle)
+					{
+						const double Ro = Zn.R * UU + RingHalfW, Ri = FMath::Max(0.0, Zn.R * UU - RingHalfW);
+						constexpr int32 Seg = 64;
+						for (int32 i = 0; i < Seg; ++i)
+						{
+							const double A0 = 2.0 * UE_DOUBLE_PI * i / Seg, A1 = 2.0 * UE_DOUBLE_PI * (i + 1) / Seg;
+							const FVector2D D0(FMath::Cos(A0), FMath::Sin(A0)), D1(FMath::Cos(A1), FMath::Sin(A1));
+							const FVector2D C(Cx, Cy);
+							RB.Quad(FVector(C + D0 * Ri, RingH), FVector(C + D0 * Ro, RingH), FVector(C + D1 * Ro, RingH), FVector(C + D1 * Ri, RingH), FVector::UpVector);
+							RB.Quad(FVector(C + D0 * Ro, 0), FVector(C + D1 * Ro, 0), FVector(C + D1 * Ro, RingH), FVector(C + D0 * Ro, RingH), FVector((D0 + D1).GetSafeNormal(), 0));
+							RB.Quad(FVector(C + D1 * Ri, 0), FVector(C + D0 * Ri, 0), FVector(C + D0 * Ri, RingH), FVector(C + D1 * Ri, RingH), FVector(-(D0 + D1).GetSafeNormal(), 0));
+						}
+					}
+					else
+					{
+						const double Hx = Zn.W * 0.5 * UU, Hy = Zn.D * 0.5 * UU, RHw = RingHalfW;
+						RB.Box(FVector(Cx - Hx - RHw, Cy - Hy - RHw, 0), FVector(Cx + Hx + RHw, Cy - Hy + RHw, RingH));
+						RB.Box(FVector(Cx - Hx - RHw, Cy + Hy - RHw, 0), FVector(Cx + Hx + RHw, Cy + Hy + RHw, RingH));
+						RB.Box(FVector(Cx - Hx - RHw, Cy - Hy + RHw, 0), FVector(Cx - Hx + RHw, Cy + Hy - RHw, RingH));
+						RB.Box(FVector(Cx + Hx - RHw, Cy - Hy + RHw, 0), FVector(Cx + Hx + RHw, Cy + Hy - RHw, RingH));
+					}
+					const double MX = FMath::Max(SizeX, 0.01), MY = FMath::Max(SizeY, 0.01);
+					// The material reads the zone's size from the component's scale as well as from the UVs (the decal quad is scaled to (w, d, 1) m), so the ring is
+					// built in the quad's local frame: centred, divided by the scale, and given the same scale below.
+					for (int32 u = 0; u < RB.V.Num(); ++u)
+					{
+						RB.UV[u] = FVector2D((RB.V[u].X - Cx) / (MX * UU) + 0.5, (RB.V[u].Y - Cy) / (MY * UU) + 0.5);
+						RB.V[u] = FVector((RB.V[u].X - Cx) / MX, (RB.V[u].Y - Cy) / MY, RB.V[u].Z);
+					}
+					UProceduralMeshComponent* Rg = NewObject<UProceduralMeshComponent>(this);
+					Rg->SetupAttachment(RootComponent);
+					Rg->SetMobility(EComponentMobility::Movable);
+					Rg->SetRelativeLocation(FVector(Cx, Cy, 0.0));
+					Rg->SetRelativeScale3D(FVector(MX, MY, 1.0));
+					Rg->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+					Rg->SetCastShadow(false);
+					Rg->SetRenderCustomDepth(false);
+					Rg->SetCustomDepthStencilValue(0);
+					RB.Commit(Rg, 0);
+					UMaterialInstanceDynamic* RD = UMaterialInstanceDynamic::Create(Look, this);
+					RD->SetScalarParameterValue(TEXT("Circle"), bCircle ? 1.f : 0.f);
+					RD->SetScalarParameterValue(TEXT("Strength"), static_cast<float>(FMath::Clamp(Zn.Strength, 0.0, 1.0)));
+					Rg->SetMaterial(0, RD);
+					Rg->SetVisibility(false);
+					Rg->RegisterComponent();
+					ZoneRings.Add(Rg);
+				}
 				++ZoneQuadsDrawn; ++ZonesDrawn;
 				continue;
 			}
@@ -743,6 +800,7 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 	GoalTriggerNeg->SetRelativeLocation(FVector(-(GL + Depth * 0.5) * UU, 0, NetH * 0.5 * UU));
 	GoalTriggerNeg->SetBoxExtent(FVector(Depth * 0.5 * UU, Hw * UU, NetH * 0.5 * UU));
 
+	SetZoneRingsForTier(Game.Look.Tier);
 	SetConstructionVisible(IsConstructionEnabled());
 	UE_LOG(LogJamSim, Log, TEXT("JAMRINK built %gx%g m corner %g goal %g m, %d obstacles, %d zones (%d on B's strips), outline %d points, construction %s (%d stanchions)"), R.LengthM, R.WidthM, R.CornerRadiusM, R.GoalWidthM, R.Obstacles.Num(), ZonesDrawn, ZoneQuadsDrawn, Line.Num(), IsConstructionEnabled() ? TEXT("on") : TEXT("off"), GlassRail->GetNumSections() > 1 ? GlassRail->GetProcMeshSection(1)->ProcVertexBuffer.Num() / 24 : 0);
 }
@@ -755,6 +813,7 @@ bool ARinkActor::IsConstructionEnabled()
 void ARinkActor::SetConstructionVisible(bool bVisible)
 {
 	for (UProceduralMeshComponent* P : { KickPlate.Get(), GlassRail.Get(), GoalLights.Get(), Benches.Get() }) if (P) P->SetVisibility(bVisible);
+	if (bClayTier && GlassRail) GlassRail->SetVisibility(false);   // lane A69: B's clay boards are open (the rail and posts are clipped by M_Toon_Rail anyway)
 	if (Nets && Nets->GetNumSections() > 2) Nets->SetMeshSectionVisible(2, bVisible);
 	if (Markings && Markings->GetNumSections() > 3) { Markings->SetMeshSectionVisible(2, bVisible); Markings->SetMeshSectionVisible(3, bVisible); }
 }
@@ -821,6 +880,19 @@ UMaterialInterface* ARinkActor::LoadConstructionMat(const TCHAR* LookName, const
 	UMaterialInstanceDynamic* D = UMaterialInstanceDynamic::Create(Mi, this);
 	D->SetVectorParameterValue(TEXT("Color"), Tint);
 	return D;
+}
+
+void ARinkActor::SetZoneRingsForTier(const FString& Tier)
+{
+	const bool bClay = Tier == TEXT("p3_clay");
+	const bool bChanged = bClay != bClayTier;
+	bClayTier = bClay;
+	for (UProceduralMeshComponent* Rg : ZoneRings) if (Rg) Rg->SetVisibility(bClay);
+	for (UStaticMeshComponent* Q : ZoneQuads) if (Q) Q->SetVisibility(!bClay);
+	// B-to-A-0035 point 1 (optional): on clay the pane and the rail clip every pixel, so their draws go; back on the other tiers they return.
+	if (Glass) Glass->SetVisibility(!bClay);
+	if (GlassRail) GlassRail->SetVisibility(!bClay && IsConstructionEnabled());
+	if (bChanged || bClay) UE_LOG(LogJamSim, Log, TEXT("JAMRINK zone rings %s for tier %s: %d ring components, %d decal quads (glass and rail %s)"), bClay ? TEXT("shown") : TEXT("hidden"), *Tier, ZoneRings.Num(), ZoneQuads.Num(), bClay ? TEXT("hidden") : TEXT("shown"));
 }
 
 void ARinkActor::SetGlassForTier(const FString& Tier)

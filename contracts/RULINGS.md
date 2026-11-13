@@ -405,3 +405,15 @@ value: collisions (the body check, the board hit, the knockdown and the get-up, 
 `dev-b-a45`), gameplay mechanics (the sweep, the spin, the lifted shot, passes, one-timers, dekes: each proven in a package through the real input path), Director's
 choices: modes that change the character of a match (cartridge-defined, chosen from the menu as a Director's cut: rules, rink, team size, physics, bots, look) so a
 player makes creative variations without editing JSON; (4) P2 stays what it is: the fallback tier, no further look work.
+
+## R-0037 (H15, 2026-11-13 10:48): every match ends; the lockstep soak's findings
+1. A `first_to` match has a horn at 30,000 frames of live play (8:20): the leader wins, a tie goes to sudden death; a hard stop at 33,000 ends any match still running,
+   the leader wins, a tie goes to the team that last touched the puck (the sim has no draw state; a draw would be new sim and UI, not worth it two days out). Lane A71
+   measured 53 of 11,400 soak matches past the old 10-minute cap, none of them stuck: goals were simply rare on the big boost rink. The hash moves only for matches
+   past 30,000 frames.
+2. Lane A71's idle measurement: the longest no-touch stretch per match is p50 16 s, p90 32 s, 12 % of matches over 30 s, almost all a loose puck the novice does not
+   reach, never teammates keeping it. The lever is a teammate deflection to the human after 10 s without a touch (A70 costs it with the curve; not before the curve lands).
+3. Lockstep (lane A56): 7,260 joined matches with loss, delay, duplicates, reorder, a 30 Hz guest and real UDP: zero desyncs, zero lost inputs after one fix (the driver's
+   pending-flags word was a byte and cut the spin's bit 512 off during a stall). Protocol 5 has no refusal message: a protocol-4 guest is ignored and told the wrong reason
+   after 60 s; a REFUSE message (about 20 lines) is accepted for the next JamNet lane. The sprint and the spin were dead in a joined match (`ReadLocalInput` never read
+   them): fixed by the Director with the landing.

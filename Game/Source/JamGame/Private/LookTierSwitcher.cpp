@@ -206,7 +206,7 @@ void ULookTierSwitcher::PushGlass()
 	if (!W) return;
 	for (TActorIterator<ARinkActor> It(W); It; ++It)
 	{
-		if (*It) It->SetGlassForTier(CurrentTier);
+		if (*It) { It->SetGlassForTier(CurrentTier); It->SetZoneRingsForTier(CurrentTier); }   // lane A69: the clay rings follow the tier
 	}
 }
 
@@ -278,6 +278,9 @@ void ULookTierSwitcher::LowerFloor()
 		// B-to-A-0023 point 1 (lane A31): the floor is authored Static, so the offset was refused ("must be Movable") and its bounds stayed at -5 cm.
 		// Movable first, then the move; the bounds are read back so the log states what the picture has.
 		if (UStaticMeshComponent* C = A->GetStaticMeshComponent()) if (C->Mobility != EComponentMobility::Movable) C->SetMobility(EComponentMobility::Movable);
+		// Lane A69 (B-to-A-0034 notes): the floor sits under the ice and under B's room floor, so it is never seen, yet it cast shadow into every shadowed light
+		// (+0.34 ms GPU on p3_clay in PIE, four shadowed spots). Nothing lies under it to be shadowed; its shadow goes.
+		if (UStaticMeshComponent* C = A->GetStaticMeshComponent()) C->SetCastShadow(false);
 		const double Delta = FloorZCm - Top;
 		A->AddActorWorldOffset(FVector(0, 0, Delta));
 		A->GetActorBounds(false, Origin, Extent);
