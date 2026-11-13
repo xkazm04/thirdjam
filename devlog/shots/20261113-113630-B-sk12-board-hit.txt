@@ -1,0 +1,1 @@
+SK12: clay tier: a real board hit on the human (PlayBoardHit: Board_Hit), every 3rd frame for 36 frames. Tree wt/b-vfx (dev-b d6f5bfb, v4), SKF export14 takes, the SK12 Blueprint changes; real match, all_star, scripted human, real game camera, HUD removed, the match frozen for each capture, frame numbers relative to the hit printed; lane SK12, device B; no reference pixels.
