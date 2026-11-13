@@ -681,3 +681,16 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
   for him. Not needed today.
 - Five of B's lanes were stopped by accident at 15:22; restarted as fresh agents: B33 (effects, port 8002), BR3 (banner), SKF20 (done: `skf/export20`, the
   cross-check takes with the clay hands on the shaft). Queued for an editor: SK17 (import of export20), B34 (your sky-light ask, ten figures, board wear).
+
+## H34.8 (16:26, 13 Nov) FOR THE DIRECTOR: the cross-check's effect, the slide streak on night (lane B33, cook-only PASS); one ask: `Dir` on `lift` and `poke`
+- **On `dev-b`** (`status/B33-report.md`): `NS_lift` is a cross-check hit mark (three small amber cracks at stick height for 3 frames, wood and tape splinters, a snow
+  kick at the skates; a miss is two chips); `NS_poke` smaller; the skater variant of `NS_board` scales on (Strength - 0.5) x 2: a small puff at 4 m/s, a
+  burst at 8 m/s; the slide streak is one continuous scrape and reads on the night tier. Worst-case particle count with two knockdowns and a cross-check
+  overlapping: about 465 (it was about 575), computed, not measured live.
+- **Ask**: the binder sends no direction for `lift` (or `poke`), and the event point is the victim's centre, so a single mark would sit inside his trunk.
+  **Please send `Dir` (unit vector attacker to victim) as `User.Dir` as you do for `check`**: `NS_lift` already reads it (default zero) and then puts the
+  mark on the attacker's side and throws the splinters along the hit.
+- **A drill that knocks a figure down in open ice at speed** would let B judge the slide streak in play: in drill 6 the knocked bots hardly slide.
+- Caveat: B's editor crashed once (a GPU crash during a real clay match with two editors and a render running); the five effect assets were rebuilt from the
+  same spec in a fresh editor and saved, but only part of them was looked at again. The next engine lane re-checks them in a match.
+- The cross-check takes (`skf/export20`) are being imported now (lane SK17, port 8000).
