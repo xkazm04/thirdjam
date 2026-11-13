@@ -5,6 +5,7 @@
 //                              JAM_FUZZ_FIRST / JAM_FUZZ_LAST   index range of the manifest (default all), so a driver can shard and restart past a crash
 //                              JAM_FUZZ_FRAMES                  frames of sim per valid cartridge (default 600)
 //                              JAM_FUZZ_LONG_EVERY              every Nth valid cartridge also runs to JAM_FUZZ_LONG_FRAMES (default 36000) and must end (0 = never)
+//                              JAM_FUZZ_HARDSTOP                1 = every valid case also idles to its hard stop and must be Over (lane A141 timer oracle)
 //                              JAM_FUZZ_OUT                     folder for progress.txt (the case about to run, written before it runs: a crash names its cartridge)
 //                                                               and faults.jsonl (one line per fault: class, case, detail)
 //   Bar.Fuzz.ModesAndCuts    the twelve modes and every shipped cut through the same checks for 36,000 frames.
@@ -135,8 +136,33 @@ namespace JamFuzz
 	}
 
 	// One valid cartridge through the sim: brain-vs-brain twice (hash), the playtester twice (hash, abilities, sprint), and optionally a long run.
-	void SimulateCase(FAutomationTestBase& T, FFaultSink& Sink, const FString& Case, const UJamCartridge& Cart, int32 Frames, bool bLong, int32 LongFrames)
+	// Lane A141 (track S3, evolution 3, item 4): the timer oracle. Whatever the cartridge's rules and hooks do, a match with nobody playing (idle inputs: no goal can come, no
+	// clock can be beaten by play) must be Over by its hard stop: max(33000, timer + 6000) frames (JamSim.cpp MatchHardStopFrames) and always under the 36,000-frame cap every
+	// tool assumes. Checked on every smoke case; the sim steps alone (no brain), so it costs about a tenth of a brain match.
+	// Real idle runs left to spend (the formula check below runs on every case): -1 = every case, N = the next N cases that carry hooks (the smoke gate: an idle run is
+	// about 7 microseconds a frame, 33,000+ frames, so the gate spends 4 of them and keeps the 10-second budget; Bar.Fuzz.Cartridges runs them all with JAM_FUZZ_HARDSTOP=1).
+	int32 GHardStopRealRuns = 0;
+
+	void HardStopOracle(FAutomationTestBase& T, FFaultSink& Sink, const FString& Case, const UJamCartridge& Cart)
 	{
+		const bool bTimer = Cart.Game.Rules.Mode == FName(TEXT("timer")) && Cart.Game.Rules.TimerFrames > 0;
+		const int64 Stop = bTimer ? FMath::Max<int64>(33000, static_cast<int64>(Cart.Game.Rules.TimerFrames) + 6000) : 33000;
+		if (Stop >= 36000) { Sink.Fault(T, TEXT("never-ends"), Case, FString::Printf(TEXT("hard stop %lld is not under the 36,000-frame cap"), static_cast<long long>(Stop))); return; }
+		const bool bReal = GHardStopRealRuns < 0 || (GHardStopRealRuns > 0 && Cart.Game.Rules.Hooks.Num() > 0);
+		if (!bReal) { return; }
+		if (GHardStopRealRuns > 0) { --GHardStopRealRuns; }
+		UJamSim* Sim = NewObject<UJamSim>();
+		if (!Sim->Init(Cart.Game, static_cast<uint64>(Cart.Seed))) { Sink.Fault(T, TEXT("harness"), Case, TEXT("hard-stop oracle: sim init failed")); return; }
+		TArray<FJamInput> Inputs;
+		Inputs.SetNum(Sim->GetSkaters().Num());
+		while (Sim->GetPhase() != EJamSimPhase::Over && Sim->GetFrame() <= Stop + 60) { Sim->Step(Inputs); }
+		if (Sim->GetPhase() != EJamSimPhase::Over) { Sink.Fault(T, TEXT("never-ends"), Case, FString::Printf(TEXT("idle match not over by its hard stop %lld (frame %lld)"), static_cast<long long>(Stop), static_cast<long long>(Sim->GetFrame()))); }
+		else if (Sim->GetFrame() > Stop + 1) { Sink.Fault(T, TEXT("never-ends"), Case, FString::Printf(TEXT("idle match ended at frame %lld, after its hard stop %lld"), static_cast<long long>(Sim->GetFrame()), static_cast<long long>(Stop))); }
+	}
+
+	void SimulateCase(FAutomationTestBase& T, FFaultSink& Sink, const FString& Case, const UJamCartridge& Cart, int32 Frames, bool bLong, int32 LongFrames, bool bHardStop = false)
+	{
+		if (bHardStop) { HardStopOracle(T, Sink, Case, Cart); }
 		const JamAI::FJamMatchConfig Cfg = JamAI::ToMatchConfigResolved(Cart);
 		const uint64 Seed = static_cast<uint64>(Cart.Seed);
 		// brain vs brain, twice
@@ -215,7 +241,7 @@ namespace JamFuzz
 	}
 
 	// The whole check of one case: the validator pair, the loader, then the sim for a valid one.
-	void RunCase(FAutomationTestBase& T, FFaultSink& Sink, const FString& Dir, const FCase& K, int32 Frames, bool bLong, int32 LongFrames, int32& Simulated)
+	void RunCase(FAutomationTestBase& T, FFaultSink& Sink, const FString& Dir, const FCase& K, int32 Frames, bool bLong, int32 LongFrames, int32& Simulated, bool bHardStop = false)
 	{
 		FString Text;
 		if (!FFileHelper::LoadFileToString(Text, *FPaths::Combine(Dir, K.File))) { Sink.Fault(T, TEXT("harness"), K.Name, TEXT("case file unreadable")); return; }
@@ -237,14 +263,14 @@ namespace JamFuzz
 		if (Cart && K.bOk)
 		{
 			++Simulated;
-			SimulateCase(T, Sink, K.Name, *Cart, Frames, bLong, LongFrames);
+			SimulateCase(T, Sink, K.Name, *Cart, Frames, bLong, LongFrames, bHardStop);
 		}
 		GLog->RemoveOutputDevice(&Cap);
 		// an error-level line (an ensure, an assert message, a log error) while a valid cartridge loaded or ran, or while an invalid one was refused
 		if (Cap.Lines.Num() > 0) { Sink.Fault(T, TEXT("engine-error"), K.Name, FString::Printf(TEXT("%d error line(s), first: %s"), Cap.Lines.Num(), *Cap.Lines[0])); }
 	}
 
-	bool RunCorpus(FAutomationTestBase& T, const FString& Dir, const FString& OutDir, int32 First, int32 Last, int32 Frames, int32 LongEvery, int32 LongFrames, const TCHAR* Label)
+	bool RunCorpus(FAutomationTestBase& T, const FString& Dir, const FString& OutDir, int32 First, int32 Last, int32 Frames, int32 LongEvery, int32 LongFrames, const TCHAR* Label, bool bHardStop = false)
 	{
 		TArray<FCase> Cases;
 		if (!LoadManifest(T, Dir, Cases)) { T.AddWarning(FString::Printf(TEXT("%s: no fuzz corpus at %s; skipped"), Label, *Dir)); return true; }
@@ -259,7 +285,7 @@ namespace JamFuzz
 			const FCase& K = Cases[i];
 			Sink.Progress(FString::Printf(TEXT("%d\t%s\t%s"), i, *K.Name, *K.File));
 			const bool bLong = K.bOk && ((LongEvery > 0 && (++ValidSeen % LongEvery == 0)) || K.Name.StartsWith(TEXT("min-")));
-			RunCase(T, Sink, Dir, K, Frames, bLong, LongFrames, Simulated);
+			RunCase(T, Sink, Dir, K, Frames, bLong, LongFrames, Simulated, bHardStop);
 			++Done;
 		}
 		Sink.Progress(FString::Printf(TEXT("done\t%d\t%d"), First, Last));
@@ -273,9 +299,11 @@ bool FJamFuzzSmoke::RunTest(const FString& Parameters)
 {
 	const FString Dir = FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::ProjectDir(), TEXT(".."), TEXT("tools"), TEXT("fuzz"), TEXT("smoke")));
 	if (!IFileManager::Get().DirectoryExists(*Dir)) { AddWarning(TEXT("tools/fuzz/smoke not found (source tree absent); skipped")); return true; }
-	const bool bSmoke = JamFuzz::RunCorpus(*this, Dir, FString(), 0, -1, 600, 0, 0, TEXT("fuzz smoke"));
+	JamFuzz::GHardStopRealRuns = 4;
+	const bool bSmoke = JamFuzz::RunCorpus(*this, Dir, FString(), 0, -1, 600, 0, 0, TEXT("fuzz smoke"), true);   // lane A141: the hard-stop formula on every case, 4 real idle runs
 	// Lane A118 (track S3, evolution 2): the regression corpus of the seven fault classes (tools/fuzz/regress, from tools/fuzz/found by gen-regress.mjs). Every valid
 	// case also runs the long match, which must end; nothing may leave the boards or go non-finite; both validators and the loader agree on every file.
+	JamFuzz::GHardStopRealRuns = 0;
 	const FString Regress = FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::ProjectDir(), TEXT(".."), TEXT("tools"), TEXT("fuzz"), TEXT("regress")));
 	const bool bRegress = JamFuzz::RunCorpus(*this, Regress, FString(), 0, -1, 600, 1, 36000, TEXT("fuzz regress"));
 	return bSmoke && bRegress;
@@ -319,8 +347,9 @@ bool FJamFuzzCartridges::RunTest(const FString& Parameters)
 {
 	const FString Dir = JamFuzz::Env(TEXT("JAM_FUZZ_DIR"));
 	if (Dir.IsEmpty()) { AddWarning(TEXT("JAM_FUZZ_DIR not set; skipped")); return true; }
+	JamFuzz::GHardStopRealRuns = JamFuzz::EnvInt(TEXT("JAM_FUZZ_HARDSTOP"), 0) != 0 ? -1 : 0;   // lane A141: JAM_FUZZ_HARDSTOP=1 idles every valid case to its hard stop
 	return JamFuzz::RunCorpus(*this, Dir, JamFuzz::Env(TEXT("JAM_FUZZ_OUT")), JamFuzz::EnvInt(TEXT("JAM_FUZZ_FIRST"), 0), JamFuzz::EnvInt(TEXT("JAM_FUZZ_LAST"), -1),
-		JamFuzz::EnvInt(TEXT("JAM_FUZZ_FRAMES"), 600), JamFuzz::EnvInt(TEXT("JAM_FUZZ_LONG_EVERY"), 0), JamFuzz::EnvInt(TEXT("JAM_FUZZ_LONG_FRAMES"), 36000), TEXT("fuzz cartridges"));
+		JamFuzz::EnvInt(TEXT("JAM_FUZZ_FRAMES"), 600), JamFuzz::EnvInt(TEXT("JAM_FUZZ_LONG_EVERY"), 0), JamFuzz::EnvInt(TEXT("JAM_FUZZ_LONG_FRAMES"), 36000), TEXT("fuzz cartridges"), JamFuzz::EnvInt(TEXT("JAM_FUZZ_HARDSTOP"), 0) != 0);
 }
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamFuzzModesAndCuts, "Bar.Fuzz.ModesAndCuts", JamFuzz::LongFlags)

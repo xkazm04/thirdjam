@@ -867,7 +867,7 @@
         "timer_frames": {
           "type": "integer",
           "minimum": 600,
-          "maximum": 36000,
+          "maximum": 28800,
           "description": "Match length in physics frames (60 per second); required when mode is timer."
         },
         "goal_pause_frames": {

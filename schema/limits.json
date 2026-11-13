@@ -122,7 +122,7 @@
     "contact.release_grace_frames": "0..300",
     "rules.mode": "first_to|timer",
     "rules.score_to_win": "1..9",
-    "rules.timer_frames": "600..36000",
+    "rules.timer_frames": "600..28800",
     "rules.goal_pause_frames": "30..600",
     "rules.penalty_frames": "60..600",
     "rules.hooks[]": "0..8",

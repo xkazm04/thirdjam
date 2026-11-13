@@ -2,7 +2,7 @@
  "schema": "tj.cartridge/1",
  "id": "fuzz-00001",
  "title": "Fuzz 1",
- "seed": 1138410339,
+ "seed": 1,
  "theme": {
   "name": "Fog of War",
   "mood_words": [
@@ -143,25 +143,25 @@
   },
   "stick": {
    "reach_m": 1.6,
-   "mouse_sensitivity": 5
+   "lift_range_m": 2.5
   },
-  "barks": {
-   "intensity": "loud"
+  "contact": {
+   "stand_speed_mps": 5,
+   "sprint_stability": 0.3,
+   "spin_stability": 0.3,
+   "down_ratio": 5,
+   "stagger_frames": 60
   },
   "look": {
-   "tier": "p3_clay",
-   "trim_colour_hex": "#ffffff"
-  },
-  "camera": {
-   "look_ahead_m": 0,
-   "lag_frames": 0,
-   "far_net_bias": 1
+   "tier": "l3_neon",
+   "trim_emissive": 0,
+   "fog_density": 0.1
   },
   "pickups": [
    {
     "kind": "speed",
     "spawn_every_frames": 120,
-    "duration_frames": 1,
+    "duration_frames": 3600,
     "magnitude": 4,
     "max_on_ice": 4
    },
@@ -169,27 +169,27 @@
     "kind": "precision",
     "spawn_every_frames": 120,
     "duration_frames": 3600,
-    "magnitude": 4,
+    "magnitude": 0.1,
     "max_on_ice": 4
    },
    {
     "kind": "heavy_puck",
     "spawn_every_frames": 120,
-    "duration_frames": 3600,
+    "duration_frames": 1,
     "magnitude": 4,
     "max_on_ice": 4
    },
    {
     "kind": "big_puck",
     "spawn_every_frames": 120,
-    "duration_frames": 1,
+    "duration_frames": 3600,
     "magnitude": 4,
     "max_on_ice": 4
    },
    {
     "kind": "reverse_other",
     "spawn_every_frames": 120,
-    "duration_frames": 3600,
+    "duration_frames": 1,
     "magnitude": 4,
     "max_on_ice": 4
    },
@@ -197,171 +197,113 @@
     "kind": "speed",
     "spawn_every_frames": 120,
     "duration_frames": 1,
-    "magnitude": 0.1,
+    "magnitude": 4,
     "max_on_ice": 4
    },
    {
     "kind": "precision",
     "spawn_every_frames": 120,
     "duration_frames": 1,
-    "magnitude": 4,
+    "magnitude": 0.1,
     "max_on_ice": 4
    },
    {
     "kind": "heavy_puck",
     "spawn_every_frames": 120,
-    "duration_frames": 3600,
-    "magnitude": 4,
+    "duration_frames": 1,
+    "magnitude": 0.1,
     "max_on_ice": 4
    }
   ],
   "puck": {
-   "count": 3
+   "count": 3,
+   "colour_hex": "#FFFFFF"
   },
   "rules": {
-   "mode": "timer",
-   "timer_frames": 36000
+   "mode": "first_to",
+   "score_to_win": 1,
+   "goal_pause_frames": 91,
+   "penalty_frames": 600
   },
-  "effects": [
-   {
-    "id": "fx-1",
-    "target": "everyone",
-    "duration_frames": 60,
-    "trigger": "check_landed",
-    "stats": [
-     {
-      "stat": "shot_reach",
-      "multiply": 0.25,
-      "add": -2.749
-     },
-     {
-      "stat": "board_restitution",
-      "multiply": 4,
-      "add": 1
-     }
-    ],
-    "kind": "reverse_other"
-   },
-   {
-    "id": "fx-2",
-    "target": "puck",
-    "duration_frames": 7200,
-    "trigger": "check_landed",
-    "stats": [
-     {
-      "stat": "shot_reach",
-      "add": -1.735
-     },
-     {
-      "stat": "puck_radius",
-      "add": -0.097
-     }
-    ],
-    "kind": "heavy_puck",
-    "stack": "ignore"
-   },
-   {
-    "id": "fx-3",
-    "target": "everyone",
-    "duration_frames": 7200,
-    "trigger": "director",
-    "stats": [
-     {
-      "stat": "skater_mass",
-      "add": 116.65
-     },
-     {
-      "stat": "shot_reach",
-      "multiply": 2.866
-     },
-     {
-      "stat": "knockdown_frames",
-      "multiply": 4
-     }
-    ],
-    "stack": "refresh",
-    "icon": "flame"
-   }
-  ],
   "teams": [
    {
     "id": "blue",
-    "colour_hex": "#1D4ED8",
+    "colour_hex": "#00FF00",
     "skaters": [
      {
-      "role": "player",
+      "role": "support",
       "spawn": [
-       8.59,
-       8.1
-      ]
-     },
-     {
-      "role": "back",
-      "spawn": [
-       11.08,
-       6.25
+       -1.5,
+       -3
       ]
      },
      {
       "role": "chaser",
       "spawn": [
-       -10.67,
-       9.1
+       -3.7,
+       3
+      ]
+     },
+     {
+      "role": "support",
+      "spawn": [
+       -5.9,
+       -3
       ]
      },
      {
       "role": "back",
       "spawn": [
-       1.5,
-       -2.07
+       -8.1,
+       3
       ]
      },
      {
-      "role": "back",
+      "role": "chaser",
       "spawn": [
-       10.14,
-       2.35
+       -10.3,
+       -3
       ]
      }
     ]
    },
    {
     "id": "orange",
-    "colour_hex": "#E8651A",
+    "colour_hex": "#FF00FF",
     "skaters": [
      {
-      "role": "chaser",
+      "role": "player",
       "spawn": [
-       4.74,
-       1.79
+       1.5,
+       -2.5
       ]
      },
      {
       "role": "chaser",
       "spawn": [
-       12.95,
-       -0.33
-      ]
-     },
-     {
-      "role": "support",
-      "spawn": [
-       8.68,
-       -0.69
+       3.7,
+       3.5
       ]
      },
      {
       "role": "back",
       "spawn": [
-       2,
-       7.37
+       5.9,
+       -2.5
       ]
      },
      {
-      "role": "chaser",
+      "role": "back",
       "spawn": [
-       -13.52,
-       -7.57
+       8.1,
+       3.5
+      ]
+     },
+     {
+      "role": "back",
+      "spawn": [
+       10.3,
+       -2.5
       ]
      }
     ]

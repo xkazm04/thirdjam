@@ -274,7 +274,7 @@ namespace JamValidate
 		static const TCHAR* const Map[][2] = {
 			{ TEXT("skater_speed"), TEXT("skater.speed") }, { TEXT("skater_turn_rate"), TEXT("skater.turn_rate") }, { TEXT("shot_speed"), TEXT("shot.speed") },
 			{ TEXT("puck_max_speed"), TEXT("puck.max_speed") }, { TEXT("ice_friction"), TEXT("rink.ice_friction") }, { TEXT("board_restitution"), TEXT("rink.board_restitution") },
-			{ TEXT("ai_speed_scale"), TEXT("ai.speed_scale") }, { TEXT("ai_red_skill"), TEXT("ai.red_skill") }, { TEXT("goal_pause_frames"), TEXT("rules.goal_pause_frames") },
+			{ TEXT("ai_speed_scale"), TEXT("ai.speed_scale") }, { TEXT("ai_red_skill"), TEXT("ai.red_skill") },
 		};
 		for (const auto& Row : Map) if (Param == Row[0]) return Row[1];
 		return nullptr;
@@ -552,7 +552,7 @@ namespace JamValidate
 				{
 					const TCHAR* Field = SetParamField(Param->String);
 					double Lo = 0, Hi = 0;
-					if (!Field) Errors.Add(FString::Printf(TEXT("at %s/param: set_param can change skater_speed, skater_turn_rate, shot_speed, puck_max_speed, ice_friction, board_restitution, ai_speed_scale, ai_red_skill, goal_pause_frames; \"%s\" is none of them."), *P, *Param->String));
+					if (!Field) Errors.Add(FString::Printf(TEXT("at %s/param: set_param can change skater_speed, skater_turn_rate, shot_speed, puck_max_speed, ice_friction, board_restitution, ai_speed_scale, ai_red_skill; \"%s\" is none of them."), *P, *Param->String));
 					else if (bV && GameRange(Field, Lo, Hi) && (V < Lo || V > Hi)) Errors.Add(FString::Printf(TEXT("at %s/value: %s lies within %s to %s (the range of game.%s), found %s."), *P, *Param->String, *Num(Lo), *Num(Hi), Field, *Num(V)));
 				}
 			}
@@ -1342,6 +1342,8 @@ bool UJamCartridge::ApplyValueKey(FJamGameConfig& C, const FString& K, double V)
 bool UJamCartridge::SetParamRange(const FString& Param, double& OutLo, double& OutHi)
 {
 	const TCHAR* Field = JamValidate::SetParamField(Param);
+	// Lane A141: goal_pause_frames is no hook tunable (its 30..600 lies above the -20..20 value limit) but the sim keeps clamping it for callers that bypass the validators.
+	if (!Field && Param == TEXT("goal_pause_frames")) Field = TEXT("rules.goal_pause_frames");
 	return Field && JamValidate::GameRange(Field, OutLo, OutHi);
 }
 

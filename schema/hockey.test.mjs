@@ -198,8 +198,8 @@ test('ranges: each limit rejects one step outside', () => {
   }
   const t = regular(); t.game.rules.mode = 'timer'; t.game.rules.timer_frames = 599;
   assert.ok(has(errorsOf(t), '/game/rules/timer_frames', 'below the minimum 600'));
-  t.game.rules.timer_frames = 36001;
-  assert.ok(has(errorsOf(t), '/game/rules/timer_frames', 'above the maximum 36000'));
+  t.game.rules.timer_frames = 28801;
+  assert.ok(has(errorsOf(t), '/game/rules/timer_frames', 'above the maximum 28800'));
   const s = regular(); s.game.teams[0].skaters.push(...Array.from({ length: 5 }, (_, i) => ({ role: 'back', spawn: [-20, i * 2 - 4] })));
   assert.ok(has(errorsOf(s), '/game/teams/0/skaters', 'the limit is 5'));
   assert.ok(g());

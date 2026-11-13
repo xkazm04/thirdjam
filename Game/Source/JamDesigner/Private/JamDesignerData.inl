@@ -2029,7 +2029,7 @@ static const unsigned char JamDesignerData_game_schema_json[] = {
 	102,105,114,115,116,95,116,111,46,34,10,32,32,32,32,32,32,32,32,125,44,10,32,32,32,32,32,32,32,32,34,116,
 	105,109,101,114,95,102,114,97,109,101,115,34,58,32,123,10,32,32,32,32,32,32,32,32,32,32,34,116,121,112,101,34,
 	58,32,34,105,110,116,101,103,101,114,34,44,10,32,32,32,32,32,32,32,32,32,32,34,109,105,110,105,109,117,109,34,
-	58,32,54,48,48,44,10,32,32,32,32,32,32,32,32,32,32,34,109,97,120,105,109,117,109,34,58,32,51,54,48,48,
+	58,32,54,48,48,44,10,32,32,32,32,32,32,32,32,32,32,34,109,97,120,105,109,117,109,34,58,32,50,56,56,48,
 	48,44,10,32,32,32,32,32,32,32,32,32,32,34,100,101,115,99,114,105,112,116,105,111,110,34,58,32,34,77,97,116,
 	99,104,32,108,101,110,103,116,104,32,105,110,32,112,104,121,115,105,99,115,32,102,114,97,109,101,115,32,40,54,48,32,
 	112,101,114,32,115,101,99,111,110,100,41,59,32,114,101,113,117,105,114,101,100,32,119,104,101,110,32,109,111,100,101,32,
@@ -3136,7 +3136,7 @@ static const unsigned char JamDesignerData_limits_json[] = {
 	48,34,44,10,32,32,32,32,34,114,117,108,101,115,46,109,111,100,101,34,58,32,34,102,105,114,115,116,95,116,111,124,
 	116,105,109,101,114,34,44,10,32,32,32,32,34,114,117,108,101,115,46,115,99,111,114,101,95,116,111,95,119,105,110,34,
 	58,32,34,49,46,46,57,34,44,10,32,32,32,32,34,114,117,108,101,115,46,116,105,109,101,114,95,102,114,97,109,101,
-	115,34,58,32,34,54,48,48,46,46,51,54,48,48,48,34,44,10,32,32,32,32,34,114,117,108,101,115,46,103,111,97,
+	115,34,58,32,34,54,48,48,46,46,50,56,56,48,48,34,44,10,32,32,32,32,34,114,117,108,101,115,46,103,111,97,
 	108,95,112,97,117,115,101,95,102,114,97,109,101,115,34,58,32,34,51,48,46,46,54,48,48,34,44,10,32,32,32,32,
 	34,114,117,108,101,115,46,112,101,110,97,108,116,121,95,102,114,97,109,101,115,34,58,32,34,54,48,46,46,54,48,48,
 	34,44,10,32,32,32,32,34,114,117,108,101,115,46,104,111,111,107,115,91,93,34,58,32,34,48,46,46,56,34,44,10,
@@ -11642,6 +11642,6 @@ static const TCHAR* JamDesignerEditableList = TEXT("values, theme, rules, entiti
 static const TCHAR* JamDesignerParitySentence = TEXT("  make it <faster> & \"meaner\"  ");
 static const TCHAR* JamDesignerParityPrevious = TEXT("Sure! <here> {\"x\":1}");
 static const TCHAR* JamDesignerParityErrors[] = { TEXT("at /values/skater_speed: 99 is above the maximum 16."), TEXT("at /: second error.") };
-static const uint64 JamDesignerParitySystemHash = 0x270354ab366d26cdull; static const int32 JamDesignerParitySystemBytes = 63374;
-static const uint64 JamDesignerParityFirstHash = 0xa638944555000592ull; static const int32 JamDesignerParityFirstBytes = 71890;
-static const uint64 JamDesignerParityRepairHash = 0x0ed9eecc056dcc14ull; static const int32 JamDesignerParityRepairBytes = 73192;
+static const uint64 JamDesignerParitySystemHash = 0xe6d4aeb78713ec23ull; static const int32 JamDesignerParitySystemBytes = 63374;
+static const uint64 JamDesignerParityFirstHash = 0x85ba2ba2b0cd8052ull; static const int32 JamDesignerParityFirstBytes = 71890;
+static const uint64 JamDesignerParityRepairHash = 0x1f0508aa0594d104ull; static const int32 JamDesignerParityRepairBytes = 73192;

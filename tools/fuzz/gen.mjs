@@ -16,6 +16,7 @@
 import { readFileSync, writeFileSync, mkdirSync, readdirSync } from 'node:fs';
 import { dirname, resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { sweepCases, chainCase } from './keys.mjs';
 import { validateCartridge, validateCartridgeText, SET_PARAM_FIELD, setParamRange } from '../../schema/validate.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -286,6 +287,12 @@ function repair(g) {
   if (typeof sk.check_speed_min === 'number' && sk.check_speed_min > sk.speed) sk.check_speed_min = sk.speed;
 }
 
+// lane A141: a sweep that shrinks the rink moves any spawn that fell outside onto the centre-ice grid (the validator refuses a spawn outside the boards)
+function respawn(g) {
+  const L = g.rink.length_m, W = g.rink.width_m, corner = typeof g.rink.corner_radius_m === 'number' ? g.rink.corner_radius_m : 5;
+  g.teams.forEach((t, ti) => t.skaters.forEach((s, i) => { if (!insideRink(s.spawn[0], s.spawn[1], L, W, corner)) s.spawn = gridSpawn(ti, i, L, W, corner); }));
+}
+
 // scenarios: [name, mutate(game, r)] applied after random fill; each is "adversarial combination" from the brief
 const SCENARIOS = {
   'smallest-rink-5v5-most-pickups': (g, r) => {
@@ -327,7 +334,7 @@ function buildRules(g, r, forced) {
   const rules = {};
   rules.mode = r.pick(['first_to', 'timer']);
   if (rules.mode === 'first_to') rules.score_to_win = r.pick([1, 9, r.int(1, 9)]);
-  else rules.timer_frames = r.pick([600, 36000, r.int(600, 36000)]);
+  else rules.timer_frames = r.pick([600, 28800, r.int(600, 28800)]);
   if (r.coin(0.6)) rules.goal_pause_frames = r.pick([30, 600, r.int(30, 600)]);
   if (r.coin(0.4)) rules.penalties = r.coin();
   if (r.coin(0.3)) rules.penalty_frames = r.pick([60, 600, r.int(60, 600)]);
@@ -535,7 +542,7 @@ function verdict(text) {
   return { ok: errors.length === 0, pointers, first: errors[0] };
 }
 
-export function generate({ count, invalid, seed, out, skipText = [], safe = false }) {
+export function generate({ count, invalid, seed, out, skipText = [], safe = false, sweep = true, chain = 0, sweepEvery = 1 }) {
   SKIP_TEXT = skipText;
   SAFE = safe;
   const r = rng(seed);
@@ -574,6 +581,23 @@ export function generate({ count, invalid, seed, out, skipText = [], safe = fals
     const v = add(c.id, JSON.stringify(c, null, 1), 'valid', 'minimal/' + name);
     if (!v.ok) manifest.cases[manifest.cases.length - 1].kind = 'invalid';
   }
+  // 1c. lane A141: every schema key at both ends alone, the interacting pairs, and the hook combinations (keys.mjs); derived from game.schema.json
+  let sweepInfo;
+  if (sweep) {
+    const baseCart = JSON.parse(readFileSync(join(CART_DIR, 'hockey.regular.cartridge.json'), 'utf8'));
+    const setParams = Object.keys(SET_PARAM_FIELD).map((p) => { const [lo, hi] = setParamRange(p); return [p, Math.max(lo, -20), Math.min(hi, 20)]; }).filter(([, lo, hi]) => lo <= hi);
+    const sw = sweepCases({ base: baseCart, validate: (c) => verdict(JSON.stringify(c)).ok, repair: (game) => { repair(game); respawn(game); }, setParams });
+    for (const [si, c] of sw.cases.entries()) { if (si % sweepEvery) continue; add(c.name, JSON.stringify(c.cart, null, 1), 'valid', c.profile); validPool.push(c.cart); }
+    sweepInfo = { keys: sw.leaves.length, cases: sw.cases.length, skipped: sw.skipped };
+    manifest.keys = sw.leaves.map((l) => ({ path: l.path, values: l.values }));
+  }
+  // 1d. lane A141: chained hooks (item 5)
+  for (let i = 0; i < chain; i++) {
+    const baseCart = JSON.parse(readFileSync(join(CART_DIR, 'hockey.regular.cartridge.json'), 'utf8'));
+    const c = chainCase(r, i + 1, baseCart);
+    const v = add(c.id, JSON.stringify(c, null, 1), 'valid', 'chain');
+    if (!v.ok) manifest.cases[manifest.cases.length - 1].kind = 'rejected';
+  }
   // 2. invalid
   const base = validPool.length ? validPool : [JSON.parse(readFileSync(join(CART_DIR, 'hockey.regular.cartridge.json'), 'utf8'))];
   let produced = 0, guard = 0;
@@ -584,7 +608,7 @@ export function generate({ count, invalid, seed, out, skipText = [], safe = fals
     if (v.ok) { manifest.cases[manifest.cases.length - 1].kind = 'invalid-but-accepted'; }
     produced++;
   }
-  manifest.summary = { total: n, valid: manifest.cases.filter((c) => c.kind === 'valid').length, rejected, invalid: produced, rejectionReasons };
+  manifest.summary = { sweep: sweepInfo ? { keys: sweepInfo.keys, cases: sweepInfo.cases, skipped: sweepInfo.skipped.length } : undefined, total: n, valid: manifest.cases.filter((c) => c.kind === 'valid').length, rejected, invalid: produced, rejectionReasons };
   manifest.summary.invalidAccepted = manifest.cases.filter((c) => c.kind === 'invalid-but-accepted').length;
   writeFileSync(join(out, 'manifest.json'), JSON.stringify(manifest, null, 1));
   return manifest.summary;
@@ -593,6 +617,6 @@ export function generate({ count, invalid, seed, out, skipText = [], safe = fals
 if (import.meta.url === `file:///${process.argv[1].replace(/\\/g, '/')}` || process.argv[1]?.endsWith('gen.mjs')) {
   const argv_has = (k) => process.argv.includes(`--${k}`);
   const arg = (k, d) => { const i = process.argv.indexOf(`--${k}`); return i >= 0 ? process.argv[i + 1] : d; };
-  const summary = generate({ count: Number(arg('count', '5000')), invalid: Number(arg('invalid', '1000')), seed: Number(arg('seed', '1')), safe: argv_has("safe"), skipText: (arg('skip-text', '') || '').split(',').filter(Boolean), out: resolve(arg('out', join(HERE, 'out', 'run1'))) });
+  const summary = generate({ count: Number(arg('count', '5000')), invalid: Number(arg('invalid', '1000')), seed: Number(arg('seed', '1')), safe: argv_has("safe"), sweep: !argv_has('no-sweep'), chain: Number(arg('chain', '0')), sweepEvery: Number(arg('sweep-every', '1')), skipText: (arg('skip-text', '') || '').split(',').filter(Boolean), out: resolve(arg('out', join(HERE, 'out', 'run1'))) });
   console.log(JSON.stringify(summary, null, 1));
 }

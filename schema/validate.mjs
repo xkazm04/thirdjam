@@ -400,7 +400,7 @@ function checkGame(game, errors) {
     errors.push('at /game/rules/score_to_win: mode "first_to" needs score_to_win (1 to 9).');
   }
   if (rules.mode === 'timer' && rules.timer_frames === undefined) {
-    errors.push('at /game/rules/timer_frames: mode "timer" needs timer_frames (600 to 36000 frames, 60 per second).');
+    errors.push('at /game/rules/timer_frames: mode "timer" needs timer_frames (600 to 28800 frames, 60 per second).');
   }
 
   const sk = isObj(game.skater) ? game.skater : {};
@@ -494,20 +494,20 @@ const ACTION_NEEDS = {
   set_param: ['param', 'value'], spawn_pickup: ['kind'], apply_modifier: ['kind', 'frames'], announce: ['text'],
 };
 // Lane A118 (track S3): the tunables a hook's set_param may name and the game field whose schema range (limits.json game_ranges) bounds its value.
-// The same nine keys the loader's `values` map onto game fields (README "Tunables"; C++ UJamCartridge::ApplyValueKey and SetParamRange). A name outside this
+// The eight keys (nine before lane A141) of the loader's `values` map onto game fields (README "Tunables"; C++ UJamCartridge::ApplyValueKey and SetParamRange). A name outside this
 // list, or a value outside the field's range, is an error in both validators; the sim clamps as well (UJamSim::SetParam), for callers that bypass the validator.
 export const SET_PARAM_FIELD = {
   skater_speed: 'skater.speed', skater_turn_rate: 'skater.turn_rate', shot_speed: 'shot.speed', puck_max_speed: 'puck.max_speed',
   ice_friction: 'rink.ice_friction', board_restitution: 'rink.board_restitution', ai_speed_scale: 'ai.speed_scale', ai_red_skill: 'ai.red_skill',
-  goal_pause_frames: 'rules.goal_pause_frames',
 };
+// Lane A141: goal_pause_frames (30..600) is no set_param tunable: a hook value is -20..20, so no value could ever be valid; the validators name eight tunables. The sim still clamps it (UJamCartridge::SetParamRange) for callers that bypass them.
 export function setParamRange(param) {
   const field = Object.hasOwn(SET_PARAM_FIELD, param) ? SET_PARAM_FIELD[param] : undefined;
   return field ? String(loadLimits().game_ranges[field]).split('..').map(Number) : undefined;
 }
 function checkHook(h, ptr, errors) {
   if (h.when === 'on_frame' && h.every_frames === undefined) errors.push(`at ${ptr}/every_frames: a hook with when "on_frame" needs every_frames (60 to 18000 frames, 60 per second).`);
-  if (h.when !== undefined && h.when !== 'on_frame' && h.every_frames !== undefined) errors.push(`at ${ptr}/every_frames: every_frames only applies to when "on_frame"; remove it.`);
+  if (typeof h.when === 'string' && h.when !== 'on_frame' && h.every_frames !== undefined) errors.push(`at ${ptr}/every_frames: every_frames only applies to when "on_frame"; remove it.`);
   if (h.when === 'on_score_reached' && !(isObj(h.score) && h.score.at_least !== undefined)) errors.push(`at ${ptr}/score: a hook with when "on_score_reached" needs score.at_least (the score that triggers it).`);
   if (isObj(h.score) && typeof h.score.at_least === 'number' && typeof h.score.at_most === 'number' && h.score.at_least > h.score.at_most) {
     errors.push(`at ${ptr}/score/at_least: at_least ${h.score.at_least} is above at_most ${h.score.at_most}; no score could ever match.`);
@@ -732,19 +732,20 @@ export function parseDesignerReply(text, base, opts = {}) {
   const raw = typeof text === 'string' ? text : '';
   const trimmed = raw.trim();
   if (!trimmed) return { kind: 'invalid', errors: ['at /: the reply is empty. Return a JSON object: the full cartridge, or {"refusal": "<reason>"}.'] };
-  let parsed;
-  try {
-    parsed = JSON.parse(trimmed);
-  } catch (e) {
+  // Lane A141: the strict parser the C++ mirror uses (FJamJson::Parse): a duplicate key, a number past double range, nesting past 64 or text after the
+  // object is refused with the same words, and the message nests the parser's own error exactly as JamDesignerPrompt.cpp ParseReply does.
+  const strict = parseStrict(trimmed);
+  if (strict.error) {
     const head = trimmed.length > 40 ? `${trimmed.slice(0, 40)}...` : trimmed;
     const wrapped = !trimmed.startsWith('{') && trimmed.includes('{');
     return {
       kind: 'invalid',
       errors: [wrapped
         ? `at /: the reply has text outside the JSON object (it starts with ${JSON.stringify(head)}). Return only the JSON object: no sentence before or after it and no markdown fence.`
-        : `at /: the reply is not valid JSON (${e.message}). Return only one complete JSON object.`],
+        : `at /: the reply is not valid JSON (${strict.error}). Return only one complete JSON object.`],
     };
   }
+  const parsed = strict.value;
   if (!isObj(parsed)) return { kind: 'invalid', errors: [`at /: the reply must be a JSON object but is ${describe(parsed)}.`] };
   if ('refusal' in parsed) {
     const errors = [];

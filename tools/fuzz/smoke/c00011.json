@@ -2,13 +2,13 @@
  "schema": "tj.cartridge/1",
  "id": "fuzz-00011",
  "title": "Fuzz 11",
- "seed": 0,
+ "seed": 1,
  "theme": {
-  "name": "Night Rink",
+  "name": "Fog of War",
   "mood_words": [
-   "night",
-   "crisp",
-   "bright"
+   "dark",
+   "sly",
+   "slow"
   ],
   "palette": [
    {
@@ -39,7 +39,7 @@
    "type": "number",
    "min": 3,
    "max": 16,
-   "default": 8,
+   "default": 11,
    "description": "Top skating speed in metres per second. Higher is faster and harder to control."
   },
   {
@@ -108,9 +108,7 @@
   }
  ],
  "values": {
-  "skater_speed": 3.3776,
-  "ice_friction": 0.1,
-  "board_restitution": 0.1019
+  "ice_friction": 0
  },
  "rules": [],
  "entities": [],
@@ -119,135 +117,123 @@
   "rink": {
    "length_m": 100,
    "width_m": 50,
-   "corner_radius_m": 7.5,
    "board_restitution": 0,
    "goal_width_m": 6,
-   "goal_height_m": 0.9,
    "ice_friction": 0.1,
    "obstacles": [
     {
-     "kind": "box",
-     "x": 28.87,
-     "z": 20.22,
-     "size": 7.26
+     "kind": "pillar",
+     "x": -24.43,
+     "z": 23.61,
+     "size": 7.73
     }
    ]
   },
   "skater": {
    "speed": 3,
    "accel": 4,
-   "lateral_grip": 6.25,
-   "visual": "humanoid_b1",
-   "carry_speed_mult": 0.8,
+   "mass": 100,
+   "brake_decel": 15.5,
+   "check_speed_min": 3,
+   "pass_speed": 17.5,
+   "pass_lead_frames": 30,
    "breakaway": {
-    "speed_bonus": 0.5,
     "frames": 150
    },
    "goalie": {
-    "block_height_m": 1
+    "reach_m": 1.5
    },
    "glide_drag": 1
   },
-  "stick": {
-   "reach_m": 1.1,
-   "carry_reach_mult": 0.75,
-   "poke_window_frames": 16,
-   "lift_range_m": 1.5,
-   "lift_cone_deg": 95,
-   "stumble_frames": 45,
-   "reception_m": 1.5,
-   "sweep": {
-    "min_deg_per_frame": 23,
-    "sprint_shield_mult": 0.5
+  "pass": {
+   "saucer": {
+    "lift_m": 0.5
    }
   },
-  "commentary": {
-   "enabled": false,
-   "intensity": "loud"
-  },
   "look": {
-   "tier": "l1_day"
+   "tier": "l1_day",
+   "trim_colour_hex": "#38BDF8"
   },
   "camera": {
-   "distance_m": 11,
+   "height_m": 8,
+   "look_ahead_m": 10,
    "lag_frames": 15,
-   "far_net_bias": 0.5
+   "fov_deg": 75,
+   "end_height_m": 8,
+   "far_net_bias": 0.5,
+   "radar": true
   },
   "puck": {
-   "drag": 2
+   "drag": 2,
+   "colour_hex": "#FFFFFF"
   },
   "rules": {
    "mode": "first_to",
-   "score_to_win": 3,
-   "goal_pause_frames": 99,
-   "penalty_frames": 600,
-   "offside": false,
-   "hooks": [
-    {
-     "id": "hook-1",
-     "when": "on_score_reached",
-     "then": [
-      {
-       "do": "set_score_multiplier",
-       "value": 5
-      },
-      {
-       "do": "end_match"
-      },
-      {
-       "do": "apply_modifier",
-       "kind": "big_puck",
-       "frames": 1825
-      },
-      {
-       "do": "announce",
-       "text": "GO"
-      }
-     ],
-     "score": {
-      "at_least": 18
-     },
-     "team": "scoring"
-    }
-   ]
+   "score_to_win": 1
   },
+  "pickups": [
+   {
+    "kind": "big_puck",
+    "spawn_every_frames": 3517,
+    "duration_frames": 1,
+    "magnitude": 4
+   },
+   {
+    "kind": "speed",
+    "spawn_every_frames": 7200,
+    "duration_frames": 3600,
+    "magnitude": 0.1,
+    "max_on_ice": 4
+   },
+   {
+    "kind": "speed",
+    "spawn_every_frames": 7200,
+    "duration_frames": 1
+   },
+   {
+    "kind": "speed",
+    "spawn_every_frames": 120,
+    "duration_frames": 3600,
+    "max_on_ice": 2
+   }
+  ],
   "teams": [
    {
     "id": "blue",
-    "colour_hex": "#1D4ED8",
+    "colour_hex": "#000000",
     "skaters": [
      {
       "role": "player",
       "spawn": [
-       -1.5,
-       -3
+       -31.54,
+       11.41
       ]
      },
      {
-      "role": "chaser",
+      "role": "back",
       "spawn": [
-       -3.7,
-       3
+       -16.27,
+       -14.9
       ]
      }
     ]
    },
    {
     "id": "orange",
-    "colour_hex": "#E8651A",
+    "colour_hex": "#FFFFFF",
     "skaters": [
      {
-      "role": "back",
+      "role": "chaser",
       "spawn": [
-       1.5,
-       -2.5
+       -29.81,
+       10.18
       ]
      },
      {
       "role": "back",
       "spawn": [
-       3.7,
-       3.5
+       13.83,
+       -7.54
       ]
      }
     ]

@@ -142,13 +142,13 @@ bool FJamModeKeysTimer::RunTest(const FString& Parameters)
 		return JamModeKeysTests::Variant(*this, { { TEXT("\"mode\": \"first_to\""), TEXT("\"mode\": \"timer\"") },
 			{ TEXT("\"score_to_win\": 3,"), FString::Printf(TEXT("\"timer_frames\": %d,"), Frames) } }, Errors, bExpect);
 	};
-	UJamCartridge* Ten = Timer(36000, true);
+	UJamCartridge* Ten = Timer(28800, true);
 	if (!Ten) return false;
-	TestEqual(TEXT("timer_frames 36000 loads"), Ten->Game.Rules.TimerFrames, 36000);
+	TestEqual(TEXT("timer_frames 28800 loads"), Ten->Game.Rules.TimerFrames, 28800);
 	UJamSim* Sim = NewObject<UJamSim>();
 	Sim->Init(Ten->Game, 1);
-	TestEqual(TEXT("the sim's clock starts at 36000"), Sim->GetTimerFrames(), 36000);
-	TestNull(TEXT("36001 is rejected"), Timer(36001, false));
+	TestEqual(TEXT("the sim's clock starts at 28800"), Sim->GetTimerFrames(), 28800);
+	TestNull(TEXT("28801 is rejected"), Timer(28801, false));
 	TestTrue(TEXT("... at /game/rules/timer_frames"), JamModeKeysTests::Rejects(Errors, TEXT("/game/rules/timer_frames")));
 	return true;
 }
