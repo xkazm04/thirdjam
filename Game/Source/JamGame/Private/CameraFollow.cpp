@@ -6,6 +6,7 @@
 #include "Engine/Engine.h"
 #include "Engine/GameViewportClient.h"
 #include "UnrealClient.h"
+#include "LookTierSwitcher.h"
 
 // A40: 1 = the H11 camera (pull in along the arm to 0.3 m inside a rectangle, no lift, no yaw rule, no far-net lead). Presentation only; the before stills of CAMERA.md use it.
 static TAutoConsoleVariable<int32> CVarJamCameraLegacy(TEXT("jam.camera.Legacy"), 0,
@@ -25,6 +26,11 @@ FJamCameraSettings FJamCameraSettings::FromCartridge(const FJamCameraConfig& C)
 	S.FarNetBias = (float)C.FarNetBias;
 	return S;
 }
+
+// Lane A64: the game camera may keep a loose puck and the near far net inside this many degrees of its yaw. Default 0 = off: a yaw lead feeds back
+// through the A49 cursor aim and the camera-relative stick (measured, see FJamCameraSettings::KeepYawDeg). Opt-in only.
+static TAutoConsoleVariable<float> CVarJamCameraKeepYaw(TEXT("jam.camera.KeepYaw"), 0.f,
+	TEXT("Degrees off the camera yaw a loose puck / the near far net may sit (0 = off, the default; a lead turns the cursor-aimed skater). Presentation only."));
 
 void FJamSpring::Reset(float Value)
 {
@@ -100,6 +106,12 @@ void UJamFollowCamera::ApplyConfig(const FJamCameraSettings& InConfig)
 {
 	Config = InConfig;
 	FieldOfView = Config.FovDeg;
+}
+
+void UJamFollowCamera::SetExposureBias(float EV)
+{
+	PostProcessSettings.bOverride_AutoExposureBias = EV != 0.f;
+	PostProcessSettings.AutoExposureBias = EV;
 }
 
 void UJamFollowCamera::ApplyConfig(const FJamCameraConfig& Cartridge)
@@ -243,6 +255,24 @@ FTransform UJamFollowCamera::StepThirdPerson(const FJamCameraSettings& C, FJamCa
 	const float DeltaAlong = FMath::UnwindDegrees(Along - YawBase);
 	const float WHead = FMath::Clamp(FMath::Cos(FMath::DegreesToRadians(DeltaAlong)), 0.f, 1.f);
 	float OffsetTarget = Lead + S0 * WEnd * WHead * DeltaAlong;
+	// Lane A64: keep the far net (near the far end) and then a loose puck inside KeepYawDeg of the camera yaw, the puck last so it wins over the net;
+	// the human's middle-third clamp below still has the last word. A point behind the camera (more than 100 degrees off) is not chased.
+	if (C.KeepYawDeg > 0.f)
+	{
+		auto Keep = [&](const FVector2D& PointM)
+		{
+			const FVector2D To = PointM - P0;
+			if (To.Size() < 1.0) return;
+			const float Bearing = FMath::RadiansToDegrees((float)FMath::Atan2(To.Y, To.X));
+			const float Rel = FMath::UnwindDegrees(State.YawDeg + OffsetTarget - Bearing);
+			if (FMath::Abs(Rel) > 100.f) return;
+			OffsetTarget += FMath::Clamp(Rel, -C.KeepYawDeg, C.KeepYawDeg) - Rel;
+		};
+		const FVector2D NetM(NetCm.X / 100.0, NetCm.Y / 100.0);
+		if (FVector2D::Distance(State.PivotM, NetM) < C.NetFrameNearM) Keep(NetM);
+		const float PuckDist = (float)FVector2D::Distance(State.PivotM, Frame.PuckM);
+		if (PuckDist > C.PuckFrameMinM && PuckDist < C.PuckFrameMaxM) Keep(Frame.PuckM);
+	}
 	// Lane A49: the human stays in the middle third. The offset's target is bounded so the camera yaw stays within MiddleThirdYawDeg of the bearing from the
 	// (clamped) camera point to the pivot; the spring then moves smoothly inside that bound (no pop from the budget itself). Skipped when the camera stands on
 	// the pivot (a bearing means nothing there).
@@ -315,6 +345,7 @@ void UJamFollowCamera::BeginPlay()
 {
 	Super::BeginPlay();
 	FieldOfView = Config.FovDeg;
+	if (UWorld* W0 = GetWorld()) if (const ULookTierSwitcher* Look = W0->GetSubsystem<ULookTierSwitcher>()) SetExposureBias(Look->GetCameraExposureBias());   // lane A64
 	if (UJamPresentation* P = UJamPresentation::Get(this))
 	{
 		FrameHandle = P->OnSimFrame.AddUObject(this, &UJamFollowCamera::StepSimFrame);
@@ -410,7 +441,9 @@ void UJamFollowCamera::StepSimFrame(const FJamPresentationFrame& Frame)
 		}
 		else
 		{
-			PoseCurrent = StepThirdPerson(Config, Filter, Frame);
+			FJamCameraSettings Live = Config;
+			Live.KeepYawDeg = FMath::Max(0.f, CVarJamCameraKeepYaw.GetValueOnGameThread());   // lane A64
+			PoseCurrent = StepThirdPerson(Live, Filter, Frame);
 		}
 	}
 	// Lane A33: the punch, one sim frame at a time, on top of the clamped pose (interpolated like the rest by TickComponent).

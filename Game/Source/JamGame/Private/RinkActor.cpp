@@ -681,13 +681,15 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 			FMeshBuf Housing, Lens;
 			// Lane A47 (B-to-A-0030 fault 10): the housing sat 4 cm above the rail and read as floating over the glass on every tier; it now straddles the
 			// rail top with its base 6 cm below the glass line, clamped onto the glass.
-			const double GH = (BoardHeightM + GlassHeightM) * UU - 6.0;
+			// Lane A64 (eyes grid h19 finding 5, 10 stills): the 40 x 30 x 30 cm box on the rail still read as a floating cube. The housing is now a low
+			// clamp that wraps the glass top rail (the rail bar is 6 x 4 cm at GH + 2), and the light a red bar lying along the rail on top of it:
+			// one line with the glass, no cube.
+			const double GH = (BoardHeightM + GlassHeightM) * UU;
 			for (int32 S = -1; S <= 1; S += 2)
 			{
 				const double Mx = S * (R.LengthM * 0.5 * UU + BoardThicknessM * 0.5 * UU);
-				Housing.Box(FVector(Mx - 20.0, -15.0, GH), FVector(Mx + 20.0, 15.0, GH + 30.0));
-				const double Lx = Mx - S * 20.0;
-				Lens.Box(FVector(FMath::Min(Lx, Lx - S * 4.0), -10.0, GH + 5.0), FVector(FMath::Max(Lx, Lx - S * 4.0), 10.0, GH + 25.0));
+				Housing.Box(FVector(Mx - 6.0, -40.0, GH - 4.0), FVector(Mx + 6.0, 40.0, GH + 8.0));
+				Lens.Box(FVector(Mx - 4.0, -34.0, GH + 8.0), FVector(Mx + 4.0, 34.0, GH + 16.0));
 			}
 			Housing.Commit(GoalLights, 0);
 			Lens.Commit(GoalLights, 1);
@@ -729,7 +731,8 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 	// a wall Size wide across the rink, 0.3 m deep) and bumpers (a pillar in its own magenta section 1).
 	{
 		FMeshBuf Bump, Shield;
-		auto Cylinder = [](FMeshBuf& Buf, const FVector& C, double Hs)
+		FMeshBuf BumpTrim;   // lane A64: the bumper's rubber base band, top band and lid (section 3, B's MI_Toon_Dark)
+		auto Cylinder = [](FMeshBuf& Buf, const FVector& C, double Hs, double Z0 = 0.0, double Z1 = BoardHeightM * UU)
 		{
 			const int32 Seg = 20;
 			for (int32 i = 0; i < Seg; ++i)
@@ -737,7 +740,7 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 				const double A0 = 2 * UE_DOUBLE_PI * i / Seg, A1 = 2 * UE_DOUBLE_PI * (i + 1) / Seg;
 				const FVector D0(FMath::Cos(A0), FMath::Sin(A0), 0), D1(FMath::Cos(A1), FMath::Sin(A1), 0);
 				// Lane A15: listed clockwise seen from outside so the front face points outward (the PIE proof showed pillars and bumpers inside out).
-				Buf.Quad(C + D1 * Hs, C + D0 * Hs, C + D0 * Hs + FVector(0, 0, BoardHeightM * UU), C + D1 * Hs + FVector(0, 0, BoardHeightM * UU), (D0 + D1).GetSafeNormal());
+				Buf.Quad(C + D1 * Hs + FVector(0, 0, Z0), C + D0 * Hs + FVector(0, 0, Z0), C + D0 * Hs + FVector(0, 0, Z1), C + D1 * Hs + FVector(0, 0, Z1), (D0 + D1).GetSafeNormal());
 			}
 		};
 		for (const FJamObstacle& O : R.Obstacles)
@@ -750,7 +753,15 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 			}
 			else if (O.Kind == FName(TEXT("bumper")))
 			{
-				Cylinder(Bump, C, Hs);
+				// Lane A64 (eyes grid h19 finding 1, severity 5): an open magenta tube with no lid read as a flat magenta box. It is now a rubber bollard:
+				// a dark base band (0..14 cm) and top band (106..120 cm) 3 cm proud, a dark lid with a magenta boss, the magenta body between.
+				const double H = BoardHeightM * UU, Band = 14.0, Proud = 3.0;
+				Cylinder(Bump, C, Hs, Band, H - Band);
+				Cylinder(BumpTrim, C, Hs + Proud, 0.0, Band);
+				Cylinder(BumpTrim, C, Hs + Proud, H - Band, H);
+				BumpTrim.Ring(FVector2D(C.X, C.Y), Hs * 0.62, Hs + Proud, H, 20);
+				Bump.Ring(FVector2D(C.X, C.Y), 0.0, Hs * 0.62, H + 2.0, 20);
+				Cylinder(Bump, C, Hs * 0.62, H, H + 2.0);
 			}
 			else if (O.Kind == FName(TEXT("goal_shield")))
 			{
@@ -776,7 +787,26 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 				D->SetVectorParameterValue(TEXT("Color"), FLinearColor(0.9f, 0.2f, 0.6f));
 				BumperMat = D;
 			}
+			else
+			{
+				// Lane A64: B's MI_Toon_Bumper (M_Toon, TeamColour hot magenta) carries an emissive fill that flattens the body into one tone; the toon
+				// ramp needs the light to show the round. The fill is capped at BumperEmissiveCap here until B's instance carries a lower value.
+				float BEmissive = 0.f;
+				BumperMat->GetScalarParameterValue(FHashedMaterialParameterInfo(TEXT("Emissive")), BEmissive);
+				if (BEmissive > BumperEmissiveCap)
+				{
+					UMaterialInstanceDynamic* D = UMaterialInstanceDynamic::Create(BumperMat, this);
+					D->SetScalarParameterValue(TEXT("Emissive"), BumperEmissiveCap);
+					BumperMat = D;
+				}
+				UE_LOG(LogJamSim, Log, TEXT("JAMRINK bumper MI_Toon_Bumper Emissive %.2f -> %.2f (lane A64 cap), lid and bands MI_Toon_Dark"), BEmissive, FMath::Min(BEmissive, BumperEmissiveCap));
+			}
 			Obstacles->SetMaterial(1, BumperMat);
+			if (BumpTrim.V.Num())
+			{
+				BumpTrim.Commit(Obstacles, 3);
+				Obstacles->SetMaterial(3, LoadConstructionMat(TEXT("MI_Toon_Dark"), TEXT("MI_LL_GlassRail"), FLinearColor(0.06f, 0.06f, 0.07f)));
+			}
 		}
 		if (Shield.V.Num())
 		{

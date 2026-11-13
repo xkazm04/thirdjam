@@ -30,6 +30,9 @@
 #include "HAL/IConsoleManager.h"
 #include "Misc/CommandLine.h"
 #include "Kismet/GameplayStatics.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
+#include "HAL/PlatformMisc.h"
 
 DEFINE_LOG_CATEGORY(LogHokej);
 
@@ -65,6 +68,10 @@ namespace
 	const TCHAR* TierBroadcast = TEXT("p4_broadcast");
 	constexpr int8 GoalieOff = -2;
 	constexpr int64 GoalieHoldFrames = 24;   // the stance stays at least 0.4 s once it came on
+	// Lane A64: why the last LoadCut failed (path and validator lines), and the toast the HUD shows once it exists. Presentation only.
+	FString GLastCutPath;
+	TArray<FString> GLastCutErrors;
+	FString PendingCutToast;
 }
 
 AHokejGameMode::AHokejGameMode()
@@ -90,6 +97,16 @@ void AHokejGameMode::StartPlay()
 	if (!LoadCut(CutName) && !bBuilt)
 	{
 		UE_LOG(LogHokej, Error, TEXT("JAMCART cut \"%s\" rejected; falling back to hockey.regular"), *CutName);
+		// Lane A64 (A54's premise 2: a rejected cut was invisible in Shipping, where UE_LOG is compiled out). One line in every configuration:
+		// the debugger stream, stderr and <Saved>/Logs/JamCut.log (appended), and a 4 s HUD toast once the HUD exists.
+		const FString Reason = GLastCutErrors.Num() ? FString::Join(GLastCutErrors, TEXT("; ")) : FString(TEXT("could not be read"));
+		const FString Line = FString::Printf(TEXT("JAMCUT rejected %s: %s (falling back to hockey.regular)"), *GLastCutPath, *Reason);
+		FPlatformMisc::LowLevelOutputDebugStringf(TEXT("%s\n"), *Line);
+		fprintf(stderr, "%s\n", TCHAR_TO_UTF8(*Line));
+		FFileHelper::SaveStringToFile(FDateTime::Now().ToString(TEXT("%Y-%m-%d %H:%M:%S ")) + Line + LINE_TERMINATOR, *(FPaths::ProjectLogDir() / TEXT("JamCut.log")),
+			FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM, &IFileManager::Get(), FILEWRITE_Append);
+		UE_LOG(LogHokej, Error, TEXT("%s"), *Line);
+		PendingCutToast = FString::Printf(TEXT("CUT REJECTED: %s\n%s\nPlaying hockey.regular"), *FPaths::GetCleanFilename(GLastCutPath), *Reason.Left(160));
 		LoadCut(TEXT("hockey.regular"));
 	}
 }
@@ -102,6 +119,8 @@ bool AHokejGameMode::LoadCut(const FString& NameOrPath)
 	if (!C)
 	{
 		for (const FString& E : Errors) UE_LOG(LogHokej, Error, TEXT("JAMCART %s %s"), *NameOrPath, *E);
+		GLastCutPath = Path.IsEmpty() ? NameOrPath : Path;
+		GLastCutErrors = Errors;
 		return false;
 	}
 	Cartridge = C;
@@ -373,6 +392,7 @@ void AHokejGameMode::PossessHuman(APlayerController* PC)
 		// Lane A49: the HUD never takes a click; with the cursor shown, a left button over a plate would otherwise be eaten by Slate instead of shooting.
 		if (Hud) Hud->SetVisibility(ESlateVisibility::HitTestInvisible);
 	}
+	if (Hud && !PendingCutToast.IsEmpty()) { Hud->ShowToast(PendingCutToast); PendingCutToast.Reset(); }   // lane A64
 	bMatchInputModeSet = false;
 	EnsureMatchInputMode(PC);
 	PushPresentation();

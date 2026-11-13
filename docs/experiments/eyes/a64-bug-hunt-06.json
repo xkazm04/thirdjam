@@ -1,0 +1,171 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T10:08:04.366Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a64/hockey.regular-l2-720-farnet.jpg",
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/a64/hockey.regular-l2-720-pause.jpg",
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/a64/hockey.regular-l2-call.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/a64/hockey.regular-l2-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/a64/hockey.regular-l2-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "F",
+          "path": "docs/experiments/img/a64/hockey.regular-l2-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2465,
+      "usage": {
+        "prompt": 7465,
+        "output": 900,
+        "thoughts": 0,
+        "total": 8365,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00897,
+      "ms": 9608,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [
+              {
+                "where": "Top center scoreboard",
+                "what": "The 'PERIOD 1: FIRST TO 3' text inside the central header frame is clipped off at the top border.",
+                "severity": 2,
+                "confidence": 0.95
+              },
+              {
+                "where": "Bottom center around skater #7",
+                "what": "The blue selection circle on the ice renders directly on top of the skater's lower body and legs instead of projecting purely beneath on the ice surface.",
+                "severity": 3,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still B",
+            "findings": [
+              {
+                "where": "Center bottom edge of pause modal",
+                "what": "The white control guide text bar along the bottom intersects directly through the bottom edge and shadow of the pause dialog card.",
+                "severity": 3,
+                "confidence": 0.9
+              },
+              {
+                "where": "Top center scoreboard behind pause menu",
+                "what": "The 'PERIOD 1: FIRST TO 3' text remains clipped at the top of the center scoreboard display.",
+                "severity": 2,
+                "confidence": 0.95
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still C",
+            "findings": [
+              {
+                "where": "Top center scoreboard",
+                "what": "The text 'PERIOD 1: FIRST TO 3' is vertically misaligned and clipped at the top edge of the middle scoreboard panel.",
+                "severity": 2,
+                "confidence": 0.95
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still D",
+            "findings": [
+              {
+                "where": "Top center scoreboard",
+                "what": "The text 'PERIOD 1: FIRST TO 3' is clipped against the top border of the scoreboard box.",
+                "severity": 2,
+                "confidence": 0.95
+              },
+              {
+                "where": "Center bottom skater",
+                "what": "The blue selection ring clips in front of the skater's legs and torso.",
+                "severity": 3,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still E",
+            "findings": [
+              {
+                "where": "Top center scoreboard",
+                "what": "The text 'PERIOD 1: FIRST TO 3' is clipped at the top edge of the central scoreboard frame.",
+                "severity": 2,
+                "confidence": 0.95
+              },
+              {
+                "where": "Bottom center skater",
+                "what": "The circular player indicator ring renders over the skater's lower body instead of being occluded by the character mesh.",
+                "severity": 3,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still F",
+            "findings": [
+              {
+                "where": "Top center scoreboard",
+                "what": "The header text 'PERIOD 1: FIRST TO 3' is partially clipped outside the top bounds of the center black scoreboard box.",
+                "severity": 2,
+                "confidence": 0.95
+              },
+              {
+                "where": "Bottom center skater",
+                "what": "The blue circular targeting/selection ring draws on top of the skater's legs and waist.",
+                "severity": 3,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=hockey.regular-l2-720-farnet.jpg B=hockey.regular-l2-720-pause.jpg C=hockey.regular-l2-call.jpg D=hockey.regular-l2-card.jpg E=hockey.regular-l2-faceoff.jpg F=hockey.regular-l2-farnet.jpg (gemini-3.8-flash, in 7465 out 900 tokens, ~$0.0090, 9.6 s)\n- stills:\n  - label: Still A; clean: false\n    - findings:\n      - where: Top center scoreboard; what: The 'PERIOD 1: FIRST TO 3' text inside the central header frame is clipped off at the top border.; severity: 2; confidence: 0.95\n      - where: Bottom center around skater #7; what: The blue selection circle on the ice renders directly on top of the skater's lower body and legs instead of projecting purely beneath on the ice surface.; severity: 3; confidence: 0.85\n  - label: Still B; clean: false\n    - findings:\n      - where: Center bottom edge of pause modal; what: The white control guide text bar along the bottom intersects directly through the bottom edge and shadow of the pause dialog card.; severity: 3; confidence: 0.9\n      - where: Top center scoreboard behind pause menu; what: The 'PERIOD 1: FIRST TO 3' text remains clipped at the top of the center scoreboard display.; severity: 2; confidence: 0.95\n  - label: Still C; clean: false\n    - findings:\n      - where: Top center scoreboard; what: The text 'PERIOD 1: FIRST TO 3' is vertically misaligned and clipped at the top edge of the middle scoreboard panel.; severity: 2; confidence: 0.95\n  - label: Still D; clean: false\n    - findings:\n      - where: Top center scoreboard; what: The text 'PERIOD 1: FIRST TO 3' is clipped against the top border of the scoreboard box.; severity: 2; confidence: 0.95\n      - where: Center bottom skater; what: The blue selection ring clips in front of the skater's legs and torso.; severity: 3; confidence: 0.85\n  - label: Still E; clean: false\n    - findings:\n      - where: Top center scoreboard; what: The text 'PERIOD 1: FIRST TO 3' is clipped at the top edge of the central scoreboard frame.; severity: 2; confidence: 0.95\n      - where: Bottom center skater; what: The circular player indicator ring renders over the skater's lower body instead of being occluded by the character mesh.; severity: 3; confidence: 0.85\n  - label: Still F; clean: false\n    - findings:\n      - where: Top center scoreboard; what: The header text 'PERIOD 1: FIRST TO 3' is partially clipped outside the top bounds of the center black scoreboard box.; severity: 2; confidence: 0.95\n      - where: Bottom center skater; what: The blue circular targeting/selection ring draws on top of the skater's legs and waist.; severity: 3; confidence: 0.85"
+    }
+  ]
+}

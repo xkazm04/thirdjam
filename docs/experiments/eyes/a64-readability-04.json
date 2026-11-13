@@ -1,0 +1,72 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "readability",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T10:15:21.265Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "readability",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a64/hockey.regular-p4-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "distance": 6,
+      "thumbnails": [],
+      "prompt_chars": 2719,
+      "usage": {
+        "prompt": 1910,
+        "output": 365,
+        "thoughts": 0,
+        "total": 2275,
+        "calls": 1
+      },
+      "cost_usd_est": 0.0028,
+      "ms": 4703,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A: hockey.regular-p4-farnet.jpg",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "The puck is not visible anywhere on screen, completely occluded by the skater's body or the boards."
+              },
+              "carrier": {
+                "score": 3,
+                "evidence": "Only one skater is present in the center foreground (blue #7), but without seeing the puck or stick clearly against the boards, possession is purely assumed."
+              },
+              "team_colours": {
+                "score": 2,
+                "evidence": "Only one team is visible on the ice (blue skater #7), though the top scoreboard displays blue and orange boxes."
+              },
+              "far_net": {
+                "score": 1,
+                "evidence": "The far net is not visible; only the corner frame of the near net appears in the bottom right corner."
+              },
+              "zone_strips": {
+                "score": 4,
+                "evidence": "A single red goal line or zone line runs vertically down the ice directly beneath the blue skater."
+              }
+            },
+            "first_look": "Blue skater #7 facing the boards with a large blue selection ring",
+            "noise": [
+              "Bright yellow glowing strip atop the rink boards",
+              "Translucent bubble particles scattering around the skater",
+              "Giant black void in the upper half representing empty stands"
+            ],
+            "overall": 2
+          }
+        ]
+      },
+      "markdown": "**eyes/readability** A=hockey.regular-p4-farnet.jpg at 6 m (gemini-3.8-flash, in 1910 out 365 tokens, ~$0.0028, 4.7 s)\n- stills:\n  - label: Still A: hockey.regular-p4-farnet.jpg; first_look: Blue skater #7 facing the boards with a large blue selection ring; overall: 2\n    - elements:\n      - puck: score 1, evidence The puck is not visible anywhere on screen, completely occluded by the skater's body or the boards.\n      - carrier: score 3, evidence Only one skater is present in the center foreground (blue #7), but without seeing the puck or stick clearly against the boards, possession is purely assumed.\n      - team_colours: score 2, evidence Only one team is visible on the ice (blue skater #7), though the top scoreboard displays blue and orange boxes.\n      - far_net: score 1, evidence The far net is not visible; only the corner frame of the near net appears in the bottom right corner.\n      - zone_strips: score 4, evidence A single red goal line or zone line runs vertically down the ice directly beneath the blue skater.\n    - noise: Bright yellow glowing strip atop the rink boards; Translucent bubble particles scattering around the skater; Giant black void in the upper half representing empty stands"
+    }
+  ]
+}

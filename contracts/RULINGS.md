@@ -417,3 +417,9 @@ player makes creative variations without editing JSON; (4) P2 stays what it is: 
    pending-flags word was a byte and cut the spin's bit 512 off during a stall). Protocol 5 has no refusal message: a protocol-4 guest is ignored and told the wrong reason
    after 60 s; a REFUSE message (about 20 lines) is accepted for the next JamNet lane. The sprint and the spin were dead in a joined match (`ReadLocalInput` never read
    them): fixed by the Director with the landing.
+
+## R-0038 (H15, 2026-11-13 11:19): the camera stays bound to the human; the HUD points at what is off screen
+Lane A64's camera lead toward the puck fought the mouse aim (the cursor aims the stick in rink space; a camera turn under the cursor changes what the player is
+aiming at), so it ships off (`jam.camera.KeepYaw` 0). Ruling: no camera lead, lift or turn is added that moves under the cursor while the player aims; what is off
+screen (the puck, its carrier, the far net) is pointed at by the HUD (lane A74: an edge arrow with the distance, the carrier's team colour), and the camera's bounds
+stay A49's. A camera that leaves the human (a replay, an end-zone shot) is a separate camera mode, never the play camera.

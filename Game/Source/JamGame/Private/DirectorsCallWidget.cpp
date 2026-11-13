@@ -485,10 +485,10 @@ void UJamDirectorsCallHudWidget::BuildTree()
 	// The period card, where lane A5 draws its win/lose card (never at the same time: this one shows only in play).
 	// R-0021 point 3 (lane A47, B-to-A-0030 fault 2): a plain banner on A18's panel, "MATCH n" over "PERIOD n - FACEOFF"; the clapperboard art
 	// (T_UI_MatchCard) stays in the menu's world. TakeArt is the plate so the show / hide logic is unchanged.
-	UBorder* Banner = S::Plate(T, S::Panel(0.92f), FMargin(44, 18, 44, 22));
+	UBorder* Banner = S::Plate(T, S::Panel(0.92f), FMargin(36, 8, 36, 12));   // lane A64: tighter (was 44, 18, 44, 22)
 	UVerticalBox* BannerBody = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("BannerBody"));
 	Banner->SetContent(BannerBody);
-	TakeCard = S::IceText(T, TEXT(""), S::Font(77, FName("Black"), S::TrackTitle, true), S::Chalk());
+	TakeCard = S::IceText(T, TEXT(""), S::Font(MatchCardFontPt, FName("Black"), S::TrackTitle, true), S::Chalk());
 	TakeCard->SetJustification(ETextJustify::Center);
 	TakeSub = S::IceText(T, TEXT("FACEOFF"), S::LabelFont(true), S::Yellow());
 	TakeSub->SetJustification(ETextJustify::Center);

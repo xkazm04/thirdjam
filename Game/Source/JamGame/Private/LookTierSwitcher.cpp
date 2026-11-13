@@ -14,6 +14,8 @@
 #include "Materials/MaterialParameterCollectionInstance.h"
 #include "EngineUtils.h"
 #include "RinkActor.h"
+#include "CameraFollow.h"
+#include "UObject/UObjectIterator.h"
 
 DEFINE_LOG_CATEGORY(LogJamLook);
 
@@ -173,9 +175,42 @@ void ULookTierSwitcher::OnRigLoaded()
 {
 	if (TObjectPtr<ULevelStreamingDynamic>* Rig = LoadedRigs.Find(CurrentTier))
 	{
-		if (*Rig && (*Rig)->GetLoadedLevel()) ApplyRigScale(*Rig, CurrentScale);
+		if (*Rig && (*Rig)->GetLoadedLevel())
+		{
+			ApplyRigScale(*Rig, CurrentScale);
+			// Lane A64 (eyes grid h19 finding 6, "l1 day blown out"): LR_L1_Day and LR_L3_Neon are still lane A0's empty placeholder maps (8 KB, a brush and
+			// world settings, no light, no post volume). Hiding the persistent sky light for them left the rink with no light rig at all and auto exposure
+			// pushed the picture white. A rig that brings no light of its own keeps the persistent lights.
+			int32 RigLights = 0;
+			for (AActor* A : (*Rig)->GetLoadedLevel()->Actors)
+			{
+				if (!A) continue;
+				TInlineComponentArray<ULightComponentBase*> Comps;
+				A->GetComponents(Comps);
+				RigLights += Comps.Num();
+			}
+			CameraExposureBias = RigLights == 0 ? NoRigExposureBiasEV : 0.f;
+			PushCameraExposure();
+			if (RigLights == 0)
+			{
+				HidePersistentLights(false);
+				UE_LOG(LogJamLook, Warning, TEXT("JAMLOOK rig %s carries no light (B's map is an empty placeholder): the persistent sky and directional lights stay on"), *CurrentTier);
+			}
+		}
 	}
 	UE_LOG(LogJamLook, Log, TEXT("JAMLOOK rig %s loaded: MPC_Look.Clay=%.1f (BP_LookParams writes its value on BeginPlay, read again by GetLookClay)"), *CurrentTier, GetLookClay());
+}
+
+void ULookTierSwitcher::PushCameraExposure()
+{
+	UWorld* W = GetWorld();
+	if (!W) return;
+	int32 N = 0;
+	for (TObjectIterator<UJamFollowCamera> It; It; ++It)
+	{
+		if (*It && It->GetWorld() == W) { It->SetExposureBias(CameraExposureBias); ++N; }
+	}
+	UE_LOG(LogJamLook, Log, TEXT("JAMLOOK camera exposure bias %.1f EV on %d follow cameras (lane A64)"), CameraExposureBias, N);
 }
 
 void ULookTierSwitcher::ResetLookCollection()

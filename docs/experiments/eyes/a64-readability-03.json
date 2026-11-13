@@ -1,0 +1,256 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "readability",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T10:15:16.472Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "readability",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a64/hockey.regular-l2-720-farnet.jpg",
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/a64/hockey.regular-l2-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/a64/hockey.regular-l2-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/a64/hockey.regular-l3-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/a64/hockey.regular-l3-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "F",
+          "path": "docs/experiments/img/a64/hockey.regular-p4-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "distance": 6,
+      "thumbnails": [],
+      "prompt_chars": 2916,
+      "usage": {
+        "prompt": 7636,
+        "output": 1714,
+        "thoughts": 0,
+        "total": 9350,
+        "calls": 1
+      },
+      "cost_usd_est": 0.01215,
+      "ms": 15300,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "The puck is not visible anywhere on the ice or near the skater."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "No puck is visible, so it is impossible to determine who has possession."
+              },
+              "team_colours": {
+                "score": 2,
+                "evidence": "Only one skater wearing royal blue is on screen, though the scoreboard at the top shows blue and orange panels."
+              },
+              "far_net": {
+                "score": 1,
+                "evidence": "The far net is not visible; only the edge of the near net frame appears in the bottom right corner."
+              },
+              "zone_strips": {
+                "score": 3,
+                "evidence": "A single red vertical line extends under the blue skater down to the bottom edge."
+              }
+            },
+            "first_look": "Blue skater surrounded by floating white particle spheres",
+            "noise": [
+              "floating white particle spheres obscuring player silhouette",
+              "bright yellow horizontal boards strip"
+            ],
+            "overall": 2
+          },
+          {
+            "label": "Still B",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "The puck is not visible anywhere along the ice surface or near either player."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "No puck is visible on the ice to identify a carrier."
+              },
+              "team_colours": {
+                "score": 4,
+                "evidence": "The foreground skater wears bright royal blue while the distant center skater clearly wears bright warm orange."
+              },
+              "far_net": {
+                "score": 4,
+                "evidence": "The far net is visible in red at center-top behind the orange skater, measuring about 40 pixels wide."
+              },
+              "zone_strips": {
+                "score": 4,
+                "evidence": "A strong horizontal red center line and deep blue zone lines span clearly across the rink."
+              }
+            },
+            "first_look": "Blue skater #7 in the foreground center",
+            "noise": [
+              "heavy concentric white/blue textured rings on the ice surface",
+              "keybind overlay bar across the bottom"
+            ],
+            "overall": 3
+          },
+          {
+            "label": "Still C",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "The puck is not visible anywhere on the ice surface."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "Possession cannot be determined because no puck is present."
+              },
+              "team_colours": {
+                "score": 2,
+                "evidence": "Only the royal blue skater is on screen, with orange visible solely in the top scoreboard UI."
+              },
+              "far_net": {
+                "score": 1,
+                "evidence": "The far net is not visible; only a cropped red corner of the near net shows at the bottom right."
+              },
+              "zone_strips": {
+                "score": 3,
+                "evidence": "A single straight red line runs vertically beneath the blue skater."
+              }
+            },
+            "first_look": "Blue skater framed by white particle dots facing the boards",
+            "noise": [
+              "white circular particle cloud around the player",
+              "glowing yellow strip at the base of the boards"
+            ],
+            "overall": 2
+          },
+          {
+            "label": "Still D",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "The puck is not visible on the ice surface."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "No carrier can be identified as no puck is visible."
+              },
+              "team_colours": {
+                "score": 4,
+                "evidence": "Foreground player is clearly light cornflower blue and the distant skater is warm orange."
+              },
+              "far_net": {
+                "score": 4,
+                "evidence": "The far net is centered along the back boards with an illuminated red frame roughly 40 pixels wide."
+              },
+              "zone_strips": {
+                "score": 4,
+                "evidence": "A dark red center line and two dark blue zone lines cleanly cut across the pale blue ice sheet."
+              }
+            },
+            "first_look": "Light blue skater #7 in the foreground center",
+            "noise": [
+              "input guide banner spanning the lower edge",
+              "large circular blue player selection ring on ice"
+            ],
+            "overall": 3
+          },
+          {
+            "label": "Still E",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "The puck is not visible anywhere on the rink."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "No puck is visible on screen."
+              },
+              "team_colours": {
+                "score": 2,
+                "evidence": "Only one team is represented on the ice by a light blue skater, while orange only appears in the score header."
+              },
+              "far_net": {
+                "score": 1,
+                "evidence": "The far net is not visible in the camera view."
+              },
+              "zone_strips": {
+                "score": 3,
+                "evidence": "A single red stripe runs vertically under the skater."
+              }
+            },
+            "first_look": "Light blue skater facing away with white particle specks",
+            "noise": [
+              "white circular particle effects cluttered around the player",
+              "bright glowing yellow base strip on the boards"
+            ],
+            "overall": 2
+          },
+          {
+            "label": "Still F",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "The puck is not visible anywhere on the clear white ice."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "No carrier can be identified because no puck is present on screen."
+              },
+              "team_colours": {
+                "score": 4,
+                "evidence": "Foreground skater wears vibrant cobalt blue while the distant opponent at center ice wears orange."
+              },
+              "far_net": {
+                "score": 4,
+                "evidence": "The red rectangular frame of the far net is centered at the far end boards, roughly 40 pixels wide."
+              },
+              "zone_strips": {
+                "score": 5,
+                "evidence": "A crisp red center line and bold blue faceoff circles/lines contrast strongly against clean white ice."
+              }
+            },
+            "first_look": "Cobalt blue skater #7 centered in the lower third",
+            "noise": [
+              "bottom controller command text banner",
+              "wide blue UI arc cutting across the bottom foreground ice"
+            ],
+            "overall": 4
+          }
+        ]
+      },
+      "markdown": "**eyes/readability** A=hockey.regular-l2-720-farnet.jpg B=hockey.regular-l2-faceoff.jpg C=hockey.regular-l2-farnet.jpg D=hockey.regular-l3-faceoff.jpg E=hockey.regular-l3-farnet.jpg F=hockey.regular-p4-faceoff.jpg at 6 m (gemini-3.8-flash, in 7636 out 1714 tokens, ~$0.0121, 15.3 s)\n- stills:\n  - label: Still A; first_look: Blue skater surrounded by floating white particle spheres; overall: 2\n    - elements:\n      - puck: score 1, evidence The puck is not visible anywhere on the ice or near the skater.\n      - carrier: score 1, evidence No puck is visible, so it is impossible to determine who has possession.\n      - team_colours: score 2, evidence Only one skater wearing royal blue is on screen, though the scoreboard at the top shows blue and orange panels.\n      - far_net: score 1, evidence The far net is not visible; only the edge of the near net frame appears in the bottom right corner.\n      - zone_strips: score 3, evidence A single red vertical line extends under the blue skater down to the bottom edge.\n    - noise: floating white particle spheres obscuring player silhouette; bright yellow horizontal boards strip\n  - label: Still B; first_look: Blue skater #7 in the foreground center; overall: 3\n    - elements:\n      - puck: score 1, evidence The puck is not visible anywhere along the ice surface or near either player.\n      - carrier: score 1, evidence No puck is visible on the ice to identify a carrier.\n      - team_colours: score 4, evidence The foreground skater wears bright royal blue while the distant center skater clearly wears bright warm orange.\n      - far_net: score 4, evidence The far net is visible in red at center-top behind the orange skater, measuring about 40 pixels wide.\n      - zone_strips: score 4, evidence A strong horizontal red center line and deep blue zone lines span clearly across the rink.\n    - noise: heavy concentric white/blue textured rings on the ice surface; keybind overlay bar across the bottom\n  - label: Still C; first_look: Blue skater framed by white particle dots facing the boards; overall: 2\n    - elements:\n      - puck: score 1, evidence The puck is not visible anywhere on the ice surface.\n      - carrier: score 1, evidence Possession cannot be determined because no puck is present.\n      - team_colours: score 2, evidence Only the royal blue skater is on screen, with orange visible solely in the top scoreboard UI.\n      - far_net: score 1, evidence The far net is not visible; only a cropped red corner of the near net shows at the bottom right.\n      - zone_strips: score 3, evidence A single straight red line runs vertically beneath the blue skater.\n    - noise: white circular particle cloud around the player; glowing yellow strip at the base of the boards\n  - label: Still D; first_look: Light blue skater #7 in the foreground center; overall: 3\n    - elements:\n      - puck: score 1, evidence The puck is not visible on the ice surface.\n      - carrier: score 1, evidence No carrier can be identified as no puck is visible.\n      - team_colours: score 4, evidence Foreground player is clearly light cornflower blue and the distant skater is warm orange.\n      - far_net: score 4, evidence The far net is centered along the back boards with an illuminated red frame roughly 40 pixels wide.\n      - zone_strips: score 4, evidence A dark red center line and two dark blue zone lines cleanly cut across the pale blue ice sheet.\n    - noise: input guide banner spanning the lower edge; large circular blue player selection ring on ice\n  - label: Still E; first_look: Light blue skater facing away with white particle specks; overall: 2\n    - elements:\n      - puck: score 1, evidence The puck is not visible anywhere on the rink.\n      - carrier: score 1, evidence No puck is visible on screen.\n      - team_colours: score 2, evidence Only one team is represented on the ice by a light blue skater, while orange only appears in the score header.\n      - far_net: score 1, evidence The far net is not visible in the camera view.\n      - zone_strips: score 3, evidence A single red stripe runs vertically under the skater.\n    - noise: white circular particle effects cluttered around the player; bright glowing yellow base strip on the boards\n  - label: Still F; first_look: Cobalt blue skater #7 centered in the lower third; overall: 4\n    - elements:\n      - puck: score 1, evidence The puck is not visible anywhere on the clear white ice.\n      - carrier: score 1, evidence No carrier can be identified because no puck is present on screen.\n      - team_colours: score 4, evidence Foreground skater wears vibrant cobalt blue while the distant opponent at center ice wears orange.\n      - far_net: score 4, evidence The red rectangular frame of the far net is centered at the far end boards, roughly 40 pixels wide.\n      - zone_strips: score 5, evidence A crisp red center line and bold blue faceoff circles/lines contrast strongly against clean white ice.\n    - noise: bottom controller command text banner; wide blue UI arc cutting across the bottom foreground ice"
+    }
+  ]
+}
