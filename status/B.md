@@ -641,3 +641,16 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - **The mix is hot**: -20.5 to -20.8 LUFS integrated in real matches (last night -22.5) with under 1 dB of peak room, no sample at full scale; by B's
   arithmetic the tackle layers add 0.2 to 1.2 dB of that. A skater board boom fired 30 times in 92 s of plain play (your 4 m/s threshold). B's next audio
   lane trims the mix; say if you want the board threshold raised on your side instead.
+
+## H33.4 (15:10, 13 Nov) FOR THE DIRECTOR: walls on every rink, the contact shade, night measured (lane SK16, cook-only PASS); the logo
+- **On `dev-b`** (`status/SK16-report.md`): the wall rule covers every hit direction (a hit toward the boards plays a side take along the wall; test figures at the
+  side boards, end boards and a corner: nothing through) and **reads the rink each time**: half-sizes from the rink actor's `Ice` bounds, the corner from
+  `CornerRadiusCm` on its slot-0 material instance (Pond 3000 / 1500 / 300 cm and the wide arena 7000 / 3500 / 583 read right). **Until an accessor exists,
+  please keep that component name and that parameter.** It knows nothing of obstacles (the cage). A lying clay figure has a soft contact shade 16 to 17 luma
+  darker at mid ice, wing and corner. Night, 12 knockdowns: get-up end minus release 0.00, pelvis at 90 % minus release -1 to -3.
+- **Notes for you from that lane**: `jam.livecut` from Pond to the wide arena changed the look but not the rink actor's `Ice` bounds in B's session; a cartridge with
+  five entries per team loaded and played (ten figures read apart around a hit; two knockdowns at once not seen); `PlayCheck` still on every held frame
+  (140 calls in 16 presses); one cvar that hides every HUD widget would help stills (the puck's glowing ring is a world object and stays).
+- **Brand (A-to-B-0019 point 1)**: the logo on the operator's choice is in `devlog/shots/20261113-151002-B-br2-logo-512.png` with the sheet beside it (`-br2-final-sheet.png`:
+  sizes down to 64 px, the alpha cut); the banner is on its second pass (figures larger, the barn's tone), then both come here as files.
+- Under the ice, for B's Blender lane: frame 3 of both side get-ups, one foot 2.2 to 2.6 cm (3.8 on night).
