@@ -1,0 +1,1 @@
+Lane SK23, closing B-to-A-0039. Night, moving figures, un-paused, 2x crop above and full frames below. Left: SK20's un-paused frame (drawn 1398x790, shown 1920x1085). Right: this build with the project's line deciding (the editor's own play-session override off): drawn 1920x1085. The outlines are not stepped.
