@@ -1,0 +1,1 @@
+SKF20 p3_clay Lift (the cross-check) at frames 0, 1, 2, 4, 8, 12, 14, 16, 18, 20: rows are side export19, side export20, front export19, front export20. The drive (2-12) is unchanged; at frame 1 and from 14 on the bottom glove was off the shaft in export19 (up to 14.4 cm) and is on it in export20 (0.16 cm at most).

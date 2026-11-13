@@ -2369,3 +2369,104 @@ Both skates are 5 cm higher at frame 3, where the low one dipped 2-4 cm into the
   | `lift-ba` | `Lift`, export18 above export19 |
   | `lift-hit-ba` | `Lift_Hit`, export18 above export19 |
   | `getup-side-ba` | `GetUp_Side_Left`, export18 above export19 |
+
+## Twentieth pass: both hands on the shaft in the cross-check, a bigger `Poke_Hit` (SKF20, 15:25 to 15:56)
+
+Taken over from an agent stopped in mid-pass. What it had left: `export20` was a rebuild of export19 with no take changed (its only edit was one reporting line in `build_clips.py`), so the whole pass was still to do. `export20` was rebuilt from the scripts five times in this pass; what is delivered is the last build (FBX files written 15:41 to 15:46).
+
+Delivered `C:\Users\kazda\jam\skater-lab\skf\export20\` (p2_cel, p3_clay, full sets) with `DIFF.md`, `JOINS.md` and `READY.txt`. Items 1 and 2 are done. Item 3 was a check only and changed nothing: `Lift_Hit` is identical to export19. The take count stays 76 with the same names. Nothing of this pass has been seen in the engine.
+
+**Difference list against export19** (`compare_anim.py`, main and loopcut file, both styles): 2 takes per style differ, `Lift` and `Poke_Hit`. The other 74 are identical, the clay aim holds among them. Bones, parents and rest pose identical (max difference 0); meshes identical (`compare_mesh.py`); `SM_Stick_<style>.fbx` byte-identical; 60 fps; the `root` bone has identity keys in all 76 takes of all four files (`root20.py`: largest deviation 0.0000000).
+
+### 1. `Lift`: the bottom hand stays on the shaft (24 frames, unchanged)
+
+**What the fault really was.** The 14.5 cm in the nineteenth pass came from the solver's own figure, which reports nothing for the frames where a key pair mixes stick modes. Measured on the FBX (`hands20.py`: the bottom glove's grip point against the shaft's axis, every frame), the drive itself (frames 2-12) was already on the shaft in export19. The hand was off it at frame 1 and through the recovery, in both styles:
+
+| Style | Export | frame 0 | frame 1 | frames 2-12 (the drive) | frames 13-15 | frames 16-23 | frame 24 | worst (frame) |
+|---|---|---|---|---|---|---|---|---|
+| p2_cel | export19 | 0.03 | 2.84 | 0.13 | 0.03 | 2.76 | 0.03 | 2.84 (1) |
+| p2_cel | export20 | 0.03 | 0.06 | 0.17 | 0.17 | 0.17 | 0.03 | 0.17 (12) |
+| p3_clay | export19 | 0.14 | 4.99 | 0.13 | 11.97 | 14.44 | 0.14 | 14.44 (16) |
+| p3_clay | export20 | 0.14 | 0.06 | 0.16 | 0.16 | 0.15 | 0.14 | 0.16 (12) |
+
+(cm; the top hand is 0.0 cm from the stick in every frame, the stick being its child bone.)
+
+**Two causes, two fixes:**
+- **The recover key (frame 15)** put the stick out of the clay figure's reach (shorter arms, wider shoulders): the left arm went straight and still missed by 12-14 cm. Its stick and bottom hand are now the halfway point between the end of the drive and the ready Glide; its body is as before.
+- **Mixed stick modes** between a key pair (Glide's heel pose against the cross-check's grip pose): the bottom hand travelled on a straight absolute path while the stick turned, so it left the shaft in between (frame 1, frames 16-23). `Lift` now blends such pairs with the hand as a fraction down the shaft (`grip_through`, opt-in per take, so no other take changes).
+
+**What changed to the eye:** frames 0 and 2-8 are the same poses as export19. From frame 9 the stick comes down a little later (lowest stick point at frame 14 on clay: 39 cm, was 30), with both gloves on it. The left elbow no longer locks straight in the recovery (bend 83-85 deg at frames 14-17 on clay, was 2 deg).
+
+### 2. `Poke_Hit`: starts at once, a little bigger (24 frames, unchanged)
+
+| Frames | Pose |
+|---|---|
+| 0 | Ready Glide |
+| 2 | The jar: the stick knocked out to the right along the ice, the bottom hand knocked off and flung left, trunk turned and bent after the stick, head lagging, hips 8-9 cm lower |
+| 6 | The right skate off the ice (6-7 cm), going out |
+| 11 | The half step planted (24-26 cm out), both hands back on the stick |
+| 24 | Ready Glide |
+
+- **Timing changed:** export19 stood still for frames 0-3 and reached its extreme at frame 5. The reaction now starts at frame 0 and is at its extreme at frame 2, as `Lift_Hit` does since the nineteenth pass. If the engine starts this take before the poke lands, it will now look early: that is for the engine side to say.
+- **The stick no longer jumps.** In export19 the blade rose 20 cm in one frame (frame 9) where the take went back to two hands, because the old heel poses put the knob out of reach and the solver re-aimed the shaft. The new keys keep the knob within reach (knob moved 0 cm, was 35).
+- **The pelvis does not travel** (horizontal 0 cm), as before.
+
+**Size against export19 and against `Lift_Hit`** (largest displacement from frame 0, cm):
+
+| Style | Take | Frames | Blade end | Head | Top hand | Right skate (lift) | Left skate (lift) | Pelvis | Trunk lean deg (range) |
+|---|---|---|---|---|---|---|---|---|---|
+| p2_cel | Poke_Hit export19 | 24 | 165 | 31 | 51 | 22 (4) | 6 (5) | 8 | 22.5-39.2 |
+| p2_cel | Poke_Hit export20 | 24 | 178 | 36 | 47 | 26 (7) | 7 (3) | 9 | 22.5-42.1 |
+| p2_cel | Lift_Hit export20 | 28 | 309 | 42 | 74 | 47 (9) | 42 (7) | 23 | 14-32.9 |
+| p3_clay | Poke_Hit export19 | 24 | 163 | 29 | 41 | 20 (3) | 6 (5) | 7 | 22.6-39.3 |
+| p3_clay | Poke_Hit export20 | 24 | 174 | 34 | 44 | 24 (6) | 7 (4) | 8 | 22.6-42.2 |
+| p3_clay | Lift_Hit export20 | 28 | 297 | 40 | 72 | 44 (9) | 40 (7) | 23 | 14-32.9 |
+
+So the head moves about 17 % more and the step is about 20 % longer than in export19, and the take is still well under `Lift_Hit` (one step against two, the stick low against overhead, no travel against 23 cm).
+
+### 3. `Lift_Hit`: checked, not changed
+
+- **Through the head:** the stick mesh cuts the head and helmet skin in 0 of 29 frames in both styles. Nearest in 3D: 9.8 cm on p2_cel, 18.8 cm on p3_clay (both at frame 1).
+- **From the game camera** (behind, 35 deg down, orthographic): the shaft comes within 3 cm of the head's outline on the screen, or crosses it, at frames 14-16 (p2_cel; also frame 1, at 2.3 cm) and 15-16 (p3_clay) as it comes back down. In all of those frames it is on the far side of the head, so the helmet hides part of it for two or three frames. It never passes on the camera's side of the head. I left this as it is.
+- **The top hand:** 0.0 cm from the stick in every frame (the stick is the hand's child bone). The solver's own figure says the stick is up to 6.3 cm from where the pose asked on clay (the arm's reach), still in the hand.
+
+### Ground, joints, joins
+
+Lowest skin vertex over all frames, cm above the ice, and the worst one-frame turn of each elbow's and knee's bend axis (`hands20.py`, on the FBX):
+
+| Style | Export | Take | Frames | Body | Skates | Stick | Elbow L / R, knee L / R bend-axis turn (deg) |
+|---|---|---|---|---|---|---|---|
+| p2_cel | export19 | Lift | 24 | 13.94 | 0.00 | 2.22 | 57.8 / 73.3 / 8.2 / 10.2 |
+| p2_cel | export20 | Lift | 24 | 13.94 | 0.00 | 2.04 | 47.8 / 73.3 / 8.2 / 10.2 |
+| p2_cel | export19 | Poke_Hit | 24 | 13.64 | 0.00 | 0.69 | 40.7 / 64.2 / 9.3 / 9.2 |
+| p2_cel | export20 | Poke_Hit | 24 | 12.70 | 0.00 | 0.31 | 39.4 / 75.6 / 2.2 / 7.4 |
+| p2_cel | export20 | Lift_Hit | 28 | 13.86 | 0.00 | 2.66 | 82.5 / 72.5 / 5.4 / 5.0 |
+| p3_clay | export19 | Lift | 24 | 13.02 | 0.13 | 2.39 | 55.9 / 67.7 / 8.1 / 10.5 |
+| p3_clay | export20 | Lift | 24 | 13.02 | 0.13 | 2.60 | 48.0 / 67.7 / 8.1 / 10.5 |
+| p3_clay | export19 | Poke_Hit | 24 | 13.05 | 0.13 | 0.18 | 153.7 / 61.6 / 9.2 / 9.2 |
+| p3_clay | export20 | Poke_Hit | 24 | 12.70 | 0.13 | 0.28 | 40.3 / 69.8 / 2.7 / 7.3 |
+| p3_clay | export20 | Lift_Hit | 28 | 12.98 | 0.13 | 2.60 | 85.1 / 73.7 / 5.5 / 5.2 |
+
+- **Nothing is under the ice** in any frame of `Lift` or `Poke_Hit` (worst: skates 0.00 cm on p2_cel, stick 0.28 cm on clay `Poke_Hit`). `Poke_Hit`'s stick slides as low as Glide's does (Glide: 0.73 / 0.34 cm); it has no 2 cm margin, because the margin would lift its frame 0 off Glide's.
+- **No elbow or knee flips:** knees turn at most 10.5 deg in a frame. The elbow turns of 40-76 deg are the two-frame snaps (frames 0-2), where the hands themselves travel 20-39 cm a frame. Clay `Poke_Hit` had a 153.7 deg left-elbow turn in one frame in export19; it is 40.3 now.
+- **Joins** (`join17.py`, `export20\JOINS.md`): all ten fall-to-get-up pairs at 0 to 0.0001 cm and 0 deg, both styles, as in export19.
+
+### Still weak, and not checked
+
+- **`Poke_Hit`, the left elbow:** during the hold (frames 2-6) the hand is still but the elbow keeps drifting 4-7 cm a frame while its bend direction settles. It reads as follow-through in the strip; I did not look at it in motion.
+- **`Poke_Hit`, fast frames:** the left forearm turns 106 deg (p2_cel) and 117 deg (p3_clay) between frames 1 and 2, and 52-74 deg a frame as the hand comes back to the stick (frames 8-10). `Lift_Hit` has 112 deg in the same place.
+- **`Lift`, frame 0:** its stick is 2 cm higher than Glide's frame 0 (the tackling takes' ice margin, as in export19). Not changed.
+- **Not checked:** anything in the engine (import, retiming, the blend into and out of both takes, whether the earlier start of `Poke_Hit` matches the sim's frame). The takes in motion: I looked at stills only (every 3rd frame, and frames 0-20 of clay `Lift`). The pair sheet (attacker against victim at 1.2 m) was not rendered again; the drive frames it shows are unchanged.
+
+### Files
+
+- **Scripts** (`skater-lab\skf\`):
+  - `build_clips.py` (the twentieth-pass blocks; a copy is `build_clips_pass20.py`, and `build_clips_pass19.py` is the state export19 was built from)
+  - `run20.sh` (the build), `post20.sh` (joins, loopcut and stick against export19, `JOINS.md`), `meas20.sh` + `hands20.py` (hand to shaft, ground, head, bend axes, per frame, on the FBX), `summary20.js` (the tables above), `root20.py` (root keys), `sheet20.sh` (the sheets); `part1.sh` knows export20
+- **Tables:** `export20\DIFF.md`, `export20\JOINS.md`, `work20\m\h19_<style>.json` and `h20_<style>.json` (every frame)
+- **Stills** (`devlog\shots\20261113-155102-B-lab-skf20-*`, 2):
+
+  | Still | Content |
+  |---|---|
+  | `crosscheck-clay-hands` | clay `Lift` at frames 0, 1, 2, 4, 8, 12, 14, 16, 18, 20: side export19, side export20, front export19, front export20. Frames 1 and 14-20 were added to the asked five because that is where the hand was off |
+  | `poke-hit-ba` | `Poke_Hit` every 3rd frame, per style: game camera export19, export20, side export19, export20 |
