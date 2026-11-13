@@ -1,6 +1,6 @@
 # Device B lane board (the lead rewrites this file whenever a lane starts or reports)
 
-Updated 2026-11-13 02:27 CET (H20.5).
+Updated 2026-11-13 02:40 CET (H20.7).
 
 ## Running
 
@@ -8,6 +8,7 @@ Updated 2026-11-13 02:27 CET (H20.5).
 |---|---|---|---|---|---|
 | B21 | P4 ice and skater, second pass, for the operator's morning decision: a lit far end and stands silhouettes so the ice has more to reflect, sharper scratches near the camera, a white powder spray on this look, the figure `P4E` imported with its Blueprint (then its loose jersey and the athletic stride when the Blender lanes deliver); stills at the concept's framing | port 8002, `wt-vfx` | 01:10 | 04:30 | `status/B21-checkpoint.md`, `status/B21-report.md` |
 | SKC4 | Blender, the broadcast figure `P4E`: a loose jersey with folds, a hanging hem and squarer shoulders; then the new stride and stop retargeted; hero renders at the concept's framing | none | 00:50 | 03:15 | `status/B-skater-p4-figure.md` (fourth pass) |
+| SK7 | Clay figures in the engine: the felt and the cream stitches of both clay figures (`BP_SkaterVisual_TB1_P3`, `_TB2_P3`) made to read at the game camera and close up in the barn; the cause of the `P3C` normal-map fault; team colours under the warm light; hero stills beside the estimate (materials, meshes and textures only: no Blueprint logic) | 8000, tree `wt/b-a45` (branch `dev-b-a45`) | 02:35 | 04:45 | `status/SK7-report.md` on `dev-b-a45` |
 
 ## Waiting for the operator's ears or eyes (pages on device B)
 
