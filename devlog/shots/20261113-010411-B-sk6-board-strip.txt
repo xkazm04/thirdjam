@@ -1,0 +1,1 @@
+SK6: PlayBoardHit in play, orange #9 plays Board_Hit at the boards (game camera crop, slomo 0.03)
