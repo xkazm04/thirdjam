@@ -1,12 +1,13 @@
 # Device B lane board (the lead rewrites this file whenever a lane starts or reports)
 
-Updated 2026-11-13 04:06 CET (H22.2).
+Updated 2026-11-13 04:08 CET (H22.2).
 
 ## Running
 
 | Lane | What | Editor | Started | Due | Report (when done) |
 |---|---|---|---|---|---|
 | SK8 | The ready stance on the two shipped scripted figures: an animation-only re-import of `skf/export9` (72 takes each) onto `BP_SkaterVisual_TB1` (night, the default) and `_TB1_P3` (clay), with blade, hand, knockdown and reaction numbers before and after; a soft dark contact plane under the two clay figures | 8000, tree `wt/b-a45` (branch `dev-b-a45`) | 04:00 | 05:40 | `status/SK8-report.md` on `dev-b-a45` |
+| B25 | P4 lab at the game camera: the side lamp banks' reflections lie on the ice as white bars brighter than the figures; make them separate soft streaks along the whole rink, help the figures read at that size (rim, trims, number), decide the grounding (shadowed lamps against the blob); stills at the game camera | 8002, tree `wt/b-vfx` (**no git in that tree while it runs**) | 04:12 | 05:20 | `status/B25-report.md` |
 
 ## Waiting for the operator's ears or eyes (pages on device B)
 
