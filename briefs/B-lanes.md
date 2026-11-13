@@ -1,13 +1,12 @@
 # Device B lane board (the lead rewrites this file whenever a lane starts or reports)
 
-Updated 2026-11-13 02:40 CET (H20.7).
+Updated 2026-11-13 02:50 CET (H20.8).
 
 ## Running
 
 | Lane | What | Editor | Started | Due | Report (when done) |
 |---|---|---|---|---|---|
 | B21 | P4 ice and skater, second pass, for the operator's morning decision: a lit far end and stands silhouettes so the ice has more to reflect, sharper scratches near the camera, a white powder spray on this look, the figure `P4E` imported with its Blueprint (then its loose jersey and the athletic stride when the Blender lanes deliver); stills at the concept's framing | port 8002, `wt-vfx` | 01:10 | 04:30 | `status/B21-checkpoint.md`, `status/B21-report.md` |
-| SKC4 | Blender, the broadcast figure `P4E`: a loose jersey with folds, a hanging hem and squarer shoulders; then the new stride and stop retargeted; hero renders at the concept's framing | none | 00:50 | 03:15 | `status/B-skater-p4-figure.md` (fourth pass) |
 | SK7 | Clay figures in the engine: the felt and the cream stitches of both clay figures (`BP_SkaterVisual_TB1_P3`, `_TB2_P3`) made to read at the game camera and close up in the barn; the cause of the `P3C` normal-map fault; team colours under the warm light; hero stills beside the estimate (materials, meshes and textures only: no Blueprint logic) | 8000, tree `wt/b-a45` (branch `dev-b-a45`) | 02:35 | 04:45 | `status/SK7-report.md` on `dev-b-a45` |
 
 ## Waiting for the operator's ears or eyes (pages on device B)
@@ -26,6 +25,7 @@ Updated 2026-11-13 02:40 CET (H20.7).
 
 ## Done today (newest first; every one has a report under `status/`)
 
+SKC4 the broadcast figure `P4E` with a loose jersey (a garment built from its own mesh: boxy torso, squarer shoulders, wider sleeves, a hem hanging over the pants; procedural folds; cloth simulation tried and dropped) and all 75 takes retargeted from the athletic `skf/export7` (new: push start, two hockey stops); Blender only, no credits; faults: reads puffy rather than draped, face-down poses pull the hem panel up, the stride's chest stays upright, one hand is off the stick in the glide render (`status/B-skater-p4-figure.md`, fourth pass; deliverable `skc/p4/P4E/export2/P4E`, lane B21 imports it) ·
 B22 clay tier pass 4 (02:20): the bulb strings' reflections computed in the ice material (`B22BulbRefl` in `M_Ice`, clay only: warm streaks across the near and middle ice that screen-space reflections cannot see), four low strings in front of the end walls so bulbs fill the top of the game camera's frame, a glitter fault in fast turns fixed at its source (`ScratchNormFar`), white chips and snow instead of brown crumbs, zone rings with a bright edge and spill, a near-black puck; night and broadcast measured unchanged; the far wall not done (`status/B22-report.md`; cook-only PASS) ·
 EST four estimate mock-ups for the operator's review page, generated from B's own stills: clay and P4, one-day and two-day (`C:/Users/kazda/jam/review/estimates/NOTES.md`; outside the repo) ·
 SKF7 the broadcast style's athletic stride and hockey stop: `skf/export7/p4_broadcast` written 00:43; the lane stopped without filing its report section; lane SKC4 retargets from it ·
