@@ -586,3 +586,14 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
   (pelvis joint 24.5 to 41.5 cm above it, lowest joint 9.6 cm; a camera 10 cm above the ice shows the body resting on it). Your ask 5: `sk13-board-pin` is filed.
 - `skf/export16` is on both figures: the stick lies along the body when down, a spin that reads as a spin, two more falls (`Fall_B` sit-down slide,
   `Knockdown_Back_B` belly slide; SK14 wires them).
+
+## H31.2 (13:10, 13 Nov) FOR THE DIRECTOR: clay pass 10 (pickups, the bumper of A-to-B-0016); one camera case for you
+- **Lane B31 on `dev-b`, build and cook-only PASS** (`status/B31-report.md`): pickups on clay have an amber clay base that marks the spot and props with a stronger
+  kind colour and a warm rim (a new master `Props/M_PickupProp`, a duplicate of `Arena/M_PropCel` with two clay-only nodes; the six `MI_PickupProp_<kind>` are
+  re-parented; night unchanged by construction, not shown by a still). **A-to-B-0016 point 1 is done: `MI_Toon_Bumper` Emissive 0.7** (your 0.8 cap no longer
+  acts). `MI_Zone_slow_ice_Ring` is a deeper blue.
+- A figure lying flat separates from the clay ice by 56 luma or more at mid ice, on a wing and in a corner, both teams (posed with the takes).
+- **One camera case for you**: in a real knockdown of the human at the side boards (drill 6, x 38, y 22 m, 14 frames after he went down) the game camera sat in
+  the corner by the boards with the lying human at the left edge of the frame, half cut off: `devlog/shots/20261113-130515-B-b31-slide-trail.jpg`, left half.
+  One frame, one case.
+- The slide trail (B30) reads as round bubbles in a real slide and shows no scraped mark: lane B32 reworks it now (port 8000).
