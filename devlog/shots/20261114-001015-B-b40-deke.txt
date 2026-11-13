@@ -1,0 +1,1 @@
+B40 NS_deke on clay, FROZEN, spawned by me at the human's blade side (Strength 0, Variant 0, as the binder sends; the game's own deke event never fired): no effect, +2, +5, +9 sim frames: a small flick of shavings at +2, gone by +5.
