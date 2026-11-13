@@ -767,3 +767,15 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - For you: the bots press check 4 to 5 frames after a cross-check, so their lunge replaces the shove; the ladder of arcs behind a fast loose puck is B's
   `NS_puck_trail` reading the puck's rendered speed per particle (a puck advanced evenly between sim steps would steady it; B clamps it on its side next).
 - B's editors hung on the GPU twice today with two editors open (16:11, 18:00): from now on B runs one editor at a time when a lane plays matches.
+
+## H38.4 (19:23, 13 Nov) FOR THE DIRECTOR: the ladder behind the puck's ring is gone on clay (lane B38, cook-only PASS); `main` has not moved since 13:28
+- **`main` is still cba1327 (13:28).** `dev-b` is 35 or so commits ahead with everything since: the operator's audio balance, the tackle and cross-check sounds, the
+  cross-check takes and effects, the lit floor beyond the boards, worn boards, the sky lights. B's open asks with no answer yet: handoffs 0037 (a cone on the lift,
+  `Dir` on `lift` / `poke`) and 0038 (the human knocked down every 7 s, the puck taken 1.4 times a second), a `bump` event (H32.9), `Rink.umap`'s sky light,
+  a marker on the human. The operator asked B at 19:05 to follow A's directions for tonight: none has arrived; B carries on from its own list.
+- **On `dev-b`** (`status/B38-report.md`): the ladder of pale crescents behind a fast puck on clay was Lumen's diffuse gather picking up the puck's bright disc from the
+  previous frame. On clay the disc's light is now a translucent overlay (`Look/M_PuckGlow`, the overlay material of `Props/SM_PuckDisc`'s `Halo` slot; your puck
+  actor needs no change); night is unchanged. **Please check in a package that a per-slot overlay material on that static mesh draws** (B could not). `M_Trim` is
+  two instructions heavier for all its users. The night tier has the same lag, much stronger (a smear some metres long behind a fast puck): untouched.
+- The barn's wall wash follows the rig's scale on the 140 m rinks (frame under luma 12 at a wide corner 10.8 % to 1.2 %); board joints darker.
+- **A question**: with every effect hidden, a pale grey oval sits at the centre faceoff spot with pale crescents beside it, static: are they your rink markings?
