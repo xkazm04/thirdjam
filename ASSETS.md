@@ -1208,6 +1208,9 @@ Rules that apply to every row:
 | Game/Plugins/JamAssets/Content/Arena/SM_Con_ClayTruss.uasset | mesh | 0.0 | original | UE 5.9 GeometryScript via MCP/Python |  |  | 2026-11-12 | B | y | 74 m king-post roof truss, 72 tris (lane B19) |
 | Game/Plugins/JamAssets/Content/Arena/SM_Con_ClayBulbString.uasset | mesh | 0.1 | original | UE 5.9 GeometryScript via MCP/Python |  |  | 2026-11-12 | B | y | 74 m sagging wire with 39 bulbs (16 cm), slots wire / bulb, 8064 tris (lane B19) |
 | Game/Plugins/JamAssets/Content/Arena/SM_Con_ClayLampShade.uasset | mesh | 0.0 | original | UE 5.9 GeometryScript via MCP/Python |  |  | 2026-11-12 | B | y | lamp shade with glowing disc and 4 m rod, 224 tris (lane B19) |
+| Game/Plugins/JamAssets/Content/Skaters/T_SkaterGen_P3C_BaseColor_v2.uasset | texture | 1.1 | original | Python (numpy, Blender 4.2) lane SKT + UE 5.9 via MCP/Python | | | 2026-11-13 | B | n | skt/out base colour v2 at 1024, BC1 sRGB: felt mottling, cream bands and running stitches (lane SK6) |
+| Game/Plugins/JamAssets/Content/Skaters/T_SkaterGen_P3C_Normal.uasset | texture | 1.0 | original | Python (numpy, Blender 4.2) lane SKT + UE 5.9 via MCP/Python | | | 2026-11-13 | B | n | skt/out tangent normal at 1024, TC_Normalmap, DirectX green; imported, not used by MI_SkaterGen_P3C (lane SK6) |
+| Game/Plugins/JamAssets/Content/Skaters/T_SkaterGen_P3C_Mask.uasset | texture | 0.1 | original | Python (numpy, Blender 4.2) lane SKT + UE 5.9 via MCP/Python | | | 2026-11-13 | B | n | skt/out part mask at 1024, linear BC3: R team, G cream, B clay, A felt (lane SK6) |
 
 
 Director ruling 2026-11-12: a mesh, texture, rig or motion clip produced by a generation service from our own prompt (Meshy, Tripo, Rodin, text-to-motion) is `ai-generated`, not `sourced`; a clip or mesh taken from a service's preset library (for example Meshy library action 187 `Knock_Down`) is `sourced` and carries the service's licence and the preset id in `url`.
