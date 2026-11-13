@@ -57,7 +57,7 @@ namespace JamAI
 			Opp.AimToleranceDeg = 20.0;
 			Opp.LeadFrames = 60;
 			Opp.bClearLane = true;
-			Opp.PokeFrames = 2;
+			Opp.PokeFrames = 0;   // lane A79 (R-0041, CURVE-3.md): 2 -> 0, all_star pokes the moment the puck is in reach (with the hunt, below)
 			Opp.SweepReactFrames = 5;   // lane A51 (R-0034): all_star reads the carried puck 5 frames late (pro 8, the FJamBotSkill default)
 			Opp.ShotChargeFrames = 18;   // lane A31 (B-to-A-0024): all_star winds its shots up (pro 10, the FJamBotSkill default)
 			Opp.bLift = true;
@@ -73,11 +73,13 @@ namespace JamAI
 			Opp.bOneTimer = true;   // R-0029 point 4 (lane A39): all_star bots use the one-timer and the deke; pro the one-timer (ProOppSkill); rookie neither
 			Opp.bDeke = true;
 			Opp.CheckMinClosing = 3.0;   // R-0031 point 2 (lane A45): all_star body-checks the carrier (front or side, never from behind); rookie keeps -1 (never). Lane A70: 5 -> 3 (knockdowns of the good playtester 2.73 -> 3.00 a match at speed 1.3, its win share 26.5 -> 26.8)
+			Opp.HuntRadiusM = 10.0;   // lane A79 (R-0041 point 1, CURVE-3.md): the support goes at an opposing carrier within 10 m (good 26.8 -> 21.4, regular 13.3 -> 11.8 at speed 1.3)
 			// R-0029 pass 2 (with A31's charge): speed 1.08 (bots may push past 1, the sim clamps them at 1.5): the good playtester 30 % / 25 %
 			// R-0029 with A39's payoffs on (one-timer, burst, deke): speed 1.15 brings the good playtester back to 23 % at 40 seeds (1.08 measured 38 %, 1.12 33 %); A39 section 9.
 			// Lane A70 (CURVE-2.md, 2,000 matches per number): speed 1.15 -> 1.3, the good playtester 40.5 -> 26.5 % (1.2 34.5, 1.32 23.9, 1.4 14.8; checks from
 			// 3 or 4 m/s and bot_react_frames 3 moved nothing).
-			return FJamDifficultyProfile{"all_star", 1.3, 1.0, 4.0, 25.0, 0.0, 60, Opp, 0.2};   // lane A46: mates pass to the open human in 0.2 of the chances
+			// Lane A79 (R-0041, CURVE-3.md): the hunt and the instant poke take the win rate, so speed comes back 1.3 -> 1.2 (good 27.0, regular 14.4, novice 3.4).
+			return FJamDifficultyProfile{"all_star", 1.2, 1.0, 4.0, 25.0, 0.0, 60, Opp, 0.2};   // lane A46: mates pass to the open human in 0.2 of the chances
 		}
 
 		void SetErr(char* Err, int ErrLen, const char* Msg, const char* Pair)
@@ -118,6 +120,7 @@ namespace JamAI
 			if (std::strcmp(Key, "deke") == 0) { K.bDeke = V != 0.0; return true; }
 			if (std::strcmp(Key, "check_min_closing") == 0) { K.CheckMinClosing = V; return true; }   // R-0031 point 2 (lane A45); -1 = never
 			if (std::strcmp(Key, "check_from_behind") == 0) { K.bCheckFromBehind = V != 0.0; return true; }
+			if (std::strcmp(Key, "hunt_radius_m") == 0) { K.HuntRadiusM = V; return true; }   // R-0041 point 1 (lane A79)
 			return false;
 		}
 	}

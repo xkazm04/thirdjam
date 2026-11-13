@@ -489,7 +489,11 @@ namespace JamAI
 		}
 		Used[Id] = Role;
 
-		if (Role == ERole::Chaser || (Role == ERole::Support && D < Params.PounceRadius))
+		// R-0041 point 1 (lane A79): a hunting support goes at an opposing carrier within its skill's HuntRadiusM (a yielding bot's D is 99, so it stays out)
+		const FJamBotSkill& Hk = SkillOf(W, Id);
+		const bool bHunt = Hk.HuntRadiusM > 0.0 && D < 90.0 && W.Carrier >= 0 && W.Skaters[W.Carrier].Team != S.Team && !W.Skaters[W.Carrier].bDown
+			&& W.Skaters[W.Carrier].Pos.DistTo(Me) < Hk.HuntRadiusM;
+		if (Role == ERole::Chaser || (Role == ERole::Support && (D < Params.PounceRadius || bHunt)))
 		{
 			Out = Attack(W, Id, Me, Pp, Dirg, D, bShoot, bAimed, bDeke, bPass);
 		}

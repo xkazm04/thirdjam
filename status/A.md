@@ -316,3 +316,13 @@
 - 13:29: the Director's process restarted at 13:23; lanes A57, A79, A83 were lost mid-run, A82 survived. Resumed: A79 and A83 with new agents on their worktrees and status files; A57's hourly package loop restarted in `.claude/worktrees/nightly` until 16:00 (its parity results landing with A81's modes). The resource timer re-armed.
 - link green 13:30: main cba1327 (Director's modes pass 2 (A81): six more modes (Sudden Death, Outnumbered, Glass House, Pin) pushed.
 - package 13:38: `Hokej_Hokej_H24.zip` from main cba1327 (twelve Director's modes with card words in the cartridge, A80 collisions pass 2, the knockdown frames unreduced).
+- link green 13:49: main 8fc69d3 (Mechanics pass 2 (A82, R-0040/R-0041): the saucer pass and protocol 6 (A77's work), the sp) pushed.
+
+## H19 (13:51) A82 landed (8fc69d3): the saucer, the lift shield, the carrier slower and no sprint; the shooting fault found (R-0042); A85 and A84 started
+- A82's release read-out: with the blade extended the carried puck sits at 1.6 m and every shot/pass test uses 1.5 m, so nothing fires while the player aims and the puck
+  slips off the blade (H24 ships with it). A85 (Fable, top priority): one carrier reach, a flat tap, the five bars re-proven; H25 packages the fix. A84 (Opus): abilities on F,
+  the pass to Q. A79 and A83 resumed and running; the hourly package loop runs to 16:00.
+- H24 packaged 13:38 (cba1327): twelve modes, A80's collision pass.
+
+- RESOURCES 13:56 cpu 83% ram 27.6/63GB gpu 5 %, 793 MiB, 39 editors 0 cmd 8 ubt 0 free 617GB
+- 13:59: A83 done: 5 v 5 plays and performs on 90 x 45 (win 37 % pro vs 47 at 3 v 3; matches 348 s; ten figures inside the frame); its patch is held for A85's carrier-reach fix (the same SeasonTakes coin), then both land and a final curve pass sets the budgets on 5 v 5. Director: first to 3 stays (the 348 s match is hockey; the modes carry clocks).

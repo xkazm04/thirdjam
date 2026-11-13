@@ -462,3 +462,12 @@ puck (A66 capped the bots' own blade to work around the same thing). Rulings (la
 `max(shot.reach_m, body radius + stick.reach_m) + 0.05`, used by every carrier test in the sim and by the brain; A66's cap goes if bots shoot without it; (2) a tap stays on the
 ice: `shot.lift.tap_m` 0 and a charge-0 shot flies flat, so a rookie bot's tap can be deflected by a stick again (A82's SeasonTakes coin lands the same way every time);
 `half_m` 0.45 and `full_m` 0.6 stand; (3) H24 ships with the fault; H25 packages the fix. The bars of R-0034 stand.
+
+## R-0043 (H20, 2026-11-13 14:14): the plan reconciled
+The operator after the plan and model switch: "please reconcile the plan as previous model may not lead into best possible directions we can achieve". The Director's read
+and the order of work are in `docs/PLAN-RECONCILED.md` (the live plan from now). Rulings: (1) **no H package from H25 on without the acceptance run green**: a script that
+plays the first five minutes in a package through the cursor and the buttons, pass or fail per verb (lane A87); H19 to H24 shipped unable to shoot or pass while aiming
+because no gate drives the real input; (2) **one curve pass on the real player** (A86): the playtester classes hold the stick the way the mouse does first; no other lane
+edits a difficulty number; (3) **no new mechanic after A84's abilities**; a mechanic whose bar still fails after A85 is cut to what passes; (4) **the submission has a lane
+from now** (A88: video, page text, dev log, ledger, clean-profile test); (5) **freezes**: the sim Saturday 12:00, content Saturday 22:00, Sunday is submission only; submit
+Sunday 22:00; (6) one lane per file family at a time (the sim, the profiles, the input mapping, the HUD).

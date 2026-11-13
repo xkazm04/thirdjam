@@ -133,6 +133,9 @@ namespace JamAI
 		// Lane A72 (ask A5, game.ai.body_check): the share of the chances above that the bot takes; the coin is a fixed function of the skater and the
 		// one-second window. 1 = every chance (the levels' own rule), 0 = never. Only a cartridge that writes game.ai.body_check changes it.
 		double BodyCheckShare = 1.0;
+		// R-0041 point 1 (lane A79): all_star bots hunt the carrier. A support bot within this many metres of an opposing carrier leaves its lane and goes at
+		// it as a second chaser (stick, lift and body check as the chaser does); 0 = never (the brain's PounceRadius on the puck only), so rookie and pro do not move.
+		double HuntRadiusM = 0.0;
 	};
 	constexpr int kMaxReactionFrames = 60;   // lane A72 (ask A4): game.ai.react_frames reaches one second (30 before; the ring is one entry longer than this)
 
