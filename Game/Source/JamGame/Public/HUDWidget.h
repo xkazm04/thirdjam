@@ -49,8 +49,40 @@ public:
 	// Pure text helpers (tests call them).
 	static FString FormatTimer(int32 FramesRemaining);
 	static FString FormatTake(int32 Take, int32 ScoreToWin = 0);
-	// Frames of a match during which the controls hint shows (10 s).
-	static constexpr int64 ControlsHintFrames = 600;
+	// Frames of a match during which the controls hint shows. Lane A111 (track U1, B-to-A-0038 fault 6): 8 s (was 10), and only in the first match of a
+	// session (process): the hint is spent when its window has run out once or the human has taken a first shot (ControlsHintSpent); later matches show nothing
+	// (the pause card has the full table). jam.hud.HintEveryMatch 1 gives back the strip in every match.
+	static constexpr int64 ControlsHintFrames = 480;
+	static FString ControlsHintText() { return TEXT("SKATE  WASD    BRAKE  PRESS AGAINST YOUR MOTION    AIM  MOUSE    SHOOT  HOLD LMB    PASS  Q    CHECK  RMB    SPRINT  SHIFT"); }
+	static bool IsControlsHintSpent() { return bControlsHintSpent; }
+	static void SetControlsHintSpent(bool bSpent) { bControlsHintSpent = bSpent; }   // tests and jam.ui.hintreset
+	// The live rule: the frame window, and not spent this session (bEveryMatch: the neutral value, the strip in every match).
+	static bool ShowControlsHintLive(const FJamPresentationFrame& F, bool bSpent, bool bEveryMatch) { return ShowControlsHint(F) && (bEveryMatch || !bSpent); }
+	// ---- Lane A111 (track U1, B-to-A-0038 fault 7: "the human's ring is the only mark among five blue figures"): the marker over the human's helmet, always
+	// on while the match plays: a take-yellow chevron with an ink edge (the HUD's accent, not the team's blue, so it reads on clay and on night ice), its tip
+	// YouMarkerGapPx over the point YouMarkerHeadM above the ice (the helmet's top is at 1.65 m); the YOU tag rides above it. It stands over the head, so it never covers the stick or the puck.
+	// bMarkerOn false (jam.hud.YouMarker 0) is lane A42's rule: the chevron only as the ring fades (20 to 24 m), the tag inside the ring's arc.
+	static constexpr float YouMarkerHeadM = 1.8f;
+	static constexpr float YouMarkerGapPx = 4.f;
+	static constexpr float YouMarkerSizePx = 48.f;   // 34 read as two thin lines at 1280 x 720 (the first still of the proof run)
+	static float YouMarkerAlpha(bool bMarkerOn, float RingAlpha) { return bMarkerOn ? 1.f : 1.f - FMath::Clamp(RingAlpha, 0.f, 1.f); }
+	// ---- Lane A111 (B-to-A-0038 fault 6): the commentator's strip is docked on the bottom edge (CommentaryDockPx from it), under the play, not 110 px up over
+	// the ice; it steps over the controls strip while that shows (first match only) and over the CALL READY line. bDock false is the earlier place.
+	static constexpr float CommentaryDockPx = 24.f;
+	static float CommentaryStripY(bool bDock, bool bControlsHint, bool bCallLine)
+	{
+		// The controls strip stands from 140 to 96 px over the edge (lane A8's ready pill is under it): the commentary keeps its place above it for those 8 s.
+		if (!bDock || bControlsHint) return bControlsHint ? -150.f : -110.f;
+		return bCallLine ? -76.f : -CommentaryDockPx;
+	}
+	// ---- Lane A111 (B-to-A-0038 fault 6): the distance labels (far net, own net, the off-screen puck) stand on a dark plate (LabelPlateOpacity, LabelPlatePad
+	// around the type), and the net badges are not drawn during the goal pause (the sparks and the horn own the net then).
+	static constexpr float LabelPlateOpacity = 0.62f;
+	static constexpr float LabelPlatePadX = 8.f;
+	static constexpr float LabelPlatePadY = 2.f;
+	static bool ShowNetBadges(EJamPhase Phase, bool bHideInGoalPause = true) { return !(bHideInGoalPause && Phase == EJamPhase::GoalPause); }
+	// Where a plate of a label stands: the label's canvas position moved so the plate overhangs the type by Pad on every side under the same alignment.
+	static FVector2D LabelPlatePos(const FVector2D& LabelPos, const FVector2D& Align) { return LabelPos + FVector2D(LabelPlatePadX * (2.f * Align.X - 1.f), LabelPlatePadY * (2.f * Align.Y - 1.f)); }
 	// Lane A64: the controls strip stops this far from the right edge: the radar frame (200 + 2 x 8 px) at EdgePx and a 16 px gap.
 	static constexpr float ControlsRightInsetPx = 24.f + 216.f + 16.f;
 	// Lane A64 (eyes grid premise 2): a notice in the top-left corner for ToastFrames sim frames (4 s), e.g. a rejected -cut cartridge.
@@ -279,6 +311,14 @@ private:
 	void UpdateCommentary(const FJamPresentationFrame& Frame);
 	void UpdatePuckMarker(const FJamPresentationFrame& Frame, bool bCovered);
 	void ResolveEdgeSlots();   // lane A76: one slot rule for the puck chevron, the net chevrons and their labels
+	// Lane A111: the dark plates behind the three distance labels follow their labels after the slot rule has run.
+	void UpdateLabelPlates();
+	UPROPERTY(Transient) TObjectPtr<UBorder> NetPlate;
+	UPROPERTY(Transient) TObjectPtr<UBorder> OwnPlate;
+	UPROPERTY(Transient) TObjectPtr<UBorder> PuckPlate;
+	static bool bControlsHintSpent;
+	bool bHintThisFrame = false;                                  // the controls strip shows this frame (the commentary strip steps over it)
+	FLinearColor YouChevronColour = FLinearColor::Transparent;   // the colour the chevron's bars were last built in (re-built on change only)
 	UPROPERTY(Transient) TObjectPtr<UWidget> PuckArrow;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> PuckText;
 	float PuckMarkerAlpha = 0.f;

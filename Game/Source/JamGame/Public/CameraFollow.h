@@ -84,6 +84,24 @@ struct JAMGAME_API FJamCameraSettings
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
 	float PuckFrameMaxM = 40.f;
 
+	// Lane A111 (track U1, B-to-A-0038 fault 5: "in the corners the camera looks out over the boards"). When the human is within CornerNearM of a board
+	// (full inside CornerFullM) and the camera looks at that board, the camera rises by up to CornerLiftM and the look-ahead shrinks to CornerLookAheadKeep of
+	// itself: the frame tilts down onto the ice around the play instead of out over the boards (the share of the frame that is ice: CAMERA rows in
+	// docs/experiments/SCREEN.md). No yaw is added (lane A64 measured that a yaw lead feeds back through the cursor aim), the weight goes through a spring
+	// (no snap), and the pitch stays inside A49's middle-third budget. 0 = off: the tests' default and the neutral value; the game camera sets it from
+	// jam.camera.CornerLift (default 3).
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
+	float CornerLiftM = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
+	float CornerNearM = 5.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
+	float CornerFullM = 2.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
+	float CornerLookAheadKeep = 0.2f;
+
 	// The far net is kept in frame when the human is within this distance of it.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
 	float NetFrameNearM = 16.f;
@@ -132,6 +150,8 @@ struct JAMGAME_API FJamCameraFilter
 	FJamSpring YawOffsetDeg;
 	// A49: the pitch follows its budgeted target through a spring too (no pop when the chest bearing moves fast next to the boards).
 	FJamSpring PitchDeg;
+	// A111: the corner weight (0 open ice, 1 at a board the camera looks at) follows its target through a spring of twice the time constant.
+	FJamSpring Corner;
 
 	// Diagnostics of the last step (not state): the displacement the boards imposed over the arm length (0 = free, 1 = a whole arm) and its direction (into the rink).
 	float LastClampS = 0.f;
@@ -203,6 +223,13 @@ public:
 	// Lane A49. Where a world point (cm) lands in the frame of a pose: x, y in [-1, 1] across the frame (0 = centre), for a horizontal FOV and an aspect ratio;
 	// a point behind the camera returns (+-9, +-9). |x| <= 1/3 and |y| <= 1/3 is the middle third.
 	static FVector2D FrameFraction(const FTransform& Pose, float HFovDeg, float Aspect, const FVector& WorldCm);
+
+	// A111. The corner weight before the spring, 0..1: the largest over the four boards of nearness (smoothstep from CornerNearM down to CornerFullM) times
+	// facing (smoothstep of the camera's forward along the board's outward normal, full from 0.7). Open ice, or skating along or away from a board: 0.
+	static float CornerWeight(const FJamCameraSettings& C, const FVector2D& PivotM, float YawCamDeg, const FJamCameraRink& Rink);
+
+	// A111. The share of the frame that is ice: of Cols x Rows rays through the frame (horizontal FOV, aspect), the fraction that meet z = 0 inside the boards.
+	static float IceShare(const FTransform& Pose, float HFovDeg, float Aspect, const FJamCameraRink& Rink, int32 Cols = 16, int32 Rows = 9);
 
 	// A40. The yaw lead toward the far net, degrees, before the spring: bias * toward * distance band * (yaw to net - yaw), 0 when skating away or near the net.
 	static float FarNetLeadDeg(const FJamCameraSettings& C, const FVector2D& PivotM, float YawDeg, const FVector2D& FarNetM);

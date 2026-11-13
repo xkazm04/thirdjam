@@ -1,0 +1,18 @@
+a114-before-l2_night_5v5-1 row 4 frame 216.3 GT 194.4: FlushAsyncLoading 70.6, EngineTickMisc 48.2, UI 25.9, EventWait/Audio 21.9, GarbageCollectionFull 18.8, ActorSpawning 15.5, AsyncLoading 5.3, EventWait 2.8, EventWait/EndOfFrameUpdates 2.6
+a114-before-l2_night_5v5-2 row 2 frame 130.2 GT 103.7: EventWait/Audio 32.2, GarbageCollectionFull 32.2, EngineTickMisc 31.3, FlushAsyncLoading 16.7, EventWait 15.0, UI 6.7, AsyncLoading 5.7, ActorSpawning 4.8
+a114-before-l2_night_5v5-3 row 4 frame 117.2 GT 122.4: EngineTickMisc 69.3, EventWait 21.6, FlushAsyncLoading 17.9, GarbageCollectionFull 11.8, UI 6.7, AsyncLoading 5.6, ActorSpawning 4.7
+a114-before-p3_clay_5v5-1 row 5 frame 307.8 GT 270.1: FlushAsyncLoading 189.2, EngineTickMisc 60.8, EventWait/Audio 37.4, EventWait 21.7, UI 8.1, ActorSpawning 5.3
+a114-before-p3_clay_5v5-2 row 14 frame 201.3 GT 177.6: FlushAsyncLoading 113.9, EngineTickMisc 36.4, EventWait/Audio 33.1, EventWait 30.2, EventWait/Effects 8.6, UI 6.7, ActorSpawning 4.7
+a114-before-p3_clay_5v5-3 row 2 frame 110.8 GT 74.1: EventWait/Audio 37.3, EngineTickMisc 31.7, EventWait 18.4, FlushAsyncLoading 16.8, UI 7.2, ActorSpawning 5.2, GarbageCollectionFull 4.9
+a114-ab-pm0-l2_night_5v5-1 row 2 frame 134.0 GT 109.2: EngineTickMisc 50.6, FlushAsyncLoading 33.9, EventWait/Audio 28.2, EventWait 13.8, UI 6.8, AsyncLoading 5.1, ActorSpawning 5.1
+a114-ab-pm0-l2_night_5v5-2 row 2 frame 170.2 GT 136.7: FlushAsyncLoading 77.8, EventWait/Audio 38.0, EngineTickMisc 32.9, EventWait 18.2, UI 7.2, ActorSpawning 5.3, AsyncLoading 5.2
+a114-ab-pm0-l2_night_5v5-3 row 2 frame 206.5 GT 172.4: FlushAsyncLoading 114.8, EventWait/Audio 38.4, EngineTickMisc 33.0, EventWait 22.4, UI 7.6, AsyncLoading 5.3, ActorSpawning 5.1
+a114-ab-pm0-p3_clay_5v5-1 row 5 frame 111.3 GT 81.9: EngineTickMisc 35.3, FlushAsyncLoading 27.2, EventWait/Audio 27.0, EventWait 13.7, UI 7.7, ActorSpawning 5.7
+a114-ab-pm0-p3_clay_5v5-2 row 2 frame 113.2 GT 111.9: EngineTickMisc 72.9, FlushAsyncLoading 20.0, EventWait 19.3, UI 7.2, ActorSpawning 4.7
+a114-ab-pm0-p3_clay_5v5-3 row 2 frame 127.8 GT 100.8: FlushAsyncLoading 46.7, EngineTickMisc 32.8, EventWait/Audio 28.1, EventWait 15.7, UI 6.9, ActorSpawning 5.6
+a114-ab-pm1-l2_night_5v5-1 row 2 frame 98.7 GT 59.0: EventWait/Audio 37.9, EngineTickMisc 33.7, EventWait 27.7, UI 6.7, ActorSpawning 5.6, AsyncLoading 5.0
+a114-ab-pm1-l2_night_5v5-2 row 7 frame 94.4 GT 68.8: EngineTickMisc 34.9, EventWait/Audio 24.4, EventWait 18.3, FlushAsyncLoading 12.4, UI 8.3, ActorSpawning 5.6
+a114-ab-pm1-l2_night_5v5-3 row 2 frame 112.5 GT 67.2: EventWait/Audio 49.6, EngineTickMisc 33.0, EventWait 18.1, FlushAsyncLoading 10.4, UI 7.6, AsyncLoading 5.0, ActorSpawning 4.7
+a114-ab-pm1-p3_clay_5v5-1 row 2 frame 211.5 GT 168.7: EngineTickMisc 85.8, EventWait 57.5, EventWait/Audio 56.3, EventWait/EndPhysics 21.7, UI 18.7, ActorSpawning 13.1, WorldTickMisc 8.8, InstanceActorComponent 7.5, EndOfFrameUpdates 3.3
+a114-ab-pm1-p3_clay_5v5-2 row 3 frame 137.3 GT 102.5: EngineTickMisc 62.9, EventWait/Audio 33.9, EventWait 19.1, FlushAsyncLoading 16.9, UI 6.9, ActorSpawning 6.8, InstanceActorComponent 2.3, GarbageCollection 2.1
+a114-ab-pm1-p3_clay_5v5-3 row 2 frame 99.3 GT 58.2: EventWait/Audio 39.1, EngineTickMisc 35.2, EventWait 22.0, UI 7.0, ActorSpawning 5.6, GarbageCollection 3.0

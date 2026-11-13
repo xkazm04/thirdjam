@@ -498,19 +498,71 @@ void UJamPreloadSubsystem::Deinitialize()
 	Super::Deinitialize();
 }
 
+static TAutoConsoleVariable<int32> CVarJamPreloadMap(TEXT("jam.PreloadMap"), 1,
+	TEXT("1: the match map's package loads asynchronously while the menu is up (lane A114). 0: it loads synchronously in the menu -> match frame (before)."));
+static const TCHAR* const JamMatchMapPackage = TEXT("/Game/Maps/Rink");
+
 void UJamPreloadSubsystem::HandlePostLoadMap(UWorld* World)
 {
 	if (!World || !World->IsGameWorld() || World->GetGameInstance() != GetGameInstance()) return;
-	if (World->GetMapName() == TEXT("Menu")) StartPreload(LikelyNextCut());
+	if (World->GetMapName() == TEXT("Menu"))
+	{
+		StartPreload(LikelyNextCut());
+		StartMapPreload();
+	}
+	else if (MapPackage || bMapRequested)
+	{
+		// The match map is up: the world holds its own package now; let ours go so it is collected with the world when the match ends.
+		UE_LOG(LogJamPreload, Log, TEXT("JAMPRELOAD map %s released at %s"), JamMatchMapPackage, *World->GetMapName());
+		MapPackage = nullptr;
+		MapWorld = nullptr;
+		bMapRequested = false;
+	}
+}
+
+void UJamPreloadSubsystem::StartMapPreload()
+{
+	// Packaged and -game only: in the editor (PIE, automation) the map is the editor's and PIE renames it, so nothing is held there.
+	if (GIsEditor || bMapRequested || MapPackage || CVarJamPreloadMap.GetValueOnGameThread() == 0) return;
+	if (!FPackageName::DoesPackageExist(JamMatchMapPackage)) return;
+	bMapRequested = true;
+	MapRequestedAt = FPlatformTime::Seconds();
+	MapLoadedAt = 0.0;
+	// No UWorld::WorldTypePreLoadMap entry: the world stays EWorldType::Inactive while it waits in memory (LoadMap's world-leak check exempts Inactive
+	// worlds and fails fatally on a Game world no context owns); LoadMap makes it the Game world when it takes it.
+	TWeakObjectPtr<UJamPreloadSubsystem> Weak(this);
+	MapRequestId = LoadPackageAsync(JamMatchMapPackage, FLoadPackageAsyncDelegate::CreateLambda([Weak](const FName& Name, UPackage* Package, EAsyncLoadingResult::Type Result)
+	{
+		UJamPreloadSubsystem* Self = Weak.Get();
+		if (!Self || !Self->bMapRequested) return;
+		Self->MapRequestId = INDEX_NONE;   // the match started before the load finished: LoadMap took it (or loads it itself)
+		if (Result == EAsyncLoadingResult::Succeeded && Package)
+		{
+			Self->MapPackage = Package;
+			Self->MapWorld = UWorld::FindWorldInPackage(Package);
+			Self->MapLoadedAt = FPlatformTime::Seconds();
+			UE_LOG(LogJamPreload, Log, TEXT("JAMPRELOAD map %s loaded in %.0f ms (world %s)"), *Name.ToString(), (Self->MapLoadedAt - Self->MapRequestedAt) * 1000.0,
+				Self->MapWorld ? *Self->MapWorld->GetName() : TEXT("none"));
+		}
+		else UE_LOG(LogJamPreload, Warning, TEXT("JAMPRELOAD map %s failed (%d): it loads at match start"), *Name.ToString(), static_cast<int32>(Result));
+	}));
+	UE_LOG(LogJamPreload, Log, TEXT("JAMPRELOAD map %s requested"), JamMatchMapPackage);
 }
 
 void UJamPreloadSubsystem::HandlePreLoadMap(const FString& MapName)
 {
 	if (!MapName.Contains(TEXT("Rink"))) return;
+	if (bMapRequested && !MapPackage && MapRequestId != INDEX_NONE)
+	{
+		// The match started before the map's async load finished: finish it now (LoadMap would wait for it anyway), so LoadMap never finds a half-loaded package.
+		FlushAsyncLoading(MapRequestId);
+		UE_LOG(LogJamPreload, Log, TEXT("JAMPRELOAD map flushed at match start (%s)"), MapPackage ? TEXT("loaded") : TEXT("not loaded"));
+	}
 	const double Now = FPlatformTime::Seconds();
 	const FString State = Handles.Num() == 0 ? FString(TEXT("no preload"))
 		: IsPreloadComplete() ? FString::Printf(TEXT("complete (%.0f ms after the request)"), (CompletedAt - RequestedAt) * 1000.0) : FString(TEXT("still loading"));
-	UE_LOG(LogJamPreload, Log, TEXT("JAMPRELOAD match start: %d assets requested %.2f s ago, %s"), Requested, RequestedAt > 0.0 ? Now - RequestedAt : -1.0, *State);
+	UE_LOG(LogJamPreload, Log, TEXT("JAMPRELOAD match start: %d assets requested %.2f s ago, %s; map %s frame=%llu"), Requested, RequestedAt > 0.0 ? Now - RequestedAt : -1.0, *State,
+		MapPackage ? TEXT("in memory") : bMapRequested ? TEXT("still loading") : TEXT("not preloaded"), static_cast<unsigned long long>(GFrameCounter));
 }
 
 void UJamPreloadSubsystem::HandleSyncLoad(const FString& PackageName)

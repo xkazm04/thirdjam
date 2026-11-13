@@ -211,4 +211,33 @@ private:
 	int32 Take = 0;
 	// Lane A17: the finished match was reported to UJamProgression (reset by RestartMatch and BuildMatch).
 	bool bResultReported = false;
+
+public:
+	// ---- Lane A111 (track U1, B-to-A-0038 fault 3, R-0049 point 3): the fade-in waits for the lights. The light rig is a sub-level streamed in after the match
+	// is built; in the first match of a process it took about 3 s, and the faceoff showed the rink without its lights. When a match is built and its tier's rig
+	// is not visible yet, the picture is held black (the camera's fade; the MATCH card and the sound play on) until the rig's level is visible for
+	// LightHoldSettleTicks rendered ticks, and never longer than LightHoldMaxSeconds of real time; then it fades in over jam.screen.FadeSeconds. The HUD is
+	// hidden with it (no ring on a black screen). Presentation only: the sim steps on, nothing is written back, the hash cannot move.
+	// A rig already visible (a second cut in the same world) holds nothing. jam.screen.LightHold 0: no hold, as before.
+	// Measured in the first proof run: the rig's level took 3.5 s to stream in, time-sliced behind the first frames, so the 2 s bound let the bare rink show for
+	// 1.5 s. jam.screen.LightHold 2 (default) therefore also finishes the rig's load inside BuildMatch (UWorld::FlushLevelStreaming: one block before the first
+	// frame, where a hitch costs nothing); 1 = the hold alone.
+	static constexpr double LightHoldMaxSeconds = 2.0;
+	static constexpr int32 LightHoldSettleTicks = 3;
+	static constexpr float LightFadeSeconds = 0.35f;
+	static bool LightHoldDone(bool bRigVisible, int32 VisibleTicks, double HeldSeconds)
+	{
+		return (bRigVisible && VisibleTicks >= LightHoldSettleTicks) || HeldSeconds >= LightHoldMaxSeconds;
+	}
+	bool IsLightHoldActive() const { return bLightHold; }
+
+private:
+	void BeginLightHold();
+	void TickLightHold();
+	bool IsLightRigVisible() const;
+	bool bLightHold = false;
+	double LightHoldStart = 0.0;
+	int32 LightHoldTicks = 0, LightVisibleTicks = 0;
+	int32 LightStillIn = -1;   // proof: ticks until the "first visible frame" still (jam.screen.HoldStill 1)
+	int64 LastStillBucket = -1;   // proof: jam.screen.StillEvery
 };

@@ -559,3 +559,13 @@ received nothing for six and a half hours: the landing script now refuses to run
 script was edited in place and derailed after its commit: scripts a chain is executing are never edited; (c) every headless start queued on the build tool's mutex
 for minutes: `-Multiprocess` on every headless start (lane A107: 5 m 17 s to 9.5 s; the gate's test step 398 s to 89 s); (d) landings go in batches through one
 gate (six evolutions in four minutes at 20:12), each lane having run the full filter on its own tree.
+
+## R-0051 (H26, 2026-11-13 20:39): the release grace is 120 frames; a line with no recording keeps its caption
+(1) Lane A113 measured R-0049's release grace: at 90 frames one figure still went down again 111 frames after its release, at 120 none in 1,000 s, and the three
+cells stay within 1 point of their targets either way: **`game.contact.release_grace_frames` defaults to 120** (neutral 0). A full-speed charge into a skater
+inside its grace costs the attacker its own stumble, as any bump does, and the HUD says JUST GOT UP; the shotgun's knockdown respects the grace as it respects
+the shield. A hit on a skater inside its grace emits no `check` event: it is a bump. (2) Lane A114 found 72 of 412 commentary lines without a recording, most of
+them the contact lines, and made the game skip such a line: **the default stays "caption without sound"** (`jam.vo.SkipAbsent` 0): the caption at a hit is the
+brand's voice even when silent, and the lookup that hitched is gone either way (an absent wave is asked for once per process). The 72 recordings go to device B.
+(3) The match-start frame is under 100 ms in 3 of 6 runs with the map preloaded behind the menu (0 of 6 before): the track continues on the audio flush and the
+figures' spawn.

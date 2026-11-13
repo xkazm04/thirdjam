@@ -170,6 +170,19 @@ private:
 	void HandlePreLoadMap(const FString& MapName);
 	void HandleSyncLoad(const FString& PackageName);
 
+	// Lane A114: the match map's package, loaded asynchronously while the menu is up and held until the match map has loaded (UEngine::LoadMap finds it in
+	// memory instead of loading it synchronously in the menu -> match frame). jam.PreloadMap=0: the map loads as before.
+	void StartMapPreload();
+	UPROPERTY(Transient)
+	TObjectPtr<UPackage> MapPackage;
+	// The world inside it: a package does not keep its objects alive, so LoadMap's garbage collection would take the world without this reference.
+	UPROPERTY(Transient)
+	TObjectPtr<UWorld> MapWorld;
+	bool bMapRequested = false;
+	int32 MapRequestId = INDEX_NONE;
+	double MapRequestedAt = 0.0;
+	double MapLoadedAt = 0.0;
+
 	TArray<TSharedPtr<FStreamableHandle>> Handles;
 	TSet<FString> PreloadedCuts;
 	FDelegateHandle PostLoadMapHandle, PreLoadMapHandle, SyncLoadHandle;

@@ -34,6 +34,9 @@ FJamCameraSettings FJamCameraSettings::FromCartridge(const FJamCameraConfig& C)
 
 // Lane A64: the game camera may keep a loose puck and the near far net inside this many degrees of its yaw. Default 0 = off: a yaw lead feeds back
 // through the A49 cursor aim and the camera-relative stick (measured, see FJamCameraSettings::KeepYawDeg). Opt-in only.
+// Lane A111 (track U1): the corner lift, metres (FJamCameraSettings::CornerLiftM). 0 = off, the camera of before.
+static TAutoConsoleVariable<float> CVarJamCameraCornerLift(TEXT("jam.camera.CornerLift"), 3.f,
+	TEXT("Metres the follow camera rises (tilting down onto the ice) when the human is within 5 m of a board the camera looks at: 3 default, 0 off."), ECVF_Default);
 static TAutoConsoleVariable<float> CVarJamCameraKeepYaw(TEXT("jam.camera.KeepYaw"), 0.f,
 	TEXT("Degrees off the camera yaw a loose puck / the near far net may sit (0 = off, the default; a lead turns the cursor-aimed skater). Presentation only."));
 
@@ -228,7 +231,7 @@ FTransform UJamFollowCamera::StepThirdPerson(const FJamCameraSettings& C, FJamCa
 	const FJamPresentationSkater& S = Frame.Skaters[Frame.HumanIndex];
 	// Lane A49: a teleport (the faceoff reset after a goal moves the skaters to the dots, 5 m and more in one frame) snaps the filter instead of lagging behind it:
 	// the human is the pivot every frame, and the 17 frames of "skater behind the camera" after a goal (packaged run bindings4) do not happen.
-	if (State.bInit && FVector2D::Distance(S.PosM, State.PivotM) > 5.0) { State.Reset(S.PosM, S.YawDeg); State.YawOffsetDeg.bInit = false; State.Lift.bInit = false; State.PitchDeg.bInit = false; }
+	if (State.bInit && FVector2D::Distance(S.PosM, State.PivotM) > 5.0) { State.Reset(S.PosM, S.YawDeg); State.YawOffsetDeg.bInit = false; State.Lift.bInit = false; State.PitchDeg.bInit = false; State.Corner.bInit = false; }
 	State.Step(S.PosM, S.YawDeg, C.LagFrames);
 	const FJamCameraRink Rink = FJamCameraRink::FromFrame(Frame);
 	const FVector NetCm = Frame.GetFarNetWorldCm();
@@ -301,12 +304,18 @@ FTransform UJamFollowCamera::StepThirdPerson(const FJamCameraSettings& C, FJamCa
 	State.Lift.Step(State.LastClampS, Omega);
 	const float Lift = FMath::Clamp(State.Lift.X, 0.f, 1.f);
 	// A49: end_height_m 3 sits under the default height 3.5, so the lift never lowers the camera: the end height is at least the height (the lift is then nothing).
-	const float Height = C.HeightM + (FMath::Max(C.EndHeightM, C.HeightM) - C.HeightM) * Lift;
+	// Lane A111: at a board the camera looks at, it rises and looks down onto the ice (no yaw: the cursor's point keeps its bearing). Eased over 2 x SpringFrames.
+	const float CornerTarget = C.CornerLiftM > 0.f ? CornerWeight(C, State.PivotM, YawCam, Rink) : 0.f;
+	if (!State.Corner.bInit) State.Corner.Reset(CornerTarget);
+	State.Corner.Step(CornerTarget, Omega * 0.5f);
+	const float Corner = C.CornerLiftM > 0.f ? FMath::Clamp(State.Corner.X, 0.f, 1.f) : 0.f;
+	const float Height = C.HeightM + (FMath::Max(C.EndHeightM, C.HeightM) - C.HeightM) * Lift + C.CornerLiftM * Corner;
 	const float YawR = FMath::DegreesToRadians(YawCam);
 	const FVector2D FwdCam(FMath::Cos(YawR), FMath::Sin(YawR));
 	const float ArmM = FMath::Max(0.f, (float)((State.PivotM.X - P.X) * FwdCam.X + (State.PivotM.Y - P.Y) * FwdCam.Y));  // along the forward axis: open ice gives exactly the F1 pitch
 	const float Extra = C.LiftLookAheadGain * Lift * C.DistanceM;
-	float Pitch = -FMath::RadiansToDegrees(FMath::Atan2(Height, FMath::Max(ArmM + C.LookAheadM + Extra, 1e-3f)));
+	const float LookAhead = C.LookAheadM * (1.f - (1.f - FMath::Clamp(C.CornerLookAheadKeep, 0.f, 1.f)) * Corner);   // A111: the corner looks at the play, not past it
+	float Pitch = -FMath::RadiansToDegrees(FMath::Atan2(Height, FMath::Max(ArmM + LookAhead + Extra, 1e-3f)));
 
 	// 4. Lane A49: the pitch stays within MiddleThirdPitchDeg of the bearing to the chest point (1 m up), through a spring of the same time constant. In open ice
 	// the F1 rig is inside the budget (4.9 degrees) and the derived pitch is what comes out; next to the boards the lift's tilt is bounded so the human stays in
@@ -324,6 +333,50 @@ FTransform UJamFollowCamera::StepThirdPerson(const FJamCameraSettings& C, FJamCa
 		Pitch = State.PitchDeg.X;
 	}
 	return FTransform(FRotator(Pitch, YawCam, 0.f), FVector(P.X * 100.0, P.Y * 100.0, Height * 100.0));
+}
+
+float UJamFollowCamera::CornerWeight(const FJamCameraSettings& C, const FVector2D& PivotM, float YawCamDeg, const FJamCameraRink& Rink)
+{
+	const float Y = FMath::DegreesToRadians(YawCamDeg);
+	const FVector2D Fwd(FMath::Cos(Y), FMath::Sin(Y));
+	const float HX = Rink.LengthM * 0.5f, HY = Rink.WidthM * 0.5f;
+	const float Band = FMath::Max(C.CornerNearM - C.CornerFullM, 0.1f);
+	auto Smooth = [](float T) { T = FMath::Clamp(T, 0.f, 1.f); return T * T * (3.f - 2.f * T); };
+	auto Wall = [&](float DistM, float Facing) { return Smooth((C.CornerNearM - DistM) / Band) * Smooth(Facing / 0.7f); };
+	const float PX = static_cast<float>(PivotM.X), PY = static_cast<float>(PivotM.Y), FX = static_cast<float>(Fwd.X), FY = static_cast<float>(Fwd.Y);
+	float W = FMath::Max(FMath::Max(Wall(HX - PX, FX), Wall(HX + PX, -FX)), FMath::Max(Wall(HY - PY, FY), Wall(HY + PY, -FY)));
+	// Inside a corner's quarter the board is the arc: the distance is along the radius, the facing along the radius outward.
+	const float R = FMath::Min(Rink.CornerRadiusM, FMath::Min(HX, HY));
+	const float CX = HX - R, CY = HY - R;
+	if (R > 0.f && FMath::Abs(PX) > CX && FMath::Abs(PY) > CY)
+	{
+		const FVector2D Out(FMath::Abs(PX) - CX, FMath::Abs(PY) - CY);
+		const float Len = static_cast<float>(Out.Size());
+		if (Len > 1e-3f)
+		{
+			const FVector2D N(Out.X / Len * FMath::Sign(PX), Out.Y / Len * FMath::Sign(PY));
+			W = FMath::Max(W, Wall(R - Len, static_cast<float>(N.X) * FX + static_cast<float>(N.Y) * FY));
+		}
+	}
+	return W;
+}
+
+float UJamFollowCamera::IceShare(const FTransform& Pose, float HFovDeg, float Aspect, const FJamCameraRink& Rink, int32 Cols, int32 Rows)
+{
+	const float TanH = FMath::Tan(FMath::DegreesToRadians(FMath::Clamp(HFovDeg, 1.f, 179.f) * 0.5f));
+	const float TanV = TanH / FMath::Max(Aspect, 0.1f);
+	const FVector O = Pose.GetLocation();
+	int32 Hit = 0, N = 0;
+	for (int32 r = 0; r < Rows; ++r) for (int32 c = 0; c < Cols; ++c)
+	{
+		const float U = ((c + 0.5f) / Cols) * 2.f - 1.f, V = 1.f - ((r + 0.5f) / Rows) * 2.f;
+		const FVector D = Pose.TransformVectorNoScale(FVector(1.f, U * TanH, V * TanV));
+		++N;
+		if (D.Z >= -1e-4) continue;
+		const FVector P = O + D * (-O.Z / D.Z);
+		if (IsInsideBoards(FVector2D(P.X / 100.0, P.Y / 100.0), Rink, 0.f)) ++Hit;
+	}
+	return N ? static_cast<float>(Hit) / static_cast<float>(N) : 0.f;
 }
 
 FVector2D UJamFollowCamera::FrameFraction(const FTransform& Pose, float HFovDeg, float Aspect, const FVector& WorldCm)
@@ -530,6 +583,7 @@ void UJamFollowCamera::StepSimFrame(const FJamPresentationFrame& Frame)
 		{
 			FJamCameraSettings Live = Config;
 			Live.KeepYawDeg = FMath::Max(0.f, CVarJamCameraKeepYaw.GetValueOnGameThread());   // lane A64
+			Live.CornerLiftM = FMath::Clamp(CVarJamCameraCornerLift.GetValueOnGameThread(), 0.f, 8.f);   // lane A111
 			PoseCurrent = StepThirdPerson(Live, Filter, Frame);
 		}
 	}

@@ -64,14 +64,20 @@ export function flatten(cart) {
 
 function newestMtime(files) { return Math.max(...files.map((f) => statSync(f).mtimeMs)); }
 
+export const nativeSources = [join(here, 'native', 'main.cpp'), join(src, 'AI', 'JamAICore.cpp'), join(src, 'AI', 'JamBotMatch.cpp'), join(src, 'AI', 'JamBotRefSim.cpp'), join(src, 'AI', 'DifficultyProfile.cpp')];
+const nativeHeaders = [join(src, 'AI', 'JamAICore.h'), join(src, 'AI', 'JamBotMatch.h'), join(src, 'AI', 'JamBotRefSim.h'), join(src, 'AI', 'DifficultyProfile.h')];
+export function findCxx() { return process.env.CXX || ['C:/Program Files/LLVM/bin/clang++.exe'].find(existsSync) || 'clang++'; }
+// Lane A114: JamAICore.h exports functions with the engine's JAMCORE_API macro (defined by UBT only); outside UBT it is defined empty here.
+export function nativeArgs(exe) {
+  return ['-std=c++17', '-O2', '-Wall', '-Wextra', '-Wshadow-all', '-DJAMCORE_API=', `-I${join(src, 'AI')}`, ...nativeSources, '-o', exe];
+}
+
 export function buildNative() {
   const exe = join(outDir, 'jam_tournament.exe');
-  const sources = [join(here, 'native', 'main.cpp'), join(src, 'AI', 'JamAICore.cpp'), join(src, 'AI', 'JamBotMatch.cpp'), join(src, 'AI', 'JamBotRefSim.cpp'), join(src, 'AI', 'DifficultyProfile.cpp')];
-  const headers = [join(src, 'AI', 'JamAICore.h'), join(src, 'AI', 'JamBotMatch.h'), join(src, 'AI', 'JamBotRefSim.h'), join(src, 'AI', 'DifficultyProfile.h')];
-  if (existsSync(exe) && statSync(exe).mtimeMs > newestMtime([...sources, ...headers])) return exe;
-  const cxx = process.env.CXX || ['C:/Program Files/LLVM/bin/clang++.exe'].find(existsSync) || 'clang++';
+  if (existsSync(exe) && statSync(exe).mtimeMs > newestMtime([...nativeSources, ...nativeHeaders, fileURLToPath(import.meta.url)])) return exe;
+  const cxx = findCxx();
   mkdirSync(outDir, { recursive: true });
-  const r = spawnSync(cxx, ['-std=c++17', '-O2', '-Wall', '-Wextra', '-Wshadow-all', `-I${join(src, 'AI')}`, ...sources, '-o', exe], { encoding: 'utf8' });
+  const r = spawnSync(cxx, nativeArgs(exe), { encoding: 'utf8' });
   if (r.error) die(2, `no C++ compiler (${cxx}): ${r.error.message}`);
   if (r.status !== 0) die(1, `native build failed:\n${r.stderr}`);
   console.log(`INFO tournament built ${exe}`);

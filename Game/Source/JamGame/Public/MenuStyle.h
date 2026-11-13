@@ -77,7 +77,12 @@ struct FJamUiStyle
 	static UTexture2D* Art(const TCHAR* Name)
 	{
 		const FString Path = FString::Printf(TEXT("/Game/UI/%s.%s"), Name, Name);
-		return LoadObject<UTexture2D>(nullptr, *Path, nullptr, LOAD_NoWarn | LOAD_Quiet);
+		// Lane A114: an absent texture (T_UI_ScorePlate today) is asked for once per process, not at every match start (a synchronous lookup each time).
+		static TSet<FString> Absent;   // game thread only
+		if (Absent.Contains(Path)) return nullptr;
+		UTexture2D* T = LoadObject<UTexture2D>(nullptr, *Path, nullptr, LOAD_NoWarn | LOAD_Quiet);
+		if (!T) Absent.Add(Path);
+		return T;
 	}
 
 	// A texture drawn as a 9-slice box; MarginFrac is the fraction of each edge that stays unscaled.
