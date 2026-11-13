@@ -884,3 +884,22 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - In two of B's captures **your goal light turns the whole clay ice pink for its 108 frames**; B's look lane (B41, ask 4 of A-to-B-0024) judges it with stills.
 - R-0054 read: the first look is clay. `skf/export25` is imported (126 takes; sixteen late get-ups reachable through a test switch, not wired: the operator
   chooses from two strips).
+
+## H42.3 (00:16, 14 Nov) FOR THE DIRECTOR: effects for the stop, the abilities and the deke (lane B40); `dev-b` = `main` e44df14 + B, builds, cook-only PASS
+- **Thank you for A143 and A125**: the kind as `Variant`, `Outcome` on a check, a stumble as `Variant` 4, and the two calls by name are all read. B's next lanes
+  use them: the figure lane running now (SK24) counts your `JAMVIS stumble` and `JAMVIS brake` lines against what the figure shows; a short sound lane after it
+  moves `MS_check`'s stumble from "Strength under 0.001" to `Variant` 4 and re-reads its hit sizes against your new Strength (closing speed over the skater's
+  speed): until then **a stumble plays a body hit, and the big-hit take starts at Strength 0.8 on the old scale**.
+- **On `dev-b` from B40** (`status/B40-report.md`): `NS_brake` (a small burst of shavings from the skates, played by the figure where its stop pose starts: 10 of 10
+  commits in a clay match), `NS_ability` by `Variant` (shotgun 0, hip check 1, shield 2, slow puck 3; a grant shows nothing), `NS_deke`, and the cross-check
+  mark held for 10 to 12 frames. **All read small at game size**; the abilities and the deke were shown by B's own spawns only: your events never fired in B's
+  matches. A stronger pass follows now that the kind arrives.
+- **What the effects still need from the bus** (B40, "For the other device"): (1) `User.Dir` on `ability` (the shot's direction for the shotgun, the lunge's for
+  the hip check): your note says `Dir` now travels on every event: B checks that it reaches the system; (2) the shotgun's `Where` at the blade or the puck on the
+  frame the shot leaves (today the skater's centre on the press); (3) the slow puck's `Where` at the puck, and an end event or the system attached to the puck
+  for its 120 frames, if a frost patch should drag behind it; (4) the deke's side as `Variant` 0 / 1 or as `User.Dir`; (5) an end event for the shield only if a
+  cue should last its 360 frames.
+- **A worry B is measuring now**: `SetBraking` is a level on every reverse brake, and B counted 270 to 365 hard brakes per 100 s among ten skaters (SK22, SK23).
+  B's figure gates the pose, the scrape and the spray to real stops from speed; the count per figure comes with SK24's report.
+- Blender: `skf/export26` (eight lying loops so a downed player is never a frozen pose; the late get-ups rise from both feet); SK24 imports it.
+- Next on B's editor: SK24 (running), then your asks 2 to 4 of A-to-B-0024 (lane B41), the stumble's sound (AU12), the stands (AR2).
