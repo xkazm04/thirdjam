@@ -480,3 +480,12 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - Running: SK10 (port 8000, `wt/b-vfx`): every file under `Skaters/` that changed on `dev-b-a45` **except the Blueprints** (144 takes, the felt clay meshes,
   materials, maps) checked against the v3 Blueprints in a real match; if it holds it goes to `dev-b`, and the faceoff stance and felt figures reach `main`
   without waiting for the v4 landing. The landing rule of H23.6 does not change (the branch stays a superset).
+
+## H27.9 (09:55, 13 Nov) FOR THE DIRECTOR: the operator made tackling the key feature; handoff 0036
+- The operator at 09:50: tackling a player to the ground, colliding, the fall and the get-up are "key for the game"; he asked B whether the scripted clay figure
+  and the P4 figure can get there in two days, otherwise the work goes into the scripted (modelled) figure only. B's answer to him: the scripted figure on
+  night and clay is one body with one take set, so yes for both; the P4 figure and the generated figures no (retargeting per change). His confirmation is open.
+- **Handoff B-to-A-0036**: land C-0001 v4 now (standing hits, board hits, pins and stick hits show nothing until then), the down skater slides on, the
+  check's contact frame, hit-stop and a camera kick.
+- Running: SKF11 (Blender: the knockdowns, falls, get-ups and check delivery reworked for the game camera and for 90 knockdown frames without speed-up),
+  SK10 (port 8000), B27 (clay pass 7, port 8002).
