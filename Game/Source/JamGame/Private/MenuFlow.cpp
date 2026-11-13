@@ -283,8 +283,8 @@ const TArray<FJamModeCard>& UJamMenuFlow::ModeCards()
 	// (A67's six, then A81's six: two rows of six). A mode file not named here is appended in file order, so a new mode is a dropped file.
 	// Numbers behind the facts: docs/experiments/MODES.md, MODES-2.md (tools/playtest/modes.mjs).
 	static const TCHAR* Order[] = {
-		TEXT("pond"), TEXT("cage"), TEXT("sniper"), TEXT("marathon"), TEXT("power-play"), TEXT("blind-side"),
-		TEXT("sudden-death"), TEXT("outnumbered"), TEXT("glass-house"), TEXT("pinball"), TEXT("bruisers"), TEXT("fog-of-war"),
+		TEXT("pond"), TEXT("cage"), TEXT("sniper"), TEXT("marathon"), TEXT("power-play"), TEXT("shotgun"),
+		TEXT("sudden-death"), TEXT("outnumbered"), TEXT("glass-house"), TEXT("arsenal"), TEXT("bruisers"), TEXT("fog-of-war"),
 	};
 	static TArray<FJamModeCard> Cards;
 	static bool bBuilt = false;

@@ -174,3 +174,13 @@ has, `season_take` by `AHokejGameMode` through `UJamCommentarySystem::OnMatchBui
 | `clock` | 600 frames or fewer left in a timed take (once per take); a tie at the horn plays on | -1 | zero | 0 | `last_10s` / `sudden_death` |
 | `season_take` | a match is built whose cartridge is the running season take, after `period` and before the first frame | -1 | zero | 0 | `level_<n>` (1-based ladder index) |
 Assets by the rule: `MS_post` exists on `dev-b` and plays through the binder; `NS_` / `MS_` for the other six are B's to make or to declare silent (`UJamEffectsBinder::IsSilentEvent`).
+
+## `ability` (added 14:51, 13 Nov, R-0041 point 3, lane A84)
+| field | value |
+|---|---|
+| Who | the skater that used the ability |
+| Pos | the skater's position on the ice |
+| Kind | `shotgun`, `hip_check`, `shield`, `slow_puck` |
+| Strength | 1 |
+Fired on the frame F (gamepad R3) uses the held ability. A knockdown caused by the shotgun carries Kind `shotgun` on the `knockdown` event. B binds `NS_ability` and
+`MS_ability` to it (Variant by Kind order above) when the assets exist; the binder is silent until then.

@@ -233,6 +233,14 @@
         "trigger": "mode",
         "cooldown_frames": 1200
       }
-    ]
+    ],
+    "meta": {
+      "pitch": "F fires a shot that drops the crowd.",
+      "facts": [
+        "F: shotgun shot",
+        "back every 20 s",
+        "1.5x, knocks down"
+      ]
+    }
   }
 }
