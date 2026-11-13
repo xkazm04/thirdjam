@@ -7,8 +7,9 @@
 //   stop-and-go: at BrakeAtM of the defender it pulls back and to the open side (the reverse brake) until it is slower than GoBelowMps, cuts CutDeg off the line
 //   to that side (the first-step burst), and goes straight again once it is a metre past; from the stop on, the cursor is on the far side of the body.
 //   straight charge: W held, the blade ahead.
-// BrakeAtM 9.5 is the clean stop against a pro: the brain does not leave its defender standing, it sends it at the carrier (11 m/s at contact), and a stop
-// begun at the brief's 5 m is run over in the middle of the brake (0 of 200). MOVEMENT-2.md section 3 has the share by where the stop begins.
+// BrakeAtM 9.5 was the clean stop against a pro (lane A102): the brain does not leave its defender standing, it sends it at the carrier (11 m/s at contact), and
+// a stop begun at the brief's 5 m is run over in the middle of the brake (0 of 200). MOVEMENT-2.md section 3 has the share by where the stop begins. Since lane
+// A121 the window's centre is 8 m, and since lane A128 that is the drill's default (MOVEMENT-4.md).
 // A carry ends Past (2 m beyond the defender along the attack with the puck, and still with it half a second later), or by how the puck was lost.
 // Header only; no state in the sim. docs/experiments/MOVEMENT-2.md.
 #pragma once
@@ -33,7 +34,7 @@ struct FJamCarryDrill
 	bool bStopAndGo = true;     // false = the straight charge
 	double CarryMps = 9.0;      // the approach
 	double DefenderM = 12.0;    // the standing defender's distance when the brain takes it over
-	double BrakeAtM = 9.5;      // the gap at which the stop begins (the pro commits from 12 m; 9.5 m is a quarter of a second after it starts)
+	double BrakeAtM = 8.0;      // the gap at which the stop begins. Lane A128: 8 m, the centre of the window since lane A121 (9.5 m before: lane A102's clean stop, now the window's far edge)
 	double CutDeg = 60.0;       // the cut off the line of attack, to the side the defender is not on
 	double GoBelowMps = 2.0;    // the stop is held until the carrier is slower than this
 	bool bStickAway = true;     // from the stop on the cursor is on the far side of the body from the defender (at most StickDegPerFrame a frame)

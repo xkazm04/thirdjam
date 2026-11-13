@@ -94,8 +94,41 @@ namespace JamAI
 		double ShapeShare = 1.0;       // the share of two-second windows a bot keeps its shape job (a fixed coin per bot and window); the rest it plays the job loosely (an off spot, three quarters pace)
 		int LateFrames = 0;            // the bot reads the change of possession this many frames late (0..kPhaseHist-1)
 		bool bReadHumanPressure = true; // an opposing carrier passes away from the human's pressure too (false: the human's forecheck is left to the old yield rule)
+		// Lane A115 (track Q2, evolution 2; docs/experiments/BRAIN-2.md): the brain plays hockey with the human. Every field off (the default) is the brain of
+		// evolution 1, bit for bit (proved: the env switch JAM_BRAIN2_OFF=all replays 200 baseline matches hash for hash). ProHockeySense() turns them on.
+		bool bPassRoom = false;        // a mate passes to the human where he has room (no opponent within 3 m; 2 m when he is set up for a one-timer), and turns to him when he is open and ahead of the play
+		bool bSupportHuman = false;    // the human's side supports him: a mate offers an open lane when he carries, and does not stand off an opposing carrier he forechecks
+		bool bChaseAhead = false;      // the loose puck's chaser is the skater that reaches where the puck will be first; the passer is not the chaser of its own pass; no yield to a human who is down
+		bool bBrakeMeant = false;      // the reverse brake is a decision (a stop on the post, a turn back for a loose puck, a stop in front of a defender, a gap closed under control); any other reversal is carved into a turn
+		bool bStopCut = false;         // (with bBrakeMeant) a carrier that runs at more than 5 m/s into a defender inside 4 m on its lane, with no pass on, stops before it cuts
+		bool bCarrySprint = false;     // a bot carrier sprints while its lane is open (nobody on the lane 15 m ahead, nobody within 6 m)
+		bool bGapControl = false;      // the presser closes under control: goal-side of a carrier that comes at it, it stops and waits on the line to the net, facing it, and steps up inside 3.5 m (the head-on charge is the old rule)
+		// The stick of the human's mates (his side only; the opposing side keeps FJamBotSkill::PokeFrames / bLift): a mate whose skill has no poke pokes an
+		// opposing carrier once its puck has sat this many frames inside the blade's reach, and lifts at contact at most every 90 frames. -1 = never (the
+		// mates of evolution 1 have no stick verb: they won a puck only by the unpressed blade, which track F2's game.stick.passive_take false ends).
+		int MateStickFrames = -1;
+		bool bReadShield = false;      // reads FJamAIWorld::bBodyShield and FJamAISkater::TakeGraceFrames (track F2's body shield and take grace): no lift or poke the sim would refuse; the bot goes round the body, or contains during the grace
+		// Lane A138 (track I1, R-0053: "a defender that contains goal-side wins when the carrier dawdles, not when he stops and goes"). The shield read's way
+		// round the body (Attack): the point beside the carrier is led by the carrier's velocity for RoundLeadS seconds (0.3 = lane A115's rule: the bot stays
+		// level with a carrier that goes and is never passed); and the bot goes round only while the carrier is slower than RoundMaxMps (0 = at any speed, lane
+		// A115's rule): a carrier that goes is chased, not shadowed. Tune keys hk_round_lead_s, hk_round_max_mps.
+		// Measured (INTEGRATION.md section 2): with 3 m/s (the Press job's own "slow carrier") a stop begun at 9.5 m passes a pro 97 % (72.5 % at 0) and one
+		// begun at 11 m 86 % (25.5 %); the stop at 8 m and the straight charge do not move. Only read with bReadShield on.
+		double RoundLeadS = 0.3;
+		double RoundMaxMps = 3.0;
+		// The spin's exposed end (lane A128: game.skater.spin.exposed_frames): the share of spins whose end this bot answers with its lift (a fixed coin per
+		// bot and spin, as BodyCheckShare). 1 = every one (the spin with the cut from 6 m passes a pro 27 %), 0 = none (98 %: the spin's price unpaid).
+		// Tune key hk_spin_end_share. Only read with bReadShield on (the brain of evolution 1 swings at a spin blind).
+		double SpinEndShare = 0.5;
 		bool Any() const { return bCarryOrPass || bAttackShape || bDefenceShape || bTransition; }
 	};
+	// Lane A115: every rule of evolution 2 on (as ProHockeySense has them) or off (the brain of evolution 1). The tune key brain2 and the tests use it.
+	inline void SetEvolution2(FJamHockeySense& H, bool bOn)
+	{
+		H.bPassRoom = H.bSupportHuman = H.bChaseAhead = H.bBrakeMeant = H.bStopCut = H.bCarrySprint = H.bReadShield = bOn;
+		H.MateStickFrames = bOn ? 10 : -1;
+		H.bGapControl = false;   // built and measured, not switched on by the profile (BRAIN-2.md): the tune keys opp.hk_gap_control=1;mate.hk_gap_control=1 play it
+	}
 	// Lane A94: the sense each level plays (DifficultyProfile.cpp sets the opponents' per level; the human's teammates play ProHockeySense at every level).
 	inline FJamHockeySense ProHockeySense()
 	{
@@ -109,6 +142,9 @@ namespace JamAI
 		H.PressureSec = 1.4;   // measured (BRAIN.md): 1.0 s with better-placed 2 m gave 11.7 passes/min but the human's touches -2.3; 1.4 s and 3 m: 11.6 and -1.7
 		H.BetterByM = 3.0;
 		H.bReadHumanPressure = false;   // pro and rookie leave the human's forecheck to ForecheckYieldFrames (the human's touches, brief A94 point 5)
+		// Lane A115 (evolution 2, BRAIN-2.md). The revert path: set these to false (each alone gives back its rule of evolution 1).
+		// The same from a profile tune: brain2=0 (both sides), or one rule: opp.hk_pass_room=0, mate.hk_mate_stick_frames=-1, ... (DifficultyProfile.cpp).
+		SetEvolution2(H, true);
 		return H;
 	}
 
@@ -263,6 +299,10 @@ namespace JamAI
 		// Lane A51 (R-0034): the spin: frames left (0 = none) and whether a spin tap would take (ready, standing, stamina left, the cut has the spin).
 		int SpinFrames = 0;
 		bool bCanSpin = false;
+		// HOOK (lane A115 for track F2, lane A121's game.stick.take_grace_frames): frames left in which this skater's puck cannot be poked or lifted (it has
+		// just won it: FJamSkaterState::TakeGraceLeft; the sim's refusal sits in IsPokeShielded). 0 = none. Nothing fills it in this tree:
+		// FJamSimAdapter::BuildWorld sets it once the sim exposes it (the line is there, commented). The brain's read is StickCannotTake() below.
+		int TakeGraceFrames = 0;
 	};
 
 	// Read-only view of the simulation for one frame.
@@ -330,6 +370,20 @@ namespace JamAI
 		int BurstFrames = 0;            // game.skater.burst.frames
 		double SprintCarryBonus = 0.0;  // game.skater.sprint.carry_bonus (0 = the carrier cannot sprint)
 		int SweepBotReactFrames = -1;   // lane A51: game.stick.sweep.bot_react_frames (-1 = absent: the level's FJamBotSkill::SweepReactFrames)
+		// HOOK (lane A115 for track F2, lane A102's game.stick.body_shield): true when the sim refuses a poke or a lift while the carrier's body is between the
+		// stick and the puck (UJamSim::IsBodyShielded). Nothing fills it in this tree (the key is not here yet): FJamSimAdapter::BuildWorld sets it from
+		// G.Stick.bBodyShield once F2 has landed (the line is there, commented). The brain's read is BodyShields() below, the sim's rule on the brain's world.
+		bool bBodyShield = false;
+		// Lane A138 (track I1, R-0053): two more facts of the sim's stick rules, filled by FJamSimAdapter::BuildWorld (false / 0 = the brain before the lane).
+		// bShieldShove: a lift the body shield or the take grace refuses is a cross-check's shove from any side (lane A125, R-0050 point 2). From behind that
+		// shove is the from-behind foul where the whistle is on, and it is not a play the brain chooses where it is off (R-0053 point 3): StickPlay.
+		// SpinExposedFrames: game.skater.spin.exposed_frames (lane A128): for the last frames of a spin neither the body nor a sweep shields the puck from a
+		// stick. BodyShields() reads it, or the brain would hold its stick through the one moment the spin can be answered.
+		bool bShieldShove = false;
+		int SpinExposedFrames = 0;
+		double BodyShieldRangeM = 2.0;   // UJamSim::BodyShieldRangeM
+		double BodyShieldFarDeg = 60.0;  // UJamSim::BodyShieldFarDeg
+		double BodyShieldFrontDeg = 60.0; // UJamSim::BodyShieldFrontDeg
 		static constexpr int kMaxPickups = 8;
 		int NumPickups = 0;
 		int PickupKind[kMaxPickups] = {};   // index of the kind in the cut's pickup list (the brain does not read it)
@@ -389,6 +443,24 @@ namespace JamAI
 	};
 	JAMCORE_API FJamSpaceRead ReadSpace(const FJamAIWorld& W, int Carrier, const FVec2& Ahead, double BetterByM = 5.0, int IgnoreOpp = -1);
 
+	// Lane A115 (evolution 2, BRAIN-2.md). Pure reads, exported for the tests.
+	// The skater of Team (the human included, nobody who is down) that reaches a loose puck first: the earliest time, in steps of a tenth of a second up to
+	// two seconds, at which it can be within a metre of where the puck will be (the puck slows as under puck.drag 0.5; a skater covers SkaterSpeed m/s after
+	// a fifth of a second to turn). The last toucher of a puck that leaves it faster than 6 m/s (its own pass or shot) starts a second late: it is the chaser
+	// only when nobody else of its team gets there. -1 = the team has nobody standing.
+	JAMCORE_API int LoosePuckOwner(const FJamAIWorld& W, int Team, double SkaterSpeed);
+	// Where a teammate of the carrier offers a pass lane: the best of six spots beside and ahead of the carrier (each side: level and wide, ahead, far ahead),
+	// scored by an open lane from the carrier (no opponent within 2 m of it), the free ice round the spot, how far up the ice it is and how near the skater is
+	// to it already; never within 4 m of another teammate.
+	JAMCORE_API FVec2 OfferLane(const FJamAIWorld& W, int Id, int Carrier);
+	// The sim's body shield on the brain's world (UJamSim::IsBodyShielded, lane A102): Poker within BodyShieldRangeM of Carrier, the puck on the far side of
+	// Carrier's body, Carrier not facing Poker. False while W.bBodyShield is false.
+	JAMCORE_API bool BodyShields(const FJamAIWorld& W, int Poker, int Carrier);
+	// The carrier's puck cannot be taken by a stick right now: the carrier is inside its take grace (FJamAISkater::TakeGraceFrames) or its body shields the
+	// puck from Poker (BodyShields). A poke or a lift would be a refused swing: the brain presses neither (StickPlay, FJamPlayerBot) and decides something
+	// else (Attack): round the body when the body shields, close and contain goal-side at stick length during the grace; the body check stays.
+	JAMCORE_API bool StickCannotTake(const FJamAIWorld& W, int Poker, int Carrier);
+
 	// The brain for every non-player skater. One instance per match (holds only the stall anchor).
 	class FJamBrain
 	{
@@ -444,6 +516,18 @@ namespace JamAI
 		int JobOrd[kMaxSkaters] = {};
 		int Owner[2] = {-1, -1};         // the skater (the human included) each attacking team has on the puck: the carrier, or the one nearest where a loose puck will be    // 0 for the first skater of a job on its team, 1 for the second (the second far / weak skater takes another spot)
 		int CarryFrames[kMaxSkaters] = {};
+		// Lane A115 (evolution 2): the brake on purpose. BrakeHold: frames left of a decided stop (the input is held against the velocity until the skater is
+		// slow); BrakeCool: frames before the next decided stop; the wants are this frame's reasons (Decide, JobSteer and Attack set them; Think reads them).
+		int BrakeHold[kMaxSkaters] = {};
+		int BrakeCool[kMaxSkaters] = {};
+		mutable bool bWantStop[kMaxSkaters] = {};      // the carrier stops in front of a defender (Attack), the presser closes under control (JobSteer)
+		mutable bool bPlaysPuck[kMaxSkaters] = {};     // Attack ran for this skater this frame (it plays the puck)
+		int MeantBrakes = 0, Carves = 0;               // diagnostics: decided stops and reversals carved into a turn since Reset
+	public:
+		int GetMeantBrakes() const { return MeantBrakes; }
+		int GetCarves() const { return Carves; }
+		bool IsBraking(int i) const { return BrakeHold[i] > 0; }
+	private:
 		void ReadPossession(const FJamAIWorld& W);
 		FPoss PossAt(const FJamAIWorld& W, int Late) const;
 		void AssignJobs(const FJamAIWorld& W);

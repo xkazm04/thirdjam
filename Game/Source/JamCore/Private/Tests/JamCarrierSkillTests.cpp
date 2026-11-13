@@ -93,6 +93,8 @@ namespace JamCarrierSkillTests
 		int32 BodyShieldRefused = 0, DefLifts = 0, DefPokes = 0, DefChecks = 0;
 		int64 Frames = 0;
 		double PastShare() const { return N > 0 ? static_cast<double>(Ends[Past]) / N : 0.0; }
+		// Lane A138: the carrier still has the puck at the end: past, or timed out with it (a defender that stayed goal-side and took nothing).
+		double KeptShare() const { return N > 0 ? static_cast<double>(Ends[Past] + Ends[FJamCarryDrill::Timeout]) / N : 0.0; }
 		FString Line() const
 		{
 			FString S = FString::Printf(TEXT("past %d of %d (%.1f %%)"), Ends[Past], N, 100.0 * PastShare());
@@ -118,7 +120,8 @@ namespace JamCarrierSkillTests
 	UJamCartridge* Copy(const UJamCartridge& C) { return DuplicateObject<UJamCartridge>(&C, GetTransientPackage()); }
 
 	// The clean stop-and-go the gate holds (MOVEMENT-2.md section 2): FJamCarryDrill's own defaults.
-	FScript DefaultGo() { return FScript(); }
+	// Lane A128: the drill's own default stop is 8 m now (the window's centre); the gate's "clean stop" rows keep lane A102's 9.5 m, the far edge.
+	FScript DefaultGo() { FScript S; S.BrakeAtM = 9.5; return S; }
 
 	// A scene for the rule itself: the carrier (human) at the origin facing Yaw with the puck on its blade at StickDir, the opposing chaser standing at DefPos.
 	UJamSim* ShieldScene(const FJamGameConfig& G, double Yaw, const FVector2D& StickDir, const FVector2D& DefPos, int32& Me, int32& Def)
@@ -207,25 +210,70 @@ bool FJamMovementStopAndGo::RunTest(const FString& Parameters)
 		FScript At8 = Go;
 		At8.BrakeAtM = 8.0;
 		UJamCartridge* E1 = Copy(*C);
-		E1->Game.Stick.TakeGraceFrames = 0; E1->Game.Skater.ReverseBrakeDecel = 20; E1->Game.Skater.bBurstOwnStop = false;
+		E1->Game.Stick.TakeGraceFrames = 0; E1->Game.Skater.ReverseBrakeDecel = 20; E1->Game.Skater.bBurstOwnStop = false; E1->Game.Skater.BurstRestFrames = 0; E1->Game.Skater.SpinExposedTail = 0;   // lane A128: and before its two keys
 		const FShare G8 = Share(*C, At8, 200), G8n = Share(*E1, At8, 200), A1 = Share(*E1, Go, 200);
 		AddInfo(FString::Printf(TEXT("STOPGO pro stop begun at 8 m: %s"), *G8.Line()));
 		AddInfo(FString::Printf(TEXT("STOPGO pro stop begun at 8 m, lane A121's neutral block: %s"), *G8n.Line()));
 		AddInfo(FString::Printf(TEXT("STOPGO pro clean stop-and-go (9.5 m), lane A121's neutral block: %s"), *A1.Line()));
 		TestTrue(FString::Printf(TEXT("A121: a stop begun at 8 m passes a pro at least 55 %% (%.1f %%)"), 100.0 * G8.PastShare()), G8.PastShare() >= 0.55);
+		// Lane A138 (R-0053): this is the bar the parked landing broke (50 %: 73 of 200 carries timed out with the puck kept, 26 were lifted). The brain of
+		// evolution 2 reads the body shield, swings nothing and went round the body at any speed: against a stop begun this early it rode level with the
+		// carrier and was never passed. The way round is now for a carrier that dawdles (FJamHockeySense::RoundMaxMps 3 m/s); one that stops and goes is
+		// chased and overrun, as R-0053 rules. With hk_round_max_mps 0 (lane A115's rule) this row reads 72.5 %.
 		TestTrue(FString::Printf(TEXT("A121: the stop begun at 9.5 m stays at 95 %% or more (%.1f %%)"), 100.0 * A.PastShare()), A.PastShare() >= 0.95);
+		TestTrue(FString::Printf(TEXT("A138: the stop begun at 9.5 m keeps the puck at least 95 %% of the time (%.1f %% kept, %.1f %% past)"), 100.0 * A.KeptShare(), 100.0 * A.PastShare()), A.KeptShare() >= 0.95);
 		TestTrue(FString::Printf(TEXT("A121: the evolution is worth at least 30 points at 8 m (%.1f against %.1f under its neutral block)"), 100.0 * G8.PastShare(), 100.0 * G8n.PastShare()), G8.PastShare() >= G8n.PastShare() + 0.30);
 		TestTrue(FString::Printf(TEXT("A121: the neutral block is lane A102's late edge (8 m under 35 %%: %.1f)"), 100.0 * G8n.PastShare()), G8n.PastShare() <= 0.35);
 	}
-	// Bars (measured 100.0 / 0.0 / 73.0 / 2.5 / 46.5 on lane A102's tree; the brief asked two in three against one in five, a gap of 47 points).
-	TestTrue(FString::Printf(TEXT("a clean stop-and-go beats a pro defender at least 8 times in 10 (%.1f %%)"), 100.0 * A.PastShare()), A.PastShare() >= 0.80);
-	TestTrue(FString::Printf(TEXT("a straight charge beats it at most 1 time in 5 (%.1f %%)"), 100.0 * B.PastShare()), B.PastShare() <= 0.20);
-	TestTrue(FString::Printf(TEXT("the gap between the two is at least 47 points (%.1f)"), 100.0 * (A.PastShare() - B.PastShare())), A.PastShare() - B.PastShare() >= 0.47);
-	TestTrue(FString::Printf(TEXT("the body between is worth at least 10 points to the clean stop-and-go (%.1f against %.1f with body_shield false)"), 100.0 * A.PastShare(), 100.0 * An.PastShare()), A.PastShare() >= An.PastShare() + 0.10);
-	// Lane A121: the window moved about 1.5 m toward the defender (6 m: 2.5 -> 23.5 %; 5 m stays 0): the timing bar is the brief's 5 m, and 6 m against the clean stop.
-	TestTrue(FString::Printf(TEXT("timing is the skill: the stop begun at 5 m beats the defender at most 1 time in 10 (%.1f %%)"), 100.0 * Br.PastShare()), Br.PastShare() <= 0.10);
-	TestTrue(FString::Printf(TEXT("timing is the skill: the stop begun at 6 m is at least 40 points worse than the clean one (%.1f %%)"), 100.0 * L.PastShare()), L.PastShare() <= A.PastShare() - 0.40);
-	TestTrue(FString::Printf(TEXT("the mouse is the skill: with the blade left ahead the stop-and-go is at least 20 points worse (%.1f %%)"), 100.0 * M.PastShare()), M.PastShare() <= A.PastShare() - 0.20);
+	// Lane A128 (track F2, evolution 3; MOVEMENT-4.md): with the standing start (burst.rest_frames) the defender starts from rest with its first step too.
+	// The brief's bars: the stop begun at 8 m still passes a pro 95 % or more; the straight charge stays under 20 % (below).
+	{
+		FScript At8 = Go;
+		At8.BrakeAtM = 8.0;
+		UJamCartridge* R0 = Copy(*C);
+		R0->Game.Skater.BurstRestFrames = 0;
+		FScript NoMouse8 = At8;
+		NoMouse8.bStickAway = false;
+		const FShare G8 = Share(*C, At8, 200), G8n = Share(*R0, At8, 200), Dflt = Share(*C, FScript(), 200), M8 = Share(*C, NoMouse8, 200);
+		AddInfo(FString::Printf(TEXT("STANDING pro stop begun at 8 m, the blade left ahead (no mouse): %s"), *M8.Line()));
+		TestTrue(FString::Printf(TEXT("A128: the mouse is the skill at 8 m: with the blade left ahead the stop is at least 20 points worse (%.1f %%)"), 100.0 * M8.PastShare()), M8.PastShare() <= G8.PastShare() - 0.20);
+		AddInfo(FString::Printf(TEXT("STANDING pro stop begun at 8 m: %s"), *G8.Line()));
+		AddInfo(FString::Printf(TEXT("STANDING pro stop begun at 8 m, burst.rest_frames 0: %s"), *G8n.Line()));
+		AddInfo(FString::Printf(TEXT("STANDING pro the drill's own default script: %s"), *Dflt.Line()));
+		TestTrue(FString::Printf(TEXT("A128: with the standing start the stop begun at 8 m passes a pro 95 %% or more (%.1f %%)"), 100.0 * G8.PastShare()), G8.PastShare() >= 0.95);
+		TestEqual(TEXT("A128: the drill's default stop is at 8 m"), FScript().BrakeAtM, 8.0);
+		TestEqual(TEXT("A128: the drill's default script is the stop at 8 m"), Dflt.Ends[Past], G8.Ends[Past]);
+	}
+	// Bars. R-0053 point 1 (lane A138): law 3 is a gate. On main, at pro, a stop begun at 8 m (the window's centre since lane A121, the drill's default since
+	// lane A128) passes at least 80 % and a straight charge under 20 %; at all_star the stop passes at least 50 % where its window is (10 to 12 m: all_star
+	// does not creep, lane A128). The gate's own bars read the stop at 8 m; lane A102's clean stop at 9.5 m keeps its 95 % in lane A121's block above.
+	{
+		FScript At8 = Go, At11 = Go, At12 = Go;
+		At8.BrakeAtM = 8.0; At11.BrakeAtM = 11.0; At12.BrakeAtM = 12.0;
+		const FShare G8 = Share(*C, At8, 200), G8n = Share(*N, At8, 200);
+		const FShare S8 = Share(*C, At8, 200, TEXT("all_star")), S95 = Share(*C, Go, 200, TEXT("all_star")), S11 = Share(*C, At11, 200, TEXT("all_star")), S12 = Share(*C, At12, 200, TEXT("all_star")), SB = Share(*C, Straight, 200, TEXT("all_star"));
+		AddInfo(FString::Printf(TEXT("LAW3 pro stop begun at 8 m: %s"), *G8.Line()));
+		AddInfo(FString::Printf(TEXT("LAW3 pro stop begun at 8 m, body_shield false: %s"), *G8n.Line()));
+		AddInfo(FString::Printf(TEXT("LAW3 all_star stop begun at 8 m: %s"), *S8.Line()));
+		AddInfo(FString::Printf(TEXT("LAW3 all_star stop begun at 9.5 m: %s"), *S95.Line()));
+		AddInfo(FString::Printf(TEXT("LAW3 all_star stop begun at 11 m: %s"), *S11.Line()));
+		AddInfo(FString::Printf(TEXT("LAW3 all_star stop begun at 12 m: %s"), *S12.Line()));
+		AddInfo(FString::Printf(TEXT("LAW3 all_star straight charge: %s"), *SB.Line()));
+		TestTrue(FString::Printf(TEXT("law 3 (R-0053): at pro a stop begun at 8 m beats the defender at least 8 times in 10 (%.1f %%)"), 100.0 * G8.PastShare()), G8.PastShare() >= 0.80);
+		TestTrue(FString::Printf(TEXT("law 3 (R-0053): at pro a straight charge beats it at most 1 time in 5 (%.1f %%)"), 100.0 * B.PastShare()), B.PastShare() <= 0.20);
+		TestTrue(FString::Printf(TEXT("the gap between the two is at least 47 points (%.1f)"), 100.0 * (G8.PastShare() - B.PastShare())), G8.PastShare() - B.PastShare() >= 0.47);
+		const double StarBest = FMath::Max(FMath::Max(S8.PastShare(), S95.PastShare()), FMath::Max(S11.PastShare(), S12.PastShare()));
+		TestTrue(FString::Printf(TEXT("law 3 (R-0053): at all_star the stop passes at least 50 %% where its window is (8 m %.1f, 9.5 m %.1f, 11 m %.1f, 12 m %.1f)"), 100.0 * S8.PastShare(), 100.0 * S95.PastShare(), 100.0 * S11.PastShare(), 100.0 * S12.PastShare()), StarBest >= 0.50);
+		TestTrue(FString::Printf(TEXT("at all_star a straight charge beats it at most 1 time in 5 (%.1f %%)"), 100.0 * SB.PastShare()), SB.PastShare() <= 0.20);
+		TestTrue(FString::Printf(TEXT("the body between is worth at least 10 points to the stop-and-go at 8 m (%.1f against %.1f with body_shield false)"), 100.0 * G8.PastShare(), 100.0 * G8n.PastShare()), G8.PastShare() >= G8n.PastShare() + 0.10);
+		// Lane A121: the window moved about 1.5 m toward the defender (6 m: 2.5 -> 23.5 %; 5 m stays 0): the timing bar is the brief's 5 m, and 6 m against the clean stop.
+		TestTrue(FString::Printf(TEXT("timing is the skill: the stop begun at 5 m beats the defender at most 1 time in 10 (%.1f %%)"), 100.0 * Br.PastShare()), Br.PastShare() <= 0.10);
+		TestTrue(FString::Printf(TEXT("timing is the skill: the stop begun at 6 m is at least 40 points worse than the one at 8 m (%.1f %%)"), 100.0 * L.PastShare()), L.PastShare() <= G8.PastShare() - 0.40);
+		// The mouse is the skill: the 20-point bar is held at 8 m in lane A128's block above; at 9.5 m the blade left ahead costs 10 points or more, as before.
+		AddInfo(FString::Printf(TEXT("LAW3 pro stop begun at 9.5 m: with the mouse %.1f %% past and %.1f %% kept; the blade left ahead %.1f %% past and %.1f %% kept"), 100.0 * A.PastShare(), 100.0 * A.KeptShare(), 100.0 * M.PastShare(), 100.0 * M.KeptShare()));
+		TestTrue(FString::Printf(TEXT("the mouse is the skill: with the blade left ahead the stop-and-go at 9.5 m is at least 10 points worse (%.1f %%)"), 100.0 * M.PastShare()), M.PastShare() <= A.PastShare() - 0.10);
+		TestTrue(FString::Printf(TEXT("the mouse is the skill at 9.5 m: with the blade left ahead the puck is lost at least 10 points more often (kept %.1f %% against %.1f %%)"), 100.0 * M.KeptShare(), 100.0 * A.KeptShare()), M.KeptShare() <= A.KeptShare() - 0.10);
+	}
 	// Determinism of the scene: the same seed twice is the same carry.
 	const FRun R1 = Carry(*C, 7, Go), R2 = Carry(*C, 7, Go);
 	TestTrue(TEXT("the same seed is the same carry"), R1.End == R2.End && R1.Frames == R2.Frames);
@@ -409,6 +457,9 @@ namespace JamCarrierSkillTests
 		int32 LiftPresses = 0, PokePresses = 0, CleanLifts = 0, CleanPokes = 0, Wins = 0;
 		int32 Under30 = 0, MinHeld = 1 << 30;
 		TArray<int32> Held;               // frames each stick takeaway's victim had held the puck
+		// Lane A128: what a takeaway inside 30 frames of a win was: the owner's grace and the carrier at the end of the frame before it.
+		int32 PrevGrace = 0, PrevCarrier = -1, PrevSpin = 0;
+		TArray<FString> Notes;
 	};
 
 	void TakeTrace(void* Ctx, const JamAI::FJamAIWorld&, const JamAI::FJamAIInput*, const JamAI::FJamBrain&, int64_t, bool)
@@ -429,12 +480,21 @@ namespace JamCarrierSkillTests
 				const int32 Held = static_cast<int32>(Sim->GetFrame() - C.WonFrame);
 				C.Held.Add(Held);
 				C.MinHeld = FMath::Min(C.MinHeld, Held);
-				if (Held <= 30) ++C.Under30;
+				if (Held <= 30)
+				{
+					++C.Under30;
+					const FJamSkaterState& V = Sim->GetSkaters()[C.Owner];
+					C.Notes.Add(FString::Printf(TEXT("frame %lld: %s by %d on owner %d after %d frames; the frame before: the owner's grace %d, the carrier %d, the owner's spin frames %d; now: owner stumble %d, settle %d, down %d"),
+						static_cast<long long>(Sim->GetFrame()), bLift ? TEXT("lift") : TEXT("poke"), E.Who, C.Owner, Held, C.PrevGrace, C.PrevCarrier, C.PrevSpin, V.StumbleFrames, V.SettleFrames, V.IsDown() ? 1 : 0));
+				}
 			}
 		}
 		const int32 Now = Sim->GetTakeOwner();
 		if (Now >= 0 && Now != C.Owner) { C.WonFrame = Sim->GetFrame(); ++C.Wins; }
 		C.Owner = Now;
+		C.PrevGrace = Now >= 0 ? Sim->GetSkaters()[Now].TakeGraceLeft : 0;
+		C.PrevCarrier = Sim->CarrierIndex();
+		C.PrevSpin = Now >= 0 ? Sim->GetSkaters()[Now].SpinFrames : 0;
 	}
 }
 
@@ -517,6 +577,7 @@ bool FJamMovementTakeGrace::RunTest(const FString& Parameters)
 			AddInfo(FString::Printf(TEXT("TAKEGRACE match pro seed %llu, take_grace_frames %d: %lld frames, %d:%d, hash %016llx | lift presses %d, clean lifts %d, poke presses %d, clean pokes %d, pucks won %d | stick takeaways %d, shortest hold before one %d frames, median %d, inside 30 frames %d"),
 				Seed, M->Game.Stick.TakeGraceFrames, static_cast<long long>(S.Frames), S.GoalsFor, S.GoalsAgainst, static_cast<unsigned long long>(S.Hash), Count.LiftPresses, Count.CleanLifts, Count.PokePresses, Count.CleanPokes, Count.Wins,
 				Count.Held.Num(), Count.Held.Num() ? Count.MinHeld : -1, Count.Held.Num() ? Count.Held[Count.Held.Num() / 2] : -1, Count.Under30));
+			if (Arm == 0) for (const FString& Note : Count.Notes) AddInfo(FString::Printf(TEXT("TAKEGRACE match pro seed %llu, a stick takeaway inside 30 frames of the win: %s"), Seed, *Note));
 			FTakeCount& T = Sum[Arm];
 			T.LiftPresses += Count.LiftPresses; T.PokePresses += Count.PokePresses; T.CleanLifts += Count.CleanLifts; T.CleanPokes += Count.CleanPokes; T.Wins += Count.Wins;
 			T.Under30 += Count.Under30; T.MinHeld = FMath::Min(T.MinHeld, Count.MinHeld); T.Held.Append(Count.Held);
@@ -531,8 +592,32 @@ bool FJamMovementTakeGrace::RunTest(const FString& Parameters)
 			T.Held.Num(), T.Held.Num() ? T.MinHeld : -1, T.Held.Num() ? T.Held[T.Held.Num() / 2] : -1, T.Under30));
 	}
 	TestTrue(TEXT("pucks were taken by a stick in play, with the grace"), Sum[0].Held.Num() > 10);
+	// Lane A128 found one takeaway 8 frames after a win under its defaults (seed 2, frame 8488) and relaxed the bar to "at most one": ResolvePokes runs right
+	// after the puck moved, the winner's grace was counted from the end of the frame, so an open poke window took the puck in the frame its carrier had won it.
+	// Lane A138 closed the hole (stick.bTakeGraceSameFrame: a carrier that is not yet the take owner is inside its grace) and the bar is zero again.
+	// R-0053 point 4: the grace refuses the stick's take only; a body check that lands loosens the puck as before; this counts clean pokes and lifts only.
 	TestEqual(TEXT("with the grace no carrier loses the puck to a stick inside half a second of winning it"), Sum[0].Under30, 0);
 	TestTrue(FString::Printf(TEXT("the shortest hold before a stick takeaway is more than 30 frames (%d)"), Sum[0].MinHeld), Sum[0].MinHeld > 30);
+	// The hole itself, counted: the same three matches with the same-frame cover off.
+	{
+		int32 Under30Hole = 0, Takeaways = 0;
+		for (uint64 Seed = 1; Seed <= 3; ++Seed)
+		{
+			UJamCartridge* M = Copy(*C);
+			M->Game.Rules.ScoreToWin = 99;
+			M->Game.Rules.bPenalties = false;
+			M->Game.Stick.bTakeGraceSameFrame = false;
+			JamAI::FJamSimAdapter Sim(*M);
+			FTakeCount Count;
+			Count.Sim = &Sim;
+			const JamAI::FJamMatchConfig Cfg = JamAI::ToMatchConfigResolved(*M, TEXT("pro"));
+			JamAI::RunPlaytestMatch(Sim, Cfg, Seed, JamAI::EPlaytester::Regular, 10800, M->Game.Shot.ChargeFramesMax, false, &TakeTrace, &Count, 1);
+			Under30Hole += Count.Under30; Takeaways += Count.Held.Num();
+			for (const FString& Note : Count.Notes) AddInfo(FString::Printf(TEXT("TAKEGRACE match pro seed %llu, bTakeGraceSameFrame false, a stick takeaway inside 30 frames of the win: %s"), Seed, *Note));
+		}
+		AddInfo(FString::Printf(TEXT("TAKEGRACE pro, 9 minutes, take_grace_frames 30 without the same-frame cover (lane A121's rule as it was): stick takeaways %d, inside 30 frames %d"), Takeaways, Under30Hole));
+	}
+	TestTrue(FString::Printf(TEXT("with the grace such takeaways are at most a tenth of what they are without it (%d against %d)"), Sum[0].Under30, Sum[1].Under30), Sum[0].Under30 * 10 <= Sum[1].Under30);
 	TestTrue(FString::Printf(TEXT("without it some did (%d inside 30 frames): the rule has something to do"), Sum[1].Under30), Sum[1].Under30 > 0);
 	return true;
 }
@@ -546,7 +631,7 @@ bool FJamMovementLateAnswer::RunTest(const FString& Parameters)
 	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
 	if (!C) return false;
 	UJamCartridge* E1 = Copy(*C);   // lane A121's neutral block
-	E1->Game.Stick.TakeGraceFrames = 0; E1->Game.Skater.ReverseBrakeDecel = 20; E1->Game.Skater.bBurstOwnStop = false;
+	E1->Game.Stick.TakeGraceFrames = 0; E1->Game.Skater.ReverseBrakeDecel = 20; E1->Game.Skater.bBurstOwnStop = false; E1->Game.Skater.BurstRestFrames = 0; E1->Game.Skater.SpinExposedTail = 0;   // lane A128: and before its two keys
 	FScript StopAt6 = DefaultGo();
 	StopAt6.BrakeAtM = 6.0;
 	const FShare Cut6 = Share(*C, FScript::Late(0), 200), Spin6 = Share(*C, FScript::Late(1), 200), Deke6 = Share(*C, FScript::Late(2), 200), Stop6 = Share(*C, StopAt6, 200);
@@ -565,9 +650,160 @@ bool FJamMovementLateAnswer::RunTest(const FString& Parameters)
 	// The brief's bar: from 6 m the carrier passes a pro at least one time in three (measured: the spin 100, the deke 56.5, the cut alone 64.5).
 	TestTrue(FString::Printf(TEXT("from 6 m the spin with the cut passes a pro at least one time in three (%.1f %%)"), 100.0 * Spin6.PastShare()), Spin6.PastShare() >= 1.0 / 3.0);
 	TestTrue(FString::Printf(TEXT("from 6 m the deke tap with the cut passes a pro at least one time in three (%.1f %%)"), 100.0 * Deke6.PastShare()), Deke6.PastShare() >= 1.0 / 3.0);
-	TestTrue(FString::Printf(TEXT("the spin is the surer late answer (%.1f against the cut alone %.1f)"), 100.0 * Spin6.PastShare(), 100.0 * Cut6.PastShare()), Spin6.PastShare() >= Cut6.PastShare());
+	// Lane A128 (skater.spin.exposed_frames): the spin has a price: from 6 m it is an answer, not the sure one (100 % before; Jam.Core.Movement.SpinPrice holds the band).
+	TestTrue(FString::Printf(TEXT("the spin is an answer, not the sure one (%.1f; the cut alone %.1f)"), 100.0 * Spin6.PastShare(), 100.0 * Cut6.PastShare()), Spin6.PastShare() <= 0.70);
 	TestTrue(FString::Printf(TEXT("late, a stop is the wrong answer (%.1f against the cut alone %.1f)"), 100.0 * Stop6.PastShare(), 100.0 * Cut6.PastShare()), Stop6.PastShare() <= Cut6.PastShare() - 0.20);
 	TestTrue(FString::Printf(TEXT("inside 4 m nothing answers more than one time in two (the spin %.1f, the deke %.1f)"), 100.0 * Spin4.PastShare(), 100.0 * Deke4.PastShare()), Spin4.PastShare() <= 0.5 && Deke4.PastShare() <= 0.5);
+	return true;
+}
+
+// Lane A128 (track F2, evolution 3): the standing start (game.skater.burst.rest_frames). A skater that has been at rest (under 1 m/s for rest_frames) has
+// earned its first step: after a faceoff, standing, lying. Never on a charge already under way. And UJamSim::Restart forgets the burst of the run before.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamMovementStandingStart, "Jam.Core.Movement.StandingStart", JamCarrierSkillTests::Flags)
+bool FJamMovementStandingStart::RunTest(const FString& Parameters)
+{
+	using namespace JamCarrierSkillTests;
+	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
+	if (!C) return false;
+	const FJamGameConfig& G = C->Game;
+	TestEqual(TEXT("game.skater.burst.rest_frames is 6 when the key is absent"), G.Skater.BurstRestFrames, 6);
+	FJamGameConfig Off = G;
+	Off.Skater.BurstRestFrames = 0;
+	// The human alone (everyone else parked). Stand: frames it stands first (0 = straight out of the faceoff); GlideMps > 0: it glides at that speed with no
+	// input for Stand frames instead. Then W is held: frames to 8 m/s, the most BurstLeft seen, the rest counter when W went down.
+	struct FStart { int32 To8 = -1, Armed = 0, RestAtGo = 0; double V0 = 0.0; };
+	auto Start = [](const FJamGameConfig& Cfg, int32 Stand, double GlideMps) -> FStart
+	{
+		FStart R;
+		UJamSim* Sim = NewObject<UJamSim>();
+		Sim->Init(Cfg, 1);
+		Sim->SkipFaceoff();
+		const int32 Me = Sim->GetHumanIndex();
+		const int32 N = Sim->GetSkaters().Num();
+		for (int32 i = 0; i < N; ++i) if (i != Me) Sim->SetSkater(i, FVector2D(-40.0 + i * 1.5, 19.0), FVector2D::ZeroVector, 0);
+		Sim->SetSkater(Me, FVector2D(-30, 0), FVector2D(GlideMps, 0), 0);
+		Sim->SetPuck(FVector2D(30, 19), FVector2D::ZeroVector);
+		TArray<FJamInput> In;
+		In.SetNum(N);
+		for (int32 F = 0; F < Stand; ++F) Sim->Step(In);
+		R.RestAtGo = Sim->GetSkaters()[Me].RestFrames;
+		R.V0 = Sim->GetSkaters()[Me].Vel.Size();
+		In[Me].Move = FVector2D(1, 0);
+		for (int32 F = 1; F <= 120 && R.To8 < 0; ++F)
+		{
+			Sim->Step(In);
+			R.Armed = FMath::Max(R.Armed, Sim->GetSkaters()[Me].BurstLeft);
+			if (Sim->GetSkaters()[Me].Vel.Size() >= 7.99) R.To8 = F;
+		}
+		return R;
+	};
+	const FStart Stood = Start(G, 30, 0.0), Draw = Start(G, 0, 0.0), StoodOff = Start(Off, 30, 0.0), Glide = Start(G, 12, 6.0), GlideOff = Start(Off, 12, 6.0);
+	AddInfo(FString::Printf(TEXT("STANDING 0 to 8 m/s: after standing 30 frames %d frames (burst %d), straight out of the faceoff %d (burst %d), with burst.rest_frames 0: %d (burst %d)"),
+		Stood.To8, Stood.Armed, Draw.To8, Draw.Armed, StoodOff.To8, StoodOff.Armed));
+	AddInfo(FString::Printf(TEXT("STANDING a charge under way (gliding at %.1f m/s when W goes down): to 8 m/s in %d frames (burst %d); with burst.rest_frames 0: %d (burst %d)"),
+		Glide.V0, Glide.To8, Glide.Armed, GlideOff.To8, GlideOff.Armed));
+	// The brief's bar: 0 to 8 m/s from rest in 26 frames or fewer (41 before, 23 with lane A93's burst for everyone).
+	TestTrue(FString::Printf(TEXT("from rest 0 to 8 m/s takes 26 frames or fewer (%d)"), Stood.To8), Stood.To8 > 0 && Stood.To8 <= 26);
+	TestTrue(FString::Printf(TEXT("straight out of the faceoff 0 to 8 m/s takes 26 frames or fewer (%d)"), Draw.To8), Draw.To8 > 0 && Draw.To8 <= 26);
+	TestEqual(TEXT("the standing skater's burst is the whole burst"), Stood.Armed, G.Skater.BurstFrames);
+	TestEqual(TEXT("the rest counter is full after standing"), Stood.RestAtGo, G.Skater.BurstRestFrames);
+	TestTrue(FString::Printf(TEXT("burst.rest_frames 0: the standing start is lane A121's (35..45 frames: %d), no burst"), StoodOff.To8), StoodOff.To8 >= 35 && StoodOff.To8 <= 45 && StoodOff.Armed == 0 && StoodOff.RestAtGo == 0);
+	TestEqual(TEXT("never on a charge already under way: no burst"), Glide.Armed, 0);
+	TestEqual(TEXT("a charge under way is the same charge with burst.rest_frames 0"), Glide.To8, GlideOff.To8);
+	// Restart forgets the burst that was running (lane A121's finding): start a burst, restart, nothing is left of it.
+	{
+		UJamSim* Sim = NewObject<UJamSim>();
+		Sim->Init(G, 1);
+		Sim->SkipFaceoff();
+		const int32 Me = Sim->GetHumanIndex();
+		TArray<FJamInput> In;
+		In.SetNum(Sim->GetSkaters().Num());
+		In[Me].Move = FVector2D(1, 0);
+		for (int32 F = 0; F < 12; ++F) Sim->Step(In);
+		const int32 Running = Sim->GetSkaters()[Me].BurstLeft;
+		Sim->Restart();
+		int32 Left = 0;
+		for (const FJamSkaterState& S : Sim->GetSkaters()) Left += S.BurstLeft + S.SpinRecoverLeft;
+		TestTrue(FString::Printf(TEXT("a burst was running before the restart (%d frames left)"), Running), Running > 0);
+		TestEqual(TEXT("Restart leaves no burst and no recovery running"), Left, 0);
+	}
+	// The counter is in the lockstep hash: the same standing frame hashes differently with the rule and without.
+	{
+		UJamSim* A = NewObject<UJamSim>();
+		UJamSim* B = NewObject<UJamSim>();
+		A->Init(G, 1); A->SkipFaceoff();
+		B->Init(Off, 1); B->SkipFaceoff();
+		TestTrue(TEXT("RestFrames is hashed (a standing skater under the rule against none)"), A->StateHash() != B->StateHash());
+	}
+	return true;
+}
+
+// Lane A128 (track F2, evolution 3): the spin's price (game.skater.spin.exposed_frames). For the last exposed_frames frames of a spin the body has come
+// round: nothing shields the puck from a stick; with 0 the whole spin shields. The carry scene: the spin with the cut is no longer the sure answer from 6 m.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamMovementSpinPrice, "Jam.Core.Movement.SpinPrice", JamCarrierSkillTests::Flags)
+bool FJamMovementSpinPrice::RunTest(const FString& Parameters)
+{
+	using namespace JamCarrierSkillTests;
+	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
+	if (!C) return false;
+	TestEqual(TEXT("game.skater.spin.exposed_frames is 5 when the key is absent"), C->Game.Skater.SpinExposedTail, 5);
+	TestEqual(TEXT("the recovery after the spin is off (code only)"), C->Game.Skater.SpinRecoveryFrames, 0);
+	FJamGameConfig On = C->Game, Off = C->Game;
+	Off.Skater.SpinExposedTail = 0;
+	// The rule: the carrier stands with the puck ahead, a defender right behind it. The carrier spins; the defender lifts when the spin has Left frames to
+	// run (0 = the frame after its last). True when the carrier keeps the puck.
+	auto LiftAtSpinLeft = [&](const FJamGameConfig& Cfg, int32 Left, int32& OutLeftSeen) -> bool
+	{
+		int32 Me = -1, Def = -1;
+		UJamSim* Sim = ShieldScene(Cfg, 0.0, FVector2D(1, 0), FVector2D(-1.6, 0), Me, Def);
+		TArray<FJamInput> In;
+		In.SetNum(Sim->GetSkaters().Num());
+		In[Me].Stick = FVector2D(1, 0);
+		In[Me].bSpin = true;
+		Sim->Step(In);
+		In[Me].bSpin = false;
+		// Keeps() steps one frame before the press: stop one frame early.
+		for (int32 F = 0; F < 200 && Sim->GetSkaters()[Me].SpinFrames > Left + 1; ++F) Sim->Step(In);
+		OutLeftSeen = Sim->GetSkaters()[Me].SpinFrames;
+		if (Sim->CarrierIndex() != Me) return false;
+		return Keeps(Sim, Me, Def, FVector2D(1, 0), true);
+	};
+	const int32 Tail = On.Skater.SpinExposedTail;
+	int32 SeenMid = 0, SeenTail = 0, SeenTailOff = 0, SeenEdge = 0, SeenAfter = 0;
+	const bool bMid = LiftAtSpinLeft(On, Tail + 6, SeenMid), bTail = LiftAtSpinLeft(On, 2, SeenTail), bTailOff = LiftAtSpinLeft(Off, 2, SeenTailOff);
+	const bool bEdge = LiftAtSpinLeft(On, Tail + 1, SeenEdge), bAfter = LiftAtSpinLeft(On, -1, SeenAfter);
+	AddInfo(FString::Printf(TEXT("SPINPRICE the lift from behind, the carrier keeps the puck: mid-spin %d, in the exposed end %d, the same frame with exposed_frames 0 %d, one frame before the exposed end %d, after the spin %d"),
+		bMid ? 1 : 0, bTail ? 1 : 0, bTailOff ? 1 : 0, bEdge ? 1 : 0, bAfter ? 1 : 0));
+	TestEqual(TEXT("the scene: the lift comes with the spin's frames it names"), SeenTail, 3);
+	TestTrue(TEXT("a lift in the middle of the spin is refused (the body is between)"), bMid);
+	TestFalse(TEXT("a lift in the spin's exposed end takes the puck"), bTail);
+	TestTrue(TEXT("spin.exposed_frames 0: the same lift is refused, as before the lane"), bTailOff);
+	TestTrue(TEXT("one frame before the exposed end the body is still between"), bEdge);
+	TestTrue(TEXT("after the spin the body shields as for any carrier (the defender is behind it)"), bAfter);
+	// The carry scene (pro, 200 seeds; FJamCarryDrill::Late): the spin with the cut from 6 m and from 5 m, with the price and without; the deke tap; the stop at 8 m.
+	UJamCartridge* N = Copy(*C);
+	N->Game.Skater.SpinExposedTail = 0;
+	FScript At8 = DefaultGo();
+	At8.BrakeAtM = 8.0;
+	const FShare Spin6 = Share(*C, FScript::Late(1), 200), Spin5 = Share(*C, FScript::Late(1, 5.0), 200), Spin7 = Share(*C, FScript::Late(1, 7.0), 200), Deke6 = Share(*C, FScript::Late(2), 200), Stop8 = Share(*C, At8, 200);
+	const FShare Spin6n = Share(*N, FScript::Late(1), 200), Spin5n = Share(*N, FScript::Late(1, 5.0), 200), Deke6n = Share(*N, FScript::Late(2), 200);
+	AddInfo(FString::Printf(TEXT("SPINPRICE pro from 6 m, the spin with the cut: %s"), *Spin6.Line()));
+	AddInfo(FString::Printf(TEXT("SPINPRICE pro from 5 m, the spin with the cut: %s"), *Spin5.Line()));
+	AddInfo(FString::Printf(TEXT("SPINPRICE pro from 7 m, the spin with the cut: %s"), *Spin7.Line()));
+	AddInfo(FString::Printf(TEXT("SPINPRICE pro from 6 m, the deke tap with the cut: %s"), *Deke6.Line()));
+	AddInfo(FString::Printf(TEXT("SPINPRICE pro the stop begun at 8 m: %s"), *Stop8.Line()));
+	AddInfo(FString::Printf(TEXT("SPINPRICE pro from 6 m, the spin with the cut, spin.exposed_frames 0: %s"), *Spin6n.Line()));
+	AddInfo(FString::Printf(TEXT("SPINPRICE pro from 5 m, the spin with the cut, spin.exposed_frames 0: %s"), *Spin5n.Line()));
+	AddInfo(FString::Printf(TEXT("SPINPRICE pro from 6 m, the deke tap with the cut, spin.exposed_frames 0: %s"), *Deke6n.Line()));
+	TestEqual(TEXT("every scene set up"), Spin6.Ends[Setup] + Spin5.Ends[Setup] + Spin7.Ends[Setup] + Deke6.Ends[Setup] + Stop8.Ends[Setup] + Spin6n.Ends[Setup] + Spin5n.Ends[Setup], 0);
+	// The brief's bars. Measured on sweep 2: 6 m 53.0 (99.5 with 0), 5 m 53.5 (60.0 with 0), the deke tap 52.0, the stop at 8 m 100.
+	TestTrue(FString::Printf(TEXT("from 6 m the spin with the cut passes a pro 50 to 70 %% (%.1f %%)"), 100.0 * Spin6.PastShare()), Spin6.PastShare() >= 0.50 && Spin6.PastShare() <= 0.70);
+	TestTrue(FString::Printf(TEXT("the price is worth at least 30 points at 6 m (%.1f against %.1f with exposed_frames 0)"), 100.0 * Spin6.PastShare(), 100.0 * Spin6n.PastShare()), Spin6.PastShare() <= Spin6n.PastShare() - 0.30);
+	// The brief asked under 50 % from 5 m: the stick's price reaches 53.5 (the losses there are body checks, which no shield rule moves); held at 60.
+	TestTrue(FString::Printf(TEXT("from 5 m the spin with the cut passes a pro at most 60 %% (%.1f %%; the brief's bar is under 50)"), 100.0 * Spin5.PastShare()), Spin5.PastShare() <= 0.60);
+	TestTrue(FString::Printf(TEXT("the deke tap stays near its 56 %% (%.1f %%)"), 100.0 * Deke6.PastShare()), Deke6.PastShare() >= 0.46 && Deke6.PastShare() <= 0.66);
+	TestTrue(FString::Printf(TEXT("the stop begun at 8 m stays at 95 %% or more (%.1f %%)"), 100.0 * Stop8.PastShare()), Stop8.PastShare() >= 0.95);
+	TestEqual(TEXT("the price is the spin's alone: the deke tap is the same carry with spin.exposed_frames 0"), Deke6.Ends[Past], Deke6n.Ends[Past]);
 	return true;
 }
 
@@ -583,8 +819,8 @@ bool FJamMovementStopAndGoSweep::RunTest(const FString& Parameters)
 	UJamCartridge* Base = LoadPreset(*this, TEXT("hockey.regular"));
 	if (!Base) return false;
 	TArray<FString> Rows;
-	const FString File = FPaths::Combine(FPaths::ProjectDir(), TEXT("logs/a102/sweep.txt")), File2 = FPaths::Combine(FPaths::ProjectDir(), TEXT("logs/a121/sweep.txt"));
-	if (!FFileHelper::LoadFileToStringArray(Rows, *File2) && !FFileHelper::LoadFileToStringArray(Rows, *File))
+	const FString File = FPaths::Combine(FPaths::ProjectDir(), TEXT("logs/a102/sweep.txt")), File2 = FPaths::Combine(FPaths::ProjectDir(), TEXT("logs/a121/sweep.txt")), File3 = FPaths::Combine(FPaths::ProjectDir(), TEXT("logs/a128/sweep.txt"));
+	if (!FFileHelper::LoadFileToStringArray(Rows, *File3) && !FFileHelper::LoadFileToStringArray(Rows, *File2) && !FFileHelper::LoadFileToStringArray(Rows, *File))
 	{
 		Rows = {
 			TEXT("defaults |"),
@@ -611,8 +847,8 @@ bool FJamMovementStopAndGoSweep::RunTest(const FString& Parameters)
 		UJamCartridge* C = Copy(*Base);
 		FJamGameConfig& G = C->Game;
 		FScript Go = DefaultGo();
-		int32 Seeds = 200, Level = 1, TraceSeed = 0;
-		bool bStraight = true;
+		int32 Seeds = 200, Level = 1, TraceSeed = 0, StandingRows = 0, TraceSeed2 = 0, TraceSeed3 = 0;
+		bool bStraight = true, bListEnds = false;
 		TArray<FString> Pairs;
 		Spec.ParseIntoArray(Pairs, TEXT(","), true);
 		for (const FString& Pair : Pairs)
@@ -625,6 +861,19 @@ bool FJamMovementStopAndGoSweep::RunTest(const FString& Parameters)
 			else if (K == TEXT("burst.own_stop")) G.Skater.bBurstOwnStop = V != 0.0;                 // lane A121
 			else if (K == TEXT("burst.carry_accel_mult")) G.Skater.BurstCarryAccelMult = V;         // lane A121 (code only)
 			else if (K == TEXT("take_grace")) G.Stick.TakeGraceFrames = FMath::RoundToInt32(V);     // lane A121
+			else if (K == TEXT("burst.rest_frames")) G.Skater.BurstRestFrames = FMath::RoundToInt32(V);         // lane A128
+			else if (K == TEXT("burst.rest_hold")) G.Skater.BurstRestHoldMps = V;                             // lane A128 (code only)
+			else if (K == TEXT("burst.rest_push")) G.Skater.bBurstRestPushOff = V != 0.0;                     // lane A128 (code only)
+			else if (K == TEXT("spin.exposed_head")) G.Skater.SpinExposedHead = FMath::RoundToInt32(V);       // lane A128 (code only)
+			else if (K == TEXT("burst.rest_burst")) G.Skater.BurstRestBurstFrames = FMath::RoundToInt32(V);   // lane A128 (code only)
+			else if (K == TEXT("spin.recovery_frames")) G.Skater.SpinRecoveryFrames = FMath::RoundToInt32(V); // lane A128
+			else if (K == TEXT("spin.recovery_accel")) G.Skater.SpinRecoveryAccelMult = V;                    // lane A128 (code only)
+			else if (K == TEXT("spin.exposed_tail")) G.Skater.SpinExposedTail = FMath::RoundToInt32(V);       // lane A128 (code only)
+			else if (K == TEXT("spin.stability")) G.Contact.SpinStability = V;                                // lane A128 (the contact family's key, read only here)
+			else if (K == TEXT("ends")) bListEnds = V != 0.0;                                                 // lane A128: list the seeds that did not pass
+			else if (K == TEXT("trace2")) TraceSeed2 = FMath::RoundToInt32(V);
+			else if (K == TEXT("trace3")) TraceSeed3 = FMath::RoundToInt32(V);
+			else if (K == TEXT("standing")) StandingRows = FMath::RoundToInt32(V);                            // lane A128: also print 0 to 8 m/s from rest
 			else if (K == TEXT("answer")) Go.Answer = FMath::RoundToInt32(V);                       // lane A121: 1 = the spin, 2 = the deke tap, with the cut
 			else if (K == TEXT("spin.frames")) G.Skater.SpinFrames = FMath::RoundToInt32(V);
 			else if (K == TEXT("spin.speed_mult")) G.Skater.SpinSpeedMult = V;
@@ -663,12 +912,248 @@ bool FJamMovementStopAndGoSweep::RunTest(const FString& Parameters)
 			AddInfo(FString::Printf(TEXT("SWEEP %s | go %.1f | straight %.1f | gap %.1f | go: %s | straight: %s"), *Name, 100.0 * A.PastShare(), 100.0 * B.PastShare(), 100.0 * (A.PastShare() - B.PastShare()), *A.Line(), *B.Line()));
 		}
 		else AddInfo(FString::Printf(TEXT("SWEEP %s | go %.1f | go: %s"), *Name, 100.0 * A.PastShare(), *A.Line()));
-		if (TraceSeed > 0)
+		if (StandingRows > 0)
 		{
-			TArray<FString> Trace;
-			Carry(*C, static_cast<uint64>(TraceSeed), Go, Levels[Level], &Trace);
-			for (const FString& L : Trace) AddInfo(FString::Printf(TEXT("TRACE %s seed %d: %s"), *Name, TraceSeed, *L));
+			// Lane A128: the standing start under this row's keys: the human alone, at rest for 30 frames, then W held: frames to 6 m/s and to 8 m/s.
+			UJamSim* Sim = NewObject<UJamSim>();
+			Sim->Init(G, 1);
+			Sim->SkipFaceoff();
+			const int32 Me = Sim->GetHumanIndex();
+			const int32 N = Sim->GetSkaters().Num();
+			for (int32 i = 0; i < N; ++i) Sim->SetSkater(i, FVector2D(-40.0 + i * 1.5, 19.0), FVector2D::ZeroVector, 0);
+			Sim->SetSkater(Me, FVector2D(-30, 0), FVector2D::ZeroVector, 0);
+			TArray<FJamInput> In;
+			In.SetNum(N);
+			for (int32 F = 0; F < 30; ++F) Sim->Step(In);
+			In[Me].Move = FVector2D(1, 0);
+			int32 To6 = -1, To8 = -1;
+			for (int32 F = 1; F <= 120 && To8 < 0; ++F)
+			{
+				Sim->Step(In);
+				const double Vm = Sim->GetSkaters()[Me].Vel.Size();
+				if (To6 < 0 && Vm >= 6.0) To6 = F;
+				if (Vm >= 8.0) To8 = F;
+			}
+			AddInfo(FString::Printf(TEXT("SWEEP %s | standing start: 0 to 6 m/s in %d frames, 0 to 8 m/s in %d frames"), *Name, To6, To8));
 		}
+		if (bListEnds)
+		{
+			FString List;
+			for (int32 Seed = 1; Seed <= Seeds; ++Seed)
+			{
+				const FRun R = Carry(*C, static_cast<uint64>(Seed), Go, Levels[Level]);
+				if (R.End != Past) List += FString::Printf(TEXT(" %d:%s"), Seed, FJamCarryDrill::EndName(R.End));
+			}
+			AddInfo(FString::Printf(TEXT("SWEEP %s | not past:%s"), *Name, *List));
+		}
+		for (const int32 TS : { TraceSeed, TraceSeed2, TraceSeed3 })
+		{
+			if (TS <= 0) continue;
+			TArray<FString> Trace;
+			Carry(*C, static_cast<uint64>(TS), Go, Levels[Level], &Trace);
+			for (const FString& L : Trace) AddInfo(FString::Printf(TEXT("TRACE %s seed %d: %s"), *Name, TS, *L));
+		}
+	}
+	return true;
+}
+
+// ---- Lane A138 (track I1, R-0053): the sim-and-brain seam, integrated (docs/experiments/INTEGRATION.md) --------------------------------------------------
+namespace JamCarrierSkillTests
+{
+	// How a carry ended, with the contact that ended it told apart: a cross-check's shove from behind (the push along the carrier's facing), a shove from
+	// the front or the side, a body check.
+	enum EHow { HPast, HLift, HPoke, HShoveBehind, HShoveOther, HChecked, HOther, HTimeout, HowCount };
+	struct FHow
+	{
+		int32 N = 0, H[HowCount] = {}, Lifts = 0, Pokes = 0, Checks = 0, Setup = 0;
+		int64 Frames = 0;
+		double PastShare() const { return N > 0 ? static_cast<double>(H[HPast]) / N : 0.0; }
+		FString Line() const
+		{
+			return FString::Printf(TEXT("past %d of %d (%.1f %%) | lifted %d, poked %d, shoved from behind %d, shoved front or side %d, checked %d, other %d, timed out with the puck %d | defender presses: lift %d poke %d check %d; %.0f frames a carry%s"),
+				H[HPast], N, 100.0 * PastShare(), H[HLift], H[HPoke], H[HShoveBehind], H[HShoveOther], H[HChecked], H[HOther], H[HTimeout], Lifts, Pokes, Checks, N > 0 ? static_cast<double>(Frames) / N : 0.0,
+				Setup > 0 ? *FString::Printf(TEXT(" (%d scenes not set up)"), Setup) : TEXT(""));
+		}
+	};
+
+	// Carry() over Seeds seeds with a profile tune on the brain (nullptr = the level as shipped), each end classified.
+	FHow CarryHow(const UJamCartridge& C, const FScript& Script, int32 Seeds, const TCHAR* Level = TEXT("pro"), const char* Tune = nullptr)
+	{
+		FHow R;
+		UJamSim* Sim = NewObject<UJamSim>();
+		UJamBrain* Brain = NewObject<UJamBrain>();
+		TArray<FJamInput> In;
+		for (int32 Seed = 1; Seed <= Seeds; ++Seed)
+		{
+			FJamCarryDrill D = Script;
+			Sim->Init(C.Game, static_cast<uint64>(Seed));
+			Sim->SkipFaceoff();
+			++R.N;
+			if (!D.Stage(*Sim, static_cast<uint64>(Seed))) { ++R.Setup; ++R.H[HOther]; continue; }
+			Brain->ApplyCartridge(C, Level);
+			if (Tune && *Tune)
+			{
+				char Err[200] = {};
+				JamAI::ApplyDifficultyTune(Tune, Brain->EditParams(), Err, sizeof(Err));
+				Brain->SpeedScale = static_cast<float>(Brain->EditParams().SpeedScale);
+				Brain->RedSkill = static_cast<float>(Brain->EditParams().RedSkill);
+			}
+			Brain->ResetBrain();
+			In.SetNum(Sim->GetSkaters().Num());
+			int32 HitFrame = -1;
+			bool bHitCross = false, bHitBehind = false;
+			while (D.End == FJamCarryDrill::Running)
+			{
+				JamAI::FJamAIWorld W;
+				JamAI::FJamSimAdapter::BuildWorld(*Sim, W);
+				JamAI::FJamAIInput Out[JamAI::kMaxSkaters];
+				Brain->Think(W, Out);
+				for (FJamInput& I : In) I = FJamInput();
+				if (!D.DefenderWaits()) In[D.Def] = ToInput(Out[D.Def]);
+				In[D.Me] = D.HumanInput(*Sim);
+				D.BeforeStep(*Sim, In[D.Def]);
+				const FJamSkaterState& S0 = Sim->GetSkaters()[D.Me];
+				const bool bBehind = FVector2D::DotProduct((S0.Pos - Sim->GetSkaters()[D.Def].Pos).GetSafeNormal(), S0.Forward()) > 0.5;
+				Sim->Step(In);
+				const FJamSkaterState& S1 = Sim->GetSkaters()[D.Me];
+				if (S1.ContactBy == D.Def && S1.ContactOutcome >= UJamSim::ContactStumble) { HitFrame = D.Frames; bHitCross = S1.bContactCross; bHitBehind = bBehind; }
+				D.AfterStep(*Sim);
+			}
+			R.Lifts += D.DefLifts; R.Pokes += D.DefPokes; R.Checks += D.DefChecks; R.Frames += D.Frames;
+			EHow How = HOther;
+			switch (D.End)
+			{
+			case FJamCarryDrill::Past: How = HPast; break;
+			case FJamCarryDrill::Timeout: How = HTimeout; break;
+			case FJamCarryDrill::Poke: How = HPoke; break;
+			case FJamCarryDrill::Lift: How = HLift; break;
+			case FJamCarryDrill::Setup: ++R.Setup; break;
+			default: How = HitFrame < 0 ? HOther : !bHitCross ? HChecked : bHitBehind ? HShoveBehind : HShoveOther; break;
+			}
+			++R.H[How];
+		}
+		return R;
+	}
+}
+
+// Bar.Integration.Carry (outside the gate's Jam filter; the brief's item 2): what broke law 3. The carry scene (200 seeds an arm, the real brain) with the
+// brain's second evolution on and off, its shield and grace reads on and off, the shove rule on and off: the stop begun at 8 m, at 9.5 m, the straight
+// charge, and how each failed carry ended.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamIntegrationCarry, "Bar.Integration.Carry", JamCarrierSkillTests::Flags)
+bool FJamIntegrationCarry::RunTest(const FString& Parameters)
+{
+	using namespace JamCarrierSkillTests;
+	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
+	if (!C) return false;
+	struct FArm { const TCHAR* Name; const char* Tune; bool bShieldShove; double MatchMps; };
+	const double M = C->Game.Contact.ShoveBehindMatchMps;
+	const FArm Arms[] = {
+		{ TEXT("everything on, as the tree stands"), nullptr, true, M },
+		{ TEXT("brain2=0 (the brain of evolution 1)"), "brain2=0", true, M },
+		{ TEXT("the brain's shield and grace reads off"), "opp.hk_read_shield=0;mate.hk_read_shield=0", true, M },
+		{ TEXT("the brain's meant brake off"), "opp.hk_brake_meant=0;mate.hk_brake_meant=0", true, M },
+		{ TEXT("the shove rule off (the shields refuse the shove too)"), nullptr, false, M },
+		{ TEXT("brain2=0 and the shove rule off (main before the parked landing)"), "brain2=0", false, M },
+		{ TEXT("the parked tree: everything on, the thrust whole from behind"), nullptr, true, 0.0 },
+		{ TEXT("the parked tree with the reads off: the thrust whole from behind"), "opp.hk_read_shield=0;mate.hk_read_shield=0", true, 0.0 },
+		{ TEXT("brain2=0, the shove rule on, the thrust whole from behind"), "brain2=0", true, 0.0 },
+		{ TEXT("brain2=0, the shove rule on, the thrust on a back by the closing speed"), "brain2=0", true, 3.0 } };
+	FScript At8, At95, Straight;
+	At8.BrakeAtM = 8.0; At95.BrakeAtM = 9.5; Straight.bStopAndGo = false;
+	const int32 Seeds = 200;
+	for (const FArm& A : Arms)
+	{
+		UJamCartridge* G = Copy(*C);
+		G->Game.Contact.bShieldShove = A.bShieldShove;
+		G->Game.Contact.ShoveBehindMatchMps = A.MatchMps;
+		AddInfo(FString::Printf(TEXT("INTCARRY pro | %s | stop at 8 m: %s"), A.Name, *CarryHow(*G, At8, Seeds, TEXT("pro"), A.Tune).Line()));
+		AddInfo(FString::Printf(TEXT("INTCARRY pro | %s | stop at 9.5 m: %s"), A.Name, *CarryHow(*G, At95, Seeds, TEXT("pro"), A.Tune).Line()));
+		AddInfo(FString::Printf(TEXT("INTCARRY pro | %s | straight charge: %s"), A.Name, *CarryHow(*G, Straight, Seeds, TEXT("pro"), A.Tune).Line()));
+	}
+	// The way round the body (the brain's shield read): candidates for "a defender that contains wins when the carrier dawdles, not when he stops and goes".
+	// (Build 4, hk_round_max_mps 0 as the default: lead 0 74.5 % at 9.5 m, lead 0.15 71.5 %; max 3 / 5 / 7 m/s 97.0 % each. The default is 3 since.)
+	for (const char* Tune : { "opp.hk_round_max_mps=0", "opp.hk_round_max_mps=0;opp.hk_round_lead_s=0", "opp.hk_round_max_mps=3", "opp.hk_round_max_mps=5" })
+	{
+		for (const TCHAR* Level : { TEXT("pro"), TEXT("all_star") })
+		{
+			FScript At11 = At95;
+			At11.BrakeAtM = 11.0;
+			AddInfo(FString::Printf(TEXT("INTROUND %s | %s | stop at 8 m: %s"), Level, ANSI_TO_TCHAR(Tune), *CarryHow(*C, At8, Seeds, Level, Tune).Line()));
+			AddInfo(FString::Printf(TEXT("INTROUND %s | %s | stop at 9.5 m: %s"), Level, ANSI_TO_TCHAR(Tune), *CarryHow(*C, At95, Seeds, Level, Tune).Line()));
+			AddInfo(FString::Printf(TEXT("INTROUND %s | %s | stop at 11 m: %s"), Level, ANSI_TO_TCHAR(Tune), *CarryHow(*C, At11, Seeds, Level, Tune).Line()));
+			AddInfo(FString::Printf(TEXT("INTROUND %s | %s | straight charge: %s"), Level, ANSI_TO_TCHAR(Tune), *CarryHow(*C, Straight, Seeds, Level, Tune).Line()));
+		}
+	}
+	// For the curve lane (CURVE-6: a pro that pokes after 2 frames won the drill): law 3's budget by the levers the curve moves, as the tree stands.
+	for (const char* Tune : { "opp.poke_frames=2", "opp.poke_frames=3", "opp.poke_frames=4", "opp.check_min_closing=1", "opp.hunt_radius_m=20", "opp.sprint_share=0.7", "opp.lift_cooldown_frames=45",
+		"opp.hunt_radius_m=20;opp.check_min_closing=1;opp.poke_frames=2;opp.sprint_share=0.7;opp.lift_cooldown_frames=45", "opp.hunt_radius_m=20;opp.check_min_closing=1;opp.poke_frames=4;opp.sprint_share=0.7;opp.lift_cooldown_frames=45" })
+	{
+		AddInfo(FString::Printf(TEXT("INTCURVE pro | %s | stop at 8 m: %s"), ANSI_TO_TCHAR(Tune), *CarryHow(*C, At8, Seeds, TEXT("pro"), Tune).Line()));
+		AddInfo(FString::Printf(TEXT("INTCURVE pro | %s | straight charge: %s"), ANSI_TO_TCHAR(Tune), *CarryHow(*C, Straight, Seeds, TEXT("pro"), Tune).Line()));
+	}
+	// The curve lane's hunt radius moves the stop's window (the pro leaves its creep): where is it then?
+	for (const char* Tune : { "opp.hunt_radius_m=8", "opp.hunt_radius_m=12", "opp.hunt_radius_m=20" })
+	{
+		for (const double At : { 8.0, 9.5, 11.0, 12.0, 13.0 })
+		{
+			FScript S;
+			S.BrakeAtM = At;
+			AddInfo(FString::Printf(TEXT("INTHUNT pro | %s | stop at %.1f m: %s"), ANSI_TO_TCHAR(Tune), At, *CarryHow(*C, S, Seeds, TEXT("pro"), Tune).Line()));
+		}
+	}
+	// The spin's exposed end: the share of spins the bot answers (hk_spin_end_share), the spin with the cut from 5, 6 and 7 m.
+	for (const char* Tune : { "opp.hk_spin_end_share=0", "opp.hk_spin_end_share=0.25", "opp.hk_spin_end_share=0.4", "opp.hk_spin_end_share=0.5", "opp.hk_spin_end_share=0.6", "opp.hk_spin_end_share=0.75", "opp.hk_spin_end_share=1" })
+	{
+		for (const double At : { 5.0, 6.0, 7.0 })
+		{
+			AddInfo(FString::Printf(TEXT("INTSPIN pro | %s | the spin with the cut from %.0f m: %s"), ANSI_TO_TCHAR(Tune), At, *CarryHow(*C, FJamCarryDrill::Late(1, At), Seeds, TEXT("pro"), Tune).Line()));
+		}
+	}
+	// The take grace's same-frame hole, counted over 20 pro matches of three minutes: stick takeaways inside 30 frames of the win, with the cover and without.
+	for (const bool bCover : { true, false })
+	{
+		int32 Under30 = 0, Takeaways = 0;
+		FString Notes;
+		for (uint64 Seed = 1; Seed <= 20; ++Seed)
+		{
+			UJamCartridge* Mc = Copy(*C);
+			Mc->Game.Rules.ScoreToWin = 99;
+			Mc->Game.Rules.bPenalties = false;
+			Mc->Game.Stick.bTakeGraceSameFrame = bCover;
+			JamAI::FJamSimAdapter Sim(*Mc);
+			FTakeCount Count;
+			Count.Sim = &Sim;
+			const JamAI::FJamMatchConfig Cfg = JamAI::ToMatchConfigResolved(*Mc, TEXT("pro"));
+			JamAI::RunPlaytestMatch(Sim, Cfg, Seed, JamAI::EPlaytester::Regular, 10800, Mc->Game.Shot.ChargeFramesMax, false, &TakeTrace, &Count, 1);
+			Under30 += Count.Under30; Takeaways += Count.Held.Num();
+			for (const FString& Note : Count.Notes) Notes += FString::Printf(TEXT(" [seed %llu: %s]"), Seed, *Note);
+		}
+		AddInfo(FString::Printf(TEXT("INTGRACE pro, 20 matches of 10800 frames, bTakeGraceSameFrame %d: stick takeaways %d, inside 30 frames of the win %d%s"), bCover ? 1 : 0, Takeaways, Under30, *Notes));
+	}
+	// One carry that timed out with the puck kept and one that was lifted (the stop at 9.5 m, as the tree stands), frame by frame.
+	{
+		bool bTimeout = false, bLift = false;
+		for (uint64 Seed = 1; Seed <= 200 && !(bTimeout && bLift); ++Seed)
+		{
+			const FRun R = Carry(*C, Seed, At95);
+			const bool bT = R.End == FJamCarryDrill::Timeout && !bTimeout, bL = R.End == FJamCarryDrill::Lift && !bLift;
+			if (!bT && !bL) continue;
+			bTimeout |= bT; bLift |= bL;
+			TArray<FString> Trace;
+			Carry(*C, Seed, At95, TEXT("pro"), &Trace);
+			for (const FString& Line : Trace) AddInfo(FString::Printf(TEXT("INTTRACE %s seed %llu | %s"), bT ? TEXT("timeout") : TEXT("lift"), Seed, *Line));
+		}
+	}
+	// By where the stop begins, as the tree stands: pro, all_star, rookie.
+	for (const TCHAR* Level : { TEXT("pro"), TEXT("all_star"), TEXT("rookie") })
+	{
+		for (const double At : { 6.0, 7.0, 8.0, 9.0, 9.5, 10.0, 11.0, 12.0 })
+		{
+			FScript S;
+			S.BrakeAtM = At;
+			AddInfo(FString::Printf(TEXT("INTWINDOW %s | stop at %.1f m: %s"), Level, At, *CarryHow(*C, S, Seeds, Level).Line()));
+		}
+		AddInfo(FString::Printf(TEXT("INTWINDOW %s | straight charge: %s"), Level, *CarryHow(*C, Straight, Seeds, Level).Line()));
 	}
 	return true;
 }

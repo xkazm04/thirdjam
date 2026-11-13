@@ -77,9 +77,9 @@ static TAutoConsoleVariable<int32> CVarJamCtrlDrill(TEXT("jam.ctrl.Drill"), 0,
 // plays; everyone else is parked in a corner. 20 rounds (the round number is the scene's seed), a JAMDRILL carry result line each and a summary; then the
 // drill switches itself off. State lives here (one game mode at a time, as the hand-puck drill's statics below).
 static TAutoConsoleVariable<int32> CVarJamCtrlCarryScript(TEXT("jam.ctrl.CarryScript"), 1,
-	TEXT("Drill 21's human: 1 = the scripted stop-and-go (the stop begins at 9.5 m, cut 60 degrees, burst; the cursor on the far side of the body), 0 = the scripted straight charge, 2 = your own keys and mouse (the drill only stages and scores). Lane A102. 3 = the late answer: the spin with the cut at 6 m, no stop; 4 = the deke tap with the cut at 6 m (lane A121)."));
+	TEXT("Drill 21's human: 1 = the scripted stop-and-go (the stop begins at 8 m (lane A128; 9.5 m before), cut 60 degrees, burst; the cursor on the far side of the body), 0 = the scripted straight charge, 2 = your own keys and mouse (the drill only stages and scores). Lane A102. 3 = the late answer: the spin with the cut at 6 m, no stop; 4 = the deke tap with the cut at 6 m (lane A121)."));
 static TAutoConsoleVariable<float> CVarJamCtrlCarryBrakeAtM(TEXT("jam.ctrl.CarryBrakeAtM"), 0.f,
-	TEXT("Drill 21: the gap to the defender, in metres, at which the scripted human begins its stop (script 1) or its cut (scripts 3 and 4). 0 = the script's own (9.5 m; 6 m for 3 and 4). Lane A121."));
+	TEXT("Drill 21: the gap to the defender, in metres, at which the scripted human begins its stop (script 1) or its cut (scripts 3 and 4). 0 = the script's own (8 m; 6 m for 3 and 4). Lane A121."));
 namespace
 {
 	FJamCarryDrill GCarryDrill;
@@ -108,8 +108,9 @@ namespace
 				CVarJamCtrlDrill->Set(0, ECVF_SetByCode);
 				return;
 			}
-			UE_LOG(LogHokej, Log, TEXT("JAMDRILL carry stage n=%d script=%s frame=%lld human=%d defender=%d body_shield=%d brake_at=%.2f take_grace=%d reverse_brake=%.0f own_stop=%d"), GCarryRounds + 1, CarryScriptName(GCarryScript), Sim.GetFrame(),
-				GCarryDrill.Me, GCarryDrill.Def, Sim.GetConfig().Stick.bBodyShield ? 1 : 0, GCarryDrill.BrakeAtM, Sim.GetConfig().Stick.TakeGraceFrames, Sim.GetConfig().Skater.ReverseBrakeDecel, Sim.GetConfig().Skater.bBurstOwnStop ? 1 : 0);
+			UE_LOG(LogHokej, Log, TEXT("JAMDRILL carry stage n=%d script=%s frame=%lld human=%d defender=%d body_shield=%d brake_at=%.2f take_grace=%d reverse_brake=%.0f own_stop=%d rest_frames=%d spin_exposed=%d"), GCarryRounds + 1, CarryScriptName(GCarryScript), Sim.GetFrame(),
+				GCarryDrill.Me, GCarryDrill.Def, Sim.GetConfig().Stick.bBodyShield ? 1 : 0, GCarryDrill.BrakeAtM, Sim.GetConfig().Stick.TakeGraceFrames, Sim.GetConfig().Skater.ReverseBrakeDecel, Sim.GetConfig().Skater.bBurstOwnStop ? 1 : 0,
+				Sim.GetConfig().Skater.BurstRestFrames, Sim.GetConfig().Skater.SpinExposedTail);
 		}
 		if (!Inputs.IsValidIndex(GCarryDrill.Me) || !Inputs.IsValidIndex(GCarryDrill.Def)) return;
 		for (int32 i = 0; i < Inputs.Num(); ++i) if (GCarryDrill.IsParked(i)) Inputs[i] = FJamInput();
