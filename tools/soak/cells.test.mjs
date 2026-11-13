@@ -5,7 +5,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync } from 
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { seedList, chunksOf, mayStart, parseChunk, repeatCommand, run } from './cells.mjs';
+import { seedList, chunksOf, mayStart, cpuLimit, parseChunk, repeatCommand, run } from './cells.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const runner = join(here, 'test', 'fake-runner.mjs');
@@ -35,6 +35,18 @@ test('mayStart: the 38-50 GB band', () => {
   assert.equal(mayStart({ usedGB: 40, active: 4, max: 16 }), false);
   assert.equal(mayStart({ usedGB: 51, active: 0, max: 16 }), false);
   assert.equal(mayStart({ usedGB: 57, active: 0, max: 16 }), false);
+});
+test('cpuLimit and mayStart: the processor band slides the worker limit, never below the floor', () => {
+  assert.equal(cpuLimit({ cpu: undefined, max: 16 }), 16);
+  assert.equal(cpuLimit({ cpu: 0.5, max: 16 }), 16);
+  assert.equal(cpuLimit({ cpu: 0.97, max: 16 }), 4);
+  assert.equal(cpuLimit({ cpu: 1, max: 16 }), 4);
+  assert.equal(cpuLimit({ cpu: 0.91, max: 16 }), 10);   // halfway: 4 + 12 * 0.5
+  assert.equal(cpuLimit({ cpu: 1, max: 2 }), 2);        // the floor never exceeds max
+  assert.equal(mayStart({ usedGB: 30, active: 3, max: 16, cpu: 1 }), true);
+  assert.equal(mayStart({ usedGB: 30, active: 4, max: 16, cpu: 1 }), false);
+  assert.equal(mayStart({ usedGB: 30, active: 12, max: 16, cpu: 0.5 }), true);
+  assert.equal(mayStart({ usedGB: 51, active: 0, max: 16, cpu: 0.1 }), false);   // memory still wins
 });
 test('parseChunk: pins a fault to the next match, lists missing seeds', () => {
   const buf = ['junk', 'x Error: boom', 'L {"tool":"thirdjam.playtest/1","seed":2}', "Failed to load 'aqProf", 'Fatal error: dead'].join('\n');

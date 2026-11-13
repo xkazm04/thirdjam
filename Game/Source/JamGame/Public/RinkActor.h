@@ -14,6 +14,9 @@
 // the scored net's cords shake; on a hard skater `board` event the bench, box or table behind that stretch of boards rocks. The rink listens to UJamEventBus
 // itself (BeginPlay) and counts the bus's sim frames, never wall clock. Presentation only: parameters on dynamic material instances and component transforms,
 // no physics body, nothing the sim reads. `jam.rink.react 0` (or `jam.rink.arena 0`) gives back the still arena.
+// Lane A136 (track F3, evolution 4): the whole boards answer a hit. A clay cap (SM_Arena_BoardCap, 24 triangles) stands on the board top at every stanchion
+// place round the ring, all in one instanced component; a hard skater `board` event anywhere rocks the nearest cap (a tilt away from the rink and a hop) and
+// its neighbours less and later. `jam.rink.caps 0` takes the caps away. The scored end's lamp light hangs over the net instead of beside the lamp.
 #pragma once
 
 #include "CoreMinimal.h"
@@ -28,6 +31,7 @@ class UStaticMeshComponent;
 class UMaterialInterface;
 class UMaterialInstanceDynamic;
 class UPointLightComponent;
+class UInstancedStaticMeshComponent;
 
 UCLASS()
 class JAMGAME_API ARinkActor : public AActor
@@ -92,8 +96,29 @@ public:
 	// The lamp lights (candelas at the top of a flash = `jam.rink.react.light`, default 3000, picked from a sweep of off-screen stills at 100 / 1,000 / 10,000 /
 	// 100,000: 1,000 is a halo and a reflection on clay, 10,000 washes the end zone, 100,000 blows the picture out). The scorer's table's light stands 1.5 m
 	// from the boxes' walls and takes TableLightShare of it; on l2_night the same candelas read far stronger against the dark and take NightLightShare.
-	static constexpr float TableLightShare = 0.25f;
-	static constexpr float NightLightShare = 0.4f;
+	// Lane A136 (evolution 4): the goal on p3_clay is as loud as on l2_night. A red light adds only red, and the clay barn's ice is bright and warm: beside the
+	// lamp at 3,000 cd it changed 4 % of the game camera's picture. The scored end's light now hangs over the net (EndLightBehindLineM behind the goal line,
+	// EndLightHeightM up: it still lights the lamp, and it reaches the crease and the slot) at 6,000 cd: 14.8 % of the picture, with the puck, the figures
+	// and the lines still read (two sweeps of off-screen stills with stand-ins, ARENA.md section 31). The table's light and the night tier keep the candelas
+	// they had (750 and 1,200 / 300). `jam.rink.react.loud 0` gives back evolution 3's light: beside the lamp, half the cvar, the shares 0.25 and 0.4.
+	static constexpr float TableLightShare = 0.125f;
+	static constexpr float NightLightShare = 0.2f;
+	static constexpr float TableLightShareE3 = 0.25f;
+	static constexpr float NightLightShareE3 = 0.4f;
+	static constexpr double EndLightBehindLineM = 3.0;
+	static constexpr double EndLightHeightM = 3.6;
+	// Lane A136 (evolution 4): the board caps. One at every stanchion place (the outline's length / StanchionSpacingM, rounded: never more than 1.8 m along
+	// the boards from a hit). A skater `board` event at RattleMinStrength or more rocks the nearest: CapRockDeg of tilt away from the rink and CapHopCm off the
+	// board top at Strength 1 on the hit's frame, a damped swing for CapRockFrames; the CapRippleReach caps on each side answer CapRippleDelay frames later
+	// per place with 0.55 and 0.25 of it. The whole ripple is over in CapRippleFrames (= RattleFrames). Up to CapRipples hits are live at once.
+	static constexpr const TCHAR* BoardCapMeshPath = TEXT("/Game/Arena/SM_Arena_BoardCap.SM_Arena_BoardCap");
+	static constexpr int32 CapRockFrames = 14;
+	static constexpr int32 CapRippleReach = 2;
+	static constexpr int32 CapRippleDelay = 2;
+	static constexpr int32 CapRippleFrames = CapRockFrames + CapRippleReach * CapRippleDelay;
+	static constexpr float CapRockDeg = 26.f;
+	static constexpr float CapHopCm = 22.f;
+	static constexpr int32 CapRipples = 4;
 
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UProceduralMeshComponent> Ice;
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UProceduralMeshComponent> Markings;
@@ -143,6 +168,8 @@ public:
 	// intensity 0 at rest; during a flash it follows the lamp's curve up to `jam.rink.react.light` candelas, so the boards, the ice and the net behind the
 	// scored goal pulse red with the lamp (the first engine stills: a lamp's Emissive alone is a small flat dot from the game camera).
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UPointLightComponent> ArenaLampLights[3];
+	// Lane A136: the board caps, every one an instance of SM_Arena_BoardCap (one draw for the ring). Stencil 1, no collision, no shadow. Shown with the pieces.
+	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UInstancedStaticMeshComponent> ArenaCaps;
 	// Behind the +x goal line (team 0 scores here) and behind the -x line (team 1 scores here).
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UBoxComponent> GoalTriggerPos;
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UBoxComponent> GoalTriggerNeg;
@@ -229,6 +256,10 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
 	float GetLampLightIntensity(int32 Index) const;
 	static float LampLightPeak();
+	// Lane A136: `jam.rink.react.loud` (default 1): the scored end's light over the net at the cvar's candelas; 0 = evolution 3's light.
+	static bool IsGoalLoud();
+	// Puts the three lamp lights where the loud switch says (Build and every cvar change call it).
+	void PlaceLampLights();
 	// The peak of one lamp's light on this rink's tier: the cvar times the table's share (Index 0) and the night tier's share.
 	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
 	float LampLightPeakAt(int32 Index) const;
@@ -244,9 +275,36 @@ public:
 	int32 GetGoalReactionCount() const { return GoalReactions; }
 	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
 	int32 GetRattleCount() const { return RattleReactions; }
-	// True while any reaction is live (a lamp lit, a net or a piece moving).
+	// True while any reaction is live (a lamp lit, a net, a piece or a board cap moving).
 	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
-	bool IsReacting() const { return GoalFrame >= 0 || RattleFrame >= 0; }
+	bool IsReacting() const { return GoalFrame >= 0 || RattleFrame >= 0 || bCapsLive; }
+	// ---- Lane A136 (evolution 4): the board caps ----
+	// `jam.rink.caps` (default 1): 0 = no caps on the boards (the arena of evolution 3).
+	static bool AreCapsEnabled();
+	// The pure curve: 0 outside [0, CapRockFrames), else a damped cosine times the clamped Strength (1 on the hit's frame at Strength 1).
+	static float CapRockAt(int64 FramesSince, float Strength);
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	bool AreCapsShown() const { return bCapsShown; }
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	int32 GetCapCount() const { return CapRest.Num(); }
+	// Where cap Index stands (rink metres, on the boards' middle line).
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	FVector2D GetCapPlaceM(int32 Index) const { return CapAtM.IsValidIndex(Index) ? CapAtM[Index] : FVector2D::ZeroVector; }
+	// Hard hits the caps answered, the cap the last one found and how far that cap stands from the hit (metres, in the plane of the ice).
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	int32 GetCapRockCount() const { return CapRockReactions; }
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	int32 GetRockedCapIndex() const { return LastCapIndex; }
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	float GetRockedCapDistanceM() const { return LastCapDistM; }
+	// Cap Index right now: its tilt away from the rink in degrees and its hop off the board top in centimetres (0 at rest).
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	float GetCapTiltDeg(int32 Index) const { const FVector2f* V = CapNow.Find(Index); return V ? V->X : 0.f; }
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	float GetCapHopCm(int32 Index) const { const FVector2f* V = CapNow.Find(Index); return V ? V->Y : 0.f; }
+	// Triangles the caps add to the scene (instances x the mesh's triangles).
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	int32 GetCapTriangles() const;
 	// Serves AJamSkater::BoxSeat (JamCore): a boxed skater's figure is drawn at its team's GetPenaltyBoxSeat by the rink of its own world. BeginPlay calls it.
 	static void ServeBoxSeat();
 
@@ -281,6 +339,7 @@ private:
 	double RattleCentreX[5] = { 0, 0, 0, 0, 0 };     // rink metres
 	double RattleHalfLen[5] = { 0, 0, 0, 0, 0 };
 	double RinkHalfWidthM = 0.0;
+	double GoalLineXM = 0.0;    // lane A136: where the end lights hang from
 	int64 GoalFrame = -1;
 	int32 GoalEnd = 0;          // +1 the +x net was scored on, -1 the -x net
 	int64 RattleFrame = -1;
@@ -289,6 +348,21 @@ private:
 	float RattleDegNow = 0.f;
 	int32 GoalReactions = 0;
 	int32 RattleReactions = 0;
+	// Lane A136: the board caps' state. CapAtM / CapYawDeg: the stanchion places Build walked (rink metres, the yaw that turns a cap's +y away from the rink);
+	// CapRest: each instance's transform at rest; CapNow: the caps off rest right now -> (tilt degrees, hop cm).
+	struct FCapRipple { int64 Frame = -1; int32 Index = -1; float Strength = 0.f; };
+	void ApplyCaps(int64 SimFrame);
+	void ResetCaps();
+	TArray<FVector2D> CapAtM;
+	TArray<double> CapYawDeg;
+	TArray<FTransform> CapRest;
+	TMap<int32, FVector2f> CapNow;
+	FCapRipple CapRipple[CapRipples];
+	bool bCapsShown = false;
+	bool bCapsLive = false;
+	int32 CapRockReactions = 0;
+	int32 LastCapIndex = -1;
+	float LastCapDistM = 0.f;
 
 	UMaterialInterface* LoadMat(const TCHAR* Path) const;
 	UMaterialInterface* LoadLook(const TCHAR* LookName, const TCHAR* FallbackPath, bool* bOutFromLook = nullptr) const;

@@ -7,6 +7,7 @@
 # PLAY is one Return posted to the window; the end is `quit` over the remote console. Stops only the process it started. Then accept.mjs judges.
 #   powershell -NoProfile -ExecutionPolicy Bypass -File tools\qa\accept\accept.ps1 -Package Game\Packaged\A87-dev
 #   -Cut <cartridge> plays another cut (accept-cut-reach165.json: the control with R-0042's carrier reach 1.65 as shot.reach_m); -From / -To run a part.
+# Exit 3 = machine: the run lost to the machine (a first act more than 1 s behind its log line, a press behind its cue, a tap held far over its ask, a foreign game on the cursor), not to the game. Repeat it.
 # Output: tools\qa\out\accept\<Name>\game.log, events.log, run.json, verdict.txt; the last line is accept.mjs's thirdjam.accept/1 JSON. Exit 0 pass, 1 fail, 2 could not run.
 param(
     [string]$Package = '',
@@ -17,10 +18,15 @@ param(
     [int]$To = 10,
     [int]$Seconds = 420,
     [int]$Port = 4661,
+    [int]$TapMs = 10,
     [int]$ResX = 1280, [int]$ResY = 720
 )
 $ErrorActionPreference = 'Continue'
 $here = $PSScriptRoot
+# A131: the driver is the hand: it must not be the slow link on a busy machine. 1 ms timer resolution (Sleep otherwise rounds to 15.6 ms) and above-normal priority.
+Add-Type -Namespace A131 -Name Win -MemberDefinition '[DllImport("winmm.dll")] public static extern uint timeBeginPeriod(uint ms);'
+[void][A131.Win]::timeBeginPeriod(1)
+try { (Get-Process -Id $PID).PriorityClass = 'AboveNormal' } catch {}
 $root = Split-Path (Split-Path (Split-Path $here -Parent) -Parent) -Parent
 if (-not $Exe) {
     if (-not $Package) { Write-Host 'FAIL give -Package <packaged dir> or -Exe <ThirdJam.exe>'; exit 2 }
@@ -37,7 +43,11 @@ $ev = Join-Path $out 'events.log'
 $log = Join-Path $out 'game.log'
 Remove-Item $log, $ev -ErrorAction SilentlyContinue
 $sw = [Diagnostics.Stopwatch]::StartNew()
-function Note([string]$s) { $l = "{0} t={1:0.000} {2}" -f (Get-Date -Format 'HH:mm:ss.fff'), $sw.Elapsed.TotalSeconds, $s; Add-Content $ev $l; Write-Host $l }
+# A131: inside the act loop a Note is queued (its time stamp is taken now) and written after the act: a press waited 160 ms behind the Add-Content / Write-Host of its own LAG line.
+$script:defer = $false
+$script:nq = New-Object System.Collections.ArrayList
+function FlushNotes { if ($script:nq.Count) { Add-Content $ev @($script:nq); foreach ($l in $script:nq) { Write-Host $l }; $script:nq.Clear() } }
+function Note([string]$s) { $l = "{0} t={1:0.000} {2}" -f (Get-Date -Format 'HH:mm:ss.fff'), $sw.Elapsed.TotalSeconds, $s; if ($script:defer) { [void]$script:nq.Add($l) } else { Add-Content $ev $l; Write-Host $l } }
 Add-Type @"
 using System; using System.Runtime.InteropServices;
 public struct A87R { public int Left, Top, Right, Bottom; }
@@ -125,6 +135,10 @@ function LogFile {
 # a file that shrinks is never re-read from its start (a run once acted twice on every line that way).
 $script:pos = @{}
 $script:all = New-Object System.Text.StringBuilder
+$script:pend = New-Object System.Text.StringBuilder     # A131: every byte read, by anyone (WaitLog included), reaches the act loop once
+$script:readTod = 0.0
+$script:minOff = [double]::MaxValue                     # smallest (driver read time - log line time): the clock offset (the game logs UTC) with the least delay in it
+$script:firstAct = @{}                                  # step -> $true once the first act of the step was timed
 function ReadNew {
     $f = LogFile; if (-not $f) { return '' }
     if (-not $script:pos.ContainsKey($f)) { $script:pos[$f] = 0L; if ($f -ne $log) { Note "NOTE the game did not open -abslog; tailing $f" } }
@@ -132,7 +146,7 @@ function ReadNew {
         $fs = [IO.File]::Open($f, 'Open', 'Read', 'ReadWrite')
         if ($fs.Length -le $script:pos[$f]) { $fs.Close(); return '' }   # the offset never moves back (a Saved\Logs file's length was seen to step back: lines re-read)
         $null = $fs.Seek($script:pos[$f], 'Begin'); $sr = New-Object IO.StreamReader($fs); $t = $sr.ReadToEnd(); $script:pos[$f] = $fs.Position; $sr.Close()
-        $null = $script:all.Append($t); return $t
+        $null = $script:all.Append($t); $null = $script:pend.Append($t); $script:readTod = [DateTime]::Now.TimeOfDay.TotalMilliseconds; return $t
     } catch { return '' }
 }
 function WaitLog([string]$pat, [int]$sec, [int]$fromLen = 0) {
@@ -141,7 +155,7 @@ function WaitLog([string]$pat, [int]$sec, [int]$fromLen = 0) {
         if ($p.HasExited) { return $false }
         $null = ReadNew
         if ($script:all.ToString($fromLen, $script:all.Length - $fromLen).Contains($pat)) { return $true }
-        Start-Sleep -Milliseconds 50
+        Start-Sleep -Milliseconds 10
     }
     return $false
 }
@@ -166,6 +180,7 @@ function Console([string]$cmd, [int]$waitSec = 10) {
     return $false
 }
 function Finish([int]$code, [string]$why) {
+    $script:defer = $false; FlushNotes
     Note $why
     $o = Others; if ($o.Count) { Note "WARN other ThirdJam processes at the end (shared OS cursor): $($o -join ' ')" }
     Start-Sleep -Seconds 2
@@ -215,7 +230,6 @@ $ot = $null                                          # the one-timer's held butt
 $t0 = $sw.Elapsed.TotalSeconds
 $lastHome = $t0
 $done = $false
-$buf = ''
 function Home { [A87W]::Cursor($h, $script:hx, $script:hy) }
 function Hold([string]$keys, [int]$ms) {
     foreach ($k in $keys.Split('+')) {
@@ -250,13 +264,20 @@ while ($sw.Elapsed.TotalSeconds - $t0 -lt $Seconds) {
         if (-not $ot.down -and $nowMs -ge $ot.pressAt) { [A87W]::Button($h, 0, $script:hx, $script:hy, $true); $ot.down = $true; $ot.downAt = $nowMs; Note 'one-timer: left button down' }
         if ($ot.down -and $nowMs -ge $ot.releaseBy) { [A87W]::Button($h, 0, $script:hx, $script:hy, $false); Note 'one-timer: left button up (time box, no reception line)'; $ot = $null }
     }
-    $new = ReadNew
-    if ($new) {
-        $buf += $new
-        $cut = $buf.LastIndexOf("`n")
-        if ($cut -ge 0) {
-            $lines = $buf.Substring(0, $cut).Split("`n"); $buf = $buf.Substring($cut + 1)
+    $null = ReadNew
+    if ($script:pend.Length -gt 0) {
+        $buf = $script:pend.ToString()
+        $nl = $buf.LastIndexOf("`n")   # A131: not $cut: the -Cut parameter is a [string] and $cut + 1 was a concatenation, so Substring threw, the buffer never shrank and was rescanned whole every pass
+        if ($nl -ge 0) {
+            $lines = $buf.Substring(0, $nl).Split("`n"); $null = $script:pend.Remove(0, $nl + 1)
+            $script:defer = $true
             foreach ($line in $lines) {
+                if ($line -match '^\[\d{4}\.\d\d\.\d\d-(\d\d)\.(\d\d)\.(\d\d):(\d\d\d)\]') {
+                    $logMs = ([int]$Matches[1] * 3600 + [int]$Matches[2] * 60 + [int]$Matches[3]) * 1000.0 + [int]$Matches[4]
+                    $off = ((($script:readTod - $logMs) % 86400000.0) + 86400000.0) % 86400000.0
+                    if ($off -lt $script:minOff) { $script:minOff = $off }
+                    $lagNow = [Math]::Max(0.0, ((([DateTime]::Now.TimeOfDay.TotalMilliseconds - $logMs) % 86400000.0) + 86400000.0) % 86400000.0 - $script:minOff)
+                }
                 if ($line -notmatch 'JAMACCEPT (\S+)(.*)$') { continue }
                 $lk = $line.Trim(); if ($seenLines.ContainsKey($lk)) { continue }; $seenLines[$lk] = 1
                 $kind = $Matches[1]; $rest = $Matches[2].Trim()
@@ -273,11 +294,21 @@ while ($sw.Elapsed.TotalSeconds - $t0 -lt $Seconds) {
                 if ($acted.ContainsKey($rest)) { continue }; $acted[$rest] = 1
                 if ($rest -notmatch 'act=(\w+)') { continue }
                 $what = $Matches[1]
+                $stepN = Num $rest 'step' 0; $kN = Num $rest 'k' 0; $lagMs = [int]$lagNow
+                Note "LAG step=$stepN k=$kN act=$what lag_ms=$lagMs"
+                if (-not $script:firstAct.ContainsKey($stepN)) { $script:firstAct[$stepN] = 1; if ($lagMs -gt 1000) { Finish 3 "MACHINE: step $stepN first act lagged its log line by $lagMs ms (more than 1000): the driver read the log late, this run is not a verdict" } }
                 switch ($what) {
                     'keys' { $keys = 'W'; if ($rest -match 'keys=([\w+]+)') { $keys = $Matches[1] }; $ms = Num $rest 'ms' 2000; Hold $keys $ms; Note "act keys $keys held $ms ms [$rest]" }
-                    'lmb' { $fr = Num $rest 'frames' 0; $ms = [int][Math]::Max(40, $fr * 1000.0 / 60.0 + 10); [A87W]::Button($h, 0, $script:hx, $script:hy, $true); Start-Sleep -Milliseconds $ms; [A87W]::Button($h, 0, $script:hx, $script:hy, $false); Note "act lmb held $ms ms [$rest]" }
+                    'lmb' { $fr = Num $rest 'frames' 0; $tap = ($fr -le 4)
+                        # the full band is >= 26 sim frames and the charge stops at charge_max: hold half again as long, a sim that dropped to 48 Hz still reaches it (glass-house: 25)
+                        $want = if ($tap) { $TapMs } elseif ($fr -ge 26) { [int]($fr * 1000.0 / 60.0 * 1.5 + 10) } else { [int][Math]::Max(40, $fr * 1000.0 / 60.0 + 10) }
+                        $sp = [Diagnostics.Stopwatch]::StartNew()
+                        [A87W]::Button($h, 0, $script:hx, $script:hy, $true)
+                        if ($tap) { while ($sp.Elapsed.TotalMilliseconds -lt $want) { } } else { Start-Sleep -Milliseconds $want }   # a tap is spun, not slept: a Sleep on a busy machine ran 120 ms where 40 was asked (charge 7 against a band of 4)
+                        [A87W]::Button($h, 0, $script:hx, $script:hy, $false); $held = [int]$sp.Elapsed.TotalMilliseconds
+                        Note "act lmb held $held ms (wanted $want) [$rest]"; Note "HOLD step=$stepN k=$kN want_ms=$want held_ms=$held" }
                     'probe_pass' { ProbePass }
-                    'pass' { if (-not $script:passKey) { ProbePass }; $fr = Num $rest 'frames' 0; $ms = [int][Math]::Max(40, $fr * 1000.0 / 60.0 + 10); [A87W]::Key($h, $vk[$script:passKey], $ch[$script:passKey], $ms); Note "act pass key $($script:passKey) held $ms ms [$rest]" }
+                    'pass' { if (-not $script:passKey) { ProbePass }; $fr = Num $rest 'frames' 0; $want = [int][Math]::Max(40, $fr * 1000.0 / 60.0 + 10); $sp = [Diagnostics.Stopwatch]::StartNew(); [A87W]::Key($h, $vk[$script:passKey], $ch[$script:passKey], $want); $held = [int]$sp.Elapsed.TotalMilliseconds; Note "act pass key $($script:passKey) held $held ms (wanted $want) [$rest]"; Note "HOLD step=$stepN k=$kN want_ms=$want held_ms=$held" }
                     'rmb' { [A87W]::Button($h, 1, $script:hx, $script:hy, $true); Start-Sleep -Milliseconds 40; [A87W]::Button($h, 1, $script:hx, $script:hy, $false); Note "act rmb [$rest]" }
                     'mmb' { [A87W]::Button($h, 2, $script:hx, $script:hy, $true); Start-Sleep -Milliseconds 40; [A87W]::Button($h, 2, $script:hx, $script:hy, $false); Note "act mmb [$rest]" }
                     'wheel' { [A87W]::Wheel($h, $script:hx, $script:hy, 120); Note "act wheel +120 [$rest]" }
@@ -297,12 +328,14 @@ while ($sw.Elapsed.TotalSeconds - $t0 -lt $Seconds) {
                     'none' { Note "act none [$rest]" }
                     default { Note "unknown act $what [$rest]" }
                 }
+                FlushNotes
             }
+            $script:defer = $false; FlushNotes
         }
     }
     if ($done) { break }
     if ($sw.Elapsed.TotalSeconds - $lastHome -gt 1.0 -and -not $ot) { Home; $lastHome = $sw.Elapsed.TotalSeconds }   # a lost move message would park the blade
-    Start-Sleep -Milliseconds 15
+    Start-Sleep -Milliseconds 4
 }
 foreach ($k in $pending) { [A87W]::KeyUp($h, $k.vk); if ($k.vk -eq 0x10) { [void][A87W]::ShiftState($h, $false) } }
 if ($done) { Finish 0 'run finished (summary seen)' } else { Finish 1 'run time box reached without a summary' }

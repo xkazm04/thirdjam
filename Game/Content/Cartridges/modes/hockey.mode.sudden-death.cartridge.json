@@ -232,8 +232,11 @@
       "facts": [
         "first goal wins",
         "120 x 60 m rink",
-        "all-star bots"
+        "no grace on a steal"
       ]
+    },
+    "stick": {
+      "take_grace_frames": 0
     }
   }
 }

@@ -1,6 +1,10 @@
 // Lane A2: brain and player bot (engine-free). See JamAICore.h.
 #include "JamAICore.h"
 
+#include <cstdlib>
+#include <cstring>
+#include <initializer_list>
+
 namespace JamAI
 {
 	namespace AICoreLocal
@@ -128,6 +132,10 @@ namespace JamAI
 		PossFrame = -1;
 		PossNow = FPoss();
 		for (int i = 0; i < kMaxSkaters; ++i) { Job[i] = EJob::None; CarryFrames[i] = 0; }
+		// lane A115
+		for (int i = 0; i < kMaxSkaters; ++i) { BrakeHold[i] = 0; BrakeCool[i] = 0; bWantStop[i] = false; bPlaysPuck[i] = false; PassHold[i] = 0; }
+		MeantBrakes = 0;
+		Carves = 0;
 	}
 
 	// Lane A51 (R-0034): one entry per frame: the puck's offset from the carrier's body (the carrier's index, -1 loose).
@@ -203,6 +211,29 @@ namespace JamAI
 
 	void FJamBrain::Think(const FJamAIWorld& W, FJamAIInput* Out)
 	{
+		// Lane A115 (measurement only, as JAM_BRAIN_CARRIER in JamSimAdapter.cpp): JAM_BRAIN2_OFF=all replays the brain of evolution 1; a list of letters
+		// switches single rules off (p pass room, s support, c chase ahead, b brake meant, x stop before the cut, r carry sprint, g gap control, h shield
+		// read, m the mates' stick). Unset: the profile's.
+		{
+			static const char* const Off2 = std::getenv("JAM_BRAIN2_OFF");
+			if (Off2 && Off2[0])
+			{
+				const bool bAll = std::strcmp(Off2, "all") == 0;
+				for (FJamBotSkill* K : { &Params.Mate, &Params.Opp })
+				{
+					if (bAll || std::strchr(Off2, 'p')) { K->Hk.bPassRoom = false; }
+					if (bAll || std::strchr(Off2, 's')) { K->Hk.bSupportHuman = false; }
+					if (bAll || std::strchr(Off2, 'c')) { K->Hk.bChaseAhead = false; }
+					if (bAll || std::strchr(Off2, 'b')) { K->Hk.bBrakeMeant = false; }
+					if (bAll || std::strchr(Off2, 'r')) { K->Hk.bCarrySprint = false; }
+					if (bAll || std::strchr(Off2, 'x')) { K->Hk.bStopCut = false; }
+					if (bAll || std::strchr(Off2, 'g')) { K->Hk.bGapControl = false; }
+					if (bAll || std::strchr(Off2, 'h')) { K->Hk.bReadShield = false; }
+					if (bAll || std::strchr(Off2, 'm')) { K->Hk.MateStickFrames = -1; }
+				}
+			}
+		}
+		for (int i = 0; i < kMaxSkaters; ++i) { bWantStop[i] = false; bPlaysPuck[i] = false; }
 		RecordPuck(W);   // lane A51: before any bot reads the puck
 		// Lane A94 (R-0045 law 2): possession, the carry clock and the shape jobs, before any bot decides
 		ReadPossession(W);
@@ -286,6 +317,7 @@ namespace JamAI
 				InReach[i] = 0;
 				Charging[i] = 0;
 				bGoalieNow[i] = false;
+				BrakeHold[i] = 0;   // lane A115
 				// R-0013 draw: a centre that jumps early (pokes in the countdown) loses the draw; rookie does it at its rate
 				const FJamBotSkill& K = SkillOf(W, i);
 				if (W.bFaceoffPhase && W.Skaters[i].bCentre && W.FaceoffCountdown == 6 && K.DrawJumpPct > 0
@@ -310,6 +342,8 @@ namespace JamAI
 			}
 			bool bShoot = false, bAimed = false, bDeke = false, bPass = false;
 			FVec2 Dir = Decide(W, i, bShoot, bAimed, bDeke, bPass);
+			// Lane A115: within the slow radius of its spot (Arrive's output shrinks there; a chase is always full length): a reversal here is the stop on the post
+			const bool bNearSpot = !bPlaysPuck[i] && Dir.Length() < 0.6;
 			if (Dir.Length() > 1.0)
 			{
 				Dir = Dir.Normalized();
@@ -424,6 +458,63 @@ namespace JamAI
 				Out[i].bSprint = bChase && (SprintShare >= 1.0
 					|| (Hash11(static_cast<uint64_t>(i) + 401, static_cast<uint64_t>(W.Frame / 120)) + 1.0) * 0.5 < SprintShare);
 			}
+			const FJamHockeySense& Hs2 = SkillOf(W, i).Hk;
+			// Lane A115 (R-0048 point 5, VISION law 4): the bot carrier sprints on an open lane: nobody on the lane 15 m ahead of its way, nobody within 6 m, no
+			// shot or pass in hand. The sim spends its stamina bar and carries the puck at full reach (easier to take): it sprints only there. A cartridge that
+			// writes game.ai.sprint 0 (no bot ever sprints: Jam.Core.ModeKeys.Sprint) stops this sprint too.
+			if (Hs2.bCarrySprint && SprintShare > 0.0 && W.SprintCarryBonus > 0.0 && W.CarrierOrHolder() == i && !W.bDrawOpen && Out[i].Move.Length() > 0.5
+				&& !Out[i].bShoot && !Out[i].bShootHeld && !Out[i].bPass && !Out[i].bPassHeld && BrakeHold[i] <= 0)
+			{
+				const FJamSpaceRead Rs = ReadSpace(W, i, Out[i].Move);
+				double Near = 1e9;
+				for (int o = 0; o < W.NumSkaters; ++o)
+				{
+					if (W.Skaters[o].Team == W.Skaters[i].Team || W.Skaters[o].bDown) { continue; }
+					const double Dn = W.Skaters[o].Pos.DistTo(W.Skaters[i].Pos);
+					if (Dn < Near) { Near = Dn; }
+				}
+				if (Rs.OnLane == 0 && Near > 6.0) { Out[i].bSprint = true; }
+			}
+			// Lane A115 (R-0048 point 5, REVIEW-1 item 9): the brain brakes on purpose. The sim reads a move more than 120 degrees off the velocity as the hard
+			// stop (A93's reverse brake). The brain's steering made that by accident about once a second per bot (2,225 a match at pro). Now a reversal is the
+			// stop only where the brain decided one: on its spot (the post, the blue line), turning back for a loose puck within 6 m, the carrier stopping in
+			// front of a defender, the presser closing under control. A decided stop is held against the velocity until the skater is slow (one stop), and
+			// the next waits BrakeCoolFrames. Every other reversal is carved: the input 115 degrees off the velocity on the input's side (the playtester's rule).
+			if (Hs2.bBrakeMeant && W.ReverseBrakeDecel > 0.0)
+			{
+				constexpr int BrakeHoldFrames = 36, BrakeCoolFrames = 45;
+				constexpr double BrakeDoneSpeed = 1.0, LoosePuckNearM = 6.0;
+				if (BrakeCool[i] > 0) { --BrakeCool[i]; }
+				const FVec2 V = W.Skaters[i].Vel;
+				const double Sp = V.Length();
+				FVec2& Mv = Out[i].Move;
+				const double Lm = Mv.Length();
+				const bool bReversal = Sp > BrakeDoneSpeed && Lm > 0.05 && Mv.Dot(V) < -0.5 * Sp * Lm;
+				const bool bLooseBehind = bPlaysPuck[i] && W.CarrierOrHolder() < 0 && W.PuckPos.DistTo(W.Skaters[i].Pos) < LoosePuckNearM;
+				const bool bDecided = bWantStop[i] || (bReversal && (bNearSpot || bLooseBehind));
+				if (BrakeHold[i] > 0)
+				{
+					if (Sp > BrakeDoneSpeed && (bDecided || bReversal)) { Mv = V * (-1.0 / Sp); --BrakeHold[i]; }
+					else { BrakeHold[i] = 0; }
+				}
+				else if (bDecided && Sp > BrakeDoneSpeed && BrakeCool[i] <= 0)
+				{
+					BrakeHold[i] = BrakeHoldFrames;
+					BrakeCool[i] = BrakeCoolFrames + BrakeHoldFrames;
+					++MeantBrakes;
+					Mv = V * (-1.0 / Sp);
+				}
+				else if (bReversal)
+				{
+					const FVec2 Vd = V * (1.0 / Sp);
+					double Side = Vd.Cross(Mv) >= 0.0 ? 1.0 : -1.0;
+					// straight back (no side to speak of): turn towards the middle of the rink, never into the boards
+					if (std::fabs(Vd.Cross(Mv)) < 0.15 * Lm) { Side = Vd.Cross(-W.Skaters[i].Pos) >= 0.0 ? 1.0 : -1.0; }
+					Mv = Rotate(Vd, DegToRad(115.0) * Side) * Lm;
+					++Carves;
+				}
+				if (BrakeHold[i] > 0) { Out[i].bSprint = false; }
+			}
 		}
 	}
 
@@ -478,6 +569,13 @@ namespace JamAI
 			{
 				// teammates yield when the human is nearer the puck (by the margin) and close to it
 				bYield = Db <= D + Params.YieldMarginM && Db < Params.YieldRadiusM;
+				// Lane A115 (REVIEW-CODE.md, severity 2): a human who is down or in the box takes no puck: his mates do not stand off it.
+				const FJamHockeySense& Hy = SkillOf(W, Id).Hk;
+				if (Hy.bChaseAhead && P.bDown) { bYield = false; }
+				// Lane A115: the yield is for a loose puck and the human's own carry. An opposing carrier is nobody's to leave alone: while the human forechecks
+				// it, his mates go at it too (on the big rinks, three a side, the human forechecked alone for a third of the match while both mates stood off).
+				const int Ch = W.CarrierOrHolder();
+				if (Hy.bSupportHuman && Ch >= 0 && Ch < W.NumSkaters && W.Skaters[Ch].Team != S.Team) { bYield = false; }
 			}
 			else if (Role != ERole::Back)
 			{
@@ -489,6 +587,16 @@ namespace JamAI
 		{
 			Role = ERole::Chaser;
 		}
+		// Lane A115 (REVIEW-CODE.md, severity 3): the passer is not the chaser of its own pass. A puck that left this bot faster than 6 m/s and that a
+		// teammate reaches first (LoosePuckOwner) is that teammate's: the passer takes the support's place. Teams with shape jobs get the same from AssignJobs.
+		bool bOwnPass = false;
+		if (SkillOf(W, Id).Hk.bChaseAhead && Job[Id] == EJob::None && !bStalled && W.CarrierOrHolder() < 0 && W.PuckLastTouch == Id && Role != ERole::Back
+			&& W.PuckVel.Length() > 6.0 && W.PuckVel.Dot(Pp - Me) > 0.0)
+		{
+			const int Own = LoosePuckOwner(W, S.Team, Params.InterceptSpeed * Params.SpeedScale);
+			bOwnPass = Own >= 0 && Own != Id;
+		}
+		if (bOwnPass) { Role = ERole::Support; D = 99.0; }
 		if (bYield && D > 2.0 && !bStalled)
 		{
 			// Lane A94: a back of a team that plays the shapes keeps its post (it never takes the human's puck: its D is 99 like the others')
@@ -611,6 +719,12 @@ namespace JamAI
 					}
 				}
 			}
+		}
+		else if (Role == ERole::Support && S.Role != ERole::Back && SkillOf(W, Id).Hk.bSupportHuman && W.PlayerIndex >= 0 && W.CarrierOrHolder() == W.PlayerIndex
+			&& W.Skaters[W.PlayerIndex].Team == S.Team)
+		{
+			// Lane A115: the human carries: this mate offers him an open lane beside or ahead (before: it stood between its own net and the puck, behind him)
+			Out = Arrive(Me, OfferLane(W, Id, W.PlayerIndex), Params.ArriveSlowRadius);
 		}
 		else if (Role == ERole::Support && FiveSupport(W, Id, Params.ArriveSlowRadius, Out))
 		{
@@ -866,16 +980,44 @@ namespace JamAI
 			In.Stick = To * (1.0 / D) * Clamp((D - W.SkaterRadius) / (W.StickReach > 0.01 ? W.StickReach : 0.01), 0.2, MaxFrac);
 		}
 		InReach[Id] = (bOppCarrier && D <= Blade) ? InReach[Id] + 1 : 0;
+		// HOOK (lane A115 for track F2's game.stick.body_shield, lane A102): the carrier's body is between this bot's stick and the puck: the sim refuses the
+		// poke and the lift (158 of 200 pro lifts in A102's carry drill), so the bot presses neither and goes round the body (Attack) or checks it (below: a
+		// body check is never shielded). Dead until FJamSimAdapter::BuildWorld fills W.bBodyShield.
+		bool bShielded = K.Hk.bReadShield && bOppCarrier && StickCannotTake(W, Id, C);   // the body shield, or the carrier's take grace (lane A121)
+		// Lane A138: the spin's exposed end (BodyShields is false there: the sim lets a stick take the puck). The bot answers a share of the spins it meets
+		// (FJamHockeySense::SpinEndShare, a fixed coin per bot and spin: the frame the spin ends on names the spin); the others it reads as the shield it was.
+		if (K.Hk.bReadShield && bOppCarrier && !bShielded && K.Hk.SpinEndShare < 1.0)
+		{
+			const FJamAISkater& Tc = W.Skaters[C];
+			if (Tc.SpinFrames > 0 && Tc.SpinFrames <= W.SpinExposedFrames
+				&& (K.Hk.SpinEndShare <= 0.0 || (Hash11(static_cast<uint64_t>(Id) * 31 + static_cast<uint64_t>(C) + 503, static_cast<uint64_t>(W.Frame + Tc.SpinFrames)) + 1.0) * 0.5 >= K.Hk.SpinEndShare))
+			{
+				bShielded = true;
+			}
+		}
 		// poke: the level's timing (frames the puck must sit inside reach); rookie never pokes
-		if (K.PokeFrames >= 0 && bOppCarrier && S.bCanPoke && InReach[Id] > K.PokeFrames)
+		// Lane A115: the stick of the human's mates (FJamHockeySense::MateStickFrames), where the skill itself has none
+		const bool bMateStick = K.Hk.MateStickFrames >= 0 && W.PlayerIndex >= 0 && W.Skaters[W.PlayerIndex].Team == S.Team;
+		const int PokeFrames = (K.PokeFrames < 0 && bMateStick) ? K.Hk.MateStickFrames : K.PokeFrames;
+		if (PokeFrames >= 0 && bOppCarrier && S.bCanPoke && InReach[Id] > PokeFrames && !bShielded)
 		{
 			In.bPoke = true;
 			InReach[Id] = 0;
 		}
 		// lift at contact
 		// Lane A95 (B-to-A-0037): only inside the sim's cone (a swing outside it is a miss) and not again inside the level's cooldown.
-		if (K.bLift && bOppCarrier && S.bCanLift && W.Skaters[C].Pos.DistTo(S.Pos) <= 2.0 * W.SkaterRadius + W.LiftRange * 0.9
-			&& W.Frame - LiftLast[Id] >= K.LiftCooldownFrames
+		// Lane A138 (track I1, R-0053 point 3): a lift the shield refuses is a shove (lane A125), and from behind that shove is a push in the back: the
+		// from-behind foul where the whistle is on, not a play the brain chooses where it is off. Whatever the bot's other rules (the shield read on or off),
+		// it presses no lift on a shielded carrier it stands behind (the push along the carrier's facing above 0.35, the body check's own margin below),
+		// unless its skill checks from behind. Dead while the sim's shove rule is off or no shield is up (W.bShieldShove, StickCannotTake).
+		bool bBehindShove = false;
+		if (W.bShieldShove && bOppCarrier && !K.bCheckFromBehind && StickCannotTake(W, Id, C))
+		{
+			const FVec2 Nb = (W.Skaters[C].Pos - S.Pos).Normalized();
+			bBehindShove = Nb.Dot(W.Skaters[C].Facing.Normalized()) > 0.35;
+		}
+		if ((K.bLift || bMateStick) && bOppCarrier && S.bCanLift && !bShielded && !bBehindShove && W.Skaters[C].Pos.DistTo(S.Pos) <= 2.0 * W.SkaterRadius + W.LiftRange * 0.9
+			&& W.Frame - LiftLast[Id] >= (K.bLift ? K.LiftCooldownFrames : 90)
 			&& (W.LiftConeDeg >= 180.0 || (W.Skaters[C].Pos - S.Pos).Normalized().Dot(S.Facing) >= std::cos(W.LiftConeDeg * 3.14159265358979323846 / 180.0)))
 		{
 			In.bLift = true;
@@ -955,6 +1097,7 @@ namespace JamAI
 	{
 		const FJamAISkater& S = W.Skaters[Id];
 		const FJamBotSkill& K = SkillOf(W, Id);
+		bPlaysPuck[Id] = true;   // lane A115: the brake rule in Think reads it
 		const FVec2 Fwd = S.Facing.Normalized();
 		const FVec2 OppGoal = W.OppGoal(S.Team);
 		const double Dgoal = Pp.DistTo(OppGoal);
@@ -1044,7 +1187,21 @@ namespace JamAI
 			const FVec2 HToGoal = OppGoal - H.Pos;
 			const bool bSetUp = HToGoal.Length() < 26.0 && H.Facing.Normalized().Dot(HToGoal.Normalized()) > std::cos(DegToRad(15.0));
 			// A set-up human is passed to in every chance (the pass every player makes); the share decides the other open chances.
-			if ((bSetUp || (Coin < Share && bAheadOrLevel)) && Dh > 5.0 && Dh < 25.0 && !H.bDown)
+			// Lane A115 (REVIEW-1 item 6: his after a mate's pass two seconds later in 11 % at pro): only where he has room. No pass onto a marked blade:
+			// the nearest standing opponent at least 3 m from him (2 m when he is set up for the one-timer).
+			bool bRoom = true;
+			if (K.Hk.bPassRoom)
+			{
+				double Free = 1e9;
+				for (int o = 0; o < W.NumSkaters; ++o)
+				{
+					if (W.Skaters[o].Team == S.Team || W.Skaters[o].bDown) { continue; }
+					const double Df = W.Skaters[o].Pos.DistTo(H.Pos);
+					if (Df < Free) { Free = Df; }
+				}
+				bRoom = Free > (bSetUp ? 2.0 : 3.0);
+			}
+			if (bRoom && (bSetUp || (Coin < Share && bAheadOrLevel)) && Dh > 5.0 && Dh < 25.0 && !H.bDown)
 			{
 				bool bClear = true;
 				for (int o = 0; o < W.NumSkaters && bClear; ++o)
@@ -1093,12 +1250,22 @@ namespace JamAI
 			// the human's teammates give it to the open human first (PASSING.md: the sim's pass when the sim would pick the human, else an aimed tap from 8 m)
 			const int Hi = W.PlayerIndex;
 			const bool bHumanOpen = Hi >= 0 && Hi < W.NumSkaters && W.Skaters[Hi].Team == S.Team && R.bOpen[Hi];
+			// Lane A115: the human open and ahead of the play (2 m up the ice from the puck, or better placed) gets a small preference: when the pass of the
+			// sim would go to another teammate, the carrier turns to him and gives it by the aimed tap, unless pressure makes it pass at once.
+			const bool bHumanAhead = K.Hk.bPassRoom && bHumanOpen
+				&& ((W.Skaters[Hi].Pos.X - Pp.X) * (OppGoal.X >= 0.0 ? 1.0 : -1.0) > 2.0 || R.bBetter[Hi]);
+			bool bTurnToHuman = false;
 			if ((bPressure || bWall || bBetter || (bHumanOpen && CarryFrames[Id] >= K.Hk.MinCarryFrames)) && bHumanOpen && S.bCanShoot)
 			{
 				const FVec2 To = W.Skaters[Hi].Pos - Pp;
 				if (BestTo == Hi) { bPass = true; }
 				else if (To.Length() > 8.0 && Fwd.Dot(To.Normalized()) > std::cos(DegToRad(15.0))) { bShoot = true; }
 				else if (bPressure || bWall) { bPass = true; }
+				else if (bHumanAhead && To.Length() > 8.0) { bTurnToHuman = true; }
+			}
+			else if (bHumanAhead && !bPressure && !bWall && BestTo != Hi && W.Skaters[Hi].Pos.DistTo(Pp) > 8.0 && CarryFrames[Id] >= K.Hk.MinCarryFrames)
+			{
+				bTurnToHuman = true;   // not in a shooting position yet: line up on him
 			}
 			else if ((bPressure || bWall || bBetter) && bMateOpen && S.bCanShoot)
 			{
@@ -1106,11 +1273,19 @@ namespace JamAI
 			}
 			else if ((bWall || (R.FirstOpp >= 0 && R.FirstOppDist < 4.0)) && R.FirstOpp >= 0)
 			{
+				// Lane A115 (VISION law 3: stop, cut, go): a carrier that runs at more than 5 m/s into a defender standing inside 4 m on its lane, with no
+				// pass on, stops first (Think holds the brake until it is slow), then cuts: the cut starts from a standstill, where the first-step burst is.
+				if (K.Hk.bBrakeMeant && K.Hk.bStopCut && R.FirstOppDist < 4.0 && S.Vel.Dot(Aim) > 5.0) { bWantStop[Id] = true; }
 				const double Side = (W.Skaters[R.FirstOpp].Pos - Pp).Cross(Aim) > 0.0 ? 1.0 : -1.0;   // > 0: the opponent is to the right of the way
 				FVec2 Cut = Rotate(Aim, DegToRad(55.0) * Side);
 				FVec2 N;
 				if (BoardSdf(W, Pp + Cut * 4.0, N) > -2.0) { Cut = Rotate(Aim, -DegToRad(55.0) * Side); }
 				Push = Cut;
+			}
+			if (bTurnToHuman && !bShoot && !bPass)
+			{
+				const FJamAISkater& Hm = W.Skaters[Hi];
+				return ((Hm.Pos + Hm.Vel * 0.4) - Me).Normalized();
 			}
 		}
 		// R-0019: the carrier takes the puck round any slow-ice circle whose edge comes within 3 m of its straight line to the net
@@ -1135,6 +1310,30 @@ namespace JamAI
 		if (bBoardPeel)
 		{
 			BoardPeel(W, Pp, OppGoal.X >= 0.0 ? 1.0 : -1.0, Push);
+		}
+		// HOOK (lane A115 for track F2's body shield): the opposing carrier's body is between this bot's stick and the puck: go round it, to the point beside
+		// the carrier (2 m off, on this bot's nearer side) and half a metre ahead of it, where the puck is in the open again. Dead until W.bBodyShield is filled.
+		{
+			const int Cs = W.CarrierOrHolder();
+			if (K.Hk.bReadShield && Cs >= 0 && Cs < W.NumSkaters && W.Skaters[Cs].Team != S.Team && BodyShields(W, Id, Cs)
+				&& (K.Hk.RoundMaxMps <= 0.0 || W.Skaters[Cs].Vel.Length() < K.Hk.RoundMaxMps))   // lane A138: a carrier that goes is chased, not shadowed
+			{
+				const FJamAISkater& Cr = W.Skaters[Cs];
+				const FVec2 Cf = Cr.Facing.Normalized();
+				const double SideR = (Me - Cr.Pos).Cross(Cf) >= 0.0 ? -1.0 : 1.0;
+				const FVec2 Round = Cr.Pos + Cf.Perp() * (SideR * 2.0) + Cf * 0.5 + Cr.Vel * K.Hk.RoundLeadS;
+				return (Round - Me).Normalized();
+			}
+			// HOOK (lane A115 for track F2's take grace, lane A121): the opposing carrier has just won the puck and no stick can take it for the frames
+			// left. The decision: close and contain. The bot goes to the point 1.8 m goal-side of the carrier (between it and our net, at stick length),
+			// so that the poke or the lift is there the frame the grace ends; the body check (StickPlay) is not refused and goes when its speeds are met.
+			// Dead until FJamAISkater::TakeGraceFrames is filled.
+			if (K.Hk.bReadShield && Cs >= 0 && Cs < W.NumSkaters && W.Skaters[Cs].Team != S.Team && W.Skaters[Cs].TakeGraceFrames > 0)
+			{
+				const FJamAISkater& Cg = W.Skaters[Cs];
+				const FVec2 Contain = Cg.Pos + (W.OwnGoal(S.Team) - Cg.Pos).Normalized() * 1.8 + Cg.Vel * 0.3;
+				return (Contain - Me).Normalized();
+			}
 		}
 		const FVec2 ToPuck = Pp - Me;
 		const double Lateral = ToPuck.X * Push.Y - ToPuck.Y * Push.X;
@@ -1245,6 +1444,105 @@ namespace JamAI
 		return R;
 	}
 
+	// Lane A115 (evolution 2): the pure reads of JamAICore.h.
+	int LoosePuckOwner(const FJamAIWorld& W, int Team, double SkaterSpeed)
+	{
+		constexpr double Drag = 0.5, ReachM = 1.0, TurnSec = 0.2, OwnPassLateSec = 1.0, OwnPassSpeed = 6.0;
+		const double Sp = SkaterSpeed > 1.0 ? SkaterSpeed : 1.0;
+		const FVec2 Pp = W.PuckPos;
+		const FVec2 Pv = W.PuckVel.LimitLength(30.0);
+		int Best = -1;
+		double BestT = 1e18, BestD = 1e18;
+		for (int i = 0; i < W.NumSkaters; ++i)
+		{
+			const FJamAISkater& K = W.Skaters[i];
+			if (K.Team != Team || K.bDown) { continue; }
+			double T = 2.5;   // not inside two seconds
+			for (int k = 0; k <= 20; ++k)
+			{
+				const double t = 0.1 * k;
+				FVec2 At = Pp + Pv * ((1.0 - std::exp(-Drag * t)) / Drag);
+				At.X = Clamp(At.X, -W.HalfLength + 0.5, W.HalfLength - 0.5);   // the boards stop it (no bounce read)
+				At.Y = Clamp(At.Y, -W.HalfWidth + 0.5, W.HalfWidth - 0.5);
+				const double Cover = Sp * (t > TurnSec ? t - TurnSec : 0.0) + ReachM;
+				if ((K.Pos + K.Vel * (t < TurnSec ? t : TurnSec)).DistTo(At) <= Cover) { T = t; break; }
+			}
+			const double Dn = K.Pos.DistTo(Pp);
+			if (T >= 2.5) { T = 2.5 + Dn / Sp; }   // out of reach inside two seconds: by the distance now
+			if (i == W.PuckLastTouch && Pv.Length() > OwnPassSpeed && Pv.Dot(Pp - K.Pos) > 0.0) { T += OwnPassLateSec; }
+			if (T < BestT - 1e-9 || (std::fabs(T - BestT) <= 1e-9 && Dn < BestD)) { BestT = T; BestD = Dn; Best = i; }
+		}
+		return Best;
+	}
+
+	FVec2 OfferLane(const FJamAIWorld& W, int Id, int Carrier)
+	{
+		const FJamAISkater& S = W.Skaters[Id];
+		if (Carrier < 0 || Carrier >= W.NumSkaters) { return S.Pos; }
+		const FJamAISkater& Cr = W.Skaters[Carrier];
+		const double Up = Sign(W.OppGoal(S.Team).X);
+		const FVec2 Cp = Cr.Pos + Cr.Vel * 0.5;
+		static const double Spots[3][2] = { { 2.0, 10.0 }, { 8.0, 9.0 }, { 13.0, 6.0 } };   // metres up the ice from the carrier, metres to the side
+		FVec2 Best = Cp + FVec2(Up * 8.0, S.Pos.Y >= Cp.Y ? 9.0 : -9.0);
+		double BestScore = -1e18;
+		for (int Side = -1; Side <= 1; Side += 2)
+		{
+			for (int k = 0; k < 3; ++k)
+			{
+				FVec2 T = Cp + FVec2(Up * Spots[k][0], Side * Spots[k][1]);
+				T.X = Clamp(T.X, -W.GoalX + 4.0, W.GoalX - 4.0);
+				T.Y = Clamp(T.Y, -W.HalfWidth + 3.0, W.HalfWidth - 3.0);
+				const FVec2 L = T - Cr.Pos;
+				const double Ld = L.Length();
+				if (Ld < 4.0) { continue; }   // squeezed against the boards onto the carrier: no lane
+				const FVec2 Lu = L * (1.0 / Ld);
+				double Free = 1e9, Lane = 1e9;
+				for (int o = 0; o < W.NumSkaters; ++o)
+				{
+					const FJamAISkater& O = W.Skaters[o];
+					if (O.Team == S.Team || O.bDown) { continue; }
+					const double Df = O.Pos.DistTo(T);
+					if (Df < Free) { Free = Df; }
+					const double Along = Clamp((O.Pos - Cr.Pos).Dot(Lu), 0.0, Ld);
+					const double Dl = (Cr.Pos + Lu * Along).DistTo(O.Pos);
+					if (Dl < Lane) { Lane = Dl; }
+				}
+				bool bTaken = false;
+				for (int m = 0; m < W.NumSkaters; ++m)
+				{
+					if (m == Id || m == Carrier || W.Skaters[m].Team != S.Team || W.Skaters[m].bDown) { continue; }
+					if (W.Skaters[m].Pos.DistTo(T) < 4.0) { bTaken = true; }
+				}
+				if (bTaken) { continue; }
+				const double Score = (Lane > 2.0 ? 2.0 : 0.0) + (Free < 6.0 ? Free : 6.0) / 6.0 + Spots[k][0] / 20.0 - S.Pos.DistTo(T) / 30.0;
+				if (Score > BestScore) { BestScore = Score; Best = T; }
+			}
+		}
+		return Best;
+	}
+
+	bool BodyShields(const FJamAIWorld& W, int Poker, int Carrier)
+	{
+		if (!W.bBodyShield || Poker < 0 || Carrier < 0 || Poker >= W.NumSkaters || Carrier >= W.NumSkaters) { return false; }
+		const FJamAISkater& P = W.Skaters[Poker];
+		const FJamAISkater& C = W.Skaters[Carrier];
+		if (P.Team == C.Team) { return false; }
+		const FVec2 Rel = C.Pos - P.Pos;
+		const double D = Rel.Length();
+		if (D > W.BodyShieldRangeM || D < 1e-6) { return false; }
+		if (C.SpinFrames > 0 && C.SpinFrames <= W.SpinExposedFrames) { return false; }   // lane A138: the spin's exposed end (lane A128): the body is no longer between
+		const FVec2 N = Rel * (1.0 / D);   // the line defender -> carrier
+		const FVec2 ToPuck = W.PuckPos - C.Pos;
+		if (ToPuck.Dot(N) < std::cos(DegToRad(W.BodyShieldFarDeg)) * ToPuck.Length()) { return false; }   // the puck is not behind the body, seen from the defender
+		return C.Facing.Normalized().Dot(N) > -std::cos(DegToRad(W.BodyShieldFrontDeg));                    // the defender is not in front of the carrier
+	}
+
+	bool StickCannotTake(const FJamAIWorld& W, int Poker, int Carrier)
+	{
+		if (Carrier < 0 || Carrier >= W.NumSkaters) { return false; }
+		return W.Skaters[Carrier].TakeGraceFrames > 0 || BodyShields(W, Poker, Carrier);
+	}
+
 	// Lane A94: the team in possession: the carrier's, else the last toucher's (a loose puck belongs to the team that touched it last); none while frozen,
 	// in the faceoff countdown, or before the first touch. Since = the frame it changed. One entry per frame in the ring (the late read).
 	void FJamBrain::ReadPossession(const FJamAIWorld& W)
@@ -1337,12 +1635,18 @@ namespace JamAI
 				{
 					// a loose puck (a pass on its way, a rebound): the skater nearest it goes (measured: the skater nearest where it will be in 0.4 s, with the
 					// shape formed round that skater, beat the human to loose pucks: its touches 23.8 -> 22.0 a minute, the pile 11.9 -> 12.6 %; BRAIN.md)
-					double Bd = 1e18;
-					for (int i = 0; i < W.NumSkaters; ++i)
+					// Lane A115 (REVIEW-CODE.md, severity 3): with bChaseAhead the owner is the skater that reaches where the puck will be first, and a passer is
+					// not the owner of its own pass (on a 15 m pass it was, for half the flight: it chased its own pass).
+					if (H.bChaseAhead) { Own = LoosePuckOwner(W, Team, Params.InterceptSpeed * Params.SpeedScale); }
+					else
 					{
-						if (W.Skaters[i].Team != Team || W.Skaters[i].bDown) { continue; }
-						const double D = W.Skaters[i].Pos.DistTo(Pp);
-						if (D < Bd) { Bd = D; Own = i; }
+						double Bd = 1e18;
+						for (int i = 0; i < W.NumSkaters; ++i)
+						{
+							if (W.Skaters[i].Team != Team || W.Skaters[i].bDown) { continue; }
+							const double D = W.Skaters[i].Pos.DistTo(Pp);
+							if (D < Bd) { Bd = D; Own = i; }
+						}
 					}
 				}
 				if (Own >= 0) { Give(Own, EJob::Puck); }
@@ -1407,6 +1711,8 @@ namespace JamAI
 			// the outlet: 4 m behind and 6 m beside the carrier (7 m off, kept at 7 below), on the middle's side, moving with it
 			const double Side = std::fabs(Cp.Y) > 3.0 ? -Sign(Cp.Y) : (Me.Y >= Cp.Y ? 1.0 : -1.0);
 			T = Cp + FVec2(-Up * 4.0, Side * 6.0) + Vc * 0.4;
+			// Lane A115: the human carries: his close support stands where his pass lane is open (beside or ahead), not at a fixed spot behind him
+			if (SkillOf(W, Id).Hk.bSupportHuman && bCarrier && C == W.PlayerIndex) { T = OfferLane(W, Id, C); }
 			bLanes = true;
 			break;
 		}
@@ -1432,6 +1738,25 @@ namespace JamAI
 			const FVec2 Ug = (OwnGoal - Cp).Normalized();
 			const double Spd = Vc.Length();
 			const bool bGoalSide = (Me - Cp).Dot(Ug) > 0.0;
+			// Lane A115 (lane A102's report: the "gap control" of the pro arrived head-on at 11 m/s, and a stop-and-go beat it 200 times of 200): closing under
+			// control, within what the sim can do (a body faces its move: nobody skates backwards, so "back off at the carrier's speed" would turn the
+			// presser's back to the puck and its lift cone away). Goal-side of a carrier that comes at it faster than 3 m/s, between 3.5 and 12 m off, the
+			// presser stops (a decided stop: Think holds the brake) and waits on the line carrier -> net, facing the carrier, creeping: standing it is braced
+			// (law 1) and its momentum is not committed, so a stop or a cut finds it still there. Inside 3.5 m it steps up and plays the puck and the body as
+			// before; a slow carrier, a carrier going away, a presser not goal-side: as before.
+			if (SkillOf(W, Id).Hk.bGapControl && bCarrier && bGoalSide)
+			{
+				const FVec2 Rel = Me - Cp;
+				const double Dist = Rel.Length();
+				const double Coming = Dist > 1e-6 ? Vc.Dot(Rel) / Dist : 0.0;
+				if (Coming > 3.0 && Dist > 3.5 && Dist < 12.0)
+				{
+					const FVec2 Lat = Rel - Ug * Rel.Dot(Ug);   // off the line carrier -> net
+					Out = (Rel * (-0.12 / Dist) - Lat * 0.5).LimitLength(1.0);
+					if (S.Vel.Length() > 2.0 && S.Vel.Dot(Rel) < 0.0) { bWantStop[Id] = true; }   // still skating at the carrier: stop and let it come
+					return true;
+				}
+			}
 			if (!bCarrier || Spd < 3.0 || Me.DistTo(Cp) < 2.5 || !bGoalSide) { bToPuck = true; return true; }
 			const double Gap = Clamp(Spd * 0.3, 1.0, 3.0);
 			T = Cp + Ug * Gap + FVec2(0.0, -Sign(Cp.Y) * 0.8);
@@ -1533,9 +1858,11 @@ namespace JamAI
 			if (Dp > 1e-6 && Dp < W.SkaterRadius + W.StickReach + 1.0)
 			{
 				In.Stick = Tp * (1.0 / Dp) * (Dp - W.SkaterRadius < W.StickReach ? (Dp - W.SkaterRadius > 0.2 * W.StickReach ? (Dp - W.SkaterRadius) / W.StickReach : 0.2) : 1.0);
-				if (Me.bCanPoke && Dp <= W.SkaterRadius + W.StickReach) { In.bPoke = true; }
+				// HOOK (lane A115 for track F2): no swing the sim would refuse (the carrier's take grace, or its body between): dead until the adapter fills the fields
+				const bool bNoStick = StickCannotTake(W, W.PlayerIndex, W.Carrier);
+				if (Me.bCanPoke && Dp <= W.SkaterRadius + W.StickReach && !bNoStick) { In.bPoke = true; }
 				// and lifts the carrier's stick at contact range
-				if (Me.bCanLift && W.Skaters[W.Carrier].Pos.DistTo(Me.Pos) <= 2.0 * W.SkaterRadius + W.LiftRange * 0.9) { In.bLift = true; }
+				if (Me.bCanLift && !bNoStick && W.Skaters[W.Carrier].Pos.DistTo(Me.Pos) <= 2.0 * W.SkaterRadius + W.LiftRange * 0.9) { In.bLift = true; }
 			}
 		}
 		// Work in the attacking frame: the opponents' goal at +x (rotate 180 deg for team 1; keeps handedness).

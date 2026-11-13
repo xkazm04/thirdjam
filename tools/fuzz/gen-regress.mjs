@@ -36,6 +36,7 @@ for (const f of readdirSync(FOUND).filter((f) => f.endsWith('.json')).sort()) {
     h.then = h.then.filter(legal);
     if (!h.then.length) h.then.push({ do: 'announce', text: 'GO' });
   }
+  if (c.game?.rules?.timer_frames > 28800) c.game.rules.timer_frames = 28800;   // lane A141: the clock limit is 28,800 (R-0052 point 6)
   const t = JSON.stringify(c, null, 1);
   if (!validateCartridge(c).ok) throw new Error(`${name}: the stripped variant is still invalid`);
   add(`${name}-valid`, t, 'found-stripped');

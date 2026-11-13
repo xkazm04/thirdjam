@@ -14,6 +14,8 @@
   - build and automation are heavy: -SkipBuild / -SkipAutomation skip them (printed as SKIP, never as PASS, and listed in the JSON).
     Automation is also skipped, with a line saying so, when the source has no automation tests yet.
   - Automation runs in its own editor process; it uses no MCP port and never touches an editor it did not start.
+  - -Drift (lane A126, off by default) adds step 7: tools/soak/drift-gate.mjs, the soak drift gate (docs/experiments/SOAK-DRIFT.md), run only when the changed paths touch
+    cartridges, the sim or the brain, under -DriftTimeoutSec (480); needs the build of this tree; a skip is printed as SKIP and listed in the JSON.
   - Writes only logs under Game\logs. Runs no git command itself; check-ownership.mjs runs read-only git diff and status.
   Exit: 0 every step that ran passed, 1 a step failed or timed out, 2 could not run (no node, no project).
 #>
@@ -23,6 +25,8 @@ param(
     [switch]$SkipBuild,
     [switch]$SkipAutomation,
     [switch]$SkipDevlog,
+    [switch]$Drift,
+    [int]$DriftTimeoutSec = 480,
     [string]$Filter = 'Jam',
     [int]$BuildTimeoutSec = 3600,
     [int]$AutomationTimeoutSec = 1200
@@ -125,6 +129,17 @@ try {
         $last = $r.out | Select-Object -Last 1
         if ($r.code -eq 0) { Write-Step 'PASS' 'devlog' "$last" } else { Write-Step 'FAIL' 'devlog' "exit $($r.code): $last" }
         Remove-Item $tmp -Force -ErrorAction SilentlyContinue
+    }
+    # 7. drift gate (lane A126): off unless -Drift. Runs only when the changed paths touch cartridges, the sim or the brain; --only modes / takes as fits; capped at -DriftTimeoutSec (8 min).
+    if (-not $Drift) { Write-Host 'SKIP drift (off: pass -Drift)'; $skipped += 'drift' }
+    else {
+        $r = Invoke-Node @('tools/soak/drift-gate.mjs', '--uproject', $uproject, '--base', $Base, '--timeout-s', "$DriftTimeoutSec") 'drift'
+        $last = ($r.out | Select-Object -Last 1)
+        $dj = $null; try { $dj = $last | ConvertFrom-Json } catch { }
+        foreach ($l in ($r.out | Where-Object { $_ -match '^(MOVED|NEW|GONE|FAIL|INFO)' } | Select-Object -First 15)) { Write-Host "  | $l" }
+        if ($dj -and $dj.verdict -eq 'skipped') { Write-Host 'SKIP drift (no changed path touches cartridges, the sim or the brain)'; $skipped += 'drift' }
+        elseif ($r.code -eq 0) { Write-Step 'PASS' 'drift' "scope $($dj.scope), $($dj.seconds)s, nothing moved" }
+        else { Write-Step 'FAIL' 'drift' "exit $($r.code) (log $($r.log))" }
     }
 }
 finally { Pop-Location }

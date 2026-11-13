@@ -458,6 +458,8 @@ void ALobbyGameMode::DeliverSimEvents()
 		Pl.Where = UJamSim::ToWorld(E.Where, E.Name == JamEvents::Board || E.Name == JamEvents::Shot || E.Name == JamEvents::Goal ? 0.04 : 0.0);
 		Pl.Strength = E.Strength;
 		Pl.Kind = E.Kind;
+		Pl.Dir = FVector(E.Dir.X, E.Dir.Y, 0.0);   // lane A143: the online match sent no Dir (HokejGameMode has since lane A47)
+		Pl.Outcome = E.Outcome;   // lane A143: stumble / down on a landed check
 		Bus->Broadcast(E.Name, Pl);
 	}
 	if (const UJamEffectSystem* Fx = GetEffects())

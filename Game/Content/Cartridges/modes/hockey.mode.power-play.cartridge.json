@@ -113,9 +113,9 @@
   "ai": [],
   "game": {
     "rink": {
-      "length_m": 90,
-      "width_m": 45,
-      "corner_radius_m": 3.75,
+      "length_m": 70,
+      "width_m": 35,
+      "corner_radius_m": 3.5,
       "board_restitution": 0.4,
       "ice_friction": 0.015,
       "goal_width_m": 4
@@ -129,7 +129,8 @@
       "glide_drag": 0.147,
       "brake_decel": 6,
       "check_enabled": true,
-      "pass_speed": 16
+      "carry_speed_mult": 0.8,
+      "pass_lead_frames": 20
     },
     "puck": {
       "radius_m": 0.12,
@@ -151,7 +152,7 @@
       "mode": "timer",
       "goal_pause_frames": 120,
       "offside": false,
-      "penalties": true,
+      "penalties": false,
       "timer_frames": 14400
     },
     "teams": [
@@ -162,29 +163,36 @@
           {
             "role": "player",
             "spawn": [
-              -7.5,
+              -5.83,
               0
-            ]
-          },
-          {
-            "role": "chaser",
-            "spawn": [
-              -7.5,
-              -7.5
             ]
           },
           {
             "role": "support",
             "spawn": [
-              -7.5,
-              7.5
+              -5.83,
+              -5.83
+            ]
+          },
+          {
+            "role": "support",
+            "spawn": [
+              -5.83,
+              5.83
             ]
           },
           {
             "role": "back",
             "spawn": [
-              -22.5,
-              0
+              -17.5,
+              -3.89
+            ]
+          },
+          {
+            "role": "back",
+            "spawn": [
+              -17.5,
+              3.89
             ]
           }
         ]
@@ -196,21 +204,21 @@
           {
             "role": "chaser",
             "spawn": [
-              7.5,
+              5.83,
               0
             ]
           },
           {
             "role": "support",
             "spawn": [
-              7.5,
-              7.5
+              5.83,
+              5.83
             ]
           },
           {
             "role": "back",
             "spawn": [
-              22.5,
+              17.5,
               0
             ]
           }
@@ -218,7 +226,8 @@
       }
     ],
     "ai": {
-      "difficulty": "pro"
+      "difficulty": "pro",
+      "yield_margin_m": 0
     },
     "barks": {
       "enabled": true,
@@ -240,13 +249,13 @@
       "radar": true
     },
     "stick": {
-      "reception_m": 1.4
+      "reception_m": 3
     },
     "meta": {
-      "pitch": "Four on three. Move it, fire it, repeat.",
+      "pitch": "Five on three. Move it, fire it, repeat.",
       "facts": [
-        "4 v 3 for you",
-        "passes land soft",
+        "5 v 3 for you",
+        "carry at 80 % speed",
         "one-timers, 4:00"
       ]
     }

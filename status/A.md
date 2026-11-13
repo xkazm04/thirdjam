@@ -407,3 +407,8 @@
 - 22:40 board: main 41df3e6 pushed and verified (23 lanes landed since the 20:03 fix). **Builds no longer queue**: `tools/run/build.ps1` gives each worktree its own TMP and builds with `-NoMutex -NoUBA` in three slots (a landing takes three minutes, was fifteen to forty). **Law 3 broke in the gate** when the brain's second evolution and the shove rule met (stop-and-go 50 %, bar 80 %): both parked on the local branch `wip-batch6` (worktree `i1`) for integration lane A138 (R-0053); the curve lane (brief A133, patch `tj/c0.patch`) takes its tree next. Running: A138 I1, A131 S2 (cursor), A135 U1, A136 F3, A137 Q3, A139 M1, A126 S1. To resume after a restart: `docs/EVOLUTION.md` (the last board), each lane's `status/A1xx.md` in its worktree, the Director's scripts in `%LOCALAPPDATA%\Temp\tj` (`export.sh`, `baseline.sh`, `land.sh`, `fresh.sh`).
 
 - RESOURCES 22:52 cpu 100% ram 40.3/63GB editors 1 cmd 11 free 480GB
+- RESOURCES 23:27 cpu 100% ram 43.3/63GB editors 0 cmd 9 free 460GB
+- link green 23:58: main e71ebf7 (The passing modes pass again and the marathon is a game of legs (A139, track M1); the bus ) pushed.
+- RESOURCES 23:59 cpu 94% ram 45.6/63GB editors 2 cmd 9 free 459GB
+- link green 00:04: main 7081e67 (The soak follows main: a fresh baseline on the kept puck, the drift gate as a gate step, f) pushed.
+- link green 00:06: main 6a5e103 (Every cartridge key is fuzzed from the schema, and the Designer's replies parse one way on) pushed.

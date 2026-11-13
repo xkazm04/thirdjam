@@ -10,6 +10,8 @@
 #include "Engine/Engine.h"
 #include "Engine/GameInstance.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/InstancedStaticMeshComponent.h"
+#include "Components/PointLightComponent.h"
 #include "HAL/IConsoleManager.h"
 #include "RinkActor.h"
 #include "JamCartridge.h"
@@ -487,6 +489,236 @@ bool FJamRinkPenaltySeat::RunTest(const FString&)
 		TestTrue(TEXT("jam.rink.arena 0: the boxed skater is drawn on the ice"), FVector::Dist2D(Pawn->GetActorLocation(), UJamSim::ToWorld(Boxed.Pos)) <= 1.0);
 	}
 	Rink->SetConstructionVisible(true);
+	return true;
+}
+
+// Lane A136 (track F3, evolution 4): the whole boards answer a hit. Jam.Rink.BoardCaps: on three rinks a hard skater `board` event at every quarter metre of
+// the outline finds a board cap within 2 m (100 % of the ring), the cap tilts and hops by the event's Strength on the hit's frame, its neighbours follow two
+// and four frames later, everything stands again after CapRippleFrames; the caps add fewer than 3,000 triangles; a soft hit and the puck rock nothing; a
+// skater of the real sim driven into the end boards rocks a cap and the sim's hash equals a twin's; `jam.rink.caps 0`, `jam.rink.react 0` and
+// `jam.rink.arena 0` give back the still boards. And the loud goal's light: over the net by default, beside the lamp with `jam.rink.react.loud 0`.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamRinkBoardCaps, "Jam.Rink.BoardCaps", JamRinkReactionTests::Flags)
+bool FJamRinkBoardCaps::RunTest(const FString&)
+{
+	TestEqual(TEXT("a cap's rock is full on the hit's frame"), ARinkActor::CapRockAt(0, 1.f), 1.f);
+	TestEqual(TEXT("it scales with Strength"), ARinkActor::CapRockAt(0, 0.5f), 0.5f);
+	TestEqual(TEXT("Strength is clamped to 1"), ARinkActor::CapRockAt(0, 1.7f), 1.f);
+	TestEqual(TEXT("it is over at CapRockFrames"), ARinkActor::CapRockAt(ARinkActor::CapRockFrames, 1.f), 0.f);
+	TestEqual(TEXT("the whole ripple lasts as long as a piece's rattle"), ARinkActor::CapRippleFrames, ARinkActor::RattleFrames);
+
+	FJamGameConfig Base;
+	if (!LoadRegular(*this, Base)) return false;
+	const FName Skater(TEXT("skater"));
+	const double Sizes[3][2] = { { 90.0, 45.0 }, { 120.0, 60.0 }, { 140.0, 70.0 } };
+	for (const double* Size : Sizes)
+	{
+		FJamGameConfig Cfg = Base;
+		Cfg.Rink.LengthM = Size[0];
+		Cfg.Rink.WidthM = Size[1];
+		const FString Tag = FString::Printf(TEXT("%.0f x %.0f"), Size[0], Size[1]);
+		FTestWorld W;
+		ARinkActor* Rink = SpawnRink(W, Cfg);
+		if (!TestNotNull(*(Tag + TEXT(": the rink spawned")), Rink)) return false;
+		if (!TestTrue(*(Tag + TEXT(": the caps stand (p3_clay)")), Rink->AreCapsShown())) return false;
+		UJamEventBus* Bus = MakeBus();
+		Rink->BindBus(Bus);
+		const int32 N = Rink->GetCapCount();
+		TArray<FVector2D> Line;
+		ARinkActor::Outline(Cfg.Rink.LengthM, Cfg.Rink.WidthM, Cfg.Rink.CornerRadiusM, 12, Line);
+		double Perimeter = 0.0;
+		for (int32 i = 0; i < Line.Num(); ++i) Perimeter += FVector2D::Distance(Line[i], Line[(i + 1) % Line.Num()]);
+		TestEqual(*(Tag + TEXT(": one cap at every stanchion place")), N, FMath::Max(4, FMath::RoundToInt32(Perimeter / ARinkActor::StanchionSpacingM)));
+		TestEqual(*(Tag + TEXT(": one instance for every cap")), Rink->ArenaCaps ? Rink->ArenaCaps->GetInstanceCount() : -1, N);
+		TestTrue(*(Tag + TEXT(": the caps add fewer than 3,000 triangles")), Rink->GetCapTriangles() > 0 && Rink->GetCapTriangles() < 3000);
+
+		// Every quarter metre of the outline: a skater's centre 0.45 m inside the boards, a hard hit.
+		int64 Frame = 1000;
+		int32 Samples = 0, Answered = 0, Within = 0;
+		double MaxFromSkater = 0.0, MaxFromBoards = 0.0;
+		for (int32 i = 0; i < Line.Num(); ++i)
+		{
+			const FVector2D A = Line[i], B = Line[(i + 1) % Line.Num()];
+			const double Len = FVector2D::Distance(A, B);
+			const FVector2D Dir = (B - A).GetSafeNormal();
+			const FVector2D Out(Dir.Y, -Dir.X);
+			for (double S = 0.0; S < Len; S += 0.25)
+			{
+				const FVector2D OnBoards = A + Dir * S;
+				const FVector2D Centre = OnBoards - Out * 0.45;
+				Frame += 40;
+				const int32 Count = Rink->GetCapRockCount();
+				FJamEventPayload Pl;
+				Pl.Who = 0;
+				Pl.Where = FVector(Centre.X * 100.0, Centre.Y * 100.0, 4.0);
+				Pl.Strength = 0.6f;
+				Pl.Kind = Skater;
+				Bus->SetSimFrame(Frame);
+				Bus->Broadcast(JamEvents::Board, Pl);
+				++Samples;
+				if (Rink->GetCapRockCount() != Count + 1) continue;
+				++Answered;
+				const int32 Cap = Rink->GetRockedCapIndex();
+				const double FromSkater = FVector2D::Distance(Rink->GetCapPlaceM(Cap), Centre), FromBoards = FVector2D::Distance(Rink->GetCapPlaceM(Cap), OnBoards);
+				MaxFromSkater = FMath::Max(MaxFromSkater, FromSkater);
+				MaxFromBoards = FMath::Max(MaxFromBoards, FromBoards);
+				if (FromSkater <= ARinkActor::RattleReachM && FMath::IsNearlyEqual(Rink->GetCapTiltDeg(Cap), ARinkActor::CapRockDeg * 0.6f, 1e-3f)) ++Within;
+			}
+		}
+		TestEqual(*(Tag + TEXT(": every hard hit on the outline is answered by a cap")), Answered, Samples);
+		TestEqual(*(Tag + TEXT(": the answering cap stands within 2 m of the skater and tilts by Strength, on 100 % of the outline")), Within, Samples);
+		AddInfo(FString::Printf(TEXT("A136 caps %s: %d caps, %d triangles in all, outline %.1f m (one cap every %.2f m); %d hits every 0.25 m of it: %d answered, %d within 2 m (%.1f %%); the farthest cap %.2f m from the skater's centre, %.2f m from the point on the boards"),
+			*Tag, N, Rink->GetCapTriangles(), Perimeter, Perimeter / FMath::Max(1, N), Samples, Answered, Within, 100.0 * Within / FMath::Max(1, Samples), MaxFromSkater, MaxFromBoards));
+
+		// One hit followed frame by frame: the cap on the end boards behind the +x net.
+		{
+			Frame += 200;
+			Bus->SetSimFrame(Frame);
+			Rink->AdvanceReactions(Frame);
+			TestFalse(*(Tag + TEXT(": the boards are still before the hit")), Rink->IsReacting());
+			FJamEventPayload Pl;
+			Pl.Who = 0;
+			Pl.Where = FVector((Cfg.Rink.LengthM * 0.5 - 0.45) * 100.0, 150.0, 4.0);
+			Pl.Strength = 0.9f;
+			Pl.Kind = Skater;
+			Bus->Broadcast(JamEvents::Board, Pl);
+			const int32 Cap = Rink->GetRockedCapIndex();
+			const int32 Next = (Cap + 1) % N, Far = (Cap + 3) % N;
+			FTransform Rest, Hit;
+			Rink->ArenaCaps->GetInstanceTransform(Cap, Hit, false);
+			TestTrue(*(Tag + TEXT(": the struck cap tilts CapRockDeg x Strength on the hit's frame")), FMath::IsNearlyEqual(Rink->GetCapTiltDeg(Cap), ARinkActor::CapRockDeg * 0.9f, 1e-3f));
+			TestTrue(*(Tag + TEXT(": and hops CapHopCm x Strength")), FMath::IsNearlyEqual(Rink->GetCapHopCm(Cap), ARinkActor::CapHopCm * 0.9f, 1e-3f));
+			TestTrue(*(Tag + TEXT(": the instance itself is lifted off the board top")), FMath::IsNearlyEqual(Hit.GetLocation().Z, ARinkActor::BoardHeightM * 100.0 + ARinkActor::CapHopCm * 0.9, 1e-2));
+			TestEqual(*(Tag + TEXT(": its neighbour waits")), Rink->GetCapTiltDeg(Next), 0.f);
+			Bus->SetSimFrame(Frame + ARinkActor::CapRippleDelay);
+			Rink->AdvanceReactions(Frame + ARinkActor::CapRippleDelay);
+			TestTrue(*(Tag + TEXT(": the neighbour answers CapRippleDelay frames later with 0.55 of it")), FMath::IsNearlyEqual(Rink->GetCapTiltDeg(Next), ARinkActor::CapRockDeg * 0.9f * 0.55f, 1e-3f));
+			TestEqual(*(Tag + TEXT(": a cap three places away never moves")), Rink->GetCapTiltDeg(Far), 0.f);
+			float MaxLater = 0.f;
+			for (int64 F = ARinkActor::CapRippleDelay + 1; F <= ARinkActor::CapRippleFrames; ++F)
+			{
+				Bus->SetSimFrame(Frame + F);
+				Rink->AdvanceReactions(Frame + F);
+				if (F < ARinkActor::CapRippleFrames) MaxLater = FMath::Max(MaxLater, FMath::Abs(Rink->GetCapTiltDeg(Cap)));
+			}
+			TestTrue(*(Tag + TEXT(": the rock dies down")), MaxLater < ARinkActor::CapRockDeg * 0.9f);
+			TestFalse(*(Tag + TEXT(": nothing is live after CapRippleFrames")), Rink->IsReacting());
+			bool bAllRest = true;
+			for (int32 k = 0; k < N; ++k)
+			{
+				Rink->ArenaCaps->GetInstanceTransform(k, Rest, false);
+				bAllRest = bAllRest && FMath::IsNearlyEqual(Rest.GetLocation().Z, ARinkActor::BoardHeightM * 100.0, 1e-3) && FMath::IsNearlyZero(Rest.Rotator().Roll, 1e-3) && Rink->GetCapTiltDeg(k) == 0.f;
+			}
+			TestTrue(*(Tag + TEXT(": every cap stands on the board top as Build put it")), bAllRest);
+		}
+		Rink->BindBus(nullptr);
+	}
+
+	// The regular rink: what does not rock a cap, several hits at once, the real sim, the neutral values, the loud goal's light.
+	FJamGameConfig Cfg = Base;
+	FTestWorld W;
+	ARinkActor* Rink = SpawnRink(W, Cfg);
+	if (!TestNotNull(TEXT("the rink spawned"), Rink)) return false;
+	UJamEventBus* Bus = MakeBus();
+	Rink->BindBus(Bus);
+	const double HalfW = Cfg.Rink.WidthM * 0.5 * 100.0, HalfL = Cfg.Rink.LengthM * 0.5 * 100.0;
+	int64 Frame = 500000;
+	auto Hit = [&](const FVector& Where, float Strength, FName Kind) -> bool
+	{
+		const int32 Count = Rink->GetCapRockCount();
+		FJamEventPayload Pl;
+		Pl.Who = 0;
+		Pl.Where = Where;
+		Pl.Strength = Strength;
+		Pl.Kind = Kind;
+		Bus->SetSimFrame(Frame);
+		Bus->Broadcast(JamEvents::Board, Pl);
+		return Rink->GetCapRockCount() == Count + 1;
+	};
+	TestFalse(TEXT("a soft hit (under RattleMinStrength) rocks no cap"), Hit(FVector(HalfL - 45.0, 100.0, 4.0), ARinkActor::RattleMinStrength - 0.05f, Skater));
+	TestFalse(TEXT("the puck on the boards rocks no cap"), Hit(FVector(HalfL - 45.0, 100.0, 4.0), 1.f, NAME_None));
+	TestFalse(TEXT("nothing is live after them"), Rink->IsReacting());
+	// Five hard hits on the same frame at five places: the four newest are live (CapRipples), every one of them at its own cap.
+	{
+		Frame += 100;
+		const FVector Places[5] = { FVector(HalfL - 45.0, 0.0, 4.0), FVector(-HalfL + 45.0, 0.0, 4.0), FVector(0.0, HalfW - 45.0, 4.0), FVector(0.0, -HalfW + 45.0, 4.0), FVector(HalfL * 0.5, HalfW - 45.0, 4.0) };
+		int32 Caps[5] = { -1, -1, -1, -1, -1 };
+		for (int32 i = 0; i < 5; ++i) { TestTrue(TEXT("each of five hits at once finds a cap"), Hit(Places[i], 1.f, Skater)); Caps[i] = Rink->GetRockedCapIndex(); }
+		int32 Tilted = 0;
+		for (int32 i = 0; i < 5; ++i) if (FMath::IsNearlyEqual(Rink->GetCapTiltDeg(Caps[i]), ARinkActor::CapRockDeg, 1e-3f)) ++Tilted;
+		TestEqual(TEXT("four ripples are live at once (the fifth hit took the oldest one's place)"), Tilted, ARinkActor::CapRipples);
+		Frame += ARinkActor::CapRippleFrames;
+		Bus->SetSimFrame(Frame);
+		Rink->AdvanceReactions(Frame);
+		TestFalse(TEXT("all of them are over CapRippleFrames later"), Rink->IsReacting());
+	}
+	// A skater of the real sim driven into the +x end boards beside the net: the sim's own `board` event, through the bus.
+	{
+		UJamSim* Sim = NewObject<UJamSim>();
+		Sim->Init(Cfg, 1);
+		Sim->SkipFaceoff();
+		UJamSim* Twin = NewObject<UJamSim>();
+		Twin->Init(Cfg, 1);
+		Twin->SkipFaceoff();
+		TArray<FJamInput> In;
+		In.Init(FJamInput(), Sim->GetSkaters().Num());
+		const FVector2D Start(Cfg.Rink.LengthM * 0.5 - 1.2, 6.0), Vel(Cfg.Skater.Speed * 0.9, 0.0);
+		Sim->SetSkater(0, Start, Vel, 0.0);
+		Twin->SetSkater(0, Start, Vel, 0.0);
+		const int32 Count = Rink->GetCapRockCount(), Pieces = Rink->GetRattleCount();
+		int32 Hard = 0;
+		for (int32 F = 0; F < 40; ++F)
+		{
+			Sim->Step(In);
+			Twin->Step(In);
+			for (const FJamSimEvent& E : Sim->GetFrameEvents()) if (E.Name == JamEvents::Board && E.Kind == Skater && E.Strength >= ARinkActor::RattleMinStrength) ++Hard;
+			Deliver(Sim, Bus, Rink);
+		}
+		TestTrue(TEXT("the sim announced a hard skater hit on the end boards"), Hard >= 1);
+		TestEqual(TEXT("one cap answer per hard hit"), Rink->GetCapRockCount() - Count, Hard);
+		TestEqual(TEXT("no bench, box or table stands behind the end boards: no piece rocked"), Rink->GetRattleCount(), Pieces);
+		TestTrue(TEXT("the cap that answered stands within 2 m of the skater"), Rink->GetRockedCapDistanceM() <= static_cast<float>(ARinkActor::RattleReachM));
+		TestEqual(TEXT("the sim's hash equals the twin's"), Sim->StateHashHex(), Twin->StateHashHex());
+		AddInfo(FString::Printf(TEXT("A136 caps from the sim: %d hard skater board event(s) on the +x end boards, cap %d of %d answered from %.2f m, hash %s"), Hard, Rink->GetRockedCapIndex(), Rink->GetCapCount(), Rink->GetRockedCapDistanceM(), *Sim->StateHashHex()));
+	}
+	// The loud goal's light: over the net by default; `jam.rink.react.loud 0` puts it back beside the lamp at evolution 3's candelas.
+	{
+		const float Loud = Rink->LampLightPeakAt(2), LoudTable = Rink->LampLightPeakAt(0);
+		const FVector Over = Rink->ArenaLampLights[2]->GetRelativeLocation();
+		TestTrue(TEXT("the +x end's light hangs over the net, behind the goal line and inside the end boards"), Over.X > Cfg.Rink.GoalLineX() * 100.0 && Over.X < HalfL && FMath::IsNearlyZero(Over.Y, 1e-3) && FMath::IsNearlyEqual(Over.Z, ARinkActor::EndLightHeightM * 100.0, 1e-3));
+		FCvarGuard Guard(TEXT("jam.rink.react.loud"));
+		Guard.Set(0);
+		Rink->SetConstructionVisible(true);
+		const FVector Beside = Rink->ArenaLampLights[2]->GetRelativeLocation();
+		TestTrue(TEXT("jam.rink.react.loud 0: the light stands beside the lamp, outside the end boards"), Beside.X > HalfL);
+		TestTrue(TEXT("jam.rink.react.loud 0: half the candelas at the end, the table's as before"), FMath::IsNearlyEqual(Rink->LampLightPeakAt(2), Loud * 0.5f, 0.01f) && FMath::IsNearlyEqual(Rink->LampLightPeakAt(0), LoudTable, 0.01f));
+		AddInfo(FString::Printf(TEXT("A136 loud goal: the end light at (%.0f, %.0f, %.0f) cm, %.0f cd (table %.0f cd); with jam.rink.react.loud 0 at (%.0f, %.0f, %.0f) cm, %.0f cd"), Over.X, Over.Y, Over.Z, Loud, LoudTable, Beside.X, Beside.Y, Beside.Z, Rink->LampLightPeakAt(2)));
+	}
+	Rink->SetConstructionVisible(true);
+	// The neutral values.
+	{
+		FCvarGuard Guard(TEXT("jam.rink.caps"));
+		Guard.Set(0);
+		Rink->SetConstructionVisible(true);
+		Frame += 100;
+		const int32 Pieces = Rink->GetRattleCount();
+		TestFalse(TEXT("jam.rink.caps 0: no caps stand"), Rink->AreCapsShown() || Rink->ArenaCaps->IsVisible());
+		TestFalse(TEXT("jam.rink.caps 0: a hard hit on the end boards rocks no cap"), Hit(FVector(HalfL - 45.0, 100.0, 4.0), 1.f, Skater));
+		TestFalse(TEXT("jam.rink.caps 0: a hard hit at the penalty box rocks no cap"), Hit(FVector(-300.0, -HalfW, 4.0), 1.f, Skater));
+		TestEqual(TEXT("jam.rink.caps 0: the penalty box still rocks (evolution 3's arena)"), Rink->GetRattleCount(), Pieces + 1);
+	}
+	Rink->SetConstructionVisible(true);
+	TestTrue(TEXT("the caps are back with jam.rink.caps 1"), Rink->AreCapsShown() && Rink->ArenaCaps->IsVisible());
+	for (const TCHAR* Name : { TEXT("jam.rink.react"), TEXT("jam.rink.arena") })
+	{
+		FCvarGuard Guard(Name);
+		Guard.Set(0);
+		Rink->SetConstructionVisible(true);
+		Frame += 100;
+		TestFalse(FString::Printf(TEXT("%s 0: a hard hit rocks no cap"), Name), Hit(FVector(HalfL - 45.0, 100.0, 4.0), 1.f, Skater));
+		TestFalse(FString::Printf(TEXT("%s 0: nothing is live"), Name), Rink->IsReacting());
+	}
+	Rink->SetConstructionVisible(true);
+	Rink->BindBus(nullptr);
 	return true;
 }
 

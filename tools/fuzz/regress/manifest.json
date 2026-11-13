@@ -34,7 +34,8 @@
    "ok": false,
    "pointers": [
     "/game/rules/hooks/4/then/1/param",
-    "/game/rules/hooks/5/then/2/param"
+    "/game/rules/hooks/5/then/2/param",
+    "/game/rules/timer_frames"
    ]
   },
   {
@@ -68,7 +69,8 @@
    "ok": false,
    "pointers": [
     "/game/rules/hooks/1/then/0/param",
-    "/game/rules/hooks/2/then/0/param"
+    "/game/rules/hooks/2/then/0/param",
+    "/game/rules/timer_frames"
    ]
   },
   {
@@ -135,6 +137,15 @@
    "ok": false,
    "pointers": [
     "/game/puck"
+   ]
+  },
+  {
+   "name": "parity-hook-when-null--fuzz-bad-01256",
+   "file": "parity-hook-when-null--fuzz-bad-01256.json",
+   "kind": "found",
+   "ok": false,
+   "pointers": [
+    "/game/rules/hooks/4/when"
    ]
   },
   {

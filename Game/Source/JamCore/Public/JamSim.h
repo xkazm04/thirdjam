@@ -153,6 +153,12 @@ struct JAMCORE_API FJamSkaterState
 	// Lane A121 (track F2; game.skater.burst.own_stop): this skater braked on its way down (the reverse brake or the brake button took speed off it) and has
 	// not been back at BurstSlowSpeed since: being slow arms its burst. Never set with own_stop false. Hashed while set.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bBurstEarned = false;
+	// Lane A128 (track F2 evolution 3; game.skater.burst.rest_frames): frames in a row this skater has been slower than BurstRestSpeed, up to rest_frames;
+	// at rest_frames its burst is armed (the standing start). 0 again once it is at the rest speed or faster. Stays 0 with rest_frames 0. Hashed while not 0.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 RestFrames = 0;
+	// Lane A128: frames left of the recovery after a spin that ran its length (FJamSkaterConfig::SpinRecoveryFrames, code only and 0: a measured candidate
+	// for the spin's price, MOVEMENT-4.md): the carried puck is exposed to a stick. Always 0 in a shipped game. Hashed while it runs.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 SpinRecoverLeft = 0;
 	// Lane A121 (R-0049 point 2; game.stick.take_grace_frames): frames left in which this skater's carried puck cannot be poked or lifted: it has just won
 	// the puck. Set when the puck comes to it from somebody else (UJamSim::TakeOwner), counts down while the puck is live, 0 the moment the puck is somebody
 	// else's. Hashed while it runs.
@@ -381,6 +387,8 @@ struct JAMCORE_API FJamSimEvent
 	// Lane A47 (B-to-A-0029): the contact normal (checker towards victim) for check and knockdown, the board normal into the rink for board; zero otherwise.
 	// Rink axes (x, z), unit length. A read-out: nothing in the step reads it and events are not hashed.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") FVector2D Dir = FVector2D::ZeroVector;
+	// Lane A143 (B-answer-0024 ask b): what a landed `check` did to the victim: `stumble` or `down`; NAME_None for every other event. A read-out, not hashed.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") FName Outcome = NAME_None;
 };
 
 UCLASS(BlueprintType)
@@ -397,6 +405,7 @@ public:
 	// than PivotSpeed whose facing is that far from the input turns on the spot instead of thrusting away from where it wants to go. The carrier's sprint:
 	// carry_speed_mult x (1 + carry_bonus) never passes CarrierSprintCap of a free skater's 1 + sprint.bonus, whatever the cartridge says.
 	static constexpr double BurstSlowSpeed = 2.0;
+	static constexpr double BurstRestSpeed = 1.0;   // lane A128: slower than this is at rest (skater.burst.rest_frames)
 	static constexpr int32 BurstCutFrames = 10;
 	static constexpr double BurstCutDot = 0.5;
 	static constexpr double ReverseBrakeDot = -0.5;
@@ -593,11 +602,33 @@ public:
 	double StabilityOf(const FJamSkaterState& S, const FVector2D& HitDir, EContactKind Kind) const;
 	// The impulse a hit by Attacker on Victim along HitDir carries, in kg m/s: mass x max(0, closing speed along HitDir + lunge_mps (Body) or thrust_mps (Cross)).
 	double ContactImpulse(const FJamSkaterState& Attacker, const FJamSkaterState& Victim, const FVector2D& HitDir, EContactKind Kind) const;
+	// Lane A138 (R-0053 point 3): the cross-check's thrust as it lands: the whole thrust_mps, but on a back (the push along the victim's facing) only as far
+	// as the attacker is closing (contact.ShoveBehindMatchMps; 0 = always whole).
+	double CrossThrust(const FJamSkaterState& Attacker, const FJamSkaterState& Victim, const FVector2D& HitDir) const;
 	// Lane A101 (track F1): the boards are a body. A victim whose centre is within ContactBoardRangeM of the boards cannot give way into them: the impulse of a
 	// hit that pushes it there counts x BoardFactor = 1 + (game.contact.board_bonus - 1) x clamp(2 x dot(HitDir, the boards' outward normal), 0, 1): the full bonus
 	// inside 60 degrees of straight in, none for a hit along the boards or away from them. 1 at board_bonus 1 (the neutral value). ResolveContact reads it.
 	static constexpr double ContactBoardRangeM = 1.5;
 	double BoardFactor(const FJamSkaterState& Victim, const FVector2D& HitDir) const;
+	// Lane A125 (track F1, R-0050 point 2): the shield refuses the stick, never the shove. True for the two shields that refuse a cross-check's shove as they
+	// refuse the lift (R-0040: the spin's body between, the sweep's window), and for nothing else: this is the ONLY shield test TryLift's shove reads. Every other
+	// reason IsLiftShielded / IsPokeShielded gives, now or later (track F2's body shield game.stick.body_shield, its take grace game.stick.take_grace_frames),
+	// refuses the puck's take only: TryLift then shoves from any side inside the cone and the lift takes nothing. A lane that adds a stick shield adds it to
+	// IsPokeShielded and leaves this function alone.
+	bool IsShoveShielded(const FJamSkaterState& Attacker, const FJamSkaterState& Carrier) const;
+	// Test seam, not state and never hashed: TryLift takes the stick as refused (what IsLiftShielded answers for a body shield or a take grace on a tree that has
+	// them), so a scene can force the shield predicate by hand on a tree without those keys. False in every game.
+	bool bTestStickRefused = false;
+	// Lane A125 (track F1): the check finds its man (game.contact.check_reach_m, 0 = off). While a HUMAN skater's check window is open, its velocity is turned
+	// onto the collision course with the nearest standing opponent whose body is within check_reach_m of its own and inside CheckReachConeDeg of where it is
+	// going or facing: the man's speed across the line between them is matched (up to CheckReachAcrossMax of the skater's speed), the rest of the skater's
+	// speed goes along the line. The speed is kept, none is added; the position is never written. Stateless: the man is found again on every frame of the
+	// window. The human's only, like its 12-frame window (lane A49): a bot's brain aims its own check, and with the bend the bots landed a quarter more hits
+	// on the human (docs/experiments/CONTACT-4.md). CheckReachTarget = that opponent, -1 none (tests and the brain may read it).
+	static constexpr double CheckReachConeDeg = 60.0;
+	static constexpr double CheckReachAcrossMax = 0.866;   // sin 60: at least half of the speed still closes
+	int32 CheckReachTarget(const FJamSkaterState& S) const;
+	void StepCheckReach(FJamSkaterState& S);
 	// The carrier cannot hit (game.contact.carrier_can_hit false): true when S carries the puck and no opponent carried it within stick.foul_grace_frames, so a
 	// take off an opponent's stick in the same breath still finishes its hit (the mirror of R-0029 point 3, where the victim that just lost the puck still counts
 	// as the carrier). The brain reads it.
@@ -631,7 +662,14 @@ public:
 	bool IsLiftShielded(const FJamSkaterState& Lifter, const FJamSkaterState& Carrier) const { return IsPokeShielded(Lifter, Carrier); }
 	// Lane A121 (R-0049 point 2): Carrier has just won the puck (game.stick.take_grace_frames): no poke and no lift takes it. IsPokeShielded includes it. A
 	// body check is never refused by it.
-	bool InTakeGrace(const FJamSkaterState& Carrier) const { return Config.Stick.TakeGraceFrames > 0 && Carrier.TakeGraceLeft > 0; }
+	// Lane A138: and the frame it won the puck in (the grace is counted from the end of that frame; a carrier that is not yet TakeOwner has just won it; a
+	// placed puck's first carrier has not). stick.bTakeGraceSameFrame false = without that frame.
+	bool InTakeGrace(const FJamSkaterState& Carrier) const
+	{
+		if (Config.Stick.TakeGraceFrames <= 0) return false;
+		if (Carrier.TakeGraceLeft > 0) return true;
+		return Config.Stick.bTakeGraceSameFrame && TakeOwner != Carrier.Index && TakeOwner != TakeOwnerPlaced && Puck.LastTouch == Carrier.Index;
+	}
 	// The skater that has carried since the puck last changed hands (-1 = nobody yet; TakeOwnerPlaced = a puck placed by SetPuck, whose first carrier did not
 	// win it). The take grace starts when the puck comes to a skater that is not the owner.
 	int32 GetTakeOwner() const { return TakeOwner; }
@@ -733,7 +771,7 @@ private:
 	bool CollidePuckCircle(const FVector2D& C, double CR, double R, double E);
 	bool CollidePuckBox(const FVector2D& Min, const FVector2D& Max, double R, double E);
 	void ScoreGoal(int32 ScoringTeam);
-	void Emit(FName Name, int32 Who, const FVector2D& Where, float Strength, FName Kind = NAME_None, const FVector2D& Dir = FVector2D::ZeroVector);
+	void Emit(FName Name, int32 Who, const FVector2D& Where, float Strength, FName Kind = NAME_None, const FVector2D& Dir = FVector2D::ZeroVector, FName Outcome = NAME_None);
 	void KnockDown(int32 Victim, const FVector2D& Dir, float Strength, FName Cause);
 
 	// C-0005 seams.

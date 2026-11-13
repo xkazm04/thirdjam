@@ -2421,7 +2421,7 @@
           "light_cd": [
             750.0,
             0.0,
-            3000.0
+            6000.0
           ],
           "lamp": 17.0,
           "light_pos": 17.0,
@@ -2437,7 +2437,7 @@
           "light_cd": [
             695.8,
             0.0,
-            2783.3
+            5566.7
           ],
           "lamp": 15.9889,
           "light_pos": 15.9889,
@@ -2453,7 +2453,7 @@
           "light_cd": [
             668.8,
             0.0,
-            2675.0
+            5350.0
           ],
           "lamp": 15.4833,
           "light_pos": 15.4833,
@@ -2469,7 +2469,7 @@
           "light_cd": [
             533.3,
             0.0,
-            2133.3
+            4266.7
           ],
           "lamp": 12.9556,
           "light_pos": 12.9556,
@@ -2485,7 +2485,7 @@
           "light_cd": [
             750.0,
             0.0,
-            3000.0
+            6000.0
           ],
           "lamp": 17.0,
           "light_pos": 17.0,
@@ -2501,7 +2501,7 @@
           "light_cd": [
             506.2,
             0.0,
-            2025.0
+            4050.0
           ],
           "lamp": 12.45,
           "light_pos": 12.45,
@@ -2517,7 +2517,7 @@
           "light_cd": [
             8.0,
             0.0,
-            32.2
+            64.4
           ],
           "lamp": 3.1502,
           "light_pos": 3.1502,
@@ -2635,7 +2635,7 @@
           "light_cd": [
             750.0,
             0.0,
-            3000.0
+            6000.0
           ],
           "lamp": 17.0,
           "light_pos": 17.0,
@@ -2651,7 +2651,7 @@
           "light_cd": [
             695.8,
             0.0,
-            2783.3
+            5566.7
           ],
           "lamp": 15.9889,
           "light_pos": 15.9889,
@@ -2667,7 +2667,7 @@
           "light_cd": [
             668.8,
             0.0,
-            2675.0
+            5350.0
           ],
           "lamp": 15.4833,
           "light_pos": 15.4833,
@@ -2683,7 +2683,7 @@
           "light_cd": [
             533.3,
             0.0,
-            2133.3
+            4266.7
           ],
           "lamp": 12.9556,
           "light_pos": 12.9556,
@@ -2699,7 +2699,7 @@
           "light_cd": [
             750.0,
             0.0,
-            3000.0
+            6000.0
           ],
           "lamp": 17.0,
           "light_pos": 17.0,
@@ -2715,7 +2715,7 @@
           "light_cd": [
             506.2,
             0.0,
-            2025.0
+            4050.0
           ],
           "lamp": 12.45,
           "light_pos": 12.45,
@@ -2731,7 +2731,7 @@
           "light_cd": [
             8.0,
             0.0,
-            32.2
+            64.4
           ],
           "lamp": 3.1502,
           "light_pos": 3.1502,
@@ -2849,7 +2849,7 @@
           "light_cd": [
             750.0,
             0.0,
-            3000.0
+            6000.0
           ],
           "lamp": 17.0,
           "light_pos": 17.0,
@@ -2865,7 +2865,7 @@
           "light_cd": [
             695.8,
             0.0,
-            2783.3
+            5566.7
           ],
           "lamp": 15.9889,
           "light_pos": 15.9889,
@@ -2881,7 +2881,7 @@
           "light_cd": [
             668.8,
             0.0,
-            2675.0
+            5350.0
           ],
           "lamp": 15.4833,
           "light_pos": 15.4833,
@@ -2897,7 +2897,7 @@
           "light_cd": [
             533.3,
             0.0,
-            2133.3
+            4266.7
           ],
           "lamp": 12.9556,
           "light_pos": 12.9556,
@@ -2913,7 +2913,7 @@
           "light_cd": [
             750.0,
             0.0,
-            3000.0
+            6000.0
           ],
           "lamp": 17.0,
           "light_pos": 17.0,
@@ -2929,7 +2929,7 @@
           "light_cd": [
             506.2,
             0.0,
-            2025.0
+            4050.0
           ],
           "lamp": 12.45,
           "light_pos": 12.45,
@@ -2945,7 +2945,7 @@
           "light_cd": [
             8.0,
             0.0,
-            32.2
+            64.4
           ],
           "lamp": 3.1502,
           "light_pos": 3.1502,
@@ -3042,6 +3042,538 @@
         "goal_lights_visible": [
           true,
           true
+        ]
+      },
+      "ok": true
+    }
+  },
+  "e4": {
+    "90x45 p3_clay": {
+      "caps": 73,
+      "instances": 73,
+      "shown": true,
+      "visible": true,
+      "mesh": "SM_Arena_BoardCap",
+      "material": "MI_Toon_KickPlate",
+      "triangles": 1752,
+      "widest_gap_m": 3.599,
+      "z_cm": [
+        120.0,
+        120.0
+      ],
+      "custom_depth": true,
+      "cast_shadow": false,
+      "hits": [
+        {
+          "at_m": [
+            44.55,
+            0.0
+          ],
+          "answered": 1,
+          "cap": 68,
+          "distance_m": 0.682,
+          "tilt_deg": 20.8,
+          "hop_cm": 17.6,
+          "still_after_18": true
+        },
+        {
+          "at_m": [
+            -44.55,
+            3.0
+          ],
+          "answered": 1,
+          "cap": 31,
+          "distance_m": 0.976,
+          "tilt_deg": 20.8,
+          "hop_cm": 17.6,
+          "still_after_18": true
+        },
+        {
+          "at_m": [
+            27.9,
+            22.05
+          ],
+          "answered": 1,
+          "cap": 6,
+          "distance_m": 1.632,
+          "tilt_deg": 20.8,
+          "hop_cm": 17.6,
+          "still_after_18": true
+        },
+        {
+          "at_m": [
+            -36.0,
+            -22.05
+          ],
+          "answered": 1,
+          "cap": 40,
+          "distance_m": 0.878,
+          "tilt_deg": 20.8,
+          "hop_cm": 17.6,
+          "still_after_18": true
+        },
+        {
+          "at_m": [
+            43.22,
+            20.72
+          ],
+          "answered": 1,
+          "cap": 1,
+          "distance_m": 0.635,
+          "tilt_deg": 20.8,
+          "hop_cm": 17.6,
+          "still_after_18": true
+        },
+        {
+          "at_m": [
+            43.22,
+            -20.72
+          ],
+          "answered": 1,
+          "cap": 62,
+          "distance_m": 0.702,
+          "tilt_deg": 20.8,
+          "hop_cm": 17.6,
+          "still_after_18": true
+        },
+        {
+          "at_m": [
+            -43.22,
+            20.72
+          ],
+          "answered": 1,
+          "cap": 26,
+          "distance_m": 1.394,
+          "tilt_deg": 20.8,
+          "hop_cm": 17.6,
+          "still_after_18": true
+        },
+        {
+          "at_m": [
+            -43.22,
+            -20.72
+          ],
+          "answered": 1,
+          "cap": 38,
+          "distance_m": 1.495,
+          "tilt_deg": 20.8,
+          "hop_cm": 17.6,
+          "still_after_18": true
+        }
+      ],
+      "end_light_cm": [
+        4400.0,
+        0.0,
+        360.0
+      ],
+      "end_light_peak_cd": [
+        750.0,
+        6000.0,
+        6000.0
+      ],
+      "ok": true
+    },
+    "120x60 p3_clay": {
+      "caps": 98,
+      "instances": 98,
+      "shown": true,
+      "visible": true,
+      "mesh": "SM_Arena_BoardCap",
+      "material": "MI_Toon_KickPlate",
+      "triangles": 2352,
+      "widest_gap_m": 3.604,
+      "z_cm": [
+        120.0,
+        120.0
+      ],
+      "custom_depth": true,
+      "cast_shadow": false,
+      "hits": [
+        {
+          "at_m": [
+            59.55,
+            0.0
+          ],
+          "answered": 1,
+          "cap": 91,
+          "distance_m": 0.559,
+          "tilt_deg": 20.8,
+          "hop_cm": 17.6,
+          "still_after_18": true
+        },
+        {
+          "at_m": [
+            -59.55,
+            3.0
+          ],
+          "answered": 1,
+          "cap": 41,
+          "distance_m": 0.879,
+          "tilt_deg": 20.8,
+          "hop_cm": 17.6,
+          "still_after_18": true
+        },
+        {
+          "at_m": [
+            37.2,
+            29.55
+          ],
+          "answered": 1,
+          "cap": 7,
+          "distance_m": 0.777,
+          "tilt_deg": 20.8,
+          "hop_cm": 17.6,
+          "still_after_18": true
+        },
+        {
+          "at_m": [
+            -48.0,
+            -29.55
+          ],
+          "answered": 1,
+          "cap": 53,
+          "distance_m": 0.747,
+          "tilt_deg": 20.8,
+          "hop_cm": 17.6,
+          "still_after_18": true
+        },
+        {
+          "at_m": [
+            58.22,
+            28.22
+          ],
+          "answered": 1,
+          "cap": 1,
+          "distance_m": 0.632,
+          "tilt_deg": 20.8,
+          "hop_cm": 17.6,
+          "still_after_18": true
+        },
+        {
+          "at_m": [
+            58.22,
+            -28.22
+          ],
+          "answered": 1,
+          "cap": 83,
+          "distance_m": 0.562,
+          "tilt_deg": 20.8,
+          "hop_cm": 17.6,
+          "still_after_18": true
+        },
+        {
+          "at_m": [
+            -58.22,
+            28.22
+          ],
+          "answered": 1,
+          "cap": 34,
+          "distance_m": 0.562,
+          "tilt_deg": 20.8,
+          "hop_cm": 17.6,
+          "still_after_18": true
+        },
+        {
+          "at_m": [
+            -58.22,
+            -28.22
+          ],
+          "answered": 1,
+          "cap": 50,
+          "distance_m": 0.632,
+          "tilt_deg": 20.8,
+          "hop_cm": 17.6,
+          "still_after_18": true
+        }
+      ],
+      "end_light_cm": [
+        5900.0,
+        0.0,
+        360.0
+      ],
+      "end_light_peak_cd": [
+        750.0,
+        6000.0,
+        6000.0
+      ],
+      "ok": true
+    },
+    "140x70 p3_clay": {
+      "caps": 114,
+      "instances": 114,
+      "shown": true,
+      "visible": true,
+      "mesh": "SM_Arena_BoardCap",
+      "material": "MI_Toon_KickPlate",
+      "triangles": 2736,
+      "widest_gap_m": 3.63,
+      "z_cm": [
+        120.0,
+        120.0
+      ],
+      "custom_depth": true,
+      "cast_shadow": false,
+      "hits": [
+        {
+          "at_m": [
+            69.55,
+            0.0
+          ],
+          "answered": 1,
+          "cap": 106,
+          "distance_m": 1.257,
+          "tilt_deg": 20.8,
+          "hop_cm": 17.6,
+          "still_after_18": true
+        },
+        {
+          "at_m": [
+            -69.55,
+            3.0
+          ],
+          "answered": 1,
+          "cap": 48,
+          "distance_m": 0.758,
+          "tilt_deg": 20.8,
+          "hop_cm": 17.6,
+          "still_after_18": true
+        },
+        {
+          "at_m": [
+            43.4,
+            34.55
+          ],
+          "answered": 1,
+          "cap": 8,
+          "distance_m": 0.798,
+          "tilt_deg": 20.8,
+          "hop_cm": 17.6,
+          "still_after_18": true
+        },
+        {
+          "at_m": [
+            -56.0,
+            -34.55
+          ],
+          "answered": 1,
+          "cap": 62,
+          "distance_m": 1.316,
+          "tilt_deg": 20.8,
+          "hop_cm": 17.6,
+          "still_after_18": true
+        },
+        {
+          "at_m": [
+            68.22,
+            33.22
+          ],
+          "answered": 1,
+          "cap": 1,
+          "distance_m": 0.621,
+          "tilt_deg": 20.8,
+          "hop_cm": 17.6,
+          "still_after_18": true
+        },
+        {
+          "at_m": [
+            68.22,
+            -33.22
+          ],
+          "answered": 1,
+          "cap": 96,
+          "distance_m": 1.13,
+          "tilt_deg": 20.8,
+          "hop_cm": 17.6,
+          "still_after_18": true
+        },
+        {
+          "at_m": [
+            -68.22,
+            33.22
+          ],
+          "answered": 1,
+          "cap": 39,
+          "distance_m": 1.13,
+          "tilt_deg": 20.8,
+          "hop_cm": 17.6,
+          "still_after_18": true
+        },
+        {
+          "at_m": [
+            -68.22,
+            -33.22
+          ],
+          "answered": 1,
+          "cap": 58,
+          "distance_m": 0.621,
+          "tilt_deg": 20.8,
+          "hop_cm": 17.6,
+          "still_after_18": true
+        }
+      ],
+      "end_light_cm": [
+        6900.0,
+        0.0,
+        360.0
+      ],
+      "end_light_peak_cd": [
+        750.0,
+        6000.0,
+        6000.0
+      ],
+      "ok": true
+    },
+    "120x60 l2_night": {
+      "caps": 98,
+      "instances": 98,
+      "shown": true,
+      "visible": true,
+      "mesh": "SM_Arena_BoardCap",
+      "material": "MI_Toon_KickPlate",
+      "triangles": 2352,
+      "widest_gap_m": 3.604,
+      "z_cm": [
+        120.0,
+        120.0
+      ],
+      "custom_depth": true,
+      "cast_shadow": false,
+      "hits": [
+        {
+          "at_m": [
+            59.55,
+            0.0
+          ],
+          "answered": 1,
+          "cap": 91,
+          "distance_m": 0.559,
+          "tilt_deg": 20.8,
+          "hop_cm": 17.6,
+          "still_after_18": true
+        },
+        {
+          "at_m": [
+            -59.55,
+            3.0
+          ],
+          "answered": 1,
+          "cap": 41,
+          "distance_m": 0.879,
+          "tilt_deg": 20.8,
+          "hop_cm": 17.6,
+          "still_after_18": true
+        },
+        {
+          "at_m": [
+            37.2,
+            29.55
+          ],
+          "answered": 1,
+          "cap": 7,
+          "distance_m": 0.777,
+          "tilt_deg": 20.8,
+          "hop_cm": 17.6,
+          "still_after_18": true
+        },
+        {
+          "at_m": [
+            -48.0,
+            -29.55
+          ],
+          "answered": 1,
+          "cap": 53,
+          "distance_m": 0.747,
+          "tilt_deg": 20.8,
+          "hop_cm": 17.6,
+          "still_after_18": true
+        },
+        {
+          "at_m": [
+            58.22,
+            28.22
+          ],
+          "answered": 1,
+          "cap": 1,
+          "distance_m": 0.632,
+          "tilt_deg": 20.8,
+          "hop_cm": 17.6,
+          "still_after_18": true
+        },
+        {
+          "at_m": [
+            58.22,
+            -28.22
+          ],
+          "answered": 1,
+          "cap": 83,
+          "distance_m": 0.562,
+          "tilt_deg": 20.8,
+          "hop_cm": 17.6,
+          "still_after_18": true
+        },
+        {
+          "at_m": [
+            -58.22,
+            28.22
+          ],
+          "answered": 1,
+          "cap": 34,
+          "distance_m": 0.562,
+          "tilt_deg": 20.8,
+          "hop_cm": 17.6,
+          "still_after_18": true
+        },
+        {
+          "at_m": [
+            -58.22,
+            -28.22
+          ],
+          "answered": 1,
+          "cap": 50,
+          "distance_m": 0.632,
+          "tilt_deg": 20.8,
+          "hop_cm": 17.6,
+          "still_after_18": true
+        }
+      ],
+      "end_light_cm": [
+        5900.0,
+        0.0,
+        360.0
+      ],
+      "end_light_peak_cd": [
+        300.0,
+        1200.0,
+        1200.0
+      ],
+      "ok": true
+    },
+    "still_boards": {
+      "bare_tier": {
+        "shown": false,
+        "visible": false
+      },
+      "jam.rink.caps 0": {
+        "shown": false,
+        "visible": false,
+        "cap_answers": 0,
+        "piece_rattles": 1,
+        "pieces_shown": true
+      },
+      "back_on": {
+        "shown": true,
+        "cap_answers": 1
+      },
+      "jam.rink.react.loud 0": {
+        "end_light_cm": [
+          6010.0,
+          0.0,
+          300.0
+        ],
+        "end_light_peak_cd": [
+          750.0,
+          3000.0,
+          3000.0
         ]
       },
       "ok": true

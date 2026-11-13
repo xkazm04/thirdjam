@@ -69,10 +69,12 @@ bool UJamEventBus::Broadcast(FName Event, const FJamEventPayload& Payload)
 	// lower case, so the log prints them lower case for the tests that grep it.
 	if (bLogEvents)
 	{
-		UE_LOG(LogJamEvents, Log, TEXT("JAMEVENT %s who=%d where=(%.1f,%.1f,%.1f) strength=%.3f frame=%llu kind=%s"),
+		const FString OutcomeTail = Payload.Outcome.IsNone() ? FString() : TEXT(" outcome=") + Payload.Outcome.ToString().ToLower();   // lane A143: only when set, after kind=
+		UE_LOG(LogJamEvents, Log, TEXT("JAMEVENT %s who=%d where=(%.1f,%.1f,%.1f) strength=%.3f frame=%llu kind=%s%s"),
 			*Event.ToString().ToLower(), Payload.Who, Payload.Where.X, Payload.Where.Y, Payload.Where.Z, Payload.Strength,
 			static_cast<unsigned long long>(SimFrame >= 0 ? static_cast<uint64>(SimFrame) : GFrameCounter),
-			Payload.Kind.IsNone() ? TEXT("none") : *Payload.Kind.ToString().ToLower());
+			Payload.Kind.IsNone() ? TEXT("none") : *Payload.Kind.ToString().ToLower(),
+			*OutcomeTail);
 	}
 	OnJamEvent.Broadcast(Event, Payload);
 	return true;

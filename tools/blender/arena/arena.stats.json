@@ -492,6 +492,39 @@
         "lamp"
       ],
       "fbx_mb": 0.036
+    },
+    "SM_Arena_BoardCap": {
+      "triangles": 24,
+      "triangles_by_slot": {
+        "kick": 24
+      },
+      "triangles_by_part": {
+        "cap": 24
+      },
+      "vertices": 17,
+      "uv_loops": 56,
+      "uv_min": [
+        0.0,
+        0.0
+      ],
+      "uv_max": [
+        0.675,
+        0.27
+      ],
+      "dimensions_m": [
+        0.554,
+        0.237,
+        0.39
+      ],
+      "sockets": {},
+      "under_budget": true,
+      "budget": 40,
+      "length_m": 0.6,
+      "thumb_presses": 1,
+      "slots": [
+        "kick"
+      ],
+      "fbx_mb": 0.016
     }
   },
   "placement_m": {
@@ -544,6 +577,11 @@
         "yaw": -90
       }
     ],
+    "SM_Arena_BoardCap": {
+      "note": "instanced by RinkActor at every stanchion place (the outline's length / 3.6 m, rounded, evenly spaced), on the boards' middle line at z = board height, yaw along the boards",
+      "spacing_m": 3.6,
+      "triangles_each": 24
+    },
     "goals": {
       "note": "x = +-GoalLineX (L/2 - 4), y = 0; yaw -90 on the +x end, +90 on the -x end; the variant nearest the cartridge's goal, scaled W/Wv along the line and H/Hv up",
       "goal_line_x": 56.0,
@@ -559,5 +597,5 @@
       ]
     }
   },
-  "total_s": 1.1
+  "total_s": 4.7
 }

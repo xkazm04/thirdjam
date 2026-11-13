@@ -32,7 +32,7 @@ test('compare: new and removed cells are listed, a changed unfinished count is f
   assert.ok(r.moved.some((m) => m.key === 'a unfinished'));
 });
 test('measure: win rate, unfinished and a deterministic digest; marathon reads its character number', () => {
-  const ms = [1, 2, 3, 4].map((s) => ({ seed: s, result: s <= 2 ? 'win' : s === 3 ? 'loss' : 'unfinished', hash: `h${s}`, frames: 100, sprint_frames: 10 * s }));
+  const ms = [1, 2, 3, 4].map((s) => ({ seed: s, result: s <= 2 ? 'win' : s === 3 ? 'loss' : 'unfinished', hash: `h${s}`, frames: 100, play_frames: 3600, sprint_frames: 10 * s }));   // lane A139: Marathon's number is per play minute (100 sprint frames in 4 play minutes)
   const c = measure('m-marathon', ms);
   assert.equal(c.win, 50); assert.equal(c.unfinished, 1); assert.equal(c.value, 25); assert.equal(c.digest, measure('m-marathon', ms).digest);
   assert.notEqual(c.digest, measure('m-marathon', ms.slice(1)).digest);
@@ -44,6 +44,6 @@ test('buildPlan: 12 modes (marathon capped and sprinting) and 8 takes x 3 classe
   w(join(dir, 'ladder', 'take-1.cartridge.json'), 'rookie'); w(join(dir, 'ladder', 'take-1-fallback.cartridge.json'), 'rookie');
   const p = buildPlan(dir, 50);
   assert.equal(p.length, 2 + 3);
-  const mar = p.find((c) => c.label === 'm-marathon'); assert.equal(mar.maxframes, 42000); assert.deepEqual(mar.extra, ['-playersprint']);
+  const mar = p.find((c) => c.label === 'm-marathon'); assert.equal(mar.maxframes, 36000); assert.deepEqual(mar.extra, ['-playersprint']);
   assert.deepEqual(p.filter((c) => c.label.startsWith('t-')).map((c) => [c.cls, c.lvl, c.seeds]), ['novice', 'regular', 'good'].map((c) => [c, 'rookie', '1-50']));
 });

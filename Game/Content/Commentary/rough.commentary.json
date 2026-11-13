@@ -13,7 +13,7 @@
       "when": "a body check with Strength under 0.4 (picker: check.light)",
       "text": "A tap on the shoulder. Rude, but a tap.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_check_light_01.VO_Commentator_check_light_01",
-      "seconds": 2.55
+      "seconds": 2.24
     },
     {
       "id": "check.light.02",
@@ -25,7 +25,7 @@
       "when": "a body check with Strength under 0.4 (picker: check.light)",
       "text": "Just a nudge. The real one is coming.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_check_light_02.VO_Commentator_check_light_02",
-      "seconds": 2.44
+      "seconds": 2.74
     },
     {
       "id": "check.light.03",
@@ -37,7 +37,7 @@
       "when": "a body check with Strength under 0.4 (picker: check.light)",
       "text": "Polite little bump.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_check_light_03.VO_Commentator_check_light_03",
-      "seconds": 1.44
+      "seconds": 1.54
     },
     {
       "id": "check.light.04",
@@ -49,7 +49,7 @@
       "when": "a body check with Strength under 0.4 (picker: check.light)",
       "text": "He felt that about as much as a breeze.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_check_light_04.VO_Commentator_check_light_04",
-      "seconds": 2.55
+      "seconds": 2.17
     },
     {
       "id": "check.light.05",
@@ -61,7 +61,7 @@
       "when": "a body check with Strength under 0.4 (picker: check.light)",
       "text": "Shoulder to shoulder. Warming up.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_check_light_05.VO_Commentator_check_light_05",
-      "seconds": 2.22
+      "seconds": 2.59
     },
     {
       "id": "check.light.06",
@@ -73,7 +73,7 @@
       "when": "a body check with Strength under 0.4 (picker: check.light)",
       "text": "That one was a hello.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_check_light_06.VO_Commentator_check_light_06",
-      "seconds": 1.56
+      "seconds": 1.48
     },
     {
       "id": "check.solid.01",
@@ -85,7 +85,7 @@
       "when": "a body check with Strength 0.4 to under 0.8 (picker: check.solid)",
       "text": "That one rattled the glass.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_check_solid_01.VO_Commentator_check_solid_01",
-      "seconds": 1.89
+      "seconds": 1.48
     },
     {
       "id": "check.solid.02",
@@ -97,7 +97,7 @@
       "when": "a body check with Strength 0.4 to under 0.8 (picker: check.solid)",
       "text": "Now he knows where the boards are.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_check_solid_02.VO_Commentator_check_solid_02",
-      "seconds": 2.27
+      "seconds": 1.92
     },
     {
       "id": "check.solid.03",
@@ -109,7 +109,7 @@
       "when": "a body check with Strength 0.4 to under 0.8 (picker: check.solid)",
       "text": "Square hit. Clean and loud.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_check_solid_03.VO_Commentator_check_solid_03",
-      "seconds": 1.89
+      "seconds": 2.17
     },
     {
       "id": "check.solid.04",
@@ -121,7 +121,7 @@
       "when": "a body check with Strength 0.4 to under 0.8 (picker: check.solid)",
       "text": "Lays the body and walks away.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_check_solid_04.VO_Commentator_check_solid_04",
-      "seconds": 2
+      "seconds": 2.05
     },
     {
       "id": "check.solid.05",
@@ -133,7 +133,7 @@
       "when": "a body check with Strength 0.4 to under 0.8 (picker: check.solid)",
       "text": "Hell of a hit.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_check_solid_05.VO_Commentator_check_solid_05",
-      "seconds": 1.17
+      "seconds": 1.12
     },
     {
       "id": "check.solid.06",
@@ -145,7 +145,7 @@
       "when": "a body check with Strength 0.4 to under 0.8 (picker: check.solid)",
       "text": "Shoulders, hips, and a lot of gravity.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_check_solid_06.VO_Commentator_check_solid_06",
-      "seconds": 2.49
+      "seconds": 1.79
     },
     {
       "id": "check.solid.07",
@@ -157,7 +157,7 @@
       "when": "a body check with Strength 0.4 to under 0.8 (picker: check.solid)",
       "text": "That is how you carry the check.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_check_solid_07.VO_Commentator_check_solid_07",
-      "seconds": 2.16
+      "seconds": 2.34
     },
     {
       "id": "knockdown.big.01",
@@ -169,7 +169,7 @@
       "when": "a knockdown caused by a check of Strength 0.8 or more (the knockdown carries the check Strength; the .big rule)",
       "text": "Flattened! Somebody check the ice for dents.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_knockdown_big_01.VO_Commentator_knockdown_big_01",
-      "seconds": 2.82
+      "seconds": 3.3
     },
     {
       "id": "knockdown.big.02",
@@ -181,7 +181,7 @@
       "when": "a knockdown caused by a check of Strength 0.8 or more (the knockdown carries the check Strength; the .big rule)",
       "text": "Sent flying, and the puck stayed behind.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_knockdown_big_02.VO_Commentator_knockdown_big_02",
-      "seconds": 2.6
+      "seconds": 2.58
     },
     {
       "id": "knockdown.big.03",
@@ -193,7 +193,7 @@
       "when": "a knockdown caused by a check of Strength 0.8 or more (the knockdown carries the check Strength; the .big rule)",
       "text": "Folded in half and set down gently. Not gently.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_knockdown_big_03.VO_Commentator_knockdown_big_03",
-      "seconds": 2.99
+      "seconds": 2.93
     },
     {
       "id": "knockdown.big.04",
@@ -205,7 +205,7 @@
       "when": "a knockdown caused by a check of Strength 0.8 or more (the knockdown carries the check Strength; the .big rule)",
       "text": "Planted him like a flag.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_knockdown_big_04.VO_Commentator_knockdown_big_04",
-      "seconds": 1.72
+      "seconds": 1.55
     },
     {
       "id": "knockdown.big.05",
@@ -217,7 +217,7 @@
       "when": "a knockdown caused by a check of Strength 0.8 or more (the knockdown carries the check Strength; the .big rule)",
       "text": "He is wearing the boards now.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_knockdown_big_05.VO_Commentator_knockdown_big_05",
-      "seconds": 2
+      "seconds": 2.21
     },
     {
       "id": "knockdown.big.06",
@@ -229,7 +229,7 @@
       "when": "a knockdown caused by a check of Strength 0.8 or more (the knockdown carries the check Strength; the .big rule)",
       "text": "Gravity wins again.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_knockdown_big_06.VO_Commentator_knockdown_big_06",
-      "seconds": 1.44
+      "seconds": 1.6
     },
     {
       "id": "knockdown.big.07",
@@ -241,7 +241,7 @@
       "when": "a knockdown caused by a check of Strength 0.8 or more (the knockdown carries the check Strength; the .big rule)",
       "text": "The ice has a new best friend.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_knockdown_big_07.VO_Commentator_knockdown_big_07",
-      "seconds": 2.05
+      "seconds": 2.8
     },
     {
       "id": "check.cross.01",
@@ -253,7 +253,7 @@
       "when": "a stick lift that lands (event lift, Kind clean; the game calls the lift its cross-check): offered beside lift.clean at the same priority (A89 proposed 4; measured as the routine steal, A90 set 3)",
       "text": "Stick across the chest! That is a cross-check.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_check_cross_01.VO_Commentator_check_cross_01",
-      "seconds": 2.93
+      "seconds": 3.36
     },
     {
       "id": "check.cross.02",
@@ -265,7 +265,7 @@
       "when": "a stick lift that lands (event lift, Kind clean; the game calls the lift its cross-check): offered beside lift.clean at the same priority (A89 proposed 4; measured as the routine steal, A90 set 3)",
       "text": "Cross-check, and he sits down hard.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_check_cross_02.VO_Commentator_check_cross_02",
-      "seconds": 2.33
+      "seconds": 2.56
     },
     {
       "id": "check.cross.03",
@@ -277,7 +277,7 @@
       "when": "a stick lift that lands (event lift, Kind clean; the game calls the lift its cross-check): offered beside lift.clean at the same priority (A89 proposed 4; measured as the routine steal, A90 set 3)",
       "text": "Bowled over with the shaft.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_check_cross_03.VO_Commentator_check_cross_03",
-      "seconds": 1.89
+      "seconds": 1.49
     },
     {
       "id": "check.cross.04",
@@ -289,7 +289,7 @@
       "when": "a stick lift that lands (event lift, Kind clean; the game calls the lift its cross-check): offered beside lift.clean at the same priority (A89 proposed 4; measured as the routine steal, A90 set 3)",
       "text": "Cross-check! Nobody saw that coming. He did not.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_check_cross_04.VO_Commentator_check_cross_04",
-      "seconds": 3.04
+      "seconds": 3.33
     },
     {
       "id": "check.cross.05",
@@ -301,7 +301,7 @@
       "when": "a stick lift that lands (event lift, Kind clean; the game calls the lift its cross-check): offered beside lift.clean at the same priority (A89 proposed 4; measured as the routine steal, A90 set 3)",
       "text": "Wood across the middle. Down he goes.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_check_cross_05.VO_Commentator_check_cross_05",
-      "seconds": 2.44
+      "seconds": 3.29
     },
     {
       "id": "check.cross.06",
@@ -313,7 +313,7 @@
       "when": "a stick lift that lands (event lift, Kind clean; the game calls the lift its cross-check): offered beside lift.clean at the same priority (A89 proposed 4; measured as the routine steal, A90 set 3)",
       "text": "The cross-check does the talking.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_check_cross_06.VO_Commentator_check_cross_06",
-      "seconds": 2.22
+      "seconds": 1.61
     },
     {
       "id": "check.cross.07",
@@ -325,7 +325,7 @@
       "when": "a stick lift that lands (event lift, Kind clean; the game calls the lift its cross-check): offered beside lift.clean at the same priority (A89 proposed 4; measured as the routine steal, A90 set 3)",
       "text": "Sent sprawling by a cross-check.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_check_cross_07.VO_Commentator_check_cross_07",
-      "seconds": 2.16
+      "seconds": 1.85
     },
     {
       "id": "check.cross.08",
@@ -337,7 +337,7 @@
       "when": "a stick lift that lands (event lift, Kind clean; the game calls the lift its cross-check): offered beside lift.clean at the same priority (A89 proposed 4; measured as the routine steal, A90 set 3)",
       "text": "Damn, that cross-check had a lot of mustard.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_check_cross_08.VO_Commentator_check_cross_08",
-      "seconds": 2.82
+      "seconds": 2.06
     },
     {
       "id": "check.cross.09",
@@ -349,7 +349,7 @@
       "when": "a stick lift that lands (event lift, Kind clean; the game calls the lift its cross-check): offered beside lift.clean at the same priority (A89 proposed 4; measured as the routine steal, A90 set 3)",
       "text": "He ran into the stick and the ice caught him.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_check_cross_09.VO_Commentator_check_cross_09",
-      "seconds": 2.88
+      "seconds": 2.93
     },
     {
       "id": "check.cross.10",
@@ -361,7 +361,7 @@
       "when": "a stick lift that lands (event lift, Kind clean; the game calls the lift its cross-check): offered beside lift.clean at the same priority (A89 proposed 4; measured as the routine steal, A90 set 3)",
       "text": "Cross-check! The glass felt that too.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_check_cross_10.VO_Commentator_check_cross_10",
-      "seconds": 2.44
+      "seconds": 2.8
     },
     {
       "id": "knockdown.human.04",
@@ -373,7 +373,7 @@
       "when": "the human skater is knocked down (B situation, A89 alternates)",
       "text": "You are down. Count the lights, then get up.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_knockdown_human_04.VO_Commentator_knockdown_human_04",
-      "seconds": 2.82
+      "seconds": 2.36
     },
     {
       "id": "knockdown.human.05",
@@ -385,7 +385,7 @@
       "when": "the human skater is knocked down (B situation, A89 alternates)",
       "text": "The ice caught you. Shake it off.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_knockdown_human_05.VO_Commentator_knockdown_human_05",
-      "seconds": 2.22
+      "seconds": 1.99
     },
     {
       "id": "knockdown.human.06",
@@ -397,7 +397,7 @@
       "when": "the human skater is knocked down (B situation, A89 alternates)",
       "text": "Good hit. Now go give one back.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_knockdown_human_06.VO_Commentator_knockdown_human_06",
-      "seconds": 2.11
+      "seconds": 1.62
     },
     {
       "id": "knockdown.human.07",
@@ -409,7 +409,7 @@
       "when": "the human skater is knocked down (B situation, A89 alternates)",
       "text": "Up you get. They are not done.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_knockdown_human_07.VO_Commentator_knockdown_human_07",
-      "seconds": 2.05
+      "seconds": 2.46
     },
     {
       "id": "knockdown.human.08",
@@ -421,7 +421,7 @@
       "when": "the human skater is knocked down (B situation, A89 alternates)",
       "text": "That one had your name on it. Go answer.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_knockdown_human_08.VO_Commentator_knockdown_human_08",
-      "seconds": 2.6
+      "seconds": 2.46
     },
     {
       "id": "knockdown.human.09",
@@ -433,7 +433,7 @@
       "when": "the human skater is knocked down (B situation, A89 alternates)",
       "text": "Flat on the ice. It happens to the best of us.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_knockdown_human_09.VO_Commentator_knockdown_human_09",
-      "seconds": 2.93
+      "seconds": 3.15
     },
     {
       "id": "knockdown.human.10",
@@ -445,7 +445,7 @@
       "when": "the human skater is knocked down (B situation, A89 alternates)",
       "text": "Sit a second. Then go find him.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_knockdown_human_10.VO_Commentator_knockdown_human_10",
-      "seconds": 2.11
+      "seconds": 2.52
     },
     {
       "id": "knockdown.human.11",
@@ -457,7 +457,7 @@
       "when": "the human skater is knocked down (B situation, A89 alternates)",
       "text": "That one is going on the wall. Now answer it.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_knockdown_human_11.VO_Commentator_knockdown_human_11",
-      "seconds": 2.88
+      "seconds": 2.74
     },
     {
       "id": "knockdown.human.12",
@@ -469,7 +469,7 @@
       "when": "the human skater is knocked down (B situation, A89 alternates)",
       "text": "Folded. Back up, there is a puck to chase.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_knockdown_human_12.VO_Commentator_knockdown_human_12",
-      "seconds": 2.71
+      "seconds": 2.56
     },
     {
       "id": "knockdown.human.13",
@@ -481,7 +481,7 @@
       "when": "the human skater is knocked down (B situation, A89 alternates)",
       "text": "Rolled right over you. Time to return the favour.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_knockdown_human_13.VO_Commentator_knockdown_human_13",
-      "seconds": 3.1
+      "seconds": 2.5
     },
     {
       "id": "knockdown.massacre.01",
@@ -493,7 +493,7 @@
       "when": "the third knockdown by one team inside 1200 frames, counted on a per-team ring of knockdown frames",
       "text": "Three down in a flash. This is a massacre shift.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_knockdown_massacre_01.VO_Commentator_knockdown_massacre_01",
-      "seconds": 3.04
+      "seconds": 3.9
     },
     {
       "id": "knockdown.massacre.02",
@@ -505,7 +505,7 @@
       "when": "the third knockdown by one team inside 1200 frames, counted on a per-team ring of knockdown frames",
       "text": "They are bowling out there. Strike after strike.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_knockdown_massacre_02.VO_Commentator_knockdown_massacre_02",
-      "seconds": 3.04
+      "seconds": 2.88
     },
     {
       "id": "knockdown.massacre.03",
@@ -517,7 +517,7 @@
       "when": "the third knockdown by one team inside 1200 frames, counted on a per-team ring of knockdown frames",
       "text": "Another one down. The ice is getting crowded.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_knockdown_massacre_03.VO_Commentator_knockdown_massacre_03",
-      "seconds": 2.88
+      "seconds": 2.29
     },
     {
       "id": "knockdown.massacre.04",
@@ -529,7 +529,7 @@
       "when": "the third knockdown by one team inside 1200 frames, counted on a per-team ring of knockdown frames",
       "text": "Nobody is standing. Well, nearly nobody.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_knockdown_massacre_04.VO_Commentator_knockdown_massacre_04",
-      "seconds": 2.6
+      "seconds": 3.5
     },
     {
       "id": "knockdown.massacre.05",
@@ -541,7 +541,7 @@
       "when": "the third knockdown by one team inside 1200 frames, counted on a per-team ring of knockdown frames",
       "text": "Hit after hit after hit. What a shift.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_knockdown_massacre_05.VO_Commentator_knockdown_massacre_05",
-      "seconds": 2.49
+      "seconds": 1.92
     },
     {
       "id": "knockdown.massacre.06",
@@ -553,7 +553,7 @@
       "when": "the third knockdown by one team inside 1200 frames, counted on a per-team ring of knockdown frames",
       "text": "They are going through the other team like a lawn mower.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_knockdown_massacre_06.VO_Commentator_knockdown_massacre_06",
-      "seconds": 3.48
+      "seconds": 2.81
     },
     {
       "id": "knockdown.massacre.07",
@@ -565,7 +565,7 @@
       "when": "the third knockdown by one team inside 1200 frames, counted on a per-team ring of knockdown frames",
       "text": "Down, down, and down again.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_knockdown_massacre_07.VO_Commentator_knockdown_massacre_07",
-      "seconds": 1.89
+      "seconds": 2.06
     },
     {
       "id": "knockdown.massacre.08",
@@ -577,7 +577,7 @@
       "when": "the third knockdown by one team inside 1200 frames, counted on a per-team ring of knockdown frames",
       "text": "This is not hockey, this is a wrecking yard.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_knockdown_massacre_08.VO_Commentator_knockdown_massacre_08",
-      "seconds": 2.82
+      "seconds": 3.21
     },
     {
       "id": "knockdown.massacre.09",
@@ -589,7 +589,7 @@
       "when": "the third knockdown by one team inside 1200 frames, counted on a per-team ring of knockdown frames",
       "text": "Pile them up! Somebody sweep the ice.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_knockdown_massacre_09.VO_Commentator_knockdown_massacre_09",
-      "seconds": 2.44
+      "seconds": 3.22
     },
     {
       "id": "knockdown.massacre.10",
@@ -601,7 +601,7 @@
       "when": "the third knockdown by one team inside 1200 frames, counted on a per-team ring of knockdown frames",
       "text": "The shift of the night, and the night is young.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_knockdown_massacre_10.VO_Commentator_knockdown_massacre_10",
-      "seconds": 2.99
+      "seconds": 2.38
     },
     {
       "id": "goal.after_hit.01",
@@ -613,7 +613,7 @@
       "when": "a goal within 300 frames after the scoring team landed a check; said as the goal second beat after the colour call",
       "text": "Hit him, take the puck, score. Simple.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_goal_after_hit_01.VO_Commentator_goal_after_hit_01",
-      "seconds": 2.49
+      "seconds": 3.09
     },
     {
       "id": "goal.after_hit.02",
@@ -625,7 +625,7 @@
       "when": "a goal within 300 frames after the scoring team landed a check; said as the goal second beat after the colour call",
       "text": "The check made the goal.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_goal_after_hit_02.VO_Commentator_goal_after_hit_02",
-      "seconds": 1.72
+      "seconds": 2.42
     },
     {
       "id": "goal.after_hit.03",
@@ -637,7 +637,7 @@
       "when": "a goal within 300 frames after the scoring team landed a check; said as the goal second beat after the colour call",
       "text": "Flatten, grab, fire. That is a goal.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_goal_after_hit_03.VO_Commentator_goal_after_hit_03",
-      "seconds": 2.38
+      "seconds": 3.3
     },
     {
       "id": "goal.after_hit.04",
@@ -649,7 +649,7 @@
       "when": "a goal within 300 frames after the scoring team landed a check; said as the goal second beat after the colour call",
       "text": "He went down and the net went in.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_goal_after_hit_04.VO_Commentator_goal_after_hit_04",
-      "seconds": 2.22
+      "seconds": 2.25
     },
     {
       "id": "goal.after_hit.05",
@@ -661,7 +661,7 @@
       "when": "a goal within 300 frames after the scoring team landed a check; said as the goal second beat after the colour call",
       "text": "The hit paid off in full.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_goal_after_hit_05.VO_Commentator_goal_after_hit_05",
-      "seconds": 1.78
+      "seconds": 1.64
     },
     {
       "id": "goal.after_hit.06",
@@ -673,7 +673,7 @@
       "when": "a goal within 300 frames after the scoring team landed a check; said as the goal second beat after the colour call",
       "text": "Lays the body, lights the lamp.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_goal_after_hit_06.VO_Commentator_goal_after_hit_06",
-      "seconds": 2.11
+      "seconds": 2.69
     },
     {
       "id": "goal.after_hit.07",
@@ -685,7 +685,7 @@
       "when": "a goal within 300 frames after the scoring team landed a check; said as the goal second beat after the colour call",
       "text": "Rough work, pretty finish.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_goal_after_hit_07.VO_Commentator_goal_after_hit_07",
-      "seconds": 1.83
+      "seconds": 1.39
     },
     {
       "id": "goal.after_hit.08",
@@ -697,7 +697,7 @@
       "when": "a goal within 300 frames after the scoring team landed a check; said as the goal second beat after the colour call",
       "text": "One hit, one goal. Efficient.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_goal_after_hit_08.VO_Commentator_goal_after_hit_08",
-      "seconds": 2
+      "seconds": 2.98
     },
     {
       "id": "goal.after_hit.09",
@@ -709,7 +709,7 @@
       "when": "a goal within 300 frames after the scoring team landed a check; said as the goal second beat after the colour call",
       "text": "The ice shook and the net followed.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_goal_after_hit_09.VO_Commentator_goal_after_hit_09",
-      "seconds": 2.33
+      "seconds": 2.14
     },
     {
       "id": "goal.after_hit.10",
@@ -721,7 +721,7 @@
       "when": "a goal within 300 frames after the scoring team landed a check; said as the goal second beat after the colour call",
       "text": "That goal started with a shoulder.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_goal_after_hit_10.VO_Commentator_goal_after_hit_10",
-      "seconds": 2.27
+      "seconds": 2.45
     }
   ]
 }

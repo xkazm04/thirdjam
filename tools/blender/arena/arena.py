@@ -243,6 +243,42 @@ class Piece:
         self.parts[part] = self.parts.get(part, 0) + faces
         return faces
 
+    def lump(self, part, slot, centre, a, b, h, sink, sides=8, wobble=0.014, lean=(0.035, -0.02)):
+        """A thumb-pressed knob (lane A136): an oval a (along x) by b (out) standing on `centre`, its foot ring `sink` under it (inside what it stands on),
+        a fatter shoulder ring at 0.72 h and one top point at h pushed off centre by `lean` (the thumb): a flat-topped lump. No bottom: sides x 3 triangles."""
+        cx, co, cz = centre
+        k = len(self.parts) + 1
+        mi = self.slots.index(slot)
+        rows = []
+        for (z, f) in ((-sink, 0.90), (h * 0.72, 1.0)):
+            row = []
+            for i in range(sides):
+                ang = 2.0 * math.pi * (i + 0.5) / sides
+                v = Vector((cx + math.cos(ang) * a * 0.5 * f, co + math.sin(ang) * b * 0.5 * f, cz + z))
+                if z > 0.0:
+                    v = v + self._wob(v * 3.1, wobble, k)
+                row.append(self.bm.verts.new(self._blender(v)))
+            rows.append(row)
+        top = self.bm.verts.new(self._blender(Vector((cx + lean[0], co + lean[1], cz + h))))
+        per = math.pi * (a + b) * 0.5
+        faces = 0
+        for i in range(sides):
+            i2 = (i + 1) % sides
+            f = self.bm.faces.new((rows[0][i], rows[0][i2], rows[1][i2], rows[1][i]))
+            f.material_index = mi
+            f.smooth = True
+            u0, u1 = per * i / sides / UV_M, per * (i + 1) / sides / UV_M
+            for loop, uvv in zip(f.loops, ((u0, 0.0), (u1, 0.0), (u1, (h * 0.72 + sink) / UV_M), (u0, (h * 0.72 + sink) / UV_M))):
+                loop[self.uv].uv = uvv
+            f = self.bm.faces.new((rows[1][i], rows[1][i2], top))
+            f.material_index = mi
+            f.smooth = True
+            for loop, uvv in zip(f.loops, ((u0, (h * 0.72 + sink) / UV_M), (u1, (h * 0.72 + sink) / UV_M), ((u0 + u1) * 0.5, (h + sink + a * 0.25) / UV_M))):
+                loop[self.uv].uv = uvv
+            faces += 3
+        self.parts[part] = self.parts.get(part, 0) + faces
+        return faces
+
     @staticmethod
     def _blender(v):
         """Piece space (x, out, z) metres -> Blender (x, -out, z) centimetres."""
@@ -422,6 +458,11 @@ NET_SLOTS = ["net"]       # the net is its own mesh: RinkActor gives the frame t
 TABLE_SLOTS = ["board", "kick", "bench", "dark", "frame", "lamp"]   # lane A127: the lamp is its own slot (RinkActor lights it on a goal)
 LIGHT_SLOTS = ["dark", "kick", "lamp"]
 LIGHT = dict(base_w=0.70, base_d=0.56, base_h=0.18, post=0.20, lamp_z=2.16, lamp_h=0.46, lamp_w=0.54, budget=1000)   # the lamp was 0.34 m: a dot from the game camera (first engine stills)
+# Lane A136 (evolution 4): the board cap, a thumb-pressed ochre knob on the board top, one at every stanchion place round the whole ring (RinkActor instances
+# it; 24 triangles each, so 113 of them on the 140 x 70 rink stay under 3,000 in all). Its origin is the middle of the board top; it reaches from the board's
+# inner face to 6 cm past its outer face and covers the 10 cm trim strip. It is what a hard board hit rocks where no bench, box or table stands.
+CAP_SLOTS = ["kick"]
+CAP = dict(len=0.60, wid=0.26, out=0.03, h=0.34, sink=0.05, sides=8, budget=40)   # the first cap (0.40 x 0.26 m, shoulder at 0.55 h) read as a small tent from the ice
 TABLE = dict(width=1.36, sign_z=2.20, sign_h=0.56, sign_w=1.30)
 
 
@@ -587,6 +628,16 @@ def goal_light():
     pc.thumbs_done = pc.thumbs()
     pc.budget = LIGHT["budget"]
     return pc, bw
+
+
+def board_cap():
+    """The board cap (lane A136): piece space x along the boards, `out` away from the rink, z up from the board top (the origin is the middle of the board
+    top, ARinkActor places it at z = 1.2 m on the boards' middle line)."""
+    pc = Piece("SM_Arena_BoardCap", seed=97.0, slots=CAP_SLOTS)
+    pc.lump("cap", "kick", (0.0, CAP["out"], 0.0), CAP["len"], CAP["wid"], CAP["h"], CAP["sink"], sides=CAP["sides"])
+    pc.thumbs_done = 1          # the top point pushed off centre is the one thumb
+    pc.budget = CAP["budget"]
+    return pc, CAP["len"]
 
 
 def renders2(goals, table, box, opts, img, raw):
@@ -833,6 +884,7 @@ def main():
     for (w, h) in GOAL_VARIANTS:
         made += goal(w, h)
     made.append(goal_light())      # lane A127; after the goals, so built[0..2] stay the bench, the box and the table for the renders
+    made.append(board_cap())       # lane A136
     for pc, length in made:
         opening, cell, net_of = getattr(pc, "opening", None), getattr(pc, "cell", None), getattr(pc, "net_of", None)
         slots = list(pc.slots)
@@ -868,6 +920,8 @@ def main():
         "bench_length_m": P["bench_len_factor"] * L,
         "SM_Arena_ScorerTable": [{"x": 0.0, "y": -y0, "yaw": 180}],
         "SM_Arena_GoalLight": [{"x": -(L * 0.5 + P["board_t"] + P["gap"]), "y": 0.0, "yaw": 90}, {"x": L * 0.5 + P["board_t"] + P["gap"], "y": 0.0, "yaw": -90}],
+        "SM_Arena_BoardCap": {"note": "instanced by RinkActor at every stanchion place (the outline's length / 3.6 m, rounded, evenly spaced), on the boards' middle line at z = board height, yaw along the boards",
+                              "spacing_m": 3.6, "triangles_each": CAP["sides"] * 3},
         "goals": {"note": "x = +-GoalLineX (L/2 - 4), y = 0; yaw -90 on the +x end, +90 on the -x end; the variant nearest the cartridge's goal, scaled W/Wv along the line and H/Hv up",
                   "goal_line_x": L * 0.5 - 4.0, "variants": [goal_name(w, h) for (w, h) in GOAL_VARIANTS], "nets": [net_name(w, h) for (w, h) in GOAL_VARIANTS]},
     }

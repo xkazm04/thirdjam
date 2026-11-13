@@ -119,6 +119,21 @@ public:
 	// (the route used to read the frame's last knockdown first and hold nothing when that one was bot on bot). Both ends come from the victim's ContactBy
 	// where the momentum model resolved the hit; the frame's last check event names the checker otherwise (contact.momentum false), as before.
 	static FJamHitStopPick HitStopPick(const TArray<FJamSkaterState>& Skaters, const TArray<FJamSimEvent>& Events, int32 Human, double BumpRatio);
+	// Lane A125 (track F1; proposed C-0001 v5, device B's asks under A-to-B-0021 point 3 and A-to-B-0023 ask 4): two calls made on the figure BY NAME, so a
+	// figure that has no function of that name keeps compiling and nothing on the interface header moves:
+	//   PlayStumble(DirX, DirZ, Frames)  one-shot on the first frame of a stumble a hit caused (the victim's, or the attacker's own bounce): the push as
+	//                                    PlayHitReaction's, Frames = the frames the sim still holds the skater without control (StumbleFramesFor). A figure
+	//                                    without it gets PlayHitReaction(DirX, DirZ) as before. A bump keeps PlayHitReaction.
+	//   SetBraking(bOn, Decel)           level, on the change: true on the frames the sim applies the reverse brake (FJamSkaterState::bReverseBraking, the sim's
+	//                                    own condition), Decel = the speed the sim took off that frame, in m/s^2 (BrakeDecelFor); false, 0 when it ends. A
+	//                                    figure without it gets nothing.
+	// CallFigure: true when Figure has a function of that name whose parameters are exactly Args.Num() numbers or booleans; each is written by the parameter's
+	// own type (bool, any integer, float or double: a Blueprint event's "float" is a double), then the function is called.
+	static bool CallFigure(UObject* Figure, FName Function, TConstArrayView<double> Args);
+	// The frames for PlayStumble on this sim frame, 0 = no stumble began by a hit (a bump, a knockdown, a mistimed poke's own stumble: PlayPoke(false) has it).
+	static int32 StumbleFramesFor(const FJamSkaterState& S);
+	// The deceleration for SetBraking(true, ...): the sim speed lost since the frame before, per second; 0 when the sim does not reverse-brake this frame.
+	static float BrakeDecelFor(double SpeedBefore, const FJamSkaterState& S);
 
 private:
 	void SetVisualTimeDilation(float Dilation);
@@ -142,6 +157,8 @@ private:
 	bool bWasAtFaceoff = false;
 	bool bWasPinned = false;   // lane A45 (C-0001 v4): SetBoardPin level, sent on the change
 	int32 SeenSoft = 0, SeenMissed = 0, SeenGraced = 0;   // lane A113: the sim's press counters at the last frame applied (the JAMVIS press line)
+	bool bWasBraking = false;   // lane A125: SetBraking level, sent on the change
+	double LastSimSpeed = 0.0;   // lane A125: the sim speed at the last frame applied (SetBraking's Decel)
 	// Lane A45: the sim frame for the JAMVIS log lines (from the event bus; -1 without one). Log only, never feeds the pose.
 	int64 SimFrameForLog() const;
 	float LastCharge = 0.f;
@@ -190,4 +207,21 @@ private:
 	void PlaceDiscOnIce(const FVector& PuckCm);
 	UPROPERTY(Transient) TObjectPtr<UNiagaraComponent> Trail;
 	double HalfHeightM = 0.04;
+};
+
+// Lane A125 (track F1): a recording stand-in for a figure that implements the two by-name calls the way a Blueprint does (its "float" inputs are doubles), for
+// Jam.Core.Contact.FigureCalls. Not a visual: it draws nothing and no game spawns it.
+UCLASS()
+class JAMCORE_API UJamFigureCallProbe : public UObject
+{
+	GENERATED_BODY()
+
+public:
+	UFUNCTION() void PlayStumble(double DirX, double DirZ, int32 Frames) { ++Stumbles; LastDirX = DirX; LastDirZ = DirZ; LastFrames = Frames; }
+	UFUNCTION() void SetBraking(bool bOn, float Decel) { ++Brakes; bLastOn = bOn; LastDecel = Decel; }
+	UFUNCTION() void PlayWrongShape(FName Kind) {}
+	int32 Stumbles = 0, Brakes = 0, LastFrames = 0;
+	double LastDirX = 0.0, LastDirZ = 0.0;
+	bool bLastOn = false;
+	float LastDecel = 0.f;
 };

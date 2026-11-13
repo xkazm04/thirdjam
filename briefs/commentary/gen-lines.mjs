@@ -161,7 +161,7 @@ S('win.comeback', 'win', null, 'the human\'s team wins after trailing by two or 
 S('win.close', 'win', null, 'the human\'s team wins by one goal', 'any', 5, 0, ['By a single goal. Nerves of steel.', 'Close, but they got there.']);
 S('lose.any', 'lose', null, 'the human\'s team loses', 'any', 5, 0, ['Not this time.', 'The other side takes it.', 'A tough night on the ice.', "We'll need a retake on that one."]);
 S('lose.close', 'lose', null, 'the human\'s team loses by one goal', 'any', 5, 0, ['So close. One goal in it.', 'Just short. That one hurts.']);
-S('lose.blowout', 'lose', null, 'the human\'s team loses by three or more', 'any', 5, 0, ['A night to forget. Back to rehearsals.', 'That one needs a full rewrite.']);
+S('lose.blowout', 'lose', null, 'the human\'s team loses by three or more', 'any', 5, 0, ['A night to forget. Back to practice.', 'That one needs a full rewrite.']);
 // Season take intros (one line each; stoppage, may run long)
 const SEASON = [
   ['The Read-Through', 'Take one of the season. The read-through. Nobody is judging yet.'],

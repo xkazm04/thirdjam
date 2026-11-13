@@ -284,7 +284,8 @@
       ]
     },
     "contact": {
-      "board_bonus": 2
+      "board_bonus": 2,
+      "release_grace_frames": 45
     }
   }
 }

@@ -460,3 +460,181 @@ ARENA_STILLS_REACT=1 "$UE" "$W/Game/ThirdJam.uproject" -ExecCmds="py $W/tools/bl
 - Contract text proposed for `contracts/events.md` (C-0003), under the additions: "`goal` and skater `board` are also heard by `ARinkActor` (lane A127): the
   scorer's table's lamp, the scored end's goal light and net, and the bench, box or table behind a hard board hit answer them. Cosmetic: frames counted on
   the bus's sim frame, nothing read by the sim. `jam.rink.react 0` switches it off."
+
+---
+
+# Evolution 4 (lane A136, Fri 13 Nov 22:39-23:30, 51 minutes): the whole boards answer a hit, and the goal is loud on the shipped look
+
+Sections 29 to 37. The bus is proven in a live match (section 32). The brief's fourth item (the box is used: the door, the clock hand) was not started: section 37.
+
+## 29. What a player gets
+
+Every hard hit into the boards is answered where it lands. A thumb-pressed ochre clay cap stands on the board top at every stanchion place round the whole
+ring; a skater driven hard into the boards anywhere (the same `board` event and the same threshold as evolution 3's rattle) makes the nearest cap jump off
+the board and tip away from the rink, and the two caps on each side follow a moment later with less: a ripple along the boards, bigger for a harder hit.
+Where a bench, a box or the table stands behind the hit, that piece still rocks as before. On `p3_clay`, where the glass and the rail are not drawn, this
+is the first thing that moves on a board hit outside the 15 % of the ring the pieces cover.
+
+A goal on `p3_clay` is now as loud as on `l2_night`: the scored end's red light hangs over the net instead of beside the lamp behind the end boards, at
+twice the candelas, so the crease, the slot and the end boards pulse red with the lamp for the 108 frames of the flash, all inside the goal pause.
+
+Presentation only: instance transforms and a light's place; no physics body, nothing the sim reads, the hash unchanged.
+
+![the board caps from the game camera on the +y side, p3_clay](img/arena/e4-p3_clay-caps-side-pos.jpg)
+![the other long side, with the boxes and the table](img/arena/e4-p3_clay-caps-side-neg.jpg)
+![the +x end](img/arena/e4-p3_clay-caps-end-pos.jpg)
+![the -x end](img/arena/e4-p3_clay-caps-end-neg.jpg)
+![the worst case for the view: a camera 2.6 m outside the boards looking in over the caps](img/arena/e4-p3_clay-caps-near-pos.jpg)
+![a hard hit's frame, close: the struck cap up and tipped](img/arena/e4-p3_clay-caps-hit-f000.jpg)
+![three frames later: the neighbours follow](img/arena/e4-p3_clay-caps-hit-f003.jpg)
+![l2_night: the caps are the clay feet of the glass stanchions](img/arena/e4-l2_night-caps-side-pos.jpg)
+![the goal's frame on p3_clay from the game camera, the light over the net at 6,000 cd, with stand-ins for two figures and two pucks](img/arena/e4-p3_clay-goal-loud-f000.jpg)
+![the goal's frame on l2_night: the same place, 1,200 cd](img/arena/e4-l2_night-goal-loud-f000.jpg)
+
+All ten are off-screen engine stills without a game (section 14): the real `ARinkActor` in B's rig maps, 90 x 45, no figures, no HUD.
+
+## 30. The board caps, in numbers
+
+| | |
+|---|---|
+| Mesh | `/Game/Arena/SM_Arena_BoardCap`: **24 triangles**, 0.55 x 0.24 x 0.39 m (5 cm of it inside the board top), one slot `kick` on device B's `MI_Toon_KickPlate` (by reference). `arena.py` `board_cap()` / `Piece.lump`: an eight-sided oval foot ring 5 cm inside the board top, a fatter shoulder ring at 0.72 of its height with the clay's wobble, one top point pushed off centre (the thumb): a flat-topped lump. No bottom. |
+| Where | one at every stanchion place: the outline's length / 3.6 m, rounded, evenly spaced (`ARinkActor::Build` walks the outline once for both), on the boards' middle line at z = 1.2 m, turned so the 6 cm overhang points away from the rink. Each instance differs a little (size 0.90 to 1.06, a turn of up to 9 degrees, from its index: no random source). At 1.06 the cap ends at the board's inner face: nothing overhangs the ice. |
+| How many | 90 x 45 (`hockey.regular`, corner 3.75 m): **73 caps, 1,752 triangles**; 120 x 60: 98 caps, 2,352; 140 x 70: 115 caps, **2,760** (the bar: under 3,000 added to the scene in all). The same count as A25's stanchions (`JAMRINK built ... (73 stanchions)`). |
+| Component | ONE `UInstancedStaticMeshComponent` `ArenaCaps` (one draw for the ring, plus its custom-depth draw): stencil 1 like the pieces, no collision, no shadow. Shown with the pieces on the dressed tiers (`l2_night`, `p3_clay`, `p4_broadcast`); on the tiers with glass a cap is the clay foot of a stanchion. |
+| The answer | a skater `board` event with Strength >= 0.45 (`RattleMinStrength`): the nearest cap tilts `CapRockDeg` 26 degrees x Strength away from the rink and hops `CapHopCm` 22 cm x Strength on the hit's frame, then swings out as `CapRockAt` = Strength x e^(-t/4) cos(2 pi t / 8) for 14 frames; the caps one and two places away on each side start 2 and 4 frames later with 0.55 and 0.25 of it. Everything stands again after `CapRippleFrames` = 18 (the length of a piece's rattle). Up to four hits are live at once (`CapRipples`); a fifth takes the oldest one's place. |
+| Reach | the nearest cap is found in the plane of the ice from the event's place (the skater's centre). Measured on every quarter metre of the outline of three rinks: 1,056 / 1,416 / 1,656 hard hits (90 x 45 / 120 x 60 / 140 x 70), **every one answered and every answering cap within 2 m: 100 % of the outline**; the farthest cap 1.89 m from the skater's centre, 1.81 m from the point on the boards (`Jam.Rink.BoardCaps`). |
+| Log | `JAMRINK arena caps: mesh loaded, N caps on the board top ...` at every `Build`; `JAMRINK react board cap=K of N strength=S frame=F tilt .. deg hop .. cm, D m from the hit` per hard hit. |
+| Neutral | `jam.rink.caps 0`: no caps (evolution 3's arena: the pieces still rock). `jam.rink.react 0`: the caps stand and never move. `jam.rink.arena 0`: the rink before the track. |
+
+## 31. The loud goal, in numbers
+
+A red light adds only red. The clay barn's ice is bright and warm, so beside the lamp behind the end boards 3,000 cd changed little: the light fell on
+the board top and a strip of ice under it. Two sweeps of off-screen engine stills from the game camera's view of the scored end on `p3_clay` 90 x 45
+(`ARENA_STILLS_REACT=place`, with engine cylinders standing in for two figures and two pucks on B's instances), measured as the share of pixels whose mean
+channel changes by more than 24 of 255 against the still arena (`tools/blender/arena/pixel_change.py`; the measure gives 4.1 % for evolution 3's light, the
+4.0 % of section 24):
+
+| The end light's place (m from the goal line towards the end boards, y, height) | 3,000 cd | 4,500 | 6,000 | 8,000 | 12,000 | 24,000 |
+|---|---|---|---|---|---|---|
+| beside the lamp (evolution 3: +4.1, 0, 3.0) | 4.1 % | | 9.2 % | | 19.8 % | 31.6 % |
+| **+3.0, 0, 3.6 (chosen)** | | 11.4 % | **14.8 %** | 19.2 % | | |
+| +2.0, 0, 4.5 | | 12.8 % | 17.1 % | 22.8 % | | |
+| +1.0, 0, 5.0 (over the crossbar) | 7.5 % | 13.2 % | 18.3 % | 24.8 % | 33.2 % | 48.6 % |
+| -2.5, 0, 6.5 (over the slot) | 3.3 % | | 10.5 % | | 37.0 % | 60.5 % |
+
+- Chosen: `EndLightBehindLineM` 3.0, `EndLightHeightM` 3.6, `jam.rink.react.light` 6,000 cd (was 3,000). At that place the light is still near enough to
+  the lamp that the lamp glows with its halo (farther into the rink the lamp goes flat again), and it reaches the crease and the slot. Looked at: the
+  pucks stay dark on the pink ice, the blue and orange stand-ins keep their colours, the red lines and the crease read; at 12,000 cd and more the red
+  lines start to wash into the ice, which is why the default stops at 6,000.
+- The scorer's table's light keeps its 750 cd (`TableLightShare` 0.125) and `l2_night` its 1,200 / 300 cd (`NightLightShare` 0.2).
+- At the default, measured on the final build (`ARENA_STILLS_REACT=1`, no stand-ins): **15.6 % of the game camera's picture changes on the goal's frame on `p3_clay`** (was 4.0 %; 14.2 % by luminance), 20.6 % on `l2_night` (was 15.3 %: the same 1,200 cd from the new place). With the stand-ins in the picture: 14.9 % on the goal's frame and at each pulse's top (frame 18), 10.5 % at a pulse's trough (frames 9 and 45), 8.0 % at frame 90 inside the fade.
+- Neutral: `jam.rink.react.loud 0` gives back evolution 3's light (beside the lamp, half the cvar = 3,000 cd, the shares 0.25 and 0.4);
+  `jam.rink.react.light 0` throws no light at all.
+
+## 32. The bus in a live match
+
+`tools/blender/arena/live_bus.sh` starts one headless game process (`UnrealEditor-Cmd ... /Game/Maps/Rink -game -nullrhi -Multiprocess`, remote console
+port 4736, the cut `tools/perf/cuts/perf.p3_clay_5v5.cartridge.json`, `jam.ScriptHuman 1`: no window, no mouse lock), waits for goals, stops the
+process it started and reads the log with `live_bus_check.py`: every `JAMEVENT goal` must have a `JAMRINK react goal` on the same sim frame, every skater
+`JAMEVENT board` with Strength >= 0.45 a `JAMRINK react board cap=` on the same frame, and no answer without an event.
+
+| Run (`Game/logs/a136-live-bus.log`) | Sim frames | `JAMEVENT goal` | `JAMRINK react goal` | hard skater `JAMEVENT board` | `JAMRINK react board cap=` | farthest cap | pieces rocked too | soft skater / puck board events (no answer) |
+|---|---|---|---|---|---|---|---|---|
+| build 2, until 3 goals | 4,166 | 3 | **3** (the same frames) | 5 | **5** (the same frames) | 1.54 m | 0 | 1 / 3 |
+| **the final build, 5 v 5 on `p3_clay`, 90 x 45** | **14,904** | **5** | **5** | **40** | **40** | 1.80 m | 7 | 4 / 24 |
+
+No goal without its answer, no hard hit without its cap, no answer without an event; 73 caps stood (`JAMRINK arena caps: mesh loaded, 73 caps ...`).
+
+This is the real binding: the game instance's `UJamEventBus` subsystem, `ARinkActor::BeginPlay` -> `BindBus`, `AHokejGameMode::DeliverEvents`, the
+actor's own tick. Nothing is drawn (`-nullrhi`): what the reactions look like in a match is still the cursor owner's packaged look.
+
+## 33. GPU cost
+
+Ten `ProfileGPU` pairs in the off-screen editor from the game camera's view of the +y side on `p3_clay` 90 x 45 (73 caps, 1,752 triangles), `jam.rink.caps 0`
+then `1`, alternating (`ARENA_STILLS_GPU=1`, read by `tools/blender/arena/gpu_pairs.py`; medians, the final build):
+
+| Pass (Graphics pipeline, inclusive) | caps off | caps on | difference |
+|---|---|---|---|
+| BasePass | 0.161 ms, 17 draws | 0.162 ms, 18 draws | **+0.001 ms, +1 draw** |
+| CustomDepth | 0.008 ms, 15 draws | 0.008 ms, 16 draws | **+0.000 ms, +1 draw** |
+| the whole frame | 2.76 ms (0.6 to 4.4) | 2.56 ms (2.4 to 3.0) | noise: the GPU is shared with other lanes |
+
+The caps are one instanced draw in each of the two passes they take part in (they cast no shadow): **+0.001 ms against the bar of 0.1 ms**, which is below
+what the profile resolves. The first run (build 2, the smaller cap) gave -0.002 and +0.001 ms. The profile's primitive column does not count instanced
+triangles (it reads +0), so the triangle number is the mesh's 24 x the instance count.
+
+## 34. Proof
+
+| What | Result |
+|---|---|
+| Blender build (`arena.py`, 120 x 60) | PASS three times: `SM_Arena_BoardCap` 24 triangles (budget 40 a cap), the other ten pieces equal the landed stats in triangles and size every time |
+| Headless import (`import_arena.py`) | **A119 IMPORT PASS**: the cap imported (slot `kick` on `MI_Toon_KickPlate`, y from -8.9 to +14.8 cm of the boards' middle line: inside the inner face), ten pieces kept |
+| Placement and reactions (`verify_arena.py`, new section 5) | **A119 VERIFY PASS, A127 E3 PASS, A136 E4 PASS**: 90 x 45, 120 x 60, 140 x 70 on `p3_clay` and 120 x 60 on `l2_night`: 73 / 98 / 114 / 98 caps (corner 5 m), widest gap 3.60 to 3.63 m, every instance at z = 120 cm inside the boards' band, stencil on, no shadow; eight hits a rink (both ends, both sides, four corners) each answered from 0.56 to 1.63 m with 26 degrees x 0.8 and 22 cm x 0.8, still after 18 frames; the end light at the goal line + 3.0 m, 3.6 m up, 750 / 6,000 cd on clay, 300 / 1,200 on night; a bare tier: no caps; `jam.rink.caps 0`: no caps, no cap answer, the box still rocks; back on: answers; `jam.rink.react.loud 0`: the light at 60.10 m, 3.0 m up, 750 / 3,000 cd |
+| `Jam.Rink.BoardCaps` (new) | PASS. The numbers of section 30; the struck cap's instance is lifted to 120 + 22 x Strength cm on the hit's frame, its neighbour waits 2 frames and takes 0.55, a cap three places away never moves, every instance stands as `Build` put it after 18 frames; a soft hit and the puck rock no cap; five hits on one frame leave four ripples live; a skater of the real sim into the +x end boards: 1 hard event, 1 cap answer from 1.69 m, no piece rocked, **hash `9983bf30bcfa2739` equal to the twin's**; `jam.rink.caps 0`, `jam.rink.react 0`, `jam.rink.arena 0`: no cap answers; `jam.rink.react.loud 0`: the light beside the lamp at half the candelas |
+| `Jam.Rink.GoalLampAndNet`, `BoardRattle`, `PenaltySeat` (evolution 3's) | PASS, unchanged source |
+| Full `Jam` filter (the gate's invocation) on the final build | **PASS: 192 tests, 0 failed** (191 on main before the lane + the new one) |
+| Hash | `hockey.boost all_star seed 1: 20157 frames, over yes, 9 spawned, 6 taken, 6 effects started, sim hash 95b2cf9a34aef071`: the same line as main's gate run of 22:34 before the lane |
+| The bus in a live match | section 32: 5 of 5 goals, 40 of 40 hard hits |
+| GPU | section 33: +0.001 ms |
+| Ledger | one row added (`SM_Arena_BoardCap`); `node tools/gate/check-assets-ledger.mjs` PASS |
+| Engine stills | 36 cap stills twice (the first cap read as a small tent and was rebuilt), 13 + 10 + 7 goal stills with stand-ins, 32 reaction stills on both tiers; looked at as contact sheets: no cap hides any ice from the four game-camera angles (both long sides, both ends) nor from a camera 2.6 m outside the boards; the struck cap reads up and tipped from 6 m and from the game camera at 12 m |
+| Editor build | PASS three times (189 s, 87 s after five minutes waiting for a build slot, 192 s) |
+
+Not run: `tools/gate/premerge.ps1` as a whole (its ownership step runs git), the node tests (no node source of the gate changed), the acceptance run (no verb
+changed), a windowed match (the cursor is another lane's).
+
+## 35. How to run it again
+
+```
+BL="C:/Program Files/Blender Foundation/Blender 4.2/blender.exe"
+UE="C:/Program Files/Epic Games/UE_5.9/Engine/Binaries/Win64/UnrealEditor-Cmd.exe"
+W=$(pwd -W)
+"$BL" -b --factory-startup -P tools/blender/arena/arena.py -- --length 120 --width 60 --out tools/blender/arena/out
+"$UE" "$W/Game/ThirdJam.uproject" -run=pythonscript -script="$W/tools/blender/arena/import_arena.py" -unattended -nopause -nosplash -NullRHI -Multiprocess -abslog="$W/Game/logs/a136-import.log"
+"$UE" "$W/Game/ThirdJam.uproject" -run=pythonscript -script="$W/tools/blender/arena/verify_arena.py" -unattended -nopause -nosplash -NullRHI -Multiprocess -abslog="$W/Game/logs/a136-verify.log"
+"$UE" "$W/Game/ThirdJam.uproject" -ExecCmds="Automation RunTests Jam.Rink; Quit" -unattended -nullrhi -Multiprocess -nosplash -nopause -log -abslog="$W/Game/logs/a136-rink-tests.log"
+ARENA_STILLS_REACT=caps ARENA_STILLS_GPU=1 "$UE" "$W/Game/ThirdJam.uproject" -ExecCmds="py $W/tools/blender/arena/engine_stills.py" -RenderOffScreen -Multiprocess -unattended -nopause -nosplash -log -abslog="$W/Game/logs/a136-caps-stills.log"
+ARENA_STILLS_REACT=place ARENA_STILLS_PLACES="3.0,0,3.6" ARENA_STILLS_LIGHT="6000" ARENA_STILLS_PLACE_FRAMES="0,9,18,45,90" "$UE" "$W/Game/ThirdJam.uproject" -ExecCmds="py $W/tools/blender/arena/engine_stills.py" -RenderOffScreen -Multiprocess -unattended -nopause -nosplash -log -abslog="$W/Game/logs/a136-place.log"
+python tools/blender/arena/pixel_change.py tools/blender/arena/out/engine-e4-place "*place-rest*.png"
+python tools/blender/arena/gpu_pairs.py Game/logs/a136-caps-stills.log
+tools/blender/arena/live_bus.sh
+```
+
+## 36. Pitfalls met in evolution 4
+
+1. A red light adds only red: on bright warm ice it changes few pixels however hot it is near the lamp. The place of the light (how much ice it
+   reaches at a useful angle) moved the number more than the candelas did.
+2. A light far from the lamp leaves the lamp itself flat again (section 27, pitfall 1): the chosen place is the nearest to the lamp that still reaches the slot.
+3. The first cap (0.37 x 0.25 x 0.31 m, its shoulder at 0.55 of its height) read from the ice as a small yellow tent, not as clay: at 24 triangles the
+   shape is the shoulder's height and the footprint. Rebuilt once, longer along the boards and flat-topped.
+4. The share of changed pixels depends on the measure: "any channel by more than 24" gives 17.8 % for the frame evolution 3 called 4.0 %; the mean of
+   the three channels reproduces 4.0 %. `pixel_change.py` prints both and the luminance.
+5. `import_arena.py`'s checks "stands on the ice" and "reaches away from the rink" do not fit a piece that sits on the board top: the cap has its own rule.
+6. A new reaction that outlives a test's "nothing is live" check breaks that check: the cap ripple was cut to the rattle's 18 frames so evolution 3's
+   tests and `verify_arena.py` hold as they were (one line added to the verify: the end-board hit now answers, so its ripple is let end).
+7. Git Bash rewrites an argument that looks like a POSIX path: `/Game/Maps/Rink` reached the engine as `C:/Program Files/Git/Game/Maps/Rink` and the game
+   left at frame 0 without an error line of its own. `MSYS_NO_PATHCONV=1` on that one command (`live_bus.sh`).
+8. UE 5.9's `ProfileGPU` prints one boxed table per pipeline, not a "total GPU time" line; `gpu_pairs.py` reads the Graphics table's rows by name.
+9. The build queue: the second build waited five minutes for one of the machine's three build slots; the import (which needs none of the new C++) ran on
+   the first build's binaries while it waited.
+
+## 37. For device B and the Director (evolution 4)
+
+- Referenced by name, not edited: `MI_Toon_KickPlate` (the caps' slot `kick`, through `LoadConstructionMat` like the kick plate itself);
+  `MI_Toon_NetFrame` (the three lamps' dynamic instances, `Emissive` 3.0 -> 17.0, as evolution 3); `MI_Toon_Board`, `MI_Toon_Bench`, `MI_Toon_Blue`,
+  `MI_Toon_Orange`, `MI_Toon_Dark`, `MI_Toon_NetMesh` on the earlier pieces, unchanged. In the stills script only (never saved): `MI_Toon_Dark`,
+  `MI_Toon_Blue`, `MI_Toon_Orange` on stand-in cylinders, `MPC_Look.Clay`.
+- The lamp instance wished for in section 28 is still the wish: `MI_Toon_Lamp` (any name), red, with an emissive that survives the toon ramp as a glow at
+  `Emissive` 17. With it the lamp would read from across the rink without a light beside it, and the end light could hang over the slot for a still
+  wider wash.
+- Not done, the brief's fourth item: **the box is used** (the door swings on entry and exit, the clock hand runs with the penalty's frames). It needs the
+  penalty box split in Blender (the door and a hand as meshes with their pivots), four components, and the penalty's frames at the rink (the `BoxSeat` hook
+  hands over the skater, not its state; but the bus's `foul` event names the fouler and `game.rules.penalty_frames` is in the config `Build` gets, so the
+  rink can count the penalty itself on the bus's sim frame without touching `JamCore`): the next evolution, with its number in the lane's report.
+- `rig_clearance.py` does not test the ring of caps on the board top against the rig maps (on `l2_night` the caps show as the stanchions' feet in the stills).
+- A cap material of its own is NOT needed; if B wants the caps in the team colours (blue on x < 0, orange on x > 0) it is two components
+  and two lines in `Build`.
+- Contract text proposed for `contracts/events.md` (C-0003), replacing the sentence proposed in section 28: "`goal` and skater `board` are also heard by
+  `ARinkActor` (lanes A127, A136): the scorer's table's lamp, the scored end's goal light and net answer a goal; the board cap nearest a hard board hit
+  (Strength >= 0.45) and the bench, box or table behind it answer the hit. Cosmetic: frames counted on the bus's sim frame, nothing read by the sim.
+  `jam.rink.react 0` switches it off."

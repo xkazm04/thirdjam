@@ -304,6 +304,12 @@
             "own_stop": {
               "type": "boolean",
               "description": "Lane A121 (track F2; docs/VISION.md law 3): the first step is earned. true or absent = being slower than 2 m/s arms the burst only after a stop of the skater's own (it braked on the way down, by reversing or with the brake button); a skater that merely stands (a waiting defender, the faceoff, a skater getting up) starts at the normal acceleration. A sharp cut arms the burst under either value. false = the neutral value (the game before the lane): any skater slower than 2 m/s has the burst."
+            },
+            "rest_frames": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 120,
+              "description": "Lane A128 (track F2, evolution 3): the standing start. A skater that has been slower than 1 m/s for this many physics frames in a row (after a faceoff, after getting up, after a full stop) and is not pushing has earned its first step: its burst is armed while it stands and runs burst.frames from its first push (a gentle push spends it as a hard one does). A charge already under way never has it. Leave the key out for 6; 0 = the neutral value (the game before the lane: only a stop or a cut of the skater's own arms the burst)."
             }
           }
         },
@@ -404,6 +410,12 @@
               "minimum": 0,
               "maximum": 1,
               "description": "Share of the sprint bar a spin takes."
+            },
+            "exposed_frames": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 120,
+              "description": "Lane A128 (track F2, evolution 3): the price of the spin. For the last this many physics frames of a spin the body has come round and is no longer between: neither the body nor a sweep shields the carried puck from a stick, so a poke or a lift in reach takes it (a puck just won keeps its take grace). A spin begun too early ends in front of the defender. Leave the key out for 5; 0 = the neutral value (the game before the lane: the whole spin shields)."
             }
           }
         }
@@ -841,6 +853,12 @@
           "minimum": 0,
           "maximum": 300,
           "description": "The release grace (R-0049 point 1): for this many frames after a knockdown ends, a hit on the released skater is a bump at most (no stumble, no knockdown; the attacker pays as for any bump) and the brain starts no check on it. Part of the momentum model (contact.momentum true). 0 = the neutral value: no grace."
+        },
+        "check_reach_m": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 3,
+          "description": "The check finds its man: while a human skater's check window is open (12 frames) its velocity is turned onto the collision course with the nearest standing opponent whose body is within this many metres of its own and inside 60 degrees of where it is going or facing. The speed is kept and none is added (the hit's strength stays the contact law's), the position is untouched; a bot aims its own check. Part of the momentum model (contact.momentum true). 0 = the neutral value: the press goes where the skater was going."
         }
       }
     },
@@ -867,7 +885,7 @@
         "timer_frames": {
           "type": "integer",
           "minimum": 600,
-          "maximum": 36000,
+          "maximum": 28800,
           "description": "Match length in physics frames (60 per second); required when mode is timer."
         },
         "goal_pause_frames": {

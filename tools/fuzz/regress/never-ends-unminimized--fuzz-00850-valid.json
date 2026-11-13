@@ -289,7 +289,7 @@
   },
   "rules": {
    "mode": "timer",
-   "timer_frames": 36000,
+   "timer_frames": 28800,
    "goal_pause_frames": 600,
    "penalties": false,
    "variants": {

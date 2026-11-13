@@ -343,6 +343,7 @@ def main():
         hit_at(-300.0, -width * 50.0, 0.3, 7100)
         hit_at(-300.0, -width * 50.0, 1.0, 7200, "None")
         hit_at(length * 50.0, 0.0, 1.0, 7300)
+        rink.advance_reactions(7400)     # lane A136: the end-board hit now rocks a board cap (no piece): let its ripple end before the rest check
         rattle["soft_puck_endboard_count"] = rink.get_rattle_count() - n1
         rattle_ok = (rattle["piece"] == "ArenaBoxNeg" and abs(rattle["deg_f0"] - 3.5) < 1e-3 and abs(abs(rattle["box_roll_f0"]) - 3.5) < 0.01 and rattle["count"] == 1
                      and rattle["deg_f18"] == 0.0 and abs(rattle["box_roll_f18"]) < 1e-3 and rattle["soft_puck_endboard_count"] == 0 and at_rest())
@@ -384,6 +385,93 @@ def main():
     ok = ok and e3_ok
     log("e3 still arena ok=%s %s" % (still_ok, json.dumps(still)))
     log("A127 E3 %s" % ("PASS" if e3_ok else "FAIL"))
+
+    # ---- 5. lane A136 (evolution 4): the board caps round the whole ring, and the loud goal's light over the net
+    import math
+    report["e4"] = {}
+    e4_ok = True
+    for (length, width, tier) in ((90, 45, "p3_clay"), (120, 60, "p3_clay"), (140, 70, "p3_clay"), (120, 60, "l2_night")):
+        build(length, width, tier)
+        caps = rink.get_editor_property("arena_caps")
+        n = rink.get_cap_count()
+        places = [rink.get_cap_place_m(i) for i in range(n)]
+        gaps = [math.hypot(places[i].x - places[(i + 1) % n].x, places[i].y - places[(i + 1) % n].y) for i in range(n)] if n else [99.0]
+        mesh = caps.get_editor_property("static_mesh")
+        mat = caps.get_material(0)
+        zs = []
+        for i in range(n):
+            t = caps.get_instance_transform(i, False)
+            t = t[1] if isinstance(t, tuple) else t
+            zs.append(t.translation.z)
+        # every cap in the boards' band: not outside the outer face, not farther inside than a corner's arc reaches
+        outside = sum(1 for q in places if abs(q.x) > length * 0.5 + BOARD_T + 1e-6 or abs(q.y) > width * 0.5 + BOARD_T + 1e-6 or (abs(q.x) < length * 0.5 - 1.6 and abs(q.y) < width * 0.5 - 1.6))
+        row = {"caps": n, "instances": caps.get_instance_count(), "shown": bool(rink.are_caps_shown()), "visible": bool(caps.is_visible()), "mesh": mesh.get_name() if mesh else None,
+               "material": mat.get_name() if mat else None, "triangles": rink.get_cap_triangles(), "widest_gap_m": round(max(gaps), 3), "z_cm": [round(min(zs), 2), round(max(zs), 2)] if zs else None,
+               "custom_depth": bool(caps.get_editor_property("render_custom_depth")), "cast_shadow": bool(caps.get_editor_property("cast_shadow"))}
+        # hard hits: both ends, both long sides, the four corners (a skater's centre 0.45 m inside the boards)
+        c = 5.0 * (1.0 - math.sqrt(0.5))
+        spots = [(length * 0.5 - 0.45, 0.0), (-(length * 0.5 - 0.45), 3.0), (length * 0.31, width * 0.5 - 0.45), (-length * 0.4, -(width * 0.5 - 0.45))]
+        spots += [(sx * (length * 0.5 - c - 0.32), sy * (width * 0.5 - c - 0.32)) for sx in (1, -1) for sy in (1, -1)]
+        hits = []
+        frame = 20000
+        for (x, y) in spots:
+            frame += 100
+            rink.advance_reactions(frame)
+            c0 = rink.get_cap_rock_count()
+            hit_at(x * 100.0, y * 100.0, 0.8, frame)
+            cap = rink.get_rocked_cap_index()
+            h = {"at_m": [round(x, 2), round(y, 2)], "answered": rink.get_cap_rock_count() - c0, "cap": cap, "distance_m": round(rink.get_rocked_cap_distance_m(), 3),
+                 "tilt_deg": round(rink.get_cap_tilt_deg(cap), 3), "hop_cm": round(rink.get_cap_hop_cm(cap), 3)}
+            rink.advance_reactions(frame + 18)
+            h["still_after_18"] = (rink.get_cap_tilt_deg(cap) == 0.0 and not rink.is_reacting())
+            hits.append(h)
+        row["hits"] = hits
+        hit_ok = all(h["answered"] == 1 and h["distance_m"] <= 2.0 and abs(h["tilt_deg"] - 26.0 * 0.8) < 1e-2 and abs(h["hop_cm"] - 22.0 * 0.8) < 1e-2 and h["still_after_18"] for h in hits)
+        # the loud goal's light: the +x end's hangs over the net (behind the goal line, inside the end boards)
+        lx = rink.get_editor_property("arena_lamp_lights")[2].get_editor_property("relative_location")
+        row["end_light_cm"] = [round(lx.x, 1), round(lx.y, 1), round(lx.z, 1)]
+        row["end_light_peak_cd"] = [round(rink.lamp_light_peak_at(i), 1) for i in range(3)]
+        light_ok = near(lx.x, (length * 0.5 - 4.0 + 3.0) * 100.0) and near(lx.y, 0.0) and near(lx.z, 360.0)
+        row["ok"] = (n >= 4 and row["instances"] == n and row["shown"] and row["visible"] and row["mesh"] == "SM_Arena_BoardCap" and row["material"] == "MI_Toon_KickPlate"
+                     and 0 < row["triangles"] < 3000 and row["widest_gap_m"] <= 3.7 and row["z_cm"] == [120.0, 120.0] and outside == 0 and row["custom_depth"] and not row["cast_shadow"] and hit_ok and light_ok)
+        e4_ok = e4_ok and row["ok"]
+        report["e4"]["%dx%d %s" % (length, width, tier)] = row
+        log("e4 %dx%d %s ok=%s: %d caps, %d triangles, widest gap %.2f m, hits %s, end light %s cd %s" % (length, width, tier, row["ok"], n, row["triangles"], row["widest_gap_m"],
+            json.dumps([[h["at_m"], h["distance_m"]] for h in hits]), row["end_light_cm"], row["end_light_peak_cd"]))
+    # the still boards: a bare tier, jam.rink.caps 0 (the pieces stay), and back
+    still4 = {}
+    build(120, 60, "l1_day")
+    still4["bare_tier"] = {"shown": bool(rink.are_caps_shown()), "visible": bool(rink.get_editor_property("arena_caps").is_visible())}
+    build(120, 60, "p3_clay")
+    unreal.SystemLibrary.execute_console_command(world, "jam.rink.caps 0")
+    rink.set_construction_visible(True)
+    c0, r0 = rink.get_cap_rock_count(), rink.get_rattle_count()
+    hit_at(5955.0, 0.0, 1.0, 30000)
+    hit_at(-300.0, -3000.0, 1.0, 30000)
+    still4["jam.rink.caps 0"] = {"shown": bool(rink.are_caps_shown()), "visible": bool(rink.get_editor_property("arena_caps").is_visible()), "cap_answers": rink.get_cap_rock_count() - c0,
+                                 "piece_rattles": rink.get_rattle_count() - r0, "pieces_shown": bool(rink.is_arena_dressing_shown())}
+    rink.advance_reactions(30100)
+    unreal.SystemLibrary.execute_console_command(world, "jam.rink.caps 1")
+    rink.set_construction_visible(True)
+    c0 = rink.get_cap_rock_count()
+    hit_at(5955.0, 0.0, 1.0, 31000)
+    still4["back_on"] = {"shown": bool(rink.are_caps_shown()), "cap_answers": rink.get_cap_rock_count() - c0}
+    rink.advance_reactions(31100)
+    unreal.SystemLibrary.execute_console_command(world, "jam.rink.react.loud 0")
+    rink.set_construction_visible(True)
+    lx = rink.get_editor_property("arena_lamp_lights")[2].get_editor_property("relative_location")
+    still4["jam.rink.react.loud 0"] = {"end_light_cm": [round(lx.x, 1), round(lx.y, 1), round(lx.z, 1)], "end_light_peak_cd": [round(rink.lamp_light_peak_at(i), 1) for i in range(3)]}
+    unreal.SystemLibrary.execute_console_command(world, "jam.rink.react.loud 1")
+    rink.set_construction_visible(True)
+    still4_ok = (not still4["bare_tier"]["shown"] and not still4["bare_tier"]["visible"] and not still4["jam.rink.caps 0"]["shown"] and not still4["jam.rink.caps 0"]["visible"]
+                 and still4["jam.rink.caps 0"]["cap_answers"] == 0 and still4["jam.rink.caps 0"]["piece_rattles"] == 1 and still4["jam.rink.caps 0"]["pieces_shown"]
+                 and still4["back_on"]["shown"] and still4["back_on"]["cap_answers"] == 1
+                 and still4["jam.rink.react.loud 0"]["end_light_cm"][0] > 6000.0 and still4["jam.rink.react.loud 0"]["end_light_peak_cd"] == [750.0, 3000.0, 3000.0])
+    report["e4"]["still_boards"] = dict(still4, ok=still4_ok)
+    e4_ok = e4_ok and still4_ok
+    ok = ok and e4_ok
+    log("e4 still boards ok=%s %s" % (still4_ok, json.dumps(still4)))
+    log("A136 E4 %s" % ("PASS" if e4_ok else "FAIL"))
 
     eas.destroy_actor(rink)
     report["verdict"] = "pass" if ok else "fail"
