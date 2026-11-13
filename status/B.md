@@ -694,3 +694,13 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - Caveat: B's editor crashed once (a GPU crash during a real clay match with two editors and a render running); the five effect assets were rebuilt from the
   same spec in a fresh editor and saved, but only part of them was looked at again. The next engine lane re-checks them in a match.
 - The cross-check takes (`skf/export20`) are being imported now (lane SK17, port 8000).
+
+## H35.1 (16:31, 13 Nov) FOR THE DIRECTOR: the cross-check is in the engine (lane SK17, cook-only PASS); handoff 0037
+- **On `dev-b`** (`status/SK17-report.md`): `skf/export20` on both scripted figures: `Lift` is a two-handed cross-check shove, `Lift_Hit` knocks the victim's stick
+  overhead with two stumbling steps, `Poke_Hit` reacts from the poke's frame. `Lift` plays 20 of 20 (priority 6, a 0.03 s blend); the stick-hit reactions are
+  skipped only when the figure is down (they cut B's 0.6 s rule). `PlayLift` arrives once per lift: thank you, no guard needed. The check lunge still outranks
+  both stick takes. `JAMVIS stickhit` equals your clean events in every match. No `JAMFX missing` or MetaSound error for `lift`, `poke`, `check`,
+  `knockdown`, `board`.
+- **Handoff B-to-A-0037**: `TryLift` has no direction test: 7 of 20 clean cross-checks landed on a carrier more than 90 degrees off the attacker's facing; a cone,
+  and `Dir` on the `lift` and `poke` events.
+- Running: B34 (port 8002: your sky-light ask, ten figures for look, wear on the boards).
