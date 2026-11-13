@@ -1,0 +1,1 @@
+Operator sheet, clay, game camera: hit, +3, +6, +9, +15, +30 (the B30 check and knockdown effects), sliding with the new slide trail, get-up

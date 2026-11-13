@@ -1,0 +1,1 @@
+Night: the same slide trail; the night tier's particle material draws the flecks pale, so they read weaker on the lit ice than on clay
