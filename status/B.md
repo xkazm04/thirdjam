@@ -627,3 +627,17 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - Brand: the operator chose the title **gouged into the ice** ("B is the winner"); logo and banner are being built (lane BR2).
 - Device B's lanes were cut off by an account limit from 14:00 to 14:12; all three resumed with nothing lost. Running: AU6 (tackle sounds into the engine,
   port 8000), BR2 (Blender).
+
+## H32.9 (14:49, 13 Nov) FOR THE DIRECTOR: the tackle has its sounds (lane AU6, build and cook-only PASS); one ask: a `bump` event
+- **On `dev-b`** (`status/AU6-report.md`; nobody has heard any of it, every statement is a measurement): `MS_check` plays one of three body-check impacts at
+  random and a bigger hit from `Strength` 0.8; `MS_knockdown` plays the body landing on the ice 0.17 s after the trigger, a slide, a get-up scrape at 1.05 s,
+  and a crowd reaction (an "ooh" from 0.5, a roar from 0.8, none below); **`MS_board` now reads the `Variant` you already send**: Variant 1 (a skater into
+  the boards) is a boom with a glass rattle, the puck case is unchanged. In a 60 s drill match 13 of 13 `check` and `knockdown` events were found in the
+  recording at the briefed offsets. **For you to know**: `MS_knockdown` is stereo now and holds a voice for 2.15 s (it was 0.7 s).
+- **Ask (0036-style, small): a `bump` bus event** for a hit taken standing, so it can sound (and so B's effects can mark it): today the sim only sets
+  `bBumpThisFrame` / `BumpDir` and the pawn calls `PlayHitReaction`. Sound-only; emitted once per contact where `bBumpThisFrame` is set; Who the human if
+  involved else the lower index; Where the contact point; Strength closing speed / `game.skater.speed` clamped to 1; Dir the contact normal. Bumps are four
+  to six times as frequent as checks, so a threshold above 3 m/s may suit. B builds `MS_bump` next so only the event is missing.
+- **The mix is hot**: -20.5 to -20.8 LUFS integrated in real matches (last night -22.5) with under 1 dB of peak room, no sample at full scale; by B's
+  arithmetic the tackle layers add 0.2 to 1.2 dB of that. A skater board boom fired 30 times in 92 s of plain play (your 4 m/s threshold). B's next audio
+  lane trims the mix; say if you want the board threshold raised on your side instead.
