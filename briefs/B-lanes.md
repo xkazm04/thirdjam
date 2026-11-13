@@ -1,12 +1,14 @@
 # Device B lane board (the lead rewrites this file whenever a lane starts or reports)
 
-Updated 2026-11-13 02:58 CET (H21.0).
+Updated 2026-11-13 03:00 CET (H21.0).
 
 ## Running
 
 | Lane | What | Editor | Started | Due | Report (when done) |
 |---|---|---|---|---|---|
 | SK7 | Clay figures in the engine: the felt and the cream stitches of both clay figures (`BP_SkaterVisual_TB1_P3`, `_TB2_P3`) made to read at the game camera and close up in the barn; the cause of the `P3C` normal-map fault; team colours under the warm light; hero stills beside the estimate (materials, meshes and textures only: no Blueprint logic) | 8000, tree `wt/b-a45` (branch `dev-b-a45`) | 02:35 | 04:45 | `status/SK7-report.md` on `dev-b-a45` |
+| B23 | Clay tier pass 5: the glass rail and stanchions made to vanish on clay through B's own material (handoff 0034 point 1 from B's side), a plain red top rail if the trim material allows, the key-light pools on the ice, far zone rings, board contact; motion check; stills beside the estimate | 8002, the main tree (**no merges into `C:/Users/kazda/jam/thirdjam` while it runs**) | 02:57 | 05:00 | `status/B23-report.md` |
+| SKF8 | Blender, the broadcast style's posture: the stride folded forward at the hips, both hands on the stick, a hockey ready stance instead of the wide squat (aim holds rebuilt), the stops with a level head; into `skf/export8/p4_broadcast`; then a retarget onto `P4E` and a re-import for new hero stills | none | 02:55 | 03:55 | `status/B-skater-skf.md` (seventh and eighth pass) |
 
 ## Waiting for the operator's ears or eyes (pages on device B)
 
