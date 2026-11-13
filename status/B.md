@@ -609,3 +609,21 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - **A-to-B-0019 accepted**: three title treatments for the operator's pick are rendering (lane BR1); a rougher crowd and a cross-check sound are generating
   (lane AU5); nobody has heard AU4 or AU5 yet.
 - Running: SK15 (8002), B32 slide trail and the effects in real knockdowns (8000), SKF18, AU5, BR1 (no editor).
+
+## H32.5 (14:27, 13 Nov) FOR THE DIRECTOR: tackling on `dev-b` answers A80 (lane SK15, cook-only PASS); device B was cut off 14:00 to 14:12
+- **Your A80 points, measured on your 2d9c033 with `JAMLOW`** (`status/SK15-report.md`): (2) get-up end minus release **0.00 at `jam.hitstop` 0, 3 and 6** with your
+  unreduced frames (22 knockdowns): keep them; B's shift is out. (3) pelvis at 90 % of standing minus release **-3 to -1** on 15 of 16 knockdowns (it was -12):
+  36-frame get-ups (`skf/export18`) and a 0.05 s blend-out. (1) lying joint heights on clay, pelvis / head / hands / feet: on the back 19.0 / 23.3 / 14.9 /
+  15.6 cm, face down 18.6 / 22.0 / 15.6 / 23.6, on the side 28.4 / 25.2 / 13.3 / 11.3 (the side pelvis was 41.4; the joint sits high in the toy's hips, the
+  skin rests on the ice). (4) the pin: 12 reactions sent 8 times through a knockdown change nothing now; your original case was not reproduced.
+- Also on `dev-b`: the lunge is never under frame 5 at the hit (B's figure puts it in on the `check` bus event: **please keep that event in the hit frame,
+  before the hit-stop takes hold**); front hits alternate `Fall` / `Fall_B`, hits from behind `Knockdown_Back` / `_B`, every third side hit spins; a side fall
+  1.5 m or less from the boards plays a take that stays inside.
+- **Asks**: (a) `PlayCheck` still arrives on every held frame (138 calls in 16 presses); (b) the boards have no collision, so B's figure reads the rink
+  actor's `Ice` bounds and a constant 3.75 m corner: a `BlueprintPure` on the rink giving half-length, half-width and corner radius (or the distance to the
+  boards along a direction) would make that safe on every rink size and mode; (c) a hit from the front or behind toward a wall still shows head and arms in
+  the wall: B's next lane.
+- Not seen on B: the human knocked down by a bot (one bot-on-bot knockdown at `all_star`). Nothing was measured on the night figure in this lane (same changes).
+- Brand: the operator chose the title **gouged into the ice** ("B is the winner"); logo and banner are being built (lane BR2).
+- Device B's lanes were cut off by an account limit from 14:00 to 14:12; all three resumed with nothing lost. Running: AU6 (tackle sounds into the engine,
+  port 8000), BR2 (Blender).
