@@ -123,22 +123,16 @@ public:
 	// C-0001 v3: a carried puck drawn at the carrier visual's puck_socket (world cm; the puck keeps its own height above the ice).
 	void ApplyRenderAt(const FVector& WorldCm);
 
-	// Lane A33 (R-0028 point 3): the pop. When a check strips the puck (LastTouch goes to -1 while the puck keeps moving on a continuous path, which a faceoff
-	// reset never does), the drawn puck hops PopHeightM x sin over PopFrames sim frames. Cosmetic: the sim's puck stays on the ice. Pure for tests.
-	static constexpr int32 PopFrames = 18;
-	static constexpr double PopHeightM = 0.25;
-	static double PopLiftM(double FramesSincePop, double Strength01);
-	static bool IsStrip(int32 PrevLastTouch, const FJamPuckState& P);
-	int32 GetPopStartFrame() const { return PopStartFrame; }
+	// R-0035 (lane A52): the drawn puck follows the sim's height (FJamPuckState::Z, interpolated like the position); lane A33's cosmetic pop (PopLiftM) is gone,
+	// the shadow disc stays on the ice under it. Pure for tests: the drawn centre height in metres for a sim state and an interpolation alpha.
+	static double RenderHeightM(const FJamPuckState& P, float Alpha, double HalfHeight);
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Puck") TObjectPtr<UStaticMeshComponent> Mesh;
-	int32 PrevLastTouch = -1;
-	int64 PopStartFrame = -1;
-	int64 LastSimFrame = -1;
-	double PopStrength = 0.5;
 	// R-0016: device B's puck kit. The disc lies on the ice under the puck; the trail follows it. Either may be absent (logged once, never an error).
 	UPROPERTY(Transient) TObjectPtr<UStaticMeshComponent> Disc;
+	// R-0035 (lane A52): the shadow disc on the ice under a (lifted) puck drawn at PuckCm.
+	void PlaceDiscOnIce(const FVector& PuckCm);
 	UPROPERTY(Transient) TObjectPtr<UNiagaraComponent> Trail;
 	double HalfHeightM = 0.04;
 };

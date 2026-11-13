@@ -37,6 +37,8 @@ of them out explicitly, but a Designer or hand-written cartridge may leave them 
 | `skater.sprint.bonus` | 0.15 | lane A49: Shift / LT held adds this fraction to top speed and acceleration while the skater moves and the stamina lasts; bots never sprint; 0 = off |
 | `skater.sprint.drain_frames` | 180 | lane A49: frames of sprint from full to empty (3 s) |
 | `skater.sprint.refill_frames` | 360 | lane A49: frames at rest from empty to full (6 s) |
+| `skater.goalie.reach_m` | 0.9 | lane A52 (R-0035): a skater in the crease stance (within 3 m of its own goal centre, the human included) saves a loose shot passing within this of it; 0 = off |
+| `skater.goalie.block_height_m` | 0.4 | lane A52 (R-0035), Director 01:30: a shot at or above this height passes the crease skater; below the 0.61 bar so a half charge (0.45) is the skill shot: over the pads, under the bar (0.7 saved everything the net could take; the novice gate failed 8 of 20) |
 | `skater.visual` | `humanoid_b1` | which figure is drawn: `toy_skeletal` (the Blender toy figure as a skeletal mesh, lane A26, the default since H11.7), `toy` (the code-built figure), `humanoid_b1`, `generated_b2`; gameplay is identical; the Designer may not change it (R-0001) |
 | `puck.radius_m` | 0.12 | |
 | `puck.max_speed` | 30 | |
@@ -44,6 +46,8 @@ of them out explicitly, but a Designer or hand-written cartridge may leave them 
 | `puck.carry_assist` | 0.6 | lane A16 (C-0005): pull towards the stick socket while the carrier turns under 90 deg/s |
 | `puck.count` | 1 | lane A16 (C-0005) |
 | `puck.colour_hex` | `#111111` | near-black; readability comes from trail and shadow disc |
+| `puck.gravity_mps2` | 9.81 | lane A52 (R-0035): gravity on a lifted puck |
+| `puck.ice_restitution` | 0.3 | lane A52 (R-0035): the bounce on the ice; a hop under 2 cm dies. The glass is 2.4 m (fixed, no key): a puck over it at the boards is out of play (free faceoff) |
 | `shot.reach_m` | 1.5 | |
 | `shot.speed` | 18 | |
 | `shot.cooldown_frames` | 24 | |
@@ -53,6 +57,10 @@ of them out explicitly, but a Designer or hand-written cartridge may leave them 
 | `shot.deflect` | true | lane A16 (C-0005): a shot into a skater within 0.6 m of its stick keeps 70 % of its speed |
 | `shot.one_timer.window_frames` | 10 | lane A39 (R-0029 point 4): a shot inside this many frames of a received pass is a one-timer (full charge without the hold, `aim_cone_deg` + `cone_bonus_deg`, `shot` event kind `one_timer`); 0 = off |
 | `shot.one_timer.cone_bonus_deg` | 8 | lane A39 |
+| `shot.lift.tap_m` | 0.05 | lane A52 (R-0035): the height a tap arrives at over the goal line |
+| `shot.lift.half_m` | 0.45 | lane A52: the height of a shot held `half_frames` |
+| `shot.lift.full_m` | 0.6 | lane A52 (0.95), Director 01:40: the height of a full charge: just under the 0.61 bar (top shelf); at 0.95 every hold past 8 frames flew over the low net; a cartridge may still choose 0.95 for a sailing full charge |
+| `shot.lift.half_frames` | 8 | lane A52: frames of hold that reach `half_m`; linear tap -> half -> full |
 | `rules.goal_pause_frames` | 120 | |
 | `rules.offside` | false | only false is accepted |
 | `rules.penalties` | true | R-0013: fouls (from behind, or on a skater without the puck) = 300 frames in the box + a free faceoff at the fouler's end; `hockey.raw` sets false |

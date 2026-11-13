@@ -222,6 +222,12 @@ struct JAMCORE_API FJamPuckState
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") FVector2D Pos = FVector2D::ZeroVector;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") FVector2D Vel = FVector2D::ZeroVector;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") FVector2D PrevPos = FVector2D::ZeroVector;
+	// R-0035 (lane A52): the puck's height above the ice (metres, the puck's centre line; 0 = on the ice) and its vertical speed (m/s, + = up). A shot's release
+	// lifts it by the charge (game.shot.lift), gravity (game.puck.gravity_mps2) pulls it down, the ice bounces it (game.puck.ice_restitution) until the hop is
+	// under 2 cm, a carried puck sits on the ice. Hashed like Pos and Vel once off the ice (a cut whose lift keys are all 0 hashes as before).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") double Z = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") double VZ = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") double PrevZ = 0;
 	// Skater index that touched or shot it last, -1 after a faceoff.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 LastTouch = -1;
 	// Total distance travelled this match.
@@ -295,6 +301,22 @@ public:
 	// held there for ReceptionSettleFrames of settle (a shot inside A39's window is a one-timer); a faster puck bounces off the body unless the blade meets it.
 	static constexpr double BodyReceptionMaxSpeed = 14.0;
 	static constexpr int32 ReceptionSettleFrames = 4;
+	// R-0035 (lane A52): the lifted puck. The glass stops a puck under GlassHeightM at the boards (no game.rink.glass_height_m key exists: 2.4 m fixed, a real
+	// rink's 2.4 m of glass over 1.2 m of boards); above it the puck is out of play (a free faceoff at the end it left, as after a foul). A puck whose centre is
+	// within BarRingM + PostRadius of the crossbar's axis rings `post` and reflects; a puck under the bar by more scores, over it by more flies over the net
+	// (its roof is closed). A hop smaller than BounceDeadM dies on the ice. A standing skater's body stops a puck under BodyHeightM (a skater's height; the
+	// lift's apex is capped at LiftApexMaxM, so only the top of a lob clears a body); a skater in the crease stance
+	// (within CreaseStanceM of its own goal centre, R-0033) saves a puck under game.skater.goalie.block_height_m within goalie.reach_m instead, the human included.
+	static constexpr double GlassHeightM = 2.4;
+	static constexpr double BarRingM = 0.05;
+	static constexpr double BounceDeadM = 0.02;
+	static constexpr double BodyHeightM = 1.8;
+	static constexpr double CreaseStanceM = 3.0;
+	static constexpr double LiftFlightMaxS = 2.0;
+	static constexpr double LiftApexMaxM = 2.0;
+	static constexpr double SaveReboundKeep = 0.45;   // Director 01:45: 0.3 left 15 of 131 faceoffs without a human touch (budget 13) once the 0.6 full charge put more shots into the pads; a livelier rebound is a chase
+	// True when S stands in the crease stance's geometry (R-0033 / R-0035): within CreaseStanceM of its own goal centre, on the ice side of the goal line, able to act.
+	bool InCreaseStance(const FJamSkaterState& S) const;
 
 	// Builds the match from a validated config: skaters at their spawns, puck at centre, score 0, phase Playing.
 	// Queues the opening "faceoff" event. Returns false (and logs) if the config has no player.
@@ -408,16 +430,19 @@ public:
 	double GoalLineX() const { return Config.Rink.GoalLineX(); }
 	// True when a puck centre at P is inside the goal volume of the net at +x (Side +1) or -x (Side -1). The two-argument form is the puck on the ice.
 	// R-0033 point 2 (lane A50): with a height (metres above the ice, the puck's centre) the opening is game.rink.goal_height_m tall: a lifted puck at or
-	// above the crossbar is no goal. The step passes the ice height today (the sim's puck has no height state; the pawn's hop is cosmetic): the test is in
-	// place for the day a lifted shot enters the sim.
+	// above the crossbar is no goal. R-0035 (lane A52): the step passes the puck's Z, so a lifted shot over the bar is no goal in play.
 	bool InGoal(const FVector2D& P, int32 Side) const { return InGoal(P, Side, 0.0); }
 	bool InGoal(const FVector2D& P, int32 Side, double HeightM) const;
+	// R-0035 (lane A52): the height a shot of this charge (0..1 of shot.charge_frames_max) arrives at over the goal line: game.shot.lift's tap_m at 0, half_m at
+	// half_frames, full_m at the full charge, linear between. The tests and the brain's shot choice read it.
+	double LiftForCharge(float Charge) const;
 
 	// Rink metres -> Unreal centimetres (the one conversion; Height in metres above the ice).
 	static FVector ToWorld(const FVector2D& P, double HeightM = 0.0) { return FVector(P.X * 100.0, P.Y * 100.0, HeightM * 100.0); }
 
-	// Debug/tests: place the puck (velocity in m/s).
+	// Debug/tests: place the puck (velocity in m/s); the four-argument form also sets its height and vertical speed (R-0035).
 	void SetPuck(const FVector2D& Pos, const FVector2D& Vel);
+	void SetPuck(const FVector2D& Pos, const FVector2D& Vel, double Z, double VZ);
 	// Debug/tests: place a skater.
 	void SetSkater(int32 Index, const FVector2D& Pos, const FVector2D& Vel, double Yaw);
 
@@ -444,6 +469,13 @@ private:
 	// The teammate a pass from S goes to, and where to aim (lead); -1 when nobody is open.
 	int32 PickReceiver(const FJamSkaterState& S, FVector2D& OutAim) const;
 	void StepPuck();
+	// R-0035 (lane A52): the free puck's height. StepPuckVertical integrates gravity and the ice bounce for one substep and pins a carried puck to the ice;
+	// ApplyShotLift gives the shot that just left its VZ for LiftForCharge(Charge) over the goal line; TryGoalieSave is the crease skater's save by height
+	// (the saver's index, -1 = no save this substep); OutOfPlay sends a puck over the glass to a free faceoff. All in their own blocks, away from the stick.
+	void StepPuckVertical(double H);
+	void ApplyShotLift(const FJamSkaterState& S, const FVector2D& Aim, double Speed, float Charge);
+	int32 TryGoalieSave(double R, double MaxSpeed);
+	void OutOfPlay();
 	bool CollidePuckSegment(const FVector2D& A, const FVector2D& B, const FVector2D& PrevPos, double R, double E);
 	bool CollidePuckCircle(const FVector2D& C, double CR, double R, double E);
 	bool CollidePuckBox(const FVector2D& Min, const FVector2D& Max, double R, double E);

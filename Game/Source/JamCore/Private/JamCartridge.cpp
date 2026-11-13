@@ -1021,6 +1021,12 @@ namespace
 			ReadInteger(Sp, TEXT("drain_frames"), C.Skater.SprintDrainFrames);
 			ReadInteger(Sp, TEXT("refill_frames"), C.Skater.SprintRefillFrames);
 		}
+		// R-0035 (lane A52): game.skater.goalie { reach_m, block_height_m }
+		if (const FJPtr Gk = Obj(Sk, TEXT("goalie")))
+		{
+			ReadNumber(Gk, TEXT("reach_m"), C.Skater.GoalieReachM);
+			ReadNumber(Gk, TEXT("block_height_m"), C.Skater.GoalieBlockHeightM);
+		}
 
 		const FJPtr St = G->Get(TEXT("stick"));
 		ReadNumber(St, TEXT("reach_m"), C.Stick.ReachM);
@@ -1045,6 +1051,9 @@ namespace
 		ReadColour(Pk, TEXT("colour_hex"), C.Puck.Colour);
 		ReadNumber(Pk, TEXT("carry_assist"), C.Puck.CarryAssist);
 		ReadInteger(Pk, TEXT("count"), C.Puck.Count);
+		// R-0035 (lane A52): the lifted puck
+		ReadNumber(Pk, TEXT("gravity_mps2"), C.Puck.GravityMps2);
+		ReadNumber(Pk, TEXT("ice_restitution"), C.Puck.IceRestitution);
 
 		FJPtr Shot = Obj(G, TEXT("shot"));
 		ReadNumber(Shot, TEXT("reach_m"), C.Shot.ReachM);
@@ -1059,6 +1068,14 @@ namespace
 		{
 			ReadInteger(Ot, TEXT("window_frames"), C.Shot.OneTimerWindowFrames);
 			ReadNumber(Ot, TEXT("cone_bonus_deg"), C.Shot.OneTimerConeBonusDeg);
+		}
+		// R-0035 (lane A52): game.shot.lift { tap_m, half_m, full_m, half_frames }
+		if (const FJPtr Lf = Obj(Shot, TEXT("lift")))
+		{
+			ReadNumber(Lf, TEXT("tap_m"), C.Shot.LiftTapM);
+			ReadNumber(Lf, TEXT("half_m"), C.Shot.LiftHalfM);
+			ReadNumber(Lf, TEXT("full_m"), C.Shot.LiftFullM);
+			ReadInteger(Lf, TEXT("half_frames"), C.Shot.LiftHalfFrames);
 		}
 
 		FJPtr Rules = Obj(G, TEXT("rules"));

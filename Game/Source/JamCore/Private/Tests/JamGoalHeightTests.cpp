@@ -70,13 +70,45 @@ bool FJamGoalHeight::RunTest(const FString&)
 		TestFalse(TEXT("1.22: a puck 1.3 m up is over the bar"), Sim->InGoal(InNet, -1, 1.3));
 		TestTrue(TEXT("1.22: on the ice still a goal"), Sim->InGoal(InNet, -1));
 	}
-	// A scored match still scores: the step passes the ice height (the sim's puck has no height state), so the baseline is untouched by the key.
+	// A puck on the ice into the net scores at the default bar.
 	{
 		UJamSim* Sim = MakeSim(C->Game, 1);
 		Sim->SetPuck(FVector2D(Sim->GoalLineX() - 1.0, 0.0), FVector2D(12.0, 0.0));
 		TArray<FJamInput> In; In.Init(FJamInput(), Sim->GetSkaters().Num());
 		for (int32 f = 0; f < 30 && Sim->GetScore(0) + Sim->GetScore(1) == 0; ++f) Sim->Step(In);
 		TestEqual(TEXT("a puck on the ice into the +x net scores for team 0"), Sim->GetScore(0), 1);
+	}
+	// R-0035 (lane A52): a real lifted shot. Skater 0 (team 0, attacking +x) charges shoot for the full charge_frames_max from 12 m out and releases: the
+	// puck arrives shot.lift.full_m over the goal line; this scene sets full_m 0.95 (a cartridge may: the default is 0.6, under the bar), so it sails over the 0.61 bar (no goal, the puck flies over the net) and goes in at 1.22
+	// (the same seed, the same scene).
+	for (const double Bar : { 0.61, 1.22 })
+	{
+		FJamGameConfig Lifted = C->Game;
+		Lifted.Rink.GoalHeightM = Bar;
+		Lifted.Shot.LiftFullM = 0.95;   // the sailing full charge is a cartridge choice since the 01:40 calibration (default 0.6)
+		UJamSim* Sim = MakeSim(Lifted, 1);
+		const double Gx = Sim->AttackGoalX(0);
+		for (const FJamSkaterState& S : Sim->GetSkaters()) Sim->SetSkater(S.Index, FVector2D(-30.0, 12.0 + 2.5 * S.Index), FVector2D::ZeroVector, 0.0);
+		Sim->SetSkater(0, FVector2D(Gx - 12.0, 0.0), FVector2D::ZeroVector, 0.0);
+		Sim->SetPuck(FVector2D(Gx - 12.0 + 0.8, 0.0), FVector2D::ZeroVector);
+		TArray<FJamInput> In; In.Init(FJamInput(), Sim->GetSkaters().Num());
+		for (int32 f = 0; f < Lifted.Shot.ChargeFramesMax; ++f) { In[0].bShootHeld = true; Sim->Step(In); }
+		In[0].bShootHeld = false;
+		bool bFlewOver = false;
+		for (int32 f = 0; f < 120 && Sim->GetPhase() == EJamSimPhase::Playing; ++f)
+		{
+			Sim->Step(In);
+			if (Sim->GetPuck().Pos.X > Gx + UJamSim::NetDepth) bFlewOver = true;
+		}
+		if (Bar < 1.0)
+		{
+			TestEqual(TEXT("0.61: the full charge from 12 m arrives at 0.95 and is no goal"), Sim->GetScore(0), 0);
+			TestTrue(TEXT("0.61: it flew over the net"), bFlewOver);
+		}
+		else
+		{
+			TestEqual(TEXT("1.22: the same full charge from 12 m is a goal"), Sim->GetScore(0), 1);
+		}
 	}
 	// The loader and the schema.
 	{

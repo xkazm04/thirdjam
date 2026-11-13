@@ -388,3 +388,10 @@ from a poke on the side it left for `game.stick.sweep.shield_frames`, and a defe
 is real in the sim and not an animation; (2) a spin move (`game.skater.spin`: 24 frames, cooldown 90, speed 0.7, a quarter of the stamina bar) on **E** and gamepad B; the puck
 rides the far side of the body; a check landing mid-spin knocks the carrier down longer; (3) the **pass moves to F** (gamepad X unchanged); A39's tap deke stays on Q and the
 wheel; (4) the spin takes lockstep flag bit 512 (protocol 5); (5) every step is proven in a packaged Development build through SendInput, as R-0032 requires for all controls work.
+
+## R-0035 (H13.3, 2026-11-13 00:45): the puck gets a height
+A50 showed the half-height goal (R-0033 point 2) bites only visually: the sim's puck is two-dimensional. Director's decision (lane A52): the sim's puck gains a height and a
+vertical speed, hashed; a shot's release height follows the charge (`game.skater.shot.lift`: tap on the ice, half charge 0.45 m, full 0.95 m), so a full charge sails over the
+0.61 bar from distance by design (amended 01:40: the default full charge arrives at 0.6, just under the bar, after the novice gate fell to 8 of 20 with 0.95; a cartridge may set full_m 0.95 for the sailing shot); the goal test uses the height; posts and the bar ring and reflect; a skater in the crease stance saves a puck under its block height within
+its reach (`game.skater.goalie`), the human included; bots charge by the net's height. The carried puck stays on the ice. The determinism baseline is re-recorded by the lane
+and once more by the Director after A51 and A52 merge.
