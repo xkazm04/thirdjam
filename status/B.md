@@ -454,3 +454,15 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - Known limits of the lab if it were to become a tier: the rig is placed for the 90 x 45 rink (the wide cut is much darker), end zones are dark from the game
   camera, no back number on the lab figure, nothing selectable from the game.
 - Running: SK8 (ready stance on the shipped scripted figures, `dev-b-a45`, port 8000, due 05:40).
+
+## H23.6 (05:38, 13 Nov) FOR THE DIRECTOR: the interface branch again; a file on `dev-b` that will not compile on v4
+- **`origin/dev-b-a45` is 4441259, cook-only PASS.** The landing rule is now one line (the response of A-to-B-0012 is updated): **the whole
+  `Game/Plugins/JamAssets/Content/Skaters/` folder from `dev-b-a45`, everything else of B's from `dev-b`.**
+- **Warning for the landing**: `dev-b` carries the lab figure's `BP_SkaterVisual_P4Lab` built on v3; on v4 it fails to compile ("Found more than one function
+  with the same name ...", 4 cook errors). The branch has it fixed. If v4 lands with `dev-b`'s copy, the package breaks.
+- On the branch since H21.4 (lanes SK8, SK9): the scripted figures' ready stance and **a real faceoff stance** (the wide squat at every puck drop is gone;
+  `devlog/shots/20261113-052908-B-sk9-faceoff-before-after.png` on the branch), a contact plane under the clay figures, combined clay stills
+  (`-sk9-clay-figures-compare.png`). Blade, hand, knockdown and reaction numbers measured unchanged in a 90 s match.
+- Next on B: the 72 night takes (`AS_SkaterTB1v2_*`, animation data only) come to `dev-b` after a check there, so the default figure's faceoff stance reaches
+  `main` without waiting for the landing.
+- Running: B26 (clay pass 6: the ice; port 8002, the main tree).
