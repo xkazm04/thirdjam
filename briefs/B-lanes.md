@@ -1,12 +1,13 @@
 # Device B lane board (the lead rewrites this file whenever a lane starts or reports)
 
-Updated 2026-11-13 04:42 CET (H22.7).
+Updated 2026-11-13 04:43 CET (H22.8).
 
 ## Running
 
 | Lane | What | Editor | Started | Due | Report (when done) |
 |---|---|---|---|---|---|
 | SK8 | The ready stance on the two shipped scripted figures: an animation-only re-import of `skf/export9` (72 takes each) onto `BP_SkaterVisual_TB1` (night, the default) and `_TB1_P3` (clay), with blade, hand, knockdown and reaction numbers before and after; a soft dark contact plane under the two clay figures | 8000, tree `wt/b-a45` (branch `dev-b-a45`) | 04:00 | 05:40 | `status/SK8-report.md` on `dev-b-a45` |
+| B26 | Clay tier pass 6, the ice: the computed bulb reflections made irregular and soft instead of a regular comb (judged from the game camera first), the dark reflection band along the side boards, the pale right-hand key pool, a faint warm wash on the far wall; motion check | 8002, the main tree (**no merges into `C:/Users/kazda/jam/thirdjam` while it runs**) | 04:47 | 05:50 | `status/B26-report.md` |
 
 ## Waiting for the operator's ears or eyes (pages on device B)
 
