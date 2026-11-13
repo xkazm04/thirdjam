@@ -137,7 +137,8 @@
           "kick": "MI_Toon_KickPlate",
           "bench": "MI_Toon_Bench",
           "dark": "MI_Toon_Dark",
-          "frame": "MI_Toon_NetFrame"
+          "frame": "MI_Toon_NetFrame",
+          "lamp": "MID_MI_Toon_NetFrame_0"
         },
         "as_expected": true
       },
@@ -875,7 +876,8 @@
           "kick": "MI_Toon_KickPlate",
           "bench": "MI_Toon_Bench",
           "dark": "MI_Toon_Dark",
-          "frame": "MI_Toon_NetFrame"
+          "frame": "MI_Toon_NetFrame",
+          "lamp": "MID_MI_Toon_NetFrame_21"
         },
         "as_expected": true
       },
@@ -1613,7 +1615,8 @@
           "kick": "MI_Toon_KickPlate",
           "bench": "MI_Toon_Bench",
           "dark": "MI_Toon_Dark",
-          "frame": "MI_Toon_NetFrame"
+          "frame": "MI_Toon_NetFrame",
+          "lamp": "MID_MI_Toon_NetFrame_42"
         },
         "as_expected": true
       },
@@ -2359,6 +2362,689 @@
         "goals_shown": false,
         "code_frame_visible": true
       }
+    }
+  },
+  "e3": {
+    "90x45": {
+      "goal_lights": {
+        "arena_goal_light_neg": {
+          "mesh": "SM_Arena_GoalLight",
+          "loc_cm": [
+            -4525.0,
+            0.0,
+            0.0
+          ],
+          "yaw": 90.0,
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "visible": true,
+          "materials": {
+            "dark": "MI_Toon_Dark",
+            "kick": "MI_Toon_KickPlate",
+            "lamp": "MID_MI_Toon_NetFrame_82"
+          },
+          "lamp_parent": "MI_Toon_NetFrame",
+          "as_expected": true
+        },
+        "arena_goal_light_pos": {
+          "mesh": "SM_Arena_GoalLight",
+          "loc_cm": [
+            4525.0,
+            0.0,
+            0.0
+          ],
+          "yaw": -90.0,
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "visible": true,
+          "materials": {
+            "dark": "MI_Toon_Dark",
+            "kick": "MI_Toon_KickPlate",
+            "lamp": "MID_MI_Toon_NetFrame_83"
+          },
+          "lamp_parent": "MI_Toon_NetFrame",
+          "as_expected": true
+        }
+      },
+      "code_goal_lights_visible": false,
+      "table_lamp_parent": "MI_Toon_NetFrame",
+      "lamp_rest_emissive": 3.0,
+      "still_at_start": true,
+      "goal_pos": {
+        "0": {
+          "light_cd": [
+            750.0,
+            0.0,
+            3000.0
+          ],
+          "lamp": 17.0,
+          "light_pos": 17.0,
+          "light_neg": 3.0,
+          "net_pos_scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "reacting": true
+        },
+        "2": {
+          "light_cd": [
+            695.8,
+            0.0,
+            2783.3
+          ],
+          "lamp": 15.9889,
+          "light_pos": 15.9889,
+          "light_neg": 3.0,
+          "net_pos_scale": [
+            1.0,
+            1.1007,
+            0.9496
+          ],
+          "reacting": true
+        },
+        "3": {
+          "light_cd": [
+            668.8,
+            0.0,
+            2675.0
+          ],
+          "lamp": 15.4833,
+          "light_pos": 15.4833,
+          "light_neg": 3.0,
+          "net_pos_scale": [
+            1.0,
+            1.0946,
+            0.9527
+          ],
+          "reacting": true
+        },
+        "8": {
+          "light_cd": [
+            533.3,
+            0.0,
+            2133.3
+          ],
+          "lamp": 12.9556,
+          "light_pos": 12.9556,
+          "light_neg": 3.0,
+          "net_pos_scale": [
+            1.0,
+            0.9308,
+            1.0346
+          ],
+          "reacting": true
+        },
+        "18": {
+          "light_cd": [
+            750.0,
+            0.0,
+            3000.0
+          ],
+          "lamp": 17.0,
+          "light_pos": 17.0,
+          "light_neg": 3.0,
+          "net_pos_scale": [
+            1.0,
+            0.9629,
+            1.0185
+          ],
+          "reacting": true
+        },
+        "45": {
+          "light_cd": [
+            506.2,
+            0.0,
+            2025.0
+          ],
+          "lamp": 12.45,
+          "light_pos": 12.45,
+          "light_neg": 3.0,
+          "net_pos_scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "reacting": true
+        },
+        "107": {
+          "light_cd": [
+            8.0,
+            0.0,
+            32.2
+          ],
+          "lamp": 3.1502,
+          "light_pos": 3.1502,
+          "light_neg": 3.0,
+          "net_pos_scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "reacting": true
+        },
+        "108": {
+          "light_cd": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "lamp": 3.0,
+          "light_pos": 3.0,
+          "light_neg": 3.0,
+          "net_pos_scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "reacting": false
+        },
+        "120": {
+          "light_cd": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "lamp": 3.0,
+          "light_pos": 3.0,
+          "light_neg": 3.0,
+          "net_pos_scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "reacting": false
+        }
+      },
+      "goal_neg_f3": {
+        "lamp": 15.4833,
+        "light_neg": 15.4833,
+        "light_pos": 3.0,
+        "net_neg_scale_y": 1.0946
+      },
+      "rattle": {
+        "piece": "ArenaBoxNeg",
+        "deg_f0": 3.5,
+        "box_roll_f0": 3.5,
+        "count": 1,
+        "deg_f18": 0.0,
+        "box_roll_f18": -0.0,
+        "soft_puck_endboard_count": 0
+      },
+      "ok": true
+    },
+    "120x60": {
+      "goal_lights": {
+        "arena_goal_light_neg": {
+          "mesh": "SM_Arena_GoalLight",
+          "loc_cm": [
+            -6025.0,
+            0.0,
+            0.0
+          ],
+          "yaw": 90.0,
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "visible": true,
+          "materials": {
+            "dark": "MI_Toon_Dark",
+            "kick": "MI_Toon_KickPlate",
+            "lamp": "MID_MI_Toon_NetFrame_85"
+          },
+          "lamp_parent": "MI_Toon_NetFrame",
+          "as_expected": true
+        },
+        "arena_goal_light_pos": {
+          "mesh": "SM_Arena_GoalLight",
+          "loc_cm": [
+            6025.0,
+            0.0,
+            0.0
+          ],
+          "yaw": -90.0,
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "visible": true,
+          "materials": {
+            "dark": "MI_Toon_Dark",
+            "kick": "MI_Toon_KickPlate",
+            "lamp": "MID_MI_Toon_NetFrame_86"
+          },
+          "lamp_parent": "MI_Toon_NetFrame",
+          "as_expected": true
+        }
+      },
+      "code_goal_lights_visible": false,
+      "table_lamp_parent": "MI_Toon_NetFrame",
+      "lamp_rest_emissive": 3.0,
+      "still_at_start": true,
+      "goal_pos": {
+        "0": {
+          "light_cd": [
+            750.0,
+            0.0,
+            3000.0
+          ],
+          "lamp": 17.0,
+          "light_pos": 17.0,
+          "light_neg": 3.0,
+          "net_pos_scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "reacting": true
+        },
+        "2": {
+          "light_cd": [
+            695.8,
+            0.0,
+            2783.3
+          ],
+          "lamp": 15.9889,
+          "light_pos": 15.9889,
+          "light_neg": 3.0,
+          "net_pos_scale": [
+            1.0,
+            1.1007,
+            0.9496
+          ],
+          "reacting": true
+        },
+        "3": {
+          "light_cd": [
+            668.8,
+            0.0,
+            2675.0
+          ],
+          "lamp": 15.4833,
+          "light_pos": 15.4833,
+          "light_neg": 3.0,
+          "net_pos_scale": [
+            1.0,
+            1.0946,
+            0.9527
+          ],
+          "reacting": true
+        },
+        "8": {
+          "light_cd": [
+            533.3,
+            0.0,
+            2133.3
+          ],
+          "lamp": 12.9556,
+          "light_pos": 12.9556,
+          "light_neg": 3.0,
+          "net_pos_scale": [
+            1.0,
+            0.9308,
+            1.0346
+          ],
+          "reacting": true
+        },
+        "18": {
+          "light_cd": [
+            750.0,
+            0.0,
+            3000.0
+          ],
+          "lamp": 17.0,
+          "light_pos": 17.0,
+          "light_neg": 3.0,
+          "net_pos_scale": [
+            1.0,
+            0.9629,
+            1.0185
+          ],
+          "reacting": true
+        },
+        "45": {
+          "light_cd": [
+            506.2,
+            0.0,
+            2025.0
+          ],
+          "lamp": 12.45,
+          "light_pos": 12.45,
+          "light_neg": 3.0,
+          "net_pos_scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "reacting": true
+        },
+        "107": {
+          "light_cd": [
+            8.0,
+            0.0,
+            32.2
+          ],
+          "lamp": 3.1502,
+          "light_pos": 3.1502,
+          "light_neg": 3.0,
+          "net_pos_scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "reacting": true
+        },
+        "108": {
+          "light_cd": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "lamp": 3.0,
+          "light_pos": 3.0,
+          "light_neg": 3.0,
+          "net_pos_scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "reacting": false
+        },
+        "120": {
+          "light_cd": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "lamp": 3.0,
+          "light_pos": 3.0,
+          "light_neg": 3.0,
+          "net_pos_scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "reacting": false
+        }
+      },
+      "goal_neg_f3": {
+        "lamp": 15.4833,
+        "light_neg": 15.4833,
+        "light_pos": 3.0,
+        "net_neg_scale_y": 1.0946
+      },
+      "rattle": {
+        "piece": "ArenaBoxNeg",
+        "deg_f0": 3.5,
+        "box_roll_f0": 3.5,
+        "count": 1,
+        "deg_f18": 0.0,
+        "box_roll_f18": -0.0,
+        "soft_puck_endboard_count": 0
+      },
+      "ok": true
+    },
+    "140x70": {
+      "goal_lights": {
+        "arena_goal_light_neg": {
+          "mesh": "SM_Arena_GoalLight",
+          "loc_cm": [
+            -7025.0,
+            0.0,
+            0.0
+          ],
+          "yaw": 90.0,
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "visible": true,
+          "materials": {
+            "dark": "MI_Toon_Dark",
+            "kick": "MI_Toon_KickPlate",
+            "lamp": "MID_MI_Toon_NetFrame_88"
+          },
+          "lamp_parent": "MI_Toon_NetFrame",
+          "as_expected": true
+        },
+        "arena_goal_light_pos": {
+          "mesh": "SM_Arena_GoalLight",
+          "loc_cm": [
+            7025.0,
+            0.0,
+            0.0
+          ],
+          "yaw": -90.0,
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "visible": true,
+          "materials": {
+            "dark": "MI_Toon_Dark",
+            "kick": "MI_Toon_KickPlate",
+            "lamp": "MID_MI_Toon_NetFrame_89"
+          },
+          "lamp_parent": "MI_Toon_NetFrame",
+          "as_expected": true
+        }
+      },
+      "code_goal_lights_visible": false,
+      "table_lamp_parent": "MI_Toon_NetFrame",
+      "lamp_rest_emissive": 3.0,
+      "still_at_start": true,
+      "goal_pos": {
+        "0": {
+          "light_cd": [
+            750.0,
+            0.0,
+            3000.0
+          ],
+          "lamp": 17.0,
+          "light_pos": 17.0,
+          "light_neg": 3.0,
+          "net_pos_scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "reacting": true
+        },
+        "2": {
+          "light_cd": [
+            695.8,
+            0.0,
+            2783.3
+          ],
+          "lamp": 15.9889,
+          "light_pos": 15.9889,
+          "light_neg": 3.0,
+          "net_pos_scale": [
+            1.0,
+            1.1007,
+            0.9496
+          ],
+          "reacting": true
+        },
+        "3": {
+          "light_cd": [
+            668.8,
+            0.0,
+            2675.0
+          ],
+          "lamp": 15.4833,
+          "light_pos": 15.4833,
+          "light_neg": 3.0,
+          "net_pos_scale": [
+            1.0,
+            1.0946,
+            0.9527
+          ],
+          "reacting": true
+        },
+        "8": {
+          "light_cd": [
+            533.3,
+            0.0,
+            2133.3
+          ],
+          "lamp": 12.9556,
+          "light_pos": 12.9556,
+          "light_neg": 3.0,
+          "net_pos_scale": [
+            1.0,
+            0.9308,
+            1.0346
+          ],
+          "reacting": true
+        },
+        "18": {
+          "light_cd": [
+            750.0,
+            0.0,
+            3000.0
+          ],
+          "lamp": 17.0,
+          "light_pos": 17.0,
+          "light_neg": 3.0,
+          "net_pos_scale": [
+            1.0,
+            0.9629,
+            1.0185
+          ],
+          "reacting": true
+        },
+        "45": {
+          "light_cd": [
+            506.2,
+            0.0,
+            2025.0
+          ],
+          "lamp": 12.45,
+          "light_pos": 12.45,
+          "light_neg": 3.0,
+          "net_pos_scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "reacting": true
+        },
+        "107": {
+          "light_cd": [
+            8.0,
+            0.0,
+            32.2
+          ],
+          "lamp": 3.1502,
+          "light_pos": 3.1502,
+          "light_neg": 3.0,
+          "net_pos_scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "reacting": true
+        },
+        "108": {
+          "light_cd": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "lamp": 3.0,
+          "light_pos": 3.0,
+          "light_neg": 3.0,
+          "net_pos_scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "reacting": false
+        },
+        "120": {
+          "light_cd": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "lamp": 3.0,
+          "light_pos": 3.0,
+          "light_neg": 3.0,
+          "net_pos_scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "reacting": false
+        }
+      },
+      "goal_neg_f3": {
+        "lamp": 15.4833,
+        "light_neg": 15.4833,
+        "light_pos": 3.0,
+        "net_neg_scale_y": 1.0946
+      },
+      "rattle": {
+        "piece": "ArenaBoxNeg",
+        "deg_f0": 3.5,
+        "box_roll_f0": 3.5,
+        "count": 1,
+        "deg_f18": 0.0,
+        "box_roll_f18": -0.0,
+        "soft_puck_endboard_count": 0
+      },
+      "ok": true
+    },
+    "still_arena": {
+      "bare_tier": {
+        "goal_lights_visible": [
+          false,
+          false
+        ],
+        "code_goal_lights_visible": true,
+        "reactions": 0,
+        "still": true
+      },
+      "jam.rink.react 0": {
+        "reactions": 0,
+        "still": true,
+        "seat_returned": true,
+        "goal_lights_visible": [
+          true,
+          true
+        ],
+        "code_goal_lights_visible": false
+      },
+      "jam.rink.arena 0": {
+        "reactions": 0,
+        "still": true,
+        "seat_returned": false,
+        "goal_lights_visible": [
+          false,
+          false
+        ],
+        "code_goal_lights_visible": true
+      },
+      "back_on": {
+        "reactions": 1,
+        "goal_lights_visible": [
+          true,
+          true
+        ]
+      },
+      "ok": true
     }
   },
   "verdict": "pass"

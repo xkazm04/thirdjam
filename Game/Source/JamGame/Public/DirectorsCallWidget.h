@@ -151,6 +151,14 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Jam|DirectorsCall") FString GetTakeCardText() const;
 	UFUNCTION(BlueprintPure, Category = "Jam|DirectorsCall") FString GetAnnouncementText() const;
 	bool IsTakeCardVisible() const;
+	// Lane A123 (track U1, evolution 2): the "ESC / START   CALL READY" pill shows when a call is ready by the HUD's own rule (UJamHudWidget::ShowDirectorsCall:
+	// after the first goal), not from the first faceoff of a 0:0 match. bAfterGoalOnly false (jam.hud.CallPillAfterGoal 0) is the pill of before. Pure (tests call it).
+	static bool ShowReadyPill(bool bCallReady, int32 Goals, bool bEnd, bool bLine, bool bAfterGoalOnly = true)
+	{
+		return bCallReady && !bEnd && !bLine && (!bAfterGoalOnly || Goals > 0);
+	}
+	// True while the scoreboard line (a call's result, a RULE line) is up: the HUD's one-time prompt takes the slot under it then.
+	bool IsLineVisible() const;
 
 	// Lane A42: the MATCH card in the top band under the scoreboard at 0.7 scale (A48's storyboard finding 3): 448 x 252 Slate units centred at
 	// y MatchCardCentreY, the FACEOFF line under it; the human and the countdown ring stay clear.

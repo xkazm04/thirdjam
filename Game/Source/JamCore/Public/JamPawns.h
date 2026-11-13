@@ -77,6 +77,8 @@ public:
 
 	// Every render frame: interpolated transform.
 	void ApplyRender(const FJamSkaterState& S, float Alpha);
+	// Lane A127 (track F3): where a boxed skater's figure is drawn (the rink's penalty box seat; ARinkActor sets it). Unset or false: the sim's place on the ice.
+	static TFunction<bool(const AJamSkater&, FVector&, FRotator&)> BoxSeat;
 
 	UFUNCTION(BlueprintPure, Category = "Jam|Skater") int32 GetSimIndex() const { return SimIndex; }
 	UFUNCTION(BlueprintPure, Category = "Jam|Skater") int32 GetTeam() const { return Team; }

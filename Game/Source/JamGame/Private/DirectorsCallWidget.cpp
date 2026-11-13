@@ -467,6 +467,9 @@ namespace
 	}
 }
 
+// Lane A123 (track U1, evolution 2): the ready pill waits for the first goal, as the HUD's own CALL READY line does.
+static TAutoConsoleVariable<int32> CVarJamHudCallPillAfterGoal(TEXT("jam.hud.CallPillAfterGoal"), 1,
+	TEXT("The ESC / START  CALL READY pill: 1 only once a goal has been scored (default, the HUD's own rule), 0 from the first faceoff."), ECVF_Default);
 static TAutoConsoleVariable<int32> CVarJamUiCardMode(TEXT("jam.ui.CardMode"), 0,
 	TEXT("MATCH card on rinks over 95 m: 0 = 40 pt in the usual place, 1 = 40 pt lifted to y 150 (lane A76)."), ECVF_Default);
 
@@ -604,7 +607,7 @@ void UJamDirectorsCallHudWidget::TickFrame(const FJamPresentationFrame& F, bool 
 	if (TakeArt) TakeArt->SetVisibility(bTake ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	const bool bLine = AnnouncementUntil >= 0 && F.SimFrame < AnnouncementUntil;
 	SetLine(Announcement, bLine);
-	SetLine(ReadyHint, bCallReady && !bEnd && !bLine);
+	SetLine(ReadyHint, ShowReadyPill(bCallReady, F.ScoreHome + F.ScoreAway, bEnd, bLine, CVarJamHudCallPillAfterGoal.GetValueOnGameThread() != 0));
 }
 
 FString UJamDirectorsCallHudWidget::GetTakeCardText() const
@@ -617,3 +620,4 @@ FString UJamDirectorsCallHudWidget::GetTakeCardText() const
 }
 FString UJamDirectorsCallHudWidget::GetAnnouncementText() const { return Announcement ? Announcement->GetText().ToString() : FString(); }
 bool UJamDirectorsCallHudWidget::IsTakeCardVisible() const { return TakeCard && TakeCard->GetVisibility() != ESlateVisibility::Collapsed; }
+bool UJamDirectorsCallHudWidget::IsLineVisible() const { return Announcement && Announcement->GetVisibility() != ESlateVisibility::Collapsed; }

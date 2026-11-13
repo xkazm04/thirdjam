@@ -29,12 +29,44 @@
 #include "Engine/GameInstance.h"
 #include "Camera/PlayerCameraManager.h"
 #include "ProfilingDebugging/CpuProfilerTrace.h"
+#include "Components/PrimitiveComponent.h"
+#include "JamPawns.h"
+#include "JamSkaterVisual.h"
+#include "DirectorsCallWidget.h"
 
 // Lane A84: the ability slot plate width (slate units at 1080p).
 static constexpr float AbilitySlotW = 380.f;
 
 int32 UJamHudWidget::FaceoffsThisSession = 0;
 bool UJamHudWidget::bControlsHintSpent = false;
+bool UJamHudWidget::bKeptPromptSpent = false;
+bool UJamHudWidget::bBrakePromptSpent = false;
+uint64 UJamHudWidget::PromptBandTick = 0;
+float UJamHudWidget::PromptBandTop = 0.f;
+
+// Lane A123 (track U1, evolution 2; docs/experiments/SCREEN.md part 2). Each rule has its neutral value: the screen before this lane.
+static TAutoConsoleVariable<int32> CVarJamHudMarkerAnchor(TEXT("jam.hud.MarkerAnchor"), 1,
+	TEXT("The human's marker: 1 its tip on the figure's head (the visual's head_socket, else the top of its bounds) and a ghost while the puck is under it (default); 0 the point 1.8 m over the skater's feet."), ECVF_Default);
+static TAutoConsoleVariable<float> CVarJamHudMarkerLiftCm(TEXT("jam.hud.MarkerLiftCm"), UJamHudWidget::YouMarkerHeadLiftCm,
+	TEXT("Centimetres from a mesh's head_socket along the head's axis (bone to socket) to the marker's anchor: -18 (default) is the helmet's top of device B's figures; 0 the socket itself."), ECVF_Default);
+static TAutoConsoleVariable<int32> CVarJamHudMarkerProbe(TEXT("jam.hud.MarkerProbe"), 0,
+	TEXT("N > 0: a JAMSCREEN marker line every N sim frames (where the tip stood against the head, the old rule's distance, frames down). 0 off."), ECVF_Default);
+static TAutoConsoleVariable<int32> CVarJamHudClearMiddle(TEXT("jam.hud.ClearMiddle"), 1,
+	TEXT("No HUD box in the middle third of the frame during play (bark bubbles pushed out, the YOU tag at the faceoff count only, no net label there): 1 on (default), 0 as before."), ECVF_Default);
+static TAutoConsoleVariable<int32> CVarJamHudCleanPlate(TEXT("jam.hud.CleanPlate"), 1,
+	TEXT("The scoreboard's centre plate: 1 centred, PERIOD n over FIRST TO n when there is no timer (default); 0 one line at the plate's top."), ECVF_Default);
+static TAutoConsoleVariable<int32> CVarJamHudPrompts(TEXT("jam.hud.Prompts"), 1,
+	TEXT("The two one-time prompts of a session (the kept puck at the first carry, the brake when a defender first closes inside 10 m): 1 on (default), 0 none."), ECVF_Default);
+
+bool UJamHudWidget::ClearMiddleOn() { return CVarJamHudClearMiddle.GetValueOnGameThread() != 0; }
+
+bool UJamHudWidget::GetPromptBandPx(float& OutTop, float& OutBottom)
+{
+	if (PromptBandTick == 0 || GFrameCounter > PromptBandTick + 1) return false;
+	OutTop = PromptBandTop - 4.f;
+	OutBottom = PromptBandTop + PromptSlotH + 4.f;
+	return true;
+}
 
 // Lane A111 (track U1, the screen; docs/experiments/SCREEN.md). Each rule has its neutral value: the screen before this lane.
 static TAutoConsoleVariable<int32> CVarJamHudYouMarker(TEXT("jam.hud.YouMarker"), 1,
@@ -145,6 +177,22 @@ namespace
 	// Lane A111: jam.ui.hintreset makes the controls strip due again (the proof's "first match of a session" without a new process).
 	FAutoConsoleCommand GHintReset(TEXT("jam.ui.hintreset"), TEXT("The controls hint counts as not yet shown this session."),
 		FConsoleCommandDelegate::CreateLambda([]() { UJamHudWidget::SetControlsHintSpent(false); }));
+	// Lane A123: the cartridge's stick.passive_take where the tree has the key (R-0048, lane A102); false (the puck is kept) where it has not.
+	template <typename T>
+	bool PassiveTakeOf(const T& Stick)
+	{
+		if constexpr (requires { Stick.bPassiveTake; }) return Stick.bPassiveTake;
+		else return false;
+	}
+	// Lane A123: jam.ui.promptreset makes both one-time prompts due again; jam.ui.prompt kept|brake shows one now (the proof's stills).
+	FAutoConsoleCommand GPromptReset(TEXT("jam.ui.promptreset"), TEXT("The two one-time prompts count as not yet shown this session."),
+		FConsoleCommandDelegate::CreateLambda([]() { UJamHudWidget::SetPromptsSpent(false, false); }));
+	FAutoConsoleCommand GPromptPreview(TEXT("jam.ui.prompt"), TEXT("Show a one-time prompt now on every HUD: jam.ui.prompt kept|brake"),
+		FConsoleCommandWithArgsDelegate::CreateLambda([](const TArray<FString>& Args)
+		{
+			const UJamHudWidget::EPrompt P = Args.Num() && Args[0].Equals(TEXT("brake"), ESearchCase::IgnoreCase) ? UJamHudWidget::EPrompt::Brake : UJamHudWidget::EPrompt::Kept;
+			for (TObjectIterator<UJamHudWidget> It; It; ++It) if (It->GetWorld() && !It->HasAnyFlags(RF_ClassDefaultObject)) It->PreviewPrompt(P);
+		}));
 	// QA previews for the proof shots (jam.ui.faceoff <frames>, jam.ui.effects icon:label,icon:label).
 	FAutoConsoleCommand GPreviewFaceoff(TEXT("jam.ui.faceoff"), TEXT("Preview the faceoff countdown on every HUD: jam.ui.faceoff <frames>"),
 		FConsoleCommandWithArgsDelegate::CreateLambda([](const TArray<FString>& Args)
@@ -269,6 +317,12 @@ void UJamHudWidget::BuildTree()
 	TakeText = MakeText(T, TEXT("TakeText"), S::Font(S::Caption + 2, FName("Bold"), 30), S::Yellow());
 	TakeText->SetJustification(ETextJustify::Center);
 	S::AddV(CentreBox, TakeText, FMargin(0, 0, 0, 0), HAlign_Center);
+	// Lane A123: with no timer the plate held one caption on its top border over an empty panel; the rule ("FIRST TO 3") is the second line, the two centred.
+	GoalRuleText = MakeText(T, TEXT("GoalRuleText"), S::Font(S::Label - 2, FName("Black"), 30), S::Paper());
+	GoalRuleText->SetJustification(ETextJustify::Center);
+	GoalRuleText->SetVisibility(ESlateVisibility::Collapsed);
+	S::AddV(CentreBox, GoalRuleText, FMargin(0, -2, 0, 0), HAlign_Center);
+	CentrePlate = Centre;
 	TimerText = MakeText(T, TEXT("TimerText"), S::ScoreFont(34, false), S::Paper());
 	TimerText->SetJustification(ETextJustify::Center);
 	S::AddV(CentreBox, TimerText, FMargin(0, -2, 0, 0), HAlign_Center);
@@ -399,6 +453,14 @@ void UJamHudWidget::BuildTree()
 	ContactText = MakeText(T, TEXT("ContactText"), S::Font(S::Body, FName("Bold"), 22), S::Yellow());
 	ContactPlate->SetContent(ContactText);
 	Place(Root, ContactPlate, FVector2D(0.5, 1), FVector2D(0.5, 1), FVector2D(0, -192));
+
+	// ---- Lane A123: the one-time prompt, a pill under the scoreboard (over the stands and the far boards, never over the play), in the HUD's yellow.
+	PromptPlate = S::Plate(T, S::Pill(0.86f), FMargin(22, 8));
+	PromptPlate->SetVisibility(ESlateVisibility::Collapsed);
+	PromptTextBlock = MakeText(T, TEXT("PromptText"), S::Font(S::Body + 2, FName("Black"), 30), S::Yellow());
+	PromptTextBlock->SetJustification(ETextJustify::Center);
+	PromptPlate->SetContent(PromptTextBlock);
+	Place(Root, PromptPlate, FVector2D(0.5, 0), FVector2D(0.5, 0), FVector2D(0, PromptSlotY));
 
 	// ---- Lane A42: the commentator's strip, bottom centre, above the controls strip; two lines at most.
 	CommentaryStrip = S::Plate(T, S::Pill(0.82f), FMargin(18, 7));
@@ -560,7 +622,20 @@ void UJamHudWidget::RefreshFromFrame(const FJamPresentationFrame& F)
 	ScoreAway->SetText(FText::FromString(FString::Printf(TEXT("%02d"), F.ScoreAway)));
 	HomeBox->SetBrushColor(F.TeamColour0);
 	AwayBox->SetBrushColor(F.TeamColour1);
-	TakeText->SetText(FText::FromString(FormatTake(F.Take, F.ScoreToWin).ToUpper()));
+	// Lane A123: one clean centre plate. With no timer: "PERIOD n" over "FIRST TO n"; the plate's content is centred (it hung from the top border).
+	const bool bCleanPlate = CVarJamHudCleanPlate.GetValueOnGameThread() != 0;
+	const bool bTwoLines = bCleanPlate && !F.bHasTimer && F.ScoreToWin > 0;
+	TakeText->SetText(FText::FromString(bTwoLines ? FormatPeriod(F.Take) : FormatTake(F.Take, F.ScoreToWin).ToUpper()));
+	if (GoalRuleText)
+	{
+		GoalRuleText->SetText(FText::FromString(FormatGoalRule(F.ScoreToWin)));
+		GoalRuleText->SetVisibility(bTwoLines ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+	}
+	if (CentrePlate && CentrePlateMode != (bCleanPlate ? 1 : 0))
+	{
+		CentrePlateMode = bCleanPlate ? 1 : 0;
+		CentrePlate->SetVerticalAlignment(bCleanPlate ? VAlign_Center : VAlign_Fill);
+	}
 	TimerText->SetText(FText::FromString(F.bHasTimer ? FormatTimer(F.FramesRemaining) : FString()));
 	// Lane A49: the stamina bar shows while the sprint runs or the bar is not full; yellow while sprinting, chalk while it refills.
 	if (StaminaBack && StaminaFill)
@@ -671,15 +746,176 @@ void UJamHudWidget::RefreshFromFrame(const FJamPresentationFrame& F)
 		CountdownText->SetColorAndOpacity(FSlateColor(S::Yellow()));
 		CountdownText->SetFont(S::Font(S::Title + 8, FName("Black"), S::TrackTitle, true));
 	}
+	// Lane A123 (2): the ring and its hint stand outside the middle third (set on a change of the rule only).
+	if (const float RingX = ClearMiddleOn() ? RingOffsetClearXPx : RingOffsetXPx; RingX != RingXApplied)
+	{
+		RingXApplied = RingX;
+		if (UCanvasPanelSlot* RS = Cast<UCanvasPanelSlot>(CountdownBox->Slot)) RS->SetPosition(FVector2D(RingX, 0));
+		if (UCanvasPanelSlot* HS = Cast<UCanvasPanelSlot>(FaceoffHintPlate->Slot)) HS->SetPosition(FVector2D(RingX, 124));
+	}
 	FaceoffWord->SetVisibility(bCount ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	CountdownBox->SetVisibility(bCount || bDrop || bResult ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	FaceoffHintPlate->SetVisibility(bCount && FaceoffsThisSession <= FaceoffHintCount ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 
+	bCountingThisFrame = bCount;
+	bSimAdvancedThisFrame = bSimAdvanced;
 	{ TRACE_CPUPROFILER_EVENT_SCOPE(JamHud_Radar); Radar->SetFrame(F); }
 	{ TRACE_CPUPROFILER_EVENT_SCOPE(JamHud_NetMarkers); UpdateMarker(F); UpdateOwnMarker(F); }
 	{ TRACE_CPUPROFILER_EVENT_SCOPE(JamHud_Yours); UpdateYours(F); }
 	{ TRACE_CPUPROFILER_EVENT_SCOPE(JamHud_PuckMarker); UpdatePuckMarker(F, bCount || Frames > 0 || F.SimFrame < PuckMarkerCardFrames); ResolveEdgeSlots(); UpdateLabelPlates(); }
 	{ TRACE_CPUPROFILER_EVENT_SCOPE(JamHud_Commentary); UpdateCommentary(F); }
+	UpdatePrompts(F, Frames > 0, bSimAdvanced);
+}
+
+// Lane A123 (1): where the human figure's head is. The visual's head_socket (a mesh socket on any of its components: device B's figures; or a scene component of
+// that name: the toy), else the top of its largest primitive's bounds. The component is found once per visual (a bounds answer is looked at again every 60 ticks:
+// a mesh may arrive after the first frame).
+int32 UJamHudWidget::HumanHeadWorld(FVector& OutWorld)
+{
+	const AHokejGameMode* GM = GetWorld() ? GetWorld()->GetAuthGameMode<AHokejGameMode>() : nullptr;
+	const AJamSkater* Human = GM ? GM->GetHumanSkater() : nullptr;
+	UObject* Visual = Human ? Human->GetVisualObject() : nullptr;
+	if (!Visual) { HeadVisual.Reset(); HeadComp.Reset(); HeadCompKind = 0; return 0; }
+	const bool bLookAgain = HeadCompKind == 1 && (OverlaySearchTick % 60) == 0;
+	if (HeadVisual.Get() != Visual || !HeadComp.IsValid() || bLookAgain)
+	{
+		HeadVisual = Visual; HeadComp.Reset(); HeadCompKind = 0;
+		TArray<USceneComponent*> Candidates;
+		if (USceneComponent* SC = Cast<USceneComponent>(Visual)) { Candidates.Add(SC); SC->GetChildrenComponents(true, Candidates); }
+		else if (AActor* A = Cast<AActor>(Visual)) A->GetComponents<USceneComponent>(Candidates);
+		for (USceneComponent* Cand : Candidates) if (Cand && Cand->DoesSocketExist(JamSkaterSockets::Head)) { HeadComp = Cand; HeadCompKind = 2; break; }
+		if (HeadCompKind == 0) for (USceneComponent* Cand : Candidates) if (Cand && Cand->GetFName() == JamSkaterSockets::Head) { HeadComp = Cand; HeadCompKind = 3; break; }
+		if (HeadCompKind == 0)
+		{
+			float Best = 0.f;
+			for (USceneComponent* Cand : Candidates)
+				if (const UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Cand); Prim && Prim->IsRegistered() && Prim->Bounds.SphereRadius > Best) { Best = Prim->Bounds.SphereRadius; HeadComp = Cand; HeadCompKind = 1; }
+		}
+	}
+	const USceneComponent* Comp = HeadComp.Get();
+	if (!Comp) return 0;
+	if (HeadCompKind == 2)
+	{
+		OutWorld = Comp->GetSocketLocation(JamSkaterSockets::Head);
+		// The socket floats over the helmet: come back along the head's own axis (it follows a lean and a fall), the world's up without a head bone.
+		if (const float Lift = CVarJamHudMarkerLiftCm.GetValueOnGameThread(); Lift != 0.f)
+		{
+			static const FName HeadBoneName(TEXT("head"));
+			FVector Axis = Comp->DoesSocketExist(HeadBoneName) ? (OutWorld - Comp->GetSocketLocation(HeadBoneName)).GetSafeNormal() : FVector::UpVector;
+			if (Axis.IsNearlyZero()) Axis = FVector::UpVector;
+			OutWorld += Axis * Lift;
+		}
+		return 2;
+	}
+	if (HeadCompKind == 3) { OutWorld = Comp->GetComponentLocation(); return 2; }
+	OutWorld = FVector(Comp->Bounds.Origin.X, Comp->Bounds.Origin.Y, Comp->Bounds.Origin.Z + Comp->Bounds.BoxExtent.Z);
+	return 1;
+}
+
+// Lane A123 (1), the proof's probe: per sim frame seen, where the tip stood (pixels of the viewport, not Slate units) against the head bone, how far the rule of
+// before (1.8 m over the feet) stood from the tip, the head's height over the ice, and the frames the human was down. One line every N sim frames.
+void UJamHudWidget::ProbeMarker(const FJamPresentationFrame& F, int32 Source, const FVector2D& Tip, const FVector2D& OldTip, const FVector& HeadWorld)
+{
+	const int32 Every = CVarJamHudMarkerProbe.GetValueOnGameThread();
+	if (Every <= 0) return;
+	if (F.SimFrame < Probe.LastLogged) Probe = FMarkerProbe();   // a restart
+	const AHokejGameMode* GM = GetWorld() ? GetWorld()->GetAuthGameMode<AHokejGameMode>() : nullptr;
+	const bool bDown = GM && GM->GetSim() && GM->GetSim()->GetSkaters().IsValidIndex(F.HumanIndex) && GM->GetSim()->GetSkaters()[F.HumanIndex].IsDown();
+	const float Scale = FMath::Max(UWidgetLayoutLibrary::GetViewportScale(this), 0.01f);
+	++Probe.Frames;
+	if (Source == 2) ++Probe.Socket; else if (Source == 1) ++Probe.Bounds; else ++Probe.Fallback;
+	if (bDown) ++Probe.Down;
+	const float OldPx = static_cast<float>(FVector2D::Distance(Tip, OldTip)) * Scale;
+	Probe.OldMaxPx = FMath::Max(Probe.OldMaxPx, bDown ? 0.f : OldPx);
+	Probe.OldMaxDownPx = FMath::Max(Probe.OldMaxDownPx, bDown ? OldPx : 0.f);
+	Probe.HeadMinCm = FMath::Min(Probe.HeadMinCm, static_cast<float>(HeadWorld.Z));
+	Probe.HeadMaxCm = FMath::Max(Probe.HeadMaxCm, static_cast<float>(HeadWorld.Z));
+	// The head bone (the helmet's centre) is the second reference: the tip stands the helmet's radius and the gap over it.
+	static const FName HeadBone(TEXT("head"));
+	FVector2D BonePx;
+	if (const USceneComponent* Comp = HeadComp.Get(); Comp && HeadCompKind == 2 && Comp->DoesSocketExist(HeadBone) && GetOwningPlayer()
+		&& UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(GetOwningPlayer(), Comp->GetSocketLocation(HeadBone), BonePx, false))
+	{
+		Probe.BoneMaxPx = FMath::Max(Probe.BoneMaxPx, static_cast<float>(FVector2D::Distance(Tip, BonePx)) * Scale);
+	}
+	if (F.SimFrame - Probe.LastLogged >= Every)
+	{
+		Probe.LastLogged = F.SimFrame;
+		UE_LOG(LogHokej, Log, TEXT("JAMSCREEN marker sim_frame=%lld frames=%lld socket=%lld bounds=%lld fallback=%lld down=%lld tip_over_anchor=%.1fpx tip_to_head_bone_max=%.1fpx old_rule_off_max=%.1fpx old_rule_off_down_max=%.1fpx head_cm=%.0f..%.0f scale=%.3f"),
+			F.SimFrame, Probe.Frames, Probe.Socket, Probe.Bounds, Probe.Fallback, Probe.Down, YouMarkerGapPx * Scale, Probe.BoneMaxPx, Probe.OldMaxPx, Probe.OldMaxDownPx, Probe.HeadMinCm, Probe.HeadMaxCm, Scale);
+	}
+}
+
+// Lane A123 (3): the two one-time prompts. Presentation only: reads the frame, the sim's carrier and the cartridge; writes nothing back.
+void UJamHudWidget::UpdatePrompts(const FJamPresentationFrame& F, bool bCountingDown, bool bSimAdvanced)
+{
+	++OverlaySearchTick;
+	if (!PromptPlate || !PromptTextBlock) return;
+	if (PromptShown > F.SimFrame) { PromptShown = -1; PromptNow = EPrompt::None; }   // a restart
+	const AHokejGameMode* GM = GetWorld() ? GetWorld()->GetAuthGameMode<AHokejGameMode>() : nullptr;
+	int32 Carrier = -1;
+	if (GM && GM->GetSim()) Carrier = GM->GetSim()->CarrierIndex();
+	else { float Best = 1.2f; for (int32 i = 0; i < F.Skaters.Num(); ++i) { const float D = FVector2D::Distance(F.Skaters[i].PosM, F.PuckM); if (D < Best) { Best = D; Carrier = i; } } }
+	const bool bCarry = F.Skaters.IsValidIndex(F.HumanIndex) && Carrier == F.HumanIndex;
+	float Nearest = -1.f;
+	if (bCarry)
+	{
+		for (const FJamPresentationSkater& Sk : F.Skaters)
+		{
+			if (Sk.TeamId == F.Skaters[F.HumanIndex].TeamId) continue;
+			const float D = static_cast<float>(FVector2D::Distance(Sk.PosM, F.Skaters[F.HumanIndex].PosM));
+			if (Nearest < 0.f || D < Nearest) Nearest = D;
+		}
+	}
+	const bool bClosing = bCarry && Nearest >= 0.f && LastNearestOpponentM >= 0.f && Nearest < LastNearestOpponentM - 1e-3f;
+	if (bSimAdvanced) LastNearestOpponentM = bCarry ? Nearest : -1.f;
+	const bool bKeptRule = !(GM && GM->GetCartridge() && PassiveTakeOf(GM->GetCartridge()->Game.Stick));
+	// One teaching surface at a time: nothing is due while the controls strip of the first match shows or a faceoff counts.
+	const bool bPlayLive = F.Phase == EJamPhase::Play && !bCountingDown && !bHintThisFrame;
+	if (PromptNow == EPrompt::None || PromptOpacity(PromptShown, F.SimFrame) <= 0.f)
+	{
+		const EPrompt Due = PromptPreview != EPrompt::None ? PromptPreview
+			: PromptDue(CVarJamHudPrompts.GetValueOnGameThread() != 0, bPlayLive, bCarry, Nearest, bClosing, bKeptPromptSpent, bBrakePromptSpent, bKeptRule);
+		PromptPreview = EPrompt::None;
+		PromptNow = Due;
+		if (Due != EPrompt::None)
+		{
+			PromptShown = F.SimFrame;
+			bPromptLow = false;
+			if (Due == EPrompt::Kept) bKeptPromptSpent = true; else bBrakePromptSpent = true;
+			PromptTextBlock->SetText(FText::FromString(PromptText(Due)));
+			UE_LOG(LogHokej, Log, TEXT("JAMSCREEN prompt %s at sim frame %lld (nearest opponent %.1f m): %s"), Due == EPrompt::Kept ? TEXT("kept") : TEXT("brake"), F.SimFrame, Nearest, *PromptText(Due));
+		}
+	}
+	const float Alpha = (PromptNow != EPrompt::None && F.Phase == EJamPhase::Play) ? PromptOpacity(PromptShown, F.SimFrame) : 0.f;
+	PromptPlate->SetVisibility(Alpha > 0.f ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+	if (Alpha <= 0.f) return;
+	PromptPlate->SetRenderOpacity(Alpha);
+	// Under the scoreboard; one slot lower while the overlay's line (a call's result, a RULE line) holds that place.
+	if (!OverlayForPrompt.IsValid() && (OverlaySearchTick % 60) == 1)
+	{
+		for (TObjectIterator<UJamDirectorsCallHudWidget> It; It; ++It) if (It->GetWorld() == GetWorld() && !It->HasAnyFlags(RF_ClassDefaultObject)) { OverlayForPrompt = *It; break; }
+	}
+	// The same for a net badge or the puck's arrow standing in the top slot (the far net straight ahead on a long rink). Once low, this prompt stays low.
+	const float VWp = static_cast<float>(UWidgetLayoutLibrary::GetViewportSize(this).X) / FMath::Max(UWidgetLayoutLibrary::GetViewportScale(this), 0.01f);
+	const float HalfWp = FMath::Max(240.f, static_cast<float>(PromptPlate->GetDesiredSize().X) * 0.5f);
+	bool bTaken = OverlayForPrompt.IsValid() && OverlayForPrompt->IsLineVisible();
+	const UWidget* EdgeMarks[] = { NetDiamond.Get(), OwnDiamond.Get(), PuckArrow.Get() };
+	for (const UWidget* Mark : EdgeMarks)
+	{
+		const UCanvasPanelSlot* MS = Mark && Mark->GetVisibility() != ESlateVisibility::Collapsed && Mark->GetRenderOpacity() > 0.f ? Cast<UCanvasPanelSlot>(Mark->Slot) : nullptr;
+		if (MS && InPromptSlot(MS->GetPosition(), VWp, HalfWp)) bTaken = true;
+	}
+	if (bTaken) bPromptLow = true;
+	const float Y = PromptSlotFor(bPromptLow);
+	if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(PromptPlate->Slot)) CS->SetPosition(FVector2D(0, Y));
+	PromptBandTick = GFrameCounter;
+	PromptBandTop = Y;
+}
+
+FString UJamHudWidget::GetPromptText() const
+{
+	return PromptPlate && PromptTextBlock && PromptPlate->GetVisibility() != ESlateVisibility::Collapsed ? PromptTextBlock->GetText().ToString() : FString();
 }
 
 // Lane A111: the dark plate behind each distance label. The label's own slot stays the anchor every other rule moves (the edge slots, the clamp); the plate
@@ -1000,7 +1236,27 @@ void UJamHudWidget::UpdateYours(const FJamPresentationFrame& F)
 	// Over the head: the chevron (team colour) past the fade, the YOU tag the first 5 s and 2 s after every drop.
 	FVector2D Head;
 	// Just over the helmet (the toy figure's head socket is at 1.65 m; the bark bubbles sit higher, at 2.35 m, so the two never meet).
-	const bool bHead = bOn && PC && UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(PC, UJamSim::ToWorld(Me.PosM, YouMarkerHeadM), Head, false);
+	// Lane A123 (1): the tip follows the figure's head (its socket, else its bounds): the clay figure is shorter than 1.8 m, crouches at the faceoff, leans and
+	// lies down; the point over the feet stood 40 to 60 px over the helmet, beside the puck at the faceoff, and over nothing with the human down.
+	FVector2D OldHead;
+	const bool bOldHead = bOn && PC && UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(PC, UJamSim::ToWorld(Me.PosM, YouMarkerHeadM), OldHead, false);
+	const bool bAnchor = CVarJamHudMarkerAnchor.GetValueOnGameThread() != 0;
+	FVector HeadWorld = UJamSim::ToWorld(Me.PosM, YouMarkerHeadM);
+	const int32 HeadSource = bAnchor ? HumanHeadWorld(HeadWorld) : 0;
+	bool bHead = bOldHead;
+	Head = OldHead;
+	if (HeadSource > 0) bHead = bOn && PC && UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(PC, HeadWorld, Head, false);
+	const FVector2D Tip = YouMarkerTip(Head);
+	if (bHead && bOldHead && bSimAdvancedThisFrame) ProbeMarker(F, HeadSource, Tip, YouMarkerTip(OldHead), HeadWorld);
+	// The marker never sits on the puck or the dot under it: a ghost while the puck's projection is inside the chevron's box, no tag while it is inside the tag's.
+	FVector2D PuckPx, ChevMin, ChevMax, TagMin, TagMax;
+	YouChevronBox(Tip, ChevMin, ChevMax);
+	YouTagBox(Tip, TagMin, TagMax);
+	const bool bPuckPx = bAnchor && bHead && PC && UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(PC, UJamSim::ToWorld(F.PuckM, 0.1), PuckPx, false);
+	const float YieldTarget = MarkerYieldAlpha(bPuckPx && MarkerBoxHasPuck(ChevMin, ChevMax, PuckPx));
+	if (!bAnchor) MarkerYield = 1.f;
+	else if (bSimAdvancedThisFrame) MarkerYield += FMath::Clamp(YieldTarget - MarkerYield, -0.12f, 0.12f);
+	const bool bTagOnPuck = bPuckPx && MarkerBoxHasPuck(TagMin, TagMax, PuckPx);
 	// Lane A111 (B-to-A-0038 fault 7): the chevron is the human's marker for the whole match, in the HUD's yellow; jam.hud.YouMarker 0 = A42's fade rule.
 	const bool bMarker = CVarJamHudYouMarker.GetValueOnGameThread() != 0;
 	const float ChevronAlpha = YouMarkerAlpha(bMarker, RingAlpha);
@@ -1010,9 +1266,9 @@ void UJamHudWidget::UpdateYours(const FJamPresentationFrame& F)
 	const bool bTagAtRing = !bMarker && RingAlpha > 0.f;
 	if (bHead && ChevronAlpha > 0.f)
 	{
-		YouChevron->SetRenderOpacity(ChevronAlpha);
+		YouChevron->SetRenderOpacity(ChevronAlpha * (bMarker ? MarkerYield : 1.f));
 		YouChevron->SetVisibility(ESlateVisibility::HitTestInvisible);
-		if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(YouChevron->Slot)) CS->SetPosition(Head + FVector2D(0, -YouMarkerGapPx));
+		if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(YouChevron->Slot)) CS->SetPosition(Tip);
 		// Two bars: take-yellow with a 2 px ink edge as the marker, the team colour under A42's rule. Re-built only when the colour changes (it is on every frame now).
 		const FLinearColor Want = bMarker ? S::Yellow() : Team;
 		if (!Want.Equals(YouChevronColour))
@@ -1023,7 +1279,8 @@ void UJamHudWidget::UpdateYours(const FJamPresentationFrame& F)
 		}
 	}
 	else Hide(YouChevron);
-	if ((bTagAtRing || bHead) && ShowYouTag(F.SimFrame, LastDropFrame))
+	// Lane A123 (2): with the middle kept clear the tag shows while a faceoff counts down and not after the drop; never on the puck.
+	if ((bTagAtRing || bHead) && ShowYouTagLive(bMarker && ClearMiddleOn(), bCountingThisFrame, F.SimFrame, LastDropFrame) && !(bMarker && bTagOnPuck))
 	{
 		YouTag->SetBrush(S::Rounded(Team, 8.f, FLinearColor(0, 0, 0, 0.9f), 2.f));
 		YouTag->SetVisibility(ESlateVisibility::HitTestInvisible);
@@ -1142,6 +1399,14 @@ void UJamHudWidget::UpdateMarker(const FJamPresentationFrame& F)
 	NetDiamond->SetVisibility(bBadge ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	NetText->SetVisibility(bBadge ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	if (!bBadge && NetArrow) NetArrow->SetVisibility(ESlateVisibility::Collapsed);
+	// Lane A123 (2): the label (a dark plate with the distance) is not drawn while it would stand in the middle third: the net is in front of the player then.
+	if (bBadge && Marker.bOnScreen)
+	{
+		const bool bLeftSide = Marker.ScreenPos.X > VW - 200.f;
+		const float LabelW = 12.f * Marker.Text.Len() + 2.f * LabelPlatePadX;
+		const FVector2D LMin(Marker.ScreenPos.X + (bLeftSide ? -24.f - LabelW : 24.f), Marker.ScreenPos.Y - 15.f);
+		if (!ShowNetLabel(ClearMiddleOn(), LMin, LMin + FVector2D(LabelW, 30.f), VW, VH)) NetText->SetVisibility(ESlateVisibility::Collapsed);
+	}
 }
 
 void UJamHudWidget::ShowToast(const FString& Text)
@@ -1205,7 +1470,13 @@ FString UJamHudWidget::GetToastText() const { return ToastText && ToastPlate && 
 FString UJamHudWidget::GetCardText() const { return CardTextBlock ? CardTextBlock->GetText().ToString() : FString(); }
 FString UJamHudWidget::GetScoreText() const { return ScoreHome && ScoreAway ? ScoreHome->GetText().ToString() + TEXT(" : ") + ScoreAway->GetText().ToString() : FString(); }
 FString UJamHudWidget::GetTimerText() const { return TimerText ? TimerText->GetText().ToString() : FString(); }
-FString UJamHudWidget::GetTakeText() const { return TakeText ? TakeText->GetText().ToString() : FString(); }
+// Lane A123: the two lines of the clean plate read as the one line of before ("PERIOD 1: FIRST TO 3") to every caller.
+FString UJamHudWidget::GetTakeText() const
+{
+	if (!TakeText) return FString();
+	const bool bRule = GoalRuleText && GoalRuleText->GetVisibility() != ESlateVisibility::Collapsed && !GoalRuleText->GetText().IsEmpty();
+	return bRule ? TakeText->GetText().ToString() + TEXT(": ") + GoalRuleText->GetText().ToString() : TakeText->GetText().ToString();
+}
 
 void UJamHudWidget::UpdateOwnMarker(const FJamPresentationFrame& F)
 {
@@ -1245,4 +1516,10 @@ void UJamHudWidget::UpdateOwnMarker(const FJamPresentationFrame& F)
 	OwnDiamond->SetVisibility(bBadge ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	OwnText->SetVisibility(bBadge ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	if (!bBadge && OwnArrow) OwnArrow->SetVisibility(ESlateVisibility::Collapsed);
+	if (bBadge && OwnMarker.bOnScreen)   // lane A123 (2): as the far net's label
+	{
+		const float LabelW = 10.f * OwnMarker.Text.Len() + 2.f * LabelPlatePadX;
+		const FVector2D LMin(OwnMarker.ScreenPos.X - LabelW * 0.5f, OwnMarker.ScreenPos.Y + 10.f);
+		if (!ShowNetLabel(ClearMiddleOn(), LMin, LMin + FVector2D(LabelW, 28.f), VW, VH)) OwnText->SetVisibility(ESlateVisibility::Collapsed);
+	}
 }

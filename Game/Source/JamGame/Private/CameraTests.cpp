@@ -11,6 +11,8 @@
 #include "InputMapping.h"
 #include "EffectsBinder.h"
 #include "HokejGameMode.h"
+#include "BarkWidget.h"
+#include "DirectorsCallWidget.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
 
@@ -731,6 +733,220 @@ bool FJamCameraCornerLift::RunTest(const FString&)
 		TestTrue(TEXT("no snap in pitch"), MaxDp <= 1.2f);
 		TestEqual(TEXT("settles at the height plus the lift"), EndZ, On.HeightM + On.CornerLiftM, 0.02f);
 	}
+	return true;
+}
+
+// ---- lane A123 (track U1, evolution 2): nothing sits on the play, and the screen teaches the two new verbs. Pure rules, no world.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamHudClearScreen, "Jam.Hud.ClearScreen", EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+bool FJamHudClearScreen::RunTest(const FString&)
+{
+	const float VW = 1920.f, VH = 1080.f;
+	// The middle third is the centre rectangle.
+	TestTrue(TEXT("a box at the centre is in the middle third"), UJamHudWidget::InMiddleThird(FVector2D(900, 500), FVector2D(1000, 560), VW, VH));
+	TestFalse(TEXT("the scoreboard is not"), UJamHudWidget::InMiddleThird(FVector2D(700, 14), FVector2D(1220, 104), VW, VH));
+	TestFalse(TEXT("the commentary strip is not"), UJamHudWidget::InMiddleThird(FVector2D(600, 1010), FVector2D(1320, 1056), VW, VH));
+	TestFalse(TEXT("a label on the side edge is not"), UJamHudWidget::InMiddleThird(FVector2D(1700, 500), FVector2D(1820, 530), VW, VH));
+	TestFalse(TEXT("the prompt's slot is not"), UJamHudWidget::InMiddleThird(FVector2D(560, UJamHudWidget::PromptSlotY), FVector2D(1360, UJamHudWidget::PromptSlotY + UJamHudWidget::PromptSlotH), VW, VH));
+	TestFalse(TEXT("the prompt's lower slot is not"), UJamHudWidget::InMiddleThird(FVector2D(560, UJamHudWidget::PromptSlotLowY), FVector2D(1360, UJamHudWidget::PromptSlotLowY + UJamHudWidget::PromptSlotH), VW, VH));
+	// The bark bubble: wherever its speaker stands, the bubble's box ends outside the middle third and inside the frame, by the shortest way.
+	int32 Moved = 0, Checked = 0;
+	float Farthest = 0.f;
+	for (float X = 160.f; X <= VW - 160.f; X += 40.f)
+	{
+		for (float Y = 170.f; Y <= VH - 60.f; Y += 20.f)
+		{
+			for (const float HalfW : { 120.f, 220.f, 330.f })
+			{
+				if (X - HalfW < 0.f || X + HalfW > VW) continue;
+				const FVector2D P(X, Y), Q = UJamBarkWidget::PushOutOfMiddle(P, HalfW, 54.f, VW, VH);
+				++Checked;
+				if (!Q.Equals(P)) ++Moved;
+				Farthest = FMath::Max(Farthest, static_cast<float>(FVector2D::Distance(P, Q)));
+				if (UJamHudWidget::InMiddleThird(FVector2D(Q.X - HalfW, Q.Y - 54.f), FVector2D(Q.X + HalfW, Q.Y), VW, VH) || Q.X - HalfW < 0.f || Q.X + HalfW > VW || Q.Y - 54.f < 0.f || Q.Y > VH)
+				{
+					AddError(FString::Printf(TEXT("a bubble at (%.0f, %.0f) half width %.0f ends at (%.0f, %.0f): in the middle third or out of the frame"), X, Y, HalfW, Q.X, Q.Y));
+				}
+			}
+		}
+	}
+	AddInfo(FString::Printf(TEXT("JAMSCREEN bark push: %d of %d bubble places moved, the farthest by %.0f Slate units"), Moved, Checked, Farthest));
+	TestTrue(TEXT("bubbles over the middle were moved"), Moved > 0);
+	TestTrue(TEXT("no bubble moves farther than half the rectangle's height plus its own"), Farthest <= VH / 6.f + 54.f + 8.f + 1.f);
+	TestEqual(TEXT("a bubble outside stays"), UJamBarkWidget::PushOutOfMiddle(FVector2D(300, 300), 120.f, 54.f, VW, VH), FVector2D(300, 300));
+	TestEqual(TEXT("a bubble just under the top edge of the rectangle goes up"), UJamBarkWidget::PushOutOfMiddle(FVector2D(960, 380), 120.f, 54.f, VW, VH), FVector2D(960, VH / 3.f - 8.f));
+	TestEqual(TEXT("a bubble near the bottom edge goes down"), UJamBarkWidget::PushOutOfMiddle(FVector2D(960, 730), 120.f, 54.f, VW, VH), FVector2D(960, VH * 2.f / 3.f + 8.f + 54.f));
+	// The faceoff ring (220 px at 0.66 of the height): at 260 right of centre it reached into the middle third; at 440 it stands outside.
+	{
+		const FVector2D RingC(VW * 0.5f + UJamHudWidget::RingOffsetClearXPx, VH * 0.66f), Old(VW * 0.5f + UJamHudWidget::RingOffsetXPx, VH * 0.66f), Half(UJamHudWidget::RingBoxPx * 0.5f, UJamHudWidget::RingBoxPx * 0.5f);
+		TestFalse(TEXT("the ring stands outside the middle third"), UJamHudWidget::InMiddleThird(RingC - Half, RingC + Half, VW, VH));
+		TestTrue(TEXT("at its place of before it reached in"), UJamHudWidget::InMiddleThird(Old - Half, Old + Half, VW, VH));
+	}
+	// The ready pill: by the HUD's own rule, after a goal.
+	TestFalse(TEXT("no pill at 0:0"), UJamDirectorsCallHudWidget::ShowReadyPill(true, 0, false, false));
+	TestTrue(TEXT("the pill after a goal"), UJamDirectorsCallHudWidget::ShowReadyPill(true, 1, false, false));
+	TestFalse(TEXT("no pill on the end card"), UJamDirectorsCallHudWidget::ShowReadyPill(true, 1, true, false));
+	TestFalse(TEXT("no pill under the line"), UJamDirectorsCallHudWidget::ShowReadyPill(true, 1, false, true));
+	TestFalse(TEXT("no pill when no call is ready"), UJamDirectorsCallHudWidget::ShowReadyPill(false, 3, false, false));
+	TestTrue(TEXT("neutral: the pill from the first faceoff"), UJamDirectorsCallHudWidget::ShowReadyPill(true, 0, false, false, false));
+	// The YOU tag: at the faceoff count only; the neutral value is A42's window.
+	TestTrue(TEXT("tag while the faceoff counts"), UJamHudWidget::ShowYouTagLive(true, true, 100, -1));
+	TestFalse(TEXT("no tag once the puck has dropped"), UJamHudWidget::ShowYouTagLive(true, false, 200, 180));
+	TestTrue(TEXT("neutral: the tag 2 s after a drop"), UJamHudWidget::ShowYouTagLive(false, false, 1000, 950));
+	// A net's label gives way in the middle third; the neutral value keeps it.
+	TestFalse(TEXT("no net label in the middle third"), UJamHudWidget::ShowNetLabel(true, FVector2D(980, 400), FVector2D(1060, 430), VW, VH));
+	TestTrue(TEXT("the label on the edge stays"), UJamHudWidget::ShowNetLabel(true, FVector2D(1700, 400), FVector2D(1780, 430), VW, VH));
+	TestTrue(TEXT("neutral: the label stays"), UJamHudWidget::ShowNetLabel(false, FVector2D(980, 400), FVector2D(1060, 430), VW, VH));
+	// The centre plate's two lines.
+	TestEqual(TEXT("the period line"), UJamHudWidget::FormatPeriod(1), FString(TEXT("PERIOD 1")));
+	TestEqual(TEXT("the rule line"), UJamHudWidget::FormatGoalRule(3), FString(TEXT("FIRST TO 3")));
+	TestTrue(TEXT("no rule line without a rule"), UJamHudWidget::FormatGoalRule(0).IsEmpty());
+	// The marker yields to the puck: a ghost while the puck is inside the chevron's box, no tag while it is inside the tag's.
+	const FVector2D Tip = UJamHudWidget::YouMarkerTip(FVector2D(800, 500));
+	TestEqual(TEXT("the tip stands the gap over the head"), Tip, FVector2D(800, 500 - UJamHudWidget::YouMarkerGapPx));
+	FVector2D CMin, CMax, TMin, TMax;
+	UJamHudWidget::YouChevronBox(Tip, CMin, CMax);
+	UJamHudWidget::YouTagBox(Tip, TMin, TMax);
+	TestTrue(TEXT("the tag stands on the chevron"), TMax.Y <= CMin.Y && TMin.Y < TMax.Y);
+	TestTrue(TEXT("a puck inside the chevron's box"), UJamHudWidget::MarkerBoxHasPuck(CMin, CMax, FVector2D(805, 470)));
+	TestTrue(TEXT("a puck at its edge counts (the pad)"), UJamHudWidget::MarkerBoxHasPuck(CMin, CMax, FVector2D(CMax.X + 8, 470)));
+	TestFalse(TEXT("a puck beside it does not"), UJamHudWidget::MarkerBoxHasPuck(CMin, CMax, FVector2D(CMax.X + 30, 470)));
+	TestFalse(TEXT("a puck at the feet does not"), UJamHudWidget::MarkerBoxHasPuck(CMin, CMax, FVector2D(800, 640)));
+	TestEqual(TEXT("ghost over the puck"), UJamHudWidget::MarkerYieldAlpha(true), UJamHudWidget::MarkerGhostAlpha);
+	TestEqual(TEXT("full otherwise"), UJamHudWidget::MarkerYieldAlpha(false), 1.f);
+	return true;
+}
+
+// The two one-time prompts: when each is due, once, in order, never over the controls strip's window or a faceoff count (the caller's bPlayLive).
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamHudPrompts, "Jam.Hud.Prompts", EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+bool FJamHudPrompts::RunTest(const FString&)
+{
+	using W = UJamHudWidget;
+	TestEqual(TEXT("the brake prompt's words"), W::PromptText(W::EPrompt::Brake), FString(TEXT("S AGAINST YOUR MOTION: STOP, THEN GO")));
+	TestEqual(TEXT("the kept puck's words"), W::PromptText(W::EPrompt::Kept), FString(TEXT("THE PUCK IS YOURS UNTIL SOMEONE PRESSES FOR IT")));
+	TestTrue(TEXT("no words for none"), W::PromptText(W::EPrompt::None).IsEmpty());
+	// The trigger: PromptDue(on, play live, human carries, nearest opponent m, closing, kept spent, brake spent, the puck-is-kept rule).
+	TestTrue(TEXT("nothing without the puck"), W::PromptDue(true, true, false, 4.f, true, false, false, true) == W::EPrompt::None);
+	TestTrue(TEXT("nothing outside live play (a faceoff count, the controls strip)"), W::PromptDue(true, false, true, 4.f, true, false, false, true) == W::EPrompt::None);
+	TestTrue(TEXT("the first carry: the kept puck"), W::PromptDue(true, true, true, 30.f, false, false, false, true) == W::EPrompt::Kept);
+	TestTrue(TEXT("kept spent, nobody near: nothing"), W::PromptDue(true, true, true, 30.f, false, true, false, true) == W::EPrompt::None);
+	TestTrue(TEXT("a defender at 10.5 m closing: not yet"), W::PromptDue(true, true, true, 10.5f, true, true, false, true) == W::EPrompt::None);
+	TestTrue(TEXT("a defender inside 10 m but not closing: not yet"), W::PromptDue(true, true, true, 6.f, false, true, false, true) == W::EPrompt::None);
+	TestTrue(TEXT("a defender closing inside 10 m: the brake"), W::PromptDue(true, true, true, 9.9f, true, true, false, true) == W::EPrompt::Brake);
+	TestTrue(TEXT("both spent: never again"), W::PromptDue(true, true, true, 3.f, true, true, true, true) == W::EPrompt::None);
+	TestTrue(TEXT("a cartridge that does not keep the puck gets the brake prompt only"), W::PromptDue(true, true, true, 9.f, true, false, false, false) == W::EPrompt::Brake);
+	TestTrue(TEXT("and no kept prompt"), W::PromptDue(true, true, true, 30.f, false, false, false, false) == W::EPrompt::None);
+	TestTrue(TEXT("the neutral value: none"), W::PromptDue(false, true, true, 3.f, true, false, false, true) == W::EPrompt::None);
+	TestEqual(TEXT("the range is the brief's 10 m"), W::BrakePromptRangeM, 10.f);
+	// A session: frame by frame through the rule as the widget drives it (one prompt at a time, each spent when shown).
+	{
+		bool bKept = false, bBrake = false;
+		int64 Shown = -1;
+		W::EPrompt Now = W::EPrompt::None;
+		int32 KeptShows = 0, BrakeShows = 0;
+		int64 KeptAt = -1, BrakeAt = -1;
+		float Last = -1.f;
+		for (int64 Fr = 0; Fr < 3600; ++Fr)
+		{
+			const bool bCarry = (Fr >= 200 && Fr < 900) || (Fr >= 1500 && Fr < 2400) || Fr >= 3000;   // three carries
+			const float Nearest = bCarry ? FMath::Max(1.5f, 14.f - 0.02f * static_cast<float>(Fr % 700)) : -1.f;   // a defender closing from 14 m
+			const bool bClosing = bCarry && Last >= 0.f && Nearest < Last - 1e-3f;
+			Last = bCarry ? Nearest : -1.f;
+			if (Now == W::EPrompt::None || W::PromptOpacity(Shown, Fr) <= 0.f)
+			{
+				Now = W::PromptDue(true, true, bCarry, Nearest, bClosing, bKept, bBrake, true);
+				if (Now == W::EPrompt::Kept) { bKept = true; Shown = Fr; ++KeptShows; KeptAt = Fr; }
+				else if (Now == W::EPrompt::Brake) { bBrake = true; Shown = Fr; ++BrakeShows; BrakeAt = Fr; }
+			}
+		}
+		TestEqual(TEXT("the kept puck shows once"), KeptShows, 1);
+		TestEqual(TEXT("the brake shows once"), BrakeShows, 1);
+		TestEqual(TEXT("the kept puck at the first carry's first frame"), KeptAt, static_cast<int64>(200));
+		TestTrue(TEXT("the brake after the kept prompt has gone"), BrakeAt >= KeptAt + W::PromptFrames);
+		AddInfo(FString::Printf(TEXT("JAMSCREEN prompts in a modelled session: kept at frame %lld, brake at frame %lld"), KeptAt, BrakeAt));
+	}
+	// The slot: under the scoreboard; one lower while a net badge or the puck's arrow (or the overlay's line) stands there.
+	TestEqual(TEXT("the top slot"), W::PromptSlotFor(false), W::PromptSlotY);
+	TestEqual(TEXT("the lower slot"), W::PromptSlotFor(true), W::PromptSlotLowY);
+	TestTrue(TEXT("a far-net badge beside the scoreboard holds the top slot"), W::InPromptSlot(FVector2D(1155, 120), 1920.f, 330.f));
+	TestFalse(TEXT("a badge on the side edge does not"), W::InPromptSlot(FVector2D(1840, 120), 1920.f, 330.f));
+	TestFalse(TEXT("a marker lower in the frame does not"), W::InPromptSlot(FVector2D(960, 400), 1920.f, 330.f));
+	// The hold and the fade.
+	TestEqual(TEXT("full while held"), W::PromptOpacity(100, 100 + W::PromptFrames - W::PromptFadeFrames - 1), 1.f);
+	TestEqual(TEXT("half way through the fade"), W::PromptOpacity(100, 100 + W::PromptFrames - W::PromptFadeFrames / 2), 0.5f, 1e-4f);
+	TestEqual(TEXT("gone after its frames"), W::PromptOpacity(100, 100 + W::PromptFrames), 0.f);
+	TestEqual(TEXT("never shown"), W::PromptOpacity(-1, 50), 0.f);
+	// The session's memory (statics; restored).
+	const bool bK = W::IsPromptSpent(W::EPrompt::Kept), bB = W::IsPromptSpent(W::EPrompt::Brake);
+	W::SetPromptsSpent(true, false);
+	TestTrue(TEXT("kept spent"), W::IsPromptSpent(W::EPrompt::Kept));
+	TestFalse(TEXT("brake due"), W::IsPromptSpent(W::EPrompt::Brake));
+	W::SetPromptsSpent(bK, bB);
+	return true;
+}
+
+// The marker's tip against the helmet's top, from the projection, on every frame of 100 s (6000 frames) of a modelled human: skating a figure over the rink
+// through the corners, leaning with speed, crouching, knocked down four times (falling over 12 frames to lie 1.2 m from the feet, getting up over 30).
+// The model stands in for the figure's head socket (the real figure is measured by jam.hud.MarkerProbe in a game process: docs/experiments/SCREEN.md part 2).
+// The rule of this lane keeps the tip the gap over the helmet on every frame; the rule of before (1.8 m over the feet) is measured beside it.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamHudMarkerFollowsHead, "Jam.Hud.MarkerFollowsHead", EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+bool FJamHudMarkerFollowsHead::RunTest(const FString&)
+{
+	const float L = 90.f, Wd = 45.f, R = 3.75f, PxW = 1280.f, PxH = 720.f, SlateToPx = PxH / 1080.f;
+	FJamCameraSettings C;
+	C.CornerLiftM = 3.f;
+	FJamCameraFilter St;
+	struct FDown { int32 Start, Frames; float DirDeg; };
+	const FDown Downs[] = { { 900, 150, 30.f }, { 2400, 90, 200.f }, { 3900, 120, -80.f }, { 5200, 60, 120.f } };
+	FVector2D Pos(-7.5, 0.0);
+	float Yaw = 0.f;
+	int32 Projected = 0, DownFrames = 0, NewOver = 0, OldOver = 0;
+	float NewMax = 0.f, OldMaxUp = 0.f, OldMaxDown = 0.f;
+	for (int32 Fr = 0; Fr < 6000; ++Fr)
+	{
+		// Down: the feet stand still, the head falls toward DirDeg and lies at 0.25 m; else skate the figure.
+		float Fall = 0.f, FallDir = 0.f;
+		for (const FDown& D : Downs)
+		{
+			if (Fr < D.Start || Fr >= D.Start + D.Frames) continue;
+			const int32 T = Fr - D.Start, Left = D.Start + D.Frames - Fr;
+			Fall = FMath::Min(1.f, FMath::Min(static_cast<float>(T) / 12.f, static_cast<float>(Left) / 30.f));
+			FallDir = FMath::DegreesToRadians(D.DirDeg);
+			++DownFrames;
+		}
+		float Speed = 0.f;
+		if (Fall <= 0.f)
+		{
+			const double Tm = Fr / 60.0;
+			const FVector2D Next(40.0 * FMath::Sin(0.21 * Tm + 0.4), 20.0 * FMath::Sin(0.34 * Tm));
+			const FVector2D Step = Next - Pos;
+			Speed = FMath::Min(11.f, static_cast<float>(Step.Size()) * 60.f);
+			if (Speed > 0.5f) Yaw = FMath::RadiansToDegrees(FMath::Atan2(Step.Y, Step.X));
+			Pos += Step.GetSafeNormal() * (Speed / 60.f);
+		}
+		const FTransform Cam = UJamFollowCamera::StepThirdPerson(C, St, JamA40Test::Frame(L, Wd, R, Pos, Yaw));
+		// The helmet's top: 1.65 m upright; the lean with speed takes it up to 0.35 m forward and 0.2 m down (a crouch); down, it lies 1.2 m from the feet at 0.25 m.
+		const float YawR = FMath::DegreesToRadians(Yaw), Lean = Speed / 11.f;
+		const FVector Up(Pos.X * 100.0 + FMath::Cos(YawR) * 35.0 * Lean, Pos.Y * 100.0 + FMath::Sin(YawR) * 35.0 * Lean, 165.0 - 20.0 * Lean);
+		const FVector Lying(Pos.X * 100.0 + FMath::Cos(FallDir) * 120.0, Pos.Y * 100.0 + FMath::Sin(FallDir) * 120.0, 25.0);
+		const FVector Helmet = FMath::Lerp(Up, Lying, Fall);
+		FVector2D HelmetPx, OldPx;
+		if (!JamA5Test::Project(Cam, C.FovDeg, Helmet, HelmetPx, PxW, PxH) || !JamA5Test::Project(Cam, C.FovDeg, FVector(Pos.X * 100.0, Pos.Y * 100.0, UJamHudWidget::YouMarkerHeadM * 100.0), OldPx, PxW, PxH)) continue;
+		++Projected;
+		// The tip in pixels: the gap is Slate units (1080 high), the frame 720.
+		const FVector2D Gap(0.f, -UJamHudWidget::YouMarkerGapPx * SlateToPx);
+		const float NewD = static_cast<float>(FVector2D::Distance(HelmetPx + Gap, HelmetPx)), OldD = static_cast<float>(FVector2D::Distance(OldPx + Gap, HelmetPx));
+		NewMax = FMath::Max(NewMax, NewD);
+		if (Fall > 0.f) OldMaxDown = FMath::Max(OldMaxDown, OldD); else OldMaxUp = FMath::Max(OldMaxUp, OldD);
+		if (NewD > 20.f) ++NewOver;
+		if (OldD > 20.f) ++OldOver;
+	}
+	AddInfo(FString::Printf(TEXT("JAMSCREEN marker model: %d of 6000 frames projected, %d down; tip to the helmet's top at 1280 x 720: this lane %.1f px at most (0 frames over 20); the rule of before %.1f px upright, %.1f px down (%d frames over 20)"),
+		Projected, DownFrames, NewMax, OldMaxUp, OldMaxDown, OldOver));
+	TestEqual(TEXT("the human projects on every frame"), Projected, 6000);
+	TestEqual(TEXT("four knockdowns were in the 100 s"), DownFrames, 150 + 90 + 120 + 60);
+	TestEqual(TEXT("the tip within 20 px of the helmet's top on every frame"), NewOver, 0);
+	TestTrue(TEXT("the tip stands the gap over the helmet"), NewMax <= UJamHudWidget::YouMarkerGapPx);
+	TestTrue(TEXT("the rule of before leaves the helmet by more than 20 px when the human is down"), OldMaxDown > 20.f);
 	return true;
 }
 

@@ -148,7 +148,8 @@
         "kick": 544,
         "bench": 80,
         "dark": 672,
-        "frame": 352
+        "frame": 224,
+        "lamp": 128
       },
       "triangles_by_part": {
         "floor": 80,
@@ -178,8 +179,8 @@
       ],
       "dimensions_m": [
         1.404,
-        1.664,
-        2.778
+        1.732,
+        2.892
       ],
       "sockets": {},
       "under_budget": true,
@@ -190,9 +191,10 @@
         "kick",
         "bench",
         "dark",
-        "frame"
+        "frame",
+        "lamp"
       ],
-      "fbx_mb": 0.075
+      "fbx_mb": 0.076
     },
     "SM_Arena_Goal_W400H061": {
       "triangles": 1608,
@@ -448,6 +450,48 @@
       ],
       "net_of": "SM_Arena_Goal_W400H122",
       "fbx_mb": 0.038
+    },
+    "SM_Arena_GoalLight": {
+      "triangles": 696,
+      "triangles_by_slot": {
+        "dark": 344,
+        "kick": 192,
+        "lamp": 160
+      },
+      "triangles_by_part": {
+        "base": 80,
+        "plate": 64,
+        "post": 168,
+        "collar": 128,
+        "lamp": 160,
+        "cap": 96
+      },
+      "vertices": 360,
+      "uv_loops": 1536,
+      "uv_min": [
+        0.0,
+        0.0
+      ],
+      "uv_max": [
+        1.135,
+        1.06
+      ],
+      "dimensions_m": [
+        0.724,
+        0.66,
+        2.782
+      ],
+      "sockets": {},
+      "under_budget": true,
+      "budget": 1000,
+      "length_m": 0.7,
+      "thumb_presses": 0,
+      "slots": [
+        "dark",
+        "kick",
+        "lamp"
+      ],
+      "fbx_mb": 0.036
     }
   },
   "placement_m": {
@@ -488,6 +532,18 @@
         "yaw": 180
       }
     ],
+    "SM_Arena_GoalLight": [
+      {
+        "x": -60.25,
+        "y": 0.0,
+        "yaw": 90
+      },
+      {
+        "x": 60.25,
+        "y": 0.0,
+        "yaw": -90
+      }
+    ],
     "goals": {
       "note": "x = +-GoalLineX (L/2 - 4), y = 0; yaw -90 on the +x end, +90 on the -x end; the variant nearest the cartridge's goal, scaled W/Wv along the line and H/Hv up",
       "goal_line_x": 56.0,
@@ -503,6 +559,5 @@
       ]
     }
   },
-  "render2_s": 4.8,
-  "total_s": 8.1
+  "total_s": 1.1
 }
