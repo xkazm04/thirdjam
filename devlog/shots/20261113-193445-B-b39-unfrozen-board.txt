@@ -1,0 +1,1 @@
+B39 item 2: REAL board crashes on clay, UN-FROZEN (the sim's board events, kind skater): a hard crash, Strength 0.90, at +3 and +9 ticks (white chips and a grey snow cloud at the skates) and a light brush, Strength 0.53, at +3 and +9 (nothing to see), as crops and at game size.
