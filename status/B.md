@@ -438,3 +438,12 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - The operator decides in the morning between P4 and a full focus on the clay tier; his page: `C:/Users/kazda/jam/review/index.html` (local to device B).
 - Running: B23 (clay pass 5: the glass rail gone from B's side, key pools, far rings; port 8002, the main tree), SK8 (the ready stance on the shipped figures;
   port 8000, `dev-b-a45`).
+
+## H22.2 (04:06, 13 Nov) clay pass 5; FOR THE DIRECTOR: handoff 0035 (0034 point 1 withdrawn)
+- **Clay tier pass 5 (lane B23, `status/B23-report.md`)**: open boards from B's side (no rail, posts or pane on clay), a matte red cap, no white blob on the ice,
+  streaks through the key pools, a board-foot band, steadier far rings. Stills: `devlog/shots/20261113-034219-B-b23-hero-low.png`, `-b23-game-after.png`,
+  `-b23-boards-ab.jpg`. **Handoff B-to-A-0035** says what this means for A: nothing to do for the rail; `look.trim_emissive` is ignored on clay; keep
+  `RinkHalfLength`, `RinkHalfWidth`, `CornerRadiusCm` set on the ice per rink; ring meshes for zones on clay are the one remaining ask.
+- Blender passes in git with this commit: SKF8 and SKF9 (`status/B-skater-skf.md`), SKC5 (`status/B-skater-p4-figure.md`).
+- Running: SK8 (the ready stance on the two shipped scripted figures, branch `dev-b-a45`, port 8000, due 05:40).
+- 04:07: cook-only on the main tree (clay pass 5 with the P4 third pass merged): PASS, 0 errors; pushed.
