@@ -2097,3 +2097,102 @@ The result is mixed: the arms are better, but the stick in `Knockdown_Left_B` is
 **Why the stick got worse:** the measure is the stick bone against the hand. In the new lying pose the stick lies in along the body, so it has about 90 deg further to turn at the landing than before.
 
 **Still:** `devlog\shots\20261113-120507-B-lab-skf16-spin-landing.png`: export16 above export16s for both spin takes, both styles.
+
+## Seventeenth pass: exact joins, the frozen hit frame, the new takes' arms, the stick out of the ice (SKF17, 12:35 to 12:42)
+
+Delivered `C:\Users\kazda\jam\skater-lab\skf\export17\` (p2_cel, p3_clay, full sets) with `READY.txt` and `JOINS.md`. It is built on export16; the optional export16s is not in it. All four items are done; what remains open is listed below. The take count stays 76 with the same names.
+
+**Difference list against export16:** 23 takes per style differ:
+
+| Item | Takes |
+|---|---|
+| 1, the joins | `Fall`, `Knockdown_Right`, `Knockdown_Right_B`, `Knockdown_Left_B`, `Trip` |
+| 2, frame 2 | the ten falls except `Trip`, and the three `Check_Hit_*` |
+| 3, the arm swing | `Fall_B`, `Knockdown_Back_B` |
+| 4, the stick out of the ice | also `Check`, `Check_Deliver_*`, `Board_Hit`, `Stumble`, `Stumble_Short` and the four get-ups |
+
+Everything else is identical to export16, and the clay aim holds are identical to export10.
+
+### 1. The joins, with rotations
+
+**Cause:** in `Fall` the left thigh's roll had not settled by the end of the lying hold. The solver lets a limb's roll catch up only 12 deg a frame, so the fall's last frame kept a roll the fresh solve at the get-up's start does not have.
+
+**Fix:** in the tackling takes, while a pose is held still, the roll may settle at up to 45 deg a frame. The fall's last frame is then the get-up's first exactly.
+
+The join check (`join17.py`) now compares bone rotations as well as joint positions, for every pair:
+
+| Fall | Get-up | p2_cel position cm (16 -> 17) | p2_cel rotation deg (16 -> 17) | p3_clay position cm (16 -> 17) | p3_clay rotation deg (16 -> 17) |
+|---|---|---|---|---|---|
+| Fall | GetUp | 0.0 -> 0.0 | 6.313 (thigh_l) -> 0.0 | 0.0 -> 0.0 | 27.55 (thigh_l) -> 0.0 |
+| Fall_B | GetUp | 0.0001 -> 0.0 | 0.0 -> 0.0 | 0.0 -> 0.0 | 0.0 -> 0.0 |
+| Fall_Forward | GetUp_Front | 0.0 -> 0.0 | 0.0 -> 0.0 | 0.0 -> 0.0 | 0.0 -> 0.0 |
+| Knockdown_Back | GetUp_Front | 0.0 -> 0.0 | 0.0 -> 0.0 | 0.0 -> 0.0 | 0.0 -> 0.0 |
+| Knockdown_Back_B | GetUp_Front | 0.0 -> 0.0 | 0.0 -> 0.0 | 0.0 -> 0.0 | 0.0 -> 0.0 |
+| Knockdown_Left | GetUp_Side_Left | 0.0 -> 0.0 | 0.0 -> 0.0 | 0.0 -> 0.0 | 0.0 -> 0.0 |
+| Knockdown_Left_B | GetUp_Side_Left | 0.0 -> 0.0 | 0.0 -> 0.0 | 0.0001 -> 0.0001 | 0.0 -> 0.0 |
+| Knockdown_Right | GetUp_Side_Right | 0.0 -> 0.0 | 0.0 -> 0.0 | 0.0 -> 0.0 | 0.0 -> 0.0 |
+| Knockdown_Right_B | GetUp_Side_Right | 0.0001 -> 0.0001 | 0.0 -> 0.0 | 0.0001 -> 0.0001 | 0.0 -> 0.0 |
+| Trip | GetUp_Side_Right | 0.0 -> 0.0 | 0.0 -> 0.0 | 0.0 -> 0.0 | 0.0 -> 0.0 |
+
+### 2. The frozen hit frame (frame 2)
+
+The engine holds frame 2 for 3 frames, so it must read on its own.
+
+**What every frame 2 has:**
+- the full snap: trunk and head thrown along the hit;
+- the arms carried round with the trunk, lagging the fling that follows;
+- new in this pass: the first-going skate already 10-14 cm off the ice.
+
+**Per take, frame 2 shows:**
+
+| Take | Frame 2 |
+|---|---|
+| `Fall`, `Fall_B` | Trunk thrown back, head forward, the left skate up and forward |
+| `Fall_Forward`, `Knockdown_Back`, `Knockdown_Back_B` | Pitched forward over the skates, head back, the right skate up behind |
+| `Knockdown_Left` / `_B` | Upper body thrown right, head lagging left, the left skate lifting out to the left |
+| `Knockdown_Right` / `_B` | The mirror of `Knockdown_Left`, the right skate lifting |
+| `Trip` | The right leg swept out sideways and up (as before) |
+| `Check_Hit_Left` / `_Right` / `_Back` | Thrown away from the push, the stick and far arm going out, the lead skate lifting 10 cm |
+| `Check_Deliver_*` | Frames 2-4 are the lunge from export14: shoulder through and low, back leg pushing |
+
+**Sheet:** `skf17-hit-frames` has one cell per take, attacker beside victim at 0.8 m.
+- Falls: the attacker is at `Check_Deliver` frame 2.
+- Standing hits: the pusher is in `Glide`.
+- `Fall` and `Fall_B`: the victim faces the attacker (hit from the front).
+- The same sheet for export16 is filed beside it for comparison.
+
+**Weakness:** from behind, the falls hit from behind (`Knockdown_Back`, `Fall_Forward`) have the victim partly hidden by the attacker, as in the game.
+
+### 3. The new takes' arm swing
+
+`Fall_B` and `Knockdown_Back_B` use export15's method: the arms ride with the trunk at frame 2, then fling on an arc to the flung position at the key after 5.
+
+| Style | Take | export16 (upper arm L / R, forearm L / R, stick, deg) | export17 |
+|---|---|---|---|
+| p2_cel | Fall_B | 123.1 / 73.6 / 143.2 / 109.0 / 124.9 | 77.6 / 73.6 / 69.7 / 109.0 / 87.4 |
+| p2_cel | Knockdown_Back_B | 100.2 / 92.7 / 85.4 / 61.5 / 84.2 | 98.4 / 51.4 / 82.7 / 51.5 / 94.3 |
+| p3_clay | Fall_B | 104.7 / 78.4 / 155.0 / 114.7 / 130.4 | 85.4 / 78.4 / 69.4 / 114.7 / 83.5 |
+| p3_clay | Knockdown_Back_B | 109.4 / 92.6 / 91.2 / 62.5 / 83.7 | 102.9 / 60.2 / 95.3 / 47.1 / 79.0 |
+
+**Result:** `Fall_B` is much better. `Knockdown_Back_B`'s left upper arm stays at 98-103 deg against its parent: it peaks in frames 0-1, before the ride key, and is not fixed.
+
+### 4. The stick out of the ice
+
+In every tackling take the stick's ice clamp now keeps 2 cm above the ice at its bone points, because the blade mesh is thicker than those points.
+
+- **Stick:** the lowest stick point in the whole set is now at least 0.08 cm above the ice (was -1.41 cm p2 `GetUp_Front`, -1.91 cm p3 `Knockdown_Back_B`, -1.87 cm p3 `Check_Hit_Back`).
+- **Body:** bodies stay at 0 cm or above.
+- **One skate:** -0.2 cm (p3 `Trip`).
+- **Lying poses:** the stick still lies along the body, 1.3-3.9 cm above the ice at its lowest; the blade end is 65-90 cm from the pelvis as in export16.
+
+### Files
+
+- **Scripts** (`skater-lab\skf\`):
+  - `run17.sh`, `summary17.py`
+  - `join17.py` (joins with bone rotations)
+  - `hit17.sh` (frame-2 sheet; `pair_render12.py` takes `PAIR_K0=1`)
+  - `local15.py`
+- **Tables:** `export17\JOINS.md`, `work17/<style>/summary17.md`, `work17/local_table.md`.
+- **Stills** (`devlog\shots\`):
+  - `20261113-124150-B-lab-skf17-hit-frames.png` (export17)
+  - `20261113-124150-B-lab-skf17-hit-frames-export16.png` (before)

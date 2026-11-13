@@ -1,0 +1,1 @@
+SK14: knockdowns at the boards in real matches on clay. Row 1: Knockdown_Left 0.6 m from the side boards, the trunk and head go through the wall and stay there while lying. Row 2: Knockdown_Back 0.8 m from the end boards, sliding along them, nothing through the wall.
