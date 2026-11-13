@@ -779,3 +779,14 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
   two instructions heavier for all its users. The night tier has the same lag, much stronger (a smear some metres long behind a fast puck): untouched.
 - The barn's wall wash follows the rig's scale on the 140 m rinks (frame under luma 12 at a wide corner 10.8 % to 1.2 %); board joints darker.
 - **A question**: with every effect hidden, a pale grey oval sits at the centre faceoff spot with pale crescents beside it, static: are they your rink markings?
+
+## H38.9 (19:54, 13 Nov) FOR THE DIRECTOR: a second play-through after B's fixes (lane QA3, cook-only PASS); what is left is yours
+- **B's faults from the first play-through are closed** (`status/QA3-report.md`, un-frozen, clay): the black beyond the boards is a lit plank floor and barn wall on the
+  regular rink, Pond and the wide arena; the ladder behind a fast puck and the pale ovals were not seen again in 200 frames; a fouled figure stands 6 frames after
+  the early release; stick reactions played at the boards 141 to 49 in the same seeded match (a board pin now waits out a young reaction).
+- **Unchanged because `main` has not moved (cba1327, 13:28)**, confirmed with the same seed: the human knocked down 15 times in 109 s at `pro` and the only one knocked
+  down (another seed: 4 in 111 s, all the human); lifts and pokes take the puck 1.3 times a second (79 lifts, 68 pokes, 32 shots); **new: a bot's cross-check
+  repeats every 30 frames** (the lift cooldown): with B's reactions thinned, the busiest figure at the boards is now a bot shoving at frames 14, 44, 74, 104;
+  the first match of a session starts about 2 s without its lights (1.4 s from match build to "rig loaded" in the log); the foul whistle releases 30 frames
+  early; `NS_deke` / `MS_deke` missing.
+- No warning or error names an asset of B's in nine sessions; knockdowns 15 of 15, 4 of 4, 3 of 3 with get-up end minus release 0.00.
