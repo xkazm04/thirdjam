@@ -983,7 +983,18 @@ namespace JamAI
 		// HOOK (lane A115 for track F2's game.stick.body_shield, lane A102): the carrier's body is between this bot's stick and the puck: the sim refuses the
 		// poke and the lift (158 of 200 pro lifts in A102's carry drill), so the bot presses neither and goes round the body (Attack) or checks it (below: a
 		// body check is never shielded). Dead until FJamSimAdapter::BuildWorld fills W.bBodyShield.
-		const bool bShielded = K.Hk.bReadShield && bOppCarrier && StickCannotTake(W, Id, C);   // the body shield, or the carrier's take grace (lane A121)
+		bool bShielded = K.Hk.bReadShield && bOppCarrier && StickCannotTake(W, Id, C);   // the body shield, or the carrier's take grace (lane A121)
+		// Lane A138: the spin's exposed end (BodyShields is false there: the sim lets a stick take the puck). The bot answers a share of the spins it meets
+		// (FJamHockeySense::SpinEndShare, a fixed coin per bot and spin: the frame the spin ends on names the spin); the others it reads as the shield it was.
+		if (K.Hk.bReadShield && bOppCarrier && !bShielded && K.Hk.SpinEndShare < 1.0)
+		{
+			const FJamAISkater& Tc = W.Skaters[C];
+			if (Tc.SpinFrames > 0 && Tc.SpinFrames <= W.SpinExposedFrames
+				&& (K.Hk.SpinEndShare <= 0.0 || (Hash11(static_cast<uint64_t>(Id) * 31 + static_cast<uint64_t>(C) + 503, static_cast<uint64_t>(W.Frame + Tc.SpinFrames)) + 1.0) * 0.5 >= K.Hk.SpinEndShare))
+			{
+				bShielded = true;
+			}
+		}
 		// poke: the level's timing (frames the puck must sit inside reach); rookie never pokes
 		// Lane A115: the stick of the human's mates (FJamHockeySense::MateStickFrames), where the skill itself has none
 		const bool bMateStick = K.Hk.MateStickFrames >= 0 && W.PlayerIndex >= 0 && W.Skaters[W.PlayerIndex].Team == S.Team;
@@ -995,7 +1006,17 @@ namespace JamAI
 		}
 		// lift at contact
 		// Lane A95 (B-to-A-0037): only inside the sim's cone (a swing outside it is a miss) and not again inside the level's cooldown.
-		if ((K.bLift || bMateStick) && bOppCarrier && S.bCanLift && !bShielded && W.Skaters[C].Pos.DistTo(S.Pos) <= 2.0 * W.SkaterRadius + W.LiftRange * 0.9
+		// Lane A138 (track I1, R-0053 point 3): a lift the shield refuses is a shove (lane A125), and from behind that shove is a push in the back: the
+		// from-behind foul where the whistle is on, not a play the brain chooses where it is off. Whatever the bot's other rules (the shield read on or off),
+		// it presses no lift on a shielded carrier it stands behind (the push along the carrier's facing above 0.35, the body check's own margin below),
+		// unless its skill checks from behind. Dead while the sim's shove rule is off or no shield is up (W.bShieldShove, StickCannotTake).
+		bool bBehindShove = false;
+		if (W.bShieldShove && bOppCarrier && !K.bCheckFromBehind && StickCannotTake(W, Id, C))
+		{
+			const FVec2 Nb = (W.Skaters[C].Pos - S.Pos).Normalized();
+			bBehindShove = Nb.Dot(W.Skaters[C].Facing.Normalized()) > 0.35;
+		}
+		if ((K.bLift || bMateStick) && bOppCarrier && S.bCanLift && !bShielded && !bBehindShove && W.Skaters[C].Pos.DistTo(S.Pos) <= 2.0 * W.SkaterRadius + W.LiftRange * 0.9
 			&& W.Frame - LiftLast[Id] >= (K.bLift ? K.LiftCooldownFrames : 90)
 			&& (W.LiftConeDeg >= 180.0 || (W.Skaters[C].Pos - S.Pos).Normalized().Dot(S.Facing) >= std::cos(W.LiftConeDeg * 3.14159265358979323846 / 180.0)))
 		{
@@ -1294,12 +1315,13 @@ namespace JamAI
 		// the carrier (2 m off, on this bot's nearer side) and half a metre ahead of it, where the puck is in the open again. Dead until W.bBodyShield is filled.
 		{
 			const int Cs = W.CarrierOrHolder();
-			if (K.Hk.bReadShield && Cs >= 0 && Cs < W.NumSkaters && W.Skaters[Cs].Team != S.Team && BodyShields(W, Id, Cs))
+			if (K.Hk.bReadShield && Cs >= 0 && Cs < W.NumSkaters && W.Skaters[Cs].Team != S.Team && BodyShields(W, Id, Cs)
+				&& (K.Hk.RoundMaxMps <= 0.0 || W.Skaters[Cs].Vel.Length() < K.Hk.RoundMaxMps))   // lane A138: a carrier that goes is chased, not shadowed
 			{
 				const FJamAISkater& Cr = W.Skaters[Cs];
 				const FVec2 Cf = Cr.Facing.Normalized();
 				const double SideR = (Me - Cr.Pos).Cross(Cf) >= 0.0 ? -1.0 : 1.0;
-				const FVec2 Round = Cr.Pos + Cf.Perp() * (SideR * 2.0) + Cf * 0.5 + Cr.Vel * 0.3;
+				const FVec2 Round = Cr.Pos + Cf.Perp() * (SideR * 2.0) + Cf * 0.5 + Cr.Vel * K.Hk.RoundLeadS;
 				return (Round - Me).Normalized();
 			}
 			// HOOK (lane A115 for track F2's take grace, lane A121): the opposing carrier has just won the puck and no stick can take it for the frames
@@ -1508,6 +1530,7 @@ namespace JamAI
 		const FVec2 Rel = C.Pos - P.Pos;
 		const double D = Rel.Length();
 		if (D > W.BodyShieldRangeM || D < 1e-6) { return false; }
+		if (C.SpinFrames > 0 && C.SpinFrames <= W.SpinExposedFrames) { return false; }   // lane A138: the spin's exposed end (lane A128): the body is no longer between
 		const FVec2 N = Rel * (1.0 / D);   // the line defender -> carrier
 		const FVec2 ToPuck = W.PuckPos - C.Pos;
 		if (ToPuck.Dot(N) < std::cos(DegToRad(W.BodyShieldFarDeg)) * ToPuck.Length()) { return false; }   // the puck is not behind the body, seen from the defender

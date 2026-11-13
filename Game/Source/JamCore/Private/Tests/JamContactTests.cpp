@@ -34,6 +34,7 @@
 #include "JamPawns.h"
 #include "JamPlaytester.h"
 #include "JamSim.h"
+#include "JamBaseline.h"
 #include "JamSimAdapter.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
@@ -146,7 +147,7 @@ namespace JamContactTests
 
 	// hockey.regular at a level, penalties off and no score limit inside the three minutes (A73's cut), 10 800 frames, the Regular playtester as the human.
 	// File = another cartridge (its own rules kept, Level null = its own level).
-	JamAI::FJamPlaytestStats Match(FAutomationTestBase& T, const TCHAR* Level, uint64 Seed, FContactCount& Count, TFunctionRef<void(FJamGameConfig&)> Edit, const FString& File = FString(), int64 Frames = 10800)
+	JamAI::FJamPlaytestStats Match(FAutomationTestBase& T, const TCHAR* Level, uint64 Seed, FContactCount& Count, TFunctionRef<void(FJamGameConfig&)> Edit, const FString& File = FString(), int64 Frames = 10800, const char* Tune = nullptr)
 	{
 		TArray<FString> Errors;
 		UJamCartridge* C = UJamCartridge::LoadFromFile(File.IsEmpty() ? UJamCartridge::ResolveCartridgePath(TEXT("hockey.regular")) : File, Errors);
@@ -160,7 +161,12 @@ namespace JamContactTests
 		Edit(C->Game);
 		JamAI::FJamSimAdapter Sim(*C);
 		Count.Sim = &Sim;
-		const JamAI::FJamMatchConfig M = JamAI::ToMatchConfigResolved(*C, Level);
+		JamAI::FJamMatchConfig M = JamAI::ToMatchConfigResolved(*C, Level);
+		if (Tune && *Tune)   // lane A138: a profile tune on the brain (JamBaseline::BrainTune() for a pinned-hash neutral arm)
+		{
+			char Err[200] = {};
+			if (!JamAI::ApplyDifficultyTune(Tune, M.AI, Err, sizeof(Err))) T.AddError(FString::Printf(TEXT("profile tune: %s"), ANSI_TO_TCHAR(Err)));
+		}
 		Count.Human = M.PlayerIndex();
 		return JamAI::RunPlaytestMatch(Sim, M, Seed, JamAI::EPlaytester::Regular, Frames, C->Game.Shot.ChargeFramesMax, false, &Trace, &Count, 1);
 	}
@@ -371,7 +377,7 @@ namespace JamContactTests
 	}
 
 	// Match() with the press counter: hockey.regular at a level, penalties off, no score limit, the Regular playtester as the human.
-	JamAI::FJamPlaytestStats MatchReach(FAutomationTestBase& T, const TCHAR* Level, uint64 Seed, FReachCount& R, TFunctionRef<void(FJamGameConfig&)> Edit, int64 Frames = 10800)
+	JamAI::FJamPlaytestStats MatchReach(FAutomationTestBase& T, const TCHAR* Level, uint64 Seed, FReachCount& R, TFunctionRef<void(FJamGameConfig&)> Edit, int64 Frames = 10800, const char* Tune = nullptr)
 	{
 		TArray<FString> Errors;
 		UJamCartridge* C = UJamCartridge::LoadFromFile(UJamCartridge::ResolveCartridgePath(TEXT("hockey.regular")), Errors);
@@ -382,7 +388,12 @@ namespace JamContactTests
 		Edit(C->Game);
 		JamAI::FJamSimAdapter Sim(*C);
 		R.Base.Sim = &Sim;
-		const JamAI::FJamMatchConfig M = JamAI::ToMatchConfigResolved(*C, Level);
+		JamAI::FJamMatchConfig M = JamAI::ToMatchConfigResolved(*C, Level);
+		if (Tune && *Tune)   // lane A138: as Match()
+		{
+			char Err[200] = {};
+			if (!JamAI::ApplyDifficultyTune(Tune, M.AI, Err, sizeof(Err))) T.AddError(FString::Printf(TEXT("profile tune: %s"), ANSI_TO_TCHAR(Err)));
+		}
 		R.Base.Human = M.PlayerIndex();
 		return JamAI::RunPlaytestMatch(Sim, M, Seed, JamAI::EPlaytester::Regular, Frames, C->Game.Shot.ChargeFramesMax, false, &TraceReach, &R, 1);
 	}
@@ -393,10 +404,11 @@ bool FJamContactShieldShove::RunTest(const FString& Parameters)
 {
 	// The standing carrier at the centre dot facing +x, the puck in front of it. The attacker presses the lift (MMB) at arm's length (a gap of 0.4 m).
 	struct FOut { FContactHit H; double Expect = 0.0; bool bPuckKept = false, bStickHit = false, bOk = false; int32 SpinFrames = 0; };
-	auto Scene = [this](const TCHAR* Name, const FVector2D& From, double Speed, bool bStickRefused, bool bSpin, bool bPenalties) -> FOut
+	// MatchMps (lane A138): contact.ShoveBehindMatchMps for the scene; below 0 = the default (3: on a back the thrust lands by the closing speed).
+	auto Scene = [this](const TCHAR* Name, const FVector2D& From, double Speed, bool bStickRefused, bool bSpin, bool bPenalties, double MatchMps = -1.0) -> FOut
 	{
 		FOut O;
-		FContactScene S = Make(*this, [bPenalties](FJamGameConfig& G) { G.Rules.bPenalties = bPenalties; });
+		FContactScene S = Make(*this, [bPenalties, MatchMps](FJamGameConfig& G) { G.Rules.bPenalties = bPenalties; if (MatchMps >= 0.0) G.Contact.ShoveBehindMatchMps = MatchMps; });
 		if (!S.Ok()) return O;
 		S.Sim->SetSkater(S.V, FVector2D::ZeroVector, FVector2D::ZeroVector, 0.0);
 		S.Sim->SetSkater(S.A, FVector2D(-10.0, -10.0), FVector2D::ZeroVector, 0.0);
@@ -417,14 +429,26 @@ bool FJamContactShieldShove::RunTest(const FString& Parameters)
 		return O;
 	};
 	const FVector2D Behind(-1.2, 0.0), Side(0.0, -1.2);
-	// 1. From behind, the body between (the shield refuses the stick): the standing attacker's thrust alone shoves the carrier; the puck is not taken.
+	// 1. From behind, the body between (the shield refuses the stick), the attacker standing. Lane A138 (R-0053 point 3): a push in the back at matched speed
+	//    is a bump: on a back the thrust lands only as far as the attacker is closing (UJamSim::CrossThrust), and here it is not closing at all.
 	{
 		const FOut O = Scene(TEXT("from behind, body between, attacker standing"), Behind, 0.0, true, false, false);
 		if (!O.bOk) return false;
-		TestEqual(TEXT("behind, shielded: the press shoves the carrier (a stumble: thrust 3 m/s x 80 kg on an unbraced 384)"), O.H.Outcome, UJamSim::ContactStumble);
-		TestEqual(TEXT("... with the ratio the contact law gives"), static_cast<double>(O.H.Ratio), O.Expect, 1e-4);
-		TestTrue(*FString::Printf(TEXT("... under loose_ratio (%.2f), so the puck stays the carrier's"), O.H.Ratio), O.H.Ratio < 0.7f && O.bPuckKept);
+		TestEqual(TEXT("behind, shielded, matched speed: the press is a bump (R-0053 point 3)"), O.H.Outcome, UJamSim::ContactBump);
+		TestEqual(TEXT("... with the ratio the contact law gives (no closing speed, no thrust: 0)"), static_cast<double>(O.H.Ratio), O.Expect, 1e-4);
+		TestTrue(*FString::Printf(TEXT("... the ratio is 0 (%.3f), the carrier keeps its feet and the puck"), O.H.Ratio), O.H.Ratio < 1e-4f && O.bPuckKept && !O.H.bCheck && !O.H.bKnock);
 		TestTrue(TEXT("... and the lift takes nothing (no clean lift, no stick-hit read-out)"), !O.H.bLiftClean && !O.bStickHit);
+		// Closing at half the matching speed (1.5 of 3 m/s): half the thrust on top of the closing speed: (1.5 + 1.5) x 80 on an unbraced 384 = 0.625, a stumble.
+		const FOut Half = Scene(TEXT("from behind, body between, attacker closing at 1.5 m/s"), Behind, 1.5, true, false, false);
+		if (!Half.bOk) return false;
+		TestEqual(TEXT("behind, shielded, closing at 1.5 m/s: a stumble"), Half.H.Outcome, UJamSim::ContactStumble);
+		TestEqual(TEXT("... with the ratio the contact law gives"), static_cast<double>(Half.H.Ratio), Half.Expect, 1e-4);
+		TestTrue(*FString::Printf(TEXT("... which is (1.5 + half the thrust) x mass on the unbraced back (%.3f)"), Half.H.Ratio), FMath::Abs(Half.H.Ratio - 0.625f) < 0.01f);
+		// The neutral value (ShoveBehindMatchMps 0): the whole thrust from behind, lane A125's shove: a stumble of 0.625 from a standing attacker.
+		const FOut Old = Scene(TEXT("from behind, body between, attacker standing, ShoveBehindMatchMps 0 (lane A125's rule)"), Behind, 0.0, true, false, false, 0.0);
+		if (!Old.bOk) return false;
+		TestEqual(TEXT("behind, shielded, the neutral value: the standing attacker's thrust alone stumbles the carrier (thrust 3 m/s x 80 kg on an unbraced 384)"), Old.H.Outcome, UJamSim::ContactStumble);
+		TestTrue(*FString::Printf(TEXT("... under loose_ratio (%.2f), so the puck stays the carrier's"), Old.H.Ratio), FMath::Abs(Old.H.Ratio - 0.625f) < 0.01f && Old.bPuckKept);
 	}
 	// 2. The same press at 8 m/s: down by the law; the puck leaves by the knockdown, not by the lift.
 	{
@@ -434,11 +458,15 @@ bool FJamContactShieldShove::RunTest(const FString& Parameters)
 		TestEqual(TEXT("... with the ratio the contact law gives"), static_cast<double>(O.H.Ratio), O.Expect, 1e-4);
 		TestTrue(TEXT("... with the check and knockdown events, and still no clean lift"), O.H.bCheck && O.H.bKnock && !O.H.bLiftClean && !O.bStickHit);
 	}
-	// 3. With the whistle: a shove from behind is the foul it always was (the contact law's own rule; nothing new).
+	// 3. With the whistle: a shove from behind that lands is the foul it always was (the contact law's own rule; nothing new). Lane A138: it lands when the
+	//    attacker closes (4 m/s here); the push at matched speed is a bump and no foul.
 	{
-		const FOut O = Scene(TEXT("from behind, body between, penalties on"), Behind, 0.0, true, false, true);
+		const FOut O = Scene(TEXT("from behind, body between, attacker at 4 m/s, penalties on"), Behind, 4.0, true, false, true);
 		if (!O.bOk) return false;
-		TestTrue(TEXT("behind, shielded, penalties on: the shove lands and the from-behind foul is called"), O.H.Outcome >= UJamSim::ContactStumble && !O.H.Foul.IsNone());
+		TestTrue(TEXT("behind, shielded, closing, penalties on: the shove lands and the from-behind foul is called"), O.H.Outcome >= UJamSim::ContactStumble && !O.H.Foul.IsNone());
+		const FOut Still = Scene(TEXT("from behind, body between, attacker standing, penalties on"), Behind, 0.0, true, false, true);
+		if (!Still.bOk) return false;
+		TestTrue(TEXT("behind, shielded, matched speed, penalties on: a bump, no foul"), Still.H.Outcome == UJamSim::ContactBump && Still.H.Foul.IsNone());
 	}
 	// 4. From the side, the body between: the shove lands as before, the lift takes nothing (without the shield it took the puck: StandingBrace case 3).
 	{
@@ -477,9 +505,29 @@ bool FJamContactShieldShove::RunTest(const FString& Parameters)
 		const FOut O = Scene(TEXT("from behind, the seam off"), Behind, 0.0, false, false, false);
 		if (!O.bOk) return false;
 		const bool bLiftOnly = O.H.Outcome == 0 && O.H.bLiftClean;
-		const bool bShoveOnly = O.H.Outcome >= UJamSim::ContactStumble && !O.H.bLiftClean && FMath::IsNearlyEqual(static_cast<double>(O.H.Ratio), O.Expect, 1e-4);
+		const bool bShoveOnly = O.H.Outcome >= UJamSim::ContactBump && !O.H.bLiftClean && FMath::IsNearlyEqual(static_cast<double>(O.H.Ratio), O.Expect, 1e-4);   // lane A138: at matched speed the shove on a back resolves as a bump
 		AddInfo(FString::Printf(TEXT("JAMSHOVE the seam off from behind: %s"), bLiftOnly ? TEXT("a stick lift, no shove (this tree has no stick-only shield)") : bShoveOnly ? TEXT("a shove, the puck not taken (the tree's own body shield refused the stick)") : TEXT("NEITHER")));
 		TestTrue(TEXT("the seam off, from behind: a stick lift and no shove (no body shield), or a shove and no take (the tree's body shield)"), bLiftOnly != bShoveOnly);
+	}
+	// 7. Lane A138 (R-0053 point 5): the rule's own neutral value. contact.bShieldShove false (no key; JamBaseline.h) is main's refusal before lane A125: what
+	//    refuses the lift refuses the shove too, from any side and at any speed.
+	{
+		struct FCase { const TCHAR* Name; FVector2D From; double Speed; };
+		for (const FCase& K : { FCase{ TEXT("from behind at 8 m/s"), Behind, 8.0 }, FCase{ TEXT("from the side at 2 m/s"), Side, 2.0 }, FCase{ TEXT("from the front, standing"), FVector2D(1.2, 0.0), 0.0 } })
+		{
+			FContactScene S = Make(*this, [](FJamGameConfig& G) { G.Contact.bShieldShove = false; });
+			if (!S.Ok()) return false;
+			S.Sim->SetSkater(S.V, FVector2D::ZeroVector, FVector2D::ZeroVector, 0.0);
+			S.Sim->SetSkater(S.A, FVector2D(-10.0, -10.0), FVector2D::ZeroVector, 0.0);
+			if (!TestTrue(*FString::Printf(TEXT("bShieldShove false, %s: the standing skater carries the puck"), K.Name), HandPuck(S, S.V))) return false;
+			Carry(S, S.V, FVector2D::ZeroVector, FVector2D::ZeroVector, 0.0);
+			const FVector2D Dir = -K.From.GetSafeNormal();
+			S.Sim->SetSkater(S.A, K.From, Dir * K.Speed, FMath::Atan2(Dir.Y, Dir.X));
+			S.Sim->bTestStickRefused = true;
+			const FContactHit H = Run(S, 1, [&](TArray<FJamInput>& In, int32 F) { In[S.A].bLift = F == 0; });
+			AddInfo(FString::Printf(TEXT("JAMSHOVE bShieldShove false, the stick refused, %s: %s"), K.Name, *Facts(H)));
+			TestTrue(*FString::Printf(TEXT("bShieldShove false, %s: the refused lift is no shove (no contact from the press, no check event) and no take"), K.Name), H.Outcome == 0 && !H.bCheck && !H.bLiftClean && S.Sim->GetPuck().LastTouch == S.V);
+		}
 	}
 	return true;
 }
@@ -734,7 +782,11 @@ bool FJamContactReachMatch::RunTest(const FString& Parameters)
 				C.Checks[0], C.Downs[1], C.Downs[0], C.HitStumble[1]));
 			if (Reach == 0.0 && Seed <= 3)
 			{
-				TestEqual(*FString::Printf(TEXT("pro seed %llu: check_reach_m 0 hashes as the baseline did"), static_cast<unsigned long long>(Seed)), FString::Printf(TEXT("%016llx"), static_cast<unsigned long long>(S.Hash)),
+				// Lane A138 (R-0053 point 5): the pin is the track's evolution 2 on its own tree (the boards and the release grace on, nothing of the other tracks):
+				// the shared baseline with those two steps back on, and check_reach_m 0.
+				FReachCount Rn;
+				const JamAI::FJamPlaytestStats Sn = MatchReach(*this, TEXT("pro"), Seed, Rn, [](FJamGameConfig& G) { JamBaseline::MakeNeutral(G); JamBaseline::WithBoards(G); JamBaseline::WithReleaseGrace(G); G.Contact.CheckReachM = 0.0; }, 10800, JamBaseline::BrainTune());
+				TestEqual(*FString::Printf(TEXT("pro seed %llu: check_reach_m 0 hashes as the baseline did"), static_cast<unsigned long long>(Seed)), FString::Printf(TEXT("%016llx"), static_cast<unsigned long long>(Sn.Hash)),
 					FString::Printf(TEXT("%016llx"), static_cast<unsigned long long>(Baseline[Seed - 1])));
 			}
 			Presses += R.Presses; Missed += C.HumanMissed; Landed += C.Checks[1]; Soft += C.HumanSoft; Graced += C.HumanGraced; HumanDowns += C.Downs[1]; BotDowns += C.Downs[0];
@@ -1082,7 +1134,7 @@ bool FJamContactGraceMatch::RunTest(const FString& Parameters)
 	for (uint64 Seed = 1; Seed <= 3; ++Seed)
 	{
 		FContactCount Cn;
-		const JamAI::FJamPlaytestStats Sn = Match(*this, TEXT("pro"), Seed, Cn, [](FJamGameConfig& G) { G.Contact.ReleaseGraceFrames = 0; G.Stick.bBodyShield = false; G.Stick.bPassiveTake = true; G.Stick.bTeammateTouchTakes = true; G.Stick.TakeGraceFrames = 0; G.Skater.ReverseBrakeDecel = 20; G.Skater.bBurstOwnStop = false; });   // lane A102's stick rules off: the baseline is lane A101's tree
+		const JamAI::FJamPlaytestStats Sn = Match(*this, TEXT("pro"), Seed, Cn, [](FJamGameConfig& G) { JamBaseline::MakeNeutral(G); JamBaseline::WithBoards(G); }, FString(), 10800, JamBaseline::BrainTune());   // lane A138 (R-0053 point 5): the shared baseline with the boards back on = lane A101's tree, release_grace_frames 0
 		AddInfo(Line(*FString::Printf(TEXT("JAMGRACE match pro seed %llu release_grace_frames 0"), static_cast<unsigned long long>(Seed)), Sn, Cn));
 		TestEqual(*FString::Printf(TEXT("pro seed %llu: release_grace_frames 0 hashes as the baseline did"), static_cast<unsigned long long>(Seed)), FString::Printf(TEXT("%016llx"), static_cast<unsigned long long>(Sn.Hash)),
 			FString::Printf(TEXT("%016llx"), static_cast<unsigned long long>(Baseline[Seed - 1])));
@@ -1175,7 +1227,7 @@ bool FJamContactBoardMatch::RunTest(const FString& Parameters)
 		AddInfo(Line(*FString::Printf(TEXT("JAMBOARDS match pro seed %llu board_bonus 1.25"), static_cast<unsigned long long>(Seed)), S, C));
 		AddInfo(FString::Printf(TEXT("JAMBOARDS boards pro seed %llu board_bonus 1.25: %s"), static_cast<unsigned long long>(Seed), *BoardLine(C)));
 		FContactCount Cn;
-		const JamAI::FJamPlaytestStats Sn = Match(*this, TEXT("pro"), Seed, Cn, [](FJamGameConfig& G) { G.Contact.BoardBonus = 1.0; G.Contact.ReleaseGraceFrames = 0; G.Stick.bBodyShield = false; G.Stick.bPassiveTake = true; G.Stick.bTeammateTouchTakes = true; G.Stick.TakeGraceFrames = 0; G.Skater.ReverseBrakeDecel = 20; G.Skater.bBurstOwnStop = false; });   // lanes A113 and A102: every later rule neutral = the game main had at ee14438
+		const JamAI::FJamPlaytestStats Sn = Match(*this, TEXT("pro"), Seed, Cn, [](FJamGameConfig& G) { JamBaseline::MakeNeutral(G); }, FString(), 10800, JamBaseline::BrainTune());   // lane A138 (R-0053 point 5): the shared baseline = the game main had at ee14438
 		AddInfo(Line(*FString::Printf(TEXT("JAMBOARDS match pro seed %llu board_bonus 1.00"), static_cast<unsigned long long>(Seed)), Sn, Cn));
 		AddInfo(FString::Printf(TEXT("JAMBOARDS boards pro seed %llu board_bonus 1.00: %s"), static_cast<unsigned long long>(Seed), *BoardLine(Cn)));
 		TestEqual(*FString::Printf(TEXT("pro seed %llu: board_bonus 1 hashes as main did"), static_cast<unsigned long long>(Seed)), FString::Printf(TEXT("%016llx"), static_cast<unsigned long long>(Sn.Hash)),
@@ -1547,6 +1599,7 @@ bool FJamContactNeutral::RunTest(const FString& Parameters)
 		C->Game.Stick.bSweepShieldOneSided = true;
 		C->Game.Stick.bBodyShield = false; C->Game.Stick.bPassiveTake = true; C->Game.Stick.bTeammateTouchTakes = true;   // lane A102: the game before its two stick rules
 		C->Game.Stick.TakeGraceFrames = 0;   // lane A121: and before the take grace (the block's burst.frames 0 and reverse_brake_decel 0 cover its other two)
+		C->Game.Skater.SpinExposedTail = 0;   // lane A128: and before the spin's price (burst.frames 0 covers its standing start)
 		FContactCount Count;
 		JamAI::FJamSimAdapter Sim(*C);
 		Count.Sim = &Sim;

@@ -108,6 +108,18 @@ namespace JamAI
 		// mates of evolution 1 have no stick verb: they won a puck only by the unpressed blade, which track F2's game.stick.passive_take false ends).
 		int MateStickFrames = -1;
 		bool bReadShield = false;      // reads FJamAIWorld::bBodyShield and FJamAISkater::TakeGraceFrames (track F2's body shield and take grace): no lift or poke the sim would refuse; the bot goes round the body, or contains during the grace
+		// Lane A138 (track I1, R-0053: "a defender that contains goal-side wins when the carrier dawdles, not when he stops and goes"). The shield read's way
+		// round the body (Attack): the point beside the carrier is led by the carrier's velocity for RoundLeadS seconds (0.3 = lane A115's rule: the bot stays
+		// level with a carrier that goes and is never passed); and the bot goes round only while the carrier is slower than RoundMaxMps (0 = at any speed, lane
+		// A115's rule): a carrier that goes is chased, not shadowed. Tune keys hk_round_lead_s, hk_round_max_mps.
+		// Measured (INTEGRATION.md section 2): with 3 m/s (the Press job's own "slow carrier") a stop begun at 9.5 m passes a pro 97 % (72.5 % at 0) and one
+		// begun at 11 m 86 % (25.5 %); the stop at 8 m and the straight charge do not move. Only read with bReadShield on.
+		double RoundLeadS = 0.3;
+		double RoundMaxMps = 3.0;
+		// The spin's exposed end (lane A128: game.skater.spin.exposed_frames): the share of spins whose end this bot answers with its lift (a fixed coin per
+		// bot and spin, as BodyCheckShare). 1 = every one (the spin with the cut from 6 m passes a pro 27 %), 0 = none (98 %: the spin's price unpaid).
+		// Tune key hk_spin_end_share. Only read with bReadShield on (the brain of evolution 1 swings at a spin blind).
+		double SpinEndShare = 0.5;
 		bool Any() const { return bCarryOrPass || bAttackShape || bDefenceShape || bTransition; }
 	};
 	// Lane A115: every rule of evolution 2 on (as ProHockeySense has them) or off (the brain of evolution 1). The tune key brain2 and the tests use it.
@@ -358,6 +370,13 @@ namespace JamAI
 		// stick and the puck (UJamSim::IsBodyShielded). Nothing fills it in this tree (the key is not here yet): FJamSimAdapter::BuildWorld sets it from
 		// G.Stick.bBodyShield once F2 has landed (the line is there, commented). The brain's read is BodyShields() below, the sim's rule on the brain's world.
 		bool bBodyShield = false;
+		// Lane A138 (track I1, R-0053): two more facts of the sim's stick rules, filled by FJamSimAdapter::BuildWorld (false / 0 = the brain before the lane).
+		// bShieldShove: a lift the body shield or the take grace refuses is a cross-check's shove from any side (lane A125, R-0050 point 2). From behind that
+		// shove is the from-behind foul where the whistle is on, and it is not a play the brain chooses where it is off (R-0053 point 3): StickPlay.
+		// SpinExposedFrames: game.skater.spin.exposed_frames (lane A128): for the last frames of a spin neither the body nor a sweep shields the puck from a
+		// stick. BodyShields() reads it, or the brain would hold its stick through the one moment the spin can be answered.
+		bool bShieldShove = false;
+		int SpinExposedFrames = 0;
 		double BodyShieldRangeM = 2.0;   // UJamSim::BodyShieldRangeM
 		double BodyShieldFarDeg = 60.0;  // UJamSim::BodyShieldFarDeg
 		double BodyShieldFrontDeg = 60.0; // UJamSim::BodyShieldFrontDeg

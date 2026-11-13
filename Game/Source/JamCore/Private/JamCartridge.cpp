@@ -1070,6 +1070,7 @@ namespace
 			ReadInteger(Bu, TEXT("frames"), C.Skater.BurstFrames);
 			ReadNumber(Bu, TEXT("accel_mult"), C.Skater.BurstAccelMult);
 			ReadBool(Bu, TEXT("own_stop"), C.Skater.bBurstOwnStop);   // lane A121 (track F2): the first step is earned by a stop or a cut of the skater's own
+			ReadInteger(Bu, TEXT("rest_frames"), C.Skater.BurstRestFrames);   // lane A128 (track F2): and by standing still (the standing start)
 		}
 		// R-0029 point 4 (lane A39): game.skater.breakaway { speed_bonus, frames }
 		if (const FJPtr Ba = Obj(Sk, TEXT("breakaway")))
@@ -1098,6 +1099,7 @@ namespace
 			ReadInteger(Sn, TEXT("cooldown_frames"), C.Skater.SpinCooldownFrames);
 			ReadNumber(Sn, TEXT("speed_mult"), C.Skater.SpinSpeedMult);
 			ReadNumber(Sn, TEXT("stamina_cost"), C.Skater.SpinStaminaCost);
+			ReadInteger(Sn, TEXT("exposed_frames"), C.Skater.SpinExposedTail);   // lane A128 (track F2): the spin's price, its exposed end
 		}
 
 		const FJPtr St = G->Get(TEXT("stick"));

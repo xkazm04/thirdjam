@@ -94,6 +94,18 @@ struct JAMCORE_API FJamSkaterConfig
 	// Not a cartridge key (lane A121 measured it as the other candidate, MOVEMENT-3.md): the carrier's own burst multiplier; 0 = accel_mult, as everyone's.
 	// Bar.Movement.StopAndGoSweep sets it.
 	double BurstCarryAccelMult = 0.0;
+	// game.skater.burst.rest_frames (lane A128, track F2 evolution 3; the Director's ruling on lane A121's open question): a skater that starts from rest has
+	// earned its first step. Slower than 1 m/s (UJamSim::BurstRestSpeed) for this many frames in a row (a faceoff, a get-up, a full stop), its burst is armed
+	// while it stands and runs burst.frames from the frame it moves off. Never on a charge already under way. 0 = the neutral value (lane A121's rule: only a
+	// stop or a cut of the skater's own).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 BurstRestFrames = 6;
+	// Not cartridge keys (lane A128 measured them, MOVEMENT-4.md): the speed under which a rested skater's burst stays armed (1 = the rest speed itself) and
+	// the length of the burst a rest arms (0 = burst.frames). Bar.Movement.StopAndGoSweep sets them.
+	double BurstRestHoldMps = 1.0;
+	int32 BurstRestBurstFrames = 0;
+	// Not a cartridge key (lane A128, sweeps 1 and 2): true = the rest ends with the push-off (the first frame the skater thrusts), so the burst is the first
+	// burst.frames of the push; false = the rest ends at the hold speed (a skater creeping under it keeps the burst armed).
+	bool bBurstRestPushOff = true;
 	// R-0035 (lane A52): game.skater.goalie { reach_m, block_height_m }: a skater in the crease stance saves a loose shot under block_height_m that passes
 	// within reach_m of it (the human included); a higher puck passes. reach_m 0 = no save by height (the body and the blade stop pucks as before).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double GoalieReachM = 0.9;
@@ -104,6 +116,16 @@ struct JAMCORE_API FJamSkaterConfig
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 SpinCooldownFrames = 90;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double SpinSpeedMult = 0.7;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double SpinStaminaCost = 0.25;
+	// game.skater.spin.exposed_frames (lane A128, track F2 evolution 3): the spin's price. For the last exposed_frames frames of a spin the body has come round
+	// and is no longer between: neither the body nor a sweep shields the carried puck from a stick (the take grace still does). Measured on the carry scene
+	// (MOVEMENT-4.md): the spin with the cut from 6 m passes a pro 53 % with 5 (99.5 % with 0). 0 = the neutral value (the whole spin shields).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 SpinExposedTail = 5;
+	// Not cartridge keys (lane A128's other candidates, measured in MOVEMENT-4.md section 4; Bar.Movement.StopAndGoSweep sets them): frames after a spin that
+	// ran its length in which the puck stays exposed (FJamSkaterState::SpinRecoverLeft), the thrust during them (1 = normal), and the frames at the start of
+	// the spin in which the body is not yet between. All off.
+	int32 SpinRecoveryFrames = 0;
+	double SpinRecoveryAccelMult = 1.0;
+	int32 SpinExposedHead = 0;
 };
 
 // game.stick (R-0013, lane A16): the mouse / right-stick aimed stick.
@@ -159,6 +181,10 @@ struct JAMCORE_API FJamStickConfig
 	// Not a cartridge key. R-0048 point 2: a teammate never takes a carried puck by touch, under either value of passive_take (a pass is a pass). true brings
 	// back the teammate's touch of the game before lane A102, which the neutral-block tests need to replay older commits' matches hash for hash.
 	bool bTeammateTouchTakes = false;
+	// Not a cartridge key (lane A138, on lane A128's finding). The take grace covers the frame the puck is won in: ResolvePokes runs right after the puck
+	// moved and the winner's grace is counted from the end of the frame, so an open poke window took a puck in the very frame its carrier had won it
+	// (hockey.regular pro seed 2, frame 8488). true = a carrier that is not yet the take owner counts as inside its grace. false = lane A121's rule as it was.
+	bool bTakeGraceSameFrame = true;
 	// Not a cartridge key (lane A102 measured it and it bought nothing, MOVEMENT-2.md section 3): the carried puck's distance while the carrier brakes, as a
 	// share of its distance by pace. 1 = no difference. Bar.Movement.StopAndGoSweep sets it.
 	double BrakeReachMult = 1.0;
@@ -266,6 +292,15 @@ struct JAMCORE_API FJamContactConfig
 	// Ships at 0: at 1.0 the playtester's whiffs fall from 60 % to 51 % of its presses, not under the 40 % asked for (five whiffs in six are presses on a man it
 	// is not closing on, which no bend of direction cures), and Jam.Bot.HumanHasSomethingToDo leaves its budget (docs/experiments/CONTACT-4.md section 6).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double CheckReachM = 0.0;
+	// Not a cartridge key (lane A138, R-0050 point 2 is a rule; R-0053 point 5 asks every rule for its neutral). true = a shield refuses the stick and never the
+	// shove (lane A125: the body shield and the take grace refuse the take only; where only they refuse it, the cross-check's shove is contact from any side).
+	// false = the refusal of main before lane A125: whatever refuses the lift refuses the shove too, and a lift from behind is never a shove. JamBaseline.h sets it.
+	bool bShieldShove = true;
+	// Not a cartridge key yet (lane A138, R-0053 point 3; proposed key game.contact.shove_behind_match_mps). A shove from behind obeys the contact law it claims:
+	// two skaters going the same way at a similar speed barely move each other, so a cross-check's own thrust (thrust_mps) lands on a back only as far as the
+	// attacker is closing on it: thrust x clamp(closing speed / this, 0, 1). At matched speed the push in the back is a bump; closing at this speed or more it
+	// is the whole thrust (and with the whistle on the from-behind foul it always was). 0 = the neutral value: the whole thrust from any side (lane A125).
+	double ShoveBehindMatchMps = 3.0;
 	// The neutral block (contact.momentum false, contact.carrier_can_hit true): the check rule of main before lane A92.
 	void SetNeutral() { bMomentum = false; bCarrierCanHit = true; }
 };

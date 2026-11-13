@@ -280,6 +280,8 @@ namespace JamAI
 		// HOOK (lane A115 for track F2, lane A102): once game.stick.body_shield is in this tree, uncomment these two lines: the brain then reads the shield
 		// (JamAI::BodyShields in JamAICore.cpp: no lift or poke into a shielding body, the bot goes round it). Until then W.bBodyShield stays false.
 		W.bBodyShield = G.Stick.bBodyShield;   // wired at landing (Director): the rule is on main
+		W.bShieldShove = G.Contact.bShieldShove && G.Contact.bMomentum && G.Contact.ThrustMps > 0.0 && G.Skater.bCheckEnabled;   // lane A138 (R-0053 point 3): the shove under a stick-only shield exists
+		W.SpinExposedFrames = G.Skater.SpinFrames > 0 ? FMath::Max(0, G.Skater.SpinExposedTail) : 0;   // lane A138: the spin's exposed end (lane A128)
 		W.BodyShieldRangeM = UJamSim::BodyShieldRangeM; W.BodyShieldFarDeg = UJamSim::BodyShieldFarDeg; W.BodyShieldFrontDeg = UJamSim::BodyShieldFrontDeg;   // wired at landing (Director): the rule is on main
 		// R-0029 point 4 (lane A39): the goalie commit of the latest deke
 		{

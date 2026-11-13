@@ -291,6 +291,7 @@ bool FJamSpinShieldsPuck::RunTest(const FString& Parameters)
 	using namespace JamStickHandlingTests;
 	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
 	if (!C) return false;
+	C->Game.Skater.SpinExposedTail = 0;   // lane A128: this test pokes through the whole spin (R-0040's shield); the spin's exposed end is Jam.Core.Movement.SpinPrice's
 	const FJamGameConfig& G = C->Game;
 	for (const bool bSpin : { true, false })
 	{

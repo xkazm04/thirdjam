@@ -5,6 +5,7 @@
 #include "Misc/AutomationTest.h"
 #include "JamCartridge.h"
 #include "JamSim.h"
+#include "JamBaseline.h"
 #include "JamEventBus.h"
 #include "JamBrain.h"
 #include "JamSimAdapter.h"
@@ -18,7 +19,7 @@ namespace JamMovementTests
 	constexpr EAutomationTestFlags Flags = EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter;
 
 	// The neutral block (MOVEMENT.md section 4): with these six values the game is the one main 8f6b157 shipped.
-	const TCHAR* NeutralSkater = TEXT("\"skater\": {\"reverse_brake_decel\": 0, \"burst\": {\"frames\": 0, \"accel_mult\": 1}, \"sprint\": {\"carry_bonus\": 0},");
+	const TCHAR* NeutralSkater = TEXT("\"skater\": {\"reverse_brake_decel\": 0, \"burst\": {\"frames\": 0, \"accel_mult\": 1}, \"sprint\": {\"carry_bonus\": 0}, \"spin\": {\"exposed_frames\": 0},");   // lane A128: the whole spin shields
 	const TCHAR* NeutralStick = TEXT("\"stick\": {\"carry_reach_mult\": 1, \"body_shield\": false, \"passive_take\": true, \"take_grace_frames\": 0, \"lift_cone_deg\": 180, \"sweep\": {\"sprint_shield_mult\": 1}}, \"skater\": {");
 
 	UJamCartridge* LoadPreset(FAutomationTestBase& T, const FString& Name)
@@ -57,6 +58,7 @@ namespace JamMovementTests
 		G.Stick.bPassiveTake = true; G.Stick.bTeammateTouchTakes = true;   // lane A102 (R-0048): the unpressed take, and the teammate's touch (a rule: a code switch)
 		G.Stick.bSweepShieldOneSided = true;   // R-0044 as amended landed with this lane (both sides): main 8f6b157 shielded one side
 		G.Stick.TakeGraceFrames = 0; G.Skater.bBurstOwnStop = false;   // lane A121 (track F2, evolution 2): no take grace, the burst for any slow skater
+		G.Skater.BurstRestFrames = 0; G.Skater.SpinExposedTail = 0;   // lane A128 (track F2, evolution 3): no standing start, the whole spin shields
 	}
 
 	// A sim in Playing with everyone parked in the far corner.
@@ -124,7 +126,8 @@ namespace JamMovementTests
 
 	// A bot match the way Jam.Core.NetTrap plays it (the real brain at Level, the scripted player bot in the human's slot, the same four input fields).
 	struct FBot { int64 Frames = 0; FString Hash; int32 Score0 = 0, Score1 = 0; };
-	FBot NetTrapMatch(const UJamCartridge& C, const TCHAR* Level, uint64 Seed, int32 MaxFrames, const char* Tune = nullptr)
+	// bHooksDead (lane A138): the brain reads nothing of track F2's shields (JamBaseline::HooksDead), as on a commit before those reads were wired.
+	FBot NetTrapMatch(const UJamCartridge& C, const TCHAR* Level, uint64 Seed, int32 MaxFrames, const char* Tune = nullptr, bool bHooksDead = false)
 	{
 		UJamSim* Sim = NewObject<UJamSim>();
 		Sim->Init(C.Game, Seed);
@@ -146,6 +149,7 @@ namespace JamMovementTests
 		{
 			JamAI::FJamAIWorld W;
 			JamAI::FJamSimAdapter::BuildWorld(*Sim, W);
+			if (bHooksDead) JamBaseline::HooksDead(W);
 			JamAI::FJamAIInput Out[JamAI::kMaxSkaters];
 			Brain->Think(W, Out);
 			const int32 Human = Sim->GetHumanIndex();
@@ -423,10 +427,16 @@ bool FJamMovementBurst::RunTest(const FString& Parameters)
 		};
 		FJamGameConfig Off = G; Off.Skater.bBurstOwnStop = false;
 		int32 ArmStand = 0, ArmStop = 0, ArmCtrl = 0, ArmStandOff = 0;
-		const int32 Stand = Go(G, 0, ArmStand), Stopped = Go(G, 1, ArmStop), Ctrl = Go(G, 2, ArmCtrl), StandOff = Go(Off, 0, ArmStandOff);
+		// Lane A128 (skater.burst.rest_frames): a skater that stands has earned its first step too; lane A121's cases hold with the key at 0.
+		FJamGameConfig Own = G; Own.Skater.BurstRestFrames = 0;
+		int32 ArmRest = 0;
+		const int32 Rested = Go(G, 0, ArmRest);
+		AddInfo(FString::Printf(TEXT("TIMING first step to 6 m/s from rest under the defaults (burst.rest_frames %d): %d frames (burst %d)"), G.Skater.BurstRestFrames, Rested, ArmRest));
+		TestEqual(TEXT("A128: a skater that stood still has the burst"), ArmRest, G.Skater.BurstFrames);
+		const int32 Stand = Go(Own, 0, ArmStand), Stopped = Go(Own, 1, ArmStop), Ctrl = Go(Own, 2, ArmCtrl), StandOff = Go(Off, 0, ArmStandOff);
 		AddInfo(FString::Printf(TEXT("TIMING first step to 6 m/s: standing %d frames (burst %d), after its own reverse stop %d (burst %d), after the brake button %d (burst %d); own_stop false, standing: %d (burst %d)"),
 			Stand, ArmStand, Stopped, ArmStop, Ctrl, ArmCtrl, StandOff, ArmStandOff));
-		TestEqual(TEXT("a skater that merely stands has no burst"), ArmStand, 0);
+		TestEqual(TEXT("burst.rest_frames 0: a skater that merely stands has no burst"), ArmStand, 0);
 		TestEqual(TEXT("a skater that stopped itself by reversing has it"), ArmStop, G.Skater.BurstFrames);
 		TestEqual(TEXT("a skater that stopped itself with the brake button has it"), ArmCtrl, G.Skater.BurstFrames);
 		TestEqual(TEXT("own_stop false: the standing skater has it, as before the lane"), ArmStandOff, G.Skater.BurstFrames);
@@ -658,6 +668,10 @@ bool FJamMovementNeutral::RunTest(const FString& Parameters)
 	// R-0044 as amended (the sweep's shield on both sides) landed with this lane and is a rule, not a key: the code switch brings back the one side.
 	N->Game.Stick.bSweepShieldOneSided = true;
 	N->Game.Stick.bTeammateTouchTakes = true;   // lane A102 (R-0048 point 2): a rule, not a key
+	// Lane A138 (R-0053 point 5): the shared baseline too (every rule since the vision's commit at its neutral value), then this test's own block again, which
+	// goes further back than the vision (lanes A92 and A93 off: main bb18439) and owns reverse_brake_decel 0.
+	JamBaseline::MakeNeutral(N->Game);
+	MakeNeutral(N->Game);
 	TestTrue(TEXT("neutral: stick.passive_take true, stick.body_shield false"), N->Game.Stick.bPassiveTake && !N->Game.Stick.bBodyShield);
 	TestEqual(TEXT("neutral: skater.reverse_brake_decel 0"), N->Game.Skater.ReverseBrakeDecel, 0.0);
 	TestEqual(TEXT("neutral: skater.burst.frames 0"), N->Game.Skater.BurstFrames, 0);
@@ -694,7 +708,7 @@ bool FJamMovementNeutral::RunTest(const FString& Parameters)
 	{
 		FString Raw = C->RawJson;
 		TestEqual(TEXT("one game.skater anchor for lane A121's neutral block"), Raw.ReplaceInline(TEXT("\"skater\": {"),
-			TEXT("\"stick\": {\"take_grace_frames\": 0}, \"skater\": {\"reverse_brake_decel\": 20, \"burst\": {\"own_stop\": false}, ")), 1);
+			TEXT("\"stick\": {\"take_grace_frames\": 0}, \"skater\": {\"reverse_brake_decel\": 20, \"burst\": {\"own_stop\": false, \"rest_frames\": 0}, \"spin\": {\"exposed_frames\": 0}, ")), 1);   // lane A128: the blocks stack
 		TArray<FString> Errors;
 		UJamCartridge* E2 = UJamCartridge::LoadFromString(Raw, Errors);
 		for (const FString& E : Errors) AddError(FString::Printf(TEXT("lane A121's neutral block: %s"), *E));
@@ -702,11 +716,34 @@ bool FJamMovementNeutral::RunTest(const FString& Parameters)
 		{
 			TestTrue(TEXT("A121 neutral: take_grace_frames 0, reverse_brake_decel 20, burst.own_stop false"), E2->Game.Stick.TakeGraceFrames == 0 && E2->Game.Skater.ReverseBrakeDecel == 20.0 && !E2->Game.Skater.bBurstOwnStop);
 			TestTrue(TEXT("A121 neutral: the rest of the burst object keeps its defaults"), E2->Game.Skater.BurstFrames == C->Game.Skater.BurstFrames && E2->Game.Skater.BurstAccelMult == C->Game.Skater.BurstAccelMult);
-			E2->Game.Contact.BoardBonus = 1.0; E2->Game.Contact.ReleaseGraceFrames = 0;   // Director at landing: the tree before the lane had neither lane A101's board bonus nor lane A113's release grace
-			const FBot N2 = NetTrapMatch(*E2, TEXT("pro"), 15, 6000);
+			// Lane A138 (R-0053 point 5): the tree before the lane is the shared baseline with lane A102's kept puck back on; its brain was evolution 1 and read no shield.
+			JamBaseline::MakeNeutral(E2->Game); JamBaseline::WithKeptPuck(E2->Game);
+			const FBot N2 = NetTrapMatch(*E2, TEXT("pro"), 15, 6000, JamBaseline::BrainTune(), true);
 			AddInfo(FString::Printf(TEXT("lane A121's neutral block, hockey.regular pro seed 15: %lld frames, %d:%d, hash %s (the tree before the lane: 6000 frames, 2:0, fc59e23598229ebc)"), N2.Frames, N2.Score0, N2.Score1, *N2.Hash));
 			TestEqual(TEXT("A121 neutral block: the pro bot match's hash is the baseline's"), N2.Hash, FString(TEXT("fc59e23598229ebc")));
 			TestNotEqual(TEXT("A121 defaults: the same match is another match"), B.Hash, N2.Hash);
+		}
+	}
+	// Lane A128 (track F2, evolution 3): its neutral block, written as a cartridge author would, gives back the default match of the tree before the lane
+	// (evolution 2's final build, Game/logs/a121-tests-jam-full-2-ue.log: "defaults, hockey.regular pro seed 15: 6000 frames, 1:1, hash c8ae80c1dbdc45b0").
+	{
+		FString Raw = C->RawJson;
+		TestEqual(TEXT("one game.skater anchor for lane A128's neutral block"), Raw.ReplaceInline(TEXT("\"skater\": {"),
+			TEXT("\"skater\": {\"burst\": {\"rest_frames\": 0}, \"spin\": {\"exposed_frames\": 0}, ")), 1);
+		TArray<FString> Errors;
+		UJamCartridge* E3 = UJamCartridge::LoadFromString(Raw, Errors);
+		for (const FString& E : Errors) AddError(FString::Printf(TEXT("lane A128's neutral block: %s"), *E));
+		if (E3)
+		{
+			TestTrue(TEXT("A128 neutral: burst.rest_frames 0, spin.exposed_frames 0"), E3->Game.Skater.BurstRestFrames == 0 && E3->Game.Skater.SpinExposedTail == 0);
+			TestTrue(TEXT("A128 neutral: the rest of the burst and spin objects keep their defaults"), E3->Game.Skater.BurstFrames == C->Game.Skater.BurstFrames && E3->Game.Skater.bBurstOwnStop == C->Game.Skater.bBurstOwnStop
+				&& E3->Game.Skater.SpinFrames == C->Game.Skater.SpinFrames && E3->Game.Skater.SpinStaminaCost == C->Game.Skater.SpinStaminaCost);
+			// Lane A138 (R-0053 point 5): the tree before the lane is the shared baseline with lane A102's kept puck and lane A121's three rules back on.
+			JamBaseline::MakeNeutral(E3->Game); JamBaseline::WithKeptPuck(E3->Game); JamBaseline::WithCarrierAnswer(E3->Game);
+			const FBot N3 = NetTrapMatch(*E3, TEXT("pro"), 15, 6000, JamBaseline::BrainTune(), true);
+			AddInfo(FString::Printf(TEXT("lane A128's neutral block, hockey.regular pro seed 15: %lld frames, %d:%d, hash %s (the tree before the lane: 6000 frames, 1:1, c8ae80c1dbdc45b0)"), N3.Frames, N3.Score0, N3.Score1, *N3.Hash));
+			TestEqual(TEXT("A128 neutral block: the pro bot match's hash is the baseline's"), N3.Hash, FString(TEXT("c8ae80c1dbdc45b0")));
+			TestNotEqual(TEXT("A128 defaults: the same match is another match"), B.Hash, N3.Hash);
 		}
 	}
 	return true;

@@ -13,6 +13,7 @@
 #include "JamCartridge.h"
 #include "JamEventBus.h"
 #include "JamSim.h"
+#include "JamBaseline.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
 
@@ -402,13 +403,15 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamHockey2ShieldHook, "Jam.Bot.Hockey2.ShieldH
 bool FJamHockey2ShieldHook::RunTest(const FString& Parameters)
 {
 	using namespace JamHockeyBrain2TestsLocal;
-	auto Behind = [](bool bShieldInSim, bool bRead, double& OutSideways) -> bool
+	// Lane A138: the way round the body is for a carrier that dawdles (FJamHockeySense::RoundMaxMps 3 m/s): the scene's carrier glides at 2 m/s (3 before).
+	// CarrierMps: its speed; RoundMax below 0 = the default.
+	auto Behind = [](bool bShieldInSim, bool bRead, double& OutSideways, double CarrierMps = 2.0, double RoundMax = -1.0) -> bool
 	{
 		FJamAIWorld W = Three();
 		W.PlayerIndex = -1;
 		W.Skaters[0].Role = ERole::Support;
 		W.Skaters[3].Facing = FVec2(1.0, 0.0);
-		Carry(W, 3, FVec2(0.0, 0.0), FVec2(3.0, 0.0));
+		Carry(W, 3, FVec2(0.0, 0.0), FVec2(CarrierMps, 0.0));
 		W.Skaters[1].Pos = FVec2(-1.2, 0.0);    // directly behind the carrier, the puck on the far side of its body
 		W.Skaters[1].Vel = FVec2(3.0, 0.0);
 		W.Skaters[1].bCanLift = true;
@@ -417,6 +420,7 @@ bool FJamHockey2ShieldHook::RunTest(const FString& Parameters)
 		SetSense(B, true);
 		B.Params.Mate.bLift = true;
 		B.Params.Mate.Hk.bReadShield = bRead;
+		if (RoundMax >= 0.0) { B.Params.Mate.Hk.RoundMaxMps = RoundMax; }
 		FJamAIInput In[kMaxSkaters];
 		B.Think(W, In);
 		OutSideways = FMath::Abs(In[1].Move.Normalized().Y);
@@ -432,6 +436,18 @@ bool FJamHockey2ShieldHook::RunTest(const FString& Parameters)
 	TestTrue(TEXT("the shield unread: the bot lifts into the body (the lift the sim refuses)"), bLiftUnread);
 	TestFalse(TEXT("the shield read: no lift into the body"), bLiftRead);
 	TestTrue(TEXT("the shield read: the bot goes round the body (its way has a sideways share over 0.5)"), SideRead > 0.5);
+	// Lane A138 (R-0053: a defender that contains wins when the carrier dawdles, not when he stops and goes): a carrier that goes (6 m/s) is not rounded: the
+	// bot still presses no lift into the body, and its way is the chase's, not the point beside the carrier. hk_round_max_mps 0 = lane A115's rule: round at any speed.
+	{
+		double SideGo = 0.0, SideGoOld = 0.0;
+		const bool bLiftGo = Behind(true, true, SideGo, 6.0);
+		const bool bLiftGoOld = Behind(true, true, SideGoOld, 6.0, 0.0);
+		AddInfo(FString::Printf(TEXT("behind a carrier that goes at 6 m/s, the shield read: lifts %d, sideways share of its way %.2f; with hk_round_max_mps 0 (lane A115's rule): lifts %d, sideways %.2f"),
+			bLiftGo ? 1 : 0, SideGo, bLiftGoOld ? 1 : 0, SideGoOld));
+		TestFalse(TEXT("a carrier that goes: still no lift into the body"), bLiftGo);
+		TestTrue(TEXT("a carrier that goes: the bot does not go round (its way is not the point beside the carrier)"), SideGo < SideGoOld - 0.2);
+		TestTrue(TEXT("hk_round_max_mps 0: the bot goes round at any speed, as lane A115 had it"), !bLiftGoOld && SideGoOld > 0.5);
+	}
 	// from the front the body shields nothing
 	{
 		FJamAIWorld W = Three();
@@ -495,23 +511,31 @@ bool FJamHockey2Neutral::RunTest(const FString& Parameters)
 	const FPin Pins[] = {
 		{ TEXT("hockey.regular"), 1, TEXT("a31f6bc64fef07f3") }, { TEXT("hockey.regular"), 2, TEXT("1e3bb78feb1e30ad") },
 		{ TEXT("hockey.arena.large"), 1, TEXT("6cbdb935ec9cd348") }, { TEXT("hockey.arena.large"), 2, TEXT("c23153964bdb9614") } };
+	// Lane A138 (R-0053 point 5): the pins are evolution 1's matches on the tree lane A115 began from (the vision's commit: none of the evening's sim rules).
+	// The neutral arm is the shared baseline (JamBaseline.h: every rule since at its neutral value) with every A115 field off; evolution 2 plays the tree as it stands.
 	for (const FPin& P : Pins)
 	{
-		TArray<FString> Errors;
-		UJamCartridge* Cart = UJamCartridge::LoadFromFile(UJamCartridge::ResolveCartridgePath(P.Cart), Errors);
-		if (!Cart) { AddError(FString::Printf(TEXT("FAIL %s does not load"), P.Cart)); return false; }
-		FJamMatchConfig C = ToMatchConfigResolved(*Cart, TEXT("pro"));
 		for (int Arm = 0; Arm < 2; ++Arm)
 		{
+			TArray<FString> Errors;
+			UJamCartridge* Cart = UJamCartridge::LoadFromFile(UJamCartridge::ResolveCartridgePath(P.Cart), Errors);
+			if (!Cart) { AddError(FString::Printf(TEXT("FAIL %s does not load"), P.Cart)); return false; }
+			if (Arm == 0) { JamBaseline::MakeNeutral(Cart->Game); }
+			FJamMatchConfig C = ToMatchConfigResolved(*Cart, TEXT("pro"));
 			SetSense(C.AI, Arm == 1);
+			if (Arm == 0)
+			{
+				char Err[200] = {};
+				TestTrue(TEXT("the shared baseline's brain tune applies"), ApplyDifficultyTune(JamBaseline::BrainTune(), C.AI, Err, sizeof(Err)));
+			}
 			FJamSimAdapter Sim(*Cart);
 			const FJamPlaytestStats St = RunPlaytestMatch(Sim, C, P.Seed, EPlaytester::Regular, 36000, Cart->Game.Shot.ChargeFramesMax, false, nullptr, nullptr, 0);
 			const FString Hash = FString::Printf(TEXT("%016llx"), static_cast<unsigned long long>(St.Hash));
-			AddInfo(FString::Printf(TEXT("%s seed %llu, %s: %lld frames, hash %s"), P.Cart, P.Seed, Arm == 0 ? TEXT("every A115 field off") : TEXT("evolution 2"), static_cast<long long>(St.Frames), *Hash));
+			AddInfo(FString::Printf(TEXT("%s seed %llu, %s: %lld frames, hash %s"), P.Cart, P.Seed, Arm == 0 ? TEXT("the shared baseline, every A115 field off") : TEXT("evolution 2, the tree as it stands"), static_cast<long long>(St.Frames), *Hash));
 			if (Arm == 0) { TestEqual(*FString::Printf(TEXT("%s seed %llu with every A115 field off is evolution 1's match"), P.Cart, P.Seed), Hash, FString(P.Hash)); }
 			else { TestNotEqual(*FString::Printf(TEXT("%s seed %llu: evolution 2 plays another match"), P.Cart, P.Seed), Hash, FString(P.Hash)); }
+			Cart->RemoveFromRoot();
 		}
-		Cart->RemoveFromRoot();
 	}
 	return true;
 }

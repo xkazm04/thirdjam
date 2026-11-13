@@ -156,6 +156,9 @@ namespace JamAI
 			if (std::strcmp(Key, "hk_stop_cut") == 0) { K.Hk.bStopCut = V != 0.0; return true; }
 			if (std::strcmp(Key, "hk_gap_control") == 0) { K.Hk.bGapControl = V != 0.0; return true; }
 			if (std::strcmp(Key, "hk_read_shield") == 0) { K.Hk.bReadShield = V != 0.0; return true; }
+			if (std::strcmp(Key, "hk_round_lead_s") == 0) { K.Hk.RoundLeadS = V; return true; }   // lane A138
+			if (std::strcmp(Key, "hk_round_max_mps") == 0) { K.Hk.RoundMaxMps = V; return true; }
+			if (std::strcmp(Key, "hk_spin_end_share") == 0) { K.Hk.SpinEndShare = V; return true; }
 			if (std::strcmp(Key, "hk_mate_stick_frames") == 0) { K.Hk.MateStickFrames = static_cast<int>(V); return true; }
 			if (std::strcmp(Key, "hk_attack_shape") == 0) { K.Hk.bAttackShape = V != 0.0; return true; }
 			if (std::strcmp(Key, "hk_defence_shape") == 0) { K.Hk.bDefenceShape = V != 0.0; return true; }
@@ -212,6 +215,10 @@ namespace JamAI
 		P.Mate = FJamBotSkill();
 		P.Mate.PassToHuman = Profile.MatesPassShare;
 		P.Mate.Hk = ProHockeySense();   // lane A94 (R-0045 law 2): the human's teammates play the pro hockey sense at every level
+		// Lane A138: the human's mates go round a shielding body at any speed (lane A115's rule; mate.hk_round_max_mps). The cap of 3 m/s is the opposing
+		// side's: it is what lets the human's stop-and-go beat a defender (law 3). A mate that only chased an opposing carrier won fewer pucks: on the big
+		// ice 46.3 % of pro matches had a 30 s stretch without a human touch with the cap on both sides, 39 % with the mates' off (600 seeds; INTEGRATION.md).
+		P.Mate.Hk.RoundMaxMps = 0.0;
 		P.Mate.SprintShare = ProOppSkill().SprintShare;   // lane A95 (R-0045 law 4): the human's teammates sprint as pro bots do at every level
 	}
 
