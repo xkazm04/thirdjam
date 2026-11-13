@@ -289,3 +289,9 @@
 
 - RESOURCES 12:16 cpu 95% ram 26.7/63GB gpu 35 %, 3717 MiB, 45 editors 0 cmd 6 ubt 0 free 626GB
 - link green 12:27: main 503fe05 (The curve on the soak (A70, R-0039): rookie red skill 0.8, pro 0.95, all_star speed 1.3, b) pushed.
+- link green 12:34: main 9f6dfe6 (Merge dev-b (clay passes 8-9, SK12 tackling takes, B's answers to 0015-0017); the clay zon) pushed.
+
+## H17 (12:36) the curve on target (503fe05, R-0039); dev-b merged with B's ring instances (9f6dfe6); A76 landing
+- Running: A57 parity + hourly packages, A77 mechanics proof + saucer pass (Fable), A78 sky-light readback measurement for B (0016 point 3). H23 after A76 and A77.
+- B's answers in: 0015 done (MI_Zone_<kind>_Ring, now loaded by RinkActor), 0016 accepted (bumper 0.7 in B31; sky light awaits A78's number), 0017 accepted (SK12 takes
+  on dev-b: new lying poses, side falls; SK13 measures the pelvis against the ice and the hit-stop timing; B30 thins and scales the check bursts).

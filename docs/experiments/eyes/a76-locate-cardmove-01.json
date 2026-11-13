@@ -1,0 +1,165 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "locate",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T11:30:38.321Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "locate",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a76/hockey.arena.large-l2-cardmove-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/a76/hockey.arena.large-l2-cardmove-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/a76/hockey.arena.large-l2-cardmove-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/a76/hockey.boost-l3-cardmove-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/a76/hockey.boost-l3-cardmove-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "F",
+          "path": "docs/experiments/img/a76/hockey.boost-l3-cardmove-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2905,
+      "usage": {
+        "prompt": 7635,
+        "output": 964,
+        "thoughts": 0,
+        "total": 8599,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00934,
+      "ms": 9536,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "puck": {
+              "score": 5,
+              "told_by": "The glowing puck itself is visible on the center red line."
+            },
+            "far_net": {
+              "score": 1,
+              "told_by": "Nothing points to the far net; it is off-screen without any HUD badge or indicator.",
+              "badge_covers_net": false
+            },
+            "overlapping_marks": [
+              "MATCH 1 card overlaps the top scoreboard timer plate",
+              "HOLD indicator overlaps the main tutorial prompt plate"
+            ],
+            "match_card_in_middle_third": false,
+            "overall": 3
+          },
+          {
+            "label": "Still B",
+            "puck": {
+              "score": 4,
+              "told_by": "An orange indicator arrow with a '14 m' distance label below the player points downward toward the puck."
+            },
+            "far_net": {
+              "score": 4,
+              "told_by": "The far red net is visible on the ice, and a yellow diamond badge with '66 m' floats directly above it.",
+              "badge_covers_net": false
+            },
+            "overlapping_marks": [],
+            "match_card_in_middle_third": false,
+            "overall": 4
+          },
+          {
+            "label": "Still C",
+            "puck": {
+              "score": 4,
+              "told_by": "A blue arrow indicator and '20 m' distance label below the player point toward the puck."
+            },
+            "far_net": {
+              "score": 5,
+              "told_by": "The red net is directly in front of the skater, with a yellow diamond badge showing '9 m' clear above its crossbar.",
+              "badge_covers_net": false
+            },
+            "overlapping_marks": [],
+            "match_card_in_middle_third": false,
+            "overall": 4
+          },
+          {
+            "label": "Still D",
+            "puck": {
+              "score": 5,
+              "told_by": "The glowing puck itself is clearly visible resting on the center red line."
+            },
+            "far_net": {
+              "score": 1,
+              "told_by": "Nothing indicates the far net; no red frame, badge, or distance appears for it.",
+              "badge_covers_net": false
+            },
+            "overlapping_marks": [
+              "MATCH 1 card overlaps the top scoreboard frame",
+              "HOLD indicator overlaps the bottom tutorial text plate"
+            ],
+            "match_card_in_middle_third": false,
+            "overall": 3
+          },
+          {
+            "label": "Still E",
+            "puck": {
+              "score": 4,
+              "told_by": "An orange arrow and '14 m' distance label positioned below the skater point toward the puck."
+            },
+            "far_net": {
+              "score": 4,
+              "told_by": "The far red net is visible on the ice, marked above by a yellow diamond badge reading '66 m'.",
+              "badge_covers_net": false
+            },
+            "overlapping_marks": [],
+            "match_card_in_middle_third": false,
+            "overall": 4
+          },
+          {
+            "label": "Still F",
+            "puck": {
+              "score": 4,
+              "told_by": "A blue arrow and '21 m' distance label beneath the skater ring point toward the puck."
+            },
+            "far_net": {
+              "score": 5,
+              "told_by": "The red net is clearly visible in the foreground, with a yellow diamond badge and '7 m' label positioned clear above it.",
+              "badge_covers_net": false
+            },
+            "overlapping_marks": [],
+            "match_card_in_middle_third": false,
+            "overall": 4
+          }
+        ]
+      },
+      "markdown": "**eyes/locate** A=hockey.arena.large-l2-cardmove-card.jpg B=hockey.arena.large-l2-cardmove-faceoff.jpg C=hockey.arena.large-l2-cardmove-farnet.jpg D=hockey.boost-l3-cardmove-card.jpg E=hockey.boost-l3-cardmove-faceoff.jpg F=hockey.boost-l3-cardmove-farnet.jpg (gemini-3.8-flash, in 7635 out 964 tokens, ~$0.0093, 9.5 s)\n- stills:\n  - label: Still A; match_card_in_middle_third: false; overall: 3\n    - puck: score 5, told_by The glowing puck itself is visible on the center red line.\n    - far_net:\n      - score: 1\n      - told_by: Nothing points to the far net; it is off-screen without any HUD badge or indicator.\n      - badge_covers_net: false\n    - overlapping_marks: MATCH 1 card overlaps the top scoreboard timer plate; HOLD indicator overlaps the main tutorial prompt plate\n  - label: Still B; match_card_in_middle_third: false; overall: 4\n    - puck: score 4, told_by An orange indicator arrow with a '14 m' distance label below the player points downward toward the puck.\n    - far_net:\n      - score: 4\n      - told_by: The far red net is visible on the ice, and a yellow diamond badge with '66 m' floats directly above it.\n      - badge_covers_net: false\n    - overlapping_marks: (none)\n  - label: Still C; match_card_in_middle_third: false; overall: 4\n    - puck: score 4, told_by A blue arrow indicator and '20 m' distance label below the player point toward the puck.\n    - far_net:\n      - score: 5\n      - told_by: The red net is directly in front of the skater, with a yellow diamond badge showing '9 m' clear above its crossbar.\n      - badge_covers_net: false\n    - overlapping_marks: (none)\n  - label: Still D; match_card_in_middle_third: false; overall: 3\n    - puck: score 5, told_by The glowing puck itself is clearly visible resting on the center red line.\n    - far_net:\n      - score: 1\n      - told_by: Nothing indicates the far net; no red frame, badge, or distance appears for it.\n      - badge_covers_net: false\n    - overlapping_marks: MATCH 1 card overlaps the top scoreboard frame; HOLD indicator overlaps the bottom tutorial text plate\n  - label: Still E; match_card_in_middle_third: false; overall: 4\n    - puck: score 4, told_by An orange arrow and '14 m' distance label positioned below the skater point toward the puck.\n    - far_net:\n      - score: 4\n      - told_by: The far red net is visible on the ice, marked above by a yellow diamond badge reading '66 m'.\n      - badge_covers_net: false\n    - overlapping_marks: (none)\n  - label: Still F; match_card_in_middle_third: false; overall: 4\n    - puck: score 4, told_by A blue arrow and '21 m' distance label beneath the skater ring point toward the puck.\n    - far_net:\n      - score: 5\n      - told_by: The red net is clearly visible in the foreground, with a yellow diamond badge and '7 m' label positioned clear above it.\n      - badge_covers_net: false\n    - overlapping_marks: (none)"
+    }
+  ]
+}

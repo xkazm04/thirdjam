@@ -1,0 +1,262 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "readability",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T11:31:02.169Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "readability",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a76/hockey.arena.large-l2-cardmove-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/a76/hockey.arena.large-l2-cardmove-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/a76/hockey.boost-l3-cardmove-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/a76/hockey.boost-l3-cardmove-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/a76/mode.marathon-l2-cardmove-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "F",
+          "path": "docs/experiments/img/a76/mode.marathon-l2-cardmove-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "distance": 6,
+      "thumbnails": [],
+      "prompt_chars": 2968,
+      "usage": {
+        "prompt": 7677,
+        "output": 2011,
+        "thoughts": 0,
+        "total": 9688,
+        "calls": 1
+      },
+      "cost_usd_est": 0.0133,
+      "ms": 17616,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "hockey.arena.large-l2-cardmove-faceoff.jpg",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "The puck is not visible anywhere on the ice surface or near any skater."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "No figure possesses the puck or displays any possession indicator."
+              },
+              "team_colours": {
+                "score": 5,
+                "evidence": "The foreground skater wears bright blue while the distant skaters wear bright orange, creating an unmistakable contrast."
+              },
+              "far_net": {
+                "score": 2,
+                "evidence": "The far net is a tiny red horizontal sliver roughly 30 pixels wide near the top boards at 66 m distance, largely occluded by an orange skater."
+              },
+              "zone_strips": {
+                "score": 4,
+                "evidence": "A dark red transverse line spans the entire rink width across the center, flanked by prominent blue circular faceoff markings."
+              }
+            },
+            "first_look": "Foreground blue skater number 7",
+            "noise": [
+              "Concentric circular blue-gray gradient shading rings across the ice",
+              "Bottom keyboard control strip spanning the entire width",
+              "Massive blue selection ring under the player figure"
+            ],
+            "overall": 2
+          },
+          {
+            "label": "hockey.arena.large-l2-cardmove-farnet.jpg",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "No puck is visible on the ice near the sticks or skaters."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "Neither skater has a visible puck or carrier halo."
+              },
+              "team_colours": {
+                "score": 5,
+                "evidence": "The player is rendered in vivid sky blue and the opponent is fully clad in bright warm orange."
+              },
+              "far_net": {
+                "score": 4,
+                "evidence": "The goal frame is centered just past the skaters, clearly outlined in bold red measuring about 180 pixels wide."
+              },
+              "zone_strips": {
+                "score": 4,
+                "evidence": "Red goal line and red goal crease arcs and hash marks are sharply drawn across the white ice."
+              }
+            },
+            "first_look": "The blue skater and adjacent orange skater duel in the center",
+            "noise": [
+              "Bright yellow glowing dasher board trim line",
+              "Floating distance badge and card prompt text box",
+              "Thick black outline rendering artifacts on skater silhouettes"
+            ],
+            "overall": 3
+          },
+          {
+            "label": "hockey.boost-l3-cardmove-faceoff.jpg",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "There is no puck visible on the ice surface."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "Neither the distant orange skater nor the foreground blue skater has the puck."
+              },
+              "team_colours": {
+                "score": 4,
+                "evidence": "Foreground player is clearly light blue, while the distant figure at the upper right is distinctly orange."
+              },
+              "far_net": {
+                "score": 2,
+                "evidence": "The far net is a minuscule red box about 25 pixels wide below the center top scoreboard, partially blocked by a skater."
+              },
+              "zone_strips": {
+                "score": 4,
+                "evidence": "A straight dark red line and large thin blue center circle are clearly visible across the middle rink."
+              }
+            },
+            "first_look": "Large blue skater number 7 centered in the foreground",
+            "noise": [
+              "Heavy brush-stroke texture across the entire ice sheet",
+              "Full-width dark control guide banner at the bottom",
+              "High-contrast empty scoreboard boxes at the top center"
+            ],
+            "overall": 2
+          },
+          {
+            "label": "hockey.boost-l3-cardmove-farnet.jpg",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "The puck is not visible anywhere on the visible ice."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "Neither the blue skater nor the orange skater carries or is marked as carrying a puck."
+              },
+              "team_colours": {
+                "score": 5,
+                "evidence": "The left figure is bright orange and the central figure is saturated blue, making team differentiation immediate."
+              },
+              "far_net": {
+                "score": 5,
+                "evidence": "The bright red goal frame is wide, centrally placed, unobstructed, and spans about 230 pixels across."
+              },
+              "zone_strips": {
+                "score": 4,
+                "evidence": "Red goal line, goal crease shading, and red faceoff circle arcs stand out clearly against the light blue-tinted ice."
+              }
+            },
+            "first_look": "Large orange skater on the lower left",
+            "noise": [
+              "Intense yellow-white light strip along the boards",
+              "Strong blue floor indicator circle beneath the blue skater",
+              "Large scoreboard dominating the top center"
+            ],
+            "overall": 3
+          },
+          {
+            "label": "mode.marathon-l2-cardmove-faceoff.jpg",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "The puck is completely absent and cannot be seen on the rink."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "No skater holds a puck or displays possession feedback."
+              },
+              "team_colours": {
+                "score": 3,
+                "evidence": "The foreground skater is clearly bright blue, but the far opponent is a tiny orange speck near the far net barely 10 pixels tall."
+              },
+              "far_net": {
+                "score": 2,
+                "evidence": "The far net appears as a minuscule red line only 35 pixels wide directly below the scoreboard at 87 m distance."
+              },
+              "zone_strips": {
+                "score": 4,
+                "evidence": "The dark red line across center ice and the blue circle ring are cleanly painted and unobstructed."
+              }
+            },
+            "first_look": "Blue skater number 7 directly in the lower center",
+            "noise": [
+              "Massive empty white ice foreground covering over half the frame",
+              "Vivid concentric blue and white ice bullseye shading",
+              "Prominent control instructions bar anchored at the bottom"
+            ],
+            "overall": 2
+          },
+          {
+            "label": "mode.marathon-l2-cardmove-farnet.jpg",
+            "elements": {
+              "puck": {
+                "score": 2,
+                "evidence": "A tiny black speck about 4 pixels wide lies on the ice near the stick of the far orange skater, but lacks any glow or outline."
+              },
+              "carrier": {
+                "score": 2,
+                "evidence": "The far orange skater directly in front of the net appears nearest the speck, but lacks clear possession visual cues."
+              },
+              "team_colours": {
+                "score": 5,
+                "evidence": "Two skaters are clearly clad in bright royal blue and three skaters are in vibrant warm orange."
+              },
+              "far_net": {
+                "score": 4,
+                "evidence": "The red net frame is prominent in the upper center spanning roughly 160 pixels, though slightly obscured by the orange skater."
+              },
+              "zone_strips": {
+                "score": 4,
+                "evidence": "The red goal line and two red faceoff circles with hash marks are plainly visible against the white ice."
+              }
+            },
+            "first_look": "The cluster of orange and blue skaters on the right side",
+            "noise": [
+              "Double selection rings on the ice (blue ring around player 7 and white double ring around skater 21)",
+              "Floating distance indicators and tutorial card prompt",
+              "High-contrast scoreboard blocks at the top border"
+            ],
+            "overall": 3
+          }
+        ]
+      },
+      "markdown": "**eyes/readability** A=hockey.arena.large-l2-cardmove-faceoff.jpg B=hockey.arena.large-l2-cardmove-farnet.jpg C=hockey.boost-l3-cardmove-faceoff.jpg D=hockey.boost-l3-cardmove-farnet.jpg E=mode.marathon-l2-cardmove-faceoff.jpg F=mode.marathon-l2-cardmove-farnet.jpg at 6 m (gemini-3.8-flash, in 7677 out 2011 tokens, ~$0.0133, 17.6 s)\n- stills:\n  - label: hockey.arena.large-l2-cardmove-faceoff.jpg; first_look: Foreground blue skater number 7; overall: 2\n    - elements:\n      - puck: score 1, evidence The puck is not visible anywhere on the ice surface or near any skater.\n      - carrier: score 1, evidence No figure possesses the puck or displays any possession indicator.\n      - team_colours: score 5, evidence The foreground skater wears bright blue while the distant skaters wear bright orange, creating an unmistakable contrast.\n      - far_net: score 2, evidence The far net is a tiny red horizontal sliver roughly 30 pixels wide near the top boards at 66 m distance, largely occluded by an orange skater.\n      - zone_strips: score 4, evidence A dark red transverse line spans the entire rink width across the center, flanked by prominent blue circular faceoff markings.\n    - noise: Concentric circular blue-gray gradient shading rings across the ice; Bottom keyboard control strip spanning the entire width; Massive blue selection ring under the player figure\n  - label: hockey.arena.large-l2-cardmove-farnet.jpg; first_look: The blue skater and adjacent orange skater duel in the center; overall: 3\n    - elements:\n      - puck: score 1, evidence No puck is visible on the ice near the sticks or skaters.\n      - carrier: score 1, evidence Neither skater has a visible puck or carrier halo.\n      - team_colours: score 5, evidence The player is rendered in vivid sky blue and the opponent is fully clad in bright warm orange.\n      - far_net: score 4, evidence The goal frame is centered just past the skaters, clearly outlined in bold red measuring about 180 pixels wide.\n      - zone_strips: score 4, evidence Red goal line and red goal crease arcs and hash marks are sharply drawn across the white ice.\n    - noise: Bright yellow glowing dasher board trim line; Floating distance badge and card prompt text box; Thick black outline rendering artifacts on skater silhouettes\n  - label: hockey.boost-l3-cardmove-faceoff.jpg; first_look: Large blue skater number 7 centered in the foreground; overall: 2\n    - elements:\n      - puck: score 1, evidence There is no puck visible on the ice surface.\n      - carrier: score 1, evidence Neither the distant orange skater nor the foreground blue skater has the puck.\n      - team_colours: score 4, evidence Foreground player is clearly light blue, while the distant figure at the upper right is distinctly orange.\n      - far_net: score 2, evidence The far net is a minuscule red box about 25 pixels wide below the center top scoreboard, partially blocked by a skater.\n      - zone_strips: score 4, evidence A straight dark red line and large thin blue center circle are clearly visible across the middle rink.\n    - noise: Heavy brush-stroke texture across the entire ice sheet; Full-width dark control guide banner at the bottom; High-contrast empty scoreboard boxes at the top center\n  - label: hockey.boost-l3-cardmove-farnet.jpg; first_look: Large orange skater on the lower left; overall: 3\n    - elements:\n      - puck: score 1, evidence The puck is not visible anywhere on the visible ice.\n      - carrier: score 1, evidence Neither the blue skater nor the orange skater carries or is marked as carrying a puck.\n      - team_colours: score 5, evidence The left figure is bright orange and the central figure is saturated blue, making team differentiation immediate.\n      - far_net: score 5, evidence The bright red goal frame is wide, centrally placed, unobstructed, and spans about 230 pixels across.\n      - zone_strips: score 4, evidence Red goal line, goal crease shading, and red faceoff circle arcs stand out clearly against the light blue-tinted ice.\n    - noise: Intense yellow-white light strip along the boards; Strong blue floor indicator circle beneath the blue skater; Large scoreboard dominating the top center\n  - label: mode.marathon-l2-cardmove-faceoff.jpg; first_look: Blue skater number 7 directly in the lower center; overall: 2\n    - elements:\n      - puck: score 1, evidence The puck is completely absent and cannot be seen on the rink.\n      - carrier: score 1, evidence No skater holds a puck or displays possession feedback.\n      - team_colours: score 3, evidence The foreground skater is clearly bright blue, but the far opponent is a tiny orange speck near the far net barely 10 pixels tall.\n      - far_net: score 2, evidence The far net appears as a minuscule red line only 35 pixels wide directly below the scoreboard at 87 m distance.\n      - zone_strips: score 4, evidence The dark red line across center ice and the blue circle ring are cleanly painted and unobstructed.\n    - noise: Massive empty white ice foreground covering over half the frame; Vivid concentric blue and white ice bullseye shading; Prominent control instructions bar anchored at the bottom\n  - label: mode.marathon-l2-cardmove-farnet.jpg; first_look: The cluster of orange and blue skaters on the right side; overall: 3\n    - elements:\n      - puck: score 2, evidence A tiny black speck about 4 pixels wide lies on the ice near the stick of the far orange skater, but lacks any glow or outline.\n      - carrier: score 2, evidence The far orange skater directly in front of the net appears nearest the speck, but lacks clear possession visual cues.\n      - team_colours: score 5, evidence Two skaters are clearly clad in bright royal blue and three skaters are in vibrant warm orange.\n      - far_net: score 4, evidence The red net frame is prominent in the upper center spanning roughly 160 pixels, though slightly obscured by the orange skater.\n      - zone_strips: score 4, evidence The red goal line and two red faceoff circles with hash marks are plainly visible against the white ice.\n    - noise: Double selection rings on the ice (blue ring around player 7 and white double ring around skater 21); Floating distance indicators and tutorial card prompt; High-contrast scoreboard blocks at the top border"
+    }
+  ]
+}

@@ -1,0 +1,167 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "locate",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T11:23:50.144Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "locate",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a76/hockey.regular-l2-after-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/a76/hockey.regular-l2-after-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/a76/hockey.regular-l2-after-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/a76/mode.marathon-l2-after-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/a76/mode.marathon-l2-after-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "F",
+          "path": "docs/experiments/img/a76/mode.marathon-l2-after-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2878,
+      "usage": {
+        "prompt": 7617,
+        "output": 1065,
+        "thoughts": 0,
+        "total": 8682,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00971,
+      "ms": 10764,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "hockey.regular-l2-after-card.jpg",
+            "puck": {
+              "score": 5,
+              "told_by": "The puck is directly visible at center ice highlighted with a yellow glow ring."
+            },
+            "far_net": {
+              "score": 1,
+              "told_by": "Nothing indicates the far net; it is off-screen or obscured with no visible beacon or arrow.",
+              "badge_covers_net": false
+            },
+            "overlapping_marks": [
+              "MATCH 1 card overlaps scoreboard bottom edge",
+              "HOLD circular gauge overlaps YOU player ring"
+            ],
+            "match_card_in_middle_third": false,
+            "overall": 3
+          },
+          {
+            "label": "hockey.regular-l2-after-faceoff.jpg",
+            "puck": {
+              "score": 4,
+              "told_by": "A grey chevron arrow and distance label '23 m' at the left frame edge point to the puck."
+            },
+            "far_net": {
+              "score": 5,
+              "told_by": "The red frame of the far net is directly visible on ice, marked overhead by a yellow diamond badge and '49 m' label.",
+              "badge_covers_net": false
+            },
+            "overlapping_marks": [],
+            "match_card_in_middle_third": false,
+            "overall": 4
+          },
+          {
+            "label": "hockey.regular-l2-after-farnet.jpg",
+            "puck": {
+              "score": 4,
+              "told_by": "A yellow diamond badge and '4 m' text along the right board line point to the puck's position."
+            },
+            "far_net": {
+              "score": 4,
+              "told_by": "The near red net is in the foreground, while a chevron and '57 m' label point to the far net location.",
+              "badge_covers_net": true
+            },
+            "overlapping_marks": [
+              "57 m chevron label overlaps the red goal net frame"
+            ],
+            "match_card_in_middle_third": false,
+            "overall": 3
+          },
+          {
+            "label": "mode.marathon-l2-after-card.jpg",
+            "puck": {
+              "score": 5,
+              "told_by": "The puck is directly visible at center ice surrounded by a glowing yellow circle."
+            },
+            "far_net": {
+              "score": 4,
+              "told_by": "A yellow diamond badge and '74 m' distance label appear directly above the MATCH card pointing toward the far net.",
+              "badge_covers_net": false
+            },
+            "overlapping_marks": [
+              "Far net badge '74 m' overlaps MATCH 1 banner top border",
+              "HOLD circular gauge overlaps YOU player ring"
+            ],
+            "match_card_in_middle_third": false,
+            "overall": 3
+          },
+          {
+            "label": "mode.marathon-l2-after-faceoff.jpg",
+            "puck": {
+              "score": 4,
+              "told_by": "An orange chevron arrow with '27 m' at the left frame edge indicates the puck's location."
+            },
+            "far_net": {
+              "score": 5,
+              "told_by": "The far net is visibly rendered in the distance beneath a yellow diamond badge reading '86 m'.",
+              "badge_covers_net": false
+            },
+            "overlapping_marks": [],
+            "match_card_in_middle_third": false,
+            "overall": 4
+          },
+          {
+            "label": "mode.marathon-l2-after-farnet.jpg",
+            "puck": {
+              "score": 5,
+              "told_by": "The puck is visible on the ice surface glowing yellow near the orange skater's stick."
+            },
+            "far_net": {
+              "score": 5,
+              "told_by": "The far red net is visible straight ahead on the ice with a yellow diamond badge and '19 m' label above it.",
+              "badge_covers_net": false
+            },
+            "overlapping_marks": [],
+            "match_card_in_middle_third": false,
+            "overall": 5
+          }
+        ]
+      },
+      "markdown": "**eyes/locate** A=hockey.regular-l2-after-card.jpg B=hockey.regular-l2-after-faceoff.jpg C=hockey.regular-l2-after-farnet.jpg D=mode.marathon-l2-after-card.jpg E=mode.marathon-l2-after-faceoff.jpg F=mode.marathon-l2-after-farnet.jpg (gemini-3.8-flash, in 7617 out 1065 tokens, ~$0.0097, 10.8 s)\n- stills:\n  - label: hockey.regular-l2-after-card.jpg; match_card_in_middle_third: false; overall: 3\n    - puck: score 5, told_by The puck is directly visible at center ice highlighted with a yellow glow ring.\n    - far_net:\n      - score: 1\n      - told_by: Nothing indicates the far net; it is off-screen or obscured with no visible beacon or arrow.\n      - badge_covers_net: false\n    - overlapping_marks: MATCH 1 card overlaps scoreboard bottom edge; HOLD circular gauge overlaps YOU player ring\n  - label: hockey.regular-l2-after-faceoff.jpg; match_card_in_middle_third: false; overall: 4\n    - puck: score 4, told_by A grey chevron arrow and distance label '23 m' at the left frame edge point to the puck.\n    - far_net:\n      - score: 5\n      - told_by: The red frame of the far net is directly visible on ice, marked overhead by a yellow diamond badge and '49 m' label.\n      - badge_covers_net: false\n    - overlapping_marks: (none)\n  - label: hockey.regular-l2-after-farnet.jpg; match_card_in_middle_third: false; overall: 3\n    - puck: score 4, told_by A yellow diamond badge and '4 m' text along the right board line point to the puck's position.\n    - far_net:\n      - score: 4\n      - told_by: The near red net is in the foreground, while a chevron and '57 m' label point to the far net location.\n      - badge_covers_net: true\n    - overlapping_marks: 57 m chevron label overlaps the red goal net frame\n  - label: mode.marathon-l2-after-card.jpg; match_card_in_middle_third: false; overall: 3\n    - puck: score 5, told_by The puck is directly visible at center ice surrounded by a glowing yellow circle.\n    - far_net:\n      - score: 4\n      - told_by: A yellow diamond badge and '74 m' distance label appear directly above the MATCH card pointing toward the far net.\n      - badge_covers_net: false\n    - overlapping_marks: Far net badge '74 m' overlaps MATCH 1 banner top border; HOLD circular gauge overlaps YOU player ring\n  - label: mode.marathon-l2-after-faceoff.jpg; match_card_in_middle_third: false; overall: 4\n    - puck: score 4, told_by An orange chevron arrow with '27 m' at the left frame edge indicates the puck's location.\n    - far_net:\n      - score: 5\n      - told_by: The far net is visibly rendered in the distance beneath a yellow diamond badge reading '86 m'.\n      - badge_covers_net: false\n    - overlapping_marks: (none)\n  - label: mode.marathon-l2-after-farnet.jpg; match_card_in_middle_third: false; overall: 5\n    - puck: score 5, told_by The puck is visible on the ice surface glowing yellow near the orange skater's stick.\n    - far_net:\n      - score: 5\n      - told_by: The far red net is visible straight ahead on the ice with a yellow diamond badge and '19 m' label above it.\n      - badge_covers_net: false\n    - overlapping_marks: (none)"
+    }
+  ]
+}

@@ -1,0 +1,222 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "hud",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T11:30:28.736Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "hud",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a76/mode.marathon-l2-cardmove-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/a76/mode.marathon-l2-cardmove-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/a76/mode.marathon-l2-cardmove-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2477,
+      "usage": {
+        "prompt": 9663,
+        "output": 3352,
+        "thoughts": 0,
+        "total": 13015,
+        "calls": 2
+      },
+      "cost_usd_est": 0.01982,
+      "ms": 31428,
+      "retried": true,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A: mode.marathon-l2-cardmove-card.jpg",
+            "elements": [
+              {
+                "name": "Scoreboard and Period Clock",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1 10:00 00"
+              },
+              {
+                "name": "Match Announcement Card",
+                "position": "upper center below score",
+                "legible": true,
+                "text": "MATCH 1 MARATHON - PERIOD 1 - FACEOFF"
+              },
+              {
+                "name": "Own Net Off-screen Indicator",
+                "position": "middle left edge",
+                "legible": true,
+                "text": "own 59 m"
+              },
+              {
+                "name": "Player Ring Label",
+                "position": "bottom center on controlled blue skater",
+                "legible": true,
+                "text": "YOU"
+              },
+              {
+                "name": "Faceoff Countdown Reticle",
+                "position": "lower right of blue skater",
+                "legible": true,
+                "text": "1 HOLD"
+              },
+              {
+                "name": "Faceoff Instruction Tooltip",
+                "position": "lower center right",
+                "legible": true,
+                "text": "press shoot at the drop, not before"
+              },
+              {
+                "name": "Commentary Subtitle",
+                "position": "lower center above controls strip",
+                "legible": true,
+                "text": "Good evening from the rink. Let us see what these two can do."
+              },
+              {
+                "name": "Controls Bar",
+                "position": "bottom center across screen",
+                "legible": true,
+                "text": "SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC"
+              },
+              {
+                "name": "Ready Prompt",
+                "position": "bottom left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              }
+            ],
+            "collisions": [
+              "Match announcement card visually blocks the opposing skater at the center faceoff circle.",
+              "Commentary subtitle box slightly overlaps the blue player indicator ring."
+            ],
+            "missing": [
+              "Labels identifying which score box belongs to which team.",
+              "Visual arrow indicating attacking direction."
+            ],
+            "smallest_text_px": 12,
+            "legibility": 4
+          },
+          {
+            "label": "Still B: mode.marathon-l2-cardmove-faceoff.jpg",
+            "elements": [
+              {
+                "name": "Scoreboard and Period Clock",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1 9:56 00"
+              },
+              {
+                "name": "Far Net Distance Marker",
+                "position": "top center below clock",
+                "legible": true,
+                "text": "87 m"
+              },
+              {
+                "name": "Opponent Off-screen Marker",
+                "position": "middle left edge upper",
+                "legible": true,
+                "text": "29 m"
+              },
+              {
+                "name": "Own Net Off-screen Marker",
+                "position": "middle left edge lower",
+                "legible": true,
+                "text": "own 45 m"
+              },
+              {
+                "name": "Controls Bar",
+                "position": "bottom center across screen",
+                "legible": true,
+                "text": "SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC"
+              },
+              {
+                "name": "Ready Prompt",
+                "position": "bottom left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              }
+            ],
+            "collisions": [
+              "Far net marker (87 m) directly overlaps the distant opposing skater and goal frame.",
+              "Ready prompt remains visible despite the match clock running at 9:56."
+            ],
+            "missing": [
+              "Explicit indication of which team the player controls.",
+              "Puck off-screen tracker or arrow when puck is not in view."
+            ],
+            "smallest_text_px": 12,
+            "legibility": 4
+          },
+          {
+            "label": "Still C: mode.marathon-l2-cardmove-farnet.jpg",
+            "elements": [
+              {
+                "name": "Scoreboard and Period Clock",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1 9:46 00"
+              },
+              {
+                "name": "Target Net Distance Marker",
+                "position": "upper center above opposing net",
+                "legible": true,
+                "text": "13 m"
+              },
+              {
+                "name": "Own Net Off-screen Marker",
+                "position": "middle left edge",
+                "legible": true,
+                "text": "own 119 m"
+              },
+              {
+                "name": "Opponent Player Distance Marker",
+                "position": "lower right near orange skater 21",
+                "legible": true,
+                "text": "6 m"
+              },
+              {
+                "name": "Commentary Subtitle",
+                "position": "lower center above ice",
+                "legible": true,
+                "text": "Long carry up the ice."
+              },
+              {
+                "name": "Ready Prompt",
+                "position": "bottom left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              }
+            ],
+            "collisions": [
+              "Orange skater distance marker (6 m) touches the skates and circle of teammate 13.",
+              "Mini-rink radar overlay intersects with teammate 13 and opponent 21."
+            ],
+            "missing": [
+              "Controls reminder or dynamic puck possession action indicator.",
+              "Clarity on team ownership of score digits."
+            ],
+            "smallest_text_px": 12,
+            "legibility": 4
+          }
+        ]
+      },
+      "markdown": "**eyes/hud** A=mode.marathon-l2-cardmove-card.jpg B=mode.marathon-l2-cardmove-faceoff.jpg C=mode.marathon-l2-cardmove-farnet.jpg (gemini-3.8-flash, in 9663 out 3352 tokens, ~$0.0198, 31.4 s, 1 retry)\n- stills:\n  - label: Still A: mode.marathon-l2-cardmove-card.jpg; smallest_text_px: 12; legibility: 4\n    - elements:\n      - name: Scoreboard and Period Clock; position: top center; legible: true; text: 00 PERIOD 1 10:00 00\n      - name: Match Announcement Card; position: upper center below score; legible: true; text: MATCH 1 MARATHON - PERIOD 1 - FACEOFF\n      - name: Own Net Off-screen Indicator; position: middle left edge; legible: true; text: own 59 m\n      - name: Player Ring Label; position: bottom center on controlled blue skater; legible: true; text: YOU\n      - name: Faceoff Countdown Reticle; position: lower right of blue skater; legible: true; text: 1 HOLD\n      - name: Faceoff Instruction Tooltip; position: lower center right; legible: true; text: press shoot at the drop, not before\n      - name: Commentary Subtitle; position: lower center above controls strip; legible: true; text: Good evening from the rink. Let us see what these two can do.\n      - name: Controls Bar; position: bottom center across screen; legible: true; text: SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC\n      - name: Ready Prompt; position: bottom left corner; legible: true; text: ESC / START CALL READY\n    - collisions: Match announcement card visually blocks the opposing skater at the center faceoff circle.; Commentary subtitle box slightly overlaps the blue player indicator ring.\n    - missing: Labels identifying which score box belongs to which team.; Visual arrow indicating attacking direction.\n  - label: Still B: mode.marathon-l2-cardmove-faceoff.jpg; smallest_text_px: 12; legibility: 4\n    - elements:\n      - name: Scoreboard and Period Clock; position: top center; legible: true; text: 00 PERIOD 1 9:56 00\n      - name: Far Net Distance Marker; position: top center below clock; legible: true; text: 87 m\n      - name: Opponent Off-screen Marker; position: middle left edge upper; legible: true; text: 29 m\n      - name: Own Net Off-screen Marker; position: middle left edge lower; legible: true; text: own 45 m\n      - name: Controls Bar; position: bottom center across screen; legible: true; text: SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC\n      - name: Ready Prompt; position: bottom left corner; legible: true; text: ESC / START CALL READY\n    - collisions: Far net marker (87 m) directly overlaps the distant opposing skater and goal frame.; Ready prompt remains visible despite the match clock running at 9:56.\n    - missing: Explicit indication of which team the player controls.; Puck off-screen tracker or arrow when puck is not in view.\n  - label: Still C: mode.marathon-l2-cardmove-farnet.jpg; smallest_text_px: 12; legibility: 4\n    - elements:\n      - name: Scoreboard and Period Clock; position: top center; legible: true; text: 00 PERIOD 1 9:46 00\n      - name: Target Net Distance Marker; position: upper center above opposing net; legible: true; text: 13 m\n      - name: Own Net Off-screen Marker; position: middle left edge; legible: true; text: own 119 m\n      - name: Opponent Player Distance Marker; position: lower right near orange skater 21; legible: true; text: 6 m\n      - name: Commentary Subtitle; position: lower center above ice; legible: true; text: Long carry up the ice.\n      - name: Ready Prompt; position: bottom left corner; legible: true; text: ESC / START CALL READY\n    - collisions: Orange skater distance marker (6 m) touches the skates and circle of teammate 13.; Mini-rink radar overlay intersects with teammate 13 and opponent 21.\n    - missing: Controls reminder or dynamic puck possession action indicator.; Clarity on team ownership of score digits."
+    }
+  ]
+}

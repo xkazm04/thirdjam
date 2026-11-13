@@ -1,0 +1,169 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "locate",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T11:24:51.611Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "locate",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a76/hockey.arena.large-l2-after-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/a76/hockey.arena.large-l2-after-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/a76/hockey.arena.large-l2-after-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/a76/hockey.boost-l3-after-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/a76/hockey.boost-l3-after-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "F",
+          "path": "docs/experiments/img/a76/hockey.boost-l3-after-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2887,
+      "usage": {
+        "prompt": 16493,
+        "output": 2147,
+        "thoughts": 0,
+        "total": 18640,
+        "calls": 2
+      },
+      "cost_usd_est": 0.02042,
+      "ms": 20135,
+      "retried": true,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "puck": {
+              "score": 5,
+              "told_by": "The glowing puck itself is visible resting on the centre red line."
+            },
+            "far_net": {
+              "score": 4,
+              "told_by": "A yellow diamond badge with '66 m' text indicates the far net along the top centre.",
+              "badge_covers_net": false
+            },
+            "overlapping_marks": [
+              "HOLD crosshair ring overlaps the blue player selection circle",
+              "HUD hint 'press shoot at the drop, not before' touches the blue selection circle"
+            ],
+            "match_card_in_middle_third": false,
+            "overall": 4
+          },
+          {
+            "label": "Still B",
+            "puck": {
+              "score": 4,
+              "told_by": "An orange chevron with '7 m' at the lower-left edge points off-screen toward the puck."
+            },
+            "far_net": {
+              "score": 5,
+              "told_by": "The red net frame is visible in the distance, directly tagged above by a yellow diamond badge showing '66 m'.",
+              "badge_covers_net": false
+            },
+            "overlapping_marks": [],
+            "match_card_in_middle_third": false,
+            "overall": 4
+          },
+          {
+            "label": "Still C",
+            "puck": {
+              "score": 4,
+              "told_by": "A blue chevron indicator with '103 m' touches the bottom rim of the player circle pointing downward off-screen."
+            },
+            "far_net": {
+              "score": 5,
+              "told_by": "The red net frame is fully visible directly ahead, marked above the boards by a yellow diamond badge reading '10 m'.",
+              "badge_covers_net": false
+            },
+            "overlapping_marks": [
+              "blue chevron and '103 m' label overlap the bottom border of the blue player selection circle"
+            ],
+            "match_card_in_middle_third": false,
+            "overall": 4
+          },
+          {
+            "label": "Still D",
+            "puck": {
+              "score": 5,
+              "told_by": "The glowing puck itself is visible on the centre ice line."
+            },
+            "far_net": {
+              "score": 4,
+              "told_by": "A yellow diamond badge showing '66 m' points directly above the distant end of the rink.",
+              "badge_covers_net": false
+            },
+            "overlapping_marks": [
+              "HOLD crosshair ring overlaps the blue player selection circle",
+              "HUD hint 'press shoot at the drop, not before' touches the blue selection circle"
+            ],
+            "match_card_in_middle_third": false,
+            "overall": 4
+          },
+          {
+            "label": "Still E",
+            "puck": {
+              "score": 4,
+              "told_by": "A blue angled chevron mark with '5 m' text appears at the bottom left pointing off-screen."
+            },
+            "far_net": {
+              "score": 5,
+              "told_by": "The red net frame is visible in perspective at the far boards, accompanied by a yellow diamond badge reading '66 m'.",
+              "badge_covers_net": false
+            },
+            "overlapping_marks": [],
+            "match_card_in_middle_third": false,
+            "overall": 4
+          },
+          {
+            "label": "Still F",
+            "puck": {
+              "score": 4,
+              "told_by": "A blue chevron and '105 m' indicator directly overlap the bottom of the player ring pointing downward."
+            },
+            "far_net": {
+              "score": 5,
+              "told_by": "The red net structure is clearly visible right in front of the skaters, tagged with a yellow diamond badge reading '10 m'.",
+              "badge_covers_net": false
+            },
+            "overlapping_marks": [
+              "blue chevron and '105 m' label overlap the bottom edge of the player selection ring"
+            ],
+            "match_card_in_middle_third": false,
+            "overall": 4
+          }
+        ]
+      },
+      "markdown": "**eyes/locate** A=hockey.arena.large-l2-after-card.jpg B=hockey.arena.large-l2-after-faceoff.jpg C=hockey.arena.large-l2-after-farnet.jpg D=hockey.boost-l3-after-card.jpg E=hockey.boost-l3-after-faceoff.jpg F=hockey.boost-l3-after-farnet.jpg (gemini-3.8-flash, in 16493 out 2147 tokens, ~$0.0204, 20.1 s, 1 retry)\n- stills:\n  - label: Still A; match_card_in_middle_third: false; overall: 4\n    - puck: score 5, told_by The glowing puck itself is visible resting on the centre red line.\n    - far_net:\n      - score: 4\n      - told_by: A yellow diamond badge with '66 m' text indicates the far net along the top centre.\n      - badge_covers_net: false\n    - overlapping_marks: HOLD crosshair ring overlaps the blue player selection circle; HUD hint 'press shoot at the drop, not before' touches the blue selection circle\n  - label: Still B; match_card_in_middle_third: false; overall: 4\n    - puck: score 4, told_by An orange chevron with '7 m' at the lower-left edge points off-screen toward the puck.\n    - far_net:\n      - score: 5\n      - told_by: The red net frame is visible in the distance, directly tagged above by a yellow diamond badge showing '66 m'.\n      - badge_covers_net: false\n    - overlapping_marks: (none)\n  - label: Still C; match_card_in_middle_third: false; overall: 4\n    - puck: score 4, told_by A blue chevron indicator with '103 m' touches the bottom rim of the player circle pointing downward off-screen.\n    - far_net:\n      - score: 5\n      - told_by: The red net frame is fully visible directly ahead, marked above the boards by a yellow diamond badge reading '10 m'.\n      - badge_covers_net: false\n    - overlapping_marks: blue chevron and '103 m' label overlap the bottom border of the blue player selection circle\n  - label: Still D; match_card_in_middle_third: false; overall: 4\n    - puck: score 5, told_by The glowing puck itself is visible on the centre ice line.\n    - far_net:\n      - score: 4\n      - told_by: A yellow diamond badge showing '66 m' points directly above the distant end of the rink.\n      - badge_covers_net: false\n    - overlapping_marks: HOLD crosshair ring overlaps the blue player selection circle; HUD hint 'press shoot at the drop, not before' touches the blue selection circle\n  - label: Still E; match_card_in_middle_third: false; overall: 4\n    - puck: score 4, told_by A blue angled chevron mark with '5 m' text appears at the bottom left pointing off-screen.\n    - far_net:\n      - score: 5\n      - told_by: The red net frame is visible in perspective at the far boards, accompanied by a yellow diamond badge reading '66 m'.\n      - badge_covers_net: false\n    - overlapping_marks: (none)\n  - label: Still F; match_card_in_middle_third: false; overall: 4\n    - puck: score 4, told_by A blue chevron and '105 m' indicator directly overlap the bottom of the player ring pointing downward.\n    - far_net:\n      - score: 5\n      - told_by: The red net structure is clearly visible right in front of the skaters, tagged with a yellow diamond badge reading '10 m'.\n      - badge_covers_net: false\n    - overlapping_marks: blue chevron and '105 m' label overlap the bottom edge of the player selection ring"
+    }
+  ]
+}

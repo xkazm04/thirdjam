@@ -32,6 +32,8 @@
 int32 UJamHudWidget::FaceoffsThisSession = 0;
 
 // Lane A74 (R-0038): the off-screen puck marker, 0 = off, 1 = on (default).
+// Lane A76: 1 = HUD pass 3 (default), 0 = the A74 layout, for the before column of the proof (same package).
+static TAutoConsoleVariable<int32> CVarJamHudPass3(TEXT("jam.hud.Pass3"), 1, TEXT("HUD pass 3 (lifted far-net badge, edge slots, rink-sized MATCH card): 1 on, 0 the A74 layout."), ECVF_Default);
 static TAutoConsoleVariable<int32> CVarJamHudPuckMarker(TEXT("jam.hud.PuckMarker"), 1,
 	TEXT("Edge arrow with the distance pointing at the puck (or its carrier) when it is outside the inner 85 % of the frame: 0 off, 1 on."), ECVF_Default);
 
@@ -603,6 +605,7 @@ void UJamHudWidget::RefreshFromFrame(const FJamPresentationFrame& F)
 	UpdateOwnMarker(F);
 	UpdateYours(F);
 	UpdatePuckMarker(F, bCount || Frames > 0 || F.SimFrame < PuckMarkerCardFrames);
+	ResolveEdgeSlots();
 	UpdateCommentary(F);
 }
 
@@ -666,6 +669,103 @@ void UJamHudWidget::UpdatePuckMarker(const FJamPresentationFrame& F, bool bCover
 	PuckText->SetVisibility(Vis);
 	PuckArrow->SetRenderOpacity(PuckMarkerAlpha);
 	PuckText->SetRenderOpacity(PuckMarkerAlpha);
+}
+
+// Lane A76: the edge-slot rule. Every edge element (the puck chevron, the far-net and own-net chevrons) with its label is one group; the groups are placed
+// puck first, far net, own net. A group that stands within EdgeSlotPx of a placed one (anchor to anchor) or whose label rectangle meets a placed
+// rectangle slides along its own edge (up or down a side edge, along a top or bottom edge) in EdgeSlotPx steps, away from the blocker first.
+// A skater under a label is accepted (labels are over the world); a label over another label is not. The puck never moves.
+void UJamHudWidget::ResolveEdgeSlots()
+{
+	struct FPart { UWidget* W; FVector2D Half; FVector2D Tex; bool bText; };
+	struct FGroup { TArray<FPart> Parts; UWidget* Anchor = nullptr; bool bFixed = false; bool bActive = false; FBox2D Box = FBox2D(ForceInit); FVector2D AnchorPos = FVector2D::ZeroVector; };
+	auto Visible = [](const UWidget* W) { return W && W->GetVisibility() != ESlateVisibility::Collapsed && W->GetRenderOpacity() > 0.f; };
+	auto PosOf = [](UWidget* W, FVector2D& OutPos, FVector2D& OutAlign) -> bool
+	{
+		UCanvasPanelSlot* CS = W ? Cast<UCanvasPanelSlot>(W->Slot) : nullptr;
+		if (!CS) return false;
+		OutPos = CS->GetPosition(); OutAlign = CS->GetAlignment();
+		return true;
+	};
+	auto TextSize = [](const UTextBlock* T, float PerChar, float H) { return FVector2D(PerChar * (T ? T->GetText().ToString().Len() : 4), H); };
+	if (!NetDiamond || !OwnDiamond || !PuckArrow || CVarJamHudPass3.GetValueOnGameThread() == 0) return;
+
+	FGroup G[3];   // 0 puck, 1 far net, 2 own net
+	auto AddPart = [&](FGroup& Gr, UWidget* W, FVector2D Half, bool bText, FVector2D Tex = FVector2D::ZeroVector)
+	{
+		if (Visible(W)) Gr.Parts.Add({ W, Half, Tex, bText });
+	};
+	G[0].bFixed = true; G[0].Anchor = PuckArrow;
+	AddPart(G[0], PuckArrow, FVector2D(16, 16), false);
+	AddPart(G[0], PuckText, FVector2D::ZeroVector, true, TextSize(PuckText, 12.f, 26.f));
+	G[1].Anchor = NetArrow;
+	AddPart(G[1], NetDiamond, FVector2D(12, 12), false);
+	AddPart(G[1], NetArrow, FVector2D(12, 12), false);
+	AddPart(G[1], NetText, FVector2D::ZeroVector, true, TextSize(NetText, 12.f, 26.f));
+	G[2].Anchor = OwnArrow;
+	AddPart(G[2], OwnDiamond, FVector2D(8, 8), false);
+	AddPart(G[2], OwnArrow, FVector2D(10, 10), false);
+	AddPart(G[2], OwnText, FVector2D::ZeroVector, true, TextSize(OwnText, 10.f, 22.f));
+
+	const FVector2D VS = UWidgetLayoutLibrary::GetViewportSize(this);
+	const float VW = VS.X / FMath::Max(UWidgetLayoutLibrary::GetViewportScale(this), 0.01f), VH = VS.Y / FMath::Max(UWidgetLayoutLibrary::GetViewportScale(this), 0.01f);
+
+	auto Measure = [&](FGroup& Gr, const FVector2D& Delta)
+	{
+		Gr.Box = FBox2D(ForceInit);
+		for (const FPart& P : Gr.Parts)
+		{
+			FVector2D Pos, Al;
+			if (!PosOf(P.W, Pos, Al)) continue;
+			Pos += Delta;
+			if (P.bText) Gr.Box += FBox2D(Pos - FVector2D(Al.X * P.Tex.X, Al.Y * P.Tex.Y), Pos + FVector2D((1.f - Al.X) * P.Tex.X, (1.f - Al.Y) * P.Tex.Y));
+			else Gr.Box += FBox2D(Pos - P.Half, Pos + P.Half);
+		}
+		FVector2D Al;
+		Gr.bActive = Gr.Anchor && Visible(Gr.Anchor) && PosOf(Gr.Anchor, Gr.AnchorPos, Al);
+		if (Gr.bActive) Gr.AnchorPos += Delta;
+	};
+	auto Conflicts = [&](const FGroup& A, const FGroup& B)
+	{
+		if (!A.Box.bIsValid || !B.Box.bIsValid) return false;
+		if (A.bActive && B.bActive && FVector2D::Distance(A.AnchorPos, B.AnchorPos) < EdgeSlotPx) return true;
+		return A.Box.ExpandBy(4.f).Intersect(B.Box);
+	};
+
+	for (int32 i = 0; i < 3; ++i) Measure(G[i], FVector2D::ZeroVector);
+	for (int32 i = 1; i < 3; ++i)
+	{
+		FGroup& Gr = G[i];
+		if (!Gr.bActive) continue;   // an on-screen diamond stands on its net: nothing to slide (labels over the world)
+		int32 Hit = -1;
+		for (int32 j = 0; j < i && Hit < 0; ++j) if (G[j].Parts.Num() && Conflicts(Gr, G[j])) Hit = j;
+		if (Hit < 0) continue;
+		const float EdgeL = Gr.AnchorPos.X, EdgeR = VW - Gr.AnchorPos.X, EdgeT = Gr.AnchorPos.Y, EdgeB = VH - Gr.AnchorPos.Y;
+		const bool bSide = FMath::Min(EdgeL, EdgeR) <= FMath::Min(EdgeT, EdgeB);
+		const FVector2D Axis = bSide ? FVector2D(0, 1) : FVector2D(1, 0);
+		const float Here = bSide ? Gr.AnchorPos.Y : Gr.AnchorPos.X;
+		const float Lo = bSide ? 130.f : 100.f, Hi = bSide ? VH - 200.f : VW - 100.f;
+		const float Away = Here >= (bSide ? G[Hit].AnchorPos.Y : G[Hit].AnchorPos.X) ? 1.f : -1.f;
+		bool bDone = false;
+		for (int32 k = 1; k <= 12 && !bDone; ++k)
+		{
+			for (const float Sign : { Away, -Away })
+			{
+				const float To = Here + Sign * EdgeSlotPx * 0.5f * k;
+				if (To < Lo || To > Hi) continue;
+				const FVector2D Delta = Axis * (To - Here);
+				Measure(Gr, Delta);
+				bool bFree = true;
+				for (int32 j = 0; j < i && bFree; ++j) if (G[j].Parts.Num() && Conflicts(Gr, G[j])) bFree = false;
+				if (!bFree) continue;
+				for (const FPart& P : Gr.Parts) { FVector2D Pos, Al; if (PosOf(P.W, Pos, Al)) Cast<UCanvasPanelSlot>(P.W->Slot)->SetPosition(Pos + Delta); }
+				bDone = true;
+				break;
+			}
+		}
+		Measure(Gr, FVector2D::ZeroVector);   // (re-read below: the slots now carry the shift when one was found)
+		if (bDone) Measure(Gr, FVector2D::ZeroVector);
+	}
 }
 
 void UJamHudWidget::UpdateCommentary(const FJamPresentationFrame& F)
@@ -863,7 +963,9 @@ void UJamHudWidget::PlaceMarkerArrow(UWidget* Arrow, const FVector2D& Raw, const
 void UJamHudWidget::UpdateMarker(const FJamPresentationFrame& F)
 {
 	APlayerController* PC = GetOwningPlayer();
-	const FVector Net = F.GetFarNetWorldCm();
+	FVector Net = F.GetFarNetWorldCm();
+	const bool bP3 = CVarJamHudPass3.GetValueOnGameThread() != 0;
+	if (bP3) Net.Z = NetCrossbarCm + NetBadgeLiftCm;   // lane A76: 1.2 m over the crossbar's centre (the frame's own Z is 3 m)
 	float DistM = 0.f;
 	if (F.Skaters.IsValidIndex(F.HumanIndex))
 	{
@@ -893,6 +995,15 @@ void UJamHudWidget::UpdateMarker(const FJamPresentationFrame& F)
 	{
 		Sp = FVector2D(VW * 0.5f, VH * 0.5f);
 	}
+	// Lane A76 (PUCK-MARKER "not done", hud row "badge covers the crossbar" 3 of 3): the badge never stands on the net. The world point is 1.2 m over
+	// the crossbar's centre (A64 aimed 3 m over the net mouth, which at 50 m is 60 px and inside the net's pixels once the clamp bit), and the badge
+	// stands at least NetBadgeGapPx over the crossbar's own projection. Off screen the same element is the edge chevron (PlaceMarkerArrow).
+	if (bP3 && !bBehind && PC && bProj)
+	{
+		FVector2D Bar;
+		if (UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(PC, FVector(Net.X, Net.Y, NetCrossbarCm), Bar, false))
+			Sp.Y = FMath::Min(Sp.Y, Bar.Y - NetBadgeGapPx);
+	}
 	Marker.bOnScreen = !bBehind && Sp.X >= 0 && Sp.X <= VW && Sp.Y >= 0 && Sp.Y <= VH;
 	if (bBehind && !PC)
 	{
@@ -900,7 +1011,7 @@ void UJamHudWidget::UpdateMarker(const FJamPresentationFrame& F)
 	}
 	// Lane A42: MarkerEdgePx inside every edge plus the arrow's room on the sides; the top margin keeps the marker below the scoreboard,
 	// the bottom one above the strips (the distance text hangs 18 + 30 px under the diamond).
-	Marker.ScreenPos = ClampMarker(Sp, VW, VH, 44.f, 150.f, 64.f);
+	Marker.ScreenPos = ClampMarker(Sp, VW, VH, 44.f, bP3 ? 120.f : 150.f, 64.f);   // lane A76: top 150 -> 120 (the badge is already lifted off the net; scoreboard plates end near 104)
 
 	if (UCanvasPanelSlot* DS = Cast<UCanvasPanelSlot>(NetDiamond->Slot))
 	{
