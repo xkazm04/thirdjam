@@ -297,3 +297,17 @@
   on dev-b: new lying poses, side falls; SK13 measures the pelvis against the ice and the hit-stop timing; B30 thins and scales the check bursts).
 - link green 12:37: main 1a33523 (HUD pass 3 (A76): the far-net badge over the card and never on the net, one edge-slot rule) pushed.
 - package 12:41: `Hokej_Hokej_H23.zip` from main 1a33523 (the curve on target, HUD pass 3, B's ring instances, SK12 takes).
+- link green 12:44: main c45face (The sky-light readback is still there on clay (A78, for B-to-A-0016 point 3): two UpdateCa) pushed.
+
+- RESOURCES 12:47 cpu 26% ram 21.1/63GB gpu 32 %, 2440 MiB, 50 editors 0 cmd 0 ubt 0 free 639GB
+- running 12:51: A79 all_star skill lever (Opus), A80 collisions pass 2 with SK12 takes (Sonnet), A81 modes pass 2 (Opus), beside A77 and A57; H23 packaged 12:41 (1a33523); main c45face.
+
+## H18 (13:07) the operator's reframing (R-0041): difficulty is aggression, 5 v 5, abilities on F, a raw brand; the carrier slower and no sprint
+- Lanes: A79 all_star lever redirected to aggression (checks, cross-checks, knockdowns per shift; speed back toward 1.2); A83 5 v 5 as the regular game (play, perf,
+  roles for five); A82 mechanics pass 2 with A77 applied (SeasonTakes take-1 seed 2 first, the lift shield, the saucer's lane, the carrier speed rule
+  `game.skater.carry_speed_mult` 0.92 + no sprint while carrying); A81 modes pass 2 told to name abilities; A84 abilities on F (pass to Q) briefed, starts when A77 + A82 land.
+- A77 landed its report but its code waits in A82's tree: the saucer broke `SeasonTakes` (rookie take-1 seed 2: AI shots 0); the Director's landing was reversed off main.
+- B: A-to-B-0018 (protocol 6) and 0019 (logo, banner, menu art, crowd, 5 v 5 on clay, hit bursts) open. Gemini credits depleted (eyes 402): the operator tops up.
+- Running: A57 (hourly packages to 16:00), A79, A80, A81, A82, A83.
+
+- RESOURCES 13:18 cpu 98% ram 37.3/63GB gpu 38 %, 2464 MiB, 42 editors 1 cmd 8 ubt 2 free 602GB
