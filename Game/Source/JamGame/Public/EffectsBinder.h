@@ -13,6 +13,8 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Subsystems/GameInstanceSubsystem.h"
+#include "Engine/StreamableManager.h"
 #include "JamEventBus.h"
 #include "EffectsBinder.generated.h"
 
@@ -132,4 +134,47 @@ private:
 	int32 SpawnedNiagara = 0;
 	int32 PlayedSounds = 0;
 	int32 HandledEvents = 0;
+};
+
+// Lane A65 (PROFILING.md offenders 3 and 4): the match start loaded ~87 packages synchronously in the menu -> match frame (83 ms: every Niagara system and
+// MetaSound of the binder, the figure class, the rink's look instances, the puck, the look collection). When the menu map is up this subsystem asks for
+// all of them in one asynchronous request and holds the handle, so the loads at match start find the objects in memory. Nothing in the sim reads it.
+// Missing packages are found once here (FPackageName::DoesPackageExist) so the binder's quiet loads skip their synchronous lookup.
+// Diagnostics (not Shipping): every synchronous package load on the game thread from the menu on is logged as "JAMPRELOAD sync <package>", and the
+// state of the request when the match map starts loading as "JAMPRELOAD match start ...".
+UCLASS()
+class JAMGAME_API UJamPreloadSubsystem : public UGameInstanceSubsystem
+{
+	GENERATED_BODY()
+
+public:
+	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+	virtual void Deinitialize() override;
+
+	// Every asset a match of this figure and tier loads at its start (existing or not; StartPreload filters).
+	static TArray<FSoftObjectPath> MatchPaths(FName Visual, const FString& Tier);
+	// The cut the next match will most likely play: -cut= on the command line, else jam.Cut (default hockey.regular).
+	static FString LikelyNextCut();
+
+	// Starts (once per cut) the asynchronous load of MatchPaths for the cut's figure and tier and holds it for the life of the game instance.
+	void StartPreload(const FString& CutNameOrPath);
+
+	// True when the preload looked the path's package up and it does not exist.
+	static bool IsKnownMissing(const FSoftObjectPath& Path);
+
+	int32 GetRequestedCount() const { return Requested; }
+	bool IsPreloadComplete() const { return Handles.Num() > 0 && CompletedAt > 0.0; }
+
+private:
+	void HandlePostLoadMap(UWorld* World);
+	void HandlePreLoadMap(const FString& MapName);
+	void HandleSyncLoad(const FString& PackageName);
+
+	TArray<TSharedPtr<FStreamableHandle>> Handles;
+	TSet<FString> PreloadedCuts;
+	FDelegateHandle PostLoadMapHandle, PreLoadMapHandle, SyncLoadHandle;
+	double RequestedAt = 0.0;
+	double CompletedAt = 0.0;
+	int32 Requested = 0;
+	int32 SyncLoadsLogged = 0;
 };

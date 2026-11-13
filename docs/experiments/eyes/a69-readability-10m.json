@@ -1,0 +1,73 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "readability",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T09:45:13.476Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "readability",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a69/a69-clay-10m.png",
+          "width": 1920,
+          "height": 1082
+        }
+      ],
+      "distance": 10,
+      "thumbnails": [],
+      "prompt_chars": 2708,
+      "usage": {
+        "prompt": 1909,
+        "output": 380,
+        "thoughts": 1254,
+        "total": 3543,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00756,
+      "ms": 19286,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "The puck is not visible anywhere on the ice during this pre-faceoff countdown."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "There is no puck carrier because the puck has not yet been dropped for the faceoff."
+              },
+              "team_colours": {
+                "score": 4,
+                "evidence": "The player in the foreground wears a distinct bright blue jersey while a distant opponent at upper-right wears warm orange."
+              },
+              "far_net": {
+                "score": 1,
+                "evidence": "The far net is completely occluded behind the massive central 'MATCH 1' UI banner."
+              },
+              "zone_strips": {
+                "score": 3,
+                "evidence": "A blue transverse line crosses at y: 620 and a red line runs across at y: 420, but both are faint and broken by heavy light streaks and overlay graphics."
+              }
+            },
+            "first_look": "The massive black 'MATCH 1' banner in the upper center",
+            "noise": [
+              "Intense vertical light reflection streaks washing out the middle ice",
+              "Large empty colored outline shapes (red rectangle, yellow and cyan circles) projected on the ice",
+              "Dense grid of bright circular wall lights on the arena boards",
+              "Heavy layered HUD overlays blocking the center ice and far boards"
+            ],
+            "overall": 2
+          }
+        ]
+      },
+      "markdown": "**eyes/readability** A=a69-clay-10m.png at 10 m (gemini-3.8-flash, in 1909 out 380 think 1254 tokens, ~$0.0076, 19.3 s)\n- stills:\n  - label: Still A; first_look: The massive black 'MATCH 1' banner in the upper center; overall: 2\n    - elements:\n      - puck: score 1, evidence The puck is not visible anywhere on the ice during this pre-faceoff countdown.\n      - carrier: score 1, evidence There is no puck carrier because the puck has not yet been dropped for the faceoff.\n      - team_colours: score 4, evidence The player in the foreground wears a distinct bright blue jersey while a distant opponent at upper-right wears warm orange.\n      - far_net: score 1, evidence The far net is completely occluded behind the massive central 'MATCH 1' UI banner.\n      - zone_strips: score 3, evidence A blue transverse line crosses at y: 620 and a red line runs across at y: 420, but both are faint and broken by heavy light streaks and overlay graphics.\n    - noise: Intense vertical light reflection streaks washing out the middle ice; Large empty colored outline shapes (red rectangle, yellow and cyan circles) projected on the ice; Dense grid of bright circular wall lights on the arena boards; Heavy layered HUD overlays blocking the center ice and far boards"
+    }
+  ]
+}

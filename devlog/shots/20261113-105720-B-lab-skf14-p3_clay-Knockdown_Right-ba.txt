@@ -1,0 +1,1 @@
+SKF14 p3_clay Knockdown_Right at the game camera (directly behind, 35 deg down, ~110 px), every 3rd frame: export10 above, export14 below.

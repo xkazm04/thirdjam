@@ -72,6 +72,10 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Jam|Game") float GetMeanStepMs() const { return Steps ? static_cast<float>(StepMsSum / Steps) : 0.f; }
 	UFUNCTION(BlueprintPure, Category = "Jam|Game") float GetWorstStepMs() const { return static_cast<float>(StepMsMax); }
 
+	// Lane A65: the Blueprint figure classes ResolveVisualClass tries for game.skater.visual and the tier, in order (empty for the C++ figures). The menu's
+	// preload (UJamPreloadSubsystem) loads the same paths asynchronously, so the match start finds the class in memory.
+	static TArray<FString> VisualClassPathsFor(FName Visual, const FString& Tier);
+
 private:
 	void BuildMatch();
 	void StepOnce();

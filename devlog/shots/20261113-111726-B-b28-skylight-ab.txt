@@ -1,0 +1,1 @@
+B28 sky light: boards view at 8 m in one frozen frame. Top clay: the 16 MB engine daylight cubemap against the tiny engine gray cube with the same intensity and colour (mean |d| 0.82, tile max 1.32; kept and saved). Bottom night: the same swap changes the picture by 3.55 (brighter and less blue); not kept, LR_L2_Night is unchanged

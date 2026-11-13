@@ -1,0 +1,14 @@
+[2026.11.13-09.46.22:772][  0]LogJamPreload: JAMPRELOAD requested 428 assets for cut C:/Users/kazda/kiro/thirdjam/.claude/worktrees/a65/tools/perf/cuts/perf.l2_night.cartridge.json (visual humanoid_b1, tier l2_night); 4 absent packages will not be looked up again
+[2026.11.13-09.46.22:778][  0]LogJamPreload: JAMPRELOAD sync /Engine/EngineMaterials/FastBlueNoise_scalar_128x128x64 frame=0
+[2026.11.13-09.46.22:778][  0]LogJamPreload: JAMPRELOAD sync /Engine/EngineMaterials/FastBlueNoise_vec2_128x128x64 frame=0
+[2026.11.13-09.46.22:778][  0]LogJamPreload: JAMPRELOAD sync /Engine/EngineMaterials/Hair/Hair_DualScattering frame=0
+[2026.11.13-09.46.22:778][  0]LogJamPreload: JAMPRELOAD sync /Engine/EngineMaterials/Hair/Hair_DirectionalAlbedo frame=0
+[2026.11.13-09.46.22:778][  0]LogJamPreload: JAMPRELOAD sync /Engine/EngineMaterials/Hair/Hair_Coverage frame=0
+[2026.11.13-09.46.22:927][  7]LogJamPreload: JAMPRELOAD done: 428 assets in 187 ms
+[2026.11.13-09.46.31:461][508]LogJamPreload: JAMPRELOAD match start: 428 assets requested 8.72 s ago, complete (187 ms after the request)
+[2026.11.13-09.46.31:489][508]LogJamPreload: JAMPRELOAD sync /Game/Maps/Rink frame=508
+[2026.11.13-09.46.31:524][508]LogJamPreload: JAMPRELOAD sync /JamAssets/Audio/MS_crowd_bed frame=508
+[2026.11.13-09.46.31:524][508]LogJamPreload: JAMPRELOAD sync /JamAssets/Audio/MS_crowd_bed frame=508
+[2026.11.13-09.46.31:525][508]LogJamPreload: JAMPRELOAD sync /Game/UI/T_UI_ScorePlate frame=508
+[2026.11.13-09.46.31:525][508]LogJamPreload: JAMPRELOAD sync /Game/UI/T_UI_ScorePlate frame=508
+[2026.11.13-09.46.31:525][508]LogJamPreload: JAMPRELOAD sync /Game/UI/T_UI_ScorePlate frame=508

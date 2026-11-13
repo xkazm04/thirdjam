@@ -42,6 +42,11 @@ namespace
 	constexpr int32 PostEventGapFrames = 20;
 	constexpr double PostEventMinSpeed = 3.0;
 	constexpr int32 ClockLastFrames = 600;
+	// Lane A71 (docs/experiments/NEVER-ENDING.md): the longest a match runs. A first_to match with no clock could go the whole soak cap without a goal (49 of 3,850 boost
+	// matches, 4 of 7,550 regular ones: no stuck puck, a scoring drought). At MatchHornFrames of play the leader wins, a tie turns to sudden death (next goal wins), and at
+	// MatchHardStopFrames a tie goes to the team that touched the puck last (EndMatchNow's own tie rule). Both are under the 36,000-frame cap every tool uses.
+	constexpr int64 MatchHornFrames = 30000;
+	constexpr int64 MatchHardStopFrames = 33000;
 	constexpr double SkaterBoardBounce = 0.3;
 	constexpr double SkaterSkaterBounce = 0.2;
 	constexpr double NetBounce = 0.3;
@@ -1023,6 +1028,24 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 			}
 		}
 		UpdatePeriod();
+	}
+
+	// Lane A71: the match horn (see MatchHornFrames). Only while the puck is live; a goal pause or a faceoff delays it by the frames it takes.
+	if (Phase == EJamSimPhase::Playing && Frame >= MatchHornFrames)
+	{
+		if (Frame >= MatchHardStopFrames)
+		{
+			EndMatchNow(-1);
+		}
+		else if (!bOvertime && Config.Rules.Mode != RuleTimer && Config.Rules.ScoreToWin > 0)
+		{
+			if (Score[0] != Score[1]) { EndMatchNow(-1); }
+			else
+			{
+				bOvertime = true;   // a tie at the horn: next goal wins
+				Emit(JamEvents::Clock, -1, FVector2D::ZeroVector, 0.f, KindSuddenDeath);
+			}
+		}
 	}
 
 	// Possession flag for the visuals: last toucher with the puck in reach.

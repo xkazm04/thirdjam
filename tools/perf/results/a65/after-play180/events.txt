@@ -1,0 +1,15 @@
+10:26:44.103 t=0.225 other game/editor windows at start: ThirdJam:19780 UnrealEditor:7796
+10:26:44.576 t=0.696 start pid 9028 -cut="C:/Users/kazda/kiro/thirdjam/.claude/worktrees/a65/tools/perf/cuts/perf.l2_night.cartridge.json" -dpcvars=jam.ScriptHuman=1,r.GPUCsvStatsEnabled=1 -windowed -ResX=1920 -ResY=1080 -WinX=40 -WinY=40 -log -abslog="C:\Users\kazda\kiro\thirdjam\.claude\worktrees\a65\tools\perf\out\after-play180\game.log" -statnamedevents -RemoteConsoleIP=127.0.0.1 -RemoteConsolePort=4665
+10:26:49.601 t=5.720 menu map logged
+10:26:57.692 t=13.811 console 'csvprofile start' OK (try 1) {"id":2,"op":"exec","ok":true}
+10:26:58.324 t=14.443 enter posted
+10:26:58.345 t=14.464 JAMMENU start match seen
+10:26:58.559 t=14.678 JAMCART loaded seen
+10:27:08.655 t=24.774 sim frame 600 seen (10 s into the match)
+10:27:08.659 t=24.778 play window: 180 s
+10:30:09.631 t=205.750 console 'csvprofile stop' OK (try 1) {"id":3,"op":"exec","ok":true}
+10:30:12.670 t=208.789 console 'quit' OK (try 1) {"id":4,"op":"exec","ok":true}
+10:30:14.745 t=210.865 game exited, code 0
+10:30:14.815 t=210.934 collected Profile(20261113_102657).csv
+10:30:14.940 t=211.060 other game/editor windows at end: UnrealEditor:7796
+10:30:14.949 t=211.069 done
