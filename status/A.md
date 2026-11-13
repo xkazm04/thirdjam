@@ -288,3 +288,4 @@
 - B: A-to-B-0015 (ring material), 0016 (bumper, rigs, sky light, Lumen), 0017 (A73's figure asks) open.
 
 - RESOURCES 12:16 cpu 95% ram 26.7/63GB gpu 35 %, 3717 MiB, 45 editors 0 cmd 6 ubt 0 free 626GB
+- link green 12:27: main 503fe05 (The curve on the soak (A70, R-0039): rookie red skill 0.8, pro 0.95, all_star speed 1.3, b) pushed.
