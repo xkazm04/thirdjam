@@ -1,0 +1,1 @@
+B29 rings before and after in one frozen frame (camera at the faceoff position): left device A's ring carrying the translucent MI_Zone_<kind>, right the same ring with the opaque MI_Zone_<kind>_Ring; the ice just in front of the rings changes by +0.4 luma on average, +9 at most (99th percentile)

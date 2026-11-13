@@ -1,0 +1,1 @@
+B29 end lamps from the game camera at the faceoff: top pass 8 (scale 1.6), bottom pass 9 (twice as wide, 5.6 m high); the far ice under them changes by +0.5 luma on average, +7 at the 99th percentile; no mirror image is visible
