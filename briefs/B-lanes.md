@@ -1,14 +1,14 @@
 # Device B lane board (the lead rewrites this file whenever a lane starts or reports)
 
-Updated 2026-11-13 09:47 CEST (H27.8). The operator this morning: tackling (knock down, collide, fall, get up) is the key feature; P4 is out of the plan; the scripted figure on clay; calm ice on clay.
+Updated 2026-11-13 10:02 CEST (H28.1). The operator this morning: tackling (knock down, collide, fall, get up) is the key feature; P4 is out of the plan; the scripted figure on clay; calm ice on clay.
 
 ## Running
 
 | Lane | What | Editor | Started | Due | Report (when done) |
 |---|---|---|---|---|---|
-| SK10 | The night's figure work that does not depend on C-0001 v4 (the 144 takes with the ready and faceoff stance, the felt-and-stitch clay meshes, materials and maps: every changed file under `Skaters/` except the Blueprints) checked on `dev-b` with the v3 Blueprints in a real match, so it reaches `main` without waiting for the landing | 8000, `wt/b-vfx` | 09:36 | 10:40 | `status/SK10-report.md` |
+| SK11 | The first reworked tackling takes (`skf/export11`: knockdowns, falls, get-ups) into both scripted figures on the interface branch, animation only; timing measured in real knockdowns (fall 26, about 20 lying, get-up 44 ending on the release), strips from the game camera with attacker and victim | 8000, `wt/b-a45` | 10:02 | 10:50 | `status/SK11-report.md` on the branch |
 | B27 | Clay tier pass 7, redirected by the operator at 09:46 ("small lights are too distracting on the ice, we will need larger reflectors with more subtle effect"): calm ice (no per-bulb reflections on the playing surface), a few large lamps with one broad soft sheen each, even light into the corners, the ice's own colour cool and pale, puck and figure contrast measured | 8002, the main tree (**no merges into `C:/Users/kazda/jam/thirdjam` while it runs**) | 09:37 | 11:10 | `status/B27-report.md` |
-| SKF11 | Blender, the scripted family (night and clay styles): the tackling takes (knockdowns, falls, get-ups, check delivery, standing hits) shown as strips at the game camera, then reworked to read small and to fit 90 knockdown frames without speed-up; same names and bones (animation-only re-import) | none | 09:45 | 11:30 | `status/B-skater-skf.md`, eleventh pass |
+| SKF12 | Blender, second tackling round: the attacker's check rebuilt for the game's timing (the take starts on the press, the hit lands 0 to 12 frames later, contact at 0.8 m), flatter and wider lying poses, a bigger airborne moment, then standing hits and the board hit | none | 10:00 | 10:45 | `status/B-skater-skf.md`, twelfth pass |
 
 ## Waiting for the operator's ears or eyes (pages on device B)
 
@@ -26,6 +26,8 @@ Updated 2026-11-13 09:47 CEST (H27.8). The operator this morning: tackling (knoc
 
 ## Done today (newest first; every one has a report under `status/`)
 
+SK10 (09:58, cook-only PASS, on `dev-b`): 155 files under `Skaters/` from the interface branch (all but the eight Blueprints) proven with the v3 Blueprints in real matches: the faceoff and ready stance on the default figure, the felt scripted clay figure the game selects on `p3_clay`, the felt maps of `generated_b2`; found: on v3 the get-up starts on the release call (the figure rises while it already skates) (`status/SK10-report.md`) ·
+SKF11 (09:58): the tackling takes shown as strips at the game camera with a blunt critique, then the knockdowns, falls, trip and four get-ups rebuilt: 26 + 44 frames so about 20 frames are spent lying and nothing is sped up (it was 108 frames played 1.2 times too fast), a fall's last frame is its get-up's first (`skf/export11`; `status/B-skater-skf.md`, eleventh pass) ·
 B26 clay tier pass 6 (05:19; adopted 09:35, cook-only PASS): the computed bulb reflections vary per bulb (brightness, length, a shift along the streak) and soften with distance, fade from cameras above 3.5 m, overlaps go to a deeper gold; the two rows of identical bars at the faceoff are gone, in play the middle ice still shows many soft streaks side by side; a warm wash on the barn's lower walls (the room reads as lit, the side band on the ice reflects wood instead of black: softer, not gone); the right key pool 46 to 33 above the left; the amber stain under figures cannot be solved from the ice; motion check clean, night and broadcast measured unchanged (`status/B26-report.md`) ·
 SK9 (05:35, `dev-b-a45` 4441259, cook-only PASS): `BP_SkaterVisual_P4Lab` moved onto C-0001 v4 (it did not compile there: the cook-only check caught it); the faceoff stance of `skf/export10` on both scripted figures (knee spread 70 to 44 cm, thighs 29 to 43 degrees below horizontal: the "stool" at every puck drop is gone); combined clay stills of both figure types for the operator's choice; the clay aim holds kept two-handed (the upright export10 holds aimed one-handed at 9 of 15 cells: restored to export9) (`status/SK9-report.md` on the branch) ·
 SK8 (05:01): the ready stance of `skf/export9` on `BP_SkaterVisual_TB1` and `_TB1_P3`, an animation-only re-import of 144 takes proven equal to the export by name (two takes with a stale import index repaired); blade, hand, knockdown and reaction numbers as before; a Modulate contact plane under the two clay figures (`M_SkaterContact`), subtle (`status/SK8-report.md` on the branch) ·
