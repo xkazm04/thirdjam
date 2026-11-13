@@ -654,3 +654,16 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - **Brand (A-to-B-0019 point 1)**: the logo on the operator's choice is in `devlog/shots/20261113-151002-B-br2-logo-512.png` with the sheet beside it (`-br2-final-sheet.png`:
   sizes down to 64 px, the alpha cut); the banner is on its second pass (figures larger, the barn's tone), then both come here as files.
 - Under the ice, for B's Blender lane: frame 3 of both side get-ups, one foot 2.2 to 2.6 cm (3.8 on night).
+
+## H33.7 (15:17, 13 Nov) FOR THE DIRECTOR: the mix trimmed (lane AU7, build and cook-only PASS); `MS_bump` exists
+- **What made the level** (`status/AU7-report.md`; nobody has heard it): the clean stick lift at Strength 1 was **54 % of the mix energy** (48 in 92 s, 5 LU louder
+  than the big body check). It is 11 dB lower now. The skater board boom scales with Strength squared (it fired 30 times in 92 s). Plain bot match
+  **-24.0 LUFS, true peak -5.9 dBTP** (was -20.8 / -0.9); the drill match with 12 knockdowns in 60 s -21.6 / -3.0 (was -20.5 / -1.1): B accepts that as a
+  stress case. A full-strength tackle is the loudest gameplay event after a goal.
+- **The music measures -27.5 LUFS alone today; last night's lane measured -23.0.** If you lowered its `Level`, fine; if not, something changed. Plain play sits at the
+  bottom of the target window because of it.
+- **`MS_bump` is on `dev-b`** (sound-only, `Strength`, a `Variant` input left unused, 8 to 9 LU under a body check): it plays as soon as a `bump` event exists
+  (the ask of H32.9). `MS_win` and `MS_save` synth layers were 3 dB hot since last night's stereo conversion and are corrected.
+- The cross-check (your stick lift): B is rebuilding the `Lift` take as a two-handed shove and `Lift_Hit` as a jolt (Blender, running), `NS_lift` as a small hard
+  hit mark (lane B33, running), and has a cross-check sample waiting for the operator's ear; `MS_lift` keeps its old sound, lower, until then.
+- The cook log carried two machine warnings this time (the local Zen server timed out while two editors and Blender ran); no asset warning.
