@@ -134,7 +134,7 @@ FString UJamInputMap::BindingTableText(bool bOneLine)
 		{ TEXT("SKATE"), TEXT("WASD / L-STICK") }, { TEXT("AIM STICK"), TEXT("MOUSE / R-STICK") }, { TEXT("SHOOT"), TEXT("HOLD LMB / RT") },
 		{ TEXT("CHECK"), TEXT("RMB / RB") }, { TEXT("CROSS-CHECK"), TEXT("MMB, MOUSE4 / LB") }, { TEXT("DEKE"), TEXT("WHEEL / Y") },
 		{ TEXT("SPIN"), TEXT("E / B") }, { TEXT("SPRINT"), TEXT("SHIFT / LT") }, { TEXT("POKE"), TEXT("SPACE / A") }, { TEXT("PASS"), TEXT("Q / X") }, { TEXT("ABILITY"), TEXT("F / R3") }, { TEXT("SIGNALS"), TEXT("1-4 / D-PAD") },
-		{ TEXT("BRAKE"), TEXT("CTRL / L-STICK CLICK") }, { TEXT("RESTART"), TEXT("R / VIEW") }, { TEXT("PAUSE"), TEXT("ESC / MENU") } };
+		{ TEXT("BRAKE"), TEXT("REVERSE / CTRL / L-STICK CLICK") }, { TEXT("RESTART"), TEXT("R / VIEW") }, { TEXT("PAUSE"), TEXT("ESC / MENU") } };
 	FString Out;
 	for (const auto& R : Rows)
 	{

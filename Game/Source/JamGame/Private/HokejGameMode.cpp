@@ -533,9 +533,22 @@ FJamInput AHokejGameMode::ReadHumanInput()
 		if (PC->PlayerCameraManager) Yaw = FMath::DegreesToRadians(PC->PlayerCameraManager->GetCameraRotation().Yaw);
 	}
 	const FVector2D Axis = Pi->GetAxis();
+	// Lane A93 (R-0045 law 3): braking by reversing (W then S). The third-person camera follows the skater's facing 4 frames late, so "back" read from the
+	// live camera turns with the skater: a held S never points at one place (the skater circled; with the reverse brake it would stop, turn and never go).
+	// While the move input pulls back, it is read in the camera's frame of the moment the pull began: S is one direction on the ice until it is let go, the
+	// skater brakes, turns and skates back that way, and the camera comes round behind it. The stick aim below keeps the live camera.
+	double MoveYaw = Yaw;
+	if (Axis.Y < -0.3)
+	{
+		if (!bBackYawHeld) { bBackYawHeld = true; BackYawRad = Yaw; }
+		MoveYaw = BackYawRad;
+	}
+	else bBackYawHeld = false;
+	const FVector2D MoveFwd(FMath::Cos(MoveYaw), FMath::Sin(MoveYaw));
+	const FVector2D MoveRight(-FMath::Sin(MoveYaw), FMath::Cos(MoveYaw));
 	const FVector2D Fwd(FMath::Cos(Yaw), FMath::Sin(Yaw));
 	const FVector2D Right(-FMath::Sin(Yaw), FMath::Cos(Yaw));
-	In.Move = Fwd * Axis.Y + Right * Axis.X;
+	In.Move = MoveFwd * Axis.Y + MoveRight * Axis.X;
 	// C-0005 charged shot: the human sends the held level; the sim charges while the puck is in reach and fires on release (a tap = a short charge).
 	Pi->ConsumeShootPressed();
 	In.bShootHeld = Pi->IsShootHeld();

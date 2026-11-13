@@ -106,6 +106,7 @@ namespace JamAI
 			Used[i] = ERole::Chaser;
 			InReach[i] = 0;
 			CheckCool[i] = 0;
+			LiftLast[i] = -100000;
 			for (int k = 0; k <= kMaxReactionFrames; ++k)
 			{
 				Hist[i][k] = FJamAIInput();
@@ -413,13 +414,15 @@ namespace JamAI
 			Out[i].bDeke = In.bDeke;   // lane A39: live, like the shot: a delayed deke would miss the moment
 			// lane A72 (ask A2): game.ai.sprint. A bot sprints while it chases the puck from more than 6 m without carrying it, in a share of the two-second
 			// windows (a fixed coin per bot); the sim spends the same stamina bar as the human's. Absent = 0: no bot ever sets it.
+			// Lane A95 (R-0045 law 4): the share is the side's level (FJamBotSkill::SprintShare) unless the cartridge wrote game.ai.sprint for both sides.
 			Out[i].bSprint = false;
-			if (Params.SprintShare > 0.0 && W.Carrier != i && !W.bDrawOpen)
+			const double SprintShare = Params.SprintShare >= 0.0 ? Params.SprintShare : SkillOf(W, i).SprintShare;
+			if (SprintShare > 0.0 && W.Carrier != i && !W.bDrawOpen)
 			{
 				const FVec2 ToPuck = W.PuckPos - W.Skaters[i].Pos;
 				const bool bChase = ToPuck.Length() > 6.0 && Out[i].Move.Dot(ToPuck) > 0.0;
-				Out[i].bSprint = bChase && (Params.SprintShare >= 1.0
-					|| (Hash11(static_cast<uint64_t>(i) + 401, static_cast<uint64_t>(W.Frame / 120)) + 1.0) * 0.5 < Params.SprintShare);
+				Out[i].bSprint = bChase && (SprintShare >= 1.0
+					|| (Hash11(static_cast<uint64_t>(i) + 401, static_cast<uint64_t>(W.Frame / 120)) + 1.0) * 0.5 < SprintShare);
 			}
 		}
 	}
@@ -870,9 +873,13 @@ namespace JamAI
 			InReach[Id] = 0;
 		}
 		// lift at contact
-		if (K.bLift && bOppCarrier && S.bCanLift && W.Skaters[C].Pos.DistTo(S.Pos) <= 2.0 * W.SkaterRadius + W.LiftRange * 0.9)
+		// Lane A95 (B-to-A-0037): only inside the sim's cone (a swing outside it is a miss) and not again inside the level's cooldown.
+		if (K.bLift && bOppCarrier && S.bCanLift && W.Skaters[C].Pos.DistTo(S.Pos) <= 2.0 * W.SkaterRadius + W.LiftRange * 0.9
+			&& W.Frame - LiftLast[Id] >= K.LiftCooldownFrames
+			&& (W.LiftConeDeg >= 180.0 || (W.Skaters[C].Pos - S.Pos).Normalized().Dot(S.Facing) >= std::cos(W.LiftConeDeg * 3.14159265358979323846 / 180.0)))
 		{
 			In.bLift = true;
+			LiftLast[Id] = W.Frame;
 		}
 		// pass out of pressure: a defender within 2 m and an open teammate (no opponent within 3 m of it, within 25 m)
 		if (K.bPassOut && C == Id && !In.bShoot)

@@ -2,7 +2,7 @@
 # fail for each verb the player has (docs/experiments/ACCEPT.md). The game runs jam.ctrl.Drill 20 (Game/Source/JamGame/Private/HokejAcceptDrill.cpp): the drill
 # stages each step and logs JAMACCEPT cursor / act lines; this driver is the hand, the way A77 / A82 drove their drills without the foreground:
 #   the cursor: SetCursorPos + a posted WM_MOUSEMOVE (Slate reads it; the blade aims at the cursor on the ice);
-#   keys (W, Shift, E, Q / F, Esc): posted WM_KEYDOWN / WM_CHAR / WM_KEYUP; buttons: posted WM_[LRM]BUTTONDOWN / UP; the wheel: a posted WM_MOUSEWHEEL.
+#   keys (W, S, Shift, E, Q / F, Esc): posted WM_KEYDOWN / WM_CHAR / WM_KEYUP; buttons: posted WM_[LRM]BUTTONDOWN / UP; the wheel: a posted WM_MOUSEWHEEL.
 # The pass key is read live: the driver taps Q, then F, and keeps the one that raised a `JAMCTRL ... btn=pass held=1` line (A84 moves the pass to Q).
 # PLAY is one Return posted to the window; the end is `quit` over the remote console. Stops only the process it started. Then accept.mjs judges.
 #   powershell -NoProfile -ExecutionPolicy Bypass -File tools\qa\accept\accept.ps1 -Package Game\Packaged\A87-dev
@@ -97,8 +97,8 @@ public static class A87W {
     PostMessage(h, 0x020A, (IntPtr)(long)((uint)(delta & 0xFFFF) << 16), (IntPtr)(long)((uint)(p.Y & 0xFFFF) << 16 | (uint)(p.X & 0xFFFF))); }
 }
 "@
-$vk = @{ W = 0x57; SHIFT = 0x10; E = 0x45; Q = 0x51; F = 0x46; ESC = 0x1B }
-$ch = @{ W = 119; SHIFT = 0; E = 101; Q = 113; F = 102; ESC = 27 }
+$vk = @{ W = 0x57; S = 0x53; SHIFT = 0x10; E = 0x45; Q = 0x51; F = 0x46; ESC = 0x1B }
+$ch = @{ W = 119; S = 115; SHIFT = 0; E = 101; Q = 113; F = 102; ESC = 27 }
 
 $a = "-cut=`"$Cut`" -dpcvars=jam.ctrl.Drill=20,jam.ctrl.Log=0,jam.accept.From=$From,jam.accept.To=$To -windowed -ResX=$ResX -ResY=$ResY -WinX=40 -WinY=40 -log -abslog=`"$log`" -ForceLogFlush -RemoteConsoleIP=127.0.0.1 -RemoteConsolePort=$Port"
 # The OS cursor is one per machine: another lane's game driven by SetCursorPos moves this run's cursor too (run control-reach165 lost 3 of 4 aim targets so).

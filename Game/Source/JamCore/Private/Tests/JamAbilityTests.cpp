@@ -304,7 +304,9 @@ bool FJamAbilitiesShield::RunTest(const FString& Parameters)
 		Sc.In[O].bCheck = false;
 		bool bDown = false;
 		OutBumps = 0;
-		for (int32 f = 0; f < 30; ++f) { bDown |= Sc.Human().IsDown(); OutBumps += Sc.Human().bBumpThisFrame ? 1 : 0; Sc.Step(); }
+		// Lane A92 (R-0045): by momentum a 7 m/s check from the front on a standing carrier is a stumble that knocks the puck loose (ratio 0.9), not a knockdown;
+		// "the check lands" is a stumble or a knockdown. Counted before the frame's bump read-out so the stumble's own hit reaction is not a "body bump".
+		for (int32 f = 0; f < 30; ++f) { bDown |= Sc.Human().IsDown() || Sc.Human().ContactOutcome >= UJamSim::ContactStumble; OutBumps += Sc.Human().bBumpThisFrame ? 1 : 0; Sc.Step(); }
 		return bDown;
 	};
 	int32 B0 = 0, B1 = 0;

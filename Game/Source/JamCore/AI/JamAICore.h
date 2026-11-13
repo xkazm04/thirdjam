@@ -173,6 +173,13 @@ namespace JamAI
 		double HuntRadiusM = 0.0;
 		// Lane A94 (R-0045 law 2): the hockey principles (all off = the brain before A94)
 		FJamHockeySense Hk;
+		// Lane A95 (R-0045 law 4, VISION.md "a defender is always faster"): the share of two-second windows this side's bot sprints while it chases the puck or
+		// an opposing carrier from more than 6 m without carrying it (A72's rule, per side and level now). 0 = never (the default: A72's absent ai.sprint).
+		// game.ai.sprint, when the cartridge writes it, replaces it on both sides (FJamAIParams::SprintShare >= 0).
+		double SprintShare = 0.0;
+		// Lane A95 (B-to-A-0037 point 3): frames between two lift presses of one bot (B saw two figures trade cross-checks 2 to 10 frames apart for a whole match).
+		// The sim's own lift cooldown is 30 frames; 0 = the sim's alone (the brain before A95). Per level: rookie 0 (never lifts), pro 90, all_star 45.
+		int LiftCooldownFrames = 0;
 	};
 	constexpr int kMaxReactionFrames = 60;   // lane A72 (ask A4): game.ai.react_frames reaches one second (30 before; the ring is one entry longer than this)
 
@@ -181,7 +188,7 @@ namespace JamAI
 	inline FJamBotSkill ProOppSkill()
 	{
 		FJamBotSkill K;
-		K.ShootExtraM = 13.0;  // 16:30 worktree sweep, 60 seeds: regular 55 / large 48 (30 before 16:18)
+		K.ShootExtraM = 30.0;  // lane A95 (CURVE-5.md): 13 -> 30, the pro bot shoots from reach + 30 m (A94's carry-or-pass halved its shots; the single biggest lever, regular 82 -> 67). 16:30 sweep: 13
 		K.LeadFrames = 60;
 		K.DrawJumpPct = 100;   // 16:18: the pro centre never wins the draw outright (the sim's own bot timing still can); with it the human touches the puck inside 600 frames after every faceoff
 		K.PokeFrames = 6;      // R-0017: pokes after the puck has sat 6 frames inside blade reach
@@ -193,7 +200,10 @@ namespace JamAI
 		K.bUseAimCone = true;
 		K.bOneTimer = true;    // R-0029 point 4 (lane A39): pro bots use the one-timer
 		K.Hk = ProHockeySense();   // lane A94 (R-0045 law 2)
-		K.CheckMinClosing = 4.0;   // R-0031 point 2 (lane A45): pro bots body-check the carrier from the front or the side at this closing speed and up (lane A70: 5 -> 4, knockdowns of the regular playtester 1.74 -> 1.96 a match, its win share unmoved, CURVE-2.md)
+		K.SprintShare = 0.35;   // lane A95 (R-0045 law 4): a pro bot sprints in a third of its chases (rookie 0.1, all_star 0.7)
+		K.LiftCooldownFrames = 90;   // lane A95 (B-to-A-0037 point 3): a pro bot lifts at most every 1.5 s
+		K.HuntRadiusM = 8.0;   // lane A95 (R-0041 "pro bots check and lift as a matter of course", CURVE-5.md): the support goes at an opposing carrier within 8 m (0 before)
+		K.CheckMinClosing = 2.0;   // lane A95 (CURVE-5.md): 4 -> 2 m/s: under A92's momentum model a low-speed press is a stumble, not a knockdown. R-0031 point 2 (lane A45): pro bots body-check the carrier from the front or the side at this closing speed and up (lane A70: 5 -> 4, knockdowns of the regular playtester 1.74 -> 1.96 a match, its win share unmoved, CURVE-2.md)
 		return K;
 	}
 
@@ -204,8 +214,8 @@ namespace JamAI
 		double YieldRadiusM = 15.0;    // game.ai.yield_radius_m
 		double HoldRadiusM = 0.0;      // game.ai.hold_radius_m (lane A3: pro profile 0 on puck.drag 0.5; A2's 4.5 handed the human the puck)
 		double SpeedScale = 1.0;       // game.ai.speed_scale
-		double SprintShare = 0.0;      // lane A72 (ask A2): game.ai.sprint, the share of two-second windows a chasing bot sprints (0 = never)
-		double RedSkill = 0.95;        // game.ai.red_skill (drives the side without the player); pro 0.95 by lane A70 (CURVE-2.md: regular playtester 50.6 % over 2,000 matches; 0.94 by R-0029 pass 2 measured 52.3 on main 7dfbeb5)
+		double SprintShare = -1.0;     // lane A72 (ask A2): game.ai.sprint, the share of two-second windows a chasing bot sprints (0 = never); lane A95: -1 (absent) = each side's FJamBotSkill::SprintShare (the level's)
+		double RedSkill = 1.07;        // lane A95 (CURVE-5.md): pro 0.95 -> 1.07. game.ai.red_skill (drives the side without the player); pro 0.95 by lane A70 (CURVE-2.md: regular playtester 50.6 % over 2,000 matches; 0.94 by R-0029 pass 2 measured 52.3 on main 7dfbeb5)
 		// lane A3: skill per side. Opp = the side without the human (team 1 in pure bot-vs-bot); Mate = the human's side.
 		FJamBotSkill Mate;
 		FJamBotSkill Opp = ProOppSkill();
@@ -309,6 +319,11 @@ namespace JamAI
 		// and pass-intent tests read it (the adapter's bCanShoot is the sim's own test). W.Carrier is still the adapter's shot.reach_m test: see StickPlay's cap.
 		double CarrierReach() const { return (ShotReach > SkaterRadius + StickReach ? ShotReach : SkaterRadius + StickReach) + 0.05; }
 		double LiftRange = 1.0;         // game.stick.lift_range_m
+		double LiftConeDeg = 180.0;     // lane A95 (B-to-A-0037): game.stick.lift_cone_deg (the brain lifts only inside it)
+		// Lane A95 (R-0045 law 3 / 4): the movement verbs the sim offers (A93's keys; 0 = the verb is off). The playtester uses a verb only when it exists.
+		double ReverseBrakeDecel = 0.0; // game.skater.reverse_brake_decel
+		int BurstFrames = 0;            // game.skater.burst.frames
+		double SprintCarryBonus = 0.0;  // game.skater.sprint.carry_bonus (0 = the carrier cannot sprint)
 		int SweepBotReactFrames = -1;   // lane A51: game.stick.sweep.bot_react_frames (-1 = absent: the level's FJamBotSkill::SweepReactFrames)
 		static constexpr int kMaxPickups = 8;
 		int NumPickups = 0;
@@ -399,6 +414,7 @@ namespace JamAI
 		int InReach[kMaxSkaters] = {};
 		int Pressed[kMaxSkaters] = {};   // frames the human's blade has been within reach of this carrier
 		int CheckCool[kMaxSkaters] = {};   // R-0031 point 2 (lane A45): frames before this bot may press check again (one press arms the sim's 6-frame window)
+		int64_t LiftLast[kMaxSkaters] = {};   // lane A95 (B-to-A-0037 point 3): the frame of this bot's last lift press (FJamBotSkill::LiftCooldownFrames)
 		int DrawJumps = 0;               // diagnostics: early draw presses sent
 		int DrawPresses = 0;   // R-0017: frames an opposing carrier's puck has been inside this bot's blade reach
 		// Lane A31: frames shoot has been held for the current aimed shot (0 = not charging); the goalie intent of the last Decide per skater.

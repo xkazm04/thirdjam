@@ -272,6 +272,10 @@ namespace JamAI
 		W.SkaterRadius = UJamSim::SkaterRadius;
 		W.StickReach = G.Stick.ReachM;
 		W.LiftRange = G.Stick.LiftRangeM;
+		W.LiftConeDeg = G.Stick.LiftConeDeg;   // lane A95 (B-to-A-0037)
+		W.ReverseBrakeDecel = G.Skater.ReverseBrakeDecel;   // lane A95: the movement verbs the playtester uses only when they exist
+		W.BurstFrames = G.Skater.BurstFrames;
+		W.SprintCarryBonus = G.Skater.SprintCarryBonus;
 		W.SweepBotReactFrames = G.Stick.SweepBotReactFrames;   // lane A51
 		// R-0029 point 4 (lane A39): the goalie commit of the latest deke
 		{

@@ -109,6 +109,10 @@ private:
 	bool bCursorAiming = false;
 	// Lane A49: the button edges logged once per press (JAMCTRL btn=...), the sprint level and brake level on change.
 	bool bLastSprint = false, bLastBrake = false, bLastShootHeld = false, bLastPassHeld = false;
+	// Lane A93 (R-0045 law 3): while the move input pulls back (S / left stick down) the move frame is the camera's yaw at the moment the pull began
+	// (ReadHumanInput): the third-person camera swings behind the turning skater, and a "back" read from the live camera would run away from it for ever.
+	bool bBackYawHeld = false;
+	double BackYawRad = 0.0;
 	// Lane A49 (complaint 5 proof, jam.ctrl.Drill 1 = tackle, 2 = cross-check): a scripted FJamInput that mirrors WASD + one right (middle) mouse press: chase the
 	// opposing carrier at full stick, press once within range, then read the sim's own events for 20 frames; 10 attempts, a JAMDRILL line each and a summary.
 	FJamInput DrillInput();

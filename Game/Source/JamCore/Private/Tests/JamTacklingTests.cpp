@@ -14,12 +14,15 @@ namespace JamTacklingTests
 {
 	constexpr EAutomationTestFlags Flags = EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter;
 
-	UJamSim* MakeRaw(FAutomationTestBase& T)
+	// Lane A92 (R-0045): bNeutral = game.contact's neutral block (the check rule before contact by momentum); Jam.Core.TacklingEvents proves that rule on it, so the
+	// neutral values give back the game the test was written for. The model itself is Jam.Core.Contact.* (JamContactTests.cpp).
+	UJamSim* MakeRaw(FAutomationTestBase& T, bool bNeutral = false)
 	{
 		TArray<FString> Errors;
 		UJamCartridge* C = UJamCartridge::LoadFromFile(UJamCartridge::ResolveCartridgePath(TEXT("hockey.raw")), Errors);
 		for (const FString& E : Errors) T.AddError(FString::Printf(TEXT("hockey.raw: %s"), *E));
 		if (!C) return nullptr;
+		if (bNeutral) C->Game.Contact.SetNeutral();
 		UJamSim* Sim = NewObject<UJamSim>();
 		Sim->Init(C->Game, 7);
 		Sim->SkipFaceoff();
@@ -66,7 +69,7 @@ using namespace JamTacklingTests;
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamTacklingEvents, "Jam.Core.TacklingEvents", JamTacklingTests::Flags)
 bool FJamTacklingEvents::RunTest(const FString& Parameters)
 {
-	UJamSim* Probe = MakeRaw(*this);
+	UJamSim* Probe = MakeRaw(*this, true);
 	if (!Probe) return false;
 	const double MaxSpeed = Probe->GetConfig().Skater.Speed;
 	// Skater 0 (team 0) checks skater 3 (team 1). The victim stands still at the centre facing +x; the checker starts 1.2 m away, moving at the victim at ClosingSpeed,
@@ -84,7 +87,7 @@ bool FJamTacklingEvents::RunTest(const FString& Parameters)
 	{
 		for (double V : Speeds)
 		{
-			UJamSim* Sim = MakeRaw(*this);
+			UJamSim* Sim = MakeRaw(*this, true);
 			if (!Sim) return false;
 			ClearIce(Sim, 0, 3);
 			Sim->SetSkater(3, FVector2D::ZeroVector, FVector2D::ZeroVector, C.VictimYaw);
@@ -118,7 +121,7 @@ bool FJamTacklingEvents::RunTest(const FString& Parameters)
 	// Below check_speed_min nothing lands for a bot (and no event of any kind is emitted by the contact); the human lands from
 	// HumanCheckSpeedMinMs (lane A49, R-0032: the operator skates slowly into the carrier and the hit must land).
 	{
-		UJamSim* Sim = MakeRaw(*this);
+		UJamSim* Sim = MakeRaw(*this, true);
 		ClearIce(Sim, 1, 3);
 		Sim->SetSkater(3, FVector2D::ZeroVector, FVector2D::ZeroVector, 0.0);
 		Sim->SetSkater(1, FVector2D(1.2, 0.0), FVector2D(-3.0, 0.0), PI);
@@ -126,7 +129,7 @@ bool FJamTacklingEvents::RunTest(const FString& Parameters)
 		TestTrue(TEXT("bot at 3 m/s: no check lands (below check_speed_min 5)"), E.Name.IsNone());
 	}
 	{
-		UJamSim* Sim = MakeRaw(*this);
+		UJamSim* Sim = MakeRaw(*this, true);
 		ClearIce(Sim, 0, 3);
 		Sim->SetSkater(3, FVector2D::ZeroVector, FVector2D::ZeroVector, 0.0);
 		Sim->SetSkater(0, FVector2D(1.2, 0.0), FVector2D(-3.0, 0.0), PI);
@@ -137,7 +140,7 @@ bool FJamTacklingEvents::RunTest(const FString& Parameters)
 	// The boards: a skater sliding into the side boards at 6 m/s emits board (Who = skater, Kind = skater, Strength 6 / speed); at 3 m/s nothing.
 	for (double V : { 6.0, 3.0 })
 	{
-		UJamSim* Sim = MakeRaw(*this);
+		UJamSim* Sim = MakeRaw(*this, true);
 		ClearIce(Sim, 0, 3);
 		Sim->SetSkater(3, FVector2D(-10.0, 0.0), FVector2D::ZeroVector, 0.0);
 		const double Hz = Sim->GetConfig().Rink.WidthM * 0.5;
@@ -169,8 +172,8 @@ bool FJamTacklingEvents::RunTest(const FString& Parameters)
 
 	// Read-out only: the hash at frame 300 of a bot-free scene is the same as the Determinism baseline's style of run (two runs agree).
 	{
-		UJamSim* A = MakeRaw(*this);
-		UJamSim* B = MakeRaw(*this);
+		UJamSim* A = MakeRaw(*this, true);
+		UJamSim* B = MakeRaw(*this, true);
 		for (int32 F = 0; F < 300; ++F)
 		{
 			TArray<FJamInput> In; In.SetNum(A->GetSkaters().Num());

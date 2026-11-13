@@ -7,7 +7,7 @@
 //   JAMACCEPT received step=6 k=K frame=F                  the one-timer's pass landed on the human (the driver releases the held button)
 //   JAMACCEPT step=S verb=V ok=0|1 <facts>                one line per verb; tools/qa/accept/accept.mjs makes the table
 //   JAMACCEPT summary ok=N fail=M                           the end
-// Steps (docs/experiments/ACCEPT.md): 1 skate / sprint / sprint_carry, 2 aim, 3 carry, 4 shoot_tap / shoot_half / shoot_full, 5 pass / saucer, 6 onetimer,
+// Steps (docs/experiments/ACCEPT.md): 1 skate / sprint / sprint_carry / brake (lane A93, R-0045 laws 3 and 4), 2 aim, 3 carry, 4 shoot_tap / shoot_half / shoot_full, 5 pass / saucer, 6 onetimer,
 // 7 check / crosscheck, 8 checked, 9 deke / spin / sweep, 10 resume_aim. jam.accept.From / jam.accept.To run a part. A QA drill: nothing here runs unless the cvar is 20.
 #include "HokejGameMode.h"
 #include "JamSim.h"
@@ -44,9 +44,19 @@ namespace JamAccept
 		int64 ActFrame = -1, MoveFrame = -1, EventFrame = -1, DownFrame = -1, UpFrame = -1, ShotFrame = -1, RecvFrame = -1, CueFrame = -1;
 		double MaxSpeed = 0.0, Closing = 0.0, CamMaxM = 0.0, PuckDistAtAct = -1.0, LastWall = 0.0, GapS = 0.0;
 		int32 SprintFrames = 0, SprintCarryFrames = 0, CarryFrames = 0, ChargeMax = 0, Sweeps0 = 0, Received0 = 0, MateRecv0 = 0, StickHit = 0;
+		// Lane A92 (R-0045 law 1): the hit by momentum as the sim resolved it: the victim's ContactOutcome (1 bump, 2 stumble, 3 down), its ratio, the frames it went down for.
+		int32 HitOutcome = 0, KnockAt = 0;
+		double HitRatio = 0.0;
 		bool bLost = false, bShot = false, bGoal = false, bOneTimer = false, bSaucer = false, bPassed = false, bRecv = false, bCheck = false, bKnock = false;
 		bool bStrip = false, bCamOff = false, bFired = false, bPaused = false, bMatePassed = false;
 		int64 LostFrame = -1;
+		// Lane A93 (R-0045 law 3), step 1 k=4 "brake": the human's move input this frame, the S line sent, the velocity's direction when W was released, the
+		// frame the S input arrived against the velocity and the speed there, the frame the skater was still, the best speed backward after it, frames of the sim's reverse brake.
+		FVector2D MoveVec = FVector2D::ZeroVector, Fwd0 = FVector2D::ZeroVector;
+		bool bSAct = false;
+		int64 RevFrame = -1, StopFrame = -1;
+		double RevSpeed = 0.0, BackSpeed = 0.0;
+		int32 BrakeFrames = 0;
 		float ShotCharge = 0.f;
 		FVector2D Target = FVector2D::ZeroVector;
 		int64 ArriveFrame = -1, FollowFrame = -1;
@@ -70,7 +80,7 @@ namespace JamAccept
 	// Steps and the number of sub-attempts each has.
 	static int32 SubsOf(int32 Step)
 	{
-		switch (Step) { case 1: return 3; case 2: return 4; case 3: return 1; case 4: return 3; case 5: return 3; case 6: return 2; case 7: return 2; case 8: return 1; case 9: return 3; case 10: return 2; default: return 0; }
+		switch (Step) { case 1: return 4; case 2: return 4; case 3: return 1; case 4: return 3; case 5: return 3; case 6: return 2; case 7: return 2; case 8: return 1; case 9: return 3; case 10: return 2; default: return 0; }
 	}
 }
 
@@ -109,6 +119,7 @@ void AHokejGameMode::AcceptDrillInputs(TArray<FJamInput>& All)
 			C.Shot.ChargeFramesMax, C.Pass.SaucerHalfFrames, C.Shot.OneTimerWindowFrames, C.Skater.KnockdownFrames, G.Step, G.Last);
 	}
 	G.MoveIn = All[Me].Move.Size();
+	G.MoveVec = All[Me].Move;
 	// Everyone but the human: still, unless the step scripts the mate or the opponent below. Parked skaters sit in the human's own corner.
 	for (int32 i = 0; i < All.Num(); ++i) if (i != Me) All[i] = FJamInput();
 	int32 Slot = 0;
@@ -149,7 +160,11 @@ void AHokejGameMode::AcceptDrillInputs(TArray<FJamInput>& All)
 		FJamInput& In = All[G.Opp];
 		const FVector2D ToH = H.Pos - O.Pos;
 		const double Dist = ToH.Size();
-		if (G.Step == 7) { In.Move = ToH.GetSafeNormal() * 0.3; In.Stick = O.Forward() * 0.5; }
+		// Lane A92: in the check sub-step the carrier skates at the human; in the cross-check sub-step it stands (the vision's case: the thrust from the front beats a
+		// standing skater), a creep that keeps the puck on its blade. Under the neutral block both skate as before.
+		// It holds the puck behind its body there (the stick back at full reach), out of the human's blade: the hit comes at its chest, the puck stays its own.
+		const bool bStand = G.Step == 7 && G.K == 2 && Sim->GetConfig().Contact.bMomentum;
+		if (G.Step == 7) { In.Move = ToH.GetSafeNormal() * (bStand ? 0.04 : 0.3); In.Stick = bStand ? -O.Forward() : O.Forward() * 0.5; }
 		if (G.Step == 8 && G.Ph == EPh::Measure)
 		{
 			In.Move = ToH.GetSafeNormal();
@@ -277,8 +292,9 @@ void AHokejGameMode::AcceptDrillObserve()
 			// the opponent carries; the human comes in at 4 m/s with W held (camera-relative forward = the skater's facing after the camera's reset)
 			G.bPinPuck = false;
 			const FJamSkaterState& O = Sk[G.Opp];
-			Sim->SetPuck(O.Pos + O.Forward() * 0.45, FVector2D::ZeroVector);
-			ACC_LOG(TEXT("act step=7 k=%d act=keys keys=W ms=1500 frame=%lld"), G.K, F);
+			Sim->SetPuck(O.Pos + O.Forward() * (G.K == 2 && Sim->GetConfig().Contact.bMomentum ? -0.45 : 0.45), FVector2D::ZeroVector);   // lane A92: behind it in the cross-check sub-step
+			// Lane A92: the cross-check sub-step glides in at its 4 m/s (W for a blink), so the hand's latency of one to six frames still presses inside cross_reach_m.
+			ACC_LOG(TEXT("act step=7 k=%d act=keys keys=W ms=%d frame=%lld"), G.K, G.K == 2 && Sim->GetConfig().Contact.bMomentum ? 30 : 1500, F);
 			G.ActFrame = F;
 			G.Ph = EPh::Measure;
 		}
@@ -355,7 +371,7 @@ void AHokejGameMode::AcceptDrillObserve()
 		switch (G.Step)
 		{
 		case 1:
-			ACC_LOG(TEXT("act step=1 k=%d act=keys keys=%s ms=2000 carrier=%d frame=%lld"), G.K, G.K == 1 ? TEXT("W") : TEXT("W+SHIFT"), C, F); break;
+			ACC_LOG(TEXT("act step=1 k=%d act=keys keys=%s ms=2000 carrier=%d frame=%lld"), G.K, (G.K == 1 || G.K == 4) ? TEXT("W") : TEXT("W+SHIFT"), C, F); break;   // lane A93: k=4 (brake) skates on W, then the drill asks for S
 		case 3:
 		{
 			const FVector2D L = H.Pos + Unit(FaceYaw + FMath::DegreesToRadians(75.0)) * 3.0, R = H.Pos + Unit(FaceYaw - FMath::DegreesToRadians(75.0)) * 3.0;
@@ -399,6 +415,29 @@ void AHokejGameMode::AcceptDrillObserve()
 	case 1:
 	{
 		if (G.MoveFrame < 0 && G.MoveIn > 0.3) G.MoveFrame = F;
+		if (G.K == 4)
+		{
+			// Lane A93 (R-0045 law 3): brake. W for 2 s, then S: still inside 40 frames of the S input arriving against the velocity, then moving backward.
+			// The driver's key-ups are queued (Hold does not block), so the S line goes out only once W was released.
+			if (G.MoveFrame >= 0 && !G.bSAct) G.MaxSpeed = FMath::Max(G.MaxSpeed, H.Vel.Size());
+			if (G.MoveFrame >= 0 && !G.bSAct && G.MoveIn < 0.1)
+			{
+				G.bSAct = true;
+				G.Fwd0 = H.Vel.GetSafeNormal();
+				ACC_LOG(TEXT("act step=1 k=4 act=keys keys=S ms=1500 speed=%.2f frame=%lld"), H.Vel.Size(), F);
+			}
+			if (G.bSAct && G.RevFrame < 0 && G.MoveIn > 0.3 && FVector2D::DotProduct(G.MoveVec, H.Vel) < 0.0) { G.RevFrame = F; G.RevSpeed = H.Vel.Size(); }
+			if (G.RevFrame >= 0 && G.StopFrame < 0 && H.Vel.Size() < 0.3) G.StopFrame = F;
+			if (G.StopFrame >= 0) G.BackSpeed = FMath::Max(G.BackSpeed, -FVector2D::DotProduct(H.Vel, G.Fwd0));
+			if (H.bReverseBraking) ++G.BrakeFrames;
+			const bool bEndBrake = (G.RevFrame >= 0 && F - G.RevFrame > 90) || InPh > 420;
+			if (!bEndBrake) return;
+			const int64 StopFrames = (G.RevFrame >= 0 && G.StopFrame >= 0) ? G.StopFrame - G.RevFrame : -1;
+			Verdict(TEXT("brake"), G.RevFrame >= 0 && G.StopFrame >= 0 && StopFrames <= 40 && G.BackSpeed > 1.0,
+				FString::Printf(TEXT("max_speed=%.2f rev_speed=%.2f stop_frames=%lld back_speed=%.2f brake_frames=%d s_after=%lld"), G.MaxSpeed, G.RevSpeed, StopFrames, G.BackSpeed, G.BrakeFrames, G.RevFrame >= 0 ? G.RevFrame - G.ActFrame : -1));
+			Next();
+			return;
+		}
 		if (G.MoveFrame >= 0 && F - G.MoveFrame <= 120)
 		{
 			G.MaxSpeed = FMath::Max(G.MaxSpeed, H.Vel.Size());
@@ -410,7 +449,13 @@ void AHokejGameMode::AcceptDrillObserve()
 		const FString Facts = FString::Printf(TEXT("max_speed=%.2f sprint_frames=%d sprint_carry_frames=%d carry_frames=%d move_after=%lld"), G.MaxSpeed, G.SprintFrames, G.SprintCarryFrames, G.CarryFrames, G.MoveFrame >= 0 ? G.MoveFrame - G.ActFrame : -1);
 		if (G.K == 1) { G.Speed1 = G.MaxSpeed; Verdict(TEXT("skate"), G.MaxSpeed > 6.0, Facts); }
 		else if (G.K == 2) { G.Speed2 = G.MaxSpeed; Verdict(TEXT("sprint"), G.SprintFrames > 0 && G.MaxSpeed > G.Speed1 + 0.2, Facts + FString::Printf(TEXT(" walk_speed=%.2f"), G.Speed1)); }
-		else Verdict(TEXT("sprint_carry"), G.CarryFrames >= 60 && G.SprintCarryFrames == 0 && G.MaxSpeed < G.Speed2 - 0.2, Facts + FString::Printf(TEXT(" sprint_speed=%.2f"), G.Speed2));
+		else
+		{
+			// Lane A93 (R-0045 law 4, replacing R-0041 point 6): the carrier may sprint; its sprint raises its speed over the carrier's walk (the free walk of
+			// k=1 x skater.carry_speed_mult) and stays under a free skater's sprint (k=2).
+			const double CarryWalk = G.Speed1 * Cfg.Skater.CarrySpeedMult;
+			Verdict(TEXT("sprint_carry"), G.CarryFrames >= 60 && G.SprintCarryFrames > 0 && G.MaxSpeed > CarryWalk + 0.2 && G.MaxSpeed < G.Speed2 - 0.2, Facts + FString::Printf(TEXT(" carry_walk=%.2f sprint_speed=%.2f"), CarryWalk, G.Speed2));
+		}
 		Next();
 		return;
 	}
@@ -514,14 +559,20 @@ void AHokejGameMode::AcceptDrillObserve()
 		const double Dist = ToO.Size();
 		const double Gap = Dist - UJamSim::SkaterRadius * 2.0;
 		const double Closing = Dist > 1e-6 ? FVector2D::DotProduct(H.Vel - O.Vel, ToO / Dist) : 0.0;
-		if (G.CueFrame < 0 && (Gap <= 0.25 || (Closing > 0.5 && Gap <= Closing * (UJamSim::HumanCheckWindowFrames - 6) * UJamSim::DT)))
+		// Lane A92: by momentum the press must come before the hit (a press after the first touch hits with the closing speed that is left): the RMB cue comes ten
+		// frames before contact, inside the human's 12-frame window whatever the hand's latency; the MMB cue comes at cross_reach_m (the shove needs arm's length).
+		const bool bCue = !Cfg.Contact.bMomentum ? (Gap <= 0.25 || (Closing > 0.5 && Gap <= Closing * (UJamSim::HumanCheckWindowFrames - 6) * UJamSim::DT))
+			: G.K == 1 ? (Gap <= 0.25 || (Closing > 0.5 && Gap <= Closing * (UJamSim::HumanCheckWindowFrames - 2) * UJamSim::DT))
+			: Gap <= Cfg.Contact.CrossReachM;
+		if (G.CueFrame < 0 && bCue)
 		{
 			G.CueFrame = F; G.Closing = Closing; G.MaxSpeed = H.Vel.Size();
 			ACC_LOG(TEXT("act step=7 k=%d act=%s gap=%.2f closing=%.2f speed=%.2f frame=%lld"), G.K, G.K == 1 ? TEXT("rmb") : TEXT("mmb"), Gap, Closing, H.Vel.Size(), F);
 		}
 		if (Events(JamEvents::Check, Me)) G.bCheck = true;
 		if (O.StickHitResult != 0) G.StickHit = O.StickHitResult;
-		if (G.DownFrame < 0 && O.IsDown()) { G.DownFrame = F; G.bKnock = true; }
+		if (O.ContactOutcome > G.HitOutcome) { G.HitOutcome = O.ContactOutcome; G.HitRatio = O.ContactRatio; }   // lane A92
+		if (G.DownFrame < 0 && O.IsDown()) { G.DownFrame = F; G.bKnock = true; G.KnockAt = O.KnockFrames; }
 		if (G.DownFrame >= 0 && G.UpFrame < 0 && !O.IsDown()) G.UpFrame = F;
 		if (G.DownFrame >= 0 && F - G.DownFrame == 5) G.bStrip = C != G.Opp;
 		if (G.K == 2 && G.CueFrame >= 0 && F - G.CueFrame == 20) G.bStrip = C != G.Opp;
@@ -530,16 +581,27 @@ void AHokejGameMode::AcceptDrillObserve()
 		if (G.K == 1)
 		{
 			const int64 Down = G.UpFrame >= 0 ? G.UpFrame - G.DownFrame : -1;
-			Verdict(TEXT("check"), G.bCheck && G.bKnock && G.bStrip && Down >= 0 && FMath::Abs(Down - Cfg.Skater.KnockdownFrames) <= 10,
-				FString::Printf(TEXT("cued=%d check=%d knockdown=%d strip=%d down_frames=%lld knock_frames_cfg=%d closing=%.2f speed=%.2f"), G.CueFrame >= 0 ? 1 : 0, G.bCheck ? 1 : 0, G.bKnock ? 1 : 0, G.bStrip ? 1 : 0, Down, Cfg.Skater.KnockdownFrames, G.Closing, G.MaxSpeed));
+			// Lane A92 (R-0045 law 1): the check comes with closing speed (W held from 4 m/s at a carrier skating at the human), so by momentum it is a knockdown:
+			// a check, down, the puck stripped, and the get-up after the frames the sim gave it (the ratio's, inside the model's range), +-10. Under the neutral
+			// block the sim gives skater.knockdown_frames and the rule reads as before.
+			const double Scale = Cfg.Skater.KnockdownFrames / 90.0;
+			const bool bRange = !Cfg.Contact.bMomentum ? G.KnockAt == Cfg.Skater.KnockdownFrames
+				: (G.KnockAt >= FMath::FloorToInt32(Cfg.Contact.DownFramesMin * Scale) - 1 && G.KnockAt <= FMath::CeilToInt32(FMath::Max(Cfg.Contact.DownFramesMin, Cfg.Contact.DownFramesMax) * Scale) + 1);
+			Verdict(TEXT("check"), G.bCheck && G.bKnock && G.bStrip && Down >= 0 && FMath::Abs(Down - G.KnockAt) <= 10 && bRange,
+				FString::Printf(TEXT("cued=%d check=%d knockdown=%d strip=%d down_frames=%lld knock_frames=%d range=%d..%d outcome=%d ratio=%.2f closing=%.2f speed=%.2f"), G.CueFrame >= 0 ? 1 : 0, G.bCheck ? 1 : 0,
+					G.bKnock ? 1 : 0, G.bStrip ? 1 : 0, Down, G.KnockAt, FMath::RoundToInt32(Cfg.Contact.DownFramesMin * Scale), FMath::RoundToInt32(Cfg.Contact.DownFramesMax * Scale), G.HitOutcome, G.HitRatio, G.Closing, G.MaxSpeed));
 		}
-		else Verdict(TEXT("crosscheck"), G.StickHit != 0 && G.bStrip, FString::Printf(TEXT("cued=%d stickhit=%d puck_free=%d knockdown=%d closing=%.2f"), G.CueFrame >= 0 ? 1 : 0, G.StickHit, G.bStrip ? 1 : 0, G.bKnock ? 1 : 0, G.Closing));
+		// Lane A92: the cross-check comes from the front (the carrier skates at the human, facing it) with closing speed: the stick's thrust on top of it is a
+		// stumble at least (the body part of the hit, the sim's ContactOutcome), and the puck is free 20 frames later. Under the neutral block: the lift as before.
+		else Verdict(TEXT("crosscheck"), (Cfg.Contact.bMomentum ? G.HitOutcome >= UJamSim::ContactStumble : G.StickHit != 0) && G.bStrip,
+			FString::Printf(TEXT("cued=%d stickhit=%d puck_free=%d outcome=%d ratio=%.2f knockdown=%d knock_frames=%d closing=%.2f"), G.CueFrame >= 0 ? 1 : 0, G.StickHit, G.bStrip ? 1 : 0, G.HitOutcome, G.HitRatio, G.bKnock ? 1 : 0, G.KnockAt, G.Closing));
 		Next();
 		return;
 	}
 	case 8:
 	{
-		if (G.DownFrame < 0 && H.IsDown()) G.DownFrame = F;
+		if (H.ContactOutcome > G.HitOutcome) { G.HitOutcome = H.ContactOutcome; G.HitRatio = H.ContactRatio; }   // lane A92
+		if (G.DownFrame < 0 && H.IsDown()) { G.DownFrame = F; G.KnockAt = H.KnockFrames; }
 		if (G.DownFrame >= 0 && G.UpFrame < 0)
 		{
 			if (H.IsDown())
@@ -549,11 +611,14 @@ void AHokejGameMode::AcceptDrillObserve()
 			}
 			else if (H.CanAct()) G.UpFrame = F;
 		}
-		const bool bEnd = G.UpFrame >= 0 || InPh > 400 || (G.DownFrame >= 0 && F - G.DownFrame > Cfg.Skater.KnockdownFrames * 2);
+		const bool bEnd = G.UpFrame >= 0 || InPh > 600 || (G.DownFrame >= 0 && F - G.DownFrame > FMath::Max(Cfg.Skater.KnockdownFrames, G.KnockAt) * 2);
 		if (!bEnd) return;
 		const int64 Down = G.UpFrame >= 0 ? G.UpFrame - G.DownFrame : -1;
-		Verdict(TEXT("checked"), G.DownFrame >= 0 && !G.bCamOff && G.CamMaxM < 25.0 && Down >= 0 && FMath::Abs(Down - Cfg.Skater.KnockdownFrames) <= 15,
-			FString::Printf(TEXT("down=%d view_target_human=%d cam_max_m=%.1f down_frames=%lld knock_frames_cfg=%d opp_cue=%lld closing=%.2f"), G.DownFrame >= 0 ? 1 : 0, G.bCamOff ? 0 : 1, G.CamMaxM, Down, Cfg.Skater.KnockdownFrames, G.CueFrame >= 0 ? G.CueFrame - G.ActFrame : -1, G.Closing));
+		// Lane A92 (R-0045 law 1): the opponent sprints 7 m at the standing human and checks at contact: a full-speed hit beats the standing brace, so the human
+		// goes down, for the frames the sim gave it by the ratio (+-15; skater.knockdown_frames under the neutral block).
+		Verdict(TEXT("checked"), G.DownFrame >= 0 && !G.bCamOff && G.CamMaxM < 25.0 && Down >= 0 && FMath::Abs(Down - G.KnockAt) <= 15,
+			FString::Printf(TEXT("down=%d view_target_human=%d cam_max_m=%.1f down_frames=%lld knock_frames=%d outcome=%d ratio=%.2f opp_cue=%lld closing=%.2f"), G.DownFrame >= 0 ? 1 : 0, G.bCamOff ? 0 : 1, G.CamMaxM, Down, G.KnockAt,
+				G.HitOutcome, G.HitRatio, G.CueFrame >= 0 ? G.CueFrame - G.ActFrame : -1, G.Closing));
 		Next();
 		return;
 	}

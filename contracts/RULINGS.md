@@ -492,3 +492,16 @@ sprinting; **the carrier may sprint** (replacing R-0041 point 6), with the puck 
 stability (A93 with A92). Process: each rule has a neutral value that gives back today's game and its lane proves it; the acceptance run and the gate stay the bar; the levels
 are tuned once more after the three lands (A86 stops after its job 0 and baseline); the sim freeze stays Saturday 12:00 and what is not green by Saturday 10:00 goes back to
 its neutral value. R-0043 point 6 is narrowed: one lane per function family in the sim, named in each brief.
+
+## R-0046 (H24, 2026-11-13 18:39): the vision is on main; the ladder set once on the real player
+Lanes A92 (contact by inertia), A93 (braking by reversing, the first-step burst, the carrier's sprint, the puck's distance by pace, the two-sided sweep shield) and A94 (the
+hockey brain) landed together through lane A95, which made the merged tree green (the full `Jam` filter 156 of 156; the acceptance run 19 of 19 through the cursor and the
+buttons), built device B's lift cone and directed stick events (B-to-A-0037), taught the playtester and the bots the new verbs, and set the ladder on 2,000 matches per cell
+(`docs/experiments/CURVE-5.md`): novice at rookie 85.3 / 86.0 on the large rink, regular at pro 48.3 / 48.4, good at all_star 26.3 / 24.9: all six inside their intervals
+of R-0029's targets (85 / 50 / 25). Rulings: (1) the profiles stand as measured: rookie knows the principles late and loosely, rarely hits (checks only from 6 m/s), sprints
+little; pro shoots from 30 m, hunts the carrier inside 8 m, checks from 2 m/s; all_star hunts inside 20 m, always sprints, checks from 2 m/s, carries through pressure, at
+bot speed 1.4 (1.22 on the large rink); (2) pro's shot range (13 to 30 m) is accepted as a lever: the hockey brain made the bots pass instead of shoot and cost them about
+40 points; shooting from range is hockey; (3) **all_star's speed of 1.4 is flagged to the operator**: aggression alone left the good player at about 37 %; the 25 % target
+was reached with speed; the operator may prefer 1.2 with the good player near 37 %; (4) the budgets follow the soak: the human-touch share plus 2 points (9.3 %), the novice's
+goal inside two minutes at 7 of 20 (the measured share is 44.8 %); (5) nothing went back to its neutral value; the neutral proofs hold on this tree; (6) the sim freeze of
+Saturday 12:00 stands: from here only fixes that the acceptance run or the gate demand, and the operator's read of H26.

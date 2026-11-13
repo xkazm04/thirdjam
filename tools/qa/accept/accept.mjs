@@ -8,14 +8,14 @@ import { readFileSync, existsSync } from 'node:fs';
 
 const [logPath, evPath] = process.argv.slice(2);
 const STEPS = {
-  1: { name: 'Skate, sprint (W, Shift)', verbs: ['skate', 'sprint', 'sprint_carry'] },
+  1: { name: 'Skate, sprint, brake (W, Shift, S)', verbs: ['skate', 'sprint', 'sprint_carry', 'brake'] },
   2: { name: 'Aim (the cursor at four points)', verbs: ['aim'] },
   3: { name: 'Carry (sweeps at full reach)', verbs: ['carry'] },
   4: { name: 'Shoot, blade extended (tap, 8, 30 frames)', verbs: ['shoot_tap', 'shoot_half', 'shoot_full'] },
   5: { name: 'Pass, blade extended (tap, held = saucer)', verbs: ['pass', 'saucer'] },
   6: { name: 'Receive and one-timer', verbs: ['onetimer'] },
-  7: { name: 'Check (RMB), cross-check (MMB)', verbs: ['check', 'crosscheck'] },
-  8: { name: 'Be checked', verbs: ['checked'] },
+  7: { name: 'Check (RMB) with closing speed, cross-check (MMB) from the front: hits by momentum (A92)', verbs: ['check', 'crosscheck'] },
+  8: { name: 'Be checked at full speed while standing: down for the frames the hit earned (A92)', verbs: ['checked'] },
   9: { name: 'Deke (wheel), spin (E), sweep', verbs: ['deke', 'spin', 'sweep'] },
   10: { name: 'Pause and resume (Esc), then aim', verbs: ['resume_aim'] },
 };

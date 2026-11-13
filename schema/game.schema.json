@@ -276,7 +276,32 @@
           "type": "number",
           "minimum": 0.6,
           "maximum": 1,
-          "description": "Lane A82 (R-0041 point 6): the puck carrier's top speed and acceleration as a fraction of a free skater's, bots and the human alike; the carrier cannot sprint (the bar does not drain). Leave the key out for 0.92; 1 = the carrier skates as freely as before."
+          "description": "Lane A82 (R-0041 point 6): the puck carrier's top speed and acceleration as a fraction of a free skater's, bots and the human alike; the carrier's sprint is skater.sprint.carry_bonus (lane A93). Leave the key out for 0.92; 1 = the carrier skates as freely as before."
+        },
+        "reverse_brake_decel": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 40,
+          "description": "Lane A93 (R-0045 law 3): braking by reversing. Move input against the velocity (more than 120 degrees from it: W then S) stops the skater at this many metres per second squared until it is still; then the input accelerates the other way. Leave the key out for 20 (full speed to still in about 0.4 s); 0 = off (only the brake button brakes, at brake_decel)."
+        },
+        "burst": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Lane A93 (R-0045 law 3): the first-step burst. For frames after the skater was slower than 2 m/s, or after its move input turned more than 60 degrees inside 10 frames (a sharp cut), its acceleration is accel_mult times normal; the top speed does not change. Leave the key out for the defaults.",
+          "properties": {
+            "frames": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 60,
+              "description": "How long the burst lasts after a stop or a cut, in physics frames; 0 turns the burst off."
+            },
+            "accel_mult": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 3,
+              "description": "Acceleration multiplier while the burst runs; 1 = no burst."
+            }
+          }
         },
         "breakaway": {
           "type": "object",
@@ -319,6 +344,12 @@
               "minimum": 30,
               "maximum": 3600,
               "description": "Physics frames at rest from empty to full."
+            },
+            "carry_bonus": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Lane A93 (R-0045 law 4): the fraction the puck carrier's sprint adds on top of carry_speed_mult (0.08: 0.92 x 1.08 of a free skater's speed); the carrier's bar drains as anyone's. The sim keeps it under a free skater's sprint (carry_speed_mult x (1 + carry_bonus) is capped at 0.97 x (1 + bonus)), so a sprinting defender always catches a sprinting carrier. 0 = the carrier cannot sprint."
             }
           }
         },
@@ -385,6 +416,12 @@
           "maximum": 1.6,
           "description": "How far the blade reaches from the skater's edge at full aim, in metres; the carried puck sits at the blade (lane A51, R-0034)."
         },
+        "carry_reach_mult": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 1,
+          "description": "Lane A93 (R-0045 law 4): the puck's distance by pace. A carrier that is not sprinting holds its blade, and the puck on it, at this fraction of the full distance from its body (0.75: 1.2 m of 1.6 m at full aim); a sprinting carrier's puck rides at the full distance, where a stick takes it more easily. Leave the key out for 0.75; 1 = always at the full distance."
+        },
         "poke_window_frames": {
           "type": "integer",
           "minimum": 2,
@@ -396,6 +433,12 @@
           "minimum": 0.5,
           "maximum": 2.5,
           "description": "Distance beyond the two bodies within which a stick lift strips the carrier, in metres."
+        },
+        "lift_cone_deg": {
+          "type": "number",
+          "minimum": 10,
+          "maximum": 180,
+          "description": "The cone of the stick lift and of the cross-check's shove, in degrees off the attacker's facing: a carrier farther off than this is neither lifted nor shoved (the swing is a miss), bots and the human alike (B-to-A-0037, lane A95). 180 = no cone (before A95)."
         },
         "stumble_frames": {
           "type": "integer",
@@ -443,7 +486,7 @@
         "sweep": {
           "type": "object",
           "additionalProperties": false,
-          "description": "Lane A51 (R-0034): the sweep. The carried puck follows the blade every frame; an aim that turns more than min_deg_per_frame counts as a sweep and shields the puck for shield_frames from a poke on the side it left; a defending bot pokes at where the puck sat on the carrier bot_react_frames ago. Leave the key out for the defaults.",
+          "description": "Lane A51 (R-0034): the sweep. The carried puck follows the blade every frame; an aim that turns more than min_deg_per_frame counts as a sweep and shields the puck for shield_frames from a poke or a lift on either side of the body (R-0044 as amended; only the side it left, before); a defending bot pokes at where the puck sat on the carrier bot_react_frames ago. Leave the key out for the defaults.",
           "properties": {
             "min_deg_per_frame": {
               "type": "number",
@@ -455,13 +498,19 @@
               "type": "integer",
               "minimum": 0,
               "maximum": 60,
-              "description": "Frames after a sweep in which a poke from the side the puck left misses; 0 turns the shield off."
+              "description": "Frames after a sweep in which a poke or a lift misses, from either side of the body; 0 turns the shield off."
             },
             "bot_react_frames": {
               "type": "integer",
               "minimum": 0,
               "maximum": 30,
               "description": "Frames late a defending bot reads the puck on the carrier (its poke aims there); leave it out for the difficulty profile: rookie 14, pro 8, all_star 5."
+            },
+            "sprint_shield_mult": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Lane A93 (R-0045 law 4): a sprinting carrier's sweep shield lasts this fraction of shield_frames (0.5: 6 of 12 frames); 1 = the sprint does not weaken the shield, 0 = no shield while sprinting."
             }
           }
         }
@@ -645,6 +694,123 @@
               "description": "The saucer's apex height over the ice, in metres (a blade is cleared from 0.2 m); 0 = off."
             }
           }
+        }
+      }
+    },
+    "contact": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Lane A92 (R-0045, docs/VISION.md law 1): contact by momentum. A pressed body check or a cross-check is an impulse (the closing speed along the contact line plus lunge_mps or thrust_mps, times the attacker's mass) against the victim's stability; the ratio decides bump, stumble or down. The neutral block { \"momentum\": false, \"carrier_can_hit\": true } gives back the rule before the lane. Leave the key out for the defaults (docs/experiments/CONTACT.md).",
+      "properties": {
+        "momentum": {
+          "type": "boolean",
+          "description": "false = the neutral value: the check rule before lane A92 (a pressed check lands when the checker's own speed along the contact passes skater.check_speed_min and always knocks down for skater.knockdown_frames; the cross-check is the lift only); true or absent = contact by momentum (impulse against stability, three outcomes)."
+        },
+        "carrier_can_hit": {
+          "type": "boolean",
+          "description": "true = the neutral value: a skater carrying the puck may body-check as before lane A92; false or absent = the carrier's check press is refused (read-out bCheckRefused)."
+        },
+        "lunge_mps": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 6,
+          "description": "Speed a pressed body check adds to the closing speed along the contact line, in m/s; the checker gives half of it away."
+        },
+        "thrust_mps": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10,
+          "description": "Speed a cross-check (the lift at an opposing carrier in range) adds to the closing speed, in m/s; 0 = the cross-check has no body hit (the lift only)."
+        },
+        "cross_reach_m": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1.5,
+          "description": "The gap between the two bodies, in metres, inside which the lift at a carrier is a cross-check (the stick's shaft at arm's length: the thrust lands); farther out, up to stick.lift_range_m, it is the stick lift only. stick.lift_range_m or more = every lift in range shoves."
+        },
+        "stability_mps": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 30,
+          "description": "The stability of a skater of the reference mass that moves slowly, sees the hit and is not braced, as the closing speed (m/s) of an equal-mass hit that puts it down at down_ratio 1."
+        },
+        "stand_speed_mps": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 5,
+          "description": "Under this speed a skater stands braced (stand_brace); above it the stability falls with the speed (speed_stability)."
+        },
+        "stand_brace": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3,
+          "description": "Stability factor of a standing skater against a hit it can see; a cross-check inside its front arc ignores it; 1 = no brace."
+        },
+        "speed_stability": {
+          "type": "number",
+          "minimum": 0.3,
+          "maximum": 1,
+          "description": "Stability factor at skater.speed; linear from 1 at stand_speed_mps; 1 = pace costs nothing."
+        },
+        "sprint_stability": {
+          "type": "number",
+          "minimum": 0.3,
+          "maximum": 1,
+          "description": "Stability factor while sprinting; 1 = the sprint costs nothing."
+        },
+        "spin_stability": {
+          "type": "number",
+          "minimum": 0.3,
+          "maximum": 1,
+          "description": "Stability factor during a spin or with a full shot wind-up; 1 = no cost."
+        },
+        "unseen_stability": {
+          "type": "number",
+          "minimum": 0.3,
+          "maximum": 1,
+          "description": "Stability factor against a hit from behind the victim's facing (the push runs along its facing); such a hit also finds a standing skater unbraced; 1 = no cost."
+        },
+        "bump_ratio": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Impulse over stability under this is a bump: both keep their feet and their control."
+        },
+        "loose_ratio": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 3,
+          "description": "A stumble at this ratio or more knocks the carried puck loose."
+        },
+        "down_ratio": {
+          "type": "number",
+          "minimum": 0.2,
+          "maximum": 5,
+          "description": "At this ratio or more the victim goes down; between bump_ratio and it the victim stumbles (half its speed, stagger_frames without control)."
+        },
+        "down_full_ratio": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 10,
+          "description": "The ratio at which the knockdown lasts down_frames_max; linear from down_frames_min at down_ratio."
+        },
+        "down_frames_min": {
+          "type": "integer",
+          "minimum": 15,
+          "maximum": 300,
+          "description": "Frames down at down_ratio, at skater.knockdown_frames 90 (the frames scale with skater.knockdown_frames / 90)."
+        },
+        "down_frames_max": {
+          "type": "integer",
+          "minimum": 15,
+          "maximum": 300,
+          "description": "Frames down at down_full_ratio and above, at skater.knockdown_frames 90; never under down_frames_min."
+        },
+        "stagger_frames": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 60,
+          "description": "Frames a stumbling skater glides without thrust, steering or stick."
         }
       }
     },

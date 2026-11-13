@@ -50,6 +50,19 @@ namespace JamAI
 		// than 10 m away that no teammate carries, in this per cent of the 2-second windows: good 100, regular 50, novice never. Only when the run asks for it
 		// (RunPlaytestMatch bSprint, the commandlet's -playersprint): off by default so every curve measured before stays comparable.
 		int SprintPct = 0;
+		// Lane A95 (R-0045 laws 3 and 4, brief A95 job 3): the vision's verbs, used on purpose and only when the cartridge has them.
+		//  - BrakeIntent: when the wanted direction reverses against the velocity (the sim's reverse brake), the player means to stop: 2 always (stop and go),
+		//    1 only to stop on a target within BrakeNearM (the puck it skated past), 0 never; otherwise the reversal is carved into a turn (115 degrees off the
+		//    velocity), so no class brakes by accident (the analog ramp passes through a reversed input on any about-turn).
+		//  - CutPct: per cent of the 2-second windows the carrier makes a sharp cut (75 degrees for CutFrames) away from a defender closing on its lane inside
+		//    CutDefenderM: the sim's first-step burst arms on it (a 60-degree turn inside 10 frames). The novice never cuts.
+		//  - CarrySprintPct: per cent of the windows the carrier holds sprint while its lane is open (no opponent within 6 m, none on the lane 15 m ahead).
+		int BrakeIntent = 0;
+		double BrakeNearM = 6.0;
+		int CutPct = 0;
+		int CutFrames = 10;
+		double CutDefenderM = 5.0;
+		int CarrySprintPct = 0;
 	};
 	FJamPlaytesterProfile PlaytesterProfile(EPlaytester Kind);
 	const char* PlaytesterName(EPlaytester Kind);
@@ -65,6 +78,8 @@ namespace JamAI
 		int ChargeFramesMax = 30;        // game.shot.charge_frames_max (the sim's; FJamAIWorld does not carry it)
 		bool bSprint = false;            // lane A72 (ask A3): the profile's SprintPct applies (RunPlaytestMatch bSprint)
 		bool bRestStick = false;         // lane A86 (R-0043 point 2): the old stick (left at rest while carrying, the before arm); env JAM_PLAYTESTER_STICK=rest
+		int Cuts = 0;                    // lane A95: cuts made (the stats read it)
+		bool bOldVerbs = false;          // lane A95: the before arm of job 3 (env JAM_PLAYTESTER_VERBS=old): no brake intent, no cut, no carry sprint (measurement only)
 		int StickVariant = 0;            // lane A86 measurement arms (env JAM_PLAYTESTER_STICK): 0 aim, 2 carry (no cursor on a loose puck), 3 front (the carry aim within 60 deg of facing)
 
 		void Reset(EPlaytester Kind, uint64_t Seed);
@@ -85,6 +100,11 @@ namespace JamAI
 		int64_t LastCheckFrame = -1000;
 		int64_t LastDekeFrame = -1000;   // R-0029 point 4 (lane A39)
 		int64_t PlayFrames = 0;          // unfrozen frames seen (the lapse clock)
+		bool BrakeRing[kMaxReactionFrames + 1] = {};   // lane A95: the brake intent decided with each ring entry
+		bool bBrakeWanted = false;       // lane A95: this frame's decision (Decide -> Think)
+		int64_t CutUntil = -1;           // lane A95: the cut runs until this frame
+		int64_t LastCutFrame = -1000;
+		FVec2 CutDir;                    // lane A95: rink frame
 		EPlaytesterAct Act = EPlaytesterAct::Idle;
 		int Acts[static_cast<int>(EPlaytesterAct::Count)] = {};
 
@@ -125,6 +145,9 @@ namespace JamAI
 		int OneTimers = 0, Breakaways = 0, Dekes = 0, PayoffGoals = 0;
 		// lane A72 (asks A2, A3): frames the human sprinted, and frames any bot sprinted (summed over the bots)
 		int64_t SprintFrames = 0, BotSprintFrames = 0;
+		// lane A95: the vision's verbs: the human's reverse-brake stops, frames sprinting with the puck, frames in the first-step burst; the bots' summed
+		int Cuts = 0;
+		int64_t RevBrakes = 0, CarrySprintFrames = 0, BurstFrames = 0, BotRevBrakes = 0, BotCarrySprintFrames = 0;
 		int Knockdowns = 0;              // the human knocked down (any cause)
 		int KnockdownsAll = 0;           // lane A84: every knockdown in the match (any skater, any cause)
 		int AbilitiesUsed = 0;           // lane A84: the human's ability uses (F, event `ability` Strength 1)

@@ -50,4 +50,9 @@ namespace JamAI
 	// lift(0|1) pass_out(0|1) read_lanes(0|1) seek_pickups(0|1) one_timer(0|1) deke(0|1) check_min_closing(m/s, -1 never) check_from_behind(0|1).
 	// Returns false and writes the first bad pair into Err.
 	bool ApplyDifficultyTune(const char* Text, FJamAIParams& P, char* Err, int ErrLen);
+
+	// Lane A95: every profile number lane A95 changed, as a tune text with main bb18439's values for that level (before A95's sprint shares, lift cooldowns
+	// and curve levers). The neutral-proof tests (Jam.Core.MovementNeutral, Jam.Core.ContactNeutral) apply it with the vision's neutral blocks to replay that
+	// commit's matches hash for hash; a lane that changes a profile number adds the old value here.
+	const char* PreA95Tune(EDifficulty Level, bool bLargeRink = false);   // bLargeRink: a rink of LargeRinkM or longer (its red skill offsets)
 }

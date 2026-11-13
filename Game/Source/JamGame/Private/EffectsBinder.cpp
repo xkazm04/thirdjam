@@ -396,7 +396,8 @@ void UJamEffectsBinder::HandleEvent(FName Event, const FJamEventPayload& Payload
 				C->SetVariableFloat(TEXT("User.Variant"), Variant);
 				// Lane A47 (B-to-A-0029 asks 1 and 2): the sim's contact normal rides the payload as Dir (unit, world x/y, z 0; zero when the sim gave none).
 				// NS_check and NS_knockdown read User.Dir (chips along the hit, the slide streak); NS_board reads User.Normal (into the rink: chips leave the face).
-				if (Event == JamEvents::Check || Event == JamEvents::Knockdown) C->SetVariableVec3(TEXT("User.Dir"), Payload.Dir);
+				// Lane A95 (B-to-A-0037): lift and poke carry Dir too (attacker -> victim; NS_lift's mark on the attacker's side, splinters along the hit).
+				if (Event == JamEvents::Check || Event == JamEvents::Knockdown || Event == JamEvents::Lift || Event == JamEvents::Poke) C->SetVariableVec3(TEXT("User.Dir"), Payload.Dir);
 				else if (Event == JamEvents::Board) C->SetVariableVec3(TEXT("User.Normal"), Payload.Dir);
 				++SpawnedNiagara;
 			}

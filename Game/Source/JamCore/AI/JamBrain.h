@@ -57,6 +57,8 @@ public:
 	int32 GetStallCount() const { return Core.StallCount(); }
 
 	const JamAI::FJamBrain& GetCore() const { return Core; }
+	// Lane A95: the resolved params, for tests that replay an older profile (JamAI::PreA95Tune); call ResetBrain after (it re-applies the five properties above).
+	JamAI::FJamAIParams& EditParams() { return Core.Params; }
 
 private:
 	JamAI::FJamBrain Core;

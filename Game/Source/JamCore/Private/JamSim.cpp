@@ -65,6 +65,10 @@ namespace
 	// Lane A45 (C-0001 v4 read-outs, never hashed): a skater-skater collision at this closing speed without a landed check is a "bump" (PlayHitReaction), at most one per
 	// skater per BumpGapFrames; a skater within BoardContactEpsM of the boards counts as on them, BoardPinFrames of that with an opponent within BoardPinRangeM is a pin.
 	constexpr double BumpMinClosing = 3.0;
+	// Lane A92 (R-0045): the references the two older levers are read against under contact by momentum: skater.check_speed_min 5 (a lower value hits harder by
+	// 5 / value) and skater.knockdown_frames 90 (the down frames scale with value / 90).
+	constexpr double ReferenceCheckSpeedMin = 5.0;
+	constexpr double ReferenceKnockdownFrames = 90.0;
 	constexpr int32 BumpGapFrames = 20;
 	constexpr double BoardContactEpsM = 0.05;
 	constexpr int32 BoardPinFrames = 10;
@@ -830,6 +834,8 @@ double UJamSim::CarrierReachM(int32 Skater) const
 {
 	// R-0042 (lane A85): one reach for every carrier test: the stick's full reach (where the carried puck lives since A51) or shot.reach_m, whichever is
 	// longer, plus 5 cm for the frame in which the blade has moved and the puck has not yet followed it.
+	// Lane A93 (R-0045 law 4): the carried puck now rides at stick.carry_reach_mult of the blade's distance unless the carrier sprints; the live reach is never
+	// longer than the full one, so this stays the full reach: a puck still out at 1.6 m on the frame the sprint ends is carried while the blade draws it in.
 	return FMath::Max(Eff(EJamStat::ShotReach, Skater), SkaterRadius + FMath::Max(0.0, Config.Stick.ReachM)) + 0.05;
 }
 
@@ -937,6 +943,7 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 		S.bBumpThisFrame = false;   // lane A45 read-outs
 		S.bBoardHitThisFrame = false;
 		S.StickHitResult = 0;
+		S.ContactOutcome = 0; S.ContactRatio = 0.f; S.bContactCross = false; S.bCheckRefused = false; S.bRecoilThisFrame = false;   // lane A92 read-outs
 		S.bAbilityThisFrame = false;   // lane A84
 	}
 	Puck.PrevPos = Puck.Pos;
@@ -1033,7 +1040,13 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 		StepPassCharge(S, In);   // lane A77 (R-0036): the held pass, a saucer on a long enough hold
 		if (In.bDeke) TryDeke(S);
 		if (In.bSpin) TrySpin(S);   // lane A51 (R-0034)
-		if (In.bCheck && Config.Skater.bCheckEnabled)
+		// Lane A92 (R-0045 law 1): the carrier cannot hit; its press is refused (read-out bCheckRefused), no window opens. contact.carrier_can_hit true = as before.
+		if (In.bCheck && Config.Skater.bCheckEnabled && CarrierMayNotHit(S))
+		{
+			S.bCheckRefused = true;
+			++S.ChecksRefused;
+		}
+		else if (In.bCheck && Config.Skater.bCheckEnabled)
 		{
 			S.CheckWindow = S.bHuman ? HumanCheckWindowFrames : CheckWindowFrames;   // lane A49: the human's press gets 0.2 s to connect
 			S.bCheckThisFrame = true;
@@ -1132,17 +1145,49 @@ void UJamSim::StepSkater(FJamSkaterState& S, const FJamInput& In)
 	// a sprinting frame costs refill_frames, a resting frame returns drain_frames, so the bar empties in drain_frames and fills in refill_frames exactly.
 	const int32 Full = StaminaFull();
 	if (S.Stamina < 0 || S.Stamina > Full) S.Stamina = Full;
-	// Lane A82 (R-0041 point 6): the puck carrier is slower (skater.carry_speed_mult on top speed and thrust, bots and the human alike) and cannot sprint: the
-	// sprint is refused while carrying and the bar does not drain, so passing and defence pay. The carrier is the one the puck step before this frame left it with.
+	// Lane A82 (R-0041 point 6): the puck carrier is slower (skater.carry_speed_mult on top speed and thrust, bots and the human alike). The carrier is the one
+	// the puck step before this frame left it with.
+	// Lane A93 (R-0045 law 4, replacing R-0041 point 6's "cannot sprint"): the carrier may sprint, for sprint.carry_bonus instead of sprint.bonus, and its bar
+	// drains as anyone's. carry_bonus 0 = refused and the bar untouched, as A82 shipped it. A defender is always the faster: carry_speed_mult x (1 + carry_bonus)
+	// is capped at CarrierSprintCap of a free skater's 1 + bonus, and the carrier's sprint does not stack with the breakaway burst (the larger of the two applies).
 	const bool bCarrying = CarrierIndex() == S.Index;
 	const double CarryMul = bCarrying ? FMath::Clamp(C.CarrySpeedMult, 0.0, 1.0) : 1.0;
-	const bool bWantSprint = In.bSprint && !bCarrying && C.SprintBonus > 0.0 && S.Stamina > 0 && In.Move.SizeSquared() > 0.0025 && S.CanAct() && !S.InBox();
+	const double SprintBonus = bCarrying ? FMath::Max(0.0, C.SprintCarryBonus) : C.SprintBonus;
+	const bool bWantSprint = In.bSprint && C.SprintBonus > 0.0 && SprintBonus > 0.0 && S.Stamina > 0 && In.Move.SizeSquared() > 0.0025 && S.CanAct() && !S.InBox();
 	S.bSprinting = bWantSprint;
 	if (bWantSprint) S.Stamina = FMath::Max(0, S.Stamina - FMath::Max(1, C.SprintRefillFrames));
 	else if (S.Stamina < Full) S.Stamina = FMath::Min(Full, S.Stamina + FMath::Max(1, C.SprintDrainFrames));
-	const double SprintMul = bWantSprint ? 1.0 + C.SprintBonus : 1.0;
-	const double Speed = Eff(EJamStat::SkaterSpeed, S.Index) * Burst * SprintMul * CarryMul;
-	const double Accel = Eff(EJamStat::SkaterAccel, S.Index) * Burst * SprintMul * CarryMul;
+	double SprintMul = bWantSprint ? 1.0 + SprintBonus : 1.0;
+	double BurstMul = Burst;
+	if (bCarrying && bWantSprint)
+	{
+		++S.CarrySprintFrames;
+		SprintMul = FMath::Max(1.0, FMath::Min(SprintMul, (1.0 + C.SprintBonus) * CarrierSprintCap / FMath::Max(CarryMul, 1e-6)));
+		if (BurstMul > SprintMul) SprintMul = 1.0; else BurstMul = 1.0;
+	}
+	// Lane A93 (R-0045 law 3): the first-step burst. Armed while the skater is slow (under BurstSlowSpeed) and on the frame its move input turned more than 60
+	// degrees inside BurstCutFrames (a sharp cut); it then runs burst.frames more. Acceleration only: the top speed is the same.
+	bool bFirstStep = false;
+	if (C.BurstFrames > 0)
+	{
+		const FVector2D MoveDir = In.Move.SizeSquared() > 0.0025 ? In.Move.GetSafeNormal() : FVector2D::ZeroVector;
+		bool bCut = false;
+		if (!MoveDir.IsZero())
+		{
+			for (const FVector2D& Was : S.MoveHist) if (!Was.IsZero() && Dot(Was, MoveDir) < BurstCutDot) { bCut = true; break; }
+		}
+		if (bCut) for (FVector2D& Was : S.MoveHist) Was = MoveDir;   // one cut arms once: the old heading is forgotten
+		S.MoveHist[S.MoveHistAt] = MoveDir;
+		S.MoveHistAt = (S.MoveHistAt + 1) % BurstCutFrames;
+		const bool bArm = bCut || S.Vel.SizeSquared() < BurstSlowSpeed * BurstSlowSpeed;
+		if (bArm) S.BurstLeft = C.BurstFrames;
+		bFirstStep = S.BurstLeft > 0;
+		if (!bArm && S.BurstLeft > 0) --S.BurstLeft;
+	}
+	else S.BurstLeft = 0;
+	S.bBraking = S.bReverseBraking = false;
+	const double Speed = Eff(EJamStat::SkaterSpeed, S.Index) * BurstMul * SprintMul * CarryMul;
+	const double Accel = Eff(EJamStat::SkaterAccel, S.Index) * BurstMul * SprintMul * CarryMul * (bFirstStep ? FMath::Max(1.0, C.BurstAccelMult) : 1.0);
 	const double TurnRate = Eff(EJamStat::SkaterTurnRate, S.Index);
 	const double Grip = Eff(EJamStat::SkaterGrip, S.Index);
 	// Glide friction scales with the ice: glide_drag was measured at ice_friction 0.015 (DEFAULTS.md). R-0019: the zone under the skater scales speed and glide.
@@ -1188,16 +1233,34 @@ void UJamSim::StepSkater(FJamSkaterState& S, const FJamInput& In)
 			S.Yaw = RotateToward(S.Yaw, FMath::Atan2(Move.Y, Move.X), TurnRate * DT);
 		}
 		const FVector2D Fwd = S.Forward();
-		double Along = Dot(S.Vel, Fwd);
-		FVector2D Side = S.Vel - Fwd * Along;
-		if (Mag > 0.05 && !In.bBrake && Along < Top)
+		// Lane A93 (R-0045 law 3): braking by reversing. Move input more than 120 degrees from the velocity is a hard stop: the whole velocity loses
+		// reverse_brake_decel (x the input's size up to 1) per second until the skater is still, while the body keeps turning to the input; then the normal
+		// thrust takes over the other way. Ctrl keeps its own rule below. reverse_brake_decel 0 = off.
+		const double V = S.Vel.Size();
+		const bool bReverse = C.ReverseBrakeDecel > 0.0 && Mag > 0.05 && !In.bBrake && V > 1e-6 && Dot(Move, S.Vel) < ReverseBrakeDot * Mag * V;
+		if (bReverse)
 		{
-			Along = FMath::Min(Top, Along + Accel * Mag * DT);
+			const double Cut = C.ReverseBrakeDecel * FMath::Min(Mag, 1.0) * DT;
+			if (V > 1.0) { if (!S.bReverseBrakeLast) ++S.ReverseBrakes; S.bBraking = S.bReverseBraking = true; }
+			S.Vel = V > Cut ? S.Vel * ((V - Cut) / V) : FVector2D::ZeroVector;
 		}
-		Along = MoveToward(Along, 0.0, (Glide + (In.bBrake ? C.BrakeDecel : 0.0)) * DT);
-		Side *= FMath::Max(0.0, 1.0 - (Grip + (In.bBrake ? C.BrakeDecel * 0.5 : 0.0)) * DT);
-		S.Vel = Fwd * Along + Side;
+		else
+		{
+			double Along = Dot(S.Vel, Fwd);
+			FVector2D Side = S.Vel - Fwd * Along;
+			// A skater that is (nearly) still with its back to the input turns on the spot: a thrust along the facing would only be braked away next frame.
+			const bool bPivot = C.ReverseBrakeDecel > 0.0 && Mag > 0.05 && V < PivotSpeed && Dot(Move, Fwd) < ReverseBrakeDot * Mag;
+			if (Mag > 0.05 && !In.bBrake && !bPivot && Along < Top)
+			{
+				Along = FMath::Min(Top, Along + Accel * Mag * DT);
+			}
+			Along = MoveToward(Along, 0.0, (Glide + (In.bBrake ? C.BrakeDecel : 0.0)) * DT);
+			Side *= FMath::Max(0.0, 1.0 - (Grip + (In.bBrake ? C.BrakeDecel * 0.5 : 0.0)) * DT);
+			S.Vel = Fwd * Along + Side;
+			if (In.bBrake && V > 1.0) S.bBraking = true;
+		}
 	}
+	S.bReverseBrakeLast = S.bReverseBraking;
 	const FVector2D Before = S.Pos;
 	S.Pos += S.Vel * DT;
 	S.DistanceM += FVector2D::Distance(Before, S.Pos);
@@ -1219,7 +1282,11 @@ void UJamSim::StepStick(FJamSkaterState& S, const FJamInput& In)
 		Dir = In.Stick / Mag;
 		Frac = FMath::Min(Mag, 1.0);
 	}
-	S.BladePos = S.Pos + Dir * (SkaterRadius + Frac * Config.Stick.ReachM);
+	// Lane A93 (R-0045 law 4): the puck's distance by pace. A carrier that is not sprinting holds the blade (and the puck on it) at stick.carry_reach_mult of
+	// the distance (1.2 m of 1.6 m at full aim); sprinting it rides at the full distance. The direction is always the aim's. Everyone else's blade is full
+	// length (a poke, a reception). carry_reach_mult 1 = always full.
+	const double ReachMul = (CarrierIndex() == S.Index && !S.bSprinting) ? FMath::Clamp(Config.Stick.CarryReachMult, 0.0, 1.0) : 1.0;
+	S.BladePos = S.Pos + Dir * ((SkaterRadius + Frac * Config.Stick.ReachM) * ReachMul);
 	// Lane A51 (R-0034): a spinning carrier's blade is not re-aimed; it stays where it was on the body and StepSpin drags it round to the far side.
 	if (S.SpinFrames > 0 && !OldDir.IsNearlyZero() && CarrierIndex() == S.Index) S.BladePos = S.Pos + OldBladeRel;
 	// Lane A51 (R-0034): the sweep. The carried puck follows the blade (StepPuck's carry assist); an aim that turned more than sweep.min_deg_per_frame
@@ -1242,23 +1309,39 @@ void UJamSim::StepStick(FJamSkaterState& S, const FJamInput& In)
 // Lane A51: opens (or re-opens) the sweep shield on S for the side the puck left; one Sweeps count and one read-out flag per start.
 void UJamSim::ArmSweepShield(FJamSkaterState& S, int32 Side)
 {
-	if (Side == 0 || Config.Stick.SweepShieldFrames <= 0) return;
+	const int32 Frames = SweepShieldFramesFor(S);   // lane A93: shorter while the carrier sprints
+	if (Side == 0 || Frames <= 0) return;
 	if (S.SweepFrames == 0 || S.SweepSide != Side) { ++S.Sweeps; S.bSweepThisFrame = true; }
-	S.SweepFrames = Config.Stick.SweepShieldFrames;
+	S.SweepFrames = Frames;
 	S.SweepSide = Side;
 }
 
-// Lane A51: the shield counts down and ends at once when the puck is no longer carried.
+// Lane A93 (R-0045 law 4): a sprinting carrier's puck is easier to take: its sweep shield lasts stick.sweep.sprint_shield_mult of shield_frames.
+int32 UJamSim::SweepShieldFramesFor(const FJamSkaterState& S) const
+{
+	const int32 Frames = Config.Stick.SweepShieldFrames;
+	if (Frames <= 0 || !S.bSprinting) return FMath::Max(0, Frames);
+	return FMath::RoundToInt32(Frames * FMath::Clamp(Config.Stick.SweepSprintShieldMult, 0.0, 1.0));
+}
+
+// Lane A51: the shield counts down and ends at once when the puck is no longer carried. R-0044 as amended (lane A93): while it counts it refuses a poke or a
+// lift from either side (IsPokeShielded).
 void UJamSim::StepSweepShield(FJamSkaterState& S)
 {
 	if (S.SweepFrames <= 0) return;
-	if (--S.SweepFrames == 0 || CarrierIndex() != S.Index) { S.SweepFrames = 0; S.SweepSide = 0; }
+	// Lane A93: a shield that was opened before the sprint is cut to the sprint's length (sprint_shield_mult 1 = never shorter).
+	if (S.bSprinting) S.SweepFrames = FMath::Min(S.SweepFrames, SweepShieldFramesFor(S) + 1);
+	if (--S.SweepFrames <= 0 || CarrierIndex() != S.Index) { S.SweepFrames = 0; S.SweepSide = 0; }
 }
 
 bool UJamSim::IsPokeShielded(const FJamSkaterState& Poker, const FJamSkaterState& Carrier) const
 {
 	if (Carrier.SpinFrames > 0) return true;   // the body is between
 	if (Carrier.SweepFrames <= 0 || Carrier.SweepSide == 0) return false;
+	// R-0044 as amended (lane A93, on lane A91's measurement): the shield covers both sides of the body for its window. One cursor crossing was read as two
+	// sweeps, the second flipped the one-sided shield, and a lift 5 frames after the crossing took the puck. SweepSide stays as the read-out of the side the
+	// puck left. The one-sided rule of main 8f6b157 is kept behind a code switch for Jam.Core.MovementNeutral only (no cartridge key: this is a rule).
+	if (!Config.Stick.bSweepShieldOneSided) return true;
 	const FVector2D Fwd = Carrier.Forward();
 	const FVector2D Rel = Poker.BladePos - Carrier.Pos;
 	const double Cr = Fwd.X * Rel.Y - Fwd.Y * Rel.X;
@@ -1361,7 +1444,7 @@ void UJamSim::ResolvePokes()
 			S.PokeWindow = 0;
 			S.bPokeArmed = false;
 			S.PokeResult = 1;
-			Emit(JamEvents::Poke, S.Index, S.BladePos, bFromOpponent ? 1.f : 0.f, KindClean);
+			Emit(JamEvents::Poke, S.Index, S.BladePos, bFromOpponent ? 1.f : 0.f, KindClean, bFromOpponent ? Skaters[C].Pos - S.Pos : S.BladePos - S.Pos);   // lane A95 (B-to-A-0037): Dir attacker -> victim
 			continue;
 		}
 		if (--S.PokeWindow == 0 && S.bPokeArmed)
@@ -1369,7 +1452,7 @@ void UJamSim::ResolvePokes()
 			S.bPokeArmed = false;
 			S.StumbleFrames = Config.Stick.StumbleFrames;
 			S.PokeResult = -1;
-			Emit(JamEvents::Poke, S.Index, S.BladePos, 0.f, KindMiss);
+			Emit(JamEvents::Poke, S.Index, S.BladePos, 0.f, KindMiss, (Ci >= 0 && Skaters[Ci].Team != S.Team ? Skaters[Ci].Pos : S.BladePos) - S.Pos);   // lane A95: Dir toward the carrier
 		}
 	}
 }
@@ -1380,25 +1463,70 @@ void UJamSim::TryLift(FJamSkaterState& S)
 	S.LiftReadyFrame = Frame + 30;
 	S.bLiftThisFrame = true;
 	const int32 C = CarrierIndex();
-	if (C >= 0 && Skaters[C].Team != S.Team && FVector2D::Distance(Skaters[C].Pos, S.Pos) <= SkaterRadius * 2.0 + Config.Stick.LiftRangeM)
+	// Lane A95 (B-to-A-0037): the cone. A carrier more than stick.lift_cone_deg off the attacker's facing is neither lifted nor shoved (the swing is a miss):
+	// B measured 7 of 20 clean lifts on a victim behind the attacker's shoulder, the shove at empty ice.
+	if (C >= 0 && Skaters[C].Team != S.Team && FVector2D::Distance(Skaters[C].Pos, S.Pos) <= SkaterRadius * 2.0 + Config.Stick.LiftRangeM && !OutsideLiftCone(S, Skaters[C]))
 	{
 		FJamSkaterState& O = Skaters[C];
+		// Lane A92 (R-0045 law 1): the cross-check's body part. The stick's thrust (contact.thrust_mps on top of the closing speed) against the carrier's stability,
+		// before the strip so the foul rule still sees the carrier. Three limits, each from a measurement (docs/experiments/CONTACT.md):
+		//  - at arm's length only: the gap between the bodies within contact.cross_reach_m (the shaft, not the blade); farther out the lift is the stick lift it
+		//    was. Without it every routine lift of the brain (40-50 a match) was a shove and the human went down 10-14 times in three minutes at pro;
+		//  - not from behind: a lift from behind stays a stick lift (no shove, no foul), which is how the brain steals a puck;
+		//  - not where the lift itself is shielded (the spin's body between, the sweep's side, the shield ability): R-0040's bars for the spin and the sweep stand.
+		if (Config.Contact.bMomentum && Config.Contact.ThrustMps > 0.0 && Config.Skater.bCheckEnabled && !O.IsDown() && O.ShieldFrames == 0 && !IsLiftShielded(S, O)
+			&& FVector2D::Distance(O.Pos, S.Pos) <= SkaterRadius * 2.0 + Config.Contact.CrossReachM)
+		{
+			FVector2D Dir = (O.Pos - S.Pos).GetSafeNormal();
+			if (Dir.IsNearlyZero()) Dir = S.Forward();
+			if (Dot(Dir, O.Forward()) <= 0.5) ResolveContact(S, O, Dir, (S.Pos + O.Pos) * 0.5, EContactKind::Cross);
+		}
 		// Lane A82 (R-0040 point 1): the lift is shielded like the poke. A77 measured 19 and 11 clean lifts inside the sweep's and the spin's shield windows: the
 		// lift at contact (1.7 m body to body) took the puck the poke could not reach. A spinning carrier's body is between (no lift takes the carried puck); a sweep
 		// shields the side the puck left for stick.sweep.shield_frames. The swing is spent (the cooldown above stands) and reads as a miss.
 		if (IsLiftShielded(S, O) || O.ShieldFrames > 0)   // lane A84: the shield ability, like the spin's body
 		{
-			Emit(JamEvents::Lift, S.Index, S.BladePos, 0.f, KindMiss);
+			Emit(JamEvents::Lift, S.Index, S.BladePos, 0.f, KindMiss, O.Pos - S.Pos);
 			return;
 		}
 		Puck.Vel = (S.Pos - O.Pos).GetSafeNormal() * 3.0 + S.Vel * 0.5;
 		Puck.LastTouch = S.Index;
 		++S.Touches;
 		O.StickHitResult = 2;   // lane A45 read-out: the carrier's PlayStickHit(true)
-		Emit(JamEvents::Lift, S.Index, O.Pos, 1.f, KindClean);
+		Emit(JamEvents::Lift, S.Index, O.Pos, 1.f, KindClean, O.Pos - S.Pos);   // lane A95 (B-to-A-0037): Dir attacker -> victim, in the frame of the lift
 		return;
 	}
-	Emit(JamEvents::Lift, S.Index, S.BladePos, 0.f, KindMiss);
+	// Lane A92 (R-0045 law 1): the take in the same breath, for the cross-check as for the body check (CarrierMayNotHit's grace). No opposing carrier is in
+	// range, but an opponent that carried within stick.foul_grace_frames stands at arm's length (this skater's blade took its puck on the way in, or the puck
+	// just left it): the thrust still lands on it. The lift has nothing to take and reads as the miss it was. Found by the acceptance run (a92-final4).
+	if (Config.Contact.bMomentum && Config.Contact.ThrustMps > 0.0 && Config.Skater.bCheckEnabled && !CarrierMayNotHit(S))
+	{
+		int32 Best = -1;
+		double BestD = SkaterRadius * 2.0 + Config.Contact.CrossReachM;
+		for (const FJamSkaterState& O : Skaters)
+		{
+			if (O.Team == S.Team || O.IsDown() || O.InBox() || O.ShieldFrames > 0 || Frame - O.LastCarryFrame > Config.Stick.FoulGraceFrames || OutsideLiftCone(S, O)) continue;
+			const double D = FVector2D::Distance(O.Pos, S.Pos);
+			if (D <= BestD) { BestD = D; Best = O.Index; }
+		}
+		if (Best >= 0)
+		{
+			FJamSkaterState& O = Skaters[Best];
+			FVector2D Dir = (O.Pos - S.Pos).GetSafeNormal();
+			if (Dir.IsNearlyZero()) Dir = S.Forward();
+			if (Dot(Dir, O.Forward()) <= 0.5) ResolveContact(S, O, Dir, (S.Pos + O.Pos) * 0.5, EContactKind::Cross);
+		}
+	}
+	Emit(JamEvents::Lift, S.Index, S.BladePos, 0.f, KindMiss, S.BladePos - S.Pos);
+}
+
+// Lane A95 (B-to-A-0037): is the victim more than stick.lift_cone_deg off the attacker's facing? 180 (or more) = no cone.
+bool UJamSim::OutsideLiftCone(const FJamSkaterState& S, const FJamSkaterState& O) const
+{
+	if (Config.Stick.LiftConeDeg >= 180.0) return false;
+	const FVector2D To = (O.Pos - S.Pos).GetSafeNormal();
+	if (To.IsNearlyZero()) return false;
+	return Dot(To, S.Forward()) < FMath::Cos(FMath::DegreesToRadians(Config.Stick.LiftConeDeg));
 }
 
 // R-0013 hard foul: the fouler sits BoxFrames in the box; the fouled team gets a free faceoff at the fouler's end, on the side of the contact.
@@ -1513,8 +1641,22 @@ void UJamSim::CollideSkaters()
 
 			// Checks, decided on the velocities before the contact exchange.
 			bool bLanded = false;   // lane A45: a landed check is a knockdown, not a bump
-			if (Config.Skater.bCheckEnabled && A.Team != B.Team)
+			if (Config.Skater.bCheckEnabled && A.Team != B.Team && Config.Contact.bMomentum)
 			{
+				// Lane A92 (R-0045 law 1): a pressed check at contact is a hit resolved by momentum (ResolveContact): no speed gate, three outcomes. When both pressed,
+				// the one with more of its own speed along the contact is the attacker. A stumble or a knockdown is a landed check; a bump leaves the read-out below.
+				auto Can = [&](const FJamSkaterState& Checker, const FJamSkaterState& Victim)
+				{
+					// The carrier cannot hit, also with a window opened before the puck arrived; an armed hip check (lane A84's ability) keeps its rule.
+					return Checker.CheckWindow > 0 && Checker.CanAct() && !Victim.IsDown() && Victim.ShieldFrames == 0 && (Checker.AbilityArmed == AbHipCheck || !CarrierMayNotHit(Checker));
+				};
+				const bool bA = Can(A, B), bB = Can(B, A);
+				if (bA && (!bB || Dot(A.Vel, N) >= Dot(B.Vel, -N))) bLanded = ResolveContact(A, B, N, Contact, EContactKind::Body) >= ContactStumble;
+				else if (bB) bLanded = ResolveContact(B, A, -N, Contact, EContactKind::Body) >= ContactStumble;
+			}
+			else if (Config.Skater.bCheckEnabled && A.Team != B.Team)
+			{
+				// contact.momentum false (the neutral value): the rule before lane A92, as it was.
 				const double ASpeed = Dot(A.Vel, N);
 				const double BSpeed = Dot(B.Vel, -N);
 				const float CheckStrength = static_cast<float>(FMath::Clamp((ASpeed - Dot(B.Vel, N)) / Config.Skater.Speed, 0.0, 1.0));
@@ -1551,11 +1693,13 @@ void UJamSim::CollideSkaters()
 				// Lane A49: the human's check lands from HumanCheckSpeedMinMs of its own speed along the contact (a calibration, FEEL.md); bots keep check_speed_min.
 				// Lane A84: an armed hip check lands from a standstill (0 m/s of the checker's own speed along the contact); a shielded victim is only bumped.
 				auto MinSpeed = [&](const FJamSkaterState& Checker) { if (Checker.AbilityArmed == AbHipCheck) return -1e-6; const double M = Eff(EJamStat::CheckSpeedMin, Checker.Index); return Checker.bHuman ? FMath::Min(M, HumanCheckSpeedMinMs) : M; };
-				if (A.CheckWindow > 0 && A.CanAct() && !B.IsDown() && B.ShieldFrames == 0 && ASpeed > MinSpeed(A))
+				// Lane A92: contact.carrier_can_hit false refuses a carrier's check at contact too (true, the neutral value, short-circuits: as before).
+				auto May = [&](const FJamSkaterState& Checker) { return Config.Contact.bCarrierCanHit || Checker.AbilityArmed == AbHipCheck || !CarrierMayNotHit(Checker); };
+				if (A.CheckWindow > 0 && A.CanAct() && !B.IsDown() && B.ShieldFrames == 0 && ASpeed > MinSpeed(A) && May(A))
 				{
 					Landed(A, B, N);
 				}
-				else if (B.CheckWindow > 0 && B.CanAct() && !A.IsDown() && A.ShieldFrames == 0 && BSpeed > MinSpeed(B))
+				else if (B.CheckWindow > 0 && B.CanAct() && !A.IsDown() && A.ShieldFrames == 0 && BSpeed > MinSpeed(B) && May(B))
 				{
 					Landed(B, A, -N);
 				}
@@ -1580,6 +1724,145 @@ void UJamSim::CollideSkaters()
 			}
 		}
 	}
+}
+
+// Lane A92 (R-0045 law 1): the carrier cannot hit. S carries, and no opponent carried within stick.foul_grace_frames (LastCarryFrame, the foul rule's own clock).
+bool UJamSim::CarrierMayNotHit(const FJamSkaterState& S) const
+{
+	if (Config.Contact.bCarrierCanHit || CarrierIndex() != S.Index) return false;
+	for (const FJamSkaterState& O : Skaters)
+	{
+		if (O.Team != S.Team && Frame - O.LastCarryFrame <= Config.Stick.FoulGraceFrames) return false;
+	}
+	return true;
+}
+
+// Lane A92 (R-0045, docs/VISION.md law 1; docs/experiments/CONTACT.md has the formulas).
+double UJamSim::StabilityOf(const FJamSkaterState& S, const FVector2D& HitDir, EContactKind Kind) const
+{
+	const FJamContactConfig& K = Config.Contact;
+	double St = FMath::Max(1.0, Eff(EJamStat::SkaterMass, S.Index)) * K.StabilityMps;
+	const double Along = Dot(HitDir, S.Forward());   // > 0.5: the push runs along the facing = from behind, unseen; < -0.5: inside the front arc
+	const bool bUnseen = Along > 0.5;
+	const double Speed = S.Vel.Size();
+	if (Speed < K.StandSpeedMps)
+	{
+		// Standing or gliding slowly: braced against a hit it sees. A cross-check inside the front arc ("to the chest") ignores the brace.
+		if (!bUnseen && !(Kind == EContactKind::Cross && Along < -0.5)) St *= FMath::Max(1.0, K.StandBrace);
+	}
+	else
+	{
+		const double Top = FMath::Max(K.StandSpeedMps + 1e-6, Eff(EJamStat::SkaterSpeed, S.Index));
+		St *= FMath::Lerp(1.0, K.SpeedStability, FMath::Clamp((Speed - K.StandSpeedMps) / (Top - K.StandSpeedMps), 0.0, 1.0));
+	}
+	if (S.bSprinting) St *= K.SprintStability;
+	if (S.SpinFrames > 0 || (Config.Shot.ChargeFramesMax > 0 && S.ChargeFrames >= Config.Shot.ChargeFramesMax)) St *= K.SpinStability;
+	if (bUnseen) St *= K.UnseenStability;
+	return St;
+}
+
+double UJamSim::ContactImpulse(const FJamSkaterState& Attacker, const FJamSkaterState& Victim, const FVector2D& HitDir, EContactKind Kind) const
+{
+	const double Push = Kind == EContactKind::Cross ? Config.Contact.ThrustMps : Config.Contact.LungeMps;
+	return FMath::Max(1.0, Eff(EJamStat::SkaterMass, Attacker.Index)) * FMath::Max(0.0, Dot(Attacker.Vel - Victim.Vel, HitDir) + Push);
+}
+
+int32 UJamSim::ResolveContact(FJamSkaterState& Att, FJamSkaterState& Vic, const FVector2D& Dir, const FVector2D& Contact, EContactKind Kind)
+{
+	const FJamContactConfig& K = Config.Contact;
+	Att.CheckWindow = 0;   // the press is spent on this contact, whatever comes of it
+	// Lane A84: an armed hip check keeps its rule: it lands at full strength from a standstill, knocks down magnitude x skater.knockdown_frames and pushes.
+	const bool bHip = Kind == EContactKind::Body && Att.AbilityArmed == AbHipCheck;
+	const double Closing = Dot(Att.Vel - Vic.Vel, Dir);
+	const double MassA = FMath::Max(1.0, Eff(EJamStat::SkaterMass, Att.Index));
+	const double MassV = FMath::Max(1.0, Eff(EJamStat::SkaterMass, Vic.Index));
+	const double Impulse = ContactImpulse(Att, Vic, Dir, Kind);
+	const double StabV = StabilityOf(Vic, Dir, Kind);
+	// skater.check_speed_min keeps a meaning: a mode that lowered it (hits from low speeds) hits harder by 5 / value; the default 5 changes nothing. The
+	// outcome reads the scaled ratio; the frames down read the physical one (PhysRatio), so such a mode's low-speed knockdown is a short one, not the maximum.
+	const double PhysRatio = Impulse / FMath::Max(1e-6, StabV);
+	const double Ratio = PhysRatio * (ReferenceCheckSpeedMin / FMath::Max(0.5, Eff(EJamStat::CheckSpeedMin, Att.Index)));
+	int32 Outcome = bHip || Ratio >= K.DownRatio ? ContactDown : Ratio >= K.BumpRatio ? ContactStumble : ContactBump;
+	if (Outcome == ContactStumble && (Vic.IsStumbling() || K.StaggerFrames <= 0)) Outcome = ContactBump;   // a stumbling skater is not stumbled again (no lock)
+	Vic.ContactOutcome = Outcome;
+	Vic.ContactRatio = static_cast<float>(Ratio);
+	Vic.bContactCross = Kind == EContactKind::Cross;
+	const float Strength = bHip ? 1.f : static_cast<float>(FMath::Clamp(Closing / Config.Skater.Speed, 0.0, 1.0));   // contracts/events.md: closing speed / skater.speed
+	auto React = [&](FJamSkaterState& S, const FVector2D& Push, bool bForce)
+	{
+		if (bForce || Frame - S.LastBumpFrame >= BumpGapFrames) { S.bBumpThisFrame = true; S.BumpDir = Push; S.LastBumpFrame = Frame; }   // lane A45 read-out: PlayHitReaction
+	};
+	// The attacker pays: the same impulse comes back on it. When its own stability is the lower and the victim stays up, an impulse of its own stability or more
+	// makes the attacker the one who stumbles (a sprinting skater into a braced one).
+	const double StabA = StabilityOf(Att, -Dir, EContactKind::Body);
+	const bool bRecoil = !bHip && Outcome != ContactDown && K.StaggerFrames > 0 && StabA < StabV && Impulse >= StabA * K.DownRatio;
+	if (Outcome == ContactBump)
+	{
+		++Vic.ContactBumps;
+		React(Vic, Dir, false);
+		React(Att, -Dir, false);
+	}
+	else
+	{
+		// The same direction rule as before (lane A33): along the facing = behind, against it = front, else the side the attacker came from.
+		const FVector2D VF = Vic.Forward();
+		const double Along = Dot(Dir, VF);
+		const FName CheckKind = Along > 0.5 ? CheckBehind : Along < -0.5 ? CheckFront : (Dot(Dir, FVector2D(VF.Y, -VF.X)) < 0.0 ? CheckSideL : CheckSideR);
+		Emit(JamEvents::Check, Att.Index, Contact, Strength, CheckKind, Dir);
+		FireRule(EJamRuleTrigger::OnCheck, Att.Index, Att.Team, NAME_None, Strength);
+		const bool bVictimHasPuck = CarrierIndex() == Vic.Index || (Frame - Vic.LastCarryFrame) <= Config.Stick.FoulGraceFrames;
+		const bool bFromBehind = Along > 0.5;
+		// The pushed speed changes hands (momentum): half of the lunge or the thrust; a body check's closing speed changes hands in the collision's exchange
+		// right after this, a cross-check may not touch, so its closing speed changes hands here.
+		const double Give = bHip ? 0.0 : 0.5 * (Kind == EContactKind::Cross ? FMath::Max(0.0, Closing + K.ThrustMps) : K.LungeMps);
+		if (Outcome == ContactStumble)
+		{
+			++Vic.ContactStumbles;
+			Vic.Vel *= 0.5;
+			Vic.StumbleFrames = FMath::Max(Vic.StumbleFrames, K.StaggerFrames);
+			React(Vic, Dir, true);
+			// The puck comes loose from loose_ratio (the knockdown's rule for where it goes).
+			if (Ratio >= K.LooseRatio && Puck.LastTouch == Vic.Index && FVector2D::Distance(Vic.Pos, Puck.Pos) <= CarrierReachM(Vic.Index))
+			{
+				Puck.Vel = Vic.Vel * 0.5 + Rng.UnitVector2D() * 1.0 - Dir * 1.0;
+				Puck.LastTouch = -1;
+			}
+		}
+		else
+		{
+			++Vic.ContactDowns;
+			KnockDown(Vic.Index, Dir, Strength, CauseCheck);   // skater.knockdown_frames (x the spin's 1.5), the knockdown event, the strip
+			Vic.StumbleFrames = 0;
+			if (bHip)
+			{
+				const FJamAbilityConfig* Ab = HeldAbility(Att.Index);
+				const double Mag = Ab && Ab->Magnitude > 0.0 ? Ab->Magnitude : AbilityDefaultMagnitude(AbHipCheck);
+				Vic.KnockFrames = FMath::Max(1, FMath::RoundToInt32(Vic.KnockFrames * Mag));
+				Vic.Vel += Dir.GetSafeNormal() * (2.0 * HipCheckPushM);
+				Att.AbilityArmed = NAME_None;
+				if (Att.AbilityCharges == 0) Att.AbilitySlot = -1;
+			}
+			else
+			{
+				// Down for longer the bigger the ratio: down_frames_min at down_ratio to down_frames_max at down_full_ratio, at skater.knockdown_frames 90.
+				const double T = FMath::Clamp((PhysRatio - K.DownRatio) / FMath::Max(1e-6, K.DownFullRatio - K.DownRatio), 0.0, 1.0);
+				const double Frames = FMath::Lerp(static_cast<double>(K.DownFramesMin), static_cast<double>(FMath::Max(K.DownFramesMin, K.DownFramesMax)), T);
+				Vic.KnockFrames = FMath::Max(1, FMath::RoundToInt32(Vic.KnockFrames * Frames / ReferenceKnockdownFrames));
+			}
+		}
+		Vic.Vel += Dir * (Give * MassA / MassV);
+		Att.Vel -= Dir * Give;
+		if (Config.Rules.bPenalties && (!bVictimHasPuck || bFromBehind)) CallFoul(Att, Vic, Contact, Strength, bVictimHasPuck ? FoulFromBehind : FoulNoPuck);
+	}
+	if (bRecoil)
+	{
+		Att.Vel *= 0.5;
+		Att.StumbleFrames = FMath::Max(Att.StumbleFrames, K.StaggerFrames);
+		Att.bRecoilThisFrame = true;
+		++Att.ContactRecoils;
+		React(Att, -Dir, true);
+	}
+	return Outcome;
 }
 
 void UJamSim::KnockDown(int32 Victim, const FVector2D& Dir, float Strength, FName Cause)
@@ -2549,6 +2832,8 @@ uint64 UJamSim::StateHash() const
 		if (S.SpinReadyFrame != 0) H.AddI(S.SpinReadyFrame);
 		// Lane A49: the sprint stamina only once it left full (unset or full = no sprint yet), so a match without a sprint hashes as before.
 		if (S.Stamina >= 0 && S.Stamina != StaminaFull()) H.AddI(S.Stamina);
+		// Lane A93: the first-step burst only while it runs (burst.frames 0: never, so the neutral block hashes as before).
+		if (S.BurstLeft != 0) H.AddI(S.BurstLeft);
 		// Lane A84: the ability state only once a skater holds one (a cartridge without abilities hashes as before).
 		if (S.AbilitySlot >= 0 || S.AbilitiesUsed > 0 || S.ShieldFrames > 0 || !S.AbilityArmed.IsNone())
 		{

@@ -74,6 +74,16 @@ struct JAMCORE_API FJamSkaterConfig
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double SprintBonus = 0.15;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 SprintDrainFrames = 180;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 SprintRefillFrames = 360;
+	// game.skater.sprint.carry_bonus (lane A93, R-0045 law 4): the puck carrier may sprint; its sprint adds this fraction on top of carry_speed_mult (0.92 x 1.08
+	// of a free skater's speed), always under a free skater's sprint (the sim caps the product at CarrierSprintCap of 1 + bonus). 0 = the carrier cannot sprint (A82).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double SprintCarryBonus = 0.08;
+	// game.skater.reverse_brake_decel (lane A93, R-0045 law 3): move input against the velocity (more than 120 degrees from it) is a hard stop at this many
+	// m/s^2 until the skater is still; then the input accelerates the other way. 0 = off (only Ctrl brakes, at brake_decel).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double ReverseBrakeDecel = 20;
+	// game.skater.burst (lane A93, R-0045 law 3): the first-step burst. For frames after the speed was under 2 m/s, or after the move input turned more than
+	// 60 degrees inside 10 frames, the acceleration is accel_mult times normal (top speed unchanged). frames 0 = off.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 BurstFrames = 20;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double BurstAccelMult = 1.8;
 	// R-0035 (lane A52): game.skater.goalie { reach_m, block_height_m }: a skater in the crease stance saves a loose shot under block_height_m that passes
 	// within reach_m of it (the human included); a higher puck passes. reach_m 0 = no save by height (the body and the blade stop pucks as before).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double GoalieReachM = 0.9;
@@ -97,6 +107,8 @@ struct JAMCORE_API FJamStickConfig
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 PokeWindowFrames = 8;
 	// Centre-to-centre distance (beyond the two bodies) within which a stick lift strips the carrier.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double LiftRangeM = 1.0;
+	// Lane A95 (B-to-A-0037): no clean lift and no cross-check shove on a carrier more than this many degrees off the attacker's facing; 180 = no cone.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double LiftConeDeg = 70.0;
 	// Frames of lost control after a poke that was timed wrong next to a carrier (0 = no penalty, hockey.raw).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 StumbleFrames = 20;
 	// Mouse delta to aim: 1 = 100 pixels move the blade one full reach.
@@ -116,6 +128,14 @@ struct JAMCORE_API FJamStickConfig
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double SweepMinDegPerFrame = 6.0;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 SweepShieldFrames = 12;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 SweepBotReactFrames = -1;
+	// game.stick.carry_reach_mult (lane A93, R-0045 law 4): the puck's distance by pace. A carrier that is not sprinting holds its blade (and the puck on it) at
+	// this fraction of the full distance from the body (0.75: 1.2 m of 1.6 m at full aim); sprinting it rides at the full distance. 1 = always full (A51).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double CarryReachMult = 0.75;
+	// game.stick.sweep.sprint_shield_mult (lane A93): a sprinting carrier's sweep shield lasts this fraction of shield_frames (0.5: 6 of 12). 1 = no difference.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double SweepSprintShieldMult = 0.5;
+	// Not a cartridge key. R-0044 as amended (lane A93): the sweep's shield covers both sides of the body; true brings back the one-sided shield of main
+	// 8f6b157 (only the side the puck left), which Jam.Core.MovementNeutral needs to replay that commit's matches hash for hash.
+	bool bSweepShieldOneSided = false;
 };
 
 USTRUCT(BlueprintType)
@@ -176,6 +196,36 @@ struct JAMCORE_API FJamPassConfig
 	GENERATED_BODY()
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 SaucerHalfFrames = 8;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double SaucerLiftM = 0.35;
+};
+
+// Lane A92 (R-0045, docs/VISION.md law 1): game.contact, contact by momentum (UJamSim::StabilityOf, UJamSim::ResolveContact; docs/experiments/CONTACT.md).
+// A pressed body check or a cross-check is an impulse (closing speed along the contact line + lunge or thrust, times the attacker's mass) against the victim's
+// stability; the ratio decides bump, stumble or down. Neutral block: momentum false + carrier_can_hit true = the rule before the lane (same state hash).
+USTRUCT(BlueprintType)
+struct JAMCORE_API FJamContactConfig
+{
+	GENERATED_BODY()
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") bool bMomentum = true;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") bool bCarrierCanHit = false;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double LungeMps = 1.5;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double ThrustMps = 3.0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double CrossReachM = 0.5;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double StabilityMps = 6.0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double StandSpeedMps = 1.0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double StandBrace = 1.5;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double SpeedStability = 0.85;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double SprintStability = 0.7;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double SpinStability = 0.8;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double UnseenStability = 0.8;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double BumpRatio = 0.4;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double LooseRatio = 0.7;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double DownRatio = 1.0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double DownFullRatio = 3.0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 DownFramesMin = 60;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 DownFramesMax = 150;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 StaggerFrames = 16;
+	// The neutral block (contact.momentum false, contact.carrier_can_hit true): the check rule of main before lane A92.
+	void SetNeutral() { bMomentum = false; bCarrierCanHit = true; }
 };
 
 USTRUCT(BlueprintType)
@@ -311,6 +361,7 @@ struct JAMCORE_API FJamGameConfig
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") FJamPuckConfig Puck;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") FJamShotConfig Shot;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") FJamPassConfig Pass;   // lane A77 (R-0036)
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") FJamContactConfig Contact;   // lane A92 (R-0045)
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") FJamRulesConfig Rules;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") TArray<FJamTeamConfig> Teams;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") FJamAiConfig Ai;

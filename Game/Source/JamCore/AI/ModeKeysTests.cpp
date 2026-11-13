@@ -113,7 +113,10 @@ bool FJamModeKeysBodyCheck::RunTest(const FString& Parameters)
 	auto Hit = [&](const TCHAR* Share)
 	{
 		return JamModeKeysTests::Variant(*this, { { TEXT("\"difficulty\": \"pro\""), FString::Printf(TEXT("\"difficulty\": \"pro\", \"body_check\": %s"), Share) },
-			{ TEXT("\"check_enabled\": true"), TEXT("\"check_enabled\": true, \"check_speed_min\": 2") } }, E2);
+			{ TEXT("\"check_enabled\": true"), TEXT("\"check_enabled\": true, \"check_speed_min\": 2") },
+			// Lane A92 (R-0045): the bots' cross-check (the lift at arm's length) shoves by momentum and lands as a check; ai.body_check is the body check's key, so
+			// the lift's shove is turned off here (game.contact.thrust_mps 0) to count body checks only.
+			{ TEXT("\"skater\": {"), TEXT("\"contact\": { \"thrust_mps\": 0 }, \"skater\": {") } }, E2);
 	};
 	UJamCartridge* On = Hit(TEXT("1"));
 	UJamCartridge* Off = Hit(TEXT("0"));
@@ -212,7 +215,7 @@ bool FJamModeKeysSprint::RunTest(const FString& Parameters)
 	if (!Absent || !Half || !All) return false;
 	FJamDifficultyResolution R;
 	ResolveDifficulty(*Absent, R);
-	TestEqual(TEXT("absent: bots never sprint"), R.Params.SprintShare, 0.0);
+	TestEqual(TEXT("absent: the level's share (lane A95: FJamBotSkill::SprintShare per side, -1 here)"), R.Params.SprintShare, -1.0);
 	ResolveDifficulty(*Half, R);
 	TestEqual(TEXT("ai.sprint 0.5 is the share"), R.Params.SprintShare, 0.5);
 	TestTrue(TEXT("listed as an explicit key"), R.ExplicitKeys.Contains(TEXT("game.ai.sprint")));
@@ -222,7 +225,12 @@ bool FJamModeKeysSprint::RunTest(const FString& Parameters)
 	const FJamPlaytestStats S0 = JamModeKeysTests::Play(*Absent, 1, 3600);
 	const FJamPlaytestStats S5 = JamModeKeysTests::Play(*Half, 1, 3600);
 	const FJamPlaytestStats S1 = JamModeKeysTests::Play(*All, 1, 3600);
-	TestEqual(TEXT("absent: no bot sprint frame"), S0.BotSprintFrames, static_cast<int64_t>(0));
+	// Lane A95 (R-0045 law 4): absent = the level's share (pro 0.35 per side); game.ai.sprint 0 = never
+	TestTrue(TEXT("absent: the level's share, bots sprint"), S0.BotSprintFrames > 0);
+	{
+		UJamCartridge* Zero = JamModeKeysTests::Ai(*this, TEXT("\"difficulty\": \"pro\", \"sprint\": 0"), Errors);
+		if (Zero) TestEqual(TEXT("ai.sprint 0: no bot sprint frame"), JamModeKeysTests::Play(*Zero, 1, 3600).BotSprintFrames, static_cast<int64_t>(0));
+	}
 	TestTrue(TEXT("ai.sprint 0.5: bots sprint"), S5.BotSprintFrames > 0);
 	TestTrue(TEXT("ai.sprint 1: more than 0.5"), S1.BotSprintFrames > S5.BotSprintFrames);
 	// A3: the playtester sprints only when asked (-playersprint), the regular and good players, never the novice
@@ -230,7 +238,8 @@ bool FJamModeKeysSprint::RunTest(const FString& Parameters)
 	const FJamPlaytestStats Reg = JamModeKeysTests::Play(*Absent, 1, 3600, EPlaytester::Regular, true);
 	const FJamPlaytestStats Good = JamModeKeysTests::Play(*Absent, 1, 3600, EPlaytester::Good, true);
 	const FJamPlaytestStats Nov = JamModeKeysTests::Play(*Absent, 1, 3600, EPlaytester::Novice, true);
-	TestEqual(TEXT("without -playersprint the human never sprints (the curves stay comparable)"), Off.SprintFrames, static_cast<int64_t>(0));
+	// Lane A95 (brief A95 job 3): the regular and good players sprint with the puck on an open lane by default (R-0045 law 4); -playersprint adds A72's chase sprint.
+	TestEqual(TEXT("without -playersprint the human sprints only with the puck (A95's carry sprint)"), Off.SprintFrames, Off.CarrySprintFrames);
 	TestEqual(TEXT("... and the match is the same as before"), Off.Hash, S0.Hash);
 	TestTrue(TEXT("the regular player sprints"), Reg.SprintFrames > 0);
 	TestTrue(TEXT("the good player sprints"), Good.SprintFrames > 0);

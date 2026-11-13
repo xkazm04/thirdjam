@@ -17,7 +17,7 @@ namespace JamAI
 			const FJamAIParams D;
 			// Lane A46 (PAYOFFS.md section 6): the human's teammates pass to the open human in 0.4 of the chances at pro (0 before: the one-timer never reached the human).
 			FJamDifficultyProfile P{"pro", D.SpeedScale, D.RedSkill, D.YieldMarginM, D.YieldRadiusM, D.HoldRadiusM, D.StallFrames, D.Opp, 0.4};
-			P.LargeRedSkill = 0.97;   // lane A70 (CURVE-2.md, 2,000 matches): the regular playtester on 120 x 60 71.0 % at 0.9 -> 51.1 at 0.97 (0.95 55.6, 1.0 45.5); R-0029 pass 2 had 0.9
+			P.LargeRedSkill = 1.04;   // lane A95 (CURVE-5.md): 0.97 -> 1.04 (the regular player on 120 x 60 with the vision: 82.8 at 0.97 (600), 41.5 at 1.06 (2,000)). Lane A70: 0.97
 			return P;
 		}
 
@@ -44,13 +44,17 @@ namespace JamAI
 			Opp.Hk.ShapeShare = 0.6;
 			Opp.Hk.LateFrames = 24;
 			Opp.Hk.PressureSec = 0.6;
+			Opp.SprintShare = 0.2;   // lane A95 (R-0045 law 4, CURVE-5.md): the rookie sprints little (pro 0.35, all_star 1.0)
+			Opp.CheckMinClosing = 6.0;   // lane A95 (R-0041 "rookie bots rarely check", CURVE-5.md): checks only from 6 m/s of closing (pro 2, all_star 2); -1 (never) before
 			Opp.DrawJumpPct = 100; // 16:23: the rookie centre always jumps early (the human takes the opening touch)
 			// R-0029 P2: speed 0.85 / red skill 0.75 (0.96 / 0.88 before, tuned against the scripted human); measured with lane A34's novice.
 			// Stall 60: the stall rule is what lets a rookie shoot at all (SeasonTakes needs one AI shot per match).
 			// Lane A70 (CURVE-2.md): red skill 0.75 -> 0.8, the novice 90.8 -> 85.8 % over 2,000 matches (speed 0.9 moved nothing).
-			FJamDifficultyProfile P{"rookie", 0.85, 0.8, 4.0, 25.0, 0.0, 60, Opp, 0.6};   // lane A46: mates pass to the open human in 0.6 of the chances (every chance before)
+			// Lane A95 (CURVE-5.md, 2,000 matches): red skill 0.8 -> 0.97 with the checks from 6 m/s and the sprint 0.2 (the novice 97.0 -> 84.8 at red 1.0, 600 matches); the
+			// principles stay late and loose (0.6, 24 frames): tightening them to pro's took 3.5 points and is not what a rookie is.
+			FJamDifficultyProfile P{"rookie", 0.85, 0.97, 4.0, 25.0, 0.0, 60, Opp, 0.6};   // lane A46: mates pass to the open human in 0.6 of the chances (every chance before)
 			P.LargeSpeedScale = 0.9;   // R-0029: large-rink rookie offsets from the playtester grid (novice 85 %, 19:43); 1.0 / 0.93 before
-			P.LargeRedSkill = 0.97;   // lane A70 (CURVE-2.md, 2,000 matches): the novice on 120 x 60 97.7 % at 0.8 (0.9 93.3, 0.95 89.0, 1.0 81.8)
+			P.LargeRedSkill = 0.9;   // lane A95 (CURVE-5.md): 0.97 -> 0.9 (the novice on 120 x 60 with the vision, 2,000 each: 93.0 at 0.86, 89.0 at 0.89, 86.0 at 0.9, 75.1 at 0.92; 62.0 at 0.97 (600)). Lane A70: 0.97
 			return P;
 		}
 
@@ -65,32 +69,40 @@ namespace JamAI
 			Opp.bClearLane = true;
 			Opp.PokeFrames = 0;   // lane A79 (R-0041, CURVE-3.md): 2 -> 0, all_star pokes the moment the puck is in reach (with the hunt, below)
 			Opp.SweepReactFrames = 5;   // lane A51 (R-0034): all_star reads the carried puck 5 frames late (pro 8, the FJamBotSkill default)
-			Opp.ShotChargeFrames = 18;   // lane A31 (B-to-A-0024): all_star winds its shots up (pro 10, the FJamBotSkill default)
+			Opp.ShotChargeFrames = 10;   // lane A95 (CURVE-5.md): 18 -> 10, the pro wind-up (the longer wind-up lost shots to the good player's stick). Lane A31 (B-to-A-0024): 18
 			Opp.bLift = true;
+			Opp.SprintShare = 1.0;   // lane A95 (R-0045 law 4, R-0041 "hunts", CURVE-5.md): all_star sprints on every chase
+			Opp.LiftCooldownFrames = 45;   // lane A95 (B-to-A-0037 point 3): all_star lifts again after 0.75 s (pro 1.5 s; rookie never lifts)
 			Opp.bPassOut = true;
 			Opp.bReadLanes = true;
 			Opp.bSeekPickups = true;
 			Opp.DrawPressPct = 0;  // 16:18: no early press; the centre jumps early in half the faceoffs instead (faceoffs without a human touch 2 per 40 matches)
 			Opp.DrawJumpPct = 75;   // 16:25 worktree sweep: faceoffs without a human touch at most 2 per 40 matches
 			Opp.DrawPressFrames = 8;
-			Opp.ForecheckYieldFrames = 12;   // Director 15:16
+			Opp.ForecheckYieldFrames = -1;   // lane A95 (CURVE-5.md): all_star never gives the puck up to the human's forecheck (Director 15:16: 12)
 			Opp.bIntercept = true;
 			Opp.bUseAimCone = true;
 			Opp.bOneTimer = true;   // R-0029 point 4 (lane A39): all_star bots use the one-timer and the deke; pro the one-timer (ProOppSkill); rookie neither
 			Opp.bDeke = true;
-			Opp.CheckMinClosing = 3.0;   // R-0031 point 2 (lane A45): all_star body-checks the carrier (front or side, never from behind); rookie keeps -1 (never). Lane A70: 5 -> 3 (knockdowns of the good playtester 2.73 -> 3.00 a match at speed 1.3, its win share 26.5 -> 26.8)
-			Opp.HuntRadiusM = 10.0;   // lane A79 (R-0041 point 1, CURVE-3.md): the support goes at an opposing carrier within 10 m (good 26.8 -> 21.4, regular 13.3 -> 11.8 at speed 1.3)
+			Opp.CheckMinClosing = 2.0;   // lane A95 (CURVE-5.md): 3 -> 2 m/s (with A92's model a low-speed press stumbles). Before:   // R-0031 point 2 (lane A45): all_star body-checks the carrier (front or side, never from behind); rookie keeps -1 (never). Lane A70: 5 -> 3 (knockdowns of the good playtester 2.73 -> 3.00 a match at speed 1.3, its win share 26.5 -> 26.8)
+			Opp.HuntRadiusM = 20.0;   // lane A95 (R-0041 "all_star hunts", CURVE-5.md): 10 -> 20 m. Before: 10.   // lane A79 (R-0041 point 1, CURVE-3.md): the support goes at an opposing carrier within 10 m (good 26.8 -> 21.4, regular 13.3 -> 11.8 at speed 1.3)
 			// Lane A94 (R-0045 law 2): all_star executes the hockey principles at once and fully (pro: ProHockeySense, share 0.85, 8 frames late)
 			Opp.Hk = ProHockeySense();
 			Opp.Hk.ShapeShare = 1.0;
 			Opp.Hk.LateFrames = 0;
 			Opp.Hk.bReadHumanPressure = true;   // all_star passes away from the human's forecheck too (pro and rookie leave it to forecheck_yield_frames)
+			Opp.Hk.BetterByM = 12.0;     // lane A95 (CURVE-5.md): passes to a better-placed teammate only when it is 12 m nearer the net (3 before) ...
+			Opp.Hk.PressureSec = 0.3;    // ... and moves the puck under pressure only when it arrives inside 0.3 s (1.4 before; 0.5 read 27.9 at 2,000): all_star carries through the forecheck
 			// R-0029 pass 2 (with A31's charge): speed 1.08 (bots may push past 1, the sim clamps them at 1.5): the good playtester 30 % / 25 %
 			// R-0029 with A39's payoffs on (one-timer, burst, deke): speed 1.15 brings the good playtester back to 23 % at 40 seeds (1.08 measured 38 %, 1.12 33 %); A39 section 9.
 			// Lane A70 (CURVE-2.md, 2,000 matches per number): speed 1.15 -> 1.3, the good playtester 40.5 -> 26.5 % (1.2 34.5, 1.32 23.9, 1.4 14.8; checks from
 			// 3 or 4 m/s and bot_react_frames 3 moved nothing).
 			// Lane A79 (R-0041, CURVE-3.md): the hunt and the instant poke take the win rate, so speed comes back 1.3 -> 1.2 (good 27.0, regular 14.4, novice 3.4).
-			return FJamDifficultyProfile{"all_star", 1.2, 1.0, 4.0, 25.0, 0.0, 60, Opp, 0.2};   // lane A46: mates pass to the open human in 0.2 of the chances
+			// Lane A95 (CURVE-5.md, 2,000 matches): with the levers above red skill 1.0 -> 0.9 and speed 1.2 -> 1.4 (speed last, as the brief orders): the good
+			// player 62.0 -> 25.8 at 600 matches; 27.9 at 2,000 (1.5: 30.7, saturated: the sim clamps a bot at 1.5 and pace costs stability).
+			FJamDifficultyProfile P{"all_star", 1.4, 0.9, 4.0, 25.0, 0.0, 60, Opp, 0.2};
+			P.LargeSpeedScale = 1.22;   // lane A95 (CURVE-5.md): the good player on 120 x 60 at speed 1.4: 5.7 % (600), 1.25: 19.2 (2,000), 1.2: 32.3 (600)
+			return P;   // lane A46: mates pass to the open human in 0.2 of the chances
 		}
 
 		void SetErr(char* Err, int ErrLen, const char* Msg, const char* Pair)
@@ -144,6 +156,8 @@ namespace JamAI
 			if (std::strcmp(Key, "hk_min_carry_frames") == 0) { K.Hk.MinCarryFrames = static_cast<int>(V); return true; }
 			if (std::strcmp(Key, "hk_better_by_m") == 0) { K.Hk.BetterByM = V; return true; }
 			if (std::strcmp(Key, "hk_read_human_pressure") == 0) { K.Hk.bReadHumanPressure = V != 0.0; return true; }
+			if (std::strcmp(Key, "lift_cooldown_frames") == 0) { K.LiftCooldownFrames = static_cast<int>(V); return true; }   // lane A95
+			if (std::strcmp(Key, "sprint_share") == 0) { K.SprintShare = V; return true; }   // lane A95 (R-0045 law 4): the side's chase sprint share
 			return false;
 		}
 	}
@@ -188,6 +202,22 @@ namespace JamAI
 		P.Mate = FJamBotSkill();
 		P.Mate.PassToHuman = Profile.MatesPassShare;
 		P.Mate.Hk = ProHockeySense();   // lane A94 (R-0045 law 2): the human's teammates play the pro hockey sense at every level
+		P.Mate.SprintShare = ProOppSkill().SprintShare;   // lane A95 (R-0045 law 4): the human's teammates sprint as pro bots do at every level
+	}
+
+	const char* PreA95Tune(EDifficulty Level, bool bLargeRink)
+	{
+		switch (Level)
+		{
+		case EDifficulty::Rookie: return bLargeRink
+			? "sprint=-1;opp.sprint_share=0;mate.sprint_share=0;opp.lift_cooldown_frames=0;red_skill=0.97;opp.check_min_closing=-1"
+			: "sprint=-1;opp.sprint_share=0;mate.sprint_share=0;opp.lift_cooldown_frames=0;red_skill=0.8;opp.check_min_closing=-1";
+		case EDifficulty::AllStar: return "sprint=-1;opp.sprint_share=0;mate.sprint_share=0;opp.lift_cooldown_frames=0;speed_scale=1.2;red_skill=1.0;opp.shot_charge_frames=18;"
+			"opp.forecheck_yield_frames=12;opp.check_min_closing=3;opp.hunt_radius_m=10;opp.hk_better_by_m=3;opp.hk_pressure_s=1.4";
+		default: return bLargeRink
+			? "sprint=-1;opp.sprint_share=0;mate.sprint_share=0;opp.lift_cooldown_frames=0;red_skill=0.97;opp.shoot_extra_m=13;opp.hunt_radius_m=0;opp.check_min_closing=4"
+			: "sprint=-1;opp.sprint_share=0;mate.sprint_share=0;opp.lift_cooldown_frames=0;red_skill=0.95;opp.shoot_extra_m=13;opp.hunt_radius_m=0;opp.check_min_closing=4";
+		}
 	}
 
 	bool ApplyDifficultyTune(const char* Text, FJamAIParams& P, char* Err, int ErrLen)
@@ -220,6 +250,7 @@ namespace JamAI
 			else if (std::strcmp(Key, "yield_radius_m") == 0) { P.YieldRadiusM = V; }
 			else if (std::strcmp(Key, "hold_radius_m") == 0) { P.HoldRadiusM = V; }
 			else if (std::strcmp(Key, "stall_frames") == 0) { P.StallFrames = static_cast<int>(V); }
+			else if (std::strcmp(Key, "sprint") == 0) { P.SprintShare = V; }   // lane A95: as game.ai.sprint (both sides; -1 = the levels' shares)
 			else if (std::strcmp(Key, "guard_range_m") == 0) { P.GuardRangeM = V; P.Opp.GuardRangeM = V; P.Mate.GuardRangeM = V; }   // both sides (opp.* / mate.* for one)
 			else if (std::strcmp(Key, "guard_radius_m") == 0) { P.GuardRadiusM = V; P.Opp.GuardRadiusM = V; P.Mate.GuardRadiusM = V; }
 			else { bOk = false; }

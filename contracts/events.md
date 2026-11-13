@@ -184,3 +184,10 @@ Assets by the rule: `MS_post` exists on `dev-b` and plays through the binder; `N
 | Strength | 1 |
 Fired on the frame F (gamepad R3) uses the held ability. A knockdown caused by the shotgun carries Kind `shotgun` on the `knockdown` event. B binds `NS_ability` and
 `MS_ability` to it (Variant by Kind order above) when the assets exist; the binder is silent until then.
+
+## Contact by momentum and directed stick events (added 18:39, 13 Nov, R-0045 / R-0046, lanes A92, A95)
+- `check` now fires for every resolved hit: a bump is silent; a **stumble** and a **knockdown** both carry `Strength` (the ratio of impulse to stability, clamped to 1) and
+  `Dir` (attacker to victim). A cross-check's shove inside arm's length fires `check` with Kind `cross`.
+- `knockdown`: `KnockdownFrames` on `SetKnockedDown` runs **60 to 150** by the hit's strength (it was a constant 90).
+- `lift` and `poke` carry `Dir` (the unit vector attacker to victim); the binder sends it as `User.Dir`, as for `check`. The clean `lift` event is in the frame of the lift.
+- A press refused because the presser carries the puck sets the read-out `bCheckRefused` (no event).

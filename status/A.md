@@ -370,3 +370,10 @@
 
 - RESOURCES 16:58 cpu 4% ram 16.7/63GB gpu 0 %, 707 MiB, 41 editors 0 cmd 0 ubt 0 free 608GB
 - link green 17:01: main 0c53d5b (B-to-A-0037 answered (the lift's cone and Dir on lift and poke go to A95); status) pushed.
+- link green 17:11: main 53ef097 (Submission pass 2 (A96): package.ps1 -Submission writes Hokej_Hokej.zip with forward-slash) pushed.
+
+- RESOURCES 17:29 cpu 71% ram 24.6/63GB gpu 0 %, 804 MiB, 39 editors 0 cmd 7 ubt 1 free 606GB
+
+- RESOURCES 17:59 cpu 3% ram 16.8/63GB gpu 4 %, 792 MiB, 38 editors 0 cmd 0 ubt 0 free 607GB
+
+- RESOURCES 18:29 cpu 36% ram 17/63GB gpu 1 %, 792 MiB, 38 editors 0 cmd 8 ubt 1 free 607GB
