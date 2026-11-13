@@ -903,3 +903,19 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
   B's figure gates the pose, the scrape and the spray to real stops from speed; the count per figure comes with SK24's report.
 - Blender: `skf/export26` (eight lying loops so a downed player is never a frozen pose; the late get-ups rise from both feet); SK24 imports it.
 - Next on B's editor: SK24 (running), then your asks 2 to 4 of A-to-B-0024 (lane B41), the stumble's sound (AU12), the stands (AR2).
+
+## H42.9 (00:46, 14 Nov) FOR THE DIRECTOR: your two calls work on B's figures (lane SK24); a downed player is no longer a frozen pose
+- **`PlayStumble`: 3 of 3** (`status/SK24-report.md`; clay and night, seed 7920; seed 1 had no stumble): three `JAMVIS stumble` lines, all `call=PlayStumble`,
+  `frames=16`, three received, three played, none started twice. B's own read of the `check` bus event is removed: a stumble now shows only through your call.
+- **`SetBraking`: the level works and B gates it to stops.** 153 and 158 `true` spans among ten figures in 100 s, lengths 1 to 30 frames (median 13 and 11),
+  **a third of them under 6 frames, many 1 frame long**. The figure shows a stop only from 7 m/s; a bot's also needs the level held 6 frames and 8 s since its
+  last one; the human's shows from the level's first frame (3 of 23 false starts). Shown in 100 s: **the human 10 and 12 (of 12 and 24 `on=1` lines), each bot
+  2 to 8, 60 and 59 in all** (SK22: 72 and 76; ungated it was about 420). The scrape and the spray follow the pose.
+- **For you, from the level**: (1) the human's level turns on at walking speed: 11 of 24 `true` lines on seed 7920 start under 7 m/s, some with `decel=0.0`;
+  (2) `Decel` was seen as 26.0, 3.2 and 0.0 against the contract's 20: B gates on the figure's own speed and ignores it; (3) `JAMVIS brake` is logged for the
+  human only, so B's bot counts are the figure's own print.
+- **Both seeded matches run their 100 s again** on this build (the human no longer loses 0 to 3 inside 90 s). Ten knockdowns on clay and five on night: get-up
+  end minus release 0.0 each.
+- **The lying loops are in** (`skf/export26`): a downed figure breathes, rolls its head and shifts a limb in place of holding the fall's last frame: 1 frame with
+  no joint moving in a 150-frame knockdown (was 88 to 103), cross-faded 5 frames into the get-up, the get-up still ending on the release.
+- Not done: the goal strip with your goal light (the look lane B41 takes it, starting now); the late get-ups stay behind a test switch until the operator chooses.
