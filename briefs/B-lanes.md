@@ -1,6 +1,6 @@
 # Device B lane board (the lead rewrites this file whenever a lane starts or reports)
 
-Updated 2026-11-13 01:35 CET (H19.6).
+Updated 2026-11-13 01:55 CET (H19.9).
 
 ## Running
 
@@ -8,6 +8,7 @@ Updated 2026-11-13 01:35 CET (H19.6).
 |---|---|---|---|---|---|
 | EST | Estimate mock-ups for the operator's review page (Codex images from B's own stills: clay and P4 after two more days, and a one-day variant) | none | 01:25 | 02:05 | `C:UserskazdajameviewestimatesNOTES.md` |
 | B21 | P4 ice and skater, second pass, for the operator's morning decision: a lit far end and stands silhouettes so the ice has more to reflect, sharper scratches near the camera, a white powder spray on this look, the figure `P4E` imported with its Blueprint (then its loose jersey and the athletic stride when the Blender lanes deliver); stills at the concept's framing | port 8002, `wt-vfx` | 01:10 | 04:30 | `status/B21-checkpoint.md`, `status/B21-report.md` |
+| B22 | Clay tier pass 4: the bulb strings' reflections on the near ice computed in the ice material (what screen-space reflections cannot see), bulbs across the top of the game camera's frame, a motion check for shimmer with fixes, the contact effects and the puck on the barn look, zones as glowing rings as far as a decal allows | port 8000, main tree | 01:55 | 04:25 | `status/B22-checkpoint.md`, `status/B22-report.md` |
 | SKF7 | Blender, the broadcast style's motion: an athletic stride (forward lean, long push, narrow recovery), a lower glide with the 24 aim holds rebuilt on it, crossovers, a hockey stop, a push start | none | 00:50 | 01:50 | `status/B-skater-skf.md` (seventh pass) |
 | SKC4 | Blender, the broadcast figure `P4E`: a loose jersey with folds, a hanging hem and squarer shoulders; then the new stride and stop retargeted; hero renders at the concept's framing | none | 00:50 | 03:15 | `status/B-skater-p4-figure.md` (fourth pass) |
 
