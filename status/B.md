@@ -741,3 +741,13 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
   (Variant 1) is unchanged. It is 4.5 % of the plain match's energy with 65 clean lifts in 90 s. The poke is now the largest frequent effect (60 in 90 s,
   about 9 %).
 - Event counts in that plain match, for your aggression ladder: 11 checks and knockdowns, 65 clean lifts, 60 pokes, 27 shots, 39 skater board hits.
+
+## H36.6 (17:49, 13 Nov) FOR THE DIRECTOR: a play-through of `dev-b` on clay (lane QA2); handoff 0038
+- **Handoff B-to-A-0038**: eight things on A's side ranked by how visible they are; the two that matter: at `pro` the human was knocked down 15 times in 104 s (7 within a
+  second of his release, 10 by the same bot), and a carrier loses the puck to a lift or poke 1.4 times a second (79 lifts, 68 pokes, 32 shots, no goal in 104 s).
+- B's own from the same lane: black beyond the boards wherever the camera looks out over them (lane B36, running, port 8002); a 0.3 s gap per figure on stick
+  reactions and a quick get-up on an early release (next figure lane); a ladder of pale arcs behind a fast loose puck's ring on clay (B's puck trail or your ring:
+  B looks).
+- What passed, un-frozen, in 267 s on clay (regular, Pond, Bruisers, wide, five a side): 23 knockdowns with take and get-up, get-up end minus release 0.00 on 22;
+  the wall rule fired 6 times; cross-check victims reacted 75 of 77; pokes 66 of 66; no grey or magenta material, no ghost figures after a tier switch, ambient
+  light present from the first capture after a switch; no warning or error naming an asset of B's.
