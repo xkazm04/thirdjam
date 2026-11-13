@@ -16,6 +16,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundBase.h"
 #include "UObject/UObjectGlobals.h"
+#include "Misc/PackageName.h"
 
 namespace JamCommentary
 {
@@ -570,6 +571,25 @@ bool FJamCommentaryPicker::Force(FName Id, int64 Frame, FJamCommentaryPick& Out)
 
 // ---------------------------------------------------------------- subsystem ----------------------------------------------------------------
 
+// Lane A114 (track Q3): an asset whose package is not in the build is found absent once per process (the preload's list from the menu, else one
+// package-store lookup, never a synchronous load) so no line, wave or crowd bed asks the loader for it during play. jam.vo.SkipAbsent=0: the commentary
+// before (a line whose wave is absent is picked and played as silence, its caption shown).
+static TAutoConsoleVariable<int32> CVarJamVoSkipAbsent(TEXT("jam.vo.SkipAbsent"), 0,
+	TEXT("1: a commentary line whose wave is not in the build is skipped when picked (no lookup, no caption). 0: played as silence (the game before lane A114)."));
+
+namespace
+{
+	bool IsAbsentAsset(const FSoftObjectPath& Path)
+	{
+		if (Path.IsNull() || Path.ResolveObject()) return false;
+		if (UJamPreloadSubsystem::IsKnownMissing(Path)) return true;
+		static TMap<FString, bool> Absent;   // game thread only
+		const FString Pkg = Path.GetLongPackageName();
+		if (const bool* Known = Absent.Find(Pkg)) return *Known;
+		return Absent.Add(Pkg, !FPackageName::DoesPackageExist(Pkg));
+	}
+}
+
 UJamCommentarySystem* UJamCommentarySystem::Get(const UObject* WorldContext)
 {
 	const UWorld* World = WorldContext ? WorldContext->GetWorld() : nullptr;
@@ -719,7 +739,14 @@ void UJamCommentarySystem::HandleSimFrame(const FJamPresentationFrame& F)
 	FString Skip;
 	const bool bStart = Picker->Resolve(W, P, &Skip);
 	if (Picker->TakeCutRequest()) CutLine();   // before Play: a must-play cut names the line it cut, not the one that starts
-	if (bStart) Play(P);
+	if (bStart && CVarJamVoSkipAbsent.GetValueOnGameThread() != 0 && IsAbsentAsset(P.Sound))
+	{
+		bool bAlready = false;
+		MissingLogged.Add(P.Sound.ToString(), &bAlready);
+		if (!bAlready) UE_LOG(LogJamCommentary, Warning, TEXT("JAMVO missing %s (logged once)"), *P.Sound.ToString());
+		UE_LOG(LogJamCommentary, Log, TEXT("JAMVO_SKIP frame=%lld reason=no_wave id=%s"), W.Frame, *P.LineId.ToString());
+	}
+	else if (bStart) Play(P);
 	else if (!Skip.IsEmpty()) UE_LOG(LogJamCommentary, Verbose, TEXT("JAMVO_SKIP frame=%lld reason=%s"), W.Frame, *Skip);
 }
 
@@ -728,7 +755,7 @@ USoundBase* UJamCommentarySystem::LoadWave(const FSoftObjectPath& Path)
 	const FName Key(*Path.ToString());
 	if (const TObjectPtr<USoundBase>* Found = Waves.Find(Key)) return Found->Get();
 	USoundBase* S = Cast<USoundBase>(Path.ResolveObject());
-	if (!S) S = Cast<USoundBase>(StaticLoadObject(USoundBase::StaticClass(), nullptr, *Path.ToString(), nullptr, LOAD_NoWarn | LOAD_Quiet));
+	if (!S && !IsAbsentAsset(Path)) S = Cast<USoundBase>(StaticLoadObject(USoundBase::StaticClass(), nullptr, *Path.ToString(), nullptr, LOAD_NoWarn | LOAD_Quiet));
 	if (!S)
 	{
 		bool bAlready = false;
@@ -835,7 +862,7 @@ void UJamCommentarySystem::OnMatchBuilt(AHokejGameMode* GM)
 		}
 	}
 	// R-0033 point 4 (lane A50): B's crowd bed loop starts with the music when the asset exists (a quiet load, no "missing" line: B says when it lands).
-	if (!CrowdBed)
+	if (!CrowdBed && !IsAbsentAsset(FSoftObjectPath(PathCrowdBed)))   // lane A114: an absent bed is asked for once per process, not at every match start
 	{
 		if (USoundBase* Bed = Cast<USoundBase>(StaticLoadObject(USoundBase::StaticClass(), nullptr, PathCrowdBed, nullptr, LOAD_NoWarn | LOAD_Quiet)))
 		{

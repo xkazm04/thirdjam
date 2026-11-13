@@ -10,6 +10,7 @@
 #include "ToySkaterVisual.h"
 #include "InputMapping.h"
 #include "EffectsBinder.h"
+#include "HokejGameMode.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
 
@@ -565,6 +566,34 @@ bool FJamHudRules::RunTest(const FString&)
 	FJamPresentationFrame F;
 	F.SimFrame = 100;
 	TestTrue(TEXT("hint at 100"), UJamHudWidget::ShowControlsHint(F));
+	// Lane A111 (track U1): the strip belongs to the first match of a session; spent, it stays away unless the neutral value asks for every match.
+	TestTrue(TEXT("hint live in the first match"), UJamHudWidget::ShowControlsHintLive(F, false, false));
+	TestFalse(TEXT("no hint once spent"), UJamHudWidget::ShowControlsHintLive(F, true, false));
+	TestTrue(TEXT("every match: the neutral value"), UJamHudWidget::ShowControlsHintLive(F, true, true));
+	TestTrue(TEXT("the hint names the brake"), UJamHudWidget::ControlsHintText().Contains(TEXT("BRAKE")));
+	TestTrue(TEXT("the hint is shorter than the ten-verb line (146 characters)"), UJamHudWidget::ControlsHintText().Len() < 146);
+	TestEqual(TEXT("the hint window is 8 s"), UJamHudWidget::ControlsHintFrames, static_cast<int64>(480));
+	// The marker over the human: always on; off, lane A42's fade rule.
+	TestEqual(TEXT("marker on at the faceoff (ring full)"), UJamHudWidget::YouMarkerAlpha(true, 1.f), 1.f);
+	TestEqual(TEXT("A42: no chevron while the ring is full"), UJamHudWidget::YouMarkerAlpha(false, 1.f), 0.f);
+	TestEqual(TEXT("A42: chevron once the ring has faded"), UJamHudWidget::YouMarkerAlpha(false, 0.f), 1.f);
+	// The commentator's strip: docked on the edge, over the controls strip and the call line while they show; undocked, the earlier places.
+	TestEqual(TEXT("docked on the edge"), UJamHudWidget::CommentaryStripY(true, false, false), -24.f);
+	TestEqual(TEXT("over the controls strip while it shows"), UJamHudWidget::CommentaryStripY(true, true, false), -150.f);
+	TestEqual(TEXT("docked over the call line"), UJamHudWidget::CommentaryStripY(true, false, true), -76.f);
+	TestEqual(TEXT("undocked as before"), UJamHudWidget::CommentaryStripY(false, false, true), -110.f);
+	TestEqual(TEXT("undocked over the strip as before"), UJamHudWidget::CommentaryStripY(false, true, false), -150.f);
+	// The net badges give way to the goal; a plate overhangs its label by the pad under any alignment.
+	TestFalse(TEXT("no net badge in the goal pause"), UJamHudWidget::ShowNetBadges(EJamPhase::GoalPause));
+	TestTrue(TEXT("net badge in play"), UJamHudWidget::ShowNetBadges(EJamPhase::Play));
+	TestTrue(TEXT("neutral: badge in the goal pause"), UJamHudWidget::ShowNetBadges(EJamPhase::GoalPause, false));
+	TestEqual(TEXT("plate of a left-aligned label"), UJamHudWidget::LabelPlatePos(FVector2D(100, 50), FVector2D(0, 0.5)), FVector2D(100 - UJamHudWidget::LabelPlatePadX, 50));
+	TestEqual(TEXT("plate of a right-aligned label"), UJamHudWidget::LabelPlatePos(FVector2D(100, 50), FVector2D(1, 0.5)), FVector2D(100 + UJamHudWidget::LabelPlatePadX, 50));
+	// The light hold (AHokejGameMode): released by the rig once it has been visible for three ticks, or by the 2 s bound, whichever comes first.
+	TestFalse(TEXT("held while the rig loads"), AHokejGameMode::LightHoldDone(false, 0, 0.5));
+	TestFalse(TEXT("held for the settle ticks"), AHokejGameMode::LightHoldDone(true, 2, 0.5));
+	TestTrue(TEXT("released by the rig"), AHokejGameMode::LightHoldDone(true, 3, 0.5));
+	TestTrue(TEXT("released by the bound"), AHokejGameMode::LightHoldDone(false, 0, 2.0));
 	F.SimFrame = 600;
 	TestFalse(TEXT("no hint at 600"), UJamHudWidget::ShowControlsHint(F));
 	F.bDirectorsCallReady = true;
@@ -623,6 +652,85 @@ bool FJamCameraMiddleThird::RunTest(const FString&)
 	for (int32 i = 0; i < 120; ++i) T2 = UJamFollowCamera::StepThirdPerson(Keep, S2, JamA40Test::Frame(120.f, 60.f, 8.5f, FVector2D(-10.0 + i * 0.1, 0.0), 0.f));
 	TestEqual(TEXT("open ice yaw = the skater's"), (float)T2.Rotator().Yaw, 0.f, 0.05f);
 	TestEqual(TEXT("open ice pitch = the derived pitch"), (float)T2.Rotator().Pitch, UJamFollowCamera::DerivedPitchDeg(Keep), 0.05f);
+	return true;
+}
+
+// Lane A111 (track U1, B-to-A-0038 fault 5): the corner lift. At a board the camera looks at, more of the frame is ice; the yaw is untouched (the cursor's
+// point keeps its bearing), the chest stays in the middle third, the move is eased, open ice is the rig of before, and CornerLiftM 0 is the camera of before.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamCameraCornerLift, "Jam.Camera.CornerLift", EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+bool FJamCameraCornerLift::RunTest(const FString&)
+{
+	const float L = 90.f, W = 45.f, R = 8.5f, Fov = 70.f, Aspect = 16.f / 9.f;
+	FJamCameraRink Rink; Rink.LengthM = L; Rink.WidthM = W; Rink.CornerRadiusM = R;
+	FJamCameraSettings Off;
+	TestEqual(TEXT("the settings default is off (the tests' rig, the neutral value)"), Off.CornerLiftM, 0.f);
+	FJamCameraSettings On = Off;
+	On.CornerLiftM = 3.f;
+	// The weight: nearness times facing, the largest over the boards.
+	TestEqual(TEXT("open ice"), UJamFollowCamera::CornerWeight(On, FVector2D(0, 0), 90.f, Rink), 0.f);
+	TestEqual(TEXT("2 m from the side board, facing it"), UJamFollowCamera::CornerWeight(On, FVector2D(0, 20.5), 90.f, Rink), 1.f, 1e-4f);
+	TestEqual(TEXT("half way in"), UJamFollowCamera::CornerWeight(On, FVector2D(0, 19.0), 90.f, Rink), 0.5f, 1e-3f);
+	TestEqual(TEXT("5 m out: nothing yet"), UJamFollowCamera::CornerWeight(On, FVector2D(0, 17.5), 90.f, Rink), 0.f, 1e-4f);
+	TestEqual(TEXT("along the board"), UJamFollowCamera::CornerWeight(On, FVector2D(0, 20.5), 0.f, Rink), 0.f);
+	TestEqual(TEXT("away from the board"), UJamFollowCamera::CornerWeight(On, FVector2D(0, 20.5), -90.f, Rink), 0.f);
+	TestEqual(TEXT("in the corner arc, facing the corner"), UJamFollowCamera::CornerWeight(On, FVector2D(41.2, 18.7), 45.f, Rink), 1.f, 1e-3f);
+	TestEqual(TEXT("at the end board behind the net"), UJamFollowCamera::CornerWeight(On, FVector2D(43.5, 0), 0.f, Rink), 1.f, 1e-4f);
+
+	auto Settle = [&](const FJamCameraSettings& C, const FVector2D& Pos, float Yaw)
+	{
+		FJamCameraFilter St;
+		FTransform T;
+		for (int32 i = 0; i < 300; ++i) T = UJamFollowCamera::StepThirdPerson(C, St, JamA40Test::Frame(L, W, R, Pos, Yaw));
+		return T;
+	};
+	struct FScene { const TCHAR* Name; FVector2D Pos; float Yaw; };
+	const FScene Scenes[] = {
+		{ TEXT("side board, 3 m out, facing it"), FVector2D(5, 19.5), 90.f },
+		{ TEXT("side board, 1.5 m out, facing it"), FVector2D(-12, 21.0), 90.f },
+		{ TEXT("corner, facing it"), FVector2D(40.5, 18.0), 45.f },
+		{ TEXT("corner, facing the end board"), FVector2D(42.5, 15.0), 0.f },
+		{ TEXT("side board, facing it at 45 degrees"), FVector2D(10, 20.0), 45.f },
+	};
+	for (const FScene& S : Scenes)
+	{
+		const FTransform A = Settle(Off, S.Pos, S.Yaw), B = Settle(On, S.Pos, S.Yaw);
+		const float IceA = UJamFollowCamera::IceShare(A, Fov, Aspect, Rink, 32, 18), IceB = UJamFollowCamera::IceShare(B, Fov, Aspect, Rink, 32, 18);
+		const FVector Chest(S.Pos.X * 100.0, S.Pos.Y * 100.0, 100.0);
+		const FVector2D Fr = UJamFollowCamera::FrameFraction(B, Fov, Aspect, Chest);
+		AddInfo(FString::Printf(TEXT("JAMSCREEN corner %s: ice share %.0f %% -> %.0f %% of the frame; height %.2f -> %.2f m, pitch %.1f -> %.1f deg, yaw %.1f -> %.1f; chest at (%.2f, %.2f)"),
+			S.Name, IceA * 100.f, IceB * 100.f, A.GetLocation().Z / 100.0, B.GetLocation().Z / 100.0, A.Rotator().Pitch, B.Rotator().Pitch, A.Rotator().Yaw, B.Rotator().Yaw, Fr.X, Fr.Y));
+		TestTrue(FString::Printf(TEXT("%s: at least 10 points more of the frame is ice"), S.Name), IceB >= IceA + 0.10f);
+		TestEqual(FString::Printf(TEXT("%s: the yaw is the yaw of before"), S.Name), (float)B.Rotator().Yaw, (float)A.Rotator().Yaw, 0.01f);
+		TestTrue(FString::Printf(TEXT("%s: the chest stays in the middle third"), S.Name), FMath::Abs(Fr.X) <= 1.f / 3.f + 1e-3f && FMath::Abs(Fr.Y) <= 1.f / 3.f + 1e-3f);
+	}
+	// Open ice and along the boards: the pose of before, to the bit.
+	for (const FScene& S : { FScene{ TEXT("centre ice"), FVector2D(0, 0), 30.f }, FScene{ TEXT("along the side board"), FVector2D(0, 20.5), 0.f }, FScene{ TEXT("leaving the corner"), FVector2D(40.5, 18.0), -135.f } })
+	{
+		const FTransform A = Settle(Off, S.Pos, S.Yaw), B = Settle(On, S.Pos, S.Yaw);
+		TestTrue(FString::Printf(TEXT("%s: untouched"), S.Name), A.Equals(B, 1e-4));
+	}
+	// Eased: a skater runs at the side board at 9 m/s and stops 1 m from it; no frame moves the camera's height by more than 12 cm or its pitch by more than 1.2 degrees.
+	{
+		FJamCameraFilter St;
+		FTransform Prev;
+		float MaxDz = 0.f, MaxDp = 0.f, EndZ = 0.f;
+		for (int32 i = 0; i < 360; ++i)
+		{
+			const double Y = FMath::Min(8.0 + i * 0.15, 21.5);
+			const FTransform T = UJamFollowCamera::StepThirdPerson(On, St, JamA40Test::Frame(L, W, R, FVector2D(0, Y), 90.f));
+			if (i > 0)
+			{
+				MaxDz = FMath::Max(MaxDz, FMath::Abs((float)(T.GetLocation().Z - Prev.GetLocation().Z)) / 100.f);
+				MaxDp = FMath::Max(MaxDp, FMath::Abs((float)(T.Rotator().Pitch - Prev.Rotator().Pitch)));
+			}
+			Prev = T;
+			EndZ = (float)T.GetLocation().Z / 100.f;
+		}
+		AddInfo(FString::Printf(TEXT("JAMSCREEN corner ease: running at the board at 9 m/s: largest step %.3f m of height, %.2f deg of pitch per frame; settles at %.2f m"), MaxDz, MaxDp, EndZ));
+		TestTrue(TEXT("no snap in height"), MaxDz <= 0.12f);
+		TestTrue(TEXT("no snap in pitch"), MaxDp <= 1.2f);
+		TestEqual(TEXT("settles at the height plus the lift"), EndZ, On.HeightM + On.CornerLiftM, 0.02f);
+	}
 	return true;
 }
 

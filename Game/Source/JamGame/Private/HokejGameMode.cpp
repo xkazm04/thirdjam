@@ -35,8 +35,29 @@
 #include "Misc/Paths.h"
 #include "HAL/PlatformMisc.h"
 #include "UnrealClient.h"
+#include "Engine/LevelStreaming.h"
+#include "Misc/App.h"
+#include "Misc/PackageName.h"
 
 DEFINE_LOG_CATEGORY(LogHokej);
+
+// Lane A111 (track U1, the screen; docs/experiments/SCREEN.md): the fade-in that waits for the light rig.
+static TAutoConsoleVariable<int32> CVarJamScreenLightHold(TEXT("jam.screen.LightHold"), 2,
+	TEXT("A new match holds the picture black until its light rig's level is visible (at most 2 s), then fades in: 2 (default) also finishes the rig's load before the first frame, 1 the hold alone, 0 off (the match shows at once, lit or not)."), ECVF_Default);
+static TAutoConsoleVariable<int32> CVarJamScreenStillEvery(TEXT("jam.screen.StillEvery"), 0,
+	TEXT("Proof: N > 0 takes a still (u1-<tier>-f<frame>.png, with the HUD) every N sim frames; two runs of one cut and seed give stills of the same frames."), ECVF_Default);
+static TAutoConsoleVariable<float> CVarJamScreenFadeSeconds(TEXT("jam.screen.FadeSeconds"), AHokejGameMode::LightFadeSeconds,
+	TEXT("Seconds of the fade-in after the light hold (0 = a cut)."), ECVF_Default);
+static TAutoConsoleVariable<int32> CVarJamScreenHoldStill(TEXT("jam.screen.HoldStill"), 0,
+	TEXT("Proof: 1 takes a still (u1-first-<tier>.png, with the HUD) two ticks after the light hold ends, or at the second tick of the match when the hold is off."), ECVF_Default);
+// jam.screen.Still <name>: a still of this game's own viewport with the HUD, into the project's screenshot folder (no window grab, no cursor).
+static FAutoConsoleCommand GJamScreenStill(TEXT("jam.screen.Still"), TEXT("Take a still with the HUD: jam.screen.Still <name> (written as <name>.png to the screenshot folder)."),
+	FConsoleCommandWithArgsDelegate::CreateLambda([](const TArray<FString>& Args)
+	{
+		const FString Name = Args.Num() ? Args[0] : FString(TEXT("u1-still"));
+		FScreenshotRequest::RequestScreenshot(Name + TEXT(".png"), true, false);
+		UE_LOG(LogHokej, Log, TEXT("JAMSCREEN still requested: %s.png"), *Name);
+	}));
 
 static TAutoConsoleVariable<FString> CVarJamCut(TEXT("jam.Cut"), TEXT("hockey.regular"),
 	TEXT("Cartridge the Hokej game mode loads at start (name in Content/Cartridges or a path). The -cut=<name> launch argument wins."));
@@ -432,6 +453,102 @@ void AHokejGameMode::BuildMatch()
 	Puck->ApplyRender(Sim->GetPuck(), 1.f);
 
 	if (APlayerController* PC = World->GetFirstPlayerController()) PossessHuman(PC);
+	BeginLightHold();   // lane A111: the picture waits for the light rig
+}
+
+// Lane A111: true when the rig of the cartridge's tier is a visible streamed level of this world (or the tier has no rig: nothing to wait for).
+bool AHokejGameMode::IsLightRigVisible() const
+{
+	const UWorld* World = GetWorld();
+	if (!World || !Cartridge) return true;
+	FString Pkg = ULookTierSwitcher::GetRigMapPath(Cartridge->Game.Look.Tier);
+	if (Pkg.IsEmpty()) return true;
+	int32 Dot = INDEX_NONE;
+	if (Pkg.FindChar(TEXT('.'), Dot)) Pkg.LeftInline(Dot);
+	const FString Short = FPackageName::GetShortName(Pkg);   // "LR_P3_Clay"; a streamed instance is named "<path>/LR_P3_Clay_LevelInstance_<n>" (PIE adds a prefix)
+	for (const ULevelStreaming* SL : World->GetStreamingLevels())
+	{
+		if (!SL || SL->GetIsRequestingUnloadAndRemoval() || !SL->ShouldBeVisible()) continue;
+		if (SL->GetWorldAssetPackageName().Contains(Short) && SL->GetLoadedLevel() && SL->IsLevelVisible()) return true;
+	}
+	return false;
+}
+
+void AHokejGameMode::BeginLightHold()
+{
+	bLightHold = false;
+	LightStillIn = -1;
+	const int32 Mode = CVarJamScreenLightHold.GetValueOnGameThread();
+	const bool bOn = Mode != 0;
+	LastStillBucket = -1;
+	if (!FApp::CanEverRender() || IsRunningDedicatedServer()) return;   // headless: no picture to hold
+	if (!bOn || IsLightRigVisible())
+	{
+		if (CVarJamScreenHoldStill.GetValueOnGameThread() != 0) LightStillIn = 2;
+		UE_LOG(LogHokej, Log, TEXT("JAMSCREEN light hold not started (%s)"), bOn ? TEXT("the rig is already visible") : TEXT("jam.screen.LightHold 0"));
+		return;
+	}
+	bLightHold = true;
+	LightHoldStart = FPlatformTime::Seconds();
+	LightHoldTicks = LightVisibleTicks = 0;
+	double FlushMs = -1.0;
+	if (Mode >= 2)
+	{
+		// The rig's level, asked for a moment ago by ULookTierSwitcher::SetTier, is loaded and made visible now instead of over the next seconds of frames.
+		const double T0 = FPlatformTime::Seconds();
+		GetWorld()->FlushLevelStreaming(EFlushLevelStreamingType::Full);
+		FlushMs = (FPlatformTime::Seconds() - T0) * 1000.0;
+	}
+	UE_LOG(LogHokej, Log, TEXT("JAMSCREEN light hold started: tier %s, rig not visible yet (bounded at %.1f s); blocking load %.0f ms (-1 = none), rig visible after it=%d"), *Cartridge->Game.Look.Tier,
+		LightHoldMaxSeconds, FlushMs, IsLightRigVisible() ? 1 : 0);
+	TickLightHold();
+}
+
+void AHokejGameMode::TickLightHold()
+{
+	UWorld* World = GetWorld();
+	if (LightStillIn >= 0 && !bLightHold)
+	{
+		if (LightStillIn-- == 0 && Cartridge)
+		{
+			const FString Name = FString::Printf(TEXT("u1-first-%s.png"), *Cartridge->Game.Look.Tier);
+			FScreenshotRequest::RequestScreenshot(Name, true, false);
+			UE_LOG(LogHokej, Log, TEXT("JAMSCREEN first visible frame still requested: %s (sim frame %lld, rig visible=%d)"), *Name, Sim ? Sim->GetFrame() : -1, IsLightRigVisible() ? 1 : 0);
+		}
+	}
+	if (const int32 Every = CVarJamScreenStillEvery.GetValueOnGameThread(); Every > 0 && Sim && Cartridge && !bLightHold)
+	{
+		const int64 Bucket = Sim->GetFrame() / Every;
+		if (Bucket != LastStillBucket && Bucket > 0)
+		{
+			LastStillBucket = Bucket;
+			FScreenshotRequest::RequestScreenshot(FString::Printf(TEXT("u1-%s-f%05lld.png"), *Cartridge->Game.Look.Tier, Bucket * Every), true, false);
+		}
+	}
+	if (!bLightHold || !World) return;
+	APlayerController* PC = World->GetFirstPlayerController();
+	APlayerCameraManager* PCM = PC ? PC->PlayerCameraManager.Get() : nullptr;
+	const bool bVisible = IsLightRigVisible();
+	LightVisibleTicks = bVisible ? LightVisibleTicks + 1 : 0;
+	const double Held = FPlatformTime::Seconds() - LightHoldStart;
+	if (!LightHoldDone(bVisible, LightVisibleTicks, Held))
+	{
+		++LightHoldTicks;
+		if (PCM) PCM->SetManualCameraFade(1.f, FLinearColor::Black, false);
+		if (Hud) Hud->SetRenderOpacity(0.f);
+		return;
+	}
+	bLightHold = false;
+	const float Fade = FMath::Max(0.f, CVarJamScreenFadeSeconds.GetValueOnGameThread());
+	if (PCM)
+	{
+		if (Fade > 0.f) PCM->StartCameraFade(1.f, 0.f, Fade, FLinearColor::Black, false, false);
+		else PCM->StopCameraFade();
+	}
+	if (Hud) Hud->SetRenderOpacity(1.f);
+	if (CVarJamScreenHoldStill.GetValueOnGameThread() != 0) LightStillIn = 2;
+	UE_LOG(LogHokej, Log, TEXT("JAMSCREEN light hold released: held %.2f s over %d ticks, rig visible=%d (%s), sim frame %lld, fade %.2f s"), Held, LightHoldTicks, bVisible ? 1 : 0,
+		bVisible ? TEXT("the rig reported loaded") : TEXT("the 2 s bound"), Sim ? Sim->GetFrame() : -1, Fade);
 }
 
 AJamSkater* AHokejGameMode::GetHumanSkater() const
@@ -1273,6 +1390,7 @@ void AHokejGameMode::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 	if (!bBuilt || !Sim) return;
+	TickLightHold();   // lane A111: presentation only (the camera's fade); the sim below steps as ever
 	Accumulator += DeltaSeconds;
 	int32 N = 0;
 	while (Accumulator >= UJamSim::DT && N < MaxStepsPerFrame)

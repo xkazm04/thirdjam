@@ -8,11 +8,14 @@ const L = fs.readFileSync(path.join(dir, 'csv', f), 'utf8').split(/\r?\n/).filte
 const rows = L.slice(1).map(split).filter(c => c.length >= h.length - 1 && c[0] !== h[0]); const ix = n => h.indexOf(n);
 let li = 0; rows.forEach((r, i) => { if (+r[ix('GameThreadTime')] > +rows[li][ix('GameThreadTime')]) li = i; });
 const log = fs.readFileSync(path.join(dir, 'game.log'), 'utf8');
-const start = Number((log.match(/JAMPRELOAD sync \/Game\/Maps\/Rink frame=(\d+)/) || [])[1]);
+// The match start: the Rink map's own sync load (before lane A114), else the "JAMPRELOAD match start ... frame=" line (A114: the map is preloaded).
+const start = Number((log.match(/JAMPRELOAD sync \/Game\/Maps\/Rink frame=(\d+)/) || log.match(/JAMPRELOAD match start:.* frame=(\d+)/) || [])[1]);
+let n = 0, total = 0;
 const seen = new Set();
 for (const m of log.matchAll(/JAMPRELOAD sync (\S+) frame=(\d+)/g)) {
-  const fr = Number(m[2]); if (fr <= start + 60 || seen.has(m[1])) continue; seen.add(m[1]);
+  const fr = Number(m[2]); if (fr <= start + 60) continue; total++; if (seen.has(m[1])) continue; seen.add(m[1]);
   const at = li + (fr - start); const win = [-1, 0, 1].map(d => rows[at + d]).filter(Boolean);
   const worst = win.reduce((a, r) => (+r[ix('GameThreadTime')] > +a[ix('GameThreadTime')] ? r : a), win[0]);
-  console.log(`${m[1]} frame=${fr} row=${at} frame_ms=${(+worst[ix('FrameTime')]).toFixed(1)} game_ms=${(+worst[ix('GameThreadTime')]).toFixed(1)}`);
+  n++; console.log(`${m[1]} frame=${fr} row=${at} frame_ms=${(+worst[ix('FrameTime')]).toFixed(1)} game_ms=${(+worst[ix('GameThreadTime')]).toFixed(1)}`);
 }
+console.log(`sync loads after the first second: ${total} (${n} packages; match start frame ${start})`);

@@ -34,6 +34,17 @@
 static constexpr float AbilitySlotW = 380.f;
 
 int32 UJamHudWidget::FaceoffsThisSession = 0;
+bool UJamHudWidget::bControlsHintSpent = false;
+
+// Lane A111 (track U1, the screen; docs/experiments/SCREEN.md). Each rule has its neutral value: the screen before this lane.
+static TAutoConsoleVariable<int32> CVarJamHudYouMarker(TEXT("jam.hud.YouMarker"), 1,
+	TEXT("The yellow chevron over the human's helmet for the whole match, the YOU tag above it: 1 on (default), 0 lane A42's rule (chevron past 20 m only, the tag in the ring)."), ECVF_Default);
+static TAutoConsoleVariable<int32> CVarJamHudHintEveryMatch(TEXT("jam.hud.HintEveryMatch"), 0,
+	TEXT("The controls strip: 0 the first match of a session only, until its 8 s run out or the first shot (default); 1 in every match."), ECVF_Default);
+static TAutoConsoleVariable<int32> CVarJamHudDockCommentary(TEXT("jam.hud.DockCommentary"), 1,
+	TEXT("The commentator's strip: 1 docked on the bottom edge (default), 0 at 110 px over it (the earlier place)."), ECVF_Default);
+static TAutoConsoleVariable<int32> CVarJamHudLabelPlates(TEXT("jam.hud.LabelPlates"), 1,
+	TEXT("The distance labels: 1 on a dark plate and the net badges hidden during the goal pause (default), 0 bare outlined type, always drawn."), ECVF_Default);
 
 // Lane A74 (R-0038): the off-screen puck marker, 0 = off, 1 = on (default).
 // Lane A76: 1 = HUD pass 3 (default), 0 = the A74 layout, for the before column of the proof (same package).
@@ -131,6 +142,9 @@ namespace
 		return I;
 	}
 
+	// Lane A111: jam.ui.hintreset makes the controls strip due again (the proof's "first match of a session" without a new process).
+	FAutoConsoleCommand GHintReset(TEXT("jam.ui.hintreset"), TEXT("The controls hint counts as not yet shown this session."),
+		FConsoleCommandDelegate::CreateLambda([]() { UJamHudWidget::SetControlsHintSpent(false); }));
 	// QA previews for the proof shots (jam.ui.faceoff <frames>, jam.ui.effects icon:label,icon:label).
 	FAutoConsoleCommand GPreviewFaceoff(TEXT("jam.ui.faceoff"), TEXT("Preview the faceoff countdown on every HUD: jam.ui.faceoff <frames>"),
 		FConsoleCommandWithArgsDelegate::CreateLambda([](const TArray<FString>& Args)
@@ -285,6 +299,16 @@ void UJamHudWidget::BuildTree()
 	// ---- Far-net marker: a take-yellow diamond with an ink edge and the distance in outlined type.
 	NetDiamond = MakeDiamond(T, TEXT("NetDiamond"), S::Yellow(), 2.f);
 	Place(Root, NetDiamond, FVector2D(0, 0), FVector2D(0.5, 0.5), FVector2D(0, 0), FVector2D(22, 22));
+	// Lane A111: each distance label stands on a dark plate (added before its label, so it draws under it); UpdateLabelPlates sizes and places it.
+	auto MakeLabelPlate = [&](const TCHAR* Name) -> UBorder*
+	{
+		UBorder* B = T->ConstructWidget<UBorder>(UBorder::StaticClass(), Name);
+		B->SetBrush(S::Rounded(FLinearColor(0.f, 0.f, 0.f, LabelPlateOpacity), 6.f));
+		B->SetVisibility(ESlateVisibility::Collapsed);
+		Place(Root, B, FVector2D(0, 0), FVector2D(0.5, 0.5), FVector2D(0, 0), FVector2D(40, 20));
+		return B;
+	};
+	NetPlate = MakeLabelPlate(TEXT("NetPlate"));
 	NetText = MakeText(T, TEXT("NetText"), S::LabelFont(true), S::Paper());
 	Place(Root, NetText, FVector2D(0, 0), FVector2D(0.5, 0), FVector2D(0, 0));
 	NetArrow = MakeChevron(T, TEXT("NetArrow"), S::Yellow(), 22.f);
@@ -294,7 +318,9 @@ void UJamHudWidget::BuildTree()
 	// ---- Own-net marker: smaller and muted, so it never competes with the far-net one.
 	OwnDiamond = MakeDiamond(T, TEXT("OwnDiamond"), S::Muted(), 1.5f);
 	Place(Root, OwnDiamond, FVector2D(0, 0), FVector2D(0.5, 0.5), FVector2D(0, 0), FVector2D(12, 12));
-	OwnText = MakeText(T, TEXT("OwnText"), S::CaptionFont(true), S::Muted());
+	OwnPlate = MakeLabelPlate(TEXT("OwnPlate"));
+	// Lane A111: 16 px bold paper on its plate (was 14 px medium in the muted grey: B's play-through could not read it on clay); the diamond stays muted.
+	OwnText = MakeText(T, TEXT("OwnText"), S::Font(S::Body - 2, FName("Bold"), 20, true), S::Paper());
 	Place(Root, OwnText, FVector2D(0, 0), FVector2D(0.5, 0), FVector2D(0, 0));
 	OwnArrow = MakeChevron(T, TEXT("OwnArrow"), S::Muted(), 16.f);
 	OwnArrow->SetVisibility(ESlateVisibility::Collapsed);
@@ -304,12 +330,14 @@ void UJamHudWidget::BuildTree()
 	PuckArrow = MakeChevron(T, TEXT("PuckArrow"), FLinearColor::White, 28.f);
 	PuckArrow->SetVisibility(ESlateVisibility::Collapsed);
 	Place(Root, PuckArrow, FVector2D(0, 0), FVector2D(0.5, 0.5), FVector2D(0, 0));
+	PuckPlate = MakeLabelPlate(TEXT("PuckPlate"));
 	PuckText = MakeText(T, TEXT("PuckText"), S::LabelFont(true), S::Paper());
 	PuckText->SetVisibility(ESlateVisibility::Collapsed);
 	Place(Root, PuckText, FVector2D(0, 0), FVector2D(0.5, 0.5), FVector2D(0, 0));
 
 	// ---- Lane A42: the chevron over the human's head when the ring has faded (past 24 m), and the YOU tag above it.
-	YouChevron = MakeChevron(T, TEXT("YouChevron"), S::Blue(), 26.f);
+	// Lane A111: the chevron is the human's marker for the whole match (take-yellow, YouMarkerSizePx); UpdateYours colours it.
+	YouChevron = MakeChevron(T, TEXT("YouChevron"), S::Yellow(), YouMarkerSizePx);
 	YouChevron->SetVisibility(ESlateVisibility::Collapsed);
 	Place(Root, YouChevron, FVector2D(0, 0), FVector2D(0.5, 1), FVector2D(0, 0));
 	YouTag = S::Plate(T, S::Rounded(S::Blue(), 8.f, FLinearColor(0, 0, 0, 0.9f), 2.f), FMargin(12, 3, 12, 4));
@@ -347,7 +375,9 @@ void UJamHudWidget::BuildTree()
 	// short of the right edge (the radar frame, 216 px, and a 16 px gap) and the type is 2 pt smaller with 4-space gaps, so the line fits that width
 	// at 1920 x 1080 and 1280 x 720 (16:9 keeps the same layout units).
 	ControlsText = MakeText(T, TEXT("ControlsText"), S::Font(S::Body - 2, FName("Bold"), 20), S::Paper());
-	ControlsText->SetText(FText::FromString(TEXT("SKATE  WASD    AIM  MOUSE    SHOOT  HOLD LMB    CHECK  RMB    CROSS-CHECK  MMB    SPIN  E    SPRINT  SHIFT    POKE  SPACE    PASS  Q    PAUSE  ESC")));   // lane A49 (UJamInputMap::BindingTableText has the full table); lane A51: spin E; lane A84: pass Q (F, the ability, is on its own slot)
+	// Lane A111 (REVIEW-1 item 8, B-to-A-0038 fault 6): seven verbs with the brake among them (was ten and no brake); the pause card keeps the full table
+	// (UJamInputMap::BindingTableText), the ability has its own slot, ESC its own tag.
+	ControlsText->SetText(FText::FromString(ControlsHintText()));
 	ControlsText->SetJustification(ETextJustify::Center);
 	ControlsStrip->SetContent(ControlsText);
 	UCanvasPanelSlot* StripSlot = Root->AddChildToCanvas(ControlsStrip);
@@ -588,7 +618,10 @@ void UJamHudWidget::RefreshFromFrame(const FJamPresentationFrame& F)
 	UpdateContactLine(F);   // lane A101
 
 	// Controls strip: full for 8 s, fading over the last 2 s of the hint window.
-	const bool bHint = ShowControlsHint(F);
+	// Lane A111: the first match of a session only; spent once the window has run out in play or the human has shot (HandleJamEvent).
+	const bool bHint = ShowControlsHintLive(F, bControlsHintSpent, CVarJamHudHintEveryMatch.GetValueOnGameThread() != 0);
+	if (F.Phase == EJamPhase::Play && F.SimFrame >= ControlsHintFrames) bControlsHintSpent = true;
+	bHintThisFrame = bHint;
 	ControlsStrip->SetVisibility(bHint ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	ControlsText->SetVisibility(bHint ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	if (bHint)
@@ -645,8 +678,32 @@ void UJamHudWidget::RefreshFromFrame(const FJamPresentationFrame& F)
 	{ TRACE_CPUPROFILER_EVENT_SCOPE(JamHud_Radar); Radar->SetFrame(F); }
 	{ TRACE_CPUPROFILER_EVENT_SCOPE(JamHud_NetMarkers); UpdateMarker(F); UpdateOwnMarker(F); }
 	{ TRACE_CPUPROFILER_EVENT_SCOPE(JamHud_Yours); UpdateYours(F); }
-	{ TRACE_CPUPROFILER_EVENT_SCOPE(JamHud_PuckMarker); UpdatePuckMarker(F, bCount || Frames > 0 || F.SimFrame < PuckMarkerCardFrames); ResolveEdgeSlots(); }
+	{ TRACE_CPUPROFILER_EVENT_SCOPE(JamHud_PuckMarker); UpdatePuckMarker(F, bCount || Frames > 0 || F.SimFrame < PuckMarkerCardFrames); ResolveEdgeSlots(); UpdateLabelPlates(); }
 	{ TRACE_CPUPROFILER_EVENT_SCOPE(JamHud_Commentary); UpdateCommentary(F); }
+}
+
+// Lane A111: the dark plate behind each distance label. The label's own slot stays the anchor every other rule moves (the edge slots, the clamp); the plate
+// copies its place one step later, sized by the label's desired size of the last layout pass.
+void UJamHudWidget::UpdateLabelPlates()
+{
+	const bool bOn = CVarJamHudLabelPlates.GetValueOnGameThread() != 0;
+	auto Follow = [bOn](UBorder* Plate, UTextBlock* Text)
+	{
+		if (!Plate) return;
+		UCanvasPanelSlot* TS = Text ? Cast<UCanvasPanelSlot>(Text->Slot) : nullptr;
+		UCanvasPanelSlot* PS = Cast<UCanvasPanelSlot>(Plate->Slot);
+		const FVector2D Sz = Text ? Text->GetDesiredSize() : FVector2D::ZeroVector;
+		const bool bShow = bOn && TS && PS && Text->GetVisibility() != ESlateVisibility::Collapsed && Text->GetRenderOpacity() > 0.f && Sz.X > 1.f && !Text->GetText().IsEmpty();
+		Plate->SetVisibility(bShow ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+		if (!bShow) return;
+		PS->SetAlignment(TS->GetAlignment());
+		PS->SetPosition(LabelPlatePos(TS->GetPosition(), TS->GetAlignment()));
+		PS->SetSize(Sz + FVector2D(2.f * LabelPlatePadX, 2.f * LabelPlatePadY));
+		Plate->SetRenderOpacity(Text->GetRenderOpacity());
+	};
+	Follow(NetPlate, NetText);
+	Follow(OwnPlate, OwnText);
+	Follow(PuckPlate, PuckText);
 }
 
 void UJamHudWidget::UpdatePuckMarker(const FJamPresentationFrame& F, bool bCovered)
@@ -835,7 +892,10 @@ void UJamHudWidget::UpdateCommentary(const FJamPresentationFrame& F)
 		const FVector2D VS = UWidgetLayoutLibrary::GetViewportSize(this);
 		const float VW = VS.X / FMath::Max(UWidgetLayoutLibrary::GetViewportScale(this), 0.01f);
 		CommentaryText->SetWrapTextAt(FMath::Clamp(VW - 600.f, 560.f, 880.f));
-		if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(CommentaryStrip->Slot)) CS->SetPosition(FVector2D(0, ShowControlsHint(F) ? -150.f : -110.f));
+		// Lane A111: docked on the bottom edge (it floated 110 px up, over the play); over the controls strip and the CALL READY line while they show.
+		const bool bCallLine = CallText && CallText->GetVisibility() != ESlateVisibility::Collapsed;
+		if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(CommentaryStrip->Slot))
+			CS->SetPosition(FVector2D(0, CommentaryStripY(CVarJamHudDockCommentary.GetValueOnGameThread() != 0, bHintThisFrame, bCallLine)));
 	}
 }
 
@@ -860,10 +920,12 @@ void UJamHudWidget::NativeDestruct()
 
 void UJamHudWidget::HandleJamEvent(FName Event, const FJamEventPayload& Payload)
 {
-	if (Event != JamEvents::Faceoff) return;
+	if (Event != JamEvents::Faceoff && Event != JamEvents::Shot) return;
 	const UJamPresentation* P = UJamPresentation::Get(this);
 	if (!P || !P->HasFrame()) return;
 	const FJamPresentationFrame& F = P->GetFrame();
+	// Lane A111: the human's first shot of the session ends the controls hint (he has found the button).
+	if (Event == JamEvents::Shot) { if (Payload.Who == F.HumanIndex) bControlsHintSpent = true; return; }
 	static const FName KindDrop(TEXT("drop")), KindWon(TEXT("won"));
 	if (Payload.Kind == KindDrop)
 	{
@@ -938,19 +1000,27 @@ void UJamHudWidget::UpdateYours(const FJamPresentationFrame& F)
 	// Over the head: the chevron (team colour) past the fade, the YOU tag the first 5 s and 2 s after every drop.
 	FVector2D Head;
 	// Just over the helmet (the toy figure's head socket is at 1.65 m; the bark bubbles sit higher, at 2.35 m, so the two never meet).
-	const bool bHead = bOn && PC && UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(PC, UJamSim::ToWorld(Me.PosM, 1.9), Head, false);
-	const float ChevronAlpha = 1.f - RingAlpha;
+	const bool bHead = bOn && PC && UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(PC, UJamSim::ToWorld(Me.PosM, YouMarkerHeadM), Head, false);
+	// Lane A111 (B-to-A-0038 fault 7): the chevron is the human's marker for the whole match, in the HUD's yellow; jam.hud.YouMarker 0 = A42's fade rule.
+	const bool bMarker = CVarJamHudYouMarker.GetValueOnGameThread() != 0;
+	const float ChevronAlpha = YouMarkerAlpha(bMarker, RingAlpha);
 	// A48's storyboard (finding 2): a point 1.9 m over the helmet projects onto whoever stands behind the human at the match camera. While the
 	// ring shows, the tag sits inside the ring's top arc (the human's own feet, nobody else's); only past the fade does it go over the head.
-	const bool bTagAtRing = RingAlpha > 0.f;
+	// Lane A111: with the marker on, the tag rides above the chevron (one sign, "YOU" over an arrow at the helmet) and the ring keeps the feet clear.
+	const bool bTagAtRing = !bMarker && RingAlpha > 0.f;
 	if (bHead && ChevronAlpha > 0.f)
 	{
 		YouChevron->SetRenderOpacity(ChevronAlpha);
 		YouChevron->SetVisibility(ESlateVisibility::HitTestInvisible);
-		if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(YouChevron->Slot)) CS->SetPosition(Head + FVector2D(0, -6));
-		// Two bars in the team colour (the maker built them blue; retint every frame costs nothing measurable).
-		if (USizeBox* Box = Cast<USizeBox>(YouChevron)) if (UOverlay* O = Box->GetChildAt(0) ? Cast<UOverlay>(Box->GetChildAt(0)) : nullptr)
-			for (int32 i = 0; i < O->GetChildrenCount(); ++i) if (UBorder* Bar = Cast<UBorder>(O->GetChildAt(i))) Bar->SetBrush(S::Rounded(Team, 2.5f, FLinearColor(0, 0, 0, 0.9f), 1.5f));
+		if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(YouChevron->Slot)) CS->SetPosition(Head + FVector2D(0, -YouMarkerGapPx));
+		// Two bars: take-yellow with a 2 px ink edge as the marker, the team colour under A42's rule. Re-built only when the colour changes (it is on every frame now).
+		const FLinearColor Want = bMarker ? S::Yellow() : Team;
+		if (!Want.Equals(YouChevronColour))
+		{
+			YouChevronColour = Want;
+			if (USizeBox* Box = Cast<USizeBox>(YouChevron)) if (UOverlay* O = Box->GetChildAt(0) ? Cast<UOverlay>(Box->GetChildAt(0)) : nullptr)
+				for (int32 i = 0; i < O->GetChildrenCount(); ++i) if (UBorder* Bar = Cast<UBorder>(O->GetChildAt(i))) Bar->SetBrush(S::Rounded(Want, 4.8f, FLinearColor(0, 0, 0, 0.95f), bMarker ? 2.5f : 1.5f));
+		}
 	}
 	else Hide(YouChevron);
 	if ((bTagAtRing || bHead) && ShowYouTag(F.SimFrame, LastDropFrame))
@@ -961,7 +1031,7 @@ void UJamHudWidget::UpdateYours(const FJamPresentationFrame& F)
 		{
 			// Inside the ring's top arc: the tag's top edge 6 px under the arc (alignment 0.5, 0), else over the helmet (alignment 0.5, 1).
 			CS->SetAlignment(FVector2D(0.5f, bTagAtRing ? 0.f : 1.f));
-			CS->SetPosition(bTagAtRing ? Centre + FVector2D(0, -Size.Y * 0.5f + 6.f) : Head + FVector2D(0, ChevronAlpha > 0.f ? -34.f : -8.f));
+			CS->SetPosition(bTagAtRing ? Centre + FVector2D(0, -Size.Y * 0.5f + 6.f) : Head + FVector2D(0, ChevronAlpha > 0.f ? -(YouMarkerGapPx + YouMarkerSizePx + 4.f) : -8.f));
 		}
 	}
 	else Hide(YouTag);
@@ -1067,6 +1137,11 @@ void UJamHudWidget::UpdateMarker(const FJamPresentationFrame& F)
 		TS->SetPosition(Marker.ScreenPos + FVector2D(bLeft ? -24.f : 24.f, 0));
 	}
 	PlaceMarkerArrow(NetArrow, Sp, Marker.ScreenPos, bBehind, VW);
+	// Lane A111 (B-to-A-0038 fault 6: a label sat over the goal sparks): no far-net badge during the goal pause.
+	const bool bBadge = ShowNetBadges(F.Phase, CVarJamHudLabelPlates.GetValueOnGameThread() != 0);
+	NetDiamond->SetVisibility(bBadge ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+	NetText->SetVisibility(bBadge ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+	if (!bBadge && NetArrow) NetArrow->SetVisibility(ESlateVisibility::Collapsed);
 }
 
 void UJamHudWidget::ShowToast(const FString& Text)
@@ -1159,4 +1234,8 @@ void UJamHudWidget::UpdateOwnMarker(const FJamPresentationFrame& F)
 	OwnText->SetText(FText::FromString(OwnMarker.Text));
 	if (UCanvasPanelSlot* TS = Cast<UCanvasPanelSlot>(OwnText->Slot)) { TS->SetPosition(OwnMarker.ScreenPos + FVector2D(0, 10)); }
 	PlaceMarkerArrow(OwnArrow, Sp, OwnMarker.ScreenPos, bBehind, VW);
+	const bool bBadge = ShowNetBadges(F.Phase, CVarJamHudLabelPlates.GetValueOnGameThread() != 0);   // lane A111: as the far net's
+	OwnDiamond->SetVisibility(bBadge ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+	OwnText->SetVisibility(bBadge ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+	if (!bBadge && OwnArrow) OwnArrow->SetVisibility(ESlateVisibility::Collapsed);
 }
