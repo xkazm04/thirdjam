@@ -736,6 +736,256 @@ bool FJamCameraCornerLift::RunTest(const FString&)
 	return true;
 }
 
+// ---- lane A135 (track U1, evolution 3): the camera never loses the player. A modelled skater works the boards of both rinks for 6,000 frames each (runs at
+// the glass, turns his back to it, stops, spins, goes into the corners, is knocked sideways, is put back on a dot); with FJamCameraSettings::KeepHumanFrac the
+// chest is inside the frame's middle third on every frame, the camera stays inside the boards' inset, the yaw is the yaw of before wherever the rig of before
+// held him (and in every settled pose), no frame snaps, and open ice is the rig of before to the bit. Pure StepThirdPerson + FrameFraction, no world.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamCameraKeepsHuman, "Jam.Camera.KeepsHuman", EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+bool FJamCameraKeepsHuman::RunTest(const FString&)
+{
+	const float Fov = 70.f, Aspect = 16.f / 9.f;
+	TestEqual(TEXT("the settings default is off (the tests' rig, the neutral value)"), FJamCameraSettings().KeepHumanFrac, 0.f);
+	FJamCameraSettings Off;
+	Off.CornerLiftM = 3.f;   // the game camera of before this lane: the corner lift on
+	FJamCameraSettings On = Off;
+	On.KeepHumanFrac = 0.31f;   // the game's value (jam.camera.KeepHuman)
+
+	struct FRun
+	{
+		int32 Frames = 0, OutThird = 0, OutFrame = 0, OutsideBoards = 0;
+		float MaxX = 0.f, MaxY = 0.f, MaxStepCm = 0.f, MaxPitchStep = 0.f, MaxYawStep = 0.f, MaxH = 0.f;
+		TArray<float> Yaw;
+		TArray<bool> In30;   // the chest inside 0.31 of the half frame on this frame (the stage's own fraction)
+	};
+	// The same path for every camera: the skater reads nothing of the camera.
+	auto Skate = [&](float L, float W, float R, int32 Seed, const FJamCameraSettings& C) -> FRun
+	{
+		FRun Out;
+		FRandomStream Rng(Seed);
+		FJamCameraRink Rink; Rink.LengthM = L; Rink.WidthM = W; Rink.CornerRadiusM = R;
+		FJamCameraFilter St;
+		FVector2D Pos(-7.5, 0.0), Vel(0.0, 0.0), Target(0.0, 0.0);
+		float Yaw = 0.f, WantYaw = 0.f, WantSpeed = 0.f;
+		int32 Hold = 0, Mode = 0;
+		FTransform Prev;
+		bool bPrev = false;
+		for (int32 i = 0; i < 6000; ++i)
+		{
+			bool bTeleport = false;
+			if (i > 0 && i % 1500 == 0) { Pos = FVector2D(-7.5, 0.0); Vel = FVector2D::ZeroVector; Yaw = 0.f; Hold = 0; bTeleport = true; }   // a faceoff after a goal
+			if (--Hold <= 0)
+			{
+				Mode = Rng.RandRange(0, 9);
+				Hold = Rng.RandRange(30, 150);
+				const float Side = Rng.FRand() < 0.5f ? -1.f : 1.f;
+				if (Mode <= 2) Target = FVector2D(Rng.FRandRange(-L * 0.5f, L * 0.5f), Side * W * 0.5f);            // run at a side board
+				else if (Mode <= 4) Target = FVector2D(Side * L * 0.5f, (Rng.FRand() < 0.5f ? -1.f : 1.f) * W * 0.5f);   // into a corner
+				else if (Mode == 5) Target = FVector2D(Side * L * 0.5f, Rng.FRandRange(-W * 0.5f, W * 0.5f));           // at an end board
+				else if (Mode <= 7) Target = FVector2D(0.0, 0.0);                                                    // turn the back to the glass: face centre ice and stop
+				else if (Mode == 8) { WantYaw = Yaw + 180.f; }                                                          // spin where he stands
+				else { const float A = Rng.FRandRange(0.f, 2.f * PI); Vel += FVector2D(FMath::Cos(A), FMath::Sin(A)) * 6.0; }   // knocked sideways: he slides, facing as he was
+				WantSpeed = (Mode == 6 || Mode == 7 || Mode == 8) ? 0.f : Rng.FRandRange(5.f, 12.65f);
+			}
+			if (Mode != 8 && Mode != 9)
+			{
+				const FVector2D To = Target - Pos;
+				if (To.Size() > 0.5) WantYaw = FMath::RadiansToDegrees((float)FMath::Atan2(To.Y, To.X));
+			}
+			Yaw = FMath::UnwindDegrees(Yaw + FMath::Clamp(FMath::UnwindDegrees(WantYaw - Yaw), -4.77f, 4.77f));   // 5 rad/s
+			const FVector2D Fwd(FMath::Cos(FMath::DegreesToRadians(Yaw)), FMath::Sin(FMath::DegreesToRadians(Yaw)));
+			const FVector2D WantVel = Fwd * WantSpeed;
+			const FVector2D Dv = WantVel - Vel;
+			const double Step = WantSpeed > 0.f ? 12.0 / 60.0 : 20.0 / 60.0;   // accelerate at 12, stop at 20 m/s^2
+			Vel += Dv.Size() > Step ? Dv.GetSafeNormal() * Step : Dv;
+			Pos += Vel / 60.0;
+			const FVector2D In = UJamFollowCamera::NearestInsideBoards(Pos, Rink, 0.45f);   // the skater's own radius from the glass
+			if (!In.Equals(Pos, 1e-9)) { Vel *= 0.5; Pos = In; }
+			const FTransform T = UJamFollowCamera::StepThirdPerson(C, St, JamA40Test::Frame(L, W, R, Pos, Yaw));
+			const FVector2D Fr = UJamFollowCamera::FrameFraction(T, Fov, Aspect, FVector(Pos.X * 100.0, Pos.Y * 100.0, C.ChestM * 100.0));
+			++Out.Frames;
+			Out.MaxX = FMath::Max(Out.MaxX, FMath::Abs((float)Fr.X));
+			Out.MaxY = FMath::Max(Out.MaxY, FMath::Abs((float)Fr.Y));
+			if (FMath::Abs(Fr.X) > 1.f / 3.f || FMath::Abs(Fr.Y) > 1.f / 3.f) ++Out.OutThird;
+			if (FMath::Abs(Fr.X) > 1.f || FMath::Abs(Fr.Y) > 1.f) ++Out.OutFrame;
+			if (!UJamFollowCamera::IsInsideBoards(JamA40Test::Cam2D(T), Rink, C.BoardsMarginM - 1e-3f)) ++Out.OutsideBoards;
+			Out.MaxH = FMath::Max(Out.MaxH, (float)T.GetLocation().Z / 100.f);
+			if (bPrev && !bTeleport)
+			{
+				Out.MaxStepCm = FMath::Max(Out.MaxStepCm, (float)FVector::Dist(T.GetLocation(), Prev.GetLocation()));
+				Out.MaxPitchStep = FMath::Max(Out.MaxPitchStep, FMath::Abs((float)(T.Rotator().Pitch - Prev.Rotator().Pitch)));
+				Out.MaxYawStep = FMath::Max(Out.MaxYawStep, FMath::Abs(FMath::UnwindDegrees((float)(T.Rotator().Yaw - Prev.Rotator().Yaw))));
+			}
+			Prev = T; bPrev = true;
+			Out.Yaw.Add((float)T.Rotator().Yaw);
+			Out.In30.Add(FMath::Abs(Fr.X) <= 0.31f && FMath::Abs(Fr.Y) <= 0.31f);
+		}
+		return Out;
+	};
+	struct FRinkCase { const TCHAR* Name; float L, W, R; int32 Seed; };
+	for (const FRinkCase& K : { FRinkCase{ TEXT("90 m"), 90.f, 45.f, 3.75f, 135 }, FRinkCase{ TEXT("140 m"), 140.f, 70.f, 5.83f, 136 }, FRinkCase{ TEXT("120 m, 8.5 m arcs"), 120.f, 60.f, 8.5f, 137 } })
+	{
+		const FRun A = Skate(K.L, K.W, K.R, K.Seed, Off), B = Skate(K.L, K.W, K.R, K.Seed, On);
+		int32 YawDiff = 0, YawDiffHeld = 0;
+		float YawDiffMax = 0.f;
+		for (int32 i = 0; i < B.Yaw.Num(); ++i)
+		{
+			const float D = FMath::Abs(FMath::UnwindDegrees(B.Yaw[i] - A.Yaw[i]));
+			if (D <= 0.01f) continue;
+			++YawDiff;
+			YawDiffMax = FMath::Max(YawDiffMax, D);
+			if (A.In30[i]) ++YawDiffHeld;
+		}
+		AddInfo(FString::Printf(TEXT("JAMSCREEN keep %s: chest outside the middle third on %d -> %d of %d frames (outside the frame %d -> %d); max |x| %.3f -> %.3f, max |y| %.3f -> %.3f; largest step a frame: camera %.0f -> %.0f cm, pitch %.2f -> %.2f deg, yaw %.2f -> %.2f deg; highest %.2f -> %.2f m; the yaw is not the yaw of before on %d frames (at most %.1f deg), %d of them frames the rig of before held him inside 0.31"),
+			K.Name, A.OutThird, B.OutThird, B.Frames, A.OutFrame, B.OutFrame, A.MaxX, B.MaxX, A.MaxY, B.MaxY, A.MaxStepCm, B.MaxStepCm, A.MaxPitchStep, B.MaxPitchStep, A.MaxYawStep, B.MaxYawStep, A.MaxH, B.MaxH, YawDiff, YawDiffMax, YawDiffHeld));
+		TestEqual(FString::Printf(TEXT("%s: frames with the chest outside the middle third"), K.Name), B.OutThird, 0);
+		TestTrue(FString::Printf(TEXT("%s: the camera of before loses him on this path (the test has teeth)"), K.Name), A.OutThird > 50);
+		TestEqual(FString::Printf(TEXT("%s: the camera never crosses the boards' inset"), K.Name), B.OutsideBoards, 0);
+		// The yaw is touched only where the rig of before did not hold him: never on a frame it had him inside 0.30.
+		TestTrue(FString::Printf(TEXT("%s: frames the rig of before held him whose yaw is not the yaw of before: %d (at most 30 of 6000)"), K.Name, YawDiffHeld), YawDiffHeld <= 30);
+		// No snap. The skater's own spin swings the picture by 4.8 degrees of yaw a frame and the rig's foot by 70 cm; holding him while the boards take the
+		// arm, no frame moves the camera by more than a metre and a half, tilts it by more than 15 degrees or turns it by more than 25 (the model's worst
+		// turn is 19.5 degrees, one frame of a spin at the glass on the 90 m rink; the largest steps are printed above).
+		TestTrue(FString::Printf(TEXT("%s: no snap in pitch (%.2f deg per frame)"), K.Name, B.MaxPitchStep), B.MaxPitchStep <= 15.f);
+		TestTrue(FString::Printf(TEXT("%s: no snap in yaw (%.2f deg per frame)"), K.Name, B.MaxYawStep), B.MaxYawStep <= 25.f);
+		TestTrue(FString::Printf(TEXT("%s: no snap in position (%.0f cm per frame)"), K.Name, B.MaxStepCm), B.MaxStepCm <= 150.f);
+	}
+
+	// The faults of the track's stills, settled: his back to the side board, his back to the corner, beside the end board.
+	auto Settle = [&](const FJamCameraSettings& C, const FVector2D& Pos, float Yaw, float L, float W, float R)
+	{
+		FJamCameraFilter St;
+		FTransform T;
+		for (int32 i = 0; i < 300; ++i) T = UJamFollowCamera::StepThirdPerson(C, St, JamA40Test::Frame(L, W, R, Pos, Yaw));
+		return T;
+	};
+	struct FScene { const TCHAR* Name; FVector2D Pos; float Yaw; bool bLostBefore; };
+	for (const FScene& S : { FScene{ TEXT("back to the side board, 0.5 m from it"), FVector2D(8, -22.0), 90.f, false }, FScene{ TEXT("back to the side board, 2 m from it"), FVector2D(-20, 20.5), -90.f, false },
+		FScene{ TEXT("back to the corner"), FVector2D(-43.0, -20.6), 45.f, true }, FScene{ TEXT("along the end board in the corner"), FVector2D(43.6, 16.0), 90.f, false },
+		FScene{ TEXT("back to the end board behind the net"), FVector2D(44.4, 1.0), 180.f, true } })
+	{
+		const FTransform A = Settle(Off, S.Pos, S.Yaw, 90.f, 45.f, 3.75f), B = Settle(On, S.Pos, S.Yaw, 90.f, 45.f, 3.75f);
+		const FVector Chest(S.Pos.X * 100.0, S.Pos.Y * 100.0, 100.0);
+		const FVector2D Fa = UJamFollowCamera::FrameFraction(A, Fov, Aspect, Chest), Fb = UJamFollowCamera::FrameFraction(B, Fov, Aspect, Chest);
+		AddInfo(FString::Printf(TEXT("JAMSCREEN keep scene %s: chest at (%.2f, %.2f) -> (%.2f, %.2f); height %.2f -> %.2f m, pitch %.1f -> %.1f deg, yaw %.1f -> %.1f, %.2f -> %.2f m from the chest"),
+			S.Name, Fa.X, Fa.Y, Fb.X, Fb.Y, A.GetLocation().Z / 100.0, B.GetLocation().Z / 100.0, A.Rotator().Pitch, B.Rotator().Pitch, A.Rotator().Yaw, B.Rotator().Yaw,
+			FVector::Dist(A.GetLocation(), Chest) / 100.0, FVector::Dist(B.GetLocation(), Chest) / 100.0));
+		TestTrue(FString::Printf(TEXT("%s: the chest is in the middle third"), S.Name), FMath::Abs(Fb.X) <= 1.f / 3.f && FMath::Abs(Fb.Y) <= 1.f / 3.f);
+		if (S.bLostBefore) TestTrue(FString::Printf(TEXT("%s: it was not before"), S.Name), FMath::Abs(Fa.X) > 1.f / 3.f || FMath::Abs(Fa.Y) > 1.f / 3.f);
+		if (!S.bLostBefore) TestEqual(FString::Printf(TEXT("%s: the yaw is the yaw of before"), S.Name), (float)B.Rotator().Yaw, (float)A.Rotator().Yaw, 0.01f);
+		TestTrue(FString::Printf(TEXT("%s: the figure is no nearer than 5 m (it does not fill the frame)"), S.Name), FVector::Dist(B.GetLocation(), Chest) >= 500.0);
+		TestTrue(FString::Printf(TEXT("%s: the camera is inside the boards' inset"), S.Name), UJamFollowCamera::IsInsideBoards(JamA40Test::Cam2D(B), FJamCameraRink{ 90.f, 45.f, 3.75f }, Off.BoardsMarginM - 1e-3f));
+	}
+
+	// Open ice at a steady pace, straight and through a wide turn, attacking either way (with and without lane A40's far-net lead in play): the rig of
+	// before to the bit. The stage's fraction stands outside lane A49's settled bounds, so a rig that holds him is not touched.
+	for (int32 Sign : { -1, 1 })
+	{
+		FJamCameraFilter Sa, Sb;
+		int32 Differ = 0;
+		float MaxYawDiff = 0.f, MaxPosDiffCm = 0.f, MaxPitchDiff = 0.f, MaxRollDiff = 0.f;
+		int32 FirstDiffer = -1, LastDiffer = -1;
+		FVector2D Pos(-30.0, -20.0);
+		float Yaw = 20.f;
+		for (int32 i = 0; i < 360; ++i)   // 54 m of skating that stays 15 m and more from every board
+		{
+			if (i >= 150 && i < 300) Yaw += 0.6f;   // 36 degrees a second
+			Pos += FVector2D(FMath::Cos(FMath::DegreesToRadians(Yaw)), FMath::Sin(FMath::DegreesToRadians(Yaw))) * (9.0 / 60.0);
+			const FJamPresentationFrame F = JamA40Test::Frame(140.f, 70.f, 5.83f, Pos, Yaw, Sign);
+			const FTransform Ta = UJamFollowCamera::StepThirdPerson(Off, Sa, F), Tb = UJamFollowCamera::StepThirdPerson(On, Sb, F);
+			if (!Ta.Equals(Tb, 1e-6)) { ++Differ; if (FirstDiffer < 0) FirstDiffer = i; LastDiffer = i; }
+			MaxPitchDiff = FMath::Max(MaxPitchDiff, FMath::Abs((float)(Tb.Rotator().Pitch - Ta.Rotator().Pitch)));
+			MaxRollDiff = FMath::Max(MaxRollDiff, FMath::Abs((float)(Tb.Rotator().Roll - Ta.Rotator().Roll)));
+			MaxYawDiff = FMath::Max(MaxYawDiff, FMath::Abs(FMath::UnwindDegrees((float)(Tb.Rotator().Yaw - Ta.Rotator().Yaw))));
+			MaxPosDiffCm = FMath::Max(MaxPosDiffCm, (float)FVector::Dist(Ta.GetLocation(), Tb.GetLocation()));
+		}
+		AddInfo(FString::Printf(TEXT("JAMSCREEN keep open ice, far net at %s: the pose is not the pose of before on %d of 360 frames (yaw by at most %.6f deg, pitch %.6f deg, roll %.6f deg, the camera by at most %.6f cm; frames %d to %d)"),
+			Sign > 0 ? TEXT("+X") : TEXT("-X"), Differ, MaxYawDiff, MaxPitchDiff, MaxRollDiff, MaxPosDiffCm, FirstDiffer, LastDiffer));
+		TestEqual(FString::Printf(TEXT("open ice at 9 m/s, straight and turning, far net at %s: frames whose pose is not the pose of before"), Sign > 0 ? TEXT("+X") : TEXT("-X")), Differ, 0);
+	}
+	// For the next lane: the same model with the crane rising at 0.4 m a frame (the default is 0.2).
+	{
+		FJamCameraSettings Fast = On;
+		Fast.KeepRiseM = 0.4f;
+		const FRun R = Skate(90.f, 45.f, 3.75f, 135, Fast);
+		AddInfo(FString::Printf(TEXT("JAMSCREEN keep 90 m with KeepRiseM 0.4: outside the middle third %d; largest step a frame: camera %.0f cm, pitch %.2f deg, yaw %.2f deg"), R.OutThird, R.MaxStepCm, R.MaxPitchStep, R.MaxYawStep));
+	}
+	return true;
+}
+
+// ---- lane A135 (track U1, evolution 3): bark text on a fixed lane, and the brake prompt in the player's own input. Pure rules, no world.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamHudBarkLane, "Jam.Hud.BarkLane", EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+bool FJamHudBarkLane::RunTest(const FString&)
+{
+	// Every bubble width on three frames (Slate units: 1280 x 720 unscaled, the 1080p reference, an ultrawide), both sides.
+	int32 Places = 0, Bad = 0;
+	float MinSkates = 1e9f;
+	const float BubH = 54.f;   // the tallest bubble (text, padding and the tail's band)
+	for (const FVector2D& V : { FVector2D(1280, 720), FVector2D(1920, 1080), FVector2D(2580, 1080) })
+	{
+		const float VW = (float)V.X, VH = (float)V.Y;
+		for (int32 Team = 0; Team < 2; ++Team) for (float HalfW = 60.f; HalfW <= 0.5f * (VW * 0.5f - UJamBarkWidget::LaneGapX - UJamBarkWidget::LaneEdgePx); HalfW += 7.f)
+		{
+			const FVector2D P = UJamBarkWidget::LanePos(Team, HalfW, VW);
+			const float L = (float)P.X - HalfW, R = (float)P.X + HalfW, T = (float)P.Y - BubH, B = (float)P.Y;
+			++Places;
+			bool bOk = L >= 0.f && R <= VW && T >= 0.f;                                            // inside the frame
+			bOk &= Team == 0 ? R <= VW * 0.5f - UJamBarkWidget::LaneGapX + 0.01f : L >= VW * 0.5f + UJamBarkWidget::LaneGapX - 0.01f;   // beside the board, on its team's side
+			bOk &= B <= 104.f;                                                                     // in the scoreboard's row: over every net label and the puck's arrow (their clamps: 120 - 15, 150)
+			bOk &= B < UJamHudWidget::PromptSlotY;                                                 // over the prompt's slots
+			bOk &= B < VH / 3.f;                                                                   // over the middle third
+			// The human's skates: his chest is inside the middle third (the camera's rule), his skates under it; 100 px of a 720-line frame is VH * 100 / 720.
+			const float Skates = VH / 3.f - B;
+			MinSkates = FMath::Min(MinSkates, Skates * 720.f / VH);
+			bOk &= Skates >= VH * 100.f / 720.f;
+			if (!bOk) ++Bad;
+		}
+	}
+	AddInfo(FString::Printf(TEXT("JAMSCREEN bark lane: %d places on three frames; %d outside the lane's rules; the human's skates are at least %.0f px (of 720 lines) under the lane"), Places, Bad, MinSkates));
+	TestTrue(TEXT("places were tried"), Places > 100);
+	TestEqual(TEXT("lane places that break a rule"), Bad, 0);
+	TestTrue(TEXT("the human's team is on the left, beside its plate"), UJamBarkWidget::LanePos(0, 100.f, 1920.f).X < 960.f && UJamBarkWidget::LanePos(1, 100.f, 1920.f).X > 960.f);
+	// The lane yields to a figure under it (the camera over the boards looks down on ice in that row): standing in it, lying beside it; not one under it.
+	const FVector2D LMin(1222, 30), LMax(1600, 84);
+	TestTrue(TEXT("a figure standing in the lane's box"), UJamBarkWidget::LaneMeetsFigure(LMin, LMax, FVector2D(1400, 120), FVector2D(1400, 40)));
+	TestTrue(TEXT("a figure whose head reaches the lane"), UJamBarkWidget::LaneMeetsFigure(LMin, LMax, FVector2D(1300, 160), FVector2D(1300, 88)));
+	TestTrue(TEXT("a figure beside the lane, within its own width"), UJamBarkWidget::LaneMeetsFigure(LMin, LMax, FVector2D(1640, 110), FVector2D(1640, 40)));
+	TestFalse(TEXT("a figure under the lane"), UJamBarkWidget::LaneMeetsFigure(LMin, LMax, FVector2D(1400, 260), FVector2D(1400, 150)));
+	TestFalse(TEXT("a figure across the board"), UJamBarkWidget::LaneMeetsFigure(LMin, LMax, FVector2D(600, 120), FVector2D(600, 40)));
+	// A line too long for its side stays in the frame.
+	TestEqual(TEXT("a long line keeps its far end in the frame"), (float)UJamBarkWidget::LanePos(0, 400.f, 1280.f).X, UJamBarkWidget::LaneEdgePx + 400.f);
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamHudPromptKeys, "Jam.Hud.PromptKeys", EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+bool FJamHudPromptKeys::RunTest(const FString&)
+{
+	const UJamInputMap* M = UJamInputMap::Get();
+	FKey Back, Brake;
+	// The keyboard's binding.
+	TestTrue(TEXT("the map has the keyboard's two controls"), UJamHudWidget::BrakeKeysFor(false, Back, Brake));
+	TestTrue(TEXT("keys: the back control is bound to the move"), M->IsKeyMapped(M->Move, Back) && !Back.IsGamepadKey());
+	TestTrue(TEXT("keys: the brake control is bound to the brake"), M->IsKeyMapped(M->Brake, Brake) && !Brake.IsGamepadKey());
+	TestTrue(TEXT("keys: S pulls back"), Back == EKeys::S);
+	const FString Keys = UJamHudWidget::BrakePromptText(true, false);
+	TestEqual(TEXT("keys: the words"), Keys, FString(TEXT("S AGAINST YOUR MOTION, OR HOLD CTRL: STOP, THEN GO")));
+	TestTrue(TEXT("keys: names both bound controls"), Keys.Contains(UJamHudWidget::KeyLabel(Back)) && Keys.Contains(UJamHudWidget::KeyLabel(Brake)));
+	// The pad's binding.
+	TestTrue(TEXT("the map has the pad's two controls"), UJamHudWidget::BrakeKeysFor(true, Back, Brake));
+	TestTrue(TEXT("pad: the back control is bound to the move"), M->IsKeyMapped(M->Move, Back) && Back.IsGamepadKey());
+	TestTrue(TEXT("pad: the brake control is bound to the brake"), M->IsKeyMapped(M->Brake, Brake) && Brake.IsGamepadKey());
+	const FString Pad = UJamHudWidget::BrakePromptText(true, true);
+	TestEqual(TEXT("pad: the words"), Pad, FString(TEXT("LEFT STICK AGAINST YOUR MOTION, OR HOLD L3: STOP, THEN GO")));
+	TestFalse(TEXT("pad: no keyboard key in the words"), Pad.Contains(TEXT("CTRL")) || Pad.StartsWith(TEXT("S ")));
+	TestFalse(TEXT("keys: no pad control in the words"), Keys.Contains(TEXT("STICK")) || Keys.Contains(TEXT("L3")));
+	// A rebinding changes the words; a brake with no control of its own leaves the pull alone; the neutral value is the line of before.
+	TestEqual(TEXT("rebound"), UJamHudWidget::BrakePromptFor(EKeys::Down, EKeys::SpaceBar), FString(TEXT("DOWN ARROW AGAINST YOUR MOTION, OR HOLD SPACE: STOP, THEN GO")));
+	TestEqual(TEXT("no brake control"), UJamHudWidget::BrakePromptFor(EKeys::S, FKey()), FString(TEXT("S AGAINST YOUR MOTION: STOP, THEN GO")));
+	TestEqual(TEXT("the neutral value"), UJamHudWidget::BrakePromptText(false, true), UJamHudWidget::PromptText(UJamHudWidget::EPrompt::Brake));
+	for (const FString& Line : { Keys, Pad }) TestTrue(TEXT("one line of the pill (60 characters at most)"), Line.Len() <= 60 && Line.EndsWith(TEXT(": STOP, THEN GO")));
+	AddInfo(FString::Printf(TEXT("JAMSCREEN prompt keys: keys \"%s\"; pad \"%s\""), *Keys, *Pad));
+	return true;
+}
+
 // ---- lane A123 (track U1, evolution 2): nothing sits on the play, and the screen teaches the two new verbs. Pure rules, no world.
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamHudClearScreen, "Jam.Hud.ClearScreen", EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
 bool FJamHudClearScreen::RunTest(const FString&)

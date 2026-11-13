@@ -8,6 +8,7 @@
 #include "RadarWidget.h"
 #include "JamEffectTypes.h"
 #include "JamEventBus.h"
+#include "InputCoreTypes.h"
 #include "HUDWidget.generated.h"
 
 class UCanvasPanel;
@@ -154,6 +155,23 @@ public:
 		default: return FString();
 		}
 	}
+	// Lane A135 (track U1, evolution 3): the brake prompt in the player's own input. "S AGAINST YOUR MOTION" named the keyboard's back key to a player holding
+	// a pad. The prompt now names the controls bound to the two ways of stopping, read from the input map (UJamInputMap's context) for the device the player
+	// last touched: the control that pulls back on IA_Move and the one on IA_Brake.
+	//   keys:  S AGAINST YOUR MOTION, OR HOLD CTRL: STOP, THEN GO
+	//   pad:   LEFT STICK AGAINST YOUR MOTION, OR HOLD L3: STOP, THEN GO
+	// A rebinding changes the words with it. jam.hud.PromptKeys 0: the words of before. jam.hud.PromptPad -1 = the device last touched, 0 keys, 1 pad (stills).
+	static FString KeyLabel(const FKey& Key);
+	// The two controls of a device from the input map: false when the map has none for it.
+	static bool BrakeKeysFor(bool bPad, FKey& OutBack, FKey& OutBrake);
+	static FString BrakePromptFor(const FKey& Back, const FKey& Brake);
+	// The brake prompt's words: bKeysOn false, or a map without the controls, gives PromptText(EPrompt::Brake).
+	static FString BrakePromptText(bool bKeysOn, bool bPad);
+	// The device the player last touched (a pad's buttons or sticks against the keyboard and the mouse buttons); the keyboard until a pad is touched.
+	static bool IsPadInUse() { return bPadInUse; }
+	static void SetPadInUse(bool bPad) { bPadInUse = bPad; }
+	// The words the HUD shows for a prompt now.
+	static FString LivePromptText(EPrompt P);
 	// What becomes due this frame (the caller shows nothing new while a prompt is up). bPlayLive: phase Play, no faceoff countdown.
 	static EPrompt PromptDue(bool bOn, bool bPlayLive, bool bHumanCarries, float NearestOpponentM, bool bClosing, bool bKeptSpent, bool bBrakeSpent, bool bPuckKeptRule)
 	{
@@ -173,7 +191,7 @@ public:
 	// The band of Slate y a prompt holds while one is up (the bark bubbles keep out of it); false when none shows.
 	static bool GetPromptBandPx(float& OutTop, float& OutBottom);
 	// jam.ui.prompt kept|brake: shows a prompt now (the proof's stills); it counts as spent like a live one.
-	void PreviewPrompt(EPrompt P) { PromptPreview = P; }
+	void PreviewPrompt(EPrompt P, bool bLowSlot = false) { PromptPreview = P; bPreviewLow = bLowSlot; }
 	UFUNCTION(BlueprintPure, Category = "Jam|Hud")
 	FString GetPromptText() const;
 	// Lane A64: the controls strip stops this far from the right edge: the radar frame (200 + 2 x 8 px) at EdgePx and a 16 px gap.
@@ -441,6 +459,9 @@ private:
 	EPrompt PromptPreview = EPrompt::None;
 	int64 PromptShown = -1;
 	bool bPromptLow = false;   // this prompt took the lower slot (it does not jump back up)
+	bool bPreviewLow = false;  // lane A135: a previewed prompt asked for the lower slot (the proof's still)
+	static bool bPadInUse;     // lane A135: the device the player last touched
+	void WatchInputDevice();
 	float LastNearestOpponentM = -1.f;
 	TWeakObjectPtr<class UJamDirectorsCallHudWidget> OverlayForPrompt;
 	int32 OverlaySearchTick = 0;

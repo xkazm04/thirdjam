@@ -33,6 +33,9 @@
 #include "JamPawns.h"
 #include "JamSkaterVisual.h"
 #include "DirectorsCallWidget.h"
+#include "InputMapping.h"
+#include "InputMappingContext.h"
+#include "InputModifiers.h"
 
 // Lane A84: the ability slot plate width (slate units at 1080p).
 static constexpr float AbilitySlotW = 380.f;
@@ -41,6 +44,7 @@ int32 UJamHudWidget::FaceoffsThisSession = 0;
 bool UJamHudWidget::bControlsHintSpent = false;
 bool UJamHudWidget::bKeptPromptSpent = false;
 bool UJamHudWidget::bBrakePromptSpent = false;
+bool UJamHudWidget::bPadInUse = false;
 uint64 UJamHudWidget::PromptBandTick = 0;
 float UJamHudWidget::PromptBandTop = 0.f;
 
@@ -59,6 +63,99 @@ static TAutoConsoleVariable<int32> CVarJamHudPrompts(TEXT("jam.hud.Prompts"), 1,
 	TEXT("The two one-time prompts of a session (the kept puck at the first carry, the brake when a defender first closes inside 10 m): 1 on (default), 0 none."), ECVF_Default);
 
 bool UJamHudWidget::ClearMiddleOn() { return CVarJamHudClearMiddle.GetValueOnGameThread() != 0; }
+
+// Lane A135 (track U1, evolution 3): the brake prompt in the player's own input.
+static TAutoConsoleVariable<int32> CVarJamHudPromptKeys(TEXT("jam.hud.PromptKeys"), 1,
+	TEXT("1 = the brake prompt names the controls bound to pulling back and to the brake, for the device last touched; 0 = the words of before (S AGAINST YOUR MOTION). Presentation only."), ECVF_Default);
+static TAutoConsoleVariable<int32> CVarJamHudPromptPad(TEXT("jam.hud.PromptPad"), -1,
+	TEXT("-1 = the prompts read the device the player last touched; 0 = the keyboard's words; 1 = the pad's (the proof's stills)."), ECVF_Default);
+static TAutoConsoleVariable<int32> CVarJamHudPromptProof(TEXT("jam.hud.PromptProof"), 0,
+	TEXT("N > 0: at sim frame N the brake prompt is shown in its lower slot (the proof's still of the slot; the remote console is not needed). Lane A135."), ECVF_Default);
+
+FString UJamHudWidget::KeyLabel(const FKey& Key)
+{
+	if (Key == EKeys::LeftControl || Key == EKeys::RightControl) return TEXT("CTRL");
+	if (Key == EKeys::LeftShift || Key == EKeys::RightShift) return TEXT("SHIFT");
+	if (Key == EKeys::LeftAlt || Key == EKeys::RightAlt) return TEXT("ALT");
+	if (Key == EKeys::SpaceBar) return TEXT("SPACE");
+	if (Key == EKeys::Down) return TEXT("DOWN ARROW");
+	if (Key == EKeys::Up) return TEXT("UP ARROW");
+	if (Key == EKeys::Gamepad_Left2D || Key == EKeys::Gamepad_LeftX || Key == EKeys::Gamepad_LeftY) return TEXT("LEFT STICK");
+	if (Key == EKeys::Gamepad_Right2D || Key == EKeys::Gamepad_RightX || Key == EKeys::Gamepad_RightY) return TEXT("RIGHT STICK");
+	if (Key == EKeys::Gamepad_LeftThumbstick) return TEXT("L3");
+	if (Key == EKeys::Gamepad_RightThumbstick) return TEXT("R3");
+	if (Key == EKeys::Gamepad_FaceButton_Bottom) return TEXT("A");
+	if (Key == EKeys::Gamepad_FaceButton_Right) return TEXT("B");
+	if (Key == EKeys::Gamepad_FaceButton_Left) return TEXT("X");
+	if (Key == EKeys::Gamepad_FaceButton_Top) return TEXT("Y");
+	if (Key == EKeys::Gamepad_LeftShoulder) return TEXT("LB");
+	if (Key == EKeys::Gamepad_RightShoulder) return TEXT("RB");
+	if (Key == EKeys::Gamepad_LeftTrigger || Key == EKeys::Gamepad_LeftTriggerAxis) return TEXT("LT");
+	if (Key == EKeys::Gamepad_RightTrigger || Key == EKeys::Gamepad_RightTriggerAxis) return TEXT("RT");
+	return Key.IsValid() ? Key.GetDisplayName(false).ToString().ToUpper() : FString();
+}
+
+bool UJamHudWidget::BrakeKeysFor(bool bPad, FKey& OutBack, FKey& OutBrake)
+{
+	OutBack = FKey();
+	OutBrake = FKey();
+	const UJamInputMap* M = UJamInputMap::Get();
+	if (!M || !M->Context) return false;
+	for (const FEnhancedActionKeyMapping& K : M->Context->GetMappings())
+	{
+		if (K.Key.IsGamepadKey() != bPad) continue;
+		if (K.Action.Get() == M->Brake.Get() && !OutBrake.IsValid()) OutBrake = K.Key;
+		if (K.Action.Get() == M->Move.Get() && !OutBack.IsValid())
+		{
+			// A pad pulls back with the stick itself. A key pulls back when it is turned onto the forward axis and negated (W: swizzle; S: swizzle and negate).
+			bool bSwizzle = false, bNegate = false;
+			for (const UInputModifier* Mod : K.Modifiers)
+			{
+				if (Cast<UInputModifierSwizzleAxis>(Mod)) bSwizzle = true;
+				if (Cast<UInputModifierNegate>(Mod)) bNegate = true;
+			}
+			if (bPad || (bSwizzle && bNegate)) OutBack = K.Key;
+		}
+	}
+	return OutBack.IsValid();
+}
+
+FString UJamHudWidget::BrakePromptFor(const FKey& Back, const FKey& Brake)
+{
+	const FString B = KeyLabel(Back), K = KeyLabel(Brake);
+	if (B.IsEmpty()) return PromptText(EPrompt::Brake);
+	return K.IsEmpty() ? FString::Printf(TEXT("%s AGAINST YOUR MOTION: STOP, THEN GO"), *B) : FString::Printf(TEXT("%s AGAINST YOUR MOTION, OR HOLD %s: STOP, THEN GO"), *B, *K);
+}
+
+FString UJamHudWidget::BrakePromptText(bool bKeysOn, bool bPad)
+{
+	FKey Back, Brake;
+	if (!bKeysOn || !BrakeKeysFor(bPad, Back, Brake)) return PromptText(EPrompt::Brake);
+	return BrakePromptFor(Back, Brake);
+}
+
+FString UJamHudWidget::LivePromptText(EPrompt P)
+{
+	if (P != EPrompt::Brake) return PromptText(P);
+	const int32 Forced = CVarJamHudPromptPad.GetValueOnGameThread();
+	return BrakePromptText(CVarJamHudPromptKeys.GetValueOnGameThread() != 0, Forced < 0 ? bPadInUse : Forced != 0);
+}
+
+// The device last touched: any of the pad's buttons or a stick past a third of its throw makes it the pad, a game key or a mouse button the keyboard.
+void UJamHudWidget::WatchInputDevice()
+{
+	const APlayerController* PC = GetOwningPlayer();
+	if (!PC) return;
+	static const FKey PadKeys[] = { EKeys::Gamepad_FaceButton_Bottom, EKeys::Gamepad_FaceButton_Right, EKeys::Gamepad_FaceButton_Left, EKeys::Gamepad_FaceButton_Top,
+		EKeys::Gamepad_LeftShoulder, EKeys::Gamepad_RightShoulder, EKeys::Gamepad_LeftTrigger, EKeys::Gamepad_RightTrigger, EKeys::Gamepad_LeftThumbstick,
+		EKeys::Gamepad_RightThumbstick, EKeys::Gamepad_DPad_Up, EKeys::Gamepad_DPad_Down, EKeys::Gamepad_DPad_Left, EKeys::Gamepad_DPad_Right, EKeys::Gamepad_Special_Left, EKeys::Gamepad_Special_Right };
+	static const FKey PadAxes[] = { EKeys::Gamepad_LeftX, EKeys::Gamepad_LeftY, EKeys::Gamepad_RightX, EKeys::Gamepad_RightY, EKeys::Gamepad_LeftTriggerAxis, EKeys::Gamepad_RightTriggerAxis };
+	static const FKey DeskKeys[] = { EKeys::W, EKeys::A, EKeys::S, EKeys::D, EKeys::Up, EKeys::Down, EKeys::Left, EKeys::Right, EKeys::LeftControl, EKeys::LeftShift, EKeys::SpaceBar,
+		EKeys::Q, EKeys::E, EKeys::F, EKeys::LeftMouseButton, EKeys::RightMouseButton, EKeys::MiddleMouseButton };
+	for (const FKey& K : PadKeys) if (PC->IsInputKeyDown(K)) { bPadInUse = true; return; }
+	for (const FKey& K : PadAxes) if (FMath::Abs(PC->GetInputAnalogKeyState(K)) > 0.33f) { bPadInUse = true; return; }
+	for (const FKey& K : DeskKeys) if (PC->IsInputKeyDown(K)) { bPadInUse = false; return; }
+}
 
 bool UJamHudWidget::GetPromptBandPx(float& OutTop, float& OutBottom)
 {
@@ -191,7 +288,8 @@ namespace
 		FConsoleCommandWithArgsDelegate::CreateLambda([](const TArray<FString>& Args)
 		{
 			const UJamHudWidget::EPrompt P = Args.Num() && Args[0].Equals(TEXT("brake"), ESearchCase::IgnoreCase) ? UJamHudWidget::EPrompt::Brake : UJamHudWidget::EPrompt::Kept;
-			for (TObjectIterator<UJamHudWidget> It; It; ++It) if (It->GetWorld() && !It->HasAnyFlags(RF_ClassDefaultObject)) It->PreviewPrompt(P);
+			const bool bLow = Args.Num() > 1 && Args[1].Equals(TEXT("low"), ESearchCase::IgnoreCase);   // lane A135: jam.ui.prompt brake low = in the lower slot
+			for (TObjectIterator<UJamHudWidget> It; It; ++It) if (It->GetWorld() && !It->HasAnyFlags(RF_ClassDefaultObject)) It->PreviewPrompt(P, bLow);
 		}));
 	// QA previews for the proof shots (jam.ui.faceoff <frames>, jam.ui.effects icon:label,icon:label).
 	FAutoConsoleCommand GPreviewFaceoff(TEXT("jam.ui.faceoff"), TEXT("Preview the faceoff countdown on every HUD: jam.ui.faceoff <frames>"),
@@ -852,6 +950,8 @@ void UJamHudWidget::UpdatePrompts(const FJamPresentationFrame& F, bool bCounting
 	++OverlaySearchTick;
 	if (!PromptPlate || !PromptTextBlock) return;
 	if (PromptShown > F.SimFrame) { PromptShown = -1; PromptNow = EPrompt::None; }   // a restart
+	WatchInputDevice();   // lane A135: the prompt's words follow the device last touched
+	if (bSimAdvanced && CVarJamHudPromptProof.GetValueOnGameThread() > 0 && F.SimFrame == CVarJamHudPromptProof.GetValueOnGameThread()) PreviewPrompt(EPrompt::Brake, true);
 	const AHokejGameMode* GM = GetWorld() ? GetWorld()->GetAuthGameMode<AHokejGameMode>() : nullptr;
 	int32 Carrier = -1;
 	if (GM && GM->GetSim()) Carrier = GM->GetSim()->CarrierIndex();
@@ -881,12 +981,16 @@ void UJamHudWidget::UpdatePrompts(const FJamPresentationFrame& F, bool bCounting
 		if (Due != EPrompt::None)
 		{
 			PromptShown = F.SimFrame;
-			bPromptLow = false;
+			bPromptLow = bPreviewLow;
+			bPreviewLow = false;
 			if (Due == EPrompt::Kept) bKeptPromptSpent = true; else bBrakePromptSpent = true;
-			PromptTextBlock->SetText(FText::FromString(PromptText(Due)));
-			UE_LOG(LogHokej, Log, TEXT("JAMSCREEN prompt %s at sim frame %lld (nearest opponent %.1f m): %s"), Due == EPrompt::Kept ? TEXT("kept") : TEXT("brake"), F.SimFrame, Nearest, *PromptText(Due));
+			PromptTextBlock->SetText(FText::FromString(LivePromptText(Due)));
+			UE_LOG(LogHokej, Log, TEXT("JAMSCREEN prompt %s at sim frame %lld (nearest opponent %.1f m)%s: %s"), Due == EPrompt::Kept ? TEXT("kept") : TEXT("brake"), F.SimFrame, Nearest,
+				bPromptLow ? TEXT(" in the lower slot") : TEXT(""), *LivePromptText(Due));
 		}
 	}
+	// Lane A135: a prompt on screen changes its words when the player takes the other device.
+	if (PromptNow == EPrompt::Brake && !PromptTextBlock->GetText().ToString().Equals(LivePromptText(PromptNow))) PromptTextBlock->SetText(FText::FromString(LivePromptText(PromptNow)));
 	const float Alpha = (PromptNow != EPrompt::None && F.Phase == EJamPhase::Play) ? PromptOpacity(PromptShown, F.SimFrame) : 0.f;
 	PromptPlate->SetVisibility(Alpha > 0.f ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	if (Alpha <= 0.f) return;
