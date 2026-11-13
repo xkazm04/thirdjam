@@ -1,0 +1,1 @@
+SKF pass 9 p3_clay Stride: rows side old (export7c), side new (export9), game camera old, game camera new; 8 phases.

@@ -1,0 +1,1 @@
+B23 motion check, 30 consecutive rendered frames per run at 1/60 s game step: held game camera in play (left boards where the rail stood: mean |d| 0.23, bulbs 0.17, streaks 0.22, far zone 0.31), frames 1/16/30 of the same run, a fast turn at 3 deg per frame, and the following game camera; nothing pops or flickers where the rail used to be

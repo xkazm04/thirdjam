@@ -1,0 +1,1 @@
+SKF pass 9 p2_cel from behind at the game camera (6 m back, 3.5 m up): Glide old (export5), Glide new (export9), Idle old, Idle new.
