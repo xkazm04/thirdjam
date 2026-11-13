@@ -1,21 +1,21 @@
 # Credits and provenance (from ASSETS.md, built by tools/media/credits.mjs)
 
-Rows: 1654; shipped: 976. Origin counts (all rows): {"original":1010,"ai-generated":581,"sourced":62,"generated":1}. Shipped: {"original":523,"ai-generated":451,"sourced":1,"generated":1}.
+Rows: 1654; shipped: 976. Origin counts (all rows): {"original":1011,"ai-generated":581,"sourced":62}. Shipped: {"original":524,"ai-generated":451,"sourced":1}.
 
 ## Sourced (not original, not AI-generated): 62 rows, 1 shipped
 
 | path | kind | shipped | tool / origin | licence | url |
 |---|---|---|---|---|---|
 | Game/Plugins/DLSS/Binaries/ThirdParty/Win64/nvngx_dlss.dll | other | y | NVIDIA DLSS 4.5 Unreal plugin v8.9.0 (UE 5.8 build, ported to 5.9) | NVIDIA RTX SDKs License + RTX Supplement (v. 2024-03-14) | https://developer.nvidia.com/downloads/assets/gameworks/downloads/secure/dlss/ue-dlss-5.8/8.9.0/2026.10.16_ue5.8_dlss4.5plugin_v8.9.0.zip |
-| Game/Content/P4/Meshy/Anims/MF_Unarmed_Jog_Fwd_P4_Meshy.uasset | anim | n |  | Epic content inside a UE product (Templates/TemplateResources 5.9 Manny clip), retargeted by IK Retargeter onto the Meshy skeleton | **EMPTY** |
-| Game/Content/P4/Meshy/Anims/MF_Unarmed_Walk_Fwd_P4_Meshy.uasset | anim | n |  | Epic content inside a UE product (Templates/TemplateResources 5.9 Manny clip), retargeted by IK Retargeter onto the Meshy skeleton | **EMPTY** |
-| Game/Content/P4/Meshy/Anims/MM_Idle_P4_Meshy.uasset | anim | n |  | Epic content inside a UE product (Templates/TemplateResources 5.9 Manny clip), retargeted by IK Retargeter onto the Meshy skeleton | **EMPTY** |
-| Game/Content/P4/Rodin/Anims/MF_Unarmed_Jog_Fwd_P4_Rodin.uasset | anim | n |  | Epic content inside a UE product (Templates/TemplateResources 5.9 Manny clip), retargeted by IK Retargeter onto the Rodin skeleton | **EMPTY** |
-| Game/Content/P4/Rodin/Anims/MF_Unarmed_Walk_Fwd_P4_Rodin.uasset | anim | n |  | Epic content inside a UE product (Templates/TemplateResources 5.9 Manny clip), retargeted by IK Retargeter onto the Rodin skeleton | **EMPTY** |
-| Game/Content/P4/Rodin/Anims/MM_Idle_P4_Rodin.uasset | anim | n |  | Epic content inside a UE product (Templates/TemplateResources 5.9 Manny clip), retargeted by IK Retargeter onto the Rodin skeleton | **EMPTY** |
-| Game/Content/P4/Tripo/Anims/MF_Unarmed_Jog_Fwd_P4_Tripo.uasset | anim | n |  | Epic content inside a UE product (Templates/TemplateResources 5.9 Manny clip), retargeted by IK Retargeter onto the Tripo skeleton | **EMPTY** |
-| Game/Content/P4/Tripo/Anims/MF_Unarmed_Walk_Fwd_P4_Tripo.uasset | anim | n |  | Epic content inside a UE product (Templates/TemplateResources 5.9 Manny clip), retargeted by IK Retargeter onto the Tripo skeleton | **EMPTY** |
-| Game/Content/P4/Tripo/Anims/MM_Idle_P4_Tripo.uasset | anim | n |  | Epic content inside a UE product (Templates/TemplateResources 5.9 Manny clip), retargeted by IK Retargeter onto the Tripo skeleton | **EMPTY** |
+| Game/Content/P4/Meshy/Anims/MF_Unarmed_Jog_Fwd_P4_Meshy.uasset | anim | n | Epic template Manny clip, retargeted by us | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/P4/Meshy/Anims/MF_Unarmed_Walk_Fwd_P4_Meshy.uasset | anim | n | Epic template Manny clip, retargeted by us | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/P4/Meshy/Anims/MM_Idle_P4_Meshy.uasset | anim | n | Epic template Manny clip, retargeted by us | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/P4/Rodin/Anims/MF_Unarmed_Jog_Fwd_P4_Rodin.uasset | anim | n | Epic template Manny clip, retargeted by us | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/P4/Rodin/Anims/MF_Unarmed_Walk_Fwd_P4_Rodin.uasset | anim | n | Epic template Manny clip, retargeted by us | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/P4/Rodin/Anims/MM_Idle_P4_Rodin.uasset | anim | n | Epic template Manny clip, retargeted by us | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/P4/Tripo/Anims/MF_Unarmed_Jog_Fwd_P4_Tripo.uasset | anim | n | Epic template Manny clip, retargeted by us | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/P4/Tripo/Anims/MF_Unarmed_Walk_Fwd_P4_Tripo.uasset | anim | n | Epic template Manny clip, retargeted by us | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
+| Game/Content/P4/Tripo/Anims/MM_Idle_P4_Tripo.uasset | anim | n | Epic template Manny clip, retargeted by us | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
 | Game/Content/Characters/Mannequins/Anims/Death/MM_Death_Back_01.uasset | anim | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
 | Game/Content/Characters/Mannequins/Anims/Death/MM_Death_Front_01.uasset | anim | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
 | Game/Content/Characters/Mannequins/Anims/Death/MM_Death_Front_02.uasset | anim | n | UE 5.9 template content (Templates/TemplateResources/High/Characters), copied verbatim by lane A29 | Unreal Engine EULA (Epic content, used inside a UE product) | https://www.unrealengine.com/en-US/eula/unreal |
@@ -71,7 +71,7 @@ Rows: 1654; shipped: 976. Origin counts (all rows): {"original":1010,"ai-generat
 
 ## Findings
 
-- Sourced rows with an empty licence or url: 9 of 62.
+- Sourced rows with an empty licence or url: 0 of 62.
 
 ## AI-generated content (declared as such, not "sourced"), by tool
 

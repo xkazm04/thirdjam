@@ -1,0 +1,78 @@
+# Curated shot list for the submitted dev log (lane A96, 2026-11-13). 60 pictures, picked by name and date.
+# Format: <path relative to the repo> | <CET stamp YYYYMMDD-HHMMSS> | <A or B> | <label> | <caption>
+# Stamps of devlog/shots/ files are the ones in their names; stamps of docs/experiments/img/ files are the hour of the lane's report (status/<lane>.md).
+# Build: node tools/media/devlog-curated.mjs   (stages these into %TEMP%\a96\curated-shots, outside the repo, and builds the page with --embed)
+
+# --- 1. The first working rink (Thu 12 Nov, H4-H5)
+devlog/shots/20261112-102938-A-a5-far-net-110m.png | 20261112-102938 | A | a5-far-net-110m | The first working rink: a far net seen from 110 m, boxes for skaters
+devlog/shots/20261112-102957-A-a5-knockdown-right.png | 20261112-102957 | A | a5-knockdown-right | The first knockdown, in the first hour of the match: still boxes
+devlog/shots/20261112-103025-A-a5-arena-mode.png | 20261112-103025 | A | a5-arena-mode | The arena cut: the first rule set that is not the regular game
+devlog/shots/20261112-103025-A-a5-win-card.png | 20261112-103025 | A | a5-win-card | The first win card
+devlog/shots/20261112-103953-A-m0-pie-scripted-human.png | 20261112-103953 | A | m0-pie-scripted-human | A scripted human skating in the editor: the first proof a person-shaped thing could play
+
+# --- 2. Menus, the Director and the modes (Thu 12 Nov to Fri 13 Nov)
+devlog/shots/20261112-114302-A-a8-menu-main.png | 20261112-114302 | A | a8-menu-main | The first menu: buttons on a flat colour
+devlog/shots/20261112-123814-A-a8-menu-main-art.png | 20261112-123814 | A | a8-menu-main-art | The same menu with the film-slate art
+devlog/shots/20261112-123814-A-a8-menu-cuts-art.png | 20261112-123814 | A | a8-menu-cuts-art | Choose your cut: the library of rule sets as cards
+devlog/shots/20261112-123814-A-a8-match-take1-clapper.png | 20261112-123814 | A | a8-match-take1-clapper | The match card before the drop: a clapperboard
+devlog/shots/20261112-144100-A-a18-hud-controls-1080p.png | 20261112-144100 | A | a18-hud-controls-1080p | The controls strip over the first ten seconds of a match
+devlog/shots/20261112-144100-A-a18-hud-faceoff-1080p.png | 20261112-144100 | A | a18-hud-faceoff-1080p | The faceoff, HUD at 1080p
+devlog/shots/20261112-153300-A-a18-hud-announce-1080p.png | 20261112-153300 | A | a18-hud-announce-1080p | The announcer plate
+docs/experiments/img/modes2/directors-choices-1080p.png | 20261113-131000 | A | modes2-directors-choices-1080p | The Director's choices: twelve modes as cards
+docs/experiments/img/modes/pond-match-card.png | 20261113-123000 | A | modes-pond-match-card | A mode's own match card: Pond
+docs/experiments/img/storyboard/a48-09-pause-time-out.jpg | 20261112-200000 | A | a48-pause-time-out | Time Out and the Director's Call over a paused match
+devlog/shots/20261113-114529-B-b29-rink-cage.jpg | 20261113-114529 | B | b29-rink-cage | Cage: a tight box with live boards
+devlog/shots/20261113-114529-B-b29-rink-pond.jpg | 20261113-114529 | B | b29-rink-pond | Pond: the same game, no hits
+devlog/shots/20261113-114529-B-b29-rink-sniper.jpg | 20261113-114529 | B | b29-rink-sniper | Sniper: a full-height net
+devlog/shots/20261113-114529-B-b29-rink-power-play.jpg | 20261113-114529 | B | b29-rink-power-play | Power Play: four against three
+devlog/shots/20261113-114529-B-b29-rink-marathon.jpg | 20261113-114529 | B | b29-rink-marathon | Marathon: long ice, long clock
+devlog/shots/20261113-114529-B-b29-pickups.jpg | 20261113-114529 | B | b29-pickups | The boost pickups on the ice
+
+# --- 3. Controls fix (Fri 13 Nov, the operator played H18 and could not aim: A49) and the verbs
+devlog/shots/20261112-114726-A-a5-controls-hint-first-10s.png | 20261112-114726 | A | a5-controls-hint-first-10s | The first controls hint, before the fix
+devlog/shots/20261112-144641-A-a16-faceoff-stick.png | 20261112-144641 | A | a16-faceoff-stick | The stick at a faceoff: the blade that follows the cursor
+devlog/shots/20261112-144641-A-a16-contact.png | 20261112-144641 | A | a16-contact | First contact between a stick and a puck carrier
+docs/experiments/img/a50/a50-halfnet-39m.jpg | 20261113-100000 | A | a50-halfnet-39m | Aiming at a half net from 39 m with the mouse
+docs/experiments/img/a52/a52-flight-2.png | 20261113-103000 | A | a52-flight-2 | A shot in flight: the puck lifting after a charged release
+docs/experiments/img/a84/hud-shotgun-fired-f438.png | 20261113-140700 | A | a84-hud-shotgun-fired | The F ability, fired: the shotgun slot on the HUD
+docs/experiments/img/a85/a85-saucer-f1108-strip.png | 20261113-140500 | A | a85-saucer-strip | The held Q saucer pass, frame by frame
+docs/experiments/img/a77/a77-spin-f190-strip.png | 20261113-111500 | A | a77-spin-strip | The E spin off a check, frame by frame
+
+# --- 4. Figures: from boxes to clay (Thu 12 Nov to Fri 13 Nov)
+devlog/shots/20261112-110132-B-lab-s1-small40.png | 20261112-110132 | B | lab-s1-small40 | The first generated figure at game size
+devlog/shots/20261112-110713-B-tb2-teams-hue-key.png | 20261112-110713 | B | tb2-teams-hue-key | Blue and orange teams, one mesh
+devlog/shots/20261112-115624-B-tb1-vs-tb2.png | 20261112-115624 | B | tb1-vs-tb2 | Two candidate bodies side by side
+devlog/shots/20261112-122757-B-tb2h-falls.png | 20261112-122757 | B | tb2h-falls | The falls library on the chosen body
+devlog/shots/20261112-125216-B-match-tb2h-2.jpg | 20261112-125216 | B | match-tb2h-2 | The figure in a real match
+devlog/shots/20261113-010411-B-sk6-tiers-figures.jpg | 20261113-010411 | B | sk6-tiers-figures | The look tiers lined up: cel, clay, broadcast
+devlog/shots/20261113-010411-B-sk6-knockdown-strip.jpg | 20261113-010411 | B | sk6-knockdown-strip | A knockdown as a strip of frames
+
+# --- 5. Clay (Thu 12 Nov evening to Fri 13 Nov morning)
+devlog/shots/20261112-144506-B-b9-clay-faceoff.png | 20261112-144506 | B | b9-clay-faceoff | The first clay faceoff
+devlog/shots/20261112-152846-B-lab-skf-p3_clay-turntable.png | 20261112-152846 | B | lab-skf-p3-clay-turntable | The clay figure on a turntable
+devlog/shots/20261112-154910-B-lab-skg-p3_clay-goal.png | 20261112-154910 | B | lab-skg-p3-clay-goal | Clay figure celebrating a goal
+devlog/shots/20261113-034219-B-b23-game-before.png | 20261113-034219 | B | b23-game-before | The rink before the clay-ice pass
+devlog/shots/20261113-034219-B-b23-game-after.png | 20261113-034219 | B | b23-game-after | The rink after: clay ice, ink outline
+devlog/shots/20261113-051859-B-b26-hero-game.png | 20261113-051859 | B | b26-hero-game | The hero shot of the night rink
+devlog/shots/20261113-095648-B-sk10-clay-default-game.jpg | 20261113-095648 | B | sk10-clay-default-game | Clay becomes the default look
+devlog/shots/20261113-114529-B-b29-hero-game.png | 20261113-114529 | B | b29-hero-game | The shipped look at the end of the clay pass
+devlog/shots/20261113-114529-B-b29-rings-game.png | 20261113-114529 | B | b29-rings-game | Chalk rings under the skaters
+
+# --- 6. Tackling (Fri 13 Nov)
+devlog/shots/20261113-113628-B-sk12-tackling-clay.png | 20261113-113628 | B | sk12-tackling-clay | Tackling in clay: a check landing
+devlog/shots/20261113-113629-B-sk12-knockdown-clay.png | 20261113-113629 | B | sk12-knockdown-clay | The knockdown, clay
+devlog/shots/20261113-113629-B-sk12-knockdown-night.png | 20261113-113629 | B | sk12-knockdown-night | The knockdown, at night
+devlog/shots/20261113-113630-B-sk12-board-hit.png | 20261113-113630 | B | sk12-board-hit | A skater into the boards
+devlog/shots/20261113-113630-B-sk12-check-lunge.png | 20261113-113630 | B | sk12-check-lunge | The lunge of a pressed check
+devlog/shots/20261113-113630-B-sk12-standing-hit.png | 20261113-113630 | B | sk12-standing-hit | A standing skater takes a hit
+devlog/shots/20261113-113630-B-sk12-lying-close.png | 20261113-113630 | B | sk12-lying-close | Down on the ice, close
+docs/experiments/img/a73/a73-kd-human-f3730-strip.png | 20261113-113000 | A | a73-kd-human-strip | The human knocked down: frames of the sim, not the art
+docs/experiments/img/a80/a80-kd-bot-f1275-back-strip.png | 20261113-125500 | A | a80-kd-bot-strip | A bot knocked down from behind
+docs/experiments/img/a80/a80-board-f1645-strip.png | 20261113-125500 | A | a80-board-strip | Into the boards, frame by frame
+
+# --- 7. Five a side and the acceptance run (Fri 13 Nov afternoon)
+docs/experiments/img/a83/five-p3-board-battle.png | 20261113-132000 | A | a83-five-board-battle | Five a side: a battle at the boards
+devlog/curated/img/accept-table-a91.png | 20261113-164500 | A | accept-table-a91 | The acceptance run: 18 of 18 verbs through the cursor and the buttons (a rendered table, not a screenshot)
+devlog/shots/20261113-114709-B-lab-skf15-p3_clay-Check_Hit_Back-ba.png | 20261113-114709 | B | lab-skf15-check-hit-back | Hit from behind, before and after
+devlog/shots/20261113-114709-B-lab-skf15-p3_clay-Knockdown_Right-ba.png | 20261113-114709 | B | lab-skf15-knockdown-right | Knockdown to the right, before and after
+docs/experiments/img/a64/hockey.chaos-l2-card.jpg | 20261113-103000 | A | a64-chaos-match-card | The match card of a mode that changes the rules: Chaos

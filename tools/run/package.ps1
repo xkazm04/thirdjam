@@ -8,6 +8,11 @@
   powershell -NoProfile -ExecutionPolicy Bypass -File tools\run\package.ps1 -Project C:\jam\Game -Out C:\jam\out -Config Shipping -Zip -Name TeamName_GameName
 
 .NOTES
+  - -Submission (lane A96): a submission candidate. Implies -Zip. With -Name Hokej_Hokej_H26 the zip is written under that
+    name AND copied as <SubmissionName>.zip (default Hokej_Hokej, the rules' TeamName_GameName form, no version suffix)
+    beside it. Without -Name the zip is just Hokej_Hokej.zip.
+  - A player README.txt (submission\package\README.txt in the repo) is copied to the root of the staged folder (beside the
+    exe) after the stage-clean check and before the zip, for every package, if the file exists.
   - Output: <Out>\Windows\... (the archive). Log: <project>\logs\package-<config>-<stamp>.log plus UAT's own logs.
   - Size report after a good package: staged (archived) folder size, the ten largest folders and pak/utoc/ucas
     files, zip size with -Zip. Budget: PASS under -LimitMB (1000), WARN at -WarnMB (900), FAIL above the limit.
@@ -22,6 +27,8 @@ param(
     [Parameter(Mandatory = $true)][string]$Out,
     [ValidateSet('Development', 'Shipping')][string]$Config = 'Development',
     [switch]$Zip,
+    [switch]$Submission,
+    [string]$SubmissionName = 'Hokej_Hokej',
     [string]$Name = '',
     [string]$Map = '',
     [string]$Ddc = '',
@@ -43,6 +50,8 @@ if (-not (Test-Path $uat)) { Write-Step 'FAIL' 'engine' "missing $uat"; Exit-Wit
 $floor = Get-MinFreeGB $MinFreeGB
 $free = Get-FreeGB $uproject
 if ($free -lt $floor) { Write-Step 'FAIL' 'disk' "free $free GB is below the floor of $floor GB"; Exit-WithResult 'package' 2 }
+if ($Submission) { $Zip = [System.Management.Automation.SwitchParameter]::new($true) }
+if ($Submission -and -not $Name) { $Name = $SubmissionName }
 if ($Zip -and -not $Name) { Write-Step 'FAIL' 'args' '-Zip needs -Name (contest format: TeamName_GameName)'; Exit-WithResult 'package' 2 }
 
 $projDir = Split-Path $uproject -Parent
@@ -130,6 +139,13 @@ if ($Config -eq 'Shipping') {
     if ($pdbs.Count -eq 0 -and $badExe.Count -eq 0) { Write-Step 'PASS' 'stage-clean' 'no pdb, only Shipping exes' }
     else { $extra['stage_dirty'] = @($pdbs + $badExe | ForEach-Object { $_.Name }) }
 }
+# Player readme (lane A96): a plain text file at the staged root, beside the exe, so it is in the zip.
+$readmeSrc = Join-Path $PSScriptRoot '..\..\submission\package\README.txt'
+if (Test-Path $readmeSrc) {
+    Copy-Item -Path $readmeSrc -Destination (Join-Path $staged 'README.txt') -Force
+    Write-Step 'PASS' 'readme' 'README.txt staged at the package root'
+    $extra['readme'] = $true
+} else { Write-Host "WARN readme: $readmeSrc not found; the package carries no README.txt" }
 $extra['staged'] = $staged
 $extra['staged_mb'] = $stagedMB
 if ($exe) { $extra['exe'] = $exe.FullName }
@@ -154,12 +170,19 @@ if ($Zip) {
     if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
     $zsw = [System.Diagnostics.Stopwatch]::StartNew()
     try {
-        Add-Type -AssemblyName System.IO.Compression.FileSystem
-        [System.IO.Compression.ZipFile]::CreateFromDirectory($staged, $zipPath, [System.IO.Compression.CompressionLevel]::Optimal, $true)
+        . "$PSScriptRoot\zipfwd.ps1"   # entry names with '/' (CreateFromDirectory on PS 5.1 writes a backslash)
+        New-ZipForwardSlash -SourceDir $staged -ZipPath $zipPath
         $zipMB = [math]::Round((Get-Item $zipPath).Length / 1MB, 1)
         $extra['zip'] = $zipPath; $extra['zip_mb'] = $zipMB; $extra['zip_s'] = [math]::Round($zsw.Elapsed.TotalSeconds, 1)
         Write-Step 'PASS' 'zip' ("{0} {1} MB in {2:N0}s" -f $zipPath, $zipMB, $zsw.Elapsed.TotalSeconds)
         $checkMB = $zipMB; $checkWhat = 'zip'
+        # A submission candidate also carries the rules' name (TeamName_GameName, no version) beside the versioned zip.
+        if ($Submission -and $Name -ne $SubmissionName) {
+            $subZip = Join-Path $Out ($SubmissionName + '.zip')
+            Copy-Item -Path $zipPath -Destination $subZip -Force
+            $extra['submission_zip'] = $subZip
+            Write-Step 'PASS' 'submission-zip' ("{0} ({1} MB, a copy of {2})" -f $subZip, $zipMB, (Split-Path $zipPath -Leaf))
+        }
     } catch { Write-Step 'FAIL' 'zip' $_.Exception.Message }
 }
 if ($checkMB -gt $LimitMB) { Write-Step 'FAIL' 'size' ("{0} is {1} MB, over the {2} MB limit" -f $checkWhat, $checkMB, $LimitMB) }

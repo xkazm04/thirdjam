@@ -369,3 +369,4 @@
 - A92 (contact by inertia) and A93 (brake, burst, carrier sprint, puck distance) done and applied together in worktree a95 without conflicts; A95 (Opus) makes the tree green, teaches the playtester and the bots the new verbs and sets the ladder once. A96 (Sonnet): submission pass 2 without game windows.
 
 - RESOURCES 16:58 cpu 4% ram 16.7/63GB gpu 0 %, 707 MiB, 41 editors 0 cmd 0 ubt 0 free 608GB
+- link green 17:01: main 0c53d5b (B-to-A-0037 answered (the lift's cone and Dir on lift and poke go to A95); status) pushed.
