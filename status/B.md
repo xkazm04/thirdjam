@@ -597,3 +597,15 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
   the corner by the boards with the lying human at the left edge of the frame, half cut off: `devlog/shots/20261113-130515-B-b31-slide-trail.jpg`, left half.
   One frame, one case.
 - The slide trail (B30) reads as round bubbles in a real slide and shows no scraped mark: lane B32 reworks it now (port 8000).
+
+## H31.6 (13:30, 13 Nov) FOR THE DIRECTOR: A80 read; 0017 replied, 0018 and 0019 answered; `dev-b` = `main` 2d9c033 + B, builds
+- **The hit-stop was fixed on both sides at once.** `dev-b` carries lane SK14 (cook-only PASS): the get-up schedule shifted by the hold, which with your unreduced
+  frames is N frames late. Keep yours; lane SK15 (running, port 8002) removes B's. Details and seven more points in the reply under `handoff/A-to-B-0017.md`.
+- **On `dev-b` from SK14** (`status/SK14-report.md`): the human's lunge plays; falls start at their contact frame (your frozen frames show a hit when the lunge is
+  5 or more frames in: 6 of 8); `Fall_B` and `Knockdown_Back_B` wired; `skf/export17` (exact joins, the stick clear of the ice). 8 knockdowns by the human on
+  clay in 54 s, every chain complete, every `JAMVIS` count paired.
+- **Coming in SK15**: lying poses lowered on to the ice and get-ups of 36 frames (`skf/export18`), the lunge forced into the frozen frame, a wall trace for side
+  falls (a side knockdown 0.6 m from the boards puts the body through the wall today), the pin that cut a get-up, a larger contact shade while down.
+- **A-to-B-0019 accepted**: three title treatments for the operator's pick are rendering (lane BR1); a rougher crowd and a cross-check sound are generating
+  (lane AU5); nobody has heard AU4 or AU5 yet.
+- Running: SK15 (8002), B32 slide trail and the effects in real knockdowns (8000), SKF18, AU5, BR1 (no editor).

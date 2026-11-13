@@ -1,0 +1,448 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "hud",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T11:28:31.181Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "hud",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a76/hockey.regular-l2-before-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/a76/hockey.regular-l2-before-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/a76/hockey.regular-l2-before-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/a76/mode.marathon-l2-before-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/a76/mode.marathon-l2-before-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "F",
+          "path": "docs/experiments/img/a76/mode.marathon-l2-before-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2605,
+      "usage": {
+        "prompt": 16554,
+        "output": 6437,
+        "thoughts": 0,
+        "total": 22991,
+        "calls": 2
+      },
+      "cost_usd_est": 0.03655,
+      "ms": 52683,
+      "retried": true,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A: hockey.regular-l2-before-card.jpg",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Match announcement card",
+                "position": "center upper-middle",
+                "legible": true,
+                "text": "MATCH 1 PERIOD 1 - FACEOFF"
+              },
+              {
+                "name": "Own net distance marker",
+                "position": "mid-left edge",
+                "legible": true,
+                "text": "own 34 m"
+              },
+              {
+                "name": "Faceoff countdown ring",
+                "position": "lower center-right",
+                "legible": true,
+                "text": "1 HOLD"
+              },
+              {
+                "name": "Player ring tag",
+                "position": "lower center",
+                "legible": true,
+                "text": "YOU"
+              },
+              {
+                "name": "Tutorial prompt bubble",
+                "position": "lower center-right above speech bubble",
+                "legible": true,
+                "text": "press shoot at the drop, not before"
+              },
+              {
+                "name": "Speech bubble",
+                "position": "bottom center above bar",
+                "legible": true,
+                "text": "Welcome to the rink: blue against orange, first period."
+              },
+              {
+                "name": "Controls bar",
+                "position": "bottom horizontal strip",
+                "legible": true,
+                "text": "SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC"
+              },
+              {
+                "name": "Call ready prompt",
+                "position": "bottom-left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              },
+              {
+                "name": "Mini-rink radar",
+                "position": "bottom-right corner",
+                "legible": true,
+                "text": "none"
+              }
+            ],
+            "collisions": [
+              "Match announcement card occludes the far rink boards and partially obscures the far net marker.",
+              "Speech bubble overlaps the lower arc of the player ring.",
+              "Call ready prompt is tightly placed near the bottom-left screen border."
+            ],
+            "missing": [
+              "Clear indicator confirming which team the player controls aside from the ring label.",
+              "Explicit indicator showing which net blue attacks."
+            ],
+            "smallest_text_px": 11,
+            "legibility": 4
+          },
+          {
+            "label": "Still B: hockey.regular-l2-before-faceoff.jpg",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Target net distance marker",
+                "position": "top center below board",
+                "legible": true,
+                "text": "49 m"
+              },
+              {
+                "name": "Own net distance marker",
+                "position": "mid-left edge",
+                "legible": true,
+                "text": "own 34 m"
+              },
+              {
+                "name": "Side distance marker",
+                "position": "mid-left lower edge",
+                "legible": true,
+                "text": "23 m"
+              },
+              {
+                "name": "Speech bubble",
+                "position": "bottom center above bar",
+                "legible": true,
+                "text": "Loud one off the wall."
+              },
+              {
+                "name": "Controls bar",
+                "position": "bottom horizontal strip",
+                "legible": true,
+                "text": "SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC"
+              },
+              {
+                "name": "Call ready prompt",
+                "position": "bottom-left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              },
+              {
+                "name": "Mini-rink radar",
+                "position": "bottom-right corner",
+                "legible": true,
+                "text": "none"
+              }
+            ],
+            "collisions": [
+              "Target net distance marker directly overlays the distant orange skater and goal frame.",
+              "Speech bubble overlaps the bottom arc of the player selection ring."
+            ],
+            "missing": [
+              "Faceoff countdown or timing indicator.",
+              "Explicit indication of which goal belongs to which team."
+            ],
+            "smallest_text_px": 11,
+            "legibility": 4
+          },
+          {
+            "label": "Still C: hockey.regular-l2-before-farnet.jpg",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Target net marker",
+                "position": "top right-center",
+                "legible": true,
+                "text": "3 m"
+              },
+              {
+                "name": "Own net distance marker",
+                "position": "mid-right edge",
+                "legible": true,
+                "text": "own 83 m"
+              },
+              {
+                "name": "Crease distance indicator",
+                "position": "lower right-center",
+                "legible": true,
+                "text": "59 m"
+              },
+              {
+                "name": "Call ready prompt",
+                "position": "bottom-left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              },
+              {
+                "name": "Mini-rink radar",
+                "position": "bottom-right corner",
+                "legible": true,
+                "text": "none"
+              }
+            ],
+            "collisions": [
+              "Crease distance marker collides directly with the red crease line arc.",
+              "Call ready prompt is seated very close to the bottom screen boundary."
+            ],
+            "missing": [
+              "Puck location indicator when puck is off-screen.",
+              "Active match clock."
+            ],
+            "smallest_text_px": 11,
+            "legibility": 3
+          },
+          {
+            "label": "Still D: mode.marathon-l2-before-card.jpg",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1 10:00 00"
+              },
+              {
+                "name": "Match announcement card",
+                "position": "center upper-middle",
+                "legible": true,
+                "text": "MATCH 1 MARATHON - PERIOD 1 - FACEOFF"
+              },
+              {
+                "name": "Own net distance marker",
+                "position": "mid-left edge",
+                "legible": true,
+                "text": "own 59 m"
+              },
+              {
+                "name": "Faceoff countdown ring",
+                "position": "lower center-right",
+                "legible": true,
+                "text": "1 HOLD"
+              },
+              {
+                "name": "Player ring tag",
+                "position": "lower center",
+                "legible": true,
+                "text": "YOU"
+              },
+              {
+                "name": "Tutorial prompt bubble",
+                "position": "lower center-right above speech bubble",
+                "legible": true,
+                "text": "press shoot at the drop, not before"
+              },
+              {
+                "name": "Speech bubble",
+                "position": "bottom center above bar",
+                "legible": true,
+                "text": "Lights are up, the ice is fresh. First period is under way."
+              },
+              {
+                "name": "Controls bar",
+                "position": "bottom horizontal strip",
+                "legible": true,
+                "text": "SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC"
+              },
+              {
+                "name": "Call ready prompt",
+                "position": "bottom-left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              },
+              {
+                "name": "Mini-rink radar",
+                "position": "bottom-right corner",
+                "legible": true,
+                "text": "none"
+              }
+            ],
+            "collisions": [
+              "Match announcement card occludes the far board and center-ice sightline.",
+              "Speech bubble overlaps the lower edge of the blue player selection ring."
+            ],
+            "missing": [
+              "Clarification on win condition for Marathon mode.",
+              "Directional orientation toward target net."
+            ],
+            "smallest_text_px": 11,
+            "legibility": 4
+          },
+          {
+            "label": "Still E: mode.marathon-l2-before-faceoff.jpg",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1 9:56 00"
+              },
+              {
+                "name": "Target net distance marker",
+                "position": "top center below scoreboard",
+                "legible": true,
+                "text": "88 m"
+              },
+              {
+                "name": "Side marker",
+                "position": "mid-left edge upper",
+                "legible": true,
+                "text": "30 m"
+              },
+              {
+                "name": "Own net distance marker",
+                "position": "mid-left edge lower",
+                "legible": true,
+                "text": "own 44 m"
+              },
+              {
+                "name": "Controls bar",
+                "position": "bottom horizontal strip",
+                "legible": true,
+                "text": "SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC"
+              },
+              {
+                "name": "Call ready prompt",
+                "position": "bottom-left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              },
+              {
+                "name": "Mini-rink radar",
+                "position": "bottom-right corner",
+                "legible": true,
+                "text": "none"
+              }
+            ],
+            "collisions": [
+              "Target net marker overlays the distant skater figure.",
+              "Controls bar lies directly beneath the player ring boundary."
+            ],
+            "missing": [
+              "Faceoff active status indicator.",
+              "Puck status indicator."
+            ],
+            "smallest_text_px": 11,
+            "legibility": 4
+          },
+          {
+            "label": "Still F: mode.marathon-l2-before-farnet.jpg",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1 9:46 00"
+              },
+              {
+                "name": "Target net distance marker",
+                "position": "top center below board",
+                "legible": true,
+                "text": "14 m"
+              },
+              {
+                "name": "Own net distance marker",
+                "position": "mid-left edge",
+                "legible": true,
+                "text": "own 118 m"
+              },
+              {
+                "name": "Opponent proximity indicator",
+                "position": "lower right-center",
+                "legible": true,
+                "text": "6 m"
+              },
+              {
+                "name": "Opponent selection ring",
+                "position": "lower right-center",
+                "legible": true,
+                "text": "none"
+              },
+              {
+                "name": "Call ready prompt",
+                "position": "bottom-left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              },
+              {
+                "name": "Mini-rink radar",
+                "position": "bottom-right corner",
+                "legible": true,
+                "text": "none"
+              }
+            ],
+            "collisions": [
+              "Opponent proximity label '6 m' overlaps skater stick blade and ice glare.",
+              "Target net marker directly overlays the top bar of the goal frame."
+            ],
+            "missing": [
+              "Puck possession indicator.",
+              "Shot power meter or aim reticle."
+            ],
+            "smallest_text_px": 11,
+            "legibility": 4
+          }
+        ]
+      },
+      "markdown": "**eyes/hud** A=hockey.regular-l2-before-card.jpg B=hockey.regular-l2-before-faceoff.jpg C=hockey.regular-l2-before-farnet.jpg D=mode.marathon-l2-before-card.jpg E=mode.marathon-l2-before-faceoff.jpg F=mode.marathon-l2-before-farnet.jpg (gemini-3.8-flash, in 16554 out 6437 tokens, ~$0.0365, 52.7 s, 1 retry)\n- stills:\n  - label: Still A: hockey.regular-l2-before-card.jpg; smallest_text_px: 11; legibility: 4\n    - elements:\n      - name: Scoreboard; position: top center; legible: true; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Match announcement card; position: center upper-middle; legible: true; text: MATCH 1 PERIOD 1 - FACEOFF\n      - name: Own net distance marker; position: mid-left edge; legible: true; text: own 34 m\n      - name: Faceoff countdown ring; position: lower center-right; legible: true; text: 1 HOLD\n      - name: Player ring tag; position: lower center; legible: true; text: YOU\n      - name: Tutorial prompt bubble; position: lower center-right above speech bubble; legible: true; text: press shoot at the drop, not before\n      - name: Speech bubble; position: bottom center above bar; legible: true; text: Welcome to the rink: blue against orange, first period.\n      - name: Controls bar; position: bottom horizontal strip; legible: true; text: SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC\n      - name: Call ready prompt; position: bottom-left corner; legible: true; text: ESC / START CALL READY\n      - name: Mini-rink radar; position: bottom-right corner; legible: true; text: none\n    - collisions: Match announcement card occludes the far rink boards and partially obscures the far net marker.; Speech bubble overlaps the lower arc of the player ring.; Call ready prompt is tightly placed near the bottom-left screen border.\n    - missing: Clear indicator confirming which team the player controls aside from the ring label.; Explicit indicator showing which net blue attacks.\n  - label: Still B: hockey.regular-l2-before-faceoff.jpg; smallest_text_px: 11; legibility: 4\n    - elements:\n      - name: Scoreboard; position: top center; legible: true; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Target net distance marker; position: top center below board; legible: true; text: 49 m\n      - name: Own net distance marker; position: mid-left edge; legible: true; text: own 34 m\n      - name: Side distance marker; position: mid-left lower edge; legible: true; text: 23 m\n      - name: Speech bubble; position: bottom center above bar; legible: true; text: Loud one off the wall.\n      - name: Controls bar; position: bottom horizontal strip; legible: true; text: SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC\n      - name: Call ready prompt; position: bottom-left corner; legible: true; text: ESC / START CALL READY\n      - name: Mini-rink radar; position: bottom-right corner; legible: true; text: none\n    - collisions: Target net distance marker directly overlays the distant orange skater and goal frame.; Speech bubble overlaps the bottom arc of the player selection ring.\n    - missing: Faceoff countdown or timing indicator.; Explicit indication of which goal belongs to which team.\n  - label: Still C: hockey.regular-l2-before-farnet.jpg; smallest_text_px: 11; legibility: 3\n    - elements:\n      - name: Scoreboard; position: top center; legible: true; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Target net marker; position: top right-center; legible: true; text: 3 m\n      - name: Own net distance marker; position: mid-right edge; legible: true; text: own 83 m\n      - name: Crease distance indicator; position: lower right-center; legible: true; text: 59 m\n      - name: Call ready prompt; position: bottom-left corner; legible: true; text: ESC / START CALL READY\n      - name: Mini-rink radar; position: bottom-right corner; legible: true; text: none\n    - collisions: Crease distance marker collides directly with the red crease line arc.; Call ready prompt is seated very close to the bottom screen boundary.\n    - missing: Puck location indicator when puck is off-screen.; Active match clock.\n  - label: Still D: mode.marathon-l2-before-card.jpg; smallest_text_px: 11; legibility: 4\n    - elements:\n      - name: Scoreboard; position: top center; legible: true; text: 00 PERIOD 1 10:00 00\n      - name: Match announcement card; position: center upper-middle; legible: true; text: MATCH 1 MARATHON - PERIOD 1 - FACEOFF\n      - name: Own net distance marker; position: mid-left edge; legible: true; text: own 59 m\n      - name: Faceoff countdown ring; position: lower center-right; legible: true; text: 1 HOLD\n      - name: Player ring tag; position: lower center; legible: true; text: YOU\n      - name: Tutorial prompt bubble; position: lower center-right above speech bubble; legible: true; text: press shoot at the drop, not before\n      - name: Speech bubble; position: bottom center above bar; legible: true; text: Lights are up, the ice is fresh. First period is under way.\n      - name: Controls bar; position: bottom horizontal strip; legible: true; text: SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC\n      - name: Call ready prompt; position: bottom-left corner; legible: true; text: ESC / START CALL READY\n      - name: Mini-rink radar; position: bottom-right corner; legible: true; text: none\n    - collisions: Match announcement card occludes the far board and center-ice sightline.; Speech bubble overlaps the lower edge of the blue player selection ring.\n    - missing: Clarification on win condition for Marathon mode.; Directional orientation toward target net.\n  - label: Still E: mode.marathon-l2-before-faceoff.jpg; smallest_text_px: 11; legibility: 4\n    - elements:\n      - name: Scoreboard; position: top center; legible: true; text: 00 PERIOD 1 9:56 00\n      - name: Target net distance marker; position: top center below scoreboard; legible: true; text: 88 m\n      - name: Side marker; position: mid-left edge upper; legible: true; text: 30 m\n      - name: Own net distance marker; position: mid-left edge lower; legible: true; text: own 44 m\n      - name: Controls bar; position: bottom horizontal strip; legible: true; text: SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC\n      - name: Call ready prompt; position: bottom-left corner; legible: true; text: ESC / START CALL READY\n      - name: Mini-rink radar; position: bottom-right corner; legible: true; text: none\n    - collisions: Target net marker overlays the distant skater figure.; Controls bar lies directly beneath the player ring boundary.\n    - missing: Faceoff active status indicator.; Puck status indicator.\n  - label: Still F: mode.marathon-l2-before-farnet.jpg; smallest_text_px: 11; legibility: 4\n    - elements:\n      - name: Scoreboard; position: top center; legible: true; text: 00 PERIOD 1 9:46 00\n      - name: Target net distance marker; position: top center below board; legible: true; text: 14 m\n      - name: Own net distance marker; position: mid-left edge; legible: true; text: own 118 m\n      - name: Opponent proximity indicator; position: lower right-center; legible: true; text: 6 m\n      - name: Opponent selection ring; position: lower right-center; legible: true; text: none\n      - name: Call ready prompt; position: bottom-left corner; legible: true; text: ESC / START CALL READY\n      - name: Mini-rink radar; position: bottom-right corner; legible: true; text: none\n    - collisions: Opponent proximity label '6 m' overlaps skater stick blade and ice glare.; Target net marker directly overlays the top bar of the goal frame.\n    - missing: Puck possession indicator.; Shot power meter or aim reticle."
+    }
+  ]
+}

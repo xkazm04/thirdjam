@@ -571,7 +571,12 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 					Rg->SetRenderCustomDepth(false);
 					Rg->SetCustomDepthStencilValue(0);
 					RB.Commit(Rg, 0);
-					UMaterialInstanceDynamic* RD = UMaterialInstanceDynamic::Create(Look, this);
+					// A-to-B-0015 (B29): B's opaque lit ring instance MI_Zone_<kind>_Ring (matte clay body, soft emissive; reads neither scale nor UVs) when it exists;
+					// else the zone's own MI_Zone_<kind> as A69 shipped it. Circle / Strength do not exist on the ring master: setting them is harmless.
+					bool bRingLook = false;
+					UMaterialInterface* RingBase = LoadLook(*FString::Printf(TEXT("MI_Zone_%s_Ring"), *Zn.Kind.ToString()), TEXT("/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial"), &bRingLook);
+					if (!bRingLook || !RingBase) RingBase = Look;
+					UMaterialInstanceDynamic* RD = UMaterialInstanceDynamic::Create(RingBase, this);
 					RD->SetScalarParameterValue(TEXT("Circle"), bCircle ? 1.f : 0.f);
 					RD->SetScalarParameterValue(TEXT("Strength"), static_cast<float>(FMath::Clamp(Zn.Strength, 0.0, 1.0)));
 					Rg->SetMaterial(0, RD);

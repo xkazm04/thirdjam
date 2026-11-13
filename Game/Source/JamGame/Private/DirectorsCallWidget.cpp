@@ -467,6 +467,9 @@ namespace
 	}
 }
 
+static TAutoConsoleVariable<int32> CVarJamUiCardMode(TEXT("jam.ui.CardMode"), 0,
+	TEXT("MATCH card on rinks over 95 m: 0 = 40 pt in the usual place, 1 = 40 pt lifted to y 150 (lane A76)."), ECVF_Default);
+
 void UJamDirectorsCallHudWidget::BuildTree()
 {
 	if (!WidgetTree) WidgetTree = NewObject<UWidgetTree>(this, TEXT("WidgetTree"), RF_Transient);
@@ -585,6 +588,15 @@ void UJamDirectorsCallHudWidget::TickFrame(const FJamPresentationFrame& F, bool 
 		}
 	}
 	LastFrame = F.SimFrame;
+	// Lane A76: the card's type and place follow the rink (and jam.ui.CardMode for the proof).
+	const IConsoleVariable* P3 = IConsoleManager::Get().FindConsoleVariable(TEXT("jam.hud.Pass3"));
+	const int32 Mode = (P3 && P3->GetInt() == 0) ? -2 : CVarJamUiCardMode.GetValueOnGameThread();   // -2: the A74 card (50 pt, y 190)
+	if (F.RinkLengthM != CardRinkLen || Mode != CardMode)
+	{
+		CardRinkLen = F.RinkLengthM; CardMode = Mode;
+		TakeCard->SetFont(S::Font(Mode == -2 ? MatchCardFontPt : MatchCardPtFor(F.RinkLengthM), FName("Black"), S::TrackTitle, true));
+		if (TakeArt) if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(TakeArt->Slot)) CS->SetPosition(FVector2D(0, MatchCardCentreYFor(F.RinkLengthM, Mode > 0)));
+	}
 	const bool bEnd = F.Phase == EJamPhase::Win || F.Phase == EJamPhase::Lose;
 	const bool bTake = !bEnd && TakeUntil >= 0 && F.SimFrame < TakeUntil;
 	TakeCard->SetVisibility(bTake ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);

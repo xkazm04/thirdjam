@@ -13,6 +13,68 @@
 #include "JamEventBus.h"
 #include "Engine/GameInstance.h"
 #include "HAL/IConsoleManager.h"
+#include "Components/SkinnedMeshComponent.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Animation/AnimInstance.h"
+#include "Animation/AnimMontage.h"
+#include "Animation/AnimSequenceBase.h"
+
+// Lane A80: a presentation-only read-out of the figure's lowest bones against the ice, for the knockdown strips (jam.vis.lowlog 1; off by default; the sim never sees it).
+static TAutoConsoleVariable<int32> CVarJamVisLow(TEXT("jam.vis.lowlog"), 0,
+	TEXT("1 = log JAMLOW per sim frame for every skater from its knockdown to 70 frames after the release: lowest bone and pelvis / hand / head / foot Z in cm above the pawn's ice plane, the montage. Lane A80 proof."));
+namespace
+{
+	struct FJamLowTrack { int64 Start = -1; int64 Release = -1; float StandPelvis = 0.f; bool bHadDown = false; };
+	TMap<const AJamSkater*, FJamLowTrack> GJamLow;
+
+	void JamLowReadout(const AJamSkater* P, UObject* V, const FJamSkaterState& S, int64 Frame, bool bHeld)
+	{
+		if (CVarJamVisLow.GetValueOnGameThread() == 0) return;
+		AActor* A = Cast<AActor>(V);
+		if (!A) return;
+		FJamLowTrack& T = GJamLow.FindOrAdd(P);
+		const bool bDown = S.IsDown();
+		if (bDown && !T.bHadDown) { T.bHadDown = true; T.Start = Frame; T.Release = -1; }
+		if (!bDown && T.bHadDown && T.Release < 0) T.Release = Frame;
+		const bool bActive = bDown || (T.Release >= 0 && Frame - T.Release <= 70);
+		if (!bActive) { T.bHadDown = false; }
+		if (!bActive && (Frame % 10) != 0) return;
+		TArray<USkinnedMeshComponent*> Cs;
+		A->GetComponents<USkinnedMeshComponent>(Cs);
+		USkinnedMeshComponent* M = nullptr;
+		for (USkinnedMeshComponent* C : Cs) if (C && C->GetNumBones() > 0 && (!M || C->GetNumBones() > M->GetNumBones())) M = C;
+		if (!M) return;
+		M->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
+		const float Ice = static_cast<float>(P->GetActorLocation().Z);
+		float LowBody = 1e9f; FName LowBodyName;
+		float Low = 1e9f, Pelvis = 1e9f, Hand = 1e9f, Head = 1e9f, Foot = 1e9f;
+		FName LowName;
+		for (int32 i = 0; i < M->GetNumBones(); ++i)
+		{
+			const FName N = M->GetBoneName(i);
+			const float Z = static_cast<float>(M->GetBoneLocation(N, EBoneSpaces::WorldSpace).Z) - Ice;
+			if (Z < Low) { Low = Z; LowName = N; }
+			const FString L = N.ToString().ToLower();
+			const bool bHelper = L.Contains(TEXT("socket")) || L.Contains(TEXT("ik")) || L.Contains(TEXT("root")) || L.Contains(TEXT("stick")) || L.Contains(TEXT("puck")) || L.Contains(TEXT("blade"));
+			if (!bHelper && Z < LowBody) { LowBody = Z; LowBodyName = N; }
+			if (L.Contains(TEXT("pelvis")) || L.Equals(TEXT("hips"))) Pelvis = FMath::Min(Pelvis, Z);
+			else if (L.Contains(TEXT("hand")) && !L.Contains(TEXT("ik"))) Hand = FMath::Min(Hand, Z);
+			else if (L.Contains(TEXT("head"))) Head = FMath::Min(Head, Z);
+			else if (L.Contains(TEXT("foot"))) Foot = FMath::Min(Foot, Z);
+		}
+		if (!bActive) { if (Pelvis < 1e8f) T.StandPelvis = Pelvis; return; }
+		FString Montage = TEXT("none");
+		if (USkeletalMeshComponent* SK = Cast<USkeletalMeshComponent>(M))
+			if (UAnimInstance* AI = SK->GetAnimInstance()) if (UAnimMontage* Mo = AI->GetCurrentActiveMontage())
+			{
+				Montage = Mo->GetName();
+				if (Mo->SlotAnimTracks.Num() > 0 && Mo->SlotAnimTracks[0].AnimTrack.AnimSegments.Num() > 0)
+					if (const UAnimSequenceBase* Seq = Mo->SlotAnimTracks[0].AnimTrack.AnimSegments[0].GetAnimReference()) Montage = Seq->GetName();
+			}
+		UE_LOG(LogJamSim, Log, TEXT("JAMLOW frame=%lld skater=%d human=%d down=%d held=%d rel=%lld low_cm=%.1f low=%s pelvis_cm=%.1f hand_cm=%.1f head_cm=%.1f foot_cm=%.1f stand_pelvis_cm=%.1f dir=(%.2f, %.2f) montage=%s"),
+			Frame, S.Index, S.bHuman ? 1 : 0, bDown ? 1 : 0, bHeld ? 1 : 0, Frame - T.Start, LowBody, *LowBodyName.ToString(), Pelvis, Hand, Head, Foot, T.StandPelvis, S.KnockDir.X, S.KnockDir.Y, *Montage);
+	}
+}
 
 namespace
 {
@@ -254,8 +316,9 @@ void AJamSkater::ApplySimFrame(const FJamSkaterState& S)
 	{
 		bWasDown = S.IsDown();
 		// C-0001 v4: the down time rides along (KnockFrames is the whole knockdown on the frame it starts: StepSkater counts it down from the next step on).
-		// Lane A73: on a hit-stop the visual's own clock stands still for HoldTotal frames, so it gets KnockFrames - HoldTotal: its get-up still ends on the release.
-		const int32 DownFrames = bWasDown ? FMath::Max(1, S.KnockFrames - (bHitFrame ? HoldTotal : 0)) : 0;
+		// Lane A73 sent KnockFrames - HoldTotal (the visual's clock stands still during the hit-stop). Lane A80 measured the get-up drifting one frame earlier per frame of
+		// hold: B's montage freezes but its get-up still ends in world time, so the hold was counted twice. The Director (13:30): the unreduced KnockFrames go out.
+		const int32 DownFrames = bWasDown ? FMath::Max(1, S.KnockFrames) : 0;
 		IJamSkaterVisual::Execute_SetKnockedDown(V, bWasDown, static_cast<float>(S.KnockDir.X), static_cast<float>(S.KnockDir.Y), DownFrames);
 		if (bWasDown)
 		{
@@ -298,6 +361,7 @@ void AJamSkater::ApplySimFrame(const FJamSkaterState& S)
 		IJamSkaterVisual::Execute_SetHasPuck(V, bHadPuck);
 	}
 	// Lane A73: while held, the continuous calls (UpdateMotion, SetStickAim, SetShotCharge) stay away: the figure keeps the hit frame's motion state.
+	JamLowReadout(this, V, S, SimFrameForLog(), bHeld);   // lane A80: off unless jam.vis.lowlog 1
 	if (bHeld)
 	{
 		if (S.PokeResult != 0) IJamSkaterVisual::Execute_PlayPoke(V, S.PokeResult > 0);

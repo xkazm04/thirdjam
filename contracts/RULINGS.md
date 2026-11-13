@@ -431,3 +431,26 @@ skill 0.94 -> 0.95 (large 0.97); all_star speed 1.15 -> 1.3; bots check from 4 m
 share barely moves). `HumanHasSomethingToDo`'s budget is the soak's measured share plus 2 points (10.4 %), as R-0037 point 2 intended. Flat and not adopted:
 `bot_react_frames`, rookie speed. Open: all_star is a steep step (a regular player wins 13 %, a novice 3 %); R-0029 names no target there; a skill lever that only the
 good player beats is the next curve ask if the operator wants all_star reachable for a regular player. The gate's 20-seed tests keep their bars (novice 14 of 20).
+
+## R-0040 (H18, 2026-11-13 12:57): the lift is shielded like the poke; the saucer pass; protocol 6
+Lane A77 (`docs/experiments/MECHANICS.md`) proved the input path and the read-outs of the sweep, the spin and the saucer in a package, and found that the stick lift at contact
+(no shield, 1.7 m body to body) took the puck inside every shield window the sweep and the spin give against the poke. Rulings: (1) the spin shields the lift fully (the body
+is between), and the sweep shields the lift on the side the puck left for `game.stick.sweep.shield_frames`, the same rule as the poke (lane A82); (2) the saucer pass stays
+(`game.pass.saucer`: a held F lifts the pass over a blade, a puck over 0.2 m passes every blade), with its lane margin at 0.9 m and the airborne window from 1.5 m along
+(A77's measured calibration); (3) `PassHeld` is lockstep flag bit 1024 and the protocol is 6: device B merges main before any joined test; (4) the mechanics' bars (R-0034,
+A51's brief) stand: ten of ten in the package, reported with the count and the cause when not met, never tuned past this ruling.
+
+## R-0041 (H18, 2026-11-13 13:00): difficulty is aggression; 5 v 5; abilities on F; a raw and brutal brand
+The operator: "I would reframe also the difficulty direction to focus more on aggressivity. I feel like the arena can be built for 5v5 game, tackles and cross-checks can
+be vital for fun gameplay which will become on harder difficulty a beating massacre. Director's mode then can produce via boosts fun aspects like one-shot shotgun,
+binding special abilities to 'F' key. This can make whole concept of the game more raw and brutal promoting into its brand (logo, banner, tone of the game)."
+Rulings: (1) **the difficulty ladder is an aggression ladder**: rookie bots rarely check and never cross-check; pro bots check and lift as a matter of course; all_star bots
+hunt the carrier: body checks from low closing speeds, cross-checks at contact, knockdowns every shift ("a beating massacre"); speed comes back toward 1.2 as the aggression
+levers take the win rate (lanes A79, A83); the R-0029 targets stand as the measure. (2) **5 v 5 is the regular game**: `hockey.regular` and the ladder's takes go to five
+skaters a side (the schema allows 2..5, the brain 10 skaters, A58 measured no hitch at 3 v 3: A83 measures 5 v 5 on the 4090 and at the minimum spec before the switch);
+the rink stays 90 x 45 unless 5 v 5 crowds it (then 100 x 50 by measurement). (3) **Abilities on F** (lane A84): a Director's mode or a boost pickup grants the human one
+special ability, used with F: the one-shot shotgun (a shot that knocks down every skater it passes within a metre and goes in through a crowd), the hip-check burst, the
+shield, the slow puck; the **pass moves to Q** (the deke keeps the mouse wheel and gamepad Y; Q was the deke's second key). Each ability is a cartridge-defined key under
+`game.abilities[]`, unknown keys errors, with a bark and a HUD slot. (4) **The brand goes raw and brutal within the jam's teen rating** (R-0021: no gore, clay figures, mild
+words at most one in ten): the title, the logo, the banner, the menu copy, the commentator's tone and the crowd sell a rough game, not a cruel one; device B owns the logo and
+the banner (A-to-B-0019), A owns the copy and the commentary tone. (5) P3 stays the shipped look; nothing here reopens P4. (6) **The carrier is slower and cannot sprint** (the operator, 13:15: "skater with puck will need slight speed reduction and inability to sprint, to incentivize passing with other players and ability to defend"): `game.skater.carry_speed_mult` (default 0.92, range 0.6..1) scales the carrier's top speed and acceleration; the sprint is refused while carrying (the bar does not drain); bots and the human alike; a calibration with the hash re-recorded (lane A82), the curve re-measured after (A79).
