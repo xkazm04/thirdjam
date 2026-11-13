@@ -368,48 +368,31 @@ void AJamPuck::InitPuck(double RadiusM, const FLinearColor& Colour)
 	}
 }
 
-double AJamPuck::PopLiftM(double FramesSincePop, double Strength01)
+double AJamPuck::RenderHeightM(const FJamPuckState& P, float Alpha, double HalfHeight)
 {
-	if (FramesSincePop < 0.0 || FramesSincePop >= (double)PopFrames) return 0.0;
-	const double S = 0.5 + 0.5 * FMath::Clamp(Strength01, 0.0, 1.0);
-	return PopHeightM * S * FMath::Sin(PI * FramesSincePop / (double)PopFrames);
-}
-
-bool AJamPuck::IsStrip(int32 PrevLastTouch, const FJamPuckState& P)
-{
-	// A check strip (UJamSim::KnockDown) clears LastTouch and leaves the puck moving from where it was; a faceoff reset clears it too but pins the puck still on the dot.
-	return PrevLastTouch >= 0 && P.LastTouch == -1 && P.Vel.Size() > 0.2 && FVector2D::Distance(P.Pos, P.PrevPos) < 0.5;
+	// R-0035 (lane A52): the sim's height, interpolated between the previous and the current frame like the position; never below the ice.
+	const double A = FMath::Clamp(static_cast<double>(Alpha), 0.0, 1.0);
+	return HalfHeight + FMath::Max(0.0, P.PrevZ + (P.Z - P.PrevZ) * A);
 }
 
 void AJamPuck::ApplyRender(const FJamPuckState& P, float Alpha)
 {
-	// Lane A33: the sim frame comes from the bus (set by the game mode before the visuals are driven); the pop counts those frames, never wall clock.
-	int64 SimFrame = LastSimFrame;
-	if (UGameInstance* GI = GetGameInstance())
-	{
-		if (const UJamEventBus* Bus = GI->GetSubsystem<UJamEventBus>()) SimFrame = Bus->GetSimFrame();
-	}
-	if (SimFrame != LastSimFrame)
-	{
-		if (IsStrip(PrevLastTouch, P))
-		{
-			PopStartFrame = SimFrame;
-			PopStrength = FMath::Clamp(P.Vel.Size() / 6.0, 0.0, 1.0);
-		}
-		PrevLastTouch = P.LastTouch;
-		LastSimFrame = SimFrame;
-	}
-	double LiftM = 0.0;
-	if (PopStartFrame >= 0 && SimFrame >= 0)
-	{
-		const double Since = (double)(SimFrame - PopStartFrame) + FMath::Clamp(Alpha, 0.f, 1.f);
-		LiftM = PopLiftM(Since, PopStrength);
-		if (Since >= (double)PopFrames) PopStartFrame = -1;
-	}
-	SetActorLocation(Lerp2D(P.PrevPos, P.Pos, Alpha, HalfHeightM + LiftM));
+	// R-0035 (lane A52): the puck is drawn where the sim says, height included; the disc (the shadow) stays on the ice under it.
+	const FVector Loc = Lerp2D(P.PrevPos, P.Pos, Alpha, RenderHeightM(P, Alpha, HalfHeightM));
+	SetActorLocation(Loc);
+	PlaceDiscOnIce(Loc);
 }
 
 void AJamPuck::ApplyRenderAt(const FVector& WorldCm)
 {
-	SetActorLocation(FVector(WorldCm.X, WorldCm.Y, HalfHeightM * 100.0));
+	const FVector Loc(WorldCm.X, WorldCm.Y, HalfHeightM * 100.0);
+	SetActorLocation(Loc);
+	PlaceDiscOnIce(Loc);
+}
+
+void AJamPuck::PlaceDiscOnIce(const FVector& PuckCm)
+{
+	// The disc is attached under the puck mesh (parent-local z -0.45 of a 0.08 m tall unit cylinder = 3.6 cm under the centre, 0.4 cm over the ice when the
+	// puck sits on it); with the puck in the air it is placed in world space at the same 0.4 cm over the ice.
+	if (Disc) Disc->SetWorldLocation(FVector(PuckCm.X, PuckCm.Y, (HalfHeightM - 0.45 * 0.08) * 100.0));
 }

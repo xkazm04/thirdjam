@@ -227,3 +227,12 @@
 
 - RESOURCES 00:27 cpu 2% ram 20/63GB gpu 3 %, 854 MiB, 39 editors 0 cmd 0 ubt 0 free 551GB
 - running 00:36: A51 stick handling (mouse sweep beats a poke, spin on E, pass to F, protocol 5; brief briefs/A51-stick-handling.md, R-0034) beside A50.
+- link green 00:39: main a6b6f5b (A50 goal height, crease stance, commentary variety, goal variant; R-0034) pushed.
+- running 00:41: A52 lifted puck (height in the sim, shots by charge, saves by height, posts; brief briefs/A52-lifted-puck.md, R-0035) beside A51.
+
+- RESOURCES 00:57 cpu 2% ram 18/63GB gpu 4 %, 700 MiB, 39 editors 0 cmd 0 ubt 0 free 536GB
+
+## H13.3 (01:21) night fillers (spark night-capacity): eleven directions accepted, three started
+- A53 playtester soak (Sonnet), A54 eyes grid (Sonnet), A55 static analysis (Opus) started at main a6b6f5b beside A51/A52; the rest queue by `docs/experiments/NIGHT-PLAN.md`.
+
+- RESOURCES 01:28 cpu 89% ram 24.4/63GB gpu 57 %, 2031 MiB, 46 editors 0 cmd 0 ubt 1 free 507GB

@@ -215,6 +215,13 @@ namespace JamAI
 		W.GoalX = S.GoalLineX();
 		W.GoalHalfWidth = G.Rink.GoalWidthM * 0.5;
 		W.ShotReach = G.Shot.ReachM;
+		// R-0035 (lane A52): the net's height and the lift rule for the shooter's charge choice
+		W.GoalHeightM = G.Rink.GoalHeightM;
+		W.LiftTapM = G.Shot.LiftTapM;
+		W.LiftHalfM = G.Shot.LiftHalfM;
+		W.LiftFullM = G.Shot.LiftFullM;
+		W.LiftHalfFrames = G.Shot.LiftHalfFrames;
+		W.ChargeFramesMax = G.Shot.ChargeFramesMax;
 		W.bDrawOpen = S.IsDrawOpen();
 		// R-0017: the pickups on the ice, from the sim's effect system (lane A14's UJamEffectSystem is the only IJamModifierSource
 		// and binds itself with SetModifierSource), so every caller of BuildWorld sees them: game mode, tests, tournaments

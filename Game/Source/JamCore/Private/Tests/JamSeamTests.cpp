@@ -52,13 +52,16 @@ namespace JamSeamTests
 	}
 
 	// Seeded random inputs for every skater; the human attacks. Returns the final hash and collects every frame hash.
-	uint64 RunScripted(UJamSim* Sim, uint64 Seed, int32 Frames, TArray<uint64>* OutHashes)
+	// OutPlayingFrames (lane A52): how many of the steps ran in the Playing phase (OnFrame fires only there; a lifted scripted shot may score inside the run).
+	uint64 RunScripted(UJamSim* Sim, uint64 Seed, int32 Frames, TArray<uint64>* OutHashes, int32* OutPlayingFrames = nullptr)
 	{
 		FJamRandom In(Seed * 7919 + 13);
 		TArray<FJamInput> Inputs;
 		Inputs.SetNum(Sim->GetSkaters().Num());
+		if (OutPlayingFrames) *OutPlayingFrames = 0;
 		for (int32 F = 0; F < Frames; ++F)
 		{
+			if (OutPlayingFrames && Sim->GetPhase() == EJamSimPhase::Playing) ++*OutPlayingFrames;
 			for (int32 i = 0; i < Inputs.Num(); ++i)
 			{
 				if (F % 20 == 0) Inputs[i].Move = In.UnitVector2D() * In.Range(0.3, 1.0);
@@ -160,9 +163,11 @@ bool FJamSeams::RunTest(const FString& Parameters)
 		Sim->SetRuleHook(&Hook);
 		Sim->Restart();        // the opening triggers with the hook attached (Restart re-seeds: the same match)
 		Sim->SkipFaceoff();
-		RunScripted(Sim, 1, 600, &WithEmptyHook);
+		int32 PlayingFrames = 0;
+		RunScripted(Sim, 1, 600, &WithEmptyHook, &PlayingFrames);
 		Sim->SetRuleHook(nullptr);
-		TestTrue(TEXT("the hook saw OnFrame every frame"), Hook.Seen.FindRef(EJamRuleTrigger::OnFrame) >= 600);
+		// Lane A52 (R-0035): the scripted attacker's lifted taps can score inside the 600 frames; OnFrame fires on every Playing frame, not during the pause.
+		TestTrue(TEXT("the hook saw OnFrame every Playing frame"), Hook.Seen.FindRef(EJamRuleTrigger::OnFrame) >= PlayingFrames && PlayingFrames >= 300);
 		TestTrue(TEXT("the hook saw the opening faceoff"), Hook.Seen.FindRef(EJamRuleTrigger::OnFaceoff) >= 1);
 		TestTrue(TEXT("the hook saw period 1 start"), Hook.Seen.FindRef(EJamRuleTrigger::OnPeriodStart) >= 1);
 	}

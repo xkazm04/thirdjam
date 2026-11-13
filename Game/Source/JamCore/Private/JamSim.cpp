@@ -658,6 +658,7 @@ void UJamSim::FaceoffReset()
 	const FVector2D Dir = Rng.UnitVector2D();
 	Puck.Pos = Puck.PrevPos = FaceoffDot + Dir * Rng.Range(0.0, FaceoffDropM);
 	Puck.Vel = FVector2D::ZeroVector;
+	Puck.Z = Puck.VZ = Puck.PrevZ = 0.0;   // R-0035 (lane A52): the drop lands on the ice
 	Puck.LastTouch = -1;
 	DekeCommitFrames = 0;
 	DekeCommitSide = 0;
@@ -805,8 +806,15 @@ bool UJamSim::InGoal(const FVector2D& P, int32 Side, double HeightM) const
 
 void UJamSim::SetPuck(const FVector2D& Pos, const FVector2D& Vel)
 {
+	SetPuck(Pos, Vel, 0.0, 0.0);
+}
+
+void UJamSim::SetPuck(const FVector2D& Pos, const FVector2D& Vel, double Z, double VZ)
+{
 	Puck.Pos = Puck.PrevPos = Pos;
 	Puck.Vel = Vel;
+	Puck.Z = Puck.PrevZ = FMath::Max(0.0, Z);   // R-0035 (lane A52)
+	Puck.VZ = VZ;
 }
 
 void UJamSim::SetSkater(int32 Index, const FVector2D& Pos, const FVector2D& Vel, double Yaw)
@@ -847,6 +855,7 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 		S.bDekeThisFrame = false;
 	}
 	Puck.PrevPos = Puck.Pos;
+	Puck.PrevZ = Puck.Z;   // R-0035 (lane A52): the visual interpolates the height like the position
 
 	if (Phase == EJamSimPhase::Faceoff)
 	{
@@ -1367,6 +1376,7 @@ void UJamSim::TryShoot(FJamSkaterState& S, float Charge)
 	const double MaxSpeed = Eff(EJamStat::PuckMaxSpeed, -1);
 	const double Speed = FMath::Min(Eff(EJamStat::ShotSpeed, S.Index) + FMath::Clamp(static_cast<double>(Charge), 0.0, 1.0) * Config.Shot.ChargeSpeedBonus, MaxSpeed);
 	Puck.Vel = Aim * Speed;
+	ApplyShotLift(S, Aim, Speed, Charge);   // R-0035 (lane A52): the release height follows the charge (a one-timer's Charge is 1 here, so it lifts full)
 	Puck.LastTouch = S.Index;
 	S.ShotReadyFrame = Frame + Config.Shot.CooldownFrames;
 	S.bShotThisFrame = true;
@@ -1643,8 +1653,11 @@ void UJamSim::StepPuck()
 	for (int32 Sub = 0; Sub < PuckSubsteps; ++Sub)
 	{
 		Puck.Vel *= FMath::Max(0.0, 1.0 - Drag * H);
+		// R-0035 (lane A52): the height first (gravity, the ice bounce, the carried puck pinned to the ice); a puck in the air feels no ice friction.
+		const double ZPrev = Puck.Z;
+		StepPuckVertical(H);
 		const double Sp = Puck.Vel.Size();
-		if (Sp > 1e-9)
+		if (Sp > 1e-9 && Puck.Z <= 0.0)
 		{
 			const double FrictionHere = ZoneSource ? Friction * ZoneSource->IceAt(Puck.Pos).FrictionMul : Friction;   // R-0019 slow / fast ice under the puck
 			const double NewSp = FMath::Max(0.0, Sp - FrictionHere * H);
@@ -1656,10 +1669,18 @@ void UJamSim::StepPuck()
 		const FVector2D Prev = Puck.Pos;
 		Puck.Pos += Puck.Vel * H;
 
+		// R-0035 (lane A52): the crease skater's save by height, before any body or blade touches the puck (its own rule, see TryGoalieSave).
+		{
+			const int32 Saver = TryGoalieSave(R, MaxSpeed);
+			if (Saver >= 0) Touched[Saver] = true;
+		}
+
 		// Skater bodies push the puck (dribbling, as in the Godot pack); the carrier's blade pulls it (C-0005 carry assist, R-0013 stick).
 		for (FJamSkaterState& S : Skaters)
 		{
 			if (S.InBox()) continue;
+			// R-0035 (lane A52): a puck over the body passes; over a crease skater's block height it passes too (the low shot through the stance is the hard one).
+			if (Puck.Z >= BodyHeightM || (Puck.Z >= Config.Skater.GoalieBlockHeightM && InCreaseStance(S))) continue;
 			// C-0005 deflection: an opponent's shot passing within DeflectRangeM of the blade bounces off it at 70 %; a teammate's puck (a pass)
 			// is received instead: the blade takes most of its speed and the carry assist settles it.
 			if (S.DeflectCooldown == 0 && Puck.LastTouch != S.Index && S.CanAct())
@@ -1747,6 +1768,7 @@ void UJamSim::StepPuck()
 		// Boards.
 		FVector2D N;
 		const double D = BoardDistance(Puck.Pos, N);
+		const bool bAtBoards = D + R > 0;   // R-0035 (lane A52): read after the bounce for the glass
 		if (D + R > 0)
 		{
 			Puck.Pos -= N * (D + R);
@@ -1764,12 +1786,41 @@ void UJamSim::StepPuck()
 			}
 		}
 
+		// R-0035 (lane A52): a puck over the glass at the boards is out of play: a free faceoff, as after a foul.
+		if (bAtBoards && Puck.Z > GlassHeightM)
+		{
+			OutOfPlay();
+			break;
+		}
+
 		// Nets: posts, side walls and back wall, both ends.
+		const double GoalH = Config.Rink.GoalHeightM;
 		for (int32 Side = -1; Side <= 1; Side += 2)
 		{
 			const double X0 = Side * GL;
 			const double X1 = Side * (GL + NetDepth);
 			const double SpeedBefore = Puck.Vel.Size();
+			// R-0035 (lane A52): the net is GoalH tall with a closed roof. A puck dropping onto the roof from above bounces on it; a puck crossing the goal
+			// line with its centre within BarRingM + PostRadius of the crossbar rings `post` and reflects; a puck over the bar flies over the net (no posts,
+			// no walls); a puck under it meets the posts and the walls as before and scores by InGoal with its height.
+			const bool bOverFootprint = Puck.Pos.X * Side > X0 - R && Puck.Pos.X * Side < X1 + R && FMath::Abs(Puck.Pos.Y) < Hw + R;
+			if (bOverFootprint && ZPrev >= GoalH && Puck.Z < GoalH)
+			{
+				Puck.Z = GoalH;
+				Puck.VZ = FMath::Abs(Puck.VZ) * FMath::Clamp(Config.Puck.IceRestitution, 0.0, 1.0);
+			}
+			if (FMath::Abs(Puck.Z - GoalH) <= BarRingM + PostRadius && FMath::Abs(Puck.Pos.Y) < Hw && Prev.X * Side < X0 && Puck.Pos.X * Side >= X0 - R)
+			{
+				Puck.Pos.X = Side * (X0 - R - 1e-3);
+				Puck.Vel.X = -Puck.Vel.X * NetBounce;
+				Puck.VZ = -Puck.VZ * NetBounce;
+				if (PostEventCooldown == 0 && SpeedBefore >= PostEventMinSpeed)
+				{
+					Emit(JamEvents::Post, -1, FVector2D(X0, Puck.Pos.Y), static_cast<float>(SpeedBefore / MaxSpeed));
+					PostEventCooldown = PostEventGapFrames;
+				}
+			}
+			if (Puck.Z >= GoalH) continue;
 			for (int32 PostSide = -1; PostSide <= 1; PostSide += 2)
 			{
 				const FVector2D PostAt(X0, PostSide * Hw);
@@ -1803,8 +1854,9 @@ void UJamSim::StepPuck()
 
 		if (Phase == EJamSimPhase::Playing)
 		{
-			if (InGoal(Puck.Pos, 1)) { ScoreGoal(bNetsSwapped ? 1 : 0); }
-			else if (InGoal(Puck.Pos, -1)) { ScoreGoal(bNetsSwapped ? 0 : 1); }
+			// R-0035 (lane A52): with the puck's height: over the bar is no goal.
+			if (InGoal(Puck.Pos, 1, Puck.Z)) { ScoreGoal(bNetsSwapped ? 1 : 0); }
+			else if (InGoal(Puck.Pos, -1, Puck.Z)) { ScoreGoal(bNetsSwapped ? 0 : 1); }
 		}
 	}
 
@@ -1812,6 +1864,132 @@ void UJamSim::StepPuck()
 	{
 		if (Touched[S.Index] && !S.bTouchingPuck) ++S.Touches;
 		S.bTouchingPuck = Touched[S.Index];
+	}
+}
+
+// ---- R-0035 (lane A52): the lifted puck. Its own functions: nothing here touches the stick, the carry, the sweep, the spin or the pokes. ----
+
+double UJamSim::LiftForCharge(float Charge) const
+{
+	const FJamShotConfig& Sh = Config.Shot;
+	const double C = FMath::Clamp(static_cast<double>(Charge), 0.0, 1.0);
+	const int32 Max = Sh.ChargeFramesMax;
+	if (Max <= 0) return FMath::Max(0.0, Sh.LiftTapM);   // charging off: every shot is a tap
+	const int32 Half = Sh.LiftHalfFrames;
+	if (Half <= 0 || Half >= Max) return FMath::Max(0.0, FMath::Lerp(Sh.LiftTapM, Sh.LiftFullM, C));
+	const double F = C * Max;   // frames held
+	if (F <= Half) return FMath::Max(0.0, FMath::Lerp(Sh.LiftTapM, Sh.LiftHalfM, F / Half));
+	return FMath::Max(0.0, FMath::Lerp(Sh.LiftHalfM, Sh.LiftFullM, (F - Half) / (Max - Half)));
+}
+
+void UJamSim::ApplyShotLift(const FJamSkaterState& S, const FVector2D& Aim, double Speed, float Charge)
+{
+	// The release is from the ice; VZ is solved so the puck is LiftForCharge(Charge) high when it reaches the attacked goal line along the aim (the
+	// straight distance to the goal centre when the aim does not head for that line). A slow puck lobs: the apex is capped under the glass.
+	Puck.Z = 0.0;
+	Puck.VZ = 0.0;
+	const double LiftM = LiftForCharge(Charge);
+	if (LiftM <= 0.0 || Speed <= 1e-6) return;
+	const double Gx = AttackGoalX(S.Team);
+	const double Dir = Gx > 0 ? 1.0 : -1.0;
+	const double ToLine = (Gx - Puck.Pos.X) * Dir;
+	const double DistM = FMath::Max(0.5, ToLine > 1.0 && Aim.X * Dir > 0.1 ? ToLine / (Aim.X * Dir) : FVector2D::Distance(Puck.Pos, FVector2D(Gx, 0.0)));
+	// The flight time with the puck's drag as StepPuck applies it (v *= 1 - k h per substep, then x += v h; no ice friction in the air): after n substeps
+	// x = v0 h (1 - k h) (1 - (1 - k h)^n) / (k h), solved for n; a puck the drag stops short of the line flies the longest allowed time.
+	const double K = Eff(EJamStat::PuckDrag, -1);
+	const double Hs = DT / PuckSubsteps;
+	double T = DistM / Speed;
+	if (K > 1e-9 && K * Hs < 1.0)
+	{
+		const double Q = 1.0 - K * DistM / (Speed * (1.0 - K * Hs));
+		T = Q > 0.05 ? Hs * FMath::Loge(Q) / FMath::Loge(1.0 - K * Hs) : LiftFlightMaxS;
+	}
+	T = FMath::Clamp(T, DT, LiftFlightMaxS);
+	const double G = FMath::Max(0.0, Config.Puck.GravityMps2);
+	// The substep integrator (VZ first, then Z) sums to Z(T) = T VZ - G T (T + h) / 2, so the release speed carries the half-substep term.
+	Puck.VZ = LiftM / T + 0.5 * G * (T + DT / PuckSubsteps);
+	if (G > 0.0) Puck.VZ = FMath::Min(Puck.VZ, FMath::Sqrt(2.0 * G * LiftApexMaxM));
+	Puck.Z = 1e-6;   // off the ice from this frame (StepPuckVertical integrates it from here; the hash sees it)
+}
+
+void UJamSim::StepPuckVertical(double H)
+{
+	// A carried puck sits on the ice: the carrier of record with the puck riding along (the carry assist's own rule: a shot or pass that just left is not).
+	const int32 Ci = CarrierIndex();
+	if (Ci >= 0 && (Puck.Vel - Skaters[Ci].Vel).Size() < 4.0) { Puck.Z = 0.0; Puck.VZ = 0.0; return; }
+	if (Puck.Z <= 0.0 && Puck.VZ <= 0.0) { Puck.Z = 0.0; Puck.VZ = 0.0; return; }   // on the ice: nothing to integrate
+	const double G = FMath::Max(0.0, Config.Puck.GravityMps2);
+	Puck.VZ -= G * H;
+	Puck.Z += Puck.VZ * H;
+	if (Puck.Z <= 0.0)
+	{
+		Puck.Z = 0.0;
+		Puck.VZ = -Puck.VZ * FMath::Clamp(Config.Puck.IceRestitution, 0.0, 1.0);
+		if (Puck.VZ * Puck.VZ < 2.0 * G * BounceDeadM) Puck.VZ = 0.0;   // a hop under BounceDeadM dies
+	}
+}
+
+bool UJamSim::InCreaseStance(const FJamSkaterState& S) const
+{
+	// JamAI::CreaseStance's geometry (R-0033, lane A50) inside the sim: within CreaseStanceM of its own goal centre, on the ice side of the goal line, able to act.
+	if (!S.CanAct()) return false;
+	const FVector2D OwnGoal(-AttackGoalX(S.Team), 0.0);
+	return FVector2D::Distance(S.Pos, OwnGoal) <= CreaseStanceM && FMath::Abs(S.Pos.X) <= GoalLineX();
+}
+
+int32 UJamSim::TryGoalieSave(double R, double MaxSpeed)
+{
+	// A loose shot (last touched by a skater, nobody carrying it, DeflectMinSpeed or faster) heading at the net it attacks (its line crosses the goal
+	// line inside the mouth plus the reach), under game.skater.goalie.block_height_m, passing within goalie.reach_m of a defending skater in the crease
+	// stance: that skater saves it. The puck dies at the saver's feet (its speed becomes the saver's, the hop is spent) and is the saver's touch; the
+	// `save` read-out names the saver. The human in the stance saves the same way. A puck over the block height passes (and a puck over the bar is no
+	// goal anyway: the low shot through the stance is the hard one).
+	const double ReachM = Config.Skater.GoalieReachM;
+	if (ReachM <= 0.0 || Puck.Z >= Config.Skater.GoalieBlockHeightM) return -1;
+	if (!Skaters.IsValidIndex(Puck.LastTouch) || CarrierIndex() >= 0) return -1;
+	const double Sp = Puck.Vel.Size();
+	if (Sp < DeflectMinSpeed) return -1;
+	const int32 ShooterTeam = Skaters[Puck.LastTouch].Team;
+	const double Gx = AttackGoalX(ShooterTeam);
+	const double Dir = Gx > 0 ? 1.0 : -1.0;
+	if (Puck.Vel.X * Dir <= 1e-6) return -1;
+	const double T = (Gx - Puck.Pos.X) / Puck.Vel.X;
+	if (T <= 0.0) return -1;
+	if (FMath::Abs(Puck.Pos.Y + Puck.Vel.Y * T) > Config.Rink.GoalWidthM * 0.5 + ReachM) return -1;
+	// R-0029 point 4 (lane A39): while the deker's goalie commit runs, the crease skater's block sits on the puck's old side (the brain's blade and block
+	// follow PuckPos - DekeCommitOffset), so the real puck is a deke's offset further from the block than from the body: the deke's open post stays open.
+	FVector2D Seen = Puck.Pos;
+	if (DekeCommitFrames > 0 && DekeCommitSkater == Puck.LastTouch && DekeCommitSide != 0) Seen.Y += DekeCommitSide * EffectiveDekeOffsetM();
+	for (FJamSkaterState& S : Skaters)
+	{
+		if (S.Team == ShooterTeam || !InCreaseStance(S)) continue;
+		if (FVector2D::Distance(S.Pos, Seen) > ReachM + R) continue;
+		Emit(JamEvents::Save, S.Index, Puck.Pos, static_cast<float>(FMath::Clamp(Sp / MaxSpeed, 0.0, 1.0)));
+		// The stop: the puck comes back off the pads at SaveReboundKeep of its speed, down the way it came, a loose puck in front of the crease (a puck dead at the
+		// saver's feet handed every save to the saver's carry and took a chase from the human: the HumanHasSomethingToDo gate).
+		Puck.Vel = S.Vel - FVector2D(Dir, 0.0) * (Sp * SaveReboundKeep);
+		Puck.VZ = 0.0;
+		Puck.LastTouch = S.Index;
+		S.DeflectCooldown = 10;
+		ShotFrame = -1000000;   // lane A32's read-out: this shot is saved (CheckSave stays quiet about the touch that follows)
+		return S.Index;
+	}
+	return -1;
+}
+
+void UJamSim::OutOfPlay()
+{
+	// Over the glass: the puck is dead; a free faceoff at the dot of the end it left, on its side, after the foul's pause (CallFoul's rule, no box).
+	const double EndX = (Puck.Pos.X >= 0.0 ? 1.0 : -1.0) * GoalLineX() * 0.55;
+	const double SideZ = (Puck.Pos.Y >= 0.0 ? 1.0 : -1.0) * Config.Rink.WidthM * 0.25;
+	PendingFaceoffDot = FVector2D(EndX, SideZ);
+	Puck.Vel = FVector2D::ZeroVector;
+	Puck.Z = 0.0;
+	Puck.VZ = 0.0;
+	if (Phase == EJamSimPhase::Playing)
+	{
+		Phase = EJamSimPhase::GoalPause;
+		PauseFrames = FoulPauseFrames;
 	}
 }
 
@@ -1896,6 +2074,8 @@ uint64 UJamSim::StateHash() const
 	H.AddV(Puck.Pos, 1000.0);
 	H.AddV(Puck.Vel, 1000.0);
 	H.AddI(Puck.LastTouch);
+	// R-0035 (lane A52): the height once the puck left the ice (a cut whose lift keys are all 0 hashes as before).
+	if (Puck.Z != 0.0 || Puck.VZ != 0.0) { H.AddQ(Puck.Z, 1000.0); H.AddQ(Puck.VZ, 1000.0); }
 	// C-0005: active modifier ids, and rule state only when it left its default (so a match without seams hashes as before).
 	for (const FJamActiveModifier& M : ActiveModifiers) H.AddI(M.Id);
 	if (ScoreMultiplier[0] != 1 || ScoreMultiplier[1] != 1) { H.AddI(ScoreMultiplier[0]); H.AddI(ScoreMultiplier[1]); }
