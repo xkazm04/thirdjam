@@ -911,7 +911,8 @@ void AHokejGameMode::GatherInputs()
 		{
 			I.Move = FVector2D(Out[i].Move.X, Out[i].Move.Y);
 			I.bShoot = Out[i].bShoot;
-			I.bShootHeld = Out[i].bShootHeld;   // lane A31 (B-to-A-0024 point 1): the bots' charged shot
+			I.bShootHeld = Out[i].bShootHeld;
+			I.bPassHeld = Out[i].bPassHeld;   // A104 finding: the brain's saucer hold never reached the sim in single player (the headless curve had it)   // lane A31 (B-to-A-0024 point 1): the bots' charged shot
 			I.bCheck = Out[i].bCheck;
 			I.bBrake = Out[i].bBrake;
 			I.bPass = Out[i].bPass;   // lane A3 (R-0017): pass, stick aim, poke, lift

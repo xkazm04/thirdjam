@@ -517,3 +517,27 @@ use; soaks scale their workers to fill it; (3) **the freezes move**: rule change
 freezes Saturday 22:00; Sunday is the submission; submit Sunday 22:00; (4) the ladder of R-0046 is set: an evolution that moves a target cell by more than 4 points ships
 with its neutral value until the curve is re-set; (5) the release chain compiles the Shipping target before the acceptance run (H26's first try played green and then failed
 to compile for Shipping: a test outside its guard).
+
+## R-0048 (H26, 2026-11-13 19:34): what the design eye measured: the carried puck, the whistle, the first ten minutes
+Track F0's first review (`docs/design/REVIEW-1.md`, 924 headless matches on the vision's build) found the game's largest gap against `docs/VISION.md` law 3: **nobody keeps
+the puck**: the human's carry lasts a median 0.87 / 0.75 / 0.67 s at rookie / pro / all_star, because a carried puck is taken by any aimed blade or body that touches it,
+with no press, even by a teammate. Rulings: (1) **a carried puck leaves its carrier only by an action**: a shot, a pass, a poke, a lift, a check or stumble that loosens it,
+or the carrier's own release; never by an unpressed blade or a body's touch (`game.stick.passive_take`, default false, neutral true), never to a teammate by touch under
+either value (track F2, in its current evolution); the ladder is re-set right after on the track's report (a curve lane), since the human keeping the puck moves every cell;
+(2) **the whistle is taken out of the regular game**: `hockey.regular` and the season's first takes play with `rules.penalties` false (the newcomer's first hit was a foul
+in 37 of 60 first matches, under a banner that promises no whistle); modes that are about the whistle keep it (Glass House); (3) **the first ten minutes**: take-3 is no wall
+(it is pro today: the novice wins 22 % and has no shot in a third of them): the season's first three takes are rookie, measured (a content lane with the curve lane);
+(4) at all_star the speed scale is the opposing side's only: the human's own mates do not outskate him (15.5 against 11.3 m/s today); set with the curve; (5) the brain
+brakes by reversing 670 to 2,330 times a match and never sprints with the puck: track Q2's next two evolutions; (6) the screen says what the sim decides (track F1, in
+progress); (7) process: every editor or commandlet start takes a turn at the one build tool lock, so a measurement uses few processes with many seeds each.
+
+## R-0049 (H26, 2026-11-13 19:38): device B's play-through (B-to-A-0038): a tackle is an event, not a rhythm
+Device B played the build before the vision for 267 s and found the human knocked down every 7 seconds (7 of 15 within a second of his release) and the carrier losing the
+puck 1.4 times a second. The vision's contact law and R-0048 answer part of it; the rest is ruled here: (1) **release grace**: a skater released from a knockdown cannot be
+stumbled or knocked down for `game.contact.release_grace_frames` (default 90, neutral 0): a hit on it is a bump at most, and the brain does not start a check on it
+(track F1's next evolution; proof: in 100 s at pro no figure is down again within 2 s of its release, the human down fewer than five times); (2) **take grace**: a skater
+that has just won the puck cannot be lifted or poked for `game.stick.take_grace_frames` (default 30, neutral 0); a body check still loosens it (track F2's next, with
+R-0048's rule: together they are "the puck is kept"); (3) the fade-in waits for the light rig, the human's marker at five a side, the hint bar, the commentary box, the
+distance labels and the camera in the corners: a new track **U1 the screen** (Fable, lane A111); (4) the whistle's early release of a knocked-down figure stays where a
+mode keeps the whistle; the regular game loses the whistle (R-0048), and B's quick get-up covers the rest; (5) `NS_deke` / `MS_deke`: B builds them small (a flick of
+shavings at the blade, a short scrape): asked in the answer.

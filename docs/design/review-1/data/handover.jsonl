@@ -1,0 +1,3 @@
+{"log":"tools/playtest/out/a100/raw/rk-novice.log","matches":12,"per_match":{"mate takes from human":1.17,"human takes from mate":0.58,"mate takes from mate":1.08,"opp takes from opp":8.58}}
+{"log":"tools/playtest/out/a100/raw/pro-regular.log","matches":12,"per_match":{"mate takes from human":1,"human takes from mate":0.75,"mate takes from mate":0.67,"opp takes from opp":9}}
+{"log":"tools/playtest/out/a100/raw/as-good.log","matches":12,"per_match":{"mate takes from human":1,"human takes from mate":0.42,"mate takes from mate":0.83,"opp takes from opp":7.92}}

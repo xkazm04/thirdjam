@@ -73,6 +73,9 @@ private:
 
 	TArray<FJamInput> LockInputs;
 	FJamNetScriptedHuman Script;
+	// Lane A104: AHokejGameMode's A93 back-pull latch (ReadLocalInput): the camera yaw when the move input began to pull back.
+	bool bBackYawHeld = false;
+	double BackYawRad = 0.0;
 	int32 LocalIndex = -1;
 	int32 RemoteIndex = -1;
 	int32 LockRinkRevision = 0;

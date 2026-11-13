@@ -221,6 +221,18 @@ void UJamLobbySubsystem::TickLobby()
 		uint32 Ip = 0; int32 Port = 0;
 		while (Link->RecvFrom(Bytes, Ip, Port))
 		{
+			// Lane A104: a HELLO from another build gets a REFUSE naming this build's protocol (the guest shows it at once instead of "no answer").
+			uint8 ForeignType = 0;
+			const int32 Foreign = JamNetPeekForeignVersion(Bytes, ForeignType);
+			if (Foreign >= 0 && ForeignType == static_cast<uint8>(JamNet::EType::Hello))
+			{
+				TArray<uint8> Refuse;
+				JamNetWriteRefuse(Refuse);
+				Link->SetPeer(Ip, Port);
+				Link->Send(Refuse);
+				UE_LOG(LogJamNet, Log, TEXT("JAMNET refused a protocol-%d guest from %s:%d (this build: %d)"), Foreign, *FJamInviteCode::FormatIp(Ip), Port, JamNet::Version);
+				continue;
+			}
 			if (!FJamNetLobbyMessage::Read(Bytes, M) || M.Type != JamNet::EType::Hello) continue;
 			Link->SetPeer(Ip, Port);
 			RemoteName = M.Name;
@@ -237,6 +249,12 @@ void UJamLobbySubsystem::TickLobby()
 	{
 		while (Link->Recv(Bytes))
 		{
+			int32 HostVersion = -1;   // lane A104: the host runs another build
+			if (JamNetReadRefuse(Bytes, HostVersion) && HostVersion != JamNet::Version)
+			{
+				Fail(FString::Printf(TEXT("the host runs a different build (protocol %d, you have %d): update both"), HostVersion, JamNet::Version));
+				return;
+			}
 			if (!FJamNetLobbyMessage::Read(Bytes, M)) continue;
 			if (M.Type == JamNet::EType::Bye) { Fail(TEXT("the host left")); return; }
 			if (M.Type != JamNet::EType::Welcome) continue;

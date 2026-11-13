@@ -25,6 +25,8 @@ Read first, always: `docs/VISION.md` (the game's laws), `docs/PLAN-RECONCILED.md
   proof with the Director in its report. The Director's release chain takes the cursor for two minutes per package: a disturbed run is repeated, never trusted.
 - At most three interactive `UnrealEditor.exe` on the machine; use one only when the brief says so, on your own MCP port, closed after. Builds: `tools/run/build.ps1`; packages:
   `tools/run/package.ps1 ... -ExtraArgs "-ubtargs=-WaitMutex"`; wait out a UBT ConflictingInstance and an AutomationTool already running.
+- **Few processes, many seeds.** Every `UnrealEditor-Cmd` start takes a turn at the one build tool lock (the design eye's commandlets waited 3 to 16 minutes each to play
+  60 matches in 7 seconds). Batch a measurement into as few process starts as you can; never one process per match or per cell when one can run a list.
 - Blender runs headless (`blender -b -P script.py`); find the install as `docs/experiments/BLENDER.md` says.
 
 ## The walls

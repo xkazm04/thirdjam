@@ -382,3 +382,9 @@
 ## H25 (18:47) evolution tracks started (R-0047, docs/EVOLUTION.md); the vision on main ee14438; H26 re-releasing
 - Ten lanes A100-A109 on tracks F0 design eye, F1 contact feel, F2 carrier skill, F3 arena in Blender (Fable); Q1 determinism and lockstep, Q2 review and repair, Q3 performance at five (Opus); S1 soak, S2 acceptance matrix (cursor owner), S3 fuzz (Sonnet). Band: 38-50 GB in use.
 - H26: the acceptance run was green 19/19 on ee14438, then the Shipping target failed to compile (a test outside its guard); fixed; the release chain now compiles Shipping first.
+
+- RESOURCES 19:00 cpu 26% ram 50.8/63GB gpu 3 %, 794 MiB, 40 editors 0 cmd 26 ubt 2 free 596GB
+- 19:12: the landing chain's clean build could not link (the soak lane runs its matches on the clean-main worktree's binaries, which locks the DLL: not a code error; the gate build passed, 156 tests). clean-main is the soak's now; the chain uses a new worktree clean-b. H26 release re-run started.
+
+- RESOURCES 19:30 cpu 100% ram 50.7/63GB gpu 1 %, 811 MiB, 47 editors 0 cmd 26 ubt 2 free 575GB
+- package 19:46: `Hokej_Hokej_H26.zip` from main a1c712f, acceptance run green (18 verbs through the cursor and the buttons).

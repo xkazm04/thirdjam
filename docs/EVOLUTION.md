@@ -40,4 +40,20 @@ submission; submit Sunday 22:00. **Cursor owner now: track S2** (after the Direc
 A merges `dev-b` at every half-hour check when it is ahead; B merges main before each lane.
 
 ## Queue (the Director appends each lane's "next three" here; the top line of a track is what runs next)
-(empty until the first reports)
+**From F0's REVIEW-1 (19:34; R-0048):**
+- **F2** now: the carried puck leaves only by an action (`stick.passive_take` false), never to a teammate; then drill 21 with the body between; then a near miss is not a stumble.
+- **Curve** (new track C0, Opus, starts on F2's report): re-set the ladder with the puck kept; all_star's speed for the opposing side only.
+- **Content** (new track C1, Sonnet, with C0): `hockey.regular` and takes 1-2 without penalties; the first three takes at rookie; the mode cards that still say "checks from N m/s".
+- **Q2** next: the brain brakes on purpose (reverse brakes at pro 2,146 to under 500 a match); mates pass to the human where he has room; the bot carrier sprints on an open lane.
+- **F1** next after "every outcome reads": the hit's size on screen (hit-stop 2 to 6, the kick by frames down); the braced bounce as a row and a line.
+- **S1** next: the shape at 60 seeds a level; the scorecard's read-outs in the playtest line; the season in order with retries.
+- **S2** rows to add: bump, refused, stumble, braced, brake with its spray.
+- **F3** next: something behind the glass; the box used during a penalty.
+- **F0** next: REVIEW-2 after F1, F2 and Q2 land (same seeds); the twelve modes against the vision.
+- **Q1** (from A104): abilities for the online guest (running as A110); the hash-coverage lint; all twelve modes soaked on protocol 8.
+- **Submission**: the page says "difficulty is aggression, not speed" and "cross-check a skater who is not looking": both false of the build; the whistle line; the video script's shot 5.
+
+**From device B's play-through (B-to-A-0038; R-0049, 19:38):**
+- **F1** next (before the hit's size): release grace (`contact.release_grace_frames` 90): nobody is down again within 2 s of release; the human down fewer than five times in 100 s at pro.
+- **F2** next (after the passive take): take grace (`stick.take_grace_frames` 30): a carrier keeps the puck at least half a second between stick takeaways.
+- **U1 the screen** (new track, Fable, lane A111 in worktree `a100`): the human's marker at five a side, the fade-in waits for the lights, the hint bar and labels, the camera in the corners.

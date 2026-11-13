@@ -216,6 +216,19 @@ void UJamSim::Restart()
 		S.ShieldFrames = 0;
 		S.AbilitiesUsed = 0;
 		S.bAbilityThisFrame = false;
+		// Lane A104 (track Q1): the state lanes A77, A92 and A93 added, back to Init's values, so a rematch (AHokejGameMode's rematch calls Restart) replays the
+		// seed: a stamina bar, a burst, a cut history or a pass hold left by the last match changed the next one, and the contact counters ran on.
+		S.Stamina = -1;
+		S.bSprinting = false;
+		S.BurstLeft = 0;
+		for (FVector2D& M : S.MoveHist) M = FVector2D::ZeroVector;
+		S.MoveHistAt = 0;
+		S.bReverseBrakeLast = false;
+		S.bStickAimed = false;
+		S.PassChargeFrames = 0;
+		S.Saucers = 0;
+		S.CarrySprintFrames = S.ReverseBrakes = 0;
+		S.ContactBumps = S.ContactStumbles = S.ContactDowns = S.ContactRecoils = S.ChecksRefused = 0;
 	}
 	PendingFaceoffDot = FVector2D::ZeroVector;
 	DekeCommitFrames = 0;
@@ -2784,6 +2797,27 @@ void UJamSim::StepSlowPuck()
 int32 UJamSim::StaminaFull() const
 {
 	return FMath::Max(1, Config.Skater.SprintDrainFrames) * FMath::Max(1, Config.Skater.SprintRefillFrames);
+}
+
+uint64 UJamSim::LockstepStateHash() const
+{
+	// Lane A104: StateHash() plus the cross-frame state it leaves out (see the header). Ages, not frames, where a rule reads an age, so the hash says what the
+	// rule will decide: Frame - LastCarryFrame matters only up to stick.foul_grace_frames.
+	FHasher H;
+	H.Add(StateHash());
+	const int64 Grace = FMath::Max(0, Config.Stick.FoulGraceFrames);
+	for (const FJamSkaterState& S : Skaters)
+	{
+		H.AddI(FMath::Min<int64>(Frame - S.LastCarryFrame, Grace + 1));
+		H.AddI((S.bSprinting ? 1 : 0) | (S.bStickAimed ? 2 : 0) | (S.bPokeArmed ? 4 : 0));
+		if (Config.Skater.BurstFrames > 0)
+		{
+			H.AddI(S.MoveHistAt);
+			for (const FVector2D& M : S.MoveHist) H.AddV(M, 1000.0);
+		}
+	}
+	if (bDrawOpen) { H.AddI(BotDrawFrame[0]); H.AddI(BotDrawFrame[1]); }
+	return H.H;
 }
 
 uint64 UJamSim::StateHash() const

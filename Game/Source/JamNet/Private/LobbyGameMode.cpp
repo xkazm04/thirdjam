@@ -143,13 +143,26 @@ FJamInput ALobbyGameMode::ReadLocalInput()
 	double Yaw = GetSim()->GetSkaters()[LocalIndex].Yaw;
 	if (APlayerController* PC = Cast<APlayerController>(Mine->GetController())) if (PC->PlayerCameraManager) Yaw = FMath::DegreesToRadians(PC->PlayerCameraManager->GetCameraRotation().Yaw);
 	const FVector2D Axis = Pi->GetAxis();
+	// Lane A104: AHokejGameMode::ReadHumanInput's A93 latch (R-0045 law 3). While the move input pulls back, it is read in the camera's frame of the moment
+	// the pull began, so S is one direction on the ice and the reverse brake stops the skater; read from the live camera (which swings behind the turning
+	// skater) a held S circled online.
+	double MoveYaw = Yaw;
+	if (Axis.Y < -0.3)
+	{
+		if (!bBackYawHeld) { bBackYawHeld = true; BackYawRad = Yaw; }
+		MoveYaw = BackYawRad;
+	}
+	else bBackYawHeld = false;
 	const FVector2D Fwd(FMath::Cos(Yaw), FMath::Sin(Yaw));
 	const FVector2D Right(-FMath::Sin(Yaw), FMath::Cos(Yaw));
-	In.Move = Fwd * Axis.Y + Right * Axis.X;
+	In.Move = FVector2D(FMath::Cos(MoveYaw), FMath::Sin(MoveYaw)) * Axis.Y + FVector2D(-FMath::Sin(MoveYaw), FMath::Cos(MoveYaw)) * Axis.X;
 	// C-0005 charged shot: the held level travels; the sim charges while the puck is in reach and fires on release.
 	Pi->ConsumeShootPressed();
 	In.bShootHeld = Pi->IsShootHeld();
-	In.bPass = Pi->ConsumePassPressed();
+	// Lane A104: the pass is a held level as in AHokejGameMode::ReadHumanInput (lane A77, R-0036): the sim fires it on the release, a saucer on a long hold.
+	// Protocol 6 carried the level, but the lobby sent the press as the bPass edge: online, a human's pass was always flat and Q never made a saucer.
+	Pi->ConsumePassPressed();
+	In.bPassHeld = Pi->IsPassHeld();
 	In.bCheck = Pi->ConsumeCheckPressed();
 	In.bBrake = Pi->IsBrakeHeld();
 	// R-0013: the stick. Right stick absolute; the mouse accumulates pixels, 100 px = one reach at mouse_sensitivity 1. Camera-relative like Move.
@@ -218,15 +231,18 @@ void ALobbyGameMode::GatherBotInputs()
 		I.bLift = Out[i].bLift;
 		I.bDeke = Out[i].bDeke;   // lane A39
 		I.bSprint = Out[i].bSprint;   // lane A72 (ask A2): game.ai.sprint
-		I.bShootHeld = false;
+		// Lane A104: every field the brain sends, as FJamSimAdapter::Step copies it (the headless game the curve measures). Before, the lobby forced
+		// bShootHeld false and dropped bPassHeld: online bots never charged a shot (lane A31) nor lifted a saucer (lane A77).
+		I.bShootHeld = Out[i].bShootHeld;
+		I.bPassHeld = Out[i].bPassHeld;
+		I.bSpin = Out[i].bSpin;
+		I.bAbility = Out[i].bAbility;
 	}
 }
 
 uint64 ALobbyGameMode::LockstepHash() const
 {
-	const UJamSim* TheSim = GetSim();
-	const UJamEffectSystem* Fx = GetEffects();
-	return TheSim ? (TheSim->StateHash() ^ (Fx ? Fx->StateHash() * 31 : 0)) : 0;
+	return JamNetLockstepHash(GetSim(), GetEffects(), GetRules(), GetZones());   // lane A104: protocol 8's checkpoint
 }
 
 void ALobbyGameMode::CountProofEvents()

@@ -516,6 +516,12 @@ public:
 
 	// FNV-1a 64 over all integer-quantised state (1 mm, 1 mm/s, 1 mrad, counters, score, rng).
 	uint64 StateHash() const;
+	// Lane A104 (track Q1): the lockstep checkpoint's hash. StateHash() folded with the cross-frame state the rules read but StateHash() leaves out (so the
+	// Determinism baseline and the neutral proofs pinned on StateHash() stay valid): LastCarryFrame (foul grace, lift, carrier-cannot-hit), last frame's
+	// bSprinting (TryLift's cross-check reads it before StepSkater), last frame's bStickAimed (TryDeke reads it before StepStick), bPokeArmed (the miss stumble),
+	// the burst's MoveHist ring, BotDrawFrame while the draw is open. Equal LockstepStateHash() = equal future for equal inputs. A field a lane adds that
+	// persists across frames and is read by a rule goes into StateHash() (behind its default) or here.
+	uint64 LockstepStateHash() const;
 	FString StateHashHex() const { return FString::Printf(TEXT("%016llx"), static_cast<unsigned long long>(StateHash())); }
 
 	// Events produced by the last Step (cleared at the start of every Step).
