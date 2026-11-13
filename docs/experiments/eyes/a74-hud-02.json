@@ -1,0 +1,415 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "hud",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T10:48:00.109Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "hud",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a74/hockey.boost-l3-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/a74/hockey.boost-l3-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/a74/hockey.boost-l3-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/a74/hockey.boost-l3-pause.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/a74/hockey.regular-l2-call.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "F",
+          "path": "docs/experiments/img/a74/hockey.regular-l2-card.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2554,
+      "usage": {
+        "prompt": 16451,
+        "output": 6181,
+        "thoughts": 0,
+        "total": 22632,
+        "calls": 2
+      },
+      "cost_usd_est": 0.03552,
+      "ms": 46909,
+      "retried": true,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A (hockey.boost-l3-card.jpg)",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Match title card",
+                "position": "upper center",
+                "legible": true,
+                "text": "MATCH 1 PERIOD 1 - FACEOFF"
+              },
+              {
+                "name": "Own net marker",
+                "position": "middle left",
+                "legible": false,
+                "text": "own 46 m"
+              },
+              {
+                "name": "Player indicator tag",
+                "position": "center bottom on player",
+                "legible": true,
+                "text": "YOU"
+              },
+              {
+                "name": "Faceoff countdown reticle",
+                "position": "lower right of player",
+                "legible": true,
+                "text": "1 HOLD"
+              },
+              {
+                "name": "Instruction speech bubble",
+                "position": "lower right",
+                "legible": true,
+                "text": "press shoot at the drop, not before"
+              },
+              {
+                "name": "Commentary bar",
+                "position": "bottom center above controls",
+                "legible": true,
+                "text": "Good evening from the rink. Let us see what these two can do."
+              },
+              {
+                "name": "Controls strip",
+                "position": "bottom edge across center",
+                "legible": true,
+                "text": "SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC"
+              },
+              {
+                "name": "Call ready prompt",
+                "position": "bottom left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              },
+              {
+                "name": "Radar mini-rink",
+                "position": "bottom right corner",
+                "legible": true,
+                "text": "MINIMAP"
+              }
+            ],
+            "collisions": [
+              "Match 1 card obscures opposing skater at center ice.",
+              "Own net marker on the far left lacks background plate against ice surface."
+            ],
+            "missing": [
+              "No indicator showing which scoreboard side belongs to the player team.",
+              "No indicator for attack goal direction."
+            ],
+            "smallest_text_px": 13,
+            "legibility": 3
+          },
+          {
+            "label": "Still B (hockey.boost-l3-faceoff.jpg)",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Far net marker",
+                "position": "top center below score",
+                "legible": true,
+                "text": "66 m"
+              },
+              {
+                "name": "Own net marker",
+                "position": "middle left",
+                "legible": false,
+                "text": "own 46 m"
+              },
+              {
+                "name": "Offscreen player indicator",
+                "position": "middle left edge",
+                "legible": true,
+                "text": "7 m"
+              },
+              {
+                "name": "Controls strip",
+                "position": "bottom edge",
+                "legible": true,
+                "text": "SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC"
+              },
+              {
+                "name": "Call ready prompt",
+                "position": "bottom left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              },
+              {
+                "name": "Radar mini-rink",
+                "position": "bottom right corner",
+                "legible": true,
+                "text": "MINIMAP"
+              }
+            ],
+            "collisions": [
+              "Offscreen skater marker at 7 m is partially clipped by the left screen border.",
+              "Far net 66 m badge covers the crossbar of the far goal."
+            ],
+            "missing": [
+              "No active game clock or period countdown timer visible.",
+              "Player identity tag 'YOU' is missing from the ring."
+            ],
+            "smallest_text_px": 13,
+            "legibility": 4
+          },
+          {
+            "label": "Still C (hockey.boost-l3-farnet.jpg)",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1: FIRST TO 3 01"
+              },
+              {
+                "name": "Far net marker",
+                "position": "top center below score",
+                "legible": true,
+                "text": "9 m"
+              },
+              {
+                "name": "Own net marker",
+                "position": "middle left edge",
+                "legible": false,
+                "text": "own 103 m"
+              },
+              {
+                "name": "Goal announcement banner",
+                "position": "bottom center below skater ring",
+                "legible": true,
+                "text": "Orange scores!"
+              },
+              {
+                "name": "Radar mini-rink",
+                "position": "bottom right corner",
+                "legible": true,
+                "text": "MINIMAP"
+              }
+            ],
+            "collisions": [
+              "Goal marker at 9 m floats above the boards disconnected from the actual net structure.",
+              "Own net marker sits unpadded against white boards on screen left."
+            ],
+            "missing": [
+              "Controls reminder strip is missing during play.",
+              "Match timer is missing."
+            ],
+            "smallest_text_px": 14,
+            "legibility": 4
+          },
+          {
+            "label": "Still D (hockey.boost-l3-pause.jpg)",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "top center",
+                "legible": false,
+                "text": "00 PERIOD 1: FIRST TO 3 01"
+              },
+              {
+                "name": "Pause menu modal",
+                "position": "screen center",
+                "legible": true,
+                "text": "TIME OUT PERIOD 1 RESUME DIRECTOR'S CALL RESTART QUIT TO MENU"
+              },
+              {
+                "name": "Menu notification subtext",
+                "position": "center lower in pause modal",
+                "legible": true,
+                "text": "Your call is ready: change one thing about this match."
+              },
+              {
+                "name": "Pause controls mapping",
+                "position": "bottom center of pause modal",
+                "legible": true,
+                "text": "SKATE WASD / L-STICK AIM STICK MOUSE / R-STICK SHOOT HOLD LMB / RT CHECK RMB / RB CROSS-CHECK MMB, MOUSE4 / LB DEKE WHEEL, Q / Y SPIN E / B SPRINT SHIFT / LT POKE SPACE / A PASS F / X SIGNALS 1-4 / D-PAD BRAKE CTRL / L-STICK CLICK RESTART R / VIEW PAUSE ESC / MENU ESC / START resume STICK move A select B back"
+              },
+              {
+                "name": "Radar mini-rink",
+                "position": "bottom right corner",
+                "legible": false,
+                "text": "MINIMAP"
+              }
+            ],
+            "collisions": [
+              "Pause menu card covers the main action, player figures, and net.",
+              "Pause menu card clips top scoreboard and upper goal marker."
+            ],
+            "missing": [
+              "Clear visual focus state indicating which menu button is highlighted."
+            ],
+            "smallest_text_px": 11,
+            "legibility": 3
+          },
+          {
+            "label": "Still E (hockey.regular-l2-call.jpg)",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "top center",
+                "legible": false,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Far net marker",
+                "position": "middle right edge",
+                "legible": true,
+                "text": "5 m"
+              },
+              {
+                "name": "Own net marker",
+                "position": "middle right edge",
+                "legible": false,
+                "text": "own 85 m"
+              },
+              {
+                "name": "Director's Call modal dialog",
+                "position": "screen center",
+                "legible": true,
+                "text": "DIRECTOR'S CALL - PERIOD 1 One change per period. Move one slider, then APPLY. The scoreboard announces the new rule. SKATER SPEED 11 SHOT POWER 18 ICE FRICTION 0.015 OPPONENTS' SKILL 1 TURN RATE 5 APPLY BACK"
+              },
+              {
+                "name": "Call ready prompt",
+                "position": "bottom left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              },
+              {
+                "name": "Radar mini-rink",
+                "position": "bottom right corner",
+                "legible": false,
+                "text": "MINIMAP"
+              }
+            ],
+            "collisions": [
+              "Director's Call modal covers center rink and upper scoreboard.",
+              "Far net and own net markers overlap visually with boards behind menu."
+            ],
+            "missing": [
+              "Clear focus indicator on active slider."
+            ],
+            "smallest_text_px": 12,
+            "legibility": 4
+          },
+          {
+            "label": "Still F (hockey.regular-l2-card.jpg)",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Match title card",
+                "position": "upper center",
+                "legible": true,
+                "text": "MATCH 1 PERIOD 1 - FACEOFF"
+              },
+              {
+                "name": "Own net marker",
+                "position": "middle left",
+                "legible": false,
+                "text": "own 34 m"
+              },
+              {
+                "name": "Player indicator tag",
+                "position": "center bottom on player",
+                "legible": true,
+                "text": "YOU"
+              },
+              {
+                "name": "Faceoff countdown reticle",
+                "position": "lower right of player",
+                "legible": true,
+                "text": "2 HOLD"
+              },
+              {
+                "name": "Instruction speech bubble",
+                "position": "lower right",
+                "legible": true,
+                "text": "press shoot at the drop, not before"
+              },
+              {
+                "name": "Commentary bar",
+                "position": "bottom center above controls",
+                "legible": true,
+                "text": "Lights are up, the ice is fresh. First period is under way."
+              },
+              {
+                "name": "Controls strip",
+                "position": "bottom edge across center",
+                "legible": true,
+                "text": "SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC"
+              },
+              {
+                "name": "Call ready prompt",
+                "position": "bottom left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              },
+              {
+                "name": "Radar mini-rink",
+                "position": "bottom right corner",
+                "legible": true,
+                "text": "MINIMAP"
+              }
+            ],
+            "collisions": [
+              "Match 1 card partially overlaps the opposing skater at center ice.",
+              "Own net marker sits unsupported over white ice markings at left."
+            ],
+            "missing": [
+              "No indicator linking blue jersey to blue scoreboard counter.",
+              "No target net indicator arrow."
+            ],
+            "smallest_text_px": 13,
+            "legibility": 3
+          }
+        ]
+      },
+      "markdown": "**eyes/hud** A=hockey.boost-l3-card.jpg B=hockey.boost-l3-faceoff.jpg C=hockey.boost-l3-farnet.jpg D=hockey.boost-l3-pause.jpg E=hockey.regular-l2-call.jpg F=hockey.regular-l2-card.jpg (gemini-3.8-flash, in 16451 out 6181 tokens, ~$0.0355, 46.9 s, 1 retry)\n- stills:\n  - label: Still A (hockey.boost-l3-card.jpg); smallest_text_px: 13; legibility: 3\n    - elements:\n      - name: Scoreboard; position: top center; legible: true; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Match title card; position: upper center; legible: true; text: MATCH 1 PERIOD 1 - FACEOFF\n      - name: Own net marker; position: middle left; legible: false; text: own 46 m\n      - name: Player indicator tag; position: center bottom on player; legible: true; text: YOU\n      - name: Faceoff countdown reticle; position: lower right of player; legible: true; text: 1 HOLD\n      - name: Instruction speech bubble; position: lower right; legible: true; text: press shoot at the drop, not before\n      - name: Commentary bar; position: bottom center above controls; legible: true; text: Good evening from the rink. Let us see what these two can do.\n      - name: Controls strip; position: bottom edge across center; legible: true; text: SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC\n      - name: Call ready prompt; position: bottom left corner; legible: true; text: ESC / START CALL READY\n      - name: Radar mini-rink; position: bottom right corner; legible: true; text: MINIMAP\n    - collisions: Match 1 card obscures opposing skater at center ice.; Own net marker on the far left lacks background plate against ice surface.\n    - missing: No indicator showing which scoreboard side belongs to the player team.; No indicator for attack goal direction.\n  - label: Still B (hockey.boost-l3-faceoff.jpg); smallest_text_px: 13; legibility: 4\n    - elements:\n      - name: Scoreboard; position: top center; legible: true; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Far net marker; position: top center below score; legible: true; text: 66 m\n      - name: Own net marker; position: middle left; legible: false; text: own 46 m\n      - name: Offscreen player indicator; position: middle left edge; legible: true; text: 7 m\n      - name: Controls strip; position: bottom edge; legible: true; text: SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC\n      - name: Call ready prompt; position: bottom left corner; legible: true; text: ESC / START CALL READY\n      - name: Radar mini-rink; position: bottom right corner; legible: true; text: MINIMAP\n    - collisions: Offscreen skater marker at 7 m is partially clipped by the left screen border.; Far net 66 m badge covers the crossbar of the far goal.\n    - missing: No active game clock or period countdown timer visible.; Player identity tag 'YOU' is missing from the ring.\n  - label: Still C (hockey.boost-l3-farnet.jpg); smallest_text_px: 14; legibility: 4\n    - elements:\n      - name: Scoreboard; position: top center; legible: true; text: 00 PERIOD 1: FIRST TO 3 01\n      - name: Far net marker; position: top center below score; legible: true; text: 9 m\n      - name: Own net marker; position: middle left edge; legible: false; text: own 103 m\n      - name: Goal announcement banner; position: bottom center below skater ring; legible: true; text: Orange scores!\n      - name: Radar mini-rink; position: bottom right corner; legible: true; text: MINIMAP\n    - collisions: Goal marker at 9 m floats above the boards disconnected from the actual net structure.; Own net marker sits unpadded against white boards on screen left.\n    - missing: Controls reminder strip is missing during play.; Match timer is missing.\n  - label: Still D (hockey.boost-l3-pause.jpg); smallest_text_px: 11; legibility: 3\n    - elements:\n      - name: Scoreboard; position: top center; legible: false; text: 00 PERIOD 1: FIRST TO 3 01\n      - name: Pause menu modal; position: screen center; legible: true; text: TIME OUT PERIOD 1 RESUME DIRECTOR'S CALL RESTART QUIT TO MENU\n      - name: Menu notification subtext; position: center lower in pause modal; legible: true; text: Your call is ready: change one thing about this match.\n      - name: Pause controls mapping; position: bottom center of pause modal; legible: true; text: SKATE WASD / L-STICK AIM STICK MOUSE / R-STICK SHOOT HOLD LMB / RT CHECK RMB / RB CROSS-CHECK MMB, MOUSE4 / LB DEKE WHEEL, Q / Y SPIN E / B SPRINT SHIFT / LT POKE SPACE / A PASS F / X SIGNALS 1-4 / D-PAD BRAKE CTRL / L-STICK CLICK RESTART R / VIEW PAUSE ESC / MENU ESC / START resume STICK move A select B back\n      - name: Radar mini-rink; position: bottom right corner; legible: false; text: MINIMAP\n    - collisions: Pause menu card covers the main action, player figures, and net.; Pause menu card clips top scoreboard and upper goal marker.\n    - missing: Clear visual focus state indicating which menu button is highlighted.\n  - label: Still E (hockey.regular-l2-call.jpg); smallest_text_px: 12; legibility: 4\n    - elements:\n      - name: Scoreboard; position: top center; legible: false; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Far net marker; position: middle right edge; legible: true; text: 5 m\n      - name: Own net marker; position: middle right edge; legible: false; text: own 85 m\n      - name: Director's Call modal dialog; position: screen center; legible: true; text: DIRECTOR'S CALL - PERIOD 1 One change per period. Move one slider, then APPLY. The scoreboard announces the new rule. SKATER SPEED 11 SHOT POWER 18 ICE FRICTION 0.015 OPPONENTS' SKILL 1 TURN RATE 5 APPLY BACK\n      - name: Call ready prompt; position: bottom left corner; legible: true; text: ESC / START CALL READY\n      - name: Radar mini-rink; position: bottom right corner; legible: false; text: MINIMAP\n    - collisions: Director's Call modal covers center rink and upper scoreboard.; Far net and own net markers overlap visually with boards behind menu.\n    - missing: Clear focus indicator on active slider.\n  - label: Still F (hockey.regular-l2-card.jpg); smallest_text_px: 13; legibility: 3\n    - elements:\n      - name: Scoreboard; position: top center; legible: true; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Match title card; position: upper center; legible: true; text: MATCH 1 PERIOD 1 - FACEOFF\n      - name: Own net marker; position: middle left; legible: false; text: own 34 m\n      - name: Player indicator tag; position: center bottom on player; legible: true; text: YOU\n      - name: Faceoff countdown reticle; position: lower right of player; legible: true; text: 2 HOLD\n      - name: Instruction speech bubble; position: lower right; legible: true; text: press shoot at the drop, not before\n      - name: Commentary bar; position: bottom center above controls; legible: true; text: Lights are up, the ice is fresh. First period is under way.\n      - name: Controls strip; position: bottom edge across center; legible: true; text: SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC\n      - name: Call ready prompt; position: bottom left corner; legible: true; text: ESC / START CALL READY\n      - name: Radar mini-rink; position: bottom right corner; legible: true; text: MINIMAP\n    - collisions: Match 1 card partially overlaps the opposing skater at center ice.; Own net marker sits unsupported over white ice markings at left.\n    - missing: No indicator linking blue jersey to blue scoreboard counter.; No target net indicator arrow."
+    }
+  ]
+}

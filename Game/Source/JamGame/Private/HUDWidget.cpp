@@ -8,6 +8,7 @@
 #include "Components/Border.h"
 #include "Components/Image.h"
 #include "Components/Overlay.h"
+#include "Components/PanelWidget.h"
 #include "Components/OverlaySlot.h"
 #include "Components/HorizontalBox.h"
 #include "Components/HorizontalBoxSlot.h"
@@ -29,6 +30,10 @@
 #include "Camera/PlayerCameraManager.h"
 
 int32 UJamHudWidget::FaceoffsThisSession = 0;
+
+// Lane A74 (R-0038): the off-screen puck marker, 0 = off, 1 = on (default).
+static TAutoConsoleVariable<int32> CVarJamHudPuckMarker(TEXT("jam.hud.PuckMarker"), 1,
+	TEXT("Edge arrow with the distance pointing at the puck (or its carrier) when it is outside the inner 85 % of the frame: 0 off, 1 on."), ECVF_Default);
 
 // Lane A18 (visual layer, R-0013 point 4): the slate kit of FJamUiStyle over lane A5's elements. Logic (markers, frames, feed) is A5's;
 // the effects strip is lane A14's feed drawn as a slot row; the faceoff countdown reads lane A16's FaceoffCountdownFrames when it lands.
@@ -288,6 +293,14 @@ void UJamHudWidget::BuildTree()
 	OwnArrow = MakeChevron(T, TEXT("OwnArrow"), S::Muted(), 16.f);
 	OwnArrow->SetVisibility(ESlateVisibility::Collapsed);
 	Place(Root, OwnArrow, FVector2D(0, 0), FVector2D(0.5, 0.5), FVector2D(0, 0));
+
+	// ---- Lane A74: the off-screen puck marker (arrow on the frame's edge and the distance beside it); drawn over the net markers.
+	PuckArrow = MakeChevron(T, TEXT("PuckArrow"), FLinearColor::White, 28.f);
+	PuckArrow->SetVisibility(ESlateVisibility::Collapsed);
+	Place(Root, PuckArrow, FVector2D(0, 0), FVector2D(0.5, 0.5), FVector2D(0, 0));
+	PuckText = MakeText(T, TEXT("PuckText"), S::LabelFont(true), S::Paper());
+	PuckText->SetVisibility(ESlateVisibility::Collapsed);
+	Place(Root, PuckText, FVector2D(0, 0), FVector2D(0.5, 0.5), FVector2D(0, 0));
 
 	// ---- Lane A42: the chevron over the human's head when the ring has faded (past 24 m), and the YOU tag above it.
 	YouChevron = MakeChevron(T, TEXT("YouChevron"), S::Blue(), 26.f);
@@ -589,7 +602,70 @@ void UJamHudWidget::RefreshFromFrame(const FJamPresentationFrame& F)
 	UpdateMarker(F);
 	UpdateOwnMarker(F);
 	UpdateYours(F);
+	UpdatePuckMarker(F, bCount || Frames > 0 || F.SimFrame < PuckMarkerCardFrames);
 	UpdateCommentary(F);
+}
+
+void UJamHudWidget::UpdatePuckMarker(const FJamPresentationFrame& F, bool bCovered)
+{
+	if (!PuckArrow || !PuckText) return;
+	APlayerController* PC = GetOwningPlayer();
+	const bool bPaused = F.Phase == EJamPhase::Paused || (GetWorld() && GetWorld()->IsPaused());
+	const bool bAdvanced = F.SimFrame != PuckMarkerLastFrame;
+	if (F.SimFrame < PuckMarkerLastFrame || bPaused) PuckMarkerAlpha = 0.f;   // a restart or the pause menu: no fade, gone at once
+	PuckMarkerLastFrame = F.SimFrame;
+
+	// Where the puck is on the screen: the projected point when it is in front of the camera, else the mirrored direction.
+	bool bWant = false;
+	FVector2D Dir = FVector2D::ZeroVector;
+	float DistM = 0.f;
+	if (CVarJamHudPuckMarker.GetValueOnGameThread() != 0 && F.Phase == EJamPhase::Play && !bCovered && !bPaused && PC && PC->PlayerCameraManager && F.Skaters.IsValidIndex(F.HumanIndex))
+	{
+		const FVector2D VS = UWidgetLayoutLibrary::GetViewportSize(this);
+		const float Scale = FMath::Max(UWidgetLayoutLibrary::GetViewportScale(this), 0.01f);
+		const float VW = VS.X / Scale, VH = VS.Y / Scale;
+		const FVector Puck = UJamSim::ToWorld(F.PuckM, 0.1);
+		FVector2D Sp(VW * 0.5f, VH * 0.5f);
+		const bool bProj = UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(PC, Puck, Sp, false);
+		const FVector Local = FRotationMatrix(PC->PlayerCameraManager->GetCameraRotation()).GetTransposed().TransformVector(Puck - PC->PlayerCameraManager->GetCameraLocation());
+		const bool bFront = bProj && Local.X > 1.f;
+		if (!bFront) { Dir = FVector2D(Local.Y, -Local.Z); if (FMath::Abs(Dir.X) < 1.f && FMath::Abs(Dir.Y) < 1.f) Dir = FVector2D(Local.Y >= 0.f ? 1.f : -1.f, 0.5f); }
+		else Dir = Sp - FVector2D(VW * 0.5f, VH * 0.5f);
+		bWant = !bFront || OutsideInnerFrame(Sp, VW, VH);
+		DistM = FVector2D::Distance(F.Skaters[F.HumanIndex].PosM, F.PuckM);
+		if (bWant)
+		{
+			Dir = Dir.GetSafeNormal();
+			// The rectangle the arrow stands on: under the scoreboard, above the strips; the radar corner is kept clear.
+			FVector2D P = PuckMarkerEdgePoint(Dir, VW, VH, 64.f, VW - 64.f, 150.f, VH - 170.f);
+			if (P.X > VW - 330.f && P.Y > VH - 200.f) P.Y = VH - 200.f;
+			const float Angle = FMath::RadiansToDegrees(FMath::Atan2(-Dir.X, Dir.Y));
+			PuckArrow->SetRenderTransformAngle(Angle);
+			if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(PuckArrow->Slot)) CS->SetPosition(P);
+			PuckMarkerText = FString::Printf(TEXT("%d m"), FMath::RoundToInt32(DistM));
+			PuckText->SetText(FText::FromString(PuckMarkerText));
+			if (UCanvasPanelSlot* TS = Cast<UCanvasPanelSlot>(PuckText->Slot)) TS->SetPosition(P - Dir * FVector2D(62.f, 34.f));
+			// The carrier's team colour (the sim's carrier when the game mode has one, else the skater on the puck); a loose puck is grey.
+			int32 Carrier = -1;
+			const AHokejGameMode* GM = GetWorld() ? GetWorld()->GetAuthGameMode<AHokejGameMode>() : nullptr;
+			if (GM && GM->GetSim()) Carrier = GM->GetSim()->CarrierIndex();
+			else { float Best = 1.2f; for (int32 i = 0; i < F.Skaters.Num(); ++i) { const float D = FVector2D::Distance(F.Skaters[i].PosM, F.PuckM); if (D < Best) { Best = D; Carrier = i; } } }
+			const FLinearColor Col = F.Skaters.IsValidIndex(Carrier) ? F.GetTeamColour(F.Skaters[Carrier].TeamId) : FLinearColor::FromSRGBColor(FColor(0x6B, 0x72, 0x7A));   // loose: a grey that reads on white ice
+			// Re-tint the chevron's bars (the tree built them in S::Muted()).
+			if (UPanelWidget* Box = Cast<UPanelWidget>(PuckArrow)) if (UPanelWidget* O = Box->GetChildrenCount() ? Cast<UPanelWidget>(Box->GetChildAt(0)) : nullptr)
+				for (int32 i = 0; i < O->GetChildrenCount(); ++i) if (UBorder* Bar = Cast<UBorder>(O->GetChildAt(i))) Bar->SetBrushColor(Col);
+		}
+	}
+	if (bAdvanced || PuckMarkerAlpha <= 0.f)
+	{
+		const float Step = 1.f / static_cast<float>(PuckMarkerFadeFrames);
+		PuckMarkerAlpha = FMath::Clamp(PuckMarkerAlpha + (bWant ? Step : -Step), 0.f, 1.f);
+	}
+	const ESlateVisibility Vis = PuckMarkerAlpha > 0.f ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed;
+	PuckArrow->SetVisibility(Vis);
+	PuckText->SetVisibility(Vis);
+	PuckArrow->SetRenderOpacity(PuckMarkerAlpha);
+	PuckText->SetRenderOpacity(PuckMarkerAlpha);
 }
 
 void UJamHudWidget::UpdateCommentary(const FJamPresentationFrame& F)

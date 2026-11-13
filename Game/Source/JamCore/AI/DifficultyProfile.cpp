@@ -17,7 +17,7 @@ namespace JamAI
 			const FJamAIParams D;
 			// Lane A46 (PAYOFFS.md section 6): the human's teammates pass to the open human in 0.4 of the chances at pro (0 before: the one-timer never reached the human).
 			FJamDifficultyProfile P{"pro", D.SpeedScale, D.RedSkill, D.YieldMarginM, D.YieldRadiusM, D.HoldRadiusM, D.StallFrames, D.Opp, 0.4};
-			P.LargeRedSkill = 0.9;   // R-0029 pass 2: the regular playtester on 120 x 60 (35 % at 0.94, 55 % at 0.9)
+			P.LargeRedSkill = 0.97;   // lane A70 (CURVE-2.md, 2,000 matches): the regular playtester on 120 x 60 71.0 % at 0.9 -> 51.1 at 0.97 (0.95 55.6, 1.0 45.5); R-0029 pass 2 had 0.9
 			return P;
 		}
 
@@ -41,9 +41,10 @@ namespace JamAI
 			Opp.DrawJumpPct = 100; // 16:23: the rookie centre always jumps early (the human takes the opening touch)
 			// R-0029 P2: speed 0.85 / red skill 0.75 (0.96 / 0.88 before, tuned against the scripted human); measured with lane A34's novice.
 			// Stall 60: the stall rule is what lets a rookie shoot at all (SeasonTakes needs one AI shot per match).
-			FJamDifficultyProfile P{"rookie", 0.85, 0.75, 4.0, 25.0, 0.0, 60, Opp, 0.6};   // lane A46: mates pass to the open human in 0.6 of the chances (every chance before)
+			// Lane A70 (CURVE-2.md): red skill 0.75 -> 0.8, the novice 90.8 -> 85.8 % over 2,000 matches (speed 0.9 moved nothing).
+			FJamDifficultyProfile P{"rookie", 0.85, 0.8, 4.0, 25.0, 0.0, 60, Opp, 0.6};   // lane A46: mates pass to the open human in 0.6 of the chances (every chance before)
 			P.LargeSpeedScale = 0.9;   // R-0029: large-rink rookie offsets from the playtester grid (novice 85 %, 19:43); 1.0 / 0.93 before
-			P.LargeRedSkill = 0.8;
+			P.LargeRedSkill = 0.97;   // lane A70 (CURVE-2.md, 2,000 matches): the novice on 120 x 60 97.7 % at 0.8 (0.9 93.3, 0.95 89.0, 1.0 81.8)
 			return P;
 		}
 
@@ -71,10 +72,12 @@ namespace JamAI
 			Opp.bUseAimCone = true;
 			Opp.bOneTimer = true;   // R-0029 point 4 (lane A39): all_star bots use the one-timer and the deke; pro the one-timer (ProOppSkill); rookie neither
 			Opp.bDeke = true;
-			Opp.CheckMinClosing = 5.0;   // R-0031 point 2 (lane A45): all_star body-checks the carrier (front or side, never from behind); rookie keeps -1 (never)
+			Opp.CheckMinClosing = 3.0;   // R-0031 point 2 (lane A45): all_star body-checks the carrier (front or side, never from behind); rookie keeps -1 (never). Lane A70: 5 -> 3 (knockdowns of the good playtester 2.73 -> 3.00 a match at speed 1.3, its win share 26.5 -> 26.8)
 			// R-0029 pass 2 (with A31's charge): speed 1.08 (bots may push past 1, the sim clamps them at 1.5): the good playtester 30 % / 25 %
 			// R-0029 with A39's payoffs on (one-timer, burst, deke): speed 1.15 brings the good playtester back to 23 % at 40 seeds (1.08 measured 38 %, 1.12 33 %); A39 section 9.
-			return FJamDifficultyProfile{"all_star", 1.15, 1.0, 4.0, 25.0, 0.0, 60, Opp, 0.2};   // lane A46: mates pass to the open human in 0.2 of the chances
+			// Lane A70 (CURVE-2.md, 2,000 matches per number): speed 1.15 -> 1.3, the good playtester 40.5 -> 26.5 % (1.2 34.5, 1.32 23.9, 1.4 14.8; checks from
+			// 3 or 4 m/s and bot_react_frames 3 moved nothing).
+			return FJamDifficultyProfile{"all_star", 1.3, 1.0, 4.0, 25.0, 0.0, 60, Opp, 0.2};   // lane A46: mates pass to the open human in 0.2 of the chances
 		}
 
 		void SetErr(char* Err, int ErrLen, const char* Msg, const char* Pair)

@@ -1,0 +1,93 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T10:41:23.973Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a74/hockey.regular-l2-off-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/a74/hockey.regular-l2-off-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/a74/hockey.regular-l2-off-pause.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2359,
+      "usage": {
+        "prompt": 4036,
+        "output": 386,
+        "thoughts": 0,
+        "total": 4422,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00447,
+      "ms": 6309,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [
+              {
+                "where": "Top-right quadrant, near the far corner boards",
+                "what": "The orange rink outline/warning strip clips or terminates abruptly leaving an unaligned yellow ledge along the boards.",
+                "severity": 2,
+                "confidence": 0.75
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still B",
+            "findings": [
+              {
+                "where": "Top-right quadrant, atop the dasher glass/rail in the background",
+                "what": "A disconnected red and grey rectangular block (goal frame asset or goal light) is floating clipped onto the glass railing with no clear mount.",
+                "severity": 3,
+                "confidence": 0.95
+              },
+              {
+                "where": "Bottom-right quadrant, left vertical post of the red net structure",
+                "what": "The left side net mesh/frame displays black outline tearing and misaligned geometry where it meets the crossbar.",
+                "severity": 2,
+                "confidence": 0.8
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still C",
+            "findings": [
+              {
+                "where": "Top-center quadrant, under the scoreboard",
+                "what": "The pause menu dialog window overlaps and clips directly beneath the scoreboard widget, cutting awkwardly into the top HUD elements.",
+                "severity": 2,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=hockey.regular-l2-off-faceoff.jpg B=hockey.regular-l2-off-farnet.jpg C=hockey.regular-l2-off-pause.jpg (gemini-3.8-flash, in 4036 out 386 tokens, ~$0.0045, 6.3 s)\n- stills:\n  - label: Still A; clean: false\n    - findings:\n      - where: Top-right quadrant, near the far corner boards; what: The orange rink outline/warning strip clips or terminates abruptly leaving an unaligned yellow ledge along the boards.; severity: 2; confidence: 0.75\n  - label: Still B; clean: false\n    - findings:\n      - where: Top-right quadrant, atop the dasher glass/rail in the background; what: A disconnected red and grey rectangular block (goal frame asset or goal light) is floating clipped onto the glass railing with no clear mount.; severity: 3; confidence: 0.95\n      - where: Bottom-right quadrant, left vertical post of the red net structure; what: The left side net mesh/frame displays black outline tearing and misaligned geometry where it meets the crossbar.; severity: 2; confidence: 0.8\n  - label: Still C; clean: false\n    - findings:\n      - where: Top-center quadrant, under the scoreboard; what: The pause menu dialog window overlaps and clips directly beneath the scoreboard widget, cutting awkwardly into the top HUD elements.; severity: 2; confidence: 0.85"
+    }
+  ]
+}

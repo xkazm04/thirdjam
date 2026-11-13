@@ -1,0 +1,153 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T10:41:08.106Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a74/hockey.arena.large-l2-off-call.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/a74/hockey.arena.large-l2-off-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/a74/hockey.arena.large-l2-off-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/a74/hockey.arena.large-l2-off-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/a74/hockey.arena.large-l2-off-pause.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "F",
+          "path": "docs/experiments/img/a74/hockey.boost-l3-off-call.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2497,
+      "usage": {
+        "prompt": 7491,
+        "output": 795,
+        "thoughts": 0,
+        "total": 8286,
+        "calls": 1
+      },
+      "cost_usd_est": 0.0086,
+      "ms": 9480,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [
+              {
+                "where": "Top center-right, behind director's call dialog (x: 1350, y: 200)",
+                "what": "A floating HUD marker '2 m' appears without an icon or clear target behind the menu.",
+                "severity": 1,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still B",
+            "findings": [
+              {
+                "where": "Center, around the player figure's back and head",
+                "what": "Player stick is clipped into or completely obscured behind the torso/waist mesh.",
+                "severity": 2,
+                "confidence": 0.75
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still C",
+            "findings": [
+              {
+                "where": "Bottom-left quadrant (x: 80, y: 460)",
+                "what": "Orange skater is visually fractured with detached white rendering artifacts/slashes obscuring its torso and stick.",
+                "severity": 4,
+                "confidence": 0.95
+              },
+              {
+                "where": "Center-left (x: 100, y: 790)",
+                "what": "HUD indicator showing a bent hockey stick icon with '5 m' is disconnected and floating over empty ice.",
+                "severity": 2,
+                "confidence": 0.8
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still D",
+            "findings": [
+              {
+                "where": "Top center, on the boards above the net (x: 935, y: 198)",
+                "what": "A red rectangular block or goal frame component floats horizontally along the top railing of the boards under the '6 m' HUD pin.",
+                "severity": 3,
+                "confidence": 0.9
+              },
+              {
+                "where": "Bottom-left quadrant (x: 600, y: 870)",
+                "what": "Floating orange angle bracket HUD element labelled '97 m' rests on the ice with no clear target.",
+                "severity": 2,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still E",
+            "findings": [
+              {
+                "where": "Top right edge of pause card (x: 1360, y: 200)",
+                "what": "HUD text '2 m' clips out from underneath the pause menu modal.",
+                "severity": 2,
+                "confidence": 0.9
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still F",
+            "findings": [
+              {
+                "where": "Top-left quadrant along the board rail (x: 440, y: 260)",
+                "what": "A red rectangular bar floats detached in mid-air along the upper boundary of the boards.",
+                "severity": 3,
+                "confidence": 0.92
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=hockey.arena.large-l2-off-call.jpg B=hockey.arena.large-l2-off-card.jpg C=hockey.arena.large-l2-off-faceoff.jpg D=hockey.arena.large-l2-off-farnet.jpg E=hockey.arena.large-l2-off-pause.jpg F=hockey.boost-l3-off-call.jpg (gemini-3.8-flash, in 7491 out 795 tokens, ~$0.0086, 9.5 s)\n- stills:\n  - label: Still A; clean: false\n    - findings:\n      - where: Top center-right, behind director's call dialog (x: 1350, y: 200); what: A floating HUD marker '2 m' appears without an icon or clear target behind the menu.; severity: 1; confidence: 0.85\n  - label: Still B; clean: false\n    - findings:\n      - where: Center, around the player figure's back and head; what: Player stick is clipped into or completely obscured behind the torso/waist mesh.; severity: 2; confidence: 0.75\n  - label: Still C; clean: false\n    - findings:\n      - where: Bottom-left quadrant (x: 80, y: 460); what: Orange skater is visually fractured with detached white rendering artifacts/slashes obscuring its torso and stick.; severity: 4; confidence: 0.95\n      - where: Center-left (x: 100, y: 790); what: HUD indicator showing a bent hockey stick icon with '5 m' is disconnected and floating over empty ice.; severity: 2; confidence: 0.8\n  - label: Still D; clean: false\n    - findings:\n      - where: Top center, on the boards above the net (x: 935, y: 198); what: A red rectangular block or goal frame component floats horizontally along the top railing of the boards under the '6 m' HUD pin.; severity: 3; confidence: 0.9\n      - where: Bottom-left quadrant (x: 600, y: 870); what: Floating orange angle bracket HUD element labelled '97 m' rests on the ice with no clear target.; severity: 2; confidence: 0.85\n  - label: Still E; clean: false\n    - findings:\n      - where: Top right edge of pause card (x: 1360, y: 200); what: HUD text '2 m' clips out from underneath the pause menu modal.; severity: 2; confidence: 0.9\n  - label: Still F; clean: false\n    - findings:\n      - where: Top-left quadrant along the board rail (x: 440, y: 260); what: A red rectangular bar floats detached in mid-air along the upper boundary of the boards.; severity: 3; confidence: 0.92"
+    }
+  ]
+}
