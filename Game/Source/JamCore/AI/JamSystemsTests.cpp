@@ -6,7 +6,6 @@
 #include "JamCartridge.h"
 #include "JamJson.h"
 #include "JamSim.h"
-#include "JamEventBus.h"
 #include "JamEffectSystem.h"
 #include "JamRuleSystem.h"
 #include "JamZones.h"

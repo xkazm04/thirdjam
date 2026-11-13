@@ -1,0 +1,86 @@
+[
+ {
+  "still": "hockey.arena.large-l2-card.jpg",
+  "moment": "card",
+  "cut": "hockey.arena.large",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.arena.large-l2-faceoff.jpg",
+  "moment": "faceoff",
+  "cut": "hockey.arena.large",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.arena.large-l2-goal.jpg",
+  "moment": "goal",
+  "cut": "hockey.arena.large",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.arena.wide-l2-card.jpg",
+  "moment": "card",
+  "cut": "hockey.arena.wide",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.arena.wide-l2-faceoff.jpg",
+  "moment": "faceoff",
+  "cut": "hockey.arena.wide",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.boost-l2-card.jpg",
+  "moment": "card",
+  "cut": "hockey.boost",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.boost-l2-faceoff.jpg",
+  "moment": "faceoff",
+  "cut": "hockey.boost",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.chaos-l2-card.jpg",
+  "moment": "card",
+  "cut": "hockey.chaos",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.chaos-l2-faceoff.jpg",
+  "moment": "faceoff",
+  "cut": "hockey.chaos",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.raw-l2-card.jpg",
+  "moment": "card",
+  "cut": "hockey.raw",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.raw-l2-faceoff.jpg",
+  "moment": "faceoff",
+  "cut": "hockey.raw",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.raw-l2-goal.jpg",
+  "moment": "goal",
+  "cut": "hockey.raw",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.regular-l2-card.jpg",
+  "moment": "card",
+  "cut": "hockey.regular",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.regular-l2-faceoff.jpg",
+  "moment": "faceoff",
+  "cut": "hockey.regular",
+  "tier": "l2"
+ }
+]

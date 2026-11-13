@@ -42,13 +42,17 @@ namespace JamAI
 		// the good player always, the regular one half the time, the novice never). The breakaway burst is the sim's: nobody presses for it.
 		int OneTimerPct = 50;
 		int DekePct = 50;
+		// Lane A51 (R-0034): stick handling. The regular and good players carry the puck on the far side from a defender within SweepDefenderM in front
+		// (a sweep when the side changes) and spin when a defender closes from behind at speed; the novice knows neither.
+		bool bStickHandling = false;
+		double SweepDefenderM = 2.5;
 	};
 	FJamPlaytesterProfile PlaytesterProfile(EPlaytester Kind);
 	const char* PlaytesterName(EPlaytester Kind);
 	bool ParsePlaytester(const char* Name, EPlaytester& Out);
 
 	// What the playtester decided this frame (diagnostics; the match counts them).
-	enum class EPlaytesterAct : uint8_t { Idle, Draw, Chase, Carry, Charge, Pass, Support, Forecheck, Poke, Check, Lapse, OneTimer, Deke, Count };
+	enum class EPlaytesterAct : uint8_t { Idle, Draw, Chase, Carry, Charge, Pass, Support, Forecheck, Poke, Check, Lapse, OneTimer, Deke, Sweep, Spin, Count };
 
 	class FJamPlaytester
 	{

@@ -20,12 +20,13 @@ proof lines, the drill), `Game/Source/JamCore/{Public,Private}/JamPawns.{h,cpp}`
 | Shoot | **left button**, hold to charge, release to shoot | RT | `bShootHeld` | `shot.charge_frames_max`, `charge_speed_bonus` as before |
 | Body check / tackle | **right button** | RB | `bCheck` | opens the check window: 12 frames for the human (bots 6); lands from 2 m/s of the human's own speed (bots `check_speed_min`) |
 | Cross-check (stick lift) | **middle button** or **mouse 4** | LB | `bLift` | strips an opposing carrier within `stick.lift_range_m` (1.2 m beyond the two bodies); 30-frame cooldown |
-| Deke | **mouse wheel** (either way) or Q | Y | `bDeke` | lane A39's deke |
+| Deke | **mouse wheel** (either way) or Q | Y | `bDeke` | lane A39's deke: the one-tap sweep (it arms the same poke shield, lane A51) |
+| Spin | **E** | B | `bSpin` | **lane A51 (R-0034)**: a full turn over 24 frames, the puck on the far side of the body from the nearest opponent (no poke reaches it), speed x0.7, a quarter of the stamina bar, 90-frame cooldown; a check landing mid-spin knocks down 1.5x longer |
 | Sprint | **Shift** (held) | LT | `bSprint` | **new**: +15 % top speed and thrust while moving and the stamina lasts; drains in 3 s (180 frames), refills in 6 s (360); `game.skater.sprint { bonus, drain_frames, refill_frames }`; a bar bottom-centre of the HUD while it is not full |
 | Poke | Space | A | `bPoke` | |
-| Pass | E | X | `bPass` | |
+| Pass | **F** | X | `bPass` | lane A51 (R-0034): moved from E (E is the spin) |
 | Team signals | 1 2 3 4 | D-pad | (signal system) | unchanged (lane A3) |
-| Brake | Ctrl | B | `bBrake` | the left trigger went to the sprint |
+| Brake | Ctrl | left stick click | `bBrake` | the left trigger went to the sprint (A49), B to the spin (A51) |
 | Restart | R | View / Back | | |
 | Pause / Director's Call | Esc | Menu / Start | | |
 
@@ -158,3 +159,25 @@ of A39 / A45, unchanged (the calibrations are human-only, the sprint stamina is 
 
 Nothing for the blink: A sends a side-stable, slewed aim in [-70, 70] (B's grid clamps -63 / +70 as before). Two asks remain from SK2: the far-reach side holds
 (`Aim_FarLeft` / `Aim_FarRight`) so the blade stays on the ice above 1.0 m of reach at +-60 degrees, and the stride's pelvis height (blade at -7 cm under the aim layer).
+
+## 5. Stick handling with the mouse, the spin on E, the pass on F (lane A51, R-0034, 2026-11-13 00:45-02:15)
+
+The model, the keys, the tests, the curve and what comes next are in `docs/experiments/STICK.md`; this section is the control path's part.
+
+- **The puck lives where the blade is.** The carried puck follows `BladePos` every frame (the carry assist, 68 % of the gap a frame), and `BladePos` is the
+  cursor's aim on the ice within `game.stick.reach_m` (1.1, range 0.6..1.6): forehand to backhand across the body as the cursor sweeps. An aim turning more than
+  `game.stick.sweep.min_deg_per_frame` (6) in one frame is a **sweep**: for `shield_frames` (12) an opponent's poke from the side the puck left misses. A
+  defending bot reads the puck's place on the carrier late (rookie 14, pro 8, all_star 5 frames), so a sweep timed as its stick closes beats its poke.
+- **The spin on E** (gamepad B): `game.skater.spin` (24 frames, cooldown 90, speed x0.7, a quarter of the bar; the bar shows while not full). The figure turns the
+  full circle through `UpdateMotion`'s facing and the actor's rotation (no new C-0001 call); the puck rides the far side of the body from the nearest opponent.
+- **Bindings**: E spin, **F pass** (E no longer passes), gamepad B spin, the brake to the left stick click; the strip, the settings card, the pause card and
+  the table in section 1 say so. `Jam.Input.Mapping` asserts all of it.
+- **Log lines in the package**: `JAMCTRL frame=N btn=spin (E / B)`, `btn=pass (F / X)`, and the sim's read-outs on the human `JAMCTRL frame=N sweep side=S
+  shield_frames=12 blade=(x,y)`, `JAMCTRL frame=N spin frames=24 dir=D stamina=0.75 carrying=1`.
+- **The 1v1 drill** `jam.ctrl.Drill 3` (sweep) / `4` (spin): unlike A49's drills the human's `FJamInput` is **not** scripted; `StickDrillInput` calls
+  `ReadHumanInput` (the cursor and the keys are the real path) and overrides only `Move` (carry the puck at the nearest defender at 60 % speed, hold the line
+  1.6 m out, chase a loose puck). `StickDrillObserve` logs `JAMDRILL stick <kind> frame= n= defender= dist=` on every sweep / spin the sim saw and
+  `JAMDRILL stick_result <kind> n= kept= poked_clean= knocked= knock_frames=` 30 frames later, a `stick_summary` after 10 attempts.
+- **Harness**: `tools/qa/ctrl/a51-prove.ps1 -Exe <Development ThirdJam.exe> -Mode sweep|spin` (A49's user32 SendInput bridge: the cursor crosses the skater in
+  three steps every 0.6 s, or E every 2.5 s), `a51-analyze.mjs` on `tools/qa/out/ctrl/a51-<mode>/game.log`. Results: `status/A51.md` and STICK.md section 7.
+- **Lockstep**: `FJamInput::bSpin` is flag bit 512, protocol 5 (`Jam.Net.InputCoverage`, `PacketRoundTrip`, `LockstepTwoPeers` PASS).

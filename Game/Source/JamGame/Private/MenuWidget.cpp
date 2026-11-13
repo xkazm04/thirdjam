@@ -3,8 +3,6 @@
 #include "SettingsWidget.h"
 #include "JamCartridge.h"
 #include "Progression.h"
-#include "Components/CanvasPanel.h"
-#include "Components/CanvasPanelSlot.h"
 #include "Components/Overlay.h"
 #include "Components/OverlaySlot.h"
 #include "Components/WidgetSwitcher.h"

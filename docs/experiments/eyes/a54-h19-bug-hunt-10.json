@@ -1,0 +1,159 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T01:20:37.773Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.regular-l2-pause.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.regular-l2-call.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.regular-l1-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.regular-l1-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.regular-l1-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "F",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.regular-l1-pause.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2456,
+      "usage": {
+        "prompt": 7447,
+        "output": 785,
+        "thoughts": 0,
+        "total": 8232,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00853,
+      "ms": 9154,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [
+              {
+                "where": "Top-left / top-center scoreboard background",
+                "what": "Scoreboard display background text or duplicate ghosting appears faintly burnt into the dark backdrop behind the scoreboard panels.",
+                "severity": 2,
+                "confidence": 0.75
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still B",
+            "findings": [
+              {
+                "where": "Top-left / top-center scoreboard area",
+                "what": "Faint ghost text 'SCOREBOARD' or similar UI residue is faintly visible behind the main scoreboard header in the black void.",
+                "severity": 2,
+                "confidence": 0.75
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still C",
+            "findings": [
+              {
+                "where": "Top-center, directly behind 'MATCH 1' title banner",
+                "what": "The '49 m' distance objective indicator is clipped and obscured by the MATCH 1 / FACE-OFF banner overlay.",
+                "severity": 3,
+                "confidence": 0.95
+              },
+              {
+                "where": "Center, speech bubble banner",
+                "what": "The dialogue speech bubble overlaps directly over the opponent skaters in the face-off circle.",
+                "severity": 2,
+                "confidence": 0.8
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still D",
+            "findings": [
+              {
+                "where": "Bottom-center, player character legs",
+                "what": "The player model appears to lack hockey stick mesh in hands during faceoff setup, or it is entirely occluded inside the torso mesh.",
+                "severity": 2,
+                "confidence": 0.7
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still E",
+            "findings": [
+              {
+                "where": "Top-left, along upper board rim",
+                "what": "An untextured or flat white proxy cube is floating on the dasher boards right below the '4 m' objective marker.",
+                "severity": 4,
+                "confidence": 0.98
+              },
+              {
+                "where": "Bottom-center, around player model",
+                "what": "The player model is missing a hockey stick while in active skating animation.",
+                "severity": 3,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still F",
+            "findings": [
+              {
+                "where": "Top-left / top-center background",
+                "what": "Ghost UI text artifact is faintly visible above the scoreboard in the dark upper background.",
+                "severity": 2,
+                "confidence": 0.75
+              },
+              {
+                "where": "Mid-left, along board rail",
+                "what": "A placeholder box/cube geometry is sitting on top of the dasher boards behind the pause menu.",
+                "severity": 3,
+                "confidence": 0.95
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=hockey.regular-l2-pause.jpg B=hockey.regular-l2-call.jpg C=hockey.regular-l1-card.jpg D=hockey.regular-l1-faceoff.jpg E=hockey.regular-l1-farnet.jpg F=hockey.regular-l1-pause.jpg (gemini-3.8-flash, in 7447 out 785 tokens, ~$0.0085, 9.2 s)\n- stills:\n  - label: Still A; clean: false\n    - findings:\n      - where: Top-left / top-center scoreboard background; what: Scoreboard display background text or duplicate ghosting appears faintly burnt into the dark backdrop behind the scoreboard panels.; severity: 2; confidence: 0.75\n  - label: Still B; clean: false\n    - findings:\n      - where: Top-left / top-center scoreboard area; what: Faint ghost text 'SCOREBOARD' or similar UI residue is faintly visible behind the main scoreboard header in the black void.; severity: 2; confidence: 0.75\n  - label: Still C; clean: false\n    - findings:\n      - where: Top-center, directly behind 'MATCH 1' title banner; what: The '49 m' distance objective indicator is clipped and obscured by the MATCH 1 / FACE-OFF banner overlay.; severity: 3; confidence: 0.95\n      - where: Center, speech bubble banner; what: The dialogue speech bubble overlaps directly over the opponent skaters in the face-off circle.; severity: 2; confidence: 0.8\n  - label: Still D; clean: false\n    - findings:\n      - where: Bottom-center, player character legs; what: The player model appears to lack hockey stick mesh in hands during faceoff setup, or it is entirely occluded inside the torso mesh.; severity: 2; confidence: 0.7\n  - label: Still E; clean: false\n    - findings:\n      - where: Top-left, along upper board rim; what: An untextured or flat white proxy cube is floating on the dasher boards right below the '4 m' objective marker.; severity: 4; confidence: 0.98\n      - where: Bottom-center, around player model; what: The player model is missing a hockey stick while in active skating animation.; severity: 3; confidence: 0.85\n  - label: Still F; clean: false\n    - findings:\n      - where: Top-left / top-center background; what: Ghost UI text artifact is faintly visible above the scoreboard in the dark upper background.; severity: 2; confidence: 0.75\n      - where: Mid-left, along board rail; what: A placeholder box/cube geometry is sitting on top of the dasher boards behind the pause menu.; severity: 3; confidence: 0.95"
+    }
+  ]
+}

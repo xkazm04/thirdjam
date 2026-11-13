@@ -1,0 +1,153 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T01:19:16.614Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/eyesgrid/h19/menu-main-screen.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/eyesgrid/h19/menu-cuts-screen.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/eyesgrid/h19/menu-direct-screen.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/eyesgrid/h19/menu-friend-screen.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/eyesgrid/h19/menu-settings-screen.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "F",
+          "path": "docs/experiments/img/eyesgrid/h19/menu-credits-screen.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2424,
+      "usage": {
+        "prompt": 7405,
+        "output": 819,
+        "thoughts": 0,
+        "total": 8224,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00863,
+      "ms": 8247,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A: menu-main-screen.jpg",
+            "findings": [
+              {
+                "where": "Bottom center, directly over the bottom border of the clapperboard slate",
+                "what": "The footer navigation text 'STICK / ARROWS move   A / ENTER select   B / ESC back' overlaps and clips directly through the white border of the menu panel.",
+                "severity": 3,
+                "confidence": 0.99
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still B: menu-cuts-screen.jpg",
+            "findings": [
+              {
+                "where": "Bottom center, directly over the bottom border of the clapperboard slate",
+                "what": "The footer navigation text 'STICK / ARROWS move   A / ENTER select   B / ESC back' clips across the bottom border line of the menu frame.",
+                "severity": 3,
+                "confidence": 0.99
+              },
+              {
+                "where": "Top and bottom-center, within both filmstrip card containers",
+                "what": "Text lines describing match parameters ('speed 11 m/s...', 'speed 8 m/s...') visibly clip and collide with the lower sprocket holes of the filmstrip graphic.",
+                "severity": 3,
+                "confidence": 0.95
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still C: menu-direct-screen.jpg",
+            "findings": [
+              {
+                "where": "Bottom center, crossing the bottom border",
+                "what": "The navigation prompt text overlaps and collides with the lower border outline of the clapperboard container.",
+                "severity": 3,
+                "confidence": 0.99
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still D: menu-friend-screen.jpg",
+            "findings": [
+              {
+                "where": "Bottom center, over the bottom border line",
+                "what": "The navigation footer text overlaps the bottom outline of the menu frame.",
+                "severity": 3,
+                "confidence": 0.99
+              },
+              {
+                "where": "Center to lower center, behind the modal dialogue",
+                "what": "The 'PLAY WITH A FRIEND' modal box does not fully occlude or dim the main menu underneath, leaving orphan buttons ('CREDITS', 'QUIT') and text visible directly beneath the popup.",
+                "severity": 3,
+                "confidence": 0.9
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still E: menu-settings-screen.jpg",
+            "findings": [
+              {
+                "where": "Bottom center, crossing the bottom frame border",
+                "what": "The navigation control prompts clip directly across the bottom white outline of the settings card.",
+                "severity": 3,
+                "confidence": 0.99
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still F: menu-credits-screen.jpg",
+            "findings": [
+              {
+                "where": "Bottom center, crossing the bottom border",
+                "what": "The footer helper text overlaps and clips through the bottom border of the frame.",
+                "severity": 3,
+                "confidence": 0.99
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=menu-main-screen.jpg B=menu-cuts-screen.jpg C=menu-direct-screen.jpg D=menu-friend-screen.jpg E=menu-settings-screen.jpg F=menu-credits-screen.jpg (gemini-3.8-flash, in 7405 out 819 tokens, ~$0.0086, 8.2 s)\n- stills:\n  - label: Still A: menu-main-screen.jpg; clean: false\n    - findings:\n      - where: Bottom center, directly over the bottom border of the clapperboard slate; what: The footer navigation text 'STICK / ARROWS move   A / ENTER select   B / ESC back' overlaps and clips directly through the white border of the menu panel.; severity: 3; confidence: 0.99\n  - label: Still B: menu-cuts-screen.jpg; clean: false\n    - findings:\n      - where: Bottom center, directly over the bottom border of the clapperboard slate; what: The footer navigation text 'STICK / ARROWS move   A / ENTER select   B / ESC back' clips across the bottom border line of the menu frame.; severity: 3; confidence: 0.99\n      - where: Top and bottom-center, within both filmstrip card containers; what: Text lines describing match parameters ('speed 11 m/s...', 'speed 8 m/s...') visibly clip and collide with the lower sprocket holes of the filmstrip graphic.; severity: 3; confidence: 0.95\n  - label: Still C: menu-direct-screen.jpg; clean: false\n    - findings:\n      - where: Bottom center, crossing the bottom border; what: The navigation prompt text overlaps and collides with the lower border outline of the clapperboard container.; severity: 3; confidence: 0.99\n  - label: Still D: menu-friend-screen.jpg; clean: false\n    - findings:\n      - where: Bottom center, over the bottom border line; what: The navigation footer text overlaps the bottom outline of the menu frame.; severity: 3; confidence: 0.99\n      - where: Center to lower center, behind the modal dialogue; what: The 'PLAY WITH A FRIEND' modal box does not fully occlude or dim the main menu underneath, leaving orphan buttons ('CREDITS', 'QUIT') and text visible directly beneath the popup.; severity: 3; confidence: 0.9\n  - label: Still E: menu-settings-screen.jpg; clean: false\n    - findings:\n      - where: Bottom center, crossing the bottom frame border; what: The navigation control prompts clip directly across the bottom white outline of the settings card.; severity: 3; confidence: 0.99\n  - label: Still F: menu-credits-screen.jpg; clean: false\n    - findings:\n      - where: Bottom center, crossing the bottom border; what: The footer helper text overlaps and clips through the bottom border of the frame.; severity: 3; confidence: 0.99"
+    }
+  ]
+}

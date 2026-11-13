@@ -78,6 +78,12 @@ struct JAMCORE_API FJamInput
 	// sprint, refill_frames to full). Bots never set it. LOCKSTEP: a new input field; lane A38's FJamNetQuantInput must carry it as a flag bit.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Sim")
 	bool bSprint = false;
+
+	// Lane A51 (R-0034): the spin move pressed this frame (edge): E / gamepad B. game.skater.spin: a full turn over spin.frames, the puck on the far side
+	// of the body from the nearest opponent, speed x speed_mult, stamina_cost of the bar; refused with an empty bar or inside the cooldown.
+	// LOCKSTEP: FJamNetQuantInput carries it as flag bit 512 (protocol 5).
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Sim")
+	bool bSpin = false;
 };
 
 // (Named EJamSimPhase, not EJamPhase: lane A5's presentation enum EJamPhase lives in JamGame/HUDFeed.h.)
@@ -170,6 +176,20 @@ struct JAMCORE_API FJamSkaterState
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 DekeSide = 0;
 	// First frame a deke is allowed again (a second tap inside DekeLockoutFrames does nothing).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int64 DekeReadyFrame = 0;
+	// Lane A51 (R-0034) stick handling. The sweep: frames left of the shield after the blade crossed fast with the puck (0 = none) and the side the puck
+	// left as the sign of Cross(Forward, blade - body) (+1 or -1; 0 = none): an opponent's poke whose blade is on that side misses while the shield runs.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 SweepFrames = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 SweepSide = 0;
+	// The spin (game.skater.spin): frames left (0 = none), the whole length, the turn direction (+1 = the sim's yaw sense, to the right), the first frame
+	// a spin is allowed again. The carried puck rides the far side of the body from the nearest opponent (BladePos follows it), a poke never reaches it,
+	// a check landing mid-spin knocks the carrier down for SpinKnockdownMult of the normal frames. Hashed only while they left their default.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 SpinFrames = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 SpinLength = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 SpinDir = 1;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int64 SpinReadyFrame = 0;
+	// Match statistics of the stick handling (not hashed, like Dekes).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 Sweeps = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 Spins = 0;
 	// Lane A46: frames left of the settle after a body reception (the carry assist holds the puck on the blade; 0 = none). Hashed only while it runs.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 SettleFrames = 0;
 	// Match statistics of the payoffs; PassesReceived (lane A46) counts teammates' passes seated on this skater's blade (blade or body reception).
@@ -188,6 +208,9 @@ struct JAMCORE_API FJamSkaterState
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bOneTimerThisFrame = false;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bBreakawayThisFrame = false;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bDekeThisFrame = false;
+	// Lane A51 (R-0034) one-frame flags: a sweep started (the blade crossed fast with the puck), a spin started.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bSweepThisFrame = false;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bSpinThisFrame = false;
 	// C-0001 v3 one-frame results for the visual: a poke resolved (1 clean, -1 missed), the draw resolved (1 won, -1 lost), a foul was called on this skater,
 	// the strength (speed / max) of the pass that left this frame; and the level: standing at the dot as a centre before the drop.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 PokeResult = 0;
@@ -213,6 +236,10 @@ struct JAMCORE_API FJamSkaterState
 	bool InBox() const { return PenaltyFrames > 0; }
 	// Standing, in control, on the ice: may shoot, check, poke, lift.
 	bool CanAct() const { return !IsDown() && !IsStumbling() && !InBox(); }
+	// Lane A51: spinning right now.
+	bool IsSpinning() const { return SpinFrames > 0; }
+	// Lane A51: the figure's extra yaw during the spin, degrees (0 outside it): the full circle over SpinLength frames in SpinDir's sense; the sim's Yaw stays.
+	double SpinVisualYawDeg() const { return (SpinFrames > 0 && SpinLength > 0) ? SpinDir * 360.0 * static_cast<double>(SpinLength - SpinFrames) / static_cast<double>(SpinLength) : 0.0; }
 };
 
 USTRUCT(BlueprintType)
@@ -317,6 +344,10 @@ public:
 	static constexpr double SaveReboundKeep = 0.45;   // Director 01:45: 0.3 left 15 of 131 faceoffs without a human touch (budget 13) once the 0.6 full charge put more shots into the pads; a livelier rebound is a chase
 	// True when S stands in the crease stance's geometry (R-0033 / R-0035): within CreaseStanceM of its own goal centre, on the ice side of the goal line, able to act.
 	bool InCreaseStance(const FJamSkaterState& S) const;
+	// Lane A51 (R-0034): the spin. A check that lands mid-spin knocks the carrier down for this multiple of knockdown_frames (risk against reward);
+	// the carried puck rides this far from the body centre on the far side from the nearest opponent (inside shot reach, outside the body).
+	static constexpr double SpinKnockdownMult = 1.5;
+	static constexpr double SpinPuckM = 0.7;
 
 	// Builds the match from a validated config: skaters at their spawns, puck at centre, score 0, phase Playing.
 	// Queues the opening "faceoff" event. Returns false (and logs) if the config has no player.
@@ -414,6 +445,11 @@ public:
 	int32 GetDekeCommit(int32& OutSkater, int32& OutSide) const { OutSkater = DekeCommitSkater; OutSide = DekeCommitSide; return DekeCommitFrames; }
 	// Tests: ends a running countdown at once with a loose puck at the dot and no draw (so a scripted scene starts in Playing).
 	void SkipFaceoff();
+	// Lane A51 (R-0034): true when Poker's poke cannot reach the puck Carrier holds: the carrier spins (the body is between), or a sweep shield runs and
+	// the poker's blade is on the side the puck left. Tests and the brain read it.
+	bool IsPokeShielded(const FJamSkaterState& Poker, const FJamSkaterState& Carrier) const;
+	// Lane A51: the nearest standing opponent of S (-1 none).
+	int32 NearestOpponent(const FJamSkaterState& S) const;
 	// The teammate a pass from Skater would go to right now (the rule of TryPass) and the aim point; -1 when nobody is open. Scripts and the brain read it.
 	int32 BestPass(int32 Skater, FVector2D& OutAim) const { return Skaters.IsValidIndex(Skater) ? PickReceiver(Skaters[Skater], OutAim) : -1; }
 	// Timer mode: frames left (0 when not in timer mode). In timer mode a tie at 0 plays on to the next goal.
@@ -466,6 +502,12 @@ private:
 	void TryDeke(FJamSkaterState& S);
 	void StepBreakaway(FJamSkaterState& S);
 	void StepPayoffWindows(FJamSkaterState& S);
+	// Lane A51 (R-0034): the spin tap, the spin's frame (speed scale, the puck on the far side) after the skater moved, the sweep shield's countdown.
+	void TrySpin(FJamSkaterState& S);
+	void StepSpin(FJamSkaterState& S);
+	void StepSweepShield(FJamSkaterState& S);
+	FVector2D SpinPuckTarget(const FJamSkaterState& S) const;
+	void ArmSweepShield(FJamSkaterState& S, int32 Side);
 	// The teammate a pass from S goes to, and where to aim (lead); -1 when nobody is open.
 	int32 PickReceiver(const FJamSkaterState& S, FVector2D& OutAim) const;
 	void StepPuck();

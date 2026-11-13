@@ -70,6 +70,7 @@ void UJamInputMap::Build()
 	Deke = MakeAction(this, TEXT("IA_Deke"), EInputActionValueType::Boolean);   // lane A39
 	Pass = MakeAction(this, TEXT("IA_Pass"), EInputActionValueType::Boolean);
 	Sprint = MakeAction(this, TEXT("IA_Sprint"), EInputActionValueType::Boolean);   // lane A49
+	Spin = MakeAction(this, TEXT("IA_Spin"), EInputActionValueType::Boolean);   // lane A51 (R-0034)
 	Context = NewObject<UInputMappingContext>(this, TEXT("IMC_Hokej"));
 
 	// WASD and arrows: a 1D key feeds X; W / Up swizzle it onto Y, S / Down swizzle and negate, A / Left negate.
@@ -95,7 +96,7 @@ void UJamInputMap::Build()
 	Context->MapKey(Check, EKeys::RightMouseButton);              // body check / tackle
 	Context->MapKey(Check, EKeys::Gamepad_RightShoulder);         // RB
 	Context->MapKey(Brake, EKeys::LeftControl);
-	Context->MapKey(Brake, EKeys::Gamepad_FaceButton_Right);      // B (the left trigger went to the sprint)
+	Context->MapKey(Brake, EKeys::Gamepad_LeftThumbstick);        // left stick click (lane A51: B went to the spin, R-0034; the left trigger to the sprint, A49)
 	Context->MapKey(Sprint, EKeys::LeftShift);
 	Context->MapKey(Sprint, EKeys::Gamepad_LeftTriggerAxis);      // LT
 	Context->MapKey(Restart, EKeys::R);
@@ -112,7 +113,10 @@ void UJamInputMap::Build()
 	Context->MapKey(Deke, EKeys::MouseScrollUp);
 	Context->MapKey(Deke, EKeys::MouseScrollDown);
 	Context->MapKey(Deke, EKeys::Gamepad_FaceButton_Top);         // Y
-	Context->MapKey(Pass, EKeys::E);
+	// Lane A51 (R-0034): the spin on E / gamepad B; the pass moves to F (gamepad X unchanged).
+	Context->MapKey(Spin, EKeys::E);
+	Context->MapKey(Spin, EKeys::Gamepad_FaceButton_Right);  // B
+	Context->MapKey(Pass, EKeys::F);
 	Context->MapKey(Pass, EKeys::Gamepad_FaceButton_Left);   // X
 	Context->MapKey(Pause, EKeys::Escape);
 	Context->MapKey(Pause, EKeys::Gamepad_Special_Right);       // Start / Menu
@@ -124,8 +128,8 @@ FString UJamInputMap::BindingTableText(bool bOneLine)
 	static const TCHAR* Rows[][2] = {
 		{ TEXT("SKATE"), TEXT("WASD / L-STICK") }, { TEXT("AIM STICK"), TEXT("MOUSE / R-STICK") }, { TEXT("SHOOT"), TEXT("HOLD LMB / RT") },
 		{ TEXT("CHECK"), TEXT("RMB / RB") }, { TEXT("CROSS-CHECK"), TEXT("MMB, MOUSE4 / LB") }, { TEXT("DEKE"), TEXT("WHEEL, Q / Y") },
-		{ TEXT("SPRINT"), TEXT("SHIFT / LT") }, { TEXT("POKE"), TEXT("SPACE / A") }, { TEXT("PASS"), TEXT("E / X") }, { TEXT("SIGNALS"), TEXT("1-4 / D-PAD") },
-		{ TEXT("BRAKE"), TEXT("CTRL / B") }, { TEXT("RESTART"), TEXT("R / VIEW") }, { TEXT("PAUSE"), TEXT("ESC / MENU") } };
+		{ TEXT("SPIN"), TEXT("E / B") }, { TEXT("SPRINT"), TEXT("SHIFT / LT") }, { TEXT("POKE"), TEXT("SPACE / A") }, { TEXT("PASS"), TEXT("F / X") }, { TEXT("SIGNALS"), TEXT("1-4 / D-PAD") },
+		{ TEXT("BRAKE"), TEXT("CTRL / L-STICK CLICK") }, { TEXT("RESTART"), TEXT("R / VIEW") }, { TEXT("PAUSE"), TEXT("ESC / MENU") } };
 	FString Out;
 	for (const auto& R : Rows)
 	{
@@ -228,6 +232,7 @@ void UJamPlayerInput::TryBind()
 	EIC->BindAction(M->Lift, ETriggerEvent::Started, this, &UJamPlayerInput::OnLiftStarted);
 	EIC->BindAction(M->Deke, ETriggerEvent::Started, this, &UJamPlayerInput::OnDekeStarted);
 	EIC->BindAction(M->Pass, ETriggerEvent::Started, this, &UJamPlayerInput::OnPassStarted);
+	EIC->BindAction(M->Spin, ETriggerEvent::Started, this, &UJamPlayerInput::OnSpinStarted);   // lane A51
 	EIC->BindAction(M->Restart, ETriggerEvent::Started, this, &UJamPlayerInput::OnRestartStarted);
 	EIC->BindAction(M->Pause, ETriggerEvent::Started, this, &UJamPlayerInput::OnPauseStarted);
 	BoundPC = PC;
@@ -272,6 +277,13 @@ bool UJamPlayerInput::ConsumePassPressed()
 {
 	const bool B = bPassLatch;
 	bPassLatch = false;
+	return B;
+}
+
+bool UJamPlayerInput::ConsumeSpinPressed()
+{
+	const bool B = bSpinLatch;
+	bSpinLatch = false;
 	return B;
 }
 

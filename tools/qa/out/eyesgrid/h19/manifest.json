@@ -1,0 +1,470 @@
+[
+ {
+  "still": "menu-main-screen.jpg",
+  "moment": "screen",
+  "cut": "menu",
+  "tier": "main"
+ },
+ {
+  "still": "menu-cuts-screen.jpg",
+  "moment": "screen",
+  "cut": "menu",
+  "tier": "cuts"
+ },
+ {
+  "still": "menu-direct-screen.jpg",
+  "moment": "screen",
+  "cut": "menu",
+  "tier": "direct"
+ },
+ {
+  "still": "menu-friend-screen.jpg",
+  "moment": "screen",
+  "cut": "menu",
+  "tier": "friend"
+ },
+ {
+  "still": "menu-settings-screen.jpg",
+  "moment": "screen",
+  "cut": "menu",
+  "tier": "settings"
+ },
+ {
+  "still": "menu-credits-screen.jpg",
+  "moment": "screen",
+  "cut": "menu",
+  "tier": "credits"
+ },
+ {
+  "still": "hockey.arena.large-l2-card.jpg",
+  "moment": "card",
+  "cut": "hockey.arena.large",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.arena.large-l2-faceoff.jpg",
+  "moment": "faceoff",
+  "cut": "hockey.arena.large",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.arena.large-l2-farnet.jpg",
+  "moment": "farnet",
+  "cut": "hockey.arena.large",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.arena.large-l2-pause.jpg",
+  "moment": "pause",
+  "cut": "hockey.arena.large",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.arena.large-l2-call.jpg",
+  "moment": "call",
+  "cut": "hockey.arena.large",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.arena.wide-l2-card.jpg",
+  "moment": "card",
+  "cut": "hockey.arena.wide",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.arena.wide-l2-faceoff.jpg",
+  "moment": "faceoff",
+  "cut": "hockey.arena.wide",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.arena.wide-l2-farnet.jpg",
+  "moment": "farnet",
+  "cut": "hockey.arena.wide",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.arena.wide-l2-pause.jpg",
+  "moment": "pause",
+  "cut": "hockey.arena.wide",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.arena.wide-l2-call.jpg",
+  "moment": "call",
+  "cut": "hockey.arena.wide",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.boost-l2-card.jpg",
+  "moment": "card",
+  "cut": "hockey.boost",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.boost-l2-faceoff.jpg",
+  "moment": "faceoff",
+  "cut": "hockey.boost",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.boost-l2-farnet.jpg",
+  "moment": "farnet",
+  "cut": "hockey.boost",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.boost-l2-pause.jpg",
+  "moment": "pause",
+  "cut": "hockey.boost",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.boost-l2-call.jpg",
+  "moment": "call",
+  "cut": "hockey.boost",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.boost-l1-card.jpg",
+  "moment": "card",
+  "cut": "hockey.boost",
+  "tier": "l1"
+ },
+ {
+  "still": "hockey.boost-l1-faceoff.jpg",
+  "moment": "faceoff",
+  "cut": "hockey.boost",
+  "tier": "l1"
+ },
+ {
+  "still": "hockey.boost-l1-farnet.jpg",
+  "moment": "farnet",
+  "cut": "hockey.boost",
+  "tier": "l1"
+ },
+ {
+  "still": "hockey.boost-l1-pause.jpg",
+  "moment": "pause",
+  "cut": "hockey.boost",
+  "tier": "l1"
+ },
+ {
+  "still": "hockey.boost-l1-call.jpg",
+  "moment": "call",
+  "cut": "hockey.boost",
+  "tier": "l1"
+ },
+ {
+  "still": "hockey.boost-l3-card.jpg",
+  "moment": "card",
+  "cut": "hockey.boost",
+  "tier": "l3"
+ },
+ {
+  "still": "hockey.boost-l3-faceoff.jpg",
+  "moment": "faceoff",
+  "cut": "hockey.boost",
+  "tier": "l3"
+ },
+ {
+  "still": "hockey.boost-l3-farnet.jpg",
+  "moment": "farnet",
+  "cut": "hockey.boost",
+  "tier": "l3"
+ },
+ {
+  "still": "hockey.boost-l3-pause.jpg",
+  "moment": "pause",
+  "cut": "hockey.boost",
+  "tier": "l3"
+ },
+ {
+  "still": "hockey.boost-l3-call.jpg",
+  "moment": "call",
+  "cut": "hockey.boost",
+  "tier": "l3"
+ },
+ {
+  "still": "hockey.boost-p3-card.jpg",
+  "moment": "card",
+  "cut": "hockey.boost",
+  "tier": "p3"
+ },
+ {
+  "still": "hockey.boost-p3-faceoff.jpg",
+  "moment": "faceoff",
+  "cut": "hockey.boost",
+  "tier": "p3"
+ },
+ {
+  "still": "hockey.boost-p3-farnet.jpg",
+  "moment": "farnet",
+  "cut": "hockey.boost",
+  "tier": "p3"
+ },
+ {
+  "still": "hockey.boost-p3-pause.jpg",
+  "moment": "pause",
+  "cut": "hockey.boost",
+  "tier": "p3"
+ },
+ {
+  "still": "hockey.boost-p3-call.jpg",
+  "moment": "call",
+  "cut": "hockey.boost",
+  "tier": "p3"
+ },
+ {
+  "still": "hockey.boost-p4-card.jpg",
+  "moment": "card",
+  "cut": "hockey.boost",
+  "tier": "p4"
+ },
+ {
+  "still": "hockey.boost-p4-faceoff.jpg",
+  "moment": "faceoff",
+  "cut": "hockey.boost",
+  "tier": "p4"
+ },
+ {
+  "still": "hockey.boost-p4-farnet.jpg",
+  "moment": "farnet",
+  "cut": "hockey.boost",
+  "tier": "p4"
+ },
+ {
+  "still": "hockey.boost-p4-pause.jpg",
+  "moment": "pause",
+  "cut": "hockey.boost",
+  "tier": "p4"
+ },
+ {
+  "still": "hockey.boost-p4-call.jpg",
+  "moment": "call",
+  "cut": "hockey.boost",
+  "tier": "p4"
+ },
+ {
+  "still": "hockey.chaos-l2-card.jpg",
+  "moment": "card",
+  "cut": "hockey.chaos",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.chaos-l2-faceoff.jpg",
+  "moment": "faceoff",
+  "cut": "hockey.chaos",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.chaos-l2-farnet.jpg",
+  "moment": "farnet",
+  "cut": "hockey.chaos",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.chaos-l2-pause.jpg",
+  "moment": "pause",
+  "cut": "hockey.chaos",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.chaos-l2-call.jpg",
+  "moment": "call",
+  "cut": "hockey.chaos",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.raw-l2-card.jpg",
+  "moment": "card",
+  "cut": "hockey.raw",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.raw-l2-faceoff.jpg",
+  "moment": "faceoff",
+  "cut": "hockey.raw",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.raw-l2-farnet.jpg",
+  "moment": "farnet",
+  "cut": "hockey.raw",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.raw-l2-pause.jpg",
+  "moment": "pause",
+  "cut": "hockey.raw",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.raw-l2-call.jpg",
+  "moment": "call",
+  "cut": "hockey.raw",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.regular-l2-card.jpg",
+  "moment": "card",
+  "cut": "hockey.regular",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.regular-l2-faceoff.jpg",
+  "moment": "faceoff",
+  "cut": "hockey.regular",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.regular-l2-farnet.jpg",
+  "moment": "farnet",
+  "cut": "hockey.regular",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.regular-l2-pause.jpg",
+  "moment": "pause",
+  "cut": "hockey.regular",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.regular-l2-call.jpg",
+  "moment": "call",
+  "cut": "hockey.regular",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.regular-l1-card.jpg",
+  "moment": "card",
+  "cut": "hockey.regular",
+  "tier": "l1"
+ },
+ {
+  "still": "hockey.regular-l1-faceoff.jpg",
+  "moment": "faceoff",
+  "cut": "hockey.regular",
+  "tier": "l1"
+ },
+ {
+  "still": "hockey.regular-l1-farnet.jpg",
+  "moment": "farnet",
+  "cut": "hockey.regular",
+  "tier": "l1"
+ },
+ {
+  "still": "hockey.regular-l1-pause.jpg",
+  "moment": "pause",
+  "cut": "hockey.regular",
+  "tier": "l1"
+ },
+ {
+  "still": "hockey.regular-l1-call.jpg",
+  "moment": "call",
+  "cut": "hockey.regular",
+  "tier": "l1"
+ },
+ {
+  "still": "hockey.regular-l3-card.jpg",
+  "moment": "card",
+  "cut": "hockey.regular",
+  "tier": "l3"
+ },
+ {
+  "still": "hockey.regular-l3-faceoff.jpg",
+  "moment": "faceoff",
+  "cut": "hockey.regular",
+  "tier": "l3"
+ },
+ {
+  "still": "hockey.regular-l3-farnet.jpg",
+  "moment": "farnet",
+  "cut": "hockey.regular",
+  "tier": "l3"
+ },
+ {
+  "still": "hockey.regular-l3-pause.jpg",
+  "moment": "pause",
+  "cut": "hockey.regular",
+  "tier": "l3"
+ },
+ {
+  "still": "hockey.regular-l3-call.jpg",
+  "moment": "call",
+  "cut": "hockey.regular",
+  "tier": "l3"
+ },
+ {
+  "still": "hockey.regular-p3-card.jpg",
+  "moment": "card",
+  "cut": "hockey.regular",
+  "tier": "p3"
+ },
+ {
+  "still": "hockey.regular-p3-faceoff.jpg",
+  "moment": "faceoff",
+  "cut": "hockey.regular",
+  "tier": "p3"
+ },
+ {
+  "still": "hockey.regular-p3-farnet.jpg",
+  "moment": "farnet",
+  "cut": "hockey.regular",
+  "tier": "p3"
+ },
+ {
+  "still": "hockey.regular-p3-pause.jpg",
+  "moment": "pause",
+  "cut": "hockey.regular",
+  "tier": "p3"
+ },
+ {
+  "still": "hockey.regular-p3-call.jpg",
+  "moment": "call",
+  "cut": "hockey.regular",
+  "tier": "p3"
+ },
+ {
+  "still": "hockey.regular-p4-card.jpg",
+  "moment": "card",
+  "cut": "hockey.regular",
+  "tier": "p4"
+ },
+ {
+  "still": "hockey.regular-p4-faceoff.jpg",
+  "moment": "faceoff",
+  "cut": "hockey.regular",
+  "tier": "p4"
+ },
+ {
+  "still": "hockey.regular-p4-farnet.jpg",
+  "moment": "farnet",
+  "cut": "hockey.regular",
+  "tier": "p4"
+ },
+ {
+  "still": "hockey.regular-p4-pause.jpg",
+  "moment": "pause",
+  "cut": "hockey.regular",
+  "tier": "p4"
+ },
+ {
+  "still": "hockey.regular-p4-call.jpg",
+  "moment": "call",
+  "cut": "hockey.regular",
+  "tier": "p4"
+ },
+ {
+  "still": "hockey.arena.large-l2-goal.jpg",
+  "moment": "goal",
+  "cut": "hockey.arena.large",
+  "tier": "l2"
+ },
+ {
+  "still": "hockey.raw-l2-goal.jpg",
+  "moment": "goal",
+  "cut": "hockey.raw",
+  "tier": "l2"
+ }
+]

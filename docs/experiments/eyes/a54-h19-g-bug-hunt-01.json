@@ -1,0 +1,93 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T01:48:15.121Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/eyesgrid/h19goal/hockey.arena.large-l2-goal.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/eyesgrid/h19goal/hockey.raw-l2-goal.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2305,
+      "usage": {
+        "prompt": 2881,
+        "output": 491,
+        "thoughts": 0,
+        "total": 3372,
+        "calls": 1
+      },
+      "cost_usd_est": 0.004,
+      "ms": 5839,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [
+              {
+                "where": "Bottom-center to bottom-right, net area",
+                "what": "The goal net is extremely wide and unnaturally low-profile/flattened, with a hockey stick blade clipping underneath the frame.",
+                "severity": 4,
+                "confidence": 0.95
+              },
+              {
+                "where": "Center, skater #7",
+                "what": "The hockey stick held by skater #7 is heavily clipping directly through the red left post of the goal net.",
+                "severity": 4,
+                "confidence": 0.98
+              },
+              {
+                "where": "Bottom-left, skater #7's feet",
+                "what": "Skater #7 has no cast shadow onto the ice surface despite the surrounding lighting, floating visually compared to skater #21.",
+                "severity": 3,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still B",
+            "findings": [
+              {
+                "where": "Top-center HUD",
+                "what": "The timer display inside the black central scoreboard box is blank/missing beneath 'PERIOD 1: FIRST TO 3'.",
+                "severity": 3,
+                "confidence": 0.95
+              },
+              {
+                "where": "Bottom-center to bottom-right, net area",
+                "what": "The goal net mesh is completely stretched into an abnormally wide, flat geometry, and skater #7's stick clips through the left post.",
+                "severity": 4,
+                "confidence": 0.98
+              },
+              {
+                "where": "Bottom-left, skater #7's feet",
+                "what": "Skater #7 is missing a ground contact shadow on the ice, making the figure appear ungrounded.",
+                "severity": 3,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=hockey.arena.large-l2-goal.jpg B=hockey.raw-l2-goal.jpg (gemini-3.8-flash, in 2881 out 491 tokens, ~$0.0040, 5.8 s)\n- stills:\n  - label: Still A; clean: false\n    - findings:\n      - where: Bottom-center to bottom-right, net area; what: The goal net is extremely wide and unnaturally low-profile/flattened, with a hockey stick blade clipping underneath the frame.; severity: 4; confidence: 0.95\n      - where: Center, skater #7; what: The hockey stick held by skater #7 is heavily clipping directly through the red left post of the goal net.; severity: 4; confidence: 0.98\n      - where: Bottom-left, skater #7's feet; what: Skater #7 has no cast shadow onto the ice surface despite the surrounding lighting, floating visually compared to skater #21.; severity: 3; confidence: 0.85\n  - label: Still B; clean: false\n    - findings:\n      - where: Top-center HUD; what: The timer display inside the black central scoreboard box is blank/missing beneath 'PERIOD 1: FIRST TO 3'.; severity: 3; confidence: 0.95\n      - where: Bottom-center to bottom-right, net area; what: The goal net mesh is completely stretched into an abnormally wide, flat geometry, and skater #7's stick clips through the left post.; severity: 4; confidence: 0.98\n      - where: Bottom-left, skater #7's feet; what: Skater #7 is missing a ground contact shadow on the ice, making the figure appear ungrounded.; severity: 3; confidence: 0.85"
+    }
+  ]
+}

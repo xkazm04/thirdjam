@@ -48,12 +48,6 @@ namespace SkeletalSkater
 	// The contract's aim is left-positive; aim_left was authored as the Unreal yaw -70 pose (the blade on the skater's left).
 	constexpr bool bAimLeftIsPositive = true;
 	constexpr bool bUseDigitsMaterial = false;
-
-	float SmoothStep01(float T)
-	{
-		T = FMath::Clamp(T, 0.f, 1.f);
-		return T * T * (3.f - 2.f * T);
-	}
 }
 
 USkeletalSkaterVisual::USkeletalSkaterVisual()
@@ -241,7 +235,7 @@ FSkelReaction USkeletalSkaterVisual::ReactionFor(const FSkelInputs& In)
 	// A hard board hit: a lean into the boards, 3 frames in and 9 out, 10 to 16 degrees by strength; not while down.
 	if (!In.bDown && In.SinceBoard >= 0 && In.SinceBoard < BoardLeanFrames)
 	{
-		const float Env = In.SinceBoard <= 3 ? SmoothStep01((float)In.SinceBoard / 3.f) : 1.f - SmoothStep01((float)(In.SinceBoard - 3) / (float)(BoardLeanFrames - 3));
+		const float Env = In.SinceBoard <= 3 ? FMath::SmoothStep(0.f, 1.f, (float)In.SinceBoard / 3.f) : 1.f - FMath::SmoothStep(0.f, 1.f, (float)(In.SinceBoard - 3) / (float)(BoardLeanFrames - 3));
 		R.BoardLeanDeg = (10.f + 6.f * FMath::Clamp(In.BoardStrength, 0.f, 1.f)) * Env;
 	}
 	// The stumble after a mistimed poke: a forward pitch that peaks at 12 degrees mid-way, a 5 degree yaw wobble (two cycles, dying out), the stick 25 cm low.
@@ -549,8 +543,8 @@ void USkeletalSkaterVisual::ApplyPose(const FRotator& Facing)
 	{
 		const float DirYaw = FMath::RadiansToDegrees(FMath::Atan2(KnockDir.Y, KnockDir.X)) + 180.f;
 		const float Off = FRotator::NormalizeAxis(DirYaw - Facing.Yaw);
-		const float K = bDown ? SkeletalSkater::SmoothStep01((float)In.SinceKnock / (float)SkeletalSkater::KnockYawInFrames)
-			: 1.f - SkeletalSkater::SmoothStep01((float)In.SinceKnock / (float)SeqFrames(ESkaterSeq::GetUp));
+		const float K = bDown ? FMath::SmoothStep(0.f, 1.f, (float)In.SinceKnock / (float)SkeletalSkater::KnockYawInFrames)
+			: 1.f - FMath::SmoothStep(0.f, 1.f, (float)In.SinceKnock / (float)SeqFrames(ESkaterSeq::GetUp));
 		YawOff = Off * K;
 	}
 	const FQuat Yaw = FRotator(0.f, Facing.Yaw + YawOff, 0.f).Quaternion();

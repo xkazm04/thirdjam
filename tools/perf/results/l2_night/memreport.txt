@@ -1,0 +1,93 @@
+== Rink-Windows-11.13-02.05.21_Pid27752_Rink-Windows-13-02.05.21.memreport: phys 1555.97 MB (peak 1572.27), objects 32598 (14.224 MB, res 33.132 MB), RHI 3910.844 MB
+== Rink-Windows-11.13-02.05.21_Pid27752_Rink-Windows-13-02.08.27.memreport: phys 1344.66 MB (peak 1572.27), objects 32598 (14.225 MB, res 33.132 MB), RHI 3909.937 MB
+== Rink-Windows-11.13-02.05.21_Pid27752_Rink-Windows-13-02.08.38.memreport: phys 1346.26 MB (peak 1572.27), objects 32346 (13.934 MB, res 33.097 MB), RHI 3929.721 MB
+== Rink-Windows-11.13-02.05.21_Pid27752_Rink-Windows-13-02.08.49.memreport: phys 1346.17 MB (peak 1572.27), objects 32602 (14.234 MB, res 33.152 MB), RHI 3910.399 MB
+== Rink-Windows-11.13-02.05.21_Pid27752_Rink-Windows-13-02.09.00.memreport: phys 1346.55 MB (peak 1572.27), objects 32353 (13.952 MB, res 33.13 MB), RHI 3930.538 MB
+
+RHI memory by kind (last):
+       2048 MB  Reserved Buffer Memory (Uncommitted)
+    795.645 MB  UAV Texture Memory
+        512 MB  Reserved Texture Memory (Committed)
+    346.062 MB  Render Target 2D Memory
+    125.137 MB  Structured Buffer Memory
+     31.643 MB  Bindless Resource Heap
+     24.776 MB  Vertex Buffer Memory
+     21.824 MB  Texture 2D Memory
+     18.203 MB  Texture Cube Memory
+      4.407 MB  Byte Address Buffer Memory
+
+Largest RHI resources (last):
+        512 MB  Shadow.Virtual.PhysicalPagePool
+      127.5 MB  TSR.History.Color
+        112 MB  GlobalDistanceField.PageObjectGridBuffer
+      85.38 MB  Shadow.Virtual.HZBPhysicalPagePool
+      72.25 MB  Lumen.RadianceCache.FinalRadianceAtlas
+         64 MB  Lumen.RadianceCache.RadianceProbeAtlasTextureSource
+         64 MB  Lumen.Radiosity.TraceRadianceAtlas
+         64 MB  Lumen.SceneFinalLighting
+         64 MB  Lumen.SceneDirectLighting
+         64 MB  Lumen.Radiosity.SceneIndirectLighting
+         56 MB  GlobalDistanceField.PageAtlas
+         32 MB  Lumen.RadianceCache.DepthProbeAtlasTexture
+         32 MB  Lumen.SceneDepth
+      31.88 MB  TSR.History.Metadata
+         21 MB  Lumen.RadianceCache.FinalRadianceAtlas
+
+Top 20 assets (last):
+    16448 KB  Texture       /Engine/MapTemplates/Sky/DaylightAmbientCubemap 512x512 PF_FloatRGBA TEXTUREGROUP_World
+     4096 KB  Texture       /Engine/EngineMaterials/FastBlueNoise_vec2_128x128x64 128x8192 PF_B8G8R8A8 TEXTUREGROUP_World
+     2816 KB  Texture       /Game/UI/T_UI_CallCard 1024x653 PF_B8G8R8A8 TEXTUREGROUP_UI
+     1408 KB  Texture       /JamAssets/Look/Textures/T_Clay_Thumb_N 1024x1024 PF_BC5 TEXTUREGROUP_WorldNormalMap
+     1024 KB  Texture       /Engine/EngineMaterials/FastBlueNoise_scalar_128x128x64 128x8192 PF_G8 TEXTUREGROUP_World
+      704 KB  Texture       /JamAssets/Look/Textures/T_Felt_Fibre 1024x1024 PF_DXT1 TEXTUREGROUP_World
+      704 KB  Texture       /JamAssets/Look/Textures/T_Numbers_Varsity 1024x512 PF_BC7 TEXTUREGROUP_World
+      512 KB  Texture       /Engine/EngineMaterials/Hair/Hair_DirectionalAlbedo 64x64 PF_FloatRGBA TEXTUREGROUP_World
+      512 KB  Texture       /Engine/EngineMaterials/Hair/Hair_DualScattering 64x64 PF_FloatRGBA TEXTUREGROUP_World
+      392 KB  SkeletalMesh  /JamAssets/Skaters/SK_SkaterTB1_P3 
+      384 KB  Texture       /Game/UI/T_UI_Button_Hover 512x171 PF_B8G8R8A8 TEXTUREGROUP_UI
+      384 KB  Texture       /Game/UI/T_UI_Button_Pressed 512x171 PF_B8G8R8A8 TEXTUREGROUP_UI
+      384 KB  Texture       /JamAssets/Look/Textures/T_Clay_Dent_N 512x512 PF_BC5 TEXTUREGROUP_WorldNormalMap
+      384 KB  Texture       /JamAssets/Look/Textures/T_Crest_Blue_Comet 512x512 PF_BC7 TEXTUREGROUP_World
+      384 KB  Texture       /JamAssets/Look/Textures/T_Crest_Orange_Fox 512x512 PF_BC7 TEXTUREGROUP_World
+      256 KB  Texture       /Engine/EngineMaterials/PreintegratedSkinBRDF 256x256 PF_B8G8R8A8 TEXTUREGROUP_World
+      256 KB  Texture       /Game/UI/T_UI_Panel 512x512 PF_BC7 TEXTUREGROUP_UI
+      256 KB  Texture       /Game/UI/T_UI_Ring 512x512 PF_BC7 TEXTUREGROUP_UI
+      256 KB  Texture       /Game/UI/T_UI_RingPlain 512x512 PF_BC7 TEXTUREGROUP_UI
+      128 KB  Texture       /Engine/EngineFonts/RobotoDistanceField 512x256 PF_G8 TEXTUREGROUP_UI
+
+Textures over budget (last):
+  16448 KB 512x512 PF_FloatRGBA TEXTUREGROUP_World mips=10 /Engine/MapTemplates/Sky/DaylightAmbientCubemap.DaylightAmbientCubemap
+  4096 KB 128x8192 PF_B8G8R8A8 TEXTUREGROUP_World mips=1 /Engine/EngineMaterials/FastBlueNoise_vec2_128x128x64.FastBlueNoise_vec2_128x128x64
+  2816 KB 1024x653 PF_B8G8R8A8 TEXTUREGROUP_UI mips=1 /Game/UI/T_UI_CallCard.T_UI_CallCard
+
+delta Rink-Windows-11.13-02.05.21_Pid27752_Rink-Windows-13-02.05.21.memreport -> Rink-Windows-11.13-02.05.21_Pid27752_Rink-Windows-13-02.08.27.memreport: phys -211.3 MB, objects 0, RHI -0.9 MB
+
+delta Rink-Windows-11.13-02.05.21_Pid27752_Rink-Windows-13-02.08.27.memreport -> Rink-Windows-11.13-02.05.21_Pid27752_Rink-Windows-13-02.08.38.memreport: phys 1.6 MB, objects -252, RHI 19.8 MB
+  ABP_SkaterTB1_P3_C: +6 objects, +36 KB
+  MaterialInstanceDynamic: +6 objects, +10 KB
+  BP_SkaterVisual_TB1_P3_C: +6 objects, +6 KB
+  Function: +3 objects, +1 KB
+  SceneComponent: +2 objects, +1 KB
+  DirectionalLightComponent: +1 objects, +1 KB
+  BlueprintGeneratedClass: +1 objects, +1 KB
+  BP_LookParams_C: +1 objects, +1 KB
+
+delta Rink-Windows-11.13-02.05.21_Pid27752_Rink-Windows-13-02.08.38.memreport -> Rink-Windows-11.13-02.05.21_Pid27752_Rink-Windows-13-02.08.49.memreport: phys -0.1 MB, objects 256, RHI -19.3 MB
+  StaticMeshComponent: +117 objects, +311 KB
+  StaticMesh: +5 objects, +108 KB
+  StaticMeshActor: +117 objects, +81 KB
+  ABP_SkaterTB1_C: +6 objects, +36 KB
+  NiagaraComponent: +2 objects, +25 KB
+  Material: +2 objects, +10 KB
+  BP_SkaterVisual_TB1_C: +6 objects, +6 KB
+  BodySetup: +5 objects, +4 KB
+
+delta Rink-Windows-11.13-02.05.21_Pid27752_Rink-Windows-13-02.08.49.memreport -> Rink-Windows-11.13-02.05.21_Pid27752_Rink-Windows-13-02.09.00.memreport: phys 0.4 MB, objects -249, RHI 20.1 MB
+  ABP_SkaterTB1_P3_C: +6 objects, +36 KB
+  NiagaraComponent: +2 objects, +17 KB
+  MaterialInstanceDynamic: +6 objects, +10 KB
+  BP_SkaterVisual_TB1_P3_C: +6 objects, +6 KB
+  AudioComponent: +1 objects, +4 KB
+  Function: +3 objects, +1 KB
+  SceneComponent: +2 objects, +1 KB
+  DirectionalLightComponent: +1 objects, +1 KB

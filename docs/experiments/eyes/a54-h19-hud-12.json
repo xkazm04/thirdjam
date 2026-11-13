@@ -1,0 +1,289 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "hud",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T01:30:36.703Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "hud",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.regular-p4-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.regular-p4-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.regular-p4-pause.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.regular-p4-call.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2490,
+      "usage": {
+        "prompt": 11815,
+        "output": 4179,
+        "thoughts": 0,
+        "total": 15994,
+        "calls": 2
+      },
+      "cost_usd_est": 0.02453,
+      "ms": 30489,
+      "retried": true,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "elements": [
+              {
+                "name": "Scoreboard blue plate",
+                "position": "top center-left",
+                "legible": true,
+                "text": "00"
+              },
+              {
+                "name": "Scoreboard period box",
+                "position": "top center",
+                "legible": true,
+                "text": "PERIOD 1: FIRST TO 3"
+              },
+              {
+                "name": "Scoreboard orange plate",
+                "position": "top center-right",
+                "legible": true,
+                "text": "00"
+              },
+              {
+                "name": "Opponent net distance marker",
+                "position": "mid-screen top center above far net",
+                "legible": true,
+                "text": "49 m"
+              },
+              {
+                "name": "Own net distance marker",
+                "position": "mid-screen left edge on ice",
+                "legible": false,
+                "text": "own 34 m"
+              },
+              {
+                "name": "Player speech bubble",
+                "position": "bottom center below blue skater",
+                "legible": true,
+                "text": "Loud one off the wall."
+              },
+              {
+                "name": "Controls bar",
+                "position": "bottom edge full width strip",
+                "legible": true,
+                "text": "SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPRINT SHIFT POKE SPACE PASS E PAUSE ESC"
+              },
+              {
+                "name": "Call ready prompt",
+                "position": "bottom-left above blue baseline arc",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              },
+              {
+                "name": "Minimap radar",
+                "position": "bottom-right corner",
+                "legible": true,
+                "text": "RADAR"
+              }
+            ],
+            "collisions": [
+              "Distance marker '49 m' overlaps the top crossbar and netting of the far red net.",
+              "Speech bubble overlaps the player selection circle at skater's feet.",
+              "Controls text 'PAUSE ESC' overlaps the upper left boundary of the radar minimap.",
+              "Left net indicator 'own 34 m' displays black glyphs directly over white ice with no backing plate."
+            ],
+            "missing": [
+              "No visible game clock or elapsed period time.",
+              "No indicator clarifying which team colour the player belongs to."
+            ],
+            "smallest_text_px": 14,
+            "legibility": 3
+          },
+          {
+            "label": "Still B",
+            "elements": [
+              {
+                "name": "Scoreboard blue plate",
+                "position": "top center-left",
+                "legible": true,
+                "text": "00"
+              },
+              {
+                "name": "Scoreboard period box",
+                "position": "top center",
+                "legible": true,
+                "text": "PERIOD 1: FIRST TO 3"
+              },
+              {
+                "name": "Scoreboard orange plate",
+                "position": "top center-right",
+                "legible": true,
+                "text": "00"
+              },
+              {
+                "name": "Far net off-screen marker",
+                "position": "mid-right above boards",
+                "legible": true,
+                "text": "4 m"
+              },
+              {
+                "name": "Own net off-screen marker",
+                "position": "mid-right below boards on ice",
+                "legible": false,
+                "text": "own 84 m"
+              },
+              {
+                "name": "Player speech bubble",
+                "position": "bottom center-left below skater ring",
+                "legible": true,
+                "text": "Rimmed around the back."
+              },
+              {
+                "name": "Call ready prompt",
+                "position": "bottom-left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              },
+              {
+                "name": "Minimap radar",
+                "position": "bottom-right corner",
+                "legible": true,
+                "text": "RADAR"
+              }
+            ],
+            "collisions": [
+              "Speech bubble overlaps both the red goal line and blue skater ground ring.",
+              "Own net indicator 'own 84 m' floats on white ice with low-contrast dark glyphs.",
+              "Puck is completely hidden under boards edge with no HUD occlusion icon."
+            ],
+            "missing": [
+              "Bottom controls bar has vanished compared to Still A.",
+              "No indicator locating puck behind boards."
+            ],
+            "smallest_text_px": 13,
+            "legibility": 3
+          },
+          {
+            "label": "Still C",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "top center background",
+                "legible": false,
+                "text": "PERIOD 1: FIRST TO 3"
+              },
+              {
+                "name": "Time Out modal card",
+                "position": "screen center",
+                "legible": true,
+                "text": "TIME OUT PERIOD 1 RESUME DIRECTOR'S CALL RESTART QUIT TO MENU"
+              },
+              {
+                "name": "Director call status line",
+                "position": "center below modal box",
+                "legible": true,
+                "text": "Your call is ready: change one thing about this match."
+              },
+              {
+                "name": "Full controls reference block",
+                "position": "bottom center spanning horizontally",
+                "legible": true,
+                "text": "SKATE WASD / L-STICK AIM STICK MOUSE / R-STICK SHOOT HOLD LMB / RT CHECK RMB / RB CROSS-CHECK MMB, MOUSE4 / LB DEKE WHEEL, Q / Y SPRINT SHIFT / LT POKE SPACE / A PASS E / X SIGNALS 1-4 / D-PAD BRAKE CTRL / B RESTART R / VIEW PAUSE ESC / MENU"
+              },
+              {
+                "name": "Menu prompt line",
+                "position": "bottom center under controls block",
+                "legible": true,
+                "text": "ESC / START resume STICK move A select B back"
+              },
+              {
+                "name": "Call ready prompt",
+                "position": "bottom-left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              }
+            ],
+            "collisions": [
+              "Modal card obscures center of ice, player character, and near goal.",
+              "Full controls list is dense, creating vertical crowding near bottom edge.",
+              "Scoreboard period header is partially occluded by the top striped banner of the modal."
+            ],
+            "missing": [
+              "No cursor or highlighted button state indicating currently focused menu option."
+            ],
+            "smallest_text_px": 12,
+            "legibility": 4
+          },
+          {
+            "label": "Still D",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "top center background",
+                "legible": false,
+                "text": "PERIOD 1: FIRST TO 3"
+              },
+              {
+                "name": "Director's Call modal panel",
+                "position": "screen center",
+                "legible": true,
+                "text": "DIRECTOR'S CALL - PERIOD 1 One change per period. Move one slider, then APPLY. The scoreboard announces the new rule."
+              },
+              {
+                "name": "Director's Call sliders and labels",
+                "position": "center inside modal body",
+                "legible": true,
+                "text": "SKATER SPEED 11 SHOT POWER 18 ICE FRICTION 0.015 OPPONENTS' SKILL 1 TURN RATE 5"
+              },
+              {
+                "name": "Modal action buttons",
+                "position": "bottom of modal card",
+                "legible": true,
+                "text": "APPLY BACK"
+              },
+              {
+                "name": "Call ready prompt",
+                "position": "bottom-left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              }
+            ],
+            "collisions": [
+              "Modal panel covers entire player figure and central play area.",
+              "Top edge of modal overlaps scoreboard period panel.",
+              "Slider rule descriptions use grey low-contrast text against dark slate background."
+            ],
+            "missing": [
+              "Controller navigation hints for moving between sliders are omitted.",
+              "Current active slider highlight is visually ambiguous."
+            ],
+            "smallest_text_px": 12,
+            "legibility": 3
+          }
+        ]
+      },
+      "markdown": "**eyes/hud** A=hockey.regular-p4-faceoff.jpg B=hockey.regular-p4-farnet.jpg C=hockey.regular-p4-pause.jpg D=hockey.regular-p4-call.jpg (gemini-3.8-flash, in 11815 out 4179 tokens, ~$0.0245, 30.5 s, 1 retry)\n- stills:\n  - label: Still A; smallest_text_px: 14; legibility: 3\n    - elements:\n      - name: Scoreboard blue plate; position: top center-left; legible: true; text: 00\n      - name: Scoreboard period box; position: top center; legible: true; text: PERIOD 1: FIRST TO 3\n      - name: Scoreboard orange plate; position: top center-right; legible: true; text: 00\n      - name: Opponent net distance marker; position: mid-screen top center above far net; legible: true; text: 49 m\n      - name: Own net distance marker; position: mid-screen left edge on ice; legible: false; text: own 34 m\n      - name: Player speech bubble; position: bottom center below blue skater; legible: true; text: Loud one off the wall.\n      - name: Controls bar; position: bottom edge full width strip; legible: true; text: SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPRINT SHIFT POKE SPACE PASS E PAUSE ESC\n      - name: Call ready prompt; position: bottom-left above blue baseline arc; legible: true; text: ESC / START CALL READY\n      - name: Minimap radar; position: bottom-right corner; legible: true; text: RADAR\n    - collisions: Distance marker '49 m' overlaps the top crossbar and netting of the far red net.; Speech bubble overlaps the player selection circle at skater's feet.; Controls text 'PAUSE ESC' overlaps the upper left boundary of the radar minimap.; Left net indicator 'own 34 m' displays black glyphs directly over white ice with no backing plate.\n    - missing: No visible game clock or elapsed period time.; No indicator clarifying which team colour the player belongs to.\n  - label: Still B; smallest_text_px: 13; legibility: 3\n    - elements:\n      - name: Scoreboard blue plate; position: top center-left; legible: true; text: 00\n      - name: Scoreboard period box; position: top center; legible: true; text: PERIOD 1: FIRST TO 3\n      - name: Scoreboard orange plate; position: top center-right; legible: true; text: 00\n      - name: Far net off-screen marker; position: mid-right above boards; legible: true; text: 4 m\n      - name: Own net off-screen marker; position: mid-right below boards on ice; legible: false; text: own 84 m\n      - name: Player speech bubble; position: bottom center-left below skater ring; legible: true; text: Rimmed around the back.\n      - name: Call ready prompt; position: bottom-left corner; legible: true; text: ESC / START CALL READY\n      - name: Minimap radar; position: bottom-right corner; legible: true; text: RADAR\n    - collisions: Speech bubble overlaps both the red goal line and blue skater ground ring.; Own net indicator 'own 84 m' floats on white ice with low-contrast dark glyphs.; Puck is completely hidden under boards edge with no HUD occlusion icon.\n    - missing: Bottom controls bar has vanished compared to Still A.; No indicator locating puck behind boards.\n  - label: Still C; smallest_text_px: 12; legibility: 4\n    - elements:\n      - name: Scoreboard; position: top center background; legible: false; text: PERIOD 1: FIRST TO 3\n      - name: Time Out modal card; position: screen center; legible: true; text: TIME OUT PERIOD 1 RESUME DIRECTOR'S CALL RESTART QUIT TO MENU\n      - name: Director call status line; position: center below modal box; legible: true; text: Your call is ready: change one thing about this match.\n      - name: Full controls reference block; position: bottom center spanning horizontally; legible: true; text: SKATE WASD / L-STICK AIM STICK MOUSE / R-STICK SHOOT HOLD LMB / RT CHECK RMB / RB CROSS-CHECK MMB, MOUSE4 / LB DEKE WHEEL, Q / Y SPRINT SHIFT / LT POKE SPACE / A PASS E / X SIGNALS 1-4 / D-PAD BRAKE CTRL / B RESTART R / VIEW PAUSE ESC / MENU\n      - name: Menu prompt line; position: bottom center under controls block; legible: true; text: ESC / START resume STICK move A select B back\n      - name: Call ready prompt; position: bottom-left corner; legible: true; text: ESC / START CALL READY\n    - collisions: Modal card obscures center of ice, player character, and near goal.; Full controls list is dense, creating vertical crowding near bottom edge.; Scoreboard period header is partially occluded by the top striped banner of the modal.\n    - missing: No cursor or highlighted button state indicating currently focused menu option.\n  - label: Still D; smallest_text_px: 12; legibility: 3\n    - elements:\n      - name: Scoreboard; position: top center background; legible: false; text: PERIOD 1: FIRST TO 3\n      - name: Director's Call modal panel; position: screen center; legible: true; text: DIRECTOR'S CALL - PERIOD 1 One change per period. Move one slider, then APPLY. The scoreboard announces the new rule.\n      - name: Director's Call sliders and labels; position: center inside modal body; legible: true; text: SKATER SPEED 11 SHOT POWER 18 ICE FRICTION 0.015 OPPONENTS' SKILL 1 TURN RATE 5\n      - name: Modal action buttons; position: bottom of modal card; legible: true; text: APPLY BACK\n      - name: Call ready prompt; position: bottom-left corner; legible: true; text: ESC / START CALL READY\n    - collisions: Modal panel covers entire player figure and central play area.; Top edge of modal overlaps scoreboard period panel.; Slider rule descriptions use grey low-contrast text against dark slate background.\n    - missing: Controller navigation hints for moving between sliders are omitted.; Current active slider highlight is visually ambiguous."
+    }
+  ]
+}

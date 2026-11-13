@@ -8,7 +8,6 @@
 // final hashes equal; a faceoff drop, a foul, a pickup take and a rule hook must have happened. The chaos run uses an 83 ms one-way /
 // 2% loss link (the WAN case); a third run has peer B tick at half rate (a slow machine): A may never run more than Delay ahead.
 #include "Misc/AutomationTest.h"
-#include "Misc/FileHelper.h"
 #include "UObject/UnrealType.h"
 #include "JamCartridge.h"
 #include "JamSim.h"
@@ -259,6 +258,15 @@ bool FJamNetInputCoverage::RunTest(const FString& Parameters)
 		const FJamInput Back = Qo.ToInput();
 		const int32 Set = (Back.bShoot ? 1 : 0) + (Back.bCheck ? 1 : 0) + (Back.bBrake ? 1 : 0) + (Back.bShootHeld ? 1 : 0) + (Back.bPass ? 1 : 0) + (Back.bPoke ? 1 : 0) + (Back.bLift ? 1 : 0);
 		TestEqual(*FString::Printf(TEXT("flag bit %d comes back alone"), Bit), Set, 1);
+	}
+	// Lane A51 (R-0034): the spin is flag bit 512 (bit 9), alone, and comes back alone.
+	{
+		FJamInput One; One.bSpin = true;
+		const FJamNetQuantInput Qo = FJamNetQuantInput::From(One);
+		TestEqual(TEXT("spin flag bit 512 alone"), static_cast<int32>(Qo.Flags), 512);
+		const FJamInput Back = Qo.ToInput();
+		TestTrue(TEXT("spin comes back alone"), Back.bSpin && !Back.bShoot && !Back.bCheck && !Back.bBrake && !Back.bShootHeld && !Back.bPass && !Back.bPoke && !Back.bLift && !Back.bDeke && !Back.bSprint);
+		TestEqual(TEXT("protocol 5 carries the spin"), static_cast<int32>(JamNet::Version), 5);
 	}
 	TestTrue(TEXT("an empty input is the zero wire value"), FJamNetQuantInput::From(FJamInput()) == FJamNetQuantInput());
 	return true;

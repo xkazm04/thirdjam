@@ -1,0 +1,165 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T01:20:19.942Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.chaos-l2-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.chaos-l2-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.chaos-l2-pause.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.chaos-l2-call.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.raw-l2-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "F",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.raw-l2-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2442,
+      "usage": {
+        "prompt": 7449,
+        "output": 847,
+        "thoughts": 0,
+        "total": 8296,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00876,
+      "ms": 8980,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [
+              {
+                "where": "Top right quadrant, right side ice near boards",
+                "what": "A solid magenta debug box without texture or shading is sitting directly on the ice surface.",
+                "severity": 5,
+                "confidence": 1
+              },
+              {
+                "where": "Bottom right corner, minimap overlay",
+                "what": "The controls HUD ribbon at the bottom overlaps and partially clips the semi-transparent minimap window frame.",
+                "severity": 2,
+                "confidence": 0.95
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still B",
+            "findings": [
+              {
+                "where": "Bottom left quadrant, goal post",
+                "what": "The player character's blue body and shoulder mesh clip through the outer right post of the red goal net.",
+                "severity": 4,
+                "confidence": 0.98
+              },
+              {
+                "where": "Top left quadrant, above the board railing",
+                "what": "A small floating black-and-red rectangular cube marker floats above the glass railing under the 3m distance marker.",
+                "severity": 3,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still C",
+            "findings": [
+              {
+                "where": "Bottom center, underneath the pause modal",
+                "what": "The control scheme keybind instructions text renders directly on top of the dark transparent backplate of the active pause menu instead of being cleanly separated or hidden.",
+                "severity": 3,
+                "confidence": 0.95
+              },
+              {
+                "where": "Top left quadrant, floating above the boards",
+                "what": "A black cube with a red face floats unanchored in the air above the boards under the 4m indicator.",
+                "severity": 3,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still D",
+            "findings": [
+              {
+                "where": "Top left quadrant, floating above the boards",
+                "what": "A small black-and-red cube object is suspended in mid-air above the dasher boards.",
+                "severity": 3,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still E",
+            "findings": [
+              {
+                "where": "Center screen, behind player figure",
+                "what": "A semi-transparent orange skater figure directly behind the center MATCH 1 card overlaps the blue skater and the prompt without distinct separation.",
+                "severity": 2,
+                "confidence": 0.8
+              },
+              {
+                "where": "Bottom right corner, minimap border",
+                "what": "The bottom control banner text overlaps the lower border of the minimap HUD element.",
+                "severity": 2,
+                "confidence": 0.95
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still F",
+            "findings": [
+              {
+                "where": "Bottom right corner, minimap frame",
+                "what": "The controls HUD text bar overlaps the lower boundary of the minimap box.",
+                "severity": 2,
+                "confidence": 0.95
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=hockey.chaos-l2-faceoff.jpg B=hockey.chaos-l2-farnet.jpg C=hockey.chaos-l2-pause.jpg D=hockey.chaos-l2-call.jpg E=hockey.raw-l2-card.jpg F=hockey.raw-l2-faceoff.jpg (gemini-3.8-flash, in 7449 out 847 tokens, ~$0.0088, 9 s)\n- stills:\n  - label: Still A; clean: false\n    - findings:\n      - where: Top right quadrant, right side ice near boards; what: A solid magenta debug box without texture or shading is sitting directly on the ice surface.; severity: 5; confidence: 1\n      - where: Bottom right corner, minimap overlay; what: The controls HUD ribbon at the bottom overlaps and partially clips the semi-transparent minimap window frame.; severity: 2; confidence: 0.95\n  - label: Still B; clean: false\n    - findings:\n      - where: Bottom left quadrant, goal post; what: The player character's blue body and shoulder mesh clip through the outer right post of the red goal net.; severity: 4; confidence: 0.98\n      - where: Top left quadrant, above the board railing; what: A small floating black-and-red rectangular cube marker floats above the glass railing under the 3m distance marker.; severity: 3; confidence: 0.85\n  - label: Still C; clean: false\n    - findings:\n      - where: Bottom center, underneath the pause modal; what: The control scheme keybind instructions text renders directly on top of the dark transparent backplate of the active pause menu instead of being cleanly separated or hidden.; severity: 3; confidence: 0.95\n      - where: Top left quadrant, floating above the boards; what: A black cube with a red face floats unanchored in the air above the boards under the 4m indicator.; severity: 3; confidence: 0.85\n  - label: Still D; clean: false\n    - findings:\n      - where: Top left quadrant, floating above the boards; what: A small black-and-red cube object is suspended in mid-air above the dasher boards.; severity: 3; confidence: 0.85\n  - label: Still E; clean: false\n    - findings:\n      - where: Center screen, behind player figure; what: A semi-transparent orange skater figure directly behind the center MATCH 1 card overlaps the blue skater and the prompt without distinct separation.; severity: 2; confidence: 0.8\n      - where: Bottom right corner, minimap border; what: The bottom control banner text overlaps the lower border of the minimap HUD element.; severity: 2; confidence: 0.95\n  - label: Still F; clean: false\n    - findings:\n      - where: Bottom right corner, minimap frame; what: The controls HUD text bar overlaps the lower boundary of the minimap box.; severity: 2; confidence: 0.95"
+    }
+  ]
+}

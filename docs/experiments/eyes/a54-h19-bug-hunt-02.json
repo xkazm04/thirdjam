@@ -1,0 +1,165 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T01:19:26.290Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.arena.large-l2-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.arena.large-l2-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.arena.large-l2-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.arena.large-l2-pause.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.arena.large-l2-call.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "F",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.arena.wide-l2-card.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2478,
+      "usage": {
+        "prompt": 7471,
+        "output": 832,
+        "thoughts": 0,
+        "total": 8303,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00872,
+      "ms": 9585,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [
+              {
+                "where": "bottom right corner",
+                "what": "The keybind prompt string 'PAUSE ESC' clips and overlaps directly with the left border and background of the minimap HUD element.",
+                "severity": 3,
+                "confidence": 0.98
+              },
+              {
+                "where": "top-center beneath MATCH 1 card",
+                "what": "The opposing center skater is partially rendered and obscured directly behind the match banner and faceoff glow, with no stick clearly visible.",
+                "severity": 2,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still B",
+            "findings": [
+              {
+                "where": "bottom right corner",
+                "what": "The keybind prompt string 'PAUSE ESC' clips and extends into the minimap panel frame.",
+                "severity": 3,
+                "confidence": 0.98
+              },
+              {
+                "where": "center-bottom foreground skater",
+                "what": "The player figure's hockey stick is missing or clipped entirely inside the body mesh during the faceoff stance.",
+                "severity": 3,
+                "confidence": 0.9
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still C",
+            "findings": [
+              {
+                "where": "center-bottom foreground skater",
+                "what": "The controlled blue player figure has no hockey stick visible in hands while skating towards the net.",
+                "severity": 3,
+                "confidence": 0.9
+              },
+              {
+                "where": "top center above net",
+                "what": "The distance marker '7 m' and yellow waypoint diamond float detached directly over the back dasher board rather than aligning onto the crossbar.",
+                "severity": 2,
+                "confidence": 0.75
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still D",
+            "findings": [
+              {
+                "where": "top-center score header background",
+                "what": "Faint ghosted watermark text 'director's call' is visible bleeding behind the top scoreboard banner.",
+                "severity": 2,
+                "confidence": 0.8
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still E",
+            "findings": [
+              {
+                "where": "top-center score header background",
+                "what": "Faint ghosted watermark text from the pause menu remains visible bleed-through behind the scoreboard banner.",
+                "severity": 2,
+                "confidence": 0.8
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still F",
+            "findings": [
+              {
+                "where": "bottom right corner",
+                "what": "The 'PAUSE ESC' text overlaps and penetrates the minimap display boundary.",
+                "severity": 3,
+                "confidence": 0.98
+              },
+              {
+                "where": "top-center behind the MATCH 1 card",
+                "what": "Distance text '76 m' clips into the bottom edge of the top objective marker diamond and the MATCH 1 popup header.",
+                "severity": 3,
+                "confidence": 0.95
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=hockey.arena.large-l2-card.jpg B=hockey.arena.large-l2-faceoff.jpg C=hockey.arena.large-l2-farnet.jpg D=hockey.arena.large-l2-pause.jpg E=hockey.arena.large-l2-call.jpg F=hockey.arena.wide-l2-card.jpg (gemini-3.8-flash, in 7471 out 832 tokens, ~$0.0087, 9.6 s)\n- stills:\n  - label: Still A; clean: false\n    - findings:\n      - where: bottom right corner; what: The keybind prompt string 'PAUSE ESC' clips and overlaps directly with the left border and background of the minimap HUD element.; severity: 3; confidence: 0.98\n      - where: top-center beneath MATCH 1 card; what: The opposing center skater is partially rendered and obscured directly behind the match banner and faceoff glow, with no stick clearly visible.; severity: 2; confidence: 0.85\n  - label: Still B; clean: false\n    - findings:\n      - where: bottom right corner; what: The keybind prompt string 'PAUSE ESC' clips and extends into the minimap panel frame.; severity: 3; confidence: 0.98\n      - where: center-bottom foreground skater; what: The player figure's hockey stick is missing or clipped entirely inside the body mesh during the faceoff stance.; severity: 3; confidence: 0.9\n  - label: Still C; clean: false\n    - findings:\n      - where: center-bottom foreground skater; what: The controlled blue player figure has no hockey stick visible in hands while skating towards the net.; severity: 3; confidence: 0.9\n      - where: top center above net; what: The distance marker '7 m' and yellow waypoint diamond float detached directly over the back dasher board rather than aligning onto the crossbar.; severity: 2; confidence: 0.75\n  - label: Still D; clean: false\n    - findings:\n      - where: top-center score header background; what: Faint ghosted watermark text 'director's call' is visible bleeding behind the top scoreboard banner.; severity: 2; confidence: 0.8\n  - label: Still E; clean: false\n    - findings:\n      - where: top-center score header background; what: Faint ghosted watermark text from the pause menu remains visible bleed-through behind the scoreboard banner.; severity: 2; confidence: 0.8\n  - label: Still F; clean: false\n    - findings:\n      - where: bottom right corner; what: The 'PAUSE ESC' text overlaps and penetrates the minimap display boundary.; severity: 3; confidence: 0.98\n      - where: top-center behind the MATCH 1 card; what: Distance text '76 m' clips into the bottom edge of the top objective marker diamond and the MATCH 1 popup header.; severity: 3; confidence: 0.95"
+    }
+  ]
+}

@@ -201,14 +201,18 @@ void AJamSkater::ApplySimFrame(const FJamSkaterState& S)
 		IJamSkaterVisual::Execute_SetHasPuck(V, bHadPuck);
 	}
 	// Contract: turn rate positive = turning left seen from above; the sim's yaw grows to the right (Unreal yaw).
-	IJamSkaterVisual::Execute_UpdateMotion(V, static_cast<float>(S.Vel.Size()), static_cast<float>(-S.YawRate),
-		FRotator(0.0, FMath::RadiansToDegrees(S.Yaw), 0.0));
+	// Lane A51 (R-0034): the spin is a yaw turn of the visual over the spin's frames (FJamSkaterState::SpinVisualYawDeg) through the existing facing call;
+	// the sim's own yaw keeps the body's line. The stick aim below is measured against the turned facing so the blade stays where the puck is.
+	const double SpinDeg = S.SpinVisualYawDeg();
+	const double VisualYaw = S.Yaw + FMath::DegreesToRadians(SpinDeg);
+	IJamSkaterVisual::Execute_UpdateMotion(V, static_cast<float>(S.Vel.Size()), static_cast<float>(-S.YawRate - (S.SpinFrames > 0 && S.SpinLength > 0 ? S.SpinDir * 2.0 * UE_DOUBLE_PI / (S.SpinLength * UJamSim::DT) : 0.0)),
+		FRotator(0.0, FMath::RadiansToDegrees(VisualYaw), 0.0));
 
 	// C-0001 v3 (B-to-A-0014): the stick verbs. Aim: the blade relative to the facing, positive = left (the sim's yaw grows to the right).
 	// Lane A49: smoothed and side-stable before it is sent (SmoothAimDeg); the reach follows with the same 6-frame approach.
 	{
 		const FVector2D D = S.BladePos - S.Pos;
-		const double Rel = FMath::UnwindRadians(FMath::Atan2(D.Y, D.X) - S.Yaw);
+		const double Rel = FMath::UnwindRadians(FMath::Atan2(D.Y, D.X) - VisualYaw);   // lane A51: against the spun facing
 		const float AimDeg = static_cast<float>(-FMath::RadiansToDegrees(Rel));
 		const float Reach = static_cast<float>(D.Size());
 		LastAimDeg = AimDeg;
@@ -293,7 +297,7 @@ void AJamSkater::ApplyRender(const FJamSkaterState& S, float Alpha)
 {
 	const FVector Loc = Lerp2D(S.PrevPos, S.Pos, Alpha, 0.0);
 	const double DYaw = FMath::UnwindRadians(S.Yaw - S.PrevYaw);
-	const double Yaw = S.PrevYaw + DYaw * Alpha;
+	const double Yaw = S.PrevYaw + DYaw * Alpha + FMath::DegreesToRadians(S.SpinVisualYawDeg());   // lane A51 (R-0034): the spin's turn of the figure
 	SetActorLocationAndRotation(Loc, FRotator(0.0, FMath::RadiansToDegrees(Yaw), 0.0));
 }
 

@@ -1,0 +1,376 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "hud",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T01:27:51.276Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "hud",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.raw-l2-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.raw-l2-pause.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.raw-l2-call.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.regular-l2-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.regular-l2-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "F",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.regular-l2-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2552,
+      "usage": {
+        "prompt": 16476,
+        "output": 5589,
+        "thoughts": 0,
+        "total": 22065,
+        "calls": 2
+      },
+      "cost_usd_est": 0.03332,
+      "ms": 38603,
+      "retried": true,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "Top centre",
+                "legible": true,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Far net target marker",
+                "position": "Upper centre, above goal",
+                "legible": true,
+                "text": "6 m"
+              },
+              {
+                "name": "Own net distance marker",
+                "position": "Mid-left edge",
+                "legible": false,
+                "text": "own 106 m"
+              },
+              {
+                "name": "Commentary subtitle",
+                "position": "Bottom centre",
+                "legible": true,
+                "text": "Long carry up the ice."
+              },
+              {
+                "name": "Call ready prompt",
+                "position": "Bottom-left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              },
+              {
+                "name": "Player indicator ring",
+                "position": "Around feet of player 7",
+                "legible": true,
+                "text": "7"
+              }
+            ],
+            "collisions": [
+              "Target net marker partially collides with the top rail of the rink boards."
+            ],
+            "missing": [
+              "Controls hint bar along the bottom is missing during open play.",
+              "No indicator clarifying which score box corresponds to the player team."
+            ],
+            "smallest_text_px": 14,
+            "legibility": 3
+          },
+          {
+            "label": "Still B",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "Top centre, behind modal",
+                "legible": false,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Time Out modal title",
+                "position": "Centre modal top",
+                "legible": true,
+                "text": "TIME OUT PERIOD 1"
+              },
+              {
+                "name": "Menu buttons",
+                "position": "Centre modal middle",
+                "legible": true,
+                "text": "RESUME DIRECTOR'S CALL RESTART QUIT TO MENU"
+              },
+              {
+                "name": "Modal instruction subtitle",
+                "position": "Below menu buttons",
+                "legible": true,
+                "text": "Your call is ready: change one thing about this match."
+              },
+              {
+                "name": "Controls reference list",
+                "position": "Lower half of modal",
+                "legible": false,
+                "text": "SKATE WASD / L-STICK AIM STICK MOUSE / R-STICK SHOOT HOLD LMB / RT CHECK RMB / RB CROSS-CHECK MMB, MOUSE4 / LB DEKE WHEEL, Q / Y SPRINT SHIFT / LT POKE SPACE / A PASS E / X SIGNALS 1-4 / D-PAD BRAKE CTRL / B RESTART R / VIEW PAUSE ESC / MENU"
+              },
+              {
+                "name": "Modal footer prompts",
+                "position": "Modal bottom rim",
+                "legible": true,
+                "text": "ESC / START resume STICK move A select B back"
+              },
+              {
+                "name": "Call ready prompt",
+                "position": "Bottom-left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              }
+            ],
+            "collisions": [
+              "Pause modal heavily covers the scoreboard and centre rink action.",
+              "Controls text is overly dense and bleeds into the bottom edge of the card."
+            ],
+            "missing": [
+              "Distinct highlight showing currently focused menu item."
+            ],
+            "smallest_text_px": 12,
+            "legibility": 2
+          },
+          {
+            "label": "Still C",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "Top centre, behind modal",
+                "legible": false,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Director's Call header",
+                "position": "Centre modal header",
+                "legible": true,
+                "text": "DIRECTOR'S CALL - PERIOD 1"
+              },
+              {
+                "name": "Call instructions",
+                "position": "Below modal header",
+                "legible": true,
+                "text": "One change per period. Move one slider, then APPLY. The scoreboard announces the new rule."
+              },
+              {
+                "name": "Rule slider labels and values",
+                "position": "Centre modal sliders",
+                "legible": true,
+                "text": "SKATER SPEED 8 SHOT POWER 18 ICE FRICTION 0.015 OPPONENTS' SKILL 1 TURN RATE 5"
+              },
+              {
+                "name": "Action buttons",
+                "position": "Bottom of modal",
+                "legible": true,
+                "text": "APPLY BACK"
+              },
+              {
+                "name": "Call ready prompt",
+                "position": "Bottom-left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              }
+            ],
+            "collisions": [
+              "Director's Call modal obscures the entire center ice and scoreboard."
+            ],
+            "missing": [
+              "Gamepad navigation hints on how to adjust slider values."
+            ],
+            "smallest_text_px": 13,
+            "legibility": 3
+          },
+          {
+            "label": "Still D",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "Top centre",
+                "legible": true,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Match banner",
+                "position": "Upper-centre overlay",
+                "legible": true,
+                "text": "MATCH 1 PERIOD 1 - FACEOFF"
+              },
+              {
+                "name": "Speech bubble",
+                "position": "Mid-centre overlay",
+                "legible": true,
+                "text": "Nice stance. Shame it's the only part that moves right."
+              },
+              {
+                "name": "Faceoff reticle announcement",
+                "position": "Centre above player",
+                "legible": true,
+                "text": "YOU WON"
+              },
+              {
+                "name": "Commentary subtitle",
+                "position": "Bottom centre",
+                "legible": true,
+                "text": "Welcome to the rink: blue against orange, first period."
+              },
+              {
+                "name": "Controls bar",
+                "position": "Bottom screen edge",
+                "legible": true,
+                "text": "SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPRINT SHIFT POKE SPACE PASS E PAUSE ESC"
+              },
+              {
+                "name": "Call ready prompt",
+                "position": "Bottom-left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              }
+            ],
+            "collisions": [
+              "Match banner completely occludes the faceoff spot and opposing skaters.",
+              "Faceoff reticle overlaps the player skater torso.",
+              "Controls bar overlaps the bottom rink border and sprint meter."
+            ],
+            "missing": [
+              "Indication of what action triggered the faceoff win."
+            ],
+            "smallest_text_px": 14,
+            "legibility": 2
+          },
+          {
+            "label": "Still E",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "Top centre",
+                "legible": true,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Far net target marker",
+                "position": "Upper centre, above goal",
+                "legible": true,
+                "text": "49 m"
+              },
+              {
+                "name": "Own net distance marker",
+                "position": "Mid-left edge",
+                "legible": false,
+                "text": "own 34 m"
+              },
+              {
+                "name": "Commentary subtitle",
+                "position": "Bottom centre",
+                "legible": true,
+                "text": "Loud one off the wall."
+              },
+              {
+                "name": "Controls bar",
+                "position": "Bottom screen edge",
+                "legible": true,
+                "text": "SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPRINT SHIFT POKE SPACE PASS E PAUSE ESC"
+              },
+              {
+                "name": "Call ready prompt",
+                "position": "Bottom-left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              }
+            ],
+            "collisions": [
+              "Far net marker floats directly over the orange bot skater at the opposite end.",
+              "Controls bar collides with the lower blue arc gauge."
+            ],
+            "missing": [
+              "Puck location indicator when distant.",
+              "Clear indicator that the player controls blue #7."
+            ],
+            "smallest_text_px": 14,
+            "legibility": 4
+          },
+          {
+            "label": "Still F",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "Top centre",
+                "legible": true,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Target net distance marker",
+                "position": "Upper-left boards",
+                "legible": true,
+                "text": "4 m"
+              },
+              {
+                "name": "Own net distance marker",
+                "position": "Mid-left edge",
+                "legible": false,
+                "text": "own 84 m"
+              },
+              {
+                "name": "Commentary subtitle",
+                "position": "Bottom centre",
+                "legible": true,
+                "text": "Rimmed around the back."
+              },
+              {
+                "name": "Call ready prompt",
+                "position": "Bottom-left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              }
+            ],
+            "collisions": [
+              "Target distance marker floats over the black rimming of the rink glass."
+            ],
+            "missing": [
+              "Controls guide is not displayed during active play.",
+              "Puck status or possession indicator."
+            ],
+            "smallest_text_px": 14,
+            "legibility": 4
+          }
+        ]
+      },
+      "markdown": "**eyes/hud** A=hockey.raw-l2-farnet.jpg B=hockey.raw-l2-pause.jpg C=hockey.raw-l2-call.jpg D=hockey.regular-l2-card.jpg E=hockey.regular-l2-faceoff.jpg F=hockey.regular-l2-farnet.jpg (gemini-3.8-flash, in 16476 out 5589 tokens, ~$0.0333, 38.6 s, 1 retry)\n- stills:\n  - label: Still A; smallest_text_px: 14; legibility: 3\n    - elements:\n      - name: Scoreboard; position: Top centre; legible: true; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Far net target marker; position: Upper centre, above goal; legible: true; text: 6 m\n      - name: Own net distance marker; position: Mid-left edge; legible: false; text: own 106 m\n      - name: Commentary subtitle; position: Bottom centre; legible: true; text: Long carry up the ice.\n      - name: Call ready prompt; position: Bottom-left corner; legible: true; text: ESC / START CALL READY\n      - name: Player indicator ring; position: Around feet of player 7; legible: true; text: 7\n    - collisions: Target net marker partially collides with the top rail of the rink boards.\n    - missing: Controls hint bar along the bottom is missing during open play.; No indicator clarifying which score box corresponds to the player team.\n  - label: Still B; smallest_text_px: 12; legibility: 2\n    - elements:\n      - name: Scoreboard; position: Top centre, behind modal; legible: false; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Time Out modal title; position: Centre modal top; legible: true; text: TIME OUT PERIOD 1\n      - name: Menu buttons; position: Centre modal middle; legible: true; text: RESUME DIRECTOR'S CALL RESTART QUIT TO MENU\n      - name: Modal instruction subtitle; position: Below menu buttons; legible: true; text: Your call is ready: change one thing about this match.\n      - name: Controls reference list; position: Lower half of modal; legible: false; text: SKATE WASD / L-STICK AIM STICK MOUSE / R-STICK SHOOT HOLD LMB / RT CHECK RMB / RB CROSS-CHECK MMB, MOUSE4 / LB DEKE WHEEL, Q / Y SPRINT SHIFT / LT POKE SPACE / A PASS E / X SIGNALS 1-4 / D-PAD BRAKE CTRL / B RESTART R / VIEW PAUSE ESC / MENU\n      - name: Modal footer prompts; position: Modal bottom rim; legible: true; text: ESC / START resume STICK move A select B back\n      - name: Call ready prompt; position: Bottom-left corner; legible: true; text: ESC / START CALL READY\n    - collisions: Pause modal heavily covers the scoreboard and centre rink action.; Controls text is overly dense and bleeds into the bottom edge of the card.\n    - missing: Distinct highlight showing currently focused menu item.\n  - label: Still C; smallest_text_px: 13; legibility: 3\n    - elements:\n      - name: Scoreboard; position: Top centre, behind modal; legible: false; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Director's Call header; position: Centre modal header; legible: true; text: DIRECTOR'S CALL - PERIOD 1\n      - name: Call instructions; position: Below modal header; legible: true; text: One change per period. Move one slider, then APPLY. The scoreboard announces the new rule.\n      - name: Rule slider labels and values; position: Centre modal sliders; legible: true; text: SKATER SPEED 8 SHOT POWER 18 ICE FRICTION 0.015 OPPONENTS' SKILL 1 TURN RATE 5\n      - name: Action buttons; position: Bottom of modal; legible: true; text: APPLY BACK\n      - name: Call ready prompt; position: Bottom-left corner; legible: true; text: ESC / START CALL READY\n    - collisions: Director's Call modal obscures the entire center ice and scoreboard.\n    - missing: Gamepad navigation hints on how to adjust slider values.\n  - label: Still D; smallest_text_px: 14; legibility: 2\n    - elements:\n      - name: Scoreboard; position: Top centre; legible: true; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Match banner; position: Upper-centre overlay; legible: true; text: MATCH 1 PERIOD 1 - FACEOFF\n      - name: Speech bubble; position: Mid-centre overlay; legible: true; text: Nice stance. Shame it's the only part that moves right.\n      - name: Faceoff reticle announcement; position: Centre above player; legible: true; text: YOU WON\n      - name: Commentary subtitle; position: Bottom centre; legible: true; text: Welcome to the rink: blue against orange, first period.\n      - name: Controls bar; position: Bottom screen edge; legible: true; text: SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPRINT SHIFT POKE SPACE PASS E PAUSE ESC\n      - name: Call ready prompt; position: Bottom-left corner; legible: true; text: ESC / START CALL READY\n    - collisions: Match banner completely occludes the faceoff spot and opposing skaters.; Faceoff reticle overlaps the player skater torso.; Controls bar overlaps the bottom rink border and sprint meter.\n    - missing: Indication of what action triggered the faceoff win.\n  - label: Still E; smallest_text_px: 14; legibility: 4\n    - elements:\n      - name: Scoreboard; position: Top centre; legible: true; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Far net target marker; position: Upper centre, above goal; legible: true; text: 49 m\n      - name: Own net distance marker; position: Mid-left edge; legible: false; text: own 34 m\n      - name: Commentary subtitle; position: Bottom centre; legible: true; text: Loud one off the wall.\n      - name: Controls bar; position: Bottom screen edge; legible: true; text: SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPRINT SHIFT POKE SPACE PASS E PAUSE ESC\n      - name: Call ready prompt; position: Bottom-left corner; legible: true; text: ESC / START CALL READY\n    - collisions: Far net marker floats directly over the orange bot skater at the opposite end.; Controls bar collides with the lower blue arc gauge.\n    - missing: Puck location indicator when distant.; Clear indicator that the player controls blue #7.\n  - label: Still F; smallest_text_px: 14; legibility: 4\n    - elements:\n      - name: Scoreboard; position: Top centre; legible: true; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Target net distance marker; position: Upper-left boards; legible: true; text: 4 m\n      - name: Own net distance marker; position: Mid-left edge; legible: false; text: own 84 m\n      - name: Commentary subtitle; position: Bottom centre; legible: true; text: Rimmed around the back.\n      - name: Call ready prompt; position: Bottom-left corner; legible: true; text: ESC / START CALL READY\n    - collisions: Target distance marker floats over the black rimming of the rink glass.\n    - missing: Controls guide is not displayed during active play.; Puck status or possession indicator."
+    }
+  ]
+}

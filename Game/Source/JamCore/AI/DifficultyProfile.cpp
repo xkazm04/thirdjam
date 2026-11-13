@@ -36,6 +36,7 @@ namespace JamAI
 			Opp.bIntercept = false;
 			Opp.bUseAimCone = true;
 			Opp.PokeFrames = -1;   // R-0017: rookie bots never poke
+			Opp.SweepReactFrames = 14;   // lane A51 (R-0034): the rookie's blade reads the carried puck 14 frames late
 			Opp.ShotChargeFrames = 0;   // lane A31 (B-to-A-0024): rookie taps its shots
 			Opp.DrawJumpPct = 100; // 16:23: the rookie centre always jumps early (the human takes the opening touch)
 			// R-0029 P2: speed 0.85 / red skill 0.75 (0.96 / 0.88 before, tuned against the scripted human); measured with lane A34's novice.
@@ -56,6 +57,7 @@ namespace JamAI
 			Opp.LeadFrames = 60;
 			Opp.bClearLane = true;
 			Opp.PokeFrames = 2;
+			Opp.SweepReactFrames = 5;   // lane A51 (R-0034): all_star reads the carried puck 5 frames late (pro 8, the FJamBotSkill default)
 			Opp.ShotChargeFrames = 18;   // lane A31 (B-to-A-0024): all_star winds its shots up (pro 10, the FJamBotSkill default)
 			Opp.bLift = true;
 			Opp.bPassOut = true;

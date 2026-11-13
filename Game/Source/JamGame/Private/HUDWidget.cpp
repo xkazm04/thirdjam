@@ -313,7 +313,7 @@ void UJamHudWidget::BuildTree()
 	ControlsStrip->SetVisibility(ESlateVisibility::Collapsed);
 	ControlsStrip->SetHorizontalAlignment(HAlign_Center);
 	ControlsText = MakeText(T, TEXT("ControlsText"), S::Font(S::Body, FName("Bold"), 40), S::Paper());
-	ControlsText->SetText(FText::FromString(TEXT("SKATE  WASD      AIM  MOUSE      SHOOT  HOLD LMB      CHECK  RMB      CROSS-CHECK  MMB      SPRINT  SHIFT      POKE  SPACE      PASS  E      PAUSE  ESC")));   // lane A49 (UJamInputMap::BindingTableText has the full table)
+	ControlsText->SetText(FText::FromString(TEXT("SKATE  WASD      AIM  MOUSE      SHOOT  HOLD LMB      CHECK  RMB      CROSS-CHECK  MMB      SPIN  E      SPRINT  SHIFT      POKE  SPACE      PASS  F      PAUSE  ESC")));   // lane A49 (UJamInputMap::BindingTableText has the full table); lane A51: spin E, pass F
 	ControlsText->SetJustification(ETextJustify::Center);
 	ControlsStrip->SetContent(ControlsText);
 	UCanvasPanelSlot* StripSlot = Root->AddChildToCanvas(ControlsStrip);

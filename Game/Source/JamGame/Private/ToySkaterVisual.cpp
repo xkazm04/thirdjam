@@ -16,12 +16,6 @@ namespace
 	// Soft path of the one toy material (built by tools in Game/Content/Blueprints/Toy); the engine's basic shape material is the fallback.
 	const TCHAR* ToyMaterialPath = TEXT("/Game/Blueprints/Toy/M_ToySkater.M_ToySkater");
 
-	float SmoothStep01(float T)
-	{
-		T = FMath::Clamp(T, 0.f, 1.f);
-		return T * T * (3.f - 2.f * T);
-	}
-
 	// Stick geometry (metres, in the stick pivot's frame): the stick leaves the right shoulder forward and down to the ice.
 	const FVector StickDir = FVector(0.9f, 0.05f, -0.9f).GetSafeNormal();
 	const float StickLenM = 1.27f;
@@ -65,7 +59,7 @@ float UToySkaterVisualComponent::ShotStickYaw(int32 F)
 		if (F <= KeyF[I + 1])
 		{
 			const float T = (float)(F - KeyF[I]) / (float)(KeyF[I + 1] - KeyF[I]);
-			return FMath::Lerp(KeyV[I], KeyV[I + 1], SmoothStep01(T));
+			return FMath::Lerp(KeyV[I], KeyV[I + 1], FMath::SmoothStep(0.f, 1.f, T));
 		}
 	}
 	return 0.f;
@@ -78,7 +72,7 @@ float UToySkaterVisualComponent::CheckCurve01(int32 F)
 		return 0.f;
 	}
 	// 8 frames in, 12 frames out.
-	return F <= 8 ? SmoothStep01((float)F / 8.f) : 1.f - SmoothStep01((float)(F - 8) / 12.f);
+	return F <= 8 ? FMath::SmoothStep(0.f, 1.f, (float)F / 8.f) : 1.f - FMath::SmoothStep(0.f, 1.f, (float)(F - 8) / 12.f);
 }
 
 float UToySkaterVisualComponent::KnockTipDeg(int32 F, bool bDownNow)

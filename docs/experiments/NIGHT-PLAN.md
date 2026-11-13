@@ -19,3 +19,10 @@ Fable) and A52 (lifted puck, Fable) run in parallel with the fillers. Editor cap
 | 7 | Highlight reel tool: clips and a 60 s reel from bot matches | A63 | Sonnet | after A54's interim | H19 | `HIGHLIGHTS.md` |
 
 Machine budget: 30-40 GB resident. The Director's half-hourly `RESOURCES` line in `status/A.md` is the record; a filler is held when free memory is under 10 GB.
+
+## Morning state (09:42, 13 Nov)
+The Director's session stood still from about 02:00 to 09:28 (a login interruption; no lane was started in that window). Ran and reported: A54 eyes grid (78 stills, 22
+findings, `EYES-GRID.md`), A55 static analysis (14 fixes landed in its tree, 0 warnings, `STATIC-ANALYSIS.md`), A58 profiling (four tiers, no hitches in play, ten
+offenders, `PROFILING.md`), beside A51 (stick handling) and A52 (lifted puck). Not started: A53 soak, A56 lockstep soak, A57 parity + nightly, A59 fuzz, A60 coverage,
+A61 self-play, A62 light sweep, A63 highlights; they run as day fillers in that order of value once the merged tree is green (A66 hotfix: pro bots stopped shooting in
+take-3 and take-4 after A51). Follow-up lanes briefed from the reports: A64 (the eyes grid's A-side faults), A65 (the profiler's A-side offenders).

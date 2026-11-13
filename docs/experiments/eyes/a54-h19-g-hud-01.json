@@ -1,0 +1,127 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "hud",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T01:48:40.537Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "hud",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/eyesgrid/h19goal/hockey.arena.large-l2-goal.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/eyesgrid/h19goal/hockey.raw-l2-goal.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2412,
+      "usage": {
+        "prompt": 7200,
+        "output": 2136,
+        "thoughts": 0,
+        "total": 9336,
+        "calls": 2
+      },
+      "cost_usd_est": 0.01341,
+      "ms": 17899,
+      "retried": true,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A: hockey.arena.large-l2-goal.jpg",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "Top centre (x=748 to 1172, y=14 to 110 px)",
+                "legible": true,
+                "text": "01 PERIOD 2 1:58 00"
+              },
+              {
+                "name": "Mid-distance marker",
+                "position": "Upper right midground (x=1340 to 1400, y=198 to 242 px)",
+                "legible": true,
+                "text": "3 m"
+              },
+              {
+                "name": "Far net marker",
+                "position": "Far right edge (x=1782 to 1882, y=532 to 572 px)",
+                "legible": false,
+                "text": "own 112 m"
+              },
+              {
+                "name": "Commentary bubble",
+                "position": "Bottom centre-left (x=862 to 1058, y=860 to 898 px)",
+                "legible": true,
+                "text": "It's in, for blue!"
+              }
+            ],
+            "collisions": [
+              "Commentary bubble overlaps the bottom-right arc of the active player selection ring",
+              "Far net marker is placed right against the far right screen edge",
+              "Minimap radar is tucked tight into the bottom-right corner without safe margins"
+            ],
+            "missing": [
+              "No indicator identifying which team is human-controlled versus AI",
+              "No controls prompt strip showing basic skate or shoot inputs",
+              "Puck location indicator is absent when puck is scored inside the net"
+            ],
+            "smallest_text_px": 12,
+            "legibility": 3
+          },
+          {
+            "label": "Still B: hockey.raw-l2-goal.jpg",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "Top centre (x=690 to 1230, y=14 to 110 px)",
+                "legible": true,
+                "text": "01 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Mid-distance marker",
+                "position": "Upper right midground (x=1340 to 1400, y=198 to 242 px)",
+                "legible": true,
+                "text": "3 m"
+              },
+              {
+                "name": "Far net marker",
+                "position": "Far right edge (x=1782 to 1882, y=532 to 572 px)",
+                "legible": false,
+                "text": "own 112 m"
+              },
+              {
+                "name": "Commentary bubble",
+                "position": "Bottom centre-left (x=862 to 1058, y=860 to 898 px)",
+                "legible": true,
+                "text": "It's in, for blue!"
+              }
+            ],
+            "collisions": [
+              "Commentary bubble overlaps the bottom-right rim of the player selection ring",
+              "Far net distance text sits uncomfortably near the right screen boundary",
+              "Minimap is anchored too close to the bottom and right viewport margins"
+            ],
+            "missing": [
+              "No indication of which skater is currently user-controlled",
+              "No on-screen controller or keyboard bindings strip",
+              "No clear goal announcement banner celebrating the score across screen center"
+            ],
+            "smallest_text_px": 12,
+            "legibility": 3
+          }
+        ]
+      },
+      "markdown": "**eyes/hud** A=hockey.arena.large-l2-goal.jpg B=hockey.raw-l2-goal.jpg (gemini-3.8-flash, in 7200 out 2136 tokens, ~$0.0134, 17.9 s, 1 retry)\n- stills:\n  - label: Still A: hockey.arena.large-l2-goal.jpg; smallest_text_px: 12; legibility: 3\n    - elements:\n      - name: Scoreboard; position: Top centre (x=748 to 1172, y=14 to 110 px); legible: true; text: 01 PERIOD 2 1:58 00\n      - name: Mid-distance marker; position: Upper right midground (x=1340 to 1400, y=198 to 242 px); legible: true; text: 3 m\n      - name: Far net marker; position: Far right edge (x=1782 to 1882, y=532 to 572 px); legible: false; text: own 112 m\n      - name: Commentary bubble; position: Bottom centre-left (x=862 to 1058, y=860 to 898 px); legible: true; text: It's in, for blue!\n    - collisions: Commentary bubble overlaps the bottom-right arc of the active player selection ring; Far net marker is placed right against the far right screen edge; Minimap radar is tucked tight into the bottom-right corner without safe margins\n    - missing: No indicator identifying which team is human-controlled versus AI; No controls prompt strip showing basic skate or shoot inputs; Puck location indicator is absent when puck is scored inside the net\n  - label: Still B: hockey.raw-l2-goal.jpg; smallest_text_px: 12; legibility: 3\n    - elements:\n      - name: Scoreboard; position: Top centre (x=690 to 1230, y=14 to 110 px); legible: true; text: 01 PERIOD 1: FIRST TO 3 00\n      - name: Mid-distance marker; position: Upper right midground (x=1340 to 1400, y=198 to 242 px); legible: true; text: 3 m\n      - name: Far net marker; position: Far right edge (x=1782 to 1882, y=532 to 572 px); legible: false; text: own 112 m\n      - name: Commentary bubble; position: Bottom centre-left (x=862 to 1058, y=860 to 898 px); legible: true; text: It's in, for blue!\n    - collisions: Commentary bubble overlaps the bottom-right rim of the player selection ring; Far net distance text sits uncomfortably near the right screen boundary; Minimap is anchored too close to the bottom and right viewport margins\n    - missing: No indication of which skater is currently user-controlled; No on-screen controller or keyboard bindings strip; No clear goal announcement banner celebrating the score across screen center"
+    }
+  ]
+}

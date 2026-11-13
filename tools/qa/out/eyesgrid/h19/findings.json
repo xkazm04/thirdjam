@@ -1,0 +1,620 @@
+[
+ {
+  "theme": "chaos-bumper-is-a-flat-magenta-box",
+  "owner": "rink",
+  "max_severity": 5,
+  "stills": [
+   "hockey.chaos-l2-card.jpg",
+   "hockey.chaos-l2-faceoff.jpg"
+  ],
+  "cuts": [
+   "hockey.chaos"
+  ],
+  "n_rows": 2,
+  "example": "A bright magenta/pink untextured box-shaped volume is visible behind the orange player, indicating a missing texture or debug collider mesh. (top right quadrant, behind orange skater)"
+ },
+ {
+  "theme": "controls-strip-collides-with-minimap-and-the-ice-arc",
+  "owner": "HUD",
+  "max_severity": 4,
+  "stills": [
+   "hockey.regular-p3-pause.jpg",
+   "hockey.arena.large-l2-card.jpg",
+   "hockey.arena.large-l2-faceoff.jpg",
+   "hockey.arena.large-l2-goal.jpg",
+   "hockey.arena.wide-l2-card.jpg",
+   "hockey.arena.wide-l2-faceoff.jpg",
+   "hockey.arena.wide-l2-pause.jpg",
+   "hockey.boost-l1-call.jpg",
+   "hockey.boost-l1-card.jpg",
+   "hockey.boost-l1-faceoff.jpg",
+   "hockey.boost-l1-pause.jpg",
+   "hockey.boost-l2-card.jpg",
+   "hockey.boost-l2-faceoff.jpg",
+   "hockey.boost-l2-farnet.jpg",
+   "hockey.boost-l2-pause.jpg",
+   "hockey.boost-l3-card.jpg",
+   "hockey.boost-l3-faceoff.jpg",
+   "hockey.boost-l3-pause.jpg",
+   "hockey.boost-p3-card.jpg",
+   "hockey.boost-p3-faceoff.jpg",
+   "hockey.boost-p3-pause.jpg",
+   "hockey.boost-p4-call.jpg",
+   "hockey.boost-p4-card.jpg",
+   "hockey.boost-p4-faceoff.jpg",
+   "hockey.boost-p4-farnet.jpg",
+   "hockey.boost-p4-pause.jpg",
+   "hockey.chaos-l2-card.jpg",
+   "hockey.chaos-l2-faceoff.jpg",
+   "hockey.chaos-l2-farnet.jpg",
+   "hockey.chaos-l2-pause.jpg",
+   "hockey.raw-l2-faceoff.jpg",
+   "hockey.raw-l2-goal.jpg",
+   "hockey.raw-l2-pause.jpg",
+   "hockey.regular-l1-call.jpg",
+   "hockey.regular-l1-card.jpg",
+   "hockey.regular-l1-faceoff.jpg",
+   "hockey.regular-l1-farnet.jpg",
+   "hockey.regular-l1-pause.jpg",
+   "hockey.regular-l2-call.jpg",
+   "hockey.regular-l2-card.jpg",
+   "hockey.regular-l2-faceoff.jpg",
+   "hockey.regular-l2-pause.jpg",
+   "hockey.regular-l3-card.jpg",
+   "hockey.regular-l3-faceoff.jpg",
+   "hockey.regular-l3-farnet.jpg",
+   "hockey.regular-p3-card.jpg",
+   "hockey.regular-p3-faceoff.jpg",
+   "hockey.regular-p4-card.jpg",
+   "hockey.regular-p4-faceoff.jpg",
+   "hockey.arena.wide-l2-farnet.jpg",
+   "hockey.raw-l2-card.jpg",
+   "hockey.regular-p3-farnet.jpg",
+   "hockey.regular-p4-farnet.jpg"
+  ],
+  "cuts": [
+   "hockey.regular",
+   "hockey.arena.large",
+   "hockey.arena.wide",
+   "hockey.boost",
+   "hockey.chaos",
+   "hockey.raw"
+  ],
+  "n_rows": 103,
+  "example": "The two-row gamepad control prompt text overlaps and collides directly with the in-game action bar text below it. (Center bottom, lower third of the Time Out menu overlay)"
+ },
+ {
+  "theme": "puck-and-carrier-not-visible-in-the-frame",
+  "owner": "camera",
+  "max_severity": 4,
+  "stills": [
+   "hockey.arena.large-l2-faceoff.jpg",
+   "hockey.arena.large-l2-farnet.jpg",
+   "hockey.arena.large-l2-goal.jpg",
+   "hockey.arena.wide-l2-faceoff.jpg",
+   "hockey.arena.wide-l2-farnet.jpg",
+   "hockey.boost-l1-faceoff.jpg",
+   "hockey.boost-l1-farnet.jpg",
+   "hockey.boost-l2-faceoff.jpg",
+   "hockey.boost-l2-farnet.jpg",
+   "hockey.boost-l3-faceoff.jpg",
+   "hockey.boost-l3-farnet.jpg",
+   "hockey.boost-p3-faceoff.jpg",
+   "hockey.boost-p3-farnet.jpg",
+   "hockey.boost-p4-faceoff.jpg",
+   "hockey.boost-p4-farnet.jpg",
+   "hockey.chaos-l2-farnet.jpg",
+   "hockey.raw-l2-faceoff.jpg",
+   "hockey.raw-l2-farnet.jpg",
+   "hockey.raw-l2-goal.jpg",
+   "hockey.regular-l1-farnet.jpg",
+   "hockey.regular-l2-faceoff.jpg",
+   "hockey.regular-l2-farnet.jpg",
+   "hockey.regular-l3-faceoff.jpg",
+   "hockey.regular-l3-farnet.jpg",
+   "hockey.regular-p3-faceoff.jpg",
+   "hockey.regular-p3-farnet.jpg",
+   "hockey.regular-p4-faceoff.jpg",
+   "hockey.regular-p4-farnet.jpg",
+   "hockey.arena.large-l2-card.jpg",
+   "hockey.boost-l2-card.jpg",
+   "hockey.boost-l3-card.jpg",
+   "hockey.boost-p3-card.jpg",
+   "hockey.boost-p4-card.jpg",
+   "hockey.regular-l1-faceoff.jpg",
+   "hockey.regular-l1-pause.jpg"
+  ],
+  "cuts": [
+   "hockey.arena.large",
+   "hockey.arena.wide",
+   "hockey.boost",
+   "hockey.chaos",
+   "hockey.raw",
+   "hockey.regular"
+  ],
+  "n_rows": 83,
+  "example": "puck scored 1: Not visible anywhere on the ice surface or near the players."
+ },
+ {
+  "theme": "stick-missing-or-clipped-through-the-body",
+  "owner": "figure",
+  "max_severity": 4,
+  "stills": [
+   "hockey.arena.large-l2-goal.jpg",
+   "hockey.boost-p3-farnet.jpg",
+   "hockey.raw-l2-goal.jpg",
+   "hockey.arena.large-l2-faceoff.jpg",
+   "hockey.arena.large-l2-farnet.jpg",
+   "hockey.boost-l2-card.jpg",
+   "hockey.boost-l3-farnet.jpg",
+   "hockey.regular-l1-card.jpg",
+   "hockey.regular-l1-farnet.jpg",
+   "hockey.regular-l2-card.jpg",
+   "hockey.regular-l3-faceoff.jpg",
+   "hockey.regular-l3-farnet.jpg",
+   "hockey.regular-p3-card.jpg",
+   "hockey.regular-p3-farnet.jpg",
+   "hockey.regular-p4-card.jpg",
+   "hockey.regular-p4-farnet.jpg",
+   "hockey.arena.large-l2-card.jpg",
+   "hockey.arena.wide-l2-farnet.jpg",
+   "hockey.regular-l1-faceoff.jpg"
+  ],
+  "cuts": [
+   "hockey.arena.large",
+   "hockey.boost",
+   "hockey.raw",
+   "hockey.regular",
+   "hockey.arena.wide"
+  ],
+  "n_rows": 21,
+  "example": "The goal net is extremely wide and unnaturally low-profile/flattened, with a hockey stick blade clipping underneath the frame. (Bottom-center to bottom-right, net area)"
+ },
+ {
+  "theme": "goal-light-housing-reads-as-a-floating-cube",
+  "owner": "rink",
+  "max_severity": 4,
+  "stills": [
+   "hockey.regular-l1-farnet.jpg",
+   "hockey.regular-l3-farnet.jpg",
+   "hockey.regular-p4-farnet.jpg",
+   "hockey.chaos-l2-call.jpg",
+   "hockey.chaos-l2-farnet.jpg",
+   "hockey.chaos-l2-pause.jpg",
+   "hockey.regular-l1-pause.jpg",
+   "hockey.regular-l2-farnet.jpg",
+   "hockey.regular-p4-call.jpg",
+   "hockey.regular-p4-pause.jpg"
+  ],
+  "cuts": [
+   "hockey.regular",
+   "hockey.chaos"
+  ],
+  "n_rows": 10,
+  "example": "An untextured or flat white proxy cube is floating on the dasher boards right below the '4 m' objective marker. (Top-left, along upper board rim)"
+ },
+ {
+  "theme": "l1-day-look-blown-out",
+  "owner": "rink",
+  "max_severity": 4,
+  "stills": [
+   "hockey.boost-l1-card.jpg",
+   "hockey.boost-l1-faceoff.jpg",
+   "hockey.boost-l1-farnet.jpg",
+   "hockey.regular-l1-faceoff.jpg",
+   "hockey.regular-l1-farnet.jpg",
+   "hockey.regular-l3-card.jpg"
+  ],
+  "cuts": [
+   "hockey.boost",
+   "hockey.regular"
+  ],
+  "n_rows": 9,
+  "example": "Intense overexposed bloom blow-out washes out the boards, ice surface, and characters, entirely stripping toon outlines and detail compared to Level 2 rendering. (center across the scene)"
+ },
+ {
+  "theme": "far-net-not-in-frame-or-unreadable",
+  "owner": "camera",
+  "max_severity": 4,
+  "stills": [
+   "hockey.regular-l2-farnet.jpg",
+   "hockey.regular-l3-farnet.jpg",
+   "hockey.regular-p3-farnet.jpg",
+   "hockey.regular-p4-farnet.jpg"
+  ],
+  "cuts": [
+   "hockey.regular"
+  ],
+  "n_rows": 4,
+  "example": "far_net scored 1: The far net is not visible; only a close-up foreground red net frame is cut off on the left."
+ },
+ {
+  "theme": "only-one-opponent-in-view",
+  "owner": "camera",
+  "max_severity": 4,
+  "stills": [
+   "hockey.regular-l3-faceoff.jpg",
+   "hockey.regular-p3-farnet.jpg",
+   "hockey.regular-p4-farnet.jpg"
+  ],
+  "cuts": [
+   "hockey.regular"
+  ],
+  "n_rows": 3,
+  "example": "Only a single opposing player is visible in the distance with no other teammates or opponents rendered on the rink for a 3-on-3 match. (Upper center ice, near"
+ },
+ {
+  "theme": "skater-clips-through-the-net-posts",
+  "owner": "figure",
+  "max_severity": 4,
+  "stills": [
+   "hockey.chaos-l2-farnet.jpg"
+  ],
+  "cuts": [
+   "hockey.chaos"
+  ],
+  "n_rows": 1,
+  "example": "The player character's blue body and shoulder mesh clip through the outer right post of the red goal net. (Bottom left quadrant, goal post)"
+ },
+ {
+  "theme": "no-game-clock-or-team-side-cue-in-the-scoreboard",
+  "owner": "HUD",
+  "max_severity": 3,
+  "stills": [
+   "hockey.raw-l2-goal.jpg",
+   "hockey.arena.large-l2-faceoff.jpg",
+   "hockey.arena.wide-l2-card.jpg",
+   "hockey.arena.wide-l2-faceoff.jpg",
+   "hockey.arena.wide-l2-farnet.jpg",
+   "hockey.boost-l1-call.jpg",
+   "hockey.boost-l1-faceoff.jpg",
+   "hockey.boost-l1-farnet.jpg",
+   "hockey.boost-l1-pause.jpg",
+   "hockey.boost-l2-faceoff.jpg",
+   "hockey.boost-l2-farnet.jpg",
+   "hockey.boost-l3-call.jpg",
+   "hockey.boost-l3-card.jpg",
+   "hockey.boost-l3-faceoff.jpg",
+   "hockey.boost-l3-farnet.jpg",
+   "hockey.boost-l3-pause.jpg",
+   "hockey.boost-p3-call.jpg",
+   "hockey.boost-p3-card.jpg",
+   "hockey.boost-p3-faceoff.jpg",
+   "hockey.boost-p3-farnet.jpg",
+   "hockey.boost-p3-pause.jpg",
+   "hockey.boost-p4-faceoff.jpg",
+   "hockey.chaos-l2-card.jpg",
+   "hockey.chaos-l2-faceoff.jpg",
+   "hockey.chaos-l2-farnet.jpg",
+   "hockey.raw-l2-farnet.jpg",
+   "hockey.regular-l1-call.jpg",
+   "hockey.regular-l1-faceoff.jpg",
+   "hockey.regular-l1-pause.jpg",
+   "hockey.regular-l2-call.jpg",
+   "hockey.regular-l2-pause.jpg",
+   "hockey.regular-l3-call.jpg",
+   "hockey.regular-l3-card.jpg",
+   "hockey.regular-l3-faceoff.jpg",
+   "hockey.regular-l3-pause.jpg",
+   "hockey.regular-p3-card.jpg",
+   "hockey.regular-p3-faceoff.jpg",
+   "hockey.regular-p3-farnet.jpg",
+   "hockey.regular-p4-card.jpg",
+   "hockey.regular-p4-faceoff.jpg"
+  ],
+  "cuts": [
+   "hockey.raw",
+   "hockey.arena.large",
+   "hockey.arena.wide",
+   "hockey.boost",
+   "hockey.chaos",
+   "hockey.regular"
+  ],
+  "n_rows": 42,
+  "example": "The timer display inside the black central scoreboard box is blank/missing beneath 'PERIOD 1: FIRST TO 3'. (Top-center HUD)"
+ },
+ {
+  "theme": "net-distance-markers-sit-on-the-boards-the-net-and-the-figures",
+  "owner": "HUD",
+  "max_severity": 3,
+  "stills": [
+   "hockey.arena.large-l2-farnet.jpg",
+   "hockey.arena.large-l2-goal.jpg",
+   "hockey.arena.wide-l2-call.jpg",
+   "hockey.arena.wide-l2-card.jpg",
+   "hockey.arena.wide-l2-farnet.jpg",
+   "hockey.boost-l2-farnet.jpg",
+   "hockey.boost-l3-faceoff.jpg",
+   "hockey.boost-l3-farnet.jpg",
+   "hockey.boost-p3-card.jpg",
+   "hockey.boost-p3-farnet.jpg",
+   "hockey.boost-p4-card.jpg",
+   "hockey.chaos-l2-faceoff.jpg",
+   "hockey.chaos-l2-farnet.jpg",
+   "hockey.raw-l2-card.jpg",
+   "hockey.raw-l2-faceoff.jpg",
+   "hockey.raw-l2-farnet.jpg",
+   "hockey.raw-l2-goal.jpg",
+   "hockey.regular-l1-call.jpg",
+   "hockey.regular-l1-card.jpg",
+   "hockey.regular-l1-faceoff.jpg",
+   "hockey.regular-l1-farnet.jpg",
+   "hockey.regular-l2-call.jpg",
+   "hockey.regular-l2-faceoff.jpg",
+   "hockey.regular-l2-farnet.jpg",
+   "hockey.regular-l3-call.jpg",
+   "hockey.regular-l3-card.jpg",
+   "hockey.regular-l3-faceoff.jpg",
+   "hockey.regular-l3-farnet.jpg",
+   "hockey.regular-l3-pause.jpg",
+   "hockey.regular-p3-card.jpg",
+   "hockey.regular-p3-farnet.jpg",
+   "hockey.regular-p4-card.jpg",
+   "hockey.regular-p4-faceoff.jpg",
+   "hockey.regular-p4-farnet.jpg"
+  ],
+  "cuts": [
+   "hockey.arena.large",
+   "hockey.arena.wide",
+   "hockey.boost",
+   "hockey.chaos",
+   "hockey.raw",
+   "hockey.regular"
+  ],
+  "n_rows": 45,
+  "example": "collision: Target net marker icon sits immediately on top of the net crossbar."
+ },
+ {
+  "theme": "pause-and-call-cards-cover-the-whole-play-field",
+  "owner": "menu",
+  "max_severity": 3,
+  "stills": [
+   "hockey.arena.large-l2-call.jpg",
+   "hockey.arena.large-l2-pause.jpg",
+   "hockey.arena.wide-l2-call.jpg",
+   "hockey.arena.wide-l2-pause.jpg",
+   "hockey.boost-l1-call.jpg",
+   "hockey.boost-l1-pause.jpg",
+   "hockey.boost-l2-call.jpg",
+   "hockey.boost-l2-pause.jpg",
+   "hockey.boost-l3-call.jpg",
+   "hockey.boost-l3-pause.jpg",
+   "hockey.boost-p3-call.jpg",
+   "hockey.boost-p3-pause.jpg",
+   "hockey.boost-p4-pause.jpg",
+   "hockey.chaos-l2-call.jpg",
+   "hockey.chaos-l2-pause.jpg",
+   "hockey.raw-l2-call.jpg",
+   "hockey.raw-l2-pause.jpg",
+   "hockey.regular-l1-call.jpg",
+   "hockey.regular-l1-pause.jpg",
+   "hockey.regular-l2-call.jpg",
+   "hockey.regular-l2-pause.jpg",
+   "hockey.regular-l3-call.jpg",
+   "hockey.regular-l3-pause.jpg",
+   "hockey.regular-p3-call.jpg",
+   "hockey.regular-p3-pause.jpg",
+   "hockey.regular-p4-call.jpg",
+   "hockey.regular-p4-pause.jpg",
+   "hockey.boost-p4-call.jpg"
+  ],
+  "cuts": [
+   "hockey.arena.large",
+   "hockey.arena.wide",
+   "hockey.boost",
+   "hockey.chaos",
+   "hockey.raw",
+   "hockey.regular"
+  ],
+  "n_rows": 72,
+  "example": "collision: Modal dialog occludes the player, net, and central ice."
+ },
+ {
+  "theme": "other",
+  "owner": "unassigned",
+  "max_severity": 3,
+  "stills": [
+   "hockey.arena.large-l2-goal.jpg",
+   "hockey.boost-l1-call.jpg",
+   "hockey.chaos-l2-card.jpg",
+   "hockey.raw-l2-goal.jpg",
+   "hockey.regular-l3-farnet.jpg",
+   "hockey.regular-p3-call.jpg",
+   "hockey.arena.large-l2-card.jpg",
+   "hockey.arena.large-l2-farnet.jpg",
+   "hockey.chaos-l2-faceoff.jpg",
+   "hockey.raw-l2-card.jpg",
+   "hockey.raw-l2-faceoff.jpg",
+   "hockey.raw-l2-farnet.jpg",
+   "hockey.regular-l1-call.jpg",
+   "hockey.regular-l1-card.jpg",
+   "hockey.regular-l1-farnet.jpg",
+   "hockey.regular-l2-call.jpg",
+   "hockey.regular-l2-card.jpg",
+   "hockey.regular-l2-faceoff.jpg",
+   "hockey.regular-l2-farnet.jpg",
+   "hockey.regular-l3-call.jpg",
+   "hockey.regular-l3-card.jpg",
+   "hockey.regular-p3-card.jpg",
+   "hockey.regular-p4-card.jpg",
+   "hockey.regular-p4-faceoff.jpg",
+   "hockey.raw-l2-call.jpg"
+  ],
+  "cuts": [
+   "hockey.arena.large",
+   "hockey.boost",
+   "hockey.chaos",
+   "hockey.raw",
+   "hockey.regular"
+  ],
+  "n_rows": 30,
+  "example": "Skater #7 has no cast shadow onto the ice surface despite the surrounding lighting, floating visually compared to skater #21. (Bottom-left, skater #7's feet)"
+ },
+ {
+  "theme": "match-card-and-reticle-cover-the-faceoff",
+  "owner": "HUD",
+  "max_severity": 3,
+  "stills": [
+   "hockey.arena.large-l2-card.jpg",
+   "hockey.arena.large-l2-goal.jpg",
+   "hockey.arena.wide-l2-card.jpg",
+   "hockey.boost-l1-card.jpg",
+   "hockey.boost-l2-card.jpg",
+   "hockey.boost-l3-card.jpg",
+   "hockey.boost-p3-card.jpg",
+   "hockey.boost-p4-card.jpg",
+   "hockey.chaos-l2-card.jpg",
+   "hockey.raw-l2-card.jpg",
+   "hockey.raw-l2-goal.jpg",
+   "hockey.regular-l1-card.jpg",
+   "hockey.regular-l2-card.jpg",
+   "hockey.regular-l3-card.jpg",
+   "hockey.regular-p3-card.jpg",
+   "hockey.regular-p4-card.jpg",
+   "hockey.regular-p4-faceoff.jpg",
+   "hockey.regular-p4-farnet.jpg",
+   "hockey.regular-p4-pause.jpg",
+   "hockey.arena.large-l2-call.jpg",
+   "hockey.arena.large-l2-pause.jpg",
+   "hockey.arena.wide-l2-call.jpg",
+   "hockey.boost-p4-call.jpg"
+  ],
+  "cuts": [
+   "hockey.arena.large",
+   "hockey.arena.wide",
+   "hockey.boost",
+   "hockey.chaos",
+   "hockey.raw",
+   "hockey.regular"
+  ],
+  "n_rows": 35,
+  "example": "collision: Match 1 title card covers the opposing center skater and faceoff dot."
+ },
+ {
+  "theme": "subtitle-pill-and-call-ready-pill-collide-with-the-ring-and-the-screen-edge",
+  "owner": "HUD",
+  "max_severity": 3,
+  "stills": [
+   "hockey.boost-l2-card.jpg",
+   "hockey.boost-l3-call.jpg",
+   "hockey.boost-l3-farnet.jpg",
+   "hockey.boost-p3-call.jpg",
+   "hockey.boost-p3-farnet.jpg",
+   "hockey.boost-p4-call.jpg",
+   "hockey.boost-p4-farnet.jpg",
+   "hockey.raw-l2-card.jpg",
+   "hockey.regular-p3-faceoff.jpg",
+   "hockey.regular-p3-farnet.jpg"
+  ],
+  "cuts": [
+   "hockey.boost",
+   "hockey.raw",
+   "hockey.regular"
+  ],
+  "n_rows": 10,
+  "example": "Multiple HUD elements (MATCH 1 banner, speech dialogue box, 'WON / YOU' circular target reticle, and bottom subtitle box) overlap each other and the player character simultaneously. (center"
+ },
+ {
+  "theme": "menu-footer-hint-clips-slate-border",
+  "owner": "menu",
+  "max_severity": 3,
+  "stills": [
+   "menu-credits-screen.jpg",
+   "menu-cuts-screen.jpg",
+   "menu-direct-screen.jpg",
+   "menu-friend-screen.jpg",
+   "menu-main-screen.jpg",
+   "menu-settings-screen.jpg"
+  ],
+  "cuts": [
+   "menu"
+  ],
+  "n_rows": 6,
+  "example": "The footer helper text overlaps and clips through the bottom border of the frame. (Bottom center, crossing the bottom border)"
+ },
+ {
+  "theme": "selection-ring-offset-from-the-skates",
+  "owner": "HUD",
+  "max_severity": 3,
+  "stills": [
+   "hockey.boost-l3-farnet.jpg",
+   "hockey.boost-p4-card.jpg",
+   "hockey.boost-p4-faceoff.jpg",
+   "hockey.boost-p4-farnet.jpg",
+   "hockey.chaos-l2-card.jpg"
+  ],
+  "cuts": [
+   "hockey.boost",
+   "hockey.chaos"
+  ],
+  "n_rows": 5,
+  "example": "The blue player selection ring is fully detached behind the player figure, floating in ice space while the figure has skated forward ahead of it. (center foreground around"
+ },
+ {
+  "theme": "goal-crease-marking-ends-in-a-hard-straight-cut",
+  "owner": "rink",
+  "max_severity": 3,
+  "stills": [
+   "hockey.boost-l2-faceoff.jpg",
+   "hockey.boost-l3-call.jpg",
+   "hockey.boost-p3-call.jpg"
+  ],
+  "cuts": [
+   "hockey.boost"
+  ],
+  "n_rows": 3,
+  "example": "collision: Target net text 66 m overlaps the ice crease border"
+ },
+ {
+  "theme": "figure-face-visor-artifacts",
+  "owner": "figure",
+  "max_severity": 3,
+  "stills": [
+   "hockey.arena.wide-l2-farnet.jpg"
+  ],
+  "cuts": [
+   "hockey.arena.wide"
+  ],
+  "n_rows": 1,
+  "example": "The orange skater's face and visor mesh has chaotic black z-fighting / polygon fragmentation artifacts across the visor and mouth area. (bottom-left quadrant, orange skater)"
+ },
+ {
+  "theme": "menu-cuts-stat-line-over-sprocket-holes",
+  "owner": "menu",
+  "max_severity": 3,
+  "stills": [
+   "menu-cuts-screen.jpg"
+  ],
+  "cuts": [
+   "menu"
+  ],
+  "n_rows": 1,
+  "example": "Text lines describing match parameters ('speed 11 m/s...', 'speed 8 m/s...') visibly clip and collide with the lower sprocket holes of the filmstrip graphic. (Top and bottom-center, within"
+ },
+ {
+  "theme": "menu-friend-modal-leaves-main-menu-visible",
+  "owner": "menu",
+  "max_severity": 3,
+  "stills": [
+   "menu-friend-screen.jpg"
+  ],
+  "cuts": [
+   "menu"
+  ],
+  "n_rows": 1,
+  "example": "The 'PLAY WITH A FRIEND' modal box does not fully occlude or dim the main menu underneath, leaving orphan buttons ('CREDITS', 'QUIT') and text visible directly beneath the"
+ },
+ {
+  "theme": "cyan-hatched-circle-on-chaos-ice-unexplained",
+  "owner": "rink",
+  "max_severity": 2,
+  "stills": [
+   "hockey.chaos-l2-card.jpg"
+  ],
+  "cuts": [
+   "hockey.chaos"
+  ],
+  "n_rows": 1,
+  "example": "missing: Explanation for the large cyan hatched grid circle across the rink."
+ }
+]

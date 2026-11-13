@@ -40,6 +40,16 @@ namespace JamAI
 		FVec2 Perp() const { return FVec2(-Y, X); }
 	};
 
+	// Lane A55: the scalar helpers JamAICore.cpp and JamPlaytester.cpp each kept a private copy of (same bodies, folded here).
+	namespace AIMath
+	{
+		inline double Clamp(double V, double Lo, double Hi) { return V < Lo ? Lo : (V > Hi ? Hi : V); }
+		inline double Sign(double V) { return V > 0.0 ? 1.0 : (V < 0.0 ? -1.0 : 0.0); }
+		inline double DegToRad(double D) { return D * kPi / 180.0; }
+		inline double RadToDeg(double R) { return R * 180.0 / kPi; }
+		inline FVec2 Rotate(const FVec2& V, double Rad) { const double C = std::cos(Rad), S = std::sin(Rad); return FVec2(V.X * C - V.Y * S, V.X * S + V.Y * C); }
+	}
+
 	enum class ERole : uint8_t { Player, Chaser, Support, Back };
 
 	// What one skater sends to the sim for one frame. Move is in the sim plane (x along the rink, y = cartridge z), |Move| <= 1.
@@ -62,6 +72,7 @@ namespace JamAI
 		bool bGoalie = false;
 		int GoalieSide = 0;
 		bool bDeke = false;        // R-0029 point 4 (lane A39): the deke tap (FJamInput::bDeke); the adapter copies it like the others
+		bool bSpin = false;        // lane A51 (R-0034): the spin tap (FJamInput::bSpin); the playtester sends it, the brain never does
 	};
 
 	// lane A3: how well one side's bots play. The defaults are A2's brain, which is what the human's teammates play at every
@@ -108,6 +119,9 @@ namespace JamAI
 		// R-0029 point 4 (lane A39): the payoffs the bots use. pro: the one-timer; all_star: the one-timer and the deke; rookie: neither.
 		bool bOneTimer = false;        // shoots at once inside the one-timer window after a received pass (full charge, wider cone)
 		bool bDeke = false;            // dekes the crease back inside 12 m, then shoots at the open post
+		// Lane A51 (R-0034): the blade follows, and the poke aims at, where the puck sat on the carrier's body this many frames ago (the stick-handling
+		// reaction; rookie 14, pro 8, all_star 5), unless game.stick.sweep.bot_react_frames names a number for every level. 0 = reads the puck live.
+		int SweepReactFrames = 8;
 	};
 	constexpr int kMaxReactionFrames = 30;
 
@@ -181,6 +195,9 @@ namespace JamAI
 		bool bDekeSettled = false; // the deked puck has moved to the side (the shot at the open post may go)
 		bool bCanDeke = false;    // a deke tap would take (carrying, lockout over, the cut has the deke)
 		FVec2 DekeOffset;         // the puck's sideways offset from the body line while deked; the crease back follows PuckPos - DekeOffset (the old side)
+		// Lane A51 (R-0034): the spin: frames left (0 = none) and whether a spin tap would take (ready, standing, stamina left, the cut has the spin).
+		int SpinFrames = 0;
+		bool bCanSpin = false;
 	};
 
 	// Read-only view of the simulation for one frame.
@@ -228,6 +245,7 @@ namespace JamAI
 		double SkaterRadius = 0.4;
 		double StickReach = 1.6;        // game.stick.reach_m
 		double LiftRange = 1.0;         // game.stick.lift_range_m
+		int SweepBotReactFrames = -1;   // lane A51: game.stick.sweep.bot_react_frames (-1 = absent: the level's FJamBotSkill::SweepReactFrames)
 		static constexpr int kMaxPickups = 8;
 		int NumPickups = 0;
 		int PickupKind[kMaxPickups] = {};   // index of the kind in the cut's pickup list (the brain does not read it)
@@ -304,6 +322,16 @@ namespace JamAI
 		int GoalieSideNow[kMaxSkaters] = {};
 		void StickPlay(const FJamAIWorld& W, int Id, FJamAIInput& In);
 		bool LastManGoalie(const FJamAIWorld& W, int Id) const;
+		// Lane A51 (R-0034): where the puck sat on the carrier's body, per frame (a ring of the last kPuckHist frames; recorded once per Think). A defending
+		// bot reads the carrier's body live and the puck's offset on it SweepReactFrames late, so a sweep inside its stick reach beats the poke and a
+		// straight carry is poked as before. PuckSeen() gives the delayed puck for Id's skill (the live puck when the carrier changed inside the delay).
+		static constexpr int kPuckHist = 32;
+		struct FPuckHist { FVec2 Rel; int Carrier = -1; };
+		FPuckHist PuckHist[kPuckHist] = {};
+		int64_t PuckHistFrame = -1;     // the frame of the latest entry (-1 none)
+		int PuckHistCount = 0;
+		void RecordPuck(const FJamAIWorld& W);
+		FVec2 PuckSeen(const FJamAIWorld& W, int Id) const;
 
 		// lane A3: reaction delay ring (input of the last kMaxReactionFrames + 1 thinks per skater)
 		FJamAIInput Hist[kMaxSkaters][kMaxReactionFrames + 1] = {};

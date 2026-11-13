@@ -1,0 +1,159 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T01:20:47.023Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.regular-l1-call.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.regular-l3-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.regular-l3-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.regular-l3-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.regular-l3-pause.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "F",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.regular-l3-call.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2455,
+      "usage": {
+        "prompt": 7447,
+        "output": 785,
+        "thoughts": 0,
+        "total": 8232,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00853,
+      "ms": 9166,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [
+              {
+                "where": "Bottom-left quadrant, behind the overlay",
+                "what": "The red goal frame has missing or detached corner geometry, clipping abruptly at the edge of the frame.",
+                "severity": 2,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still B",
+            "findings": [
+              {
+                "where": "Center foreground, around the player figure",
+                "what": "The 'WON' target reticle and 'MATCH 1' title card heavily overlap and clutter the player character model and gameplay area during active sequence.",
+                "severity": 3,
+                "confidence": 0.95
+              },
+              {
+                "where": "Far boards, along the top perimeter",
+                "what": "Extreme overexposure/bloom along the top edge of the rink boards blowing out all edge detail into pure white.",
+                "severity": 2,
+                "confidence": 0.9
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still C",
+            "findings": [
+              {
+                "where": "Bottom center, player character",
+                "what": "The skater is completely missing their hockey stick while in a skating/faceoff stance.",
+                "severity": 3,
+                "confidence": 0.98
+              },
+              {
+                "where": "Upper center ice, near the far red line",
+                "what": "Only a single opposing player is visible in the distance with no other teammates or opponents rendered on the rink for a 3-on-3 match.",
+                "severity": 4,
+                "confidence": 0.9
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still D",
+            "findings": [
+              {
+                "where": "Upper-left quadrant, along the glass panel",
+                "what": "An untextured or placeholder white rectangular prism mesh floats suspended above the boards.",
+                "severity": 4,
+                "confidence": 0.95
+              },
+              {
+                "where": "Center, around the blue player character",
+                "what": "Player stick is clipping invisibly or missing its shaft, rendering disconnected from hands.",
+                "severity": 3,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still E",
+            "findings": [
+              {
+                "where": "Bottom center, underneath the pause menu modal",
+                "what": "The bottom control hint text overlays directly across the ice lines without a dark backing plate, creating low contrast and visual clutter.",
+                "severity": 2,
+                "confidence": 0.8
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still F",
+            "findings": [
+              {
+                "where": "Bottom-left quadrant, goal frame",
+                "what": "The goal structure appears identical to Still A, showing an unattached floating net frame cut off without proper base mounting.",
+                "severity": 2,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=hockey.regular-l1-call.jpg B=hockey.regular-l3-card.jpg C=hockey.regular-l3-faceoff.jpg D=hockey.regular-l3-farnet.jpg E=hockey.regular-l3-pause.jpg F=hockey.regular-l3-call.jpg (gemini-3.8-flash, in 7447 out 785 tokens, ~$0.0085, 9.2 s)\n- stills:\n  - label: Still A; clean: false\n    - findings:\n      - where: Bottom-left quadrant, behind the overlay; what: The red goal frame has missing or detached corner geometry, clipping abruptly at the edge of the frame.; severity: 2; confidence: 0.85\n  - label: Still B; clean: false\n    - findings:\n      - where: Center foreground, around the player figure; what: The 'WON' target reticle and 'MATCH 1' title card heavily overlap and clutter the player character model and gameplay area during active sequence.; severity: 3; confidence: 0.95\n      - where: Far boards, along the top perimeter; what: Extreme overexposure/bloom along the top edge of the rink boards blowing out all edge detail into pure white.; severity: 2; confidence: 0.9\n  - label: Still C; clean: false\n    - findings:\n      - where: Bottom center, player character; what: The skater is completely missing their hockey stick while in a skating/faceoff stance.; severity: 3; confidence: 0.98\n      - where: Upper center ice, near the far red line; what: Only a single opposing player is visible in the distance with no other teammates or opponents rendered on the rink for a 3-on-3 match.; severity: 4; confidence: 0.9\n  - label: Still D; clean: false\n    - findings:\n      - where: Upper-left quadrant, along the glass panel; what: An untextured or placeholder white rectangular prism mesh floats suspended above the boards.; severity: 4; confidence: 0.95\n      - where: Center, around the blue player character; what: Player stick is clipping invisibly or missing its shaft, rendering disconnected from hands.; severity: 3; confidence: 0.85\n  - label: Still E; clean: false\n    - findings:\n      - where: Bottom center, underneath the pause menu modal; what: The bottom control hint text overlays directly across the ice lines without a dark backing plate, creating low contrast and visual clutter.; severity: 2; confidence: 0.8\n  - label: Still F; clean: false\n    - findings:\n      - where: Bottom-left quadrant, goal frame; what: The goal structure appears identical to Still A, showing an unattached floating net frame cut off without proper base mounting.; severity: 2; confidence: 0.85"
+    }
+  ]
+}

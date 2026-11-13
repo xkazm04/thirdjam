@@ -334,6 +334,37 @@
               "description": "A shot at or above this height passes the crease skater, in metres."
             }
           }
+        },
+        "spin": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Lane A51 (R-0034): the spin move (E / gamepad B): a full turn over frames, the puck on the far side of the body from the nearest opponent (a poke never reaches it), speed scaled by speed_mult, stamina_cost of the sprint bar taken at the start (refused with an empty bar or inside cooldown_frames); a check landing mid-spin knocks the carrier down 1.5x longer. Leave the key out for the defaults.",
+          "properties": {
+            "frames": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 120,
+              "description": "Frames of the full turn; 0 turns the spin off."
+            },
+            "cooldown_frames": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 600,
+              "description": "Frames after a spin before the next one."
+            },
+            "speed_mult": {
+              "type": "number",
+              "minimum": 0.2,
+              "maximum": 1,
+              "description": "Top speed while spinning, as a fraction of the skater's."
+            },
+            "stamina_cost": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Share of the sprint bar a spin takes."
+            }
+          }
         }
       }
     },
@@ -344,9 +375,9 @@
       "properties": {
         "reach_m": {
           "type": "number",
-          "minimum": 0.8,
-          "maximum": 3,
-          "description": "How far the blade reaches from the skater's edge at full aim, in metres."
+          "minimum": 0.6,
+          "maximum": 1.6,
+          "description": "How far the blade reaches from the skater's edge at full aim, in metres; the carried puck sits at the blade (lane A51, R-0034)."
         },
         "poke_window_frames": {
           "type": "integer",
@@ -400,6 +431,31 @@
               "minimum": 0,
               "maximum": 60,
               "description": "Frames the crease back stays committed to the puck's old side after a deke."
+            }
+          }
+        },
+        "sweep": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Lane A51 (R-0034): the sweep. The carried puck follows the blade every frame; an aim that turns more than min_deg_per_frame counts as a sweep and shields the puck for shield_frames from a poke on the side it left; a defending bot pokes at where the puck sat on the carrier bot_react_frames ago. Leave the key out for the defaults.",
+          "properties": {
+            "min_deg_per_frame": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 45,
+              "description": "How many degrees the aim must turn in one frame to count as a sweep."
+            },
+            "shield_frames": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 60,
+              "description": "Frames after a sweep in which a poke from the side the puck left misses; 0 turns the shield off."
+            },
+            "bot_react_frames": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 30,
+              "description": "Frames late a defending bot reads the puck on the carrier (its poke aims there); leave it out for the difficulty profile: rookie 14, pro 8, all_star 5."
             }
           }
         }

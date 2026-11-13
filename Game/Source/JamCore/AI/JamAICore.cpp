@@ -5,12 +5,9 @@ namespace JamAI
 {
 	namespace AICoreLocal
 	{
-		inline double Clamp(double V, double Lo, double Hi) { return V < Lo ? Lo : (V > Hi ? Hi : V); }
-		inline double Sign(double V) { return V > 0.0 ? 1.0 : (V < 0.0 ? -1.0 : 0.0); }
+		using namespace AIMath;   // lane A55: Clamp, Sign, DegToRad, RadToDeg, Rotate live in JamAICore.h (shared with JamPlaytester.cpp)
 		inline double Lerp(double A, double B, double T) { return A + (B - A) * T; }
 		inline FVec2 LerpV(const FVec2& A, const FVec2& B, double T) { return A + (B - A) * T; }
-		inline double DegToRad(double D) { return D * kPi / 180.0; }
-		inline double RadToDeg(double R) { return R * 180.0 / kPi; }
 		// lane A3: deterministic value in [-1, 1] from two integers (splitmix64 finaliser); no state, no seed
 		inline double Hash11(uint64_t A, uint64_t B)
 		{
@@ -20,7 +17,6 @@ namespace JamAI
 			Z ^= Z >> 31;
 			return static_cast<double>(Z >> 11) * (2.0 / 9007199254740992.0) - 1.0;
 		}
-		inline FVec2 Rotate(const FVec2& V, double Rad) { const double C = std::cos(Rad), S = std::sin(Rad); return FVec2(V.X * C - V.Y * S, V.X * S + V.Y * C); }
 		// R-0035 (lane A52): the shooter's charge choice (ChargeWindowFor): inside ChargeCloseM of the net a tap; a lift level must clear the bar by ChargeBarMarginM.
 		constexpr double ChargeCloseM = 6.0;
 		constexpr double ChargeBarMarginM = 0.1;
@@ -119,6 +115,31 @@ namespace JamAI
 		DrawPresses = 0;
 		for (int i = 0; i < kMaxSkaters; ++i) { Pressed[i] = 0; Charging[i] = 0; bGoalieNow[i] = false; GoalieSideNow[i] = 0; }
 		bWasFaceoff = false;
+		PuckHistFrame = -1;   // lane A51
+		PuckHistCount = 0;
+	}
+
+	// Lane A51 (R-0034): one entry per frame: the puck's offset from the carrier's body (the carrier's index, -1 loose).
+	void FJamBrain::RecordPuck(const FJamAIWorld& W)
+	{
+		if (W.Frame == PuckHistFrame) { return; }
+		if (PuckHistFrame >= 0 && W.Frame != PuckHistFrame + 1) { PuckHistCount = 0; }   // a jump (restart, a skipped frame): the history starts over
+		FPuckHist& H = PuckHist[static_cast<int>(W.Frame % kPuckHist)];
+		H.Carrier = W.Carrier;
+		H.Rel = (W.Carrier >= 0 && W.Carrier < W.NumSkaters) ? W.PuckPos - W.Skaters[W.Carrier].Pos : W.PuckPos;
+		PuckHistFrame = W.Frame;
+		if (PuckHistCount < kPuckHist) { ++PuckHistCount; }
+	}
+
+	FVec2 FJamBrain::PuckSeen(const FJamAIWorld& W, int Id) const
+	{
+		const int C = W.Carrier;
+		if (C < 0 || C >= W.NumSkaters || W.Skaters[C].Team == W.Skaters[Id].Team) { return W.PuckPos; }   // only an opposing carrier is read late
+		const int React = W.SweepBotReactFrames >= 0 ? W.SweepBotReactFrames : SkillOf(W, Id).SweepReactFrames;
+		if (React <= 0 || React >= kPuckHist || PuckHistCount <= React) { return W.PuckPos; }
+		const FPuckHist& H = PuckHist[static_cast<int>((W.Frame - React) % kPuckHist)];
+		if (H.Carrier != C) { return W.PuckPos; }   // a fresh carrier is read live
+		return W.Skaters[C].Pos + H.Rel;
 	}
 
 	const FJamBotSkill& FJamBrain::SkillOf(const FJamAIWorld& W, int Id) const
@@ -167,6 +188,7 @@ namespace JamAI
 
 	void FJamBrain::Think(const FJamAIWorld& W, FJamAIInput* Out)
 	{
+		RecordPuck(W);   // lane A51: before any bot reads the puck
 		TeamIntent = FJamAIIntent();
 		if (W.IntentKind >= 1 && W.IntentKind <= 4 && W.IntentFramesLeft > 0)
 		{
@@ -596,14 +618,26 @@ namespace JamAI
 		// R-0029 point 4 (lane A39): during an opponent's deke commit the blade and the poke follow the puck's old side: the back reads where the
 		// puck was, not where it went, for deke.commit_frames (and the flight of a shot released inside the window).
 		const bool bCommitted = W.DekeCommitFrames > 0 && W.DekeCommitSkater >= 0 && W.DekeCommitSkater < W.NumSkaters && W.Skaters[W.DekeCommitSkater].Team != S.Team;
-		const FVec2 PuckRef = bCommitted ? W.PuckPos - W.DekeCommitOffset : W.PuckPos;
+		// Lane A51 (R-0034): against an opposing carrier the blade and the poke read the puck's place on the body SweepReactFrames late (PuckSeen), so a
+		// sweep inside the stick's reach beats the poke; the deke commit (A39) wins over it while it runs.
+		const FVec2 PuckRef = bCommitted ? W.PuckPos - W.DekeCommitOffset : PuckSeen(W, Id);
 		const FVec2 To = PuckRef - S.Pos;
 		const double D = To.Length();
 		const double Blade = W.SkaterRadius + W.StickReach;
 		// the blade follows the puck when it is near (zero aim = the sim's default, ahead at half reach)
 		if (D > 1e-6 && D < Blade + 1.0)
 		{
-			In.Stick = To * (1.0 / D) * Clamp((D - W.SkaterRadius) / (W.StickReach > 0.01 ? W.StickReach : 0.01), 0.2, 1.0);
+			// Lane A66: on its own puck inside its shooting range the bot draws the blade inside shot reach. Since A51 the sim carries the puck out to
+			// the blade's full reach (0.4 + stick.reach_m 1.2 = 1.6 m, past shot.reach_m 1.5), and a blade aimed at the puck's own distance held it
+			// there: carried, but beyond TryShoot's and the charge's reach, and the bot never shot (Jam.Bot.SeasonTakes take-3 / take-4 seed 1,
+			// docs/experiments/STICK.md section 8). Outside the range the long carry stays as A51 made it (the passes to the human come from there).
+			double MaxFrac = 1.0;
+			if (W.PuckLastTouch == Id && !bOppCarrier && W.StickReach > 0.01 && W.PuckPos.DistTo(W.OppGoal(S.Team)) < W.ShotReach + K.ShootExtraM)
+			{
+				const double Cap = (W.ShotReach - 0.1 - W.SkaterRadius) / W.StickReach;
+				if (Cap > 0.2 && Cap < MaxFrac) { MaxFrac = Cap; }
+			}
+			In.Stick = To * (1.0 / D) * Clamp((D - W.SkaterRadius) / (W.StickReach > 0.01 ? W.StickReach : 0.01), 0.2, MaxFrac);
 		}
 		InReach[Id] = (bOppCarrier && D <= Blade) ? InReach[Id] + 1 : 0;
 		// poke: the level's timing (frames the puck must sit inside reach); rookie never pokes

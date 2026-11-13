@@ -1,0 +1,153 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T01:19:35.177Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.arena.wide-l2-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.arena.wide-l2-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.arena.wide-l2-pause.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.arena.wide-l2-call.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.boost-l2-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "F",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.boost-l2-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2466,
+      "usage": {
+        "prompt": 7465,
+        "output": 823,
+        "thoughts": 0,
+        "total": 8288,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00869,
+      "ms": 8799,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "hockey.arena.wide-l2-faceoff.jpg",
+            "findings": [
+              {
+                "where": "bottom-right corner, minimap overlay area",
+                "what": "The bottom control hint text bar extends horizontally behind the minimap box, causing the text 'PAUSE ESC' to be cut off and overlapped by the minimap frame.",
+                "severity": 2,
+                "confidence": 0.95
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "hockey.arena.wide-l2-farnet.jpg",
+            "findings": [
+              {
+                "where": "bottom-left quadrant, orange skater",
+                "what": "The orange skater's face and visor mesh has chaotic black z-fighting / polygon fragmentation artifacts across the visor and mouth area.",
+                "severity": 3,
+                "confidence": 0.9
+              },
+              {
+                "where": "bottom-center quadrant, blue skater #7",
+                "what": "The blue player figure has no hockey stick visible in hands while standing directly in front of the goal.",
+                "severity": 2,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "hockey.arena.wide-l2-pause.jpg",
+            "findings": [
+              {
+                "where": "bottom-center quadrant, underneath the pause modal",
+                "what": "The controller and keyboard bindings text lines overlap with the modal footer controls ('ESC / START resume...'), creating colliding text rows.",
+                "severity": 3,
+                "confidence": 0.95
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "hockey.arena.wide-l2-call.jpg",
+            "findings": [
+              {
+                "where": "top-left quadrant, behind modal at ice level",
+                "what": "The target marker box and '3 m' HUD text float awkwardly intersected by the left edge of the Director's Call menu panel.",
+                "severity": 2,
+                "confidence": 0.8
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "hockey.boost-l2-card.jpg",
+            "findings": [
+              {
+                "where": "center quadrant, between blue skater and center ice",
+                "what": "Multiple HUD elements (MATCH 1 banner, speech dialogue box, 'WON / YOU' circular target reticle, and bottom subtitle box) overlap each other and the player character simultaneously.",
+                "severity": 3,
+                "confidence": 0.9
+              },
+              {
+                "where": "bottom-right corner, minimap area",
+                "what": "Bottom control prompt string overlaps and is clipped by the minimap widget container.",
+                "severity": 2,
+                "confidence": 0.95
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "hockey.boost-l2-faceoff.jpg",
+            "findings": [
+              {
+                "where": "bottom-right corner, minimap area",
+                "what": "The bottom control hint text bar extends behind the minimap box, causing 'PAUSE ESC' to intersect the minimap frame.",
+                "severity": 2,
+                "confidence": 0.95
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=hockey.arena.wide-l2-faceoff.jpg B=hockey.arena.wide-l2-farnet.jpg C=hockey.arena.wide-l2-pause.jpg D=hockey.arena.wide-l2-call.jpg E=hockey.boost-l2-card.jpg F=hockey.boost-l2-faceoff.jpg (gemini-3.8-flash, in 7465 out 823 tokens, ~$0.0087, 8.8 s)\n- stills:\n  - label: hockey.arena.wide-l2-faceoff.jpg; clean: false\n    - findings:\n      - where: bottom-right corner, minimap overlay area; what: The bottom control hint text bar extends horizontally behind the minimap box, causing the text 'PAUSE ESC' to be cut off and overlapped by the minimap frame.; severity: 2; confidence: 0.95\n  - label: hockey.arena.wide-l2-farnet.jpg; clean: false\n    - findings:\n      - where: bottom-left quadrant, orange skater; what: The orange skater's face and visor mesh has chaotic black z-fighting / polygon fragmentation artifacts across the visor and mouth area.; severity: 3; confidence: 0.9\n      - where: bottom-center quadrant, blue skater #7; what: The blue player figure has no hockey stick visible in hands while standing directly in front of the goal.; severity: 2; confidence: 0.85\n  - label: hockey.arena.wide-l2-pause.jpg; clean: false\n    - findings:\n      - where: bottom-center quadrant, underneath the pause modal; what: The controller and keyboard bindings text lines overlap with the modal footer controls ('ESC / START resume...'), creating colliding text rows.; severity: 3; confidence: 0.95\n  - label: hockey.arena.wide-l2-call.jpg; clean: false\n    - findings:\n      - where: top-left quadrant, behind modal at ice level; what: The target marker box and '3 m' HUD text float awkwardly intersected by the left edge of the Director's Call menu panel.; severity: 2; confidence: 0.8\n  - label: hockey.boost-l2-card.jpg; clean: false\n    - findings:\n      - where: center quadrant, between blue skater and center ice; what: Multiple HUD elements (MATCH 1 banner, speech dialogue box, 'WON / YOU' circular target reticle, and bottom subtitle box) overlap each other and the player character simultaneously.; severity: 3; confidence: 0.9\n      - where: bottom-right corner, minimap area; what: Bottom control prompt string overlaps and is clipped by the minimap widget container.; severity: 2; confidence: 0.95\n  - label: hockey.boost-l2-faceoff.jpg; clean: false\n    - findings:\n      - where: bottom-right corner, minimap area; what: The bottom control hint text bar extends behind the minimap box, causing 'PAUSE ESC' to intersect the minimap frame.; severity: 2; confidence: 0.95"
+    }
+  ]
+}

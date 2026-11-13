@@ -1,0 +1,256 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "readability",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T01:21:33.136Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "readability",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.boost-l1-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.boost-l1-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.boost-l3-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.boost-l3-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.boost-p3-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "F",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.boost-p3-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "distance": 6,
+      "thumbnails": [],
+      "prompt_chars": 2900,
+      "usage": {
+        "prompt": 7629,
+        "output": 1824,
+        "thoughts": 0,
+        "total": 9453,
+        "calls": 1
+      },
+      "cost_usd_est": 0.01256,
+      "ms": 15805,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A: hockey.boost-l1-faceoff.jpg",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "Not visible; no disc or indicator is apparent at center ice or near any stick."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "Cannot be determined because no puck or possession effect is visible on either skater."
+              },
+              "team_colours": {
+                "score": 3,
+                "evidence": "The foreground skater wears glowing light cyan-blue while the far skater is a washed-out peach-orange, both severely overexposed."
+              },
+              "far_net": {
+                "score": 2,
+                "evidence": "The red net frame at the far boards is obscured by bloom and only marked by a HUD diamond box with '66 m'."
+              },
+              "zone_strips": {
+                "score": 4,
+                "evidence": "The center red line and dark blue faceoff circle are clearly drawn across the reflective ice surface."
+              }
+            },
+            "first_look": "Glowing blue player ring and light cyan jersey",
+            "noise": [
+              "Severe bloom along the top boards",
+              "Heavy reflections blurring ice markings"
+            ],
+            "overall": 2
+          },
+          {
+            "label": "Still B: hockey.boost-l1-farnet.jpg",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "Not visible anywhere on the ice or sticks."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "Cannot be determined as neither figure displays a puck or possession highlight."
+              },
+              "team_colours": {
+                "score": 4,
+                "evidence": "Light glowing cyan-blue on the center player contrasts adequately with pastel orange on the left player despite heavy bloom."
+              },
+              "far_net": {
+                "score": 5,
+                "evidence": "The red goal frame is centered directly ahead, measuring roughly 440 pixels wide with white netting clearly visible."
+              },
+              "zone_strips": {
+                "score": 4,
+                "evidence": "Red goal line and black/dark blue faceoff circles and hashes are sharp and easily readable."
+              }
+            },
+            "first_look": "Large red net in the center background",
+            "noise": [
+              "Intense yellow-white rim glare on top board edge",
+              "Ice surface reflections below the goal"
+            ],
+            "overall": 3
+          },
+          {
+            "label": "Still C: hockey.boost-l3-faceoff.jpg",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "Not visible on the ice surface or near any player."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "Cannot be determined due to the total absence of a puck."
+              },
+              "team_colours": {
+                "score": 3,
+                "evidence": "The foreground skater is washed-out sky blue and the distant skater is pale peach-orange against bright ice."
+              },
+              "far_net": {
+                "score": 2,
+                "evidence": "The far net is largely blown out by background glare, detectable mostly by the 66 m HUD marker."
+              },
+              "zone_strips": {
+                "score": 4,
+                "evidence": "The red center line and large blue center circle lines are crisp and high-contrast."
+              }
+            },
+            "first_look": "Blue selection ring and cyan player #7",
+            "noise": [
+              "Overexposed board lighting wash",
+              "Mirror-like ice specular sheen"
+            ],
+            "overall": 2
+          },
+          {
+            "label": "Still D: hockey.boost-l3-farnet.jpg",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "Not visible around either skater or within the crease."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "Cannot be determined since no puck or possession cue is rendered."
+              },
+              "team_colours": {
+                "score": 4,
+                "evidence": "Colors are distinct with a pastel orange player on the left and a pale cyan-blue player in the center."
+              },
+              "far_net": {
+                "score": 5,
+                "evidence": "Prominent red goal frame occupies the center view at roughly 440 pixels wide with distinct netting."
+              },
+              "zone_strips": {
+                "score": 4,
+                "evidence": "Red goal crease and dark ice lines/hashes are sharply defined against the light blue ice."
+              }
+            },
+            "first_look": "Red goal frame centered behind the player",
+            "noise": [
+              "High-bloom glare strip on the top barrier",
+              "Text overlay box near player skates"
+            ],
+            "overall": 3
+          },
+          {
+            "label": "Still E: hockey.boost-p3-faceoff.jpg",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "Not visible anywhere across the white textured surface."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "Cannot be determined due to the complete lack of a visible puck."
+              },
+              "team_colours": {
+                "score": 5,
+                "evidence": "Foreground player is a solid deep royal blue while the opposing player in the distance is clearly saturated orange."
+              },
+              "far_net": {
+                "score": 2,
+                "evidence": "The far net is a tiny, dark reddish silhouette under the 66 m icon, lacking strong color punch."
+              },
+              "zone_strips": {
+                "score": 5,
+                "evidence": "The dark red center stripe and dark navy faceoff circle stand out with extreme clarity against matte off-white ice."
+              }
+            },
+            "first_look": "Deep blue jersey of player #7",
+            "noise": [
+              "Harsh drop shadow beneath the player",
+              "Rough snow bump texture across the rink"
+            ],
+            "overall": 3
+          },
+          {
+            "label": "Still F: hockey.boost-p3-farnet.jpg",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "Not visible on the ice or by the stick blades."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "Cannot be determined because the puck is entirely absent."
+              },
+              "team_colours": {
+                "score": 5,
+                "evidence": "Deep royal blue on the center skater contrasts strongly with the warm matte orange on the left skater."
+              },
+              "far_net": {
+                "score": 5,
+                "evidence": "The red net structure is large, centered, unblown by glare, and crisply outlined against the boards."
+              },
+              "zone_strips": {
+                "score": 5,
+                "evidence": "Red goal line, crease boundary, and faceoff arcs are bright red and immediately legible on the white surface."
+              }
+            },
+            "first_look": "Red net frame and deep blue skater",
+            "noise": [
+              "Hard-edged black drop shadow to player's left",
+              "Subdued brown upper barrier wall"
+            ],
+            "overall": 4
+          }
+        ]
+      },
+      "markdown": "**eyes/readability** A=hockey.boost-l1-faceoff.jpg B=hockey.boost-l1-farnet.jpg C=hockey.boost-l3-faceoff.jpg D=hockey.boost-l3-farnet.jpg E=hockey.boost-p3-faceoff.jpg F=hockey.boost-p3-farnet.jpg at 6 m (gemini-3.8-flash, in 7629 out 1824 tokens, ~$0.0126, 15.8 s)\n- stills:\n  - label: Still A: hockey.boost-l1-faceoff.jpg; first_look: Glowing blue player ring and light cyan jersey; overall: 2\n    - elements:\n      - puck: score 1, evidence Not visible; no disc or indicator is apparent at center ice or near any stick.\n      - carrier: score 1, evidence Cannot be determined because no puck or possession effect is visible on either skater.\n      - team_colours: score 3, evidence The foreground skater wears glowing light cyan-blue while the far skater is a washed-out peach-orange, both severely overexposed.\n      - far_net: score 2, evidence The red net frame at the far boards is obscured by bloom and only marked by a HUD diamond box with '66 m'.\n      - zone_strips: score 4, evidence The center red line and dark blue faceoff circle are clearly drawn across the reflective ice surface.\n    - noise: Severe bloom along the top boards; Heavy reflections blurring ice markings\n  - label: Still B: hockey.boost-l1-farnet.jpg; first_look: Large red net in the center background; overall: 3\n    - elements:\n      - puck: score 1, evidence Not visible anywhere on the ice or sticks.\n      - carrier: score 1, evidence Cannot be determined as neither figure displays a puck or possession highlight.\n      - team_colours: score 4, evidence Light glowing cyan-blue on the center player contrasts adequately with pastel orange on the left player despite heavy bloom.\n      - far_net: score 5, evidence The red goal frame is centered directly ahead, measuring roughly 440 pixels wide with white netting clearly visible.\n      - zone_strips: score 4, evidence Red goal line and black/dark blue faceoff circles and hashes are sharp and easily readable.\n    - noise: Intense yellow-white rim glare on top board edge; Ice surface reflections below the goal\n  - label: Still C: hockey.boost-l3-faceoff.jpg; first_look: Blue selection ring and cyan player #7; overall: 2\n    - elements:\n      - puck: score 1, evidence Not visible on the ice surface or near any player.\n      - carrier: score 1, evidence Cannot be determined due to the total absence of a puck.\n      - team_colours: score 3, evidence The foreground skater is washed-out sky blue and the distant skater is pale peach-orange against bright ice.\n      - far_net: score 2, evidence The far net is largely blown out by background glare, detectable mostly by the 66 m HUD marker.\n      - zone_strips: score 4, evidence The red center line and large blue center circle lines are crisp and high-contrast.\n    - noise: Overexposed board lighting wash; Mirror-like ice specular sheen\n  - label: Still D: hockey.boost-l3-farnet.jpg; first_look: Red goal frame centered behind the player; overall: 3\n    - elements:\n      - puck: score 1, evidence Not visible around either skater or within the crease.\n      - carrier: score 1, evidence Cannot be determined since no puck or possession cue is rendered.\n      - team_colours: score 4, evidence Colors are distinct with a pastel orange player on the left and a pale cyan-blue player in the center.\n      - far_net: score 5, evidence Prominent red goal frame occupies the center view at roughly 440 pixels wide with distinct netting.\n      - zone_strips: score 4, evidence Red goal crease and dark ice lines/hashes are sharply defined against the light blue ice.\n    - noise: High-bloom glare strip on the top barrier; Text overlay box near player skates\n  - label: Still E: hockey.boost-p3-faceoff.jpg; first_look: Deep blue jersey of player #7; overall: 3\n    - elements:\n      - puck: score 1, evidence Not visible anywhere across the white textured surface.\n      - carrier: score 1, evidence Cannot be determined due to the complete lack of a visible puck.\n      - team_colours: score 5, evidence Foreground player is a solid deep royal blue while the opposing player in the distance is clearly saturated orange.\n      - far_net: score 2, evidence The far net is a tiny, dark reddish silhouette under the 66 m icon, lacking strong color punch.\n      - zone_strips: score 5, evidence The dark red center stripe and dark navy faceoff circle stand out with extreme clarity against matte off-white ice.\n    - noise: Harsh drop shadow beneath the player; Rough snow bump texture across the rink\n  - label: Still F: hockey.boost-p3-farnet.jpg; first_look: Red net frame and deep blue skater; overall: 4\n    - elements:\n      - puck: score 1, evidence Not visible on the ice or by the stick blades.\n      - carrier: score 1, evidence Cannot be determined because the puck is entirely absent.\n      - team_colours: score 5, evidence Deep royal blue on the center skater contrasts strongly with the warm matte orange on the left skater.\n      - far_net: score 5, evidence The red net structure is large, centered, unblown by glare, and crisply outlined against the boards.\n      - zone_strips: score 5, evidence Red goal line, crease boundary, and faceoff arcs are bright red and immediately legible on the white surface.\n    - noise: Hard-edged black drop shadow to player's left; Subdued brown upper barrier wall"
+    }
+  ]
+}

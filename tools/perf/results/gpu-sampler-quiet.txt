@@ -1,0 +1,100 @@
+02:30:00 gpu=0 %, 889 MiB windows=
+02:30:06 gpu=17 %, 2345 MiB windows=ThirdJam:33816
+02:30:11 gpu=30 %, 3182 MiB windows=ThirdJam:33816
+02:30:17 gpu=29 %, 3182 MiB windows=ThirdJam:33816
+02:30:23 gpu=33 %, 3183 MiB windows=ThirdJam:33816
+02:30:29 gpu=55 %, 3183 MiB windows=ThirdJam:33816
+02:30:35 gpu=52 %, 3183 MiB windows=ThirdJam:33816
+02:30:41 gpu=22 %, 3183 MiB windows=ThirdJam:33816
+02:30:47 gpu=23 %, 3183 MiB windows=ThirdJam:33816
+02:30:52 gpu=22 %, 3183 MiB windows=ThirdJam:33816
+02:30:58 gpu=31 %, 3183 MiB windows=ThirdJam:33816
+02:31:04 gpu=31 %, 3183 MiB windows=ThirdJam:33816
+02:31:10 gpu=22 %, 3183 MiB windows=ThirdJam:33816
+02:31:16 gpu=46 %, 3183 MiB windows=ThirdJam:33816
+02:31:22 gpu=21 %, 3183 MiB windows=ThirdJam:33816
+02:31:27 gpu=22 %, 3183 MiB windows=ThirdJam:33816
+02:31:33 gpu=29 %, 3183 MiB windows=ThirdJam:33816
+02:31:39 gpu=32 %, 3183 MiB windows=ThirdJam:33816
+02:31:45 gpu=32 %, 3183 MiB windows=ThirdJam:33816
+02:31:51 gpu=22 %, 3183 MiB windows=ThirdJam:33816
+02:31:57 gpu=31 %, 3183 MiB windows=ThirdJam:33816
+02:32:03 gpu=49 %, 3183 MiB windows=ThirdJam:33816
+02:32:08 gpu=28 %, 3183 MiB windows=ThirdJam:33816
+02:32:14 gpu=22 %, 3183 MiB windows=ThirdJam:33816
+02:32:20 gpu=29 %, 3183 MiB windows=ThirdJam:33816
+02:32:26 gpu=32 %, 3183 MiB windows=ThirdJam:33816
+02:32:32 gpu=23 %, 3183 MiB windows=ThirdJam:33816
+02:32:38 gpu=30 %, 3183 MiB windows=ThirdJam:33816
+02:32:43 gpu=46 %, 3183 MiB windows=ThirdJam:33816
+02:32:49 gpu=20 %, 3186 MiB windows=ThirdJam:28800 ThirdJam:33816
+02:32:55 gpu=43 %, 4631 MiB windows=ThirdJam:28800 ThirdJam:33816
+02:33:01 gpu=41 %, 4631 MiB windows=ThirdJam:28800 ThirdJam:33816
+02:33:07 gpu=42 %, 4631 MiB windows=ThirdJam:28800 ThirdJam:33816
+02:33:13 gpu=47 %, 5468 MiB windows=ThirdJam:28800 ThirdJam:33816
+02:33:19 gpu=45 %, 5468 MiB windows=ThirdJam:28800 ThirdJam:33816
+02:33:25 gpu=45 %, 5468 MiB windows=ThirdJam:28800 ThirdJam:33816
+02:33:31 gpu=36 %, 4665 MiB windows=ThirdJam:11792 ThirdJam:28800
+02:33:37 gpu=27 %, 4858 MiB windows=ThirdJam:11792 ThirdJam:28800
+02:33:43 gpu=43 %, 4826 MiB windows=ThirdJam:11792 ThirdJam:28800
+02:33:49 gpu=42 %, 4826 MiB windows=ThirdJam:11792 ThirdJam:28800
+02:33:55 gpu=43 %, 4827 MiB windows=ThirdJam:11792 ThirdJam:28800
+02:34:01 gpu=43 %, 4827 MiB windows=ThirdJam:11792 ThirdJam:28800
+02:34:07 gpu=43 %, 4827 MiB windows=ThirdJam:11792 ThirdJam:28800
+02:34:13 gpu=43 %, 4827 MiB windows=ThirdJam:11792 ThirdJam:28800
+02:34:18 gpu=43 %, 4827 MiB windows=ThirdJam:11792 ThirdJam:28800
+02:34:24 gpu=44 %, 4827 MiB windows=ThirdJam:11792 ThirdJam:28800
+02:34:30 gpu=43 %, 4827 MiB windows=ThirdJam:11792 ThirdJam:28800
+02:34:36 gpu=43 %, 4827 MiB windows=ThirdJam:11792 ThirdJam:28800
+02:34:42 gpu=40 %, 4827 MiB windows=ThirdJam:11792 ThirdJam:28800
+02:34:48 gpu=42 %, 4827 MiB windows=ThirdJam:11792 ThirdJam:28800
+02:34:54 gpu=41 %, 4827 MiB windows=ThirdJam:11792 ThirdJam:28800
+02:35:00 gpu=43 %, 4827 MiB windows=ThirdJam:11792 ThirdJam:28800
+02:35:06 gpu=43 %, 4827 MiB windows=ThirdJam:11792 ThirdJam:28800
+02:35:12 gpu=44 %, 4827 MiB windows=ThirdJam:11792 ThirdJam:28800
+02:35:18 gpu=43 %, 4827 MiB windows=ThirdJam:11792 ThirdJam:28800
+02:35:24 gpu=32 %, 3990 MiB windows=ThirdJam:8684 ThirdJam:11792
+02:35:30 gpu=31 %, 3990 MiB windows=ThirdJam:8684 ThirdJam:11792
+02:35:36 gpu=30 %, 3990 MiB windows=ThirdJam:8684 ThirdJam:11792
+02:35:42 gpu=60 %, 4827 MiB windows=ThirdJam:8684 ThirdJam:11792
+02:35:48 gpu=59 %, 4827 MiB windows=ThirdJam:8684 ThirdJam:11792
+02:35:53 gpu=56 %, 4827 MiB windows=ThirdJam:8684 ThirdJam:11792
+02:35:59 gpu=57 %, 4827 MiB windows=ThirdJam:8684 ThirdJam:11792
+02:36:05 gpu=54 %, 4827 MiB windows=ThirdJam:8684 ThirdJam:11792
+02:36:11 gpu=54 %, 4827 MiB windows=ThirdJam:8684 ThirdJam:11792
+02:36:17 gpu=52 %, 4827 MiB windows=ThirdJam:8684 ThirdJam:11792
+02:36:23 gpu=52 %, 4828 MiB windows=ThirdJam:8684 ThirdJam:11792
+02:36:29 gpu=52 %, 4828 MiB windows=ThirdJam:8684 ThirdJam:11792
+02:36:35 gpu=54 %, 4828 MiB windows=ThirdJam:8684 ThirdJam:11792
+02:36:41 gpu=55 %, 4828 MiB windows=ThirdJam:8684 ThirdJam:11792
+02:36:47 gpu=46 %, 4828 MiB windows=ThirdJam:8684 ThirdJam:11792
+02:36:53 gpu=42 %, 4828 MiB windows=ThirdJam:8684 ThirdJam:11792
+02:36:59 gpu=23 %, 3177 MiB windows=ThirdJam:8684
+02:37:05 gpu=30 %, 3177 MiB windows=ThirdJam:8684
+02:37:11 gpu=24 %, 3177 MiB windows=ThirdJam:8684
+02:37:16 gpu=23 %, 3177 MiB windows=ThirdJam:8684
+02:37:22 gpu=23 %, 3177 MiB windows=ThirdJam:8684
+02:37:28 gpu=23 %, 3177 MiB windows=ThirdJam:8684
+02:37:34 gpu=22 %, 3177 MiB windows=ThirdJam:8684
+02:37:40 gpu=29 %, 3177 MiB windows=ThirdJam:8684
+02:37:46 gpu=22 %, 3177 MiB windows=ThirdJam:8684
+02:37:52 gpu=0 %, 889 MiB windows=ThirdJam:38224
+02:37:57 gpu=24 %, 2339 MiB windows=ThirdJam:38224
+02:38:03 gpu=29 %, 2339 MiB windows=ThirdJam:38224
+02:38:09 gpu=44 %, 2339 MiB windows=ThirdJam:38224
+02:38:15 gpu=32 %, 3181 MiB windows=ThirdJam:38224
+02:38:21 gpu=33 %, 3182 MiB windows=ThirdJam:38224
+02:38:27 gpu=34 %, 3182 MiB windows=ThirdJam:38224
+02:38:33 gpu=34 %, 3182 MiB windows=ThirdJam:38224
+02:38:39 gpu=21 %, 3182 MiB windows=ThirdJam:38224
+02:38:44 gpu=30 %, 3182 MiB windows=ThirdJam:38224
+02:38:50 gpu=29 %, 3182 MiB windows=ThirdJam:38224
+02:38:56 gpu=32 %, 3182 MiB windows=ThirdJam:38224
+02:39:02 gpu=51 %, 3182 MiB windows=ThirdJam:38224
+02:39:08 gpu=29 %, 3182 MiB windows=ThirdJam:38224
+02:39:14 gpu=30 %, 3182 MiB windows=ThirdJam:38224
+02:39:20 gpu=32 %, 3182 MiB windows=ThirdJam:38224
+02:39:26 gpu=22 %, 3182 MiB windows=ThirdJam:38224
+02:39:32 gpu=22 %, 3182 MiB windows=ThirdJam:38224
+02:39:38 gpu=23 %, 3182 MiB windows=ThirdJam:38224
+02:39:44 gpu=23 %, 3182 MiB windows=ThirdJam:38224

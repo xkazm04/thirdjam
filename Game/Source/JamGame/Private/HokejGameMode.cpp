@@ -1,4 +1,4 @@
-#include "HokejGameMode.h"
+﻿#include "HokejGameMode.h"
 #include "JamCartridge.h"
 #include "JamEventBus.h"
 #include "JamPawns.h"
@@ -39,7 +39,7 @@ static TAutoConsoleVariable<int32> CVarJamScriptHuman(TEXT("jam.ScriptHuman"), 0
 	TEXT("1: the human's skater plays itself (skate behind the puck, shoot when lined up). For PIE proofs through MCP."));
 // Lane A49: the tackle / cross-check drill (packaged proof of complaint 5). 1 = tackle (right mouse), 2 = cross-check (middle mouse); resets to 0 after 10 attempts.
 static TAutoConsoleVariable<int32> CVarJamCtrlDrill(TEXT("jam.ctrl.Drill"), 0,
-	TEXT("1 = tackle drill, 2 = cross-check drill: the human chases the carrier and presses once in range, 10 attempts, JAMDRILL lines. Lane A49 proof."));
+	TEXT("1 = tackle drill, 2 = cross-check drill: the human chases the carrier and presses once in range, 10 attempts, JAMDRILL lines. Lane A49 proof. 3 = sweep drill, 4 = spin drill (lane A51): the cursor and the keys stay real, the skating carries the puck at the nearest defender; JAMDRILL stick lines."));
 // Lane A31: a Director's Call from the console: load a cartridge (name or path) and apply it to the running match without a reset
 // (AHokejGameMode::ApplyCartridgeLive), the way the Designer does. A tier change swaps the rig and respawns the figures in place.
 static FAutoConsoleCommandWithWorldAndArgs CmdJamLiveCut(TEXT("jam.livecut"), TEXT("jam.livecut <name-or-path>: apply a cartridge to the running match live (Director's Call); no reset"),
@@ -536,6 +536,7 @@ FJamInput AHokejGameMode::ReadHumanInput()
 	In.bPoke = Pi->ConsumePokePressed();
 	In.bLift = Pi->ConsumeLiftPressed();
 	In.bDeke = Pi->ConsumeDekePressed();   // lane A39 (R-0029 point 4): IA_Deke, Q / gamepad Y
+	In.bSpin = Pi->ConsumeSpinPressed();   // lane A51 (R-0034): IA_Spin, E / gamepad B
 	// Lane A49 proof lines: the stick every frame when jam.ctrl.Log is on; every button edge always (a few per minute).
 	const int64 Frame = Sim->GetFrame();
 	if (UJamInputMap::LogEnabled())
@@ -546,18 +547,84 @@ FJamInput AHokejGameMode::ReadHumanInput()
 	if (In.bCheck) UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=check (right mouse / RB)"), Frame);
 	if (In.bPoke) UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=poke (space / A)"), Frame);
 	if (In.bLift) UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=lift (middle mouse, mouse 4 / LB)"), Frame);
-	if (In.bPass) UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=pass (E / X)"), Frame);
+	if (In.bPass) UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=pass (F / X)"), Frame);
 	if (In.bDeke) UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=deke (wheel, Q / Y)"), Frame);
+	if (In.bSpin) UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=spin (E / B)"), Frame);   // lane A51 (R-0034)
 	if (In.bShootHeld != bLastShootHeld) { bLastShootHeld = In.bShootHeld; UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=shoot held=%d (left mouse / RT)"), Frame, In.bShootHeld ? 1 : 0); }
 	if (In.bSprint != bLastSprint) { bLastSprint = In.bSprint; UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=sprint held=%d (shift / LT)"), Frame, In.bSprint ? 1 : 0); }
 	if (In.bBrake != bLastBrake) { bLastBrake = In.bBrake; UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=brake held=%d (ctrl / B)"), Frame, In.bBrake ? 1 : 0); }
 	return In;
 }
 
+// Lane A51 (R-0034): the 1v1 stick-handling drill. The real input path stays in charge of the stick and the keys (the SendInput harness sweeps the cursor and
+// presses E); the skating is scripted so the carrier meets a defender: carry towards the nearest opponent, chase the puck when it is loose.
+FJamInput AHokejGameMode::StickDrillInput()
+{
+	FJamInput In = ReadHumanInput();
+	if (Sim->GetPhase() != EJamSimPhase::Playing) return In;
+	const int32 Me = Sim->GetHumanIndex();
+	const FJamSkaterState& S = Sim->GetSkaters()[Me];
+	const int32 C = Sim->CarrierIndex();
+	if (C == Me)
+	{
+		const int32 O = Sim->NearestOpponent(S);
+		FVector2D To = O >= 0 ? Sim->GetSkaters()[O].Pos - S.Pos : FVector2D(Sim->AttackGoalX(S.Team), 0.0) - S.Pos;
+		const double D = To.Size();
+		// Skate at the defender at half speed until the bodies are 1.6 m apart, then hold the line (the sweep and the spin do the rest).
+		In.Move = D > 1.6 ? To.GetSafeNormal() * 0.6 : FVector2D::ZeroVector;
+		return In;
+	}
+	const FVector2D ToPuck = Sim->GetPuck().Pos - S.Pos;
+	In.Move = ToPuck.Size() > 0.3 ? ToPuck.GetSafeNormal() : FVector2D::ZeroVector;
+	return In;
+}
+
+void AHokejGameMode::StickDrillObserve()
+{
+	const int32 Me = Sim->GetHumanIndex();
+	const FJamSkaterState& S = Sim->GetSkaters()[Me];
+	if (StickDrillFrame < 0)
+	{
+		if (!(S.bSweepThisFrame || S.bSpinThisFrame)) return;
+		StickDrillFrame = Sim->GetFrame();
+		StickDrillKind = S.bSpinThisFrame ? 2 : 1;
+		bStickDrillPokedThis = bStickDrillKnockThis = false;
+		StickDrillKnockFramesThis = 0;
+		int32 Opp = -1;
+		double Dist = -1.0;
+		if ((Opp = Sim->NearestOpponent(S)) >= 0) Dist = FVector2D::Distance(Sim->GetSkaters()[Opp].Pos, S.Pos);
+		UE_LOG(LogHokej, Log, TEXT("JAMDRILL stick %s frame=%lld n=%d defender=%d dist=%.2f carrying=%d stamina=%.2f"), StickDrillKind == 2 ? TEXT("spin") : TEXT("sweep"), StickDrillFrame,
+			StickDrillAttempts + 1, Opp, Dist, Sim->CarrierIndex() == Me ? 1 : 0, S.Stamina < 0 ? 1.0 : static_cast<double>(S.Stamina) / Sim->StaminaFull());
+		return;
+	}
+	for (const FJamSimEvent& E : Sim->GetFrameEvents())
+	{
+		if (E.Name == JamEvents::Poke && E.Who != Me && Sim->GetSkaters().IsValidIndex(E.Who) && Sim->GetSkaters()[E.Who].Team != S.Team && E.Kind == FName(TEXT("clean"))) bStickDrillPokedThis = true;
+		if (E.Name == JamEvents::Knockdown && E.Who == Me) { bStickDrillKnockThis = true; StickDrillKnockFramesThis = S.KnockFrames; }
+	}
+	if (Sim->GetFrame() - StickDrillFrame < 30) return;
+	++StickDrillAttempts;
+	const bool bKept = Sim->CarrierIndex() == Me;
+	StickDrillKept += bKept ? 1 : 0;
+	StickDrillPoked += bStickDrillPokedThis ? 1 : 0;
+	StickDrillKnocked += bStickDrillKnockThis ? 1 : 0;
+	StickDrillKnockFrames = FMath::Max(StickDrillKnockFrames, StickDrillKnockFramesThis);
+	UE_LOG(LogHokej, Log, TEXT("JAMDRILL stick_result %s n=%d kept=%d poked_clean=%d knocked=%d knock_frames=%d"), StickDrillKind == 2 ? TEXT("spin") : TEXT("sweep"), StickDrillAttempts,
+		bKept ? 1 : 0, bStickDrillPokedThis ? 1 : 0, bStickDrillKnockThis ? 1 : 0, StickDrillKnockFramesThis);
+	StickDrillFrame = -1;
+	if (StickDrillAttempts >= 10)
+	{
+		UE_LOG(LogHokej, Log, TEXT("JAMDRILL stick_summary mode=%d attempts=%d kept=%d poked_clean=%d knocked=%d max_knock_frames=%d"), CVarJamCtrlDrill.GetValueOnGameThread(),
+			StickDrillAttempts, StickDrillKept, StickDrillPoked, StickDrillKnocked, StickDrillKnockFrames);
+		StickDrillAttempts = StickDrillKept = StickDrillPoked = StickDrillKnocked = StickDrillKnockFrames = 0;
+	}
+}
+
 FJamInput AHokejGameMode::DrillInput()
 {
 	// Mirrors what the bindings produce: WASD as a unit Move toward the carrier, one frame of bCheck (right mouse) or bLift (middle mouse) when in range.
 	const int32 Mode = CVarJamCtrlDrill.GetValueOnGameThread();
+	if (Mode == 3 || Mode == 4) return StickDrillInput();   // lane A51 (R-0034): the 1v1 stick-handling drill keeps the real cursor and keys
 	const int32 Me = Sim->GetHumanIndex();
 	const FJamSkaterState& S = Sim->GetSkaters()[Me];
 	FJamInput In;
@@ -858,7 +925,8 @@ void AHokejGameMode::StepOnce()
 	StepMsMax = FMath::Max(StepMsMax, Ms);
 	++Steps;
 	if (Effects) Effects->Step();   // lane A14: after the sim's frame, before the events go out
-	if (CVarJamCtrlDrill.GetValueOnGameThread() != 0 || DrillPressFrame >= 0) DrillObserve();   // lane A49
+	if (CVarJamCtrlDrill.GetValueOnGameThread() == 3 || CVarJamCtrlDrill.GetValueOnGameThread() == 4 || StickDrillFrame >= 0) StickDrillObserve();   // lane A51
+	else if (CVarJamCtrlDrill.GetValueOnGameThread() != 0 || DrillPressFrame >= 0) DrillObserve();   // lane A49
 	DeliverEvents();
 	// Lane A15 (C-0005): ShrinkRink / GrowRink changed the geometry at this faceoff; rebuild the rink actor from the sim's config.
 	if (Rink && Sim->GetRinkRevision() != BuiltRinkRevision)
@@ -885,6 +953,9 @@ void AHokejGameMode::StepOnce()
 		// Lane A31 (B-to-A-0024 points 1 and 2): one line per shot (with its charge) and per pass, a few per minute, so B can read what the visual was sent.
 		if (St.bShotThisFrame) UE_LOG(LogHokej, Log, TEXT("JAMSHOT frame=%lld skater=%d team=%d charge=%.2f %s"), Sim->GetFrame(), St.Index, St.Team, St.LastShotCharge, St.bHuman ? TEXT("human") : TEXT("bot"));
 		if (St.bPassThisFrame) UE_LOG(LogHokej, Log, TEXT("JAMPASS frame=%lld skater=%d team=%d strength=%.2f %s (PlayPass only, no PlayShoot)"), Sim->GetFrame(), St.Index, St.Team, St.LastPassStrength, St.bHuman ? TEXT("human") : TEXT("bot"));
+		// Lane A51 (R-0034) proof lines: the human's sweep (the blade crossed fast with the puck: the shield opens) and spin, as the sim saw them.
+		if (St.bHuman && St.bSweepThisFrame) UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld sweep side=%d shield_frames=%d blade=(%.2f,%.2f)"), Sim->GetFrame(), St.SweepSide, St.SweepFrames, St.BladePos.X, St.BladePos.Y);
+		if (St.bHuman && St.bSpinThisFrame) UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld spin frames=%d dir=%d stamina=%.2f carrying=%d"), Sim->GetFrame(), St.SpinFrames, St.SpinDir, St.Stamina < 0 ? 1.0 : static_cast<double>(St.Stamina) / Sim->StaminaFull(), Sim->CarrierIndex() == St.Index ? 1 : 0);
 		A->ApplySimFrame(St);
 		if (Effects && LastBoost.IsValidIndex(A->GetSimIndex()))
 		{

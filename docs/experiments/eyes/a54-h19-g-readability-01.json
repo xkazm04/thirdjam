@@ -1,0 +1,110 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "readability",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T01:48:22.560Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "readability",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/eyesgrid/h19goal/hockey.arena.large-l2-goal.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/eyesgrid/h19goal/hockey.raw-l2-goal.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "distance": 6,
+      "thumbnails": [],
+      "prompt_chars": 2753,
+      "usage": {
+        "prompt": 3051,
+        "output": 673,
+        "thoughts": 0,
+        "total": 3724,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00481,
+      "ms": 7368,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "The puck is not visible anywhere on the ice surface or inside the goal frame."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "No player has possession of a visible puck, though skater #7 has a selection ring indicating active control."
+              },
+              "team_colours": {
+                "score": 5,
+                "evidence": "Skaters display high-contrast, saturated royal blue (#7, #42) and vivid orange (#21) jerseys that are instantly distinguishable."
+              },
+              "far_net": {
+                "score": 4,
+                "evidence": "The red net frame is prominent near mid-screen, spanning roughly 650 pixels wide with thick red posts and a grey mesh top."
+              },
+              "zone_strips": {
+                "score": 3,
+                "evidence": "Red goal crease and goal line markings are visible across the lower half, but blue/red transverse zone strips are absent from view."
+              }
+            },
+            "first_look": "blue selection ring around skater 7",
+            "noise": [
+              "bright yellow illuminated strip along the boards",
+              "faint blue floating particle motes across the screen",
+              "yellow diamond distance marker '3 m' over empty boards"
+            ],
+            "overall": 2
+          },
+          {
+            "label": "Still B",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "The puck is not visible anywhere in the play area or around the net."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "No puck is visible near any stick blade, leaving the actual puck carrier completely unidentified."
+              },
+              "team_colours": {
+                "score": 5,
+                "evidence": "Two skaters clearly wear saturated bright blue jerseys while one foreground skater wears bright warm orange."
+              },
+              "far_net": {
+                "score": 4,
+                "evidence": "The red goal structure is clearly defined near center ice, occupying over 600 pixels across with stark red outline piping."
+              },
+              "zone_strips": {
+                "score": 3,
+                "evidence": "Red end-zone boundary and semi-circle crease lines are visible on the ice, but regular transverse neutral zone lines are not present."
+              }
+            },
+            "first_look": "blue selection circle beneath skater 7",
+            "noise": [
+              "intense yellow glowing line running along the boards",
+              "translucent blue circular particles scattered across the upper frame",
+              "distance indicator diamond floating above the dasher board"
+            ],
+            "overall": 2
+          }
+        ]
+      },
+      "markdown": "**eyes/readability** A=hockey.arena.large-l2-goal.jpg B=hockey.raw-l2-goal.jpg at 6 m (gemini-3.8-flash, in 3051 out 673 tokens, ~$0.0048, 7.4 s)\n- stills:\n  - label: Still A; first_look: blue selection ring around skater 7; overall: 2\n    - elements:\n      - puck: score 1, evidence The puck is not visible anywhere on the ice surface or inside the goal frame.\n      - carrier: score 1, evidence No player has possession of a visible puck, though skater #7 has a selection ring indicating active control.\n      - team_colours: score 5, evidence Skaters display high-contrast, saturated royal blue (#7, #42) and vivid orange (#21) jerseys that are instantly distinguishable.\n      - far_net: score 4, evidence The red net frame is prominent near mid-screen, spanning roughly 650 pixels wide with thick red posts and a grey mesh top.\n      - zone_strips: score 3, evidence Red goal crease and goal line markings are visible across the lower half, but blue/red transverse zone strips are absent from view.\n    - noise: bright yellow illuminated strip along the boards; faint blue floating particle motes across the screen; yellow diamond distance marker '3 m' over empty boards\n  - label: Still B; first_look: blue selection circle beneath skater 7; overall: 2\n    - elements:\n      - puck: score 1, evidence The puck is not visible anywhere in the play area or around the net.\n      - carrier: score 1, evidence No puck is visible near any stick blade, leaving the actual puck carrier completely unidentified.\n      - team_colours: score 5, evidence Two skaters clearly wear saturated bright blue jerseys while one foreground skater wears bright warm orange.\n      - far_net: score 4, evidence The red goal structure is clearly defined near center ice, occupying over 600 pixels across with stark red outline piping.\n      - zone_strips: score 3, evidence Red end-zone boundary and semi-circle crease lines are visible on the ice, but regular transverse neutral zone lines are not present.\n    - noise: intense yellow glowing line running along the boards; translucent blue circular particles scattered across the upper frame; distance indicator diamond floating above the dasher board"
+    }
+  ]
+}

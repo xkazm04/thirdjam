@@ -1,0 +1,111 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T01:21:00.621Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.regular-p4-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.regular-p4-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.regular-p4-pause.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.regular-p4-call.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2383,
+      "usage": {
+        "prompt": 5165,
+        "output": 476,
+        "thoughts": 0,
+        "total": 5641,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00566,
+      "ms": 6192,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [
+              {
+                "where": "Bottom-center / bottom-right HUD area",
+                "what": "The blue player selection ring clips awkwardly under the bottom controls bar, and the minimap in the bottom right has HUD key text 'PAUSE' overlapping into its frame area.",
+                "severity": 2,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still B",
+            "findings": [
+              {
+                "where": "Upper-right quadrant, along the dasher board glass rail",
+                "what": "A disconnected, untextured grey cube with a red square face floats inexplicably on top of the glass support rail.",
+                "severity": 4,
+                "confidence": 0.95
+              },
+              {
+                "where": "Bottom-left quadrant, blue player stick",
+                "what": "The wooden blade and shaft of the hockey stick clip entirely into and through the yellow dasher kickplate and white board.",
+                "severity": 3,
+                "confidence": 0.9
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still C",
+            "findings": [
+              {
+                "where": "Upper-right quadrant behind the pause modal",
+                "what": "The grey and red debug/placeholder block is visible floating along the board handrail.",
+                "severity": 3,
+                "confidence": 0.95
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still D",
+            "findings": [
+              {
+                "where": "Upper-right quadrant behind modal",
+                "what": "The rogue grey cube with red face remains visible behind the UI dialog above the dasher boards.",
+                "severity": 3,
+                "confidence": 0.95
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=hockey.regular-p4-faceoff.jpg B=hockey.regular-p4-farnet.jpg C=hockey.regular-p4-pause.jpg D=hockey.regular-p4-call.jpg (gemini-3.8-flash, in 5165 out 476 tokens, ~$0.0057, 6.2 s)\n- stills:\n  - label: Still A; clean: false\n    - findings:\n      - where: Bottom-center / bottom-right HUD area; what: The blue player selection ring clips awkwardly under the bottom controls bar, and the minimap in the bottom right has HUD key text 'PAUSE' overlapping into its frame area.; severity: 2; confidence: 0.85\n  - label: Still B; clean: false\n    - findings:\n      - where: Upper-right quadrant, along the dasher board glass rail; what: A disconnected, untextured grey cube with a red square face floats inexplicably on top of the glass support rail.; severity: 4; confidence: 0.95\n      - where: Bottom-left quadrant, blue player stick; what: The wooden blade and shaft of the hockey stick clip entirely into and through the yellow dasher kickplate and white board.; severity: 3; confidence: 0.9\n  - label: Still C; clean: false\n    - findings:\n      - where: Upper-right quadrant behind the pause modal; what: The grey and red debug/placeholder block is visible floating along the board handrail.; severity: 3; confidence: 0.95\n  - label: Still D; clean: false\n    - findings:\n      - where: Upper-right quadrant behind modal; what: The rogue grey cube with red face remains visible behind the UI dialog above the dasher boards.; severity: 3; confidence: 0.95"
+    }
+  ]
+}
