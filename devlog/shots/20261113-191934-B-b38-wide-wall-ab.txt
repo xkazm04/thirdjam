@@ -1,0 +1,1 @@
+B38, wide arena 140 x 70 m, corner and side board from game-camera height, before and after the barn wall wash follows the rig's scale. Frame under luma 12: corner 10.8 % to 1.2 %, side 8.7 % to 0.1 %; top of the frame 5 to 14 and 10 to 20 (regular rink: 15 and 26). Regular rink and Pond: 0.47 to 0.59 mean difference, unchanged.

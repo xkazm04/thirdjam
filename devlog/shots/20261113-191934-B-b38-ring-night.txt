@@ -1,0 +1,1 @@
+B38, the night tier's puck disc in an un-frozen match, same sim ticks before and after (36 and 44 ticks after the first knockdown). Whole-frame mean difference 0.24 to 0.30, ring crop 0.40 to 0.59: unchanged. To know: night has the same lag as a long yellow-green smear behind a fast puck, before and after; this lane did not touch it.
