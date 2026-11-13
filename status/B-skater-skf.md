@@ -2618,3 +2618,257 @@ Lowest skin vertex over all frames (cm above the ice), `meas21.py` on the FBX:
 1. **The contact outcomes reach the figure, and the boards hold it.** Engine side: a `PlayStumble(DirX, DirZ, Frames)` call or the outcome on `PlayHitReaction`, so a stumble plays `Stumble_*` and a bump plays `Check_Hit_*`; `PlayBoardHit` with a knockdown plays `Board_Fall_Front` / `_Back` by the push against the facing. Figure side: a lying pose that fits against a wall (knees up, body along the boards) with its own `GetUp_Wall`, side board falls, and `Board_Fall_Front`'s legs spread over more frames. **Proving numbers:** in a three-match log, the share of stumble outcomes (ratio 0.4 to 1) that play a `Stumble_*` take: from 0 % to 100 %, and of bumps that play `Check_Hit_*`: 100 %; the farthest any skin vertex goes past the wall plane in a board fall from frame 2: from 20 cm (p2_cel) / 14 cm (p3_clay) to 2 cm or less.
 2. **The carrier's body says "stop, cut, go"** (VISION law 3, the skill the game is about). `Stop_Hard` wired to the sim's `bReverseBraking`, held on its loop while the brake lasts and released into a new first-step burst take for the burst window (20 frames); a cut take per side for a sharp turn; `Deke_Left` / `_Right` (14 to 18 frames) with a call for the deke tap. **Proving numbers:** frames from the brake read-out to the hips being 70 deg or more across the travel on screen: 4 or fewer (the old `Stop`: 15); the share of reverse brakes in a match that show `Stop_Hard`: 100 %; stop, burst, cut and deke told apart in one still each from the game camera.
 3. **The hit's strength sizes the fall.** One fall length serves a knockdown of 60 frames and one of 150, and the hit-stop already grows from 2 to 5 frames. A light fall for ratio 1 to 1.4 (down to a hip and a hand and straight up, 16 to 18 frames, so the figure is not seen standing idle from frame 35 to 60), and a heavy one for ratio 2.2 and up (a longer throw with a slide and a roll before lying). **Proving number:** at ratios 1.0, 1.4 and 3.0, the frames the figure is on its skates without control at the end of the knockdown: from about 25 (frames 35 to 60 of a 60-frame knockdown today) to 6 or fewer; and the three falls told apart in one still each at their frame 8.
+
+## Twenty-second pass: the boards hold the body, the carrier's fakes, quick get-ups (SKF22, 21:11 to 21:36)
+
+The figure half of the twenty-first pass's first proposal, plus the fakes. Delivered `C:\Users\kazda\jam\skater-lab\skf\export22\` (p2_cel, p3_clay, full sets) with `DIFF.md`, `JOINS.md` and `READY.txt`. Items 1, 2 and 3 are all built. Nothing of this pass has been seen in the engine; I looked at stills only.
+
+**The proving number is met: the farthest any skin goes past the wall plane from frame 2 is 1.1 cm or less in all four board falls, both styles** (it was 20 / 14 cm in `Board_Fall_Front`).
+
+**The take count grows from 84 to 96.** New names (12):
+
+| Take | Frames | What it is |
+|---|---|---|
+| `Board_Fall_Left`, `Board_Fall_Right` | 28 | the wall 35 cm to that side; contact frame 2; `GetUp_Wall_Left` / `_Right` joins |
+| `GetUp_Wall`, `GetUp_Wall_Left`, `GetUp_Wall_Right` | 36 | from the wall pose: in front (after `Board_Fall_Front`), at the left, at the right |
+| `Deke_Left`, `Deke_Right` | 16 | the fake; `_Left` = the cut goes left |
+| `Burst` | 20 | three low strides; its last frame is `Stride`'s frame 0 |
+| `GetUp_Quick`, `GetUp_Quick_Front`, `GetUp_Quick_Side_Left`, `GetUp_Quick_Side_Right` | 20 | the four get-ups at 20 frames, from the same lying poses |
+
+**Difference list against export21** (`compare_anim.py`, main and loopcut file, both styles): 1 of export21's 84 takes differs, `Board_Fall_Front` (rebuilt, still 28 frames). The other 83 are identical, the clay aim holds among them. Bones, parents and rest pose identical; meshes identical; `SM_Stick_<style>.fbx` byte-identical; 60 fps; the `root` bone has identity keys in all 96 takes of all four files.
+
+### 1. The boards hold the body
+
+**`Lie_Wall` (a pose, not a take).** Slumped sitting against a wall at the figure's side: the near shoulder and arm on the wall, the trunk leaning 28 deg into it, the head lolling, both legs out along the wall. Defined for a wall at the left; mirrored for the right; turned a quarter for a wall in front (the figure then faces to its right, its left shoulder on the wall).
+
+It is not symmetric, because the stick stays in the right hand: with the wall at the left the stick lies on the ice on the open side; with the wall at the right the stick arm is the one against the wall and the stick lies along the wall beside the leg. So there are three get-ups.
+
+**The four falls against the plane** (worst skin past the plane from frame 2, cm, with its frame; negative = inside; `meas21.py` on the FBX):
+
+| Take | Wall | p2_cel skin | p2_cel stick | p3_clay skin | p3_clay stick | Ends on | Get-up that joins |
+|---|---|---|---|---|---|---|---|
+| Board_Fall_Front | 35 cm in front | 1.04 (6) | -18.6 | 0.31 (15) | -17.2 | `Lie_Wall` turned to the front wall | `GetUp_Wall` |
+| Board_Fall_Back | 35 cm behind | -0.13 (2) | -31.7 | -0.62 (2) | -21.5 | `Knockdown_Left`'s lying pose (kept from export21) | `GetUp_Side_Left`, `GetUp_Quick_Side_Left` |
+| Board_Fall_Left | 35 cm to the left | 0.70 (14) | -76.2 | 0.16 (14) | -71.6 | `Lie_Wall` left | `GetUp_Wall_Left` |
+| Board_Fall_Right | 35 cm to the right | 1.07 (14) | -18.7 | 0.64 (14) | -14.5 | `Lie_Wall` right | `GetUp_Wall_Right` |
+
+- **`Board_Fall_Front` (rebuilt).** Flattened chest-first as before (frames 2-5). Then it peels off to its right with the left shoulder staying on the wall (8), slides down it (12) and ends in the wall pose (18), a bounce, lying from 22. **The kneel is gone**: I did not spread the kneel-to-sit over more frames, I removed it, because knees going down and legs coming out again is the flip itself. The shins now turn less than 45 deg in every frame (was 95-108) and the knees travel 23 cm a frame at most (was 32-34).
+- **For the engine side:** `Board_Fall_Front` no longer ends on `Fall`'s lying pose, so `GetUp` (and `GetUp_Quick`) no longer join it: after it, play `GetUp_Wall`.
+- **`Board_Fall_Left` / `_Right`.** Thrown shoulder-first into the wall (2), the head tips to the wall and back (2-5), the far arm flung out, the far skate off the ice; slides down along it (11) into the wall pose (17), a bounce, lying from 21.
+- **`Board_Fall_Back`** is kept as it was (it stays inside, and it tips over on to its side, so the ordinary side get-ups join).
+- **How the fit was made.** The offsets that put each pose on its wall are measured, not guessed: `fit22.js` reads the skin's overshoot from the FBX and writes `fit22.json` per style, which `build_clips.py` reads. To build for another wall distance, change `WALL22` and refit.
+
+**The wall get-ups (36 frames).** A hand goes up the wall (6), on to one knee with the hand up (14), the rise with the hand held there (14-30), ready Glide at 36. The hips are over 90 % of standing height from frame 33 (87 % at 32), as in the other get-ups. Measured on the FBX, the wall hand's wrist is at 81 cm at frame 6, 110 cm at 14 and 117 cm at 30 (p2_cel; 78, 105 and 112 cm on p3_clay). The board top is 1.3 m: the hand does not reach it, it is 13 to 20 cm under, and the glove stays about 4 cm off the wall's face (I kept it inside the plane). So it reads as a hand at the wall, not a hand on the board top.
+
+| Take | Wall hand | Worst skin past the plane p2_cel / p3_clay (frame) |
+|---|---|---|
+| GetUp_Wall_Left | the left hand | 2.3 (34) / 1.3 (36) |
+| GetUp_Wall_Right | the stick hand, the stick held upright along the wall | 4.0 (35) / 3.3 (4) |
+| GetUp_Wall (wall in front) | the left hand; the body turns back a quarter to its facing in the last frames | 13.7 (33) / 6.2 (34) |
+
+- **`GetUp_Wall` ends through the wall.** It has to end in the ready stance facing the wall, and that stance itself reaches 43.6 cm (p2_cel) and 39.1 cm (p3_clay) in front of the pelvis, with the stick a metre further. The side get-ups end 1.3 to 2.8 cm over for the same reason (the ready stance is 36 to 38 cm wide to each side). The falls were the proving number; the front get-up is in the proposals.
+
+### 2. The carrier's fakes
+
+**`Deke_Left`, `Deke_Right` (16 frames).** `Deke_Left` is the fake whose cut goes to the left; `Deke_Right` is its mirror with the stick carried across.
+
+| Frames | What happens |
+|---|---|
+| 0-4 | The sell: the shoulders drop and turn to the right, the stick sweeps out to the right on the ice; the hips and both skates are already turned 14 deg to the left |
+| 4-9 | The cut: the hips drive left (22 deg), the stick comes back across in front |
+| 9-16 | Out to the ready Glide |
+
+- **At frame 4:** the blade has moved 102 cm (`Deke_Left`) and 74 cm (`Deke_Right`) from its ready position, the head 25 cm, the trunk leans 36 deg (22 in the ready stance).
+- **The blade stays on the ice:** the stick's lowest point is never more than 0.84 cm above it (Glide: 0.73).
+- **The pelvis does not travel**; the game moves the pawn.
+- **The call I would want:** `PlayDeke(float Side, int32 Frames)`, on the frame of the `deke` event: `Side` +1 when the carrier goes to its own left, -1 to its right (or the push as `DirX, DirZ`, classified against the facing like the other calls); `Frames` the length of the sim's deke window, so the figure can retime the 16 frames to it. And for `Burst`: `PlayBurst(int32 Frames)` on the first frame of the burst window (20 frames in `MOVEMENT.md`), or the window as a read-out.
+
+**`Burst` (20 frames).** Three short hard strides from the ready stance: left (frame 3), right (9), left (15). The trunk is at 68 to 74 deg from frame 2 to 13 (22 in the ready stance), the hips 9 to 11 cm lower, the free arm and the stick hand pumping against the legs. The trunk comes up through the third stride (55 deg at 16, 41 at 17).
+
+- **The join into `Stride`:** frames 18, 19 and 20 are `Stride`'s 58, 59 and 0, and the bake copies `Stride`'s first frame into frame 20 key for key. Largest joint position difference 0.0000 cm, largest bone rotation difference 0 deg, both styles (`JOINS.md`).
+- **Weakness:** between frames 19 and 20 the left upper arm rolls 114 deg (p2_cel) and 118 deg (p3_clay) about its own axis. The joints move 0.5 cm in that frame, so it is a twist of the sleeve for one frame, not a jump of the arm; I did not have a clean way to spread it.
+
+### 3. `GetUp_Quick` (20 frames, four takes)
+
+The same key poses as the 36-frame get-ups, retimed: sitting or pushing up by 4, on one knee at 9, the rise key at 16, ready Glide at 20. Each starts on its 36-frame get-up's lying pose, so the same falls join exactly.
+
+| Take | From | Hips % of standing at frames 0 / 9 / 16 / 17 / 18 / 20 (p2_cel) |
+|---|---|---|
+| GetUp_Quick | on the back (`Fall`, `Fall_B`) | 23 / 64 / 82 / 85 / 91 / 100 |
+| GetUp_Quick_Front | face down (`Fall_Forward`, `Knockdown_Back`, `_B`) | 22 / 62 / 82 / 85 / 91 / 100 |
+| GetUp_Quick_Side_Left | right side (`Knockdown_Left`, `_B`, `Board_Fall_Back`) | 35 / 64 / 82 / 85 / 91 / 100 |
+| GetUp_Quick_Side_Right | left side (`Knockdown_Right`, `_B`, `Trip`) | 35 / 64 / 82 / 85 / 91 / 100 |
+
+- The hips cross 90 % at frame 18 in all four, both styles: inside the last 3 frames.
+- With a 60-frame knockdown: the fall's 24 played frames, 16 frames lying, 20 frames up. With 75: 31 lying.
+- There is no quick version of the wall get-ups.
+
+### Ground, joints, joins
+
+Lowest skin vertex over all frames (cm above the ice):
+
+| Take | p2_cel body / skates / stick | p3_clay body / skates / stick |
+|---|---|---|
+| Board_Fall_Front | 2.67 / -0.01 / 2.66 | 2.31 / 0.13 / 2.60 |
+| Board_Fall_Left | 2.67 / 0.00 / 2.66 | 2.31 / 0.13 / 2.60 |
+| Board_Fall_Right | 2.67 / 0.00 / 1.64 | 5.07 / 0.13 / 1.32 |
+| GetUp_Wall | 1.36 / 0.00 / 2.10 | 2.31 / 0.13 / 1.42 |
+| GetUp_Wall_Left | 2.67 / 0.00 / 2.10 | 2.31 / 0.13 / 1.71 |
+| GetUp_Wall_Right | 2.67 / 0.00 / 2.66 | 5.07 / 0.13 / 1.32 |
+| Deke_Left / _Right | 13.97 / 0.00 / 0.70 | 13.04 / 0.13 / 0.18 |
+| Burst | 12.05 / 0.00 / 0.68 | 11.77 / 0.13 / 0.32 |
+| GetUp_Quick (four) | 0.00 / 0.00 / 1.01 | 0.56 / 0.13 / 0.91 |
+
+- **Nothing is under the ice** beyond 0.01 cm (one p2_cel skate vertex in `Board_Fall_Front`). The lying body in the wall pose is 2.3 to 5.1 cm above the ice at its lowest: it sits a little high, I did not measure it down as the eighteenth pass did for the other lying poses.
+- **The top hand** is 0.0 cm from the stick in every frame of every new take.
+- **Joins** (`join22.py`, `export22\JOINS.md`, 26 pairs): every fall to every get-up that may follow it, 36-frame and quick, the three wall pairs, and `Burst` to `Stride`: 0 to 0.0001 cm and 0 deg, both styles.
+- **Fast frames:** `Board_Fall_Front` has one frame (6 to 7) where the left forearm turns 106-109 deg as the arms come down off the wall; `Board_Fall_Right` 102-104 deg in the left upper arm at frames 0-1 (before the frame the engine starts at); the quick get-ups 53-69 deg a frame; the dekes 30 deg at most.
+
+### Not checked, and known gaps
+
+- Nothing in the engine. In particular the wall: 35 cm is the brief's number; if the pawn stands at another distance from the boards when the calls fire, the poses must be refitted (one constant and a refit).
+- The takes in motion: stills only.
+- `GetUp_Wall` ends 13.7 / 6.2 cm through a wall in front; the side wall get-ups 2.3 to 4.0 cm.
+- `Burst`'s one-frame sleeve twist at its last frame.
+- `Board_Fall_Back` does not end on the wall pose (my choice: it was inside already).
+- The wall pose sits 2 to 5 cm above the ice.
+
+### Files
+
+- **Scripts** (`skater-lab\skf\`): `build_clips.py` (the twenty-second-pass block; a copy is `build_clips_pass22.py`), `fit22.js` + `fit22.json` (the wall offsets per style), `run22.sh`, `post22.sh` (joins with `join22.py`, loopcut and stick against export21, root keys, `JOINS.md`, `DIFF.md`), `meas21.py` + `sum22.js` + `tab22.js` (measurements on the FBX and the tables), `render22.py` (the lane's renderer plus a wall on either axis), `sheet22.sh`, `it22.sh` (the working loop).
+- **Tables:** `export22\DIFF.md`, `export22\JOINS.md`, `work22\m\f22_<style>.json` (every frame).
+- **Stills** (`devlog\shots\20261113-213243-B-lab-skf22-*`, 4): `board-falls` (side or behind, and above, the wall drawn, the worst overshoot printed per take), `getup-wall`, `dekes-burst`, `getup-quick`.
+
+### The next three evolutions of this track, ranked, each with its proving number
+
+1. **The hit's strength sizes the fall** (carried over from the twenty-first pass, now that the quick get-ups exist). A light fall for ratio 1 to 1.4: down to a hip and a hand and straight up, 16 to 18 frames, joining `GetUp_Quick_*`; a heavy one for ratio 2.2 and up: a longer throw with a slide and a roll before lying. **Proving numbers:** frames the figure is on its skates without control at the end of a knockdown, at ratios 1.0, 1.4 and 3.0: 6 or fewer at each, counted from the hips passing half their standing height to the release (today 25 with the 36-frame get-up and 13 with `GetUp_Quick`); and the three falls told apart in one still each at their frame 8.
+2. **Up off the boards without going through them.** `GetUp_Wall` ends in a ready stance turned along the boards, with a step off the wall, so the figure never faces a wall 35 cm away (a facing the engine then blends out, or a call that tells the figure which way is open); `Board_Fall_Back` moved on to the wall pose with a `GetUp_Wall_Back`; quick versions of the wall get-ups; the wall pose measured down on to the ice. **Proving numbers:** the worst skin past the plane over fall plus get-up on all four sides: 2 cm or less (today 13.7 / 6.2 cm front, 4.0 right, 2.3 left); the wall pose's lowest skin 0 to 1 cm above the ice (today 2.3 to 5.1).
+3. **Pace reads on the body** (VISION law 4: sprinting is a gamble). A sprint posture and stride distinct from `Stride` (lower, longer, the stick out at full reach in one hand), a carry posture with the blade at three quarters of its reach, and the cut takes for a sharp turn, so the player can see which skater is fast and unstable before the hit. **Proving numbers:** sprint against skate told apart in one still from the game camera: trunk lean differing by 15 deg or more and the blade's distance from the body matching the sim's puck distance (1.2 m carried, 1.6 m sprinting) within 5 cm; `Burst` to the sprint stride and back to `Stride` joining at 0 cm and 0 deg.
+
+## Twenty-third pass: three sizes of fall, and up off the boards inside the plane (SKF23, 21:36 to 22:10)
+
+My own first two proposals from the twenty-second pass. Delivered `C:\Users\kazda\jam\skater-lab\skf\export23\` (p2_cel, p3_clay, full sets) with `DIFF.md`, `JOINS.md` and `READY.txt`. Items 1 and 2 are built. Item 3 (the one-frame twists in `Burst` and `Board_Fall_Front`) is not done. Nothing of this pass has been seen in the engine; I looked at stills only.
+
+- **Item 2's number is met:** the worst skin past the wall plane over fall plus get-up is 1.2 cm or less on all four sides, both styles.
+- **Item 1's number is not met by the falls:** frames from the hips passing half their standing height to the release are 13-17 with `GetUp_Quick` and 25-31 with the 36-frame get-ups, whatever the size of the fall, because that count lies wholly inside the get-up. I added four `GetUp_Snap` takes (not asked for) that bring it to 6-13; my target of 6 holds only for the get-up from the back on p2_cel.
+
+**The take count grows from 96 to 109.** New names (13):
+
+| Take | Frames | What it is |
+|---|---|---|
+| `Fall_Light`, `Knockdown_Back_Light`, `Knockdown_Left_Light`, `Knockdown_Right_Light` | 18 | the light fall per direction; contact frame 2 |
+| `Fall_Heavy`, `Knockdown_Back_Heavy`, `Knockdown_Left_Heavy`, `Knockdown_Right_Heavy` | 34 | the heavy fall per direction; contact frame 2 |
+| `GetUp_Wall_Back` | 36 | from the wall pose at a wall behind |
+| `GetUp_Snap`, `GetUp_Snap_Front`, `GetUp_Snap_Side_Left`, `GetUp_Snap_Side_Right` | 20 | not asked for: the 20-frame get-ups timed to stay down longer and rise late |
+
+**Difference list against export22** (`compare_anim.py`, main and loopcut file, both styles): 7 of export22's 96 takes differ, all of them the wall takes this pass rebuilds: `Board_Fall_Back` (now ends on the wall pose), `Board_Fall_Front`, `Board_Fall_Left`, `Board_Fall_Right` (the wall pose is 2.2 / 4.4 cm lower), `GetUp_Wall`, `GetUp_Wall_Left`, `GetUp_Wall_Right` (new end). The other 89 are identical, the clay aim holds among them. Bones, parents and rest pose identical; meshes identical; `SM_Stick_<style>.fbx` byte-identical; 60 fps; the `root` bone has identity keys in all 109 takes of all four files.
+
+### 1. The hit's strength sizes the fall
+
+Three sizes per direction now: light, the existing fall, heavy. All have their contact at frame 2. Each ends on its direction's existing lying pose, so `GetUp_*`, `GetUp_Quick_*` and `GetUp_Snap_*` join all three.
+
+**Light (18 frames).** No air time, the stick low.
+
+| Frames | What happens |
+|---|---|
+| 0-2 | The feet slip: the hips drop 15 to 20 cm, one skate shoots out |
+| 2-7 | Down to a sit (`Fall_Light`), to a knee and a hand (`Knockdown_Back_Light`), or to a hip and a hand (the side ones): the 36-frame get-up's own sit key, run the other way |
+| 7-13 | Lies down |
+| 13-18 | Still |
+
+I ended them on the lying poses, not on a half-down `Lie_Knee`: no new get-up was needed, and the sit already reads as lighter than being thrown.
+
+**Heavy (34 frames).**
+
+| Frames | What happens |
+|---|---|
+| 0-4 | The existing fall's own first frames, so the hit frame the engine holds is the same picture |
+| 4-16 | Thrown 14 cm higher and half as far again (carried 49 cm, was 30), turning one full turn about the vertical, 30 deg a frame: that is what reads from above |
+| 13-16 | Coming down in the lying pose's shape (hands, stick and skates lifted with the body), the first landing at 16 |
+| 19 | A big bounce (10 to 13 cm), the legs loose |
+| 23, 26 | The second landing and a small bounce (5 cm) |
+| 28-34 | Settled 18 cm back toward the start, on the lying pose, still |
+
+**Measured** (`meas21.py` on the FBX; p2_cel. On p3_clay the heights are about 3 cm lower, the body is carried the same, and the light falls' hips go under half height one frame later in three of four):
+
+| Direction | Take | Frames | Body carried cm | Hips highest after frame 4 cm | Whole turns in the air | Frame the hips go under half height | Lying still from frame |
+|---|---|---|---|---|---|---|---|
+| from the front | Fall_Light | 18 | 30 | 37 | 0 | 5 | 13 |
+| | Fall | 26 | 30 | 48 | 0 | 10 | 18 |
+| | Fall_Heavy | 34 | 49 | 62 | 1 | 14 | 28 |
+| from behind | Knockdown_Back_Light | 18 | 30 | 50 | 0 | 9 | 13 |
+| | Knockdown_Back | 26 | 30 | 48 | 0 | 10 | 18 |
+| | Knockdown_Back_Heavy | 34 | 49 | 65 | 1 | 14 | 28 |
+| from the left | Knockdown_Left_Light | 18 | 30 | 46 | 0 | 7 | 13 |
+| | Knockdown_Left | 26 | 30 | 48 | 0 | 10 | 18 |
+| | Knockdown_Left_Heavy | 34 | 49 | 65 | 1 | 15 | 28 |
+| from the right | Knockdown_Right_Light | 18 | 30 | 46 | 0 | 7 | 13 |
+| | Knockdown_Right | 26 | 30 | 48 | 0 | 10 | 18 |
+| | Knockdown_Right_Heavy | 34 | 49 | 62 | 1 | 15 | 28 |
+
+(The light falls are carried the same 30 cm as the existing ones because they end on the same lying poses, which sit 30 cm from the start.)
+
+**The chains, and the proving number** (`chain23.js`: the fall from its frame 2, the lying hold, the get-up; the last column counts frames from the hips passing half their standing height for good to the release; p2_cel / p3_clay):
+
+| Knockdown frames | Fall (played frames) | Lying frames | Get-up | Number with that get-up: from the front / behind / left / right |
+|---|---|---|---|---|
+| 60 (ratio 1.0) | the `_Light` fall (16) | 24 | `GetUp_Quick_*` (20) | 13 / 14, 14 / 17, 15 / 16, 15 / 16 |
+| 80 (ratio 1.4) | the `_Light` fall (16) | 44 | `GetUp_Quick_*` (20) | 13 / 14, 14 / 17, 15 / 16, 15 / 16 |
+| 110 (ratio 2.1) | the existing fall (24) | 50 | `GetUp_*` (36) | 25 / 27, 27 / 31, 28 / 31, 28 / 31 |
+| 150 (ratio 3.0) | the `_Heavy` fall (32) | 82 | `GetUp_*` (36) | 25 / 27, 27 / 31, 28 / 31, 28 / 31 |
+| any of the four | the same falls | 16 more at 110 and 150 | `GetUp_Snap_*` (20) | 6 / 8, 8 / 13, 9 / 12, 9 / 12 |
+
+- **What the falls change** is the first half: with the light fall the hips are under half height 3 to 7 frames after the contact (existing: 8), with the heavy one after 12 to 13 and the body is still moving until frame 28.
+- **What they cannot change** is the number: it is the get-up's last part. `GetUp_Snap_*` is the same key poses timed late (sitting up slowly to frame 10, one knee at 16, the rise key at 18, ready at 20; hips over 90 % from frame 19). From the front and the side the hips pass half height early because the lying pelvis is already at 35 to 50 % of standing there, so those stay at 8 to 13.
+
+### 2. Up off the boards without going through them
+
+**Worst skin past the plane, cm (frame); negative = inside:**
+
+| Side | Fall, from frame 2: p2_cel | p3_clay | Get-up, every frame: p2_cel | p3_clay | Wall pose's lowest skin above the ice p2_cel / p3_clay |
+|---|---|---|---|---|---|
+| front: Board_Fall_Front + GetUp_Wall | 1.04 (6) | 1.06 (15) | -0.03 (5) | -0.83 (3) | 0.5 / 0.5 |
+| back: Board_Fall_Back + GetUp_Wall_Back | 0.53 (15) | 1.16 (16) | -0.03 (5) | -0.83 (3) | 0.5 / 0.5 |
+| left: Board_Fall_Left + GetUp_Wall_Left | 0.48 (14) | 0.95 (14) | -0.03 (5) | 1.14 (2) | 0.5 / 0.5 |
+| right: Board_Fall_Right + GetUp_Wall_Right | 0.52 (14) | 0.10 (14) | -0.10 (2) | 0.70 (2) | 0.5 / 0.67 |
+
+- **The wall get-ups end one step off the wall, turned along the boards.** The whole get-up stays turned as the wall pose is, and its last frame is the ready stance with the pelvis 12.4 cm (p2_cel) / 10.1 cm (p3_clay) further from the wall than the take's start. `GetUp_Wall` ends facing 90 deg to the figure's right, `GetUp_Wall_Back` 90 deg to its left; `GetUp_Wall_Left` / `_Right` face forward. **So these four takes no longer end on the ready Glide at the pawn's spot and facing: the engine has to blend that out, or turn and move the pawn.** The stick stays inside too (11 to 31 cm inside at its worst). Hips over 90 % of standing from frame 33, as before.
+- **`Board_Fall_Back` now ends on the wall pose:** back on the wall as before (frames 2-5), then it rolls a quarter to its left along the wall (8), slides down (12) into the wall pose turned to the wall behind (18). **`GetUp_Wall_Back` joins it; `GetUp_Side_Left` and `GetUp_Quick_Side_Left` no longer do.**
+- **The wall pose is measured down:** the pelvis drops 2.2 cm (p2_cel) and 4.4 cm (p3_clay), so the hips' skin rests 0.5 cm above the ice (was 2.3 to 5.1).
+- **The fit is still one constant** (`WALL22` = 0.35) plus `fit23.json`, written by `fit23.js` from the FBX.
+
+**The engine's measurement, received while I worked** (42 real board hits: the pawn stands a median 47 cm from the wall, 39 of 42 between 40 and 59 cm; the engine will slide the mesh toward the wall by the measured distance minus 35 cm, capped at 30, during the fall and back during the get-up). The lab keeps 35 cm. What I did for it:
+- **The falls:** nothing. From frame 2 to about 11 the skates are on the ice while the body is thrown at the wall, so a slide toward the wall there reads as the throw; after that the figure is sitting and slides as a whole.
+- **The wall get-ups:** from the knee (frame 14) on, each skate now leaves the ice twice (the skate that glides back through the rise steps at 18 and 27, 7 to 8 cm; the kneeling one steps through at 23 and again at 33), so the slide back falls on steps. From 6 to 14 the figure is still sitting. A step while sitting (frame 10) made the clay figure's kneeling skate turn 79 deg in one frame, so I left it out.
+- **Not verified:** I did not render the takes with a 30 cm slide applied. The wall hand will leave the wall as the mesh slides back: it is at the wall only while the mesh is at the wall.
+
+### 3. The one-frame twists: not done
+
+`Burst` frames 19 to 20 (the left upper arm's 114-118 deg roll) and `Board_Fall_Front` frames 6 to 7 (the left forearm's 106-109 deg) are as in export22.
+
+### Ground, joints, joins
+
+- **Nothing is under the ice** in any new or rebuilt take: body 0.00 cm or more, skates 0.00 (p2_cel) / 0.12 (p3_clay), stick 0.32 or more. In the heavy falls a guard lifts the body in frames 5-18 if an arm, knee or head joint comes nearer the ice than its skin (`air_clamp`). It acts in one place in the delivered build: `Knockdown_Back_Heavy` on p3_clay, where it softens the first landing: the hips rise 2 cm at frame 15 and stop at 25 cm at frame 17, not at 19 cm at frame 16 (without it the left elbow was 1.3 cm under the ice at frame 16). The other heavy falls' hips come down without a jump (p2_cel `Knockdown_Left_Heavy`, frames 8-16: 61, 59, 58, 57, 56, 56, 46, 37, 28 cm).
+- **The top hand** is 0.0 cm from the stick in every frame of every new take.
+- **Joins** (`join23.py`, `export23\JOINS.md`, 53 pairs): every fall of every size to the three get-ups of its direction, the four wall pairs, `Burst` to `Stride`. Positions 0.0005 cm or less (the heavy falls 0.0001 to 0.0005, from the full turn; the rest 0 to 0.0001), bone rotations 0 deg, both styles.
+- **Fast frames** (largest one-frame turn of one bone, p2_cel / p3_clay): the light falls 77-100 / 79-108 deg (frames 0 to 3), the heavy falls 90-92 / 90-110 (the upper arm at frames 5-6, and the stick turning 90 deg in the landing frame), `Board_Fall_Back` 96 / 94, the wall get-ups 53-63 / 55-60, the snap get-ups 53-66 / 55-65. The heavy falls' skates turn with the body (the 18 deg-a-frame skate limit is off for them, `free_feet`).
+
+### Not checked, and known gaps
+
+- Nothing in the engine: the import, which size plays at which ratio, the wall get-ups' turned ends, how the wall takes read with the mesh slid up to 30 cm.
+- The takes in motion: stills only. The heavy falls' full turn at 30 deg a frame is at the solver's limit for how fast a knee's bend direction may swing; I saw no broken leg in the stills, I did not see it move.
+- The proving number of 6 is met only by `GetUp_Snap` on p2_cel.
+- No light or heavy version of the `_B` alternates, of `Trip`, or of the board falls.
+- On the fall-sizes sheet the back-lying figure runs off the bottom of its cell.
+
+### Files
+
+- **Scripts** (`skater-lab\skf\`): `build_clips.py` (the twenty-third-pass blocks; a copy is `build_clips_pass23.py`), `fit23.js` + `fit23.json`, `run23.sh`, `post23.sh` (joins with `join23.py`, loopcut and stick against export22, root keys, `JOINS.md`, `DIFF.md`), `meas21.py` + `sum23.js` + `tab23.js` + `chain23.js` (measurements, tables, the chains), `render22.py`, `sheet23.sh`, `slide23.js` (how long each skate stays put in the wall get-ups), `it23.sh` (the working loop).
+- **Tables:** `export23\DIFF.md`, `export23\JOINS.md`, `work23\m\f23_<style>.json` (every frame).
+- **Stills** (`devlog\shots\20261113-220716-B-lab-skf23-*`, 2): `fall-sizes` (light, existing, heavy per direction, one row each, game camera), `wall-getups` (from above, the plane drawn, the worst overshoot printed).
+
+### The next three evolutions of this track, ranked, each with its proving number
+
+1. **Pace reads on the body** (VISION law 4; carried over, and now the biggest gap: it shows in every second of play, not only on a hit). A sprint posture and stride distinct from `Stride` (lower, longer, the stick out at full reach in one hand), a carry posture with the blade at three quarters of its reach, cut takes for a sharp turn, and `Burst` joining the sprint stride. **Proving numbers:** sprint against skate told apart in one still from the game camera: trunk lean differing by 15 deg or more, and the blade's distance from the body matching the sim's puck distance (1.2 m carried, 1.6 m sprinting) within 5 cm; `Burst` to the sprint stride and the sprint stride to `Stride` joining at 0 cm and 0 deg.
+2. **The get-up answers the release in every direction.** Front and side get-ups with a low phase of their own (a crouch under half height held until six frames before the end, since the side-lying hips already sit at 35 to 50 %), snap and quick versions of the four wall get-ups, and light and heavy versions of the board falls. **Proving number:** frames from the hips passing half their standing height to the release: 6 or fewer in all four directions and at the wall, both styles (today 6 to 13 with `GetUp_Snap`, 13 to 17 with `GetUp_Quick`, 25 to 31 with the 36-frame get-ups; the wall get-ups 26).
+3. **No take pops.** The one-frame twists left over (`Burst` 19 to 20, `Board_Fall_Front` 6 to 7) and the fast frames of the hit takes outside their contact frames, by letting a limb's roll catch up over several frames where a take copies or joins another, and by arcs in the arms' paths. **Proving number:** the largest one-frame turn of any bone outside frames 0 to 3, over every take the engine plays: 60 deg or less (today up to 118 in `Burst`, 106 to 109 in `Board_Fall_Front`, 90 to 110 in the heavy falls).

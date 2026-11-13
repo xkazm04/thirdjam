@@ -1,0 +1,1 @@
+Lane SK22. A bot's hard stop in play at the game camera (seed 7920), un-frozen, full frames, every 3rd frame from the commit: the orange number 14, which enters at the right edge of the frame, low and turned across its travel, and skates on by frame 21. The watcher took the first bot stop within 12 m of the human; it is not framed on the bot.

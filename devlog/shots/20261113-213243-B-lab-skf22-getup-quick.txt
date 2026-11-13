@@ -1,0 +1,1 @@
+SKF22 the four 20-frame get-ups at the game camera, every 2nd frame, p2_cel (top four rows) then p3_clay: GetUp_Quick (from the back), GetUp_Quick_Front (face down), GetUp_Quick_Side_Left, GetUp_Quick_Side_Right. On one knee at frame 9, the hips over 90 % of standing height from frame 18, ready at 20.
