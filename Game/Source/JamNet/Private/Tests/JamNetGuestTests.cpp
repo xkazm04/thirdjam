@@ -198,6 +198,11 @@ namespace JamNetGuestTests
 	// A lane that adds a field to FJamSkaterState or FJamPuckState either hashes it (StateHash behind its default, or LockstepStateHash) or lists it here.
 	struct FReadout { const TCHAR* Name; const TCHAR* Why; };
 	const FReadout SkaterReadouts[] = {
+		{ TEXT("ChecksMissed"), TEXT("read-out counter behind the HUD's MISSED line (lane A113); read by no rule") },
+		{ TEXT("ChecksGraced"), TEXT("read-out counter behind the HUD's JUST GOT UP line (lane A113); read by no rule") },
+		{ TEXT("ChecksSoft"), TEXT("read-out counter behind the HUD's TOO SOFT line (lane A113); read by no rule") },
+		{ TEXT("ContactGraced"), TEXT("read-out counter behind the HUD's contact line (lane A113); read by no rule") },
+		{ TEXT("bContactGrace"), TEXT("read-out for the HUD: the grace turned this frame's hit into a bump (lane A113); read by no rule") },
 		{ TEXT("LastContactBoardFrame"), TEXT("read-out: gates the board event and the figure's take against the echo of the same hit (lane A101); read by no rule") },
 		{ TEXT("ContactBy"), TEXT("read-out for the figure and the HUD: who made the last contact (lane A101); set from hashed state, read by no rule") },
 		{ TEXT("bContactBoard"), TEXT("read-out for the figure: the last landed check drove this skater into the boards (lane A101); read by no rule") },
@@ -395,7 +400,7 @@ namespace JamNetGuestTests
 
 	// UJamSim's own state is not reflected (its scalars: frame, phase, score, the faceoff, the deke commit, the draw, the rule flags). Its size is pinned:
 	// a member added or removed changes it. Then: hash it (StateHash behind its default, or LockstepStateHash) or say why not here, and move the pin.
-	constexpr int32 SimBytesPinned = 1760;   // lane A110, UE 5.9 Win64 editor Development (measured by this test)
+	constexpr int32 SimBytesPinned = 1768;   // lane A110, UE 5.9 Win64 editor Development (measured by this test)
 }
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamNetHashCoverage, "Jam.Net.HashCoverage", JamNetGuestTests::Flags)

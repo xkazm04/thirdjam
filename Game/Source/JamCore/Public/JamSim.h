@@ -284,6 +284,18 @@ struct JAMCORE_API FJamSkaterState
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bContactBoard = false;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 ContactBoardHits = 0;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int64 LastContactBoardFrame = -1000;   // the frame of the last such hit: its echo on the boards is not a second board hit
+	// Lane A113 (track F1, R-0049 point 1): the release grace. GraceFrames: frames left in which a hit on this skater is a bump at most; set to
+	// game.contact.release_grace_frames on the frame a knockdown ends, counted down every frame after, 0 = none. RULE STATE: ResolveContact and the brain read
+	// it, StateHash() covers it while it is not 0 (so release_grace_frames 0 hashes as before). The rest are read-outs, never hashed, never read by a rule:
+	// bContactGrace: the hit ContactOutcome reports this frame would have landed and the grace made it a bump (ContactGraced counts them on the victim).
+	// The attacker's counters behind the HUD's contact line: ChecksSoft (its pressed body check resolved as a bump: TOO SOFT), ChecksGraced (it met a grace:
+	// JUST GOT UP), ChecksMissed (its window ran out on nobody: MISSED).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 GraceFrames = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bContactGrace = false;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 ContactGraced = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 ChecksSoft = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 ChecksGraced = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 ChecksMissed = 0;
 	// R-0029 point 3: the last frame this skater carried the puck (-1000 = never); a check within game.stick.foul_grace_frames of it is not a foul_no_puck.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int64 LastCarryFrame = -1000;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bTouchingPuck = false;

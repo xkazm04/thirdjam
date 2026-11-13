@@ -273,7 +273,45 @@ bool FJamFuzzSmoke::RunTest(const FString& Parameters)
 {
 	const FString Dir = FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::ProjectDir(), TEXT(".."), TEXT("tools"), TEXT("fuzz"), TEXT("smoke")));
 	if (!IFileManager::Get().DirectoryExists(*Dir)) { AddWarning(TEXT("tools/fuzz/smoke not found (source tree absent); skipped")); return true; }
-	return JamFuzz::RunCorpus(*this, Dir, FString(), 0, -1, 600, 0, 0, TEXT("fuzz smoke"));
+	const bool bSmoke = JamFuzz::RunCorpus(*this, Dir, FString(), 0, -1, 600, 0, 0, TEXT("fuzz smoke"));
+	// Lane A118 (track S3, evolution 2): the regression corpus of the seven fault classes (tools/fuzz/regress, from tools/fuzz/found by gen-regress.mjs). Every valid
+	// case also runs the long match, which must end; nothing may leave the boards or go non-finite; both validators and the loader agree on every file.
+	const FString Regress = FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::ProjectDir(), TEXT(".."), TEXT("tools"), TEXT("fuzz"), TEXT("regress")));
+	const bool bRegress = JamFuzz::RunCorpus(*this, Regress, FString(), 0, -1, 600, 1, 36000, TEXT("fuzz regress"));
+	return bSmoke && bRegress;
+}
+
+// Lane A118 (track S3, evolution 2): set_param cannot make the sim non-finite. A value outside the field's range (the found cartridge's puck_max_speed -20,
+// which the validators now refuse) is clamped by the sim for any caller that bypasses the validator; an unknown name changes nothing.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamFuzzSetParamClamp, "Jam.Core.FuzzSetParamClamp", JamFuzz::SmokeFlags)
+bool FJamFuzzSetParamClamp::RunTest(const FString& Parameters)
+{
+	TArray<FString> Errors;
+	UJamCartridge* Cart = UJamCartridge::LoadFromFile(FPaths::Combine(UJamCartridge::GetCartridgeDir(), TEXT("hockey.regular.cartridge.json")), Errors);
+	if (!TestNotNull(TEXT("hockey.regular loads"), Cart)) return false;
+	double Lo = 0, Hi = 0;
+	TestTrue(TEXT("puck_max_speed has a range"), UJamCartridge::SetParamRange(TEXT("puck_max_speed"), Lo, Hi));
+	TestEqual(TEXT("puck_max_speed range 10..60"), FString::Printf(TEXT("%g..%g"), Lo, Hi), FString(TEXT("10..60")));
+	TestFalse(TEXT("warp_factor has no range"), UJamCartridge::SetParamRange(TEXT("warp_factor"), Lo, Hi));
+	UJamSim* Sim = NewObject<UJamSim>();
+	Sim->Init(Cart->Game, 1);
+	Sim->SetParam(FName(TEXT("puck_max_speed")), -20.0);
+	TestEqual(TEXT("puck_max_speed -20 is clamped to 10"), Sim->GetConfig().Puck.MaxSpeed, 10.0);
+	Sim->SetParam(FName(TEXT("ice_friction")), -19.928);
+	TestEqual(TEXT("ice_friction -19.9 is clamped to 0"), Sim->GetConfig().Rink.IceFriction, 0.0);
+	Sim->SetParam(FName(TEXT("skater_speed")), 0.0);
+	TestEqual(TEXT("skater_speed 0 is clamped to 3"), Sim->GetConfig().Skater.Speed, 3.0);
+	const double Speed = Sim->GetConfig().Skater.Speed;
+	TestFalse(TEXT("an unknown name is refused"), Sim->SetParam(FName(TEXT("warp_factor")), 5.0));
+	TestEqual(TEXT("... and changes nothing"), Sim->GetConfig().Skater.Speed, Speed);
+	TArray<FJamInput> In;
+	for (int32 f = 0; f < 3000; ++f)
+	{
+		Sim->Step(In);
+		const FJamPuckState& P = Sim->GetPuck();
+		if (!FMath::IsFinite(P.Pos.X) || !FMath::IsFinite(P.Pos.Y)) { AddError(FString::Printf(TEXT("puck not finite at frame %d"), f)); break; }
+	}
+	return true;
 }
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamFuzzCartridges, "Bar.Fuzz.Cartridges", JamFuzz::LongFlags)

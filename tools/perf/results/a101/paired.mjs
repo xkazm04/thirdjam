@@ -22,7 +22,7 @@ mkdirSync(join(here, 'raw'), { recursive: true });
 function run(cart, cls, lvl) {
   return new Promise((res) => {
     const args = [uproject, '-run=JamTournament', '-sim=jam', `-cartridge=${cart}`, `-difficulty=${lvl}`, `-player=${cls}`, `-seeds=1-${n}`, '-maxframes=36000',
-      '-nullrhi', '-unattended', '-nopause', '-nosplash', '-stdout', '-FullStdOutLogOutput'];
+      '-nullrhi', '-Multiprocess', '-unattended', '-nopause', '-nosplash', '-stdout', '-FullStdOutLogOutput'];
     const p = spawn(exe, args, { windowsHide: true });
     let buf = '';
     p.stdout.on('data', (d) => { buf += d; });

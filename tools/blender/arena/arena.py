@@ -1,7 +1,14 @@
-"""tools/blender/arena/arena.py: the arena dressing in the clay voice (Third Jam, team Hokej, track F3, lane A103), Blender 4.2.
+"""tools/blender/arena/arena.py: the arena dressing in the clay voice (Third Jam, team Hokej, track F3, lanes A103 and A119), Blender 4.2.
 
 Run headless from the repository root:
-  blender -b -P tools/blender/arena/arena.py -- --length 120 --width 60 --out tools/blender/arena/out [--render] [--img docs/experiments/img/arena]
+  blender -b -P tools/blender/arena/arena.py -- --length 120 --width 60 --out tools/blender/arena/out [--render | --render2] [--img docs/experiments/img/arena]
+
+Evolution 2 (lane A119) adds, further down (GOAL_VARIANTS, goal(), scorer_table(), renders2()):
+  SM_Arena_Goal_W<w>H<h>     a goal frame built for an opening w x h (game.rink.goal_width_m x goal_height_m, centimetres in the name): the posts' inner
+                             faces at +-w/2 and the crossbar's underside at h are the sim's goal volume; slot frame. One per entry of GOAL_VARIANTS.
+  SM_Arena_GoalNet_W<w>H<h>  its net: real cords from bar to bar, slot net; a mesh of its own so Unreal can leave the cords out of the outline stencil.
+  SM_Arena_ScorerTable       the scorer's table between the two penalty boxes; slots board, kick, bench, dark, frame.
+A goal's frame: origin on the goal line in the middle of the mouth, +x along the line, "out" = into the net. --render2 writes evolution 2's stills.
 
 Builds two static meshes, each under 3,000 triangles, each with UVs (world scale, 1 UV unit = 2 m) and five material SLOTS and no material of its own
 (the slots are names; Unreal binds device B's instances to them by reference, see tools/blender/arena/import_arena.py and RinkActor.cpp):
@@ -39,6 +46,8 @@ PREVIEW = {           # render-only colours (nothing of this reaches Unreal: mat
     "bench": (0.50, 0.33, 0.20, 1.0),
     "team": (0.07, 0.22, 0.80, 1.0),
     "dark": (0.06, 0.06, 0.07, 1.0),
+    "frame": (0.70, 0.04, 0.03, 1.0),
+    "net": (0.93, 0.93, 0.90, 1.0),
 }
 
 # ---------------------------------------------------------------- parameters (metres)
@@ -67,7 +76,7 @@ P = dict(
 
 def parse_args():
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
-    o = {"length": 120.0, "width": 60.0, "out": "tools/blender/arena/out", "render": False, "img": ""}
+    o = {"length": 120.0, "width": 60.0, "out": "tools/blender/arena/out", "render": False, "render2": False, "img": ""}
     i = 0
     while i < len(argv):
         a = argv[i]
@@ -77,6 +86,8 @@ def parse_args():
             o[a[2:]] = argv[i + 1]; i += 1
         elif a == "--render":
             o["render"] = True
+        elif a == "--render2":     # evolution 2's stills (the goal, the scorer's table); use it without --render
+            o["render2"] = True
         i += 1
     return o
 
@@ -106,9 +117,10 @@ def section(w, h, r, segs):
 class Piece:
     """One static mesh: bars lofted into a single bmesh, a material index per face, UVs per loop."""
 
-    def __init__(self, name, seed):
+    def __init__(self, name, seed, slots=None):
         self.name = name
         self.seed = float(seed)
+        self.slots = list(slots or SLOTS)
         self.bm = bmesh.new()
         self.uv = self.bm.loops.layers.uv.new("UVMap")
         self.parts = {}
@@ -155,7 +167,7 @@ class Piece:
                     v = xform @ v
                 row.append(self.bm.verts.new(self._blender(v)))
             ring_verts.append(row)
-        mi = SLOTS.index(slot)
+        mi = self.slots.index(slot)
         faces = 0
         for i in range(len(ts) - 1):
             for j in range(n):
@@ -190,6 +202,40 @@ class Piece:
                     else:
                         loop[self.uv].uv = (uu + (pts[key][0] * sc + w * 0.5) / UV_M, (pts[key][1] * sc + h * 0.5) / UV_M)
                 faces += 1
+        self.parts[part] = self.parts.get(part, 0) + faces
+        return faces
+
+    def cord(self, part, slot, p0, p1, thick, mid=1, sag=(0.0, 0.0, 0.0)):
+        """A net cord (lane A119): a square tube from p0 to p1 (piece space, metres) with `mid` inner rings, no caps (its ends are inside the bars).
+        The inner rings hang by `sag` (a parabola) and wander a little (Perlin noise of the position): clay string, not wire."""
+        a, b = Vector(p0), Vector(p1)
+        d = (b - a)
+        length = d.length
+        d = d / length
+        up = Vector((0, 0, 1)) if abs(d.z) < 0.9 else Vector((1, 0, 0))
+        s1 = d.cross(up).normalized()
+        s2 = d.cross(s1).normalized()
+        k = len(self.parts) + 1
+        mi = self.slots.index(slot)
+        rings = []
+        for i in range(mid + 2):
+            t = i / (mid + 1)
+            c = a.lerp(b, t)
+            if 0 < i < mid + 1:
+                c = c + Vector(sag) * (4.0 * t * (1.0 - t)) + self._wob(c * 2.3, 0.008, k)
+            rings.append([self.bm.verts.new(self._blender(c + (s1 * ca + s2 * cb) * (thick * 0.5))) for ca, cb in ((1, 0), (0, 1), (-1, 0), (0, -1))])
+        faces = 0
+        for i in range(mid + 1):
+            for j in range(4):
+                j2 = (j + 1) % 4
+                f = self.bm.faces.new((rings[i][j], rings[i + 1][j], rings[i + 1][j2], rings[i][j2]))
+                f.material_index = mi
+                f.smooth = True
+                u0, u1 = length * i / (mid + 1) / UV_M, length * (i + 1) / (mid + 1) / UV_M
+                v0, v1 = j * thick / UV_M, (j + 1) * thick / UV_M
+                for loop, uvv in zip(f.loops, ((u0, v0), (u1, v0), (u1, v1), (u0, v1))):
+                    loop[self.uv].uv = uvv
+                faces += 2
         self.parts[part] = self.parts.get(part, 0) + faces
         return faces
 
@@ -237,12 +283,12 @@ class Piece:
         me = bpy.data.meshes.new(self.name)
         self.bm.to_mesh(me)
         tris = sum(len(f.verts) - 2 for f in self.bm.faces)
-        by_slot = {s: 0 for s in SLOTS}
+        by_slot = {s: 0 for s in self.slots}
         for f in self.bm.faces:
-            by_slot[SLOTS[f.material_index]] += len(f.verts) - 2
+            by_slot[self.slots[f.material_index]] += len(f.verts) - 2
         uvs = [l[self.uv].uv.copy() for f in self.bm.faces for l in f.loops]
         self.bm.free()
-        for s in SLOTS:
+        for s in self.slots:
             m = bpy.data.materials.get(s) or bpy.data.materials.new(s)
             m.use_nodes = True
             b = m.node_tree.nodes["Principled BSDF"]
@@ -352,6 +398,236 @@ def penalty_box():
     pc.sockets["Seat"] = tuple(P["seat_socket"])
     pc.thumbs_done = pc.thumbs()
     return pc, length
+
+
+# ---------------------------------------------------------------- evolution 2 (lane A119): the goal, the scorer's table
+
+G = dict(
+    depth=1.5,              # UJamSim::NetDepth
+    post=0.16,              # the front posts and the crossbar: chunky
+    low=0.11,               # bottom bars, back posts, back bar, braces
+    back_h_factor=0.6, back_h_max=0.9,   # the back frame's height: RinkActor's code frame keeps 0.9 under a 1.5 m bar
+    cord=0.03, cell=0.25,   # the net: real cords, about 25 cm cells (12 % of a cell covered each way: nothing is hidden)
+    wobble=0.005,           # half the benches' unevenness: the inner opening is the sim's goal volume within 2 cm
+    press_r=0.13, press_depth=0.045, press_every=0.45,
+    tri_target=2900,
+)
+GOAL_VARIANTS = [(4.0, 0.61), (6.0, 0.61), (4.0, 1.22)]   # game.rink.goal_width_m x goal_height_m: the default, hockey.mode.pond, hockey.mode.sniper
+GOAL_SLOTS = ["frame"]
+NET_SLOTS = ["net"]       # the net is its own mesh: RinkActor gives the frame the outline stencil and the cords none (inked cords read as a black comb at 11 m)
+TABLE_SLOTS = ["board", "kick", "bench", "dark", "frame"]
+TABLE = dict(width=1.36, sign_z=2.20, sign_h=0.56, sign_w=1.30)
+
+
+def goal_name(w, h):
+    return "SM_Arena_Goal_W%03dH%03d" % (round(w * 100), round(h * 100))
+
+
+def net_name(w, h):
+    return "SM_Arena_GoalNet_W%03dH%03d" % (round(w * 100), round(h * 100))
+
+
+def rot_x(a):
+    """Piece space (x, out, z): turn about x so that +out leans towards +z by a."""
+    return Matrix(((1, 0, 0, 0), (0, math.cos(a), -math.sin(a), 0), (0, math.sin(a), math.cos(a), 0), (0, 0, 0, 1)))
+
+
+def goal_build(w, h, cell):
+    """One goal for an opening w x h (metres): origin on the goal line at the middle of the mouth, +x along the goal line, out = into the net.
+    The posts' inner faces stand at x = +-w/2 and the crossbar's underside at z = h: the sim's goal volume (UJamSim::InGoal)."""
+    pc = Piece(goal_name(w, h), seed=73.0 + w * 3.1 + h * 5.3, slots=GOAL_SLOTS)
+    PT, LT, D, WB = G["post"], G["low"], G["depth"], G["wobble"]
+    hw = w * 0.5
+    xp = hw + PT * 0.5                       # post centres
+    top = h + PT * 0.5                       # crossbar centre
+    bh = min(G["back_h_max"], h * G["back_h_factor"])
+    for sx in (-1, 1):
+        pc.bar("post", "frame", "z", h + PT, PT, PT, (sx * xp, 0.0, (h + PT) * 0.5), rings=5 if h < 1.0 else 9, r=0.055, segs=2, wobble=WB)
+    pc.bar("crossbar", "frame", "x", w + 2 * PT, PT, PT, (0.0, 0.0, top), rings=max(8, int(round(w / 0.2))), r=0.055, segs=2, wobble=WB)
+    for sx in (-1, 1):
+        pc.bar("bottom_bar", "frame", "o", D + LT, LT, LT, (sx * xp, D * 0.5, LT * 0.5), rings=2, r=0.035, wobble=WB)
+        pc.bar("back_post", "frame", "z", bh, LT, LT, (sx * xp, D, bh * 0.5), rings=1, r=0.035, wobble=WB)
+        # the brace from the crossbar's end down to the back post's top
+        dz = bh - top
+        ln = math.hypot(D, dz)
+        m = Matrix.Translation(Vector((sx * xp, D * 0.5, (top + bh) * 0.5))) @ rot_x(math.atan2(dz, D))
+        pc.bar("brace", "frame", "o", ln + 0.04, LT, LT, (0.0, 0.0, 0.0), rings=2, r=0.035, wobble=WB, xform=m)
+    pc.bar("bottom_bar", "frame", "x", w + 2 * PT, LT, LT, (0.0, D, LT * 0.5), rings=4, r=0.035, wobble=WB)
+    pc.bar("back_bar", "frame", "x", w + 2 * PT, LT, LT, (0.0, D, bh), rings=4, r=0.035, wobble=WB)
+    # thumbs: along the crossbar's top, and on the front of each post (the presses move clay up, down and along the goal's depth: never across the mouth)
+    presses = 0
+    n = max(2, int(round(w / G["press_every"])))
+    for i in range(n):
+        q = Vector((i * 1.93 + pc.seed, 2.5, h))
+        t = -hw + w * (i + 0.5 + noise.noise(q) * 0.3) / n
+        depth = G["press_depth"] * (0.8 + 0.4 * abs(noise.noise(q + Vector((3.3, 0, 0)))))
+        pc.press((t, noise.noise(q + Vector((0, 0, 4.4))) * 0.03, h + PT), G["press_r"], depth, (0.0, noise.noise(q + Vector((0, 8.8, 0))) * 0.5, -1.0))
+        presses += 1
+    for sx in (-1, 1):
+        for j in range(1 if h < 1.0 else 2):
+            z = h * (j + 0.55) / (1 if h < 1.0 else 2)
+            pc.press((sx * xp, -PT * 0.5, z), G["press_r"], G["press_depth"], (0.0, 1.0, 0.15 * sx))
+            presses += 1
+    pc.thumbs_done = presses
+    # the measured opening, before the net (frame verts only): Blender coordinates are (x, -out, z) centimetres
+    front = [v.co for v in pc.bm.verts if -PT * 100 < v.co.y < PT * 100]
+    inner = [abs(c.x) for c in front if 3.0 < c.z < (h - 0.03) * 100 and abs(c.x) < (hw + PT) * 100]
+    under = [c.z for c in front if abs(c.x) < (hw - 0.05) * 100 and c.z > (h - 0.1) * 100]
+    pc.opening = {"half_width_m": round(min(inner) / 100.0, 4), "height_m": round(min(under) / 100.0, 4)}
+    # ---- the net: cords from bar to bar, in a mesh of their own with the frame's origin
+    frame = pc
+    pc = Piece(net_name(w, h), seed=frame.seed + 1.0, slots=NET_SLOTS)
+    pc.thumbs_done = 0
+    CT = G["cord"]
+    nx = max(4, int(round(w / cell)))
+    xs = [-hw + w * i / nx for i in range(1, nx)]
+    f0 = Vector((0.0, PT * 0.2, top))            # where a top cord leaves the crossbar
+    b0 = Vector((0.0, D, bh))                    # where it meets the back bar
+    slope = (b0 - f0).length
+    nt = max(3, int(round(slope / cell)))
+    for x in xs:                                 # top, lengthwise; then down the back
+        pc.cord("net_top", "net", (x, f0.y, f0.z), (x, b0.y, b0.z), CT, mid=2, sag=(0, 0, -0.025))
+        pc.cord("net_back", "net", (x, D, bh), (x, D, LT * 0.5), CT, mid=1 if bh > 0.5 else 0, sag=(0, 0.02, 0))
+    for j in range(1, nt):                       # top, across
+        p = f0.lerp(b0, j / nt)
+        pc.cord("net_top", "net", (-xp, p.y, p.z), (xp, p.y, p.z), CT, mid=max(2, nx // 3), sag=(0, 0, -0.02))
+    nb = max(2, int(round(bh / cell)))
+    for j in range(1, nb):                       # back, across
+        pc.cord("net_back", "net", (-xp, D, bh * j / nb), (xp, D, bh * j / nb), CT, mid=max(2, nx // 3), sag=(0, 0.02, 0))
+    no = max(3, int(round(D / cell)))
+    for sx in (-1, 1):                           # the two sides
+        for k in range(1, no):
+            o = D * k / no
+            pc.cord("net_side", "net", (sx * xp, o, top + (bh - top) * k / no), (sx * xp, o, LT * 0.5), CT, mid=0)
+        z = cell
+        while z < top - 0.12:
+            o_end = D if z <= bh else D * (top - z) / (top - bh)
+            pc.cord("net_side", "net", (sx * xp, PT * 0.2, z), (sx * xp, o_end, z), CT, mid=1, sag=(0.015 * sx, 0, 0))
+            z += cell
+    return frame, pc
+
+
+def goal(w, h):
+    """The goal (frame and net together) under the triangle target: the net's cell grows a little on a wide goal. Returns the two pieces."""
+    cell = G["cell"]
+    while True:
+        frame, net = goal_build(w, h, cell)
+        tris = sum(len(f.verts) - 2 for f in frame.bm.faces) + sum(len(f.verts) - 2 for f in net.bm.faces)
+        if tris < G["tri_target"]:
+            frame.cell = round(cell, 3)
+            net.net_of = frame.name
+            return [(frame, w), (net, w)]
+        frame.bm.free()
+        net.bm.free()
+        cell *= 1.12
+
+
+def scorer_table():
+    """The scorer's table between the two penalty boxes (their inner ends stand 1.48 m apart): floor, back wall with an ochre rail, a desk with a horn,
+    papers and a mug, a stool, and over the boards a sign with a clock face and a red goal lamp. Same frame as the boxes: origin on the ice in the middle
+    of the rink-side edge, the piece reaches away from the rink."""
+    pc = Piece("SM_Arena_ScorerTable", seed=59.0, slots=TABLE_SLOTS)
+    W, D, WT, WH, FH = TABLE["width"], P["depth"], P["wall_t"], P["wall_h"], P["floor_h"]
+    back_o = D - WT * 0.5
+    pc.bar("floor", "bench", "x", W, D, FH, (0, D * 0.5, FH * 0.5), rings=2, r=0.03)
+    pc.bar("back_wall", "board", "x", W, WT, WH - FH + 0.02, (0, back_o, FH + (WH - FH) * 0.5 - 0.01), rings=2, r=0.04)
+    zr = WH + P["rail_h"] * 0.5 - 0.02
+    pc.bar("cap_rail", "kick", "x", W + 0.02, P["rail_w"], P["rail_h"], (0, back_o, zr), rings=8, r=0.05, wobble=P["wobble"] * 1.3)
+    pc.rails.append(("x", -W * 0.5 + 0.25, W * 0.5 - 0.25, back_o, zr + P["rail_h"] * 0.5))
+    # the desk at the board line: a thick ochre top on a board-coloured front and two dark legs
+    pc.bar("desk", "kick", "x", W - 0.10, 0.62, 0.10, (0, 0.37, 0.80), rings=4, r=0.04)
+    pc.bar("desk", "board", "x", W - 0.16, 0.09, 0.66, (0, 0.11, FH + 0.33), rings=2, r=0.035)
+    for sx in (-1, 1):
+        pc.bar("desk_legs", "dark", "z", 0.66, 0.11, 0.11, (sx * (W * 0.5 - 0.16), 0.60, FH + 0.33), rings=1, r=0.03)
+    # on the desk: the horn (a red body, a dark mouth towards the rink), a stack of papers, a mug
+    pc.bar("horn", "frame", "o", 0.30, 0.17, 0.17, (-0.36, 0.40, 0.945), rings=1, r=0.075, segs=2, wobble=0.004)
+    pc.bar("horn", "dark", "o", 0.06, 0.25, 0.25, (-0.36, 0.22, 0.945), rings=1, r=0.11, segs=2, wobble=0.004, pillow=0.0)
+    pc.bar("papers", "board", "x", 0.34, 0.25, 0.05, (0.20, 0.36, 0.875), rings=1, r=0.012, wobble=0.004)
+    pc.bar("mug", "dark", "z", 0.13, 0.10, 0.10, (0.50, 0.52, 0.915), rings=1, r=0.045, segs=2, wobble=0.003)
+    # the stool
+    pc.bar("stool", "dark", "z", 0.40, 0.13, 0.13, (0.05, 1.02, FH + 0.20), rings=1, r=0.035)
+    pc.bar("stool", "kick", "z", 0.10, 0.40, 0.40, (0.05, 1.02, FH + 0.45), rings=1, r=0.17, segs=3)
+    # over the boards: two posts, the sign (board-coloured rim, dark face, two ochre digits, a red colon), the goal lamp
+    sz, sh, sw = TABLE["sign_z"], TABLE["sign_h"], TABLE["sign_w"]
+    for sx in (-1, 1):
+        pc.bar("sign_posts", "dark", "z", sz - sh * 0.5 - WH + 0.10, 0.11, 0.11, (sx * 0.46, back_o, (sz - sh * 0.5 + WH) * 0.5), rings=1, r=0.03)
+    pc.bar("sign", "board", "x", sw, 0.16, sh, (0, back_o, sz), rings=6, r=0.07, segs=2, wobble=0.008)
+    pc.rails.append(("x", -sw * 0.5 + 0.3, sw * 0.5 - 0.3, back_o, sz + sh * 0.5))
+    pc.bar("sign_face", "dark", "x", sw - 0.22, 0.03, sh - 0.20, (0, back_o - 0.085, sz), rings=1, r=0.012, wobble=0.003, pillow=0.004)
+    for sx in (-1, 1):
+        pc.bar("sign_digits", "kick", "z", 0.24, 0.17, 0.04, (sx * 0.30, back_o - 0.105, sz), rings=1, r=0.015, wobble=0.003)
+        pc.bar("sign_digits", "frame", "x", 0.06, 0.04, 0.06, (0.0, back_o - 0.105, sz + sx * 0.07), rings=1, r=0.015, wobble=0.002)
+    pc.bar("lamp", "dark", "z", 0.07, 0.30, 0.30, (0, back_o, sz + sh * 0.5 + 0.02), rings=1, r=0.13, segs=2, wobble=0.004)
+    pc.bar("lamp", "frame", "z", 0.22, 0.23, 0.23, (0, back_o, sz + sh * 0.5 + 0.15), rings=1, r=0.105, segs=3, wobble=0.004, pillow=0.03)
+    pc.thumbs_done = pc.thumbs()
+    return pc, W
+
+
+def renders2(goals, table, box, opts, img, raw):
+    """Evolution 2's stills. Landed (img): the goal from the game camera at the far end, the own end seen through the net's top, the far end seen through
+    the net from behind, the scorer's table between the boxes. Raw (not landed): a close-up, the two other goal sizes, the table from the ice."""
+    for o in bpy.context.scene.objects:
+        if o.type == "MESH":
+            o.hide_render = True
+    cam, tgt = setup_render()
+    T = P["board_t"]
+    ORANGE, BLUE, BLACK = (0.75, 0.30, 0.10, 1), (0.07, 0.22, 0.80, 1), (0.02, 0.02, 0.02, 1)
+    LENS = 18.0 / math.tan(math.radians(35.0))     # the game camera: 70 degrees across (CameraFollow.h FovDeg)
+    preview_box("ground", (200, 200, 0.02), (0, 0, -0.05), (0.30, 0.22, 0.16, 1))
+    ice = preview_box("ice", (60, 60, 0.02), (0, -26.0, -0.011), (0.80, 0.86, 0.92, 1), 0.35)
+    # ---- the goal frame: the goal at the origin, the end boards 4 m behind the goal line (FJamRinkConfig::GoalLineX), the rink on the -out side
+    stage = [preview_box("endboards", (60, T, P["board_h"]), (0, 4.0 + T * 0.5, P["board_h"] * 0.5), PREVIEW["board"]),
+             preview_box("endkick", (60, 0.02, 0.25), (0, 4.0 - 0.01, 0.125), PREVIEW["kick"]),
+             preview_box("goalline", (60, 0.08, 0.004), (0, 0, 0.003), (0.75, 0.05, 0.05, 1))]
+
+    def puck(x, o, z=0.0):
+        bpy.ops.mesh.primitive_cylinder_add(vertices=20, radius=cm(0.12), depth=cm(0.06), location=(cm(x), -cm(o), cm(z + 0.03)))
+        p = bpy.context.active_object
+        m = bpy.data.materials.new("puck")
+        m.use_nodes = True
+        m.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = BLACK
+        p.data.materials.append(m)
+        return p
+
+    props = figure(0.5, -0.7, 0.0, ORANGE) + figure(-2.6, -5.0, 0.0, BLUE)                 # a goalie in the crease, an attacker
+    props += [puck(-1.2, -1.6), puck(-0.9, 0.8), puck(1.5, 1.25), puck(0.2, 0.35)]        # one in front, three inside the net (mid, back corner, behind the goalie)
+    def show(pair, on):
+        for o in pair:
+            o.hide_render = not on
+
+    main = goals[0]
+    for g in goals:
+        show(g, False)
+    show(main, True)
+    j = lambda n: os.path.join(img, n)
+    r = lambda n: os.path.join(raw, n)
+    shoot(cam, tgt, (-1.9, -11.0, 3.5), (-0.6, -1.5, 0.6), LENS, j("arena-goal-game-camera.jpg"))            # 6 m behind a skater 5 m out, 3.5 m up
+    shoot(cam, tgt, (0.7, 3.1, 3.5), (0.2, -1.6, 0.3), LENS, j("arena-goal-own-end-through-net.jpg"))        # defending: the camera behind the own net
+    shoot(cam, tgt, (1.3, 3.7, 1.75), (0.0, -0.9, 0.25), 30, j("arena-goal-from-behind.jpg"))                # from the end boards through the net
+    shoot(cam, tgt, (-3.3, -3.0, 1.5), (-0.4, 0.5, 0.3), 35, r("goal-closeup.jpg"))
+    for g in goals[1:]:
+        show(main, False)
+        show(g, True)
+        shoot(cam, tgt, (-1.9, -11.0, 3.5), (-0.6, -1.5, 0.6), LENS, r(g[0].name + "-game-camera.jpg"))
+        shoot(cam, tgt, (-4.0, -3.4, 1.8), (-0.4, 0.5, 0.4), 32, r(g[0].name + "-closeup.jpg"))
+        show(g, False)
+    for o in stage + props:
+        o.hide_render = True
+    # ---- the table's frame: the table at the origin, the two boxes at x = -3 and +3, the boards and the rink on the -out side
+    G0 = P["gap"]
+    ice.location = (0, cm(G0 + T + 30.0), cm(-0.011))
+    preview_box("boards", (30, T, P["board_h"]), (0, -G0 - T * 0.5, P["board_h"] * 0.5), PREVIEW["board"])
+    preview_box("kickplate", (30, 0.02, 0.25), (0, -G0 - T - 0.01, 0.125), PREVIEW["kick"])
+    table.hide_render = False
+    for sgn in (-1, 1):
+        o = box.copy(); bpy.context.scene.collection.objects.link(o)
+        o.location = (cm(sgn * P["box_x"]), 0, 0)
+        o.hide_render = False
+    figure(-0.25, 1.0, P["floor_h"], (0.55, 0.55, 0.50, 1))          # the scorer
+    figure(2.4, -1.5, 0.0, BLUE)
+    shoot(cam, tgt, (2.6, -5.2, 4.6), (0.0, 0.7, 1.0), 35, j("arena-scorer-table.jpg"))
+    shoot(cam, tgt, (-6.0, -12.0, 3.5), (0.0, 0.6, 1.2), LENS, r("table-from-ice-game-camera.jpg"))
+    shoot(cam, tgt, (0.3, 4.2, 3.2), (0.0, 0.5, 0.9), 35, r("table-behind.jpg"))
 
 
 # ---------------------------------------------------------------- export, stats, renders
@@ -527,32 +803,62 @@ def main():
     L, W = opts["length"], opts["width"]
     stats = {"rink": {"length_m": L, "width_m": W}, "params": P, "pieces": {}}
     built = []
-    for make in (lambda: team_bench(L), penalty_box):
-        pc, length = make()
+    made = [team_bench(L), penalty_box(), scorer_table()]
+    for (w, h) in GOAL_VARIANTS:
+        made += goal(w, h)
+    for pc, length in made:
+        opening, cell, net_of = getattr(pc, "opening", None), getattr(pc, "cell", None), getattr(pc, "net_of", None)
+        slots = list(pc.slots)
         ob, empties, st = pc.finish()
         st["length_m"] = round(length, 3)
         st["thumb_presses"] = pc.thumbs_done
+        st["slots"] = slots
+        if opening:      # a goal: the opening it was built for, the opening measured on its frame, and the net's cell
+            w, h = [v for v in GOAL_VARIANTS if goal_name(*v) == ob.name][0]
+            st["goal"] = {"width_m": w, "height_m": h, "depth_m": G["depth"], "measured_half_width_m": opening["half_width_m"], "measured_height_m": opening["height_m"],
+                          "opening_error_cm": round(max(abs(opening["half_width_m"] - w * 0.5), abs(opening["height_m"] - h)) * 100.0, 2), "net_cell_m": cell, "cord_m": G["cord"]}
+            st["opening_within_2cm"] = st["goal"]["opening_error_cm"] <= 2.0
+        if net_of:       # a goal's net: the frame it hangs in; the pair's triangles are counted on the frame's row once both are built
+            st["net_of"] = net_of
         st["fbx_mb"] = export_fbx([ob] + empties, os.path.join(out, ob.name + ".fbx"))
         stats["pieces"][ob.name] = st
         built.append(ob)
+    for name, st in stats["pieces"].items():
+        if "net_of" in st:
+            fr = stats["pieces"][st["net_of"]]
+            fr["goal"]["net_mesh"] = name
+            fr["goal"]["triangles_with_net"] = fr["triangles"] + st["triangles"]
+            fr["under_budget"] = fr["goal"]["triangles_with_net"] < TRI_BUDGET
     y0 = W * 0.5 + P["board_t"] + P["gap"]
     stats["placement_m"] = {
         "note": "Unreal metres, rink centre at the origin, ice top at z 0; RinkActor computes the same from game.rink",
         "SM_Arena_TeamBench": [{"x": -P["bench_x_factor"] * L, "y": y0, "yaw": 0, "team": 0}, {"x": P["bench_x_factor"] * L, "y": y0, "yaw": 0, "team": 1}],
         "SM_Arena_PenaltyBox": [{"x": -P["box_x"], "y": -y0, "yaw": 180, "team": 0}, {"x": P["box_x"], "y": -y0, "yaw": 180, "team": 1}],
         "bench_length_m": P["bench_len_factor"] * L,
+        "SM_Arena_ScorerTable": [{"x": 0.0, "y": -y0, "yaw": 180}],
+        "goals": {"note": "x = +-GoalLineX (L/2 - 4), y = 0; yaw -90 on the +x end, +90 on the -x end; the variant nearest the cartridge's goal, scaled W/Wv along the line and H/Hv up",
+                  "goal_line_x": L * 0.5 - 4.0, "variants": [goal_name(w, h) for (w, h) in GOAL_VARIANTS], "nets": [net_name(w, h) for (w, h) in GOAL_VARIANTS]},
     }
-    ok = all(p["under_budget"] and p["uv_loops"] > 0 for p in stats["pieces"].values())
+    ok = all(p["under_budget"] and p["uv_loops"] > 0 and p.get("opening_within_2cm", True) for p in stats["pieces"].values())
     if opts["render"]:
         img = os.path.abspath(opts["img"] or os.path.join(out, "render"))
         os.makedirs(img, exist_ok=True)
         t = time.time()
         renders(built[0], built[1], stats["pieces"]["SM_Arena_TeamBench"]["length_m"], opts, img)
         stats["render_s"] = round(time.time() - t, 1)
+    if opts["render2"]:
+        img = os.path.abspath(opts["img"] or os.path.join(out, "render"))
+        raw = os.path.join(out, "render2")
+        os.makedirs(img, exist_ok=True)
+        os.makedirs(raw, exist_ok=True)
+        t = time.time()
+        by_name = {o.name: o for o in built}
+        renders2([(by_name[goal_name(w, h)], by_name[net_name(w, h)]) for (w, h) in GOAL_VARIANTS], built[2], built[1], opts, img, raw)
+        stats["render2_s"] = round(time.time() - t, 1)
     stats["total_s"] = round(time.time() - T0, 1)
     with open(os.path.join(out, "arena.json"), "w") as fh:
         json.dump(stats, fh, indent=2)
-    print(("A103 arena.py PASS " if ok else "A103 arena.py FAIL ") + json.dumps({k: {"triangles": v["triangles"], "dims": v["dimensions_m"]} for k, v in stats["pieces"].items()}))
+    print(("A103 arena.py PASS " if ok else "A103 arena.py FAIL ") + json.dumps({k: {"triangles": v["triangles"], "dims": v["dimensions_m"], **({"goal": v["goal"]} if "goal" in v else {})} for k, v in stats["pieces"].items()}))
     if not ok:
         sys.exit(1)
 

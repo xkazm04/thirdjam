@@ -931,7 +931,7 @@ namespace JamAI
 			const FJamAISkater& T = W.Skaters[C];
 			const FVec2 Rel = T.Pos - S.Pos;
 			const double Dist = Rel.Length();
-			if (Dist > 1e-6 && Dist <= 2.0 * W.SkaterRadius + CheckArmGapM && !T.bDown)
+			if (Dist > 1e-6 && Dist <= 2.0 * W.SkaterRadius + CheckArmGapM && !T.bDown && T.GraceFrames <= 0)   // lane A113 (R-0049 point 1): no check starts on a skater inside its release grace
 			{
 				const FVec2 N = Rel * (1.0 / Dist);   // the push: checker towards the carrier
 				const double Closing = (S.Vel - T.Vel).Dot(N);

@@ -12,6 +12,16 @@
 #include "JamPawns.generated.h"
 
 class UStaticMeshComponent;
+
+// Lane A113 (track F1): the one hit of a sim frame the hit-stop holds on (AJamSkater::HitStopPick). Victim -1 = nothing that involves the human.
+struct FJamHitStopPick
+{
+	int32 Victim = -1, Checker = -1;
+	int32 Outcome = 0;      // UJamSim::ContactNone (a knockdown the momentum model did not resolve), ContactStumble (also the human's own bounce) or ContactDown
+	float Ratio = 0.f;      // the victim's ContactRatio (the bounce: contact.bump_ratio)
+	float Strength = 0.f;   // the hit's event strength: the knockdown's, or the check event's for a stumble
+	FName Kind;             // the check event's kind for a knockdown (front, behind, side_l, side_r), "stumble" or "bounce"
+};
 class UMaterialInstanceDynamic;
 class UNiagaraComponent;
 
@@ -102,6 +112,11 @@ public:
 	// 2 from the middle of the stumble band (bump_ratio..down_ratio); a knockdown 2 at down_ratio to 5 at down_full_ratio and above. Base = jam.hitstop scales it
 	// (x Base / 3, a landed hit never under 1, never over 6; 0 = off). A knockdown the model did not resolve (Outcome 0: contact.momentum false) holds Base.
 	static int32 HitStopFramesFor(int32 Outcome, float Ratio, const FJamContactConfig& Contact, int32 Base);
+	// Lane A113 (track F1): which hit of this sim frame the hold is for, read from the frame's events and the skaters' read-outs. In order: a knockdown by a
+	// check the human took, one it landed, a stumble it took, one it landed, its own bounce. A hit between two bots never hides one that involves the human
+	// (the route used to read the frame's last knockdown first and hold nothing when that one was bot on bot). Both ends come from the victim's ContactBy
+	// where the momentum model resolved the hit; the frame's last check event names the checker otherwise (contact.momentum false), as before.
+	static FJamHitStopPick HitStopPick(const TArray<FJamSkaterState>& Skaters, const TArray<FJamSimEvent>& Events, int32 Human, double BumpRatio);
 
 private:
 	void SetVisualTimeDilation(float Dilation);
@@ -124,6 +139,7 @@ private:
 	bool bHadPuck = false;
 	bool bWasAtFaceoff = false;
 	bool bWasPinned = false;   // lane A45 (C-0001 v4): SetBoardPin level, sent on the change
+	int32 SeenSoft = 0, SeenMissed = 0, SeenGraced = 0;   // lane A113: the sim's press counters at the last frame applied (the JAMVIS press line)
 	// Lane A45: the sim frame for the JAMVIS log lines (from the event bus; -1 without one). Log only, never feeds the pose.
 	int64 SimFrameForLog() const;
 	float LastCharge = 0.f;

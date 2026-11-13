@@ -59,7 +59,7 @@ async function runShard(k, first, last) {
     rmSync(join(dir, 'progress.txt'), { force: true });
     const env = { ...process.env, JAM_FUZZ_DIR: corpus, JAM_FUZZ_OUT: dir, JAM_FUZZ_FIRST: String(next), JAM_FUZZ_LAST: String(last), JAM_FUZZ_FRAMES: frames, JAM_FUZZ_LONG_EVERY: longEvery, JAM_FUZZ_LONG_FRAMES: longFrames };
     const abslog = join(dir, `ue-${next}.log`);
-    const args = [project, `-ExecCmds=Automation RunTests ${test}; Quit`, '-nullrhi', '-unattended', '-nopause', '-nosplash', '-log', `-ABSLOG=${abslog}`];
+    const args = [project, `-ExecCmds=Automation RunTests ${test}; Quit`, '-nullrhi', '-Multiprocess', '-unattended', '-nopause', '-nosplash', '-log', `-ABSLOG=${abslog}`];
     const child = spawn(exe, args, { env, stdio: 'ignore', windowsHide: true });
     let killedForHang = false;
     const startedAt = Date.now();

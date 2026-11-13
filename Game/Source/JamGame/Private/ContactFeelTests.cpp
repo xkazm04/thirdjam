@@ -52,6 +52,15 @@ bool FJamHudContactLine::RunTest(const FString& Parameters)
 	TestEqual(TEXT("the human's own bounce"), UJamHudWidget::ContactLineFor(false, true), FString(TEXT("BOUNCED OFF")));
 	TestEqual(TEXT("both in one frame: the bounce (it is the one that cost the player its feet)"), UJamHudWidget::ContactLineFor(true, true), FString(TEXT("BOUNCED OFF")));
 	TestTrue(TEXT("neither: no line"), UJamHudWidget::ContactLineFor(false, false).IsEmpty());
+	// Lane A113: the soft hit explains itself.
+	TestEqual(TEXT("the human's own bump"), UJamHudWidget::ContactLineFor(false, false, true, false, false), FString(TEXT("TOO SOFT")));
+	TestEqual(TEXT("a whiff"), UJamHudWidget::ContactLineFor(false, false, false, true, false), FString(TEXT("MISSED")));
+	TestEqual(TEXT("a hit on a skater inside its release grace"), UJamHudWidget::ContactLineFor(false, false, false, false, true), FString(TEXT("JUST GOT UP")));
+	TestEqual(TEXT("a soft hit that bounced the human: the bounce"), UJamHudWidget::ContactLineFor(false, true, true, false, false), FString(TEXT("BOUNCED OFF")));
+	TestEqual(TEXT("the grace before the soft hit before the miss"), UJamHudWidget::ContactLineFor(false, false, true, true, true), FString(TEXT("JUST GOT UP")));
+	TestEqual(TEXT("the soft hit before the miss"), UJamHudWidget::ContactLineFor(false, false, true, true, false), FString(TEXT("TOO SOFT")));
+	TestEqual(TEXT("a refused press before the soft hit and the miss"), UJamHudWidget::ContactLineFor(true, false, true, true, false), FString(TEXT("NOT WITH THE PUCK")));
+	TestEqual(TEXT("a charge into a skater that just got up bounced the human: the grace is the reason"), UJamHudWidget::ContactLineFor(false, true, false, false, true), FString(TEXT("JUST GOT UP")));
 	TestTrue(TEXT("the line is up for a second and fades over its last quarter"), UJamHudWidget::ContactLineFrames == 60 && UJamHudWidget::ContactFadeFrames == 15);
 	return true;
 }

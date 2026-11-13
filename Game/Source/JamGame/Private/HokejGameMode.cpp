@@ -1419,40 +1419,15 @@ void AHokejGameMode::HitStopRoute()
 {
 	const int32 Base = AJamSkater::HitStopFrames();
 	if (Base <= 0 || !Sim || Sim->GetFrame() <= HitStopEndFrame) return;
-	int32 Victim = -1, Checker = -1;
-	float Strength = 0.f;
-	FName Kind;
-	for (const FJamSimEvent& E : Sim->GetFrameEvents())
-	{
-		if (E.Name == JamEvents::Knockdown && E.Kind == FName(TEXT("check"))) { Victim = E.Who; Strength = E.Strength; }
-		if (E.Name == JamEvents::Check) { Checker = E.Who; Kind = E.Kind; }
-	}
 	const int32 Human = Sim->GetHumanIndex();
-	// Lane A101 (track F1): the hold reads the hit (AJamSkater::HitStopFramesFor). A knockdown: 2 to 5 frames by the victim's ContactRatio. A stumble emits no
-	// event that names its victim, so the read-outs say it: a stumble the human takes or lands holds 1 or 2 frames; the human's own bounce (bRecoilThisFrame) 1.
-	int32 Outcome = UJamSim::ContactNone;
-	float Ratio = 0.f;
-	const TArray<FJamSkaterState>& Sk = Sim->GetSkaters();
-	if (Victim >= 0)
-	{
-		if (Sk.IsValidIndex(Victim) && Sk[Victim].ContactOutcome == UJamSim::ContactDown) { Outcome = UJamSim::ContactDown; Ratio = Sk[Victim].ContactRatio; }
-	}
-	else
-	{
-		for (const FJamSkaterState& S : Sk)
-		{
-			if (S.ContactOutcome == UJamSim::ContactStumble && (S.Index == Human || S.ContactBy == Human)) { Victim = S.Index; Checker = S.ContactBy; Outcome = UJamSim::ContactStumble; Ratio = S.ContactRatio; Kind = FName(TEXT("stumble")); break; }
-		}
-		if (Victim < 0 && Sk.IsValidIndex(Human) && Sk[Human].bRecoilThisFrame)
-		{
-			Victim = Human;   // the one who stumbles
-			for (const FJamSkaterState& S : Sk) if (S.ContactBy == Human) Checker = S.Index;   // the skater it bounced off
-			Outcome = UJamSim::ContactStumble;
-			Ratio = static_cast<float>(Sim->GetConfig().Contact.BumpRatio);
-			Kind = FName(TEXT("bounce"));
-		}
-	}
-	if (Victim < 0 || (Victim != Human && Checker != Human)) return;
+	// Lane A101 (track F1): the hold reads the hit (AJamSkater::HitStopFramesFor). A knockdown: 2 to 5 frames by the victim's ContactRatio; a stumble the human
+	// takes or lands 1 or 2 frames; the human's own bounce 1. Lane A113: AJamSkater::HitStopPick chooses the hit (one that involves the human is never hidden
+	// by a knockdown between two bots in the same frame; a stumble's strength is its check event's).
+	const FJamHitStopPick Pick = AJamSkater::HitStopPick(Sim->GetSkaters(), Sim->GetFrameEvents(), Human, Sim->GetConfig().Contact.BumpRatio);
+	if (Pick.Victim < 0) return;
+	const int32 Victim = Pick.Victim, Checker = Pick.Checker, Outcome = Pick.Outcome;
+	const float Strength = Pick.Strength, Ratio = Pick.Ratio;
+	const FName Kind = Pick.Kind;
 	const int32 Hold = AJamSkater::HitStopFramesFor(Outcome, Ratio, Sim->GetConfig().Contact, Base);
 	if (Hold <= 0) return;
 	for (AJamSkater* A : Skaters) if (A && (A->GetSimIndex() == Victim || A->GetSimIndex() == Checker)) A->BeginHitStop(Hold);

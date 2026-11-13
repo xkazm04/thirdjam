@@ -16,7 +16,7 @@
 import { readFileSync, writeFileSync, mkdirSync, readdirSync } from 'node:fs';
 import { dirname, resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { validateCartridge } from '../../schema/validate.mjs';
+import { validateCartridge, validateCartridgeText, SET_PARAM_FIELD, setParamRange } from '../../schema/validate.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(HERE, '..', '..');
@@ -183,7 +183,6 @@ function buildZones(g, r, n) {
 }
 
 function buildObstacles(g, r, n) {
-  if (SAFE) return [];
   const L = g.rink.length_m, W = g.rink.width_m, corner = typeof g.rink.corner_radius_m === 'number' ? g.rink.corner_radius_m : 5;
   const out = [];
   for (let i = 0; i < n; i++) {
@@ -218,8 +217,11 @@ function buildEffects(r, zoneIds, n) {
   return out;
 }
 
-const SET_PARAMS = ['skater_speed', 'skater_accel', 'shot_speed', 'puck_max_speed', 'puck_radius', 'ice_friction', 'board_restitution', 'skater_mass', 'puck_drag',
-  'warp_factor', 'x', 'goal_width_m', 'rink_length_m', 'knockdown_frames'];
+// Lane A118: set_param names one of the nine tunables (validate.mjs SET_PARAM_FIELD) inside its field's range; the valid family draws only those (at both
+// ends and inside); a name outside the list or a value outside the range is refused by both validators (the invalid family's 'bad-set-param' kind).
+// goal_pause_frames (30..600) lies above a hook value's schema range (-20..20), so no valid hook can name it.
+const SET_PARAMS = Object.keys(SET_PARAM_FIELD).filter((k) => { const [lo] = setParamRange(k); return lo <= 20; });
+const BAD_SET_PARAMS = ['skater_accel', 'puck_radius', 'skater_mass', 'puck_drag', 'warp_factor', 'x', 'goal_width_m', 'rink_length_m', 'knockdown_frames'];
 function buildHook(r, i, kindIds, maxFrames) {
   const when = r.pick(['on_goal', 'on_period_start', 'on_period_end', 'on_check', 'on_knockdown', 'on_pickup_take', 'on_faceoff', 'on_frame', 'on_score_reached']);
   const h = { id: `hook-${i + 1}`, when, then: [] };
@@ -237,13 +239,12 @@ function buildHook(r, i, kindIds, maxFrames) {
   const n = r.int(1, 4);
   for (let j = 0; j < n; j++) {
     const d = r.pick(['add_score', 'set_score_multiplier', 'end_period', 'end_match', 'shrink_rink', 'grow_rink', 'set_param', 'spawn_pickup', 'swap_nets', 'announce', 'apply_modifier']);
-    if (SAFE && (d === "set_param" || d === "shrink_rink" || d === "swap_nets" || d === "end_period")) continue;
     const a = { do: d };
     if (r.coin(0.5)) a.team = r.pick(['scoring', 'conceding', 'any']);
     if (d === 'add_score') a.value = r.int(-20, 20);
     if (d === 'set_score_multiplier') a.value = r.pick([1, 5, r.int(1, 5)]);
     if (d === 'shrink_rink' || d === 'grow_rink') a.value = r.pick([0.05, 0.5, round(0.05 + r.next() * 0.45, 3)]);
-    if (d === 'set_param') { a.param = r.pick(SET_PARAMS); a.value = r.pick([-20, 20, 0, round((r.next() * 2 - 1) * 20, 3)]); }
+    if (d === 'set_param') { a.param = r.pick(SET_PARAMS); const [lo, hi] = setParamRange(a.param).map((x) => Math.max(-20, Math.min(20, x))); a.value = r.pick([lo, hi, round(lo + r.next() * (hi - lo), 3)]); }
     if (d === 'spawn_pickup') a.kind = r.pick(kindIds);
     if (d === 'apply_modifier') { a.kind = r.pick(kindIds); a.frames = r.pick([1, 3600, r.int(1, 3600)]); }
     if (d === 'announce') a.text = r.pick(['GO', 'x'.repeat(60), 'quote " and \\ slash', 'tab\there']);
@@ -337,7 +338,7 @@ function buildRules(g, r, forced) {
     if (r.coin()) v.last_goal_double = r.coin();
     if (r.coin()) v.mercy_goals = r.pick([2, 9, r.int(2, 9)]);
     if (r.coin()) v.period_count = r.int(1, 3);
-    if (r.coin() && !SAFE) v.shrink_per_goal = r.pick([0.02, 0.3, round(0.02 + r.next() * 0.28, 3)]);
+    if (r.coin()) v.shrink_per_goal = r.pick([0.02, 0.3, round(0.02 + r.next() * 0.28, 3)]);
     if (Object.keys(v).length) rules.variants = v;
   }
   return rules;
@@ -422,9 +423,9 @@ function getParent(root, ptr) {
 }
 
 let SKIP_TEXT = [];
-let SAFE = false;   // smoke corpus: leave out what the findings in docs/experiments/FUZZ.md show to fail (set_param extremes, shrink_rink, obstacles on spawns), so the gate test guards the rest
+let SAFE = false;   // lane A118: --safe once left out the seven fault classes of docs/experiments/FUZZ.md; all are closed, so it leaves out nothing (kept as a flag for old command lines)
 function buildInvalid(index, r, valid) {
-  const kinds = ['wrong-type', 'unknown-key', 'missing-required', 'out-of-range-hi', 'out-of-range-lo', 'null', 'fractional-int', 'empty-list-needed', 'text'];
+  const kinds = ['wrong-type', 'unknown-key', 'missing-required', 'out-of-range-hi', 'out-of-range-lo', 'null', 'fractional-int', 'empty-list-needed', 'text', 'bad-set-param'];
   const kind = r.pick(kinds);
   const c = clone(valid);
   c.id = `fuzz-bad-${String(index).padStart(5, '0')}`;
@@ -439,6 +440,14 @@ function buildInvalid(index, r, valid) {
       const t = r.pick(all);
       const [par, key] = getParent(c.game, t.p.replace(/^\/game/, ''));
       par[key] = typeof t.v === 'string' ? 12 : r.pick(['a string', true, [], {}]);
+      break;
+    }
+    case 'bad-set-param': {   // lane A118: a name outside the nine tunables, or a legal name with a value outside its field's range
+      const rules = c.game.rules;
+      rules.hooks = (rules.hooks ?? []).slice(0, 7);
+      const bad = r.coin() ? { do: 'set_param', param: r.pick(BAD_SET_PARAMS), value: r.pick([-20, 0, 20]) }
+        : (() => { const param = r.pick(SET_PARAMS); const [lo, hi] = setParamRange(param); return { do: 'set_param', param, value: lo > -20 && r.coin() ? -20 : (hi < 20 ? 20 : -20) }; })();
+      rules.hooks.push({ id: 'zz-bad-set-param', when: 'on_goal', then: [bad] });
       break;
     }
     case 'unknown-key': { const o = r.pick(objs); (o.v)[r.pick(['foo', 'speedd', 'Speed', 'x_y', 'a'.repeat(50)])] = r.pick([1, 'x', true, {}]); break; }
@@ -521,7 +530,7 @@ const MINIMAL = {
 // ---------- main ----------
 function verdict(text) {
   let errors;
-  try { errors = validateCartridge(JSON.parse(text)).errors; } catch { errors = ['at /: not json']; }
+  errors = validateCartridgeText(text).errors;   // lane A118: the strict parser the C++ loader uses (duplicate keys refused, a BOM tolerated, its pointers)
   const pointers = [...new Set(errors.map((e) => e.match(/^at (\S+?):/)?.[1] ?? '?'))].sort();
   return { ok: errors.length === 0, pointers, first: errors[0] };
 }
@@ -561,7 +570,9 @@ export function generate({ count, invalid, seed, out, skipText = [], safe = fals
   for (const [name, mutate] of SAFE ? [] : Object.entries(MINIMAL)) {
     const c = JSON.parse(readFileSync(join(CART_DIR, 'hockey.regular.cartridge.json'), 'utf8'));
     c.id = 'min-' + name; mutate(c.game, c);
-    add(c.id, JSON.stringify(c, null, 1), 'valid', 'minimal/' + name);
+    // lane A118: a set_param outside the nine tunables or their ranges is now refused by both validators; such a minimal case is an invalid one (parity only)
+    const v = add(c.id, JSON.stringify(c, null, 1), 'valid', 'minimal/' + name);
+    if (!v.ok) manifest.cases[manifest.cases.length - 1].kind = 'invalid';
   }
   // 2. invalid
   const base = validPool.length ? validPool : [JSON.parse(readFileSync(join(CART_DIR, 'hockey.regular.cartridge.json'), 'utf8'))];

@@ -123,6 +123,68 @@ int32 AJamSkater::HitStopFramesFor(int32 Outcome, float Ratio, const FJamContact
 	return FMath::Clamp(FMath::RoundToInt32(At3 * Base / 3.0), 1, 6);
 }
 
+FJamHitStopPick AJamSkater::HitStopPick(const TArray<FJamSkaterState>& Sk, const TArray<FJamSimEvent>& Events, int32 Human, double BumpRatio)
+{
+	static const FName CauseCheck(TEXT("check")), KindStumble(TEXT("stumble")), KindBounce(TEXT("bounce"));
+	FJamHitStopPick P;
+	int32 LastChecker = -1;
+	FName LastKind;
+	for (const FJamSimEvent& E : Events) if (E.Name == JamEvents::Check) { LastChecker = E.Who; LastKind = E.Kind; }
+	// The check event of one attacker: its strength (closing speed / skater.speed) and its kind.
+	auto CheckOf = [&](int32 Who, float& Strength, FName& Kind)
+	{
+		for (const FJamSimEvent& E : Events) if (E.Name == JamEvents::Check && E.Who == Who) { Strength = E.Strength; Kind = E.Kind; return true; }
+		return false;
+	};
+	// 1. A knockdown by a check: the one the human took, else the one it landed.
+	for (const FJamSimEvent& E : Events)
+	{
+		if (E.Name != JamEvents::Knockdown || E.Kind != CauseCheck) continue;
+		const bool bResolved = Sk.IsValidIndex(E.Who) && Sk[E.Who].ContactOutcome == UJamSim::ContactDown;
+		const int32 Checker = bResolved && Sk[E.Who].ContactBy >= 0 ? Sk[E.Who].ContactBy : LastChecker;
+		if (E.Who != Human && Checker != Human) continue;
+		if (P.Victim == Human) continue;   // the human's own fall is already picked
+		P.Victim = E.Who;
+		P.Checker = Checker;
+		P.Outcome = bResolved ? UJamSim::ContactDown : UJamSim::ContactNone;
+		P.Ratio = bResolved ? Sk[E.Who].ContactRatio : 0.f;
+		P.Strength = E.Strength;
+		float Unused = 0.f;
+		P.Kind = LastKind;
+		CheckOf(Checker, Unused, P.Kind);
+	}
+	if (P.Victim >= 0) return P;
+	// 2. A stumble (no event names its victim: the read-outs do): the one the human took, else the one it landed. Its strength is its check event's.
+	for (int32 Pass = 0; Pass < 2 && P.Victim < 0; ++Pass)
+	{
+		for (const FJamSkaterState& S : Sk)
+		{
+			if (S.ContactOutcome != UJamSim::ContactStumble || (Pass == 0 ? S.Index != Human : S.ContactBy != Human)) continue;
+			P.Victim = S.Index;
+			P.Checker = S.ContactBy;
+			P.Outcome = UJamSim::ContactStumble;
+			P.Ratio = S.ContactRatio;
+			FName Unused;
+			CheckOf(S.ContactBy, P.Strength, Unused);
+			P.Kind = KindStumble;
+			break;
+		}
+	}
+	if (P.Victim >= 0) return P;
+	// 3. The human's own bounce: it ran into a skater more stable than itself and is the one who stumbles.
+	if (Sk.IsValidIndex(Human) && Sk[Human].bRecoilThisFrame)
+	{
+		P.Victim = Human;
+		for (const FJamSkaterState& S : Sk) if (S.ContactBy == Human) P.Checker = S.Index;   // the skater it bounced off
+		P.Outcome = UJamSim::ContactStumble;
+		P.Ratio = static_cast<float>(BumpRatio);
+		FName Unused;
+		CheckOf(Human, P.Strength, Unused);   // a bump emits no check event: 0 then
+		P.Kind = KindBounce;
+	}
+	return P;
+}
+
 void AJamSkater::BeginHitStop(int32 Frames)
 {
 	if (Frames <= 0) return;
@@ -355,6 +417,24 @@ void AJamSkater::ApplySimFrame(const FJamSkaterState& S)
 		// Lane A101: also on a landed check that pushed the skater into boards within 1.5 m (bContactBoard; the `board` event then carries the check's strength).
 		UE_LOG(LogJamSim, Log, TEXT("JAMVIS board frame=%lld skater=%d team=%d checked=%d outcome=%d ratio=%.2f (PlayBoardHit: the skater board event: 4 m/s and up into the boards, or checked into them)"),
 			SimFrameForLog(), S.Index, S.Team, S.bContactBoard ? 1 : 0, S.ContactOutcome, S.ContactRatio);
+	}
+	// Lane A113 (track F1): what became of the human's own check press when it did not land (the sim's counters behind the HUD's contact line), one JAMVIS line
+	// when one grows: the headless read-out of JUST GOT UP / TOO SOFT / MISSED (the HUD does not run under -nullrhi; an acceptance row can read this line). A
+	// restart sets the counters back: no line then. And one line for any skater whose hit the release grace made a bump.
+	if (S.ChecksSoft != SeenSoft || S.ChecksMissed != SeenMissed || S.ChecksGraced != SeenGraced)
+	{
+		const TCHAR* Result = S.ChecksGraced > SeenGraced ? TEXT("just_got_up") : S.ChecksSoft > SeenSoft ? TEXT("too_soft") : S.ChecksMissed > SeenMissed ? TEXT("missed") : nullptr;
+		if (Result && S.bHuman)
+		{
+			UE_LOG(LogJamSim, Log, TEXT("JAMVIS press frame=%lld skater=%d team=%d human=1 result=%s soft=%d missed=%d graced=%d (the human's check press did not land; the HUD's contact line)"),
+				SimFrameForLog(), S.Index, S.Team, Result, S.ChecksSoft, S.ChecksMissed, S.ChecksGraced);
+		}
+		SeenSoft = S.ChecksSoft; SeenMissed = S.ChecksMissed; SeenGraced = S.ChecksGraced;
+	}
+	if (S.bContactGrace)
+	{
+		UE_LOG(LogJamSim, Log, TEXT("JAMVIS grace frame=%lld skater=%d team=%d human=%d by=%d ratio=%.2f grace_left=%d (a hit inside the release grace: a bump at most)"),
+			SimFrameForLog(), S.Index, S.Team, S.bHuman ? 1 : 0, S.ContactBy, S.ContactRatio, S.GraceFrames);
 	}
 	if (S.bBoardPinned != bWasPinned)
 	{

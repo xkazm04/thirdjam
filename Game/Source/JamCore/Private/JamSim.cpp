@@ -192,6 +192,8 @@ void UJamSim::Restart()
 		S.PokeReadyFrame = S.LiftReadyFrame = 0;
 		S.PenaltyFrames = 0;
 		S.StumbleFrames = 0;
+		S.GraceFrames = 0;   // lane A113
+		S.ContactGraced = S.ChecksSoft = S.ChecksGraced = S.ChecksMissed = 0;
 		S.LastCarryFrame = -1000;
 		S.OneTimers = S.Breakaways = S.Dekes = 0;
 		S.PassesReceived = 0;
@@ -580,6 +582,10 @@ void UJamSim::ApplyRuleAction(const FJamRuleEventIn& In, const FJamRuleActionOut
 
 bool UJamSim::SetParam(FName Key, double Value)
 {
+	// Lane A118 (track S3): a set_param value lies inside the field's schema range (both validators refuse one outside it; a caller that bypasses them is
+	// clamped here), so no hook can make the sim non-finite. A value inside the range is unchanged, bit for bit.
+	double Lo = 0, Hi = 0;
+	if (UJamCartridge::SetParamRange(Key.ToString(), Lo, Hi)) Value = FMath::IsFinite(Value) ? FMath::Clamp(Value, Lo, Hi) : Lo;
 	FJamGameConfig N = Config;
 	if (!UJamCartridge::ApplyValueKey(N, Key.ToString(), Value))
 	{
@@ -679,6 +685,7 @@ void UJamSim::ApplyPendingRink()
 	Config.Rink.CornerRadiusM = FMath::Min(Config.Rink.CornerRadiusM, FMath::Min(L, W) * 0.5);
 	for (FJamSkaterState& S : Skaters) { S.SpawnPos.X *= Sx; S.SpawnPos.Y *= Sz; }
 	for (FJamObstacle& O : Config.Rink.Obstacles) { O.X *= Sx; O.Z *= Sz; }
+	PendingFaceoffDot.X *= Sx; PendingFaceoffDot.Y *= Sz;   // lane A118: an end-zone dot (icing, a foul) moves in with the boards, so the drop lands inside them
 	PendingRinkScale = 1.0;
 	++RinkRevision;
 	UE_LOG(LogJamSim, Log, TEXT("JAMSIM rink rebuilt at frame %lld: %g x %g (revision %d)"), Frame, L, W, RinkRevision);
@@ -698,6 +705,7 @@ void UJamSim::FaceoffReset()
 		S.CheckWindow = 0;
 		S.KnockFrames = 0;
 		S.StumbleFrames = 0;
+		S.GraceFrames = 0;   // lane A113: a faceoff sets everybody up; no grace is owed after it
 		S.PokeWindow = 0;
 		S.bPokeArmed = false;
 		S.bTouchingPuck = false;
@@ -971,10 +979,19 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 		S.StickHitResult = 0;
 		S.ContactOutcome = 0; S.ContactRatio = 0.f; S.bContactCross = false; S.bCheckRefused = false; S.bRecoilThisFrame = false;   // lane A92 read-outs
 		S.ContactBy = -1; S.bContactBoard = false;   // lane A101 read-outs
+		S.bContactGrace = false;   // lane A113 read-out
 		S.bAbilityThisFrame = false;   // lane A84
 	}
 	Puck.PrevPos = Puck.Pos;
 	Puck.PrevZ = Puck.Z;   // R-0035 (lane A52): the visual interpolates the height like the position
+
+	// Lane A118 (track S3): the hard stop (lane A71, see MatchHardStopFrames) holds in every phase. Before, it ran only while the puck was live, so a hook that
+	// ends the period at every faceoff (GoalPause -> Faceoff -> GoalPause ...) never reached it and the match never ended (five fuzz cartridges).
+	if (Phase != EJamSimPhase::Over && Phase != EJamSimPhase::Playing)
+	{
+		const int64 AnyPhaseStop = (Config.Rules.Mode == RuleTimer && Config.Rules.TimerFrames > 0) ? FMath::Max<int64>(MatchHardStopFrames, static_cast<int64>(Config.Rules.TimerFrames) + 6000) : MatchHardStopFrames;
+		if (Frame >= AnyPhaseStop) EndMatchNow(-1);
+	}
 
 	if (Phase == EJamSimPhase::Faceoff)
 	{
@@ -1057,7 +1074,8 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 	for (FJamSkaterState& S : Skaters)
 	{
 		const FJamInput& In = Inputs.IsValidIndex(S.Index) ? Inputs[S.Index] : FJamInput();
-		if (S.CheckWindow > 0) --S.CheckWindow;
+		// Lane A113: a window that runs out on nobody is a whiff (the read-out counter behind the HUD's MISSED); a skater that took the puck inside its window did not miss.
+		if (S.CheckWindow > 0 && --S.CheckWindow == 0 && !CarrierMayNotHit(S)) ++S.ChecksMissed;
 		if (S.ShieldFrames > 0) --S.ShieldFrames;   // lane A84: the shield runs while the puck is live
 		if (!S.CanAct()) { S.ChargeFrames = 0; continue; }
 		if (In.bAbility) TryAbility(S);   // lane A84 (R-0041 point 3): F, before the shot so a shotgun with the puck fires this frame
@@ -1221,6 +1239,8 @@ void UJamSim::StepSkater(FJamSkaterState& S, const FJamInput& In)
 	const FJamIceFactors Ice = ZoneSource ? ZoneSource->IceAt(S.Pos) : FJamIceFactors();
 	const double Glide = C.GlideDrag * (Eff(EJamStat::IceFriction, -1) / ReferenceIceFriction) * Ice.FrictionMul;
 
+	// Lane A113 (R-0049 point 1): the release grace counts down on every frame after the release (the release below sets it after this line).
+	if (S.GraceFrames > 0) --S.GraceFrames;
 	if (S.InBox())
 	{
 		// R-0013: sitting out a penalty at the side boards; no input, no contact.
@@ -1233,7 +1253,9 @@ void UJamSim::StepSkater(FJamSkaterState& S, const FJamInput& In)
 	if (S.IsDown())
 	{
 		S.Vel *= FMath::Max(0.0, 1.0 - 2.0 * DT);
-		--S.KnockFrames;
+		// Lane A113: the release. For game.contact.release_grace_frames after it a hit on this skater is a bump at most (ResolveContact). Part of the momentum
+		// model: under contact.momentum false (lane A92's neutral block) no grace starts, so that block still hashes as the game before the model.
+		if (--S.KnockFrames == 0 && Config.Contact.bMomentum) S.GraceFrames = FMath::Max(0, Config.Contact.ReleaseGraceFrames);
 	}
 	else if (S.IsStumbling())
 	{
@@ -1671,6 +1693,14 @@ void UJamSim::CollideSkaterStatic(FJamSkaterState& S)
 			}
 		}
 	}
+	// Lane A118 (track S3): an obstacle's push never puts a skater through the boards (an obstacle over a spawn at the boards threw one 3.4 m out at frame 1).
+	// Only a skater the obstacles left beyond the boards moves; everyone else is untouched, bit for bit.
+	if (BoardDistance(S.Pos, N) + R > BoardContactEpsM)
+	{
+		S.Pos -= N * (BoardDistance(S.Pos, N) + R);
+		const double Vn = Dot(S.Vel, N);
+		if (Vn > 0) S.Vel -= N * Vn;
+	}
 }
 
 void UJamSim::CollideSkaters()
@@ -1849,6 +1879,16 @@ int32 UJamSim::ResolveContact(FJamSkaterState& Att, FJamSkaterState& Vic, const 
 	const double Ratio = PhysRatio * (ReferenceCheckSpeedMin / FMath::Max(0.5, Eff(EJamStat::CheckSpeedMin, Att.Index)));
 	int32 Outcome = bHip || Ratio >= K.DownRatio ? ContactDown : Ratio >= K.BumpRatio ? ContactStumble : ContactBump;
 	if (Outcome == ContactStumble && (Vic.IsStumbling() || K.StaggerFrames <= 0)) Outcome = ContactBump;   // a stumbling skater is not stumbled again (no lock)
+	// Lane A113 (R-0049 point 1): a tackle is an event, not a rhythm. A skater released from a knockdown inside the last contact.release_grace_frames takes a bump
+	// at most, whatever the ratio (an armed hip check too: its charge stays armed). The attacker pays as for any bump (the recoil test below reads Outcome).
+	const bool bGraced = Vic.GraceFrames > 0 && Outcome != ContactBump;
+	if (bGraced)
+	{
+		Outcome = ContactBump;
+		Vic.bContactGrace = true;
+		++Vic.ContactGraced;
+		if (Kind == EContactKind::Body) ++Att.ChecksGraced;
+	}
 	Vic.ContactOutcome = Outcome;
 	Vic.ContactRatio = static_cast<float>(Ratio);
 	Vic.bContactCross = Kind == EContactKind::Cross;
@@ -1865,6 +1905,7 @@ int32 UJamSim::ResolveContact(FJamSkaterState& Att, FJamSkaterState& Vic, const 
 	if (Outcome == ContactBump)
 	{
 		++Vic.ContactBumps;
+		if (!bGraced && Kind == EContactKind::Body) ++Att.ChecksSoft;   // lane A113 read-out: the pressed check that did nothing (the HUD's TOO SOFT)
 		React(Vic, Dir, false);
 		React(Att, -Dir, false);
 	}
@@ -1947,6 +1988,7 @@ void UJamSim::KnockDown(int32 Victim, const FVector2D& Dir, float Strength, FNam
 {
 	FJamSkaterState& V = Skaters[Victim];
 	V.KnockFrames = FMath::RoundToInt32(Eff(EJamStat::KnockdownFrames, Victim));
+	V.GraceFrames = 0;   // lane A113: whatever puts a skater down ends a grace; the next release starts a new one (no caller reaches this inside a grace today)
 	// Lane A51 (R-0034): a check that lands mid-spin knocks the carrier down longer (risk against reward); the spin ends.
 	if (V.SpinFrames > 0) { V.KnockFrames = FMath::RoundToInt32(V.KnockFrames * SpinKnockdownMult); V.SpinFrames = 0; V.SpinLength = 0; }
 	V.KnockDir = Dir.GetSafeNormal();
@@ -2857,7 +2899,8 @@ void UJamSim::StepShotgun(const FVector2D& Prev)
 	const FVector2D Dir = L2 > 1e-12 ? Seg / FMath::Sqrt(L2) : FVector2D(1, 0);
 	for (FJamSkaterState& S : Skaters)
 	{
-		if (S.Index == Puck.ShotgunBy || S.IsDown() || S.InBox() || S.ShieldFrames > 0) continue;
+		// Lane A113 (R-0051 point 3): a skater inside its release grace is passed over as a shielded one is (it stays up; its body can still stop the puck).
+		if (S.Index == Puck.ShotgunBy || S.IsDown() || S.InBox() || S.ShieldFrames > 0 || S.GraceFrames > 0) continue;
 		const double T = L2 > 1e-12 ? FMath::Clamp(Dot(S.Pos - Prev, Seg) / L2, 0.0, 1.0) : 0.0;
 		if (FVector2D::Distance(S.Pos, Prev + Seg * T) > ShotgunPathM) continue;
 		KnockDown(S.Index, Dir, 1.f, CauseShotgun);
@@ -2972,6 +3015,9 @@ uint64 UJamSim::StateHash() const
 		if (S.Stamina >= 0 && S.Stamina != StaminaFull()) H.AddI(S.Stamina);
 		// Lane A93: the first-step burst only while it runs (burst.frames 0: never, so the neutral block hashes as before).
 		if (S.BurstLeft != 0) H.AddI(S.BurstLeft);
+		// Lane A113 (R-0049 point 1): the release grace only while it runs, behind a tag (contact.release_grace_frames 0: never, so the neutral value hashes as
+		// before). Main's LockstepStateHash() folds StateHash(), so the lockstep checkpoint covers it too.
+		if (S.GraceFrames != 0) { H.AddI(-113); H.AddI(S.GraceFrames); }
 		// Lane A84: the ability state only once a skater holds one (a cartridge without abilities hashes as before).
 		if (S.AbilitySlot >= 0 || S.AbilitiesUsed > 0 || S.ShieldFrames > 0 || !S.AbilityArmed.IsNone())
 		{

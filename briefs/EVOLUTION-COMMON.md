@@ -30,6 +30,12 @@ Read first, always: `docs/VISION.md` (the game's laws), `docs/PLAN-RECONCILED.md
 - **`-Multiprocess` on every headless start** (lane A107, 20:00): without it every `UnrealEditor-Cmd` start runs `Build.bat -Mode=ValidatePlatforms` and queues on the
   build tool's mutex (a 3-match run: 5 m 17 s; with the flag 9.5 s, identical hashes). The shared drivers on main carry it from 20:10; add it to any command line of
   your own (`-nullrhi -Multiprocess -unattended`) and to your worktree's copies of `tools/playtest/run.mjs`, `tools/soak/playtest/soak.mjs`, `tools/perf/results/a95/curve.mjs`.
+- **A field you add to skater or puck state** (`FJamSkaterState`, `FJamPuckState`): if a rule reads it, it goes into `UJamSim::StateHash()` behind its default
+  (the lockstep hash folds that in); if it is a read-out for the figure, the HUD or a test, list it by name with its reason in `SkaterReadouts` / `PuckReadouts`
+  in `Game/Source/JamNet/Private/Tests/JamNetGuestTests.cpp`. `Jam.Net.HashCoverage` fails the gate on a field that is neither (it stopped two landings
+  tonight). Name every state field you added in your report.
+- **Builds share one lock across the machine** (`-WaitMutex`): a one-minute rebuild has waited fourteen minutes tonight. Batch your C++ edits into few builds,
+  set your own timeouts above twenty minutes, and measure while you wait.
 - Blender runs headless (`blender -b -P script.py`); find the install as `docs/experiments/BLENDER.md` says.
 
 ## The walls

@@ -1,0 +1,155 @@
+{
+ "tool": "gen-regress",
+ "cases": [
+  {
+   "name": "nan--min-setparam-puck-max-speed-neg",
+   "file": "nan--min-setparam-puck-max-speed-neg.json",
+   "kind": "found",
+   "ok": false,
+   "pointers": [
+    "/game/rules/hooks/0/then/0/value"
+   ]
+  },
+  {
+   "name": "never-ends-unminimized--fuzz-00600",
+   "file": "never-ends-unminimized--fuzz-00600.json",
+   "kind": "found",
+   "ok": false,
+   "pointers": [
+    "/game/rules/hooks/0/then/1/param",
+    "/game/rules/hooks/2/then/2/value"
+   ]
+  },
+  {
+   "name": "never-ends-unminimized--fuzz-00600-valid",
+   "file": "never-ends-unminimized--fuzz-00600-valid.json",
+   "kind": "found-stripped",
+   "ok": true,
+   "pointers": []
+  },
+  {
+   "name": "never-ends-unminimized--fuzz-00850",
+   "file": "never-ends-unminimized--fuzz-00850.json",
+   "kind": "found",
+   "ok": false,
+   "pointers": [
+    "/game/rules/hooks/4/then/1/param",
+    "/game/rules/hooks/5/then/2/param"
+   ]
+  },
+  {
+   "name": "never-ends-unminimized--fuzz-00850-valid",
+   "file": "never-ends-unminimized--fuzz-00850-valid.json",
+   "kind": "found-stripped",
+   "ok": true,
+   "pointers": []
+  },
+  {
+   "name": "never-ends-unminimized--fuzz-02125",
+   "file": "never-ends-unminimized--fuzz-02125.json",
+   "kind": "found",
+   "ok": false,
+   "pointers": [
+    "/game/rules/hooks/2/then/0/param",
+    "/game/rules/hooks/2/then/1/value"
+   ]
+  },
+  {
+   "name": "never-ends-unminimized--fuzz-02125-valid",
+   "file": "never-ends-unminimized--fuzz-02125-valid.json",
+   "kind": "found-stripped",
+   "ok": true,
+   "pointers": []
+  },
+  {
+   "name": "never-ends-unminimized--fuzz-02826",
+   "file": "never-ends-unminimized--fuzz-02826.json",
+   "kind": "found",
+   "ok": false,
+   "pointers": [
+    "/game/rules/hooks/1/then/0/param",
+    "/game/rules/hooks/2/then/0/param"
+   ]
+  },
+  {
+   "name": "never-ends-unminimized--fuzz-02826-valid",
+   "file": "never-ends-unminimized--fuzz-02826-valid.json",
+   "kind": "found-stripped",
+   "ok": true,
+   "pointers": []
+  },
+  {
+   "name": "never-ends-unminimized--fuzz-04552",
+   "file": "never-ends-unminimized--fuzz-04552.json",
+   "kind": "found",
+   "ok": false,
+   "pointers": [
+    "/game/rules/hooks/0/then/0/param"
+   ]
+  },
+  {
+   "name": "never-ends-unminimized--fuzz-04552-valid",
+   "file": "never-ends-unminimized--fuzz-04552-valid.json",
+   "kind": "found-stripped",
+   "ok": true,
+   "pointers": []
+  },
+  {
+   "name": "parity--bom",
+   "file": "parity--bom.json",
+   "kind": "found",
+   "ok": true,
+   "pointers": []
+  },
+  {
+   "name": "parity--duplicate-key",
+   "file": "parity--duplicate-key.json",
+   "kind": "found",
+   "ok": false,
+   "pointers": [
+    "/game/rink"
+   ]
+  },
+  {
+   "name": "parity--nan-literal",
+   "file": "parity--nan-literal.json",
+   "kind": "found",
+   "ok": false,
+   "pointers": [
+    "/game/skater/speed"
+   ]
+  },
+  {
+   "name": "parity--neg-infinity-number",
+   "file": "parity--neg-infinity-number.json",
+   "kind": "found",
+   "ok": false,
+   "pointers": [
+    "/game/skater/speed"
+   ]
+  },
+  {
+   "name": "parity--truncated",
+   "file": "parity--truncated.json",
+   "kind": "found",
+   "ok": false,
+   "pointers": [
+    "/game/puck"
+   ]
+  },
+  {
+   "name": "puck-outside--min-shrink-every-60",
+   "file": "puck-outside--min-shrink-every-60.json",
+   "kind": "found",
+   "ok": true,
+   "pointers": []
+  },
+  {
+   "name": "skater-outside--min-spawn-in-big-box-at-boards",
+   "file": "skater-outside--min-spawn-in-big-box-at-boards.json",
+   "kind": "found",
+   "ok": true,
+   "pointers": []
+  }
+ ]
+}

@@ -7,7 +7,10 @@ Run: `node schema/validate.mjs file.json` (exit 0 valid, 1 invalid, 2 could not 
 ## The rule for lane A1
 
 A cartridge Node rejects, the game rejects: same verdict, same JSON pointer in the message (wording may differ, the pointer and the kind of failure must not).
-Parse with a strict JSON parser (duplicate keys: reject). Then, in this order:
+Parse with a strict JSON parser (duplicate keys: reject). Lane A118: both sides run the same parser, `FParser` in `JamJson.cpp` and its port `schema/strict-json.mjs`
+(`validateCartridgeText` and the CLI use it): a duplicate key is an error at the pointer of the repeated key; a leading UTF-8 byte order mark is tolerated (editors add
+it); a syntax error is reported at the pointer of the value being read (`at /game/skater/speed: the file is not valid JSON (unexpected character at character 2753).`);
+nesting deeper than 64 and a number that is not finite (`1e999`) are refused while parsing. Then, in this order:
 
 1. **Unknown keys are errors** in every object of both schemas (`additionalProperties: false` everywhere except `values`, which is keyed by tunable key, and `params`, which is keyed by snake_case names). Message: `unknown key "k" at <pointer>`.
 2. **Absent = omit.** A `null` anywhere is an error. A key that is absent takes the default in `DEFAULTS.md`. Never treat 0 as absent.
@@ -112,6 +115,7 @@ Cartridge errors are sentences that start `at <JSON pointer>:`, because the Desi
 | `contact.down_frames_max` | 15..300 | 150 (lane A92, R-0045): Frames down at down_full_ratio and above, at skater.knockdown_frames 90; never under down_frames_min. |
 | `contact.stagger_frames` | 0..60 | 16 (lane A92, R-0045): Frames a stumbling skater glides without thrust, steering or stick. |
 | `contact.board_bonus` | 1..2 | 1.25 (lane A101, track F1): The boards are a body: the impulse of a hit that pushes a victim standing within 1.5 m of the boards into them counts this much higher (the full bonus inside 60 degrees of straight in, none along the boards), and the victim's board read-out fires. 1 = the neutral value: no bonus, no read-out. |
+| `contact.release_grace_frames` | 0..300 | 120 (lane A113, track F1; R-0051): The release grace (R-0049 point 1): for this many frames after a knockdown ends, a hit on the released skater is a bump at most (no stumble, no knockdown; the attacker pays as for any bump) and the brain starts no check on it. Part of the momentum model (contact.momentum true). 0 = the neutral value: no grace. |
 | `rules.score_to_win` | 1..9 | one digit on the HUD |
 | `rules.timer_frames` | 600..36000 | 10 s to 10 min at 60 Hz (lane A72, ask A1: 5 min before; the HUD clock reads 10:00) |
 | `rules.penalty_frames` | 60..600 | 1 s to 10 s in the box (lane A72, ask A8); 300 when absent |
@@ -143,7 +147,7 @@ on_check | on_knockdown | on_pickup_take | on_faceoff | on_frame | on_score_reac
 `score` is `{ at_least?, at_most?, lead_at_least? }` read on the hook's team after the goal has been counted (`any`: either team). `then` holds 1..4 actions
 `{ do, team?, value?, param?, kind?, frames?, text? }` with `do` one of `add_score | set_score_multiplier | end_period | end_match | shrink_rink | grow_rink | set_param |
 spawn_pickup | swap_nets | announce | apply_modifier`: add_score needs a whole `value`; set_score_multiplier a `value` 1..5; shrink_rink / grow_rink a `value` that is the
-fraction 0.05..0.5 (0.1 = 10 %; the sim scales by 1 - f / 1 + f and clamps to the rink range); set_param needs `param` (a tunable key) and `value`; spawn_pickup `kind`;
+fraction 0.05..0.5 (0.1 = 10 %; the sim scales by 1 - f / 1 + f and clamps to the rink range); set_param needs `param` (a tunable key) and `value`: lane A118, the `param` is one of the nine tunables of "Tunables" below and the `value` lies inside the range of the game field it names (`puck_max_speed` 10..60, `ice_friction` 0..0.1, ...; `goal_pause_frames` 30..600 lies above any hook value, so no valid hook names it); both validators refuse anything else and the sim clamps to the same range; spawn_pickup `kind`;
 apply_modifier `kind` and `frames`; announce `text` (1..60 chars). Hook ids are unique; the engine evaluates hooks in id order.
 `game.rules.variants` is sugar `{ sudden_death?, last_goal_double?, mercy_goals? (2..9), period_count? (1..3), shrink_per_goal? (0.02..0.3) }` the loader expands into hooks
 (DEFAULTS.md says how). `game.rink.zones[]` (max 8): `{ id, shape: rect | circle, x, z, w?, d?, r?, kind, strength?, visible? }`; rect needs `w` and `d`, circle needs `r`

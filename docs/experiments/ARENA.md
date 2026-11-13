@@ -3,6 +3,8 @@
 Evolution 1 (lane A103, Fri 13 Nov 18:47-20:00, 73 minutes): **the team benches and the penalty boxes.** Scripts in `tools/blender/arena/` are the source of truth; the
 meshes are A's own content under `Game/Content/Arena/`; `ARinkActor` places them. Nothing under `Game/Plugins/JamAssets` was written.
 
+**Evolution 2 (lane A119, 20:12-21:02): the goals and the scorer's table: sections 10 to 18 below.** Sections 1 to 9 are evolution 1 as it was written.
+
 ## 1. What a player gets
 
 Two players' benches outside the +y boards and two penalty boxes outside the -y boards, chunky and a little uneven, with a thumb-pressed rail in the team's
@@ -148,3 +150,160 @@ JSON (bulk, not landed); `arena.stats.json`, `import.result.json` and `import.lo
   the Director's still on `l2_night` decides whether the night tier keeps the pieces (`IsBareTier` is one line). An actor without a static mesh (lights,
   volumes, Blueprint-built dressing: 10 on night, 23 on clay) is not judged by this probe.
 - A wish, not a need: a wood instance for the floor and the seat (the banner's wall wood) would warm the pieces; the slot names are `bench` and `kick`.
+
+---
+
+# Evolution 2 (lane A119, Fri 13 Nov 20:12-21:02, 50 minutes): the goals and the scorer's table
+
+## 10. What a player gets
+
+The two goals are no longer code bars with an opaque sheet behind them: each is a chunky, thumb-pressed clay frame whose opening is the sim's goal volume, with
+a net of real cords the puck and the goalie are seen through from every camera the game has. Between the two penalty boxes stands a scorer's table: a desk with
+a horn, a stool, and over the boards a sign with a clock face and a red goal lamp. Visual only: no collision, no sim state, no hash.
+
+![the goal from the game camera: 3.5 m up, 70 degrees, 6 m behind a skater 5 m from the net](img/arena/arena-goal-game-camera.jpg)
+![defending: the camera behind the own net, looking through its top](img/arena/arena-goal-own-end-through-net.jpg)
+![from the end boards through the net: three pucks inside it and the goalie](img/arena/arena-goal-from-behind.jpg)
+![the scorer's table between the penalty boxes](img/arena/arena-scorer-table.jpg)
+
+Those four are Blender's (flat preview colours, 1.6 m stand-ins, 12 cm pucks). The next four are the engine's: the real `ARinkActor`, device B's rig map, B's
+materials, rendered off screen without a game (section 14 says why they are not stills from the game).
+
+![p3_clay 90 x 45: the goal at the game camera's height and field of view](img/arena/engine-p3_clay-90x45-goal.jpg)
+![p3_clay 120 x 60: the penalty side from the ice: box, table, box](img/arena/engine-p3_clay-120x60-boxes.jpg)
+![l2_night 90 x 45: the goal from 5 m; the frame is inked, the cords are not](img/arena/engine-l2_night-90x45-goal-close.jpg)
+![l2_night 120 x 60: the penalty side from the ice; nothing lights the outside of the boards on this tier](img/arena/engine-l2_night-120x60-boxes.jpg)
+
+## 11. The pieces
+
+| Mesh | Triangles (budget 3,000) | Size (m) | Slots | Notes |
+|---|---|---|---|---|
+| `/Game/Arena/SM_Arena_Goal_W400H061` + `SM_Arena_GoalNet_W400H061` | **1,608 + 912 = 2,520** | 4.34 x 1.66 x 0.79 | frame; net | the default goal, 4 x 0.61 m; net cell 0.25 m |
+| `/Game/Arena/SM_Arena_Goal_W600H061` + `SM_Arena_GoalNet_W600H061` | **1,848 + 952 = 2,800** | 6.34 x 1.66 x 0.80 | frame; net | `hockey.mode.pond`, 6 x 0.61 m; net cell 0.31 m (the script widens the cell until the pair is under 2,900) |
+| `/Game/Arena/SM_Arena_Goal_W400H122` + `SM_Arena_GoalNet_W400H122` | **1,800 + 992 = 2,792** | 4.34 x 1.66 x 1.40 | frame; net | `hockey.mode.sniper`, 4 x 1.22 m; net cell 0.28 m |
+| `/Game/Arena/SM_Arena_ScorerTable` | **2,088** | 1.40 x 1.66 x 2.78 | board, kick, bench, dark, frame | 1.36 m wide: the boxes' inner ends stand 1.48 m apart on every rink |
+
+- **The goal is built to the cartridge's numbers.** `goal(w, h)` in `arena.py`: the posts' inner faces stand at x = +-w/2 and the crossbar's underside at z = h,
+  which is `UJamSim`'s goal test (|y| < goal_width/2, height < goal_height, 1.5 m deep). Posts and crossbar are 16 cm bars, the bottom bars, back posts, back bar
+  and the two braces 11 cm; the back frame stands at 0.6 h (the code frame's proportion). The frame's unevenness is half the benches' (5 mm) and the thumbs press
+  the crossbar from above (one about every 45 cm, 4.5 cm deep) and the posts from the front: clay moves up, down and along the goal's depth, never across the
+  mouth. The script measures the opening on the finished vertices and fails the build when it is more than 2 cm off: **0.30 cm, 0.15 cm, 0.21 cm**.
+- **Other sizes take the nearest variant, scaled**: `ARinkActor::Build` picks the variant with the smallest |ln(W/Wv)| + |ln(H/Hv)| and scales it W/Wv along
+  the goal line and H/Hv up. The inner faces sit exactly on +-Wv/2 and Hv, so the opening stays exact under any scale; only the bars' thickness stretches
+  (5.5 m: x0.917 of the 6 m goal; 2.5 m: x0.625 of the 4 m goal). A fourth exact variant is one tuple in `GOAL_VARIANTS` and one line in `RinkActor.cpp`.
+- **The net is cords, not a sheet.** Square tubes 3 cm thick from bar to bar (top, back, two sides), hanging 2 cm and wandering a little; about 12 % of a cell is
+  covered each way, so nothing behind it is hidden. The old netting was an opaque `MI_Toon_NetMesh` sheet over the whole box: that is what hid the puck.
+- **The net is its own mesh**, on its own component with **no custom depth stencil**. With the cords inside the frame's mesh every cord took the tier's ink
+  outline and from the game camera the net's top was a black comb on `l2_night` (the first engine stills, kept in `out/engine-run1/`). The frame keeps stencil 1
+  and its ink. After the split the ink is off the cords; what is still dark on them is `MI_Toon_NetMesh`'s own pattern (dark dashes along a pale cord, section
+  18), so on `l2_night` the net is lighter than it was but not yet pale: the second engine stills show a rope net, readable, with the ice and the crease seen
+  through it from every view.
+- UVs as evolution 1 (channel 0, 1 unit = 2 m); a cord's U runs along it.
+
+## 12. Materials: device B's, by reference (nothing made, nothing under `Game/Plugins/JamAssets` written)
+
+| Slot | Device B's instance (`/JamAssets/Look/`) | On the new pieces |
+|---|---|---|
+| `frame` | `MI_Toon_NetFrame` (what the code frame carried) | the goal's bars; on the table: the lamp, the horn, the sign's colon |
+| `net` | `MI_Toon_NetMesh` (what the code netting carried) | the cords |
+| `board` | `MI_Toon_Board` | the table's back wall, desk front, the sign's rim, the papers |
+| `kick` | `MI_Toon_KickPlate` | the table's rail and desk top, the stool's seat, the sign's two digits |
+| `bench` | `MI_Toon_Bench` | the table's floor |
+| `dark` | `MI_Toon_Dark` | legs, posts, the sign's face, the horn's mouth, the mug, the lamp's base |
+
+## 13. Placement (`ARinkActor`, placement only)
+
+| Component | Mesh | Place (rink metres, L x W) | Yaw | Scale |
+|---|---|---|---|---|
+| `ArenaGoalPos` + `ArenaGoalNetPos` | the variant and its net | x = +(L/2 - 4) (`FJamRinkConfig::GoalLineX`), y = 0 | -90 | (W/Wv, 1, H/Hv) |
+| `ArenaGoalNeg` + `ArenaGoalNetNeg` | the same | x = -(L/2 - 4), y = 0 | +90 | the same |
+| `ArenaTable` | `SM_Arena_ScorerTable` | x = 0, y = -(W/2 + 0.2 + 0.05) | 180 | 1 |
+
+- A goal mesh's +x runs along the goal line and its +y into the net; the origin is the middle of the mouth on the ice.
+- **One goal on each line, never both, never none**: while the Blender goals show, the code frame and its sheet (`Nets`) are hidden; when they do not show
+  (`jam.rink.arena 0`, a bare tier, `jam.rink.construction 0`, a missing mesh or a frame without its net) `Nets` shows as before.
+- The table shows with the boxes. Tiers as evolution 1: shown on `l2_night`, `p3_clay`, `p4_broadcast`; the code frame stays on `l1_day`, `l3_neon`.
+- **Neutral value: `jam.rink.arena 0`** gives back the code frame, its sheet netting and A25's benches on every tier.
+- Log lines: `JAMRINK arena goals: mesh ... for an opening W x H m, scale ...` at every `Build`; `JAMRINK arena goals shown|hidden for tier ...` on a change.
+- The goal light on the end-board rail and the goal triggers are untouched.
+
+## 14. The engine stills, and why they are not stills from the game
+
+`AHokejGameMode::EnsureMatchInputMode` (`HokejGameMode.cpp:409-420`) sets `EMouseLockMode::LockAlways` at every match start, and no console variable switches
+it off. Slate carries a mouse lock out as `ClipCursor` on the one system cursor; as this lane reads the engine, that call does not ask whether the window is the
+foreground one or on screen. This was NOT tested: the test is itself the disturbance (a cursor confined to an off-screen window during the cursor owner's run).
+So this lane started no match. If the Director knows the lock to be harmless for a window that never had the foreground, the queue below is one command.
+
+Instead `tools/blender/arena/engine_stills.py` renders in an **off-screen editor without a game**: no player controller, no input mode, no window. It opens B's
+rig map (in memory only: loaded again with the Discard policy between jobs, never saved; the rig maps' file times are unchanged), scales the rig as the level
+instance's transform does in the game (L / 90), spawns the real `ARinkActor` (transient), builds it for the rink and the tier, sets `MPC_Look.Clay` as the
+rig's `BP_LookParams` does at BeginPlay, and shoots from fixed cameras at the game camera's height (3.5 m) and field of view (70 degrees): six views x two tiers
+x two rinks = 24 stills in two minutes, one process. What it lacks against the game: the figures, the HUD, the tier switcher's own settings.
+
+**Queued for the Director (the cursor owner's two minutes):** on a Development package of the landed tree,
+`tools\perf\start.ps1 -Exe <package>\ThirdJam.exe -Tier p3_clay -Shot <png> -Port 4719`, then `-Tier l2_night` (both cuts are 90 x 45), and the same two
+with a copy of each cut whose rink is 120 x 60 (two numbers in `tools/perf/cuts/perf.<tier>.cartridge.json`). Four stills; what to look at: the far net from
+the scripted human's camera (the puck through the cords), and the penalty side when play passes centre.
+
+## 15. Proof
+
+| What | Result |
+|---|---|
+| Blender build (`arena.py`, 120 x 60) | PASS: the triangles of section 11; openings 0.30 / 0.15 / 0.21 cm off; bench and box unchanged (2,816 and 2,144 triangles, the same sizes); `arena.stats.json` |
+| Headless import (`import_arena.py`, commandlet) | **A119 IMPORT PASS**: nine pieces; a piece equal to Blender's build is checked and kept (the bench and the box of evolution 1 were never imported again; their files are as they landed); the table, three frames and three nets were imported by this lane: triangles equal Blender's, the slots Blender wrote, every slot on a `/JamAssets/Look/MI_Toon_*` instance, UV0 extents equal, the opening measured again on the imported vertices (0.30 / 0.15 / 0.21 cm), each goal with its net under 3,000. `import.result.json`, `import.log.txt` |
+| Placement (`verify_arena.py`, commandlet) | **A119 VERIFY PASS**: on 90 x 45, 120 x 60 and 140 x 70, each with six goals (4 x 0.61, 6 x 0.61, 4 x 1.22 built; 5.5 x 0.61 scaled 0.917; 2.5 x 0.61 scaled 0.625; 5 x 1.0 scaled 1.25 x 0.82): the opening in the world within **0.30 cm** of the cartridge's goal and of the goal trigger box (limit 2 cm); goal places, yaw, the net on the frame's transform, frame with the stencil and net without, B's two instances; the table's place and slots; tiers built and switched; `jam.rink.arena 0` and construction off give the code frame back. Evolution 1's checks all still pass. `verify.result.json` |
+| Ledger | seven rows added; `node tools/gate/check-assets-ledger.mjs` PASS |
+| Full `Jam` filter (the gate's invocation plus `-Multiprocess`), on the final build | **PASS: 156 tests, 0 failed, 100 s** (`Jam.Core.Determinism`, `Jam.Bot.BundleKeepsRegularHash` among them); 0 "missing usage flag" lines. Also 156 / 0 on the build before the net was split |
+| Hash | `hockey.boost all_star seed 1: 19607 frames ... sim hash 91199b105218b20d`: the same before this lane (A103's gate, main at 18:46) and after; no file under `JamCore` changed |
+| Engine stills | 24 before the split and 24 after, looked at; the fault the first set showed (the inked net on `l2_night`) answered by the split and shot again |
+| Editor build | PASS twice (58.5 s; the second 787.9 s, of which about twelve minutes in the machine's build queue: eight `Build.bat` waiting on one lock) |
+
+The gate script itself (`tools/gate/premerge.ps1`) was not run: its ownership step runs git, and a lane runs no git. Its ledger, build and automation steps were
+run by their own commands.
+
+**For the package**: evolution 1's `+DirectoriesToAlwaysCook=(Path="/Game/Arena")` covers the new meshes (they are loaded by path too). Without it a package
+shows the code frame and the code benches: the fallback, with no error.
+
+## 16. How to run it again
+
+```
+BL="C:/Program Files/Blender Foundation/Blender 4.2/blender.exe"
+UE="C:/Program Files/Epic Games/UE_5.9/Engine/Binaries/Win64/UnrealEditor-Cmd.exe"
+W=$(pwd -W)
+"$BL" -b --factory-startup -P tools/blender/arena/arena.py -- --length 120 --width 60 --out tools/blender/arena/out --render2 --img docs/experiments/img/arena
+"$UE" "$W/Game/ThirdJam.uproject" -run=pythonscript -script="$W/tools/blender/arena/import_arena.py" -unattended -nopause -nosplash -NullRHI -Multiprocess -abslog="$W/Game/logs/a119-import.log"
+"$UE" "$W/Game/ThirdJam.uproject" -run=pythonscript -script="$W/tools/blender/arena/verify_arena.py" -unattended -nopause -nosplash -NullRHI -Multiprocess -abslog="$W/Game/logs/a119-verify.log"
+"$UE" "$W/Game/ThirdJam.uproject" -ExecCmds="py $W/tools/blender/arena/engine_stills.py" -RenderOffScreen -Multiprocess -unattended -nopause -nosplash -log -abslog="$W/Game/logs/a119-stills.log"
+```
+`--render2` writes this evolution's four Blender stills (and raw extras to `out/render2/`); `--render` still writes evolution 1's eight. With `-Multiprocess` a
+commandlet starts in under a minute (import, clearance and verify ran in one process through a three-line runner). `ARENA_FORCE=1` imports every piece again;
+`ARENA_STILLS_ONLY=l2_night-90` renders one job; `ARENA_STILLS_NO_STENCIL=arena_goal_pos` is the outline A/B.
+
+## 17. Pitfalls met in evolution 2
+
+1. `-ExecutePythonScript` quits the editor as soon as the script returns: a script that needs frames (a still) goes through `-ExecCmds="py <path>"` and quits itself.
+2. `unreal.KismetMaterialLibrary` does not exist in Python: it is `unreal.MaterialLibrary`.
+3. `LevelEditorSubsystem.load_level` refuses a second load over a changed map; the policy enum is found by name (`*UnsavedChangesPolicy*`) and `DISCARD` is passed. Never `SAVE`: the map is B's.
+4. The custom depth stencil is per component, not per section: a part that must not be outlined needs a mesh and a component of its own.
+5. `LevelEditorSubsystem.editor_set_viewport_realtime(True)` raises an ensure off screen; `editor_invalidate_viewports()` every tick of the warm-up does the job.
+6. The off-screen editor tries the default MCP port 8000 and logs an error when another editor holds it; nothing else happens.
+7. A bash heredoc that carries an apostrophe-heavy Python source failed in this shell; the patches were written as files.
+8. The build tool's lock is not first come, first served: a build asked for at 20:41 ran at about 20:53 while one asked for at 20:30 still waited. Ask for the
+   rebuild before the work that does not need it, not after.
+9. Opening B's rig map in the editor moves the time of `Game/Plugins/JamAssets/Content` (the directory itself: a probe file made and removed); no file under it
+   is written (checked by time after every run).
+
+## 18. For device B (evolution 2)
+
+- Referenced by name, not edited: `MI_Toon_NetFrame`, `MI_Toon_NetMesh`, `MI_Toon_Board`, `MI_Toon_KickPlate`, `MI_Toon_Bench`, `MI_Toon_Dark` (and, from evolution 1,
+  `MI_Toon_Blue`, `MI_Toon_Orange`). Renaming or deleting one drops that slot to the LookLab stand-in or the tinted basic material.
+- **`MI_Toon_NetMesh` now covers cords, not a sheet.** Its pattern shows on a 3 cm cord as dark dashes along a pale rope: it reads as rope, by luck. A wish: a plain
+  instance for cords (off-white, no pattern), under any name; the slot is `net`.
+- **Snow banks on `l2_night`** (`rig_clearance.py`, 90 x 45, `rig_clearance.result.json`): `Snow_L2_Night_Bank_3` (-y, boxes y = -25.30 to -23.19 m, 0.6 m high) still
+  crosses **both penalty boxes and now the scorer's table** (x = -5.3 to +5.3 m, floor at 10 cm, desk top at 85 cm); `Snow_L2_Night_Bank_4` (+y) still crosses both
+  benches (x = -0.134 L to +0.134 L). Ask as before: notch the two banks over those x ranges or lower them under 10 cm there. Nothing of any rig crosses the goals
+  (the `Beam_P4_Broadcast_*` actors that overlap the goal volumes are hidden in game).
+- On `l2_night` nothing lights the outside of the boards: the boxes, the table and the benches are ink on black there (engine still `engine-l2_night-*-boxes`),
+  only the lamp, the digits and the clocks' hands catch the eye. A low warm light behind each long side would show them; or say they should stay dark.
+  The same on `p3_clay` at 120 x 60, more mildly (`engine-p3_clay-120x60-boxes`): if the rig's lights do not grow with the rig, the long sides dim on the big rink.
+- The pieces reach, on -y: the table x = -0.70 to +0.70 m, out to y = -(W/2 + 1.92) m, 2.78 m high at the lamp. The goals stand inside the rink.

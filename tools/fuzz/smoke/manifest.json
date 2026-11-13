@@ -22,7 +22,7 @@
    "name": "fuzz-00003",
    "file": "c00003.json",
    "kind": "valid",
-   "profile": "every-ability/rand/1",
+   "profile": "every-ability/mixed/0.9",
    "ok": true,
    "pointers": []
   },
@@ -30,7 +30,7 @@
    "name": "fuzz-00004",
    "file": "c00004.json",
    "kind": "valid",
-   "profile": "contact-extremes-lo/mixed/1",
+   "profile": "contact-extremes-lo/limits/0.5",
    "ok": true,
    "pointers": []
   },
@@ -38,7 +38,7 @@
    "name": "fuzz-00005",
    "file": "c00005.json",
    "kind": "valid",
-   "profile": "contact-extremes-hi/rand/0.5",
+   "profile": "contact-extremes-hi/limits/0.5",
    "ok": true,
    "pointers": []
   },
@@ -46,7 +46,7 @@
    "name": "fuzz-00006",
    "file": "c00006.json",
    "kind": "valid",
-   "profile": "tap-longer-than-charge/mid/1",
+   "profile": "tap-longer-than-charge/rand/0.9",
    "ok": true,
    "pointers": []
   },
@@ -54,7 +54,7 @@
    "name": "fuzz-00007",
    "file": "c00007.json",
    "kind": "valid",
-   "profile": "tap-with-no-charge/mixed/1",
+   "profile": "tap-with-no-charge/mid/0.9",
    "ok": true,
    "pointers": []
   },
@@ -62,7 +62,7 @@
    "name": "fuzz-00008",
    "file": "c00008.json",
    "kind": "valid",
-   "profile": "smallest-reach/rand/1",
+   "profile": "smallest-reach/limits/0.5",
    "ok": true,
    "pointers": []
   },
@@ -70,7 +70,7 @@
    "name": "fuzz-00009",
    "file": "c00009.json",
    "kind": "valid",
-   "profile": "largest-reach/mid/1",
+   "profile": "largest-reach/limits/0.5",
    "ok": true,
    "pointers": []
   },
@@ -78,7 +78,7 @@
    "name": "fuzz-00010",
    "file": "c00010.json",
    "kind": "valid",
-   "profile": "frictionless-boards-dead/mid/1",
+   "profile": "frictionless-boards-dead/limits/1",
    "ok": true,
    "pointers": []
   },
@@ -86,7 +86,7 @@
    "name": "fuzz-00011",
    "file": "c00011.json",
    "kind": "valid",
-   "profile": "sticky-ice/rand/0.9",
+   "profile": "sticky-ice/mid/0.5",
    "ok": true,
    "pointers": []
   },
@@ -102,7 +102,7 @@
    "name": "fuzz-00013",
    "file": "c00013.json",
    "kind": "valid",
-   "profile": "max-lists/mid/1",
+   "profile": "max-lists/rand/1",
    "ok": true,
    "pointers": []
   },
@@ -110,7 +110,7 @@
    "name": "fuzz-00014",
    "file": "c00014.json",
    "kind": "valid",
-   "profile": "puck-tiny-and-huge/limits/0.5",
+   "profile": "puck-tiny-and-huge/mid/0.9",
    "ok": true,
    "pointers": []
   },
@@ -118,7 +118,7 @@
    "name": "fuzz-00015",
    "file": "c00015.json",
    "kind": "valid",
-   "profile": "goal-extremes/limits/0.5",
+   "profile": "goal-extremes/rand/0.9",
    "ok": true,
    "pointers": []
   },
@@ -134,7 +134,7 @@
    "name": "fuzz-00017",
    "file": "c00017.json",
    "kind": "valid",
-   "profile": "no-penalties-no-timer-win9/mixed/0.9",
+   "profile": "no-penalties-no-timer-win9/rand/1",
    "ok": true,
    "pointers": []
   },
@@ -142,7 +142,7 @@
    "name": "fuzz-00018",
    "file": "c00018.json",
    "kind": "valid",
-   "profile": "mass-and-speed-limits/rand/0.5",
+   "profile": "mass-and-speed-limits/mid/0.5",
    "ok": true,
    "pointers": []
   },
@@ -150,7 +150,7 @@
    "name": "fuzz-00019",
    "file": "c00019.json",
    "kind": "valid",
-   "profile": "two-v-two/mixed/0.9",
+   "profile": "two-v-two/mixed/1",
    "ok": true,
    "pointers": []
   },
@@ -158,7 +158,7 @@
    "name": "fuzz-00020",
    "file": "c00020.json",
    "kind": "valid",
-   "profile": "five-v-two/mixed/0.9",
+   "profile": "five-v-two/limits/0.5",
    "ok": true,
    "pointers": []
   },
@@ -166,7 +166,7 @@
    "name": "fuzz-00021",
    "file": "c00021.json",
    "kind": "valid",
-   "profile": "ai-extremes/mixed/1",
+   "profile": "ai-extremes/rand/0.5",
    "ok": true,
    "pointers": []
   },
@@ -182,7 +182,7 @@
    "name": "fuzz-00023",
    "file": "c00023.json",
    "kind": "valid",
-   "profile": "shortest-timer/mid/1",
+   "profile": "shortest-timer/mid/0.9",
    "ok": true,
    "pointers": []
   },
@@ -190,7 +190,7 @@
    "name": "fuzz-00024",
    "file": "c00024.json",
    "kind": "valid",
-   "profile": "every-ability/limits/0.9",
+   "profile": "every-ability/mid/0.5",
    "ok": true,
    "pointers": []
   },
@@ -198,7 +198,7 @@
    "name": "fuzz-00025",
    "file": "c00025.json",
    "kind": "valid",
-   "profile": "contact-extremes-lo/rand/0.9",
+   "profile": "contact-extremes-lo/limits/1",
    "ok": true,
    "pointers": []
   },
@@ -206,7 +206,7 @@
    "name": "fuzz-00026",
    "file": "c00026.json",
    "kind": "valid",
-   "profile": "contact-extremes-hi/rand/0.5",
+   "profile": "contact-extremes-hi/mid/0.5",
    "ok": true,
    "pointers": []
   },
@@ -214,7 +214,7 @@
    "name": "fuzz-00027",
    "file": "c00027.json",
    "kind": "valid",
-   "profile": "tap-longer-than-charge/rand/0.5",
+   "profile": "tap-longer-than-charge/limits/0.5",
    "ok": true,
    "pointers": []
   },
@@ -222,7 +222,7 @@
    "name": "fuzz-00028",
    "file": "c00028.json",
    "kind": "valid",
-   "profile": "tap-with-no-charge/limits/0.9",
+   "profile": "tap-with-no-charge/rand/0.9",
    "ok": true,
    "pointers": []
   },
@@ -230,7 +230,7 @@
    "name": "fuzz-00029",
    "file": "c00029.json",
    "kind": "valid",
-   "profile": "smallest-reach/mixed/0.5",
+   "profile": "smallest-reach/limits/0.9",
    "ok": true,
    "pointers": []
   },
@@ -238,7 +238,7 @@
    "name": "fuzz-00030",
    "file": "c00030.json",
    "kind": "valid",
-   "profile": "largest-reach/mid/1",
+   "profile": "largest-reach/limits/0.5",
    "ok": true,
    "pointers": []
   },
@@ -246,7 +246,7 @@
    "name": "fuzz-00031",
    "file": "c00031.json",
    "kind": "valid",
-   "profile": "frictionless-boards-dead/limits/0.9",
+   "profile": "frictionless-boards-dead/mixed/0.5",
    "ok": true,
    "pointers": []
   },
@@ -254,7 +254,7 @@
    "name": "fuzz-00032",
    "file": "c00032.json",
    "kind": "valid",
-   "profile": "sticky-ice/limits/0.9",
+   "profile": "sticky-ice/mixed/1",
    "ok": true,
    "pointers": []
   },
@@ -262,7 +262,7 @@
    "name": "fuzz-00033",
    "file": "c00033.json",
    "kind": "valid",
-   "profile": "fast-skaters-small-rink/mixed/0.9",
+   "profile": "fast-skaters-small-rink/limits/0.9",
    "ok": true,
    "pointers": []
   },
@@ -270,7 +270,7 @@
    "name": "fuzz-00034",
    "file": "c00034.json",
    "kind": "valid",
-   "profile": "max-lists/limits/0.5",
+   "profile": "max-lists/mid/0.9",
    "ok": true,
    "pointers": []
   },
@@ -278,7 +278,7 @@
    "name": "fuzz-00035",
    "file": "c00035.json",
    "kind": "valid",
-   "profile": "puck-tiny-and-huge/limits/0.9",
+   "profile": "puck-tiny-and-huge/mid/0.9",
    "ok": true,
    "pointers": []
   },
@@ -286,7 +286,7 @@
    "name": "fuzz-00036",
    "file": "c00036.json",
    "kind": "valid",
-   "profile": "goal-extremes/mixed/0.9",
+   "profile": "goal-extremes/rand/0.5",
    "ok": true,
    "pointers": []
   },
@@ -294,7 +294,7 @@
    "name": "fuzz-00037",
    "file": "c00037.json",
    "kind": "valid",
-   "profile": "every-hook-8/mid/0.5",
+   "profile": "every-hook-8/rand/0.5",
    "ok": true,
    "pointers": []
   },
@@ -302,7 +302,7 @@
    "name": "fuzz-00038",
    "file": "c00038.json",
    "kind": "valid",
-   "profile": "no-penalties-no-timer-win9/limits/0.5",
+   "profile": "no-penalties-no-timer-win9/mixed/0.5",
    "ok": true,
    "pointers": []
   },
@@ -310,7 +310,7 @@
    "name": "fuzz-00039",
    "file": "c00039.json",
    "kind": "valid",
-   "profile": "mass-and-speed-limits/mixed/0.9",
+   "profile": "mass-and-speed-limits/limits/0.5",
    "ok": true,
    "pointers": []
   },
@@ -318,7 +318,7 @@
    "name": "fuzz-00040",
    "file": "c00040.json",
    "kind": "valid",
-   "profile": "two-v-two/limits/1",
+   "profile": "two-v-two/rand/1",
    "ok": true,
    "pointers": []
   },
@@ -326,7 +326,7 @@
    "name": "fuzz-00041",
    "file": "c00041.json",
    "kind": "valid",
-   "profile": "five-v-two/mid/1",
+   "profile": "five-v-two/rand/0.9",
    "ok": true,
    "pointers": []
   },
@@ -334,7 +334,7 @@
    "name": "fuzz-00042",
    "file": "c00042.json",
    "kind": "valid",
-   "profile": "ai-extremes/rand/0.5",
+   "profile": "ai-extremes/limits/0.9",
    "ok": true,
    "pointers": []
   },
@@ -342,7 +342,7 @@
    "name": "fuzz-00043",
    "file": "c00043.json",
    "kind": "valid",
-   "profile": "smallest-rink-5v5-most-pickups/rand/1",
+   "profile": "smallest-rink-5v5-most-pickups/rand/0.5",
    "ok": true,
    "pointers": []
   },
@@ -366,7 +366,7 @@
    "name": "fuzz-00046",
    "file": "c00046.json",
    "kind": "valid",
-   "profile": "contact-extremes-lo/mid/0.9",
+   "profile": "contact-extremes-lo/rand/0.9",
    "ok": true,
    "pointers": []
   },
@@ -374,7 +374,7 @@
    "name": "fuzz-00047",
    "file": "c00047.json",
    "kind": "valid",
-   "profile": "contact-extremes-hi/limits/0.9",
+   "profile": "contact-extremes-hi/mixed/0.5",
    "ok": true,
    "pointers": []
   },
@@ -382,7 +382,7 @@
    "name": "fuzz-00048",
    "file": "c00048.json",
    "kind": "valid",
-   "profile": "tap-longer-than-charge/mid/0.5",
+   "profile": "tap-longer-than-charge/limits/0.5",
    "ok": true,
    "pointers": []
   },
@@ -390,7 +390,7 @@
    "name": "fuzz-00049",
    "file": "c00049.json",
    "kind": "valid",
-   "profile": "tap-with-no-charge/limits/0.5",
+   "profile": "tap-with-no-charge/mid/0.9",
    "ok": true,
    "pointers": []
   },
@@ -398,7 +398,7 @@
    "name": "fuzz-00050",
    "file": "c00050.json",
    "kind": "valid",
-   "profile": "smallest-reach/mid/0.5",
+   "profile": "smallest-reach/limits/1",
    "ok": true,
    "pointers": []
   },
@@ -406,7 +406,7 @@
    "name": "fuzz-00051",
    "file": "c00051.json",
    "kind": "valid",
-   "profile": "largest-reach/mixed/0.9",
+   "profile": "largest-reach/mid/0.5",
    "ok": true,
    "pointers": []
   },
@@ -414,7 +414,7 @@
    "name": "fuzz-00052",
    "file": "c00052.json",
    "kind": "valid",
-   "profile": "frictionless-boards-dead/mixed/1",
+   "profile": "frictionless-boards-dead/rand/0.9",
    "ok": true,
    "pointers": []
   },
@@ -422,7 +422,7 @@
    "name": "fuzz-00053",
    "file": "c00053.json",
    "kind": "valid",
-   "profile": "sticky-ice/mixed/0.9",
+   "profile": "sticky-ice/limits/0.5",
    "ok": true,
    "pointers": []
   },
@@ -430,7 +430,7 @@
    "name": "fuzz-00054",
    "file": "c00054.json",
    "kind": "valid",
-   "profile": "fast-skaters-small-rink/rand/0.5",
+   "profile": "fast-skaters-small-rink/mid/0.5",
    "ok": true,
    "pointers": []
   },
@@ -438,7 +438,7 @@
    "name": "fuzz-00055",
    "file": "c00055.json",
    "kind": "valid",
-   "profile": "max-lists/mixed/1",
+   "profile": "max-lists/limits/1",
    "ok": true,
    "pointers": []
   },
@@ -446,7 +446,7 @@
    "name": "fuzz-00056",
    "file": "c00056.json",
    "kind": "valid",
-   "profile": "puck-tiny-and-huge/mid/1",
+   "profile": "puck-tiny-and-huge/rand/0.9",
    "ok": true,
    "pointers": []
   },
@@ -462,7 +462,7 @@
    "name": "fuzz-00058",
    "file": "c00058.json",
    "kind": "valid",
-   "profile": "every-hook-8/limits/0.5",
+   "profile": "every-hook-8/rand/0.9",
    "ok": true,
    "pointers": []
   },
@@ -470,7 +470,7 @@
    "name": "fuzz-00059",
    "file": "c00059.json",
    "kind": "valid",
-   "profile": "no-penalties-no-timer-win9/mixed/0.9",
+   "profile": "no-penalties-no-timer-win9/limits/0.5",
    "ok": true,
    "pointers": []
   },
@@ -478,7 +478,7 @@
    "name": "fuzz-00060",
    "file": "c00060.json",
    "kind": "valid",
-   "profile": "mass-and-speed-limits/rand/0.5",
+   "profile": "mass-and-speed-limits/mid/0.5",
    "ok": true,
    "pointers": []
   },
@@ -486,37 +486,37 @@
    "name": "fuzz-bad-00001",
    "file": "c00061.json",
    "kind": "invalid",
-   "profile": "unknown-key",
+   "profile": "wrong-type",
    "ok": false,
    "pointers": [
-    "/game/pickups/1/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    "/game/contact/down_ratio"
    ]
   },
   {
    "name": "fuzz-bad-00002",
    "file": "c00062.json",
    "kind": "invalid",
-   "profile": "missing-required",
+   "profile": "null",
    "ok": false,
    "pointers": [
-    "/values"
+    "/game/abilities/0/kind"
    ]
   },
   {
    "name": "fuzz-bad-00003",
    "file": "c00063.json",
    "kind": "invalid",
-   "profile": "missing-required",
+   "profile": "unknown-key",
    "ok": false,
    "pointers": [
-    "/game/rink/length_m"
+    "/game/rules/hooks/2/Speed"
    ]
   },
   {
    "name": "fuzz-bad-00004",
    "file": "c00064.json",
    "kind": "invalid",
-   "profile": "text:single-quote",
+   "profile": "text:null-root",
    "ok": false,
    "pointers": [
     "/"
@@ -526,10 +526,10 @@
    "name": "fuzz-bad-00005",
    "file": "c00065.json",
    "kind": "invalid",
-   "profile": "text:big-int",
+   "profile": "text:tiny-exp",
    "ok": false,
    "pointers": [
-    "/seed"
+    "/game/skater/speed"
    ]
   },
   {
@@ -539,17 +539,17 @@
    "profile": "null",
    "ok": false,
    "pointers": [
-    "/game/teams/0/skaters/4"
+    "/game/effects/6/stats/0/add"
    ]
   },
   {
    "name": "fuzz-bad-00007",
    "file": "c00067.json",
    "kind": "invalid",
-   "profile": "fractional-int",
+   "profile": "bad-set-param",
    "ok": false,
    "pointers": [
-    "/game/effects/4/duration_frames"
+    "/game/rules/hooks/0/then/0/value"
    ]
   },
   {
@@ -559,37 +559,37 @@
    "profile": "wrong-type",
    "ok": false,
    "pointers": [
-    "/game/shot/lift"
+    "/game/teams/0/skaters/1"
    ]
   },
   {
    "name": "fuzz-bad-00009",
    "file": "c00069.json",
    "kind": "invalid",
-   "profile": "missing-required",
+   "profile": "fractional-int",
    "ok": false,
    "pointers": [
-    "/game/rules/mode"
+    "/game/rules/penalty_frames"
    ]
   },
   {
    "name": "fuzz-bad-00010",
    "file": "c00070.json",
    "kind": "invalid",
-   "profile": "empty-list-needed",
+   "profile": "unknown-key",
    "ok": false,
    "pointers": [
-    "/game/teams"
+    "/game/teams/0/skaters/1/x_y"
    ]
   },
   {
    "name": "fuzz-bad-00011",
    "file": "c00071.json",
    "kind": "invalid",
-   "profile": "fractional-int",
+   "profile": "null",
    "ok": false,
    "pointers": [
-    "/game/shot/lift/half_frames"
+    "/game/pass/saucer/half_frames"
    ]
   },
   {
@@ -599,7 +599,7 @@
    "profile": "null",
    "ok": false,
    "pointers": [
-    "/game/effects/9/stats/0/multiply"
+    "/game/rules/hooks/1/then"
    ]
   },
   {
@@ -609,12 +609,24 @@
    "profile": "missing-required",
    "ok": false,
    "pointers": [
-    "/game/skater/speed"
+    "/tunables",
+    "/values/ai_speed_scale",
+    "/values/skater_speed"
    ]
   },
   {
    "name": "fuzz-bad-00014",
    "file": "c00074.json",
+   "kind": "invalid",
+   "profile": "wrong-type",
+   "ok": false,
+   "pointers": [
+    "/game/rules/hooks/6/then/2/param"
+   ]
+  },
+  {
+   "name": "fuzz-bad-00015",
+   "file": "c00075.json",
    "kind": "invalid",
    "profile": "missing-required",
    "ok": false,
@@ -623,63 +635,53 @@
    ]
   },
   {
-   "name": "fuzz-bad-00015",
-   "file": "c00075.json",
-   "kind": "invalid",
-   "profile": "fractional-int",
-   "ok": false,
-   "pointers": [
-    "/game/contact/stagger_frames"
-   ]
-  },
-  {
    "name": "fuzz-bad-00016",
    "file": "c00076.json",
    "kind": "invalid",
-   "profile": "unknown-key",
+   "profile": "bad-set-param",
    "ok": false,
    "pointers": [
-    "/game/look/x_y"
+    "/game/rules/hooks/0/then/0/value"
    ]
   },
   {
    "name": "fuzz-bad-00017",
    "file": "c00077.json",
    "kind": "invalid",
-   "profile": "null",
+   "profile": "fractional-int",
    "ok": false,
    "pointers": [
-    "/game/skater/pass_lead_frames"
+    "/game/shot/charge_frames_max"
    ]
   },
   {
    "name": "fuzz-bad-00018",
    "file": "c00078.json",
    "kind": "invalid",
-   "profile": "null",
+   "profile": "wrong-type",
    "ok": false,
    "pointers": [
-    "/game/rink/zones/1/kind"
+    "/game/contact/sprint_stability"
    ]
   },
   {
    "name": "fuzz-bad-00019",
    "file": "c00079.json",
    "kind": "invalid",
-   "profile": "null",
+   "profile": "unknown-key",
    "ok": false,
    "pointers": [
-    "/game/pickups/0/kind"
+    "/game/rules/hooks/0/then/0/Speed"
    ]
   },
   {
    "name": "fuzz-bad-00020",
    "file": "c00080.json",
    "kind": "invalid",
-   "profile": "unknown-key",
+   "profile": "text:nan",
    "ok": false,
    "pointers": [
-    "/game/rules/Speed"
+    "/game/skater/speed"
    ]
   }
  ],

@@ -209,8 +209,9 @@ bool FJamAbilitiesShotgun::RunTest(const FString& Parameters)
 	if (!C) return false;
 	// The human at x = -20 with the puck, facing the far net; three opponents standing on the line at 5, 10 and 15 m (0.0, +0.6 and -0.6 m off it).
 	// With F: the shot leaves 1.5x as fast, all three go down (cause shotgun) and the puck passes x = -2; without: the first body stops the shot.
-	struct FOut { double Speed = 0; int32 Down = 0, Shotgun = 0; double MaxX = -100; };
-	auto Run = [&](bool bAbility)
+	// Lane A113 (R-0051 point 3): Graced = the opponent (0 to 2) inside its release grace: the shotgun passes it over as it does a shielded skater.
+	struct FOut { double Speed = 0; int32 Down = 0, Shotgun = 0; double MaxX = -100; bool bDown[3] = { false, false, false }; int32 GraceLeft = 0; };
+	auto Run = [&](bool bAbility, int32 Graced = -1)
 	{
 		FAbilityScene Sc(With(C->Game, { Ab(TEXT("shotgun"), TEXT("mode")) }), FVector2D(-20, 0), true);
 		const double D = Sc.Dir;
@@ -218,6 +219,7 @@ bool FJamAbilitiesShotgun::RunTest(const FString& Parameters)
 		const double Off[3] = { 0.0, 0.6, -0.6 };
 		for (int32 k = 0; k < 3 && k < Sc.Opps.Num(); ++k) Sc.Sim->SetSkater(Sc.Opps[k], FVector2D(-20 + D * (5.0 * (k + 1)), Off[k]), FVector2D::ZeroVector, D > 0 ? PI : 0.0);
 		FOut O;
+		if (Graced >= 0 && Graced < Sc.Opps.Num()) const_cast<FJamSkaterState&>(Sc.Sim->GetSkaters()[Sc.Opps[Graced]]).GraceFrames = 200;   // test only: just released
 		Sc.Press(bAbility ? &FJamInput::bAbility : &FJamInput::bShoot);
 		O.Speed = Sc.Sim->GetPuck().Vel.Size();
 		O.Shotgun += Count(Sc.Sim, JamEvents::Knockdown, TEXT("shotgun"));
@@ -227,7 +229,8 @@ bool FJamAbilitiesShotgun::RunTest(const FString& Parameters)
 			O.Shotgun += Count(Sc.Sim, JamEvents::Knockdown, TEXT("shotgun"));
 			O.MaxX = FMath::Max(O.MaxX, Sc.Sim->GetPuck().Pos.X * D);
 		}
-		for (int32 k = 0; k < 3 && k < Sc.Opps.Num(); ++k) if (Sc.S(Sc.Opps[k]).IsDown()) ++O.Down;
+		for (int32 k = 0; k < 3 && k < Sc.Opps.Num(); ++k) if (Sc.S(Sc.Opps[k]).IsDown()) { ++O.Down; O.bDown[k] = true; }
+		if (Graced >= 0 && Graced < Sc.Opps.Num()) O.GraceLeft = Sc.Sim->GetSkaters()[Sc.Opps[Graced]].GraceFrames;
 		AddInfo(FString::Printf(TEXT("shotgun %d: speed %.2f m/s, down %d, shotgun knockdowns %d, puck reached x %.1f, used %d"), bAbility ? 1 : 0, O.Speed, O.Down, O.Shotgun, O.MaxX * D, Sc.Human().AbilitiesUsed));
 		return O;
 	};
@@ -238,6 +241,11 @@ bool FJamAbilitiesShotgun::RunTest(const FString& Parameters)
 	TestEqual(TEXT("shotgun: three knockdown events, cause shotgun"), Gun.Shotgun, 3);
 	TestTrue(TEXT("shotgun: the puck goes through the crowd (past the third body at x -5)"), Gun.MaxX > -4.0);
 	TestEqual(TEXT("plain: nobody knocked down"), Plain.Down, 0);
+	// Lane A113 (R-0051 point 3): the third skater on the path was released a moment ago: the two before it go down, it stays up.
+	const FOut Grace = Run(true, 2);
+	AddInfo(FString::Printf(TEXT("shotgun, the third skater inside its grace: down %d %d %d, shotgun knockdowns %d, grace left %d"), Grace.bDown[0] ? 1 : 0, Grace.bDown[1] ? 1 : 0, Grace.bDown[2] ? 1 : 0, Grace.Shotgun, Grace.GraceLeft));
+	TestTrue(TEXT("shotgun, the third skater inside its release grace: the two before it go down"), Grace.bDown[0] && Grace.bDown[1] && Grace.Shotgun == 2);
+	TestTrue(TEXT("... and the skater inside its grace stays up, its grace still running"), !Grace.bDown[2] && Grace.GraceLeft > 0);
 	TestTrue(TEXT("plain: the first body stops it short of the second"), Plain.MaxX < -20 + 10.0 - 0.3);
 	return true;
 }

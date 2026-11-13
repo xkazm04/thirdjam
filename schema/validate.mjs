@@ -25,6 +25,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseStrict } from './strict-json.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SCHEMA_FILE = resolve(HERE, 'cartridge.schema.json');
@@ -492,6 +493,18 @@ const ACTION_NEEDS = {
   add_score: ['value'], set_score_multiplier: ['value'], shrink_rink: ['value'], grow_rink: ['value'],
   set_param: ['param', 'value'], spawn_pickup: ['kind'], apply_modifier: ['kind', 'frames'], announce: ['text'],
 };
+// Lane A118 (track S3): the tunables a hook's set_param may name and the game field whose schema range (limits.json game_ranges) bounds its value.
+// The same nine keys the loader's `values` map onto game fields (README "Tunables"; C++ UJamCartridge::ApplyValueKey and SetParamRange). A name outside this
+// list, or a value outside the field's range, is an error in both validators; the sim clamps as well (UJamSim::SetParam), for callers that bypass the validator.
+export const SET_PARAM_FIELD = {
+  skater_speed: 'skater.speed', skater_turn_rate: 'skater.turn_rate', shot_speed: 'shot.speed', puck_max_speed: 'puck.max_speed',
+  ice_friction: 'rink.ice_friction', board_restitution: 'rink.board_restitution', ai_speed_scale: 'ai.speed_scale', ai_red_skill: 'ai.red_skill',
+  goal_pause_frames: 'rules.goal_pause_frames',
+};
+export function setParamRange(param) {
+  const field = Object.hasOwn(SET_PARAM_FIELD, param) ? SET_PARAM_FIELD[param] : undefined;
+  return field ? String(loadLimits().game_ranges[field]).split('..').map(Number) : undefined;
+}
 function checkHook(h, ptr, errors) {
   if (h.when === 'on_frame' && h.every_frames === undefined) errors.push(`at ${ptr}/every_frames: a hook with when "on_frame" needs every_frames (60 to 18000 frames, 60 per second).`);
   if (h.when !== undefined && h.when !== 'on_frame' && h.every_frames !== undefined) errors.push(`at ${ptr}/every_frames: every_frames only applies to when "on_frame"; remove it.`);
@@ -510,6 +523,12 @@ function checkHook(h, ptr, errors) {
       if (a.do === 'add_score' && !Number.isInteger(a.value)) errors.push(`at ${p}/value: add_score adds whole goals; ${a.value} is not a whole number.`);
       if (a.do === 'set_score_multiplier' && (a.value < 1 || a.value > 5)) errors.push(`at ${p}/value: a score multiplier is 1 to 5, found ${a.value}.`);
       if ((a.do === 'shrink_rink' || a.do === 'grow_rink') && (a.value < 0.05 || a.value > 0.5)) errors.push(`at ${p}/value: ${a.do} takes the fraction to change the rink by, 0.05 to 0.5 (0.1 is 10 percent), found ${a.value}.`);
+    }
+    // Lane A118: set_param names one of the nine tunables and stays inside its field's range.
+    if (a.do === 'set_param' && typeof a.param === 'string') {
+      const range = setParamRange(a.param);
+      if (!range) errors.push(`at ${p}/param: set_param can change ${Object.keys(SET_PARAM_FIELD).join(', ')}; "${a.param}" is none of them.`);
+      else if (typeof a.value === 'number' && (a.value < range[0] || a.value > range[1])) errors.push(`at ${p}/value: ${a.param} lies within ${range[0]} to ${range[1]} (the range of game.${SET_PARAM_FIELD[a.param]}), found ${a.value}.`);
     }
   });
 }
@@ -618,6 +637,13 @@ function checkEngine(obj, limits, errors) {
 }
 
 // ---------- public API ----------
+
+// Lane A118: a cartridge's text, parsed as the C++ loader parses it (UJamCartridge::Validate / LoadFromString), then validated.
+export function validateCartridgeText(text, opts = {}) {
+  const strict = parseStrict(text);
+  if (strict.error) return { ok: false, errors: [strict.error] };
+  return validateCartridge(strict.value, opts);
+}
 
 export function validateCartridge(obj, opts = {}) {
   const limits = opts.limits ?? loadLimits();
@@ -754,10 +780,13 @@ function cli(argv) {
   }
   let errors;
   try {
-    const parsed = JSON.parse(text);
+    // Lane A118: the strict parser both sides share (duplicate keys refused, a byte order mark tolerated, the C++ loader's pointers).
+    const strict = parseStrict(text);
+    if (strict.error) throw Object.assign(new SyntaxError(strict.error), { strict: true });
+    const parsed = strict.value;
     errors = (base ? validateDesignerOutput(base, parsed) : validateCartridge(parsed)).errors;
   } catch (e) {
-    if (e instanceof SyntaxError) errors = [`at /: the file is not valid JSON (${e.message}).`];
+    if (e instanceof SyntaxError) errors = [e.strict ? e.message : `at /: the file is not valid JSON (${e.message}).`];
     else { console.error(`validator could not run: ${e.message}`); return 2; }
   }
   if (errors.length === 0) console.log(`PASS ${file}`);

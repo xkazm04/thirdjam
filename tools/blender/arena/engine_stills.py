@@ -1,0 +1,186 @@
+"""tools/blender/arena/engine_stills.py: the arena pieces rendered by the engine, off screen, without a game (Third Jam, track F3, lane A119).
+
+Why this exists: a match locks the mouse to its viewport (AHokejGameMode::EnsureMatchInputMode, EMouseLockMode::LockAlways), which Slate turns into a
+ClipCursor on the one system cursor; a lane that does not own the cursor cannot start a match. This script starts NO game: no player controller, no input
+mode, no window on screen. It opens device B's rig map in an off-screen editor, spawns the real ARinkActor (transient, nothing is saved), builds it for a
+rink and a look tier, sets MPC_Look.Clay as the rig's BP_LookParams would at BeginPlay, and takes stills from fixed cameras at the game camera's height
+(3.5 m) and field of view (70 degrees). It is the lane's own look at the pieces under B's materials and lights; it is NOT a still from the game
+(no figures, no HUD, no tier switcher).
+
+Run (Git Bash, from the worktree root; one process for every still):
+  "C:/Program Files/Epic Games/UE_5.9/Engine/Binaries/Win64/UnrealEditor-Cmd.exe" "$PWD/Game/ThirdJam.uproject" -ExecCmds="py $(pwd -W)/tools/blender/arena/engine_stills.py" \
+      -RenderOffScreen -Multiprocess -unattended -nopause -nosplash -log -abslog="$PWD/Game/logs/a119-stills.log"
+(-ExecCmds, not -ExecutePythonScript: that one quits the editor as soon as the script returns, before a frame is drawn. The rig map is changed in memory
+only: it is loaded again with the Discard policy between jobs and the editor quits without saving; the script never saves anything.)
+Writes PNG files to tools/blender/arena/out/engine/ and prints "A119 STILLS ..." lines; quits the editor when done or after its frame budget.
+"""
+import os
+
+import unreal
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+OUT = os.path.join(HERE, "out", "engine")
+RIG_LENGTH_M = 90.0          # ULookTierSwitcher::RigRinkLengthM: the rig is built for a 90 m rink and scaled with the rink's length
+WARM = 70                    # editor ticks between placing the camera and the shot (exposure, Lumen, virtual shadow maps settle)
+RES = (1600, 900)
+FOV = 70.0
+ONLY = os.environ.get("ARENA_STILLS_ONLY", "")            # e.g. "l2_night-90" to render one job
+SUFFIX = os.environ.get("ARENA_STILLS_SUFFIX", "")        # appended to the file names (an A/B)
+NO_STENCIL = os.environ.get("ARENA_STILLS_NO_STENCIL", "").split(",")   # component properties whose custom depth is switched off (an A/B of the outline)
+JOBS = [("p3_clay", "LR_P3_Clay", 1.0, 90, 45), ("p3_clay", "LR_P3_Clay", 1.0, 120, 60), ("l2_night", "LR_L2_Night", 0.0, 90, 45), ("l2_night", "LR_L2_Night", 0.0, 120, 60)]
+
+
+def log(msg):
+    unreal.log("A119 STILLS " + msg)
+
+
+def views(length, width):
+    gl = length * 0.5 - 4.0
+    bx = 0.0833 * length
+    return [
+        ("goal", (gl - 11.0, 1.9, 3.5), (gl - 1.5, 0.6, 0.6)),                               # 6 m behind a skater 5 m from the +x net
+        ("goal-close", (gl - 5.0, 1.3, 2.2), (gl + 0.5, 0.0, 0.3)),                          # closer than the game camera comes: the frame and the cords
+        ("goal-own-end", (gl + 3.3, -0.7, 3.5), (gl - 1.6, -0.2, 0.3)),                      # defending: the camera behind the own net, looking through its top
+        ("boxes", (-7.0, -(width * 0.5 - 13.0), 3.5), (0.5, -(width * 0.5 + 0.8), 1.1)),     # the penalty side from the ice
+        ("benches", (bx - 13.0, width * 0.5 - 12.0, 3.5), (bx - 2.0, width * 0.5 + 0.6, 0.9)),
+        ("over", (-length * 0.30, width * 0.12, 14.0), (length * 0.18, -width * 0.10, 0.0)),  # not a game camera: everything in one frame
+    ]
+
+
+class Run:
+    def __init__(self):
+        self.job = -1
+        self.view = 0
+        self.wait = 0
+        self.state = "next_job"
+        self.frames = 0
+        self.cam = None
+        self.rink = None
+        self.pending = None
+        self.done = []
+        os.makedirs(OUT, exist_ok=True)
+        self.les = unreal.get_editor_subsystem(unreal.LevelEditorSubsystem)
+        self.eas = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
+        self.handle = unreal.register_slate_post_tick_callback(self.tick)
+
+    def world(self):
+        return unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem).get_editor_world()
+
+    def start_job(self):
+        tier, rig, clay, length, width = JOBS[self.job]
+        # a fresh rig map for every job (the scale below is applied once); what the last job changed in memory is DISCARDED, never saved
+        policy = [getattr(unreal, n) for n in dir(unreal) if "UnsavedChangesPolicy" in n]
+        if self.job == 0 or not policy:
+            ok = self.les.load_level("/JamAssets/Rigs/" + rig) if self.job == 0 else False
+        else:
+            ok = self.les.load_level("/JamAssets/Rigs/" + rig, policy[0].DISCARD)
+        log("load %s -> %s (policy %s)" % (rig, ok, [str(x) for x in policy]))
+        if not ok:
+            raise RuntimeError("rig map not loaded")
+        s = length / RIG_LENGTH_M
+        if abs(s - 1.0) > 1e-6:      # what the level instance's transform does in the game: every actor's place and scale times s about the origin
+            for a in self.eas.get_all_level_actors():
+                root = a.get_editor_property("root_component")
+                if not root:
+                    continue
+                loc = a.get_actor_location()
+                sc = a.get_actor_scale3d()
+                a.set_actor_location(unreal.Vector(loc.x * s, loc.y * s, loc.z * s), False, False)
+                a.set_actor_scale3d(unreal.Vector(sc.x * s, sc.y * s, sc.z * s))
+        mpc = unreal.load_asset("/JamAssets/Look/MPC_Look")
+        if mpc:
+            unreal.MaterialLibrary.set_scalar_parameter_value(self.world(), mpc, "Clay", clay)
+        self.rink = self.eas.spawn_actor_from_class(unreal.RinkActor, unreal.Vector(0, 0, 0))
+        cfg = unreal.JamGameConfig()
+        r = cfg.get_editor_property("rink")
+        r.set_editor_property("length_m", float(length))
+        r.set_editor_property("width_m", float(width))
+        cfg.set_editor_property("rink", r)
+        look = cfg.get_editor_property("look")
+        look.set_editor_property("tier", tier)
+        cfg.set_editor_property("look", look)
+        self.rink.build(cfg)
+        for prop in [n for n in NO_STENCIL if n]:
+            self.rink.get_editor_property(prop).set_render_custom_depth(False)
+        self.cam = self.eas.spawn_actor_from_class(unreal.CameraActor, unreal.Vector(0, 0, 350))
+        cc = self.cam.get_editor_property("camera_component")
+        cc.set_editor_property("field_of_view", FOV)
+        cc.set_editor_property("constrain_aspect_ratio", False)
+        self.les.editor_set_game_view(True)
+        self.les.pilot_level_actor(self.cam)
+        log("job %s %dx%d: rink built, arena shown=%s goals shown=%s clay=%s scale=%.3f" % (tier, length, width, self.rink.is_arena_dressing_shown(), self.rink.is_arena_goal_shown(), clay, s))
+        self.view = 0
+        self.place()
+
+    def place(self):
+        tier, rig, clay, length, width = JOBS[self.job]
+        name, eye, target = views(length, width)[self.view]
+        e = unreal.Vector(eye[0] * 100.0, eye[1] * 100.0, eye[2] * 100.0)
+        t = unreal.Vector(target[0] * 100.0, target[1] * 100.0, target[2] * 100.0)
+        self.cam.set_actor_location_and_rotation(e, unreal.MathLibrary.find_look_at_rotation(e, t), False, False)
+        self.les.pilot_level_actor(self.cam)
+        self.wait = WARM
+        self.state = "warm"
+
+    def shoot(self):
+        tier, rig, clay, length, width = JOBS[self.job]
+        name = views(length, width)[self.view][0]
+        path = os.path.join(OUT, "engine-%s-%dx%d-%s%s.png" % (tier, length, width, name, SUFFIX)).replace("\\", "/")
+        if os.path.exists(path):
+            os.remove(path)
+        unreal.AutomationLibrary.take_high_res_screenshot(RES[0], RES[1], path, self.cam)
+        self.pending = path
+        self.wait = 400
+        self.state = "saving"
+
+    def tick(self, dt):
+        self.frames += 1
+        try:
+            if self.frames > 20000:
+                log("frame budget spent")
+                self.finish()
+            elif self.state == "next_job":
+                self.job += 1
+                if self.job >= len(JOBS):
+                    self.finish()
+                else:
+                    self.start_job()
+            elif self.state == "warm":
+                self.les.editor_invalidate_viewports()      # the off-screen viewport is not realtime: ask for every frame of the warm-up
+                self.wait -= 1
+                if self.wait <= 0:
+                    self.shoot()
+            elif self.state == "saving":
+                self.wait -= 1
+                if os.path.exists(self.pending) and os.path.getsize(self.pending) > 0:
+                    self.done.append(self.pending)
+                    log("saved %s" % self.pending)
+                    self.advance()
+                elif self.wait <= 0:
+                    log("NOT SAVED %s" % self.pending)
+                    self.advance()
+        except Exception:
+            import traceback
+            unreal.log_error("A119 STILLS exception: %s" % traceback.format_exc())
+            self.finish()
+
+    def advance(self):
+        tier, rig, clay, length, width = JOBS[self.job]
+        self.view += 1
+        if self.view >= len(views(length, width)):
+            self.state = "next_job"
+        else:
+            self.place()
+
+    def finish(self):
+        if self.state == "done":
+            return
+        self.state = "done"
+        unreal.unregister_slate_post_tick_callback(self.handle)
+        log("DONE %d stills" % len(self.done))
+        unreal.SystemLibrary.quit_editor()
+
+
+if ONLY:
+    JOBS = [j for j in JOBS if ("%s-%d" % (j[0], j[3])) == ONLY]
+RUN = Run()

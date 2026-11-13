@@ -101,6 +101,7 @@ of them out explicitly, but a Designer or hand-written cartridge may leave them 
 | `contact.down_frames_max` | 150 | lane A92 (R-0045): Frames down at down_full_ratio and above, at skater.knockdown_frames 90; never under down_frames_min. |
 | `contact.stagger_frames` | 16 | lane A92 (R-0045): Frames a stumbling skater glides without thrust, steering or stick. |
 | `contact.board_bonus` | 1.25 | lane A101 (track F1): The boards are a body: the impulse of a hit that pushes a victim standing within 1.5 m of the boards into them counts this much higher (the full bonus inside 60 degrees of straight in, none along the boards), and the victim's board read-out fires. 1 = the neutral value: no bonus, no read-out. |
+| `contact.release_grace_frames` | 120 | lane A113 (track F1; R-0051): The release grace (R-0049 point 1): for this many frames after a knockdown ends, a hit on the released skater is a bump at most (no stumble, no knockdown; the attacker pays as for any bump) and the brain starts no check on it. Part of the momentum model (contact.momentum true). 0 = the neutral value: no grace. |
 | `rules.goal_pause_frames` | 120 | |
 | `rules.offside` | false | only false is accepted |
 | `rules.penalties` | true | R-0013: fouls (from behind, or on a skater without the puck) = 300 frames in the box + a free faceoff at the fouler's end; `hockey.raw` sets false |

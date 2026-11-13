@@ -118,6 +118,625 @@
       ],
       "seat_ok": true,
       "matches_arena_json": true,
+      "table": {
+        "mesh": "SM_Arena_ScorerTable",
+        "loc_cm": [
+          0.0,
+          -3025.0,
+          0.0
+        ],
+        "yaw": 180.0,
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "visible": true,
+        "materials": {
+          "board": "MI_Toon_Board",
+          "kick": "MI_Toon_KickPlate",
+          "bench": "MI_Toon_Bench",
+          "dark": "MI_Toon_Dark",
+          "frame": "MI_Toon_NetFrame"
+        },
+        "as_expected": true
+      },
+      "goals": {
+        "4x0.61": {
+          "components": {
+            "arena_goal_neg": {
+              "mesh": "SM_Arena_Goal_W400H061",
+              "loc_cm": [
+                -5600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": 90.0,
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "frame": "MI_Toon_NetFrame"
+              },
+              "opening_world_cm": {
+                "half_width": 199.82,
+                "height": 60.7
+              },
+              "opening_error_cm": 0.3,
+              "custom_depth": true
+            },
+            "arena_goal_pos": {
+              "mesh": "SM_Arena_Goal_W400H061",
+              "loc_cm": [
+                5600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": -90.0,
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "frame": "MI_Toon_NetFrame"
+              },
+              "opening_world_cm": {
+                "half_width": 199.82,
+                "height": 60.7
+              },
+              "opening_error_cm": 0.3,
+              "custom_depth": true
+            },
+            "arena_goal_net_neg": {
+              "mesh": "SM_Arena_GoalNet_W400H061",
+              "loc_cm": [
+                -5600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": 90.0,
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "net": "MI_Toon_NetMesh"
+              },
+              "custom_depth": false
+            },
+            "arena_goal_net_pos": {
+              "mesh": "SM_Arena_GoalNet_W400H061",
+              "loc_cm": [
+                5600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": -90.0,
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "net": "MI_Toon_NetMesh"
+              },
+              "custom_depth": false
+            }
+          },
+          "code_frame_visible": false,
+          "shown": true,
+          "sim_volume_cm": {
+            "half_width": 200.0,
+            "height": 61.0,
+            "front_x": 5600.0,
+            "depth": 150.0
+          },
+          "ok": true
+        },
+        "6x0.61": {
+          "components": {
+            "arena_goal_neg": {
+              "mesh": "SM_Arena_Goal_W600H061",
+              "loc_cm": [
+                -5600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": 90.0,
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "frame": "MI_Toon_NetFrame"
+              },
+              "opening_world_cm": {
+                "half_width": 299.85,
+                "height": 60.86
+              },
+              "opening_error_cm": 0.15,
+              "custom_depth": true
+            },
+            "arena_goal_pos": {
+              "mesh": "SM_Arena_Goal_W600H061",
+              "loc_cm": [
+                5600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": -90.0,
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "frame": "MI_Toon_NetFrame"
+              },
+              "opening_world_cm": {
+                "half_width": 299.85,
+                "height": 60.86
+              },
+              "opening_error_cm": 0.15,
+              "custom_depth": true
+            },
+            "arena_goal_net_neg": {
+              "mesh": "SM_Arena_GoalNet_W600H061",
+              "loc_cm": [
+                -5600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": 90.0,
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "net": "MI_Toon_NetMesh"
+              },
+              "custom_depth": false
+            },
+            "arena_goal_net_pos": {
+              "mesh": "SM_Arena_GoalNet_W600H061",
+              "loc_cm": [
+                5600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": -90.0,
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "net": "MI_Toon_NetMesh"
+              },
+              "custom_depth": false
+            }
+          },
+          "code_frame_visible": false,
+          "shown": true,
+          "sim_volume_cm": {
+            "half_width": 300.0,
+            "height": 61.0,
+            "front_x": 5600.0,
+            "depth": 150.0
+          },
+          "ok": true
+        },
+        "4x1.22": {
+          "components": {
+            "arena_goal_neg": {
+              "mesh": "SM_Arena_Goal_W400H122",
+              "loc_cm": [
+                -5600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": 90.0,
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "frame": "MI_Toon_NetFrame"
+              },
+              "opening_world_cm": {
+                "half_width": 199.92,
+                "height": 121.79
+              },
+              "opening_error_cm": 0.21,
+              "custom_depth": true
+            },
+            "arena_goal_pos": {
+              "mesh": "SM_Arena_Goal_W400H122",
+              "loc_cm": [
+                5600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": -90.0,
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "frame": "MI_Toon_NetFrame"
+              },
+              "opening_world_cm": {
+                "half_width": 199.92,
+                "height": 121.79
+              },
+              "opening_error_cm": 0.21,
+              "custom_depth": true
+            },
+            "arena_goal_net_neg": {
+              "mesh": "SM_Arena_GoalNet_W400H122",
+              "loc_cm": [
+                -5600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": 90.0,
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "net": "MI_Toon_NetMesh"
+              },
+              "custom_depth": false
+            },
+            "arena_goal_net_pos": {
+              "mesh": "SM_Arena_GoalNet_W400H122",
+              "loc_cm": [
+                5600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": -90.0,
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "net": "MI_Toon_NetMesh"
+              },
+              "custom_depth": false
+            }
+          },
+          "code_frame_visible": false,
+          "shown": true,
+          "sim_volume_cm": {
+            "half_width": 200.0,
+            "height": 122.0,
+            "front_x": 5600.0,
+            "depth": 150.0
+          },
+          "ok": true
+        },
+        "5.5x0.61": {
+          "components": {
+            "arena_goal_neg": {
+              "mesh": "SM_Arena_Goal_W600H061",
+              "loc_cm": [
+                -5600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": 90.0,
+              "scale": [
+                0.9167,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "frame": "MI_Toon_NetFrame"
+              },
+              "opening_world_cm": {
+                "half_width": 274.87,
+                "height": 60.86
+              },
+              "opening_error_cm": 0.14,
+              "custom_depth": true
+            },
+            "arena_goal_pos": {
+              "mesh": "SM_Arena_Goal_W600H061",
+              "loc_cm": [
+                5600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": -90.0,
+              "scale": [
+                0.9167,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "frame": "MI_Toon_NetFrame"
+              },
+              "opening_world_cm": {
+                "half_width": 274.87,
+                "height": 60.86
+              },
+              "opening_error_cm": 0.14,
+              "custom_depth": true
+            },
+            "arena_goal_net_neg": {
+              "mesh": "SM_Arena_GoalNet_W600H061",
+              "loc_cm": [
+                -5600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": 90.0,
+              "scale": [
+                0.9167,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "net": "MI_Toon_NetMesh"
+              },
+              "custom_depth": false
+            },
+            "arena_goal_net_pos": {
+              "mesh": "SM_Arena_GoalNet_W600H061",
+              "loc_cm": [
+                5600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": -90.0,
+              "scale": [
+                0.9167,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "net": "MI_Toon_NetMesh"
+              },
+              "custom_depth": false
+            }
+          },
+          "code_frame_visible": false,
+          "shown": true,
+          "sim_volume_cm": {
+            "half_width": 275.0,
+            "height": 61.0,
+            "front_x": 5600.0,
+            "depth": 150.0
+          },
+          "ok": true
+        },
+        "2.5x0.61": {
+          "components": {
+            "arena_goal_neg": {
+              "mesh": "SM_Arena_Goal_W400H061",
+              "loc_cm": [
+                -5600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": 90.0,
+              "scale": [
+                0.625,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "frame": "MI_Toon_NetFrame"
+              },
+              "opening_world_cm": {
+                "half_width": 124.89,
+                "height": 60.7
+              },
+              "opening_error_cm": 0.3,
+              "custom_depth": true
+            },
+            "arena_goal_pos": {
+              "mesh": "SM_Arena_Goal_W400H061",
+              "loc_cm": [
+                5600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": -90.0,
+              "scale": [
+                0.625,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "frame": "MI_Toon_NetFrame"
+              },
+              "opening_world_cm": {
+                "half_width": 124.89,
+                "height": 60.7
+              },
+              "opening_error_cm": 0.3,
+              "custom_depth": true
+            },
+            "arena_goal_net_neg": {
+              "mesh": "SM_Arena_GoalNet_W400H061",
+              "loc_cm": [
+                -5600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": 90.0,
+              "scale": [
+                0.625,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "net": "MI_Toon_NetMesh"
+              },
+              "custom_depth": false
+            },
+            "arena_goal_net_pos": {
+              "mesh": "SM_Arena_GoalNet_W400H061",
+              "loc_cm": [
+                5600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": -90.0,
+              "scale": [
+                0.625,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "net": "MI_Toon_NetMesh"
+              },
+              "custom_depth": false
+            }
+          },
+          "code_frame_visible": false,
+          "shown": true,
+          "sim_volume_cm": {
+            "half_width": 125.0,
+            "height": 61.0,
+            "front_x": 5600.0,
+            "depth": 150.0
+          },
+          "ok": true
+        },
+        "5x1": {
+          "components": {
+            "arena_goal_neg": {
+              "mesh": "SM_Arena_Goal_W400H122",
+              "loc_cm": [
+                -5600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": 90.0,
+              "scale": [
+                1.25,
+                1.0,
+                0.8197
+              ],
+              "visible": true,
+              "materials": {
+                "frame": "MI_Toon_NetFrame"
+              },
+              "opening_world_cm": {
+                "half_width": 249.9,
+                "height": 99.83
+              },
+              "opening_error_cm": 0.17,
+              "custom_depth": true
+            },
+            "arena_goal_pos": {
+              "mesh": "SM_Arena_Goal_W400H122",
+              "loc_cm": [
+                5600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": -90.0,
+              "scale": [
+                1.25,
+                1.0,
+                0.8197
+              ],
+              "visible": true,
+              "materials": {
+                "frame": "MI_Toon_NetFrame"
+              },
+              "opening_world_cm": {
+                "half_width": 249.9,
+                "height": 99.83
+              },
+              "opening_error_cm": 0.17,
+              "custom_depth": true
+            },
+            "arena_goal_net_neg": {
+              "mesh": "SM_Arena_GoalNet_W400H122",
+              "loc_cm": [
+                -5600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": 90.0,
+              "scale": [
+                1.25,
+                1.0,
+                0.8197
+              ],
+              "visible": true,
+              "materials": {
+                "net": "MI_Toon_NetMesh"
+              },
+              "custom_depth": false
+            },
+            "arena_goal_net_pos": {
+              "mesh": "SM_Arena_GoalNet_W400H122",
+              "loc_cm": [
+                5600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": -90.0,
+              "scale": [
+                1.25,
+                1.0,
+                0.8197
+              ],
+              "visible": true,
+              "materials": {
+                "net": "MI_Toon_NetMesh"
+              },
+              "custom_depth": false
+            }
+          },
+          "code_frame_visible": false,
+          "shown": true,
+          "sim_volume_cm": {
+            "half_width": 250.0,
+            "height": 100.0,
+            "front_x": 5600.0,
+            "depth": 150.0
+          },
+          "ok": true
+        }
+      },
       "ok": true
     },
     "90x45": {
@@ -237,6 +856,625 @@
         -157.0
       ],
       "seat_ok": true,
+      "table": {
+        "mesh": "SM_Arena_ScorerTable",
+        "loc_cm": [
+          0.0,
+          -2275.0,
+          0.0
+        ],
+        "yaw": 180.0,
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "visible": true,
+        "materials": {
+          "board": "MI_Toon_Board",
+          "kick": "MI_Toon_KickPlate",
+          "bench": "MI_Toon_Bench",
+          "dark": "MI_Toon_Dark",
+          "frame": "MI_Toon_NetFrame"
+        },
+        "as_expected": true
+      },
+      "goals": {
+        "4x0.61": {
+          "components": {
+            "arena_goal_neg": {
+              "mesh": "SM_Arena_Goal_W400H061",
+              "loc_cm": [
+                -4100.0,
+                0.0,
+                0.0
+              ],
+              "yaw": 90.0,
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "frame": "MI_Toon_NetFrame"
+              },
+              "opening_world_cm": {
+                "half_width": 199.82,
+                "height": 60.7
+              },
+              "opening_error_cm": 0.3,
+              "custom_depth": true
+            },
+            "arena_goal_pos": {
+              "mesh": "SM_Arena_Goal_W400H061",
+              "loc_cm": [
+                4100.0,
+                0.0,
+                0.0
+              ],
+              "yaw": -90.0,
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "frame": "MI_Toon_NetFrame"
+              },
+              "opening_world_cm": {
+                "half_width": 199.82,
+                "height": 60.7
+              },
+              "opening_error_cm": 0.3,
+              "custom_depth": true
+            },
+            "arena_goal_net_neg": {
+              "mesh": "SM_Arena_GoalNet_W400H061",
+              "loc_cm": [
+                -4100.0,
+                0.0,
+                0.0
+              ],
+              "yaw": 90.0,
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "net": "MI_Toon_NetMesh"
+              },
+              "custom_depth": false
+            },
+            "arena_goal_net_pos": {
+              "mesh": "SM_Arena_GoalNet_W400H061",
+              "loc_cm": [
+                4100.0,
+                0.0,
+                0.0
+              ],
+              "yaw": -90.0,
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "net": "MI_Toon_NetMesh"
+              },
+              "custom_depth": false
+            }
+          },
+          "code_frame_visible": false,
+          "shown": true,
+          "sim_volume_cm": {
+            "half_width": 200.0,
+            "height": 61.0,
+            "front_x": 4100.0,
+            "depth": 150.0
+          },
+          "ok": true
+        },
+        "6x0.61": {
+          "components": {
+            "arena_goal_neg": {
+              "mesh": "SM_Arena_Goal_W600H061",
+              "loc_cm": [
+                -4100.0,
+                0.0,
+                0.0
+              ],
+              "yaw": 90.0,
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "frame": "MI_Toon_NetFrame"
+              },
+              "opening_world_cm": {
+                "half_width": 299.85,
+                "height": 60.86
+              },
+              "opening_error_cm": 0.15,
+              "custom_depth": true
+            },
+            "arena_goal_pos": {
+              "mesh": "SM_Arena_Goal_W600H061",
+              "loc_cm": [
+                4100.0,
+                0.0,
+                0.0
+              ],
+              "yaw": -90.0,
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "frame": "MI_Toon_NetFrame"
+              },
+              "opening_world_cm": {
+                "half_width": 299.85,
+                "height": 60.86
+              },
+              "opening_error_cm": 0.15,
+              "custom_depth": true
+            },
+            "arena_goal_net_neg": {
+              "mesh": "SM_Arena_GoalNet_W600H061",
+              "loc_cm": [
+                -4100.0,
+                0.0,
+                0.0
+              ],
+              "yaw": 90.0,
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "net": "MI_Toon_NetMesh"
+              },
+              "custom_depth": false
+            },
+            "arena_goal_net_pos": {
+              "mesh": "SM_Arena_GoalNet_W600H061",
+              "loc_cm": [
+                4100.0,
+                0.0,
+                0.0
+              ],
+              "yaw": -90.0,
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "net": "MI_Toon_NetMesh"
+              },
+              "custom_depth": false
+            }
+          },
+          "code_frame_visible": false,
+          "shown": true,
+          "sim_volume_cm": {
+            "half_width": 300.0,
+            "height": 61.0,
+            "front_x": 4100.0,
+            "depth": 150.0
+          },
+          "ok": true
+        },
+        "4x1.22": {
+          "components": {
+            "arena_goal_neg": {
+              "mesh": "SM_Arena_Goal_W400H122",
+              "loc_cm": [
+                -4100.0,
+                0.0,
+                0.0
+              ],
+              "yaw": 90.0,
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "frame": "MI_Toon_NetFrame"
+              },
+              "opening_world_cm": {
+                "half_width": 199.92,
+                "height": 121.79
+              },
+              "opening_error_cm": 0.21,
+              "custom_depth": true
+            },
+            "arena_goal_pos": {
+              "mesh": "SM_Arena_Goal_W400H122",
+              "loc_cm": [
+                4100.0,
+                0.0,
+                0.0
+              ],
+              "yaw": -90.0,
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "frame": "MI_Toon_NetFrame"
+              },
+              "opening_world_cm": {
+                "half_width": 199.92,
+                "height": 121.79
+              },
+              "opening_error_cm": 0.21,
+              "custom_depth": true
+            },
+            "arena_goal_net_neg": {
+              "mesh": "SM_Arena_GoalNet_W400H122",
+              "loc_cm": [
+                -4100.0,
+                0.0,
+                0.0
+              ],
+              "yaw": 90.0,
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "net": "MI_Toon_NetMesh"
+              },
+              "custom_depth": false
+            },
+            "arena_goal_net_pos": {
+              "mesh": "SM_Arena_GoalNet_W400H122",
+              "loc_cm": [
+                4100.0,
+                0.0,
+                0.0
+              ],
+              "yaw": -90.0,
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "net": "MI_Toon_NetMesh"
+              },
+              "custom_depth": false
+            }
+          },
+          "code_frame_visible": false,
+          "shown": true,
+          "sim_volume_cm": {
+            "half_width": 200.0,
+            "height": 122.0,
+            "front_x": 4100.0,
+            "depth": 150.0
+          },
+          "ok": true
+        },
+        "5.5x0.61": {
+          "components": {
+            "arena_goal_neg": {
+              "mesh": "SM_Arena_Goal_W600H061",
+              "loc_cm": [
+                -4100.0,
+                0.0,
+                0.0
+              ],
+              "yaw": 90.0,
+              "scale": [
+                0.9167,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "frame": "MI_Toon_NetFrame"
+              },
+              "opening_world_cm": {
+                "half_width": 274.87,
+                "height": 60.86
+              },
+              "opening_error_cm": 0.14,
+              "custom_depth": true
+            },
+            "arena_goal_pos": {
+              "mesh": "SM_Arena_Goal_W600H061",
+              "loc_cm": [
+                4100.0,
+                0.0,
+                0.0
+              ],
+              "yaw": -90.0,
+              "scale": [
+                0.9167,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "frame": "MI_Toon_NetFrame"
+              },
+              "opening_world_cm": {
+                "half_width": 274.87,
+                "height": 60.86
+              },
+              "opening_error_cm": 0.14,
+              "custom_depth": true
+            },
+            "arena_goal_net_neg": {
+              "mesh": "SM_Arena_GoalNet_W600H061",
+              "loc_cm": [
+                -4100.0,
+                0.0,
+                0.0
+              ],
+              "yaw": 90.0,
+              "scale": [
+                0.9167,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "net": "MI_Toon_NetMesh"
+              },
+              "custom_depth": false
+            },
+            "arena_goal_net_pos": {
+              "mesh": "SM_Arena_GoalNet_W600H061",
+              "loc_cm": [
+                4100.0,
+                0.0,
+                0.0
+              ],
+              "yaw": -90.0,
+              "scale": [
+                0.9167,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "net": "MI_Toon_NetMesh"
+              },
+              "custom_depth": false
+            }
+          },
+          "code_frame_visible": false,
+          "shown": true,
+          "sim_volume_cm": {
+            "half_width": 275.0,
+            "height": 61.0,
+            "front_x": 4100.0,
+            "depth": 150.0
+          },
+          "ok": true
+        },
+        "2.5x0.61": {
+          "components": {
+            "arena_goal_neg": {
+              "mesh": "SM_Arena_Goal_W400H061",
+              "loc_cm": [
+                -4100.0,
+                0.0,
+                0.0
+              ],
+              "yaw": 90.0,
+              "scale": [
+                0.625,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "frame": "MI_Toon_NetFrame"
+              },
+              "opening_world_cm": {
+                "half_width": 124.89,
+                "height": 60.7
+              },
+              "opening_error_cm": 0.3,
+              "custom_depth": true
+            },
+            "arena_goal_pos": {
+              "mesh": "SM_Arena_Goal_W400H061",
+              "loc_cm": [
+                4100.0,
+                0.0,
+                0.0
+              ],
+              "yaw": -90.0,
+              "scale": [
+                0.625,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "frame": "MI_Toon_NetFrame"
+              },
+              "opening_world_cm": {
+                "half_width": 124.89,
+                "height": 60.7
+              },
+              "opening_error_cm": 0.3,
+              "custom_depth": true
+            },
+            "arena_goal_net_neg": {
+              "mesh": "SM_Arena_GoalNet_W400H061",
+              "loc_cm": [
+                -4100.0,
+                0.0,
+                0.0
+              ],
+              "yaw": 90.0,
+              "scale": [
+                0.625,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "net": "MI_Toon_NetMesh"
+              },
+              "custom_depth": false
+            },
+            "arena_goal_net_pos": {
+              "mesh": "SM_Arena_GoalNet_W400H061",
+              "loc_cm": [
+                4100.0,
+                0.0,
+                0.0
+              ],
+              "yaw": -90.0,
+              "scale": [
+                0.625,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "net": "MI_Toon_NetMesh"
+              },
+              "custom_depth": false
+            }
+          },
+          "code_frame_visible": false,
+          "shown": true,
+          "sim_volume_cm": {
+            "half_width": 125.0,
+            "height": 61.0,
+            "front_x": 4100.0,
+            "depth": 150.0
+          },
+          "ok": true
+        },
+        "5x1": {
+          "components": {
+            "arena_goal_neg": {
+              "mesh": "SM_Arena_Goal_W400H122",
+              "loc_cm": [
+                -4100.0,
+                0.0,
+                0.0
+              ],
+              "yaw": 90.0,
+              "scale": [
+                1.25,
+                1.0,
+                0.8197
+              ],
+              "visible": true,
+              "materials": {
+                "frame": "MI_Toon_NetFrame"
+              },
+              "opening_world_cm": {
+                "half_width": 249.9,
+                "height": 99.83
+              },
+              "opening_error_cm": 0.17,
+              "custom_depth": true
+            },
+            "arena_goal_pos": {
+              "mesh": "SM_Arena_Goal_W400H122",
+              "loc_cm": [
+                4100.0,
+                0.0,
+                0.0
+              ],
+              "yaw": -90.0,
+              "scale": [
+                1.25,
+                1.0,
+                0.8197
+              ],
+              "visible": true,
+              "materials": {
+                "frame": "MI_Toon_NetFrame"
+              },
+              "opening_world_cm": {
+                "half_width": 249.9,
+                "height": 99.83
+              },
+              "opening_error_cm": 0.17,
+              "custom_depth": true
+            },
+            "arena_goal_net_neg": {
+              "mesh": "SM_Arena_GoalNet_W400H122",
+              "loc_cm": [
+                -4100.0,
+                0.0,
+                0.0
+              ],
+              "yaw": 90.0,
+              "scale": [
+                1.25,
+                1.0,
+                0.8197
+              ],
+              "visible": true,
+              "materials": {
+                "net": "MI_Toon_NetMesh"
+              },
+              "custom_depth": false
+            },
+            "arena_goal_net_pos": {
+              "mesh": "SM_Arena_GoalNet_W400H122",
+              "loc_cm": [
+                4100.0,
+                0.0,
+                0.0
+              ],
+              "yaw": -90.0,
+              "scale": [
+                1.25,
+                1.0,
+                0.8197
+              ],
+              "visible": true,
+              "materials": {
+                "net": "MI_Toon_NetMesh"
+              },
+              "custom_depth": false
+            }
+          },
+          "code_frame_visible": false,
+          "shown": true,
+          "sim_volume_cm": {
+            "half_width": 250.0,
+            "height": 100.0,
+            "front_x": 4100.0,
+            "depth": 150.0
+          },
+          "ok": true
+        }
+      },
       "ok": true
     },
     "140x70": {
@@ -356,6 +1594,625 @@
         -157.0
       ],
       "seat_ok": true,
+      "table": {
+        "mesh": "SM_Arena_ScorerTable",
+        "loc_cm": [
+          0.0,
+          -3525.0,
+          0.0
+        ],
+        "yaw": 180.0,
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "visible": true,
+        "materials": {
+          "board": "MI_Toon_Board",
+          "kick": "MI_Toon_KickPlate",
+          "bench": "MI_Toon_Bench",
+          "dark": "MI_Toon_Dark",
+          "frame": "MI_Toon_NetFrame"
+        },
+        "as_expected": true
+      },
+      "goals": {
+        "4x0.61": {
+          "components": {
+            "arena_goal_neg": {
+              "mesh": "SM_Arena_Goal_W400H061",
+              "loc_cm": [
+                -6600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": 90.0,
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "frame": "MI_Toon_NetFrame"
+              },
+              "opening_world_cm": {
+                "half_width": 199.82,
+                "height": 60.7
+              },
+              "opening_error_cm": 0.3,
+              "custom_depth": true
+            },
+            "arena_goal_pos": {
+              "mesh": "SM_Arena_Goal_W400H061",
+              "loc_cm": [
+                6600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": -90.0,
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "frame": "MI_Toon_NetFrame"
+              },
+              "opening_world_cm": {
+                "half_width": 199.82,
+                "height": 60.7
+              },
+              "opening_error_cm": 0.3,
+              "custom_depth": true
+            },
+            "arena_goal_net_neg": {
+              "mesh": "SM_Arena_GoalNet_W400H061",
+              "loc_cm": [
+                -6600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": 90.0,
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "net": "MI_Toon_NetMesh"
+              },
+              "custom_depth": false
+            },
+            "arena_goal_net_pos": {
+              "mesh": "SM_Arena_GoalNet_W400H061",
+              "loc_cm": [
+                6600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": -90.0,
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "net": "MI_Toon_NetMesh"
+              },
+              "custom_depth": false
+            }
+          },
+          "code_frame_visible": false,
+          "shown": true,
+          "sim_volume_cm": {
+            "half_width": 200.0,
+            "height": 61.0,
+            "front_x": 6600.0,
+            "depth": 150.0
+          },
+          "ok": true
+        },
+        "6x0.61": {
+          "components": {
+            "arena_goal_neg": {
+              "mesh": "SM_Arena_Goal_W600H061",
+              "loc_cm": [
+                -6600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": 90.0,
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "frame": "MI_Toon_NetFrame"
+              },
+              "opening_world_cm": {
+                "half_width": 299.85,
+                "height": 60.86
+              },
+              "opening_error_cm": 0.15,
+              "custom_depth": true
+            },
+            "arena_goal_pos": {
+              "mesh": "SM_Arena_Goal_W600H061",
+              "loc_cm": [
+                6600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": -90.0,
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "frame": "MI_Toon_NetFrame"
+              },
+              "opening_world_cm": {
+                "half_width": 299.85,
+                "height": 60.86
+              },
+              "opening_error_cm": 0.15,
+              "custom_depth": true
+            },
+            "arena_goal_net_neg": {
+              "mesh": "SM_Arena_GoalNet_W600H061",
+              "loc_cm": [
+                -6600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": 90.0,
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "net": "MI_Toon_NetMesh"
+              },
+              "custom_depth": false
+            },
+            "arena_goal_net_pos": {
+              "mesh": "SM_Arena_GoalNet_W600H061",
+              "loc_cm": [
+                6600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": -90.0,
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "net": "MI_Toon_NetMesh"
+              },
+              "custom_depth": false
+            }
+          },
+          "code_frame_visible": false,
+          "shown": true,
+          "sim_volume_cm": {
+            "half_width": 300.0,
+            "height": 61.0,
+            "front_x": 6600.0,
+            "depth": 150.0
+          },
+          "ok": true
+        },
+        "4x1.22": {
+          "components": {
+            "arena_goal_neg": {
+              "mesh": "SM_Arena_Goal_W400H122",
+              "loc_cm": [
+                -6600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": 90.0,
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "frame": "MI_Toon_NetFrame"
+              },
+              "opening_world_cm": {
+                "half_width": 199.92,
+                "height": 121.79
+              },
+              "opening_error_cm": 0.21,
+              "custom_depth": true
+            },
+            "arena_goal_pos": {
+              "mesh": "SM_Arena_Goal_W400H122",
+              "loc_cm": [
+                6600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": -90.0,
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "frame": "MI_Toon_NetFrame"
+              },
+              "opening_world_cm": {
+                "half_width": 199.92,
+                "height": 121.79
+              },
+              "opening_error_cm": 0.21,
+              "custom_depth": true
+            },
+            "arena_goal_net_neg": {
+              "mesh": "SM_Arena_GoalNet_W400H122",
+              "loc_cm": [
+                -6600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": 90.0,
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "net": "MI_Toon_NetMesh"
+              },
+              "custom_depth": false
+            },
+            "arena_goal_net_pos": {
+              "mesh": "SM_Arena_GoalNet_W400H122",
+              "loc_cm": [
+                6600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": -90.0,
+              "scale": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "net": "MI_Toon_NetMesh"
+              },
+              "custom_depth": false
+            }
+          },
+          "code_frame_visible": false,
+          "shown": true,
+          "sim_volume_cm": {
+            "half_width": 200.0,
+            "height": 122.0,
+            "front_x": 6600.0,
+            "depth": 150.0
+          },
+          "ok": true
+        },
+        "5.5x0.61": {
+          "components": {
+            "arena_goal_neg": {
+              "mesh": "SM_Arena_Goal_W600H061",
+              "loc_cm": [
+                -6600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": 90.0,
+              "scale": [
+                0.9167,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "frame": "MI_Toon_NetFrame"
+              },
+              "opening_world_cm": {
+                "half_width": 274.87,
+                "height": 60.86
+              },
+              "opening_error_cm": 0.14,
+              "custom_depth": true
+            },
+            "arena_goal_pos": {
+              "mesh": "SM_Arena_Goal_W600H061",
+              "loc_cm": [
+                6600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": -90.0,
+              "scale": [
+                0.9167,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "frame": "MI_Toon_NetFrame"
+              },
+              "opening_world_cm": {
+                "half_width": 274.87,
+                "height": 60.86
+              },
+              "opening_error_cm": 0.14,
+              "custom_depth": true
+            },
+            "arena_goal_net_neg": {
+              "mesh": "SM_Arena_GoalNet_W600H061",
+              "loc_cm": [
+                -6600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": 90.0,
+              "scale": [
+                0.9167,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "net": "MI_Toon_NetMesh"
+              },
+              "custom_depth": false
+            },
+            "arena_goal_net_pos": {
+              "mesh": "SM_Arena_GoalNet_W600H061",
+              "loc_cm": [
+                6600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": -90.0,
+              "scale": [
+                0.9167,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "net": "MI_Toon_NetMesh"
+              },
+              "custom_depth": false
+            }
+          },
+          "code_frame_visible": false,
+          "shown": true,
+          "sim_volume_cm": {
+            "half_width": 275.0,
+            "height": 61.0,
+            "front_x": 6600.0,
+            "depth": 150.0
+          },
+          "ok": true
+        },
+        "2.5x0.61": {
+          "components": {
+            "arena_goal_neg": {
+              "mesh": "SM_Arena_Goal_W400H061",
+              "loc_cm": [
+                -6600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": 90.0,
+              "scale": [
+                0.625,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "frame": "MI_Toon_NetFrame"
+              },
+              "opening_world_cm": {
+                "half_width": 124.89,
+                "height": 60.7
+              },
+              "opening_error_cm": 0.3,
+              "custom_depth": true
+            },
+            "arena_goal_pos": {
+              "mesh": "SM_Arena_Goal_W400H061",
+              "loc_cm": [
+                6600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": -90.0,
+              "scale": [
+                0.625,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "frame": "MI_Toon_NetFrame"
+              },
+              "opening_world_cm": {
+                "half_width": 124.89,
+                "height": 60.7
+              },
+              "opening_error_cm": 0.3,
+              "custom_depth": true
+            },
+            "arena_goal_net_neg": {
+              "mesh": "SM_Arena_GoalNet_W400H061",
+              "loc_cm": [
+                -6600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": 90.0,
+              "scale": [
+                0.625,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "net": "MI_Toon_NetMesh"
+              },
+              "custom_depth": false
+            },
+            "arena_goal_net_pos": {
+              "mesh": "SM_Arena_GoalNet_W400H061",
+              "loc_cm": [
+                6600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": -90.0,
+              "scale": [
+                0.625,
+                1.0,
+                1.0
+              ],
+              "visible": true,
+              "materials": {
+                "net": "MI_Toon_NetMesh"
+              },
+              "custom_depth": false
+            }
+          },
+          "code_frame_visible": false,
+          "shown": true,
+          "sim_volume_cm": {
+            "half_width": 125.0,
+            "height": 61.0,
+            "front_x": 6600.0,
+            "depth": 150.0
+          },
+          "ok": true
+        },
+        "5x1": {
+          "components": {
+            "arena_goal_neg": {
+              "mesh": "SM_Arena_Goal_W400H122",
+              "loc_cm": [
+                -6600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": 90.0,
+              "scale": [
+                1.25,
+                1.0,
+                0.8197
+              ],
+              "visible": true,
+              "materials": {
+                "frame": "MI_Toon_NetFrame"
+              },
+              "opening_world_cm": {
+                "half_width": 249.9,
+                "height": 99.83
+              },
+              "opening_error_cm": 0.17,
+              "custom_depth": true
+            },
+            "arena_goal_pos": {
+              "mesh": "SM_Arena_Goal_W400H122",
+              "loc_cm": [
+                6600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": -90.0,
+              "scale": [
+                1.25,
+                1.0,
+                0.8197
+              ],
+              "visible": true,
+              "materials": {
+                "frame": "MI_Toon_NetFrame"
+              },
+              "opening_world_cm": {
+                "half_width": 249.9,
+                "height": 99.83
+              },
+              "opening_error_cm": 0.17,
+              "custom_depth": true
+            },
+            "arena_goal_net_neg": {
+              "mesh": "SM_Arena_GoalNet_W400H122",
+              "loc_cm": [
+                -6600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": 90.0,
+              "scale": [
+                1.25,
+                1.0,
+                0.8197
+              ],
+              "visible": true,
+              "materials": {
+                "net": "MI_Toon_NetMesh"
+              },
+              "custom_depth": false
+            },
+            "arena_goal_net_pos": {
+              "mesh": "SM_Arena_GoalNet_W400H122",
+              "loc_cm": [
+                6600.0,
+                0.0,
+                0.0
+              ],
+              "yaw": -90.0,
+              "scale": [
+                1.25,
+                1.0,
+                0.8197
+              ],
+              "visible": true,
+              "materials": {
+                "net": "MI_Toon_NetMesh"
+              },
+              "custom_depth": false
+            }
+          },
+          "code_frame_visible": false,
+          "shown": true,
+          "sim_volume_cm": {
+            "half_width": 250.0,
+            "height": 100.0,
+            "front_x": 6600.0,
+            "depth": 150.0
+          },
+          "ok": true
+        }
+      },
       "ok": true
     }
   },
@@ -369,6 +2226,14 @@
         true,
         true
       ],
+      "goals_and_table_visible": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "code_frame_visible": false,
       "ok": true
     },
     "p3_clay": {
@@ -380,6 +2245,14 @@
         true,
         true
       ],
+      "goals_and_table_visible": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "code_frame_visible": false,
       "ok": true
     },
     "p4_broadcast": {
@@ -391,6 +2264,14 @@
         true,
         true
       ],
+      "goals_and_table_visible": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "code_frame_visible": false,
       "ok": true
     },
     "l1_day": {
@@ -402,6 +2283,14 @@
         false,
         false
       ],
+      "goals_and_table_visible": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "code_frame_visible": true,
       "ok": true
     },
     "l3_neon": {
@@ -413,16 +2302,29 @@
         false,
         false
       ],
+      "goals_and_table_visible": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "code_frame_visible": true,
       "ok": true
     }
   },
   "checks": {
     "switch_without_rebuild": {
       "p3_clay": true,
+      "p3_clay:goals": true,
       "l1_day": false,
+      "l1_day:goals": false,
       "l2_night": true,
+      "l2_night:goals": true,
       "l3_neon": false,
-      "p4_broadcast": true
+      "l3_neon:goals": false,
+      "p4_broadcast": true,
+      "p4_broadcast:goals": true
     },
     "neutral_cvar": {
       "arena_0": {
@@ -434,15 +2336,28 @@
           false,
           false
         ],
-        "seat_returned": false
+        "seat_returned": false,
+        "goals_and_table_visible": [
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "goals_shown": false,
+        "code_frame_visible": true
       },
       "arena_1": {
         "shown": true,
-        "code_benches_visible": false
+        "code_benches_visible": false,
+        "goals_shown": true,
+        "code_frame_visible": false
       },
       "construction_off": {
         "shown": false,
-        "code_benches_visible": false
+        "code_benches_visible": false,
+        "goals_shown": false,
+        "code_frame_visible": true
       }
     }
   },
