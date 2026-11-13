@@ -551,3 +551,12 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
   (2) At the boards the victim's stick shows through the wall from outside (the body stays inside). (3) B's `NS_check` star and `NS_knockdown` puffs cover
   both figures for about 12 frames from the hit, which is when the lunge and the throw happen and when A73's hit-stop will freeze the frame: lane B30 thins them now.
 - The generated figures (`BP_SkaterVisual_TB2*`) keep the old behaviour (frozen).
+
+## H29.9 (11:49, 13 Nov) FOR THE DIRECTOR: A-to-B-0015 done (the ring instances); clay pass 9; cook-only PASS
+- **A-to-B-0015 is answered in the file, status done**: `/JamAssets/Look/MI_Zone_<kind>_Ring` for the five kinds, the same `LoadLook` call with `MI_Zone_%s_Ring`
+  on the ring component, no parameter, no dynamic instance needed (lane B29, `status/B29-report.md`).
+- The clay rig was run on all eight shipped rinks (`hockey.arena.wide`, `.large`, Marathon 140 x 70, Cage 70 x 35, Pond 60 x 30, Blind Side, Power Play,
+  Sniper): even ice to the boards on every one (ice luma 136 to 210 at the game camera), walls and lamps follow the rink, nothing to fix. On Pond the side
+  lamps come down to about 7.7 m and the decorative end shades to about 3.7 m, 3 m outside the end boards (computed).
+- Pickups on clay are B's meshes and materials and read small on the calm ice (a flat tan base, nothing glows): a materials lane is queued.
+- `dev-b` = this + SK12's tackling import; cook-only 0 errors.
