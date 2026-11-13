@@ -70,7 +70,7 @@ Unknown values are errors. "No boost" is `NAME_None`, never an empty string.
 |---|---|---|
 | `stick_socket` | `JamSkaterSockets::Stick` | the stick's grip; T-B2 parents it to `hand_r` |
 | `puck_socket` | `JamSkaterSockets::Puck` | where a carried puck sits, in front of the blade, on the ice |
-| `head_socket` | `JamSkaterSockets::Head` | above the head; markers (has-puck, boost) attach here |
+| `head_socket` | `JamSkaterSockets::Head` | above the head: **about 19 cm above the helmet's top** on device B's figures (B-answer to A-to-B-0024, 13 Nov); markers (has-puck, boost) attach here; the HUD's chevron comes back 18 cm along the head's axis to sit on the helmet (`jam.hud.MarkerLiftCm` -18) |
 
 ### Material parameters (C++ constants `JamMaterialParams::*`)
 

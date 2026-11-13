@@ -1,36 +1,58 @@
-# Submission checklist (lane A88 first version 14:45; lane A96 pass 2, 2026-11-13 17:55, main bb18439; refresh on every H package)
+# Submission checklist (lane A88 first version 14:45; lane A96 pass 2 17:55; lane A142 pass 3, Fri 13 Nov night, main 41df3e6)
 
-Rules digest: `docs/PLAN.md` section 2. Deadline Sunday 22:00 CET internal, Monday 02:59 real. Pass 2 needed no game window: what is left needs one (the video, the clean-profile repeat, a real package) and is for Saturday and Sunday.
+Rules digest: `docs/PLAN.md` section 2. Submit Sunday 22:00 internal; Monday 02:59 is the real deadline. The text of the page, the form, the tagline and the video script is now
+checked sentence by sentence in **`submission/TRUTH.md`** (96 rows: before 47 true, 16 false, 30 unproven, 3 n/a; after 66 true of main, 20 waiting for a lane, 10 a marked question).
+Pass 3 ran no game and no build: it is reading and writing text.
 
-| # | Deliverable (rule) | Status after pass 2 | Owner | What is left |
-|---|---|---|---|---|
-| 1 | Windows zip under 1 GB, named TeamName_GameName | **script ready, not run for real**: `tools/run/package.ps1 -Submission` writes `Hokej_Hokej_<H>.zip` and a byte-identical `Hokej_Hokej.zip`, stages `README.txt` (how to start, controls, `vc_redist.x64.exe` and when, the firewall prompt, credits) at the package root beside `ThirdJam.exe`, and writes entry names with `/` (`tools/run/zipfwd.ps1`: the H24/H25 zips have `\` in their entry names, which Explorer accepts and other unzippers do not). Unit run on a replica of H25's staged folder: 9 PASS (`tools/media/zipstep-test.ps1`). Last measured: H24 zip 272.5 MiB (27 % of the limit) | Director / A95 | one real package run with `-Submission` (AutomationTool is A95's until about 19:30); unzip it and check `README.txt` and the entry names; confirm the firewall sentence (below) |
-| 2 | Video 30-60 s, 1080p+ | **v1 done** (`video/hokej-v1.mp4`, 39.5 s, silent, H24 plus an older Development take); **v2 scripted**: `video/script-v2.md` (48 s, 11 shots, the staging command per shot) | capture lane (Saturday) | film v2 on H26 after the sim freeze (12:00 Sat); no drill stages the stop-and-go past a defender (write drill 21, or the operator plays); audio: question for device B below |
-| 3 | Stills for the page | **done, 8 at 1080p** (`shots/`, H24) | capture lane | refresh from H26 (menu, faceoff, a check, a knockdown, a goal, the Director's call) |
-| 4 | Page text | **v2 written**: `page.md` with the three lengths (pitch 21 words, blurb exactly 60, full page about 940 words), controls as bound at bb18439, the menu's twelve modes, the tools in plain words, `TEAM: <names>` placeholder. Lines marked VERIFY depend on A92 and A93 | A96 / operator | team names; re-read `InputMapping.cpp` and the VERIFY lines on the final package; `form.md` has the form's draft fields and the tools list |
-| 5 | Sourced assets noted; AI-generated not "sourced" | **done**: `credits.md` rebuilt from the repaired ledger (62 sourced rows, 1 shipped: the DLSS library, NVIDIA licence; no row without a url) | A96 | the in-game CREDITS screen: not checked whether it lists the AI tools; propose P4 removal: `ledger-proposals.md` |
-| 6 | No trademarks or logos (only the Unreal Engine logo) | page, README.txt, script and captions use no brand word; vendor names only in `credits.md`, `form.md` and the dev log (text credits) | A96 / Director | not verified without a window: the game's CREDITS screen, the plugin name in the package, the Windows firewall dialog (publisher text "Hokej") |
-| 7 | Glass Box dev log with the entry | **rebuilt**: `devlog/index.html` 7.8 MB, 490 commits, 123 sessions (8 main + 115 subagent), 11,999 turns, 60 pictures embedded (1280 px JPEG; list `devlog/curated/shots.txt`, 59 files plus a rendered table of the acceptance run), redacted 0 secrets / 0 emails / 10 paths; grep outside the images: no user name, no drive path, no key pattern | A96 | device B's transcripts (none found; B has 30 notes in `devlog/notes-b.md`); entries thin before H4; hosting link; rebuild on Sunday: `node tools/media/devlog-curated.mjs --repo <main checkout>` |
-| 8 | Modifier prize | **no decision recorded in the repo**; Glass Box is the natural claim (the log exists and builds); Solo Driver does not apply to two people | Director / operator | decide (below) |
-| 9 | Clean-profile run of the zip | PASS on H24 (A88) | capture lane | repeat on H-final, and test Cancel on the firewall prompt (only claimed, never tested) |
-| 10 | One main prize + one modifier | n/a | Director | |
+## 1. The operator's questions, in the order he will meet them
+Each is a blank or a choice in the text: the file and the mark are named. Nothing below was invented to fill a gap.
+
+| # | Question | Where it bites | Why the repository cannot say |
+|---|---|---|---|
+| O1 | **Team names and roles** (and how many people: two devices worked on it) | `page.md` Team, `form.md` Members, `docs/SUBMISSION.md` | his to give; the old skeleton said 1 |
+| O2 | **Who presses submit, and when** (Sunday 22:00 internal) | the form | his |
+| O3 | **Which look does a newcomer meet first, and is it clay?** The regular cut is the night tier (`l2_night`); six modes are `p3_clay`; R-0041 point 5 calls P3 clay the shipped look. Also: may the page claim an ink outline and spot pools? Needs a still of the package at 1080p | `page.md` "Look and sound", taglines 1 and 2 | no document shows the packaged first screen; B owns the look |
+| O4 | **Main prize and the one modifier prize.** Glass Box is the one the repository supports (the log exists and builds); the plan said Render Royalty; Solo Driver does not apply to two people | `form.md` | no decision recorded |
+| O5 | **May the page name tool vendors?** The page says "an image-generation model, 3D-generation services, a voice-and-audio service"; `form.md` "Tools you used" names them. **Is a Rodin or Tripo asset shipped?** (`docs/SUBMISSION.md`: list Rodin only if the ledger shows a shipped Rodin asset; the P4 rows in `credits.md` are Epic clips, `shipped` n) | `page.md`, `form.md` | policy and a ledger fact |
+| O6 | **The "original" claim for the arena pieces** (benches, boxes, goal frames, goal light, scorer's table: A's Blender work) needs their ledger rows: run `node tools/gate/check-assets-ledger.mjs` on the tree that ships | `page.md` "How it was made" | the gate was last run on A96's tree |
+| O7 | **Test Cancel on the firewall prompt** (solo play after Cancel), once, on a clean profile | `page.md` limits and How to run, `package/README.txt` | "only claimed, never tested" (clean-profile section below) |
+| O8 | **Hosting link for the dev log** (a 7.8 MB self-contained page; rebuild Sunday), and whether device B's transcripts exist | `form.md` | his; B's transcripts: none found |
+| O9 | **The same-direction shot** (shot 5 of the video): no drill stages it. Play it by hand, have a lane write a drill, or drop the split frame | `video/script-v2.md` | no console drill; drill 5 is a stumble |
+| O10 | **Development takes in the video**: drills (shots 5 to 7, 9) exist only in a Development package, whose ice measured darker than Shipping's. Allow them, or play by hand | `video/script-v2.md` | A88's measurement |
+| O11 | **The P4 removal** (`ledger-proposals.md`: 149 rows, 100 MB of A's files, all `shipped` n): yes or no | the zip's size and the ledger | a proposal for the Director |
+| O12 | **Audio**: can device B capture the final 30 to 60 s of play with sound from the next package (A-to-B-0020 point 5)? Otherwise a silent cut with the game's own commentator and music muxed in | `video/script-v2.md` | open since Friday |
+| O13 | **The first two-machine match**: the joined match is tested as two processes on one machine through a match and a rematch; two real machines and a real firewall prompt are the operator's (with B). Send the result and the page's two-machine sentence is finished | `page.md` "Two machines" | `JOIN-GUIDE.md` section 5 |
+| O14 | **The banner if the curve lane does not land**: "Hockey with the whistle taken out" needs the whistle out of the regular cut and the takes (A133). Fallback: "Real hits. The speed you bring is the hit you get." Say which he prefers if it comes to that | `tagline.md`, `page.md` | R-0048 point 2 waits on A133 |
+
+## 2. What is done (true of main today, by the truth table)
+- `page.md` v3: three lengths (pitch 13 words, blurb exactly 60), the first minute, the three things no other hockey game says, the bots, the twelve cuts and what the Director's Call really is (one dial, once a period), the joined match with its limit, the arena that answers a goal, the controls table (15 rows, matches `InputMapping.cpp`), the tools in plain words, known limits said plainly.
+- `form.md` re-checked (the video row no longer points at a file that does not exist; the prizes are the operator's); `docs/SUBMISSION.md` skeleton no longer says 1 member or "3v3".
+- `video/script-v2.md` names for each shot the drill, console command or cut that stages it today (`jam.ctrl.Drill 21` with `jam.ctrl.CarryScript 1` for the stop-and-go: it exists now, the old script said to write it), and what device B captures with sound.
+- Not touched, still right at A96's tree: `credits.md` (62 sourced rows, 1 shipped), `package/README.txt`, `devlog/index.html`, `shots/` (the 8 stills are of H24).
+
+## 3. What waits for the next package or a lane (each is tagged `[waits: ...]` in the text)
+| Mark | Sentence in the text | When it is true |
+|---|---|---|
+| A133 | "Hockey with the whistle taken out" (page, tagline 1, the video's end card); take-3 at rookie; "the harder the level, the more it hits, the top one is faster"; Sudden Death "against the top level"; "the ladder is being re-set" | the curve lane lands: the whistle off in `hockey.regular` and the takes (R-0048 point 2), the ladder re-set |
+| A138 | the brain brakes on purpose, a bot carrier sprints, bots read your shield; the shove under a shield | the integration lane lands the brain's second evolution and the shove rule (R-0053 points 2 and 3) |
+| A135 | the brake prompt on the ice; the clipped hint line | the screen lane lands (camera, prompts) |
+| A132 | the screen shows a knockdown better than a bump (a limit, not a promise) | the hit's size on screen lands |
+| A139 | Fog of War "slow" bots removed from the card; the modes' second evolution | the modes lane lands |
+| device B BF1 | the brake's spray and pose (video shot 6) | B delivers |
+| device B BF2 | a crowd (the page says there is none yet) | B delivers |
+| device B BF3 | the 72 contact lines with a voice; the ability's burst and sound (shot 7) | B delivers (R-0051 point 2) |
+| device B BS1 | the dev log's second half (B's transcripts); the video with sound | B delivers |
+| the Director | `Hokej_Hokej.zip` from a real `package.ps1 -Submission` run on the final tree, unzipped and checked (`README.txt`, entry names with `/`); the clean-profile run repeated on it; the next package (H27) for every video shot | after A133 and A138 (R-0053 point 6) |
+| capture lane | the stale "3 v 3" menu line checked in the take; five skaters a side counted in the take; the stills refreshed from the next package (the 8 in `shots/` are H24; the design eye asks for four more, `REVIEW-1.md` section 7) | after the next package |
+
+## 4. If a lane does not land (so Sunday has no surprises)
+Delete the tagged sentences and use the fallback beside them. A133 not landed: banner "Real hits. The speed you bring is the hit you get."; drop "Hockey with the whistle taken out" and the level sentences. A138: drop the one tagged sentence in "The bots". A135 and A132: the limits stay as they read. Device B items: the limits already say they are missing. The page is true of the package that ships when every `[waits: ...]` is stripped or its sentence deleted: find them with `grep -n "waits:" submission/page.md submission/form.md submission/video/script-v2.md`.
+
+## 5. What only the operator can do
+O1, O2, O4, O5, O8, O13 (names, submit, prize, vendor policy, hosting, the first two-machine match), plus the final upload and the confirmation screenshot (`docs/SUBMISSION.md` checklist).
 
 ## The asset ledger (item 5), after pass 2
 `node tools/gate/check-assets-ledger.mjs` **PASS**, 1,654 rows (was parsed as 1,401: a paragraph inside the table ended it, so 253 rows of device A's `Game/Content/**` were never validated; moved above the table). Fixed: `T_UI_RingPlain` origin `original` (a PowerShell-drawn circle, no generative model), nine P4 sourced animation rows now carry licence and url, twelve `AS_P4_*` size_mb rows updated. Six WARN left, all device B's (`BP_SkaterVisual_*`, listed in `ledger-proposals.md`), and one for device A's `vfx/font/other` 76.5 MB against a 40 MB slice, which is the 56.2 MB DLSS library alone. P4 removal (149 rows, 100 MB of A's files, all `shipped` = n) is a proposal for the Director, nothing deleted.
-
-## What is left, by day
-**Saturday**: after the sim freeze (12:00) and A95's curve pass, a Shipping and a Development H26 package (A95/Director); one `package.ps1 -Submission` run; film the video v2 shots 5 to 8 (they need H26's contact, movement and brain); stills refresh; drill 21 for the stop-and-go; device B's logo and banner and the audio answer; the in-game CREDITS screen read.
-**Sunday**: assemble `hokej-v2.mp4` (`tools/media/cut.sh`), mux audio, rebuild the dev log, repeat the clean-profile run on the final zip, fill `TEAM:` in `page.md` and `form.md`, upload, submit 22:00.
-
-## The operator's decisions needed
-1. **Team names and roles** (page, form; `docs/SUBMISSION.md` still says 1 member).
-2. **The modifier**: Glass Box (log exists) or something else; the plan said Render Royalty and the Director decides at H48, no record exists.
-3. **Who presses submit**, and when (Sunday 22:00 internal).
-4. **Vendor names**: the page says "an image-generation model, 3D-generation services, a voice-and-audio service" and sends readers to `credits.md` and the dev log; the form's "Tools you used" field names them (`form.md`). Say if the page should name them too.
-5. **Development takes in the video**: drills (the contact shots 5 and 6, the ability shot 8) exist only in a Development package, whose ice looked darker than Shipping's in A88's measurement. Allow them, or have the operator play the contact shots by hand.
-6. **The P4 removal** (`ledger-proposals.md`): yes or no.
-7. **Audio**: can device B capture the final 30 to 60 s with sound (A-to-B-0020 point 5, still open)? Otherwise a silent cut with the game's own commentator and music muxed in.
-8. **Hosting link** for the dev log (a 7.8 MB self-contained page).
 
 ## Clean-profile test of H24 (item 9, lane A88)
 Unzipped to `%LOCALAPPDATA%\Temp\a88\H24` (outside the repo); `%LOCALAPPDATA%\ThirdJam\Saved` renamed away, game run from the root `ThirdJam.exe`, folder restored (the fresh one kept as `Saved.a88-clean` beside it).
@@ -52,3 +74,6 @@ Shipping cannot be asked anything: no log, no console, no state hash (PARITY.md)
 
 ## Files (relative to the worktree)
 `submission/README.md`, `page.md`, `form.md`, `credits.md`, `ledger-proposals.md`, `package/README.txt`, `video/script-v2.md`, `devlog/index.html`; `devlog/curated/shots.txt`, `devlog/curated/img/accept-table-a91.{txt,png}`; `tools/run/package.ps1`, `tools/run/zipfwd.ps1`; `tools/media/{devlog-curated.mjs,table-still.sh,zipstep-test.ps1,ledger-fix.mjs}`; `ASSETS.md` (rows of A's own assets, the paragraph moved above the table); `status/A96.md`. Unchanged from A88: `shots/`, `tagline.md`, `video/hokej-v1.mp4`, `video/cutlist.md`, `video/takes/`, `tools/media/{take.ps1,cut.sh,clean-profile.ps1,credits.mjs}`.
+
+## Files added or changed by lane A142 (pass 3)
+`submission/TRUTH.md` (new), `submission/page.md`, `submission/form.md`, `submission/tagline.md`, `submission/README.md`, `submission/video/script-v2.md`, `submission/video/cutlist.md` (header), `docs/SUBMISSION.md`, `status/A142.md`. The repository `README.md` describes the prep repository, not the game: unchanged.
