@@ -1,15 +1,16 @@
 # Device B lane board (the lead rewrites this file whenever a lane starts or reports)
 
-Updated 2026-11-13 15:26 CEST (H33.9). Five lanes were stopped by accident at 15:22 (the operator); four are restarted as fresh agents or queued. dev-b = main cba1327 + B's work, builds.
+Updated 2026-11-13 20:45 CEST (H40.1). The evolution loop (R-0047, A-to-B-0022): each lane does one evolution on a track, proves it, proposes the next three. One editor at a time on B (two hung the GPU twice today). dev-b = main 25df19f + B, builds, cook-only PASS.
 
 ## Running
 
 | Lane | What | Editor | Started | Due | Report (when done) |
 |---|---|---|---|---|---|
-| AU8 | The operator at 15:22: "tone down with 30% audio reduction effects from gameplay (skating, hits for 20% decrease, animation sounds). Keeping music, commenator and the crowd as dominant tracks": gameplay effects x 0.70, hits x 0.80, music, commentary and every crowd layer unchanged; one named trim per sound | 8000, `wt/b-vfx` | 15:25 | 16:10 | `status/AU8-report.md` |
-| B33 | Effects (a fresh agent; the first was stopped by accident at 15:22): `NS_lift` as a cross-check hit mark, `NS_poke` in line, the slide streak readable on night and continuous on clay, the skater board puff by Strength | 8002, the main tree (**no merges into `C:/Users/kazda/jam/thirdjam` while it runs**) | 15:30 | 16:25 | `status/B33-report.md` |
-| SKF20 | Blender (a fresh agent): the clay figure's bottom hand on the shaft in the cross-check, `Poke_Hit` a little bigger; `skf/export20` | none | 15:28 | 16:15 | `status/B-skater-skf.md`, twentieth pass |
-| BR3 | Blender (a fresh agent): the banner with the two figures large and at the word, the barn's tone; logo fixes and a version for dark pages | none | 15:28 | 16:20 | `status/BR3-report.md` |
+| QA4 | Track BQ1 (the quality of B's implementation): the play-through's acceptance lines on the vision's build (main 25df19f), every take against its event under the new contact model (bump, stumble, 60 to 150 frame knockdowns, a board hit in the same frame as a knockdown, the cross-check under the cone, abilities), the wall rule beside the new benches, the Blueprint's cost per call | 8002, the main tree, **the only editor** | 21:05 | 21:55 | `status/QA4-report.md` |
+| SKF21 | Track BF1 (the figure plays the vision), Blender: four stumbles by direction around 16 frames, `Board_Fall_Front` / `_Back`, `Stop_Hard`; `skf/export21` | none | 20:52 | 21:45 | `status/B-skater-skf.md`, twenty-first pass |
+| AR1 | Track BF2 (the arena and the clay look), Blender: timber stands with a clay crowd for the apron beyond the boards, a corner piece, a barn scoreboard housing; `C:/Users/kazda/jam/arena-lab/` | none | 21:00 | 22:00 | `status/AR1-report.md` |
+| AU10 | Track BF3 (hits you hear and see), generation: the four ability sounds, deke, stumble, brake, a board fall; the 72 commentator lines in the accepted voice and a hockey line for `lose.blowout.01` | none | 20:55 | 21:45 | `status/AU10-report.md` |
+| BR4 | The banner's K reads as an X (A-to-B-0021): a clear stem, the diagonals meeting it; banner, logo, alpha cuts | none | 20:50 | 21:25 | `status/BR4-report.md` |
 
 ## Waiting for the operator's ears or eyes (pages on device B)
 
@@ -23,8 +24,11 @@ Updated 2026-11-13 15:26 CEST (H33.9). Five lanes were stopped by accident at 15
 
 | Lane | What | Waits for |
 |---|---|---|
-| B34 | Clay pass 11 (stopped by accident at 15:22 before it saved anything; to be restarted): both rigs' sky lights to the movable real-time capture (A-to-B-0016 point 3), ten figures for clutter, wear on the boards | an editor slot |
-| SK17 | `skf/export20` (the cross-check takes) into both scripted figures, measured in real matches | an editor slot, after SKF20 |
+| SK21 | `skf/export21` into both scripted figures: the stumbles on `PlayHitReaction` (and on `PlayStumble` when the other device adds it), the board falls when `PlayBoardHit` arrives with a knockdown, `Stop_Hard` | the editor, after QA4 and SKF21 |
+| B40 | Effects: `NS_ability` by kind, `NS_deke`, the brake's spray; chips as short streaks if the operator still reads bubbles | the editor |
+| AU11 | Import AU10: `MS_ability`, `MS_deke`, stumble, brake, board fall; the 73 commentator waves | the editor |
+| AR2 | Import AR1's stands and crowd into `JamAssets/Arena` and place them in `LR_P3_Clay`; readability re-measured | the editor |
+| BS1 | The four jobs moved from A (A-to-B-0022): the clean-machine test of H26, the video with sound, joined play A to B, B's half of the dev log | the operator (the zip, both ends, his word on the transcripts) |
 
 ## Done today (newest first; every one has a report under `status/`)
 
