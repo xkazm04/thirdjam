@@ -1,0 +1,1 @@
+SK24 job 3. Test figures on clay, fixed camera, un-paused, 150-frame knockdowns: the lying loops run from the frame the fall first holds its end pose (left Lie_Loop_Side_Left, middle Lie_Loop_Front, right Lie_Loop); the 36-frame get-ups start at frame 115, cross-faded 5 frames out of the loop, and end on the release at 150. Frames with no joint moving: 1 of 150 (was 88 to 103).

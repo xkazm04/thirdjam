@@ -1,0 +1,1 @@
+SK24 job 3. In play on clay, game camera, un-paused, window resolution, seed 1, sim frame 5242: the human's 114-frame knockdown (Knockdown_Left, then Lie_Loop_Side_Left, then GetUp_Side_Left), every 12th frame, cropped on the figure. Between frames 42 and 66 the limb shift is visible at game size (the near arm and the legs move); the breathing does not show in stills.
