@@ -1,14 +1,14 @@
 # Device B lane board (the lead rewrites this file whenever a lane starts or reports)
 
-Updated 2026-11-13 03:00 CET (H21.0).
+Updated 2026-11-13 03:30 CET (H21.5).
 
 ## Running
 
 | Lane | What | Editor | Started | Due | Report (when done) |
 |---|---|---|---|---|---|
-| SK7 | Clay figures in the engine: the felt and the cream stitches of both clay figures (`BP_SkaterVisual_TB1_P3`, `_TB2_P3`) made to read at the game camera and close up in the barn; the cause of the `P3C` normal-map fault; team colours under the warm light; hero stills beside the estimate (materials, meshes and textures only: no Blueprint logic) | 8000, tree `wt/b-a45` (branch `dev-b-a45`) | 02:35 | 04:45 | `status/SK7-report.md` on `dev-b-a45` |
 | B23 | Clay tier pass 5: the glass rail and stanchions made to vanish on clay through B's own material (handoff 0034 point 1 from B's side), a plain red top rail if the trim material allows, the key-light pools on the ice, far zone rings, board contact; motion check; stills beside the estimate | 8002, the main tree (**no merges into `C:/Users/kazda/jam/thirdjam` while it runs**) | 02:57 | 05:00 | `status/B23-report.md` |
-| SKF8 | Blender, the broadcast style's posture: the stride folded forward at the hips, both hands on the stick, a hockey ready stance instead of the wide squat (aim holds rebuilt), the stops with a level head; into `skf/export8/p4_broadcast`; then a retarget onto `P4E` and a re-import for new hero stills | none | 02:55 | 03:55 | `status/B-skater-skf.md` (seventh and eighth pass) |
+| SKC5 | Blender: `P4E` (loose jersey) retargeted from the posture-fixed takes `skf/export8`, with the lean, both hands on the stick and a level head measured on the figure itself; into `skc/p4/P4E/export3`; then an engine re-import for new hero stills when an editor slot frees | none | 03:05 | 03:50 | `status/B-skater-p4-figure.md` (fifth pass) |
+| SKF9 | Blender: the ready stance instead of the wide squat for the two SHIPPED styles (`p2_cel`, `p3_clay`), toy proportions kept, aim holds rebuilt, meshes unchanged (animation-only re-import later); into `skf/export9` | none | 03:20 | 04:20 | `status/B-skater-skf.md` (ninth pass) |
 
 ## Waiting for the operator's ears or eyes (pages on device B)
 
@@ -26,6 +26,8 @@ Updated 2026-11-13 03:00 CET (H21.0).
 
 ## Done today (newest first; every one has a report under `status/`)
 
+SK7 the two clay figures as felt-and-stitch toys (03:15, branch `dev-b-a45` b7002ce, cook-only PASS): cream running stitches twice as large (8 x 2.6 cm), felt mottle and a warm sheen, the `P3C` normal map on (it was never wrong, only far too weak: relief rebuilt, strength 3.5), felt breezers and a darker hem band on `TB1_P3`; materials, one mesh, three textures, no Blueprint logic; the generated figure reads best from the game camera, the scripted one sits in a wide squat (posture pass SKF9); under a figure the ice shows an amber stain (the computed bulb reflection is not shadowed) (`status/SK7-report.md` on the branch) ·
+SKF8 the broadcast style's posture (03:05): stride trunk 42 to 51 degrees, ready stance in Glide and Idle, two-handed crossovers and leans, level head in the stops, aim holds rebuilt with 36 degrees of lean; found that the engine's aim layer replaces the upper body with the hold's pose, which is why the chest read upright (`status/B-skater-skf.md`, seventh and eighth pass; `skf/export8`) ·
 B21 P4 lab second pass (02:46): stands with a dim crowd and lamp banks, 14 reflection-only lights so lamp streaks show in the ice from the game camera, a crisp scratch layer within 6 m of the camera, bluer ice with wet patches, a white powder spray `NS_P4Lab_spray`, the figure `P4E` with the loose jersey and 75 takes on its own skeleton with `BP_SkaterVisual_P4Lab` (the game cannot select it: its calls were mirrored onto it in a bot match); four hero stills for the operator; the lane puts the ice at about 70 % and the skater at about 65 % of the concept; all lab assets, `shipped` n (`status/B21-report.md`; cook-only result in `status/B.md`) ·
 SKC4 the broadcast figure `P4E` with a loose jersey (a garment built from its own mesh: boxy torso, squarer shoulders, wider sleeves, a hem hanging over the pants; procedural folds; cloth simulation tried and dropped) and all 75 takes retargeted from the athletic `skf/export7` (new: push start, two hockey stops); Blender only, no credits; faults: reads puffy rather than draped, face-down poses pull the hem panel up, the stride's chest stays upright, one hand is off the stick in the glide render (`status/B-skater-p4-figure.md`, fourth pass; deliverable `skc/p4/P4E/export2/P4E`, lane B21 imports it) ·
 B22 clay tier pass 4 (02:20): the bulb strings' reflections computed in the ice material (`B22BulbRefl` in `M_Ice`, clay only: warm streaks across the near and middle ice that screen-space reflections cannot see), four low strings in front of the end walls so bulbs fill the top of the game camera's frame, a glitter fault in fast turns fixed at its source (`ScratchNormFar`), white chips and snow instead of brown crumbs, zone rings with a bright edge and spill, a near-black puck; night and broadcast measured unchanged; the far wall not done (`status/B22-report.md`; cook-only PASS) ·

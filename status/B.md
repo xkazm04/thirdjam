@@ -419,3 +419,13 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
   a handoff with exact names. Expected cost over the night tier, not measured: +2 to 3 ms on the 4090, +6 to 9 ms on a mid-range card.
 - Running: lane SK7 (clay figures: felt and stitches in the barn) on branch `dev-b-a45`, port 8000, due 04:45.
 - 02:53: cook-only on the tree with lane B21's assets (after merging `dev-b` and building): PASS, 0 errors; pushed to `dev-b`.
+
+## H21.5 (03:30, 13 Nov) the clay figures; FOR THE DIRECTOR: the landing list grew by one file
+- **Lane SK7 on `origin/dev-b-a45` (b7002ce, cook-only PASS)**: both clay figures read as felt-and-stitch toys now (stills on the branch:
+  `devlog/shots/20261113-031355-B-sk7-clay-hero-low.png`, `-sk7-clay-figures-before-after.png`). **The landing list of A-to-B-0012 is 17 files** (the response
+  there is updated): the 16 plus `MI_SkaterTB1_P3_PadsFelt`.
+- Open on B from that lane: the scripted figure's wide squat from behind (posture pass SKF9 in Blender, then an animation-only re-import on the branch); an amber
+  stain under figures on the clay ice (the computed bulb reflection of lane B22 is emissive and is not shadowed: a soft dark blob under each figure on this tier
+  is the planned fix, in the figure Blueprints on the branch).
+- Lead's read for the operator: on the clay tier the generated figure (`generated_b2`: `BP_SkaterVisual_TB2_P3`) looks better than the scripted default
+  (`humanoid_b1`: `BP_SkaterVisual_TB1_P3`) from the game camera. Whether the clay tier should use it by default is the operator's call in the morning.
