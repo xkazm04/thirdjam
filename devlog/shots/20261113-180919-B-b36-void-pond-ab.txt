@@ -1,0 +1,1 @@
+B36, the same fix on Pond (60 x 30 m, rig scale 0.667): corner and side board from game-camera height, before and after. Apron luma 30 to 36 after; share of the frame under luma 12: corner 3.8 % to 0.3 %, side 5.7 % to 0.1 %. The fill follows the rig's scale because it is computed in the floor's own local coordinates.

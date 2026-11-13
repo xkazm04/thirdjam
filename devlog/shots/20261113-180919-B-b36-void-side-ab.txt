@@ -1,0 +1,1 @@
+B36, the black beyond the boards, regular rink, side board from game-camera height, 8.5 m from the board. Before: 9.0 % of the frame under luma 12. After: 0.4 %. Apron luma 32 at the wall, about 45 beside the boards; ice 145.5 before and after.
