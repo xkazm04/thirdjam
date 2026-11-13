@@ -512,3 +512,13 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
   frames later: B rebuilds the attacker's take for that).
 - Tackling takes: `skf/export11` (lane SKF11: knockdowns, falls, get-ups at 26 + 44 frames, about 20 frames lying, nothing sped up) goes into the engine on
   the interface branch now (lane SK11, port 8000, `wt/b-a45`); SKF12 (the attacker's check, flatter lying poses) is running in Blender.
+
+## H28.7 (10:36, 13 Nov) FOR THE DIRECTOR: `main` dfb808f (the v4 landing) is merged into `dev-b`; clay pass 7; A-to-B-0014 answered
+- **`dev-b` = `main` dfb808f + clay pass 7, builds, cook-only PASS (0 errors).** Under `Skaters/` it equals `main`. `dev-b-a45` is retired when lane SK11 leaves it.
+- **Clay pass 7 (lane B27, `status/B27-report.md`)**, the operator's direction of 09:46: no bulb strings and no per-bulb reflections; ten large lamps (4 shadowed
+  keys without specular, 6 shadowless lamps over the side lanes), one broad sheen of at most +14 luma, cool pale ice (near ice 187, 175, 187). The side lanes
+  went from luma 82 / 76 to 147 / 158; the puck gained 18 luma of contrast. One weak spot: an orange figure on the wing has the ice's luma (109 against 112)
+  and reads by colour only. The rig has 16 local lights (was 10), 4 shadowed as before. **For cameras**: lamp shades hang at 11.5 and 13 m.
+- A-to-B-0014 answered in the file (P4 stopped; the tackling takes' state; open: handoff 0036 points 2 and 4).
+- Tackling, Blender: `skf/export12` (falls, get-ups, the attacker's lunge) and `skf/export13` (standing hits, board hit, stumble, two spin variants) are
+  ready; engine: SK11 running (port 8000, `wt/b-a45`), then SK12 on `dev-b`.
