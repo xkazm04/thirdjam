@@ -845,6 +845,17 @@ int32 UJamSim::CarrierIndex() const
 	return (FVector2D::Distance(S.Pos, Puck.Pos) <= CarrierReachM(C) || FVector2D::Distance(S.BladePos, Puck.Pos) <= DeflectRangeM) ? C : -1;
 }
 
+// Lane A102 (R-0048): is the puck riding with a carrier? The same test the carry assist in StepPuck makes (a shot or a pass that just left the stick is fast
+// relative to the body and does not ride; a reception that settles does). Cuts without a carry assist dribble with the body and have no riding puck.
+int32 UJamSim::RidingCarrier() const
+{
+	const int32 Ci = CarrierIndex();
+	if (Ci < 0 || Config.Puck.CarryAssist <= 0.0 || bDrawOpen) return -1;
+	const FJamSkaterState& C = Skaters[Ci];
+	if (C.bShotThisFrame || C.bPassThisFrame) return -1;
+	return ((Puck.Vel - C.Vel).Size() < 4.0 || C.SettleFrames > 0) ? Ci : -1;
+}
+
 double UJamSim::CarrierReachM(int32 Skater) const
 {
 	// R-0042 (lane A85): one reach for every carrier test: the stick's full reach (where the carried puck lives since A51) or shot.reach_m, whichever is
@@ -1301,7 +1312,8 @@ void UJamSim::StepStick(FJamSkaterState& S, const FJamInput& In)
 	// Lane A93 (R-0045 law 4): the puck's distance by pace. A carrier that is not sprinting holds the blade (and the puck on it) at stick.carry_reach_mult of
 	// the distance (1.2 m of 1.6 m at full aim); sprinting it rides at the full distance. The direction is always the aim's. Everyone else's blade is full
 	// length (a poke, a reception). carry_reach_mult 1 = always full.
-	const double ReachMul = (CarrierIndex() == S.Index && !S.bSprinting) ? FMath::Clamp(Config.Stick.CarryReachMult, 0.0, 1.0) : 1.0;
+	// Lane A102: BrakeReachMult is not a key (1 = no difference; measured in Bar.Movement.StopAndGoSweep, docs/experiments/MOVEMENT-2.md section 3).
+	const double ReachMul = (CarrierIndex() == S.Index && !S.bSprinting) ? FMath::Clamp(Config.Stick.CarryReachMult, 0.0, 1.0) * (S.bBraking ? FMath::Clamp(Config.Stick.BrakeReachMult, 0.0, 1.0) : 1.0) : 1.0;
 	S.BladePos = S.Pos + Dir * ((SkaterRadius + Frac * Config.Stick.ReachM) * ReachMul);
 	// Lane A51 (R-0034): a spinning carrier's blade is not re-aimed; it stays where it was on the body and StepSpin drags it round to the far side.
 	if (S.SpinFrames > 0 && !OldDir.IsNearlyZero() && CarrierIndex() == S.Index) S.BladePos = S.Pos + OldBladeRel;
@@ -1353,6 +1365,7 @@ void UJamSim::StepSweepShield(FJamSkaterState& S)
 bool UJamSim::IsPokeShielded(const FJamSkaterState& Poker, const FJamSkaterState& Carrier) const
 {
 	if (Carrier.SpinFrames > 0) return true;   // the body is between
+	if (IsBodyShielded(Poker, Carrier)) return true;   // lane A102 (track F2): the body is between without a button
 	if (Carrier.SweepFrames <= 0 || Carrier.SweepSide == 0) return false;
 	// R-0044 as amended (lane A93, on lane A91's measurement): the shield covers both sides of the body for its window. One cursor crossing was read as two
 	// sweeps, the second flipped the one-sided shield, and a lift 5 frames after the crossing took the puck. SweepSide stays as the read-out of the side the
@@ -1362,6 +1375,25 @@ bool UJamSim::IsPokeShielded(const FJamSkaterState& Poker, const FJamSkaterState
 	const FVector2D Rel = Poker.BladePos - Carrier.Pos;
 	const double Cr = Fwd.X * Rel.Y - Fwd.Y * Rel.X;
 	return (Cr > 0.0 ? 1 : -1) == Carrier.SweepSide;
+}
+
+// Lane A102 (track F2; docs/VISION.md law 3: the carrier's defence is its feet and its stick): puck protection with the body, no button. A defender within
+// BodyShieldRangeM whose line to the puck runs through the carrier's body cannot take it with the stick: the puck sits on the far side of the body (within
+// BodyShieldFarDeg of the line defender -> carrier carried on) and the carrier has turned its side or its back (the defender is more than BodyShieldFrontDeg
+// off the carrier's facing). A carrier that faces the defender shields nothing, wherever it holds the puck: the poke, the lift and the cross-check from the
+// front stand (law 1). A body check is never shielded (bodies are not sticks). game.stick.body_shield false = off.
+bool UJamSim::IsBodyShielded(const FJamSkaterState& Poker, const FJamSkaterState& Carrier) const
+{
+	if (!Config.Stick.bBodyShield || Poker.Team == Carrier.Team) return false;
+	const FVector2D ToCarrier = Carrier.Pos - Poker.Pos;
+	const double D = ToCarrier.Size();
+	if (D > BodyShieldRangeM || D < 1e-6) return false;
+	const FVector2D ToPuck = Puck.Pos - Carrier.Pos;
+	const double P = ToPuck.Size();
+	if (P < 1e-6) return false;
+	const FVector2D N = ToCarrier / D;   // defender -> carrier
+	if (Dot(ToPuck, N) < FMath::Cos(FMath::DegreesToRadians(BodyShieldFarDeg)) * P) return false;   // the puck is not behind the body, seen from the defender
+	return Dot(Carrier.Forward(), N) > -FMath::Cos(FMath::DegreesToRadians(BodyShieldFrontDeg));   // the defender is not in front of the carrier
 }
 
 int32 UJamSim::NearestOpponent(const FJamSkaterState& S) const
@@ -2376,6 +2408,14 @@ void UJamSim::StepPuck()
 			if (Puck.ShotgunFrames > 0 && S.IsDown()) continue;   // lane A84: the shotgun goes through the bodies it knocked down
 			// R-0035 (lane A52): a puck over the body passes; over a crease skater's block height it passes too (the low shot through the stance is the hard one).
 			if (Puck.Z >= BodyHeightM || (Puck.Z >= Config.Skater.GoalieBlockHeightM && InCreaseStance(S))) continue;
+			// Lane A102 (R-0048, on the design eye's 924 matches: a carry lasted a median 0.7 to 0.9 s and the puck was on nobody's blade 60 % of play): a puck
+			// that rides with its carrier is not taken by another skater's unpressed blade or by a body's touch. It leaves by a shot, a pass, a poke, a lift, a
+			// check or stumble that loosens it (the carrier can no longer act: nothing rides), or the carrier's own release. game.stick.passive_take true = as
+			// before. A teammate never takes it by touch under either value (bTeammateTouchTakes is the tests' switch for older commits).
+			{
+				const int32 Rider = RidingCarrier();
+				if (Rider >= 0 && Rider != S.Index && !(Skaters[Rider].Team == S.Team ? Config.Stick.bTeammateTouchTakes : Config.Stick.bPassiveTake)) continue;
+			}
 			// C-0005 deflection: an opponent's shot passing within DeflectRangeM of the blade bounces off it at 70 %; a teammate's puck (a pass)
 			// is received instead: the blade takes most of its speed and the carry assist settles it.
 			// Lane A77 (R-0036): a puck over BladeClearM flies over the blades (the saucer's point); the body below still stops it.
@@ -2754,6 +2794,25 @@ bool UJamSim::GrantAbility(int32 Skater, int32 Slot)
 	return true;
 }
 
+bool UJamSim::SeatGuest(int32 Skater)
+{
+	// Lane A110 (track Q1): see the header. Init's Restart already ran with the seat as a bot: redo the two things it decided by bHuman.
+	if (!Skaters.IsValidIndex(Skater) || Skater == HumanIndex || Frame != 0) return false;
+	FJamSkaterState& S = Skaters[Skater];
+	S.bHuman = true;
+	if (S.AbilitySlot < 0)
+	{
+		for (int32 a = 0; a < Config.Abilities.Num(); ++a)
+		{
+			if (Config.Abilities[a].Trigger != TriggerMode) continue;
+			GrantAbility(S.Index, a);
+			break;
+		}
+	}
+	if (bDrawOpen && S.bCentre && S.Team >= 0 && S.Team < 2) BotDrawFrame[S.Team] = -1;
+	return true;
+}
+
 void UJamSim::TryAbility(FJamSkaterState& S)
 {
 	const FJamAbilityConfig* A = HeldAbility(S.Index);
@@ -2853,7 +2912,8 @@ uint64 UJamSim::LockstepStateHash() const
 	for (const FJamSkaterState& S : Skaters)
 	{
 		H.AddI(FMath::Min<int64>(Frame - S.LastCarryFrame, Grace + 1));
-		H.AddI((S.bSprinting ? 1 : 0) | (S.bStickAimed ? 2 : 0) | (S.bPokeArmed ? 4 : 0));
+		// Lane A110: bHuman (8) too, since SeatGuest makes it a per-match choice: a peer that seated the guest differently disagrees at the first checkpoint.
+		H.AddI((S.bSprinting ? 1 : 0) | (S.bStickAimed ? 2 : 0) | (S.bPokeArmed ? 4 : 0) | (S.bHuman ? 8 : 0));
 		if (Config.Skater.BurstFrames > 0)
 		{
 			H.AddI(S.MoveHistAt);

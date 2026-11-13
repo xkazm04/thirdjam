@@ -541,3 +541,21 @@ R-0048's rule: together they are "the puck is kept"); (3) the fade-in waits for 
 distance labels and the camera in the corners: a new track **U1 the screen** (Fable, lane A111); (4) the whistle's early release of a knocked-down figure stays where a
 mode keeps the whistle; the regular game loses the whistle (R-0048), and B's quick get-up covers the rest; (5) `NS_deke` / `MS_deke`: B builds them small (a flick of
 shavings at the blade, a short scrape): asked in the answer.
+
+## R-0050 (H26, 2026-11-13 20:14): the puck is kept, the ladder is off until the curve is re-set; process faults of the day
+Lane A102 built R-0048's rule (`game.stick.passive_take` false, plus `game.stick.body_shield` true: the carrier's body shields the puck from a stick behind it). On
+600 matches a cell it moves the ladder to 99.8 / 72.0 / 39.8 (targets 85 / 48 / 26): the human finally keeps the puck, and the bots have not learned to take it.
+Rulings: (1) the rule lands with its default as R-0048 set it (false), not at its neutral value: the game with it is the game the vision describes, and the curve
+track (C0, lane A112) starts on its landing; **no package is cut from main until the curve lands** (H26 stays the newest package); (2) **the body shield refuses
+the stick, never the shove**: a lift or a poke through the carrier's body is refused; a cross-check's shove from any side inside its cone is contact and obeys the
+contact law (track F1's next evolution; today `TryLift` refuses both); (3) the brain reads the shield and closes under control instead of charging head-on at
+11 m/s (track Q2, lane A115); (4) rookie cannot take a carried puck except by a hit (a straight charge at a rookie passes 53.5 %): the curve track decides what
+rookie may do with its stick; (5) track F2's next: the take grace of R-0049, the stop's grip (`reverse_brake_decel` 26), the first step that belongs to the
+carrier (lane A121); (6) lane A107's soak: three modes no longer differ from the regular game by a third (cage, outnumbered, shotgun), the marathon plays past its
+own horn, take-3 and take-6 play identically: a modes lane (M1) starts with the curve lane, on the same build; (7) lane A109's fuzz: seven fault classes go to
+lane A118 with the found cartridges as regression cases; a hook's `set_param` value lies inside the named parameter's range.
+**Process faults found today, and their guards:** (a) the main checkout sat on a detached HEAD from 13:39 to 20:03, so every push sent a stale branch and device B
+received nothing for six and a half hours: the landing script now refuses to run off the branch and reads the remote back after each push; (b) a running landing
+script was edited in place and derailed after its commit: scripts a chain is executing are never edited; (c) every headless start queued on the build tool's mutex
+for minutes: `-Multiprocess` on every headless start (lane A107: 5 m 17 s to 9.5 s; the gate's test step 398 s to 89 s); (d) landings go in batches through one
+gate (six evolutions in four minutes at 20:12), each lane having run the full filter on its own tree.

@@ -392,3 +392,4 @@
 - 20:05: **found: the main checkout sat on a detached HEAD from 13:39** (a checkout of cba1327 after the 13:23 restart), so every "pushed" line since then pushed the stale branch: origin/main stayed at cba1327 for six and a half hours and device B never received the vision, handoffs A-to-B-0020 to 0022 or anything else. Fixed 20:03: main switched onto the head commit, 70 commits pushed and verified against the remote (941b8d4); the landing script now refuses to run off the branch and checks the remote after each push.
 - link green 20:05: main 941b8d4 (A104: two online peers check everything the rules read; protocol 8) pushed, verified.
 - RESOURCES 20:00 [exited with code 0]
+- link green 20:12: main 7f4d501 (Six evolutions in one landing: every contact outcome reads and the boards are a body (A101) pushed.

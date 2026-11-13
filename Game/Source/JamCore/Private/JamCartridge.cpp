@@ -1074,6 +1074,8 @@ namespace
 		ReadNumber(St, TEXT("reception_m"), C.Stick.ReceptionM);   // lane A46
 		ReadNumber(St, TEXT("mouse_sensitivity"), C.Stick.MouseSensitivity);
 		ReadNumber(St, TEXT("carry_reach_mult"), C.Stick.CarryReachMult);   // lane A93 (R-0045 law 4)
+		ReadBool(St, TEXT("body_shield"), C.Stick.bBodyShield);   // lane A102 (track F2): puck protection with the body
+		ReadBool(St, TEXT("passive_take"), C.Stick.bPassiveTake);   // lane A102 (R-0048): false = a carried puck leaves its carrier only by a press
 		// R-0029 point 4 (lane A39): game.stick.deke { offset_m, commit_frames }
 		if (const FJPtr Dk = Obj(St, TEXT("deke")))
 		{

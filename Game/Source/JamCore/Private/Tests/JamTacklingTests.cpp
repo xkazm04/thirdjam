@@ -291,14 +291,15 @@ bool FJamTacklingReadouts::RunTest(const FString& Parameters)
 		UJamSim* Sim = MakeRaw(*this);
 		if (!Sim) return false;
 		ClearIce(Sim, 0, 3);
-		// Skater 3 dribbles the puck for 40 frames so it is the carrier (CarrierIndex reads the last toucher); skater 0 is then set 1.2 m behind it and lifts.
+		// Skater 3 dribbles the puck for 40 frames so it is the carrier (CarrierIndex reads the last toucher); skater 0 is then set 1.2 m beside it and lifts.
 		Sim->SetSkater(3, FVector2D::ZeroVector, FVector2D::ZeroVector, 0.0);
 		Sim->SetPuck(FVector2D(0.8, 0.0), FVector2D::ZeroVector);
 		Sim->SetSkater(0, FVector2D(-8.0, 8.0), FVector2D::ZeroVector, 0.0);
 		StepN(Sim, 40, [](TArray<FJamInput>& In, int32) { In[3].Move = FVector2D(1.0, 0.0); });
 		const FJamSkaterState& Carrier = Sim->GetSkaters()[3];
 		TestTrue(TEXT("skater 3 carries the puck"), Carrier.bHasPuck);
-		Sim->SetSkater(0, Carrier.Pos - FVector2D(1.2, 0.0), Carrier.Vel, 0.0);
+		// Lane A102: the lifter stands 1.2 m beside the carrier and faces it (it stood 1.2 m behind): with game.stick.body_shield a lift from behind does not take a puck held ahead.
+		Sim->SetSkater(0, Carrier.Pos - FVector2D(0.0, 1.2), Carrier.Vel, UE_DOUBLE_PI * 0.5);
 		StepN(Sim, 1, [](TArray<FJamInput>& In, int32) { In[3].Move = FVector2D(1.0, 0.0); In[0].Move = FVector2D(1.0, 0.0); In[0].bLift = true; });
 		bool bLiftClean = false;
 		for (const FJamSimEvent& E : Sim->GetFrameEvents()) if (E.Name == JamEvents::Lift && E.Who == 0 && E.Strength > 0.5f) bLiftClean = true;

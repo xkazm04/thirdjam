@@ -19,7 +19,7 @@ namespace JamMovementTests
 
 	// The neutral block (MOVEMENT.md section 4): with these six values the game is the one main 8f6b157 shipped.
 	const TCHAR* NeutralSkater = TEXT("\"skater\": {\"reverse_brake_decel\": 0, \"burst\": {\"frames\": 0, \"accel_mult\": 1}, \"sprint\": {\"carry_bonus\": 0},");
-	const TCHAR* NeutralStick = TEXT("\"stick\": {\"carry_reach_mult\": 1, \"lift_cone_deg\": 180, \"sweep\": {\"sprint_shield_mult\": 1}}, \"skater\": {");
+	const TCHAR* NeutralStick = TEXT("\"stick\": {\"carry_reach_mult\": 1, \"body_shield\": false, \"passive_take\": true, \"lift_cone_deg\": 180, \"sweep\": {\"sprint_shield_mult\": 1}}, \"skater\": {");
 
 	UJamCartridge* LoadPreset(FAutomationTestBase& T, const FString& Name)
 	{
@@ -53,6 +53,8 @@ namespace JamMovementTests
 	{
 		G.Skater.ReverseBrakeDecel = 0; G.Skater.BurstFrames = 0; G.Skater.BurstAccelMult = 1; G.Skater.SprintCarryBonus = 0;
 		G.Stick.CarryReachMult = 1; G.Stick.SweepSprintShieldMult = 1;
+		G.Stick.bBodyShield = false;   // lane A102 (track F2): puck protection with the body is off in the neutral block
+		G.Stick.bPassiveTake = true; G.Stick.bTeammateTouchTakes = true;   // lane A102 (R-0048): the unpressed take, and the teammate's touch (a rule: a code switch)
 		G.Stick.bSweepShieldOneSided = true;   // R-0044 as amended landed with this lane (both sides): main 8f6b157 shielded one side
 	}
 
@@ -604,6 +606,8 @@ bool FJamMovementNeutral::RunTest(const FString& Parameters)
 	if (!N) return false;
 	// R-0044 as amended (the sweep's shield on both sides) landed with this lane and is a rule, not a key: the code switch brings back the one side.
 	N->Game.Stick.bSweepShieldOneSided = true;
+	N->Game.Stick.bTeammateTouchTakes = true;   // lane A102 (R-0048 point 2): a rule, not a key
+	TestTrue(TEXT("neutral: stick.passive_take true, stick.body_shield false"), N->Game.Stick.bPassiveTake && !N->Game.Stick.bBodyShield);
 	TestEqual(TEXT("neutral: skater.reverse_brake_decel 0"), N->Game.Skater.ReverseBrakeDecel, 0.0);
 	TestEqual(TEXT("neutral: skater.burst.frames 0"), N->Game.Skater.BurstFrames, 0);
 	TestEqual(TEXT("neutral: skater.burst.accel_mult 1"), N->Game.Skater.BurstAccelMult, 1.0);

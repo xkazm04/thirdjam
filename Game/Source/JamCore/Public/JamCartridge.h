@@ -133,6 +133,21 @@ struct JAMCORE_API FJamStickConfig
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double CarryReachMult = 0.75;
 	// game.stick.sweep.sprint_shield_mult (lane A93): a sprinting carrier's sweep shield lasts this fraction of shield_frames (0.5: 6 of 12). 1 = no difference.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double SweepSprintShieldMult = 0.5;
+	// game.stick.body_shield (lane A102, track F2; docs/VISION.md law 3, docs/experiments/MOVEMENT-2.md): puck protection with the body, no button. While the
+	// carrier's body is between a defender's stick and the puck (the defender within 2 m, the puck on the far side of the body, the carrier turned away from the
+	// defender by more than 60 degrees) that defender's poke or lift does not take the puck. false = off (the neutral value: the game before the lane).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") bool bBodyShield = true;
+	// game.stick.passive_take (lane A102, R-0048): false (the default) = a carried puck is not taken by an unpressed blade or by a body's touch: it leaves its
+	// carrier only by a shot, a pass, a poke, a lift, a check or stumble that loosens it, or the carrier's own release (R-0021's sentence, now the rule).
+	// true = the neutral value (the game before the lane): an aimed opposing blade within 0.6 m deflects a carried puck moving faster than 6 m/s, and any
+	// body's touch makes that skater the last toucher.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") bool bPassiveTake = false;
+	// Not a cartridge key. R-0048 point 2: a teammate never takes a carried puck by touch, under either value of passive_take (a pass is a pass). true brings
+	// back the teammate's touch of the game before lane A102, which the neutral-block tests need to replay older commits' matches hash for hash.
+	bool bTeammateTouchTakes = false;
+	// Not a cartridge key (lane A102 measured it and it bought nothing, MOVEMENT-2.md section 3): the carried puck's distance while the carrier brakes, as a
+	// share of its distance by pace. 1 = no difference. Bar.Movement.StopAndGoSweep sets it.
+	double BrakeReachMult = 1.0;
 	// Not a cartridge key. R-0044 as amended (lane A93): the sweep's shield covers both sides of the body; true brings back the one-sided shield of main
 	// 8f6b157 (only the side the puck left), which Jam.Core.MovementNeutral needs to replay that commit's matches hash for hash.
 	bool bSweepShieldOneSided = false;

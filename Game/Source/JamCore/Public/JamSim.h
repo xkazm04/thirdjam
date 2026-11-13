@@ -111,6 +111,7 @@ USTRUCT(BlueprintType)
 struct JAMCORE_API FJamSkaterState
 {
 	GENERATED_BODY()
+	FJamSkaterState() { for (FVector2D& M : MoveHist) M = FVector2D::ZeroVector; }   // lane A110: the reflected MoveHist ring starts zeroed (was "= {}")
 
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 Index = 0;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 Team = 0;
@@ -145,13 +146,14 @@ struct JAMCORE_API FJamSkaterState
 	// input against the velocity (reverse_brake_decel); bReverseBraking = the second kind. For the figure's stop pose, spray and sound.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bBraking = false;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bReverseBraking = false;
-	bool bReverseBrakeLast = false;   // last frame's bReverseBraking (counts ReverseBrakes once per stop)
+	UPROPERTY() bool bReverseBrakeLast = false;   // last frame's bReverseBraking (counts ReverseBrakes once per stop); lane A110: reflected (Jam.Net.HashCoverage)
 	// Lane A93 (R-0045 law 3): frames left of the first-step burst (acceleration x skater.burst.accel_mult). Full while the speed is under BurstSlowSpeed and on
 	// the frame the move input turned more than 60 degrees inside BurstCutFrames; counts down otherwise. Hashed only while it runs (burst.frames 0 = never).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 BurstLeft = 0;
 	// The move input's direction over the last BurstCutFrames frames (unit, or zero for a frame without input), a ring written at MoveHistAt. Burst only.
-	FVector2D MoveHist[10] = {};
-	int32 MoveHistAt = 0;
+	// Lane A110: reflected, so the soak's field compare and Jam.Net.HashCoverage see them (every member of this struct is a UPROPERTY: the lint checks the layout).
+	UPROPERTY() FVector2D MoveHist[10];
+	UPROPERTY() int32 MoveHistAt = 0;
 	// Match statistics (not hashed): frames this skater sprinted while carrying the puck; reverse brakes started.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 CarrySprintFrames = 0;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 ReverseBrakes = 0;
@@ -464,6 +466,12 @@ public:
 	static double AbilityDefaultMagnitude(FName Kind);
 	// Lane A84: hands Skater the ability game.abilities[Slot] (a mode at the drop, a pickup on a take); emits `ability` with Strength 0. False for a bad slot.
 	bool GrantAbility(int32 Skater, int32 Slot);
+	// Lane A110 (track Q1): the online guest's seat plays as a human. The lobby's guest drives a skater the cartridge made a bot slot; SeatGuest marks it bHuman
+	// (Restart keeps it), so it gets what the host's human gets: the mode's ability from the drop and a pickup's on a take, the human's check window, move
+	// clamp and check-speed floor, and no seeded bot press at the draw (the opening draw's bot press of its team is withdrawn when it is the centre). Call it
+	// on both peers at frame 0, before the first Step. False (and nothing changes) for a bad index, the cartridge's own human, or after frame 0.
+	// Never called in single player: the Determinism baseline does not move.
+	bool SeatGuest(int32 Skater);
 
 	// Builds the match from a validated config: skaters at their spawns, puck at centre, score 0, phase Playing.
 	// Queues the opening "faceoff" event. Returns false (and logs) if the config has no player.
@@ -577,6 +585,9 @@ public:
 	bool CarrierMayNotHit(const FJamSkaterState& S) const;
 	// The skater carrying the puck right now (last toucher, standing and in control, puck within its reach), -1 when the puck is loose. The brain reads it.
 	int32 CarrierIndex() const;
+	// Lane A102 (R-0048): the carrier whose puck rides with it right now (the carry assist's own test: carried, not just shot or passed, moving with the
+	// carrier or settling on its blade), -1 otherwise. With game.stick.passive_take false nobody else's blade or body takes that puck without a press.
+	int32 RidingCarrier() const;
 	// R-0042 (lane A85): the carrier's one reach for carrying, charging, shooting and passing: max(shot.reach_m, body radius + stick.reach_m) + 0.05.
 	// Since A51 the carried puck lives at the blade (0.4 + stick.reach_m 1.2 = 1.6 m), beyond shot.reach_m 1.5, so every carrier test in the sim reads this
 	// (CarrierIndex, StepCharge, StepPassCharge, TryShoot, TryPass, the deke's offset, the knockdown strip); the brain's copy is FJamAIWorld::CarrierReach().
@@ -599,6 +610,14 @@ public:
 	bool IsPokeShielded(const FJamSkaterState& Poker, const FJamSkaterState& Carrier) const;
 	// Lane A82 (R-0040 point 1): the lift is shielded like the poke: a spinning carrier's body is between; a sweep shields the side the puck left for shield_frames.
 	bool IsLiftShielded(const FJamSkaterState& Lifter, const FJamSkaterState& Carrier) const { return IsPokeShielded(Lifter, Carrier); }
+	// Lane A102 (track F2): puck protection, no button (game.stick.body_shield). True when Carrier's body is between Poker's stick and the puck: Poker's body
+	// within BodyShieldRangeM of Carrier's, the puck on the far side of Carrier's body from Poker (inside BodyShieldFarDeg of the line Poker -> Carrier carried on),
+	// and Carrier turned: Poker is more than BodyShieldFrontDeg off its facing (a carrier that faces the defender shields nothing). IsPokeShielded includes it,
+	// so the poke, the lift and the cross-check's shove are all refused, as for a spinning carrier. No state: nothing new in the hash.
+	bool IsBodyShielded(const FJamSkaterState& Poker, const FJamSkaterState& Carrier) const;
+	static constexpr double BodyShieldRangeM = 2.0;
+	static constexpr double BodyShieldFarDeg = 60.0;
+	static constexpr double BodyShieldFrontDeg = 60.0;
 	bool OutsideLiftCone(const FJamSkaterState& Lifter, const FJamSkaterState& Victim) const;   // lane A95 (B-to-A-0037): stick.lift_cone_deg
 	// Lane A51: the nearest standing opponent of S (-1 none).
 	int32 NearestOpponent(const FJamSkaterState& S) const;

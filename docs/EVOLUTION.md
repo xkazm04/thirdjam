@@ -64,3 +64,20 @@ A merges `dev-b` at every half-hour check when it is ahead; B merges main before
 - **S2** rows to add from A101: "refused" reading the HUD's contact text; captures of a stumble's hold and a check into the boards.
 - **Hygiene** (Sonnet, when a slot is free): `ownership.json` does not know the folders added since Thursday (185 paths "owned by nobody" in the gate's ownership step).
 
+**Board at 20:14 (R-0050). Landed: A104, A101, A106, A103, A107, A109, A105 (main 7f4d501, pushed and verified); landing: A110, A102.**
+| Track | Running now | Then |
+|---|---|---|
+| F1 contact | A113 release grace, the soft hit explains itself | the shield refuses the stick, never the shove; the board check as a play; a hard turn lowers stability |
+| F2 carrier | A121 take grace, the stop's grip, the carrier's first step | a late answer inside 7 m (spin and deke windows) |
+| F3 arena | A119 clay goal frames, the scorer's table, stills from the game | the boxed skater sits in the box (modes with the whistle) |
+| U1 screen | A111 the human's marker, the fade-in, the hint bar, the corner camera | from its report |
+| Q1 lockstep | A120 two real processes, the refusal card, barks for the guest, the join guide | from its report |
+| Q2 brain | A115 mates pass to the human, the chaser, braking on purpose, reading the shield | loose puck and downed human; slow puck flight; live changes |
+| Q3 performance | A114 the match starts without a hitch | the first 60 frames; the figure Blueprint with device B |
+| S1 soak | A116 one shared driver, a drift gate for modes and takes | a soak of the packaged game |
+| S2 acceptance | A108 the matrix on every mode and tier (cursor owner) | rows: refused, bump, stumble, braced, brake with its spray |
+| S3 fuzz | A118 the seven fault classes closed | lockstep fuzz with Q1 |
+| C0 curve | starts when A102 is on main (lane A112, new worktree) | re-measure after each rule landing; the last set at the rule freeze |
+| M1 modes | starts with C0: cage, outnumbered, shotgun differ again; the marathon's horn; take-3 against take-6 | the twelve modes against the vision |
+| F0 design eye | REVIEW-2 when F1, F2, Q2 and C0 have landed (same seeds) | |
+

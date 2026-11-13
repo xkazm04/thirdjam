@@ -81,3 +81,90 @@ processes (`tools/net/twoproc.ps1` with a patched version byte is the next proof
 
 ## 4. Raw
 `Game/Saved/SoakLockstep/a104/*.jsonl` (not landed); logs `Game/logs/a104/`, `Game/logs/soak-*`.
+
+# Evolution 2: the online guest plays the whole game (lane A110, track Q1, protocol 8, wire unchanged)
+
+Status with timestamps: `status/A110.md`. Tests: `Game/Source/JamNet/Private/Tests/JamNetGuestTests.cpp`.
+
+## 1. The guest's seat is a human (`UJamSim::SeatGuest`)
+The guest drives a skater the cartridge made a bot slot (`bHuman` false), and `bHuman` decides more than the ability:
+
+| rule (JamSim.cpp) | the guest before | seated |
+|---|---|---|
+| the mode's ability at the drop (`Restart`) | none: F did nothing in Shotgun | granted, as the host's |
+| a pickup's ability on a take (`NotifyPickupTaken`) | none | granted |
+| the check window (`CheckWindow` 6 / 12) and the human's check-speed floor | the bot's | the human's |
+| the move clamp (1.5 / 1.0) | the bot's 1.5 | 1.0 |
+| the faceoff draw (`BotDrawFrame`) | a seeded bot press for the guest centre: the guest "won" draws it never played | its own press only |
+
+`SeatGuest` marks the seat human (`Restart` never resets `bHuman`, so a rematch keeps it), grants the mode's ability if it holds none, and withdraws
+the opening draw's bot press when the guest is the centre. `ALobbyGameMode::StartPlay` calls it on both peers at frame 0 with WELCOME's guest index;
+single player never calls it, so `StateHash()` and the Determinism baseline do not move. `LockstepStateHash()` now folds `bHuman` (bit 8 of the flag
+word): two peers that seated differently disagree at the first checkpoint. The wire is unchanged (the guest index already travels in WELCOME), so the
+protocol stays **8**; protocol 8 is in no package yet (A104 and A110 land together; if A104 ships alone first, this needs 9).
+
+The lobby's HUD never got the stamina bar or the ability slot (`AHokejGameMode::PushPresentation` fills them; `ALobbyGameMode::PushLockstepPresentation`
+did not): online neither player saw F's slot. Filled for the local seat.
+
+## 2. The guest's stick follows the cursor on the ice
+`AHokejGameMode::CursorAimRink` (A49) and `EnsureMatchInputMode` are protected now, and the ice math is the public static `CursorAimFromRay`.
+`ALobbyGameMode::ReadLocalInput` sets the match's cursor mode and reads the stick in single player's order (right stick, the cursor on the ice, the
+mouse delta with its dead zone) through `ComposeLocalStick`. `Jam.Net.CursorAimParity` puts a cursor on the screen point of a known spot on the ice
+(the engine's `FSceneView` projection of a third-person camera), and the lobby's stick equals single player's in five cases (full blade, part blade,
+the dead zone, the hysteresis, the right stick winning), to the bit and on the wire (the quantised aim), pointing at the spot under the cursor.
+
+## 3. The hash-coverage lint (`Jam.Net.HashCoverage`)
+On a live, seated Shotgun match (abilities held, the burst ring live) every reflected field of `FJamSkaterState` and `FJamPuckState` is perturbed alone
+(several values per type, behind its guard where `StateHash()` hashes it only while another field left its default) and must move
+`LockstepStateHash()`, or be listed in the test's read-out table with its reason. A listed name that is no field any more fails too.
+`MoveHist`, `MoveHistAt` and `bReverseBrakeLast` became `UPROPERTY`s, so every member of the two structs is reflected; a layout check fails on bytes
+that belong to no `UPROPERTY` (an unreflected member). `UJamSim`'s own state is not reflected: its size is pinned (1736 bytes).
+Today: 59 fields seen by the hash, 64 listed read-outs, **0 untagged**. Proven red in a scratch build (build 1): an unhashed `UPROPERTY` int32 was
+reported untagged, an unreflected int64 showed as "11 bytes between bAbilityThisFrame and A110ScratchReflected belong to no UPROPERTY", and the
+unset pin failed; both scratch fields were removed for build 2.
+Limit: an unreflected member small enough to sit in padding the alignment leaves anyway (a bool after a bool) is not seen; the convention is that every
+member of the two structs is a `UPROPERTY`.
+
+## 4. Proof
+
+**Gate** (`Automation RunTests Jam`, headless, `-nullrhi -Multiprocess`, build 3): **162 of 162** pass (A104's 159 plus the three new). The
+Determinism hashes are unchanged: hockey.regular `d192973ac7c97102`, hockey.raw `b02f67a2da0314b4`, the seam test's `f3613b5fcd33ce32`, all equal to
+main's before-hash. `Jam.Net.GuestSeat`: the seated guest holds the shotgun from the drop and uses F; unseated it holds nothing and F does nothing. A
+pickup's ability goes to the seated guest's take in arsenal. Two seated sims agree for 1200 frames, and `Restart` keeps the seat and the grant.
+`Jam.Net.CursorAimParity`: in 5 of 5 cases the lobby's stick equals single player's to the bit and on the wire, and it points exactly at the ray's
+hit (the engine's round trip lands 0.9 to 1.5 cm from the spot the cursor was put on). `Jam.Net.HashCoverage`: 0 untagged.
+
+**Soak** (A56's harness, protocol 8, 3600 frames per match, both peers seat the guest (`-SoakSeatGuest=0` gives back A104's bot seat), the guest
+playtester presses F as the host's does). All twelve modes, clean and at 30 % loss + jitter 0..6 + 10 % dup, 200 seeds each (shotgun 300):
+**5000 matches, 0 desync, 0 silent drift, 0 lost, 0 missed checkpoints, 0 edge presses lost.** Guest abilities used: **1428** (A104: 0, the
+guest could not hold one). Table by `node tools/soak/lockstep/modes-table.mjs Game/Saved/SoakLockstep/a110/*.jsonl`:
+
+| mode | profile | matches | desync | silent drift | lost | missed | edge presses lost | speed | F applied | abilities used (guest) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| arsenal | clean | 200 | 0 | 0 | 0 | 0 | 0 | 0.9994 | 373 | 110 (65) |
+| arsenal | loss30-jitter0-6-dup10 | 200 | 0 | 0 | 0 | 0 | 0 | 0.6244 | 492 | 98 (54) |
+| bruisers | clean | 200 | 0 | 0 | 0 | 0 | 0 | 0.9994 | 0 | 0 (0) |
+| bruisers | loss30-jitter0-6-dup10 | 200 | 0 | 0 | 0 | 0 | 0 | 0.6244 | 0 | 0 (0) |
+| cage | clean | 200 | 0 | 0 | 0 | 0 | 0 | 0.9994 | 0 | 0 (0) |
+| cage | loss30-jitter0-6-dup10 | 200 | 0 | 0 | 0 | 0 | 0 | 0.6244 | 0 | 0 (0) |
+| fog-of-war | clean | 200 | 0 | 0 | 0 | 0 | 0 | 0.9994 | 0 | 0 (0) |
+| fog-of-war | loss30-jitter0-6-dup10 | 200 | 0 | 0 | 0 | 0 | 0 | 0.6244 | 0 | 0 (0) |
+| glass-house | clean | 200 | 0 | 0 | 0 | 0 | 0 | 0.9994 | 0 | 0 (0) |
+| glass-house | loss30-jitter0-6-dup10 | 200 | 0 | 0 | 0 | 0 | 0 | 0.6244 | 0 | 0 (0) |
+| marathon | clean | 200 | 0 | 0 | 0 | 0 | 0 | 0.9994 | 0 | 0 (0) |
+| marathon | loss30-jitter0-6-dup10 | 200 | 0 | 0 | 0 | 0 | 0 | 0.6244 | 0 | 0 (0) |
+| outnumbered | clean | 200 | 0 | 0 | 0 | 0 | 0 | 0.9994 | 0 | 0 (0) |
+| outnumbered | loss30-jitter0-6-dup10 | 200 | 0 | 0 | 0 | 0 | 0 | 0.6244 | 0 | 0 (0) |
+| pond | clean | 200 | 0 | 0 | 0 | 0 | 0 | 0.9994 | 0 | 0 (0) |
+| pond | loss30-jitter0-6-dup10 | 200 | 0 | 0 | 0 | 0 | 0 | 0.6244 | 0 | 0 (0) |
+| power-play | clean | 200 | 0 | 0 | 0 | 0 | 0 | 0.9994 | 0 | 0 (0) |
+| power-play | loss30-jitter0-6-dup10 | 200 | 0 | 0 | 0 | 0 | 0 | 0.6244 | 0 | 0 (0) |
+| shotgun | clean | 300 | 0 | 0 | 0 | 0 | 0 | 0.9994 | 3724 | 1169 (652) |
+| shotgun | loss30-jitter0-6-dup10 | 300 | 0 | 0 | 0 | 0 | 0 | 0.6244 | 3828 | 1205 (657) |
+| sniper | clean | 200 | 0 | 0 | 0 | 0 | 0 | 0.9994 | 0 | 0 (0) |
+| sniper | loss30-jitter0-6-dup10 | 200 | 0 | 0 | 0 | 0 | 0 | 0.6244 | 0 | 0 (0) |
+| sudden-death | clean | 200 | 0 | 0 | 0 | 0 | 0 | 0.9994 | 0 | 0 (0) |
+| sudden-death | loss30-jitter0-6-dup10 | 200 | 0 | 0 | 0 | 0 | 0 | 0.6244 | 0 | 0 (0) |
+
+The ten modes without an ability show "F applied 0": their cartridges grant none, so the harness never presses F. Speed is A56's and A104's, 0.9994
+clean and 0.6244 at the worst mix. Raw output: `Game/Saved/SoakLockstep/a110/*.jsonl` (not landed).

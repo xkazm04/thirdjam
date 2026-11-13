@@ -436,7 +436,7 @@ bool FJamContactBoardMatch::RunTest(const FString& Parameters)
 		AddInfo(Line(*FString::Printf(TEXT("JAMBOARDS match pro seed %llu board_bonus 1.25"), static_cast<unsigned long long>(Seed)), S, C));
 		AddInfo(FString::Printf(TEXT("JAMBOARDS boards pro seed %llu board_bonus 1.25: %s"), static_cast<unsigned long long>(Seed), *BoardLine(C)));
 		FContactCount Cn;
-		const JamAI::FJamPlaytestStats Sn = Match(*this, TEXT("pro"), Seed, Cn, [](FJamGameConfig& G) { G.Contact.BoardBonus = 1.0; });
+		const JamAI::FJamPlaytestStats Sn = Match(*this, TEXT("pro"), Seed, Cn, [](FJamGameConfig& G) { G.Contact.BoardBonus = 1.0; G.Stick.bBodyShield = false; G.Stick.bPassiveTake = true; G.Stick.bTeammateTouchTakes = true; });   // lane A102's two stick rules off: the game main had at ee14438
 		AddInfo(Line(*FString::Printf(TEXT("JAMBOARDS match pro seed %llu board_bonus 1.00"), static_cast<unsigned long long>(Seed)), Sn, Cn));
 		AddInfo(FString::Printf(TEXT("JAMBOARDS boards pro seed %llu board_bonus 1.00: %s"), static_cast<unsigned long long>(Seed), *BoardLine(Cn)));
 		TestEqual(*FString::Printf(TEXT("pro seed %llu: board_bonus 1 hashes as main did"), static_cast<unsigned long long>(Seed)), FString::Printf(TEXT("%016llx"), static_cast<unsigned long long>(Sn.Hash)),
@@ -573,7 +573,8 @@ bool FJamContactStandingBrace::RunTest(const FString& Parameters)
 	// 5. From behind at arm's length: the stick lift only (no shove, no foul).
 	for (int32 Case = 0; Case < 2; ++Case)
 	{
-		FContactScene S = Make(*this, [](FJamGameConfig& G) { G.Rules.bPenalties = true; });
+		FContactScene S = Make(*this, [](FJamGameConfig& G) { G.Rules.bPenalties = true; G.Stick.bBodyShield = false; });
+		// Lane A102: stick.body_shield false here: this case is about the shove (none from behind); with the body shield a lift from behind does not take a puck held ahead (Jam.Core.Movement.BodyShield).
 		if (!S.Ok()) return false;
 		S.Sim->SetSkater(S.V, FVector2D::ZeroVector, FVector2D::ZeroVector, 0.0);
 		S.Sim->SetSkater(S.A, FVector2D(-10.0, -10.0), FVector2D::ZeroVector, 0.0);
@@ -805,6 +806,7 @@ bool FJamContactNeutral::RunTest(const FString& Parameters)
 		for (const FString& E : Errors) AddError(FString::Printf(TEXT("neutral blocks in %s: %s"), M.Cart, *E));
 		if (!C) continue;
 		C->Game.Stick.bSweepShieldOneSided = true;
+		C->Game.Stick.bBodyShield = false; C->Game.Stick.bPassiveTake = true; C->Game.Stick.bTeammateTouchTakes = true;   // lane A102: the game before its two stick rules
 		FContactCount Count;
 		JamAI::FJamSimAdapter Sim(*C);
 		Count.Sim = &Sim;

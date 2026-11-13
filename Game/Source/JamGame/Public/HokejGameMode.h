@@ -101,12 +101,18 @@ private:
 
 	// Lane A49 (complaint 1): the match's input mode. The menu leaves the viewport in game-and-UI with capture only while a button is down, so the mouse delta never
 	// reached IA_StickMouse in the package; the match sets its own mode (cursor shown, locked to the viewport) and re-applies it after the pause menu's Resume.
-	void EnsureMatchInputMode(APlayerController* PC);
-	bool bMatchInputModeSet = false;
 	// Lane A49: the stick aim from the cursor: the cursor deprojected onto the ice, the vector from the skater to it. False when the cursor is hidden or off the ice;
 	// zero inside the dead zone (0.5 m in, 0.7 m out), |Stick| 0.5..1 over 0.5..3 m. The accumulated mouse delta stays as the fallback (right stick first).
+	// Lane A110 (track Q1): protected, so the lobby's guest aims as single player does (A49's fix never reached ALobbyGameMode); the ice math is the public static
+	// CursorAimFromRay (the ray from the camera through the cursor; bInOutAiming is the hysteresis state, this game mode's bCursorAiming).
+public:
+	static bool CursorAimFromRay(const FVector& RayOrigin, const FVector& RayDir, const FVector2D& SkaterPosM, bool& bInOutAiming, FVector2D& OutStick);
+protected:
+	void EnsureMatchInputMode(APlayerController* PC);   // lane A110: the lobby sets the same cursor mode (A49), or the cursor is hidden and never aims
+	bool bMatchInputModeSet = false;
 	bool CursorAimRink(APlayerController* PC, const FVector2D& SkaterPosM, FVector2D& OutStick);
 	bool bCursorAiming = false;
+private:
 	// Lane A49: the button edges logged once per press (JAMCTRL btn=...), the sprint level and brake level on change.
 	bool bLastSprint = false, bLastBrake = false, bLastShootHeld = false, bLastPassHeld = false;
 	// Lane A93 (R-0045 law 3): while the move input pulls back (S / left stick down) the move frame is the camera's yaw at the moment the pull began

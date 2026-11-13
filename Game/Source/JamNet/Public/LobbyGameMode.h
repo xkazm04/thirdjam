@@ -49,6 +49,10 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Jam|Lobby") int32 GetFouls() const { return Fouls; }
 	UFUNCTION(BlueprintPure, Category = "Jam|Lobby") int32 GetPickupTakes() const { return PickupTakes; }
 
+	// Lane A110 (track Q1): the local stick in AHokejGameMode::ReadHumanInput's order: the right stick (absolute, camera-relative) first; then the cursor on the
+	// ice (bCursor true: CursorStick, rink-exact, from CursorAimRink); then the mouse delta in pixels (100 px = one reach at Sensitivity 1). Yaw = the camera's.
+	static FVector2D ComposeLocalStick(const FVector2D& PadAim, bool bCursor, const FVector2D& CursorStick, const FVector2D& MouseDeltaPx, double Sensitivity, double YawRad);
+
 private:
 	bool StepLockstep();
 	void GatherBotInputs();

@@ -422,6 +422,14 @@
           "maximum": 1,
           "description": "Lane A93 (R-0045 law 4): the puck's distance by pace. A carrier that is not sprinting holds its blade, and the puck on it, at this fraction of the full distance from its body (0.75: 1.2 m of 1.6 m at full aim); a sprinting carrier's puck rides at the full distance, where a stick takes it more easily. Leave the key out for 0.75; 1 = always at the full distance."
         },
+        "body_shield": {
+          "type": "boolean",
+          "description": "Lane A102 (track F2, docs/VISION.md law 3): puck protection with the body, no button. While the carrier's body is between a defender's stick and the puck (the defender within 2 m, the puck on the far side of the carrier's body, the carrier turned more than 60 degrees away from the defender), that defender's poke or stick lift does not take the puck; a carrier that faces the defender shields nothing, and a body check is never shielded. true or absent = on; false = the neutral value (the game before the lane)."
+        },
+        "passive_take": {
+          "type": "boolean",
+          "description": "Lane A102 (R-0048): false or absent = a carried puck is not taken by an unpressed blade or by a body's touch: it leaves its carrier only by a shot, a pass, a poke, a lift, a check or stumble that loosens it, or the carrier's own release. true = the neutral value (the game before the lane): an aimed opposing blade within 0.6 m deflects a carried puck moving faster than 6 m/s and any body's touch takes it. A teammate never takes a carried puck by touch under either value."
+        },
         "poke_window_frames": {
           "type": "integer",
           "minimum": 2,

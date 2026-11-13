@@ -62,6 +62,9 @@ void ALobbyGameMode::StartPlay()
 	}
 	LocalIndex = Lobby->IsHost() ? Human : Guest;
 	RemoteIndex = Lobby->IsHost() ? Guest : Human;
+	// Lane A110 (track Q1): the guest's seat plays as a human on both machines, from frame 0 (the mode's ability, a pickup's, the human's check rules, no bot
+	// press at the draw). Both peers seat the same index (WELCOME's), so the sims stay equal; the checkpoint hashes the seat.
+	if (!TheSim->SeatGuest(Guest)) UE_LOG(LogJamNet, Warning, TEXT("JAMNET could not seat the guest at skater %d (frame %lld)"), Guest, TheSim->GetFrame());
 	LockInputs.SetNum(TheSim->GetSkaters().Num());
 
 	// Lane A38: the brain as single player builds it (R-0009 point 3: difficulty profile -> game.ai -> Designer values).
@@ -153,8 +156,6 @@ FJamInput ALobbyGameMode::ReadLocalInput()
 		MoveYaw = BackYawRad;
 	}
 	else bBackYawHeld = false;
-	const FVector2D Fwd(FMath::Cos(Yaw), FMath::Sin(Yaw));
-	const FVector2D Right(-FMath::Sin(Yaw), FMath::Cos(Yaw));
 	In.Move = FVector2D(FMath::Cos(MoveYaw), FMath::Sin(MoveYaw)) * Axis.Y + FVector2D(-FMath::Sin(MoveYaw), FMath::Cos(MoveYaw)) * Axis.X;
 	// C-0005 charged shot: the held level travels; the sim charges while the puck is in reach and fires on release.
 	Pi->ConsumeShootPressed();
@@ -165,14 +166,16 @@ FJamInput ALobbyGameMode::ReadLocalInput()
 	In.bPassHeld = Pi->IsPassHeld();
 	In.bCheck = Pi->ConsumeCheckPressed();
 	In.bBrake = Pi->IsBrakeHeld();
-	// R-0013: the stick. Right stick absolute; the mouse accumulates pixels, 100 px = one reach at mouse_sensitivity 1. Camera-relative like Move.
-	FVector2D Aim = Pi->GetStickAxis();
-	if (Aim.SizeSquared() < 0.01)
-	{
-		Aim = Pi->GetMouseAimPx() * (0.01 * GetSim()->GetConfig().Stick.MouseSensitivity);
-		if (Aim.SizeSquared() > 1.0) Aim.Normalize();
-	}
-	In.Stick = Fwd * Aim.Y + Right * Aim.X;
+	// R-0013 + lane A49, as AHokejGameMode::ReadHumanInput: the right stick, then the cursor on the ice (the blade points at the cursor), then the mouse
+	// delta. Lane A110: before, online the stick followed the mouse delta only (CursorAimRink was private), so the guest's and the host's blade never sat
+	// under the cursor. The wire's quantised aim is unchanged.
+	APlayerController* PC = Cast<APlayerController>(Mine->GetController());
+	EnsureMatchInputMode(PC);
+	const FVector2D Pad = Pi->GetStickAxis();
+	FVector2D CursorStick = FVector2D::ZeroVector;
+	const bool bCursor = Pad.SizeSquared() < 0.01 && CursorAimRink(PC, GetSim()->GetSkaters()[LocalIndex].Pos, CursorStick);
+	if (bCursor) Pi->ResetMouseAim();
+	In.Stick = ComposeLocalStick(Pad, bCursor, CursorStick, bCursor ? FVector2D::ZeroVector : Pi->GetMouseAimPx(), GetSim()->GetConfig().Stick.MouseSensitivity, Yaw);
 	In.bPoke = Pi->ConsumePokePressed();
 	In.bLift = Pi->ConsumeLiftPressed();
 	In.bDeke = Pi->ConsumeDekePressed();   // lane A39 (R-0029 point 4)
@@ -180,6 +183,17 @@ FJamInput ALobbyGameMode::ReadLocalInput()
 	In.bSpin = Pi->ConsumeSpinPressed();
 	In.bAbility = Pi->ConsumeAbilityPressed();   // lane A84 (R-0041 point 3): F / R3
 	return In;
+}
+
+FVector2D ALobbyGameMode::ComposeLocalStick(const FVector2D& PadAim, bool bCursor, const FVector2D& CursorStick, const FVector2D& MouseDeltaPx, double Sensitivity, double YawRad)
+{
+	const FVector2D Fwd(FMath::Cos(YawRad), FMath::Sin(YawRad));
+	const FVector2D Right(-FMath::Sin(YawRad), FMath::Cos(YawRad));
+	if (PadAim.SizeSquared() >= 0.01) return Fwd * PadAim.Y + Right * PadAim.X;
+	if (bCursor) return CursorStick;
+	FVector2D Aim = MouseDeltaPx * (0.01 * Sensitivity);
+	if (Aim.SizeSquared() > 1.0) Aim.Normalize();
+	return Aim.SizeSquared() >= 0.0025 ? Fwd * Aim.Y + Right * Aim.X : FVector2D::ZeroVector;   // AHokejGameMode's dead zone for the delta
 }
 
 // Mirror of AHokejGameMode::GatherInputs for the bot slots (the team signals are not read: see the header).
@@ -395,6 +409,29 @@ void ALobbyGameMode::PushLockstepPresentation()
 	}
 	F.PuckM = TheSim->GetPuck().Pos;
 	F.HumanIndex = LocalIndex;
+	// Lane A110 (track Q1): the local seat's stamina bar and ability slot, as AHokejGameMode::PushPresentation fills them for the human (A49, A84). Online
+	// the HUD showed neither, for the host or the guest: F's slot was hidden though the host held the mode's ability.
+	if (TheSim->GetSkaters().IsValidIndex(LocalIndex))
+	{
+		const FJamSkaterState& H = TheSim->GetSkaters()[LocalIndex];
+		F.HumanStamina01 = H.Stamina < 0 ? 1.f : FMath::Clamp((float)H.Stamina / (float)FMath::Max(1, TheSim->StaminaFull()), 0.f, 1.f);
+		F.bHumanSprinting = H.bSprinting;
+		const FJamAbilityConfig* Ab = TheSim->HeldAbility(H.Index);
+		const FName Kind = Ab ? Ab->Kind : (!H.AbilityArmed.IsNone() ? H.AbilityArmed : (H.ShieldFrames > 0 ? FName(TEXT("shield")) : NAME_None));
+		if (!Kind.IsNone())
+		{
+			F.HumanAbility = Kind.ToString().Replace(TEXT("_"), TEXT(" ")).ToUpper();
+			const int32 Cool = Ab ? (Ab->CooldownFrames > 0 ? Ab->CooldownFrames : UJamSim::AbilityDefaultCooldown(Kind)) : 1;
+			const int64 Left = FMath::Max<int64>(0, H.AbilityReadyFrame - TheSim->GetFrame());
+			if (H.ShieldFrames > 0) F.HumanAbilityState = FString::Printf(TEXT("SHIELD %.1fs"), H.ShieldFrames / 60.f);
+			else if (!H.AbilityArmed.IsNone()) F.HumanAbilityState = TEXT("ARMED");
+			else if (Left > 0) F.HumanAbilityState = FString::Printf(TEXT("%llds"), (Left + 59) / 60);
+			else F.HumanAbilityState = TEXT("READY");
+			if (H.AbilityCharges > 0) F.HumanAbilityState += FString::Printf(TEXT("  x%d"), H.AbilityCharges);
+			F.HumanAbilityReady01 = H.ShieldFrames > 0 ? 1.f : 1.f - FMath::Clamp((float)Left / (float)FMath::Max(1, Cool), 0.f, 1.f);
+			F.bHumanAbilityLive = H.ShieldFrames > 0 || !H.AbilityArmed.IsNone();
+		}
+	}
 	F.AttackSign = MyTeam == 0 ? 1 : -1;
 	F.NetInsetM = 4.f;
 	F.ScoreHome = TheSim->GetScore(MyTeam);

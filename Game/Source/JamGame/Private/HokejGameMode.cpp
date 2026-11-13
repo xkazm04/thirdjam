@@ -4,6 +4,7 @@
 #include "JamPawns.h"
 #include "JamBrain.h"
 #include "JamSimAdapter.h"
+#include "JamCarryDrill.h"
 #include "JamRuleSystem.h"
 #include "JamZones.h"
 #include "SignalSystem.h"
@@ -49,7 +50,74 @@ static TAutoConsoleVariable<int32> CVarJamCtrlStills(TEXT("jam.ctrl.Stills"), 0,
 static TAutoConsoleVariable<int32> CVarJamCtrlHandPuck(TEXT("jam.ctrl.HandPuck"), 0,
 	TEXT("1 = drills 10 / 11 hand the puck to the human (10) or the scripted teammate (11) whenever nobody on the human's team carries and no shot is being measured; JAMDRILL hand_puck lines. Lane A82 proof."));
 static TAutoConsoleVariable<int32> CVarJamCtrlDrill(TEXT("jam.ctrl.Drill"), 0,
-	TEXT("1 = tackle drill, 2 = cross-check drill: the human chases the carrier and presses once in range, 10 attempts, JAMDRILL lines. Lane A49 proof. 3 = sweep drill, 4 = spin drill (lane A51): the cursor and the keys stay real, the skating carries the puck at the nearest defender; JAMDRILL stick lines. 7 = sweep past a defender, 8 = spin with the puck, 9 = saucer over a defender's blade, 10 = shots from 10 m, 11 = one-timers off a scripted teammate (lane A77): JAMCUE lines for the driver, JAMDRILL stick / saucer / shot / onetimer lines. 20 = the acceptance run (lane A87, tools/qa/accept): JAMACCEPT lines."));
+	TEXT("1 = tackle drill, 2 = cross-check drill: the human chases the carrier and presses once in range, 10 attempts, JAMDRILL lines. Lane A49 proof. 3 = sweep drill, 4 = spin drill (lane A51): the cursor and the keys stay real, the skating carries the puck at the nearest defender; JAMDRILL stick lines. 7 = sweep past a defender, 8 = spin with the puck, 9 = saucer over a defender's blade, 10 = shots from 10 m, 11 = one-timers off a scripted teammate (lane A77): JAMCUE lines for the driver, JAMDRILL stick / saucer / shot / onetimer lines. 20 = the acceptance run (lane A87, tools/qa/accept): JAMACCEPT lines. 21 = the carry drill (lane A102): the human carries at a standing defender the brain plays, 20 rounds, JAMDRILL carry lines; jam.ctrl.CarryScript picks who skates."));
+// Lane A102 (track F2, carrier skill): drill 21, the packaged face of Jam.Core.Movement.StopAndGo. The scene and the scripted human are FJamCarryDrill
+// (JamCore/Public/JamCarryDrill.h), the code the headless test runs: the human carries at 9 m/s at the opposing chaser standing 12 m ahead, which the real brain
+// plays; everyone else is parked in a corner. 20 rounds (the round number is the scene's seed), a JAMDRILL carry result line each and a summary; then the
+// drill switches itself off. State lives here (one game mode at a time, as the hand-puck drill's statics below).
+static TAutoConsoleVariable<int32> CVarJamCtrlCarryScript(TEXT("jam.ctrl.CarryScript"), 1,
+	TEXT("Drill 21's human: 1 = the scripted stop-and-go (brake at 5 m, cut 60 degrees, burst; the cursor on the far side of the body), 0 = the scripted straight charge, 2 = your own keys and mouse (the drill only stages and scores). Lane A102."));
+namespace
+{
+	FJamCarryDrill GCarryDrill;
+	int64 GCarryNextFrame = 0;
+	int32 GCarryRounds = 0, GCarryScript = 1;
+	int32 GCarryEnds[FJamCarryDrill::EndCount] = {};
+	constexpr int32 CarryDrillRounds = 20;
+	const TCHAR* CarryScriptName(int32 Script) { return Script == 0 ? TEXT("straight") : Script == 2 ? TEXT("hand") : TEXT("stop_and_go"); }
+
+	// In GatherInputs, after the brain's and the human's inputs: stages a round when none runs, parks everyone but the two, scripts the human.
+	void CarryDrillGather(UJamSim& Sim, TArray<FJamInput>& Inputs)
+	{
+		if (Sim.GetPhase() != EJamSimPhase::Playing) return;
+		if (!GCarryDrill.IsLive())
+		{
+			if (Sim.GetFrame() < GCarryNextFrame) return;
+			// A round starts only with the human on its feet (the last round may have left it down or stumbling: the headless run lost 1 round of 20 to that).
+			if (!Sim.GetSkaters().IsValidIndex(Sim.GetHumanIndex()) || !Sim.GetSkaters()[Sim.GetHumanIndex()].CanAct()) return;
+			GCarryScript = CVarJamCtrlCarryScript.GetValueOnGameThread();
+			GCarryDrill = FJamCarryDrill();
+			GCarryDrill.bStopAndGo = GCarryScript != 0;
+			if (!GCarryDrill.Stage(Sim, static_cast<uint64>(GCarryRounds + 1)))
+			{
+				UE_LOG(LogHokej, Warning, TEXT("JAMDRILL carry: no human or no opponent in this cut; drill off"));
+				CVarJamCtrlDrill->Set(0, ECVF_SetByCode);
+				return;
+			}
+			UE_LOG(LogHokej, Log, TEXT("JAMDRILL carry stage n=%d script=%s frame=%lld human=%d defender=%d body_shield=%d"), GCarryRounds + 1, CarryScriptName(GCarryScript), Sim.GetFrame(),
+				GCarryDrill.Me, GCarryDrill.Def, Sim.GetConfig().Stick.bBodyShield ? 1 : 0);
+		}
+		if (!Inputs.IsValidIndex(GCarryDrill.Me) || !Inputs.IsValidIndex(GCarryDrill.Def)) return;
+		for (int32 i = 0; i < Inputs.Num(); ++i) if (GCarryDrill.IsParked(i)) Inputs[i] = FJamInput();
+		if (GCarryDrill.DefenderWaits()) Inputs[GCarryDrill.Def] = FJamInput();
+		if (GCarryScript != 2) Inputs[GCarryDrill.Me] = GCarryDrill.HumanInput(Sim);
+		GCarryDrill.BeforeStep(Sim, Inputs[GCarryDrill.Def]);
+	}
+
+	// In StepOnce, after the sim's step: the round's end, its line, the summary after the last round.
+	void CarryDrillObserve(UJamSim& Sim)
+	{
+		if (!GCarryDrill.IsLive()) return;
+		GCarryDrill.AfterStep(Sim);
+		if (GCarryDrill.End == FJamCarryDrill::Running) return;
+		++GCarryRounds;
+		if (GCarryDrill.End >= 0 && GCarryDrill.End < FJamCarryDrill::EndCount) ++GCarryEnds[GCarryDrill.End];
+		UE_LOG(LogHokej, Log, TEXT("JAMDRILL carry result n=%d script=%s end=%s frames=%d min_gap=%.2f brake_frames=%d defender_lift=%d defender_poke=%d defender_check=%d body_refused=%d"),
+			GCarryRounds, CarryScriptName(GCarryScript), FJamCarryDrill::EndName(GCarryDrill.End), GCarryDrill.Frames, GCarryDrill.MinGapM, GCarryDrill.BrakeFrames,
+			GCarryDrill.DefLifts, GCarryDrill.DefPokes, GCarryDrill.DefChecks, GCarryDrill.BodyShieldRefused);
+		GCarryNextFrame = Sim.GetFrame() + 90;
+		if (GCarryRounds >= CarryDrillRounds)
+		{
+			UE_LOG(LogHokej, Log, TEXT("JAMDRILL carry summary script=%s rounds=%d past=%d poke=%d lift=%d down=%d stumble=%d touch=%d timeout=%d setup=%d"), CarryScriptName(GCarryScript), GCarryRounds,
+				GCarryEnds[FJamCarryDrill::Past], GCarryEnds[FJamCarryDrill::Poke], GCarryEnds[FJamCarryDrill::Lift], GCarryEnds[FJamCarryDrill::Down], GCarryEnds[FJamCarryDrill::Stumble],
+				GCarryEnds[FJamCarryDrill::Touch], GCarryEnds[FJamCarryDrill::Timeout], GCarryEnds[FJamCarryDrill::Setup]);
+			GCarryRounds = 0;
+			for (int32& E : GCarryEnds) E = 0;
+			GCarryNextFrame = 0;
+			CVarJamCtrlDrill->Set(0, ECVF_SetByCode);
+		}
+	}
+}
 // Lane A31: a Director's Call from the console: load a cartridge (name or path) and apply it to the running match without a reset
 // (AHokejGameMode::ApplyCartridgeLive), the way the Designer does. A tier change swaps the rig and respawns the figures in place.
 static FAutoConsoleCommandWithWorldAndArgs CmdJamLiveCut(TEXT("jam.livecut"), TEXT("jam.livecut <name-or-path>: apply a cartridge to the running match live (Director's Call); no reset"),
@@ -427,13 +495,20 @@ bool AHokejGameMode::CursorAimRink(APlayerController* PC, const FVector2D& Skate
 	float MX = 0.f, MY = 0.f;
 	if (!PC->GetMousePosition(MX, MY)) return false;
 	FVector O, D;
-	if (!PC->DeprojectScreenPositionToWorld(MX, MY, O, D) || D.Z >= -1e-4) return false;
+	if (!PC->DeprojectScreenPositionToWorld(MX, MY, O, D)) return false;
+	return CursorAimFromRay(O, D, SkaterPosM, bCursorAiming, OutStick);
+}
+
+bool AHokejGameMode::CursorAimFromRay(const FVector& O, const FVector& D, const FVector2D& SkaterPosM, bool& bInOutAiming, FVector2D& OutStick)
+{
+	OutStick = FVector2D::ZeroVector;
+	if (D.Z >= -1e-4) return false;
 	const FVector Hit = O + D * (-O.Z / D.Z);   // the ice is z = 0 (UJamSim::ToWorld)
 	const FVector2D Delta = FVector2D(Hit.X / 100.0, Hit.Y / 100.0) - SkaterPosM;
 	const double Dist = Delta.Size();
-	const double Enter = bCursorAiming ? 0.5 : 0.7;   // hysteresis: a cursor parked on the skater holds the blade ahead without flapping at the edge
-	if (Dist < Enter) { bCursorAiming = false; return true; }
-	bCursorAiming = true;
+	const double Enter = bInOutAiming ? 0.5 : 0.7;   // hysteresis: a cursor parked on the skater holds the blade ahead without flapping at the edge
+	if (Dist < Enter) { bInOutAiming = false; return true; }
+	bInOutAiming = true;
 	const double Mag = 0.5 + 0.5 * FMath::Clamp((Dist - 0.5) / 2.5, 0.0, 1.0);
 	OutStick = Delta / Dist * Mag;
 	return true;
@@ -716,6 +791,7 @@ FJamInput AHokejGameMode::DrillInput()
 	const int32 Mode = CVarJamCtrlDrill.GetValueOnGameThread();
 	if (Mode == 3 || Mode == 4) return StickDrillInput();   // lane A51 (R-0034): the 1v1 stick-handling drill keeps the real cursor and keys
 	if (Mode >= 7 && Mode <= 11) return MechDrillInput();   // lane A77 (R-0036): the mechanics drills
+	if (Mode == 21) return CVarJamCtrlCarryScript.GetValueOnGameThread() == 2 ? ReadHumanInput() : FJamInput();   // lane A102: the carry drill scripts the human in CarryDrillGather (2 = by hand)
 	const int32 Me = Sim->GetHumanIndex();
 	const FJamSkaterState& S = Sim->GetSkaters()[Me];
 	FJamInput In;
@@ -937,6 +1013,7 @@ void AHokejGameMode::GatherInputs()
 	if (CVarJamCtrlDrill.GetValueOnGameThread() != 0 && CVarJamCtrlDrill.GetValueOnGameThread() != 20) Inputs[Human] = DrillInput();   // lane A49 proof drill (lane A87: drill 20 keeps the real input)
 	else Inputs[Human] = (bScriptedHuman || CVarJamScriptHuman.GetValueOnGameThread() != 0) ? ScriptedHumanInput() : ReadHumanInput();
 	if (CVarJamCtrlDrill.GetValueOnGameThread() == 11) MechDrillMate(Inputs);   // lane A77: the scripted teammate of the one-timer drill (after the human's input, never between A49's if and its else)
+	if (CVarJamCtrlDrill.GetValueOnGameThread() == 21 && Sim) CarryDrillGather(*Sim, Inputs);   // lane A102 (track F2): the carry drill stages its round, parks the others and scripts the human
 	// Lane A82: drills 10 and 11 hand the puck (jam.ctrl.HandPuck 1): A77's human reached its 10 m spot carrying twice in 150 s and the one-timer's set piece never formed.
 	// The shots drill puts the puck on the human's blade whenever it is not carrying and no shot of its is being measured; the one-timer drill puts it on the scripted
 	// teammate's blade whenever nobody on the human's team carries, no pass of the teammate's is in flight and no shot is being measured. A drill change, not a mechanic one.
@@ -1136,6 +1213,7 @@ void AHokejGameMode::StepOnce()
 	}
 	if (CVarJamCtrlDrill.GetValueOnGameThread() == 20) AcceptDrillObserve();   // lane A87 (R-0043): the acceptance run
 	MechDrillObserve();   // lane A77 (R-0036): the human's saucers always; the shots and one-timers in drills 10 and 11
+	if (CVarJamCtrlDrill.GetValueOnGameThread() == 21 && Sim) CarryDrillObserve(*Sim);   // lane A102 (track F2): the carry drill's round
 	if (CVarJamCtrlDrill.GetValueOnGameThread() == 3 || CVarJamCtrlDrill.GetValueOnGameThread() == 4 || CVarJamCtrlDrill.GetValueOnGameThread() == 7 || CVarJamCtrlDrill.GetValueOnGameThread() == 8 || StickDrillFrame >= 0) StickDrillObserve();   // lane A51 (7 and 8: lane A77)
 	else if (CVarJamCtrlDrill.GetValueOnGameThread() != 0 || DrillPressFrame >= 0) DrillObserve();   // lane A49
 	if (CVarJamCtrlDrill.GetValueOnGameThread() == 6 || bKdWasDown) KdObserve();   // lane A73
