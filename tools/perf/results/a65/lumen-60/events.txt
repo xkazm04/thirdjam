@@ -1,0 +1,16 @@
+10:36:31.365 t=0.123 other game/editor windows at start: ThirdJam:38296
+10:36:31.514 t=0.270 start pid 5856 -cut="C:/Users/kazda/kiro/thirdjam/.claude/worktrees/a65/tools/perf/cuts/perf.l2_night.cartridge.json" -dpcvars=jam.ScriptHuman=1,r.GPUCsvStatsEnabled=1,r.Lumen.ScreenProbeGather.DownsampleFactor=32,r.LumenScene.Radiosity.UpdateFactor=128,r.Lumen.ScreenProbeGather.RadianceCache.ProbeResolution=16 -windowed -ResX=1920 -ResY=1080 -WinX=40 -WinY=40 -log -abslog="C:\Users\kazda\kiro\thirdjam\.claude\worktrees\a65\tools\perf\out\lumen-60\game.log" -statnamedevents -RemoteConsoleIP=127.0.0.1 -RemoteConsolePort=4665
+10:36:34.151 t=2.908 menu map logged
+10:36:42.480 t=11.236 console 'csvprofile start' OK (try 1) {"id":2,"op":"exec","ok":true}
+10:36:44.217 t=12.975 enter posted
+10:36:44.452 t=13.209 JAMMENU start match seen
+10:36:44.456 t=13.213 JAMCART loaded seen
+10:36:55.100 t=23.858 sim frame 600 seen (10 s into the match)
+10:36:56.104 t=24.861 saved C:\Users\kazda\kiro\thirdjam\.claude\worktrees\a65\docs\experiments\img\a65\lumen-b-params-l2_night.png 1920x1080 ok=True
+10:36:56.135 t=24.892 play window: 60 s
+10:37:56.920 t=85.677 console 'csvprofile stop' OK (try 1) {"id":3,"op":"exec","ok":true}
+10:37:59.951 t=88.708 console 'quit' OK (try 1) {"id":4,"op":"exec","ok":true}
+10:38:02.494 t=91.251 game exited, code 0
+10:38:02.529 t=91.287 collected Profile(20261113_103642).csv
+10:38:02.660 t=91.417 other game/editor windows at end: ThirdJam-Win64-Shipping:22748 UnrealEditor:39704
+10:38:02.662 t=91.419 done

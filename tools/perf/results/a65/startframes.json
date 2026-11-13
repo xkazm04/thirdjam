@@ -1,0 +1,727 @@
+[
+ {
+  "run": "before-1",
+  "load": {
+   "row": 30,
+   "frame_ms": 162.73,
+   "game_ms": 150.16,
+   "flush_async_ms": 92,
+   "engine_tick_misc_ms": 24.72,
+   "audio_gt_ms": 0.22
+  },
+  "first_lit_hitches": [
+   {
+    "row": 34,
+    "frame_ms": 40.9,
+    "game_ms": 2.46,
+    "render_ms": 7.44,
+    "gpu_ms": 5.45,
+    "shadow_init_ms": 0.06,
+    "tsr_ms": 0.44
+   }
+  ],
+  "first_lit_sum_ms": 40.9,
+  "first_lit_max_ms": 40.9,
+  "first_lit_window": {
+   "shadow_init_max_ms": 27.6,
+   "render_max_ms": 51.7,
+   "gpu_max_ms": 17.52,
+   "tsr_max_ms": 0.75
+  },
+  "steady": {
+   "rows": 493,
+   "gpu_ms": 3.33,
+   "tsr_ms": 0.5,
+   "game_ms": 2.16,
+   "render_ms": 3.95,
+   "physical_mb": 1480.42
+  }
+ },
+ {
+  "run": "before-2",
+  "load": {
+   "row": 30,
+   "frame_ms": 164.96,
+   "game_ms": 143.4,
+   "flush_async_ms": 90.87,
+   "engine_tick_misc_ms": 23.51,
+   "audio_gt_ms": 0.21
+  },
+  "first_lit_hitches": [
+   {
+    "row": 34,
+    "frame_ms": 40.8,
+    "game_ms": 3.09,
+    "render_ms": 7.64,
+    "gpu_ms": 4.4,
+    "shadow_init_ms": 0.06,
+    "tsr_ms": 0.46
+   }
+  ],
+  "first_lit_sum_ms": 40.8,
+  "first_lit_max_ms": 40.8,
+  "first_lit_window": {
+   "shadow_init_max_ms": 29.11,
+   "render_max_ms": 51.46,
+   "gpu_max_ms": 16.85,
+   "tsr_max_ms": 1.96
+  },
+  "steady": {
+   "rows": 484,
+   "gpu_ms": 3.58,
+   "tsr_ms": 0.43,
+   "game_ms": 1.85,
+   "render_ms": 3.51,
+   "physical_mb": 1461.91
+  }
+ },
+ {
+  "run": "before-3",
+  "load": {
+   "row": 66,
+   "frame_ms": 170.71,
+   "game_ms": 176.78,
+   "flush_async_ms": 95.89,
+   "engine_tick_misc_ms": 57.3,
+   "audio_gt_ms": 0.23
+  },
+  "first_lit_hitches": [
+   {
+    "row": 70,
+    "frame_ms": 34.98,
+    "game_ms": 2.89,
+    "render_ms": 8.21,
+    "gpu_ms": 5.12,
+    "shadow_init_ms": 0.04,
+    "tsr_ms": 0.41
+   },
+   {
+    "row": 112,
+    "frame_ms": 39.88,
+    "game_ms": 4.79,
+    "render_ms": 4.95,
+    "gpu_ms": 3.09,
+    "shadow_init_ms": 0.05,
+    "tsr_ms": 0.4
+   },
+   {
+    "row": 113,
+    "frame_ms": 36.31,
+    "game_ms": 3.76,
+    "render_ms": 5.12,
+    "gpu_ms": 2.98,
+    "shadow_init_ms": 0.05,
+    "tsr_ms": 0.4
+   },
+   {
+    "row": 122,
+    "frame_ms": 43.52,
+    "game_ms": 2.68,
+    "render_ms": 19.54,
+    "gpu_ms": 3.04,
+    "shadow_init_ms": 0.1,
+    "tsr_ms": 0.41
+   },
+   {
+    "row": 126,
+    "frame_ms": 43.94,
+    "game_ms": 2.43,
+    "render_ms": 5.47,
+    "gpu_ms": 3.27,
+    "shadow_init_ms": 0.06,
+    "tsr_ms": 0.41
+   }
+  ],
+  "first_lit_sum_ms": 198.63,
+  "first_lit_max_ms": 43.94,
+  "first_lit_window": {
+   "shadow_init_max_ms": 26.31,
+   "render_max_ms": 47.46,
+   "gpu_max_ms": 15.92,
+   "tsr_max_ms": 0.69
+  },
+  "steady": {
+   "rows": 487,
+   "gpu_ms": 3.61,
+   "tsr_ms": 0.52,
+   "game_ms": 2.74,
+   "render_ms": 5.57,
+   "physical_mb": 1618.52
+  }
+ },
+ {
+  "run": "before-4",
+  "load": {
+   "row": 28,
+   "frame_ms": 176.76,
+   "game_ms": 148.69,
+   "flush_async_ms": 94.24,
+   "engine_tick_misc_ms": 24.93,
+   "audio_gt_ms": 0.24
+  },
+  "first_lit_hitches": [
+   {
+    "row": 29,
+    "frame_ms": 49.65,
+    "game_ms": 4.55,
+    "render_ms": 25.84,
+    "gpu_ms": 6.02,
+    "shadow_init_ms": 0,
+    "tsr_ms": 4.05
+   },
+   {
+    "row": 32,
+    "frame_ms": 100.71,
+    "game_ms": 2.92,
+    "render_ms": 11.49,
+    "gpu_ms": 20.64,
+    "shadow_init_ms": 0.03,
+    "tsr_ms": 0.41
+   }
+  ],
+  "first_lit_sum_ms": 150.36,
+  "first_lit_max_ms": 100.71,
+  "first_lit_window": {
+   "shadow_init_max_ms": 36.05,
+   "render_max_ms": 98.37,
+   "gpu_max_ms": 69.51,
+   "tsr_max_ms": 4.05
+  },
+  "steady": {
+   "rows": 499,
+   "gpu_ms": 3.58,
+   "tsr_ms": 0.43,
+   "game_ms": 2.64,
+   "render_ms": 4.42,
+   "physical_mb": 1604.79
+  }
+ },
+ {
+  "run": "before-play180",
+  "load": {
+   "row": 40,
+   "frame_ms": 181.95,
+   "game_ms": 165.41,
+   "flush_async_ms": 109.84,
+   "engine_tick_misc_ms": 25.74,
+   "audio_gt_ms": 0.26
+  },
+  "first_lit_hitches": [
+   {
+    "row": 44,
+    "frame_ms": 71.65,
+    "game_ms": 2.81,
+    "render_ms": 15.06,
+    "gpu_ms": 12.62,
+    "shadow_init_ms": 0.06,
+    "tsr_ms": 0.75
+   }
+  ],
+  "first_lit_sum_ms": 71.65,
+  "first_lit_max_ms": 71.65,
+  "first_lit_window": {
+   "shadow_init_max_ms": 31.61,
+   "render_max_ms": 73.22,
+   "gpu_max_ms": 38.96,
+   "tsr_max_ms": 4.11
+  },
+  "steady": {
+   "rows": 11049,
+   "gpu_ms": 4.17,
+   "tsr_ms": 0.63,
+   "game_ms": 2.2,
+   "render_ms": 4.07,
+   "physical_mb": 1639.57
+  }
+ },
+ {
+  "run": "vsm1024-1",
+  "load": {
+   "row": 84,
+   "frame_ms": 181.34,
+   "game_ms": 156.04,
+   "flush_async_ms": 96.8,
+   "engine_tick_misc_ms": 25.37,
+   "audio_gt_ms": 0.23
+  },
+  "first_lit_hitches": [],
+  "first_lit_sum_ms": 0,
+  "first_lit_max_ms": 0,
+  "first_lit_window": {
+   "shadow_init_max_ms": 7.32,
+   "render_max_ms": 44.05,
+   "gpu_max_ms": 14.25,
+   "tsr_max_ms": 1.77
+  },
+  "steady": {
+   "rows": 490,
+   "gpu_ms": 3.45,
+   "tsr_ms": 0.43,
+   "game_ms": 1.72,
+   "render_ms": 3.25,
+   "physical_mb": 1456.16
+  }
+ },
+ {
+  "run": "vsm1024-2",
+  "load": {
+   "row": 23,
+   "frame_ms": 132.85,
+   "game_ms": 114.85,
+   "flush_async_ms": 74.59,
+   "engine_tick_misc_ms": 17.31,
+   "audio_gt_ms": 0.11
+  },
+  "first_lit_hitches": [
+   {
+    "row": 27,
+    "frame_ms": 34.29,
+    "game_ms": 2.09,
+    "render_ms": 8.32,
+    "gpu_ms": 9.6,
+    "shadow_init_ms": 0.04,
+    "tsr_ms": 2.38
+   }
+  ],
+  "first_lit_sum_ms": 34.29,
+  "first_lit_max_ms": 34.29,
+  "first_lit_window": {
+   "shadow_init_max_ms": 6.9,
+   "render_max_ms": 37.96,
+   "gpu_max_ms": 36.68,
+   "tsr_max_ms": 2.44
+  },
+  "steady": {
+   "rows": 489,
+   "gpu_ms": 4.8,
+   "tsr_ms": 0.8,
+   "game_ms": 1.6,
+   "render_ms": 3.27,
+   "physical_mb": 1528
+  }
+ },
+ {
+  "run": "vsm2048-1",
+  "load": {
+   "row": 27,
+   "frame_ms": 166.77,
+   "game_ms": 149.1,
+   "flush_async_ms": 96.46,
+   "engine_tick_misc_ms": 23.39,
+   "audio_gt_ms": 0.2
+  },
+  "first_lit_hitches": [
+   {
+    "row": 31,
+    "frame_ms": 51.14,
+    "game_ms": 3.22,
+    "render_ms": 8.87,
+    "gpu_ms": 10.63,
+    "shadow_init_ms": 0.05,
+    "tsr_ms": 2.15
+   }
+  ],
+  "first_lit_sum_ms": 51.14,
+  "first_lit_max_ms": 51.14,
+  "first_lit_window": {
+   "shadow_init_max_ms": 16.49,
+   "render_max_ms": 53.7,
+   "gpu_max_ms": 37.5,
+   "tsr_max_ms": 3.04
+  },
+  "steady": {
+   "rows": 486,
+   "gpu_ms": 4.68,
+   "tsr_ms": 0.78,
+   "game_ms": 1.83,
+   "render_ms": 3.59,
+   "physical_mb": 1536.94
+  }
+ },
+ {
+  "run": "tsr100-1",
+  "load": {
+   "row": 21,
+   "frame_ms": 127.79,
+   "game_ms": 111.04,
+   "flush_async_ms": 71.22,
+   "engine_tick_misc_ms": 16.84,
+   "audio_gt_ms": 0.12
+  },
+  "first_lit_hitches": [
+   {
+    "row": 22,
+    "frame_ms": 39,
+    "game_ms": 4.45,
+    "render_ms": 23.37,
+    "gpu_ms": 5.84,
+    "shadow_init_ms": 0,
+    "tsr_ms": 1.88
+   },
+   {
+    "row": 25,
+    "frame_ms": 79.16,
+    "game_ms": 2.24,
+    "render_ms": 9.7,
+    "gpu_ms": 16.27,
+    "shadow_init_ms": 0.05,
+    "tsr_ms": 0.24
+   }
+  ],
+  "first_lit_sum_ms": 118.16,
+  "first_lit_max_ms": 79.16,
+  "first_lit_window": {
+   "shadow_init_max_ms": 30.31,
+   "render_max_ms": 79.14,
+   "gpu_max_ms": 59.02,
+   "tsr_max_ms": 2.28
+  },
+  "steady": {
+   "rows": 488,
+   "gpu_ms": 5.02,
+   "tsr_ms": 0.57,
+   "game_ms": 1.7,
+   "render_ms": 3.38,
+   "physical_mb": 1468.21
+  }
+ },
+ {
+  "run": "after-1",
+  "load": {
+   "row": 47,
+   "frame_ms": 111.96,
+   "game_ms": 84,
+   "flush_async_ms": 29.15,
+   "engine_tick_misc_ms": 23.43,
+   "audio_gt_ms": 0.24
+  },
+  "first_lit_hitches": [],
+  "first_lit_sum_ms": 0,
+  "first_lit_max_ms": 0,
+  "first_lit_window": {
+   "shadow_init_max_ms": 7.91,
+   "render_max_ms": 28.66,
+   "gpu_max_ms": 11.8,
+   "tsr_max_ms": 1.49
+  },
+  "steady": {
+   "rows": 488,
+   "gpu_ms": 3.43,
+   "tsr_ms": 0.29,
+   "game_ms": 1.96,
+   "render_ms": 3.72,
+   "physical_mb": 1358.23
+  }
+ },
+ {
+  "run": "after1-b",
+  "load": {
+   "row": 33,
+   "frame_ms": 111,
+   "game_ms": 75.56,
+   "flush_async_ms": 25.12,
+   "engine_tick_misc_ms": 23.4,
+   "audio_gt_ms": 0.26
+  },
+  "first_lit_hitches": [],
+  "first_lit_sum_ms": 0,
+  "first_lit_max_ms": 0,
+  "first_lit_window": {
+   "shadow_init_max_ms": 7.6,
+   "render_max_ms": 30.6,
+   "gpu_max_ms": 11.59,
+   "tsr_max_ms": 1.86
+  },
+  "steady": {
+   "rows": 500,
+   "gpu_ms": 4.43,
+   "tsr_ms": 0.51,
+   "game_ms": 2.11,
+   "render_ms": 4.25,
+   "physical_mb": 1575.84
+  }
+ },
+ {
+  "run": "after1-c",
+  "load": {
+   "row": 29,
+   "frame_ms": 86.58,
+   "game_ms": 67.26,
+   "flush_async_ms": 20.37,
+   "engine_tick_misc_ms": 22.26,
+   "audio_gt_ms": 0.22
+  },
+  "first_lit_hitches": [],
+  "first_lit_sum_ms": 0,
+  "first_lit_max_ms": 0,
+  "first_lit_window": {
+   "shadow_init_max_ms": 6.55,
+   "render_max_ms": 22.16,
+   "gpu_max_ms": 12.74,
+   "tsr_max_ms": 0.49
+  },
+  "steady": {
+   "rows": 490,
+   "gpu_ms": 3.28,
+   "tsr_ms": 0.24,
+   "game_ms": 1.97,
+   "render_ms": 3.77,
+   "physical_mb": 1629.79
+  }
+ },
+ {
+  "run": "after-play180",
+  "load": {
+   "row": 36,
+   "frame_ms": 114.25,
+   "game_ms": 91.56,
+   "flush_async_ms": 37.69,
+   "engine_tick_misc_ms": 23.37,
+   "audio_gt_ms": 0.19
+  },
+  "first_lit_hitches": [],
+  "first_lit_sum_ms": 0,
+  "first_lit_max_ms": 0,
+  "first_lit_window": {
+   "shadow_init_max_ms": 7.35,
+   "render_max_ms": 30.98,
+   "gpu_max_ms": 13.78,
+   "tsr_max_ms": 1.47
+  },
+  "steady": {
+   "rows": 11179,
+   "gpu_ms": 4.06,
+   "tsr_ms": 0.33,
+   "game_ms": 2.48,
+   "render_ms": 4.82,
+   "physical_mb": 1472.25
+  }
+ },
+ {
+  "run": "after2-1",
+  "load": {
+   "row": 40,
+   "frame_ms": 127.1,
+   "game_ms": 98.1,
+   "flush_async_ms": 48.43,
+   "engine_tick_misc_ms": 24.53,
+   "audio_gt_ms": 0.05
+  },
+  "first_lit_hitches": [
+   {
+    "row": 45,
+    "frame_ms": 39.22,
+    "game_ms": 2.4,
+    "render_ms": 4.93,
+    "gpu_ms": 4.76,
+    "shadow_init_ms": 0.03,
+    "tsr_ms": 0.47
+   }
+  ],
+  "first_lit_sum_ms": 39.22,
+  "first_lit_max_ms": 39.22,
+  "first_lit_window": {
+   "shadow_init_max_ms": 8.13,
+   "render_max_ms": 53.8,
+   "gpu_max_ms": 9.27,
+   "tsr_max_ms": 1.39
+  },
+  "steady": {
+   "rows": 491,
+   "gpu_ms": 3.79,
+   "tsr_ms": 0.32,
+   "game_ms": 2.53,
+   "render_ms": 4.8,
+   "physical_mb": 1610.62
+  }
+ },
+ {
+  "run": "after2-2",
+  "load": {
+   "row": 72,
+   "frame_ms": 179.43,
+   "game_ms": 191.74,
+   "flush_async_ms": 42.85,
+   "engine_tick_misc_ms": 93.7,
+   "audio_gt_ms": 0
+  },
+  "first_lit_hitches": [
+   {
+    "row": 73,
+    "frame_ms": 40.34,
+    "game_ms": 4.77,
+    "render_ms": 19.61,
+    "gpu_ms": 1.27,
+    "shadow_init_ms": 0,
+    "tsr_ms": 0.26
+   },
+   {
+    "row": 76,
+    "frame_ms": 80.19,
+    "game_ms": 3.8,
+    "render_ms": 13.42,
+    "gpu_ms": 3.15,
+    "shadow_init_ms": 0.05,
+    "tsr_ms": 0.23
+   }
+  ],
+  "first_lit_sum_ms": 120.53,
+  "first_lit_max_ms": 80.19,
+  "first_lit_window": {
+   "shadow_init_max_ms": 6.36,
+   "render_max_ms": 91.72,
+   "gpu_max_ms": 11.05,
+   "tsr_max_ms": 1.89
+  },
+  "steady": {
+   "rows": 493,
+   "gpu_ms": 4.61,
+   "tsr_ms": 0.56,
+   "game_ms": 2.31,
+   "render_ms": 4.51,
+   "physical_mb": 1468.25
+  }
+ },
+ {
+  "run": "after2-3",
+  "load": {
+   "row": 517,
+   "frame_ms": 66.1,
+   "game_ms": 69.87,
+   "flush_async_ms": 0,
+   "engine_tick_misc_ms": 0.06,
+   "audio_gt_ms": 0
+  },
+  "first_lit_hitches": [
+   {
+    "row": 528,
+    "frame_ms": 37,
+    "game_ms": 3.18,
+    "render_ms": 38.38,
+    "gpu_ms": 3.22,
+    "shadow_init_ms": 0.05,
+    "tsr_ms": 0.25
+   }
+  ],
+  "first_lit_sum_ms": 37,
+  "first_lit_max_ms": 37,
+  "first_lit_window": {
+   "shadow_init_max_ms": 0.31,
+   "render_max_ms": 45.6,
+   "gpu_max_ms": 7.36,
+   "tsr_max_ms": 1.55
+  },
+  "steady": {
+   "rows": 7,
+   "gpu_ms": 5.88,
+   "tsr_ms": 0.46,
+   "game_ms": 2.96,
+   "render_ms": 4.85,
+   "physical_mb": 1595.83
+  }
+ },
+ {
+  "run": "after2-4",
+  "load": {
+   "row": 65,
+   "frame_ms": 83.94,
+   "game_ms": 67.36,
+   "flush_async_ms": 19.44,
+   "engine_tick_misc_ms": 19.89,
+   "audio_gt_ms": 0.02
+  },
+  "first_lit_hitches": [],
+  "first_lit_sum_ms": 0,
+  "first_lit_max_ms": 0,
+  "first_lit_window": {
+   "shadow_init_max_ms": 7.87,
+   "render_max_ms": 29.03,
+   "gpu_max_ms": 14.64,
+   "tsr_max_ms": 1.72
+  },
+  "steady": {
+   "rows": 497,
+   "gpu_ms": 3.56,
+   "tsr_ms": 0.3,
+   "game_ms": 2.6,
+   "render_ms": 3.99,
+   "physical_mb": 1439.24
+  }
+ },
+ {
+  "run": "lumbase-60",
+  "load": {
+   "row": 31,
+   "frame_ms": 153.9,
+   "game_ms": 160.18,
+   "flush_async_ms": 81.84,
+   "engine_tick_misc_ms": 53.63,
+   "audio_gt_ms": 0.23
+  },
+  "first_lit_hitches": [
+   {
+    "row": 35,
+    "frame_ms": 39.65,
+    "game_ms": 2.28,
+    "render_ms": 8.12,
+    "gpu_ms": 4.49,
+    "shadow_init_ms": 0.05,
+    "tsr_ms": 0.42
+   }
+  ],
+  "first_lit_sum_ms": 39.65,
+  "first_lit_max_ms": 39.65,
+  "first_lit_window": {
+   "shadow_init_max_ms": 26.41,
+   "render_max_ms": 48.31,
+   "gpu_max_ms": 19.82,
+   "tsr_max_ms": 1.67
+  },
+  "steady": {
+   "rows": 4104,
+   "gpu_ms": 3.59,
+   "tsr_ms": 0.47,
+   "game_ms": 2.01,
+   "render_ms": 3.79,
+   "physical_mb": 1637.35
+  }
+ },
+ {
+  "run": "lumen-60",
+  "load": {
+   "row": 99,
+   "frame_ms": 162,
+   "game_ms": 149.67,
+   "flush_async_ms": 94.76,
+   "engine_tick_misc_ms": 24.7,
+   "audio_gt_ms": 0.27
+  },
+  "first_lit_hitches": [
+   {
+    "row": 103,
+    "frame_ms": 33.41,
+    "game_ms": 2.7,
+    "render_ms": 7.36,
+    "gpu_ms": 3.92,
+    "shadow_init_ms": 0.05,
+    "tsr_ms": 1.74
+   }
+  ],
+  "first_lit_sum_ms": 33.41,
+  "first_lit_max_ms": 33.41,
+  "first_lit_window": {
+   "shadow_init_max_ms": 27.37,
+   "render_max_ms": 48.09,
+   "gpu_max_ms": 13.85,
+   "tsr_max_ms": 1.79
+  },
+  "steady": {
+   "rows": 4123,
+   "gpu_ms": 3.72,
+   "tsr_ms": 0.56,
+   "game_ms": 2.24,
+   "render_ms": 4.42,
+   "physical_mb": 1463.29
+  }
+ }
+]

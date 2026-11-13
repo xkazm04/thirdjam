@@ -1,0 +1,22 @@
+[2026.11.13-09.26.49:289][  0]LogJamPreload: JAMPRELOAD requested 79 assets for cut C:/Users/kazda/kiro/thirdjam/.claude/worktrees/a65/tools/perf/cuts/perf.l2_night.cartridge.json (visual humanoid_b1, tier l2_night); 4 absent packages will not be looked up again
+[2026.11.13-09.26.49:292][  0]LogJamPreload: JAMPRELOAD sync /Engine/EngineMaterials/FastBlueNoise_scalar_128x128x64 frame=0
+[2026.11.13-09.26.49:297][  0]LogJamPreload: JAMPRELOAD sync /Engine/EngineMaterials/FastBlueNoise_vec2_128x128x64 frame=0
+[2026.11.13-09.26.49:303][  0]LogJamPreload: JAMPRELOAD sync /Engine/EngineMaterials/Hair/Hair_DualScattering frame=0
+[2026.11.13-09.26.49:305][  0]LogJamPreload: JAMPRELOAD sync /Engine/EngineMaterials/Hair/Hair_DirectionalAlbedo frame=0
+[2026.11.13-09.26.49:307][  0]LogJamPreload: JAMPRELOAD sync /Engine/EngineMaterials/Hair/Hair_Coverage frame=0
+[2026.11.13-09.26.49:461][  7]LogJamPreload: JAMPRELOAD done: 79 assets in 191 ms
+[2026.11.13-09.26.58:289][517]LogJamPreload: JAMPRELOAD match start: 79 assets requested 9.02 s ago, complete (191 ms after the request)
+[2026.11.13-09.26.58:326][517]LogJamPreload: JAMPRELOAD sync /Game/Maps/Rink frame=517
+[2026.11.13-09.26.58:362][517]LogJamPreload: JAMPRELOAD sync /Game/UI/T_UI_Panel frame=517
+[2026.11.13-09.26.58:363][517]LogJamPreload: JAMPRELOAD sync /Game/UI/T_UI_CallCard frame=517
+[2026.11.13-09.26.58:365][517]LogJamPreload: JAMPRELOAD sync /Game/UI/T_UI_Button_Normal frame=517
+[2026.11.13-09.26.58:365][517]LogJamPreload: JAMPRELOAD sync /Game/UI/T_UI_Button_Hover frame=517
+[2026.11.13-09.26.58:366][517]LogJamPreload: JAMPRELOAD sync /Game/UI/T_UI_Button_Pressed frame=517
+[2026.11.13-09.26.58:380][517]LogJamPreload: JAMPRELOAD sync /JamAssets/Audio/MS_crowd_bed frame=517
+[2026.11.13-09.26.58:380][517]LogJamPreload: JAMPRELOAD sync /JamAssets/Audio/MS_crowd_bed frame=517
+[2026.11.13-09.26.58:381][517]LogJamPreload: JAMPRELOAD sync /JamAssets/Audio/VO/VO_Commentator_period_take_1_01 frame=517
+[2026.11.13-09.26.58:381][517]LogJamPreload: JAMPRELOAD sync /Game/UI/T_UI_ScorePlate frame=517
+[2026.11.13-09.26.58:381][517]LogJamPreload: JAMPRELOAD sync /Game/UI/T_UI_ScorePlate frame=517
+[2026.11.13-09.26.58:381][517]LogJamPreload: JAMPRELOAD sync /Game/UI/T_UI_ScorePlate frame=517
+[2026.11.13-09.26.58:381][517]LogJamPreload: JAMPRELOAD sync /Game/UI/T_UI_RingPlain frame=517
+[2026.11.13-09.26.58:382][517]LogJamPreload: JAMPRELOAD sync /Game/UI/T_UI_Ring frame=517
