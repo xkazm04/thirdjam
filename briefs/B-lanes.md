@@ -1,13 +1,13 @@
 # Device B lane board (the lead rewrites this file whenever a lane starts or reports)
 
-Updated 2026-11-13 22:45 CET (H40.8). The evolution loop (R-0047, A-to-B-0022): each lane does one evolution on a track, proves it, proposes the next three. One editor at a time on B (two hung the GPU twice today). dev-b = main 3b496c2 + B, builds; cook-only PASS on f86aed0 + B.
+Updated 2026-11-13 23:10 CET (H41.2). The evolution loop (R-0047, A-to-B-0022): each lane does one evolution on a track, proves it, proposes the next three. One editor at a time on B (two hung the GPU twice today). dev-b = main 41df3e6 + B, builds; cook-only PASS on 3b496c2 + B with lane AU11.
 
 ## Running
 
 | Lane | What | Editor | Started | Due | Report (when done) |
 |---|---|---|---|---|---|
-| AU11 | Track BF3 (hits you hear and see): the 73 commentator waves beside the bank (the 72 that device A's build shows as captions without sound, and the new `lose.blowout.01`); `MS_ability` by kind, `MS_deke`, the stumble, the hard stop, the fall into the boards; the operator's mix rule kept | 8002, the main tree, **the only editor** | 22:40 | 23:40 | `status/AU11-report.md` |
-| SKF24 | Track BF1 (the figure plays the vision), Blender: no pops between takes, a heavier clay fall, a sprint stride; `skf/export24` | none | 22:10 | 23:00 | `status/B-skater-skf.md`, twenty-fourth pass |
+| SK23 | Track BF1 (the figure plays the vision): `skf/export24` into both figures (three fall sizes, snap and wall get-ups), device A's two calls declared by name (`PlayStumble`, `SetBraking`; A-to-B-0024), the board fall meeting the wall, the figures in play at the window's resolution (closes B-to-A-0039) | 8002, the main tree, **the only editor** | 23:05 | 00:20 | `status/SK23-report.md` |
+| SKF25 | Track BF1, Blender: get-ups that stay low until the release in every direction and at the wall; the three leftover one-frame turns; `skf/export25` | none | 22:50 | 23:50 | `status/B-skater-skf.md`, twenty-fifth pass |
 
 ## Waiting for the operator's ears or eyes (pages on device B)
 
@@ -23,13 +23,15 @@ Updated 2026-11-13 22:45 CET (H40.8). The evolution loop (R-0047, A-to-B-0022): 
 
 | Lane | What | Waits for |
 |---|---|---|
-| SK23 | `skf/export23` (and 24 if it is ready) into both scripted figures: light and heavy falls, `GetUp_Snap`, the get-up from sitting against the wall; the board fall's mesh shifted to meet the wall (31 cm short today); the lean-in of the hard stop counted before it is shown; the figures in play at the window's resolution (closes B-to-A-0039 on B's side) | the editor, after AU11 |
-| B40 | Effects: `NS_ability` by kind, `NS_deke`, the stop's spray; a longer cross-check mark; chips as short streaks if the operator still reads bubbles | the editor |
-| AR2 | AR1's stands and crowd into `JamAssets/Arena`, placed by `LR_P3_Clay` about 4 m beyond the boards, front row empty, half full, lit; readability of puck and figures re-measured | the editor |
+| B40 | Track BF3: effects `NS_ability` by kind, `NS_deke`, the stop's spray; a longer cross-check mark; chips as short streaks if the operator still reads bubbles | the editor, after SK23 |
+| B41 | A-to-B-0024 asks 2, 3, 4: a red lamp instance whose glow survives the ramp and a plain off-white instance for the net's cords; the night snow banks notched where they cross device A's benches, boxes and table, a low fill outside the boards on night; a goal on both tiers with A's lamp, light and net shake beside `NS_goal` / `MS_goal` | the editor |
+| AR2 | AR1's stands and crowd into `JamAssets/Arena`, placed by `LR_P3_Clay` clear of device A's benches, boxes and table, front row empty, half full, lit; readability re-measured | the editor |
 | BS1 | The four jobs moved from A (A-to-B-0022): the clean-machine test of a package, the video with sound, joined play A to B, B's half of the dev log | the operator (the zip: B cannot package; both ends of the match; his word on the transcripts) |
 
 ## Done today (newest first; every one has a report under `status/`)
 
+AU11 (22:48, cook-only PASS): the 73 commentator waves (412 of 412 line ids have a wave), `MS_ability` by kind, `MS_deke`, the stumble inside `MS_check`, `MS_brake` on the figures' stop (`status/AU11-report.md`) ·
+SKF24 (22:34, Blender): one-frame turns evened out in 35 takes, the heavy back fall lands on clay, `Stride_Sprint` (`skf/export24`, 110 takes) ·
 SK22 (22:22, build and cook-only PASS): the hard stop gated to an event (419 and 422 poses in 100 s to 72 and 76), the night figure through a 100 s match (appended to `status/SK21-report.md`) ·
 SK21 (22:02): the contact outcomes on both figures from `skf/export22`: the stumble on its own take (3 of 3), four falls into the boards with wall get-ups, quick get-ups under 80 frames, dekes and a burst wired (`status/SK21-report.md`) ·
 SKF21 to SKF23 (21:05 to 22:07, Blender): stumbles, board falls, the hard stop, quick and wall get-ups, dekes, a burst, three fall sizes (`skf/export21` to `export23`, 109 takes) ·
