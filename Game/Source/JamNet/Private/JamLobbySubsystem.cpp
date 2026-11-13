@@ -81,7 +81,7 @@ void UJamLobbySubsystem::SetState(EJamLobbyState S)
 {
 	if (State == S) return;
 	State = S;
-	UE_LOG(LogJamNet, Log, TEXT("JAMNET lobby state=%d host=%d cut=%s peer=%s"), static_cast<int32>(S), bHost ? 1 : 0, *Cut, Link ? *Link->PeerString() : TEXT("-"));
+	UE_LOG(LogJamNet, Log, TEXT("JAMNET lobby state=%d host=%d cut=%s peer=%s status=\"%s\""), static_cast<int32>(S), bHost ? 1 : 0, *Cut, Link ? *Link->PeerString() : TEXT("-"), *GetStatusText());   // lane A140: the status line as the screen shows it
 	OnChanged.Broadcast();
 }
 

@@ -49,6 +49,17 @@ public:
 	int64 GetTicks() const { return Ticks; }
 	// Bytes per second each way at 60 ticks/s, from the link's counters.
 	FString DescribeStats() const;
+	// Lane A140 (track Q1, evolution 5): this machine's edge presses (shoot, check, pass, poke, lift, deke, spin, F) as read from its controls, as
+	// applied to its seat by the lockstep, still in flight (read, not yet at their frame: the last Delay frames, the stall queue) and folded (a press the
+	// full stall queue, jam.net.PressQueue, had to OR into its last entry). lost = read - applied - in flight. "presses=[F 12/12/0/0 ...] lost=0".
+	FString DescribePresses() const;
+	int32 GetPressesLost() const;
+	// Lane A140: presses of these flag bits read but not yet applied (the input delay's frames and the stall queue).
+	int32 GetPressesInFlight(uint16 FlagBits) const;
+	// Lane A140: repeats of a held edge absorbed by the stall queue (not presses: see TryStep).
+	int32 GetPressesHeld(uint16 FlagBits) const;
+	int32 GetPressesFolded() const { int32 N = 0; for (int32 e = 0; e < NumEdges; ++e) N += PressFolded[e]; return N; }
+	static constexpr int32 NumEdges = 8;
 
 private:
 	void Receive();
@@ -69,7 +80,13 @@ private:
 	int64 LastCheckedHashFrame = -1;
 	// Lane A56: the flags word's own type. It was uint8, so a spin (flag 512, protocol 5) pressed during a stall was cut off and never reached either sim
 	// (Bar.Net.SoakLossy: 49 of 1636 spins lost at 30 % loss, 137 of 1727 on a 0..6-tick jitter, 200 seeds each).
-	decltype(FJamNetQuantInput::Flags) PendingFlags = 0;  // edge presses read while stalled are not lost
+	// Lane A140: edge presses read but not yet sent, one entry per frame (was one OR'd word, PendingFlags: a double tap in a stall was one press).
+	TArray<decltype(FJamNetQuantInput::Flags)> Pending;
+	int32 PressRead[NumEdges] = {};      // lane A140: see DescribePresses
+	int32 PressApplied[NumEdges] = {};
+	int32 PressFolded[NumEdges] = {};
+	int32 PressHeld[NumEdges] = {};
+	uint16 LastRawEdges = 0;
 	int64 RemoteFrame = 0;
 	int32 MaxFrameGap = 0;
 	int32 StallTicks = 0;

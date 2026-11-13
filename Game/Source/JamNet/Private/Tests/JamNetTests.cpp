@@ -169,6 +169,10 @@ namespace JamNetTests
 		T.AddInfo(FString::Printf(TEXT("%s: A %s | stalls=%d | faceoffs=%d fouls=%d pickups=%d rule_fires=%d pokes=%d passes=%d | %.1f s wall"), Label, *A.Driver->DescribeStats(), A.Stalls,
 			A.Faceoffs, A.Fouls, A.Pickups, A.Rules->GetTotalFires(), A.Pokes, A.Passes, Secs));
 		T.AddInfo(FString::Printf(TEXT("%s: B %s | stalls=%d dropped=%d"), Label, *B.Driver->DescribeStats(), B.Stalls, Link.Dropped));
+		// Lane A140: every edge press each peer read reached its seat or is in flight at the end (the stall queue: protocol 8 folded 5 of 25 pokes on boost-lossy-lan, 21 of 37 on chaos-wan).
+		T.AddInfo(FString::Printf(TEXT("%s: A %s | B %s"), Label, *A.Driver->DescribePresses(), *B.Driver->DescribePresses()));
+		T.TestEqual(*FString::Printf(TEXT("%s: A: no press lost (lost %d, of them folded %d)"), Label, A.Driver->GetPressesLost(), A.Driver->GetPressesFolded()), A.Driver->GetPressesLost(), 0);
+		T.TestEqual(*FString::Printf(TEXT("%s: B: no press lost (lost %d, of them folded %d)"), Label, B.Driver->GetPressesLost(), B.Driver->GetPressesFolded()), B.Driver->GetPressesLost(), 0);
 		return bFramesDone && bSameHash;
 	}
 
@@ -447,6 +451,109 @@ bool FJamNetRestartIsInit::RunTest(const FString& Parameters)
 		if (Fresh->StateHash() != Again->StateHash() || Fresh->LockstepStateHash() != Again->LockstepStateHash()) Differ = F;
 	}
 	TestEqual(TEXT("the restarted sim replays the fresh sim's match on every frame"), Differ, -1);
+	return true;
+}
+
+
+// Lane A140 (track Q1, evolution 5): a restarted sim IS a fresh one. Two different histories (a busy one with checks, abilities, brakes, pokes and shots,
+// and a quiet one), each restarted: every reflected skater and puck field equals a freshly Init'ed sim's, both hashes equal it, and the three replay the
+// same match on every frame for 600 frames. Run on the Shotgun mode with the guest seated (the two-machine rematch) and on the regular cartridge.
+// Before: bBraking, bReverseBraking, BladePos, LastPassStrength, BumpDir, LastBumpFrame (lane A129's list) and more ran on into the rematch.
+namespace JamNetTests
+{
+	TArray<FJamInput> A140Inputs(int32 F, int32 N, int32 Style)
+	{
+		TArray<FJamInput> In;
+		In.SetNum(N);
+		for (int32 i = 0; i < N; ++i)
+		{
+			const double Ang = 0.37 * i * (Style + 1) + (F / (30 + 15 * Style)) * 2.1;
+			In[i].Move = FVector2D(FMath::Cos(Ang), FMath::Sin(Ang));
+			In[i].Stick = FVector2D(FMath::Cos(-Ang), FMath::Sin(-Ang));
+			if (Style == 0) continue;   // the quiet history and the replay: steering only
+			const int32 K = (F * 7 + i * 13) % 97;
+			In[i].bSprint = K < 40;
+			In[i].bBrake = K >= 40 && K < 52;
+			In[i].bShootHeld = K >= 52 && K < 70;
+			In[i].bShoot = K == 70;
+			In[i].bPassHeld = K >= 71 && K < 80;
+			In[i].bPass = K == 80;
+			In[i].bCheck = K == 81 || K == 82;
+			In[i].bPoke = K == 83;
+			In[i].bLift = K == 84;
+			In[i].bDeke = K == 85;
+			In[i].bSpin = K == 86;
+			In[i].bAbility = K == 87;
+		}
+		return In;
+	}
+
+	// The reflected fields (every element of a fixed array) in which A and B differ, as " skater[i].Field" / " puck.Field".
+	FString A140Differences(const UJamSim& A, const UJamSim& B)
+	{
+		FString Out;
+		for (int32 i = 0; i < A.GetSkaters().Num() && i < B.GetSkaters().Num(); ++i)
+			for (TFieldIterator<FProperty> It(FJamSkaterState::StaticStruct()); It; ++It)
+				for (int32 k = 0; k < It->ArrayDim; ++k)
+					if (!It->Identical_InContainer(&A.GetSkaters()[i], &B.GetSkaters()[i], k)) { Out += FString::Printf(TEXT(" skater[%d].%s"), i, *It->GetName()); break; }
+		for (TFieldIterator<FProperty> It(FJamPuckState::StaticStruct()); It; ++It)
+			for (int32 k = 0; k < It->ArrayDim; ++k)
+				if (!It->Identical_InContainer(&A.GetPuck(), &B.GetPuck(), k)) { Out += FString::Printf(TEXT(" puck.%s"), *It->GetName()); break; }
+		return Out;
+	}
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamNetRestartIsFresh, "Jam.Net.RestartIsFresh", JamNetTests::Flags)
+bool FJamNetRestartIsFresh::RunTest(const FString& Parameters)
+{
+	struct FCase { const TCHAR* Cartridge; bool bGuest; };
+	const FCase Cases[] = { { TEXT("modes/hockey.mode.shotgun"), true }, { TEXT("hockey.regular"), false } };
+	for (const FCase& Case : Cases)
+	{
+		UJamCartridge* C = Load(*this, Case.Cartridge);
+		if (!C) return false;
+		TStrongObjectPtr<UJamSim> Fresh(NewObject<UJamSim>()), Busy(NewObject<UJamSim>()), Quiet(NewObject<UJamSim>());
+		UJamSim* Sims[] = { Fresh.Get(), Busy.Get(), Quiet.Get() };
+		int32 Guest = -1;
+		for (UJamSim* S : Sims)
+		{
+			S->Init(C->Game, 11);
+			if (Case.bGuest)
+			{
+				// The first bot of the other team, as the lobby seats it.
+				const int32 HostTeam = S->GetSkaters()[S->GetHumanIndex()].Team;
+				for (const FJamSkaterState& K : S->GetSkaters()) if (K.Team != HostTeam && !K.bHuman) { Guest = K.Index; break; }
+				TestTrue(TEXT("the guest is seated"), S->SeatGuest(Guest));
+			}
+		}
+		const int32 N = Fresh->GetSkaters().Num();
+		for (int32 F = 0; F < 1500; ++F) Busy->Step(A140Inputs(F, N, 1));
+		for (int32 F = 0; F < 900; ++F) Quiet->Step(A140Inputs(F, N, 2));
+		// The busy history did what the rematch must forget.
+		int32 Braked = 0, Bumped = 0, Passed = 0;
+		for (const FJamSkaterState& K : Busy->GetSkaters()) { Braked += K.bBraking || K.bReverseBraking ? 1 : 0; Bumped += K.LastBumpFrame != -1000 ? 1 : 0; Passed += K.LastPassStrength != 0.f ? 1 : 0; }
+		AddInfo(FString::Printf(TEXT("%s: before the restart the busy sim differs from a fresh one in:%s"), Case.Cartridge, *A140Differences(*Fresh, *Busy).Left(600)));
+		AddInfo(FString::Printf(TEXT("%s: busy history: %d braking, %d bumped, %d passed; frame %lld, score %d-%d"), Case.Cartridge, Braked, Bumped, Passed,
+			static_cast<long long>(Busy->GetFrame()), Busy->GetScore(0), Busy->GetScore(1)));
+		Busy->Restart();
+		Quiet->Restart();
+		const FString DBusy = A140Differences(*Fresh, *Busy), DQuiet = A140Differences(*Fresh, *Quiet);
+		TestTrue(FString::Printf(TEXT("%s: the busy history, restarted, equals a fresh sim in every reflected field (differs in:%s)"), Case.Cartridge, *DBusy), DBusy.IsEmpty());
+		TestTrue(FString::Printf(TEXT("%s: the quiet history, restarted, equals a fresh sim in every reflected field (differs in:%s)"), Case.Cartridge, *DQuiet), DQuiet.IsEmpty());
+		TestEqual(FString::Printf(TEXT("%s: restarted busy: the state hash of a fresh sim"), Case.Cartridge), Busy->StateHash(), Fresh->StateHash());
+		TestEqual(FString::Printf(TEXT("%s: restarted busy: the lockstep hash of a fresh sim"), Case.Cartridge), Busy->LockstepStateHash(), Fresh->LockstepStateHash());
+		TestEqual(FString::Printf(TEXT("%s: restarted quiet: the lockstep hash of a fresh sim"), Case.Cartridge), Quiet->LockstepStateHash(), Fresh->LockstepStateHash());
+		int32 Differ = -1;
+		for (int32 F = 0; F < 600 && Differ < 0; ++F)
+		{
+			const TArray<FJamInput> In = A140Inputs(F, N, 1);
+			for (UJamSim* S : Sims) S->Step(In);
+			if (Busy->StateHash() != Fresh->StateHash() || Busy->LockstepStateHash() != Fresh->LockstepStateHash()
+				|| Quiet->StateHash() != Fresh->StateHash() || Quiet->LockstepStateHash() != Fresh->LockstepStateHash()) Differ = F;
+		}
+		TestEqual(FString::Printf(TEXT("%s: both restarted sims replay the fresh sim's match on every frame for 600 frames"), Case.Cartridge), Differ, -1);
+		if (Differ >= 0) AddInfo(FString::Printf(TEXT("first differing frame %d; fields:%s"), Differ, *A140Differences(*Fresh, *Busy)));
+	}
 	return true;
 }
 

@@ -184,64 +184,21 @@ void UJamSim::Restart()
 	bOvertime = false;
 	BoardEventCooldown = 0;
 	TimerLeft = (Config.Rules.Mode == RuleTimer) ? Config.Rules.TimerFrames : 0;
-	for (FJamSkaterState& S : Skaters)
+	// Lane A140 (track Q1, evolution 5): every skater goes back to a default FJamSkaterState keeping only what Init (and SeatGuest) gave it: its index,
+	// team, role, seat and spawn. Lanes A104 and A121 reset fields one by one, and the list fell behind the struct (bBraking, bReverseBraking, BladePos,
+	// LastPassStrength, BumpDir, LastBumpFrame, KnockDir, the contact read-outs ... ran on into the rematch): a field added tomorrow is reset too.
+	// A first match is unchanged: Init builds default skaters and calls Restart. Jam.Net.RestartIsFresh holds it.
+	for (int32 i = 0; i < Skaters.Num(); ++i)
 	{
-		S.Shots = S.Touches = S.Goals = S.Passes = 0;
-		S.DistanceM = 0;
-		S.ShotReadyFrame = 0;
-		S.ChargeFrames = 0;
-		S.DeflectCooldown = 0;
-		S.PokeReadyFrame = S.LiftReadyFrame = 0;
-		S.PenaltyFrames = 0;
-		S.StumbleFrames = 0;
-		S.GraceFrames = 0;   // lane A113
-		S.ContactGraced = S.ChecksSoft = S.ChecksGraced = S.ChecksMissed = 0;
-		S.LastCarryFrame = -1000;
-		S.TakeGraceLeft = 0;       // lane A121
-		S.bBurstEarned = false;
-		// Lane A128 (lane A121's finding): a restart forgets the burst that was running and the move inputs of the run before it.
-		S.BurstLeft = 0;
-		S.MoveHistAt = 0;
-		for (FVector2D& Was : S.MoveHist) Was = FVector2D::ZeroVector;
-		S.RestFrames = 0;
-		S.SpinRecoverLeft = 0;
-		S.OneTimers = S.Breakaways = S.Dekes = 0;
-		S.PassesReceived = 0;
-		S.SettleFrames = 0;
-		S.PassReceivedFrame = -1;
-		S.BreakawayFrames = 0;
-		S.bBreakawayUsed = false;
-		S.CarryFrames = 0;
-		S.DekeFrames = 0;
-		S.DekeSide = 0;
-		S.DekeReadyFrame = 0;
-		// Lane A51 (R-0034): the stick handling state.
-		S.SweepFrames = S.SweepSide = 0;
-		S.SpinFrames = S.SpinLength = 0;
-		S.SpinDir = 1;
-		S.SpinReadyFrame = 0;
-		S.Sweeps = S.Spins = 0;
-		// Lane A84: no ability held, nothing armed (the mode grant follows below, once the puck state is reset).
-		S.AbilitySlot = -1;
-		S.AbilityCharges = -1;
-		S.AbilityReadyFrame = 0;
-		S.AbilityArmed = NAME_None;
-		S.ShieldFrames = 0;
-		S.AbilitiesUsed = 0;
-		S.bAbilityThisFrame = false;
-		// Lane A104 (track Q1): the state lanes A77, A92 and A93 added, back to Init's values, so a rematch (AHokejGameMode's rematch calls Restart) replays the
-		// seed: a stamina bar, a burst, a cut history or a pass hold left by the last match changed the next one, and the contact counters ran on.
-		S.Stamina = -1;
-		S.bSprinting = false;
-		S.BurstLeft = 0;
-		for (FVector2D& M : S.MoveHist) M = FVector2D::ZeroVector;
-		S.MoveHistAt = 0;
-		S.bReverseBrakeLast = false;
-		S.bStickAimed = false;
-		S.PassChargeFrames = 0;
-		S.Saucers = 0;
-		S.CarrySprintFrames = S.ReverseBrakes = 0;
-		S.ContactBumps = S.ContactStumbles = S.ContactDowns = S.ContactRecoils = S.ChecksRefused = 0;
+		FJamSkaterState& S = Skaters[i];
+		FJamSkaterState Fresh;
+		Fresh.Index = S.Index;
+		Fresh.Team = S.Team;
+		Fresh.Role = S.Role;
+		Fresh.bHuman = S.bHuman;
+		Fresh.SpawnPos = InitSpawns.IsValidIndex(i) ? InitSpawns[i] : S.SpawnPos;   // Init's spawn (a rink scale moved it)
+		Fresh.SpawnYaw = S.SpawnYaw;
+		S = Fresh;
 	}
 	PendingFaceoffDot = FVector2D::ZeroVector;
 	DekeCommitFrames = 0;

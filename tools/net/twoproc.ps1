@@ -17,6 +17,12 @@
 #                                     each machine's own seat, the rematch started on both on the same lockstep frame with the same hash, and the proof line
 #                                     600 frames into the second match.
 #   -LiveCutAt N                      the guest tries a live cut at lockstep frame N (jam.net.TestLiveCutAt): PASS needs it refused, on its screen, hashes equal.
+# Lane A140 (track Q1, evolution 5):
+#   -Lan                              not loopback: no jam.net.Loopback, the host binds every address on UDP 7700 (the real game's port; -HostPort fixes another),
+#                                     the guest waits for the host's invite codes in its log and joins with the CODE of -LanIp (default: the address of the
+#                                     interface holding the default route), as the operator types it. Prints each machine's status lines as the screen showed them.
+#   -Exe <ThirdJam.exe>               a packaged game instead of the editor binary (no project, no -game, no -Multiprocess).
+#   Every play run also checks each machine's press accounting (the proof line's presses=[...] presses_lost=N): FAIL on any press lost.
 # Prints PASS/FAIL lines and one JSON line last ({"tool":"thirdjam.net/1", ...}); exit 0 pass, 1 fail, 2 could not run.
 # Only the two processes this script started are ever stopped. Logs: <OutDir>\host.log, <OutDir>\guest.log.
 param(
@@ -38,13 +44,17 @@ param(
     [int]$LiveCutAt = 0,
     [string]$Project = '',
     [string]$Exe = 'C:\Program Files\Epic Games\UE_5.9\Engine\Binaries\Win64\UnrealEditor-Cmd.exe',
-    [string]$OutDir = ''
+    [string]$OutDir = '',
+    [switch]$Lan,
+    [string]$LanIp = ''
 )
 $ErrorActionPreference = 'Continue'
 if (-not $Project) { $Project = Join-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) 'Game\ThirdJam.uproject' }
 if (-not $OutDir) { $OutDir = Join-Path $PSScriptRoot "out\$Name" }
 if (-not (Test-Path $Exe)) { Write-Host "FAIL engine missing $Exe"; Write-Host '{"tool":"thirdjam.net/1","verdict":"could_not_run","exit":2}'; exit 2 }
-if (-not (Test-Path $Project)) { Write-Host "FAIL project missing $Project"; Write-Host '{"tool":"thirdjam.net/1","verdict":"could_not_run","exit":2}'; exit 2 }
+$packaged = ($Exe -notmatch 'UnrealEditor')
+if ($packaged) { $Project = '(packaged)' }
+if (-not $packaged -and -not (Test-Path $Project)) { Write-Host "FAIL project missing $Project"; Write-Host '{"tool":"thirdjam.net/1","verdict":"could_not_run","exit":2}'; exit 2 }
 New-Item -ItemType Directory -Force $OutDir | Out-Null
 $hostLog = Join-Path $OutDir 'host.log'
 $guestLog = Join-Path $OutDir 'guest.log'
@@ -52,7 +62,7 @@ Remove-Item $hostLog, $guestLog -ErrorAction SilentlyContinue
 $quit = $Frames
 $dp = "t.MaxFPS=60,jam.ScriptHuman=1"
 if ($Verbs) { $dp = "$dp,jam.net.ScriptVerbs=1" }
-if ($HostPort -gt 0) { $dp = "$dp,jam.net.Loopback=1" }
+if (($HostPort -gt 0 -or $GuestPort -gt 0) -and -not $Lan) { $dp = "$dp,jam.net.Loopback=1" }
 if ($Player) { $dp = "$dp,jam.net.ScriptPlayer=$Player" }
 if ($Rematch) { $dp = "$dp,jam.net.ProofRematch=1" }
 if ($Cvars) { $dp = "$dp,$Cvars" }
@@ -65,14 +75,41 @@ if ($HostPort -gt 0) { $hostDp = "$hostDp,jam.net.Port=$HostPort" }
 if ($GuestPort -gt 0) { $guestDp = "$guestDp,jam.net.Port=$GuestPort" }
 $joinPort = if ($HostPort -gt 0) { $HostPort } else { 7700 }
 $common = "`"$Project`" -game -nullrhi -Multiprocess -unattended -nosplash -NoSound -log"
+if ($packaged) { $common = "-nullrhi -unattended -nosplash -NoSound -log" }
+$joinAddr = "127.0.0.1:$joinPort"
+if ($Lan -and -not $LanIp) {
+    # The default route's interface with a real (DHCP or manual, not link-local 169.254) address: on this machine Ethernet 2, 10.0.0.141.
+    foreach ($route in (Get-NetRoute -DestinationPrefix '0.0.0.0/0' -ErrorAction SilentlyContinue | Sort-Object { $_.RouteMetric + $_.InterfaceMetric })) {
+        $ip = Get-NetIPAddress -InterfaceIndex $route.ifIndex -AddressFamily IPv4 -ErrorAction SilentlyContinue | Where-Object { $_.IPAddress -notmatch '^(169.254|127).' } | Select-Object -First 1
+        if ($ip) { $LanIp = $ip.IPAddress; break }
+    }
+    if (-not $LanIp) { Write-Host 'FAIL -Lan: no LAN address found (no default route)'; Write-Host '{"tool":"thirdjam.net/1","verdict":"could_not_run","exit":2}'; exit 2 }
+}
+if ($Lan) { Write-Host "INFO twoproc: LAN mode, host binds every address, the guest joins with the code of $LanIp" }
 $hostArgs = "$common -abslog=`"$hostLog`" -ExecCmds=`"jam.host $Cut Ada auto`" -dpcvars=$hostDp"
-$guestArgs = "$common -abslog=`"$guestLog`" -ExecCmds=`"jam.join 127.0.0.1:$joinPort Bo`" -dpcvars=$guestDp"
+$guestArgs = "$common -abslog=`"$guestLog`" -ExecCmds=`"jam.join $joinAddr Bo`" -dpcvars=$guestDp"
 Write-Host "INFO twoproc: mode $Mode, cut $Cut, cap $Frames frames, to the end $([bool]$ToEnd), host cvars $hostDp"
 Write-Host "INFO twoproc: guest cvars $guestDp"
 Write-Host "INFO twoproc: logs $hostLog | $guestLog"
 $t0 = Get-Date
 $h = Start-Process -FilePath $Exe -ArgumentList $hostArgs -PassThru
 Start-Sleep -Seconds $GuestDelaySec
+$hostingLine = ''
+if ($Lan) {
+    # Lane A140: the operator reads the guest the code next to the guest's network address; the guest types the code.
+    $wait = [Diagnostics.Stopwatch]::StartNew()
+    while ($wait.Elapsed.TotalSeconds -lt 120 -and -not $hostingLine) {
+        if (Test-Path $hostLog) { $r = Select-String -Path $hostLog -Pattern 'JAMNET hosting .*codes: (.*)$' | Select-Object -First 1; if ($r) { $hostingLine = $r.Matches[0].Groups[1].Value } }
+        if (-not $hostingLine) { $h.Refresh(); if ($h.HasExited) { break }; Start-Sleep -Milliseconds 500 }
+    }
+    Write-Host "INFO twoproc: host's codes: $hostingLine"
+    $code = ''
+    foreach ($part in ($hostingLine -split '\|')) { if ($part -match '^\s*(\S+)\s+\(([0-9.]+)\)') { if ($Matches[2] -eq $LanIp) { $code = $Matches[1] } } }
+    if (-not $code) { Write-Host "FAIL -Lan: the host listed no code for $LanIp"; if (-not $h.HasExited) { Stop-Process -Id $h.Id -Force -Confirm:$false }; Write-Host '{"tool":"thirdjam.net/1","verdict":"fail","exit":1}'; exit 1 }
+    $joinAddr = $code
+    Write-Host "INFO twoproc: the guest types $code ($LanIp)"
+    $guestArgs = "$common -abslog=`"$guestLog`" -ExecCmds=`"jam.join $joinAddr Bo`" -dpcvars=$guestDp"
+}
 $g = Start-Process -FilePath $Exe -ArgumentList $guestArgs -PassThru
 Write-Host ("INFO twoproc: host pid {0}, guest pid {1}, started {2}" -f $h.Id, $g.Id, $t0.ToString('HH:mm:ss'))
 $sw = [Diagnostics.Stopwatch]::StartNew()
@@ -159,7 +196,7 @@ if ($Mode -eq 'refuse') {
     if ($hostDone -match 'frame=(\d+) hash=([0-9a-f]+)') { $hFrame = [int]$Matches[1]; $hFinal = $Matches[2] }
     if ($guestDone -match 'frame=(\d+) hash=([0-9a-f]+)') { $gFrame = [int]$Matches[1]; $gFinal = $Matches[2] }
     $guestSeat = ''; $guestAb = -1
-    if ($guestDone -match 'guest=\[([^\]]*)\]') { $guestSeat = $Matches[1]; if ($guestSeat -match 'abilities_used (\d+)') { $guestAb = [int]$Matches[1] } }
+    if ($guestDone -match 'guest=\[([^\]]*)\]') { $guestSeat = $Matches[1]; if ($guestSeat -match ' ability (\d+) \|') { $guestAb = [int]$Matches[1] } }   # lane A140: F applied over both matches (abilities_used restarts with the rematch)
     if ($timedOut) { Write-Host "FAIL timeout after ${TimeoutSec}s"; $fail = $true }
     if ($desync) { Write-Host "FAIL desync: $desync"; $fail = $true }
     if ($lost) { Write-Host "FAIL connection lost: $lost"; $fail = $true }
@@ -196,6 +233,25 @@ if ($Mode -eq 'refuse') {
     $extra.goals = if ($hostDone -match 'score=(\d+):(\d+)') { "$($Matches[1]):$($Matches[2])" } else { '' }
     $extra.guest_seat = $guestSeat; $extra.guest_abilities_used = $guestAb; $extra.match_over = $over
 }
+if ($Mode -eq 'play') {
+    # Lane A140: each machine's own presses (read from its controls / applied to its seat / in flight at the end / folded in a stall).
+    foreach ($side in @(@('host', $hostLog), @('guest', $guestLog))) {
+        $done = Last-Match $side[1] 'JAMNET proof done'
+        if ($done -match '(presses=\[[^\]]*\]) \(read/applied/in_flight/folded\)(?: held_repeats=\d+)? presses_lost=(-?\d+)') {
+            $pr = $Matches[1]; $lostN = [int]$Matches[2]; $folded = 0
+            foreach ($m in [regex]::Matches($pr, '(\d+)/(\d+)/(\d+)/(\d+)')) { $folded += [int]$m.Groups[4].Value }
+            if ($lostN -ne 0) { Write-Host "FAIL $($side[0]): $lostN presses lost ($folded folded by a full stall queue): $pr"; $fail = $true }
+            else { Write-Host "PASS $($side[0]) presses (read/applied/in flight/folded): $pr lost=$lostN folded=$folded" }
+            $extra["presses_$($side[0])"] = $pr; $extra["presses_lost_$($side[0])"] = $lostN; $extra["presses_folded_$($side[0])"] = $folded
+        } else { Write-Host "INFO $($side[0]): no press accounting on the proof line (a build before lane A140)" }
+    }
+}
+foreach ($side in @(@('host', $hostLog), @('guest', $guestLog))) {
+    if (-not (Test-Path $side[1])) { continue }
+    $st = @(Select-String -Path $side[1] -Pattern 'JAMNET lobby state=\d+ .*status="([^"]*)"' | ForEach-Object { $_.Matches[0].Groups[1].Value })
+    if ($st.Count) { Write-Host ("INFO {0} status lines: {1}" -f $side[0], ($st -join ' -> ')); $extra["status_$($side[0])"] = ($st -join ' -> ') }
+}
+if ($Lan) { $extra.lan_ip = $LanIp; $extra.join_code = $joinAddr; $extra.host_codes = $hostingLine }
 $code = 0; if ($fail) { $code = 1 }
 $obj = [ordered]@{ tool = 'thirdjam.net/1'; verdict = @('pass', 'fail')[$code]; exit = $code; mode = $Mode; cut = $Cut; frames = $Frames; wall_s = $wall; host_log = $hostLog; guest_log = $guestLog }
 foreach ($k in $extra.Keys) { $obj[$k] = $extra[$k] }

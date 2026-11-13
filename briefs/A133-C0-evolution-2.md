@@ -17,6 +17,16 @@ step (+0 / +7 / +3), the brain that plays as a side and reads the shield and the
 whistle off (+5 to +10), and lane A112's first profile (rookie pokes after 6 frames and shoots from range; pro pokes after 2, hunts 20 m; all_star hunts 30 m).
 Nobody has measured the sum. **No package is cut until this lane lands** (R-0050): the operator has had no new build since 19:46.
 
+## What the integration lane measured for you (R-0055; `docs/experiments/INTEGRATION.md`, `status/A138.md`)
+- The six cells on the integrated tree, 600 a cell, before any of your numbers: regular rink 98.2 / 67.8 / 39.3; large rink 99.8 / 79.5 / 82.0 (all_star is
+  easier than pro on the large rink: three a side).
+- **`opp.hunt_radius_m` is the lever that breaks law 3, not the poke.** Your first profile's hunt 20 (pro) took the stop at 8 m to 20 %; hunt 12 to 24 %. The
+  poke at 2, 3 or 4 frames leaves it at 99.5 %. So keep the poke, drop the hunt back, and find the points in checks, the shot, support and speed; any hunt
+  value must keep `Jam.Core.Movement.StopAndGo` green at that level.
+- All_star's bar is the stop from 10 m at 50 % or more (its window is 10 to 12 m).
+- The pinned-hash tests call `JamBaseline.h` now: if a profile number of yours moves a pinned match, add the profile's neutral to that one helper.
+- The soak lane's baseline (`docs/experiments/SOAK-3.md`): takes 1 and 2 are a rout, takes 3 to 7 are flat for a good player (91 to 94 %).
+
 ## Evolution 2, in this order
 1. **The tree is green first.** Lane A112 left seven red tests: fix what is yours (`ContactBoardMatch`'s pinned pro hashes need the profile's neutral in their
    neutral arm, `Designer.CutsRoundTrip` and `Designer.PromptParity` need the Designer data regenerated against the whistle-off `hockey.regular`,

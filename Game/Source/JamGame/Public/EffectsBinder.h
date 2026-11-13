@@ -203,6 +203,17 @@ private:
 	double MapRequestedAt = 0.0;
 	double MapLoadedAt = 0.0;
 
+	// Lane A137 (track Q3 evolution 4): the warm scene. The first rendered match frame waited 60-150 ms on pipeline states created at first use (PSO
+	// precache misses: the light rig's lights, shadows and post, the rink's look materials). Behind the menu's opaque black card, once the preload is done,
+	// the tier's light rig is streamed into the menu world and a plane for each look material stands in front of the menu camera for jam.WarmScene.Frames
+	// rendered frames, so those pipeline states are created while the menu is up. jam.WarmScene 0: nothing (before).
+	void TickWarmScene(UWorld* MenuWorld);
+	TWeakObjectPtr<AActor> WarmActor;
+	TWeakObjectPtr<class ULevelStreamingDynamic> WarmLevel;
+	TWeakObjectPtr<UWorld> WarmWorld;
+	int32 WarmFramesLeft = -1;
+	double WarmStartedAt = 0.0;
+
 	TArray<TSharedPtr<FStreamableHandle>> Handles;
 	TSet<FString> PreloadedCuts;
 	FDelegateHandle PostLoadMapHandle, PreLoadMapHandle, SyncLoadHandle;

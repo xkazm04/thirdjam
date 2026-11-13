@@ -206,9 +206,10 @@ namespace JamNetSoak
 		int32 Stalls = 0;
 		TMap<int64, FSnap> Snaps;
 		// Edge presses: what the local player pressed (merged over a stall, as the driver promises) against what the sim was handed for that frame.
-		TMap<int64, uint16> ExpectedEdges;
-		uint16 PendingEdges = 0;
+		// Lane A140: presses are counted as read (one per tick a verb's edge is in the local input) and as applied (in the seat's lockstep input); at
+		// the end lost = read - applied - still in flight. Before, the expectation OR'd a stall's presses into one, so a fold never counted as lost.
 		int32 EdgePressed[16] = {};
+		int32 EdgeApplied[16] = {};
 		int32 EdgeLost[16] = {};
 		int64 FirstEdgeLostFrame = -1;
 		int32 Spins = 0;   // spin presses that reached the sim (either human)
@@ -306,21 +307,10 @@ namespace JamNetSoak
 			const uint64 C0 = FPlatformTime::Cycles64();
 			const bool bOk = Driver->TryStep(Local, L, R);
 			Tm.Try.Add(static_cast<uint32>(FPlatformTime::Cycles64() - C0));
-			if (!bOk) { PendingEdges |= Edges; ++Stalls; return false; }
-			const uint16 Want = Edges | PendingEdges;
-			PendingEdges = 0;
-			if (Want) ExpectedEdges.Add(F0 + Driver->GetDelay(), Want);
-			if (const uint16* Exp = ExpectedEdges.Find(F0))
-			{
-				const uint16 Got = FJamNetQuantInput::From(L).Flags & FJamNetQuantInput::EdgeFlags;
-				for (int32 b = 0; b < 16; ++b)
-				{
-					if (!(*Exp & (1 << b))) continue;
-					++EdgePressed[b];
-					if (!(Got & (1 << b))) { ++EdgeLost[b]; if (FirstEdgeLostFrame < 0) FirstEdgeLostFrame = F0; }
-				}
-				ExpectedEdges.Remove(F0);
-			}
+			if (bOk || F0 > 0) for (int32 b = 0; b < 16; ++b) if (Edges & (1 << b)) ++EdgePressed[b];   // the driver reads nothing before the first frame
+			if (!bOk) { ++Stalls; return false; }
+			const uint16 Got = FJamNetQuantInput::From(L).Flags & FJamNetQuantInput::EdgeFlags;
+			for (int32 b = 0; b < 16; ++b) if (Got & (1 << b)) ++EdgeApplied[b];
 			if (L.bSpin || R.bSpin) ++Spins;
 			Verbs[0] += (L.bSprint ? 1 : 0) + (R.bSprint ? 1 : 0);
 			Verbs[1] += (L.bPassHeld ? 1 : 0) + (R.bPassHeld ? 1 : 0);
@@ -631,6 +621,12 @@ namespace JamNetSoak
 		M.Dropped = Link.A.Dropped + Link.B.Dropped; M.Blacked = Link.A.Blacked + Link.B.Blacked; M.Duplicated = Link.A.Duplicated + Link.B.Duplicated;
 		M.Reordered = Link.A.Reordered + Link.B.Reordered; M.Twice = Link.A.Twice + Link.B.Twice; M.MaxRun = FMath::Max(Link.A.MaxRun, Link.B.MaxRun);
 		M.Corrupted = Link.B.Corrupted;
+		for (FPeer* P : { &A, &B })
+			for (int32 b = 0; b < 16; ++b)
+			{
+				P->EdgeLost[b] = P->EdgePressed[b] - P->EdgeApplied[b] - P->Driver->GetPressesInFlight(static_cast<uint16>(1 << b)) - P->Driver->GetPressesHeld(static_cast<uint16>(1 << b));   // lane A140: a held key's absorbed repeats are no presses
+				if (P->EdgeLost[b] != 0 && P->FirstEdgeLostFrame < 0) P->FirstEdgeLostFrame = P->Driver->GetFrame();   // lane A140: the frame it was found at
+			}
 		for (int32 b = 0; b < 16; ++b) { M.EdgePressed[b] = A.EdgePressed[b] + B.EdgePressed[b]; M.EdgeLost[b] = A.EdgeLost[b] + B.EdgeLost[b]; }
 		M.FirstEdgeLost = A.FirstEdgeLostFrame >= 0 ? A.FirstEdgeLostFrame : B.FirstEdgeLostFrame;
 		M.Spins = A.Spins;
