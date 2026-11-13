@@ -600,3 +600,18 @@ stick takeaways only; (5) **pinned-hash neutral tests are one helper, not a habi
 five landings tonight stopped on each other's pins: the integration lane writes one shared baseline (every rule and brain evolution after the vision's commit
 at its neutral) that the neutral tests call, and later lanes add their neutral to it in one line; (6) the curve lane works on the integration lane's tree;
 no package before both land.
+
+## R-0054 (H26, 2026-11-13 22:57): the first look is clay; what the Director answers of the submission's questions
+Lane A142's truth table found that the regular cut and seven of the season's eight takes play on the night tier, while the operator's decision of 13 Nov
+(R-0036, R-0041 point 5) made **P3 clay the shipped look**: a newcomer's first match was not the look the page shows. Rulings: (1) **the first look is clay**:
+`hockey.regular`, `hockey.arena.wide`, `hockey.arena.large` and the season's takes 1 to 4 carry `look.tier` `p3_clay`; takes 5 to 8 keep their variety (neon,
+night) as the season's change of scene; the modes keep theirs; the acceptance run's cut follows the regular cut (the curve lane does this with its content
+step, with the Designer's cached cuts regenerated); (2) the page may say "clay figures on clay ice with an ink outline" only for what a still of the package
+shows: the stills are retaken from the first package after the curve; (3) the video's same-direction shot (a nudge at matched speed against a hit at full
+closing speed: the vision's law 1 in one frame) gets a drill of its own (the contact track's next evolution), since no existing drill stages it; (4) drills
+exist only in a Development package, whose ice is darker than Shipping's: a Development take may be used in the video only beside other Development takes
+(a split frame of two drills), never cut against Shipping footage; (5) the banner stays "Hockey with the whistle taken out": it is true when the curve lane
+lands the whistle's removal; if that does not land by Saturday 19:00 the fallback is the law itself: "The speed you bring is the hit you get"; (6) the
+head socket stands about 19 cm above the helmet (device B's answer): written into the figure contract; A's marker keeps its 18 cm. Left with the operator:
+team names and roles, who submits, the prizes, whether the page names tool vendors, the dev log's hosting and device B's transcripts, the P4 removal, the
+firewall prompt's Cancel, and the first match between two machines.

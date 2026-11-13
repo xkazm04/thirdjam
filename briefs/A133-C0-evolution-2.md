@@ -30,8 +30,11 @@ Nobody has measured the sum. **No package is cut until this lane lands** (R-0050
    points) by aggression first and speed last, confirm at 2,000 a cell. Lane A112's ranking of levers for each direction is in its report (status file).
 4. **The season ramps**: the novice's win rate falls by no more than 20 points between neighbouring takes from 3 to 8 (63 points today between 3 and 4), with a
    shot in every take-1-to-3 match; takes 4 and 5 get the intermediate steps (a level name and at most one `ai` number each).
-5. Budgets of the soak-set tests (`BotTests.cpp:221` sits four faceoffs from red: reset from your own measurement).
+5. **The first look is clay** (R-0054): `look.tier` `p3_clay` in `hockey.regular`, `hockey.arena.wide`, `hockey.arena.large` and takes 1 to 4 (takes 5 to 8 and the
+   modes keep theirs); the acceptance run's cut follows the regular cut; the Designer's cached cuts and prompt data regenerated; name every test that pinned
+   the night tier. The sim's hash does not move (a look is not a rule): prove it.
+6. Budgets of the soak-set tests (`BotTests.cpp:221` sits four faceoffs from red: reset from your own measurement).
 
 Write `LADDER READY` in your status file the moment items 1 to 3 are green and measured, with the file list: the Director lands it at once and cuts H27; items
-4 and 5 follow as a second landing. Proof: the full `Jam` filter green; `CURVE-7.md` with the tables; the neutral proofs (`PreA95Tune` and every key's neutral)
+4 to 6 follow as a second landing. Proof: the full `Jam` filter green; `CURVE-7.md` with the tables; the neutral proofs (`PreA95Tune` and every key's neutral)
 still passing. `-Multiprocess` on every headless start; few processes, many seeds; builds no longer queue across worktrees. Time box 120 minutes.
