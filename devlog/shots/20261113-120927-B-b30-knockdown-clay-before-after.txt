@@ -1,0 +1,1 @@
+Clay, the same knockdown (test figures, Knockdown_Right on the victim, Check_Deliver_Right on the attacker, effects spawned at the contact and the victim as the binder does) every 3rd frame from the hit to +21: before (NS_check + NS_knockdown as shipped) above, after B30 below

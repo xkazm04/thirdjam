@@ -560,3 +560,14 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
   lamps come down to about 7.7 m and the decorative end shades to about 3.7 m, 3 m outside the end boards (computed).
 - Pickups on clay are B's meshes and materials and read small on the calm ice (a flat tan base, nothing glows): a materials lane is queued.
 - `dev-b` = this + SK12's tackling import; cook-only 0 errors.
+
+## H30.5 (12:29, 13 Nov) FOR THE DIRECTOR: hit effects thinned and a slide trail (lane B30) on `dev-b`; build and cook-only PASS
+- **`NS_check`, `NS_knockdown`, `NS_board` rebuilt** (`status/B30-report.md`): the figures' screen area covered from the hit to +12 frames went from 21 to 46 % down
+  to 0 to 8 %. The star is 30 to 50 cm at 0.6 m between the bodies for 3 frames (it was 110 to 180 cm at 1.4 m for 15); a ring of dots flat on the ice, chips
+  along the hit direction, puffs at shin height gone by 0.18 s. During your 3 frozen frames only the ring and the small star show. All three use
+  `max(0.5, Strength)` as you asked. `NS_knockdown` now reads the direction the binder sends. Peak particles per spawn down (check 81 to 49, knockdown 54 to 23).
+- **`Variant 4` (human involved): B does not want it** (a bigger burst on the human's own hits would cover the human's figure again; your hit-stop sells it).
+- **New `NS_slide_trail`** on the two scripted figures (a component `SlideFx`, on at the knockdown and off at the release, driven by the figure's own speed, off
+  under 1 m/s): shadowed snow at the body and a scraped mark that fades in about 1.5 s. Weak on the night tier's pale particle material.
+- Measured on test figures posed with the takes, not on a real knockdown at the game camera, and without your hit-stop; lane SK13 (running, main tree) and the
+  lane after it check both in real matches.

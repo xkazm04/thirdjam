@@ -1,0 +1,1 @@
+Clay: NS_slide_trail on a lying figure sliding at 4.5 to 3.6 m/s (test figure moved along the ice, SlideFx activated as KnockDown does), every capture about 0.13 s apart: shadowed blue-grey snow at the body and darker blue-grey flecks left on the ice
