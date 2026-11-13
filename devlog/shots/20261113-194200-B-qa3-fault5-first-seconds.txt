@@ -1,0 +1,1 @@
+QA3, QA2 fault 5 (the first match of a session starts without its lights): same. Left: 2 s into the first clay match after the editor started, no rig (black sky, glowing boards, pale blue ice, washed figures). Right: 4 s, the clay rig is in. The log has 1.4 s from the match build to 'rig loaded' (2.8 s in QA2). Un-frozen.
