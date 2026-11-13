@@ -505,3 +505,15 @@ bot speed 1.4 (1.22 on the large rink); (2) pro's shot range (13 to 30 m) is acc
 was reached with speed; the operator may prefer 1.2 with the good player near 37 %; (4) the budgets follow the soak: the human-touch share plus 2 points (9.3 %), the novice's
 goal inside two minutes at 7 of 20 (the measured share is 44.8 %); (5) nothing went back to its neutral value; the neutral proofs hold on this tree; (6) the sim freeze of
 Saturday 12:00 stands: from here only fixes that the acceptance run or the gate demand, and the operator's read of H26.
+
+## R-0047 (H25, 2026-11-13 18:46): the difficulty accepted; evolution tracks until the freeze
+The operator: "difficulty setup fine for me" (R-0046 stands, all_star's speed included) and "We need to iterate on top of existing concepts and make evolution after
+evolution in tracks where possible. Next 24h will be key ... RAM 60-80% used, Fable agents thinking how to improve game mechanics and design, executing in blender. Opus
+subagents to improve the codebase and quality of implementation, Sonnet subagents to run tests and harden the game." Rulings: (1) ten standing tracks (`docs/EVOLUTION.md`):
+Fable F0 design eye, F1 contact feel, F2 carrier skill, F3 the arena in Blender; Opus Q1 determinism and lockstep, Q2 review and repair, Q3 performance at five a side;
+Sonnet S1 soak, S2 the acceptance matrix (the cursor's owner), S3 fuzz and the loader; each lane does one evolution, lands through the gate (and the acceptance run when a
+player's verb changes), and proposes the next three; the Director keeps every track busy; rules in `briefs/EVOLUTION-COMMON.md`; (2) the machine's band is 38 to 50 GB in
+use; soaks scale their workers to fill it; (3) **the freezes move**: rule changes in the sim land until Saturday 19:00, each with a neutral value and a green gate; content
+freezes Saturday 22:00; Sunday is the submission; submit Sunday 22:00; (4) the ladder of R-0046 is set: an evolution that moves a target cell by more than 4 points ships
+with its neutral value until the curve is re-set; (5) the release chain compiles the Shipping target before the acceptance run (H26's first try played green and then failed
+to compile for Shipping: a test outside its guard).

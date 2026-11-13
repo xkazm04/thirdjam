@@ -719,7 +719,6 @@ bool FJamContactTakes::RunTest(const FString& Parameters)
 	return true;
 }
 
-#endif
 
 // Lane A95 (B-to-A-0037): the cone on the stick lift and on the cross-check's shove (game.stick.lift_cone_deg, default 70). A standing carrier with an attacker
 // standing beside it at arm's length (0.3 m between the bodies: inside contact.cross_reach_m and stick.lift_range_m), the attacker's facing turned Theta off the
@@ -768,3 +767,5 @@ bool FJamLiftCone::RunTest(const FString& Parameters)
 	}
 	return true;
 }
+
+#endif

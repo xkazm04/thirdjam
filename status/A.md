@@ -377,3 +377,8 @@
 - RESOURCES 17:59 cpu 3% ram 16.8/63GB gpu 4 %, 792 MiB, 38 editors 0 cmd 0 ubt 0 free 607GB
 
 - RESOURCES 18:29 cpu 36% ram 17/63GB gpu 1 %, 792 MiB, 38 editors 0 cmd 8 ubt 1 free 607GB
+- link green 18:41: main ee14438 (The vision on main (R-0045, R-0046): contact by inertia (A92: impulse against stability, b) pushed.
+
+## H25 (18:47) evolution tracks started (R-0047, docs/EVOLUTION.md); the vision on main ee14438; H26 re-releasing
+- Ten lanes A100-A109 on tracks F0 design eye, F1 contact feel, F2 carrier skill, F3 arena in Blender (Fable); Q1 determinism and lockstep, Q2 review and repair, Q3 performance at five (Opus); S1 soak, S2 acceptance matrix (cursor owner), S3 fuzz (Sonnet). Band: 38-50 GB in use.
+- H26: the acceptance run was green 19/19 on ee14438, then the Shipping target failed to compile (a test outside its guard); fixed; the release chain now compiles Shipping first.
