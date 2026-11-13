@@ -1,0 +1,1 @@
+SKF19 cross-check pair at 1.2 m: attacker Lift (blue) and victim Lift_Hit (orange, facing him), both starting on the same frame, every 3rd frame from -6 to +24. Per style (p2_cel top, p3_clay bottom): game camera export18, game camera export19, side export18, side export19.
