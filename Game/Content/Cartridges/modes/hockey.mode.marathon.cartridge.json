@@ -236,6 +236,14 @@
       "lag_frames": 4,
       "fov_deg": 70,
       "radar": true
+    },
+    "meta": {
+      "pitch": "Long ice, a long clock. Pace it, then go.",
+      "facts": [
+        "140 x 70 m, 10:00",
+        "burst +60 % for 4 s",
+        "everyone sprints"
+      ]
     }
   }
 }

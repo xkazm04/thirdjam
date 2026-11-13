@@ -1293,6 +1293,34 @@
           "description": "Show the mini-rink radar in the HUD."
         }
       }
+    },
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pitch",
+        "facts"
+      ],
+      "description": "Lane A81 (A67 ask A11): the words the menu shows for a Director's choice: informational only, read by the menu and never by the sim. The card's name is the envelope title. Leave the key out for a cut that is not a mode.",
+      "properties": {
+        "pitch": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 48,
+          "description": "One sentence on the card under the name: what the mode is for, in the player's words. 48 characters keep it to two lines at six cards a row."
+        },
+        "facts": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20
+          },
+          "description": "Up to three short lines on the card, each a fact that differs from the Regular Cut (\"first goal wins\"). At six cards a row a line holds about 18 characters at 1080p and 720p; 20 is the hard cap."
+        }
+      }
     }
   }
 }

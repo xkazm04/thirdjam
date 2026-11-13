@@ -241,6 +241,14 @@
     },
     "stick": {
       "reception_m": 1.4
+    },
+    "meta": {
+      "pitch": "Four against three. Move it and shoot.",
+      "facts": [
+        "4 v 3 for you",
+        "soft passes seat",
+        "one-timers, 4:00"
+      ]
     }
   }
 }

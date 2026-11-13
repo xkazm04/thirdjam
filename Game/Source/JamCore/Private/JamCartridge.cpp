@@ -1247,6 +1247,14 @@ UJamCartridge* UJamCartridge::LoadFromString(const FString& Json, TArray<FString
 	ReadStr(Root, TEXT("id"), C->Id);
 	ReadStr(Root, TEXT("title"), C->Title);
 	if (FJPtr Theme = Obj(Root, TEXT("theme"))) ReadStr(Theme, TEXT("name"), C->ThemeName);
+	if (FJPtr Meta = Obj(Obj(Root, TEXT("game")), TEXT("meta")))
+	{
+		ReadStr(Meta, TEXT("pitch"), C->MetaPitch);
+		if (FJPtr Facts = Meta->Get(TEXT("facts")); Facts && Facts->IsArray())
+		{
+			for (const FJPtr& F : Facts->Array) if (F && F->IsString()) C->MetaFacts.Add(F->String);
+		}
+	}
 	if (FJPtr Seed = Root->Get(TEXT("seed")); Seed && Seed->IsNumber()) C->Seed = static_cast<int64>(Seed->Number);
 	FillGame(Root->Get(TEXT("game")), C->Game);
 	ApplyValues(Root->Get(TEXT("values")), C->Game);
