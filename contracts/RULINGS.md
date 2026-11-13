@@ -408,7 +408,7 @@ player makes creative variations without editing JSON; (4) P2 stays what it is: 
 
 ## R-0037 (H15, 2026-11-13 10:48): every match ends; the lockstep soak's findings
 1. A `first_to` match has a horn at 30,000 frames of live play (8:20): the leader wins, a tie goes to sudden death; a hard stop at 33,000 ends any match still running,
-   the leader wins, a tie goes to the team that last touched the puck (the sim has no draw state; a draw would be new sim and UI, not worth it two days out). Lane A71
+   the leader wins, a tie goes to the team that last touched the puck (the sim has no draw state; a draw would be new sim and UI, not worth it two days out). Amended 11:30: a timer match's hard stop is its clock plus 6,000 frames (a 10:00 Marathon clock is 36,000 frames; A72 caught that the 33,000 stop would have cut it). Lane A71
    measured 53 of 11,400 soak matches past the old 10-minute cap, none of them stuck: goals were simply rare on the big boost rink. The hash moves only for matches
    past 30,000 frames.
 2. Lane A71's idle measurement: the longest no-touch stretch per match is p50 16 s, p90 32 s, 12 % of matches over 30 s, almost all a loose puck the novice does not
