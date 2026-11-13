@@ -1,37 +1,42 @@
 # Device B lane board (the lead rewrites this file whenever a lane starts or reports)
 
-Updated 2026-11-13 20:45 CEST (H40.1). The evolution loop (R-0047, A-to-B-0022): each lane does one evolution on a track, proves it, proposes the next three. One editor at a time on B (two hung the GPU twice today). dev-b = main 25df19f + B, builds, cook-only PASS.
+Updated 2026-11-13 22:45 CET (H40.8). The evolution loop (R-0047, A-to-B-0022): each lane does one evolution on a track, proves it, proposes the next three. One editor at a time on B (two hung the GPU twice today). dev-b = main 3b496c2 + B, builds; cook-only PASS on f86aed0 + B.
 
 ## Running
 
 | Lane | What | Editor | Started | Due | Report (when done) |
 |---|---|---|---|---|---|
-| QA4 | Track BQ1 (the quality of B's implementation): the play-through's acceptance lines on the vision's build (main 25df19f), every take against its event under the new contact model (bump, stumble, 60 to 150 frame knockdowns, a board hit in the same frame as a knockdown, the cross-check under the cone, abilities), the wall rule beside the new benches, the Blueprint's cost per call | 8002, the main tree, **the only editor** | 21:05 | 21:55 | `status/QA4-report.md` |
-| SKF21 | Track BF1 (the figure plays the vision), Blender: four stumbles by direction around 16 frames, `Board_Fall_Front` / `_Back`, `Stop_Hard`; `skf/export21` | none | 20:52 | 21:45 | `status/B-skater-skf.md`, twenty-first pass |
-| AR1 | Track BF2 (the arena and the clay look), Blender: timber stands with a clay crowd for the apron beyond the boards, a corner piece, a barn scoreboard housing; `C:/Users/kazda/jam/arena-lab/` | none | 21:00 | 22:00 | `status/AR1-report.md` |
-| AU10 | Track BF3 (hits you hear and see), generation: the four ability sounds, deke, stumble, brake, a board fall; the 72 commentator lines in the accepted voice and a hockey line for `lose.blowout.01` | none | 20:55 | 21:45 | `status/AU10-report.md` |
-| BR4 | The banner's K reads as an X (A-to-B-0021): a clear stem, the diagonals meeting it; banner, logo, alpha cuts | none | 20:50 | 21:25 | `status/BR4-report.md` |
+| AU11 | Track BF3 (hits you hear and see): the 73 commentator waves beside the bank (the 72 that device A's build shows as captions without sound, and the new `lose.blowout.01`); `MS_ability` by kind, `MS_deke`, the stumble, the hard stop, the fall into the boards; the operator's mix rule kept | 8002, the main tree, **the only editor** | 22:40 | 23:40 | `status/AU11-report.md` |
+| SKF24 | Track BF1 (the figure plays the vision), Blender: no pops between takes, a heavier clay fall, a sprint stride; `skf/export24` | none | 22:10 | 23:00 | `status/B-skater-skf.md`, twenty-fourth pass |
 
 ## Waiting for the operator's ears or eyes (pages on device B)
 
 | Page | What to decide |
 |---|---|
-| **`C:Userskazdajameviewindex.html`** | the operator's visual review: concept against engine stills for the P4 experiment and the clay tier, rebuilt as lanes file stills (`node C:Userskazdajameviewuild.mjs`) |
-| `C:/Users/kazda/jam/audio-lab/crowd/pick.html` (ready since 23:00: 17 takes; defaults pre-selected by measurement) | which crowd takes: up to three cheers for a goal, one each for the other situations |
-| `C:Userskazdajamaudio-labeadypicks.html` | two boosted takes and three loops of the first audio picks (used as delivered until told otherwise) |
+| **`C:/Users/kazda/jam/review/index.html`** | the visual review, newest rows first: tonight's contact outcomes, the banner with the K fixed, the stands and crowd (rebuilt by `node C:/Users/kazda/jam/review/build.mjs`) |
+| `C:/Users/kazda/jam/audio-lab/verbs/pick.html` | the ability, deke, stumble, stop and board-fall sounds (nobody has heard them) |
+| `C:/Users/kazda/jam/audio-lab/commentary-rough/listen.html` | the 73 new commentator lines (nobody has heard them; 15 run over 3 s) |
+| `C:/Users/kazda/jam/audio-lab/tackle/pick.html` | the tackle sounds and the rough crowd takes (chant, groan, goal reaction: not imported until heard) |
+| `C:/Users/kazda/jam/arena-lab/out/renders/ar1-gamecam-crowd.png` | how full the stands should be (half full is the default) |
 
-## Queued (needs an editor slot)
+## Queued (needs the editor, in this order)
 
 | Lane | What | Waits for |
 |---|---|---|
-| SK21 | `skf/export21` into both scripted figures: the stumbles on `PlayHitReaction` (and on `PlayStumble` when the other device adds it), the board falls when `PlayBoardHit` arrives with a knockdown, `Stop_Hard` | the editor, after QA4 and SKF21 |
-| B40 | Effects: `NS_ability` by kind, `NS_deke`, the brake's spray; chips as short streaks if the operator still reads bubbles | the editor |
-| AU11 | Import AU10: `MS_ability`, `MS_deke`, stumble, brake, board fall; the 73 commentator waves | the editor |
-| AR2 | Import AR1's stands and crowd into `JamAssets/Arena` and place them in `LR_P3_Clay`; readability re-measured | the editor |
-| BS1 | The four jobs moved from A (A-to-B-0022): the clean-machine test of H26, the video with sound, joined play A to B, B's half of the dev log | the operator (the zip, both ends, his word on the transcripts) |
+| SK23 | `skf/export23` (and 24 if it is ready) into both scripted figures: light and heavy falls, `GetUp_Snap`, the get-up from sitting against the wall; the board fall's mesh shifted to meet the wall (31 cm short today); the lean-in of the hard stop counted before it is shown; the figures in play at the window's resolution (closes B-to-A-0039 on B's side) | the editor, after AU11 |
+| B40 | Effects: `NS_ability` by kind, `NS_deke`, the stop's spray; a longer cross-check mark; chips as short streaks if the operator still reads bubbles | the editor |
+| AR2 | AR1's stands and crowd into `JamAssets/Arena`, placed by `LR_P3_Clay` about 4 m beyond the boards, front row empty, half full, lit; readability of puck and figures re-measured | the editor |
+| BS1 | The four jobs moved from A (A-to-B-0022): the clean-machine test of a package, the video with sound, joined play A to B, B's half of the dev log | the operator (the zip: B cannot package; both ends of the match; his word on the transcripts) |
 
 ## Done today (newest first; every one has a report under `status/`)
 
+SK22 (22:22, build and cook-only PASS): the hard stop gated to an event (419 and 422 poses in 100 s to 72 and 76), the night figure through a 100 s match (appended to `status/SK21-report.md`) ·
+SK21 (22:02): the contact outcomes on both figures from `skf/export22`: the stumble on its own take (3 of 3), four falls into the boards with wall get-ups, quick get-ups under 80 frames, dekes and a burst wired (`status/SK21-report.md`) ·
+SKF21 to SKF23 (21:05 to 22:07, Blender): stumbles, board falls, the hard stop, quick and wall get-ups, dekes, a burst, three fall sizes (`skf/export21` to `export23`, 109 takes) ·
+QA4 (21:21, cook-only PASS): the play-through on the vision's build: knocked down 3 and 2 times (pass), nobody down again within 2 s (pass), the puck lost again inside half a second 3 and 9 times (fail, device A's) (`status/QA4-report.md`) ·
+AU10 (21:01): 16 effect takes for abilities, deke, stumble, stop, board fall; 73 commentator lines (`status/AU10-report.md`) ·
+AR1 (21:00, Blender): timber stands, a corner piece, a scoreboard housing, clay crowd figures: 12 FBX (`status/AR1-report.md`) ·
+BR4 (20:58): the banner's K with a clear stem; banner, logo and alpha cuts refiled (`status/BR4-report.md`) ·
 AU7 (15:14, build and cook-only PASS): the mix trimmed (the stick lift was 54 % of the mix energy: -11 dB; the board boom by Strength squared): plain match -24.0 LUFS at -5.9 dBTP, drill -21.6 at -3.0; `MS_bump` built; `MS_win` / `MS_save` synth layers corrected (`status/AU7-report.md`) ·
 SK16 (15:08, cook-only PASS): the wall rule for every hit direction and rink size, a contact shade that shows under a lying clay figure, night measured like clay, ten figures for look, three banner stills (`status/SK16-report.md`) ·
 BR2 (15:03): the 512 logo and a first banner on the operator's title (gouged into the ice), sizes down to 64 px (`status/BR2-report.md`; `C:/Users/kazda/jam/brand-lab/out/final/`) ·
