@@ -1,12 +1,12 @@
 # Device B lane board (the lead rewrites this file whenever a lane starts or reports)
 
-Updated 2026-11-13 05:38 CET (H23.6).
+Updated 2026-11-13 09:36 CEST (H27.6; device B slept from 05:20 to 09:30).
 
 ## Running
 
 | Lane | What | Editor | Started | Due | Report (when done) |
 |---|---|---|---|---|---|
-| B26 | Clay tier pass 6, the ice: the computed bulb reflections made irregular and soft instead of a regular comb (judged from the game camera first), the dark reflection band along the side boards, the pale right-hand key pool, a faint warm wash on the far wall; motion check | 8002, the main tree (**no merges into `C:/Users/kazda/jam/thirdjam` while it runs**) | 04:47 | 05:50 | `status/B26-report.md` |
+| SK10 | The night's figure work that does not depend on C-0001 v4 (the 144 takes with the ready and faceoff stance, the felt-and-stitch clay meshes, materials and maps: every changed file under `Skaters/` except the Blueprints) checked on `dev-b` with the v3 Blueprints in a real match, so it reaches `main` without waiting for the landing | 8000, `wt/b-vfx` | 09:40 | 10:40 | `status/SK10-report.md` |
 
 ## Waiting for the operator's ears or eyes (pages on device B)
 
@@ -24,6 +24,7 @@ Updated 2026-11-13 05:38 CET (H23.6).
 
 ## Done today (newest first; every one has a report under `status/`)
 
+B26 clay tier pass 6 (05:19; adopted 09:35, cook-only PASS): the computed bulb reflections vary per bulb (brightness, length, a shift along the streak) and soften with distance, fade from cameras above 3.5 m, overlaps go to a deeper gold; the two rows of identical bars at the faceoff are gone, in play the middle ice still shows many soft streaks side by side; a warm wash on the barn's lower walls (the room reads as lit, the side band on the ice reflects wood instead of black: softer, not gone); the right key pool 46 to 33 above the left; the amber stain under figures cannot be solved from the ice; motion check clean, night and broadcast measured unchanged (`status/B26-report.md`) ·
 SK9 (05:35, `dev-b-a45` 4441259, cook-only PASS): `BP_SkaterVisual_P4Lab` moved onto C-0001 v4 (it did not compile there: the cook-only check caught it); the faceoff stance of `skf/export10` on both scripted figures (knee spread 70 to 44 cm, thighs 29 to 43 degrees below horizontal: the "stool" at every puck drop is gone); combined clay stills of both figure types for the operator's choice; the clay aim holds kept two-handed (the upright export10 holds aimed one-handed at 9 of 15 cells: restored to export9) (`status/SK9-report.md` on the branch) ·
 SK8 (05:01): the ready stance of `skf/export9` on `BP_SkaterVisual_TB1` and `_TB1_P3`, an animation-only re-import of 144 takes proven equal to the export by name (two takes with a stale import index repaired); blade, hand, knockdown and reaction numbers as before; a Modulate contact plane under the two clay figures (`M_SkaterContact`), subtle (`status/SK8-report.md` on the branch) ·
 SKF10 (05:11): the faceoff stance rebuilt for both shipped styles and the clay aim lean reduced (`skf/export10`; `status/B-skater-skf.md`, tenth pass; in git with the next main-tree commit) ·

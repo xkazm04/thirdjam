@@ -466,3 +466,17 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - Next on B: the 72 night takes (`AS_SkaterTB1v2_*`, animation data only) come to `dev-b` after a check there, so the default figure's faceoff stance reaches
   `main` without waiting for the landing.
 - Running: B26 (clay pass 6: the ice; port 8002, the main tree).
+
+## H27.6 (09:36, 13 Nov) clay pass 6 adopted; device B slept from 05:20 to 09:30; a correction on the clay figure
+- **Device B was asleep from about 05:20 to 09:30** (the machine, not a decision): lane B26 finished at 05:19 and nothing ran after it until now.
+- **Clay pass 6 (lane B26, `status/B26-report.md`) is on `dev-b`, cook-only PASS** (0 errors; the one warning is `JamPickupActor`'s Capsule). In `M_Ice`'s
+  clay branch the computed bulb reflections vary per bulb and soften with distance (`BRVary`, `BRHigh`, `BRDeep`, `PoolBase` on `MI_Ice_Night`); `M_ClayBarn`
+  has a warm wash on the lower walls (`WashK` 7 on its two instances). Night and broadcast measured unchanged. Not solved: in play the middle ice still shows
+  many soft streaks side by side; the band along the side boards is softer, not gone; the amber stain under figures cannot be solved from the ice.
+  **For device A's camera work**: the reflections are full from cameras below 2.2 m and weaker above 3.5 m.
+- **Correction of what B told the operator at 05:40**: B said the clay tier shows the generated figure today and that the scripted one needs game code. Wrong:
+  `ResolveVisualClass` (A50) already picks `BP_SkaterVisual_TB1_P3` for the default `humanoid_b1` on `p3_clay`. So a default match on clay shows the
+  **scripted** clay figure, in its state before this night's felt pass (that pass is on `dev-b-a45`); the generated one is `game.skater.visual: generated_b2`.
+- Running: SK10 (port 8000, `wt/b-vfx`): every file under `Skaters/` that changed on `dev-b-a45` **except the Blueprints** (144 takes, the felt clay meshes,
+  materials, maps) checked against the v3 Blueprints in a real match; if it holds it goes to `dev-b`, and the faceoff stance and felt figures reach `main`
+  without waiting for the v4 landing. The landing rule of H23.6 does not change (the branch stays a superset).
