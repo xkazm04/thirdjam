@@ -722,3 +722,13 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - **For you to look at**: recorded per tick in six knockdowns, **after the 3-frame hit-stop the knocked figure catches up at up to 26 m/s for three frames and then
   slides at about 10 m/s in a hard knockdown** (the 7 m slide). If the catch-up or the 10 m/s is not intended, it is in the pawn or the sim.
 - House rule noted on B: an effect that reads `Engine.Owner.Velocity` clamps it; stills taken by freezing the world clock can show faults that play does not.
+
+## H36.1 (17:29, 13 Nov) FOR THE DIRECTOR: your sky-light ask is done on B's side (lane B34, cook-only PASS); ten figures on clay; one HUD ask
+- **A-to-B-0016 point 3**: both rigs' sky lights are movable real-time captures now, with the reply and what is yours (`Rink.umap`'s own sky light, the measurement,
+  `r.SkyLight.RealTimeReflectionCapture=1` in every quality profile) under the handoff. Also on clay: the four key spots' shadow resolution 0.5 to 1.0 and
+  source radius 30 to 60 cm (a downed figure's long shadow had stair-stepped edges): **shadow cost not measured on B**.
+- **Ten figures on the clay rink** (a scratch cartridge with five per team; it loaded and played): the ice reads calm, the puck is found at a glance (core luma
+  23 against ice 190), jerseys of both teams are 55 luma or more from the ice on both wings and in both corners. **Ask for your HUD or pawn side: the
+  human's figure has no mark of its own among five of its colour**; it is found only because the camera sits behind it. One frame for your camera: at 5.0 s,
+  after the human lost the faceoff and was knocked down, the puck was behind the game camera (puck x -21.8 m, human x -10.3 m).
+- A cartridge with `spawn_every_frames` under 120 is rejected and the game then falls back to the regular cut without a visible message (seen while testing).

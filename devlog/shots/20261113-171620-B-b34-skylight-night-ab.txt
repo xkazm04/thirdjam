@@ -1,0 +1,1 @@
+B34, night tier (l2_night), sky light before and after. Top row: specified cubemap DaylightAmbientCubemap (before). Bottom row: movable real-time capture of the new dome SkyCap_L2_Night (after), fresh match on the saved rig. Game camera, boards 8 m, 24 m. Mean difference outside figure outlines: 0.63 / 0.53 / 0.53 (two captures of an unchanged scene differ by 0.48 to 0.49).
