@@ -1,0 +1,1 @@
+SK8: Check_Hit_Back on BP_SkaterVisual_TB1_P3 after the re-import, 8 captures at slomo 0.012 (montage time and 60 Hz frame printed); the arms fling out between frames 3.8 and 5.1. Lane SK8, device B.

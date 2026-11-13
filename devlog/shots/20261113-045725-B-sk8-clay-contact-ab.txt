@@ -1,0 +1,1 @@
+SK8: soft dark contact under the clay figures, plane hidden / shown: P3C (BP_SkaterVisual_TB2_P3, the game's clay figure) and TB1_P3; M_SkaterContact (Modulate, Darkest 0.45), 70 x 50 cm plane at ice height; clay tier, frozen at t 1.2 s, camera 4.2 m behind, 2.1 m up, fov 50, after a cold editor start. Lane SK8, device B.

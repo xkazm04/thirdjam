@@ -1,0 +1,1 @@
+SK8 before: night tier, default figure BP_SkaterVisual_TB1 in a real match (seed 1, all_star); game camera at the faceoff (t 1.2 s, frozen); takes as committed (export5 / 7c). Lane SK8, device B, no reference pixels.

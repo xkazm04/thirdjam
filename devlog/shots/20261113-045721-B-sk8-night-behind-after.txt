@@ -1,0 +1,1 @@
+SK8 after: night tier, default figure BP_SkaterVisual_TB1 in a real match (seed 1, all_star); camera 6 m straight behind the standing wing (JamSkater_1), 3.5 m up, pitch -18, fov 70 (t 1.2 s); SKF pass 9 takes after the animation-only re-import. Lane SK8, device B, no reference pixels.

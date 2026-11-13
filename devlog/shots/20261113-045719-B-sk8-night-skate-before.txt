@@ -1,0 +1,1 @@
+SK8 before: night tier, default figure BP_SkaterVisual_TB1 in a real match (seed 1, all_star); game camera in open skating (t 2.18 s, about 8 m/s, frozen); takes as committed (export5 / 7c). Lane SK8, device B, no reference pixels.

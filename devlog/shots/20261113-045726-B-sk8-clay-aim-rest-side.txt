@@ -1,0 +1,1 @@
+SK8: aiming at rest after the re-import, side view; small figure on the left = clay BP_SkaterVisual_TB1_P3 (trunk about 40 deg), large on the right = night BP_SkaterVisual_TB1 (about 27 deg); left half aim 0 deg / 1.3 m, right half aim 35 deg / 1.6 m. Lane SK8, device B.

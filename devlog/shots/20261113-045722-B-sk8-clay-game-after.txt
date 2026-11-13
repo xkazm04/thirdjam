@@ -1,0 +1,1 @@
+SK8 after: clay tier, BP_SkaterVisual_TB1_P3 mirrored onto the six pawns of a real match (the game mode does not select it in this tree); contact plane hidden; game camera at the faceoff (t 1.2 s, frozen); SKF pass 9 takes after the animation-only re-import. Lane SK8, device B, no reference pixels.

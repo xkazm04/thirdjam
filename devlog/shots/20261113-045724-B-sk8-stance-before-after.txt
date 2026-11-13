@@ -1,0 +1,1 @@
+SK8 composite for the operator: night (BP_SkaterVisual_TB1) and clay (BP_SkaterVisual_TB1_P3), 6 m behind view / game camera at the faceoff / game camera skating; before (committed takes) above after (SKF pass 9 takes, animation-only re-import). The faceoff pose is unchanged by pass 9. Lane SK8, device B.
