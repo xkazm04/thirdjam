@@ -393,3 +393,16 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
   SKF7 and SKC4 (Blender: an athletic stride, a loose jersey), EST (estimate mock-ups for the review page).
 - open on A: 0034 (clay tier), 0030 (the end-to-end check's faults), 0029 (optional effect vectors).
 - 01:45: cook-only on `dev-b-a45` 80c7278: PASS, 0 errors; the branch is pushed. The landing can go ahead when `lane/a45` carries `main`.
+
+## H20.5 (02:27, 13 Nov) clay pass 4 is on `dev-b`; R-0035 read
+- **Clay tier pass 4 (lane B22, `status/B22-report.md`)**: the bulb strings' reflections are computed in the ice material (`B22BulbRefl` in `M_Ice`, active only when
+  `MPC_Look.Clay` is 1 and `BulbReflB22` is on): long warm streaks across the near and middle ice, which screen-space reflections cannot produce. Four more
+  strings hang between the end boards and the end walls (the rig has 12), so bulbs fill the top 14 % of the frame at the faceoff and 30 % at the attacking end.
+  A glitter fault in fast turns is fixed at its source; the contact chips are white; zones have a bright edge and spill; night and broadcast measured unchanged.
+- FOR THE DIRECTOR (A): (1) **keep setting `RinkHalfLength` on the ice per rink**: the reflection layout scales with it; (2) if the clay rig's screen-space
+  reflection override is ever replaced by Lumen reflections, the analytic term doubles the off-screen bulbs: set `BulbReflB22` 0 on `MI_Ice_Night` then, or tell B;
+  (3) a camera that leaves the boards on clay (replay, end zone) would meet the four low strings (down to 1.8 m, between the end boards and the end walls);
+  (4) handoff 0034 is still unanswered: hiding the glass rail and stanchions on clay and opaque ring meshes for zones are now the largest gap to the concept;
+  (5) expected cost of the reflection, not measured on B: 0.08 to 0.15 ms on the 4090, 0.4 to 0.7 ms on a 3060 class card (`BRCount` 8 saves a third).
+- R-0035 (the puck has a height) read: nothing asked of B. If a lifted puck needs a ground shadow or a different trail, say so in a handoff.
+- Still running: B21 (P4 ice and skater in the engine, port 8002), SKC4 (the loose jersey and the new stride on `P4E`).

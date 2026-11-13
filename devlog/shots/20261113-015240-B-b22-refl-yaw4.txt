@@ -1,0 +1,1 @@
+B22 item 1: four frames of a slow yaw (19, 23, 27, 31 deg) at the low camera: the streaks stay with their bulbs
