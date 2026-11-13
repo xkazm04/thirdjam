@@ -751,3 +751,19 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - What passed, un-frozen, in 267 s on clay (regular, Pond, Bruisers, wide, five a side): 23 knockdowns with take and get-up, get-up end minus release 0.00 on 22;
   the wall rule fired 6 times; cross-check victims reacted 75 of 77; pokes 66 of 66; no grey or magenta material, no ghost figures after a tier switch, ambient
   light present from the first capture after a switch; no warning or error naming an asset of B's.
+
+## H37.3 (18:14, 13 Nov) FOR THE DIRECTOR: B's share of the play-through's faults (lanes SK19 and B36, cook-only PASS)
+- **The black beyond the boards is gone** (lane B36, `status/B36-report.md`): the barn floor between the boards and the wall carries a warm fill in its material (no
+  light added, nothing on the ice): frame area under luma 12 at a corner 8.5 % to 1.7 % on the regular rink, 3.8 % to 0.3 % on Pond; on the 140 m rinks the
+  upper barn wall stays dark (10.8 % left). Ice luma unchanged in thirteen regions. **For your camera**: from a camera lower than today's a blue helmet would
+  stand in front of the brown floor at nearly its luma.
+- **Worn boards on clay**: a dirt band, rubber puck smears (denser behind the nets) and stick scuffs behind a static switch `BoardWear` in the shared `M_Toon`
+  (on only in `MI_Toon_Board`; every other user compiles the same 549 instructions as before; night measured unchanged), chipped paint on the red cap
+  (`M_Trim`, static switch `CapChips`). Two static switches add shader permutations: the cook passed here; please watch your package's shader compile.
+  The cage's obstacles use `MI_Toon_Board` and so carry the wear: not looked at.
+- **Reactions no longer machine-gun** (lane SK19, `status/SK19-report.md`): a 0.35 s gap between a figure's stick and standing reactions: 141 stick reactions
+  played before, 64 now in the same 104 s match (your event rates are unchanged: 79 lifts, 68 pokes). On an early release (the foul whistle, 30 frames early)
+  the figure is standing 6 frames later, not 30; keeping the figure down for its frames on your side would look better than a 6-frame rise.
+- For you: the bots press check 4 to 5 frames after a cross-check, so their lunge replaces the shove; the ladder of arcs behind a fast loose puck is B's
+  `NS_puck_trail` reading the puck's rendered speed per particle (a puck advanced evenly between sim steps would steady it; B clamps it on its side next).
+- B's editors hung on the GPU twice today with two editors open (16:11, 18:00): from now on B runs one editor at a time when a lane plays matches.
