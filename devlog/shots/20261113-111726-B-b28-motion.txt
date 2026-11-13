@@ -1,0 +1,1 @@
+B28 motion check, final assets, 30 consecutive frames per run: held game camera from the faceoff into play (far ice under the end lamps mean |d| 0.35, the lamps 0.17, near ice 0.26, walls 0.13) and a fast turn at 3 deg per frame; the new shades and the ice below them do not shimmer
