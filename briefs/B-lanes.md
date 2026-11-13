@@ -1,13 +1,12 @@
 # Device B lane board (the lead rewrites this file whenever a lane starts or reports)
 
-Updated 2026-11-13 04:08 CET (H22.2).
+Updated 2026-11-13 04:42 CET (H22.7).
 
 ## Running
 
 | Lane | What | Editor | Started | Due | Report (when done) |
 |---|---|---|---|---|---|
 | SK8 | The ready stance on the two shipped scripted figures: an animation-only re-import of `skf/export9` (72 takes each) onto `BP_SkaterVisual_TB1` (night, the default) and `_TB1_P3` (clay), with blade, hand, knockdown and reaction numbers before and after; a soft dark contact plane under the two clay figures | 8000, tree `wt/b-a45` (branch `dev-b-a45`) | 04:00 | 05:40 | `status/SK8-report.md` on `dev-b-a45` |
-| B25 | P4 lab at the game camera: the side lamp banks' reflections lie on the ice as white bars brighter than the figures; make them separate soft streaks along the whole rink, help the figures read at that size (rim, trims, number), decide the grounding (shadowed lamps against the blob); stills at the game camera | 8002, tree `wt/b-vfx` (**no git in that tree while it runs**) | 04:12 | 05:20 | `status/B25-report.md` |
 
 ## Waiting for the operator's ears or eyes (pages on device B)
 
@@ -25,6 +24,7 @@ Updated 2026-11-13 04:08 CET (H22.2).
 
 ## Done today (newest first; every one has a report under `status/`)
 
+B25 P4 lab at the game camera (04:36): the white bars on the ice gone (side banks clustered and dimmed, glints 4000 to 120 cd, overhead specular 0.2, softer and dimmer ice reflections from cameras above 2.5 to 4 m; the concept framing unchanged), brightest ice patch 246 to about 170 at centre; trim and team glow on the lab figure (blue jersey luma 17 to about 51 against the night tier's 66); 7 shadowed lamps, no blob; left: end zones and boards dark from the game camera, the rig does not scale to the wide rink, no back number on the lab figure (`status/B25-report.md`) ·
 B23 clay tier pass 5 (04:02): the glass rail, stanchions and pane no longer draw on clay (`MI_Toon_GlassRail` on its own masked parent `M_Toon_Rail`; `MI_Glass` `ClayGlassK` 0), a matte red board cap (`M_Trim` clay path), the white blob on the ice gone (it was a fill light's mirror image: the six fills have no specular now), the streaks carried through the key pools, a contact shade and warm band at the board foot, far zone rings hold their width; night and broadcast measured unchanged; left: a dark reflection band along the side boards, rings that cannot glow outside their decal (`status/B23-report.md`, handoff 0035; cook-only result in `status/B.md`) ·
 B24 P4 lab third pass (03:56): the posture-fixed `P4E` re-imported (`skc/p4/P4E/export3`), the aim layer of `ABP_SkaterGen_P4E` from `spine_03` so the stride's lean shows (trunk 37 to 45 degrees at full stride; the blade then lands up to about 20 cm from its aim point at full stride), opponents in a ready stance, the head level in the stop, the face-down hem fixed; new hero stills `b24-*`; not fixed: the lamp reflections as white bars at the game camera, the top hand as a lump on the upper back from directly behind, stiff cloth; the lane puts the skater at about 70 % (`status/B24-report.md`; cook-only PASS) ·
 SKC5 `P4E` retargeted from the posture-fixed takes, lean and hand placement measured on the figure, the hem's back panel re-weighted (`status/B-skater-p4-figure.md`, fifth pass; in git with the next main-tree commit) ·

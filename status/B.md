@@ -447,3 +447,10 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - Blender passes in git with this commit: SKF8 and SKF9 (`status/B-skater-skf.md`), SKC5 (`status/B-skater-p4-figure.md`).
 - Running: SK8 (the ready stance on the two shipped scripted figures, branch `dev-b-a45`, port 8000, due 05:40).
 - 04:07: cook-only on the main tree (clay pass 5 with the P4 third pass merged): PASS, 0 errors; pushed.
+
+## H22.7 (04:42, 13 Nov) P4 lab at the game camera
+- Lane B25 (`status/B25-report.md`): the lamp reflections no longer lie on the ice as white bars at the game camera; the lab figures read better at that size.
+  Stills: `devlog/shots/20261113-043457-B-b25-game-ab.jpg`, `-043511-B-b25-game-best.jpg`. Lab assets only (`shipped` n); materials and the lab rig, no skater asset.
+- Known limits of the lab if it were to become a tier: the rig is placed for the 90 x 45 rink (the wide cut is much darker), end zones are dark from the game
+  camera, no back number on the lab figure, nothing selectable from the game.
+- Running: SK8 (ready stance on the shipped scripted figures, `dev-b-a45`, port 8000, due 05:40).
