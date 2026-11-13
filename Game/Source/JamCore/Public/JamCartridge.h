@@ -76,6 +76,12 @@ struct JAMCORE_API FJamSkaterConfig
 	// within reach_m of it (the human included); a higher puck passes. reach_m 0 = no save by height (the body and the blade stop pucks as before).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double GoalieReachM = 0.9;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double GoalieBlockHeightM = 0.4;   // Director calibration 01:30 (R-0035): below the 0.61 bar, so a half-charged shot (0.45) clears the stance and stays under the bar; at 0.7 the stance saved everything the net could take and the novice stopped scoring in time
+	// game.skater.spin (lane A51, R-0034): E / gamepad B. A full turn over frames, cooldown_frames before the next, speed x speed_mult while it runs,
+	// stamina_cost of the sprint bar taken at the start (refused with an empty bar). frames 0 = off.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 SpinFrames = 24;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 SpinCooldownFrames = 90;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double SpinSpeedMult = 0.7;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double SpinStaminaCost = 0.25;
 };
 
 // game.stick (R-0013, lane A16): the mouse / right-stick aimed stick.
@@ -84,7 +90,7 @@ struct JAMCORE_API FJamStickConfig
 {
 	GENERATED_BODY()
 	// How far the blade reaches from the skater's edge at full aim, metres.
-	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double ReachM = 1.2;   // R-0022 point 3 (was 1.6)
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double ReachM = 1.2;   // R-0022 point 3 (1.6 before); lane A51 (R-0034): the range is 0.6..1.6; the brief's 1.1 halved the passes the regular player receives at pro (STICK.md section 6), so 1.2 stays
 	// Frames after a poke press during which the blade reaching the puck takes it cleanly.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 PokeWindowFrames = 8;
 	// Centre-to-centre distance (beyond the two bodies) within which a stick lift strips the carrier.
@@ -102,6 +108,12 @@ struct JAMCORE_API FJamStickConfig
 	// commits the crease back for DekeCommitFrames; a shot inside that window aims at the post on the deke side. offset_m 0 = off.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double DekeOffsetM = 1.0;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 DekeCommitFrames = 15;
+	// game.stick.sweep (lane A51, R-0034): the carried puck follows the blade every frame; an aim that moves more than min_deg_per_frame counts as a
+	// sweep and shields the puck for shield_frames from a poke on the side it left; a defending bot pokes at where the puck sat on the carrier's body
+	// bot_react_frames ago (-1 = absent: by the difficulty profile, rookie 14, pro 8, all_star 5). shield_frames 0 = no shield.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double SweepMinDegPerFrame = 6.0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 SweepShieldFrames = 12;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 SweepBotReactFrames = -1;
 };
 
 USTRUCT(BlueprintType)

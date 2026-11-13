@@ -1,0 +1,62 @@
+[
+ {
+  "run": "l2_night_quiet",
+  "tier": "l2_night",
+  "boot_s": 2.03,
+  "loadmap_s": 0.146,
+  "rig_s": 0.199,
+  "first_drop_s": 1.74,
+  "pso_misses": 21,
+  "missing_packages": [
+   "/JamAssets/VFX/NS_deke",
+   "/JamAssets/Audio/MS_deke",
+   "/JamAssets/Audio/MS_crowd_bed",
+   "/Game/UI/T_UI_ScorePlate"
+  ]
+ },
+ {
+  "run": "p3_clay",
+  "tier": "p3_clay",
+  "boot_s": 2.12,
+  "loadmap_s": 0.143,
+  "rig_s": 0.157,
+  "first_drop_s": 1.73,
+  "pso_misses": 26,
+  "missing_packages": [
+   "/JamAssets/VFX/NS_deke",
+   "/JamAssets/Audio/MS_deke",
+   "/JamAssets/Audio/MS_crowd_bed",
+   "/Game/UI/T_UI_ScorePlate"
+  ]
+ },
+ {
+  "run": "p4_broadcast",
+  "tier": "p4_broadcast",
+  "boot_s": 2.03,
+  "loadmap_s": 0.137,
+  "rig_s": 0.188,
+  "first_drop_s": 1.72,
+  "pso_misses": 22,
+  "missing_packages": [
+   "/JamAssets/VFX/NS_deke",
+   "/JamAssets/Audio/MS_deke",
+   "/JamAssets/Audio/MS_crowd_bed",
+   "/Game/UI/T_UI_ScorePlate"
+  ]
+ },
+ {
+  "run": "l1_day_quiet",
+  "tier": "l1_day",
+  "boot_s": 2.16,
+  "loadmap_s": 0.145,
+  "rig_s": 0.159,
+  "first_drop_s": 1.64,
+  "pso_misses": 17,
+  "missing_packages": [
+   "/JamAssets/VFX/NS_deke",
+   "/JamAssets/Audio/MS_deke",
+   "/JamAssets/Audio/MS_crowd_bed",
+   "/Game/UI/T_UI_ScorePlate"
+  ]
+ }
+]

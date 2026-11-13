@@ -1,0 +1,262 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "readability",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T01:22:10.482Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "readability",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.regular-l2-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.regular-l2-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.regular-l1-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.regular-l1-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.regular-l3-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "F",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.regular-l3-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "distance": 6,
+      "thumbnails": [],
+      "prompt_chars": 2912,
+      "usage": {
+        "prompt": 7629,
+        "output": 1920,
+        "thoughts": 0,
+        "total": 9549,
+        "calls": 1
+      },
+      "cost_usd_est": 0.01292,
+      "ms": 18320,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "Not visible anywhere on the ice surface or near either player."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "Neither player visibly possesses a puck."
+              },
+              "team_colours": {
+                "score": 4,
+                "evidence": "The foreground skater wears saturated cyan-blue with dark outlines while the distant opponent at center ice is a distinct warm orange."
+              },
+              "far_net": {
+                "score": 4,
+                "evidence": "Located at center top, roughly 55 pixels wide, rendered as a clear red rectangular frame with a yellow target indicator hovering above."
+              },
+              "zone_strips": {
+                "score": 5,
+                "evidence": "A strong dark red center line and thin blue neutral zone lines stretch across the full width of the rink with high contrast."
+              }
+            },
+            "first_look": "Foreground blue skater inside blue selection ring",
+            "noise": [
+              "High-contrast concentric target-like ice surface shading circles",
+              "Bright yellow dash line atop the rink perimeter boards",
+              "Bottom keybind text overlay bar"
+            ],
+            "overall": 3
+          },
+          {
+            "label": "Still B",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "Not visible on the ice or around the player's stick."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "No puck is attached to or near the blue skater."
+              },
+              "team_colours": {
+                "score": 2,
+                "evidence": "Only one team colour (deep cyan-blue on skater #7) is present in the field of play, with orange only appearing in the HUD scorebox."
+              },
+              "far_net": {
+                "score": 1,
+                "evidence": "The far net is not visible; only a close-up foreground red net frame is cut off on the left."
+              },
+              "zone_strips": {
+                "score": 4,
+                "evidence": "A red goal line runs horizontally across the lower frame and cuts vertically near the skater's skate with strong contrast against the light ice."
+              }
+            },
+            "first_look": "Large red goal frame on the lower left",
+            "noise": [
+              "Over-bright yellow LED strip on the rink board ledge",
+              "Mounted red-and-white sensor box on the board glass",
+              "Subtitled play commentary text box below the player ring"
+            ],
+            "overall": 2
+          },
+          {
+            "label": "Still C",
+            "elements": {
+              "puck": {
+                "score": 2,
+                "evidence": "A tiny dark black dot sits on the center red line, but it is only around 6 pixels wide and easily confused with a faceoff dot."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "Neither the blown-out blue skater nor the distant orange figure holds the puck."
+              },
+              "team_colours": {
+                "score": 3,
+                "evidence": "The foreground skater is washed-out pastel sky blue and the tiny distant dot at the far net is pale orange, separated adequately but weakened by overexposure."
+              },
+              "far_net": {
+                "score": 2,
+                "evidence": "Located at center top, roughly 50 pixels wide, but severely washed out into a faint pinkish wireframe by bright arena lighting."
+              },
+              "zone_strips": {
+                "score": 5,
+                "evidence": "The dark red center line and horizontal blue boundary line are sharply delineated across the pale ice surface."
+              }
+            },
+            "first_look": "Overexposed sky-blue foreground skater",
+            "noise": [
+              "Blinding white glare along the far perimeter boards",
+              "Bottom keybind prompt bar",
+              "Distance indicator and marker above the washed-out net"
+            ],
+            "overall": 2
+          },
+          {
+            "label": "Still D",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "Not visible anywhere on the overexposed ice surface."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "The skater does not carry or possess any visible puck."
+              },
+              "team_colours": {
+                "score": 2,
+                "evidence": "Only a single washed-out light-blue skater is visible; the opposing orange team is missing entirely from the rink."
+              },
+              "far_net": {
+                "score": 1,
+                "evidence": "Not visible; only a washed-out coral-pink near goal frame occupies the left corner."
+              },
+              "zone_strips": {
+                "score": 4,
+                "evidence": "A dark red ice strip crosses cleanly along the bottom and angles past the skater's skates."
+              }
+            },
+            "first_look": "Washed-out coral net frame and glowing boards",
+            "noise": [
+              "Severe white bloom across the upper board wall and ice",
+              "Bright white camera block sitting on the top dasher rail",
+              "Floating speech bubble 'Rimmed around the back.'"
+            ],
+            "overall": 2
+          },
+          {
+            "label": "Still E",
+            "elements": {
+              "puck": {
+                "score": 2,
+                "evidence": "A minute black speck resting on the center red line spans roughly 6 pixels and resembles an ice marking more than a puck."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "No skater is touching or carrying the puck."
+              },
+              "team_colours": {
+                "score": 3,
+                "evidence": "Foreground player is pastel glowing cyan-blue while the far figure is a tiny speck of light orange, distinguishable only by HUD context."
+              },
+              "far_net": {
+                "score": 2,
+                "evidence": "Centered in the upper background, about 50 pixels wide, but heavily desaturated into a pale pink frame under high exposure."
+              },
+              "zone_strips": {
+                "score": 5,
+                "evidence": "The deep red center line and transverse blue zone line provide strong linear contrast against the uniform ice."
+              }
+            },
+            "first_look": "Glowing cyan back of the foreground player",
+            "noise": [
+              "Intense board glare washing out the upper boundary wall",
+              "High-contrast UI input prompts pinned to the bottom edge",
+              "Distance floating text '49 m' overlapping the net"
+            ],
+            "overall": 2
+          },
+          {
+            "label": "Still F",
+            "elements": {
+              "puck": {
+                "score": 1,
+                "evidence": "Not visible anywhere on the surface."
+              },
+              "carrier": {
+                "score": 1,
+                "evidence": "No puck exists on the stick or skates of the skater."
+              },
+              "team_colours": {
+                "score": 2,
+                "evidence": "Only one team member is on screen, shown in heavily overexposed light cyan-blue."
+              },
+              "far_net": {
+                "score": 1,
+                "evidence": "Not visible; only the near goal in the lower-left is rendered."
+              },
+              "zone_strips": {
+                "score": 4,
+                "evidence": "Dark red goal lines are clearly readable against the bright ice near the skater and along the bottom."
+              }
+            },
+            "first_look": "Intensely bright yellow-white board strip",
+            "noise": [
+              "Blown-out white and yellow lighting strip along the boards",
+              "Coral-coloured goal post bloom on the left",
+              "Mounted light fixture box along the upper dasher"
+            ],
+            "overall": 2
+          }
+        ]
+      },
+      "markdown": "**eyes/readability** A=hockey.regular-l2-faceoff.jpg B=hockey.regular-l2-farnet.jpg C=hockey.regular-l1-faceoff.jpg D=hockey.regular-l1-farnet.jpg E=hockey.regular-l3-faceoff.jpg F=hockey.regular-l3-farnet.jpg at 6 m (gemini-3.8-flash, in 7629 out 1920 tokens, ~$0.0129, 18.3 s)\n- stills:\n  - label: Still A; first_look: Foreground blue skater inside blue selection ring; overall: 3\n    - elements:\n      - puck: score 1, evidence Not visible anywhere on the ice surface or near either player.\n      - carrier: score 1, evidence Neither player visibly possesses a puck.\n      - team_colours: score 4, evidence The foreground skater wears saturated cyan-blue with dark outlines while the distant opponent at center ice is a distinct warm orange.\n      - far_net: score 4, evidence Located at center top, roughly 55 pixels wide, rendered as a clear red rectangular frame with a yellow target indicator hovering above.\n      - zone_strips: score 5, evidence A strong dark red center line and thin blue neutral zone lines stretch across the full width of the rink with high contrast.\n    - noise: High-contrast concentric target-like ice surface shading circles; Bright yellow dash line atop the rink perimeter boards; Bottom keybind text overlay bar\n  - label: Still B; first_look: Large red goal frame on the lower left; overall: 2\n    - elements:\n      - puck: score 1, evidence Not visible on the ice or around the player's stick.\n      - carrier: score 1, evidence No puck is attached to or near the blue skater.\n      - team_colours: score 2, evidence Only one team colour (deep cyan-blue on skater #7) is present in the field of play, with orange only appearing in the HUD scorebox.\n      - far_net: score 1, evidence The far net is not visible; only a close-up foreground red net frame is cut off on the left.\n      - zone_strips: score 4, evidence A red goal line runs horizontally across the lower frame and cuts vertically near the skater's skate with strong contrast against the light ice.\n    - noise: Over-bright yellow LED strip on the rink board ledge; Mounted red-and-white sensor box on the board glass; Subtitled play commentary text box below the player ring\n  - label: Still C; first_look: Overexposed sky-blue foreground skater; overall: 2\n    - elements:\n      - puck: score 2, evidence A tiny dark black dot sits on the center red line, but it is only around 6 pixels wide and easily confused with a faceoff dot.\n      - carrier: score 1, evidence Neither the blown-out blue skater nor the distant orange figure holds the puck.\n      - team_colours: score 3, evidence The foreground skater is washed-out pastel sky blue and the tiny distant dot at the far net is pale orange, separated adequately but weakened by overexposure.\n      - far_net: score 2, evidence Located at center top, roughly 50 pixels wide, but severely washed out into a faint pinkish wireframe by bright arena lighting.\n      - zone_strips: score 5, evidence The dark red center line and horizontal blue boundary line are sharply delineated across the pale ice surface.\n    - noise: Blinding white glare along the far perimeter boards; Bottom keybind prompt bar; Distance indicator and marker above the washed-out net\n  - label: Still D; first_look: Washed-out coral net frame and glowing boards; overall: 2\n    - elements:\n      - puck: score 1, evidence Not visible anywhere on the overexposed ice surface.\n      - carrier: score 1, evidence The skater does not carry or possess any visible puck.\n      - team_colours: score 2, evidence Only a single washed-out light-blue skater is visible; the opposing orange team is missing entirely from the rink.\n      - far_net: score 1, evidence Not visible; only a washed-out coral-pink near goal frame occupies the left corner.\n      - zone_strips: score 4, evidence A dark red ice strip crosses cleanly along the bottom and angles past the skater's skates.\n    - noise: Severe white bloom across the upper board wall and ice; Bright white camera block sitting on the top dasher rail; Floating speech bubble 'Rimmed around the back.'\n  - label: Still E; first_look: Glowing cyan back of the foreground player; overall: 2\n    - elements:\n      - puck: score 2, evidence A minute black speck resting on the center red line spans roughly 6 pixels and resembles an ice marking more than a puck.\n      - carrier: score 1, evidence No skater is touching or carrying the puck.\n      - team_colours: score 3, evidence Foreground player is pastel glowing cyan-blue while the far figure is a tiny speck of light orange, distinguishable only by HUD context.\n      - far_net: score 2, evidence Centered in the upper background, about 50 pixels wide, but heavily desaturated into a pale pink frame under high exposure.\n      - zone_strips: score 5, evidence The deep red center line and transverse blue zone line provide strong linear contrast against the uniform ice.\n    - noise: Intense board glare washing out the upper boundary wall; High-contrast UI input prompts pinned to the bottom edge; Distance floating text '49 m' overlapping the net\n  - label: Still F; first_look: Intensely bright yellow-white board strip; overall: 2\n    - elements:\n      - puck: score 1, evidence Not visible anywhere on the surface.\n      - carrier: score 1, evidence No puck exists on the stick or skates of the skater.\n      - team_colours: score 2, evidence Only one team member is on screen, shown in heavily overexposed light cyan-blue.\n      - far_net: score 1, evidence Not visible; only the near goal in the lower-left is rendered.\n      - zone_strips: score 4, evidence Dark red goal lines are clearly readable against the bright ice near the skater and along the bottom.\n    - noise: Blown-out white and yellow lighting strip along the boards; Coral-coloured goal post bloom on the left; Mounted light fixture box along the upper dasher"
+    }
+  ]
+}

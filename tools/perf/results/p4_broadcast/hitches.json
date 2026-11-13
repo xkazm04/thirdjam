@@ -1,0 +1,227 @@
+{
+ "trace": "C:\\Users\\kazda\\kiro\\thirdjam\\.claude\\worktrees\\a58\\tools\\perf\\out\\p4_broadcast\\trace.utrace",
+ "frames": 12327,
+ "from": 0,
+ "mean_ms": null,
+ "p99_ms": 17.210399999996184,
+ "max_ms": null,
+ "hitches": [
+  {
+   "frame_index": 357,
+   "t_s": 8.027,
+   "frame_ms": 163.3,
+   "tick_ms": 163.3,
+   "stack": [
+    "FEngineLoop::Tick 163.3ms",
+    "Frame 163.1ms",
+    "FrameTime 147.3ms",
+    "Tick_Engine 138.6ms",
+    "GameEngine Tick 138.6ms",
+    "STAT_UGameEngine_Tick_TickWorldTravel 136.9ms",
+    "UEngine::LoadMap 136.9ms",
+    "FTaskBase::TryRetractAndExecute 33.5ms",
+    "FAudioThreadTask.Flush 33.5ms",
+    "FAudioMixerPlatformSwappable_CheckAudioDeviceChange 0.0ms",
+    "FAudioMixerPlatformSwappable_CheckThreadedDeviceSwap 0.0ms"
+   ],
+   "game_thread_longest": [
+    "FrameTime 147.3ms",
+    "Tick_Engine 138.6ms",
+    "GameEngine Tick 138.6ms",
+    "STAT_UGameEngine_Tick_TickWorldTravel 136.9ms",
+    "UEngine::LoadMap 136.9ms",
+    "FTaskBase::TryRetractAndExecute 33.5ms"
+   ],
+   "other_threads": [
+    "Rendering Frames:Rendering Frame 357 185.9ms",
+    "Game Frames:Game Frame 357 163.1ms",
+    "GPU0-Compute0:RenderGraphExecute 106.0ms",
+    "GPU0-Compute0:SceneRender 35.8ms"
+   ]
+  },
+  {
+   "frame_index": 12149,
+   "t_s": 204.92,
+   "frame_ms": 130.7,
+   "tick_ms": 130.7,
+   "stack": [
+    "FEngineLoop::Tick 130.7ms",
+    "Frame 130.6ms",
+    "FrameTime 115.0ms",
+    "Deferred Tick Time 113.9ms",
+    "Tick_DeferredCommands 113.9ms",
+    "STAT_UEngine_TickDeferredCommands 113.9ms",
+    "HandleMemReportDeferredCommand 113.8ms",
+    "FTaskBase::TryRetractAndExecute 4.7ms",
+    "FSimpleDelegateGraphTask.GetPermanentStatsString_StatsThread 4.7ms"
+   ],
+   "game_thread_longest": [
+    "FrameTime 115.0ms",
+    "Deferred Tick Time 113.9ms",
+    "Tick_DeferredCommands 113.9ms",
+    "STAT_UEngine_TickDeferredCommands 113.9ms",
+    "HandleMemReportDeferredCommand 113.8ms",
+    "FrameTime 15.5ms"
+   ],
+   "other_threads": [
+    "Game Frames:Game Frame 12149 130.6ms",
+    "Rendering Frames:Rendering Frame 12149 115.1ms",
+    "GPU0-Compute0:RenderGraphExecute 108.0ms",
+    "Background Worker #2:Other TaskGraph Tasks 23.7ms"
+   ]
+  },
+  {
+   "frame_index": 983,
+   "t_s": 18.684,
+   "frame_ms": 122.6,
+   "tick_ms": 122.6,
+   "stack": [
+    "FEngineLoop::Tick 122.6ms",
+    "Frame 122.4ms",
+    "FrameTime 107.1ms",
+    "Deferred Tick Time 105.9ms",
+    "Tick_DeferredCommands 105.9ms",
+    "STAT_UEngine_TickDeferredCommands 105.9ms",
+    "HandleMemReportDeferredCommand 105.8ms",
+    "ConsoleCmd 4.8ms",
+    "FTaskBase::TryRetractAndExecute 4.4ms",
+    "FSimpleDelegateGraphTask.GetPermanentStatsString_StatsThread 4.4ms"
+   ],
+   "game_thread_longest": [
+    "FrameTime 107.1ms",
+    "Deferred Tick Time 105.9ms",
+    "Tick_DeferredCommands 105.9ms",
+    "STAT_UEngine_TickDeferredCommands 105.9ms",
+    "HandleMemReportDeferredCommand 105.8ms",
+    "FrameTime 15.3ms"
+   ],
+   "other_threads": [
+    "Game Frames:Game Frame 983 122.4ms",
+    "Rendering Frames:Rendering Frame 983 107.2ms",
+    "GPU0-Compute0:RenderGraphExecute 99.7ms",
+    "Background Worker #7:Other TaskGraph Tasks 29.2ms"
+   ]
+  },
+  {
+   "frame_index": 0,
+   "t_s": 2.027,
+   "frame_ms": 81.8,
+   "tick_ms": 81.8,
+   "stack": [
+    "FEngineLoop::Tick 81.8ms",
+    "Frame 78.4ms",
+    "FrameTime 61.6ms",
+    "Slate::Tick (Time and Widgets) 53.9ms",
+    "Total Slate Tick Time 53.9ms",
+    "Slate::DrawWindows 53.8ms",
+    "Slate_FlushFontCache 51.1ms",
+    "FlushRenderingCommands 50.7ms",
+    "Sync_RenderingThread 50.6ms",
+    "Frame Sync Time 50.6ms",
+    "GameThreadWaitForTask 50.5ms",
+    "Game thread idle time 50.5ms",
+    "FSimpleDelegateGraphTask.StatsGroupToGame 0.0ms"
+   ],
+   "game_thread_longest": [
+    "FrameTime 61.6ms",
+    "Slate::Tick (Time and Widgets) 53.9ms",
+    "Total Slate Tick Time 53.9ms",
+    "Slate::DrawWindows 53.8ms",
+    "Slate_FlushFontCache 51.1ms",
+    "FlushRenderingCommands 50.7ms"
+   ],
+   "other_threads": [
+    "Game Frames:Game Frame 0 78.2ms",
+    "Rendering Frames:Rendering Frame 0 49.1ms",
+    "GPU0-Graphics0:RenderGraphExecute 49.1ms",
+    "Foreground Worker #1:FExecuteRHIThreadTask 40.5ms"
+   ]
+  },
+  {
+   "frame_index": 361,
+   "t_s": 8.27,
+   "frame_ms": 78.7,
+   "tick_ms": 78.7,
+   "stack": [
+    "FEngineLoop::Tick 78.7ms",
+    "Frame 78.4ms",
+    "FrameTime 78.4ms",
+    "Sync_RenderingThread 77.1ms",
+    "Frame Sync Time 77.1ms",
+    "GameThreadWaitForTask 77.1ms",
+    "Game thread idle time 77.1ms"
+   ],
+   "game_thread_longest": [
+    "FrameTime 78.4ms",
+    "Sync_RenderingThread 77.1ms",
+    "Frame Sync Time 77.1ms",
+    "GameThreadWaitForTask 77.1ms",
+    "Game thread idle time 77.1ms",
+    "Tick_Engine 0.9ms"
+   ],
+   "other_threads": [
+    "Rendering Frames:Rendering Frame 360 78.7ms",
+    "Game Frames:Game Frame 361 78.4ms",
+    "GPU0-Graphics0:SceneRender 55.7ms",
+    "GPU0-Compute0:SceneRender 51.9ms"
+   ]
+  },
+  {
+   "frame_index": 11971,
+   "t_s": 201.911,
+   "frame_ms": 73.9,
+   "tick_ms": 73.9,
+   "stack": [
+    "FEngineLoop::Tick 73.9ms",
+    "Frame 73.6ms",
+    "FrameTime 59.4ms",
+    "FCoreDelegates::OnEndFrame 58.0ms",
+    "STAT_FCsvProfiler_EndFrame_Stop 58.0ms",
+    "STAT_FMsgLogf 0.0ms"
+   ],
+   "game_thread_longest": [
+    "FrameTime 59.4ms",
+    "FCoreDelegates::OnEndFrame 58.0ms",
+    "STAT_FCsvProfiler_EndFrame_Stop 58.0ms",
+    "FrameTime 14.2ms",
+    "FEngineLoop_UpdateTimeAndHandleMaxTickRate 14.2ms",
+    "Game thread tick wait time 14.1ms"
+   ],
+   "other_threads": [
+    "Game Frames:Game Frame 11971 73.6ms",
+    "Rendering Frames:Rendering Frame 11971 59.4ms",
+    "GPU0-Compute0:RenderGraphExecute 52.7ms",
+    "Background Worker #0:Other TaskGraph Tasks 24.2ms"
+   ]
+  },
+  {
+   "frame_index": 358,
+   "t_s": 8.19,
+   "frame_ms": 38.8,
+   "tick_ms": 38.8,
+   "stack": [
+    "FEngineLoop::Tick 38.8ms",
+    "Frame 38.5ms",
+    "FrameTime 38.3ms",
+    "Sync_RenderingThread 31.2ms",
+    "Frame Sync Time 31.2ms",
+    "GameThreadWaitForTask 31.1ms",
+    "Game thread idle time 31.1ms"
+   ],
+   "game_thread_longest": [
+    "FrameTime 38.3ms",
+    "Sync_RenderingThread 31.2ms",
+    "Frame Sync Time 31.2ms",
+    "GameThreadWaitForTask 31.1ms",
+    "Game thread idle time 31.1ms",
+    "Tick_Engine 6.5ms"
+   ],
+   "other_threads": [
+    "Rendering Frames:Rendering Frame 357 185.9ms",
+    "GPU0-Graphics0:SceneRender 42.3ms",
+    "Game Frames:Game Frame 358 38.4ms",
+    "GPU0-Graphics0:RenderGraphExecute 36.0ms"
+   ]
+  }
+ ]
+}

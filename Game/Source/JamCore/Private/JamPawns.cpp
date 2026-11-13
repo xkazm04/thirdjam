@@ -89,7 +89,7 @@ void UJamPlaceholderVisual::UpdateMotion_Implementation(float Speed, float TurnR
 	}
 }
 
-void UJamPlaceholderVisual::SetKnockedDown_Implementation(bool bInDown, float DirX, float DirZ)
+void UJamPlaceholderVisual::SetKnockedDown_Implementation(bool bInDown, float DirX, float DirZ, int32 KnockdownFrames)
 {
 	bDown = bInDown;
 	DownDir = FVector2D(DirX, DirZ);
@@ -154,9 +154,19 @@ void AJamSkater::SetupVisual(UObject* Visual, const FLinearColor& Colour, int32 
 	bWasDown = false;
 	bHadPuck = false;
 	bWasAtFaceoff = false;
+	bWasPinned = false;
 	LastCharge = 0.f;
 	LastAimDeg = 0.f;
 	LastAimReach = 0.f;
+}
+
+int64 AJamSkater::SimFrameForLog() const
+{
+	if (const UGameInstance* GI = GetGameInstance())
+	{
+		if (const UJamEventBus* Bus = GI->GetSubsystem<UJamEventBus>()) return Bus->GetSimFrame();
+	}
+	return -1;
 }
 
 void AJamSkater::InitSkater(int32 InSimIndex, int32 InTeam, const FLinearColor& Colour, int32 Number, UClass* VisualClass)
@@ -193,7 +203,33 @@ void AJamSkater::ApplySimFrame(const FJamSkaterState& S)
 	if (S.IsDown() != bWasDown)
 	{
 		bWasDown = S.IsDown();
-		IJamSkaterVisual::Execute_SetKnockedDown(V, bWasDown, static_cast<float>(S.KnockDir.X), static_cast<float>(S.KnockDir.Y));
+		// C-0001 v4: the down time rides along (KnockFrames is the whole knockdown on the frame it starts: StepSkater counts it down from the next step on).
+		IJamSkaterVisual::Execute_SetKnockedDown(V, bWasDown, static_cast<float>(S.KnockDir.X), static_cast<float>(S.KnockDir.Y), bWasDown ? S.KnockFrames : 0);
+	}
+	// Lane A45 (C-0001 v4, R-0031 point 1): B's four calls from the sim's read-outs (JamSim.h, never hashed). One JAMVIS line each, a few per minute, so B can read what was sent.
+	if (S.bBumpThisFrame && !S.IsDown())
+	{
+		IJamSkaterVisual::Execute_PlayHitReaction(V, static_cast<float>(S.BumpDir.X), static_cast<float>(S.BumpDir.Y));
+		UE_LOG(LogJamSim, Log, TEXT("JAMVIS hit frame=%lld skater=%d team=%d dir=(%.2f, %.2f) (PlayHitReaction: a collision at 3 m/s closing or more, no check landed)"),
+			SimFrameForLog(), S.Index, S.Team, S.BumpDir.X, S.BumpDir.Y);
+	}
+	if (S.bBoardHitThisFrame)
+	{
+		IJamSkaterVisual::Execute_PlayBoardHit(V);
+		UE_LOG(LogJamSim, Log, TEXT("JAMVIS board frame=%lld skater=%d team=%d (PlayBoardHit: the skater board event, 4 m/s and up)"), SimFrameForLog(), S.Index, S.Team);
+	}
+	if (S.bBoardPinned != bWasPinned)
+	{
+		bWasPinned = S.bBoardPinned;
+		IJamSkaterVisual::Execute_SetBoardPin(V, bWasPinned);
+		UE_LOG(LogJamSim, Log, TEXT("JAMVIS pin frame=%lld skater=%d team=%d on=%d board_frames=%d (SetBoardPin: 10 frames on the boards with an opponent within 1.2 m)"),
+			SimFrameForLog(), S.Index, S.Team, bWasPinned ? 1 : 0, S.BoardFrames);
+	}
+	if (S.StickHitResult != 0)
+	{
+		IJamSkaterVisual::Execute_PlayStickHit(V, S.StickHitResult == 2);
+		UE_LOG(LogJamSim, Log, TEXT("JAMVIS stickhit frame=%lld skater=%d team=%d lifted=%d (PlayStickHit: the carrier lost the puck to a clean %s)"),
+			SimFrameForLog(), S.Index, S.Team, S.StickHitResult == 2 ? 1 : 0, S.StickHitResult == 2 ? TEXT("lift") : TEXT("poke"));
 	}
 	if (S.bHasPuck != bHadPuck)
 	{
@@ -201,14 +237,18 @@ void AJamSkater::ApplySimFrame(const FJamSkaterState& S)
 		IJamSkaterVisual::Execute_SetHasPuck(V, bHadPuck);
 	}
 	// Contract: turn rate positive = turning left seen from above; the sim's yaw grows to the right (Unreal yaw).
-	IJamSkaterVisual::Execute_UpdateMotion(V, static_cast<float>(S.Vel.Size()), static_cast<float>(-S.YawRate),
-		FRotator(0.0, FMath::RadiansToDegrees(S.Yaw), 0.0));
+	// Lane A51 (R-0034): the spin is a yaw turn of the visual over the spin's frames (FJamSkaterState::SpinVisualYawDeg) through the existing facing call;
+	// the sim's own yaw keeps the body's line. The stick aim below is measured against the turned facing so the blade stays where the puck is.
+	const double SpinDeg = S.SpinVisualYawDeg();
+	const double VisualYaw = S.Yaw + FMath::DegreesToRadians(SpinDeg);
+	IJamSkaterVisual::Execute_UpdateMotion(V, static_cast<float>(S.Vel.Size()), static_cast<float>(-S.YawRate - (S.SpinFrames > 0 && S.SpinLength > 0 ? S.SpinDir * 2.0 * UE_DOUBLE_PI / (S.SpinLength * UJamSim::DT) : 0.0)),
+		FRotator(0.0, FMath::RadiansToDegrees(VisualYaw), 0.0));
 
 	// C-0001 v3 (B-to-A-0014): the stick verbs. Aim: the blade relative to the facing, positive = left (the sim's yaw grows to the right).
 	// Lane A49: smoothed and side-stable before it is sent (SmoothAimDeg); the reach follows with the same 6-frame approach.
 	{
 		const FVector2D D = S.BladePos - S.Pos;
-		const double Rel = FMath::UnwindRadians(FMath::Atan2(D.Y, D.X) - S.Yaw);
+		const double Rel = FMath::UnwindRadians(FMath::Atan2(D.Y, D.X) - VisualYaw);   // lane A51: against the spun facing
 		const float AimDeg = static_cast<float>(-FMath::RadiansToDegrees(Rel));
 		const float Reach = static_cast<float>(D.Size());
 		LastAimDeg = AimDeg;
@@ -293,7 +333,7 @@ void AJamSkater::ApplyRender(const FJamSkaterState& S, float Alpha)
 {
 	const FVector Loc = Lerp2D(S.PrevPos, S.Pos, Alpha, 0.0);
 	const double DYaw = FMath::UnwindRadians(S.Yaw - S.PrevYaw);
-	const double Yaw = S.PrevYaw + DYaw * Alpha;
+	const double Yaw = S.PrevYaw + DYaw * Alpha + FMath::DegreesToRadians(S.SpinVisualYawDeg());   // lane A51 (R-0034): the spin's turn of the figure
 	SetActorLocationAndRotation(Loc, FRotator(0.0, FMath::RadiansToDegrees(Yaw), 0.0));
 }
 

@@ -1,0 +1,36 @@
+frames 12294 from t=0s: mean 16.73 p99 17.70 max 168.35 ms; hitches > 33.3 ms: 7
+
+hitch frame#362 t=8.198s 168.4 ms (tick 168.4 ms)
+  stack: FEngineLoop::Tick 168.4ms > Frame 168.2ms > FrameTime 152.7ms > Tick_Engine 145.2ms > GameEngine Tick 145.2ms > STAT_UGameEngine_Tick_TickWorldTravel 143.5ms > UEngine::LoadMap 143.5ms > FTaskBase::TryRetractAndExecute 39.7ms > FAudioThreadTask.Flush 39.7ms > FAudioMixerPlatformSwappable_CheckAudioDeviceChange 0.0ms > FAudioMixerPlatformSwappable_CheckThreadedDeviceSwap 0.0ms
+  GT longest: FrameTime 152.7ms | Tick_Engine 145.2ms | GameEngine Tick 145.2ms | STAT_UGameEngine_Tick_TickWorldTravel 143.5ms | UEngine::LoadMap 143.5ms | FTaskBase::TryRetractAndExecute 39.7ms
+  other threads: Rendering Frames:Rendering Frame 362 193.5ms | Game Frames:Game Frame 362 168.2ms | GPU0-Compute0:RenderGraphExecute 107.5ms | GPU0-Compute0:SceneRender 42.6ms
+
+hitch frame#973 t=18.632s 125.7 ms (tick 125.7 ms)
+  stack: FEngineLoop::Tick 125.7ms > Frame 125.5ms > FrameTime 110.6ms > Deferred Tick Time 109.2ms > Tick_DeferredCommands 109.2ms > STAT_UEngine_TickDeferredCommands 109.2ms > HandleMemReportDeferredCommand 109.1ms > ConsoleCmd 4.9ms > FTaskBase::TryRetractAndExecute 4.5ms > FSimpleDelegateGraphTask.GetPermanentStatsString_StatsThread 4.5ms
+  GT longest: FrameTime 110.6ms | Deferred Tick Time 109.2ms | Tick_DeferredCommands 109.2ms | STAT_UEngine_TickDeferredCommands 109.2ms | HandleMemReportDeferredCommand 109.1ms | FrameTime 14.9ms
+  other threads: Game Frames:Game Frame 973 125.5ms | Rendering Frames:Rendering Frame 973 110.7ms | GPU0-Compute0:RenderGraphExecute 102.6ms | Background Worker #1:Other TaskGraph Tasks 28.7ms
+
+hitch frame#12116 t=204.783s 121 ms (tick 121 ms)
+  stack: FEngineLoop::Tick 121.0ms > Frame 120.8ms > FrameTime 105.6ms > Deferred Tick Time 104.4ms > Tick_DeferredCommands 104.4ms > STAT_UEngine_TickDeferredCommands 104.4ms > HandleMemReportDeferredCommand 104.3ms > FTaskBase::TryRetractAndExecute 4.9ms > FSimpleDelegateGraphTask.GetPermanentStatsString_StatsThread 4.9ms
+  GT longest: FrameTime 105.6ms | Deferred Tick Time 104.4ms | Tick_DeferredCommands 104.4ms | STAT_UEngine_TickDeferredCommands 104.4ms | HandleMemReportDeferredCommand 104.3ms | FrameTime 15.3ms
+  other threads: Game Frames:Game Frame 12116 120.8ms | Rendering Frames:Rendering Frame 12116 105.6ms | GPU0-Compute0:RenderGraphExecute 95.0ms | Background Worker #1:Other TaskGraph Tasks 22.2ms
+
+hitch frame#0 t=2.109s 87 ms (tick 87 ms)
+  stack: FEngineLoop::Tick 87.0ms > Frame 83.4ms > FrameTime 66.4ms > Slate::Tick (Time and Widgets) 57.8ms > Total Slate Tick Time 57.8ms > Slate::DrawWindows 57.8ms > Slate_FlushFontCache 55.1ms > FlushRenderingCommands 54.6ms > Sync_RenderingThread 54.6ms > Frame Sync Time 54.6ms > GameThreadWaitForTask 54.5ms > Game thread idle time 54.5ms > FSimpleDelegateGraphTask.StatsGroupToGame 0.1ms
+  GT longest: FrameTime 66.4ms | Slate::Tick (Time and Widgets) 57.8ms | Total Slate Tick Time 57.8ms | Slate::DrawWindows 57.8ms | Slate_FlushFontCache 55.1ms | FlushRenderingCommands 54.6ms
+  other threads: Game Frames:Game Frame 0 83.3ms | Rendering Frames:Rendering Frame 0 51.0ms | Foreground Worker #1:FExecuteRHIThreadTask 48.4ms | Foreground Worker #1:EndOfPipeTask 48.4ms
+
+hitch frame#365 t=8.433s 74.6 ms (tick 74.6 ms)
+  stack: FEngineLoop::Tick 74.6ms > Frame 74.3ms > FrameTime 74.2ms > Sync_RenderingThread 72.5ms > Frame Sync Time 72.5ms > GameThreadWaitForTask 72.5ms > Game thread idle time 72.5ms > FSimpleDelegateGraphTask.StatsGroupToGame 0.0ms
+  GT longest: FrameTime 74.2ms | Sync_RenderingThread 72.5ms | Frame Sync Time 72.5ms | GameThreadWaitForTask 72.5ms | Game thread idle time 72.5ms | Tick_Engine 1.2ms
+  other threads: Rendering Frames:Rendering Frame 364 74.6ms | Game Frames:Game Frame 365 74.3ms | GPU0-Graphics0:SceneRender 60.5ms | GPU0-Compute0:SceneRender 55.4ms
+
+hitch frame#11937 t=201.776s 55.9 ms (tick 55.9 ms)
+  stack: FEngineLoop::Tick 55.9ms > Frame 55.7ms > FrameTime 40.5ms > FCoreDelegates::OnEndFrame 39.3ms > STAT_FCsvProfiler_EndFrame_Stop 39.3ms > STAT_FMsgLogf 0.0ms
+  GT longest: FrameTime 40.5ms | FCoreDelegates::OnEndFrame 39.3ms | STAT_FCsvProfiler_EndFrame_Stop 39.3ms | FrameTime 15.1ms | FEngineLoop_UpdateTimeAndHandleMaxTickRate 15.1ms | Game thread tick wait time 15.1ms
+  other threads: Game Frames:Game Frame 11937 55.7ms | Rendering Frames:Rendering Frame 11937 40.5ms | GPU0-Compute0:RenderGraphExecute 33.0ms | Background Worker #4:Other TaskGraph Tasks 28.0ms
+
+hitch frame#363 t=8.367s 41 ms (tick 41 ms)
+  stack: FEngineLoop::Tick 41.0ms > Frame 40.7ms > FrameTime 40.5ms > Sync_RenderingThread 33.7ms > Frame Sync Time 33.7ms > GameThreadWaitForTask 33.6ms > Game thread idle time 33.6ms
+  GT longest: FrameTime 40.5ms | Sync_RenderingThread 33.7ms | Frame Sync Time 33.7ms | GameThreadWaitForTask 33.6ms | Game thread idle time 33.6ms | Tick_Engine 6.3ms
+  other threads: Rendering Frames:Rendering Frame 362 193.5ms | GPU0-Compute0:RenderGraphExecute 107.5ms | GPU0-Graphics0:SceneRender 44.5ms | Game Frames:Game Frame 363 40.6ms

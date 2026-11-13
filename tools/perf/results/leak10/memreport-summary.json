@@ -1,0 +1,4887 @@
+[
+ {
+  "file": "Rink-Windows-11.13-02.27.31_Pid28776_Rink-Windows-13-02.27.31.memreport",
+  "physUsedMB": 1327.86,
+  "physPeakMB": 1382.86,
+  "objects": 32598,
+  "objTotalMB": 14.224,
+  "objResMB": 33.132,
+  "rhiTotalMB": 3910.83,
+  "rhiLines": [
+   {
+    "mb": 2048,
+    "name": "Reserved Buffer Memory (Uncommitted)"
+   },
+   {
+    "mb": 775.391,
+    "name": "UAV Texture Memory"
+   },
+   {
+    "mb": 512,
+    "name": "Reserved Texture Memory (Committed)"
+   },
+   {
+    "mb": 346.062,
+    "name": "Render Target 2D Memory"
+   },
+   {
+    "mb": 125.536,
+    "name": "Structured Buffer Memory"
+   },
+   {
+    "mb": 31.643,
+    "name": "Bindless Resource Heap"
+   },
+   {
+    "mb": 24.489,
+    "name": "Vertex Buffer Memory"
+   },
+   {
+    "mb": 21.824,
+    "name": "Texture 2D Memory"
+   },
+   {
+    "mb": 18.203,
+    "name": "Texture Cube Memory"
+   },
+   {
+    "mb": 4.402,
+    "name": "Byte Address Buffer Memory"
+   },
+   {
+    "mb": 1.379,
+    "name": "Bindless Sampler Heap"
+   },
+   {
+    "mb": 1.059,
+    "name": "Texture 3D Memory"
+   },
+   {
+    "mb": 0.661,
+    "name": "Index Buffer Memory"
+   },
+   {
+    "mb": 0.118,
+    "name": "Uniform Buffer Memory"
+   },
+   {
+    "mb": 0.062,
+    "name": "Render Target 3D Memory"
+   }
+  ],
+  "rhiTop": [
+   {
+    "name": "Shadow.Virtual.PhysicalPagePool",
+    "type": "Texture",
+    "mb": 512
+   },
+   {
+    "name": "TSR.History.Color",
+    "type": "Texture",
+    "mb": 127.5
+   },
+   {
+    "name": "GlobalDistanceField.PageObjectGridBuffer",
+    "type": "Buffer",
+    "mb": 112
+   },
+   {
+    "name": "Shadow.Virtual.HZBPhysicalPagePool",
+    "type": "Texture",
+    "mb": 85.38
+   },
+   {
+    "name": "Lumen.RadianceCache.FinalRadianceAtlas",
+    "type": "Texture",
+    "mb": 72.25
+   },
+   {
+    "name": "Lumen.SceneFinalLighting",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.Radiosity.TraceRadianceAtlas",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.RadianceCache.RadianceProbeAtlasTextureSource",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.Radiosity.SceneIndirectLighting",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.SceneDirectLighting",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "GlobalDistanceField.PageAtlas",
+    "type": "Texture",
+    "mb": 56
+   },
+   {
+    "name": "Lumen.RadianceCache.DepthProbeAtlasTexture",
+    "type": "Texture",
+    "mb": 32
+   },
+   {
+    "name": "Lumen.SceneDepth",
+    "type": "Texture",
+    "mb": 32
+   },
+   {
+    "name": "TSR.History.Metadata",
+    "type": "Texture",
+    "mb": 31.88
+   },
+   {
+    "name": "Lumen.RadianceCache.FinalRadianceAtlas",
+    "type": "Texture",
+    "mb": 21
+   }
+  ],
+  "classes": {
+   "TextureCube": {
+    "count": 1,
+    "numKB": 0.34,
+    "resKB": 16448
+   },
+   "Texture2D": {
+    "count": 39,
+    "numKB": 14.02,
+    "resKB": 14160
+   },
+   "VolumeTexture": {
+    "count": 3,
+    "numKB": 1.03,
+    "resKB": 1056
+   },
+   "Material": {
+    "count": 36,
+    "numKB": 25.27,
+    "resKB": 789.13
+   },
+   "SoundWave": {
+    "count": 349,
+    "numKB": 384.45,
+    "resKB": 393.99
+   },
+   "StaticMesh": {
+    "count": 11,
+    "numKB": 24.66,
+    "resKB": 271.95
+   },
+   "SkeletalMesh": {
+    "count": 1,
+    "numKB": 7.11,
+    "resKB": 205.76
+   },
+   "StaticMeshComponent": {
+    "count": 160,
+    "numKB": 277.14,
+    "resKB": 150.4
+   },
+   "BodySetup": {
+    "count": 27,
+    "numKB": 27.37,
+    "resKB": 140.08
+   },
+   "MaterialInstanceConstant": {
+    "count": 48,
+    "numKB": 48.02,
+    "resKB": 71.38
+   },
+   "NiagaraSystem": {
+    "count": 23,
+    "numKB": 135.25,
+    "resKB": 70.94
+   },
+   "MetaSoundSource": {
+    "count": 32,
+    "numKB": 872.62,
+    "resKB": 35.25
+   },
+   "NiagaraSpriteRendererProperties": {
+    "count": 39,
+    "numKB": 50.27,
+    "resKB": 34.12
+   },
+   "SkeletalMeshComponent": {
+    "count": 7,
+    "numKB": 70.49,
+    "resKB": 27.28
+   },
+   "ProceduralMeshComponent": {
+    "count": 13,
+    "numKB": 1361.37,
+    "resKB": 8.33
+   },
+   "AnimSequence": {
+    "count": 62,
+    "numKB": 170.36,
+    "resKB": 0.97
+   },
+   "NiagaraRibbonRendererProperties": {
+    "count": 1,
+    "numKB": 1.3,
+    "resKB": 0.34
+   },
+   "ScriptStruct": {
+    "count": 6995,
+    "numKB": 1311.56,
+    "resKB": 0
+   },
+   "AudioAnalyzerSubsystem": {
+    "count": 1,
+    "numKB": 0.08,
+    "resKB": 0
+   },
+   "DeviceProfile": {
+    "count": 187,
+    "numKB": 1782.32,
+    "resKB": 0
+   },
+   "NiagaraScript": {
+    "count": 128,
+    "numKB": 395.4,
+    "resKB": 0
+   },
+   "Enum": {
+    "count": 2342,
+    "numKB": 256.16,
+    "resKB": 0
+   },
+   "Class": {
+    "count": 5338,
+    "numKB": 3204.25,
+    "resKB": 0
+   },
+   "AudioWidgetSubsystem": {
+    "count": 1,
+    "numKB": 0.05,
+    "resKB": 0
+   },
+   "AudioDeviceNotificationSubsystem": {
+    "count": 1,
+    "numKB": 0.38,
+    "resKB": 0
+   },
+   "NiagaraDataInterfaceCurve": {
+    "count": 27,
+    "numKB": 14.39,
+    "resKB": 0
+   },
+   "NiagaraEmitter": {
+    "count": 40,
+    "numKB": 44.33,
+    "resKB": 0
+   },
+   "AudioPlatformSettings": {
+    "count": 1,
+    "numKB": 0.08,
+    "resKB": 0
+   },
+   "AudioSubsystemCollectionRoot": {
+    "count": 1,
+    "numKB": 0.05,
+    "resKB": 0
+   },
+   "AudioBusSubsystem": {
+    "count": 1,
+    "numKB": 0.26,
+    "resKB": 0
+   },
+   "DelegateFunction": {
+    "count": 630,
+    "numKB": 142.73,
+    "resKB": 0
+   },
+   "Package": {
+    "count": 890,
+    "numKB": 83.44,
+    "resKB": 0
+   },
+   "Function": {
+    "count": 13962,
+    "numKB": 3179.92,
+    "resKB": 0
+   },
+   "CameraAnimationCameraModifier": {
+    "count": 1,
+    "numKB": 0.09,
+    "resKB": 0
+   },
+   "NiagaraComponentPool": {
+    "count": 1,
+    "numKB": 0.16,
+    "resKB": 0
+   },
+   "CameraAnimationSequenceSubsystem": {
+    "count": 1,
+    "numKB": 0.08,
+    "resKB": 0
+   },
+   "StaticMeshActor": {
+    "count": 156,
+    "numKB": 108.47,
+    "resKB": 0
+   },
+   "AnimCurveCompressionSettings": {
+    "count": 1,
+    "numKB": 0.05,
+    "resKB": 0
+   },
+   "AnimCurveCompressionCodec_ACL": {
+    "count": 1,
+    "numKB": 0.04,
+    "resKB": 0
+   },
+   "AnimCurveMetaData": {
+    "count": 1,
+    "numKB": 0.16,
+    "resKB": 0
+   },
+   "AnimBoneCompressionSettings": {
+    "count": 1,
+    "numKB": 0.07,
+    "resKB": 0
+   },
+   "AnimBoneCompressionCodec_ACL": {
+    "count": 1,
+    "numKB": 0.06,
+    "resKB": 0
+   },
+   "AnimBlueprintGeneratedClass": {
+    "count": 1,
+    "numKB": 13.26,
+    "resKB": 0
+   },
+   "JamSkater": {
+    "count": 6,
+    "numKB": 5.22,
+    "resKB": 0
+   },
+   "BP_SkaterVisual_TB1_C": {
+    "count": 6,
+    "numKB": 6.33,
+    "resKB": 0
+   },
+   "ABP_SkaterTB1_C": {
+    "count": 6,
+    "numKB": 35.72,
+    "resKB": 0
+   },
+   "NiagaraComponent": {
+    "count": 1,
+    "numKB": 2.21,
+    "resKB": 0
+   },
+   "AudioComponent": {
+    "count": 4,
+    "numKB": 14.19,
+    "resKB": 0
+   }
+  }
+ },
+ {
+  "file": "Rink-Windows-11.13-02.27.31_Pid28776_Rink-Windows-13-02.27.57.memreport",
+  "physUsedMB": 1309.85,
+  "physPeakMB": 1382.86,
+  "objects": 32598,
+  "objTotalMB": 14.223,
+  "objResMB": 33.136,
+  "rhiTotalMB": 3910.386,
+  "rhiLines": [
+   {
+    "mb": 2048,
+    "name": "Reserved Buffer Memory (Uncommitted)"
+   },
+   {
+    "mb": 775.391,
+    "name": "UAV Texture Memory"
+   },
+   {
+    "mb": 512,
+    "name": "Reserved Texture Memory (Committed)"
+   },
+   {
+    "mb": 346.062,
+    "name": "Render Target 2D Memory"
+   },
+   {
+    "mb": 125.142,
+    "name": "Structured Buffer Memory"
+   },
+   {
+    "mb": 31.643,
+    "name": "Bindless Resource Heap"
+   },
+   {
+    "mb": 24.489,
+    "name": "Vertex Buffer Memory"
+   },
+   {
+    "mb": 21.824,
+    "name": "Texture 2D Memory"
+   },
+   {
+    "mb": 18.203,
+    "name": "Texture Cube Memory"
+   },
+   {
+    "mb": 4.4,
+    "name": "Byte Address Buffer Memory"
+   },
+   {
+    "mb": 1.379,
+    "name": "Bindless Sampler Heap"
+   },
+   {
+    "mb": 1.059,
+    "name": "Texture 3D Memory"
+   },
+   {
+    "mb": 0.661,
+    "name": "Index Buffer Memory"
+   },
+   {
+    "mb": 0.071,
+    "name": "Uniform Buffer Memory"
+   },
+   {
+    "mb": 0.062,
+    "name": "Render Target 3D Memory"
+   }
+  ],
+  "rhiTop": [
+   {
+    "name": "Shadow.Virtual.PhysicalPagePool",
+    "type": "Texture",
+    "mb": 512
+   },
+   {
+    "name": "TSR.History.Color",
+    "type": "Texture",
+    "mb": 127.5
+   },
+   {
+    "name": "GlobalDistanceField.PageObjectGridBuffer",
+    "type": "Buffer",
+    "mb": 112
+   },
+   {
+    "name": "Shadow.Virtual.HZBPhysicalPagePool",
+    "type": "Texture",
+    "mb": 85.38
+   },
+   {
+    "name": "Lumen.RadianceCache.FinalRadianceAtlas",
+    "type": "Texture",
+    "mb": 72.25
+   },
+   {
+    "name": "Lumen.SceneFinalLighting",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.Radiosity.SceneIndirectLighting",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.RadianceCache.RadianceProbeAtlasTextureSource",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.Radiosity.TraceRadianceAtlas",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.SceneDirectLighting",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "GlobalDistanceField.PageAtlas",
+    "type": "Texture",
+    "mb": 56
+   },
+   {
+    "name": "Lumen.RadianceCache.DepthProbeAtlasTexture",
+    "type": "Texture",
+    "mb": 32
+   },
+   {
+    "name": "Lumen.SceneDepth",
+    "type": "Texture",
+    "mb": 32
+   },
+   {
+    "name": "TSR.History.Metadata",
+    "type": "Texture",
+    "mb": 31.88
+   },
+   {
+    "name": "Lumen.RadianceCache.FinalRadianceAtlas",
+    "type": "Texture",
+    "mb": 21
+   }
+  ],
+  "classes": {
+   "TextureCube": {
+    "count": 1,
+    "numKB": 0.34,
+    "resKB": 16448
+   },
+   "Texture2D": {
+    "count": 39,
+    "numKB": 14.02,
+    "resKB": 14160
+   },
+   "VolumeTexture": {
+    "count": 3,
+    "numKB": 1.03,
+    "resKB": 1056
+   },
+   "Material": {
+    "count": 36,
+    "numKB": 25.27,
+    "resKB": 789.13
+   },
+   "SoundWave": {
+    "count": 349,
+    "numKB": 384.45,
+    "resKB": 393.99
+   },
+   "StaticMesh": {
+    "count": 11,
+    "numKB": 24.66,
+    "resKB": 271.95
+   },
+   "SkeletalMesh": {
+    "count": 1,
+    "numKB": 7.11,
+    "resKB": 205.76
+   },
+   "StaticMeshComponent": {
+    "count": 160,
+    "numKB": 277.14,
+    "resKB": 150.4
+   },
+   "BodySetup": {
+    "count": 27,
+    "numKB": 27.37,
+    "resKB": 140.08
+   },
+   "MaterialInstanceConstant": {
+    "count": 48,
+    "numKB": 48.02,
+    "resKB": 71.38
+   },
+   "NiagaraSystem": {
+    "count": 23,
+    "numKB": 135.25,
+    "resKB": 70.94
+   },
+   "MetaSoundSource": {
+    "count": 32,
+    "numKB": 872.62,
+    "resKB": 35.25
+   },
+   "NiagaraSpriteRendererProperties": {
+    "count": 39,
+    "numKB": 50.27,
+    "resKB": 34.12
+   },
+   "SkeletalMeshComponent": {
+    "count": 7,
+    "numKB": 70.49,
+    "resKB": 27.28
+   },
+   "ProceduralMeshComponent": {
+    "count": 13,
+    "numKB": 1361.37,
+    "resKB": 8.33
+   },
+   "NiagaraComponent": {
+    "count": 2,
+    "numKB": 4.52,
+    "resKB": 4.56
+   },
+   "AnimSequence": {
+    "count": 62,
+    "numKB": 170.36,
+    "resKB": 0.97
+   },
+   "NiagaraRibbonRendererProperties": {
+    "count": 1,
+    "numKB": 1.3,
+    "resKB": 0.34
+   },
+   "ScriptStruct": {
+    "count": 6995,
+    "numKB": 1311.56,
+    "resKB": 0
+   },
+   "AudioAnalyzerSubsystem": {
+    "count": 1,
+    "numKB": 0.08,
+    "resKB": 0
+   },
+   "DeviceProfile": {
+    "count": 187,
+    "numKB": 1782.32,
+    "resKB": 0
+   },
+   "NiagaraScript": {
+    "count": 128,
+    "numKB": 395.4,
+    "resKB": 0
+   },
+   "Enum": {
+    "count": 2342,
+    "numKB": 256.16,
+    "resKB": 0
+   },
+   "Class": {
+    "count": 5338,
+    "numKB": 3204.25,
+    "resKB": 0
+   },
+   "AudioWidgetSubsystem": {
+    "count": 1,
+    "numKB": 0.05,
+    "resKB": 0
+   },
+   "NiagaraDataInterfaceCurve": {
+    "count": 27,
+    "numKB": 14.39,
+    "resKB": 0
+   },
+   "NiagaraEmitter": {
+    "count": 40,
+    "numKB": 44.33,
+    "resKB": 0
+   },
+   "AudioDeviceNotificationSubsystem": {
+    "count": 1,
+    "numKB": 0.38,
+    "resKB": 0
+   },
+   "AudioPlatformSettings": {
+    "count": 1,
+    "numKB": 0.08,
+    "resKB": 0
+   },
+   "AudioSubsystemCollectionRoot": {
+    "count": 1,
+    "numKB": 0.05,
+    "resKB": 0
+   },
+   "AudioBusSubsystem": {
+    "count": 1,
+    "numKB": 0.26,
+    "resKB": 0
+   },
+   "DelegateFunction": {
+    "count": 630,
+    "numKB": 142.73,
+    "resKB": 0
+   },
+   "Package": {
+    "count": 890,
+    "numKB": 83.44,
+    "resKB": 0
+   },
+   "CameraAnimationCameraModifier": {
+    "count": 1,
+    "numKB": 0.09,
+    "resKB": 0
+   },
+   "Function": {
+    "count": 13962,
+    "numKB": 3179.92,
+    "resKB": 0
+   },
+   "NiagaraComponentPool": {
+    "count": 1,
+    "numKB": 0.16,
+    "resKB": 0
+   },
+   "CameraAnimationSequenceSubsystem": {
+    "count": 1,
+    "numKB": 0.08,
+    "resKB": 0
+   },
+   "StaticMeshActor": {
+    "count": 156,
+    "numKB": 108.47,
+    "resKB": 0
+   },
+   "AnimCurveCompressionSettings": {
+    "count": 1,
+    "numKB": 0.05,
+    "resKB": 0
+   },
+   "AnimCurveCompressionCodec_ACL": {
+    "count": 1,
+    "numKB": 0.04,
+    "resKB": 0
+   },
+   "AnimCurveMetaData": {
+    "count": 1,
+    "numKB": 0.16,
+    "resKB": 0
+   },
+   "AnimBoneCompressionSettings": {
+    "count": 1,
+    "numKB": 0.07,
+    "resKB": 0
+   },
+   "AnimBoneCompressionCodec_ACL": {
+    "count": 1,
+    "numKB": 0.06,
+    "resKB": 0
+   },
+   "AnimBlueprintGeneratedClass": {
+    "count": 1,
+    "numKB": 13.26,
+    "resKB": 0
+   },
+   "JamSkater": {
+    "count": 6,
+    "numKB": 5.22,
+    "resKB": 0
+   },
+   "BP_SkaterVisual_TB1_C": {
+    "count": 6,
+    "numKB": 6.33,
+    "resKB": 0
+   },
+   "ABP_SkaterTB1_C": {
+    "count": 6,
+    "numKB": 35.72,
+    "resKB": 0
+   },
+   "AudioComponent": {
+    "count": 3,
+    "numKB": 10.56,
+    "resKB": 0
+   }
+  }
+ },
+ {
+  "file": "Rink-Windows-11.13-02.27.31_Pid28776_Rink-Windows-13-02.28.08.memreport",
+  "physUsedMB": 1312.4,
+  "physPeakMB": 1382.86,
+  "objects": 32348,
+  "objTotalMB": 13.937,
+  "objResMB": 33.102,
+  "rhiTotalMB": 3930.91,
+  "rhiLines": [
+   {
+    "mb": 2048,
+    "name": "Reserved Buffer Memory (Uncommitted)"
+   },
+   {
+    "mb": 795.645,
+    "name": "UAV Texture Memory"
+   },
+   {
+    "mb": 512,
+    "name": "Reserved Texture Memory (Committed)"
+   },
+   {
+    "mb": 346.062,
+    "name": "Render Target 2D Memory"
+   },
+   {
+    "mb": 125.051,
+    "name": "Structured Buffer Memory"
+   },
+   {
+    "mb": 31.643,
+    "name": "Bindless Resource Heap"
+   },
+   {
+    "mb": 24.838,
+    "name": "Vertex Buffer Memory"
+   },
+   {
+    "mb": 21.824,
+    "name": "Texture 2D Memory"
+   },
+   {
+    "mb": 18.203,
+    "name": "Texture Cube Memory"
+   },
+   {
+    "mb": 4.408,
+    "name": "Byte Address Buffer Memory"
+   },
+   {
+    "mb": 1.379,
+    "name": "Bindless Sampler Heap"
+   },
+   {
+    "mb": 1.059,
+    "name": "Texture 3D Memory"
+   },
+   {
+    "mb": 0.683,
+    "name": "Index Buffer Memory"
+   },
+   {
+    "mb": 0.062,
+    "name": "Render Target 3D Memory"
+   },
+   {
+    "mb": 0.052,
+    "name": "Uniform Buffer Memory"
+   }
+  ],
+  "rhiTop": [
+   {
+    "name": "Shadow.Virtual.PhysicalPagePool",
+    "type": "Texture",
+    "mb": 512
+   },
+   {
+    "name": "TSR.History.Color",
+    "type": "Texture",
+    "mb": 127.5
+   },
+   {
+    "name": "GlobalDistanceField.PageObjectGridBuffer",
+    "type": "Buffer",
+    "mb": 112
+   },
+   {
+    "name": "Shadow.Virtual.HZBPhysicalPagePool",
+    "type": "Texture",
+    "mb": 85.38
+   },
+   {
+    "name": "Lumen.RadianceCache.FinalRadianceAtlas",
+    "type": "Texture",
+    "mb": 72.25
+   },
+   {
+    "name": "Lumen.RadianceCache.RadianceProbeAtlasTextureSource",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.SceneDirectLighting",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.Radiosity.TraceRadianceAtlas",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.SceneFinalLighting",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.Radiosity.SceneIndirectLighting",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "GlobalDistanceField.PageAtlas",
+    "type": "Texture",
+    "mb": 56
+   },
+   {
+    "name": "Lumen.SceneDepth",
+    "type": "Texture",
+    "mb": 32
+   },
+   {
+    "name": "Lumen.RadianceCache.DepthProbeAtlasTexture",
+    "type": "Texture",
+    "mb": 32
+   },
+   {
+    "name": "TSR.History.Metadata",
+    "type": "Texture",
+    "mb": 31.88
+   },
+   {
+    "name": "Lumen.RadianceCache.FinalRadianceAtlas",
+    "type": "Texture",
+    "mb": 21
+   }
+  ],
+  "classes": {
+   "TextureCube": {
+    "count": 1,
+    "numKB": 0.34,
+    "resKB": 16448
+   },
+   "Texture2D": {
+    "count": 39,
+    "numKB": 14.02,
+    "resKB": 14160
+   },
+   "VolumeTexture": {
+    "count": 3,
+    "numKB": 1.03,
+    "resKB": 1056
+   },
+   "Material": {
+    "count": 34,
+    "numKB": 23.88,
+    "resKB": 780.2
+   },
+   "SoundWave": {
+    "count": 349,
+    "numKB": 384.45,
+    "resKB": 393.99
+   },
+   "SkeletalMesh": {
+    "count": 1,
+    "numKB": 7.11,
+    "resKB": 384.77
+   },
+   "StaticMesh": {
+    "count": 6,
+    "numKB": 15.09,
+    "resKB": 173.24
+   },
+   "BodySetup": {
+    "count": 22,
+    "numKB": 23.11,
+    "resKB": 140.08
+   },
+   "NiagaraSystem": {
+    "count": 23,
+    "numKB": 135.25,
+    "resKB": 70.94
+   },
+   "MaterialInstanceConstant": {
+    "count": 45,
+    "numKB": 45.73,
+    "resKB": 69.93
+   },
+   "StaticMeshComponent": {
+    "count": 43,
+    "numKB": 74.45,
+    "resKB": 41.65
+   },
+   "MetaSoundSource": {
+    "count": 32,
+    "numKB": 872.62,
+    "resKB": 35.25
+   },
+   "NiagaraSpriteRendererProperties": {
+    "count": 39,
+    "numKB": 50.27,
+    "resKB": 34.12
+   },
+   "SkeletalMeshComponent": {
+    "count": 7,
+    "numKB": 70.49,
+    "resKB": 27.28
+   },
+   "MaterialInstanceDynamic": {
+    "count": 34,
+    "numKB": 35.22,
+    "resKB": 22.58
+   },
+   "ProceduralMeshComponent": {
+    "count": 13,
+    "numKB": 1361.37,
+    "resKB": 8.33
+   },
+   "NiagaraComponent": {
+    "count": 2,
+    "numKB": 4.47,
+    "resKB": 4.28
+   },
+   "AnimSequence": {
+    "count": 62,
+    "numKB": 170.36,
+    "resKB": 0.97
+   },
+   "AnimMontage": {
+    "count": 1,
+    "numKB": 0.6,
+    "resKB": 0.55
+   },
+   "NiagaraRibbonRendererProperties": {
+    "count": 1,
+    "numKB": 1.3,
+    "resKB": 0.34
+   },
+   "ScriptStruct": {
+    "count": 6995,
+    "numKB": 1311.56,
+    "resKB": 0
+   },
+   "AudioAnalyzerSubsystem": {
+    "count": 1,
+    "numKB": 0.08,
+    "resKB": 0
+   },
+   "DeviceProfile": {
+    "count": 187,
+    "numKB": 1782.32,
+    "resKB": 0
+   },
+   "NiagaraScript": {
+    "count": 128,
+    "numKB": 395.4,
+    "resKB": 0
+   },
+   "Enum": {
+    "count": 2342,
+    "numKB": 256.16,
+    "resKB": 0
+   },
+   "Class": {
+    "count": 5338,
+    "numKB": 3204.25,
+    "resKB": 0
+   },
+   "NiagaraEmitter": {
+    "count": 40,
+    "numKB": 44.33,
+    "resKB": 0
+   },
+   "AudioWidgetSubsystem": {
+    "count": 1,
+    "numKB": 0.05,
+    "resKB": 0
+   },
+   "NiagaraDataInterfaceCurve": {
+    "count": 27,
+    "numKB": 14.39,
+    "resKB": 0
+   },
+   "AudioDeviceNotificationSubsystem": {
+    "count": 1,
+    "numKB": 0.38,
+    "resKB": 0
+   },
+   "AudioPlatformSettings": {
+    "count": 1,
+    "numKB": 0.08,
+    "resKB": 0
+   },
+   "AudioSubsystemCollectionRoot": {
+    "count": 1,
+    "numKB": 0.05,
+    "resKB": 0
+   },
+   "AudioBusSubsystem": {
+    "count": 1,
+    "numKB": 0.26,
+    "resKB": 0
+   },
+   "DelegateFunction": {
+    "count": 630,
+    "numKB": 142.73,
+    "resKB": 0
+   },
+   "Package": {
+    "count": 881,
+    "numKB": 82.59,
+    "resKB": 0
+   },
+   "Function": {
+    "count": 13965,
+    "numKB": 3181.28,
+    "resKB": 0
+   },
+   "CameraAnimationCameraModifier": {
+    "count": 1,
+    "numKB": 0.09,
+    "resKB": 0
+   },
+   "NiagaraComponentPool": {
+    "count": 1,
+    "numKB": 0.16,
+    "resKB": 0
+   },
+   "CameraAnimationSequenceSubsystem": {
+    "count": 1,
+    "numKB": 0.08,
+    "resKB": 0
+   },
+   "AnimBlueprintGeneratedClass": {
+    "count": 1,
+    "numKB": 13.26,
+    "resKB": 0
+   },
+   "AnimCurveCompressionSettings": {
+    "count": 1,
+    "numKB": 0.05,
+    "resKB": 0
+   },
+   "AnimCurveCompressionCodec_ACL": {
+    "count": 1,
+    "numKB": 0.04,
+    "resKB": 0
+   },
+   "AnimBoneCompressionSettings": {
+    "count": 1,
+    "numKB": 0.07,
+    "resKB": 0
+   },
+   "AnimBoneCompressionCodec_ACL": {
+    "count": 1,
+    "numKB": 0.06,
+    "resKB": 0
+   },
+   "JamSkater": {
+    "count": 6,
+    "numKB": 5.22,
+    "resKB": 0
+   },
+   "AudioComponent": {
+    "count": 4,
+    "numKB": 14.19,
+    "resKB": 0
+   },
+   "AnimCurveMetaData": {
+    "count": 1,
+    "numKB": 0.16,
+    "resKB": 0
+   },
+   "BP_SkaterVisual_TB1_P3_C": {
+    "count": 6,
+    "numKB": 6.33,
+    "resKB": 0
+   },
+   "ABP_SkaterTB1_P3_C": {
+    "count": 6,
+    "numKB": 35.72,
+    "resKB": 0
+   }
+  }
+ },
+ {
+  "file": "Rink-Windows-11.13-02.27.31_Pid28776_Rink-Windows-13-02.28.19.memreport",
+  "physUsedMB": 1312.32,
+  "physPeakMB": 1382.86,
+  "objects": 32598,
+  "objTotalMB": 14.225,
+  "objResMB": 33.132,
+  "rhiTotalMB": 3909.855,
+  "rhiLines": [
+   {
+    "mb": 2048,
+    "name": "Reserved Buffer Memory (Uncommitted)"
+   },
+   {
+    "mb": 775.395,
+    "name": "UAV Texture Memory"
+   },
+   {
+    "mb": 512,
+    "name": "Reserved Texture Memory (Committed)"
+   },
+   {
+    "mb": 346.062,
+    "name": "Render Target 2D Memory"
+   },
+   {
+    "mb": 124.891,
+    "name": "Structured Buffer Memory"
+   },
+   {
+    "mb": 31.643,
+    "name": "Bindless Resource Heap"
+   },
+   {
+    "mb": 24.239,
+    "name": "Vertex Buffer Memory"
+   },
+   {
+    "mb": 21.824,
+    "name": "Texture 2D Memory"
+   },
+   {
+    "mb": 18.203,
+    "name": "Texture Cube Memory"
+   },
+   {
+    "mb": 4.399,
+    "name": "Byte Address Buffer Memory"
+   },
+   {
+    "mb": 1.379,
+    "name": "Bindless Sampler Heap"
+   },
+   {
+    "mb": 1.059,
+    "name": "Texture 3D Memory"
+   },
+   {
+    "mb": 0.661,
+    "name": "Index Buffer Memory"
+   },
+   {
+    "mb": 0.062,
+    "name": "Render Target 3D Memory"
+   },
+   {
+    "mb": 0.037,
+    "name": "Uniform Buffer Memory"
+   }
+  ],
+  "rhiTop": [
+   {
+    "name": "Shadow.Virtual.PhysicalPagePool",
+    "type": "Texture",
+    "mb": 512
+   },
+   {
+    "name": "TSR.History.Color",
+    "type": "Texture",
+    "mb": 127.5
+   },
+   {
+    "name": "GlobalDistanceField.PageObjectGridBuffer",
+    "type": "Buffer",
+    "mb": 112
+   },
+   {
+    "name": "Shadow.Virtual.HZBPhysicalPagePool",
+    "type": "Texture",
+    "mb": 85.38
+   },
+   {
+    "name": "Lumen.RadianceCache.FinalRadianceAtlas",
+    "type": "Texture",
+    "mb": 72.25
+   },
+   {
+    "name": "Lumen.Radiosity.TraceRadianceAtlas",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.SceneDirectLighting",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.RadianceCache.RadianceProbeAtlasTextureSource",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.SceneFinalLighting",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.Radiosity.SceneIndirectLighting",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "GlobalDistanceField.PageAtlas",
+    "type": "Texture",
+    "mb": 56
+   },
+   {
+    "name": "Lumen.SceneDepth",
+    "type": "Texture",
+    "mb": 32
+   },
+   {
+    "name": "Lumen.RadianceCache.DepthProbeAtlasTexture",
+    "type": "Texture",
+    "mb": 32
+   },
+   {
+    "name": "TSR.History.Metadata",
+    "type": "Texture",
+    "mb": 31.88
+   },
+   {
+    "name": "Lumen.RadianceCache.FinalRadianceAtlas",
+    "type": "Texture",
+    "mb": 21
+   }
+  ],
+  "classes": {
+   "TextureCube": {
+    "count": 1,
+    "numKB": 0.34,
+    "resKB": 16448
+   },
+   "Texture2D": {
+    "count": 39,
+    "numKB": 14.02,
+    "resKB": 14160
+   },
+   "VolumeTexture": {
+    "count": 3,
+    "numKB": 1.03,
+    "resKB": 1056
+   },
+   "Material": {
+    "count": 36,
+    "numKB": 25.27,
+    "resKB": 789.13
+   },
+   "SoundWave": {
+    "count": 349,
+    "numKB": 384.45,
+    "resKB": 393.99
+   },
+   "StaticMesh": {
+    "count": 11,
+    "numKB": 24.66,
+    "resKB": 271.95
+   },
+   "SkeletalMesh": {
+    "count": 1,
+    "numKB": 7.11,
+    "resKB": 205.76
+   },
+   "StaticMeshComponent": {
+    "count": 160,
+    "numKB": 277.14,
+    "resKB": 150.4
+   },
+   "BodySetup": {
+    "count": 27,
+    "numKB": 27.37,
+    "resKB": 140.08
+   },
+   "MaterialInstanceConstant": {
+    "count": 48,
+    "numKB": 48.02,
+    "resKB": 71.38
+   },
+   "NiagaraSystem": {
+    "count": 23,
+    "numKB": 135.25,
+    "resKB": 70.94
+   },
+   "MetaSoundSource": {
+    "count": 32,
+    "numKB": 872.62,
+    "resKB": 35.25
+   },
+   "NiagaraSpriteRendererProperties": {
+    "count": 39,
+    "numKB": 50.27,
+    "resKB": 34.12
+   },
+   "SkeletalMeshComponent": {
+    "count": 7,
+    "numKB": 70.49,
+    "resKB": 27.28
+   },
+   "ProceduralMeshComponent": {
+    "count": 13,
+    "numKB": 1361.37,
+    "resKB": 8.33
+   },
+   "AnimSequence": {
+    "count": 62,
+    "numKB": 170.36,
+    "resKB": 0.97
+   },
+   "NiagaraRibbonRendererProperties": {
+    "count": 1,
+    "numKB": 1.3,
+    "resKB": 0.34
+   },
+   "NiagaraScript": {
+    "count": 128,
+    "numKB": 395.4,
+    "resKB": 0
+   },
+   "AudioWidgetSubsystem": {
+    "count": 1,
+    "numKB": 0.05,
+    "resKB": 0
+   },
+   "AudioAnalyzerSubsystem": {
+    "count": 1,
+    "numKB": 0.08,
+    "resKB": 0
+   },
+   "NiagaraDataInterfaceCurve": {
+    "count": 27,
+    "numKB": 14.39,
+    "resKB": 0
+   },
+   "NiagaraEmitter": {
+    "count": 40,
+    "numKB": 44.33,
+    "resKB": 0
+   },
+   "AudioDeviceNotificationSubsystem": {
+    "count": 1,
+    "numKB": 0.38,
+    "resKB": 0
+   },
+   "AudioPlatformSettings": {
+    "count": 1,
+    "numKB": 0.08,
+    "resKB": 0
+   },
+   "AudioSubsystemCollectionRoot": {
+    "count": 1,
+    "numKB": 0.05,
+    "resKB": 0
+   },
+   "AudioBusSubsystem": {
+    "count": 1,
+    "numKB": 0.26,
+    "resKB": 0
+   },
+   "DeviceProfile": {
+    "count": 187,
+    "numKB": 1782.32,
+    "resKB": 0
+   },
+   "Package": {
+    "count": 890,
+    "numKB": 83.44,
+    "resKB": 0
+   },
+   "CameraAnimationCameraModifier": {
+    "count": 1,
+    "numKB": 0.09,
+    "resKB": 0
+   },
+   "Function": {
+    "count": 13962,
+    "numKB": 3179.92,
+    "resKB": 0
+   },
+   "NiagaraComponentPool": {
+    "count": 1,
+    "numKB": 0.16,
+    "resKB": 0
+   },
+   "DelegateFunction": {
+    "count": 630,
+    "numKB": 142.73,
+    "resKB": 0
+   },
+   "CameraAnimationSequenceSubsystem": {
+    "count": 1,
+    "numKB": 0.08,
+    "resKB": 0
+   },
+   "Enum": {
+    "count": 2342,
+    "numKB": 256.16,
+    "resKB": 0
+   },
+   "StaticMeshActor": {
+    "count": 156,
+    "numKB": 108.47,
+    "resKB": 0
+   },
+   "ScriptStruct": {
+    "count": 6995,
+    "numKB": 1311.56,
+    "resKB": 0
+   },
+   "AnimCurveCompressionSettings": {
+    "count": 1,
+    "numKB": 0.05,
+    "resKB": 0
+   },
+   "AnimCurveCompressionCodec_ACL": {
+    "count": 1,
+    "numKB": 0.04,
+    "resKB": 0
+   },
+   "AnimBoneCompressionSettings": {
+    "count": 1,
+    "numKB": 0.07,
+    "resKB": 0
+   },
+   "AnimBoneCompressionCodec_ACL": {
+    "count": 1,
+    "numKB": 0.06,
+    "resKB": 0
+   },
+   "JamSkater": {
+    "count": 6,
+    "numKB": 5.22,
+    "resKB": 0
+   },
+   "NiagaraComponent": {
+    "count": 1,
+    "numKB": 2.21,
+    "resKB": 0
+   },
+   "AudioComponent": {
+    "count": 4,
+    "numKB": 14.19,
+    "resKB": 0
+   },
+   "ABP_SkaterTB1_C": {
+    "count": 6,
+    "numKB": 35.72,
+    "resKB": 0
+   },
+   "Class": {
+    "count": 5338,
+    "numKB": 3204.25,
+    "resKB": 0
+   },
+   "BP_SkaterVisual_TB1_C": {
+    "count": 6,
+    "numKB": 6.33,
+    "resKB": 0
+   },
+   "AnimBlueprintGeneratedClass": {
+    "count": 1,
+    "numKB": 13.26,
+    "resKB": 0
+   },
+   "AnimCurveMetaData": {
+    "count": 1,
+    "numKB": 0.16,
+    "resKB": 0
+   }
+  }
+ },
+ {
+  "file": "Rink-Windows-11.13-02.27.31_Pid28776_Rink-Windows-13-02.28.30.memreport",
+  "physUsedMB": 1312.74,
+  "physPeakMB": 1382.86,
+  "objects": 32351,
+  "objTotalMB": 13.947,
+  "objResMB": 33.133,
+  "rhiTotalMB": 3930.879,
+  "rhiLines": [
+   {
+    "mb": 2048,
+    "name": "Reserved Buffer Memory (Uncommitted)"
+   },
+   {
+    "mb": 795.645,
+    "name": "UAV Texture Memory"
+   },
+   {
+    "mb": 512,
+    "name": "Reserved Texture Memory (Committed)"
+   },
+   {
+    "mb": 346.062,
+    "name": "Render Target 2D Memory"
+   },
+   {
+    "mb": 125.132,
+    "name": "Structured Buffer Memory"
+   },
+   {
+    "mb": 31.643,
+    "name": "Bindless Resource Heap"
+   },
+   {
+    "mb": 24.776,
+    "name": "Vertex Buffer Memory"
+   },
+   {
+    "mb": 21.824,
+    "name": "Texture 2D Memory"
+   },
+   {
+    "mb": 18.203,
+    "name": "Texture Cube Memory"
+   },
+   {
+    "mb": 4.408,
+    "name": "Byte Address Buffer Memory"
+   },
+   {
+    "mb": 1.379,
+    "name": "Bindless Sampler Heap"
+   },
+   {
+    "mb": 1.059,
+    "name": "Texture 3D Memory"
+   },
+   {
+    "mb": 0.683,
+    "name": "Index Buffer Memory"
+   },
+   {
+    "mb": 0.062,
+    "name": "Render Target 3D Memory"
+   },
+   {
+    "mb": 0.002,
+    "name": "Uniform Buffer Memory"
+   }
+  ],
+  "rhiTop": [
+   {
+    "name": "Shadow.Virtual.PhysicalPagePool",
+    "type": "Texture",
+    "mb": 512
+   },
+   {
+    "name": "TSR.History.Color",
+    "type": "Texture",
+    "mb": 127.5
+   },
+   {
+    "name": "GlobalDistanceField.PageObjectGridBuffer",
+    "type": "Buffer",
+    "mb": 112
+   },
+   {
+    "name": "Shadow.Virtual.HZBPhysicalPagePool",
+    "type": "Texture",
+    "mb": 85.38
+   },
+   {
+    "name": "Lumen.RadianceCache.FinalRadianceAtlas",
+    "type": "Texture",
+    "mb": 72.25
+   },
+   {
+    "name": "Lumen.SceneDirectLighting",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.Radiosity.SceneIndirectLighting",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.RadianceCache.RadianceProbeAtlasTextureSource",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.SceneFinalLighting",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.Radiosity.TraceRadianceAtlas",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "GlobalDistanceField.PageAtlas",
+    "type": "Texture",
+    "mb": 56
+   },
+   {
+    "name": "Lumen.SceneDepth",
+    "type": "Texture",
+    "mb": 32
+   },
+   {
+    "name": "Lumen.RadianceCache.DepthProbeAtlasTexture",
+    "type": "Texture",
+    "mb": 32
+   },
+   {
+    "name": "TSR.History.Metadata",
+    "type": "Texture",
+    "mb": 31.88
+   },
+   {
+    "name": "Lumen.RadianceCache.FinalRadianceAtlas",
+    "type": "Texture",
+    "mb": 21
+   }
+  ],
+  "classes": {
+   "TextureCube": {
+    "count": 1,
+    "numKB": 0.34,
+    "resKB": 16448
+   },
+   "Texture2D": {
+    "count": 39,
+    "numKB": 14.02,
+    "resKB": 14160
+   },
+   "VolumeTexture": {
+    "count": 3,
+    "numKB": 1.03,
+    "resKB": 1056
+   },
+   "Material": {
+    "count": 34,
+    "numKB": 23.88,
+    "resKB": 780.2
+   },
+   "SoundWave": {
+    "count": 349,
+    "numKB": 384.45,
+    "resKB": 393.99
+   },
+   "SkeletalMesh": {
+    "count": 1,
+    "numKB": 7.11,
+    "resKB": 384.77
+   },
+   "StaticMesh": {
+    "count": 6,
+    "numKB": 15.09,
+    "resKB": 173.24
+   },
+   "BodySetup": {
+    "count": 22,
+    "numKB": 23.11,
+    "resKB": 140.08
+   },
+   "NiagaraSystem": {
+    "count": 23,
+    "numKB": 135.25,
+    "resKB": 70.94
+   },
+   "MaterialInstanceConstant": {
+    "count": 45,
+    "numKB": 45.73,
+    "resKB": 69.93
+   },
+   "StaticMeshComponent": {
+    "count": 43,
+    "numKB": 74.45,
+    "resKB": 41.65
+   },
+   "NiagaraComponent": {
+    "count": 3,
+    "numKB": 6.78,
+    "resKB": 36.03
+   },
+   "MetaSoundSource": {
+    "count": 32,
+    "numKB": 872.62,
+    "resKB": 35.25
+   },
+   "NiagaraSpriteRendererProperties": {
+    "count": 39,
+    "numKB": 50.27,
+    "resKB": 34.12
+   },
+   "SkeletalMeshComponent": {
+    "count": 7,
+    "numKB": 70.49,
+    "resKB": 27.28
+   },
+   "MaterialInstanceDynamic": {
+    "count": 34,
+    "numKB": 35.22,
+    "resKB": 22.58
+   },
+   "ProceduralMeshComponent": {
+    "count": 13,
+    "numKB": 1361.37,
+    "resKB": 8.33
+   },
+   "AnimSequence": {
+    "count": 62,
+    "numKB": 170.36,
+    "resKB": 0.97
+   },
+   "AnimMontage": {
+    "count": 1,
+    "numKB": 0.6,
+    "resKB": 0.55
+   },
+   "NiagaraRibbonRendererProperties": {
+    "count": 1,
+    "numKB": 1.3,
+    "resKB": 0.34
+   },
+   "Function": {
+    "count": 13965,
+    "numKB": 3181.28,
+    "resKB": 0
+   },
+   "NiagaraScript": {
+    "count": 128,
+    "numKB": 395.4,
+    "resKB": 0
+   },
+   "AudioPlatformSettings": {
+    "count": 1,
+    "numKB": 0.08,
+    "resKB": 0
+   },
+   "AudioWidgetSubsystem": {
+    "count": 1,
+    "numKB": 0.05,
+    "resKB": 0
+   },
+   "AudioAnalyzerSubsystem": {
+    "count": 1,
+    "numKB": 0.08,
+    "resKB": 0
+   },
+   "NiagaraDataInterfaceCurve": {
+    "count": 27,
+    "numKB": 14.39,
+    "resKB": 0
+   },
+   "NiagaraEmitter": {
+    "count": 40,
+    "numKB": 44.33,
+    "resKB": 0
+   },
+   "DelegateFunction": {
+    "count": 630,
+    "numKB": 142.73,
+    "resKB": 0
+   },
+   "AudioDeviceNotificationSubsystem": {
+    "count": 1,
+    "numKB": 0.38,
+    "resKB": 0
+   },
+   "AudioSubsystemCollectionRoot": {
+    "count": 1,
+    "numKB": 0.05,
+    "resKB": 0
+   },
+   "AudioBusSubsystem": {
+    "count": 1,
+    "numKB": 0.26,
+    "resKB": 0
+   },
+   "Enum": {
+    "count": 2342,
+    "numKB": 256.16,
+    "resKB": 0
+   },
+   "ScriptStruct": {
+    "count": 6995,
+    "numKB": 1311.56,
+    "resKB": 0
+   },
+   "DeviceProfile": {
+    "count": 187,
+    "numKB": 1782.32,
+    "resKB": 0
+   },
+   "Package": {
+    "count": 881,
+    "numKB": 82.59,
+    "resKB": 0
+   },
+   "CameraAnimationCameraModifier": {
+    "count": 1,
+    "numKB": 0.09,
+    "resKB": 0
+   },
+   "NiagaraComponentPool": {
+    "count": 1,
+    "numKB": 0.16,
+    "resKB": 0
+   },
+   "CameraAnimationSequenceSubsystem": {
+    "count": 1,
+    "numKB": 0.08,
+    "resKB": 0
+   },
+   "Class": {
+    "count": 5338,
+    "numKB": 3204.25,
+    "resKB": 0
+   },
+   "AnimCurveCompressionSettings": {
+    "count": 1,
+    "numKB": 0.05,
+    "resKB": 0
+   },
+   "AnimCurveCompressionCodec_ACL": {
+    "count": 1,
+    "numKB": 0.04,
+    "resKB": 0
+   },
+   "AnimBoneCompressionSettings": {
+    "count": 1,
+    "numKB": 0.07,
+    "resKB": 0
+   },
+   "AnimBoneCompressionCodec_ACL": {
+    "count": 1,
+    "numKB": 0.06,
+    "resKB": 0
+   },
+   "JamSkater": {
+    "count": 6,
+    "numKB": 5.22,
+    "resKB": 0
+   },
+   "AudioComponent": {
+    "count": 6,
+    "numKB": 21.44,
+    "resKB": 0
+   },
+   "ABP_SkaterTB1_P3_C": {
+    "count": 6,
+    "numKB": 35.72,
+    "resKB": 0
+   },
+   "BP_SkaterVisual_TB1_P3_C": {
+    "count": 6,
+    "numKB": 6.33,
+    "resKB": 0
+   },
+   "AnimBlueprintGeneratedClass": {
+    "count": 1,
+    "numKB": 13.26,
+    "resKB": 0
+   },
+   "AnimCurveMetaData": {
+    "count": 1,
+    "numKB": 0.16,
+    "resKB": 0
+   }
+  }
+ },
+ {
+  "file": "Rink-Windows-11.13-02.27.31_Pid28776_Rink-Windows-13-02.28.41.memreport",
+  "physUsedMB": 1312.84,
+  "physPeakMB": 1382.86,
+  "objects": 32604,
+  "objTotalMB": 14.24,
+  "objResMB": 33.178,
+  "rhiTotalMB": 3908.381,
+  "rhiLines": [
+   {
+    "mb": 2048,
+    "name": "Reserved Buffer Memory (Uncommitted)"
+   },
+   {
+    "mb": 775.395,
+    "name": "UAV Texture Memory"
+   },
+   {
+    "mb": 512,
+    "name": "Reserved Texture Memory (Committed)"
+   },
+   {
+    "mb": 346.062,
+    "name": "Render Target 2D Memory"
+   },
+   {
+    "mb": 123.508,
+    "name": "Structured Buffer Memory"
+   },
+   {
+    "mb": 31.643,
+    "name": "Bindless Resource Heap"
+   },
+   {
+    "mb": 24.239,
+    "name": "Vertex Buffer Memory"
+   },
+   {
+    "mb": 21.824,
+    "name": "Texture 2D Memory"
+   },
+   {
+    "mb": 18.203,
+    "name": "Texture Cube Memory"
+   },
+   {
+    "mb": 4.399,
+    "name": "Byte Address Buffer Memory"
+   },
+   {
+    "mb": 1.379,
+    "name": "Bindless Sampler Heap"
+   },
+   {
+    "mb": 1.059,
+    "name": "Texture 3D Memory"
+   },
+   {
+    "mb": 0.661,
+    "name": "Index Buffer Memory"
+   },
+   {
+    "mb": 0.062,
+    "name": "Render Target 3D Memory"
+   }
+  ],
+  "rhiTop": [
+   {
+    "name": "Shadow.Virtual.PhysicalPagePool",
+    "type": "Texture",
+    "mb": 512
+   },
+   {
+    "name": "TSR.History.Color",
+    "type": "Texture",
+    "mb": 127.5
+   },
+   {
+    "name": "GlobalDistanceField.PageObjectGridBuffer",
+    "type": "Buffer",
+    "mb": 112
+   },
+   {
+    "name": "Shadow.Virtual.HZBPhysicalPagePool",
+    "type": "Texture",
+    "mb": 85.38
+   },
+   {
+    "name": "Lumen.RadianceCache.FinalRadianceAtlas",
+    "type": "Texture",
+    "mb": 72.25
+   },
+   {
+    "name": "Lumen.RadianceCache.RadianceProbeAtlasTextureSource",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.Radiosity.SceneIndirectLighting",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.Radiosity.TraceRadianceAtlas",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.SceneDirectLighting",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.SceneFinalLighting",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "GlobalDistanceField.PageAtlas",
+    "type": "Texture",
+    "mb": 56
+   },
+   {
+    "name": "Lumen.RadianceCache.DepthProbeAtlasTexture",
+    "type": "Texture",
+    "mb": 32
+   },
+   {
+    "name": "Lumen.SceneDepth",
+    "type": "Texture",
+    "mb": 32
+   },
+   {
+    "name": "TSR.History.Metadata",
+    "type": "Texture",
+    "mb": 31.88
+   },
+   {
+    "name": "Lumen.RadianceCache.FinalRadianceAtlas",
+    "type": "Texture",
+    "mb": 21
+   }
+  ],
+  "classes": {
+   "TextureCube": {
+    "count": 1,
+    "numKB": 0.34,
+    "resKB": 16448
+   },
+   "Texture2D": {
+    "count": 39,
+    "numKB": 14.02,
+    "resKB": 14160
+   },
+   "VolumeTexture": {
+    "count": 3,
+    "numKB": 1.03,
+    "resKB": 1056
+   },
+   "Material": {
+    "count": 36,
+    "numKB": 25.27,
+    "resKB": 789.13
+   },
+   "SoundWave": {
+    "count": 349,
+    "numKB": 384.45,
+    "resKB": 393.99
+   },
+   "StaticMesh": {
+    "count": 11,
+    "numKB": 24.66,
+    "resKB": 271.95
+   },
+   "SkeletalMesh": {
+    "count": 1,
+    "numKB": 7.11,
+    "resKB": 205.76
+   },
+   "StaticMeshComponent": {
+    "count": 160,
+    "numKB": 277.14,
+    "resKB": 150.4
+   },
+   "BodySetup": {
+    "count": 27,
+    "numKB": 27.37,
+    "resKB": 140.08
+   },
+   "MaterialInstanceConstant": {
+    "count": 48,
+    "numKB": 48.02,
+    "resKB": 71.38
+   },
+   "NiagaraSystem": {
+    "count": 23,
+    "numKB": 135.25,
+    "resKB": 70.94
+   },
+   "NiagaraComponent": {
+    "count": 4,
+    "numKB": 9.04,
+    "resKB": 47.06
+   },
+   "MetaSoundSource": {
+    "count": 32,
+    "numKB": 872.62,
+    "resKB": 35.25
+   },
+   "NiagaraSpriteRendererProperties": {
+    "count": 39,
+    "numKB": 50.27,
+    "resKB": 34.12
+   },
+   "SkeletalMeshComponent": {
+    "count": 7,
+    "numKB": 70.49,
+    "resKB": 27.28
+   },
+   "ProceduralMeshComponent": {
+    "count": 13,
+    "numKB": 1361.37,
+    "resKB": 8.33
+   },
+   "AnimSequence": {
+    "count": 62,
+    "numKB": 170.36,
+    "resKB": 0.97
+   },
+   "AnimMontage": {
+    "count": 1,
+    "numKB": 0.6,
+    "resKB": 0.55
+   },
+   "NiagaraRibbonRendererProperties": {
+    "count": 1,
+    "numKB": 1.3,
+    "resKB": 0.34
+   },
+   "ScriptStruct": {
+    "count": 6995,
+    "numKB": 1311.56,
+    "resKB": 0
+   },
+   "AudioAnalyzerSubsystem": {
+    "count": 1,
+    "numKB": 0.08,
+    "resKB": 0
+   },
+   "DeviceProfile": {
+    "count": 187,
+    "numKB": 1782.32,
+    "resKB": 0
+   },
+   "NiagaraScript": {
+    "count": 128,
+    "numKB": 395.4,
+    "resKB": 0
+   },
+   "Enum": {
+    "count": 2342,
+    "numKB": 256.16,
+    "resKB": 0
+   },
+   "Class": {
+    "count": 5338,
+    "numKB": 3204.25,
+    "resKB": 0
+   },
+   "NiagaraEmitter": {
+    "count": 40,
+    "numKB": 44.33,
+    "resKB": 0
+   },
+   "AudioWidgetSubsystem": {
+    "count": 1,
+    "numKB": 0.05,
+    "resKB": 0
+   },
+   "NiagaraDataInterfaceCurve": {
+    "count": 27,
+    "numKB": 14.39,
+    "resKB": 0
+   },
+   "AudioDeviceNotificationSubsystem": {
+    "count": 1,
+    "numKB": 0.38,
+    "resKB": 0
+   },
+   "AudioPlatformSettings": {
+    "count": 1,
+    "numKB": 0.08,
+    "resKB": 0
+   },
+   "AudioSubsystemCollectionRoot": {
+    "count": 1,
+    "numKB": 0.05,
+    "resKB": 0
+   },
+   "AudioBusSubsystem": {
+    "count": 1,
+    "numKB": 0.26,
+    "resKB": 0
+   },
+   "DelegateFunction": {
+    "count": 630,
+    "numKB": 142.73,
+    "resKB": 0
+   },
+   "Package": {
+    "count": 890,
+    "numKB": 83.44,
+    "resKB": 0
+   },
+   "CameraAnimationCameraModifier": {
+    "count": 1,
+    "numKB": 0.09,
+    "resKB": 0
+   },
+   "Function": {
+    "count": 13962,
+    "numKB": 3179.92,
+    "resKB": 0
+   },
+   "NiagaraComponentPool": {
+    "count": 1,
+    "numKB": 0.16,
+    "resKB": 0
+   },
+   "CameraAnimationSequenceSubsystem": {
+    "count": 1,
+    "numKB": 0.08,
+    "resKB": 0
+   },
+   "StaticMeshActor": {
+    "count": 156,
+    "numKB": 108.47,
+    "resKB": 0
+   },
+   "AnimCurveCompressionSettings": {
+    "count": 1,
+    "numKB": 0.05,
+    "resKB": 0
+   },
+   "AnimCurveCompressionCodec_ACL": {
+    "count": 1,
+    "numKB": 0.04,
+    "resKB": 0
+   },
+   "AnimBoneCompressionSettings": {
+    "count": 1,
+    "numKB": 0.07,
+    "resKB": 0
+   },
+   "AnimBoneCompressionCodec_ACL": {
+    "count": 1,
+    "numKB": 0.06,
+    "resKB": 0
+   },
+   "AudioComponent": {
+    "count": 6,
+    "numKB": 21.44,
+    "resKB": 0
+   },
+   "JamSkater": {
+    "count": 6,
+    "numKB": 5.22,
+    "resKB": 0
+   },
+   "ABP_SkaterTB1_C": {
+    "count": 6,
+    "numKB": 35.72,
+    "resKB": 0
+   },
+   "BP_SkaterVisual_TB1_C": {
+    "count": 6,
+    "numKB": 6.33,
+    "resKB": 0
+   },
+   "AnimBlueprintGeneratedClass": {
+    "count": 1,
+    "numKB": 13.26,
+    "resKB": 0
+   },
+   "AnimCurveMetaData": {
+    "count": 1,
+    "numKB": 0.16,
+    "resKB": 0
+   }
+  }
+ },
+ {
+  "file": "Rink-Windows-11.13-02.27.31_Pid28776_Rink-Windows-13-02.28.52.memreport",
+  "physUsedMB": 1313.38,
+  "physPeakMB": 1382.86,
+  "objects": 32345,
+  "objTotalMB": 13.93,
+  "objResMB": 33.097,
+  "rhiTotalMB": 3930.235,
+  "rhiLines": [
+   {
+    "mb": 2048,
+    "name": "Reserved Buffer Memory (Uncommitted)"
+   },
+   {
+    "mb": 795.645,
+    "name": "UAV Texture Memory"
+   },
+   {
+    "mb": 512,
+    "name": "Reserved Texture Memory (Committed)"
+   },
+   {
+    "mb": 346.062,
+    "name": "Render Target 2D Memory"
+   },
+   {
+    "mb": 124.758,
+    "name": "Structured Buffer Memory"
+   },
+   {
+    "mb": 31.643,
+    "name": "Bindless Resource Heap"
+   },
+   {
+    "mb": 24.588,
+    "name": "Vertex Buffer Memory"
+   },
+   {
+    "mb": 21.824,
+    "name": "Texture 2D Memory"
+   },
+   {
+    "mb": 18.203,
+    "name": "Texture Cube Memory"
+   },
+   {
+    "mb": 4.406,
+    "name": "Byte Address Buffer Memory"
+   },
+   {
+    "mb": 1.379,
+    "name": "Bindless Sampler Heap"
+   },
+   {
+    "mb": 1.059,
+    "name": "Texture 3D Memory"
+   },
+   {
+    "mb": 0.688,
+    "name": "Index Buffer Memory"
+   },
+   {
+    "mb": 0.062,
+    "name": "Render Target 3D Memory"
+   }
+  ],
+  "rhiTop": [
+   {
+    "name": "Shadow.Virtual.PhysicalPagePool",
+    "type": "Texture",
+    "mb": 512
+   },
+   {
+    "name": "TSR.History.Color",
+    "type": "Texture",
+    "mb": 127.5
+   },
+   {
+    "name": "GlobalDistanceField.PageObjectGridBuffer",
+    "type": "Buffer",
+    "mb": 112
+   },
+   {
+    "name": "Shadow.Virtual.HZBPhysicalPagePool",
+    "type": "Texture",
+    "mb": 85.38
+   },
+   {
+    "name": "Lumen.RadianceCache.FinalRadianceAtlas",
+    "type": "Texture",
+    "mb": 72.25
+   },
+   {
+    "name": "Lumen.Radiosity.TraceRadianceAtlas",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.RadianceCache.RadianceProbeAtlasTextureSource",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.SceneFinalLighting",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.Radiosity.SceneIndirectLighting",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.SceneDirectLighting",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "GlobalDistanceField.PageAtlas",
+    "type": "Texture",
+    "mb": 56
+   },
+   {
+    "name": "Lumen.SceneDepth",
+    "type": "Texture",
+    "mb": 32
+   },
+   {
+    "name": "Lumen.RadianceCache.DepthProbeAtlasTexture",
+    "type": "Texture",
+    "mb": 32
+   },
+   {
+    "name": "TSR.History.Metadata",
+    "type": "Texture",
+    "mb": 31.88
+   },
+   {
+    "name": "Lumen.RadianceCache.FinalRadianceAtlas",
+    "type": "Texture",
+    "mb": 21
+   }
+  ],
+  "classes": {
+   "TextureCube": {
+    "count": 1,
+    "numKB": 0.34,
+    "resKB": 16448
+   },
+   "Texture2D": {
+    "count": 39,
+    "numKB": 14.02,
+    "resKB": 14160
+   },
+   "VolumeTexture": {
+    "count": 3,
+    "numKB": 1.03,
+    "resKB": 1056
+   },
+   "Material": {
+    "count": 34,
+    "numKB": 23.88,
+    "resKB": 780.2
+   },
+   "SoundWave": {
+    "count": 349,
+    "numKB": 384.45,
+    "resKB": 393.99
+   },
+   "SkeletalMesh": {
+    "count": 1,
+    "numKB": 7.11,
+    "resKB": 384.77
+   },
+   "StaticMesh": {
+    "count": 6,
+    "numKB": 15.09,
+    "resKB": 173.24
+   },
+   "BodySetup": {
+    "count": 22,
+    "numKB": 23.11,
+    "resKB": 140.08
+   },
+   "NiagaraSystem": {
+    "count": 23,
+    "numKB": 135.25,
+    "resKB": 70.94
+   },
+   "MaterialInstanceConstant": {
+    "count": 45,
+    "numKB": 45.73,
+    "resKB": 69.93
+   },
+   "StaticMeshComponent": {
+    "count": 43,
+    "numKB": 74.45,
+    "resKB": 41.65
+   },
+   "MetaSoundSource": {
+    "count": 32,
+    "numKB": 872.62,
+    "resKB": 35.25
+   },
+   "NiagaraSpriteRendererProperties": {
+    "count": 39,
+    "numKB": 50.27,
+    "resKB": 34.12
+   },
+   "SkeletalMeshComponent": {
+    "count": 7,
+    "numKB": 70.49,
+    "resKB": 27.28
+   },
+   "MaterialInstanceDynamic": {
+    "count": 34,
+    "numKB": 35.22,
+    "resKB": 22.58
+   },
+   "ProceduralMeshComponent": {
+    "count": 13,
+    "numKB": 1361.37,
+    "resKB": 8.33
+   },
+   "AnimSequence": {
+    "count": 62,
+    "numKB": 170.36,
+    "resKB": 0.97
+   },
+   "NiagaraRibbonRendererProperties": {
+    "count": 1,
+    "numKB": 1.3,
+    "resKB": 0.34
+   },
+   "NiagaraScript": {
+    "count": 128,
+    "numKB": 395.4,
+    "resKB": 0
+   },
+   "AudioWidgetSubsystem": {
+    "count": 1,
+    "numKB": 0.05,
+    "resKB": 0
+   },
+   "AudioAnalyzerSubsystem": {
+    "count": 1,
+    "numKB": 0.08,
+    "resKB": 0
+   },
+   "NiagaraDataInterfaceCurve": {
+    "count": 27,
+    "numKB": 14.39,
+    "resKB": 0
+   },
+   "NiagaraEmitter": {
+    "count": 40,
+    "numKB": 44.33,
+    "resKB": 0
+   },
+   "AudioDeviceNotificationSubsystem": {
+    "count": 1,
+    "numKB": 0.38,
+    "resKB": 0
+   },
+   "AudioPlatformSettings": {
+    "count": 1,
+    "numKB": 0.08,
+    "resKB": 0
+   },
+   "AudioSubsystemCollectionRoot": {
+    "count": 1,
+    "numKB": 0.05,
+    "resKB": 0
+   },
+   "AudioBusSubsystem": {
+    "count": 1,
+    "numKB": 0.26,
+    "resKB": 0
+   },
+   "DeviceProfile": {
+    "count": 187,
+    "numKB": 1782.32,
+    "resKB": 0
+   },
+   "Package": {
+    "count": 881,
+    "numKB": 82.59,
+    "resKB": 0
+   },
+   "CameraAnimationCameraModifier": {
+    "count": 1,
+    "numKB": 0.09,
+    "resKB": 0
+   },
+   "Function": {
+    "count": 13965,
+    "numKB": 3181.28,
+    "resKB": 0
+   },
+   "NiagaraComponentPool": {
+    "count": 1,
+    "numKB": 0.16,
+    "resKB": 0
+   },
+   "DelegateFunction": {
+    "count": 630,
+    "numKB": 142.73,
+    "resKB": 0
+   },
+   "CameraAnimationSequenceSubsystem": {
+    "count": 1,
+    "numKB": 0.08,
+    "resKB": 0
+   },
+   "Enum": {
+    "count": 2342,
+    "numKB": 256.16,
+    "resKB": 0
+   },
+   "ScriptStruct": {
+    "count": 6995,
+    "numKB": 1311.56,
+    "resKB": 0
+   },
+   "AnimCurveCompressionSettings": {
+    "count": 1,
+    "numKB": 0.05,
+    "resKB": 0
+   },
+   "AnimCurveCompressionCodec_ACL": {
+    "count": 1,
+    "numKB": 0.04,
+    "resKB": 0
+   },
+   "ABP_SkaterTB1_P3_C": {
+    "count": 6,
+    "numKB": 35.72,
+    "resKB": 0
+   },
+   "Class": {
+    "count": 5338,
+    "numKB": 3204.25,
+    "resKB": 0
+   },
+   "BP_SkaterVisual_TB1_P3_C": {
+    "count": 6,
+    "numKB": 6.33,
+    "resKB": 0
+   },
+   "AnimBoneCompressionSettings": {
+    "count": 1,
+    "numKB": 0.07,
+    "resKB": 0
+   },
+   "AnimBoneCompressionCodec_ACL": {
+    "count": 1,
+    "numKB": 0.06,
+    "resKB": 0
+   },
+   "AnimBlueprintGeneratedClass": {
+    "count": 1,
+    "numKB": 13.26,
+    "resKB": 0
+   },
+   "JamSkater": {
+    "count": 6,
+    "numKB": 5.22,
+    "resKB": 0
+   },
+   "NiagaraComponent": {
+    "count": 1,
+    "numKB": 2.21,
+    "resKB": 0
+   },
+   "AudioComponent": {
+    "count": 3,
+    "numKB": 10.56,
+    "resKB": 0
+   },
+   "AnimCurveMetaData": {
+    "count": 1,
+    "numKB": 0.16,
+    "resKB": 0
+   }
+  }
+ },
+ {
+  "file": "Rink-Windows-11.13-02.27.31_Pid28776_Rink-Windows-13-02.29.04.memreport",
+  "physUsedMB": 1312.61,
+  "physPeakMB": 1382.86,
+  "objects": 32597,
+  "objTotalMB": 14.221,
+  "objResMB": 33.132,
+  "rhiTotalMB": 3909.915,
+  "rhiLines": [
+   {
+    "mb": 2048,
+    "name": "Reserved Buffer Memory (Uncommitted)"
+   },
+   {
+    "mb": 775.395,
+    "name": "UAV Texture Memory"
+   },
+   {
+    "mb": 512,
+    "name": "Reserved Texture Memory (Committed)"
+   },
+   {
+    "mb": 346.062,
+    "name": "Render Target 2D Memory"
+   },
+   {
+    "mb": 125.151,
+    "name": "Structured Buffer Memory"
+   },
+   {
+    "mb": 31.643,
+    "name": "Bindless Resource Heap"
+   },
+   {
+    "mb": 24.176,
+    "name": "Vertex Buffer Memory"
+   },
+   {
+    "mb": 21.824,
+    "name": "Texture 2D Memory"
+   },
+   {
+    "mb": 18.203,
+    "name": "Texture Cube Memory"
+   },
+   {
+    "mb": 4.401,
+    "name": "Byte Address Buffer Memory"
+   },
+   {
+    "mb": 1.379,
+    "name": "Bindless Sampler Heap"
+   },
+   {
+    "mb": 1.059,
+    "name": "Texture 3D Memory"
+   },
+   {
+    "mb": 0.661,
+    "name": "Index Buffer Memory"
+   },
+   {
+    "mb": 0.062,
+    "name": "Render Target 3D Memory"
+   }
+  ],
+  "rhiTop": [
+   {
+    "name": "Shadow.Virtual.PhysicalPagePool",
+    "type": "Texture",
+    "mb": 512
+   },
+   {
+    "name": "TSR.History.Color",
+    "type": "Texture",
+    "mb": 127.5
+   },
+   {
+    "name": "GlobalDistanceField.PageObjectGridBuffer",
+    "type": "Buffer",
+    "mb": 112
+   },
+   {
+    "name": "Shadow.Virtual.HZBPhysicalPagePool",
+    "type": "Texture",
+    "mb": 85.38
+   },
+   {
+    "name": "Lumen.RadianceCache.FinalRadianceAtlas",
+    "type": "Texture",
+    "mb": 72.25
+   },
+   {
+    "name": "Lumen.Radiosity.TraceRadianceAtlas",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.Radiosity.SceneIndirectLighting",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.SceneDirectLighting",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.SceneFinalLighting",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.RadianceCache.RadianceProbeAtlasTextureSource",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "GlobalDistanceField.PageAtlas",
+    "type": "Texture",
+    "mb": 56
+   },
+   {
+    "name": "Lumen.RadianceCache.DepthProbeAtlasTexture",
+    "type": "Texture",
+    "mb": 32
+   },
+   {
+    "name": "Lumen.SceneDepth",
+    "type": "Texture",
+    "mb": 32
+   },
+   {
+    "name": "TSR.History.Metadata",
+    "type": "Texture",
+    "mb": 31.88
+   },
+   {
+    "name": "Lumen.RadianceCache.FinalRadianceAtlas",
+    "type": "Texture",
+    "mb": 21
+   }
+  ],
+  "classes": {
+   "TextureCube": {
+    "count": 1,
+    "numKB": 0.34,
+    "resKB": 16448
+   },
+   "Texture2D": {
+    "count": 39,
+    "numKB": 14.02,
+    "resKB": 14160
+   },
+   "VolumeTexture": {
+    "count": 3,
+    "numKB": 1.03,
+    "resKB": 1056
+   },
+   "Material": {
+    "count": 36,
+    "numKB": 25.27,
+    "resKB": 789.13
+   },
+   "SoundWave": {
+    "count": 349,
+    "numKB": 384.45,
+    "resKB": 393.99
+   },
+   "StaticMesh": {
+    "count": 11,
+    "numKB": 24.66,
+    "resKB": 271.95
+   },
+   "SkeletalMesh": {
+    "count": 1,
+    "numKB": 7.11,
+    "resKB": 205.76
+   },
+   "StaticMeshComponent": {
+    "count": 160,
+    "numKB": 277.14,
+    "resKB": 150.4
+   },
+   "BodySetup": {
+    "count": 27,
+    "numKB": 27.37,
+    "resKB": 140.08
+   },
+   "MaterialInstanceConstant": {
+    "count": 48,
+    "numKB": 48.02,
+    "resKB": 71.38
+   },
+   "NiagaraSystem": {
+    "count": 23,
+    "numKB": 135.25,
+    "resKB": 70.94
+   },
+   "MetaSoundSource": {
+    "count": 32,
+    "numKB": 872.62,
+    "resKB": 35.25
+   },
+   "NiagaraSpriteRendererProperties": {
+    "count": 39,
+    "numKB": 50.27,
+    "resKB": 34.12
+   },
+   "SkeletalMeshComponent": {
+    "count": 7,
+    "numKB": 70.49,
+    "resKB": 27.28
+   },
+   "ProceduralMeshComponent": {
+    "count": 13,
+    "numKB": 1361.37,
+    "resKB": 8.33
+   },
+   "AnimSequence": {
+    "count": 62,
+    "numKB": 170.36,
+    "resKB": 0.97
+   },
+   "NiagaraRibbonRendererProperties": {
+    "count": 1,
+    "numKB": 1.3,
+    "resKB": 0.34
+   },
+   "ScriptStruct": {
+    "count": 6995,
+    "numKB": 1311.56,
+    "resKB": 0
+   },
+   "AudioAnalyzerSubsystem": {
+    "count": 1,
+    "numKB": 0.08,
+    "resKB": 0
+   },
+   "DeviceProfile": {
+    "count": 187,
+    "numKB": 1782.32,
+    "resKB": 0
+   },
+   "NiagaraScript": {
+    "count": 128,
+    "numKB": 395.4,
+    "resKB": 0
+   },
+   "Enum": {
+    "count": 2342,
+    "numKB": 256.16,
+    "resKB": 0
+   },
+   "Class": {
+    "count": 5338,
+    "numKB": 3204.25,
+    "resKB": 0
+   },
+   "AudioDeviceNotificationSubsystem": {
+    "count": 1,
+    "numKB": 0.38,
+    "resKB": 0
+   },
+   "AudioPlatformSettings": {
+    "count": 1,
+    "numKB": 0.08,
+    "resKB": 0
+   },
+   "AudioWidgetSubsystem": {
+    "count": 1,
+    "numKB": 0.05,
+    "resKB": 0
+   },
+   "NiagaraDataInterfaceCurve": {
+    "count": 27,
+    "numKB": 14.39,
+    "resKB": 0
+   },
+   "NiagaraEmitter": {
+    "count": 40,
+    "numKB": 44.33,
+    "resKB": 0
+   },
+   "AudioSubsystemCollectionRoot": {
+    "count": 1,
+    "numKB": 0.05,
+    "resKB": 0
+   },
+   "AudioBusSubsystem": {
+    "count": 1,
+    "numKB": 0.26,
+    "resKB": 0
+   },
+   "DelegateFunction": {
+    "count": 630,
+    "numKB": 142.73,
+    "resKB": 0
+   },
+   "Package": {
+    "count": 890,
+    "numKB": 83.44,
+    "resKB": 0
+   },
+   "Function": {
+    "count": 13962,
+    "numKB": 3179.92,
+    "resKB": 0
+   },
+   "CameraAnimationCameraModifier": {
+    "count": 1,
+    "numKB": 0.09,
+    "resKB": 0
+   },
+   "NiagaraComponentPool": {
+    "count": 1,
+    "numKB": 0.16,
+    "resKB": 0
+   },
+   "CameraAnimationSequenceSubsystem": {
+    "count": 1,
+    "numKB": 0.08,
+    "resKB": 0
+   },
+   "StaticMeshActor": {
+    "count": 156,
+    "numKB": 108.47,
+    "resKB": 0
+   },
+   "AnimCurveCompressionSettings": {
+    "count": 1,
+    "numKB": 0.05,
+    "resKB": 0
+   },
+   "AnimCurveCompressionCodec_ACL": {
+    "count": 1,
+    "numKB": 0.04,
+    "resKB": 0
+   },
+   "AnimBoneCompressionSettings": {
+    "count": 1,
+    "numKB": 0.07,
+    "resKB": 0
+   },
+   "AnimBoneCompressionCodec_ACL": {
+    "count": 1,
+    "numKB": 0.06,
+    "resKB": 0
+   },
+   "JamSkater": {
+    "count": 6,
+    "numKB": 5.22,
+    "resKB": 0
+   },
+   "NiagaraComponent": {
+    "count": 1,
+    "numKB": 2.21,
+    "resKB": 0
+   },
+   "AudioComponent": {
+    "count": 3,
+    "numKB": 10.56,
+    "resKB": 0
+   },
+   "ABP_SkaterTB1_C": {
+    "count": 6,
+    "numKB": 35.72,
+    "resKB": 0
+   },
+   "BP_SkaterVisual_TB1_C": {
+    "count": 6,
+    "numKB": 6.33,
+    "resKB": 0
+   },
+   "AnimBlueprintGeneratedClass": {
+    "count": 1,
+    "numKB": 13.26,
+    "resKB": 0
+   },
+   "AnimCurveMetaData": {
+    "count": 1,
+    "numKB": 0.16,
+    "resKB": 0
+   }
+  }
+ },
+ {
+  "file": "Rink-Windows-11.13-02.27.31_Pid28776_Rink-Windows-13-02.29.15.memreport",
+  "physUsedMB": 1312.99,
+  "physPeakMB": 1382.86,
+  "objects": 32345,
+  "objTotalMB": 13.93,
+  "objResMB": 33.097,
+  "rhiTotalMB": 3930.217,
+  "rhiLines": [
+   {
+    "mb": 2048,
+    "name": "Reserved Buffer Memory (Uncommitted)"
+   },
+   {
+    "mb": 795.645,
+    "name": "UAV Texture Memory"
+   },
+   {
+    "mb": 512,
+    "name": "Reserved Texture Memory (Committed)"
+   },
+   {
+    "mb": 346.062,
+    "name": "Render Target 2D Memory"
+   },
+   {
+    "mb": 124.778,
+    "name": "Structured Buffer Memory"
+   },
+   {
+    "mb": 31.643,
+    "name": "Bindless Resource Heap"
+   },
+   {
+    "mb": 24.588,
+    "name": "Vertex Buffer Memory"
+   },
+   {
+    "mb": 21.824,
+    "name": "Texture 2D Memory"
+   },
+   {
+    "mb": 18.203,
+    "name": "Texture Cube Memory"
+   },
+   {
+    "mb": 4.406,
+    "name": "Byte Address Buffer Memory"
+   },
+   {
+    "mb": 1.379,
+    "name": "Bindless Sampler Heap"
+   },
+   {
+    "mb": 1.059,
+    "name": "Texture 3D Memory"
+   },
+   {
+    "mb": 0.688,
+    "name": "Index Buffer Memory"
+   },
+   {
+    "mb": 0.062,
+    "name": "Render Target 3D Memory"
+   }
+  ],
+  "rhiTop": [
+   {
+    "name": "Shadow.Virtual.PhysicalPagePool",
+    "type": "Texture",
+    "mb": 512
+   },
+   {
+    "name": "TSR.History.Color",
+    "type": "Texture",
+    "mb": 127.5
+   },
+   {
+    "name": "GlobalDistanceField.PageObjectGridBuffer",
+    "type": "Buffer",
+    "mb": 112
+   },
+   {
+    "name": "Shadow.Virtual.HZBPhysicalPagePool",
+    "type": "Texture",
+    "mb": 85.38
+   },
+   {
+    "name": "Lumen.RadianceCache.FinalRadianceAtlas",
+    "type": "Texture",
+    "mb": 72.25
+   },
+   {
+    "name": "Lumen.RadianceCache.RadianceProbeAtlasTextureSource",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.Radiosity.SceneIndirectLighting",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.SceneDirectLighting",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.SceneFinalLighting",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.Radiosity.TraceRadianceAtlas",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "GlobalDistanceField.PageAtlas",
+    "type": "Texture",
+    "mb": 56
+   },
+   {
+    "name": "Lumen.SceneDepth",
+    "type": "Texture",
+    "mb": 32
+   },
+   {
+    "name": "Lumen.RadianceCache.DepthProbeAtlasTexture",
+    "type": "Texture",
+    "mb": 32
+   },
+   {
+    "name": "TSR.History.Metadata",
+    "type": "Texture",
+    "mb": 31.88
+   },
+   {
+    "name": "Lumen.RadianceCache.FinalRadianceAtlas",
+    "type": "Texture",
+    "mb": 21
+   }
+  ],
+  "classes": {
+   "TextureCube": {
+    "count": 1,
+    "numKB": 0.34,
+    "resKB": 16448
+   },
+   "Texture2D": {
+    "count": 39,
+    "numKB": 14.02,
+    "resKB": 14160
+   },
+   "VolumeTexture": {
+    "count": 3,
+    "numKB": 1.03,
+    "resKB": 1056
+   },
+   "Material": {
+    "count": 34,
+    "numKB": 23.88,
+    "resKB": 780.2
+   },
+   "SoundWave": {
+    "count": 349,
+    "numKB": 384.45,
+    "resKB": 393.99
+   },
+   "SkeletalMesh": {
+    "count": 1,
+    "numKB": 7.11,
+    "resKB": 384.77
+   },
+   "StaticMesh": {
+    "count": 6,
+    "numKB": 15.09,
+    "resKB": 173.24
+   },
+   "BodySetup": {
+    "count": 22,
+    "numKB": 23.11,
+    "resKB": 140.08
+   },
+   "NiagaraSystem": {
+    "count": 23,
+    "numKB": 135.25,
+    "resKB": 70.94
+   },
+   "MaterialInstanceConstant": {
+    "count": 45,
+    "numKB": 45.73,
+    "resKB": 69.93
+   },
+   "StaticMeshComponent": {
+    "count": 43,
+    "numKB": 74.45,
+    "resKB": 41.65
+   },
+   "MetaSoundSource": {
+    "count": 32,
+    "numKB": 872.62,
+    "resKB": 35.25
+   },
+   "NiagaraSpriteRendererProperties": {
+    "count": 39,
+    "numKB": 50.27,
+    "resKB": 34.12
+   },
+   "SkeletalMeshComponent": {
+    "count": 7,
+    "numKB": 70.49,
+    "resKB": 27.28
+   },
+   "MaterialInstanceDynamic": {
+    "count": 34,
+    "numKB": 35.22,
+    "resKB": 22.58
+   },
+   "ProceduralMeshComponent": {
+    "count": 13,
+    "numKB": 1361.37,
+    "resKB": 8.33
+   },
+   "AnimSequence": {
+    "count": 62,
+    "numKB": 170.36,
+    "resKB": 0.97
+   },
+   "NiagaraRibbonRendererProperties": {
+    "count": 1,
+    "numKB": 1.3,
+    "resKB": 0.34
+   },
+   "ScriptStruct": {
+    "count": 6995,
+    "numKB": 1311.56,
+    "resKB": 0
+   },
+   "AudioAnalyzerSubsystem": {
+    "count": 1,
+    "numKB": 0.08,
+    "resKB": 0
+   },
+   "DeviceProfile": {
+    "count": 187,
+    "numKB": 1782.32,
+    "resKB": 0
+   },
+   "NiagaraScript": {
+    "count": 128,
+    "numKB": 395.4,
+    "resKB": 0
+   },
+   "Enum": {
+    "count": 2342,
+    "numKB": 256.16,
+    "resKB": 0
+   },
+   "Class": {
+    "count": 5338,
+    "numKB": 3204.25,
+    "resKB": 0
+   },
+   "AudioDeviceNotificationSubsystem": {
+    "count": 1,
+    "numKB": 0.38,
+    "resKB": 0
+   },
+   "AudioPlatformSettings": {
+    "count": 1,
+    "numKB": 0.08,
+    "resKB": 0
+   },
+   "AudioWidgetSubsystem": {
+    "count": 1,
+    "numKB": 0.05,
+    "resKB": 0
+   },
+   "NiagaraDataInterfaceCurve": {
+    "count": 27,
+    "numKB": 14.39,
+    "resKB": 0
+   },
+   "NiagaraEmitter": {
+    "count": 40,
+    "numKB": 44.33,
+    "resKB": 0
+   },
+   "AudioSubsystemCollectionRoot": {
+    "count": 1,
+    "numKB": 0.05,
+    "resKB": 0
+   },
+   "AudioBusSubsystem": {
+    "count": 1,
+    "numKB": 0.26,
+    "resKB": 0
+   },
+   "DelegateFunction": {
+    "count": 630,
+    "numKB": 142.73,
+    "resKB": 0
+   },
+   "Package": {
+    "count": 881,
+    "numKB": 82.59,
+    "resKB": 0
+   },
+   "Function": {
+    "count": 13965,
+    "numKB": 3181.28,
+    "resKB": 0
+   },
+   "CameraAnimationCameraModifier": {
+    "count": 1,
+    "numKB": 0.09,
+    "resKB": 0
+   },
+   "NiagaraComponentPool": {
+    "count": 1,
+    "numKB": 0.16,
+    "resKB": 0
+   },
+   "CameraAnimationSequenceSubsystem": {
+    "count": 1,
+    "numKB": 0.08,
+    "resKB": 0
+   },
+   "AnimCurveCompressionSettings": {
+    "count": 1,
+    "numKB": 0.05,
+    "resKB": 0
+   },
+   "AnimCurveCompressionCodec_ACL": {
+    "count": 1,
+    "numKB": 0.04,
+    "resKB": 0
+   },
+   "AnimBoneCompressionSettings": {
+    "count": 1,
+    "numKB": 0.07,
+    "resKB": 0
+   },
+   "AnimBoneCompressionCodec_ACL": {
+    "count": 1,
+    "numKB": 0.06,
+    "resKB": 0
+   },
+   "ABP_SkaterTB1_P3_C": {
+    "count": 6,
+    "numKB": 35.72,
+    "resKB": 0
+   },
+   "BP_SkaterVisual_TB1_P3_C": {
+    "count": 6,
+    "numKB": 6.33,
+    "resKB": 0
+   },
+   "JamSkater": {
+    "count": 6,
+    "numKB": 5.22,
+    "resKB": 0
+   },
+   "AnimBlueprintGeneratedClass": {
+    "count": 1,
+    "numKB": 13.26,
+    "resKB": 0
+   },
+   "NiagaraComponent": {
+    "count": 1,
+    "numKB": 2.21,
+    "resKB": 0
+   },
+   "AudioComponent": {
+    "count": 3,
+    "numKB": 10.56,
+    "resKB": 0
+   },
+   "AnimCurveMetaData": {
+    "count": 1,
+    "numKB": 0.16,
+    "resKB": 0
+   }
+  }
+ },
+ {
+  "file": "Rink-Windows-11.13-02.27.31_Pid28776_Rink-Windows-13-02.29.26.memreport",
+  "physUsedMB": 1310.76,
+  "physPeakMB": 1382.86,
+  "objects": 32597,
+  "objTotalMB": 14.221,
+  "objResMB": 33.132,
+  "rhiTotalMB": 3909.73,
+  "rhiLines": [
+   {
+    "mb": 2048,
+    "name": "Reserved Buffer Memory (Uncommitted)"
+   },
+   {
+    "mb": 775.395,
+    "name": "UAV Texture Memory"
+   },
+   {
+    "mb": 512,
+    "name": "Reserved Texture Memory (Committed)"
+   },
+   {
+    "mb": 346.062,
+    "name": "Render Target 2D Memory"
+   },
+   {
+    "mb": 125.008,
+    "name": "Structured Buffer Memory"
+   },
+   {
+    "mb": 31.643,
+    "name": "Bindless Resource Heap"
+   },
+   {
+    "mb": 24.176,
+    "name": "Vertex Buffer Memory"
+   },
+   {
+    "mb": 21.824,
+    "name": "Texture 2D Memory"
+   },
+   {
+    "mb": 18.203,
+    "name": "Texture Cube Memory"
+   },
+   {
+    "mb": 4.399,
+    "name": "Byte Address Buffer Memory"
+   },
+   {
+    "mb": 1.379,
+    "name": "Bindless Sampler Heap"
+   },
+   {
+    "mb": 1.059,
+    "name": "Texture 3D Memory"
+   },
+   {
+    "mb": 0.661,
+    "name": "Index Buffer Memory"
+   },
+   {
+    "mb": 0.062,
+    "name": "Render Target 3D Memory"
+   }
+  ],
+  "rhiTop": [
+   {
+    "name": "Shadow.Virtual.PhysicalPagePool",
+    "type": "Texture",
+    "mb": 512
+   },
+   {
+    "name": "TSR.History.Color",
+    "type": "Texture",
+    "mb": 127.5
+   },
+   {
+    "name": "GlobalDistanceField.PageObjectGridBuffer",
+    "type": "Buffer",
+    "mb": 112
+   },
+   {
+    "name": "Shadow.Virtual.HZBPhysicalPagePool",
+    "type": "Texture",
+    "mb": 85.38
+   },
+   {
+    "name": "Lumen.RadianceCache.FinalRadianceAtlas",
+    "type": "Texture",
+    "mb": 72.25
+   },
+   {
+    "name": "Lumen.RadianceCache.RadianceProbeAtlasTextureSource",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.Radiosity.TraceRadianceAtlas",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.Radiosity.SceneIndirectLighting",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.SceneFinalLighting",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.SceneDirectLighting",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "GlobalDistanceField.PageAtlas",
+    "type": "Texture",
+    "mb": 56
+   },
+   {
+    "name": "Lumen.RadianceCache.DepthProbeAtlasTexture",
+    "type": "Texture",
+    "mb": 32
+   },
+   {
+    "name": "Lumen.SceneDepth",
+    "type": "Texture",
+    "mb": 32
+   },
+   {
+    "name": "TSR.History.Metadata",
+    "type": "Texture",
+    "mb": 31.88
+   },
+   {
+    "name": "Lumen.RadianceCache.FinalRadianceAtlas",
+    "type": "Texture",
+    "mb": 21
+   }
+  ],
+  "classes": {
+   "TextureCube": {
+    "count": 1,
+    "numKB": 0.34,
+    "resKB": 16448
+   },
+   "Texture2D": {
+    "count": 39,
+    "numKB": 14.02,
+    "resKB": 14160
+   },
+   "VolumeTexture": {
+    "count": 3,
+    "numKB": 1.03,
+    "resKB": 1056
+   },
+   "Material": {
+    "count": 36,
+    "numKB": 25.27,
+    "resKB": 789.13
+   },
+   "SoundWave": {
+    "count": 349,
+    "numKB": 384.45,
+    "resKB": 393.99
+   },
+   "StaticMesh": {
+    "count": 11,
+    "numKB": 24.66,
+    "resKB": 271.95
+   },
+   "SkeletalMesh": {
+    "count": 1,
+    "numKB": 7.11,
+    "resKB": 205.76
+   },
+   "StaticMeshComponent": {
+    "count": 160,
+    "numKB": 277.14,
+    "resKB": 150.4
+   },
+   "BodySetup": {
+    "count": 27,
+    "numKB": 27.37,
+    "resKB": 140.08
+   },
+   "MaterialInstanceConstant": {
+    "count": 48,
+    "numKB": 48.02,
+    "resKB": 71.38
+   },
+   "NiagaraSystem": {
+    "count": 23,
+    "numKB": 135.25,
+    "resKB": 70.94
+   },
+   "MetaSoundSource": {
+    "count": 32,
+    "numKB": 872.62,
+    "resKB": 35.25
+   },
+   "NiagaraSpriteRendererProperties": {
+    "count": 39,
+    "numKB": 50.27,
+    "resKB": 34.12
+   },
+   "SkeletalMeshComponent": {
+    "count": 7,
+    "numKB": 70.49,
+    "resKB": 27.28
+   },
+   "ProceduralMeshComponent": {
+    "count": 13,
+    "numKB": 1361.37,
+    "resKB": 8.33
+   },
+   "AnimSequence": {
+    "count": 62,
+    "numKB": 170.36,
+    "resKB": 0.97
+   },
+   "NiagaraRibbonRendererProperties": {
+    "count": 1,
+    "numKB": 1.3,
+    "resKB": 0.34
+   },
+   "ScriptStruct": {
+    "count": 6995,
+    "numKB": 1311.56,
+    "resKB": 0
+   },
+   "NiagaraScript": {
+    "count": 128,
+    "numKB": 395.4,
+    "resKB": 0
+   },
+   "DeviceProfile": {
+    "count": 187,
+    "numKB": 1782.32,
+    "resKB": 0
+   },
+   "Function": {
+    "count": 13962,
+    "numKB": 3179.92,
+    "resKB": 0
+   },
+   "AudioSubsystemCollectionRoot": {
+    "count": 1,
+    "numKB": 0.05,
+    "resKB": 0
+   },
+   "AudioBusSubsystem": {
+    "count": 1,
+    "numKB": 0.26,
+    "resKB": 0
+   },
+   "AudioWidgetSubsystem": {
+    "count": 1,
+    "numKB": 0.05,
+    "resKB": 0
+   },
+   "AudioAnalyzerSubsystem": {
+    "count": 1,
+    "numKB": 0.08,
+    "resKB": 0
+   },
+   "NiagaraDataInterfaceCurve": {
+    "count": 27,
+    "numKB": 14.39,
+    "resKB": 0
+   },
+   "NiagaraEmitter": {
+    "count": 40,
+    "numKB": 44.33,
+    "resKB": 0
+   },
+   "AudioDeviceNotificationSubsystem": {
+    "count": 1,
+    "numKB": 0.38,
+    "resKB": 0
+   },
+   "AudioPlatformSettings": {
+    "count": 1,
+    "numKB": 0.08,
+    "resKB": 0
+   },
+   "StaticMeshActor": {
+    "count": 156,
+    "numKB": 108.47,
+    "resKB": 0
+   },
+   "Enum": {
+    "count": 2342,
+    "numKB": 256.16,
+    "resKB": 0
+   },
+   "DelegateFunction": {
+    "count": 630,
+    "numKB": 142.73,
+    "resKB": 0
+   },
+   "Class": {
+    "count": 5338,
+    "numKB": 3204.25,
+    "resKB": 0
+   },
+   "Package": {
+    "count": 890,
+    "numKB": 83.44,
+    "resKB": 0
+   },
+   "CameraAnimationCameraModifier": {
+    "count": 1,
+    "numKB": 0.09,
+    "resKB": 0
+   },
+   "NiagaraComponentPool": {
+    "count": 1,
+    "numKB": 0.16,
+    "resKB": 0
+   },
+   "CameraAnimationSequenceSubsystem": {
+    "count": 1,
+    "numKB": 0.08,
+    "resKB": 0
+   },
+   "AnimCurveCompressionSettings": {
+    "count": 1,
+    "numKB": 0.05,
+    "resKB": 0
+   },
+   "AnimCurveCompressionCodec_ACL": {
+    "count": 1,
+    "numKB": 0.04,
+    "resKB": 0
+   },
+   "AnimBoneCompressionSettings": {
+    "count": 1,
+    "numKB": 0.07,
+    "resKB": 0
+   },
+   "AnimBoneCompressionCodec_ACL": {
+    "count": 1,
+    "numKB": 0.06,
+    "resKB": 0
+   },
+   "JamSkater": {
+    "count": 6,
+    "numKB": 5.22,
+    "resKB": 0
+   },
+   "NiagaraComponent": {
+    "count": 1,
+    "numKB": 2.21,
+    "resKB": 0
+   },
+   "AudioComponent": {
+    "count": 3,
+    "numKB": 10.56,
+    "resKB": 0
+   },
+   "ABP_SkaterTB1_C": {
+    "count": 6,
+    "numKB": 35.72,
+    "resKB": 0
+   },
+   "BP_SkaterVisual_TB1_C": {
+    "count": 6,
+    "numKB": 6.33,
+    "resKB": 0
+   },
+   "AnimBlueprintGeneratedClass": {
+    "count": 1,
+    "numKB": 13.26,
+    "resKB": 0
+   },
+   "AnimCurveMetaData": {
+    "count": 1,
+    "numKB": 0.16,
+    "resKB": 0
+   }
+  }
+ },
+ {
+  "file": "Rink-Windows-11.13-02.27.31_Pid28776_Rink-Windows-13-02.29.37.memreport",
+  "physUsedMB": 1310.38,
+  "physPeakMB": 1382.86,
+  "objects": 32348,
+  "objTotalMB": 13.94,
+  "objResMB": 33.123,
+  "rhiTotalMB": 3930.714,
+  "rhiLines": [
+   {
+    "mb": 2048,
+    "name": "Reserved Buffer Memory (Uncommitted)"
+   },
+   {
+    "mb": 795.645,
+    "name": "UAV Texture Memory"
+   },
+   {
+    "mb": 512,
+    "name": "Reserved Texture Memory (Committed)"
+   },
+   {
+    "mb": 346.062,
+    "name": "Render Target 2D Memory"
+   },
+   {
+    "mb": 125.127,
+    "name": "Structured Buffer Memory"
+   },
+   {
+    "mb": 31.643,
+    "name": "Bindless Resource Heap"
+   },
+   {
+    "mb": 24.776,
+    "name": "Vertex Buffer Memory"
+   },
+   {
+    "mb": 21.824,
+    "name": "Texture 2D Memory"
+   },
+   {
+    "mb": 18.203,
+    "name": "Texture Cube Memory"
+   },
+   {
+    "mb": 4.407,
+    "name": "Byte Address Buffer Memory"
+   },
+   {
+    "mb": 1.379,
+    "name": "Bindless Sampler Heap"
+   },
+   {
+    "mb": 1.059,
+    "name": "Texture 3D Memory"
+   },
+   {
+    "mb": 0.683,
+    "name": "Index Buffer Memory"
+   },
+   {
+    "mb": 0.062,
+    "name": "Render Target 3D Memory"
+   }
+  ],
+  "rhiTop": [
+   {
+    "name": "Shadow.Virtual.PhysicalPagePool",
+    "type": "Texture",
+    "mb": 512
+   },
+   {
+    "name": "TSR.History.Color",
+    "type": "Texture",
+    "mb": 127.5
+   },
+   {
+    "name": "GlobalDistanceField.PageObjectGridBuffer",
+    "type": "Buffer",
+    "mb": 112
+   },
+   {
+    "name": "Shadow.Virtual.HZBPhysicalPagePool",
+    "type": "Texture",
+    "mb": 85.38
+   },
+   {
+    "name": "Lumen.RadianceCache.FinalRadianceAtlas",
+    "type": "Texture",
+    "mb": 72.25
+   },
+   {
+    "name": "Lumen.SceneFinalLighting",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.RadianceCache.RadianceProbeAtlasTextureSource",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.Radiosity.SceneIndirectLighting",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.Radiosity.TraceRadianceAtlas",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.SceneDirectLighting",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "GlobalDistanceField.PageAtlas",
+    "type": "Texture",
+    "mb": 56
+   },
+   {
+    "name": "Lumen.SceneDepth",
+    "type": "Texture",
+    "mb": 32
+   },
+   {
+    "name": "Lumen.RadianceCache.DepthProbeAtlasTexture",
+    "type": "Texture",
+    "mb": 32
+   },
+   {
+    "name": "TSR.History.Metadata",
+    "type": "Texture",
+    "mb": 31.88
+   },
+   {
+    "name": "Lumen.RadianceCache.FinalRadianceAtlas",
+    "type": "Texture",
+    "mb": 21
+   }
+  ],
+  "classes": {
+   "TextureCube": {
+    "count": 1,
+    "numKB": 0.34,
+    "resKB": 16448
+   },
+   "Texture2D": {
+    "count": 39,
+    "numKB": 14.02,
+    "resKB": 14160
+   },
+   "VolumeTexture": {
+    "count": 3,
+    "numKB": 1.03,
+    "resKB": 1056
+   },
+   "Material": {
+    "count": 34,
+    "numKB": 23.88,
+    "resKB": 780.2
+   },
+   "SoundWave": {
+    "count": 349,
+    "numKB": 384.45,
+    "resKB": 393.99
+   },
+   "SkeletalMesh": {
+    "count": 1,
+    "numKB": 7.11,
+    "resKB": 384.77
+   },
+   "StaticMesh": {
+    "count": 6,
+    "numKB": 15.09,
+    "resKB": 173.24
+   },
+   "BodySetup": {
+    "count": 22,
+    "numKB": 23.11,
+    "resKB": 140.08
+   },
+   "NiagaraSystem": {
+    "count": 23,
+    "numKB": 135.25,
+    "resKB": 70.94
+   },
+   "MaterialInstanceConstant": {
+    "count": 45,
+    "numKB": 45.73,
+    "resKB": 69.93
+   },
+   "StaticMeshComponent": {
+    "count": 43,
+    "numKB": 74.45,
+    "resKB": 41.65
+   },
+   "MetaSoundSource": {
+    "count": 32,
+    "numKB": 872.62,
+    "resKB": 35.25
+   },
+   "NiagaraSpriteRendererProperties": {
+    "count": 39,
+    "numKB": 50.27,
+    "resKB": 34.12
+   },
+   "SkeletalMeshComponent": {
+    "count": 7,
+    "numKB": 70.49,
+    "resKB": 27.28
+   },
+   "NiagaraComponent": {
+    "count": 2,
+    "numKB": 4.52,
+    "resKB": 26.81
+   },
+   "MaterialInstanceDynamic": {
+    "count": 34,
+    "numKB": 35.22,
+    "resKB": 22.58
+   },
+   "ProceduralMeshComponent": {
+    "count": 13,
+    "numKB": 1361.37,
+    "resKB": 8.33
+   },
+   "AnimSequence": {
+    "count": 62,
+    "numKB": 170.36,
+    "resKB": 0.97
+   },
+   "NiagaraRibbonRendererProperties": {
+    "count": 1,
+    "numKB": 1.3,
+    "resKB": 0.34
+   },
+   "DeviceProfile": {
+    "count": 187,
+    "numKB": 1782.32,
+    "resKB": 0
+   },
+   "AudioWidgetSubsystem": {
+    "count": 1,
+    "numKB": 0.05,
+    "resKB": 0
+   },
+   "AudioAnalyzerSubsystem": {
+    "count": 1,
+    "numKB": 0.08,
+    "resKB": 0
+   },
+   "NiagaraDataInterfaceCurve": {
+    "count": 27,
+    "numKB": 14.39,
+    "resKB": 0
+   },
+   "NiagaraEmitter": {
+    "count": 40,
+    "numKB": 44.33,
+    "resKB": 0
+   },
+   "AudioDeviceNotificationSubsystem": {
+    "count": 1,
+    "numKB": 0.38,
+    "resKB": 0
+   },
+   "AudioPlatformSettings": {
+    "count": 1,
+    "numKB": 0.08,
+    "resKB": 0
+   },
+   "AudioSubsystemCollectionRoot": {
+    "count": 1,
+    "numKB": 0.05,
+    "resKB": 0
+   },
+   "AudioBusSubsystem": {
+    "count": 1,
+    "numKB": 0.26,
+    "resKB": 0
+   },
+   "Function": {
+    "count": 13965,
+    "numKB": 3181.28,
+    "resKB": 0
+   },
+   "DelegateFunction": {
+    "count": 630,
+    "numKB": 142.73,
+    "resKB": 0
+   },
+   "Enum": {
+    "count": 2342,
+    "numKB": 256.16,
+    "resKB": 0
+   },
+   "NiagaraScript": {
+    "count": 128,
+    "numKB": 395.4,
+    "resKB": 0
+   },
+   "ScriptStruct": {
+    "count": 6995,
+    "numKB": 1311.56,
+    "resKB": 0
+   },
+   "Package": {
+    "count": 881,
+    "numKB": 82.59,
+    "resKB": 0
+   },
+   "CameraAnimationCameraModifier": {
+    "count": 1,
+    "numKB": 0.09,
+    "resKB": 0
+   },
+   "NiagaraComponentPool": {
+    "count": 1,
+    "numKB": 0.16,
+    "resKB": 0
+   },
+   "CameraAnimationSequenceSubsystem": {
+    "count": 1,
+    "numKB": 0.08,
+    "resKB": 0
+   },
+   "Class": {
+    "count": 5338,
+    "numKB": 3204.25,
+    "resKB": 0
+   },
+   "AnimCurveCompressionSettings": {
+    "count": 1,
+    "numKB": 0.05,
+    "resKB": 0
+   },
+   "AnimCurveCompressionCodec_ACL": {
+    "count": 1,
+    "numKB": 0.04,
+    "resKB": 0
+   },
+   "AnimBoneCompressionSettings": {
+    "count": 1,
+    "numKB": 0.07,
+    "resKB": 0
+   },
+   "AnimBoneCompressionCodec_ACL": {
+    "count": 1,
+    "numKB": 0.06,
+    "resKB": 0
+   },
+   "JamSkater": {
+    "count": 6,
+    "numKB": 5.22,
+    "resKB": 0
+   },
+   "AudioComponent": {
+    "count": 5,
+    "numKB": 17.81,
+    "resKB": 0
+   },
+   "ABP_SkaterTB1_P3_C": {
+    "count": 6,
+    "numKB": 35.72,
+    "resKB": 0
+   },
+   "BP_SkaterVisual_TB1_P3_C": {
+    "count": 6,
+    "numKB": 6.33,
+    "resKB": 0
+   },
+   "AnimBlueprintGeneratedClass": {
+    "count": 1,
+    "numKB": 13.26,
+    "resKB": 0
+   },
+   "AnimCurveMetaData": {
+    "count": 1,
+    "numKB": 0.16,
+    "resKB": 0
+   }
+  }
+ },
+ {
+  "file": "Rink-Windows-11.13-02.27.31_Pid28776_Rink-Windows-13-02.29.48.memreport",
+  "physUsedMB": 1310.15,
+  "physPeakMB": 1382.86,
+  "objects": 32603,
+  "objTotalMB": 14.238,
+  "objResMB": 33.165,
+  "rhiTotalMB": 3908.446,
+  "rhiLines": [
+   {
+    "mb": 2048,
+    "name": "Reserved Buffer Memory (Uncommitted)"
+   },
+   {
+    "mb": 775.395,
+    "name": "UAV Texture Memory"
+   },
+   {
+    "mb": 512,
+    "name": "Reserved Texture Memory (Committed)"
+   },
+   {
+    "mb": 346.062,
+    "name": "Render Target 2D Memory"
+   },
+   {
+    "mb": 123.642,
+    "name": "Structured Buffer Memory"
+   },
+   {
+    "mb": 31.643,
+    "name": "Bindless Resource Heap"
+   },
+   {
+    "mb": 24.301,
+    "name": "Vertex Buffer Memory"
+   },
+   {
+    "mb": 21.824,
+    "name": "Texture 2D Memory"
+   },
+   {
+    "mb": 18.203,
+    "name": "Texture Cube Memory"
+   },
+   {
+    "mb": 4.399,
+    "name": "Byte Address Buffer Memory"
+   },
+   {
+    "mb": 1.379,
+    "name": "Bindless Sampler Heap"
+   },
+   {
+    "mb": 1.059,
+    "name": "Texture 3D Memory"
+   },
+   {
+    "mb": 0.661,
+    "name": "Index Buffer Memory"
+   },
+   {
+    "mb": 0.062,
+    "name": "Render Target 3D Memory"
+   }
+  ],
+  "rhiTop": [
+   {
+    "name": "Shadow.Virtual.PhysicalPagePool",
+    "type": "Texture",
+    "mb": 512
+   },
+   {
+    "name": "TSR.History.Color",
+    "type": "Texture",
+    "mb": 127.5
+   },
+   {
+    "name": "GlobalDistanceField.PageObjectGridBuffer",
+    "type": "Buffer",
+    "mb": 112
+   },
+   {
+    "name": "Shadow.Virtual.HZBPhysicalPagePool",
+    "type": "Texture",
+    "mb": 85.38
+   },
+   {
+    "name": "Lumen.RadianceCache.FinalRadianceAtlas",
+    "type": "Texture",
+    "mb": 72.25
+   },
+   {
+    "name": "Lumen.RadianceCache.RadianceProbeAtlasTextureSource",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.SceneDirectLighting",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.Radiosity.TraceRadianceAtlas",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.SceneFinalLighting",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "Lumen.Radiosity.SceneIndirectLighting",
+    "type": "Texture",
+    "mb": 64
+   },
+   {
+    "name": "GlobalDistanceField.PageAtlas",
+    "type": "Texture",
+    "mb": 56
+   },
+   {
+    "name": "Lumen.SceneDepth",
+    "type": "Texture",
+    "mb": 32
+   },
+   {
+    "name": "Lumen.RadianceCache.DepthProbeAtlasTexture",
+    "type": "Texture",
+    "mb": 32
+   },
+   {
+    "name": "TSR.History.Metadata",
+    "type": "Texture",
+    "mb": 31.88
+   },
+   {
+    "name": "Lumen.RadianceCache.FinalRadianceAtlas",
+    "type": "Texture",
+    "mb": 21
+   }
+  ],
+  "classes": {
+   "TextureCube": {
+    "count": 1,
+    "numKB": 0.34,
+    "resKB": 16448
+   },
+   "Texture2D": {
+    "count": 39,
+    "numKB": 14.02,
+    "resKB": 14160
+   },
+   "VolumeTexture": {
+    "count": 3,
+    "numKB": 1.03,
+    "resKB": 1056
+   },
+   "Material": {
+    "count": 36,
+    "numKB": 25.27,
+    "resKB": 789.13
+   },
+   "SoundWave": {
+    "count": 349,
+    "numKB": 384.45,
+    "resKB": 393.99
+   },
+   "StaticMesh": {
+    "count": 11,
+    "numKB": 24.66,
+    "resKB": 271.95
+   },
+   "SkeletalMesh": {
+    "count": 1,
+    "numKB": 7.11,
+    "resKB": 205.76
+   },
+   "StaticMeshComponent": {
+    "count": 160,
+    "numKB": 277.14,
+    "resKB": 150.4
+   },
+   "BodySetup": {
+    "count": 27,
+    "numKB": 27.37,
+    "resKB": 140.08
+   },
+   "MaterialInstanceConstant": {
+    "count": 48,
+    "numKB": 48.02,
+    "resKB": 71.38
+   },
+   "NiagaraSystem": {
+    "count": 23,
+    "numKB": 135.25,
+    "resKB": 70.94
+   },
+   "MetaSoundSource": {
+    "count": 32,
+    "numKB": 872.62,
+    "resKB": 35.25
+   },
+   "NiagaraSpriteRendererProperties": {
+    "count": 39,
+    "numKB": 50.27,
+    "resKB": 34.12
+   },
+   "NiagaraComponent": {
+    "count": 3,
+    "numKB": 6.78,
+    "resKB": 33.55
+   },
+   "SkeletalMeshComponent": {
+    "count": 7,
+    "numKB": 70.49,
+    "resKB": 27.28
+   },
+   "ProceduralMeshComponent": {
+    "count": 13,
+    "numKB": 1361.37,
+    "resKB": 8.33
+   },
+   "AnimSequence": {
+    "count": 62,
+    "numKB": 170.36,
+    "resKB": 0.97
+   },
+   "AnimMontage": {
+    "count": 1,
+    "numKB": 0.6,
+    "resKB": 0.55
+   },
+   "NiagaraRibbonRendererProperties": {
+    "count": 1,
+    "numKB": 1.3,
+    "resKB": 0.34
+   },
+   "NiagaraScript": {
+    "count": 128,
+    "numKB": 395.4,
+    "resKB": 0
+   },
+   "AudioWidgetSubsystem": {
+    "count": 1,
+    "numKB": 0.05,
+    "resKB": 0
+   },
+   "AudioAnalyzerSubsystem": {
+    "count": 1,
+    "numKB": 0.08,
+    "resKB": 0
+   },
+   "NiagaraDataInterfaceCurve": {
+    "count": 27,
+    "numKB": 14.39,
+    "resKB": 0
+   },
+   "NiagaraEmitter": {
+    "count": 40,
+    "numKB": 44.33,
+    "resKB": 0
+   },
+   "AudioDeviceNotificationSubsystem": {
+    "count": 1,
+    "numKB": 0.38,
+    "resKB": 0
+   },
+   "AudioPlatformSettings": {
+    "count": 1,
+    "numKB": 0.08,
+    "resKB": 0
+   },
+   "AudioSubsystemCollectionRoot": {
+    "count": 1,
+    "numKB": 0.05,
+    "resKB": 0
+   },
+   "AudioBusSubsystem": {
+    "count": 1,
+    "numKB": 0.26,
+    "resKB": 0
+   },
+   "Function": {
+    "count": 13962,
+    "numKB": 3179.92,
+    "resKB": 0
+   },
+   "DelegateFunction": {
+    "count": 630,
+    "numKB": 142.73,
+    "resKB": 0
+   },
+   "Enum": {
+    "count": 2342,
+    "numKB": 256.16,
+    "resKB": 0
+   },
+   "StaticMeshActor": {
+    "count": 156,
+    "numKB": 108.47,
+    "resKB": 0
+   },
+   "DeviceProfile": {
+    "count": 187,
+    "numKB": 1782.32,
+    "resKB": 0
+   },
+   "ScriptStruct": {
+    "count": 6995,
+    "numKB": 1311.56,
+    "resKB": 0
+   },
+   "Package": {
+    "count": 890,
+    "numKB": 83.44,
+    "resKB": 0
+   },
+   "CameraAnimationCameraModifier": {
+    "count": 1,
+    "numKB": 0.09,
+    "resKB": 0
+   },
+   "NiagaraComponentPool": {
+    "count": 1,
+    "numKB": 0.16,
+    "resKB": 0
+   },
+   "CameraAnimationSequenceSubsystem": {
+    "count": 1,
+    "numKB": 0.08,
+    "resKB": 0
+   },
+   "Class": {
+    "count": 5338,
+    "numKB": 3204.25,
+    "resKB": 0
+   },
+   "AnimCurveCompressionSettings": {
+    "count": 1,
+    "numKB": 0.05,
+    "resKB": 0
+   },
+   "AnimCurveCompressionCodec_ACL": {
+    "count": 1,
+    "numKB": 0.04,
+    "resKB": 0
+   },
+   "AnimBoneCompressionSettings": {
+    "count": 1,
+    "numKB": 0.07,
+    "resKB": 0
+   },
+   "AnimBoneCompressionCodec_ACL": {
+    "count": 1,
+    "numKB": 0.06,
+    "resKB": 0
+   },
+   "JamSkater": {
+    "count": 6,
+    "numKB": 5.22,
+    "resKB": 0
+   },
+   "AudioComponent": {
+    "count": 6,
+    "numKB": 21.44,
+    "resKB": 0
+   },
+   "ABP_SkaterTB1_C": {
+    "count": 6,
+    "numKB": 35.72,
+    "resKB": 0
+   },
+   "BP_SkaterVisual_TB1_C": {
+    "count": 6,
+    "numKB": 6.33,
+    "resKB": 0
+   },
+   "AnimBlueprintGeneratedClass": {
+    "count": 1,
+    "numKB": 13.26,
+    "resKB": 0
+   },
+   "AnimCurveMetaData": {
+    "count": 1,
+    "numKB": 0.16,
+    "resKB": 0
+   }
+  },
+  "assets": [
+   {
+    "asset": "/Engine/MapTemplates/Sky/DaylightAmbientCubemap",
+    "kind": "Texture",
+    "kb": 16448,
+    "note": "512x512 PF_FloatRGBA TEXTUREGROUP_World"
+   },
+   {
+    "asset": "/Engine/EngineMaterials/FastBlueNoise_vec2_128x128x64",
+    "kind": "Texture",
+    "kb": 4096,
+    "note": "128x8192 PF_B8G8R8A8 TEXTUREGROUP_World"
+   },
+   {
+    "asset": "/Game/UI/T_UI_CallCard",
+    "kind": "Texture",
+    "kb": 2816,
+    "note": "1024x653 PF_B8G8R8A8 TEXTUREGROUP_UI"
+   },
+   {
+    "asset": "/JamAssets/Look/Textures/T_Clay_Thumb_N",
+    "kind": "Texture",
+    "kb": 1408,
+    "note": "1024x1024 PF_BC5 TEXTUREGROUP_WorldNormalMap"
+   },
+   {
+    "asset": "/Engine/EngineMaterials/FastBlueNoise_scalar_128x128x64",
+    "kind": "Texture",
+    "kb": 1024,
+    "note": "128x8192 PF_G8 TEXTUREGROUP_World"
+   },
+   {
+    "asset": "/JamAssets/Look/Textures/T_Felt_Fibre",
+    "kind": "Texture",
+    "kb": 704,
+    "note": "1024x1024 PF_DXT1 TEXTUREGROUP_World"
+   },
+   {
+    "asset": "/JamAssets/Look/Textures/T_Numbers_Varsity",
+    "kind": "Texture",
+    "kb": 704,
+    "note": "1024x512 PF_BC7 TEXTUREGROUP_World"
+   },
+   {
+    "asset": "/Engine/EngineMaterials/Hair/Hair_DirectionalAlbedo",
+    "kind": "Texture",
+    "kb": 512,
+    "note": "64x64 PF_FloatRGBA TEXTUREGROUP_World"
+   },
+   {
+    "asset": "/Engine/EngineMaterials/Hair/Hair_DualScattering",
+    "kind": "Texture",
+    "kb": 512,
+    "note": "64x64 PF_FloatRGBA TEXTUREGROUP_World"
+   },
+   {
+    "asset": "/Game/UI/T_UI_Button_Hover",
+    "kind": "Texture",
+    "kb": 384,
+    "note": "512x171 PF_B8G8R8A8 TEXTUREGROUP_UI"
+   },
+   {
+    "asset": "/Game/UI/T_UI_Button_Pressed",
+    "kind": "Texture",
+    "kb": 384,
+    "note": "512x171 PF_B8G8R8A8 TEXTUREGROUP_UI"
+   },
+   {
+    "asset": "/JamAssets/Look/Textures/T_Clay_Dent_N",
+    "kind": "Texture",
+    "kb": 384,
+    "note": "512x512 PF_BC5 TEXTUREGROUP_WorldNormalMap"
+   },
+   {
+    "asset": "/JamAssets/Look/Textures/T_Crest_Blue_Comet",
+    "kind": "Texture",
+    "kb": 384,
+    "note": "512x512 PF_BC7 TEXTUREGROUP_World"
+   },
+   {
+    "asset": "/JamAssets/Look/Textures/T_Crest_Orange_Fox",
+    "kind": "Texture",
+    "kb": 384,
+    "note": "512x512 PF_BC7 TEXTUREGROUP_World"
+   },
+   {
+    "asset": "/Engine/EngineMaterials/PreintegratedSkinBRDF",
+    "kind": "Texture",
+    "kb": 256,
+    "note": "256x256 PF_B8G8R8A8 TEXTUREGROUP_World"
+   },
+   {
+    "asset": "/Game/UI/T_UI_Panel",
+    "kind": "Texture",
+    "kb": 256,
+    "note": "512x512 PF_BC7 TEXTUREGROUP_UI"
+   },
+   {
+    "asset": "/Game/UI/T_UI_Ring",
+    "kind": "Texture",
+    "kb": 256,
+    "note": "512x512 PF_BC7 TEXTUREGROUP_UI"
+   },
+   {
+    "asset": "/Game/UI/T_UI_RingPlain",
+    "kind": "Texture",
+    "kb": 256,
+    "note": "512x512 PF_BC7 TEXTUREGROUP_UI"
+   },
+   {
+    "asset": "/JamAssets/Skaters/SK_SkaterTB1v2",
+    "kind": "SkeletalMesh",
+    "kb": 212.87
+   },
+   {
+    "asset": "/Engine/EngineFonts/RobotoDistanceField",
+    "kind": "Texture",
+    "kb": 128,
+    "note": "512x256 PF_G8 TEXTUREGROUP_UI"
+   },
+   {
+    "asset": "/Game/UI/T_UI_Button_Normal",
+    "kind": "Texture",
+    "kb": 128,
+    "note": "512x256 PF_BC7 TEXTUREGROUP_UI"
+   },
+   {
+    "asset": "/JamAssets/Props/SM_PuckDisc",
+    "kind": "StaticMesh",
+    "kb": 92.07
+   },
+   {
+    "asset": "/Engine/EngineMaterials/HairColorMap",
+    "kind": "Texture",
+    "kb": 64,
+    "note": "843x5 PF_B8G8R8A8 TEXTUREGROUP_World"
+   },
+   {
+    "asset": "/Engine/EngineDebugMaterials/VolumeToRender",
+    "kind": "Texture",
+    "kb": 32,
+    "note": "10x10 PF_FloatRGBA TEXTUREGROUP_World"
+   },
+   {
+    "asset": "/Engine/BasicShapes/Sphere",
+    "kind": "StaticMesh",
+    "kb": 29.419999999999998
+   },
+   {
+    "asset": "/Engine/EngineMeshes/Sphere",
+    "kind": "StaticMesh",
+    "kb": 28.22
+   },
+   {
+    "asset": "/JamAssets/Arena/SM_Con_SnowField",
+    "kind": "StaticMesh",
+    "kb": 27.11
+   },
+   {
+    "asset": "/JamAssets/Arena/SM_Con_SnowBank_Side",
+    "kind": "StaticMesh",
+    "kb": 24.82
+   },
+   {
+    "asset": "/Engine/EngineMaterials/DefaultBokeh",
+    "kind": "Texture",
+    "kb": 24,
+    "note": "64x64 PF_B8G8R8A8 TEXTUREGROUP_Bokeh"
+   },
+   {
+    "asset": "/Engine/BasicShapes/Cylinder",
+    "kind": "StaticMesh",
+    "kb": 23.77
+   }
+  ],
+  "overBudget": [
+   {
+    "asset": "/Engine/MapTemplates/Sky/DaylightAmbientCubemap.DaylightAmbientCubemap",
+    "kind": "Texture",
+    "kb": 16448,
+    "dims": "512x512",
+    "format": "PF_FloatRGBA",
+    "group": "TEXTUREGROUP_World",
+    "streaming": "NO",
+    "usage": 0,
+    "mips": 10,
+    "uncompressed": true
+   },
+   {
+    "asset": "/Engine/EngineMaterials/FastBlueNoise_vec2_128x128x64.FastBlueNoise_vec2_128x128x64",
+    "kind": "Texture",
+    "kb": 4096,
+    "dims": "128x8192",
+    "format": "PF_B8G8R8A8",
+    "group": "TEXTUREGROUP_World",
+    "streaming": "NO",
+    "usage": 0,
+    "mips": 1,
+    "uncompressed": true
+   },
+   {
+    "asset": "/Game/UI/T_UI_CallCard.T_UI_CallCard",
+    "kind": "Texture",
+    "kb": 2816,
+    "dims": "1024x653",
+    "format": "PF_B8G8R8A8",
+    "group": "TEXTUREGROUP_UI",
+    "streaming": "NO",
+    "usage": 0,
+    "mips": 1,
+    "uncompressed": false
+   }
+  ]
+ }
+]

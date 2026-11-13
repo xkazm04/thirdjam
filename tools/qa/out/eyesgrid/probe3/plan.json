@@ -1,0 +1,11 @@
+{"seconds":52,"steps":[{"at":11,"shot":"menu-main"},
+{"at":12,"keys":"{DOWN}"},{"at":12.6,"keys":"{ENTER}"},{"at":14.6,"shot":"menu-cuts"},{"at":15,"keys":"{ESC}"},
+{"at":16.5,"shot":"back1"},
+{"at":17,"keys":"{DOWN}"},{"at":17.6,"keys":"{ENTER}"},{"at":19.6,"shot":"menu-direct"},{"at":20,"keys":"{ESC}"},
+{"at":21.5,"shot":"back2"},
+{"at":22,"keys":"{DOWN}"},{"at":22.6,"keys":"{ENTER}"},{"at":24.6,"shot":"menu-friend"},{"at":25,"keys":"{ESC}"},
+{"at":26.5,"shot":"back3"},
+{"at":27,"keys":"{DOWN}"},{"at":27.6,"keys":"{ENTER}"},{"at":29.6,"shot":"menu-settings"},{"at":30,"keys":"{ESC}"},
+{"at":31.5,"shot":"back4"},
+{"at":32,"keys":"{DOWN}"},{"at":32.6,"keys":"{ENTER}"},{"at":34.6,"shot":"menu-credits"},{"at":35,"keys":"{ESC}"},
+{"at":36.5,"shot":"back5"}]}

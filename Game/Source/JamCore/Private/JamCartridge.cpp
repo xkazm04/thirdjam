@@ -1027,6 +1027,14 @@ namespace
 			ReadNumber(Gk, TEXT("reach_m"), C.Skater.GoalieReachM);
 			ReadNumber(Gk, TEXT("block_height_m"), C.Skater.GoalieBlockHeightM);
 		}
+		// Lane A51 (R-0034): game.skater.spin { frames, cooldown_frames, speed_mult, stamina_cost }
+		if (const FJPtr Sn = Obj(Sk, TEXT("spin")))
+		{
+			ReadInteger(Sn, TEXT("frames"), C.Skater.SpinFrames);
+			ReadInteger(Sn, TEXT("cooldown_frames"), C.Skater.SpinCooldownFrames);
+			ReadNumber(Sn, TEXT("speed_mult"), C.Skater.SpinSpeedMult);
+			ReadNumber(Sn, TEXT("stamina_cost"), C.Skater.SpinStaminaCost);
+		}
 
 		const FJPtr St = G->Get(TEXT("stick"));
 		ReadNumber(St, TEXT("reach_m"), C.Stick.ReachM);
@@ -1041,6 +1049,13 @@ namespace
 		{
 			ReadNumber(Dk, TEXT("offset_m"), C.Stick.DekeOffsetM);
 			ReadInteger(Dk, TEXT("commit_frames"), C.Stick.DekeCommitFrames);
+		}
+		// Lane A51 (R-0034): game.stick.sweep { min_deg_per_frame, shield_frames, bot_react_frames }
+		if (const FJPtr Sw = Obj(St, TEXT("sweep")))
+		{
+			ReadNumber(Sw, TEXT("min_deg_per_frame"), C.Stick.SweepMinDegPerFrame);
+			ReadInteger(Sw, TEXT("shield_frames"), C.Stick.SweepShieldFrames);
+			ReadInteger(Sw, TEXT("bot_react_frames"), C.Stick.SweepBotReactFrames);
 		}
 
 		FJPtr Pk = Obj(G, TEXT("puck"));

@@ -20,7 +20,7 @@ of them out explicitly, but a Designer or hand-written cartridge may leave them 
 | `skater.brake_decel` | 6 | |
 | `skater.check_enabled` | true | R-0013: the body check is in every cut (was false before H7) | |
 | `skater.check_speed_min` | 5 | only read when `check_enabled` is true |
-| `stick.reach_m` | 1.2 | lane A16 (R-0013); 1.2 by R-0022 point 3 (rest 1.0 m, full aim 1.6 m) |
+| `stick.reach_m` | 1.2 | lane A16 (R-0013); 1.2 by R-0022 point 3; the range 0.6..1.6 by R-0034 (lane A51): the carried puck sits at the blade, forehand to backhand as the aim sweeps (the brief's 1.1 halved the regular player's passes received at pro: kept 1.2, STICK.md section 6) |
 | `stick.poke_window_frames` | 8 | lane A16 (R-0013) |
 | `stick.lift_range_m` | 1.0 | lane A16 (R-0013) |
 | `stick.stumble_frames` | 20 | lane A16 (R-0013); 0 in `hockey.raw` |
@@ -28,6 +28,9 @@ of them out explicitly, but a Designer or hand-written cartridge may leave them 
 | `stick.foul_grace_frames` | 12 | lane A16 (R-0029 point 3): no `foul_no_puck` on a skater that carried within the last 12 frames |
 | `stick.deke.offset_m` | 1.0 | lane A39 (R-0029 point 4): a deke tap (`bDeke`) moves the carried puck this far to the blade side (the side the stick is aimed to; the middle of the ice when it is not aimed) within 6 frames; a shot inside the commit window aims at the post on that side; a second tap inside 30 frames does nothing; 0 = off |
 | `stick.deke.commit_frames` | 15 | lane A39: the crease back's stance and blade follow the puck's old side this long |
+| `stick.sweep.min_deg_per_frame` | 6 | lane A51 (R-0034): an aim turning more than this in one frame on the carrier is a sweep (read-out flag `bSweepThisFrame`) |
+| `stick.sweep.shield_frames` | 12 | lane A51: frames after a sweep (or a deke tap) in which an opponent's poke from the side the puck left misses; 0 = off |
+| `stick.sweep.bot_react_frames` | absent | lane A51: a defending bot reads the puck's place on the carrier this many frames late; absent = the difficulty profile (rookie 14, pro 8, all_star 5) |
 | `stick.reception_m` | 0.9 | lane A46 (PAYOFFS.md section 6): a teammate's pass reaching the body within this radius at 6-14 m/s seats on the blade with a 4-frame settle; faster passes bounce off the body unless the blade meets them; 0 = blade reception only |
 | `skater.knockdown_frames` | 90 | only read when `check_enabled` is true |
 | `skater.pass_speed` | 14 | lane A16 (C-0005) |
@@ -39,6 +42,10 @@ of them out explicitly, but a Designer or hand-written cartridge may leave them 
 | `skater.sprint.refill_frames` | 360 | lane A49: frames at rest from empty to full (6 s) |
 | `skater.goalie.reach_m` | 0.9 | lane A52 (R-0035): a skater in the crease stance (within 3 m of its own goal centre, the human included) saves a loose shot passing within this of it; 0 = off |
 | `skater.goalie.block_height_m` | 0.4 | lane A52 (R-0035), Director 01:30: a shot at or above this height passes the crease skater; below the 0.61 bar so a half charge (0.45) is the skill shot: over the pads, under the bar (0.7 saved everything the net could take; the novice gate failed 8 of 20) |
+| `skater.spin.frames` | 24 | lane A51 (R-0034): the spin on E / gamepad B: a full turn of the figure over this many frames, the puck on the far side of the body from the nearest opponent (a poke never reaches it); a check landing mid-spin knocks down 1.5x longer; 0 = off |
+| `skater.spin.cooldown_frames` | 90 | lane A51: frames before the next spin |
+| `skater.spin.speed_mult` | 0.7 | lane A51: top speed while spinning as a fraction of the skater's |
+| `skater.spin.stamina_cost` | 0.25 | lane A51: the share of the sprint bar a spin takes; refused with an empty bar |
 | `skater.visual` | `humanoid_b1` | which figure is drawn: `toy_skeletal` (the Blender toy figure as a skeletal mesh, lane A26, the default since H11.7), `toy` (the code-built figure), `humanoid_b1`, `generated_b2`; gameplay is identical; the Designer may not change it (R-0001) |
 | `puck.radius_m` | 0.12 | |
 | `puck.max_speed` | 30 | |

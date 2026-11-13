@@ -379,7 +379,7 @@ bool FJamPayoffDeke::RunTest(const FString& Parameters)
 			bool bGoal = false;
 			double Lateral = -1;
 			int32 Dekes = 0;
-			FVector2D PuckAtShot, BackAtShot;
+			FVector2D PuckAtShot = FVector2D::ZeroVector, BackAtShot = FVector2D::ZeroVector;   // A55: C4701, printed below even when no shot came
 			for (int32 F = 1; F <= 300; ++F)
 			{
 				JamAI::FJamAIInput H = Move(0.5, 0);   // a half stick: 5.5 m/s at the net

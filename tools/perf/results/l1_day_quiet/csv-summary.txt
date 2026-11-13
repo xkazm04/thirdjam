@@ -1,0 +1,93 @@
+frames 10814, capture 180.27 s
+FrameTime                      mean 16.67 p50 16.67 p99 16.69 max 43.78
+GameThreadTime                 mean 1.81 p50 1.76 p99 2.66 max 6.54
+RenderThreadTime               mean 3.07 p50 3.02 p99 4.19 max 7.75
+RHIThreadTime                  mean 2.05 p50 2.02 p99 2.75 max 4.24
+GPUTime                        mean 3.37 p50 3 p99 5.72 max 7.76
+GameThreadTime_CriticalPath    mean 1.82 p50 1.76 p99 2.67 max 6.56
+RenderThreadTime_CriticalPath  mean 15.81 p50 15.84 p99 16.65 max 43.49
+InputLatencyTime               mean 6.72 p50 7.64 p99 12.77 max 29.89
+hitches (> 33.3 ms): 1
+  row 5742 t=95.7s frame 43.78 game 3.02 render 4.01 gpu 3.11 
+game thread exclusive (ms):
+  Exclusive/GameThread/TickActors                    0.41 p99 0.7 max 1.27
+  Exclusive/GameThread/UI                            0.35 p99 0.65 max 1.13
+  Exclusive/GameThread/LLM                           0.25 p99 0.45 max 1.08
+  Exclusive/GameThread/ViewportMisc                  0.1 p99 0.16 max 0.52
+  Exclusive/GameThread/Animation                     0.07 p99 0.12 max 0.36
+  Exclusive/GameThread/EventWait/EndPhysics          0.07 p99 0.12 max 0.83
+  Exclusive/GameThread/DebugHUD                      0.06 p99 0.1 max 0.77
+  Exclusive/GameThread/WorldTickMisc                 0.05 p99 0.07 max 2.07
+  Exclusive/GameThread/EndOfFrameUpdates             0.05 p99 0.08 max 0.28
+  Exclusive/GameThread/EngineTickMisc                0.04 p99 0.07 max 0.21
+  Exclusive/GameThread/Effects                       0.04 p99 0.18 max 0.41
+  Exclusive/GameThread/PlayerControllerTick          0.03 p99 0.05 max 0.22
+  Exclusive/GameThread/QueueTicks                    0.02 p99 0.03 max 0.2
+  Exclusive/GameThread/Physics                       0.02 p99 0.03 max 0.16
+  Exclusive/GameThread/Tickables                     0.02 p99 0.03 max 0.2
+render thread exclusive (ms):
+  Exclusive/RenderThread/EventWait                   13.59 p99 14.13 max 39.73
+  Exclusive/RenderThread/RenderOther                 1.15 p99 1.68 max 2.35
+  Exclusive/RenderThread/RDG_CollectResources        0.36 p99 0.54 max 0.9
+  Exclusive/RenderThread/RDG                         0.24 p99 0.39 max 2.9
+  Exclusive/RenderThread/RenderThreadOther           0.23 p99 0.33 max 0.73
+  Exclusive/RenderThread/PrepareDistanceFieldScene   0.19 p99 0.34 max 0.59
+  Exclusive/RenderThread/RenderPostProcessing        0.15 p99 0.23 max 0.51
+  Exclusive/RenderThread/RenderLighting              0.12 p99 0.19 max 0.37
+  Exclusive/RenderThread/RDG_Execute                 0.08 p99 0.15 max 0.45
+  Exclusive/RenderThread/STAT_SkinningSceneExtension 0.07 p99 0.16 max 0.52
+  Exclusive/RenderThread/InitViews_Scene             0.06 p99 0.11 max 0.48
+  Exclusive/RenderThread/RenderShadows               0.06 p99 0.09 max 0.2
+GPU (ms):
+  GPU/RenderDeferredLighting                         0.91 p99 2.11 max 2.58
+  GPU/Unaccounted                                    0.59 p99 1.81 max 3.09
+  GPU/LumenReflections                               0.48 p99 1.57 max 1.85
+  GPU/TemporalSuperResolution                        0.44 p99 1.65 max 2.06
+  GPU/GlobalDistanceFieldUpdate                      0.15 p99 0.2 max 0.31
+  GPU/Postprocessing                                 0.14 p99 0.17 max 1.4
+  GPU/Basepass                                       0.11 p99 0.16 max 0.88
+  GPU/Translucency                                   0.11 p99 0.15 max 1.43
+  GPU/LumenSceneUpdate                               0.06 p99 0.07 max 0.13
+  GPU/BuildRenderingCommandsDeferred                 0.05 p99 0.67 max 1.45
+  GPU/RenderVelocities                               0.04 p99 0.05 max 0.07
+  GPU/DistanceFields                                 0.03 p99 0.04 max 0.06
+  GPU/Prepass                                        0.03 p99 0.03 max 0.22
+  GPU/SubmitBufferUploads                            0.02 p99 0.02 max 0.04
+  GPU/GPUSceneUpdate                                 0.02 p99 0.02 max 0.05
+  GPU/HZB                                            0.02 p99 0.02 max 0.05
+  GPU/LightGrid                                      0.02 p99 0.02 max 0.03
+  GPU/TranslucentLighting                            0.02 p99 0.03 max 1.48
+  GPU/FXSystemPreRender                              0.01 p99 0.02 max 0.03
+  GPU/BeginOcclusionTests                            0.01 p99 0.01 max 0.02
+counts:
+  RHI/DrawCalls                  mean 193.52 max 293
+  RHI/PrimitivesDrawn            mean 84206.01 max 137471
+  Ticks/Total                    mean 41 max 41
+  Ticks/SkeletalMeshComponent    mean 6 max 6
+  ActorCount/TotalActorCount     mean 33.28 max 34
+  PSO/PSOMisses                  mean 0 max 1
+  PSO/PSOMissesOnHitch           mean -1 max -1
+  LightCount/All                 mean 0 max 0
+  Shaders/NumShadersCreated      mean 5265 max 5265
+  FileIO/PerFrameKB              mean 0.04 max 199
+memory (MB, first -> last):
+  GPUMem/SystemBudgetMB          47509.88 -> 47509.88 (+0) max 47509.88
+  MemoryFreeMB                   42826.36 -> 42840.76 (+14.39) max 44283.97
+  GPUMem/LocalBudgetMB           23370 -> 23370 (+0) max 23370
+  LLM/PagefileUsed               3205.21 -> 3210.77 (+5.56) max 3215.88
+  LLM/Total                      3169.59 -> 3175.05 (+5.46) max 3180.25
+  GPUMem/LocalUsedMB             1631.63 -> 1631.88 (+0.25) max 1631.88
+  LLM/Untracked                  1586.38 -> 1589.03 (+2.65) max 1590.94
+  LLM/TrackedTotal               1583.12 -> 1585.59 (+2.47) max 1591
+  LLM/WorkingSetSize             1563.26 -> 1567.66 (+4.4) max 1572.81
+  PhysicalUsedMB                 1559.73 -> 1567.64 (+7.91) max 1572.83
+  LLM/Textures                   720.64 -> 720.64 (+0) max 720.64
+  LLM/RenderTargets              346.18 -> 346.18 (+0) max 346.18
+  GPUMem/SystemUsedMB            184.21 -> 187.27 (+3.06) max 187.27
+  LLM/Shaders                    121.09 -> 121.08 (-0.01) max 121.1
+  LLM/FMallocUnused              56.39 -> 58.46 (+2.07) max 64.58
+  LLM/ThreadStack                39.38 -> 39.38 (+0) max 39.38
+  LLM/OOMBackupPool              32 -> 32 (+0) max 32
+  LLM/UObject                    30.93 -> 30.86 (-0.07) max 33.08
+  LLM/Nanite                     25.29 -> 25.29 (+0) max 25.29
+  LLM/Modules                    25.05 -> 25.05 (+0) max 25.05

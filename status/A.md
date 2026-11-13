@@ -236,3 +236,19 @@
 - A53 playtester soak (Sonnet), A54 eyes grid (Sonnet), A55 static analysis (Opus) started at main a6b6f5b beside A51/A52; the rest queue by `docs/experiments/NIGHT-PLAN.md`.
 
 - RESOURCES 01:28 cpu 89% ram 24.4/63GB gpu 57 %, 2031 MiB, 46 editors 0 cmd 0 ubt 1 free 507GB
+- link green 01:48: main 9d2e66c (A52 lifted puck + Director calibrations; night plan) pushed.
+
+## H14 (09:42) the night: A51 + A52 landed in part, three fillers reported, the Director's session stood still 02:00-09:28
+- main 9d2e66c (01:48): A52 lifted puck + Director calibrations (pads 0.4, full charge 0.6, rebound 0.45, human-touch budget 12 %). Uncommitted on main now, gate red on
+  one test: A51 stick handling (sweep, spin on E, pass on F, protocol 5), A55 analysis fixes, A54 eyes grid, A58 profiling; `Jam.Bot.SeasonTakes` take-3/take-4 (pro,
+  penalties) show AI shots 0 since A51: lane A66 (Opus) finds the cause. H20 packages when it lands.
+- Repository: one loose object (a committed P4 capture PNG) was corrupt this morning; rebuilt from the working copy, `git fsck --connectivity-only` clean.
+- A foreign "Windows Security" dialog held the foreground all night (A51, A54, A58 report it): SendInput proofs failed; lanes drove the game by PostMessage and the
+  remote console. Not mine to close: the operator should dismiss it.
+- B overnight: 38 commits on dev-b (B19-B26: clay tier against the concept, P4 lab at the game camera, SK6-SK9 figures; `dev-b-a45` = lane/a45 v4 + B's assets, the
+  landing rule: take `Game/Plugins/JamAssets/Content/Skaters/` whole from `dev-b-a45`). Handoffs B-to-A-0034 (clay asks) and 0035 (0034 point 1 withdrawn; ring meshes for
+  zones on clay is the one open ask). Next merge window: after H20.
+- link green 09:55: main e99e005 (A51 stick handling + A66 fix, A55, A54, A58) pushed.
+- link green 10:09: main 59675fe (dev-b merged: B19-B26, SK6-SK9; R-0036) pushed.
+
+- RESOURCES 10:13 cpu 43% ram 31.9/63GB gpu 0 %, 626 MiB, 39 editors 0 cmd 9 ubt 2 free 625GB

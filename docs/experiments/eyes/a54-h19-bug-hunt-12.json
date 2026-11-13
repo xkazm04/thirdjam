@@ -1,0 +1,146 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T01:20:54.339Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.regular-p3-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.regular-p3-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.regular-p3-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.regular-p3-pause.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.regular-p3-call.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "F",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.regular-p4-card.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2455,
+      "usage": {
+        "prompt": 7447,
+        "output": 668,
+        "thoughts": 0,
+        "total": 8115,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00809,
+      "ms": 7235,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [
+              {
+                "where": "Top-center, under the Match 1 card banner",
+                "what": "Distance indicator text reading '49 m' is clipping and occluded behind the top edge of the 'MATCH 1' title banner.",
+                "severity": 3,
+                "confidence": 0.95
+              },
+              {
+                "where": "Bottom-right edge of control prompt bar",
+                "what": "The word 'PAUSE ESC' on the control strip is clipped directly through by the minimap widget overlay.",
+                "severity": 3,
+                "confidence": 0.98
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still B",
+            "findings": [
+              {
+                "where": "Bottom-right edge of control prompt bar",
+                "what": "The 'PAUSE ESC' prompt is intersected and partially obscured by the minimap display frame.",
+                "severity": 3,
+                "confidence": 0.98
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still C",
+            "findings": [
+              {
+                "where": "Center, main skater model against the boards",
+                "what": "The player model's stick and hands appear to clip straight into or through the boards mesh at hip level.",
+                "severity": 3,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still D",
+            "findings": [
+              {
+                "where": "Center bottom, lower third of the Time Out menu overlay",
+                "what": "The two-row gamepad control prompt text overlaps and collides directly with the in-game action bar text below it.",
+                "severity": 4,
+                "confidence": 0.99
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still E",
+            "findings": [],
+            "clean": true
+          },
+          {
+            "label": "Still F",
+            "findings": [
+              {
+                "where": "Top-center, behind the Match 1 card banner",
+                "what": "The text '49 m' and distance icon clip behind the upper border of the 'MATCH 1' banner.",
+                "severity": 3,
+                "confidence": 0.95
+              },
+              {
+                "where": "Bottom-right corner along the bottom HUD bar",
+                "what": "The minimap overlay overlaps and cuts off the text 'PAUSE ESC'.",
+                "severity": 3,
+                "confidence": 0.98
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=hockey.regular-p3-card.jpg B=hockey.regular-p3-faceoff.jpg C=hockey.regular-p3-farnet.jpg D=hockey.regular-p3-pause.jpg E=hockey.regular-p3-call.jpg F=hockey.regular-p4-card.jpg (gemini-3.8-flash, in 7447 out 668 tokens, ~$0.0081, 7.2 s)\n- stills:\n  - label: Still A; clean: false\n    - findings:\n      - where: Top-center, under the Match 1 card banner; what: Distance indicator text reading '49 m' is clipping and occluded behind the top edge of the 'MATCH 1' title banner.; severity: 3; confidence: 0.95\n      - where: Bottom-right edge of control prompt bar; what: The word 'PAUSE ESC' on the control strip is clipped directly through by the minimap widget overlay.; severity: 3; confidence: 0.98\n  - label: Still B; clean: false\n    - findings:\n      - where: Bottom-right edge of control prompt bar; what: The 'PAUSE ESC' prompt is intersected and partially obscured by the minimap display frame.; severity: 3; confidence: 0.98\n  - label: Still C; clean: false\n    - findings:\n      - where: Center, main skater model against the boards; what: The player model's stick and hands appear to clip straight into or through the boards mesh at hip level.; severity: 3; confidence: 0.85\n  - label: Still D; clean: false\n    - findings:\n      - where: Center bottom, lower third of the Time Out menu overlay; what: The two-row gamepad control prompt text overlaps and collides directly with the in-game action bar text below it.; severity: 4; confidence: 0.99\n  - label: Still E; clean: true\n    - findings: (none)\n  - label: Still F; clean: false\n    - findings:\n      - where: Top-center, behind the Match 1 card banner; what: The text '49 m' and distance icon clip behind the upper border of the 'MATCH 1' banner.; severity: 3; confidence: 0.95\n      - where: Bottom-right corner along the bottom HUD bar; what: The minimap overlay overlaps and cuts off the text 'PAUSE ESC'.; severity: 3; confidence: 0.98"
+    }
+  ]
+}

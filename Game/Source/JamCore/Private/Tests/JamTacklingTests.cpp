@@ -185,4 +185,127 @@ bool FJamTacklingEvents::RunTest(const FString& Parameters)
 	return true;
 }
 
+// Lane A45 (C-0001 v4, R-0031 point 1): the read-outs the pawn's four new calls hang on. A collision at 4 m/s closing without a check press bumps both skaters (the push on
+// each is the other towards it), at 2 m/s nothing; a skater into the end boards at 6 m/s sets the board flag on the frame of the board event; a skater pressed into the side
+// boards for 10 frames with an opponent 1 m away is pinned, and released when the opponent leaves; a clean lift flags the carrier with 2. None of it is in the hash: the
+// hash of the bump scene equals the hash of the same scene with the read-outs ignored (they are plain fields the sim never reads).
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamTacklingReadouts, "Jam.Core.TacklingReadouts", JamTacklingTests::Flags)
+bool FJamTacklingReadouts::RunTest(const FString& Parameters)
+{
+	using namespace JamTacklingTests;
+	auto StepN = [](UJamSim* Sim, int32 Frames, TFunctionRef<void(TArray<FJamInput>&, int32)> Fill)
+	{
+		const int32 N = Sim->GetSkaters().Num();
+		for (int32 F = 0; F < Frames; ++F) { TArray<FJamInput> In; In.SetNum(N); Fill(In, F); Sim->Step(In); }
+	};
+	// 1. The bump.
+	for (const double Speed : { 4.0, 2.0 })
+	{
+		UJamSim* Sim = MakeRaw(*this);
+		if (!Sim) return false;
+		ClearIce(Sim, 0, 3);
+		Sim->SetPuck(FVector2D(-20.0, 0.0), FVector2D::ZeroVector);   // ClearIce parks the puck at (Hx, 0): inside the net on the raw rink, a goal and the pause
+		Sim->SetSkater(3, FVector2D::ZeroVector, FVector2D::ZeroVector, PI);
+		Sim->SetSkater(0, FVector2D(-1.3, 0.0), FVector2D(Speed, 0.0), 0.0);
+		bool bBumpA = false, bBumpB = false, bCheck = false;
+		FVector2D DirA, DirB;
+		for (int32 F = 0; F < 40 && !bBumpA; ++F)
+		{
+			StepN(Sim, 1, [](TArray<FJamInput>&, int32) {});
+			const FJamSkaterState& A = Sim->GetSkaters()[0];
+			const FJamSkaterState& B = Sim->GetSkaters()[3];
+			if (A.bBumpThisFrame) { bBumpA = true; DirA = A.BumpDir; }
+			if (B.bBumpThisFrame) { bBumpB = true; DirB = B.BumpDir; }
+			for (const FJamSimEvent& E : Sim->GetFrameEvents()) if (E.Name == JamEvents::Check || E.Name == JamEvents::Knockdown) bCheck = true;
+		}
+		if (Speed >= 3.0)
+		{
+			TestTrue(TEXT("4 m/s into a standing opponent: the mover is bumped"), bBumpA);
+			TestTrue(TEXT("4 m/s into a standing opponent: the one hit is bumped the same frame"), bBumpB);
+			TestTrue(TEXT("the mover's push points back along its path"), bBumpA && DirA.X < -0.9);
+			TestTrue(TEXT("the one hit is pushed on along the mover's path"), bBumpB && DirB.X > 0.9);
+			TestFalse(TEXT("no check and no knockdown: nobody pressed check"), bCheck);
+		}
+		else
+		{
+			TestFalse(TEXT("2 m/s closing bumps nobody"), bBumpA || bBumpB);
+		}
+	}
+	// 2. The board flag rides with the board event.
+	{
+		UJamSim* Sim = MakeRaw(*this);
+		if (!Sim) return false;
+		ClearIce(Sim, 0, 3);
+		Sim->SetPuck(FVector2D(-20.0, 0.0), FVector2D::ZeroVector);
+		const double Hx = Sim->GetConfig().Rink.LengthM * 0.5;
+		Sim->SetSkater(3, FVector2D(0.0, 10.0), FVector2D::ZeroVector, 0.0);
+		Sim->SetSkater(0, FVector2D(Hx - 2.0, 0.0), FVector2D(6.0, 0.0), 0.0);
+		bool bFlag = false, bEvent = false, bSameFrame = false;
+		for (int32 F = 0; F < 60 && !bFlag; ++F)
+		{
+			StepN(Sim, 1, [](TArray<FJamInput>& In, int32) { In[0].Move = FVector2D(1.0, 0.0); });
+			bool bE = false;
+			for (const FJamSimEvent& E : Sim->GetFrameEvents()) if (E.Name == JamEvents::Board && E.Who == 0) bE = true;
+			bEvent |= bE;
+			if (Sim->GetSkaters()[0].bBoardHitThisFrame) { bFlag = true; bSameFrame = bE; }
+		}
+		TestTrue(TEXT("6 m/s into the end boards: the skater board event"), bEvent);
+		TestTrue(TEXT("... and the board flag on the same frame"), bFlag && bSameFrame);
+	}
+	// 3. The pin.
+	{
+		UJamSim* Sim = MakeRaw(*this);
+		if (!Sim) return false;
+		ClearIce(Sim, 0, 3);
+		Sim->SetPuck(FVector2D(-20.0, 0.0), FVector2D::ZeroVector);
+		const double Hz = Sim->GetConfig().Rink.WidthM * 0.5;
+		// Skater 0 skates into the side boards from 0.3 m out and keeps pressing (it stops with its centre 0.4 m from the boards); skater 3 stands 0.6 m aside and 1 m
+		// further in, 1.17 m from where 0 stops: within the 1.2 m, off the boards itself, and out of 0's path.
+		Sim->SetSkater(0, FVector2D(0.0, Hz - 0.7), FVector2D(0.0, 3.0), PI * 0.5);
+		Sim->SetSkater(3, FVector2D(0.6, Hz - 1.4), FVector2D::ZeroVector, PI * 0.5);
+		int32 PinFrame = -1, BoardFramesAtPin = 0, FirstContact = -1;
+		FString Trace;
+		for (int32 F = 0; F < 120 && PinFrame < 0; ++F)
+		{
+			StepN(Sim, 1, [](TArray<FJamInput>& In, int32) { In[0].Move = FVector2D(0.0, 1.0); });
+			const FJamSkaterState& A = Sim->GetSkaters()[0];
+			if (F % 10 == 0) Trace += FString::Printf(TEXT(" f%d z=%.2f bf=%d d3=%.2f;"), F, A.Pos.Y, A.BoardFrames, FVector2D::Distance(A.Pos, Sim->GetSkaters()[3].Pos));
+			if (FirstContact < 0 && A.BoardFrames > 0) FirstContact = F;
+			if (A.bBoardPinned) { PinFrame = F; BoardFramesAtPin = A.BoardFrames; }
+		}
+		AddInfo(FString::Printf(TEXT("pin trace (Hz %.1f):%s"), Hz, *Trace));
+		TestTrue(TEXT("the skater reached the boards"), FirstContact >= 0);
+		TestTrue(TEXT("pressed into the side boards with an opponent 1 m away: pinned"), PinFrame >= 0);
+		TestTrue(TEXT("... after ten frames on the boards, not before"), PinFrame >= 0 && BoardFramesAtPin >= 10 && PinFrame - FirstContact >= 9);
+		AddInfo(FString::Printf(TEXT("pin: first board contact at frame %d, pinned at frame %d with %d board frames"), FirstContact, PinFrame, BoardFramesAtPin));
+		TestFalse(TEXT("the opponent 1 m off the boards is not pinned"), Sim->GetSkaters()[3].bBoardPinned);
+		Sim->SetSkater(3, FVector2D(0.0, Hz - 6.0), FVector2D::ZeroVector, 0.0);
+		StepN(Sim, 1, [](TArray<FJamInput>& In, int32) { In[0].Move = FVector2D(0.0, 1.0); });
+		TestFalse(TEXT("the opponent leaves: the pin is released the next frame"), Sim->GetSkaters()[0].bBoardPinned);
+	}
+	// 4. The stick hit (a lift).
+	{
+		UJamSim* Sim = MakeRaw(*this);
+		if (!Sim) return false;
+		ClearIce(Sim, 0, 3);
+		// Skater 3 dribbles the puck for 40 frames so it is the carrier (CarrierIndex reads the last toucher); skater 0 is then set 1.2 m behind it and lifts.
+		Sim->SetSkater(3, FVector2D::ZeroVector, FVector2D::ZeroVector, 0.0);
+		Sim->SetPuck(FVector2D(0.8, 0.0), FVector2D::ZeroVector);
+		Sim->SetSkater(0, FVector2D(-8.0, 8.0), FVector2D::ZeroVector, 0.0);
+		StepN(Sim, 40, [](TArray<FJamInput>& In, int32) { In[3].Move = FVector2D(1.0, 0.0); });
+		const FJamSkaterState& Carrier = Sim->GetSkaters()[3];
+		TestTrue(TEXT("skater 3 carries the puck"), Carrier.bHasPuck);
+		Sim->SetSkater(0, Carrier.Pos - FVector2D(1.2, 0.0), Carrier.Vel, 0.0);
+		StepN(Sim, 1, [](TArray<FJamInput>& In, int32) { In[3].Move = FVector2D(1.0, 0.0); In[0].Move = FVector2D(1.0, 0.0); In[0].bLift = true; });
+		bool bLiftClean = false;
+		for (const FJamSimEvent& E : Sim->GetFrameEvents()) if (E.Name == JamEvents::Lift && E.Who == 0 && E.Strength > 0.5f) bLiftClean = true;
+		TestTrue(TEXT("the lift took the puck"), bLiftClean);
+		TestEqual(TEXT("the carrier is flagged with a lift (2)"), Sim->GetSkaters()[3].StickHitResult, 2);
+		TestEqual(TEXT("the lifter is not flagged"), Sim->GetSkaters()[0].StickHitResult, 0);
+		StepN(Sim, 1, [](TArray<FJamInput>&, int32) {});
+		TestEqual(TEXT("the flag lasts one frame"), Sim->GetSkaters()[3].StickHitResult, 0);
+	}
+	return true;
+}
+
 #endif

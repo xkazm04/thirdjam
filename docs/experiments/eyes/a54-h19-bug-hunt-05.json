@@ -1,0 +1,153 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T01:19:51.816Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.boost-l1-pause.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.boost-l1-call.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.boost-l3-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.boost-l3-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.boost-l3-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "F",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.boost-l3-pause.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2444,
+      "usage": {
+        "prompt": 7447,
+        "output": 735,
+        "thoughts": 0,
+        "total": 8182,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00834,
+      "ms": 9511,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [
+              {
+                "where": "bottom-right corner HUD bar",
+                "what": "The bottom controls HUD bar has text ('PAUSE ESC / MENU') clipping partially behind or colliding with the minimap window boundary.",
+                "severity": 2,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still B",
+            "findings": [
+              {
+                "where": "bottom-right corner HUD bar",
+                "what": "The controls legend bar text overlaps or cuts off right before the minimap UI element.",
+                "severity": 2,
+                "confidence": 0.8
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still C",
+            "findings": [
+              {
+                "where": "bottom-right corner HUD bar",
+                "what": "The right edge of the bottom control prompt text ('PAUSE ESC') intersects directly into the minimap UI frame.",
+                "severity": 2,
+                "confidence": 0.95
+              },
+              {
+                "where": "center foreground above player figure",
+                "what": "The 'WON' circular reticle, the 'YOU' badge, the dialogue bubble, and the 'MATCH 1' title card heavily overlap each other simultaneously, creating an unreadable cluster of conflicting UI layers.",
+                "severity": 3,
+                "confidence": 0.9
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still D",
+            "findings": [
+              {
+                "where": "bottom-right corner HUD bar",
+                "what": "Text 'PAUSE ESC' on the bottom keybinds bar overlaps and clips into the minimap element box.",
+                "severity": 2,
+                "confidence": 0.95
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still E",
+            "findings": [
+              {
+                "where": "center foreground around player figure",
+                "what": "The blue player selection ring is fully detached behind the player figure, floating in ice space while the figure has skated forward ahead of it.",
+                "severity": 3,
+                "confidence": 0.85
+              },
+              {
+                "where": "bottom-left quadrant",
+                "what": "The orange player figure's hockey stick blade is missing or completely clipped below the ice surface, showing only the yellow shaft pointing downwards.",
+                "severity": 3,
+                "confidence": 0.9
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still F",
+            "findings": [
+              {
+                "where": "bottom-right corner HUD bar",
+                "what": "The bottom controls HUD text 'PAUSE ESC / MENU' collides into the minimap container.",
+                "severity": 2,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=hockey.boost-l1-pause.jpg B=hockey.boost-l1-call.jpg C=hockey.boost-l3-card.jpg D=hockey.boost-l3-faceoff.jpg E=hockey.boost-l3-farnet.jpg F=hockey.boost-l3-pause.jpg (gemini-3.8-flash, in 7447 out 735 tokens, ~$0.0083, 9.5 s)\n- stills:\n  - label: Still A; clean: false\n    - findings:\n      - where: bottom-right corner HUD bar; what: The bottom controls HUD bar has text ('PAUSE ESC / MENU') clipping partially behind or colliding with the minimap window boundary.; severity: 2; confidence: 0.85\n  - label: Still B; clean: false\n    - findings:\n      - where: bottom-right corner HUD bar; what: The controls legend bar text overlaps or cuts off right before the minimap UI element.; severity: 2; confidence: 0.8\n  - label: Still C; clean: false\n    - findings:\n      - where: bottom-right corner HUD bar; what: The right edge of the bottom control prompt text ('PAUSE ESC') intersects directly into the minimap UI frame.; severity: 2; confidence: 0.95\n      - where: center foreground above player figure; what: The 'WON' circular reticle, the 'YOU' badge, the dialogue bubble, and the 'MATCH 1' title card heavily overlap each other simultaneously, creating an unreadable cluster of conflicting UI layers.; severity: 3; confidence: 0.9\n  - label: Still D; clean: false\n    - findings:\n      - where: bottom-right corner HUD bar; what: Text 'PAUSE ESC' on the bottom keybinds bar overlaps and clips into the minimap element box.; severity: 2; confidence: 0.95\n  - label: Still E; clean: false\n    - findings:\n      - where: center foreground around player figure; what: The blue player selection ring is fully detached behind the player figure, floating in ice space while the figure has skated forward ahead of it.; severity: 3; confidence: 0.85\n      - where: bottom-left quadrant; what: The orange player figure's hockey stick blade is missing or completely clipped below the ice surface, showing only the yellow shaft pointing downwards.; severity: 3; confidence: 0.9\n  - label: Still F; clean: false\n    - findings:\n      - where: bottom-right corner HUD bar; what: The bottom controls HUD text 'PAUSE ESC / MENU' collides into the minimap container.; severity: 2; confidence: 0.85"
+    }
+  ]
+}

@@ -8,7 +8,6 @@
 #include "Misc/Paths.h"
 #include "HAL/FileManager.h"
 #include "Engine/World.h"
-#include "Engine/Engine.h"
 
 const TCHAR* UJamMenuFlow::MenuMap = TEXT("/Game/Maps/Menu");
 const TCHAR* UJamMenuFlow::RinkMap = TEXT("/Game/Maps/Rink");

@@ -1,0 +1,171 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T01:20:10.892Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.boost-p4-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.boost-p4-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.boost-p4-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.boost-p4-pause.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.boost-p4-call.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "F",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.chaos-l2-card.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2443,
+      "usage": {
+        "prompt": 7447,
+        "output": 918,
+        "thoughts": 0,
+        "total": 8365,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00903,
+      "ms": 9143,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [
+              {
+                "where": "bottom-right corner, control prompt bar",
+                "what": "The 'PAUSE ESC' text label clips and overflows past the right edge under the minimap container.",
+                "severity": 2,
+                "confidence": 0.95
+              },
+              {
+                "where": "center foreground, player skate ring",
+                "what": "The circular player indicator ring sits completely centered in front of the skater rather than under the skater's feet, leaving the player model offset outside it.",
+                "severity": 3,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still B",
+            "findings": [
+              {
+                "where": "bottom-right corner, control prompt bar",
+                "what": "The 'PAUSE ESC' prompt text clips behind/under the minimap overlay.",
+                "severity": 2,
+                "confidence": 0.95
+              },
+              {
+                "where": "center foreground, player skate ring",
+                "what": "The selection circle is placed forward relative to skater #7, failing to align with the contact point of the skates on the ice.",
+                "severity": 3,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still C",
+            "findings": [
+              {
+                "where": "bottom center, under blue skater #7",
+                "what": "The blue ground circle is positioned well forward of the skater's feet rather than centered beneath them.",
+                "severity": 3,
+                "confidence": 0.85
+              },
+              {
+                "where": "bottom-right corner, control prompt bar",
+                "what": "The control prompt bar text is covered by the minimap box on the right.",
+                "severity": 2,
+                "confidence": 0.95
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still D",
+            "findings": [
+              {
+                "where": "center, lower half of TIME OUT modal",
+                "what": "The bottom white control prompt text overlaps and collides directly into the bottom rim of the menu card.",
+                "severity": 2,
+                "confidence": 0.9
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still E",
+            "findings": [
+              {
+                "where": "center, top title of card",
+                "what": "The yellow title text 'DIRECTOR'S CALL - PERIOD 1' extends into the diagonal black/white hazard stripe banner, overlapping its bottom boundary.",
+                "severity": 2,
+                "confidence": 0.8
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still F",
+            "findings": [
+              {
+                "where": "top right quadrant, behind orange skater",
+                "what": "A bright magenta/pink untextured box-shaped volume is visible behind the orange player, indicating a missing texture or debug collider mesh.",
+                "severity": 5,
+                "confidence": 0.99
+              },
+              {
+                "where": "bottom-right corner, control prompt bar",
+                "what": "The 'PAUSE ESC' text clips into the minimap panel.",
+                "severity": 2,
+                "confidence": 0.95
+              },
+              {
+                "where": "center foreground, player skate ring",
+                "what": "The blue selection circle on the ice is displaced forward and misaligned from skater #7's skates.",
+                "severity": 3,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=hockey.boost-p4-card.jpg B=hockey.boost-p4-faceoff.jpg C=hockey.boost-p4-farnet.jpg D=hockey.boost-p4-pause.jpg E=hockey.boost-p4-call.jpg F=hockey.chaos-l2-card.jpg (gemini-3.8-flash, in 7447 out 918 tokens, ~$0.0090, 9.1 s)\n- stills:\n  - label: Still A; clean: false\n    - findings:\n      - where: bottom-right corner, control prompt bar; what: The 'PAUSE ESC' text label clips and overflows past the right edge under the minimap container.; severity: 2; confidence: 0.95\n      - where: center foreground, player skate ring; what: The circular player indicator ring sits completely centered in front of the skater rather than under the skater's feet, leaving the player model offset outside it.; severity: 3; confidence: 0.85\n  - label: Still B; clean: false\n    - findings:\n      - where: bottom-right corner, control prompt bar; what: The 'PAUSE ESC' prompt text clips behind/under the minimap overlay.; severity: 2; confidence: 0.95\n      - where: center foreground, player skate ring; what: The selection circle is placed forward relative to skater #7, failing to align with the contact point of the skates on the ice.; severity: 3; confidence: 0.85\n  - label: Still C; clean: false\n    - findings:\n      - where: bottom center, under blue skater #7; what: The blue ground circle is positioned well forward of the skater's feet rather than centered beneath them.; severity: 3; confidence: 0.85\n      - where: bottom-right corner, control prompt bar; what: The control prompt bar text is covered by the minimap box on the right.; severity: 2; confidence: 0.95\n  - label: Still D; clean: false\n    - findings:\n      - where: center, lower half of TIME OUT modal; what: The bottom white control prompt text overlaps and collides directly into the bottom rim of the menu card.; severity: 2; confidence: 0.9\n  - label: Still E; clean: false\n    - findings:\n      - where: center, top title of card; what: The yellow title text 'DIRECTOR'S CALL - PERIOD 1' extends into the diagonal black/white hazard stripe banner, overlapping its bottom boundary.; severity: 2; confidence: 0.8\n  - label: Still F; clean: false\n    - findings:\n      - where: top right quadrant, behind orange skater; what: A bright magenta/pink untextured box-shaped volume is visible behind the orange player, indicating a missing texture or debug collider mesh.; severity: 5; confidence: 0.99\n      - where: bottom-right corner, control prompt bar; what: The 'PAUSE ESC' text clips into the minimap panel.; severity: 2; confidence: 0.95\n      - where: center foreground, player skate ring; what: The blue selection circle on the ice is displaced forward and misaligned from skater #7's skates.; severity: 3; confidence: 0.85"
+    }
+  ]
+}

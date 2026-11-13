@@ -1,0 +1,63 @@
+== Rink-Windows-11.13-02.20.24_Pid26656_Rink-Windows-13-02.20.24.memreport: phys 1655.86 MB (peak 1671.12), objects 32337 (13.93 MB, res 33.098 MB), RHI 3930.877 MB
+== Rink-Windows-11.13-02.20.24_Pid26656_Rink-Windows-13-02.23.30.memreport: phys 1442.15 MB (peak 1672.92), objects 32343 (13.947 MB, res 33.134 MB), RHI 3930.531 MB
+
+RHI memory by kind (last):
+       2048 MB  Reserved Buffer Memory (Uncommitted)
+    795.645 MB  UAV Texture Memory
+        512 MB  Reserved Texture Memory (Committed)
+    346.062 MB  Render Target 2D Memory
+    125.105 MB  Structured Buffer Memory
+     31.643 MB  Bindless Resource Heap
+     24.776 MB  Vertex Buffer Memory
+     21.824 MB  Texture 2D Memory
+     18.203 MB  Texture Cube Memory
+      4.406 MB  Byte Address Buffer Memory
+
+Largest RHI resources (last):
+        512 MB  Shadow.Virtual.PhysicalPagePool
+      127.5 MB  TSR.History.Color
+        112 MB  GlobalDistanceField.PageObjectGridBuffer
+      85.38 MB  Shadow.Virtual.HZBPhysicalPagePool
+      72.25 MB  Lumen.RadianceCache.FinalRadianceAtlas
+         64 MB  Lumen.SceneDirectLighting
+         64 MB  Lumen.Radiosity.TraceRadianceAtlas
+         64 MB  Lumen.SceneFinalLighting
+         64 MB  Lumen.RadianceCache.RadianceProbeAtlasTextureSource
+         64 MB  Lumen.Radiosity.SceneIndirectLighting
+         56 MB  GlobalDistanceField.PageAtlas
+         32 MB  Lumen.SceneDepth
+         32 MB  Lumen.RadianceCache.DepthProbeAtlasTexture
+      31.88 MB  TSR.History.Metadata
+         21 MB  Lumen.RadianceCache.FinalRadianceAtlas
+
+Top 20 assets (last):
+    16448 KB  Texture       /Engine/MapTemplates/Sky/DaylightAmbientCubemap 512x512 PF_FloatRGBA TEXTUREGROUP_World
+     4096 KB  Texture       /Engine/EngineMaterials/FastBlueNoise_vec2_128x128x64 128x8192 PF_B8G8R8A8 TEXTUREGROUP_World
+     2816 KB  Texture       /Game/UI/T_UI_CallCard 1024x653 PF_B8G8R8A8 TEXTUREGROUP_UI
+     1408 KB  Texture       /JamAssets/Look/Textures/T_Clay_Thumb_N 1024x1024 PF_BC5 TEXTUREGROUP_WorldNormalMap
+     1024 KB  Texture       /Engine/EngineMaterials/FastBlueNoise_scalar_128x128x64 128x8192 PF_G8 TEXTUREGROUP_World
+      704 KB  Texture       /JamAssets/Look/Textures/T_Felt_Fibre 1024x1024 PF_DXT1 TEXTUREGROUP_World
+      704 KB  Texture       /JamAssets/Look/Textures/T_Numbers_Varsity 1024x512 PF_BC7 TEXTUREGROUP_World
+      512 KB  Texture       /Engine/EngineMaterials/Hair/Hair_DirectionalAlbedo 64x64 PF_FloatRGBA TEXTUREGROUP_World
+      512 KB  Texture       /Engine/EngineMaterials/Hair/Hair_DualScattering 64x64 PF_FloatRGBA TEXTUREGROUP_World
+      392 KB  SkeletalMesh  /JamAssets/Skaters/SK_SkaterTB1_P3 
+      384 KB  Texture       /Game/UI/T_UI_Button_Hover 512x171 PF_B8G8R8A8 TEXTUREGROUP_UI
+      384 KB  Texture       /Game/UI/T_UI_Button_Pressed 512x171 PF_B8G8R8A8 TEXTUREGROUP_UI
+      384 KB  Texture       /JamAssets/Look/Textures/T_Clay_Dent_N 512x512 PF_BC5 TEXTUREGROUP_WorldNormalMap
+      384 KB  Texture       /JamAssets/Look/Textures/T_Crest_Blue_Comet 512x512 PF_BC7 TEXTUREGROUP_World
+      384 KB  Texture       /JamAssets/Look/Textures/T_Crest_Orange_Fox 512x512 PF_BC7 TEXTUREGROUP_World
+      256 KB  Texture       /Engine/EngineMaterials/PreintegratedSkinBRDF 256x256 PF_B8G8R8A8 TEXTUREGROUP_World
+      256 KB  Texture       /Game/UI/T_UI_Panel 512x512 PF_BC7 TEXTUREGROUP_UI
+      256 KB  Texture       /Game/UI/T_UI_Ring 512x512 PF_BC7 TEXTUREGROUP_UI
+      256 KB  Texture       /Game/UI/T_UI_RingPlain 512x512 PF_BC7 TEXTUREGROUP_UI
+      128 KB  Texture       /Engine/EngineFonts/RobotoDistanceField 512x256 PF_G8 TEXTUREGROUP_UI
+
+Textures over budget (last):
+  16448 KB 512x512 PF_FloatRGBA TEXTUREGROUP_World mips=10 /Engine/MapTemplates/Sky/DaylightAmbientCubemap.DaylightAmbientCubemap
+  4096 KB 128x8192 PF_B8G8R8A8 TEXTUREGROUP_World mips=1 /Engine/EngineMaterials/FastBlueNoise_vec2_128x128x64.FastBlueNoise_vec2_128x128x64
+  2816 KB 1024x653 PF_B8G8R8A8 TEXTUREGROUP_UI mips=1 /Game/UI/T_UI_CallCard.T_UI_CallCard
+
+delta Rink-Windows-11.13-02.20.24_Pid26656_Rink-Windows-13-02.20.24.memreport -> Rink-Windows-11.13-02.20.24_Pid26656_Rink-Windows-13-02.23.30.memreport: phys -213.7 MB, objects 6, RHI -0.3 MB
+  NiagaraComponent: +2 objects, +41 KB
+  AudioComponent: +3 objects, +11 KB
+  AnimMontage: +1 objects, +1 KB

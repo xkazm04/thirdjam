@@ -255,6 +255,7 @@ namespace JamAI
 		W.SkaterRadius = UJamSim::SkaterRadius;
 		W.StickReach = G.Stick.ReachM;
 		W.LiftRange = G.Stick.LiftRangeM;
+		W.SweepBotReactFrames = G.Stick.SweepBotReactFrames;   // lane A51
 		// R-0029 point 4 (lane A39): the goalie commit of the latest deke
 		{
 			int32 Deker = -1, Side = 0;
@@ -288,6 +289,9 @@ namespace JamAI
 			O.bCanDeke = K.CanAct() && G.Stick.DekeOffsetM > 0.0 && G.Stick.DekeCommitFrames > 0 && NextFrame >= K.DekeReadyFrame && K.DekeFrames == 0;
 			const FVector2D Off = S.DekeOffset(K);
 			O.DekeOffset = FVec2(Off.X, Off.Y);
+			// Lane A51 (R-0034): the spin, as the sim will see a tap on the next step (TrySpin's gate; an unset stamina is a full bar)
+			O.SpinFrames = K.SpinFrames;
+			O.bCanSpin = K.CanAct() && G.Skater.SpinFrames > 0 && NextFrame >= K.SpinReadyFrame && K.SpinFrames == 0 && K.Stamina != 0;
 			// the same gate as UJamSim::TryShoot
 			const FVector2D To = S.GetPuck().Pos - K.Pos;
 			const double D = To.Size();
@@ -331,6 +335,7 @@ namespace JamAI
 			I.bPoke = In[i].bPoke;
 			I.bLift = In[i].bLift;
 			I.bDeke = In[i].bDeke;   // R-0029 point 4 (lane A39): the deke tap
+			I.bSpin = In[i].bSpin;   // lane A51 (R-0034): the spin tap
 		}
 		if (bWithSystems) { Systems.BeforeStep(*Sim); }   // lane A41: score mirror, sim step, zone update, effect step (the game mode's order)
 		Sim->Step(Inputs);

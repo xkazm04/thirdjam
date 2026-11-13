@@ -112,6 +112,15 @@ private:
 	int64 DrillPressFrame = -1, DrillCooldownUntil = 0;
 	int32 DrillVictim = -1, DrillAttempts = 0, DrillLanded = 0, DrillStripped = 0, DrillKnockdowns = 0, DrillVisualDown = 0, DrillLifted = 0;
 	bool bDrillLandedThis = false, bDrillStrippedThis = false, bDrillKnockThis = false, bDrillVisualThis = false, bDrillLiftThis = false;
+	// Lane A51 (R-0034): the 1v1 stick-handling drill (jam.ctrl.Drill 3 = sweep, 4 = spin). The cursor and the keys stay real (ReadHumanInput: the mouse sweeps,
+	// E spins); only the skating is scripted (carry at the nearest opponent, chase a loose puck). Each human sweep / spin the sim reports opens an attempt;
+	// 30 frames later the puck kept, an opponent's clean poke, a knock-down (and its frames) are logged as JAMDRILL stick lines, with a summary after 10.
+	FJamInput StickDrillInput();
+	void StickDrillObserve();
+	int64 StickDrillFrame = -1;
+	int32 StickDrillKind = 0, StickDrillAttempts = 0, StickDrillKept = 0, StickDrillPoked = 0, StickDrillKnocked = 0, StickDrillKnockFrames = 0;
+	bool bStickDrillPokedThis = false, bStickDrillKnockThis = false;
+	int32 StickDrillKnockFramesThis = 0;
 
 	UFUNCTION() void HandleRestartPressed();
 

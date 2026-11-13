@@ -130,3 +130,5 @@ Section 10 follow-up (01:45): the novice gate went to 15 of 20 with full_m 0.6; 
 with more shots into the pads; the lifted-shot test's midway value is 0.525 and its sailing scene sets full_m 0.95 itself.
 Section 10 follow-up (01:50): `Jam.Bot.HumanHasSomethingToDo` budget 10 % -> 12 % (15 of 129 after the calibrations against 12 of 142 before; twenty seeds cannot tell those
 apart). A53's soak measures the share over hundreds of seeds tonight; A3 sets the bar from that number in the morning.
+
+## 11. Merged baseline (Director, 09:52): A51 + A52 + A66 + the calibrations on main: hockey.regular seed 1 frame 600 hash `ccb658f82e4ca910` (A66 measured it on the merged tree; the Determinism test checks replay stability; this line is the record).

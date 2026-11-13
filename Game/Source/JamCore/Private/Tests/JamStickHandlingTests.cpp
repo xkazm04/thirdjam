@@ -1,0 +1,495 @@
+// Lane A51 (R-0034): stick handling with the mouse and the spin on E. Jam.Core.SweepBeatsPoke, Jam.Core.SpinShieldsPuck, Jam.Core.SpinCooldown,
+// Jam.Core.SpinCheckedFalls, Jam.Core.StickHandlingKeys. Headless, scripted scenes on UJamSim (the defender is scripted with the pro brain's rule, so the
+// scene does not depend on the brain's roles); the brain's delayed read of the carried puck is checked on a hand-built FJamAIWorld. docs/experiments/STICK.md.
+//   UnrealEditor-Cmd.exe Game/ThirdJam.uproject -ExecCmds="Automation RunTests Jam.Core.Sweep+Jam.Core.Spin+Jam.Core.StickHandling; Quit" -unattended -nullrhi -nosplash -log
+#include "Misc/AutomationTest.h"
+#include "JamCartridge.h"
+#include "JamSim.h"
+#include "JamEventBus.h"
+#include "JamAICore.h"
+#include "DifficultyProfile.h"
+
+#if WITH_DEV_AUTOMATION_TESTS
+
+namespace JamStickHandlingTests
+{
+	constexpr EAutomationTestFlags Flags = EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter;
+
+	UJamCartridge* LoadPreset(FAutomationTestBase& T, const FString& Name)
+	{
+		TArray<FString> Errors;
+		UJamCartridge* C = UJamCartridge::LoadFromFile(UJamCartridge::ResolveCartridgePath(Name), Errors);
+		for (const FString& E : Errors) T.AddError(FString::Printf(TEXT("%s: %s"), *Name, *E));
+		return C;
+	}
+
+	// A sim in Playing with everyone parked in the far corner but the named skaters.
+	UJamSim* MakeScene(const FJamGameConfig& G, uint64 Seed, const TArray<int32>& Keep)
+	{
+		UJamSim* Sim = NewObject<UJamSim>();
+		Sim->Init(G, Seed);
+		Sim->SkipFaceoff();
+		for (const FJamSkaterState& S : Sim->GetSkaters())
+		{
+			if (Keep.Contains(S.Index)) continue;
+			Sim->SetSkater(S.Index, FVector2D(-35.0 + S.Index * 2.0, 18.0), FVector2D::ZeroVector, 0);
+		}
+		return Sim;
+	}
+
+	int32 FirstOpponent(const UJamSim* Sim, int32 Me)
+	{
+		for (const FJamSkaterState& S : Sim->GetSkaters()) if (S.Team != Sim->GetSkaters()[Me].Team) return S.Index;
+		return -1;
+	}
+
+	// Gives Who the puck: against the body (a touch: LastTouch), then four quiet frames in which the carry assist seats it on the aimed blade.
+	void GivePuck(UJamSim* Sim, int32 Who, const FVector2D& Stick)
+	{
+		TArray<FJamInput> In;
+		In.SetNum(Sim->GetSkaters().Num());
+		In[Who].Stick = Stick;
+		const FJamSkaterState& S = Sim->GetSkaters()[Who];
+		const FVector2D Dir = Stick.IsNearlyZero() ? S.Forward() : Stick.GetSafeNormal();
+		Sim->SetPuck(S.Pos + Dir * 0.45, S.Vel);
+		for (int32 i = 0; i < 5; ++i) Sim->Step(In);
+	}
+
+	int32 Count(const UJamSim* Sim, FName Name, int32 Who = -2, FName Kind = FName(TEXT("__any")))
+	{
+		int32 N = 0;
+		for (const FJamSimEvent& E : Sim->GetFrameEvents())
+			if (E.Name == Name && (Who == -2 || E.Who == Who) && (Kind == FName(TEXT("__any")) || E.Kind == Kind)) ++N;
+		return N;
+	}
+
+	// The pro defender's stick rule, scripted: the blade follows the puck's offset on the carrier's body React frames late (FJamBrain::PuckSeen) and
+	// pokes once that delayed puck has sat inside blade reach for more than PokeFrames frames (FJamBotSkill::PokeFrames, pro 6).
+	struct FScriptedDefender
+	{
+		int32 React = 8, PokeFrames = 6, InReach = 0;
+		TArray<FVector2D> Rel;   // per frame: puck - carrier body
+		FJamInput Think(const UJamSim* Sim, int32 Me, int32 Carrier)
+		{
+			FJamInput In;
+			const FJamSkaterState& S = Sim->GetSkaters()[Me];
+			const FJamSkaterState& C = Sim->GetSkaters()[Carrier];
+			Rel.Add(Sim->GetPuck().Pos - C.Pos);
+			const FVector2D Seen = Rel.Num() > React ? C.Pos + Rel[Rel.Num() - 1 - React] : Sim->GetPuck().Pos;
+			const FVector2D To = Seen - S.Pos;
+			const double D = To.Size();
+			const double Blade = UJamSim::SkaterRadius + Sim->GetConfig().Stick.ReachM;
+			if (D > 1e-6 && D < Blade + 1.0) In.Stick = To / D * FMath::Clamp((D - UJamSim::SkaterRadius) / Sim->GetConfig().Stick.ReachM, 0.2, 1.0);
+			InReach = D <= Blade ? InReach + 1 : 0;
+			const bool bCanPoke = S.CanAct() && Sim->GetFrame() + 1 >= S.PokeReadyFrame && S.PokeWindow <= 0;
+			if (bCanPoke && InReach > PokeFrames) { In.bPoke = true; InReach = 0; }
+			return In;
+		}
+	};
+}
+
+// Keys: the defaults, the keys read back, and the ranges mirrored in limits.json.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamStickHandlingKeys, "Jam.Core.StickHandlingKeys", JamStickHandlingTests::Flags)
+bool FJamStickHandlingKeys::RunTest(const FString& Parameters)
+{
+	using namespace JamStickHandlingTests;
+	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
+	if (!C) return false;
+	const FJamGameConfig& G = C->Game;
+	TestEqual(TEXT("stick.reach_m default 1.2 (R-0022; A51 kept it: 1.1 cost the regular player half its passes at pro)"), G.Stick.ReachM, 1.2);
+	TestEqual(TEXT("stick.sweep.min_deg_per_frame default 6"), G.Stick.SweepMinDegPerFrame, 6.0);
+	TestEqual(TEXT("stick.sweep.shield_frames default 12"), G.Stick.SweepShieldFrames, 12);
+	TestEqual(TEXT("stick.sweep.bot_react_frames absent = -1 (by difficulty)"), G.Stick.SweepBotReactFrames, -1);
+	TestEqual(TEXT("skater.spin.frames default 24"), G.Skater.SpinFrames, 24);
+	TestEqual(TEXT("skater.spin.cooldown_frames default 90"), G.Skater.SpinCooldownFrames, 90);
+	TestEqual(TEXT("skater.spin.speed_mult default 0.7"), G.Skater.SpinSpeedMult, 0.7);
+	TestEqual(TEXT("skater.spin.stamina_cost default 0.25"), G.Skater.SpinStaminaCost, 0.25);
+	// The difficulty profiles' reaction to the carried puck.
+	TestEqual(TEXT("rookie reads the puck 14 frames late"), JamAI::GetDifficultyProfile(JamAI::EDifficulty::Rookie).Opp.SweepReactFrames, 14);
+	TestEqual(TEXT("pro reads the puck 8 frames late"), JamAI::GetDifficultyProfile(JamAI::EDifficulty::Pro).Opp.SweepReactFrames, 8);
+	TestEqual(TEXT("all_star reads the puck 5 frames late"), JamAI::GetDifficultyProfile(JamAI::EDifficulty::AllStar).Opp.SweepReactFrames, 5);
+	// The keys read back through a cartridge text.
+	{
+		const FString Json = TEXT("{\"schema\":\"tj.cartridge/1\",\"id\":\"a51-keys\",\"title\":\"A51 keys\",\"seed\":1,\"theme\":{\"name\":\"t\",\"palette\":[{\"hex\":\"#112233\"}],\"mood\":[]},")
+			TEXT("\"game\":{\"stick\":{\"reach_m\":0.9,\"sweep\":{\"min_deg_per_frame\":9,\"shield_frames\":20,\"bot_react_frames\":3}},\"skater\":{\"spin\":{\"frames\":30,\"cooldown_frames\":60,\"speed_mult\":0.5,\"stamina_cost\":0.5}}}}");
+		TArray<FString> Errors;
+		UJamCartridge* V = UJamCartridge::LoadFromString(Json, Errors);
+		if (V && Errors.Num() == 0)
+		{
+			TestEqual(TEXT("reach_m 0.9 read"), V->Game.Stick.ReachM, 0.9);
+			TestEqual(TEXT("min_deg_per_frame 9 read"), V->Game.Stick.SweepMinDegPerFrame, 9.0);
+			TestEqual(TEXT("shield_frames 20 read"), V->Game.Stick.SweepShieldFrames, 20);
+			TestEqual(TEXT("bot_react_frames 3 read"), V->Game.Stick.SweepBotReactFrames, 3);
+			TestEqual(TEXT("spin.frames 30 read"), V->Game.Skater.SpinFrames, 30);
+			TestEqual(TEXT("spin.cooldown_frames 60 read"), V->Game.Skater.SpinCooldownFrames, 60);
+			TestEqual(TEXT("spin.speed_mult 0.5 read"), V->Game.Skater.SpinSpeedMult, 0.5);
+			TestEqual(TEXT("spin.stamina_cost 0.5 read"), V->Game.Skater.SpinStaminaCost, 0.5);
+		}
+		else
+		{
+			AddInfo(TEXT("the minimal cartridge text did not load on its own (the schema needs more of the object); the defaults above still hold"));
+			for (const FString& E : Errors) AddInfo(E);
+		}
+	}
+	return true;
+}
+
+// SweepBeatsPoke. (a) A carrier standing still with the puck on the blade, a pro defender (scripted with the brain's rule: the blade reads the puck's place on
+// the body 8 frames late, pokes after 6 frames in reach) 2 m away. The carrier moves the blade into the defender's reach, and sweeps the puck across the body
+// the moment the defender's blade comes within 0.7 m of it: the poke lands on the old side, the puck is kept in 10 of 10 seeds. The carrier that does not
+// sweep loses it 10 of 10. (b) The shield itself: a defender whose blade sits on the puck's old spot in the frame after a sweep is refused the take while
+// shield_frames run and takes it with shield_frames 0. (c) The brain's delayed read on a hand-built world.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamSweepBeatsPoke, "Jam.Core.SweepBeatsPoke", JamStickHandlingTests::Flags)
+bool FJamSweepBeatsPoke::RunTest(const FString& Parameters)
+{
+	using namespace JamStickHandlingTests;
+	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
+	if (!C) return false;
+	const FJamGameConfig& G = C->Game;
+	const FVector2D Left(0.0, -1.0), FwdLeft(0.7071, -0.7071), FwdRight(0.7071, 0.7071);   // yaw 0: forward +x, left -y
+	int32 KeptSweep = 0, KeptNoSweep = 0, MissesSweep = 0, TakesNoSweep = 0, SweepEvents = 0;
+	for (uint64 Seed = 1; Seed <= 10; ++Seed)
+	{
+		for (const bool bSweep : { true, false })
+		{
+			UJamSim* Sim = MakeScene(G, Seed, {});
+			const int32 Me = Sim->GetHumanIndex();
+			const int32 D = FirstOpponent(Sim, Me);
+			Sim->SetSkater(Me, FVector2D(0, 0), FVector2D::ZeroVector, 0);
+			Sim->SetSkater(D, FVector2D(3.6, 0), FVector2D::ZeroVector, UE_DOUBLE_PI);   // out of reach for the first 12 frames (the defender's history fills)
+			for (const FJamSkaterState& S : Sim->GetSkaters()) if (S.Index != Me && S.Index != D) Sim->SetSkater(S.Index, FVector2D(-35.0 + S.Index * 2.0, 18.0), FVector2D::ZeroVector, 0);
+			GivePuck(Sim, Me, FwdLeft);
+			TestEqual(*FString::Printf(TEXT("seed %llu: the carrier holds the puck on the forward-left blade"), Seed), Sim->CarrierIndex(), Me);
+			FScriptedDefender Def;
+			bool bSwept = false, bPokeMissed = false, bPokeTook = false;
+			int32 SweepFrame = -1, PokeFrame = -1, BladeOnPuck = 0;
+			TArray<FJamInput> In;
+			In.SetNum(Sim->GetSkaters().Num());
+			for (int32 F = 1; F <= 90; ++F)
+			{
+				// Frame 13: the defender arrives 2 m in front, the puck inside its blade reach (1.42 m): its blade lands on the puck, its poke comes after 6 frames in
+				// reach. The carrier sweeps when the defender's blade has sat on the puck for 4 frames, as a person reads a stick closing on the puck.
+				if (F == 13) Sim->SetSkater(D, FVector2D(2.0, 0), FVector2D::ZeroVector, UE_DOUBLE_PI);
+				const FJamSkaterState& Ds = Sim->GetSkaters()[D];
+				FVector2D Stick = FwdLeft;
+				BladeOnPuck = FVector2D::Distance(Ds.BladePos, Sim->GetPuck().Pos) < 0.7 ? BladeOnPuck + 1 : 0;
+				if (bSweep && !bSwept && F > 13 && BladeOnPuck >= 4)
+				{
+					bSwept = true;
+					SweepFrame = F;
+				}
+				if (bSwept) Stick = FwdRight;   // the sweep: the aim crosses the body in one frame and stays on the far side
+				In[Me] = FJamInput();
+				In[Me].Stick = Stick;
+				In[D] = Def.Think(Sim, D, Me);
+				Sim->Step(In);
+				if (bSwept && F == SweepFrame) SweepEvents += Sim->GetSkaters()[Me].bSweepThisFrame ? 1 : 0;
+				if (Count(Sim, JamEvents::Poke, D, FName(TEXT("miss"))) > 0) { bPokeMissed = true; if (PokeFrame < 0) PokeFrame = F; }
+				if (Count(Sim, JamEvents::Poke, D, FName(TEXT("clean"))) > 0) { bPokeTook = true; if (PokeFrame < 0) PokeFrame = F; }
+				if (bPokeMissed || bPokeTook) { for (int32 K = 0; K < 20; ++K) { In[Me].Stick = Stick; In[D] = FJamInput(); Sim->Step(In); } break; }
+			}
+			const bool bKept = Sim->CarrierIndex() == Me;
+			AddInfo(FString::Printf(TEXT("seed %llu %s: sweep at frame %d, the defender's poke at %d (%s), carrier after 20 more frames %d (me %d)"), Seed,
+				bSweep ? TEXT("sweep") : TEXT("no sweep"), SweepFrame, PokeFrame, bPokeTook ? TEXT("took") : bPokeMissed ? TEXT("missed") : TEXT("none"), Sim->CarrierIndex(), Me));
+			if (bSweep) { KeptSweep += bKept ? 1 : 0; MissesSweep += bPokeMissed ? 1 : 0; }
+			else { KeptNoSweep += bKept ? 1 : 0; TakesNoSweep += bPokeTook ? 1 : 0; }
+		}
+	}
+	TestEqual(TEXT("the sweep is seen by the sim on the frame of the crossing, 10 of 10"), SweepEvents, 10);
+	TestEqual(TEXT("the sweeping carrier keeps the puck 10 of 10 seeds"), KeptSweep, 10);
+	TestEqual(TEXT("the pro defender's poke misses the swept puck 10 of 10"), MissesSweep, 10);
+	TestEqual(TEXT("the carrier that does not sweep loses the puck 10 of 10"), KeptNoSweep, 0);
+	TestEqual(TEXT("... to a clean poke 10 of 10"), TakesNoSweep, 10);
+
+	// (b) The shield rule on its own: the defender's blade on the puck's old spot one frame after the sweep.
+	for (const int32 ShieldFrames : { 12, 0 })
+	{
+		FJamGameConfig G2 = G;
+		G2.Stick.SweepShieldFrames = ShieldFrames;
+		UJamSim* Sim = MakeScene(G2, 1, {});
+		const int32 Me = Sim->GetHumanIndex();
+		const int32 D = FirstOpponent(Sim, Me);
+		Sim->SetSkater(Me, FVector2D(0, 0), FVector2D::ZeroVector, 0);
+		Sim->SetSkater(D, FVector2D(1.3, -1.75), FVector2D::ZeroVector, UE_DOUBLE_PI * 0.5);   // on the carrier's left, 0.64 m from the puck: its blade reaches the old spot, its body (0.52) does not
+		GivePuck(Sim, Me, FwdLeft);
+		const FVector2D OldSpot = Sim->GetPuck().Pos;
+		TArray<FJamInput> In;
+		In.SetNum(Sim->GetSkaters().Num());
+		// Frame 1: a 20-degree sweep towards the front (above min_deg_per_frame 6). The defender aims its blade at the old spot and pokes the same frame: the puck
+		// is still within the take radius of the old spot on this frame (the carry assist moves it 68 % of a 0.5 m step), so only the shield decides.
+		In[Me].Stick = FVector2D(0.906, -0.423);
+		{
+			const FJamSkaterState& Ds = Sim->GetSkaters()[D];
+			const FVector2D To = OldSpot - Ds.Pos;
+			In[D].Stick = To.GetSafeNormal() * FMath::Clamp((To.Size() - UJamSim::SkaterRadius) / G2.Stick.ReachM, 0.2, 1.0);
+			In[D].bPoke = true;
+		}
+		Sim->Step(In);
+		const FJamSkaterState& MeS = Sim->GetSkaters()[Me];
+		const bool bShieldOn = ShieldFrames > 0;
+		TestEqual(*FString::Printf(TEXT("shield %d: the sweep is seen"), ShieldFrames), MeS.bSweepThisFrame, bShieldOn);
+		if (bShieldOn) TestTrue(TEXT("shield 12: the defender on the side the puck left is shielded"), Sim->IsPokeShielded(Sim->GetSkaters()[D], MeS));
+		const double DistBladePuck = FVector2D::Distance(Sim->GetSkaters()[D].BladePos, Sim->GetPuck().Pos);
+		AddInfo(FString::Printf(TEXT("shield %d: blade to puck %.2f m after the sweep frame (take radius %.2f), carrier %d, poke clean %d miss %d"), ShieldFrames, DistBladePuck,
+			G2.Puck.RadiusM + UJamSim::PokeTakeM, Sim->CarrierIndex(), Count(Sim, JamEvents::Poke, D, FName(TEXT("clean"))), Count(Sim, JamEvents::Poke, D, FName(TEXT("miss")))));
+		if (bShieldOn)
+		{
+			TestEqual(TEXT("shield 12: the carrier keeps the puck"), Sim->CarrierIndex(), Me);
+			TestEqual(TEXT("shield 12: no clean poke"), Count(Sim, JamEvents::Poke, D, FName(TEXT("clean"))), 0);
+		}
+		else if (DistBladePuck <= G2.Puck.RadiusM + UJamSim::PokeTakeM)
+		{
+			TestEqual(TEXT("shield 0: the same poke takes the puck"), Count(Sim, JamEvents::Poke, D, FName(TEXT("clean"))), 1);
+		}
+		else AddInfo(TEXT("shield 0: the puck had already left the take radius on the sweep frame; the shield case above is the rule's proof"));
+	}
+
+	// (c) The brain reads an opposing carrier's puck 8 frames late at pro: a hand-built world, the puck jumps from the carrier's left to its right at frame 20;
+	// the defender's blade keeps pointing left for 8 more frames, then follows.
+	{
+		JamAI::FJamBrain Brain;
+		Brain.Reset();
+		Brain.Params.Opp = JamAI::GetDifficultyProfile(JamAI::EDifficulty::Pro).Opp;
+		JamAI::FJamAIWorld W;
+		W.NumSkaters = 2;
+		W.PlayerIndex = 0;
+		W.StickReach = G.Stick.ReachM;
+		W.Skaters[0].Team = 0; W.Skaters[0].Pos = JamAI::FVec2(0, 0); W.Skaters[0].Facing = JamAI::FVec2(1, 0); W.Skaters[0].bHasPuck = true;
+		W.Skaters[1].Team = 1; W.Skaters[1].Pos = JamAI::FVec2(2.0, 0); W.Skaters[1].Facing = JamAI::FVec2(-1, 0); W.Skaters[1].Role = JamAI::ERole::Chaser; W.Skaters[1].bCanPoke = true;
+		W.Carrier = 0;
+		W.PuckLastTouch = 0;
+		W.GoalX = G.Rink.GoalLineX(); W.HalfLength = G.Rink.LengthM * 0.5; W.HalfWidth = G.Rink.WidthM * 0.5;
+		JamAI::FJamAIInput Out[JamAI::kMaxSkaters];
+		double StickYAt[40] = {};
+		for (int32 F = 1; F <= 36; ++F)
+		{
+			W.Frame = F;
+			W.PuckPos = F < 20 ? JamAI::FVec2(0.8, -1.0) : JamAI::FVec2(0.8, 1.0);   // left of the body, then right
+			Brain.Think(W, Out);
+			StickYAt[F] = Out[1].Stick.Y;
+		}
+		TestTrue(*FString::Printf(TEXT("pro: the defender's blade still points to the puck's old side 7 frames after the jump (stick y %.2f)"), StickYAt[26]), StickYAt[26] < -0.1);
+		TestTrue(*FString::Printf(TEXT("pro: ... and follows after 8 frames (stick y %.2f)"), StickYAt[29]), StickYAt[29] > 0.1);
+		TestTrue(*FString::Printf(TEXT("pro: before the jump it pointed left (stick y %.2f)"), StickYAt[19]), StickYAt[19] < -0.1);
+	}
+	return true;
+}
+
+// SpinShieldsPuck: the carrier spins with a defender's blade on the puck; for the 24 frames every poke is refused, the puck rides the far side of the body
+// from the defender, the stamina drops by a quarter and the speed is capped at 0.7; the same defender takes the puck on its first poke without the spin.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamSpinShieldsPuck, "Jam.Core.SpinShieldsPuck", JamStickHandlingTests::Flags)
+bool FJamSpinShieldsPuck::RunTest(const FString& Parameters)
+{
+	using namespace JamStickHandlingTests;
+	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
+	if (!C) return false;
+	const FJamGameConfig& G = C->Game;
+	for (const bool bSpin : { true, false })
+	{
+		UJamSim* Sim = MakeScene(G, 1, {});
+		const int32 Me = Sim->GetHumanIndex();
+		const int32 D = FirstOpponent(Sim, Me);
+		// Standing still: a carried puck moving at 8 m/s past an opposing aimed blade is a deflection (C-0005, the pre-existing rule), which is not what this test is about.
+		Sim->SetSkater(Me, FVector2D(0, 0), FVector2D::ZeroVector, 0);
+		Sim->SetSkater(D, FVector2D(0, -0.9), FVector2D::ZeroVector, 0);   // beside the carrier (bodies do not overlap: 0.9 > 0.8)
+		GivePuck(Sim, Me, FVector2D(0.7071, -0.7071));   // the puck forward-left, on the defender's side
+		TestEqual(TEXT("the carrier starts with the puck"), Sim->CarrierIndex(), Me);
+		const int32 Full = Sim->StaminaFull();
+		TArray<FJamInput> In;
+		In.SetNum(Sim->GetSkaters().Num());
+		int32 CleanPokes = 0, Pokes = 0, FarSideFrames = 0, SpinFrames = 0, StaminaAfterPress = -1;
+		double MaxSpeedInSpin = 0.0;
+		int32 LostAt = -1;
+		for (int32 F = 1; F <= 30; ++F)
+		{
+			In[Me] = FJamInput();
+			In[Me].Stick = FVector2D(0.7071, -0.7071);
+			if (bSpin && F == 1) In[Me].bSpin = true;
+			// The defender: the blade on the puck every frame, a poke whenever one is allowed.
+			const FJamSkaterState& Ds = Sim->GetSkaters()[D];
+			const FVector2D To = Sim->GetPuck().Pos - Ds.Pos;
+			In[D] = FJamInput();
+			In[D].Stick = To.GetSafeNormal() * FMath::Clamp((To.Size() - UJamSim::SkaterRadius) / G.Stick.ReachM, 0.2, 1.0);
+			In[D].bPoke = Sim->GetFrame() + 1 >= Ds.PokeReadyFrame && Ds.PokeWindow <= 0;
+			Pokes += In[D].bPoke ? 1 : 0;
+			Sim->Step(In);
+			CleanPokes += Count(Sim, JamEvents::Poke, D, FName(TEXT("clean")));
+			const FJamSkaterState& S = Sim->GetSkaters()[Me];
+			if (F == 1) StaminaAfterPress = S.Stamina;
+			if (S.SpinFrames > 0 || (bSpin && F <= 24))
+			{
+				++SpinFrames;
+				MaxSpeedInSpin = FMath::Max(MaxSpeedInSpin, S.Vel.Size());
+				const FVector2D ToD = Sim->GetSkaters()[D].Pos - S.Pos;
+				const FVector2D ToP = Sim->GetPuck().Pos - S.Pos;
+				if (FVector2D::DotProduct(ToD.GetSafeNormal(), ToP.GetSafeNormal()) < -0.5 && F >= 6) ++FarSideFrames;   // after the blade dragged it round (5 frames to 90 %)
+			}
+			if (LostAt < 0 && Sim->CarrierIndex() != Me) LostAt = F;
+		}
+		const FJamSkaterState& S = Sim->GetSkaters()[Me];
+		AddInfo(FString::Printf(TEXT("%s: defender pokes pressed %d, clean %d, lost at frame %d; spin frames %d, puck on the far side on %d of them, max speed in the spin %.2f (cap %.2f), stamina %.3f, spins %d"),
+			bSpin ? TEXT("spin") : TEXT("no spin"), Pokes, CleanPokes, LostAt, SpinFrames, FarSideFrames, MaxSpeedInSpin, G.Skater.Speed * G.Skater.SpinSpeedMult,
+			S.Stamina < 0 ? 1.0 : static_cast<double>(S.Stamina) / Full, S.Spins));
+		if (bSpin)
+		{
+			TestEqual(TEXT("spin: the spin ran 24 frames"), S.Spins, 1);
+			TestTrue(TEXT("spin: no poke took the puck during the spin (the body is between)"), CleanPokes == 0 || LostAt > 24);
+			TestTrue(TEXT("spin: the carrier still has the puck after the spin"), LostAt < 0 || LostAt > 24);
+			TestTrue(*FString::Printf(TEXT("spin: the puck rode the far side of the body on at least 18 of the spin frames (%d)"), FarSideFrames), FarSideFrames >= 18);
+			TestTrue(*FString::Printf(TEXT("spin: a quarter of the stamina bar is gone on the press (%d of %d, less that frame's refill)"), Full - StaminaAfterPress, Full),
+				Full - StaminaAfterPress >= FMath::RoundToInt32(Full * 0.25) - G.Skater.SprintDrainFrames && Full - StaminaAfterPress <= FMath::RoundToInt32(Full * 0.25));
+		}
+		else
+		{
+			TestTrue(*FString::Printf(TEXT("no spin: the defender's poke takes the puck (clean %d, lost at %d)"), CleanPokes, LostAt), CleanPokes >= 1 && LostAt > 0);
+		}
+	}
+	// The speed cap: a carrier at full speed who spins is held at speed_mult of the skater's speed for the spin's frames and accelerates again after it.
+	{
+		UJamSim* Sim = MakeScene(G, 1, {});
+		const int32 Me = Sim->GetHumanIndex();
+		Sim->SetSkater(Me, FVector2D(-10, 0), FVector2D(G.Skater.Speed, 0), 0);
+		GivePuck(Sim, Me, FVector2D::ZeroVector);
+		TArray<FJamInput> In;
+		In.SetNum(Sim->GetSkaters().Num());
+		double MaxInSpin = 0.0, After = 0.0;
+		for (int32 F = 1; F <= 60; ++F)
+		{
+			In[Me] = FJamInput();
+			In[Me].Move = FVector2D(1, 0);
+			In[Me].bSpin = F == 1;
+			Sim->Step(In);
+			const double V = Sim->GetSkaters()[Me].Vel.Size();
+			if (F <= G.Skater.SpinFrames) MaxInSpin = FMath::Max(MaxInSpin, V);
+			After = V;
+		}
+		const double Cap = G.Skater.Speed * G.Skater.SpinSpeedMult;
+		TestTrue(*FString::Printf(TEXT("speed capped at speed_mult during the spin (max %.2f, cap %.2f)"), MaxInSpin, Cap), MaxInSpin <= Cap + 0.01);
+		TestTrue(*FString::Printf(TEXT("the skater accelerates again after the spin (%.2f > cap)"), After), After > Cap + 0.5);
+	}
+	return true;
+}
+
+// SpinCooldown: a second press during the spin does nothing, one inside the 90-frame cooldown is refused, the first frame after it is accepted; an empty
+// stamina bar refuses the spin, a little stamina allows it.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamSpinCooldown, "Jam.Core.SpinCooldown", JamStickHandlingTests::Flags)
+bool FJamSpinCooldown::RunTest(const FString& Parameters)
+{
+	using namespace JamStickHandlingTests;
+	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
+	if (!C) return false;
+	const FJamGameConfig& G = C->Game;
+	UJamSim* Sim = MakeScene(G, 1, {});
+	const int32 Me = Sim->GetHumanIndex();
+	Sim->SetSkater(Me, FVector2D(0, 0), FVector2D::ZeroVector, 0);
+	TArray<FJamInput> In;
+	In.SetNum(Sim->GetSkaters().Num());
+	auto StepSpin = [&](bool bPress, bool bSprint = false)
+	{
+		In[Me] = FJamInput();
+		In[Me].bSpin = bPress;
+		In[Me].bSprint = bSprint;
+		if (bSprint) { const double A = Sim->GetFrame() * 0.08; In[Me].Move = FVector2D(FMath::Cos(A), FMath::Sin(A)); }   // sprint in a circle: never into the net or the boards
+		Sim->Step(In);
+	};
+	const int64 F0 = Sim->GetFrame() + 1;
+	StepSpin(true);   // frame F0: the first spin
+	const FJamSkaterState* S = &Sim->GetSkaters()[Me];
+	TestEqual(TEXT("the first press spins"), S->Spins, 1);
+	TestEqual(TEXT("24 frames: 23 left after the first"), S->SpinFrames, G.Skater.SpinFrames - 1);
+	TestTrue(TEXT("the one-frame flag"), S->bSpinThisFrame);
+	TestEqual(TEXT("ready again after frames + cooldown"), S->SpinReadyFrame, F0 + G.Skater.SpinFrames + G.Skater.SpinCooldownFrames);
+	TestTrue(*FString::Printf(TEXT("the visual turn starts (15 degrees after the first frame of 24: %.1f)"), S->SpinVisualYawDeg()), FMath::Abs(FMath::Abs(S->SpinVisualYawDeg()) - 15.0) < 0.01);
+	const int32 Full = Sim->StaminaFull();
+	TestTrue(*FString::Printf(TEXT("the press took a quarter of the bar (%d of %d, less the resting frame's refill)"), Full - S->Stamina, Full),
+		Full - S->Stamina >= FMath::RoundToInt32(Full * 0.25) - G.Skater.SprintDrainFrames && Full - S->Stamina <= FMath::RoundToInt32(Full * 0.25));
+	for (int32 i = 0; i < 4; ++i) StepSpin(false);
+	StepSpin(true);   // a press during the spin
+	TestEqual(TEXT("a press during the spin does nothing"), Sim->GetSkaters()[Me].Spins, 1);
+	while (Sim->GetSkaters()[Me].SpinFrames > 0) StepSpin(false);
+	TestEqual(TEXT("the spin ended on frame F0 + 23"), Sim->GetFrame(), F0 + G.Skater.SpinFrames - 1);
+	TestEqual(TEXT("the visual turn is back to 0"), Sim->GetSkaters()[Me].SpinVisualYawDeg(), 0.0);
+	// Inside the cooldown: refused on its last frame, accepted on the first frame after it.
+	while (Sim->GetFrame() + 1 < F0 + G.Skater.SpinFrames + G.Skater.SpinCooldownFrames - 1) StepSpin(false);
+	StepSpin(true);
+	TestEqual(TEXT("the last cooldown frame refuses"), Sim->GetSkaters()[Me].Spins, 1);
+	const int32 StaminaBeforeSecond = Sim->GetSkaters()[Me].Stamina;
+	StepSpin(true);
+	TestEqual(TEXT("the first frame after the cooldown spins"), Sim->GetSkaters()[Me].Spins, 2);
+	TestTrue(TEXT("the second press took a quarter of the bar too (the bar refilled during the 90-frame cooldown: a quarter refills in 90 resting frames)"),
+		StaminaBeforeSecond - Sim->GetSkaters()[Me].Stamina >= FMath::RoundToInt32(Full * 0.25) - G.Skater.SprintDrainFrames);
+	// Stamina: once the cooldown is over, a sprint drains the bar to empty; the spin is refused on the empty bar and allowed again with a sliver.
+	while (Sim->GetFrame() + 1 < Sim->GetSkaters()[Me].SpinReadyFrame) StepSpin(false);
+	int32 Guard = 0;
+	while (Sim->GetSkaters()[Me].Stamina != 0 && Guard++ < 600) StepSpin(false, true);
+	TestEqual(TEXT("the sprint emptied the bar"), Sim->GetSkaters()[Me].Stamina, 0);
+	StepSpin(true, true);   // the press in the frame right after the bar hit 0 (TrySpin runs before the frame's refill)
+	TestEqual(TEXT("an empty bar refuses the spin"), Sim->GetSkaters()[Me].Spins, 2);
+	for (int32 i = 0; i < 10; ++i) StepSpin(false);   // ten frames of rest refill a sliver
+	TestTrue(TEXT("the bar has a little stamina"), Sim->GetSkaters()[Me].Stamina > 0 && Sim->GetSkaters()[Me].Stamina < FMath::RoundToInt32(Full * 0.25));
+	StepSpin(true);
+	TestEqual(TEXT("a little stamina allows the spin (and is spent)"), Sim->GetSkaters()[Me].Spins, 3);
+	TestTrue(TEXT("... down to the resting frame's refill"), Sim->GetSkaters()[Me].Stamina <= G.Skater.SprintDrainFrames);
+	return true;
+}
+
+// SpinCheckedFalls: a bot's body check that lands mid-spin knocks the carrier down for 1.5x knockdown_frames (135 of 90) and strips it; the same hit on a
+// carrier that is not spinning: 90 frames.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamSpinCheckedFalls, "Jam.Core.SpinCheckedFalls", JamStickHandlingTests::Flags)
+bool FJamSpinCheckedFalls::RunTest(const FString& Parameters)
+{
+	using namespace JamStickHandlingTests;
+	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
+	if (!C) return false;
+	const FJamGameConfig& G = C->Game;
+	for (const bool bSpin : { true, false })
+	{
+		UJamSim* Sim = MakeScene(G, 1, {});
+		const int32 Me = Sim->GetHumanIndex();
+		const int32 D = FirstOpponent(Sim, Me);
+		Sim->SetSkater(Me, FVector2D(0, 0), FVector2D::ZeroVector, 0);
+		Sim->SetSkater(D, FVector2D(3.0, 0), FVector2D(-9, 0), UE_DOUBLE_PI);   // head-on from the front at 9 m/s (above check_speed_min 5), no foul
+		GivePuck(Sim, Me, FVector2D(0, -1));   // the puck on the left blade, out of the checker's line
+		Sim->SetSkater(D, FVector2D(3.0, 0), FVector2D(-9, 0), UE_DOUBLE_PI);   // the quiet frames glided it; reset
+		TArray<FJamInput> In;
+		In.SetNum(Sim->GetSkaters().Num());
+		int32 KnockFramesAtHit = -1, HitFrame = -1, SpinFramesAtHit = -1;
+		bool bStripped = false;
+		for (int32 F = 1; F <= 60; ++F)
+		{
+			In[Me] = FJamInput();
+			In[Me].Stick = FVector2D(0, -1);
+			if (bSpin && F == 1) In[Me].bSpin = true;
+			const FJamSkaterState& Ds = Sim->GetSkaters()[D];
+			const FJamSkaterState& Ms = Sim->GetSkaters()[Me];
+			In[D] = FJamInput();
+			In[D].Move = FVector2D(-1, 0);
+			const double Gap = FVector2D::Distance(Ds.Pos, Ms.Pos) - UJamSim::SkaterRadius * 2.0;
+			const double Closing = FVector2D::DotProduct(Ds.Vel - Ms.Vel, (Ms.Pos - Ds.Pos).GetSafeNormal());
+			if (HitFrame < 0 && Ds.CheckWindow == 0 && Gap <= Closing * 4.0 * UJamSim::DT) In[D].bCheck = true;   // inside the bots' 6-frame window
+			Sim->Step(In);
+			if (HitFrame < 0 && Count(Sim, JamEvents::Knockdown, Me) > 0)
+			{
+				HitFrame = F;
+				KnockFramesAtHit = Sim->GetSkaters()[Me].KnockFrames;
+				SpinFramesAtHit = Sim->GetSkaters()[Me].SpinFrames;
+			}
+			if (HitFrame > 0 && Sim->CarrierIndex() != Me) bStripped = true;
+			if (HitFrame > 0 && F >= HitFrame + 5) break;
+		}
+		AddInfo(FString::Printf(TEXT("%s: the check landed at frame %d, knockdown frames %d (normal %d), spin frames after the hit %d, stripped %d"),
+			bSpin ? TEXT("spin") : TEXT("no spin"), HitFrame, KnockFramesAtHit, G.Skater.KnockdownFrames, SpinFramesAtHit, bStripped ? 1 : 0));
+		TestTrue(TEXT("the check landed"), HitFrame > 0);
+		if (bSpin)
+		{
+			TestTrue(TEXT("spin: the hit came mid-spin (frame 2..24)"), HitFrame >= 2 && HitFrame <= 24);
+			TestEqual(TEXT("spin: knocked down for 1.5x the normal frames"), KnockFramesAtHit, FMath::RoundToInt32(G.Skater.KnockdownFrames * UJamSim::SpinKnockdownMult));
+			TestEqual(TEXT("spin: the spin ends with the fall"), SpinFramesAtHit, 0);
+		}
+		else TestEqual(TEXT("no spin: the normal knockdown"), KnockFramesAtHit, G.Skater.KnockdownFrames);
+		TestTrue(TEXT("a landed check on the carrier strips the puck (C-0005)"), bStripped);
+	}
+	return true;
+}
+
+#endif

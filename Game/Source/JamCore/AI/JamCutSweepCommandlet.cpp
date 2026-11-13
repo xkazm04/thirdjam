@@ -10,7 +10,6 @@
 #include "JamZones.h"
 #include "DifficultyResolve.h"
 #include "Misc/Parse.h"
-#include "UObject/StrongObjectPtr.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogJamCutSweep, Log, All);
 

@@ -11,11 +11,7 @@ namespace JamAI
 {
 	namespace PlaytesterLocal
 	{
-		inline double Clamp(double V, double Lo, double Hi) { return V < Lo ? Lo : (V > Hi ? Hi : V); }
-		inline double Sign(double V) { return V > 0.0 ? 1.0 : (V < 0.0 ? -1.0 : 0.0); }
-		inline double DegToRad(double D) { return D * kPi / 180.0; }
-		inline double RadToDeg(double R) { return R * 180.0 / kPi; }
-		inline FVec2 Rotate(const FVec2& V, double Rad) { const double C = std::cos(Rad), S = std::sin(Rad); return FVec2(V.X * C - V.Y * S, V.X * S + V.Y * C); }
+		using namespace AIMath;   // lane A55: Clamp, Sign, DegToRad, RadToDeg, Rotate live in JamAICore.h (shared with JamAICore.cpp)
 		inline double AngleBetweenDeg(const FVec2& A, const FVec2& B) { return RadToDeg(std::acos(Clamp(A.Dot(B), -1.0, 1.0))); }
 
 		// splitmix64: a fixed, well-mixed 64-bit function of its input (no state).
@@ -82,6 +78,7 @@ namespace JamAI
 			P.bGoalside = true;
 			P.OneTimerPct = 50;          // R-0029 point 4: the regular player takes half the chances
 			P.DekePct = 50;
+			P.bStickHandling = true;     // lane A51 (R-0034): sweeps past a defender in front, spins away from one closing behind
 			break;
 		default:
 			P.ReactionFrames = 3;
@@ -98,6 +95,7 @@ namespace JamAI
 			P.bGoalside = true;
 			P.OneTimerPct = 100;         // R-0029 point 4: the good player always
 			P.DekePct = 100;
+			P.bStickHandling = true;     // lane A51 (R-0034)
 			break;
 		}
 		return P;
@@ -221,7 +219,7 @@ namespace JamAI
 		const double NoiseDeg = P.AimNoiseDeg * Noise(W.Frame / (P.AimWindowFrames > 0 ? P.AimWindowFrames : 1), 1);
 		const FVec2 AimDir = Rotate(ToGoalFromPuck, DegToRad(NoiseDeg));
 
-		int NearOpp = -1;
+		int NearOpp = -1;   // read again since A51 (the sweep looks at the nearest opponent); A55 had removed the unread store
 		double NearOppDist = 1e9;
 		for (int i = 0; i < W.NumSkaters; ++i)
 		{
@@ -285,6 +283,26 @@ namespace JamAI
 						bPayoff = true;
 						break;
 					}
+				}
+			}
+			// Lane A51 (R-0034): stick handling (regular and good). A defender within SweepDefenderM in front: carry the puck on the far side of the body
+			// from it (the stick flips sides as the defender does: each flip is a sweep the sim shields); a defender closing from behind at speed: the spin.
+			if (P.bStickHandling && !bPayoff && NearOpp >= 0)
+			{
+				const FJamAISkater& O = W.Skaters[NearOpp];
+				const FVec2 ToO = O.Pos - Me.Pos;   // rink frame, like Me.Facing
+				const double Dn = ToO.Length();
+				const double Front = Dn > 1e-6 ? Me.Facing.Dot(ToO * (1.0 / Dn)) : 0.0;
+				if (Dn < P.SweepDefenderM && Front > 0.3 && (Dgoal >= P.ShootRangeM || bLaneBlocked))   // not while lining up a shot: the stick stays on the puck for the release
+				{
+					const double Cr = Me.Facing.Cross(ToO);
+					In.Stick = Me.Facing.Perp() * (Cr > 0.0 ? -1.0 : 1.0);   // the far side, full reach (Cross(Facing, Perp) is +1)
+					Act = EPlaytesterAct::Sweep;
+				}
+				else if (Me.bCanSpin && Dn < P.SweepDefenderM && Front < -0.3 && MySpeed > 2.0 && (O.Vel - Me.Vel).Dot(ToO * (-1.0 / Dn)) > 2.0)
+				{
+					In.bSpin = true;
+					Act = EPlaytesterAct::Spin;
 				}
 			}
 			// pass: a teammate clearly ahead and open, while a defender closes or the lane to the goal is blocked
@@ -653,7 +671,7 @@ namespace JamAI
 			S.ChecksLanded, S.ChecksTaken, S.Knockdowns, S.Fouls, S.FoulsFromBehind, S.FoulsNoPuck, static_cast<long long>(S.BoxFrames), S.Pokes, S.PokesClean, S.Lifts, S.Passes, S.PassesReceived,
 			S.OneTimers, S.Breakaways, S.Dekes, S.PayoffGoals,
 			static_cast<long long>(S.IdleFrames), S.IdleSpells, static_cast<long long>(S.MaxNoTouch), static_cast<unsigned long long>(S.Hash), S.PlayerIndex);
-		static const char* ActNames[] = {"idle", "draw", "chase", "carry", "charge", "pass", "support", "forecheck", "poke", "check", "lapse", "one_timer", "deke"};
+		static const char* ActNames[] = {"idle", "draw", "chase", "carry", "charge", "pass", "support", "forecheck", "poke", "check", "lapse", "one_timer", "deke", "sweep", "spin"};
 		N += std::snprintf(Buf + N, static_cast<size_t>(BufLen - N), ",\"acts\":{");
 		for (int a = 0; a < static_cast<int>(EPlaytesterAct::Count) && N < BufLen; ++a)
 		{

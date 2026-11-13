@@ -16,12 +16,6 @@ namespace
 	// Soft path of the one toy material (built by tools in Game/Content/Blueprints/Toy); the engine's basic shape material is the fallback.
 	const TCHAR* ToyMaterialPath = TEXT("/Game/Blueprints/Toy/M_ToySkater.M_ToySkater");
 
-	float SmoothStep01(float T)
-	{
-		T = FMath::Clamp(T, 0.f, 1.f);
-		return T * T * (3.f - 2.f * T);
-	}
-
 	// Stick geometry (metres, in the stick pivot's frame): the stick leaves the right shoulder forward and down to the ice.
 	const FVector StickDir = FVector(0.9f, 0.05f, -0.9f).GetSafeNormal();
 	const float StickLenM = 1.27f;
@@ -65,7 +59,7 @@ float UToySkaterVisualComponent::ShotStickYaw(int32 F)
 		if (F <= KeyF[I + 1])
 		{
 			const float T = (float)(F - KeyF[I]) / (float)(KeyF[I + 1] - KeyF[I]);
-			return FMath::Lerp(KeyV[I], KeyV[I + 1], SmoothStep01(T));
+			return FMath::Lerp(KeyV[I], KeyV[I + 1], FMath::SmoothStep(0.f, 1.f, T));
 		}
 	}
 	return 0.f;
@@ -78,7 +72,7 @@ float UToySkaterVisualComponent::CheckCurve01(int32 F)
 		return 0.f;
 	}
 	// 8 frames in, 12 frames out.
-	return F <= 8 ? SmoothStep01((float)F / 8.f) : 1.f - SmoothStep01((float)(F - 8) / 12.f);
+	return F <= 8 ? FMath::SmoothStep(0.f, 1.f, (float)F / 8.f) : 1.f - FMath::SmoothStep(0.f, 1.f, (float)(F - 8) / 12.f);
 }
 
 float UToySkaterVisualComponent::KnockTipDeg(int32 F, bool bDownNow)
@@ -139,6 +133,17 @@ FToyPose UToySkaterVisualComponent::ComputePose(const FToyPoseState& S, const FT
 		P.StickForwardCm = 10.f;
 	}
 	P.TipAngleDeg = KnockTipDeg(In.FramesSinceKnock, In.bDown);
+	// Lane A45 (C-0001 v4) on the existing check curve (8 in, 12 out), never while down: a hit taken standing tips 14 degrees toward the push; a board hit
+	// pitches the body 12 degrees forward (the boards are ahead of a skater that hits them); the pin holds 10 degrees of that; a stick hit knocks the stick
+	// 25 degrees aside (poke) or lifts the blade 20 degrees (lift).
+	if (!In.bDown)
+	{
+		P.HitTipDeg = 14.f * CheckCurve01(In.FramesSinceHit);
+		P.BodyPitchDeg -= 12.f * CheckCurve01(In.FramesSinceBoard);
+		if (In.bPinned) P.BodyPitchDeg -= 10.f;
+		const float StickHit = CheckCurve01(In.FramesSinceStickHit);
+		if (In.bStickHitLifted) P.StickPitchDeg += 20.f * StickHit; else P.StickYawDeg += 25.f * StickHit;
+	}
 	if (In.bBoost)
 	{
 		const float W = FMath::Sin(2.f * PI * (float)In.Frame / 30.f);
@@ -368,6 +373,11 @@ void UToySkaterVisualComponent::UpdateMotion_Implementation(float InSpeed, float
 	In.AimReachM = AimReachM;
 	In.FramesSinceCheck = CheckStart >= 0 ? LocalFrame - CheckStart : -1;
 	In.FramesSinceKnock = KnockStart >= 0 ? LocalFrame - KnockStart : -1;
+	In.FramesSinceHit = HitStart >= 0 ? LocalFrame - HitStart : -1;   // lane A45 (C-0001 v4)
+	In.FramesSinceBoard = BoardStart >= 0 ? LocalFrame - BoardStart : -1;
+	In.bPinned = bPinned;
+	In.FramesSinceStickHit = StickHitStart >= 0 ? LocalFrame - StickHitStart : -1;
+	In.bStickHitLifted = bStickHitLifted;
 	LastPose = ComputePose(State, In);
 	if (bBuilt)
 	{
@@ -405,7 +415,7 @@ void UToySkaterVisualComponent::PlayCheck_Implementation()
 	CheckStart = LocalFrame;
 }
 
-void UToySkaterVisualComponent::SetKnockedDown_Implementation(bool bDownNow, float DirX, float DirZ)
+void UToySkaterVisualComponent::SetKnockedDown_Implementation(bool bDownNow, float DirX, float DirZ, int32 KnockdownFrames)
 {
 	if (bDownNow == bDown)
 	{
@@ -413,11 +423,38 @@ void UToySkaterVisualComponent::SetKnockedDown_Implementation(bool bDownNow, flo
 	}
 	bDown = bDownNow;
 	KnockStart = LocalFrame;
+	KnockdownFramesGiven = bDownNow ? KnockdownFrames : 0;   // C-0001 v4: the down time; this figure holds its tip while down, so it is kept, not used
 	if (bDownNow)
 	{
 		const FVector2D D(DirX, DirZ);
 		KnockDir = D.IsNearlyZero() ? FVector2D(-1.f, 0.f) : D.GetSafeNormal();
 	}
+}
+
+// ---- Lane A45 (C-0001 v4): defaults onto the existing curves ----
+
+void UToySkaterVisualComponent::PlayHitReaction_Implementation(float DirX, float DirZ)
+{
+	if (bDown) return;
+	HitStart = LocalFrame;
+	const FVector2D D(DirX, DirZ);
+	HitDir = D.IsNearlyZero() ? FVector2D(-FMath::Cos(FMath::DegreesToRadians(LastFacing.Yaw)), -FMath::Sin(FMath::DegreesToRadians(LastFacing.Yaw))) : D.GetSafeNormal();
+}
+
+void UToySkaterVisualComponent::PlayBoardHit_Implementation()
+{
+	BoardStart = LocalFrame;
+}
+
+void UToySkaterVisualComponent::SetBoardPin_Implementation(bool bOn)
+{
+	bPinned = bOn;
+}
+
+void UToySkaterVisualComponent::PlayStickHit_Implementation(bool bLifted)
+{
+	StickHitStart = LocalFrame;
+	bStickHitLifted = bLifted;
 }
 
 void UToySkaterVisualComponent::SetHasPuck_Implementation(bool bInHasPuck)
@@ -469,8 +506,12 @@ void UToySkaterVisualComponent::ApplyPose(const FToyPose& P, const FRotator& Fac
 	const FVector DirLocal = FRotator(0.f, Facing.Yaw, 0.f).UnrotateVector(DirWorld);
 	const FVector Axis = FVector::CrossProduct(FVector::UpVector, DirLocal).GetSafeNormal();
 	const FQuat Tip = Axis.IsNearlyZero() ? FQuat::Identity : FQuat(Axis, FMath::DegreesToRadians(P.TipAngleDeg));
+	// Lane A45 (C-0001 v4): the hit taken standing tips toward its own push direction, in the same frame.
+	const FVector HitLocal = FRotator(0.f, Facing.Yaw, 0.f).UnrotateVector(FVector(HitDir.X, HitDir.Y, 0.f));
+	const FVector HitAxis = FVector::CrossProduct(FVector::UpVector, HitLocal).GetSafeNormal();
+	const FQuat HitTip = (HitAxis.IsNearlyZero() || P.HitTipDeg < 0.01f) ? FQuat::Identity : FQuat(HitAxis, FMath::DegreesToRadians(P.HitTipDeg));
 	const FQuat Roll = FRotator(0.f, 0.f, P.LeanRollDeg).Quaternion();
-	LeanNode->SetRelativeRotation(Tip * Roll);
+	LeanNode->SetRelativeRotation(Tip * HitTip * Roll);
 	LeanNode->SetRelativeLocation(FVector(P.CheckShiftCm, 0.f, 0.f));
 
 	BodyPivot->SetRelativeRotation(FRotator(P.BodyPitchDeg, P.BodyYawSwayDeg, 0.f));

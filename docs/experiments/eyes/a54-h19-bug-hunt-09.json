@@ -1,0 +1,153 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T01:20:28.539Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.raw-l2-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.raw-l2-pause.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.raw-l2-call.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.regular-l2-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.regular-l2-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "F",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.regular-l2-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2445,
+      "usage": {
+        "prompt": 7451,
+        "output": 707,
+        "thoughts": 0,
+        "total": 8158,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00824,
+      "ms": 8518,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [
+              {
+                "where": "top-center, along the boards rail behind the net",
+                "what": "The yellow distance marker '6 m' floats with its red square intersecting the handrail/board edge without clean grounding.",
+                "severity": 2,
+                "confidence": 0.8
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still B",
+            "findings": [
+              {
+                "where": "bottom-right corner",
+                "what": "Minimap display overlaps partially or has uneven padding against the screen boundary.",
+                "severity": 1,
+                "confidence": 0.7
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still C",
+            "findings": [
+              {
+                "where": "center menu panel",
+                "what": "The dark translucent background card exhibits subtle vertical banding / gradient stepping across its bottom half.",
+                "severity": 1,
+                "confidence": 0.75
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still D",
+            "findings": [
+              {
+                "where": "bottom edge across the entire width",
+                "what": "The blue stamina/power curved bar clips directly across the text control prompt bar.",
+                "severity": 3,
+                "confidence": 0.95
+              },
+              {
+                "where": "center around the player's back",
+                "what": "The 'WON' circular target reticle and the 'YOU' box heavily overlap the player's jersey number and stick.",
+                "severity": 3,
+                "confidence": 0.9
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still E",
+            "findings": [
+              {
+                "where": "bottom edge across the width",
+                "what": "The blue curved arc at the bottom overlaps the text prompt string 'ESC / START CALL READY' and the keyboard keybindings row.",
+                "severity": 3,
+                "confidence": 0.95
+              },
+              {
+                "where": "top-center near the red net",
+                "what": "The distance text '49 m' and yellow objective diamond overlap directly on top of the orange opposing player figure.",
+                "severity": 2,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still F",
+            "findings": [
+              {
+                "where": "top-left, along the top rail of the boards",
+                "what": "A floating red and black cube marker labeled '4 m' is detached and partially clipping through the dasher board glass rail.",
+                "severity": 3,
+                "confidence": 0.9
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=hockey.raw-l2-farnet.jpg B=hockey.raw-l2-pause.jpg C=hockey.raw-l2-call.jpg D=hockey.regular-l2-card.jpg E=hockey.regular-l2-faceoff.jpg F=hockey.regular-l2-farnet.jpg (gemini-3.8-flash, in 7451 out 707 tokens, ~$0.0082, 8.5 s)\n- stills:\n  - label: Still A; clean: false\n    - findings:\n      - where: top-center, along the boards rail behind the net; what: The yellow distance marker '6 m' floats with its red square intersecting the handrail/board edge without clean grounding.; severity: 2; confidence: 0.8\n  - label: Still B; clean: false\n    - findings:\n      - where: bottom-right corner; what: Minimap display overlaps partially or has uneven padding against the screen boundary.; severity: 1; confidence: 0.7\n  - label: Still C; clean: false\n    - findings:\n      - where: center menu panel; what: The dark translucent background card exhibits subtle vertical banding / gradient stepping across its bottom half.; severity: 1; confidence: 0.75\n  - label: Still D; clean: false\n    - findings:\n      - where: bottom edge across the entire width; what: The blue stamina/power curved bar clips directly across the text control prompt bar.; severity: 3; confidence: 0.95\n      - where: center around the player's back; what: The 'WON' circular target reticle and the 'YOU' box heavily overlap the player's jersey number and stick.; severity: 3; confidence: 0.9\n  - label: Still E; clean: false\n    - findings:\n      - where: bottom edge across the width; what: The blue curved arc at the bottom overlaps the text prompt string 'ESC / START CALL READY' and the keyboard keybindings row.; severity: 3; confidence: 0.95\n      - where: top-center near the red net; what: The distance text '49 m' and yellow objective diamond overlap directly on top of the orange opposing player figure.; severity: 2; confidence: 0.85\n  - label: Still F; clean: false\n    - findings:\n      - where: top-left, along the top rail of the boards; what: A floating red and black cube marker labeled '4 m' is detached and partially clipping through the dasher board glass rail.; severity: 3; confidence: 0.9"
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-12T22:13:25.442Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a45/docs/experiments/img/tackling/a45-pin-toy-f1693-strip.png",
+          "width": 6288,
+          "height": 453
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2270,
+      "usage": {
+        "prompt": 1641,
+        "output": 251,
+        "thoughts": 0,
+        "total": 1892,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00217,
+      "ms": 5232,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [
+              {
+                "where": "Top-left edge across the first frame",
+                "what": "A line of debug/overlay text is visible along the top border above the boards.",
+                "severity": 2,
+                "confidence": 0.95
+              },
+              {
+                "where": "Middle-right panels (frames 5 to 7), rightmost orange skater",
+                "what": "The orange toy figure sinks deeply into the ice surface up to its lower torso instead of resting on skate blades atop the ice.",
+                "severity": 4,
+                "confidence": 0.9
+              },
+              {
+                "where": "Far-right panels (frames 6 and 7), background above boards",
+                "what": "Vertical seams and mismatched dark rectangular shading bands appear in the dark arena background above the glass rail.",
+                "severity": 3,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=a45-pin-toy-f1693-strip.png (gemini-3.8-flash, in 1641 out 251 tokens, ~$0.0022, 5.2 s)\n- stills:\n  - label: Still A; clean: false\n    - findings:\n      - where: Top-left edge across the first frame; what: A line of debug/overlay text is visible along the top border above the boards.; severity: 2; confidence: 0.95\n      - where: Middle-right panels (frames 5 to 7), rightmost orange skater; what: The orange toy figure sinks deeply into the ice surface up to its lower torso instead of resting on skate blades atop the ice.; severity: 4; confidence: 0.9\n      - where: Far-right panels (frames 6 and 7), background above boards; what: Vertical seams and mismatched dark rectangular shading bands appear in the dark arena background above the glass rail.; severity: 3; confidence: 0.85"
+    }
+  ]
+}

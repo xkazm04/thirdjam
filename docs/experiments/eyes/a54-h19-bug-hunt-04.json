@@ -1,0 +1,132 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T01:19:42.214Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.boost-l2-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.boost-l2-pause.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.boost-l2-call.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.boost-l1-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.boost-l1-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "F",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.boost-l1-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2445,
+      "usage": {
+        "prompt": 7451,
+        "output": 530,
+        "thoughts": 0,
+        "total": 7981,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00758,
+      "ms": 6948,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [],
+            "clean": true
+          },
+          {
+            "label": "Still B",
+            "findings": [],
+            "clean": true
+          },
+          {
+            "label": "Still C",
+            "findings": [],
+            "clean": true
+          },
+          {
+            "label": "Still D",
+            "findings": [
+              {
+                "where": "bottom-right corner HUD control strip",
+                "what": "The 'PAUSE ESC' label is clipped and cut off by the right edge of the screen frame.",
+                "severity": 2,
+                "confidence": 0.95
+              },
+              {
+                "where": "center across the scene",
+                "what": "Intense overexposed bloom blow-out washes out the boards, ice surface, and characters, entirely stripping toon outlines and detail compared to Level 2 rendering.",
+                "severity": 4,
+                "confidence": 0.9
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still E",
+            "findings": [
+              {
+                "where": "bottom-right corner HUD control strip",
+                "what": "The 'PAUSE ESC' text label clips out of bounds off the right edge of the screen.",
+                "severity": 2,
+                "confidence": 0.95
+              },
+              {
+                "where": "center and upper half of the rink",
+                "what": "Overexposed emissive lighting or post-processing bloom bleaches the characters and background boards, blowing out mesh shading and toon outlines.",
+                "severity": 4,
+                "confidence": 0.9
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still F",
+            "findings": [
+              {
+                "where": "across the entire scene, particularly the goal net, boards, and players",
+                "what": "Severe overexposure and blown-out bloom removes black cel-shading outlines and washes out the net and player textures compared to Still A.",
+                "severity": 4,
+                "confidence": 0.9
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=hockey.boost-l2-farnet.jpg B=hockey.boost-l2-pause.jpg C=hockey.boost-l2-call.jpg D=hockey.boost-l1-card.jpg E=hockey.boost-l1-faceoff.jpg F=hockey.boost-l1-farnet.jpg (gemini-3.8-flash, in 7451 out 530 tokens, ~$0.0076, 6.9 s)\n- stills:\n  - label: Still A; clean: true\n    - findings: (none)\n  - label: Still B; clean: true\n    - findings: (none)\n  - label: Still C; clean: true\n    - findings: (none)\n  - label: Still D; clean: false\n    - findings:\n      - where: bottom-right corner HUD control strip; what: The 'PAUSE ESC' label is clipped and cut off by the right edge of the screen frame.; severity: 2; confidence: 0.95\n      - where: center across the scene; what: Intense overexposed bloom blow-out washes out the boards, ice surface, and characters, entirely stripping toon outlines and detail compared to Level 2 rendering.; severity: 4; confidence: 0.9\n  - label: Still E; clean: false\n    - findings:\n      - where: bottom-right corner HUD control strip; what: The 'PAUSE ESC' text label clips out of bounds off the right edge of the screen.; severity: 2; confidence: 0.95\n      - where: center and upper half of the rink; what: Overexposed emissive lighting or post-processing bloom bleaches the characters and background boards, blowing out mesh shading and toon outlines.; severity: 4; confidence: 0.9\n  - label: Still F; clean: false\n    - findings:\n      - where: across the entire scene, particularly the goal net, boards, and players; what: Severe overexposure and blown-out bloom removes black cel-shading outlines and washes out the net and player textures compared to Still A.; severity: 4; confidence: 0.9"
+    }
+  ]
+}

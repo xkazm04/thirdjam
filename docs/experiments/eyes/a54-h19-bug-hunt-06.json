@@ -1,0 +1,153 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T01:20:01.681Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.boost-l3-call.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.boost-p3-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.boost-p3-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.boost-p3-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.boost-p3-pause.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "F",
+          "path": "docs/experiments/img/eyesgrid/h19/hockey.boost-p3-call.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2443,
+      "usage": {
+        "prompt": 7447,
+        "output": 760,
+        "thoughts": 0,
+        "total": 8207,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00844,
+      "ms": 9792,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [
+              {
+                "where": "Bottom-left quadrant, at the red goal crease circle overlay",
+                "what": "The red semi-circular goal crease marking abruptly cuts off with a straight hard edge across the center-left ice instead of completing a clean boundary.",
+                "severity": 2,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still B",
+            "findings": [
+              {
+                "where": "Bottom edge, center to bottom right",
+                "what": "The bottom control prompt bar overlaps and clips directly into the bottom-right minimap frame and the ESC/START prompt.",
+                "severity": 3,
+                "confidence": 0.95
+              },
+              {
+                "where": "Center, around the player skater",
+                "what": "Multiple HUD graphic layers ('MATCH 1' card, speech bubble, aiming reticle with 'WON' text, and 'YOU' label) overlap densely and obscure the active character model.",
+                "severity": 2,
+                "confidence": 0.7
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still C",
+            "findings": [
+              {
+                "where": "Bottom edge, center-right",
+                "what": "The control scheme keybind text bar runs straight into and behind the minimap box on the bottom right.",
+                "severity": 3,
+                "confidence": 0.95
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still D",
+            "findings": [
+              {
+                "where": "Bottom-left quadrant, the orange skater figure",
+                "what": "The hockey stick held by the orange figure clips completely through the lower torso/crotch rather than being gripped naturally at the hands.",
+                "severity": 4,
+                "confidence": 0.95
+              },
+              {
+                "where": "Center, behind the blue skater",
+                "what": "The stick shaft clips through the blue player figure's legs/waist with no clear hands holding it.",
+                "severity": 3,
+                "confidence": 0.9
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still E",
+            "findings": [
+              {
+                "where": "Bottom center, underneath the TIME OUT dialog window",
+                "what": "The two-row control binding text list spills out of the UI card area and clutters the ice playfield.",
+                "severity": 2,
+                "confidence": 0.8
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still F",
+            "findings": [
+              {
+                "where": "Bottom-left quadrant, along the bottom edge of the red goal crease",
+                "what": "The red semi-circular goal crease shape is chopped off along a harsh horizontal line rather than maintaining a circular arc.",
+                "severity": 2,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=hockey.boost-l3-call.jpg B=hockey.boost-p3-card.jpg C=hockey.boost-p3-faceoff.jpg D=hockey.boost-p3-farnet.jpg E=hockey.boost-p3-pause.jpg F=hockey.boost-p3-call.jpg (gemini-3.8-flash, in 7447 out 760 tokens, ~$0.0084, 9.8 s)\n- stills:\n  - label: Still A; clean: false\n    - findings:\n      - where: Bottom-left quadrant, at the red goal crease circle overlay; what: The red semi-circular goal crease marking abruptly cuts off with a straight hard edge across the center-left ice instead of completing a clean boundary.; severity: 2; confidence: 0.85\n  - label: Still B; clean: false\n    - findings:\n      - where: Bottom edge, center to bottom right; what: The bottom control prompt bar overlaps and clips directly into the bottom-right minimap frame and the ESC/START prompt.; severity: 3; confidence: 0.95\n      - where: Center, around the player skater; what: Multiple HUD graphic layers ('MATCH 1' card, speech bubble, aiming reticle with 'WON' text, and 'YOU' label) overlap densely and obscure the active character model.; severity: 2; confidence: 0.7\n  - label: Still C; clean: false\n    - findings:\n      - where: Bottom edge, center-right; what: The control scheme keybind text bar runs straight into and behind the minimap box on the bottom right.; severity: 3; confidence: 0.95\n  - label: Still D; clean: false\n    - findings:\n      - where: Bottom-left quadrant, the orange skater figure; what: The hockey stick held by the orange figure clips completely through the lower torso/crotch rather than being gripped naturally at the hands.; severity: 4; confidence: 0.95\n      - where: Center, behind the blue skater; what: The stick shaft clips through the blue player figure's legs/waist with no clear hands holding it.; severity: 3; confidence: 0.9\n  - label: Still E; clean: false\n    - findings:\n      - where: Bottom center, underneath the TIME OUT dialog window; what: The two-row control binding text list spills out of the UI card area and clutters the ice playfield.; severity: 2; confidence: 0.8\n  - label: Still F; clean: false\n    - findings:\n      - where: Bottom-left quadrant, along the bottom edge of the red goal crease; what: The red semi-circular goal crease shape is chopped off along a harsh horizontal line rather than maintaining a circular arc.; severity: 2; confidence: 0.85"
+    }
+  ]
+}

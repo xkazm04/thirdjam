@@ -1,0 +1,112 @@
+[
+ {
+  "id": "menu-footer-hint-clips-slate-border",
+  "owner": "menu",
+  "re": "^menu-.*(footer|STICK|navigation|helper|prompt|bottom (edge|border)|controller)"
+ },
+ {
+  "id": "menu-cuts-stat-line-over-sprocket-holes",
+  "owner": "menu",
+  "re": "^menu-cuts"
+ },
+ {
+  "id": "menu-friend-modal-leaves-main-menu-visible",
+  "owner": "menu",
+  "re": "^menu-friend"
+ },
+ {
+  "id": "menu-other",
+  "owner": "menu",
+  "re": "^menu-"
+ },
+ {
+  "id": "chaos-bumper-is-a-flat-magenta-box",
+  "owner": "rink",
+  "re": "magenta|pink untextured|pink (box|rectang)"
+ },
+ {
+  "id": "cyan-hatched-circle-on-chaos-ice-unexplained",
+  "owner": "rink",
+  "re": "cyan hatched|hatched grid"
+ },
+ {
+  "id": "no-game-clock-or-team-side-cue-in-the-scoreboard",
+  "owner": "HUD",
+  "re": "clock|timer|elapsed|score (plate|affiliation)|team score|which score|side/|controls reminder"
+ },
+ {
+  "id": "l1-day-look-blown-out",
+  "owner": "rink",
+  "re": "overexpos|blown|bloom|washed|bleach"
+ },
+ {
+  "id": "goal-light-housing-reads-as-a-floating-cube",
+  "owner": "rink",
+  "re": "cube|prism|placeholder|debug|grey and red|black-and-red|red face|rogue"
+ },
+ {
+  "id": "puck-and-carrier-not-visible-in-the-frame",
+  "owner": "camera",
+  "re": "puck|possession|carrier"
+ },
+ {
+  "id": "goal-crease-marking-ends-in-a-hard-straight-cut",
+  "owner": "rink",
+  "re": "crease"
+ },
+ {
+  "id": "far-net-not-in-frame-or-unreadable",
+  "owner": "camera",
+  "re": "far_net scored 1|far net is not"
+ },
+ {
+  "id": "stick-missing-or-clipped-through-the-body",
+  "owner": "figure",
+  "re": "stick|blade|shaft"
+ },
+ {
+  "id": "figure-face-visor-artifacts",
+  "owner": "figure",
+  "re": "visor|z-fight|fragmentation"
+ },
+ {
+  "id": "selection-ring-offset-from-the-skates",
+  "owner": "HUD",
+  "re": "(ring|circle|reticle).*(forward|offset|displaced|detached|misaligned|front)|(forward|offset|displaced|detached|misaligned).*(ring|circle)"
+ },
+ {
+  "id": "controls-strip-collides-with-minimap-and-the-ice-arc",
+  "owner": "HUD",
+  "re": "minimap|radar|controls? (strip|text|bar|block)|control prompt|keybind|bottom (status )?prompt|stamina|curved arc|call ready"
+ },
+ {
+  "id": "skater-clips-through-the-net-posts",
+  "owner": "figure",
+  "re": "(post|goal net|net frame|crossbar).*(clip|through)|clip.*(post|goal net)"
+ },
+ {
+  "id": "only-one-opponent-in-view",
+  "owner": "camera",
+  "re": "only (one|deep blue|a single)|team_colours scored 1|no other (teammates|players)|lone skater"
+ },
+ {
+  "id": "net-distance-markers-sit-on-the-boards-the-net-and-the-figures",
+  "owner": "HUD",
+  "re": "distance|own net|far net|target net|net (marker|indicator)|\\d+ ?m (marker|label|text)"
+ },
+ {
+  "id": "subtitle-pill-and-call-ready-pill-collide-with-the-ring-and-the-screen-edge",
+  "owner": "HUD",
+  "re": "subtitle|status prompt|settings card|call ready"
+ },
+ {
+  "id": "match-card-and-reticle-cover-the-faceoff",
+  "owner": "HUD",
+  "re": "match 1|title card|banner|reticle|WON|YOU|speech|bubble|countdown|\\d+ ?m.*(clip|occlud|collid|border|behind|touch)|(clip|occlud|collid).*\\d+ ?m|net (marker|indicator)"
+ },
+ {
+  "id": "pause-and-call-cards-cover-the-whole-play-field",
+  "owner": "menu",
+  "re": "pause|director|modal|dialog|slider|card (covers|obscures|blocks)"
+ }
+]

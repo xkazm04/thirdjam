@@ -1,0 +1,1 @@
+{"seconds":150,"steps":[{"at":18,"keys":"{ENTER}"},{"at":21,"shot":"card"},{"at":25,"shot":"faceoff"}],"triggers":[{"on":"JAMEVENT goal ","after":0.8,"shot":"goal","max":1,"skip":0}]}

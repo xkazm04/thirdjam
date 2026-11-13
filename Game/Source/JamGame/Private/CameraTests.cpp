@@ -10,7 +10,6 @@
 #include "ToySkaterVisual.h"
 #include "InputMapping.h"
 #include "EffectsBinder.h"
-#include "InputAction.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
 
@@ -121,7 +120,7 @@ bool FJamFarNetReadable::RunTest(const FString&)
 		const FVector Net = F.GetFarNetWorldCm();
 		const FVector2D SkaterM(Net.X / 100.f - DistM, 0.f);
 		const FTransform Cam = UJamFollowCamera::ComputeThirdPersonPose(C, SkaterM, 0.f);
-		FVector2D Px;
+		FVector2D Px = FVector2D::ZeroVector;   // A55: read below even when Project() returns false
 		const bool bFront = JamA5Test::Project(Cam, C.FovDeg, Net, Px);
 		TestTrue(*FString::Printf(TEXT("net at %.0f m is in front of the camera"), DistM), bFront);
 		TestTrue(*FString::Printf(TEXT("net at %.0f m projects inside 1920x1080 (%.0f, %.0f)"), DistM, Px.X, Px.Y), Px.X >= 0 && Px.X <= 1920 && Px.Y >= 0 && Px.Y <= 1080);
@@ -163,7 +162,7 @@ bool FJamFarNetReadable::RunTest(const FString&)
 	const FTransform AC = UJamFollowCamera::ComputeArenaPose(Arena, 120.f, 60.f);
 	for (float Sgn : { -1.f, 1.f })
 	{
-		FVector2D Px;
+		FVector2D Px = FVector2D::ZeroVector;   // A55: read below even when Project() returns false
 		const FVector Goal(Sgn * 56.f * 100.f, 0.f, 75.f);
 		TestTrue(TEXT("arena: goal in front"), JamA5Test::Project(AC, Arena.FovDeg, Goal, Px));
 		TestTrue(*FString::Printf(TEXT("arena: goal %.0f inside viewport (%.0f, %.0f)"), Sgn, Px.X, Px.Y), Px.X >= 0 && Px.X <= 1920 && Px.Y >= 0 && Px.Y <= 1080);
@@ -235,7 +234,14 @@ bool FJamInputMapTest::RunTest(const FString&)
 	TestTrue(TEXT("pad A pokes"), M->IsKeyMapped(M->Poke, EKeys::Gamepad_FaceButton_Bottom));
 	TestTrue(TEXT("wheel dekes"), M->IsKeyMapped(M->Deke, EKeys::MouseScrollUp) && M->IsKeyMapped(M->Deke, EKeys::MouseScrollDown));
 	TestTrue(TEXT("Q dekes"), M->IsKeyMapped(M->Deke, EKeys::Q));
-	TestTrue(TEXT("E passes"), M->IsKeyMapped(M->Pass, EKeys::E));
+	// Lane A51 (R-0034): the spin on E / B, the pass on F / X, the brake off B.
+	TestTrue(TEXT("F passes"), M->IsKeyMapped(M->Pass, EKeys::F));
+	TestFalse(TEXT("E no longer passes"), M->IsKeyMapped(M->Pass, EKeys::E));
+	TestTrue(TEXT("pad X passes"), M->IsKeyMapped(M->Pass, EKeys::Gamepad_FaceButton_Left));
+	TestTrue(TEXT("E spins"), M->IsKeyMapped(M->Spin, EKeys::E));
+	TestTrue(TEXT("pad B spins"), M->IsKeyMapped(M->Spin, EKeys::Gamepad_FaceButton_Right));
+	TestFalse(TEXT("pad B no longer brakes"), M->IsKeyMapped(M->Brake, EKeys::Gamepad_FaceButton_Right));
+	TestTrue(TEXT("left stick click brakes"), M->IsKeyMapped(M->Brake, EKeys::Gamepad_LeftThumbstick));
 	TestTrue(TEXT("mouse aims"), M->IsKeyMapped(M->StickMouse, EKeys::Mouse2D));
 	TestTrue(TEXT("right stick aims"), M->IsKeyMapped(M->StickAim, EKeys::Gamepad_Right2D));
 	TestTrue(TEXT("R restarts"), M->IsKeyMapped(M->Restart, EKeys::R));
@@ -486,7 +492,7 @@ bool FJamCameraEndBoards::RunTest(const FString&)
 	}
 	// A49: the end-board rule now works inside the middle-third budget; the far net may leave the frame, the human may not (Jam.Camera.MiddleThird).
 	AddInfo(FString::Printf(TEXT("far net in frame from frame 30 on: %s (informational since A49)"), bNetAlways ? TEXT("yes") : TEXT("no")));
-	FVector2D Px;
+	FVector2D Px = FVector2D::ZeroVector;   // A55: read below even when Project() returns false
 	TestTrue(TEXT("far net projects"), JamA5Test::Project(T, C.FovDeg, Fr.GetFarNetWorldCm(), Px));
 	AddInfo(FString::Printf(TEXT("far net at (%.0f, %.0f) of 1920x1080 (informational since A49)"), Px.X, Px.Y));
 
@@ -534,7 +540,7 @@ bool FJamCameraFarNetBias::RunTest(const FString&)
 	}
 	TestEqual(TEXT("settled yaw equals the lead"), (float)Ta.Rotator().Yaw, Lead, 0.3f);
 	TestEqual(TEXT("bias 0 keeps the skater's yaw"), (float)Tb.Rotator().Yaw, 0.f, 0.01f);
-	FVector2D PxA, PxB;
+	FVector2D PxA = FVector2D::ZeroVector, PxB = FVector2D::ZeroVector;   // A55: read below even when Project() returns false
 	const FVector NetCm(4100.f, 0.f, 300.f);
 	TestTrue(TEXT("net in front (bias)"), JamA5Test::Project(Ta, C.FovDeg, NetCm, PxA));
 	TestTrue(TEXT("net in front (no bias)"), JamA5Test::Project(Tb, C.FovDeg, NetCm, PxB));
@@ -562,7 +568,7 @@ bool FJamHudRules::RunTest(const FString&)
 	TestTrue(TEXT("call after a goal"), UJamHudWidget::ShowDirectorsCall(F));
 	UJamInputMap* M = UJamInputMap::Get();
 	TestTrue(TEXT("ctrl brakes"), M->IsKeyMapped(M->Brake, EKeys::LeftControl));
-	TestTrue(TEXT("pad B brakes (A49: the left trigger sprints)"), M->IsKeyMapped(M->Brake, EKeys::Gamepad_FaceButton_Right));
+	TestTrue(TEXT("left stick click brakes (A51: B spins; A49: the left trigger sprints)"), M->IsKeyMapped(M->Brake, EKeys::Gamepad_LeftThumbstick));
 	return true;
 }
 

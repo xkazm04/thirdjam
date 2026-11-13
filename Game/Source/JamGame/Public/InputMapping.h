@@ -41,8 +41,10 @@ public:
 	UPROPERTY() TObjectPtr<UInputAction> Lift;
 	// R-0029 point 4 (lane A39): IA_Deke, Q / gamepad Y: the carrier's deke tap (FJamInput::bDeke).
 	UPROPERTY() TObjectPtr<UInputAction> Deke;
-	// C-0005 (lane A16): IA_Pass, E / X: a lead pass to the best open teammate.
+	// C-0005 (lane A16): IA_Pass, F / X (lane A51, R-0034: the pass moved from E to F): a lead pass to the best open teammate.
 	UPROPERTY() TObjectPtr<UInputAction> Pass;
+	// Lane A51 (R-0034): IA_Spin, E / gamepad B: the spin move (FJamInput::bSpin). The brake left B for the left stick click.
+	UPROPERTY() TObjectPtr<UInputAction> Spin;
 	UPROPERTY() TObjectPtr<UInputMappingContext> Context;
 
 	// Keys mapped to an action, for tests ("is the gamepad A button on Shoot").
@@ -97,6 +99,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Jam|Input")
 	bool ConsumePokePressed();
+	// Lane A51: the spin tap (E / B) since the last read.
+	UFUNCTION(BlueprintCallable, Category = "Jam|Input")
+	bool ConsumeSpinPressed();
 
 	UFUNCTION(BlueprintCallable, Category = "Jam|Input")
 	bool ConsumeLiftPressed();
@@ -151,6 +156,7 @@ private:
 	void OnLiftStarted() { bLiftLatch = true; }
 	void OnDekeStarted() { bDekeLatch = true; }
 	void OnPassStarted() { bPassLatch = true; }
+	void OnSpinStarted() { bSpinLatch = true; }   // lane A51
 	void OnRestartStarted() { OnRestart.Broadcast(); }
 	void OnPauseStarted() { OnPause.Broadcast(); }
 
@@ -165,6 +171,7 @@ private:
 	bool bLiftLatch = false;
 	bool bDekeLatch = false;
 	bool bPassLatch = false;
+	bool bSpinLatch = false;   // lane A51
 	FVector2D StickAxis = FVector2D::ZeroVector;
 	FVector2D MouseAimPx = FVector2D::ZeroVector;
 	bool bBound = false;
