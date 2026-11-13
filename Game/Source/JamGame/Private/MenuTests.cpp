@@ -245,4 +245,26 @@ bool FJamMenuToMatchAndBack::RunTest(const FString&)
 	return true;
 }
 
+// Lane A67 (R-0036): the six Director's choices are on disk, load through the game's loader, carry a pitch and three facts, and name
+// themselves by cartridge id (the match card's line); the shipped cuts are not modes.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamMenuDirectorsChoices, "Jam.Menu.DirectorsChoices", JamMenuTests::MenuTestFlags)
+bool FJamMenuDirectorsChoices::RunTest(const FString&)
+{
+	const TArray<FJamModeCard> Cards = UJamMenuFlow::AvailableModeCards();
+	TestEqual(TEXT("six Director's choices on disk"), Cards.Num(), 6);
+	for (const FJamModeCard& M : Cards)
+	{
+		TArray<FString> Errors;
+		UJamCartridge* C = UJamCartridge::LoadFromFile(UJamCartridge::ResolveCartridgePath(M.Name), Errors);
+		for (const FString& E : Errors) AddError(FString::Printf(TEXT("%s: %s"), *M.Name, *E));
+		if (!C) continue;
+		TestEqual(*FString::Printf(TEXT("%s id"), *M.Name), C->Id, M.Id);
+		TestEqual(*FString::Printf(TEXT("%s names itself"), *M.Name), UJamMenuFlow::ModeDisplayForId(C->Id), M.Display);
+		TestEqual(*FString::Printf(TEXT("%s three facts"), *M.Name), M.Facts.Num(), 3);
+		TestFalse(*FString::Printf(TEXT("%s pitch"), *M.Name), M.Pitch.IsEmpty());
+	}
+	TestTrue(TEXT("the regular cut is not a mode"), UJamMenuFlow::ModeDisplayForId(TEXT("hockey-regular")).IsEmpty());
+	return true;
+}
+
 #endif

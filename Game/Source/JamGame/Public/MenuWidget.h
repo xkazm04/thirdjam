@@ -13,6 +13,7 @@
 class UWidgetSwitcher;
 class UVerticalBox;
 class UScrollBox;
+class UUniformGridPanel;
 class UEditableTextBox;
 class UJamSettingsWidget;
 class UJamMenuWidget;
@@ -92,6 +93,8 @@ private:
 	UWidget* BuildSettings();
 	UWidget* BuildCredits();
 	void RefreshCuts();
+	// Lane A67 (R-0036): the Director's choices row, six mode cards above the cut list.
+	void RefreshModes();
 	void RefreshDirect();
 	void OnResult(const FJamDesignerResult& R);
 	UJamDesignerSubsystem* Designer() const;
@@ -137,6 +140,7 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UButton> QuitButton;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> MainStatus;
 	UPROPERTY(Transient) TObjectPtr<UScrollBox> CutList;
+	UPROPERTY(Transient) TObjectPtr<UUniformGridPanel> ModeGrid;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> CutsStatus;
 	UPROPERTY(Transient) TObjectPtr<UEditableTextBox> SentenceBox;
 	UPROPERTY(Transient) TObjectPtr<UButton> RollButton;

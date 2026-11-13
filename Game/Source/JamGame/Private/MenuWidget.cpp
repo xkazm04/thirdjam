@@ -10,6 +10,8 @@
 #include "Components/ScrollBoxSlot.h"
 #include "Components/SizeBox.h"
 #include "Components/SizeBoxSlot.h"
+#include "Components/UniformGridPanel.h"
+#include "Components/UniformGridSlot.h"
 #include "Components/EditableTextBox.h"
 #include "Components/Spacer.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -188,10 +190,15 @@ UWidget* UJamMenuWidget::BuildCuts()
 {
 	UWidgetTree* T = WidgetTree;
 	UVerticalBox* Box = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("CutsScreen"));
+	// Lane A67 (R-0036): the Director's choices, six modes chosen like a cut, above the cut list.
+	AddV(Box, S::Section(T, TEXT("DIRECTOR'S CHOICES")), FMargin(0, 0, 0, 4));
+	ModeGrid = T->ConstructWidget<UUniformGridPanel>(UUniformGridPanel::StaticClass(), TEXT("ModeGrid"));
+	ModeGrid->SetSlotPadding(FMargin(4.f));
+	AddV(Box, ModeGrid, FMargin(0, 0, 0, 8));
 	AddV(Box, S::Section(T, TEXT("CHOOSE YOUR CUT")), FMargin(0, 0, 0, 6));
 	CutList = T->ConstructWidget<UScrollBox>(UScrollBox::StaticClass(), TEXT("CutList"));
 	USizeBox* ListBox = T->ConstructWidget<USizeBox>(USizeBox::StaticClass());
-	ListBox->SetMaxDesiredHeight(440.f);
+	ListBox->SetMaxDesiredHeight(250.f);   // lane A67: the mode cards take the rest of the 720p card
 	ListBox->AddChild(CutList);
 	AddV(Box, ListBox, FMargin(0, 0));
 	CutsStatus = S::Text(T, TEXT(""), S::BodyFont(), S::Muted());
@@ -340,6 +347,8 @@ void UJamMenuWidget::ShowScreen(EJamMenuScreen InScreen)
 		break;
 	case EJamMenuScreen::Cuts:
 		RefreshCuts();
+		RefreshModes();
+		if (ModeGrid && ModeGrid->GetChildrenCount()) { PendingFocus = ModeGrid->GetChildAt(0); break; }
 		PendingFocus = CutList && CutList->GetChildrenCount() ? CutList->GetChildAt(0) : (BackButtons.Num() ? static_cast<UWidget*>(BackButtons[0].Get()) : nullptr);
 		break;
 	case EJamMenuScreen::Direct:
@@ -417,6 +426,48 @@ void UJamMenuWidget::RefreshCuts()
 		AddTinted(B, Name);
 	}
 	CutsStatus->SetText(FText::FromString(Rows.Num() ? FString::Printf(TEXT("%d cuts. Pick one to play it."), Rows.Num()) : TEXT("No cuts found in Content/Cartridges.")));
+}
+
+void UJamMenuWidget::RefreshModes()
+{
+	if (!ModeGrid) return;
+	ModeGrid->ClearChildren();
+	Tinted.RemoveAll([](const TPair<TWeakObjectPtr<UButton>, TWeakObjectPtr<UTextBlock>>& P) { return !P.Key.IsValid(); });
+	UWidgetTree* T = WidgetTree;
+	const TArray<FJamModeCard> Cards = UJamMenuFlow::AvailableModeCards();
+	for (int32 i = 0; i < Cards.Num(); ++i)
+	{
+		const FJamModeCard& M = Cards[i];
+		UJamMenuRowButton* B = T->ConstructWidget<UJamMenuRowButton>(UJamMenuRowButton::StaticClass());
+		FButtonStyle CardStyle = ButtonStyle();
+		CardStyle.SetNormal(S::Rounded(S::SlateDark(), S::Radius, S::Blue(), 1.5f));
+		CardStyle.SetHovered(S::Rounded(FLinearColor(S::Blue().R, S::Blue().G, S::Blue().B, 0.45f), S::Radius, S::Yellow(), 2.f));
+		CardStyle.SetPressed(S::Rounded(FLinearColor(S::Orange().R, S::Orange().G, S::Orange().B, 0.55f), S::Radius, S::Yellow(), 2.f));
+		CardStyle.SetNormalPadding(FMargin(12, 8));
+		CardStyle.SetPressedPadding(FMargin(12, 9, 12, 7));
+		B->SetStyle(CardStyle);
+		// Chosen like a cut: the payload is the cut name ChooseCut loads ("modes/hockey.mode.pond").
+		B->Bind(this, EJamMenuRowKind::Cut, M.Name);
+
+		UVerticalBox* Body = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass());
+		UTextBlock* Name = S::Text(T, M.Display.ToUpper(), S::Font(S::Body + 2, FName("Black"), S::TrackLabel), S::Chalk());
+		B->TintText = Name;
+		AddV(Body, Name, FMargin(0, 0, 0, 2));
+		UTextBlock* Pitch = S::Text(T, M.Pitch, S::Font(S::Caption, FName("Italic")), S::Chalk());
+		Pitch->SetAutoWrapText(true);
+		AddV(Body, Pitch, FMargin(0, 0, 0, 3));
+		for (const FString& F : M.Facts)
+		{
+			UTextBlock* Fact = S::Text(T, FString::Printf(TEXT("- %s"), *F), S::Font(S::Caption - 1, FName("Medium")), S::Muted());
+			Fact->SetAutoWrapText(true);
+			AddV(Body, Fact, FMargin(0));
+		}
+		B->AddChild(Body);
+		ModeGrid->AddChildToUniformGrid(B, i / 3, i % 3);
+		if (UUniformGridSlot* GS = Cast<UUniformGridSlot>(B->Slot)) { GS->SetHorizontalAlignment(HAlign_Fill); GS->SetVerticalAlignment(VAlign_Fill); }
+		AddTinted(B, Name);
+	}
+	ModeGrid->SetVisibility(Cards.Num() ? ESlateVisibility::SelfHitTestInvisible : ESlateVisibility::Collapsed);
 }
 
 void UJamMenuWidget::RefreshDirect()

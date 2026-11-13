@@ -534,7 +534,13 @@ void UJamDirectorsCallHudWidget::ShowTake(int32 Take, int64 UntilFrame)
 		if (Take <= 1) Note = P->ActiveNote(Path);
 	}
 	TakeCard->SetText(FText::FromString(FString::Printf(TEXT("MATCH %d"), Match)));
-	const FString Line = Count > 0 ? FString::Printf(TEXT("OF %d   -   PERIOD %d   -   FACEOFF"), Count, FMath::Max(1, Take)) : FString::Printf(TEXT("PERIOD %d   -   FACEOFF"), FMath::Max(1, Take));
+	FString Line = Count > 0 ? FString::Printf(TEXT("OF %d   -   PERIOD %d   -   FACEOFF"), Count, FMath::Max(1, Take)) : FString::Printf(TEXT("PERIOD %d   -   FACEOFF"), FMath::Max(1, Take));
+	// Lane A67 (R-0036): a Director's choice names itself on the card ("POND   -   PERIOD 1   -   FACEOFF").
+	if (GM && GM->GetCartridge())
+	{
+		const FString Mode = UJamMenuFlow::ModeDisplayForId(GM->GetCartridge()->Id);
+		if (!Mode.IsEmpty()) Line = FString::Printf(TEXT("%s   -   %s"), *Mode.ToUpper(), *Line);
+	}
 	TakeSub->SetText(FText::FromString(Note.IsEmpty() ? Line : FString::Printf(TEXT("COACH'S NOTE: %s"), *Note)));
 	// A note needs reading time: the card stays twice as long (2 x TakeCardFrames).
 	if (!Note.IsEmpty()) TakeUntil = UntilFrame + UJamDirectorsCallController::TakeCardFrames;
