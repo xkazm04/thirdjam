@@ -28,5 +28,16 @@ submission; submit Sunday 22:00. **Cursor owner now: track S2** (after the Direc
 | **S2 Acceptance matrix** | The acceptance run on everything a player can pick | `tools/qa/accept/**` drivers and cuts only, reports | The acceptance run on each mode and each look tier; a Shipping smoke and clean-profile test of H26; which rows a mode's rules legitimately change |
 | **S3 Fuzz and loader** | No cartridge can crash or hang the game | `tools/fuzz/**`, tests under `Game/Source/JamCore/Private/Tests/JamFuzzTests.cpp` | Thousands of schema-valid random cartridges at the limits through the loader and 600 frames of sim, headless: crashes, non-determinism, never-ending matches |
 
+## Device B: the same loop (handoff A-to-B-0022, 19:20; B owns its board)
+| Track | Model | Goal |
+|---|---|---|
+| **BF1 The figure plays the vision** | Fable + Blender | The stumble by direction and strength, the side takes lowered, a hard-stop pose and spray |
+| **BF2 The arena and the clay look** | Fable + Blender | Takes over the arena track from lane A103's report: the crowd band, the scoreboard, the stands |
+| **BF3 Hits you hear and see** | Fable | The ability effect and sound, a bump and a stumble sound, the brake's spray, the crowd by strength, 72 commentator lines |
+| **BQ1 The quality of B's implementation** | Opus | Blueprints against the hit-stop, every take plays when its event fires, cook warnings, ledger sizes |
+| **BS1 Tests only a second machine can run** | Sonnet | The clean-machine test of every package, the video with sound, joined play A to B, B's half of the dev log |
+
+A merges `dev-b` at every half-hour check when it is ahead; B merges main before each lane.
+
 ## Queue (the Director appends each lane's "next three" here; the top line of a track is what runs next)
 (empty until the first reports)
