@@ -1,0 +1,1 @@
+Lane BR4 (Blender, Cycles): HOKEJ gouged into the ice with the K rebuilt (a plain stem, the diagonals meeting it), banner-figures. Replaces the -br3- file of the same name. Built from geometry, no font file, nothing from outside. Sources outside the repository: C:/Users/kazda/jam/brand-lab/.
