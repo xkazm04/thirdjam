@@ -1,0 +1,1 @@
+SKF18 lying poses from a level camera at ice height (the pale band is the ice): left to right on the back (Fall), face down (Fall_Forward), right side (Knockdown_Left), left side (Knockdown_Right). Rows: p2_cel export17, p2_cel export18, p3_clay export17, p3_clay export18. export17 hovers 7-17 cm with the stick in the gap; export18 rests on the ice.

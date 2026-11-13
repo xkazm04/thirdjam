@@ -1,0 +1,1 @@
+SK17: real cross-checks on clay at A's game camera, every 2nd frame from the call to +24 (export20, the SK17 Blueprint). Top: the human on a bot 1.4 m away and 58 degrees off its facing: the bot's stick is knocked overhead, the human's shove goes past it. Bottom: a bot on the human at 0.8 m; two frames later the human's own body check lands and replaces the reaction.

@@ -1,0 +1,1 @@
+SK18: NS_board skater variant (B33) in real board hits on clay at A's game camera: hit, +2, +4, +8. Top: a light brush (Strength 0.39, the human): two or three small chips at the skates. Bottom: a hard crash (Strength 1.00, a bot at the end boards): a few more chips and a small puff at the skates. No shake line on the board top in either.

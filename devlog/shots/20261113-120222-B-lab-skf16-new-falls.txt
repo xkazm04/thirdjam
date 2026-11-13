@@ -1,0 +1,1 @@
+SKF16 new takes at the game camera, every 3rd frame, per style (p2_cel top four rows, p3_clay bottom four): Fall above Fall_B (sits down hard, slides seated with arms up, drops back flat), Knockdown_Back above Knockdown_Back_B (dive and belly slide, arms out in front, legs kicked up). Each ends on its A version's lying pose.

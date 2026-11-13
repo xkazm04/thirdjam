@@ -1,0 +1,1 @@
+B31 motion check on the pickups, 30 consecutive frames at 1/60 s game step, held game camera in play: pickup crops mean |d| 0.17 to 0.35 (the props spin and bob), near ice 0.26; bases and rims do not flicker

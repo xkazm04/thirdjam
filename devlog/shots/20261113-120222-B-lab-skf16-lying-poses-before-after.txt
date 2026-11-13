@@ -1,0 +1,1 @@
+SKF16 the four lying poses at the game camera (behind, 35 deg down), left to right: on the back (Fall), face down (Fall_Forward), right side (Knockdown_Left), left side (Knockdown_Right). Per style (p2_cel top, p3_clay bottom) export14 above export16: the stick now in along the body.

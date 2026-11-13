@@ -1,0 +1,1 @@
+B31 pickups on the clay tier, one frozen frame (t 4.69), game camera and 10 m: left before (tan base, painted props), right after (amber clay base with a soft glow, props with a stronger colour and a warm rim). The after frame was taken with the final values before the save; the rings in it carry MI_Zone_<kind>_Ring assigned at run time

@@ -1,0 +1,1 @@
+B31 pickups from the saved assets in a fresh editor: top the game-height camera, bottom the low camera; left cut speed (just taken), precision, big puck, heavy puck; right cut reverse_other, heavy puck, big puck, speed. The custom kind cannot be spawned without an effect declared in the cartridge and is not shown

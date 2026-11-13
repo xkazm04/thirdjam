@@ -1,0 +1,1 @@
+SK17: a real cross-check on night (drill 2, A's game camera), every 2nd frame from the call to +24: the human on a bot that is 1.5 m away and behind its shoulder (137 degrees off the facing). The bot's Lift_Hit plays; the human's shove points away from it.

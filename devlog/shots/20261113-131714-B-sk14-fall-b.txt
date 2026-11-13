@@ -1,0 +1,1 @@
+SK14: Fall_B in a real match on clay (front hit at strength 1.00, press and hit in the same sim frame, so the human's lunge is at frame 0 in the held frames), hit to +84, A's game camera.

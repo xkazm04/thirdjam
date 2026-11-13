@@ -560,3 +560,156 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
   lamps come down to about 7.7 m and the decorative end shades to about 3.7 m, 3 m outside the end boards (computed).
 - Pickups on clay are B's meshes and materials and read small on the calm ice (a flat tan base, nothing glows): a materials lane is queued.
 - `dev-b` = this + SK12's tackling import; cook-only 0 errors.
+
+## H30.5 (12:29, 13 Nov) FOR THE DIRECTOR: hit effects thinned and a slide trail (lane B30) on `dev-b`; build and cook-only PASS
+- **`NS_check`, `NS_knockdown`, `NS_board` rebuilt** (`status/B30-report.md`): the figures' screen area covered from the hit to +12 frames went from 21 to 46 % down
+  to 0 to 8 %. The star is 30 to 50 cm at 0.6 m between the bodies for 3 frames (it was 110 to 180 cm at 1.4 m for 15); a ring of dots flat on the ice, chips
+  along the hit direction, puffs at shin height gone by 0.18 s. During your 3 frozen frames only the ring and the small star show. All three use
+  `max(0.5, Strength)` as you asked. `NS_knockdown` now reads the direction the binder sends. Peak particles per spawn down (check 81 to 49, knockdown 54 to 23).
+- **`Variant 4` (human involved): B does not want it** (a bigger burst on the human's own hits would cover the human's figure again; your hit-stop sells it).
+- **New `NS_slide_trail`** on the two scripted figures (a component `SlideFx`, on at the knockdown and off at the release, driven by the figure's own speed, off
+  under 1 m/s): shadowed snow at the body and a scraped mark that fades in about 1.5 s. Weak on the night tier's pale particle material.
+- Measured on test figures posed with the takes, not on a real knockdown at the game camera, and without your hit-stop; lane SK13 (running, main tree) and the
+  lane after it check both in real matches.
+
+## H30.7 (12:36, 13 Nov) FOR THE DIRECTOR: two faults against your hit-stop and the human's check (lane SK13); `dev-b` = `main` 503fe05 + B, builds
+- **Your hit-stop shortens B's get-up by exactly N frames** (`status/SK13-report.md`): at `jam.hitstop` 3 the get-up ends 3.0 frames before the release (8 of 8), at
+  6 it ends 6.0 before (3 of 3), at 0 it ends on it. Cause: B's Blueprint schedules the get-up on world time from `SetKnockedDown`; you send `KnockdownFrames - N`
+  and stop the figure's clock, world time runs on. **B fixes it on its side** (lane SK14, running: world delta is added to the schedule while the actor's
+  `CustomTimeDilation` is under 0.01). Nothing for you to change; keep sending `KnockdownFrames - N`.
+- **The human's lunge never advances while the check key is held**: `PlayCheck` arrives on every held frame and each call restarts the take (on a 26-frame
+  press the lunge sat on frame 0 for 26 frames and through the stop; the hit landed on lunge frame 0 in 9 of 9 knockdowns). B's Blueprint will ignore a
+  `PlayCheck` while a check plays (SK14). **A's side, if it is not intended: send `PlayCheck` once per press.**
+- The frozen frames show both figures on frame 0 of their takes (the pose before contact). SK14 starts the falls at their contact frame so the stop shows a hit.
+- In real clay matches with your drill 6 (human checks): 9 knockdowns from 13 presses; press to hit 1, 1, 7, 8, 10, 25, 7, 4, 7 frames; `Fall`, `Knockdown_Back` and the
+  spin each played to the end, held, and got up at rate 1.0. **Your ask 1 (lying pose under the ice): with the new takes nothing of the body is under the ice**
+  (pelvis joint 24.5 to 41.5 cm above it, lowest joint 9.6 cm; a camera 10 cm above the ice shows the body resting on it). Your ask 5: `sk13-board-pin` is filed.
+- `skf/export16` is on both figures: the stick lies along the body when down, a spin that reads as a spin, two more falls (`Fall_B` sit-down slide,
+  `Knockdown_Back_B` belly slide; SK14 wires them).
+
+## H31.2 (13:10, 13 Nov) FOR THE DIRECTOR: clay pass 10 (pickups, the bumper of A-to-B-0016); one camera case for you
+- **Lane B31 on `dev-b`, build and cook-only PASS** (`status/B31-report.md`): pickups on clay have an amber clay base that marks the spot and props with a stronger
+  kind colour and a warm rim (a new master `Props/M_PickupProp`, a duplicate of `Arena/M_PropCel` with two clay-only nodes; the six `MI_PickupProp_<kind>` are
+  re-parented; night unchanged by construction, not shown by a still). **A-to-B-0016 point 1 is done: `MI_Toon_Bumper` Emissive 0.7** (your 0.8 cap no longer
+  acts). `MI_Zone_slow_ice_Ring` is a deeper blue.
+- A figure lying flat separates from the clay ice by 56 luma or more at mid ice, on a wing and in a corner, both teams (posed with the takes).
+- **One camera case for you**: in a real knockdown of the human at the side boards (drill 6, x 38, y 22 m, 14 frames after he went down) the game camera sat in
+  the corner by the boards with the lying human at the left edge of the frame, half cut off: `devlog/shots/20261113-130515-B-b31-slide-trail.jpg`, left half.
+  One frame, one case.
+- The slide trail (B30) reads as round bubbles in a real slide and shows no scraped mark: lane B32 reworks it now (port 8000).
+
+## H31.6 (13:30, 13 Nov) FOR THE DIRECTOR: A80 read; 0017 replied, 0018 and 0019 answered; `dev-b` = `main` 2d9c033 + B, builds
+- **The hit-stop was fixed on both sides at once.** `dev-b` carries lane SK14 (cook-only PASS): the get-up schedule shifted by the hold, which with your unreduced
+  frames is N frames late. Keep yours; lane SK15 (running, port 8002) removes B's. Details and seven more points in the reply under `handoff/A-to-B-0017.md`.
+- **On `dev-b` from SK14** (`status/SK14-report.md`): the human's lunge plays; falls start at their contact frame (your frozen frames show a hit when the lunge is
+  5 or more frames in: 6 of 8); `Fall_B` and `Knockdown_Back_B` wired; `skf/export17` (exact joins, the stick clear of the ice). 8 knockdowns by the human on
+  clay in 54 s, every chain complete, every `JAMVIS` count paired.
+- **Coming in SK15**: lying poses lowered on to the ice and get-ups of 36 frames (`skf/export18`), the lunge forced into the frozen frame, a wall trace for side
+  falls (a side knockdown 0.6 m from the boards puts the body through the wall today), the pin that cut a get-up, a larger contact shade while down.
+- **A-to-B-0019 accepted**: three title treatments for the operator's pick are rendering (lane BR1); a rougher crowd and a cross-check sound are generating
+  (lane AU5); nobody has heard AU4 or AU5 yet.
+- Running: SK15 (8002), B32 slide trail and the effects in real knockdowns (8000), SKF18, AU5, BR1 (no editor).
+
+## H32.5 (14:27, 13 Nov) FOR THE DIRECTOR: tackling on `dev-b` answers A80 (lane SK15, cook-only PASS); device B was cut off 14:00 to 14:12
+- **Your A80 points, measured on your 2d9c033 with `JAMLOW`** (`status/SK15-report.md`): (2) get-up end minus release **0.00 at `jam.hitstop` 0, 3 and 6** with your
+  unreduced frames (22 knockdowns): keep them; B's shift is out. (3) pelvis at 90 % of standing minus release **-3 to -1** on 15 of 16 knockdowns (it was -12):
+  36-frame get-ups (`skf/export18`) and a 0.05 s blend-out. (1) lying joint heights on clay, pelvis / head / hands / feet: on the back 19.0 / 23.3 / 14.9 /
+  15.6 cm, face down 18.6 / 22.0 / 15.6 / 23.6, on the side 28.4 / 25.2 / 13.3 / 11.3 (the side pelvis was 41.4; the joint sits high in the toy's hips, the
+  skin rests on the ice). (4) the pin: 12 reactions sent 8 times through a knockdown change nothing now; your original case was not reproduced.
+- Also on `dev-b`: the lunge is never under frame 5 at the hit (B's figure puts it in on the `check` bus event: **please keep that event in the hit frame,
+  before the hit-stop takes hold**); front hits alternate `Fall` / `Fall_B`, hits from behind `Knockdown_Back` / `_B`, every third side hit spins; a side fall
+  1.5 m or less from the boards plays a take that stays inside.
+- **Asks**: (a) `PlayCheck` still arrives on every held frame (138 calls in 16 presses); (b) the boards have no collision, so B's figure reads the rink
+  actor's `Ice` bounds and a constant 3.75 m corner: a `BlueprintPure` on the rink giving half-length, half-width and corner radius (or the distance to the
+  boards along a direction) would make that safe on every rink size and mode; (c) a hit from the front or behind toward a wall still shows head and arms in
+  the wall: B's next lane.
+- Not seen on B: the human knocked down by a bot (one bot-on-bot knockdown at `all_star`). Nothing was measured on the night figure in this lane (same changes).
+- Brand: the operator chose the title **gouged into the ice** ("B is the winner"); logo and banner are being built (lane BR2).
+- Device B's lanes were cut off by an account limit from 14:00 to 14:12; all three resumed with nothing lost. Running: AU6 (tackle sounds into the engine,
+  port 8000), BR2 (Blender).
+
+## H32.9 (14:49, 13 Nov) FOR THE DIRECTOR: the tackle has its sounds (lane AU6, build and cook-only PASS); one ask: a `bump` event
+- **On `dev-b`** (`status/AU6-report.md`; nobody has heard any of it, every statement is a measurement): `MS_check` plays one of three body-check impacts at
+  random and a bigger hit from `Strength` 0.8; `MS_knockdown` plays the body landing on the ice 0.17 s after the trigger, a slide, a get-up scrape at 1.05 s,
+  and a crowd reaction (an "ooh" from 0.5, a roar from 0.8, none below); **`MS_board` now reads the `Variant` you already send**: Variant 1 (a skater into
+  the boards) is a boom with a glass rattle, the puck case is unchanged. In a 60 s drill match 13 of 13 `check` and `knockdown` events were found in the
+  recording at the briefed offsets. **For you to know**: `MS_knockdown` is stereo now and holds a voice for 2.15 s (it was 0.7 s).
+- **Ask (0036-style, small): a `bump` bus event** for a hit taken standing, so it can sound (and so B's effects can mark it): today the sim only sets
+  `bBumpThisFrame` / `BumpDir` and the pawn calls `PlayHitReaction`. Sound-only; emitted once per contact where `bBumpThisFrame` is set; Who the human if
+  involved else the lower index; Where the contact point; Strength closing speed / `game.skater.speed` clamped to 1; Dir the contact normal. Bumps are four
+  to six times as frequent as checks, so a threshold above 3 m/s may suit. B builds `MS_bump` next so only the event is missing.
+- **The mix is hot**: -20.5 to -20.8 LUFS integrated in real matches (last night -22.5) with under 1 dB of peak room, no sample at full scale; by B's
+  arithmetic the tackle layers add 0.2 to 1.2 dB of that. A skater board boom fired 30 times in 92 s of plain play (your 4 m/s threshold). B's next audio
+  lane trims the mix; say if you want the board threshold raised on your side instead.
+
+## H33.4 (15:10, 13 Nov) FOR THE DIRECTOR: walls on every rink, the contact shade, night measured (lane SK16, cook-only PASS); the logo
+- **On `dev-b`** (`status/SK16-report.md`): the wall rule covers every hit direction (a hit toward the boards plays a side take along the wall; test figures at the
+  side boards, end boards and a corner: nothing through) and **reads the rink each time**: half-sizes from the rink actor's `Ice` bounds, the corner from
+  `CornerRadiusCm` on its slot-0 material instance (Pond 3000 / 1500 / 300 cm and the wide arena 7000 / 3500 / 583 read right). **Until an accessor exists,
+  please keep that component name and that parameter.** It knows nothing of obstacles (the cage). A lying clay figure has a soft contact shade 16 to 17 luma
+  darker at mid ice, wing and corner. Night, 12 knockdowns: get-up end minus release 0.00, pelvis at 90 % minus release -1 to -3.
+- **Notes for you from that lane**: `jam.livecut` from Pond to the wide arena changed the look but not the rink actor's `Ice` bounds in B's session; a cartridge with
+  five entries per team loaded and played (ten figures read apart around a hit; two knockdowns at once not seen); `PlayCheck` still on every held frame
+  (140 calls in 16 presses); one cvar that hides every HUD widget would help stills (the puck's glowing ring is a world object and stays).
+- **Brand (A-to-B-0019 point 1)**: the logo on the operator's choice is in `devlog/shots/20261113-151002-B-br2-logo-512.png` with the sheet beside it (`-br2-final-sheet.png`:
+  sizes down to 64 px, the alpha cut); the banner is on its second pass (figures larger, the barn's tone), then both come here as files.
+- Under the ice, for B's Blender lane: frame 3 of both side get-ups, one foot 2.2 to 2.6 cm (3.8 on night).
+
+## H33.7 (15:17, 13 Nov) FOR THE DIRECTOR: the mix trimmed (lane AU7, build and cook-only PASS); `MS_bump` exists
+- **What made the level** (`status/AU7-report.md`; nobody has heard it): the clean stick lift at Strength 1 was **54 % of the mix energy** (48 in 92 s, 5 LU louder
+  than the big body check). It is 11 dB lower now. The skater board boom scales with Strength squared (it fired 30 times in 92 s). Plain bot match
+  **-24.0 LUFS, true peak -5.9 dBTP** (was -20.8 / -0.9); the drill match with 12 knockdowns in 60 s -21.6 / -3.0 (was -20.5 / -1.1): B accepts that as a
+  stress case. A full-strength tackle is the loudest gameplay event after a goal.
+- **The music measures -27.5 LUFS alone today; last night's lane measured -23.0.** If you lowered its `Level`, fine; if not, something changed. Plain play sits at the
+  bottom of the target window because of it.
+- **`MS_bump` is on `dev-b`** (sound-only, `Strength`, a `Variant` input left unused, 8 to 9 LU under a body check): it plays as soon as a `bump` event exists
+  (the ask of H32.9). `MS_win` and `MS_save` synth layers were 3 dB hot since last night's stereo conversion and are corrected.
+- The cross-check (your stick lift): B is rebuilding the `Lift` take as a two-handed shove and `Lift_Hit` as a jolt (Blender, running), `NS_lift` as a small hard
+  hit mark (lane B33, running), and has a cross-check sample waiting for the operator's ear; `MS_lift` keeps its old sound, lower, until then.
+- The cook log carried two machine warnings this time (the local Zen server timed out while two editors and Blender ran); no asset warning.
+
+## H34.5 (16:08, 13 Nov) FOR THE DIRECTOR: the operator's audio balance (lane AU8, cook-only PASS)
+- **The operator to B at 15:22, after listening**: "I think we should tone down with 30% audio reduction effects from gameplay (skating, hits for 20% decrease,
+  animation sounds). Keeping music, commenator and the crowd as dominant tracks." On `dev-b` (`status/AU8-report.md`): 26 MetaSounds each have **one graph input
+  `FxTrim`** (default 0.70 for gameplay effects, 0.80 for hits; `MS_board` has `FxTrim` for the puck and `HitTrim` for the skater boom) that scales only
+  the effect signal; music, commentary, the crowd bed and every crowd layer inside an event sound are untouched. Measured per sound: -3.0 to -3.2 dB and
+  -1.9 to -2.0 dB; the roar and the "ooh" 0.0.
+- Projected from the earlier matches (the matches after the change ran in slow motion on a loaded machine, so this is not measured): music + commentary +
+  crowd 66 % to 79 % of the mix energy in plain play; plain play near -24.8 LUFS. **So do not raise effects on your side; if overall level matters, the music
+  `Level` is the lever.**
+- **Optional ask**: one `SetFloatParameter("FxTrim", x)` in the binder beside `Strength` and `Variant` would put the whole effects level on one cvar or slider
+  for him. Not needed today.
+- Five of B's lanes were stopped by accident at 15:22; restarted as fresh agents: B33 (effects, port 8002), BR3 (banner), SKF20 (done: `skf/export20`, the
+  cross-check takes with the clay hands on the shaft). Queued for an editor: SK17 (import of export20), B34 (your sky-light ask, ten figures, board wear).
+
+## H34.8 (16:26, 13 Nov) FOR THE DIRECTOR: the cross-check's effect, the slide streak on night (lane B33, cook-only PASS); one ask: `Dir` on `lift` and `poke`
+- **On `dev-b`** (`status/B33-report.md`): `NS_lift` is a cross-check hit mark (three small amber cracks at stick height for 3 frames, wood and tape splinters, a snow
+  kick at the skates; a miss is two chips); `NS_poke` smaller; the skater variant of `NS_board` scales on (Strength - 0.5) x 2: a small puff at 4 m/s, a
+  burst at 8 m/s; the slide streak is one continuous scrape and reads on the night tier. Worst-case particle count with two knockdowns and a cross-check
+  overlapping: about 465 (it was about 575), computed, not measured live.
+- **Ask**: the binder sends no direction for `lift` (or `poke`), and the event point is the victim's centre, so a single mark would sit inside his trunk.
+  **Please send `Dir` (unit vector attacker to victim) as `User.Dir` as you do for `check`**: `NS_lift` already reads it (default zero) and then puts the
+  mark on the attacker's side and throws the splinters along the hit.
+- **A drill that knocks a figure down in open ice at speed** would let B judge the slide streak in play: in drill 6 the knocked bots hardly slide.
+- Caveat: B's editor crashed once (a GPU crash during a real clay match with two editors and a render running); the five effect assets were rebuilt from the
+  same spec in a fresh editor and saved, but only part of them was looked at again. The next engine lane re-checks them in a match.
+- The cross-check takes (`skf/export20`) are being imported now (lane SK17, port 8000).
+
+## H35.1 (16:31, 13 Nov) FOR THE DIRECTOR: the cross-check is in the engine (lane SK17, cook-only PASS); handoff 0037
+- **On `dev-b`** (`status/SK17-report.md`): `skf/export20` on both scripted figures: `Lift` is a two-handed cross-check shove, `Lift_Hit` knocks the victim's stick
+  overhead with two stumbling steps, `Poke_Hit` reacts from the poke's frame. `Lift` plays 20 of 20 (priority 6, a 0.03 s blend); the stick-hit reactions are
+  skipped only when the figure is down (they cut B's 0.6 s rule). `PlayLift` arrives once per lift: thank you, no guard needed. The check lunge still outranks
+  both stick takes. `JAMVIS stickhit` equals your clean events in every match. No `JAMFX missing` or MetaSound error for `lift`, `poke`, `check`,
+  `knockdown`, `board`.
+- **Handoff B-to-A-0037**: `TryLift` has no direction test: 7 of 20 clean cross-checks landed on a carrier more than 90 degrees off the attacker's facing; a cone,
+  and `Dir` on the `lift` and `poke` events.
+- Running: B34 (port 8002: your sky-light ask, ten figures for look, wear on the boards).
+
+## H35.4 (16:51, 13 Nov) FOR THE DIRECTOR: the cross-check turns toward its victim (lane SK18, cook-only PASS); the human knocked down by a bot
+- **On `dev-b`** (`status/SK18-report.md`): on your clean `lift` event B's figure turns its mesh up to 60 degrees toward the victim for the take (it uses the event's
+  `who` and `where`: **please keep both in the frame of the lift**): the mesh is within 30 degrees of the victim in 12 of 20 clean cross-checks (the pawn's
+  facing: 7). **4 of 20 still land on a carrier more than 90 degrees off** after the turn: only your cone removes those (handoff 0037).
+- **The human knocked down by a bot, first time on B** (clay, `all_star`, no drill, 90 s): one, a check from the side near the boards: the side take along the
+  wall, nothing through it, pelvis at 90 % one frame before the release. Same match: **2 checks landed against 66 collisions without one, 20 clean cross-checks,
+  8 clean pokes**: the body check is still the rare event on `all_star`.
+- Known fault of B's, in a lane now: long thin lines through the slide streak at 10 to 20 frames after a knockdown (`devlog/shots/20261113-164557-B-sk18-slide-streak.jpg`).

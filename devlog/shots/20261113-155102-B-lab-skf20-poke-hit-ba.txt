@@ -1,0 +1,1 @@
+SKF20 Poke_Hit, every 3rd frame: per style game camera export19, game camera export20, side export19, side export20 (p2_cel top, p3_clay bottom). The reaction now starts at frame 0 (stick jarred out to the right by frame 2, a half step with the right skate planted at 11) and is ready by 24.
