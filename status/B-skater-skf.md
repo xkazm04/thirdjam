@@ -1682,3 +1682,335 @@ Delivered `C:\Users\kazda\jam\skater-lab\skf\export12\` (p2_cel, p3_clay, full s
   | `tackle-before-after` | the operator sheet: export10 above export12, both styles, attacker and victim at 0.8 m (hit at attacker frame 6), then `GetUp_Side_Left` |
   | `<style>-pairs-before`, `-pairs-after` | the pairs at frames 2, 6, 12 plus the right and back cases |
   | `<style>-<take>-ba` (24) | game camera, export10 above export12 |
+
+## Thirteenth pass: hits taken standing, the board hit, stumbles, cleanups, spin variants (SKF13, 10:26 to 10:35)
+
+Delivered `C:\Users\kazda\jam\skater-lab\skf\export13\` (p2_cel, p3_clay, full sets) with `READY.txt`. All five items are done; what still fails is listed below.
+
+### Difference list against export12
+
+| Takes (both styles) | Change |
+|---|---|
+| `Check_Hit_Back`, `Check_Hit_Left`, `Check_Hit_Right`, `Board_Hit`, `Stumble`, `Stumble_Short` | New work |
+| `Check`, `Check_Deliver_Right`, `Check_Deliver_Left`, `Fall`, `Fall_Forward`, `Knockdown_Back`, `Knockdown_Left`, `Knockdown_Right`, `Trip`, `GetUp_Front`, `GetUp_Side_Left`, `GetUp_Side_Right` | Cleanups |
+| `Knockdown_Left_B`, `Knockdown_Right_B` | New takes (74 in all). The existing 72 keep their names. |
+
+- **Unchanged:** `GetUp`, `Board_Pin` and every other take. The clay aim holds are identical to export10.
+- **Rig:** meshes, bones, rest pose and sockets are identical; `SM_Stick` is byte-identical; the root never moves.
+
+### What changed
+
+| Take | Before (export10/12) | After (export13) |
+|---|---|---|
+| `Check_Hit_Left` / `_Right` / `_Back` | A small lean and one step, 28 frames | Contact at frame 0. A 2-frame snap away from the push with the head lagging. The far arm and the stick are thrown out for balance (sideways: the arm on the push side up and out, the stick out; from behind: both arms up and forward). Two staggering steps: the skate on the push side slides out (5-7), the other crosses under and catches (11-13). The body is carried up to 30 cm along the push and back, overshoots against it at 20, and is in the ready Glide at 30. 30 frames. |
+| `Board_Hit` | A brace and a turn of the head | Flattened upright as against a wall in front at 3-6: body straight, hips up, arms and stick raised over the head, head back. A rebound step back at 10 (pelvis 16 cm back), a head shake at 13-19, Glide at 30. It reads from every side because the arms and stick go up. |
+| `Stumble`, `Stumble_Short` | A forward pitch | Pitched over and rolled to the right. The left arm windmills (back-up, forward-up, down-forward at 4, 8, 12), the stick goes out right, the right skate kicks up and out, then catches wide. 20 frames; `Stumble_Short` still starts exactly on `Poke` frame 6. |
+| Cleanups | | 1. Falls and standing hits: the contact snap uses a linear ease, so the arm swing is spread over frames 0-2. 2. Check: the stick whip is spread over 3 frames and pulled back less (140 deg). 3. Side lying pose raised 2 cm: the lower arm is now 0.4-1.8 cm above the ice. 4. Face down: the arms are thrown forward with the elbows forward and the hands beside the helmet; `GetUp_Front` starts from that pose. |
+| `Knockdown_Left_B` / `_Right_B` (new) | | The same snap, airborne moment and landing as the A versions, with one full turn about the vertical (frames 2-11, about 40 deg per frame). The legs and skates turn with the body, and it ends on the A version's lying pose, so the same get-up joins. The last frames match the A last frame in rotation and location exactly; 5 bones carry the negated quaternion of the same rotation. |
+
+### Pairs at 0.8 m
+
+- **Setup:** the pusher plays plain Glide. The victim's `Check_Hit_*` starts on the collision. After contact the victim is pushed on at half the knockdown slide (assumed 1.2 m/s, losing 63 % every 0.5 s). Both keep their feet.
+- **Result:** from behind and above, the push direction is unmistakable in all three cases.
+
+### Per take (p2_cel)
+
+| Take | Frames | Lowest body (part) cm | Lowest skate / stick cm | Biggest one-frame step (bone) before -> after | Pelvis thrown cm | Trunk deg min/max | Skate spread cm |
+|---|---|---|---|---|---|---|---|
+| Check_Hit_Back | 29 -> 31 | 13.97 (knees_shins) | -0.00 / 0.73 | 122 (upperarm_l f4->5) -> 144 (hand_l f2->3) | 30 | 12/93 | 39.3 |
+| Check_Hit_Left | 29 -> 31 | 12.20 (knees_shins) | -0.00 / 0.20 | 111 (upperarm_l f4->5) -> 130 (hand_l f2->3) | 30 | 22/74 | 41.7 |
+| Check_Hit_Right | 29 -> 31 | 12.20 (knees_shins) | -0.00 / 0.73 | 126 (upperarm_l f4->5) -> 140 (lowerarm_l f2->3) | 30 | 22/74 | 41.7 |
+| Board_Hit | 31 -> 31 | 13.97 (knees_shins) | -0.00 / 0.73 | 72 (hand_r f1->2) -> 91 (upperarm_l f1->2) | 16 | 4/38 | 39.1 |
+| Stumble | 21 -> 21 | 13.69 (knees_shins) | -0.00 / 0.73 | 66 (upperarm_l f1->2) -> 90 (upperarm_l f1->2) | 6 | 22/56 | 54.0 |
+| Stumble_Short | 21 -> 21 | 13.73 (knees_shins) | -0.00 / 0.71 | 57 (upperarm_l f1->2) -> 52 (lowerarm_r f2->3) | 6 | 22/56 | 54.1 |
+| Knockdown_Left_B | 0 -> 27 | 0.80 (arms) | -0.00 / 0.16 | 0 (new) -> 103 (calf_l f4->5) | 30 | 22/103 | 14.8 |
+| Knockdown_Right_B | 0 -> 27 | 1.75 (arms) | -0.00 / 0.73 | 0 (new) -> 99 (hand_l f2->3) | 30 | 22/103 | 15.1 |
+| Check | 31 -> 31 | 13.96 (knees_shins) | -0.00 / -0.61 | 83 (stick_socket f1->2) -> 43 (stick_socket f1->2) | 0 | 22/65 | 46.2 |
+| Check_Deliver_Right | 31 -> 31 | 13.96 (knees_shins) | -0.00 / -0.61 | 83 (stick_socket f1->2) -> 43 (stick_socket f1->2) | 0 | 22/65 | 46.2 |
+| Check_Deliver_Left | 31 -> 31 | 13.94 (knees_shins) | -0.00 / 0.73 | 96 (stick_socket f1->2) -> 51 (stick_socket f2->3) | 0 | 22/65 | 46.2 |
+| Fall | 27 -> 27 | 3.63 (hands) | -0.00 / 0.73 | 144 (lowerarm_l f1->2) -> 124 (lowerarm_l f2->3) | 30 | 11/86 | 72.7 |
+| Fall_Forward | 27 -> 27 | 1.60 (head) | -0.00 / 0.73 | 131 (lowerarm_r f1->2) -> 100 (upperarm_l f1->2) | 30 | 22/89 | 67.3 |
+| Knockdown_Back | 27 -> 27 | 1.60 (head) | -0.00 / 0.56 | 122 (upperarm_l f1->2) -> 87 (upperarm_l f1->2) | 30 | 22/89 | 66.8 |
+| Knockdown_Left | 27 -> 27 | 1.75 (arms) | -0.00 / 0.15 | 106 (upperarm_l f1->2) -> 86 (lowerarm_r f2->3) | 30 | 22/103 | 17.3 |
+| Knockdown_Right | 27 -> 27 | 1.75 (arms) | -0.00 / 0.73 | 129 (upperarm_l f1->2) -> 95 (lowerarm_l f2->3) | 30 | 22/103 | 17.9 |
+| Trip | 27 -> 27 | 1.74 (arms) | -0.00 / 0.73 | 135 (lowerarm_l f1->2) -> 135 (lowerarm_l f1->2) | 30 | 22/87 | 37.2 |
+| GetUp | 45 -> 45 | 1.28 (hands) | -0.00 / 0.10 | 47 (thigh_l f14->15) -> 47 (thigh_l f14->15) | 30 | 3/86 | 45.9 |
+| GetUp_Front | 45 -> 45 | 1.60 (head) | -0.00 / -1.41 | 31 (thigh_l f15->16) -> 31 (thigh_l f15->16) | 30 | 22/89 | 46.1 |
+| GetUp_Side_Left | 45 -> 45 | 1.75 (arms) | -0.00 / -1.05 | 46 (foot_l f15->16) -> 46 (foot_l f15->16) | 30 | 22/87 | 36.2 |
+| GetUp_Side_Right | 45 -> 45 | 1.75 (arms) | -0.00 / -0.62 | 55 (foot_l f15->16) -> 55 (foot_l f15->16) | 30 | 22/87 | 36.1 |
+
+### Per take (p3_clay)
+
+| Take | Frames | Lowest body (part) cm | Lowest skate / stick cm | Biggest one-frame step (bone) before -> after | Pelvis thrown cm | Trunk deg min/max | Skate spread cm |
+|---|---|---|---|---|---|---|---|
+| Check_Hit_Back | 29 -> 31 | 13.06 (knees_shins) | 0.13 / 0.33 | 93 (upperarm_l f4->5) -> 150 (lowerarm_l f2->3) | 30 | 12/94 | 43.1 |
+| Check_Hit_Left | 29 -> 31 | 12.46 (knees_shins) | 0.13 / -0.08 | 116 (upperarm_l f4->5) -> 135 (hand_l f2->3) | 30 | 23/74 | 43.5 |
+| Check_Hit_Right | 29 -> 31 | 12.09 (knees_shins) | 0.13 / 0.34 | 108 (upperarm_l f4->5) -> 131 (lowerarm_l f2->3) | 30 | 23/74 | 43.5 |
+| Board_Hit | 31 -> 31 | 13.10 (knees_shins) | 0.13 / 0.34 | 71 (lowerarm_r f1->2) -> 116 (upperarm_l f1->2) | 16 | 4/38 | 42.9 |
+| Stumble | 21 -> 21 | 13.05 (knees_shins) | 0.13 / 0.34 | 68 (upperarm_l f1->2) -> 90 (upperarm_l f1->2) | 6 | 23/56 | 56.4 |
+| Stumble_Short | 21 -> 21 | 13.07 (knees_shins) | 0.13 / 0.33 | 60 (upperarm_l f1->2) -> 53 (hand_r f2->3) | 6 | 23/56 | 56.5 |
+| Knockdown_Left_B | 0 -> 27 | 0.69 (forearms) | 0.13 / 0.34 | 0 (new) -> 105 (calf_l f4->5) | 30 | 23/103 | 14.0 |
+| Knockdown_Right_B | 0 -> 27 | 0.44 (arms) | 0.13 / 0.34 | 0 (new) -> 105 (lowerarm_l f2->3) | 30 | 23/103 | 14.5 |
+| Check | 31 -> 31 | 12.43 (hands) | 0.13 / -0.69 | 83 (stick_socket f1->2) -> 44 (stick_socket f1->2) | 0 | 23/65 | 49.4 |
+| Check_Deliver_Right | 31 -> 31 | 12.43 (hands) | 0.13 / -0.69 | 83 (stick_socket f1->2) -> 44 (stick_socket f1->2) | 0 | 23/65 | 49.4 |
+| Check_Deliver_Left | 31 -> 31 | 13.05 (knees_shins) | 0.13 / 0.34 | 96 (stick_socket f1->2) -> 51 (stick_socket f2->3) | 0 | 23/65 | 49.4 |
+| Fall | 27 -> 27 | 2.96 (hands) | 0.13 / 0.34 | 143 (lowerarm_l f1->2) -> 89 (thigh_l f3->4) | 30 | 11/86 | 72.6 |
+| Fall_Forward | 27 -> 27 | 7.20 (hands) | 0.13 / 0.34 | 126 (lowerarm_l f1->2) -> 104 (upperarm_l f1->2) | 30 | 23/89 | 68.3 |
+| Knockdown_Back | 27 -> 27 | 7.65 (hands) | 0.13 / -0.65 | 116 (upperarm_l f1->2) -> 96 (upperarm_l f1->2) | 30 | 23/89 | 67.8 |
+| Knockdown_Left | 27 -> 27 | 0.69 (forearms) | 0.13 / 0.34 | 110 (upperarm_l f1->2) -> 88 (lowerarm_r f2->3) | 30 | 23/103 | 16.2 |
+| Knockdown_Right | 27 -> 27 | 0.44 (arms) | 0.13 / 0.34 | 93 (head f1->2) -> 102 (lowerarm_l f2->3) | 30 | 23/103 | 17.8 |
+| Trip | 27 -> 27 | 0.57 (arms) | -0.20 / 0.34 | 149 (lowerarm_l f1->2) -> 149 (lowerarm_l f1->2) | 30 | 23/87 | 36.4 |
+| GetUp | 45 -> 45 | 1.33 (hands) | 0.13 / 0.34 | 42 (stick_socket f4->5) -> 42 (stick_socket f4->5) | 30 | 4/86 | 49.0 |
+| GetUp_Front | 45 -> 45 | 1.95 (hands) | 0.13 / -0.91 | 30 (thigh_l f15->16) -> 30 (thigh_l f15->16) | 30 | 23/89 | 49.2 |
+| GetUp_Side_Left | 45 -> 45 | 1.82 (forearms) | 0.13 / -0.78 | 48 (upperarm_r f13->14) -> 48 (upperarm_r f13->14) | 30 | 23/87 | 39.3 |
+| GetUp_Side_Right | 45 -> 45 | 1.56 (arms) | 0.12 / 0.15 | 38 (lowerarm_r f15->16) -> 38 (lowerarm_r f15->16) | 30 | 23/87 | 39.3 |
+
+**Ground:**
+- No body part or skate is under the ice in any changed or new take (0.0 cm p2, 0.13 cm p3).
+- The stick is at worst -1.41 cm (p2 `GetUp_Front`, as in export10).
+
+### What still fails
+
+1. **Arm swing after contact:** the snap now has a linear ease, but the arms still swing 87-150 deg in a single frame between frames 0 and 2, in the falls and in the standing hits. The left hand leaving the stick for a balance position crosses near the body. Fixing it needs an elbow-path key, not just easing.
+2. **`Board_Hit` after the rebound:** the stick is held out to the right, and the arms read as "spread" rather than "shaken".
+3. **`Board_Pin`:** unchanged; I did not judge it bad enough from behind to spend time on it.
+4. **Spin variants:** the turn is fast (about 40 deg per frame). They are only checked at the game camera.
+5. **Not verified in the engine.** The pusher and slide numbers are assumptions.
+
+### Files
+
+- **Scripts** (`skater-lab\skf\`):
+  - `run13.sh`, `summary13.py`
+  - `pairs13.sh` (`pair_render12.py` now takes a slide scale)
+  - `part1.sh export13`
+  - `compose13.sh`, `joinb13.py`
+- **Stills** (`devlog\shots\20261113-1033xx-B-lab-skf13-*`, 43):
+
+  | Still | Content |
+  |---|---|
+  | `hits-before-after` | the operator sheet: export10 left, export13 right; rows are the standing hit from the left (pair), from behind (pair), `Board_Hit`, `Stumble`; both styles |
+  | `<style>-hitpairs-before`, `-hitpairs-after` | the three standing hits at 0.8 m |
+  | `<style>-<take>-ba` (34) | game camera, export10 above export13 |
+  | `<style>-Knockdown_Left_B-new`, `-Knockdown_Right_B-new` | the A version above its spin variant |
+
+## Fourteenth pass: fixes from the engine (SKF14, 10:48 to 10:59)
+
+Delivered `C:\Users\kazda\jam\skater-lab\skf\export14\` (p2_cel, p3_clay, full sets) with `READY.txt`. Items 1 to 5 are done and item 6 is checked. The take count stays 74, with the same names.
+
+**Difference list against export13:** 11 takes per style differ: `Idle_Faceoff`, `Faceoff_Ready`, `Faceoff_Draw`, `Check`, `Check_Deliver_Right`, `Check_Deliver_Left`, `GetUp_Side_Left`, `GetUp_Side_Right`, `Knockdown_Left`, `Knockdown_Right`, `Board_Hit`. Everything else is identical to export13; the clay aim holds are identical to export10. Meshes, bones, sockets and the root are unchanged.
+
+### 1. The faceoff from behind
+
+The shaft now stands exactly at the blade's lie, so the blade stays flat on the ice. The blade heel is placed far enough ahead that the knob is 8 cm in front of the pelvis, beside the right hip. The bottom hand is a third of the way down the shaft. The body (crouch, knee spread, skates, trunk) is export10's. `Faceoff_Draw` sweeps with the knob at the right side, then ends in the ready Glide as before.
+
+| Measure (whole take) | p2_cel export10 | p2_cel export14 | p3_clay export10 | p3_clay export14 |
+|---|---|---|---|---|
+| Knob height cm (`Idle_Faceoff` / `Faceoff_Ready`) | 106.9 / 106.0 | 90.0 / 90.0 | 100.4 / 99.6 | 72.7 / 72.7 |
+| Knob above the shoulders cm | +8.9 / +7.1 | -8.0 / -8.8 | +7.3 / +5.7 | -20.4 / -21.2 |
+| Knob behind the pelvis cm | 30.9 / 30.3 | -7.9 (in front) | 26.9 / 26.3 | -8.0 (in front) |
+| `Faceoff_Draw`: knob above the shoulders cm | +13.0 | -7.5 | +10.7 | -20.2 |
+| Lowest stick point above the ice cm | 0.16 | 0.69 | 0.69-0.80 | 0.77 |
+| Knee spread cm | 44.5 | 44.5 | 46.4 | 46.4 |
+
+- **From the game camera directly behind:** the silhouette is helmet, shoulders, back and hips, and the stick shows only in front and to the left. Both hands stay on the stick (gap 1.1 / 0.5 cm).
+- **First try failed:** the shaft 3 deg past the lie lifted the blade 4-6 cm off the ice, so it was put back at the lie exactly.
+
+### 2. The check by frame 2
+
+- **Timing:** the drive extreme is at frame 2 and goes deeper through frame 12. The stick only starts back at frame 2 (yaw 45) and reaches the pulled-back carry at frame 6.
+- **Stick turn** (world, per frame): at most 23.6 deg (`Deliver_Right`) and 29.3 deg (`Deliver_Left`), down from 43 / 51.
+- **Hands:** they travel up to 48 cm in frame 0-1. That is the lunge itself.
+
+### 3. Side get-ups
+
+The left skate now lifts 12 cm at frame 13 and 10 cm at frame 17 while it turns. Its largest world turn per frame is 28.4 deg (p2) and 29.4 deg (p3), down from 46-55 and 43. `GetUp` / `GetUp_Front` were not touched (28-29 deg).
+
+### 4. Arm swing at contact (`Knockdown_Right` first)
+
+The extra key: at the contact frame the bottom hand is only half way to its flung position, so it leaves the stick on a shorter path.
+
+| Take | Left upper arm deg/frame (export13 → 14) | Left hand cm/frame (export13 → 14) |
+|---|---|---|
+| `Knockdown_Right` | 80 → 55 (p2), 89 → 61 (p3) | 40 → 33 (p2), 38 → 33 (p3) |
+| `Knockdown_Left` | 70 → 53 (p2), 72 → 63 (p3) | unchanged |
+
+`Fall` (up to 115 deg), `Fall_Forward`, `Knockdown_Back`, the standing hits and the spin variants are not changed yet.
+
+### 5. `Board_Hit`
+
+After the rebound the stick comes back in, carried in front with both hands, through the head shake. The shake now reads as a shake, not as arms spread.
+
+### 6. `Glide`, `Stride`, `Idle` from behind and above
+
+Not changed: the top hand sits at the hip, not above the back, so it is not as plain as the faceoff.
+
+- **Height:** the knob stands at 80-86 cm, 22-29 cm under the shoulders, so nothing stands above the shoulders.
+- **Position:** it sits 25-33 cm behind the pelvis, beside the right hip.
+- **From behind:** the top glove shows at the right hip as a small dark shape. It is visible in the last frames of `Faceoff_Draw` on the operator sheet. If it should go, the same change as the faceoff applies, but it changes every locomotion take and the aim joins.
+
+### Per take (p2_cel)
+
+| Take | Frames | Lowest body (part) cm | Lowest skate / stick cm | Biggest one-frame step (bone) before -> after | Pelvis thrown cm | Trunk deg min/max | Skate spread cm |
+|---|---|---|---|---|---|---|---|
+| Idle_Faceoff | 121 -> 121 | 13.65 (knees_shins) | -0.00 / 0.69 | 4 (lowerarm_r f46->47) -> 0 (lowerarm_r f25->26) | 0 | 48/50 | 52.0 |
+| Faceoff_Ready | 31 -> 31 | 13.84 (knees_shins) | -0.00 / 0.69 | 0 (upperarm_r f8->9) -> 0 (lowerarm_r f6->7) | 0 | 50/50 | 52.0 |
+| Faceoff_Draw | 19 -> 19 | 13.56 (knees_shins) | -0.00 / 0.62 | 22 (hand_r f1->2) -> 22 (lowerarm_r f1->2) | 0 | 22/50 | 49.1 |
+| Check_Hit_Back | 31 -> 31 | 13.97 (knees_shins) | -0.00 / 0.73 | 144 (hand_l f2->3) -> 144 (hand_l f2->3) | 30 | 12/93 | 39.3 |
+| Check_Hit_Left | 31 -> 31 | 12.20 (knees_shins) | -0.00 / 0.20 | 130 (hand_l f2->3) -> 130 (hand_l f2->3) | 30 | 22/74 | 41.7 |
+| Check_Hit_Right | 31 -> 31 | 12.20 (knees_shins) | -0.00 / 0.73 | 140 (lowerarm_l f2->3) -> 140 (lowerarm_l f2->3) | 30 | 22/74 | 41.7 |
+| Board_Hit | 31 -> 31 | 13.97 (knees_shins) | -0.00 / 0.71 | 91 (upperarm_l f1->2) -> 91 (upperarm_l f1->2) | 16 | 4/38 | 39.1 |
+| Stumble | 21 -> 21 | 13.69 (knees_shins) | -0.00 / 0.73 | 90 (upperarm_l f1->2) -> 90 (upperarm_l f1->2) | 6 | 22/56 | 54.0 |
+| Stumble_Short | 21 -> 21 | 13.73 (knees_shins) | -0.00 / 0.71 | 52 (lowerarm_r f2->3) -> 52 (lowerarm_r f2->3) | 6 | 22/56 | 54.1 |
+| Knockdown_Left_B | 27 -> 27 | 0.80 (arms) | -0.00 / 0.16 | 103 (calf_l f4->5) -> 103 (calf_l f4->5) | 30 | 22/103 | 14.8 |
+| Knockdown_Right_B | 27 -> 27 | 1.75 (arms) | -0.00 / 0.73 | 99 (hand_l f2->3) -> 99 (hand_l f2->3) | 30 | 22/103 | 15.1 |
+| Check | 31 -> 31 | 13.96 (knees_shins) | -0.00 / -0.61 | 43 (stick_socket f1->2) -> 56 (lowerarm_r f2->3) | 0 | 22/65 | 46.3 |
+| Check_Deliver_Right | 31 -> 31 | 13.96 (knees_shins) | -0.00 / -0.61 | 43 (stick_socket f1->2) -> 56 (lowerarm_r f2->3) | 0 | 22/65 | 46.3 |
+| Check_Deliver_Left | 31 -> 31 | 13.94 (knees_shins) | -0.00 / 0.33 | 51 (stick_socket f2->3) -> 51 (clavicle_l f1->2) | 0 | 22/65 | 46.3 |
+| Fall | 27 -> 27 | 3.63 (hands) | -0.00 / 0.73 | 124 (lowerarm_l f2->3) -> 124 (lowerarm_l f2->3) | 30 | 11/86 | 72.7 |
+| Fall_Forward | 27 -> 27 | 1.60 (head) | -0.00 / 0.73 | 100 (upperarm_l f1->2) -> 100 (upperarm_l f1->2) | 30 | 22/89 | 67.3 |
+| Knockdown_Back | 27 -> 27 | 1.60 (head) | -0.00 / 0.56 | 87 (upperarm_l f1->2) -> 87 (upperarm_l f1->2) | 30 | 22/89 | 66.8 |
+| Knockdown_Left | 27 -> 27 | 1.75 (arms) | -0.00 / 0.15 | 86 (lowerarm_r f2->3) -> 86 (lowerarm_r f2->3) | 30 | 22/103 | 17.3 |
+| Knockdown_Right | 27 -> 27 | 1.75 (arms) | -0.00 / 0.73 | 95 (lowerarm_l f2->3) -> 77 (calf_l f3->4) | 30 | 22/103 | 17.9 |
+| Trip | 27 -> 27 | 1.74 (arms) | -0.00 / 0.73 | 135 (lowerarm_l f1->2) -> 135 (lowerarm_l f1->2) | 30 | 22/87 | 37.2 |
+| GetUp | 45 -> 45 | 1.28 (hands) | -0.00 / 0.10 | 47 (thigh_l f14->15) -> 47 (thigh_l f14->15) | 30 | 3/86 | 45.9 |
+| GetUp_Front | 45 -> 45 | 1.60 (head) | -0.00 / -1.41 | 31 (thigh_l f15->16) -> 31 (thigh_l f15->16) | 30 | 22/89 | 46.1 |
+| GetUp_Side_Left | 45 -> 45 | 1.75 (arms) | -0.00 / -1.05 | 46 (foot_l f15->16) -> 33 (thigh_l f15->16) | 30 | 22/87 | 36.2 |
+| GetUp_Side_Right | 45 -> 45 | 1.75 (arms) | -0.00 / 0.09 | 55 (foot_l f15->16) -> 44 (calf_l f15->16) | 30 | 22/87 | 36.1 |
+
+
+### Per take (p3_clay)
+
+| Take | Frames | Lowest body (part) cm | Lowest skate / stick cm | Biggest one-frame step (bone) before -> after | Pelvis thrown cm | Trunk deg min/max | Skate spread cm |
+|---|---|---|---|---|---|---|---|
+| Idle_Faceoff | 121 -> 121 | 13.12 (knees_shins) | 0.13 / 0.77 | 8 (lowerarm_l f18->19) -> 0 (upperarm_l f8->9) | 0 | 48/50 | 54.7 |
+| Faceoff_Ready | 31 -> 31 | 13.12 (knees_shins) | 0.13 / 0.78 | 0 (upperarm_r f7->8) -> 0 (lowerarm_l f7->8) | 0 | 50/50 | 54.7 |
+| Faceoff_Draw | 19 -> 19 | 13.10 (knees_shins) | 0.13 / 0.34 | 23 (lowerarm_r f1->2) -> 24 (lowerarm_r f1->2) | 0 | 23/50 | 52.0 |
+| Check_Hit_Back | 31 -> 31 | 13.06 (knees_shins) | 0.13 / 0.33 | 150 (lowerarm_l f2->3) -> 150 (lowerarm_l f2->3) | 30 | 12/94 | 43.1 |
+| Check_Hit_Left | 31 -> 31 | 12.46 (knees_shins) | 0.13 / -0.08 | 135 (hand_l f2->3) -> 135 (hand_l f2->3) | 30 | 23/74 | 43.5 |
+| Check_Hit_Right | 31 -> 31 | 12.09 (knees_shins) | 0.13 / 0.34 | 131 (lowerarm_l f2->3) -> 131 (lowerarm_l f2->3) | 30 | 23/74 | 43.5 |
+| Board_Hit | 31 -> 31 | 13.10 (knees_shins) | 0.13 / 0.33 | 116 (upperarm_l f1->2) -> 116 (upperarm_l f1->2) | 16 | 4/38 | 42.9 |
+| Stumble | 21 -> 21 | 13.05 (knees_shins) | 0.13 / 0.34 | 90 (upperarm_l f1->2) -> 90 (upperarm_l f1->2) | 6 | 23/56 | 56.4 |
+| Stumble_Short | 21 -> 21 | 13.07 (knees_shins) | 0.13 / 0.33 | 53 (hand_r f2->3) -> 53 (hand_r f2->3) | 6 | 23/56 | 56.5 |
+| Knockdown_Left_B | 27 -> 27 | 0.69 (forearms) | 0.13 / 0.34 | 105 (calf_l f4->5) -> 105 (calf_l f4->5) | 30 | 23/103 | 14.0 |
+| Knockdown_Right_B | 27 -> 27 | 0.44 (arms) | 0.13 / 0.34 | 105 (lowerarm_l f2->3) -> 105 (lowerarm_l f2->3) | 30 | 23/103 | 14.5 |
+| Check | 31 -> 31 | 12.43 (hands) | 0.13 / -0.74 | 44 (stick_socket f1->2) -> 54 (lowerarm_r f2->3) | 0 | 23/65 | 49.5 |
+| Check_Deliver_Right | 31 -> 31 | 12.43 (hands) | 0.13 / -0.74 | 44 (stick_socket f1->2) -> 54 (lowerarm_r f2->3) | 0 | 23/65 | 49.5 |
+| Check_Deliver_Left | 31 -> 31 | 13.05 (knees_shins) | 0.13 / 0.34 | 51 (stick_socket f2->3) -> 51 (clavicle_l f1->2) | 0 | 23/65 | 49.5 |
+| Fall | 27 -> 27 | 2.96 (hands) | 0.13 / 0.34 | 89 (thigh_l f3->4) -> 89 (thigh_l f3->4) | 30 | 11/86 | 72.6 |
+| Fall_Forward | 27 -> 27 | 7.20 (hands) | 0.13 / 0.34 | 104 (upperarm_l f1->2) -> 104 (upperarm_l f1->2) | 30 | 23/89 | 68.3 |
+| Knockdown_Back | 27 -> 27 | 7.65 (hands) | 0.13 / -0.65 | 96 (upperarm_l f1->2) -> 96 (upperarm_l f1->2) | 30 | 23/89 | 67.8 |
+| Knockdown_Left | 27 -> 27 | 0.69 (forearms) | 0.13 / 0.34 | 88 (lowerarm_r f2->3) -> 88 (lowerarm_r f2->3) | 30 | 23/103 | 16.2 |
+| Knockdown_Right | 27 -> 27 | 0.44 (arms) | 0.13 / 0.34 | 102 (lowerarm_l f2->3) -> 82 (calf_l f3->4) | 30 | 23/103 | 17.8 |
+| Trip | 27 -> 27 | 0.57 (arms) | -0.20 / 0.34 | 149 (lowerarm_l f1->2) -> 149 (lowerarm_l f1->2) | 30 | 23/87 | 36.4 |
+| GetUp | 45 -> 45 | 1.33 (hands) | 0.13 / 0.34 | 42 (stick_socket f4->5) -> 42 (stick_socket f4->5) | 30 | 4/86 | 49.0 |
+| GetUp_Front | 45 -> 45 | 1.95 (hands) | 0.13 / -0.91 | 30 (thigh_l f15->16) -> 30 (thigh_l f15->16) | 30 | 23/89 | 49.2 |
+| GetUp_Side_Left | 45 -> 45 | 1.82 (forearms) | 0.13 / -0.78 | 48 (upperarm_r f13->14) -> 32 (thigh_l f16->17) | 30 | 23/87 | 39.3 |
+| GetUp_Side_Right | 45 -> 45 | 1.56 (arms) | 0.12 / -0.28 | 38 (lowerarm_r f15->16) -> 44 (calf_l f15->16) | 30 | 23/87 | 39.3 |
+
+
+**Ground:** nothing goes under the ice in any changed take. The stick's worst is -1.41 cm (p2 `GetUp_Front`, as in export10). The per-frame world measures for export13 and export14 are in `work14/<style>/world_13.json` and `world_14.json`.
+
+### Still open
+
+1. Contact arm swing in `Fall` (115 deg), `Fall_Forward`, `Knockdown_Back`, the standing hits and the B variants.
+2. The locomotion top glove at the right hip (item 6).
+3. Not verified in the engine.
+
+### Files
+
+- **Scripts** (`skater-lab\skf\`): `run14.sh`, `summary14.py`, `knob14.py` (knob vs shoulders and pelvis), `world14.py` (world turns and hand travel per frame), `compose14.sh`, `part1.sh export14`.
+- **Stills** (`devlog\shots\20261113-1058xx-B-lab-skf14-*`, 21):
+
+  | Still | Content |
+  |---|---|
+  | `faceoff-behind-before-after` | the operator sheet: directly behind, rows p2 export10, p2 export14, p3 export10, p3 export14; `Idle_Faceoff` then `Faceoff_Draw` |
+  | `<style>-<take>-ba` (20) | export10 above export14 |
+
+## Fifteenth pass: arm swing, standing-hit stick, a spin that reads (SKF15, 11:42 to 11:50)
+
+Delivered `C:\Users\kazda\jam\skater-lab\skf\export15\` (p2_cel, p3_clay, full sets) with `READY.txt`.
+- **Item 3 (the spin):** done.
+- **Items 1 and 2:** improved but not at the targets.
+- **Items 4 and 5:** not started.
+
+**Difference list against export14:** 7 takes per style differ: `Knockdown_Right`, `Fall`, `Check_Hit_Back`, `Check_Hit_Left`, `Check_Hit_Right`, `Knockdown_Left_B`, `Knockdown_Right_B`. Everything else is identical to export14; the clay aim holds are identical to export10. The take count stays 74 with the same names.
+
+**The measure.** The engine's numbers match the local turn (each bone against its parent), not the world turn I reported in pass 14. My world numbers were therefore lower than what the figure shows. Everything below uses the local measure (`local15.py`).
+
+**Why the right side was worse: it is which arm was measured, not the stick.** The large contact turn is always on the arm of the side the body falls towards:
+- the left arm in `Knockdown_Right`;
+- the right arm in `Knockdown_Left` (122 deg in export14);
+- the measure in the engine was taken on one arm only.
+
+**The cause.** The snap rolls the trunk about 46 deg a frame. The hand targets stay put in the world: offsets from the shoulder and stick positions do not turn with the trunk. So against the trunk the arm swings the other way.
+
+**The fix (items 1 and 2):**
+- At the contact frame (2), both hands and the stick are the ready Glide's arms carried round with the trunk.
+- From frame 2 to 5 they fling out on an arc: extra keys at 3 and 4 keep each hand at least 85 % of the arm's reach from its shoulder, instead of a straight line that folds and unfolds the elbow.
+- It is applied to `Knockdown_Right`, `Fall` and the three standing hits.
+- On `Knockdown_Left`, `Fall_Forward` and `Knockdown_Back` it made the other arm worse (up to 166 deg), so those stay as export14.
+
+**Local one-frame turns, export14 → export15** (upper arm L / R, forearm L / R, stick, in deg):
+
+| Style | Take | export14 | export15 |
+|---|---|---|---|
+| p2_cel | Knockdown_Right | 109.1 / 50.1 / 84.2 / 53.8 / 67.3 | 77.5 / 46.4 / 59.5 / 33.0 / 98.6 |
+| p2_cel | Knockdown_Right_B | 134.0 / 60.5 / 99.8 / 62.5 / 66.9 | 100.8 / 68.6 / 81.8 / 87.6 / 132.6 |
+| p2_cel | Knockdown_Left_B | 49.1 / 124.4 / 54.1 / 78.7 / 76.0 | 94.6 / 50.2 / 135.0 / 67.5 / 121.2 |
+| p2_cel | Fall | 123.1 / 58.6 / 143.2 / 75.9 / 124.9 | 90.2 / 73.9 / 58.8 / 44.3 / 82.4 |
+| p2_cel | Check_Hit_Left | 46.1 / 112.2 / 135.3 / 121.2 / 131.2 | 31.5 / 61.9 / 54.2 / 44.9 / 84.0 |
+| p2_cel | Check_Hit_Right | 178.4 / 48.9 / 158.8 / 103.4 / 113.5 | 65.1 / 44.6 / 61.6 / 70.7 / 67.0 |
+| p2_cel | Check_Hit_Back | 151.8 / 112.7 / 141.1 / 130.1 / 123.1 | 63.4 / 51.8 / 58.7 / 72.9 / 101.0 |
+| p3_clay | Knockdown_Right | 113.0 / 49.1 / 89.3 / 51.7 / 64.5 | 76.5 / 40.8 / 73.4 / 33.4 / 98.1 |
+| p3_clay | Knockdown_Right_B | 140.0 / 58.6 / 106.0 / 62.2 / 65.5 | 104.3 / 69.7 / 76.9 / 86.2 / 130.5 |
+| p3_clay | Knockdown_Left_B | 48.6 / 124.7 / 51.8 / 84.8 / 75.3 | 110.2 / 55.5 / 141.8 / 64.2 / 121.7 |
+| p3_clay | Fall | 104.7 / 66.2 / 155.0 / 83.6 / 130.4 | 103.0 / 75.9 / 76.6 / 57.1 / 75.7 |
+| p3_clay | Check_Hit_Left | 41.5 / 111.7 / 152.3 / 128.0 / 134.9 | 50.0 / 68.7 / 58.1 / 59.6 / 74.5 |
+| p3_clay | Check_Hit_Right | 166.3 / 46.2 / 166.4 / 117.2 / 127.2 | 62.4 / 44.4 / 76.4 / 70.1 / 72.8 |
+| p3_clay | Check_Hit_Back | 156.5 / 124.2 / 145.9 / 135.6 / 132.3 | 74.3 / 40.8 / 76.9 / 62.6 / 102.5 |
+
+**Against the targets:**
+- **Contact upper arm, target about 40-65 deg:** met for the standing hits (31-74). `Knockdown_Right` is at 77-78 and clay `Fall` at 103, so not met yet.
+- **Standing-hit stick, target under about 45 deg:** now 67-103 deg per frame (was 113-135). Not met. The flung-wide stagger is kept.
+
+### 3. The spin reads as a spin
+
+`Knockdown_Left_B` and `Knockdown_Right_B` are now a helicopter:
+- both arms out, one leg flung straight out sideways;
+- the stick a horizontal spoke, all turning with the body;
+- one full turn over frames 2-14 at 30 deg per frame (shoulders 30 deg per frame, measured);
+- landing at 14, bounce at 17, lying from 21 to 30.
+
+**Timing:** 30 frames, 30 + 44 = 74 of 90, so lying is about 16 frames.
+
+**Join:** it ends on the A version's lying pose, so the same get-up joins. The rotation is the same; some bones carry the negated quaternion, as before.
+
+**From the game camera** the spoke points right, down-left, up-left, then up over frames 3-12, so the rotation is visible. See `skf15-spin-vs-plain`.
+
+**Still failing in the spin:** at the landing (frames 13-14) the arms and the stick turn 95-150 deg in one frame against their parents, coming from the spokes into the lying pose.
+
+### Ground
+
+- Body and skates are at 0 cm or above.
+- The stick's worst is -1.41 cm (p2 `GetUp_Front`, as in export10) and -1.87 cm (p3 `Check_Hit_Back`, new: the stick during the fling).
+
+### Not done
+
+- **Item 4:** stick along the body in the lying poses.
+- **Item 5:** `Fall_B`, `Knockdown_Back_B`.
+- Plus the open values above. Nothing is verified in the engine.
+
+### Files
+
+- **Scripts** (`skater-lab\skf\`):
+  - `run15.sh`, `summary15.py`
+  - `local15.py` (the engine's local measure)
+  - `series15.py` (per-frame world turns)
+  - `compose15.sh`, `part1.sh export15`
+- **Tables:** `work15/<style>/summary15.md`, `local_14.json`, `local_15.json`.
+- **Stills** (`devlog\shots\20261113-1147xx-B-lab-skf15-*`, 11):
+
+  | Still | Content |
+  |---|---|
+  | `spin-vs-plain` | per style, `Knockdown_Left` above `Knockdown_Left_B`, `Knockdown_Right` above `Knockdown_Right_B` |
+  | `<style>-<take>-ba` (10) | export10 above export15 for the three standing hits, `Knockdown_Right` and `Fall` |

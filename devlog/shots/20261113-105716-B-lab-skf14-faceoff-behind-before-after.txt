@@ -1,0 +1,1 @@
+SKF14 operator sheet, game camera directly behind, 35 deg down: rows p2_cel export10, p2_cel export14, p3_clay export10, p3_clay export14. First cell Idle_Faceoff, then Faceoff_Draw every 3rd frame. export10: the top glove and butt end stand on the back; export14: the stick low in front, the back clean.

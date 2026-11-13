@@ -1,0 +1,1 @@
+B29 tier stability, night (l2_night): before (11:28) and after the last save (11:43), same frozen cameras: boards 8 m mean |d| 0.50 (tile max 1.56), game camera 1.29 (figure outlines; open-ice crop 0.71), 24 m 0.68; luma equal to 0.09

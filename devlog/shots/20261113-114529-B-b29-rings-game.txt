@@ -1,0 +1,1 @@
+B29 clay zone rings with MI_Zone_<kind>_Ring on device A's ring meshes (assigned at run time), game camera, t 4.6: boost_only yellow, fast_ice green, bumper orange (left edge), no_shoot red, slow_ice blue; opaque, lit, softly emissive, no halo
