@@ -732,3 +732,12 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
   human's figure has no mark of its own among five of its colour**; it is found only because the camera sits behind it. One frame for your camera: at 5.0 s,
   after the human lost the faceoff and was knocked down, the puck was behind the game camera (puck x -21.8 m, human x -10.3 m).
 - A cartridge with `spawn_every_frames` under 120 is rejected and the game then falls back to the regular cut without a visible message (seen while testing).
+
+## H36.2 (17:30, 13 Nov) FOR THE DIRECTOR: the operator's audio balance measured at full speed; the cross-check has its sound (lane AU9, cook-only PASS)
+- **Measured at 58 ticks a second with the operator's trims** (`status/AU9-report.md`): plain match 90 s -24.2 LUFS, true peak -6.9 dBTP; drill match 60 s -22.5 / -4.7.
+  Music + commentary + crowd are 73 % of the mix energy in plain play (72 % in the drill); gameplay effects 20 %, hits 6 %. The hit moment sits 4.5 dB (plain)
+  and 7.4 dB (drill) over the second before it, median.
+- **`MS_lift`**: the clean case (Variant 0, which you already send) plays one of three cross-check impacts, 2.6 to 3.4 LU under a body check at 0.6; the miss
+  (Variant 1) is unchanged. It is 4.5 % of the plain match's energy with 65 clean lifts in 90 s. The poke is now the largest frequent effect (60 in 90 s,
+  about 9 %).
+- Event counts in that plain match, for your aggression ladder: 11 checks and knockdowns, 65 clean lifts, 60 pokes, 27 shots, 39 skater board hits.
