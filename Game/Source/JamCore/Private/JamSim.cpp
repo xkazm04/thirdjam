@@ -1031,9 +1031,12 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 	}
 
 	// Lane A71: the match horn (see MatchHornFrames). Only while the puck is live; a goal pause or a faceoff delays it by the frames it takes.
+	// Director (R-0037, A72's note): a timer match may run longer than the first_to horn (a 10:00 clock is 36,000 frames): its hard stop is the clock plus 6,000 frames of
+	// pauses and sudden death, never the first_to stop.
+	const int64 HardStop = (Config.Rules.Mode == RuleTimer && Config.Rules.TimerFrames > 0) ? FMath::Max<int64>(MatchHardStopFrames, static_cast<int64>(Config.Rules.TimerFrames) + 6000) : MatchHardStopFrames;
 	if (Phase == EJamSimPhase::Playing && Frame >= MatchHornFrames)
 	{
-		if (Frame >= MatchHardStopFrames)
+		if (Frame >= HardStop)
 		{
 			EndMatchNow(-1);
 		}
@@ -1331,7 +1334,7 @@ void UJamSim::CallFoul(FJamSkaterState& Fouler, const FJamSkaterState& Victim, c
 {
 	Emit(JamEvents::Foul, Fouler.Index, Contact, Strength, Kind);
 	Fouler.bFoulThisFrame = true;
-	Fouler.PenaltyFrames = BoxFrames;
+	Fouler.PenaltyFrames = Config.Rules.PenaltyFrames > 0 ? Config.Rules.PenaltyFrames : BoxFrames;   // lane A72 (ask A8): game.rules.penalty_frames, absent = 300
 	Fouler.CheckWindow = 0;
 	const double OwnEndX = -AttackGoalX(Fouler.Team) * 0.55;
 	const double SideZ = (Contact.Y >= 0 ? 1.0 : -1.0) * Config.Rink.WidthM * 0.25;

@@ -1,0 +1,392 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "hud",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T10:10:34.526Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "hud",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a64/hockey.boost-l3-call.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/a64/hockey.boost-l3-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/a64/hockey.boost-l3-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/a64/hockey.boost-l3-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/a64/hockey.boost-l3-pause.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "F",
+          "path": "docs/experiments/img/a64/hockey.chaos-l2-call.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2550,
+      "usage": {
+        "prompt": 16441,
+        "output": 5990,
+        "thoughts": 0,
+        "total": 22431,
+        "calls": 2
+      },
+      "cost_usd_est": 0.03479,
+      "ms": 40511,
+      "retried": true,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A (hockey.boost-l3-call.jpg)",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Director's Call modal card",
+                "position": "screen center",
+                "legible": true,
+                "text": "DIRECTOR'S CALL - PERIOD 1 One change per period. Move one slider, then APPLY. The scoreboard announces the new rule. SKATER SPEED 8 SHOT POWER 18 ICE FRICTION 0.015 OPPONENTS' SKILL 1 TURN RATE 5 APPLY BACK"
+              },
+              {
+                "name": "Distance indicator",
+                "position": "mid-left edge",
+                "legible": true,
+                "text": "< > 4 m"
+              },
+              {
+                "name": "Own goal distance indicator",
+                "position": "lower-left edge",
+                "legible": true,
+                "text": "< > own 114 m"
+              },
+              {
+                "name": "Call ready prompt",
+                "position": "bottom-left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              },
+              {
+                "name": "Radar minimap",
+                "position": "bottom-right corner",
+                "legible": false,
+                "text": "NONE"
+              }
+            ],
+            "collisions": [
+              "Modal card completely blocks center ice and player character",
+              "Modal card top edge nearly touches the top scoreboard frame",
+              "Minimap in bottom right is extremely dim and lacks contrast against background"
+            ],
+            "missing": [
+              "No visible confirmation of which team color the player controls while inside menu",
+              "Slider adjustment input prompts (keys/buttons to alter slider values)"
+            ],
+            "smallest_text_px": 14,
+            "legibility": 3
+          },
+          {
+            "label": "Still B (hockey.boost-l3-card.jpg)",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Match title card",
+                "position": "upper center below scoreboard",
+                "legible": true,
+                "text": "MATCH 1 PERIOD 1 - FACEOFF"
+              },
+              {
+                "name": "Player indicator tag",
+                "position": "above player character head",
+                "legible": true,
+                "text": "YOU"
+              },
+              {
+                "name": "Faceoff countdown timer",
+                "position": "mid-right of player",
+                "legible": true,
+                "text": "1 HOLD"
+              },
+              {
+                "name": "Tutorial speech bubble 1",
+                "position": "lower center right",
+                "legible": true,
+                "text": "press shoot at the drop, not before"
+              },
+              {
+                "name": "Tutorial speech bubble 2",
+                "position": "lower center",
+                "legible": true,
+                "text": "Welcome to the rink: blue against orange, first period."
+              },
+              {
+                "name": "Controls banner",
+                "position": "bottom screen strip",
+                "legible": true,
+                "text": "SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC"
+              },
+              {
+                "name": "Call ready prompt",
+                "position": "bottom-left corner below controls",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              },
+              {
+                "name": "Own goal distance indicator",
+                "position": "mid-left edge",
+                "legible": true,
+                "text": "< > own 46 m"
+              },
+              {
+                "name": "Radar minimap",
+                "position": "bottom-right corner",
+                "legible": false,
+                "text": "NONE"
+              }
+            ],
+            "collisions": [
+              "Tutorial speech bubble overlaps player selection ring and character skate base",
+              "Match 1 title card covers opposing center ice skater",
+              "Controls bar overlaps player ring bottom boundary slightly"
+            ],
+            "missing": [
+              "No goal target reticle or shot aim vector display",
+              "Explicit indicator of which end of the rink is the attack goal"
+            ],
+            "smallest_text_px": 14,
+            "legibility": 4
+          },
+          {
+            "label": "Still C (hockey.boost-l3-faceoff.jpg)",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Far-net distance marker",
+                "position": "top center below scoreboard",
+                "legible": true,
+                "text": "66 m"
+              },
+              {
+                "name": "Own goal distance indicator",
+                "position": "mid-left edge",
+                "legible": true,
+                "text": "< > own 46 m"
+              },
+              {
+                "name": "Controls banner",
+                "position": "bottom screen strip",
+                "legible": true,
+                "text": "SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC"
+              },
+              {
+                "name": "Call ready prompt",
+                "position": "bottom-left corner below controls",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              },
+              {
+                "name": "Radar minimap",
+                "position": "bottom-right corner",
+                "legible": false,
+                "text": "NONE"
+              }
+            ],
+            "collisions": [
+              "Controls strip sits partially over the bottom edge of the player selection ring"
+            ],
+            "missing": [
+              "Puck status indicator (puck is currently missing/hidden off-ice before drop)",
+              "Name or role tags for AI teammates and opponents"
+            ],
+            "smallest_text_px": 14,
+            "legibility": 4
+          },
+          {
+            "label": "Still D (hockey.boost-l3-farnet.jpg)",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Target distance indicator",
+                "position": "top center below scoreboard",
+                "legible": true,
+                "text": "3 m"
+              },
+              {
+                "name": "Own goal distance indicator",
+                "position": "mid-left edge",
+                "legible": true,
+                "text": "< > own 109 m"
+              },
+              {
+                "name": "Call ready prompt",
+                "position": "bottom-left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              },
+              {
+                "name": "Radar minimap",
+                "position": "bottom-right corner",
+                "legible": false,
+                "text": "NONE"
+              }
+            ],
+            "collisions": [
+              "Player character overlaps the goal crease line and partially obstructs net entrance"
+            ],
+            "missing": [
+              "Main controls reminder bar across bottom screen is missing",
+              "Puck location indicator"
+            ],
+            "smallest_text_px": 14,
+            "legibility": 4
+          },
+          {
+            "label": "Still E (hockey.boost-l3-pause.jpg)",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Pause modal card",
+                "position": "screen center",
+                "legible": true,
+                "text": "TIME OUT PERIOD 1 RESUME DIRECTOR'S CALL RESTART QUIT TO MENU Your call is ready: change one thing about this match. SKATE WASD / L-STICK AIM STICK MOUSE / R-STICK SHOOT HOLD LMB / RT CHECK RMB / RB CROSS-CHECK MMB, MOUSE4 / LB DEKE WHEEL, Q / Y SPIN E / B SPRINT SHIFT / LT POKE SPACE / A PASS F / X SIGNALS 1-4 / D-PAD BRAKE CTRL / L-STICK CLICK RESTART R / VIEW PAUSE ESC / MENU ESC / START resume STICK move A select B back"
+              },
+              {
+                "name": "Distance indicator",
+                "position": "mid-left edge",
+                "legible": true,
+                "text": "< > 4 m"
+              },
+              {
+                "name": "Own goal distance indicator",
+                "position": "lower-left edge",
+                "legible": true,
+                "text": "< > own 114 m"
+              },
+              {
+                "name": "Call ready prompt",
+                "position": "bottom-left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              },
+              {
+                "name": "Radar minimap",
+                "position": "bottom-right corner",
+                "legible": false,
+                "text": "NONE"
+              }
+            ],
+            "collisions": [
+              "Pause modal covers the central ice field and player figure entirely",
+              "Controls list at base of pause card is extremely dense and tightly packed against bottom border"
+            ],
+            "missing": [
+              "Current match duration or period time remaining"
+            ],
+            "smallest_text_px": 13,
+            "legibility": 3
+          },
+          {
+            "label": "Still F (hockey.chaos-l2-call.jpg)",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Director's Call modal card",
+                "position": "screen center",
+                "legible": true,
+                "text": "DIRECTOR'S CALL - PERIOD 1 One change per period. Move one slider, then APPLY. The scoreboard announces the new rule. SKATER SPEED 11 SHOT POWER 18 ICE FRICTION 0.015 OPPONENTS' SKILL 1 TURN RATE 5 APPLY BACK"
+              },
+              {
+                "name": "Distance indicator",
+                "position": "mid-left edge",
+                "legible": true,
+                "text": "< > 5 m"
+              },
+              {
+                "name": "Own goal distance indicator",
+                "position": "lower-left edge",
+                "legible": true,
+                "text": "< > own 86 m"
+              },
+              {
+                "name": "Call ready prompt",
+                "position": "bottom-left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              },
+              {
+                "name": "Radar minimap",
+                "position": "bottom-right corner",
+                "legible": false,
+                "text": "NONE"
+              }
+            ],
+            "collisions": [
+              "Director card blocks the center action area and player figure",
+              "Top of director card comes very close to top scoreboard bottom border"
+            ],
+            "missing": [
+              "Gamepad navigation hints for manipulating menu sliders",
+              "Active score differential or leading team highlight"
+            ],
+            "smallest_text_px": 14,
+            "legibility": 3
+          }
+        ]
+      },
+      "markdown": "**eyes/hud** A=hockey.boost-l3-call.jpg B=hockey.boost-l3-card.jpg C=hockey.boost-l3-faceoff.jpg D=hockey.boost-l3-farnet.jpg E=hockey.boost-l3-pause.jpg F=hockey.chaos-l2-call.jpg (gemini-3.8-flash, in 16441 out 5990 tokens, ~$0.0348, 40.5 s, 1 retry)\n- stills:\n  - label: Still A (hockey.boost-l3-call.jpg); smallest_text_px: 14; legibility: 3\n    - elements:\n      - name: Scoreboard; position: top center; legible: true; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Director's Call modal card; position: screen center; legible: true; text: DIRECTOR'S CALL - PERIOD 1 One change per period. Move one slider, then APPLY. The scoreboard announces the new rule. SKATER SPEED 8 SHOT POWER 18 ICE FRICTION 0.015 OPPONENTS' SKILL 1 TURN RATE 5 APPLY BACK\n      - name: Distance indicator; position: mid-left edge; legible: true; text: < > 4 m\n      - name: Own goal distance indicator; position: lower-left edge; legible: true; text: < > own 114 m\n      - name: Call ready prompt; position: bottom-left corner; legible: true; text: ESC / START CALL READY\n      - name: Radar minimap; position: bottom-right corner; legible: false; text: NONE\n    - collisions: Modal card completely blocks center ice and player character; Modal card top edge nearly touches the top scoreboard frame; Minimap in bottom right is extremely dim and lacks contrast against background\n    - missing: No visible confirmation of which team color the player controls while inside menu; Slider adjustment input prompts (keys/buttons to alter slider values)\n  - label: Still B (hockey.boost-l3-card.jpg); smallest_text_px: 14; legibility: 4\n    - elements:\n      - name: Scoreboard; position: top center; legible: true; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Match title card; position: upper center below scoreboard; legible: true; text: MATCH 1 PERIOD 1 - FACEOFF\n      - name: Player indicator tag; position: above player character head; legible: true; text: YOU\n      - name: Faceoff countdown timer; position: mid-right of player; legible: true; text: 1 HOLD\n      - name: Tutorial speech bubble 1; position: lower center right; legible: true; text: press shoot at the drop, not before\n      - name: Tutorial speech bubble 2; position: lower center; legible: true; text: Welcome to the rink: blue against orange, first period.\n      - name: Controls banner; position: bottom screen strip; legible: true; text: SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC\n      - name: Call ready prompt; position: bottom-left corner below controls; legible: true; text: ESC / START CALL READY\n      - name: Own goal distance indicator; position: mid-left edge; legible: true; text: < > own 46 m\n      - name: Radar minimap; position: bottom-right corner; legible: false; text: NONE\n    - collisions: Tutorial speech bubble overlaps player selection ring and character skate base; Match 1 title card covers opposing center ice skater; Controls bar overlaps player ring bottom boundary slightly\n    - missing: No goal target reticle or shot aim vector display; Explicit indicator of which end of the rink is the attack goal\n  - label: Still C (hockey.boost-l3-faceoff.jpg); smallest_text_px: 14; legibility: 4\n    - elements:\n      - name: Scoreboard; position: top center; legible: true; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Far-net distance marker; position: top center below scoreboard; legible: true; text: 66 m\n      - name: Own goal distance indicator; position: mid-left edge; legible: true; text: < > own 46 m\n      - name: Controls banner; position: bottom screen strip; legible: true; text: SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC\n      - name: Call ready prompt; position: bottom-left corner below controls; legible: true; text: ESC / START CALL READY\n      - name: Radar minimap; position: bottom-right corner; legible: false; text: NONE\n    - collisions: Controls strip sits partially over the bottom edge of the player selection ring\n    - missing: Puck status indicator (puck is currently missing/hidden off-ice before drop); Name or role tags for AI teammates and opponents\n  - label: Still D (hockey.boost-l3-farnet.jpg); smallest_text_px: 14; legibility: 4\n    - elements:\n      - name: Scoreboard; position: top center; legible: true; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Target distance indicator; position: top center below scoreboard; legible: true; text: 3 m\n      - name: Own goal distance indicator; position: mid-left edge; legible: true; text: < > own 109 m\n      - name: Call ready prompt; position: bottom-left corner; legible: true; text: ESC / START CALL READY\n      - name: Radar minimap; position: bottom-right corner; legible: false; text: NONE\n    - collisions: Player character overlaps the goal crease line and partially obstructs net entrance\n    - missing: Main controls reminder bar across bottom screen is missing; Puck location indicator\n  - label: Still E (hockey.boost-l3-pause.jpg); smallest_text_px: 13; legibility: 3\n    - elements:\n      - name: Scoreboard; position: top center; legible: true; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Pause modal card; position: screen center; legible: true; text: TIME OUT PERIOD 1 RESUME DIRECTOR'S CALL RESTART QUIT TO MENU Your call is ready: change one thing about this match. SKATE WASD / L-STICK AIM STICK MOUSE / R-STICK SHOOT HOLD LMB / RT CHECK RMB / RB CROSS-CHECK MMB, MOUSE4 / LB DEKE WHEEL, Q / Y SPIN E / B SPRINT SHIFT / LT POKE SPACE / A PASS F / X SIGNALS 1-4 / D-PAD BRAKE CTRL / L-STICK CLICK RESTART R / VIEW PAUSE ESC / MENU ESC / START resume STICK move A select B back\n      - name: Distance indicator; position: mid-left edge; legible: true; text: < > 4 m\n      - name: Own goal distance indicator; position: lower-left edge; legible: true; text: < > own 114 m\n      - name: Call ready prompt; position: bottom-left corner; legible: true; text: ESC / START CALL READY\n      - name: Radar minimap; position: bottom-right corner; legible: false; text: NONE\n    - collisions: Pause modal covers the central ice field and player figure entirely; Controls list at base of pause card is extremely dense and tightly packed against bottom border\n    - missing: Current match duration or period time remaining\n  - label: Still F (hockey.chaos-l2-call.jpg); smallest_text_px: 14; legibility: 3\n    - elements:\n      - name: Scoreboard; position: top center; legible: true; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Director's Call modal card; position: screen center; legible: true; text: DIRECTOR'S CALL - PERIOD 1 One change per period. Move one slider, then APPLY. The scoreboard announces the new rule. SKATER SPEED 11 SHOT POWER 18 ICE FRICTION 0.015 OPPONENTS' SKILL 1 TURN RATE 5 APPLY BACK\n      - name: Distance indicator; position: mid-left edge; legible: true; text: < > 5 m\n      - name: Own goal distance indicator; position: lower-left edge; legible: true; text: < > own 86 m\n      - name: Call ready prompt; position: bottom-left corner; legible: true; text: ESC / START CALL READY\n      - name: Radar minimap; position: bottom-right corner; legible: false; text: NONE\n    - collisions: Director card blocks the center action area and player figure; Top of director card comes very close to top scoreboard bottom border\n    - missing: Gamepad navigation hints for manipulating menu sliders; Active score differential or leading team highlight"
+    }
+  ]
+}

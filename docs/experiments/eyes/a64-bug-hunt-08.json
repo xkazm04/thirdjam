@@ -1,0 +1,129 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T10:08:22.094Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a64/hockey.regular-p4-call.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/a64/hockey.regular-p4-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/a64/hockey.regular-p4-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/a64/hockey.regular-p4-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/a64/hockey.regular-p4-pause.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2419,
+      "usage": {
+        "prompt": 6306,
+        "output": 564,
+        "thoughts": 0,
+        "total": 6870,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00684,
+      "ms": 7919,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [
+              {
+                "where": "Top center",
+                "what": "The top scoreboard period box says 'PERIOD 1: FIRST TO 3' above an empty black rectangle with no game clock or time text rendered inside.",
+                "severity": 2,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still B",
+            "findings": [
+              {
+                "where": "Bottom center, directly below the player ring",
+                "what": "Subtitles 'press shoot at the drop, not before' and 'Welcome to the rink: blue against orange, first period.' overlap closely and crowd the controls bar.",
+                "severity": 2,
+                "confidence": 0.75
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still C",
+            "findings": [
+              {
+                "where": "Top center",
+                "what": "The orange team has only one visible skater near the far net, leaving their other two players completely absent from the frame or ice.",
+                "severity": 3,
+                "confidence": 0.8
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still D",
+            "findings": [
+              {
+                "where": "Center, along the boards",
+                "what": "The blue player figure is clipping directly into the solid white board mesh with hands/stick completely penetrating into the wall geometry.",
+                "severity": 4,
+                "confidence": 0.95
+              },
+              {
+                "where": "Center, around the player figure",
+                "what": "Snow spray billboard particle textures display faint square/circular border outlines or sorting artifacts against the ice and boards.",
+                "severity": 2,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still E",
+            "findings": [
+              {
+                "where": "Bottom center of modal card",
+                "what": "The controller/keyboard binding hint text overlaps the bottom rounded edge of the pause menu card background.",
+                "severity": 2,
+                "confidence": 0.8
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=hockey.regular-p4-call.jpg B=hockey.regular-p4-card.jpg C=hockey.regular-p4-faceoff.jpg D=hockey.regular-p4-farnet.jpg E=hockey.regular-p4-pause.jpg (gemini-3.8-flash, in 6306 out 564 tokens, ~$0.0068, 7.9 s)\n- stills:\n  - label: Still A; clean: false\n    - findings:\n      - where: Top center; what: The top scoreboard period box says 'PERIOD 1: FIRST TO 3' above an empty black rectangle with no game clock or time text rendered inside.; severity: 2; confidence: 0.85\n  - label: Still B; clean: false\n    - findings:\n      - where: Bottom center, directly below the player ring; what: Subtitles 'press shoot at the drop, not before' and 'Welcome to the rink: blue against orange, first period.' overlap closely and crowd the controls bar.; severity: 2; confidence: 0.75\n  - label: Still C; clean: false\n    - findings:\n      - where: Top center; what: The orange team has only one visible skater near the far net, leaving their other two players completely absent from the frame or ice.; severity: 3; confidence: 0.8\n  - label: Still D; clean: false\n    - findings:\n      - where: Center, along the boards; what: The blue player figure is clipping directly into the solid white board mesh with hands/stick completely penetrating into the wall geometry.; severity: 4; confidence: 0.95\n      - where: Center, around the player figure; what: Snow spray billboard particle textures display faint square/circular border outlines or sorting artifacts against the ice and boards.; severity: 2; confidence: 0.85\n  - label: Still E; clean: false\n    - findings:\n      - where: Bottom center of modal card; what: The controller/keyboard binding hint text overlaps the bottom rounded edge of the pause menu card background.; severity: 2; confidence: 0.8"
+    }
+  ]
+}

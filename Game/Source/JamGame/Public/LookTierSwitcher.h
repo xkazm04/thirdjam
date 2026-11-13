@@ -25,6 +25,10 @@ class JAMGAME_API ULookTierSwitcher : public UWorldSubsystem
 	GENERATED_BODY()
 
 public:
+	// Lane A64: the exposure bias (EV) the follow camera adds while the tier's rig brings no light of its own (an empty placeholder map: l1_day, l3_neon
+	// today); 0 under a real rig. The persistent lights carry those tiers and auto exposure alone washed them out (eyes grid h19 finding 6).
+	static constexpr float NoRigExposureBiasEV = -1.f;
+	float GetCameraExposureBias() const { return CameraExposureBias; }
 	// The rink length every rig is authored for (R-0016 point 5).
 	static constexpr double RigRinkLengthM = 90.0;
 	// Where A's under-ice floor goes while a rig is loaded (R-0016 point 3).
@@ -103,6 +107,8 @@ private:
 	float CurrentScale = 1.f;
 	int32 ScaledLights = 0;
 	bool bPersistentLightsHidden = false;
+	float CameraExposureBias = 0.f;   // lane A64
+	void PushCameraExposure();
 	bool bFloorLowered = false;
 	bool bTrimOverride = false;
 	float TrimOverride = 30.f;

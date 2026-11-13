@@ -1,0 +1,57 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T10:35:34.473Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a73/a73-kd-human-f5740-strip.png",
+          "width": 1002,
+          "height": 855
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2271,
+      "usage": {
+        "prompt": 1729,
+        "output": 159,
+        "thoughts": 0,
+        "total": 1888,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00189,
+      "ms": 6016,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [
+              {
+                "where": "Frames f5764+24 through f5780+40, center of each frame",
+                "what": "The knocked-down blue skater's limbs and torso clip completely flat into the ice surface without proper 3D ragdoll volume or casting accurate depth shadows.",
+                "severity": 3,
+                "confidence": 0.85
+              },
+              {
+                "where": "Frame f5756+16, bottom-left quadrant",
+                "what": "The white selection indicator ring becomes completely detached from the player, floating empty on the ice behind the checking orange skater.",
+                "severity": 3,
+                "confidence": 0.95
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=a73-kd-human-f5740-strip.png (gemini-3.8-flash, in 1729 out 159 tokens, ~$0.0019, 6 s)\n- stills:\n  - label: Still A; clean: false\n    - findings:\n      - where: Frames f5764+24 through f5780+40, center of each frame; what: The knocked-down blue skater's limbs and torso clip completely flat into the ice surface without proper 3D ragdoll volume or casting accurate depth shadows.; severity: 3; confidence: 0.85\n      - where: Frame f5756+16, bottom-left quadrant; what: The white selection indicator ring becomes completely detached from the player, floating empty on the ice behind the checking orange skater.; severity: 3; confidence: 0.95"
+    }
+  ]
+}

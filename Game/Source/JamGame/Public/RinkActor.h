@@ -40,6 +40,8 @@ public:
 	static constexpr double BoardHeightM = 1.2;
 	static constexpr double GlassHeightM = 0.9;
 	static constexpr double BoardThicknessM = 0.2;
+	// Lane A64: the emissive fill B's MI_Toon_Bumper may carry at most (presentation only; the toon ramp needs the light to show the round).
+	static constexpr float BumperEmissiveCap = 0.8f;
 	// Lane A25: the construction's fixed sizes (they do not scale with the rink; the benches do).
 	static constexpr double KickPlateHeightM = 0.25;
 	static constexpr double KickPlateProudM = 0.02;

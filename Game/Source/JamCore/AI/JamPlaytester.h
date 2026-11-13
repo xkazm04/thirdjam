@@ -46,6 +46,10 @@ namespace JamAI
 		// (a sweep when the side changes) and spin when a defender closes from behind at speed; the novice knows neither.
 		bool bStickHandling = false;
 		double SweepDefenderM = 2.5;
+		// Lane A72 (ask A3): the sprint (Shift held) on a breakaway (carrying with the burst running or no opponent within 8 m) or a chase of a puck more
+		// than 10 m away that no teammate carries, in this per cent of the 2-second windows: good 100, regular 50, novice never. Only when the run asks for it
+		// (RunPlaytestMatch bSprint, the commandlet's -playersprint): off by default so every curve measured before stays comparable.
+		int SprintPct = 0;
 	};
 	FJamPlaytesterProfile PlaytesterProfile(EPlaytester Kind);
 	const char* PlaytesterName(EPlaytester Kind);
@@ -59,6 +63,7 @@ namespace JamAI
 	public:
 		FJamPlaytesterProfile P;
 		int ChargeFramesMax = 30;        // game.shot.charge_frames_max (the sim's; FJamAIWorld does not carry it)
+		bool bSprint = false;            // lane A72 (ask A3): the profile's SprintPct applies (RunPlaytestMatch bSprint)
 
 		void Reset(EPlaytester Kind, uint64_t Seed);
 		// One frame: the decision on this frame's world, delayed by the reaction ring, then the analog ramp.
@@ -115,6 +120,8 @@ namespace JamAI
 		int PassesReceived = 0;          // lane A46: teammates' passes seated on the human's blade (UJamSim's FJamSkaterState::PassesReceived)
 		// R-0029 point 4 (lane A39): the payoffs the human used (one-timer shots, bursts, dekes) and the human's goals within 180 frames of one of them
 		int OneTimers = 0, Breakaways = 0, Dekes = 0, PayoffGoals = 0;
+		// lane A72 (asks A2, A3): frames the human sprinted, and frames any bot sprinted (summed over the bots)
+		int64_t SprintFrames = 0, BotSprintFrames = 0;
 		int Knockdowns = 0;              // the human knocked down (any cause)
 		int64_t IdleFrames = 0;          // frames beyond 900 since the human's last touch (play frames only)
 		int IdleSpells = 0;              // spells without a touch that reached 900 frames
@@ -128,7 +135,8 @@ namespace JamAI
 	// SinceTouch = play frames since the human's last touch. Null / 0 = no trace, and the match is the same either way.
 	using FJamPlaytestTraceFn = void (*)(void* Ctx, const FJamAIWorld& W, const FJamAIInput* In, const FJamBrain& Brain, int64_t SinceTouch, bool bHumanTouch);
 	FJamPlaytestStats RunPlaytestMatch(FJamSimAdapter& Sim, const FJamMatchConfig& C, uint64_t Seed, EPlaytester Kind, int64_t MaxFrames, int ChargeFramesMax,
-		FJamPlaytestTraceFn Trace = nullptr, void* TraceCtx = nullptr, int TraceEvery = 0);
+		bool bSprint = false, FJamPlaytestTraceFn Trace = nullptr, void* TraceCtx = nullptr, int TraceEvery = 0);
+	// bSprint (lane A72, ask A3): the regular and good players press sprint (FJamPlaytesterProfile::SprintPct); false keeps every earlier measurement comparable.
 	// One thirdjam.playtest/1 JSON line (no newline) into Buf. Returns the length written.
 	int FormatPlaytestJson(const FJamPlaytestStats& S, const char* Cartridge, const char* Difficulty, EPlaytester Kind, char* Buf, int BufLen);
 }

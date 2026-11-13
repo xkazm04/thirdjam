@@ -26,3 +26,8 @@ findings, `EYES-GRID.md`), A55 static analysis (14 fixes landed in its tree, 0 w
 offenders, `PROFILING.md`), beside A51 (stick handling) and A52 (lifted puck). Not started: A53 soak, A56 lockstep soak, A57 parity + nightly, A59 fuzz, A60 coverage,
 A61 self-play, A62 light sweep, A63 highlights; they run as day fillers in that order of value once the merged tree is green (A66 hotfix: pro bots stopped shooting in
 take-3 and take-4 after A51). Follow-up lanes briefed from the reports: A64 (the eyes grid's A-side faults), A65 (the profiler's A-side offenders).
+
+## Midday state (11:39, 13 Nov)
+Landed since the morning: A53 soak (27,000 matches), A56 lockstep soak + fix, A64 eyes-grid fixes, A65 perf fixes, A66 hotfix, A67 modes, A69 clay rings, A71 match horn,
+A72 mode keys; main d630740, 115 gate tests. Running: A57 parity + hourly packages, A70 curve re-tune, A73 tackling felt, A74 puck marker. Dropped from the plan: A59 fuzz,
+A60 coverage, A61 self-play, A62 light sweep, A63 highlights (the fillers' value went to the P3 focus of R-0036: collisions, mechanics, modes). H22 after A73 and A74.

@@ -1,0 +1,63 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T10:32:56.929Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a73/a73-kd-bot-f555-strip.png",
+          "width": 1002,
+          "height": 855
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2268,
+      "usage": {
+        "prompt": 1727,
+        "output": 326,
+        "thoughts": 0,
+        "total": 2053,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00252,
+      "ms": 7518,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "a73-kd-bot-f555-strip.png",
+            "findings": [
+              {
+                "where": "Row 4-6, panel f607+52 through f615+60, lower center of panels",
+                "what": "The orange skater knocked down on the ice abruptly shrinks and vanishes entirely between frames f607 and f615 without a fade or respawn effect.",
+                "severity": 4,
+                "confidence": 0.95
+              },
+              {
+                "where": "Row 2-3, panels f571+16 through f591+36, center",
+                "what": "The knocked-down orange player's body and stick clip directly into the ice plane, with parts of the limbs sinking beneath the surface texture.",
+                "severity": 3,
+                "confidence": 0.9
+              },
+              {
+                "where": "Top-left header of panel f555+0 and f559+4, bottom edge of those sub-panels",
+                "what": "A solid dark blue horizontal bar/artifact cuts across the bottom of the first two panels in row 1.",
+                "severity": 2,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=a73-kd-bot-f555-strip.png (gemini-3.8-flash, in 1727 out 326 tokens, ~$0.0025, 7.5 s)\n- stills:\n  - label: a73-kd-bot-f555-strip.png; clean: false\n    - findings:\n      - where: Row 4-6, panel f607+52 through f615+60, lower center of panels; what: The orange skater knocked down on the ice abruptly shrinks and vanishes entirely between frames f607 and f615 without a fade or respawn effect.; severity: 4; confidence: 0.95\n      - where: Row 2-3, panels f571+16 through f591+36, center; what: The knocked-down orange player's body and stick clip directly into the ice plane, with parts of the limbs sinking beneath the surface texture.; severity: 3; confidence: 0.9\n      - where: Top-left header of panel f555+0 and f559+4, bottom edge of those sub-panels; what: A solid dark blue horizontal bar/artifact cuts across the bottom of the first two panels in row 1.; severity: 2; confidence: 0.85"
+    }
+  ]
+}

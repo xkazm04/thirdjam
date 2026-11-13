@@ -1,0 +1,127 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T10:07:46.872Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a64/hockey.chaos-l2-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/a64/hockey.chaos-l2-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/a64/hockey.chaos-l2-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/a64/hockey.chaos-l2-pause.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/a64/hockey.regular-l1-call.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "F",
+          "path": "docs/experiments/img/a64/hockey.regular-l1-card.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2447,
+      "usage": {
+        "prompt": 7447,
+        "output": 508,
+        "thoughts": 0,
+        "total": 7955,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00749,
+      "ms": 7404,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [
+              {
+                "where": "Top center, behind MATCH 1 banner (around x: 960, y: 175)",
+                "what": "A yellow HUD arrow marker is clipping directly behind the MATCH 1 popup window.",
+                "severity": 2,
+                "confidence": 0.95
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still B",
+            "findings": [],
+            "clean": true
+          },
+          {
+            "label": "Still C",
+            "findings": [
+              {
+                "where": "Top-left quadrant, on top of the acrylic glass panel (x: 200, y: 283)",
+                "what": "A red goal net element or bar appears detached or floating on the dasher glass line.",
+                "severity": 3,
+                "confidence": 0.8
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still D",
+            "findings": [],
+            "clean": true
+          },
+          {
+            "label": "Still E",
+            "findings": [
+              {
+                "where": "Top-right quadrant behind the modal card (x: 840-880, y: 350-380)",
+                "what": "HUD distance text '5 m' overlaps directly with the red net graphic/dasher board background without proper occlusion or depth priority.",
+                "severity": 2,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still F",
+            "findings": [
+              {
+                "where": "Top center, behind MATCH 1 banner (around x: 960, y: 120)",
+                "what": "The yellow net indicator arrow clips behind the MATCH 1 card frame.",
+                "severity": 2,
+                "confidence": 0.95
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=hockey.chaos-l2-card.jpg B=hockey.chaos-l2-faceoff.jpg C=hockey.chaos-l2-farnet.jpg D=hockey.chaos-l2-pause.jpg E=hockey.regular-l1-call.jpg F=hockey.regular-l1-card.jpg (gemini-3.8-flash, in 7447 out 508 tokens, ~$0.0075, 7.4 s)\n- stills:\n  - label: Still A; clean: false\n    - findings:\n      - where: Top center, behind MATCH 1 banner (around x: 960, y: 175); what: A yellow HUD arrow marker is clipping directly behind the MATCH 1 popup window.; severity: 2; confidence: 0.95\n  - label: Still B; clean: true\n    - findings: (none)\n  - label: Still C; clean: false\n    - findings:\n      - where: Top-left quadrant, on top of the acrylic glass panel (x: 200, y: 283); what: A red goal net element or bar appears detached or floating on the dasher glass line.; severity: 3; confidence: 0.8\n  - label: Still D; clean: true\n    - findings: (none)\n  - label: Still E; clean: false\n    - findings:\n      - where: Top-right quadrant behind the modal card (x: 840-880, y: 350-380); what: HUD distance text '5 m' overlaps directly with the red net graphic/dasher board background without proper occlusion or depth priority.; severity: 2; confidence: 0.85\n  - label: Still F; clean: false\n    - findings:\n      - where: Top center, behind MATCH 1 banner (around x: 960, y: 120); what: The yellow net indicator arrow clips behind the MATCH 1 card frame.; severity: 2; confidence: 0.95"
+    }
+  ]
+}

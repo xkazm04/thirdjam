@@ -61,6 +61,8 @@ menu's controls card is unchanged. Stills: `docs/experiments/img/modes/`.
 
 ## Asks: keys that do not exist (each mode ships without)
 
+Lane A72 (13 Nov, 11:30) landed A1, A2, A3, A4, A5 and A8 and re-measured Cage, Blind Side and Marathon with them; A10 is a design: `docs/experiments/MODE-KEYS.md`.
+
 | ask | key, range | effect | for |
 |---|---|---|---|
 | A1 | `rules.timer_frames` max 18000 -> **36000** | a 10-minute match; 5:00 is the ceiling today | Marathon |

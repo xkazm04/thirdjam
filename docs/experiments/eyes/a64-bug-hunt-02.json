@@ -1,0 +1,127 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T10:07:31.744Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a64/hockey.arena.wide-l2-pause.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/a64/hockey.boost-l1-call.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/a64/hockey.boost-l1-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/a64/hockey.boost-l1-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/a64/hockey.boost-l1-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "F",
+          "path": "docs/experiments/img/a64/hockey.boost-l1-pause.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2449,
+      "usage": {
+        "prompt": 7451,
+        "output": 473,
+        "thoughts": 0,
+        "total": 7924,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00736,
+      "ms": 7024,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [
+              {
+                "where": "Top-left / top-center above boards",
+                "what": "The background environment behind the boards is pitch black with an abrupt, harsh cutoff line and floating horizontal railings over void.",
+                "severity": 3,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still B",
+            "findings": [],
+            "clean": true
+          },
+          {
+            "label": "Still C",
+            "findings": [
+              {
+                "where": "Bottom-center under skater marker ring",
+                "what": "The subtitle banner 'Lights are up, the ice is fresh...' and the prompt 'press shoot at the drop, not before' awkwardly collide and overlap the player ring indicator and ice rink line graphics.",
+                "severity": 2,
+                "confidence": 0.8
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still D",
+            "findings": [
+              {
+                "where": "Top-center at far goal line",
+                "what": "The far net frame appears incomplete or sunken, rendering only as a thin floating reddish rectangle without distinct depth or mesh.",
+                "severity": 3,
+                "confidence": 0.75
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still E",
+            "findings": [
+              {
+                "where": "Center / top-center directly behind net",
+                "what": "A glowing horizontal light strip runs through the base of the boards and clips visually behind the red net without a clear physical fixture.",
+                "severity": 2,
+                "confidence": 0.7
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still F",
+            "findings": [],
+            "clean": true
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=hockey.arena.wide-l2-pause.jpg B=hockey.boost-l1-call.jpg C=hockey.boost-l1-card.jpg D=hockey.boost-l1-faceoff.jpg E=hockey.boost-l1-farnet.jpg F=hockey.boost-l1-pause.jpg (gemini-3.8-flash, in 7451 out 473 tokens, ~$0.0074, 7 s)\n- stills:\n  - label: Still A; clean: false\n    - findings:\n      - where: Top-left / top-center above boards; what: The background environment behind the boards is pitch black with an abrupt, harsh cutoff line and floating horizontal railings over void.; severity: 3; confidence: 0.85\n  - label: Still B; clean: true\n    - findings: (none)\n  - label: Still C; clean: false\n    - findings:\n      - where: Bottom-center under skater marker ring; what: The subtitle banner 'Lights are up, the ice is fresh...' and the prompt 'press shoot at the drop, not before' awkwardly collide and overlap the player ring indicator and ice rink line graphics.; severity: 2; confidence: 0.8\n  - label: Still D; clean: false\n    - findings:\n      - where: Top-center at far goal line; what: The far net frame appears incomplete or sunken, rendering only as a thin floating reddish rectangle without distinct depth or mesh.; severity: 3; confidence: 0.75\n  - label: Still E; clean: false\n    - findings:\n      - where: Center / top-center directly behind net; what: A glowing horizontal light strip runs through the base of the boards and clips visually behind the red net without a clear physical fixture.; severity: 2; confidence: 0.7\n  - label: Still F; clean: true\n    - findings: (none)"
+    }
+  ]
+}

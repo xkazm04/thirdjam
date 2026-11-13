@@ -79,6 +79,7 @@ namespace JamAI
 			P.OneTimerPct = 50;          // R-0029 point 4: the regular player takes half the chances
 			P.DekePct = 50;
 			P.bStickHandling = true;     // lane A51 (R-0034): sweeps past a defender in front, spins away from one closing behind
+			P.SprintPct = 50;            // lane A72 (ask A3): half the chances (with -playersprint)
 			break;
 		default:
 			P.ReactionFrames = 3;
@@ -96,6 +97,7 @@ namespace JamAI
 			P.OneTimerPct = 100;         // R-0029 point 4: the good player always
 			P.DekePct = 100;
 			P.bStickHandling = true;     // lane A51 (R-0034)
+			P.SprintPct = 100;           // lane A72 (ask A3): every chance (with -playersprint)
 			break;
 		}
 		return P;
@@ -478,11 +480,19 @@ namespace JamAI
 			Want = Want * (Scale / Dist);
 		}
 		In.Move = Want * Sg;
+		// lane A72 (ask A3): Shift on a breakaway or a long chase; the sim refuses it on an empty bar
+		if (bSprint && P.SprintPct > 0 && !W.bDrawOpen && Act != EPlaytesterAct::Charge)
+		{
+			const bool bBreak = bCarrying && (Me.bBreakaway || NearOppDist > 8.0);
+			const bool bChase = !bCarrying && !bMateCarries && Me.Pos.DistTo(W.PuckPos) > 10.0;
+			const double SprintCoin = (Noise(W.Frame / 120, 23) + 1.0) * 50.0;
+			In.bSprint = (bBreak || bChase) && (P.SprintPct >= 100 || SprintCoin < P.SprintPct);
+		}
 		return In;
 	}
 
 	FJamPlaytestStats RunPlaytestMatch(FJamSimAdapter& Sim, const FJamMatchConfig& C, uint64_t Seed, EPlaytester Kind, int64_t MaxFrames, int ChargeFramesMax,
-		FJamPlaytestTraceFn Trace, void* TraceCtx, int TraceEvery)
+		bool bSprint, FJamPlaytestTraceFn Trace, void* TraceCtx, int TraceEvery)
 	{
 		FJamPlaytestStats St;
 		St.Seed = Seed;
@@ -498,6 +508,7 @@ namespace JamAI
 		FJamPlaytester Tester;
 		Tester.Reset(Kind, Seed);
 		Tester.ChargeFramesMax = ChargeFramesMax;
+		Tester.bSprint = bSprint;
 		FJamAIWorld W;
 		FJamAIInput In[kMaxSkaters];
 		int64_t SinceFaceoff = 0, SinceTouch = 0, CarrySpell = 0;
@@ -633,6 +644,11 @@ namespace JamAI
 				}
 				const TArray<FJamSkaterState>& Sk = S->GetSkaters();
 				if (Sk.IsValidIndex(Pi) && Sk[Pi].InBox()) { ++St.BoxFrames; }
+				for (int32 k = 0; k < Sk.Num(); ++k)   // lane A72 (asks A2, A3): the sprint applied this frame
+				{
+					if (!Sk[k].bSprinting) { continue; }
+					if (k == Pi) { ++St.SprintFrames; } else { ++St.BotSprintFrames; }
+				}
 			}
 			if (Trace && ((TraceEvery > 0 && St.Frames % TraceEvery == 0) || (TraceEvery > 0 && bHumanTouch))) { Trace(TraceCtx, W, In, Brain, SinceTouch, bHumanTouch); }
 		}
@@ -663,6 +679,7 @@ namespace JamAI
 			"\"faceoffs\":%d,\"faceoffs_without_touch\":%d,\"max_faceoff_to_touch\":%d,\"wo_frames\":[%lld,%lld,%lld],"
 			"\"checks_landed\":%d,\"checks_taken\":%d,\"knockdowns\":%d,\"fouls\":%d,\"fouls_from_behind\":%d,\"fouls_no_puck\":%d,\"box_frames\":%lld,\"pokes\":%d,\"pokes_clean\":%d,\"lifts\":%d,\"passes\":%d,\"passes_received\":%d,"
 			"\"one_timers\":%d,\"breakaways\":%d,\"dekes\":%d,\"payoff_goals\":%d,"
+			"\"sprint_frames\":%lld,\"bot_sprint_frames\":%lld,"
 			"\"idle_frames\":%lld,\"idle_spells\":%d,\"max_no_touch\":%lld,\"hash\":\"%016llx\",\"player_index\":%d",
 			Cartridge, Difficulty, PlaytesterName(Kind), static_cast<unsigned long long>(S.Seed), Result, S.bOver ? "true" : "false",
 			S.GoalsFor, S.GoalsAgainst, S.GoalsByHuman, static_cast<long long>(S.Frames), static_cast<long long>(S.PlayFrames), S.Touches,
@@ -672,7 +689,7 @@ namespace JamAI
 			static_cast<long long>(S.FirstGoalAgainst), S.Faceoffs, S.FaceoffsWithoutTouch, S.MaxFaceoffToTouch,
 			static_cast<long long>(S.WoMateFrames), static_cast<long long>(S.WoOppFrames), static_cast<long long>(S.WoLooseFrames),
 			S.ChecksLanded, S.ChecksTaken, S.Knockdowns, S.Fouls, S.FoulsFromBehind, S.FoulsNoPuck, static_cast<long long>(S.BoxFrames), S.Pokes, S.PokesClean, S.Lifts, S.Passes, S.PassesReceived,
-			S.OneTimers, S.Breakaways, S.Dekes, S.PayoffGoals,
+			S.OneTimers, S.Breakaways, S.Dekes, S.PayoffGoals, static_cast<long long>(S.SprintFrames), static_cast<long long>(S.BotSprintFrames),
 			static_cast<long long>(S.IdleFrames), S.IdleSpells, static_cast<long long>(S.MaxNoTouch), static_cast<unsigned long long>(S.Hash), S.PlayerIndex);
 		static const char* ActNames[] = {"idle", "draw", "chase", "carry", "charge", "pass", "support", "forecheck", "poke", "check", "lapse", "one_timer", "deke", "sweep", "spin"};
 		N += std::snprintf(Buf + N, static_cast<size_t>(BufLen - N), ",\"acts\":{");

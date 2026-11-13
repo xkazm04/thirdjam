@@ -1099,6 +1099,7 @@ namespace
 		ReadInteger(Rules, TEXT("timer_frames"), C.Rules.TimerFrames);
 		ReadInteger(Rules, TEXT("goal_pause_frames"), C.Rules.GoalPauseFrames);
 		ReadBool(Rules, TEXT("penalties"), C.Rules.bPenalties);
+		ReadInteger(Rules, TEXT("penalty_frames"), C.Rules.PenaltyFrames);   // lane A72 (ask A8)
 		// C-0005 (lane A15): hooks as written, then the variants expanded into hooks (schema/validate.mjs expandVariants is the Node mirror).
 		if (Rules) if (FJPtr Hooks = Rules->Get(TEXT("hooks")); Hooks && Hooks->IsArray())
 		{
@@ -1146,6 +1147,9 @@ namespace
 		ReadNumber(Ai, TEXT("hold_radius_m"), C.Ai.HoldRadiusM);
 		ReadNumber(Ai, TEXT("speed_scale"), C.Ai.SpeedScale);
 		ReadNumber(Ai, TEXT("red_skill"), C.Ai.RedSkill);
+		ReadInteger(Ai, TEXT("react_frames"), C.Ai.ReactFrames);   // lane A72 (ask A4)
+		ReadNumber(Ai, TEXT("body_check"), C.Ai.BodyCheck);       // lane A72 (ask A5)
+		ReadNumber(Ai, TEXT("sprint"), C.Ai.Sprint);              // lane A72 (ask A2)
 
 		if (FJPtr Pickups = G->Get(TEXT("pickups")); Pickups && Pickups->IsArray())
 		{

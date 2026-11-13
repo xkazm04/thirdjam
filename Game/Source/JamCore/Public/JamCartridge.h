@@ -171,6 +171,8 @@ struct JAMCORE_API FJamRulesConfig
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 GoalPauseFrames = 120;
 	// R-0013: a check from behind or on a skater without the puck is a foul (free faceoff at the fouler's end, 300 frames in the box). Absent = true.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") bool bPenalties = true;
+	// Lane A72 (ask A8): game.rules.penalty_frames, frames a hard foul sits in the box (60..600). Absent = 300 (UJamSim::BoxFrames).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 PenaltyFrames = 300;
 	// game.rules.hooks (C-0005, lane A15) in file order, then the hooks ExpandVariants made from game.rules.variants (bFromVariant).
 	// UJamRuleSystem evaluates them in id order. Absent = none.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") TArray<FJamRuleHookConfig> Hooks;
@@ -207,6 +209,12 @@ struct JAMCORE_API FJamAiConfig
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double HoldRadiusM = 4.5;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double SpeedScale = 1;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double RedSkill = 1;
+	// Lane A72 (asks A4, A5): game.ai.react_frames (0..60) and game.ai.body_check (0..1). Read by JamAI::ResolveDifficulty only when the key is written
+	// (absent = the level's profile), so these defaults are never applied on their own.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 ReactFrames = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double BodyCheck = 1;
+	// Lane A72 (ask A2): game.ai.sprint, the share of the time a bot sprints on a chase (0..1). Absent = 0.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double Sprint = 0;
 };
 
 USTRUCT(BlueprintType)

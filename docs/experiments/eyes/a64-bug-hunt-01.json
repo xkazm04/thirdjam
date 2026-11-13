@@ -1,0 +1,146 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T10:07:24.635Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a64/bad-cut-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/a64/bad-cut-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/a64/hockey.arena.wide-l2-call.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/a64/hockey.arena.wide-l2-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/a64/hockey.arena.wide-l2-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "F",
+          "path": "docs/experiments/img/a64/hockey.arena.wide-l2-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2449,
+      "usage": {
+        "prompt": 7453,
+        "output": 642,
+        "thoughts": 0,
+        "total": 8095,
+        "calls": 1
+      },
+      "cost_usd_est": 0.008,
+      "ms": 8661,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [
+              {
+                "where": "top-left corner",
+                "what": "Engine error toast 'CUT REJECTED: hockey.bad.cartridge.json' is visible over the arena and skybox.",
+                "severity": 4,
+                "confidence": 1
+              },
+              {
+                "where": "top-center beneath MATCH 1 card",
+                "what": "The center orange player's head and stick clip through the black background of the MATCH 1 card overlay.",
+                "severity": 3,
+                "confidence": 0.95
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still B",
+            "findings": [
+              {
+                "where": "top-center near the far net",
+                "what": "Only one orange skater is present near the net instead of full 3-on-3 teams aligned for a faceoff.",
+                "severity": 3,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still C",
+            "findings": [
+              {
+                "where": "center screen modal dialog",
+                "what": "The Director's Call options card completely obstructs active gameplay and goal visibility without blurring or darkening the background.",
+                "severity": 2,
+                "confidence": 0.7
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still D",
+            "findings": [
+              {
+                "where": "center ice beneath MATCH 1 card",
+                "what": "The orange player at the center faceoff spot is partially clipped and obscured by the MATCH 1 title card overlay.",
+                "severity": 3,
+                "confidence": 0.95
+              },
+              {
+                "where": "right of center faceoff circle",
+                "what": "Missing blue teammates; only player #7 and two distant orange skaters appear on ice.",
+                "severity": 2,
+                "confidence": 0.8
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still E",
+            "findings": [
+              {
+                "where": "upper center ice",
+                "what": "Only a single opposing orange skater is rendered on the ice, leaving incomplete 3-on-3 roster representation.",
+                "severity": 3,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still F",
+            "findings": [],
+            "clean": true
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=bad-cut-card.jpg B=bad-cut-faceoff.jpg C=hockey.arena.wide-l2-call.jpg D=hockey.arena.wide-l2-card.jpg E=hockey.arena.wide-l2-faceoff.jpg F=hockey.arena.wide-l2-farnet.jpg (gemini-3.8-flash, in 7453 out 642 tokens, ~$0.0080, 8.7 s)\n- stills:\n  - label: Still A; clean: false\n    - findings:\n      - where: top-left corner; what: Engine error toast 'CUT REJECTED: hockey.bad.cartridge.json' is visible over the arena and skybox.; severity: 4; confidence: 1\n      - where: top-center beneath MATCH 1 card; what: The center orange player's head and stick clip through the black background of the MATCH 1 card overlay.; severity: 3; confidence: 0.95\n  - label: Still B; clean: false\n    - findings:\n      - where: top-center near the far net; what: Only one orange skater is present near the net instead of full 3-on-3 teams aligned for a faceoff.; severity: 3; confidence: 0.85\n  - label: Still C; clean: false\n    - findings:\n      - where: center screen modal dialog; what: The Director's Call options card completely obstructs active gameplay and goal visibility without blurring or darkening the background.; severity: 2; confidence: 0.7\n  - label: Still D; clean: false\n    - findings:\n      - where: center ice beneath MATCH 1 card; what: The orange player at the center faceoff spot is partially clipped and obscured by the MATCH 1 title card overlay.; severity: 3; confidence: 0.95\n      - where: right of center faceoff circle; what: Missing blue teammates; only player #7 and two distant orange skaters appear on ice.; severity: 2; confidence: 0.8\n  - label: Still E; clean: false\n    - findings:\n      - where: upper center ice; what: Only a single opposing orange skater is rendered on the ice, leaving incomplete 3-on-3 roster representation.; severity: 3; confidence: 0.85\n  - label: Still F; clean: true\n    - findings: (none)"
+    }
+  ]
+}

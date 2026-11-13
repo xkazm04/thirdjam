@@ -155,8 +155,11 @@ public:
 	// Lane A42: the MATCH card in the top band under the scoreboard at 0.7 scale (A48's storyboard finding 3): 448 x 252 Slate units centred at
 	// y MatchCardCentreY, the FACEOFF line under it; the human and the countdown ring stay clear.
 	static constexpr float MatchCardW = 448.f;
-	static constexpr float MatchCardH = 252.f;
-	static constexpr float MatchCardCentreY = 262.f;
+	// Lane A64 (eyes grid h19 finding 14, 23 stills: the card covered the opposing centre at the drop): the banner type 77 -> 50 pt, the card
+	// 165 -> about 120 px tall, centred at 190 (top under the scoreboard line at 112), so the far half of the faceoff circle stays clear.
+	static constexpr float MatchCardH = 130.f;
+	static constexpr float MatchCardCentreY = 190.f;
+	static constexpr int32 MatchCardFontPt = 50;
 	// Lane A42 (y-slots): the band of Slate y the MATCH card covers (card plus the line under it; VH kept for callers, the band is absolute),
 	// so the bark bubbles keep out of it. Pure (tests call it); GetBannerBandPx answers only while the card is up.
 	static void BannerBandPx(float VH, float& OutTop, float& OutBottom) { (void)VH; OutTop = MatchCardCentreY - MatchCardH * 0.5f - 4.f; OutBottom = MatchCardCentreY + MatchCardH * 0.5f + 40.f; }

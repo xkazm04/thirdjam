@@ -1,0 +1,1 @@
+B29 motion check on the rings, 30 consecutive frames per run: held game camera in play at 1/60 s game step (rings mean |d| 0.16 to 0.37, end lamps 0.17, near ice 0.26) and a fast turn at 3 deg per frame; the rings do not shimmer

@@ -312,14 +312,26 @@ void UJamHudWidget::BuildTree()
 	ControlsStrip = S::Plate(T, S::Pill(0.72f, 0.f), FMargin(0, 8));
 	ControlsStrip->SetVisibility(ESlateVisibility::Collapsed);
 	ControlsStrip->SetHorizontalAlignment(HAlign_Center);
-	ControlsText = MakeText(T, TEXT("ControlsText"), S::Font(S::Body, FName("Bold"), 40), S::Paper());
-	ControlsText->SetText(FText::FromString(TEXT("SKATE  WASD      AIM  MOUSE      SHOOT  HOLD LMB      CHECK  RMB      CROSS-CHECK  MMB      SPIN  E      SPRINT  SHIFT      POKE  SPACE      PASS  F      PAUSE  ESC")));   // lane A49 (UJamInputMap::BindingTableText has the full table); lane A51: spin E, pass F
+	// Lane A64 (eyes grid h19 finding 2, 53 stills): the strip ran under the radar frame and "PAUSE ESC" printed into it. The strip now ends ControlsRightInsetPx
+	// short of the right edge (the radar frame, 216 px, and a 16 px gap) and the type is 2 pt smaller with 4-space gaps, so the line fits that width
+	// at 1920 x 1080 and 1280 x 720 (16:9 keeps the same layout units).
+	ControlsText = MakeText(T, TEXT("ControlsText"), S::Font(S::Body - 2, FName("Bold"), 20), S::Paper());
+	ControlsText->SetText(FText::FromString(TEXT("SKATE  WASD    AIM  MOUSE    SHOOT  HOLD LMB    CHECK  RMB    CROSS-CHECK  MMB    SPIN  E    SPRINT  SHIFT    POKE  SPACE    PASS  F    PAUSE  ESC")));   // lane A49 (UJamInputMap::BindingTableText has the full table); lane A51: spin E, pass F
 	ControlsText->SetJustification(ETextJustify::Center);
 	ControlsStrip->SetContent(ControlsText);
 	UCanvasPanelSlot* StripSlot = Root->AddChildToCanvas(ControlsStrip);
 	StripSlot->SetAnchors(FAnchors(0, 1, 1, 1));
 	StripSlot->SetAlignment(FVector2D(0, 1));
-	StripSlot->SetOffsets(FMargin(0, -96, 0, 44));
+	StripSlot->SetOffsets(FMargin(S::EdgePx, -96, ControlsRightInsetPx, 44));
+
+	// ---- Lane A64: a notice plate top-left (a rejected -cut cartridge), 4 s.
+	ToastPlate = S::Plate(T, S::Pill(0.86f), FMargin(16, 6));
+	ToastPlate->SetVisibility(ESlateVisibility::Collapsed);
+	ToastText = MakeText(T, TEXT("ToastText"), S::Font(S::Body, FName("Bold"), 20), S::Yellow());
+	ToastText->SetAutoWrapText(true);
+	ToastText->SetWrapTextAt(560.f);
+	ToastPlate->SetContent(ToastText);
+	Place(Root, ToastPlate, FVector2D(0, 0), FVector2D(0, 0), FVector2D(S::EdgePx, S::EdgePx));
 
 	// ---- Lane A42: the commentator's strip, bottom centre, above the controls strip; two lines at most.
 	CommentaryStrip = S::Plate(T, S::Pill(0.82f), FMargin(18, 7));
@@ -368,7 +380,9 @@ void UJamHudWidget::BuildTree()
 	Ring->SetVisibility(ESlateVisibility::Collapsed);
 	CountdownBox = Ring;
 	// Below the TAKE card's slot (0.4): at a match start lane A16's countdown and lane A8's card are up together.
-	Place(Root, Ring, FVector2D(0.5, 0.66), FVector2D(0.5, 0.5), FVector2D(0, 0));
+	// Lane A64 (eyes grid h19 finding 14: the WON ring sat on the human's hip and the YOU tag): the ring stands RingOffsetXPx right of centre, on open ice
+	// beside the figure (the camera's 0.7 m off-axis puts the human left of centre), clear of the faceoff circle's far half.
+	Place(Root, Ring, FVector2D(0.5, 0.66), FVector2D(0.5, 0.5), FVector2D(RingOffsetXPx, 0));
 	// The one-line hint under the ring for the first three faceoffs of a session (R-0013 point 2 in the player's words).
 	FaceoffHintPlate = S::Plate(T, S::Pill(0.78f), FMargin(18, 6));
 	FaceoffHintPlate->SetVisibility(ESlateVisibility::Collapsed);
@@ -376,7 +390,7 @@ void UJamHudWidget::BuildTree()
 	HintLine->SetText(FText::FromString(FaceoffHintText()));
 	HintLine->SetJustification(ETextJustify::Center);
 	FaceoffHintPlate->SetContent(HintLine);
-	Place(Root, FaceoffHintPlate, FVector2D(0.5, 0.66), FVector2D(0.5, 0), FVector2D(0, 124));
+	Place(Root, FaceoffHintPlate, FVector2D(0.5, 0.66), FVector2D(0.5, 0), FVector2D(RingOffsetXPx, 124));
 
 	// ---- Win / lose cards on a slate plate with a clapper stripe, and the restart hint under it.
 	CardPlate = S::Plate(T, S::Panel(0.94f), FMargin(0, 0, 0, 18));
@@ -506,6 +520,15 @@ void UJamHudWidget::RefreshFromFrame(const FJamPresentationFrame& F)
 		CardTextBlock->SetColorAndOpacity(FSlateColor(F.Phase == EJamPhase::Win ? S::Yellow() : S::Paper()));
 	}
 	CallText->SetVisibility(ShowDirectorsCall(F) ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+
+	// Lane A64: the toast counts sim frames from the first frame it is up; a restart (the frame count going back) ends it.
+	if (ToastPlate)
+	{
+		if (bToastPending) { ToastStart = F.SimFrame; bToastPending = false; }
+		const bool bToast = ToastStart >= 0 && F.SimFrame >= ToastStart && F.SimFrame < ToastStart + ToastFrames;
+		if (!bToast) ToastStart = -1;
+		ToastPlate->SetVisibility(bToast ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+	}
 
 	// Controls strip: full for 8 s, fading over the last 2 s of the hint window.
 	const bool bHint = ShowControlsHint(F);
@@ -810,10 +833,25 @@ void UJamHudWidget::UpdateMarker(const FJamPresentationFrame& F)
 	NetText->SetText(FText::FromString(Marker.Text));
 	if (UCanvasPanelSlot* TS = Cast<UCanvasPanelSlot>(NetText->Slot))
 	{
-		TS->SetPosition(Marker.ScreenPos + FVector2D(0, 18));
+		// Lane A64 (eyes grid h19 finding 11, 34 stills): the distance hung 18 + 30 px under the diamond and printed over the net's crossbar and the end
+		// boards. It now stands beside the diamond, on the side away from the nearer screen edge, at the diamond's height (3 m over the net mouth).
+		const bool bLeft = Marker.ScreenPos.X > VW - 200.f;
+		TS->SetAlignment(FVector2D(bLeft ? 1.f : 0.f, 0.5f));
+		TS->SetPosition(Marker.ScreenPos + FVector2D(bLeft ? -24.f : 24.f, 0));
 	}
 	PlaceMarkerArrow(NetArrow, Sp, Marker.ScreenPos, bBehind, VW);
 }
+
+void UJamHudWidget::ShowToast(const FString& Text)
+{
+	if (!ToastText || !ToastPlate) return;
+	ToastText->SetText(FText::FromString(Text));
+	bToastPending = true;
+	ToastStart = -1;
+	ToastPlate->SetVisibility(ESlateVisibility::HitTestInvisible);
+}
+
+FString UJamHudWidget::GetToastText() const { return ToastText && ToastPlate && ToastPlate->GetVisibility() != ESlateVisibility::Collapsed ? ToastText->GetText().ToString() : FString(); }
 
 FString UJamHudWidget::GetCardText() const { return CardTextBlock ? CardTextBlock->GetText().ToString() : FString(); }
 FString UJamHudWidget::GetScoreText() const { return ScoreHome && ScoreAway ? ScoreHome->GetText().ToString() + TEXT(" : ") + ScoreAway->GetText().ToString() : FString(); }

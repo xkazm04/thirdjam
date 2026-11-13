@@ -399,7 +399,7 @@ function checkGame(game, errors) {
     errors.push('at /game/rules/score_to_win: mode "first_to" needs score_to_win (1 to 9).');
   }
   if (rules.mode === 'timer' && rules.timer_frames === undefined) {
-    errors.push('at /game/rules/timer_frames: mode "timer" needs timer_frames (600 to 18000 frames, 60 per second).');
+    errors.push('at /game/rules/timer_frames: mode "timer" needs timer_frames (600 to 36000 frames, 60 per second).');
   }
 
   const sk = isObj(game.skater) ? game.skater : {};

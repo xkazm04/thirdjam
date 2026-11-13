@@ -145,10 +145,12 @@ int32 UJamTournamentCommandlet::Main(const FString& Params)
 			return 2;
 		}
 		const FTCHARToUTF8 LevelUtf8(*Level);
+		// lane A72 (ask A3): -playersprint lets the regular and good players press sprint (off by default: the curves measured before stay comparable)
+		const bool bPlayerSprint = FParse::Param(*Params, TEXT("playersprint"));
 		for (int32 Seed = SeedLo; Seed <= SeedHi; ++Seed)
 		{
 			JamAI::FJamSimAdapter Sim(*Cart);   // lane A41: with the game mode's rule, zone and effect systems
-			const JamAI::FJamPlaytestStats St = JamAI::RunPlaytestMatch(Sim, Cfg, static_cast<uint64_t>(Seed), Kind, MaxFrames, Cart->Game.Shot.ChargeFramesMax,
+			const JamAI::FJamPlaytestStats St = JamAI::RunPlaytestMatch(Sim, Cfg, static_cast<uint64_t>(Seed), Kind, MaxFrames, Cart->Game.Shot.ChargeFramesMax, bPlayerSprint,
 				TraceEvery > 0 ? &JamTournamentLocal::PlaytestTraceToLog : nullptr, nullptr, TraceEvery);
 			JamAI::FormatPlaytestJson(St, CartUtf8.Get(), LevelUtf8.Get(), Kind, Line, sizeof(Line));
 			UE_LOG(LogJamAI, Display, TEXT("%s"), UTF8_TO_TCHAR(Line));

@@ -51,6 +51,14 @@ public:
 	static FString FormatTake(int32 Take, int32 ScoreToWin = 0);
 	// Frames of a match during which the controls hint shows (10 s).
 	static constexpr int64 ControlsHintFrames = 600;
+	// Lane A64: the controls strip stops this far from the right edge: the radar frame (200 + 2 x 8 px) at EdgePx and a 16 px gap.
+	static constexpr float ControlsRightInsetPx = 24.f + 216.f + 16.f;
+	// Lane A64 (eyes grid premise 2): a notice in the top-left corner for ToastFrames sim frames (4 s), e.g. a rejected -cut cartridge.
+	static constexpr int64 ToastFrames = 240;
+	// Lane A64: the faceoff countdown / WON ring's x offset from the screen centre (Slate units).
+	static constexpr float RingOffsetXPx = 260.f;
+	void ShowToast(const FString& Text);
+	FString GetToastText() const;
 	static bool ShowControlsHint(const FJamPresentationFrame& F) { return F.SimFrame < ControlsHintFrames && F.Phase == EJamPhase::Play; }
 	// The Directors Call prompt shows only after the first goal.
 	static bool ShowDirectorsCall(const FJamPresentationFrame& F) { return F.bDirectorsCallReady && (F.ScoreHome + F.ScoreAway) > 0 && F.Phase != EJamPhase::Win && F.Phase != EJamPhase::Lose; }
@@ -177,6 +185,10 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UBorder> OwnDiamond;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> OwnText;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> ControlsText;
+	UPROPERTY(Transient) TObjectPtr<UBorder> ToastPlate;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> ToastText;
+	int64 ToastStart = -1;     // sim frame the toast first showed; -1 = waiting for the next frame
+	bool bToastPending = false;
 	UPROPERTY(Transient) TObjectPtr<UJamRadarWidget> Radar;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> CallText;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> CardTextBlock;

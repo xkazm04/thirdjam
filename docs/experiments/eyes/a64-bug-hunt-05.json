@@ -1,0 +1,147 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T10:07:54.681Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a64/hockey.regular-l1-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/a64/hockey.regular-l1-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/a64/hockey.regular-l1-pause.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/a64/hockey.regular-l2-720-call.jpg",
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/a64/hockey.regular-l2-720-card.jpg",
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "label": "F",
+          "path": "docs/experiments/img/a64/hockey.regular-l2-720-faceoff.jpg",
+          "width": 1280,
+          "height": 720
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2470,
+      "usage": {
+        "prompt": 7470,
+        "output": 633,
+        "thoughts": 0,
+        "total": 8103,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00798,
+      "ms": 7725,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [
+              {
+                "where": "Top center scoreboard overlay",
+                "what": "Yellow text 'PERIOD 1: FIRST TO 3' slightly overlaps the upper inner border of the scoreboard display.",
+                "severity": 1,
+                "confidence": 0.75
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still B",
+            "findings": [
+              {
+                "where": "Center foreground player mesh",
+                "what": "The skater figure is deeply sunken or clipping into the ice surface up to the ankles/lower calves.",
+                "severity": 4,
+                "confidence": 0.95
+              },
+              {
+                "where": "Bottom right foreground near the boards",
+                "what": "The red goal net mesh clips abruptly through the bottom screen edge and into the ice floor.",
+                "severity": 3,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still C",
+            "findings": [
+              {
+                "where": "Center pause menu modal",
+                "what": "Bottom control prompt text overlaps and extends past the lower curved white boundary of the pause popup card.",
+                "severity": 3,
+                "confidence": 0.9
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still D",
+            "findings": [
+              {
+                "where": "Center Director's Call menu",
+                "what": "The top title banner text 'DIRECTOR'S CALL - PERIOD 1' clips directly into the blue and white diagonal hazard stripes.",
+                "severity": 2,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still E",
+            "findings": [
+              {
+                "where": "Bottom right of player indicator ring",
+                "what": "The countdown timer UI widget overlaps the notification prompt 'press shoot at the drop, not before'.",
+                "severity": 2,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still F",
+            "findings": [
+              {
+                "where": "Top center scoreboard overlay",
+                "what": "Yellow text 'PERIOD 1: FIRST TO 3' clips into the top frame boundary of the scoreboard panel.",
+                "severity": 1,
+                "confidence": 0.75
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=hockey.regular-l1-faceoff.jpg B=hockey.regular-l1-farnet.jpg C=hockey.regular-l1-pause.jpg D=hockey.regular-l2-720-call.jpg E=hockey.regular-l2-720-card.jpg F=hockey.regular-l2-720-faceoff.jpg (gemini-3.8-flash, in 7470 out 633 tokens, ~$0.0080, 7.7 s)\n- stills:\n  - label: Still A; clean: false\n    - findings:\n      - where: Top center scoreboard overlay; what: Yellow text 'PERIOD 1: FIRST TO 3' slightly overlaps the upper inner border of the scoreboard display.; severity: 1; confidence: 0.75\n  - label: Still B; clean: false\n    - findings:\n      - where: Center foreground player mesh; what: The skater figure is deeply sunken or clipping into the ice surface up to the ankles/lower calves.; severity: 4; confidence: 0.95\n      - where: Bottom right foreground near the boards; what: The red goal net mesh clips abruptly through the bottom screen edge and into the ice floor.; severity: 3; confidence: 0.85\n  - label: Still C; clean: false\n    - findings:\n      - where: Center pause menu modal; what: Bottom control prompt text overlaps and extends past the lower curved white boundary of the pause popup card.; severity: 3; confidence: 0.9\n  - label: Still D; clean: false\n    - findings:\n      - where: Center Director's Call menu; what: The top title banner text 'DIRECTOR'S CALL - PERIOD 1' clips directly into the blue and white diagonal hazard stripes.; severity: 2; confidence: 0.85\n  - label: Still E; clean: false\n    - findings:\n      - where: Bottom right of player indicator ring; what: The countdown timer UI widget overlaps the notification prompt 'press shoot at the drop, not before'.; severity: 2; confidence: 0.85\n  - label: Still F; clean: false\n    - findings:\n      - where: Top center scoreboard overlay; what: Yellow text 'PERIOD 1: FIRST TO 3' clips into the top frame boundary of the scoreboard panel.; severity: 1; confidence: 0.75"
+    }
+  ]
+}

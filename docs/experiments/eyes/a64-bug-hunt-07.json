@@ -1,0 +1,153 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T10:08:14.089Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a64/hockey.regular-l2-pause.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/a64/hockey.regular-l3-call.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/a64/hockey.regular-l3-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/a64/hockey.regular-l3-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/a64/hockey.regular-l3-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "F",
+          "path": "docs/experiments/img/a64/hockey.regular-l3-pause.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2456,
+      "usage": {
+        "prompt": 7447,
+        "output": 712,
+        "thoughts": 0,
+        "total": 8159,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00826,
+      "ms": 9639,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [
+              {
+                "where": "top right quadrant, background near boards",
+                "what": "A red floating geometric block/indicator with a gray base appears hovering in midair above the rink boards next to the '5 m' text without physical support.",
+                "severity": 2,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still B",
+            "findings": [
+              {
+                "where": "top right quadrant, background behind menu panel",
+                "what": "Floating red rectangular block indicator with gray base hovers unsupported over the side boards.",
+                "severity": 2,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still C",
+            "findings": [
+              {
+                "where": "bottom right quadrant, next to player circle",
+                "what": "Instructional text 'press shoot at the drop, not before' overlaps directly onto the outer boundary of the player selection ring.",
+                "severity": 2,
+                "confidence": 0.95
+              },
+              {
+                "where": "center right quadrant, orange figure",
+                "what": "Orange skater on the right lacks a stick completely or it has clipped invisible beneath the ice surface.",
+                "severity": 3,
+                "confidence": 0.9
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still D",
+            "findings": [
+              {
+                "where": "bottom center quadrant, player character",
+                "what": "Player figure #7 has hands positioned holding nothing, with no hockey stick visible in hands or on the ice.",
+                "severity": 3,
+                "confidence": 0.95
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still E",
+            "findings": [
+              {
+                "where": "center quadrant, player figure and boards",
+                "what": "Player skater mesh is penetrating directly into the front dasher board wall while ice chip particle billboards spawn floating detached in front and above the player.",
+                "severity": 3,
+                "confidence": 0.9
+              },
+              {
+                "where": "top right quadrant, above rink glass",
+                "what": "Red rectangular block with gray slab floats unsupported in midair against the dark backdrop.",
+                "severity": 2,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still F",
+            "findings": [
+              {
+                "where": "top right quadrant, behind menu overlay",
+                "what": "Floating red rectangular box marker hovers unsupported above the perimeter glass.",
+                "severity": 2,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=hockey.regular-l2-pause.jpg B=hockey.regular-l3-call.jpg C=hockey.regular-l3-card.jpg D=hockey.regular-l3-faceoff.jpg E=hockey.regular-l3-farnet.jpg F=hockey.regular-l3-pause.jpg (gemini-3.8-flash, in 7447 out 712 tokens, ~$0.0083, 9.6 s)\n- stills:\n  - label: Still A; clean: false\n    - findings:\n      - where: top right quadrant, background near boards; what: A red floating geometric block/indicator with a gray base appears hovering in midair above the rink boards next to the '5 m' text without physical support.; severity: 2; confidence: 0.85\n  - label: Still B; clean: false\n    - findings:\n      - where: top right quadrant, background behind menu panel; what: Floating red rectangular block indicator with gray base hovers unsupported over the side boards.; severity: 2; confidence: 0.85\n  - label: Still C; clean: false\n    - findings:\n      - where: bottom right quadrant, next to player circle; what: Instructional text 'press shoot at the drop, not before' overlaps directly onto the outer boundary of the player selection ring.; severity: 2; confidence: 0.95\n      - where: center right quadrant, orange figure; what: Orange skater on the right lacks a stick completely or it has clipped invisible beneath the ice surface.; severity: 3; confidence: 0.9\n  - label: Still D; clean: false\n    - findings:\n      - where: bottom center quadrant, player character; what: Player figure #7 has hands positioned holding nothing, with no hockey stick visible in hands or on the ice.; severity: 3; confidence: 0.95\n  - label: Still E; clean: false\n    - findings:\n      - where: center quadrant, player figure and boards; what: Player skater mesh is penetrating directly into the front dasher board wall while ice chip particle billboards spawn floating detached in front and above the player.; severity: 3; confidence: 0.9\n      - where: top right quadrant, above rink glass; what: Red rectangular block with gray slab floats unsupported in midair against the dark backdrop.; severity: 2; confidence: 0.85\n  - label: Still F; clean: false\n    - findings:\n      - where: top right quadrant, behind menu overlay; what: Floating red rectangular box marker hovers unsupported above the perimeter glass.; severity: 2; confidence: 0.85"
+    }
+  ]
+}

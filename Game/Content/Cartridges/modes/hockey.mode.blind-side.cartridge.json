@@ -212,7 +212,9 @@
       }
     ],
     "ai": {
-      "difficulty": "pro"
+      "difficulty": "pro",
+      "react_frames": 4,
+      "body_check": 1
     },
     "barks": {
       "enabled": true,
