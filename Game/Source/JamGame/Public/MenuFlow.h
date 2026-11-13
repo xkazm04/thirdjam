@@ -30,7 +30,8 @@ struct JAMGAME_API FJamMenuCutRow
 };
 
 // Lane A67 (R-0036): one Director's choice, a mode cartridge in Content/Cartridges/modes/ chosen like a cut. The pitch and the three facts that
-// differ from the Regular Cut are the menu's words (the envelope has no description key); docs/experiments/MODES.md has the numbers behind them.
+// differ from the Regular Cut are the menu's words, read from the cartridge's game.meta since lane A81 (the name is the envelope title);
+// docs/experiments/MODES.md and MODES-2.md have the numbers behind them.
 struct JAMGAME_API FJamModeCard
 {
 	// The cut name LoadCut / StartMatch take: "modes/hockey.mode.pond".
@@ -85,7 +86,7 @@ public:
 	// saved cut) and returns the path, or empty when it could not be written. "Play" without "Save" goes through here.
 	static FString WritePreviewCut(const FString& Json);
 
-	// Lane A67: the six Director's choices in menu order (every entry, whether or not its file is on disk).
+	// Lane A67 / A81: the Director's choices in menu order, one per mode file that loads and carries game.meta (read once, then cached).
 	static const TArray<FJamModeCard>& ModeCards();
 	// The Director's choices whose cartridge file exists under Content/Cartridges/modes/.
 	static TArray<FJamModeCard> AvailableModeCards();

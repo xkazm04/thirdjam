@@ -91,6 +91,7 @@ of them out explicitly, but a Designer or hand-written cartridge may leave them 
 | `effects[].stats[].multiply` / `add` | 1 / 0 | |
 | `look.trim_colour_hex` | `#38BDF8` | |
 | `look.fog_density` | 0 | |
+| `meta` (whole object) | absent | lane A81 (A67 ask A11): the menu's words for a Director's choice (`pitch`, up to three `facts`; the card's name is the envelope `title`); informational, never read by the sim; a mode file without it gets no card |
 | `look.trim_emissive` | by tier: 30 (`l1_day`, `l2_night`, `l3_neon`, `p4_broadcast`), 12 (`p3_clay`) | B-to-A-0018 point 5, B-to-A-0025 (lane A31); the beacon stays at 40 |
 | `look.wet_ice` | false | |
 | `camera` (whole object) | see below | measured by lane E4, `docs/experiments/CAMERA-120M.md` |

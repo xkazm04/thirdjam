@@ -2196,3 +2196,120 @@ In every tackling take the stick's ice clamp now keeps 2 cm above the ice at its
 - **Stills** (`devlog\shots\`):
   - `20261113-124150-B-lab-skf17-hit-frames.png` (export17)
   - `20261113-124150-B-lab-skf17-hit-frames-export16.png` (before)
+
+## Eighteenth pass: the lying bodies rest on the ice, the get-ups at 36 frames (SKF18, 13:29 to 13:36)
+
+Delivered `C:\Users\kazda\jam\skater-lab\skf\export18\` (p2_cel, p3_clay, full sets) with `READY.txt`, `JOINS.md` and `LYING.md`. Both items are done. The take count stays 76 with the same names.
+
+**Difference list against export17:** 14 takes per style differ:
+- the ten falls that end lying: `Fall`, `Fall_B`, `Fall_Forward`, `Knockdown_Back`, `Knockdown_Back_B`, `Knockdown_Left`, `Knockdown_Left_B`, `Knockdown_Right`, `Knockdown_Right_B`, `Trip`;
+- the four get-ups.
+
+Everything else is identical to export17, and the clay aim holds are identical to export10.
+
+### 1. The lying bodies rest on the ice
+
+**Cause.** The lying pelvis heights were hand-set in earlier passes, plus `lie_add` (+7 cm on clay). My checks only proved that nothing went under the ice.
+
+**How it was fixed.** The lowest skin vertex of each part was measured on each style's own skin (`lie18.py`). Each lying pose then gets a drop per style:
+
+| Style | Back | Front | Side |
+|---|---|---|---|
+| p2_cel | -6.8 cm | -7.0 cm | -14.0 cm |
+| p3_clay | -12.8 cm | -13.2 cm | -13.0 cm |
+
+**Other changes to the lying poses:**
+- **Side poses:** the spine now bends up sideways (8 deg in all), so the shoulder rests on the ice as well as the hip. The top leg lies down (ankle 14 cm, was 24), and the head rests on the lower arm.
+- **On the back:** the head lies back on the ice (it was tucked forward).
+- **Face down:** the head is turned to the side with the neck lifted, so the helmet rests rather than sinking.
+- **Forearms:** where a forearm went under the ice once the body dropped, its elbow now points up and its hand is 5-8 cm higher.
+- **The stick:** moved 10 cm out to the side, so it lies beside the body, not under it.
+
+**Lowest skin vertex and the joint heights A reads** (cm above the ice, last frame of each fall; the full table is in `export18\LYING.md`):
+
+| Style | Lying pose (fall) | Export | Trunk | Pelvis | Head | Thigh L / R | Forearm L / R | Joint pelvis | Joint head | Joint hand L / R | Joint foot L / R | Stick lowest |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| p2_cel | back (Fall, Fall_B) | export17 | 8.4 | 7.4 | 14.5 | 10.8 / 10.8 | 4.9 / 7.7 | 24.5 | 30.0 | 13.7 / 15.4 | 15.3 / 15.3 | 1.96 |
+| p2_cel | face down (Fall_Forward, Knockdown_Back, _B) | export17 | 8.8 | 7.4 | 1.6 | 10.8 / 10.8 | 20.2 / 8.8 | 24.5 | 26.8 | 25.1 / 16.1 | 22.8 / 22.8 | 1.55 |
+| p2_cel | right side (Knockdown_Left, _B) | export17 | 7.1 | 16.7 | 25.2 | 30.9 / 10.0 | 26.3 / 5.9 | 41.5 | 44.9 | 33.2 / 14.2 | 24.0 / 10.0 | 1.26 |
+| p2_cel | left side (Knockdown_Right, _B, Trip) | export17 | 7.1 | 16.7 | 25.2 | 10.0 / 30.9 | 2.0 / 23.9 | 41.5 | 44.9 | 13.0 / 31.7 | 10.0 / 24.0 | 3.61 |
+| p2_cel | back (Fall, Fall_B) | export18 | 1.6 | 0.6 | 0.6 | 4.2 / 4.2 | 16.6 / 5.7 | 17.7 | 22.2 | 22.8 / 14.2 | 15.3 / 15.3 | 1.55 |
+| p2_cel | face down (Fall_Forward, Knockdown_Back, _B) | export18 | 1.8 | 0.4 | 1.4 | 3.9 / 3.9 | 16.1 / 7.7 | 17.5 | 21.4 | 23.1 / 15.5 | 22.8 / 22.8 | 1.55 |
+| p2_cel | right side (Knockdown_Left, _B) | export18 | -0.0 | 2.7 | 10.6 | 19.5 / 2.1 | 15.0 / 2.7 | 27.5 | 37.7 | 21.1 / 13.1 | 14.0 / 10.0 | 1.11 |
+| p2_cel | left side (Knockdown_Right, _B, Trip) | export18 | -0.0 | 2.7 | 10.6 | 2.1 / 19.5 | 20.0 / 15.9 | 27.5 | 37.7 | 26.1 / 22.9 | 10.0 / 14.0 | 7.43 |
+| p3_clay | back (Fall, Fall_B) | export17 | 13.5 | 13.5 | 26.1 | 16.4 / 16.1 | 10.7 / 11.6 | 31.8 | 36.9 | 16.9 / 18.5 | 15.6 / 15.6 | 3.85 |
+| p3_clay | face down (Fall_Forward, Knockdown_Back, _B) | export17 | 14.3 | 13.8 | 23.1 | 17.6 / 17.2 | 19.0 / 11.6 | 31.8 | 33.8 | 25.3 / 18.4 | 23.6 / 23.6 | 2.73 |
+| p3_clay | right side (Knockdown_Left, _B) | export17 | 6.8 | 14.8 | 31.9 | 31.6 / 10.7 | 29.1 / 6.0 | 41.4 | 44.5 | 36.0 / 14.3 | 24.1 / 11.2 | 1.32 |
+| p3_clay | left side (Knockdown_Right, _B, Trip) | export17 | 7.3 | 14.6 | 31.8 | 10.8 / 31.2 | 1.9 / 26.5 | 41.4 | 44.5 | 12.6 / 33.4 | 11.2 / 24.1 | 3.63 |
+| p3_clay | back (Fall, Fall_B) | export18 | 0.7 | 0.7 | 9.8 | 6.6 / 5.7 | 16.0 / 7.7 | 19.0 | 23.3 | 23.3 / 14.9 | 15.6 / 15.6 | 1.74 |
+| p3_clay | face down (Fall_Forward, Knockdown_Back, _B) | export18 | 1.1 | 0.6 | 10.8 | 6.0 / 5.5 | 16.4 / 8.3 | 18.6 | 22.0 | 22.6 / 15.6 | 23.6 / 23.6 | 1.43 |
+| p3_clay | right side (Knockdown_Left, _B) | export18 | 1.1 | 1.8 | 14.9 | 20.2 / 2.0 | 18.8 / 4.3 | 28.4 | 38.4 | 25.6 / 13.3 | 14.9 / 11.2 | 0.91 |
+| p3_clay | left side (Knockdown_Right, _B, Trip) | export18 | 1.2 | 1.6 | 14.8 | 2.1 / 20.0 | 18.0 / 20.8 | 28.4 | 38.4 | 25.2 / 27.5 | 11.3 / 14.9 | 11.28 |
+
+**Reading the table:**
+- **Trunk and pelvis:** they now rest within 0-2.7 cm of the ice everywhere.
+- **Joint pelvis on the back and face down:** p2 17.5-17.7 cm, p3 18.6-19.0 cm. The clay figure is about 1.5 cm thicker per side.
+- **Joint pelvis on the side:** 27.5 / 28.4 cm. That is above the 15-20 cm target even though the hip's skin is down. The pelvis joint sits near the top of the toy's wide hips (hip width 23 cm), so a body on its side cannot bring it lower without sinking the hip.
+- **Head:** rests on the back and face down (p2 0.6 / 1.4 cm). On clay it is still 10-11 cm up, held by the big helmet's back rim. On the side it is 10-15 cm up, resting on the lower arm.
+
+**Weaknesses:**
+- On the left side (`Knockdown_Right`, `_Right_B`, `Trip`) the stick still lies diagonally 7-11 cm above the ice across the legs, because the top hand cannot reach it lower.
+- One p3 point is at -0.12 cm.
+
+**Sheet:** `skf18-lying-side-view` uses a level camera 5 mm above the ice, with the ice drawn as a pale block. export17 shows the gap with the stick in it; export18 shows the bodies on the ice.
+
+### 2. The get-ups at 36 frames
+
+All four get-ups now run:
+
+| Frames | Stage |
+|---|---|
+| 0 | Lying |
+| 6 | Hands push / sit |
+| 14 | One knee |
+| 14-30 | The rise |
+| 30 | Crouch |
+| 36 | Ready Glide, no overshoot and no settle |
+
+The side get-ups' lifted-skate keys moved to frames 9 and 12, where the skate now turns.
+
+**Frame where the pelvis first reaches 90 % of its ready-Glide height:**
+
+| Style | Get-up | export17 frames / 90 % frame | export18 frames / 90 % frame | standing pelvis cm |
+|---|---|---|---|---|
+| p2_cel | GetUp | 44 / 31 | 36 / 33 | 78.0 |
+| p2_cel | GetUp_Front | 44 / 31 | 36 / 33 | 78.0 |
+| p2_cel | GetUp_Side_Left | 44 / 33 | 36 / 33 | 78.0 |
+| p2_cel | GetUp_Side_Right | 44 / 33 | 36 / 33 | 78.0 |
+| p3_clay | GetUp | 44 / 31 | 36 / 33 | 73.8 |
+| p3_clay | GetUp_Front | 44 / 31 | 36 / 33 | 73.8 |
+| p3_clay | GetUp_Side_Left | 44 / 33 | 36 / 33 | 73.8 |
+| p3_clay | GetUp_Side_Right | 44 / 33 | 36 / 33 | 73.8 |
+
+**Timing:** 26 + 36 = 62 of 90 frames, so the figure lies for about 28 frames.
+
+### Joins (positions and rotations)
+
+| Fall | Get-up | p2_cel position cm | p2_cel rotation deg | p3_clay position cm | p3_clay rotation deg |
+|---|---|---|---|---|---|
+| Fall | GetUp | 0.0 | 0.0 | 0.0 | 0.0 |
+| Fall_B | GetUp | 0.0 | 0.0 | 0.0 | 0.0 |
+| Fall_Forward | GetUp_Front | 0.0 | 0.0 | 0.0 | 0.0 |
+| Knockdown_Back | GetUp_Front | 0.0 | 0.0 | 0.0 | 0.0 |
+| Knockdown_Back_B | GetUp_Front | 0.0 | 0.0 | 0.0 | 0.0 |
+| Knockdown_Left | GetUp_Side_Left | 0.0 | 0.0 | 0.0 | 0.0 |
+| Knockdown_Left_B | GetUp_Side_Left | 0.0 | 0.0 | 0.0 | 0.0 |
+| Knockdown_Right | GetUp_Side_Right | 0.0 | 0.0 | 0.0 | 0.0 |
+| Knockdown_Right_B | GetUp_Side_Right | 0.0001 | 0.0 | 0.0001 | 0.0 |
+| Trip | GetUp_Side_Right | 0.0 | 0.0 | 0.0 | 0.0 |
+
+### Files
+
+- **Scripts** (`skater-lab\skf\`):
+  - `run18.sh`, `summary18.py`
+  - `lie18.py` (lowest skin vertex per part, joint heights, the 90 % frame)
+  - `lyrender18.py` (the ice-level camera)
+  - `join17.py`
+- **Stills** (`devlog\shots\`):
+  - `20261113-133553-B-lab-skf18-lying-side-view.png`
+  - `20261113-133553-B-lab-skf18-getups.png` (export17 above export18, both styles)

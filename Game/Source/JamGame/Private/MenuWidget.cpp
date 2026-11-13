@@ -12,6 +12,7 @@
 #include "Components/SizeBoxSlot.h"
 #include "Components/UniformGridPanel.h"
 #include "Components/UniformGridSlot.h"
+#include "Components/ButtonSlot.h"
 #include "Components/EditableTextBox.h"
 #include "Components/Spacer.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -29,6 +30,10 @@ DEFINE_LOG_CATEGORY_STATIC(LogJamMenuUi, Log, All);
 // and A17's.
 namespace
 {
+	// Lane A81: the Director's choices row: six cards a row (two rows hold twelve) on a slate card this wide on the cuts screen.
+	constexpr int32 ModesPerRow = 6;
+	constexpr float ModeCardWidth = 1240.f;
+
 	// Which painted card a cut row shows (R-0008 art).
 	FString CardTextureFor(const FJamMenuCutRow& R)
 	{
@@ -108,6 +113,7 @@ void UJamMenuWidget::BuildTree()
 
 	USizeBox* CardBox = T->ConstructWidget<USizeBox>(USizeBox::StaticClass());
 	CardBox->SetWidthOverride(880.f);
+	CardSize = CardBox;
 	S::AddO(Root, CardBox, HAlign_Center, VAlign_Center);
 
 	UBorder* Card = S::Plate(T, S::Panel(1.f), FMargin(0, 0, 0, 18));
@@ -190,7 +196,7 @@ UWidget* UJamMenuWidget::BuildCuts()
 {
 	UWidgetTree* T = WidgetTree;
 	UVerticalBox* Box = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("CutsScreen"));
-	// Lane A67 (R-0036): the Director's choices, six modes chosen like a cut, above the cut list.
+	// Lane A67 (R-0036): the Director's choices, modes chosen like a cut, above the cut list; lane A81: twelve in two rows of six.
 	AddV(Box, S::Section(T, TEXT("DIRECTOR'S CHOICES")), FMargin(0, 0, 0, 4));
 	ModeGrid = T->ConstructWidget<UUniformGridPanel>(UUniformGridPanel::StaticClass(), TEXT("ModeGrid"));
 	ModeGrid->SetSlotPadding(FMargin(4.f));
@@ -339,6 +345,8 @@ void UJamMenuWidget::ShowScreen(EJamMenuScreen InScreen)
 	Switcher->SetActiveWidgetIndex(static_cast<int32>(Screen));
 	// The title heads the main and credits screens; the tall screens (cuts, direct, settings) keep the card inside 720p.
 	if (TitlePicture) TitlePicture->SetVisibility(Screen == EJamMenuScreen::Main || Screen == EJamMenuScreen::Credits ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+	// Lane A81: twelve Director's choices in two rows of six need a wider card than the other screens' 880 (1240 of 1920 slate units, also at 720p).
+	if (CardSize) CardSize->SetWidthOverride(Screen == EJamMenuScreen::Cuts ? ModeCardWidth : 880.f);
 	switch (Screen)
 	{
 	case EJamMenuScreen::Main:
@@ -443,14 +451,14 @@ void UJamMenuWidget::RefreshModes()
 		CardStyle.SetNormal(S::Rounded(S::SlateDark(), S::Radius, S::Blue(), 1.5f));
 		CardStyle.SetHovered(S::Rounded(FLinearColor(S::Blue().R, S::Blue().G, S::Blue().B, 0.45f), S::Radius, S::Yellow(), 2.f));
 		CardStyle.SetPressed(S::Rounded(FLinearColor(S::Orange().R, S::Orange().G, S::Orange().B, 0.55f), S::Radius, S::Yellow(), 2.f));
-		CardStyle.SetNormalPadding(FMargin(12, 8));
-		CardStyle.SetPressedPadding(FMargin(12, 9, 12, 7));
+		CardStyle.SetNormalPadding(FMargin(10, 6));
+		CardStyle.SetPressedPadding(FMargin(10, 7, 10, 5));
 		B->SetStyle(CardStyle);
 		// Chosen like a cut: the payload is the cut name ChooseCut loads ("modes/hockey.mode.pond").
 		B->Bind(this, EJamMenuRowKind::Cut, M.Name);
 
 		UVerticalBox* Body = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass());
-		UTextBlock* Name = S::Text(T, M.Display.ToUpper(), S::Font(S::Body + 2, FName("Black"), S::TrackLabel), S::Chalk());
+		UTextBlock* Name = S::Text(T, M.Display.ToUpper(), S::Font(S::Body, FName("Black")), S::Chalk());   // no tracking: OUTNUMBERED fits a sixth
 		B->TintText = Name;
 		AddV(Body, Name, FMargin(0, 0, 0, 2));
 		UTextBlock* Pitch = S::Text(T, M.Pitch, S::Font(S::Caption, FName("Italic")), S::Chalk());
@@ -463,7 +471,9 @@ void UJamMenuWidget::RefreshModes()
 			AddV(Body, Fact, FMargin(0));
 		}
 		B->AddChild(Body);
-		ModeGrid->AddChildToUniformGrid(B, i / 3, i % 3);
+		// Lane A81: the words start at the top of every card, so the names line up along the row.
+		if (UButtonSlot* BS = Cast<UButtonSlot>(Body->Slot)) { BS->SetHorizontalAlignment(HAlign_Fill); BS->SetVerticalAlignment(VAlign_Top); }
+		ModeGrid->AddChildToUniformGrid(B, i / ModesPerRow, i % ModesPerRow);
 		if (UUniformGridSlot* GS = Cast<UUniformGridSlot>(B->Slot)) { GS->SetHorizontalAlignment(HAlign_Fill); GS->SetVerticalAlignment(VAlign_Fill); }
 		AddTinted(B, Name);
 	}

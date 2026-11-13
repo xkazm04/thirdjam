@@ -279,21 +279,38 @@ FString UJamMenuFlow::BaseCartridgeJson(const UJamDesignerSubsystem* Designer)
 
 const TArray<FJamModeCard>& UJamMenuFlow::ModeCards()
 {
-	// Menu order; the facts are what differs from the Regular Cut (docs/experiments/MODES.md, measured with tools/playtest/modes.mjs).
-	static const TArray<FJamModeCard> Cards = {
-		{ TEXT("modes/hockey.mode.pond"), TEXT("hockey-mode-pond"), TEXT("Pond"), TEXT("Skate and pass on an outdoor pond. Nobody hits."),
-			{ TEXT("60 x 30 m, slick ice, 6 m nets"), TEXT("no checks, no penalties"), TEXT("soft passes land, rookie bots, 3:00") } },
-		{ TEXT("modes/hockey.mode.cage"), TEXT("hockey-mode-cage"), TEXT("Cage"), TEXT("A tight box with live boards and pillars. Hit, don't poke."),
-			{ TEXT("70 x 35 m, boards 0.95, 4 pillars"), TEXT("stick reach 0.6 m"), TEXT("bots hit back, 2 s in the box, 3:00") } },
-		{ TEXT("modes/hockey.mode.sniper"), TEXT("hockey-mode-sniper"), TEXT("Sniper"), TEXT("A full-height net and a low crease guard. Lift it."),
-			{ TEXT("net 1.22 m high, pads 0.15 m"), TEXT("shot 26 m/s, charge to 60 frames"), TEXT("full lift 1.1 m") } },
-		{ TEXT("modes/hockey.mode.marathon"), TEXT("hockey-mode-marathon"), TEXT("Marathon"), TEXT("Long ice and a ten-minute clock. Pace it, then go."),
-			{ TEXT("140 x 70 m, 10:00 on the clock"), TEXT("breakaway burst +60 % for 4 s"), TEXT("everyone sprints: +40 %, empty in 2 s") } },
-		{ TEXT("modes/hockey.mode.power-play"), TEXT("hockey-mode-power-play"), TEXT("Power Play"), TEXT("Four of yours against three. Move it and shoot."),
-			{ TEXT("4 v 3 for your side"), TEXT("passes seat within 1.4 m"), TEXT("one-timer window 20 frames, 4:00") } },
-		{ TEXT("modes/hockey.mode.blind-side"), TEXT("hockey-mode-blind-side"), TEXT("Blind Side"), TEXT("Dekes that send the back the wrong way, checks that stick."),
-			{ TEXT("deke 2 m, the back fooled 1 s"), TEXT("slow-reacting bots, crease reach 0.5 m"), TEXT("checks from 2 m/s both ways, down 4 s") } },
+	// Lane A81: the words come from each cartridge's game.meta (pitch, facts) and its envelope title; this table keeps only the menu order
+	// (A67's six, then A81's six: two rows of six). A mode file not named here is appended in file order, so a new mode is a dropped file.
+	// Numbers behind the facts: docs/experiments/MODES.md, MODES-2.md (tools/playtest/modes.mjs).
+	static const TCHAR* Order[] = {
+		TEXT("pond"), TEXT("cage"), TEXT("sniper"), TEXT("marathon"), TEXT("power-play"), TEXT("blind-side"),
+		TEXT("sudden-death"), TEXT("outnumbered"), TEXT("glass-house"), TEXT("pinball"), TEXT("bruisers"), TEXT("fog-of-war"),
 	};
+	static TArray<FJamModeCard> Cards;
+	static bool bBuilt = false;
+	if (bBuilt) return Cards;
+	bBuilt = true;
+	TArray<FString> Names;
+	for (const TCHAR* Slug : Order) Names.Add(FString::Printf(TEXT("modes/hockey.mode.%s"), Slug));
+	TArray<FString> Files;
+	IFileManager::Get().FindFiles(Files, *FPaths::Combine(UJamCartridge::GetCartridgeDir(), TEXT("modes"), TEXT("*.cartridge.json")), true, false);
+	Files.Sort();
+	for (const FString& F : Files) Names.AddUnique(TEXT("modes/") + F.LeftChop(FString(TEXT(".cartridge.json")).Len()));
+	for (const FString& Name : Names)
+	{
+		const FString Path = UJamCartridge::ResolveCartridgePath(Name);
+		if (!FPaths::FileExists(Path)) continue;
+		TArray<FString> Errors;
+		const UJamCartridge* C = UJamCartridge::LoadFromFile(Path, Errors);
+		if (!C || C->MetaPitch.IsEmpty()) continue;   // a mode without game.meta has no card words
+		FJamModeCard M;
+		M.Name = Name;
+		M.Id = C->Id;
+		M.Display = C->Title;
+		M.Pitch = C->MetaPitch;
+		M.Facts = C->MetaFacts;
+		Cards.Add(M);
+	}
 	return Cards;
 }
 

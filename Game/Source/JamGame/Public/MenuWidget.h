@@ -141,6 +141,8 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> MainStatus;
 	UPROPERTY(Transient) TObjectPtr<UScrollBox> CutList;
 	UPROPERTY(Transient) TObjectPtr<UUniformGridPanel> ModeGrid;
+	// Lane A81: the slate card's width box; the cuts screen widens it so twelve mode cards sit in two rows of six.
+	UPROPERTY(Transient) TObjectPtr<class USizeBox> CardSize;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> CutsStatus;
 	UPROPERTY(Transient) TObjectPtr<UEditableTextBox> SentenceBox;
 	UPROPERTY(Transient) TObjectPtr<UButton> RollButton;

@@ -152,6 +152,7 @@
     "camera.fov_deg": "40..110",
     "camera.boards_margin_m": "0..5",
     "camera.end_height_m": "1..15",
-    "camera.far_net_bias": "0..1"
+    "camera.far_net_bias": "0..1",
+    "meta.facts[]": "1..3"
   }
 }

@@ -1,0 +1,1 @@
+SK15: a side knockdown 0.6 m from the side boards in real matches on clay, the same sim frame (2932). Top: SK14, Knockdown_Left, the body goes into the wall. Bottom: SK15, the boards rule plays Knockdown_Back along the facing, the body stays on the ice (export17 takes in this strip).

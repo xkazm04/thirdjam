@@ -239,6 +239,14 @@
       "lag_frames": 4,
       "fov_deg": 70,
       "radar": true
+    },
+    "meta": {
+      "pitch": "A full-height net, a low guard. Lift it.",
+      "facts": [
+        "net 1.22 m high",
+        "pads at 0.15 m",
+        "shot 26 m/s"
+      ]
     }
   }
 }

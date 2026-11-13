@@ -94,6 +94,7 @@ Cartridge errors are sentences that start `at <JSON pointer>:`, because the Desi
 | `pickups[]` | 0..8 items, `spawn_every_frames` 120..7200, `duration_frames` 1..3600, `magnitude` 0.1..4, `max_on_ice` 1..4, `zone` a `rink.zones` id | 2 s to 2 min between spawns; effect up to 1 min; more than 4 of one kind on the ice is clutter (C-0005, A14) |
 | `effects[]` | 0..12 items, `duration_frames` 60..7200, 1..4 `stats`, `multiply` 0.25..4, `add` within the stat's range width (per stat, `checkGame`) | C-0005 section 4: 12 is the HUD strip's limit; a quarter to four times a stat is the widest change that still reads as the same game; 1 s to 2 min |
 | `look.fog_density` | 0..0.1 | engine exponential fog density; 0.02 neon; L2 ships with none |
+| `meta.pitch` / `meta.facts[]` | 1..48 characters / 1..3 items of 1..20 characters | lane A81 (A67 ask A11): the words of a Director's choice card in the menu; at six cards a row 48 characters are two lines and about 18 one line (measured on the 1080p and 720p stills); informational, the sim never reads it |
 | `camera.distance_m` | 2..20 | 6 default, 8 wide |
 | `camera.height_m` | 1..15 | 3.5 default |
 | `camera.look_ahead_m` | 0..20 | 5 default |

@@ -1,0 +1,1 @@
+SKF18 get-ups at the game camera, every 3rd frame, export17 (44 frames) above export18 (36 frames, pelvis at 90 % in the last 3 frames, ready Glide at 36): p2_cel GetUp, GetUp_Front, GetUp_Side_Left, GetUp_Side_Right, then p3_clay.
