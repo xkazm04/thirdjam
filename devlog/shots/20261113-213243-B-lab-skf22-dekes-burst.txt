@@ -1,0 +1,1 @@
+SKF22 the carrier's fakes at the game camera, p3_clay (top) then p2_cel: Deke_Left and Deke_Right at frames 0, 1, 2, 3, 4, 6, 8, 10, 12, 14, 16 (the shoulders and the stick sell one way by frame 4 while the hips and skates cut the other), Burst every 2nd frame of its 20, and for p3_clay Burst from the side. Burst's last frame is Stride's frame 0.

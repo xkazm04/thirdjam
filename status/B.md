@@ -823,3 +823,42 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
   15 over 3 s** (7 words at the median against the bank's 4): the list is in the report's table (marked `*`); shorter alternates for the 15 would help the booth
   keep up. Texts B flags as borderline for the rating or the voice guide are in section B4, recorded as written. `lose.blowout.01` is now "A night to forget.
   Back to practice." Also ready: stands and a clay crowd (`status/AR1-report.md`), the banner's K (`-br4-` files).
+
+## H40.6 (22:26, 13 Nov) FOR THE DIRECTOR: the contact outcomes are on both figures (lanes SK21, SK22); `dev-b` = `main` f86aed0 + B, builds, cook-only PASS
+- **What the figure now plays on your vision's build** (`status/SK21-report.md`, SK22 appended; clay, five a side, `pro`, seeds 1 and 7920, 100 s each; the machine
+  ran at 36 to 42 sim frames per wall second, so every number is in sim frames):
+  - **the stumble on its own take: 3 of 3 on clay, 2 of 2 on night** (QA4: two played as a bump, one not shown). B reads the `check` bus event in the frame of
+    `PlayHitReaction`; a bump emits none. Four takes by direction, 16 frames.
+  - **a fall into the boards: 1 of 1 in play**, four sides on test figures, each with its own get-up from the wall. A stumble into the boards plays the stumble.
+  - **quick get-ups** for knockdowns under 80 frames (a 70-frame one seen on each figure); get-up end minus release 0.0 on nine knockdowns.
+  - **the hard stop, gated to an event**: 419 and 422 poses in 100 s became **72 and 76** (each bot 6 to 8, the human 8 and 11). The gate: 7 m/s or more when the
+    brake began, three calls over 12 m/s^2, 3.5 m/s lost, then 1.5 s between the human's stops and 12 s between a bot's.
+  - the dekes and a burst are imported and wired to a `deke` bus event; none fired in 300 s of `pro` play, so they are unproven.
+- **Not done**: the board fall slumps up to 31 cm short of the wall (the mesh shift is the next figure lane, with `skf/export23`: light and heavy falls, a snap
+  get-up, a get-up from sitting against the wall); the stop shows nothing for its first ten frames or so (the pose commits when 3.5 m/s is lost).
+- **For you**:
+  1. **Your bots brake hard from full speed every 2 to 4 seconds**: 25 to 51 brakes of 3.5 m/s or more per bot in 100 s, median start speed 10.5 m/s. B's figure now
+     hides two of three of them behind the 12 s bar; the cause is the brain's, and a real full-speed stop by a bot is hidden with them.
+  2. `PlayStumble(DirX, DirZ, Frames)` is still wanted: until it lands the stumble depends on a bump emitting no `check` event and on the bus event reaching the
+     figure before the pawn's calls. Frames is a constant 16 on B's side.
+  3. One accessor for the brake (reverse braking true or false) would replace B's derivation from the speed, and B could drop the time bar.
+  4. The pawn stands 47 cm from the boards at a board hit on the median (40 to 66).
+  5. `PlayDeke(Side, Frames)` and `PlayBurst(Frames)`, or a drill that fires the `deke` event; a way to fire each ability kind without a human (asked at H40.5).
+  6. The attacker's recoil stumble has no event; `JAMVIS hit` still says "no check landed" for a stumble.
+  7. Handoff B-to-A-0039 (the screen percentage line) is still open; your f86aed0 says the game renders at the window's resolution: B checks the figures in play in
+     the next engine lane and closes it there.
+- Next on B's one editor, in order: the sounds and the 73 commentator waves (AU11: your build shows captions without sound until then), the three fall sizes and
+  the wall (SK23), effects for the abilities, the deke and the stop's spray (B40), the stands and crowd on clay (AR2). Running without an editor: SKF24 (no take
+  pops, a heavier clay fall, a sprint stride).
+
+## H41.0 (22:51, 13 Nov) FOR THE DIRECTOR: the commentator's lines all have a wave (lane AU11, cook-only PASS); A-to-B-0024 answered; `dev-b` = `main` 41df3e6 + B
+- **412 of 412 line ids have a wave** (`status/AU11-report.md`): the 73 imported beside the bank with its settings; four of the new lines found in match and drill
+  recordings at the commentator's gain. `lose.blowout.01` is new under the old name; your embedded bank and `gen-lines.mjs` line 164 still carry the old text.
+- **New sounds**: `MS_ability` (by `Variant`: 0 shotgun, 1 hip check, 2 shield, 3 slow puck; **the binder sends 0 for every kind today**, so every use is the
+  shotgun; a grant is silent), `MS_deke`, the stumble inside `MS_check` (Strength under 0.001), `MS_brake` played by the figure when its stop pose commits
+  (46 in a 100 s clay match, about 3 % of the mix). None of the abilities, the deke or a stumble fired in 170 s, so those are auditioned, not proven in a match.
+  A fall into the boards keeps the boom, the rattle and the landing: the generated take doubled the boom.
+- **The mix** in a 100 s clay match at `pro` (38.5 ticks a second, slow): -23.6 LUFS, -5.7 dBTP, music + commentary + crowd clearly over AU9's 73 %.
+- Blender: `skf/export24` (110 takes: one-frame turns evened out in 35 takes, the heavy back fall lands on clay, `Stride_Sprint`); `export25` is being built
+  (get-ups that stay low until the release in every direction).
+- **A-to-B-0024**: both calls are declared on the figures in the lane starting now (SK23); ask 5 done; asks 1 to 4 answered in the handoff with their lanes.

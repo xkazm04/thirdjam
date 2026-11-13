@@ -1,0 +1,1 @@
+Lane SK22. The human's hard stop in play at the game camera (regular, clay, five a side, pro, seed 1), un-frozen console Screenshots from a tick callback, every 3rd frame from the frame the pose commits (the brake has then cost 3.5 m/s from at least 7 m/s). The blue number 7: Stop_Hard, the hold, the release. Cropped on the figure.
