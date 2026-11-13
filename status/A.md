@@ -388,3 +388,7 @@
 
 - RESOURCES 19:30 cpu 100% ram 50.7/63GB gpu 1 %, 811 MiB, 47 editors 0 cmd 26 ubt 2 free 575GB
 - package 19:46: `Hokej_Hokej_H26.zip` from main a1c712f, acceptance run green (18 verbs through the cursor and the buttons).
+- link green 20:03: main 941b8d4 (Two online peers check everything the rules read (A104, track Q1): the lockstep checkpoint) pushed.
+- 20:05: **found: the main checkout sat on a detached HEAD from 13:39** (a checkout of cba1327 after the 13:23 restart), so every "pushed" line since then pushed the stale branch: origin/main stayed at cba1327 for six and a half hours and device B never received the vision, handoffs A-to-B-0020 to 0022 or anything else. Fixed 20:03: main switched onto the head commit, 70 commits pushed and verified against the remote (941b8d4); the landing script now refuses to run off the branch and checks the remote after each push.
+- link green 20:05: main 941b8d4 (A104: two online peers check everything the rules read; protocol 8) pushed, verified.
+- RESOURCES 20:00 [exited with code 0]

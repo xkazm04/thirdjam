@@ -1,0 +1,127 @@
+[
+ {
+  "label": "m-arsenal",
+  "cls": "regular",
+  "lvl": "rookie",
+  "cart": "modes/hockey.mode.arsenal",
+  "seeds": "1-200"
+ },
+ {
+  "label": "m-bruisers",
+  "cls": "regular",
+  "lvl": "rookie",
+  "cart": "modes/hockey.mode.bruisers",
+  "seeds": "1-200"
+ },
+ {
+  "label": "m-cage",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "modes/hockey.mode.cage",
+  "seeds": "1-200"
+ },
+ {
+  "label": "m-fog-of-war",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "modes/hockey.mode.fog-of-war",
+  "seeds": "1-200"
+ },
+ {
+  "label": "m-glass-house",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "modes/hockey.mode.glass-house",
+  "seeds": "1-200"
+ },
+ {
+  "label": "m-marathon",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "modes/hockey.mode.marathon",
+  "seeds": "1-200"
+ },
+ {
+  "label": "m-marathon-sprint",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "modes/hockey.mode.marathon",
+  "seeds": "1-200",
+  "extra": [
+   "-playersprint"
+  ]
+ },
+ {
+  "label": "m-outnumbered",
+  "cls": "regular",
+  "lvl": "rookie",
+  "cart": "modes/hockey.mode.outnumbered",
+  "seeds": "1-200"
+ },
+ {
+  "label": "m-pond",
+  "cls": "regular",
+  "lvl": "rookie",
+  "cart": "modes/hockey.mode.pond",
+  "seeds": "1-200"
+ },
+ {
+  "label": "m-power-play",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "modes/hockey.mode.power-play",
+  "seeds": "1-200"
+ },
+ {
+  "label": "m-shotgun",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "modes/hockey.mode.shotgun",
+  "seeds": "1-200"
+ },
+ {
+  "label": "m-sniper",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "modes/hockey.mode.sniper",
+  "seeds": "1-200"
+ },
+ {
+  "label": "m-sudden-death",
+  "cls": "regular",
+  "lvl": "all_star",
+  "cart": "modes/hockey.mode.sudden-death",
+  "seeds": "1-200"
+ },
+ {
+  "label": "m-regular-rookie",
+  "cls": "regular",
+  "lvl": "rookie",
+  "cart": "hockey.regular",
+  "seeds": "1-200"
+ },
+ {
+  "label": "m-regular-pro",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "hockey.regular",
+  "seeds": "1-200"
+ },
+ {
+  "label": "m-regular-all_star",
+  "cls": "regular",
+  "lvl": "all_star",
+  "cart": "hockey.regular",
+  "seeds": "1-200"
+ },
+ {
+  "label": "m-regular-sprint",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "hockey.regular",
+  "seeds": "1-200",
+  "extra": [
+   "-playersprint"
+  ]
+ }
+]

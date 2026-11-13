@@ -28,6 +28,7 @@
 #include "Progression.h"
 #include "Engine/GameInstance.h"
 #include "Camera/PlayerCameraManager.h"
+#include "ProfilingDebugging/CpuProfilerTrace.h"
 
 // Lane A84: the ability slot plate width (slate units at 1080p).
 static constexpr float AbilitySlotW = 380.f;
@@ -362,6 +363,12 @@ void UJamHudWidget::BuildTree()
 	ToastText->SetWrapTextAt(560.f);
 	ToastPlate->SetContent(ToastText);
 	Place(Root, ToastPlate, FVector2D(0, 0), FVector2D(0, 0), FVector2D(S::EdgePx, S::EdgePx));
+	// ---- Lane A101 (track F1): the contact line, bottom centre above the stamina bar: NOT WITH THE PUCK (a refused press), BOUNCED OFF (the human's own recoil).
+	ContactPlate = S::Plate(T, S::Pill(0.86f), FMargin(18, 5));
+	ContactPlate->SetVisibility(ESlateVisibility::Collapsed);
+	ContactText = MakeText(T, TEXT("ContactText"), S::Font(S::Body, FName("Bold"), 22), S::Yellow());
+	ContactPlate->SetContent(ContactText);
+	Place(Root, ContactPlate, FVector2D(0.5, 1), FVector2D(0.5, 1), FVector2D(0, -192));
 
 	// ---- Lane A42: the commentator's strip, bottom centre, above the controls strip; two lines at most.
 	CommentaryStrip = S::Plate(T, S::Pill(0.82f), FMargin(18, 7));
@@ -441,12 +448,14 @@ void UJamHudWidget::BuildTree()
 void UJamHudWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
+	TRACE_CPUPROFILER_EVENT_SCOPE(JamHud_Tick);
 	if (const UJamPresentation* P = UJamPresentation::Get(this))
 	{
 		if (P->HasFrame())
 		{
 			RefreshFromFrame(P->GetFrame());
 			// Lane A14's feed: one slot per row that touches the human (icon name, effect id and the seconds left).
+			TRACE_CPUPROFILER_EVENT_SCOPE(JamHud_EffectsFeed);
 			const AHokejGameMode* GM = GetWorld() ? GetWorld()->GetAuthGameMode<AHokejGameMode>() : nullptr;
 			if (GM && GM->GetEffects())
 			{
@@ -516,6 +525,7 @@ void UJamHudWidget::RefreshFromFrame(const FJamPresentationFrame& F)
 	{
 		return;
 	}
+	TRACE_CPUPROFILER_EVENT_SCOPE(JamHud_Refresh);
 	ScoreHome->SetText(FText::FromString(FString::Printf(TEXT("%02d"), F.ScoreHome)));
 	ScoreAway->SetText(FText::FromString(FString::Printf(TEXT("%02d"), F.ScoreAway)));
 	HomeBox->SetBrushColor(F.TeamColour0);
@@ -575,6 +585,8 @@ void UJamHudWidget::RefreshFromFrame(const FJamPresentationFrame& F)
 		ToastPlate->SetVisibility(bToast ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	}
 
+	UpdateContactLine(F);   // lane A101
+
 	// Controls strip: full for 8 s, fading over the last 2 s of the hint window.
 	const bool bHint = ShowControlsHint(F);
 	ControlsStrip->SetVisibility(bHint ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
@@ -630,13 +642,11 @@ void UJamHudWidget::RefreshFromFrame(const FJamPresentationFrame& F)
 	CountdownBox->SetVisibility(bCount || bDrop || bResult ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	FaceoffHintPlate->SetVisibility(bCount && FaceoffsThisSession <= FaceoffHintCount ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 
-	Radar->SetFrame(F);
-	UpdateMarker(F);
-	UpdateOwnMarker(F);
-	UpdateYours(F);
-	UpdatePuckMarker(F, bCount || Frames > 0 || F.SimFrame < PuckMarkerCardFrames);
-	ResolveEdgeSlots();
-	UpdateCommentary(F);
+	{ TRACE_CPUPROFILER_EVENT_SCOPE(JamHud_Radar); Radar->SetFrame(F); }
+	{ TRACE_CPUPROFILER_EVENT_SCOPE(JamHud_NetMarkers); UpdateMarker(F); UpdateOwnMarker(F); }
+	{ TRACE_CPUPROFILER_EVENT_SCOPE(JamHud_Yours); UpdateYours(F); }
+	{ TRACE_CPUPROFILER_EVENT_SCOPE(JamHud_PuckMarker); UpdatePuckMarker(F, bCount || Frames > 0 || F.SimFrame < PuckMarkerCardFrames); ResolveEdgeSlots(); }
+	{ TRACE_CPUPROFILER_EVENT_SCOPE(JamHud_Commentary); UpdateCommentary(F); }
 }
 
 void UJamHudWidget::UpdatePuckMarker(const FJamPresentationFrame& F, bool bCovered)
@@ -1067,6 +1077,46 @@ void UJamHudWidget::ShowToast(const FString& Text)
 	ToastStart = -1;
 	ToastPlate->SetVisibility(ESlateVisibility::HitTestInvisible);
 }
+
+// Lane A101 (track F1): the contact line. The human's counters in the sim say what happened (a counter survives a frame the hit-stop held; a restart sets
+// it back and shows nothing).
+void UJamHudWidget::ShowContactLine(const FString& Text)
+{
+	if (!ContactText || !ContactPlate || Text.IsEmpty()) return;
+	ContactText->SetText(FText::FromString(Text));
+	bContactPending = true;
+	ContactStart = -1;
+	ContactPlate->SetRenderOpacity(1.f);
+	ContactPlate->SetVisibility(ESlateVisibility::HitTestInvisible);
+}
+
+void UJamHudWidget::UpdateContactLine(const FJamPresentationFrame& F)
+{
+	if (!ContactPlate || !ContactText) return;
+	const AHokejGameMode* GM = GetWorld() ? GetWorld()->GetAuthGameMode<AHokejGameMode>() : nullptr;
+	const UJamSim* Sim = GM ? GM->GetSim() : nullptr;
+	if (Sim && Sim->GetSkaters().IsValidIndex(Sim->GetHumanIndex()))
+	{
+		const FJamSkaterState& Hu = Sim->GetSkaters()[Sim->GetHumanIndex()];
+		const bool bBounced = Hu.ContactRecoils > ContactSeenRecoils;
+		const bool bRefused = Hu.ChecksRefused > ContactSeenRefused;
+		ContactSeenRecoils = Hu.ContactRecoils;
+		ContactSeenRefused = Hu.ChecksRefused;
+		if (bBounced || bRefused)
+		{
+			ShowContactLine(ContactLineFor(bRefused, bBounced));
+			UE_LOG(LogTemp, Log, TEXT("JAMHUD frame=%lld contact_line=%s refused=%d recoils=%d"), F.SimFrame, *ContactLineFor(bRefused, bBounced).Replace(TEXT(" "), TEXT("_")), Hu.ChecksRefused, Hu.ContactRecoils);
+		}
+	}
+	if (bContactPending) { ContactStart = F.SimFrame; bContactPending = false; }
+	const int64 Age = F.SimFrame - ContactStart;
+	const bool bShow = ContactStart >= 0 && Age >= 0 && Age < ContactLineFrames;
+	if (!bShow) ContactStart = -1;
+	ContactPlate->SetVisibility(bShow ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+	if (bShow) ContactPlate->SetRenderOpacity(Age <= ContactLineFrames - ContactFadeFrames ? 1.f : static_cast<float>(ContactLineFrames - Age) / static_cast<float>(ContactFadeFrames));
+}
+
+FString UJamHudWidget::GetContactText() const { return ContactText && ContactPlate && ContactPlate->GetVisibility() != ESlateVisibility::Collapsed ? ContactText->GetText().ToString() : FString(); }
 
 FString UJamHudWidget::GetToastText() const { return ToastText && ToastPlate && ToastPlate->GetVisibility() != ESlateVisibility::Collapsed ? ToastText->GetText().ToString() : FString(); }
 

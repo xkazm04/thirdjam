@@ -1,0 +1,235 @@
+[
+ {
+  "label": "m-arsenal",
+  "cls": "regular",
+  "lvl": "rookie",
+  "cart": "modes/hockey.mode.arsenal",
+  "seeds": "1-200"
+ },
+ {
+  "label": "m-bruisers",
+  "cls": "regular",
+  "lvl": "rookie",
+  "cart": "modes/hockey.mode.bruisers",
+  "seeds": "1-200"
+ },
+ {
+  "label": "m-cage",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "modes/hockey.mode.cage",
+  "seeds": "1-200"
+ },
+ {
+  "label": "m-fog-of-war",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "modes/hockey.mode.fog-of-war",
+  "seeds": "1-200"
+ },
+ {
+  "label": "m-glass-house",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "modes/hockey.mode.glass-house",
+  "seeds": "1-200"
+ },
+ {
+  "label": "m-marathon",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "modes/hockey.mode.marathon",
+  "seeds": "1-200"
+ },
+ {
+  "label": "m-marathon-sprint",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "modes/hockey.mode.marathon",
+  "seeds": "1-200",
+  "extra": [
+   "-playersprint"
+  ]
+ },
+ {
+  "label": "m-outnumbered",
+  "cls": "regular",
+  "lvl": "rookie",
+  "cart": "modes/hockey.mode.outnumbered",
+  "seeds": "1-200"
+ },
+ {
+  "label": "m-pond",
+  "cls": "regular",
+  "lvl": "rookie",
+  "cart": "modes/hockey.mode.pond",
+  "seeds": "1-200"
+ },
+ {
+  "label": "m-power-play",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "modes/hockey.mode.power-play",
+  "seeds": "1-200"
+ },
+ {
+  "label": "m-shotgun",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "modes/hockey.mode.shotgun",
+  "seeds": "1-200"
+ },
+ {
+  "label": "m-sniper",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "modes/hockey.mode.sniper",
+  "seeds": "1-200"
+ },
+ {
+  "label": "m-sudden-death",
+  "cls": "regular",
+  "lvl": "all_star",
+  "cart": "modes/hockey.mode.sudden-death",
+  "seeds": "1-200"
+ },
+ {
+  "label": "m-regular-rookie",
+  "cls": "regular",
+  "lvl": "rookie",
+  "cart": "hockey.regular",
+  "seeds": "1-200"
+ },
+ {
+  "label": "m-regular-pro",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "hockey.regular",
+  "seeds": "1-200"
+ },
+ {
+  "label": "m-regular-all_star",
+  "cls": "regular",
+  "lvl": "all_star",
+  "cart": "hockey.regular",
+  "seeds": "1-200"
+ },
+ {
+  "label": "m-regular-sprint",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "hockey.regular",
+  "seeds": "1-200",
+  "extra": [
+   "-playersprint"
+  ]
+ },
+ {
+  "label": "t-take-1",
+  "cls": "regular",
+  "lvl": "rookie",
+  "cart": "ladder/take-1",
+  "seeds": "1-200"
+ },
+ {
+  "label": "t-take-2",
+  "cls": "regular",
+  "lvl": "rookie",
+  "cart": "ladder/take-2",
+  "seeds": "1-200"
+ },
+ {
+  "label": "t-take-3",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "ladder/take-3",
+  "seeds": "1-200"
+ },
+ {
+  "label": "t-take-4",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "ladder/take-4",
+  "seeds": "1-200"
+ },
+ {
+  "label": "t-take-5-fallback",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "ladder/take-5-fallback",
+  "seeds": "1-200"
+ },
+ {
+  "label": "t-take-5",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "ladder/take-5",
+  "seeds": "1-200"
+ },
+ {
+  "label": "t-take-6-fallback",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "ladder/take-6-fallback",
+  "seeds": "1-200"
+ },
+ {
+  "label": "t-take-6",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "ladder/take-6",
+  "seeds": "1-200"
+ },
+ {
+  "label": "t-take-7-fallback",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "ladder/take-7-fallback",
+  "seeds": "1-200"
+ },
+ {
+  "label": "t-take-7",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "ladder/take-7",
+  "seeds": "1-200"
+ },
+ {
+  "label": "t-take-8-fallback",
+  "cls": "regular",
+  "lvl": "all_star",
+  "cart": "ladder/take-8-fallback",
+  "seeds": "1-200"
+ },
+ {
+  "label": "t-take-8",
+  "cls": "regular",
+  "lvl": "all_star",
+  "cart": "ladder/take-8",
+  "seeds": "1-200"
+ },
+ {
+  "label": "idle-regular-rookie",
+  "cls": "regular",
+  "lvl": "rookie",
+  "cart": "hockey.regular",
+  "seeds": "regularband:100",
+  "trace": true
+ },
+ {
+  "label": "idle-regular-pro",
+  "cls": "regular",
+  "lvl": "pro",
+  "cart": "hockey.regular",
+  "seeds": "regularband:100",
+  "trace": true
+ },
+ {
+  "label": "idle-regular-all_star",
+  "cls": "regular",
+  "lvl": "all_star",
+  "cart": "hockey.regular",
+  "seeds": "regularband:100",
+  "trace": true
+ }
+]

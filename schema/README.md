@@ -109,6 +109,7 @@ Cartridge errors are sentences that start `at <JSON pointer>:`, because the Desi
 | `contact.down_frames_min` | 15..300 | 60 (lane A92, R-0045): Frames down at down_ratio, at skater.knockdown_frames 90 (the frames scale with skater.knockdown_frames / 90). |
 | `contact.down_frames_max` | 15..300 | 150 (lane A92, R-0045): Frames down at down_full_ratio and above, at skater.knockdown_frames 90; never under down_frames_min. |
 | `contact.stagger_frames` | 0..60 | 16 (lane A92, R-0045): Frames a stumbling skater glides without thrust, steering or stick. |
+| `contact.board_bonus` | 1..2 | 1.25 (lane A101, track F1): The boards are a body: the impulse of a hit that pushes a victim standing within 1.5 m of the boards into them counts this much higher (the full bonus inside 60 degrees of straight in, none along the boards), and the victim's board read-out fires. 1 = the neutral value: no bonus, no read-out. |
 | `rules.score_to_win` | 1..9 | one digit on the HUD |
 | `rules.timer_frames` | 600..36000 | 10 s to 10 min at 60 Hz (lane A72, ask A1: 5 min before; the HUD clock reads 10:00) |
 | `rules.penalty_frames` | 60..600 | 1 s to 10 s in the box (lane A72, ask A8); 300 when absent |

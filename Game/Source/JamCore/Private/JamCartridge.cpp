@@ -1155,6 +1155,7 @@ namespace
 			ReadInteger(Ct, TEXT("down_frames_min"), C.Contact.DownFramesMin);
 			ReadInteger(Ct, TEXT("down_frames_max"), C.Contact.DownFramesMax);
 			ReadInteger(Ct, TEXT("stagger_frames"), C.Contact.StaggerFrames);
+			ReadNumber(Ct, TEXT("board_bonus"), C.Contact.BoardBonus);   // lane A101 (track F1): the boards are a body; 1 = the neutral value
 		}
 
 		FJPtr Rules = Obj(G, TEXT("rules"));

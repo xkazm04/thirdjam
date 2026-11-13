@@ -20,6 +20,10 @@ static TAutoConsoleVariable<int32> CVarRinkConstruction(TEXT("jam.rink.construct
 // reads 4/5 as the far net on both rink sizes without it) and the translucent one only weakly over the opaque (0.6). docs/experiments/RINK.md has the pair.
 static TAutoConsoleVariable<int32> CVarRinkBeacon(TEXT("jam.rink.beacon"), 0,
 	TEXT("Far-net beacon column: 0 off, 1 B's MI_Trim_Beacon (translucent), 2 opaque emissive column. Lane A25, eyes finding 3."));
+// Lane A103 (track F3): the Blender-made benches and penalty boxes. 0 = A25's code benches on every tier (the rink as it was before the lane); 1 = the meshes on
+// the dressed tiers. Read at Build and on every change through the construction sink below (SetConstructionVisible applies both switches).
+static TAutoConsoleVariable<int32> CVarRinkArena(TEXT("jam.rink.arena"), 1,
+	TEXT("1: the Blender-made team benches and penalty boxes (/Game/Arena) stand outside the boards on the dressed look tiers; 0: lane A25's code benches. Lane A103."));
 static FAutoConsoleVariableSink GRinkConstructionSink(FConsoleCommandDelegate::CreateLambda([]()
 {
 	const bool bOn = ARinkActor::IsConstructionEnabled();
@@ -197,6 +201,21 @@ ARinkActor::ARinkActor()
 		Bc->SetRenderCustomDepth(false);
 		Bc->SetCustomDepthStencilValue(0);
 		(i == 0 ? BeaconPos : BeaconNeg) = Bc;
+	}
+	// Lane A103: the four Blender pieces. Empty and hidden until Build finds the meshes; stencil 1 (ramp and outline) like A25's benches; they cast shadows.
+	{
+		static const TCHAR* const ArenaNames[4] = { TEXT("ArenaBenchNeg"), TEXT("ArenaBenchPos"), TEXT("ArenaBoxNeg"), TEXT("ArenaBoxPos") };
+		TObjectPtr<UStaticMeshComponent>* const ArenaSlots[4] = { &ArenaBenchNeg, &ArenaBenchPos, &ArenaBoxNeg, &ArenaBoxPos };
+		for (int32 i = 0; i < 4; ++i)
+		{
+			UStaticMeshComponent* Ac = CreateDefaultSubobject<UStaticMeshComponent>(ArenaNames[i]);
+			Ac->SetupAttachment(Root);
+			Ac->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			Ac->SetRenderCustomDepth(true);
+			Ac->SetCustomDepthStencilValue(1);
+			Ac->SetVisibility(false);
+			*ArenaSlots[i] = Ac;
+		}
 	}
 	GoalTriggerPos = CreateDefaultSubobject<UBoxComponent>(TEXT("GoalTriggerPos"));
 	GoalTriggerNeg = CreateDefaultSubobject<UBoxComponent>(TEXT("GoalTriggerNeg"));
@@ -732,6 +751,42 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 		Benches->SetMaterial(1, LoadConstructionMat(TEXT("MI_Toon_KickPlate"), TEXT("MI_LL_KickPlate"), FLinearColor(0.85f, 0.72f, 0.12f), 1.2f));
 	}
 
+	// Lane A103 (track F3): the Blender-made dressing. Two team benches outside the +y boards at A25's places (centres +-0.0833 L, the 12 m mesh scaled along the
+	// boards to 0.1 L), two penalty boxes outside the -y boards at x = -3 and +3 (UJamSim::BoxPos), turned 180 degrees so they open onto the rink. Each piece's
+	// origin is the middle of its rink-side edge on the ice, 5 cm clear of the board's outer face. Materials are device B's instances by reference, through the
+	// same loaders as the code construction (B's instance, else the LookLab stand-in, else the engine's basic material tinted); the `team` slot follows the half:
+	// blue for x < 0 (team 0), orange for x > 0. A missing mesh leaves the component empty: ApplyArenaDressing then keeps A25's code benches.
+	{
+		UStaticMesh* BenchMesh = LoadObject<UStaticMesh>(nullptr, TeamBenchMeshPath, nullptr, LOAD_NoWarn | LOAD_Quiet);
+		UStaticMesh* BoxMesh = LoadObject<UStaticMesh>(nullptr, PenaltyBoxMeshPath, nullptr, LOAD_NoWarn | LOAD_Quiet);
+		const double Y0 = (R.WidthM * 0.5 + BoardThicknessM + ArenaGapM) * UU;
+		const double BenchScale = R.LengthM * ArenaBenchLengthFactor / ArenaBenchBuiltLengthM;
+		const double BenchX = R.LengthM * ArenaBenchCentreFactor * UU;
+		auto Dress = [this](UStaticMeshComponent* C, UStaticMesh* Mesh, const FVector& Loc, double Yaw, double ScaleX, bool bOrange)
+		{
+			if (!C) return;
+			C->SetStaticMesh(Mesh);
+			if (!Mesh) return;
+			C->SetRelativeLocationAndRotation(Loc, FRotator(0.0, Yaw, 0.0));
+			C->SetRelativeScale3D(FVector(ScaleX, 1.0, 1.0));
+			auto Bind = [C](const TCHAR* Slot, UMaterialInterface* Mat) { const int32 I = C->GetMaterialIndex(FName(Slot)); if (I != INDEX_NONE && Mat) C->SetMaterial(I, Mat); };
+			Bind(TEXT("board"), LoadLook(TEXT("MI_Toon_Board"), BoardsMaterialPath));
+			Bind(TEXT("kick"), LoadConstructionMat(TEXT("MI_Toon_KickPlate"), TEXT("MI_LL_KickPlate"), FLinearColor(0.85f, 0.72f, 0.12f), 1.2f));
+			Bind(TEXT("bench"), LoadConstructionMat(TEXT("MI_Toon_Bench"), TEXT("MI_LL_KickPlate"), FLinearColor(0.62f, 0.60f, 0.56f), 1.2f, true));
+			Bind(TEXT("team"), bOrange
+				? LoadConstructionMat(TEXT("MI_Toon_Orange"), TEXT("MI_LL_NetFrame"), FLinearColor(0.95f, 0.45f, 0.08f), 1.2f, true)
+				: LoadConstructionMat(TEXT("MI_Toon_Blue"), TEXT("MI_LL_NetFrame"), FLinearColor(0.05f, 0.25f, 0.85f), 1.2f, true));
+			Bind(TEXT("dark"), LoadConstructionMat(TEXT("MI_Toon_Dark"), TEXT("MI_LL_GlassRail"), FLinearColor(0.06f, 0.06f, 0.07f)));
+		};
+		Dress(ArenaBenchNeg, BenchMesh, FVector(-BenchX, Y0, 0.0), 0.0, BenchScale, false);
+		Dress(ArenaBenchPos, BenchMesh, FVector(BenchX, Y0, 0.0), 0.0, BenchScale, true);
+		Dress(ArenaBoxNeg, BoxMesh, FVector(-PenaltyBoxCentreXM * UU, -Y0, 0.0), 180.0, 1.0, false);
+		Dress(ArenaBoxPos, BoxMesh, FVector(PenaltyBoxCentreXM * UU, -Y0, 0.0), 180.0, 1.0, true);
+		ArenaTier = Game.Look.Tier;
+		UE_LOG(LogJamSim, Log, TEXT("JAMRINK arena pieces: bench mesh %s, box mesh %s; benches at x +-%.2f m y +%.2f m scale %.3f (%.1f m long), boxes at x +-%.1f m y -%.2f m yaw 180"),
+			BenchMesh ? TEXT("loaded") : TEXT("missing"), BoxMesh ? TEXT("loaded") : TEXT("missing"), BenchX / UU, Y0 / UU, BenchScale, R.LengthM * ArenaBenchLengthFactor, PenaltyBoxCentreXM, Y0 / UU);
+	}
+
 	// Obstacles (M3b): boxes and pillars, 1.2 m tall like the boards (section 0); C-0005 / A15 adds goal shields (section 0,
 	// a wall Size wide across the rink, 0.3 m deep) and bumpers (a pillar in its own magenta section 1).
 	{
@@ -851,6 +906,49 @@ void ARinkActor::SetConstructionVisible(bool bVisible)
 	if (bClayTier && GlassRail) GlassRail->SetVisibility(false);   // lane A69: B's clay boards are open (the rail and posts are clipped by M_Toon_Rail anyway)
 	if (Nets && Nets->GetNumSections() > 2) Nets->SetMeshSectionVisible(2, bVisible);
 	if (Markings && Markings->GetNumSections() > 3) { Markings->SetMeshSectionVisible(2, bVisible); Markings->SetMeshSectionVisible(3, bVisible); }
+	ApplyArenaDressing();   // lane A103: the Blender pieces replace A25's code benches where they show
+}
+
+bool ARinkActor::IsArenaDressingEnabled()
+{
+	return CVarRinkArena.GetValueOnGameThread() != 0;
+}
+
+bool ARinkActor::IsBareTier(const FString& Tier)
+{
+	// C-0002 (contracts/look-tiers.md): LR_L1_Day and LR_L3_Neon are the contract's empty placeholder rigs: no dressing and no light outside the boards.
+	return Tier == TEXT("l1_day") || Tier == TEXT("l3_neon");
+}
+
+void ARinkActor::ApplyArenaDressing()
+{
+	UStaticMeshComponent* const Pieces[4] = { ArenaBenchNeg.Get(), ArenaBenchPos.Get(), ArenaBoxNeg.Get(), ArenaBoxPos.Get() };
+	bool bHave = true;
+	for (const UStaticMeshComponent* C : Pieces) bHave = bHave && C && C->GetStaticMesh();
+	// The construction layer's state is what SetConstructionVisible last applied, not the cvar: a direct call with false must hide the pieces too. The kick
+	// plate is the witness (only SetConstructionVisible ever sets its visibility).
+	const bool bConstruction = KickPlate ? KickPlate->IsVisible() : IsConstructionEnabled();
+	const bool bShow = bHave && bConstruction && IsArenaDressingEnabled() && !IsBareTier(ArenaTier);
+	for (UStaticMeshComponent* C : Pieces) if (C) C->SetVisibility(bShow);
+	// A25's code benches stand where the Blender benches go: one or the other, never both.
+	if (Benches) Benches->SetVisibility(bConstruction && !bShow);
+	if (bShow != bArenaShown)
+	{
+		bArenaShown = bShow;
+		UE_LOG(LogJamSim, Log, TEXT("JAMRINK arena dressing %s for tier %s (meshes %s, jam.rink.arena %d, construction %s): %s"), bShow ? TEXT("shown") : TEXT("hidden"), *ArenaTier,
+			bHave ? TEXT("loaded") : TEXT("missing"), IsArenaDressingEnabled() ? 1 : 0, bConstruction ? TEXT("on") : TEXT("off"), bShow ? TEXT("code benches hidden") : TEXT("code benches as before"));
+	}
+}
+
+bool ARinkActor::GetPenaltyBoxSeat(int32 Team, FVector& OutLocation, FRotator& OutRotation) const
+{
+	const UStaticMeshComponent* C = Team == 0 ? ArenaBoxNeg.Get() : ArenaBoxPos.Get();
+	static const FName SeatSocket(TEXT("Seat"));
+	if (!bArenaShown || !C || !C->GetStaticMesh() || !C->DoesSocketExist(SeatSocket)) return false;
+	OutLocation = C->GetSocketLocation(SeatSocket);
+	// Facing the rink: the box stands on the -y side, so the rink is along the actor's +y.
+	OutRotation = GetActorTransform().TransformVectorNoScale(FVector::YAxisVector).Rotation();
+	return true;
 }
 
 int32 ARinkActor::GetBeaconMode()
@@ -927,6 +1025,9 @@ void ARinkActor::SetZoneRingsForTier(const FString& Tier)
 	// B-to-A-0035 point 1 (optional): on clay the pane and the rail clip every pixel, so their draws go; back on the other tiers they return.
 	if (Glass) Glass->SetVisibility(!bClay);
 	if (GlassRail) GlassRail->SetVisibility(!bClay && IsConstructionEnabled());
+	// Lane A103: the arena dressing follows the tier through the same call (Build and ULookTierSwitcher::PushGlass both come here).
+	ArenaTier = Tier;
+	ApplyArenaDressing();
 	if (bChanged || bClay) UE_LOG(LogJamSim, Log, TEXT("JAMRINK zone rings %s for tier %s: %d ring components, %d decal quads (glass and rail %s)"), bClay ? TEXT("shown") : TEXT("hidden"), *Tier, ZoneRings.Num(), ZoneQuads.Num(), bClay ? TEXT("hidden") : TEXT("shown"));
 }
 

@@ -224,6 +224,9 @@ struct JAMCORE_API FJamContactConfig
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 DownFramesMin = 60;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 DownFramesMax = 150;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 StaggerFrames = 16;
+	// Lane A101 (track F1): the boards are a body. The impulse of a hit that pushes a victim within 1.5 m of the boards into them counts this much higher
+	// (UJamSim::BoardFactor). 1 = the neutral value: no bonus, no board read-out, the game before the lane (same state hash).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double BoardBonus = 1.25;
 	// The neutral block (contact.momentum false, contact.carrier_can_hit true): the check rule of main before lane A92.
 	void SetNeutral() { bMomentum = false; bCarrierCanHit = true; }
 };

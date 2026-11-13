@@ -1,0 +1,450 @@
+{
+  "sizes": {
+    "120x60": {
+      "components": {
+        "arena_bench_neg": {
+          "mesh": "SM_Arena_TeamBench",
+          "loc_cm": [
+            -999.6,
+            3025.0,
+            0.0
+          ],
+          "yaw": 0.0,
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "visible": true,
+          "materials": {
+            "board": "MI_Toon_Board",
+            "kick": "MI_Toon_KickPlate",
+            "bench": "MI_Toon_Bench",
+            "team": "MI_Toon_Blue",
+            "dark": "MI_Toon_Dark"
+          },
+          "as_expected": true
+        },
+        "arena_bench_pos": {
+          "mesh": "SM_Arena_TeamBench",
+          "loc_cm": [
+            999.6,
+            3025.0,
+            0.0
+          ],
+          "yaw": 0.0,
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "visible": true,
+          "materials": {
+            "board": "MI_Toon_Board",
+            "kick": "MI_Toon_KickPlate",
+            "bench": "MI_Toon_Bench",
+            "team": "MI_Toon_Orange",
+            "dark": "MI_Toon_Dark"
+          },
+          "as_expected": true
+        },
+        "arena_box_neg": {
+          "mesh": "SM_Arena_PenaltyBox",
+          "loc_cm": [
+            -300.0,
+            -3025.0,
+            0.0
+          ],
+          "yaw": 180.0,
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "visible": true,
+          "materials": {
+            "board": "MI_Toon_Board",
+            "kick": "MI_Toon_KickPlate",
+            "bench": "MI_Toon_Bench",
+            "team": "MI_Toon_Blue",
+            "dark": "MI_Toon_Dark"
+          },
+          "as_expected": true
+        },
+        "arena_box_pos": {
+          "mesh": "SM_Arena_PenaltyBox",
+          "loc_cm": [
+            300.0,
+            -3025.0,
+            0.0
+          ],
+          "yaw": 180.0,
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "visible": true,
+          "materials": {
+            "board": "MI_Toon_Board",
+            "kick": "MI_Toon_KickPlate",
+            "bench": "MI_Toon_Bench",
+            "team": "MI_Toon_Orange",
+            "dark": "MI_Toon_Dark"
+          },
+          "as_expected": true
+        }
+      },
+      "shown": true,
+      "code_benches_visible": false,
+      "seat_team0_cm": [
+        -335.0,
+        -3087.0,
+        10.0
+      ],
+      "seat_team0_yaw": 90.0,
+      "seat_team1_cm": [
+        265.0,
+        -3087.0,
+        10.0
+      ],
+      "sim_box_pos_team0_cm": [
+        -300.0,
+        -2930.0
+      ],
+      "seat_minus_sim_cm": [
+        -35.0,
+        -157.0
+      ],
+      "seat_ok": true,
+      "matches_arena_json": true,
+      "ok": true
+    },
+    "90x45": {
+      "components": {
+        "arena_bench_neg": {
+          "mesh": "SM_Arena_TeamBench",
+          "loc_cm": [
+            -749.7,
+            2275.0,
+            0.0
+          ],
+          "yaw": 0.0,
+          "scale": [
+            0.75,
+            1.0,
+            1.0
+          ],
+          "visible": true,
+          "materials": {
+            "board": "MI_Toon_Board",
+            "kick": "MI_Toon_KickPlate",
+            "bench": "MI_Toon_Bench",
+            "team": "MI_Toon_Blue",
+            "dark": "MI_Toon_Dark"
+          },
+          "as_expected": true
+        },
+        "arena_bench_pos": {
+          "mesh": "SM_Arena_TeamBench",
+          "loc_cm": [
+            749.7,
+            2275.0,
+            0.0
+          ],
+          "yaw": 0.0,
+          "scale": [
+            0.75,
+            1.0,
+            1.0
+          ],
+          "visible": true,
+          "materials": {
+            "board": "MI_Toon_Board",
+            "kick": "MI_Toon_KickPlate",
+            "bench": "MI_Toon_Bench",
+            "team": "MI_Toon_Orange",
+            "dark": "MI_Toon_Dark"
+          },
+          "as_expected": true
+        },
+        "arena_box_neg": {
+          "mesh": "SM_Arena_PenaltyBox",
+          "loc_cm": [
+            -300.0,
+            -2275.0,
+            0.0
+          ],
+          "yaw": 180.0,
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "visible": true,
+          "materials": {
+            "board": "MI_Toon_Board",
+            "kick": "MI_Toon_KickPlate",
+            "bench": "MI_Toon_Bench",
+            "team": "MI_Toon_Blue",
+            "dark": "MI_Toon_Dark"
+          },
+          "as_expected": true
+        },
+        "arena_box_pos": {
+          "mesh": "SM_Arena_PenaltyBox",
+          "loc_cm": [
+            300.0,
+            -2275.0,
+            0.0
+          ],
+          "yaw": 180.0,
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "visible": true,
+          "materials": {
+            "board": "MI_Toon_Board",
+            "kick": "MI_Toon_KickPlate",
+            "bench": "MI_Toon_Bench",
+            "team": "MI_Toon_Orange",
+            "dark": "MI_Toon_Dark"
+          },
+          "as_expected": true
+        }
+      },
+      "shown": true,
+      "code_benches_visible": false,
+      "seat_team0_cm": [
+        -335.0,
+        -2337.0,
+        10.0
+      ],
+      "seat_team0_yaw": 90.0,
+      "seat_team1_cm": [
+        265.0,
+        -2337.0,
+        10.0
+      ],
+      "sim_box_pos_team0_cm": [
+        -300.0,
+        -2180.0
+      ],
+      "seat_minus_sim_cm": [
+        -35.0,
+        -157.0
+      ],
+      "seat_ok": true,
+      "ok": true
+    },
+    "140x70": {
+      "components": {
+        "arena_bench_neg": {
+          "mesh": "SM_Arena_TeamBench",
+          "loc_cm": [
+            -1166.2,
+            3525.0,
+            0.0
+          ],
+          "yaw": 0.0,
+          "scale": [
+            1.1667,
+            1.0,
+            1.0
+          ],
+          "visible": true,
+          "materials": {
+            "board": "MI_Toon_Board",
+            "kick": "MI_Toon_KickPlate",
+            "bench": "MI_Toon_Bench",
+            "team": "MI_Toon_Blue",
+            "dark": "MI_Toon_Dark"
+          },
+          "as_expected": true
+        },
+        "arena_bench_pos": {
+          "mesh": "SM_Arena_TeamBench",
+          "loc_cm": [
+            1166.2,
+            3525.0,
+            0.0
+          ],
+          "yaw": 0.0,
+          "scale": [
+            1.1667,
+            1.0,
+            1.0
+          ],
+          "visible": true,
+          "materials": {
+            "board": "MI_Toon_Board",
+            "kick": "MI_Toon_KickPlate",
+            "bench": "MI_Toon_Bench",
+            "team": "MI_Toon_Orange",
+            "dark": "MI_Toon_Dark"
+          },
+          "as_expected": true
+        },
+        "arena_box_neg": {
+          "mesh": "SM_Arena_PenaltyBox",
+          "loc_cm": [
+            -300.0,
+            -3525.0,
+            0.0
+          ],
+          "yaw": 180.0,
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "visible": true,
+          "materials": {
+            "board": "MI_Toon_Board",
+            "kick": "MI_Toon_KickPlate",
+            "bench": "MI_Toon_Bench",
+            "team": "MI_Toon_Blue",
+            "dark": "MI_Toon_Dark"
+          },
+          "as_expected": true
+        },
+        "arena_box_pos": {
+          "mesh": "SM_Arena_PenaltyBox",
+          "loc_cm": [
+            300.0,
+            -3525.0,
+            0.0
+          ],
+          "yaw": 180.0,
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "visible": true,
+          "materials": {
+            "board": "MI_Toon_Board",
+            "kick": "MI_Toon_KickPlate",
+            "bench": "MI_Toon_Bench",
+            "team": "MI_Toon_Orange",
+            "dark": "MI_Toon_Dark"
+          },
+          "as_expected": true
+        }
+      },
+      "shown": true,
+      "code_benches_visible": false,
+      "seat_team0_cm": [
+        -335.0,
+        -3587.0,
+        10.0
+      ],
+      "seat_team0_yaw": 90.0,
+      "seat_team1_cm": [
+        265.0,
+        -3587.0,
+        10.0
+      ],
+      "sim_box_pos_team0_cm": [
+        -300.0,
+        -3430.0
+      ],
+      "seat_minus_sim_cm": [
+        -35.0,
+        -157.0
+      ],
+      "seat_ok": true,
+      "ok": true
+    }
+  },
+  "tiers": {
+    "l2_night": {
+      "shown": true,
+      "code_benches_visible": false,
+      "pieces_visible": [
+        true,
+        true,
+        true,
+        true
+      ],
+      "ok": true
+    },
+    "p3_clay": {
+      "shown": true,
+      "code_benches_visible": false,
+      "pieces_visible": [
+        true,
+        true,
+        true,
+        true
+      ],
+      "ok": true
+    },
+    "p4_broadcast": {
+      "shown": true,
+      "code_benches_visible": false,
+      "pieces_visible": [
+        true,
+        true,
+        true,
+        true
+      ],
+      "ok": true
+    },
+    "l1_day": {
+      "shown": false,
+      "code_benches_visible": true,
+      "pieces_visible": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "ok": true
+    },
+    "l3_neon": {
+      "shown": false,
+      "code_benches_visible": true,
+      "pieces_visible": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "ok": true
+    }
+  },
+  "checks": {
+    "switch_without_rebuild": {
+      "p3_clay": true,
+      "l1_day": false,
+      "l2_night": true,
+      "l3_neon": false,
+      "p4_broadcast": true
+    },
+    "neutral_cvar": {
+      "arena_0": {
+        "shown": false,
+        "code_benches_visible": true,
+        "pieces_visible": [
+          false,
+          false,
+          false,
+          false
+        ],
+        "seat_returned": false
+      },
+      "arena_1": {
+        "shown": true,
+        "code_benches_visible": false
+      },
+      "construction_off": {
+        "shown": false,
+        "code_benches_visible": false
+      }
+    }
+  },
+  "verdict": "pass"
+}

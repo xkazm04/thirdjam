@@ -274,6 +274,14 @@ struct JAMCORE_API FJamSkaterState
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 ContactDowns = 0;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 ContactRecoils = 0;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 ChecksRefused = 0;
+	// Lane A101 (track F1) read-outs, never hashed, never read by the sim. ContactBy: the skater whose hit ContactOutcome reports (-1 with none): the hit-stop,
+	// the camera and the HUD find both ends of a stumble with it (a stumble emits no event that names its victim). bContactBoard: that hit landed within
+	// UJamSim::ContactBoardRangeM of the boards and pushed into them, so the boards answered as a second body (game.contact.board_bonus above 1); the victim's
+	// bBoardHitThisFrame and a `board` event (Kind skater, Strength = the check's) go out with it. ContactBoardHits counts them (a match statistic).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 ContactBy = -1;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bContactBoard = false;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 ContactBoardHits = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int64 LastContactBoardFrame = -1000;   // the frame of the last such hit: its echo on the boards is not a second board hit
 	// R-0029 point 3: the last frame this skater carried the puck (-1000 = never); a check within game.stick.foul_grace_frames of it is not a foul_no_puck.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int64 LastCarryFrame = -1000;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bTouchingPuck = false;
@@ -558,6 +566,11 @@ public:
 	double StabilityOf(const FJamSkaterState& S, const FVector2D& HitDir, EContactKind Kind) const;
 	// The impulse a hit by Attacker on Victim along HitDir carries, in kg m/s: mass x max(0, closing speed along HitDir + lunge_mps (Body) or thrust_mps (Cross)).
 	double ContactImpulse(const FJamSkaterState& Attacker, const FJamSkaterState& Victim, const FVector2D& HitDir, EContactKind Kind) const;
+	// Lane A101 (track F1): the boards are a body. A victim whose centre is within ContactBoardRangeM of the boards cannot give way into them: the impulse of a
+	// hit that pushes it there counts x BoardFactor = 1 + (game.contact.board_bonus - 1) x clamp(2 x dot(HitDir, the boards' outward normal), 0, 1): the full bonus
+	// inside 60 degrees of straight in, none for a hit along the boards or away from them. 1 at board_bonus 1 (the neutral value). ResolveContact reads it.
+	static constexpr double ContactBoardRangeM = 1.5;
+	double BoardFactor(const FJamSkaterState& Victim, const FVector2D& HitDir) const;
 	// The carrier cannot hit (game.contact.carrier_can_hit false): true when S carries the puck and no opponent carried it within stick.foul_grace_frames, so a
 	// take off an opponent's stick in the same breath still finishes its hit (the mirror of R-0029 point 3, where the victim that just lost the puck still counts
 	// as the carrier). The brain reads it.

@@ -212,4 +212,45 @@ bool FJamCarrierDoesNotChargeTheWall::RunTest(const FString& Parameters)
 	return true;
 }
 
+// Lane A105 (track Q2): a skater in the penalty box is not on the ice for the brain. FJamSimAdapter::BuildWorld mapped only the knockdown into
+// FJamAISkater::bDown, so a boxed skater (pinned at UJamSim::BoxPos, on the ice by the bottom boards at centre) still counted for its team as a presser, a
+// cover, a pass outlet or the loose puck's owner, and for the other team as pressure on a carrier passing the box. Every brain read skips bDown: the box is
+// mapped into it. Staged: hockey.regular (penalties on), a 7 m/s check pressed head-on into an opponent without the puck: a foul, the checker boxed.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamHockeyBoxedIsOffIce, "Jam.Bot.Hockey.BoxedIsOffIce", JamHockeyBrainTestsLocal::Flags)
+bool FJamHockeyBoxedIsOffIce::RunTest(const FString& Parameters)
+{
+	TArray<FString> Errors;
+	UJamCartridge* C = UJamCartridge::LoadFromFile(UJamCartridge::ResolveCartridgePath(TEXT("hockey.regular")), Errors);
+	if (!C) { AddError(TEXT("hockey.regular did not load")); return false; }
+	FJamGameConfig G = C->Game;
+	G.Rules.bPenalties = true;
+	UJamSim* Sim = NewObject<UJamSim>();
+	Sim->Init(G, 1);
+	Sim->SkipFaceoff();
+	const int32 Human = Sim->GetHumanIndex();
+	int32 A = -1, V = -1;
+	for (const FJamSkaterState& S : Sim->GetSkaters())
+	{
+		if (S.Index == Human) continue;
+		if (S.Team == 0 && A < 0) A = S.Index;
+		if (S.Team == 1 && V < 0) V = S.Index;
+	}
+	// Everybody parked along the top boards, the puck far away, the checker at 7 m/s head-on into the victim skating back at 4 m/s.
+	for (const FJamSkaterState& S : Sim->GetSkaters()) Sim->SetSkater(S.Index, FVector2D(-30.0 + S.Index * 3.0, 20.0), FVector2D::ZeroVector, 0.0);
+	Sim->SetPuck(FVector2D(-35.0, -15.0), FVector2D::ZeroVector);
+	Sim->SetSkater(A, FVector2D(0.0, 0.0), FVector2D(7.0, 0.0), 0.0);
+	Sim->SetSkater(V, FVector2D(1.2, 0.0), FVector2D(-4.0, 0.0), PI);   // head-on: the biggest hit, a knockdown
+	TArray<FJamInput> In;
+	In.SetNum(Sim->GetSkaters().Num());
+	In[A].bCheck = true;
+	for (int32 f = 0; f < 10 && !Sim->GetSkaters()[A].InBox(); ++f) { Sim->Step(In); In[A].bCheck = false; }
+	if (!Sim->GetSkaters()[A].InBox()) { AddError(TEXT("staging: the check from behind did not send the checker to the box")); return false; }
+	JamAI::FJamAIWorld W;
+	JamAI::FJamSimAdapter::BuildWorld(*Sim, W);
+	AddInfo(FString::Printf(TEXT("checker %d boxed for %d frames at (%.1f, %.1f); brain bDown %d"), A, Sim->GetSkaters()[A].PenaltyFrames, W.Skaters[A].Pos.X, W.Skaters[A].Pos.Y, W.Skaters[A].bDown ? 1 : 0));
+	TestTrue(TEXT("a boxed skater is off the ice for the brain (bDown)"), W.Skaters[A].bDown);
+	TestEqual(TEXT("the victim reads as down exactly when the sim has it down"), W.Skaters[V].bDown, Sim->GetSkaters()[V].IsDown());
+	return true;
+}
+
 #endif

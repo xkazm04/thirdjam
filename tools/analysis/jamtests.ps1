@@ -18,7 +18,7 @@ $logDir = Get-LogDir (Join-Path $repo 'Game')
 $stamp = Get-Stamp
 $log = Join-Path $logDir ("a55-automation-{0}.log" -f $stamp)
 $abslog = Join-Path $logDir ("a55-automation-ue-{0}.log" -f $stamp)
-$ue = ('"{0}" -ExecCmds="Automation RunTests {1}; Quit" -nullrhi -unattended -nopause -nosplash -log -ABSLOG="{2}"' -f $uproject, $Filter, $abslog)
+$ue = ('"{0}" -ExecCmds="Automation RunTests {1}; Quit" -nullrhi -Multiprocess -unattended -nopause -nosplash -log -ABSLOG="{2}"' -f $uproject, $Filter, $abslog)
 $w = Invoke-Watched -FilePath $cmd -Arguments $ue -LogFile $log -TimeoutSec $TimeoutSec -MinFreeGB (Get-MinFreeGB 40) -DiskPath $uproject -Label 'automation'
 $src = $log; if (Test-Path $abslog) { $src = $abslog }
 $ok = @(Select-String -Path $src -Pattern 'Test Completed\. Result=\{Success\}' -ErrorAction SilentlyContinue).Count

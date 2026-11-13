@@ -171,7 +171,7 @@ function freeGB() {
 function runChunk(o, lo, hi, onMatch) {
   const exe = join(engineRoot(), 'Engine', 'Binaries', 'Win64', 'UnrealEditor-Cmd.exe');
   const args = [o.uproject, '-run=JamTournament', '-sim=jam', `-cartridge=${o.cartridge}`, `-difficulty=${o.level}`, `-player=${o.player}`, `-seeds=${lo}-${hi}`,
-    `-maxframes=${o.maxFrames}`, '-trace=1', '-nullrhi', '-unattended', '-nopause', '-nosplash', '-stdout', '-FullStdOutLogOutput', '-LogCmds=LogJamAI Display'];
+    `-maxframes=${o.maxFrames}`, '-trace=1', '-nullrhi', '-Multiprocess', '-unattended', '-nopause', '-nosplash', '-stdout', '-FullStdOutLogOutput', '-LogCmds=LogJamAI Display'];
   if (o.tune) args.push(`-aitune=${o.tune}`);
   return new Promise((res) => {
     const p = spawn(exe, args, { windowsHide: true });

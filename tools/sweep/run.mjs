@@ -91,7 +91,7 @@ export function runCell({ runner, exe, cartridge, level, tune, seeds, mode, maxF
     if (!ue) die(2, 'Unreal Engine not found (set UE_ROOT)');
     const cmd = join(ue, 'Engine', 'Binaries', 'Win64', 'UnrealEditor-Cmd.exe');
     const args = [join(repo, 'Game', 'ThirdJam.uproject'), '-run=JamTournament', '-sim=jam', `-cartridge=${cartFile}`, `-difficulty=${level}`, `-seeds=${seeds}`,
-      `-mode=${mode}`, `-maxframes=${maxFrames}`, '-nullrhi', '-unattended', '-nopause', '-nosplash', '-stdout', '-FullStdOutLogOutput'];
+      `-mode=${mode}`, `-maxframes=${maxFrames}`, '-nullrhi', '-Multiprocess', '-unattended', '-nopause', '-nosplash', '-stdout', '-FullStdOutLogOutput'];
     if (tune) args.push(`-aitune=${tune}`);
     r = spawnSync(cmd, args, { encoding: 'utf8', maxBuffer: 256 << 20, timeout: 1800000 });
   }

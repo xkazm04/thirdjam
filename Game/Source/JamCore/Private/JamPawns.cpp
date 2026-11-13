@@ -111,6 +111,18 @@ int32 AJamSkater::HitStopFrames()
 	return FMath::Clamp(CVarJamHitStop.GetValueOnGameThread(), 0, 6);
 }
 
+// Lane A101 (track F1): the hold reads the hit. At jam.hitstop 3: stumble 1 or 2, knockdown 2 to 5 by the ratio; a bump holds nothing.
+int32 AJamSkater::HitStopFramesFor(int32 Outcome, float Ratio, const FJamContactConfig& K, int32 Base)
+{
+	if (Base <= 0) return 0;
+	if (Outcome == UJamSim::ContactNone) return FMath::Clamp(Base, 0, 6);   // a knockdown the model did not resolve (contact.momentum false): as before
+	double At3 = 0.0;
+	if (Outcome == UJamSim::ContactStumble) At3 = static_cast<double>(Ratio) >= 0.5 * (K.BumpRatio + K.DownRatio) - 1e-6 ? 2.0 : 1.0;   // the read-out is a float: 0.7f is the middle
+	else if (Outcome == UJamSim::ContactDown) At3 = FMath::Lerp(2.0, 5.0, FMath::Clamp((static_cast<double>(Ratio) - K.DownRatio) / FMath::Max(1e-6, K.DownFullRatio - K.DownRatio), 0.0, 1.0));
+	else return 0;   // a bump
+	return FMath::Clamp(FMath::RoundToInt32(At3 * Base / 3.0), 1, 6);
+}
+
 void AJamSkater::BeginHitStop(int32 Frames)
 {
 	if (Frames <= 0) return;
@@ -340,7 +352,9 @@ void AJamSkater::ApplySimFrame(const FJamSkaterState& S)
 	if (S.bBoardHitThisFrame)
 	{
 		IJamSkaterVisual::Execute_PlayBoardHit(V);
-		UE_LOG(LogJamSim, Log, TEXT("JAMVIS board frame=%lld skater=%d team=%d (PlayBoardHit: the skater board event, 4 m/s and up)"), SimFrameForLog(), S.Index, S.Team);
+		// Lane A101: also on a landed check that pushed the skater into boards within 1.5 m (bContactBoard; the `board` event then carries the check's strength).
+		UE_LOG(LogJamSim, Log, TEXT("JAMVIS board frame=%lld skater=%d team=%d checked=%d outcome=%d ratio=%.2f (PlayBoardHit: the skater board event: 4 m/s and up into the boards, or checked into them)"),
+			SimFrameForLog(), S.Index, S.Team, S.bContactBoard ? 1 : 0, S.ContactOutcome, S.ContactRatio);
 	}
 	if (S.bBoardPinned != bWasPinned)
 	{

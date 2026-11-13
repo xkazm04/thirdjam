@@ -61,6 +61,7 @@ namespace
 	constexpr double BoardTangentKeep = 0.9;
 	constexpr double BoardEventMinSpeed = 3.0;   // m/s normal impact before a "board" event
 	constexpr int32 BoardEventGapFrames = 6;
+	constexpr int64 ContactBoardEchoFrames = 30;   // lane A101: a checked skater's slide into the boards within half a second is the hit already announced
 	constexpr double SkaterBoardEventMinSpeed = 4.0;   // lane A33: a skater's normal speed into the boards before a "board" event (Who = skater, Kind = skater)
 	// Lane A45 (C-0001 v4 read-outs, never hashed): a skater-skater collision at this closing speed without a landed check is a "bump" (PlayHitReaction), at most one per
 	// skater per BumpGapFrames; a skater within BoardContactEpsM of the boards counts as on them, BoardPinFrames of that with an opponent within BoardPinRangeM is a pin.
@@ -601,7 +602,8 @@ void UJamSim::NotifyPickupTaken(int32 Who, FName Kind)
 	if (Skaters.IsValidIndex(Who) && Skaters[Who].bHuman && Skaters[Who].AbilitySlot < 0)
 	{
 		TArray<int32, TInlineAllocator<4>> Pool;
-		for (int32 a = 0; a < Config.Abilities.Num(); ++a) if (Config.Abilities[a].Trigger == TriggerPickup) Pool.Add(a);
+		// Lane A105: a hip check is passed over while body checks are off (it could never land; held, it would block every later pickup).
+		for (int32 a = 0; a < Config.Abilities.Num(); ++a) if (Config.Abilities[a].Trigger == TriggerPickup && (Config.Abilities[a].Kind != AbHipCheck || Config.Skater.bCheckEnabled)) Pool.Add(a);
 		if (Pool.Num() > 0)
 		{
 			const uint64 Mix = (static_cast<uint64>(Frame) * 2654435761ull + static_cast<uint64>(Who) * 40503ull) >> 7;
@@ -957,6 +959,7 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 		S.bBoardHitThisFrame = false;
 		S.StickHitResult = 0;
 		S.ContactOutcome = 0; S.ContactRatio = 0.f; S.bContactCross = false; S.bCheckRefused = false; S.bRecoilThisFrame = false;   // lane A92 read-outs
+		S.ContactBy = -1; S.bContactBoard = false;   // lane A101 read-outs
 		S.bAbilityThisFrame = false;   // lane A84
 	}
 	Puck.PrevPos = Puck.Pos;
@@ -1572,7 +1575,9 @@ void UJamSim::CollideSkaterStatic(FJamSkaterState& S)
 		S.Pos -= N * (D + R);
 		const double Vn = Dot(S.Vel, N);
 		// Lane A33: a hard board hit is announced (cosmetic read-out; Strength = normal speed / skater.speed, Kind = skater, Where = the contact on the boards).
-		if (Vn >= SkaterBoardEventMinSpeed)
+		// Lane A101: a skater checked into the boards was announced at the hit (ResolveContact, with the check's strength); its slide into them inside
+		// ContactBoardEchoFrames is the same hit, not a second one. LastContactBoardFrame is a read-out (never hashed); it gates the event and the figure's take only.
+		if (Vn >= SkaterBoardEventMinSpeed && !(Frame >= S.LastContactBoardFrame && Frame - S.LastContactBoardFrame < ContactBoardEchoFrames))
 		{
 			Emit(JamEvents::Board, S.Index, S.Pos + N * R, static_cast<float>(Vn / FMath::Max(1e-6, Config.Skater.Speed)), KindSkater, -N);   // lane A47: Dir = the board normal into the rink
 			S.bBoardHitThisFrame = true;   // lane A45: PlayBoardHit
@@ -1774,6 +1779,17 @@ double UJamSim::StabilityOf(const FJamSkaterState& S, const FVector2D& HitDir, E
 	return St;
 }
 
+// Lane A101 (track F1, docs/experiments/CONTACT-2.md): the boards are a body.
+double UJamSim::BoardFactor(const FJamSkaterState& Vic, const FVector2D& HitDir) const
+{
+	const double Bonus = Config.Contact.BoardBonus;
+	if (Bonus <= 1.0 || Vic.InBox()) return 1.0;   // the neutral value: exactly 1, the impulse is untouched
+	FVector2D N;
+	const double D = BoardDistance(Vic.Pos, N);   // negative inside, N outwards
+	if (-D > ContactBoardRangeM) return 1.0;
+	return 1.0 + (Bonus - 1.0) * FMath::Clamp(2.0 * Dot(HitDir, N), 0.0, 1.0);
+}
+
 double UJamSim::ContactImpulse(const FJamSkaterState& Attacker, const FJamSkaterState& Victim, const FVector2D& HitDir, EContactKind Kind) const
 {
 	const double Push = Kind == EContactKind::Cross ? Config.Contact.ThrustMps : Config.Contact.LungeMps;
@@ -1789,7 +1805,11 @@ int32 UJamSim::ResolveContact(FJamSkaterState& Att, FJamSkaterState& Vic, const 
 	const double Closing = Dot(Att.Vel - Vic.Vel, Dir);
 	const double MassA = FMath::Max(1.0, Eff(EJamStat::SkaterMass, Att.Index));
 	const double MassV = FMath::Max(1.0, Eff(EJamStat::SkaterMass, Vic.Index));
-	const double Impulse = ContactImpulse(Att, Vic, Dir, Kind);
+	// Lane A101: the boards are a body. A victim pushed into boards it stands within ContactBoardRangeM of cannot give way: the impulse counts x BoardFactor
+	// (game.contact.board_bonus; exactly 1 at the neutral value). The attacker's own recoil reads the impulse without it (FreeImpulse).
+	const double FreeImpulse = ContactImpulse(Att, Vic, Dir, Kind);
+	const double Board = BoardFactor(Vic, Dir);
+	const double Impulse = FreeImpulse * Board;
 	const double StabV = StabilityOf(Vic, Dir, Kind);
 	// skater.check_speed_min keeps a meaning: a mode that lowered it (hits from low speeds) hits harder by 5 / value; the default 5 changes nothing. The
 	// outcome reads the scaled ratio; the frames down read the physical one (PhysRatio), so such a mode's low-speed knockdown is a short one, not the maximum.
@@ -1800,6 +1820,7 @@ int32 UJamSim::ResolveContact(FJamSkaterState& Att, FJamSkaterState& Vic, const 
 	Vic.ContactOutcome = Outcome;
 	Vic.ContactRatio = static_cast<float>(Ratio);
 	Vic.bContactCross = Kind == EContactKind::Cross;
+	Vic.ContactBy = Att.Index;   // lane A101 read-out
 	const float Strength = bHip ? 1.f : static_cast<float>(FMath::Clamp(Closing / Config.Skater.Speed, 0.0, 1.0));   // contracts/events.md: closing speed / skater.speed
 	auto React = [&](FJamSkaterState& S, const FVector2D& Push, bool bForce)
 	{
@@ -1808,7 +1829,7 @@ int32 UJamSim::ResolveContact(FJamSkaterState& Att, FJamSkaterState& Vic, const 
 	// The attacker pays: the same impulse comes back on it. When its own stability is the lower and the victim stays up, an impulse of its own stability or more
 	// makes the attacker the one who stumbles (a sprinting skater into a braced one).
 	const double StabA = StabilityOf(Att, -Dir, EContactKind::Body);
-	const bool bRecoil = !bHip && Outcome != ContactDown && K.StaggerFrames > 0 && StabA < StabV && Impulse >= StabA * K.DownRatio;
+	const bool bRecoil = !bHip && Outcome != ContactDown && K.StaggerFrames > 0 && StabA < StabV && FreeImpulse >= StabA * K.DownRatio;
 	if (Outcome == ContactBump)
 	{
 		++Vic.ContactBumps;
@@ -1823,6 +1844,18 @@ int32 UJamSim::ResolveContact(FJamSkaterState& Att, FJamSkaterState& Vic, const 
 		const FName CheckKind = Along > 0.5 ? CheckBehind : Along < -0.5 ? CheckFront : (Dot(Dir, FVector2D(VF.Y, -VF.X)) < 0.0 ? CheckSideL : CheckSideR);
 		Emit(JamEvents::Check, Att.Index, Contact, Strength, CheckKind, Dir);
 		FireRule(EJamRuleTrigger::OnCheck, Att.Index, Att.Team, NAME_None, Strength);
+		// Lane A101: a landed hit the boards answered: the victim's board read-out (the figure's board-hit take) and a `board` event (Kind skater, the glass and
+		// the sound) go out with the check's strength, at the point of the boards nearest the victim. Read-outs and an event only: nothing hashed.
+		if (Board > 1.0)
+		{
+			FVector2D Nb;
+			const double Db = BoardDistance(Vic.Pos, Nb);
+			Vic.bContactBoard = true;
+			++Vic.ContactBoardHits;
+			Vic.bBoardHitThisFrame = true;
+			Vic.LastContactBoardFrame = Frame;
+			Emit(JamEvents::Board, Vic.Index, Vic.Pos + Nb * FMath::Max(0.0, -Db), Strength, KindSkater, -Nb);
+		}
 		const bool bVictimHasPuck = CarrierIndex() == Vic.Index || (Frame - Vic.LastCarryFrame) <= Config.Stick.FoulGraceFrames;
 		const bool bFromBehind = Along > 0.5;
 		// The pushed speed changes hands (momentum): half of the lunge or the thrust; a body check's closing speed changes hands in the collision's exchange
@@ -2728,6 +2761,8 @@ void UJamSim::TryAbility(FJamSkaterState& S)
 	// One effect at a time: an armed kind waits for its shot, check or pass; a running shield runs out first.
 	if (!S.AbilityArmed.IsNone() || S.ShieldFrames > 0) return;
 	const FName Kind = A->Kind;
+	// Lane A105: with body checks off a hip check can never land (both landing sites sit behind skater.check_enabled): F is refused, nothing is spent.
+	if (Kind == AbHipCheck && !Config.Skater.bCheckEnabled) return;
 	S.AbilityReadyFrame = Frame + (A->CooldownFrames > 0 ? A->CooldownFrames : AbilityDefaultCooldown(Kind));
 	++S.AbilitiesUsed;
 	S.bAbilityThisFrame = true;
@@ -2772,7 +2807,12 @@ void UJamSim::StepShotgun(const FVector2D& Prev)
 
 void UJamSim::ApplySlowPuck(FJamSkaterState& S)
 {
-	if (S.AbilityArmed != AbSlowPuck) return;
+	// Lane A105: the slow puck's own skater playing it again (a plain shot or pass inside the window) spends it quietly: no wake-up doubles the new puck.
+	if (S.AbilityArmed != AbSlowPuck)
+	{
+		if (Puck.SlowFrames > 0 && Puck.SlowBy == S.Index) { Puck.SlowFrames = 0; Puck.SlowBy = -1; Puck.SlowMul = 1.0; }
+		return;
+	}
 	const FJamAbilityConfig* A = HeldAbility(S.Index);
 	const double Mag = A && A->Magnitude > 0.0 ? A->Magnitude : AbilityDefaultMagnitude(AbSlowPuck);
 	Puck.Vel *= Mag;
@@ -2791,6 +2831,10 @@ void UJamSim::StepSlowPuck()
 	if (Puck.ShotgunFrames > 0) --Puck.ShotgunFrames;
 	if (Puck.SlowFrames <= 0) return;
 	if (Puck.LastTouch != Puck.SlowBy) { Puck.SlowFrames = 0; return; }
+	// Lane A105: the shooter took its own slow puck back (carried: in its reach and riding within the carry assist's 4 m/s): the slow puck is spent. Before,
+	// the wake-up divided the carried puck's speed by the magnitude and threw it off the blade at twice the carrier's speed.
+	const int32 Ci = CarrierIndex();
+	if (Ci >= 0 && Ci == Puck.SlowBy && (Puck.Vel - Skaters[Ci].Vel).Size() < 4.0) { Puck.SlowFrames = 0; Puck.SlowBy = -1; Puck.SlowMul = 1.0; return; }
 	if (--Puck.SlowFrames == 0) Puck.Vel /= Puck.SlowMul;
 }
 

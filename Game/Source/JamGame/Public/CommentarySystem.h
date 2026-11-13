@@ -180,6 +180,8 @@ private:
 	bool Start(int32 LineIndex, FName Event, int64 Frame, FJamCommentaryPick& Out);
 	void Remember(const FJamCommentaryEvent& E, const FJamCommentaryWorld& W);
 	int32 ChooseAmong(const TArray<TPair<int32, int32>>& Options) const;   // (line index, event slot); -1 when empty
+	// Lane A105: every entry point reads the frame; one earlier than the last seen is a new match on the same cartridge (a retake): the match state resets.
+	void NoteFrame(int64 Frame);
 
 	const FJamCommentaryBank& Bank;
 	FJamCommentarySettings Settings;
@@ -189,6 +191,7 @@ private:
 	int64 LastStartFrame = -1000000;
 	int64 LastEndFrame = -1000000;
 	int64 BarkHoldUntil = -1000000;
+	int64 LastSeenFrame = -1000000;   // lane A105
 	bool bBarkAtHumanThisFrame = false;
 	bool bCutRequested = false;
 	const TCHAR* CutReason = TEXT("bark_at_human");

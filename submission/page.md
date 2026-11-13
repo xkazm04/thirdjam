@@ -26,14 +26,14 @@ You skate. You aim the stick with the mouse. The other team is trying to put you
 
 1. **Hits obey momentum.** Two skaters gliding the same way just bump; head-on at full speed is the biggest hit in the game, and the one who throws it pays for it too. (VERIFY: the contact law, lane A92, R-0045 law 1.)
 2. **The carrier wins by stopping and cutting.** With the puck you cannot check, so you win with your feet: hit S against your own motion to brake hard, then burst away, because a defender at full sprint is always faster than you in a straight line. (VERIFY: brake and burst, lane A93, R-0045 laws 3 and 4.)
-3. **Five a side, and they pass.** The bots read open ice: they carry when the lane is clear, pass when you close in, and have stopped charging a wall of defenders. Difficulty is aggression, not speed: rookies barely touch you, all-stars hunt whoever has the puck.
+3. **Five a side, and they pass.** The bots read open ice: they carry when the lane is clear, pass when you close in, and have stopped charging a wall of defenders. Difficulty is aggression first: rookies barely touch you, all-stars hunt whoever has the puck and outskate you to it.
 4. **Modes and abilities.** Once a period you can stop the game and let the Director change one rule: a mode can hand you a one-shot shotgun, a hip-check burst, a shield or a slow puck on **F**, or turn the rink into a pond where nobody hits.
 
 ### What you do
 
 - Skate behind your skater, aim the blade with the mouse, hold the left button to charge a shot, let go to fire.
 - Poke the puck off a carrier, sweep it, spin off a check, deke past a stick, pass to a team-mate (tap Q for a flat pass, hold it for a saucer that flies over a blade).
-- Body-check a carrier into the boards. Cross-check a skater who is not looking. Watch the clay figure go down, slide, and get up angry.
+- Body-check a carrier into the boards. Cross-check a skater at arm's length, face to face. Watch the clay figure go down, slide, and get up angry.
 - Take the season (a ladder of rivals), or pick a cut from the Director's choices.
 
 ### Controls

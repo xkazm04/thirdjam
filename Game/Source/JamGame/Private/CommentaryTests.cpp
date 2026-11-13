@@ -699,4 +699,31 @@ bool FJamCommentaryHitCall::RunTest(const FString&)
 	return true;
 }
 
+// Lane A105 (track Q2): a retake (R after a match: AHokejGameMode::RestartMatch) restarts the sim at frame 0 with the same cartridge object, so
+// UJamCommentarySystem::RefreshSettings never reset the picker: the previous match's frame-keyed state (the booth's end frame, the gate, every cooldown, the
+// knockdown ring) stayed in the future of the new match's frames. A line that ended at frame 20,180 kept the booth "playing" for the first 5.6 minutes of the
+// retake, and the old ring's knockdowns counted again when the new match's clock reached them. A frame earlier than the last one seen is a new match.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamCommentaryRewind, "Jam.Commentary.Rewind", JamCommentaryTests::Flags)
+bool FJamCommentaryRewind::RunTest(const FString&)
+{
+	FRig R;
+	FJamCommentaryPick P;
+	FString Skip;
+	// The first match: two knockdowns by blue late on, then the take line (3 s) at 20,000.
+	R.Frame(19000, JamEvents::Knockdown, Payload(3, FVector2D(0, 0), 0.5f, TEXT("check")), P);
+	R.Frame(19400, JamEvents::Knockdown, Payload(4, FVector2D(0, 0), 0.5f, TEXT("check")), P);
+	TestTrue(TEXT("first match: the take line plays"), R.Frame(20000, JamEvents::Period, Payload(-1, FVector2D::ZeroVector, 0.f, TEXT("take_1")), P, true));
+	TestEqual(TEXT("first match: the booth is held to 20,180"), R.Picker->GetLastEndFrame(), (int64)20180);
+	// The retake: frame 30 of the new match, a shot. It must play (the booth is free in the new match).
+	const bool bPlays = R.Frame(30, JamEvents::Shot, Payload(4, FVector2D(-20, 0), 0.9f), P, false, &Skip);
+	AddInfo(FString::Printf(TEXT("retake frame 30: plays %d (skip '%s'), booth end %lld"), bPlays ? 1 : 0, *Skip, R.Picker->GetLastEndFrame()));
+	TestTrue(TEXT("retake: the first shot line plays"), bPlays);
+	TestTrue(TEXT("retake: the booth's end frame belongs to the new match"), R.Picker->GetLastEndFrame() < 1000);
+	// The old match's knockdowns are not in the new match's ring when its clock reaches their frames.
+	TestEqual(TEXT("retake: the knockdown ring starts empty"), R.Picker->KnockdownsInWindow(0, 19500), 0);
+	// The same frame twice (several events in one frame) is no rewind: the line just started still holds the booth.
+	TestFalse(TEXT("same frame: still one line at a time"), R.Frame(30, JamEvents::Shot, Payload(1, FVector2D(20, 0), 0.9f), P));
+	return true;
+}
+
 #endif // WITH_DEV_AUTOMATION_TESTS

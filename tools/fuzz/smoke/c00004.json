@@ -1,0 +1,400 @@
+{
+ "schema": "tj.cartridge/1",
+ "id": "fuzz-00004",
+ "title": "Fuzz 4",
+ "seed": 4294967295,
+ "theme": {
+  "name": "The Final Cut",
+  "mood_words": [
+   "neon",
+   "electric",
+   "wet"
+  ],
+  "palette": [
+   {
+    "name": "wet ice",
+    "hex": "#9FB6D6"
+   },
+   {
+    "name": "blue",
+    "hex": "#1D4ED8"
+   },
+   {
+    "name": "orange",
+    "hex": "#E8651A"
+   },
+   {
+    "name": "neon",
+    "hex": "#22F5E1"
+   },
+   {
+    "name": "magenta",
+    "hex": "#FF2BD6"
+   },
+   {
+    "name": "dark",
+    "hex": "#070B16"
+   }
+  ]
+ },
+ "tunables": [
+  {
+   "key": "skater_speed",
+   "type": "number",
+   "min": 3,
+   "max": 16,
+   "default": 11,
+   "description": "Top skating speed in metres per second. Higher is faster and harder to control."
+  },
+  {
+   "key": "skater_turn_rate",
+   "type": "number",
+   "min": 1,
+   "max": 12,
+   "default": 5,
+   "description": "How sharply skaters turn, in radians per second."
+  },
+  {
+   "key": "shot_speed",
+   "type": "number",
+   "min": 5,
+   "max": 40,
+   "default": 18,
+   "description": "How fast the puck leaves the stick after a shot, in metres per second."
+  },
+  {
+   "key": "puck_max_speed",
+   "type": "number",
+   "min": 10,
+   "max": 60,
+   "default": 30,
+   "description": "The fastest the puck can ever travel, in metres per second."
+  },
+  {
+   "key": "ice_friction",
+   "type": "number",
+   "min": 0,
+   "max": 0.1,
+   "default": 0.015,
+   "description": "How slippery the ice is. 0 never slows down, 0.015 is real ice."
+  },
+  {
+   "key": "board_restitution",
+   "type": "number",
+   "min": 0,
+   "max": 1,
+   "default": 0.4,
+   "description": "How bouncy the boards are. 0 is dead, 1 is a perfect bounce."
+  },
+  {
+   "key": "ai_speed_scale",
+   "type": "number",
+   "min": 0.3,
+   "max": 1.5,
+   "default": 1,
+   "description": "How fast the bots skate compared with you. 1 is equal."
+  },
+  {
+   "key": "ai_red_skill",
+   "type": "number",
+   "min": 0,
+   "max": 1,
+   "default": 1,
+   "description": "How sharp the opposing bots are. 0 is clumsy, 1 is sharp."
+  },
+  {
+   "key": "goal_pause_frames",
+   "type": "integer",
+   "min": 30,
+   "max": 600,
+   "default": 120,
+   "description": "How long the game pauses after a goal, in physics frames (60 per second)."
+  }
+ ],
+ "values": {
+  "board_restitution": 0,
+  "ai_speed_scale": 1.5,
+  "ai_red_skill": 1
+ },
+ "rules": [],
+ "entities": [],
+ "ai": [],
+ "game": {
+  "rink": {
+   "length_m": 40.12,
+   "width_m": 42.41709,
+   "corner_radius_m": 0.015,
+   "board_restitution": 0.001,
+   "ice_friction": 0.05017,
+   "goal_width_m": 6,
+   "goal_height_m": 1.4988,
+   "zones": [
+    {
+     "id": "zone-1",
+     "shape": "circle",
+     "x": -8.17,
+     "z": 11.55,
+     "kind": "no_shoot",
+     "r": 8.17
+    }
+   ]
+  },
+  "skater": {
+   "speed": 15.987,
+   "accel": 4.036,
+   "turn_rate": 1.98005,
+   "lateral_grip": 0.5115,
+   "mass": 126.99965,
+   "glide_drag": 0.001,
+   "brake_decel": 29.971,
+   "check_enabled": true,
+   "check_speed_min": 1.011,
+   "knockdown_frames": 15,
+   "visual": "toy",
+   "pass_speed": 17.5,
+   "pass_lead_frames": 60,
+   "carry_speed_mult": 0.6004,
+   "reverse_brake_decel": 0,
+   "burst": {
+    "frames": 0,
+    "accel_mult": 1
+   },
+   "breakaway": {
+    "speed_bonus": 0.999,
+    "frames": 300
+   },
+   "sprint": {
+    "bonus": 1,
+    "drain_frames": 1003,
+    "refill_frames": 30,
+    "carry_bonus": 0.5
+   },
+   "goalie": {
+    "reach_m": 1.5,
+    "block_height_m": 1.88999
+   },
+   "spin": {
+    "frames": 0,
+    "cooldown_frames": 600,
+    "speed_mult": 0.2008,
+    "stamina_cost": 0
+   }
+  },
+  "stick": {
+   "reach_m": 0.601,
+   "carry_reach_mult": 0.75,
+   "poke_window_frames": 14,
+   "lift_range_m": 0.502,
+   "lift_cone_deg": 10,
+   "stumble_frames": 90,
+   "mouse_sensitivity": 5,
+   "foul_grace_frames": 120,
+   "reception_m": 1.5,
+   "deke": {
+    "offset_m": 0.70193,
+    "commit_frames": 60
+   },
+   "sweep": {
+    "min_deg_per_frame": 1,
+    "shield_frames": 33,
+    "bot_react_frames": 0,
+    "sprint_shield_mult": 0.001
+   }
+  },
+  "puck": {
+   "radius_m": 0.39966,
+   "max_speed": 10,
+   "drag": 1.998,
+   "carry_assist": 0.001,
+   "count": 2,
+   "gravity_mps2": 15,
+   "ice_restitution": 0
+  },
+  "shot": {
+   "reach_m": 4,
+   "speed": 7.99583,
+   "cooldown_frames": 21,
+   "aim_cone_deg": 33.54301,
+   "charge_frames_max": 60,
+   "charge_speed_bonus": 0,
+   "tap_frames": 30,
+   "deflect": false,
+   "one_timer": {
+    "window_frames": 60,
+    "cone_bonus_deg": 0.03
+   },
+   "lift": {
+    "tap_m": 0.13226,
+    "half_m": 1.4985,
+    "full_m": 1.998,
+    "half_frames": 0
+   }
+  },
+  "pass": {
+   "saucer": {
+    "half_frames": 60,
+    "lift_m": 0.001
+   }
+  },
+  "contact": {
+   "momentum": true,
+   "carrier_can_hit": true,
+   "lunge_mps": 0,
+   "thrust_mps": 0,
+   "cross_reach_m": 0,
+   "stability_mps": 1,
+   "stand_speed_mps": 0,
+   "stand_brace": 1,
+   "speed_stability": 0.3,
+   "sprint_stability": 0.3,
+   "spin_stability": 0.3,
+   "unseen_stability": 0.3,
+   "bump_ratio": 0,
+   "loose_ratio": 0,
+   "down_ratio": 0.2,
+   "down_full_ratio": 1,
+   "down_frames_min": 300,
+   "down_frames_max": 15,
+   "stagger_frames": 60
+  },
+  "ai": {
+   "difficulty": "all_star",
+   "yield_margin_m": 0,
+   "yield_radius_m": 11.6741,
+   "hold_radius_m": 0,
+   "speed_scale": 1.4988,
+   "red_skill": 0,
+   "react_frames": 30,
+   "body_check": 0.55596,
+   "sprint": 0.64842
+  },
+  "barks": {
+   "enabled": false,
+   "intensity": "normal"
+  },
+  "commentary": {
+   "enabled": false,
+   "intensity": "loud"
+  },
+  "look": {
+   "tier": "p4_broadcast",
+   "trim_emissive": 50,
+   "fog_density": 0.04598,
+   "wet_ice": false,
+   "trim_colour_hex": "#38BDF8"
+  },
+  "camera": {
+   "mode": "third_person",
+   "distance_m": 19.982,
+   "height_m": 5.24385,
+   "look_ahead_m": 19.98,
+   "lag_frames": 0,
+   "fov_deg": 44.05177,
+   "boards_margin_m": 2.5,
+   "end_height_m": 15,
+   "far_net_bias": 1,
+   "radar": true
+  },
+  "rules": {
+   "mode": "first_to",
+   "score_to_win": 7,
+   "goal_pause_frames": 527,
+   "penalty_frames": 60,
+   "offside": false
+  },
+  "abilities": [
+   {
+    "kind": "shotgun",
+    "trigger": "mode",
+    "charges": 8,
+    "cooldown_frames": 2339,
+    "duration_frames": 1,
+    "magnitude": 4
+   }
+  ],
+  "teams": [
+   {
+    "id": "blue",
+    "colour_hex": "#123456",
+    "skaters": [
+     {
+      "role": "player",
+      "spawn": [
+       -7.07,
+       -8.85
+      ]
+     },
+     {
+      "role": "back",
+      "spawn": [
+       -12.48,
+       -0.73
+      ]
+     },
+     {
+      "role": "support",
+      "spawn": [
+       15.26,
+       -11.87
+      ]
+     },
+     {
+      "role": "support",
+      "spawn": [
+       4.55,
+       -2.03
+      ]
+     },
+     {
+      "role": "support",
+      "spawn": [
+       -7.05,
+       13.88
+      ]
+     }
+    ]
+   },
+   {
+    "id": "orange",
+    "colour_hex": "#654321",
+    "skaters": [
+     {
+      "role": "support",
+      "spawn": [
+       16.17,
+       8.94
+      ]
+     },
+     {
+      "role": "back",
+      "spawn": [
+       4.41,
+       -15.39
+      ]
+     },
+     {
+      "role": "back",
+      "spawn": [
+       11.7,
+       19.14
+      ]
+     },
+     {
+      "role": "chaser",
+      "spawn": [
+       9.7,
+       3.59
+      ]
+     },
+     {
+      "role": "support",
+      "spawn": [
+       18.94,
+       5.1
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

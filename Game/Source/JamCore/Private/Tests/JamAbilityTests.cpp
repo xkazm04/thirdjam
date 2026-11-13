@@ -361,4 +361,84 @@ bool FJamAbilitiesSlowPuck::RunTest(const FString& Parameters)
 	return true;
 }
 
+// Lane A105 (track Q2): the slow puck's wake-up belongs to a puck in flight. Before the fix StepSlowPuck divided the puck's speed by slow_puck's magnitude after
+// duration_frames whenever the shooter was still its last touch: the shooter who skated after its own slow puck and carried it again had the carried puck
+// thrown ahead at twice the carrier's speed (out of the carry assist's 4 m/s), and a second plain shot or pass by the same skater inside the window was
+// doubled in mid-flight. Now the shooter's carry or its next shot or pass spends the slow puck quietly.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamAbilitiesSlowPuckRetaken, "Jam.Core.Abilities.SlowPuckRetaken", JamAbilityTests::Flags)
+bool FJamAbilitiesSlowPuckRetaken::RunTest(const FString& Parameters)
+{
+	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
+	if (!C) return false;
+	const FJamGameConfig G = With(C->Game, { Ab(TEXT("slow_puck"), TEXT("mode")) });
+	// (1) The human shoots a slow puck from x = -30, and 30 frames later it is put back on the puck at the puck's own speed, skating on with the stick forward
+	// (the carry assist takes it). Through and past the 120 frames of the slow puck the puck must stay carried, riding at the carrier's speed.
+	{
+		FAbilityScene Sc(G, FVector2D(-30, 0), true);
+		const double D = Sc.Dir;
+		Sc.Press(&FJamInput::bAbility);
+		Sc.Press(&FJamInput::bShoot);
+		TestTrue(TEXT("retaken: the slow puck runs"), Sc.Sim->GetPuck().SlowFrames > 0);
+		for (int32 f = 0; f < 30; ++f) Sc.Step();
+		const FJamPuckState& P = Sc.Sim->GetPuck();
+		const FVector2D PV = P.Vel;
+		Sc.Sim->SetSkater(Sc.Me, P.Pos - FVector2D(D * 0.45, 0.0), FVector2D(PV.X, 0.0), D > 0 ? 0.0 : PI);
+		Sc.In[Sc.Me].Move = FVector2D(D, 0.0);
+		Sc.In[Sc.Me].Stick = FVector2D(D, 0.0) * 0.5;
+		bool bAlwaysCarried = true;
+		double WorstRel = 0.0;
+		for (int32 f = 0; f < 120; ++f)
+		{
+			Sc.Step();
+			if (f < 6) continue;   // the carry assist settles the puck on the blade
+			const double Rel = (Sc.Sim->GetPuck().Vel - Sc.Human().Vel).Size();
+			WorstRel = FMath::Max(WorstRel, Rel);
+			bAlwaysCarried &= Sc.Sim->CarrierIndex() == Sc.Me;
+		}
+		AddInfo(FString::Printf(TEXT("retaken: carried throughout %d, worst puck-carrier speed difference %.2f m/s, slow frames left %d"), bAlwaysCarried ? 1 : 0, WorstRel, Sc.Sim->GetPuck().SlowFrames));
+		TestTrue(TEXT("retaken: the shooter keeps its own slow puck through the wake-up"), bAlwaysCarried);
+		TestTrue(TEXT("retaken: the puck rides at the carrier's speed (under 4 m/s apart)"), WorstRel < 4.0);
+	}
+	// (2) The same skater's next plain shot inside the window: no mid-flight doubling at frame 120 of the first.
+	{
+		FAbilityScene Sc(G, FVector2D(-30, 0), true);
+		const double D = Sc.Dir;
+		Sc.Press(&FJamInput::bAbility);
+		Sc.Press(&FJamInput::bShoot);
+		for (int32 f = 0; f < 40; ++f) Sc.Step();
+		// Back on the puck (standing), wait out the shot cooldown, shoot plain.
+		const FJamPuckState& P = Sc.Sim->GetPuck();
+		Sc.Sim->SetSkater(Sc.Me, P.Pos - FVector2D(D * 0.45, 0.0), FVector2D::ZeroVector, D > 0 ? 0.0 : PI);
+		Sc.Sim->SetPuck(P.Pos, FVector2D::ZeroVector);
+		for (int32 f = 0; f < 30; ++f) Sc.Step();
+		Sc.Press(&FJamInput::bShoot);
+		TArray<double> Speeds;
+		for (int32 f = 0; f < 80; ++f) { Speeds.Add(Sc.Sim->GetPuck().Vel.Size()); Sc.Step(); }
+		double WorstJump = 0.0;
+		for (int32 i = 1; i < Speeds.Num(); ++i) WorstJump = FMath::Max(WorstJump, Speeds[i] / FMath::Max(1e-6, Speeds[i - 1]));
+		AddInfo(FString::Printf(TEXT("second shot: release %.2f m/s, worst frame-to-frame speed ratio %.2f"), Speeds[0], WorstJump));
+		TestTrue(TEXT("second shot: never sped up in flight (frame-to-frame ratio under 1.05)"), WorstJump < 1.05);
+	}
+	return true;
+}
+
+// Lane A105 (track Q2): a hip check in a cartridge whose body checks are off (skater.check_enabled false) could arm and never fire: both of its landing
+// sites sit behind check_enabled, so F spent the charge, the slot stayed held for the match and a pickup slot never emptied (no further pickup granted).
+// Now F refuses it there (nothing spent) and a pickup draw passes it over.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamAbilitiesHipCheckNoChecks, "Jam.Core.Abilities.HipCheckNoChecks", JamAbilityTests::Flags)
+bool FJamAbilitiesHipCheckNoChecks::RunTest(const FString& Parameters)
+{
+	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
+	if (!C) return false;
+	FJamGameConfig G = With(C->Game, { Ab(TEXT("hip_check"), TEXT("mode"), 2) });
+	G.Skater.bCheckEnabled = false;
+	FAbilityScene Sc(G, FVector2D(0, 0), false);
+	TestEqual(TEXT("granted from the drop"), Sc.Human().AbilitySlot, 0);
+	Sc.Press(&FJamInput::bAbility);
+	TestTrue(TEXT("checks off: F does not arm a hip check"), Sc.Human().AbilityArmed.IsNone());
+	TestEqual(TEXT("checks off: no charge spent"), Sc.Human().AbilityCharges, 2);
+	TestEqual(TEXT("checks off: no use counted"), Sc.Human().AbilitiesUsed, 0);
+	return true;
+}
+
 #endif

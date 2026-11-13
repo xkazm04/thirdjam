@@ -1,0 +1,2 @@
+[{"label":"m-marathon","cls":"regular","lvl":"pro","cart":"modes/hockey.mode.marathon","seeds":"1-200","maxframes":40000},
+ {"label":"m-marathon-sprint","cls":"regular","lvl":"pro","cart":"modes/hockey.mode.marathon","seeds":"1-200","maxframes":40000,"extra":["-playersprint"]}]

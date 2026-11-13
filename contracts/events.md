@@ -58,6 +58,7 @@ The payload is a C++ struct with defaults, not JSON; "absent" here means the def
 |---|---|---|---|---|---|
 | `shot` | `Shot` | a shot leaves the stick | shooter | puck position | exit speed / `game.puck.max_speed` |
 | `board` | `Board` | the puck hits the boards | -1 | contact point | normal impact speed / `game.puck.max_speed` |
+| `board` | `Board` | a skater hits the boards at 4 m/s or more, or is checked into them (lane A101; Kind `skater`, Dir = the boards' normal into the rink) | the skater | the skater's position | normal speed / `skater.speed`, or the check's strength when checked into the boards |
 | `goal` | `Goal` | the puck enters a goal trigger | last skater to touch the puck, or -1 | puck position | 1 |
 | `faceoff` | `Faceoff` | a faceoff reset ends and play resumes | -1 | centre ice | 0 |
 | `check` | `Check` | a body check makes contact | the checker | contact point | closing speed / `game.skater.speed` (clamped to 1) |

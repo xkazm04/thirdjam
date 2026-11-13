@@ -27,6 +27,9 @@ Read first, always: `docs/VISION.md` (the game's laws), `docs/PLAN-RECONCILED.md
   `tools/run/package.ps1 ... -ExtraArgs "-ubtargs=-WaitMutex"`; wait out a UBT ConflictingInstance and an AutomationTool already running.
 - **Few processes, many seeds.** Every `UnrealEditor-Cmd` start takes a turn at the one build tool lock (the design eye's commandlets waited 3 to 16 minutes each to play
   60 matches in 7 seconds). Batch a measurement into as few process starts as you can; never one process per match or per cell when one can run a list.
+- **`-Multiprocess` on every headless start** (lane A107, 20:00): without it every `UnrealEditor-Cmd` start runs `Build.bat -Mode=ValidatePlatforms` and queues on the
+  build tool's mutex (a 3-match run: 5 m 17 s; with the flag 9.5 s, identical hashes). The shared drivers on main carry it from 20:10; add it to any command line of
+  your own (`-nullrhi -Multiprocess -unattended`) and to your worktree's copies of `tools/playtest/run.mjs`, `tools/soak/playtest/soak.mjs`, `tools/perf/results/a95/curve.mjs`.
 - Blender runs headless (`blender -b -P script.py`); find the install as `docs/experiments/BLENDER.md` says.
 
 ## The walls

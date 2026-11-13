@@ -58,6 +58,13 @@ public:
 	// Lane A64: the faceoff countdown / WON ring's x offset from the screen centre (Slate units).
 	static constexpr float RingOffsetXPx = 260.f;
 	void ShowToast(const FString& Text);
+	// Lane A101 (track F1): the contact line, bottom centre above the stamina bar, ContactLineFrames sim frames (the last ContactFadeFrames fade): what just
+	// happened to the human's press. The HUD reads the human's counters from the sim (ChecksRefused, ContactRecoils), so a frame the hit-stop held is not lost.
+	static constexpr int64 ContactLineFrames = 60;
+	static constexpr int64 ContactFadeFrames = 15;
+	static FString ContactLineFor(bool bRefused, bool bBounced) { return bBounced ? TEXT("BOUNCED OFF") : bRefused ? TEXT("NOT WITH THE PUCK") : TEXT(""); }
+	void ShowContactLine(const FString& Text);
+	FString GetContactText() const;
 	FString GetToastText() const;
 	static bool ShowControlsHint(const FJamPresentationFrame& F) { return F.SimFrame < ControlsHintFrames && F.Phase == EJamPhase::Play; }
 	// The Directors Call prompt shows only after the first goal.
@@ -219,6 +226,12 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> ToastText;
 	int64 ToastStart = -1;     // sim frame the toast first showed; -1 = waiting for the next frame
 	bool bToastPending = false;
+	UPROPERTY(Transient) TObjectPtr<UBorder> ContactPlate;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> ContactText;
+	int64 ContactStart = -1;   // sim frame the contact line first showed; -1 = none or waiting for the next frame
+	bool bContactPending = false;
+	int32 ContactSeenRefused = 0, ContactSeenRecoils = 0;
+	void UpdateContactLine(const FJamPresentationFrame& Frame);
 	UPROPERTY(Transient) TObjectPtr<UJamRadarWidget> Radar;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> CallText;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> CardTextBlock;

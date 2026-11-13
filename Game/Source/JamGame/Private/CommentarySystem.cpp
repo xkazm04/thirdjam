@@ -98,7 +98,7 @@ void FJamCommentaryPicker::Reset(uint64 Seed)
 {
 	Rng.Seed(Seed, 91u);
 	Pending.Reset();
-	LastStartFrame = LastEndFrame = BarkHoldUntil = -1000000;
+	LastStartFrame = LastEndFrame = BarkHoldUntil = LastSeenFrame = -1000000;
 	bBarkAtHumanThisFrame = bCutRequested = false;
 	LastSituationFrame.Reset();
 	SituationHistory.Reset();
@@ -321,8 +321,25 @@ void FJamCommentaryPicker::Remember(const FJamCommentaryEvent& E, const FJamComm
 	}
 }
 
+void FJamCommentaryPicker::NoteFrame(int64 Frame)
+{
+	// Lane A105: AHokejGameMode::RestartMatch (R after a match, the Director's Call restart) puts the sim back to frame 0 with the same cartridge object, so
+	// UJamCommentarySystem::RefreshSettings never resets the picker; the previous match's frame-keyed state (the booth's end frame, the gate, the cooldowns,
+	// the knockdown ring) would sit in the new match's future and hold the booth silent for as long as the last match ran. The stream carries on (cosmetic).
+	if (Frame < LastSeenFrame)
+	{
+		const bool bWasPlaying = IsLinePlaying(LastSeenFrame);
+		const FJamRandom Keep = Rng;
+		Reset(0);
+		Rng = Keep;
+		if (bWasPlaying) { bCutRequested = true; CutReason = TEXT("rewind"); }
+	}
+	LastSeenFrame = Frame;
+}
+
 void FJamCommentaryPicker::Observe(FName Event, const FJamEventPayload& Payload, const FVector2D& WhereM, const FJamCommentaryWorld& W)
 {
+	NoteFrame(W.Frame);
 	if (!Settings.bEnabled) return;
 	if (Event == JamEvents::Ability && Payload.Strength < 0.5f) return;   // lane A84: a grant is not narrated, only a use (Strength 1)
 	FJamCommentaryEvent E;
@@ -397,6 +414,7 @@ void FJamCommentaryPicker::Observe(FName Event, const FJamEventPayload& Payload,
 
 void FJamCommentaryPicker::ObserveBark(int64 Frame, bool bAtHuman)
 {
+	NoteFrame(Frame);
 	if (bAtHuman) bBarkAtHumanThisFrame = true;
 }
 
@@ -452,6 +470,7 @@ bool FJamCommentaryPicker::Resolve(const FJamCommentaryWorld& W, FJamCommentaryP
 {
 	if (OutSkip) OutSkip->Reset();
 	const int64 Frame = W.Frame;
+	NoteFrame(Frame);
 	// The score and possession of this frame become the "before" of the next.
 	auto Close = [&]
 	{
@@ -543,6 +562,7 @@ bool FJamCommentaryPicker::Resolve(const FJamCommentaryWorld& W, FJamCommentaryP
 
 bool FJamCommentaryPicker::Force(FName Id, int64 Frame, FJamCommentaryPick& Out)
 {
+	NoteFrame(Frame);
 	const int32 I = Bank.Find(Id);
 	if (I == INDEX_NONE) return false;
 	return Start(I, Bank.Lines[I].Event, Frame, Out);

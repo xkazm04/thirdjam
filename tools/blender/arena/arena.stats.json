@@ -1,0 +1,165 @@
+{
+  "rink": {
+    "length_m": 120.0,
+    "width_m": 60.0
+  },
+  "params": {
+    "bench_len_factor": 0.1,
+    "bench_x_factor": 0.0833,
+    "box_len": 4.4,
+    "box_x": 3.0,
+    "depth": 1.6,
+    "gap": 0.05,
+    "board_t": 0.2,
+    "board_h": 1.2,
+    "floor_h": 0.1,
+    "wall_t": 0.18,
+    "wall_h": 1.3,
+    "back_h": 1.75,
+    "rail_w": 0.28,
+    "rail_h": 0.15,
+    "seat_h": 0.46,
+    "seat_t": 0.12,
+    "seat_d": 0.42,
+    "door_w": 1.05,
+    "door_h": 1.08,
+    "door_t": 0.09,
+    "door_open_deg": 72.0,
+    "wobble": 0.012,
+    "press_r": 0.27,
+    "press_depth": 0.05,
+    "press_every": 1.15,
+    "seat_socket": [
+      0.35,
+      0.62,
+      0.1
+    ]
+  },
+  "pieces": {
+    "SM_Arena_TeamBench": {
+      "triangles": 2816,
+      "triangles_by_slot": {
+        "board": 336,
+        "kick": 528,
+        "bench": 144,
+        "team": 1296,
+        "dark": 512
+      },
+      "triangles_by_part": {
+        "floor": 144,
+        "back_wall": 176,
+        "kick_band": 144,
+        "end_wall": 160,
+        "cap_rail": 1136,
+        "seat": 240,
+        "legs": 256,
+        "backrest": 144,
+        "door": 160,
+        "door_fittings": 256
+      },
+      "vertices": 1448,
+      "uv_loops": 5952,
+      "uv_min": [
+        0.0,
+        0.0
+      ],
+      "uv_max": [
+        6.835,
+        1.803
+      ],
+      "dimensions_m": [
+        12.111,
+        1.69,
+        1.901
+      ],
+      "sockets": {},
+      "under_budget": true,
+      "length_m": 12.0,
+      "thumb_presses": 12,
+      "fbx_mb": 0.089
+    },
+    "SM_Arena_PenaltyBox": {
+      "triangles": 2144,
+      "triangles_by_slot": {
+        "board": 432,
+        "kick": 272,
+        "bench": 96,
+        "team": 864,
+        "dark": 480
+      },
+      "triangles_by_part": {
+        "floor": 96,
+        "back_wall": 112,
+        "kick_band": 96,
+        "end_wall": 160,
+        "cap_rail": 656,
+        "seat": 96,
+        "legs": 128,
+        "backrest": 80,
+        "door": 80,
+        "door_fittings": 128,
+        "clock": 512
+      },
+      "vertices": 1112,
+      "uv_loops": 4656,
+      "uv_min": [
+        0.0,
+        0.0
+      ],
+      "uv_max": [
+        3.035,
+        1.803
+      ],
+      "dimensions_m": [
+        4.515,
+        1.693,
+        2.663
+      ],
+      "sockets": {
+        "Seat": [
+          0.35,
+          0.62,
+          0.1
+        ]
+      },
+      "under_budget": true,
+      "length_m": 4.4,
+      "thumb_presses": 5,
+      "fbx_mb": 0.076
+    }
+  },
+  "placement_m": {
+    "note": "Unreal metres, rink centre at the origin, ice top at z 0; RinkActor computes the same from game.rink",
+    "SM_Arena_TeamBench": [
+      {
+        "x": -9.996,
+        "y": 30.25,
+        "yaw": 0,
+        "team": 0
+      },
+      {
+        "x": 9.996,
+        "y": 30.25,
+        "yaw": 0,
+        "team": 1
+      }
+    ],
+    "SM_Arena_PenaltyBox": [
+      {
+        "x": -3.0,
+        "y": -30.25,
+        "yaw": 180,
+        "team": 0
+      },
+      {
+        "x": 3.0,
+        "y": -30.25,
+        "yaw": 180,
+        "team": 1
+      }
+    ],
+    "bench_length_m": 12.0
+  },
+  "render_s": 15.9,
+  "total_s": 22.7
+}

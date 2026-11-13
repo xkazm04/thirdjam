@@ -296,7 +296,7 @@ namespace JamAI
 			O.Team = K.Team;
 			O.Role = RoleOf(K.Role);
 			O.bHasPuck = K.bHasPuck;
-			O.bDown = K.IsDown();
+			O.bDown = K.IsDown() || K.InBox();   // lane A105: a boxed skater is off the ice for every brain read (pressure, outlets, jobs), like one knocked down
 			O.bCentre = K.bCentre;
 			O.bCanPoke = K.CanAct() && NextFrame >= K.PokeReadyFrame && K.PokeWindow <= 0;
 			O.bCanLift = K.CanAct() && NextFrame >= K.LiftReadyFrame;

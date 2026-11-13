@@ -7,6 +7,8 @@
 #include "Engine/GameViewportClient.h"
 #include "UnrealClient.h"
 #include "LookTierSwitcher.h"
+#include "HokejGameMode.h"   // lane A101: the kick reads the outcome and the ratio of the hit from the sim
+#include "JamSim.h"
 
 // A40: 1 = the H11 camera (pull in along the arm to 0.3 m inside a rectangle, no lift, no yaw rule, no far-net lead). Presentation only; the before stills of CAMERA.md use it.
 static TAutoConsoleVariable<int32> CVarJamCameraLegacy(TEXT("jam.camera.Legacy"), 0,
@@ -415,9 +417,36 @@ void UJamFollowCamera::KickOffset(int32 FrameIndex, float Strength, const FVecto
 	OutRollDeg = KickRollDeg * S * K * (Side < 0.f ? -1.f : 1.f) * FMath::Min(1.f, FMath::Abs(Side) * 2.f);
 }
 
-void UJamFollowCamera::StartKick(float Strength, FVector2D DirWorld)
+float UJamFollowCamera::StumbleKickScale(float Ratio, float BumpRatio, float DownRatio)
+{
+	const float T = FMath::Clamp((Ratio - BumpRatio) / FMath::Max(1e-6f, DownRatio - BumpRatio), 0.f, 1.f);
+	return FMath::Lerp(StumbleKickMin, StumbleKickMax, T);
+}
+
+// Lane A101 (track F1): the hits no event names the human in: a stumble it takes (the push is its BumpDir) and its own bounce off a more stable skater.
+void UJamFollowCamera::ContactKickObserve()
+{
+	if (CVarJamHitKick.GetValueOnGameThread() <= 0.f) return;
+	const UWorld* W = GetWorld();
+	const AHokejGameMode* GM = W ? W->GetAuthGameMode<AHokejGameMode>() : nullptr;
+	const UJamSim* Sim = GM ? GM->GetSim() : nullptr;
+	if (!Sim || !Sim->GetSkaters().IsValidIndex(Sim->GetHumanIndex())) return;
+	const FJamSkaterState& H = Sim->GetSkaters()[Sim->GetHumanIndex()];
+	const FJamContactConfig& K = Sim->GetConfig().Contact;
+	const bool bTaken = H.ContactOutcome == UJamSim::ContactStumble;
+	if (!bTaken && !H.bRecoilThisFrame) return;
+	// The bounce kicks as the hardest stumble does: the player ran into a wall. BumpDir is the push on the human in both cases.
+	const float Scale = H.bRecoilThisFrame ? StumbleKickMax : StumbleKickScale(H.ContactRatio, static_cast<float>(K.BumpRatio), static_cast<float>(K.DownRatio));
+	StartKick(StumbleKickStrength, H.BumpDir, Scale);
+	UE_LOG(LogTemp, Log, TEXT("JAMKICK frame=%lld %s strength=%.2f dir=(%.2f, %.2f) cm=%.1f frames=%d scale=%.2f ratio=%.2f"), Sim->GetFrame(),
+		H.bRecoilThisFrame ? TEXT("bounce") : TEXT("stumble_taken"), StumbleKickStrength, H.BumpDir.X, H.BumpDir.Y,
+		KickCm * StumbleKickStrength * Scale * CVarJamHitKick.GetValueOnGameThread(), KickFrames, Scale * CVarJamHitKick.GetValueOnGameThread(), H.ContactRatio);
+}
+
+void UJamFollowCamera::StartKick(float Strength, FVector2D DirWorld, float Scale)
 {
 	KickLeft = KickFrames;
+	KickScale = FMath::Clamp(Scale, 0.f, 1.f);
 	KickStrength = FMath::Clamp(Strength, 0.f, 1.f);
 	KickDir = DirWorld.GetSafeNormal();
 	if (KickDir.IsNearlyZero()) KickLeft = 0;
@@ -434,10 +463,31 @@ void UJamFollowCamera::OnJamEvent(FName Event, const FJamEventPayload& Payload)
 	const FVector2D Dir2(Payload.Dir.X, Payload.Dir.Y);
 	if (!Dir2.IsNearlyZero() && CVarJamHitKick.GetValueOnGameThread() > 0.f)
 	{
-		StartKick(Payload.Strength, Dir2);
+		// Lane A101 (track F1): a check the human lands that only stumbles its victim kicks by the ratio (3 to 6 cm), not as a knockdown does. The victim is the
+		// skater whose ContactBy names the human this frame (the sim's read-outs are this frame's while the events are delivered).
+		float Strength = Payload.Strength, Scale = 1.f;
+		const TCHAR* What = bLanded ? TEXT("landed") : TEXT("taken");
+		if (bLanded)
+		{
+			const UWorld* W = GetWorld();
+			const AHokejGameMode* GM = W ? W->GetAuthGameMode<AHokejGameMode>() : nullptr;
+			if (const UJamSim* Sim = GM ? GM->GetSim() : nullptr)
+			{
+				const FJamContactConfig& K = Sim->GetConfig().Contact;
+				for (const FJamSkaterState& V : Sim->GetSkaters())
+				{
+					if (V.ContactBy != Payload.Who || V.ContactOutcome != UJamSim::ContactStumble) continue;
+					Strength = StumbleKickStrength;
+					Scale = StumbleKickScale(V.ContactRatio, static_cast<float>(K.BumpRatio), static_cast<float>(K.DownRatio));
+					What = TEXT("stumble_landed");
+					break;
+				}
+			}
+		}
+		StartKick(Strength, Dir2, Scale);
 		UE_LOG(LogTemp, Log, TEXT("JAMKICK frame=%lld %s strength=%.2f dir=(%.2f, %.2f) cm=%.1f frames=%d scale=%.2f"), Bus ? Bus->GetSimFrame() : -1,
-			bLanded ? TEXT("landed") : TEXT("taken"), Payload.Strength, Dir2.X, Dir2.Y, KickCm * FMath::Max(0.5f, Payload.Strength) * CVarJamHitKick.GetValueOnGameThread(), KickFrames,
-			CVarJamHitKick.GetValueOnGameThread());
+			What, Strength, Dir2.X, Dir2.Y, KickCm * FMath::Max(0.5f, Strength) * Scale * CVarJamHitKick.GetValueOnGameThread(), KickFrames,
+			Scale * CVarJamHitKick.GetValueOnGameThread());
 		return;
 	}
 	// The side of the contact seen by the camera decides the kick's direction.
@@ -493,12 +543,13 @@ void UJamFollowCamera::StepSimFrame(const FJamPresentationFrame& Frame)
 		PoseCurrent.SetLocation(PoseCurrent.GetLocation() + Rot.GetRightVector() * RightCm);
 		PoseCurrent.SetRotation(Rot * FRotator(0.f, 0.f, RollDeg).Quaternion());
 	}
+	ContactKickObserve();   // lane A101: a stumble the human takes and its own bounce start a kick on this frame
 	// Lane A73: the kick along the hit direction, one sim frame at a time; the displaced point never leaves A40's boards inset (third-person mode only).
 	if (KickLeft > 0)
 	{
 		FVector OffsetCm = FVector::ZeroVector;
 		float RollDeg = 0.f;
-		KickOffset(KickFrames - KickLeft, KickStrength, KickDir, PoseCurrent.Rotator().Yaw, CVarJamHitKick.GetValueOnGameThread(), OffsetCm, RollDeg);
+		KickOffset(KickFrames - KickLeft, KickStrength, KickDir, PoseCurrent.Rotator().Yaw, CVarJamHitKick.GetValueOnGameThread() * KickScale, OffsetCm, RollDeg);
 		--KickLeft;
 		FVector Loc = PoseCurrent.GetLocation() + OffsetCm;
 		if (Config.Mode != EJamCameraMode::Arena)

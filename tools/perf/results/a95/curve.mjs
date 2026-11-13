@@ -39,7 +39,7 @@ if (brain) env.JAM_BRAIN_CARRIER = brain; else delete env.JAM_BRAIN_CARRIER;
 function run([lo, hi]) {
   return new Promise((res) => {
     const args = [uproject, '-run=JamTournament', '-sim=jam', `-cartridge=${cart}`, `-difficulty=${lvl}`, `-player=${cls}`, `-seeds=${lo}-${hi}`, '-maxframes=36000',
-      '-nullrhi', '-unattended', '-nopause', '-nosplash', '-stdout', '-FullStdOutLogOutput'];
+      '-nullrhi', '-Multiprocess', '-unattended', '-nopause', '-nosplash', '-stdout', '-FullStdOutLogOutput'];
     if (tune) args.push(`-aitune=${tune}`);
     const p = spawn(exe, args, { windowsHide: true, env });
     let buf = '';

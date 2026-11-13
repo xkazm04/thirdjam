@@ -1,0 +1,308 @@
+[
+ {
+  "run": "a106-l2_night_5v5-csv",
+  "load_row": 6,
+  "load_frame_ms": 96.217,
+  "load_game_ms": 80.547,
+  "play_rows": 7173,
+  "frame": {
+   "mean": 18.071,
+   "p99": 38.481,
+   "max": 169.077
+  },
+  "game": {
+   "mean": 2.412,
+   "p99": 7.32,
+   "max": 53.708
+  },
+  "render": {
+   "mean": 4.424,
+   "p99": 14.368,
+   "max": 184.293
+  },
+  "gpu": {
+   "mean": 4.813,
+   "p99": 8.529,
+   "max": 10.663
+  },
+  "rhi": {
+   "mean": 1.882,
+   "p99": 2.614,
+   "max": 6.285
+  },
+  "brain": {
+   "mean": 0.014,
+   "p99": 0.034,
+   "max": 5.128
+  },
+  "draws": {
+   "mean": 337.703,
+   "p99": 550,
+   "max": 583
+  },
+  "prims": {
+   "mean": 115164.112,
+   "p99": 224679,
+   "max": 232077
+  },
+  "hitches_33": 139,
+  "hitch_list": [
+   "184:46.967",
+   "185:37.539",
+   "194:44.902",
+   "196:106.644",
+   "217:114.717",
+   "229:34.727",
+   "230:33.499",
+   "408:42.046",
+   "409:35.968",
+   "426:64.961"
+  ],
+  "top_gt": [
+   "TickActors 0.667",
+   "UI 0.482",
+   "EventWait 0.322",
+   "EventWait/EndPhysics 0.18",
+   "Animation 0.124",
+   "ViewportMisc 0.115",
+   "DebugHUD 0.068",
+   "EndOfFrameUpdates 0.062",
+   "WorldTickMisc 0.059",
+   "Effects 0.054",
+   "EngineTickMisc 0.053",
+   "PlayerControllerTick 0.041"
+  ],
+  "top_rt": [
+   "EventWait 13.863",
+   "RenderOther 1.448",
+   "RDG 0.518",
+   "RDG_CollectResources 0.463",
+   "RenderPostProcessing 0.25",
+   "RenderThreadOther 0.227",
+   "PrepareDistanceFieldScene 0.205",
+   "RenderLighting 0.147",
+   "RenderShadows 0.145",
+   "RDG_Execute 0.126",
+   "STAT_SkinningSceneExtension 0.091",
+   "UploadDynamicPrimitiveShaderData 0.074"
+  ],
+  "top_gpu": [
+   "RenderDeferredLighting 1.187",
+   "Unaccounted 0.944",
+   "TemporalSuperResolution 0.496",
+   "ShadowDepths 0.31",
+   "Translucency 0.268",
+   "Postprocessing 0.257",
+   "GlobalDistanceFieldUpdate 0.214",
+   "Basepass 0.208",
+   "Lights 0.133",
+   "LumenSceneUpdate 0.091",
+   "RenderVelocities 0.061",
+   "TranslucentLighting 0.048"
+  ]
+ },
+ {
+  "run": "a106-p3_clay_5v5-csv",
+  "load_row": 2,
+  "load_frame_ms": 168.739,
+  "load_game_ms": 116.967,
+  "play_rows": 7271,
+  "frame": {
+   "mean": 17.905,
+   "p99": 38.828,
+   "max": 281.818
+  },
+  "game": {
+   "mean": 2.406,
+   "p99": 6.387,
+   "max": 62.132
+  },
+  "render": {
+   "mean": 4.56,
+   "p99": 13.406,
+   "max": 300.916
+  },
+  "gpu": {
+   "mean": 4.675,
+   "p99": 9.388,
+   "max": 11.745
+  },
+  "rhi": {
+   "mean": 1.911,
+   "p99": 2.74,
+   "max": 7.164
+  },
+  "brain": {
+   "mean": 0.013,
+   "p99": 0.035,
+   "max": 0.607
+  },
+  "draws": {
+   "mean": 432.615,
+   "p99": 646,
+   "max": 664
+  },
+  "prims": {
+   "mean": 196766.577,
+   "p99": 399465,
+   "max": 408137
+  },
+  "hitches_33": 142,
+  "hitch_list": [
+   "367:79.673",
+   "379:35.036",
+   "475:46.781",
+   "498:38.777",
+   "713:37.088",
+   "848:39.833",
+   "849:33.369",
+   "1081:37.255",
+   "1182:281.818",
+   "1185:43.733"
+  ],
+  "top_gt": [
+   "TickActors 0.677",
+   "UI 0.477",
+   "EventWait 0.337",
+   "EventWait/EndPhysics 0.177",
+   "Animation 0.138",
+   "ViewportMisc 0.117",
+   "DebugHUD 0.067",
+   "EndOfFrameUpdates 0.066",
+   "WorldTickMisc 0.06",
+   "EngineTickMisc 0.055",
+   "Effects 0.052",
+   "PlayerControllerTick 0.043"
+  ],
+  "top_rt": [
+   "EventWait 13.576",
+   "RenderOther 1.416",
+   "RDG 0.497",
+   "RDG_CollectResources 0.477",
+   "RenderPostProcessing 0.308",
+   "RenderLighting 0.227",
+   "PrepareDistanceFieldScene 0.209",
+   "RenderThreadOther 0.19",
+   "RenderShadows 0.151",
+   "RDG_Execute 0.132",
+   "STAT_SkinningSceneExtension 0.095",
+   "UploadDynamicPrimitiveShaderData 0.09"
+  ],
+  "top_gpu": [
+   "Unaccounted 0.917",
+   "RenderDeferredLighting 0.848",
+   "Lights 0.387",
+   "TemporalSuperResolution 0.383",
+   "ShadowDepths 0.372",
+   "Basepass 0.237",
+   "Postprocessing 0.192",
+   "GlobalDistanceFieldUpdate 0.187",
+   "Translucency 0.18",
+   "DepthOfField 0.124",
+   "ScreenSpaceReflections 0.082",
+   "LumenSceneUpdate 0.072"
+  ]
+ },
+ {
+  "run": "a106-l2-5v5",
+  "load_row": 154,
+  "load_frame_ms": 21.565,
+  "load_game_ms": 274.218,
+  "play_rows": 7318,
+  "frame": {
+   "mean": 17.368,
+   "p99": 33.664,
+   "max": 99.552
+  },
+  "game": {
+   "mean": 2.723,
+   "p99": 5.652,
+   "max": 99.968
+  },
+  "render": {
+   "mean": 4.027,
+   "p99": 6.559,
+   "max": 64.721
+  },
+  "gpu": {
+   "mean": 4.597,
+   "p99": 8.307,
+   "max": 10.232
+  },
+  "rhi": {
+   "mean": 2.188,
+   "p99": 3.115,
+   "max": 10.583
+  },
+  "brain": {
+   "mean": 0.013,
+   "p99": 0.027,
+   "max": 1.087
+  },
+  "draws": {
+   "mean": 336.086,
+   "p99": 550,
+   "max": 583
+  },
+  "prims": {
+   "mean": 115384.141,
+   "p99": 224699,
+   "max": 232085
+  },
+  "hitches_33": 76,
+  "hitch_list": [
+   "208:37.126",
+   "209:37.274",
+   "213:38.054",
+   "214:39.613",
+   "216:37.679",
+   "226:52.055",
+   "374:44.865",
+   "563:41.922",
+   "564:34.849",
+   "566:35.004"
+  ],
+  "top_gt": [
+   "TickActors 0.871",
+   "UI 0.529",
+   "EventWait/EndPhysics 0.174",
+   "Animation 0.14",
+   "ViewportMisc 0.118",
+   "EndOfFrameUpdates 0.076",
+   "DebugHUD 0.069",
+   "WorldTickMisc 0.064",
+   "Effects 0.056",
+   "EngineTickMisc 0.054",
+   "PlayerControllerTick 0.046",
+   "PostProcessSettings 0.039"
+  ],
+  "top_rt": [
+   "EventWait 13.356",
+   "RenderOther 1.465",
+   "RDG_CollectResources 0.459",
+   "RDG 0.375",
+   "RenderPostProcessing 0.25",
+   "RenderThreadOther 0.22",
+   "PrepareDistanceFieldScene 0.21",
+   "RenderLighting 0.157",
+   "RenderShadows 0.143",
+   "STAT_SkinningSceneExtension 0.081",
+   "UploadDynamicPrimitiveShaderData 0.079",
+   "RDG_Execute 0.075"
+  ],
+  "top_gpu": [
+   "RenderDeferredLighting 1.148",
+   "Unaccounted 0.905",
+   "TemporalSuperResolution 0.467",
+   "ShadowDepths 0.293",
+   "Postprocessing 0.245",
+   "Translucency 0.243",
+   "GlobalDistanceFieldUpdate 0.204",
+   "Basepass 0.2",
+   "Lights 0.127",
+   "LumenSceneUpdate 0.087",
+   "RenderVelocities 0.059",
+   "Prepass 0.046"
+  ]
+ }
+]

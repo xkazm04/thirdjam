@@ -57,3 +57,10 @@ A merges `dev-b` at every half-hour check when it is ahead; B merges main before
 - **F1** next (before the hit's size): release grace (`contact.release_grace_frames` 90): nobody is down again within 2 s of release; the human down fewer than five times in 100 s at pro.
 - **F2** next (after the passive take): take grace (`stick.take_grace_frames` 30): a carrier keeps the puck at least half a second between stick takeaways.
 - **U1 the screen** (new track, Fable, lane A111 in worktree `a100`): the human's marker at five a side, the fade-in waits for the lights, the hint bar and labels, the camera in the corners.
+
+**From A101 (F1, 19:59) and A106 (Q3, 19:59):**
+- **F1** running: A113, release grace and the soft hit explains itself. Then: the board check as a play (`contact.board_slam`; landed hits the boards answer per pro match from 1 to 3 or more); a hard turn lowers stability (`contact.turn_stability` 0.85, neutral 1).
+- **Q3** running: A114, the match-start frame under 100 ms in 6 of 6 runs, no synchronous lookup in play, the tournament build. Then: the first 60 frames under 33 ms; the figure Blueprint under 0.2 ms a frame (with device B).
+- **S2** rows to add from A101: "refused" reading the HUD's contact text; captures of a stumble's hold and a check into the boards.
+- **Hygiene** (Sonnet, when a slot is free): `ownership.json` does not know the folders added since Thursday (185 paths "owned by nobody" in the gate's ownership step).
+

@@ -11,6 +11,11 @@
 //   Jam.Core.Contact.Levers          skater.knockdown_frames scales the frames down; skater.check_speed_min scales the hit (5 / value), not the frames
 //   Jam.Core.ContactModes            the modes that wrote those two levers (and the raw cut), model against neutral: knockdowns and frames down (a measurement)
 //   Jam.Core.ContactTakes            the rookie takes of Jam.Bot.SeasonTakes over ten seeds, model against neutral: the AI's shots and the score (a measurement)
+// Lane A101 (track F1, docs/experiments/CONTACT-2.md): every outcome reads.
+//   Jam.Core.Contact.Boards          the boards are a body: a hit that pushes a victim within 1.5 m of the boards into them counts x contact.board_bonus and fires the
+//                                    board read-out and event; along the boards, away from them, beyond 1.5 m and at board_bonus 1 it is the open-ice hit
+//   Jam.Core.Contact.HitStop         the hold by outcome and ratio: stumble 1 or 2 frames, knockdown 2 to 5, bump 0; jam.hitstop scales it
+//   Jam.Core.ContactBoardMatch       three pro matches: outcomes by kind, the share of hits near the boards; board_bonus 1 hashes as main at ee14438 did
 // Run:
 //   UnrealEditor-Cmd.exe Game/ThirdJam.uproject -ExecCmds="Automation RunTests Jam.Core.Contact; Quit" -unattended -nullrhi -nosplash -log
 #include "Misc/AutomationTest.h"
@@ -20,6 +25,7 @@
 #include "DifficultyResolve.h"
 #include "JamCartridge.h"
 #include "JamEventBus.h"
+#include "JamPawns.h"
 #include "JamPlaytester.h"
 #include "JamSim.h"
 #include "JamSimAdapter.h"
@@ -45,6 +51,13 @@ namespace JamContactTests
 		int32 HitBump[2] = { 0, 0 }, HitStumble[2] = { 0, 0 }, HitDown[2] = { 0, 0 }, Recoil[2] = { 0, 0 }, Refused[2] = { 0, 0 };
 		int32 CrossStumble[2] = { 0, 0 }, CrossDown[2] = { 0, 0 };   // of those, by a cross-check (the rest by a body check)
 		int32 DownFrames[2] = { 0, 0 };                               // frames down, summed (the model's knockdowns only)
+		// Lane A101: hits (any outcome) on a victim within ContactBoardRangeM of the boards; of the landed ones, those the boards answered (bContactBoard), by outcome;
+		// and the ones the bonus promoted (the ratio without the boards' factor was under the threshold the hit passed).
+		int32 NearBoards[2] = { 0, 0 }, BoardStumble[2] = { 0, 0 }, BoardDown[2] = { 0, 0 }, BoardPromotedStumble[2] = { 0, 0 }, BoardPromotedDown[2] = { 0, 0 };
+		// Every resolved hit by where and how: [0 = within 1.5 m of the boards, 1 = 1.5 to 3 m][0 = into them (dot of the push and the outward normal 0.5 and up),
+		// 1 = glancing (0 to 0.5), 2 = along or away][bump, stumble, down]. The push of a bump is the victim's BumpDir (stale when the bump read-out was gapped).
+		int32 Where[2][3][3] = {};
+		int32 BoardEvents = 0;                                        // `board` events with Kind skater (the hit's and a skater's own slide into the boards)
 		int64 LastFrame = -1;
 	};
 
@@ -64,11 +77,30 @@ namespace JamContactTests
 			if (S.ContactOutcome == UJamSim::ContactDown) { ++C.HitDown[H]; C.DownFrames[H] += S.KnockFrames; if (S.bContactCross) ++C.CrossDown[H]; }
 			if (S.bRecoilThisFrame) ++C.Recoil[H];
 			if (S.bCheckRefused) ++C.Refused[H];
+			if (S.ContactOutcome != UJamSim::ContactNone)
+			{
+				FVector2D N;
+				const double Gap = -Sim->BoardDistance(S.Pos, N);
+				if (Gap <= UJamSim::ContactBoardRangeM) ++C.NearBoards[H];
+				if (Gap <= 2.0 * UJamSim::ContactBoardRangeM)
+				{
+					const double Into = FVector2D::DotProduct(S.ContactOutcome == UJamSim::ContactDown ? S.KnockDir : S.BumpDir, N);
+					++C.Where[Gap <= UJamSim::ContactBoardRangeM ? 0 : 1][Into >= 0.5 ? 0 : Into > 0.0 ? 1 : 2][S.ContactOutcome - 1];
+				}
+				if (S.bContactBoard)
+				{
+					const FJamContactConfig& K = Sim->GetConfig().Contact;
+					const double Free = S.ContactRatio / Sim->BoardFactor(S, S.ContactOutcome == UJamSim::ContactDown ? S.KnockDir : S.BumpDir);
+					if (S.ContactOutcome == UJamSim::ContactDown) { ++C.BoardDown[H]; if (Free < K.DownRatio) ++C.BoardPromotedDown[H]; }
+					else { ++C.BoardStumble[H]; if (Free < K.BumpRatio) ++C.BoardPromotedStumble[H]; }
+				}
+			}
 		}
 		int32 Checker = -1;
 		for (const FJamSimEvent& E : Sim->GetFrameEvents())
 		{
 			if (E.Name == JamEvents::Check) { Checker = E.Who; ++C.Checks[E.Who == C.Human ? 1 : 0]; }
+			if (E.Name == JamEvents::Board && E.Who >= 0) ++C.BoardEvents;
 			if (E.Name == JamEvents::Knockdown)
 			{
 				++C.Downs[E.Who == C.Human ? 1 : 0];
@@ -225,9 +257,194 @@ namespace JamContactTests
 			H.StumbleFrames, H.bCheck ? 1 : 0, H.Strength, H.bRecoil ? 1 : 0, H.AttSpeedBefore, H.AttSpeedAfter, H.VicSpeedBefore, H.VicSpeedAfter, H.Frame);
 	}
 	const auto NoEdit = [](FJamGameConfig&) {};
+
+	// Lane A101: the board part of a match line.
+	FString BoardLine(const FContactCount& C)
+	{
+		const int32 Hits = C.HitBump[0] + C.HitBump[1] + C.HitStumble[0] + C.HitStumble[1] + C.HitDown[0] + C.HitDown[1];
+		const int32 Near = C.NearBoards[0] + C.NearBoards[1];
+		FString Bins;
+		for (int32 B = 0; B < 2; ++B) Bins += FString::Printf(TEXT(" | %s (bump/stumble/down): into %d/%d/%d glancing %d/%d/%d along-or-away %d/%d/%d"), B == 0 ? TEXT("within 1.5 m") : TEXT("1.5 to 3 m"),
+			C.Where[B][0][0], C.Where[B][0][1], C.Where[B][0][2], C.Where[B][1][0], C.Where[B][1][1], C.Where[B][1][2], C.Where[B][2][0], C.Where[B][2][1], C.Where[B][2][2]);
+		return FString::Printf(TEXT("hits resolved %d, near the boards (1.5 m) %d = %.1f %% (bot %d human %d) | the boards answered: stumble bot %d human %d, down bot %d human %d | promoted by the bonus: to a stumble bot %d human %d, to a knockdown bot %d human %d | board events (skater) %d"),
+			Hits, Near, Hits > 0 ? 100.0 * Near / Hits : 0.0, C.NearBoards[0], C.NearBoards[1], C.BoardStumble[0], C.BoardStumble[1], C.BoardDown[0], C.BoardDown[1],
+			C.BoardPromotedStumble[0], C.BoardPromotedStumble[1], C.BoardPromotedDown[0], C.BoardPromotedDown[1], C.BoardEvents) + Bins;
+	}
 }
 
 using namespace JamContactTests;
+
+// ---- Lane A101 (track F1): every outcome reads -------------------------------------------------------------------------------------------------
+
+// The boards are a body. One hit, five places: a side body check on a standing skater (facing along the boards or +x, the hit from its side, seen and braced).
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamContactBoards, "Jam.Core.Contact.Boards", JamContactTests::Flags)
+bool FJamContactBoards::RunTest(const FString& Parameters)
+{
+	struct FOut { FContactHit H; bool bBoardReadout = false, bContactBoard = false; int32 BoardEvents = 0, BoardHits = 0; float BoardStrength = -1.f; FVector2D BoardDir = FVector2D::ZeroVector; double BoardGap = -1.0; uint64 Hash = 0; };
+	// Speed = the attacker's speed along Dir; the victim stands at VPos facing VYaw, the attacker starts 1 m away along -Dir.
+	auto Hit = [&](const TCHAR* Name, double Bonus, const FVector2D& VPos, double VYaw, const FVector2D& Dir, double Speed) -> FOut
+	{
+		FOut O;
+		FContactScene S = Make(*this, [&](FJamGameConfig& G) { G.Contact.BoardBonus = Bonus; });
+		if (!S.Ok()) return O;
+		S.Sim->SetSkater(S.V, VPos, FVector2D::ZeroVector, VYaw);
+		S.Sim->SetSkater(S.A, VPos - Dir * 1.0, Dir * Speed, FMath::Atan2(Dir.Y, Dir.X));
+		O.H = Run(S, 12, [&](TArray<FJamInput>& In, int32 F) { In[S.A].bCheck = F == 0; });
+		O.bBoardReadout = S.Vic().bBoardHitThisFrame;
+		O.bContactBoard = S.Vic().bContactBoard;
+		O.BoardHits = S.Vic().ContactBoardHits;
+		for (const FJamSimEvent& E : S.Sim->GetFrameEvents())
+		{
+			if (E.Name != JamEvents::Board || E.Who != S.V) continue;
+			++O.BoardEvents;
+			O.BoardStrength = E.Strength;
+			O.BoardDir = E.Dir;
+			FVector2D N;
+			O.BoardGap = FMath::Abs(S.Sim->BoardDistance(E.Where, N));
+		}
+		// The echo: the victim's own slide into the boards inside half a second is the hit already announced.
+		for (int32 F = 0; F < 30; ++F)
+		{
+			TArray<FJamInput> In;
+			In.SetNum(S.Sim->GetSkaters().Num());
+			S.Sim->Step(In);
+			for (const FJamSimEvent& E : S.Sim->GetFrameEvents()) if (E.Name == JamEvents::Board && E.Who == S.V) ++O.BoardEvents;
+		}
+		O.Hash = S.Sim->StateHash();
+		AddInfo(FString::Printf(TEXT("JAMBOARDS %s (board_bonus %.2f, %.1f m/s): %s | board read-out %d contact_board %d board events %d strength %.2f"), Name, Bonus, Speed, *Facts(O.H),
+			O.bBoardReadout ? 1 : 0, O.bContactBoard ? 1 : 0, O.BoardEvents, O.BoardStrength));
+		return O;
+	};
+	FJamGameConfig Cfg;
+	{
+		FContactScene S0 = Make(*this, NoEdit);
+		if (!S0.Ok()) return false;
+		Cfg = S0.Cfg;
+	}
+	TestEqual(TEXT("contact.board_bonus defaults to 1.25"), Cfg.Contact.BoardBonus, 1.25);
+	const double Hz = Cfg.Rink.WidthM * 0.5;
+	const FVector2D In(0.0, 1.0);   // into the +z side boards
+	const double Bonus = Cfg.Contact.BoardBonus;
+	// 1. Open ice: the reference hit (4 m/s: a stumble, CONTACT.md's 0.61).
+	const FOut Open = Hit(TEXT("open ice"), Bonus, FVector2D::ZeroVector, 0.0, In, 4.0);
+	TestEqual(TEXT("open ice, 4 m/s on a standing skater: a stumble"), Open.H.Outcome, UJamSim::ContactStumble);
+	TestTrue(TEXT("open ice: no board read-out, no board event"), !Open.bBoardReadout && !Open.bContactBoard && Open.BoardEvents == 0);
+	// 2. The same hit 1 m from the boards, straight into them: the ratio counts x board_bonus, the read-out and the event fire with the check's strength.
+	const FOut Into = Hit(TEXT("1 m from the boards, into them"), Bonus, FVector2D(0.0, Hz - 1.0), 0.0, In, 4.0);
+	TestTrue(*FString::Printf(TEXT("into the boards: ratio %.3f = open ice %.3f x %.2f"), Into.H.Ratio, Open.H.Ratio, Bonus), FMath::IsNearlyEqual(static_cast<double>(Into.H.Ratio), Open.H.Ratio * Bonus, 0.005));
+	TestTrue(TEXT("into the boards: the victim's board read-out fires (PlayBoardHit) and the hit is counted"), Into.bBoardReadout && Into.bContactBoard && Into.BoardHits == 1);
+	TestEqual(TEXT("into the boards: one board event for the victim, also through its slide into the boards (the echo is the same hit)"), Into.BoardEvents, 1);
+	TestTrue(*FString::Printf(TEXT("... with the check's strength (%.2f = %.2f)"), Into.BoardStrength, Into.H.Strength), Into.H.bCheck && FMath::IsNearlyEqual(Into.BoardStrength, Into.H.Strength, 0.001f));
+	TestTrue(TEXT("... on the boards, its Dir the normal into the rink"), Into.BoardGap < 0.01 && FVector2D::DotProduct(Into.BoardDir, In) < -0.99);
+	// 3. Along the boards, away from them, and beyond the range: the open-ice hit.
+	const FOut Along = Hit(TEXT("1 m from the boards, along them"), Bonus, FVector2D(0.0, Hz - 1.0), PI * 0.5, FVector2D(1.0, 0.0), 4.0);
+	const FOut Away = Hit(TEXT("1.45 m from the boards, away from them"), Bonus, FVector2D(0.0, Hz - 1.45), 0.0, -In, 4.0);
+	const FOut Far = Hit(TEXT("2 m from the boards, into them"), Bonus, FVector2D(0.0, Hz - 2.0), 0.0, In, 4.0);
+	for (const FOut* O : { &Along, &Away, &Far })
+	{
+		TestTrue(*FString::Printf(TEXT("no boards in the hit: ratio %.3f = open ice %.3f"), O->H.Ratio, Open.H.Ratio), FMath::IsNearlyEqual(O->H.Ratio, Open.H.Ratio, 0.005f));
+		TestTrue(TEXT("... and no board read-out at the hit"), !O->bBoardReadout && !O->bContactBoard);
+	}
+	// 4. Half the bonus at 75.5 degrees off straight in (dot 0.25): the factor is linear in 2 x dot up to 60 degrees.
+	{
+		const FVector2D Dir = FVector2D(FMath::Sqrt(1.0 - 0.25 * 0.25), 0.25);
+		const FOut Half = Hit(TEXT("1 m from the boards, dot 0.25"), Bonus, FVector2D(0.0, Hz - 1.0), FMath::Atan2(Dir.Y, Dir.X) + PI * 0.5, Dir, 4.0);
+		TestTrue(*FString::Printf(TEXT("dot 0.25: ratio %.3f = open ice x %.3f"), Half.H.Ratio, 1.0 + (Bonus - 1.0) * 0.5), FMath::IsNearlyEqual(static_cast<double>(Half.H.Ratio), Open.H.Ratio * (1.0 + (Bonus - 1.0) * 0.5), 0.01));
+	}
+	// 5. The hit the boards decide: 6.5 m/s stumbles a braced skater on open ice (0.89) and puts it down against the boards (1.11).
+	const FOut OpenHard = Hit(TEXT("open ice"), Bonus, FVector2D::ZeroVector, 0.0, In, 6.5);
+	const FOut IntoHard = Hit(TEXT("1 m from the boards, into them"), Bonus, FVector2D(0.0, Hz - 1.0), 0.0, In, 6.5);
+	TestEqual(TEXT("6.5 m/s on open ice: a stumble"), OpenHard.H.Outcome, UJamSim::ContactStumble);
+	TestEqual(TEXT("6.5 m/s into the boards: down"), IntoHard.H.Outcome, UJamSim::ContactDown);
+	TestTrue(TEXT("... with the board read-out"), IntoHard.bBoardReadout && IntoHard.H.bKnock);
+	// 6. The neutral value: board_bonus 1 is the open-ice hit at the boards: same ratio, no read-out, no event; and the state after it hashes as a sim that
+	// never heard of the boards would (the same scene with the bonus left at its default but the victim's hit resolved 2 m out differs: so compare 1.0 against 1.0 twice
+	// and against the default, which must differ once the knockdown lasts longer).
+	const FOut Neutral = Hit(TEXT("1 m from the boards, into them"), 1.0, FVector2D(0.0, Hz - 1.0), 0.0, In, 6.5);
+	TestTrue(*FString::Printf(TEXT("board_bonus 1: ratio %.3f = open ice %.3f"), Neutral.H.Ratio, OpenHard.H.Ratio), FMath::IsNearlyEqual(Neutral.H.Ratio, OpenHard.H.Ratio, 0.005f));
+	TestEqual(TEXT("board_bonus 1: a stumble, as on open ice"), Neutral.H.Outcome, UJamSim::ContactStumble);
+	TestTrue(TEXT("board_bonus 1: no board read-out and no board event at the hit"), !Neutral.bBoardReadout && !Neutral.bContactBoard && Neutral.BoardHits == 0);
+	TestTrue(TEXT("board_bonus 1 and 1.25 end in different states (the bonus is a rule), two runs at 1 in the same"), Neutral.Hash != IntoHard.Hash
+		&& Neutral.Hash == Hit(TEXT("1 m from the boards, into them (again)"), 1.0, FVector2D(0.0, Hz - 1.0), 0.0, In, 6.5).Hash);
+	// 7. The key loads, its range holds.
+	FString Json;
+	if (TestTrue(TEXT("hockey.regular reads"), FFileHelper::LoadFileToString(Json, *UJamCartridge::ResolveCartridgePath(TEXT("hockey.regular")))))
+	{
+		TArray<FString> Errors;
+		FString One = Json;
+		TestEqual(TEXT("one game.skater anchor"), One.ReplaceInline(TEXT("\"skater\": {"), TEXT("\"contact\": { \"board_bonus\": 1 }, \"skater\": {")), 1);
+		UJamCartridge* N = UJamCartridge::LoadFromString(One, Errors);
+		for (const FString& E : Errors) AddError(FString::Printf(TEXT("board_bonus 1: %s"), *E));
+		if (TestNotNull(TEXT("contact.board_bonus 1 loads"), N)) TestEqual(TEXT("... and reads back"), N->Game.Contact.BoardBonus, 1.0);
+		FString Bad = Json;
+		Bad.ReplaceInline(TEXT("\"skater\": {"), TEXT("\"contact\": { \"board_bonus\": 0.5 }, \"skater\": {"));
+		Errors.Reset();
+		UJamCartridge* B = UJamCartridge::LoadFromString(Bad, Errors);
+		TestTrue(TEXT("contact.board_bonus under 1 is out of range"), B == nullptr || Errors.Num() > 0);
+	}
+	return true;
+}
+
+// The hold reads the hit (AJamSkater::HitStopFramesFor; the game mode's HitStopRoute calls it with jam.hitstop as the base).
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamContactHitStop, "Jam.Core.Contact.HitStop", JamContactTests::Flags)
+bool FJamContactHitStop::RunTest(const FString& Parameters)
+{
+	const FJamContactConfig K;   // the defaults: bump 0.4, down 1, full 3
+	struct FRow { int32 Outcome; float Ratio; int32 Base; int32 Want; const TCHAR* Name; };
+	const FRow Rows[] = {
+		{ UJamSim::ContactBump, 0.30f, 3, 0, TEXT("a bump holds nothing") },
+		{ UJamSim::ContactStumble, 0.40f, 3, 1, TEXT("the lightest stumble: 1") },
+		{ UJamSim::ContactStumble, 0.69f, 3, 1, TEXT("a stumble under the middle of its band: 1") },
+		{ UJamSim::ContactStumble, 0.70f, 3, 2, TEXT("a stumble from the middle of its band: 2") },
+		{ UJamSim::ContactStumble, 0.99f, 3, 2, TEXT("the hardest stumble: 2") },
+		{ UJamSim::ContactDown, 1.00f, 3, 2, TEXT("a knockdown at down_ratio: 2") },
+		{ UJamSim::ContactDown, 1.40f, 3, 3, TEXT("a knockdown at 1.4 (a full-speed charge into a braced skater): 3") },
+		{ UJamSim::ContactDown, 2.34f, 3, 4, TEXT("a knockdown at 2.34 (the acceptance drill's check): 4") },
+		{ UJamSim::ContactDown, 3.00f, 3, 5, TEXT("a knockdown at down_full_ratio: 5") },
+		{ UJamSim::ContactDown, 4.61f, 3, 5, TEXT("head-on at full speed: 5") },
+		{ UJamSim::ContactNone, 0.00f, 3, 3, TEXT("a knockdown the model did not resolve (contact.momentum false): the base, as before") },
+		{ UJamSim::ContactDown, 3.00f, 0, 0, TEXT("jam.hitstop 0: off") },
+		{ UJamSim::ContactStumble, 0.90f, 0, 0, TEXT("jam.hitstop 0: off for a stumble too") },
+		{ UJamSim::ContactDown, 3.00f, 6, 6, TEXT("jam.hitstop 6: the biggest hit holds 6 (the cap)") },
+		{ UJamSim::ContactStumble, 0.45f, 6, 2, TEXT("jam.hitstop 6: the lightest stumble 2") },
+		{ UJamSim::ContactStumble, 0.45f, 1, 1, TEXT("jam.hitstop 1: a landed hit never under 1") },
+	};
+	for (const FRow& R : Rows) TestEqual(R.Name, AJamSkater::HitStopFramesFor(R.Outcome, R.Ratio, K, R.Base), R.Want);
+	// Never shorter for a harder hit, across the two bands.
+	int32 Last = 0;
+	for (int32 I = 40; I <= 500; ++I)
+	{
+		const float Ratio = I / 100.f;
+		const int32 Frames = AJamSkater::HitStopFramesFor(Ratio >= K.DownRatio ? UJamSim::ContactDown : UJamSim::ContactStumble, Ratio, K, 3);
+		if (Frames < Last) { AddError(FString::Printf(TEXT("the hold shrinks at ratio %.2f: %d after %d"), Ratio, Frames, Last)); break; }
+		Last = Frames;
+	}
+	TestEqual(TEXT("the sweep ends on 5 frames"), Last, 5);
+	return true;
+}
+
+// Three pro matches (the brief's measurement), the bonus against its neutral value; the neutral arm must hash as main at ee14438 did (the Director's gate log
+// premerge-automation-ue-20261113-184648.log: Jam.Core.ContactMatch, pro, seeds 1 to 3).
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamContactBoardMatch, "Jam.Core.ContactBoardMatch", JamContactTests::Flags)
+bool FJamContactBoardMatch::RunTest(const FString& Parameters)
+{
+	const uint64 Main[3] = { 0x6ed8f16ab724086bull, 0xdc1a21fe22e0bc6full, 0x7d34793757849ca9ull };
+	for (uint64 Seed = 1; Seed <= 3; ++Seed)
+	{
+		FContactCount C;
+		const JamAI::FJamPlaytestStats S = Match(*this, TEXT("pro"), Seed, C, [](FJamGameConfig&) {});
+		AddInfo(Line(*FString::Printf(TEXT("JAMBOARDS match pro seed %llu board_bonus 1.25"), static_cast<unsigned long long>(Seed)), S, C));
+		AddInfo(FString::Printf(TEXT("JAMBOARDS boards pro seed %llu board_bonus 1.25: %s"), static_cast<unsigned long long>(Seed), *BoardLine(C)));
+		FContactCount Cn;
+		const JamAI::FJamPlaytestStats Sn = Match(*this, TEXT("pro"), Seed, Cn, [](FJamGameConfig& G) { G.Contact.BoardBonus = 1.0; });
+		AddInfo(Line(*FString::Printf(TEXT("JAMBOARDS match pro seed %llu board_bonus 1.00"), static_cast<unsigned long long>(Seed)), Sn, Cn));
+		AddInfo(FString::Printf(TEXT("JAMBOARDS boards pro seed %llu board_bonus 1.00: %s"), static_cast<unsigned long long>(Seed), *BoardLine(Cn)));
+		TestEqual(*FString::Printf(TEXT("pro seed %llu: board_bonus 1 hashes as main did"), static_cast<unsigned long long>(Seed)), FString::Printf(TEXT("%016llx"), static_cast<unsigned long long>(Sn.Hash)),
+			FString::Printf(TEXT("%016llx"), static_cast<unsigned long long>(Main[Seed - 1])));
+		TestEqual(*FString::Printf(TEXT("pro seed %llu: at board_bonus 1 the boards answer no hit"), static_cast<unsigned long long>(Seed)), Cn.BoardStumble[0] + Cn.BoardStumble[1] + Cn.BoardDown[0] + Cn.BoardDown[1], 0);
+	}
+	return true;
+}
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamContactSameDirection, "Jam.Core.Contact.SameDirection", JamContactTests::Flags)
 bool FJamContactSameDirection::RunTest(const FString& Parameters)
