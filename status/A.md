@@ -272,3 +272,4 @@
 
 - RESOURCES 11:15 cpu 87% ram 28.8/63GB gpu 36 %, 2006 MiB, 46 editors 0 cmd 7 ubt 0 free 626GB
 - link green 11:21: main 0c49b09 (The eyes grid's faults fixed (A64): the chaos bumper is a bollard, the controls strip clea) pushed.
+- link green 11:31: main dc40777 (The modes' keys (A72): ai.react_frames, ai.body_check (bots check from check_speed_min whe) pushed.

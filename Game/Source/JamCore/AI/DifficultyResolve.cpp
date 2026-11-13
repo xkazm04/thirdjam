@@ -60,6 +60,25 @@ namespace JamAI
 				Out.ExplicitKeys.Add(FString(TEXT("game.ai.")) + K.Name);
 			}
 		}
+		// lane A72 (asks A4, A5): the opposing bots' reaction delay and body check from the cartridge (the level's Opp skill otherwise)
+		if (Ai && Ai->IsObject() && Ai->Has(TEXT("react_frames")))
+		{
+			Out.Params.Opp.ReactionFrames = FMath::Clamp(G.ReactFrames, 0, kMaxReactionFrames);
+			Out.ExplicitKeys.Add(TEXT("game.ai.react_frames"));
+		}
+		if (Ai && Ai->IsObject() && Ai->Has(TEXT("body_check")))
+		{
+			const double Share = FMath::Clamp(G.BodyCheck, 0.0, 1.0);
+			Out.Params.Opp.BodyCheckShare = Share;
+			// a chance is the level's rule at the closing speed the sim lands a check on; at rookie (never) a share above 0 turns the rule on
+			Out.Params.Opp.CheckMinClosing = Share > 0.0 ? Cart.Game.Skater.CheckSpeedMin : -1.0;
+			Out.ExplicitKeys.Add(TEXT("game.ai.body_check"));
+		}
+		if (Ai && Ai->IsObject() && Ai->Has(TEXT("sprint")))
+		{
+			Out.Params.SprintShare = FMath::Clamp(G.Sprint, 0.0, 1.0);   // lane A72 (ask A2)
+			Out.ExplicitKeys.Add(TEXT("game.ai.sprint"));
+		}
 		// 3. Designer values (the loader already folded them into Cart.Game.Ai; a value outranks the game field)
 		if (Values && Values->IsObject())
 		{

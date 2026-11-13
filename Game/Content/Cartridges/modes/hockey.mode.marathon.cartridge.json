@@ -156,7 +156,7 @@
       "goal_pause_frames": 120,
       "offside": false,
       "penalties": true,
-      "timer_frames": 18000
+      "timer_frames": 36000
     },
     "teams": [
       {
@@ -215,7 +215,8 @@
       }
     ],
     "ai": {
-      "difficulty": "pro"
+      "difficulty": "pro",
+      "sprint": 0.5
     },
     "barks": {
       "enabled": true,

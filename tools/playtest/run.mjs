@@ -68,7 +68,7 @@ export function writeVariant(cartridge, set) {
   return file.split('\\').join('/');
 }
 
-export function runCell({ uproject, cartridge, level, player, seeds, maxFrames, tune, set }) {
+export function runCell({ uproject, cartridge, level, player, seeds, maxFrames, tune, set, sprint }) {
   const ue = engineRoot();
   if (!ue) die(2, 'Unreal Engine not found (set UE_ROOT)');
   const cmd = join(ue, 'Engine', 'Binaries', 'Win64', 'UnrealEditor-Cmd.exe');
@@ -76,6 +76,7 @@ export function runCell({ uproject, cartridge, level, player, seeds, maxFrames, 
   const args = [uproject, '-run=JamTournament', '-sim=jam', `-cartridge=${cartArg}`, `-difficulty=${level}`, `-player=${player}`, `-seeds=${seeds}`,
     `-maxframes=${maxFrames}`, '-nullrhi', '-unattended', '-nopause', '-nosplash', '-stdout', '-FullStdOutLogOutput'];
   if (tune) args.push(`-aitune=${tune}`);
+  if (sprint) args.push('-playersprint');   // lane A72 (ask A3): the regular and good players press sprint
   return new Promise((res, rej) => {
     const p = spawn(cmd, args, { windowsHide: true });
     let out = '';

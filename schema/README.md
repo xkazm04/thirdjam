@@ -80,13 +80,17 @@ Cartridge errors are sentences that start `at <JSON pointer>:`, because the Desi
 | `shot.one_timer.window_frames` | 0..60 | 10 (lane A39, R-0029 point 4): a shot inside this many frames of a received pass is a one-timer (full charge, wider cone, `shot` event kind `one_timer`); 0 = off |
 | `shot.one_timer.cone_bonus_deg` | 0..30 | 8 (lane A39): added to `aim_cone_deg` for a one-timer |
 | `rules.score_to_win` | 1..9 | one digit on the HUD |
-| `rules.timer_frames` | 600..18000 | 10 s to 5 min at 60 Hz |
+| `rules.timer_frames` | 600..36000 | 10 s to 10 min at 60 Hz (lane A72, ask A1: 5 min before; the HUD clock reads 10:00) |
+| `rules.penalty_frames` | 60..600 | 1 s to 10 s in the box (lane A72, ask A8); 300 when absent |
 | `rules.goal_pause_frames` | 30..600 | 120 measured |
 | `ai.yield_margin_m` | 0..6 | 2 measured |
 | `ai.yield_radius_m` | 0..40 | 15 measured |
 | `ai.hold_radius_m` | 0..15 | 4.5 measured |
 | `ai.speed_scale` | 0.3..1.5 | below 0.3 bots stand still, above 1.5 they cannot be beaten |
 | `ai.red_skill` | 0..1 | fraction (wire name kept from HOCKEY.md; it drives the orange side) |
+| `ai.react_frames` | 0..60 | lane A72 (ask A4): up to one second of steering delay for the opposing bots (the ring holds 60 frames) |
+| `ai.sprint` | 0..1 | lane A72 (ask A2): a share of two-second windows on a chase |
+| `ai.body_check` | 0..1 | lane A72 (ask A5): a share of the chances; 0 never, 1 every chance at `skater.check_speed_min` |
 | `pickups[]` | 0..8 items, `spawn_every_frames` 120..7200, `duration_frames` 1..3600, `magnitude` 0.1..4, `max_on_ice` 1..4, `zone` a `rink.zones` id | 2 s to 2 min between spawns; effect up to 1 min; more than 4 of one kind on the ice is clutter (C-0005, A14) |
 | `effects[]` | 0..12 items, `duration_frames` 60..7200, 1..4 `stats`, `multiply` 0.25..4, `add` within the stat's range width (per stat, `checkGame`) | C-0005 section 4: 12 is the HUD strip's limit; a quarter to four times a stat is the widest change that still reads as the same game; 1 s to 2 min |
 | `look.fog_density` | 0..0.1 | engine exponential fog density; 0.02 neon; L2 ships with none |

@@ -294,7 +294,7 @@
         "sprint": {
           "type": "object",
           "additionalProperties": false,
-          "description": "Lane A49: the sprint (Shift / left trigger held): top speed and acceleration rise by bonus while the skater moves and its stamina lasts; the stamina drains in drain_frames of sprint and refills in refill_frames at rest. Bots never sprint. Leave the key out for the defaults.",
+          "description": "Lane A49: the sprint (Shift / left trigger held): top speed and acceleration rise by bonus while the skater moves and its stamina lasts; the stamina drains in drain_frames of sprint and refills in refill_frames at rest. Bots sprint only when game.ai.sprint is written. Leave the key out for the defaults.",
           "properties": {
             "bonus": {
               "type": "number",
@@ -633,7 +633,7 @@
         "timer_frames": {
           "type": "integer",
           "minimum": 600,
-          "maximum": 18000,
+          "maximum": 36000,
           "description": "Match length in physics frames (60 per second); required when mode is timer."
         },
         "goal_pause_frames": {
@@ -648,7 +648,7 @@
         },
         "penalties": {
           "type": "boolean",
-          "description": "Hard fouls (R-0013): a check from behind or on a skater without the puck sends the checker to the box for 300 frames and gives a free faceoff at the checker's end. Absent = true."
+          "description": "Hard fouls (R-0013): a check from behind or on a skater without the puck sends the checker to the box for penalty_frames (absent = 300) and gives a free faceoff at the checker's end. Absent = true."
         },
         "hooks": {
           "type": "array",
@@ -826,6 +826,12 @@
               "description": "The rink shrinks by this fraction after every goal (0.1 is 10 percent), rebuilt at the next faceoff, never below the smallest rink."
             }
           }
+        },
+        "penalty_frames": {
+          "type": "integer",
+          "minimum": 60,
+          "maximum": 600,
+          "description": "Lane A72 (R-0037, ask A8): how long a hard foul sits in the box, in frames (60 per second). Absent = 300 (5 s). Read only when penalties is true."
         }
       }
     },
@@ -929,6 +935,24 @@
           "minimum": 0,
           "maximum": 1,
           "description": "Skill of the opposing bots: 0 clumsy, 1 sharp."
+        },
+        "react_frames": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 60,
+          "description": "Lane A72 (R-0037, ask A4): the opposing bots' reaction delay in frames (their steering is applied this many frames late; shots stay live; the back reacts at once). Absent = the level's profile (0 at every level today)."
+        },
+        "body_check": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Lane A72 (R-0037, ask A5): the share of the chances an opposing bot closes with a body check: 0 never, 1 every chance. A chance is the level's rule (the opposing carrier within reach, from the front or the side, never from behind) at the closing speed the sim lands a check on (skater.check_speed_min) instead of the level's fixed 5 m/s; at rookie, which never checks, any share above 0 turns that rule on. Absent = the level's rule (rookie never, pro and all_star at 5 m/s)."
+        },
+        "sprint": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Lane A72 (R-0037, ask A2): the share of the time a bot sprints (skater.sprint) while it chases the puck from more than 6 m away without carrying it; a seeded coin per bot and two-second window; the sprint drains and refills the same stamina bar as the human's. Both sides' bots. Absent = 0 (bots never sprint)."
         }
       }
     },

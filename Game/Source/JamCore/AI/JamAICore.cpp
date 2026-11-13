@@ -363,6 +363,16 @@ namespace JamAI
 			Out[i].bGoalie = In.bGoalie;
 			Out[i].GoalieSide = In.GoalieSide;
 			Out[i].bDeke = In.bDeke;   // lane A39: live, like the shot: a delayed deke would miss the moment
+			// lane A72 (ask A2): game.ai.sprint. A bot sprints while it chases the puck from more than 6 m without carrying it, in a share of the two-second
+			// windows (a fixed coin per bot); the sim spends the same stamina bar as the human's. Absent = 0: no bot ever sets it.
+			Out[i].bSprint = false;
+			if (Params.SprintShare > 0.0 && W.Carrier != i && !W.bDrawOpen)
+			{
+				const FVec2 ToPuck = W.PuckPos - W.Skaters[i].Pos;
+				const bool bChase = ToPuck.Length() > 6.0 && Out[i].Move.Dot(ToPuck) > 0.0;
+				Out[i].bSprint = bChase && (Params.SprintShare >= 1.0
+					|| (Hash11(static_cast<uint64_t>(i) + 401, static_cast<uint64_t>(W.Frame / 120)) + 1.0) * 0.5 < Params.SprintShare);
+			}
 		}
 	}
 
@@ -709,7 +719,10 @@ namespace JamAI
 				const double Closing = (S.Vel - T.Vel).Dot(N);
 				const double Own = S.Vel.Dot(N);
 				const double Along = N.Dot(T.Facing.Normalized());
-				if (Closing >= K.CheckMinClosing && Own > K.CheckMinClosing && (K.bCheckFromBehind || Along <= 0.35))
+				// lane A72 (ask A5): game.ai.body_check takes a share of the chances; the coin is only thrown below 1, so a level's own rule is unchanged
+				const bool bTake = K.BodyCheckShare >= 1.0
+					|| (K.BodyCheckShare > 0.0 && (Hash11(static_cast<uint64_t>(Id) + 307, static_cast<uint64_t>(W.Frame / 60)) + 1.0) * 0.5 < K.BodyCheckShare);
+				if (bTake && Closing >= K.CheckMinClosing && Own > K.CheckMinClosing && (K.bCheckFromBehind || Along <= 0.35))
 				{
 					In.bCheck = true;
 					CheckCool[Id] = CheckCoolFrames;

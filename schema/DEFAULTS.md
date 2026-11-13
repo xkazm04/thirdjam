@@ -37,7 +37,7 @@ of them out explicitly, but a Designer or hand-written cartridge may leave them 
 | `skater.pass_lead_frames` | 20 | lane A16 (C-0005) |
 | `skater.breakaway.speed_bonus` | 0.2 | lane A39 (R-0029 point 4): a carrier past centre ice with no opponent between it and the net gets this fraction more top speed and acceleration for `frames`, once per possession (event `breakaway`); 0 = off |
 | `skater.breakaway.frames` | 60 | lane A39 |
-| `skater.sprint.bonus` | 0.15 | lane A49: Shift / LT held adds this fraction to top speed and acceleration while the skater moves and the stamina lasts; bots never sprint; 0 = off |
+| `skater.sprint.bonus` | 0.15 | lane A49: Shift / LT held adds this fraction to top speed and acceleration while the skater moves and the stamina lasts; bots only with `ai.sprint` (lane A72); 0 = off |
 | `skater.sprint.drain_frames` | 180 | lane A49: frames of sprint from full to empty (3 s) |
 | `skater.sprint.refill_frames` | 360 | lane A49: frames at rest from empty to full (6 s) |
 | `skater.goalie.reach_m` | 0.9 | lane A52 (R-0035): a skater in the crease stance (within 3 m of its own goal centre, the human included) saves a loose shot passing within this of it; 0 = off |
@@ -71,12 +71,16 @@ of them out explicitly, but a Designer or hand-written cartridge may leave them 
 | `rules.goal_pause_frames` | 120 | |
 | `rules.offside` | false | only false is accepted |
 | `rules.penalties` | true | R-0013: fouls (from behind, or on a skater without the puck) = 300 frames in the box + a free faceoff at the fouler's end; `hockey.raw` sets false |
-| `ai.difficulty` | `pro` | lane A3; the five numbers below, when absent, come from the level's profile (`docs/experiments/BALANCING.md`), not from this table |
+| `rules.penalty_frames` | 300 | lane A72 (ask A8): frames a hard foul sits in the box; read only when `penalties` is true |
+| `ai.difficulty` | `pro` | lane A3; the numbers below (and `react_frames`, `body_check`), when absent, come from the level's profile (`docs/experiments/BALANCING.md`), not from this table |
 | `ai.yield_margin_m` | 2 (pro) | |
 | `ai.yield_radius_m` | 15 | |
 | `ai.hold_radius_m` | 0 (pro; 4.5 before the difficulty sweep) | |
 | `ai.speed_scale` | 1 | |
 | `ai.red_skill` | 1 | |
+| `ai.react_frames` | the level's profile (0 at rookie, pro and all_star) | lane A72 (ask A4): the opposing bots' steering delay in frames; the back reacts at once |
+| `ai.sprint` | 0 | lane A72 (ask A2): the share of the time a bot sprints on a chase from more than 6 m (both sides' bots, same stamina bar as the human); 0 = bots never sprint |
+| `ai.body_check` | the level's rule (rookie never; pro and all_star from 5 m/s of closing) | lane A72 (ask A5): when written, the share of the chances an opposing bot checks, at `skater.check_speed_min` instead of 5 m/s; 0 never |
 | `pickups` | none | |
 | `pickups[].max_on_ice` | 1 | lane A14 (C-0005) |
 | `pickups[].zone` | absent = anywhere on the ice | |

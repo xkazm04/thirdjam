@@ -816,6 +816,7 @@ void AHokejGameMode::GatherInputs()
 			I.bPoke = Out[i].bPoke;
 			I.bLift = Out[i].bLift;
 			I.bDeke = Out[i].bDeke;   // lane A39: the bots' deke
+			I.bSprint = Out[i].bSprint;   // lane A72 (ask A2): game.ai.sprint
 			// Lane A31 (B-to-A-0024 point 3, C-0001 v3): the brain's owner calls SetGoalieStance for the skater covering the crease, on a change only.
 			// R-0033 point 2 (lane A50): any crease skater, not only the back (JamAI::CreaseStance after Decide); the human below through the same send.
 			SendGoalieStance(i, Out[i].bGoalie, Out[i].GoalieSide, RoleName(W.Skaters[i].Role));

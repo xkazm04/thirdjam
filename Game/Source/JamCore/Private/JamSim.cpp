@@ -1334,7 +1334,7 @@ void UJamSim::CallFoul(FJamSkaterState& Fouler, const FJamSkaterState& Victim, c
 {
 	Emit(JamEvents::Foul, Fouler.Index, Contact, Strength, Kind);
 	Fouler.bFoulThisFrame = true;
-	Fouler.PenaltyFrames = BoxFrames;
+	Fouler.PenaltyFrames = Config.Rules.PenaltyFrames > 0 ? Config.Rules.PenaltyFrames : BoxFrames;   // lane A72 (ask A8): game.rules.penalty_frames, absent = 300
 	Fouler.CheckWindow = 0;
 	const double OwnEndX = -AttackGoalX(Fouler.Team) * 0.55;
 	const double SideZ = (Contact.Y >= 0 ? 1.0 : -1.0) * Config.Rink.WidthM * 0.25;
