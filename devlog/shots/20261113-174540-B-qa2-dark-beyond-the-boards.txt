@@ -1,0 +1,1 @@
+QA2 fault: play along the boards on clay at the game camera, un-frozen: everything between the board top and the lit band of the barn wall is black, here about half the frame. Seen in most frames of play at the boards on the regular rink, more on Pond.
