@@ -1,0 +1,1 @@
+B36, the same fix on the wide arena (140 x 70 m, rig scale 1.556): corner and side board, before and after. The apron (13 % of the frame height at the side board) goes from black to luma 30 to 45. Not fixed: the upper barn wall at the top of the frame is dark on this rink before and after (luma about 10): the wall wash has a fixed height and the walls are 1.56 times taller here.

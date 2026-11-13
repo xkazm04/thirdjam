@@ -1,0 +1,1 @@
+B34, clay tier (p3_clay), sky light before and after. Top row: specified gray cube (before). Bottom row: movable real-time capture of the new dome SkyCap_P3_Clay (after), fresh match on the saved rig. Game camera, boards 8 m, 24 m. Mean difference outside figure outlines: 0.54 / 0.58 / 0.50 (unchanged scene: 0.51 to 0.59).

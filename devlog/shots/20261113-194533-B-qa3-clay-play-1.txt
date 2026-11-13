@@ -1,0 +1,1 @@
+QA3 ordinary play on clay 1: open ice, regular cut, game camera, un-frozen, HUD as the player sees it.

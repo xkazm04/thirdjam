@@ -1,0 +1,1 @@
+QA3, QA2 fault 1: fixed. Play along a side board of the regular rink on clay, un-frozen: the right half of the frame is the lit plank floor outside the boards and the wall; even, not glowing.

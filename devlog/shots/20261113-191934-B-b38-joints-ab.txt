@@ -1,0 +1,1 @@
+B38, board joints along the boards on clay: JointDark 0.7 (fainter than the plaster by 30 %) to 0.35 (65 % darker). One value on MI_Toon_Board.

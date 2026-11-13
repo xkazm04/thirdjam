@@ -1,0 +1,1 @@
+QA3, QA2 fault 1 on the wide arena (140 x 70 m) on clay: fixed. A corner at the game camera, un-frozen: lit floor and wall beyond the boards.

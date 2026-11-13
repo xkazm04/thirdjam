@@ -713,3 +713,80 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
   wall, nothing through it, pelvis at 90 % one frame before the release. Same match: **2 checks landed against 66 collisions without one, 20 clean cross-checks,
   8 clean pokes**: the body check is still the rare event on `all_star`.
 - Known fault of B's, in a lane now: long thin lines through the slide streak at 10 to 20 frames after a knockdown (`devlog/shots/20261113-164557-B-sk18-slide-streak.jpg`).
+
+## H35.9 (17:17, 13 Nov) FOR THE DIRECTOR: the slide streak cannot stretch any more (lane B35, cook-only PASS); a speed for you to look at
+- **On `dev-b`** (`status/B35-report.md`): the long lines through the slide streak came from reading the owner's velocity unclamped: (a) mostly an artefact of B's
+  stills (a frozen world tick has a time step of microseconds, so any move in it gave a quad kilometres long), (b) in play, over-long quads at the start of a hard
+  slide. Speed and quad length are capped now and nothing spawns on a near-zero time step, a 30 cm jump or the first 0.1 s. The cross-check mark is one size up on
+  clay; a hard board crash (Strength 1.0) is 26 chips and a snow cloud against 4 chips at 0.5; the board shake line is gone for good.
+- **For you to look at**: recorded per tick in six knockdowns, **after the 3-frame hit-stop the knocked figure catches up at up to 26 m/s for three frames and then
+  slides at about 10 m/s in a hard knockdown** (the 7 m slide). If the catch-up or the 10 m/s is not intended, it is in the pawn or the sim.
+- House rule noted on B: an effect that reads `Engine.Owner.Velocity` clamps it; stills taken by freezing the world clock can show faults that play does not.
+
+## H36.1 (17:29, 13 Nov) FOR THE DIRECTOR: your sky-light ask is done on B's side (lane B34, cook-only PASS); ten figures on clay; one HUD ask
+- **A-to-B-0016 point 3**: both rigs' sky lights are movable real-time captures now, with the reply and what is yours (`Rink.umap`'s own sky light, the measurement,
+  `r.SkyLight.RealTimeReflectionCapture=1` in every quality profile) under the handoff. Also on clay: the four key spots' shadow resolution 0.5 to 1.0 and
+  source radius 30 to 60 cm (a downed figure's long shadow had stair-stepped edges): **shadow cost not measured on B**.
+- **Ten figures on the clay rink** (a scratch cartridge with five per team; it loaded and played): the ice reads calm, the puck is found at a glance (core luma
+  23 against ice 190), jerseys of both teams are 55 luma or more from the ice on both wings and in both corners. **Ask for your HUD or pawn side: the
+  human's figure has no mark of its own among five of its colour**; it is found only because the camera sits behind it. One frame for your camera: at 5.0 s,
+  after the human lost the faceoff and was knocked down, the puck was behind the game camera (puck x -21.8 m, human x -10.3 m).
+- A cartridge with `spawn_every_frames` under 120 is rejected and the game then falls back to the regular cut without a visible message (seen while testing).
+
+## H36.2 (17:30, 13 Nov) FOR THE DIRECTOR: the operator's audio balance measured at full speed; the cross-check has its sound (lane AU9, cook-only PASS)
+- **Measured at 58 ticks a second with the operator's trims** (`status/AU9-report.md`): plain match 90 s -24.2 LUFS, true peak -6.9 dBTP; drill match 60 s -22.5 / -4.7.
+  Music + commentary + crowd are 73 % of the mix energy in plain play (72 % in the drill); gameplay effects 20 %, hits 6 %. The hit moment sits 4.5 dB (plain)
+  and 7.4 dB (drill) over the second before it, median.
+- **`MS_lift`**: the clean case (Variant 0, which you already send) plays one of three cross-check impacts, 2.6 to 3.4 LU under a body check at 0.6; the miss
+  (Variant 1) is unchanged. It is 4.5 % of the plain match's energy with 65 clean lifts in 90 s. The poke is now the largest frequent effect (60 in 90 s,
+  about 9 %).
+- Event counts in that plain match, for your aggression ladder: 11 checks and knockdowns, 65 clean lifts, 60 pokes, 27 shots, 39 skater board hits.
+
+## H36.6 (17:49, 13 Nov) FOR THE DIRECTOR: a play-through of `dev-b` on clay (lane QA2); handoff 0038
+- **Handoff B-to-A-0038**: eight things on A's side ranked by how visible they are; the two that matter: at `pro` the human was knocked down 15 times in 104 s (7 within a
+  second of his release, 10 by the same bot), and a carrier loses the puck to a lift or poke 1.4 times a second (79 lifts, 68 pokes, 32 shots, no goal in 104 s).
+- B's own from the same lane: black beyond the boards wherever the camera looks out over them (lane B36, running, port 8002); a 0.3 s gap per figure on stick
+  reactions and a quick get-up on an early release (next figure lane); a ladder of pale arcs behind a fast loose puck's ring on clay (B's puck trail or your ring:
+  B looks).
+- What passed, un-frozen, in 267 s on clay (regular, Pond, Bruisers, wide, five a side): 23 knockdowns with take and get-up, get-up end minus release 0.00 on 22;
+  the wall rule fired 6 times; cross-check victims reacted 75 of 77; pokes 66 of 66; no grey or magenta material, no ghost figures after a tier switch, ambient
+  light present from the first capture after a switch; no warning or error naming an asset of B's.
+
+## H37.3 (18:14, 13 Nov) FOR THE DIRECTOR: B's share of the play-through's faults (lanes SK19 and B36, cook-only PASS)
+- **The black beyond the boards is gone** (lane B36, `status/B36-report.md`): the barn floor between the boards and the wall carries a warm fill in its material (no
+  light added, nothing on the ice): frame area under luma 12 at a corner 8.5 % to 1.7 % on the regular rink, 3.8 % to 0.3 % on Pond; on the 140 m rinks the
+  upper barn wall stays dark (10.8 % left). Ice luma unchanged in thirteen regions. **For your camera**: from a camera lower than today's a blue helmet would
+  stand in front of the brown floor at nearly its luma.
+- **Worn boards on clay**: a dirt band, rubber puck smears (denser behind the nets) and stick scuffs behind a static switch `BoardWear` in the shared `M_Toon`
+  (on only in `MI_Toon_Board`; every other user compiles the same 549 instructions as before; night measured unchanged), chipped paint on the red cap
+  (`M_Trim`, static switch `CapChips`). Two static switches add shader permutations: the cook passed here; please watch your package's shader compile.
+  The cage's obstacles use `MI_Toon_Board` and so carry the wear: not looked at.
+- **Reactions no longer machine-gun** (lane SK19, `status/SK19-report.md`): a 0.35 s gap between a figure's stick and standing reactions: 141 stick reactions
+  played before, 64 now in the same 104 s match (your event rates are unchanged: 79 lifts, 68 pokes). On an early release (the foul whistle, 30 frames early)
+  the figure is standing 6 frames later, not 30; keeping the figure down for its frames on your side would look better than a 6-frame rise.
+- For you: the bots press check 4 to 5 frames after a cross-check, so their lunge replaces the shove; the ladder of arcs behind a fast loose puck is B's
+  `NS_puck_trail` reading the puck's rendered speed per particle (a puck advanced evenly between sim steps would steady it; B clamps it on its side next).
+- B's editors hung on the GPU twice today with two editors open (16:11, 18:00): from now on B runs one editor at a time when a lane plays matches.
+
+## H38.4 (19:23, 13 Nov) FOR THE DIRECTOR: the ladder behind the puck's ring is gone on clay (lane B38, cook-only PASS); `main` has not moved since 13:28
+- **`main` is still cba1327 (13:28).** `dev-b` is 69 commits ahead with everything since: the operator's audio balance, the tackle and cross-check sounds, the
+  cross-check takes and effects, the lit floor beyond the boards, worn boards, the sky lights. B's open asks with no answer yet: handoffs 0037 (a cone on the lift,
+  `Dir` on `lift` / `poke`) and 0038 (the human knocked down every 7 s, the puck taken 1.4 times a second), a `bump` event (H32.9), `Rink.umap`'s sky light,
+  a marker on the human. The operator asked B at 19:05 to follow A's directions for tonight: none has arrived; B carries on from its own list.
+- **On `dev-b`** (`status/B38-report.md`): the ladder of pale crescents behind a fast puck on clay was Lumen's diffuse gather picking up the puck's bright disc from the
+  previous frame. On clay the disc's light is now a translucent overlay (`Look/M_PuckGlow`, the overlay material of `Props/SM_PuckDisc`'s `Halo` slot; your puck
+  actor needs no change); night is unchanged. **Please check in a package that a per-slot overlay material on that static mesh draws** (B could not). `M_Trim` is
+  two instructions heavier for all its users. The night tier has the same lag, much stronger (a smear some metres long behind a fast puck): untouched.
+- The barn's wall wash follows the rig's scale on the 140 m rinks (frame under luma 12 at a wide corner 10.8 % to 1.2 %); board joints darker.
+- **A question**: with every effect hidden, a pale grey oval sits at the centre faceoff spot with pale crescents beside it, static: are they your rink markings?
+
+## H38.9 (19:54, 13 Nov) FOR THE DIRECTOR: a second play-through after B's fixes (lane QA3, cook-only PASS); what is left is yours
+- **B's faults from the first play-through are closed** (`status/QA3-report.md`, un-frozen, clay): the black beyond the boards is a lit plank floor and barn wall on the
+  regular rink, Pond and the wide arena; the ladder behind a fast puck and the pale ovals were not seen again in 200 frames; a fouled figure stands 6 frames after
+  the early release; stick reactions played at the boards 141 to 49 in the same seeded match (a board pin now waits out a young reaction).
+- **Unchanged because `main` has not moved (cba1327, 13:28)**, confirmed with the same seed: the human knocked down 15 times in 109 s at `pro` and the only one knocked
+  down (another seed: 4 in 111 s, all the human); lifts and pokes take the puck 1.3 times a second (79 lifts, 68 pokes, 32 shots); **new: a bot's cross-check
+  repeats every 30 frames** (the lift cooldown): with B's reactions thinned, the busiest figure at the boards is now a bot shoving at frames 14, 44, 74, 104;
+  the first match of a session starts about 2 s without its lights (1.4 s from match build to "rig loaded" in the log); the foul whistle releases 30 frames
+  early; `NS_deke` / `MS_deke` missing.
+- No warning or error names an asset of B's in nine sessions; knockdowns 15 of 15, 4 of 4, 3 of 3 with get-up end minus release 0.00.

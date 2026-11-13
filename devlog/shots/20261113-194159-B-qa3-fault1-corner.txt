@@ -1,0 +1,1 @@
+QA3, QA2 fault 1 (black beyond the boards): fixed. Play in a corner of the regular rink on clay at the game camera, un-frozen: beyond the board cap there is a lit wooden floor and the barn wall, no black. The figures and the blue helmet read against it.

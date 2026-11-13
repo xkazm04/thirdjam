@@ -1,0 +1,1 @@
+B36, worn boards on the clay tier, before and after, along the boards and at 8 m. New in M_Toon behind the static switch BoardWear (on only in MI_Toon_Board): a dirt band above the kick strip, dark rubber puck smears low on the board, horizontal stick scuffs, plaster a little darker and warmer; chipped paint on the red cap (M_Trim, static switch CapChips). Barn wall wash darker.

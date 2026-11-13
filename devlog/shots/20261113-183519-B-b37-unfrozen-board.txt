@@ -1,0 +1,1 @@
+B37 item 4: a REAL hard board crash on clay (the sim's board event, Strength 1.00, kind skater), UN-FROZEN, far side of the rink at the game camera: full frames and crops at +6 and +10 ticks after the puck's own board hit; the grey snow cloud shows at the skater's feet at +10.

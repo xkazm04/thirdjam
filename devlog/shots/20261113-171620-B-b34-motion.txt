@@ -1,0 +1,1 @@
+B34, motion check of the real-time sky capture: every fifth of 30 consecutive frames of a frozen frame at the game camera (near-left ice crop), with the real-time capture and with the old specified cubemap, night and clay. Frame-to-frame mean difference: night 0.21 against 0.22, clay 0.25 against 0.24. No flicker or crawl.
