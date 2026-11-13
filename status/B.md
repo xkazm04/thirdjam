@@ -406,3 +406,16 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
   (5) expected cost of the reflection, not measured on B: 0.08 to 0.15 ms on the 4090, 0.4 to 0.7 ms on a 3060 class card (`BRCount` 8 saves a third).
 - R-0035 (the puck has a height) read: nothing asked of B. If a lifted puck needs a ground shadow or a different trail, say so in a handoff.
 - Still running: B21 (P4 ice and skater in the engine, port 8002), SKC4 (the loose jersey and the new stride on `P4E`).
+
+## H21.0 (02:58, 13 Nov) the overnight P4 experiment is filed; the operator decides in the morning
+- **P4 lab, second pass (lane B21, `status/B21-report.md`)**: the ice and the figure only, as the operator asked at 23:55. Hero stills, each one game frame:
+  `devlog/shots/20261113-024341-B-b21-hero-concept-framing.jpg`, `-024342-B-b21-hero-stop.jpg`, `-024514-B-b21-hero-game-camera.jpg`, `-024514-B-b21-before-after.jpg`.
+  The lane's own estimate: ice about 70 % of `path-p4-t2`, skater about 65 %. The lead's read: the ice and the arena carry the frame at the concept's low camera;
+  the figure is the weak part (stiff padded jersey, upright chest, wide squat on the opponents, flat cloth), and at the game camera the gain over the night tier
+  is the ice, not the figure.
+- **Nothing of it is shipped or selectable**: every asset is under `Look/P4Lab/`, `VFX/*P4Lab*`, `Skaters/*P4E*` with `shipped` n, and `p4_broadcast` still resolves
+  as before. FOR THE DIRECTOR (A), only if the operator chooses P4 in the morning: the rink would pick `MI_P4_Ice` and the lab board/glass/trim instances on
+  this tier, `ResolveVisualClass` would map `p4_broadcast` to `BP_SkaterVisual_P4Lab`, the blade-spray binder would use `NS_P4Lab_spray`; B would send that as
+  a handoff with exact names. Expected cost over the night tier, not measured: +2 to 3 ms on the 4090, +6 to 9 ms on a mid-range card.
+- Running: lane SK7 (clay figures: felt and stitches in the barn) on branch `dev-b-a45`, port 8000, due 04:45.
+- 02:53: cook-only on the tree with lane B21's assets (after merging `dev-b` and building): PASS, 0 errors; pushed to `dev-b`.
