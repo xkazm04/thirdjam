@@ -2872,3 +2872,118 @@ I ended them on the lying poses, not on a half-down `Lie_Knee`: no new get-up wa
 1. **Pace reads on the body** (VISION law 4; carried over, and now the biggest gap: it shows in every second of play, not only on a hit). A sprint posture and stride distinct from `Stride` (lower, longer, the stick out at full reach in one hand), a carry posture with the blade at three quarters of its reach, cut takes for a sharp turn, and `Burst` joining the sprint stride. **Proving numbers:** sprint against skate told apart in one still from the game camera: trunk lean differing by 15 deg or more, and the blade's distance from the body matching the sim's puck distance (1.2 m carried, 1.6 m sprinting) within 5 cm; `Burst` to the sprint stride and the sprint stride to `Stride` joining at 0 cm and 0 deg.
 2. **The get-up answers the release in every direction.** Front and side get-ups with a low phase of their own (a crouch under half height held until six frames before the end, since the side-lying hips already sit at 35 to 50 %), snap and quick versions of the four wall get-ups, and light and heavy versions of the board falls. **Proving number:** frames from the hips passing half their standing height to the release: 6 or fewer in all four directions and at the wall, both styles (today 6 to 13 with `GetUp_Snap`, 13 to 17 with `GetUp_Quick`, 25 to 31 with the 36-frame get-ups; the wall get-ups 26).
 3. **No take pops.** The one-frame twists left over (`Burst` 19 to 20, `Board_Fall_Front` 6 to 7) and the fast frames of the hit takes outside their contact frames, by letting a limb's roll catch up over several frames where a take copies or joins another, and by arcs in the arms' paths. **Proving number:** the largest one-frame turn of any bone outside frames 0 to 3, over every take the engine plays: 60 deg or less (today up to 118 in `Burst`, 106 to 109 in `Board_Fall_Front`, 90 to 110 in the heavy falls).
+
+## Twenty-fourth pass: no take pops, the heavy fall on clay, a sprint stride (SKF24, 22:09 to 22:40)
+
+Delivered `C:\Users\kazda\jam\skater-lab\skf\export24\` (p2_cel, p3_clay, full sets) with `DIFF.md`, `JOINS.md` and `READY.txt`. All three items are built. Nothing of this pass has been seen in the engine; I looked at stills of the sprint only, and at none of the 35 takes the pop pass changed.
+
+- **Item 1:** the takes with a one-frame bone turn over the limits went from 29 to 2 per style. Three steps are left as solved (below).
+- **Item 2:** `Knockdown_Back_Heavy` on clay lands at 19 cm at frame 16 like the other style, the arms placed.
+- **Item 3:** `Stride_Sprint` is 17.4 deg lower in the trunk than `Stride` at every frame; its skates leave and meet the ice on `Stride`'s frames, but on p2_cel the pushing skate then skims 0.2 cm over the ice for six frames where `Stride`'s is 1 cm up.
+
+**The take count grows from 109 to 110** (`Stride_Sprint`). **Difference list against export23** (`compare_anim.py`, main and loopcut file): 29 takes differ on p2_cel and 32 on p3_clay, 35 in either: every one is a take the pop pass changed (`Knockdown_Back_Heavy` also for item 2). They are named at the end of this section and in `export24\DIFF.md`. Lengths unchanged. The other takes are identical, the clay aim holds among them. Bones, parents and rest pose identical; meshes identical; `SM_Stick_<style>.fbx` byte-identical; 60 fps; the `root` bone has identity keys in all 110 takes of all four files.
+
+### 1. No take pops
+
+**The rule.** Over every take the engine plays, no bone turns more than 60 deg in one frame from frame 3 on, nor more than 120 deg in frames 0 to 3 (the turn is the bone's turn in the figure's space between two frames, as `check_fbx.py` measures it on the FBX). Treated as unused and left alone: `Stop`, `Stumble`, `Stumble_Short`, `Check`. The loops had no step over the limits and are not touched.
+
+**How.** A pass after each take is solved (`smooth24` in `build_clips.py`), aiming at 55 and 115 deg to leave room. Where a bone's step is over, its rotation over the smallest window of frames around the step is evened out: first along the bone's own path (the same poses, retimed), and if that is not enough, straight from the window's first frame to its last. The window's two end frames are kept, so frame 2, the last frame and every join are as solved. The bone's children keep their orientation in space, so a roll of an upper arm does not swing the forearm and the stick stays where the hand holds it. A window is refused if it would
+- put a joint, a skate blade or the stick nearer the ice than it was (when it was within its skin's thickness of the ice), or
+- take a bottom hand off the shaft that was on it (within 1 cm).
+
+When no window passes, the step is left as solved. `Burst`'s last frame is now set to `Stride`'s first before this pass runs, so its 114-118 deg roll of the upper arm is spread over the frames before it.
+
+**Before and after** (largest offending step before, with the number of steps over the limits; after: the largest step from frame 3 on / in frames 0 to 3; bold = still over):
+
+| Take | Frames | p2_cel before: worst step over the limits (bone, frames, deg) | p2_cel after: largest step from frame 3 on / in frames 0-3 | p3_clay before | p3_clay after |
+|---|---|---|---|---|---|
+| Board_Fall_Back | 28 | lowerarm_l 6-7: 62 (2 steps) | 54 / 95.7 | lowerarm_l 6-7: 61.6 (2 steps) | 54.1 / 94.4 |
+| Board_Fall_Front | 28 | lowerarm_l 6-7: 105.7 (3 steps) | 54.2 / 96.8 | lowerarm_l 6-7: 109.1 (3 steps) | 54.5 / 86.5 |
+| Board_Hit | 30 | lowerarm_r 6-7: 72.1 (5 steps) | 53.1 / 85.4 | upperarm_l 7-8: 74.3 (6 steps) | 53 / 86.3 |
+| Burst | 20 | upperarm_l 19-20: 113.7 (3 steps) | 50.6 / 75.5 | upperarm_l 19-20: 117.8 (3 steps) | 52.1 / 81.1 |
+| Celebrate | 72 | none over the limits (largest from frame 3 on 55.1) | 50.4 / 47.9 | none | not touched |
+| Fall | 26 | stick_socket 10-11: 80.9 (4 steps) | 54.6 / 51.5 | stick_socket 10-11: 80.9 (4 steps) | 53.2 / 51.6 |
+| Fall_B | 28 | upperarm_l 4-5: 74.8 (5 steps) | 54.9 / 45.1 | upperarm_l 4-5: 83 (4 steps) | 50 / under 45 |
+| Fall_Forward | 26 | stick_socket 10-11: 90.8 | 53.8 / 101.1 | stick_socket 10-11: 90.8 | **stick_socket 10-11: 90.8** (not touched) |
+| Fall_Heavy | 34 | upperarm_l 5-6: 91.8 (12 steps) | 54.7 / 51.5 | upperarm_l 5-6: 109.9 (12 steps) | 55 / 51.6 |
+| Fall_Light | 18 | stick_socket 4-5: 64.1 | 53.9 / 87.8 | stick_socket 4-5: 64.1 | 51.9 / 98.2 |
+| GetUp_Quick | 20 | stick_socket 6-7: 68.4 (2 steps) | 57.7 / 55 | stick_socket 6-7: 68.7 (2 steps) | 56.2 / 55 |
+| GetUp_Quick_Side_Left | 20 | none | not touched | none over the limits (largest from frame 3 on 57.4) | 48.1 / 51.5 |
+| GetUp_Quick_Side_Right | 20 | calf_l 6-7: 63.1 | 52.7 / 46.6 | calf_l 6-7: 62.9 | 51.9 / 50.9 |
+| GetUp_Side_Right | 36 | thigh_l 10-11: 63.4 | 48.9 / 45.9 | thigh_l 10-11: 64.6 | 51.3 / under 45 |
+| GetUp_Snap | 20 | thigh_l 13-14: 65.5 | 52.7 / under 45 | none over the limits (largest from frame 3 on 58.8) | 54.5 / under 45 |
+| GetUp_Snap_Front | 20 | lowerarm_r 17-18: 65.4 (2 steps) | **lowerarm_r 17-18: 65.4** (not touched) | lowerarm_r 17-18: 64.5 (2 steps) | 49.1 / under 45 |
+| GetUp_Snap_Side_Right | 20 | calf_l 12-13: 63.1 | 53.1 / under 45 | calf_l 12-13: 62.9 | 54.5 / under 45 |
+| GetUp_Wall | 36 | none | not touched | thigh_l 10-11: 60.1 | 49.8 / under 45 |
+| GetUp_Wall_Back | 36 | none | not touched | thigh_l 10-11: 60.1 | 49.8 / under 45 |
+| GetUp_Wall_Right | 36 | upperarm_r 3-4: 63.4 | 47 / under 45 | none over the limits (largest from frame 3 on 57.4) | 54.1 / under 45 |
+| Knockdown_Back | 26 | stick_socket 10-11: 90.8 | under 45 / 85.8 | stick_socket 10-11: 90.8 | under 45 / 96 |
+| Knockdown_Back_B | 28 | stick_socket 8-9: 120.7 (5 steps) | **stick_socket 8-9: 116** | stick_socket 8-9: 120.7 (3 steps) | **stick_socket 8-9: 112.5** |
+| Knockdown_Back_Heavy | 34 | stick_socket 13-14: 90 (11 steps) | 57.7 / 95 | lowerarm_l 12-13: 92.6 (13 steps) | 58 / 100.1 |
+| Knockdown_Left | 26 | stick_socket 10-11: 90.3 (2 steps) | 54.8 / 86.2 | stick_socket 10-11: 90.3 (2 steps) | 51.3 / 88.1 |
+| Knockdown_Left_B | 30 | stick_socket 12-13: 156.2 (12 steps) | 55 / 76.6 | stick_socket 12-13: 156.2 (12 steps) | 54.8 / 72 |
+| Knockdown_Left_Heavy | 34 | stick_socket 13-14: 90 (14 steps) | 54.8 / 86.2 | stick_socket 13-14: 90 (16 steps) | 54.9 / 88.1 |
+| Knockdown_Right | 26 | upperarm_r 10-11: 86.5 (2 steps) | 54.1 / 72 | upperarm_r 10-11: 84.9 | 54.1 / 68.7 |
+| Knockdown_Right_B | 30 | stick_socket 13-14: 154.2 (6 steps) | 54.7 / 73 | stick_socket 13-14: 154.2 (7 steps) | 54.8 / 69.9 |
+| Knockdown_Right_Heavy | 34 | stick_socket 13-14: 90 (7 steps) | 55 / 72 | stick_socket 13-14: 90 (12 steps) | 54.8 / 68.7 |
+| Lift_Hit | 28 | none | not touched | none over the limits (largest from frame 3 on 56.1) | 54.8 / 111.4 |
+| Poke_Hit | 24 | lowerarm_l 8-9: 71.9 (2 steps) | 53.7 / 106.1 | lowerarm_l 8-9: 74 (3 steps) | 54.5 / 104.2 |
+| Shot_Slap | 42 | lowerarm_l 19-20: 70 (2 steps) | 52.4 / under 45 | lowerarm_l 19-20: 69.1 (2 steps) | 53.1 / under 45 |
+| Stumble_Back | 32 | none | not touched | upperarm_l 11-12: 60.8 | 49.2 / 87.3 |
+| Stumble_Front | 32 | lowerarm_r 1-2: 121.2 (2 steps) | under 45 / 95.4 | none | not touched |
+| Trip | 26 | lowerarm_l 0-1: 124.7 (4 steps) | 51.9 / 113.7 | lowerarm_l 0-1: 148.7 (4 steps) | 54.8 / 105.1 |
+
+- **Count:** takes with a step over the limits: 29 per style before, 2 per style after. Takes changed: 29 on p2_cel, 32 on p3_clay, 35 in either style. (`Celebrate` on p2_cel, and `Lift_Hit`, `GetUp_Quick_Side_Left`, `GetUp_Wall_Right` and `GetUp_Snap` on p3_clay, were under 60 already but over the pass's own 55, so they changed too.)
+- **Left as solved (3 steps):**
+  - `Knockdown_Back_B`, the stick, frames 8 to 9: 116 deg (p2_cel), 112.5 (p3_clay), was 120.7. The stick is at the ice there; every wider window lowered it.
+  - `Fall_Forward` on p3_clay, the stick, frames 10 to 11: 90.8 deg. Evening it out put the clay stick's blade 0.2 cm into the ice at frame 11 (measured on the FBX), so that one is switched off by name.
+  - `GetUp_Snap_Front` on p2_cel, the right forearm, frames 17 to 18: 65.4 deg. No window kept the stick over the ice.
+- **Inside frames 0 to 3,** the two steps over 120 are down: `Stumble_Front` 121 to 95 (p2_cel), `Trip` 125 / 149 to 114 / 105.
+
+### 2. `Knockdown_Back_Heavy` on clay
+
+The clay figure's left elbow lagged the turn in the air (a bend direction may swing 30 deg a frame, and the body turns 30), was under the ice at the landing, and the guard lifted the body 9 cm. This take's elbows may now swing 60 deg a frame, so they are in place at frame 16. Hips over frames 12 to 19: 43, 37, 31, 25, 19, 25, 29, 31 cm on p3_clay (was 43, 37, 34, 36, 28, 25, 29, 31); 50, 46, 36, 27, 18, 25, 29, 31 on p2_cel. Lowest skin at frame 16: 0.56 cm (clay), 0.41 (cel). The other three heavy falls keep the 30 deg limit: with 60 the cel figure's `Knockdown_Left_Heavy` went 2.4 cm under the ice.
+
+### 3. `Stride_Sprint` (60 frames, a loop)
+
+The same length as `Stride`, the same four keys (0 right push, 15 right recover, 30 left push, 45 left recover), the same skate heights at the keys.
+
+| | `Stride` | `Stride_Sprint` (p2_cel / p3_clay) |
+|---|---|---|
+| Trunk lean, frames 0 / 15 / 30 / 45 | 32.7 / 32.9 / 32.7 / 32.9 deg | 50.2 / 50.4 / 50.2 / 50.4 deg: 17.4 deg more at every frame of the loop |
+| Hips | 77.5 / 73.4 cm | 74.5 / 70.6 cm |
+| Blade end ahead of the hips | 107.8 / 105.7 cm | 147.7 / 144.1 cm (40 / 38 cm farther), on the ice (stick lowest 0.6 to 0.8 cm, as `Stride`) |
+| Hands | both on the stick | the top hand alone; the free arm swings 34 to 37 cm fore and aft and across the body against the legs |
+| Left blade leaves / meets the ice (0.8 cm line) | 32 / 56 (p2_cel), 32 / 57 (p3_clay) | 32 / 56, 32 / 57 |
+| Right blade leaves / meets the ice | 2 / 26, 2 / 27 | 2 / 26, 2 / 27 |
+| Loop seam (first against last frame) | | 0.0000 cm |
+
+- **Foot phase:** the push-off and the landing fall on the same frames as `Stride`'s in both styles. At the same frame the two takes' ankles are at most 5.2 cm (p2_cel) and 4.0 cm (p3_clay) apart, which is the most a full blend between them moves a skate.
+- **Where it does not match:** on p2_cel the sprint's pushing skate drops back to 0.2 cm over the ice for frames 35 to 40 (right skate 5 to 10) before it lifts; `Stride`'s is 0.8 to 1.2 cm up there. On p3_clay it stays up (0.8 to 1.2 cm), and the support skate's edge crosses the 0.8 cm line up to 3 frames apart from `Stride`'s (frames 14 to 23 against 17 to 20). So "within 1 frame" holds for leaving and meeting the ice, not for every crossing of that line.
+- **The pushes are only a little longer** (2 cm farther back, 1 cm farther out): with 8 cm more the cel figure's skate skimmed for 8 frames.
+
+### Ground, joints, joins
+
+- **Nothing is under the ice** in the 35 changed takes or the new one: body 0.00 cm or more, skates -0.01 cm (the same p2_cel vertex in `Board_Fall_Front` as before) / 0.13, stick 0.31 cm (p2_cel) / 0.08 cm (p3_clay).
+- **The top hand** is 0.0 cm from the stick in every frame. In `Shot_Slap`, `Burst`, `Board_Hit` and `Poke_Hit` (the changed takes with two-handed frames) no frame lost a bottom hand that was on the shaft (`hands20.py`, export23 against export24).
+- **Joins** (`join24.py`, `export24\JOINS.md`, 53 pairs): as export23: positions 0.0005 cm or less, bone rotations 0 deg, both styles; `Burst` to `Stride` 0 cm and 0 deg.
+
+### Not checked, and known gaps
+
+- Nothing in the engine. None of the 35 changed takes was looked at as a picture: the pass is checked by numbers only (turns, ground, hands, joins). An evened-out arm takes a slightly different path between the same end frames; I do not know how each reads.
+- Three steps over the limits remain (above).
+- The cel figure's skimming skate in the sprint.
+- No sprint versions of anything else (`Burst` still ends on `Stride`).
+
+### Files
+
+- **Scripts** (`skater-lab\skf\`): `build_clips.py` (the pop pass `smooth24`, the sprint; a copy is `build_clips_pass24.py`), `run24.sh`, `post24.sh` (joins with `join24.py`, loopcut and stick against export23, root keys, ground and hands on every changed take, `JOINS.md`, `DIFF.md`), `pops24.js` (the scan), `tab24.js` (the table above), `sum24.js`, `sheet24.sh`.
+- **Tables:** `export24\DIFF.md`, `export24\JOINS.md`, `work24\<style>\pops24.json` (every window the pass used or refused), `work24\m\f24_<style>.json`.
+- **Still** (`devlog\shots\20261113-223325-B-lab-skf24-sprint.png`): `Stride` above `Stride_Sprint`, game camera and side, both styles.
+- **Changed in either style (35):** `Board_Fall_Back`, `Board_Fall_Front`, `Board_Hit`, `Burst`, `Celebrate`, `Fall`, `Fall_B`, `Fall_Forward`, `Fall_Heavy`, `Fall_Light`, `GetUp_Quick`, `GetUp_Quick_Side_Left`, `GetUp_Quick_Side_Right`, `GetUp_Side_Right`, `GetUp_Snap`, `GetUp_Snap_Front`, `GetUp_Snap_Side_Right`, `GetUp_Wall`, `GetUp_Wall_Back`, `GetUp_Wall_Right`, `Knockdown_Back`, `Knockdown_Back_B`, `Knockdown_Back_Heavy`, `Knockdown_Left`, `Knockdown_Left_B`, `Knockdown_Left_Heavy`, `Knockdown_Right`, `Knockdown_Right_B`, `Knockdown_Right_Heavy`, `Lift_Hit`, `Poke_Hit`, `Shot_Slap`, `Stumble_Back`, `Stumble_Front`, `Trip`.
+
+### The next three evolutions of this track, ranked, each with its proving number
+
+1. **The rest of pace, on one import.** The sprint's cel skate lifted clear; `Burst` given a second ending on `Stride_Sprint`; a carry posture as a loop on `Stride`'s phase with the blade at three quarters of its reach; a sprint glide. All as loops or joins the engine can blend by a flag, so they cost it no new logic. **Proving numbers:** every crossing of the 0.8 cm line by a skate within 1 frame of `Stride`'s in both styles (today up to 6 frames on p2_cel); the blade's distance from the body 1.2 m carried and 1.6 m sprinting within 5 cm of the sim's puck distance; `Burst` to `Stride_Sprint` at 0 cm and 0 deg.
+2. **The get-up answers the release in every direction** (carried over). Front and side get-ups with a low phase of their own, snap versions of the four wall get-ups. **Proving number:** frames from the hips passing half their standing height to the release: 6 or fewer in all four directions and at the wall, both styles (today 6 to 13 with `GetUp_Snap`, 13 to 17 with `GetUp_Quick`, 25 to 31 with the 36-frame get-ups, 26 at the wall).
+3. **The lab checks itself before the engine has to.** One gate script run on every export: the pop scan, ground, the top hand, bottom hands that were on the shaft, joins, root, the difference list; it fails the export and names the take. And the three steps left over fixed by re-authoring their keys, not by the pass. **Proving numbers:** takes over the pop limits: 0 (today 2 per style); exports that reach the engine with a ground, hand or join fault the gate would have caught: 0.
