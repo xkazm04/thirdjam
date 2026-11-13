@@ -1,0 +1,1 @@
+One frame from the game: P4E export3 (posture-fixed takes), its AnimBP with the aim layer now from spine_03 (mesh space) so the stride's lean shows (pelvis-to-neck 45 deg, was 37); push spray off the left skate; same camera as b21-hero-concept-framing

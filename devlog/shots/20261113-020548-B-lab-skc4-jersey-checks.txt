@@ -1,0 +1,1 @@
+Garment checks: Stride, Shot_Slap, Knockdown_Left, Fall_Forward, Stop_Hockey_Left, Push_Start

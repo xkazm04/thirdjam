@@ -1,0 +1,1 @@
+SK6 item 7: BP_SkaterVisual_TB1_P3 on the clay barn tier, old mesh (left) against skf export6 mesh (right: cream sleeve and sock bands, running stitches, tape blade, vertex colour Col read by M_SkaterTB1Jersey: felt by R, +-4 % brightness by G, 0.6+0.4xB AO); rows 8 m, game camera, close

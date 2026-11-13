@@ -1,0 +1,1 @@
+B23 far zones from the game camera (25 m and 33 m), 4x crops: top before (thin flat rings), bottom after (the edge never thinner than 1.5 pixels, sits inside the outline, brighter and keeps its chroma at distance); still flat rings, not glowing tori

@@ -1,0 +1,1 @@
+SKF pass 10 p2_cel Faceoff_Draw from the side: old (export9) above, new (export10) below; starts in the new Faceoff_Ready, ends in Glide.

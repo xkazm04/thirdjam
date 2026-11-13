@@ -1,0 +1,1 @@
+SK6 item 6: P3C (BP_SkaterVisual_TB2_P3) on the clay barn tier, old texture (left) against base colour v2 + mask (team colour by R x (1-G), felt by A x (R+G), roughness per part 0.95/0.85/0.70, JerseyLum 0.19) (right); rows 8 m, game camera, close (the tier's depth of field blurs the close-up). Normal map imported but switched off on the instance (see p3c-normal-problem)

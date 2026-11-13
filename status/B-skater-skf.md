@@ -976,3 +976,446 @@ The main file repeats the last frame, so a 20-frame take has 21 frames (as every
 ### Sheets
 
 - `devlog/shots/20261112-203453-B-lab-skf5-p2_cel-old-new.png`, `20261112-203454-B-lab-skf5-p3_clay-old-new.png`, `20261112-203454-B-lab-skf5-p4_broadcast-old-new.png`
+
+## Sixth pass: clay style, bands, stitches, felt (23:32 to 23:50)
+
+The coordinator asked for this pass, for `p3_clay` only (`BP_SkaterVisual_TB1_P3` in the engine). Blender only.
+
+**Where the files are**
+
+| What | Folder |
+|---|---|
+| Shipped mesh | `C:\Users\kazda\jam\skater-lab\skf\export6\p3_clay\` (SK_Skater_p3_clay.fbx, _loopcut.fbx, SM_Stick_p3_clay.fbx), **without fuzz** |
+| The fuzz variant | `skf\export6fz\p3_clay\` |
+| Measurements | `skf\work6\p3_clay\` (`compare_anim*.json`, `check_fbx*.json`) |
+
+- `export/` to `export5/` and `s4/` were not touched.
+- Rebuild:
+  - shipped: `SKF_SUFFIX=6 SKF_FUZZ=0 bash C:/Users/kazda/jam/skater-lab/skf/run_all.sh p3_clay`
+  - fuzz variant: `SKF_SUFFIX=6fz SKF_FUZZ=1 bash .../run_all.sh p3_clay`
+  - sheets: `bash skf/sheet6.sh`
+  - Builder switch `--fuzz 0|1` or env `SKF_FUZZ`.
+
+**Mesh-only re-import is safe** (`compare_anim.py`, `export5` against `export6`, main and loopcut files):
+- same 24 bones and parents, rest matrices max difference **0.0**;
+- 72 / 72 takes, same names; **672,051 keys (main) and 662,091 (loopcut) compared, max difference 0.0**, no curve missing.
+- The clip pass is unchanged and re-checked: pelvis and root travel 0, seams 0; the old reaches 1.000 / 1.600 m with the same blade heights; aim grid within 0.03 cm, blend test 0 failures.
+- The lowest point over all takes is -0.97 cm (the stick), against -0.96 in `export5`. No new below-ice point in any take.
+- At most **1 bone weight per vertex** (rigid parts). The UV0 back-number projection is unchanged.
+
+### What was added (all `Trim` unless stated)
+
+| Item | How | Triangles |
+|---|---|---|
+| **Cream band on each upper sleeve** | 5 cm wide, 4.5 mm proud (edges 2 mm), ray-cast onto the clay surface (28 points round), bound to `upperarm_l/r` | about 170 each |
+| **Two cream bands on each sock** | 4 cm wide, same build, bound to `calf_l/r` | about 170 each |
+| **Hem band and collar ring** | the existing cream clay rolls (hem 2 cm and collar 2.4 cm round), kept | unchanged |
+| **Running stitches** | **71 dashes of 4.0 x 1.4 x 0.5 cm, 2.4 cm gaps, 3 mm above the felt** (the texture lane's readable size). Around the hem 3.5 cm above the hem roll, round the collar 3.5 cm below the collar roll, down both sides, over both shoulders, and round both cuffs 3.5 cm from the cuff roll. They replace the old 3.0 x 0.9 cm cross-stitches and their jersey ridges. | 852 |
+| Forearm rolls | removed (the concept bands the upper sleeves) | -400 |
+| **Felt** | seeded fine displacement on every `Jersey` part (socks included), 1.5 mm, two octaves (60 and 130 per m), on top of the clay lumps, in the vertices and smooth normals | 0 |
+| **Stick** | darker shaft (sRGB 0.17 / 0.12 / 0.10), the blade in `Stick`, with **cream tape** as a raised spiral (7 turns, 4.5 mm round cord) inside the blade height | +572 (984 in all) |
+| **Fuzz** (variant only) | 600 two-sided fibre cards, 10 to 20 x 3 to 4.5 mm, on the upper chest and back, shoulder pads, outer upper sleeves and sock tops; slot **`Fuzz`**, bound to the bone of the cloth under it | 1,200 |
+
+**Totals.** Shipped `export6`: **12,436** triangles (body 11,452 + stick 984), 9 slots as before. Fuzz variant: **13,636**, with a 10th slot `Fuzz`. The cap is 16k.
+
+**Band and stitch deformation.** Every band and stitch is weighted 1.0 to the same bone as the cloth under it, so it moves rigidly with it.
+- The bands sit 2 to 4.5 mm above the ray-cast surface at 28 points round, so they don't z-fight.
+- Iteration 1 used 14 points round the sock: the felt bulged through between the points and the band broke into blocks (`lab-skf6-close` was re-filed after the fix).
+- Checked on the rendered stride, slap and knockdown sheets: no tearing. The joins at elbows and knees are the existing ball-joint overlaps.
+
+### Vertex colours (one layer `Col`, exported in the FBX as linear data; face-corner domain after import)
+
+| Channel | Meaning |
+|---|---|
+| **R** | felt amount: Jersey and Trim (cloth, bands, stitches, patch) 1.0, Pads (breezers) 0.6, Fuzz 1.0, clay parts (helmet, gloves, skates, skin, blade, stick shaft) 0.0 |
+| **G** | a random value per part (island), 0..0.97, for mottling |
+| **B** | ambient occlusion baked per vertex: 12 hemisphere rays of 25 cm. Dark under the arms, between the legs, under the helmet rim, where the bands meet the felt. |
+| A | 1 |
+
+**What the engine should do**
+- Read `Col` in the jersey and clay masters.
+- R: mix the felt response (rim and roughness 1) with the clay response.
+- G: a small brightness or hue jitter per part (mottling, about ±4 %).
+- B: multiply it into the base colour or ambient (about 0.6 + 0.4 × B), so the figure gets depth without a texture.
+- If the fuzz variant is used, the **`Fuzz` slot** needs:
+  - the jersey's team colour;
+  - two-sided rendering;
+  - masked or dithered opacity that fades the cards towards their tips;
+  - no shadow casting.
+
+### Did the fuzz earn its place? No
+
+On my own renders, close up it reads as a few stray hairs on the shoulders. At 8 m, 70 px and 40 px the fuzz and no-fuzz figures are indistinguishable (`lab-skf6-8m`, `-game70`, `-game40`, middle row against bottom row). It is noise, not wool, so `export6` ships without it. The variant stays in `export6fz` if the engine's dithered alpha makes more of it.
+
+### What reads now (70 px and 40 px from the game camera, blue and orange)
+
+At 70 px:
+- the cream upper-sleeve bands and the two sock bands read clearly in both colours;
+- the hem roll and the stitched band above it read as a cream line;
+- the patch reads as before.
+
+At 40 px the sleeve and sock bands still separate the limbs, and the stitches merge into the hem line.
+
+### Still far from the concept
+
+- **Not fuzzy wool.** The felt displacement is barely visible at our vertex density (2 to 3 cm spacing), so the jersey still reads as matte clay or felt, not woolly. True wool needs the engine (a fuzz shader or a normal map), or a much denser mesh.
+- **Stitches.** The stitches are hard-edged boxes, not soft thread. They read as dashes, as wanted, but up close they look sculpted.
+- **Clay thumbprints.** The helmet, gloves and skates have dents and lumps from the earlier passes, but no fingerprint ridges.
+- **Sleeve bands.** The concept's bands sit near the shoulder and are wider; mine are at mid upper arm, 5 cm wide.
+- **Tape wrap.** The tape spiral is visible on the blade only up close.
+- **Not verified:** anything in Unreal (vertex-colour import, the `Col` layer on the skeletal mesh, how the masters use it).
+
+### Sheets
+
+- `devlog/shots/20261112-234642-B-lab-skf6-turntable.png` (old above new)
+- `devlog/shots/20261112-234642-B-lab-skf6-close.png` (back, sleeve, sock: old / with fuzz / without fuzz)
+- `devlog/shots/20261112-234642-B-lab-skf6-game70.png`
+- `devlog/shots/20261112-234642-B-lab-skf6-game40.png`
+- `devlog/shots/20261112-234642-B-lab-skf6-8m.png`
+- `devlog/shots/20261112-234642-B-lab-skf6-knockdowns.png`
+
+## Seventh and eighth pass: an athletic stride and posture fixes for the broadcast style
+
+### Seventh pass (00:42 to 00:49; `export7`, used as delivered by lanes SKC4 and B21)
+
+`skf/export7/p4_broadcast/` has 75 takes (72 plus `Stop_Hockey_Left`, `Stop_Hockey_Right`, `Push_Start`). Same skeleton as before.
+
+- **Style flag `athletic`** in `skf_style.py` (p4 only): a new base Glide (`GLIDE_ATH`) that every Glide join uses.
+- **Stride:** a long diagonal push to near extension, skate turned out 38 deg on its inside edge, support knee under the body, trunk 42 deg, shoulders counter-rotated.
+- **Leans and crossovers:** on the same attitude.
+- **Two new takes:** the two-foot hockey stops (contact frame 6, held 8 frames) and `Push_Start` (first push at frame 9).
+- **Aim grid:** rebuilt on the new Glide.
+
+What happened to the pass:
+- `export7` was built at 00:45 with the aim-grid setting `aim_lean = -0.8` (blend test 0 failures). I had settled on 0.0, but the final full run, its sheets and this section never happened: the run stalled.
+- I stopped without writing this section, and no pass-7 sheets were filed.
+
+### Eighth pass (02:55 to 03:05; `export8`), the lead's posture fixes, p4 only
+
+**Where the files are**
+- New files: `skf/export8/p4_broadcast/`, same file names, `READY.txt` in `skf/export8/`.
+- `export7` and the other styles were not touched.
+- Rebuild: `SKF_SUFFIX=8 bash C:/Users/kazda/jam/skater-lab/skf/run_all.sh p4_broadcast`, then `bash skf/sheet8.sh` for the old-against-new sheets.
+- Measurements: `measure8.py` (posture on the exported FBX, what a retarget sees) and `work8/posture.md`.
+
+**The main finding**
+- In Blender, `export7`'s Stride already leaned 42 deg with both hands on the stick (glove-to-shaft gap 0.0 cm).
+- The upright chest and lifted glove in the engine come from two places:
+  - **The aim layer.** It replaces everything from `spine_01` up with the aim hold's own mesh-space rotations. The holds carried Glide's trunk (25 to 32 deg) and, at 1.6 m, a head 17 deg up.
+  - **The crossovers and leans.** They had the free-arm pump: the bottom glove was 75 to 95 cm off the shaft.
+- So the holds now carry more trunk (36 deg) themselves, and the crossovers and leans are two-handed.
+
+What changed per take:
+- **Glide:** a ready stance. Feet just over shoulder width (±0.225 m), knees forward (pole straight ahead, not outward), hips back (skates 8 cm ahead of the pelvis), trunk 27.6 deg, head level, blade on the ice in front.
+- **Idle:** the same stance and head, with a small weight shift. The stool look (upright 23 deg on deep knees, skates ±0.21 m) is gone.
+- **Stride:** folded at the hips. Pelvis tilt 34 deg (was 28) plus spine, so a retarget keeps it: trunk **50.6 deg**. Head up. Push leg further back and low (0.38 m behind), support skate further forward (knee over the toe). Hips within 2 cm of Glide. Both hands on.
+- **Crossovers and leans:** trunk 48 deg, **both hands on the stick**, blade in front on the ice. The bottom glove went from 75–95 cm off the shaft to 0, and the blade from 9.5–14.4 cm up to 1.9–4.0 cm.
+- **Stops:** the head is level, looking along the travel (head elevation max 26.1 -> -2 deg), both hands on, body leaning into the stop.
+- **Push_Start:** head up (-18 -> -2 deg at worst).
+- **Shot_Wrist:** 8 deg more hip fold (trunk 23 -> 30.6 deg), the bottom glove closer (6.9 -> 4.2 cm).
+- **Aim holds:** the extra trunk lean is a style setting (`aim_trunk` 1.0) with the head counter-tilted. Trunk 36 deg in every hold; head elevation at 1.6 m 10 deg (was 17). The blade-on-ice checks were re-run.
+- **Pass and Faceoff_Ready:** checked and left (31 deg; 57 deg with the head on the dot, which is right for a faceoff).
+
+### Measured posture (on the exported FBX, every frame; `work8/posture.md`)
+
+| Take | Trunk from vertical, mean (min..max) deg: export7 -> export8 | Pelvis tilt deg | Head elevation deg (0 level, + up) | Bottom glove to shaft, max cm | Blade toe low cm |
+|---|---|---|---|---|---|
+| Glide | 31.6 (31.3..31.9) -> **27.6** (27.3..27.9) | 24..24 -> 20..20 | -4..0 -> -2..-2 | 0 -> 0 | 4.2 -> 4.2 |
+| Idle | 23.1 (23.1..23.1) -> **26** (25.9..26) | 14..14.1 -> 18..18.1 | 4..4.1 -> 0..0.2 | 0 -> 0 | 4.2 -> 4.2 |
+| Stride | 42 (41.7..42.3) -> **50.6** (50.3..50.9) | 27.3..28 -> 33.3..34 | -4..-3.2 -> -2..-1.2 | 0.1 -> 0.1 | 3.8 -> 2.9 |
+| Crossover_Left | 44.6 (44.5..44.7) -> **47.9** (47.7..48) | 26.7..26.7 -> 28.7..28.7 | -4.6..-4.1 -> -4.5..-4.1 | 95.3 -> 0 | 13 -> 1.9 |
+| Crossover_Right | 44.6 (44.5..44.7) -> **47.9** (47.7..48) | 26.7..26.7 -> 28.7..28.7 | -4.6..-4.1 -> -4.5..-4.1 | 82.7 -> 0 | 9.5 -> 3.8 |
+| Lean_Left | 46.2 (46.1..46.3) -> **48** (47.9..48) | 26.7..26.8 -> 28.7..28.8 | -6.6..-6.4 -> -4.6..-4.4 | 94.9 -> 0 | 14.4 -> 1.9 |
+| Lean_Right | 46.2 (46.1..46.3) -> **48** (47.9..48) | 26.7..26.8 -> 28.7..28.8 | -6.6..-6.4 -> -4.6..-4.4 | 75.5 -> 0 | 11.6 -> 4 |
+| Push_Start | 44.8 (31.9..49.2) -> **45.4** (27.9..51.1) | 24..36 -> 20..36 | -18..0 -> -2..4 | 0.1 -> 0.1 | 2.5 -> 2.3 |
+| Stop_Hockey_Right | 28.1 (22.2..31.9) -> **26.7** (21..31.7) | -21.2..24 -> -21.2..20.2 | 0..26.1 -> -12.3..-2 | 0.1 -> 0.1 | 3.5 -> 3.2 |
+| Stop_Hockey_Left | 28.1 (22.2..31.9) -> **26.7** (21..31.7) | -21.2..24 -> -21.2..20.2 | 0..26.1 -> -12.3..-2 | 0.1 -> 0.1 | 2.9 -> 2.7 |
+| Shot_Wrist | 23.1 (19.8..26.6) -> **30.6** (27..34.1) | 8.6..14.2 -> 16.4..22.2 | -5.8..1.7 -> -4.9..2.7 | 6.9 -> 4.2 | 1.8 -> 1.1 |
+| Pass | 32.6 (31.9..33.1) -> **31** (27.9..33.1) | 19.3..24 -> 19.3..20 | -7..0 -> -7..-2 | 0 -> 0 | 0.5 -> 0.5 |
+| Faceoff_Ready | 57.5 (57.4..57.6) -> **57.5** (57.4..57.6) | 34..34.1 -> 34..34.1 | -18.2..-18 -> -18.2..-18 | 0.1 -> 0.1 | 0.5 -> 0.5 |
+| Aim_P00_R100 | 31.9 (31.9..31.9) -> **36.5** (36.5..36.5) | 24..24 -> 20..20 | -2..-2 -> 2..2 | 0.1 -> 0.1 | 2 -> 2 |
+| Aim_P00_R130 | 28.5 (28.5..28.5) -> **36.5** (36.5..36.5) | 24..24 -> 20..20 | 7.6..7.6 -> 6..6 | 0.1 -> 0 | 1.8 -> 1.9 |
+| Aim_P00_R160 | 25.1 (25.1..25.1) -> **36.5** (36.5..36.5) | 24..24 -> 20..20 | 17.2..17.2 -> 10..10 | 0 -> 0.1 | 1.8 -> 1.8 |
+| Aim_N63_R160 | 25.2 (25.2..25.2) -> **35.9** (35.9..35.9) | 24..24 -> 20..20 | 16.9..16.9 -> 10.4..10.4 | 79.6 -> 80.7 | 1.8 -> 1.8 |
+| Aim_P70_R160 | 25.2 (25.2..25.2) -> **35.8** (35.8..35.8) | 24..24 -> 20..20 | 16.8..16.8 -> 10.4..10.4 | 0.1 -> 0.1 | 2 -> 1.9 |
+
+The trunk is measured as the angle of the pelvis -> neck line from vertical. Head elevation is the face's forward direction above horizontal: 0 is level, + is towards the sky. The hand gap is the bottom glove's grip point to the shaft line.
+
+### Checks against export7
+
+**Unchanged:**
+- skeleton: rest matrices max difference 0.0;
+- the same 75 take names, 60 fps, sockets unchanged;
+- pelvis and root travel 0.000 cm (both files);
+- loop seams 0.000 cm, wrap-speed offenders 0;
+- no new point below the ice; skate target miss 0;
+- foot pitch max 20.1 / 25.1 deg;
+- reaches exactly 1.000 / 1.600 m;
+- aim grid holds within 0.05 cm, blend test 0 failures (worst 3.37 cm, blade -1.9..1.9 cm);
+- knockdown-to-get-up joins unchanged (those poses were not touched; Glide joins use the new Glide exactly).
+
+**Locomotion hip heights (cm):**
+
+| Take | Pelvis height |
+|---|---|
+| Glide | 76.8..77.8 |
+| Stride | 76.2..76.9 |
+| Crossovers | 75.9..78.5 |
+| Leans | 77.7..77.8 |
+| Hockey stops | 75.9..77.8 |
+| Push_Start | 76.2..77.8 |
+| Idle | 78.5..79.1 |
+| The old `Stop` | 77.8..79.8 |
+
+All are within 2 cm of Glide.
+
+**Moved:** a new twist step over 45 deg in `GetUp` (the left skate turns 52 deg as it rises into the new, narrower-hipped Glide). Twist steps over 45 deg went 5 -> 6.
+
+### What still looks wrong
+
+- **The game's lean is the aim hold's (36 deg), not Stride's (50 deg).** That is how the engine layers the aim from `spine_01` up in mesh space. Showing the full 50 deg at speed would need either:
+  - a speed-dependent pitch offset in the engine's layer;
+  - or a second set of "skating" aim holds blended in by speed.
+- **The bottom hand comes off in `Aim_N63_R160`** (far right at 1.6 m, by design one-handed): the glove is 81 cm off the shaft. When the game aims far right, the free glove shows.
+- **`Shot_Wrist`:** the bottom glove is still 4.2 cm off the shaft at the follow-through, and the shot stays more upright than the stride.
+- **Hockey stops:** the trunk is 21 to 32 deg, leaning back into the stop. The concept's stop throws snow from a lower body.
+- **No checks in the engine.** Only rendered in Blender: no retarget onto P4E, no engine frames.
+
+### Sheets (old export7 against new export8; rows: side old, side new, low behind old, low behind new)
+
+`C:\Users\kazda\jam\thirdjam\devlog\shots\`:
+
+| Take | Sheet |
+|---|---|
+| Stride | `20261113-030315-B-lab-skf8-stride.png` |
+| Glide | `20261113-030315-B-lab-skf8-glide.png` |
+| Idle | `20261113-030316-B-lab-skf8-idle.png` |
+| Crossover_Left | `20261113-030316-B-lab-skf8-crossover-left.png` |
+| Lean_Left | `20261113-030316-B-lab-skf8-lean-left.png` |
+| Push_Start | `20261113-030317-B-lab-skf8-push-start.png` |
+| Stop_Hockey_Right | `20261113-030317-B-lab-skf8-stop-hockey-right.png` |
+| Stop_Hockey_Left | `20261113-030318-B-lab-skf8-stop-hockey-left.png` |
+| Shot_Wrist | `20261113-030318-B-lab-skf8-shot-wrist.png` |
+| Aim_P00_R130 | `20261113-030319-B-lab-skf8-aim-p00-r130.png` |
+
+Each sheet has its `.txt` caption.
+
+## Ninth pass: the hockey ready stance for the shipped toy styles (03:20 to 03:30)
+
+The lead asked for the pass-8 posture fixes, scaled to the toy proportions (big head, short legs), on `p2_cel` (the night figure `BP_SkaterVisual_TB1`) and `p3_clay`.
+
+**Where the files are**
+
+| What | Path |
+|---|---|
+| New exports | `skf/export9/p2_cel/`, `skf/export9/p3_clay/` (same file names as before) |
+| `READY.txt` | `skf/export9/` (files, takes changed, measurements, mesh provenance) |
+| Posture tables | `work9/<style>/posture.md` |
+| Rebuild | `bash C:/Users/kazda/jam/skater-lab/skf/run9.sh` (about 1 min for both) |
+
+`export6`, `export7`, `export7c` and `export8` were not touched.
+
+**Mesh: copied, not regenerated (an animation-only re-import)**
+- `p2_cel`: the mesh of `export5/p2_cel`, the shipped night figure, from `work5/p2_cel/skater.blend`.
+- `p3_clay`: the mesh of `export7c/p3_clay` (lane SK7: `SKF_SUFFIX=7c SKF_FUZZ=0 SKF_STITCH_SCALE=2.0`), from `work7c/p3_clay/skater.blend`.
+- I used the source blends because re-running the clay builder is not bit-identical (the clay surface moved 3 mm between runs in an earlier pass).
+- `compare_mesh.py` (new) against the shipped export: vertex positions, polygons, materials, bone weights, UV0 and vertex colours are identical (max difference 0.0) for body and stick.
+- `compare_anim.py`: the same 24 bones, parents and rest matrices (0.0), the same 72 take names in both styles. Only the keys differ.
+
+**What changed (style flag `ready`, the toy version of pass 8)**
+- **Glide:** a ready stance. Skates ±0.20 m (a little over the 0.43 m shoulders), knees forward (pole straight ahead), hips back (skates 7 to 8 cm ahead of the pelvis), hips at a 10 cm drop (was 12), head level, both hands on the stick, blade on the ice in front.
+- **Idle:** the same stance and head with a small weight shift.
+- **Stride:** two-handed, blade in front, trunk about 33 deg, head up, push back and out, hips within 2 cm of Glide.
+- **Crossovers and leans:** two-handed with the blade in front (the free-arm pump is gone).
+- **Toy `Stop`:** head levelled (it looked 15 deg up).
+- **24 aim holds and 4 aliases:** rebuilt on the new Glide. P3 needs extra trunk lean in its holds (`aim_trunk` 1.6) or its short top arm goes straight at 1.0 m on the right and the blend test fails (3 failures at 0.8, 1 at 1.2, 0 at 1.6). P2 needs none.
+- **No hockey stops or `Push_Start`** in these styles (they stay at 72 takes).
+
+### Measured posture (on the exported FBX, every frame)
+
+**p2_cel** (shipped export5 -> export9)
+
+| Take | Trunk deg, mean (min..max): shipped -> export9 | Head elevation deg | Bottom glove to shaft, max cm | Blade toe low cm |
+|---|---|---|---|---|
+| Glide | 29.6 (29.3..29.8) -> **22.3** (22..22.5) | -11..-5 -> -5..-4 | 1 -> 1 | 3.9 -> 3.9 |
+| Idle | 23.3 (23.3..23.3) -> **20.6** (20.5..20.6) | -1..-0.9 -> -2..-1.8 | 1 -> 1 | 3.9 -> 3.9 |
+| Stride | 40.7 (40.7..40.7) -> **32.8** (32.7..32.9) | -10..-9.2 -> -6..-5.6 | 127.9 -> 1 | 6.6 -> 3.9 |
+| Crossover_Left | 39 (39..39) -> **39.6** (39.4..39.6) | -12.5..-11.3 -> -11.7..-11 | 95.4 -> 1 | 16.1 -> 2.8 |
+| Crossover_Right | 39 (39..39) -> **39.6** (39.4..39.6) | -12.5..-11.3 -> -11.7..-11 | 83.2 -> 1 | 10.1 -> 3.9 |
+| Lean_Left | 40.4 (40.3..40.5) -> **37.2** (37.2..37.3) | -14.1..-13.9 -> -8.5..-8.3 | 94.6 -> 1 | 16.4 -> 3 |
+| Lean_Right | 40.4 (40.3..40.5) -> **37.2** (37.2..37.3) | -14.1..-13.9 -> -8.5..-8.3 | 76 -> 1 | 12.1 -> 3.9 |
+| Stop | 26.4 (19.7..29.8) -> **25** (19.7..28.7) | -7.1..15.2 -> -15.5..1.4 | 1 -> 1 | 3.9 -> 3.9 |
+| Shot_Wrist | 22 (18.8..25.5) -> **22** (18.8..25.5) | -5.8..1.7 -> -5.8..1.7 | 2.2 -> 2.2 | 2.4 -> 2.4 |
+| Pass | 31 (29.8..31.8) -> **28.1** (22.5..31.8) | -7..-5 -> -7..-4 | 1 -> 1 | 0.4 -> 0.4 |
+| Aim_P00_R100 | 29.8 (29.8..29.8) -> **22.5** (22.5..22.5) | -5..-5 -> 7..7 | 0.9 -> 0.9 | 1.7 -> 1.6 |
+| Aim_P00_R130 | 33.7 (33.7..33.7) -> **26.4** (26.4..26.4) | -8..-8 -> 4..4 | 0.8 -> 0.8 | 1.5 -> 1.5 |
+| Aim_P00_R160 | 37.5 (37.5..37.5) -> **30.2** (30.2..30.2) | -11..-11 -> 1..1 | 0.8 -> 0.9 | 1.6 -> 1.6 |
+| Aim_N63_R100 | 29.4 (29.4..29.4) -> **22.3** (22.3..22.3) | -4.5..-4.5 -> 7.1..7.1 | 0.9 -> 0.8 | 1.7 -> 1.7 |
+| Aim_P70_R160 | 36.8 (36.8..36.8) -> **29.7** (29.7..29.7) | -10..-10 -> 1.6..1.6 | 0.5 -> 0.6 | 1.8 -> 1.7 |
+| GetUp | 34.8 (0.7..86) -> **33.3** (0.7..86) | -18..51 -> -18..51 | 125.2 -> 125.2 | 0.4 -> 0.4 |
+| Idle_Faceoff | 51.9 (51.1..52.6) -> **51.9** (51.1..52.6) | -17.5..-14 -> -17.5..-14 | 1.1 -> 1.1 | 0.4 -> 0.4 |
+
+**p3_clay** (shipped export7c -> export9)
+
+| Take | Trunk deg, mean (min..max): shipped -> export9 | Head elevation deg | Bottom glove to shaft, max cm | Blade toe low cm |
+|---|---|---|---|---|
+| Glide | 29.7 (29.4..29.9) -> **22.3** (22..22.6) | -11..-5 -> -5..-4 | 0.5 -> 0.5 | 2.1 -> 2.1 |
+| Idle | 23.4 (23.3..23.4) -> **20.6** (20.6..20.7) | -1..-0.9 -> -2..-1.8 | 0.5 -> 0.5 | 2.1 -> 2.1 |
+| Stride | 40.8 (40.8..40.8) -> **32.9** (32.8..32.9) | -10..-9.2 -> -6..-5.6 | 127.2 -> 0.6 | 5.8 -> 1.9 |
+| Crossover_Left | 39.1 (39.1..39.1) -> **39.6** (39.5..39.7) | -12.5..-11.3 -> -11.7..-11 | 96.4 -> 0.5 | 16 -> 1.8 |
+| Crossover_Right | 39.1 (39.1..39.1) -> **39.6** (39.5..39.7) | -12.5..-11.3 -> -11.7..-11 | 85.5 -> 0.6 | 8.5 -> 2.1 |
+| Lean_Left | 40.5 (40.5..40.6) -> **37.3** (37.2..37.4) | -14.1..-13.9 -> -8.5..-8.3 | 95.4 -> 0.5 | 16.3 -> 1.8 |
+| Lean_Right | 40.5 (40.5..40.6) -> **37.3** (37.2..37.4) | -14.1..-13.9 -> -8.5..-8.3 | 78.8 -> 0.6 | 10 -> 2.1 |
+| Stop | 26.4 (19.7..29.9) -> **24.9** (19.7..28.7) | -7.1..15.2 -> -15.5..1.4 | 0.6 -> 0.6 | 2.1 -> 2.1 |
+| Shot_Wrist | 22.1 (18.9..25.5) -> **22.1** (18.9..25.5) | -5.8..1.7 -> -5.8..1.7 | 4.7 -> 4.7 | 1.8 -> 1.8 |
+| Pass | 31.1 (29.9..31.9) -> **28.2** (22.6..31.9) | -7..-5 -> -7..-4 | 0.6 -> 0.6 | 1.8 -> 1.8 |
+| Aim_P00_R100 | 29.9 (29.9..29.9) -> **35** (35..35) | -5..-5 -> 7..7 | 0.5 -> 0.5 | 3.2 -> 3.2 |
+| Aim_P00_R130 | 33.8 (33.8..33.8) -> **38.9** (38.9..38.9) | -8..-8 -> 4..4 | 0.5 -> 0.5 | 3.1 -> 3.1 |
+| Aim_P00_R160 | 37.7 (37.7..37.7) -> **42.8** (42.8..42.8) | -11..-11 -> 1..1 | 0.5 -> 0.5 | 3.1 -> 3.1 |
+| Aim_N63_R100 | 29.5 (29.5..29.5) -> **34.4** (34.4..34.4) | -4.5..-4.5 -> 7.5..7.5 | 0.5 -> 0.6 | 2.1 -> 2 |
+| Aim_P70_R160 | 37 (37..37) -> **41.9** (41.9..41.9) | -10..-10 -> 2..2 | 0.3 -> 0.4 | 3.2 -> 3.2 |
+| GetUp | 34.9 (0.5..85.9) -> **33.4** (0.5..85.9) | -18..51 -> -18..51 | 119.6 -> 119.6 | 2 -> 2 |
+| Idle_Faceoff | 52.1 (51.3..52.9) -> **52.1** (51.3..52.9) | -17.5..-14 -> -17.5..-14 | 0.6 -> 0.6 | 1.8 -> 1.8 |
+
+The head elevation is the face's forward direction above horizontal: 0 is level, + is up.
+
+### Checks (both styles, main and loopcut files)
+
+**Unchanged:**
+- pelvis and root travel 0.000 cm, loop seams 0.000 cm;
+- wrap-speed offenders 0;
+- no new point below the ice (lowest -1.41 cm in P2 and -0.91 in P3, as shipped);
+- skate target miss 0; foot pitch max 21.5 / 25.1 and 22.2 / 25.0 deg;
+- reaches 1.000 / 1.600 m;
+- aim holds within 0.03 cm; blend test 0 failures (worst 3.14 and 2.84 cm, blade -2.2 / -2.8 cm at worst);
+- knockdown-to-get-up joins unchanged;
+- **no `GetUp` twist** (the pass-8 P4 skate step does not happen in these styles).
+
+Pelvis height (cm), every locomotion take within 2 cm of Glide:
+
+| Take | p2_cel | p3_clay |
+|---|---|---|
+| Glide | 78.0..78.5 | 73.8..74.3 |
+| Idle | 78.5..79.0 | 74.3..74.8 |
+| Stride | 77.5..78.0 | 73.4..73.8 |
+
+**Moved:** the clavicle twist steps in `Check_Hit_Back` grew from 52.5 to 61.5 deg (frame 4), and `Knockdown_Back` gained a 45.7 deg clavicle step (frame 1). Both hits now start from the more upright Glide, so the shoulders travel further in the 2-frame hit.
+
+### What still looks wrong
+
+- **The game shows the hold's trunk, not Stride's (the pass-8 finding).**
+  - P2's holds are 22 to 30 deg, so a skating P2 shows a little less lean than its Stride (33).
+  - P3's holds are 34 to 43 deg, more than its Stride: the price of P3's blend test.
+- **From the game camera the difference is modest.** The figure is about 40 px tall; the new stance reads as standing (legs under the hips, knees not splayed), but the toy proportions still make it chunky.
+- **`Shot_Wrist`** was left as it was (22 deg; bottom glove 2.2 / 4.7 cm off the shaft at the follow-through).
+- **`GetUp`** is one-handed by design while pushing up.
+- **Clavicle steps** in the back hits, as above.
+- **Not verified:** nothing has been seen in the engine.
+
+### Sheets (`C:\Users\kazda\jam\thirdjam\devlog\shots\`, each with a `.txt`)
+
+| Style | Glide behind | Stride | Idle | Crossover |
+|---|---|---|---|---|
+| p2_cel | `20261113-032917-B-lab-skf9-p2-cel-glide-behind.png` | `20261113-032918-B-lab-skf9-p2-cel-stride.png` | `20261113-032918-B-lab-skf9-p2-cel-idle.png` | `20261113-032918-B-lab-skf9-p2-cel-crossover.png` |
+| p3_clay | `20261113-032919-B-lab-skf9-p3-clay-glide-behind.png` | `20261113-032919-B-lab-skf9-p3-clay-stride.png` | `20261113-032919-B-lab-skf9-p3-clay-idle.png` | `20261113-032919-B-lab-skf9-p3-clay-crossover.png` |
+
+## Tenth pass: the faceoff stance and the clay aim lean (05:03 to 05:11)
+
+The lead asked for this after the engine still (`sk8-stance-before-after`). It showed that the stool look is the **faceoff** pose: thighs horizontal, knees far outside the hips, the seat low. Pass 9 had not touched it.
+
+**Where the files are**
+
+| What | Path |
+|---|---|
+| New exports | `skf/export10/p2_cel/`, `skf/export10/p3_clay/` |
+| `READY.txt` | `skf/export10/` |
+| Rebuild | `bash C:/Users/kazda/jam/skater-lab/skf/run10.sh` (about 1 min for both) |
+
+Earlier exports were not touched.
+
+**Meshes and takes**
+- **Meshes** are the same as export9: the mesh input is copied from `work9/<style>/skater.blend`, and `SM_Stick_<style>.fbx` are byte-identical copies.
+- `compare_mesh.py`: vertices, polygons, materials, weights, UV0 and vertex colours are identical (0.0).
+- Same 24 bones and rest pose, the same 72 take names.
+- **Takes that differ from export9** (`compare_anim.py` now lists them; re-import only these):
+  - `p2_cel` (3): `Faceoff_Draw`, `Faceoff_Ready`, `Idle_Faceoff`.
+  - `p3_clay` (31): the same three, plus all 24 aim holds, plus the aliases `Aim_Front`, `Aim_Left`, `Aim_Right`, `Aim_FarReach`.
+  - Every other take is identical to export9 (0.0).
+
+**The faceoff (style flag `ready`; `p4_broadcast` keeps its own)**
+- **Before:** `FACEOFF` dropped the hips 21 cm with the knee poles 0.5 outward and the skates ±0.27 m.
+- **Now:**
+  - skates ±0.26 m (about 1.2 x shoulder width);
+  - knee poles straight ahead (the knees go forward over the toes);
+  - skates 9 to 15 cm ahead of the pelvis (hips back);
+  - hip drop 14 cm, so the thighs sit at about 42 deg;
+  - trunk folded to about 50 deg, head up looking at the dot;
+  - bottom hand low on the shaft (0.60 down it), blade flat at the dot.
+- `Faceoff_Ready` builds on it; `Faceoff_Draw` starts in the new `Faceoff_Ready` and ends in Glide, with its own sweep as before.
+
+**p2_cel** (export9 -> export10)
+
+| Take | Trunk deg | Thigh below horizontal deg | Knee spread cm (hips) | Skate spread cm | Head deg | Bottom glove to shaft cm | Blade toe low cm |
+|---|---|---|---|---|---|---|---|
+| Idle_Faceoff | 51.9 -> **49** | 27.8 -> **41.6** | 70.4 -> **44.5** (23) | 55.9 -> 52 | -17.5..-14 -> -9.5..-6 | 1.1 -> 1 | 0.4 -> 0.4 |
+| Faceoff_Ready | 55.2 -> **50.3** | 28.9 -> **42.6** | 69.9 -> **44.3** (23) | 55.9 -> 52 | -18.2..-18 -> -8.2..-8 | 1.1 -> 1 | 0.5 -> 0.4 |
+| Faceoff_Draw | 41.8 -> **39.3** | 37.3 -> **40.3** | 58.4 -> **41.9** (22.5) | 51 -> 49.1 | -18..-4 -> -8..-3.7 | 1.1 -> 1.1 | 0.3 -> 0.4 |
+
+| Aim row | Trunk deg, export9 -> export10 |
+|---|---|
+| R100 | 22.3..22.5 -> **22.3..22.5** |
+| R130 | 26..26.4 -> **26..26.4** |
+| R145 | 27.8..28.3 -> **27.8..28.3** |
+| R160 | 29.7..30.2 -> **29.7..30.2** |
+
+One-handed holds: Aim_N63_R160, Aim_N46_R160. Holds blade 1.12..2.3 cm above the ice, within 0.03 cm of their points; blend test worst 3.14 cm, blade -2.2..1.9 cm, failures 0.
+
+Checks: pelvis 0 cm, root 0 cm, loop seams 0 cm, wrap-speed offenders 0, lowest point -1.41 cm, reaches 1 / 1 / 1 / 1.6 / 1.6 m.
+
+**p3_clay** (export9 -> export10)
+
+| Take | Trunk deg | Thigh below horizontal deg | Knee spread cm (hips) | Skate spread cm | Head deg | Bottom glove to shaft cm | Blade toe low cm |
+|---|---|---|---|---|---|---|---|
+| Idle_Faceoff | 52.1 -> **49.1** | 27.5 -> **41.6** | 69.8 -> **46.4** (26) | 58.4 -> 54.7 | -17.5..-14 -> -9.5..-6 | 0.6 -> 0.6 | 1.8 -> 1.7 |
+| Faceoff_Ready | 55.4 -> **50.4** | 28.6 -> **42.7** | 69.3 -> **46.3** (26) | 58.4 -> 54.7 | -18.2..-18 -> -8.2..-8 | 0.6 -> 0.5 | 1.7 -> 1.8 |
+| Faceoff_Draw | 42 -> **39.4** | 37 -> **40.4** | 58.9 -> **44** (25.5) | 53.9 -> 52 | -18..-4 -> -8..-3.7 | 0.6 -> 0.6 | 1.6 -> 1.7 |
+
+| Aim row | Trunk deg, export9 -> export10 |
+|---|---|
+| R100 | 34.3..35 -> **22.3..29.5** |
+| R130 | 38.1..38.9 -> **26..29.7** |
+| R145 | 40..40.8 -> **27.9..28.4** |
+| R160 | 41.9..42.8 -> **29.8..30.3** |
+
+One-handed holds: Aim_N63_R100, Aim_N63_R130, Aim_N63_R145, Aim_N63_R160, Aim_N46_R100, Aim_N46_R130, Aim_N46_R145, Aim_N46_R160, Aim_N30_R145, Aim_N30_R160, Aim_P00_R160. Holds blade 0.22..2.01 cm above the ice, within 0.03 cm of their points; blend test worst 2.46 cm, blade -2.95..1.87 cm, failures 0.
+
+Checks: pelvis 0 cm, root 0 cm, loop seams 0 cm, wrap-speed offenders 0, lowest point -0.91 cm, reaches 1 / 1 / 1 / 1.6 / 1.6 m.
+
+**The clay aim lean: what was traded**
+- The pass-9 extra lean (`aim_trunk` 1.6, holds at 34 to 43 deg) is gone. The holds now carry Glide's 22 deg plus the normal reach lean.
+- To keep the blend check passing with P3's short top arm on the right at 1.0 to 1.3 m:
+  1. **Three more holds are one-handed**: `Aim_N46_R100`, `Aim_N63_R100` (= `Aim_Right`) and `Aim_N46_R130`. The bottom hand comes off and hangs beside the hip, as in the far-right cells.
+  2. **A little extra lean only on the right side of the near rows**: up to +7 deg at -63 deg in the 1.0 m row (29.5 deg at most), half of that in the 1.3 m row (29.7 at most).
+- The far row is as before in kind (29.8 to 30.3 deg). Without the extra lean the blend check failed 3 times; with the lean in the 1.0 m row only, 4 times. I did not use a pelvis shift or a top hand sliding down the shaft.
+
+
+### What still looks wrong
+
+- **The faceoff thighs are at about 42 deg, not 45.** Lowering them further pushes the knees out again on the toy's short legs.
+- **The knees are now 44 to 46 cm apart, against hips of 23 to 26 cm.** Still about 10 cm outside each hip, but inside the skates (52 to 55 cm): from behind it reads as a crouch over the dot, no longer as seated.
+- **At `Aim_Right` (1.0 m, -63 deg) the clay figure aims one-handed.** In the game, aiming to the right at short range shows the bottom glove off the shaft beside the hip.
+- **`p4_broadcast` has the same faceoff squat** (not built; render filed as `lab-skf10-p4-broadcast-faceoff-note`): knees out, and its bottom glove is up off the shaft at `Faceoff_Ready`.
+- **Not verified:** nothing has been seen in the engine.
+
+### Sheets (`C:\Users\kazda\jam\thirdjam\devlog\shots\`, each with a `.txt`)
+
+| Style | Sheet | What it shows |
+|---|---|---|
+| p2_cel | `20261113-051011-B-lab-skf10-p2-cel-faceoff-gamecam.png` | Idle_Faceoff and Faceoff_Ready, old against new, game camera |
+| p2_cel | `20261113-051011-B-lab-skf10-p2-cel-faceoff-side.png` | the same from the side |
+| p2_cel | `20261113-051012-B-lab-skf10-p2-cel-faceoff-draw.png` | Faceoff_Draw, old against new |
+| p3_clay | `20261113-051012-B-lab-skf10-p3-clay-faceoff-gamecam.png` | Idle_Faceoff and Faceoff_Ready, old against new, game camera |
+| p3_clay | `20261113-051012-B-lab-skf10-p3-clay-faceoff-side.png` | the same from the side |
+| p3_clay | `20261113-051013-B-lab-skf10-p3-clay-faceoff-draw.png` | Faceoff_Draw, old against new |
+| p3_clay | `20261113-051013-B-lab-skf10-p3-clay-aim-rest-side.png` | three aim holds from the side, old against new |
+| p4_broadcast | `20261113-051013-B-lab-skf10-p4-broadcast-faceoff-note.png` | the P4 faceoff fault, not built |

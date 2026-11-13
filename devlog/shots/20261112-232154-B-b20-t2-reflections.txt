@@ -1,0 +1,1 @@
+B20 technique 2 reflections: none / screen-space / Lumen software, game camera (top) and low 2 m camera (bottom)

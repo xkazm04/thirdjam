@@ -1,0 +1,1 @@
+SK6: knockdown and get-up in play, blue #7 Knockdown_Left then GetUp_Side_Left, 12 frames at slomo 0.12; get-up started at frame 36 of 90 from KnockdownFrames, ends at 90.0 = the release (SK6REL end_minus_rel -0.08 frames)

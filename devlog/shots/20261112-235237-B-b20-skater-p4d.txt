@@ -1,0 +1,1 @@
+B20 skater: old P4B figure (top left) vs P4D re-imported with M_P4_Figure (hue key kept, yoke, dark gloves and skates, cloth/helmet roughness, dark stick); middle: 4 vs 14 shadowed lamps (contact/ground shadow); bottom: blue and orange three-quarter

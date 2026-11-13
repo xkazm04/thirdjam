@@ -1,0 +1,1 @@
+SKF pass 10 p2_cel at the game camera (6 m behind, 3.5 m up): Idle_Faceoff old (export9), new (export10), Faceoff_Ready old, new.

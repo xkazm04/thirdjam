@@ -1,0 +1,1 @@
+B19 checkpoint: 24 m behind centre ice, bulb reflections in the far ice through screen-space reflections

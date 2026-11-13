@@ -1,0 +1,1 @@
+SKF pass 10 p3_clay from the side: Idle_Faceoff old (export9), new (export10), Faceoff_Ready old, new.

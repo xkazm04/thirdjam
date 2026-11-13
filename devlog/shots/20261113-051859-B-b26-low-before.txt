@@ -1,0 +1,1 @@
+B26 before (pass 5 state): clay tier, low camera (x -17, y -7, z 2.2 m, pitch -10, yaw 25), zones cut, t 4.6: regular streaks, pale right key pool (luma 186 against 140 on the left)

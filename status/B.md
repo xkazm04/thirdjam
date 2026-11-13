@@ -378,3 +378,125 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
   texture with other generators and settings; lane B19 (port 8000) rebuilds the clay tier against `path-p3-t3`. In the morning: `status/B20-report.md`,
   `status/B-skater-p4-figure.md`, `status/B19-report.md`, each with stills and an honest distance to its concept. The decision between P4 and a full P3 focus is the
   operator's.
+
+## H19.6 (01:35, 13 Nov) FOR THE DIRECTOR: C-0001 v4 is ready to land; the operator's overnight question; what moved since H17.9
+- **A-to-B-0012 is done on branch `origin/dev-b-a45`** (pushed after its cook-only check, which is running at 01:35: result in the next line of this file when it
+  ends): the seven figure Blueprints on the interface, get-ups on `KnockdownFrames`, the stick correction damped (B's share of "the stick blinks"). **For the landing:
+  merge `main` into `lane/a45`, take the 16 files listed in the handoff's response from `dev-b-a45`, the rest of B's from `dev-b`.** Until then B changes those
+  Blueprints only on `dev-b-a45`.
+- `main` a6b6f5b is merged into `dev-b` (56266a9). A-to-B-0013 answered.
+- On `dev-b` since H17.9: the clay tier rebuilt as a barn with string lights and glossy scratched ice (`status/B19-report.md`, handoff 0034: four asks of A); crowd
+  sounds instead of horns (`status/AU3-report.md`: `MS_goal` needs the variant from the binder; `MS_crowd_bed` exists); the P4 lab's first pass
+  (`status/B20-report.md`: lab assets, not shipped); the P4 figure experiments (`status/B-skater-p4-figure.md`).
+- The operator at 23:55 and 01:20: P4 is chased overnight for the skater and the ice only; in the morning he decides between P4 and "full focus on P3"; he judges
+  from pictures, not reports: B keeps a local review page of concept against engine stills for him. Lanes running: B21 (P4 ice and skater in the engine, port 8002),
+  SKF7 and SKC4 (Blender: an athletic stride, a loose jersey), EST (estimate mock-ups for the review page).
+- open on A: 0034 (clay tier), 0030 (the end-to-end check's faults), 0029 (optional effect vectors).
+- 01:45: cook-only on `dev-b-a45` 80c7278: PASS, 0 errors; the branch is pushed. The landing can go ahead when `lane/a45` carries `main`.
+
+## H20.5 (02:27, 13 Nov) clay pass 4 is on `dev-b`; R-0035 read
+- **Clay tier pass 4 (lane B22, `status/B22-report.md`)**: the bulb strings' reflections are computed in the ice material (`B22BulbRefl` in `M_Ice`, active only when
+  `MPC_Look.Clay` is 1 and `BulbReflB22` is on): long warm streaks across the near and middle ice, which screen-space reflections cannot produce. Four more
+  strings hang between the end boards and the end walls (the rig has 12), so bulbs fill the top 14 % of the frame at the faceoff and 30 % at the attacking end.
+  A glitter fault in fast turns is fixed at its source; the contact chips are white; zones have a bright edge and spill; night and broadcast measured unchanged.
+- FOR THE DIRECTOR (A): (1) **keep setting `RinkHalfLength` on the ice per rink**: the reflection layout scales with it; (2) if the clay rig's screen-space
+  reflection override is ever replaced by Lumen reflections, the analytic term doubles the off-screen bulbs: set `BulbReflB22` 0 on `MI_Ice_Night` then, or tell B;
+  (3) a camera that leaves the boards on clay (replay, end zone) would meet the four low strings (down to 1.8 m, between the end boards and the end walls);
+  (4) handoff 0034 is still unanswered: hiding the glass rail and stanchions on clay and opaque ring meshes for zones are now the largest gap to the concept;
+  (5) expected cost of the reflection, not measured on B: 0.08 to 0.15 ms on the 4090, 0.4 to 0.7 ms on a 3060 class card (`BRCount` 8 saves a third).
+- R-0035 (the puck has a height) read: nothing asked of B. If a lifted puck needs a ground shadow or a different trail, say so in a handoff.
+- Still running: B21 (P4 ice and skater in the engine, port 8002), SKC4 (the loose jersey and the new stride on `P4E`).
+
+## H21.0 (02:58, 13 Nov) the overnight P4 experiment is filed; the operator decides in the morning
+- **P4 lab, second pass (lane B21, `status/B21-report.md`)**: the ice and the figure only, as the operator asked at 23:55. Hero stills, each one game frame:
+  `devlog/shots/20261113-024341-B-b21-hero-concept-framing.jpg`, `-024342-B-b21-hero-stop.jpg`, `-024514-B-b21-hero-game-camera.jpg`, `-024514-B-b21-before-after.jpg`.
+  The lane's own estimate: ice about 70 % of `path-p4-t2`, skater about 65 %. The lead's read: the ice and the arena carry the frame at the concept's low camera;
+  the figure is the weak part (stiff padded jersey, upright chest, wide squat on the opponents, flat cloth), and at the game camera the gain over the night tier
+  is the ice, not the figure.
+- **Nothing of it is shipped or selectable**: every asset is under `Look/P4Lab/`, `VFX/*P4Lab*`, `Skaters/*P4E*` with `shipped` n, and `p4_broadcast` still resolves
+  as before. FOR THE DIRECTOR (A), only if the operator chooses P4 in the morning: the rink would pick `MI_P4_Ice` and the lab board/glass/trim instances on
+  this tier, `ResolveVisualClass` would map `p4_broadcast` to `BP_SkaterVisual_P4Lab`, the blade-spray binder would use `NS_P4Lab_spray`; B would send that as
+  a handoff with exact names. Expected cost over the night tier, not measured: +2 to 3 ms on the 4090, +6 to 9 ms on a mid-range card.
+- Running: lane SK7 (clay figures: felt and stitches in the barn) on branch `dev-b-a45`, port 8000, due 04:45.
+- 02:53: cook-only on the tree with lane B21's assets (after merging `dev-b` and building): PASS, 0 errors; pushed to `dev-b`.
+
+## H21.4 (03:21, 13 Nov) the clay figures; FOR THE DIRECTOR: the landing list grew by one file
+- **Lane SK7 on `origin/dev-b-a45` (b7002ce, cook-only PASS)**: both clay figures read as felt-and-stitch toys now (stills on the branch:
+  `devlog/shots/20261113-031355-B-sk7-clay-hero-low.png`, `-sk7-clay-figures-before-after.png`). **The landing list of A-to-B-0012 is 17 files** (the response
+  there is updated): the 16 plus `MI_SkaterTB1_P3_PadsFelt`.
+- Open on B from that lane: the scripted figure's wide squat from behind (posture pass SKF9 in Blender, then an animation-only re-import on the branch); an amber
+  stain under figures on the clay ice (the computed bulb reflection of lane B22 is emissive and is not shadowed: a soft dark blob under each figure on this tier
+  is the planned fix, in the figure Blueprints on the branch).
+- Lead's read for the operator: on the clay tier the generated figure (`generated_b2`: `BP_SkaterVisual_TB2_P3`) looks better than the scripted default
+  (`humanoid_b1`: `BP_SkaterVisual_TB1_P3`) from the game camera. Whether the clay tier should use it by default is the operator's call in the morning.
+
+## H22.1 (04:02, 13 Nov) the P4 experiment's third pass; what the operator has for the morning
+- **P4 lab third pass (lane B24, `status/B24-report.md`, cook-only PASS)**: the posture fix is in the engine. Stills: `devlog/shots/20261113-035618-B-b24-hero-best.jpg`,
+  `-034521-B-b24-hero-concept-framing.jpg`, `-034653-B-b24-hero-stop.jpg`, `-035136-B-b24-hero-game-camera.jpg`, `-035137-B-b24-posture-ab.jpg`.
+  The lead's read: at the concept's low camera the frame now holds up (ice, arena, a leaning two-handed skater, powder); what remains is cloth (stiff, no drape),
+  the top hand from directly behind, lamp reflections as white bars at the game camera, and that none of it is selectable in the game. Still a lab: `shipped` n.
+- The operator decides in the morning between P4 and a full focus on the clay tier; his page: `C:/Users/kazda/jam/review/index.html` (local to device B).
+- Running: B23 (clay pass 5: the glass rail gone from B's side, key pools, far rings; port 8002, the main tree), SK8 (the ready stance on the shipped figures;
+  port 8000, `dev-b-a45`).
+
+## H22.2 (04:06, 13 Nov) clay pass 5; FOR THE DIRECTOR: handoff 0035 (0034 point 1 withdrawn)
+- **Clay tier pass 5 (lane B23, `status/B23-report.md`)**: open boards from B's side (no rail, posts or pane on clay), a matte red cap, no white blob on the ice,
+  streaks through the key pools, a board-foot band, steadier far rings. Stills: `devlog/shots/20261113-034219-B-b23-hero-low.png`, `-b23-game-after.png`,
+  `-b23-boards-ab.jpg`. **Handoff B-to-A-0035** says what this means for A: nothing to do for the rail; `look.trim_emissive` is ignored on clay; keep
+  `RinkHalfLength`, `RinkHalfWidth`, `CornerRadiusCm` set on the ice per rink; ring meshes for zones on clay are the one remaining ask.
+- Blender passes in git with this commit: SKF8 and SKF9 (`status/B-skater-skf.md`), SKC5 (`status/B-skater-p4-figure.md`).
+- Running: SK8 (the ready stance on the two shipped scripted figures, branch `dev-b-a45`, port 8000, due 05:40).
+- 04:07: cook-only on the main tree (clay pass 5 with the P4 third pass merged): PASS, 0 errors; pushed.
+
+## H22.7 (04:42, 13 Nov) P4 lab at the game camera
+- Lane B25 (`status/B25-report.md`): the lamp reflections no longer lie on the ice as white bars at the game camera; the lab figures read better at that size.
+  Stills: `devlog/shots/20261113-043457-B-b25-game-ab.jpg`, `-043511-B-b25-game-best.jpg`. Lab assets only (`shipped` n); materials and the lab rig, no skater asset.
+- Known limits of the lab if it were to become a tier: the rig is placed for the 90 x 45 rink (the wide cut is much darker), end zones are dark from the game
+  camera, no back number on the lab figure, nothing selectable from the game.
+- Running: SK8 (ready stance on the shipped scripted figures, `dev-b-a45`, port 8000, due 05:40).
+
+## H23.6 (05:38, 13 Nov) FOR THE DIRECTOR: the interface branch again; a file on `dev-b` that will not compile on v4
+- **`origin/dev-b-a45` is 4441259, cook-only PASS.** The landing rule is now one line (the response of A-to-B-0012 is updated): **the whole
+  `Game/Plugins/JamAssets/Content/Skaters/` folder from `dev-b-a45`, everything else of B's from `dev-b`.**
+- **Warning for the landing**: `dev-b` carries the lab figure's `BP_SkaterVisual_P4Lab` built on v3; on v4 it fails to compile ("Found more than one function
+  with the same name ...", 4 cook errors). The branch has it fixed. If v4 lands with `dev-b`'s copy, the package breaks.
+- On the branch since H21.4 (lanes SK8, SK9): the scripted figures' ready stance and **a real faceoff stance** (the wide squat at every puck drop is gone;
+  `devlog/shots/20261113-052908-B-sk9-faceoff-before-after.png` on the branch), a contact plane under the clay figures, combined clay stills
+  (`-sk9-clay-figures-compare.png`). Blade, hand, knockdown and reaction numbers measured unchanged in a 90 s match.
+- Next on B: the 72 night takes (`AS_SkaterTB1v2_*`, animation data only) come to `dev-b` after a check there, so the default figure's faceoff stance reaches
+  `main` without waiting for the landing.
+- Running: B26 (clay pass 6: the ice; port 8002, the main tree).
+
+## H27.6 (09:36, 13 Nov) clay pass 6 adopted; device B slept from 05:20 to 09:30; a correction on the clay figure
+- **Device B was asleep from about 05:20 to 09:30** (the machine, not a decision): lane B26 finished at 05:19 and nothing ran after it until now.
+- **Clay pass 6 (lane B26, `status/B26-report.md`) is on `dev-b`, cook-only PASS** (0 errors; the one warning is `JamPickupActor`'s Capsule). In `M_Ice`'s
+  clay branch the computed bulb reflections vary per bulb and soften with distance (`BRVary`, `BRHigh`, `BRDeep`, `PoolBase` on `MI_Ice_Night`); `M_ClayBarn`
+  has a warm wash on the lower walls (`WashK` 7 on its two instances). Night and broadcast measured unchanged. Not solved: in play the middle ice still shows
+  many soft streaks side by side; the band along the side boards is softer, not gone; the amber stain under figures cannot be solved from the ice.
+  **For device A's camera work**: the reflections are full from cameras below 2.2 m and weaker above 3.5 m.
+- **Correction of what B told the operator at 05:40**: B said the clay tier shows the generated figure today and that the scripted one needs game code. Wrong:
+  `ResolveVisualClass` (A50) already picks `BP_SkaterVisual_TB1_P3` for the default `humanoid_b1` on `p3_clay`. So a default match on clay shows the
+  **scripted** clay figure, in its state before this night's felt pass (that pass is on `dev-b-a45`); the generated one is `game.skater.visual: generated_b2`.
+- Running: SK10 (port 8000, `wt/b-vfx`): every file under `Skaters/` that changed on `dev-b-a45` **except the Blueprints** (144 takes, the felt clay meshes,
+  materials, maps) checked against the v3 Blueprints in a real match; if it holds it goes to `dev-b`, and the faceoff stance and felt figures reach `main`
+  without waiting for the v4 landing. The landing rule of H23.6 does not change (the branch stays a superset).
+
+## H27.7 (09:46, 13 Nov) FOR THE DIRECTOR: the operator made tackling the key feature; handoff 0036
+- The operator at 09:43: tackling a player to the ground, colliding, the fall and the get-up are "key for the game"; he asked B whether the scripted clay figure
+  and the P4 figure can get there in two days, otherwise the work goes into the scripted (modelled) figure only. B's answer to him: the scripted figure on
+  night and clay is one body with one take set, so yes for both; the P4 figure and the generated figures no (retargeting per change). His confirmation is open.
+- **Handoff B-to-A-0036**: land C-0001 v4 now (standing hits, board hits, pins and stick hits show nothing until then), the down skater slides on, the
+  check's contact frame, hit-stop and a camera kick.
+- Running: SKF11 (Blender: the knockdowns, falls, get-ups and check delivery reworked for the game camera and for 90 knockdown frames without speed-up),
+  SK10 (port 8000), B27 (clay pass 7, port 8002).
+
+## H27.8 (09:47, 13 Nov) FOR THE DIRECTOR: the operator's decisions of this morning: P4 out, the scripted figure on clay, calm ice
+- **P4 is out of the plan** (the operator: "I would agree to put P4 away from plan"). B stops the P4 lab and the P4 figure; `p4_broadcast`, `LR_P4_Broadcast`,
+  `Look/P4Lab/**` and `BP_SkaterVisual_P4Lab` stay in the repository unshipped (`shipped` n) and untouched. Two days go to `p3_clay` and `l2_night`.
+- **The clay tier's figure is the scripted one** ("for P3 I will listen your recommendation for Manual x Scripted skaters"; B recommends the scripted figure:
+  it is the default `humanoid_b1`, the game already selects `BP_SkaterVisual_TB1_P3` on `p3_clay`, and it shares the night figure's take set, so the
+  tackling work reaches both). Nothing for A to change. `generated_b2` stays selectable and frozen.
+- **The clay tier's light** (the operator on pass 6: "night arena small lights are too distracting on the ice, we will need larger reflectors with more subtle
+  effect to keep visibility but not complicating the gameplay experience"): lane B27 is redirected: no per-bulb reflections on the playing surface, a few
+  large lamps with one broad soft sheen each, even light into the corners, the puck and figures the most contrasted things on the ice. B read "night arena"
+  as the dark clay barn he was shown; if he meant `l2_night` as well, B applies the same rule there.

@@ -1,0 +1,1 @@
+B20 reflections at the concept camera: none / screen-space / Lumen software: Lumen gives the vertical lamp streaks

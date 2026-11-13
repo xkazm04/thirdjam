@@ -1,0 +1,1 @@
+One frame from the game camera in a running bot match (t 10.8 s): both teams on P4E (export2) via BP_SkaterVisual_P4Lab mirrored onto the game's visuals; side lamp-bank reflections and glints in the ice

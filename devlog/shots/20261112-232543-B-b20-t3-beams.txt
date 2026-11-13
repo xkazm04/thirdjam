@@ -1,0 +1,1 @@
+B20 technique 3 beams: columns = none / volumetric fog (density 0.012, light scattering 20) / additive depth-faded cone meshes (M_P4_Beam 0.15); rows = low 2 m, camera inside a cone at 3 m, game camera

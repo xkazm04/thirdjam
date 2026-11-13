@@ -1,0 +1,1 @@
+One frame from the game (PIE, nothing composited): P4E with the loose jersey (export2) on BP_SkaterVisual_P4Lab, its AnimBP driven to the new Stride, blue; the lab ice (near cuts, wet patches), lamp banks, glint lights and Lumen streaks; NS_P4Lab_spray off the pushing skate; 14 shadowed lamps. Framed like the review estimate

@@ -1,0 +1,1 @@
+Game camera Stride at 40 px (2x) and 70 px, blue and orange: P4E, P4D, P4B

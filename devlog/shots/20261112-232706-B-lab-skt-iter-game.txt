@@ -1,0 +1,1 @@
+SKT stitch iterations at the game camera (70 px and 40 px): v1 2.5x0.8, v3 4.0x1.2, v4=final 4.0x1.4 3.5 cm off the trim

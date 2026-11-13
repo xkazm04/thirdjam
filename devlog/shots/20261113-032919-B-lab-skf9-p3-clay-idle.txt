@@ -1,0 +1,1 @@
+SKF pass 9 p3_clay: side Glide old, Glide new, side Idle old, Idle new, then Idle from behind old, new.
