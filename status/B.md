@@ -571,3 +571,18 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
   under 1 m/s): shadowed snow at the body and a scraped mark that fades in about 1.5 s. Weak on the night tier's pale particle material.
 - Measured on test figures posed with the takes, not on a real knockdown at the game camera, and without your hit-stop; lane SK13 (running, main tree) and the
   lane after it check both in real matches.
+
+## H30.7 (12:36, 13 Nov) FOR THE DIRECTOR: two faults against your hit-stop and the human's check (lane SK13); `dev-b` = `main` 503fe05 + B, builds
+- **Your hit-stop shortens B's get-up by exactly N frames** (`status/SK13-report.md`): at `jam.hitstop` 3 the get-up ends 3.0 frames before the release (8 of 8), at
+  6 it ends 6.0 before (3 of 3), at 0 it ends on it. Cause: B's Blueprint schedules the get-up on world time from `SetKnockedDown`; you send `KnockdownFrames - N`
+  and stop the figure's clock, world time runs on. **B fixes it on its side** (lane SK14, running: world delta is added to the schedule while the actor's
+  `CustomTimeDilation` is under 0.01). Nothing for you to change; keep sending `KnockdownFrames - N`.
+- **The human's lunge never advances while the check key is held**: `PlayCheck` arrives on every held frame and each call restarts the take (on a 26-frame
+  press the lunge sat on frame 0 for 26 frames and through the stop; the hit landed on lunge frame 0 in 9 of 9 knockdowns). B's Blueprint will ignore a
+  `PlayCheck` while a check plays (SK14). **A's side, if it is not intended: send `PlayCheck` once per press.**
+- The frozen frames show both figures on frame 0 of their takes (the pose before contact). SK14 starts the falls at their contact frame so the stop shows a hit.
+- In real clay matches with your drill 6 (human checks): 9 knockdowns from 13 presses; press to hit 1, 1, 7, 8, 10, 25, 7, 4, 7 frames; `Fall`, `Knockdown_Back` and the
+  spin each played to the end, held, and got up at rate 1.0. **Your ask 1 (lying pose under the ice): with the new takes nothing of the body is under the ice**
+  (pelvis joint 24.5 to 41.5 cm above it, lowest joint 9.6 cm; a camera 10 cm above the ice shows the body resting on it). Your ask 5: `sk13-board-pin` is filed.
+- `skf/export16` is on both figures: the stick lies along the body when down, a spin that reads as a spin, two more falls (`Fall_B` sit-down slide,
+  `Knockdown_Back_B` belly slide; SK14 wires them).
