@@ -1,0 +1,1 @@
+B31 tier stability, night (l2_night, chaos cut) before and after the last save: boards 8 m mean |d| 0.49 (tile max 1.43, luma 60.61 to 60.60); game camera 1.28 and the bumper view 0.73, where the two bumpers changed on purpose (Emissive 0.7)
