@@ -1,0 +1,1 @@
+Lane QA4. Regular cut on clay, five a side, pro, scripted human, seed B (1+7919), un-frozen MCP capture with the HUD, about 101 s of wall time into the match: open ice. Build dev-b 40a4c1c.

@@ -2470,3 +2470,151 @@ Lowest skin vertex over all frames, cm above the ice, and the worst one-frame tu
   |---|---|
   | `crosscheck-clay-hands` | clay `Lift` at frames 0, 1, 2, 4, 8, 12, 14, 16, 18, 20: side export19, side export20, front export19, front export20. Frames 1 and 14-20 were added to the asked five because that is where the hand was off |
   | `poke-hit-ba` | `Poke_Hit` every 3rd frame, per style: game camera export19, export20, side export19, export20 |
+
+## Twenty-first pass: takes for the momentum contact model (SKF21, 20:40 to 21:10)
+
+One evolution on the track "the figure plays the vision". Read first: `docs/VISION.md`, `docs/experiments/CONTACT.md`, `CONTACT-2.md` section 8, `MOVEMENT.md`, `contracts/skater-visual.md`.
+
+Delivered `C:\Users\kazda\jam\skater-lab\skf\export21\` (p2_cel, p3_clay, full sets) with `DIFF.md`, `JOINS.md` and `READY.txt`. Items 1, 2 and 4 are built; item 3 is checked (no short fall is needed to make a 60-frame knockdown read); item 5 (`Deke`) is not built. Nothing of this pass has been seen in the engine.
+
+**The take count grows from 76 to 84.** New names:
+
+| Take | Frames | What it is |
+|---|---|---|
+| `Stumble_Front`, `Stumble_Back`, `Stumble_Left`, `Stumble_Right` | 32 | the stumble, named by the side the hit comes from (as `Check_Hit_*`) |
+| `Board_Fall_Front` | 28 | thrown chest-first into a wall in front, down it, on to the back; contact frame 2; `GetUp` joins |
+| `Board_Fall_Back` | 28 | thrown back-first into a wall behind, slumps sitting, tips on to the right side; contact frame 2; `GetUp_Side_Left` joins |
+| `Stop_Hard`, `Stop_Hard_Left` | 24 | the hockey stop turned to the right, and its mirror |
+
+**Difference list against export20** (`compare_anim.py`, main and loopcut file, both styles): 3 of export20's 76 takes differ, `Check_Hit_Back`, `Check_Hit_Left`, `Check_Hit_Right` (trimmed, 30 to 20 frames). The other 73 are identical, the clay aim holds among them. Bones, parents and rest pose identical; meshes identical (`compare_mesh.py`); `SM_Stick_<style>.fbx` byte-identical; 60 fps; the `root` bone has identity keys in all 84 takes of all four files.
+
+### 1. The stumble, and the bump trimmed
+
+**The stumble (32 frames):**
+
+| Frames | What happens |
+|---|---|
+| 0-2 | The snap away from the hit, one skate already off the ice |
+| 2-18 | The feet go: one skate shoots out, the other flails and catches, a knee joint comes down to 15-18 cm above the ice (34 cm in `Stumble_Front`, which sits back instead), the hips 29-36 cm under standing, the hands and the stick go low for balance |
+| 18-25 | A wide low catch, then the heave up with an overshoot |
+| 32 | Ready Glide |
+
+- `Stumble_Back` (hit from behind): pitched forward to horizontal, the right skate out behind, the right knee nearly down.
+- `Stumble_Front` (hit from the front): sits back with both skates shooting forward, the left hand reaching for the ice behind.
+- `Stumble_Left` (hit from the left, thrown right) and `Stumble_Right`: the skate on the thrown side slides out about 60 cm, the other leg kicks up, then that knee nearly down.
+- The body is carried 42-50 cm and comes back (the bump: 9-11 cm).
+
+**The bump (`Check_Hit_*`) is now a jolt and one step, 20 frames** (was a 30-frame stagger with two steps and the trunk thrown as far as the stumble's). Both hands stay on the stick.
+
+| Style | Take | Frames | Hips lowest (of standing) cm | Lowest knee joint cm | Trunk lean max deg | Body carried cm | Head travel cm |
+|---|---|---|---|---|---|---|---|
+| p2_cel | Check_Hit_Back | 20 | 73 (78) | 46.6 | 38.2 | 9 | 22 |
+| p2_cel | Stumble_Back | 32 | 46 (78) | 16.2 | 93.4 | 44 | 78 |
+| p2_cel | Check_Hit_Left / _Right | 20 | 73 (78) | 44.6 | 35.6 | 11 | 34 |
+| p2_cel | Stumble_Left / _Right | 32 | 46 (78) | 14.7 | 73.8 | 45 | 78 |
+| p2_cel | Stumble_Front | 32 | 42 (78) | 34.0 | 45.4 | 50 | 64 |
+| p3_clay | Check_Hit_Back | 20 | 69.3 (73.8) | 44.7 | 38.3 | 9 | 22 |
+| p3_clay | Stumble_Back | 32 | 44.5 (73.8) | 18.2 | 93.8 | 42 | 74 |
+| p3_clay | Check_Hit_Left / _Right | 20 | 69.3 (73.8) | 42.8 | 35.7 | 11 | 33 |
+| p3_clay | Stumble_Left / _Right | 32 | 44.5 (73.8) | 16.1 | 74.1 | 43 | 75 |
+| p3_clay | Stumble_Front | 32 | 40.8 (73.8) | 34.2 | 45.4 | 47 | 62 |
+
+**For the engine side:**
+- Before this pass `Check_Hit_Back` in export20 also reached 93 deg of trunk lean and 31 cm of travel, so a bump and a stumble could not have looked different. If the trimmed length breaks an assumption (30 frames was read somewhere), say so and I restore the length with the lighter motion.
+- There is still no bump take for a hit from the front (`Check_Hit_Front` never existed); the stumble has all four sides.
+- A bump and a stumble both arrive as `PlayHitReaction` today (CONTACT-2 section 8 asks for `PlayStumble`): the figure cannot choose between the two takes without that call or the outcome.
+
+### 2. Driven into the boards and down
+
+The wall is a vertical plane 35 cm in front of (Front) or behind (Back) the pelvis's start. Both takes have their contact at frame 2 and are flattened upright against the wall for frames 2-5.
+
+- **`Board_Fall_Front`:** chest and cheek on the wall, both arms up, the stick standing up along it. Slides down to both knees (frame 10), sags (12), topples back off the wall (15) on to its back (19), a bounce, lying from 23. Ends on `Fall`'s lying pose: **`GetUp` joins**.
+- **`Board_Fall_Back`:** back and head on the wall, arms flung wide along it, one skate kicking. Slumps down to sitting against it (11), the head lolls (14), tips over on to its right side (19), a bounce, lying from 23. Ends on `Knockdown_Left`'s lying pose: **`GetUp_Side_Left` joins**.
+- No `GetUp_Seated` was needed: neither take ends seated.
+
+**Against the plane** (worst x of the skin, cm from the pelvis's start; the plane is at +35 for Front and -35 for Back):
+
+| Style | Take | Frames 2-5 (flattened) | Frames 6-14 (down the wall) | Frames 15-18 (on to the ice) | Frames 19-28 (lying) | Stick, worst over frames 2-28 |
+|---|---|---|---|---|---|---|
+| p2_cel | Board_Fall_Front | 32.4 | 35.2 | 51.3 | 54.8 | 41.2 |
+| p3_clay | Board_Fall_Front | 29.4 | 31.5 | 46.1 | 49.1 | 39.0 |
+| p2_cel | Board_Fall_Back | -34.9 | -29.4 | -29.0 | -25.4 | -3.3 |
+| p3_clay | Board_Fall_Back | -34.4 | -31.0 | -30.7 | -21.2 | -13.5 |
+
+- **`Board_Fall_Back` stays on its side of the plane in every frame from 2 on**, both styles.
+- **`Board_Fall_Front` does not, from frame 15 on.** No existing lying pose fits behind a wall 35 cm in front: on the back the skates reach 54 cm (p2_cel) and 48 cm (p3_clay) in front of the start, on the side the top leg reaches 60 and 56 cm, face down the body lies through the wall. I chose the back because it is the least over and the natural way off a wall. The skates end 20 cm (p2_cel) and 14 cm (p3_clay) past the plane; the stick is 6 and 4 cm past it for one frame (18). Until frame 14 the body is within the plane (p2_cel 0.2 cm over at frame 7).
+- **Frames 0 and 1 cross the plane in both takes**, because the ready stance itself reaches 43.6 / 39.1 cm in front of the pelvis and 41.7 / 36.4 cm behind it (hands, stick hand). The engine starts a fall at frame 2, where the body is inside.
+- The Back take's distance to the wall is set per style (the cel figure's bigger helmet): 5 cm back for p2_cel, 12 cm for p3_clay.
+
+### 3. A 60-frame knockdown reads as down and up
+
+The fall from its contact frame (24 played frames) straight into the 36-frame get-up, measured on the FBX (`short21.js`):
+
+| Style | Fall + get-up | Hips under half their standing height, frames | Whole body under 45 % of standing height (flat), frames | Hips back over 90 % |
+|---|---|---|---|---|
+| p2_cel | Fall + GetUp | 8 to 34 (27) | 9 to 25 (17) | 57 |
+| p2_cel | Fall_Forward + GetUp_Front | 8 to 32 (25) | 9 to 26 (18) | 57 |
+| p2_cel | Knockdown_Left + GetUp_Side_Left | 8 to 31 (24) | 9 to 24 (11) | 57 |
+| p3_clay | Fall + GetUp | 8 to 32 (25) | 9 to 25 (17) | 57 |
+| p3_clay | Fall_Forward + GetUp_Front | 8 to 28 (21) | 9 to 26 (18) | 57 |
+| p3_clay | Knockdown_Left + GetUp_Side_Left | 8 to 28 (21) | not measured this way | 57 |
+
+(The clay figure on its side is never under 45 % of its standing height, the top arm and leg being up; its hips are down for 21 frames.)
+
+**Verdict: not a twitch.** The body is on the ice 6 frames after the contact and stays flat for about 17 frames (0.28 s) before the get-up starts to lift it. On the sheet six of the 21 cells are lying. No short fall is built or proposed for reading. What I would look at in the engine instead: from about frame 35 the figure is on its skates and only rises slowly to frame 57, while the player has no control until 60.
+
+### 4. The hard stop
+
+`Stop_Hard` turns to the right (as the old `Stop` does), `Stop_Hard_Left` is its mirror (the stick goes across with the hands).
+
+| Frames | What happens |
+|---|---|
+| 0-4 | The hips and both skates turn 80 deg across the travel (60 deg at frame 2, 75 at frame 3), the hips drop 16-17 cm |
+| 4-16 | The hold: a slight settle (2 deg more turn, 3 cm deeper at frame 10) and back. Frame 16 equals frame 4 exactly (largest joint distance 0.000 cm): this is the part to loop |
+| 16-24 | Out to the ready Glide |
+
+- Skates sideways, 29 cm apart (ankle to ankle) and ahead of the hips; the weight back against the slide (hips rolled 22 deg away from the travel); the shoulders follow about half way; the head keeps looking down the ice; the stick out in front of the turned body, both hands on it, the blade 7 to 14 cm over the ice through the hold.
+- The old `Stop` has its hips 70 deg across at frame 15 and 80 deg at frame 22; this one at frames 3 and 4.
+
+### 5. `Deke`: not built
+
+No such take exists, and the contract (C-0001 v4) has no call that would play one: the sim's deke is a tap that arms the sweep shield (`MOVEMENT.md`), with no read-out to the figure. A take would have no caller. It is in the proposals below.
+
+### Ground, joints, joins
+
+Lowest skin vertex over all frames (cm above the ice), `meas21.py` on the FBX:
+
+| Take | p2_cel body / skates / stick | p3_clay body / skates / stick |
+|---|---|---|
+| Stumble_Front | 13.67 / 0.00 / 1.24 | 12.91 / 0.13 / 1.76 |
+| Stumble_Back | 5.18 / 0.00 / 1.51 | 7.50 / 0.13 / 1.23 |
+| Stumble_Left | 3.42 / 0.00 / 1.29 | 6.02 / 0.13 / 1.44 |
+| Stumble_Right | 3.42 / 0.00 / 2.26 | 5.60 / 0.13 / 1.45 |
+| Board_Fall_Front | 0.60 / 0.00 / 1.29 | 0.66 / 0.13 / 1.52 |
+| Board_Fall_Back | 0.00 / 0.00 / 1.11 | 0.92 / 0.13 / 0.91 |
+| Stop_Hard | 13.86 / 0.00 / 0.66 | 13.04 / 0.13 / 0.34 |
+| Stop_Hard_Left | 13.73 / 0.00 / 0.14 | 13.02 / 0.13 / 0.34 |
+| Check_Hit_Back / _Left / _Right | 12.83 / 0.00 / 2.63 | 12.58 / 0.13 / 2.57 |
+
+- **Nothing is under the ice** in any new or changed take. The top hand is 0.0 cm from the stick in every frame of all of them.
+- **Joins** (`join21.py`, `export21\JOINS.md`): the ten old pairs and the two new ones (`Board_Fall_Front` to `GetUp`, `Board_Fall_Back` to `GetUp_Side_Left`) at 0 to 0.0001 cm and 0 deg, both styles.
+- **Fast frames:** in the stumbles a forearm or upper arm turns 87-121 deg in one frame during the snap (frames 0-3), as in the other hit takes (`Lift_Hit` 112); in the board falls the left upper arm turns 94-97 deg between frames 0 and 1 as the arms go up (before the frame the engine starts at). In `Board_Fall_Front` the shins turn 108 deg (p2_cel) and 95 deg (p3_clay) between frames 14 and 15, where the legs come from kneeling to sitting: the knees travel 32-34 cm in that frame. That one is a weakness I did not have time to spread over more frames.
+
+### Not checked, and known gaps
+
+- Nothing in the engine: import of the eight new takes, the trimmed bump's length, which take wins when `PlayBoardHit` comes with a knockdown or a stumble, the stop's loop.
+- The takes in motion: I looked at stills only (12 cells a take).
+- No board fall for a figure driven sideways into the boards.
+- `Board_Fall_Front` ends through the plane (above).
+
+### Files
+
+- **Scripts** (`skater-lab\skf\`): `build_clips.py` (the twenty-first-pass block; a copy is `build_clips_pass21.py`), `run21.sh` (the build and the lane's checks), `post21.sh` (joins with `join21.py`, loopcut and stick against export20, root keys, `JOINS.md`, `DIFF.md`), `meas21.py` + `sum21.js` + `tab21.js` (per-frame measurements on the FBX and the tables above), `short21.js` (the 60-frame count), `render21.py` (the lane's renderer plus a wall slab and a wider side camera), `sheet21.sh` (the four sheets), `it21.sh` (the working loop).
+- **Tables:** `export21\DIFF.md`, `export21\JOINS.md`, `work21\m\f21_<style>.json` (every frame).
+- **Stills** (`devlog\shots\20261113-210511-B-lab-skf21-*`, 4): `stumbles` (each stumble with the bump of its side beside it), `board-falls` (from the side with the wall plane drawn, and the game camera), `short-knockdown`, `stop-hard`.
+
+### The next three evolutions of this track, ranked, each with its proving number
+
+1. **The contact outcomes reach the figure, and the boards hold it.** Engine side: a `PlayStumble(DirX, DirZ, Frames)` call or the outcome on `PlayHitReaction`, so a stumble plays `Stumble_*` and a bump plays `Check_Hit_*`; `PlayBoardHit` with a knockdown plays `Board_Fall_Front` / `_Back` by the push against the facing. Figure side: a lying pose that fits against a wall (knees up, body along the boards) with its own `GetUp_Wall`, side board falls, and `Board_Fall_Front`'s legs spread over more frames. **Proving numbers:** in a three-match log, the share of stumble outcomes (ratio 0.4 to 1) that play a `Stumble_*` take: from 0 % to 100 %, and of bumps that play `Check_Hit_*`: 100 %; the farthest any skin vertex goes past the wall plane in a board fall from frame 2: from 20 cm (p2_cel) / 14 cm (p3_clay) to 2 cm or less.
+2. **The carrier's body says "stop, cut, go"** (VISION law 3, the skill the game is about). `Stop_Hard` wired to the sim's `bReverseBraking`, held on its loop while the brake lasts and released into a new first-step burst take for the burst window (20 frames); a cut take per side for a sharp turn; `Deke_Left` / `_Right` (14 to 18 frames) with a call for the deke tap. **Proving numbers:** frames from the brake read-out to the hips being 70 deg or more across the travel on screen: 4 or fewer (the old `Stop`: 15); the share of reverse brakes in a match that show `Stop_Hard`: 100 %; stop, burst, cut and deke told apart in one still each from the game camera.
+3. **The hit's strength sizes the fall.** One fall length serves a knockdown of 60 frames and one of 150, and the hit-stop already grows from 2 to 5 frames. A light fall for ratio 1 to 1.4 (down to a hip and a hand and straight up, 16 to 18 frames, so the figure is not seen standing idle from frame 35 to 60), and a heavy one for ratio 2.2 and up (a longer throw with a slide and a roll before lying). **Proving number:** at ratios 1.0, 1.4 and 3.0, the frames the figure is on its skates without control at the end of the knockdown: from about 25 (frames 35 to 60 of a 60-frame knockdown today) to 6 or fewer; and the three falls told apart in one still each at their frame 8.
