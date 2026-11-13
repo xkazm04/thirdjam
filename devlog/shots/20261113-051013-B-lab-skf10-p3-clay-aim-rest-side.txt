@@ -1,0 +1,1 @@
+SKF pass 10 p3_clay aim holds from the side: Aim_P00_R100 old (export9, 35 deg trunk), new (22.6), Aim_P00_R130 old (38.9), new (26.4), Aim_N46_R100 old, new (one-handed now, 29.5).

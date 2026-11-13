@@ -1,0 +1,1 @@
+SKF pass 10 note, not built: p4_broadcast (export8) has the same faceoff squat: Idle_Faceoff and Faceoff_Ready at the game camera (knees out), Faceoff_Ready from the side.

@@ -1318,3 +1318,104 @@ Pelvis height (cm), every locomotion take within 2 cm of Glide:
 |---|---|---|---|---|
 | p2_cel | `20261113-032917-B-lab-skf9-p2-cel-glide-behind.png` | `20261113-032918-B-lab-skf9-p2-cel-stride.png` | `20261113-032918-B-lab-skf9-p2-cel-idle.png` | `20261113-032918-B-lab-skf9-p2-cel-crossover.png` |
 | p3_clay | `20261113-032919-B-lab-skf9-p3-clay-glide-behind.png` | `20261113-032919-B-lab-skf9-p3-clay-stride.png` | `20261113-032919-B-lab-skf9-p3-clay-idle.png` | `20261113-032919-B-lab-skf9-p3-clay-crossover.png` |
+
+## Tenth pass: the faceoff stance and the clay aim lean (05:03 to 05:11)
+
+The lead asked for this after the engine still (`sk8-stance-before-after`). It showed that the stool look is the **faceoff** pose: thighs horizontal, knees far outside the hips, the seat low. Pass 9 had not touched it.
+
+**Where the files are**
+
+| What | Path |
+|---|---|
+| New exports | `skf/export10/p2_cel/`, `skf/export10/p3_clay/` |
+| `READY.txt` | `skf/export10/` |
+| Rebuild | `bash C:/Users/kazda/jam/skater-lab/skf/run10.sh` (about 1 min for both) |
+
+Earlier exports were not touched.
+
+**Meshes and takes**
+- **Meshes** are the same as export9: the mesh input is copied from `work9/<style>/skater.blend`, and `SM_Stick_<style>.fbx` are byte-identical copies.
+- `compare_mesh.py`: vertices, polygons, materials, weights, UV0 and vertex colours are identical (0.0).
+- Same 24 bones and rest pose, the same 72 take names.
+- **Takes that differ from export9** (`compare_anim.py` now lists them; re-import only these):
+  - `p2_cel` (3): `Faceoff_Draw`, `Faceoff_Ready`, `Idle_Faceoff`.
+  - `p3_clay` (31): the same three, plus all 24 aim holds, plus the aliases `Aim_Front`, `Aim_Left`, `Aim_Right`, `Aim_FarReach`.
+  - Every other take is identical to export9 (0.0).
+
+**The faceoff (style flag `ready`; `p4_broadcast` keeps its own)**
+- **Before:** `FACEOFF` dropped the hips 21 cm with the knee poles 0.5 outward and the skates ±0.27 m.
+- **Now:**
+  - skates ±0.26 m (about 1.2 x shoulder width);
+  - knee poles straight ahead (the knees go forward over the toes);
+  - skates 9 to 15 cm ahead of the pelvis (hips back);
+  - hip drop 14 cm, so the thighs sit at about 42 deg;
+  - trunk folded to about 50 deg, head up looking at the dot;
+  - bottom hand low on the shaft (0.60 down it), blade flat at the dot.
+- `Faceoff_Ready` builds on it; `Faceoff_Draw` starts in the new `Faceoff_Ready` and ends in Glide, with its own sweep as before.
+
+**p2_cel** (export9 -> export10)
+
+| Take | Trunk deg | Thigh below horizontal deg | Knee spread cm (hips) | Skate spread cm | Head deg | Bottom glove to shaft cm | Blade toe low cm |
+|---|---|---|---|---|---|---|---|
+| Idle_Faceoff | 51.9 -> **49** | 27.8 -> **41.6** | 70.4 -> **44.5** (23) | 55.9 -> 52 | -17.5..-14 -> -9.5..-6 | 1.1 -> 1 | 0.4 -> 0.4 |
+| Faceoff_Ready | 55.2 -> **50.3** | 28.9 -> **42.6** | 69.9 -> **44.3** (23) | 55.9 -> 52 | -18.2..-18 -> -8.2..-8 | 1.1 -> 1 | 0.5 -> 0.4 |
+| Faceoff_Draw | 41.8 -> **39.3** | 37.3 -> **40.3** | 58.4 -> **41.9** (22.5) | 51 -> 49.1 | -18..-4 -> -8..-3.7 | 1.1 -> 1.1 | 0.3 -> 0.4 |
+
+| Aim row | Trunk deg, export9 -> export10 |
+|---|---|
+| R100 | 22.3..22.5 -> **22.3..22.5** |
+| R130 | 26..26.4 -> **26..26.4** |
+| R145 | 27.8..28.3 -> **27.8..28.3** |
+| R160 | 29.7..30.2 -> **29.7..30.2** |
+
+One-handed holds: Aim_N63_R160, Aim_N46_R160. Holds blade 1.12..2.3 cm above the ice, within 0.03 cm of their points; blend test worst 3.14 cm, blade -2.2..1.9 cm, failures 0.
+
+Checks: pelvis 0 cm, root 0 cm, loop seams 0 cm, wrap-speed offenders 0, lowest point -1.41 cm, reaches 1 / 1 / 1 / 1.6 / 1.6 m.
+
+**p3_clay** (export9 -> export10)
+
+| Take | Trunk deg | Thigh below horizontal deg | Knee spread cm (hips) | Skate spread cm | Head deg | Bottom glove to shaft cm | Blade toe low cm |
+|---|---|---|---|---|---|---|---|
+| Idle_Faceoff | 52.1 -> **49.1** | 27.5 -> **41.6** | 69.8 -> **46.4** (26) | 58.4 -> 54.7 | -17.5..-14 -> -9.5..-6 | 0.6 -> 0.6 | 1.8 -> 1.7 |
+| Faceoff_Ready | 55.4 -> **50.4** | 28.6 -> **42.7** | 69.3 -> **46.3** (26) | 58.4 -> 54.7 | -18.2..-18 -> -8.2..-8 | 0.6 -> 0.5 | 1.7 -> 1.8 |
+| Faceoff_Draw | 42 -> **39.4** | 37 -> **40.4** | 58.9 -> **44** (25.5) | 53.9 -> 52 | -18..-4 -> -8..-3.7 | 0.6 -> 0.6 | 1.6 -> 1.7 |
+
+| Aim row | Trunk deg, export9 -> export10 |
+|---|---|
+| R100 | 34.3..35 -> **22.3..29.5** |
+| R130 | 38.1..38.9 -> **26..29.7** |
+| R145 | 40..40.8 -> **27.9..28.4** |
+| R160 | 41.9..42.8 -> **29.8..30.3** |
+
+One-handed holds: Aim_N63_R100, Aim_N63_R130, Aim_N63_R145, Aim_N63_R160, Aim_N46_R100, Aim_N46_R130, Aim_N46_R145, Aim_N46_R160, Aim_N30_R145, Aim_N30_R160, Aim_P00_R160. Holds blade 0.22..2.01 cm above the ice, within 0.03 cm of their points; blend test worst 2.46 cm, blade -2.95..1.87 cm, failures 0.
+
+Checks: pelvis 0 cm, root 0 cm, loop seams 0 cm, wrap-speed offenders 0, lowest point -0.91 cm, reaches 1 / 1 / 1 / 1.6 / 1.6 m.
+
+**The clay aim lean: what was traded**
+- The pass-9 extra lean (`aim_trunk` 1.6, holds at 34 to 43 deg) is gone. The holds now carry Glide's 22 deg plus the normal reach lean.
+- To keep the blend check passing with P3's short top arm on the right at 1.0 to 1.3 m:
+  1. **Three more holds are one-handed**: `Aim_N46_R100`, `Aim_N63_R100` (= `Aim_Right`) and `Aim_N46_R130`. The bottom hand comes off and hangs beside the hip, as in the far-right cells.
+  2. **A little extra lean only on the right side of the near rows**: up to +7 deg at -63 deg in the 1.0 m row (29.5 deg at most), half of that in the 1.3 m row (29.7 at most).
+- The far row is as before in kind (29.8 to 30.3 deg). Without the extra lean the blend check failed 3 times; with the lean in the 1.0 m row only, 4 times. I did not use a pelvis shift or a top hand sliding down the shaft.
+
+
+### What still looks wrong
+
+- **The faceoff thighs are at about 42 deg, not 45.** Lowering them further pushes the knees out again on the toy's short legs.
+- **The knees are now 44 to 46 cm apart, against hips of 23 to 26 cm.** Still about 10 cm outside each hip, but inside the skates (52 to 55 cm): from behind it reads as a crouch over the dot, no longer as seated.
+- **At `Aim_Right` (1.0 m, -63 deg) the clay figure aims one-handed.** In the game, aiming to the right at short range shows the bottom glove off the shaft beside the hip.
+- **`p4_broadcast` has the same faceoff squat** (not built; render filed as `lab-skf10-p4-broadcast-faceoff-note`): knees out, and its bottom glove is up off the shaft at `Faceoff_Ready`.
+- **Not verified:** nothing has been seen in the engine.
+
+### Sheets (`C:\Users\kazda\jam\thirdjam\devlog\shots\`, each with a `.txt`)
+
+| Style | Sheet | What it shows |
+|---|---|---|
+| p2_cel | `20261113-051011-B-lab-skf10-p2-cel-faceoff-gamecam.png` | Idle_Faceoff and Faceoff_Ready, old against new, game camera |
+| p2_cel | `20261113-051011-B-lab-skf10-p2-cel-faceoff-side.png` | the same from the side |
+| p2_cel | `20261113-051012-B-lab-skf10-p2-cel-faceoff-draw.png` | Faceoff_Draw, old against new |
+| p3_clay | `20261113-051012-B-lab-skf10-p3-clay-faceoff-gamecam.png` | Idle_Faceoff and Faceoff_Ready, old against new, game camera |
+| p3_clay | `20261113-051012-B-lab-skf10-p3-clay-faceoff-side.png` | the same from the side |
+| p3_clay | `20261113-051013-B-lab-skf10-p3-clay-faceoff-draw.png` | Faceoff_Draw, old against new |
+| p3_clay | `20261113-051013-B-lab-skf10-p3-clay-aim-rest-side.png` | three aim holds from the side, old against new |
+| p4_broadcast | `20261113-051013-B-lab-skf10-p4-broadcast-faceoff-note.png` | the P4 faceoff fault, not built |

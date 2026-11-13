@@ -1,0 +1,1 @@
+B26 motion check with the final values, 30 consecutive rendered frames per run: held game camera in play at 1/60 s game step (right middle ice with the computed reflections mean |d| 0.24, side bands 0.22 to 0.23, walls 0.15 to 0.19, bulbs 0.19, whole frame 0.21 to 0.25), the following game camera, and a fast turn at 3 deg per frame; no shimmer or popping seen
