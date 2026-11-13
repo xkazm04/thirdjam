@@ -2313,3 +2313,59 @@ The side get-ups' lifted-skate keys moved to frames 9 and 12, where the skate no
 - **Stills** (`devlog\shots\`):
   - `20261113-133553-B-lab-skf18-lying-side-view.png`
   - `20261113-133553-B-lab-skf18-getups.png` (export17 above export18, both styles)
+
+## Nineteenth pass: the cross-check and its victim (SKF19, 15:11 to 15:19)
+
+Delivered `C:\Users\kazda\jam\skater-lab\skf\export19\` (p2_cel, p3_clay, full sets) with `READY.txt` and `JOINS.md`. Items 1-4 are done (item 4 needed only the skate lift); item 5 (`Poke_Hit`) is not done. The take count stays 76 with the same names.
+
+**Difference list against export18:** 4 takes per style differ: `Lift`, `Lift_Hit`, `GetUp_Side_Left`, `GetUp_Side_Right`. Everything else is identical to export18, and the clay aim holds are identical to export10.
+
+### 1. `Lift` is now a cross-check (21 → 24 frames)
+
+| Frame | Pose |
+|---|---|
+| 0 | Ready Glide |
+| 2 | The extreme: both hands on the shaft, shaft horizontal across the chest, pushed forward. Shoulders square and hips low behind it, trunk pitched about 45 deg, the back leg straight behind as a push, elbows out. |
+| 8 | Still driving, a little deeper |
+| 15 | Recover, the stick coming back down |
+| 24 | Ready Glide |
+
+- The blade leaves the ice (lowest stick point 2.2 cm).
+- **From behind** it reads as a square two-handed thrust with the shaft out to the left. It differs from the shoulder check (one shoulder low, the body turned and lunging) and from the poke (one hand, along the ice).
+- **Weakness:** on `p3_clay` the bottom hand leaves the shaft by up to 14.5 cm in some frames (p2 0.2 cm).
+
+### 2. `Lift_Hit` is now the victim of a cross-check (20 → 28 frames)
+
+Built as hit from the front.
+
+| Frames | Pose |
+|---|---|
+| 0-2 | The snap: the stick knocked up and away overhead (the top hand keeps it), the free arm flung, trunk jolted back and bent to the side, head snapping back, body carried 10 cm back |
+| 6 | Stumbling step back with the right skate |
+| 11 | Step back with the left skate |
+| 19 | Small overshoot forward |
+| 28 | Ready Glide |
+
+Within the 30-frame and 36-frame limits. From behind the stick going up overhead and the free arm out make it read.
+
+### 3. Pair sheet at 1.2 m
+
+The attacker plays `Lift` and the victim `Lift_Hit`, both from the same frame, with the victim straight ahead and facing him. Shown from the game camera and from the side, export18 above export19, both styles: `skf19-crosscheck-pair`.
+
+A first layout with the victim ahead-right put him away from the shaft, which crosses to the attacker's left. Straight ahead is where the shove lands.
+
+### 4. Side get-ups, frame 3
+
+Both skates are 5 cm higher at frame 3, where the low one dipped 2-4 cm into the ice on the way from lying to sitting. The skates are now at 0 cm or above in all frames, and the joins are exact (`JOINS.md`: positions at most 0.0001 cm, rotations 0.0 deg). The mitt against the kick plate: no change made.
+
+### Files
+
+- **Scripts** (`skater-lab\skf\`): `run19.sh`, `part1.sh export19`, `pair_render12.py` (victim yaw 180, slide 0), `join17.py`.
+- **Stills** (`devlog\shots\20261113-151756-B-lab-skf19-*`, 4):
+
+  | Still | Content |
+  |---|---|
+  | `crosscheck-pair` | the pair at 1.2 m |
+  | `lift-ba` | `Lift`, export18 above export19 |
+  | `lift-hit-ba` | `Lift_Hit`, export18 above export19 |
+  | `getup-side-ba` | `GetUp_Side_Left`, export18 above export19 |

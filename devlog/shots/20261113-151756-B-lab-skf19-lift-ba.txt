@@ -1,0 +1,1 @@
+SKF19 Lift (the cross-check), every 3rd frame: per style game camera export18, game camera export19, side export18, side export19 (p2_cel top, p3_clay bottom).
