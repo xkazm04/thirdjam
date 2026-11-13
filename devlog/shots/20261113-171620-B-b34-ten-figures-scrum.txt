@@ -1,0 +1,1 @@
+B34, ten figures on clay, scrum at t 3.65 s, game camera: the human (blue 7) is down beside the puck. Puck core luma 23 against ice 190. Bottom: the downed figure's shadow before (stair-stepped) and after the key spots went to shadow resolution 1.0 and source radius 60 cm.
