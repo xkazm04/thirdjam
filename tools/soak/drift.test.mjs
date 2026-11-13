@@ -44,6 +44,6 @@ test('buildPlan: 12 modes (marathon capped and sprinting) and 8 takes x 3 classe
   w(join(dir, 'ladder', 'take-1.cartridge.json'), 'rookie'); w(join(dir, 'ladder', 'take-1-fallback.cartridge.json'), 'rookie');
   const p = buildPlan(dir, 50);
   assert.equal(p.length, 2 + 3);
-  const mar = p.find((c) => c.label === 'm-marathon'); assert.equal(mar.maxframes, 42000); assert.deepEqual(mar.extra, ['-playersprint']);
+  const mar = p.find((c) => c.label === 'm-marathon'); assert.equal(mar.maxframes, 36000); assert.deepEqual(mar.extra, ['-playersprint']);
   assert.deepEqual(p.filter((c) => c.label.startsWith('t-')).map((c) => [c.cls, c.lvl, c.seeds]), ['novice', 'regular', 'good'].map((c) => [c, 'rookie', '1-50']));
 });

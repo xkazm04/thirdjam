@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Lane A116 (track S1 soak, evolution 2): THE shared soak driver (from A107's tools/soak/a107/cells.mjs). A plan file in, one JSON line per match out.
 //   node tools/soak/cells.mjs <plan.json> --uproject <abs .uproject of a BUILT checkout> --out <dir> [--max 16] [--chunk 100] [--lo 38] [--hi 50] [--stop 56]
-//                             [--stagger-ms 1000] [--exe <UnrealEditor-Cmd.exe>] [--runner <script.js>]   (runner: spawn `node script args...` instead of the exe; used by the node test)
+//                             [--cpu-lo 0.85] [--cpu-hi 0.97] [--cpu-floor 4] [--stagger-ms 1000] [--exe <UnrealEditor-Cmd.exe>] [--runner <script.js>]   (runner: spawn `node script args...` instead of the exe; used by the node test)
 // plan.json: [{label, cls, lvl, cart, seeds:"1-2000" | "regularband:2000" | "3,5,9-12", extra:["-playersprint"], trace:false, maxframes:36000}]
 // Output (all under --out): <label>.jsonl one thirdjam.playtest/1 line per match (sorted by seed, deduped), <label>.faults.jsonl one line per fault with seed and the command that
 // repeats it, <label>.done, faults.jsonl (the per-seed fault ledger of the whole run: every fault with its label), logs/<label>-<lo>-<hi>.log only for a chunk with a fault, a
@@ -13,7 +13,7 @@
 import { spawn } from 'node:child_process';
 import { readFileSync, writeFileSync, appendFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { totalmem, freemem } from 'node:os';
+import { totalmem, freemem, cpus } from 'node:os';
 import { pathToFileURL } from 'node:url';
 
 export const DEFAULT_EXE = 'C:/Program Files/Epic Games/UE_5.9/Engine/Binaries/Win64/UnrealEditor-Cmd.exe';
@@ -33,12 +33,29 @@ export function chunksOf(list, chunk) {
   for (let i = 1; i <= list.length; i++) { const x = list[i]; if (x === undefined || x !== prev + 1 || prev - lo + 1 >= chunk) { r.push([lo, prev]); lo = x; } prev = x; }
   return r;
 }
-// The memory governor: may a new worker start? Band 38-50 GB in use (R-0047: the operator's 60-80 % of 63 GB).
-export function mayStart({ usedGB, active, max, lo = 38, hi = 50, stop = 56 }) {
+// The governor: may a new worker start? Memory band 38-50 GB in use (R-0047: the operator's 60-80 % of 63 GB) and, lane A126, the processor: `cpu` is the whole machine's
+// busy share (0..1) over the last sample (Windows has no load average, so os.cpus() deltas stand in for it; other lanes' builds count, ours too). Below cpuLo every worker up
+// to max may run; above cpuHi only cpuFloor (4) may, so a build next door is never starved and the matrix never stops; between, the limit slides linearly. cpu undefined = ignored.
+export function cpuLimit({ cpu, max, cpuLo = 0.85, cpuHi = 0.97, cpuFloor = 4 }) {
+  if (cpu === undefined || cpu === null || cpu <= cpuLo) return max;
+  const floor = Math.min(cpuFloor, max);
+  if (cpu >= cpuHi) return floor;
+  return Math.max(floor, Math.round(floor + (max - floor) * (cpuHi - cpu) / (cpuHi - cpuLo)));
+}
+export function mayStart({ usedGB, active, max, lo = 38, hi = 50, stop = 56, cpu, cpuLo, cpuHi, cpuFloor }) {
   if (active >= max) return false;
   if (usedGB >= stop || usedGB >= hi) return false;
   if (usedGB >= lo) return active < Math.min(4, max);
-  return true;
+  return active < cpuLimit({ cpu, max, cpuLo, cpuHi, cpuFloor });
+}
+// the machine's busy share since the previous call (0..1); the first call reads over a short window. SOAK_FAKE_CPU overrides (tests).
+let lastCpu = null;
+export function cpuBusy() {
+  if (process.env.SOAK_FAKE_CPU) return Number(process.env.SOAK_FAKE_CPU);
+  const t = cpus().reduce((a, c) => { const x = Object.values(c.times); a.all += x.reduce((p, q) => p + q, 0); a.idle += c.times.idle; return a; }, { all: 0, idle: 0 });
+  const prev = lastCpu; lastCpu = t;
+  if (!prev || t.all === prev.all) return undefined;
+  return 1 - (t.idle - prev.idle) / (t.all - prev.all);
 }
 // One process's stdout: match lines, faults pinned to the next match line that follows them, and the seeds that never came.
 export function parseChunk(buf, lo, hi) {
@@ -68,6 +85,7 @@ export async function run(argv) {
   if (!argv[0] || argv[0].startsWith('--')) return fail2('usage: cells.mjs <plan.json> --uproject <abs> --out <dir>');
   const plan = JSON.parse(readFileSync(argv[0], 'utf8'));
   const uproject = opt('uproject'), outArg = opt('out'), runner = opt('runner'), exe = opt('exe', DEFAULT_EXE);
+  const CPU_LO = +opt('cpu-lo', 0.85), CPU_HI = +opt('cpu-hi', 0.97), CPU_FLOOR = +opt('cpu-floor', 4);   // lane A126: the processor band
   const MAX = +opt('max', 16), CHUNK = +opt('chunk', 100), LO = +opt('lo', 38), HI = +opt('hi', 50), STOP = +opt('stop', 56);
   // the start guard, first half
   if (!outArg) return fail2('--out missing');
@@ -97,6 +115,7 @@ export async function run(argv) {
     for (const [lo, hi] of ch) queue.push({ c, lo, hi, attempt: 0 });
     if (!ch.length) finishCell(c);
   }
+  let cpuNow, cpuAt = 0;
   let active = 0, doneChunks = 0, totalChunks = queue.length, lastStart = 0;
   const t0 = Date.now();
 
@@ -137,9 +156,11 @@ export async function run(argv) {
     const iv = setInterval(() => pump(), runner ? 20 : 2000);
     const pump = () => {
       if (!queue.length && active === 0) { clearInterval(iv); return resolveAll(); }
-      if (queue.length && Date.now() - lastStart > (runner ? 0 : +opt('stagger-ms', 1000)) && mayStart({ usedGB: usedGB(), active, max: MAX, lo: LO, hi: HI, stop: STOP })) {
+      if (Date.now() - cpuAt >= 1500) { const x = cpuBusy(); if (x !== undefined) cpuNow = x; cpuAt = Date.now(); }   // resampled at most every 1.5 s (a pump after each chunk would read a tiny window)
+      const cpu = cpuNow;
+      if (queue.length && Date.now() - lastStart > (runner ? 0 : +opt('stagger-ms', 1000)) && mayStart({ usedGB: usedGB(), active, max: MAX, lo: LO, hi: HI, stop: STOP, cpu, cpuLo: CPU_LO, cpuHi: CPU_HI, cpuFloor: CPU_FLOOR })) {
         lastStart = Date.now(); active++;
-        runChunk(queue.shift()).then(() => { active--; doneChunks++; if (doneChunks % 20 === 0) console.log(`${tfmt()} ${doneChunks}/${totalChunks} chunks, active ${active}, used ${usedGB().toFixed(1)} GB`); pump(); });
+        runChunk(queue.shift()).then(() => { active--; doneChunks++; if (doneChunks % 20 === 0) console.log(`${tfmt()} ${doneChunks}/${totalChunks} chunks, active ${active}, used ${usedGB().toFixed(1)} GB, cpu ${cpuNow === undefined ? '?' : Math.round(100 * cpuNow)} %`); pump(); });
       }
     };
     pump();

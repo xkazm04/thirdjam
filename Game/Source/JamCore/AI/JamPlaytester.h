@@ -150,6 +150,10 @@ namespace JamAI
 		int64_t RevBrakes = 0, CarrySprintFrames = 0, BurstFrames = 0, BotRevBrakes = 0, BotCarrySprintFrames = 0;
 		int Knockdowns = 0;              // the human knocked down (any cause)
 		int KnockdownsAll = 0;           // lane A84: every knockdown in the match (any skater, any cause)
+		int Stumbles = 0;                // lane A126: the human's StumbleFrames going from 0 to above 0
+		int BoardHits = 0;               // lane A126: skater `board` events of any skater
+		int KnockdownsByShotgun = 0;     // lane A126: knockdown events with cause shotgun (any skater)
+		int64_t HoldMateFrames = 0, HoldOppFrames = 0, HoldNoneFrames = 0;   // lane A126: play frames by puck holder: the human's side, the other side, nobody
 		int AbilitiesUsed = 0;           // lane A84: the human's ability uses (F, event `ability` Strength 1)
 		int64_t IdleFrames = 0;          // frames beyond 900 since the human's last touch (play frames only)
 		int IdleSpells = 0;              // spells without a touch that reached 900 frames

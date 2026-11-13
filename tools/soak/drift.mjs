@@ -2,7 +2,7 @@
 // Lane A116 (track S1 soak, evolution 2): the drift gate for modes and takes. Documented in docs/experiments/SOAK-DRIFT.md.
 //   node tools/soak/drift.mjs --uproject <abs .uproject of a BUILT checkout> [--out tools/soak/out/drift-<stamp>] [--seeds 100] [--max 16] [--only modes|takes]
 //                             [--baseline tools/soak/baseline.json] [--threshold 10] [--update-baseline] [--from <out dir of an earlier run>]
-// It plays the twelve modes (regular class, at the mode's own level; Marathon with -playersprint and --max-frames 42000, the cap its ten minutes need) and the eight season takes
+// It plays the twelve modes (regular class, at the mode's own level; Marathon with -playersprint and --max-frames 36000: its clock is 8:00 since A122) and the eight season takes
 // (novice, regular and good class, at the take's level) through the shared driver (cells.mjs), reads each mode's character number (tools/playtest/modes.mjs CHARACTER) and
 // each take's win rate per class, and compares them with tools/soak/baseline.json. A number that moved more than --threshold percent (and by more than a floor that keeps a
 // single match from tripping it: 2 win points, 0.02 of a character number) is printed and the exit is 1. The sim is deterministic: a cell whose per-seed hashes equal the
@@ -16,7 +16,7 @@ import { CHARACTER } from '../playtest/modes.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 export const CLASSES = ['novice', 'regular', 'good'];
-export const MARATHON_CAP = 42000;
+export const MARATHON_CAP = 36000;   // lane A126: the clock is 8:00 now (timer 28800 + 6000 hard stop = 34800), under the tools' usual cap
 
 // The plan: derived from the cartridges of the build that is played, so a new mode or take joins the gate (and shows as "new" until the baseline is updated).
 export function buildPlan(cartDir, seeds) {
