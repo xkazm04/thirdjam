@@ -398,3 +398,6 @@
 - RESOURCES 20:44 cpu 100% ram 41.4/63GB editors 0 cmd 15 free 548GB
 - link green 21:12: main 2250116 (The player finds himself and a lit rink in the first second, and the match starts on a pre) pushed.
 - RESOURCES 21:18 cpu 100% ram 42.9/63GB editors 0 cmd 22 free 544GB
+- RESOURCES 21:49 cpu 100% ram 38.4/63GB editors 0 cmd 17 free 543GB
+- link green 21:56: main f86aed0 (A tackle is an event (120-frame release grace, A113), clay goal frames (A119), no cartridg) pushed.
+- RESOURCES 22:20 cpu 55% ram 28.9/63GB editors 0 cmd 5 free 540GB

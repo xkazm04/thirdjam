@@ -141,6 +141,12 @@ struct JAMNET_API FJamNetScriptedHuman
 	int64 LastCheck = -600;
 	int32 ChaseTarget = -1;
 	int64 ChaseUntil = -1;
+	// Lane A120 (track Q1): every verb (jam.net.ScriptVerbs 1, the two-process proof): sprint, the saucer (a held pass instead of the tap), brake, spin and F on
+	// top of the poke, shot and check. Off = A38's script, bit for bit.
+	bool bAllVerbs = false;
+	int32 SaucerHold = 0;
 
 	FJamInput Think(const UJamSim& Sim, int32 Me);
+private:
+	FJamInput ThinkBase(const UJamSim& Sim, int32 Me);
 };

@@ -6,7 +6,13 @@
 //
 //   node tools/playtest/modes.mjs [--modes pond,cage] [--seeds 1-20] [--jobs 3] [--player regular] [--max-frames 36000] [--out tools/playtest/out/modes-<stamp>]
 //        [--baseline tools/playtest/out/modes-<earlier>.jsonl]   (reuse the regular cells of an earlier run on the same binary: same seeds, same hash)
-//        [--sprint]   (lane A72, ask A3: the playtester presses sprint, -playersprint; Marathon's number is the human's sprint frames and needs it)
+//        [--sprint]   (lane A72, ask A3: the playtester presses sprint in every cell, -playersprint)
+//        [--dir <folder>]   (lane A122: measure the *.cartridge.json files of another folder, e.g. variants under tools/playtest/out/; the slug is the file name
+//                            after "hockey.mode." up to the first dot, so hockey.mode.cage.v2.cartridge.json is measured with Cage's number)
+//
+// Lane A122 (track M1): a mode may ask for its own run in RUN below (Marathon: the playtester sprints, and its regular baseline sprints too); a timer mode's
+// frame cap is its clock plus the sim's 6,000 frames of pauses and sudden death (JamSim.cpp HardStop), so a long clock is never read as unfinished; the table
+// carries the ratio, the match length and the human's knockdowns; a win rate outside 15 to 85 % is flagged (a note, not a failure: the level is the ladder's).
 //
 // Exit: 0 every mode passed, 1 a mode failed (invalid, a cell failed, unfinished matches, or its number within a third of regular), 2 could not run.
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
@@ -50,9 +56,19 @@ export const CHARACTER = {
   // lane A84 (R-0041 point 3): the abilities on F. Shotgun's character is the bodies on the ice (every knockdown, any skater, any cause, per match: the shotgun drops
   // every skater within a metre of its path); Arsenal's is the tricks used (the human's ability uses per match: regular has none). Both need the playtester's F
   // (JamPlaytester's PlaytesterAbility) and the binary that writes `knockdowns_all` and `abilities_used`.
-  shotgun: { label: 'knockdowns (all skaters) / match', of: (ms) => avg(ms.map((m) => m.knockdowns_all || 0)) },
+  // lane A122 (track M1): per play minute, not per match: a Shotgun match is a third shorter than a regular one, so the per-match count read the length, not the blast.
+  shotgun: { label: 'knockdowns (all skaters) / play min', of: (ms) => perPlayMin(ms, (m) => m.knockdowns_all || 0) },
   arsenal: { label: 'human abilities used / match', of: (ms) => avg(ms.map((m) => m.abilities_used || 0)) },
 };
+
+// Lane A122: what a mode's cell needs beyond the defaults. sprint: the playtester presses sprint (the mode is about the sprint) and the mode is compared with a
+// regular cell that sprints too.
+export const RUN = {
+  marathon: { sprint: true },
+};
+// The frame cap of one cell: a timer match's hard stop is max(33000, clock + 6000) frames (JamSim.cpp), 600 frames of margin on top.
+export const capFor = (cart, maxFrames) => (cart?.game?.rules?.mode === 'timer' ? Math.max(maxFrames, (cart.game.rules.timer_frames || 0) + 6600) : maxFrames);
+export const WIN_BAND = [15, 85];
 
 function arg(name, dflt) {
   const i = process.argv.indexOf(`--${name}`);
@@ -65,12 +81,17 @@ function die(code, msg) {
 }
 const stamp = () => new Date().toISOString().replace(/[-:]/g, '').replace(/\..+/, '').replace('T', '-');
 
-export function listModes() {
-  if (!existsSync(modesDir)) return [];
-  return readdirSync(modesDir).filter((f) => f.endsWith('.cartridge.json')).sort().map((f) => {
-    const slug = f.replace(/^hockey\.mode\./, '').replace(/\.cartridge\.json$/, '');
-    const cart = JSON.parse(readFileSync(join(modesDir, f), 'utf8'));
-    return { slug, file: join(modesDir, f), name: `modes/${f.replace(/\.cartridge\.json$/, '')}`, title: cart.title, level: cart.game?.ai?.difficulty || 'pro', cart };
+export function listModes(dir = modesDir) {
+  if (!existsSync(dir)) return [];
+  const shipped = resolve(dir) === resolve(modesDir);
+  return readdirSync(dir).filter((f) => f.endsWith('.cartridge.json')).sort().map((f) => {
+    const id = f.replace(/^hockey\.mode\./, '').replace(/\.cartridge\.json$/, '');
+    // a variant file "hockey.mode.cage.v2.cartridge.json" is Cage (slug) under its own row name (id)
+    const slug = shipped ? id : id.split('.')[0];
+    const cart = JSON.parse(readFileSync(join(dir, f), 'utf8'));
+    // the commandlet takes a cartridge name under Content/Cartridges or a file path (forward slashes: it is echoed into the JSON lines)
+    const name = shipped ? `modes/${f.replace(/\.cartridge\.json$/, '')}` : join(dir, f).split('\\').join('/');
+    return { slug, id, file: join(dir, f), name, title: cart.title, level: cart.game?.ai?.difficulty || 'pro', cart };
   });
 }
 
@@ -88,6 +109,8 @@ function cell(s) {
     dekes: s.dekes, breakaways: s.breakaways, one_timers: s.one_timers, shots: s.shots, match_s: s.match_s, unfinished: s.unfinished };
 }
 const signed = (p) => (p === null ? 'new' : `${p > 0 ? '+' : ''}${p} %`);
+const winPct = (ms) => (ms.length ? r1((100 * ms.filter((m) => m.result === 'win').length) / ms.length) : 0);
+const downs = (ms) => r2(avg(ms.map((m) => m.knockdowns || 0)));
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const only = arg('modes', '');
@@ -98,37 +121,48 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const uproject = arg('uproject', join(repo, 'Game', 'ThirdJam.uproject'));
   const outBase = arg('out', join(here, 'out', `modes-${stamp()}`));
   const baseline = arg('baseline', '');
-  const sprint = process.argv.includes('--sprint');
+  const dir = arg('dir', '');
+  const sprintAll = process.argv.includes('--sprint');
   if (!/^\d+(-\d+)?$/.test(seeds)) die(2, `bad --seeds ${seeds}`);
   if (!existsSync(uproject)) die(2, `no uproject ${uproject}`);
-  let modes = listModes();
-  if (only) modes = modes.filter((m) => only.split(',').includes(m.slug));
-  if (!modes.length) die(2, `no mode cartridges in ${modesDir}${only ? ` matching ${only}` : ''}`);
+  if (dir && !existsSync(dir)) die(2, `no --dir ${dir}`);
+  let modes = listModes(dir ? resolve(dir) : modesDir);
+  if (only) modes = modes.filter((m) => only.split(',').includes(m.slug) || only.split(',').includes(m.id));
+  if (!modes.length) die(2, `no mode cartridges in ${dir || modesDir}${only ? ` matching ${only}` : ''}`);
   let failed = 0;
   for (const m of modes) {
     const res = validateCartridge(m.cart);
-    if (res.errors.length) { failed++; m.invalid = true; console.log(`FAIL validate ${m.name}: ${res.errors.join(' | ')}`); }
-    else console.log(`PASS validate ${m.name}`);
+    if (res.errors.length) { failed++; m.invalid = true; console.log(`FAIL validate ${m.id}: ${res.errors.join(' | ')}`); }
+    else console.log(`PASS validate ${m.id}`);
+    m.sprint = sprintAll || Boolean(RUN[m.slug]?.sprint);
+    m.base = `${m.level}${m.sprint ? '+sprint' : ''}`;
   }
-  const levels = [...new Set(modes.map((m) => m.level))];
-  // Regular cells from an earlier run, when given and complete for a level.
+  // One regular cell per level (and per level with the sprint, when a mode runs with it), reused from an earlier run when given and complete.
+  const wanted = [...new Set(modes.filter((m) => !m.invalid).map((m) => m.base))];
   const reused = {};
   if (baseline) {
     if (!existsSync(baseline)) die(2, `no baseline ${baseline}`);
     for (const l of readFileSync(baseline, 'utf8').split(/\r?\n/).filter(Boolean)) {
       const m = JSON.parse(l);
-      if (m.mode === 'regular' && m.player === player) (reused[m.difficulty] ??= []).push(m);
+      if (m.mode === 'regular' && m.player === player) (reused[`${m.difficulty}${m.sprint ? '+sprint' : ''}`] ??= []).push(m);
     }
   }
+  const [lo, hi] = seeds.includes('-') ? seeds.split('-').map(Number) : [Number(seeds), Number(seeds)];
+  // a baseline measured on other seeds is not this run's baseline: keep the matches of this run's seeds, and measure again when one is missing
+  for (const k of Object.keys(reused)) {
+    reused[k] = reused[k].filter((m) => m.seed >= lo && m.seed <= hi);
+    if (reused[k].length !== hi - lo + 1) delete reused[k];
+  }
   const cells = [
-    ...levels.filter((level) => !reused[level]).map((level) => ({ kind: 'regular', name: 'hockey.regular', level })),
-    ...modes.filter((m) => !m.invalid).map((m) => ({ kind: 'mode', name: m.name, level: m.level, mode: m })),
+    ...wanted.filter((b) => !reused[b]).map((b) => ({ kind: 'regular', name: 'hockey.regular', level: b.split('+')[0], sprint: b.endsWith('+sprint'), base: b, cap: maxFrames })),
+    ...modes.filter((m) => !m.invalid).map((m) => ({ kind: 'mode', name: m.name, level: m.level, sprint: m.sprint, base: m.base, cap: capFor(m.cart, maxFrames), mode: m })),
   ];
-  console.log(`INFO modes ${cells.length} cells (${levels.length} regular baselines) x seeds ${seeds}, player ${player}, ${jobs} at a time`);
+  console.log(`INFO modes ${cells.length} cells (${cells.filter((c) => c.kind === 'regular').length} regular baselines measured, ${Object.keys(reused).filter((b) => wanted.includes(b)).length} reused) x seeds ${seeds}, player ${player}, ${jobs} at a time`);
   const t0 = Date.now();
   const done = await pool(cells, jobs, async (c) => {
     try {
-      const ms = await runCell({ uproject, cartridge: c.name, level: c.level, player, seeds, maxFrames, sprint });
+      const ms = (await runCell({ uproject, cartridge: c.name, level: c.level, player, seeds, maxFrames: c.cap, sprint: c.sprint })).map((m) => ({ ...m, sprint: c.sprint || undefined }));
+      console.log(`INFO cell ${c.kind === 'regular' ? `regular ${c.base}` : c.mode.id} done (${ms.length} matches, ${Math.round((Date.now() - t0) / 1000)} s)`);
       return { ...c, ms, s: summarize(c.kind === 'regular' ? 'regular' : c.mode.slug, c.name, c.level, player, ms) };
     } catch (e) {
       failed++;
@@ -136,30 +170,34 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       return null;
     }
   });
-  for (const [level, ms] of Object.entries(reused)) if (levels.includes(level)) done.push({ kind: 'regular', name: 'hockey.regular', level, ms, s: summarize('regular', 'hockey.regular', level, player, ms), reused: true });
-  const base = Object.fromEntries(done.filter((d) => d && d.kind === 'regular').map((d) => [d.level, d]));
+  for (const [b, ms] of Object.entries(reused)) if (wanted.includes(b)) done.push({ kind: 'regular', name: 'hockey.regular', level: b.split('+')[0], base: b, ms, s: summarize('regular', 'hockey.regular', b.split('+')[0], player, ms), reused: true });
+  const base = Object.fromEntries(done.filter((d) => d && d.kind === 'regular').map((d) => [d.base, d]));
   const results = [];
   const lines = [
-    '| mode | level | W-L-D-unf | win % (regular) | GF / GA (regular) | touches/min (regular) | checks L/T (regular) | character | mode | regular | change | verdict |',
+    '| mode | level | character number | mode | regular | ratio | a third apart | win % mode / regular | win band | match s mode / regular | human knockdowns / match mode / regular | unfinished |',
     '|---|---|---|---|---|---|---|---|---|---|---|---|',
   ];
   for (const d of done.filter((x) => x && x.kind === 'mode')) {
-    const ch = (d.mode.slug === 'marathon' && !sprint ? CHARACTER['marathon-pace'] : CHARACTER[d.mode.slug]) || CHARACTER[d.mode.slug.split('-')[0]] || CHARACTER.sniper;
-    const b = base[d.level];
+    const ch = CHARACTER[d.mode.slug] || CHARACTER[d.mode.slug.split('-')[0]] || CHARACTER.sniper;
+    const b = base[d.base];
     const mine = ch.of(d.ms);
     const theirs = b ? ch.of(b.ms) : NaN;
     const change = theirs > 0 ? mine / theirs - 1 : (mine > 0 ? Infinity : 0);
     const ok = Boolean(b) && Math.abs(change) >= 1 / 3 && d.s.unfinished === 0;
     if (!ok) failed++;
     const pctChange = Number.isFinite(change) ? Math.round(change * 100) : null;
-    const r = { mode: d.mode.slug, title: d.mode.title, level: d.level, character: ch.label, value: r2(mine), regular_value: r2(theirs), change_pct: pctChange,
-      verdict: ok ? 'pass' : 'fail', mode_cell: cell(d.s), regular_cell: b ? cell(b.s) : undefined };
+    const ratio = Number.isFinite(change) ? r2(1 + change) : null;
+    const win = winPct(d.ms);
+    const inBand = win >= WIN_BAND[0] && win <= WIN_BAND[1];
+    const r = { mode: d.mode.id, title: d.mode.title, level: d.level, sprint: d.sprint || undefined, character: ch.label, value: r2(mine), regular_value: r2(theirs), ratio, change_pct: pctChange,
+      verdict: ok ? 'pass' : 'fail', win_pct: win, regular_win_pct: b ? winPct(b.ms) : undefined, win_in_band: inBand, match_s: d.s.match_s, regular_match_s: b?.s.match_s,
+      human_knockdowns: downs(d.ms), regular_human_knockdowns: b ? downs(b.ms) : undefined, unfinished: d.s.unfinished, mode_cell: cell(d.s), regular_cell: b ? cell(b.s) : undefined };
     results.push(r);
-    console.log(`${ok ? 'PASS' : 'FAIL'} mode ${d.mode.slug} (${d.level}): ${ch.label} ${r.value} vs regular ${r.regular_value} (${signed(pctChange)}), win ${d.s.win_pct} % vs ${b?.s.win_pct} %, unfinished ${d.s.unfinished}`);
-    lines.push(`| ${d.mode.title} | ${d.level} | ${d.s.wins}-${d.s.losses}-${d.s.draws}-${d.s.unfinished} | ${d.s.win_pct} (${b?.s.win_pct}) | ${d.s.goals_for} / ${d.s.goals_against} (${b?.s.goals_for} / ${b?.s.goals_against}) | ${d.s.touches_per_min} (${b?.s.touches_per_min}) | ${d.s.checks_landed} / ${d.s.checks_taken} (${b?.s.checks_landed} / ${b?.s.checks_taken}) | ${ch.label} | **${r.value}** | ${r.regular_value} | ${signed(pctChange)} | ${r.verdict} |`);
+    console.log(`${ok ? 'PASS' : 'FAIL'} mode ${d.mode.id} (${d.base}): ${ch.label} ${r.value} vs regular ${r.regular_value} (${signed(pctChange)}), win ${win} % vs ${r.regular_win_pct} %${inBand ? '' : ' (OUTSIDE 15-85)'}, unfinished ${d.s.unfinished}`);
+    lines.push(`| ${d.mode.id} | ${d.base} | ${ch.label} | **${r.value}** | ${r.regular_value} | ${ratio === null ? 'n/a' : ratio} | ${ok ? 'yes' : '**NO**'} | ${win} / ${r.regular_win_pct} | ${inBand ? 'in' : '**out**'} | ${d.s.match_s} / ${b?.s.match_s} | ${r.human_knockdowns} / ${r.regular_human_knockdowns} | ${d.s.unfinished} |`);
   }
   mkdirSync(dirname(outBase), { recursive: true });
-  writeFileSync(`${outBase}.jsonl`, done.filter(Boolean).flatMap((d) => d.ms.map((m) => JSON.stringify({ ...m, mode: d.kind === 'mode' ? d.mode.slug : 'regular' }))).join('\n') + '\n');
+  writeFileSync(`${outBase}.jsonl`, done.filter(Boolean).flatMap((d) => d.ms.map((m) => JSON.stringify({ ...m, mode: d.kind === 'mode' ? d.mode.id : 'regular' }))).join('\n') + '\n');
   writeFileSync(`${outBase}.md`, `${lines.join('\n')}\n`);
   console.log('');
   console.log(lines.join('\n'));

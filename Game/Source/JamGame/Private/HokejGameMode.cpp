@@ -77,7 +77,9 @@ static TAutoConsoleVariable<int32> CVarJamCtrlDrill(TEXT("jam.ctrl.Drill"), 0,
 // plays; everyone else is parked in a corner. 20 rounds (the round number is the scene's seed), a JAMDRILL carry result line each and a summary; then the
 // drill switches itself off. State lives here (one game mode at a time, as the hand-puck drill's statics below).
 static TAutoConsoleVariable<int32> CVarJamCtrlCarryScript(TEXT("jam.ctrl.CarryScript"), 1,
-	TEXT("Drill 21's human: 1 = the scripted stop-and-go (brake at 5 m, cut 60 degrees, burst; the cursor on the far side of the body), 0 = the scripted straight charge, 2 = your own keys and mouse (the drill only stages and scores). Lane A102."));
+	TEXT("Drill 21's human: 1 = the scripted stop-and-go (the stop begins at 9.5 m, cut 60 degrees, burst; the cursor on the far side of the body), 0 = the scripted straight charge, 2 = your own keys and mouse (the drill only stages and scores). Lane A102. 3 = the late answer: the spin with the cut at 6 m, no stop; 4 = the deke tap with the cut at 6 m (lane A121)."));
+static TAutoConsoleVariable<float> CVarJamCtrlCarryBrakeAtM(TEXT("jam.ctrl.CarryBrakeAtM"), 0.f,
+	TEXT("Drill 21: the gap to the defender, in metres, at which the scripted human begins its stop (script 1) or its cut (scripts 3 and 4). 0 = the script's own (9.5 m; 6 m for 3 and 4). Lane A121."));
 namespace
 {
 	FJamCarryDrill GCarryDrill;
@@ -85,7 +87,7 @@ namespace
 	int32 GCarryRounds = 0, GCarryScript = 1;
 	int32 GCarryEnds[FJamCarryDrill::EndCount] = {};
 	constexpr int32 CarryDrillRounds = 20;
-	const TCHAR* CarryScriptName(int32 Script) { return Script == 0 ? TEXT("straight") : Script == 2 ? TEXT("hand") : TEXT("stop_and_go"); }
+	const TCHAR* CarryScriptName(int32 Script) { return Script == 0 ? TEXT("straight") : Script == 2 ? TEXT("hand") : Script == 3 ? TEXT("spin_cut") : Script == 4 ? TEXT("deke_cut") : TEXT("stop_and_go"); }
 
 	// In GatherInputs, after the brain's and the human's inputs: stages a round when none runs, parks everyone but the two, scripts the human.
 	void CarryDrillGather(UJamSim& Sim, TArray<FJamInput>& Inputs)
@@ -97,16 +99,17 @@ namespace
 			// A round starts only with the human on its feet (the last round may have left it down or stumbling: the headless run lost 1 round of 20 to that).
 			if (!Sim.GetSkaters().IsValidIndex(Sim.GetHumanIndex()) || !Sim.GetSkaters()[Sim.GetHumanIndex()].CanAct()) return;
 			GCarryScript = CVarJamCtrlCarryScript.GetValueOnGameThread();
-			GCarryDrill = FJamCarryDrill();
+			GCarryDrill = GCarryScript == 3 ? FJamCarryDrill::Late(1) : GCarryScript == 4 ? FJamCarryDrill::Late(2) : FJamCarryDrill();   // lane A121: the late answers
 			GCarryDrill.bStopAndGo = GCarryScript != 0;
+			if (const float AtM = CVarJamCtrlCarryBrakeAtM.GetValueOnGameThread(); AtM > 0.f) GCarryDrill.BrakeAtM = AtM;
 			if (!GCarryDrill.Stage(Sim, static_cast<uint64>(GCarryRounds + 1)))
 			{
 				UE_LOG(LogHokej, Warning, TEXT("JAMDRILL carry: no human or no opponent in this cut; drill off"));
 				CVarJamCtrlDrill->Set(0, ECVF_SetByCode);
 				return;
 			}
-			UE_LOG(LogHokej, Log, TEXT("JAMDRILL carry stage n=%d script=%s frame=%lld human=%d defender=%d body_shield=%d"), GCarryRounds + 1, CarryScriptName(GCarryScript), Sim.GetFrame(),
-				GCarryDrill.Me, GCarryDrill.Def, Sim.GetConfig().Stick.bBodyShield ? 1 : 0);
+			UE_LOG(LogHokej, Log, TEXT("JAMDRILL carry stage n=%d script=%s frame=%lld human=%d defender=%d body_shield=%d brake_at=%.2f take_grace=%d reverse_brake=%.0f own_stop=%d"), GCarryRounds + 1, CarryScriptName(GCarryScript), Sim.GetFrame(),
+				GCarryDrill.Me, GCarryDrill.Def, Sim.GetConfig().Stick.bBodyShield ? 1 : 0, GCarryDrill.BrakeAtM, Sim.GetConfig().Stick.TakeGraceFrames, Sim.GetConfig().Skater.ReverseBrakeDecel, Sim.GetConfig().Skater.bBurstOwnStop ? 1 : 0);
 		}
 		if (!Inputs.IsValidIndex(GCarryDrill.Me) || !Inputs.IsValidIndex(GCarryDrill.Def)) return;
 		for (int32 i = 0; i < Inputs.Num(); ++i) if (GCarryDrill.IsParked(i)) Inputs[i] = FJamInput();
@@ -554,6 +557,11 @@ void AHokejGameMode::TickLightHold()
 AJamSkater* AHokejGameMode::GetHumanSkater() const
 {
 	return (Sim && Skaters.IsValidIndex(Sim->GetHumanIndex())) ? Skaters[Sim->GetHumanIndex()].Get() : nullptr;
+}
+
+int32 AHokejGameMode::GetLocalSeat() const
+{
+	return Sim ? Sim->GetHumanIndex() : -1;
 }
 
 void AHokejGameMode::PossessHuman(APlayerController* PC)

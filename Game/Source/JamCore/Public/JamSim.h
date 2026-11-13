@@ -150,6 +150,13 @@ struct JAMCORE_API FJamSkaterState
 	// Lane A93 (R-0045 law 3): frames left of the first-step burst (acceleration x skater.burst.accel_mult). Full while the speed is under BurstSlowSpeed and on
 	// the frame the move input turned more than 60 degrees inside BurstCutFrames; counts down otherwise. Hashed only while it runs (burst.frames 0 = never).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 BurstLeft = 0;
+	// Lane A121 (track F2; game.skater.burst.own_stop): this skater braked on its way down (the reverse brake or the brake button took speed off it) and has
+	// not been back at BurstSlowSpeed since: being slow arms its burst. Never set with own_stop false. Hashed while set.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bBurstEarned = false;
+	// Lane A121 (R-0049 point 2; game.stick.take_grace_frames): frames left in which this skater's carried puck cannot be poked or lifted: it has just won
+	// the puck. Set when the puck comes to it from somebody else (UJamSim::TakeOwner), counts down while the puck is live, 0 the moment the puck is somebody
+	// else's. Hashed while it runs.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 TakeGraceLeft = 0;
 	// The move input's direction over the last BurstCutFrames frames (unit, or zero for a frame without input), a ring written at MoveHistAt. Burst only.
 	// Lane A110: reflected, so the soak's field compare and Jam.Net.HashCoverage see them (every member of this struct is a UPROPERTY: the lint checks the layout).
 	UPROPERTY() FVector2D MoveHist[10];
@@ -622,6 +629,13 @@ public:
 	bool IsPokeShielded(const FJamSkaterState& Poker, const FJamSkaterState& Carrier) const;
 	// Lane A82 (R-0040 point 1): the lift is shielded like the poke: a spinning carrier's body is between; a sweep shields the side the puck left for shield_frames.
 	bool IsLiftShielded(const FJamSkaterState& Lifter, const FJamSkaterState& Carrier) const { return IsPokeShielded(Lifter, Carrier); }
+	// Lane A121 (R-0049 point 2): Carrier has just won the puck (game.stick.take_grace_frames): no poke and no lift takes it. IsPokeShielded includes it. A
+	// body check is never refused by it.
+	bool InTakeGrace(const FJamSkaterState& Carrier) const { return Config.Stick.TakeGraceFrames > 0 && Carrier.TakeGraceLeft > 0; }
+	// The skater that has carried since the puck last changed hands (-1 = nobody yet; TakeOwnerPlaced = a puck placed by SetPuck, whose first carrier did not
+	// win it). The take grace starts when the puck comes to a skater that is not the owner.
+	int32 GetTakeOwner() const { return TakeOwner; }
+	static constexpr int32 TakeOwnerPlaced = -2;
 	// Lane A102 (track F2): puck protection, no button (game.stick.body_shield). True when Carrier's body is between Poker's stick and the puck: Poker's body
 	// within BodyShieldRangeM of Carrier's, the puck on the far side of Carrier's body from Poker (inside BodyShieldFarDeg of the line Poker -> Carrier carried on),
 	// and Carrier turned: Poker is more than BodyShieldFrontDeg off its facing (a carrier that faces the defender shields nothing). IsPokeShielded includes it,
@@ -762,6 +776,8 @@ private:
 	int32 DekeCommitFrames = 0;
 	int32 DekeCommitSide = 0;
 	int32 DekeCommitSkater = -1;
+	// Lane A121 (R-0049 point 2): see GetTakeOwner. In StateHash only when game.stick.take_grace_frames is above 0.
+	int32 TakeOwner = -1;
 
 	// R-0013 faceoff and draw state.
 	int32 FaceoffCountdown = 0;

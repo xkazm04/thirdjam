@@ -10,6 +10,8 @@
 #include "JamRandom.h"
 #include "BarkSystem.generated.h"
 
+class UJamSim;
+
 class UJamBarkWidget;
 class AHokejGameMode;
 class AJamSkater;
@@ -232,6 +234,10 @@ protected:
 private:
 	void RefreshSettings();
 	void BuildWorld(FJamBarkWorld& Out) const;
+public:
+	// Lane A120 (track Q1): the bark world of a sim seen from Seat (the machine's own seat: the guest's online). Presentation only: reads the sim, writes nothing.
+	static void FillWorld(const UJamSim& Sim, int32 Seat, FJamBarkWorld& Out);
+private:
 	void Show(const FJamBarkPick& P);
 	AHokejGameMode* GameMode() const;
 

@@ -220,7 +220,7 @@
       }
     ],
     "ai": {
-      "difficulty": "rookie",
+      "difficulty": "pro",
       "sprint": 0.75
     },
     "barks": {
@@ -243,12 +243,20 @@
       "radar": true
     },
     "meta": {
-      "pitch": "Three against five. Get hit. Hit back.",
+      "pitch": "Three on five. Keep the puck, take the heat.",
       "facts": [
         "3 v 5 against you",
-        "rookies that sprint",
-        "first to 3"
+        "F: shield, 3 s",
+        "pro bots that sprint"
       ]
-    }
+    },
+    "abilities": [
+      {
+        "kind": "shield",
+        "trigger": "mode",
+        "cooldown_frames": 600,
+        "duration_frames": 180
+      }
+    ]
   }
 }

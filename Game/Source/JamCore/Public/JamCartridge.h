@@ -79,11 +79,21 @@ struct JAMCORE_API FJamSkaterConfig
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double SprintCarryBonus = 0.08;
 	// game.skater.reverse_brake_decel (lane A93, R-0045 law 3): move input against the velocity (more than 120 degrees from it) is a hard stop at this many
 	// m/s^2 until the skater is still; then the input accelerates the other way. 0 = off (only Ctrl brakes, at brake_decel).
-	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double ReverseBrakeDecel = 20;
+	// Lane A121 (track F2, evolution 2; R-0050 point 5): 26, the stop's grip (20 before, the neutral value). A stop-and-go begun a metre later still beats a
+	// charging pro (docs/experiments/MOVEMENT-3.md): 11 m/s to still in 26 frames (33 before), 8 m/s in 19 (24 before).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double ReverseBrakeDecel = 26;
 	// game.skater.burst (lane A93, R-0045 law 3): the first-step burst. For frames after the speed was under 2 m/s, or after the move input turned more than
 	// 60 degrees inside 10 frames, the acceleration is accel_mult times normal (top speed unchanged). frames 0 = off.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 BurstFrames = 20;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double BurstAccelMult = 1.8;
+	// game.skater.burst.own_stop (lane A121, track F2; docs/VISION.md law 3 "after a stop or a sharp cut"): true = the first step is earned. Being slow arms the
+	// burst only after a stop of the skater's own (it braked on the way down, by reversing or with the brake button); a skater that merely stands (a defender
+	// waiting, the faceoff, a skater getting up) starts at the normal acceleration. A sharp cut arms it as before. false = the neutral value (lane A93's rule:
+	// any skater under 2 m/s has the burst), under which the burst helped the charging defender more than the carrier (MOVEMENT-2.md section 3).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") bool bBurstOwnStop = true;
+	// Not a cartridge key (lane A121 measured it as the other candidate, MOVEMENT-3.md): the carrier's own burst multiplier; 0 = accel_mult, as everyone's.
+	// Bar.Movement.StopAndGoSweep sets it.
+	double BurstCarryAccelMult = 0.0;
 	// R-0035 (lane A52): game.skater.goalie { reach_m, block_height_m }: a skater in the crease stance saves a loose shot under block_height_m that passes
 	// within reach_m of it (the human included); a higher puck passes. reach_m 0 = no save by height (the body and the blade stop pucks as before).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double GoalieReachM = 0.9;
@@ -142,6 +152,10 @@ struct JAMCORE_API FJamStickConfig
 	// true = the neutral value (the game before the lane): an aimed opposing blade within 0.6 m deflects a carried puck moving faster than 6 m/s, and any
 	// body's touch makes that skater the last toucher.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") bool bPassiveTake = false;
+	// game.stick.take_grace_frames (lane A121, track F2; R-0049 point 2, B-to-A-0038 point 2): a skater that has just won the puck (a poke, a lift, a loose puck,
+	// a pass, the draw: the puck came to it from somebody else) cannot be poked or lifted for this many frames; a body check still loosens it. 0 = off (the
+	// neutral value: the game before the lane, where device B counted a stick takeaway 1.4 times a second).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 TakeGraceFrames = 30;
 	// Not a cartridge key. R-0048 point 2: a teammate never takes a carried puck by touch, under either value of passive_take (a pass is a pass). true brings
 	// back the teammate's touch of the game before lane A102, which the neutral-block tests need to replay older commits' matches hash for hash.
 	bool bTeammateTouchTakes = false;

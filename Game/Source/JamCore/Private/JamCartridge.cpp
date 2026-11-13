@@ -1069,6 +1069,7 @@ namespace
 		{
 			ReadInteger(Bu, TEXT("frames"), C.Skater.BurstFrames);
 			ReadNumber(Bu, TEXT("accel_mult"), C.Skater.BurstAccelMult);
+			ReadBool(Bu, TEXT("own_stop"), C.Skater.bBurstOwnStop);   // lane A121 (track F2): the first step is earned by a stop or a cut of the skater's own
 		}
 		// R-0029 point 4 (lane A39): game.skater.breakaway { speed_bonus, frames }
 		if (const FJPtr Ba = Obj(Sk, TEXT("breakaway")))
@@ -1111,6 +1112,7 @@ namespace
 		ReadNumber(St, TEXT("carry_reach_mult"), C.Stick.CarryReachMult);   // lane A93 (R-0045 law 4)
 		ReadBool(St, TEXT("body_shield"), C.Stick.bBodyShield);   // lane A102 (track F2): puck protection with the body
 		ReadBool(St, TEXT("passive_take"), C.Stick.bPassiveTake);   // lane A102 (R-0048): false = a carried puck leaves its carrier only by a press
+		ReadInteger(St, TEXT("take_grace_frames"), C.Stick.TakeGraceFrames);   // lane A121 (R-0049 point 2): no poke or lift on a skater that just won the puck
 		// R-0029 point 4 (lane A39): game.stick.deke { offset_m, commit_frames }
 		if (const FJPtr Dk = Obj(St, TEXT("deke")))
 		{

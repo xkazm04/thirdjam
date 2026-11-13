@@ -395,9 +395,15 @@ void UJamBarkSystem::BuildWorld(FJamBarkWorld& Out) const
 	AHokejGameMode* GM = GameMode();
 	const UJamSim* Sim = GM ? GM->GetSim() : nullptr;
 	if (!Sim) return;
-	Out.HumanIndex = Sim->GetHumanIndex();
-	for (const FJamSkaterState& S : Sim->GetSkaters()) { Out.Teams.Add(S.Team); Out.Positions.Add(S.Pos); }
-	Out.PuckLastTouch = Sim->GetPuck().LastTouch;
+	FillWorld(*Sim, GM->GetLocalSeat(), Out);   // lane A120: the local seat (the guest's on the guest's machine), was Sim->GetHumanIndex() (the host's)
+}
+
+void UJamBarkSystem::FillWorld(const UJamSim& Sim, int32 Seat, FJamBarkWorld& Out)
+{
+	Out = FJamBarkWorld();
+	Out.HumanIndex = Seat;
+	for (const FJamSkaterState& S : Sim.GetSkaters()) { Out.Teams.Add(S.Team); Out.Positions.Add(S.Pos); }
+	Out.PuckLastTouch = Sim.GetPuck().LastTouch;
 }
 
 void UJamBarkSystem::HandleBusEvent(FName Event, const FJamEventPayload& Payload)

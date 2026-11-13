@@ -39,6 +39,9 @@ struct FJamCarryDrill
 	bool bStickAway = true;     // from the stop on the cursor is on the far side of the body from the defender (at most StickDegPerFrame a frame)
 	double StickDegPerFrame = 15.0;
 	bool bBrake = true;         // false = the cut without the stop: at BrakeAtM the carrier cuts at once
+	// Lane A121 (track F2, evolution 2): the late answer. On the first frame of the cut the carrier presses 1 = the spin (E: the body between for the spin's
+	// frames) or 2 = the deke tap (the puck to the blade side, the sweep's shield). 0 = neither.
+	int32 Answer = 0;
 	// A person is not a metronome: the seed moves the approach speed (+-0.5 m/s), the defender's distance (+-1 m) and offset across the line (+-1.5 m), the
 	// gap at which the stop begins (+-0.75 m), the cut's angle (+-10 degrees) and the frames before the go (0 to 4), each times Spread. 0 = the script exactly.
 	double Spread = 1.0;
@@ -92,6 +95,16 @@ struct FJamCarryDrill
 		return true;
 	}
 
+	// Lane A121: the late answer inside 7 m (MOVEMENT-3.md section 5): no stop, the cut at AtM with the spin (InAnswer 1), the deke tap (2) or nothing (0).
+	static FJamCarryDrill Late(int32 InAnswer, double AtM = 6.0)
+	{
+		FJamCarryDrill D;
+		D.bBrake = false;
+		D.BrakeAtM = AtM;
+		D.Answer = InAnswer;
+		return D;
+	}
+
 	bool IsLive() const { return End == Running && Me >= 0 && Def >= 0; }
 	bool IsParked(int32 i) const { return i != Me && i != Def; }
 	bool DefenderWaits() const { return Frames < SettleFrames; }
@@ -119,6 +132,7 @@ struct FJamCarryDrill
 			if (Phase == 1) { Move = FVector2D(-Dir, Side).GetSafeNormal(); ++BrakeFrames; }   // S and the side key
 			else if (Phase == 2) Move = FVector2D(Dir * FMath::Cos(CutRad), Side * FMath::Sin(CutRad));
 			else if (Phase == 3) Move = FVector2D(Dir, 0.0);
+			if (Phase == 2 && PhaseFrames == 0) { In.bSpin = Answer == 1; In.bDeke = Answer == 2; }   // lane A121: the late answer goes with the cut
 			++PhaseFrames;
 			if (bStickAway && Phase >= 1 && Gap > 1e-6) StickTo = (S.Pos - D.Pos) / Gap;
 		}

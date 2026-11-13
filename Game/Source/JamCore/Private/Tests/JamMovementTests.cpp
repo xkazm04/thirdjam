@@ -19,7 +19,7 @@ namespace JamMovementTests
 
 	// The neutral block (MOVEMENT.md section 4): with these six values the game is the one main 8f6b157 shipped.
 	const TCHAR* NeutralSkater = TEXT("\"skater\": {\"reverse_brake_decel\": 0, \"burst\": {\"frames\": 0, \"accel_mult\": 1}, \"sprint\": {\"carry_bonus\": 0},");
-	const TCHAR* NeutralStick = TEXT("\"stick\": {\"carry_reach_mult\": 1, \"body_shield\": false, \"passive_take\": true, \"lift_cone_deg\": 180, \"sweep\": {\"sprint_shield_mult\": 1}}, \"skater\": {");
+	const TCHAR* NeutralStick = TEXT("\"stick\": {\"carry_reach_mult\": 1, \"body_shield\": false, \"passive_take\": true, \"take_grace_frames\": 0, \"lift_cone_deg\": 180, \"sweep\": {\"sprint_shield_mult\": 1}}, \"skater\": {");
 
 	UJamCartridge* LoadPreset(FAutomationTestBase& T, const FString& Name)
 	{
@@ -56,6 +56,7 @@ namespace JamMovementTests
 		G.Stick.bBodyShield = false;   // lane A102 (track F2): puck protection with the body is off in the neutral block
 		G.Stick.bPassiveTake = true; G.Stick.bTeammateTouchTakes = true;   // lane A102 (R-0048): the unpressed take, and the teammate's touch (a rule: a code switch)
 		G.Stick.bSweepShieldOneSided = true;   // R-0044 as amended landed with this lane (both sides): main 8f6b157 shielded one side
+		G.Stick.TakeGraceFrames = 0; G.Skater.bBurstOwnStop = false;   // lane A121 (track F2, evolution 2): no take grace, the burst for any slow skater
 	}
 
 	// A sim in Playing with everyone parked in the far corner.
@@ -220,8 +221,8 @@ namespace JamMovementTests
 	}
 }
 
-// ReverseBrake (job 1 and the timing of job 2). W then S: from full speed the skater is still inside about half a second (reverse_brake_decel 20: 24 frames
-// from 8 m/s; hockey.regular skates 11 m/s: 33 frames), the read-out says so, and it then goes the other way. The Ctrl brake is untouched. The timings from
+// ReverseBrake (job 1 and the timing of job 2). W then S: from full speed the skater is still inside about half a second (reverse_brake_decel 26 since lane
+// A121: 19 frames from 8 m/s; hockey.regular skates 11 m/s: 26 frames; 20 before: 24 and 33), the read-out says so, and it then goes the other way. The Ctrl brake is untouched. The timings from
 // full speed one way to 6 m/s the other way are printed for the neutral block, the brake alone and the brake with the burst, free skater and carrier.
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamMovementReverseBrake, "Jam.Core.Movement.ReverseBrake", JamMovementTests::Flags)
 bool FJamMovementReverseBrake::RunTest(const FString& Parameters)
@@ -230,7 +231,7 @@ bool FJamMovementReverseBrake::RunTest(const FString& Parameters)
 	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
 	if (!C) return false;
 	const FJamGameConfig& G = C->Game;
-	TestEqual(TEXT("skater.reverse_brake_decel default 20"), G.Skater.ReverseBrakeDecel, 20.0);
+	TestEqual(TEXT("skater.reverse_brake_decel default 26 (lane A121: the stop's grip; 20 before)"), G.Skater.ReverseBrakeDecel, 26.0);
 	FJamGameConfig Neutral = G; MakeNeutral(Neutral);
 	FJamGameConfig BrakeOnly = Neutral; BrakeOnly.Skater.ReverseBrakeDecel = G.Skater.ReverseBrakeDecel;
 	FJamGameConfig BurstOnly = Neutral; BurstOnly.Skater.BurstFrames = G.Skater.BurstFrames; BurstOnly.Skater.BurstAccelMult = G.Skater.BurstAccelMult;
@@ -248,8 +249,8 @@ bool FJamMovementReverseBrake::RunTest(const FString& Parameters)
 	const FReverse& D = Free[3];
 	const int32 Want = FMath::CeilToInt32(D.V0 / G.Skater.ReverseBrakeDecel * 60.0);
 	TestTrue(*FString::Printf(TEXT("the reverse brake stops the skater dead (still at frame %d)"), D.StillFrames), D.StillFrames > 0);
-	TestTrue(*FString::Printf(TEXT("from %.2f m/s to still in %d frames (v / 20 m/s^2 = %d frames, within 1)"), D.V0, D.StillFrames, Want), FMath::Abs(D.StillFrames - Want) <= 1);
-	TestTrue(*FString::Printf(TEXT("still inside 40 frames (%d)"), D.StillFrames), D.StillFrames <= 40);
+	TestTrue(*FString::Printf(TEXT("from %.2f m/s to still in %d frames (v / reverse_brake_decel = %d frames, within 1)"), D.V0, D.StillFrames, Want), FMath::Abs(D.StillFrames - Want) <= 1);
+	TestTrue(*FString::Printf(TEXT("still inside 30 frames (%d; 33 at the 20 m/s^2 before lane A121)"), D.StillFrames), D.StillFrames <= 30);
 	TestTrue(*FString::Printf(TEXT("the read-out bReverseBraking was up while it braked (%d frames)"), D.BrakeFlagFrames), D.BrakeFlagFrames >= Want - 4 && D.BrakeFlagFrames <= Want);
 	TestEqual(TEXT("one reverse brake counted"), D.ReverseBrakes, 1);
 	TestTrue(*FString::Printf(TEXT("then the input accelerates the other way (6 m/s back after %d frames)"), D.To6Frames), D.To6Frames > D.StillFrames && D.To6Frames < 150);
@@ -261,7 +262,11 @@ bool FJamMovementReverseBrake::RunTest(const FString& Parameters)
 		FJamGameConfig G8 = G; G8.Skater.Speed = 8;
 		const FReverse R8 = Reverse(G8, false);
 		AddInfo(FString::Printf(TEXT("TIMING skater.speed 8: from %.2f m/s still after %d frames (%.2f s), 6 m/s the other way after %d frames"), R8.V0, R8.StillFrames, R8.StillFrames / 60.0, R8.To6Frames));
-		TestTrue(*FString::Printf(TEXT("8 m/s to still in about half a second (%d frames, want 22..30)"), R8.StillFrames), R8.StillFrames >= 22 && R8.StillFrames <= 30);
+		TestTrue(*FString::Printf(TEXT("8 m/s to still in about a third of a second (%d frames, want 17..22; 24 at the 20 m/s^2 before lane A121)"), R8.StillFrames), R8.StillFrames >= 17 && R8.StillFrames <= 22);
+		FJamGameConfig G20 = G8; G20.Skater.ReverseBrakeDecel = 20;
+		const FReverse R20 = Reverse(G20, false);
+		AddInfo(FString::Printf(TEXT("TIMING skater.speed 8, reverse_brake_decel 20 (lane A121's neutral value): still after %d frames, 6 m/s the other way after %d frames"), R20.StillFrames, R20.To6Frames));
+		TestTrue(*FString::Printf(TEXT("reverse_brake_decel 20 is lane A93's stop: 8 m/s to still in 24 frames (%d)"), R20.StillFrames), FMath::Abs(R20.StillFrames - 24) <= 1);
 	}
 	// Ctrl keeps working, and exactly as before: the same glide to the same speed under the defaults and under the neutral block.
 	{
@@ -314,6 +319,7 @@ bool FJamMovementBurst::RunTest(const FString& Parameters)
 	// burst.frames after the speed passed 2 m/s, then normal.
 	{
 		FJamGameConfig Fast = G; Fast.Skater.Speed = 40;
+		Fast.Skater.bBurstOwnStop = false;   // lane A121: from rest the burst arms only under the neutral value (case d has the default)
 		UJamSim* Sim = MakeScene(Fast, 1);
 		const int32 Me = Sim->GetHumanIndex();
 		Sim->SetSkater(Me, FVector2D(-34, 0), FVector2D::ZeroVector, 0);
@@ -340,7 +346,8 @@ bool FJamMovementBurst::RunTest(const FString& Parameters)
 	{
 		int32 ToTop[2] = { -1, -1 }; double Top[2] = { 0, 0 };
 		int32 k = 0;
-		for (const FJamGameConfig* Cfg : { static_cast<const FJamGameConfig*>(&G), static_cast<const FJamGameConfig*>(&Neutral) })
+		FJamGameConfig AnySlow = G; AnySlow.Skater.bBurstOwnStop = false;   // lane A121: the burst from rest (own_stop false)
+		for (const FJamGameConfig* Cfg : { static_cast<const FJamGameConfig*>(&AnySlow), static_cast<const FJamGameConfig*>(&Neutral) })
 		{
 			UJamSim* Sim = MakeScene(*Cfg, 1);
 			const int32 Me = Sim->GetHumanIndex();
@@ -381,6 +388,50 @@ bool FJamMovementBurst::RunTest(const FString& Parameters)
 		TestEqual(TEXT("two 45-degree turns 5 frames apart do (90 degrees inside 10 frames)"), Cut(B, 5, Cc), G.Skater.BurstFrames);
 		TestEqual(TEXT("two 45-degree turns 12 frames apart do not"), Cut(B, 12, Cc), 0);
 		TestEqual(TEXT("a reversal arms it"), Cut(FVector2D(-1, 0), 0, FVector2D(-1, 0)), G.Skater.BurstFrames);
+	}
+	// (d) Lane A121 (skater.burst.own_stop, default true): the first step is earned. A skater that merely stands starts at the normal acceleration; one that
+	// stopped itself (the reverse brake, or the brake button) has the burst when it goes; own_stop false gives the standing skater its burst back.
+	{
+		TestTrue(TEXT("skater.burst.own_stop is true when the key is absent"), G.Skater.bBurstOwnStop);
+		// Frames from rest to 6 m/s, and the most BurstLeft seen; Stop: 0 = standing from the start, 1 = W to full speed, S to still, then go; 2 = W, the brake button to under 2 m/s, then go.
+		auto Go = [&](const FJamGameConfig& Cfg, int32 Stop, int32& OutArmed) -> int32
+		{
+			UJamSim* Sim = MakeScene(Cfg, 1);
+			const int32 Me = Sim->GetHumanIndex();
+			Sim->SetSkater(Me, FVector2D(-20, -10), FVector2D::ZeroVector, 0);
+			TArray<FJamInput> In;
+			In.SetNum(Sim->GetSkaters().Num());
+			if (Stop > 0)
+			{
+				In[Me].Move = FVector2D(1, 0);
+				for (int32 F = 0; F < 90; ++F) Sim->Step(In);
+				In[Me] = FJamInput();
+				if (Stop == 1) In[Me].Move = FVector2D(-1, 0); else In[Me].bBrake = true;
+				for (int32 F = 0; F < 240 && Sim->GetSkaters()[Me].Vel.Size() > (Stop == 1 ? 0.05 : 1.5); ++F) Sim->Step(In);
+				In[Me] = FJamInput();
+			}
+			In[Me].Move = FVector2D(0, 1);   // off to the side: a new direction either way
+			OutArmed = 0;
+			const FVector2D V0 = Sim->GetSkaters()[Me].Vel;
+			for (int32 F = 1; F <= 120; ++F)
+			{
+				Sim->Step(In);
+				OutArmed = FMath::Max(OutArmed, Sim->GetSkaters()[Me].BurstLeft);
+				if (Sim->GetSkaters()[Me].Vel.Y >= 6.0) return F;
+			}
+			return -1;
+		};
+		FJamGameConfig Off = G; Off.Skater.bBurstOwnStop = false;
+		int32 ArmStand = 0, ArmStop = 0, ArmCtrl = 0, ArmStandOff = 0;
+		const int32 Stand = Go(G, 0, ArmStand), Stopped = Go(G, 1, ArmStop), Ctrl = Go(G, 2, ArmCtrl), StandOff = Go(Off, 0, ArmStandOff);
+		AddInfo(FString::Printf(TEXT("TIMING first step to 6 m/s: standing %d frames (burst %d), after its own reverse stop %d (burst %d), after the brake button %d (burst %d); own_stop false, standing: %d (burst %d)"),
+			Stand, ArmStand, Stopped, ArmStop, Ctrl, ArmCtrl, StandOff, ArmStandOff));
+		TestEqual(TEXT("a skater that merely stands has no burst"), ArmStand, 0);
+		TestEqual(TEXT("a skater that stopped itself by reversing has it"), ArmStop, G.Skater.BurstFrames);
+		TestEqual(TEXT("a skater that stopped itself with the brake button has it"), ArmCtrl, G.Skater.BurstFrames);
+		TestEqual(TEXT("own_stop false: the standing skater has it, as before the lane"), ArmStandOff, G.Skater.BurstFrames);
+		TestTrue(*FString::Printf(TEXT("the earned first step is faster than the standing start (%d frames against %d)"), Stopped, Stand), Stopped > 0 && Stand > 0 && Stopped < Stand);
+		TestTrue(*FString::Printf(TEXT("the earned first step is at least the burst lane A93 gave everyone from rest (%d frames against %d)"), Stopped, StandOff), Stopped <= StandOff);
 	}
 	return true;
 }
@@ -638,6 +689,26 @@ bool FJamMovementNeutral::RunTest(const FString& Parameters)
 	const FBot B = NetTrapMatch(*C, TEXT("pro"), 15, 6000);
 	AddInfo(FString::Printf(TEXT("defaults, hockey.regular pro seed 15: %lld frames, %d:%d, hash %s"), B.Frames, B.Score0, B.Score1, *B.Hash));
 	TestNotEqual(TEXT("defaults: the pro bot match is another match"), B.Hash, FString(TEXT("874f67830b20dc4f")));
+	// Lane A121 (track F2, evolution 2): its neutral block, written as a cartridge author would, gives back the default match of the tree before the lane
+	// (evolution 1's final build, Game/logs/a102-tests-jam-full-3-ue.log: "defaults, hockey.regular pro seed 15: 6000 frames, 2:0, hash fc59e23598229ebc").
+	{
+		FString Raw = C->RawJson;
+		TestEqual(TEXT("one game.skater anchor for lane A121's neutral block"), Raw.ReplaceInline(TEXT("\"skater\": {"),
+			TEXT("\"stick\": {\"take_grace_frames\": 0}, \"skater\": {\"reverse_brake_decel\": 20, \"burst\": {\"own_stop\": false}, ")), 1);
+		TArray<FString> Errors;
+		UJamCartridge* E2 = UJamCartridge::LoadFromString(Raw, Errors);
+		for (const FString& E : Errors) AddError(FString::Printf(TEXT("lane A121's neutral block: %s"), *E));
+		if (E2)
+		{
+			TestTrue(TEXT("A121 neutral: take_grace_frames 0, reverse_brake_decel 20, burst.own_stop false"), E2->Game.Stick.TakeGraceFrames == 0 && E2->Game.Skater.ReverseBrakeDecel == 20.0 && !E2->Game.Skater.bBurstOwnStop);
+			TestTrue(TEXT("A121 neutral: the rest of the burst object keeps its defaults"), E2->Game.Skater.BurstFrames == C->Game.Skater.BurstFrames && E2->Game.Skater.BurstAccelMult == C->Game.Skater.BurstAccelMult);
+			E2->Game.Contact.BoardBonus = 1.0; E2->Game.Contact.ReleaseGraceFrames = 0;   // Director at landing: the tree before the lane had neither lane A101's board bonus nor lane A113's release grace
+			const FBot N2 = NetTrapMatch(*E2, TEXT("pro"), 15, 6000);
+			AddInfo(FString::Printf(TEXT("lane A121's neutral block, hockey.regular pro seed 15: %lld frames, %d:%d, hash %s (the tree before the lane: 6000 frames, 2:0, fc59e23598229ebc)"), N2.Frames, N2.Score0, N2.Score1, *N2.Hash));
+			TestEqual(TEXT("A121 neutral block: the pro bot match's hash is the baseline's"), N2.Hash, FString(TEXT("fc59e23598229ebc")));
+			TestNotEqual(TEXT("A121 defaults: the same match is another match"), B.Hash, N2.Hash);
+		}
+	}
 	return true;
 }
 

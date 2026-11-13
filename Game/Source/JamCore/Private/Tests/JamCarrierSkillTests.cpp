@@ -11,6 +11,8 @@
 #include "JamSimAdapter.h"
 #include "JamRandom.h"
 #include "JamCarryDrill.h"
+#include "JamPlaytester.h"
+#include "DifficultyResolve.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "UObject/Package.h"
@@ -199,12 +201,30 @@ bool FJamMovementStopAndGo::RunTest(const FString& Parameters)
 	AddInfo(FString::Printf(TEXT("STOPGO pro stop begun at the brief's 5 m: %s"), *Br.Line()));
 	AddInfo(FString::Printf(TEXT("STOPGO pro clean stop-and-go, the blade left ahead (no mouse): %s"), *M.Line()));
 	TestEqual(TEXT("every scene set up (the human carries when the brain takes the defender over)"), A.Ends[Setup] + B.Ends[Setup] + An.Ends[Setup] + Bn.Ends[Setup] + L.Ends[Setup] + Br.Ends[Setup] + M.Ends[Setup], 0);
-	// Bars (measured 100.0 / 0.0 / 73.0 / 2.5 / 46.5 on the lane's tree; the brief asked two in three against one in five, a gap of 47 points).
+	// Lane A121 (track F2, evolution 2: the carrier's answer inside ten metres; MOVEMENT-3.md): the stop begun at 8 m, under the defaults and under that
+	// lane's neutral block (take_grace_frames 0, reverse_brake_decel 20, burst.own_stop false: lane A102's game, where 8 m was 25.5 %).
+	{
+		FScript At8 = Go;
+		At8.BrakeAtM = 8.0;
+		UJamCartridge* E1 = Copy(*C);
+		E1->Game.Stick.TakeGraceFrames = 0; E1->Game.Skater.ReverseBrakeDecel = 20; E1->Game.Skater.bBurstOwnStop = false;
+		const FShare G8 = Share(*C, At8, 200), G8n = Share(*E1, At8, 200), A1 = Share(*E1, Go, 200);
+		AddInfo(FString::Printf(TEXT("STOPGO pro stop begun at 8 m: %s"), *G8.Line()));
+		AddInfo(FString::Printf(TEXT("STOPGO pro stop begun at 8 m, lane A121's neutral block: %s"), *G8n.Line()));
+		AddInfo(FString::Printf(TEXT("STOPGO pro clean stop-and-go (9.5 m), lane A121's neutral block: %s"), *A1.Line()));
+		TestTrue(FString::Printf(TEXT("A121: a stop begun at 8 m passes a pro at least 55 %% (%.1f %%)"), 100.0 * G8.PastShare()), G8.PastShare() >= 0.55);
+		TestTrue(FString::Printf(TEXT("A121: the stop begun at 9.5 m stays at 95 %% or more (%.1f %%)"), 100.0 * A.PastShare()), A.PastShare() >= 0.95);
+		TestTrue(FString::Printf(TEXT("A121: the evolution is worth at least 30 points at 8 m (%.1f against %.1f under its neutral block)"), 100.0 * G8.PastShare(), 100.0 * G8n.PastShare()), G8.PastShare() >= G8n.PastShare() + 0.30);
+		TestTrue(FString::Printf(TEXT("A121: the neutral block is lane A102's late edge (8 m under 35 %%: %.1f)"), 100.0 * G8n.PastShare()), G8n.PastShare() <= 0.35);
+	}
+	// Bars (measured 100.0 / 0.0 / 73.0 / 2.5 / 46.5 on lane A102's tree; the brief asked two in three against one in five, a gap of 47 points).
 	TestTrue(FString::Printf(TEXT("a clean stop-and-go beats a pro defender at least 8 times in 10 (%.1f %%)"), 100.0 * A.PastShare()), A.PastShare() >= 0.80);
 	TestTrue(FString::Printf(TEXT("a straight charge beats it at most 1 time in 5 (%.1f %%)"), 100.0 * B.PastShare()), B.PastShare() <= 0.20);
 	TestTrue(FString::Printf(TEXT("the gap between the two is at least 47 points (%.1f)"), 100.0 * (A.PastShare() - B.PastShare())), A.PastShare() - B.PastShare() >= 0.47);
 	TestTrue(FString::Printf(TEXT("the body between is worth at least 10 points to the clean stop-and-go (%.1f against %.1f with body_shield false)"), 100.0 * A.PastShare(), 100.0 * An.PastShare()), A.PastShare() >= An.PastShare() + 0.10);
-	TestTrue(FString::Printf(TEXT("timing is the skill: the stop begun at 6 m beats the defender at most 1 time in 4 (%.1f %%)"), 100.0 * L.PastShare()), L.PastShare() <= 0.25);
+	// Lane A121: the window moved about 1.5 m toward the defender (6 m: 2.5 -> 23.5 %; 5 m stays 0): the timing bar is the brief's 5 m, and 6 m against the clean stop.
+	TestTrue(FString::Printf(TEXT("timing is the skill: the stop begun at 5 m beats the defender at most 1 time in 10 (%.1f %%)"), 100.0 * Br.PastShare()), Br.PastShare() <= 0.10);
+	TestTrue(FString::Printf(TEXT("timing is the skill: the stop begun at 6 m is at least 40 points worse than the clean one (%.1f %%)"), 100.0 * L.PastShare()), L.PastShare() <= A.PastShare() - 0.40);
 	TestTrue(FString::Printf(TEXT("the mouse is the skill: with the blade left ahead the stop-and-go is at least 20 points worse (%.1f %%)"), 100.0 * M.PastShare()), M.PastShare() <= A.PastShare() - 0.20);
 	// Determinism of the scene: the same seed twice is the same carry.
 	const FRun R1 = Carry(*C, 7, Go), R2 = Carry(*C, 7, Go);
@@ -375,6 +395,182 @@ bool FJamMovementPassiveTake::RunTest(const FString& Parameters)
 	return true;
 }
 
+// Lane A121 (track F2, evolution 2; R-0049 point 2): game.stick.take_grace_frames. A skater that has just won the puck cannot be poked or lifted for that many
+// frames. The rule in a staged scene (a lift, the lift back, the poke back and its stumble), then in play: three minutes of pro hockey with the grace and
+// without, every stick takeaway timed from the frame its victim won the puck.
+namespace JamCarrierSkillTests
+{
+	struct FTakeCount
+	{
+		JamAI::FJamSimAdapter* Sim = nullptr;
+		int64 LastFrame = -1;
+		int32 Owner = -1;                 // the owner at the end of the previous frame
+		int64 WonFrame = -1;              // the frame it won the puck
+		int32 LiftPresses = 0, PokePresses = 0, CleanLifts = 0, CleanPokes = 0, Wins = 0;
+		int32 Under30 = 0, MinHeld = 1 << 30;
+		TArray<int32> Held;               // frames each stick takeaway's victim had held the puck
+	};
+
+	void TakeTrace(void* Ctx, const JamAI::FJamAIWorld&, const JamAI::FJamAIInput*, const JamAI::FJamBrain&, int64_t, bool)
+	{
+		FTakeCount& C = *static_cast<FTakeCount*>(Ctx);
+		const UJamSim* Sim = C.Sim->GetSim();
+		if (!Sim || Sim->GetFrame() == C.LastFrame) return;
+		C.LastFrame = Sim->GetFrame();
+		for (const FJamSkaterState& S : Sim->GetSkaters()) { if (S.bLiftThisFrame) ++C.LiftPresses; if (S.bPokeThisFrame) ++C.PokePresses; }
+		static const FName Clean(TEXT("clean"));
+		for (const FJamSimEvent& E : Sim->GetFrameEvents())
+		{
+			const bool bLift = E.Name == JamEvents::Lift && E.Strength > 0.5f, bPoke = E.Name == JamEvents::Poke && E.Kind == Clean && E.Strength > 0.5f;
+			if (!bLift && !bPoke) continue;
+			if (bLift) ++C.CleanLifts; else ++C.CleanPokes;
+			if (C.Owner >= 0 && C.Owner != E.Who && Sim->GetSkaters()[C.Owner].Team != Sim->GetSkaters()[E.Who].Team)
+			{
+				const int32 Held = static_cast<int32>(Sim->GetFrame() - C.WonFrame);
+				C.Held.Add(Held);
+				C.MinHeld = FMath::Min(C.MinHeld, Held);
+				if (Held <= 30) ++C.Under30;
+			}
+		}
+		const int32 Now = Sim->GetTakeOwner();
+		if (Now >= 0 && Now != C.Owner) { C.WonFrame = Sim->GetFrame(); ++C.Wins; }
+		C.Owner = Now;
+	}
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamMovementTakeGrace, "Jam.Core.Movement.TakeGrace", JamCarrierSkillTests::Flags)
+bool FJamMovementTakeGrace::RunTest(const FString& Parameters)
+{
+	using namespace JamCarrierSkillTests;
+	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
+	if (!C) return false;
+	TestEqual(TEXT("game.stick.take_grace_frames is 30 when the key is absent"), C->Game.Stick.TakeGraceFrames, 30);
+	FJamGameConfig On = C->Game, Off = C->Game;
+	Off.Stick.TakeGraceFrames = 0;
+	// The scene: the human carries a placed puck (no grace: a placed puck is not won) facing an opponent that stands in front of it and lifts the puck (it
+	// wins it: the grace starts). The human presses back Wait frames after the lift: a lift, or a poke with its blade on the puck.
+	// Returns the frame (after the opponent's lift) on which the human had the puck back, or -1 inside 20 frames of its press.
+	struct FBack { int32 GraceAtWin = -1, Owner = -1, BackFrame = -1, Stumble = 0; bool bCleanBack = false, bOppTook = false; };
+	auto Back = [&](const FJamGameConfig& G, int32 Wait, bool bLift) -> FBack
+	{
+		FBack R;
+		int32 Me = -1, Def = -1;
+		UJamSim* Sim = ShieldScene(G, 0.0, FVector2D(1, 0), FVector2D(1.6, 0.6), Me, Def);
+		TArray<FJamInput> In;
+		In.SetNum(Sim->GetSkaters().Num());
+		In[Me].Stick = FVector2D(1, 0);
+		In[Def].bLift = true;
+		Sim->Step(In);
+		In[Def] = FJamInput();
+		R.bOppTook = Sim->GetPuck().LastTouch == Def;
+		// The puck comes to the opponent's blade (unaimed: an aim that followed the puck would be a sweep, with its own shield); the human waits.
+		int32 F = 0;
+		for (; F < Wait; ++F)
+		{
+			Sim->Step(In);
+			if (R.GraceAtWin < 0 && Sim->CarrierIndex() == Def) { R.GraceAtWin = Sim->GetSkaters()[Def].TakeGraceLeft; R.Owner = Sim->GetTakeOwner(); }
+		}
+		for (int32 K = 0; K < 20; ++K, ++F)
+		{
+			const FVector2D ToPuck = Sim->GetPuck().Pos - Sim->GetSkaters()[Me].Pos;
+			In[Me] = FJamInput();
+			In[Me].Stick = ToPuck.GetSafeNormal() * FMath::Clamp((ToPuck.Size() - UJamSim::SkaterRadius) / FMath::Max(0.01, G.Stick.ReachM), 0.2, 1.0);
+			if (K == 0) { In[Me].bLift = bLift; In[Me].bPoke = !bLift; }
+			Sim->Step(In);
+			if (R.GraceAtWin < 0 && Sim->CarrierIndex() == Def) { R.GraceAtWin = Sim->GetSkaters()[Def].TakeGraceLeft; R.Owner = Sim->GetTakeOwner(); }
+			for (const FJamSimEvent& E : Sim->GetFrameEvents()) if ((E.Name == JamEvents::Poke || E.Name == JamEvents::Lift) && E.Who == Me && E.Strength > 0.5f) R.bCleanBack = true;
+			R.Stumble = FMath::Max(R.Stumble, Sim->GetSkaters()[Me].StumbleFrames);
+			if (R.BackFrame < 0 && Sim->GetPuck().LastTouch == Me) R.BackFrame = F;
+		}
+		return R;
+	};
+	for (const bool bLift : { true, false })
+	{
+		const TCHAR* What = bLift ? TEXT("lift") : TEXT("poke");
+		const FBack Early = Back(On, 6, bLift), Late = Back(On, 40, bLift), EarlyOff = Back(Off, 6, bLift);
+		AddInfo(FString::Printf(TEXT("TAKEGRACE the %s back: 6 frames after the take: clean %d, back at frame %d, stumble %d (grace at the win %d, owner %d); 40 frames after: clean %d, back at %d; take_grace_frames 0, 6 frames after: clean %d, back at %d, stumble %d"),
+			What, Early.bCleanBack ? 1 : 0, Early.BackFrame, Early.Stumble, Early.GraceAtWin, Early.Owner, Late.bCleanBack ? 1 : 0, Late.BackFrame, EarlyOff.bCleanBack ? 1 : 0, EarlyOff.BackFrame, EarlyOff.Stumble));
+		TestTrue(FString::Printf(TEXT("%s: the scene's opponent takes the placed puck (a placed puck gives its first carrier no grace)"), What), Early.bOppTook && Late.bOppTook && EarlyOff.bOppTook);
+		TestTrue(FString::Printf(TEXT("%s: the winner's grace is up (%d of 30)"), What, Early.GraceAtWin), Early.GraceAtWin > 20 && Early.GraceAtWin <= 30);
+		TestFalse(FString::Printf(TEXT("%s back inside the grace is refused"), What), Early.bCleanBack);
+		TestTrue(FString::Printf(TEXT("%s back after the grace takes the puck"), What), Late.bCleanBack);
+		TestTrue(FString::Printf(TEXT("%s back at once takes it with take_grace_frames 0, as before"), What), EarlyOff.bCleanBack);
+		TestEqual(FString::Printf(TEXT("%s: take_grace_frames 0 leaves no grace"), What), EarlyOff.GraceAtWin, 0);
+		if (!bLift) TestEqual(TEXT("a poke the grace refused costs no stumble"), Early.Stumble, 0);
+	}
+	// In play: hockey.regular at pro, the regular playtester and nine bots, 3 seeds of 10 800 frames (9 minutes), with the grace and with its neutral value.
+	FTakeCount Sum[2];
+	for (int32 Arm = 0; Arm < 2; ++Arm)
+	{
+		for (uint64 Seed = 1; Seed <= 3; ++Seed)
+		{
+			UJamCartridge* M = Copy(*C);
+			M->Game.Rules.ScoreToWin = 99;
+			M->Game.Rules.bPenalties = false;
+			if (Arm == 1) M->Game.Stick.TakeGraceFrames = 0;
+			JamAI::FJamSimAdapter Sim(*M);
+			FTakeCount Count;
+			Count.Sim = &Sim;
+			const JamAI::FJamMatchConfig Cfg = JamAI::ToMatchConfigResolved(*M, TEXT("pro"));
+			const JamAI::FJamPlaytestStats S = JamAI::RunPlaytestMatch(Sim, Cfg, Seed, JamAI::EPlaytester::Regular, 10800, M->Game.Shot.ChargeFramesMax, false, &TakeTrace, &Count, 1);
+			Count.Held.Sort();
+			AddInfo(FString::Printf(TEXT("TAKEGRACE match pro seed %llu, take_grace_frames %d: %lld frames, %d:%d, hash %016llx | lift presses %d, clean lifts %d, poke presses %d, clean pokes %d, pucks won %d | stick takeaways %d, shortest hold before one %d frames, median %d, inside 30 frames %d"),
+				Seed, M->Game.Stick.TakeGraceFrames, static_cast<long long>(S.Frames), S.GoalsFor, S.GoalsAgainst, static_cast<unsigned long long>(S.Hash), Count.LiftPresses, Count.CleanLifts, Count.PokePresses, Count.CleanPokes, Count.Wins,
+				Count.Held.Num(), Count.Held.Num() ? Count.MinHeld : -1, Count.Held.Num() ? Count.Held[Count.Held.Num() / 2] : -1, Count.Under30));
+			FTakeCount& T = Sum[Arm];
+			T.LiftPresses += Count.LiftPresses; T.PokePresses += Count.PokePresses; T.CleanLifts += Count.CleanLifts; T.CleanPokes += Count.CleanPokes; T.Wins += Count.Wins;
+			T.Under30 += Count.Under30; T.MinHeld = FMath::Min(T.MinHeld, Count.MinHeld); T.Held.Append(Count.Held);
+		}
+	}
+	for (int32 Arm = 0; Arm < 2; ++Arm)
+	{
+		FTakeCount& T = Sum[Arm];
+		T.Held.Sort();
+		AddInfo(FString::Printf(TEXT("TAKEGRACE pro, 9 minutes, take_grace_frames %d: per 104 s: lift presses %.0f, clean lifts %.1f, poke presses %.0f, clean pokes %.1f, pucks won %.0f | stick takeaways %d, shortest hold %d frames, median %d, inside 30 frames %d"),
+			Arm == 0 ? C->Game.Stick.TakeGraceFrames : 0, T.LiftPresses * 104.0 / 540.0, T.CleanLifts * 104.0 / 540.0, T.PokePresses * 104.0 / 540.0, T.CleanPokes * 104.0 / 540.0, T.Wins * 104.0 / 540.0,
+			T.Held.Num(), T.Held.Num() ? T.MinHeld : -1, T.Held.Num() ? T.Held[T.Held.Num() / 2] : -1, T.Under30));
+	}
+	TestTrue(TEXT("pucks were taken by a stick in play, with the grace"), Sum[0].Held.Num() > 10);
+	TestEqual(TEXT("with the grace no carrier loses the puck to a stick inside half a second of winning it"), Sum[0].Under30, 0);
+	TestTrue(FString::Printf(TEXT("the shortest hold before a stick takeaway is more than 30 frames (%d)"), Sum[0].MinHeld), Sum[0].MinHeld > 30);
+	TestTrue(FString::Printf(TEXT("without it some did (%d inside 30 frames): the rule has something to do"), Sum[1].Under30), Sum[1].Under30 > 0);
+	return true;
+}
+
+// Lane A121 (track F2, evolution 2, the brief's point 4): the late answer inside 7 m. A player who reacts late (6 m from a charging pro) has an answer: no
+// stop, the cut with the spin or with the deke tap (FJamCarryDrill::Late, jam.ctrl.CarryScript 3 and 4). Inside 4 m nothing answers.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamMovementLateAnswer, "Jam.Core.Movement.LateAnswer", JamCarrierSkillTests::Flags)
+bool FJamMovementLateAnswer::RunTest(const FString& Parameters)
+{
+	using namespace JamCarrierSkillTests;
+	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
+	if (!C) return false;
+	UJamCartridge* E1 = Copy(*C);   // lane A121's neutral block
+	E1->Game.Stick.TakeGraceFrames = 0; E1->Game.Skater.ReverseBrakeDecel = 20; E1->Game.Skater.bBurstOwnStop = false;
+	FScript StopAt6 = DefaultGo();
+	StopAt6.BrakeAtM = 6.0;
+	const FShare Cut6 = Share(*C, FScript::Late(0), 200), Spin6 = Share(*C, FScript::Late(1), 200), Deke6 = Share(*C, FScript::Late(2), 200), Stop6 = Share(*C, StopAt6, 200);
+	const FShare Spin4 = Share(*C, FScript::Late(1, 4.0), 200), Deke4 = Share(*C, FScript::Late(2, 4.0), 200);
+	const FShare Cut6n = Share(*E1, FScript::Late(0), 200), Spin6n = Share(*E1, FScript::Late(1), 200), Deke6n = Share(*E1, FScript::Late(2), 200);
+	AddInfo(FString::Printf(TEXT("LATE pro from 6 m, the cut alone: %s"), *Cut6.Line()));
+	AddInfo(FString::Printf(TEXT("LATE pro from 6 m, the spin with the cut: %s"), *Spin6.Line()));
+	AddInfo(FString::Printf(TEXT("LATE pro from 6 m, the deke tap with the cut: %s"), *Deke6.Line()));
+	AddInfo(FString::Printf(TEXT("LATE pro from 6 m, the stop-and-go: %s"), *Stop6.Line()));
+	AddInfo(FString::Printf(TEXT("LATE pro from 4 m, the spin with the cut: %s"), *Spin4.Line()));
+	AddInfo(FString::Printf(TEXT("LATE pro from 4 m, the deke tap with the cut: %s"), *Deke4.Line()));
+	AddInfo(FString::Printf(TEXT("LATE pro from 6 m under lane A121's neutral block: the cut alone: %s"), *Cut6n.Line()));
+	AddInfo(FString::Printf(TEXT("LATE pro from 6 m under lane A121's neutral block: the spin with the cut: %s"), *Spin6n.Line()));
+	AddInfo(FString::Printf(TEXT("LATE pro from 6 m under lane A121's neutral block: the deke tap with the cut: %s"), *Deke6n.Line()));
+	TestEqual(TEXT("every scene set up"), Cut6.Ends[Setup] + Spin6.Ends[Setup] + Deke6.Ends[Setup] + Stop6.Ends[Setup] + Spin4.Ends[Setup] + Deke4.Ends[Setup], 0);
+	// The brief's bar: from 6 m the carrier passes a pro at least one time in three (measured: the spin 100, the deke 56.5, the cut alone 64.5).
+	TestTrue(FString::Printf(TEXT("from 6 m the spin with the cut passes a pro at least one time in three (%.1f %%)"), 100.0 * Spin6.PastShare()), Spin6.PastShare() >= 1.0 / 3.0);
+	TestTrue(FString::Printf(TEXT("from 6 m the deke tap with the cut passes a pro at least one time in three (%.1f %%)"), 100.0 * Deke6.PastShare()), Deke6.PastShare() >= 1.0 / 3.0);
+	TestTrue(FString::Printf(TEXT("the spin is the surer late answer (%.1f against the cut alone %.1f)"), 100.0 * Spin6.PastShare(), 100.0 * Cut6.PastShare()), Spin6.PastShare() >= Cut6.PastShare());
+	TestTrue(FString::Printf(TEXT("late, a stop is the wrong answer (%.1f against the cut alone %.1f)"), 100.0 * Stop6.PastShare(), 100.0 * Cut6.PastShare()), Stop6.PastShare() <= Cut6.PastShare() - 0.20);
+	TestTrue(FString::Printf(TEXT("inside 4 m nothing answers more than one time in two (the spin %.1f, the deke %.1f)"), 100.0 * Spin4.PastShare(), 100.0 * Deke4.PastShare()), Spin4.PastShare() <= 0.5 && Deke4.PastShare() <= 0.5);
+	return true;
+}
+
 // Outside the gate (Bar.*): the carry scene over the keys and the script's numbers. Rows come from Game/logs/a102/sweep.txt when it exists (one row a line:
 // "name | key=value, key=value"; # starts a comment), so one build serves every sweep; without the file, the rows of docs/experiments/MOVEMENT-2.md section 3.
 // Keys of the game: burst.frames, burst.accel_mult, reverse_brake_decel, brake_reach (code only), carry_reach_mult, carry_speed_mult, body_shield, passive_take,
@@ -387,8 +583,8 @@ bool FJamMovementStopAndGoSweep::RunTest(const FString& Parameters)
 	UJamCartridge* Base = LoadPreset(*this, TEXT("hockey.regular"));
 	if (!Base) return false;
 	TArray<FString> Rows;
-	const FString File = FPaths::Combine(FPaths::ProjectDir(), TEXT("logs/a102/sweep.txt"));
-	if (!FFileHelper::LoadFileToStringArray(Rows, *File))
+	const FString File = FPaths::Combine(FPaths::ProjectDir(), TEXT("logs/a102/sweep.txt")), File2 = FPaths::Combine(FPaths::ProjectDir(), TEXT("logs/a121/sweep.txt"));
+	if (!FFileHelper::LoadFileToStringArray(Rows, *File2) && !FFileHelper::LoadFileToStringArray(Rows, *File))
 	{
 		Rows = {
 			TEXT("defaults |"),
@@ -426,6 +622,14 @@ bool FJamMovementStopAndGoSweep::RunTest(const FString& Parameters)
 			K.TrimStartAndEndInline();
 			const double V = FCString::Atod(*VS.TrimStartAndEnd());
 			if (K == TEXT("burst.frames")) G.Skater.BurstFrames = FMath::RoundToInt32(V);
+			else if (K == TEXT("burst.own_stop")) G.Skater.bBurstOwnStop = V != 0.0;                 // lane A121
+			else if (K == TEXT("burst.carry_accel_mult")) G.Skater.BurstCarryAccelMult = V;         // lane A121 (code only)
+			else if (K == TEXT("take_grace")) G.Stick.TakeGraceFrames = FMath::RoundToInt32(V);     // lane A121
+			else if (K == TEXT("answer")) Go.Answer = FMath::RoundToInt32(V);                       // lane A121: 1 = the spin, 2 = the deke tap, with the cut
+			else if (K == TEXT("spin.frames")) G.Skater.SpinFrames = FMath::RoundToInt32(V);
+			else if (K == TEXT("spin.speed_mult")) G.Skater.SpinSpeedMult = V;
+			else if (K == TEXT("deke.offset_m")) G.Stick.DekeOffsetM = V;
+			else if (K == TEXT("deke.commit_frames")) G.Stick.DekeCommitFrames = FMath::RoundToInt32(V);
 			else if (K == TEXT("burst.accel_mult")) G.Skater.BurstAccelMult = V;
 			else if (K == TEXT("reverse_brake_decel")) G.Skater.ReverseBrakeDecel = V;
 			else if (K == TEXT("brake_reach")) G.Stick.BrakeReachMult = V;

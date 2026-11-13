@@ -238,6 +238,21 @@ uint64 JamNetFnv64(const TArray<uint8>& Bytes)
 
 FJamInput FJamNetScriptedHuman::Think(const UJamSim& Sim, int32 Me)
 {
+	FJamInput In = ThinkBase(Sim, Me);
+	if (!bAllVerbs || !Sim.GetSkaters().IsValidIndex(Me) || Sim.GetPhase() != EJamSimPhase::Playing) { SaucerHold = 0; return In; }
+	// Lane A120: the verbs A38's script never pressed, on a fixed beat of the frame so both machines' logs can be read against each other.
+	const int64 Frame = Sim.GetFrame();
+	if (In.bPass && SaucerHold == 0) SaucerHold = FMath::Max(1, Sim.GetConfig().Pass.SaucerHalfFrames) + 4;   // the pass becomes a held saucer
+	if (SaucerHold > 0) { In.bPass = false; In.bShoot = false; In.bShootHeld = false; In.bPassHeld = true; --SaucerHold; return In; }   // release on the frame after
+	In.bSprint = (Frame % 300) < 150;
+	if ((Frame % 600) >= 450 && (Frame % 600) < 470 && !In.bShootHeld) { In.bBrake = true; In.bSprint = false; }
+	if (Frame % 600 == 400) In.bSpin = true;
+	if (Frame % 180 == 90) In.bAbility = true;
+	return In;
+}
+
+FJamInput FJamNetScriptedHuman::ThinkBase(const UJamSim& Sim, int32 Me)
+{
 	FJamInput In;
 	if (!Sim.GetSkaters().IsValidIndex(Me)) return In;
 	const FJamSkaterState& S = Sim.GetSkaters()[Me];

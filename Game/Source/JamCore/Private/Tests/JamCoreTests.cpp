@@ -328,10 +328,11 @@ bool FJamFeel::RunTest(const FString& Parameters)
 	In[Me].Move = FVector2D(1, 0);
 	int32 ToTop = -1;
 	for (int32 F = 1; F <= 120; ++F) { Sim->Step(In); if (ToTop < 0 && Sim->GetSkaters()[Me].Vel.Size() >= 7.99) ToTop = F; }
-	AddInfo(FString::Printf(TEXT("0 to 8 m/s in %d frames (Godot: about 40; lane A93's first-step burst: 23)"), ToTop));
-	// Lane A93 (R-0045 law 3): the first-step burst (acceleration x 1.8 under 2 m/s and for 20 frames after) takes 0 to 8 m/s from 41 frames to 23; the
-	// 35..45 window holds with skater.burst.frames 0 (Jam.Core.Movement.Burst measures both).
-	TestTrue(TEXT("reaches top speed in 20..27 frames (35..45 before the first-step burst)"), ToTop >= 20 && ToTop <= 27);
+	AddInfo(FString::Printf(TEXT("0 to 8 m/s in %d frames (Godot: about 40; lane A93's first-step burst from rest: 23; lane A121: a standing skater has no burst)"), ToTop));
+	// Lane A93 (R-0045 law 3): the first-step burst (acceleration x 1.8 for 20 frames) took 0 to 8 m/s from 41 frames to 23. Lane A121 (track F2;
+	// skater.burst.own_stop, default true): the first step is earned by a stop or a cut of the skater's own, so a skater that merely stands is back in the
+	// 35..45 window; Jam.Core.Movement.Burst measures the burst itself (cases a and b with own_stop false, case d the earned step).
+	TestTrue(TEXT("a standing skater reaches top speed in 35..45 frames (20..27 with the burst, which a stop or a cut of its own earns)"), ToTop >= 35 && ToTop <= 45);
 	In[Me].Move = FVector2D::ZeroVector;
 	Sim->SetSkater(Me, FVector2D(-55, -10), FVector2D(8, 0), 0);
 	for (int32 F = 0; F < 300; ++F) Sim->Step(In);

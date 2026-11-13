@@ -195,6 +195,8 @@ void UJamSim::Restart()
 		S.GraceFrames = 0;   // lane A113
 		S.ContactGraced = S.ChecksSoft = S.ChecksGraced = S.ChecksMissed = 0;
 		S.LastCarryFrame = -1000;
+		S.TakeGraceLeft = 0;       // lane A121
+		S.bBurstEarned = false;
 		S.OneTimers = S.Breakaways = S.Dekes = 0;
 		S.PassesReceived = 0;
 		S.SettleFrames = 0;
@@ -723,6 +725,8 @@ void UJamSim::FaceoffReset()
 		S.DekeFrames = 0;
 		S.DekeSide = 0;
 		S.SweepFrames = S.SweepSide = 0;   // lane A51: a faceoff ends the sweep shield and the spin
+		S.TakeGraceLeft = 0;               // lane A121: and the take grace (the draw's winner wins the puck anew)
+		S.bBurstEarned = false;            // lane A121: at a faceoff everybody merely stands
 		S.SpinFrames = S.SpinLength = 0;
 		if (S.InBox()) { S.Pos = S.PrevPos = BoxPos(S.Team); continue; }
 		S.Pos = FaceoffDot + S.SpawnPos * Shift;
@@ -753,6 +757,7 @@ void UJamSim::FaceoffReset()
 	Puck.Vel = FVector2D::ZeroVector;
 	Puck.Z = Puck.VZ = Puck.PrevZ = 0.0;   // R-0035 (lane A52): the drop lands on the ice
 	Puck.LastTouch = -1;
+	TakeOwner = -1;   // lane A121
 	Puck.ShotgunFrames = 0; Puck.ShotgunBy = -1; Puck.ShotgunMul = 1.0;   // lane A84: a faceoff ends a shotgun and a slow puck in flight
 	Puck.SlowFrames = 0; Puck.SlowBy = -1; Puck.SlowMul = 1.0;
 	DekeCommitFrames = 0;
@@ -933,6 +938,9 @@ void UJamSim::SetPuck(const FVector2D& Pos, const FVector2D& Vel, double Z, doub
 	Puck.Vel = Vel;
 	Puck.Z = Puck.PrevZ = FMath::Max(0.0, Z);   // R-0035 (lane A52)
 	Puck.VZ = VZ;
+	// Lane A121 (R-0049 point 2): a puck placed by a scene (a test, a drill) is not won: whoever carries it first has no take grace. Only where the grace
+	// is on, so game.stick.take_grace_frames 0 leaves no trace.
+	if (Config.Stick.TakeGraceFrames > 0) { TakeOwner = TakeOwnerPlaced; for (FJamSkaterState& S : Skaters) S.TakeGraceLeft = 0; }
 }
 
 void UJamSim::SetSkater(int32 Index, const FVector2D& Pos, const FVector2D& Vel, double Yaw)
@@ -1170,10 +1178,20 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 	}
 
 	// Possession flag for the visuals: last toucher with the puck in reach.
+	// Lane A121 (R-0049 point 2): the take grace. The owner is the skater that has carried since the puck last changed hands; the puck coming to anybody
+	// else is a puck won, and its new carrier cannot be poked or lifted for stick.take_grace_frames (set at the end of the frame it won it: the next
+	// take_grace_frames frames are refused). A carrier's own flicker (a stumble, its own rebound, the puck out of reach for a frame) never re-arms it.
+	if (TakeOwner >= 0 && Puck.LastTouch != TakeOwner) TakeOwner = -1;
 	for (FJamSkaterState& S : Skaters)
 	{
 		S.bHasPuck = (Puck.LastTouch == S.Index) && CarrierIndex() == S.Index;
 		if (S.bHasPuck) S.LastCarryFrame = Frame;
+		if (S.TakeGraceLeft > 0 && (Puck.LastTouch != S.Index || --S.TakeGraceLeft < 0)) S.TakeGraceLeft = 0;
+		if (S.bHasPuck && TakeOwner != S.Index)
+		{
+			S.TakeGraceLeft = TakeOwner == TakeOwnerPlaced ? 0 : FMath::Max(0, Config.Stick.TakeGraceFrames);
+			TakeOwner = S.Index;
+		}
 	}
 	// Lane A32: breakaway, carry and clock read-outs (after everything moved; emits only).
 	if (Phase == EJamSimPhase::Playing) StepReadouts();
@@ -1224,15 +1242,20 @@ void UJamSim::StepSkater(FJamSkaterState& S, const FJamInput& In)
 		if (bCut) for (FVector2D& Was : S.MoveHist) Was = MoveDir;   // one cut arms once: the old heading is forgotten
 		S.MoveHist[S.MoveHistAt] = MoveDir;
 		S.MoveHistAt = (S.MoveHistAt + 1) % BurstCutFrames;
-		const bool bArm = bCut || S.Vel.SizeSquared() < BurstSlowSpeed * BurstSlowSpeed;
+		// Lane A121 (track F2; skater.burst.own_stop): the first step is earned. Being slow arms the burst only after a stop of the skater's own: a brake took
+		// speed off it (bBurstEarned, set below in the frame the brake acts) and it has not been back at BurstSlowSpeed since. A skater that merely stands starts
+		// at the normal acceleration: the burst no longer helps the defender that charges from a standstill more than the carrier that stopped (MOVEMENT-3.md).
+		if (!C.bBurstOwnStop) S.bBurstEarned = false;
+		const bool bArm = bCut || (S.Vel.SizeSquared() < BurstSlowSpeed * BurstSlowSpeed && (!C.bBurstOwnStop || S.bBurstEarned));
 		if (bArm) S.BurstLeft = C.BurstFrames;
 		bFirstStep = S.BurstLeft > 0;
 		if (!bArm && S.BurstLeft > 0) --S.BurstLeft;
 	}
-	else S.BurstLeft = 0;
+	else { S.BurstLeft = 0; S.bBurstEarned = false; }
 	S.bBraking = S.bReverseBraking = false;
 	const double Speed = Eff(EJamStat::SkaterSpeed, S.Index) * BurstMul * SprintMul * CarryMul;
-	const double Accel = Eff(EJamStat::SkaterAccel, S.Index) * BurstMul * SprintMul * CarryMul * (bFirstStep ? FMath::Max(1.0, C.BurstAccelMult) : 1.0);
+	const double FirstStepMul = bCarrying && C.BurstCarryAccelMult > 0.0 ? C.BurstCarryAccelMult : C.BurstAccelMult;   // lane A121: the carrier's own (code only, 0 = everyone's)
+	const double Accel = Eff(EJamStat::SkaterAccel, S.Index) * BurstMul * SprintMul * CarryMul * (bFirstStep ? FMath::Max(1.0, FirstStepMul) : 1.0);
 	const double TurnRate = Eff(EJamStat::SkaterTurnRate, S.Index);
 	const double Grip = Eff(EJamStat::SkaterGrip, S.Index);
 	// Glide friction scales with the ice: glide_drag was measured at ice_friction 0.015 (DEFAULTS.md). R-0019: the zone under the skater scales speed and glide.
@@ -1310,6 +1333,13 @@ void UJamSim::StepSkater(FJamSkaterState& S, const FJamInput& In)
 		}
 	}
 	S.bReverseBrakeLast = S.bReverseBraking;
+	// Lane A121 (skater.burst.own_stop): a brake of the skater's own (this frame's, at more than 1 m/s) earns the next first step; back at speed without
+	// braking, the earned step is spent. Hashed state only: no read-out of an earlier frame feeds the sim.
+	if (C.bBurstOwnStop && C.BurstFrames > 0)
+	{
+		if (S.bBraking) S.bBurstEarned = true;
+		else if (S.Vel.SizeSquared() >= BurstSlowSpeed * BurstSlowSpeed) S.bBurstEarned = false;
+	}
 	const FVector2D Before = S.Pos;
 	S.Pos += S.Vel * DT;
 	S.DistanceM += FVector2D::Distance(Before, S.Pos);
@@ -1388,6 +1418,7 @@ bool UJamSim::IsPokeShielded(const FJamSkaterState& Poker, const FJamSkaterState
 {
 	if (Carrier.SpinFrames > 0) return true;   // the body is between
 	if (IsBodyShielded(Poker, Carrier)) return true;   // lane A102 (track F2): the body is between without a button
+	if (InTakeGrace(Carrier) && Poker.Team != Carrier.Team) return true;   // lane A121 (R-0049 point 2): it has just won the puck
 	if (Carrier.SweepFrames <= 0 || Carrier.SweepSide == 0) return false;
 	// R-0044 as amended (lane A93, on lane A91's measurement): the shield covers both sides of the body for its window. One cursor crossing was read as two
 	// sweeps, the second flipped the one-sided shield, and a lift 5 frames after the crossing took the puck. SweepSide stays as the read-out of the side the
@@ -1520,7 +1551,9 @@ void UJamSim::ResolvePokes()
 		if (--S.PokeWindow == 0 && S.bPokeArmed)
 		{
 			S.bPokeArmed = false;
-			S.StumbleFrames = Config.Stick.StumbleFrames;
+			// Lane A121 (R-0049 point 2): a poke that ran out on a carrier in its take grace costs no stumble (nobody can see the grace: it refuses, it does not punish).
+			const bool bGraceOnly = Ci >= 0 && Ci != S.Index && Skaters[Ci].Team != S.Team && InTakeGrace(Skaters[Ci]);
+			if (!bGraceOnly) S.StumbleFrames = Config.Stick.StumbleFrames;
 			S.PokeResult = -1;
 			Emit(JamEvents::Poke, S.Index, S.BladePos, 0.f, KindMiss, (Ci >= 0 && Skaters[Ci].Team != S.Team ? Skaters[Ci].Pos : S.BladePos) - S.Pos);   // lane A95: Dir toward the carrier
 		}
@@ -3018,6 +3051,9 @@ uint64 UJamSim::StateHash() const
 		// Lane A113 (R-0049 point 1): the release grace only while it runs, behind a tag (contact.release_grace_frames 0: never, so the neutral value hashes as
 		// before). Main's LockstepStateHash() folds StateHash(), so the lockstep checkpoint covers it too.
 		if (S.GraceFrames != 0) { H.AddI(-113); H.AddI(S.GraceFrames); }
+		// Lane A121: the earned first step and the take grace only while they are up (burst.own_stop false and stick.take_grace_frames 0 hash as before).
+		if (S.bBurstEarned) H.AddI(0x121B);
+		if (S.TakeGraceLeft != 0) H.AddI(S.TakeGraceLeft);
 		// Lane A84: the ability state only once a skater holds one (a cartridge without abilities hashes as before).
 		if (S.AbilitySlot >= 0 || S.AbilitiesUsed > 0 || S.ShieldFrames > 0 || !S.AbilityArmed.IsNone())
 		{
@@ -3026,6 +3062,7 @@ uint64 UJamSim::StateHash() const
 		}
 	}
 	if (DekeCommitFrames != 0) { H.AddI(DekeCommitFrames); H.AddI(DekeCommitSide); H.AddI(DekeCommitSkater); }
+	if (Config.Stick.TakeGraceFrames > 0) H.AddI(TakeOwner);   // lane A121: who would not win the puck by carrying it next
 	H.AddI(FaceoffCountdown);
 	H.AddV(FaceoffDot, 1000.0);
 	H.AddV(PendingFaceoffDot, 1000.0);

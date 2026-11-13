@@ -16,6 +16,10 @@
 // Lane A38: the simulated bad link for measurements (0 / 0 = the real wire). Set on both processes' command lines, e.g.
 // -dpcvars=jam.net.SimDelayMs=40,jam.net.SimLoss=0.02 (40 ms each way = an 80 ms round trip, 2% loss).
 static TAutoConsoleVariable<float> CVarJamNetSimDelayMs(TEXT("jam.net.SimDelayMs"), 0.f, TEXT("Hold every outgoing JamNet datagram this many ms (simulated one-way latency)."));
+// Lane A120 (track Q1): the refusal proof. A guest with this set sends its HELLO with this protocol byte instead of its own (another build, patched).
+static TAutoConsoleVariable<int32> CVarJamNetTestVersion(TEXT("jam.net.TestVersion"), 0, TEXT("> 0: the guest's HELLO carries this protocol byte (the refusal proof: a guest on another build)."));
+// Lane A120: a fixed UDP port for this process (host or guest), for runs on one machine beside other lanes' processes; 0 = the host scans BasePort.., the guest any.
+static TAutoConsoleVariable<int32> CVarJamNetPort(TEXT("jam.net.Port"), 0, TEXT("> 0: bind exactly this UDP port (host and guest). The host's invite codes then read ip:port."));
 static TAutoConsoleVariable<float> CVarJamNetSimLoss(TEXT("jam.net.SimLoss"), 0.f, TEXT("Drop this fraction of outgoing JamNet datagrams (simulated loss, 0..1)."));
 
 namespace
@@ -84,7 +88,10 @@ void UJamLobbySubsystem::SetState(EJamLobbyState S)
 void UJamLobbySubsystem::Fail(const FString& Why)
 {
 	Error = Why;
-	UE_LOG(LogJamNet, Warning, TEXT("JAMNET lobby failed: %s"), *Why);
+	UE_LOG(LogJamNet, Warning, TEXT("JAMNET lobby failed: %s (%.3f s after the join)"), *Why, JoinedAt > 0.0 ? FPlatformTime::Seconds() - JoinedAt : -1.0);
+	// Lane A120: the unattended proof (jam.net.QuitAtFrame) exits on a failed lobby too, with the screen's text in the log.
+	static IConsoleVariable* QuitAt = IConsoleManager::Get().FindConsoleVariable(TEXT("jam.net.QuitAtFrame"));
+	if (QuitAt && QuitAt->GetInt() > 0) { UE_LOG(LogJamNet, Log, TEXT("JAMNET screen: %s; quitting (jam.net.QuitAtFrame)"), *Why); FPlatformMisc::RequestExit(false); }
 	if (Link && Link->HasPeer()) SendLobby(static_cast<uint8>(JamNet::EType::Bye));
 	ResetSession();
 	SetState(EJamLobbyState::Failed);
@@ -121,14 +128,19 @@ bool UJamLobbySubsystem::Host(const FString& InCut, const FString& Name)
 	if (!ComputeCartridgeHash(Cut, CartridgeHash, Seed, GuestIndex, Why)) { Fail(Why); return false; }
 	Link = MakeUnique<FJamUdpLink>();
 	int32 PortIndex = 0;
-	for (; PortIndex < JamNet::PortSlots; ++PortIndex) if (Link->Bind(JamNet::BasePort + PortIndex) > 0) break;
+	const int32 FixedPort = CVarJamNetPort.GetValueOnGameThread();
+	if (FixedPort > 0) { if (Link->Bind(FixedPort) <= 0) { Fail(FString::Printf(TEXT("UDP port %d is taken (jam.net.Port)"), FixedPort)); return false; } PortIndex = -1; }
+	else for (; PortIndex < JamNet::PortSlots; ++PortIndex) if (Link->Bind(JamNet::BasePort + PortIndex) > 0) break;
 	if (!Link->IsOpen()) { Fail(FString::Printf(TEXT("no free UDP port in %d..%d"), JamNet::BasePort, JamNet::BasePort + JamNet::PortSlots - 1)); return false; }
 	ApplyImpairment(*Link, Seed * 2 + 1);
 	BoundPort = Link->GetBoundPort();
 	TArray<uint32> Addrs = FJamUdpLink::LocalAddresses();
-	for (uint32 Ip : Addrs) { Codes.Add(FJamInviteCode::Encode(Ip, PortIndex)); CodeAddresses.Add(FJamInviteCode::FormatIp(Ip)); }
-	// Loopback last: the two-process test on one machine.
-	Codes.Add(FJamInviteCode::Encode(0x7F000001u, PortIndex)); CodeAddresses.Add(TEXT("127.0.0.1"));
+	Addrs.Add(0x7F000001u);   // loopback last: the two-process test on one machine
+	for (uint32 Ip : Addrs)
+	{
+		Codes.Add(PortIndex >= 0 ? FJamInviteCode::Encode(Ip, PortIndex) : FString::Printf(TEXT("%s:%d"), *FJamInviteCode::FormatIp(Ip), BoundPort));   // lane A120: a fixed port has no code
+		CodeAddresses.Add(FJamInviteCode::FormatIp(Ip));
+	}
 	Driver = NewObject<UJamLockstepDriver>(this);
 	UE_LOG(LogJamNet, Log, TEXT("JAMNET hosting cut=%s seed=%llu port=%d guest_index=%d codes: %s"), *Cut, static_cast<unsigned long long>(Seed), BoundPort, GuestIndex, *GetCodesText().Replace(TEXT("\n"), TEXT(" | ")));
 	SetState(EJamLobbyState::Hosting);
@@ -144,7 +156,7 @@ bool UJamLobbySubsystem::Join(const FString& Code, const FString& Name)
 	uint32 Ip = 0; int32 Port = 0;
 	if (!FJamInviteCode::Decode(Code, Ip, Port)) { Fail(FString::Printf(TEXT("\"%s\" is not an invite code (8 letters and digits, shown as ABCD-EFGH)"), *Code)); return false; }
 	Link = MakeUnique<FJamUdpLink>();
-	if (Link->Bind(0) <= 0) { Fail(TEXT("could not open a UDP socket")); return false; }
+	if (Link->Bind(FMath::Max(0, CVarJamNetPort.GetValueOnGameThread())) <= 0) { Fail(TEXT("could not open a UDP socket")); return false; }
 	ApplyImpairment(*Link, 2);
 	BoundPort = Link->GetBoundPort();
 	Link->SetPeer(Ip, Port);
@@ -190,6 +202,8 @@ void UJamLobbySubsystem::SendLobby(uint8 Type, int32 Flags)
 	M.Flags = Flags;
 	TArray<uint8> Bytes;
 	M.Write(Bytes);
+	const int32 TestVersion = CVarJamNetTestVersion.GetValueOnGameThread();
+	if (!bHost && TestVersion > 0 && Bytes.Num() > 4) Bytes[4] = static_cast<uint8>(TestVersion);
 	Link->Send(Bytes);
 }
 
@@ -250,9 +264,10 @@ void UJamLobbySubsystem::TickLobby()
 		while (Link->Recv(Bytes))
 		{
 			int32 HostVersion = -1;   // lane A104: the host runs another build
-			if (JamNetReadRefuse(Bytes, HostVersion) && HostVersion != JamNet::Version)
+			const int32 MyVersion = CVarJamNetTestVersion.GetValueOnGameThread() > 0 ? CVarJamNetTestVersion.GetValueOnGameThread() : JamNet::Version;   // lane A120: the byte this guest sent
+			if (JamNetReadRefuse(Bytes, HostVersion) && HostVersion != MyVersion)
 			{
-				Fail(FString::Printf(TEXT("the host runs a different build (protocol %d, you have %d): update both"), HostVersion, JamNet::Version));
+				Fail(FString::Printf(TEXT("the host runs a different build (protocol %d, you have %d): update both"), HostVersion, MyVersion));
 				return;
 			}
 			if (!FJamNetLobbyMessage::Read(Bytes, M)) continue;

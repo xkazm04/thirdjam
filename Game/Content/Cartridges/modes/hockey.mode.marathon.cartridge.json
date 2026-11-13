@@ -129,10 +129,6 @@
       "glide_drag": 0.147,
       "brake_decel": 6,
       "check_enabled": true,
-      "breakaway": {
-        "speed_bonus": 0.6,
-        "frames": 240
-      },
       "sprint": {
         "bonus": 0.4,
         "drain_frames": 120,
@@ -155,8 +151,8 @@
       "mode": "timer",
       "goal_pause_frames": 120,
       "offside": false,
-      "penalties": true,
-      "timer_frames": 36000
+      "penalties": false,
+      "timer_frames": 28800
     },
     "teams": [
       {
@@ -216,7 +212,7 @@
     ],
     "ai": {
       "difficulty": "pro",
-      "sprint": 0.5
+      "sprint": 0.25
     },
     "barks": {
       "enabled": true,
@@ -238,11 +234,11 @@
       "radar": true
     },
     "meta": {
-      "pitch": "Ten minutes, endless ice. Pace it, then punish.",
+      "pitch": "Eight minutes, endless ice. Pace it, then go.",
       "facts": [
-        "140 x 70 m, 10:00",
-        "burst +60 % for 4 s",
-        "everyone sprints"
+        "140 x 70 m, 8:00",
+        "sprint +40 % for 2 s",
+        "no whistle, no box"
       ]
     }
   }
