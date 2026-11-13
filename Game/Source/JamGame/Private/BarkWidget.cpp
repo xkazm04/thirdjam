@@ -16,6 +16,28 @@
 #include "HUDWidget.h"
 #include "Camera/PlayerCameraManager.h"
 #include "UObject/UObjectIterator.h"
+#include "HAL/IConsoleManager.h"
+
+// Lane A135 (track U1, evolution 3): bark text on a fixed lane beside the scoreboard (UJamBarkWidget::LanePos). 0 = the bubble over its speaker, as before.
+static TAutoConsoleVariable<int32> CVarJamHudBarkLane(TEXT("jam.hud.BarkLane"), 1,
+	TEXT("1 = a bark's text stands in the scoreboard's row beside its team's score plate (no bubble on a figure, a net label or by the human's skates); 0 = the bubble over its speaker, pushed out of the middle third (the screen of before). Presentation only."), ECVF_Default);
+
+bool UJamBarkWidget::LaneOn() { return CVarJamHudBarkLane.GetValueOnGameThread() != 0; }
+
+bool UJamBarkWidget::LaneMeetsFigure(const FVector2D& Min, const FVector2D& Max, const FVector2D& FeetPx, const FVector2D& HeadPx, float Pad)
+{
+	const double HalfW = FMath::Max(12.0, 0.5 * FVector2D::Distance(FeetPx, HeadPx));
+	const double L = FMath::Min(FeetPx.X, HeadPx.X) - HalfW, R = FMath::Max(FeetPx.X, HeadPx.X) + HalfW;
+	const double T = FMath::Min(FeetPx.Y, HeadPx.Y), B = FMath::Max(FeetPx.Y, HeadPx.Y);
+	return !(R < Min.X - Pad || L > Max.X + Pad || B < Min.Y - Pad || T > Max.Y + Pad);
+}
+
+FVector2D UJamBarkWidget::LanePos(int32 Team, float HalfW, float VW)
+{
+	// The near end stands LaneGapX from the centre; a bubble too long for its side keeps its far end LaneEdgePx inside the frame (and leans on the board).
+	const float X = Team == 0 ? FMath::Max(VW * 0.5f - LaneGapX - HalfW, LaneEdgePx + HalfW) : FMath::Min(VW * 0.5f + LaneGapX + HalfW, VW - LaneEdgePx - HalfW);
+	return FVector2D(X, LaneBottomY);
+}
 
 // Lane A18 (visual layer): the generated bubble (T_UI_Bubble, chalk paper with an ink edge and a tail at the bottom left) drawn as a
 // 9-slice, mirrored when the figure is on the right half of the screen so the tail stays inside the picture; the team colour tints the
@@ -173,6 +195,7 @@ void UJamBarkWidget::ShowBark(const FJamBarkPick& P, AActor* Anchor, int32 Team)
 	if (Pick < 0) return;
 	FJamBarkBubble& B = Bubbles[Pick];
 	B.Speaker = P.Speaker;
+	B.Team = Team;
 	B.Anchor = Anchor;
 	B.ShownFrame = P.Frame;
 	if (B.Text) B.Text->SetText(FText::FromString(P.Text));
@@ -232,6 +255,40 @@ void UJamBarkWidget::Layout()
 		for (FJamBarkBubble& B : Bubbles) { B.ShownFrame = -1000000; if (B.Box) B.Box->SetVisibility(ESlateVisibility::Collapsed); }
 	}
 	const FVector CamLoc = PC && PC->PlayerCameraManager ? PC->PlayerCameraManager->GetCameraLocation() : FVector::ZeroVector;
+	// Lane A135: the lane holds one bubble a side, the newest of a team whose speaker is in the frame and near (the rule of below).
+	const bool bLane = LaneOn();
+	const FJamBarkBubble* LaneOwner[2] = { nullptr, nullptr };
+	if (bLane && PC)
+	{
+		for (const FJamBarkBubble& B : Bubbles)
+		{
+			if (!B.Box || !B.Anchor.IsValid() || OpacityFor(B.ShownFrame, Now) <= 0.f) continue;
+			FVector2D Sp;
+			if (PC->PlayerCameraManager && FVector::Dist(B.Anchor->GetActorLocation(), CamLoc) > MaxBubbleDistanceM * 100.f) continue;
+			if (!UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(PC, B.Anchor->GetActorLocation() + FVector(0, 0, BubbleHeightCm), Sp, false)) continue;
+			if (!(Sp.X > 0.f && Sp.X < VW && Sp.Y > 0.f && Sp.Y < VH)) continue;
+			const int32 Side = B.Team == 0 ? 0 : 1;
+			if (!LaneOwner[Side] || B.ShownFrame > LaneOwner[Side]->ShownFrame) LaneOwner[Side] = &B;
+		}
+	}
+	// Lane A135: is a figure or the puck under a lane box this frame (every skater of the presentation frame, feet to 1.8 m; the puck's ring)?
+	auto LaneCovered = [&](const FVector2D& Min, const FVector2D& Max) -> bool
+	{
+		if (!PC || !P || !P->HasFrame()) return false;
+		const FJamPresentationFrame& F = P->GetFrame();
+		for (const FJamPresentationSkater& Sk : F.Skaters)
+		{
+			const FVector W(Sk.PosM.X * 100.0, Sk.PosM.Y * 100.0, 0.0);
+			FVector2D Feet, Head;
+			if (!UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(PC, W, Feet, false)) continue;
+			if (!UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(PC, W + FVector(0, 0, 180), Head, false)) continue;
+			if (LaneMeetsFigure(Min, Max, Feet, Head)) return true;
+		}
+		FVector2D Puck;
+		if (UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(PC, FVector(F.PuckM.X * 100.0, F.PuckM.Y * 100.0, 0.0), Puck, false)
+			&& LaneMeetsFigure(Min, Max, Puck + FVector2D(0, 14), Puck - FVector2D(0, 14))) return true;
+		return false;
+	};
 	for (FJamBarkBubble& B : Bubbles)
 	{
 		if (!B.Box) continue;
@@ -275,6 +332,16 @@ void UJamBarkWidget::Layout()
 					Pos = PushOutOfMiddle(Pos, FMath::Max(60.f, static_cast<float>(B.Box->GetDesiredSize().X) * 0.5f), BubH, VW, VH);
 					bTail = Pos.Y <= Before.Y + 1.f && FMath::Abs(Pos.X - Before.X) < 1.f;
 				}
+				// Lane A135: the fixed lane beside the team's score plate; no tail; one bubble a side.
+				if (bLane)
+				{
+					const float LaneHalfW = FMath::Max(60.f, static_cast<float>(B.Box->GetDesiredSize().X) * 0.5f);
+					const float LaneH = FMath::Max(40.f, static_cast<float>(B.Box->GetDesiredSize().Y));
+					Pos = LanePos(B.Team, LaneHalfW, VW);
+					bTail = false;
+					if (LaneOwner[B.Team == 0 ? 0 : 1] != &B) bOn = false;
+					if (bOn && LaneCovered(FVector2D(Pos.X - LaneHalfW, Pos.Y - LaneH), FVector2D(Pos.X + LaneHalfW, Pos.Y))) bOn = false;   // the lane yields to a figure under it
+				}
 			}
 		}
 		// Off-screen speakers are heard, not seen (the strip is the commentator's).
@@ -283,7 +350,7 @@ void UJamBarkWidget::Layout()
 		CS->SetPosition(Pos);
 		// The tail side: the art mirrors, the fallback tail moves.
 		if (B.Body && bArt) B.Body->SetRenderScale(FVector2D(bTailLeft ? 1.f : -1.f, 1.f));
-		if (B.Text) if (UOverlaySlot* TS = Cast<UOverlaySlot>(B.Text->Slot)) TS->SetPadding(bArt ? ArtPadding(bTailLeft) : FMargin(14, 7, 14, 7 + TailPx));
+		if (B.Text) if (UOverlaySlot* TS = Cast<UOverlaySlot>(B.Text->Slot)) TS->SetPadding(bArt ? ArtPadding(bTailLeft) : FMargin(14, 7, 14, 7 + ((bLane && !bTail) ? 0.f : TailPx)));
 		if (B.Tail && !bArt)
 		{
 			B.Tail->SetVisibility(bTail ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);

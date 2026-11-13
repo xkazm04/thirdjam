@@ -244,3 +244,170 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools\qa\screen\u1-stills.ps
 python tools/qa/screen/u1-sheet.py tools/qa/screen/out/clay-after      # sheet-1.jpg ...: nine stills a sheet, the middle third outlined
 ```
 One game process at a time on port 4711 (two tiers may run side by side if the second gets its own port: the still names differ by tier).
+
+---
+
+# Part 3: the camera never loses the player (lane A135, track U1, evolution 3, Fri 13 Nov 22:39 to Sat 14 Nov 00:20)
+
+Sources: this track's own stills of evolution 2 (the human out of the frame at the boards), the brief `briefs/A135-U1-evolution-3.md`. Family: `CameraFollow.*`
+framing, `HUDWidget.*` layout and texts, `BarkWidget.*`. Nothing here is sim: no file under `JamCore` changed, no state field was added. Every rule has a
+console variable whose neutral value is the screen of evolution 2. Status and every intermediate number: `status/A135.md`.
+
+**The measure.** The human's *chest* is the point 1 m over his point on the ice. A frame counts as lost when that point is outside the middle third
+([W/3, 2W/3] x [H/3, 2H/3], lane A49's meaning). The probe is in the camera (`jam.camera.Probe N`: a `JAMSCREEN camera` line every N sim frames with the
+running counts; `jam.camera.Log 1`: a `JAMCAM` line per sim frame, read by `tools/qa/screen/u1-camstat.py`).
+
+## What changed, and the neutral value of each
+
+| # | Fault | Rule now | Where | Neutral value |
+|---|---|---|---|---|
+| 1 | The camera lost the human at the boards: on the 100 s pro match the chest was outside the middle third on 436 of 5,989 frames on 90 m (88 of them outside the frame) and on 519 of 5,991 on 140 m. Two causes, read from the per-frame lines: on 298 of the 436 the boards had taken the arm (he turns near a board, the camera ends up over or beside him still looking ahead, until lane A49's sprung budgets catch up); on the other 138 the corner lift's rise outran the pitch spring | A last stage in `StepThirdPerson` holds the chest inside 0.31 of the half frame on every frame (the edge is 0.333; lane A49's own settled bounds are 0.304 and 0.289, so a rig that holds him is not touched). In this order: **the crane** (what the boards take of the arm the camera gains in height, keeping the rig's 6.5 m to the chest; at most 0.2 m a frame), **the pitch** (held within 7 degrees of the bearing to the chest), **the step** (a camera foot the boards pushed in front of him comes back over him: his back at the glass), **the slide** (a chest still off to a side: the foot slides along the camera's own right by exactly what he is outside, inside the boards' inset), and last **the yaw**, only for what the boards did not let the slide take | `UJamFollowCamera::KeepHumanInFrame`, `FJamCameraSettings::KeepHumanFrac`, `KeepRiseM`, `FJamCameraFilter::KeepHeightM` | `jam.camera.KeepHuman 0` (the settings default is 0: every earlier camera test runs the rig of before) |
+| 3 | A bark bubble pushed out of the middle third landed by the human's skates or on a net label; over its speaker it lies on whatever stands behind him | The line stands in the scoreboard's row beside its team's score plate (the human's team left of the board, the other right; near end 262 Slate units from the centre, bottom at 84), no tail, one bubble a side (the newest whose speaker is in the frame). That row is above every net label and the puck's arrow (their own clamps), the prompt's slots and the middle third. The lane yields: a line whose box meets a figure's box on the screen, or the puck, is not drawn that frame (from over the boards that row can be ice) | `UJamBarkWidget::LanePos`, `LaneMeetsFigure`, `Layout` | `jam.hud.BarkLane 0` |
+| 4 | "S AGAINST YOUR MOTION" named the keyboard's key to a player holding a pad | The brake prompt reads the input map for the device last touched: the control that pulls back on `IA_Move` and the one on `IA_Brake`. Keys: `S AGAINST YOUR MOTION, OR HOLD CTRL: STOP, THEN GO`. Pad: `LEFT STICK AGAINST YOUR MOTION, OR HOLD L3: STOP, THEN GO`. A rebinding changes the words; a prompt on screen changes them when the player takes the other device | `UJamHudWidget::BrakeKeysFor`, `BrakePromptFor`, `BrakePromptText`, `LivePromptText`, `WatchInputDevice` | `jam.hud.PromptKeys 0`; `jam.hud.PromptPad -1 / 0 / 1` forces the device |
+
+Item 2 of the brief is stills, not a rule: see "The pill and the prompt's lower slot" below.
+
+**Why the yaw is in it at all.** The brief says to prefer position, height and pitch, because a yaw of the camera's own feeds back through the cursor's aim
+(lane A64). The first two builds used no yaw: the camera came in along the line towards the skater until he was in. That is ill-conditioned (a tenth of
+a metre more of sideways offset moved the camera three metres): 0 frames lost, but 20 degrees of pitch and 3.4 m of camera in one frame. The slide is the
+well-conditioned move by position and takes most of it; what is left is where the boards' inset stops the slide. There the stage turns the camera towards
+him by the angle he would be outside: lane A49's own yaw budget applied to the frame instead of to a spring's target. It is not a lead towards anything, and
+in every settled pose the yaw is the yaw of before. How often it acts is measured below; **its effect on the cursor's aim under a real hand is not measured
+here** (the scripted human reads only the sim).
+
+## Proof
+
+### The gate
+- Editor builds green (eight; the final one, build 8, 23:58).
+- `Automation RunTests Jam`, headless (`-nullrhi -Multiprocess`), on build 8: **194 of 194 Success** in 119 s (`Game/logs/u1-automation-run5.log`, driver
+  `tools/qa/screen/u1-gate.ps1`). The tree had 191; `Jam.Camera.KeepsHuman`, `Jam.Hud.BarkLane` and `Jam.Hud.PromptKeys` are new. Runs 1 to 4 were 193 of
+  194: each time only `Jam.Camera.KeepsHuman`, on a design that was then changed (the two snapping builds, a yaw-only build that turned 19.5 degrees in a
+  frame, and a float-noise threshold in the crane). Only this step of `tools/gate/premerge.ps1` was run by the lane.
+- Hash: `Jam.Core.Determinism` hockey.regular `0ff7ea98d5570484`, hockey.raw `8425610943e6dd92`, in all five runs: the values of main's own premerge logs
+  of 21:56 to 22:34 (`Game/logs/premerge-automation-ue-20261113-223401.log` in the main checkout). Seven source files changed, none under `JamCore`.
+
+### 1: the human in the frame, the real match
+The regular game five a side, pro, the scripted human, 1280 x 720, one off-screen process per cell (`u1-stills.ps1 -CamLog`, 135 s so the probe covers
+6,000 frames). Before = `-Mode base3` (this lane's three rules at their neutral values); the sim is the same match in every run.
+
+| Cell | Build | Chest outside the middle third | Outside the frame | Largest x, y of the half frame (edge 0.333) |
+|---|---|---|---|---|
+| 90 m, before (clay) | 5 | 438 of 6,000 (436 of 5,989 by the per-frame lines) | 88 | 1.257, 2.304 |
+| 90 m clay | 6 | **0 of 6,000** (0 of 5,989) | 0 | 0.310, 0.310 |
+| 90 m night | 8 | **0 of 6,000** (0 of 5,989) | 0 | 0.310, 0.310 |
+| 140 m, before (night) | 5 | 523 of 6,000 (519 of 5,991) | 33 | 1.447, 2.253 |
+| 140 m night | 6 | **0 of 6,000** (0 of 5,991) | 0 | 0.310, 0.319 |
+| 140 m clay | 8 | **0 of 6,000** (0 of 5,991) | 0 | 0.310, 0.319 |
+
+The "before" rows are main's camera to the frame: the lane's first run on the untouched tree (22:55) gave the same 436 and 519. Builds 6 and 8 differ by a
+relative threshold of 1e-5 in the crane (half a micron of camera height in open ice); the two tiers of a rink give the same numbers to the digit.
+
+What the brief asked to keep, on the same 6,000 frames (before -> after):
+
+| | 90 m | 140 m |
+|---|---|---|
+| The puck out of the frame while the human carries it (within 2 m, in play) | 6 -> **0** of 1,531 | 7 -> **2** of 2,718 |
+| The attacked net out of the frame while he is inside the blue line and the camera looks up the rink | 67 -> 65 of 397 | 189 -> 187 of 533 |
+| Largest step in one frame: camera | 68 -> 72 cm | 68 -> 70 cm |
+| Largest step in one frame: pitch | 1.5 -> 5.3 deg | 1.5 -> 4.7 deg |
+| Largest step in one frame: yaw (his own spin turns it 5 deg a frame) | 5.1 -> 6.0 deg | 6.4 -> 8.8 deg |
+
+And frame by frame against the "before" run of the same match (the camera's yaw, pitch and height of every sim frame, both logs):
+
+| | 90 m (5,989 frames) | 140 m (5,991 frames) |
+|---|---|---|
+| The whole pose is the pose of before | 5,322 | 5,261 |
+| The yaw is not the yaw of before | 204 (at most 24.7 deg; over 10 deg on 87) | 244 (at most 27.4 deg; over 10 deg on 119) |
+| ... of them frames the old rig held him inside 0.31 | 0 | 0 |
+| The pitch differs / the height differs | 548 / 459 | 510 / 312 |
+
+**Not achieved, said plainly:**
+- *The net he attacks comes into frame inside the blue line*: unchanged (16 % and 35 % of those frames without it, before and after). Holding the human
+  from over the boards looks down, not up the rink.
+- *Position, height and pitch only*: the yaw acts on 3.4 % and 4.1 % of the frames, by up to 25 and 27 degrees. Each of them is a frame the old camera did
+  not hold him at all, but under a real hand a turned camera turns W and moves the bearing of the cursor's point for those frames. No run of this lane has
+  a hand in it.
+- *The puck stays in frame when he carries*: 2 frames of 2,718 on 140 m remain (7 before).
+
+### 1: the model in the gate
+`Jam.Camera.KeepsHuman`: a modelled skater works the boards for 6,000 frames a rink (runs at the glass, turns his back to it, stops, spins, goes into the
+corners, is knocked sideways, is put back on a dot), the same path for both cameras (the corner lift on in both):
+
+| Rink | Chest outside the middle third | Outside the frame | Largest step a frame: camera, pitch, yaw | Yaw not the yaw of before (largest) |
+|---|---|---|---|---|
+| 90 x 45 m | 481 -> **0** of 6,000 | 271 -> 0 | 70 -> 74 cm, 1.7 -> 5.4 deg, 5.3 -> 5.3 deg | 144 frames (21.9 deg) |
+| 140 x 70 m | 71 -> **0** | 11 -> 0 | 70 -> 76 cm, 1.2 -> 5.1 deg, 5.1 -> 5.7 deg | 60 (7.3 deg) |
+| 120 x 60 m, 8.5 m arcs | 107 -> **0** | 0 -> 0 | 69 -> 77 cm, 0.6 -> 3.8 deg, 5.1 -> 5.2 deg | 60 (17.6 deg) |
+
+Also asserted: the camera never crosses the boards' inset; no frame whose yaw differs is one the old rig held him; open ice at 9 m/s, straight and through
+a turn, attacking either way, is the pose of before on 360 of 360 frames to 1e-6; five settled scenes at the boards hold the chest (his back to the corner:
+from (0.14, -5.86) of the half frame to (0.02, -0.31), the camera from 2.5 m to 6.5 m from him at 7.5 m of height) with the yaw of before in all five.
+
+### 1: by still
+The before and after runs play the same match, so the same sim frames can be laid side by side (the rectangle is the middle third).
+- `img/a135/lost-90-f0360-before-after.jpg`, `lost-90-f4680-before-after.jpg`: 90 m, the human in the frame's bottom left corner with his ring cut by the
+  edge; after, at the rectangle's edge, seen from over the boards with the ice he can skate into.
+- `img/a135/lost-140-night-f1800-before-after.jpg`: 140 m night: before, the human is not in the picture (the puck's arrow says 6 m below it); after, he
+  is, with the puck. `lost-140-night-f4680-before-after.jpg`: the same at the side board.
+- `img/a135/sheet-clay-90-3.jpg`, `sheet-clay-140-2.jpg`: nine consecutive stills each, final rules.
+- Read in full: 63 stills (clay 90 m sheets 1 to 4, clay 140 m sheets 2 and 3, night 90 m sheet 3). The human is inside the rectangle or on its edge in
+  every one. Evolution 2's fault frames (90 m 1440 and 4500, 140 m 2520 and 2700) hold him too, but on this main they are not lost frames before either:
+  the match has changed since, so the pairs above are taken where this main's camera lost him.
+
+![90 m, sim frame 4680](img/a135/lost-90-f4680-before-after.jpg)
+![140 m night, sim frame 1800](img/a135/lost-140-night-f1800-before-after.jpg)
+
+What the stills also show, and the number does not:
+- **He is held at the rectangle's edge, not its centre**: at the boards the chest sits at 0.31 and the figure's legs and ring are under the rectangle.
+- **A human lying on the ice reads lower than the measured point** (90 m sim frame 2700: the figure in the bottom left, the point 1 m over his feet on the
+  rectangle's lower edge). Evolution 2's head anchor would be the truer point.
+- **From over a side board half the frame can be the stands** (90 m 5040, 140 m 3420 and 4500): he sees himself, and less ice than the corner lift's 50 %.
+
+### 2: the pill and the prompt's lower slot
+- **The CALL READY pill after a goal**: `img/a135/pill-and-prompt-lower-slot-clay-90.jpg` (90 m, sim frame 1440, 0:1 after the goal at 853): the pill
+  stands in the bottom left corner, clear of everything. No pill in any still before the goal.
+- **The prompt's lower slot**: the same still (the brake prompt put there by `jam.hud.PromptProof 1300`: the brake prompt in its lower slot at that sim
+  frame, no console needed), and `lost-140-night-f1800-before-after.jpg` left, where the game put it there by itself (the far-net badge held the top slot).
+- **A fault, now seen: in its lower slot the prompt lies on the attacked net.** The lower slot is taken when the far-net badge stands in the top slot, which
+  is when the net is straight ahead and just under the badge: at 24 m (the still) the pill covers the net for its 5 s. Not fixed here.
+
+### 3: bark text on the lane
+- By test (`Jam.Hud.BarkLane`): 248 lane places on three frame shapes, every bubble width, both sides: all inside the frame, beside the board on their
+  team's side, above the net labels' and the puck arrow's clamps, the prompt's slots and the middle third, the human's skates at least 156 px (of 720
+  lines) under the lane; the yield rule against a figure in, reaching, beside, under and across from the lane.
+- By still: of the 63 stills read, 19 carry a bubble (three of them fading): **0 on a net label, a ring or a figure, 0 within 100 px of the human's skates**.
+  `img/a135/bark-lane-f4500-before-after.jpg`: the same line over the play before, beside the orange plate after.
+- Not shown: a line of the human's own team (every bark in these runs was the other team's, so the left lane is proven by the test only); the yield rule
+  in a still. Seen: a fading bubble keeps its outline (140 m sim frame 2880: an empty box beside the plate), as it did over a speaker.
+
+### 4: the prompt in the player's input
+- By test (`Jam.Hud.PromptKeys`, over the two bindings): the keyboard's pair and the pad's pair are found in the input map and each is bound to the move
+  and to the brake; the two lines; no pad control in the keys' line and no key in the pad's; a rebinding changes the words; a brake with no control of its
+  own; the neutral value is the line of before; both lines fit the pill (60 characters).
+- In the game: `JAMSCREEN prompt brake at sim frame 1116 ... S AGAINST YOUR MOTION, OR HOLD CTRL: STOP, THEN GO` (90 m), and with `jam.hud.PromptPad 1`
+  `LEFT STICK AGAINST YOUR MOTION, OR HOLD L3: STOP, THEN GO` (140 m, sim frame 1527). Stills: `img/a135/prompt-pad-clay-140.jpg`, and the keys' line in
+  the pill still above.
+- Not proven: the switch on a real pad (`WatchInputDevice` reads the player controller's keys; no pad was touched). The controls strip and the pause card
+  still name the keyboard.
+
+### What is not proven here
+- **The acceptance run** (`tools/qa/accept/accept.ps1`): not run (this lane does not own the cursor). Rows the camera could move, the aim rows first:
+  **2 aim** and **10 resume_aim** (the cursor's point is deprojected through the live camera, so it stays true; a drill staged within 6 m of a board now
+  has the camera higher, steeper and on some frames turned), **3 carry** and **9 sweep** (the cursor swept across), **8 checked** (the camera within 25 m:
+  it stays 6.5 m from the chest, at most 7.5 m up). In open ice the pose is the pose of before bit for bit, so drills staged there cannot move.
+- **A hand on the keys**: W is read in the camera's frame; on the frames the stage turns the camera, W turns with it.
+- **A package**, the menu's way into a match, 16:10 or ultrawide (the stage reads the viewport's aspect; only 16:9 was run).
+
+## How to repeat (part 3)
+
+```
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\run\build.ps1 -Project Game
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\qa\screen\u1-gate.ps1 -Tag run                       # the Jam filter, counted
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\qa\screen\u1-stills.ps1 -Tier clay  -Mode after -PlaySeconds 135 -Port 4735 -CamLog -ExtraCVars "jam.hud.PromptProof=1300"
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\qa\screen\u1-stills.ps1 -Tier night -Rink 140 -Mode after -PlaySeconds 135 -Port 4798 -CamLog -ExtraCVars "jam.hud.PromptProof=1300,jam.hud.PromptPad=1"
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\qa\screen\u1-stills.ps1 -Tier clay  -Mode base3 -PlaySeconds 135 -Port 4735 -CamLog     # this part's rules at their neutral values
+python tools/qa/screen/u1-camstat.py tools/qa/screen/out/clay-after/game.log        # frames 0..5999: outside the middle third, the largest steps
+python tools/qa/screen/u1-sheet.py tools/qa/screen/out/clay-after                   # contact sheets, the middle third outlined
+```
+Two processes may run side by side on their own ports. In a fresh worktree the engine did not honour `-abslog`: the script then finds the process's log
+under `Game\Saved\Logs` by its port and copies it to the run's folder. `tools/qa/screen/u1-console.ps1 -Port N -Cmd "..."` sends one console command.

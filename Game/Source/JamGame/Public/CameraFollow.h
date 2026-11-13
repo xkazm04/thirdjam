@@ -102,6 +102,35 @@ struct JAMGAME_API FJamCameraSettings
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
 	float CornerLookAheadKeep = 0.2f;
 
+	// Lane A135 (track U1, evolution 3: "the camera never loses the player"). The track's own probe counted the human's chest outside the frame's middle third on
+	// 436 of 5,989 frames of the 100 s pro match on the 90 m rink (88 of them outside the frame) and on 519 of 5,991 on 140 m: when the skater turns near a
+	// board the boards take the arm and the camera ends up over or beside him, still looking ahead, until lane A49's sprung budgets catch up; and the corner
+	// lift's rise outruns the pitch spring. KeepHumanFrac > 0 adds a last stage to StepThirdPerson that holds the chest inside that fraction of the half frame
+	// (0.31: between lane A49's own settled bounds, 12 degrees of yaw = 0.304 and 6.5 of pitch = 0.289, and the middle third's edge 0.333) on every frame, by
+	// height, pitch and position first:
+	//   the crane   the camera keeps the rig's own distance to the chest: what the boards take of the arm, it gains in height (the arm swings up over the
+	//               skater instead of collapsing onto him), by at most KeepRiseM a frame up or down;
+	//   the pitch   is held within the fraction's angle of the bearing to the chest (the rig's pitch where that is inside it, the nearest edge else);
+	//   the step    a camera whose foot the boards pushed in front of the skater (his back at the glass) comes towards the point over him until the pitch can
+	//               reach him (it cannot look past straight down);
+	//   the slide   a chest still off to a side: the camera's foot slides sideways (along its own right, the yaw untouched) by exactly what he is outside,
+	//               and stays inside the boards' inset;
+	//   the yaw     last, and only for what the boards did not let the slide take: lane A49's own yaw budget (the camera's yaw within a bound of the bearing to the human)
+	//               applied to the frame itself instead of to a spring's target. Where A49's spring has settled this changes nothing; it acts in the frames
+	//               the spring is late, by the angle the human would be outside. It is not a lead towards anything (lane A64's loop was a standing lead).
+	// Where the rig already holds the chest inside the fraction (open ice at a steady pace, every settled pose at the boards), the stage changes nothing.
+	// 0 = off: the tests' default and the neutral value; the game camera sets it from jam.camera.KeepHuman (default 0.31). KeepAspect is the frame's width
+	// over its height (the game camera sets it from the viewport).
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
+	float KeepHumanFrac = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
+	float KeepAspect = 16.f / 9.f;
+
+	// The crane's height changes by at most this many metres a sim frame (0.2: 12 m/s, the whole rise in a third of a second).
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
+	float KeepRiseM = 0.2f;
+
 	// The far net is kept in frame when the human is within this distance of it.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
 	float NetFrameNearM = 16.f;
@@ -152,6 +181,8 @@ struct JAMGAME_API FJamCameraFilter
 	FJamSpring PitchDeg;
 	// A111: the corner weight (0 open ice, 1 at a board the camera looks at) follows its target through a spring of twice the time constant.
 	FJamSpring Corner;
+	// A135: the height the keep-human stage gave last frame (0 = none yet, or the stage is off): its crane moves from it by at most KeepRiseM a frame.
+	float KeepHeightM = 0.f;
 
 	// Diagnostics of the last step (not state): the displacement the boards imposed over the arm length (0 = free, 1 = a whole arm) and its direction (into the rink).
 	float LastClampS = 0.f;
@@ -228,6 +259,13 @@ public:
 	// facing (smoothstep of the camera's forward along the board's outward normal, full from 0.7). Open ice, or skating along or away from a board: 0.
 	static float CornerWeight(const FJamCameraSettings& C, const FVector2D& PivotM, float YawCamDeg, const FJamCameraRink& Rink);
 
+	// A135. The last stage of StepThirdPerson when C.KeepHumanFrac > 0 (see FJamCameraSettings::KeepHumanFrac): the crane, the step, the yaw and the pitch.
+	// PivotM is the filtered pivot (the crane reads the arm from it, so open ice is the rig to the bit), HumanM the skater itself (the chest the frame must
+	// hold), PrevHeightM the height this stage gave on the frame before (0 = none: no limit on the rise). In and out: the camera's point on the ice (metres),
+	// its height (metres), its pitch and its yaw (degrees). Pure: the one value of state is the caller's.
+	static void KeepHumanInFrame(const FJamCameraSettings& C, const FJamCameraRink& Rink, const FVector2D& PivotM, const FVector2D& HumanM, float PrevHeightM,
+		FVector2D& InOutPosM, float& InOutHeightM, float& InOutPitchDeg, float& InOutYawDeg);
+
 	// A111. The share of the frame that is ice: of Cols x Rows rays through the frame (horizontal FOV, aspect), the fraction that meet z = 0 inside the boards.
 	static float IceShare(const FTransform& Pose, float HFovDeg, float Aspect, const FJamCameraRink& Rink, int32 Cols = 16, int32 Rows = 9);
 
@@ -302,4 +340,18 @@ private:
 	void ContactKickObserve();
 	FVector2D KickDir = FVector2D(1, 0);
 	UPROPERTY(Transient) TObjectPtr<UJamEventBus> Bus;
+
+	// Lane A135: the probe's counts (jam.camera.Probe), from the first sim frame the probe saw.
+	struct FKeepProbe
+	{
+		int64 Frames = 0, OutThird = 0, OutFrame = 0, Carry = 0, CarryPuckOut = 0, Zone = 0, ZoneNetOut = 0, Pulled = 0, Craned = 0;
+		float MaxX = 0.f, MaxY = 0.f, MaxStepCm = 0.f, MaxPitchStep = 0.f, MaxYawStep = 0.f, MaxHeightM = 0.f;
+		FVector PrevLoc = FVector::ZeroVector;
+		float PrevPitch = 0.f, PrevYaw = 0.f;
+		FVector2D PrevHuman = FVector2D::ZeroVector;
+		bool bHavePrev = false;
+	};
+	FKeepProbe Probe;
+	FJamCameraSettings KeepLive;   // the settings of the last third-person step (the probe reads the fraction and the aspect)
+	void ProbeObserve(const FJamPresentationFrame& Frame, const FJamCameraSettings& Live);
 };

@@ -360,10 +360,10 @@ void ALobbyGameMode::LogProofLine(const TCHAR* Tag) const
 		Seats += FString::Printf(TEXT(" %s=[seat %d sprint %d pass_held %d brake %d spin %d check %d ability %d | saucers %d spins %d abilities_used %d]"), s ? TEXT("guest") : TEXT("host"), SeatIdx[s],
 			VerbFrames[s][0], VerbFrames[s][1], VerbFrames[s][2], VerbFrames[s][3], VerbFrames[s][4], VerbFrames[s][5], K ? K->Saucers : -1, K ? K->Spins : -1, K ? K->AbilitiesUsed : -1);
 	}
-	UE_LOG(LogJamNet, Log, TEXT("JAMNET %s frame=%lld hash=%016llx sim_hash=%s score=%d:%d phase=%d faceoffs=%d fouls=%d pickups=%d rule_fires=%d first_frame_s=%.2f %s%s"), Tag,
+	UE_LOG(LogJamNet, Log, TEXT("JAMNET %s frame=%lld hash=%016llx sim_hash=%s score=%d:%d phase=%d faceoffs=%d fouls=%d pickups=%d rule_fires=%d first_frame_s=%.2f %s %s%s"), Tag,
 		TheSim->GetFrame(), static_cast<unsigned long long>(LockstepHash()), *TheSim->StateHashHex(), TheSim->GetScore(0), TheSim->GetScore(1), static_cast<int32>(TheSim->GetPhase()),
 		FaceoffDrops, Fouls, PickupTakes, GetRules() ? GetRules()->GetTotalFires() : 0,
-		(FirstFrameAt > 0.0 && Lobby && Lobby->GetJoinedAtSeconds() > 0.0) ? FirstFrameAt - Lobby->GetJoinedAtSeconds() : -1.0, *Driver->DescribeStats(), *Seats);
+		(FirstFrameAt > 0.0 && Lobby && Lobby->GetJoinedAtSeconds() > 0.0) ? FirstFrameAt - Lobby->GetJoinedAtSeconds() : -1.0, *Driver->DescribeStats(), *Driver->DescribePresses(), *Seats);   // lane A140: this machine's presses
 }
 
 bool ALobbyGameMode::StepLockstep()

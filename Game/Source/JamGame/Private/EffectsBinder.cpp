@@ -27,6 +27,12 @@
 #include "JamCommentaryData.h"
 #include "AudioDevice.h"
 #include "LookTierSwitcher.h"
+#include "Engine/LevelStreamingDynamic.h"
+#include "Misc/App.h"
+#include "Engine/StaticMesh.h"
+#include "Components/StaticMeshComponent.h"
+#include "GameFramework/PlayerController.h"
+#include "Camera/PlayerCameraManager.h"
 
 DEFINE_LOG_CATEGORY(LogJamFx);
 
@@ -461,6 +467,11 @@ FString UJamPreloadSubsystem::LikelyNextCut()
 	return TEXT("hockey.regular");
 }
 
+// Lane A137: lane A103/A119/A127's arena pieces were loaded synchronously by ARinkActor's build in the menu -> match frame (FlushAsyncLoading 10-76 ms,
+// 8 packages: JAMPRELOAD sync lines). 1 (default): they join the match preload. 0: before.
+static TAutoConsoleVariable<int32> CVarJamPreloadArena(TEXT("jam.PreloadArena"), 1,
+	TEXT("Lane A137: 1 (default): the arena's static meshes (/Game/Arena benches, penalty boxes, scorer's table, goal light, goals and nets) and their team instances are loaded asynchronously behind the menu with the match assets. 0: they load synchronously in the menu -> match frame (before)."));
+
 TArray<FSoftObjectPath> UJamPreloadSubsystem::MatchPaths(FName Visual, const FString& Tier)
 {
 	TArray<FSoftObjectPath> P;
@@ -499,6 +510,24 @@ TArray<FSoftObjectPath> UJamPreloadSubsystem::MatchPaths(FName Visual, const FSt
 	for (const TCHAR* N : UiNames) Add(FString::Printf(TEXT("/Game/UI/%s.%s"), N, N));
 	// The commentary waves (UJamCommentarySystem asks for them asynchronously at match start; the first line loaded synchronously).
 	for (const FJamCommentaryLine& L : FJamCommentaryBank::Embedded().Lines) if (!L.Sound.IsNull()) P.AddUnique(L.Sound);
+	// Lane A137: the arena pieces ARinkActor::Build loads (RinkActor.h's mesh paths; the goal variants of RinkActor.cpp's GArenaGoalVariants) and the team
+	// instances its Dress binds. Absent packages are filtered by StartPreload's existence check like every other path.
+	if (CVarJamPreloadArena.GetValueOnGameThread() != 0)
+	{
+		Add(ARinkActor::TeamBenchMeshPath);
+		Add(ARinkActor::PenaltyBoxMeshPath);
+		Add(ARinkActor::ScorerTableMeshPath);
+		Add(ARinkActor::GoalLightMeshPath);
+		static const TCHAR* const GoalNames[] = { TEXT("W400H061"), TEXT("W600H061"), TEXT("W400H122") };
+		for (const TCHAR* G : GoalNames)
+		{
+			Add(FString::Printf(TEXT("/Game/Arena/SM_Arena_Goal_%s.SM_Arena_Goal_%s"), G, G));
+			Add(FString::Printf(TEXT("/Game/Arena/SM_Arena_GoalNet_%s.SM_Arena_GoalNet_%s"), G, G));
+		}
+		Look(TEXT("MI_Toon_Orange"));
+		Look(TEXT("MI_Toon_Blue"));
+		Look(TEXT("MI_Toon_Dark"));
+	}
 	return P;
 }
 
@@ -526,14 +555,98 @@ static TAutoConsoleVariable<int32> CVarJamPreloadMap(TEXT("jam.PreloadMap"), 1,
 static const TCHAR* const JamMatchMapPackage = TEXT("/Game/Maps/Rink");
 static TAutoConsoleVariable<int32> CVarJamStartQuietFrames(TEXT("jam.StartQuietFrames"), 0,
 	TEXT("Lane A124: frames the menu -> match travel waits after every sound is stopped (4 tried: LoadMap's audio flush waited 22-38 ms all the same, PROFILING-4.md). 0 (default): the travel at once (before)."));
-static TAutoConsoleVariable<int32> CVarJamPreloadRig(TEXT("jam.PreloadRig"), 0,
-	TEXT("Lane A124: 1: the likely tier's light rig map is loaded asynchronously behind the menu with the match assets (its level instance then finds its imports in memory). 0: before."));
+// Lane A137: default 1 (was 0). On main with track U1's blocking rig load, 6 runs a tier per arm interleaved: the light hold's blocking load median 9 -> 5.5 ms,
+// worst 21 -> 15 ms (PROFILING-5.md section 2).
+static TAutoConsoleVariable<int32> CVarJamPreloadRig(TEXT("jam.PreloadRig"), 1,
+	TEXT("Lane A124: 1 (default, lane A137): the likely tier's light rig map is loaded asynchronously behind the menu with the match assets (its level instance then finds its imports in memory). 0: before."));
+
+static TAutoConsoleVariable<int32> CVarJamWarmScene(TEXT("jam.WarmScene"), 1,
+	TEXT("Lane A137: 1 (default): behind the menu's black card, once the match preload is done, the tier's light rig and a plane for each rink look material are drawn for jam.WarmScene.Frames frames so their pipeline states exist before the first match frame. 0: nothing (before)."));
+static TAutoConsoleVariable<int32> CVarJamWarmSceneFrames(TEXT("jam.WarmScene.Frames"), 90,
+	TEXT("Lane A137: rendered frames the menu's warm scene stays up before it is taken down (the rig level unloaded, the planes destroyed)."));
+
+void UJamPreloadSubsystem::TickWarmScene(UWorld* W)
+{
+	// Taking it down after its frames (a travel takes the planes and the rig with the menu world anyway).
+	if (WarmFramesLeft > 0)
+	{
+		if (--WarmFramesLeft > 0) return;
+		if (AActor* A = WarmActor.Get()) A->Destroy();
+		if (ULevelStreamingDynamic* L = WarmLevel.Get()) L->SetIsRequestingUnloadAndRemoval(true);
+		UE_LOG(LogJamPreload, Log, TEXT("JAMPRELOAD warm scene down after %d frames (%.2f s) frame=%llu"), CVarJamWarmSceneFrames.GetValueOnGameThread(),
+			FPlatformTime::Seconds() - WarmStartedAt, static_cast<unsigned long long>(GFrameCounter));
+		return;
+	}
+	if (WarmWorld.Get() == W) return;   // done in this menu world
+	if (GIsEditor || !FApp::CanEverRender() || CVarJamWarmScene.GetValueOnGameThread() == 0 || !IsPreloadComplete()) return;
+	APlayerController* PC = W->GetFirstPlayerController();
+	if (!PC || !PC->PlayerCameraManager) return;
+	WarmWorld = W;
+	const FVector Eye = PC->PlayerCameraManager->GetCameraLocation();
+	const FRotator Rot = PC->PlayerCameraManager->GetCameraRotation();
+	// The rig of the tier the preload asked for (held in memory by the preload: the level instance finds its imports there).
+	int32 RigOk = 0;
+	const FString Rig = ULookTierSwitcher::GetRigMapPath(LikelyTier);
+	if (!Rig.IsEmpty())
+	{
+		bool bOk = false;
+		ULevelStreamingDynamic::FLoadLevelInstanceParams P(W, Rig, FTransform::Identity);
+		WarmLevel = ULevelStreamingDynamic::LoadLevelInstance(P, bOk);
+		RigOk = bOk ? 1 : 0;
+	}
+	// One small plane a look material and the arena's pieces, in a grid 6 m in front of the menu camera (the menu's black card covers them).
+	FActorSpawnParameters SP;
+	SP.ObjectFlags |= RF_Transient;
+	SP.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	AActor* A = W->SpawnActor<AActor>(AActor::StaticClass(), FTransform(Rot, Eye), SP);
+	if (!A) return;
+	USceneComponent* Root = NewObject<USceneComponent>(A, TEXT("WarmRoot"));
+	Root->SetWorldTransform(FTransform(Rot, Eye));
+	A->SetRootComponent(Root);
+	Root->RegisterComponent();
+	UStaticMesh* Plane = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Plane.Plane"), nullptr, LOAD_NoWarn | LOAD_Quiet);
+	TArray<UObject*> Items;
+	static const TCHAR* const Mats[] = { TEXT("MI_Ice_Night"), TEXT("MI_Toon_Board"), TEXT("MI_Toon_KickPlate"), TEXT("MI_Toon_GlassRail"), TEXT("MI_Trim_Blue"),
+		TEXT("MI_Trim_Orange"), TEXT("MI_Toon_NetFrame"), TEXT("MI_Toon_NetMesh"), TEXT("MI_Toon_GoalLight"), TEXT("MI_Toon_Bench"), TEXT("MI_Toon_Bumper"),
+		TEXT("MI_Toon_GoalShield"), TEXT("MI_Trim_Beacon"), TEXT("MI_Trim_BeaconOpaque"), TEXT("MI_Toon_Puck"), TEXT("MI_Toon_Orange"), TEXT("MI_Toon_Blue"),
+		TEXT("MI_Toon_Dark"), TEXT("MI_Glass"), TEXT("MI_Bcast_Glass") };
+	for (const TCHAR* N : Mats)   // only what the preload holds: nothing is loaded here
+		if (UMaterialInterface* M = FindObject<UMaterialInterface>(nullptr, *FString::Printf(TEXT("/JamAssets/Look/%s.%s"), N, N))) Items.Add(M);
+	for (const TCHAR* MeshPath : { ARinkActor::TeamBenchMeshPath, ARinkActor::PenaltyBoxMeshPath, ARinkActor::ScorerTableMeshPath, ARinkActor::GoalLightMeshPath })
+		if (UStaticMesh* SM = FindObject<UStaticMesh>(nullptr, MeshPath)) Items.Add(SM);
+	int32 Index = 0;
+	for (UObject* It : Items)
+	{
+		UStaticMesh* Mesh = Cast<UStaticMesh>(It);
+		if (!Mesh && !Plane) continue;
+		UStaticMeshComponent* C = NewObject<UStaticMeshComponent>(A);
+		C->SetStaticMesh(Mesh ? Mesh : Plane);
+		if (UMaterialInterface* M = Cast<UMaterialInterface>(It)) C->SetMaterial(0, M);
+		const int32 Col = Index % 6, Row = Index / 6;
+		C->SetupAttachment(Root);
+		// Relative to the camera: x ahead, y right, z up. A plane's normal is its +z: pitched 90 degrees it faces the camera.
+		C->SetRelativeLocation(FVector(600.0, (Col - 2.5) * 70.0, (1.5 - Row) * 70.0));
+		C->SetRelativeRotation(FRotator(Mesh ? 0.0 : 90.0, 0.0, 0.0));
+		C->SetRelativeScale3D(Mesh ? FVector(0.2) : FVector(0.6));
+		C->SetRenderCustomDepth(true);   // the outline pass reads CustomStencil 1, as on the rink's pieces
+		C->SetCustomDepthStencilValue(1);
+		C->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		C->RegisterComponent();
+		++Index;
+	}
+	WarmActor = A;
+	WarmFramesLeft = FMath::Max(1, CVarJamWarmSceneFrames.GetValueOnGameThread());
+	WarmStartedAt = FPlatformTime::Seconds();
+	UE_LOG(LogJamPreload, Log, TEXT("JAMPRELOAD warm scene up: rig %s (%s), %d items in front of the menu camera, %d frames frame=%llu"), *LikelyTier,
+		RigOk ? TEXT("streaming in") : TEXT("none"), Index, WarmFramesLeft, static_cast<unsigned long long>(GFrameCounter));
+}
 
 void UJamPreloadSubsystem::HandleBeginFrame()
 {
 	UGameInstance* GI = GetGameInstance();
 	FWorldContext* Ctx = GI ? GI->GetWorldContext() : nullptr;
 	if (!Ctx) return;
+	if (UWorld* MW = Ctx->World(); MW && MW->GetMapName() == TEXT("Menu") && Ctx->TravelURL.IsEmpty()) TickWarmScene(MW);
 	if (QuietFramesLeft > 0)
 	{
 		if (--QuietFramesLeft > 0) return;

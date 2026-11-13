@@ -615,3 +615,19 @@ lands the whistle's removal; if that does not land by Saturday 19:00 the fallbac
 head socket stands about 19 cm above the helmet (device B's answer): written into the figure contract; A's marker keeps its 18 cm. Left with the operator:
 team names and roles, who submits, the prizes, whether the page names tool vendors, the dev log's hosting and device B's transcripts, the P4 removal, the
 firewall prompt's Cancel, and the first match between two machines.
+
+## R-0055 (H26, 2026-11-14 00:12): what really broke law 3, and what the curve may not use
+Integration lane A138 measured the cause R-0053 guessed at, and the guess was wrong: **nobody was shoved from behind** in 6,000 carries. The stop begun at
+8 m never broke (99.5 % on the parked tree); the bar that fell was the stop at 9.5 m (72.5 %), and the cause was the brain's read of the body shield: the
+defender went round the carrier's body at any speed and rode level with a carrier that had stopped and gone, to the end boards. The way round the body is now
+for a carrier slower than 3 m/s. R-0053 point 3's sentence on the shove stands as a rule (a shove from behind at matched speed is a bump; the brain chooses no
+felling shove from behind where the whistle is off) but not as the cause. Rulings: (1) **the hunt radius is not a curve lever**: lane A138 ran the curve
+lane's first profile: `opp.hunt_radius_m` at 12 or 20 moves the stop's window out to 9.5 to 13 m and the stop at 8 m passes 24 % and 20 %; the poke's delay
+(2, 3 or 4 frames) leaves it at 99.5 %: the curve may turn the poke, the checks, the shot, support and speed, and may raise the hunt only as far as the
+law-3 drill stays green at that level; (2) **all_star's window is 10 to 12 m** (56.5 %, 89 %, 100 %; 0 % at 8 m: it does not creep): the bar of R-0053 at
+all_star is "the stop passes at least 50 % from 10 m", as the test asserts; (3) all_star must be harder than pro on every rink: on the large rink it wins
+82.0 % against pro's 79.5 % today (three a side): the curve lane's to set; (4) the cells on the integrated tree, before the curve: 98.2 / 67.8 / 39.3 on the
+regular rink, 99.8 / 79.5 / 82.0 on the large; (5) owed by the brain track: the human's side takes a kept puck back (the big-ice share of matches with 30 s
+without the puck is 39.2 % at pro; the bar is 25 %); (6) online, button presses made during a network stall were merged into one frame and half of the F
+presses were lost on a bad link (lane A140 found it; the old soak expected the merge): fixed with a press queue, protocol unchanged; (7) a pinned-hash test
+names its baseline through `JamBaseline.h`, never by its own list of neutral values.

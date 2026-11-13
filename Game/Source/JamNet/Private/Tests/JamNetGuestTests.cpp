@@ -586,6 +586,8 @@ bool FJamNetGuestSites::RunTest(const FString& Parameters)
 	for (int32 f = 0; f < 650; ++f) { Busy(In, f * 3 + 1, Host, Guest); Twin->Step(In); }
 	Twin->Restart();
 	TestEqual(TEXT("rematch: two machines with the same history restart to the same lockstep hash"), Twin->LockstepStateHash(), Other->LockstepStateHash());
+	// Lane A140: Restart forgets the history (the fields lane A129 listed here are reset), so even two different histories restart equal.
+	TestEqual(TEXT("rematch: two different histories restart to the same lockstep hash"), Sim->LockstepStateHash(), Other->LockstepStateHash());
 	if (Sim->LockstepStateHash() != Other->LockstepStateHash())
 	{
 		FString Kept;
