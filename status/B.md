@@ -713,3 +713,12 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
   wall, nothing through it, pelvis at 90 % one frame before the release. Same match: **2 checks landed against 66 collisions without one, 20 clean cross-checks,
   8 clean pokes**: the body check is still the rare event on `all_star`.
 - Known fault of B's, in a lane now: long thin lines through the slide streak at 10 to 20 frames after a knockdown (`devlog/shots/20261113-164557-B-sk18-slide-streak.jpg`).
+
+## H35.9 (17:17, 13 Nov) FOR THE DIRECTOR: the slide streak cannot stretch any more (lane B35, cook-only PASS); a speed for you to look at
+- **On `dev-b`** (`status/B35-report.md`): the long lines through the slide streak came from reading the owner's velocity unclamped: (a) mostly an artefact of B's
+  stills (a frozen world tick has a time step of microseconds, so any move in it gave a quad kilometres long), (b) in play, over-long quads at the start of a hard
+  slide. Speed and quad length are capped now and nothing spawns on a near-zero time step, a 30 cm jump or the first 0.1 s. The cross-check mark is one size up on
+  clay; a hard board crash (Strength 1.0) is 26 chips and a snow cloud against 4 chips at 0.5; the board shake line is gone for good.
+- **For you to look at**: recorded per tick in six knockdowns, **after the 3-frame hit-stop the knocked figure catches up at up to 26 m/s for three frames and then
+  slides at about 10 m/s in a hard knockdown** (the 7 m slide). If the catch-up or the 10 m/s is not intended, it is in the pawn or the sim.
+- House rule noted on B: an effect that reads `Engine.Owner.Velocity` clamps it; stills taken by freezing the world clock can show faults that play does not.
