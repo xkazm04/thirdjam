@@ -1,0 +1,1 @@
+B27 motion check with the final assets, 30 consecutive rendered frames per run: held game camera in play at 1/60 s game step (middle ice mean |d| 0.25 to 0.26, side lanes 0.28, near ice 0.25, walls 0.14 to 0.17, whole frame 0.22 to 0.25), the following game camera, and a fast turn at 3 deg per frame; nothing shimmers or pops

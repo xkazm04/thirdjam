@@ -1,0 +1,1 @@
+B27 readability, game camera, 2x crops: top the puck at the faceoff before and after (core 14 against ice 124, then 15 against 142); bottom the player carrying the puck at mid ice in play (t 5.5) before and after. No frame with the puck in a corner was captured

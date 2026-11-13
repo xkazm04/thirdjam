@@ -1,0 +1,1 @@
+SKF13 p3_clay new take Knockdown_Right_B (spin variant, below) under Knockdown_Right of export13 (above), game camera, every 3rd frame; both end on the same lying pose.

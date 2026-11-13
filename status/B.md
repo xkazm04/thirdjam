@@ -500,3 +500,25 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
   effect to keep visibility but not complicating the gameplay experience"): lane B27 is redirected: no per-bulb reflections on the playing surface, a few
   large lamps with one broad soft sheen each, even light into the corners, the puck and figures the most contrasted things on the ice. B read "night arena"
   as the dark clay barn he was shown; if he meant `l2_night` as well, B applies the same rule there.
+
+## H28.0 (10:00, 13 Nov) FOR THE DIRECTOR: the night's figure work is on `dev-b` (no v4 needed); two facts about tackling on `main`
+- **Lane SK10 (`status/SK10-report.md`), cook-only PASS**: 155 files under `Skaters/` (everything that changed on `dev-b-a45` except the eight Blueprints)
+  are on `dev-b` and work with the v3 Blueprints: the faceoff and ready stance on the default figure (knee spread 44.4 cm at the faceoff, as on the branch),
+  the felt-and-stitch scripted clay figure the game selects on `p3_clay` (all nine material slots right), the felt maps of `generated_b2` on clay.
+  The landing rule does not change: at the v4 landing, `Skaters/` whole from `dev-b-a45` (it differs from `dev-b` now only in the eight `BP_*` files).
+- **On `main` today the knocked-down figure gets up late**: the v3 Blueprints start the get-up when the sim releases the skater, so the figure is still
+  rising while it already skates; the v4 Blueprints end the get-up on the release frame. Handoff 0036 point 2.
+- Handoff 0036 point 3 is withdrawn (the sim already slides the down skater and slows the attacker; `PlayCheck` starts on the press, the hit lands 0 to 12
+  frames later: B rebuilds the attacker's take for that).
+- Tackling takes: `skf/export11` (lane SKF11: knockdowns, falls, get-ups at 26 + 44 frames, about 20 frames lying, nothing sped up) goes into the engine on
+  the interface branch now (lane SK11, port 8000, `wt/b-a45`); SKF12 (the attacker's check, flatter lying poses) is running in Blender.
+
+## H28.7 (10:36, 13 Nov) FOR THE DIRECTOR: `main` dfb808f (the v4 landing) is merged into `dev-b`; clay pass 7; A-to-B-0014 answered
+- **`dev-b` = `main` dfb808f + clay pass 7, builds, cook-only PASS (0 errors).** Under `Skaters/` it equals `main`. `dev-b-a45` is retired when lane SK11 leaves it.
+- **Clay pass 7 (lane B27, `status/B27-report.md`)**, the operator's direction of 09:46: no bulb strings and no per-bulb reflections; ten large lamps (4 shadowed
+  keys without specular, 6 shadowless lamps over the side lanes), one broad sheen of at most +14 luma, cool pale ice (near ice 187, 175, 187). The side lanes
+  went from luma 82 / 76 to 147 / 158; the puck gained 18 luma of contrast. One weak spot: an orange figure on the wing has the ice's luma (109 against 112)
+  and reads by colour only. The rig has 16 local lights (was 10), 4 shadowed as before. **For cameras**: lamp shades hang at 11.5 and 13 m.
+- A-to-B-0014 answered in the file (P4 stopped; the tackling takes' state; open: handoff 0036 points 2 and 4).
+- Tackling, Blender: `skf/export12` (falls, get-ups, the attacker's lunge) and `skf/export13` (standing hits, board hit, stumble, two spin variants) are
+  ready; engine: SK11 running (port 8000, `wt/b-a45`), then SK12 on `dev-b`.

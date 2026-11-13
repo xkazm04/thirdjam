@@ -1,0 +1,1 @@
+SKF pass 11 part 1, p3_clay from export10 from the side (300 px), every 3rd frame; rows: Check, Check_Deliver_Left, Check_Deliver_Right, Check_Hit_Back, Check_Hit_Left, Check_Hit_Right, Knockdown_Back, Knockdown_Left, Knockdown_Right, Fall, Fall_Forward, GetUp, GetUp_Front, GetUp_Side_Left, GetUp_Side_Right, Stumble, Stumble_Short, Trip, Board_Hit, Board_Pin, Foul_Reaction.

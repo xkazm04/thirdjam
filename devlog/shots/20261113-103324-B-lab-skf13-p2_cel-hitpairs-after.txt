@@ -1,0 +1,1 @@
+SKF13 p2_cel export13 standing hits at 0.8 m (pusher in Glide): Check_Hit_Left, Check_Hit_Right, Check_Hit_Back; bottom: side view of the left hit. Contact -6 to +24 every 3rd frame.

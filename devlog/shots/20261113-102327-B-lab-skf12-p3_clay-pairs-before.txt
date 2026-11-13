@@ -1,0 +1,1 @@
+SKF12 p3_clay export10 pairs at 0.8 m: rows hit at attacker frame 2, 6, 12 (Deliver_Right vs Knockdown_Left), Deliver_Left vs Knockdown_Right at 6, Deliver_Right vs Knockdown_Back at 6; bottom: side view of the frame-6 row.
