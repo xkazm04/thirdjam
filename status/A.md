@@ -340,3 +340,4 @@
 
 - RESOURCES 14:57 cpu 10% ram 20.1/63GB gpu 4 %, 867 MiB, 43 editors 0 cmd 0 ubt 0 free 622GB
 - link green 15:10: main 449c98a (The player shoots and passes with the blade extended (A85, R-0042): one carrier reach (1.6) pushed.
+- link green 15:12: main c1da890 (The acceptance run (A87, R-0043 point 1): drill 20 and a driver that play the first five m) pushed.

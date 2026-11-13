@@ -1,0 +1,75 @@
+tionController: PASS hockey.regular seed 1: least moved 19.6 m, puck path 621.4 m, AI shots 3, worst board distance -0.356 m, over yes, first goal at frame 485
+tionController: PASS hockey.arena.large seed 1: least moved 28.0 m, puck path 1340.3 m, AI shots 8, worst board distance -0.400 m, over yes, first goal at frame 10916
+tionController: PASS hockey.regular rookie novice seed 1: bare 460a03cbe65c86e7 (13140 frames) bundle 460a03cbe65c86e7 (13140 frames)
+tionController: PASS hockey.regular rookie novice seed 2: bare 6adde55c9c7e53fb (15684 frames) bundle 6adde55c9c7e53fb (15684 frames)
+tionController: PASS hockey.regular rookie novice seed 3: bare 41eb57f72e5bdbff (12591 frames) bundle 41eb57f72e5bdbff (12591 frames)
+tionController: PASS hockey.arena.large rookie novice seed 1: bare 43e04a428db2a09e (11885 frames) bundle 43e04a428db2a09e (11885 frames)
+tionController: PASS hockey.arena.large rookie novice seed 2: bare 781deef00910e223 (12096 frames) bundle 781deef00910e223 (12096 frames)
+tionController: PASS hockey.arena.large rookie novice seed 3: bare 05fd181e28ac4581 (11945 frames) bundle 05fd181e28ac4581 (11945 frames)
+tionController: PASS hockey.regular seed 1: 5 faceoffs, 0 without a human touch inside 600 frames, worst 12 frames, over yes
+tionController: PASS hockey.regular seed 2: 6 faceoffs, 0 without a human touch inside 600 frames, worst 12 frames, over yes
+tionController: PASS hockey.regular seed 7: 6 faceoffs, 0 without a human touch inside 600 frames, worst 12 frames, over yes
+tionController: PASS hockey.arena.large seed 1: 3 faceoffs, 0 without a human touch inside 600 frames, worst 12 frames, over yes
+tionController: PASS hockey.arena.large seed 2: 4 faceoffs, 0 without a human touch inside 600 frames, worst 12 frames, over yes
+tionController: PASS hockey.arena.large seed 7: 4 faceoffs, 0 without a human touch inside 600 frames, worst 12 frames, over yes
+tionController: PASS hockey.regular rookie novice, seeds 1-20: 10 of 126 faceoffs without a human touch inside 600 frames (budget 10.4 %: 13)
+tionController: PASS pro, regular playtester, 20 seeds: 1.90 passes received per match (bar 1.0), 0.05 one-timers, 0.20 passes made, 10 wins
+tionController: PASS rookie, regular playtester, 20 seeds: 1.10 passes received per match (bar 1.0), 0.00 one-timers, 0.60 passes made, 20 wins
+tionController: PASS hockey.regular seed 1 (rookie): 3:0 in 3309 frames, player shots 10, hash b75d14cfde54941a (same on the second run)
+tionController: PASS hockey.regular seed 2 (rookie): 3:0 in 5455 frames, player shots 8, hash 8ef642b4ed079ef8 (same on the second run)
+tionController: PASS hockey.regular seed 7 (rookie): 3:0 in 14780 frames, player shots 13, hash 030fe4d359fae728 (same on the second run)
+tionController: PASS hockey.regular (pro): first goal after frame 600 in 2 of 3 seeds (need 2)
+tionController: PASS take-1 (The Read-Through) seed 1: 2:0 in 2731 frames, WIN, faceoffs 3 without a touch 0, AI shots 3, worst board -0.400 m, hash 892ead1c43f94868 same
+tionController: PASS take-1 (The Read-Through) seed 2: 2:0 in 4885 frames, WIN, faceoffs 3 without a touch 0, AI shots 2, worst board -0.400 m, hash 82bb56ed418b6d26 same
+tionController: PASS take-1 (The Read-Through) seed 7: 2:0 in 13862 frames, WIN, faceoffs 3 without a touch 0, AI shots 4, worst board -0.379 m, hash 4796d14875b2bf09 same
+tionController: PASS take-1 (rookie, first_to): the scripted human won 3 of 3
+tionController: PASS take-2 (The Big Room) seed 1: 2:0 in 11312 frames, WIN, faceoffs 4 without a touch 0, AI shots 2, worst board -0.382 m, hash 00271f8415d924c3 same
+tionController: PASS take-2 (The Big Room) seed 2: 2:0 in 11312 frames, WIN, faceoffs 4 without a touch 0, AI shots 5, worst board -0.396 m, hash 6aa2d979fe4c2d32 same
+tionController: PASS take-2 (The Big Room) seed 7: 1:0 in 11101 frames, WIN, faceoffs 3 without a touch 0, AI shots 7, worst board -0.377 m, hash 05da1df1210d716d same
+tionController: PASS take-2 (rookie, timer): the scripted human won 3 of 3
+tionController: PASS take-3 (Rough Cut) seed 1: 1:3 in 10779 frames, no win, faceoffs 5 without a touch 0, AI shots 7, worst board -0.368 m, hash 7e62c57bc1080655 same
+tionController: PASS take-3 (Rough Cut) seed 2: 3:2 in 12318 frames, WIN, faceoffs 6 without a touch 0, AI shots 8, worst board -0.393 m, hash e66df4918d3435f9 same
+tionController: PASS take-3 (Rough Cut) seed 7: 3:2 in 8564 frames, WIN, faceoffs 6 without a touch 0, AI shots 4, worst board -0.394 m, hash ce400dcbd2746f94 same
+tionController: PASS take-3 (pro or harder, first_to): the scripted human won 2 of 3
+tionController: PASS take-4 (Set Pieces) seed 1: 3:2 in 11337 frames, WIN, faceoffs 6 without a touch 0, AI shots 5, worst board -0.384 m, hash cf43e850f9e55663 same
+tionController: PASS take-4 (Set Pieces) seed 2: 1:2 in 18934 frames, no win, faceoffs 4 without a touch 0, AI shots 20, worst board -0.367 m, hash d94034167e9162fb same
+tionController: PASS take-4 (Set Pieces) seed 7: 3:2 in 12650 frames, WIN, faceoffs 6 without a touch 0, AI shots 8, worst board -0.376 m, hash da22fdf77dea3a1f same
+tionController: PASS take-4 (pro or harder, timer): the scripted human won 2 of 3
+tionController: PASS /JamAssets/Skaters/BP_SkaterVisual_TB1.BP_SkaterVisual_TB1_C loads and implements JamSkaterVisual
+tionController: PASS /JamAssets/Skaters/BP_SkaterVisual_TB2.BP_SkaterVisual_TB2_C loads and implements JamSkaterVisual
+tionController: PASS generated_b2 seed 1: least moved 28.1 m, puck path 2148.9 m, AI shots 12, worst board distance -0.397 m, over yes, hash 34159f9e0ee5f06b
+tionController: PASS humanoid_b1 seed 1: least moved 28.1 m, puck path 2148.9 m, AI shots 12, worst board distance -0.397 m, over yes, hash 34159f9e0ee5f06b
+tionController: PASS toy_skeletal seed 1: least moved 28.1 m, puck path 2148.9 m, AI shots 12, worst board distance -0.397 m, over yes, hash 34159f9e0ee5f06b
+tionController: hockey.regular seed 1 frame 600 hash ccb658f82e4ca910; 600 frames in 2.80 ms (0.0047 ms/frame)
+tionController: hockey.raw seed 1 frame 600 hash e09eebd2cebd1337; 600 frames in 2.25 ms (0.0037 ms/frame)
+tionController: PASS hockey.regular rookie seed 346: over after 19061 frames, 3:2, hash 5ae41298a57c2ae1 (replay 5ae41298a57c2ae1)
+tionController: PASS hockey.regular rookie seed 349: over after 5887 frames, 3:0, hash e4c805b843579910 (replay e4c805b843579910)
+tionController: PASS hockey.regular all_star seed 387: over after 9095 frames, 1:3, hash 04cb2bf8480d3ee4 (replay 04cb2bf8480d3ee4)
+tionController: PASS hockey.boost pro seed 150: over after 12855 frames, 2:3, hash d65c72c4ee5a07ab (replay d65c72c4ee5a07ab)
+tionController: PASS hockey.boost all_star seed 251: over after 19862 frames, 1:3, hash 0162b6adb5918a70 (replay 0162b6adb5918a70)
+tionController: PASS hockey.boost pro seed 737: over after 30000 frames, 2:1, hash f9618a9971f0fa50 (replay f9618a9971f0fa50)
+tionController: hockey.regular seed 1 frame 600 hash aeeb0ff6139e40d4 (compare with Jam.Core.Determinism)
+tionController: Warning: LogJamDesigner: JAMDESIGNER request attempt=1 model=claude-haiku-5-5 status=401 tokens_in=0 tokens_out=0 ms=70 result=http_error_fatal [log] 
+tionController: Warning: LogJamDesigner: JAMDESIGNER request attempt=1 model=claude-haiku-5-5 status=401 tokens_in=0 tokens_out=0 ms=5 result=http_error_fatal [log] 
+tionController: Warning: boost-lossy-lan: a foul happened (0) [C:\Users\kazda\kiro\thirdjam\.claude\worktrees\a83\Game\Source\JamNet\Private\Tests\JamNetTests.cpp(165)]
+tionController: Warning: chaos-wan-83ms-2pct: a foul happened (0) [C:\Users\kazda\kiro\thirdjam\.claude\worktrees\a83\Game\Source\JamNet\Private\Tests\JamNetTests.cpp(165)]
+tionController: PASS hockey.regular rookie novice seed 1: first goal by the human at frame 5905, 3:2, over
+tionController: PASS seed 1 replays: hash 460a03cbe65c86e7 / 460a03cbe65c86e7, 13140 / 13140 frames
+tionController: PASS hockey.regular rookie novice seed 2: first goal by the human at frame 4064, 3:2, over
+tionController: PASS hockey.regular rookie novice seed 5: first goal by the human at frame 6390, 3:1, over
+tionController: PASS hockey.regular rookie novice seed 6: first goal by the human at frame 2940, 3:1, over
+tionController: PASS hockey.regular rookie novice seed 9: first goal by the human at frame 1920, 3:1, over
+tionController: PASS hockey.regular rookie novice seed 10: first goal by the human at frame 3603, 3:0, over
+tionController: PASS hockey.regular rookie novice seed 11: first goal by the human at frame 2206, 3:0, over
+tionController: PASS hockey.regular rookie novice seed 12: first goal by the human at frame 414, 3:0, over
+tionController: PASS hockey.regular rookie novice seed 13: first goal by the human at frame 462, 3:1, over
+tionController: PASS hockey.regular rookie novice seed 15: first goal by the human at frame 4309, 3:0, over
+tionController: PASS hockey.regular rookie novice seed 16: first goal by the human at frame 6276, 3:1, over
+tionController: PASS hockey.regular rookie novice seed 17: first goal by the human at frame 6853, 3:0, over
+tionController: PASS hockey.regular rookie novice seed 18: first goal by the human at frame 5299, 3:0, over
+tionController: PASS hockey.regular rookie novice seed 20: first goal by the human at frame 2726, 3:0, over
+tionController: PASS the novice scores within 7,200 frames at rookie in 14 of 20 seeds (need 10)
+tionController: Warning: LogJamProgression: JAMSEASON ../../../../../../Users/kazda/kiro/thirdjam/.claude/worktrees/a83/Game/Saved/Automation/Progression/unlocks.json rejected (the season starts fresh): at /takes/0/stars: unknown key "stars" is not allowed here
+tionController: Warning: the sim treats the bumper obstacle as a box with board restitution (came back at -0.00 m/s from 6); A16's collision change pending [C:\Users\kazda\kiro\thirdjam\.claude\worktrees\a83\Game\Source\JamCore\Rules\JamRulesTests.cpp(321)]
+tionController: PASS hockey.regular seeds 1-5: human wins rookie 5 (goal diff +14), all_star 0 (goal diff -11)
+tionController: PASS hockey.arena.large seeds 1-5: human wins rookie 5 (goal diff +10), all_star 0 (goal diff -8)

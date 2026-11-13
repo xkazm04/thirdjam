@@ -1,0 +1,18 @@
+13:30:09.523 t=0.127 other game/editor windows at start: 
+13:30:09.636 t=0.240 start pid 34048 -cut="C:/Users/kazda/kiro/thirdjam/.claude/worktrees/a83/tools/perf/cuts/perf.p3_clay_5v5.cartridge.json" -dpcvars=jam.ScriptHuman=1,r.GPUCsvStatsEnabled=1 -windowed -ResX=1920 -ResY=1080 -WinX=40 -WinY=40 -log -abslog="C:\Users\kazda\kiro\thirdjam\.claude\worktrees\a83\tools\perf\out\a83-p3_clay_5v5\game.log" -statnamedevents -RemoteConsoleIP=127.0.0.1 -RemoteConsolePort=4683 -trace=cpu,gpu,frame,bookmark,loadtime,memtag -tracefile="C:\Users\kazda\kiro\thirdjam\.claude\worktrees\a83\tools\perf\out\a83-p3_clay_5v5\trace.utrace"
+13:30:12.566 t=3.170 menu map logged
+13:30:18.051 t=8.655 enter posted
+13:30:18.271 t=8.874 JAMMENU start match seen
+13:30:18.290 t=8.894 JAMCART loaded seen
+13:30:28.355 t=18.959 sim frame 600 seen (10 s into the match)
+13:30:28.403 t=19.006 console 'csvprofile start' OK (try 1) {"id":2,"op":"exec","ok":true}
+13:30:28.417 t=19.020 console 'trace.bookmark A58_match_start' OK (try 1) {"id":3,"op":"exec","ok":true}
+13:30:28.419 t=19.022 match profiling window: 180 s
+13:33:29.009 t=199.613 console 'csvprofile stop' OK (try 1) {"id":4,"op":"exec","ok":true}
+13:33:32.045 t=202.649 console 'trace.stop' OK (try 1) {"id":5,"op":"exec","ok":true}
+13:33:35.079 t=205.683 console 'quit' OK (try 1) {"id":6,"op":"exec","ok":true}
+13:33:36.106 t=206.710 game exited, code 0
+13:33:36.133 t=206.736 collected Profile(20261113_133028).csv
+13:33:36.134 t=206.738 no C:\Users\kazda\kiro\thirdjam\.claude\worktrees\a83\Game\Packaged\A83-dev\Windows\ThirdJam\Saved\Profiling\MemReports
+13:33:36.195 t=206.799 other game/editor windows at end: ThirdJam:15320
+13:33:36.196 t=206.800 done

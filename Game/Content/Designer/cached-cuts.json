@@ -1,7 +1,7 @@
 {
   "schema": "tj.designer-cache/1",
-  "base_sha256": "dfc7b19caf629c5925344b682211e03fd504fcfb240ff5f64356ecb2f7757548",
-  "generated_by": "claude CLI, tools/designer-eval/loop.mjs chain over hockey.regular",
+  "base_sha256": "4d816b850120a5f25c5235ffca25a5431e172f0b891554d9096757989dcf0095",
+  "generated_by": "claude CLI, tools/designer-eval/loop.mjs chain over hockey.regular ; teams copied from the 5 v 5 hockey.regular by the Director (A83 landing, 2026-11-13)",
   "cuts": [
     {
       "name": "Fast Cut",
@@ -190,10 +190,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    -7.5,
+                    7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     -22.5,
-                    0
+                    -5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    -22.5,
+                    5
                   ]
                 }
               ]
@@ -217,10 +231,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    7.5,
+                    -7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     22.5,
-                    0
+                    5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    22.5,
+                    -5
                   ]
                 }
               ]
@@ -455,10 +483,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    -7.5,
+                    7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     -22.5,
-                    0
+                    -5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    -22.5,
+                    5
                   ]
                 }
               ]
@@ -482,10 +524,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    7.5,
+                    -7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     22.5,
-                    0
+                    5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    22.5,
+                    -5
                   ]
                 }
               ]
@@ -707,10 +763,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    -7.5,
+                    7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     -22.5,
-                    0
+                    -5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    -22.5,
+                    5
                   ]
                 }
               ]
@@ -734,10 +804,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    7.5,
+                    -7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     22.5,
-                    0
+                    5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    22.5,
+                    -5
                   ]
                 }
               ]
@@ -984,10 +1068,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    -7.5,
+                    7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     -22.5,
-                    0
+                    -5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    -22.5,
+                    5
                   ]
                 }
               ]
@@ -1011,10 +1109,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    7.5,
+                    -7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     22.5,
-                    0
+                    5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    22.5,
+                    -5
                   ]
                 }
               ]
@@ -1231,10 +1343,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    -7.5,
+                    7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     -22.5,
-                    0
+                    -5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    -22.5,
+                    5
                   ]
                 }
               ]
@@ -1258,10 +1384,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    7.5,
+                    -7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     22.5,
-                    0
+                    5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    22.5,
+                    -5
                   ]
                 }
               ]
@@ -1477,10 +1617,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    -7.5,
+                    7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     -22.5,
-                    0
+                    -5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    -22.5,
+                    5
                   ]
                 }
               ]
@@ -1504,10 +1658,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    7.5,
+                    -7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     22.5,
-                    0
+                    5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    22.5,
+                    -5
                   ]
                 }
               ]
@@ -1722,10 +1890,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    -7.5,
+                    7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     -22.5,
-                    0
+                    -5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    -22.5,
+                    5
                   ]
                 }
               ]
@@ -1749,10 +1931,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    7.5,
+                    -7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     22.5,
-                    0
+                    5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    22.5,
+                    -5
                   ]
                 }
               ]
@@ -1969,10 +2165,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    -7.5,
+                    7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     -22.5,
-                    0
+                    -5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    -22.5,
+                    5
                   ]
                 }
               ]
@@ -1996,10 +2206,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    7.5,
+                    -7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     22.5,
-                    0
+                    5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    22.5,
+                    -5
                   ]
                 }
               ]
@@ -2249,10 +2473,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    -7.5,
+                    7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     -22.5,
-                    0
+                    -5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    -22.5,
+                    5
                   ]
                 }
               ]
@@ -2276,10 +2514,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    7.5,
+                    -7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     22.5,
-                    0
+                    5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    22.5,
+                    -5
                   ]
                 }
               ]
@@ -2512,10 +2764,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    -7.5,
+                    7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     -22.5,
-                    0
+                    -5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    -22.5,
+                    5
                   ]
                 }
               ]
@@ -2539,10 +2805,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    7.5,
+                    -7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     22.5,
-                    0
+                    5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    22.5,
+                    -5
                   ]
                 }
               ]
@@ -2755,10 +3035,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    -7.5,
+                    7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     -22.5,
-                    0
+                    -5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    -22.5,
+                    5
                   ]
                 }
               ]
@@ -2782,10 +3076,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    7.5,
+                    -7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     22.5,
-                    0
+                    5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    22.5,
+                    -5
                   ]
                 }
               ]
@@ -3042,10 +3350,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    -7.5,
+                    7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     -22.5,
-                    0
+                    -5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    -22.5,
+                    5
                   ]
                 }
               ]
@@ -3069,10 +3391,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    7.5,
+                    -7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     22.5,
-                    0
+                    5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    22.5,
+                    -5
                   ]
                 }
               ]
@@ -3316,10 +3652,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    -7.5,
+                    7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     -22.5,
-                    0
+                    -5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    -22.5,
+                    5
                   ]
                 }
               ]
@@ -3343,10 +3693,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    7.5,
+                    -7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     22.5,
-                    0
+                    5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    22.5,
+                    -5
                   ]
                 }
               ]
@@ -3561,10 +3925,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    -7.5,
+                    7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     -22.5,
-                    0
+                    -5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    -22.5,
+                    5
                   ]
                 }
               ]
@@ -3588,10 +3966,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    7.5,
+                    -7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     22.5,
-                    0
+                    5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    22.5,
+                    -5
                   ]
                 }
               ]
@@ -3809,10 +4201,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    -7.5,
+                    7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     -22.5,
-                    0
+                    -5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    -22.5,
+                    5
                   ]
                 }
               ]
@@ -3836,10 +4242,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    7.5,
+                    -7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     22.5,
-                    0
+                    5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    22.5,
+                    -5
                   ]
                 }
               ]
@@ -4057,10 +4477,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    -7.5,
+                    7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     -22.5,
-                    0
+                    -5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    -22.5,
+                    5
                   ]
                 }
               ]
@@ -4084,10 +4518,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    7.5,
+                    -7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     22.5,
-                    0
+                    5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    22.5,
+                    -5
                   ]
                 }
               ]
@@ -4303,10 +4751,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    -7.5,
+                    7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     -22.5,
-                    0
+                    -5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    -22.5,
+                    5
                   ]
                 }
               ]
@@ -4330,10 +4792,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    7.5,
+                    -7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     22.5,
-                    0
+                    5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    22.5,
+                    -5
                   ]
                 }
               ]
@@ -4552,10 +5028,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    -7.5,
+                    7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     -22.5,
-                    0
+                    -5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    -22.5,
+                    5
                   ]
                 }
               ]
@@ -4579,10 +5069,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    7.5,
+                    -7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     22.5,
-                    0
+                    5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    22.5,
+                    -5
                   ]
                 }
               ]
@@ -4812,10 +5316,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    -7.5,
+                    7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     -22.5,
-                    0
+                    -5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    -22.5,
+                    5
                   ]
                 }
               ]
@@ -4839,10 +5357,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    7.5,
+                    -7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     22.5,
-                    0
+                    5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    22.5,
+                    -5
                   ]
                 }
               ]
@@ -5059,10 +5591,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    -7.5,
+                    7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     -22.5,
-                    0
+                    -5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    -22.5,
+                    5
                   ]
                 }
               ]
@@ -5086,10 +5632,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    7.5,
+                    -7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     22.5,
-                    0
+                    5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    22.5,
+                    -5
                   ]
                 }
               ]
@@ -5328,10 +5888,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    -7.5,
+                    7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     -22.5,
-                    0
+                    -5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    -22.5,
+                    5
                   ]
                 }
               ]
@@ -5355,10 +5929,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    7.5,
+                    -7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     22.5,
-                    0
+                    5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    22.5,
+                    -5
                   ]
                 }
               ]
@@ -5656,10 +6244,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    -7.5,
+                    7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     -22.5,
-                    0
+                    -5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    -22.5,
+                    5
                   ]
                 }
               ]
@@ -5683,10 +6285,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    7.5,
+                    -7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     22.5,
-                    0
+                    5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    22.5,
+                    -5
                   ]
                 }
               ]
@@ -5904,10 +6520,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    -7.5,
+                    7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     -22.5,
-                    0
+                    -5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    -22.5,
+                    5
                   ]
                 }
               ]
@@ -5931,10 +6561,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    7.5,
+                    -7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     22.5,
-                    0
+                    5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    22.5,
+                    -5
                   ]
                 }
               ]
@@ -6150,10 +6794,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    -7.5,
+                    7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     -22.5,
-                    0
+                    -5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    -22.5,
+                    5
                   ]
                 }
               ]
@@ -6177,10 +6835,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    7.5,
+                    -7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     22.5,
-                    0
+                    5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    22.5,
+                    -5
                   ]
                 }
               ]
@@ -6395,10 +7067,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    -7.5,
+                    7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     -22.5,
-                    0
+                    -5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    -22.5,
+                    5
                   ]
                 }
               ]
@@ -6422,10 +7108,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    7.5,
+                    -7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     22.5,
-                    0
+                    5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    22.5,
+                    -5
                   ]
                 }
               ]
@@ -6664,10 +7364,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    -7.5,
+                    7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     -22.5,
-                    0
+                    -5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    -22.5,
+                    5
                   ]
                 }
               ]
@@ -6691,10 +7405,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    7.5,
+                    -7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     22.5,
-                    0
+                    5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    22.5,
+                    -5
                   ]
                 }
               ]
@@ -6910,10 +7638,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    -7.5,
+                    7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     -22.5,
-                    0
+                    -5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    -22.5,
+                    5
                   ]
                 }
               ]
@@ -6937,10 +7679,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    7.5,
+                    -7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     22.5,
-                    0
+                    5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    22.5,
+                    -5
                   ]
                 }
               ]
@@ -7157,10 +7913,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    -7.5,
+                    7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     -22.5,
-                    0
+                    -5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    -22.5,
+                    5
                   ]
                 }
               ]
@@ -7184,10 +7954,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    7.5,
+                    -7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     22.5,
-                    0
+                    5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    22.5,
+                    -5
                   ]
                 }
               ]
@@ -7403,10 +8187,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    -7.5,
+                    7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     -22.5,
-                    0
+                    -5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    -22.5,
+                    5
                   ]
                 }
               ]
@@ -7430,10 +8228,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    7.5,
+                    -7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     22.5,
-                    0
+                    5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    22.5,
+                    -5
                   ]
                 }
               ]
@@ -7649,10 +8461,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    -7.5,
+                    7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     -22.5,
-                    0
+                    -5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    -22.5,
+                    5
                   ]
                 }
               ]
@@ -7676,10 +8502,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    7.5,
+                    -7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     22.5,
-                    0
+                    5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    22.5,
+                    -5
                   ]
                 }
               ]
@@ -7922,10 +8762,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    -7.5,
+                    7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     -22.5,
-                    0
+                    -5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    -22.5,
+                    5
                   ]
                 }
               ]
@@ -7949,10 +8803,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    7.5,
+                    -7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     22.5,
-                    0
+                    5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    22.5,
+                    -5
                   ]
                 }
               ]
@@ -8189,10 +9057,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    -7.5,
+                    7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     -22.5,
-                    0
+                    -5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    -22.5,
+                    5
                   ]
                 }
               ]
@@ -8216,10 +9098,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    7.5,
+                    -7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     22.5,
-                    0
+                    5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    22.5,
+                    -5
                   ]
                 }
               ]
@@ -8451,10 +9347,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    -7.5,
+                    7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     -22.5,
-                    0
+                    -5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    -22.5,
+                    5
                   ]
                 }
               ]
@@ -8478,10 +9388,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    7.5,
+                    -7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     22.5,
-                    0
+                    5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    22.5,
+                    -5
                   ]
                 }
               ]
@@ -8704,10 +9628,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    -7.5,
+                    7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     -22.5,
-                    0
+                    -5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    -22.5,
+                    5
                   ]
                 }
               ]
@@ -8731,10 +9669,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    7.5,
+                    -7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     22.5,
-                    0
+                    5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    22.5,
+                    -5
                   ]
                 }
               ]
@@ -8957,10 +9909,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    -7.5,
+                    7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     -22.5,
-                    0
+                    -5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    -22.5,
+                    5
                   ]
                 }
               ]
@@ -8984,10 +9950,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    7.5,
+                    -7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     22.5,
-                    0
+                    5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    22.5,
+                    -5
                   ]
                 }
               ]
@@ -9213,10 +10193,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    -7.5,
+                    7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     -22.5,
-                    0
+                    -5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    -22.5,
+                    5
                   ]
                 }
               ]
@@ -9240,10 +10234,24 @@
                   ]
                 },
                 {
+                  "role": "support",
+                  "spawn": [
+                    7.5,
+                    -7.5
+                  ]
+                },
+                {
                   "role": "back",
                   "spawn": [
                     22.5,
-                    0
+                    5
+                  ]
+                },
+                {
+                  "role": "back",
+                  "spawn": [
+                    22.5,
+                    -5
                   ]
                 }
               ]

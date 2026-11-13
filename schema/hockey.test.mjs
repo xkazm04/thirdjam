@@ -56,8 +56,8 @@ test('preset numbers match the brief', () => {
   assert.equal(r.rules.mode, 'first_to'); assert.equal(r.rules.score_to_win, 3); assert.equal(r.rules.goal_pause_frames, 120);
   assert.equal(r.look.tier, 'l2_night'); assert.equal(r.pickups, undefined);
   assert.deepEqual(r.teams.map((t) => [t.id, t.colour_hex]), [['blue', '#1D4ED8'], ['orange', '#E8651A']]);
-  assert.deepEqual(r.teams[0].skaters.map((s) => s.role), ['player', 'chaser', 'back']);
-  assert.deepEqual(r.teams[1].skaters.map((s) => s.role), ['chaser', 'support', 'back']);
+  assert.deepEqual(r.teams[0].skaters.map((s) => s.role), ['player', 'chaser', 'support', 'back', 'back']);   // R-0041 point 2 (lane A83): five a side, 3 F + 2 D
+  assert.deepEqual(r.teams[1].skaters.map((s) => s.role), ['chaser', 'support', 'support', 'back', 'back']);
   const raw = read('hockey.raw.cartridge.json').game.skater;
   assert.deepEqual([raw.check_enabled, raw.check_speed_min, raw.knockdown_frames], [true, 5, 150]);   // R-0013: raw lengthens knockdowns
   assert.equal(read('hockey.boost.cartridge.json').game.pickups.length, 3);

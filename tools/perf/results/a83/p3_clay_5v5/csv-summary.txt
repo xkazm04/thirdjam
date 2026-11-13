@@ -1,0 +1,101 @@
+frames 10729, capture 180.61 s
+FrameTime                      mean 16.83 p50 16.67 p99 19.12 max 113.01
+GameThreadTime                 mean 2.91 p50 2.9 p99 4.56 max 50.49
+RenderThreadTime               mean 4.74 p50 4.77 p99 6.67 max 126.89
+RHIThreadTime                  mean 2.77 p50 2.8 p99 3.76 max 15.49
+GPUTime                        mean 4.07 p50 3.55 p99 8.84 max 11.24
+GameThreadTime_CriticalPath    mean 2.92 p50 2.91 p99 4.58 max 50.51
+RenderThreadTime_CriticalPath  mean 15.2 p50 15.12 p99 18.16 max 136.45
+InputLatencyTime               mean 5.21 p50 3.13 p99 16.47 max 97.16
+hitches (> 33.3 ms): 20
+  row 253 t=4.28s frame 43.46 game 2.71 render 4.78 gpu 4.72 
+  row 257 t=4.37s frame 36.05 game 3.75 render 4.47 gpu 4.77 
+  row 299 t=5.1s frame 40.9 game 3.16 render 19.86 gpu 8.23 
+  row 427 t=7.32s frame 40.52 game 4.25 render 4.41 gpu 4.73 
+  row 527 t=9.09s frame 47.7 game 3.23 render 100.09 gpu 8.74 
+  row 528 t=9.14s frame 55.13 game 3.75 render 5.65 gpu 8.74 
+  row 538 t=9.35s frame 39.51 game 4.8 render 4.6 gpu 9.68 
+  row 633 t=11.05s frame 40.3 game 3.13 render 4.19 gpu 3.44 
+  row 658 t=11.52s frame 49.78 game 3.04 render 5.17 gpu 5.36 
+  row 664 t=11.67s frame 57.7 game 3.73 render 4.88 gpu 4.71 
+  row 693 t=12.21s frame 39.45 game 3.89 render 6.79 gpu 4.81 
+  row 695 t=12.26s frame 37.39 game 4.04 render 7.26 gpu 4.89 
+  row 698 t=12.34s frame 52.03 game 4.72 render 8.8 gpu 4.94 
+  row 3550 t=59.97s frame 42.32 game 3.88 render 6.17 gpu 3.34 
+  row 3681 t=62.21s frame 41.9 game 3.72 render 5.8 gpu 4.5 
+  row 6848 t=115.49s frame 49.03 game 3.24 render 10.79 gpu 3.13 
+  row 6874 t=116.05s frame 113.01 game 4.51 render 5.79 gpu 3.6 
+  row 6939 t=117.24s frame 43.87 game 5.37 render 5.1 gpu 5.69 
+  row 6995 t=118.26s frame 58.62 game 3.57 render 14.04 gpu 3.64 
+  row 6996 t=118.32s frame 46.34 game 21.19 render 5.88 gpu 3.22 
+game thread exclusive (ms):
+  Exclusive/GameThread/TickActors                    0.86 p99 1.42 max 35.96
+  Exclusive/GameThread/UI                            0.5 p99 1.02 max 20.01
+  Exclusive/GameThread/LLM                           0.28 p99 0.54 max 1.65
+  Exclusive/GameThread/Animation                     0.18 p99 0.35 max 1.97
+  Exclusive/GameThread/ViewportMisc                  0.14 p99 0.32 max 0.63
+  Exclusive/GameThread/EventWait/EndPhysics          0.13 p99 0.43 max 45.25
+  Exclusive/GameThread/DebugHUD                      0.09 p99 0.19 max 0.82
+  Exclusive/GameThread/EndOfFrameUpdates             0.08 p99 0.15 max 0.38
+  Exclusive/GameThread/WorldTickMisc                 0.07 p99 0.14 max 3.02
+  Exclusive/GameThread/EngineTickMisc                0.06 p99 0.17 max 0.68
+  Exclusive/GameThread/Effects                       0.06 p99 0.23 max 2.6
+  Exclusive/GameThread/PlayerControllerTick          0.04 p99 0.1 max 0.42
+render thread exclusive (ms):
+  Exclusive/RenderThread/EventWait                   12.1 p99 13.88 max 97.23
+  Exclusive/RenderThread/RenderOther                 1.62 p99 2.32 max 10.37
+  Exclusive/RenderThread/RDG_CollectResources        0.54 p99 0.79 max 7.29
+  Exclusive/RenderThread/RDG                         0.39 p99 0.71 max 32.08
+  Exclusive/RenderThread/RenderPostProcessing        0.32 p99 0.55 max 0.94
+  Exclusive/RenderThread/RenderThreadOther           0.31 p99 0.46 max 0.93
+  Exclusive/RenderThread/PrepareDistanceFieldScene   0.24 p99 0.39 max 0.75
+  Exclusive/RenderThread/RenderLighting              0.24 p99 0.4 max 0.62
+  Exclusive/RenderThread/RenderShadows               0.19 p99 0.31 max 1.22
+  Exclusive/RenderThread/UploadDynamicPrimitiveShaderData 0.13 p99 0.23 max 0.6
+  Exclusive/RenderThread/STAT_SkinningSceneExtension 0.09 p99 0.18 max 4.45
+  Exclusive/RenderThread/RDG_Execute                 0.09 p99 0.2 max 4.14
+GPU (ms):
+  GPU/Unaccounted                                    0.84 p99 1.64 max 2.97
+  GPU/RenderDeferredLighting                         0.74 p99 2.15 max 9.4
+  GPU/TemporalSuperResolution                        0.34 p99 1.47 max 3.74
+  GPU/ShadowDepths                                   0.32 p99 0.76 max 2.45
+  GPU/Lights                                         0.32 p99 0.76 max 2.41
+  GPU/Basepass                                       0.21 p99 0.59 max 1.61
+  GPU/GlobalDistanceFieldUpdate                      0.17 p99 0.3 max 1.38
+  GPU/Postprocessing                                 0.17 p99 0.43 max 2.8
+  GPU/Translucency                                   0.15 p99 0.61 max 2.44
+  GPU/DepthOfField                                   0.1 p99 0.36 max 1.85
+  GPU/ScreenSpaceReflections                         0.07 p99 0.13 max 0.31
+  GPU/LumenSceneUpdate                               0.06 p99 0.11 max 0.7
+counts:
+  RHI/DrawCalls                  mean 412.18 max 662
+  RHI/PrimitivesDrawn            mean 192994.29 max 404517
+  Ticks/Total                    mean 49.06 max 50
+  Ticks/SkeletalMeshComponent    mean 10 max 10
+  ActorCount/TotalActorCount     mean 163.28 max 164
+  PSO/PSOMisses                  mean 0 max 1
+  PSO/PSOMissesOnHitch           mean -1 max -1
+  LightCount/All                 mean 12.3 max 18
+  Shaders/NumShadersCreated      mean 5269 max 5269
+  FileIO/PerFrameKB              mean 0.08 max 335
+memory (MB, first -> last):
+  GPUMem/SystemBudgetMB          47509.88 -> 47509.88 (+0) max 47509.88
+  MemoryFreeMB                   35088.63 -> 28058.57 (-7030.06) max 35181.22
+  GPUMem/LocalBudgetMB           23370 -> 23370 (+0) max 23370
+  LLM/PagefileUsed               3299.39 -> 3306.94 (+7.55) max 3311.5
+  LLM/Total                      3263.77 -> 3271.2 (+7.42) max 3275.75
+  GPUMem/LocalUsedMB             1709.76 -> 1711.26 (+1.5) max 1711.26
+  LLM/TrackedTotal               1638.59 -> 1643.75 (+5.16) max 1648.75
+  LLM/Untracked                  1624.3 -> 1627.31 (+3.01) max 1629.62
+  PhysicalUsedMB                 1597.26 -> 1606.18 (+8.92) max 1610.73
+  LLM/WorkingSetSize             1600.57 -> 1606.18 (+5.61) max 1610.73
+  LLM/Textures                   774.16 -> 774.16 (+0) max 774.17
+  LLM/RenderTargets              337.74 -> 337.74 (+0) max 337.74
+  GPUMem/SystemUsedMB            198.73 -> 199.85 (+1.13) max 199.85
+  LLM/Shaders                    121.45 -> 121.44 (-0.01) max 121.45
+  LLM/FMallocUnused              57.24 -> 60.98 (+3.74) max 64.13
+  LLM/ThreadStack                40.38 -> 40.38 (+0) max 40.38
+  LLM/UObject                    31.87 -> 32.03 (+0.16) max 33.57
+  LLM/OOMBackupPool              32 -> 32 (+0) max 32
+  LLM/Nanite                     25.29 -> 25.29 (+0) max 25.29
+  LLM/Modules                    25.05 -> 25.05 (+0) max 25.05

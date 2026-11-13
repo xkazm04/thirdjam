@@ -22,6 +22,9 @@ namespace JamAI
 		constexpr double ChargeBarMarginM = 0.1;
 	}
 	using namespace AICoreLocal;
+	// Lane A83: the five-a-side parts of the support and the back (defined after Decide)
+	bool FiveSupport(const FJamAIWorld& W, int Id, double SlowRadius, FVec2& Out);
+	bool FiveSlot(const FJamAIWorld& W, int Id, const FJamBotSkill& Gk, double SlowRadius, FVec2& Out);
 
 	double BoardSdf(const FJamAIWorld& W, const FVec2& P, FVec2& OutNormal)
 	{
@@ -516,6 +519,10 @@ namespace JamAI
 			{
 				Out = Attack(W, Id, Me, Pp, Dirg, D, bShoot, bAimed, bDeke, bPass);
 			}
+			else if (FiveSlot(W, Id, SkillOf(W, Id), Params.ArriveSlowRadius, Out))
+			{
+				// lane A83: the second back of a five holds the slot
+			}
 			else if (LastManGoalie(W, Id))
 			{
 				// R-0013 point 3: the carrier is inside our blue line and nobody stands between: hold the crease, squared to the
@@ -572,6 +579,10 @@ namespace JamAI
 				}
 			}
 		}
+		else if (Role == ERole::Support && FiveSupport(W, Id, Params.ArriveSlowRadius, Out))
+		{
+			// lane A83: a five's forecheck second man and weak-side support
+		}
 		else
 		{
 			const double Lane = S.Spawn.Y;
@@ -604,6 +615,139 @@ namespace JamAI
 		}
 		Out += Separate(Me, W, Id, Params.SeparateRadius) * 1.2;
 		return Out;
+	}
+
+	// Lane A83 (R-0041 point 2): five a side. A team of five plays three forwards and two backs (player|chaser, chaser|support, support, back, back);
+	// the second skater of a role on its team (by index) plays that role's five-a-side part, so the middle is not a pile. Teams of four or fewer
+	// never reach these functions (bit-identical to 3 v 3). Engine-free, pure: no state of the brain is read or written except through Out.
+	namespace FiveLocal
+	{
+		int TeamCount(const FJamAIWorld& W, int Team)
+		{
+			int N = 0;
+			for (int o = 0; o < W.NumSkaters; ++o) { if (W.Skaters[o].Team == Team) { ++N; } }
+			return N;
+		}
+		// 0 for the first skater of its spawn role on its team, 1 for the second, ...
+		int RoleOrdinal(const FJamAIWorld& W, int Id)
+		{
+			int N = 0;
+			for (int o = 0; o < Id; ++o) { if (W.Skaters[o].Team == W.Skaters[Id].Team && W.Skaters[o].Role == W.Skaters[Id].Role) { ++N; } }
+			return N;
+		}
+		// The opposing carrier deep in its own end (its defensive third): the forecheck's moment.
+		bool OppCarrierDeep(const FJamAIWorld& W, int Id)
+		{
+			const int C = W.Carrier;
+			if (C < 0 || C >= W.NumSkaters || W.Skaters[C].Team == W.Skaters[Id].Team) { return false; }
+			const FVec2 OppGoal = W.OppGoal(W.Skaters[Id].Team);
+			const FVec2 Cp = W.Skaters[C].Pos;
+			return Cp.X * OppGoal.X > 0.0 && std::fabs(Cp.X) > W.HalfLength / 3.0;
+		}
+		// The carrier's nearest standing teammate (its outlet), -1 when none within 30 m.
+		int Outlet(const FJamAIWorld& W, int C)
+		{
+			int Mate = -1;
+			double Best = 30.0;
+			for (int o = 0; o < W.NumSkaters; ++o)
+			{
+				if (o == C || W.Skaters[o].Team != W.Skaters[C].Team || W.Skaters[o].bDown) { continue; }
+				const double Dd = W.Skaters[o].Pos.DistTo(W.Skaters[C].Pos);
+				if (Dd < Best) { Best = Dd; Mate = o; }
+			}
+			return Mate;
+		}
+	}
+
+	// The supports of a five. The first support is the forecheck's second man (F2): with the opposing carrier deep in its end it takes away the
+	// outlet (stands on the pass lane to the carrier's nearest teammate, nearer the carrier), while the chaser (F1) presses the puck. The second
+	// support covers the weak side: the far side of the rink from the puck, a little ahead of it when we have the puck or it is loose (the back-door
+	// lane for a cross-ice pass), back in our half on the far post's lane when they have it. Returns false when the 3 v 3 support play stands.
+	bool FiveSupport(const FJamAIWorld& W, int Id, double SlowRadius, FVec2& Out)
+	{
+		using namespace FiveLocal;
+		const FJamAISkater& S = W.Skaters[Id];
+		if (S.Role != ERole::Support || TeamCount(W, S.Team) < 5) { return false; }
+		const FVec2 Me = S.Pos;
+		const FVec2 Pp = W.PuckPos;
+		const FVec2 OwnGoal = W.OwnGoal(S.Team);
+		const FVec2 OppGoal = W.OppGoal(S.Team);
+		const int Ord = RoleOrdinal(W, Id);
+		const int C = W.Carrier;
+		if (Ord == 0)
+		{
+			if (!OppCarrierDeep(W, Id)) { return false; }
+			const int M = Outlet(W, C);
+			if (M < 0) { return false; }
+			const FVec2 Lane = LerpV(W.Skaters[C].Pos, W.Skaters[M].Pos, 0.4);
+			Out = Arrive(Me, Lane - S.Vel * 0.2, SlowRadius);
+			return true;
+		}
+		// the weak side: the side of the rink away from the puck (the spawn's side when the puck is near the middle)
+		const double Side = std::fabs(Pp.Y) > 2.0 ? -Sign(Pp.Y) : (S.Spawn.Y != 0.0 ? Sign(S.Spawn.Y) : 1.0);
+		const bool bTheirs = C >= 0 && C < W.NumSkaters && W.Skaters[C].Team != S.Team;
+		FVec2 T;
+		if (bTheirs)
+		{
+			// back-check: the far lane, between our net and the puck, a third of the width out
+			T = LerpV(OwnGoal, Pp, 0.45);
+			T.Y = Side * W.HalfWidth * 0.35;
+		}
+		else
+		{
+			// ahead of the puck towards their net, on the far side: open for the cross-ice pass and the back door
+			T = FVec2(Lerp(Pp.X, OppGoal.X, 0.3), Side * W.HalfWidth * 0.45);
+		}
+		T.X = Clamp(T.X, -W.GoalX + 3.0, W.GoalX - 3.0);
+		Out = Arrive(Me, T, SlowRadius);
+		return true;
+	}
+
+	// The second back of a five holds the slot: with the puck within the profile's guard range of our net (pro 45 m: about our half; rookie 20 m)
+	// it stands the guard radius + 2 m out in front of our net (pro 7 m, rookie 12 m), shaded a third of the way towards the puck's side (the first
+	// back keeps the guard post on the goal-puck line and the crease). Further out: when we carry it in their half, the trailer at their point on
+	// the far side from the puck; otherwise a quarter of the way up our half, shaded to the puck's side (the breakout outlet). It steps onto a
+	// shot's path like the first back. Returns false for the first back and for teams of four or fewer. FIVE.md: slot 12 % -> 38 % (pro, regular
+	// playtester), the trailer 40 %, the profile's depth brings the rookie novice back to 93 % (65 % at a fixed 7 m).
+	bool FiveSlot(const FJamAIWorld& W, int Id, const FJamBotSkill& Gk, double SlowRadius, FVec2& Out)
+	{
+		using namespace FiveLocal;
+		const FJamAISkater& S = W.Skaters[Id];
+		if (S.Role != ERole::Back || TeamCount(W, S.Team) < 5 || RoleOrdinal(W, Id) == 0) { return false; }
+		const FVec2 Me = S.Pos;
+		const FVec2 Pp = W.PuckPos;
+		const FVec2 OwnGoal = W.OwnGoal(S.Team);
+		const double Up = Sign(-OwnGoal.X);   // up-ice from our net
+		FVec2 T;
+		if (Pp.DistTo(OwnGoal) < Gk.GuardRangeM)
+		{
+			// the slot, as deep as the profile's guard post allows (pro 7 m out; rookie, whose back guards 10 m out within 20 m, 12 m and only then)
+			T = FVec2(OwnGoal.X + Up * (Gk.GuardRadiusM + 2.0), Clamp(Pp.Y * 0.3, -3.0, 3.0));
+		}
+		else if (W.Carrier >= 0 && W.Carrier < W.NumSkaters && W.Skaters[W.Carrier].Team == S.Team)
+		{
+			// we carry it in their half: the trailer at their point, on the far side from the puck (the cross-ice pass and the late shot)
+			T = FVec2(Up * W.HalfLength * 0.45, -Sign(Pp.Y) * W.HalfWidth * 0.3);
+		}
+		else
+		{
+			T = FVec2(Up * -W.HalfLength * 0.25, Clamp(Pp.Y * 0.4, -6.0, 6.0));
+		}
+		Out = Arrive(Me, T - S.Vel * 0.25, SlowRadius);
+		const double Pv = W.PuckVel.Length();
+		if (Gk.bBlockShots && Pp.DistTo(OwnGoal) >= Gk.BlockMinDistM && Pv > 6.0 && W.PuckVel.Dot(OwnGoal - Pp) > 0.0)
+		{
+			const FVec2 Dir = W.PuckVel * (1.0 / Pv);
+			const double Tg = std::fabs(Dir.X) > 1e-6 ? (OwnGoal.X - Pp.X) / Dir.X : -1.0;
+			const double Yg = Pp.Y + Dir.Y * Tg;
+			if (Tg > 0.0 && std::fabs(Yg) < W.GoalHalfWidth + 1.0)
+			{
+				double Along = (Me - Pp).Dot(Dir);
+				Along = Along < 0.0 ? 0.0 : (Along > Tg ? Tg : Along);
+				if (Along < Tg - 0.5) { Out = Arrive(Me, Pp + Dir * Along - S.Vel * 0.25, 1.0); }   // only a lane it can reach in front of the net
+			}
+		}
+		return true;
 	}
 
 	bool FJamBrain::LastManGoalie(const FJamAIWorld& W, int Id) const
