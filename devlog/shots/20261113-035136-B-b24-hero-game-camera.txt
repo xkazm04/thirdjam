@@ -1,0 +1,1 @@
+One frame from the game camera in a running bot match: both teams on P4E export3 via BP_SkaterVisual_P4Lab (mirrored), forward lean visible on both; the side-bank glints still read as bright bars at right
