@@ -5,7 +5,7 @@
 import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { validateCartridge } from '../../../../schema/validate.mjs';
+import { validateCartridge, validateCartridgeText } from '../../../../schema/validate.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '..', '..', '..', '..');
@@ -14,7 +14,7 @@ const cases = [];
 const pointers = (errors) => [...new Set(errors.map((e) => e.match(/^at (\S+?):/)?.[1] ?? '?'))].sort();
 const add = (name, text) => {
   let errors;
-  try { errors = validateCartridge(JSON.parse(text)).errors; } catch (e) { errors = ['at /: not json']; }
+  errors = validateCartridgeText(text).errors;   // lane A118: the strict parser both sides share (duplicate keys, BOM, syntax pointers)
   cases.push({ name, ok: errors.length === 0, pointers: pointers(errors), text });
 };
 for (const f of readdirSync(cartDir).filter((f) => f.endsWith('.json')).sort()) add(`preset ${f}`, readFileSync(resolve(cartDir, f), 'utf8'));
@@ -84,8 +84,11 @@ const mut = {
   'look missing tier': (c) => { delete c.game.look.tier; },
 };
 for (const [name, f] of Object.entries(mut)) { const c = base(); f(c); add(`mutation ${name}`, JSON.stringify(c, null, 2)); }
-add('mutation duplicate key (Node accepts, C++ must reject: README rule)', readFileSync(resolve(cartDir, 'hockey.regular.cartridge.json'), 'utf8').replace('"seed": 1,', '"seed": 1,\n  "seed": 2,'));
-cases.at(-1).ok = false; cases.at(-1).pointers = ['/seed'];
+add('mutation duplicate key (both refuse: README rule, lane A118)', readFileSync(resolve(cartDir, 'hockey.regular.cartridge.json'), 'utf8').replace('"seed": 1,', '"seed": 1,\n  "seed": 2,'));
+add('mutation byte order mark (both accept: README rule, lane A118)', '﻿' + readFileSync(resolve(cartDir, 'hockey.regular.cartridge.json'), 'utf8'));
+add('mutation set_param unknown name (lane A118)', JSON.stringify((() => { const c = base(); c.game.rules.hooks = [{ id: 'h1', when: 'on_goal', then: [{ do: 'set_param', param: 'warp_factor', value: 1 }] }]; return c; })(), null, 2));
+add('mutation set_param out of range (lane A118)', JSON.stringify((() => { const c = base(); c.game.rules.hooks = [{ id: 'h1', when: 'on_goal', then: [{ do: 'set_param', param: 'puck_max_speed', value: -20 }] }]; return c; })(), null, 2));
+add('mutation set_param inside range (lane A118)', JSON.stringify((() => { const c = base(); c.game.rules.hooks = [{ id: 'h1', when: 'on_goal', then: [{ do: 'set_param', param: 'ice_friction', value: 0.005 }] }]; return c; })(), null, 2));
 writeFileSync(resolve(here, 'parity.json'), JSON.stringify({ tool: 'gen-parity', cases }, null, 1));
 console.log(`PASS gen-parity ${cases.length} cases, ${cases.filter((c) => c.ok).length} valid`);
 for (const c of cases) console.log(`  ${c.ok ? 'ok ' : 'bad'} ${c.name} ${c.pointers.join(' ')}`);

@@ -825,6 +825,12 @@
           "minimum": 1,
           "maximum": 2,
           "description": "The boards are a body: the impulse of a hit that pushes a victim standing within 1.5 m of the boards into them counts this much higher (the full bonus inside 60 degrees of straight in, none along the boards), and the victim's board read-out fires. 1 = the neutral value: no bonus, no read-out."
+        },
+        "release_grace_frames": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 300,
+          "description": "The release grace (R-0049 point 1): for this many frames after a knockdown ends, a hit on the released skater is a bump at most (no stumble, no knockdown; the attacker pays as for any bump) and the brain starts no check on it. Part of the momentum model (contact.momentum true). 0 = the neutral value: no grace."
         }
       }
     },

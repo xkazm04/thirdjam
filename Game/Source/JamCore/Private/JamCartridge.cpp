@@ -268,6 +268,30 @@ namespace JamValidate
 		return Fallback;
 	}
 
+	// Lane A118 (track S3): the game field a hook's set_param names (SET_PARAM_FIELD in validate.mjs), and its "lo..hi" range from limits.json game_ranges.
+	static const TCHAR* SetParamField(const FString& Param)
+	{
+		static const TCHAR* const Map[][2] = {
+			{ TEXT("skater_speed"), TEXT("skater.speed") }, { TEXT("skater_turn_rate"), TEXT("skater.turn_rate") }, { TEXT("shot_speed"), TEXT("shot.speed") },
+			{ TEXT("puck_max_speed"), TEXT("puck.max_speed") }, { TEXT("ice_friction"), TEXT("rink.ice_friction") }, { TEXT("board_restitution"), TEXT("rink.board_restitution") },
+			{ TEXT("ai_speed_scale"), TEXT("ai.speed_scale") }, { TEXT("ai_red_skill"), TEXT("ai.red_skill") }, { TEXT("goal_pause_frames"), TEXT("rules.goal_pause_frames") },
+		};
+		for (const auto& Row : Map) if (Param == Row[0]) return Row[1];
+		return nullptr;
+	}
+
+	static bool GameRange(const FString& Field, double& Lo, double& Hi)
+	{
+		const FSchemas& S = GetSchemas();
+		FJPtr Ranges = S.Limits ? S.Limits->Get(TEXT("game_ranges")) : nullptr;
+		FJPtr R = Ranges && Ranges->IsObject() ? Ranges->Get(Field) : nullptr;
+		FString L, H;
+		if (!R || !R->IsString() || !R->String.Split(TEXT(".."), &L, &H)) return false;
+		Lo = FCString::Atod(*L);
+		Hi = FCString::Atod(*H);
+		return true;
+	}
+
 	static bool IsWallClock(const FString& K)
 	{
 		static const FRegexPattern P(TEXT("_(seconds?|secs?|ms|millis|milliseconds|minutes?|mins?|hours?)$"));
@@ -520,6 +544,17 @@ namespace JamValidate
 				if (Do == TEXT("add_score") && FMath::FloorToDouble(V) != V) Errors.Add(FString::Printf(TEXT("at %s/value: add_score adds whole goals; %s is not a whole number."), *P, *Num(V)));
 				if (Do == TEXT("set_score_multiplier") && (V < 1 || V > 5)) Errors.Add(FString::Printf(TEXT("at %s/value: a score multiplier is 1 to 5, found %s."), *P, *Num(V)));
 				if ((Do == TEXT("shrink_rink") || Do == TEXT("grow_rink")) && (V < 0.05 || V > 0.5)) Errors.Add(FString::Printf(TEXT("at %s/value: %s takes the fraction to change the rink by, 0.05 to 0.5 (0.1 is 10 percent), found %s."), *P, *Do, *Num(V)));
+			}
+			// Lane A118: set_param names one of the nine tunables and stays inside its field's range (validate.mjs checkHook).
+			if (Do == TEXT("set_param"))
+			{
+				if (FJPtr Param = A->Get(TEXT("param")); Param && Param->IsString())
+				{
+					const TCHAR* Field = SetParamField(Param->String);
+					double Lo = 0, Hi = 0;
+					if (!Field) Errors.Add(FString::Printf(TEXT("at %s/param: set_param can change skater_speed, skater_turn_rate, shot_speed, puck_max_speed, ice_friction, board_restitution, ai_speed_scale, ai_red_skill, goal_pause_frames; \"%s\" is none of them."), *P, *Param->String));
+					else if (bV && GameRange(Field, Lo, Hi) && (V < Lo || V > Hi)) Errors.Add(FString::Printf(TEXT("at %s/value: %s lies within %s to %s (the range of game.%s), found %s."), *P, *Param->String, *Num(Lo), *Num(Hi), Field, *Num(V)));
+				}
 			}
 		}
 	}
@@ -1158,6 +1193,7 @@ namespace
 			ReadInteger(Ct, TEXT("down_frames_max"), C.Contact.DownFramesMax);
 			ReadInteger(Ct, TEXT("stagger_frames"), C.Contact.StaggerFrames);
 			ReadNumber(Ct, TEXT("board_bonus"), C.Contact.BoardBonus);   // lane A101 (track F1): the boards are a body; 1 = the neutral value
+			ReadInteger(Ct, TEXT("release_grace_frames"), C.Contact.ReleaseGraceFrames);   // lane A113 (R-0049 point 1): 0 = the neutral value
 		}
 
 		FJPtr Rules = Obj(G, TEXT("rules"));
@@ -1298,6 +1334,13 @@ bool UJamCartridge::ApplyValueKey(FJamGameConfig& C, const FString& K, double V)
 	else if (K == TEXT("goal_pause_frames")) C.Rules.GoalPauseFrames = static_cast<int32>(V);
 	else return false;
 	return true;
+}
+
+// Lane A118 (track S3): the schema range of the game field a set_param tunable names; false for a name that is not one of the nine.
+bool UJamCartridge::SetParamRange(const FString& Param, double& OutLo, double& OutHi)
+{
+	const TCHAR* Field = JamValidate::SetParamField(Param);
+	return Field && JamValidate::GameRange(Field, OutLo, OutHi);
 }
 
 bool UJamCartridge::HexToLinear(const FString& Hex, FLinearColor& Out)

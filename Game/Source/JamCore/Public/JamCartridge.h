@@ -242,6 +242,10 @@ struct JAMCORE_API FJamContactConfig
 	// Lane A101 (track F1): the boards are a body. The impulse of a hit that pushes a victim within 1.5 m of the boards into them counts this much higher
 	// (UJamSim::BoardFactor). 1 = the neutral value: no bonus, no board read-out, the game before the lane (same state hash).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double BoardBonus = 1.25;
+	// Lane A113 (track F1, R-0049 point 1): the release grace. For this many frames after a knockdown ends, a hit on the released skater is a bump at most and
+	// the brain starts no check on it. 0 = the neutral value: no grace, the game before the lane (same state hash). 120 (R-0051): two seconds, the value at
+	// which no figure went down again within 2 s of its release in the lane's ten matches (at 90 one did, 111 frames after).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 ReleaseGraceFrames = 120;
 	// The neutral block (contact.momentum false, contact.carrier_can_hit true): the check rule of main before lane A92.
 	void SetNeutral() { bMomentum = false; bCarrierCanHit = true; }
 };
@@ -413,6 +417,9 @@ public:
 	// schema/README.md "Tunables": sets the game field a `values` key names (skater_speed, shot_speed, ice_friction, ...).
 	// False when the key names no field. The same mapping the loader applies; the rule hook's SetParam (C-0005) rides it.
 	static bool ApplyValueKey(FJamGameConfig& Config, const FString& Key, double Value);
+	// Lane A118 (track S3): the range (schema/limits.json game_ranges) of the game field a hook's set_param may change; false when Param is not one of the
+	// nine tunables. Both validators refuse a value outside it; UJamSim::SetParam clamps to it.
+	static bool SetParamRange(const FString& Param, double& OutLo, double& OutHi);
 
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") FString Id;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") FString Title;

@@ -192,3 +192,4 @@ Fired on the frame F (gamepad R3) uses the held ability. A knockdown caused by t
 - `knockdown`: `KnockdownFrames` on `SetKnockedDown` runs **60 to 150** by the hit's strength (it was a constant 90).
 - `lift` and `poke` carry `Dir` (the unit vector attacker to victim); the binder sends it as `User.Dir`, as for `check`. The clean `lift` event is in the frame of the lift.
 - A press refused because the presser carries the puck sets the read-out `bCheckRefused` (no event).
+- **Release grace (lane A113, R-0051).** For `game.contact.release_grace_frames` (120) after a skater is released from a knockdown, a hit on it is a bump at most: it emits no `check` and no `knockdown` event, the attacker pays as for any bump, and the shotgun passes over it as over a shield.

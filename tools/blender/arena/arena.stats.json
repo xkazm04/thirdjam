@@ -76,6 +76,13 @@
       "under_budget": true,
       "length_m": 12.0,
       "thumb_presses": 12,
+      "slots": [
+        "board",
+        "kick",
+        "bench",
+        "team",
+        "dark"
+      ],
       "fbx_mb": 0.089
     },
     "SM_Arena_PenaltyBox": {
@@ -125,7 +132,322 @@
       "under_budget": true,
       "length_m": 4.4,
       "thumb_presses": 5,
+      "slots": [
+        "board",
+        "kick",
+        "bench",
+        "team",
+        "dark"
+      ],
       "fbx_mb": 0.076
+    },
+    "SM_Arena_ScorerTable": {
+      "triangles": 2088,
+      "triangles_by_slot": {
+        "board": 440,
+        "kick": 544,
+        "bench": 80,
+        "dark": 672,
+        "frame": 352
+      },
+      "triangles_by_part": {
+        "floor": 80,
+        "back_wall": 80,
+        "cap_rail": 176,
+        "desk": 192,
+        "desk_legs": 128,
+        "horn": 192,
+        "papers": 64,
+        "mug": 96,
+        "stool": 192,
+        "sign_posts": 128,
+        "sign": 216,
+        "sign_face": 64,
+        "sign_digits": 256,
+        "lamp": 224
+      },
+      "vertices": 1090,
+      "uv_loops": 4616,
+      "uv_min": [
+        0.0,
+        0.0
+      ],
+      "uv_max": [
+        1.515,
+        1.665
+      ],
+      "dimensions_m": [
+        1.404,
+        1.664,
+        2.778
+      ],
+      "sockets": {},
+      "under_budget": true,
+      "length_m": 1.36,
+      "thumb_presses": 2,
+      "slots": [
+        "board",
+        "kick",
+        "bench",
+        "dark",
+        "frame"
+      ],
+      "fbx_mb": 0.075
+    },
+    "SM_Arena_Goal_W400H061": {
+      "triangles": 1608,
+      "triangles_by_slot": {
+        "frame": 1608
+      },
+      "triangles_by_part": {
+        "post": 384,
+        "crossbar": 552,
+        "bottom_bar": 272,
+        "back_post": 128,
+        "brace": 160,
+        "back_bar": 112
+      },
+      "vertices": 826,
+      "uv_loops": 3416,
+      "uv_min": [
+        0.0,
+        0.0
+      ],
+      "uv_max": [
+        2.263,
+        0.268
+      ],
+      "dimensions_m": [
+        4.344,
+        1.656,
+        0.794
+      ],
+      "sockets": {},
+      "under_budget": true,
+      "length_m": 4.0,
+      "thumb_presses": 11,
+      "slots": [
+        "frame"
+      ],
+      "goal": {
+        "width_m": 4.0,
+        "height_m": 0.61,
+        "depth_m": 1.5,
+        "measured_half_width_m": 1.9982,
+        "measured_height_m": 0.607,
+        "opening_error_cm": 0.3,
+        "net_cell_m": 0.25,
+        "cord_m": 0.03,
+        "net_mesh": "SM_Arena_GoalNet_W400H061",
+        "triangles_with_net": 2520
+      },
+      "opening_within_2cm": true,
+      "fbx_mb": 0.055
+    },
+    "SM_Arena_GoalNet_W400H061": {
+      "triangles": 912,
+      "triangles_by_slot": {
+        "net": 912
+      },
+      "triangles_by_part": {
+        "net_top": 600,
+        "net_back": 168,
+        "net_side": 144
+      },
+      "vertices": 656,
+      "uv_loops": 1824,
+      "uv_min": [
+        0.0,
+        0.0
+      ],
+      "uv_max": [
+        2.08,
+        0.06
+      ],
+      "dimensions_m": [
+        4.224,
+        1.507,
+        0.65
+      ],
+      "sockets": {},
+      "under_budget": true,
+      "length_m": 4.0,
+      "thumb_presses": 0,
+      "slots": [
+        "net"
+      ],
+      "net_of": "SM_Arena_Goal_W400H061",
+      "fbx_mb": 0.035
+    },
+    "SM_Arena_Goal_W600H061": {
+      "triangles": 1848,
+      "triangles_by_slot": {
+        "frame": 1848
+      },
+      "triangles_by_part": {
+        "post": 384,
+        "crossbar": 792,
+        "bottom_bar": 272,
+        "back_post": 128,
+        "brace": 160,
+        "back_bar": 112
+      },
+      "vertices": 946,
+      "uv_loops": 3896,
+      "uv_min": [
+        0.0,
+        0.0
+      ],
+      "uv_max": [
+        3.263,
+        0.268
+      ],
+      "dimensions_m": [
+        6.344,
+        1.655,
+        0.799
+      ],
+      "sockets": {},
+      "under_budget": true,
+      "length_m": 6.0,
+      "thumb_presses": 15,
+      "slots": [
+        "frame"
+      ],
+      "goal": {
+        "width_m": 6.0,
+        "height_m": 0.61,
+        "depth_m": 1.5,
+        "measured_half_width_m": 2.9985,
+        "measured_height_m": 0.6086,
+        "opening_error_cm": 0.15,
+        "net_cell_m": 0.314,
+        "cord_m": 0.03,
+        "net_mesh": "SM_Arena_GoalNet_W600H061",
+        "triangles_with_net": 2800
+      },
+      "opening_within_2cm": true,
+      "fbx_mb": 0.06
+    },
+    "SM_Arena_GoalNet_W600H061": {
+      "triangles": 952,
+      "triangles_by_slot": {
+        "net": 952
+      },
+      "triangles_by_part": {
+        "net_top": 656,
+        "net_back": 200,
+        "net_side": 96
+      },
+      "vertices": 680,
+      "uv_loops": 1904,
+      "uv_min": [
+        0.0,
+        0.0
+      ],
+      "uv_max": [
+        3.08,
+        0.06
+      ],
+      "dimensions_m": [
+        6.229,
+        1.507,
+        0.65
+      ],
+      "sockets": {},
+      "under_budget": true,
+      "length_m": 6.0,
+      "thumb_presses": 0,
+      "slots": [
+        "net"
+      ],
+      "net_of": "SM_Arena_Goal_W600H061",
+      "fbx_mb": 0.036
+    },
+    "SM_Arena_Goal_W400H122": {
+      "triangles": 1800,
+      "triangles_by_slot": {
+        "frame": 1800
+      },
+      "triangles_by_part": {
+        "post": 576,
+        "crossbar": 552,
+        "bottom_bar": 272,
+        "back_post": 128,
+        "brace": 160,
+        "back_bar": 112
+      },
+      "vertices": 922,
+      "uv_loops": 3800,
+      "uv_min": [
+        0.0,
+        0.0
+      ],
+      "uv_max": [
+        2.263,
+        0.268
+      ],
+      "dimensions_m": [
+        4.344,
+        1.658,
+        1.404
+      ],
+      "sockets": {},
+      "under_budget": true,
+      "length_m": 4.0,
+      "thumb_presses": 13,
+      "slots": [
+        "frame"
+      ],
+      "goal": {
+        "width_m": 4.0,
+        "height_m": 1.22,
+        "depth_m": 1.5,
+        "measured_half_width_m": 1.9992,
+        "measured_height_m": 1.2179,
+        "opening_error_cm": 0.21,
+        "net_cell_m": 0.28,
+        "cord_m": 0.03,
+        "net_mesh": "SM_Arena_GoalNet_W400H122",
+        "triangles_with_net": 2792
+      },
+      "opening_within_2cm": true,
+      "fbx_mb": 0.059
+    },
+    "SM_Arena_GoalNet_W400H122": {
+      "triangles": 992,
+      "triangles_by_slot": {
+        "net": 992
+      },
+      "triangles_by_part": {
+        "net_top": 512,
+        "net_back": 288,
+        "net_side": 192
+      },
+      "vertices": 692,
+      "uv_loops": 1984,
+      "uv_min": [
+        0.0,
+        0.0
+      ],
+      "uv_max": [
+        2.08,
+        0.06
+      ],
+      "dimensions_m": [
+        4.227,
+        1.513,
+        1.259
+      ],
+      "sockets": {},
+      "under_budget": true,
+      "length_m": 4.0,
+      "thumb_presses": 0,
+      "slots": [
+        "net"
+      ],
+      "net_of": "SM_Arena_Goal_W400H122",
+      "fbx_mb": 0.038
     }
   },
   "placement_m": {
@@ -158,8 +480,29 @@
         "team": 1
       }
     ],
-    "bench_length_m": 12.0
+    "bench_length_m": 12.0,
+    "SM_Arena_ScorerTable": [
+      {
+        "x": 0.0,
+        "y": -30.25,
+        "yaw": 180
+      }
+    ],
+    "goals": {
+      "note": "x = +-GoalLineX (L/2 - 4), y = 0; yaw -90 on the +x end, +90 on the -x end; the variant nearest the cartridge's goal, scaled W/Wv along the line and H/Hv up",
+      "goal_line_x": 56.0,
+      "variants": [
+        "SM_Arena_Goal_W400H061",
+        "SM_Arena_Goal_W600H061",
+        "SM_Arena_Goal_W400H122"
+      ],
+      "nets": [
+        "SM_Arena_GoalNet_W400H061",
+        "SM_Arena_GoalNet_W600H061",
+        "SM_Arena_GoalNet_W400H122"
+      ]
+    }
   },
-  "render_s": 15.9,
-  "total_s": 22.7
+  "render2_s": 4.8,
+  "total_s": 8.1
 }

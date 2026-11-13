@@ -1175,12 +1175,19 @@ void UJamHudWidget::UpdateContactLine(const FJamPresentationFrame& F)
 		const FJamSkaterState& Hu = Sim->GetSkaters()[Sim->GetHumanIndex()];
 		const bool bBounced = Hu.ContactRecoils > ContactSeenRecoils;
 		const bool bRefused = Hu.ChecksRefused > ContactSeenRefused;
+		// Lane A113: the human's own soft hit, its hit on a skater that just got up, its whiff (counters, as the two above).
+		const bool bSoft = Hu.ChecksSoft > ContactSeenSoft, bMissed = Hu.ChecksMissed > ContactSeenMissed, bGraced = Hu.ChecksGraced > ContactSeenGraced;
 		ContactSeenRecoils = Hu.ContactRecoils;
 		ContactSeenRefused = Hu.ChecksRefused;
-		if (bBounced || bRefused)
+		ContactSeenSoft = Hu.ChecksSoft;
+		ContactSeenMissed = Hu.ChecksMissed;
+		ContactSeenGraced = Hu.ChecksGraced;
+		if (bBounced || bRefused || bSoft || bMissed || bGraced)
 		{
-			ShowContactLine(ContactLineFor(bRefused, bBounced));
-			UE_LOG(LogTemp, Log, TEXT("JAMHUD frame=%lld contact_line=%s refused=%d recoils=%d"), F.SimFrame, *ContactLineFor(bRefused, bBounced).Replace(TEXT(" "), TEXT("_")), Hu.ChecksRefused, Hu.ContactRecoils);
+			const FString Line = ContactLineFor(bRefused, bBounced, bSoft, bMissed, bGraced);
+			ShowContactLine(Line);
+			UE_LOG(LogTemp, Log, TEXT("JAMHUD frame=%lld contact_line=%s refused=%d recoils=%d soft=%d missed=%d graced=%d"), F.SimFrame, *Line.Replace(TEXT(" "), TEXT("_")), Hu.ChecksRefused, Hu.ContactRecoils,
+				Hu.ChecksSoft, Hu.ChecksMissed, Hu.ChecksGraced);
 		}
 	}
 	if (bContactPending) { ContactStart = F.SimFrame; bContactPending = false; }

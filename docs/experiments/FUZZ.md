@@ -48,3 +48,24 @@ Nothing in the game changed. The gate gains `Jam.Core.FuzzSmoke` (3 s) and `tool
 ## The twelve modes and every shipped cut (`Bar.Fuzz.ModesAndCuts`)
 35 cartridges (the cuts in `Cartridges/`, the twelve in `modes/`, the ladder's takes and fallbacks), two seeds each, brain-vs-brain twice (hash) and the playtester once,
 36,000 frames or the timer's own stop plus a margin: 70 runs, 0 faults (no non-finite state, nothing beyond the boards, every match over, every seed one hash). 138 s on one worker.
+
+## Evolution 2 (lane A118, 13 Nov 2026): the seven fault classes closed
+Each fix has a test that failed first (`Game/logs/a118/failfirst2.log`: the regression corpus 18 cases, 9 faults; `Jam.Core.FuzzSetParamClamp` red) and the found cartridge as
+its regression case (`tools/fuzz/regress/`, built from `found/` by `tools/fuzz/gen-regress.mjs`; `Jam.Core.FuzzSmoke` runs it after the smoke corpus, with the long run on every valid case).
+
+| Class | Fix | Where |
+|---|---|---|
+| nan (set_param) | **Refused** by both validators: `param` must be one of the nine tunables (README "Tunables"), `value` inside the field's `game_ranges` range. The sim also clamps (`UJamSim::SetParam`) for callers that bypass the validator. Refusal over clamp-only because it tells the Designer what it did wrong; no shipped cartridge has a `set_param`, so all stay valid. | `validate.mjs` `SET_PARAM_FIELD`/`checkHook`, `JamCartridge.cpp` `CheckHook`, `UJamCartridge::SetParamRange`, `JamSim.cpp` `SetParam` |
+| puck-outside (shrink_rink) | `ApplyPendingRink` scales the pending end-zone faceoff dot (icing, a foul) with the boards; before, the drop landed on the old dot, outside the new rink. | `JamSim.cpp` `ApplyPendingRink` |
+| skater-outside | **The sim clamps**: after the obstacles push, a skater beyond the boards is put back on them (no validator change: an obstacle over a spawn stays legal). Untouched unless the obstacles left the skater beyond the boards. | `JamSim.cpp` `CollideSkaterStatic` |
+| never-ends | Hypothesis confirmed: `Step` returns early in Faceoff / GoalPause, the hard stop ran only in Playing; a hook `on_faceoff -> end_period` loops GoalPause -> Faceoff forever. The hard stop now holds in every phase. | `JamSim.cpp` `Step` (one block before the phase branches) |
+| parity / BOM / duplicate keys | One parser both sides: `schema/strict-json.mjs` is a port of `FParser` (`JamJson.cpp`): duplicate keys refused at the repeated key's pointer, a BOM tolerated (the C++ loader always did; README updated), a syntax error at the pointer of the value being read, the same words and offset. `validateCartridgeText`, the CLI, `gen.mjs`, `gen-parity.mjs` use it. | `schema/strict-json.mjs`, `validate.mjs`, README |
+
+`--safe` no longer leaves out anything the findings showed (set_param, shrink_rink, swap_nets, end_period, obstacles, shrink_per_goal are back in the smoke corpus); it still
+leaves out the 28 hand-minimal `min-*` cartridges (each runs a 36,000-frame match). The valid family draws `set_param` only inside the rules; the invalid family gains `bad-set-param`.
+
+### Evolution 2 result
+`Jam.Core.FuzzSmoke` (smoke 80 cases + regress 18 cases, 6 s) and `Jam.Core.FuzzSetParamClamp` green; the full `Jam` filter 158 of 158; `Bar.Fuzz.ModesAndCuts` 35 shipped files, 70 runs,
+0 faults, every brain hash, frame count, score and playtester frame count identical to the baseline (0 of 70 lines differ). Fresh run3 (seed 3, 6,528 cases = 5,011 valid
++ 17 refused minimal + 1,500 invalid, set_param / shrink_rink / swap_nets / end_period / obstacles / BOM / duplicate keys all included): **0 faults**, 0 crashes, 0 hangs, 140 s on three workers
+(`-Multiprocess` on the driver's command line: 404 s before).

@@ -396,3 +396,5 @@
 - link green 20:29: main 25df19f (The carried puck leaves only by a press, and the online guest plays the whole game (A102 t) pushed.
 - 20:32 board: landed and verified on origin today since the fix: 941b8d4 (A104), 7f4d501 (A101, A106, A103, A107, A109, A105, device B merged), 25df19f (A102 the puck is kept, A110 the online guest). Running: A113 (grace to 120), A121 F2, A119 F3, A123 U1, A120 Q1, A115 Q2, A114 Q3, A116 S1, A108 S2 (cursor), A118 S3, A112 C0 curve, A122 M1 modes. The ladder is off until A112 lands (R-0050): no package before that; H26 stays the newest.
 - RESOURCES 20:44 cpu 100% ram 41.4/63GB editors 0 cmd 15 free 548GB
+- link green 21:12: main 2250116 (The player finds himself and a lit rink in the first second, and the match starts on a pre) pushed.
+- RESOURCES 21:18 cpu 100% ram 42.9/63GB editors 0 cmd 22 free 544GB

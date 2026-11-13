@@ -2,18 +2,18 @@
  "schema": "tj.cartridge/1",
  "id": "fuzz-00035",
  "title": "Fuzz 35",
- "seed": 0,
+ "seed": 4294967295,
  "theme": {
-  "name": "The Cage",
+  "name": "Chaos Cut",
   "mood_words": [
-   "loud",
-   "hard",
-   "neon"
+   "wild",
+   "shrinking",
+   "loud"
   ],
   "palette": [
    {
-    "name": "ice",
-    "hex": "#DCE9F5"
+    "name": "scuffed ice",
+    "hex": "#B8C4D0"
    },
    {
     "name": "blue",
@@ -24,8 +24,12 @@
     "hex": "#E8651A"
    },
    {
-    "name": "trim",
-    "hex": "#38BDF8"
+    "name": "bumper",
+    "hex": "#E633A0"
+   },
+   {
+    "name": "slow ice",
+    "hex": "#5A8CF2"
    },
    {
     "name": "dark",
@@ -39,7 +43,7 @@
    "type": "number",
    "min": 3,
    "max": 16,
-   "default": 12,
+   "default": 11,
    "description": "Top skating speed in metres per second. Higher is faster and harder to control."
   },
   {
@@ -79,7 +83,7 @@
    "type": "number",
    "min": 0,
    "max": 1,
-   "default": 0.95,
+   "default": 0.4,
    "description": "How bouncy the boards are. 0 is dead, 1 is a perfect bounce."
   },
   {
@@ -108,238 +112,504 @@
   }
  ],
  "values": {
-  "skater_turn_rate": 2.7101,
-  "ice_friction": 0,
-  "board_restitution": 0,
-  "goal_pause_frames": 170
+  "ice_friction": 0.1,
+  "board_restitution": 0.9963,
+  "goal_pause_frames": 600
  },
  "rules": [],
  "entities": [],
  "ai": [],
  "game": {
   "rink": {
-   "length_m": 160,
-   "width_m": 20,
-   "corner_radius_m": 10,
-   "board_restitution": 1,
-   "goal_height_m": 1.5
+   "length_m": 100,
+   "width_m": 50,
+   "corner_radius_m": 7.5,
+   "board_restitution": 0.5,
+   "ice_friction": 0.05,
+   "goal_width_m": 6,
+   "goal_height_m": 0.9,
+   "zones": [
+    {
+     "id": "zone-1",
+     "shape": "circle",
+     "x": -19,
+     "z": -2.23,
+     "kind": "bumper",
+     "r": 2.74
+    },
+    {
+     "id": "zone-2",
+     "shape": "rect",
+     "x": 47.75,
+     "z": -16.62,
+     "kind": "no_shoot",
+     "w": 151.29,
+     "d": 53.33
+    },
+    {
+     "id": "zone-3",
+     "shape": "rect",
+     "x": 13.54,
+     "z": -24.33,
+     "kind": "fast_ice",
+     "w": 135.18,
+     "d": 34.71
+    }
+   ],
+   "obstacles": [
+    {
+     "kind": "pillar",
+     "x": 0,
+     "z": 0,
+     "size": 3.13
+    }
+   ]
   },
   "skater": {
-   "speed": 16,
-   "accel": 4,
-   "turn_rate": 1,
-   "lateral_grip": 12,
-   "mass": 40,
-   "glide_drag": 1,
-   "brake_decel": 1,
+   "speed": 9.5,
+   "accel": 22,
+   "turn_rate": 6.5,
+   "lateral_grip": 6.25,
+   "mass": 100,
+   "glide_drag": 0.5,
+   "brake_decel": 15.5,
    "check_enabled": false,
-   "check_speed_min": 1,
-   "knockdown_frames": 300,
-   "visual": "generated_b2",
-   "pass_speed": 30,
-   "pass_lead_frames": 60,
-   "carry_speed_mult": 0.6,
-   "reverse_brake_decel": 40,
+   "check_speed_min": 6.5,
+   "knockdown_frames": 158,
+   "visual": "toy",
+   "pass_speed": 17.5,
+   "pass_lead_frames": 30,
+   "carry_speed_mult": 0.8,
+   "reverse_brake_decel": 20,
    "burst": {
-    "frames": 60,
-    "accel_mult": 1
+    "frames": 30,
+    "accel_mult": 2
    },
    "breakaway": {
-    "speed_bonus": 0,
-    "frames": 300
+    "speed_bonus": 0.5,
+    "frames": 150
    },
    "sprint": {
-    "bonus": 1,
-    "drain_frames": 30,
-    "refill_frames": 3600,
-    "carry_bonus": 0
+    "bonus": 0.5,
+    "drain_frames": 915,
+    "refill_frames": 1815,
+    "carry_bonus": 0.5
    },
    "goalie": {
-    "block_height_m": 2
+    "reach_m": 1.5,
+    "block_height_m": 1
+   },
+   "spin": {
+    "frames": 60,
+    "cooldown_frames": 300,
+    "speed_mult": 0.6,
+    "stamina_cost": 0.5
    }
   },
   "stick": {
-   "reach_m": 0.6,
-   "poke_window_frames": 2,
-   "lift_range_m": 0.5,
-   "lift_cone_deg": 180,
-   "stumble_frames": 0,
-   "mouse_sensitivity": 5,
-   "foul_grace_frames": 0,
-   "reception_m": 3,
+   "reach_m": 1.1,
+   "poke_window_frames": 16,
+   "lift_range_m": 1.5,
+   "lift_cone_deg": 95,
+   "stumble_frames": 45,
+   "mouse_sensitivity": 2.55,
+   "reception_m": 1.5,
    "deke": {
-    "offset_m": 0,
-    "commit_frames": 60
+    "offset_m": 1,
+    "commit_frames": 30
    },
    "sweep": {
-    "min_deg_per_frame": 1,
-    "shield_frames": 0,
-    "bot_react_frames": 0,
-    "sprint_shield_mult": 1
+    "min_deg_per_frame": 23,
+    "bot_react_frames": 15,
+    "sprint_shield_mult": 0.5
    }
   },
   "puck": {
    "radius_m": 0.06,
-   "max_speed": 10,
-   "drag": 2,
-   "carry_assist": 0,
+   "max_speed": 35,
+   "drag": 1,
+   "carry_assist": 0.5,
    "count": 3,
    "gravity_mps2": 30,
-   "ice_restitution": 1,
-   "colour_hex": "#111111"
+   "ice_restitution": 0.5
   },
   "shot": {
-   "reach_m": 0.5,
-   "cooldown_frames": 120,
-   "aim_cone_deg": 1,
-   "charge_frames_max": 120,
-   "charge_speed_bonus": 0,
-   "tap_frames": 30,
+   "reach_m": 2.25,
+   "speed": 22.5,
+   "aim_cone_deg": 23,
+   "charge_frames_max": 60,
+   "charge_speed_bonus": 10,
+   "tap_frames": 15,
+   "deflect": false,
    "one_timer": {
-    "window_frames": 0,
-    "cone_bonus_deg": 0
+    "window_frames": 30,
+    "cone_bonus_deg": 15
    },
    "lift": {
-    "tap_m": 0,
-    "half_m": 0,
-    "full_m": 2,
-    "half_frames": 120
+    "tap_m": 0.25,
+    "half_m": 0.75,
+    "full_m": 1,
+    "half_frames": 60
+   }
+  },
+  "pass": {
+   "saucer": {
+    "half_frames": 30,
+    "lift_m": 0.5
    }
   },
   "contact": {
    "momentum": false,
    "carrier_can_hit": true,
-   "lunge_mps": 0,
-   "thrust_mps": 0,
-   "cross_reach_m": 0,
-   "stability_mps": 30,
-   "stand_speed_mps": 5,
-   "stand_brace": 1,
-   "speed_stability": 0.3,
-   "sprint_stability": 1,
-   "unseen_stability": 0.3,
-   "bump_ratio": 0,
-   "loose_ratio": 3,
-   "down_ratio": 0.2,
-   "down_full_ratio": 10,
-   "down_frames_min": 300,
-   "down_frames_max": 15,
-   "stagger_frames": 0
+   "lunge_mps": 3,
+   "thrust_mps": 5,
+   "cross_reach_m": 0.75,
+   "stability_mps": 15.5,
+   "stand_speed_mps": 2.5,
+   "stand_brace": 2,
+   "speed_stability": 0.65,
+   "spin_stability": 0.65,
+   "unseen_stability": 0.65,
+   "bump_ratio": 0.5,
+   "loose_ratio": 1.5,
+   "down_ratio": 2.6,
+   "down_full_ratio": 5.5,
+   "down_frames_min": 158,
+   "stagger_frames": 30
   },
   "ai": {
-   "difficulty": "pro",
-   "yield_margin_m": 6,
-   "yield_radius_m": 40,
-   "hold_radius_m": 0,
-   "speed_scale": 1.5,
-   "red_skill": 1,
-   "react_frames": 0,
-   "body_check": 0,
-   "sprint": 1
+   "difficulty": "rookie",
+   "yield_margin_m": 3,
+   "yield_radius_m": 20,
+   "hold_radius_m": 7.5,
+   "speed_scale": 0.9,
+   "react_frames": 30,
+   "body_check": 0.5,
+   "sprint": 0.5
   },
   "barks": {
    "enabled": true,
-   "intensity": "normal"
+   "intensity": "quiet"
   },
   "commentary": {
-   "enabled": false,
-   "intensity": "normal"
+   "enabled": true,
+   "intensity": "quiet"
   },
   "look": {
-   "tier": "l1_day",
-   "trim_emissive": 0,
-   "fog_density": 0.1,
-   "wet_ice": true,
-   "trim_colour_hex": "#38BDF8"
+   "tier": "l2_night",
+   "trim_emissive": 50,
+   "fog_density": 0.05,
+   "wet_ice": false
   },
   "camera": {
-   "distance_m": 20,
-   "height_m": 1,
-   "look_ahead_m": 0,
-   "lag_frames": 30,
-   "fov_deg": 40,
-   "boards_margin_m": 0,
-   "end_height_m": 1,
-   "far_net_bias": 0
+   "mode": "third_person",
+   "distance_m": 11,
+   "height_m": 8,
+   "look_ahead_m": 10,
+   "lag_frames": 15,
+   "fov_deg": 75,
+   "boards_margin_m": 2.5,
+   "end_height_m": 8,
+   "far_net_bias": 0.5
   },
   "rules": {
-   "mode": "timer",
-   "timer_frames": 36000,
-   "goal_pause_frames": 479,
+   "mode": "first_to",
+   "score_to_win": 9,
+   "goal_pause_frames": 30,
+   "penalties": false,
    "variants": {
-    "sudden_death": false,
     "last_goal_double": true,
-    "period_count": 1
+    "shrink_per_goal": 0.3
    }
   },
+  "effects": [
+   {
+    "id": "fx-1",
+    "target": "rink",
+    "duration_frames": 5007,
+    "trigger": "check_landed",
+    "stats": [
+     {
+      "stat": "check_speed_min",
+      "multiply": 1.997,
+      "add": 11
+     },
+     {
+      "stat": "skater_grip",
+      "add": 0
+     },
+     {
+      "stat": "skater_speed",
+      "multiply": 0.25,
+      "add": 0
+     }
+    ],
+    "kind": "big_puck",
+    "stack": "extend"
+   },
+   {
+    "id": "fx-2",
+    "target": "self",
+    "duration_frames": 7200,
+    "trigger": "check_received",
+    "stats": [
+     {
+      "stat": "skater_accel",
+      "multiply": 0.25
+     },
+     {
+      "stat": "skater_accel",
+      "multiply": 4,
+      "add": 36
+     },
+     {
+      "stat": "puck_drag",
+      "add": 0
+     },
+     {
+      "stat": "shot_speed",
+      "add": 0
+     }
+    ]
+   },
+   {
+    "id": "fx-3",
+    "target": "everyone",
+    "duration_frames": 7200,
+    "trigger": "pickup",
+    "stats": [
+     {
+      "stat": "check_speed_min",
+      "add": -0.646
+     }
+    ]
+   },
+   {
+    "id": "fx-4",
+    "target": "rink",
+    "duration_frames": 60,
+    "trigger": "period_start",
+    "stats": [
+     {
+      "stat": "skater_grip",
+      "multiply": 4
+     }
+    ],
+    "kind": "speed"
+   },
+   {
+    "id": "fx-5",
+    "target": "rink",
+    "duration_frames": 7200,
+    "trigger": "check_received",
+    "stats": [
+     {
+      "stat": "shot_speed",
+      "multiply": 1.76
+     },
+     {
+      "stat": "ice_friction",
+      "multiply": 0.25
+     },
+     {
+      "stat": "skater_turn_rate",
+      "multiply": 4
+     },
+     {
+      "stat": "knockdown_frames",
+      "add": 0
+     }
+    ],
+    "kind": "precision",
+    "stack": "refresh",
+    "icon": "circle"
+   },
+   {
+    "id": "fx-6",
+    "target": "rink",
+    "duration_frames": 60,
+    "trigger": "check_received",
+    "stats": [
+     {
+      "stat": "shot_reach",
+      "multiply": 0.25,
+      "add": -3.5
+     },
+     {
+      "stat": "skater_speed",
+      "multiply": 4
+     },
+     {
+      "stat": "skater_turn_rate",
+      "add": 11
+     },
+     {
+      "stat": "shot_reach",
+      "multiply": 2.763,
+      "add": -3.5
+     }
+    ],
+    "stack": "refresh"
+   },
+   {
+    "id": "fx-7",
+    "target": "rink",
+    "duration_frames": 3504,
+    "trigger": "zone_exit",
+    "stats": [
+     {
+      "stat": "puck_radius",
+      "multiply": 4,
+      "add": 0
+     }
+    ],
+    "kind": "speed",
+    "zone": "zone-1",
+    "stack": "ignore"
+   },
+   {
+    "id": "fx-8",
+    "target": "everyone",
+    "duration_frames": 1038,
+    "trigger": "zone_enter",
+    "stats": [
+     {
+      "stat": "puck_radius",
+      "multiply": 4
+     }
+    ],
+    "kind": "speed",
+    "zone": "zone-3"
+   },
+   {
+    "id": "fx-9",
+    "target": "other_team",
+    "duration_frames": 60,
+    "trigger": "check_landed",
+    "stats": [
+     {
+      "stat": "board_restitution",
+      "add": 1
+     },
+     {
+      "stat": "skater_mass",
+      "multiply": 0.643,
+      "add": 120
+     }
+    ],
+    "icon": "circle"
+   },
+   {
+    "id": "fx-10",
+    "target": "puck",
+    "duration_frames": 60,
+    "trigger": "period_start",
+    "stats": [
+     {
+      "stat": "skater_mass",
+      "multiply": 1.144
+     }
+    ],
+    "stack": "refresh"
+   },
+   {
+    "id": "fx-11",
+    "target": "rink",
+    "duration_frames": 7200,
+    "trigger": "goal_against",
+    "stats": [
+     {
+      "stat": "skater_turn_rate",
+      "multiply": 3.315
+     },
+     {
+      "stat": "check_speed_min",
+      "add": 11
+     }
+    ],
+    "stack": "refresh"
+   },
+   {
+    "id": "fx-12",
+    "target": "everyone",
+    "duration_frames": 7200,
+    "trigger": "period_start",
+    "stats": [
+     {
+      "stat": "shot_reach",
+      "multiply": 3.081,
+      "add": 3.5
+     },
+     {
+      "stat": "skater_accel",
+      "multiply": 0.982,
+      "add": 36
+     }
+    ],
+    "stack": "ignore"
+   }
+  ],
   "abilities": [
    {
-    "kind": "hip_check",
+    "kind": "slow_puck",
     "trigger": "mode",
-    "charges": 1,
+    "charges": 6,
     "cooldown_frames": 60,
-    "duration_frames": 1,
-    "magnitude": 4
+    "duration_frames": 600,
+    "magnitude": 0.1
    }
   ],
   "teams": [
    {
     "id": "blue",
-    "colour_hex": "#000000",
+    "colour_hex": "#123456",
     "skaters": [
      {
       "role": "player",
       "spawn": [
-       5.57,
-       -8.99
+       -1.5,
+       -3
       ]
      },
      {
       "role": "chaser",
       "spawn": [
-       61.19,
-       -2.82
-      ]
-     },
-     {
-      "role": "support",
-      "spawn": [
-       17.22,
-       7.79
+       -3.7,
+       3
       ]
      }
     ]
    },
    {
     "id": "orange",
-    "colour_hex": "#FFFFFF",
+    "colour_hex": "#654321",
     "skaters": [
+     {
+      "role": "chaser",
+      "spawn": [
+       1.5,
+       -2.5
+      ]
+     },
      {
       "role": "support",
       "spawn": [
-       74.32,
-       -1.55
-      ]
-     },
-     {
-      "role": "back",
-      "spawn": [
-       -23.29,
-       -9.38
-      ]
-     },
-     {
-      "role": "back",
-      "spawn": [
-       -42.8,
-       -6.83
+       3.7,
+       3.5
       ]
      },
      {
       "role": "chaser",
       "spawn": [
-       -73.38,
-       4.16
+       5.9,
+       -2.5
+      ]
+     },
+     {
+      "role": "chaser",
+      "spawn": [
+       8.1,
+       3.5
       ]
      }
     ]

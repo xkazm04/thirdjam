@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { generate } from './gen.mjs';
-import { validateCartridge } from '../../schema/validate.mjs';
+import { validateCartridge, validateCartridgeText } from '../../schema/validate.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
@@ -36,8 +36,22 @@ test('the checked-in smoke corpus matches Node verdicts (the C++ side compares a
   const m = JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf8'));
   assert.ok(m.cases.length >= 40);
   for (const c of m.cases) {
-    let errors;
-    try { errors = validateCartridge(JSON.parse(readFileSync(join(dir, c.file), 'utf8'))).errors; } catch { errors = ['at /: not json']; }
+    const errors = validateCartridgeText(readFileSync(join(dir, c.file), 'utf8')).errors;   // lane A118: the strict parser both sides share
     assert.equal(errors.length === 0, c.ok, c.name);
+    assert.deepEqual([...new Set(errors.map((e) => e.match(/^at (\S+?):/)?.[1] ?? '?'))].sort(), c.pointers, `${c.name} pointers`);
   }
+});
+
+// Lane A118 (track S3, evolution 2): the regression corpus of the seven closed fault classes is current, and the two parsers agree on what A109 found.
+test('the regression corpus (tools/fuzz/regress) matches Node verdicts; set_param, duplicate keys and the BOM follow one rule', () => {
+  const dir = resolve(HERE, 'regress');
+  const m = JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf8'));
+  assert.equal(m.cases.length, 18);
+  for (const c of m.cases) assert.equal(validateCartridgeText(readFileSync(join(dir, c.file), 'utf8')).ok, c.ok, c.name);
+  const byName = Object.fromEntries(m.cases.map((c) => [c.name, c]));
+  assert.deepEqual(byName['nan--min-setparam-puck-max-speed-neg'].pointers, ['/game/rules/hooks/0/then/0/value']);
+  assert.equal(byName['parity--bom'].ok, true);
+  assert.deepEqual(byName['parity--duplicate-key'].pointers, ['/game/rink']);
+  assert.deepEqual(byName['parity--neg-infinity-number'].pointers, ['/game/skater/speed']);
+  for (const n of ['never-ends-unminimized--fuzz-00600', 'never-ends-unminimized--fuzz-04552']) { assert.equal(byName[n].ok, false); assert.equal(byName[`${n}-valid`].ok, true); }
 });

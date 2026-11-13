@@ -61,6 +61,11 @@ public:
 	static constexpr double ArenaBenchCentreFactor = 0.0833;
 	static constexpr double PenaltyBoxCentreXM = 3.0;
 	static constexpr double ArenaGapM = 0.05;   // between the board's outer face and a piece (A25's benches: the same 5 cm)
+	// Lane A119 (track F3, evolution 2): the goals and the scorer's table. A goal mesh is built by arena.py for one opening (game.rink.goal_width_m x
+	// goal_height_m: its posts' inner faces stand at +-W/2 and its crossbar's underside at H, the sim's goal volume); Build takes the variant nearest the
+	// cartridge's goal (the table is in RinkActor.cpp) and scales it W/Wv along the goal line and H/Hv up, which keeps the opening exact. The scorer's table
+	// stands between the two penalty boxes at x = 0 on the -y side.
+	static constexpr const TCHAR* ScorerTableMeshPath = TEXT("/Game/Arena/SM_Arena_ScorerTable.SM_Arena_ScorerTable");
 
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UProceduralMeshComponent> Ice;
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UProceduralMeshComponent> Markings;
@@ -93,6 +98,15 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UStaticMeshComponent> ArenaBenchPos;
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UStaticMeshComponent> ArenaBoxNeg;
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UStaticMeshComponent> ArenaBoxPos;
+	// Lane A119: the Blender-made goals (Neg = the -x end, yaw +90; Pos = the +x end, yaw -90: the mesh's +y runs into the net) and the scorer's table.
+	// While the goals show, the code frame and its sheet netting (`Nets`) are hidden; `jam.rink.arena 0`, a bare tier or a missing mesh gives them back.
+	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UStaticMeshComponent> ArenaGoalNeg;
+	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UStaticMeshComponent> ArenaGoalPos;
+	// The goal's net is a mesh of its own on the same transform, WITHOUT the custom depth stencil: on the outlined tiers every inked cord made the net a black
+	// comb from the game camera (off-screen engine stills on l2_night, ARENA.md); the frame keeps the stencil and its outline.
+	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UStaticMeshComponent> ArenaGoalNetNeg;
+	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UStaticMeshComponent> ArenaGoalNetPos;
+	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UStaticMeshComponent> ArenaTable;
 	// Behind the +x goal line (team 0 scores here) and behind the -x line (team 1 scores here).
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UBoxComponent> GoalTriggerPos;
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UBoxComponent> GoalTriggerNeg;
@@ -143,6 +157,9 @@ public:
 	// True when the four Blender pieces are what the rink shows (meshes loaded, construction on, the cvar on, a dressed tier); A25's code benches are hidden then.
 	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
 	bool IsArenaDressingShown() const { return bArenaShown; }
+	// Lane A119: true when the Blender goals are what stands on the goal lines (the code frame `Nets` is hidden then).
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	bool IsArenaGoalShown() const { return bArenaGoalShown; }
 	// Where a boxed skater of Team (0 or 1) would stand inside its penalty box, facing the rink: the box mesh's socket `Seat` in world space.
 	// False when the box is not shown (the caller keeps the sim's place on the ice). Presentation only: UJamSim::BoxPos is not changed by this lane.
 	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
@@ -165,6 +182,7 @@ private:
 	void ApplyArenaDressing();   // lane A103: shows the Blender pieces or A25's code benches, never both
 	FString ArenaTier;           // lane A103: the tier the dressing was last decided for (Build and SetZoneRingsForTier write it)
 	bool bArenaShown = false;
+	bool bArenaGoalShown = false;   // lane A119
 	bool bClayTier = false;   // lane A69: the tier the rink shows is p3_clay (rings on, decal quads off, glass and rail not drawn)
 	bool bLookIce = false;
 	bool bLookTrim = false;

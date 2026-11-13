@@ -94,7 +94,13 @@ public:
 	// happened to the human's press. The HUD reads the human's counters from the sim (ChecksRefused, ContactRecoils), so a frame the hit-stop held is not lost.
 	static constexpr int64 ContactLineFrames = 60;
 	static constexpr int64 ContactFadeFrames = 15;
-	static FString ContactLineFor(bool bRefused, bool bBounced) { return bBounced ? TEXT("BOUNCED OFF") : bRefused ? TEXT("NOT WITH THE PUCK") : TEXT(""); }
+	// Lane A113 (track F1): the soft hit explains itself. The human's pressed check that resolved as a bump (ChecksSoft): TOO SOFT; one that met a skater inside
+	// its release grace (ChecksGraced): JUST GOT UP; a window that ran out on nobody (ChecksMissed): MISSED. One line a frame: the grace first (a charge into a
+	// skater that just got up can bounce the human too, and the grace is the reason), then the bounce, the refused press, the soft hit, the miss.
+	static FString ContactLineFor(bool bRefused, bool bBounced, bool bSoft = false, bool bMissed = false, bool bGraced = false)
+	{
+		return bGraced ? TEXT("JUST GOT UP") : bBounced ? TEXT("BOUNCED OFF") : bRefused ? TEXT("NOT WITH THE PUCK") : bSoft ? TEXT("TOO SOFT") : bMissed ? TEXT("MISSED") : TEXT("");
+	}
 	void ShowContactLine(const FString& Text);
 	FString GetContactText() const;
 	FString GetToastText() const;
@@ -263,6 +269,7 @@ private:
 	int64 ContactStart = -1;   // sim frame the contact line first showed; -1 = none or waiting for the next frame
 	bool bContactPending = false;
 	int32 ContactSeenRefused = 0, ContactSeenRecoils = 0;
+	int32 ContactSeenSoft = 0, ContactSeenMissed = 0, ContactSeenGraced = 0;   // lane A113
 	void UpdateContactLine(const FJamPresentationFrame& Frame);
 	UPROPERTY(Transient) TObjectPtr<UJamRadarWidget> Radar;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> CallText;

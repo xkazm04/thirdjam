@@ -248,6 +248,7 @@ namespace JamAI
 		bool bCanShoot = false;   // the sim's shot gate: in reach, facing within 60 deg, cooldown over
 		bool bHasPuck = false;
 		bool bDown = false;       // knocked down
+		int GraceFrames = 0;      // lane A113 (R-0049 point 1): frames left of its release grace (a hit on it is a bump at most); 0 = none
 		bool bCanPoke = false;    // R-0017: poke ready (cooldown over, no open window, can act)
 		bool bCanLift = false;    // R-0017: lift ready
 		bool bCentre = false;     // R-0013: takes the faceoff draw

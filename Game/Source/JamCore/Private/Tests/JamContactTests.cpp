@@ -16,6 +16,12 @@
 //                                    board read-out and event; along the boards, away from them, beyond 1.5 m and at board_bonus 1 it is the open-ice hit
 //   Jam.Core.Contact.HitStop         the hold by outcome and ratio: stumble 1 or 2 frames, knockdown 2 to 5, bump 0; jam.hitstop scales it
 //   Jam.Core.ContactBoardMatch       three pro matches: outcomes by kind, the share of hits near the boards; board_bonus 1 hashes as main at ee14438 did
+// Lane A113 (track F1, R-0049 point 1, docs/experiments/CONTACT-3.md): a tackle is an event, not a rhythm.
+//   Jam.Core.Contact.ReleaseGrace    a skater released from a knockdown takes a bump at most for contact.release_grace_frames; after it the same hit lands;
+//                                    0 = the hit lands at once; the counter is hashed while it runs; the soft hit and the whiff count for the HUD
+//   Jam.Core.Contact.HitStopPick     the hit the hold is for: one that involves the human is never hidden by a knockdown between two bots
+//   Jam.Core.ContactGraceMatch       release_grace_frames 0 hashes as the baseline (three pro seeds); ten pro matches of 100 s, grace 0 / 90 / 120: knockdowns
+//                                    of the human, figures down again within 2 s of their release
 // Run:
 //   UnrealEditor-Cmd.exe Game/ThirdJam.uproject -ExecCmds="Automation RunTests Jam.Core.Contact; Quit" -unattended -nullrhi -nosplash -log
 #include "Misc/AutomationTest.h"
@@ -58,6 +64,16 @@ namespace JamContactTests
 		// 1 = glancing (0 to 0.5), 2 = along or away][bump, stumble, down]. The push of a bump is the victim's BumpDir (stale when the bump read-out was gapped).
 		int32 Where[2][3][3] = {};
 		int32 BoardEvents = 0;                                        // `board` events with Kind skater (the hit's and a skater's own slide into the boards)
+		// Lane A113: the release grace. By victim (bot / human): knockdowns (any cause) that begin within ReDownWindow frames of the same skater's release, of
+		// those the ones a hit caused (ContactOutcome down), stumbles by a hit in the same window, hits the grace made a bump (bContactGrace) and of those the
+		// ones a bot threw; the shortest release-to-down gap of the match; the human's HUD counters at the end.
+		static constexpr int32 ReDownWindow = 120, MaxSk = 16;
+		int32 ReDown[2] = { 0, 0 }, ReDownByHit[2] = { 0, 0 }, ReStumble[2] = { 0, 0 }, Graced[2] = { 0, 0 }, GracedByBot = 0, ReHitInGrace = 0;
+		int32 MinGap = 1000000, GraceAtRelease = -1;
+		int32 HumanSoft = 0, HumanMissed = 0, HumanGraced = 0;
+		bool bWasDown[MaxSk] = {};
+		int64 ReleasedAt[MaxSk] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+		int32 GraceBefore[MaxSk] = {};   // GraceFrames after the previous frame: over 1 means the skater was inside its grace when this frame's contacts resolved
 		int64 LastFrame = -1;
 	};
 
@@ -77,6 +93,25 @@ namespace JamContactTests
 			if (S.ContactOutcome == UJamSim::ContactDown) { ++C.HitDown[H]; C.DownFrames[H] += S.KnockFrames; if (S.bContactCross) ++C.CrossDown[H]; }
 			if (S.bRecoilThisFrame) ++C.Recoil[H];
 			if (S.bCheckRefused) ++C.Refused[H];
+			// Lane A113: the release grace.
+			if (S.Index < FContactCount::MaxSk)
+			{
+				const int32 I = S.Index;
+				const bool bDown = S.IsDown();
+				const bool bInWindow = C.ReleasedAt[I] >= 0 && Sim->GetFrame() - C.ReleasedAt[I] < FContactCount::ReDownWindow;   // inside 2 s: frames 0 to 119 after the release
+				if (bDown && !C.bWasDown[I] && C.ReleasedAt[I] >= 0)
+				{
+					C.MinGap = FMath::Min(C.MinGap, static_cast<int32>(Sim->GetFrame() - C.ReleasedAt[I]));
+					if (bInWindow) { ++C.ReDown[H]; if (S.ContactOutcome == UJamSim::ContactDown) ++C.ReDownByHit[H]; }
+				}
+				if (S.ContactOutcome == UJamSim::ContactStumble && bInWindow) ++C.ReStumble[H];
+				if (S.ContactOutcome >= UJamSim::ContactStumble && C.GraceBefore[I] > 1) ++C.ReHitInGrace;   // the rule's own promise: never
+				if (S.bContactGrace) { ++C.Graced[H]; if (S.ContactBy != C.Human) ++C.GracedByBot; }
+				if (!bDown && C.bWasDown[I]) { C.ReleasedAt[I] = Sim->GetFrame(); if (C.GraceAtRelease < 0) C.GraceAtRelease = S.GraceFrames; }
+				C.bWasDown[I] = bDown;
+				C.GraceBefore[I] = S.GraceFrames;
+				if (H == 1) { C.HumanSoft = S.ChecksSoft; C.HumanMissed = S.ChecksMissed; C.HumanGraced = S.ChecksGraced; }
+			}
 			if (S.ContactOutcome != UJamSim::ContactNone)
 			{
 				FVector2D N;
@@ -111,7 +146,7 @@ namespace JamContactTests
 
 	// hockey.regular at a level, penalties off and no score limit inside the three minutes (A73's cut), 10 800 frames, the Regular playtester as the human.
 	// File = another cartridge (its own rules kept, Level null = its own level).
-	JamAI::FJamPlaytestStats Match(FAutomationTestBase& T, const TCHAR* Level, uint64 Seed, FContactCount& Count, TFunctionRef<void(FJamGameConfig&)> Edit, const FString& File = FString())
+	JamAI::FJamPlaytestStats Match(FAutomationTestBase& T, const TCHAR* Level, uint64 Seed, FContactCount& Count, TFunctionRef<void(FJamGameConfig&)> Edit, const FString& File = FString(), int64 Frames = 10800)
 	{
 		TArray<FString> Errors;
 		UJamCartridge* C = UJamCartridge::LoadFromFile(File.IsEmpty() ? UJamCartridge::ResolveCartridgePath(TEXT("hockey.regular")) : File, Errors);
@@ -127,7 +162,7 @@ namespace JamContactTests
 		Count.Sim = &Sim;
 		const JamAI::FJamMatchConfig M = JamAI::ToMatchConfigResolved(*C, Level);
 		Count.Human = M.PlayerIndex();
-		return JamAI::RunPlaytestMatch(Sim, M, Seed, JamAI::EPlaytester::Regular, 10800, C->Game.Shot.ChargeFramesMax, false, &Trace, &Count, 1);
+		return JamAI::RunPlaytestMatch(Sim, M, Seed, JamAI::EPlaytester::Regular, Frames, C->Game.Shot.ChargeFramesMax, false, &Trace, &Count, 1);
 	}
 
 	FString Line(const TCHAR* Label, const JamAI::FJamPlaytestStats& S, const FContactCount& C)
@@ -258,6 +293,16 @@ namespace JamContactTests
 	}
 	const auto NoEdit = [](FJamGameConfig&) {};
 
+	// Lane A113: the grace part of a match line.
+	FString GraceLine(const FContactCount& C)
+	{
+		return FString::Printf(TEXT("knockdowns of human %d of bot %d | down again within %d frames of release: human %d bot %d (by a hit: human %d bot %d) | stumbled by a hit in that window: human %d bot %d | ")
+			TEXT("shortest release-to-down gap %d frames | hits the grace made a bump: on human %d on bot %d (thrown by a bot %d) | landed hits on a skater inside its grace %d | ")
+			TEXT("grace at the first release %d | human's own: soft %d missed %d met-a-grace %d"),
+			C.Downs[1], C.Downs[0], FContactCount::ReDownWindow, C.ReDown[1], C.ReDown[0], C.ReDownByHit[1], C.ReDownByHit[0], C.ReStumble[1], C.ReStumble[0],
+			C.MinGap == 1000000 ? -1 : C.MinGap, C.Graced[1], C.Graced[0], C.GracedByBot, C.ReHitInGrace, C.GraceAtRelease, C.HumanSoft, C.HumanMissed, C.HumanGraced);
+	}
+
 	// Lane A101: the board part of a match line.
 	FString BoardLine(const FContactCount& C)
 	{
@@ -385,6 +430,271 @@ bool FJamContactBoards::RunTest(const FString& Parameters)
 	return true;
 }
 
+// ---- Lane A113 (track F1, R-0049 point 1): a tackle is an event, not a rhythm -------------------------------------------------------------------
+
+// One head-on hit at full speed puts the victim down; it is released; the same hit comes again Wait frames after the release.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamContactReleaseGrace, "Jam.Core.Contact.ReleaseGrace", JamContactTests::Flags)
+bool FJamContactReleaseGrace::RunTest(const FString& Parameters)
+{
+	struct FOut { bool bOk = false; FContactHit First, Second; int32 GraceAtRelease = -1, GraceAfter30 = -1, GraceAtHit = -1, DownFor = 0, AttGraced = 0, AttSoft = 0, VicGraced = 0, AttStumble = 0; bool bGraceFlag = false; uint64 Hash = 0; };
+	auto Scene = [&](const TCHAR* Name, TFunctionRef<void(FJamGameConfig&)> Edit, int32 Wait) -> FOut
+	{
+		FOut O;
+		FContactScene S = Make(*this, Edit);
+		if (!S.Ok()) return O;
+		const double Top = S.Cfg.Skater.Speed;
+		auto Charge = [&]()
+		{
+			S.Sim->SetSkater(S.V, FVector2D(0.6, 0.0), FVector2D(-Top, 0.0), PI);
+			S.Sim->SetSkater(S.A, FVector2D(-0.6, 0.0), FVector2D(Top, 0.0), 0.0);
+			return Run(S, 12, [&](TArray<FJamInput>& In, int32 F) { In[S.A].bCheck = F == 0; });
+		};
+		O.First = Charge();
+		if (!TestTrue(*FString::Printf(TEXT("%s: the first hit puts the victim down"), Name), O.First.bKnock && S.Vic().IsDown())) return O;
+		TArray<FJamInput> None;
+		None.SetNum(S.Sim->GetSkaters().Num());
+		// Park the attacker away from the fallen victim, wait for the release.
+		S.Sim->SetSkater(S.A, FVector2D(-12.0, 0.0), FVector2D::ZeroVector, 0.0);
+		while (S.Vic().IsDown() && O.DownFor < 400) { S.Sim->Step(None); ++O.DownFor; }
+		O.GraceAtRelease = S.Vic().GraceFrames;
+		for (int32 F = 0; F < Wait; ++F)
+		{
+			S.Sim->Step(None);
+			if (F == 29) O.GraceAfter30 = S.Vic().GraceFrames;
+		}
+		O.GraceAtHit = S.Vic().GraceFrames;
+		O.Second = Charge();
+		O.bGraceFlag = S.Vic().bContactGrace;
+		O.AttGraced = S.Att().ChecksGraced;
+		O.AttSoft = S.Att().ChecksSoft;
+		O.VicGraced = S.Vic().ContactGraced;
+		O.AttStumble = S.Att().StumbleFrames;
+		O.Hash = S.Sim->StateHash();
+		O.bOk = true;
+		AddInfo(FString::Printf(TEXT("JAMGRACE scene %s: down for %d frames, grace at release %d, after 30 frames %d, at the second charge %d | second hit: %s | grace flag %d attacker graced %d soft %d"),
+			Name, O.DownFor, O.GraceAtRelease, O.GraceAfter30, O.GraceAtHit, *Facts(O.Second), O.bGraceFlag ? 1 : 0, O.AttGraced, O.AttSoft));
+		return O;
+	};
+	const FJamContactConfig K;
+	TestEqual(TEXT("the default grace is 120 frames (R-0051)"), K.ReleaseGraceFrames, 120);
+	// 1. Inside the grace: the biggest hit in the game is a bump.
+	const FOut In = Scene(TEXT("grace 120, hit 10 frames after the release"), NoEdit, 10);
+	if (!In.bOk) return false;
+	TestEqual(TEXT("the release starts the grace at contact.release_grace_frames"), In.GraceAtRelease, 120);
+	TestTrue(*FString::Printf(TEXT("the grace is running at the second charge (%d)"), In.GraceAtHit), In.GraceAtHit > 90 && In.GraceAtHit <= 110);
+	TestEqual(TEXT("inside the grace: a bump"), In.Second.Outcome, UJamSim::ContactBump);
+	TestTrue(TEXT("... no check event, no knockdown event, the victim stays up and in control"), !In.Second.bCheck && !In.Second.bKnock && In.Second.KnockFrames == 0 && In.Second.StumbleFrames == 0);
+	TestTrue(*FString::Printf(TEXT("... the read-out keeps the hit's real ratio (%.2f, past down_ratio)"), In.Second.Ratio), In.Second.Ratio >= K.DownRatio);
+	TestTrue(TEXT("... the victim's grace read-out and the attacker's counter say why (no TOO SOFT for it)"), In.bGraceFlag && In.VicGraced == 1 && In.AttGraced == 1 && In.AttSoft == 0);
+	TestTrue(*FString::Printf(TEXT("... the same hit landed the first time (ratio %.2f, down %d frames)"), In.First.Ratio, In.First.KnockFrames), In.First.Outcome == UJamSim::ContactDown && In.First.bKnock);
+	TestTrue(*FString::Printf(TEXT("... the attacker pays as for any bump: this full-speed charge bounces it (recoil, %d frames of stumble)"), In.AttStumble), In.Second.bRecoil && In.AttStumble > 0);
+	// 2. The countdown: 30 frames on, 90 are left; after the grace the same hit lands again.
+	const FOut After = Scene(TEXT("grace 120, hit 130 frames after the release"), NoEdit, 130);
+	TestEqual(TEXT("30 frames after the release 90 frames of grace are left"), After.GraceAfter30, 90);
+	TestEqual(TEXT("130 frames after the release the grace is over"), After.GraceAtHit, 0);
+	TestTrue(TEXT("after the grace the same hit lands: down, with its events"), After.Second.Outcome == UJamSim::ContactDown && After.Second.bCheck && After.Second.bKnock && !After.bGraceFlag && After.AttGraced == 0);
+	// 3. The neutral value: no grace, the hit 10 frames after the release lands (the rhythm device B played).
+	const FOut Zero = Scene(TEXT("grace 0, hit 10 frames after the release"), [](FJamGameConfig& G) { G.Contact.ReleaseGraceFrames = 0; }, 10);
+	TestTrue(TEXT("release_grace_frames 0: no grace starts"), Zero.GraceAtRelease == 0 && Zero.GraceAtHit == 0);
+	TestTrue(TEXT("release_grace_frames 0: the hit right after the release lands"), Zero.Second.Outcome == UJamSim::ContactDown && Zero.Second.bKnock && !Zero.bGraceFlag);
+	TestTrue(TEXT("grace 0 and the default grace end in different states (the grace is a rule)"), Zero.Hash != In.Hash);
+	// 4. The grace belongs to the momentum model: lane A92's neutral block starts none (it hashes as the game before the model).
+	const FOut Old = Scene(TEXT("contact.momentum false"), [](FJamGameConfig& G) { G.Contact.SetNeutral(); }, 10);
+	TestTrue(TEXT("contact.momentum false: no grace starts, the old rule's hit lands"), Old.GraceAtRelease == 0 && Old.Second.bKnock);
+	// 5. A longer grace is a longer grace.
+	const FOut Long = Scene(TEXT("grace 200, hit 100 frames after the release"), [](FJamGameConfig& G) { G.Contact.ReleaseGraceFrames = 200; }, 100);
+	TestTrue(TEXT("release_grace_frames 200: 100 frames after the release the hit is still a bump"), Long.GraceAtRelease == 200 && Long.Second.Outcome == UJamSim::ContactBump && !Long.Second.bKnock);
+	// 6. The counter is state: the hash sees it (one field changed on a live sim, then put back).
+	{
+		FContactScene S = Make(*this, NoEdit);
+		if (S.Ok())
+		{
+			FJamSkaterState& V = const_cast<FJamSkaterState&>(S.Vic());   // test only
+			const uint64 H0 = S.Sim->StateHash();
+			V.GraceFrames = 5;
+			const uint64 H5 = S.Sim->StateHash();
+			V.GraceFrames = 6;
+			const uint64 H6 = S.Sim->StateHash();
+			V.GraceFrames = 0;
+			TestTrue(TEXT("StateHash() covers GraceFrames (0 / 5 / 6 differ) and gives the hash back at 0"), H0 != H5 && H5 != H6 && S.Sim->StateHash() == H0);
+			V.bContactGrace = true; V.ChecksSoft = 3; V.ChecksMissed = 2; V.ChecksGraced = 1; V.ContactGraced = 4;
+			TestEqual(TEXT("the read-outs (bContactGrace, ChecksSoft, ChecksMissed, ChecksGraced, ContactGraced) are not hashed"), S.Sim->StateHash(), H0);
+		}
+	}
+	// 7. The soft hit and the whiff count on the attacker (the HUD's TOO SOFT and MISSED).
+	{
+		FContactScene S = Make(*this, NoEdit);
+		if (S.Ok())
+		{
+			// Both gliding the same way at the same speed, the attacker behind: a bump (lane A92's SameDirection).
+			S.Sim->SetSkater(S.V, FVector2D::ZeroVector, FVector2D(8.0, 0.0), 0.0);
+			S.Sim->SetSkater(S.A, FVector2D(-0.78, 0.0), FVector2D(8.0, 0.0), 0.0);
+			const FContactHit H = Run(S, 12, [&](TArray<FJamInput>& In2, int32 F) { In2[S.A].bCheck = F == 0; In2[S.A].Move = FVector2D(0.7, 0.0); In2[S.V].Move = FVector2D(0.7, 0.0); });
+			AddInfo(FString::Printf(TEXT("JAMGRACE soft: %s | attacker soft %d missed %d graced %d"), *Facts(H), S.Att().ChecksSoft, S.Att().ChecksMissed, S.Att().ChecksGraced));
+			TestTrue(TEXT("a pressed check that resolves as a bump counts as soft on the attacker, not as a miss"), H.Outcome == UJamSim::ContactBump && S.Att().ChecksSoft == 1 && S.Att().ChecksMissed == 0 && S.Att().ChecksGraced == 0);
+		}
+		FContactScene W = Make(*this, NoEdit);
+		if (W.Ok())
+		{
+			// Nobody near: the window (12 frames for the human) runs out.
+			W.Sim->SetSkater(W.V, FVector2D(15.0, 0.0), FVector2D::ZeroVector, PI);
+			W.Sim->SetSkater(W.A, FVector2D(-15.0, 0.0), FVector2D(4.0, 0.0), 0.0);
+			int32 MissedAt = -1;
+			for (int32 F = 0; F < 30; ++F)
+			{
+				TArray<FJamInput> In2;
+				In2.SetNum(W.Sim->GetSkaters().Num());
+				In2[W.A].bCheck = F == 0;
+				W.Sim->Step(In2);
+				if (MissedAt < 0 && W.Att().ChecksMissed > 0) MissedAt = F;
+			}
+			AddInfo(FString::Printf(TEXT("JAMGRACE whiff: missed %d at frame %d soft %d"), W.Att().ChecksMissed, MissedAt, W.Att().ChecksSoft));
+			TestTrue(TEXT("a press that meets nobody counts one miss when its window closes, and no soft hit"), W.Att().ChecksMissed == 1 && W.Att().ChecksSoft == 0);
+			TestEqual(TEXT("... on the frame the human's window (12 frames) closes"), MissedAt, UJamSim::HumanCheckWindowFrames);
+		}
+	}
+	// 8. The key loads, its range holds.
+	FString Json;
+	if (TestTrue(TEXT("hockey.regular reads"), FFileHelper::LoadFileToString(Json, *UJamCartridge::ResolveCartridgePath(TEXT("hockey.regular")))))
+	{
+		TArray<FString> Errors;
+		FString One = Json;
+		TestEqual(TEXT("one game.skater anchor"), One.ReplaceInline(TEXT("\"skater\": {"), TEXT("\"contact\": { \"release_grace_frames\": 0 }, \"skater\": {")), 1);
+		UJamCartridge* N = UJamCartridge::LoadFromString(One, Errors);
+		for (const FString& E : Errors) AddError(FString::Printf(TEXT("release_grace_frames 0: %s"), *E));
+		if (TestNotNull(TEXT("contact.release_grace_frames 0 loads"), N)) TestEqual(TEXT("... and reads back"), N->Game.Contact.ReleaseGraceFrames, 0);
+		for (const TCHAR* BadValue : { TEXT("-1"), TEXT("301"), TEXT("1.5") })
+		{
+			FString Bad = Json;
+			Bad.ReplaceInline(TEXT("\"skater\": {"), *FString::Printf(TEXT("\"contact\": { \"release_grace_frames\": %s }, \"skater\": {"), BadValue));
+			Errors.Reset();
+			UJamCartridge* B = UJamCartridge::LoadFromString(Bad, Errors);
+			TestTrue(*FString::Printf(TEXT("contact.release_grace_frames %s is refused"), BadValue), B == nullptr || Errors.Num() > 0);
+		}
+	}
+	return true;
+}
+
+// The hit the hold is for (AJamSkater::HitStopPick; the game mode's HitStopRoute holds on it).
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamContactHitStopPick, "Jam.Core.Contact.HitStopPick", JamContactTests::Flags)
+bool FJamContactHitStopPick::RunTest(const FString& Parameters)
+{
+	const FName Cause(TEXT("check")), Front(TEXT("front")), SideL(TEXT("side_l"));
+	const int32 Human = 0;
+	auto Skaters = []() { TArray<FJamSkaterState> Sk; Sk.SetNum(6); for (int32 I = 0; I < 6; ++I) Sk[I].Index = I; return Sk; };
+	auto Event = [](FName Name, int32 Who, float Strength, FName Kind) { FJamSimEvent E; E.Name = Name; E.Who = Who; E.Strength = Strength; E.Kind = Kind; return E; };
+	const FJamContactConfig K;
+	// 1. A stumble of the human, alone: its check event's strength (the log line used to print 0.00).
+	{
+		TArray<FJamSkaterState> Sk = Skaters();
+		Sk[Human].ContactOutcome = UJamSim::ContactStumble; Sk[Human].ContactRatio = 0.8f; Sk[Human].ContactBy = 4;
+		const TArray<FJamSimEvent> Ev = { Event(JamEvents::Check, 4, 0.45f, SideL) };
+		const FJamHitStopPick P = AJamSkater::HitStopPick(Sk, Ev, Human, K.BumpRatio);
+		TestTrue(TEXT("a stumble the human takes: victim, checker, outcome, ratio"), P.Victim == Human && P.Checker == 4 && P.Outcome == UJamSim::ContactStumble && FMath::IsNearlyEqual(P.Ratio, 0.8f));
+		TestTrue(*FString::Printf(TEXT("... with its check event's strength (%.2f) and the kind stumble"), P.Strength), FMath::IsNearlyEqual(P.Strength, 0.45f) && P.Kind == FName(TEXT("stumble")));
+		TestEqual(TEXT("... held 2 frames (ratio 0.8, past the middle of the band)"), AJamSkater::HitStopFramesFor(P.Outcome, P.Ratio, K, 3), 2);
+	}
+	// 2. The same frame also carries a knockdown between two bots: the human's stumble is still the hit (the route held nothing).
+	{
+		TArray<FJamSkaterState> Sk = Skaters();
+		Sk[Human].ContactOutcome = UJamSim::ContactStumble; Sk[Human].ContactRatio = 0.5f; Sk[Human].ContactBy = 4;
+		Sk[2].ContactOutcome = UJamSim::ContactDown; Sk[2].ContactRatio = 2.f; Sk[2].ContactBy = 5;
+		const TArray<FJamSimEvent> Ev = { Event(JamEvents::Check, 4, 0.3f, SideL), Event(JamEvents::Check, 5, 0.9f, Front), Event(JamEvents::Knockdown, 2, 0.9f, Cause) };
+		const FJamHitStopPick P = AJamSkater::HitStopPick(Sk, Ev, Human, K.BumpRatio);
+		TestTrue(TEXT("a bot-on-bot knockdown and a stumble of the human in one frame: the stumble is picked"), P.Victim == Human && P.Checker == 4 && P.Outcome == UJamSim::ContactStumble);
+		TestTrue(*FString::Printf(TEXT("... with its own strength (%.2f), 1 frame"), P.Strength), FMath::IsNearlyEqual(P.Strength, 0.3f) && AJamSkater::HitStopFramesFor(P.Outcome, P.Ratio, K, 3) == 1);
+	}
+	// 3. Two knockdowns in one frame, the human's fall listed first: the human's is the hit, with its own checker and kind.
+	{
+		TArray<FJamSkaterState> Sk = Skaters();
+		Sk[Human].ContactOutcome = UJamSim::ContactDown; Sk[Human].ContactRatio = 1.4f; Sk[Human].ContactBy = 4;
+		Sk[2].ContactOutcome = UJamSim::ContactDown; Sk[2].ContactRatio = 3.f; Sk[2].ContactBy = 5;
+		const TArray<FJamSimEvent> Ev = { Event(JamEvents::Check, 4, 0.5f, SideL), Event(JamEvents::Knockdown, Human, 0.5f, Cause), Event(JamEvents::Check, 5, 1.f, Front), Event(JamEvents::Knockdown, 2, 1.f, Cause) };
+		const FJamHitStopPick P = AJamSkater::HitStopPick(Sk, Ev, Human, K.BumpRatio);
+		TestTrue(TEXT("two knockdowns in one frame: the human's fall is picked, not the last one"), P.Victim == Human && P.Checker == 4 && P.Kind == SideL && FMath::IsNearlyEqual(P.Strength, 0.5f) && FMath::IsNearlyEqual(P.Ratio, 1.4f));
+		TestEqual(TEXT("... held 3 frames (ratio 1.4)"), AJamSkater::HitStopFramesFor(P.Outcome, P.Ratio, K, 3), 3);
+	}
+	// 4. A knockdown between two bots only: nothing to hold.
+	{
+		TArray<FJamSkaterState> Sk = Skaters();
+		Sk[2].ContactOutcome = UJamSim::ContactDown; Sk[2].ContactRatio = 2.f; Sk[2].ContactBy = 5;
+		const TArray<FJamSimEvent> Ev = { Event(JamEvents::Check, 5, 0.9f, Front), Event(JamEvents::Knockdown, 2, 0.9f, Cause) };
+		TestEqual(TEXT("a knockdown between two bots holds nothing"), AJamSkater::HitStopPick(Sk, Ev, Human, K.BumpRatio).Victim, -1);
+	}
+	// 5. A knockdown the human lands; and a knockdown the momentum model did not resolve (the frame's check event names the checker; the base holds).
+	{
+		TArray<FJamSkaterState> Sk = Skaters();
+		Sk[3].ContactOutcome = UJamSim::ContactDown; Sk[3].ContactRatio = 2.34f; Sk[3].ContactBy = Human;
+		const TArray<FJamSimEvent> Ev = { Event(JamEvents::Check, Human, 0.8f, Front), Event(JamEvents::Knockdown, 3, 0.8f, Cause) };
+		const FJamHitStopPick P = AJamSkater::HitStopPick(Sk, Ev, Human, K.BumpRatio);
+		TestTrue(TEXT("a knockdown the human lands"), P.Victim == 3 && P.Checker == Human && P.Outcome == UJamSim::ContactDown && P.Kind == Front && AJamSkater::HitStopFramesFor(P.Outcome, P.Ratio, K, 3) == 4);
+		TArray<FJamSkaterState> Old = Skaters();
+		const FJamHitStopPick Q = AJamSkater::HitStopPick(Old, Ev, Human, K.BumpRatio);
+		TestTrue(TEXT("contact.momentum false: the check event names the checker, outcome none, the base holds"), Q.Victim == 3 && Q.Checker == Human && Q.Outcome == UJamSim::ContactNone && AJamSkater::HitStopFramesFor(Q.Outcome, Q.Ratio, K, 3) == 3);
+	}
+	// 6. The human's own bounce (its hit was a bump, it stumbles): 1 frame; a knockdown by another cause (the shotgun) holds nothing.
+	{
+		TArray<FJamSkaterState> Sk = Skaters();
+		Sk[Human].bRecoilThisFrame = true;
+		Sk[3].ContactOutcome = UJamSim::ContactBump; Sk[3].ContactBy = Human;
+		const FJamHitStopPick P = AJamSkater::HitStopPick(Sk, TArray<FJamSimEvent>(), Human, K.BumpRatio);
+		TestTrue(TEXT("the human's bounce: the human holds with the skater it bounced off, 1 frame"), P.Victim == Human && P.Checker == 3 && P.Kind == FName(TEXT("bounce")) && AJamSkater::HitStopFramesFor(P.Outcome, P.Ratio, K, 3) == 1);
+		const TArray<FJamSimEvent> Shot = { Event(JamEvents::Knockdown, Human, 1.f, FName(TEXT("shotgun"))) };
+		TestEqual(TEXT("a knockdown by the shotgun is not a check: nothing picked (as before)"), AJamSkater::HitStopPick(Skaters(), Shot, Human, K.BumpRatio).Victim, -1);
+	}
+	return true;
+}
+
+// The neutral proof and the brief's measurement. Baseline = this track's evolution 1 (board_bonus 1.25): pro seeds 1 to 3, three minutes.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamContactGraceMatch, "Jam.Core.ContactGraceMatch", JamContactTests::Flags)
+bool FJamContactGraceMatch::RunTest(const FString& Parameters)
+{
+	const uint64 Baseline[3] = { 0xb59b988423ca43cfull, 0x2333d70ef430d6f3ull, 0x4f3c95b28136e412ull };
+	for (uint64 Seed = 1; Seed <= 3; ++Seed)
+	{
+		FContactCount Cn;
+		const JamAI::FJamPlaytestStats Sn = Match(*this, TEXT("pro"), Seed, Cn, [](FJamGameConfig& G) { G.Contact.ReleaseGraceFrames = 0; G.Stick.bBodyShield = false; G.Stick.bPassiveTake = true; G.Stick.bTeammateTouchTakes = true; });   // lane A102's stick rules off: the baseline is lane A101's tree
+		AddInfo(Line(*FString::Printf(TEXT("JAMGRACE match pro seed %llu release_grace_frames 0"), static_cast<unsigned long long>(Seed)), Sn, Cn));
+		TestEqual(*FString::Printf(TEXT("pro seed %llu: release_grace_frames 0 hashes as the baseline did"), static_cast<unsigned long long>(Seed)), FString::Printf(TEXT("%016llx"), static_cast<unsigned long long>(Sn.Hash)),
+			FString::Printf(TEXT("%016llx"), static_cast<unsigned long long>(Baseline[Seed - 1])));
+		TestEqual(*FString::Printf(TEXT("pro seed %llu: at release_grace_frames 0 no hit meets a grace"), static_cast<unsigned long long>(Seed)), Cn.Graced[0] + Cn.Graced[1], 0);
+		FContactCount C;
+		const JamAI::FJamPlaytestStats S = Match(*this, TEXT("pro"), Seed, C, [](FJamGameConfig&) {});
+		AddInfo(Line(*FString::Printf(TEXT("JAMGRACE match pro seed %llu release_grace_frames 120 (the default)"), static_cast<unsigned long long>(Seed)), S, C));
+		AddInfo(FString::Printf(TEXT("JAMGRACE grace pro seed %llu three minutes, grace 120 (the default): %s"), static_cast<unsigned long long>(Seed), *GraceLine(C)));
+		TestEqual(*FString::Printf(TEXT("pro seed %llu: on the default no hit lands on a skater inside its grace, three minutes"), static_cast<unsigned long long>(Seed)), C.ReHitInGrace, 0);
+		AddInfo(FString::Printf(TEXT("JAMGRACE grace pro seed %llu three minutes, grace 0: %s"), static_cast<unsigned long long>(Seed), *GraceLine(Cn)));
+	}
+	// The brief's measurement: 100 s at pro, five a side, the scripted human (the Regular playtester), ten seeds, grace 0 (before) / 90 (the first ruling) / 120
+	// (the default, R-0051).
+	const int32 Arms[3] = { 0, 90, 120 };
+	for (int32 A = 0; A < 3; ++A)
+	{
+		const int32 Grace = Arms[A];
+		int32 HumanDowns = 0, HumanMax = 0, BotDowns = 0, ReDown = 0, ReDownByHit = 0, ReStumble = 0, Graced = 0, GracedByBot = 0, InGrace = 0, MinGap = 1000000, Over4 = 0, Soft = 0, Missed = 0;
+		FString PerSeed;
+		for (uint64 Seed = 1; Seed <= 10; ++Seed)
+		{
+			FContactCount C;
+			const JamAI::FJamPlaytestStats S = Match(*this, TEXT("pro"), Seed, C, [Grace](FJamGameConfig& G) { G.Contact.ReleaseGraceFrames = Grace; }, FString(), 6000);
+			AddInfo(FString::Printf(TEXT("JAMGRACE 100s pro seed %llu grace %d: frames %lld hash %016llx goals %d:%d | %s"), static_cast<unsigned long long>(Seed), Grace, static_cast<long long>(S.Frames),
+				static_cast<unsigned long long>(S.Hash), S.GoalsFor, S.GoalsAgainst, *GraceLine(C)));
+			HumanDowns += C.Downs[1]; HumanMax = FMath::Max(HumanMax, C.Downs[1]); BotDowns += C.Downs[0];
+			ReDown += C.ReDown[0] + C.ReDown[1]; ReDownByHit += C.ReDownByHit[0] + C.ReDownByHit[1]; ReStumble += C.ReStumble[0] + C.ReStumble[1];
+			Graced += C.Graced[0] + C.Graced[1]; GracedByBot += C.GracedByBot; InGrace += C.ReHitInGrace; MinGap = FMath::Min(MinGap, C.MinGap);
+			if (C.Downs[1] >= 5) ++Over4;
+			Soft += C.HumanSoft; Missed += C.HumanMissed;
+			PerSeed += FString::Printf(TEXT("%s%d"), Seed > 1 ? TEXT(" ") : TEXT(""), C.Downs[1]);
+		}
+		AddInfo(FString::Printf(TEXT("JAMGRACE 100s pro TOTAL grace %d, ten seeds: knockdowns of the human %d (per seed: %s; most %d; matches with five or more %d) of a bot %d | figures down again within 120 frames of release %d (by a hit %d) | ")
+			TEXT("stumbled by a hit in that window %d | shortest release-to-down gap %d frames | hits the grace made a bump %d (thrown by a bot %d) | landed hits inside a grace %d | human's soft hits %d misses %d"),
+			Grace, HumanDowns, *PerSeed, HumanMax, Over4, BotDowns, ReDown, ReDownByHit, ReStumble, MinGap == 1000000 ? -1 : MinGap, Graced, GracedByBot, InGrace, Soft, Missed));
+		if (Grace > 0) TestEqual(*FString::Printf(TEXT("grace %d: no hit lands (stumble or knockdown) on a skater inside its grace, ten matches"), Grace), InGrace, 0);
+		if (Grace == 0) TestEqual(TEXT("grace 0: no hit meets a grace"), Graced, 0);
+	}
+	return true;
+}
+
 // The hold reads the hit (AJamSkater::HitStopFramesFor; the game mode's HitStopRoute calls it with jam.hitstop as the base).
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamContactHitStop, "Jam.Core.Contact.HitStop", JamContactTests::Flags)
 bool FJamContactHitStop::RunTest(const FString& Parameters)
@@ -436,7 +746,7 @@ bool FJamContactBoardMatch::RunTest(const FString& Parameters)
 		AddInfo(Line(*FString::Printf(TEXT("JAMBOARDS match pro seed %llu board_bonus 1.25"), static_cast<unsigned long long>(Seed)), S, C));
 		AddInfo(FString::Printf(TEXT("JAMBOARDS boards pro seed %llu board_bonus 1.25: %s"), static_cast<unsigned long long>(Seed), *BoardLine(C)));
 		FContactCount Cn;
-		const JamAI::FJamPlaytestStats Sn = Match(*this, TEXT("pro"), Seed, Cn, [](FJamGameConfig& G) { G.Contact.BoardBonus = 1.0; G.Stick.bBodyShield = false; G.Stick.bPassiveTake = true; G.Stick.bTeammateTouchTakes = true; });   // lane A102's two stick rules off: the game main had at ee14438
+		const JamAI::FJamPlaytestStats Sn = Match(*this, TEXT("pro"), Seed, Cn, [](FJamGameConfig& G) { G.Contact.BoardBonus = 1.0; G.Contact.ReleaseGraceFrames = 0; G.Stick.bBodyShield = false; G.Stick.bPassiveTake = true; G.Stick.bTeammateTouchTakes = true; });   // lanes A113 and A102: every later rule neutral = the game main had at ee14438
 		AddInfo(Line(*FString::Printf(TEXT("JAMBOARDS match pro seed %llu board_bonus 1.00"), static_cast<unsigned long long>(Seed)), Sn, Cn));
 		AddInfo(FString::Printf(TEXT("JAMBOARDS boards pro seed %llu board_bonus 1.00: %s"), static_cast<unsigned long long>(Seed), *BoardLine(Cn)));
 		TestEqual(*FString::Printf(TEXT("pro seed %llu: board_bonus 1 hashes as main did"), static_cast<unsigned long long>(Seed)), FString::Printf(TEXT("%016llx"), static_cast<unsigned long long>(Sn.Hash)),

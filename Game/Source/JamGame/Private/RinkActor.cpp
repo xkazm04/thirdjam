@@ -23,7 +23,18 @@ static TAutoConsoleVariable<int32> CVarRinkBeacon(TEXT("jam.rink.beacon"), 0,
 // Lane A103 (track F3): the Blender-made benches and penalty boxes. 0 = A25's code benches on every tier (the rink as it was before the lane); 1 = the meshes on
 // the dressed tiers. Read at Build and on every change through the construction sink below (SetConstructionVisible applies both switches).
 static TAutoConsoleVariable<int32> CVarRinkArena(TEXT("jam.rink.arena"), 1,
-	TEXT("1: the Blender-made team benches and penalty boxes (/Game/Arena) stand outside the boards on the dressed look tiers; 0: lane A25's code benches. Lane A103."));
+	TEXT("1: the Blender-made team benches, penalty boxes, scorer's table and goals (/Game/Arena) stand on the dressed look tiers; 0: lane A25's code benches and code net frame. Lanes A103, A119."));
+
+// Lane A119: the goal meshes arena.py builds (tools/blender/arena/arena.py GOAL_VARIANTS): the opening each was built for. Build takes the nearest and scales it.
+namespace
+{
+	struct FArenaGoalVariant { double WidthM; double HeightM; const TCHAR* Name; const TCHAR* Path; const TCHAR* NetPath; };
+	const FArenaGoalVariant GArenaGoalVariants[] = {
+		{ 4.0, 0.61, TEXT("SM_Arena_Goal_W400H061"), TEXT("/Game/Arena/SM_Arena_Goal_W400H061.SM_Arena_Goal_W400H061"), TEXT("/Game/Arena/SM_Arena_GoalNet_W400H061.SM_Arena_GoalNet_W400H061") },   // the default goal
+		{ 6.0, 0.61, TEXT("SM_Arena_Goal_W600H061"), TEXT("/Game/Arena/SM_Arena_Goal_W600H061.SM_Arena_Goal_W600H061"), TEXT("/Game/Arena/SM_Arena_GoalNet_W600H061.SM_Arena_GoalNet_W600H061") },   // hockey.mode.pond
+		{ 4.0, 1.22, TEXT("SM_Arena_Goal_W400H122"), TEXT("/Game/Arena/SM_Arena_Goal_W400H122.SM_Arena_Goal_W400H122"), TEXT("/Game/Arena/SM_Arena_GoalNet_W400H122.SM_Arena_GoalNet_W400H122") },   // hockey.mode.sniper
+	};
+}
 static FAutoConsoleVariableSink GRinkConstructionSink(FConsoleCommandDelegate::CreateLambda([]()
 {
 	const bool bOn = ARinkActor::IsConstructionEnabled();
@@ -204,9 +215,10 @@ ARinkActor::ARinkActor()
 	}
 	// Lane A103: the four Blender pieces. Empty and hidden until Build finds the meshes; stencil 1 (ramp and outline) like A25's benches; they cast shadows.
 	{
-		static const TCHAR* const ArenaNames[4] = { TEXT("ArenaBenchNeg"), TEXT("ArenaBenchPos"), TEXT("ArenaBoxNeg"), TEXT("ArenaBoxPos") };
-		TObjectPtr<UStaticMeshComponent>* const ArenaSlots[4] = { &ArenaBenchNeg, &ArenaBenchPos, &ArenaBoxNeg, &ArenaBoxPos };
-		for (int32 i = 0; i < 4; ++i)
+		// Lane A119: three more of the same kind: the two goals and the scorer's table.
+		static const TCHAR* const ArenaNames[9] = { TEXT("ArenaBenchNeg"), TEXT("ArenaBenchPos"), TEXT("ArenaBoxNeg"), TEXT("ArenaBoxPos"), TEXT("ArenaGoalNeg"), TEXT("ArenaGoalPos"), TEXT("ArenaTable"), TEXT("ArenaGoalNetNeg"), TEXT("ArenaGoalNetPos") };
+		TObjectPtr<UStaticMeshComponent>* const ArenaSlots[9] = { &ArenaBenchNeg, &ArenaBenchPos, &ArenaBoxNeg, &ArenaBoxPos, &ArenaGoalNeg, &ArenaGoalPos, &ArenaTable, &ArenaGoalNetNeg, &ArenaGoalNetPos };
+		for (int32 i = 0; i < 9; ++i)
 		{
 			UStaticMeshComponent* Ac = CreateDefaultSubobject<UStaticMeshComponent>(ArenaNames[i]);
 			Ac->SetupAttachment(Root);
@@ -214,6 +226,7 @@ ARinkActor::ARinkActor()
 			Ac->SetRenderCustomDepth(true);
 			Ac->SetCustomDepthStencilValue(1);
 			Ac->SetVisibility(false);
+			if (i >= 7) { Ac->SetRenderCustomDepth(false); Ac->SetCustomDepthStencilValue(0); }   // lane A119: the net's cords take no outline
 			*ArenaSlots[i] = Ac;
 		}
 	}
@@ -782,6 +795,47 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 		Dress(ArenaBenchPos, BenchMesh, FVector(BenchX, Y0, 0.0), 0.0, BenchScale, true);
 		Dress(ArenaBoxNeg, BoxMesh, FVector(-PenaltyBoxCentreXM * UU, -Y0, 0.0), 180.0, 1.0, false);
 		Dress(ArenaBoxPos, BoxMesh, FVector(PenaltyBoxCentreXM * UU, -Y0, 0.0), 180.0, 1.0, true);
+		// Lane A119: the scorer's table between the two boxes (their inner ends stand 1.48 m apart on every rink), and the goals on the goal lines.
+		UStaticMesh* TableMesh = LoadObject<UStaticMesh>(nullptr, ScorerTableMeshPath, nullptr, LOAD_NoWarn | LOAD_Quiet);
+		UMaterialInterface* FrameMat = LoadConstructionMat(TEXT("MI_Toon_NetFrame"), TEXT("MI_LL_NetFrame"), FLinearColor(0.7f, 0.03f, 0.02f));
+		auto BindSlot = [](UStaticMeshComponent* C, const TCHAR* Slot, UMaterialInterface* Mat) { if (!C || !C->GetStaticMesh() || !Mat) return; const int32 I = C->GetMaterialIndex(FName(Slot)); if (I != INDEX_NONE) C->SetMaterial(I, Mat); };
+		Dress(ArenaTable, TableMesh, FVector(0.0, -Y0, 0.0), 180.0, 1.0, false);
+		BindSlot(ArenaTable, TEXT("frame"), FrameMat);
+		// The goal: the variant nearest the cartridge's opening (by the ratio of widths and heights), scaled to it. The mesh's +x runs along the goal line and
+		// its +y into the net, so the +x end takes yaw -90 and the -x end yaw +90. Frame on B's MI_Toon_NetFrame, cords on B's MI_Toon_NetMesh.
+		const FArenaGoalVariant* Variant = nullptr;
+		double BestDist = TNumericLimits<double>::Max();
+		if (R.GoalWidthM > 0.0 && NetH > 0.0)
+		{
+			for (const FArenaGoalVariant& V : GArenaGoalVariants)
+			{
+				const double Dist = FMath::Abs(FMath::Loge(R.GoalWidthM / V.WidthM)) + FMath::Abs(FMath::Loge(NetH / V.HeightM));
+				if (Dist < BestDist) { BestDist = Dist; Variant = &V; }
+			}
+		}
+		UStaticMesh* GoalMesh = Variant ? LoadObject<UStaticMesh>(nullptr, Variant->Path, nullptr, LOAD_NoWarn | LOAD_Quiet) : nullptr;
+		UStaticMesh* GoalNetMesh = GoalMesh ? LoadObject<UStaticMesh>(nullptr, Variant->NetPath, nullptr, LOAD_NoWarn | LOAD_Quiet) : nullptr;
+		if (!GoalNetMesh) GoalMesh = nullptr;   // a frame without its net is not a goal: the code frame stays
+		const FVector GoalScale = Variant ? FVector(R.GoalWidthM / Variant->WidthM, 1.0, NetH / Variant->HeightM) : FVector::OneVector;
+		UMaterialInterface* CordMat = LoadLook(TEXT("MI_Toon_NetMesh"), NetMaterialPath);
+		for (int32 S = -1; S <= 1; S += 2)
+		{
+			UStaticMeshComponent* const Pair[2] = { S > 0 ? ArenaGoalPos.Get() : ArenaGoalNeg.Get(), S > 0 ? ArenaGoalNetPos.Get() : ArenaGoalNetNeg.Get() };
+			for (int32 k = 0; k < 2; ++k)
+			{
+				UStaticMeshComponent* C = Pair[k];
+				if (!C) continue;
+				C->SetStaticMesh(k == 0 ? GoalMesh : GoalNetMesh);
+				if (!GoalMesh) continue;
+				C->SetRelativeLocationAndRotation(FVector(S * GL * UU, 0.0, 0.0), FRotator(0.0, S > 0 ? -90.0 : 90.0, 0.0));
+				C->SetRelativeScale3D(GoalScale);
+				BindSlot(C, TEXT("frame"), FrameMat);
+				BindSlot(C, TEXT("net"), CordMat);
+			}
+		}
+		UE_LOG(LogJamSim, Log, TEXT("JAMRINK arena goals: mesh %s (%s) for an opening %.2f x %.2f m, scale %.3f along the line, %.3f up, at x +-%.2f m; scorer's table %s at x 0 y -%.2f m"),
+			GoalMesh ? TEXT("loaded") : TEXT("missing"), Variant ? Variant->Name : TEXT("none"), R.GoalWidthM, NetH, GoalScale.X, GoalScale.Z, GL,
+			TableMesh ? TEXT("loaded") : TEXT("missing"), Y0 / UU);
 		ArenaTier = Game.Look.Tier;
 		UE_LOG(LogJamSim, Log, TEXT("JAMRINK arena pieces: bench mesh %s, box mesh %s; benches at x +-%.2f m y +%.2f m scale %.3f (%.1f m long), boxes at x +-%.1f m y -%.2f m yaw 180"),
 			BenchMesh ? TEXT("loaded") : TEXT("missing"), BoxMesh ? TEXT("loaded") : TEXT("missing"), BenchX / UU, Y0 / UU, BenchScale, R.LengthM * ArenaBenchLengthFactor, PenaltyBoxCentreXM, Y0 / UU);
@@ -932,6 +986,21 @@ void ARinkActor::ApplyArenaDressing()
 	for (UStaticMeshComponent* C : Pieces) if (C) C->SetVisibility(bShow);
 	// A25's code benches stand where the Blender benches go: one or the other, never both.
 	if (Benches) Benches->SetVisibility(bConstruction && !bShow);
+	// Lane A119: the scorer's table stands with the boxes; the goals follow the same rule on their own meshes, and the code frame with its sheet netting
+	// (`Nets`) shows exactly when they do not: one goal on each line, never both, never none.
+	if (ArenaTable) ArenaTable->SetVisibility(bShow && ArenaTable->GetStaticMesh() != nullptr);
+	UStaticMeshComponent* const Goals[4] = { ArenaGoalNeg.Get(), ArenaGoalPos.Get(), ArenaGoalNetNeg.Get(), ArenaGoalNetPos.Get() };
+	bool bHaveGoals = true;
+	for (const UStaticMeshComponent* C : Goals) bHaveGoals = bHaveGoals && C && C->GetStaticMesh();
+	const bool bShowGoals = bHaveGoals && bConstruction && IsArenaDressingEnabled() && !IsBareTier(ArenaTier);
+	for (UStaticMeshComponent* C : Goals) if (C) C->SetVisibility(bShowGoals);
+	if (Nets) Nets->SetVisibility(!bShowGoals);
+	if (bShowGoals != bArenaGoalShown)
+	{
+		bArenaGoalShown = bShowGoals;
+		UE_LOG(LogJamSim, Log, TEXT("JAMRINK arena goals %s for tier %s (meshes %s): %s"), bShowGoals ? TEXT("shown") : TEXT("hidden"), *ArenaTier,
+			bHaveGoals ? TEXT("loaded") : TEXT("missing"), bShowGoals ? TEXT("code net frame hidden") : TEXT("code net frame as before"));
+	}
 	if (bShow != bArenaShown)
 	{
 		bArenaShown = bShow;

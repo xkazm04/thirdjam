@@ -2,13 +2,13 @@
  "schema": "tj.cartridge/1",
  "id": "fuzz-00050",
  "title": "Fuzz 50",
- "seed": 1547866109,
+ "seed": 1494356409,
  "theme": {
-  "name": "The Read-Through",
+  "name": "Sudden Death",
   "mood_words": [
-   "night",
-   "crisp",
-   "bright"
+   "tense",
+   "quiet",
+   "final"
   ],
   "palette": [
    {
@@ -108,132 +108,480 @@
   }
  ],
  "values": {
-  "shot_speed": 5
+  "skater_turn_rate": 1,
+  "puck_max_speed": 43.9382,
+  "ice_friction": 0
  },
  "rules": [],
  "entities": [],
  "ai": [],
  "game": {
   "rink": {
-   "length_m": 100,
-   "width_m": 50,
-   "board_restitution": 0.5,
-   "ice_friction": 0.05,
-   "goal_width_m": 6,
-   "goal_height_m": 0.9,
-   "obstacles": []
+   "length_m": 40,
+   "width_m": 80,
+   "corner_radius_m": 15,
+   "board_restitution": 1,
+   "ice_friction": 0,
+   "goal_width_m": 10,
+   "goal_height_m": 0.3,
+   "obstacles": [
+    {
+     "kind": "box",
+     "x": 0,
+     "z": 0,
+     "size": 4.62
+    },
+    {
+     "kind": "bumper",
+     "x": 1.39,
+     "z": -16.62,
+     "size": 6.07
+    },
+    {
+     "kind": "bumper",
+     "x": 0,
+     "z": 0,
+     "size": 4.7
+    },
+    {
+     "kind": "box",
+     "x": -15.3,
+     "z": 24.34,
+     "size": 8.2
+    }
+   ]
   },
   "skater": {
-   "speed": 9.5,
-   "accel": 22,
-   "turn_rate": 6.5,
-   "mass": 100,
-   "glide_drag": 0.5,
-   "brake_decel": 15.5,
-   "check_speed_min": 6.5,
-   "reverse_brake_decel": 20,
+   "speed": 16,
+   "accel": 40,
+   "turn_rate": 1,
+   "lateral_grip": 0.5,
+   "mass": 40,
+   "glide_drag": 1,
+   "brake_decel": 1,
+   "check_enabled": false,
+   "check_speed_min": 1,
+   "knockdown_frames": 15,
+   "visual": "toy",
+   "pass_speed": 30,
+   "pass_lead_frames": 0,
+   "carry_speed_mult": 0.6,
+   "reverse_brake_decel": 0,
+   "burst": {
+    "frames": 60,
+    "accel_mult": 1
+   },
+   "breakaway": {
+    "speed_bonus": 1,
+    "frames": 0
+   },
    "sprint": {
-    "drain_frames": 915
+    "bonus": 0,
+    "drain_frames": 30,
+    "refill_frames": 30,
+    "carry_bonus": 0
+   },
+   "goalie": {
+    "reach_m": 3,
+    "block_height_m": 0
    },
    "spin": {
-    "cooldown_frames": 300,
-    "speed_mult": 0.6,
-    "stamina_cost": 0.5
+    "frames": 120,
+    "cooldown_frames": 0,
+    "speed_mult": 1,
+    "stamina_cost": 0
    }
-  },
-  "shot": {
-   "speed": 22.5,
-   "cooldown_frames": 63,
-   "charge_speed_bonus": 10,
-   "tap_frames": 15,
-   "reach_m": 0.5
-  },
-  "pass": {
-   "saucer": {
-    "half_frames": 30
-   }
-  },
-  "contact": {
-   "thrust_mps": 5,
-   "stand_speed_mps": 2.5,
-   "speed_stability": 0.65,
-   "sprint_stability": 0.65,
-   "spin_stability": 0.65,
-   "unseen_stability": 0.65,
-   "loose_ratio": 1.5,
-   "down_frames_max": 158,
-   "stagger_frames": 30
-  },
-  "look": {
-   "tier": "p4_broadcast"
   },
   "stick": {
    "reach_m": 0.6,
    "carry_reach_mult": 0.5,
+   "poke_window_frames": 30,
+   "lift_range_m": 0.5,
+   "lift_cone_deg": 180,
+   "stumble_frames": 0,
+   "mouse_sensitivity": 5,
+   "foul_grace_frames": 0,
    "reception_m": 0,
-   "lift_range_m": 0.5
+   "deke": {
+    "offset_m": 2,
+    "commit_frames": 60
+   },
+   "sweep": {
+    "min_deg_per_frame": 45,
+    "shield_frames": 60,
+    "bot_react_frames": 30,
+    "sprint_shield_mult": 1
+   }
+  },
+  "puck": {
+   "radius_m": 0.4,
+   "max_speed": 60,
+   "drag": 2,
+   "carry_assist": 0,
+   "count": 3,
+   "gravity_mps2": 30,
+   "ice_restitution": 0
+  },
+  "shot": {
+   "reach_m": 0.5,
+   "speed": 40,
+   "cooldown_frames": 6,
+   "aim_cone_deg": 1,
+   "charge_frames_max": 0,
+   "charge_speed_bonus": 0,
+   "tap_frames": 0,
+   "deflect": true,
+   "one_timer": {
+    "window_frames": 0,
+    "cone_bonus_deg": 30
+   },
+   "lift": {
+    "tap_m": 0.5,
+    "half_m": 0,
+    "full_m": 2,
+    "half_frames": 120
+   }
+  },
+  "pass": {
+   "saucer": {
+    "half_frames": 60,
+    "lift_m": 1
+   }
+  },
+  "contact": {
+   "momentum": true,
+   "carrier_can_hit": false,
+   "lunge_mps": 6,
+   "thrust_mps": 0,
+   "cross_reach_m": 0,
+   "stability_mps": 1,
+   "stand_speed_mps": 5,
+   "stand_brace": 3,
+   "speed_stability": 1,
+   "sprint_stability": 0.3,
+   "spin_stability": 0.3,
+   "unseen_stability": 0.3,
+   "bump_ratio": 0,
+   "loose_ratio": 0,
+   "down_ratio": 5,
+   "down_full_ratio": 10,
+   "down_frames_min": 300,
+   "down_frames_max": 300,
+   "stagger_frames": 60
+  },
+  "ai": {
+   "difficulty": "all_star",
+   "yield_margin_m": 0,
+   "yield_radius_m": 0,
+   "hold_radius_m": 0,
+   "speed_scale": 0.3,
+   "red_skill": 1,
+   "react_frames": 60,
+   "body_check": 0,
+   "sprint": 0
+  },
+  "barks": {
+   "enabled": true,
+   "intensity": "quiet"
+  },
+  "commentary": {
+   "enabled": true,
+   "intensity": "normal"
+  },
+  "look": {
+   "tier": "p4_broadcast",
+   "trim_emissive": 100,
+   "fog_density": 0.1,
+   "wet_ice": false
+  },
+  "camera": {
+   "mode": "arena",
+   "distance_m": 20,
+   "height_m": 15,
+   "look_ahead_m": 20,
+   "lag_frames": 30,
+   "fov_deg": 110,
+   "boards_margin_m": 0,
+   "end_height_m": 1,
+   "far_net_bias": 0,
+   "radar": false
   },
   "rules": {
    "mode": "first_to",
    "score_to_win": 9,
    "goal_pause_frames": 600,
-   "offside": false
+   "penalties": false
   },
+  "effects": [
+   {
+    "id": "fx-1",
+    "target": "self",
+    "duration_frames": 2710,
+    "trigger": "goal_against",
+    "stats": [
+     {
+      "stat": "knockdown_frames",
+      "multiply": 0.25,
+      "add": -9.791
+     }
+    ],
+    "kind": "big_puck",
+    "stack": "ignore"
+   },
+   {
+    "id": "fx-2",
+    "target": "puck",
+    "duration_frames": 60,
+    "trigger": "check_received",
+    "stats": [
+     {
+      "stat": "skater_accel",
+      "multiply": 0.25,
+      "add": 0
+     },
+     {
+      "stat": "skater_turn_rate",
+      "multiply": 0.25,
+      "add": 0
+     },
+     {
+      "stat": "shot_aim_cone_deg",
+      "multiply": 4
+     },
+     {
+      "stat": "knockdown_frames",
+      "add": 285
+     }
+    ]
+   },
+   {
+    "id": "fx-3",
+    "target": "own_team",
+    "duration_frames": 7200,
+    "trigger": "goal_for",
+    "stats": [
+     {
+      "stat": "ice_friction",
+      "multiply": 0.25,
+      "add": -0.03
+     }
+    ],
+    "stack": "ignore"
+   },
+   {
+    "id": "fx-4",
+    "target": "other_team",
+    "duration_frames": 60,
+    "trigger": "period_start",
+    "stats": [
+     {
+      "stat": "skater_mass",
+      "add": 0
+     }
+    ],
+    "icon": "snail"
+   },
+   {
+    "id": "fx-5",
+    "target": "other_team",
+    "duration_frames": 1596,
+    "trigger": "check_received",
+    "stats": [
+     {
+      "stat": "skater_grip",
+      "multiply": 3.253
+     },
+     {
+      "stat": "skater_turn_rate",
+      "multiply": 0.25
+     },
+     {
+      "stat": "skater_turn_rate",
+      "multiply": 1.901
+     },
+     {
+      "stat": "puck_radius",
+      "add": 0.34
+     }
+    ],
+    "stack": "ignore"
+   },
+   {
+    "id": "fx-6",
+    "target": "puck",
+    "duration_frames": 119,
+    "trigger": "check_received",
+    "stats": [
+     {
+      "stat": "shot_aim_cone_deg",
+      "add": -45
+     },
+     {
+      "stat": "puck_drag",
+      "multiply": 2.074,
+      "add": 1.907
+     },
+     {
+      "stat": "puck_max_speed",
+      "multiply": 0.25,
+      "add": -50
+     },
+     {
+      "stat": "skater_speed",
+      "multiply": 4
+     }
+    ],
+    "stack": "ignore"
+   },
+   {
+    "id": "fx-7",
+    "target": "everyone",
+    "duration_frames": 3143,
+    "trigger": "check_landed",
+    "stats": [
+     {
+      "stat": "puck_radius",
+      "multiply": 4,
+      "add": -0.34
+     }
+    ],
+    "kind": "heavy_puck"
+   },
+   {
+    "id": "fx-8",
+    "target": "other_team",
+    "duration_frames": 60,
+    "trigger": "check_received",
+    "stats": [
+     {
+      "stat": "skater_accel",
+      "multiply": 4
+     },
+     {
+      "stat": "skater_speed",
+      "multiply": 2.481
+     },
+     {
+      "stat": "shot_aim_cone_deg",
+      "add": -45
+     },
+     {
+      "stat": "knockdown_frames",
+      "add": -285
+     }
+    ],
+    "kind": "precision",
+    "stack": "extend",
+    "icon": "swirl"
+   },
+   {
+    "id": "fx-9",
+    "target": "other_team",
+    "duration_frames": 2423,
+    "trigger": "goal_for",
+    "stats": [
+     {
+      "stat": "shot_reach",
+      "add": 1.259
+     },
+     {
+      "stat": "puck_radius",
+      "add": 0.34
+     },
+     {
+      "stat": "skater_grip",
+      "multiply": 0.25,
+      "add": -11.5
+     }
+    ],
+    "kind": "big_puck"
+   },
+   {
+    "id": "fx-10",
+    "target": "puck",
+    "duration_frames": 60,
+    "trigger": "pickup",
+    "stats": [
+     {
+      "stat": "puck_max_speed",
+      "add": -50
+     },
+     {
+      "stat": "skater_grip",
+      "add": 4.222
+     },
+     {
+      "stat": "board_restitution",
+      "multiply": 0.25
+     },
+     {
+      "stat": "puck_drag",
+      "multiply": 2.34,
+      "add": 0
+     }
+    ],
+    "kind": "heavy_puck",
+    "icon": "snail"
+   },
+   {
+    "id": "fx-11",
+    "target": "own_team",
+    "duration_frames": 60,
+    "trigger": "check_received",
+    "stats": [
+     {
+      "stat": "board_restitution",
+      "multiply": 0.25
+     }
+    ],
+    "stack": "extend"
+   },
+   {
+    "id": "fx-12",
+    "target": "puck",
+    "duration_frames": 1460,
+    "trigger": "period_start",
+    "stats": [
+     {
+      "stat": "puck_drag",
+      "add": 0
+     }
+    ],
+    "stack": "extend"
+   }
+  ],
   "pickups": [
    {
-    "kind": "big_puck",
-    "spawn_every_frames": 7200,
-    "duration_frames": 3600,
+    "kind": "fx-5",
+    "spawn_every_frames": 120,
+    "duration_frames": 1559,
+    "magnitude": 4,
+    "max_on_ice": 2
+   },
+   {
+    "kind": "fx-5",
+    "spawn_every_frames": 120,
+    "duration_frames": 1,
     "max_on_ice": 3
    },
    {
-    "kind": "big_puck",
-    "spawn_every_frames": 1463,
-    "duration_frames": 3600,
+    "kind": "speed",
+    "spawn_every_frames": 2251,
+    "duration_frames": 3191,
     "magnitude": 4
    },
    {
-    "kind": "heavy_puck",
+    "kind": "fx-8",
     "spawn_every_frames": 7200,
-    "duration_frames": 1131,
+    "duration_frames": 2630,
     "magnitude": 4,
-    "max_on_ice": 1
-   },
-   {
-    "kind": "big_puck",
-    "spawn_every_frames": 3535,
-    "duration_frames": 3600,
-    "magnitude": 4
-   },
-   {
-    "kind": "speed",
-    "spawn_every_frames": 5232,
-    "duration_frames": 872
-   },
-   {
-    "kind": "speed",
-    "spawn_every_frames": 120,
-    "duration_frames": 1819,
-    "magnitude": 4,
-    "max_on_ice": 4
-   },
-   {
-    "kind": "big_puck",
-    "spawn_every_frames": 7200,
-    "duration_frames": 1816,
-    "magnitude": 3.371,
-    "max_on_ice": 4
-   },
-   {
-    "kind": "reverse_other",
-    "spawn_every_frames": 120,
-    "duration_frames": 2189
+    "max_on_ice": 2
    }
   ],
   "teams": [
    {
     "id": "blue",
-    "colour_hex": "#1D4ED8",
+    "colour_hex": "#00FF00",
     "skaters": [
      {
       "role": "player",
@@ -243,27 +591,34 @@
       ]
      },
      {
-      "role": "back",
+      "role": "support",
       "spawn": [
        -3.7,
        3
+      ]
+     },
+     {
+      "role": "chaser",
+      "spawn": [
+       -5.9,
+       -3
       ]
      }
     ]
    },
    {
     "id": "orange",
-    "colour_hex": "#E8651A",
+    "colour_hex": "#FF00FF",
     "skaters": [
      {
-      "role": "support",
+      "role": "back",
       "spawn": [
        1.5,
        -2.5
       ]
      },
      {
-      "role": "support",
+      "role": "back",
       "spawn": [
        3.7,
        3.5
