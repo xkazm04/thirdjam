@@ -1,0 +1,1 @@
+B35 NS_board skater variant, saved asset, clay, POSED at a real board (test figure in the Board_Hit take between the two bursts): left of the figure Strength 0.5 (four chips and one small puff, unchanged), right of it Strength 1.0 (26 larger chips along the board foot and a blue-grey snow cloud of nine puffs), at +1, +3, +6, +10 frames. The shake line emitter is removed.

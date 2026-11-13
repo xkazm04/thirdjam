@@ -694,3 +694,31 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - Caveat: B's editor crashed once (a GPU crash during a real clay match with two editors and a render running); the five effect assets were rebuilt from the
   same spec in a fresh editor and saved, but only part of them was looked at again. The next engine lane re-checks them in a match.
 - The cross-check takes (`skf/export20`) are being imported now (lane SK17, port 8000).
+
+## H35.1 (16:31, 13 Nov) FOR THE DIRECTOR: the cross-check is in the engine (lane SK17, cook-only PASS); handoff 0037
+- **On `dev-b`** (`status/SK17-report.md`): `skf/export20` on both scripted figures: `Lift` is a two-handed cross-check shove, `Lift_Hit` knocks the victim's stick
+  overhead with two stumbling steps, `Poke_Hit` reacts from the poke's frame. `Lift` plays 20 of 20 (priority 6, a 0.03 s blend); the stick-hit reactions are
+  skipped only when the figure is down (they cut B's 0.6 s rule). `PlayLift` arrives once per lift: thank you, no guard needed. The check lunge still outranks
+  both stick takes. `JAMVIS stickhit` equals your clean events in every match. No `JAMFX missing` or MetaSound error for `lift`, `poke`, `check`,
+  `knockdown`, `board`.
+- **Handoff B-to-A-0037**: `TryLift` has no direction test: 7 of 20 clean cross-checks landed on a carrier more than 90 degrees off the attacker's facing; a cone,
+  and `Dir` on the `lift` and `poke` events.
+- Running: B34 (port 8002: your sky-light ask, ten figures for look, wear on the boards).
+
+## H35.4 (16:51, 13 Nov) FOR THE DIRECTOR: the cross-check turns toward its victim (lane SK18, cook-only PASS); the human knocked down by a bot
+- **On `dev-b`** (`status/SK18-report.md`): on your clean `lift` event B's figure turns its mesh up to 60 degrees toward the victim for the take (it uses the event's
+  `who` and `where`: **please keep both in the frame of the lift**): the mesh is within 30 degrees of the victim in 12 of 20 clean cross-checks (the pawn's
+  facing: 7). **4 of 20 still land on a carrier more than 90 degrees off** after the turn: only your cone removes those (handoff 0037).
+- **The human knocked down by a bot, first time on B** (clay, `all_star`, no drill, 90 s): one, a check from the side near the boards: the side take along the
+  wall, nothing through it, pelvis at 90 % one frame before the release. Same match: **2 checks landed against 66 collisions without one, 20 clean cross-checks,
+  8 clean pokes**: the body check is still the rare event on `all_star`.
+- Known fault of B's, in a lane now: long thin lines through the slide streak at 10 to 20 frames after a knockdown (`devlog/shots/20261113-164557-B-sk18-slide-streak.jpg`).
+
+## H35.9 (17:17, 13 Nov) FOR THE DIRECTOR: the slide streak cannot stretch any more (lane B35, cook-only PASS); a speed for you to look at
+- **On `dev-b`** (`status/B35-report.md`): the long lines through the slide streak came from reading the owner's velocity unclamped: (a) mostly an artefact of B's
+  stills (a frozen world tick has a time step of microseconds, so any move in it gave a quad kilometres long), (b) in play, over-long quads at the start of a hard
+  slide. Speed and quad length are capped now and nothing spawns on a near-zero time step, a 30 cm jump or the first 0.1 s. The cross-check mark is one size up on
+  clay; a hard board crash (Strength 1.0) is 26 chips and a snow cloud against 4 chips at 0.5; the board shake line is gone for good.
+- **For you to look at**: recorded per tick in six knockdowns, **after the 3-frame hit-stop the knocked figure catches up at up to 26 m/s for three frames and then
+  slides at about 10 m/s in a hard knockdown** (the 7 m slide). If the catch-up or the 10 m/s is not intended, it is in the pawn or the sim.
+- House rule noted on B: an effect that reads `Engine.Owner.Velocity` clamps it; stills taken by freezing the world clock can show faults that play does not.
