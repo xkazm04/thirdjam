@@ -353,6 +353,49 @@ bool AJamSkater::ResetVisual(const FLinearColor& Colour, int32 Number, UClass* V
 	return true;
 }
 
+// Lane A125 (track F1): the by-name figure calls (JamPawns.h).
+bool AJamSkater::CallFigure(UObject* Figure, FName Function, TConstArrayView<double> Args)
+{
+	UFunction* F = Figure ? Figure->FindFunction(Function) : nullptr;
+	if (!F) return false;
+	int32 N = 0;
+	for (TFieldIterator<FProperty> It(F); It && It->HasAnyPropertyFlags(CPF_Parm); ++It)
+	{
+		if (It->HasAnyPropertyFlags(CPF_ReturnParm | CPF_OutParm) || !(CastField<FBoolProperty>(*It) || CastField<FNumericProperty>(*It))) return false;
+		++N;
+	}
+	if (N != Args.Num()) return false;
+	uint8* Params = static_cast<uint8*>(FMemory_Alloca(FMath::Max<int32>(F->ParmsSize, 1)));
+	FMemory::Memzero(Params, F->ParmsSize);
+	int32 I = 0;
+	for (TFieldIterator<FProperty> It(F); It && It->HasAnyPropertyFlags(CPF_Parm); ++It)
+	{
+		It->InitializeValue_InContainer(Params);
+		const double A = Args[I++];
+		if (const FBoolProperty* B = CastField<FBoolProperty>(*It)) B->SetPropertyValue_InContainer(Params, A != 0.0);
+		else if (const FNumericProperty* Num = CastField<FNumericProperty>(*It))
+		{
+			void* Value = Num->ContainerPtrToValuePtr<void>(Params);
+			if (Num->IsFloatingPoint()) Num->SetFloatingPointPropertyValue(Value, A);
+			else Num->SetIntPropertyValue(Value, static_cast<int64>(FMath::RoundToInt64(A)));
+		}
+	}
+	Figure->ProcessEvent(F, Params);
+	for (TFieldIterator<FProperty> It(F); It && It->HasAnyPropertyFlags(CPF_Parm); ++It) It->DestroyValue_InContainer(Params);
+	return true;
+}
+
+int32 AJamSkater::StumbleFramesFor(const FJamSkaterState& S)
+{
+	if (S.IsDown() || S.StumbleFrames <= 0 || !S.bBumpThisFrame) return 0;
+	return S.ContactOutcome == UJamSim::ContactStumble || S.bRecoilThisFrame ? S.StumbleFrames : 0;
+}
+
+float AJamSkater::BrakeDecelFor(double SpeedBefore, const FJamSkaterState& S)
+{
+	return S.bReverseBraking ? static_cast<float>(FMath::Max(0.0, SpeedBefore - S.Vel.Size()) / UJamSim::DT) : 0.f;
+}
+
 void AJamSkater::ApplySimFrame(const FJamSkaterState& S)
 {
 	if (!VisualObject) return;
@@ -407,10 +450,43 @@ void AJamSkater::ApplySimFrame(const FJamSkaterState& S)
 	// Lane A45 (C-0001 v4, R-0031 point 1): B's four calls from the sim's read-outs (JamSim.h, never hashed). One JAMVIS line each, a few per minute, so B can read what was sent.
 	if (S.bBumpThisFrame && !S.IsDown())
 	{
+		// Lane A125 (track F1): a stumble is told apart from a bump. The first frame of a stumble a hit caused goes out as PlayStumble(DirX, DirZ, Frames) on a
+		// figure that has it (by name: CallFigure), with the frames the sim holds the skater without control; any other figure, and every bump, gets
+		// PlayHitReaction as before. One JAMVIS stumble line either way (call = what was sent).
+		const int32 StumbleFrames = StumbleFramesFor(S);
+		static const FName NamePlayStumble(TEXT("PlayStumble"));
+		const bool bStumbleSent = StumbleFrames > 0 && CallFigure(V, NamePlayStumble, { S.BumpDir.X, S.BumpDir.Y, static_cast<double>(StumbleFrames) });
+		if (!bStumbleSent)
+		{
 		IJamSkaterVisual::Execute_PlayHitReaction(V, static_cast<float>(S.BumpDir.X), static_cast<float>(S.BumpDir.Y));
 		UE_LOG(LogJamSim, Log, TEXT("JAMVIS hit frame=%lld skater=%d team=%d dir=(%.2f, %.2f) (PlayHitReaction: a collision at 3 m/s closing or more, no check landed)"),
 			SimFrameForLog(), S.Index, S.Team, S.BumpDir.X, S.BumpDir.Y);
+		}
+		if (StumbleFrames > 0)
+		{
+			UE_LOG(LogJamSim, Log, TEXT("JAMVIS stumble frame=%lld skater=%d team=%d human=%d dir=(%.2f, %.2f) frames=%d by=%d ratio=%.2f recoil=%d call=%s (the first frame of a stumble by a hit)"),
+				SimFrameForLog(), S.Index, S.Team, S.bHuman ? 1 : 0, S.BumpDir.X, S.BumpDir.Y, StumbleFrames, S.ContactBy, S.ContactRatio, S.bRecoilThisFrame ? 1 : 0,
+				bStumbleSent ? TEXT("PlayStumble") : TEXT("PlayHitReaction"));
+		}
 	}
+	// Lane A125 (track F1): the braking read-out, a level sent on the change: the sim's own reverse-brake condition (bReverseBraking), never the pawn's speed.
+	// By name (CallFigure): a figure without SetBraking gets nothing. The JAMVIS line is the human's only (a bot reverses some 2,000 times a match).
+	// The read-out is written by the skater's own step: a faceoff or a period break (no step) leaves the last value standing, so a skater the sim holds still
+	// is not braking whatever the flag says.
+	const bool bBrakingNow = S.bReverseBraking && !S.Vel.IsNearlyZero();
+	if (bBrakingNow != bWasBraking)
+	{
+		bWasBraking = bBrakingNow;
+		const float Decel = BrakeDecelFor(LastSimSpeed, S);
+		static const FName NameSetBraking(TEXT("SetBraking"));
+		const bool bBrakeSent = CallFigure(V, NameSetBraking, { bWasBraking ? 1.0 : 0.0, static_cast<double>(Decel) });
+		if (S.bHuman)
+		{
+			UE_LOG(LogJamSim, Log, TEXT("JAMVIS brake frame=%lld skater=%d team=%d human=1 on=%d decel=%.1f speed=%.2f call=%s (SetBraking: the sim's reverse brake)"),
+				SimFrameForLog(), S.Index, S.Team, bWasBraking ? 1 : 0, Decel, S.Vel.Size(), bBrakeSent ? TEXT("SetBraking") : TEXT("none"));
+		}
+	}
+	LastSimSpeed = S.Vel.Size();
 	if (S.bBoardHitThisFrame)
 	{
 		IJamSkaterVisual::Execute_PlayBoardHit(V);
@@ -564,12 +640,15 @@ bool AJamSkater::GetPuckSocketWorld(FVector& Out) const
 	return false;
 }
 
+TFunction<bool(const AJamSkater&, FVector&, FRotator&)> AJamSkater::BoxSeat;   // lane A127 (track F3): set by ARinkActor
+
 void AJamSkater::ApplyRender(const FJamSkaterState& S, float Alpha)
 {
-	const FVector Loc = Lerp2D(S.PrevPos, S.Pos, Alpha, 0.0);
+	FVector Loc = Lerp2D(S.PrevPos, S.Pos, Alpha, 0.0);
 	const double DYaw = FMath::UnwindRadians(S.Yaw - S.PrevYaw);
 	const double Yaw = S.PrevYaw + DYaw * Alpha + FMath::DegreesToRadians(S.SpinVisualYawDeg());   // lane A51 (R-0034): the spin's turn of the figure
-	const FRotator Rot(0.0, FMath::RadiansToDegrees(Yaw), 0.0);
+	FRotator Rot(0.0, FMath::RadiansToDegrees(Yaw), 0.0);
+	if (S.InBox() && BoxSeat) BoxSeat(*this, Loc, Rot);   // lane A127 (track F3): a boxed skater's figure stands in its penalty box (presentation only; the sim keeps BoxPos)
 	// Lane A73: held = the hit frame's pose; catching up = a blend from it to the live pose over HoldTotal frames (w runs 0 -> 1, Alpha inside each frame).
 	if (HoldLeft > 0)
 	{

@@ -13,6 +13,7 @@
 #include "GameFramework/Actor.h"
 #include "DirectorsCallWidget.h"
 #include "HUDFeed.h"
+#include "HUDWidget.h"
 #include "Camera/PlayerCameraManager.h"
 #include "UObject/UObjectIterator.h"
 
@@ -70,6 +71,24 @@ FVector2D UJamBarkWidget::PushOutOfBand(FVector2D Pos, float Height, float Top, 
 	// Above the band when the bubble still fits under the scoreboard, else below it.
 	if (Top - 4.f - Height >= MinY) Pos.Y = Top - 4.f;
 	else Pos.Y = Bottom + 4.f + Height;
+	return Pos;
+}
+
+FVector2D UJamBarkWidget::PushOutOfMiddle(FVector2D Pos, float HalfW, float Height, float VW, float VH, float Pad)
+{
+	const float L = VW / 3.f - Pad, R = VW * 2.f / 3.f + Pad, T = VH / 3.f - Pad, B = VH * 2.f / 3.f + Pad;
+	const float MinX = Pos.X - HalfW, MaxX = Pos.X + HalfW, MinY = Pos.Y - Height, MaxY = Pos.Y;
+	if (MaxX <= L || MinX >= R || MaxY <= T || MinY >= B) return Pos;   // clear already
+	// The four ways out and how far each is; a sideways move counts only while the whole bubble stays in the frame.
+	const float Up = MaxY - T, Down = B - MinY, Left = MaxX - L, Right = R - MinX;
+	const bool bLeftFits = MinX - Left >= 0.f, bRightFits = MaxX + Right <= VW;
+	float Best = FMath::Min(Up, Down);
+	if (bLeftFits) Best = FMath::Min(Best, Left);
+	if (bRightFits) Best = FMath::Min(Best, Right);
+	if (Best == Up) Pos.Y -= Up;
+	else if (Best == Down) Pos.Y += Down;
+	else if (bLeftFits && Best == Left) Pos.X -= Left;
+	else Pos.X += Right;
 	return Pos;
 }
 
@@ -226,6 +245,7 @@ void UJamBarkWidget::Layout()
 		FVector2D Pos(VW * 0.5f, VH - 140.f);
 		bool bOn = false;
 		bool bTailLeft = true;
+		bool bTail = true;   // lane A123: a bubble moved under or beside its speaker has no tail (it would point away)
 		if (PC && B.Anchor.IsValid())
 		{
 			FVector2D Sp;
@@ -245,6 +265,16 @@ void UJamBarkWidget::Layout()
 				if (Pos.X + HalfW > VW - 300.f || Pos.X - HalfW < 420.f) Pos.Y = FMath::Min(Pos.Y, VH - 180.f);
 				// Lane A42: never over the MATCH banner (the bubble is about 54 px tall: text, padding and the tail).
 				if (bBand) Pos = PushOutOfBand(Pos, FMath::Max(54.f, static_cast<float>(B.Box->GetDesiredSize().Y)), BandTop, BandBottom, 170.f);
+				// Lane A123: never over the HUD's one-time prompt (its slot under the scoreboard), and never over the middle third of the frame.
+				const float BubH = FMath::Max(54.f, static_cast<float>(B.Box->GetDesiredSize().Y));
+				float PromptTop = 0.f, PromptBottom = 0.f;
+				if (UJamHudWidget::GetPromptBandPx(PromptTop, PromptBottom)) Pos = PushOutOfBand(Pos, BubH, PromptTop, PromptBottom, 170.f);
+				if (UJamHudWidget::ClearMiddleOn())
+				{
+					const FVector2D Before = Pos;
+					Pos = PushOutOfMiddle(Pos, FMath::Max(60.f, static_cast<float>(B.Box->GetDesiredSize().X) * 0.5f), BubH, VW, VH);
+					bTail = Pos.Y <= Before.Y + 1.f && FMath::Abs(Pos.X - Before.X) < 1.f;
+				}
 			}
 		}
 		// Off-screen speakers are heard, not seen (the strip is the commentator's).
@@ -256,6 +286,7 @@ void UJamBarkWidget::Layout()
 		if (B.Text) if (UOverlaySlot* TS = Cast<UOverlaySlot>(B.Text->Slot)) TS->SetPadding(bArt ? ArtPadding(bTailLeft) : FMargin(14, 7, 14, 7 + TailPx));
 		if (B.Tail && !bArt)
 		{
+			B.Tail->SetVisibility(bTail ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 			if (UOverlaySlot* TS = Cast<UOverlaySlot>(B.Tail->Slot))
 			{
 				TS->SetHorizontalAlignment(bTailLeft ? HAlign_Left : HAlign_Right);

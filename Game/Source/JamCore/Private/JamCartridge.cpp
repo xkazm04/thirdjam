@@ -1196,6 +1196,7 @@ namespace
 			ReadInteger(Ct, TEXT("stagger_frames"), C.Contact.StaggerFrames);
 			ReadNumber(Ct, TEXT("board_bonus"), C.Contact.BoardBonus);   // lane A101 (track F1): the boards are a body; 1 = the neutral value
 			ReadInteger(Ct, TEXT("release_grace_frames"), C.Contact.ReleaseGraceFrames);   // lane A113 (R-0049 point 1): 0 = the neutral value
+			ReadNumber(Ct, TEXT("check_reach_m"), C.Contact.CheckReachM);   // lane A125 (track F1): the check finds its man; 0 = the neutral value
 		}
 
 		FJPtr Rules = Obj(G, TEXT("rules"));

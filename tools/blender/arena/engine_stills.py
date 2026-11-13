@@ -13,6 +13,11 @@ Run (Git Bash, from the worktree root; one process for every still):
 (-ExecCmds, not -ExecutePythonScript: that one quits the editor as soon as the script returns, before a frame is drawn. The rig map is changed in memory
 only: it is loaded again with the Discard policy between jobs and the editor quits without saving; the script never saves anything.)
 Writes PNG files to tools/blender/arena/out/engine/ and prints "A119 STILLS ..." lines; quits the editor when done or after its frame budget.
+
+Evolution 3 (lane A127): ARENA_STILLS_REACT=1 shoots the arena answering the game instead, to tools/blender/arena/out/engine-e3/: six frames after a goal
+(sim frames 0, 3, 8, 18, 45, 120) of the scored net with its goal light and of the scorer's table's lamp, the game camera's view lit and at rest, and a
+penalty box at rest and on the frame of a hard board hit. No game runs: the script calls ARinkActor.ReactToEvent / AdvanceReactions (what the event bus
+and the actor's tick call in a match) with the frame it wants to look at.
 """
 import os
 
@@ -28,6 +33,12 @@ ONLY = os.environ.get("ARENA_STILLS_ONLY", "")            # e.g. "l2_night-90" t
 SUFFIX = os.environ.get("ARENA_STILLS_SUFFIX", "")        # appended to the file names (an A/B)
 NO_STENCIL = os.environ.get("ARENA_STILLS_NO_STENCIL", "").split(",")   # component properties whose custom depth is switched off (an A/B of the outline)
 JOBS = [("p3_clay", "LR_P3_Clay", 1.0, 90, 45), ("p3_clay", "LR_P3_Clay", 1.0, 120, 60), ("l2_night", "LR_L2_Night", 0.0, 90, 45), ("l2_night", "LR_L2_Night", 0.0, 120, 60)]
+REACT = os.environ.get("ARENA_STILLS_REACT", "") in ("1", "sweep")   # lane A127: the reactions' stills
+SWEEP = [float(v) for v in os.environ.get("ARENA_STILLS_LIGHT", "50,200,800,3000,12000").split(",")] if os.environ.get("ARENA_STILLS_REACT", "") == "sweep" else []
+REACT_FRAMES = [0, 3, 8, 18, 45, 120]
+if REACT:
+    OUT = os.path.join(HERE, "out", "engine-e3")
+    JOBS = [("p3_clay", "LR_P3_Clay", 1.0, 90, 45), ("l2_night", "LR_L2_Night", 0.0, 90, 45)]
 
 
 def log(msg):
@@ -37,6 +48,19 @@ def log(msg):
 def views(length, width):
     gl = length * 0.5 - 4.0
     bx = 0.0833 * length
+    if REACT:   # (name, eye, target, action): action = ("goal", frames since the goal) | ("rattle", frames since the hit) | None (the still arena)
+        hw = width * 0.5
+        if SWEEP:   # the lamp light's candelas (jam.rink.react.light), on the goal's frame: the game camera's view and the table
+            out = []
+            for cd in SWEEP:
+                out += [("react-game-f000-cd%05d" % cd, (gl - 11.0, 1.9, 3.5), (gl - 1.5, 0.6, 0.6), ("goal", 0, cd)),
+                        ("react-table-f000-cd%05d" % cd, (-3.6, -(hw - 7.5), 2.9), (0.2, -(hw + 0.9), 1.9), ("goal", 0, cd))]
+            return out
+        out = [("react-net-f%03d" % f, (gl - 6.5, 1.7, 2.9), (gl + 1.6, 0.0, 1.1), ("goal", f)) for f in REACT_FRAMES]
+        out += [("react-table-f%03d" % f, (-3.6, -(hw - 7.5), 2.9), (0.2, -(hw + 0.9), 1.9), ("goal", f)) for f in REACT_FRAMES]
+        out += [("react-game-f%03d" % f, (gl - 11.0, 1.9, 3.5), (gl - 1.5, 0.6, 0.6), ("goal", f)) for f in (0, 120)]
+        out += [("react-box-rest", (-8.5, -(hw - 5.5), 2.0), (-3.0, -(hw + 0.8), 1.0), None), ("react-box-hit-f000", (-8.5, -(hw - 5.5), 2.0), (-3.0, -(hw + 0.8), 1.0), ("rattle", 0))]
+        return out
     return [
         ("goal", (gl - 11.0, 1.9, 3.5), (gl - 1.5, 0.6, 0.6)),                               # 6 m behind a skater 5 m from the +x net
         ("goal-close", (gl - 5.0, 1.3, 2.2), (gl + 0.5, 0.0, 0.3)),                          # closer than the game camera comes: the frame and the cords
@@ -114,13 +138,39 @@ class Run:
 
     def place(self):
         tier, rig, clay, length, width = JOBS[self.job]
-        name, eye, target = views(length, width)[self.view]
+        view = views(length, width)[self.view]
+        name, eye, target = view[0], view[1], view[2]
+        if REACT:
+            self.react(view[3], length, width)
         e = unreal.Vector(eye[0] * 100.0, eye[1] * 100.0, eye[2] * 100.0)
         t = unreal.Vector(target[0] * 100.0, target[1] * 100.0, target[2] * 100.0)
         self.cam.set_actor_location_and_rotation(e, unreal.MathLibrary.find_look_at_rotation(e, t), False, False)
         self.les.pilot_level_actor(self.cam)
         self.wait = WARM
         self.state = "warm"
+
+    def react(self, action, length, width):
+        """Lane A127: puts the rink at one frame of a reaction (or at rest). The same two calls the event bus and the actor's tick make in a match."""
+        self.rink.advance_reactions(10 ** 9)          # whatever the last still left live ends: the still arena
+        if not action:
+            return
+        pl = unreal.JamEventPayload()
+        if len(action) > 2:
+            unreal.SystemLibrary.execute_console_command(self.world(), "jam.rink.react.light %g" % action[2])
+        if action[0] == "goal":
+            pl.set_editor_property("where", unreal.Vector((length * 0.5 - 4.0 + 0.5) * 100.0, 0.0, 4.0))   # the puck in the +x net
+            pl.set_editor_property("strength", 1.0)
+            self.rink.react_to_event("goal", pl, 1000)
+        else:
+            pl.set_editor_property("who", 0)
+            pl.set_editor_property("where", unreal.Vector(-300.0, -width * 50.0, 4.0))                     # a skater into the boards at the -x penalty box
+            pl.set_editor_property("strength", 1.0)
+            pl.set_editor_property("kind", "skater")
+            self.rink.react_to_event("board", pl, 1000)
+        self.rink.advance_reactions(1000 + action[1])
+        log("light cd %s" % [round(self.rink.get_lamp_light_intensity(i), 1) for i in range(3)])
+        log("react %s frame %d: lamp %.2f (rest %.2f) light+x %.2f net+x scale %s rattle %.2f deg %s" % (action[0], action[1], self.rink.get_lamp_emissive(),
+            self.rink.get_lamp_rest_emissive(), self.rink.get_goal_light_emissive(1), self.rink.get_net_shake_scale(1), self.rink.get_rattle_deg(), self.rink.get_rattled_piece_name()))
 
     def shoot(self):
         tier, rig, clay, length, width = JOBS[self.job]

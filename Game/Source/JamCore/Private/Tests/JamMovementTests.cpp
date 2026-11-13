@@ -742,7 +742,7 @@ bool FJamMovementBotMatchPro::RunTest(const FString& Parameters)
 			bCarrierSprints ? TEXT("every carrier holds the sprint") : TEXT("as the brain plays it (ai.sprint 0: no bot sprints)"), static_cast<long long>(Sum.Frames), Matches, Sum.Goals, Sum.ReverseBrakes,
 			static_cast<long long>(Sum.CarryWalk), static_cast<long long>(Sum.CarrySprint), Sum.TakenWalk, PerWalk, Sum.TakenSprint, PerSprint));
 		TestTrue(TEXT("three minutes were played"), Sum.Frames >= 10800);
-		if (!bCarrierSprints) TestEqual(TEXT("the brain's carriers never sprint (the brain sprints only on a chase)"), static_cast<int32>(Sum.CarrySprint), 0);
+		if (!bCarrierSprints) TestTrue(TEXT("the brain's carriers sprint only on an open lane (lane A115; before: never): fewer sprinting than skating carry frames"), Sum.CarrySprint < Sum.CarryWalk);
 		else TestTrue(TEXT("carriers sprinted"), Sum.CarrySprint > 0);
 	}
 	return true;

@@ -841,6 +841,12 @@
           "minimum": 0,
           "maximum": 300,
           "description": "The release grace (R-0049 point 1): for this many frames after a knockdown ends, a hit on the released skater is a bump at most (no stumble, no knockdown; the attacker pays as for any bump) and the brain starts no check on it. Part of the momentum model (contact.momentum true). 0 = the neutral value: no grace."
+        },
+        "check_reach_m": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 3,
+          "description": "The check finds its man: while a human skater's check window is open (12 frames) its velocity is turned onto the collision course with the nearest standing opponent whose body is within this many metres of its own and inside 60 degrees of where it is going or facing. The speed is kept and none is added (the hit's strength stays the contact law's), the position is untouched; a bot aims its own check. Part of the momentum model (contact.momentum true). 0 = the neutral value: the press goes where the skater was going."
         }
       }
     },

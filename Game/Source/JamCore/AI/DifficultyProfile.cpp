@@ -147,6 +147,16 @@ namespace JamAI
 			// Lane A94 (R-0045 law 2): the hockey principles. hk_on 0 | 1 switches all four; the others tune one.
 			if (std::strcmp(Key, "hk_on") == 0) { K.Hk.bCarryOrPass = K.Hk.bAttackShape = K.Hk.bDefenceShape = K.Hk.bTransition = V != 0.0; return true; }
 			if (std::strcmp(Key, "hk_carry_or_pass") == 0) { K.Hk.bCarryOrPass = V != 0.0; return true; }
+			// Lane A115 (BRAIN-2.md): the rules of evolution 2, one by one (brain2 switches all of them on both sides)
+			if (std::strcmp(Key, "hk_pass_room") == 0) { K.Hk.bPassRoom = V != 0.0; return true; }
+			if (std::strcmp(Key, "hk_support_human") == 0) { K.Hk.bSupportHuman = V != 0.0; return true; }
+			if (std::strcmp(Key, "hk_chase_ahead") == 0) { K.Hk.bChaseAhead = V != 0.0; return true; }
+			if (std::strcmp(Key, "hk_brake_meant") == 0) { K.Hk.bBrakeMeant = V != 0.0; return true; }
+			if (std::strcmp(Key, "hk_carry_sprint") == 0) { K.Hk.bCarrySprint = V != 0.0; return true; }
+			if (std::strcmp(Key, "hk_stop_cut") == 0) { K.Hk.bStopCut = V != 0.0; return true; }
+			if (std::strcmp(Key, "hk_gap_control") == 0) { K.Hk.bGapControl = V != 0.0; return true; }
+			if (std::strcmp(Key, "hk_read_shield") == 0) { K.Hk.bReadShield = V != 0.0; return true; }
+			if (std::strcmp(Key, "hk_mate_stick_frames") == 0) { K.Hk.MateStickFrames = static_cast<int>(V); return true; }
 			if (std::strcmp(Key, "hk_attack_shape") == 0) { K.Hk.bAttackShape = V != 0.0; return true; }
 			if (std::strcmp(Key, "hk_defence_shape") == 0) { K.Hk.bDefenceShape = V != 0.0; return true; }
 			if (std::strcmp(Key, "hk_transition") == 0) { K.Hk.bTransition = V != 0.0; return true; }
@@ -210,13 +220,13 @@ namespace JamAI
 		switch (Level)
 		{
 		case EDifficulty::Rookie: return bLargeRink
-			? "sprint=-1;opp.sprint_share=0;mate.sprint_share=0;opp.lift_cooldown_frames=0;red_skill=0.97;opp.check_min_closing=-1"
-			: "sprint=-1;opp.sprint_share=0;mate.sprint_share=0;opp.lift_cooldown_frames=0;red_skill=0.8;opp.check_min_closing=-1";
-		case EDifficulty::AllStar: return "sprint=-1;opp.sprint_share=0;mate.sprint_share=0;opp.lift_cooldown_frames=0;speed_scale=1.2;red_skill=1.0;opp.shot_charge_frames=18;"
+			? "brain2=0;sprint=-1;opp.sprint_share=0;mate.sprint_share=0;opp.lift_cooldown_frames=0;red_skill=0.97;opp.check_min_closing=-1"
+			: "brain2=0;sprint=-1;opp.sprint_share=0;mate.sprint_share=0;opp.lift_cooldown_frames=0;red_skill=0.8;opp.check_min_closing=-1";
+		case EDifficulty::AllStar: return "brain2=0;sprint=-1;opp.sprint_share=0;mate.sprint_share=0;opp.lift_cooldown_frames=0;speed_scale=1.2;red_skill=1.0;opp.shot_charge_frames=18;"
 			"opp.forecheck_yield_frames=12;opp.check_min_closing=3;opp.hunt_radius_m=10;opp.hk_better_by_m=3;opp.hk_pressure_s=1.4";
 		default: return bLargeRink
-			? "sprint=-1;opp.sprint_share=0;mate.sprint_share=0;opp.lift_cooldown_frames=0;red_skill=0.97;opp.shoot_extra_m=13;opp.hunt_radius_m=0;opp.check_min_closing=4"
-			: "sprint=-1;opp.sprint_share=0;mate.sprint_share=0;opp.lift_cooldown_frames=0;red_skill=0.95;opp.shoot_extra_m=13;opp.hunt_radius_m=0;opp.check_min_closing=4";
+			? "brain2=0;sprint=-1;opp.sprint_share=0;mate.sprint_share=0;opp.lift_cooldown_frames=0;red_skill=0.97;opp.shoot_extra_m=13;opp.hunt_radius_m=0;opp.check_min_closing=4"
+			: "brain2=0;sprint=-1;opp.sprint_share=0;mate.sprint_share=0;opp.lift_cooldown_frames=0;red_skill=0.95;opp.shoot_extra_m=13;opp.hunt_radius_m=0;opp.check_min_closing=4";
 		}
 	}
 
@@ -250,6 +260,7 @@ namespace JamAI
 			else if (std::strcmp(Key, "yield_radius_m") == 0) { P.YieldRadiusM = V; }
 			else if (std::strcmp(Key, "hold_radius_m") == 0) { P.HoldRadiusM = V; }
 			else if (std::strcmp(Key, "stall_frames") == 0) { P.StallFrames = static_cast<int>(V); }
+			else if (std::strcmp(Key, "brain2") == 0) { SetEvolution2(P.Opp.Hk, V != 0.0); SetEvolution2(P.Mate.Hk, V != 0.0); }   // lane A115: 0 = the brain of evolution 1
 			else if (std::strcmp(Key, "sprint") == 0) { P.SprintShare = V; }   // lane A95: as game.ai.sprint (both sides; -1 = the levels' shares)
 			else if (std::strcmp(Key, "guard_range_m") == 0) { P.GuardRangeM = V; P.Opp.GuardRangeM = V; P.Mate.GuardRangeM = V; }   // both sides (opp.* / mate.* for one)
 			else if (std::strcmp(Key, "guard_radius_m") == 0) { P.GuardRadiusM = V; P.Opp.GuardRadiusM = V; P.Mate.GuardRadiusM = V; }

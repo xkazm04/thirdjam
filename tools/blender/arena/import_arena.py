@@ -30,6 +30,7 @@ SLOT_LOOK = {
     "dark": "/JamAssets/Look/MI_Toon_Dark",
     "frame": "/JamAssets/Look/MI_Toon_NetFrame",   # lane A119: the goal's frame, the table's lamp and horn
     "net": "/JamAssets/Look/MI_Toon_NetMesh",      # lane A119: the goal's cords
+    "lamp": "/JamAssets/Look/MI_Toon_NetFrame",    # lane A127: the table's lamp and the goal lights' (RinkActor puts a dynamic instance of it on the slot and drives its Emissive)
 }
 TRI_BUDGET = 3000
 
@@ -114,6 +115,9 @@ def unchanged(name, want):
     mesh = unreal.load_asset(path)
     if not mesh or not isinstance(mesh, unreal.StaticMesh) or mesh.get_num_triangles(0) != want["triangles"]:
         return None
+    # lane A127: the same triangles on other slots is another piece (the table's lamp moved from `frame` to a slot of its own)
+    if sorted(str(m.material_slot_name) for m in mesh.static_materials) != sorted(want.get("slots", ["board", "kick", "bench", "team", "dark"])):
+        return None
     box = mesh.get_bounding_box()
     size = [(box.max.x - box.min.x) / 100.0, (box.max.y - box.min.y) / 100.0, (box.max.z - box.min.z) / 100.0]
     return mesh if all(abs(a - b) < 0.02 for a, b in zip(size, want["dimensions_m"])) else None
@@ -170,13 +174,13 @@ def main():
             "nanite": bool(mesh.get_editor_property("nanite_settings").enabled),
         }
         checks = {
-            "under_budget": tris < TRI_BUDGET,
+            "under_budget": tris < blender[name].get("budget", TRI_BUDGET),
             "triangles_match_blender": tris == blender[name]["triangles"],
             "slots_match_blender": sorted(slots) == sorted(blender[name].get("slots", ["board", "kick", "bench", "team", "dark"])),
             "look_instances_bound": all(m is not None and m.startswith("/JamAssets/Look/MI_Toon_") for m in row["materials"]),
             # Unreal flips V on import (v -> 1 - v): the extents must match Blender's, the U range exactly
             "has_uvs": uvn > 0 and abs(uvb[0] - bu0[0]) < 0.01 and abs(uvb[2] - bu1[0]) < 0.01 and abs((uvb[3] - uvb[1]) - (bu1[1] - bu0[1])) < 0.01 and (uvb[2] - uvb[0]) > 0.1,
-            "extends_to_plus_y": box.max.y > 100.0 and box.min.y > -30.0,
+            "extends_to_plus_y": box.max.y > (30.0 if name == "SM_Arena_GoalLight" else 100.0) and box.min.y > -30.0,   # the goal light is a post, half a metre deep
             "stands_on_the_ice": abs(box.min.z) < (8.0 if "net_of" in blender[name] else 5.0),   # a net hangs from the bars: its lowest cord ends in the bottom bar
             "size_matches_blender": all(abs(a - b) < 0.02 for a, b in zip(size, blender[name]["dimensions_m"])),
         }

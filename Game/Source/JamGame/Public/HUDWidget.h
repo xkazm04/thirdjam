@@ -14,6 +14,7 @@ class UCanvasPanel;
 class UTextBlock;
 class UBorder;
 class UImage;
+class USceneComponent;
 
 // Where the far-net marker is this frame (Slate units, i.e. DPI-scaled viewport coordinates).
 USTRUCT(BlueprintType)
@@ -83,12 +84,108 @@ public:
 	static bool ShowNetBadges(EJamPhase Phase, bool bHideInGoalPause = true) { return !(bHideInGoalPause && Phase == EJamPhase::GoalPause); }
 	// Where a plate of a label stands: the label's canvas position moved so the plate overhangs the type by Pad on every side under the same alignment.
 	static FVector2D LabelPlatePos(const FVector2D& LabelPos, const FVector2D& Align) { return LabelPos + FVector2D(LabelPlatePadX * (2.f * Align.X - 1.f), LabelPlatePadY * (2.f * Align.Y - 1.f)); }
+	// ---- Lane A123 (track U1, evolution 2; docs/experiments/SCREEN.md part 2): nothing sits on the play, and the screen teaches the two new verbs.
+	// "The middle third" is the centre rectangle [W/3, 2W/3] x [H/3, 2H/3] of the frame (lane A49's meaning: where the human and the play are).
+	static bool InMiddleThird(const FVector2D& Min, const FVector2D& Max, float VW, float VH)
+	{
+		return Max.X > VW / 3.f && Min.X < VW * 2.f / 3.f && Max.Y > VH / 3.f && Min.Y < VH * 2.f / 3.f;
+	}
+	// jam.hud.ClearMiddle (1 default, 0 the screen of before): the bark bubbles, the YOU tag and the net labels keep out of the middle third during play.
+	static bool ClearMiddleOn();
+	// (1) The marker follows the figure: the chevron's tip stands YouMarkerGapPx over the projection of the figure's head anchor (the visual's head_socket, else the
+	// top of its bounds, else the point YouMarkerHeadM over the skater's point on the ice: the rule of before, jam.hud.MarkerAnchor 0). HeadLiftCm is added to a
+	// mesh-socket anchor along the head's own axis (from the "head" bone to the socket; the world's up where the mesh has no such bone), so it holds for a
+	// figure that leans or lies. Device B's meshes carry head_socket about 19 cm over the helmet's top (47 cm over the head bone: the place for a has-puck
+	// marker), measured in this lane's first stills (the tip stood 30 px over the helmet at the faceoff): -18 puts the tip on the helmet. The toy's socket
+	// (a scene component at 1.65 m) is the helmet's top and takes no lift.
+	static constexpr float YouMarkerHeadLiftCm = -18.f;
+	static FVector2D YouMarkerTip(const FVector2D& HeadPx) { return HeadPx + FVector2D(0.f, -YouMarkerGapPx); }
+	// The chevron's box and the tag's box from the tip (the chevron is YouMarkerSizePx square, its bottom centre on the tip; the tag is about 76 x 34 over it).
+	static void YouChevronBox(const FVector2D& Tip, FVector2D& OutMin, FVector2D& OutMax)
+	{
+		OutMin = Tip + FVector2D(-YouMarkerSizePx * 0.5f, -YouMarkerSizePx); OutMax = Tip + FVector2D(YouMarkerSizePx * 0.5f, 0.f);
+	}
+	static void YouTagBox(const FVector2D& Tip, FVector2D& OutMin, FVector2D& OutMax)
+	{
+		OutMin = Tip + FVector2D(-38.f, -(YouMarkerSizePx + 4.f + 34.f)); OutMax = Tip + FVector2D(38.f, -(YouMarkerSizePx + 4.f));
+	}
+	// The marker never sits on the puck (or the faceoff dot under it): while the puck's projection is inside the chevron's box plus MarkerYieldPadPx the chevron
+	// is a ghost (MarkerGhostAlpha); inside the tag's box the tag is not drawn.
+	static constexpr float MarkerYieldPadPx = 10.f;
+	static constexpr float MarkerGhostAlpha = 0.3f;
+	static bool MarkerBoxHasPuck(const FVector2D& Min, const FVector2D& Max, const FVector2D& PuckPx, float Pad = MarkerYieldPadPx)
+	{
+		return PuckPx.X >= Min.X - Pad && PuckPx.X <= Max.X + Pad && PuckPx.Y >= Min.Y - Pad && PuckPx.Y <= Max.Y + Pad;
+	}
+	static float MarkerYieldAlpha(bool bPuckInChevronBox) { return bPuckInChevronBox ? MarkerGhostAlpha : 1.f; }
+	// (2) The YOU tag is a box over the human: with the middle kept clear it shows while a faceoff counts down (the moment the player looks for himself) and
+	// not after the drop; bClearMiddle false is lane A42's window (the first 5 s, 2 s after every drop).
+	static bool ShowYouTagLive(bool bClearMiddle, bool bCountingDown, int64 SimFrame, int64 LastDropFrame)
+	{
+		return bClearMiddle ? bCountingDown : ShowYouTag(SimFrame, LastDropFrame);
+	}
+	// A net's distance label is not drawn while it would stand in the middle third (the net itself is in front of the player then); the diamond stays.
+	static bool ShowNetLabel(bool bClearMiddle, const FVector2D& LabelMin, const FVector2D& LabelMax, float VW, float VH)
+	{
+		return !(bClearMiddle && InMiddleThird(LabelMin, LabelMax, VW, VH));
+	}
+	// The scoreboard's centre plate with no timer: "PERIOD n" over "FIRST TO n", centred on the plate (jam.hud.CleanPlate 0: one line on the top border, as before).
+	static FString FormatPeriod(int32 Take) { return FString::Printf(TEXT("PERIOD %d"), FMath::Max(1, Take)); }
+	static FString FormatGoalRule(int32 ScoreToWin) { return ScoreToWin > 0 ? FString::Printf(TEXT("FIRST TO %d"), ScoreToWin) : FString(); }
+	// (3) The two skills of the vision, one short prompt each, once in a session (process), at the first moment it applies, never two at once:
+	// Kept: the human's first carry (only where the cartridge keeps the puck: stick.passive_take false). Brake: the first time an opponent closes inside
+	// BrakePromptRangeM of the carrying human. A prompt holds PromptFrames sim frames, the last PromptFadeFrames fading. jam.hud.Prompts 0: none.
+	enum class EPrompt : uint8 { None, Kept, Brake };
+	static constexpr float BrakePromptRangeM = 10.f;
+	static constexpr int32 PromptFrames = 300;
+	static constexpr int32 PromptFadeFrames = 30;
+	static constexpr float PromptSlotY = 112.f;       // under the scoreboard (its plates end near 104): over the stands and the far boards, not the play
+	static constexpr float PromptSlotLowY = 206.f;    // under the overlay's line and the effects row while the line shows
+	static constexpr float PromptSlotH = 46.f;
+	// An edge marker (a net badge, the puck's arrow) at P holds the top slot when it stands in the prompt's box: the prompt then takes the lower slot.
+	static bool InPromptSlot(const FVector2D& P, float VW, float HalfW) { return P.Y < PromptSlotY + PromptSlotH + 24.f && FMath::Abs(P.X - VW * 0.5f) < HalfW + 80.f; }
+	static float PromptSlotFor(bool bTopSlotTaken) { return bTopSlotTaken ? PromptSlotLowY : PromptSlotY; }
+	static FString PromptText(EPrompt P)
+	{
+		switch (P)
+		{
+		case EPrompt::Kept: return TEXT("THE PUCK IS YOURS UNTIL SOMEONE PRESSES FOR IT");
+		case EPrompt::Brake: return TEXT("S AGAINST YOUR MOTION: STOP, THEN GO");
+		default: return FString();
+		}
+	}
+	// What becomes due this frame (the caller shows nothing new while a prompt is up). bPlayLive: phase Play, no faceoff countdown.
+	static EPrompt PromptDue(bool bOn, bool bPlayLive, bool bHumanCarries, float NearestOpponentM, bool bClosing, bool bKeptSpent, bool bBrakeSpent, bool bPuckKeptRule)
+	{
+		if (!bOn || !bPlayLive || !bHumanCarries) return EPrompt::None;
+		if (!bKeptSpent && bPuckKeptRule) return EPrompt::Kept;
+		if (!bBrakeSpent && bClosing && NearestOpponentM <= BrakePromptRangeM) return EPrompt::Brake;
+		return EPrompt::None;
+	}
+	static float PromptOpacity(int64 ShownFrame, int64 Now)
+	{
+		const int64 Age = Now - ShownFrame;
+		if (ShownFrame < 0 || Age < 0 || Age >= PromptFrames) return 0.f;
+		return Age < PromptFrames - PromptFadeFrames ? 1.f : static_cast<float>(PromptFrames - Age) / static_cast<float>(PromptFadeFrames);
+	}
+	static bool IsPromptSpent(EPrompt P) { return P == EPrompt::Kept ? bKeptPromptSpent : P == EPrompt::Brake ? bBrakePromptSpent : true; }
+	static void SetPromptsSpent(bool bKept, bool bBrake) { bKeptPromptSpent = bKept; bBrakePromptSpent = bBrake; }   // tests and jam.ui.promptreset
+	// The band of Slate y a prompt holds while one is up (the bark bubbles keep out of it); false when none shows.
+	static bool GetPromptBandPx(float& OutTop, float& OutBottom);
+	// jam.ui.prompt kept|brake: shows a prompt now (the proof's stills); it counts as spent like a live one.
+	void PreviewPrompt(EPrompt P) { PromptPreview = P; }
+	UFUNCTION(BlueprintPure, Category = "Jam|Hud")
+	FString GetPromptText() const;
 	// Lane A64: the controls strip stops this far from the right edge: the radar frame (200 + 2 x 8 px) at EdgePx and a 16 px gap.
 	static constexpr float ControlsRightInsetPx = 24.f + 216.f + 16.f;
 	// Lane A64 (eyes grid premise 2): a notice in the top-left corner for ToastFrames sim frames (4 s), e.g. a rejected -cut cartridge.
 	static constexpr int64 ToastFrames = 240;
 	// Lane A64: the faceoff countdown / WON ring's x offset from the screen centre (Slate units).
 	static constexpr float RingOffsetXPx = 260.f;
+	// Lane A123: at 260 the ring's 220 px box reached into the middle third (its DROP / WON / LOST stand half a second into the play); with the middle kept
+	// clear (jam.hud.ClearMiddle 1) it stands RingOffsetClearXPx right of centre: its left edge 10 px outside the rectangle at 16:9, the hint line under it.
+	static constexpr float RingOffsetClearXPx = 440.f;
+	static constexpr float RingBoxPx = 220.f;
 	void ShowToast(const FString& Text);
 	// Lane A101 (track F1): the contact line, bottom centre above the stamina bar, ContactLineFrames sim frames (the last ContactFadeFrames fade): what just
 	// happened to the human's press. The HUD reads the human's counters from the sim (ChecksRefused, ContactRecoils), so a frame the hit-stop held is not lost.
@@ -324,6 +421,41 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UBorder> OwnPlate;
 	UPROPERTY(Transient) TObjectPtr<UBorder> PuckPlate;
 	static bool bControlsHintSpent;
+	// ---- Lane A123: the head anchor (found once per visual), the yield, the prompts, the clean centre plate, the marker probe.
+	// 2 = the visual's head socket, 1 = the top of its bounds, 0 = none (the caller falls back to the point over the feet).
+	int32 HumanHeadWorld(FVector& OutWorld);
+	void UpdatePrompts(const FJamPresentationFrame& Frame, bool bCountingDown, bool bSimAdvanced);
+	void ProbeMarker(const FJamPresentationFrame& Frame, int32 Source, const FVector2D& Tip, const FVector2D& OldTip, const FVector& HeadWorld);
+	TWeakObjectPtr<UObject> HeadVisual;
+	TWeakObjectPtr<USceneComponent> HeadComp;
+	int32 HeadCompKind = 0;   // 2 a mesh socket, 3 a scene component named head_socket, 1 the bounds of the largest primitive
+	float MarkerYield = 1.f;
+	float RingXApplied = -1.f;
+	bool bCountingThisFrame = false;
+	bool bSimAdvancedThisFrame = false;
+	static bool bKeptPromptSpent;
+	static bool bBrakePromptSpent;
+	static uint64 PromptBandTick;           // GFrameCounter of the last tick a prompt was drawn (the band's getter reads it)
+	static float PromptBandTop;
+	EPrompt PromptNow = EPrompt::None;
+	EPrompt PromptPreview = EPrompt::None;
+	int64 PromptShown = -1;
+	bool bPromptLow = false;   // this prompt took the lower slot (it does not jump back up)
+	float LastNearestOpponentM = -1.f;
+	TWeakObjectPtr<class UJamDirectorsCallHudWidget> OverlayForPrompt;
+	int32 OverlaySearchTick = 0;
+	UPROPERTY(Transient) TObjectPtr<UBorder> PromptPlate;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> PromptTextBlock;
+	UPROPERTY(Transient) TObjectPtr<UBorder> CentrePlate;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> GoalRuleText;
+	int32 CentrePlateMode = -1;
+	// The probe's running numbers (jam.hud.MarkerProbe N: a JAMSCREEN marker line every N sim frames).
+	struct FMarkerProbe
+	{
+		int64 Frames = 0, Socket = 0, Bounds = 0, Fallback = 0, Down = 0, LastLogged = -1;
+		float TipMaxPx = 0.f, OldMaxPx = 0.f, OldMaxDownPx = 0.f, BoneMaxPx = 0.f, HeadMinCm = 1e9f, HeadMaxCm = 0.f;
+	};
+	FMarkerProbe Probe;
 	bool bHintThisFrame = false;                                  // the controls strip shows this frame (the commentary strip steps over it)
 	FLinearColor YouChevronColour = FLinearColor::Transparent;   // the colour the chevron's bars were last built in (re-built on change only)
 	UPROPERTY(Transient) TObjectPtr<UWidget> PuckArrow;

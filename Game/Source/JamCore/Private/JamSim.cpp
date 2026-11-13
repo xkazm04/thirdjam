@@ -1104,6 +1104,7 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 			S.CheckWindow = S.bHuman ? HumanCheckWindowFrames : CheckWindowFrames;   // lane A49: the human's press gets 0.2 s to connect
 			S.bCheckThisFrame = true;
 		}
+		StepCheckReach(S);   // lane A125 (track F1): an open window bends toward its man (contact.check_reach_m; 0 = off)
 		if (In.bPoke) TryPoke(S);
 		if (In.bLift) TryLift(S);
 	}
@@ -1577,17 +1578,26 @@ void UJamSim::TryLift(FJamSkaterState& S)
 		//    was. Without it every routine lift of the brain (40-50 a match) was a shove and the human went down 10-14 times in three minutes at pro;
 		//  - not from behind: a lift from behind stays a stick lift (no shove, no foul), which is how the brain steals a puck;
 		//  - not where the lift itself is shielded (the spin's body between, the sweep's side, the shield ability): R-0040's bars for the spin and the sweep stand.
-		if (Config.Contact.bMomentum && Config.Contact.ThrustMps > 0.0 && Config.Skater.bCheckEnabled && !O.IsDown() && O.ShieldFrames == 0 && !IsLiftShielded(S, O)
+		// Lane A125 (track F1, R-0050 point 2): the shield refuses the stick, never the shove. The shove's guard below reads ONE shield test, IsShoveShielded (the
+		// spin and the sweep: the third limit above), and never IsLiftShielded / IsPokeShielded: whatever else refuses the lift (track F2's body shield, its take
+		// grace, a later lane's) refuses the puck's take only. bStickRefused is the lift's answer, read once and before the contact (a carrier the shove drops
+		// loses the puck by the contact law, not to the lift). The shove reads it only to WIDEN itself: where the stick is refused by a stick-only shield
+		// (bStickOnly) the second limit above has lost its reason (it stood for the stick lift from behind, which is now refused), so the shove is contact from
+		// any side inside the cone and obeys the contact law.
+		const bool bStickRefused = IsLiftShielded(S, O) || bTestStickRefused;
+		const bool bShoveRefused = IsShoveShielded(S, O);
+		const bool bStickOnly = bStickRefused && !bShoveRefused;
+		if (Config.Contact.bMomentum && Config.Contact.ThrustMps > 0.0 && Config.Skater.bCheckEnabled && !O.IsDown() && O.ShieldFrames == 0 && !bShoveRefused
 			&& FVector2D::Distance(O.Pos, S.Pos) <= SkaterRadius * 2.0 + Config.Contact.CrossReachM)
 		{
 			FVector2D Dir = (O.Pos - S.Pos).GetSafeNormal();
 			if (Dir.IsNearlyZero()) Dir = S.Forward();
-			if (Dot(Dir, O.Forward()) <= 0.5) ResolveContact(S, O, Dir, (S.Pos + O.Pos) * 0.5, EContactKind::Cross);
+			if (Dot(Dir, O.Forward()) <= 0.5 || bStickOnly) ResolveContact(S, O, Dir, (S.Pos + O.Pos) * 0.5, EContactKind::Cross);
 		}
 		// Lane A82 (R-0040 point 1): the lift is shielded like the poke. A77 measured 19 and 11 clean lifts inside the sweep's and the spin's shield windows: the
 		// lift at contact (1.7 m body to body) took the puck the poke could not reach. A spinning carrier's body is between (no lift takes the carried puck); a sweep
 		// shields the side the puck left for stick.sweep.shield_frames. The swing is spent (the cooldown above stands) and reads as a miss.
-		if (IsLiftShielded(S, O) || O.ShieldFrames > 0)   // lane A84: the shield ability, like the spin's body
+		if (bStickRefused || O.ShieldFrames > 0)   // lane A84: the shield ability, like the spin's body
 		{
 			Emit(JamEvents::Lift, S.Index, S.BladePos, 0.f, KindMiss, O.Pos - S.Pos);
 			return;
@@ -1630,6 +1640,64 @@ bool UJamSim::OutsideLiftCone(const FJamSkaterState& S, const FJamSkaterState& O
 	const FVector2D To = (O.Pos - S.Pos).GetSafeNormal();
 	if (To.IsNearlyZero()) return false;
 	return Dot(To, S.Forward()) < FMath::Cos(FMath::DegreesToRadians(Config.Stick.LiftConeDeg));
+}
+
+// Lane A125 (track F1, R-0050 point 2): the shields that refuse the cross-check's shove as well as the lift: the spin's body between and the sweep's window
+// (R-0040's bars, lane A92's third limit). The same two tests as IsPokeShielded, without anything a later lane adds there for the stick alone (track F2's
+// body shield and take grace): those refuse the take, never the shove. Keep it to these two: TryLift's shove reads no other shield.
+bool UJamSim::IsShoveShielded(const FJamSkaterState& Attacker, const FJamSkaterState& Carrier) const
+{
+	if (Carrier.SpinFrames > 0) return true;
+	if (Carrier.SweepFrames <= 0 || Carrier.SweepSide == 0) return false;
+	if (!Config.Stick.bSweepShieldOneSided) return true;
+	const FVector2D Fwd = Carrier.Forward();
+	const FVector2D Rel = Attacker.BladePos - Carrier.Pos;
+	const double Cr = Fwd.X * Rel.Y - Fwd.Y * Rel.X;
+	return (Cr > 0.0 ? 1 : -1) == Carrier.SweepSide;
+}
+
+// Lane A125 (track F1): the check finds its man. The playtester's check press ran out on nobody six times in ten (a press 1 m out, a carrier that cut away).
+// The nearest standing opponent whose body is within contact.check_reach_m of S's and inside CheckReachConeDeg of where S is going or of its facing; -1 none,
+// the key 0, or a bot (the brain aims its own check).
+int32 UJamSim::CheckReachTarget(const FJamSkaterState& S) const
+{
+	const double Reach = Config.Contact.CheckReachM;
+	if (Reach <= 0.0 || !Config.Contact.bMomentum || !S.bHuman) return -1;
+	const FVector2D Fwd = S.Forward();
+	const FVector2D Going = S.Vel.GetSafeNormal();   // zero when the skater stands: the facing alone then
+	const double CosCone = FMath::Cos(FMath::DegreesToRadians(CheckReachConeDeg));
+	int32 Best = -1;
+	double BestD = SkaterRadius * 2.0 + Reach;
+	for (const FJamSkaterState& O : Skaters)
+	{
+		if (O.Team == S.Team || O.IsDown() || O.InBox()) continue;
+		const FVector2D To = O.Pos - S.Pos;
+		const double D = To.Size();
+		if (D > BestD || D < 1e-6 || (Dot(To, Fwd) < CosCone * D && Dot(To, Going) < CosCone * D)) continue;
+		BestD = D;
+		Best = O.Index;
+	}
+	return Best;
+}
+
+// On every frame of an open check window the skater's velocity is turned onto the collision course with that man: across the line between them it takes the
+// man's own speed (constant bearing; capped so half of the skater's speed still closes), along the line it keeps the rest. The press's direction bends, the
+// speed is kept (none is added: the hit's strength is the closing speed of a true collision course under the contact law, plus the lunge the model already
+// has), the position is untouched (no teleport). A press that already is on the collision course is left as it was. A carrier's press is refused before it
+// gets here; a window opened before the puck arrived does not lunge (CarrierMayNotHit).
+void UJamSim::StepCheckReach(FJamSkaterState& S)
+{
+	if (S.CheckWindow <= 0 || Config.Contact.CheckReachM <= 0.0 || CarrierMayNotHit(S)) return;
+	const double V = S.Vel.Size();
+	if (V < 1e-6) return;
+	const int32 T = CheckReachTarget(S);
+	if (T < 0) return;
+	const FJamSkaterState& O = Skaters[T];
+	const FVector2D To = (O.Pos - S.Pos).GetSafeNormal();
+	if (To.IsNearlyZero()) return;
+	const FVector2D Side(-To.Y, To.X);
+	const double Across = FMath::Clamp(Dot(O.Vel, Side), -CheckReachAcrossMax * V, CheckReachAcrossMax * V);
+	S.Vel = To * FMath::Sqrt(FMath::Max(0.0, V * V - Across * Across)) + Side * Across;
 }
 
 // R-0013 hard foul: the fouler sits BoxFrames in the box; the fouled team gets a free faceoff at the fouler's end, on the side of the contact.

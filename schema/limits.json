@@ -120,6 +120,7 @@
     "contact.stagger_frames": "0..60",
     "contact.board_bonus": "1..2",
     "contact.release_grace_frames": "0..300",
+    "contact.check_reach_m": "0..3",
     "rules.mode": "first_to|timer",
     "rules.score_to_win": "1..9",
     "rules.timer_frames": "600..36000",

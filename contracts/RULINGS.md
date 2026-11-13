@@ -569,3 +569,17 @@ them the contact lines, and made the game skip such a line: **the default stays 
 brand's voice even when silent, and the lookup that hitched is gone either way (an absent wave is asked for once per process). The 72 recordings go to device B.
 (3) The match-start frame is under 100 ms in 3 of 6 runs with the map preloaded behind the menu (0 of 6 before): the track continues on the audio flush and the
 figures' spawn.
+
+## R-0052 (H26, 2026-11-13 22:25): the brain plays as a side, and it lands on; what each track owes the curve
+Lane A115 (track Q2, evolution 2): the human's mates support him, pass only where he has room, use the stick and leave a loose puck to whoever arrives first;
+every bot brakes by decision (2,225 reverse brakes a match at pro to 334) and a bot carrier sprints on an open lane; the share of big-ice matches with a 30 s
+stretch without the puck falls from 67 % to 25 %. Measured on its own tree it takes 4 / 4 / 10 points from the human at the three levels, because the opposing
+side gains more than the human's. Rulings: (1) **it lands switched on** (neutral: the profile tune `brain2=0`): the vision's law 2 is the game, and the curve
+track re-sets on the commit that carries it together with track F2's carrier rules (which give the human 0 / 7 / 3 points back); (2) the two hooks that make
+the brain read the body shield and the take grace are wired at this landing (no refused swings: the bot goes round the body or contains); (3) not met and owed
+by the track's next evolution: a mate's share of the puck while the human waits (4 to 6 % against a bar of 15 %) and the puck still the human's two seconds
+after a mate's pass (6 % against 30 %): support that covers until the puck is kept, shapes for three a side, the chaser by arrival read for the human;
+(4) gap control stays off (no gain in 100 seeds; the sim has no backward skating); (5) online, presentation keys on the local seat and the sim on the human
+index (lane A120's contract sentence), and a live cut is refused during a joined match (lane A129); (6) `rules.timer_frames` above 28,800 can run past the
+36,000-frame cap every tool assumes (lane A122): the schema's limit goes to 28,800 with the next schema landing; (7) the order of landings tonight is rules
+first, then the brain, then the curve: no package before the curve.

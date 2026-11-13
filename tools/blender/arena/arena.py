@@ -9,6 +9,9 @@ Evolution 2 (lane A119) adds, further down (GOAL_VARIANTS, goal(), scorer_table(
   SM_Arena_GoalNet_W<w>H<h>  its net: real cords from bar to bar, slot net; a mesh of its own so Unreal can leave the cords out of the outline stencil.
   SM_Arena_ScorerTable       the scorer's table between the two penalty boxes; slots board, kick, bench, dark, frame.
 A goal's frame: origin on the goal line in the middle of the mouth, +x along the line, "out" = into the net. --render2 writes evolution 2's stills.
+Evolution 3 (lane A127): the scorer's table's lamp is a slot of its own (`lamp`), so Unreal can light it alone on a goal, and one more piece:
+  SM_Arena_GoalLight         a goal light outside the end boards behind each net: a dark base and post, an ochre collar, a red lamp over the glass line;
+                             slots dark, kick, lamp; under 1,000 triangles. Same frame as the boxes (origin at the middle of the rink-side edge on the ice).
 
 Builds two static meshes, each under 3,000 triangles, each with UVs (world scale, 1 UV unit = 2 m) and five material SLOTS and no material of its own
 (the slots are names; Unreal binds device B's instances to them by reference, see tools/blender/arena/import_arena.py and RinkActor.cpp):
@@ -48,6 +51,7 @@ PREVIEW = {           # render-only colours (nothing of this reaches Unreal: mat
     "dark": (0.06, 0.06, 0.07, 1.0),
     "frame": (0.70, 0.04, 0.03, 1.0),
     "net": (0.93, 0.93, 0.90, 1.0),
+    "lamp": (0.92, 0.06, 0.03, 1.0),
 }
 
 # ---------------------------------------------------------------- parameters (metres)
@@ -415,7 +419,9 @@ G = dict(
 GOAL_VARIANTS = [(4.0, 0.61), (6.0, 0.61), (4.0, 1.22)]   # game.rink.goal_width_m x goal_height_m: the default, hockey.mode.pond, hockey.mode.sniper
 GOAL_SLOTS = ["frame"]
 NET_SLOTS = ["net"]       # the net is its own mesh: RinkActor gives the frame the outline stencil and the cords none (inked cords read as a black comb at 11 m)
-TABLE_SLOTS = ["board", "kick", "bench", "dark", "frame"]
+TABLE_SLOTS = ["board", "kick", "bench", "dark", "frame", "lamp"]   # lane A127: the lamp is its own slot (RinkActor lights it on a goal)
+LIGHT_SLOTS = ["dark", "kick", "lamp"]
+LIGHT = dict(base_w=0.70, base_d=0.56, base_h=0.18, post=0.20, lamp_z=2.16, lamp_h=0.46, lamp_w=0.54, budget=1000)   # the lamp was 0.34 m: a dot from the game camera (first engine stills)
 TABLE = dict(width=1.36, sign_z=2.20, sign_h=0.56, sign_w=1.30)
 
 
@@ -557,10 +563,30 @@ def scorer_table():
     for sx in (-1, 1):
         pc.bar("sign_digits", "kick", "z", 0.24, 0.17, 0.04, (sx * 0.30, back_o - 0.105, sz), rings=1, r=0.015, wobble=0.003)
         pc.bar("sign_digits", "frame", "x", 0.06, 0.04, 0.06, (0.0, back_o - 0.105, sz + sx * 0.07), rings=1, r=0.015, wobble=0.002)
-    pc.bar("lamp", "dark", "z", 0.07, 0.30, 0.30, (0, back_o, sz + sh * 0.5 + 0.02), rings=1, r=0.13, segs=2, wobble=0.004)
-    pc.bar("lamp", "frame", "z", 0.22, 0.23, 0.23, (0, back_o, sz + sh * 0.5 + 0.15), rings=1, r=0.105, segs=3, wobble=0.004, pillow=0.03)
+    # lane A127: the lamp grew from 0.23 to 0.36 m (it is what a goal lights; at 0.23 it was a dot from the ice)
+    pc.bar("lamp", "dark", "z", 0.07, 0.44, 0.44, (0, back_o, sz + sh * 0.5 + 0.02), rings=1, r=0.19, segs=2, wobble=0.004)
+    pc.bar("lamp", "lamp", "z", 0.32, 0.36, 0.36, (0, back_o, sz + sh * 0.5 + 0.20), rings=1, r=0.165, segs=3, wobble=0.004, pillow=0.04)
     pc.thumbs_done = pc.thumbs()
     return pc, W
+
+
+def goal_light():
+    """The goal light (lane A127): it stands outside the end boards behind a net, in the frame of the boxes (origin on the ice in the middle of the
+    rink-side edge, reaching away from the rink). A squat dark base with an ochre plate, a dark post up past the glass line (boards 1.2 m, glass to 2.1 m),
+    an ochre collar and a fat red lamp with a dark cap: the lamp is the slot `lamp`, which RinkActor lights when that net is scored on."""
+    pc = Piece("SM_Arena_GoalLight", seed=83.0, slots=LIGHT_SLOTS)
+    bw, bd, bh, pw = LIGHT["base_w"], LIGHT["base_d"], LIGHT["base_h"], LIGHT["post"]
+    top, lh, lw = LIGHT["lamp_z"], LIGHT["lamp_h"], LIGHT["lamp_w"]
+    o = bd * 0.5
+    pc.bar("base", "dark", "x", bw, bd, bh, (0, o, bh * 0.5), rings=2, r=0.06, wobble=0.010)
+    pc.bar("plate", "kick", "x", bw * 0.64, bd * 0.70, 0.07, (0, o, bh + 0.02), rings=1, r=0.03, wobble=0.006)
+    pc.bar("post", "dark", "z", top - bh + 0.04, pw, pw, (0, o, (top + bh) * 0.5), rings=4, r=0.05, segs=2, wobble=0.014)
+    pc.bar("collar", "kick", "z", 0.11, lw + 0.12, lw + 0.12, (0, o, top + 0.03), rings=1, r=(lw + 0.12) * 0.44, segs=3, wobble=0.005)
+    pc.bar("lamp", "lamp", "z", lh, lw, lw, (0, o, top + 0.08 + lh * 0.5), rings=2, r=lw * 0.46, segs=3, wobble=0.004, pillow=0.06)
+    pc.bar("cap", "dark", "z", 0.07, lw * 0.5, lw * 0.5, (0, o, top + 0.08 + lh + 0.03), rings=1, r=lw * 0.22, segs=2, wobble=0.003)
+    pc.thumbs_done = pc.thumbs()
+    pc.budget = LIGHT["budget"]
+    return pc, bw
 
 
 def renders2(goals, table, box, opts, img, raw):
@@ -806,10 +832,15 @@ def main():
     made = [team_bench(L), penalty_box(), scorer_table()]
     for (w, h) in GOAL_VARIANTS:
         made += goal(w, h)
+    made.append(goal_light())      # lane A127; after the goals, so built[0..2] stay the bench, the box and the table for the renders
     for pc, length in made:
         opening, cell, net_of = getattr(pc, "opening", None), getattr(pc, "cell", None), getattr(pc, "net_of", None)
         slots = list(pc.slots)
+        budget = getattr(pc, "budget", None)
         ob, empties, st = pc.finish()
+        if budget:       # a piece with a budget of its own (the goal light: 1,000)
+            st["budget"] = budget
+            st["under_budget"] = st["triangles"] < budget
         st["length_m"] = round(length, 3)
         st["thumb_presses"] = pc.thumbs_done
         st["slots"] = slots
@@ -836,6 +867,7 @@ def main():
         "SM_Arena_PenaltyBox": [{"x": -P["box_x"], "y": -y0, "yaw": 180, "team": 0}, {"x": P["box_x"], "y": -y0, "yaw": 180, "team": 1}],
         "bench_length_m": P["bench_len_factor"] * L,
         "SM_Arena_ScorerTable": [{"x": 0.0, "y": -y0, "yaw": 180}],
+        "SM_Arena_GoalLight": [{"x": -(L * 0.5 + P["board_t"] + P["gap"]), "y": 0.0, "yaw": 90}, {"x": L * 0.5 + P["board_t"] + P["gap"], "y": 0.0, "yaw": -90}],
         "goals": {"note": "x = +-GoalLineX (L/2 - 4), y = 0; yaw -90 on the +x end, +90 on the -x end; the variant nearest the cartridge's goal, scaled W/Wv along the line and H/Hv up",
                   "goal_line_x": L * 0.5 - 4.0, "variants": [goal_name(w, h) for (w, h) in GOAL_VARIANTS], "nets": [net_name(w, h) for (w, h) in GOAL_VARIANTS]},
     }

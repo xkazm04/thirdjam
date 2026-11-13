@@ -260,6 +260,12 @@ struct JAMCORE_API FJamContactConfig
 	// the brain starts no check on it. 0 = the neutral value: no grace, the game before the lane (same state hash). 120 (R-0051): two seconds, the value at
 	// which no figure went down again within 2 s of its release in the lane's ten matches (at 90 one did, 111 frames after).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 ReleaseGraceFrames = 120;
+	// Lane A125 (track F1): the check finds its man. While a human skater's check window is open its velocity is turned (speed kept, none added) onto the
+	// collision course with the nearest standing opponent whose body is within this many metres of its own and inside 60 degrees of where it is going or
+	// facing (UJamSim::StepCheckReach). 0 = the neutral value: the press goes where the skater was going, the game before the lane (same state hash).
+	// Ships at 0: at 1.0 the playtester's whiffs fall from 60 % to 51 % of its presses, not under the 40 % asked for (five whiffs in six are presses on a man it
+	// is not closing on, which no bend of direction cures), and Jam.Bot.HumanHasSomethingToDo leaves its budget (docs/experiments/CONTACT-4.md section 6).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double CheckReachM = 0.0;
 	// The neutral block (contact.momentum false, contact.carrier_can_hit true): the check rule of main before lane A92.
 	void SetNeutral() { bMomentum = false; bCarrierCanHit = true; }
 };

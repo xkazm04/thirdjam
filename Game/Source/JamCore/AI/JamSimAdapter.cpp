@@ -277,6 +277,10 @@ namespace JamAI
 		W.BurstFrames = G.Skater.BurstFrames;
 		W.SprintCarryBonus = G.Skater.SprintCarryBonus;
 		W.SweepBotReactFrames = G.Stick.SweepBotReactFrames;   // lane A51
+		// HOOK (lane A115 for track F2, lane A102): once game.stick.body_shield is in this tree, uncomment these two lines: the brain then reads the shield
+		// (JamAI::BodyShields in JamAICore.cpp: no lift or poke into a shielding body, the bot goes round it). Until then W.bBodyShield stays false.
+		W.bBodyShield = G.Stick.bBodyShield;   // wired at landing (Director): the rule is on main
+		W.BodyShieldRangeM = UJamSim::BodyShieldRangeM; W.BodyShieldFarDeg = UJamSim::BodyShieldFarDeg; W.BodyShieldFrontDeg = UJamSim::BodyShieldFrontDeg;   // wired at landing (Director): the rule is on main
 		// R-0029 point 4 (lane A39): the goalie commit of the latest deke
 		{
 			int32 Deker = -1, Side = 0;
@@ -298,6 +302,9 @@ namespace JamAI
 			O.bHasPuck = K.bHasPuck;
 			O.bDown = K.IsDown() || K.InBox();   // lane A105: a boxed skater is off the ice for every brain read (pressure, outlets, jobs), like one knocked down
 			O.GraceFrames = K.GraceFrames;   // lane A113
+			// HOOK (lane A115 for track F2, lane A121): once FJamSkaterState::TakeGraceLeft is in this tree, uncomment this line: the brain then presses no poke
+			// or lift on a carrier inside its take grace and contains it instead (JamAI::StickCannotTake in JamAICore.cpp). Until then the field stays 0.
+			O.TakeGraceFrames = K.TakeGraceLeft;   // wired at landing (Director): the rule is on main
 			O.bCentre = K.bCentre;
 			O.bCanPoke = K.CanAct() && NextFrame >= K.PokeReadyFrame && K.PokeWindow <= 0;
 			O.bCanLift = K.CanAct() && NextFrame >= K.LiftReadyFrame;

@@ -17,6 +17,12 @@ Lane A119 adds:
     (`Nets`) hidden exactly when they show; on three rink sizes and six goal sizes (the three built, two scaled widths, one scaled both ways) the
     opening in the world (the opening import_arena.py measured on the mesh, times the component's scale) within 2 cm of the cartridge's goal AND of the
     goal trigger box, which Build sizes from the same numbers the sim's goal test reads.
+Lane A127 (evolution 3) adds, on three rinks (section 4, `e3` in verify.json):
+  - a goal light (SM_Arena_GoalLight) outside the end boards behind each net, shown with the boxes, A25's code housings (`GoalLights`) hidden exactly then;
+  - the lamps (the table's and the two goal lights' slot `lamp`) on dynamic instances of B's MI_Toon_NetFrame, resting at its own Emissive;
+  - a goal at the +x net: the table's lamp and the +x goal light up on the goal's frame, the -x light at rest, the +x net's scale off rest at frame 3,
+    everything at rest again at frame 108 (the bar: 120); a hard skater board hit at the -x penalty box rolls that box 3.5 degrees (ARinkActor::RattleMaxDeg) and is over at frame 18;
+  - nothing answers on a bare tier, with `jam.rink.react 0`, or with `jam.rink.arena 0`.
 Writes tools/blender/arena/out/verify.json and prints "A119 VERIFY PASS|FAIL".
 """
 import json
@@ -250,6 +256,134 @@ def main():
     ok = ok and cv_ok
     log("neutral cvar ok=%s %s" % (cv_ok, json.dumps(report["checks"]["neutral_cvar"])))
     log("switch without rebuild ok=%s %s" % (sw_ok, json.dumps(switched)))
+
+    # ---- 4. lane A127 (evolution 3): the goal lights, the lamps and the reactions
+    def lamp_parent(c):
+        m = c.get_material(c.get_material_index("lamp"))
+        if not m or not isinstance(m, unreal.MaterialInstanceDynamic):
+            return None
+        par = m.get_editor_property("parent")
+        return par.get_name() if par else None
+
+    def goal_at(x_cm, frame):
+        pl = unreal.JamEventPayload()
+        pl.set_editor_property("where", unreal.Vector(x_cm, 0.0, 4.0))
+        pl.set_editor_property("strength", 1.0)
+        rink.react_to_event("goal", pl, frame)
+
+    def hit_at(x_cm, y_cm, strength, frame, kind="skater"):
+        pl = unreal.JamEventPayload()
+        pl.set_editor_property("who", 0)
+        pl.set_editor_property("where", unreal.Vector(x_cm, y_cm, 4.0))
+        pl.set_editor_property("strength", strength)
+        pl.set_editor_property("kind", kind)
+        rink.react_to_event("board", pl, frame)
+
+    def at_rest():
+        s1, s2 = rink.get_net_shake_scale(1), rink.get_net_shake_scale(-1)
+        rest = rink.get_lamp_rest_emissive()
+        return (abs(rink.get_lamp_emissive() - rest) < 1e-6 and abs(rink.get_goal_light_emissive(1) - rest) < 1e-6 and abs(rink.get_goal_light_emissive(-1) - rest) < 1e-6
+                and all(abs(v - 1.0) < 1e-6 for v in (s1.x, s1.y, s1.z, s2.x, s2.y, s2.z)) and abs(rink.get_rattle_deg()) < 1e-6 and not rink.is_reacting())
+
+    report["e3"] = {}
+    e3_ok = True
+    for (length, width) in ((90, 45), (120, 60), (140, 70)):
+        build(length, width, "p3_clay")
+        ex = (length * 0.5 + BOARD_T + GAP) * 100.0
+        gx = (length * 0.5 - 4.0 + 0.5) * 100.0
+        lights = {n: rink.get_editor_property(n) for n in ("arena_goal_light_neg", "arena_goal_light_pos")}
+        rows = {n: comp_row(c) for n, c in lights.items()}
+        place_ok = True
+        for n, sign in (("arena_goal_light_neg", -1.0), ("arena_goal_light_pos", 1.0)):
+            r3 = rows[n]
+            r3["lamp_parent"] = lamp_parent(lights[n])
+            good = (r3["mesh"] == "SM_Arena_GoalLight" and near(r3["loc_cm"][0], sign * ex) and near(r3["loc_cm"][1], 0.0) and near(r3["loc_cm"][2], 0.0)
+                    and near(r3["yaw"], -90.0 * sign, 0.1) and r3["scale"] == [1.0, 1.0, 1.0] and r3["visible"]
+                    and r3["materials"].get("dark") == "MI_Toon_Dark" and r3["materials"].get("kick") == "MI_Toon_KickPlate" and r3["lamp_parent"] == "MI_Toon_NetFrame")
+            r3["as_expected"] = good
+            place_ok = place_ok and good
+        code_lights = bool(rink.get_editor_property("goal_lights").is_visible())
+        table_lamp = lamp_parent(rink.get_editor_property("arena_table"))
+        rest = rink.get_lamp_rest_emissive()
+        entry = {"goal_lights": rows, "code_goal_lights_visible": code_lights, "table_lamp_parent": table_lamp, "lamp_rest_emissive": round(rest, 4), "still_at_start": at_rest()}
+        place_ok = place_ok and not code_lights and table_lamp == "MI_Toon_NetFrame" and rest >= 0.0 and entry["still_at_start"]
+        # a goal in the +x net at sim frame 5000
+        goal_at(gx, 5000)
+        seq = {}
+        for f in (0, 2, 3, 8, 18, 45, 107, 108, 120):
+            rink.advance_reactions(5000 + f)
+            s = rink.get_net_shake_scale(1)
+            seq[str(f)] = {"light_cd": [round(rink.get_lamp_light_intensity(i), 1) for i in range(3)], "lamp": round(rink.get_lamp_emissive(), 4), "light_pos": round(rink.get_goal_light_emissive(1), 4), "light_neg": round(rink.get_goal_light_emissive(-1), 4),
+                           "net_pos_scale": [round(s.x, 4), round(s.y, 4), round(s.z, 4)], "reacting": bool(rink.is_reacting())}
+        goal_ok = (seq["0"]["lamp"] > rest + 12.0 and seq["2"]["lamp"] > rest + 12.0 and seq["0"]["light_pos"] > rest + 12.0
+                   and all(abs(seq[k]["light_neg"] - rest) < 1e-4 for k in seq) and abs(seq["3"]["net_pos_scale"][1] - 1.0) > 0.05 and seq["3"]["net_pos_scale"][0] == 1.0
+                   and seq["107"]["lamp"] > rest and abs(seq["108"]["lamp"] - rest) < 1e-6 and abs(seq["120"]["lamp"] - rest) < 1e-6
+                   and seq["120"]["net_pos_scale"] == [1.0, 1.0, 1.0] and not seq["120"]["reacting"] and at_rest()
+                   # the lamps' lights: the table's and the +x one on with the flash, the -x one never, all off again at rest
+                   and seq["0"]["light_cd"][0] > 0.0 and seq["0"]["light_cd"][2] > 0.0 and all(seq[k]["light_cd"][1] == 0.0 for k in seq)
+                   and seq["108"]["light_cd"] == [0.0, 0.0, 0.0] and seq["120"]["light_cd"] == [0.0, 0.0, 0.0])
+        entry["goal_pos"] = seq
+        # a goal in the -x net lights the -x light and shakes the -x net
+        goal_at(-gx, 6000)
+        rink.advance_reactions(6003)
+        sn = rink.get_net_shake_scale(-1)
+        entry["goal_neg_f3"] = {"lamp": round(rink.get_lamp_emissive(), 4), "light_neg": round(rink.get_goal_light_emissive(-1), 4), "light_pos": round(rink.get_goal_light_emissive(1), 4), "net_neg_scale_y": round(sn.y, 4)}
+        goal_ok = goal_ok and entry["goal_neg_f3"]["light_neg"] > rest + 10.0 and abs(entry["goal_neg_f3"]["light_pos"] - rest) < 1e-4 and abs(sn.y - 1.0) > 0.05
+        rink.advance_reactions(6120)
+        goal_ok = goal_ok and at_rest()
+        # a hard skater board hit in front of the -x penalty box; a soft one; the puck; an end board
+        n0 = rink.get_rattle_count()
+        hit_at(-300.0, -width * 50.0, 1.0, 7000)
+        box = rink.get_editor_property("arena_box_neg")
+        rattle = {"piece": str(rink.get_rattled_piece_name()), "deg_f0": round(rink.get_rattle_deg(), 3), "box_roll_f0": round(box.get_editor_property("relative_rotation").roll, 3), "count": rink.get_rattle_count() - n0}
+        rink.advance_reactions(7018)
+        rattle["deg_f18"] = round(rink.get_rattle_deg(), 3)
+        rattle["box_roll_f18"] = round(box.get_editor_property("relative_rotation").roll, 3)
+        n1 = rink.get_rattle_count()
+        hit_at(-300.0, -width * 50.0, 0.3, 7100)
+        hit_at(-300.0, -width * 50.0, 1.0, 7200, "None")
+        hit_at(length * 50.0, 0.0, 1.0, 7300)
+        rattle["soft_puck_endboard_count"] = rink.get_rattle_count() - n1
+        rattle_ok = (rattle["piece"] == "ArenaBoxNeg" and abs(rattle["deg_f0"] - 3.5) < 1e-3 and abs(abs(rattle["box_roll_f0"]) - 3.5) < 0.01 and rattle["count"] == 1
+                     and rattle["deg_f18"] == 0.0 and abs(rattle["box_roll_f18"]) < 1e-3 and rattle["soft_puck_endboard_count"] == 0 and at_rest())
+        entry["rattle"] = rattle
+        entry["ok"] = place_ok and goal_ok and rattle_ok
+        e3_ok = e3_ok and entry["ok"]
+        report["e3"]["%dx%d" % (length, width)] = entry
+        log("e3 %dx%d place=%s goal=%s rattle=%s lamp rest %.3f -> %.3f at f0, at rest again f108; light x +-%.1f cm; %s" % (length, width, place_ok, goal_ok, rattle_ok, rest, seq["0"]["lamp"], ex, json.dumps(rattle)))
+    # the still arena: a bare tier, jam.rink.react 0, jam.rink.arena 0
+    still = {}
+    build(120, 60, "l1_day")
+    c0 = rink.get_goal_reaction_count()
+    goal_at(5650.0, 8000)
+    still["bare_tier"] = {"goal_lights_visible": [bool(rink.get_editor_property(n).is_visible()) for n in ("arena_goal_light_neg", "arena_goal_light_pos")],
+                          "code_goal_lights_visible": bool(rink.get_editor_property("goal_lights").is_visible()), "reactions": rink.get_goal_reaction_count() - c0, "still": at_rest()}
+    build(120, 60, "p3_clay")
+    for cvar in ("jam.rink.react", "jam.rink.arena"):
+        unreal.SystemLibrary.execute_console_command(world, cvar + " 0")
+        rink.set_construction_visible(True)
+        c0, r0 = rink.get_goal_reaction_count(), rink.get_rattle_count()
+        goal_at(5650.0, 9000)
+        hit_at(-300.0, -3000.0, 1.0, 9000)
+        still[cvar + " 0"] = {"reactions": rink.get_goal_reaction_count() - c0 + rink.get_rattle_count() - r0, "still": at_rest(), "seat_returned": seat_of(rink, 0) is not None,
+                              "goal_lights_visible": [bool(rink.get_editor_property(n).is_visible()) for n in ("arena_goal_light_neg", "arena_goal_light_pos")],
+                              "code_goal_lights_visible": bool(rink.get_editor_property("goal_lights").is_visible())}
+        unreal.SystemLibrary.execute_console_command(world, cvar + " 1")
+        rink.set_construction_visible(True)
+    c0 = rink.get_goal_reaction_count()
+    goal_at(5650.0, 9500)
+    still["back_on"] = {"reactions": rink.get_goal_reaction_count() - c0, "goal_lights_visible": [bool(rink.get_editor_property(n).is_visible()) for n in ("arena_goal_light_neg", "arena_goal_light_pos")]}
+    rink.advance_reactions(9700)
+    still_ok = (still["bare_tier"]["reactions"] == 0 and still["bare_tier"]["still"] and not any(still["bare_tier"]["goal_lights_visible"]) and still["bare_tier"]["code_goal_lights_visible"]
+                and still["jam.rink.react 0"]["reactions"] == 0 and still["jam.rink.react 0"]["still"] and all(still["jam.rink.react 0"]["goal_lights_visible"]) and still["jam.rink.react 0"]["seat_returned"]
+                and still["jam.rink.arena 0"]["reactions"] == 0 and still["jam.rink.arena 0"]["still"] and not any(still["jam.rink.arena 0"]["goal_lights_visible"])
+                and still["jam.rink.arena 0"]["code_goal_lights_visible"] and not still["jam.rink.arena 0"]["seat_returned"]
+                and still["back_on"]["reactions"] == 1 and all(still["back_on"]["goal_lights_visible"]))
+    report["e3"]["still_arena"] = dict(still, ok=still_ok)
+    e3_ok = e3_ok and still_ok
+    ok = ok and e3_ok
+    log("e3 still arena ok=%s %s" % (still_ok, json.dumps(still)))
+    log("A127 E3 %s" % ("PASS" if e3_ok else "FAIL"))
 
     eas.destroy_actor(rink)
     report["verdict"] = "pass" if ok else "fail"

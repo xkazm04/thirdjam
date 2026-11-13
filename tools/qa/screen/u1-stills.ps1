@@ -6,12 +6,17 @@
 #                             so the -Mode after and -Mode before runs show the same frames of the same match
 #   powershell -NoProfile -ExecutionPolicy Bypass -File tools\qa\screen\u1-stills.ps1 -Tier clay -Mode after  [-PlaySeconds 50] [-Port 4711]
 #   powershell -NoProfile -ExecutionPolicy Bypass -File tools\qa\screen\u1-stills.ps1 -Tier clay -Mode before
-# -Mode after: this lane's screen (the defaults). -Mode before: every rule at its neutral value (the screen of before the lane).
+# -Mode after: the track's screen (the defaults). -Mode before: every rule of the track at its neutral value (the screen of before lane A111).
+# -Mode base (lane A123, evolution 2): evolution 1's screen, evolution 2's rules at their neutral values (the marker 1.8 m over the feet, boxes over the
+#   middle third, the ready pill from the first faceoff, the one-line centre plate, no prompts).
+# -Rink 140 (lane A123): the same game on the 140 x 70 m rink (u1-cut-<tier>-140.json); stills go to out\<tier>-140-<mode>.
+# Every run logs the marker probe (jam.hud.MarkerProbe 600: a JAMSCREEN marker line every 10 s of play) and the prompts' JAMSCREEN prompt lines.
 # The stills are copied to tools\qa\screen\out\<tier>-<mode>\shots; the JAMSCREEN / JAMLOOK log lines are printed and kept in screen-lines.txt.
 # Exit 0: the first-frame still and at least one sim-frame still exist. 1: missing. 2: could not run.
 param(
     [ValidateSet('clay', 'night')][string]$Tier = 'clay',
-    [ValidateSet('after', 'before')][string]$Mode = 'after',
+    [ValidateSet('after', 'before', 'base')][string]$Mode = 'after',
+    [ValidateSet(90, 140)][int]$Rink = 90,
     [int]$PlaySeconds = 50,
     [int]$EveryFrames = 180,
     [int]$Port = 4711,
@@ -25,25 +30,28 @@ $uproject = Resolve-UProject (Join-Path $root 'Game')
 $engine = Get-EngineRoot $uproject
 $exe = Join-Path $engine 'Engine\Binaries\Win64\UnrealEditor.exe'
 if (-not $uproject -or -not (Test-Path $exe)) { Write-Host "FAIL u1-stills: no project or no $exe"; exit 2 }
-$name = "$Tier-$Mode"
+$name = if ($Rink -eq 140) { "$Tier-140-$Mode" } else { "$Tier-$Mode" }
 $out = Join-Path $root "tools\qa\screen\out\$name"
 New-Item -ItemType Directory -Force (Join-Path $out 'shots') | Out-Null
 Get-ChildItem (Join-Path $out 'shots') -Filter '*.png' -ErrorAction SilentlyContinue | Remove-Item -Force
 $log = Join-Path $out 'game.log'
 Remove-Item $log -ErrorAction SilentlyContinue
-$cut = (Join-Path $root "tools\qa\screen\u1-cut-$Tier.json").Replace('\', '/')
+$cutName = if ($Rink -eq 140) { "u1-cut-$Tier-140.json" } else { "u1-cut-$Tier.json" }
+$cut = (Join-Path $root "tools\qa\screen\$cutName").Replace('\', '/')
 $tierId = if ($Tier -eq 'clay') { 'p3_clay' } else { 'l2_night' }
 $shotDir = Join-Path $root 'Game\Saved\Screenshots\WindowsEditor'
 Get-ChildItem $shotDir -Filter "u1-*$tierId*.png" -ErrorAction SilentlyContinue | Remove-Item -Force
-$cvars = "jam.ScriptHuman=1,jam.screen.HoldStill=1,jam.screen.FadeSeconds=0,jam.screen.StillEvery=$EveryFrames"
-if ($Mode -eq 'before') { $cvars += ',jam.screen.LightHold=0,jam.hud.YouMarker=0,jam.hud.LabelPlates=0,jam.hud.DockCommentary=0,jam.hud.HintEveryMatch=1,jam.camera.CornerLift=0' }
+$cvars = "jam.ScriptHuman=1,jam.screen.HoldStill=1,jam.screen.FadeSeconds=0,jam.screen.StillEvery=$EveryFrames,jam.hud.MarkerProbe=600"
+$neutral2 = ',jam.hud.MarkerAnchor=0,jam.hud.ClearMiddle=0,jam.hud.CallPillAfterGoal=0,jam.hud.CleanPlate=0,jam.hud.Prompts=0'   # evolution 2 (lane A123)
+if ($Mode -eq 'before') { $cvars += ',jam.screen.LightHold=0,jam.hud.YouMarker=0,jam.hud.LabelPlates=0,jam.hud.DockCommentary=0,jam.hud.HintEveryMatch=1,jam.camera.CornerLift=0' + $neutral2 }
+if ($Mode -eq 'base') { $cvars += $neutral2 }
 if ($ExtraCVars) { $cvars += ",$ExtraCVars" }
 $a = "`"$uproject`" /Game/Maps/Rink -game -RenderOffScreen -Multiprocess -ResX=$ResX -ResY=$ResY -ForceRes -unattended -nosplash -nosound -log -abslog=`"$log`" -ForceLogFlush " +
      "-cut=$cut -dpcvars=$cvars -RemoteConsoleIP=127.0.0.1 -RemoteConsolePort=$Port"
 $sw = [Diagnostics.Stopwatch]::StartNew()
 $p = Start-Process -FilePath $exe -ArgumentList $a -PassThru -WindowStyle Hidden
 $start = $p.StartTime
-@{ pid = $p.Id; start = $start.ToString('o'); args = $a; lane = 'A111' } | ConvertTo-Json -Compress | Set-Content (Join-Path $out 'game.json')
+@{ pid = $p.Id; start = $start.ToString('o'); args = $a; lane = 'A123' } | ConvertTo-Json -Compress | Set-Content (Join-Path $out 'game.json')
 $events = Join-Path $out 'events.log'
 Remove-Item $events -ErrorAction SilentlyContinue
 function Note([string]$s) { $line = ('{0,7:n1}s  {1}' -f $sw.Elapsed.TotalSeconds, $s); Write-Host $line; Add-Content $events $line }
@@ -77,7 +85,7 @@ function Finish([int]$code, [string]$why) {
     Get-ChildItem $shotDir -Filter "u1-*$tierId*.png" -ErrorAction SilentlyContinue | ForEach-Object { Copy-Item $_.FullName (Join-Path $out "shots\$($_.Name)") -Force; $n++ }
     Note "$n stills copied to $out\shots"
     if (Test-Path $log) {
-        Select-String -Path $log -Pattern 'JAMSCREEN light|JAMSCREEN first|JAMLOOK tier=|JAMLOOK rig .* loaded|JAMCUT rejected' | ForEach-Object { $_.Line } | Set-Content (Join-Path $out 'screen-lines.txt')
+        Select-String -Path $log -Pattern 'JAMSCREEN light|JAMSCREEN first|JAMSCREEN marker|JAMSCREEN prompt|JAMLOOK tier=|JAMLOOK rig .* loaded|JAMCUT rejected' | ForEach-Object { $_.Line } | Set-Content (Join-Path $out 'screen-lines.txt')
         Get-Content (Join-Path $out 'screen-lines.txt') | ForEach-Object { Write-Host "  | $_" }
     }
     $first = Test-Path (Join-Path $out "shots\u1-first-$tierId.png")

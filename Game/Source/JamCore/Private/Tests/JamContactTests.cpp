@@ -319,6 +319,435 @@ namespace JamContactTests
 
 using namespace JamContactTests;
 
+// ---- Lane A125 (track F1, docs/experiments/CONTACT-4.md): the figure is told what happened, and the human's check finds its man -----------------------
+//   Jam.Core.Contact.ShieldShove     R-0050 point 2: a shield that refuses the stick alone (track F2's body shield or take grace; forced by hand here) never refuses the shove:
+//                                    the same MMB press from behind shoves the carrier by the contact law and does not take the puck; the spin refuses both
+//   Jam.Core.Contact.FigureCalls     the pawn's two by-name figure calls: PlayStumble(DirX, DirZ, Frames) on a stumble's first frame (a bump keeps
+//                                    PlayHitReaction), SetBraking(bOn, Decel) from the sim's reverse brake; a figure without them is not called
+//   Jam.Core.Contact.CheckReach      contact.check_reach_m: an open check window turns the velocity toward the nearest opponent in the cone ahead; speed kept,
+//                                    no teleport; outside the cone, beyond the reach, standing still and at 0 nothing bends
+//   Jam.Core.ContactReachMatch       check_reach_m 0 hashes as the baseline (three pro seeds); six three-minute pro matches by reach: the human's presses,
+//                                    whiffs and landed hits, knockdowns of the human and of a bot
+namespace JamContactTests
+{
+	struct FReachCount
+	{
+		FContactCount Base;
+		int32 Presses = 0;      // the human's check presses that opened a window
+		// Why a press ran out on nobody, read at the press: the nearest standing opponent was beyond 1 m (body to body), or within it and the two closed at under
+		// 3 m/s along the line between them (a chase: the contact law gives such a hit nothing either), or neither (the man got away inside the window).
+		int32 WhiffFar = 0, WhiffChase = 0, WhiffOther = 0, SeenMissed = 0;
+		double PressGap = 0.0, PressClosing = 0.0;
+		int64 Last = -1;
+	};
+
+	void TraceReach(void* Ctx, const JamAI::FJamAIWorld& W, const JamAI::FJamAIInput* In, const JamAI::FJamBrain& B, int64_t F, bool bTouch)
+	{
+		FReachCount& R = *static_cast<FReachCount*>(Ctx);
+		const UJamSim* Sim = R.Base.Sim->GetSim();
+		if (Sim && Sim->GetFrame() != R.Last)
+		{
+			R.Last = Sim->GetFrame();
+			if (Sim->GetSkaters().IsValidIndex(R.Base.Human))
+			{
+				const FJamSkaterState& H = Sim->GetSkaters()[R.Base.Human];
+				if (H.bCheckThisFrame)
+				{
+					++R.Presses;
+					R.PressGap = 1e9; R.PressClosing = 0.0;
+					for (const FJamSkaterState& O : Sim->GetSkaters())
+					{
+						if (O.Team == H.Team || O.IsDown() || O.InBox()) continue;
+						const FVector2D To = O.Pos - H.Pos;
+						const double Gap = To.Size() - 2.0 * UJamSim::SkaterRadius;
+						if (Gap < R.PressGap) { R.PressGap = Gap; R.PressClosing = FVector2D::DotProduct(H.Vel - O.Vel, To.GetSafeNormal()); }
+					}
+				}
+				if (H.ChecksMissed > R.SeenMissed) { if (R.PressGap > 1.0) ++R.WhiffFar; else if (R.PressClosing < 3.0) ++R.WhiffChase; else ++R.WhiffOther; }
+				R.SeenMissed = H.ChecksMissed;
+			}
+		}
+		Trace(&R.Base, W, In, B, F, bTouch);
+	}
+
+	// Match() with the press counter: hockey.regular at a level, penalties off, no score limit, the Regular playtester as the human.
+	JamAI::FJamPlaytestStats MatchReach(FAutomationTestBase& T, const TCHAR* Level, uint64 Seed, FReachCount& R, TFunctionRef<void(FJamGameConfig&)> Edit, int64 Frames = 10800)
+	{
+		TArray<FString> Errors;
+		UJamCartridge* C = UJamCartridge::LoadFromFile(UJamCartridge::ResolveCartridgePath(TEXT("hockey.regular")), Errors);
+		for (const FString& E : Errors) T.AddError(FString::Printf(TEXT("hockey.regular: %s"), *E));
+		if (!C) return JamAI::FJamPlaytestStats();
+		C->Game.Rules.ScoreToWin = 99;
+		C->Game.Rules.bPenalties = false;
+		Edit(C->Game);
+		JamAI::FJamSimAdapter Sim(*C);
+		R.Base.Sim = &Sim;
+		const JamAI::FJamMatchConfig M = JamAI::ToMatchConfigResolved(*C, Level);
+		R.Base.Human = M.PlayerIndex();
+		return JamAI::RunPlaytestMatch(Sim, M, Seed, JamAI::EPlaytester::Regular, Frames, C->Game.Shot.ChargeFramesMax, false, &TraceReach, &R, 1);
+	}
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamContactShieldShove, "Jam.Core.Contact.ShieldShove", JamContactTests::Flags)
+bool FJamContactShieldShove::RunTest(const FString& Parameters)
+{
+	// The standing carrier at the centre dot facing +x, the puck in front of it. The attacker presses the lift (MMB) at arm's length (a gap of 0.4 m).
+	struct FOut { FContactHit H; double Expect = 0.0; bool bPuckKept = false, bStickHit = false, bOk = false; int32 SpinFrames = 0; };
+	auto Scene = [this](const TCHAR* Name, const FVector2D& From, double Speed, bool bStickRefused, bool bSpin, bool bPenalties) -> FOut
+	{
+		FOut O;
+		FContactScene S = Make(*this, [bPenalties](FJamGameConfig& G) { G.Rules.bPenalties = bPenalties; });
+		if (!S.Ok()) return O;
+		S.Sim->SetSkater(S.V, FVector2D::ZeroVector, FVector2D::ZeroVector, 0.0);
+		S.Sim->SetSkater(S.A, FVector2D(-10.0, -10.0), FVector2D::ZeroVector, 0.0);
+		if (!TestTrue(*FString::Printf(TEXT("%s: the standing skater carries the puck"), Name), HandPuck(S, S.V))) return O;
+		Carry(S, S.V, FVector2D::ZeroVector, FVector2D::ZeroVector, 0.0);
+		const FVector2D Dir = -From.GetSafeNormal();
+		S.Sim->SetSkater(S.A, From, Dir * Speed, FMath::Atan2(Dir.Y, Dir.X));
+		S.Sim->bTestStickRefused = bStickRefused;
+		const int32 Press = bSpin ? 1 : 0;
+		if (!bSpin) O.Expect = S.Sim->ContactImpulse(S.Att(), S.Vic(), Dir, UJamSim::EContactKind::Cross) / S.Sim->StabilityOf(S.Vic(), Dir, UJamSim::EContactKind::Cross);
+		O.H = Run(S, Press + 1, [&](TArray<FJamInput>& In, int32 F) { In[S.V].bSpin = bSpin && F == 0; In[S.A].bLift = F == Press; });
+		O.SpinFrames = S.Vic().SpinFrames;
+		O.bPuckKept = S.Sim->GetPuck().LastTouch == S.V;
+		O.bStickHit = S.Vic().StickHitResult != 0;
+		O.bOk = true;
+		AddInfo(FString::Printf(TEXT("JAMSHOVE %s: %s | expected ratio by the law %.3f | lift clean %d, puck still the carrier's %d, stick-hit read-out %d, foul %s, spin frames %d"), Name, *Facts(O.H), O.Expect,
+			O.H.bLiftClean ? 1 : 0, O.bPuckKept ? 1 : 0, O.bStickHit ? 1 : 0, *O.H.Foul.ToString(), O.SpinFrames));
+		return O;
+	};
+	const FVector2D Behind(-1.2, 0.0), Side(0.0, -1.2);
+	// 1. From behind, the body between (the shield refuses the stick): the standing attacker's thrust alone shoves the carrier; the puck is not taken.
+	{
+		const FOut O = Scene(TEXT("from behind, body between, attacker standing"), Behind, 0.0, true, false, false);
+		if (!O.bOk) return false;
+		TestEqual(TEXT("behind, shielded: the press shoves the carrier (a stumble: thrust 3 m/s x 80 kg on an unbraced 384)"), O.H.Outcome, UJamSim::ContactStumble);
+		TestEqual(TEXT("... with the ratio the contact law gives"), static_cast<double>(O.H.Ratio), O.Expect, 1e-4);
+		TestTrue(*FString::Printf(TEXT("... under loose_ratio (%.2f), so the puck stays the carrier's"), O.H.Ratio), O.H.Ratio < 0.7f && O.bPuckKept);
+		TestTrue(TEXT("... and the lift takes nothing (no clean lift, no stick-hit read-out)"), !O.H.bLiftClean && !O.bStickHit);
+	}
+	// 2. The same press at 8 m/s: down by the law; the puck leaves by the knockdown, not by the lift.
+	{
+		const FOut O = Scene(TEXT("from behind, body between, attacker at 8 m/s"), Behind, 8.0, true, false, false);
+		if (!O.bOk) return false;
+		TestEqual(TEXT("behind, shielded, 8 m/s: down"), O.H.Outcome, UJamSim::ContactDown);
+		TestEqual(TEXT("... with the ratio the contact law gives"), static_cast<double>(O.H.Ratio), O.Expect, 1e-4);
+		TestTrue(TEXT("... with the check and knockdown events, and still no clean lift"), O.H.bCheck && O.H.bKnock && !O.H.bLiftClean && !O.bStickHit);
+	}
+	// 3. With the whistle: a shove from behind is the foul it always was (the contact law's own rule; nothing new).
+	{
+		const FOut O = Scene(TEXT("from behind, body between, penalties on"), Behind, 0.0, true, false, true);
+		if (!O.bOk) return false;
+		TestTrue(TEXT("behind, shielded, penalties on: the shove lands and the from-behind foul is called"), O.H.Outcome >= UJamSim::ContactStumble && !O.H.Foul.IsNone());
+	}
+	// 4. From the side, the body between: the shove lands as before, the lift takes nothing (without the shield it took the puck: StandingBrace case 3).
+	{
+		const FOut O = Scene(TEXT("from the side, body between, 2 m/s"), Side, 2.0, true, false, false);
+		if (!O.bOk) return false;
+		TestEqual(TEXT("side, shielded: the brace holds, a stumble"), O.H.Outcome, UJamSim::ContactStumble);
+		TestEqual(TEXT("... with the ratio the contact law gives"), static_cast<double>(O.H.Ratio), O.Expect, 1e-4);
+		TestTrue(TEXT("... and the puck is not taken"), !O.H.bLiftClean && !O.bStickHit && O.bPuckKept);
+		const FOut N = Scene(TEXT("from the side, no shield, 2 m/s"), Side, 2.0, false, false, false);
+		if (!N.bOk) return false;
+		TestEqual(TEXT("side, the seam off: the same shove (the shield never changes the shove)"), static_cast<double>(N.H.Ratio), static_cast<double>(O.H.Ratio), 1e-6);
+	}
+	// 4b. From the front, the stick refused and no body between (the shape of track F2's take grace: the carrier has just won the puck and faces the
+	//     attacker): the shove lands by the law (the thrust ignores the standing brace), the lift takes nothing.
+	{
+		const FOut O = Scene(TEXT("from the front, stick refused (a take grace), attacker standing"), FVector2D(1.2, 0.0), 0.0, true, false, false);
+		if (!O.bOk) return false;
+		TestEqual(TEXT("front, stick refused: the press shoves the carrier (a stumble: 240 on an unbraced 480)"), O.H.Outcome, UJamSim::ContactStumble);
+		TestEqual(TEXT("... with the ratio the contact law gives"), static_cast<double>(O.H.Ratio), O.Expect, 1e-4);
+		TestTrue(TEXT("... and the puck is not taken"), !O.H.bLiftClean && !O.bStickHit && O.bPuckKept);
+		const FOut N = Scene(TEXT("from the front, no shield, attacker standing"), FVector2D(1.2, 0.0), 0.0, false, false, false);
+		if (!N.bOk) return false;
+		TestEqual(TEXT("front, the seam off: the same shove (a stick shield never changes the shove)"), static_cast<double>(N.H.Ratio), static_cast<double>(O.H.Ratio), 1e-6);
+	}
+	// 5. The spin refuses both, shield or not (R-0040's bar stands).
+	{
+		const FOut O = Scene(TEXT("from behind, body between, the carrier spins"), Behind, 0.0, true, true, false);
+		if (!O.bOk) return false;
+		TestTrue(TEXT("the carrier is spinning when the press comes"), O.SpinFrames > 0);
+		TestTrue(TEXT("spinning: no shove and no clean lift"), O.H.Outcome == 0 && !O.H.bCheck && !O.H.bLiftClean);
+	}
+	// 6. The seam off, from behind. A tree without a stick-only shield: the stick lift it was (no shove, the puck lifted; the game before the lane). A tree with
+	//    track F2's body shield (game.stick.body_shield, default true): the shield is real here (the puck is on the far side of the body, the carrier's back
+	//    is turned): the shove lands and the puck is not taken. Either is right; anything else is not.
+	{
+		const FOut O = Scene(TEXT("from behind, the seam off"), Behind, 0.0, false, false, false);
+		if (!O.bOk) return false;
+		const bool bLiftOnly = O.H.Outcome == 0 && O.H.bLiftClean;
+		const bool bShoveOnly = O.H.Outcome >= UJamSim::ContactStumble && !O.H.bLiftClean && FMath::IsNearlyEqual(static_cast<double>(O.H.Ratio), O.Expect, 1e-4);
+		AddInfo(FString::Printf(TEXT("JAMSHOVE the seam off from behind: %s"), bLiftOnly ? TEXT("a stick lift, no shove (this tree has no stick-only shield)") : bShoveOnly ? TEXT("a shove, the puck not taken (the tree's own body shield refused the stick)") : TEXT("NEITHER")));
+		TestTrue(TEXT("the seam off, from behind: a stick lift and no shove (no body shield), or a shove and no take (the tree's body shield)"), bLiftOnly != bShoveOnly);
+	}
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamContactFigureCalls, "Jam.Core.Contact.FigureCalls", JamContactTests::Flags)
+bool FJamContactFigureCalls::RunTest(const FString& Parameters)
+{
+	// 1. The by-name call: a figure that has the function is called with the numbers written by each parameter's own type; one that has not is not.
+	{
+		UJamFigureCallProbe* P = NewObject<UJamFigureCallProbe>();
+		TestTrue(TEXT("PlayStumble by name on a figure that has it (double, double, int32: a Blueprint event's shape)"), AJamSkater::CallFigure(P, TEXT("PlayStumble"), { 0.6, -0.8, 16.0 }));
+		TestTrue(*FString::Printf(TEXT("... it received (%.2f, %.2f, %d)"), P->LastDirX, P->LastDirZ, P->LastFrames), P->Stumbles == 1 && FMath::IsNearlyEqual(P->LastDirX, 0.6, 1e-9) && FMath::IsNearlyEqual(P->LastDirZ, -0.8, 1e-9) && P->LastFrames == 16);
+		TestTrue(TEXT("SetBraking by name (bool, float)"), AJamSkater::CallFigure(P, TEXT("SetBraking"), { 1.0, 20.0 }));
+		TestTrue(*FString::Printf(TEXT("... it received (%d, %.1f)"), P->bLastOn ? 1 : 0, P->LastDecel), P->Brakes == 1 && P->bLastOn && FMath::IsNearlyEqual(P->LastDecel, 20.f, 1e-4f));
+		TestTrue(TEXT("SetBraking(false, 0)"), AJamSkater::CallFigure(P, TEXT("SetBraking"), { 0.0, 0.0 }) && P->Brakes == 2 && !P->bLastOn && P->LastDecel == 0.f);
+		TestFalse(TEXT("a function of the name with another parameter count is not called"), AJamSkater::CallFigure(P, TEXT("PlayStumble"), { 0.6, -0.8 }));
+		TestFalse(TEXT("a function whose parameter is not a number is not called"), AJamSkater::CallFigure(P, TEXT("PlayWrongShape"), { 1.0 }));
+		TestFalse(TEXT("a figure without the function is not called (PlayStumble falls back to PlayHitReaction in the pawn)"), AJamSkater::CallFigure(NewObject<UJamSim>(), TEXT("PlayStumble"), { 0.6, -0.8, 16.0 }));
+		TestFalse(TEXT("no figure"), AJamSkater::CallFigure(nullptr, TEXT("PlayStumble"), { 0.6, -0.8, 16.0 }));
+		TestEqual(TEXT("the probe was called once for the stumble"), P->Stumbles, 1);
+	}
+	// 2. The stumble's frames, read from the sim on the frame of the hit. A side body check from 4 m/s on a standing skater: a stumble, the full stagger.
+	{
+		FContactScene S = Make(*this, NoEdit);
+		if (!S.Ok()) return false;
+		S.Sim->SetSkater(S.V, FVector2D::ZeroVector, FVector2D::ZeroVector, 0.0);
+		S.Sim->SetSkater(S.A, FVector2D(0.0, -1.0), FVector2D(0.0, 4.0), PI * 0.5);
+		const FContactHit H = Run(S, 12, [&](TArray<FJamInput>& In, int32 F) { In[S.A].bCheck = F == 0; });
+		AddInfo(FString::Printf(TEXT("JAMFIG body-check stumble: %s | victim frames for PlayStumble %d, attacker %d, push (%.2f, %.2f)"), *Facts(H), AJamSkater::StumbleFramesFor(S.Vic()), AJamSkater::StumbleFramesFor(S.Att()), S.Vic().BumpDir.X, S.Vic().BumpDir.Y));
+		TestEqual(TEXT("a body-check stumble"), H.Outcome, UJamSim::ContactStumble);
+		TestEqual(TEXT("... PlayStumble's frames are the sim's stagger_frames (the contact resolves after the skaters moved)"), AJamSkater::StumbleFramesFor(S.Vic()), S.Cfg.Contact.StaggerFrames);
+		TestEqual(TEXT("... the attacker did not stumble: no PlayStumble for it"), AJamSkater::StumbleFramesFor(S.Att()), 0);
+		TestTrue(TEXT("... the push is the attacker's way (+z)"), S.Vic().BumpDir.Y > 0.9);
+		// the frames are exactly the frames without control: the skater can act again after that many steps
+		int32 Held = 0;
+		for (; Held < 40 && !S.Vic().CanAct(); ++Held) { TArray<FJamInput> In; In.SetNum(S.Sim->GetSkaters().Num()); S.Sim->Step(In); }
+		TestEqual(TEXT("... and the sim gives the control back after exactly that many frames"), Held, S.Cfg.Contact.StaggerFrames);
+		TestEqual(TEXT("... no PlayStumble on a later frame of the same stumble"), AJamSkater::StumbleFramesFor(S.Vic()), 0);
+	}
+	// 3. A cross-check's stumble resolves before the skaters move: one frame of it is already spent when the pawn reads it.
+	{
+		FContactScene S = Make(*this, NoEdit);
+		if (!S.Ok()) return false;
+		S.Sim->SetSkater(S.V, FVector2D::ZeroVector, FVector2D::ZeroVector, 0.0);
+		S.Sim->SetSkater(S.A, FVector2D(-10.0, -10.0), FVector2D::ZeroVector, 0.0);
+		TestTrue(TEXT("the standing skater carries the puck"), HandPuck(S, S.V));
+		Carry(S, S.V, FVector2D::ZeroVector, FVector2D::ZeroVector, 0.0);
+		S.Sim->SetSkater(S.A, FVector2D(0.0, -1.2), FVector2D(0.0, 4.0), PI * 0.5);
+		const FContactHit H = Run(S, 6, [&](TArray<FJamInput>& In, int32 F) { In[S.A].bLift = F == 0; });
+		TestEqual(TEXT("a cross-check stumble"), H.Outcome, UJamSim::ContactStumble);
+		TestEqual(TEXT("... PlayStumble's frames: stagger_frames less the frame already stepped"), AJamSkater::StumbleFramesFor(S.Vic()), S.Cfg.Contact.StaggerFrames - 1);
+		int32 Held = 0;
+		for (; Held < 40 && !S.Vic().CanAct(); ++Held) { TArray<FJamInput> In; In.SetNum(S.Sim->GetSkaters().Num()); S.Sim->Step(In); }
+		TestEqual(TEXT("... and the control is back after exactly that many frames"), Held, S.Cfg.Contact.StaggerFrames - 1);
+	}
+	// 4. A bump is not a stumble; a knockdown is not a stumble; the attacker's own bounce is one.
+	{
+		FContactScene S = Make(*this, NoEdit);
+		if (!S.Ok()) return false;
+		S.Sim->SetSkater(S.V, FVector2D::ZeroVector, FVector2D(8.0, 0.0), 0.0);
+		S.Sim->SetSkater(S.A, FVector2D(-0.79, 0.0), FVector2D(8.0, 0.0), 0.0);
+		const FContactHit H = Run(S, 12, [&](TArray<FJamInput>& In, int32 F) { In[S.A].bCheck = F == 0; In[S.A].Move = FVector2D(1.0, 0.0); In[S.V].Move = FVector2D(1.0, 0.0); });
+		AddInfo(FString::Printf(TEXT("JAMFIG same-way bump: %s"), *Facts(H)));
+		TestEqual(TEXT("two skaters going the same way: a bump"), H.Outcome, UJamSim::ContactBump);
+		TestEqual(TEXT("... a bump keeps PlayHitReaction: no PlayStumble frames"), AJamSkater::StumbleFramesFor(S.Vic()), 0);
+	}
+	{
+		FContactScene S = Make(*this, NoEdit);
+		if (!S.Ok()) return false;
+		S.Sim->SetSkater(S.V, FVector2D(1.5, 0.0), FVector2D(-11.0, 0.0), PI);
+		S.Sim->SetSkater(S.A, FVector2D(-1.5, 0.0), FVector2D(11.0, 0.0), 0.0);
+		const FContactHit H = Run(S, 12, [&](TArray<FJamInput>& In, int32 F) { In[S.A].bCheck = F == 0; });
+		TestEqual(TEXT("head-on at full speed: down"), H.Outcome, UJamSim::ContactDown);
+		TestEqual(TEXT("... a knockdown is SetKnockedDown's: no PlayStumble frames"), AJamSkater::StumbleFramesFor(S.Vic()), 0);
+	}
+	{
+		// The scene of Jam.Core.Contact.AttackerBounces: a sprinting attacker into a braced standing skater's side is the one who stumbles.
+		FContactScene S = Make(*this, NoEdit);
+		if (!S.Ok()) return false;
+		S.Sim->SetSkater(S.V, FVector2D::ZeroVector, FVector2D::ZeroVector, 0.0);
+		S.Sim->SetSkater(S.A, FVector2D(0.0, -1.2), FVector2D(0.0, 5.0), PI * 0.5);
+		const FContactHit H = Run(S, 14, [&](TArray<FJamInput>& In, int32 F) { In[S.A].Move = FVector2D(0.0, 1.0); In[S.A].bSprint = true; In[S.A].bCheck = F == 1; });
+		AddInfo(FString::Printf(TEXT("JAMFIG the attacker's bounce: %s | attacker's PlayStumble frames %d, push (%.2f, %.2f); victim's %d"), *Facts(H), AJamSkater::StumbleFramesFor(S.Att()), S.Att().BumpDir.X, S.Att().BumpDir.Y,
+			AJamSkater::StumbleFramesFor(S.Vic())));
+		TestTrue(TEXT("the sprinting attacker bounces off the braced skater"), H.bRecoil);
+		TestEqual(TEXT("... its own bounce is a stumble: PlayStumble with the stagger"), AJamSkater::StumbleFramesFor(S.Att()), S.Cfg.Contact.StaggerFrames);
+		TestTrue(TEXT("... pushed back against its travel (-z)"), S.Att().BumpDir.Y < -0.9);
+	}
+	// 5. The braking read-out: the sim's reverse brake, and the deceleration it applied.
+	{
+		FContactScene S = Make(*this, NoEdit);
+		if (!S.Ok()) return false;
+		S.Sim->SetSkater(S.A, FVector2D(-5.0, 0.0), FVector2D(10.0, 0.0), 0.0);
+		double Before = S.Att().Vel.Size();
+		int32 OnFrames = 0, First = -1;
+		float FirstDecel = 0.f, MinDecel = 1e9f, MaxDecel = 0.f;
+		bool bZeroWhenOff = true;
+		for (int32 F = 0; F < 60; ++F)
+		{
+			TArray<FJamInput> In;
+			In.SetNum(S.Sim->GetSkaters().Num());
+			In[S.A].Move = FVector2D(F < 5 ? 1.0 : -1.0, 0.0);   // five frames forward, then the input reversed
+			S.Sim->Step(In);
+			const float D = AJamSkater::BrakeDecelFor(Before, S.Att());
+			if (S.Att().bReverseBraking)
+			{
+				++OnFrames;
+				if (First < 0) { First = F; FirstDecel = D; }
+				MinDecel = FMath::Min(MinDecel, D); MaxDecel = FMath::Max(MaxDecel, D);
+			}
+			else if (D != 0.f) bZeroWhenOff = false;
+			Before = S.Att().Vel.Size();
+		}
+		AddInfo(FString::Printf(TEXT("JAMFIG brake: on from frame %d for %d frames, Decel first %.2f min %.2f max %.2f m/s^2 (skater.reverse_brake_decel %.1f)"), First, OnFrames, FirstDecel, MinDecel, MaxDecel, S.Cfg.Skater.ReverseBrakeDecel));
+		TestEqual(TEXT("the level rises on the first frame of the reversed input"), First, 5);
+		TestTrue(TEXT("... Decel is 0 on every frame the sim does not brake"), bZeroWhenOff);
+		TestTrue(TEXT("... and holds for the stop (about speed / decel seconds)"), OnFrames >= 20 && OnFrames <= 35);
+		TestEqual(TEXT("... Decel on its first frame is the sim's reverse_brake_decel"), static_cast<double>(FirstDecel), S.Cfg.Skater.ReverseBrakeDecel, 0.01);
+		TestTrue(TEXT("... and on every frame of it"), FMath::IsNearlyEqual(static_cast<double>(MinDecel), S.Cfg.Skater.ReverseBrakeDecel, 0.01) && FMath::IsNearlyEqual(static_cast<double>(MaxDecel), S.Cfg.Skater.ReverseBrakeDecel, 0.01));
+	}
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamContactCheckReach, "Jam.Core.Contact.CheckReach", JamContactTests::Flags)
+bool FJamContactCheckReach::RunTest(const FString& Parameters)
+{
+	// The attacker skates +x at Speed; the victim stands Ahead metres ahead and Off metres to its left. A straight line passes it when Off is over two radii (0.8 m).
+	struct FOut { FContactHit H; int32 Missed = 0, Target = -2; double SpeedAtPress = 0, SpeedAfterPress = 0, MaxExcess = 0, Turn = 0; bool bOk = false; };
+	auto Scene = [this](const TCHAR* Name, double Reach, double Speed, double Ahead, double Off, bool bCarrier = false) -> FOut
+	{
+		FOut O;
+		FContactScene S = Make(*this, [Reach](FJamGameConfig& G) { G.Contact.CheckReachM = Reach; });
+		if (!S.Ok()) return O;
+		S.Sim->SetSkater(S.V, FVector2D(Ahead, Off), FVector2D::ZeroVector, PI);
+		S.Sim->SetSkater(S.A, FVector2D::ZeroVector, FVector2D(Speed, 0.0), 0.0);
+		if (bCarrier)
+		{
+			S.Sim->SetSkater(S.V, FVector2D(30.0, 10.0), FVector2D::ZeroVector, PI);
+			if (!TestTrue(*FString::Printf(TEXT("%s: the attacker carries the puck"), Name), HandPuck(S, S.A))) return O;
+			S.Sim->SetSkater(S.V, FVector2D(S.Att().Pos.X + Ahead, S.Att().Pos.Y + Off), FVector2D::ZeroVector, PI);
+		}
+		O.Target = S.Sim->CheckReachTarget(S.Att());
+		O.SpeedAtPress = S.Att().Vel.Size();
+		FVector2D Prev = S.Att().Pos;
+		const FVector2D Vel0 = S.Att().Vel;
+		O.H = Run(S, 14, [&](TArray<FJamInput>& In, int32 F)
+		{
+			if (F > 0) O.MaxExcess = FMath::Max(O.MaxExcess, FVector2D::Distance(Prev, S.Att().Pos) - S.Att().Vel.Size() * UJamSim::DT);   // a step is the velocity x one frame, never more
+			if (F == 1)
+			{
+				O.SpeedAfterPress = S.Att().Vel.Size();
+				O.Turn = FMath::RadiansToDegrees(FMath::Acos(FMath::Clamp(FVector2D::DotProduct(S.Att().Vel.GetSafeNormal(), Vel0.GetSafeNormal()), -1.0, 1.0)));
+			}
+			Prev = S.Att().Pos;
+			In[S.A].bCheck = F == 0;
+			In[S.A].Move = Speed > 0.0 ? FVector2D(1.0, 0.0) : FVector2D::ZeroVector;
+		});
+		O.Missed = S.Att().ChecksMissed;
+		O.bOk = true;
+		AddInfo(FString::Printf(TEXT("JAMREACH %s (reach %.1f, %.1f m/s, man %.1f m ahead %.1f m aside): target %d | %s | missed %d | speed at the press %.2f, a frame later %.2f, turned %.1f deg, a step beyond velocity x frame by at most %.6f m"), Name, Reach, Speed, Ahead, Off,
+			O.Target, *Facts(O.H), O.Missed, O.SpeedAtPress, O.SpeedAfterPress, O.Turn, O.MaxExcess));
+		return O;
+	};
+	// 1. The man 1.3 m ahead and 1.1 m aside (a body-to-body gap of 0.9 m, 40 degrees off the facing), the attacker at 8 m/s.
+	const FOut Off = Scene(TEXT("reach 0"), 0.0, 8.0, 1.3, 1.1);
+	const FOut On = Scene(TEXT("reach 1"), 1.0, 8.0, 1.3, 1.1);
+	if (!Off.bOk || !On.bOk) return false;
+	TestTrue(TEXT("reach 0: the press runs out on nobody (the whiff), no target"), Off.H.Outcome == 0 && Off.Missed == 1 && Off.Target == -1);
+	TestTrue(TEXT("reach 1: the press finds the man"), On.H.Outcome != 0 && On.Missed == 0 && On.Target >= 0);
+	TestTrue(*FString::Printf(TEXT("reach 1: the press bends the direction (%.1f deg) ..."), On.Turn), On.Turn > 20.0);
+	TestTrue(*FString::Printf(TEXT("... and adds no speed: a frame after the press %.2f m/s, the same press without the reach %.2f m/s"), On.SpeedAfterPress, Off.SpeedAfterPress), On.SpeedAfterPress <= Off.SpeedAfterPress + 1e-6);
+	TestTrue(*FString::Printf(TEXT("... and never moves the skater but by its velocity (excess %.6f m)"), On.MaxExcess), On.MaxExcess < 1e-6);
+	// The hit is the contact law's: the same closing speed head-on gives the same ratio.
+	{
+		const FOut Straight = Scene(TEXT("reach 0, straight at the man"), 0.0, 8.0, 1.7, 0.0);
+		if (!Straight.bOk) return false;
+		TestTrue(*FString::Printf(TEXT("the bent press hits no harder than the same speed straight on (ratio %.2f against %.2f)"), On.H.Ratio, Straight.H.Ratio), On.H.Ratio <= Straight.H.Ratio + 0.05f);
+	}
+	// 2. Outside the cone (the man beside the attacker, 80 degrees off the facing): nothing bends.
+	{
+		const FOut O = Scene(TEXT("reach 1, the man beside"), 1.0, 8.0, 0.25, 1.4);
+		if (!O.bOk) return false;
+		TestTrue(TEXT("outside the cone: no target, the press is a whiff"), O.Target == -1 && O.H.Outcome == 0 && O.Missed == 1);
+	}
+	// 3. Beyond the reach (a gap of 1.4 m): nothing bends.
+	{
+		const FOut O = Scene(TEXT("reach 1, the man beyond it"), 1.0, 2.0, 1.7, 1.4);
+		if (!O.bOk) return false;
+		TestTrue(TEXT("beyond the reach: no target, a whiff"), O.Target == -1 && O.H.Outcome == 0 && O.Missed == 1);
+	}
+	// 4. Standing still: the reach adds no speed, so the press goes nowhere.
+	{
+		const FOut O = Scene(TEXT("reach 1, standing still"), 1.0, 0.0, 1.3, 1.1);
+		if (!O.bOk) return false;
+		TestTrue(*FString::Printf(TEXT("standing still: a target, no speed made of it (%.3f m/s a frame later), a whiff"), O.SpeedAfterPress), O.Target >= 0 && O.SpeedAfterPress < 1e-6 && O.H.Outcome == 0 && O.Missed == 1);
+	}
+	// 5. The carrier's press is refused: nothing bends.
+	{
+		const FOut O = Scene(TEXT("reach 1, the attacker carries the puck"), 1.0, 0.0, 1.3, 1.1, true);
+		if (!O.bOk) return false;
+		TestTrue(TEXT("the carrier: refused, no hit"), O.H.bRefused && O.H.Outcome == 0);
+	}
+	// 6. A man crossing the attacker's path is led, not chased: the velocity takes his speed across the line between them, so the press turns to where he will be.
+	// 7. A bot's press does not bend (the brain aims its own check): the same scene with the bot as the checker finds no target.
+	{
+		FContactScene S = Make(*this, [](FJamGameConfig& G) { G.Contact.CheckReachM = 1.0; });
+		if (!S.Ok()) return false;
+		S.Sim->SetSkater(S.V, FVector2D(1.5, -0.6), FVector2D(0.0, 4.0), PI * 0.5);   // 22 degrees to the attacker's right, skating to its left at 4 m/s
+		S.Sim->SetSkater(S.A, FVector2D::ZeroVector, FVector2D(8.0, 0.0), 0.0);
+		TestTrue(TEXT("the crossing man is the target"), S.Sim->CheckReachTarget(S.Att()) == S.V);
+		TestEqual(TEXT("a bot has no target (the reach is the human's)"), S.Sim->CheckReachTarget(S.Vic()), -1);
+		TArray<FJamInput> In;
+		In.SetNum(S.Sim->GetSkaters().Num());
+		In[S.A].bCheck = true;
+		In[S.A].Move = FVector2D(1.0, 0.0);
+		In[S.V].bCheck = true;
+		const FVector2D VicBefore = S.Vic().Vel;
+		S.Sim->Step(In);
+		AddInfo(FString::Printf(TEXT("JAMREACH a crossing man (1.5 m ahead, 0.6 m to the right, crossing to the left at 4 m/s): the attacker's velocity a frame after the press (%.2f, %.2f), %.2f m/s; the bot's (%.2f, %.2f)"),
+			S.Att().Vel.X, S.Att().Vel.Y, S.Att().Vel.Size(), S.Vic().Vel.X, S.Vic().Vel.Y));
+		TestTrue(*FString::Printf(TEXT("the press leads the man: the velocity turns to the left, where he is going (vz %.2f), though he is still on the right"), S.Att().Vel.Y), S.Att().Vel.Y > 0.5);
+		TestTrue(*FString::Printf(TEXT("... at the speed it had (%.2f m/s)"), S.Att().Vel.Size()), S.Att().Vel.Size() < 8.25);
+		TestTrue(TEXT("the bot's own press bends nothing: it keeps its line"), FMath::Abs(S.Vic().Vel.X - VicBefore.X) < 0.3 && S.Vic().Vel.Y > 3.0);
+	}
+	// The default.
+	{
+		TArray<FString> Errors;
+		const UJamCartridge* C = UJamCartridge::LoadFromFile(UJamCartridge::ResolveCartridgePath(TEXT("hockey.regular")), Errors);
+		if (C) TestEqual(TEXT("game.contact.check_reach_m is 0 (off) when the key is absent"), C->Game.Contact.CheckReachM, 0.0, 1e-12);
+	}
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamContactReachMatch, "Jam.Core.ContactReachMatch", JamContactTests::Flags)
+bool FJamContactReachMatch::RunTest(const FString& Parameters)
+{
+	// The neutral value: three pro matches at check_reach_m 0 hash as the track's baseline did on its defaults (evolution 2, R-0051: release grace 120).
+	const uint64 Baseline[3] = { 0x7fb31c1f16b3f8c4ull, 0xa2be45743aebf331ull, 0x4f3c95b28136e412ull };
+	// The measurement: three-minute pro matches, five a side, the Regular playtester as the human, by reach.
+	const double Arms[] = { 0.0, 1.0 };   // 0.5 and 1.5 were measured too (docs/experiments/CONTACT-4.md section 6)
+	const int32 Seeds = 6;
+	for (const double Reach : Arms)
+	{
+		int32 Presses = 0, Missed = 0, Landed = 0, Soft = 0, Graced = 0, HumanDowns = 0, BotDowns = 0, BotChecks = 0, HumanStumbles = 0, GoalsFor = 0, GoalsAgainst = 0, Far = 0, Chase = 0, Other = 0;
+		for (uint64 Seed = 1; Seed <= Seeds; ++Seed)
+		{
+			FReachCount R;
+			const JamAI::FJamPlaytestStats S = MatchReach(*this, TEXT("pro"), Seed, R, [Reach](FJamGameConfig& G) { G.Contact.CheckReachM = Reach; });
+			const FContactCount& C = R.Base;
+			AddInfo(FString::Printf(TEXT("JAMREACH match pro seed %llu reach %.1f: frames %lld hash %016llx goals %d:%d | human's presses %d: whiffs %d, too soft %d, met a grace %d, landed %d | check events by a bot %d | knockdowns of human %d of bot %d | stumbles of human %d"),
+				static_cast<unsigned long long>(Seed), Reach, static_cast<long long>(S.Frames), static_cast<unsigned long long>(S.Hash), S.GoalsFor, S.GoalsAgainst, R.Presses, C.HumanMissed, C.HumanSoft, C.HumanGraced, C.Checks[1],
+				C.Checks[0], C.Downs[1], C.Downs[0], C.HitStumble[1]));
+			if (Reach == 0.0 && Seed <= 3)
+			{
+				TestEqual(*FString::Printf(TEXT("pro seed %llu: check_reach_m 0 hashes as the baseline did"), static_cast<unsigned long long>(Seed)), FString::Printf(TEXT("%016llx"), static_cast<unsigned long long>(S.Hash)),
+					FString::Printf(TEXT("%016llx"), static_cast<unsigned long long>(Baseline[Seed - 1])));
+			}
+			Presses += R.Presses; Missed += C.HumanMissed; Landed += C.Checks[1]; Soft += C.HumanSoft; Graced += C.HumanGraced; HumanDowns += C.Downs[1]; BotDowns += C.Downs[0];
+			BotChecks += C.Checks[0]; HumanStumbles += C.HitStumble[1]; GoalsFor += S.GoalsFor; GoalsAgainst += S.GoalsAgainst; Far += R.WhiffFar; Chase += R.WhiffChase; Other += R.WhiffOther;
+		}
+		AddInfo(FString::Printf(TEXT("JAMREACH TOTAL pro reach %.1f, %d three-minute matches: human's presses %d, whiffs %d = %.1f %%, too soft %d, met a grace %d, landed %d = %.1f %% | check events by a bot %d | knockdowns a match: of the human %.2f, of a bot %.2f | ")
+			TEXT("stumbles of the human %d | goals %d:%d | whiffs by the press: the nearest man beyond 1 m %d, within 1 m closing under 3 m/s (a chase) %d, within 1 m closing faster %d"), Reach, Seeds, Presses, Missed,
+			Presses > 0 ? 100.0 * Missed / Presses : 0.0, Soft, Graced, Landed, Presses > 0 ? 100.0 * Landed / Presses : 0.0, BotChecks,
+			static_cast<double>(HumanDowns) / Seeds, static_cast<double>(BotDowns) / Seeds, HumanStumbles, GoalsFor, GoalsAgainst, Far, Chase, Other));
+	}
+	return true;
+}
+
 // ---- Lane A101 (track F1): every outcome reads -------------------------------------------------------------------------------------------------
 
 // The boards are a body. One hit, five places: a side body check on a standing skater (facing along the boards or +x, the hit from its side, seen and braced).
