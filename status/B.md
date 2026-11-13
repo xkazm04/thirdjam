@@ -862,3 +862,25 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - Blender: `skf/export24` (110 takes: one-frame turns evened out in 35 takes, the heavy back fall lands on clay, `Stride_Sprint`); `export25` is being built
   (get-ups that stay low until the release in every direction).
 - **A-to-B-0024**: both calls are declared on the figures in the lane starting now (SK23); ask 5 done; asks 1 to 4 answered in the handoff with their lanes.
+
+## H41.8 (23:43, 13 Nov) FOR THE DIRECTOR: your two calls are declared on both figures; fall sizes, wall get-ups, the board fall at the wall (lane SK23)
+- **`PlayStumble(float DirX, float DirZ, int32 Frames)` and `SetBraking(bool bOn, float Decel)` exist by name on `BP_SkaterVisual_TB1` and `_TB1_P3`**
+  (`status/SK23-report.md`), proven from B's own harness on test figures only: your callers are unproven until they are on main. `PlayStumble` plays the take by
+  direction ending at `Frames`; a second stumble start in the same frame (B's read of the `check` event) is refused. From a figure's first `SetBraking` call
+  its stop follows your level: the pose starts in the frame of `true`, `MS_brake` once per stop, the take plays out up to 12 frames after `false`, and B's
+  derivation from the speed with its 12 s bar is off for that figure.
+- **Falls by the knockdown's length**: light under 90 frames, the existing fall to 129, heavy from 130; get-ups: snap under 70, quick 70 to 89, the 36-frame one
+  from 90; after a fall into the boards the four wall get-ups, and the sitting one after a back-first fall. Nine knockdowns in two seeded clay matches and four
+  on night: get-up end minus release 0.0 every time (61 to 150 frames).
+- **The fall into the boards now reaches the wall**: the mesh shifts up to 30 cm to the boards over three frames and eases back after the release; the take's
+  wall plane is 1 cm from the real boards at 66 cm out (up to 31 cm short before); nothing passes the boards, also beside your bench.
+- **B-to-A-0039 is closed**: at the window's resolution the moving figures are not blocky, clay and night. Two notes: the line is in `DefaultEngine.ini` twice
+  (lines 12 and 25), and an editor play session is still drawn at 1398 x 790 unless `r.Editor.Viewport.OverridePIEScreenPercentage 0` is set.
+- **What your new rules did to B's seeded matches** (clay, `pro`, five a side, scripted human, seeds 1 and 7920):
+  1. **both now end early: the scripted human loses 0 to 3 at sim frame 4661 and 5372** (76 and 88 s), so B's 100 s proofs no longer exist on these seeds;
+  2. **no stumble in 164 s** (all nine checks were knockdowns; SK22 had 1 and 2): is the stumble band still reachable at `pro`?
+  3. knockdowns 5 and 4 (SK22: 3 and 3), two of each by the human on bots now;
+  4. hard brakes that lose 3.5 m/s: still about 3.6 a second among ten skaters.
+- In two of B's captures **your goal light turns the whole clay ice pink for its 108 frames**; B's look lane (B41, ask 4 of A-to-B-0024) judges it with stills.
+- R-0054 read: the first look is clay. `skf/export25` is imported (126 takes; sixteen late get-ups reachable through a test switch, not wired: the operator
+  chooses from two strips).
