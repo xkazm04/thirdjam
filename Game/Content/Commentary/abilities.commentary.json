@@ -13,7 +13,7 @@
       "when": "the human fires the shotgun ability (F)",
       "text": "Shotgun! That puck went through everybody.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_ability_shotgun_01.VO_Commentator_ability_shotgun_01",
-      "seconds": 1.9
+      "seconds": 3.4
     },
     {
       "id": "ability.shotgun.02",
@@ -25,7 +25,7 @@
       "when": "the human fires the shotgun ability (F)",
       "text": "Bowling night. The whole lane is down.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_ability_shotgun_02.VO_Commentator_ability_shotgun_02",
-      "seconds": 1.8
+      "seconds": 2.76
     },
     {
       "id": "ability.shotgun.03",
@@ -37,7 +37,7 @@
       "when": "the human fires the shotgun ability (F)",
       "text": "One blast and nobody is left standing.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_ability_shotgun_03.VO_Commentator_ability_shotgun_03",
-      "seconds": 1.8
+      "seconds": 3.32
     },
     {
       "id": "ability.hip_check.01",
@@ -49,7 +49,7 @@
       "when": "the human uses the hip check ability (F)",
       "text": "Hip check! He sent him three metres.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_ability_hip_check_01.VO_Commentator_ability_hip_check_01",
-      "seconds": 1.7
+      "seconds": 2.61
     },
     {
       "id": "ability.hip_check.02",
@@ -61,7 +61,7 @@
       "when": "the human uses the hip check ability (F)",
       "text": "Out of nowhere. That hip lands like a truck.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_ability_hip_check_02.VO_Commentator_ability_hip_check_02",
-      "seconds": 1.9
+      "seconds": 2.33
     },
     {
       "id": "ability.hip_check.03",
@@ -73,7 +73,7 @@
       "when": "the human uses the hip check ability (F)",
       "text": "From a standstill. What a hip!",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_ability_hip_check_03.VO_Commentator_ability_hip_check_03",
-      "seconds": 1.5
+      "seconds": 2.15
     },
     {
       "id": "ability.shield.01",
@@ -85,7 +85,7 @@
       "when": "the human raises the shield ability (F)",
       "text": "Shield is up. Bounce off him all you like.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_ability_shield_01.VO_Commentator_ability_shield_01",
-      "seconds": 1.8
+      "seconds": 2.33
     },
     {
       "id": "ability.shield.02",
@@ -97,7 +97,7 @@
       "when": "the human raises the shield ability (F)",
       "text": "You cannot knock this one over right now.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_ability_shield_02.VO_Commentator_ability_shield_02",
-      "seconds": 1.7
+      "seconds": 2.27
     },
     {
       "id": "ability.shield.03",
@@ -109,7 +109,7 @@
       "when": "the human raises the shield ability (F)",
       "text": "Armour on. Hit him and you just bounce.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_ability_shield_03.VO_Commentator_ability_shield_03",
-      "seconds": 1.7
+      "seconds": 2.87
     },
     {
       "id": "ability.slow_puck.01",
@@ -121,7 +121,7 @@
       "when": "the human arms the slow puck ability (F)",
       "text": "Slow puck. Watch it crawl, then wake up.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_ability_slow_puck_01.VO_Commentator_ability_slow_puck_01",
-      "seconds": 1.8
+      "seconds": 3.49
     },
     {
       "id": "ability.slow_puck.02",
@@ -133,7 +133,7 @@
       "when": "the human arms the slow puck ability (F)",
       "text": "A trick play. The puck is taking its time.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_ability_slow_puck_02.VO_Commentator_ability_slow_puck_02",
-      "seconds": 1.8
+      "seconds": 3.23
     },
     {
       "id": "ability.slow_puck.03",
@@ -145,7 +145,7 @@
       "when": "the human arms the slow puck ability (F)",
       "text": "Look at that puck dawdle. Then it goes.",
       "sound": "/JamAssets/Audio/VO/VO_Commentator_ability_slow_puck_03.VO_Commentator_ability_slow_puck_03",
-      "seconds": 1.7
+      "seconds": 2.85
     }
   ]
 }

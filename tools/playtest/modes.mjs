@@ -14,6 +14,8 @@
 // frame cap is its clock plus the sim's 6,000 frames of pauses and sudden death (JamSim.cpp HardStop), so a long clock is never read as unfinished; the table
 // carries the ratio, the match length and the human's knockdowns; a win rate outside 15 to 85 % is flagged (a note, not a failure: the level is the ladder's).
 //
+// Lane A139 (track M1, evolution 2): Marathon's and Power Play's numbers are per play minute (a clock is a length, not a character); numbers in docs/experiments/MODES-4.md.
+//
 // Exit: 0 every mode passed, 1 a mode failed (invalid, a cell failed, unfinished matches, or its number within a third of regular), 2 could not run.
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
@@ -39,9 +41,12 @@ export const CHARACTER = {
   sniper: { label: 'human goals per human shot', of: (ms) => { const s = ms.reduce((a, m) => a + m.shots, 0); return s ? ms.reduce((a, m) => a + m.goals_by_human, 0) / s : 0; } },
   // lane A72 (asks A1-A3): ten minutes, bots that sprint (ai.sprint) and a playtester that sprints (--sprint): the human's sprint frames per match. Minutes per goal
   // (A67's number) is kept as marathon-pace for the runs without --sprint.
-  marathon: { label: 'human sprint frames / match', of: (ms) => avg(ms.map((m) => m.sprint_frames || 0)) },
+  // lane A139 (track M1, evolution 2): per play minute, not per match: an eight-minute match has 2.2x the minutes of a regular one, so the per-match count read the
+  // clock, not the legs (MODES-3.md: 2.29x a match was 1.03x a minute).
+  marathon: { label: 'human sprint frames / play min', of: (ms) => perPlayMin(ms, (m) => m.sprint_frames || 0) },
   'marathon-pace': { label: 'minutes per goal', of: (ms) => { const g = ms.reduce((a, m) => a + m.goals[0] + m.goals[1], 0); return g ? ms.reduce((a, m) => a + m.frames, 0) / 3600 / g : 0; } },
-  'power-play': { label: 'passes + received / match', of: (ms) => avg(ms.map((m) => (m.passes || 0) + (m.passes_received || 0))) },
+  // lane A139: per play minute, as Pond: a four-minute clock against a first-to-three is a length, not a character
+  'power-play': { label: 'passes + received / play min', of: (ms) => perPlayMin(ms, (m) => (m.passes || 0) + (m.passes_received || 0)) },
   'blind-side': { label: 'dekes / match', of: (ms) => avg(ms.map((m) => m.dekes || 0)) },
   // lane A81 (modes pass 2): six more characters, each its own number. Per play minute where the mode changes the match length (a timer or one goal).
   'sudden-death': { label: 'match seconds', of: (ms) => avg(ms.map((m) => m.frames)) / 60 },

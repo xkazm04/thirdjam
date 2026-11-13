@@ -38,3 +38,10 @@ The machine was NOT quiet: lane a106 launched `A114-after` ThirdJam.exe beside r
 04 a blue skater flat on the ice beside "YOU 7", "Folded in half and set down gently. Not gently." 05 net front, lift attempt text. 06 two mates moving with one highlighted, "Into your lane." on a clay-ish look.
 07 open ice with two mates near the blue line. 08 boards close, "Sent sprawling by a cross-check." text. 09 Arsenal faceoff, clay look, warm wooden stands. 10 Arsenal, an orange skater with the puck on a pickup, clay figures.
 11 Arsenal period 2 faceoff, HOLD ring. 12 H26 clean profile, Period 2, 0-1, live play. Gaps: no real 5 v 5 head-on hit, no stumble hold, no twelve-card menu (the take did not open Choose your cut).
+
+## Re-run by lane A131 (Fri 13 Nov 22:30 to 23:48; same package `A108dev`, the cuts of A108; main's later mode cartridges are NOT in these cuts)
+`node tools/qa/accept/summarize-matrix.mjs m- --md` is the table. Final attempt per run: `hockey.regular` x5 PASS with no repeat (load: mean cpu 47 %, 26 GB, 6 to 15 build/editor processes,
+a foreign game on the machine in some runs; act lag 4 to 17 ms, tap hold 10 ms = 1 sim frame, 5 of 5); regcart PASS+DESIGN (first_to 3 ends the match after step 4); 12 of 12 modes
+PASS, PASS+DESIGN (pond: check, crosscheck, checked by `check_enabled=false`; marathon: brake 47 frames at 16 m/s against band 52) or PASS after one automatic repeat of a `machine` run
+(power-play, outnumbered, marathon x2); 5 of 5 tiers PASS (p4_broadcast now passes: its check failure was a late press). The by-design rows are in `tools/qa/accept/mode-table.json`.
+Not covered: power-play's and glass-house's shot bands needed no entry (the full hold is now 1.5x, the failures were the sim running at 48 Hz); stale cuts for the changed cartridges (regenerate with `make-matrix-cuts.mjs`).

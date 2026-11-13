@@ -39,7 +39,7 @@
       "type": "number",
       "min": 3,
       "max": 16,
-      "default": 11,
+      "default": 10,
       "description": "Top skating speed in metres per second. Higher is faster and harder to control."
     },
     {
@@ -265,6 +265,9 @@
         "130 kg skaters",
         "no whistle, no box"
       ]
+    },
+    "contact": {
+      "release_grace_frames": 60
     }
   }
 }

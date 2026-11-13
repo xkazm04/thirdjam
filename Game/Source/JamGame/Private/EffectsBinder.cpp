@@ -202,12 +202,31 @@ float UJamEffectsBinder::VariantFor(FName Event, FName Kind)
 	{
 		return Kind == FName(TEXT("skater")) ? 1.f : 0.f;
 	}
+	// Lane A143 (B-answer-0024 ask a): the ability's kind in the order of contracts/events.md (game.abilities kinds); MS_ability and NS_ability read it.
+	if (Event == JamEvents::Ability)
+	{
+		if (Kind == FName(TEXT("hip_check"))) return 1.f;
+		if (Kind == FName(TEXT("shield"))) return 2.f;
+		if (Kind == FName(TEXT("slow_puck"))) return 3.f;
+		return 0.f;   // shotgun
+	}
 	// Lane A47 (B-to-A-0031 ask 3): MS_clock plays ten ticks at Variant 0 and nothing at Variant 1, so sudden death has no countdown.
 	if (Event == JamEvents::Clock)
 	{
 		return Kind == FName(TEXT("sudden_death")) ? 1.f : 0.f;
 	}
 	return 0.f;   // shot_blocked reuses the foul assets at Variant 0 (B-to-A-0016); everything else has one kind
+}
+
+float UJamEffectsBinder::VariantForPayload(FName Event, const FJamEventPayload& Payload)
+{
+	if (Event == JamEvents::Check && Payload.Outcome == FName(TEXT("stumble"))) return StumbleCheckVariant;
+	return VariantFor(Event, Payload.Kind);
+}
+
+bool UJamEffectsBinder::IsQuietPayload(FName Event, const FJamEventPayload& Payload)
+{
+	return Event == JamEvents::Ability && Payload.Strength < 0.5f;
 }
 
 bool UJamEffectsBinder::IsSound2D(FName Event)
@@ -379,11 +398,11 @@ void UJamEffectsBinder::HandleEvent(FName Event, const FJamEventPayload& Payload
 {
 	++HandledEvents;
 	UWorld* World = GetWorld();
-	if (!World || IsSilentEvent(Event))
+	if (!World || IsSilentEvent(Event) || IsQuietPayload(Event, Payload))
 	{
 		return;
 	}
-	float Variant = VariantFor(Event, Payload.Kind);
+	float Variant = VariantForPayload(Event, Payload);   // lane A143: a stumble's check is Variant 4
 	if (Event == JamEvents::Goal) Variant = GoalVariantFor(Payload);   // R-0033 point 4 (lane A50): 0 the human's team scored, 1 it conceded
 	// Lane A45 (R-0031 point 4): a skater into the boards wobbles the glass for GlassWobbleFrames when B's glass carries HitWobble.
 	if (Event == JamEvents::Board && Payload.Kind == FName(TEXT("skater"))) StartGlassWobble(Payload);

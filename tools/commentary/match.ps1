@@ -29,7 +29,7 @@ Remove-Item $log -ErrorAction SilentlyContinue
 if (-not (Test-Path $Exe)) { Write-Host "FAIL engine missing $Exe"; Write-Host '{"tool":"thirdjam.commentary.match/1","verdict":"could_not_run","exit":2}'; exit 2 }
 $dp = 't.MaxFPS=60,jam.ScriptHuman=1'
 if ($Cvars) { $dp = "$dp,$Cvars" }
-$args = "`"$project`" /Game/Maps/Rink -game -nullrhi -unattended -nosplash -NoSound -log -abslog=`"$log`" -cut=$Cut -dpcvars=$dp"
+$args = "`"$project`" /Game/Maps/Rink -game -nullrhi -Multiprocess -unattended -nosplash -NoSound -log -abslog=`"$log`" -cut=$Cut -dpcvars=$dp"
 $p = Start-Process -FilePath $Exe -ArgumentList $args -PassThru
 Write-Host ("INFO match: cut {0}, until frame {1}, pid {2}, log {3}" -f $Cut, $Frames, $p.Id, $log)
 $sw = [Diagnostics.Stopwatch]::StartNew()

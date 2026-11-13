@@ -112,6 +112,27 @@ from the HUD score in a still, only goals can be judged (steps 4 and 6). The inp
 and Shipping; only the logging differs. So the Development verdict is the verdict for the build that gets zipped. Run it on the Development package built from the
 same commit as the Shipping zip.
 
+## The machine's faults and the game's (lane A131, evolution 2)
+The run now says which of the two lost a row. Four causes were found in A108's flapping `hockey.regular` runs (three verdicts in three runs):
+1. **The driver read its log late.** `accept.ps1` named a local `$cut`, which PowerShell treats as the `[string] -Cut` parameter: `$cut + 1` was a string concatenation, `Substring`
+   threw at the old line 258, the buffer never shrank and the whole backlog was re-split every pass (acts ran 1.9 s behind their log lines; at 86 s it handled frames 387 to 1758 in
+   0.4 s of driver time). Fixed (`$nl`); the lines `WaitLog` consumed (ProbePass, pause) now also reach the act loop; the poll is 4 ms with a 1 ms timer and above-normal priority.
+2. **Every act is timed.** The events log has `LAG step= k= act= lag_ms=` (log line time to the press; the clock offset between the game's UTC log and the driver is the smallest
+   offset seen, so only the delay counts) and `HOLD step= k= want_ms= held_ms=`. A first act of a step more than 1 s behind its line stops the run: `MACHINE:` note, verdict `machine`,
+   exit 3 (the game owns what happens next, so the run is repeated, not the step). Notes are queued during an act and written after it (a press waited 160 ms behind its own log line).
+3. **A tap is spun, not slept** (`-TapMs`, default 10): a `Start-Sleep 40` ran 120 ms under load and charged 7 sim frames against the band of 4 (`charge_frames_max`
+   is the sim's count already, so only the hold's wall time was wrong); a 10 ms spin charges 1 frame, 5 of 5.
+4. **A press the game took late.** Step 7's cue is 10 frames (RMB) or about 6 (MMB, at `cross_reach_m`) before the contact. `accept.mjs` reads the press in sim frames
+   (`JAMACCEPT act ... frame=` against `JAMCTRL btn=check|lift frame=`); more than 8 (RMB) / 4 (MMB) frames and the row is a machine row (seen: 7 and 12 frames, a render stall of the
+   game while the driver's lag was 20 ms). That is also why the check rows did not need a faster opponent: every `check` that failed had a late press (closing 10 to 12 m/s
+   knocks down in the passes; the failures with 0.30 to 0.66 ratios are presses after the first touch, "a press after the first touch hits with the closing speed that is left").
+   By `docs/experiments/CONTACT.md` a stumble is a landed check, but the row stays the knockdown row (it is the row that names the frames down and the strip): no drill change, no band change.
+
+`machine` verdicts: a failing row is a machine row when its step had a late hand (limits: RMB/MMB 100 ms, LMB/pass 250 ms, keys 400 ms, a tap held over 25 ms past its ask, a
+long hold over 60 ms) or a foreign ThirdJam process shared the cursor. If every failing row is a machine row the verdict is `machine` (exit 3), else `fail`. `run-matrix.ps1`
+repeats a machine run (up to `-Retries 2`, folders `<name>-t1`, `-t2`; `-Repeat N` plays a job N times). A pass is a pass whatever the machine did.
+`tools/qa/accept/mode-table.json` holds the rows a mode's rules change by design; `summarize-matrix.mjs [prefix] [--md]` reads it: PASS, PASS+DESIGN (named differences), MACHINE, FAIL (unexplained rows).
+
 ## Files
 
 `tools/qa/accept/accept.ps1`, `accept.mjs`, `accept-cut.json`, `accept-cut-reach165.json`, `shipping-probe.ps1`; `Game/Source/JamGame/Private/HokejAcceptDrill.cpp` (new);

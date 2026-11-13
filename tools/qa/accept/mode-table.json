@@ -1,0 +1,72 @@
+{
+ "schema": "thirdjam.accept-modes/1",
+ "doc": "A131: the rows a mode's own rules change by design. tools/qa/accept/summarize-matrix.mjs reads this: a failing row named here is a named, by-design difference (shown as BY-DESIGN with its reason), any other failing row is UNEXPLAINED. Entries: by_design (the row cannot hold in this mode: it may pass or fail), or accept (the row holds when every check on its facts holds: {key, min?, max?}; replaces the drill's own band for this mode). Machine verdicts (exit 3) are not in this table: they are the driver's.",
+ "modes": {
+  "pond": {
+   "check": {
+    "by_design": "game.skater.check_enabled=false: nobody can check in the pond (no RMB hit exists)"
+   },
+   "crosscheck": {
+    "by_design": "game.skater.check_enabled=false: the cross-check is a hit too; the stick lift alone is not the row"
+   },
+   "checked": {
+    "by_design": "game.skater.check_enabled=false: nobody checks the standing human, so there is no knockdown to wait for"
+   }
+  },
+  "marathon": {
+   "brake": {
+    "accept": [
+     {
+      "key": "rev_speed",
+      "min": 0.1
+     },
+     {
+      "key": "stop_frames",
+      "min": 0,
+      "max": 52
+     },
+     {
+      "key": "back_speed",
+      "min": 1.0
+     }
+    ],
+    "why": "top speed 16 m/s (speed 10 + breakaway 0.6): the same brake law (about 2.9 frames per m/s) stops in 46 frames; the drill's 40 is the 11 m/s game's; 52 = 3.25 frames per m/s of 16"
+   }
+  }
+ },
+ "tiers": {},
+ "cuts": {
+  "regcart": {
+   "pass": {
+    "by_design": "the plain cartridge is first_to 3: the drill's three shoot goals end the match after step 4, so steps 5 to 10 are never staged (the acceptance cut plays first_to 9; the 12 mode cuts and the tiers do too)"
+   },
+   "saucer": {
+    "by_design": "the plain cartridge is first_to 3: the drill's three shoot goals end the match after step 4, so steps 5 to 10 are never staged (the acceptance cut plays first_to 9; the 12 mode cuts and the tiers do too)"
+   },
+   "onetimer": {
+    "by_design": "the plain cartridge is first_to 3: the drill's three shoot goals end the match after step 4, so steps 5 to 10 are never staged (the acceptance cut plays first_to 9; the 12 mode cuts and the tiers do too)"
+   },
+   "check": {
+    "by_design": "the plain cartridge is first_to 3: the drill's three shoot goals end the match after step 4, so steps 5 to 10 are never staged (the acceptance cut plays first_to 9; the 12 mode cuts and the tiers do too)"
+   },
+   "crosscheck": {
+    "by_design": "the plain cartridge is first_to 3: the drill's three shoot goals end the match after step 4, so steps 5 to 10 are never staged (the acceptance cut plays first_to 9; the 12 mode cuts and the tiers do too)"
+   },
+   "checked": {
+    "by_design": "the plain cartridge is first_to 3: the drill's three shoot goals end the match after step 4, so steps 5 to 10 are never staged (the acceptance cut plays first_to 9; the 12 mode cuts and the tiers do too)"
+   },
+   "deke": {
+    "by_design": "the plain cartridge is first_to 3: the drill's three shoot goals end the match after step 4, so steps 5 to 10 are never staged (the acceptance cut plays first_to 9; the 12 mode cuts and the tiers do too)"
+   },
+   "spin": {
+    "by_design": "the plain cartridge is first_to 3: the drill's three shoot goals end the match after step 4, so steps 5 to 10 are never staged (the acceptance cut plays first_to 9; the 12 mode cuts and the tiers do too)"
+   },
+   "sweep": {
+    "by_design": "the plain cartridge is first_to 3: the drill's three shoot goals end the match after step 4, so steps 5 to 10 are never staged (the acceptance cut plays first_to 9; the 12 mode cuts and the tiers do too)"
+   },
+   "resume_aim": {
+    "by_design": "the plain cartridge is first_to 3: the drill's three shoot goals end the match after step 4, so steps 5 to 10 are never staged (the acceptance cut plays first_to 9; the 12 mode cuts and the tiers do too)"
+   }
+  }
+ }
+}

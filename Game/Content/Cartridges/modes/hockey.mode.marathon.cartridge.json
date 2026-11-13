@@ -131,8 +131,8 @@
       "check_enabled": true,
       "sprint": {
         "bonus": 0.4,
-        "drain_frames": 120,
-        "refill_frames": 600
+        "drain_frames": 240,
+        "refill_frames": 480
       }
     },
     "puck": {
@@ -162,21 +162,14 @@
           {
             "role": "player",
             "spawn": [
-              -7.5,
+              -11.67,
               0
-            ]
-          },
-          {
-            "role": "chaser",
-            "spawn": [
-              -7.5,
-              -7.5
             ]
           },
           {
             "role": "back",
             "spawn": [
-              -30,
+              -35,
               0
             ]
           }
@@ -189,21 +182,14 @@
           {
             "role": "chaser",
             "spawn": [
-              7.5,
+              11.67,
               0
-            ]
-          },
-          {
-            "role": "support",
-            "spawn": [
-              7.5,
-              7.5
             ]
           },
           {
             "role": "back",
             "spawn": [
-              30,
+              35,
               0
             ]
           }
@@ -234,11 +220,11 @@
       "radar": true
     },
     "meta": {
-      "pitch": "Eight minutes, endless ice. Pace it, then go.",
+      "pitch": "Two on two on endless ice. Bring your legs.",
       "facts": [
         "140 x 70 m, 8:00",
-        "sprint +40 % for 2 s",
-        "no whistle, no box"
+        "2 v 2, no whistle",
+        "sprint +40 % for 4 s"
       ]
     }
   }

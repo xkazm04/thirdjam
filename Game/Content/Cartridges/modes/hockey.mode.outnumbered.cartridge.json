@@ -247,7 +247,7 @@
       "facts": [
         "3 v 5 against you",
         "F: shield, 3 s",
-        "pro bots that sprint"
+        "won puck safe 1.5 s"
       ]
     },
     "abilities": [
@@ -257,6 +257,9 @@
         "cooldown_frames": 600,
         "duration_frames": 180
       }
-    ]
+    ],
+    "stick": {
+      "take_grace_frames": 90
+    }
   }
 }

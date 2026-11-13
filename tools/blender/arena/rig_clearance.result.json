@@ -71,8 +71,8 @@
   "rigs": {
     "LR_L2_Night": {
       "loaded": true,
-      "actors": 165,
-      "sized": 155,
+      "actors": 166,
+      "sized": 156,
       "crossing": [
         {
           "actor": "SkyB_L2_Night_Dome",
@@ -265,15 +265,240 @@
             60
           ],
           "volume": "bench_pos"
+        },
+        {
+          "actor": "SkyCap_L2_Night",
+          "class": "StaticMeshActor",
+          "hidden_in_game": false,
+          "min_cm": [
+            -35000,
+            -35000,
+            -35000
+          ],
+          "max_cm": [
+            35000,
+            35000,
+            35000
+          ],
+          "volume": "bench_neg"
+        },
+        {
+          "actor": "SkyCap_L2_Night",
+          "class": "StaticMeshActor",
+          "hidden_in_game": false,
+          "min_cm": [
+            -35000,
+            -35000,
+            -35000
+          ],
+          "max_cm": [
+            35000,
+            35000,
+            35000
+          ],
+          "volume": "bench_pos"
+        },
+        {
+          "actor": "SkyCap_L2_Night",
+          "class": "StaticMeshActor",
+          "hidden_in_game": false,
+          "min_cm": [
+            -35000,
+            -35000,
+            -35000
+          ],
+          "max_cm": [
+            35000,
+            35000,
+            35000
+          ],
+          "volume": "box_neg"
+        },
+        {
+          "actor": "SkyCap_L2_Night",
+          "class": "StaticMeshActor",
+          "hidden_in_game": false,
+          "min_cm": [
+            -35000,
+            -35000,
+            -35000
+          ],
+          "max_cm": [
+            35000,
+            35000,
+            35000
+          ],
+          "volume": "box_pos"
+        },
+        {
+          "actor": "SkyCap_L2_Night",
+          "class": "StaticMeshActor",
+          "hidden_in_game": false,
+          "min_cm": [
+            -35000,
+            -35000,
+            -35000
+          ],
+          "max_cm": [
+            35000,
+            35000,
+            35000
+          ],
+          "volume": "table"
+        },
+        {
+          "actor": "SkyCap_L2_Night",
+          "class": "StaticMeshActor",
+          "hidden_in_game": false,
+          "min_cm": [
+            -35000,
+            -35000,
+            -35000
+          ],
+          "max_cm": [
+            35000,
+            35000,
+            35000
+          ],
+          "volume": "goal_neg"
+        },
+        {
+          "actor": "SkyCap_L2_Night",
+          "class": "StaticMeshActor",
+          "hidden_in_game": false,
+          "min_cm": [
+            -35000,
+            -35000,
+            -35000
+          ],
+          "max_cm": [
+            35000,
+            35000,
+            35000
+          ],
+          "volume": "goal_pos"
         }
       ],
       "near": []
     },
     "LR_P3_Clay": {
       "loaded": true,
-      "actors": 124,
-      "sized": 101,
-      "crossing": [],
+      "actors": 125,
+      "sized": 102,
+      "crossing": [
+        {
+          "actor": "SkyCap_P3_Clay",
+          "class": "StaticMeshActor",
+          "hidden_in_game": false,
+          "min_cm": [
+            -35000,
+            -35000,
+            -35000
+          ],
+          "max_cm": [
+            35000,
+            35000,
+            35000
+          ],
+          "volume": "bench_neg"
+        },
+        {
+          "actor": "SkyCap_P3_Clay",
+          "class": "StaticMeshActor",
+          "hidden_in_game": false,
+          "min_cm": [
+            -35000,
+            -35000,
+            -35000
+          ],
+          "max_cm": [
+            35000,
+            35000,
+            35000
+          ],
+          "volume": "bench_pos"
+        },
+        {
+          "actor": "SkyCap_P3_Clay",
+          "class": "StaticMeshActor",
+          "hidden_in_game": false,
+          "min_cm": [
+            -35000,
+            -35000,
+            -35000
+          ],
+          "max_cm": [
+            35000,
+            35000,
+            35000
+          ],
+          "volume": "box_neg"
+        },
+        {
+          "actor": "SkyCap_P3_Clay",
+          "class": "StaticMeshActor",
+          "hidden_in_game": false,
+          "min_cm": [
+            -35000,
+            -35000,
+            -35000
+          ],
+          "max_cm": [
+            35000,
+            35000,
+            35000
+          ],
+          "volume": "box_pos"
+        },
+        {
+          "actor": "SkyCap_P3_Clay",
+          "class": "StaticMeshActor",
+          "hidden_in_game": false,
+          "min_cm": [
+            -35000,
+            -35000,
+            -35000
+          ],
+          "max_cm": [
+            35000,
+            35000,
+            35000
+          ],
+          "volume": "table"
+        },
+        {
+          "actor": "SkyCap_P3_Clay",
+          "class": "StaticMeshActor",
+          "hidden_in_game": false,
+          "min_cm": [
+            -35000,
+            -35000,
+            -35000
+          ],
+          "max_cm": [
+            35000,
+            35000,
+            35000
+          ],
+          "volume": "goal_neg"
+        },
+        {
+          "actor": "SkyCap_P3_Clay",
+          "class": "StaticMeshActor",
+          "hidden_in_game": false,
+          "min_cm": [
+            -35000,
+            -35000,
+            -35000
+          ],
+          "max_cm": [
+            35000,
+            35000,
+            35000
+          ],
+          "volume": "goal_pos"
+        }
+      ],
       "near": []
     },
     "LR_P4_Broadcast": {

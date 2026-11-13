@@ -1212,6 +1212,7 @@ void AHokejGameMode::DeliverEvents()
 		Pl.Strength = E.Strength;
 		Pl.Kind = E.Kind;
 		Pl.Dir = FVector(E.Dir.X, E.Dir.Y, 0.0);   // lane A47 (B-to-A-0029): rink (x, z) -> world (x, y), the same axes as ToWorld
+		Pl.Outcome = E.Outcome;   // lane A143: stumble / down on a landed check
 		Bus->Broadcast(E.Name, Pl);
 	}
 	if (Effects)

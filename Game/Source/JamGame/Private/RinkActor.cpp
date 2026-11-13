@@ -13,6 +13,7 @@
 #include "UObject/UObjectIterator.h"
 #include "Engine/GameInstance.h"
 #include "Components/PointLightComponent.h"
+#include "Components/InstancedStaticMeshComponent.h"
 #include "JamPawns.h"
 
 // Lane A25: the construction layer's switch. 0 hides the kick plate, glass rail, net frame extras, goal lights, benches and the extra markings on every rink
@@ -33,9 +34,18 @@ static TAutoConsoleVariable<int32> CVarRinkArena(TEXT("jam.rink.arena"), 1,
 static TAutoConsoleVariable<int32> CVarRinkReact(TEXT("jam.rink.react"), 1,
 	TEXT("1: the arena answers the game (a goal lights the lamp and shakes the net, a hard board hit rocks the piece behind it, a boxed skater stands in the box); 0: the still arena. Lane A127."));
 
+// Lane A136 (track F3, evolution 4): the board caps (one clay cap on the board top at every stanchion place, the piece a hard board hit rocks anywhere on the
+// ring). 0 = no caps: the arena of evolution 3. Read through the construction sink like the other switches.
+static TAutoConsoleVariable<int32> CVarRinkCaps(TEXT("jam.rink.caps"), 1,
+	TEXT("1: clay caps stand on the board top round the whole ring on the dressed tiers and rock when a skater hits the boards hard; 0: no caps. Lane A136."));
+
 // Lane A127: the lamp lights' intensity at the top of a flash, in candelas. 0 = the lamps flash without lighting anything around them.
-static TAutoConsoleVariable<float> CVarRinkReactLight(TEXT("jam.rink.react.light"), 3000.f,
-	TEXT("Candelas of the red point light over the scorer's table's lamp and over the scored end's goal light at the top of a goal's flash; 0 = no light. Lane A127."));
+static TAutoConsoleVariable<float> CVarRinkReactLight(TEXT("jam.rink.react.light"), 6000.f,
+	TEXT("Candelas of the red point light over the scored end's net at the top of a goal's flash (the scorer's table's takes an eighth, l2_night a fifth); 0 = no light. Lanes A127, A136."));
+// Lane A136 (evolution 4): the loud goal. 1 = the scored end's light hangs over the net (it reaches the crease and the slot); 0 = evolution 3's light, beside
+// the lamp behind the end boards at half the candelas.
+static TAutoConsoleVariable<int32> CVarRinkReactLoud(TEXT("jam.rink.react.loud"), 1,
+	TEXT("1: a goal's red light hangs over the scored net and lights the end zone; 0: the light beside the lamp behind the end boards at half the candelas (lane A127's). Lane A136."));
 
 // Lane A119: the goal meshes arena.py builds (tools/blender/arena/arena.py GOAL_VARIANTS): the opening each was built for. Build takes the nearest and scales it.
 namespace
@@ -262,6 +272,15 @@ ARinkActor::ARinkActor()
 			ArenaLampLights[i] = L;
 		}
 	}
+	// Lane A136: the board caps, one instanced component (one draw for the ring). Empty and hidden until Build finds the mesh.
+	ArenaCaps = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("ArenaCaps"));
+	ArenaCaps->SetupAttachment(Root);
+	ArenaCaps->SetMobility(EComponentMobility::Movable);
+	ArenaCaps->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	ArenaCaps->SetRenderCustomDepth(true);
+	ArenaCaps->SetCustomDepthStencilValue(1);
+	ArenaCaps->SetCastShadow(false);
+	ArenaCaps->SetVisibility(false);
 	GoalTriggerPos = CreateDefaultSubobject<UBoxComponent>(TEXT("GoalTriggerPos"));
 	GoalTriggerNeg = CreateDefaultSubobject<UBoxComponent>(TEXT("GoalTriggerNeg"));
 	for (UBoxComponent* B : { GoalTriggerPos.Get(), GoalTriggerNeg.Get() })
@@ -403,6 +422,8 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 			for (int32 i = 0; i < Line.Num(); ++i) Perimeter += FVector2D::Distance(Line[i], Line[(i + 1) % Line.Num()]);
 			const int32 Count = FMath::Max(4, FMath::RoundToInt32(Perimeter / StanchionSpacingM));
 			const double Step = Perimeter / Count;
+			CapAtM.Reset(Count);      // lane A136: a board cap stands at every stanchion's foot
+			CapYawDeg.Reset(Count);
 			int32 Seg = 0;
 			double SegStart = 0, SegLen = FVector2D::Distance(Line[0], Line[1 % Line.Num()]);
 			for (int32 k = 0; k < Count; ++k)
@@ -414,6 +435,8 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 				const FVector2D Out(Dir.Y, -Dir.X);
 				const FVector2D M = (A + Dir * FMath::Clamp(S - SegStart, 0.0, SegLen)) * UU + Out * (T * 0.5);
 				Posts.Box(FVector(M.X - 2.5, M.Y - 2.5, H), FVector(M.X + 2.5, M.Y + 2.5, GH + 4.0));
+				CapAtM.Add(M / UU);
+				CapYawDeg.Add(FMath::RadiansToDegrees(FMath::Atan2(-Out.X, Out.Y)));   // the cap's +y (its `out`) along Out
 			}
 		}
 		Kick.Commit(KickPlate, 0);
@@ -841,6 +864,37 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 		const double EndX = (R.LengthM * 0.5 + BoardThicknessM + ArenaGapM) * UU;
 		Dress(ArenaGoalLightNeg, LightMesh, FVector(-EndX, 0.0, 0.0), 90.0, 1.0, false);
 		Dress(ArenaGoalLightPos, LightMesh, FVector(EndX, 0.0, 0.0), -90.0, 1.0, true);
+		// Lane A136 (evolution 4): the board caps. One instance at every stanchion place on the boards' middle line, its origin on the board top, turned so its
+		// overhang points away from the rink; each a little different in size and turn (from its index: no random source). B's MI_Toon_KickPlate by reference.
+		{
+			UStaticMesh* CapMesh = LoadObject<UStaticMesh>(nullptr, BoardCapMeshPath, nullptr, LOAD_NoWarn | LOAD_Quiet);
+			for (FCapRipple& Rp : CapRipple) Rp = FCapRipple();
+			CapNow.Reset();
+			CapRest.Reset();
+			bCapsLive = false;
+			if (ArenaCaps)
+			{
+				ArenaCaps->ClearInstances();
+				ArenaCaps->SetStaticMesh(CapMesh);
+				if (CapMesh)
+				{
+					const int32 KickSlot = ArenaCaps->GetMaterialIndex(FName(TEXT("kick")));
+					if (KickSlot != INDEX_NONE) ArenaCaps->SetMaterial(KickSlot, LoadConstructionMat(TEXT("MI_Toon_KickPlate"), TEXT("MI_LL_KickPlate"), FLinearColor(0.85f, 0.72f, 0.12f), 1.2f));
+					for (int32 k = 0; k < CapAtM.Num(); ++k)
+					{
+						uint32 Hh = static_cast<uint32>(k + 1) * 2654435761u;
+						Hh ^= Hh >> 15;
+						const double Size = 0.90 + 0.16 * ((Hh & 0xffu) / 255.0);   // at 1.06 the cap still ends at the board's inner face
+						const double Turn = -9.0 + 18.0 * (((Hh >> 8) & 0xffu) / 255.0);
+						CapRest.Add(FTransform(FRotator(0.0, CapYawDeg[k] + Turn, 0.0), FVector(CapAtM[k].X * UU, CapAtM[k].Y * UU, BoardHeightM * UU), FVector(Size)));
+					}
+					ArenaCaps->AddInstances(CapRest, false, false);
+				}
+			}
+			UE_LOG(LogJamSim, Log, TEXT("JAMRINK arena caps: mesh %s, %d caps on the board top (one every %.2f m of the ring), %d triangles in all; jam.rink.caps %d"),
+				CapMesh ? TEXT("loaded") : TEXT("missing"), CapRest.Num(), CapRest.Num() > 0 ? 2.0 * (R.LengthM + R.WidthM - (4.0 - UE_DOUBLE_PI) * FMath::Clamp(R.CornerRadiusM, 0.0, FMath::Min(R.LengthM, R.WidthM) * 0.5)) / CapRest.Num() : 0.0,
+				GetCapTriangles(), AreCapsEnabled() ? 1 : 0);
+		}
 		{
 			UStaticMeshComponent* const LampOn[3] = { ArenaTable.Get(), ArenaGoalLightNeg.Get(), ArenaGoalLightPos.Get() };
 			for (int32 i = 0; i < 3; ++i)
@@ -858,12 +912,9 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 				LampMids[i] = D;
 				LampRest[i] = Rest;
 			}
-			// The lamps' lights: 3 m up, a little to the rink's side of each lamp (the piece's -y), so the board top, the ice and the net take the red.
-			const FVector LightLocal[3] = { FVector(0.0, 105.0, 305.0), FVector(0.0, -15.0, 300.0), FVector(0.0, -15.0, 300.0) };
-			for (int32 i = 0; i < 3; ++i)
-			{
-				if (ArenaLampLights[i] && LampOn[i]) ArenaLampLights[i]->SetRelativeLocation(LampOn[i]->GetRelativeTransform().TransformPosition(LightLocal[i]));
-			}
+			// The lamps' lights (lane A136: PlaceLampLights; the end lights hang over the nets unless `jam.rink.react.loud 0`).
+			GoalLineXM = GL;
+			PlaceLampLights();
 			// The rattle's pieces and where each stands along its long side (rink metres): bench -x, bench +x (the +y side), box -x, box +x, table (the -y side).
 			RinkHalfWidthM = R.WidthM * 0.5;
 			const double Cx[5] = { -BenchX / UU, BenchX / UU, -PenaltyBoxCentreXM, PenaltyBoxCentreXM, 0.0 };
@@ -1080,6 +1131,12 @@ void ARinkActor::ApplyArenaDressing()
 	const bool bShowLights = bHaveLights && bShow;
 	for (UStaticMeshComponent* C : Lights) if (C) C->SetVisibility(bShowLights);
 	if (GoalLights) GoalLights->SetVisibility(bConstruction && !bShowLights);
+	PlaceLampLights();   // lane A136: `jam.rink.react.loud` may have changed
+	// Lane A136: the board caps stand with the pieces; `jam.rink.caps 0` takes them away alone.
+	const bool bShowCaps = bShow && AreCapsEnabled() && ArenaCaps && ArenaCaps->GetStaticMesh() != nullptr && CapRest.Num() > 0;
+	if (ArenaCaps) ArenaCaps->SetVisibility(bShowCaps);
+	if (!bShowCaps) ResetCaps();
+	bCapsShown = bShowCaps;
 	// The still arena: with the pieces hidden or `jam.rink.react 0` every lamp is at rest and every piece where Build put it.
 	if (!bShow || !bShowGoals || !AreReactionsEnabled()) ResetReactions();
 	if (bShowGoals != bArenaGoalShown)
@@ -1137,6 +1194,70 @@ float ARinkActor::RattleAt(int64 FramesSince, float Strength)
 	return FMath::Clamp(Strength, 0.f, 1.f) * FMath::Exp(-T / 6.f) * FMath::Cos(2.f * UE_PI * T / 8.f);
 }
 
+bool ARinkActor::AreCapsEnabled()
+{
+	return CVarRinkCaps.GetValueOnGameThread() != 0;
+}
+
+float ARinkActor::CapRockAt(int64 FramesSince, float Strength)
+{
+	if (FramesSince < 0 || FramesSince >= CapRockFrames) return 0.f;
+	const float T = static_cast<float>(FramesSince);
+	return FMath::Clamp(Strength, 0.f, 1.f) * FMath::Exp(-T / 4.f) * FMath::Cos(2.f * UE_PI * T / 8.f);
+}
+
+int32 ARinkActor::GetCapTriangles() const
+{
+	const UStaticMesh* Mesh = nullptr;
+	if (ArenaCaps) Mesh = ArenaCaps->GetStaticMesh();
+	return Mesh ? CapRest.Num() * Mesh->GetNumTriangles(0) : 0;
+}
+
+// Writes every cap that a live ripple moves at SimFrame and puts back the ones that were moving and are not any more.
+void ARinkActor::ApplyCaps(int64 SimFrame)
+{
+	static const float Share[CapRippleReach + 1] = { 1.f, 0.55f, 0.25f };
+	const int32 N = CapRest.Num();
+	TMap<int32, FVector2f> Next;
+	bool bLive = false;
+	for (FCapRipple& Rp : CapRipple)
+	{
+		if (Rp.Frame < 0) continue;
+		const int64 Since = SimFrame - Rp.Frame;
+		if (N <= 0 || Since < 0 || Since >= CapRippleFrames) { Rp.Frame = -1; continue; }   // over, or a frame before its start: a new match began
+		bLive = true;
+		for (int32 D = -CapRippleReach; D <= CapRippleReach; ++D)
+		{
+			const int32 Ring = FMath::Abs(D);
+			const float Cv = CapRockAt(Since - Ring * CapRippleDelay, Rp.Strength) * Share[Ring];
+			if (Cv == 0.f) continue;
+			FVector2f& V = Next.FindOrAdd(((Rp.Index + D) % N + N) % N, FVector2f::ZeroVector);
+			V.X += CapRockDeg * Cv;                 // the tilt swings both ways
+			V.Y += CapHopCm * FMath::Abs(Cv);       // the hop is always up
+		}
+	}
+	if (ArenaCaps && ArenaCaps->GetInstanceCount() == N)
+	{
+		for (const TPair<int32, FVector2f>& Was : CapNow) if (!Next.Contains(Was.Key) && CapRest.IsValidIndex(Was.Key)) ArenaCaps->UpdateInstanceTransform(Was.Key, CapRest[Was.Key], false, true, true);
+		for (const TPair<int32, FVector2f>& P : Next)
+		{
+			// A roll about the cap's own x axis (along the boards): positive tips its top towards its +y, away from the rink.
+			FTransform X = CapRest[P.Key];
+			X.SetRotation(X.GetRotation() * FRotator(0.0, 0.0, P.Value.X).Quaternion());
+			X.AddToTranslation(FVector(0.0, 0.0, P.Value.Y));
+			ArenaCaps->UpdateInstanceTransform(P.Key, X, false, true, true);
+		}
+	}
+	CapNow = MoveTemp(Next);
+	bCapsLive = bLive;
+}
+
+void ARinkActor::ResetCaps()
+{
+	for (FCapRipple& Rp : CapRipple) Rp.Frame = -1;
+	ApplyCaps(0);
+}
+
 UStaticMeshComponent* ARinkActor::RattlePiece(int32 Index) const
 {
 	switch (Index)
@@ -1187,6 +1308,7 @@ void ARinkActor::ResetReactions()
 {
 	if (GoalFrame >= 0) ApplyGoalReaction(MAX_int32);
 	if (RattleFrame >= 0) ApplyRattle(MAX_int32);
+	ResetCaps();
 	GoalFrame = -1;
 	RattleFrame = -1;
 	RattleDegNow = 0.f;
@@ -1206,29 +1328,60 @@ void ARinkActor::ReactToEvent(FName Event, const FJamEventPayload& Payload, int6
 		UE_LOG(LogJamSim, Log, TEXT("JAMRINK react goal end=%s frame=%lld lamp %.2f -> %.2f net shake %d frames"), GoalEnd > 0 ? TEXT("+x") : TEXT("-x"),
 			static_cast<long long>(SimFrame), LampRest[0], GetLampEmissive(), NetShakeFrames);
 	}
-	else if (Event == JamEvents::Board && Payload.Kind == FName(TEXT("skater")) && Payload.Strength >= RattleMinStrength && bArenaShown)
+	else if (Event == JamEvents::Board && Payload.Kind == FName(TEXT("skater")) && Payload.Strength >= RattleMinStrength && (bArenaShown || bCapsShown))
 	{
 		const double X = Local.X / UU, Y = Local.Y / UU;
-		if (FMath::Abs(Y) < RinkHalfWidthM - 1.5) return;   // an end board or a corner: nothing of this lane stands behind it
-		int32 Best = -1;
-		double BestD = RattleReachM + 1e-6;
-		for (int32 i = 0; i < 5; ++i)
+		bool bAnswered = false;
+		// Lane A136: the nearest board cap answers anywhere on the ring (the caps stand every 3.6 m at most, so one is always within 2 m of the hit).
+		if (bCapsShown && CapRest.Num() > 0 && CapAtM.Num() == CapRest.Num())
 		{
-			if ((i < 2) != (Y > 0.0)) continue;   // benches on +y, boxes and table on -y
-			const UStaticMeshComponent* C = RattlePiece(i);
-			if (!C || !C->GetStaticMesh() || !C->IsVisible()) continue;
-			const double D = FMath::Max(0.0, FMath::Abs(X - RattleCentreX[i]) - RattleHalfLen[i]);
-			if (D < BestD) { BestD = D; Best = i; }
+			int32 Cap = 0;
+			double BestSq = TNumericLimits<double>::Max();
+			for (int32 k = 0; k < CapAtM.Num(); ++k)
+			{
+				const double Sq = FVector2D::DistSquared(CapAtM[k], FVector2D(X, Y));
+				if (Sq < BestSq) { BestSq = Sq; Cap = k; }
+			}
+			int32 Slot = 0;   // a free ripple (Frame -1) first, else the oldest
+			for (int32 i = 1; i < CapRipples; ++i) if (CapRipple[i].Frame < CapRipple[Slot].Frame) Slot = i;
+			CapRipple[Slot].Frame = SimFrame;
+			CapRipple[Slot].Index = Cap;
+			CapRipple[Slot].Strength = Payload.Strength;
+			LastCapIndex = Cap;
+			LastCapDistM = static_cast<float>(FMath::Sqrt(BestSq));
+			++CapRockReactions;
+			ApplyCaps(SimFrame);
+			bAnswered = true;
+			UE_LOG(LogJamSim, Log, TEXT("JAMRINK react board cap=%d of %d strength=%.2f frame=%lld tilt %.1f deg hop %.1f cm, %.2f m from the hit"), Cap, CapRest.Num(),
+				Payload.Strength, static_cast<long long>(SimFrame), GetCapTiltDeg(Cap), GetCapHopCm(Cap), LastCapDistM);
 		}
-		if (Best < 0) return;
-		if (RattleFrame >= 0 && RattleIndex != Best) ApplyRattle(MAX_int32);   // the piece that was rocking goes back to rest
-		RattleFrame = SimFrame;
-		RattleIndex = Best;
-		RattleStrength = Payload.Strength;
-		++RattleReactions;
-		ApplyRattle(0);
-		UE_LOG(LogJamSim, Log, TEXT("JAMRINK react rattle piece=%s strength=%.2f frame=%lld roll %.2f deg, %.2f m along the boards from it"), *RattlePiece(Best)->GetName(),
-			Payload.Strength, static_cast<long long>(SimFrame), RattleDegNow, BestD);
+		// Lane A127: the bench, box or table behind a long side's hit rocks too (an end board or a corner has none).
+		if (bArenaShown && FMath::Abs(Y) >= RinkHalfWidthM - 1.5)
+		{
+			int32 Best = -1;
+			double BestD = RattleReachM + 1e-6;
+			for (int32 i = 0; i < 5; ++i)
+			{
+				if ((i < 2) != (Y > 0.0)) continue;   // benches on +y, boxes and table on -y
+				const UStaticMeshComponent* C = RattlePiece(i);
+				if (!C || !C->GetStaticMesh() || !C->IsVisible()) continue;
+				const double D = FMath::Max(0.0, FMath::Abs(X - RattleCentreX[i]) - RattleHalfLen[i]);
+				if (D < BestD) { BestD = D; Best = i; }
+			}
+			if (Best >= 0)
+			{
+				if (RattleFrame >= 0 && RattleIndex != Best) ApplyRattle(MAX_int32);   // the piece that was rocking goes back to rest
+				RattleFrame = SimFrame;
+				RattleIndex = Best;
+				RattleStrength = Payload.Strength;
+				++RattleReactions;
+				ApplyRattle(0);
+				bAnswered = true;
+				UE_LOG(LogJamSim, Log, TEXT("JAMRINK react rattle piece=%s strength=%.2f frame=%lld roll %.2f deg, %.2f m along the boards from it"), *RattlePiece(Best)->GetName(),
+					Payload.Strength, static_cast<long long>(SimFrame), RattleDegNow, BestD);
+			}
+		}
+		if (!bAnswered) return;
 	}
 	else return;
 	if (HasActorBegunPlay()) SetActorTickEnabled(true);
@@ -1249,6 +1402,7 @@ void ARinkActor::AdvanceReactions(int64 SimFrame)
 		if (Since < 0 || Since >= RattleFrames) { ApplyRattle(MAX_int32); RattleFrame = -1; }
 		else ApplyRattle(Since);
 	}
+	if (bCapsLive) ApplyCaps(SimFrame);
 }
 
 float ARinkActor::GetLampEmissive() const
@@ -1263,7 +1417,31 @@ float ARinkActor::LampLightPeak()
 
 float ARinkActor::LampLightPeakAt(int32 Index) const
 {
-	return LampLightPeak() * (Index == 0 ? TableLightShare : 1.f) * (ArenaTier == TEXT("l2_night") ? NightLightShare : 1.f);
+	const bool bNight = ArenaTier == TEXT("l2_night");
+	if (!IsGoalLoud()) return LampLightPeak() * 0.5f * (Index == 0 ? TableLightShareE3 : 1.f) * (bNight ? NightLightShareE3 : 1.f);   // evolution 3's light
+	// The table's light keeps what it had on both tiers (750 cd, 300 on l2_night): its night share is evolution 3's.
+	if (Index == 0) return LampLightPeak() * TableLightShare * (bNight ? NightLightShareE3 : 1.f);
+	return LampLightPeak() * (bNight ? NightLightShare : 1.f);
+}
+
+bool ARinkActor::IsGoalLoud()
+{
+	return CVarRinkReactLoud.GetValueOnGameThread() != 0;
+}
+
+void ARinkActor::PlaceLampLights()
+{
+	// Evolution 3's places, in each piece's own space: 3 m up, a little to the rink's side of the lamp (the piece's -y; the table's lamp stands at its back).
+	const FVector LightLocal[3] = { FVector(0.0, 105.0, 305.0), FVector(0.0, -15.0, 300.0), FVector(0.0, -15.0, 300.0) };
+	UStaticMeshComponent* const LampOn[3] = { ArenaTable.Get(), ArenaGoalLightNeg.Get(), ArenaGoalLightPos.Get() };
+	const bool bLoud = IsGoalLoud();
+	for (int32 i = 0; i < 3; ++i)
+	{
+		if (!ArenaLampLights[i] || !LampOn[i]) continue;
+		// Lane A136: an end's light hangs over its net, EndLightBehindLineM behind the goal line and EndLightHeightM up (1 m inside the end boards on every rink).
+		if (bLoud && i > 0) ArenaLampLights[i]->SetRelativeLocation(FVector((i == 1 ? -1.0 : 1.0) * (GoalLineXM + EndLightBehindLineM) * UU, 0.0, EndLightHeightM * UU));
+		else ArenaLampLights[i]->SetRelativeLocation(LampOn[i]->GetRelativeTransform().TransformPosition(LightLocal[i]));
+	}
 }
 
 float ARinkActor::GetLampLightIntensity(int32 Index) const

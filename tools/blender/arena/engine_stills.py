@@ -33,12 +33,29 @@ ONLY = os.environ.get("ARENA_STILLS_ONLY", "")            # e.g. "l2_night-90" t
 SUFFIX = os.environ.get("ARENA_STILLS_SUFFIX", "")        # appended to the file names (an A/B)
 NO_STENCIL = os.environ.get("ARENA_STILLS_NO_STENCIL", "").split(",")   # component properties whose custom depth is switched off (an A/B of the outline)
 JOBS = [("p3_clay", "LR_P3_Clay", 1.0, 90, 45), ("p3_clay", "LR_P3_Clay", 1.0, 120, 60), ("l2_night", "LR_L2_Night", 0.0, 90, 45), ("l2_night", "LR_L2_Night", 0.0, 120, 60)]
-REACT = os.environ.get("ARENA_STILLS_REACT", "") in ("1", "sweep")   # lane A127: the reactions' stills
+REACT = os.environ.get("ARENA_STILLS_REACT", "") in ("1", "sweep", "place", "caps")   # lane A127: the reactions' stills
+# Lane A136 (evolution 4). ARENA_STILLS_REACT=place: the goal's frame from the game camera on p3_clay with the scored end's lamp light at several places
+# (ARENA_STILLS_PLACES="dx,y,z;..." in metres from the goal line, "cur" = where Build put it) and candelas (ARENA_STILLS_LIGHT), with stand-ins for a puck
+# and two figures (engine cylinders on B's instances, transient) so a washed-out picture shows. ARENA_STILLS_REACT=caps: the board caps from the game
+# camera's angle on both long sides and both ends, at rest and on the frame of a hard hit, and (ARENA_STILLS_GPU=1) ProfileGPU pairs with jam.rink.caps 0 / 1.
+PLACE = os.environ.get("ARENA_STILLS_REACT", "") == "place"
+CAPS = os.environ.get("ARENA_STILLS_REACT", "") == "caps"
+PLACES = [None if t.strip() == "cur" else tuple(float(v) for v in t.split(",")) for t in os.environ.get("ARENA_STILLS_PLACES", "cur;1.0,0,5.0;-2.5,0,6.5").split(";")]
+PLACE_CDS = [float(v) for v in os.environ.get("ARENA_STILLS_LIGHT", "3000,6000,12000,24000").split(",")]
+GPU = os.environ.get("ARENA_STILLS_GPU", "") == "1"
 SWEEP = [float(v) for v in os.environ.get("ARENA_STILLS_LIGHT", "50,200,800,3000,12000").split(",")] if os.environ.get("ARENA_STILLS_REACT", "") == "sweep" else []
 REACT_FRAMES = [0, 3, 8, 18, 45, 120]
 if REACT:
     OUT = os.path.join(HERE, "out", "engine-e3")
     JOBS = [("p3_clay", "LR_P3_Clay", 1.0, 90, 45), ("l2_night", "LR_L2_Night", 0.0, 90, 45)]
+if PLACE:
+    OUT = os.path.join(HERE, "out", "engine-e4-place")
+    JOBS = [("p3_clay", "LR_P3_Clay", 1.0, 90, 45)]
+if CAPS:
+    OUT = os.path.join(HERE, "out", "engine-e4-caps")
+    JOBS = [("p3_clay", "LR_P3_Clay", 1.0, 90, 45), ("p3_clay", "LR_P3_Clay", 1.0, 120, 60), ("l2_night", "LR_L2_Night", 0.0, 90, 45)]
+if os.environ.get("ARENA_STILLS_OUT", ""):
+    OUT = os.path.join(HERE, "out", os.environ["ARENA_STILLS_OUT"])
 
 
 def log(msg):
@@ -50,6 +67,31 @@ def views(length, width):
     bx = 0.0833 * length
     if REACT:   # (name, eye, target, action): action = ("goal", frames since the goal) | ("rattle", frames since the hit) | None (the still arena)
         hw = width * 0.5
+        if PLACE:   # lane A136: the game camera's view of the scored end: at rest, then the goal's frame for every place and candela
+            eye, tgt = (gl - 11.0, 1.9, 3.5), (gl - 1.5, 0.6, 0.6)
+            out = [("place-rest", eye, tgt, None)]
+            for pi, pos in enumerate(PLACES):
+                for cd in PLACE_CDS:
+                    out.append(("place-p%d-cd%05d" % (pi, cd), eye, tgt, ("goal", 0, cd, pos)))
+            if os.environ.get("ARENA_STILLS_PLACE_FRAMES", ""):   # the last place and candela at later frames of the flash
+                for f in [int(v) for v in os.environ["ARENA_STILLS_PLACE_FRAMES"].split(",")]:
+                    out.append(("place-final-f%03d" % f, eye, tgt, ("goal", f, PLACE_CDS[-1], PLACES[-1])))
+            return out
+        if CAPS:    # lane A136: the board caps. The game camera stands 6 m behind its skater at 3.5 m; both long sides, both ends, a hit, a close look
+            hx, hy = length * 0.25, hw - 0.4
+            out = [("caps-side-pos", (-6.0, hw - 12.0, 3.5), (2.0, hw - 1.0, 0.6), None),          # a skater 1 m off the +y boards, play going +x
+                   ("caps-side-neg", (-length * 0.25 - 6.0, -(hw - 12.0), 3.5), (-length * 0.25 + 2.0, -(hw - 1.0), 0.6), None),
+                   ("caps-near-pos", (0.0, hw + 2.6, 3.5), (6.0, hw - 6.0, 0.6), None),             # the camera pushed outside the +y boards (a skater on the near boards)
+                   ("caps-near-neg", (length * 0.2, -(hw + 2.6), 3.5), (length * 0.2 + 6.0, -(hw - 6.0), 0.6), None),
+                   ("caps-end-pos", (gl - 11.0, 1.9, 3.5), (gl - 1.5, 0.6, 0.6), None),
+                   ("caps-end-neg", (-(gl - 11.0), -1.9, 3.5), (-(gl - 1.5), -0.6, 0.6), None),
+                   ("caps-own-end", (length * 0.5 + 2.4, -3.2, 3.5), (gl - 4.0, -0.8, 0.3), None),   # the camera behind the end boards, beside the goal light (at y -0.7 it stood inside the lamp)
+                   ("caps-hit-rest", (hx - 5.0, hw - 6.5, 2.4), (hx, hw + 0.1, 1.3), None),
+                   ("caps-hit-f000", (hx - 5.0, hw - 6.5, 2.4), (hx, hw + 0.1, 1.3), ("cap", 0, (hx, hy))),
+                   ("caps-hit-f003", (hx - 5.0, hw - 6.5, 2.4), (hx, hw + 0.1, 1.3), ("cap", 3, (hx, hy))),
+                   ("caps-hit-game-rest", (hx - 8.0, hw - 12.0, 3.5), (hx, hy, 0.6), None),
+                   ("caps-hit-game-f000", (hx - 8.0, hw - 12.0, 3.5), (hx, hy, 0.6), ("cap", 0, (hx, hy)))]
+            return out
         if SWEEP:   # the lamp light's candelas (jam.rink.react.light), on the goal's frame: the game camera's view and the table
             out = []
             for cd in SWEEP:
@@ -82,6 +124,7 @@ class Run:
         self.rink = None
         self.pending = None
         self.done = []
+        self.gpu = []
         os.makedirs(OUT, exist_ok=True)
         self.les = unreal.get_editor_subsystem(unreal.LevelEditorSubsystem)
         self.eas = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
@@ -132,6 +175,20 @@ class Run:
         cc.set_editor_property("constrain_aspect_ratio", False)
         self.les.editor_set_game_view(True)
         self.les.pilot_level_actor(self.cam)
+        if PLACE:   # stand-ins: pucks in the crease and the slot, two figures (engine cylinders, B's instances by reference, transient)
+            gl = length * 0.5 - 4.0
+            for nm, mat, loc, sc in (("puck", "MI_Toon_Dark", (gl - 1.6, 0.7, 0.04), (0.16, 0.16, 0.05)), ("fig0", "MI_Toon_Blue", (gl - 3.2, -1.6, 0.9), (0.55, 0.55, 1.8)),
+                                     ("fig1", "MI_Toon_Orange", (gl - 5.5, 2.3, 0.9), (0.55, 0.55, 1.8)), ("puck2", "MI_Toon_Dark", (gl - 6.0, -0.8, 0.04), (0.16, 0.16, 0.05))):
+                a = self.eas.spawn_actor_from_class(unreal.StaticMeshActor, unreal.Vector(loc[0] * 100.0, loc[1] * 100.0, loc[2] * 100.0))
+                c = a.static_mesh_component
+                c.set_mobility(unreal.ComponentMobility.MOVABLE)
+                c.set_static_mesh(unreal.load_asset("/Engine/BasicShapes/Cylinder"))
+                m = unreal.load_asset("/JamAssets/Look/" + mat)
+                if m:
+                    c.set_material(0, m)
+                a.set_actor_scale3d(unreal.Vector(sc[0], sc[1], sc[2]))
+                c.set_render_custom_depth(True)
+                c.set_editor_property("custom_depth_stencil_value", 1)
         log("job %s %dx%d: rink built, arena shown=%s goals shown=%s clay=%s scale=%.3f" % (tier, length, width, self.rink.is_arena_dressing_shown(), self.rink.is_arena_goal_shown(), clay, s))
         self.view = 0
         self.place()
@@ -155,9 +212,15 @@ class Run:
         if not action:
             return
         pl = unreal.JamEventPayload()
-        if len(action) > 2:
+        if action[0] == "goal" and len(action) > 2:
             unreal.SystemLibrary.execute_console_command(self.world(), "jam.rink.react.light %g" % action[2])
-        if action[0] == "goal":
+        if action[0] == "cap":    # lane A136: a hard skater `board` event at (x, y) metres
+            pl.set_editor_property("who", 0)
+            pl.set_editor_property("where", unreal.Vector(action[2][0] * 100.0, action[2][1] * 100.0, 4.0))
+            pl.set_editor_property("strength", 1.0)
+            pl.set_editor_property("kind", "skater")
+            self.rink.react_to_event("board", pl, 1000)
+        elif action[0] == "goal":
             pl.set_editor_property("where", unreal.Vector((length * 0.5 - 4.0 + 0.5) * 100.0, 0.0, 4.0))   # the puck in the +x net
             pl.set_editor_property("strength", 1.0)
             self.rink.react_to_event("goal", pl, 1000)
@@ -168,6 +231,12 @@ class Run:
             pl.set_editor_property("kind", "skater")
             self.rink.react_to_event("board", pl, 1000)
         self.rink.advance_reactions(1000 + action[1])
+        if len(action) > 3 and action[3]:      # lane A136: the scored end's lamp light moved to a trial place (metres: from the goal line along x, y, z)
+            lights = self.rink.get_editor_property("arena_lamp_lights")
+            lights[2].set_relative_location(unreal.Vector((length * 0.5 - 4.0 + action[3][0]) * 100.0, action[3][1] * 100.0, action[3][2] * 100.0), False, False)
+            if len(action[3]) > 3:
+                lights[2].set_attenuation_radius(action[3][3] * 100.0)
+            log("light +x moved to %s" % (action[3],))
         log("light cd %s" % [round(self.rink.get_lamp_light_intensity(i), 1) for i in range(3)])
         log("react %s frame %d: lamp %.2f (rest %.2f) light+x %.2f net+x scale %s rattle %.2f deg %s" % (action[0], action[1], self.rink.get_lamp_emissive(),
             self.rink.get_lamp_rest_emissive(), self.rink.get_goal_light_emissive(1), self.rink.get_net_shake_scale(1), self.rink.get_rattle_deg(), self.rink.get_rattled_piece_name()))
@@ -195,6 +264,19 @@ class Run:
                     self.finish()
                 else:
                     self.start_job()
+            elif self.state == "gpu":       # lane A136: ProfileGPU pairs, the caps off and on, from one game-camera view
+                self.les.editor_invalidate_viewports()
+                self.wait -= 1
+                if self.wait <= 0:
+                    if not self.gpu:
+                        self.state = "next_job"
+                    else:
+                        cmd, wait = self.gpu.pop(0)
+                        log("gpu %s" % cmd)
+                        unreal.SystemLibrary.execute_console_command(self.world(), cmd)
+                        if cmd.startswith("jam.rink.caps"):
+                            self.rink.set_construction_visible(True)     # what the cvar sink does at the end of the frame
+                        self.wait = wait
             elif self.state == "warm":
                 self.les.editor_invalidate_viewports()      # the off-screen viewport is not realtime: ask for every frame of the warm-up
                 self.wait -= 1
@@ -218,6 +300,19 @@ class Run:
         tier, rig, clay, length, width = JOBS[self.job]
         self.view += 1
         if self.view >= len(views(length, width)):
+            if CAPS and GPU and self.job == 0:
+                hw = width * 0.5
+                e = unreal.Vector(-600.0, (hw - 12.0) * 100.0, 350.0)
+                t = unreal.Vector(200.0, (hw - 1.0) * 100.0, 60.0)
+                self.rink.advance_reactions(10 ** 9)
+                self.cam.set_actor_location_and_rotation(e, unreal.MathLibrary.find_look_at_rotation(e, t), False, False)
+                self.les.pilot_level_actor(self.cam)
+                self.gpu = []
+                for i in range(10):
+                    self.gpu += [("jam.rink.caps 0", 24), ("ProfileGPU", 10), ("jam.rink.caps 1", 24), ("ProfileGPU", 10)]
+                self.wait = 40
+                self.state = "gpu"
+                return
             self.state = "next_job"
         else:
             self.place()

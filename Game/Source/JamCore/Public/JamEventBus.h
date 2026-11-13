@@ -80,6 +80,11 @@ struct JAMCORE_API FJamEventPayload
 	// (the binder's Niagara User.Dir); board: the board normal pointing into the rink (User.Normal). Zero for every other event. A read-out of the sim.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Events")
 	FVector Dir = FVector::ZeroVector;
+
+	// Lane A143 (B-answer-0024 ask b): what a landed `check` did to the victim, `stumble` or `down` (the binder sends a stumble as Variant 4); NAME_None for
+	// every other event. A read-out of the sim; the log line prints it as ` outcome=<x>` only when set.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Events")
+	FName Outcome = NAME_None;
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FJamEventSignature, FName, Event, const FJamEventPayload&, Payload);

@@ -44,6 +44,14 @@ public:
 	// B-to-A-0012: the Kind -> Variant table (Niagara User.Variant, MetaSound Variant). 0 for every event or kind not in the table.
 	UFUNCTION(BlueprintPure, Category = "Jam|Fx")
 	static float VariantFor(FName Event, FName Kind);
+	// Lane A143 (B-answer-0024): the Variant the binder sends for a whole payload: VariantFor(Event, Kind), except a `check` whose Outcome is `stumble`
+	// (StumbleCheckVariant, 4: MS_check's skate scrabble; the hit's side still rides User.Dir). The goal's team Variant is decided in HandleEvent.
+	static constexpr float StumbleCheckVariant = 4.f;
+	UFUNCTION(BlueprintPure, Category = "Jam|Fx")
+	static float VariantForPayload(FName Event, const FJamEventPayload& Payload);
+	// Lane A143 (B-answer-0024 ask a): an `ability` grant (Strength 0: the ability is given, not used) plays nothing; only a use (Strength 1) bursts and sounds.
+	UFUNCTION(BlueprintPure, Category = "Jam|Fx")
+	static bool IsQuietPayload(FName Event, const FJamEventPayload& Payload);
 	// R-0033 point 4 (lane A50): MS_goal's Variant: 0 when the human's team scores, 1 when it concedes. Pure parts for the tests: the scoring team is the
 	// one whose score grew between Before and After (the payload's Who is the last touch, the wrong team on an own goal); FallbackTeam (Who's team, -1
 	// unknown) when neither grew; -1 when nothing tells, which plays Variant 1 (never the celebration for a goal that may not be ours).

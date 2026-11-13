@@ -9,6 +9,8 @@ namespace
 	const FName RolePlayer(TEXT("player"));
 	const FName RuleTimer(TEXT("timer"));
 	const FName CauseCheck(TEXT("check"));
+	const FName OutcomeStumble(TEXT("stumble"));   // lane A143: FJamSimEvent::Outcome on a landed check
+	const FName OutcomeDown(TEXT("down"));
 	const FName KindClean(TEXT("clean"));
 	const FName KindMiss(TEXT("miss"));
 	const FName KindDrop(TEXT("drop"));
@@ -878,7 +880,7 @@ double UJamSim::CarrierReachM(int32 Skater) const
 	return FMath::Max(Eff(EJamStat::ShotReach, Skater), SkaterRadius + FMath::Max(0.0, Config.Stick.ReachM)) + 0.05;
 }
 
-void UJamSim::Emit(FName Name, int32 Who, const FVector2D& Where, float Strength, FName Kind, const FVector2D& Dir)
+void UJamSim::Emit(FName Name, int32 Who, const FVector2D& Where, float Strength, FName Kind, const FVector2D& Dir, FName Outcome)
 {
 	FJamSimEvent E;
 	E.Name = Name;
@@ -888,6 +890,7 @@ void UJamSim::Emit(FName Name, int32 Who, const FVector2D& Where, float Strength
 	E.Kind = Kind;
 	E.Frame = Frame;
 	E.Dir = Dir.GetSafeNormal();   // lane A47 read-out (B-to-A-0029): zero stays zero
+	E.Outcome = Outcome;   // lane A143 read-out: stumble / down on a landed check
 	FrameEvents.Add(E);
 }
 
@@ -1786,7 +1789,7 @@ void UJamSim::CollideSkaters()
 					const FVector2D VF = Victim.Forward();
 					const double Along = Dot(Dir, VF);
 					const FName CheckKind = Along > 0.5 ? CheckBehind : Along < -0.5 ? CheckFront : (Dot(Dir, FVector2D(VF.Y, -VF.X)) < 0.0 ? CheckSideL : CheckSideR);
-					Emit(JamEvents::Check, Checker.Index, Contact, Strength, CheckKind, Dir);   // lane A47: Dir = the contact normal, checker towards victim (B-to-A-0029 ask 1)
+					Emit(JamEvents::Check, Checker.Index, Contact, Strength, CheckKind, Dir, OutcomeDown);   // lane A47: Dir = the contact normal, checker towards victim (B-to-A-0029 ask 1)
 					FireRule(EJamRuleTrigger::OnCheck, Checker.Index, Checker.Team, NAME_None, Strength);
 					// R-0029 point 3: a victim that carried the puck within game.stick.foul_grace_frames still counts as the carrier (the puck just left it).
 					const bool bVictimHasPuck = CarrierIndex() == Victim.Index || (Frame - Victim.LastCarryFrame) <= Config.Stick.FoulGraceFrames;
@@ -1948,7 +1951,7 @@ int32 UJamSim::ResolveContact(FJamSkaterState& Att, FJamSkaterState& Vic, const 
 		const FVector2D VF = Vic.Forward();
 		const double Along = Dot(Dir, VF);
 		const FName CheckKind = Along > 0.5 ? CheckBehind : Along < -0.5 ? CheckFront : (Dot(Dir, FVector2D(VF.Y, -VF.X)) < 0.0 ? CheckSideL : CheckSideR);
-		Emit(JamEvents::Check, Att.Index, Contact, Strength, CheckKind, Dir);
+		Emit(JamEvents::Check, Att.Index, Contact, Strength, CheckKind, Dir, Outcome == ContactStumble ? OutcomeStumble : OutcomeDown);   // lane A143: the stumble told from a hit (B-answer-0024 ask b)
 		FireRule(EJamRuleTrigger::OnCheck, Att.Index, Att.Team, NAME_None, Strength);
 		// Lane A101: a landed hit the boards answered: the victim's board read-out (the figure's board-hit take) and a `board` event (Kind skater, the glass and
 		// the sound) go out with the check's strength, at the point of the boards nearest the victim. Read-outs and an event only: nothing hashed.

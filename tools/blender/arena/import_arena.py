@@ -180,8 +180,10 @@ def main():
             "look_instances_bound": all(m is not None and m.startswith("/JamAssets/Look/MI_Toon_") for m in row["materials"]),
             # Unreal flips V on import (v -> 1 - v): the extents must match Blender's, the U range exactly
             "has_uvs": uvn > 0 and abs(uvb[0] - bu0[0]) < 0.01 and abs(uvb[2] - bu1[0]) < 0.01 and abs((uvb[3] - uvb[1]) - (bu1[1] - bu0[1])) < 0.01 and (uvb[2] - uvb[0]) > 0.1,
-            "extends_to_plus_y": box.max.y > (30.0 if name == "SM_Arena_GoalLight" else 100.0) and box.min.y > -30.0,   # the goal light is a post, half a metre deep
-            "stands_on_the_ice": abs(box.min.z) < (8.0 if "net_of" in blender[name] else 5.0),   # a net hangs from the bars: its lowest cord ends in the bottom bar
+            # the goal light is a post, half a metre deep; lane A136: the board cap sits on the board top, from the board's inner face (10 cm) to past its outer one
+            "extends_to_plus_y": (box.max.y > 13.0 and box.min.y > -10.0) if name == "SM_Arena_BoardCap" else (box.max.y > (30.0 if name == "SM_Arena_GoalLight" else 100.0) and box.min.y > -30.0),
+            # a net hangs from the bars: its lowest cord ends in the bottom bar; lane A136: the board cap's foot ring sinks 5 cm into the board top (its z 0)
+            "stands_on_the_ice": (-6.5 < box.min.z < -3.0) if name == "SM_Arena_BoardCap" else abs(box.min.z) < (8.0 if "net_of" in blender[name] else 5.0),
             "size_matches_blender": all(abs(a - b) < 0.02 for a, b in zip(size, blender[name]["dimensions_m"])),
         }
         if name == "SM_Arena_PenaltyBox":
