@@ -3961,9 +3961,9 @@
    "priority": 5,
    "cooldown_s": 0,
    "when": "the human's team loses by three or more",
-   "text": "A night to forget. Back to rehearsals.",
+   "text": "A night to forget. Back to practice.",
    "sound": "/JamAssets/Audio/VO/VO_Commentator_lose_blowout_01.VO_Commentator_lose_blowout_01",
-   "seconds": 2.31
+   "seconds": 2.75
   },
   {
    "id": "lose.blowout.02",
