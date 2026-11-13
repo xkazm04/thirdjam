@@ -1,0 +1,569 @@
+// Lane A87 (R-0043 point 1): the acceptance run's drill, jam.ctrl.Drill 20. The human plays through the real input path (ReadHumanInput: the cursor on the ice,
+// the keys, the buttons); this drill only stages each step (SetSkater / SetPuck: the human, one mate, one opponent; every other skater parked in the human's own
+// corner), scripts the mate and the opponent, tells the driver (tools/qa/accept/accept.ps1) where the cursor goes and what to press, and judges:
+//   JAMACCEPT begin ...                                   the indices and the config numbers the pass rules use
+//   JAMACCEPT cursor step=S k=K sx=<px> sy=<px> ...        the driver puts the cursor there (client pixels = viewport pixels) and keeps it there
+//   JAMACCEPT act step=S k=K act=<what> ...                the driver presses (keys, lmb, pass, rmb, mmb, wheel, key, sweep, pause_resume, lmb_onetimer, probe_pass)
+//   JAMACCEPT received step=6 k=K frame=F                  the one-timer's pass landed on the human (the driver releases the held button)
+//   JAMACCEPT step=S verb=V ok=0|1 <facts>                one line per verb; tools/qa/accept/accept.mjs makes the table
+//   JAMACCEPT summary ok=N fail=M                           the end
+// Steps (docs/experiments/ACCEPT.md): 1 skate / sprint / sprint_carry, 2 aim, 3 carry, 4 shoot_tap / shoot_half / shoot_full, 5 pass / saucer, 6 onetimer,
+// 7 check / crosscheck, 8 checked, 9 deke / spin / sweep, 10 resume_aim. jam.accept.From / jam.accept.To run a part. A QA drill: nothing here runs unless the cvar is 20.
+#include "HokejGameMode.h"
+#include "JamSim.h"
+#include "JamPawns.h"
+#include "JamEventBus.h"
+#include "GameFramework/PlayerController.h"
+#include "Camera/PlayerCameraManager.h"
+#include "HAL/IConsoleManager.h"
+#include "HAL/PlatformTime.h"
+
+static TAutoConsoleVariable<int32> CVarJamAcceptFrom(TEXT("jam.accept.From"), 1, TEXT("Lane A87: the first step of the acceptance run (jam.ctrl.Drill 20)."));
+static TAutoConsoleVariable<int32> CVarJamAcceptTo(TEXT("jam.accept.To"), 10, TEXT("Lane A87: the last step of the acceptance run (jam.ctrl.Drill 20)."));
+
+#define ACC_LOG(Fmt, ...) UE_LOG(LogHokej, Log, TEXT("JAMACCEPT ") Fmt, ##__VA_ARGS__)
+
+namespace JamAccept
+{
+	enum class EPh : uint8 { Begin, Stage, Settle, Hand, Measure, Gap, Done };
+
+	struct FState
+	{
+		EPh Ph = EPh::Begin;
+		int32 Step = 0, K = 0, Last = 10;
+		int64 PhFrame = 0;          // the frame this phase began
+		int32 Me = -1, Mate = -1, Opp = -1;
+		TArray<int32> Parked;
+		bool bMateLive = false, bOppLive = false, bPinPuck = true;
+		FVector2D PuckPark = FVector2D::ZeroVector;
+		double Dir = 1.0, Gx = 0.0;
+		int32 NOk = 0, NFail = 0;
+		// the human's own input this frame (read before the step)
+		double MoveIn = 0.0;
+		// measurement scratch (reset at each stage)
+		int64 ActFrame = -1, MoveFrame = -1, EventFrame = -1, DownFrame = -1, UpFrame = -1, ShotFrame = -1, RecvFrame = -1, CueFrame = -1;
+		double MaxSpeed = 0.0, Closing = 0.0, CamMaxM = 0.0, PuckDistAtAct = -1.0, LastWall = 0.0, GapS = 0.0;
+		int32 SprintFrames = 0, SprintCarryFrames = 0, CarryFrames = 0, ChargeMax = 0, Sweeps0 = 0, Received0 = 0, MateRecv0 = 0, StickHit = 0;
+		bool bLost = false, bShot = false, bGoal = false, bOneTimer = false, bSaucer = false, bPassed = false, bRecv = false, bCheck = false, bKnock = false;
+		bool bStrip = false, bCamOff = false, bFired = false, bPaused = false, bMatePassed = false;
+		int64 LostFrame = -1;
+		float ShotCharge = 0.f;
+		FVector2D Target = FVector2D::ZeroVector;
+		int64 ArriveFrame = -1, FollowFrame = -1;
+		double ErrAtEnd = 0.0;
+		// per-step aggregates
+		double Speed1 = 0.0, Speed2 = 0.0;
+		FString AimFacts;
+		int32 AimOk = 0, OtOk = 0;
+		FString OtFacts;
+	};
+	static FState G;
+
+	static double YawOf(const FVector2D& D) { return FMath::Atan2(D.Y, D.X); }
+	static FVector2D Unit(double Rad) { return FVector2D(FMath::Cos(Rad), FMath::Sin(Rad)); }
+	static double AngDeg(const FVector2D& A, const FVector2D& B)
+	{
+		const FVector2D a = A.GetSafeNormal(), b = B.GetSafeNormal();
+		if (a.IsNearlyZero() || b.IsNearlyZero()) return 180.0;
+		return FMath::RadiansToDegrees(FMath::Acos(FMath::Clamp(FVector2D::DotProduct(a, b), -1.0, 1.0)));
+	}
+	// Steps and the number of sub-attempts each has.
+	static int32 SubsOf(int32 Step)
+	{
+		switch (Step) { case 1: return 3; case 2: return 4; case 3: return 1; case 4: return 3; case 5: return 3; case 6: return 2; case 7: return 2; case 8: return 1; case 9: return 3; case 10: return 2; default: return 0; }
+	}
+}
+
+void AHokejGameMode::AcceptDrillInputs(TArray<FJamInput>& All)
+{
+	using namespace JamAccept;
+	if (!Sim) return;
+	if (Sim->GetPhase() == EJamSimPhase::Faceoff) Sim->SkipFaceoff();   // no faceoffs in the run: the scene is staged
+	const TArray<FJamSkaterState>& Sk = Sim->GetSkaters();
+	const int32 Me = Sim->GetHumanIndex();
+	if (!Sk.IsValidIndex(Me) || !All.IsValidIndex(Me)) return;
+	if (G.Ph == EPh::Begin)
+	{
+		G = FState();
+		G.Me = Me;
+		const int32 Team = Sk[Me].Team;
+		for (const FJamSkaterState& S : Sk)
+		{
+			if (S.Index == Me) continue;
+			if (S.Team == Team && G.Mate < 0 && S.Role != FName(TEXT("back"))) G.Mate = S.Index;
+			else if (S.Team != Team && G.Opp < 0 && S.Role != FName(TEXT("back"))) G.Opp = S.Index;
+		}
+		for (const FJamSkaterState& S : Sk) if (S.Index != Me && S.Index != G.Mate && S.Index != G.Opp) G.Parked.Add(S.Index);
+		G.Gx = Sim->AttackGoalX(Team);
+		G.Dir = G.Gx > 0 ? 1.0 : -1.0;
+		G.PuckPark = FVector2D(-G.Dir * 20.0, -18.0);
+		G.Step = FMath::Clamp(CVarJamAcceptFrom.GetValueOnGameThread(), 1, 10);
+		G.Last = FMath::Clamp(CVarJamAcceptTo.GetValueOnGameThread(), G.Step, 10);
+		G.K = 1;
+		G.Ph = EPh::Stage;
+		G.PhFrame = Sim->GetFrame();
+		G.LastWall = FPlatformTime::Seconds();
+		const FJamGameConfig& C = Sim->GetConfig();
+		ACC_LOG(TEXT("begin frame=%lld human=%d mate=%d opp=%d parked=%d attack_x=%.1f shot_reach=%.2f stick_reach=%.2f carry_reach=%.2f charge_max=%d saucer_half=%d onetimer_window=%d knock_frames=%d from=%d to=%d"),
+			Sim->GetFrame(), Me, G.Mate, G.Opp, G.Parked.Num(), G.Gx, Sim->GetEffectiveStat(EJamStat::ShotReach, Me), C.Stick.ReachM, UJamSim::SkaterRadius + C.Stick.ReachM,
+			C.Shot.ChargeFramesMax, C.Pass.SaucerHalfFrames, C.Shot.OneTimerWindowFrames, C.Skater.KnockdownFrames, G.Step, G.Last);
+	}
+	G.MoveIn = All[Me].Move.Size();
+	// Everyone but the human: still, unless the step scripts the mate or the opponent below. Parked skaters sit in the human's own corner.
+	for (int32 i = 0; i < All.Num(); ++i) if (i != Me) All[i] = FJamInput();
+	int32 Slot = 0;
+	auto Park = [&](int32 i) { if (Sk.IsValidIndex(i)) Sim->SetSkater(i, FVector2D(-G.Dir * 34.0, -16.0 + 6.5 * Slot++), FVector2D::ZeroVector, 0.0); };
+	for (int32 i : G.Parked) Park(i);
+	if (!G.bMateLive) Park(G.Mate);
+	if (!G.bOppLive) Park(G.Opp);
+	if (G.bPinPuck && Sim->GetPhase() == EJamSimPhase::Playing) Sim->SetPuck(G.PuckPark, FVector2D::ZeroVector);
+	if (G.Ph != EPh::Measure && G.Ph != EPh::Hand && G.Ph != EPh::Settle) return;
+	const int64 F = Sim->GetFrame();
+	const FJamSkaterState& H = Sk[Me];
+	// The mate (steps 5, 6): stands with its blade toward the human; in step 6 it carries and passes once the human is open.
+	if (G.bMateLive && Sk.IsValidIndex(G.Mate) && All.IsValidIndex(G.Mate))
+	{
+		const FJamSkaterState& M = Sk[G.Mate];
+		FJamInput& In = All[G.Mate];
+		In.Stick = (H.Pos - M.Pos).GetSafeNormal() * 0.5;
+		if (G.Step == 6 && G.Ph == EPh::Measure && !G.bMatePassed && Sim->CarrierIndex() == G.Mate && F >= M.ShotReadyFrame)
+		{
+			FVector2D Aim;
+			const int32 To = Sim->BestPass(G.Mate, Aim);
+			if (To == Me || F - G.PhFrame > 120)
+			{
+				In.bPass = true;
+				G.bMatePassed = true;
+				G.CueFrame = F;
+				const double Dist = FVector2D::Distance(H.BladePos, Sim->GetPuck().Pos);
+				const double Speed = FMath::Max(1.0, Sim->GetConfig().Skater.PassSpeed);
+				const int32 Eta = FMath::CeilToInt32(Dist / (Speed * 0.85) / UJamSim::DT);
+				ACC_LOG(TEXT("act step=6 k=%d act=lmb_onetimer eta_frames=%d best_pass=%d frame=%lld"), G.K, Eta, To, F);
+			}
+		}
+	}
+	// The opponent (steps 7, 8): in 7 it carries slowly at the human; in 8 it charges the carrying human and checks at contact (the A49 drill's rule).
+	if (G.bOppLive && Sk.IsValidIndex(G.Opp) && All.IsValidIndex(G.Opp))
+	{
+		const FJamSkaterState& O = Sk[G.Opp];
+		FJamInput& In = All[G.Opp];
+		const FVector2D ToH = H.Pos - O.Pos;
+		const double Dist = ToH.Size();
+		if (G.Step == 7) { In.Move = ToH.GetSafeNormal() * 0.3; In.Stick = O.Forward() * 0.5; }
+		if (G.Step == 8 && G.Ph == EPh::Measure)
+		{
+			In.Move = ToH.GetSafeNormal();
+			In.bSprint = true;
+			const double Gap = Dist - UJamSim::SkaterRadius * 2.0;
+			const double Closing = Dist > 1e-6 ? FVector2D::DotProduct(O.Vel - H.Vel, ToH / Dist) : 0.0;
+			if ((Gap <= 0.25 || (Closing > 0.5 && Gap <= Closing * (UJamSim::CheckWindowFrames - 2) * UJamSim::DT)) && !H.IsDown() && O.CanAct() && G.DownFrame < 0)
+			{
+				In.bCheck = true;
+				if (G.CueFrame < 0) { G.CueFrame = F; G.Closing = Closing; }
+			}
+		}
+	}
+}
+
+void AHokejGameMode::AcceptDrillObserve()
+{
+	using namespace JamAccept;
+	if (!Sim || G.Ph == EPh::Begin || G.Ph == EPh::Done) return;
+	const TArray<FJamSkaterState>& Sk = Sim->GetSkaters();
+	const int32 Me = G.Me;
+	if (!Sk.IsValidIndex(Me)) return;
+	const int64 F = Sim->GetFrame();
+	const FJamSkaterState& H = Sk[Me];
+	const FJamPuckState& P = Sim->GetPuck();
+	const FJamGameConfig& Cfg = Sim->GetConfig();
+	const double Now = FPlatformTime::Seconds();
+	const double WallGap = Now - G.LastWall;
+	G.LastWall = Now;
+	AJamSkater* HumanPawn = GetHumanSkater();
+	APlayerController* PC = HumanPawn ? Cast<APlayerController>(HumanPawn->GetController()) : nullptr;
+	const FVector2D Fwd(G.Dir, 0.0);
+	const double FaceYaw = G.Dir > 0 ? 0.0 : PI;
+	auto Screen = [&](const FVector2D& RinkM, FVector2D& Out) -> bool { return PC && PC->ProjectWorldLocationToScreen(UJamSim::ToWorld(RinkM), Out, false); };
+	auto CursorLine = [&](const FVector2D& RinkM, const TCHAR* What)
+	{
+		FVector2D S2(-1, -1);
+		const bool bOk = Screen(RinkM, S2);
+		ACC_LOG(TEXT("cursor step=%d k=%d sx=%d sy=%d on_screen=%d what=%s rink=(%.2f,%.2f) frame=%lld"), G.Step, G.K, FMath::RoundToInt32(S2.X), FMath::RoundToInt32(S2.Y), bOk ? 1 : 0, What, RinkM.X, RinkM.Y, F);
+	};
+	// A cursor target along Dir from the skater: the farthest of Max..Min metres whose projection sits inside the viewport with a 24 px margin (the ice right
+	// behind the skater lies under the third-person camera; a mate 8 m to the side lies past the screen's edge at 6 m).
+	auto OnScreenTarget = [&](const FVector2D& From, const FVector2D& D, double MaxM, double MinM) -> FVector2D
+	{
+		int32 VX = 0, VY = 0;
+		if (PC) PC->GetViewportSize(VX, VY);
+		for (double M = MaxM; M >= MinM - 1e-6; M -= 0.25)
+		{
+			FVector2D S2;
+			if (Screen(From + D * M, S2) && S2.X >= 24 && S2.Y >= 24 && S2.X <= VX - 24 && S2.Y <= VY - 24) return From + D * M;
+		}
+		return From + D * MinM;
+	};
+	auto CursorIce = [&](FVector2D& Out) -> bool
+	{
+		float MX = 0.f, MY = 0.f;
+		FVector O, D;
+		if (!PC || !PC->GetMousePosition(MX, MY) || !PC->DeprojectScreenPositionToWorld(MX, MY, O, D) || D.Z >= -1e-4) return false;
+		const FVector Hit = O + D * (-O.Z / D.Z);
+		Out = FVector2D(Hit.X / 100.0, Hit.Y / 100.0);
+		return true;
+	};
+	auto Verdict = [&](const TCHAR* Verb, bool bOk, const FString& Facts)
+	{
+		(bOk ? G.NOk : G.NFail)++;
+		ACC_LOG(TEXT("step=%d verb=%s ok=%d frame=%lld %s"), G.Step, Verb, bOk ? 1 : 0, F, *Facts);
+	};
+	auto Hand = [&](int32 To)
+	{
+		G.bPinPuck = false;
+		const FJamSkaterState& T = Sk[To];
+		Sim->SetPuck(T.Pos + T.Forward() * 0.45, T.Vel);
+	};
+	auto Next = [&]()
+	{
+		if (G.K < SubsOf(G.Step)) ++G.K;
+		else
+		{
+			++G.Step; G.K = 1;
+			if (G.Step > G.Last)
+			{
+				G.Ph = EPh::Done;
+				ACC_LOG(TEXT("summary ok=%d fail=%d frame=%lld"), G.NOk, G.NFail, F);
+				return;
+			}
+		}
+		G.Ph = EPh::Gap;
+		G.PhFrame = F;
+	};
+	const int64 InPh = F - G.PhFrame;
+
+	if (G.Ph == EPh::Gap)
+	{
+		if (InPh >= 30 && Sim->GetPhase() == EJamSimPhase::Playing) { G.Ph = EPh::Stage; G.PhFrame = F; }
+		return;
+	}
+	if (G.Ph == EPh::Stage)
+	{
+		if (Sim->GetPhase() != EJamSimPhase::Playing) return;
+		// Reset the scratch, stage the step's scene.
+		const FState Keep = G;
+		G = FState();
+		G.Ph = EPh::Settle; G.Step = Keep.Step; G.K = Keep.K; G.Last = Keep.Last; G.Me = Keep.Me; G.Mate = Keep.Mate; G.Opp = Keep.Opp; G.Parked = Keep.Parked;
+		G.PuckPark = Keep.PuckPark; G.Dir = Keep.Dir; G.Gx = Keep.Gx; G.NOk = Keep.NOk; G.NFail = Keep.NFail; G.LastWall = Keep.LastWall;
+		G.Speed1 = Keep.Speed1; G.Speed2 = Keep.Speed2; G.AimFacts = Keep.AimFacts; G.AimOk = Keep.AimOk; G.OtOk = Keep.OtOk; G.OtFacts = Keep.OtFacts;
+		if (G.K == 1) { G.AimFacts.Reset(); G.AimOk = 0; G.OtOk = 0; G.OtFacts.Reset(); }
+		G.PhFrame = F;
+		G.bPinPuck = true;
+		const double Dir = G.Dir, Gx = G.Gx;
+		FVector2D HPos(-Dir * 5.0, 0.0);
+		switch (G.Step)
+		{
+		case 1: HPos = FVector2D(-Dir * 22.0, 0.0); break;
+		case 4: HPos = FVector2D(Gx - Dir * 10.0, 0.0); break;
+		case 5: HPos = FVector2D(Gx - Dir * 16.0, -4.0); G.bMateLive = true; Sim->SetSkater(G.Mate, FVector2D(Gx - Dir * 16.0, 4.0), FVector2D::ZeroVector, FaceYaw); break;
+		case 6: HPos = FVector2D(Gx - Dir * 10.0, -2.0); G.bMateLive = true; Sim->SetSkater(G.Mate, FVector2D(Gx - Dir * 6.0, 6.0), FVector2D::ZeroVector, YawOf(HPos - FVector2D(Gx - Dir * 6.0, 6.0))); break;
+		case 7: HPos = FVector2D(-Dir * 3.5, 0.0); G.bOppLive = true; Sim->SetSkater(G.Opp, FVector2D(Dir * 2.0, 0.0), FVector2D::ZeroVector, FaceYaw + PI); break;
+		case 8: HPos = FVector2D(0.0, 0.0); G.bOppLive = true; Sim->SetSkater(G.Opp, FVector2D(Dir * 7.0, 0.0), FVector2D::ZeroVector, FaceYaw + PI); break;
+		default: break;
+		}
+		Sim->SetSkater(Me, HPos, G.Step == 7 ? Fwd * 4.0 : FVector2D::ZeroVector, FaceYaw);
+		ACC_LOG(TEXT("stage step=%d k=%d frame=%lld human=(%.1f,%.1f)"), G.Step, G.K, F, HPos.X, HPos.Y);
+		if (G.Step == 7)
+		{
+			// the opponent carries; the human comes in at 4 m/s with W held (camera-relative forward = the skater's facing after the camera's reset)
+			G.bPinPuck = false;
+			const FJamSkaterState& O = Sk[G.Opp];
+			Sim->SetPuck(O.Pos + O.Forward() * 0.45, FVector2D::ZeroVector);
+			ACC_LOG(TEXT("act step=7 k=%d act=keys keys=W ms=1500 frame=%lld"), G.K, F);
+			G.ActFrame = F;
+			G.Ph = EPh::Measure;
+		}
+		return;
+	}
+	if (G.Ph == EPh::Settle)
+	{
+		if (InPh < 40) return;
+		// The camera has settled on the staged human: the cursor and the hand.
+		const FVector2D Pos = H.Pos;
+		switch (G.Step)
+		{
+		case 1:
+			if (G.K == 3) Hand(Me);
+			G.Ph = EPh::Hand; G.PhFrame = F; return;
+		case 2: case 10:
+		{
+			if (G.Step == 10 && G.K == 1)
+			{
+				ACC_LOG(TEXT("act step=10 k=1 act=pause_resume frame=%lld"), F);
+				G.ActFrame = F; G.Ph = EPh::Measure; G.PhFrame = F; return;
+			}
+			static const double Rel2[4] = { 0.0, 90.0, 180.0, -90.0 };
+			static const double Rel10[2] = { 90.0, -90.0 };
+			const double Rel = G.Step == 2 ? Rel2[(G.K - 1) % 4] : Rel10[(G.K - 1) % 2];
+			G.Target = OnScreenTarget(Pos, Unit(FaceYaw + FMath::DegreesToRadians(Rel)), 2.5, 1.0);
+			CursorLine(G.Target, TEXT("aim"));
+			G.ActFrame = F; G.Ph = EPh::Measure; G.PhFrame = F; return;
+		}
+		case 3:
+			Hand(Me);
+			CursorLine(Pos + Fwd * 3.0, TEXT("ahead"));
+			G.Ph = EPh::Hand; G.PhFrame = F; return;
+		case 4:
+			CursorLine(Pos + Fwd * 6.0, TEXT("net"));
+			Hand(Me);
+			G.Ph = EPh::Hand; G.PhFrame = F; return;
+		case 5:
+			if (G.K == 1)
+			{
+				ACC_LOG(TEXT("act step=5 k=1 act=probe_pass frame=%lld"), F);   // no puck yet: the driver finds which key raises JAMCTRL btn=pass
+				G.ActFrame = F; G.Ph = EPh::Measure; G.PhFrame = F; return;
+			}
+			CursorLine(OnScreenTarget(Pos, (Sk[G.Mate].Pos - Pos).GetSafeNormal(), 6.0, 2.0), TEXT("mate"));
+			Hand(Me);
+			G.Ph = EPh::Hand; G.PhFrame = F; return;
+		case 6:
+			CursorLine(Pos + (FVector2D(G.Gx, 0.0) - Pos).GetSafeNormal() * 6.0, TEXT("net"));
+			Hand(G.Mate);
+			G.MateRecv0 = H.PassesReceived; G.Received0 = H.PassesReceived;
+			G.Ph = EPh::Hand; G.PhFrame = F; return;
+		case 8:
+			CursorLine(Pos + Fwd * 3.0, TEXT("ahead"));
+			Hand(Me);
+			G.Ph = EPh::Hand; G.PhFrame = F; return;
+		case 9:
+			CursorLine(Pos + Fwd * 3.0, TEXT("ahead"));
+			Hand(Me);
+			G.Ph = EPh::Hand; G.PhFrame = F; return;
+		default: G.Ph = EPh::Hand; G.PhFrame = F; return;
+		}
+	}
+	if (G.Ph == EPh::Hand)
+	{
+		if (InPh < 45) return;   // the carry assist seats the handed puck on the blade the cursor holds
+		const double PuckDist = FVector2D::Distance(H.Pos, P.Pos);
+		G.PuckDistAtAct = PuckDist;
+		G.ActFrame = F;
+		G.Ph = EPh::Measure; G.PhFrame = F;
+		G.Sweeps0 = H.Sweeps;
+		G.MateRecv0 = Sk.IsValidIndex(G.Mate) ? Sk[G.Mate].PassesReceived : 0;
+		const int32 C = Sim->CarrierIndex();
+		const double Reach = Sim->GetEffectiveStat(EJamStat::ShotReach, Me);
+		switch (G.Step)
+		{
+		case 1:
+			ACC_LOG(TEXT("act step=1 k=%d act=keys keys=%s ms=2000 carrier=%d frame=%lld"), G.K, G.K == 1 ? TEXT("W") : TEXT("W+SHIFT"), C, F); break;
+		case 3:
+		{
+			const FVector2D L = H.Pos + Unit(FaceYaw + FMath::DegreesToRadians(75.0)) * 3.0, R = H.Pos + Unit(FaceYaw - FMath::DegreesToRadians(75.0)) * 3.0;
+			FVector2D SL(-1, -1), SR(-1, -1); Screen(L, SL); Screen(R, SR);
+			ACC_LOG(TEXT("act step=3 k=1 act=sweep lx=%d ly=%d rx=%d ry=%d n=3 ms=400 carrier=%d puck_dist=%.2f frame=%lld"), FMath::RoundToInt32(SL.X), FMath::RoundToInt32(SL.Y), FMath::RoundToInt32(SR.X), FMath::RoundToInt32(SR.Y), C, PuckDist, F);
+			break;
+		}
+		case 4:
+		{
+			static const int32 Hold[3] = { 0, 8, 30 };
+			ACC_LOG(TEXT("act step=4 k=%d act=lmb frames=%d carrier=%d puck_dist=%.2f reach=%.2f frame=%lld"), G.K, Hold[(G.K - 1) % 3], C, PuckDist, Reach, F);
+			break;
+		}
+		case 5:
+			ACC_LOG(TEXT("act step=5 k=%d act=pass frames=%d carrier=%d puck_dist=%.2f reach=%.2f frame=%lld"), G.K, G.K == 2 ? 0 : Cfg.Pass.SaucerHalfFrames + 6, C, PuckDist, Reach, F); break;
+		case 6:
+			ACC_LOG(TEXT("wait step=6 k=%d mate_carrier=%d frame=%lld"), G.K, C == G.Mate ? 1 : 0, F); G.ActFrame = -1; break;   // the act line comes with the mate's pass
+		case 8:
+			ACC_LOG(TEXT("act step=8 k=1 act=none carrier=%d puck_dist=%.2f frame=%lld"), C, PuckDist, F); break;
+		case 9:
+		{
+			if (G.K == 1) { ACC_LOG(TEXT("act step=9 k=1 act=wheel carrier=%d frame=%lld"), C, F); }
+			else if (G.K == 2) { ACC_LOG(TEXT("act step=9 k=2 act=key key=E carrier=%d frame=%lld"), C, F); }
+			else
+			{
+				const FVector2D L = H.Pos + Unit(FaceYaw + FMath::DegreesToRadians(75.0)) * 3.0, R = H.Pos + Unit(FaceYaw - FMath::DegreesToRadians(75.0)) * 3.0;
+				FVector2D SL(-1, -1), SR(-1, -1); Screen(L, SL); Screen(R, SR);
+				ACC_LOG(TEXT("act step=9 k=3 act=sweep lx=%d ly=%d rx=%d ry=%d n=1 ms=120 carrier=%d frame=%lld"), FMath::RoundToInt32(SL.X), FMath::RoundToInt32(SL.Y), FMath::RoundToInt32(SR.X), FMath::RoundToInt32(SR.Y), C, F);
+			}
+			break;
+		}
+		default: break;
+		}
+		return;
+	}
+	// EPh::Measure
+	const int32 C = Sim->CarrierIndex();
+	auto Events = [&](FName Name, int32 Who) { for (const FJamSimEvent& E : Sim->GetFrameEvents()) if (E.Name == Name && (Who < 0 || E.Who == Who)) return true; return false; };
+	switch (G.Step)
+	{
+	case 1:
+	{
+		if (G.MoveFrame < 0 && G.MoveIn > 0.3) G.MoveFrame = F;
+		if (G.MoveFrame >= 0 && F - G.MoveFrame <= 120)
+		{
+			G.MaxSpeed = FMath::Max(G.MaxSpeed, H.Vel.Size());
+			if (H.bSprinting) { ++G.SprintFrames; if (C == Me) ++G.SprintCarryFrames; }
+			if (C == Me) ++G.CarryFrames;
+		}
+		const bool bEnd = (G.MoveFrame >= 0 && F - G.MoveFrame > 120) || InPh > 300;
+		if (!bEnd) return;
+		const FString Facts = FString::Printf(TEXT("max_speed=%.2f sprint_frames=%d sprint_carry_frames=%d carry_frames=%d move_after=%lld"), G.MaxSpeed, G.SprintFrames, G.SprintCarryFrames, G.CarryFrames, G.MoveFrame >= 0 ? G.MoveFrame - G.ActFrame : -1);
+		if (G.K == 1) { G.Speed1 = G.MaxSpeed; Verdict(TEXT("skate"), G.MaxSpeed > 6.0, Facts); }
+		else if (G.K == 2) { G.Speed2 = G.MaxSpeed; Verdict(TEXT("sprint"), G.SprintFrames > 0 && G.MaxSpeed > G.Speed1 + 0.2, Facts + FString::Printf(TEXT(" walk_speed=%.2f"), G.Speed1)); }
+		else Verdict(TEXT("sprint_carry"), G.CarryFrames >= 60 && G.SprintCarryFrames == 0 && G.MaxSpeed < G.Speed2 - 0.2, Facts + FString::Printf(TEXT(" sprint_speed=%.2f"), G.Speed2));
+		Next();
+		return;
+	}
+	case 2: case 10:
+	{
+		if (G.Step == 10 && G.K == 1 && !G.bPaused)
+		{
+			// the driver pauses and resumes with Esc; the game mode does not tick while paused, so the pause shows as a wall-clock gap between two sim frames
+			if (WallGap > 0.7) { G.bPaused = true; G.GapS = WallGap; ACC_LOG(TEXT("resumed step=10 gap_s=%.2f frame=%lld"), WallGap, F); G.PhFrame = F; return; }
+			if (InPh > 900) { Verdict(TEXT("resume_aim"), false, FString::Printf(TEXT("pause_seen=0 waited_frames=%lld"), InPh)); G.K = SubsOf(10); Next(); }
+			return;
+		}
+		if (G.Step == 10 && G.K == 1 && G.bPaused && G.Target.IsZero())
+		{
+			if (InPh < 30) return;
+			G.Target = OnScreenTarget(H.Pos, Unit(FaceYaw + FMath::DegreesToRadians(90.0)), 2.5, 1.0);
+			CursorLine(G.Target, TEXT("aim"));
+			G.ActFrame = F; G.PhFrame = F; G.AimFacts = FString::Printf(TEXT("pause_gap_s=%.2f"), G.GapS);
+			return;
+		}
+		FVector2D Ice;
+		const bool bCursor = CursorIce(Ice);
+		const double Err = AngDeg(H.BladePos - H.Pos, G.Target - H.Pos);
+		if (G.ArriveFrame < 0 && bCursor && FVector2D::Distance(Ice, G.Target) < 0.6) G.ArriveFrame = F;
+		if (G.ArriveFrame >= 0 && G.FollowFrame < 0 && Err <= 15.0) G.FollowFrame = F;
+		const bool bEnd = (G.FollowFrame >= 0) || (G.ArriveFrame >= 0 && F - G.ArriveFrame > 60) || InPh > 240;
+		if (!bEnd) return;
+		const int64 Lat = G.FollowFrame >= 0 ? G.FollowFrame - G.ArriveFrame : -1;
+		const bool bOk = G.ArriveFrame >= 0 && G.FollowFrame >= 0 && Lat <= 12;
+		G.AimOk += bOk ? 1 : 0;
+		G.AimFacts += FString::Printf(TEXT(" t%d=(arrive=%lld lat=%lld err=%.1f)"), G.K, G.ArriveFrame >= 0 ? G.ArriveFrame - G.ActFrame : -1, Lat, Err);
+		if (G.K == SubsOf(G.Step)) Verdict(G.Step == 2 ? TEXT("aim") : TEXT("resume_aim"), G.AimOk == SubsOf(G.Step), FString::Printf(TEXT("followed=%d/%d "), G.AimOk, SubsOf(G.Step)) + G.AimFacts);
+		if (G.Step == 10 && G.K == 1) { G.K = 2; G.Ph = EPh::Settle; G.PhFrame = F - 40; G.ArriveFrame = G.FollowFrame = -1; return; }   // the second target straight away (no re-stage)
+		Next();
+		return;
+	}
+	case 3:
+	{
+		if (!G.bLost && (P.LastTouch != Me || C != Me)) { G.bLost = true; G.LostFrame = F; }
+		if (InPh < 300) return;
+		Verdict(TEXT("carry"), !G.bLost, FString::Printf(TEXT("lost=%d lost_after=%lld sweeps=%d puck_dist=%.2f start_puck_dist=%.2f"), G.bLost ? 1 : 0, G.bLost ? G.LostFrame - G.ActFrame : -1, H.Sweeps - G.Sweeps0, FVector2D::Distance(H.Pos, P.Pos), G.PuckDistAtAct));
+		Next();
+		return;
+	}
+	case 4: case 6:
+	{
+		G.ChargeMax = FMath::Max(G.ChargeMax, H.ChargeFrames);
+		if (G.Step == 6)
+		{
+			if (G.CueFrame < 0) { if (InPh > 300) { G.OtFacts += FString::Printf(TEXT(" k%d=(mate_pass=0)"), G.K); if (G.K == SubsOf(6)) Verdict(TEXT("onetimer"), G.OtOk > 0, FString::Printf(TEXT("ok_tries=%d"), G.OtOk) + G.OtFacts); Next(); } return; }
+			if (G.RecvFrame < 0 && (H.PassesReceived > G.Received0 || (P.LastTouch == Me && C == Me)))
+			{
+				G.RecvFrame = F;
+				ACC_LOG(TEXT("received step=6 k=%d frame=%lld after_pass=%lld puck_dist=%.2f"), G.K, F, F - G.CueFrame, FVector2D::Distance(H.Pos, P.Pos));
+			}
+		}
+		if (H.bShotThisFrame && !G.bShot) { G.bShot = true; G.ShotFrame = F; G.ShotCharge = H.LastShotCharge; G.bOneTimer = H.bOneTimerThisFrame; }
+		if (Events(JamEvents::Goal, -1)) G.bGoal = true;
+		const int64 From = G.Step == 6 ? G.CueFrame : G.ActFrame;
+		const bool bEnd = G.bGoal || (G.bShot && F - G.ShotFrame > 120) || (!G.bShot && F - From > 150) || Sim->GetPhase() != EJamSimPhase::Playing;
+		if (!bEnd) return;
+		if (G.Step == 4)
+		{
+			static const TCHAR* Verb[3] = { TEXT("shoot_tap"), TEXT("shoot_half"), TEXT("shoot_full") };
+			const int32 i = (G.K - 1) % 3;
+			const bool bBand = i == 0 ? G.ChargeMax <= 3 : (i == 1 ? (G.ChargeMax >= 5 && G.ChargeMax <= 12) : G.ChargeMax >= FMath::Min(Cfg.Shot.ChargeFramesMax, 30) - 4);
+			Verdict(Verb[i], G.bShot && G.bGoal && bBand, FString::Printf(TEXT("shot=%d goal=%d charge_frames_max=%d charge=%.2f puck_dist_at_act=%.2f reach=%.2f"), G.bShot ? 1 : 0, G.bGoal ? 1 : 0, G.ChargeMax, G.ShotCharge, G.PuckDistAtAct, Sim->GetEffectiveStat(EJamStat::ShotReach, Me)));
+		}
+		else
+		{
+			const bool bOk = G.bGoal || (G.bShot && G.bOneTimer);
+			G.OtOk += bOk ? 1 : 0;
+			G.OtFacts += FString::Printf(TEXT(" k%d=(received=%d recv_after=%lld shot=%d one_timer=%d goal=%d charge_frames_max=%d)"), G.K, G.RecvFrame >= 0 ? 1 : 0, G.RecvFrame >= 0 ? G.RecvFrame - G.CueFrame : -1, G.bShot ? 1 : 0, G.bOneTimer ? 1 : 0, G.bGoal ? 1 : 0, G.ChargeMax);
+			if (G.K == SubsOf(6)) Verdict(TEXT("onetimer"), G.OtOk > 0, FString::Printf(TEXT("ok_tries=%d"), G.OtOk) + G.OtFacts);
+		}
+		Next();
+		return;
+	}
+	case 5:
+	{
+		if (G.K == 1) { if (InPh >= 150) { G.K = 1; G.Ph = EPh::Gap; G.PhFrame = F; G.K = 2; } return; }   // the probe: no verdict
+		if (H.bPassThisFrame && !G.bPassed) { G.bPassed = true; G.EventFrame = F; G.bSaucer = H.bSaucerThisFrame; }
+		if (G.bPassed && !G.bRecv && Sk.IsValidIndex(G.Mate) && (Sk[G.Mate].PassesReceived > G.MateRecv0 || C == G.Mate)) { G.bRecv = true; G.RecvFrame = F; }
+		const bool bEnd = (G.bPassed && (G.bRecv || F - G.EventFrame > 120)) || (!G.bPassed && InPh > 180);
+		if (!bEnd) return;
+		const FString Facts = FString::Printf(TEXT("pass=%d saucer=%d received=%d flight_frames=%lld puck_dist_at_act=%.2f reach=%.2f"), G.bPassed ? 1 : 0, G.bSaucer ? 1 : 0, G.bRecv ? 1 : 0, G.bRecv ? G.RecvFrame - G.EventFrame : -1, G.PuckDistAtAct, Sim->GetEffectiveStat(EJamStat::ShotReach, Me));
+		if (G.K == 2) Verdict(TEXT("pass"), G.bPassed && G.bRecv, Facts);
+		else Verdict(TEXT("saucer"), G.bPassed && G.bSaucer, Facts);
+		Next();
+		return;
+	}
+	case 7:
+	{
+		const FJamSkaterState& O = Sk[G.Opp];
+		const FVector2D ToO = O.Pos - H.Pos;
+		const double Dist = ToO.Size();
+		const double Gap = Dist - UJamSim::SkaterRadius * 2.0;
+		const double Closing = Dist > 1e-6 ? FVector2D::DotProduct(H.Vel - O.Vel, ToO / Dist) : 0.0;
+		if (G.CueFrame < 0 && (Gap <= 0.25 || (Closing > 0.5 && Gap <= Closing * (UJamSim::HumanCheckWindowFrames - 6) * UJamSim::DT)))
+		{
+			G.CueFrame = F; G.Closing = Closing; G.MaxSpeed = H.Vel.Size();
+			ACC_LOG(TEXT("act step=7 k=%d act=%s gap=%.2f closing=%.2f speed=%.2f frame=%lld"), G.K, G.K == 1 ? TEXT("rmb") : TEXT("mmb"), Gap, Closing, H.Vel.Size(), F);
+		}
+		if (Events(JamEvents::Check, Me)) G.bCheck = true;
+		if (O.StickHitResult != 0) G.StickHit = O.StickHitResult;
+		if (G.DownFrame < 0 && O.IsDown()) { G.DownFrame = F; G.bKnock = true; }
+		if (G.DownFrame >= 0 && G.UpFrame < 0 && !O.IsDown()) G.UpFrame = F;
+		if (G.DownFrame >= 0 && F - G.DownFrame == 5) G.bStrip = C != G.Opp;
+		if (G.K == 2 && G.CueFrame >= 0 && F - G.CueFrame == 20) G.bStrip = C != G.Opp;
+		const bool bEnd = G.K == 1 ? ((G.UpFrame >= 0) || (G.CueFrame >= 0 && F - G.CueFrame > 60 && G.DownFrame < 0) || InPh > 400) : ((G.CueFrame >= 0 && F - G.CueFrame > 40) || InPh > 300);
+		if (!bEnd) return;
+		if (G.K == 1)
+		{
+			const int64 Down = G.UpFrame >= 0 ? G.UpFrame - G.DownFrame : -1;
+			Verdict(TEXT("check"), G.bCheck && G.bKnock && G.bStrip && Down >= 0 && FMath::Abs(Down - Cfg.Skater.KnockdownFrames) <= 10,
+				FString::Printf(TEXT("cued=%d check=%d knockdown=%d strip=%d down_frames=%lld knock_frames_cfg=%d closing=%.2f speed=%.2f"), G.CueFrame >= 0 ? 1 : 0, G.bCheck ? 1 : 0, G.bKnock ? 1 : 0, G.bStrip ? 1 : 0, Down, Cfg.Skater.KnockdownFrames, G.Closing, G.MaxSpeed));
+		}
+		else Verdict(TEXT("crosscheck"), G.StickHit != 0 && G.bStrip, FString::Printf(TEXT("cued=%d stickhit=%d puck_free=%d knockdown=%d closing=%.2f"), G.CueFrame >= 0 ? 1 : 0, G.StickHit, G.bStrip ? 1 : 0, G.bKnock ? 1 : 0, G.Closing));
+		Next();
+		return;
+	}
+	case 8:
+	{
+		if (G.DownFrame < 0 && H.IsDown()) G.DownFrame = F;
+		if (G.DownFrame >= 0 && G.UpFrame < 0)
+		{
+			if (H.IsDown())
+			{
+				if (PC && PC->GetViewTarget() != HumanPawn) G.bCamOff = true;
+				if (PC && PC->PlayerCameraManager && HumanPawn) G.CamMaxM = FMath::Max(G.CamMaxM, FVector::Dist2D(PC->PlayerCameraManager->GetCameraLocation(), HumanPawn->GetActorLocation()) / 100.0);
+			}
+			else if (H.CanAct()) G.UpFrame = F;
+		}
+		const bool bEnd = G.UpFrame >= 0 || InPh > 400 || (G.DownFrame >= 0 && F - G.DownFrame > Cfg.Skater.KnockdownFrames * 2);
+		if (!bEnd) return;
+		const int64 Down = G.UpFrame >= 0 ? G.UpFrame - G.DownFrame : -1;
+		Verdict(TEXT("checked"), G.DownFrame >= 0 && !G.bCamOff && G.CamMaxM < 25.0 && Down >= 0 && FMath::Abs(Down - Cfg.Skater.KnockdownFrames) <= 15,
+			FString::Printf(TEXT("down=%d view_target_human=%d cam_max_m=%.1f down_frames=%lld knock_frames_cfg=%d opp_cue=%lld closing=%.2f"), G.DownFrame >= 0 ? 1 : 0, G.bCamOff ? 0 : 1, G.CamMaxM, Down, Cfg.Skater.KnockdownFrames, G.CueFrame >= 0 ? G.CueFrame - G.ActFrame : -1, G.Closing));
+		Next();
+		return;
+	}
+	case 9:
+	{
+		const bool bFire = G.K == 1 ? H.bDekeThisFrame : (G.K == 2 ? H.bSpinThisFrame : H.bSweepThisFrame);
+		if (bFire && !G.bFired) { G.bFired = true; G.EventFrame = F; }
+		if (G.bFired && !G.bLost && F - G.EventFrame <= 30 && (P.LastTouch != Me || C != Me)) { G.bLost = true; G.LostFrame = F; }
+		const bool bEnd = (G.bFired && F - G.EventFrame > 30) || (!G.bFired && InPh > 120);
+		if (!bEnd) return;
+		static const TCHAR* Verb[3] = { TEXT("deke"), TEXT("spin"), TEXT("sweep") };
+		Verdict(Verb[(G.K - 1) % 3], G.bFired && !G.bLost, FString::Printf(TEXT("fired=%d fired_after=%lld kept_30=%d lost_after=%lld puck_dist_at_act=%.2f"), G.bFired ? 1 : 0, G.bFired ? G.EventFrame - G.ActFrame : -1, G.bFired && !G.bLost ? 1 : 0, G.bLost ? G.LostFrame - G.EventFrame : -1, G.PuckDistAtAct));
+		Next();
+		return;
+	}
+	default: Next(); return;
+	}
+}

@@ -49,7 +49,7 @@ static TAutoConsoleVariable<int32> CVarJamCtrlStills(TEXT("jam.ctrl.Stills"), 0,
 static TAutoConsoleVariable<int32> CVarJamCtrlHandPuck(TEXT("jam.ctrl.HandPuck"), 0,
 	TEXT("1 = drills 10 / 11 hand the puck to the human (10) or the scripted teammate (11) whenever nobody on the human's team carries and no shot is being measured; JAMDRILL hand_puck lines. Lane A82 proof."));
 static TAutoConsoleVariable<int32> CVarJamCtrlDrill(TEXT("jam.ctrl.Drill"), 0,
-	TEXT("1 = tackle drill, 2 = cross-check drill: the human chases the carrier and presses once in range, 10 attempts, JAMDRILL lines. Lane A49 proof. 3 = sweep drill, 4 = spin drill (lane A51): the cursor and the keys stay real, the skating carries the puck at the nearest defender; JAMDRILL stick lines. 7 = sweep past a defender, 8 = spin with the puck, 9 = saucer over a defender's blade, 10 = shots from 10 m, 11 = one-timers off a scripted teammate (lane A77): JAMCUE lines for the driver, JAMDRILL stick / saucer / shot / onetimer lines."));
+	TEXT("1 = tackle drill, 2 = cross-check drill: the human chases the carrier and presses once in range, 10 attempts, JAMDRILL lines. Lane A49 proof. 3 = sweep drill, 4 = spin drill (lane A51): the cursor and the keys stay real, the skating carries the puck at the nearest defender; JAMDRILL stick lines. 7 = sweep past a defender, 8 = spin with the puck, 9 = saucer over a defender's blade, 10 = shots from 10 m, 11 = one-timers off a scripted teammate (lane A77): JAMCUE lines for the driver, JAMDRILL stick / saucer / shot / onetimer lines. 20 = the acceptance run (lane A87, tools/qa/accept): JAMACCEPT lines."));
 // Lane A31: a Director's Call from the console: load a cartridge (name or path) and apply it to the running match without a reset
 // (AHokejGameMode::ApplyCartridgeLive), the way the Designer does. A tier change swaps the rig and respawns the figures in place.
 static FAutoConsoleCommandWithWorldAndArgs CmdJamLiveCut(TEXT("jam.livecut"), TEXT("jam.livecut <name-or-path>: apply a cartridge to the running match live (Director's Call); no reset"),
@@ -907,7 +907,7 @@ void AHokejGameMode::GatherInputs()
 		const bool bOn = JamAI::CreaseStance(W, Human, Side);
 		SendGoalieStance(Human, bOn, Side, TEXT("player"));
 	}
-	if (CVarJamCtrlDrill.GetValueOnGameThread() != 0) Inputs[Human] = DrillInput();   // lane A49 proof drill
+	if (CVarJamCtrlDrill.GetValueOnGameThread() != 0 && CVarJamCtrlDrill.GetValueOnGameThread() != 20) Inputs[Human] = DrillInput();   // lane A49 proof drill (lane A87: drill 20 keeps the real input)
 	else Inputs[Human] = (bScriptedHuman || CVarJamScriptHuman.GetValueOnGameThread() != 0) ? ScriptedHumanInput() : ReadHumanInput();
 	if (CVarJamCtrlDrill.GetValueOnGameThread() == 11) MechDrillMate(Inputs);   // lane A77: the scripted teammate of the one-timer drill (after the human's input, never between A49's if and its else)
 	// Lane A82: drills 10 and 11 hand the puck (jam.ctrl.HandPuck 1): A77's human reached its 10 m spot carrying twice in 150 s and the one-timer's set piece never formed.
@@ -943,6 +943,7 @@ void AHokejGameMode::GatherInputs()
 			}
 		}
 	}
+	if (CVarJamCtrlDrill.GetValueOnGameThread() == 20) AcceptDrillInputs(Inputs);   // lane A87: the acceptance run stages the scene and scripts the mate and the opponent
 	if (Skaters.IsValidIndex(Human) && Skaters[Human]) Skaters[Human]->SetLogAim(UJamInputMap::LogEnabled());
 }
 
@@ -1090,6 +1091,7 @@ void AHokejGameMode::StepOnce()
 		for (const FJamSimEvent& E : Sim->GetFrameEvents()) if (E.Name == JamEvents::Ability && E.Who == H.Index && E.Strength > 0.5f) Kind = E.Kind;
 		UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld ability used kind=%s charges=%d ready=%lld"), Sim->GetFrame(), *Kind.ToString(), H.AbilityCharges, H.AbilityReadyFrame);
 	}
+	if (CVarJamCtrlDrill.GetValueOnGameThread() == 20) AcceptDrillObserve();   // lane A87 (R-0043): the acceptance run
 	MechDrillObserve();   // lane A77 (R-0036): the human's saucers always; the shots and one-timers in drills 10 and 11
 	if (CVarJamCtrlDrill.GetValueOnGameThread() == 3 || CVarJamCtrlDrill.GetValueOnGameThread() == 4 || CVarJamCtrlDrill.GetValueOnGameThread() == 7 || CVarJamCtrlDrill.GetValueOnGameThread() == 8 || StickDrillFrame >= 0) StickDrillObserve();   // lane A51 (7 and 8: lane A77)
 	else if (CVarJamCtrlDrill.GetValueOnGameThread() != 0 || DrillPressFrame >= 0) DrillObserve();   // lane A49

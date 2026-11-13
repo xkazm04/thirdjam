@@ -164,6 +164,11 @@ private:
 	int32 KdCount = 0, KdGetUps = 0;
 	int64 KdDownFrame = -1;
 	bool bKdWasDown = false;
+	// Lane A87 (R-0043 point 1): the acceptance run (jam.ctrl.Drill 20, HokejAcceptDrill.cpp): the human plays through the real input path; the drill stages each
+	// step (the human, one mate, one opponent; the rest parked), tells the driver (tools/qa/accept/accept.ps1) where the cursor goes and what to press, and logs a
+	// JAMACCEPT step=<n> verb=<v> ok=<0|1> line per verb. State lives in the .cpp (file-local).
+	void AcceptDrillInputs(TArray<FJamInput>& AllInputs);
+	void AcceptDrillObserve();
 
 	UPROPERTY(Transient) TObjectPtr<UJamCartridge> Cartridge;
 	UPROPERTY(Transient) TObjectPtr<UJamSim> Sim;
