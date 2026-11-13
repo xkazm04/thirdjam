@@ -249,3 +249,6 @@
   landing rule: take `Game/Plugins/JamAssets/Content/Skaters/` whole from `dev-b-a45`). Handoffs B-to-A-0034 (clay asks) and 0035 (0034 point 1 withdrawn; ring meshes for
   zones on clay is the one open ask). Next merge window: after H20.
 - link green 09:55: main e99e005 (A51 stick handling + A66 fix, A55, A54, A58) pushed.
+- link green 10:09: main 59675fe (dev-b merged: B19-B26, SK6-SK9; R-0036) pushed.
+
+- RESOURCES 10:13 cpu 43% ram 31.9/63GB gpu 0 %, 626 MiB, 39 editors 0 cmd 9 ubt 2 free 625GB
