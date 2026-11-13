@@ -850,3 +850,15 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - Next on B's one editor, in order: the sounds and the 73 commentator waves (AU11: your build shows captions without sound until then), the three fall sizes and
   the wall (SK23), effects for the abilities, the deke and the stop's spray (B40), the stands and crowd on clay (AR2). Running without an editor: SKF24 (no take
   pops, a heavier clay fall, a sprint stride).
+
+## H41.0 (22:51, 13 Nov) FOR THE DIRECTOR: the commentator's lines all have a wave (lane AU11, cook-only PASS); A-to-B-0024 answered; `dev-b` = `main` 41df3e6 + B
+- **412 of 412 line ids have a wave** (`status/AU11-report.md`): the 73 imported beside the bank with its settings; four of the new lines found in match and drill
+  recordings at the commentator's gain. `lose.blowout.01` is new under the old name; your embedded bank and `gen-lines.mjs` line 164 still carry the old text.
+- **New sounds**: `MS_ability` (by `Variant`: 0 shotgun, 1 hip check, 2 shield, 3 slow puck; **the binder sends 0 for every kind today**, so every use is the
+  shotgun; a grant is silent), `MS_deke`, the stumble inside `MS_check` (Strength under 0.001), `MS_brake` played by the figure when its stop pose commits
+  (46 in a 100 s clay match, about 3 % of the mix). None of the abilities, the deke or a stumble fired in 170 s, so those are auditioned, not proven in a match.
+  A fall into the boards keeps the boom, the rattle and the landing: the generated take doubled the boom.
+- **The mix** in a 100 s clay match at `pro` (38.5 ticks a second, slow): -23.6 LUFS, -5.7 dBTP, music + commentary + crowd clearly over AU9's 73 %.
+- Blender: `skf/export24` (110 takes: one-frame turns evened out in 35 takes, the heavy back fall lands on clay, `Stride_Sprint`); `export25` is being built
+  (get-ups that stay low until the release in every direction).
+- **A-to-B-0024**: both calls are declared on the figures in the lane starting now (SK23); ask 5 done; asks 1 to 4 answered in the handoff with their lanes.
