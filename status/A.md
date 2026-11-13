@@ -278,3 +278,13 @@
 - RESOURCES 11:46 cpu 91% ram 32.7/63GB gpu 40 %, 2992 MiB, 47 editors 0 cmd 9 ubt 1 free 636GB
 - link green 11:47: main 83fad8e (The hit felt (A73, B-to-A-0036 point 4): a hit-stop of 3 frames on a knockdown that involv) pushed.
 - package 11:54: `Hokej_Hokej_H22.zip` from main 83fad8e.
+- link green 11:56: main 5bd99c4 (The off-screen puck marker (A74, R-0038): a chevron on the frame's edge toward the puck wi) pushed.
+
+## H16 (12:00) H22 packaged (83fad8e); the puck marker landed (5bd99c4); two lanes on the P3 focus
+- H22: tackling felt (A73 hit-stop + camera kick), six modes with their keys (A67, A72), every match ends (A71), match start halved (A65), eyes-grid fixes (A64), clay
+  rings (A69), lockstep fix (A56). 5bd99c4: A74's off-screen puck marker (R-0038).
+- Running: A57 parity + hourly packages, A70 curve re-tune (A73's finding: pro bots rarely check the human, given as a lever), A76 HUD pass 3 (far-net diamond, edge
+  slots, the card on large rinks; Sonnet), A77 mechanics proven to their bars + the saucer pass (Fable).
+- B: A-to-B-0015 (ring material), 0016 (bumper, rigs, sky light, Lumen), 0017 (A73's figure asks) open.
+
+- RESOURCES 12:16 cpu 95% ram 26.7/63GB gpu 35 %, 3717 MiB, 45 editors 0 cmd 6 ubt 0 free 626GB

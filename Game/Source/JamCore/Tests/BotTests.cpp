@@ -199,7 +199,8 @@ bool FJamBotHumanHasSomethingToDo::RunTest(const FString& Parameters)
 	// 10 % of the faceoffs without a human touch inside 600 frames (frames in the penalty box do not count: nobody touches the puck from there).
 	// Measured 19:53: 12 of 126, 74 % of the lost windows a loose-puck chase. 00:37 (A50): 12 of 134; 01:22 (A52, the lifted puck): 12 of 142; 01:43 (the Director's
 	// calibrations block 0.4, full_m 0.6, rebound 0.45): 15 of 129. Budget 12 % since 01:50: twenty seeds put the standard error of this share near 2.5 points, so a
-	// 10 % bar on an 8.5 % baseline flipped on the calibration noise; lane A53's soak (hundreds of seeds) measures the real share tonight and A3 sets the bar from it.
+	// 10 % bar on an 8.5 % baseline flipped on the calibration noise. Lane A70 (CURVE-2.md): the soak's share over 2,000 matches on the final profiles (rookie red
+	// skill 0.8) is 8.4 % (1,055 of 12,548); seeds 1-20 give 10 of 126; the budget is that share plus 2 points, 10.4 %.
 	if (UJamCartridge* Cart = Load(*this, 0))
 	{
 		int32 Without = 0, Faceoffs = 0;
@@ -211,8 +212,8 @@ bool FJamBotHumanHasSomethingToDo::RunTest(const FString& Parameters)
 			Without += S.FaceoffsWithoutTouch;
 			Faceoffs += S.Faceoffs;
 		}
-		const int32 Budget = Faceoffs * 12 / 100;
-		const FString Msg = FString::Printf(TEXT("hockey.regular rookie novice, seeds 1-20: %d of %d faceoffs without a human touch inside 600 frames (budget 12 %%: %d)"), Without, Faceoffs, Budget);
+		const int32 Budget = Faceoffs * 104 / 1000;
+		const FString Msg = FString::Printf(TEXT("hockey.regular rookie novice, seeds 1-20: %d of %d faceoffs without a human touch inside 600 frames (budget 10.4 %%: %d)"), Without, Faceoffs, Budget);
 		if (Without <= Budget) { AddInfo(TEXT("PASS ") + Msg); } else { AddError(TEXT("FAIL ") + Msg); bOk = false; }
 	}
 	else { bOk = false; }

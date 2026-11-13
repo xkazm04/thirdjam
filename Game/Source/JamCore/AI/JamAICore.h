@@ -151,7 +151,7 @@ namespace JamAI
 		K.bIntercept = true;
 		K.bUseAimCone = true;
 		K.bOneTimer = true;    // R-0029 point 4 (lane A39): pro bots use the one-timer
-		K.CheckMinClosing = 5.0;   // R-0031 point 2 (lane A45): pro bots body-check the carrier from the front or the side at check_speed_min closing and up
+		K.CheckMinClosing = 4.0;   // R-0031 point 2 (lane A45): pro bots body-check the carrier from the front or the side at this closing speed and up (lane A70: 5 -> 4, knockdowns of the regular playtester 1.74 -> 1.96 a match, its win share unmoved, CURVE-2.md)
 		return K;
 	}
 
@@ -163,7 +163,7 @@ namespace JamAI
 		double HoldRadiusM = 0.0;      // game.ai.hold_radius_m (lane A3: pro profile 0 on puck.drag 0.5; A2's 4.5 handed the human the puck)
 		double SpeedScale = 1.0;       // game.ai.speed_scale
 		double SprintShare = 0.0;      // lane A72 (ask A2): game.ai.sprint, the share of two-second windows a chasing bot sprints (0 = never)
-		double RedSkill = 0.94;        // game.ai.red_skill (drives the side without the player); pro 0.94 by the R-0029 pass 2 (regular playtester 50 %)
+		double RedSkill = 0.95;        // game.ai.red_skill (drives the side without the player); pro 0.95 by lane A70 (CURVE-2.md: regular playtester 50.6 % over 2,000 matches; 0.94 by R-0029 pass 2 measured 52.3 on main 7dfbeb5)
 		// lane A3: skill per side. Opp = the side without the human (team 1 in pure bot-vs-bot); Mate = the human's side.
 		FJamBotSkill Mate;
 		FJamBotSkill Opp = ProOppSkill();
