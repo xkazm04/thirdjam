@@ -1,0 +1,1 @@
+SK7: P3C hem, world-normal buffer (left, NormalStrength 6) and lit (right): the relief sits on the painted stitches and each dash faces up on its upper side, so UV set, tangent basis and green channel are right

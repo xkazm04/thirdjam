@@ -1,0 +1,1 @@
+SK7: skates on the clay ice (P3C left, TB1_P3 right): the shadow is an amber patch because the ice's bulb reflection term is not shadowed; reflections of the figures are faint

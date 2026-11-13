@@ -1,0 +1,1 @@
+SK7 before: P3C blue, close-up 2.8 m from behind (fov 50, focus on the figure); clay-tier match (cut sk7-clay: generated_b2 x p3_clay, seed 1), frozen at t 2.18 s (faceoff)
