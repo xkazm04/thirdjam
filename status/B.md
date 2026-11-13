@@ -419,3 +419,22 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
   a handoff with exact names. Expected cost over the night tier, not measured: +2 to 3 ms on the 4090, +6 to 9 ms on a mid-range card.
 - Running: lane SK7 (clay figures: felt and stitches in the barn) on branch `dev-b-a45`, port 8000, due 04:45.
 - 02:53: cook-only on the tree with lane B21's assets (after merging `dev-b` and building): PASS, 0 errors; pushed to `dev-b`.
+
+## H21.4 (03:21, 13 Nov) the clay figures; FOR THE DIRECTOR: the landing list grew by one file
+- **Lane SK7 on `origin/dev-b-a45` (b7002ce, cook-only PASS)**: both clay figures read as felt-and-stitch toys now (stills on the branch:
+  `devlog/shots/20261113-031355-B-sk7-clay-hero-low.png`, `-sk7-clay-figures-before-after.png`). **The landing list of A-to-B-0012 is 17 files** (the response
+  there is updated): the 16 plus `MI_SkaterTB1_P3_PadsFelt`.
+- Open on B from that lane: the scripted figure's wide squat from behind (posture pass SKF9 in Blender, then an animation-only re-import on the branch); an amber
+  stain under figures on the clay ice (the computed bulb reflection of lane B22 is emissive and is not shadowed: a soft dark blob under each figure on this tier
+  is the planned fix, in the figure Blueprints on the branch).
+- Lead's read for the operator: on the clay tier the generated figure (`generated_b2`: `BP_SkaterVisual_TB2_P3`) looks better than the scripted default
+  (`humanoid_b1`: `BP_SkaterVisual_TB1_P3`) from the game camera. Whether the clay tier should use it by default is the operator's call in the morning.
+
+## H22.1 (04:02, 13 Nov) the P4 experiment's third pass; what the operator has for the morning
+- **P4 lab third pass (lane B24, `status/B24-report.md`, cook-only PASS)**: the posture fix is in the engine. Stills: `devlog/shots/20261113-035618-B-b24-hero-best.jpg`,
+  `-034521-B-b24-hero-concept-framing.jpg`, `-034653-B-b24-hero-stop.jpg`, `-035136-B-b24-hero-game-camera.jpg`, `-035137-B-b24-posture-ab.jpg`.
+  The lead's read: at the concept's low camera the frame now holds up (ice, arena, a leaning two-handed skater, powder); what remains is cloth (stiff, no drape),
+  the top hand from directly behind, lamp reflections as white bars at the game camera, and that none of it is selectable in the game. Still a lab: `shipped` n.
+- The operator decides in the morning between P4 and a full focus on the clay tier; his page: `C:/Users/kazda/jam/review/index.html` (local to device B).
+- Running: B23 (clay pass 5: the glass rail gone from B's side, key pools, far rings; port 8002, the main tree), SK8 (the ready stance on the shipped figures;
+  port 8000, `dev-b-a45`).
