@@ -274,3 +274,7 @@
 - link green 11:21: main 0c49b09 (The eyes grid's faults fixed (A64): the chaos bumper is a bollard, the controls strip clea) pushed.
 - link green 11:31: main dc40777 (The modes' keys (A72): ai.react_frames, ai.body_check (bots check from check_speed_min whe) pushed.
 - link green 11:39: main d630740 (The modes' keys (A72): ai.react_frames, ai.body_check (bots check from check_speed_min whe) pushed.
+
+- RESOURCES 11:46 cpu 91% ram 32.7/63GB gpu 40 %, 2992 MiB, 47 editors 0 cmd 9 ubt 1 free 636GB
+- link green 11:47: main 83fad8e (The hit felt (A73, B-to-A-0036 point 4): a hit-stop of 3 frames on a knockdown that involv) pushed.
+- package 11:54: `Hokej_Hokej_H22.zip` from main 83fad8e.

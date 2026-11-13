@@ -1,0 +1,232 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "hud",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T10:43:35.424Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "hud",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a74/hockey.regular-l2-off-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/a74/hockey.regular-l2-off-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/a74/hockey.regular-l2-off-pause.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2466,
+      "usage": {
+        "prompt": 9745,
+        "output": 4552,
+        "thoughts": 0,
+        "total": 14297,
+        "calls": 2
+      },
+      "cost_usd_est": 0.02438,
+      "ms": 34761,
+      "retried": true,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A: hockey.regular-l2-off-faceoff.jpg",
+            "elements": [
+              {
+                "name": "Scoreboard and Period Banner",
+                "position": "top center (y: 12-112 px, x: 690-1230 px)",
+                "legible": true,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Far Net Distance Marker",
+                "position": "upper center below scoreboard (y: 110-150 px, x: 928-1052 px)",
+                "legible": true,
+                "text": "49 m"
+              },
+              {
+                "name": "Left Offscreen Own Goal Marker",
+                "position": "mid-left screen (y: 488-532 px, x: 22-128 px)",
+                "legible": false,
+                "text": "own 34 m"
+              },
+              {
+                "name": "Left Offscreen Distance Indicator",
+                "position": "lower-mid left screen (y: 622-662 px, x: 26-162 px)",
+                "legible": true,
+                "text": "24 m"
+              },
+              {
+                "name": "Skater Speech Bubble",
+                "position": "lower center beneath player (y: 820-862 px, x: 825-1098 px)",
+                "legible": true,
+                "text": "Loud one off the wall."
+              },
+              {
+                "name": "Controls Reference Strip",
+                "position": "bottom full width strip (y: 872-914 px, x: 24-1662 px)",
+                "legible": true,
+                "text": "SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC"
+              },
+              {
+                "name": "Call Ready Prompt",
+                "position": "bottom left corner (y: 946-980 px, x: 24-290 px)",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              },
+              {
+                "name": "Minimap Radar",
+                "position": "bottom right corner (y: 878-970 px, x: 1690-1880 px)",
+                "legible": false,
+                "text": "none"
+              }
+            ],
+            "collisions": [
+              "Target distance marker '49 m' floats directly above the distant orange skater and far goal frame.",
+              "Speech bubble 'Loud one off the wall' sits right over the blue ground selection ring.",
+              "Controls bar partially intersects the outer blue player arc.",
+              "Marker 'own 34 m' is cramped against the left screen boundary with weak contrast against blue ice lines."
+            ],
+            "missing": [
+              "Puck location indicator before faceoff.",
+              "Countdown timer or faceoff status indicator."
+            ],
+            "smallest_text_px": 14,
+            "legibility": 3
+          },
+          {
+            "label": "Still B: hockey.regular-l2-off-farnet.jpg",
+            "elements": [
+              {
+                "name": "Scoreboard and Period Banner",
+                "position": "top center (y: 12-112 px, x: 690-1230 px)",
+                "legible": true,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Upper Right Proximity Marker",
+                "position": "upper right ice and boards (y: 185-218 px, x: 1418-1512 px)",
+                "legible": true,
+                "text": "3 m"
+              },
+              {
+                "name": "Right Edge Own Goal Marker",
+                "position": "middle right screen border (y: 490-532 px, x: 1782-1915 px)",
+                "legible": false,
+                "text": "own 82 m"
+              },
+              {
+                "name": "Goal Crease Distance Marker",
+                "position": "lower center-right crease boundary (y: 840-876 px, x: 1120-1206 px)",
+                "legible": true,
+                "text": "53 m"
+              },
+              {
+                "name": "Call Ready Prompt",
+                "position": "bottom left corner (y: 946-980 px, x: 24-290 px)",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              },
+              {
+                "name": "Minimap Radar",
+                "position": "bottom right corner (y: 878-970 px, x: 1690-1880 px)",
+                "legible": false,
+                "text": "none"
+              }
+            ],
+            "collisions": [
+              "Distance marker 'own 82 m' touches the right screen perimeter and overlaps the red goal line.",
+              "Distance marker '53 m' overlaps the red circular crease line.",
+              "Minimap in bottom right corner sits on top of red goal crease line graphics."
+            ],
+            "missing": [
+              "Controls hint bar for gameplay navigation.",
+              "Puck position pointer or locator."
+            ],
+            "smallest_text_px": 13,
+            "legibility": 3
+          },
+          {
+            "label": "Still C: hockey.regular-l2-off-pause.jpg",
+            "elements": [
+              {
+                "name": "Scoreboard and Period Banner",
+                "position": "top center background (y: 12-112 px, x: 690-1230 px)",
+                "legible": false,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Upper Right Proximity Marker",
+                "position": "upper right background (y: 185-218 px, x: 1418-1512 px)",
+                "legible": true,
+                "text": "3 m"
+              },
+              {
+                "name": "Right Edge Own Goal Marker",
+                "position": "middle right screen edge (y: 490-532 px, x: 1782-1915 px)",
+                "legible": false,
+                "text": "own 82 m"
+              },
+              {
+                "name": "Pause Menu Clapperboard Modal",
+                "position": "screen center overlay (y: 192-808 px, x: 560-1360 px)",
+                "legible": true,
+                "text": "TIME OUT PERIOD 1 RESUME DIRECTOR'S CALL RESTART QUIT TO MENU Your call is ready: change one thing about this match."
+              },
+              {
+                "name": "Comprehensive Controls Legend",
+                "position": "lower screen center overlay (y: 692-748 px, x: 456-1464 px)",
+                "legible": true,
+                "text": "SKATE WASD / L-STICK AIM STICK MOUSE / R-STICK SHOOT HOLD LMB / RT CHECK RMB / RB CROSS-CHECK MMB, MOUSE4 / LB DEKE WHEEL, Q / Y SPIN E / B SPRINT SHIFT / LT POKE SPACE / A PASS F / X SIGNALS 1-4 / D-PAD BRAKE CTRL / L-STICK CLICK RESTART R / VIEW PAUSE ESC / MENU"
+              },
+              {
+                "name": "Menu Navigation Prompt Strip",
+                "position": "bottom edge of pause card (y: 764-782 px, x: 698-1224 px)",
+                "legible": true,
+                "text": "ESC / START resume STICK move A select B back"
+              },
+              {
+                "name": "Call Ready Prompt",
+                "position": "bottom left corner (y: 946-980 px, x: 24-290 px)",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              },
+              {
+                "name": "Minimap Radar",
+                "position": "bottom right corner (y: 878-970 px, x: 1690-1880 px)",
+                "legible": false,
+                "text": "none"
+              }
+            ],
+            "collisions": [
+              "Pause menu modal directly conceals the central player figure and the scoreboard base.",
+              "Comprehensive controls text clashes with the bottom white border of the clapperboard card.",
+              "Background marker 'own 82 m' is squashed against the right screen edge."
+            ],
+            "missing": [
+              "Current match score summary inside the pause modal itself.",
+              "Clear visual focus state highlighting which pause menu option is currently selected."
+            ],
+            "smallest_text_px": 12,
+            "legibility": 2
+          }
+        ]
+      },
+      "markdown": "**eyes/hud** A=hockey.regular-l2-off-faceoff.jpg B=hockey.regular-l2-off-farnet.jpg C=hockey.regular-l2-off-pause.jpg (gemini-3.8-flash, in 9745 out 4552 tokens, ~$0.0244, 34.8 s, 1 retry)\n- stills:\n  - label: Still A: hockey.regular-l2-off-faceoff.jpg; smallest_text_px: 14; legibility: 3\n    - elements:\n      - name: Scoreboard and Period Banner; position: top center (y: 12-112 px, x: 690-1230 px); legible: true; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Far Net Distance Marker; position: upper center below scoreboard (y: 110-150 px, x: 928-1052 px); legible: true; text: 49 m\n      - name: Left Offscreen Own Goal Marker; position: mid-left screen (y: 488-532 px, x: 22-128 px); legible: false; text: own 34 m\n      - name: Left Offscreen Distance Indicator; position: lower-mid left screen (y: 622-662 px, x: 26-162 px); legible: true; text: 24 m\n      - name: Skater Speech Bubble; position: lower center beneath player (y: 820-862 px, x: 825-1098 px); legible: true; text: Loud one off the wall.\n      - name: Controls Reference Strip; position: bottom full width strip (y: 872-914 px, x: 24-1662 px); legible: true; text: SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC\n      - name: Call Ready Prompt; position: bottom left corner (y: 946-980 px, x: 24-290 px); legible: true; text: ESC / START CALL READY\n      - name: Minimap Radar; position: bottom right corner (y: 878-970 px, x: 1690-1880 px); legible: false; text: none\n    - collisions: Target distance marker '49 m' floats directly above the distant orange skater and far goal frame.; Speech bubble 'Loud one off the wall' sits right over the blue ground selection ring.; Controls bar partially intersects the outer blue player arc.; Marker 'own 34 m' is cramped against the left screen boundary with weak contrast against blue ice lines.\n    - missing: Puck location indicator before faceoff.; Countdown timer or faceoff status indicator.\n  - label: Still B: hockey.regular-l2-off-farnet.jpg; smallest_text_px: 13; legibility: 3\n    - elements:\n      - name: Scoreboard and Period Banner; position: top center (y: 12-112 px, x: 690-1230 px); legible: true; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Upper Right Proximity Marker; position: upper right ice and boards (y: 185-218 px, x: 1418-1512 px); legible: true; text: 3 m\n      - name: Right Edge Own Goal Marker; position: middle right screen border (y: 490-532 px, x: 1782-1915 px); legible: false; text: own 82 m\n      - name: Goal Crease Distance Marker; position: lower center-right crease boundary (y: 840-876 px, x: 1120-1206 px); legible: true; text: 53 m\n      - name: Call Ready Prompt; position: bottom left corner (y: 946-980 px, x: 24-290 px); legible: true; text: ESC / START CALL READY\n      - name: Minimap Radar; position: bottom right corner (y: 878-970 px, x: 1690-1880 px); legible: false; text: none\n    - collisions: Distance marker 'own 82 m' touches the right screen perimeter and overlaps the red goal line.; Distance marker '53 m' overlaps the red circular crease line.; Minimap in bottom right corner sits on top of red goal crease line graphics.\n    - missing: Controls hint bar for gameplay navigation.; Puck position pointer or locator.\n  - label: Still C: hockey.regular-l2-off-pause.jpg; smallest_text_px: 12; legibility: 2\n    - elements:\n      - name: Scoreboard and Period Banner; position: top center background (y: 12-112 px, x: 690-1230 px); legible: false; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Upper Right Proximity Marker; position: upper right background (y: 185-218 px, x: 1418-1512 px); legible: true; text: 3 m\n      - name: Right Edge Own Goal Marker; position: middle right screen edge (y: 490-532 px, x: 1782-1915 px); legible: false; text: own 82 m\n      - name: Pause Menu Clapperboard Modal; position: screen center overlay (y: 192-808 px, x: 560-1360 px); legible: true; text: TIME OUT PERIOD 1 RESUME DIRECTOR'S CALL RESTART QUIT TO MENU Your call is ready: change one thing about this match.\n      - name: Comprehensive Controls Legend; position: lower screen center overlay (y: 692-748 px, x: 456-1464 px); legible: true; text: SKATE WASD / L-STICK AIM STICK MOUSE / R-STICK SHOOT HOLD LMB / RT CHECK RMB / RB CROSS-CHECK MMB, MOUSE4 / LB DEKE WHEEL, Q / Y SPIN E / B SPRINT SHIFT / LT POKE SPACE / A PASS F / X SIGNALS 1-4 / D-PAD BRAKE CTRL / L-STICK CLICK RESTART R / VIEW PAUSE ESC / MENU\n      - name: Menu Navigation Prompt Strip; position: bottom edge of pause card (y: 764-782 px, x: 698-1224 px); legible: true; text: ESC / START resume STICK move A select B back\n      - name: Call Ready Prompt; position: bottom left corner (y: 946-980 px, x: 24-290 px); legible: true; text: ESC / START CALL READY\n      - name: Minimap Radar; position: bottom right corner (y: 878-970 px, x: 1690-1880 px); legible: false; text: none\n    - collisions: Pause menu modal directly conceals the central player figure and the scoreboard base.; Comprehensive controls text clashes with the bottom white border of the clapperboard card.; Background marker 'own 82 m' is squashed against the right screen edge.\n    - missing: Current match score summary inside the pause modal itself.; Clear visual focus state highlighting which pause menu option is currently selected."
+    }
+  ]
+}

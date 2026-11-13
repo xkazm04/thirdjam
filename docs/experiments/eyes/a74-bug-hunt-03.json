@@ -1,0 +1,105 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T10:46:23.210Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a74/hockey.regular-l2-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/a74/hockey.regular-l2-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/a74/hockey.regular-l2-pause.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2347,
+      "usage": {
+        "prompt": 4024,
+        "output": 519,
+        "thoughts": 0,
+        "total": 4543,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00496,
+      "ms": 7117,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [
+              {
+                "where": "Top center-left and center-right behind boards",
+                "what": "Dark sky backdrop abruptly cuts off into pure black void above the boards with floating vertical truss posts extending into darkness.",
+                "severity": 2,
+                "confidence": 0.8
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still B",
+            "findings": [
+              {
+                "where": "Top-right along top of the dasher board glass rail",
+                "what": "A small red and white goal net mesh is duplicated or floating along the top ledge of the boards near the '3 m' marker.",
+                "severity": 4,
+                "confidence": 0.98
+              },
+              {
+                "where": "Center-right in front of boards",
+                "what": "The goal net is rendered completely flat, opaque grey on top without transparent netting mesh, resembling a solid table/bench rather than a standard hockey goal cage.",
+                "severity": 3,
+                "confidence": 0.9
+              },
+              {
+                "where": "Center, around player 7's feet",
+                "what": "Player's blue selection ring clips or renders behind the red goal frame leg while the skater stands on the ice.",
+                "severity": 2,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still C",
+            "findings": [
+              {
+                "where": "Top-right above dasher board rail",
+                "what": "Floating miniature goal net artifact visible at the upper right rail just beside the '5 m' marker.",
+                "severity": 4,
+                "confidence": 0.98
+              },
+              {
+                "where": "Bottom-center under pause menu modal",
+                "what": "Two lines of controller mapping text overflow and overlap heavily with each other directly under 'Your call is ready'.",
+                "severity": 3,
+                "confidence": 0.95
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=hockey.regular-l2-faceoff.jpg B=hockey.regular-l2-farnet.jpg C=hockey.regular-l2-pause.jpg (gemini-3.8-flash, in 4024 out 519 tokens, ~$0.0050, 7.1 s)\n- stills:\n  - label: Still A; clean: false\n    - findings:\n      - where: Top center-left and center-right behind boards; what: Dark sky backdrop abruptly cuts off into pure black void above the boards with floating vertical truss posts extending into darkness.; severity: 2; confidence: 0.8\n  - label: Still B; clean: false\n    - findings:\n      - where: Top-right along top of the dasher board glass rail; what: A small red and white goal net mesh is duplicated or floating along the top ledge of the boards near the '3 m' marker.; severity: 4; confidence: 0.98\n      - where: Center-right in front of boards; what: The goal net is rendered completely flat, opaque grey on top without transparent netting mesh, resembling a solid table/bench rather than a standard hockey goal cage.; severity: 3; confidence: 0.9\n      - where: Center, around player 7's feet; what: Player's blue selection ring clips or renders behind the red goal frame leg while the skater stands on the ice.; severity: 2; confidence: 0.85\n  - label: Still C; clean: false\n    - findings:\n      - where: Top-right above dasher board rail; what: Floating miniature goal net artifact visible at the upper right rail just beside the '5 m' marker.; severity: 4; confidence: 0.98\n      - where: Bottom-center under pause menu modal; what: Two lines of controller mapping text overflow and overlap heavily with each other directly under 'Your call is ready'.; severity: 3; confidence: 0.95"
+    }
+  ]
+}

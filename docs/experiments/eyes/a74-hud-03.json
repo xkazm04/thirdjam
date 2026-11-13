@@ -1,0 +1,223 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "hud",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T10:48:23.998Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "hud",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a74/hockey.regular-l2-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/a74/hockey.regular-l2-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/a74/hockey.regular-l2-pause.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2454,
+      "usage": {
+        "prompt": 9539,
+        "output": 3131,
+        "thoughts": 0,
+        "total": 12670,
+        "calls": 2
+      },
+      "cost_usd_est": 0.0189,
+      "ms": 23838,
+      "retried": true,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A: hockey.regular-l2-faceoff.jpg",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Far Net Marker",
+                "position": "upper center below scoreboard",
+                "legible": true,
+                "text": "49 m"
+              },
+              {
+                "name": "Own Goal Offscreen Indicator",
+                "position": "center left",
+                "legible": false,
+                "text": "own 34 m"
+              },
+              {
+                "name": "Player Distance Marker",
+                "position": "mid-lower left",
+                "legible": true,
+                "text": "23 m"
+              },
+              {
+                "name": "Speech Bubble",
+                "position": "lower center below skater",
+                "legible": true,
+                "text": "Loud one off the wall."
+              },
+              {
+                "name": "Controls Strip",
+                "position": "bottom full width",
+                "legible": true,
+                "text": "SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC"
+              },
+              {
+                "name": "Call Ready Prompt",
+                "position": "bottom left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              },
+              {
+                "name": "Minimap Radar",
+                "position": "bottom right corner",
+                "legible": true,
+                "text": "Radar display with skater dots"
+              }
+            ],
+            "collisions": [
+              "Radar sits dangerously close to the bottom-right frame edge without safe-zone margin",
+              "Speech bubble overlaps the player base circle and control bar boundary",
+              "Own net distance text collides with blue line ice markings reducing contrast"
+            ],
+            "missing": [
+              "Faceoff countdown timer or ready confirmation indicator",
+              "Puck highlight or indicator showing where the drop will occur"
+            ],
+            "smallest_text_px": 14,
+            "legibility": 4
+          },
+          {
+            "label": "Still B: hockey.regular-l2-farnet.jpg",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "top center",
+                "legible": true,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Far Net Distance Marker",
+                "position": "upper center right",
+                "legible": true,
+                "text": "3 m"
+              },
+              {
+                "name": "Own Goal Offscreen Marker",
+                "position": "mid right edge",
+                "legible": false,
+                "text": "own 82 m"
+              },
+              {
+                "name": "Opponent Offscreen Indicator",
+                "position": "lower center right crease",
+                "legible": true,
+                "text": "62 m"
+              },
+              {
+                "name": "Call Ready Prompt",
+                "position": "bottom left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              },
+              {
+                "name": "Minimap Radar",
+                "position": "bottom right corner",
+                "legible": true,
+                "text": "Radar display with skater dots"
+              }
+            ],
+            "collisions": [
+              "Own net distance marker collides with the right screen border and the bright yellow dasher board line",
+              "The 62 m indicator sits right on the goal crease line"
+            ],
+            "missing": [
+              "Location of the puck",
+              "Bottom controls strip present in Still A is entirely missing"
+            ],
+            "smallest_text_px": 13,
+            "legibility": 3
+          },
+          {
+            "label": "Still C: hockey.regular-l2-pause.jpg",
+            "elements": [
+              {
+                "name": "Scoreboard",
+                "position": "top center partially behind dialog",
+                "legible": true,
+                "text": "00 PERIOD 1: FIRST TO 3 00"
+              },
+              {
+                "name": "Time Out Menu Card",
+                "position": "center screen",
+                "legible": true,
+                "text": "TIME OUT PERIOD 1 RESUME DIRECTOR'S CALL RESTART QUIT TO MENU Your call is ready: change one thing about this match."
+              },
+              {
+                "name": "Offscreen Goal Indicator",
+                "position": "mid right edge behind card",
+                "legible": false,
+                "text": "5 m own 85 m"
+              },
+              {
+                "name": "Extended Controls Strip",
+                "position": "lower center within menu",
+                "legible": true,
+                "text": "SKATE WASD / L-STICK AIM STICK MOUSE / R-STICK SHOOT HOLD LMB / RT CHECK RMB / RB CROSS-CHECK MMB, MOUSE4 / LB DEKE WHEEL, Q / Y SPIN E / B SPRINT SHIFT / LT POKE SPACE / A PASS F / X SIGNALS 1-4 / D-PAD BRAKE CTRL / L-STICK CLICK RESTART R / VIEW PAUSE ESC / MENU"
+              },
+              {
+                "name": "Menu Navigation Prompt",
+                "position": "bottom of pause card",
+                "legible": true,
+                "text": "ESC / START resume STICK move A select B back"
+              },
+              {
+                "name": "Call Ready Prompt",
+                "position": "bottom left corner",
+                "legible": true,
+                "text": "ESC / START CALL READY"
+              },
+              {
+                "name": "Minimap Radar",
+                "position": "bottom right corner",
+                "legible": true,
+                "text": "Radar display with skater dots"
+              }
+            ],
+            "collisions": [
+              "Time Out modal card heavily obscures the rink action and the scoreboard bottom",
+              "Bottom-left Call Ready prompt conflicts directly with ESC / START resume inside the pause menu"
+            ],
+            "missing": [
+              "Puck status or possession summary during pause",
+              "Current match timer"
+            ],
+            "smallest_text_px": 12,
+            "legibility": 4
+          }
+        ]
+      },
+      "markdown": "**eyes/hud** A=hockey.regular-l2-faceoff.jpg B=hockey.regular-l2-farnet.jpg C=hockey.regular-l2-pause.jpg (gemini-3.8-flash, in 9539 out 3131 tokens, ~$0.0189, 23.8 s, 1 retry)\n- stills:\n  - label: Still A: hockey.regular-l2-faceoff.jpg; smallest_text_px: 14; legibility: 4\n    - elements:\n      - name: Scoreboard; position: top center; legible: true; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Far Net Marker; position: upper center below scoreboard; legible: true; text: 49 m\n      - name: Own Goal Offscreen Indicator; position: center left; legible: false; text: own 34 m\n      - name: Player Distance Marker; position: mid-lower left; legible: true; text: 23 m\n      - name: Speech Bubble; position: lower center below skater; legible: true; text: Loud one off the wall.\n      - name: Controls Strip; position: bottom full width; legible: true; text: SKATE WASD AIM MOUSE SHOOT HOLD LMB CHECK RMB CROSS-CHECK MMB SPIN E SPRINT SHIFT POKE SPACE PASS F PAUSE ESC\n      - name: Call Ready Prompt; position: bottom left corner; legible: true; text: ESC / START CALL READY\n      - name: Minimap Radar; position: bottom right corner; legible: true; text: Radar display with skater dots\n    - collisions: Radar sits dangerously close to the bottom-right frame edge without safe-zone margin; Speech bubble overlaps the player base circle and control bar boundary; Own net distance text collides with blue line ice markings reducing contrast\n    - missing: Faceoff countdown timer or ready confirmation indicator; Puck highlight or indicator showing where the drop will occur\n  - label: Still B: hockey.regular-l2-farnet.jpg; smallest_text_px: 13; legibility: 3\n    - elements:\n      - name: Scoreboard; position: top center; legible: true; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Far Net Distance Marker; position: upper center right; legible: true; text: 3 m\n      - name: Own Goal Offscreen Marker; position: mid right edge; legible: false; text: own 82 m\n      - name: Opponent Offscreen Indicator; position: lower center right crease; legible: true; text: 62 m\n      - name: Call Ready Prompt; position: bottom left corner; legible: true; text: ESC / START CALL READY\n      - name: Minimap Radar; position: bottom right corner; legible: true; text: Radar display with skater dots\n    - collisions: Own net distance marker collides with the right screen border and the bright yellow dasher board line; The 62 m indicator sits right on the goal crease line\n    - missing: Location of the puck; Bottom controls strip present in Still A is entirely missing\n  - label: Still C: hockey.regular-l2-pause.jpg; smallest_text_px: 12; legibility: 4\n    - elements:\n      - name: Scoreboard; position: top center partially behind dialog; legible: true; text: 00 PERIOD 1: FIRST TO 3 00\n      - name: Time Out Menu Card; position: center screen; legible: true; text: TIME OUT PERIOD 1 RESUME DIRECTOR'S CALL RESTART QUIT TO MENU Your call is ready: change one thing about this match.\n      - name: Offscreen Goal Indicator; position: mid right edge behind card; legible: false; text: 5 m own 85 m\n      - name: Extended Controls Strip; position: lower center within menu; legible: true; text: SKATE WASD / L-STICK AIM STICK MOUSE / R-STICK SHOOT HOLD LMB / RT CHECK RMB / RB CROSS-CHECK MMB, MOUSE4 / LB DEKE WHEEL, Q / Y SPIN E / B SPRINT SHIFT / LT POKE SPACE / A PASS F / X SIGNALS 1-4 / D-PAD BRAKE CTRL / L-STICK CLICK RESTART R / VIEW PAUSE ESC / MENU\n      - name: Menu Navigation Prompt; position: bottom of pause card; legible: true; text: ESC / START resume STICK move A select B back\n      - name: Call Ready Prompt; position: bottom left corner; legible: true; text: ESC / START CALL READY\n      - name: Minimap Radar; position: bottom right corner; legible: true; text: Radar display with skater dots\n    - collisions: Time Out modal card heavily obscures the rink action and the scoreboard bottom; Bottom-left Call Ready prompt conflicts directly with ESC / START resume inside the pause menu\n    - missing: Puck status or possession summary during pause; Current match timer"
+    }
+  ]
+}

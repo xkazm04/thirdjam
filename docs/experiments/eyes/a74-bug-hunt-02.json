@@ -1,0 +1,153 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-13T10:46:15.990Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": "docs/experiments/img/a74/hockey.boost-l3-card.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "B",
+          "path": "docs/experiments/img/a74/hockey.boost-l3-faceoff.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "C",
+          "path": "docs/experiments/img/a74/hockey.boost-l3-farnet.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "D",
+          "path": "docs/experiments/img/a74/hockey.boost-l3-pause.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "E",
+          "path": "docs/experiments/img/a74/hockey.regular-l2-call.jpg",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "label": "F",
+          "path": "docs/experiments/img/a74/hockey.regular-l2-card.jpg",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2447,
+      "usage": {
+        "prompt": 7447,
+        "output": 761,
+        "thoughts": 0,
+        "total": 8208,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00844,
+      "ms": 9442,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [
+              {
+                "where": "Top-center, behind MATCH 1 card",
+                "what": "The center-ice orange skater's upper body and an objective marker diamond are obscured and clipping behind the match intro UI card.",
+                "severity": 2,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still B",
+            "findings": [
+              {
+                "where": "Bottom-left quadrant, x=0 to 30 px, y=480 to 590 px",
+                "what": "An orange skater and their selection ring are cut off by the left screen edge, revealing only half a skate and ring border without an off-screen indicator icon.",
+                "severity": 2,
+                "confidence": 0.8
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still C",
+            "findings": [
+              {
+                "where": "Center, skater models",
+                "what": "The blue skater's right torso/arm and stick are heavily intersecting and clipping inside the orange skater's torso mesh.",
+                "severity": 3,
+                "confidence": 0.95
+              },
+              {
+                "where": "Center, goal area",
+                "what": "The orange floating UI pip marker (red line and diamond at 9 m) floats unnaturally above the goal board without clear ground alignment.",
+                "severity": 2,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still D",
+            "findings": [
+              {
+                "where": "Center-bottom, under the pause card",
+                "what": "The pause menu modal covers the action while the selection ring and ice markings remain fully rendered without background dimming or depth of field.",
+                "severity": 1,
+                "confidence": 0.75
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still E",
+            "findings": [
+              {
+                "where": "Top-right edge, board area behind dialog",
+                "what": "A red rectangular element (possibly a goal frame or signage) is clipped awkwardly behind the upper board wall near the top right.",
+                "severity": 2,
+                "confidence": 0.8
+              }
+            ],
+            "clean": false
+          },
+          {
+            "label": "Still F",
+            "findings": [
+              {
+                "where": "Across the entire ice surface",
+                "what": "Severe stepped banding and concentric circular aliasing artifacts in the spotlight/ice texture brightness gradient.",
+                "severity": 3,
+                "confidence": 0.95
+              },
+              {
+                "where": "Top-center, behind MATCH 1 card",
+                "what": "An orange objective diamond marker and player silhouette are visually occluded/clipped directly behind the MATCH 1 card overlay.",
+                "severity": 2,
+                "confidence": 0.85
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=hockey.boost-l3-card.jpg B=hockey.boost-l3-faceoff.jpg C=hockey.boost-l3-farnet.jpg D=hockey.boost-l3-pause.jpg E=hockey.regular-l2-call.jpg F=hockey.regular-l2-card.jpg (gemini-3.8-flash, in 7447 out 761 tokens, ~$0.0084, 9.4 s)\n- stills:\n  - label: Still A; clean: false\n    - findings:\n      - where: Top-center, behind MATCH 1 card; what: The center-ice orange skater's upper body and an objective marker diamond are obscured and clipping behind the match intro UI card.; severity: 2; confidence: 0.85\n  - label: Still B; clean: false\n    - findings:\n      - where: Bottom-left quadrant, x=0 to 30 px, y=480 to 590 px; what: An orange skater and their selection ring are cut off by the left screen edge, revealing only half a skate and ring border without an off-screen indicator icon.; severity: 2; confidence: 0.8\n  - label: Still C; clean: false\n    - findings:\n      - where: Center, skater models; what: The blue skater's right torso/arm and stick are heavily intersecting and clipping inside the orange skater's torso mesh.; severity: 3; confidence: 0.95\n      - where: Center, goal area; what: The orange floating UI pip marker (red line and diamond at 9 m) floats unnaturally above the goal board without clear ground alignment.; severity: 2; confidence: 0.85\n  - label: Still D; clean: false\n    - findings:\n      - where: Center-bottom, under the pause card; what: The pause menu modal covers the action while the selection ring and ice markings remain fully rendered without background dimming or depth of field.; severity: 1; confidence: 0.75\n  - label: Still E; clean: false\n    - findings:\n      - where: Top-right edge, board area behind dialog; what: A red rectangular element (possibly a goal frame or signage) is clipped awkwardly behind the upper board wall near the top right.; severity: 2; confidence: 0.8\n  - label: Still F; clean: false\n    - findings:\n      - where: Across the entire ice surface; what: Severe stepped banding and concentric circular aliasing artifacts in the spotlight/ice texture brightness gradient.; severity: 3; confidence: 0.95\n      - where: Top-center, behind MATCH 1 card; what: An orange objective diamond marker and player silhouette are visually occluded/clipped directly behind the MATCH 1 card overlay.; severity: 2; confidence: 0.85"
+    }
+  ]
+}
