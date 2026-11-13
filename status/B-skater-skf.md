@@ -1926,11 +1926,12 @@ Not changed: the top hand sits at the hip, not above the back, so it is not as p
   | `faceoff-behind-before-after` | the operator sheet: directly behind, rows p2 export10, p2 export14, p3 export10, p3 export14; `Idle_Faceoff` then `Faceoff_Draw` |
   | `<style>-<take>-ba` (20) | export10 above export14 |
 
-## Fifteenth pass: arm swing, standing-hit stick, a spin that reads (SKF15, 11:42 to 11:50)
+## Fifteenth pass: arm swing, standing-hit stick, a spin that reads (SKF15, 11:42 to 11:51)
 
 Delivered `C:\Users\kazda\jam\skater-lab\skf\export15\` (p2_cel, p3_clay, full sets) with `READY.txt`.
+- **Item 1 (the falls):** done, apart from one forearm/stick figure each (see "Against the targets").
 - **Item 3 (the spin):** done.
-- **Items 1 and 2:** improved but not at the targets.
+- **Item 2:** improved but not at the target.
 - **Items 4 and 5:** not started.
 
 **Difference list against export14:** 7 takes per style differ: `Knockdown_Right`, `Fall`, `Check_Hit_Back`, `Check_Hit_Left`, `Check_Hit_Right`, `Knockdown_Left_B`, `Knockdown_Right_B`. Everything else is identical to export14; the clay aim holds are identical to export10. The take count stays 74 with the same names.
@@ -1948,30 +1949,31 @@ Delivered `C:\Users\kazda\jam\skater-lab\skf\export15\` (p2_cel, p3_clay, full s
 - At the contact frame (2), both hands and the stick are the ready Glide's arms carried round with the trunk.
 - From frame 2 to 5 they fling out on an arc: extra keys at 3 and 4 keep each hand at least 85 % of the arm's reach from its shoulder, instead of a straight line that folds and unfolds the elbow.
 - It is applied to `Knockdown_Right`, `Fall` and the three standing hits.
+- In the two falls only, the arms also reach their flung position at frame 8 instead of 5, so the fling spreads over 6 frames. In the hits that moved the stick turn to frames 6-7, so the hits keep the 3-frame fling.
 - On `Knockdown_Left`, `Fall_Forward` and `Knockdown_Back` it made the other arm worse (up to 166 deg), so those stay as export14.
 
 **Local one-frame turns, export14 → export15** (upper arm L / R, forearm L / R, stick, in deg):
 
 | Style | Take | export14 | export15 |
 |---|---|---|---|
-| p2_cel | Knockdown_Right | 109.1 / 50.1 / 84.2 / 53.8 / 67.3 | 77.5 / 46.4 / 59.5 / 33.0 / 98.6 |
+| p2_cel | Knockdown_Right | 109.1 / 50.1 / 84.2 / 53.8 / 67.3 | 47.1 / 40.9 / 54.2 / 28.1 / 67.3 |
 | p2_cel | Knockdown_Right_B | 134.0 / 60.5 / 99.8 / 62.5 / 66.9 | 100.8 / 68.6 / 81.8 / 87.6 / 132.6 |
 | p2_cel | Knockdown_Left_B | 49.1 / 124.4 / 54.1 / 78.7 / 76.0 | 94.6 / 50.2 / 135.0 / 67.5 / 121.2 |
-| p2_cel | Fall | 123.1 / 58.6 / 143.2 / 75.9 / 124.9 | 90.2 / 73.9 / 58.8 / 44.3 / 82.4 |
-| p2_cel | Check_Hit_Left | 46.1 / 112.2 / 135.3 / 121.2 / 131.2 | 31.5 / 61.9 / 54.2 / 44.9 / 84.0 |
-| p2_cel | Check_Hit_Right | 178.4 / 48.9 / 158.8 / 103.4 / 113.5 | 65.1 / 44.6 / 61.6 / 70.7 / 67.0 |
-| p2_cel | Check_Hit_Back | 151.8 / 112.7 / 141.1 / 130.1 / 123.1 | 63.4 / 51.8 / 58.7 / 72.9 / 101.0 |
-| p3_clay | Knockdown_Right | 113.0 / 49.1 / 89.3 / 51.7 / 64.5 | 76.5 / 40.8 / 73.4 / 33.4 / 98.1 |
+| p2_cel | Fall | 123.1 / 58.6 / 143.2 / 75.9 / 124.9 | 52.6 / 35.9 / 61.2 / 81.3 / 78.4 |
+| p2_cel | Check_Hit_Left | 46.1 / 112.2 / 135.3 / 121.2 / 131.2 | 31.5 / 61.9 / 54.2 / 44.9 / 80.0 |
+| p2_cel | Check_Hit_Right | 178.4 / 48.9 / 158.8 / 103.4 / 113.5 | 65.1 / 44.6 / 61.6 / 70.7 / 72.5 |
+| p2_cel | Check_Hit_Back | 151.8 / 112.7 / 141.1 / 130.1 / 123.1 | 63.4 / 51.8 / 58.7 / 72.9 / 94.6 |
+| p3_clay | Knockdown_Right | 113.0 / 49.1 / 89.3 / 51.7 / 64.5 | 48.6 / 40.8 / 75.4 / 30.6 / 64.5 |
 | p3_clay | Knockdown_Right_B | 140.0 / 58.6 / 106.0 / 62.2 / 65.5 | 104.3 / 69.7 / 76.9 / 86.2 / 130.5 |
 | p3_clay | Knockdown_Left_B | 48.6 / 124.7 / 51.8 / 84.8 / 75.3 | 110.2 / 55.5 / 141.8 / 64.2 / 121.7 |
-| p3_clay | Fall | 104.7 / 66.2 / 155.0 / 83.6 / 130.4 | 103.0 / 75.9 / 76.6 / 57.1 / 75.7 |
-| p3_clay | Check_Hit_Left | 41.5 / 111.7 / 152.3 / 128.0 / 134.9 | 50.0 / 68.7 / 58.1 / 59.6 / 74.5 |
-| p3_clay | Check_Hit_Right | 166.3 / 46.2 / 166.4 / 117.2 / 127.2 | 62.4 / 44.4 / 76.4 / 70.1 / 72.8 |
-| p3_clay | Check_Hit_Back | 156.5 / 124.2 / 145.9 / 135.6 / 132.3 | 74.3 / 40.8 / 76.9 / 62.6 / 102.5 |
+| p3_clay | Fall | 104.7 / 66.2 / 155.0 / 83.6 / 130.4 | 60.7 / 39.0 / 77.6 / 83.6 / 73.8 |
+| p3_clay | Check_Hit_Left | 41.5 / 111.7 / 152.3 / 128.0 / 134.9 | 50.0 / 68.7 / 58.1 / 59.6 / 73.4 |
+| p3_clay | Check_Hit_Right | 166.3 / 46.2 / 166.4 / 117.2 / 127.2 | 62.4 / 44.4 / 76.4 / 70.1 / 74.7 |
+| p3_clay | Check_Hit_Back | 156.5 / 124.2 / 145.9 / 135.6 / 132.3 | 74.3 / 40.8 / 76.9 / 62.6 / 97.0 |
 
 **Against the targets:**
-- **Contact upper arm, target about 40-65 deg:** met for the standing hits (31-74). `Knockdown_Right` is at 77-78 and clay `Fall` at 103, so not met yet.
-- **Standing-hit stick, target under about 45 deg:** now 67-103 deg per frame (was 113-135). Not met. The flung-wide stagger is kept.
+- **Contact upper arm, target about 40-65 deg:** met for `Knockdown_Right` (47 / 49, was 109 / 113) and `Fall` (53 / 61, was 123 / 105). The forearm is 54-78 and the stick 64-78. The standing hits' upper arms are 31-74.
+- **Standing-hit stick, target under about 45 deg:** now 72-97 deg per frame (was 113-135). Not met. Most of it is the stick turning in the hand, a wrist twist, not its swing: halving the balance stick's swing changed it by only 1-6 deg. The flung-wide stagger is kept.
 
 ### 3. The spin reads as a spin
 
@@ -2008,9 +2010,90 @@ Delivered `C:\Users\kazda\jam\skater-lab\skf\export15\` (p2_cel, p3_clay, full s
   - `series15.py` (per-frame world turns)
   - `compose15.sh`, `part1.sh export15`
 - **Tables:** `work15/<style>/summary15.md`, `local_14.json`, `local_15.json`.
-- **Stills** (`devlog\shots\20261113-1147xx-B-lab-skf15-*`, 11):
+- **Stills** (`devlog\shots\20261113-1150xx to 1152xx-B-lab-skf15-*`, 11):
 
   | Still | Content |
   |---|---|
   | `spin-vs-plain` | per style, `Knockdown_Left` above `Knockdown_Left_B`, `Knockdown_Right` above `Knockdown_Right_B` |
   | `<style>-<take>-ba` (10) | export10 above export15 for the three standing hits, `Knockdown_Right` and `Fall` |
+
+## Sixteenth pass: the stick in the lying poses, two new falls (SKF16, 11:58 to 12:04)
+
+Delivered `C:\Users\kazda\jam\skater-lab\skf\export16\` (p2_cel, p3_clay, full sets) with `READY.txt`. Items 1 and 2 are done and verified; item 3 (the spin's landing) is not done.
+
+**Difference list against export15:** 12 existing takes per style differ:
+- the falls, now with the stick in from the landing on: `Fall`, `Fall_Forward`, `Knockdown_Back`, `Knockdown_Left`, `Knockdown_Right`, `Knockdown_Left_B`, `Knockdown_Right_B`, `Trip`;
+- the get-ups, which start on those poses: `GetUp`, `GetUp_Front`, `GetUp_Side_Left`, `GetUp_Side_Right`.
+
+There are also two new takes, `Fall_B` and `Knockdown_Back_B` (76 takes in all). Everything else is identical to export15; the clay aim holds are identical to export10.
+
+### 1. The stick in along the body
+
+In every lying pose the top hand reaches past the head along the ice and the shaft lies along the trunk (on the right side of the body). The shaft slopes down to the ice instead of floating at hand height. The air moment and the spin keep their wide stick.
+
+Measured on the last frame of each fall (`lie16.py`), p2 / p3:
+
+| Lying pose (takes) | Blade end from pelvis, export15 → 16 (cm) | Lowest stick point, export15 → 16 (cm) |
+|---|---|---|
+| On the back (`Fall`, `Fall_B`) | stick out to the side → 64.7 / 65.6 | 9.6 / 8.8 → 2.0 / 3.9 |
+| Face down (`Fall_Forward`, `Knockdown_Back`, `_B`) | → 77.3 / 76.6 | 16.0 / 14.4 → 1.6 / 0.1 |
+| Right side (`Knockdown_Left`, `_Left_B`) | → 66.3 / 65.2 | 9.6 / 8.8 → 1.3 / 1.3 |
+| Left side (`Knockdown_Right`, `_Right_B`, `Trip`) | → 89.8 / 85.0 | 29.4 / 30.7 → 0.8 / 1.0 |
+
+- **Not at 60 cm:** face down and on the left side the blade stays 77-90 cm from the pelvis. The toy's top arm is at full reach (arm extension 0.987), and on the left side it is the upper arm.
+- **Joins:** every fall's last frame equals its get-up's first, at most 0.0001 cm, the new takes included.
+- **Ground:** body and skates are at 0 cm or above. The stick's worst is -1.41 cm (p2 `GetUp_Front`, as in export10), -1.47 cm (p3 `Knockdown_Back_B`) and -1.87 cm (p3 `Check_Hit_Back`, from export15).
+
+### 2. Two new takes
+
+| Take | Frames | Beats | Ends on | Joins |
+|---|---|---|---|---|
+| `Fall_B` (hit from the front) | 28 | Snap at 2; onto the backside 5-7; slides seated with the legs out in front and the arms and stick thrown up 7-14 (pelvis carried back 24 cm); drops back flat at 18; lying 18-28 | `Fall`'s pose | `GetUp` |
+| `Knockdown_Back_B` (hit from behind) | 28 | Snap at 2; forward dive at 5 with the arms reaching forward; belly slide 9-15 with the arms out in front and the legs kicked up behind (pelvis carried 28 cm forward); flat at 20; lying 20-28 | `Knockdown_Back`'s pose | `GetUp_Front` |
+
+`Fall_B` + `GetUp` = 72 of 90 frames, and the same for `Knockdown_Back_B` + `GetUp_Front`.
+
+### Not done
+
+- **Item 3:** the spin's landing (arms and stick 95-150 deg in one frame at frames 13-14).
+- **Arm swing in the new takes:** the contact-frame swing in `Fall_B` and `Knockdown_Back_B` is not tamed (forearm up to 124 deg, upper arm up to 96 deg against the parent).
+
+### Files
+
+- **Scripts** (`skater-lab\skf\`):
+  - `run16.sh`, `summary16.py`
+  - `lie16.py` (blade end, stick height, joins)
+  - `compose16.sh`, `part1.sh export16`
+- **Tables:** `work16/<style>/summary16.md`, `lie16.txt`.
+- **Stills** (`devlog\shots\20261113-1202xx-B-lab-skf16-*`, 10):
+
+  | Still | Content |
+  |---|---|
+  | `lying-poses-before-after` | the four lying poses, export14 above export16, both styles |
+  | `new-falls` | `Fall` above `Fall_B`, `Knockdown_Back` above `Knockdown_Back_B`, both styles |
+  | `<style>-<take>-ba` (8) | export14 above export16 for `Fall`, `Fall_Forward`, `Knockdown_Left`, `Knockdown_Right` |
+
+### Addendum: item 3 as an optional set, export16s (12:05)
+
+`C:\Users\kazda\jam\skater-lab\skf\export16s\` (with `READY.txt`) differs from export16 only in `Knockdown_Left_B` and `Knockdown_Right_B`. export16 stays the main set.
+
+**What changed:**
+- The spin lands at frame 15 instead of 14 (bounce at 18, settle at 22, lying 22-30).
+- Arc keys at 12-14 bring the arms from the spokes into the lying pose over 4 frames.
+- The lying pose and the join are unchanged (0.0001 cm), and nothing goes under the ice.
+
+**Local one-frame turns at the landing (p2 / p3, deg), export16 → export16s:**
+
+| Take | Bone | export16 | export16s |
+|---|---|---|---|
+| `Knockdown_Right_B` | right upper arm | 144 / 155 | 104 / 113 |
+| `Knockdown_Right_B` | stick | 136 / 137 | 107 / 109 |
+| `Knockdown_Left_B` | left upper arm | 95 / 110 | 77 / 88 |
+| `Knockdown_Left_B` | left forearm | 135 / 142 | 81 / 72 |
+| `Knockdown_Left_B` | stick | 154 / 153 | 164 / 163 (worse) |
+
+The result is mixed: the arms are better, but the stick in `Knockdown_Left_B` is worse. Take it only if the arm pop at the landing shows more than the stick.
+
+**Why the stick got worse:** the measure is the stick bone against the hand. In the new lying pose the stick lies in along the body, so it has about 90 deg further to turn at the landing than before.
+
+**Still:** `devlog\shots\20261113-120507-B-lab-skf16-spin-landing.png`: export16 above export16s for both spin takes, both styles.
