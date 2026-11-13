@@ -333,3 +333,5 @@
 
 - RESOURCES 14:27 cpu 31% ram 26.8/63GB gpu 2 %, 814 MiB, 44 editors 0 cmd 0 ubt 3 free 611GB
 - link green 14:39: main 36d5f97 (The game speaks rough (A89, R-0041 point 4): a voice guide (ten rules, the rating's line, ) pushed.
+- link green 14:45: main 7e20aeb (The submission, first version from H24 (A88, R-0043 point 4): the rules checklist, a 39.5 ) pushed.
+- 14:45: A88 landed the submission v1 (submission/README.md is the checklist). Open for Sunday: the video has no audio (no capture device on this machine), no cross-check, no human goal, no 5 v 5 (needs H25+); zip to be named Hokej_Hokej.zip; a readme for vc_redist; team names on the page; ledger: T_UI_RingPlain origin "generated" is not an allowed origin, nine unshipped sourced rows lack a URL; dev log needs --repo and a curated shot set (2,606 shots break --embed); Windows Firewall prompt on first launch from a new path.

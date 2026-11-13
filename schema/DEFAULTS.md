@@ -87,6 +87,11 @@ of them out explicitly, but a Designer or hand-written cartridge may leave them 
 | `pickups` | none | |
 | `pickups[].max_on_ice` | 1 | lane A14 (C-0005) |
 | `pickups[].zone` | absent = anywhere on the ice | |
+| `abilities` | none (nobody holds an ability; F does nothing) | lane A84 (R-0041 point 3) |
+| `abilities[].charges` | unlimited for `trigger` mode, 1 for `trigger` pickup | lane A84 |
+| `abilities[].cooldown_frames` | 1200 (20 s) | lane A84 |
+| `abilities[].duration_frames` | 360 shield (6 s), 120 slow_puck (2 s); unused by shotgun and hip_check | lane A84 |
+| `abilities[].magnitude` | 1.5 shotgun (shot speed x), 1.5 hip_check (knockdown frames x), 0.5 slow_puck (the puck's speed share); unused by shield | lane A84 |
 | `effects` | none (the five built-ins are always available to pickups) | lane A14; `Game/Content/Designer/builtin-effects.json` |
 | `effects[].kind` | `custom` | the visual family; built-ins carry their own |
 | `effects[].stack` | `refresh` | |

@@ -299,6 +299,7 @@ void FJamCommentaryPicker::Remember(const FJamCommentaryEvent& E, const FJamComm
 void FJamCommentaryPicker::Observe(FName Event, const FJamEventPayload& Payload, const FVector2D& WhereM, const FJamCommentaryWorld& W)
 {
 	if (!Settings.bEnabled) return;
+	if (Event == JamEvents::Ability && Payload.Strength < 0.5f) return;   // lane A84: a grant is not narrated, only a use (Strength 1)
 	FJamCommentaryEvent E;
 	E.Event = Event;
 	E.Kind = Payload.Kind;

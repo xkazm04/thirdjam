@@ -124,6 +124,8 @@ namespace JamAI
 		// lane A72 (asks A2, A3): frames the human sprinted, and frames any bot sprinted (summed over the bots)
 		int64_t SprintFrames = 0, BotSprintFrames = 0;
 		int Knockdowns = 0;              // the human knocked down (any cause)
+		int KnockdownsAll = 0;           // lane A84: every knockdown in the match (any skater, any cause)
+		int AbilitiesUsed = 0;           // lane A84: the human's ability uses (F, event `ability` Strength 1)
 		int64_t IdleFrames = 0;          // frames beyond 900 since the human's last touch (play frames only)
 		int IdleSpells = 0;              // spells without a touch that reached 900 frames
 		int64_t MaxNoTouch = 0;          // the longest spell without a touch

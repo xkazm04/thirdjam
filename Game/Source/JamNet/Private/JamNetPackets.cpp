@@ -65,7 +65,8 @@ FJamNetQuantInput FJamNetQuantInput::From(const FJamInput& In)
 	Q.StickX = Q16(In.Stick.X);
 	Q.StickY = Q16(In.Stick.Y);
 	Q.Flags = (In.bShoot ? Shoot : 0) | (In.bCheck ? Check : 0) | (In.bBrake ? Brake : 0) | (In.bShootHeld ? ShootHeld : 0)
-		| (In.bPass ? Pass : 0) | (In.bPoke ? Poke : 0) | (In.bLift ? Lift : 0) | (In.bDeke ? Deke : 0) | (In.bSprint ? Sprint : 0) | (In.bSpin ? Spin : 0) | (In.bPassHeld ? PassHeld : 0);
+		| (In.bPass ? Pass : 0) | (In.bPoke ? Poke : 0) | (In.bLift ? Lift : 0) | (In.bDeke ? Deke : 0) | (In.bSprint ? Sprint : 0) | (In.bSpin ? Spin : 0) | (In.bPassHeld ? PassHeld : 0)
+		| (In.bAbility ? Ability : 0);   // lane A84
 	return Q;
 }
 
@@ -85,13 +86,14 @@ FJamInput FJamNetQuantInput::ToInput() const
 	In.bDeke = (Flags & Deke) != 0;   // lane A39
 	In.bSpin = (Flags & Spin) != 0;   // lane A51
 	In.bPassHeld = (Flags & PassHeld) != 0;   // lane A77
+	In.bAbility = (Flags & Ability) != 0;   // lane A84 (R-0041 point 3)
 	return In;
 }
 
 TArray<FName> FJamNetQuantInput::CoveredFields()
 {
 	return { FName(TEXT("Move")), FName(TEXT("bShoot")), FName(TEXT("bShootHeld")), FName(TEXT("bPass")), FName(TEXT("bCheck")), FName(TEXT("bBrake")),
-		FName(TEXT("Stick")), FName(TEXT("bPoke")), FName(TEXT("bLift")), FName(TEXT("bDeke")), FName(TEXT("bSprint")), FName(TEXT("bSpin")), FName(TEXT("bPassHeld")) };
+		FName(TEXT("Stick")), FName(TEXT("bPoke")), FName(TEXT("bLift")), FName(TEXT("bDeke")), FName(TEXT("bSprint")), FName(TEXT("bSpin")), FName(TEXT("bPassHeld")), FName(TEXT("bAbility")) };
 }
 
 void FJamNetInputPacket::Write(TArray<uint8>& Out) const

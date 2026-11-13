@@ -266,7 +266,16 @@ bool FJamNetInputCoverage::RunTest(const FString& Parameters)
 		TestEqual(TEXT("spin flag bit 512 alone"), static_cast<int32>(Qo.Flags), 512);
 		const FJamInput Back = Qo.ToInput();
 		TestTrue(TEXT("spin comes back alone"), Back.bSpin && !Back.bShoot && !Back.bCheck && !Back.bBrake && !Back.bShootHeld && !Back.bPass && !Back.bPoke && !Back.bLift && !Back.bDeke && !Back.bSprint);
-		TestEqual(TEXT("protocol 6 carries the spin and the held pass (lane A77; 5 carried the spin)"), static_cast<int32>(JamNet::Version), 6);
+		TestEqual(TEXT("protocol 7 carries the spin, the held pass and the ability (lane A84; 6 the held pass, 5 the spin)"), static_cast<int32>(JamNet::Version), 7);
+	}
+	// Lane A84 (R-0041 point 3): the ability is flag bit 2048 (bit 11), an edge, alone, and comes back alone.
+	{
+		FJamInput One; One.bAbility = true;
+		const FJamNetQuantInput Qo = FJamNetQuantInput::From(One);
+		TestEqual(TEXT("ability flag bit 2048 alone"), static_cast<int32>(Qo.Flags), 2048);
+		TestTrue(TEXT("ability is an edge flag"), (FJamNetQuantInput::EdgeFlags & FJamNetQuantInput::Ability) != 0);
+		const FJamInput Back = Qo.ToInput();
+		TestTrue(TEXT("ability comes back alone"), Back.bAbility && !Back.bSpin && !Back.bPassHeld && !Back.bShoot && !Back.bCheck && !Back.bPass && !Back.bDeke && !Back.bSprint);
 	}
 	TestTrue(TEXT("an empty input is the zero wire value"), FJamNetQuantInput::From(FJamInput()) == FJamNetQuantInput());
 	return true;

@@ -1,5 +1,6 @@
 #include "JamCommentaryData.h"
 #include "CommentaryData.inl"
+#include "CommentaryAbilityData.inl"   // lane A84 (R-0041 point 3): A's ability lines, merged below
 #include "JamJson.h"
 
 DEFINE_LOG_CATEGORY(LogJamCommentary);
@@ -130,6 +131,11 @@ int32 FJamCommentaryBank::Find(FName Id) const
 	return Found ? *Found : INDEX_NONE;
 }
 
+FString FJamCommentaryBank::AbilityJson()
+{
+	return FString(UTF8_TO_TCHAR(reinterpret_cast<const char*>(JamCommentaryAbilityJson)));
+}
+
 FString FJamCommentaryBank::EmbeddedJson()
 {
 	return FString(UTF8_TO_TCHAR(reinterpret_cast<const char*>(JamCommentaryBankJson)));
@@ -145,7 +151,19 @@ const FJamCommentaryBank& FJamCommentaryBank::Embedded()
 		{
 			for (const FString& E : Errors) UE_LOG(LogJamCommentary, Error, TEXT("JAMVO bank %s"), *E);
 		}
-		UE_LOG(LogJamCommentary, Log, TEXT("JAMVO bank loaded: %d lines, %d situations, %d errors"), B.Lines.Num(), B.SituationCount(), Errors.Num());
+		// Lane A84 (R-0041 point 3): the ability supplement, appended (its ids never collide with B's; a collision is skipped and logged).
+		FJamCommentaryBank Sup;
+		TArray<FString> SupErrors;
+		if (!Sup.Parse(AbilityJson(), SupErrors)) for (const FString& E : SupErrors) UE_LOG(LogJamCommentary, Error, TEXT("JAMVO ability bank %s"), *E);
+		for (const FJamCommentaryLine& L : Sup.Lines)
+		{
+			if (B.ById.Contains(L.Id)) { UE_LOG(LogJamCommentary, Error, TEXT("JAMVO ability bank: %s is already in the manifest, skipped"), *L.Id.ToString()); continue; }
+			B.ById.Add(L.Id, B.Lines.Num());
+			B.ByEvent.FindOrAdd(L.Event).Add(B.Lines.Num());
+			B.Situations.Add(L.Situation);
+			B.Lines.Add(L);
+		}
+		UE_LOG(LogJamCommentary, Log, TEXT("JAMVO bank loaded: %d lines (%d ability), %d situations, %d errors"), B.Lines.Num(), Sup.Lines.Num(), B.SituationCount(), Errors.Num() + SupErrors.Num());
 		return B;
 	}();
 	return Bank;

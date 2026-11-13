@@ -1,0 +1,151 @@
+{
+  "schema": "hokej.commentary/1",
+  "rules": "Lane A84 (R-0041 point 3): A's supplement to B's manifest, one situation per ability (event ability, Strength 1 = a use; grants are not narrated). The waves are B's to record (names in sound); until then the strip shows the text and the voice is silent.",
+  "count": 12,
+  "lines": [
+    {
+      "id": "ability.shotgun.01",
+      "event": "ability",
+      "kind": "shotgun",
+      "team": "any",
+      "priority": 4,
+      "cooldown_s": 6,
+      "when": "the human fires the shotgun ability (F)",
+      "text": "Shotgun! That puck went through everybody.",
+      "sound": "/JamAssets/Audio/VO/VO_Commentator_ability_shotgun_01.VO_Commentator_ability_shotgun_01",
+      "seconds": 1.9
+    },
+    {
+      "id": "ability.shotgun.02",
+      "event": "ability",
+      "kind": "shotgun",
+      "team": "any",
+      "priority": 4,
+      "cooldown_s": 6,
+      "when": "the human fires the shotgun ability (F)",
+      "text": "Bowling night. The whole lane is down.",
+      "sound": "/JamAssets/Audio/VO/VO_Commentator_ability_shotgun_02.VO_Commentator_ability_shotgun_02",
+      "seconds": 1.8
+    },
+    {
+      "id": "ability.shotgun.03",
+      "event": "ability",
+      "kind": "shotgun",
+      "team": "any",
+      "priority": 4,
+      "cooldown_s": 6,
+      "when": "the human fires the shotgun ability (F)",
+      "text": "One blast and nobody is left standing.",
+      "sound": "/JamAssets/Audio/VO/VO_Commentator_ability_shotgun_03.VO_Commentator_ability_shotgun_03",
+      "seconds": 1.8
+    },
+    {
+      "id": "ability.hip_check.01",
+      "event": "ability",
+      "kind": "hip_check",
+      "team": "any",
+      "priority": 4,
+      "cooldown_s": 6,
+      "when": "the human uses the hip check ability (F)",
+      "text": "Hip check! He sent him three metres.",
+      "sound": "/JamAssets/Audio/VO/VO_Commentator_ability_hip_check_01.VO_Commentator_ability_hip_check_01",
+      "seconds": 1.7
+    },
+    {
+      "id": "ability.hip_check.02",
+      "event": "ability",
+      "kind": "hip_check",
+      "team": "any",
+      "priority": 4,
+      "cooldown_s": 6,
+      "when": "the human uses the hip check ability (F)",
+      "text": "Out of nowhere. That hip lands like a truck.",
+      "sound": "/JamAssets/Audio/VO/VO_Commentator_ability_hip_check_02.VO_Commentator_ability_hip_check_02",
+      "seconds": 1.9
+    },
+    {
+      "id": "ability.hip_check.03",
+      "event": "ability",
+      "kind": "hip_check",
+      "team": "any",
+      "priority": 4,
+      "cooldown_s": 6,
+      "when": "the human uses the hip check ability (F)",
+      "text": "From a standstill. What a hip!",
+      "sound": "/JamAssets/Audio/VO/VO_Commentator_ability_hip_check_03.VO_Commentator_ability_hip_check_03",
+      "seconds": 1.5
+    },
+    {
+      "id": "ability.shield.01",
+      "event": "ability",
+      "kind": "shield",
+      "team": "any",
+      "priority": 4,
+      "cooldown_s": 6,
+      "when": "the human raises the shield ability (F)",
+      "text": "Shield is up. Bounce off him all you like.",
+      "sound": "/JamAssets/Audio/VO/VO_Commentator_ability_shield_01.VO_Commentator_ability_shield_01",
+      "seconds": 1.8
+    },
+    {
+      "id": "ability.shield.02",
+      "event": "ability",
+      "kind": "shield",
+      "team": "any",
+      "priority": 4,
+      "cooldown_s": 6,
+      "when": "the human raises the shield ability (F)",
+      "text": "You cannot knock this one over right now.",
+      "sound": "/JamAssets/Audio/VO/VO_Commentator_ability_shield_02.VO_Commentator_ability_shield_02",
+      "seconds": 1.7
+    },
+    {
+      "id": "ability.shield.03",
+      "event": "ability",
+      "kind": "shield",
+      "team": "any",
+      "priority": 4,
+      "cooldown_s": 6,
+      "when": "the human raises the shield ability (F)",
+      "text": "Armour on. Hit him and you just bounce.",
+      "sound": "/JamAssets/Audio/VO/VO_Commentator_ability_shield_03.VO_Commentator_ability_shield_03",
+      "seconds": 1.7
+    },
+    {
+      "id": "ability.slow_puck.01",
+      "event": "ability",
+      "kind": "slow_puck",
+      "team": "any",
+      "priority": 4,
+      "cooldown_s": 6,
+      "when": "the human arms the slow puck ability (F)",
+      "text": "Slow puck. Watch it crawl, then wake up.",
+      "sound": "/JamAssets/Audio/VO/VO_Commentator_ability_slow_puck_01.VO_Commentator_ability_slow_puck_01",
+      "seconds": 1.8
+    },
+    {
+      "id": "ability.slow_puck.02",
+      "event": "ability",
+      "kind": "slow_puck",
+      "team": "any",
+      "priority": 4,
+      "cooldown_s": 6,
+      "when": "the human arms the slow puck ability (F)",
+      "text": "A trick play. The puck is taking its time.",
+      "sound": "/JamAssets/Audio/VO/VO_Commentator_ability_slow_puck_02.VO_Commentator_ability_slow_puck_02",
+      "seconds": 1.8
+    },
+    {
+      "id": "ability.slow_puck.03",
+      "event": "ability",
+      "kind": "slow_puck",
+      "team": "any",
+      "priority": 4,
+      "cooldown_s": 6,
+      "when": "the human arms the slow puck ability (F)",
+      "text": "Look at that puck dawdle. Then it goes.",
+      "sound": "/JamAssets/Audio/VO/VO_Commentator_ability_slow_puck_03.VO_Commentator_ability_slow_puck_03",
+      "seconds": 1.7
+    }
+  ]
+}

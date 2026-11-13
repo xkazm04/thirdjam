@@ -341,6 +341,7 @@ namespace JamAI
 			I.bDeke = In[i].bDeke;   // R-0029 point 4 (lane A39): the deke tap
 			I.bSpin = In[i].bSpin;   // lane A51 (R-0034): the spin tap
 			I.bSprint = In[i].bSprint;   // lane A72 (asks A2, A3): the bots' and the playtester's sprint
+			I.bAbility = In[i].bAbility;   // lane A84 (R-0041 point 3): the playtester's F
 		}
 		if (bWithSystems) { Systems.BeforeStep(*Sim); }   // lane A41: score mirror, sim step, zone update, effect step (the game mode's order)
 		Sim->Step(Inputs);

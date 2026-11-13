@@ -202,8 +202,8 @@ void UJamDirectorsCallWidget::BuildTree()
 	// Lane A49: the controls card on the pause menu (the same table as UJamInputMap::BindingTableText and docs/experiments/CONTROLS.md).
 	UTextBlock* Controls = S::Text(T,
 		TEXT("SKATE  WASD / L-STICK      AIM STICK  MOUSE / R-STICK      SHOOT  HOLD LMB / RT      CHECK  RMB / RB\n")
-		TEXT("CROSS-CHECK  MMB, MOUSE4 / LB      DEKE  WHEEL, Q / Y      SPIN  E / B      SPRINT  SHIFT / LT      POKE  SPACE / A\n")
-		TEXT("PASS  F / X      SIGNALS  1-4 / D-PAD      BRAKE  CTRL / L-STICK CLICK      RESTART  R / VIEW      PAUSE  ESC / MENU"), S::CaptionFont(), S::Chalk());   // lane A51 (R-0034): spin E / B, pass F
+		TEXT("CROSS-CHECK  MMB, MOUSE4 / LB      DEKE  WHEEL / Y      SPIN  E / B      SPRINT  SHIFT / LT      POKE  SPACE / A\n")
+		TEXT("PASS  Q / X      ABILITY  F / R3      SIGNALS  1-4 / D-PAD      BRAKE  CTRL / L-STICK CLICK      RESTART  R / VIEW      PAUSE  ESC / MENU"), S::CaptionFont(), S::Chalk());   // lane A51 (R-0034): spin E / B; lane A84 (R-0041 point 3): pass Q, ability F / R3
 	Controls->SetJustification(ETextJustify::Center);
 	AddV(Pause, Controls, FMargin(0, 12, 0, 0));
 	UTextBlock* Keys = S::Text(T, TEXT("ESC / START  resume      STICK  move      A  select      B  back"), S::CaptionFont(), S::Muted());

@@ -151,7 +151,7 @@ while ($sw.Elapsed.TotalSeconds - $t0 -lt $Seconds) {
                     foreach ($k in 1..3) { [A77W]::Cursor($h, $cx + [int](110 * $script:side * (-1 + 2 * $k / 3)), $cy - 100); Start-Sleep -Milliseconds 16 }
                     $cues.sweep++; Note "cue sweep -> cursor crossed to side $script:side ($rest)" }
                 'spin' { if ($Drill -ne 8) { continue }; [A77W]::Key($h, 0x45, 101, 30); $cues.spin++; Note "cue spin -> E ($rest)" }
-                'saucer' { if ($Drill -ne 9) { continue }; [A77W]::KeyDown($h, 0x46, 102); Start-Sleep -Milliseconds 220; [A77W]::KeyUp($h, 0x46); $cues.saucer++; Note "cue saucer -> F held 220 ms ($rest)" }
+                'saucer' { if ($Drill -ne 9) { continue }; [A77W]::KeyDown($h, 0x51, 113); Start-Sleep -Milliseconds 220; [A77W]::KeyUp($h, 0x51); $cues.saucer++; Note "cue saucer -> Q held 220 ms (lane A84: the pass moved to Q) ($rest)" }
                 'shot' { if ($Drill -ne 10) { continue }
                     $hold = 20; if ($rest -match 'kind=half') { $hold = 135 } elseif ($rest -match 'kind=full') { $hold = 650 }
                     [A77W]::LButton($h, $cx, $cy, $true); Start-Sleep -Milliseconds $hold; [A77W]::LButton($h, $cx, $cy, $false)
@@ -162,7 +162,7 @@ while ($sw.Elapsed.TotalSeconds - $t0 -lt $Seconds) {
                     Start-Sleep -Milliseconds $ms
                     [A77W]::LButton($h, $cx, $cy, $true); Start-Sleep -Milliseconds 20; [A77W]::LButton($h, $cx, $cy, $false)
                     $cues.onetimer++; Note "cue onetimer -> waited $ms ms, left button tapped ($rest)" }
-                'pass_to_mate' { if ($Drill -ne 11) { continue }; [A77W]::Key($h, 0x46, 102, 30); $cues.pass_to_mate++; Note "cue pass_to_mate -> F tapped ($rest)" }
+                'pass_to_mate' { if ($Drill -ne 11) { continue }; [A77W]::Key($h, 0x51, 113, 30); $cues.pass_to_mate++; Note "cue pass_to_mate -> Q tapped (lane A84) ($rest)" }
             }
         }
         if ($text.Contains($summary)) { $done = $true; break }

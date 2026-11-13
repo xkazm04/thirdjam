@@ -34,6 +34,14 @@ namespace
 	const FName KindOneTimer(TEXT("one_timer"));
 	const FName KindLeft(TEXT("left"));
 	const FName KindRight(TEXT("right"));
+	// Lane A84 (R-0041 point 3): the four abilities, their triggers and the shotgun's knockdown cause.
+	const FName AbShotgun(TEXT("shotgun"));
+	const FName AbHipCheck(TEXT("hip_check"));
+	const FName AbShield(TEXT("shield"));
+	const FName AbSlowPuck(TEXT("slow_puck"));
+	const FName TriggerMode(TEXT("mode"));
+	const FName TriggerPickup(TEXT("pickup"));
+	const FName CauseShotgun(TEXT("shotgun"));
 
 	constexpr double Gravity = 9.8;
 	// Lane A32 read-outs: a shot counts as "on goal" for this many frames, a possession becomes a "carry" after this many, a post rings at most this often.
@@ -196,6 +204,14 @@ void UJamSim::Restart()
 		S.SpinDir = 1;
 		S.SpinReadyFrame = 0;
 		S.Sweeps = S.Spins = 0;
+		// Lane A84: no ability held, nothing armed (the mode grant follows below, once the puck state is reset).
+		S.AbilitySlot = -1;
+		S.AbilityCharges = -1;
+		S.AbilityReadyFrame = 0;
+		S.AbilityArmed = NAME_None;
+		S.ShieldFrames = 0;
+		S.AbilitiesUsed = 0;
+		S.bAbilityThisFrame = false;
 	}
 	PendingFaceoffDot = FVector2D::ZeroVector;
 	DekeCommitFrames = 0;
@@ -224,6 +240,13 @@ void UJamSim::Restart()
 	ResolveStats();
 	ResetReadouts();
 	FaceoffReset();
+	// Lane A84 (R-0041 point 3): a mode ability is every human's from the drop (bots never hold one).
+	for (int32 a = 0; a < Config.Abilities.Num(); ++a)
+	{
+		if (Config.Abilities[a].Trigger != TriggerMode) continue;
+		for (FJamSkaterState& S : Skaters) if (S.bHuman) GrantAbility(S.Index, a);
+		break;
+	}
 	FireRule(EJamRuleTrigger::OnPeriodStart, -1, -1, NAME_None, 1.f);
 }
 
@@ -345,6 +368,17 @@ TArray<FString> UJamSim::ApplyLiveConfig(const FJamGameConfig& N)
 	if (N.Rink.Obstacles.Num() != R.Obstacles.Num()) Held.Add(TEXT("rink.obstacles"));
 	if (N.Teams.Num() != Config.Teams.Num()) Held.Add(TEXT("teams"));
 	if (N.Rules.Mode != Config.Rules.Mode || N.Rules.ScoreToWin != Config.Rules.ScoreToWin || N.Rules.TimerFrames != Config.Rules.TimerFrames) Held.Add(TEXT("rules"));
+	// Lane A84: the abilities are the match's (a held slot indexes the list); a change waits for the next match.
+	{
+		bool bSame = N.Abilities.Num() == Config.Abilities.Num();
+		for (int32 i = 0; bSame && i < N.Abilities.Num(); ++i)
+		{
+			const FJamAbilityConfig& X = N.Abilities[i];
+			const FJamAbilityConfig& Y = Config.Abilities[i];
+			bSame = X.Kind == Y.Kind && X.Trigger == Y.Trigger && X.Charges == Y.Charges && X.CooldownFrames == Y.CooldownFrames && X.DurationFrames == Y.DurationFrames && X.Magnitude == Y.Magnitude;
+		}
+		if (!bSame) Held.Add(TEXT("abilities"));
+	}
 
 	Config.Rink.IceFriction = N.Rink.IceFriction;
 	Config.Rink.BoardRestitution = N.Rink.BoardRestitution;
@@ -545,6 +579,18 @@ bool UJamSim::AllowsPickupAt(const FVector2D& PosM) const
 
 void UJamSim::NotifyPickupTaken(int32 Who, FName Kind)
 {
+	// Lane A84 (R-0041 point 3): a human taking a boost while holding no ability is granted one of the pickup abilities, picked by the frame and the taker
+	// (deterministic and off the seeded stream, so a cartridge without abilities draws exactly as before).
+	if (Skaters.IsValidIndex(Who) && Skaters[Who].bHuman && Skaters[Who].AbilitySlot < 0)
+	{
+		TArray<int32, TInlineAllocator<4>> Pool;
+		for (int32 a = 0; a < Config.Abilities.Num(); ++a) if (Config.Abilities[a].Trigger == TriggerPickup) Pool.Add(a);
+		if (Pool.Num() > 0)
+		{
+			const uint64 Mix = (static_cast<uint64>(Frame) * 2654435761ull + static_cast<uint64>(Who) * 40503ull) >> 7;
+			GrantAbility(Who, Pool[static_cast<int32>(Mix % static_cast<uint64>(Pool.Num()))]);
+		}
+	}
 	FireRule(EJamRuleTrigger::OnPickupTake, Who, Skaters.IsValidIndex(Who) ? Skaters[Who].Team : -1, Kind, 0.f);
 }
 
@@ -680,6 +726,8 @@ void UJamSim::FaceoffReset()
 	Puck.Vel = FVector2D::ZeroVector;
 	Puck.Z = Puck.VZ = Puck.PrevZ = 0.0;   // R-0035 (lane A52): the drop lands on the ice
 	Puck.LastTouch = -1;
+	Puck.ShotgunFrames = 0; Puck.ShotgunBy = -1; Puck.ShotgunMul = 1.0;   // lane A84: a faceoff ends a shotgun and a slow puck in flight
+	Puck.SlowFrames = 0; Puck.SlowBy = -1; Puck.SlowMul = 1.0;
 	DekeCommitFrames = 0;
 	DekeCommitSide = 0;
 	DekeCommitSkater = -1;
@@ -883,6 +931,7 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 		S.bBumpThisFrame = false;   // lane A45 read-outs
 		S.bBoardHitThisFrame = false;
 		S.StickHitResult = 0;
+		S.bAbilityThisFrame = false;   // lane A84
 	}
 	Puck.PrevPos = Puck.Pos;
 	Puck.PrevZ = Puck.Z;   // R-0035 (lane A52): the visual interpolates the height like the position
@@ -969,7 +1018,9 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 	{
 		const FJamInput& In = Inputs.IsValidIndex(S.Index) ? Inputs[S.Index] : FJamInput();
 		if (S.CheckWindow > 0) --S.CheckWindow;
+		if (S.ShieldFrames > 0) --S.ShieldFrames;   // lane A84: the shield runs while the puck is live
 		if (!S.CanAct()) { S.ChargeFrames = 0; continue; }
+		if (In.bAbility) TryAbility(S);   // lane A84 (R-0041 point 3): F, before the shot so a shotgun with the puck fires this frame
 		if (In.bShoot) TryShoot(S, 0.f);
 		StepCharge(S, In);
 		if (In.bPass) TryPass(S);
@@ -995,6 +1046,7 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 	}
 	CollideSkaters();
 	StepPuck();
+	StepSlowPuck();   // lane A84: the slow puck's clock, after the puck moved
 	ResolvePokes();
 	for (FJamSkaterState& S : Skaters) { StepPayoffWindows(S); StepSweepShield(S); }
 	// Lane A45 read-out (C-0001 v4 SetBoardPin): on the boards BoardPinFrames or more with a standing opponent within BoardPinRangeM; never while down or in the box.
@@ -1328,7 +1380,7 @@ void UJamSim::TryLift(FJamSkaterState& S)
 		// Lane A82 (R-0040 point 1): the lift is shielded like the poke. A77 measured 19 and 11 clean lifts inside the sweep's and the spin's shield windows: the
 		// lift at contact (1.7 m body to body) took the puck the poke could not reach. A spinning carrier's body is between (no lift takes the carried puck); a sweep
 		// shields the side the puck left for stick.sweep.shield_frames. The swing is spent (the cooldown above stands) and reads as a miss.
-		if (IsLiftShielded(S, O))
+		if (IsLiftShielded(S, O) || O.ShieldFrames > 0)   // lane A84: the shield ability, like the spin's body
 		{
 			Emit(JamEvents::Lift, S.Index, S.BladePos, 0.f, KindMiss);
 			return;
@@ -1459,12 +1511,15 @@ void UJamSim::CollideSkaters()
 			{
 				const double ASpeed = Dot(A.Vel, N);
 				const double BSpeed = Dot(B.Vel, -N);
-				const float Strength = static_cast<float>(FMath::Clamp((ASpeed - Dot(B.Vel, N)) / Config.Skater.Speed, 0.0, 1.0));
+				const float CheckStrength = static_cast<float>(FMath::Clamp((ASpeed - Dot(B.Vel, N)) / Config.Skater.Speed, 0.0, 1.0));
 				// R-0013: a check on a skater without the puck, or from behind (the contact normal runs along the victim's facing), is a foul when penalties are on.
 				auto Landed = [&](FJamSkaterState& Checker, FJamSkaterState& Victim, const FVector2D& Dir)
 				{
 					bLanded = true;
 					Checker.CheckWindow = 0;
+					// Lane A84 (R-0041 point 3): an armed hip check lands at full strength, knocks down magnitude x as long and pushes the victim HipCheckPushM.
+					const bool bHip = Checker.AbilityArmed == AbHipCheck;
+					const float Strength = bHip ? 1.f : CheckStrength;
 					// Lane A33: the direction of the hit seen from the victim (Dir = the push, checker towards victim): along the facing = behind, against it = front,
 					// else the side the checker came from (the sim's yaw grows to the right, so the left is (sin yaw, -cos yaw)). Same thresholds as the foul rule below.
 					const FVector2D VF = Victim.Forward();
@@ -1476,15 +1531,25 @@ void UJamSim::CollideSkaters()
 					const bool bVictimHasPuck = CarrierIndex() == Victim.Index || (Frame - Victim.LastCarryFrame) <= Config.Stick.FoulGraceFrames;
 					const bool bFromBehind = Dot(Dir, Victim.Forward()) > 0.5;
 					KnockDown(Victim.Index, Dir, Strength, CauseCheck);
+					if (bHip)
+					{
+						const FJamAbilityConfig* Ab = HeldAbility(Checker.Index);
+						const double Mag = Ab && Ab->Magnitude > 0.0 ? Ab->Magnitude : AbilityDefaultMagnitude(AbHipCheck);
+						Victim.KnockFrames = FMath::Max(1, FMath::RoundToInt32(Victim.KnockFrames * Mag));
+						Victim.Vel += Dir.GetSafeNormal() * (2.0 * HipCheckPushM);   // the down glide halves it every 0.5 s: v slides v / 2 m
+						Checker.AbilityArmed = NAME_None;
+						if (Checker.AbilityCharges == 0) Checker.AbilitySlot = -1;
+					}
 					if (Config.Rules.bPenalties && (!bVictimHasPuck || bFromBehind)) CallFoul(Checker, Victim, Contact, Strength, bVictimHasPuck ? FoulFromBehind : FoulNoPuck);
 				};
 				// Lane A49: the human's check lands from HumanCheckSpeedMinMs of its own speed along the contact (a calibration, FEEL.md); bots keep check_speed_min.
-				auto MinSpeed = [&](const FJamSkaterState& Checker) { const double M = Eff(EJamStat::CheckSpeedMin, Checker.Index); return Checker.bHuman ? FMath::Min(M, HumanCheckSpeedMinMs) : M; };
-				if (A.CheckWindow > 0 && A.CanAct() && !B.IsDown() && ASpeed > MinSpeed(A))
+				// Lane A84: an armed hip check lands from a standstill (0 m/s of the checker's own speed along the contact); a shielded victim is only bumped.
+				auto MinSpeed = [&](const FJamSkaterState& Checker) { if (Checker.AbilityArmed == AbHipCheck) return -1e-6; const double M = Eff(EJamStat::CheckSpeedMin, Checker.Index); return Checker.bHuman ? FMath::Min(M, HumanCheckSpeedMinMs) : M; };
+				if (A.CheckWindow > 0 && A.CanAct() && !B.IsDown() && B.ShieldFrames == 0 && ASpeed > MinSpeed(A))
 				{
 					Landed(A, B, N);
 				}
-				else if (B.CheckWindow > 0 && B.CanAct() && !A.IsDown() && BSpeed > MinSpeed(B))
+				else if (B.CheckWindow > 0 && B.CanAct() && !A.IsDown() && A.ShieldFrames == 0 && BSpeed > MinSpeed(B))
 				{
 					Landed(B, A, -N);
 				}
@@ -1584,7 +1649,20 @@ void UJamSim::TryShoot(FJamSkaterState& S, float Charge)
 		}
 	}
 	const double MaxSpeed = Eff(EJamStat::PuckMaxSpeed, -1);
-	const double Speed = FMath::Min(Eff(EJamStat::ShotSpeed, S.Index) + FMath::Clamp(static_cast<double>(Charge), 0.0, 1.0) * Config.Shot.ChargeSpeedBonus, MaxSpeed);
+	double Speed = FMath::Min(Eff(EJamStat::ShotSpeed, S.Index) + FMath::Clamp(static_cast<double>(Charge), 0.0, 1.0) * Config.Shot.ChargeSpeedBonus, MaxSpeed);
+	// Lane A84 (R-0041 point 3): an armed shotgun leaves at magnitude x the speed (over puck.max_speed by the same factor) and flies through the crowd (StepShotgun).
+	if (S.AbilityArmed == AbShotgun)
+	{
+		const FJamAbilityConfig* Ab = HeldAbility(S.Index);
+		const double Mag = Ab && Ab->Magnitude > 0.0 ? Ab->Magnitude : AbilityDefaultMagnitude(AbShotgun);
+		Speed *= Mag;
+		Puck.ShotgunFrames = ShotgunFlightFrames;
+		Puck.ShotgunBy = S.Index;
+		Puck.ShotgunMul = FMath::Max(1.0, Mag);
+		S.AbilityArmed = NAME_None;
+		if (S.AbilityCharges == 0) S.AbilitySlot = -1;
+	}
+	else if (Puck.ShotgunFrames != 0) { Puck.ShotgunFrames = 0; Puck.ShotgunBy = -1; Puck.ShotgunMul = 1.0; }
 	Puck.Vel = Aim * Speed;
 	ApplyShotLift(S, Aim, Speed, Charge);   // R-0035 (lane A52): the release height follows the charge (a one-timer's Charge is 1 here, so it lifts full)
 	Puck.LastTouch = S.Index;
@@ -1610,6 +1688,7 @@ void UJamSim::TryShoot(FJamSkaterState& S, float Charge)
 	ShotFrame = Frame;
 	ShotBy = S.Index;
 	ShotStrength = static_cast<float>(FMath::Clamp(Speed / MaxSpeed, 0.0, 1.0));
+	ApplySlowPuck(S);   // lane A84: an armed slow puck takes this shot
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -1829,6 +1908,8 @@ void UJamSim::TryPass(FJamSkaterState& S, bool bSaucer)
 	S.LastPassStrength = static_cast<float>(Speed / MaxSpeed);
 	++S.Passes;
 	Emit(JamEvents::Pass, S.Index, Puck.Pos, static_cast<float>(Speed / MaxSpeed), FName(*FString::Printf(TEXT("%sto_%d"), bSaucer && Config.Pass.SaucerLiftM > 0.0 ? TEXT("saucer_") : TEXT(""), To)));
+	if (Puck.ShotgunFrames != 0) { Puck.ShotgunFrames = 0; Puck.ShotgunBy = -1; Puck.ShotgunMul = 1.0; }   // lane A84: a pass is never a shotgun
+	ApplySlowPuck(S);   // ... but may be a slow puck
 }
 
 void UJamSim::ApplySaucerLift(double DistM, double Speed)
@@ -1935,10 +2016,12 @@ void UJamSim::StepPuck()
 			Puck.Vel *= NewSp / Sp;
 		}
 		const double Sp2 = Puck.Vel.Size();
-		if (Sp2 > MaxSpeed) Puck.Vel *= MaxSpeed / Sp2;
+		const double Cap = Puck.ShotgunFrames > 0 ? MaxSpeed * Puck.ShotgunMul : MaxSpeed;   // lane A84: the shotgun's own cap
+		if (Sp2 > Cap) Puck.Vel *= Cap / Sp2;
 
 		const FVector2D Prev = Puck.Pos;
 		Puck.Pos += Puck.Vel * H;
+		if (Puck.ShotgunFrames > 0) StepShotgun(Prev);   // lane A84: the bodies on the path go down before any of them can stop it
 
 		// R-0035 (lane A52): the crease skater's save by height, before any body or blade touches the puck (its own rule, see TryGoalieSave).
 		{
@@ -1950,6 +2033,7 @@ void UJamSim::StepPuck()
 		for (FJamSkaterState& S : Skaters)
 		{
 			if (S.InBox()) continue;
+			if (Puck.ShotgunFrames > 0 && S.IsDown()) continue;   // lane A84: the shotgun goes through the bodies it knocked down
 			// R-0035 (lane A52): a puck over the body passes; over a crease skater's block height it passes too (the low shot through the stance is the hard one).
 			if (Puck.Z >= BodyHeightM || (Puck.Z >= Config.Skater.GoalieBlockHeightM && InCreaseStance(S))) continue;
 			// C-0005 deflection: an opponent's shot passing within DeflectRangeM of the blade bounces off it at 70 %; a teammate's puck (a pass)
@@ -2291,6 +2375,118 @@ void UJamSim::ScoreGoal(int32 ScoringTeam)
 	PauseFrames = Config.Rules.GoalPauseFrames;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+// Lane A84 (R-0041 point 3): the abilities on F. Cartridge-defined (game.abilities[]), one held at a time, the human's only.
+// ---------------------------------------------------------------------------------------------------------------------
+
+const FJamAbilityConfig* UJamSim::HeldAbility(int32 Skater) const
+{
+	if (!Skaters.IsValidIndex(Skater)) return nullptr;
+	const int32 Slot = Skaters[Skater].AbilitySlot;
+	return Config.Abilities.IsValidIndex(Slot) ? &Config.Abilities[Slot] : nullptr;
+}
+
+int32 UJamSim::AbilityDefaultCooldown(FName Kind)
+{
+	return 1200;   // 20 s for every kind (the Shotgun mode's number)
+}
+
+int32 UJamSim::AbilityDefaultDuration(FName Kind)
+{
+	return Kind == AbShield ? 360 : Kind == AbSlowPuck ? 120 : 0;
+}
+
+double UJamSim::AbilityDefaultMagnitude(FName Kind)
+{
+	return Kind == AbShotgun ? 1.5 : Kind == AbHipCheck ? 1.5 : Kind == AbSlowPuck ? 0.5 : 1.0;
+}
+
+bool UJamSim::GrantAbility(int32 Skater, int32 Slot)
+{
+	if (!Skaters.IsValidIndex(Skater) || !Config.Abilities.IsValidIndex(Slot)) return false;
+	FJamSkaterState& S = Skaters[Skater];
+	const FJamAbilityConfig& A = Config.Abilities[Slot];
+	S.AbilitySlot = Slot;
+	S.AbilityCharges = A.Charges > 0 ? A.Charges : (A.Trigger == TriggerPickup ? 1 : -1);
+	S.AbilityReadyFrame = Frame;
+	S.AbilityArmed = NAME_None;
+	Emit(JamEvents::Ability, S.Index, S.Pos, 0.f, A.Kind);
+	return true;
+}
+
+void UJamSim::TryAbility(FJamSkaterState& S)
+{
+	const FJamAbilityConfig* A = HeldAbility(S.Index);
+	if (!A || S.AbilityCharges == 0 || Frame < S.AbilityReadyFrame) return;
+	// One effect at a time: an armed kind waits for its shot, check or pass; a running shield runs out first.
+	if (!S.AbilityArmed.IsNone() || S.ShieldFrames > 0) return;
+	const FName Kind = A->Kind;
+	S.AbilityReadyFrame = Frame + (A->CooldownFrames > 0 ? A->CooldownFrames : AbilityDefaultCooldown(Kind));
+	++S.AbilitiesUsed;
+	S.bAbilityThisFrame = true;
+	if (S.AbilityCharges > 0) --S.AbilityCharges;
+	Emit(JamEvents::Ability, S.Index, S.Pos, 1.f, Kind);
+	if (Kind == AbShield)
+	{
+		S.ShieldFrames = A->DurationFrames > 0 ? A->DurationFrames : AbilityDefaultDuration(Kind);
+		if (S.AbilityCharges == 0) S.AbilitySlot = -1;
+		return;
+	}
+	// The other three arm for the next shot, check or pass (the slot empties when the armed kind fires on the last charge).
+	S.AbilityArmed = Kind;
+	// The hip check is also a check press now (the human's window); the shotgun fires this frame when the puck is on the blade.
+	if (Kind == AbHipCheck && Config.Skater.bCheckEnabled)
+	{
+		S.CheckWindow = S.bHuman ? HumanCheckWindowFrames : CheckWindowFrames;
+		S.bCheckThisFrame = true;
+	}
+	else if (Kind == AbShotgun)
+	{
+		TryShoot(S, 0.f);
+	}
+}
+
+void UJamSim::StepShotgun(const FVector2D& Prev)
+{
+	// Called per puck substep after the puck moved: every standing skater but the shooter within ShotgunPathM of this substep's path goes down (Strength 1,
+	// cause shotgun) unless shielded. The shotgun ends when another skater touched the puck or it slowed under DeflectMinSpeed.
+	if (Puck.LastTouch != Puck.ShotgunBy || Puck.Vel.Size() < DeflectMinSpeed || Phase != EJamSimPhase::Playing) { Puck.ShotgunFrames = 0; return; }
+	const FVector2D Seg = Puck.Pos - Prev;
+	const double L2 = Seg.SizeSquared();
+	const FVector2D Dir = L2 > 1e-12 ? Seg / FMath::Sqrt(L2) : FVector2D(1, 0);
+	for (FJamSkaterState& S : Skaters)
+	{
+		if (S.Index == Puck.ShotgunBy || S.IsDown() || S.InBox() || S.ShieldFrames > 0) continue;
+		const double T = L2 > 1e-12 ? FMath::Clamp(Dot(S.Pos - Prev, Seg) / L2, 0.0, 1.0) : 0.0;
+		if (FVector2D::Distance(S.Pos, Prev + Seg * T) > ShotgunPathM) continue;
+		KnockDown(S.Index, Dir, 1.f, CauseShotgun);
+	}
+}
+
+void UJamSim::ApplySlowPuck(FJamSkaterState& S)
+{
+	if (S.AbilityArmed != AbSlowPuck) return;
+	const FJamAbilityConfig* A = HeldAbility(S.Index);
+	const double Mag = A && A->Magnitude > 0.0 ? A->Magnitude : AbilityDefaultMagnitude(AbSlowPuck);
+	Puck.Vel *= Mag;
+	Puck.SlowFrames = A && A->DurationFrames > 0 ? A->DurationFrames : AbilityDefaultDuration(AbSlowPuck);
+	Puck.SlowBy = S.Index;
+	Puck.SlowMul = FMath::Max(0.05, Mag);
+	S.AbilityArmed = NAME_None;
+	if (S.AbilityCharges == 0) S.AbilitySlot = -1;
+}
+
+void UJamSim::StepSlowPuck()
+{
+	// Once per frame after the puck moved: the shotgun's flight clock, and the slow puck's. The slow puck travels at SlowMul of its speed until its frames run out,
+	// then wakes up (its speed divided back; StepPuck caps it at max_speed next frame). Another skater's touch ends it quietly (the shooter's own blade does not:
+	// the puck is inside its reach for the first frames of the flight).
+	if (Puck.ShotgunFrames > 0) --Puck.ShotgunFrames;
+	if (Puck.SlowFrames <= 0) return;
+	if (Puck.LastTouch != Puck.SlowBy) { Puck.SlowFrames = 0; return; }
+	if (--Puck.SlowFrames == 0) Puck.Vel /= Puck.SlowMul;
+}
+
 int32 UJamSim::StaminaFull() const
 {
 	return FMath::Max(1, Config.Skater.SprintDrainFrames) * FMath::Max(1, Config.Skater.SprintRefillFrames);
@@ -2342,6 +2538,12 @@ uint64 UJamSim::StateHash() const
 		if (S.SpinReadyFrame != 0) H.AddI(S.SpinReadyFrame);
 		// Lane A49: the sprint stamina only once it left full (unset or full = no sprint yet), so a match without a sprint hashes as before.
 		if (S.Stamina >= 0 && S.Stamina != StaminaFull()) H.AddI(S.Stamina);
+		// Lane A84: the ability state only once a skater holds one (a cartridge without abilities hashes as before).
+		if (S.AbilitySlot >= 0 || S.AbilitiesUsed > 0 || S.ShieldFrames > 0 || !S.AbilityArmed.IsNone())
+		{
+			H.AddI(S.AbilitySlot); H.AddI(S.AbilityCharges); H.AddI(S.AbilityReadyFrame); H.AddI(S.ShieldFrames); H.AddI(S.AbilitiesUsed);
+			H.AddI(S.AbilityArmed == AbShotgun ? 1 : S.AbilityArmed == AbHipCheck ? 2 : S.AbilityArmed == AbSlowPuck ? 3 : 0);
+		}
 	}
 	if (DekeCommitFrames != 0) { H.AddI(DekeCommitFrames); H.AddI(DekeCommitSide); H.AddI(DekeCommitSkater); }
 	H.AddI(FaceoffCountdown);
@@ -2354,6 +2556,8 @@ uint64 UJamSim::StateHash() const
 	H.AddI(Puck.LastTouch);
 	// R-0035 (lane A52): the height once the puck left the ice (a cut whose lift keys are all 0 hashes as before).
 	if (Puck.Z != 0.0 || Puck.VZ != 0.0) { H.AddQ(Puck.Z, 1000.0); H.AddQ(Puck.VZ, 1000.0); }
+	if (Puck.ShotgunFrames != 0) { H.AddI(Puck.ShotgunFrames); H.AddI(Puck.ShotgunBy); H.AddQ(Puck.ShotgunMul, 1000.0); }   // lane A84
+	if (Puck.SlowFrames != 0) { H.AddI(Puck.SlowFrames); H.AddI(Puck.SlowBy); H.AddQ(Puck.SlowMul, 1000.0); }
 	// C-0005: active modifier ids, and rule state only when it left its default (so a match without seams hashes as before).
 	for (const FJamActiveModifier& M : ActiveModifiers) H.AddI(M.Id);
 	if (ScoreMultiplier[0] != 1 || ScoreMultiplier[1] != 1) { H.AddI(ScoreMultiplier[0]); H.AddI(ScoreMultiplier[1]); }

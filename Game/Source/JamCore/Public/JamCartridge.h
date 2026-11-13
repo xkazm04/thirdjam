@@ -240,6 +240,27 @@ struct JAMCORE_API FJamPickupConfig
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double Magnitude = 1;
 };
 
+// Lane A84 (R-0041 point 3, A81's ask A12): one entry of game.abilities[]: the human's special ability, used with F. Absent numbers are 0 here and the sim
+// applies the kind's default (UJamSim::AbilityDefault*): cooldown 1200 frames, shield 360 and slow_puck 120 frames, magnitude 1.5 shotgun (shot speed),
+// 1.5 hip_check (knockdown frames), 0.5 slow_puck (the puck's speed share), 1 shield (unused).
+USTRUCT(BlueprintType)
+struct JAMCORE_API FJamAbilityConfig
+{
+	GENERATED_BODY()
+	// shotgun | hip_check | shield | slow_puck
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") FName Kind;
+	// mode (held from the drop) | pickup (a boost take grants one of the pickup entries, held until its charges are spent)
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") FName Trigger;
+	// 1..9; 0 = absent (a mode grant: unlimited; a pickup grant: 1)
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 Charges = 0;
+	// 60..3600; 0 = absent (the kind's default)
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 CooldownFrames = 0;
+	// 1..600; 0 = absent (the kind's default)
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 DurationFrames = 0;
+	// 0.1..4; 0 = absent (the kind's default)
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double Magnitude = 0;
+};
+
 USTRUCT(BlueprintType)
 struct JAMCORE_API FJamLookConfig
 {
@@ -286,6 +307,7 @@ struct JAMCORE_API FJamGameConfig
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") TArray<FJamTeamConfig> Teams;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") FJamAiConfig Ai;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") TArray<FJamPickupConfig> Pickups;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") TArray<FJamAbilityConfig> Abilities;   // lane A84; empty = no ability (the default game)
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") FJamLookConfig Look;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") FJamCameraConfig Camera;
 };

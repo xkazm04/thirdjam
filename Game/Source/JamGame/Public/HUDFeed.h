@@ -116,6 +116,21 @@ struct JAMGAME_API FJamPresentationFrame
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Presentation")
 	bool bHumanSprinting = false;
 
+	// Lane A84 (R-0041 point 3): the human's ability slot beside the stamina bar. HumanAbility = the kind's display name (SHOTGUN, HIP CHECK, SHIELD, SLOW PUCK),
+	// empty = the slot is hidden; HumanAbilityState = READY | ARMED | SHIELD 4.2s | 12s (the cooldown left), with " x2" when charges are limited;
+	// HumanAbilityReady01 = the cooldown's progress (1 = ready; a running shield shows its time left instead).
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Presentation")
+	FString HumanAbility;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Presentation")
+	FString HumanAbilityState;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Presentation")
+	float HumanAbilityReady01 = 1.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Presentation")
+	bool bHumanAbilityLive = false;   // armed or a shield running: the slot glows yellow
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Presentation")
 	bool bDirectorsCallReady = false;
 

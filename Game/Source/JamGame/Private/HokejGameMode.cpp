@@ -571,8 +571,9 @@ FJamInput AHokejGameMode::ReadHumanInput()
 	In.Stick = StickRink;
 	In.bPoke = Pi->ConsumePokePressed();
 	In.bLift = Pi->ConsumeLiftPressed();
-	In.bDeke = Pi->ConsumeDekePressed();   // lane A39 (R-0029 point 4): IA_Deke, Q / gamepad Y
+	In.bDeke = Pi->ConsumeDekePressed();   // lane A39 (R-0029 point 4): IA_Deke, wheel / gamepad Y (lane A84: Q went to the pass)
 	In.bSpin = Pi->ConsumeSpinPressed();   // lane A51 (R-0034): IA_Spin, E / gamepad B
+	In.bAbility = Pi->ConsumeAbilityPressed();   // lane A84 (R-0041 point 3): IA_Ability, F / gamepad R3
 	// Lane A49 proof lines: the stick every frame when jam.ctrl.Log is on; every button edge always (a few per minute).
 	const int64 Frame = Sim->GetFrame();
 	if (UJamInputMap::LogEnabled())
@@ -583,9 +584,14 @@ FJamInput AHokejGameMode::ReadHumanInput()
 	if (In.bCheck) UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=check (right mouse / RB)"), Frame);
 	if (In.bPoke) UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=poke (space / A)"), Frame);
 	if (In.bLift) UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=lift (middle mouse, mouse 4 / LB)"), Frame);
-	if (In.bPassHeld != bLastPassHeld) { bLastPassHeld = In.bPassHeld; UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=pass held=%d (F / X)"), Frame, In.bPassHeld ? 1 : 0); }   // lane A77
-	if (In.bDeke) UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=deke (wheel, Q / Y)"), Frame);
+	if (In.bPassHeld != bLastPassHeld) { bLastPassHeld = In.bPassHeld; UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=pass held=%d (Q / X)"), Frame, In.bPassHeld ? 1 : 0); }   // lane A77
+	if (In.bDeke) UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=deke (wheel / Y)"), Frame);
 	if (In.bSpin) UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=spin (E / B)"), Frame);   // lane A51 (R-0034)
+	if (In.bAbility)   // lane A84 (R-0041 point 3): the press, with the kind held (none = the press does nothing)
+	{
+		const FJamAbilityConfig* Ab = Sim->HeldAbility(Sim->GetHumanIndex());
+		UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=ability kind=%s (F / R3)"), Frame, Ab ? *Ab->Kind.ToString() : TEXT("none"));
+	}
 	if (In.bShootHeld != bLastShootHeld)
 	{
 		bLastShootHeld = In.bShootHeld;
@@ -1010,6 +1016,23 @@ void AHokejGameMode::PushPresentation()
 		const FJamSkaterState& H = Sim->GetSkaters()[F.HumanIndex];
 		F.HumanStamina01 = H.Stamina < 0 ? 1.f : FMath::Clamp((float)H.Stamina / (float)FMath::Max(1, Sim->StaminaFull()), 0.f, 1.f);   // lane A49
 		F.bHumanSprinting = H.bSprinting;
+		// Lane A84 (R-0041 point 3): the ability slot. The kind held (or the one still armed / running after its last charge), its state and the cooldown.
+		const FJamAbilityConfig* Ab = Sim->HeldAbility(H.Index);
+		const FName Kind = Ab ? Ab->Kind : (!H.AbilityArmed.IsNone() ? H.AbilityArmed : (H.ShieldFrames > 0 ? FName(TEXT("shield")) : NAME_None));
+		if (!Kind.IsNone())
+		{
+			F.HumanAbility = Kind.ToString().Replace(TEXT("_"), TEXT(" ")).ToUpper();
+			const int64 Now = Sim->GetFrame();
+			const int32 Cool = Ab ? (Ab->CooldownFrames > 0 ? Ab->CooldownFrames : UJamSim::AbilityDefaultCooldown(Kind)) : 1;
+			const int64 Left = FMath::Max<int64>(0, H.AbilityReadyFrame - Now);
+			if (H.ShieldFrames > 0) F.HumanAbilityState = FString::Printf(TEXT("SHIELD %.1fs"), H.ShieldFrames / 60.f);
+			else if (!H.AbilityArmed.IsNone()) F.HumanAbilityState = TEXT("ARMED");
+			else if (Left > 0) F.HumanAbilityState = FString::Printf(TEXT("%llds"), (Left + 59) / 60);
+			else F.HumanAbilityState = TEXT("READY");
+			if (H.AbilityCharges > 0) F.HumanAbilityState += FString::Printf(TEXT("  x%d"), H.AbilityCharges);
+			F.HumanAbilityReady01 = H.ShieldFrames > 0 ? 1.f : 1.f - FMath::Clamp((float)Left / (float)FMath::Max(1, Cool), 0.f, 1.f);
+			F.bHumanAbilityLive = H.ShieldFrames > 0 || !H.AbilityArmed.IsNone();
+		}
 	}
 	F.AttackSign = Sim->GetHumanTeam() == 0 ? 1 : -1;
 	F.NetInsetM = 4.f;
@@ -1043,6 +1066,15 @@ void AHokejGameMode::StepOnce()
 	StepMsMax = FMath::Max(StepMsMax, Ms);
 	++Steps;
 	if (Effects) Effects->Step();   // lane A14: after the sim's frame, before the events go out
+	// Lane A84 (R-0041 point 3): the proof that F reached the sim and the ability fired (kind, charges left, -1 = unlimited, the frame it is ready again).
+	if (Sim->GetSkaters().IsValidIndex(Sim->GetHumanIndex()) && Sim->GetSkaters()[Sim->GetHumanIndex()].bAbilityThisFrame)
+	{
+		const FJamSkaterState& H = Sim->GetSkaters()[Sim->GetHumanIndex()];
+		FName Kind = H.AbilityArmed;
+		if (Kind.IsNone()) { const FJamAbilityConfig* Ab = Sim->HeldAbility(H.Index); Kind = Ab ? Ab->Kind : (H.ShieldFrames > 0 ? FName(TEXT("shield")) : NAME_None); }
+		for (const FJamSimEvent& E : Sim->GetFrameEvents()) if (E.Name == JamEvents::Ability && E.Who == H.Index && E.Strength > 0.5f) Kind = E.Kind;
+		UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld ability used kind=%s charges=%d ready=%lld"), Sim->GetFrame(), *Kind.ToString(), H.AbilityCharges, H.AbilityReadyFrame);
+	}
 	MechDrillObserve();   // lane A77 (R-0036): the human's saucers always; the shots and one-timers in drills 10 and 11
 	if (CVarJamCtrlDrill.GetValueOnGameThread() == 3 || CVarJamCtrlDrill.GetValueOnGameThread() == 4 || CVarJamCtrlDrill.GetValueOnGameThread() == 7 || CVarJamCtrlDrill.GetValueOnGameThread() == 8 || StickDrillFrame >= 0) StickDrillObserve();   // lane A51 (7 and 8: lane A77)
 	else if (CVarJamCtrlDrill.GetValueOnGameThread() != 0 || DrillPressFrame >= 0) DrillObserve();   // lane A49
@@ -1167,6 +1199,7 @@ void AHokejGameMode::StillsObserve()
 			if (H.bSweepThisFrame && Sim->CarrierIndex() == Human && CVarJamCtrlDrill.GetValueOnGameThread() == 7) { Kind = TEXT("sweep"); Count = 150; Max = 1; }   // lane A82: drill 7 only (A77's spin runs spent the capture on a crossing)
 			else if (H.bSpinThisFrame && Sim->CarrierIndex() == Human) { Kind = TEXT("spin"); Count = 24; }
 			else if (H.bSaucerThisFrame) { Kind = TEXT("saucer"); Count = 20; }
+			else if (H.bAbilityThisFrame) { Kind = TEXT("ability"); Count = 6; }   // lane A84 (R-0041 point 3): the HUD's ability slot after F
 		}
 		else
 		{

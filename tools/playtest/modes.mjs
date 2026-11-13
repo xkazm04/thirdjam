@@ -47,6 +47,11 @@ export const CHARACTER = {
   // R-0041 (aggression is the character): hits = checks the human lands + checks the human takes, per play minute
   bruisers: { label: 'hits (landed + taken) / play min', of: (ms) => perPlayMin(ms, (m) => (m.checks_landed || 0) + (m.checks_taken || 0)) },
   'fog-of-war': { label: 'human breakaways / play min', of: (ms) => perPlayMin(ms, (m) => m.breakaways || 0) },
+  // lane A84 (R-0041 point 3): the abilities on F. Shotgun's character is the bodies on the ice (every knockdown, any skater, any cause, per match: the shotgun drops
+  // every skater within a metre of its path); Arsenal's is the tricks used (the human's ability uses per match: regular has none). Both need the playtester's F
+  // (JamPlaytester's PlaytesterAbility) and the binary that writes `knockdowns_all` and `abilities_used`.
+  shotgun: { label: 'knockdowns (all skaters) / match', of: (ms) => avg(ms.map((m) => m.knockdowns_all || 0)) },
+  arsenal: { label: 'human abilities used / match', of: (ms) => avg(ms.map((m) => m.abilities_used || 0)) },
 };
 
 function arg(name, dflt) {

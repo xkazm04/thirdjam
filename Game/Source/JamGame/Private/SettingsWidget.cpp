@@ -210,8 +210,8 @@ void UJamSettingsWidget::BuildTree()
 	Heading(Root, TEXT("settings"), TEXT("CONTROLS"), TEXT(""));
 	UTextBlock* Controls = S::Text(T,
 		TEXT("Skate   WASD / left stick        Aim the stick   mouse / right stick        Shoot   hold left mouse / RT        Check   right mouse / RB\n")
-		TEXT("Cross-check   middle mouse, mouse 4 / LB        Deke   wheel, Q / Y        Spin   E / B        Sprint   Shift / LT        Poke   Space / A        Pass   F / X\n")
-		TEXT("Signals   1-4 / D-pad        Brake   Ctrl / left stick click        Restart   R / View        Pause and Director's Call   Esc / Start        Menus   arrows, Enter, Esc back"),   // lane A49; lane A51 (R-0034): spin E / B, pass F
+		TEXT("Cross-check   middle mouse, mouse 4 / LB        Deke   wheel / Y        Spin   E / B        Sprint   Shift / LT        Poke   Space / A        Pass   Q / X        Ability   F / R3\n")
+		TEXT("Signals   1-4 / D-pad        Brake   Ctrl / left stick click        Restart   R / View        Pause and Director's Call   Esc / Start        Menus   arrows, Enter, Esc back"),   // lane A49; lane A51 (R-0034): spin E / B; lane A84 (R-0041 point 3): pass Q, ability F / R3
 		S::BodyFont(), S::Chalk());
 	Controls->SetAutoWrapText(true);
 	AddV(Root, Controls, FMargin(0, -2, 0, 6));

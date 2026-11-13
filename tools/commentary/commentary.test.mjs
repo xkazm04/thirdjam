@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { checkManifest, checkText, situationOf, KEYS } from './check.mjs';
-import { render, parseInl, MANIFEST, OUTPUT } from './embed.mjs';
+import { render, parseInl, MANIFEST, OUTPUT, SUPPLEMENT, SUPPLEMENT_OUTPUT, renderSupplement } from './embed.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '..', '..');
@@ -69,4 +69,19 @@ test('the embedded C++ copy matches commentary.json (node tools/commentary/embed
   assert.ok(embedded.equals(bytes), 'bytes differ: re-run node tools/commentary/embed.mjs');
   assert.ok(inl.includes(`JamCommentaryBankJsonSize = ${bytes.length};`));
   assert.ok(parseInl(render(Buffer.from('{"a":1}'))).equals(Buffer.from('{"a":1}')), 'render and parse round-trip');
+});
+
+// Lane A84 (R-0041 point 3): A's ability lines pass the same check (the waves are B's to record: a missing wave is the only error allowed),
+// one situation per ability kind, and the embedded copy matches the file.
+test('the ability supplement is clean, one situation per kind, and embedded', () => {
+  const sup = JSON.parse(readFileSync(resolve(repo, SUPPLEMENT), 'utf8'));
+  const r = checkManifest(sup, { soundExists: () => true });
+  assert.deepEqual(r.errors, []);
+  assert.equal(r.infos.length, 0);
+  const kinds = new Set(sup.lines.map((l) => l.kind));
+  assert.deepEqual([...kinds].sort(), ['hip_check', 'shield', 'shotgun', 'slow_puck']);
+  for (const l of sup.lines) assert.equal(l.event, 'ability', l.id);
+  const ids = new Set(manifest.lines.map((l) => l.id));
+  for (const l of sup.lines) assert.ok(!ids.has(l.id), `${l.id} collides with B's manifest`);
+  assert.equal(readFileSync(resolve(repo, SUPPLEMENT_OUTPUT), 'utf8').replace(/\r/g, ''), renderSupplement(readFileSync(resolve(repo, SUPPLEMENT))));
 });

@@ -11,6 +11,14 @@ const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '..', '..');
 export const MANIFEST = 'Game/Plugins/JamAssets/Content/Audio/VO/commentary.json';
 export const OUTPUT = 'Game/Source/JamGame/Private/CommentaryData.inl';
+// Lane A84 (R-0041 point 3): A's supplement (the ability lines; B records the waves later), embedded beside B's manifest and merged by FJamCommentaryBank::Embedded().
+export const SUPPLEMENT = 'Game/Content/Commentary/abilities.commentary.json';
+export const SUPPLEMENT_OUTPUT = 'Game/Source/JamGame/Private/CommentaryAbilityData.inl';
+
+// The supplement's .inl text (its own array name, so both .inl files can be included in one translation unit).
+export function renderSupplement(bytes) {
+  return render(bytes).replace(/JamCommentaryBankJson/g, 'JamCommentaryAbilityJson').replace(MANIFEST, SUPPLEMENT);
+}
 
 // Renders the .inl text from the manifest bytes (pure, so the test can compare without writing).
 export function render(bytes) {
@@ -33,6 +41,9 @@ export function embed(root = repo) {
   const bytes = readFileSync(resolve(root, MANIFEST));
   writeFileSync(resolve(root, OUTPUT), render(bytes));
   console.log(`PASS embed commentary ${bytes.length} bytes -> ${OUTPUT}`);
+  const sup = readFileSync(resolve(root, SUPPLEMENT));
+  writeFileSync(resolve(root, SUPPLEMENT_OUTPUT), renderSupplement(sup));
+  console.log(`PASS embed commentary supplement ${sup.length} bytes -> ${SUPPLEMENT_OUTPUT}`);
   return bytes.length;
 }
 

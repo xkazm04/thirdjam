@@ -676,6 +676,25 @@ namespace JamValidate
 			}
 		}
 
+		// Lane A84 (R-0041 point 3), the mirror of validate.mjs: one mode ability at most; a pickup ability needs pickups to arrive by.
+		if (FJPtr Abilities = Game->Get(TEXT("abilities")); Abilities && Abilities->IsArray())
+		{
+			FJPtr PickupList = Game->Get(TEXT("pickups"));
+			const bool bHasPickups = PickupList && PickupList->IsArray() && PickupList->Array.Num() > 0;
+			int32 Modes = 0;
+			for (int32 i = 0; i < Abilities->Array.Num(); ++i)
+			{
+				const FJPtr& A = Abilities->Array[i];
+				if (!A->IsObject()) continue;
+				FJPtr Tr = A->Get(TEXT("trigger"));
+				if (!Tr || !Tr->IsString()) continue;
+				if (Tr->String == TEXT("mode") && ++Modes > 1)
+					Errors.Add(FString::Printf(TEXT("at /game/abilities/%d/trigger: only one ability may have trigger \"mode\" (F is one key); make this one \"pickup\" or remove it."), i));
+				if (Tr->String == TEXT("pickup") && !bHasPickups)
+					Errors.Add(FString::Printf(TEXT("at /game/abilities/%d/trigger: a \"pickup\" ability is granted by a boost take, but game.pickups is empty; add a pickup or use trigger \"mode\"."), i));
+			}
+		}
+
 		FJPtr Teams = Game->Get(TEXT("teams"));
 		if (Teams && Teams->IsArray())
 		{
@@ -1173,6 +1192,22 @@ namespace
 				Pc.Magnitude = K == TEXT("speed") ? 1.5 : K == TEXT("precision") ? 2.0 : K == TEXT("heavy_puck") ? 2.0 : K == TEXT("big_puck") ? 1.5 : 1.0;
 				ReadNumber(P, TEXT("magnitude"), Pc.Magnitude);
 				C.Pickups.Add(Pc);
+			}
+		}
+
+		// Lane A84 (R-0041 point 3): game.abilities[]; absent numbers stay 0 and the sim applies the kind's default.
+		if (FJPtr Abilities = G->Get(TEXT("abilities")); Abilities && Abilities->IsArray())
+		{
+			for (const FJPtr& A : Abilities->Array)
+			{
+				FJamAbilityConfig Ac;
+				ReadName(A, TEXT("kind"), Ac.Kind);
+				ReadName(A, TEXT("trigger"), Ac.Trigger);
+				ReadInteger(A, TEXT("charges"), Ac.Charges);
+				ReadInteger(A, TEXT("cooldown_frames"), Ac.CooldownFrames);
+				ReadInteger(A, TEXT("duration_frames"), Ac.DurationFrames);
+				ReadNumber(A, TEXT("magnitude"), Ac.Magnitude);
+				C.Abilities.Add(Ac);
 			}
 		}
 

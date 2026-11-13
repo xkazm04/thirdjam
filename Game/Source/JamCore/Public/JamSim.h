@@ -90,6 +90,11 @@ struct JAMCORE_API FJamInput
 	// LOCKSTEP: FJamNetQuantInput carries it as flag bit 512 (protocol 5).
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Sim")
 	bool bSpin = false;
+
+	// Lane A84 (R-0041 point 3): the held ability used this frame (edge): F / gamepad D-pad down. Does nothing unless the skater holds one of game.abilities[]
+	// (a mode grant from the drop, or a pickup grant). LOCKSTEP: FJamNetQuantInput carries it as flag bit 2048 (protocol 7).
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Sim")
+	bool bAbility = false;
 };
 
 // (Named EJamSimPhase, not EJamPhase: lane A5's presentation enum EJamPhase lives in JamGame/HUDFeed.h.)
@@ -251,6 +256,16 @@ struct JAMCORE_API FJamSkaterState
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 Touches = 0;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 Goals = 0;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") double DistanceM = 0;
+	// Lane A84 (R-0041 point 3): the held ability. AbilitySlot indexes game.abilities[] (-1 = none held); AbilityCharges left (-1 = unlimited); usable from
+	// AbilityReadyFrame (the cooldown); AbilityArmed is the kind waiting for the next shot / check / pass (NAME_None = nothing armed); ShieldFrames left of a
+	// shield. Hashed only while they left their defaults, so a cartridge without abilities hashes as before.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 AbilitySlot = -1;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 AbilityCharges = -1;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int64 AbilityReadyFrame = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") FName AbilityArmed;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 ShieldFrames = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 AbilitiesUsed = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bAbilityThisFrame = false;
 
 	FVector2D Forward() const { return FVector2D(FMath::Cos(Yaw), FMath::Sin(Yaw)); }
 	bool IsDown() const { return KnockFrames > 0; }
@@ -281,6 +296,14 @@ struct JAMCORE_API FJamPuckState
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 LastTouch = -1;
 	// Total distance travelled this match.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") double PathM = 0;
+	// Lane A84: a shotgun shot in flight (frames left, the shooter, its speed multiplier) and a slow puck (frames left, the passer or shooter, the speed share).
+	// Zero frames = none; hashed only while one runs.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 ShotgunFrames = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 ShotgunBy = -1;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") double ShotgunMul = 1;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 SlowFrames = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 SlowBy = -1;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") double SlowMul = 1;
 };
 
 // An event the step produced; the game mode hands it to UJamEventBus (converting Where to centimetres).
@@ -380,6 +403,20 @@ public:
 	// the carried puck rides this far from the body centre on the far side from the nearest opponent (inside shot reach, outside the body).
 	static constexpr double SpinKnockdownMult = 1.5;
 	static constexpr double SpinPuckM = 0.7;
+	// Lane A84 (R-0041 point 3): the abilities' fixed geometry. A shotgun knocks down every skater (not the shooter) within ShotgunPathM of the puck's path while
+	// it flies (at most ShotgunFlightFrames, until another skater touches it or it slows under DeflectMinSpeed); a hip check pushes the victim HipCheckPushM
+	// (the knocked-down glide halves the speed every 0.5 s: a push of v slides v / 2 metres).
+	static constexpr double ShotgunPathM = 1.0;
+	static constexpr int32 ShotgunFlightFrames = 120;
+	static constexpr double HipCheckPushM = 3.0;
+
+	// Lane A84: the ability a skater holds (nullptr = none) and the kind's resolved numbers (absent keys = the kind's defaults, ABILITIES.md).
+	const FJamAbilityConfig* HeldAbility(int32 Skater) const;
+	static int32 AbilityDefaultCooldown(FName Kind);
+	static int32 AbilityDefaultDuration(FName Kind);
+	static double AbilityDefaultMagnitude(FName Kind);
+	// Lane A84: hands Skater the ability game.abilities[Slot] (a mode at the drop, a pickup on a take); emits `ability` with Strength 0. False for a bad slot.
+	bool GrantAbility(int32 Skater, int32 Slot);
 
 	// Builds the match from a validated config: skaters at their spawns, puck at centre, score 0, phase Playing.
 	// Queues the opening "faceoff" event. Returns false (and logs) if the config has no player.
@@ -542,6 +579,11 @@ private:
 	void StepPayoffWindows(FJamSkaterState& S);
 	// Lane A51 (R-0034): the spin tap, the spin's frame (speed scale, the puck on the far side) after the skater moved, the sweep shield's countdown.
 	void TrySpin(FJamSkaterState& S);
+	// Lane A84: F pressed: the held ability's use, its cooldown and charge; the shotgun puck's knockdowns per substep; the slow puck's clock after the puck moved.
+	void TryAbility(FJamSkaterState& S);
+	void StepShotgun(const FVector2D& Prev);
+	void StepSlowPuck();
+	void ApplySlowPuck(FJamSkaterState& S);
 	void StepSpin(FJamSkaterState& S);
 	void StepSweepShield(FJamSkaterState& S);
 	FVector2D SpinPuckTarget(const FJamSkaterState& S) const;

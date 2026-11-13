@@ -29,6 +29,9 @@
 #include "Engine/GameInstance.h"
 #include "Camera/PlayerCameraManager.h"
 
+// Lane A84: the ability slot plate width (slate units at 1080p).
+static constexpr float AbilitySlotW = 380.f;
+
 int32 UJamHudWidget::FaceoffsThisSession = 0;
 
 // Lane A74 (R-0038): the off-screen puck marker, 0 = off, 1 = on (default).
@@ -323,6 +326,18 @@ void UJamHudWidget::BuildTree()
 	StaminaFill->SetVisibility(ESlateVisibility::Collapsed);
 	Place(Root, StaminaFill, FVector2D(0.5, 1), FVector2D(0, 1), FVector2D(-120, -170), FVector2D(240, 8));
 
+	// ---- Lane A84 (R-0041 point 3): the ability slot above the radar frame, right-aligned with it: "F  SHOTGUN  READY" on a dark plate, the cooldown fill
+	// along its foot. Hidden while the human holds no ability. 380 wide: the package still clipped "F  SHOTGUN  ARMED" at 240 (Label 24 needs about 330). (First placed right of the stamina bar: the package still showed the commentary
+	// strip's line over its "F"; the corner above the radar is free of the strip, the controls hint and the commentary.)
+	AbilityPlate = S::Plate(T, FLinearColor(0.f, 0.f, 0.f, 0.62f), FMargin(10, 4, 10, 8));
+	AbilityPlate->SetVisibility(ESlateVisibility::Collapsed);
+	AbilityText = MakeText(T, TEXT("AbilityText"), S::LabelFont(true), S::Paper());
+	AbilityPlate->SetContent(AbilityText);
+	Place(Root, AbilityPlate, FVector2D(1, 1), FVector2D(1, 1), FVector2D(-S::EdgePx, -(S::EdgePx + UJamRadarWidget::RadarHeightPx + 30.f)), FVector2D(AbilitySlotW, 34));
+	AbilityFill = S::Plate(T, S::Chalk(), FMargin(0));
+	AbilityFill->SetVisibility(ESlateVisibility::Collapsed);
+	Place(Root, AbilityFill, FVector2D(1, 1), FVector2D(0, 1), FVector2D(-S::EdgePx - AbilitySlotW + 10.f, -(S::EdgePx + UJamRadarWidget::RadarHeightPx + 32.f)), FVector2D(AbilitySlotW - 20.f, 4));
+
 	// ---- Controls hint: a bottom strip for the first 10 s, fading out over the last 2 s.
 	ControlsStrip = S::Plate(T, S::Pill(0.72f, 0.f), FMargin(0, 8));
 	ControlsStrip->SetVisibility(ESlateVisibility::Collapsed);
@@ -331,7 +346,7 @@ void UJamHudWidget::BuildTree()
 	// short of the right edge (the radar frame, 216 px, and a 16 px gap) and the type is 2 pt smaller with 4-space gaps, so the line fits that width
 	// at 1920 x 1080 and 1280 x 720 (16:9 keeps the same layout units).
 	ControlsText = MakeText(T, TEXT("ControlsText"), S::Font(S::Body - 2, FName("Bold"), 20), S::Paper());
-	ControlsText->SetText(FText::FromString(TEXT("SKATE  WASD    AIM  MOUSE    SHOOT  HOLD LMB    CHECK  RMB    CROSS-CHECK  MMB    SPIN  E    SPRINT  SHIFT    POKE  SPACE    PASS  F    PAUSE  ESC")));   // lane A49 (UJamInputMap::BindingTableText has the full table); lane A51: spin E, pass F
+	ControlsText->SetText(FText::FromString(TEXT("SKATE  WASD    AIM  MOUSE    SHOOT  HOLD LMB    CHECK  RMB    CROSS-CHECK  MMB    SPIN  E    SPRINT  SHIFT    POKE  SPACE    PASS  Q    PAUSE  ESC")));   // lane A49 (UJamInputMap::BindingTableText has the full table); lane A51: spin E; lane A84: pass Q (F, the ability, is on its own slot)
 	ControlsText->SetJustification(ETextJustify::Center);
 	ControlsStrip->SetContent(ControlsText);
 	UCanvasPanelSlot* StripSlot = Root->AddChildToCanvas(ControlsStrip);
@@ -515,6 +530,21 @@ void UJamHudWidget::RefreshFromFrame(const FJamPresentationFrame& F)
 		StaminaFill->SetVisibility(bShow ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 		StaminaFill->SetBrushColor(F.bHumanSprinting ? S::Yellow() : S::Chalk());
 		if (UCanvasPanelSlot* FS = Cast<UCanvasPanelSlot>(StaminaFill->Slot)) FS->SetSize(FVector2D(FMath::Max(2.f, 240.f * FMath::Clamp(F.HumanStamina01, 0.f, 1.f)), 8.f));
+	}
+	// Lane A84 (R-0041 point 3): the ability slot: yellow while armed or a shield runs, chalk when ready, grey while it cools down (the fill grows back to full).
+	if (AbilityPlate && AbilityText && AbilityFill)
+	{
+		const bool bShow = !F.HumanAbility.IsEmpty();
+		AbilityPlate->SetVisibility(bShow ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+		AbilityFill->SetVisibility(bShow ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+		if (bShow)
+		{
+			const bool bReady = F.HumanAbilityReady01 >= 0.999f;
+			AbilityText->SetText(FText::FromString(FString::Printf(TEXT("F  %s  %s"), *F.HumanAbility, *F.HumanAbilityState)));
+			AbilityText->SetColorAndOpacity(FSlateColor(F.bHumanAbilityLive ? S::Yellow() : bReady ? S::Paper() : FLinearColor(0.6f, 0.6f, 0.6f, 1.f)));
+			AbilityFill->SetBrushColor(F.bHumanAbilityLive ? S::Yellow() : bReady ? S::Chalk() : FLinearColor(0.45f, 0.45f, 0.45f, 1.f));
+			if (UCanvasPanelSlot* FS = Cast<UCanvasPanelSlot>(AbilityFill->Slot)) FS->SetSize(FVector2D(FMath::Max(2.f, (AbilitySlotW - 20.f) * FMath::Clamp(F.HumanAbilityReady01, 0.f, 1.f)), 4.f));
+		}
 	}
 	TimerText->SetVisibility(F.bHasTimer ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 

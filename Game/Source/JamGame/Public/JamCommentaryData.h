@@ -68,6 +68,8 @@ struct JAMGAME_API FJamCommentaryBank
 	// The embedded copy (CommentaryData.inl), parsed once; and its raw text (tests compare it with the file on disk).
 	static const FJamCommentaryBank& Embedded();
 	static FString EmbeddedJson();
+	// Lane A84 (R-0041 point 3): A's ability supplement (CommentaryAbilityData.inl from Game/Content/Commentary/abilities.commentary.json); Embedded() merges it.
+	static FString AbilityJson();
 
 private:
 	TMap<FName, TArray<int32>> ByEvent;

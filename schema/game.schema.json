@@ -1039,6 +1039,63 @@
         }
       }
     },
+    "abilities": {
+      "type": "array",
+      "maxItems": 4,
+      "description": "Lane A84 (R-0041 point 3): the human's special ability, used with F (gamepad D-pad down). A mode entry is held from the first drop and comes back after its cooldown; pickup entries are the pool a boost take grants from (one at random, held until its charges are spent; nothing is granted while one is held). At most one mode entry. Bots never hold one. Leave the key out for none (the default game).",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "trigger"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "shotgun",
+              "hip_check",
+              "shield",
+              "slow_puck"
+            ],
+            "description": "shotgun: the next shot leaves at magnitude x speed and knocks down every skater within 1 m of its path. hip_check: the next check lands from a standstill, knocks down magnitude x as long and pushes 3 m. shield: for duration_frames checks and lifts on the holder fail (the body still bumps). slow_puck: the next pass or shot travels at magnitude x its speed for duration_frames, then wakes up."
+          },
+          "trigger": {
+            "type": "string",
+            "enum": [
+              "mode",
+              "pickup"
+            ],
+            "description": "mode: held from the drop. pickup: one of the pickup entries is granted when the human takes a boost pickup (needs game.pickups)."
+          },
+          "charges": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9,
+            "description": "Uses before the ability is gone. Absent: unlimited for a mode entry, 1 for a pickup entry."
+          },
+          "cooldown_frames": {
+            "type": "integer",
+            "minimum": 60,
+            "maximum": 3600,
+            "description": "Frames after a use before the next one. Absent = 1200 (20 s)."
+          },
+          "duration_frames": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 600,
+            "description": "shield and slow_puck: how long it lasts. Absent = 360 (shield, 6 s) or 120 (slow_puck, 2 s); ignored by shotgun and hip_check."
+          },
+          "magnitude": {
+            "type": "number",
+            "minimum": 0.1,
+            "maximum": 4,
+            "description": "The kind's strength. Absent = 1.5 shotgun (shot speed multiplier), 1.5 hip_check (knockdown frames multiplier), 0.5 slow_puck (the puck's speed share); ignored by shield."
+          }
+        }
+      }
+    },
     "effects": {
       "type": "array",
       "maxItems": 12,

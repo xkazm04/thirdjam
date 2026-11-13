@@ -470,4 +470,29 @@ bool FJamCommentaryBankWhen::RunTest(const FString&)
 	return true;
 }
 
+// Lane A84 (R-0041 point 3): on the shipped bank (B's manifest + A's ability supplement) a use of each ability (event `ability`, Strength 1) starts one of its
+// own lines; a grant (Strength 0) starts nothing.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamCommentaryAbilities, "Jam.Commentary.Abilities", JamCommentaryTests::Flags)
+bool FJamCommentaryAbilities::RunTest(const FString&)
+{
+	const FJamCommentaryBank& Bank = FJamCommentaryBank::Embedded();
+	FJamCommentaryPicker Picker(Bank, 7);
+	int64 F = 1000;
+	for (const TCHAR* Kind : { TEXT("shotgun"), TEXT("hip_check"), TEXT("shield"), TEXT("slow_puck") })
+	{
+		FJamCommentaryPick P;
+		FJamCommentaryWorld W = World(F);
+		Picker.Observe(JamEvents::Ability, Payload(0, FVector2D(-10, 0), 0.f, Kind), FVector2D(-10, 0), W);
+		TestFalse(*FString::Printf(TEXT("%s grant: no line"), Kind), Picker.Resolve(W, P));
+		F += 600;
+		W = World(F);
+		Picker.Observe(JamEvents::Ability, Payload(0, FVector2D(-10, 0), 1.f, Kind), FVector2D(-10, 0), W);
+		TestTrue(*FString::Printf(TEXT("%s use: a line starts"), Kind), Picker.Resolve(W, P));
+		TestTrue(*FString::Printf(TEXT("%s use: its own line (%s)"), Kind, *P.LineId.ToString()), P.LineId.ToString().StartsWith(FString::Printf(TEXT("ability.%s."), Kind)));
+		AddInfo(FString::Printf(TEXT("%s: %s \"%s\""), Kind, *P.LineId.ToString(), *P.Text));
+		F += 600;
+	}
+	return true;
+}
+
 #endif // WITH_DEV_AUTOMATION_TESTS

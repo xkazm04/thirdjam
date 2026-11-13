@@ -233,9 +233,14 @@ bool FJamInputMapTest::RunTest(const FString&)
 	TestTrue(TEXT("space pokes"), M->IsKeyMapped(M->Poke, EKeys::SpaceBar));
 	TestTrue(TEXT("pad A pokes"), M->IsKeyMapped(M->Poke, EKeys::Gamepad_FaceButton_Bottom));
 	TestTrue(TEXT("wheel dekes"), M->IsKeyMapped(M->Deke, EKeys::MouseScrollUp) && M->IsKeyMapped(M->Deke, EKeys::MouseScrollDown));
-	TestTrue(TEXT("Q dekes"), M->IsKeyMapped(M->Deke, EKeys::Q));
-	// Lane A51 (R-0034): the spin on E / B, the pass on F / X, the brake off B.
-	TestTrue(TEXT("F passes"), M->IsKeyMapped(M->Pass, EKeys::F));
+	// Lane A84 (R-0041 point 3): the pass on Q / X, the ability on F / R3, Q off the deke.
+	TestFalse(TEXT("Q no longer dekes"), M->IsKeyMapped(M->Deke, EKeys::Q));
+	TestTrue(TEXT("pad Y dekes"), M->IsKeyMapped(M->Deke, EKeys::Gamepad_FaceButton_Top));
+	TestTrue(TEXT("Q passes"), M->IsKeyMapped(M->Pass, EKeys::Q));
+	TestFalse(TEXT("F no longer passes"), M->IsKeyMapped(M->Pass, EKeys::F));
+	TestTrue(TEXT("F uses the ability"), M->IsKeyMapped(M->Ability, EKeys::F));
+	TestTrue(TEXT("R3 uses the ability"), M->IsKeyMapped(M->Ability, EKeys::Gamepad_RightThumbstick));
+	// Lane A51 (R-0034): the spin on E / B, the brake off B.
 	TestFalse(TEXT("E no longer passes"), M->IsKeyMapped(M->Pass, EKeys::E));
 	TestTrue(TEXT("pad X passes"), M->IsKeyMapped(M->Pass, EKeys::Gamepad_FaceButton_Left));
 	TestTrue(TEXT("E spins"), M->IsKeyMapped(M->Spin, EKeys::E));

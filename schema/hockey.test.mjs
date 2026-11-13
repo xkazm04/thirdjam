@@ -313,3 +313,28 @@ test('barks: enabled and intensity quiet | normal | loud; absent = enabled norma
   assert.deepEqual(validateDesignerOutput(base, loud).errors, []);
   assert.ok(DESIGNER_GAME_EDITABLE.includes('barks'));
 });
+
+// Lane A84 (R-0041 point 3): game.abilities[], the human's ability on F.
+test('abilities: the four kinds, mode or pickup; one mode at most; a pickup ability needs pickups; unknown keys and ranges fail', () => {
+  const ok = regular();
+  ok.game.pickups = [{ kind: 'speed', spawn_every_frames: 600, duration_frames: 300 }];
+  ok.game.abilities = [
+    { kind: 'shotgun', trigger: 'mode', cooldown_frames: 1200 },
+    { kind: 'hip_check', trigger: 'pickup', magnitude: 1.5 },
+    { kind: 'shield', trigger: 'pickup', duration_frames: 360, charges: 3 },
+    { kind: 'slow_puck', trigger: 'pickup', duration_frames: 120, magnitude: 0.5 },
+  ];
+  assert.deepEqual(errorsOf(ok), []);
+  const two = regular(); two.game.abilities = [{ kind: 'shield', trigger: 'mode' }, { kind: 'shotgun', trigger: 'mode' }];
+  assert.ok(has(errorsOf(two), '/game/abilities/1/trigger', 'only one ability may have trigger "mode"'));
+  const lone = regular(); lone.game.abilities = [{ kind: 'slow_puck', trigger: 'pickup' }];
+  assert.ok(has(errorsOf(lone), '/game/abilities/0/trigger', 'game.pickups is empty'));
+  const unk = regular(); unk.game.abilities = [{ kind: 'shield', trigger: 'mode', colour: 'red' }];
+  assert.ok(errorsOf(unk).some((e) => e.startsWith('at /game/abilities/0')));
+  const kind = regular(); kind.game.abilities = [{ kind: 'flamethrower', trigger: 'mode' }];
+  assert.ok(errorsOf(kind).some((e) => e.startsWith('at /game/abilities/0/kind')));
+  const low = regular(); low.game.abilities = [{ kind: 'hip_check', trigger: 'mode', cooldown_frames: 59 }];
+  assert.ok(has(errorsOf(low), '/game/abilities/0/cooldown_frames', 'below'));
+  const many = regular(); many.game.abilities = Array.from({ length: 5 }, () => ({ kind: 'shield', trigger: 'mode', charges: 1 }));
+  assert.ok(errorsOf(many).some((e) => e.startsWith('at /game/abilities')));
+});

@@ -230,6 +230,10 @@ private:
 	// Lane A49: the sprint stamina bar (bottom centre, above the strips): a dark back plate and a fill that shrinks with the stamina; hidden while full and idle.
 	UPROPERTY(Transient) TObjectPtr<UBorder> StaminaBack;
 	UPROPERTY(Transient) TObjectPtr<UBorder> StaminaFill;
+	// Lane A84 (R-0041 point 3): the ability slot right of the stamina bar: a plate with "F  SHOTGUN  READY" and a cooldown fill under it; hidden with no ability.
+	UPROPERTY(Transient) TObjectPtr<UBorder> AbilityPlate;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> AbilityText;
+	UPROPERTY(Transient) TObjectPtr<UBorder> AbilityFill;
 	UPROPERTY(Transient) TObjectPtr<UWidget> CountdownBox;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> CountdownText;
 	UPROPERTY(Transient) TObjectPtr<class UHorizontalBox> EffectsRow;
