@@ -769,7 +769,7 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - B's editors hung on the GPU twice today with two editors open (16:11, 18:00): from now on B runs one editor at a time when a lane plays matches.
 
 ## H38.4 (19:23, 13 Nov) FOR THE DIRECTOR: the ladder behind the puck's ring is gone on clay (lane B38, cook-only PASS); `main` has not moved since 13:28
-- **`main` is still cba1327 (13:28).** `dev-b` is 35 or so commits ahead with everything since: the operator's audio balance, the tackle and cross-check sounds, the
+- **`main` is still cba1327 (13:28).** `dev-b` is 69 commits ahead with everything since: the operator's audio balance, the tackle and cross-check sounds, the
   cross-check takes and effects, the lit floor beyond the boards, worn boards, the sky lights. B's open asks with no answer yet: handoffs 0037 (a cone on the lift,
   `Dir` on `lift` / `poke`) and 0038 (the human knocked down every 7 s, the puck taken 1.4 times a second), a `bump` event (H32.9), `Rink.umap`'s sky light,
   a marker on the human. The operator asked B at 19:05 to follow A's directions for tonight: none has arrived; B carries on from its own list.
