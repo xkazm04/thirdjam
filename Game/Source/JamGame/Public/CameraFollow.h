@@ -69,6 +69,25 @@ struct JAMGAME_API FJamCameraSettings
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
 	float ChestM = 1.f;
 
+	// Lane A64 (eyes grid h19 findings 3 and 7: no puck or carrier in 35 stills, the far net out of frame at the end boards): a loose puck (more than
+	// PuckFrameMinM from the human, in front of the camera, nearer than PuckFrameMaxM) and, near the far end, the far net are kept within KeepYawDeg of the
+	// camera yaw (the middle two thirds' edge at 70 degrees of FOV is 25 degrees), always inside the human's own middle-third budget, which wins.
+	// 0 = off (the A40 / A49 tests' default); the game camera sets it from jam.camera.KeepYaw, default 0: OFF. Measured (lane A64): any yaw lead feeds
+	// back through the A49 cursor aim (the cursor's point on the ice turns with the camera, the skater turns to it, the pivot yaw follows) and through the
+	// camera-relative stick; with 22 the idle skater spun to the side boards and a held W never reached the far net. Kept as an opt-in for the Director.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
+	float KeepYawDeg = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
+	float PuckFrameMinM = 2.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
+	float PuckFrameMaxM = 40.f;
+
+	// The far net is kept in frame when the human is within this distance of it.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
+	float NetFrameNearM = 16.f;
+
 	// Not cartridge keys (constants of the recipe): the critically damped spring's time constant in sim frames (lift and yaw offset), the metres of
 	// look-ahead added per metre of arm the boards take (tilts the lifted camera up the rink instead of down at the skater's back), and the distance
 	// band over which the far-net bias fades in (none inside the near edge, full beyond the far edge; the slot is where the lead matters).
@@ -151,6 +170,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Jam|Camera")
 	void ApplyConfig(const FJamCameraSettings& InConfig);
+	// Lane A64: an exposure bias in EV on the camera's own post-process override (0 = none); the look switcher sets it for a tier without a light rig.
+	void SetExposureBias(float EV);
 
 	// The cartridge's game.camera (what the game mode has in hand): converted with FJamCameraSettings::FromCartridge.
 	void ApplyConfig(const struct FJamCameraConfig& Cartridge);
@@ -204,6 +225,19 @@ public:
 	void StartPunch(float Strength, float Sign);
 	int32 GetPunchFramesLeft() const { return PunchLeft; }
 
+	// Lane A73 (B-to-A-0036 point 4): the kick along the hit direction on a knockdown the human lands or takes. KickFrames sim frames: the camera is displaced
+	// KickCm along the hit's Dir (world x/y, the push checker -> victim) times max(0.5, Strength) times jam.hitkick, decaying (1 - i / 8)^1.5 from the hit frame,
+	// with KickRollDeg of roll toward the side the push has in the camera's frame; the displaced point is clamped back inside A40's boards inset, and 12 cm at 6 m
+	// moves the skater by 0.03 of the frame, inside A49's middle-third budget (0.333; the worst measured was 0.237). Replaces A33's punch when the event carries
+	// a Dir (every check and knockdown does since A47); the punch stays for a Dir of zero. Pure for tests: FrameIndex 0..7 -> the offsets, anything else -> 0.
+	static constexpr int32 KickFrames = 8;
+	static constexpr float KickCm = 12.f;
+	static constexpr float KickRollDeg = 1.f;
+	static void KickOffset(int32 FrameIndex, float Strength, const FVector2D& DirWorld, float CamYawDeg, float Scale, FVector& OutOffsetCm, float& OutRollDeg);
+	UFUNCTION(BlueprintCallable, Category = "Jam|Camera")
+	void StartKick(float Strength, FVector2D DirWorld);
+	int32 GetKickFramesLeft() const { return KickLeft; }
+
 	const FJamCameraFilter& GetFilter() const { return Filter; }
 	const FTransform& GetCurrentSimPose() const { return PoseCurrent; }
 
@@ -226,5 +260,9 @@ private:
 	float PunchSign = 1.f;
 	int32 LastHumanIndex = -1;
 	FVector2D LastHumanPosM = FVector2D::ZeroVector;
+	// Lane A73 kick state (stepped per sim frame in StepSimFrame).
+	int32 KickLeft = 0;
+	float KickStrength = 0.f;
+	FVector2D KickDir = FVector2D(1, 0);
 	UPROPERTY(Transient) TObjectPtr<UJamEventBus> Bus;
 };

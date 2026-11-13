@@ -75,7 +75,7 @@ struct JAMCORE_API FJamInput
 	bool bDeke = false;
 
 	// Lane A49 sprint held (level): +game.skater.sprint.bonus top speed and thrust while the skater moves and its stamina lasts (drain_frames of
-	// sprint, refill_frames to full). Bots never set it. LOCKSTEP: a new input field; lane A38's FJamNetQuantInput must carry it as a flag bit.
+	// sprint, refill_frames to full). Bots set it only with game.ai.sprint (lane A72). LOCKSTEP: a new input field; lane A38's FJamNetQuantInput must carry it as a flag bit.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Sim")
 	bool bSprint = false;
 
@@ -317,7 +317,7 @@ public:
 	// R-0013: the faceoff countdown, the draw window after the drop, the penalty box, the pause before a free faceoff after a foul.
 	static constexpr int32 FaceoffCountdownFrames = 90;
 	static constexpr int32 DrawWindowFrames = 30;
-	static constexpr int32 BoxFrames = 300;
+	static constexpr int32 BoxFrames = 300;          // the default of game.rules.penalty_frames (lane A72)
 	static constexpr int32 FoulPauseFrames = 60;
 	static constexpr double PokeTakeM = 0.35;        // blade-to-puck distance (beyond the puck radius) that takes the puck
 	static constexpr double DeflectRangeM = 0.6;     // C-0005: a shot passing within this of a stick deflects

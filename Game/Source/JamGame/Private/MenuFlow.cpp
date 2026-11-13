@@ -284,15 +284,15 @@ const TArray<FJamModeCard>& UJamMenuFlow::ModeCards()
 		{ TEXT("modes/hockey.mode.pond"), TEXT("hockey-mode-pond"), TEXT("Pond"), TEXT("Skate and pass on an outdoor pond. Nobody hits."),
 			{ TEXT("60 x 30 m, slick ice, 6 m nets"), TEXT("no checks, no penalties"), TEXT("soft passes land, rookie bots, 3:00") } },
 		{ TEXT("modes/hockey.mode.cage"), TEXT("hockey-mode-cage"), TEXT("Cage"), TEXT("A tight box with live boards and pillars. Hit, don't poke."),
-			{ TEXT("70 x 35 m, boards 0.95, 4 pillars"), TEXT("stick reach 0.6 m"), TEXT("checks from 3 m/s, no penalties, 3:00") } },
+			{ TEXT("70 x 35 m, boards 0.95, 4 pillars"), TEXT("stick reach 0.6 m"), TEXT("bots hit back, 2 s in the box, 3:00") } },
 		{ TEXT("modes/hockey.mode.sniper"), TEXT("hockey-mode-sniper"), TEXT("Sniper"), TEXT("A full-height net and a low crease guard. Lift it."),
 			{ TEXT("net 1.22 m high, pads 0.15 m"), TEXT("shot 26 m/s, charge to 60 frames"), TEXT("full lift 1.1 m") } },
-		{ TEXT("modes/hockey.mode.marathon"), TEXT("hockey-mode-marathon"), TEXT("Marathon"), TEXT("Long ice and a five-minute clock. Pace it, then go."),
-			{ TEXT("140 x 70 m, 5:00 on the clock"), TEXT("breakaway burst +60 % for 4 s"), TEXT("sprint +40 %, empty in 2 s") } },
+		{ TEXT("modes/hockey.mode.marathon"), TEXT("hockey-mode-marathon"), TEXT("Marathon"), TEXT("Long ice and a ten-minute clock. Pace it, then go."),
+			{ TEXT("140 x 70 m, 10:00 on the clock"), TEXT("breakaway burst +60 % for 4 s"), TEXT("everyone sprints: +40 %, empty in 2 s") } },
 		{ TEXT("modes/hockey.mode.power-play"), TEXT("hockey-mode-power-play"), TEXT("Power Play"), TEXT("Four of yours against three. Move it and shoot."),
 			{ TEXT("4 v 3 for your side"), TEXT("passes seat within 1.4 m"), TEXT("one-timer window 20 frames, 4:00") } },
 		{ TEXT("modes/hockey.mode.blind-side"), TEXT("hockey-mode-blind-side"), TEXT("Blind Side"), TEXT("Dekes that send the back the wrong way, checks that stick."),
-			{ TEXT("deke 2 m, the back fooled 1 s"), TEXT("crease reach 0.5 m"), TEXT("checks from 2 m/s, down 4 s") } },
+			{ TEXT("deke 2 m, the back fooled 1 s"), TEXT("slow-reacting bots, crease reach 0.5 m"), TEXT("checks from 2 m/s both ways, down 4 s") } },
 	};
 	return Cards;
 }

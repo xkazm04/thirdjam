@@ -73,6 +73,7 @@ namespace JamAI
 		int GoalieSide = 0;
 		bool bDeke = false;        // R-0029 point 4 (lane A39): the deke tap (FJamInput::bDeke); the adapter copies it like the others
 		bool bSpin = false;        // lane A51 (R-0034): the spin tap (FJamInput::bSpin); the playtester sends it, the brain never does
+		bool bSprint = false;      // lane A72 (asks A2, A3): sprint held (FJamInput::bSprint); the brain with game.ai.sprint, the playtester with -playersprint
 	};
 
 	// lane A3: how well one side's bots play. The defaults are A2's brain, which is what the human's teammates play at every
@@ -128,8 +129,11 @@ namespace JamAI
 		// push would run along the carrier's facing (the sim's foul_from_behind band, 0.5; the brain keeps a margin at 0.35), so no bot ever earns the box for it.
 		double CheckMinClosing = -1.0;
 		bool bCheckFromBehind = false;
+		// Lane A72 (ask A5, game.ai.body_check): the share of the chances above that the bot takes; the coin is a fixed function of the skater and the
+		// one-second window. 1 = every chance (the levels' own rule), 0 = never. Only a cartridge that writes game.ai.body_check changes it.
+		double BodyCheckShare = 1.0;
 	};
-	constexpr int kMaxReactionFrames = 30;
+	constexpr int kMaxReactionFrames = 60;   // lane A72 (ask A4): game.ai.react_frames reaches one second (30 before; the ring is one entry longer than this)
 
 	// lane A3: the opposing bots at pro (tools/sweep, docs/experiments/BALANCING.md): they shoot from reach + 30 m, know the
 	// aim assist, and run to where the puck will be.
@@ -158,6 +162,7 @@ namespace JamAI
 		double YieldRadiusM = 15.0;    // game.ai.yield_radius_m
 		double HoldRadiusM = 0.0;      // game.ai.hold_radius_m (lane A3: pro profile 0 on puck.drag 0.5; A2's 4.5 handed the human the puck)
 		double SpeedScale = 1.0;       // game.ai.speed_scale
+		double SprintShare = 0.0;      // lane A72 (ask A2): game.ai.sprint, the share of two-second windows a chasing bot sprints (0 = never)
 		double RedSkill = 0.94;        // game.ai.red_skill (drives the side without the player); pro 0.94 by the R-0029 pass 2 (regular playtester 50 %)
 		// lane A3: skill per side. Opp = the side without the human (team 1 in pure bot-vs-bot); Mate = the human's side.
 		FJamBotSkill Mate;

@@ -216,6 +216,7 @@ void ALobbyGameMode::GatherBotInputs()
 		I.bPoke = Out[i].bPoke;
 		I.bLift = Out[i].bLift;
 		I.bDeke = Out[i].bDeke;   // lane A39
+		I.bSprint = Out[i].bSprint;   // lane A72 (ask A2): game.ai.sprint
 		I.bShootHeld = false;
 	}
 }

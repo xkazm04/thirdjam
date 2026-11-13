@@ -6,6 +6,7 @@
 //
 //   node tools/playtest/modes.mjs [--modes pond,cage] [--seeds 1-20] [--jobs 3] [--player regular] [--max-frames 36000] [--out tools/playtest/out/modes-<stamp>]
 //        [--baseline tools/playtest/out/modes-<earlier>.jsonl]   (reuse the regular cells of an earlier run on the same binary: same seeds, same hash)
+//        [--sprint]   (lane A72, ask A3: the playtester presses sprint, -playersprint; Marathon's number is the human's sprint frames and needs it)
 //
 // Exit: 0 every mode passed, 1 a mode failed (invalid, a cell failed, unfinished matches, or its number within a third of regular), 2 could not run.
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
@@ -29,7 +30,10 @@ export const CHARACTER = {
   // the human's checks landed; knockdowns of the human stay 0 while bots never body check (PLAYTEST.md section 3)
   cage: { label: 'checks landed / match', of: (ms) => avg(ms.map((m) => m.checks_landed || 0)) },
   sniper: { label: 'human goals per human shot', of: (ms) => { const s = ms.reduce((a, m) => a + m.shots, 0); return s ? ms.reduce((a, m) => a + m.goals_by_human, 0) / s : 0; } },
-  marathon: { label: 'minutes per goal', of: (ms) => { const g = ms.reduce((a, m) => a + m.goals[0] + m.goals[1], 0); return g ? ms.reduce((a, m) => a + m.frames, 0) / 3600 / g : 0; } },
+  // lane A72 (asks A1-A3): ten minutes, bots that sprint (ai.sprint) and a playtester that sprints (--sprint): the human's sprint frames per match. Minutes per goal
+  // (A67's number) is kept as marathon-pace for the runs without --sprint.
+  marathon: { label: 'human sprint frames / match', of: (ms) => avg(ms.map((m) => m.sprint_frames || 0)) },
+  'marathon-pace': { label: 'minutes per goal', of: (ms) => { const g = ms.reduce((a, m) => a + m.goals[0] + m.goals[1], 0); return g ? ms.reduce((a, m) => a + m.frames, 0) / 3600 / g : 0; } },
   'power-play': { label: 'passes + received / match', of: (ms) => avg(ms.map((m) => (m.passes || 0) + (m.passes_received || 0))) },
   'blind-side': { label: 'dekes / match', of: (ms) => avg(ms.map((m) => m.dekes || 0)) },
 };
@@ -78,6 +82,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const uproject = arg('uproject', join(repo, 'Game', 'ThirdJam.uproject'));
   const outBase = arg('out', join(here, 'out', `modes-${stamp()}`));
   const baseline = arg('baseline', '');
+  const sprint = process.argv.includes('--sprint');
   if (!/^\d+(-\d+)?$/.test(seeds)) die(2, `bad --seeds ${seeds}`);
   if (!existsSync(uproject)) die(2, `no uproject ${uproject}`);
   let modes = listModes();
@@ -107,7 +112,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const t0 = Date.now();
   const done = await pool(cells, jobs, async (c) => {
     try {
-      const ms = await runCell({ uproject, cartridge: c.name, level: c.level, player, seeds, maxFrames });
+      const ms = await runCell({ uproject, cartridge: c.name, level: c.level, player, seeds, maxFrames, sprint });
       return { ...c, ms, s: summarize(c.kind === 'regular' ? 'regular' : c.mode.slug, c.name, c.level, player, ms) };
     } catch (e) {
       failed++;
@@ -123,7 +128,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     '|---|---|---|---|---|---|---|---|---|---|---|---|',
   ];
   for (const d of done.filter((x) => x && x.kind === 'mode')) {
-    const ch = CHARACTER[d.mode.slug] || CHARACTER[d.mode.slug.split('-')[0]] || CHARACTER.sniper;
+    const ch = (d.mode.slug === 'marathon' && !sprint ? CHARACTER['marathon-pace'] : CHARACTER[d.mode.slug]) || CHARACTER[d.mode.slug.split('-')[0]] || CHARACTER.sniper;
     const b = base[d.level];
     const mine = ch.of(d.ms);
     const theirs = b ? ch.of(b.ms) : NaN;

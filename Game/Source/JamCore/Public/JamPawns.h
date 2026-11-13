@@ -89,6 +89,25 @@ public:
 	// component named puck_socket); false when the visual has none. The game mode draws a carried puck there.
 	bool GetPuckSocketWorld(FVector& Out) const;
 
+	// Lane A73 (B-to-A-0036 point 4): the hit-stop. Presentation only: the sim never pauses and lockstep never sees it. The game mode calls BeginHitStop(N) before
+	// the hit frame's ApplySimFrame; that frame is applied in full (SetKnockedDown, PlayCheck, the burst all start), then the figure holds the hit frame's pose for N
+	// sim frames: no UpdateMotion / SetStickAim / SetShotCharge (the toy's curves stand still), CustomTimeDilation ~0 on the pawn and on a visual actor (B's montage
+	// freezes), the one-shot and edge calls still go out so nothing is lost; then it catches up to the live pose over N more frames (a blend, no pop). The victim's
+	// SetKnockedDown carries KnockFrames - N: the visual's own clock runs that many frames between the two calls, so B's get-up still ends on the release.
+	void BeginHitStop(int32 Frames);
+	bool IsHitStopped() const { return HoldLeft > 0; }
+	// jam.hitstop (0..6, default 3): the frames the visuals hold on a knockdown that involves the human. 0 = off.
+	static int32 HitStopFrames();
+
+private:
+	void SetVisualTimeDilation(float Dilation);
+	int32 HoldArmed = 0;       // frames asked for; the next ApplySimFrame is the hit frame
+	int32 HoldLeft = 0;        // frames still held
+	int32 HoldTotal = 0;
+	int32 CatchUpLeft = 0;     // frames of the catch-up blend after the hold
+	FVector HeldLoc = FVector::ZeroVector;
+	FRotator HeldRot = FRotator::ZeroRotator;
+
 
 private:
 	UObject* CreateVisual(UClass* VisualClass);
@@ -130,7 +149,18 @@ public:
 	// the shadow disc stays on the ice under it. Pure for tests: the drawn centre height in metres for a sim state and an interpolation alpha.
 	static double RenderHeightM(const FJamPuckState& P, float Alpha, double HalfHeight);
 
+	// Lane A73: the puck's part of the hit-stop: it holds where it was drawn on the hit frame for N sim frames, then blends to the live place over N more.
+	// StepSimFrame is called by the game mode once per sim step (the puck has no ApplySimFrame of its own).
+	void BeginHitStop(int32 Frames);
+	void StepSimFrame();
+
 private:
+	// Lane A73: the one place the drawn location goes through (hold / catch-up applied).
+	void Place(const FVector& LiveCm, float Alpha);
+	int32 HoldLeft = 0, HoldTotal = 0, CatchUpLeft = 0;
+	FVector HeldLoc = FVector::ZeroVector;
+	FVector LastPlaced = FVector::ZeroVector;
+	bool bEverPlaced = false;
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Puck") TObjectPtr<UStaticMeshComponent> Mesh;
 	// R-0016: device B's puck kit. The disc lies on the ice under the puck; the trail follows it. Either may be absent (logged once, never an error).
 	UPROPERTY(Transient) TObjectPtr<UStaticMeshComponent> Disc;

@@ -12,6 +12,7 @@
 #include "NiagaraSystem.h"
 #include "JamEventBus.h"
 #include "Engine/GameInstance.h"
+#include "HAL/IConsoleManager.h"
 
 namespace
 {
@@ -36,6 +37,29 @@ namespace
 	{
 		return UJamSim::ToWorld(A + (B - A) * Alpha, HeightM);
 	}
+}
+
+// Lane A73 (B-to-A-0036 point 4): the frames the figures, the puck and the presentation frame hold on a knockdown that involves the human. Presentation only:
+// the sim steps every frame whatever this says; 0 turns the hit-stop off. The operator tastes it with jam.hitstop 0..6.
+static TAutoConsoleVariable<int32> CVarJamHitStop(TEXT("jam.hitstop"), 3,
+	TEXT("Hit-stop frames (0..6, default 3) on a knockdown that involves the human: both figures, the puck, the camera and the HUD hold the hit frame while the sim runs on. 0 = off."));
+
+int32 AJamSkater::HitStopFrames()
+{
+	return FMath::Clamp(CVarJamHitStop.GetValueOnGameThread(), 0, 6);
+}
+
+void AJamSkater::BeginHitStop(int32 Frames)
+{
+	if (Frames <= 0) return;
+	HoldArmed = FMath::Clamp(Frames, 1, 6);
+}
+
+void AJamSkater::SetVisualTimeDilation(float Dilation)
+{
+	// The pawn's components (the toy figure, its Niagara) tick with the pawn's dilation; B's figure is an attached actor with a dilation of its own.
+	CustomTimeDilation = Dilation;
+	if (AActor* A = Cast<AActor>(VisualObject.Get())) A->CustomTimeDilation = Dilation;
 }
 
 // ---------- UJamPlaceholderVisual ----------
@@ -197,6 +221,32 @@ void AJamSkater::ApplySimFrame(const FJamSkaterState& S)
 {
 	if (!VisualObject) return;
 	UObject* V = VisualObject;
+	// Lane A73: the hit-stop bookkeeping, one step per sim frame. The hit frame (HoldArmed) is applied in full below and its pose recorded; the next HoldTotal
+	// frames are "held": edges and one-shots still go out, the continuous calls do not, the actor is drawn at the held pose; then CatchUpLeft frames blend back.
+	const bool bHitFrame = HoldArmed > 0;
+	if (bHitFrame)
+	{
+		HoldTotal = HoldArmed;
+		HoldLeft = HoldArmed;
+		HoldArmed = 0;
+		CatchUpLeft = 0;
+		HeldLoc = UJamSim::ToWorld(S.Pos, 0.0);
+		HeldRot = FRotator(0.0, FMath::RadiansToDegrees(S.Yaw + FMath::DegreesToRadians(S.SpinVisualYawDeg())), 0.0);
+		SetVisualTimeDilation(0.0001f);   // not 0: nothing downstream divides by a zero delta
+	}
+	else if (HoldLeft > 0)
+	{
+		if (--HoldLeft == 0)
+		{
+			SetVisualTimeDilation(1.f);
+			CatchUpLeft = HoldTotal;
+		}
+	}
+	else if (CatchUpLeft > 0)
+	{
+		--CatchUpLeft;
+	}
+	const bool bHeld = !bHitFrame && HoldLeft > 0;
 	// B-to-A-0024 point 2 (lane A31): PlayShoot only for a shot; a pass is PlayPass alone (below), never a charge-0 shot in the same frame.
 	if (S.bShotThisFrame) IJamSkaterVisual::Execute_PlayShoot(V, S.LastShotCharge);
 	if (S.bCheckThisFrame) IJamSkaterVisual::Execute_PlayCheck(V);
@@ -204,7 +254,18 @@ void AJamSkater::ApplySimFrame(const FJamSkaterState& S)
 	{
 		bWasDown = S.IsDown();
 		// C-0001 v4: the down time rides along (KnockFrames is the whole knockdown on the frame it starts: StepSkater counts it down from the next step on).
-		IJamSkaterVisual::Execute_SetKnockedDown(V, bWasDown, static_cast<float>(S.KnockDir.X), static_cast<float>(S.KnockDir.Y), bWasDown ? S.KnockFrames : 0);
+		// Lane A73: on a hit-stop the visual's own clock stands still for HoldTotal frames, so it gets KnockFrames - HoldTotal: its get-up still ends on the release.
+		const int32 DownFrames = bWasDown ? FMath::Max(1, S.KnockFrames - (bHitFrame ? HoldTotal : 0)) : 0;
+		IJamSkaterVisual::Execute_SetKnockedDown(V, bWasDown, static_cast<float>(S.KnockDir.X), static_cast<float>(S.KnockDir.Y), DownFrames);
+		if (bWasDown)
+		{
+			UE_LOG(LogJamSim, Log, TEXT("JAMVIS knockdown frame=%lld skater=%d team=%d human=%d dir=(%.2f, %.2f) sim_frames=%d sent_frames=%d hitstop=%d"),
+				SimFrameForLog(), S.Index, S.Team, S.bHuman ? 1 : 0, S.KnockDir.X, S.KnockDir.Y, S.KnockFrames, DownFrames, bHitFrame ? HoldTotal : 0);
+		}
+		else
+		{
+			UE_LOG(LogJamSim, Log, TEXT("JAMVIS getup frame=%lld skater=%d team=%d human=%d (SetKnockedDown false: the sim released the skater)"), SimFrameForLog(), S.Index, S.Team, S.bHuman ? 1 : 0);
+		}
 	}
 	// Lane A45 (C-0001 v4, R-0031 point 1): B's four calls from the sim's read-outs (JamSim.h, never hashed). One JAMVIS line each, a few per minute, so B can read what was sent.
 	if (S.bBumpThisFrame && !S.IsDown())
@@ -235,6 +296,17 @@ void AJamSkater::ApplySimFrame(const FJamSkaterState& S)
 	{
 		bHadPuck = S.bHasPuck;
 		IJamSkaterVisual::Execute_SetHasPuck(V, bHadPuck);
+	}
+	// Lane A73: while held, the continuous calls (UpdateMotion, SetStickAim, SetShotCharge) stay away: the figure keeps the hit frame's motion state.
+	if (bHeld)
+	{
+		if (S.PokeResult != 0) IJamSkaterVisual::Execute_PlayPoke(V, S.PokeResult > 0);
+		if (S.bLiftThisFrame) IJamSkaterVisual::Execute_PlayLift(V);
+		if (S.bPassThisFrame) IJamSkaterVisual::Execute_PlayPass(V, S.LastPassStrength);
+		if (S.bAtFaceoff != bWasAtFaceoff) { bWasAtFaceoff = S.bAtFaceoff; IJamSkaterVisual::Execute_SetFaceoff(V, bWasAtFaceoff); }
+		if (S.DrawResult != 0) IJamSkaterVisual::Execute_PlayFaceoffDraw(V, S.DrawResult > 0);
+		if (S.bFoulThisFrame) IJamSkaterVisual::Execute_PlayFoulReaction(V);
+		return;
 	}
 	// Contract: turn rate positive = turning left seen from above; the sim's yaw grows to the right (Unreal yaw).
 	// Lane A51 (R-0034): the spin is a yaw turn of the visual over the spin's frames (FJamSkaterState::SpinVisualYawDeg) through the existing facing call;
@@ -339,7 +411,20 @@ void AJamSkater::ApplyRender(const FJamSkaterState& S, float Alpha)
 	const FVector Loc = Lerp2D(S.PrevPos, S.Pos, Alpha, 0.0);
 	const double DYaw = FMath::UnwindRadians(S.Yaw - S.PrevYaw);
 	const double Yaw = S.PrevYaw + DYaw * Alpha + FMath::DegreesToRadians(S.SpinVisualYawDeg());   // lane A51 (R-0034): the spin's turn of the figure
-	SetActorLocationAndRotation(Loc, FRotator(0.0, FMath::RadiansToDegrees(Yaw), 0.0));
+	const FRotator Rot(0.0, FMath::RadiansToDegrees(Yaw), 0.0);
+	// Lane A73: held = the hit frame's pose; catching up = a blend from it to the live pose over HoldTotal frames (w runs 0 -> 1, Alpha inside each frame).
+	if (HoldLeft > 0)
+	{
+		SetActorLocationAndRotation(HeldLoc, HeldRot);
+		return;
+	}
+	if (CatchUpLeft > 0 && HoldTotal > 0)
+	{
+		const float W = FMath::Clamp((static_cast<float>(HoldTotal - CatchUpLeft) + Alpha) / static_cast<float>(HoldTotal), 0.f, 1.f);
+		SetActorLocationAndRotation(FMath::Lerp(HeldLoc, Loc, W), FQuat::Slerp(HeldRot.Quaternion(), Rot.Quaternion(), W).Rotator());
+		return;
+	}
+	SetActorLocationAndRotation(Loc, Rot);
 }
 
 // ---------- AJamPuck ----------
@@ -423,14 +508,45 @@ double AJamPuck::RenderHeightM(const FJamPuckState& P, float Alpha, double HalfH
 void AJamPuck::ApplyRender(const FJamPuckState& P, float Alpha)
 {
 	// R-0035 (lane A52): the puck is drawn where the sim says, height included; the disc (the shadow) stays on the ice under it.
-	const FVector Loc = Lerp2D(P.PrevPos, P.Pos, Alpha, RenderHeightM(P, Alpha, HalfHeightM));
-	SetActorLocation(Loc);
-	PlaceDiscOnIce(Loc);
+	Place(Lerp2D(P.PrevPos, P.Pos, Alpha, RenderHeightM(P, Alpha, HalfHeightM)), Alpha);
 }
 
 void AJamPuck::ApplyRenderAt(const FVector& WorldCm)
 {
-	const FVector Loc(WorldCm.X, WorldCm.Y, HalfHeightM * 100.0);
+	Place(FVector(WorldCm.X, WorldCm.Y, HalfHeightM * 100.0), 1.f);
+}
+
+void AJamPuck::BeginHitStop(int32 Frames)
+{
+	// Lane A73: hold where the puck was last drawn. Called on the hit frame before that frame's StepSimFrame, which counts one down.
+	if (Frames <= 0) return;
+	HoldTotal = FMath::Clamp(Frames, 1, 6);
+	HoldLeft = HoldTotal + 1;
+	CatchUpLeft = 0;
+	HeldLoc = bEverPlaced ? LastPlaced : GetActorLocation();
+	CustomTimeDilation = 0.0001f;
+}
+
+void AJamPuck::StepSimFrame()
+{
+	if (HoldLeft > 0)
+	{
+		if (--HoldLeft == 0) { CustomTimeDilation = 1.f; CatchUpLeft = HoldTotal; }
+	}
+	else if (CatchUpLeft > 0) --CatchUpLeft;
+}
+
+void AJamPuck::Place(const FVector& LiveCm, float Alpha)
+{
+	FVector Loc = LiveCm;
+	if (HoldLeft > 0) Loc = HeldLoc;
+	else if (CatchUpLeft > 0 && HoldTotal > 0)
+	{
+		const float W = FMath::Clamp((static_cast<float>(HoldTotal - CatchUpLeft) + Alpha) / static_cast<float>(HoldTotal), 0.f, 1.f);
+		Loc = FMath::Lerp(HeldLoc, LiveCm, W);
+	}
+	LastPlaced = Loc;
+	bEverPlaced = true;
 	SetActorLocation(Loc);
 	PlaceDiscOnIce(Loc);
 }
