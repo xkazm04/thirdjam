@@ -6,7 +6,8 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { checkManifest, checkText, situationOf, KEYS } from './check.mjs';
-import { render, parseInl, MANIFEST, OUTPUT, SUPPLEMENT, SUPPLEMENT_OUTPUT, renderSupplement } from './embed.mjs';
+import { render, parseInl, MANIFEST, OUTPUT, SUPPLEMENT, SUPPLEMENT_OUTPUT, renderSupplement, ROUGH, ROUGH_OUTPUT, renderRough } from './embed.mjs';
+import { mildCount, MILD_QUOTA } from '../barks/filter.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '..', '..');
@@ -84,4 +85,24 @@ test('the ability supplement is clean, one situation per kind, and embedded', ()
   const ids = new Set(manifest.lines.map((l) => l.id));
   for (const l of sup.lines) assert.ok(!ids.has(l.id), `${l.id} collides with B's manifest`);
   assert.equal(readFileSync(resolve(repo, SUPPLEMENT_OUTPUT), 'utf8').replace(/\r/g, ''), renderSupplement(readFileSync(resolve(repo, SUPPLEMENT))));
+});
+
+// Lane A90 (R-0041 point 4): A89's rough-voice lines pass the same check (a missing wave is the only error allowed: B records them), keep A89's ids and
+// situations, never collide with B's or the ability ids, are embedded, and the whole bank (B + ability + rough) keeps mild words under one line in ten.
+test('the rough supplement is clean, keeps the situations, is embedded; the whole bank stays under the mild quota', () => {
+  const rough = JSON.parse(readFileSync(resolve(repo, ROUGH), 'utf8'));
+  const r = checkManifest(rough, { soundExists: () => true });
+  assert.deepEqual(r.errors, []);
+  assert.equal(r.lines, 60);
+  const per = {};
+  for (const l of rough.lines) per[situationOf(l.id)] = (per[situationOf(l.id)] || 0) + 1;
+  assert.deepEqual(per, { 'check.light': 6, 'check.solid': 7, 'knockdown.big': 7, 'check.cross': 10, 'knockdown.human': 10, 'knockdown.massacre': 10, 'goal.after_hit': 10 });
+  const sup = JSON.parse(readFileSync(resolve(repo, SUPPLEMENT), 'utf8'));
+  const taken = new Set([...manifest.lines, ...sup.lines].map((l) => l.id));
+  for (const l of rough.lines) assert.ok(!taken.has(l.id), `${l.id} collides`);
+  assert.equal(readFileSync(resolve(repo, ROUGH_OUTPUT), 'utf8').replace(/\r/g, ''), renderRough(readFileSync(resolve(repo, ROUGH))));
+  const all = [...manifest.lines, ...sup.lines, ...rough.lines];
+  const mild = all.filter((l) => mildCount(l.text) > 0).length;
+  assert.ok(mild <= Math.floor(all.length * MILD_QUOTA), `${mild} mild of ${all.length}`);
+  assert.ok(all.every((l) => mildCount(l.text) <= 1), 'never two mild words in a line');
 });

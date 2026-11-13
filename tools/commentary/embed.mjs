@@ -14,6 +14,12 @@ export const OUTPUT = 'Game/Source/JamGame/Private/CommentaryData.inl';
 // Lane A84 (R-0041 point 3): A's supplement (the ability lines; B records the waves later), embedded beside B's manifest and merged by FJamCommentaryBank::Embedded().
 export const SUPPLEMENT = 'Game/Content/Commentary/abilities.commentary.json';
 export const SUPPLEMENT_OUTPUT = 'Game/Source/JamGame/Private/CommentaryAbilityData.inl';
+// Lane A90 (R-0041 point 4): A89's rough-voice lines (checks by Strength, cross-checks, the human down, massacre shifts, goals after a hit), a second supplement.
+export const ROUGH = 'Game/Content/Commentary/rough.commentary.json';
+export const ROUGH_OUTPUT = 'Game/Source/JamGame/Private/CommentaryRoughData.inl';
+export function renderRough(bytes) {
+  return render(bytes).replace(/JamCommentaryBankJson/g, 'JamCommentaryRoughJson').replace(MANIFEST, ROUGH);
+}
 
 // The supplement's .inl text (its own array name, so both .inl files can be included in one translation unit).
 export function renderSupplement(bytes) {
@@ -44,6 +50,9 @@ export function embed(root = repo) {
   const sup = readFileSync(resolve(root, SUPPLEMENT));
   writeFileSync(resolve(root, SUPPLEMENT_OUTPUT), renderSupplement(sup));
   console.log(`PASS embed commentary supplement ${sup.length} bytes -> ${SUPPLEMENT_OUTPUT}`);
+  const rough = readFileSync(resolve(root, ROUGH));
+  writeFileSync(resolve(root, ROUGH_OUTPUT), renderRough(rough));
+  console.log(`PASS embed commentary rough supplement ${rough.length} bytes -> ${ROUGH_OUTPUT}`);
   return bytes.length;
 }
 

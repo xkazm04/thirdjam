@@ -37,6 +37,12 @@ namespace JamCommentary
 	constexpr int32 BankWindowFrames = 60;      // board.bank: a goal within a second of a board hit
 	constexpr int32 ProtectWindowFrames = 120;  // carry.protect: a check on the carrier within two seconds
 	constexpr int32 LongShotWindowFrames = 180; // goal.long reads the shot that went in
+	// Lane A90 (R-0041 point 4, A89's rough voice): the picker rules the data-only `when` cannot express.
+	constexpr float CheckLightBelow = 0.4f;     // check.light: Strength < 0.4
+	constexpr float CheckSolidBelow = 0.8f;     // check.solid: 0.4 <= Strength < 0.8 (check.big and knockdown.big: >= 0.8)
+	constexpr int32 MassacreWindowFrames = 1200; // knockdown.massacre: the third knockdown by one team inside 20 s
+	constexpr int32 MassacreCount = 3;
+	constexpr int32 AfterHitWindowFrames = 300; // goal.after_hit: a goal within 5 s after the scoring team landed a check
 	constexpr float MusicLevelPlay = 0.35f;     // MS_music_match Level in play
 	constexpr float MusicLevelPause = 0.6f;     // ... in pauses and at the end
 	constexpr double TurnTriggerRadS = 3.0;     // MS_skate_loop Turn when |yaw rate| passes this (B-to-A-0007 point 4)
@@ -155,7 +161,7 @@ public:
 	bool IsGateOpen(int64 Frame) const { return Frame - LastStartFrame >= JamCommentary::GateFrames && Frame >= LastEndFrame && Frame >= BarkHoldUntil; }
 	bool IsLinePlaying(int64 Frame) const { return Frame < LastEndFrame; }
 	bool TakeCutRequest() { const bool b = bCutRequested; bCutRequested = false; return b; }
-	// Why the last cut was requested: "bark_at_human" or "must_play" (lane A47).
+	// Why the last cut was requested: "bark_at_human" or "must_play" (lane A47), "hit" (lane A90: a check or knockdown line over a non-hit line).
 	const TCHAR* GetCutReason() const { return CutReason; }
 	int32 GetPickCount() const { return PickCount; }
 	const FJamCommentaryPick& GetLast() const { return Last; }
@@ -167,6 +173,8 @@ public:
 	bool WhenHolds(const FJamCommentaryLine& L, const FJamCommentaryEvent& E, const FJamCommentaryWorld& W) const;
 	static int32 Specificity(const FJamCommentaryLine& L);
 	static FName Suffix(const FJamCommentaryLine& L);
+	// Lane A90: knockdowns by Team inside the massacre window ending at Frame (the ring the knockdown.massacre rule reads).
+	int32 KnockdownsInWindow(int32 Team, int64 Frame) const;
 
 private:
 	bool Start(int32 LineIndex, FName Event, int64 Frame, FJamCommentaryPick& Out);
@@ -209,6 +217,11 @@ private:
 	FVector2D LastCheckWhere = FVector2D::ZeroVector;
 	int32 PassStreakTeam = -1;
 	int32 PassStreak = 0;
+	// Lane A90: knockdown frames per knocking team (the victim's opponents) inside MassacreWindowFrames; the last landed check per team; whether
+	// the last goal came within AfterHitWindowFrames of its team's check (goal.after_hit, said as the goal's second beat).
+	TArray<int64> KnockdownsBy[2];
+	int64 LastTeamCheckFrame[2] = { -1000000, -1000000 };
+	bool bGoalAfterHit = false;
 	// A goal's second beat (B's rule 6): one score-state or mood line when the gate reopens in the pause; goal.pause only if nothing else fits.
 	bool bGoalBeatPending = false;
 	FJamCommentaryEvent GoalBeat;

@@ -495,4 +495,208 @@ bool FJamCommentaryAbilities::RunTest(const FString&)
 	return true;
 }
 
+// ---------------------------------------------------------------- lane A90 (R-0041 point 4): A89's rough voice ----------------------------------------------------------------
+// On the shipped bank (B's manifest + the ability and rough supplements): the four picker rules the data-only `when` cannot express.
+namespace JamCommentaryTests
+{
+	int32 CountSituation(const TArray<int32>& C, const FJamCommentaryBank& Bank, const TCHAR* Sit)
+	{
+		int32 N = 0;
+		for (int32 I : C) if (Bank.Lines[I].Situation == FName(Sit)) ++N;
+		return N;
+	}
+	FJamCommentaryEvent Ev(FName Event, int32 Who, float Strength, int64 Frame, int32 Team, FName Kind = NAME_None)
+	{
+		FJamCommentaryEvent E;
+		E.Event = Event; E.Who = Who; E.Strength = Strength; E.Frame = Frame; E.Team = Team; E.Kind = Kind; E.WhereM = FVector2D(0, 0);
+		return E;
+	}
+	// One event through Observe + Resolve on the shipped picker.
+	bool Step(FJamCommentaryPicker& Picker, int64 F, FName Event, const FJamEventPayload& P, FJamCommentaryPick& Out, bool bPause = false, int32 Score0 = 0)
+	{
+		FJamCommentaryWorld W = World(F, bPause);
+		W.Score[0] = Score0;
+		Picker.Observe(Event, P, FVector2D(P.Where.X / 100.0, P.Where.Y / 100.0), W);
+		return Picker.Resolve(W, Out);
+	}
+}
+
+// check.light < 0.4 <= check.solid < 0.8 <= check.big / knockdown.big, by the check's Strength; the 60 rough lines are in the shipped bank.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamCommentaryCheckByStrength, "Jam.Commentary.CheckByStrength", JamCommentaryTests::Flags)
+bool FJamCommentaryCheckByStrength::RunTest(const FString&)
+{
+	const FJamCommentaryBank& Bank = FJamCommentaryBank::Embedded();
+	TestEqual(TEXT("shipped bank: 340 + 12 ability + 60 rough lines"), Bank.Lines.Num(), 412);
+	TestTrue(TEXT("rough ids merged"), Bank.Find(TEXT("check.light.01")) != INDEX_NONE && Bank.Find(TEXT("knockdown.human.13")) != INDEX_NONE && Bank.Find(TEXT("goal.after_hit.10")) != INDEX_NONE);
+	FJamCommentaryPicker Picker(Bank, 7);
+	const FJamCommentaryWorld W = World(1000);
+	TArray<int32> C;
+	struct FCase { float S; int32 Light, Solid, Big; };
+	for (const FCase& K : { FCase{ 0.1f, 1, 0, 0 }, FCase{ 0.399f, 1, 0, 0 }, FCase{ 0.4f, 0, 1, 0 }, FCase{ 0.79f, 0, 1, 0 }, FCase{ 0.8f, 0, 0, 1 }, FCase{ 1.f, 0, 0, 1 } })
+	{
+		Picker.Candidates(JamCommentaryTests::Ev(JamEvents::Check, 4, K.S, 1000, 1, TEXT("front")), W, C);
+		TestEqual(*FString::Printf(TEXT("%.3f check.light"), K.S), CountSituation(C, Bank, TEXT("check.light")) > 0 ? 1 : 0, K.Light);
+		TestEqual(*FString::Printf(TEXT("%.3f check.solid"), K.S), CountSituation(C, Bank, TEXT("check.solid")) > 0 ? 1 : 0, K.Solid);
+		TestEqual(*FString::Printf(TEXT("%.3f check.big"), K.S), CountSituation(C, Bank, TEXT("check.big")) > 0 ? 1 : 0, K.Big);
+		Picker.Candidates(JamCommentaryTests::Ev(JamEvents::Knockdown, 1, K.S, 1000, 0, TEXT("check")), W, C);
+		TestEqual(*FString::Printf(TEXT("%.3f knockdown.big"), K.S), CountSituation(C, Bank, TEXT("knockdown.big")) > 0 ? 1 : 0, K.Big);
+	}
+	// Through the rules: a solid check (0.6) starts check.solid (3, the top priority among the check lines that hold); a light one (0.2) a priority-2 line.
+	FJamCommentaryPick P;
+	TestTrue(TEXT("solid check plays"), Step(Picker, 2000, JamEvents::Check, Payload(4, FVector2D(0, 0), 0.6f, TEXT("front")), P));
+	TestEqual(TEXT("check.solid"), P.Situation, FName(TEXT("check.solid")));
+	TestTrue(TEXT("light check plays"), Step(Picker, 3000, JamEvents::Check, Payload(4, FVector2D(0, 0), 0.2f, TEXT("side_l")), P));
+	TestTrue(TEXT("check.light or the colour line (2 each)"), P.Situation == FName(TEXT("check.light")) || P.Situation == FName(TEXT("check.orange")));
+	// A big check and its knockdown on the same frame (orange 4 flattens blue 1): knockdown.big (4) wins.
+	{
+		FJamCommentaryWorld W2 = World(4000);
+		Picker.Observe(JamEvents::Check, Payload(4, FVector2D(0, 0), 0.9f, TEXT("front")), FVector2D(0, 0), W2);
+		Picker.Observe(JamEvents::Knockdown, Payload(1, FVector2D(0, 0), 0.9f, TEXT("check")), FVector2D(0, 0), W2);
+		TestTrue(TEXT("big hit plays"), Picker.Resolve(W2, P));
+		TestEqual(TEXT("knockdown.big"), P.Situation, FName(TEXT("knockdown.big")));
+	}
+	return true;
+}
+
+// knockdown.massacre: the third knockdown by one team inside 1,200 frames (a per-team ring); the other team's knockdowns do not count; a slower third does not.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamCommentaryMassacre, "Jam.Commentary.Massacre", JamCommentaryTests::Flags)
+bool FJamCommentaryMassacre::RunTest(const FString&)
+{
+	const FJamCommentaryBank& Bank = FJamCommentaryBank::Embedded();
+	{
+		FJamCommentaryPicker Picker(Bank, 7);
+		FJamCommentaryPick P;
+		// Blue knocks down orange 3 at 1000 and orange 4 at 1400; orange knocks down blue 1 at 1600 (the other ring).
+		Step(Picker, 1000, JamEvents::Knockdown, Payload(3, FVector2D(0, 0), 0.5f, TEXT("check")), P);
+		const bool b2 = Step(Picker, 1400, JamEvents::Knockdown, Payload(4, FVector2D(0, 0), 0.5f, TEXT("check")), P);
+		TestTrue(TEXT("second by blue: no massacre"), !b2 || P.Situation != FName(TEXT("knockdown.massacre")));
+		TestEqual(TEXT("blue ring holds two"), Picker.KnockdownsInWindow(0, 1400), 2);
+		const bool b3 = Step(Picker, 1600, JamEvents::Knockdown, Payload(1, FVector2D(0, 0), 0.5f, TEXT("check")), P);
+		TestEqual(TEXT("orange ring holds one"), Picker.KnockdownsInWindow(1, 1600), 1);
+		TestTrue(TEXT("orange's knockdown is not blue's massacre"), !b3 || P.Situation != FName(TEXT("knockdown.massacre")));
+		// Blue's third at 2100 (1,100 frames after the first): the massacre line (5) plays.
+		TestTrue(TEXT("third by blue plays"), Step(Picker, 2100, JamEvents::Knockdown, Payload(5, FVector2D(0, 0), 0.5f, TEXT("check")), P));
+		TestEqual(TEXT("knockdown.massacre"), P.Situation, FName(TEXT("knockdown.massacre")));
+	}
+	{
+		FJamCommentaryPicker Picker(Bank, 7);
+		FJamCommentaryPick P;
+		Step(Picker, 1000, JamEvents::Knockdown, Payload(3, FVector2D(0, 0), 0.5f, TEXT("check")), P);
+		Step(Picker, 1400, JamEvents::Knockdown, Payload(4, FVector2D(0, 0), 0.5f, TEXT("check")), P);
+		// The third at 2200: the first has left the 1,200-frame window.
+		const bool b = Step(Picker, 2200, JamEvents::Knockdown, Payload(5, FVector2D(0, 0), 0.5f, TEXT("check")), P);
+		TestTrue(TEXT("a third after 1,200 frames is no massacre"), !b || P.Situation != FName(TEXT("knockdown.massacre")));
+		TestEqual(TEXT("ring pruned to two"), Picker.KnockdownsInWindow(0, 2200), 2);
+	}
+	return true;
+}
+
+// goal.after_hit: a goal within 300 frames after the scoring team's check; the colour call plays at the goal, the hit's payoff is the second beat.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamCommentaryGoalAfterHit, "Jam.Commentary.GoalAfterHit", JamCommentaryTests::Flags)
+bool FJamCommentaryGoalAfterHit::RunTest(const FString&)
+{
+	const FJamCommentaryBank& Bank = FJamCommentaryBank::Embedded();
+	// Returns the second beat's situation after a goal by blue at GoalFrame (NAME_None when none plays in the pause).
+	auto Run = [&](int32 CheckWho, int64 CheckFrame, int64 GoalFrame, FName& OutCall) -> FName
+	{
+		FJamCommentaryPicker Picker(Bank, 7);
+		FJamCommentaryPick P;
+		if (CheckWho >= 0) Step(Picker, CheckFrame, JamEvents::Check, Payload(CheckWho, FVector2D(0, 0), 0.5f, TEXT("front")), P);
+		OutCall = NAME_None;
+		if (Step(Picker, GoalFrame, JamEvents::Goal, Payload(1, FVector2D(43, 0), 1.f), P, true, 1)) OutCall = P.Situation;
+		for (int64 F = GoalFrame + 1; F <= GoalFrame + 300; ++F)
+		{
+			FJamCommentaryWorld W = World(F, true);
+			W.Score[0] = 1;
+			if (Picker.Resolve(W, P)) return P.Situation;
+		}
+		return NAME_None;
+	};
+	FName Call;
+	const FName Beat = Run(2, 1000, 1200, Call);
+	TestEqual(TEXT("colour call at the goal"), Call, FName(TEXT("goal.blue")));
+	TestEqual(TEXT("second beat: goal.after_hit (blue checked 200 frames before)"), Beat, FName(TEXT("goal.after_hit")));
+	const FName Late = Run(2, 1000, 1301, Call);
+	TestTrue(TEXT("301 frames after the check: no after_hit"), Late != FName(TEXT("goal.after_hit")));
+	TestEqual(TEXT("... the colour call still plays"), Call, FName(TEXT("goal.blue")));
+	const FName Theirs = Run(4, 1000, 1200, Call);
+	TestTrue(TEXT("orange's check does not make blue's goal an after_hit"), Theirs != FName(TEXT("goal.after_hit")));
+	const FName NoHit = Run(-1, 0, 1200, Call);
+	TestTrue(TEXT("no check: no after_hit"), NoHit != FName(TEXT("goal.after_hit")));
+	return true;
+}
+
+// check.cross: the stick lift that lands (event lift, Kind clean) offers the cross-check lines; a missed lift and a body check never do.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamCommentaryCrossCheck, "Jam.Commentary.CrossCheck", JamCommentaryTests::Flags)
+bool FJamCommentaryCrossCheck::RunTest(const FString&)
+{
+	const FJamCommentaryBank& Bank = FJamCommentaryBank::Embedded();
+	FJamCommentaryPicker Picker(Bank, 7);
+	FJamCommentaryPick P;
+	// check.cross (3) ties lift.clean (3): over clean lifts 800 frames apart (both cooldowns spent) the cross-check is called, always under the lift event,
+	// and while it cools the lift's own line covers the next lift.
+	int32 Cross = 0;
+	for (int32 i = 0; i < 6; ++i)
+	{
+		TestTrue(TEXT("clean lift plays"), Step(Picker, 1000 + i * 800, JamEvents::Lift, Payload(4, FVector2D(-10, 0), 1.f, TEXT("clean")), P));
+		TestTrue(TEXT("check.cross or lift.clean"), P.Situation == FName(TEXT("check.cross")) || P.Situation == FName(TEXT("lift.clean")));
+		TestEqual(TEXT("logged under the lift event"), P.Event, JamEvents::Lift);
+		if (P.Situation == FName(TEXT("check.cross")))
+		{
+			++Cross;
+			TestTrue(TEXT("a lift inside the cross-check's cooldown"), Step(Picker, 1000 + i * 800 + 300, JamEvents::Lift, Payload(4, FVector2D(-10, 0), 1.f, TEXT("clean")), P));
+			TestEqual(TEXT("... is lift.clean"), P.Situation, FName(TEXT("lift.clean")));
+		}
+	}
+	TestTrue(TEXT("the cross-check is called on clean lifts"), Cross >= 1);
+	const bool bMiss = Step(Picker, 7000, JamEvents::Lift, Payload(4, FVector2D(-10, 0), 0.f, TEXT("miss")), P);
+	TestTrue(TEXT("a missed lift is no cross-check"), !bMiss || P.Situation != FName(TEXT("check.cross")));
+	TArray<int32> C;
+	for (const TCHAR* K : { TEXT("front"), TEXT("behind"), TEXT("side_l"), TEXT("side_r") })
+	{
+		Picker.Candidates(JamCommentaryTests::Ev(JamEvents::Check, 4, 0.9f, 9000, 1, K), World(9000), C);
+		TestEqual(*FString::Printf(TEXT("a %s body check never offers check.cross"), K), CountSituation(C, Bank, TEXT("check.cross")), 0);
+	}
+	return true;
+}
+
+
+// Lane A90 "the hit is called": a check or knockdown line cuts the stick chatter that led to it (the same or a lower priority, under the gate), never in a bark
+// hold and never over another hit's line.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamCommentaryHitCall, "Jam.Commentary.HitCall", JamCommentaryTests::Flags)
+bool FJamCommentaryHitCall::RunTest(const FString&)
+{
+	const FJamCommentaryBank& Bank = FJamCommentaryBank::Embedded();
+	{
+		FJamCommentaryPicker Picker(Bank, 7);
+		FJamCommentaryPick P;
+		TestTrue(TEXT("a clean lift starts a line"), Step(Picker, 1000, JamEvents::Lift, Payload(3, FVector2D(-40, 15), 1.f, TEXT("clean")), P));
+		// Orange 3 flattens the human 10 frames later (solid, 0.6): knockdown.human (3) cuts the lift's line (3).
+		FJamCommentaryWorld W = World(1010);
+		Picker.Observe(JamEvents::Check, Payload(3, FVector2D(-44, 15), 0.6f, TEXT("side_l")), FVector2D(-44, 15), W);
+		Picker.Observe(JamEvents::Knockdown, Payload(0, FVector2D(-44, 15), 0.6f, TEXT("check")), FVector2D(-44, 15), W);
+		TestTrue(TEXT("the hit is called under the gate"), Picker.Resolve(W, P));
+		TestEqual(TEXT("knockdown.human"), P.Situation, FName(TEXT("knockdown.human")));
+		TestTrue(TEXT("the lift's line is cut"), Picker.TakeCutRequest());
+		TestEqual(TEXT("cut reason hit"), FString(Picker.GetCutReason()), FString(TEXT("hit")));
+		// A second hit 40 frames later does not cut the first hit's line.
+		FJamCommentaryWorld W2 = World(1050);
+		Picker.Observe(JamEvents::Knockdown, Payload(1, FVector2D(-40, 10), 0.9f, TEXT("check")), FVector2D(-40, 10), W2);
+		TestFalse(TEXT("never over another hit's line"), Picker.Resolve(W2, P));
+	}
+	{
+		FJamCommentaryPicker Picker(Bank, 7);
+		FJamCommentaryPick P;
+		Step(Picker, 1000, JamEvents::Lift, Payload(3, FVector2D(-40, 15), 1.f, TEXT("clean")), P);
+		// A bark at the human on frame 1005 holds the booth for 150 frames: the hit at 1010 is dropped.
+		FJamCommentaryWorld W = World(1005);
+		Picker.ObserveBark(1005, true);
+		Picker.Resolve(W, P);
+		FJamCommentaryWorld W2 = World(1010);
+		Picker.Observe(JamEvents::Knockdown, Payload(0, FVector2D(-44, 15), 0.6f, TEXT("check")), FVector2D(-44, 15), W2);
+		TestFalse(TEXT("never inside a bark hold"), Picker.Resolve(W2, P));
+	}
+	return true;
+}
+
 #endif // WITH_DEV_AUTOMATION_TESTS

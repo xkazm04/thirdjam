@@ -1,6 +1,7 @@
 #include "JamCommentaryData.h"
 #include "CommentaryData.inl"
 #include "CommentaryAbilityData.inl"   // lane A84 (R-0041 point 3): A's ability lines, merged below
+#include "CommentaryRoughData.inl"     // lane A90 (R-0041 point 4): A89's rough-voice lines, merged below
 #include "JamJson.h"
 
 DEFINE_LOG_CATEGORY(LogJamCommentary);
@@ -136,6 +137,11 @@ FString FJamCommentaryBank::AbilityJson()
 	return FString(UTF8_TO_TCHAR(reinterpret_cast<const char*>(JamCommentaryAbilityJson)));
 }
 
+FString FJamCommentaryBank::RoughJson()
+{
+	return FString(UTF8_TO_TCHAR(reinterpret_cast<const char*>(JamCommentaryRoughJson)));
+}
+
 FString FJamCommentaryBank::EmbeddedJson()
 {
 	return FString(UTF8_TO_TCHAR(reinterpret_cast<const char*>(JamCommentaryBankJson)));
@@ -152,18 +158,25 @@ const FJamCommentaryBank& FJamCommentaryBank::Embedded()
 			for (const FString& E : Errors) UE_LOG(LogJamCommentary, Error, TEXT("JAMVO bank %s"), *E);
 		}
 		// Lane A84 (R-0041 point 3): the ability supplement, appended (its ids never collide with B's; a collision is skipped and logged).
-		FJamCommentaryBank Sup;
-		TArray<FString> SupErrors;
-		if (!Sup.Parse(AbilityJson(), SupErrors)) for (const FString& E : SupErrors) UE_LOG(LogJamCommentary, Error, TEXT("JAMVO ability bank %s"), *E);
-		for (const FJamCommentaryLine& L : Sup.Lines)
+		// Lane A90 (R-0041 point 4): A89's rough-voice supplement the same way (knockdown.human.04..13 extend B's situation).
+		auto Merge = [&B](const FString& Json, const TCHAR* Name, TArray<FString>& SupErrors) -> int32
 		{
-			if (B.ById.Contains(L.Id)) { UE_LOG(LogJamCommentary, Error, TEXT("JAMVO ability bank: %s is already in the manifest, skipped"), *L.Id.ToString()); continue; }
-			B.ById.Add(L.Id, B.Lines.Num());
-			B.ByEvent.FindOrAdd(L.Event).Add(B.Lines.Num());
-			B.Situations.Add(L.Situation);
-			B.Lines.Add(L);
-		}
-		UE_LOG(LogJamCommentary, Log, TEXT("JAMVO bank loaded: %d lines (%d ability), %d situations, %d errors"), B.Lines.Num(), Sup.Lines.Num(), B.SituationCount(), Errors.Num() + SupErrors.Num());
+			FJamCommentaryBank Sup;
+			if (!Sup.Parse(Json, SupErrors)) for (const FString& E : SupErrors) UE_LOG(LogJamCommentary, Error, TEXT("JAMVO %s bank %s"), Name, *E);
+			for (const FJamCommentaryLine& L : Sup.Lines)
+			{
+				if (B.ById.Contains(L.Id)) { UE_LOG(LogJamCommentary, Error, TEXT("JAMVO %s bank: %s is already in the manifest, skipped"), Name, *L.Id.ToString()); continue; }
+				B.ById.Add(L.Id, B.Lines.Num());
+				B.ByEvent.FindOrAdd(L.Event).Add(B.Lines.Num());
+				B.Situations.Add(L.Situation);
+				B.Lines.Add(L);
+			}
+			return Sup.Lines.Num();
+		};
+		TArray<FString> SupErrors;
+		const int32 NAbility = Merge(AbilityJson(), TEXT("ability"), SupErrors);
+		const int32 NRough = Merge(RoughJson(), TEXT("rough"), SupErrors);
+		UE_LOG(LogJamCommentary, Log, TEXT("JAMVO bank loaded: %d lines (%d ability, %d rough), %d situations, %d errors"), B.Lines.Num(), NAbility, NRough, B.SituationCount(), Errors.Num() + SupErrors.Num());
 		return B;
 	}();
 	return Bank;

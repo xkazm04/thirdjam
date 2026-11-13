@@ -341,3 +341,12 @@
 - RESOURCES 14:57 cpu 10% ram 20.1/63GB gpu 4 %, 867 MiB, 43 editors 0 cmd 0 ubt 0 free 622GB
 - link green 15:10: main 449c98a (The player shoots and passes with the blade extended (A85, R-0042): one carrier reach (1.6) pushed.
 - link green 15:12: main c1da890 (The acceptance run (A87, R-0043 point 1): drill 20 and a driver that play the first five m) pushed.
+- link green 15:14: main 0f51082 (5 v 5 is the regular game (A83, R-0041 point 2): hockey.regular and the thirteen ladder ta) pushed.
+
+## H21 (15:16) main 0f51082: the reach fix (A85), the acceptance run (A87), abilities on F (A84), 5 v 5 (A83), all_star by aggression (A79), the voice (A89)
+- The acceptance run on the pre-fix build failed shooting, passing and the one-timer as it should; on a stand-in for the fix 17 of 18 verbs green; the red one is the full
+  charge on the crossbar. R-0044: full_m 0.5, a 4-frame tap window, the mechanics' bars restated. A91 (Fable) makes them and takes the acceptance run to green: H25's gate.
+- A86 (Opus): the one curve pass on 5 v 5, the playtester's stick like the mouse first. A90 (Opus): the rough commentary's lines and picker rules.
+- B: A-to-B-0020 (protocol 7, the ability effect and sound, a take with audio). Gate 127 tests.
+
+- RESOURCES 15:27 cpu 29% ram 29/63GB gpu 6 %, 874 MiB, 40 editors 0 cmd 3 ubt 0 free 626GB

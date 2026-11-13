@@ -35,6 +35,10 @@ namespace
 		SfxEarly(TEXT("early")), SfxDrop(TEXT("drop")), SfxTakeN(TEXT("take_n")), SfxTakeTied(TEXT("take_tied")), SfxTied(TEXT("tied")), SfxLast10(TEXT("last_10")),
 		SfxLast10Tied(TEXT("last_10_tied")), SfxLast10Close(TEXT("last_10_close")), SfxSudden(TEXT("sudden")), SfxShutout(TEXT("shutout")), SfxSeason(TEXT("season"));
 	const FName KindBoost(TEXT("boost")), KindCheck(TEXT("check"));
+	// Lane A90 (R-0041 point 4): A89's rough-voice situations.
+	const FName SfxLight(TEXT("light")), SfxSolid(TEXT("solid")), SfxMassacre(TEXT("massacre")), SfxAfterHit(TEXT("after_hit")), SfxCross(TEXT("cross")),
+		KindClean(TEXT("clean"));
+	const FName SitCheckCross(TEXT("check.cross")), SitGoalAfterHit(TEXT("goal.after_hit"));
 	// Lane A47 (B-to-A-0030 fault 4): B tagged board.bank and board.rim with their condition as the line's kind so they could never play on a plain
 	// board hit. The payload's kind for board is "skater" or none, so these kinds are conditions for WhenHolds, not a kind to match.
 	bool IsConditionKind(FName Kind) { return Kind == SfxBank || Kind == SfxRim; }
@@ -111,6 +115,10 @@ void FJamCommentaryPicker::Reset(uint64 Seed)
 	HumanShotFrames.Reset();
 	PassStreakTeam = -1;
 	PassStreak = 0;
+	KnockdownsBy[0].Reset();
+	KnockdownsBy[1].Reset();
+	LastTeamCheckFrame[0] = LastTeamCheckFrame[1] = -1000000;
+	bGoalAfterHit = false;
 	bGoalBeatPending = false;
 	GoalBeat = FJamCommentaryEvent();
 	GoalBeatSaid = NAME_None;
@@ -164,6 +172,15 @@ bool FJamCommentaryPicker::WhenHolds(const FJamCommentaryLine& L, const FJamComm
 	if (Sfx == SfxHard) return E.Strength >= (E.Event == JamEvents::Board ? 0.7f : 0.8f);
 	if (Sfx == SfxBig) return E.Strength >= 0.8f;
 	if (Sfx == SfxSoft) return E.Strength < 0.3f;
+	// Lane A90: a check by its Strength (closing speed / skater speed): light < 0.4 <= solid < 0.8 <= big.
+	if (Sfx == SfxLight) return E.Strength < JamCommentary::CheckLightBelow;
+	if (Sfx == SfxSolid) return E.Strength >= JamCommentary::CheckLightBelow && E.Strength < JamCommentary::CheckSolidBelow;
+	// Lane A90: the third knockdown by one team (the victim's opponents) inside 20 s; the ring already holds this knockdown (Observe adds it first).
+	if (Sfx == SfxMassacre) return E.Event == JamEvents::Knockdown && T >= 0 && O >= 0 && KnockdownsInWindow(O, E.Frame) >= JamCommentary::MassacreCount;
+	// Lane A90: a goal within 5 s after the scoring team's check (Observe decides it at the goal; the line waits for the goal's second beat).
+	if (Sfx == SfxAfterHit) return E.Event == JamEvents::Goal && bGoalAfterHit;
+	// Lane A90: check.cross is offered on a lift that lands (Observe asks with Event check, Kind cross; the kind already matched).
+	if (Sfx == SfxCross) return E.Kind == SfxCross;
 	if (Sfx == SfxLong)
 	{
 		if (E.Event == JamEvents::Pass) return E.Strength >= 0.8f;
@@ -275,6 +292,14 @@ void FJamCommentaryPicker::Candidates(const FJamCommentaryEvent& E, const FJamCo
 	}
 }
 
+int32 FJamCommentaryPicker::KnockdownsInWindow(int32 Team, int64 Frame) const
+{
+	if (Team < 0 || Team > 1) return 0;
+	int32 N = 0;
+	for (int64 F : KnockdownsBy[Team]) if (F <= Frame && Frame - F < JamCommentary::MassacreWindowFrames) ++N;
+	return N;
+}
+
 void FJamCommentaryPicker::Remember(const FJamCommentaryEvent& E, const FJamCommentaryWorld& W)
 {
 	if (E.Event == JamEvents::Shot)
@@ -323,8 +348,30 @@ void FJamCommentaryPicker::Observe(FName Event, const FJamEventPayload& Payload,
 	// The history before this event for the "after" conditions, then this event into the history, then the streak conditions.
 	const bool bPassLike = Event == JamEvents::Pass || Event == JamEvents::Shot;
 	if (bPassLike) Remember(E, W);
+	// Lane A90: the rough-voice history this event's own conditions read (the knockdown ring includes this knockdown; the goal reads the checks before it).
+	if (Event == JamEvents::Knockdown && E.Team >= 0 && E.Team <= 1)
+	{
+		TArray<int64>& Ring = KnockdownsBy[1 - E.Team];
+		Ring.Add(E.Frame);
+		Ring.RemoveAll([&](int64 F) { return E.Frame - F >= JamCommentary::MassacreWindowFrames; });
+	}
+	if (Event == JamEvents::Goal) bGoalAfterHit = E.Team >= 0 && E.Team <= 1 && E.Frame - LastTeamCheckFrame[E.Team] <= JamCommentary::AfterHitWindowFrames;
 	Candidates(E, W, E.Candidates);
 	if (!bPassLike) Remember(E, W);
+	if (Event == JamEvents::Check && E.Team >= 0 && E.Team <= 1) LastTeamCheckFrame[E.Team] = E.Frame;
+	// Lane A90: goal.after_hit is a second-beat line: the colour call keeps the goal frame, the hit's payoff follows when the gate reopens.
+	if (Event == JamEvents::Goal) E.Candidates.RemoveAll([&](int32 I) { return Bank.Lines[I].Situation == SitGoalAfterHit; });
+	// Lane A90 (brief A90: "check.cross: the stick lift that lands"): the sim has no cross-check Kind (A85 owns the sim); a clean lift is the stick across the
+	// carrier, so the check.cross lines (event check, kind cross, never matched by a body check's Kind) are offered on it beside lift.clean.
+	if (Event == JamEvents::Lift && E.Kind == KindClean)
+	{
+		FJamCommentaryEvent X = E;
+		X.Event = JamEvents::Check;
+		X.Kind = SfxCross;
+		TArray<int32> C;
+		Candidates(X, W, C);
+		for (int32 I : C) if (Bank.Lines[I].Situation == SitCheckCross) E.Candidates.Add(I);
+	}
 	// board.bank is a goal-time line of event "board": a goal within a second of a board hit.
 	if (Event == JamEvents::Goal && E.Frame - LastBoardFrame <= JamCommentary::BankWindowFrames && W.bPause)
 	{
@@ -468,14 +515,20 @@ bool FJamCommentaryPicker::Resolve(const FJamCommentaryWorld& W, FJamCommentaryP
 		// Lane A47 (B-to-A-0030 fault 3, A32's open point 1): a must-play line (priority 5: the goal calls) cuts a playing lower-priority line, skips the
 		// 2.5 s gate behind one and plays through a bark hold; it never cuts a playing priority-5 line (then it is dropped as before).
 		const bool bMustPlay = !bFromBeat && Bank.Lines[LineIndex].Priority >= JamCommentary::MustPlayPriority && !(IsLinePlaying(Frame) && Last.Priority >= JamCommentary::MustPlayPriority);
-		if (!bMustPlay)
+		// Lane A90 (R-0041 point 4, "the hit is called"): a check or knockdown line cuts a playing line that is not about a hit, of the same or a lower priority,
+		// and skips the 2.5 s gate behind one; never inside a bark hold and never over another hit's line. The first headless pro match dropped all five
+		// knockdowns of the human behind the stick chatter that led to them (a clean lift 7 and 10 frames before, a poke 50 before).
+		const bool bHitEvent = Event == JamEvents::Check || Event == JamEvents::Knockdown;
+		const bool bLastHit = Last.Event == JamEvents::Check || Last.Event == JamEvents::Knockdown;
+		const bool bHitCall = !bFromBeat && !bMustPlay && bHitEvent && !bLastHit && Frame >= BarkHoldUntil && Bank.Lines[LineIndex].Priority >= Last.Priority;
+		if (!bMustPlay && !bHitCall)
 		{
 			// A late quick-play line describes a play that is over: dropped, never queued (the goal beat alone waits for the gate).
 			if (OutSkip) *OutSkip = Frame < LastEndFrame ? TEXT("playing") : Frame < BarkHoldUntil ? TEXT("yield") : TEXT("gate");
 			Close();
 			return false;
 		}
-		if (IsLinePlaying(Frame)) { bCutRequested = true; CutReason = TEXT("must_play"); }
+		if (IsLinePlaying(Frame)) { bCutRequested = true; CutReason = bMustPlay ? TEXT("must_play") : TEXT("hit"); }
 		LastEndFrame = Frame;
 	}
 	const bool bOk = Start(LineIndex, Event, Frame, Out);

@@ -1,0 +1,40 @@
+INFO match: cut modes/hockey.mode.bruisers, until frame 10800, pid 17152, log C:\Users\kazda\kiro\thirdjam\.claude\worktrees\a90\tools\commentary\out\bruisers\game.log
+INFO match: stopping my pid 17152 at frame 10945 after 201s
+  JAMVO board.hard                 3
+  JAMVO board.rim                  6
+  JAMVO carry.long                 1
+  JAMVO goal.against               1
+  JAMVO goal.orange                1
+  JAMVO knockdown.human            2
+  JAMVO knockdown.massacre         1
+  JAMVO pass.any                   4
+  JAMVO period.take_1              1
+  JAMVO post.any                   1
+  JAMVO shot.blue                  1
+  JAMVO shot.close                 1
+  JAMVO shot.long                  3
+  JAMVO shot.orange                7
+  JAMEVENT bark.faceoff               2
+  JAMEVENT bark.stall                 1
+  JAMEVENT bark.steal                 14
+  JAMEVENT board.none                 35
+  JAMEVENT board.skater               29
+  JAMEVENT carry.long                 6
+  JAMEVENT check.front                1
+  JAMEVENT check.side_l               1
+  JAMEVENT check.side_r               3
+  JAMEVENT faceoff.drop               2
+  JAMEVENT faceoff.lost               2
+  JAMEVENT faceoff.won                2
+  JAMEVENT goal.none                  1
+  JAMEVENT knockdown.check            5
+  JAMEVENT pass.to_1                  3
+  JAMEVENT pass.to_2                  3
+  JAMEVENT pass.to_3                  2
+  JAMEVENT pass.to_4                  2
+  JAMEVENT period.take_1              1
+  JAMEVENT period.take_2              1
+  JAMEVENT post.none                  2
+  JAMEVENT shot.none                  41
+INFO match modes/hockey.mode.bruisers: 10769 frames, 33 JAMVO lines, rough situations not spoken: check.light, check.solid, knockdown.big, check.cross, goal.after_hit
+{"tool":"thirdjam.commentary.match/1","cut":"modes/hockey.mode.bruisers","frames":10769,"jamvo":{"post.any":1,"shot.long":3,"period.take_1":1,"knockdown.human":2,"board.hard":3,"shot.close":1,"goal.against":1,"knockdown.massacre":1,"shot.orange":7,"pass.any":4,"goal.orange":1,"shot.blue":1,"board.rim":6,"carry.long":1},"events":{"faceoff.won":2,"faceoff.drop":2,"period.take_1":1,"check.side_l":1,"pass.to_1":3,"goal.none":1,"faceoff.lost":2,"shot.none":41,"check.front":1,"bark.stall":1,"pass.to_3":2,"pass.to_2":3,"post.none":2,"bark.steal":14,"check.side_r":3,"knockdown.check":5,"board.none":35,"board.skater":29,"period.take_2":1,"carry.long":6,"bark.faceoff":2,"pass.to_4":2},"rough_missing":["check.light","check.solid","knockdown.big","check.cross","goal.after_hit"]}

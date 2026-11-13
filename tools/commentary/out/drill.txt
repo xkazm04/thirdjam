@@ -1,0 +1,44 @@
+INFO match: cut hockey.regular, until frame 10800, pid 38428, log C:\Users\kazda\kiro\thirdjam\.claude\worktrees\a90\tools\commentary\out\drill\game.log
+INFO match: stopping my pid 38428 at frame 2950 after 603s
+  JAMVO board.rim                  1
+  JAMVO check.cross                1
+  JAMVO faceoff.after_foul         1
+  JAMVO foul.behind                1
+  JAMVO goal.after_hit             1
+  JAMVO goal.against               2
+  JAMVO goal.orange                2
+  JAMVO knockdown.big              2
+  JAMVO knockdown.human            1
+  JAMVO lift.clean                 1
+  JAMVO lose.blowout               1
+  JAMVO period.take_1              1
+  JAMVO shot.blue                  1
+  JAMVO shot.human_streak          1
+  JAMVO shot.long                  1
+  JAMVO shot.orange                1
+  JAMEVENT bark.faceoff               3
+  JAMEVENT bark.goal_against          1
+  JAMEVENT bark.steal                 2
+  JAMEVENT board.none                 6
+  JAMEVENT board.skater               5
+  JAMEVENT breakaway.none             1
+  JAMEVENT check.behind               1
+  JAMEVENT check.front                3
+  JAMEVENT check.side_l               1
+  JAMEVENT faceoff.drop               4
+  JAMEVENT faceoff.lost               4
+  JAMEVENT faceoff.won                4
+  JAMEVENT foul.foul_from_behind      1
+  JAMEVENT goal.none                  3
+  JAMEVENT knockdown.check            5
+  JAMEVENT lift.clean                 8
+  JAMEVENT lift.miss                  1
+  JAMEVENT lose.none                  1
+  JAMEVENT period.take_1              1
+  JAMEVENT period.take_2              1
+  JAMEVENT period.take_3              1
+  JAMEVENT poke.clean                 1
+  JAMEVENT shot.none                  13
+  JAMEVENT shot.one_timer             3
+INFO match hockey.regular: 2950 frames, 19 JAMVO lines, rough situations not spoken: check.light, check.solid, knockdown.massacre
+{"tool":"thirdjam.commentary.match/1","cut":"hockey.regular","frames":2950,"jamvo":{"shot.long":1,"period.take_1":1,"shot.orange":1,"foul.behind":1,"lift.clean":1,"knockdown.big":2,"goal.after_hit":1,"faceoff.after_foul":1,"check.cross":1,"shot.human_streak":1,"goal.against":2,"lose.blowout":1,"goal.orange":2,"shot.blue":1,"board.rim":1,"knockdown.human":1},"events":{"faceoff.won":4,"faceoff.drop":4,"period.take_1":1,"knockdown.check":5,"breakaway.none":1,"goal.none":3,"faceoff.lost":4,"lift.clean":8,"shot.none":13,"lift.miss":1,"lose.none":1,"shot.one_timer":3,"check.side_l":1,"bark.steal":2,"bark.goal_against":1,"foul.foul_from_behind":1,"period.take_2":1,"board.none":6,"check.front":3,"board.skater":5,"period.take_3":1,"check.behind":1,"poke.clean":1,"bark.faceoff":3},"rough_missing":["check.light","check.solid","knockdown.massacre"]}

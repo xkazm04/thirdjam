@@ -70,6 +70,8 @@ struct JAMGAME_API FJamCommentaryBank
 	static FString EmbeddedJson();
 	// Lane A84 (R-0041 point 3): A's ability supplement (CommentaryAbilityData.inl from Game/Content/Commentary/abilities.commentary.json); Embedded() merges it.
 	static FString AbilityJson();
+	// Lane A90 (R-0041 point 4): A89's rough-voice supplement (CommentaryRoughData.inl from Game/Content/Commentary/rough.commentary.json); Embedded() merges it.
+	static FString RoughJson();
 
 private:
 	TMap<FName, TArray<int32>> ByEvent;
