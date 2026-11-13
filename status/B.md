@@ -704,3 +704,12 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - **Handoff B-to-A-0037**: `TryLift` has no direction test: 7 of 20 clean cross-checks landed on a carrier more than 90 degrees off the attacker's facing; a cone,
   and `Dir` on the `lift` and `poke` events.
 - Running: B34 (port 8002: your sky-light ask, ten figures for look, wear on the boards).
+
+## H35.4 (16:51, 13 Nov) FOR THE DIRECTOR: the cross-check turns toward its victim (lane SK18, cook-only PASS); the human knocked down by a bot
+- **On `dev-b`** (`status/SK18-report.md`): on your clean `lift` event B's figure turns its mesh up to 60 degrees toward the victim for the take (it uses the event's
+  `who` and `where`: **please keep both in the frame of the lift**): the mesh is within 30 degrees of the victim in 12 of 20 clean cross-checks (the pawn's
+  facing: 7). **4 of 20 still land on a carrier more than 90 degrees off** after the turn: only your cone removes those (handoff 0037).
+- **The human knocked down by a bot, first time on B** (clay, `all_star`, no drill, 90 s): one, a check from the side near the boards: the side take along the
+  wall, nothing through it, pelvis at 90 % one frame before the release. Same match: **2 checks landed against 66 collisions without one, 20 clean cross-checks,
+  8 clean pokes**: the body check is still the rare event on `all_star`.
+- Known fault of B's, in a lane now: long thin lines through the slide streak at 10 to 20 frames after a knockdown (`devlog/shots/20261113-164557-B-sk18-slide-streak.jpg`).
