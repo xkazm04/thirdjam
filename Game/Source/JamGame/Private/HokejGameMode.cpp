@@ -44,9 +44,12 @@ static TAutoConsoleVariable<int32> CVarJamScriptHuman(TEXT("jam.ScriptHuman"), 0
 // Lane A49: the tackle / cross-check drill (packaged proof of complaint 5). 1 = tackle (right mouse), 2 = cross-check (middle mouse); resets to 0 after 10 attempts.
 // Lane A73: the still capture of the tackling proof (see StillsObserve).
 static TAutoConsoleVariable<int32> CVarJamCtrlStills(TEXT("jam.ctrl.Stills"), 0,
-	TEXT("1 = capture a still every 4 sim frames after a knockdown that involves the human (24), the human's board hit (8) and a stick hit on the human (8); twice per kind. Lane A73 proof."));
+	TEXT("1 = capture a still every 4 sim frames after a knockdown that involves the human (24), the human's board hit (8) and a stick hit on the human (8); twice per kind. Lane A73 proof. 2 = the mechanics (lane A77): the human's sweep with the puck (150 = 10 s, once), its spin with the puck (24, twice), its saucer (20, twice)."));
+// Lane A82: drills 10 and 11 hand the puck by SetPuck (the shots drill to the human, the one-timer drill to the scripted teammate) instead of winning it from the bots.
+static TAutoConsoleVariable<int32> CVarJamCtrlHandPuck(TEXT("jam.ctrl.HandPuck"), 0,
+	TEXT("1 = drills 10 / 11 hand the puck to the human (10) or the scripted teammate (11) whenever nobody on the human's team carries and no shot is being measured; JAMDRILL hand_puck lines. Lane A82 proof."));
 static TAutoConsoleVariable<int32> CVarJamCtrlDrill(TEXT("jam.ctrl.Drill"), 0,
-	TEXT("1 = tackle drill, 2 = cross-check drill: the human chases the carrier and presses once in range, 10 attempts, JAMDRILL lines. Lane A49 proof. 3 = sweep drill, 4 = spin drill (lane A51): the cursor and the keys stay real, the skating carries the puck at the nearest defender; JAMDRILL stick lines."));
+	TEXT("1 = tackle drill, 2 = cross-check drill: the human chases the carrier and presses once in range, 10 attempts, JAMDRILL lines. Lane A49 proof. 3 = sweep drill, 4 = spin drill (lane A51): the cursor and the keys stay real, the skating carries the puck at the nearest defender; JAMDRILL stick lines. 7 = sweep past a defender, 8 = spin with the puck, 9 = saucer over a defender's blade, 10 = shots from 10 m, 11 = one-timers off a scripted teammate (lane A77): JAMCUE lines for the driver, JAMDRILL stick / saucer / shot / onetimer lines."));
 // Lane A31: a Director's Call from the console: load a cartridge (name or path) and apply it to the running match without a reset
 // (AHokejGameMode::ApplyCartridgeLive), the way the Designer does. A tier change swaps the rig and respawns the figures in place.
 static FAutoConsoleCommandWithWorldAndArgs CmdJamLiveCut(TEXT("jam.livecut"), TEXT("jam.livecut <name-or-path>: apply a cartridge to the running match live (Director's Call); no reset"),
@@ -536,7 +539,9 @@ FJamInput AHokejGameMode::ReadHumanInput()
 	// C-0005 charged shot: the human sends the held level; the sim charges while the puck is in reach and fires on release (a tap = a short charge).
 	Pi->ConsumeShootPressed();
 	In.bShootHeld = Pi->IsShootHeld();
-	In.bPass = Pi->ConsumePassPressed();
+	// Lane A77 (R-0036): the pass is a held level like the shot: the sim's StepPassCharge fires it on the release (a tap flat, a hold of pass.saucer.half_frames a saucer).
+	Pi->ConsumePassPressed();
+	In.bPassHeld = Pi->IsPassHeld();
 	In.bCheck = Pi->ConsumeCheckPressed();
 	In.bBrake = Pi->IsBrakeHeld();  // A5: Ctrl / gamepad B (FEEL.md proposal 6)
 	In.bSprint = Pi->IsSprintHeld();   // lane A49: Shift / LT
@@ -578,10 +583,23 @@ FJamInput AHokejGameMode::ReadHumanInput()
 	if (In.bCheck) UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=check (right mouse / RB)"), Frame);
 	if (In.bPoke) UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=poke (space / A)"), Frame);
 	if (In.bLift) UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=lift (middle mouse, mouse 4 / LB)"), Frame);
-	if (In.bPass) UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=pass (F / X)"), Frame);
+	if (In.bPassHeld != bLastPassHeld) { bLastPassHeld = In.bPassHeld; UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=pass held=%d (F / X)"), Frame, In.bPassHeld ? 1 : 0); }   // lane A77
 	if (In.bDeke) UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=deke (wheel, Q / Y)"), Frame);
 	if (In.bSpin) UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=spin (E / B)"), Frame);   // lane A51 (R-0034)
-	if (In.bShootHeld != bLastShootHeld) { bLastShootHeld = In.bShootHeld; UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=shoot held=%d (left mouse / RT)"), Frame, In.bShootHeld ? 1 : 0); }
+	if (In.bShootHeld != bLastShootHeld)
+	{
+		bLastShootHeld = In.bShootHeld;
+		UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=shoot held=%d (left mouse / RT)"), Frame, In.bShootHeld ? 1 : 0);
+		// Lane A82: the release frame as the sim will see it this step (A77's two taps fired nothing, unexplained): the charge the hold built, the cooldown, the puck's reach and side.
+		if (!In.bShootHeld && Sim->GetSkaters().IsValidIndex(Sim->GetHumanIndex()))
+		{
+			const FJamSkaterState& H = Sim->GetSkaters()[Sim->GetHumanIndex()];
+			const FVector2D ToPuck = Sim->GetPuck().Pos - H.Pos;
+			const double Dist = ToPuck.Size();
+			UE_LOG(LogHokej, Log, TEXT("JAMSHOT release frame=%lld charge_frames=%d shot_ready_frame=%lld cooldown_left=%lld puck_dist=%.2f reach=%.2f front_dot=%.2f carrier=%d"), Frame, H.ChargeFrames, H.ShotReadyFrame,
+				FMath::Max<int64>(0, H.ShotReadyFrame - Frame), Dist, Sim->GetEffectiveStat(EJamStat::ShotReach, H.Index), Dist > 1e-6 ? FVector2D::DotProduct(H.Forward(), ToPuck / Dist) : 1.0, Sim->CarrierIndex());
+		}
+	}
 	if (In.bSprint != bLastSprint) { bLastSprint = In.bSprint; UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=sprint held=%d (shift / LT)"), Frame, In.bSprint ? 1 : 0); }
 	if (In.bBrake != bLastBrake) { bLastBrake = In.bBrake; UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=brake held=%d (ctrl / B)"), Frame, In.bBrake ? 1 : 0); }
 	return In;
@@ -656,6 +674,7 @@ FJamInput AHokejGameMode::DrillInput()
 	// Mirrors what the bindings produce: WASD as a unit Move toward the carrier, one frame of bCheck (right mouse) or bLift (middle mouse) when in range.
 	const int32 Mode = CVarJamCtrlDrill.GetValueOnGameThread();
 	if (Mode == 3 || Mode == 4) return StickDrillInput();   // lane A51 (R-0034): the 1v1 stick-handling drill keeps the real cursor and keys
+	if (Mode >= 7 && Mode <= 11) return MechDrillInput();   // lane A77 (R-0036): the mechanics drills
 	const int32 Me = Sim->GetHumanIndex();
 	const FJamSkaterState& S = Sim->GetSkaters()[Me];
 	FJamInput In;
@@ -875,6 +894,34 @@ void AHokejGameMode::GatherInputs()
 	}
 	if (CVarJamCtrlDrill.GetValueOnGameThread() != 0) Inputs[Human] = DrillInput();   // lane A49 proof drill
 	else Inputs[Human] = (bScriptedHuman || CVarJamScriptHuman.GetValueOnGameThread() != 0) ? ScriptedHumanInput() : ReadHumanInput();
+	if (CVarJamCtrlDrill.GetValueOnGameThread() == 11) MechDrillMate(Inputs);   // lane A77: the scripted teammate of the one-timer drill (after the human's input, never between A49's if and its else)
+	// Lane A82: drills 10 and 11 hand the puck (jam.ctrl.HandPuck 1): A77's human reached its 10 m spot carrying twice in 150 s and the one-timer's set piece never formed.
+	// The shots drill puts the puck on the human's blade whenever it is not carrying and no shot of its is being measured; the one-timer drill puts it on the scripted
+	// teammate's blade whenever nobody on the human's team carries, no pass of the teammate's is in flight and no shot is being measured. A drill change, not a mechanic one.
+	if (CVarJamCtrlHandPuck.GetValueOnGameThread() != 0 && (CVarJamCtrlDrill.GetValueOnGameThread() == 10 || CVarJamCtrlDrill.GetValueOnGameThread() == 11) && Sim->GetPhase() == EJamSimPhase::Playing && Sim->GetSkaters().IsValidIndex(Human))
+	{
+		static int64 HandReady = 0;
+		const int64 F = Sim->GetFrame();
+		const int32 C = Sim->CarrierIndex();
+		const FJamSkaterState& H = Sim->GetSkaters()[Human];
+		if (F >= HandReady && MechShotFrame < 0 && C != Human)
+		{
+			int32 To = -1;
+			if (CVarJamCtrlDrill.GetValueOnGameThread() == 10) To = Human;
+			else
+			{
+				for (const FJamSkaterState& T : Sim->GetSkaters()) if (T.Team == H.Team && T.Index != Human && T.Role != FName(TEXT("back"))) { To = T.Index; break; }
+				if (C == To || (MechMatePassFrame >= 0 && F - MechMatePassFrame < 90)) To = -1;
+			}
+			if (To >= 0 && Sim->GetSkaters()[To].CanAct())
+			{
+				const FJamSkaterState& T = Sim->GetSkaters()[To];
+				Sim->SetPuck(T.Pos + T.Forward() * 0.45, T.Vel);
+				HandReady = F + 60;
+				UE_LOG(LogHokej, Log, TEXT("JAMDRILL hand_puck frame=%lld to=%d carrier_was=%d"), F, To, C);
+			}
+		}
+	}
 	if (Skaters.IsValidIndex(Human) && Skaters[Human]) Skaters[Human]->SetLogAim(UJamInputMap::LogEnabled());
 }
 
@@ -996,7 +1043,8 @@ void AHokejGameMode::StepOnce()
 	StepMsMax = FMath::Max(StepMsMax, Ms);
 	++Steps;
 	if (Effects) Effects->Step();   // lane A14: after the sim's frame, before the events go out
-	if (CVarJamCtrlDrill.GetValueOnGameThread() == 3 || CVarJamCtrlDrill.GetValueOnGameThread() == 4 || StickDrillFrame >= 0) StickDrillObserve();   // lane A51
+	MechDrillObserve();   // lane A77 (R-0036): the human's saucers always; the shots and one-timers in drills 10 and 11
+	if (CVarJamCtrlDrill.GetValueOnGameThread() == 3 || CVarJamCtrlDrill.GetValueOnGameThread() == 4 || CVarJamCtrlDrill.GetValueOnGameThread() == 7 || CVarJamCtrlDrill.GetValueOnGameThread() == 8 || StickDrillFrame >= 0) StickDrillObserve();   // lane A51 (7 and 8: lane A77)
 	else if (CVarJamCtrlDrill.GetValueOnGameThread() != 0 || DrillPressFrame >= 0) DrillObserve();   // lane A49
 	if (CVarJamCtrlDrill.GetValueOnGameThread() == 6 || bKdWasDown) KdObserve();   // lane A73
 	DeliverEvents();
@@ -1024,8 +1072,8 @@ void AHokejGameMode::StepOnce()
 	{
 		const FJamSkaterState& St = Sim->GetSkaters()[A->GetSimIndex()];
 		// Lane A31 (B-to-A-0024 points 1 and 2): one line per shot (with its charge) and per pass, a few per minute, so B can read what the visual was sent.
-		if (St.bShotThisFrame) UE_LOG(LogHokej, Log, TEXT("JAMSHOT frame=%lld skater=%d team=%d charge=%.2f %s"), Sim->GetFrame(), St.Index, St.Team, St.LastShotCharge, St.bHuman ? TEXT("human") : TEXT("bot"));
-		if (St.bPassThisFrame) UE_LOG(LogHokej, Log, TEXT("JAMPASS frame=%lld skater=%d team=%d strength=%.2f %s (PlayPass only, no PlayShoot)"), Sim->GetFrame(), St.Index, St.Team, St.LastPassStrength, St.bHuman ? TEXT("human") : TEXT("bot"));
+		if (St.bShotThisFrame) UE_LOG(LogHokej, Log, TEXT("JAMSHOT frame=%lld skater=%d team=%d charge=%.2f %s one_timer=%d"), Sim->GetFrame(), St.Index, St.Team, St.LastShotCharge, St.bHuman ? TEXT("human") : TEXT("bot"), St.bOneTimerThisFrame ? 1 : 0);
+		if (St.bPassThisFrame) UE_LOG(LogHokej, Log, TEXT("JAMPASS frame=%lld skater=%d team=%d strength=%.2f %s saucer=%d (PlayPass only, no PlayShoot)"), Sim->GetFrame(), St.Index, St.Team, St.LastPassStrength, St.bHuman ? TEXT("human") : TEXT("bot"), St.bSaucerThisFrame ? 1 : 0);   // saucer: lane A77
 		// Lane A51 (R-0034) proof lines: the human's sweep (the blade crossed fast with the puck: the shield opens) and spin, as the sim saw them.
 		if (St.bHuman && St.bSweepThisFrame) UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld sweep side=%d shield_frames=%d blade=(%.2f,%.2f)"), Sim->GetFrame(), St.SweepSide, St.SweepFrames, St.BladePos.X, St.BladePos.Y);
 		if (St.bHuman && St.bSpinThisFrame) UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld spin frames=%d dir=%d stamina=%.2f carrying=%d"), Sim->GetFrame(), St.SpinFrames, St.SpinDir, St.Stamina < 0 ? 1.0 : static_cast<double>(St.Stamina) / Sim->StaminaFull(), Sim->CarrierIndex() == St.Index ? 1 : 0);
@@ -1103,28 +1151,39 @@ void AHokejGameMode::HitStopRoute()
 
 void AHokejGameMode::StillsObserve()
 {
-	if (CVarJamCtrlStills.GetValueOnGameThread() == 0 || !Sim) return;
+	const int32 StillsMode = CVarJamCtrlStills.GetValueOnGameThread();
+	if (StillsMode == 0 || !Sim) return;
 	const int64 F = Sim->GetFrame();
 	const int32 Human = Sim->GetHumanIndex();
 	if (!Sim->GetSkaters().IsValidIndex(Human)) return;
 	if (StillStart < 0)
 	{
 		FString Kind;
-		int32 Count = 0;
-		int32 Victim = -1, Checker = -1;
-		for (const FJamSimEvent& E : Sim->GetFrameEvents())
-		{
-			if (E.Name == JamEvents::Knockdown && E.Kind == FName(TEXT("check"))) Victim = E.Who;
-			if (E.Name == JamEvents::Check) Checker = E.Who;
-		}
-		if (Victim == Human) { Kind = TEXT("kd-human"); Count = 24; }
-		else if (Victim >= 0 && Checker == Human) { Kind = TEXT("kd-bot"); Count = 24; }
+		int32 Count = 0, Max = 2;
 		const FJamSkaterState& H = Sim->GetSkaters()[Human];
-		if (Kind.IsEmpty() && H.bBoardHitThisFrame) { Kind = TEXT("board"); Count = 8; }
-		if (Kind.IsEmpty() && H.StickHitResult != 0) { Kind = TEXT("stickhit"); Count = 8; }
+		if (StillsMode == 2)
+		{
+			// Lane A77 (R-0036): the mechanics stills: the puck on the blade through a sweep (10 s = 150 stills, once), the spin with the puck (24, twice), the saucer (20, twice).
+			if (H.bSweepThisFrame && Sim->CarrierIndex() == Human && CVarJamCtrlDrill.GetValueOnGameThread() == 7) { Kind = TEXT("sweep"); Count = 150; Max = 1; }   // lane A82: drill 7 only (A77's spin runs spent the capture on a crossing)
+			else if (H.bSpinThisFrame && Sim->CarrierIndex() == Human) { Kind = TEXT("spin"); Count = 24; }
+			else if (H.bSaucerThisFrame) { Kind = TEXT("saucer"); Count = 20; }
+		}
+		else
+		{
+			int32 Victim = -1, Checker = -1;
+			for (const FJamSimEvent& E : Sim->GetFrameEvents())
+			{
+				if (E.Name == JamEvents::Knockdown && E.Kind == FName(TEXT("check"))) Victim = E.Who;
+				if (E.Name == JamEvents::Check) Checker = E.Who;
+			}
+			if (Victim == Human) { Kind = TEXT("kd-human"); Count = 24; }
+			else if (Victim >= 0 && Checker == Human) { Kind = TEXT("kd-bot"); Count = 24; }
+			if (Kind.IsEmpty() && H.bBoardHitThisFrame) { Kind = TEXT("board"); Count = 8; }
+			if (Kind.IsEmpty() && H.StickHitResult != 0) { Kind = TEXT("stickhit"); Count = 8; }
+		}
 		if (Kind.IsEmpty()) return;
 		int32& N = StillsPerKind.FindOrAdd(Kind);
-		if (N >= 2) return;
+		if (N >= Max) return;
 		++N;
 		StillKind = Kind;
 		StillStart = F;
@@ -1134,10 +1193,305 @@ void AHokejGameMode::StillsObserve()
 	}
 	if ((F - StillStart) % 4 == 0 && StillTaken < StillCount)
 	{
-		FScreenshotRequest::RequestScreenshot(FString::Printf(TEXT("a73-%s-%lld-f%06lld.png"), *StillKind, StillStart, F), true, false);
+		FScreenshotRequest::RequestScreenshot(FString::Printf(TEXT("%s-%s-%lld-f%06lld.png"), StillsMode == 2 ? TEXT("a77") : TEXT("a73"), *StillKind, StillStart, F), true, false);
 		++StillTaken;
 	}
 	if (StillTaken >= StillCount) StillStart = -1;
+}
+
+// Lane A77 (R-0036): the mechanics drills. Only the skating is scripted; the stick, E, F and the left button come through ReadHumanInput as the driver sends them.
+FJamInput AHokejGameMode::MechDrillInput()
+{
+	FJamInput In = ReadHumanInput();
+	if (Sim->GetPhase() != EJamSimPhase::Playing) return In;
+	const int32 Mode = CVarJamCtrlDrill.GetValueOnGameThread();
+	const int32 Me = Sim->GetHumanIndex();
+	const FJamSkaterState& S = Sim->GetSkaters()[Me];
+	const int64 F = Sim->GetFrame();
+	const int32 C = Sim->CarrierIndex();
+	const FVector2D PuckPos = Sim->GetPuck().Pos;
+	const double Gx = Sim->AttackGoalX(S.Team);
+	const double Dir = Gx > 0 ? 1.0 : -1.0;
+	const FVector2D HumanSpot(Gx - Dir * 10.0, Mode == 11 ? -2.0 : 0.0);
+	const FVector2D PreSpot(Gx - Dir * 14.0, HumanSpot.Y);
+	if (C != Me)
+	{
+		bMechAtPre = false;
+		if (Mode == 11)
+		{
+			// the one-timer drill: the human waits at its spot facing the net (approached from behind so the facing is the goal's); the scripted teammate brings the puck
+			const FVector2D ToPre = PreSpot - S.Pos, ToSpot = HumanSpot - S.Pos;
+			if (!bMechAtPre && ToPre.Size() > 1.0 && ToSpot.Size() > 1.5) In.Move = ToPre.GetSafeNormal();
+			else In.Move = ToSpot.Size() > 0.4 ? ToSpot.GetSafeNormal() * 0.7 : FVector2D::ZeroVector;
+			return In;
+		}
+		if (C >= 0 && Sim->GetSkaters()[C].Team != S.Team)
+		{
+			// an opponent carries: take it back with a check (as drill 6 does); not an attempt of any drill here
+			const FJamSkaterState& V = Sim->GetSkaters()[C];
+			const FVector2D ToC = V.Pos - S.Pos;
+			const double Dist = ToC.Size();
+			In.Move = ToC.GetSafeNormal();
+			const double Gap = Dist - UJamSim::SkaterRadius * 2.0;
+			const double Closing = Dist > 1e-6 ? FVector2D::DotProduct(S.Vel - V.Vel, ToC / Dist) : 0.0;
+			if ((Gap <= 0.25 || (Closing > 0.5 && Gap <= Closing * (UJamSim::HumanCheckWindowFrames - 3) * UJamSim::DT)) && !V.IsDown() && S.CanAct()) In.bCheck = true;
+			return In;
+		}
+		const FVector2D ToPuck = PuckPos - S.Pos;
+		In.Move = ToPuck.Size() > 0.3 ? ToPuck.GetSafeNormal() : FVector2D::ZeroVector;
+		return In;
+	}
+	const int32 O = Sim->NearestOpponent(S);
+	const FVector2D ToO = O >= 0 ? Sim->GetSkaters()[O].Pos - S.Pos : FVector2D(Gx, 0.0) - S.Pos;
+	const double D = ToO.Size();
+	if (Mode == 7)
+	{
+		// The sweep: keep the body 1.9-2.4 m from the defender (outside its lift at contact, the puck on the blade toward it inside its poke reach): at it at 60 %
+		// farther out, away at full speed closer. The cue: the defender's blade within 0.9 m of the puck (its poke lands 6 frames after the blade sits in reach).
+		In.Move = D > 2.4 ? ToO.GetSafeNormal() * 0.6 : (D < 1.9 ? -ToO.GetSafeNormal() : FVector2D::ZeroVector);
+		if (O >= 0 && F >= MechCueReady)
+		{
+			const double BladeToPuck = FVector2D::Distance(Sim->GetSkaters()[O].BladePos, PuckPos);
+			if (BladeToPuck < 0.9)
+			{
+				MechCueReady = F + 20;
+				const int32 Side = FVector2D::CrossProduct(S.Forward(), PuckPos - S.Pos) >= 0.0 ? 1 : -1;
+				UE_LOG(LogHokej, Log, TEXT("JAMCUE sweep frame=%lld defender=%d dist=%.2f blade_to_puck=%.2f puck_side=%d"), F, O, D, BladeToPuck, Side);
+			}
+		}
+		return In;
+	}
+	if (Mode == 8)
+	{
+		// The spin: carry at the goal at 60 %; the cue when a defender is within 2.5 m, the bar has a quarter and the cooldown is over.
+		const FVector2D ToGoal = FVector2D(Gx, 0.0) - S.Pos;
+		In.Move = ToGoal.GetSafeNormal() * 0.6;
+		const bool bStamina = S.Stamina < 0 || S.Stamina >= Sim->StaminaFull() / 4;
+		if (O >= 0 && D < 2.5 && F >= MechCueReady && S.SpinFrames == 0 && F >= S.SpinReadyFrame && bStamina)
+		{
+			MechCueReady = F + 120;
+			UE_LOG(LogHokej, Log, TEXT("JAMCUE spin frame=%lld defender=%d dist=%.2f stamina=%.2f"), F, O, D, S.Stamina < 0 ? 1.0 : static_cast<double>(S.Stamina) / Sim->StaminaFull());
+		}
+		return In;
+	}
+	if (Mode == 9)
+	{
+		// The saucer: carry up the ice slowly; away from a defender within 3 m. The cue when the sim has a saucer receiver and an opponent's body sits within 1.6 m
+		// (a blade's reach) of the lane inside its airborne part.
+		const FVector2D ToGoal = FVector2D(Gx, 0.0) - S.Pos;
+		In.Move = (O >= 0 && D < 3.0) ? -ToO.GetSafeNormal() : ToGoal.GetSafeNormal() * 0.5;
+		if (F >= MechCueReady)
+		{
+			FVector2D AimS, AimF;
+			const int32 RS = Sim->BestPass(Me, AimS, true);
+			const int32 RF = Sim->BestPass(Me, AimF, false);
+			if (RS >= 0)
+			{
+				const FVector2D To = AimS - PuckPos;
+				const double DistAim = To.Size();
+				const FVector2D Ldir = To.GetSafeNormal();
+				double Lane = 1e9, Along = 0.0;
+				for (const FJamSkaterState& Op : Sim->GetSkaters())
+				{
+					if (Op.Team == S.Team || Op.InBox()) continue;
+					const double T0 = FMath::Clamp(FVector2D::DotProduct(Op.Pos - PuckPos, Ldir), 0.0, DistAim);
+					const double Dl = FVector2D::Distance(PuckPos + Ldir * T0, Op.Pos);
+					if (Dl < Lane) { Lane = Dl; Along = T0; }
+				}
+				if (Lane < 1.6 && Along > UJamSim::SaucerAirFromM && Along < DistAim * UJamSim::SaucerLandFrac - 0.5)   // lane A82 (R-0040): the sim's own window
+				{
+					MechCueReady = F + 60;
+					UE_LOG(LogHokej, Log, TEXT("JAMCUE saucer frame=%lld receiver=%d flat_receiver=%d lane_m=%.2f along_m=%.2f dist_m=%.2f"), F, RS, RF, Lane, Along, DistAim);
+				}
+			}
+		}
+		return In;
+	}
+	if (Mode == 10 || Mode == 11)
+	{
+		// Shots from 10 m (and the one-timer drill's give-away): to the pre-spot 14 m out, then the spot 10 m out on the attacked goal's centre line, facing it.
+		const FVector2D ToPre = PreSpot - S.Pos, ToSpot = HumanSpot - S.Pos;
+		if (!bMechAtPre && ToPre.Size() > 1.0 && ToSpot.Size() > 2.0) { In.Move = ToPre.GetSafeNormal() * 0.8; return In; }
+		bMechAtPre = true;
+		In.Move = ToSpot.Size() > 0.4 ? ToSpot.GetSafeNormal() * 0.6 : FVector2D::ZeroVector;
+		if (ToSpot.Size() > 0.6 || F < MechCueReady) return In;
+		const FVector2D ToGoal = (FVector2D(Gx, 0.0) - PuckPos).GetSafeNormal();
+		const bool bFacing = FVector2D::DotProduct(S.Forward(), ToGoal) > FMath::Cos(FMath::DegreesToRadians(12.0));
+		if (Mode == 10 && bFacing && F >= S.ShotReadyFrame && S.ChargeFrames == 0)
+		{
+			MechCueReady = F + 90;
+			const TCHAR* Kind = MechShotN % 3 == 0 ? TEXT("tap") : (MechShotN % 3 == 1 ? TEXT("half") : TEXT("full"));
+			UE_LOG(LogHokej, Log, TEXT("JAMCUE shot frame=%lld kind=%s dist_line=%.2f"), F, Kind, FMath::Abs(Gx - PuckPos.X));
+		}
+		if (Mode == 11)
+		{
+			FVector2D Aim;
+			if (Sim->BestPass(Me, Aim) >= 0 && F >= S.ShotReadyFrame) { MechCueReady = F + 90; UE_LOG(LogHokej, Log, TEXT("JAMCUE pass_to_mate frame=%lld to=%d"), F, Sim->BestPass(Me, Aim)); }
+		}
+		return In;
+	}
+	return In;
+}
+
+void AHokejGameMode::MechDrillMate(TArray<FJamInput>& AllInputs)
+{
+	// Drill 11: the human's teammate (not the back) carries the puck to a spot 6 m out and 6 m to the side of the attacked net and passes to the human standing at
+	// its spot 10 m out when the sim's pass would go there; the JAMCUE onetimer line carries the flight's ETA so the driver taps the shot inside the one-timer window.
+	if (!Sim || Sim->GetPhase() != EJamSimPhase::Playing) return;
+	const int32 Me = Sim->GetHumanIndex();
+	const FJamSkaterState& H = Sim->GetSkaters()[Me];
+	int32 Mate = -1;
+	for (const FJamSkaterState& T : Sim->GetSkaters()) if (T.Team == H.Team && T.Index != Me && T.Role != FName(TEXT("back"))) { Mate = T.Index; break; }
+	if (Mate < 0 || !AllInputs.IsValidIndex(Mate)) return;
+	const FJamSkaterState& M = Sim->GetSkaters()[Mate];
+	const double Gx = Sim->AttackGoalX(H.Team);
+	const double Dir = Gx > 0 ? 1.0 : -1.0;
+	const FVector2D MateSpot(Gx - Dir * 6.0, 6.0);
+	const FVector2D HumanSpot(Gx - Dir * 10.0, -2.0);
+	const int32 C = Sim->CarrierIndex();
+	const int64 F = Sim->GetFrame();
+	FJamInput In;
+	if (C == Mate)
+	{
+		const FVector2D To = MateSpot - M.Pos;
+		In.Move = To.Size() > 0.5 ? To.GetSafeNormal() * 0.8 : FVector2D::ZeroVector;
+		In.Stick = (H.Pos - M.Pos).GetSafeNormal() * 0.5;
+		FVector2D Aim;
+		if (To.Size() <= 1.2 && FVector2D::Distance(H.Pos, HumanSpot) < 1.5 && F >= MechMateReady && F >= M.ShotReadyFrame && Sim->BestPass(Mate, Aim) == Me)
+		{
+			In.bPass = true;
+			MechMateReady = F + 120;
+			MechMatePassFrame = F;
+			const double Dist = FVector2D::Distance(Aim, Sim->GetPuck().Pos);
+			const double Speed = FMath::Max(1.0, Sim->GetConfig().Skater.PassSpeed);
+			UE_LOG(LogHokej, Log, TEXT("JAMCUE onetimer frame=%lld mate=%d dist=%.2f eta_frames=%d"), F, Mate, Dist, FMath::CeilToInt32(Dist / (Speed * 0.85) / UJamSim::DT));
+		}
+	}
+	else if (C >= 0 && Sim->GetSkaters()[C].Team != H.Team)
+	{
+		const FJamSkaterState& V = Sim->GetSkaters()[C];
+		const FVector2D ToC = V.Pos - M.Pos;
+		const double Dist = ToC.Size();
+		In.Move = ToC.GetSafeNormal();
+		In.Stick = In.Move;
+		const double Gap = Dist - UJamSim::SkaterRadius * 2.0;
+		const double Closing = Dist > 1e-6 ? FVector2D::DotProduct(M.Vel - V.Vel, ToC / Dist) : 0.0;
+		if ((Gap <= 0.25 || (Closing > 0.5 && Gap <= Closing * 5.0 * UJamSim::DT)) && !V.IsDown() && M.CanAct()) In.bCheck = true;
+	}
+	else if (C != Me)
+	{
+		const FVector2D ToPuck = Sim->GetPuck().Pos - M.Pos;
+		In.Move = ToPuck.Size() > 0.3 ? ToPuck.GetSafeNormal() : FVector2D::ZeroVector;
+	}
+	else
+	{
+		const FVector2D To = MateSpot - M.Pos;   // the human carries: stand open at the spot (the driver passes to it on JAMCUE pass_to_mate)
+		In.Move = To.Size() > 0.5 ? To.GetSafeNormal() * 0.8 : FVector2D::ZeroVector;
+	}
+	AllInputs[Mate] = In;
+}
+
+void AHokejGameMode::MechDrillObserve()
+{
+	if (!Sim) return;
+	const int32 Mode = CVarJamCtrlDrill.GetValueOnGameThread();
+	const int32 Me = Sim->GetHumanIndex();
+	if (!Sim->GetSkaters().IsValidIndex(Me)) return;
+	const FJamSkaterState& S = Sim->GetSkaters()[Me];
+	const FJamPuckState& P = Sim->GetPuck();
+	const int64 F = Sim->GetFrame();
+	const double Gx = Sim->AttackGoalX(S.Team);
+	const double Dir = Gx > 0 ? 1.0 : -1.0;
+	// The human's shot (drills 10 and 11): its charge, then the puck's height when it crosses the goal line (or the goal / save / post that ended the flight).
+	if ((Mode == 10 || Mode == 11) && S.bShotThisFrame && MechShotFrame < 0)
+	{
+		MechShotFrame = F;
+		MechShotCharge = S.LastShotCharge;
+		MechShotPrevZ = P.Z;
+		bMechShotGoal = bMechShotSave = bMechShotPost = false;
+		if (Mode == 11)
+		{
+			++MechOtShots;
+			if (S.bOneTimerThisFrame) ++MechOneTimers;
+			UE_LOG(LogHokej, Log, TEXT("JAMDRILL onetimer n=%d frame=%lld one_timer=%d charge=%.2f since_pass=%lld"), MechOtShots, F, S.bOneTimerThisFrame ? 1 : 0, S.LastShotCharge, MechMatePassFrame >= 0 ? F - MechMatePassFrame : -1);
+			if (MechOtShots % 5 == 0) UE_LOG(LogHokej, Log, TEXT("JAMDRILL onetimer_summary shots=%d one_timers=%d"), MechOtShots, MechOneTimers);
+		}
+	}
+	else if (MechShotFrame >= 0)
+	{
+		for (const FJamSimEvent& E : Sim->GetFrameEvents())
+		{
+			if (E.Name == JamEvents::Goal) bMechShotGoal = true;
+			if (E.Name == JamEvents::Save) bMechShotSave = true;
+			if (E.Name == JamEvents::Post) bMechShotPost = true;
+		}
+		const bool bCrossed = (P.Pos.X - Gx) * Dir >= 0.0;
+		const bool bTimeout = F - MechShotFrame > 150;
+		const bool bLost = P.LastTouch != Me && !bCrossed && !bMechShotGoal;   // a body or a blade took it before the line
+		if (bCrossed || bTimeout || bLost || bMechShotGoal || bMechShotSave)
+		{
+			++MechShotN;
+			const TCHAR* Kind = MechShotCharge < 0.15f ? TEXT("tap") : (MechShotCharge < 0.6f ? TEXT("half") : TEXT("full"));
+			if (MechShotCharge < 0.15f) ++MechShotTaps; else if (MechShotCharge < 0.6f) ++MechShotHalf; else ++MechShotFull;
+			const double ArrivalZ = bCrossed ? P.Z : (bMechShotGoal ? MechShotPrevZ : -1.0);
+			UE_LOG(LogHokej, Log, TEXT("JAMDRILL shot n=%d kind=%s charge=%.2f lift_target=%.3f arrival_z=%.3f crossed=%d goal=%d save=%d post=%d blocked=%d flight_frames=%lld"), MechShotN, Kind, MechShotCharge,
+				Sim->LiftForCharge(MechShotCharge), ArrivalZ, bCrossed ? 1 : 0, bMechShotGoal ? 1 : 0, bMechShotSave ? 1 : 0, bMechShotPost ? 1 : 0, bLost ? 1 : 0, F - MechShotFrame);
+			MechShotFrame = -1;
+			if (Mode == 10 && MechShotN % 10 == 0) UE_LOG(LogHokej, Log, TEXT("JAMDRILL shot_summary shots=%d taps=%d half=%d full=%d"), MechShotN, MechShotTaps, MechShotHalf, MechShotFull);
+		}
+		else MechShotPrevZ = P.Z;
+	}
+	// The human's saucer (any drill): the flight over the nearest opponent blade, the landing, the reception.
+	if (S.bSaucerThisFrame && MechSaucerFrame < 0)
+	{
+		MechSaucerFrame = F;
+		MechSaucerReceiver = -1;
+		MechSaucerMinBladeAir = 1e9;
+		MechSaucerZAtBlade = MechSaucerMaxZ = 0.0;
+		MechSaucerLand = -1;
+		MechSaucerLandDist = -1.0;
+		bMechSaucerOverThis = false;
+		for (const FJamSimEvent& E : Sim->GetFrameEvents())
+		{
+			if (E.Name != JamEvents::Pass || E.Who != Me) continue;
+			const FString K = E.Kind.ToString();
+			int32 At = -1;
+			if (K.FindLastChar(TCHAR('_'), At)) MechSaucerReceiver = FCString::Atoi(*K.Mid(At + 1));
+		}
+		UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld saucer receiver=%d vz=%.2f"), F, MechSaucerReceiver, P.VZ);
+	}
+	else if (MechSaucerFrame >= 0)
+	{
+		if (P.Z > 0.0)
+		{
+			for (const FJamSkaterState& O : Sim->GetSkaters())
+			{
+				if (O.Team == S.Team || O.InBox()) continue;
+				const double Db = FVector2D::Distance(O.BladePos, P.Pos);
+				if (Db < MechSaucerMinBladeAir) { MechSaucerMinBladeAir = Db; MechSaucerZAtBlade = P.Z; }
+				if (Db < UJamSim::DeflectRangeM && P.Z >= UJamSim::BladeClearM) bMechSaucerOverThis = true;
+			}
+		}
+		MechSaucerMaxZ = FMath::Max(MechSaucerMaxZ, P.Z);
+		if (MechSaucerLand < 0 && F - MechSaucerFrame > 2 && P.Z <= 0.0)
+		{
+			MechSaucerLand = F;
+			MechSaucerLandDist = Sim->GetSkaters().IsValidIndex(MechSaucerReceiver) ? FVector2D::Distance(P.Pos, Sim->GetSkaters()[MechSaucerReceiver].Pos) : -1.0;
+		}
+		const bool bTouched = P.LastTouch != Me;
+		if (bTouched || F - MechSaucerFrame > 150)
+		{
+			++MechSaucerN;
+			const bool bReceived = bTouched && Sim->GetSkaters().IsValidIndex(P.LastTouch) && Sim->GetSkaters()[P.LastTouch].Team == S.Team;
+			if (bMechSaucerOverThis) ++MechSaucerOver;
+			if (bReceived) ++MechSaucerReceived;
+			UE_LOG(LogHokej, Log, TEXT("JAMDRILL saucer n=%d frame=%lld receiver=%d over_blade=%d nearest_blade_air_m=%.2f z_at_blade=%.3f max_z=%.3f landed_frame=%lld land_dist_to_receiver=%.2f received=%d by=%d opp_touch=%d"),
+				MechSaucerN, MechSaucerFrame, MechSaucerReceiver, bMechSaucerOverThis ? 1 : 0, MechSaucerMinBladeAir < 1e8 ? MechSaucerMinBladeAir : -1.0, MechSaucerZAtBlade, MechSaucerMaxZ, MechSaucerLand, MechSaucerLandDist,
+				bReceived ? 1 : 0, bTouched ? P.LastTouch : -1, (bTouched && !bReceived) ? 1 : 0);
+			MechSaucerFrame = -1;
+			if (MechSaucerN % 10 == 0) UE_LOG(LogHokej, Log, TEXT("JAMDRILL saucer_summary n=%d over_blade=%d received=%d"), MechSaucerN, MechSaucerOver, MechSaucerReceived);
+		}
+	}
 }
 
 void AHokejGameMode::KdObserve()

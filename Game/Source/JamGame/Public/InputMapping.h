@@ -77,6 +77,10 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Jam|Input")
 	bool IsCheckHeld() const { return bCheck; }
 
+	// Lane A77 (R-0036): pass (F / X) held, a level like the shot: the sim charges the saucer while it is held and passes on the release.
+	UFUNCTION(BlueprintPure, Category = "Jam|Input")
+	bool IsPassHeld() const { return bPassHeld; }
+
 	// Held while Ctrl or the left trigger is down; the game mode copies it into FJamInput::bBrake.
 	UFUNCTION(BlueprintPure, Category = "Jam|Input")
 	bool IsBrakeHeld() const { return bBrake; }
@@ -155,7 +159,8 @@ private:
 	void OnPokeStarted() { bPokeLatch = true; }
 	void OnLiftStarted() { bLiftLatch = true; }
 	void OnDekeStarted() { bDekeLatch = true; }
-	void OnPassStarted() { bPassLatch = true; }
+	void OnPassStarted() { bPassLatch = true; bPassHeld = true; }
+	void OnPassDone() { bPassHeld = false; }   // lane A77
 	void OnSpinStarted() { bSpinLatch = true; }   // lane A51
 	void OnRestartStarted() { OnRestart.Broadcast(); }
 	void OnPauseStarted() { OnPause.Broadcast(); }
@@ -171,6 +176,7 @@ private:
 	bool bLiftLatch = false;
 	bool bDekeLatch = false;
 	bool bPassLatch = false;
+	bool bPassHeld = false;   // lane A77 (R-0036)
 	bool bSpinLatch = false;   // lane A51
 	FVector2D StickAxis = FVector2D::ZeroVector;
 	FVector2D MouseAimPx = FVector2D::ZeroVector;

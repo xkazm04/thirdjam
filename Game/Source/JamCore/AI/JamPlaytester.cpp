@@ -232,6 +232,13 @@ namespace JamAI
 
 		FVec2 Target = Puck;
 		const bool bCarrying = W.Carrier == Pi;
+		// Lane A77 (R-0036): a saucer in progress: pass held for the sim's half_frames (the player stops for it), then released; dropped when the puck is gone.
+		if (SaucerHold > 0)
+		{
+			if (!bCarrying) { SaucerHold = 0; }
+			else if (SaucerHold <= W.SaucerHalfFrames) { In.bPassHeld = true; ++SaucerHold; Act = EPlaytesterAct::Pass; return In; }
+			else { SaucerHold = 0; LastPassFrame = W.Frame; Act = EPlaytesterAct::Pass; return In; }
+		}
 		const bool bMateCarries = W.Carrier >= 0 && W.Carrier != Pi && W.Skaters[W.Carrier].Team == Me.Team;
 		const bool bOppCarries = W.Carrier >= 0 && W.Skaters[W.Carrier].Team != Me.Team;
 
@@ -323,7 +330,21 @@ namespace JamAI
 					}
 					const FVec2 ToT = T.Pos - W.PuckPos;
 					const double Dt = ToT.Length();
-					if (!bOpen || Dt < 3.0 || Dt > 40.0 || Corridor(W, Pi, W.PuckPos, ToT * (1.0 / Dt), Dt, 1.0, true, Me.Team)) { continue; }
+					if (!bOpen || Dt < 3.0 || Dt > 40.0) { continue; }
+					if (Corridor(W, Pi, W.PuckPos, ToT * (1.0 / Dt), Dt, 1.0, true, Me.Team))
+					{
+						// Lane A77 (R-0036): a stick in the lane: the regular and good players saucer it over (pass held half_frames, the sim lifts it over the blade)
+						if (P.bStickHandling && W.SaucerHalfFrames > 0 && W.CarrierBestSaucer >= 0)
+						{
+							SaucerHold = 1;
+							In.bPassHeld = true;
+							bHolding = false;
+							HoldFrames = 0;
+							Act = EPlaytesterAct::Pass;
+							break;
+						}
+						continue;
+					}
 					In.bPass = true;
 					LastPassFrame = W.Frame;
 					bHolding = false;

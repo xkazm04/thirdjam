@@ -63,6 +63,8 @@ struct JAMCORE_API FJamSkaterConfig
 	// C-0005 (lane A16): the pass button.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double PassSpeed = 14;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 PassLeadFrames = 20;
+	// game.skater.carry_speed_mult (lane A82, R-0041 point 6): the carrier's top speed and acceleration as a fraction of a free skater's; the carrier cannot sprint. 1 = off.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double CarrySpeedMult = 0.92;
 	// game.skater.breakaway (R-0029 point 4, lane A39): a carrier past centre ice with no opponent between it and the net gets this fraction more
 	// top speed and acceleration for BreakawayFrames, once per possession (event breakaway). speed_bonus 0 = off.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double BreakawaySpeedBonus = 0.2;
@@ -156,6 +158,16 @@ struct JAMCORE_API FJamShotConfig
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double LiftHalfM = 0.45;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double LiftFullM = 0.6;   // Director calibration 01:40 (R-0035 amended): just under the 0.61 bar, the top-shelf shot; at 0.95 every hold past 8 frames sailed over the low net and the novice gate fell to 8 of 20
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 LiftHalfFrames = 8;
+};
+
+// Lane A77 (R-0036): game.pass. The saucer pass: a pass held saucer.half_frames or more lifts saucer.lift_m at its apex, flies over a blade in the lane and lands
+// before the receiver (UJamSim::ApplySaucerLift); a shorter hold or the edge is the flat pass. half_frames 0 or lift_m 0 = the saucer is off.
+USTRUCT(BlueprintType)
+struct JAMCORE_API FJamPassConfig
+{
+	GENERATED_BODY()
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 SaucerHalfFrames = 8;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double SaucerLiftM = 0.35;
 };
 
 USTRUCT(BlueprintType)
@@ -269,6 +281,7 @@ struct JAMCORE_API FJamGameConfig
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") FJamStickConfig Stick;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") FJamPuckConfig Puck;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") FJamShotConfig Shot;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") FJamPassConfig Pass;   // lane A77 (R-0036)
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") FJamRulesConfig Rules;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") TArray<FJamTeamConfig> Teams;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") FJamAiConfig Ai;

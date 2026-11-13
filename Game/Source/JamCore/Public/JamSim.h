@@ -46,6 +46,12 @@ struct JAMCORE_API FJamInput
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Sim")
 	bool bPass = false;
 
+	// Lane A77 (R-0036): pass held (level). While held with the puck in reach the pass charges to game.pass.saucer.half_frames; the pass fires on the
+	// release: held half_frames or more it is a saucer (the puck lifts pass.saucer.lift_m, flies over a blade in the lane and lands before the receiver),
+	// shorter it stays flat. The human's game mode sends the level here and never the edge above; bots hold it for half_frames. LOCKSTEP: flag bit 1024 (protocol 6).
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Sim")
+	bool bPassHeld = false;
+
 	// Check pressed on this frame (edge). Opens a 6-frame check window; only lands when game.skater.check_enabled.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Sim")
 	bool bCheck = false;
@@ -190,6 +196,10 @@ struct JAMCORE_API FJamSkaterState
 	// Match statistics of the stick handling (not hashed, like Dekes).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 Sweeps = 0;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 Spins = 0;
+	// Lane A77 (R-0036): frames pass has been held with the puck in reach (0..pass.saucer.half_frames); saucers passed; the pass that left this frame was a saucer.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 PassChargeFrames = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 Saucers = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bSaucerThisFrame = false;
 	// Lane A46: frames left of the settle after a body reception (the carry assist holds the puck on the blade; 0 = none). Hashed only while it runs.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 SettleFrames = 0;
 	// Match statistics of the payoffs; PassesReceived (lane A46) counts teammates' passes seated on this skater's blade (blade or body reception).
@@ -350,6 +360,16 @@ public:
 	static constexpr double BarRingM = 0.05;
 	static constexpr double BounceDeadM = 0.02;
 	static constexpr double BodyHeightM = 1.8;
+	// Lane A77 (R-0036): a puck this high or higher is over the blades: no deflection, no reception, no poke takes it (the body still stops it under BodyHeightM).
+	static constexpr double BladeClearM = 0.2;
+	// A saucer lands this share of the way to its aim point when the way is short; on a long way it flies the apex pass.saucer.lift_m allows and slides the rest.
+	static constexpr double SaucerLandFrac = 0.75;
+	// The saucer's receiver may have a blade in the lane: the opponent's body must stay this far off the line (the puck flies over the stick, not the body).
+	// Lane A82 (R-0040 point 2): 0.9 (A77 measured 0.55 too tight for live bots: 3 of 4 saucers taken 8 cm up). Note: 0.9 is the flat pass's own refusal, so the
+	// saucer's receiver set equals the flat pass's; what the saucer buys is the flight over a blade that would deflect the flat pass (MECHANICS-2.md section 3).
+	static constexpr double SaucerLaneMinM = 0.9;
+	// Lane A82 (R-0040 point 2): the saucer is airborne from this far along the lane (it leaves at 14 m/s and is 0.2 m up after 1.3 m); a blade nearer than this takes it.
+	static constexpr double SaucerAirFromM = 1.5;
 	static constexpr double CreaseStanceM = 3.0;
 	static constexpr double LiftFlightMaxS = 2.0;
 	static constexpr double LiftApexMaxM = 2.0;
@@ -460,10 +480,12 @@ public:
 	// Lane A51 (R-0034): true when Poker's poke cannot reach the puck Carrier holds: the carrier spins (the body is between), or a sweep shield runs and
 	// the poker's blade is on the side the puck left. Tests and the brain read it.
 	bool IsPokeShielded(const FJamSkaterState& Poker, const FJamSkaterState& Carrier) const;
+	// Lane A82 (R-0040 point 1): the lift is shielded like the poke: a spinning carrier's body is between; a sweep shields the side the puck left for shield_frames.
+	bool IsLiftShielded(const FJamSkaterState& Lifter, const FJamSkaterState& Carrier) const { return IsPokeShielded(Lifter, Carrier); }
 	// Lane A51: the nearest standing opponent of S (-1 none).
 	int32 NearestOpponent(const FJamSkaterState& S) const;
 	// The teammate a pass from Skater would go to right now (the rule of TryPass) and the aim point; -1 when nobody is open. Scripts and the brain read it.
-	int32 BestPass(int32 Skater, FVector2D& OutAim) const { return Skaters.IsValidIndex(Skater) ? PickReceiver(Skaters[Skater], OutAim) : -1; }
+	int32 BestPass(int32 Skater, FVector2D& OutAim, bool bSaucer = false) const { return Skaters.IsValidIndex(Skater) ? PickReceiver(Skaters[Skater], OutAim, bSaucer) : -1; }
 	// Timer mode: frames left (0 when not in timer mode). In timer mode a tie at 0 plays on to the next goal.
 	int32 GetTimerFrames() const { return TimerLeft; }
 	bool IsOvertime() const { return bOvertime; }
@@ -509,7 +531,11 @@ private:
 	void CollideSkaters();
 	void TryShoot(FJamSkaterState& S, float Charge);
 	void StepCharge(FJamSkaterState& S, const FJamInput& In);
-	void TryPass(FJamSkaterState& S);
+	// Lane A77 (R-0036): the held pass charges like the shot and fires on the release; a saucer when held pass.saucer.half_frames or more.
+	void StepPassCharge(FJamSkaterState& S, const FJamInput& In);
+	void TryPass(FJamSkaterState& S, bool bSaucer = false);
+	// The saucer's flight: VZ so the puck lands SaucerLandFrac of the way to the aim (or at the apex pass.saucer.lift_m when the way is long), with the drag as ApplyShotLift solves it.
+	void ApplySaucerLift(double DistM, double Speed);
 	// R-0029 point 4 (lane A39): the deke tap, the burst decision (before the skater moves), and the window bookkeeping after the puck moved.
 	void TryDeke(FJamSkaterState& S);
 	void StepBreakaway(FJamSkaterState& S);
@@ -521,7 +547,7 @@ private:
 	FVector2D SpinPuckTarget(const FJamSkaterState& S) const;
 	void ArmSweepShield(FJamSkaterState& S, int32 Side);
 	// The teammate a pass from S goes to, and where to aim (lead); -1 when nobody is open.
-	int32 PickReceiver(const FJamSkaterState& S, FVector2D& OutAim) const;
+	int32 PickReceiver(const FJamSkaterState& S, FVector2D& OutAim, bool bSaucer = false) const;
 	void StepPuck();
 	// R-0035 (lane A52): the free puck's height. StepPuckVertical integrates gravity and the ice bounce for one substep and pins a carried puck to the ice;
 	// ApplyShotLift gives the shot that just left its VZ for LiftForCharge(Charge) over the goal line; TryGoalieSave is the crease skater's save by height

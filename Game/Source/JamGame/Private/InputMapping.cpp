@@ -232,6 +232,7 @@ void UJamPlayerInput::TryBind()
 	EIC->BindAction(M->Lift, ETriggerEvent::Started, this, &UJamPlayerInput::OnLiftStarted);
 	EIC->BindAction(M->Deke, ETriggerEvent::Started, this, &UJamPlayerInput::OnDekeStarted);
 	EIC->BindAction(M->Pass, ETriggerEvent::Started, this, &UJamPlayerInput::OnPassStarted);
+	EIC->BindAction(M->Pass, ETriggerEvent::Completed, this, &UJamPlayerInput::OnPassDone);   // lane A77 (R-0036): the held pass
 	EIC->BindAction(M->Spin, ETriggerEvent::Started, this, &UJamPlayerInput::OnSpinStarted);   // lane A51
 	EIC->BindAction(M->Restart, ETriggerEvent::Started, this, &UJamPlayerInput::OnRestartStarted);
 	EIC->BindAction(M->Pause, ETriggerEvent::Started, this, &UJamPlayerInput::OnPauseStarted);

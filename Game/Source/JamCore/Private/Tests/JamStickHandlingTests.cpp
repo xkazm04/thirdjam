@@ -382,6 +382,7 @@ bool FJamSpinCooldown::RunTest(const FString& Parameters)
 	UJamSim* Sim = MakeScene(G, 1, {});
 	const int32 Me = Sim->GetHumanIndex();
 	Sim->SetSkater(Me, FVector2D(0, 0), FVector2D::ZeroVector, 0);
+	Sim->SetPuck(FVector2D(20, -15), FVector2D::ZeroVector);   // lane A82 (R-0041 point 6): off the dot the skater stands on; a carrier cannot sprint, and this test's sprint must empty the bar
 	TArray<FJamInput> In;
 	In.SetNum(Sim->GetSkaters().Num());
 	auto StepSpin = [&](bool bPress, bool bSprint = false)
@@ -488,6 +489,178 @@ bool FJamSpinCheckedFalls::RunTest(const FString& Parameters)
 		}
 		else TestEqual(TEXT("no spin: the normal knockdown"), KnockFramesAtHit, G.Skater.KnockdownFrames);
 		TestTrue(TEXT("a landed check on the carrier strips the puck (C-0005)"), bStripped);
+	}
+	return true;
+}
+
+// Lane A82 (R-0040 point 1): the lift is shielded like the poke. SpinShieldsLift: a carrier spins with a defender at lift range (1.2 m body to body, inside
+// stick.lift_range_m 1.0 + the two bodies); the defender lifts on every frame its cooldown allows: for the 24 spin frames every lift is a miss and the puck stays;
+// the same defender without the spin takes it with its first lift.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamSpinShieldsLift, "Jam.Core.SpinShieldsLift", JamStickHandlingTests::Flags)
+bool FJamSpinShieldsLift::RunTest(const FString& Parameters)
+{
+	using namespace JamStickHandlingTests;
+	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
+	if (!C) return false;
+	const FJamGameConfig& G = C->Game;
+	for (const bool bSpin : { true, false })
+	{
+		UJamSim* Sim = MakeScene(G, 1, {});
+		const int32 Me = Sim->GetHumanIndex();
+		const int32 D = FirstOpponent(Sim, Me);
+		Sim->SetSkater(Me, FVector2D(0, 0), FVector2D::ZeroVector, 0);
+		Sim->SetSkater(D, FVector2D(0, -1.2), FVector2D::ZeroVector, UE_DOUBLE_PI * 0.5);   // beside the carrier, inside the lift's range (0.8 + 1.0)
+		GivePuck(Sim, Me, FVector2D(0.7071, -0.7071));
+		TestEqual(TEXT("the carrier starts with the puck"), Sim->CarrierIndex(), Me);
+		TArray<FJamInput> In;
+		In.SetNum(Sim->GetSkaters().Num());
+		int32 Lifts = 0, Clean = 0, Miss = 0, LostAt = -1;
+		for (int32 F = 1; F <= 30; ++F)
+		{
+			In[Me] = FJamInput();
+			In[Me].Stick = FVector2D(0.7071, -0.7071);
+			if (bSpin && F == 1) In[Me].bSpin = true;
+			const FJamSkaterState& Ds = Sim->GetSkaters()[D];
+			In[D] = FJamInput();
+			In[D].Stick = (Sim->GetPuck().Pos - Ds.Pos).GetSafeNormal() * 0.6;
+			In[D].bLift = Sim->GetFrame() + 1 >= Ds.LiftReadyFrame;
+			Lifts += In[D].bLift ? 1 : 0;
+			Sim->Step(In);
+			Clean += Count(Sim, JamEvents::Lift, D, FName(TEXT("clean")));
+			Miss += Count(Sim, JamEvents::Lift, D, FName(TEXT("miss")));
+			if (LostAt < 0 && Sim->CarrierIndex() != Me) LostAt = F;
+		}
+		AddInfo(FString::Printf(TEXT("%s: lifts pressed %d, clean %d, miss %d, lost at frame %d"), bSpin ? TEXT("spin") : TEXT("no spin"), Lifts, Clean, Miss, LostAt));
+		if (bSpin)
+		{
+			TestEqual(TEXT("spin: the spin ran"), Sim->GetSkaters()[Me].Spins, 1);
+			TestTrue(TEXT("spin: no lift took the puck during the spin (the body is between)"), LostAt < 0 || LostAt > G.Skater.SpinFrames);
+			TestTrue(TEXT("spin: the shielded lift reads as a miss"), Miss >= 1);
+		}
+		else
+		{
+			TestTrue(*FString::Printf(TEXT("no spin: the first lift takes the puck (clean %d, lost at %d)"), Clean, LostAt), Clean >= 1 && LostAt == 1);
+		}
+	}
+	return true;
+}
+
+// SweepShieldsLift: the carrier sweeps the puck from its left to its right with a defender at lift range on the left; the defender lifts the frame after the sweep
+// and keeps lifting: with shield_frames 12 every lift inside the shield is a miss and the puck stays through the shield; with shield_frames 0 the lift at frame 2
+// takes it. A defender on the right (the side the puck went to) is not shielded and takes it.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamSweepShieldsLift, "Jam.Core.SweepShieldsLift", JamStickHandlingTests::Flags)
+bool FJamSweepShieldsLift::RunTest(const FString& Parameters)
+{
+	using namespace JamStickHandlingTests;
+	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
+	if (!C) return false;
+	const FJamGameConfig& G = C->Game;
+	const FVector2D FwdLeft(0.7071, -0.7071), FwdRight(0.7071, 0.7071);
+	struct FCase { int32 ShieldFrames; double DefY; const TCHAR* Name; bool bExpectShield; };
+	const FCase Cases[] = { { 12, -1.4, TEXT("shield 12, defender on the side the puck left"), true }, { 0, -1.4, TEXT("shield 0, same defender"), false }, { 12, 1.4, TEXT("shield 12, defender on the side the puck went to"), false } };
+	for (const FCase& K : Cases)
+	{
+		FJamGameConfig G2 = G;
+		G2.Stick.SweepShieldFrames = K.ShieldFrames;
+		UJamSim* Sim = MakeScene(G2, 1, {});
+		const int32 Me = Sim->GetHumanIndex();
+		const int32 D = FirstOpponent(Sim, Me);
+		Sim->SetSkater(Me, FVector2D(0, 0), FVector2D::ZeroVector, 0);
+		Sim->SetSkater(D, FVector2D(0.4, K.DefY), FVector2D::ZeroVector, K.DefY < 0 ? UE_DOUBLE_PI * 0.5 : -UE_DOUBLE_PI * 0.5);   // 1.46 m body to body: inside the lift's 1.8
+		GivePuck(Sim, Me, FwdLeft);
+		TestEqual(*FString::Printf(TEXT("%s: the carrier starts with the puck"), K.Name), Sim->CarrierIndex(), Me);
+		TArray<FJamInput> In;
+		In.SetNum(Sim->GetSkaters().Num());
+		int32 Clean = 0, Miss = 0, LostAt = -1, Lifts = 0;
+		bool bSweepSeen = false;
+		for (int32 F = 1; F <= 14; ++F)
+		{
+			In[Me] = FJamInput();
+			In[Me].Stick = FwdRight;   // frame 1: the aim crosses the body (a sweep); it stays right
+			const FJamSkaterState& Ds = Sim->GetSkaters()[D];
+			In[D] = FJamInput();
+			In[D].Stick = (Sim->GetSkaters()[Me].Pos - Ds.Pos).GetSafeNormal() * 0.6;   // the blade toward the carrier: on its own side of the body
+			In[D].bLift = F >= 2 && Sim->GetFrame() + 1 >= Ds.LiftReadyFrame;
+			Lifts += In[D].bLift ? 1 : 0;
+			Sim->Step(In);
+			if (F == 1) bSweepSeen = Sim->GetSkaters()[Me].bSweepThisFrame;
+			Clean += Count(Sim, JamEvents::Lift, D, FName(TEXT("clean")));
+			Miss += Count(Sim, JamEvents::Lift, D, FName(TEXT("miss")));
+			if (LostAt < 0 && Sim->CarrierIndex() != Me) LostAt = F;
+		}
+		AddInfo(FString::Printf(TEXT("%s: sweep seen %d, lifts pressed %d, clean %d, miss %d, lost at frame %d"), K.Name, bSweepSeen ? 1 : 0, Lifts, Clean, Miss, LostAt));
+		TestTrue(*FString::Printf(TEXT("%s: the sweep is seen on frame 1"), K.Name), bSweepSeen || K.ShieldFrames == 0);
+		if (K.bExpectShield)
+		{
+			TestTrue(*FString::Printf(TEXT("%s: no lift takes the puck inside the shield (lost at %d)"), K.Name, LostAt), LostAt < 0 || LostAt > 1 + K.ShieldFrames);
+			TestTrue(*FString::Printf(TEXT("%s: the shielded lifts read as misses (%d)"), K.Name, Miss), Miss >= 1 && Clean == 0);
+		}
+		else
+		{
+			TestTrue(*FString::Printf(TEXT("%s: the lift at frame 2 takes the puck (clean %d, lost at %d)"), K.Name, Clean, LostAt), Clean >= 1 && LostAt == 2);
+		}
+	}
+	return true;
+}
+
+// Lane A82 (R-0041 point 6): the puck carrier is slower and cannot sprint. CarrierSpeed: a carrier and a free skater at full input from rest for 3 s: the carrier
+// settles at carry_speed_mult of the free skater's speed; sprint held while carrying changes nothing (the same speed, the bar full), while the free skater sprints.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamCarrierSpeed, "Jam.Core.CarrierSpeed", JamStickHandlingTests::Flags)
+bool FJamCarrierSpeed::RunTest(const FString& Parameters)
+{
+	using namespace JamStickHandlingTests;
+	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
+	if (!C) return false;
+	const FJamGameConfig& G = C->Game;
+	TestEqual(TEXT("skater.carry_speed_mult default 0.92"), G.Skater.CarrySpeedMult, 0.92);
+	auto Run = [&](const FJamGameConfig& Gc, bool bSprint, double& OutCarrier, double& OutFree, int32& OutCarrierStamina, int32& OutFreeStamina, int32& OutCarrierIdx)
+	{
+		UJamSim* Sim = MakeScene(Gc, 1, {});
+		const int32 Me = Sim->GetHumanIndex();
+		int32 Free = -1;
+		for (const FJamSkaterState& S : Sim->GetSkaters()) if (S.Index != Me && S.Team == Sim->GetSkaters()[Me].Team) { Free = S.Index; break; }
+		Sim->SetSkater(Me, FVector2D(-30, -8), FVector2D::ZeroVector, 0);
+		Sim->SetSkater(Free, FVector2D(-30, 8), FVector2D::ZeroVector, 0);
+		GivePuck(Sim, Me, FVector2D::ZeroVector);
+		TArray<FJamInput> In;
+		In.SetNum(Sim->GetSkaters().Num());
+		for (int32 F = 1; F <= 180; ++F)
+		{
+			In[Me] = FJamInput(); In[Me].Move = FVector2D(1, 0); In[Me].bSprint = bSprint;
+			In[Free] = FJamInput(); In[Free].Move = FVector2D(1, 0); In[Free].bSprint = bSprint;
+			Sim->Step(In);
+		}
+		OutCarrier = Sim->GetSkaters()[Me].Vel.Size();
+		OutFree = Sim->GetSkaters()[Free].Vel.Size();
+		OutCarrierStamina = Sim->GetSkaters()[Me].Stamina;
+		OutFreeStamina = Sim->GetSkaters()[Free].Stamina;
+		OutCarrierIdx = Sim->CarrierIndex() == Me ? Me : -1;
+	};
+	double Vc = 0, Vf = 0, Vcs = 0, Vfs = 0;
+	int32 Sc = 0, Sf = 0, Scs = 0, Sfs = 0, Ci = -1, Cis = -1;
+	Run(G, false, Vc, Vf, Sc, Sf, Ci);
+	Run(G, true, Vcs, Vfs, Scs, Sfs, Cis);
+	AddInfo(FString::Printf(TEXT("no sprint: carrier %.3f m/s, free %.3f (ratio %.3f); sprint held: carrier %.3f (stamina %d), free %.3f (stamina %d); full bar %d"), Vc, Vf, Vf > 0 ? Vc / Vf : 0.0, Vcs, Scs, Vfs, Sfs, Sc));
+	TestTrue(TEXT("the carrier kept the puck through the run"), Ci >= 0 && Cis >= 0);
+	TestTrue(*FString::Printf(TEXT("the carrier runs at carry_speed_mult of the free skater (%.3f of %.3f = %.3f, want 0.92 within 0.01)"), Vc, Vf, Vc / Vf), FMath::Abs(Vc / Vf - G.Skater.CarrySpeedMult) < 0.01);
+	TestTrue(*FString::Printf(TEXT("sprint held while carrying changes nothing (%.3f vs %.3f)"), Vcs, Vc), FMath::Abs(Vcs - Vc) < 1e-6);
+	TestTrue(TEXT("the carrier's bar does not drain under a held sprint"), Scs < 0 || Scs == Sc);
+	TestTrue(*FString::Printf(TEXT("the free skater's sprint is live (%.3f > %.3f, bar %d < %d)"), Vfs, Vf, Sfs, Sf), Vfs > Vf + 0.5 && Sfs >= 0 && Sfs < Sf);
+	// carry_speed_mult 1: no penalty; the key reads back and an out-of-range value is refused.
+	{
+		FJamGameConfig G1 = G;
+		G1.Skater.CarrySpeedMult = 1.0;
+		double Vc1 = 0, Vf1 = 0; int32 A = 0, B = 0, I = -1;
+		Run(G1, false, Vc1, Vf1, A, B, I);
+		TestTrue(*FString::Printf(TEXT("carry_speed_mult 1: the carrier skates as freely (%.3f vs %.3f)"), Vc1, Vf1), FMath::Abs(Vc1 - Vf1) < 0.02);
+		const FString Raw = C->RawJson;
+		TArray<FString> Errors;
+		UJamCartridge* V = UJamCartridge::LoadFromString(Raw.Replace(TEXT("\"skater\": {"), TEXT("\"skater\": {\"carry_speed_mult\": 0.8,")), Errors);
+		for (const FString& E : Errors) AddError(FString::Printf(TEXT("carry_speed_mult 0.8 variant: %s"), *E));
+		if (V) TestEqual(TEXT("carry_speed_mult 0.8 read"), V->Game.Skater.CarrySpeedMult, 0.8);
+		Errors.Reset();
+		UJamCartridge* Bad = UJamCartridge::LoadFromString(Raw.Replace(TEXT("\"skater\": {"), TEXT("\"skater\": {\"carry_speed_mult\": 0.3,")), Errors);
+		TestTrue(TEXT("carry_speed_mult 0.3 (under 0.6) is refused"), Bad == nullptr || Errors.Num() > 0);
 	}
 	return true;
 }

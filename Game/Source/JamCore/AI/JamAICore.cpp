@@ -298,6 +298,20 @@ namespace JamAI
 			In.bDeke = bDeke;   // R-0029 point 4 (lane A39)
 			In.bPass = bPass;   // lane A46: the pass to the human
 			StickPlay(W, i, In);
+			// Lane A77 (R-0036): the saucer. A carrier that charges its shots (pro, all_star; rookie's window is 0) whose pass has no flat lane but a saucer lane
+			// (W.CarrierBestPass < 0, W.CarrierBestSaucer >= 0) holds pass for W.SaucerHalfFrames and releases it: the sim lifts the puck over the blade in the lane.
+			// While it holds, StickPlay keeps the puck inside shot reach (A66's cap). The puck gone, the hold is dropped (the sim fires nothing out of reach).
+			if (W.Carrier == i && W.SaucerHalfFrames > 0 && SkillOf(W, i).ShotChargeFrames > 0)
+			{
+				const bool bWantSaucer = In.bPass && W.CarrierBestPass < 0 && W.CarrierBestSaucer >= 0;
+				if (bWantSaucer || PassHold[i] > 0)
+				{
+					In.bPass = false;
+					if (PassHold[i] < W.SaucerHalfFrames) { In.bPassHeld = true; ++PassHold[i]; }
+					else { PassHold[i] = 0; }   // the release: the sim's StepPassCharge passes the saucer
+				}
+			}
+			else { PassHold[i] = 0; }
 			// Lane A31 (B-to-A-0024 point 1): the carrier charges an aimed shot on the net. While the lined-up decision holds, shoot is held
 			// (bShootHeld, never the edge) for the skill's window; at the window's end, or the frame the line-up is lost, the hold is dropped and
 			// the sim fires the charged shot on the release (StepCharge). Rookie's window is 0: a tap, as before. Taps by StickPlay (the dump
@@ -356,6 +370,7 @@ namespace JamAI
 			Out[i].bShoot = In.bShoot;
 			Out[i].bShootHeld = In.bShootHeld;   // lane A31: the charge is live like the shot
 			Out[i].bPass = In.bPass;
+			Out[i].bPassHeld = In.bPassHeld;   // lane A77: the saucer hold is live like the charge
 			Out[i].Stick = In.Stick;
 			Out[i].bPoke = In.bPoke;
 			Out[i].bCheck = In.bCheck;   // R-0031 point 2 (lane A45): the check press is live like the shot (a delayed press misses the 6-frame window)
@@ -644,7 +659,7 @@ namespace JamAI
 			// there: carried, but beyond TryShoot's and the charge's reach, and the bot never shot (Jam.Bot.SeasonTakes take-3 / take-4 seed 1,
 			// docs/experiments/STICK.md section 8). Outside the range the long carry stays as A51 made it (the passes to the human come from there).
 			double MaxFrac = 1.0;
-			if (W.PuckLastTouch == Id && !bOppCarrier && W.StickReach > 0.01 && W.PuckPos.DistTo(W.OppGoal(S.Team)) < W.ShotReach + K.ShootExtraM)
+			if (W.PuckLastTouch == Id && !bOppCarrier && W.StickReach > 0.01 && (W.PuckPos.DistTo(W.OppGoal(S.Team)) < W.ShotReach + K.ShootExtraM || PassHold[Id] > 0))   // PassHold: lane A77, the saucer's hold needs the puck in pass reach
 			{
 				const double Cap = (W.ShotReach - 0.1 - W.SkaterRadius) / W.StickReach;
 				if (Cap > 0.2 && Cap < MaxFrac) { MaxFrac = Cap; }

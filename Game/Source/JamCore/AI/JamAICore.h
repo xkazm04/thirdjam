@@ -73,6 +73,7 @@ namespace JamAI
 		int GoalieSide = 0;
 		bool bDeke = false;        // R-0029 point 4 (lane A39): the deke tap (FJamInput::bDeke); the adapter copies it like the others
 		bool bSpin = false;        // lane A51 (R-0034): the spin tap (FJamInput::bSpin); the playtester sends it, the brain never does
+		bool bPassHeld = false;    // lane A77 (R-0036): pass held (FJamInput::bPassHeld) for the saucer: held W.SaucerHalfFrames then released; the sim lifts the pass
 		bool bSprint = false;      // lane A72 (asks A2, A3): sprint held (FJamInput::bSprint); the brain with game.ai.sprint, the playtester with -playersprint
 	};
 
@@ -249,6 +250,8 @@ namespace JamAI
 		int FramesSinceDrop = -1;       // frames since the drop while the draw is open (-1 unknown; set by FJamSimAdapter::View)
 		int Carrier = -1;               // UJamSim::CarrierIndex: a skater that can act with the puck within shot reach, else -1
 		int CarrierBestPass = -1;       // lane A46: the teammate UJamSim::BestPass would send the carrier's pass to right now (-1: no carrier or nobody open); the adapter fills it
+		int CarrierBestSaucer = -1;     // lane A77 (R-0036): the teammate a saucer from the carrier would go to (a blade may be in the lane); -1 nobody
+		int SaucerHalfFrames = 8;       // lane A77: game.pass.saucer.half_frames (0 = the saucer is off)
 		// R-0029 point 4 (lane A39): the goalie commit of the latest deke (UJamSim::GetDekeCommit): while it runs, the deker's opponents' blades, pokes
 		// and shot blocks follow PuckPos - DekeCommitOffset (the puck's old side) instead of the puck.
 		int DekeCommitFrames = 0;
@@ -331,6 +334,7 @@ namespace JamAI
 		int DrawPresses = 0;   // R-0017: frames an opposing carrier's puck has been inside this bot's blade reach
 		// Lane A31: frames shoot has been held for the current aimed shot (0 = not charging); the goalie intent of the last Decide per skater.
 		int Charging[kMaxSkaters] = {};
+		int PassHold[kMaxSkaters] = {};   // lane A77 (R-0036): frames pass has been held for a saucer (0 = not holding)
 		bool bGoalieNow[kMaxSkaters] = {};
 		int GoalieSideNow[kMaxSkaters] = {};
 		void StickPlay(const FJamAIWorld& W, int Id, FJamAIInput& In);

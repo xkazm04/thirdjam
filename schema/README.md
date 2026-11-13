@@ -57,6 +57,7 @@ Cartridge errors are sentences that start `at <JSON pointer>:`, because the Desi
 | `skater.pass_lead_frames` | 0..60 | 20 (C-0005); the receiver's position a third of a second ahead |
 | `skater.breakaway.speed_bonus` | 0..1 | 0.2 (lane A39, R-0029 point 4): top speed and acceleration bonus of the breakaway burst (a carrier past centre ice with no opponent between it and the net, once per possession; event `breakaway`); 0 = off |
 | `skater.breakaway.frames` | 0..300 | 60 (lane A39): how long the burst lasts |
+| `skater.carry_speed_mult` | 0.6..1 | 0.92 (lane A82, R-0041 point 6): the carrier's top speed and acceleration as a fraction of a free skater's; the carrier cannot sprint; 0.6 is a crawl that makes every carry a pass, 1 is no penalty |
 | `stick.reach_m` | 0.8..3 | 1.2 (R-0022 point 3; was 1.6 in R-0013): rest 1.0 m, full aim 1.6 m from the skater centre, which both of B's figures can pose |
 | `stick.poke_window_frames` | 2..30 | 8; the timing window of a clean poke |
 | `stick.lift_range_m` | 0.5..2.5 | 1.0; contact range of a stick lift beyond the two bodies |
@@ -79,6 +80,8 @@ Cartridge errors are sentences that start `at <JSON pointer>:`, because the Desi
 | `shot.charge_speed_bonus` | 0..20 | 8 (C-0005); capped by `puck.max_speed` |
 | `shot.one_timer.window_frames` | 0..60 | 10 (lane A39, R-0029 point 4): a shot inside this many frames of a received pass is a one-timer (full charge, wider cone, `shot` event kind `one_timer`); 0 = off |
 | `shot.one_timer.cone_bonus_deg` | 0..30 | 8 (lane A39): added to `aim_cone_deg` for a one-timer |
+| `pass.saucer.half_frames` | 0..60 | 8 (lane A77, R-0036): frames of pass held for the saucer; the tap stays flat; 0 = off |
+| `pass.saucer.lift_m` | 0..1 | 0.35 (lane A77): the saucer's apex; over a blade (0.2 m), under a body (1.8 m); 0 = off |
 | `rules.score_to_win` | 1..9 | one digit on the HUD |
 | `rules.timer_frames` | 600..36000 | 10 s to 10 min at 60 Hz (lane A72, ask A1: 5 min before; the HUD clock reads 10:00) |
 | `rules.penalty_frames` | 60..600 | 1 s to 10 s in the box (lane A72, ask A8); 300 when absent |

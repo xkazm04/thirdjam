@@ -79,6 +79,7 @@ namespace JamAI
 		bool bHolding = false;           // shoot held
 		int HoldFrames = 0;
 		int64_t LastPassFrame = -1000;
+		int SaucerHold = 0;              // lane A77 (R-0036): frames pass has been held for a saucer (0 = none)
 		int64_t LastCheckFrame = -1000;
 		int64_t LastDekeFrame = -1000;   // R-0029 point 4 (lane A39)
 		int64_t PlayFrames = 0;          // unfrozen frames seen (the lapse clock)

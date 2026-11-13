@@ -312,3 +312,7 @@
 
 - RESOURCES 13:18 cpu 98% ram 37.3/63GB gpu 38 %, 2464 MiB, 42 editors 1 cmd 8 ubt 2 free 602GB
 - link green 13:22: main 2d9c033 (Collisions pass 2 (A80): A73's counts hold on B's SK12 takes, nothing under the ice, the s) pushed.
+
+- 13:29: the Director's process restarted at 13:23; lanes A57, A79, A83 were lost mid-run, A82 survived. Resumed: A79 and A83 with new agents on their worktrees and status files; A57's hourly package loop restarted in `.claude/worktrees/nightly` until 16:00 (its parity results landing with A81's modes). The resource timer re-armed.
+- link green 13:30: main cba1327 (Director's modes pass 2 (A81): six more modes (Sudden Death, Outnumbered, Glass House, Pin) pushed.
+- package 13:38: `Hokej_Hokej_H24.zip` from main cba1327 (twelve Director's modes with card words in the cartridge, A80 collisions pass 2, the knockdown frames unreduced).

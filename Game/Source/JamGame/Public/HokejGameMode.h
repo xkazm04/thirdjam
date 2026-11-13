@@ -108,7 +108,7 @@ private:
 	bool CursorAimRink(APlayerController* PC, const FVector2D& SkaterPosM, FVector2D& OutStick);
 	bool bCursorAiming = false;
 	// Lane A49: the button edges logged once per press (JAMCTRL btn=...), the sprint level and brake level on change.
-	bool bLastSprint = false, bLastBrake = false, bLastShootHeld = false;
+	bool bLastSprint = false, bLastBrake = false, bLastShootHeld = false, bLastPassHeld = false;
 	// Lane A49 (complaint 5 proof, jam.ctrl.Drill 1 = tackle, 2 = cross-check): a scripted FJamInput that mirrors WASD + one right (middle) mouse press: chase the
 	// opposing carrier at full stick, press once within range, then read the sim's own events for 20 frames; 10 attempts, a JAMDRILL line each and a summary.
 	FJamInput DrillInput();
@@ -125,6 +125,25 @@ private:
 	int32 StickDrillKind = 0, StickDrillAttempts = 0, StickDrillKept = 0, StickDrillPoked = 0, StickDrillKnocked = 0, StickDrillKnockFrames = 0;
 	bool bStickDrillPokedThis = false, bStickDrillKnockThis = false;
 	int32 StickDrillKnockFramesThis = 0;
+	// Lane A77 (R-0036): the mechanics drills (jam.ctrl.Drill 7 = sweep past a defender, 8 = spin with the puck, 9 = saucer over a defender's blade, 10 = shots from
+	// 10 m, 11 = one-timers off a scripted teammate's pass). The cursor and the keys stay the real input path; the skating is scripted and JAMCUE lines tell the driver
+	// (tools/qa/ctrl/a77-prove.ps1) when a person would act. MechDrillObserve logs JAMDRILL saucer / shot / onetimer lines; MechDrillMate scripts the teammate of drill 11.
+	FJamInput MechDrillInput();
+	void MechDrillObserve();
+	void MechDrillMate(TArray<FJamInput>& AllInputs);
+	int64 MechCueReady = 0;
+	bool bMechAtPre = false;
+	int32 MechShotN = 0, MechShotTaps = 0, MechShotHalf = 0, MechShotFull = 0;
+	int64 MechShotFrame = -1;
+	float MechShotCharge = 0.f;
+	double MechShotPrevZ = 0.0;
+	bool bMechShotGoal = false, bMechShotSave = false, bMechShotPost = false;
+	int64 MechSaucerFrame = -1, MechSaucerLand = -1;
+	int32 MechSaucerN = 0, MechSaucerReceiver = -1, MechSaucerOver = 0, MechSaucerReceived = 0;
+	bool bMechSaucerOverThis = false;
+	double MechSaucerMinBladeAir = 1e9, MechSaucerZAtBlade = 0.0, MechSaucerMaxZ = 0.0, MechSaucerLandDist = -1.0;
+	int64 MechMatePassFrame = -1, MechMateReady = 0;
+	int32 MechOneTimers = 0, MechOtShots = 0;
 
 	UFUNCTION() void HandleRestartPressed();
 

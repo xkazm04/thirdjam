@@ -221,6 +221,7 @@ namespace JamAI
 		W.LiftHalfM = G.Shot.LiftHalfM;
 		W.LiftFullM = G.Shot.LiftFullM;
 		W.LiftHalfFrames = G.Shot.LiftHalfFrames;
+		W.SaucerHalfFrames = G.Pass.SaucerHalfFrames;   // lane A77 (R-0036)
 		W.ChargeFramesMax = G.Shot.ChargeFramesMax;
 		W.bDrawOpen = S.IsDrawOpen();
 		// R-0017: the pickups on the ice, from the sim's effect system (lane A14's UJamEffectSystem is the only IJamModifierSource
@@ -251,6 +252,8 @@ namespace JamAI
 			// lane A46: whom the sim's pass would go to from the carrier right now (the brain passes to the human only when it is this teammate)
 			W.CarrierBestPass = -1;
 			if (W.Carrier >= 0) { FVector2D Aim; W.CarrierBestPass = S.BestPass(W.Carrier, Aim); }
+			W.CarrierBestSaucer = -1;   // lane A77 (R-0036): whom a saucer would go to (a blade in the lane allowed)
+			if (W.Carrier >= 0) { FVector2D Aim; W.CarrierBestSaucer = S.BestPass(W.Carrier, Aim, true); }
 		}
 		W.SkaterRadius = UJamSim::SkaterRadius;
 		W.StickReach = G.Stick.ReachM;
@@ -331,6 +334,7 @@ namespace JamAI
 			I.bCheck = In[i].bCheck;
 			I.bBrake = In[i].bBrake;
 			I.bPass = In[i].bPass;
+			I.bPassHeld = In[i].bPassHeld;   // lane A77 (R-0036): the saucer hold
 			I.Stick = FVector2D(In[i].Stick.X, In[i].Stick.Y);
 			I.bPoke = In[i].bPoke;
 			I.bLift = In[i].bLift;

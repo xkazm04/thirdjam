@@ -454,3 +454,11 @@ shield, the slow puck; the **pass moves to Q** (the deke keeps the mouse wheel a
 `game.abilities[]`, unknown keys errors, with a bark and a HUD slot. (4) **The brand goes raw and brutal within the jam's teen rating** (R-0021: no gore, clay figures, mild
 words at most one in ten): the title, the logo, the banner, the menu copy, the commentator's tone and the crowd sell a rough game, not a cruel one; device B owns the logo and
 the banner (A-to-B-0019), A owns the copy and the commentary tone. (5) P3 stays the shipped look; nothing here reopens P4. (6) **The carrier is slower and cannot sprint** (the operator, 13:15: "skater with puck will need slight speed reduction and inability to sprint, to incentivize passing with other players and ability to defend"): `game.skater.carry_speed_mult` (default 0.92, range 0.6..1) scales the carrier's top speed and acceleration; the sprint is refused while carrying (the bar does not drain); bots and the human alike; a calibration with the hash re-recorded (lane A82), the curve re-measured after (A79).
+
+## R-0042 (H19, 2026-11-13 13:47): the carrier's reach; the tap stays on the ice
+Lane A82's release read-out found why the human's shots, passes and saucers never fire with the blade extended: since A51 the carried puck lives at the blade (0.4 +
+`stick.reach_m` 1.2 = 1.6 m) and every carrier test uses `shot.reach_m` 1.5, so nothing charges or fires while the player aims; the human also keeps losing a blade-length
+puck (A66 capped the bots' own blade to work around the same thing). Rulings (lane A85, top priority): (1) one carrier reach for shooting, passing, charging and carrying:
+`max(shot.reach_m, body radius + stick.reach_m) + 0.05`, used by every carrier test in the sim and by the brain; A66's cap goes if bots shoot without it; (2) a tap stays on the
+ice: `shot.lift.tap_m` 0 and a charge-0 shot flies flat, so a rookie bot's tap can be deflected by a stick again (A82's SeasonTakes coin lands the same way every time);
+`half_m` 0.45 and `full_m` 0.6 stand; (3) H24 ships with the fault; H25 packages the fix. The bars of R-0034 stand.

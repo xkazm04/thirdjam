@@ -266,7 +266,7 @@ bool FJamNetInputCoverage::RunTest(const FString& Parameters)
 		TestEqual(TEXT("spin flag bit 512 alone"), static_cast<int32>(Qo.Flags), 512);
 		const FJamInput Back = Qo.ToInput();
 		TestTrue(TEXT("spin comes back alone"), Back.bSpin && !Back.bShoot && !Back.bCheck && !Back.bBrake && !Back.bShootHeld && !Back.bPass && !Back.bPoke && !Back.bLift && !Back.bDeke && !Back.bSprint);
-		TestEqual(TEXT("protocol 5 carries the spin"), static_cast<int32>(JamNet::Version), 5);
+		TestEqual(TEXT("protocol 6 carries the spin and the held pass (lane A77; 5 carried the spin)"), static_cast<int32>(JamNet::Version), 6);
 	}
 	TestTrue(TEXT("an empty input is the zero wire value"), FJamNetQuantInput::From(FJamInput()) == FJamNetQuantInput());
 	return true;

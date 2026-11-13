@@ -37,6 +37,7 @@ of them out explicitly, but a Designer or hand-written cartridge may leave them 
 | `skater.pass_lead_frames` | 20 | lane A16 (C-0005) |
 | `skater.breakaway.speed_bonus` | 0.2 | lane A39 (R-0029 point 4): a carrier past centre ice with no opponent between it and the net gets this fraction more top speed and acceleration for `frames`, once per possession (event `breakaway`); 0 = off |
 | `skater.breakaway.frames` | 60 | lane A39 |
+| `skater.carry_speed_mult` | 0.92 | lane A82 (R-0041 point 6): the carrier's top speed and acceleration as a fraction of a free skater's, bots and the human alike; the carrier cannot sprint and its bar does not drain; 1 = no carry penalty |
 | `skater.sprint.bonus` | 0.15 | lane A49: Shift / LT held adds this fraction to top speed and acceleration while the skater moves and the stamina lasts; bots only with `ai.sprint` (lane A72); 0 = off |
 | `skater.sprint.drain_frames` | 180 | lane A49: frames of sprint from full to empty (3 s) |
 | `skater.sprint.refill_frames` | 360 | lane A49: frames at rest from empty to full (6 s) |
@@ -68,6 +69,8 @@ of them out explicitly, but a Designer or hand-written cartridge may leave them 
 | `shot.lift.half_m` | 0.45 | lane A52: the height of a shot held `half_frames` |
 | `shot.lift.full_m` | 0.6 | lane A52 (0.95), Director 01:40: the height of a full charge: just under the 0.61 bar (top shelf); at 0.95 every hold past 8 frames flew over the low net; a cartridge may still choose 0.95 for a sailing full charge |
 | `shot.lift.half_frames` | 8 | lane A52: frames of hold that reach `half_m`; linear tap -> half -> full |
+| `pass.saucer.half_frames` | 8 | lane A77 (R-0036): pass (F / X) held this many frames with the puck in reach is a saucer; a shorter hold or the tap is the flat pass; 0 = off |
+| `pass.saucer.lift_m` | 0.35 | lane A77: the saucer's apex height; it clears a blade (0.2 m) in the lane and lands three quarters of the way to the receiver; 0 = off |
 | `rules.goal_pause_frames` | 120 | |
 | `rules.offside` | false | only false is accepted |
 | `rules.penalties` | true | R-0013: fouls (from behind, or on a skater without the puck) = 300 frames in the box + a free faceoff at the fouler's end; `hockey.raw` sets false |

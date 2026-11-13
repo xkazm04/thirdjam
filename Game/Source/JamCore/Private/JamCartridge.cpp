@@ -1008,6 +1008,7 @@ namespace
 		ReadName(Sk, TEXT("visual"), C.Skater.Visual);
 		ReadNumber(Sk, TEXT("pass_speed"), C.Skater.PassSpeed);
 		ReadInteger(Sk, TEXT("pass_lead_frames"), C.Skater.PassLeadFrames);
+		ReadNumber(Sk, TEXT("carry_speed_mult"), C.Skater.CarrySpeedMult);   // lane A82 (R-0041 point 6)
 		// R-0029 point 4 (lane A39): game.skater.breakaway { speed_bonus, frames }
 		if (const FJPtr Ba = Obj(Sk, TEXT("breakaway")))
 		{
@@ -1091,6 +1092,15 @@ namespace
 			ReadNumber(Lf, TEXT("half_m"), C.Shot.LiftHalfM);
 			ReadNumber(Lf, TEXT("full_m"), C.Shot.LiftFullM);
 			ReadInteger(Lf, TEXT("half_frames"), C.Shot.LiftHalfFrames);
+		}
+		// Lane A77 (R-0036): game.pass.saucer { half_frames, lift_m }
+		if (const FJPtr Ps = Obj(G, TEXT("pass")))
+		{
+			if (const FJPtr Sc = Obj(Ps, TEXT("saucer")))
+			{
+				ReadInteger(Sc, TEXT("half_frames"), C.Pass.SaucerHalfFrames);
+				ReadNumber(Sc, TEXT("lift_m"), C.Pass.SaucerLiftM);
+			}
 		}
 
 		FJPtr Rules = Obj(G, TEXT("rules"));
