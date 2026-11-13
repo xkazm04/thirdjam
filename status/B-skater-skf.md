@@ -3294,3 +3294,168 @@ Takes over the pop limits (60 deg from frame 3 on, 120 deg in frames 0-3): p2_ce
 1. **The stick's path through the get-ups, authored.** The body no longer slides or pops, the stick still swings half a turn in four frames and the pop pass evens what is left. A path for the grip and the blade from the lying pose to the planted stick, per direction, in the low phase where there is time. **Proving numbers:** the blade end's largest one-frame move in a late get-up: 40 cm or less (today 136); no there-and-back over 5 cm (today 19); late get-ups the pop pass changes: 0 of 16 (today 16).
 2. **Leaving a loop without a pop, and a stick that lies still.** Either exit frames (the loop built so that every 18 frames it is within 1 cm of the rest pose, with a table of them) or a 6-frame settle take per loop that the engine plays from any loop frame; and the open-ice stick arm given slack so the breath does not drag it. **Proving numbers:** farthest joint from the get-up's first frame when the engine leaves the loop, over lying times of 0 to 110 frames: 1 cm or less (today up to 14.8); stick travel in a loop: 0.2 cm or less (today up to 1.75).
 3. **One gate for every export** (carried over twice), with the clay sprint bump as its first customer. `it26.sh` runs every check in order; the gate adds the verdict and writes `READY.txt` itself. **Proving numbers:** exports that reach the engine with a fault the gate would have caught: 0; every 0.8 cm crossing of the clay sprint within 1 frame of `Stride`'s (today 3).
+
+## Twenty-seventh pass: the stick's path through the get-ups, loops the engine can leave cleanly (SKF27, 00:12 to 00:51)
+
+Done, with three numbers short of what was asked (named below). `C:\Users\kazda\jam\skater-lab\skf\export27\` is complete (`READY.txt`, `DIFF.md`, `JOINS.md`): the same 134 take names as export26. 37 takes differ, all deliberately: the sixteen late get-ups, thirteen other get-ups that failed the 40 cm line (`GetUp`, `GetUp_Front`, `GetUp_Side_Left`, `GetUp_Side_Right`, the four `GetUp_Quick*`, the four `GetUp_Snap*`, `GetUp_Wall_Right`) and the eight lying loops. Every other take is key-identical to export26; `GetUp_Wall`, `GetUp_Wall_Back` and `GetUp_Wall_Left` pass the line and were left alone. Bones, parents, rest pose, meshes, stick files and root keys are as they were. One Blender process at a time; the renders were one batch of four short sessions at the end.
+
+### 1. The stick's path, authored
+
+Each key pose had a stick of its own (lying by the hip when sitting, planted when kneeling), so the stick went from one to the next by the body's eases. Now every changed get-up has one path from its first pose to its last: the grip relative to the shoulder (the hand can always reach it), on a straight line or, lying on the back or the front, an arc out to the stick side; the stick's yaw, tilt and twist in near-equal steps; the elbow's pole in equal steps; a key on every frame, the body exactly as the take's keys and eases had it. Frame 0 and the last frame are untouched, so every join holds. Face down the stick sweeps round the stick side (the short way went through the body). At a right wall the stick hand is the wall hand: it held the stick upright (the blade above the head, down in two frames at the end); it now points down along the wall with the blade on the ice ahead. At the other walls the wall hand leaves the wall one frame before the crouch and goes to the shaft over the last five frames instead of the last two. Face down the hop has one more frame (push-up at 6, in the air at 9).
+
+**Proving numbers:**
+- **The blade end's largest one-frame move: 33.3 cm at most over all 32 get-ups, both styles** (asked 40 or less; export26: 136).
+- **There and back: not met everywhere.** Asked: none over 5 cm. Largest now 8.7 cm (export26: 59). Over 5 cm: `GetUp_Wall_Right` on cel 8.7; `GetUp_LateLong_Side_Left` on clay 8.4; `GetUp_Late_Wall_Right` and `GetUp_LateLong_Wall_Right` 5.6 to 5.7 on both styles; and `GetUp_Wall`, `GetUp_Wall_Back`, `GetUp_Wall_Left` on clay 6.8 at frame 35, which are the three takes not touched.
+- **Late get-ups the pop pass changes: 1 of 16 on cel, 4 of 16 on clay** (asked 0; export26: 16 of 16). What is left are single arm steps of 55.9 to 61.2 deg, just over the pass's 55: the stick arm reaching for the right wall (frame 5), the wall hand going up the wall in the three 36-frame left, front and back wall takes on clay (frame 18).
+
+The sixteen late get-ups keep the last pass's numbers (5 frames from hips-half to the release, a skate at most 6 cm in one frame of the last 6). Nothing is under the ice; the top hand is on the stick in every frame.
+
+One thing found on the way: a sample between two keys of different stick modes solves the pose, and on unadapted clay poses that put a hand target 13 cm too low (a forearm 8 cm under the ice in a first build). This pass's get-up work runs on the adapted poses.
+
+### The stick in every get-up the engine plays: before (export26) and after (export27), p2_cel / p3_clay, cm
+
+| Take | Changed | Blade end, largest one-frame move: export26 | export27 | Blade there and back within two frames: export26 | export27 | Stick hand, largest one-frame move: export26 | export27 |
+|---|---|---|---|---|---|---|---|
+| GetUp | yes | 95.4 / 90.6 | 16.7 (3-4) / 16.6 (3-4) | 24.5 / 23.2 | 2.2 / 2.1 | 23.3 / 24.4 | 18.7 / 18.6 |
+| GetUp_Front | yes | 91.1 / 86.2 | 23.3 (0-1) / 22.0 (0-1) | 6.7 / 4.4 | 0.0 / 0.0 | 16.2 / 15.6 | 9.3 / 9.9 |
+| GetUp_Quick | yes | 134.3 / 127.6 | 24.2 (2-3) / 23.5 (2-3) | 59.0 / 55.8 | 4.3 / 0.0 | 33.4 / 34.6 | 27.1 / 26.8 |
+| GetUp_Quick_Front | yes | 129.2 / 122.3 | 32.7 (0-1) / 31.2 (0-1) | 6.1 / 3.2 | 0.0 / 0.0 | 23.3 / 22.1 | 14.2 / 15.3 |
+| GetUp_Quick_Side_Left | yes | 81.0 / 77.3 | 19.2 (0-1) / 18.6 (0-1) | 14.5 / 12.4 | 0.0 / 0.0 | 26.4 / 24.0 | 15.7 / 15.3 |
+| GetUp_Quick_Side_Right | yes | 53.3 / 50.9 | 19.8 (0-1) / 17.8 (1-2) | 22.8 / 11.2 | 0.0 / 0.0 | 36.6 / 28.7 | 15.9 / 15.3 |
+| GetUp_Side_Left | yes | 74.9 / 71.6 | 17.1 (0-1) / 15.7 (0-1) | 7.9 / 6.3 | 0.0 / 4.1 | 24.9 / 21.5 | 13.7 / 13.3 |
+| GetUp_Side_Right | yes | 44.8 / 44.2 | 14.4 (4-5) / 14.3 (4-5) | 8.6 / 8.0 | 0.0 / 0.0 | 30.2 / 25.9 | 14.1 / 13.6 |
+| GetUp_Snap | yes | 112.1 / 104.6 | 17.1 (0-1) / 15.8 (0-1) | 15.3 / 15.2 | 0.0 / 0.0 | 21.5 / 17.9 | 12.7 / 11.8 |
+| GetUp_Snap_Front | yes | 56.1 / 53.1 | 33.3 (0-1) / 32.0 (0-1) | 0.0 / 0.0 | 0.0 / 0.0 | 41.1 / 36.7 | 15.4 / 14.4 |
+| GetUp_Snap_Side_Left | yes | 55.4 / 52.7 | 19.4 (0-1) / 18.2 (0-1) | 10.2 / 9.6 | 0.0 / 0.0 | 26.4 / 24.0 | 14.6 / 13.8 |
+| GetUp_Snap_Side_Right | yes | 43.5 / 34.1 | 19.5 (19-20) / 18.5 (19-20) | 4.0 / 3.2 | 2.9 / 2.9 | 34.8 / 18.6 | 15.5 / 14.9 |
+| GetUp_Wall | no | 19.5 / 18.6 | 19.5 (9-10) / 18.6 (9-10) | 1.7 / 6.8 | 1.7 / 6.8 | 16.5 / 15.4 | 16.5 / 15.4 |
+| GetUp_Wall_Back | no | 19.5 / 18.6 | 19.5 (9-10) / 18.6 (9-10) | 1.7 / 6.8 | 1.7 / 6.8 | 16.5 / 15.4 | 16.5 / 15.4 |
+| GetUp_Wall_Left | no | 19.5 / 18.6 | 19.5 (9-10) / 18.6 (9-10) | 1.7 / 6.8 | 1.7 / 6.8 | 16.5 / 15.4 | 16.5 / 15.4 |
+| GetUp_Wall_Right | yes | 85.3 / 82.0 | 18.4 (4-5) / 14.8 (5-6) | 0.0 / 0.1 | 8.7 / 1.7 | 26.7 / 19.1 | 21.0 / 19.0 |
+| GetUp_Late | yes | 136.0 / 128.8 | 16.3 (0-1) / 15.6 (0-1) | 15.3 / 15.3 | 0.0 / 0.0 | 24.3 / 22.2 | 15.2 / 14.9 |
+| GetUp_Late_Front | yes | 79.2 / 74.9 | 33.3 (0-1) / 31.8 (0-1) | 0.5 / 0.5 | 0.0 / 0.0 | 27.3 / 28.1 | 15.4 / 14.4 |
+| GetUp_Late_Side_Left | yes | 54.9 / 51.9 | 19.3 (0-1) / 18.4 (0-1) | 17.4 / 18.7 | 0.0 / 0.0 | 22.2 / 20.5 | 13.9 / 13.7 |
+| GetUp_Late_Side_Right | yes | 30.7 / 30.0 | 17.3 (18-19) / 16.3 (18-19) | 2.1 / 2.1 | 0.0 / 0.0 | 24.4 / 35.0 | 14.2 / 13.0 |
+| GetUp_Late_Wall | yes | 28.5 / 27.2 | 13.9 (19-20) / 14.6 (19-20) | 1.2 / 1.2 | 0.0 / 0.0 | 22.6 / 25.2 | 14.2 / 13.1 |
+| GetUp_Late_Wall_Back | yes | 28.5 / 27.2 | 13.9 (19-20) / 14.6 (19-20) | 1.2 / 1.2 | 0.0 / 0.0 | 22.6 / 25.2 | 14.2 / 13.1 |
+| GetUp_Late_Wall_Left | yes | 28.5 / 27.2 | 13.9 (19-20) / 14.6 (19-20) | 1.2 / 1.2 | 0.0 / 0.0 | 22.6 / 25.2 | 14.2 / 13.1 |
+| GetUp_Late_Wall_Right | yes | 128.3 / 119.0 | 17.2 (18-19) / 15.7 (19-20) | 0.0 / 0.0 | 5.7 / 5.6 | 28.8 / 24.3 | 17.7 / 16.3 |
+| GetUp_LateLong | yes | 136.0 / 128.8 | 16.6 (12-13) / 16.1 (12-13) | 15.3 / 15.3 | 0.0 / 2.5 | 24.3 / 22.2 | 15.1 / 14.7 |
+| GetUp_LateLong_Front | yes | 51.0 / 48.3 | 29.1 (12-13) / 27.9 (12-13) | 0.5 / 0.5 | 0.0 / 0.0 | 27.3 / 28.1 | 15.0 / 14.0 |
+| GetUp_LateLong_Side_Left | yes | 54.9 / 51.9 | 18.4 (12-13) / 17.8 (12-13) | 17.4 / 18.7 | 0.0 / 8.4 | 22.2 / 20.5 | 14.1 / 13.9 |
+| GetUp_LateLong_Side_Right | yes | 26.2 / 28.1 | 16.0 (35-36) / 15.0 (35-36) | 2.1 / 2.1 | 0.0 / 0.0 | 24.4 / 35.0 | 14.0 / 12.8 |
+| GetUp_LateLong_Wall | yes | 28.5 / 27.2 | 13.5 (35-36) / 14.3 (35-36) | 0.5 / 0.5 | 0.1 / 0.1 | 22.6 / 25.2 | 14.0 / 12.9 |
+| GetUp_LateLong_Wall_Back | yes | 28.5 / 27.2 | 13.5 (35-36) / 14.3 (35-36) | 0.5 / 0.5 | 0.1 / 0.1 | 22.6 / 25.2 | 14.0 / 12.9 |
+| GetUp_LateLong_Wall_Left | yes | 28.5 / 27.2 | 13.5 (35-36) / 14.3 (35-36) | 0.5 / 0.5 | 0.1 / 0.1 | 22.6 / 25.2 | 14.0 / 12.9 |
+| GetUp_LateLong_Wall_Right | yes | 131.7 / 119.0 | 17.2 (34-35) / 15.7 (35-36) | 33.4 / 0.0 | 5.7 / 5.6 | 26.9 / 24.3 | 12.9 / 11.6 |
+
+Worst over all 32 get-ups and both styles: the blade end moves 33.3 cm in one frame (GetUp_Late_Front p2_cel; export26: 136.0); largest there-and-back 8.7 cm (GetUp_Wall_Right p2_cel; export26: 59.0). Over 5 cm there and back: GetUp_Wall p3_clay 6.8; GetUp_Wall_Back p3_clay 6.8; GetUp_Wall_Left p3_clay 6.8; GetUp_Wall_Right p2_cel 8.7; GetUp_Late_Wall_Right p2_cel 5.7; GetUp_Late_Wall_Right p3_clay 5.6; GetUp_LateLong_Side_Left p3_clay 8.4; GetUp_LateLong_Wall_Right p2_cel 5.7; GetUp_LateLong_Wall_Right p3_clay 5.6.
+
+Late get-ups the pop pass changes: p2_cel 1 of 16 (GetUp_Late_Wall_Right: upperarm_r 59 deg at 5); p3_clay 4 of 16 (GetUp_LateLong_Wall_Left: upperarm_l 55.9 deg at 18; GetUp_Late_Wall_Right: upperarm_r 61.2 deg at 5; GetUp_LateLong_Wall: upperarm_l 55.9 deg at 18; GetUp_LateLong_Wall_Back: upperarm_l 55.9 deg at 18). export26: 16 of 16.
+
+The sixteen late get-ups keep their numbers: frames from hips-half to the release at most 5; a skate travels at most 6 cm in one frame of the last 6. Ground over all 32 get-ups: body >= 0 cm, skates >= 0 cm, stick >= 0.91 cm (GetUp_Quick_Side_Left p3_clay); top hand to stick 0 cm.
+Wall plane, the wall get-ups and loops: at most 1.7 cm past it.
+Takes over the pop limits: p2_cel 0 of 130, p3_clay 0 of 130 played takes.
+
+
+### 2. Leaving a loop without a pop, and a stick that lies still
+
+The loops are rebuilt under their names, still 108 frames, frame 0 the rest pose.
+
+- Two breaths of 54 frames, small: the chest (neck joint) rises 0.8 to 1.4 cm, what a padded player's chest does. A sway of the neck a quarter of a breath out of step, so some joint is always moving. The head looks to one side between frames 15 and 39 (a turn of the head: no joint moves by it).
+- The one big shift (the knee, the free hand, the far skate: 6 to 15 cm) and the head's look the other way happen together between frames 69 and 93 and nowhere else.
+- So on the clean frames (94-107, 0-14, 40-68: within 14 frames of the two breath minima) every joint is within 0.91 cm of the rest pose. Because the clean frames are more than half the loop, for any lying time there is a clean start frame whose cut frame is clean too: the rule is in the table below. A short lying time never shows the big shift; from 69 frames on it is seen once and is over before the cut.
+- The stick: the collarbone turns against the breath until the stick shoulder is back where it rests, so the arm at full reach no longer drags the stick.
+
+**Proving numbers:**
+- **Farthest joint from the get-up's first frame at the cut, lying times 0 to 110 frames, with the rule: 0.91 cm at most** (asked 1 or less; without a rule up to 14.8). The same at the start: the fall's end pose against the loop's start frame is 0.91 cm at most. Checked on the FBX for every loop and lying time, and over every fall with knockdowns of 60, 80, 110 and 150 frames.
+- **Stick travel within a loop: 0.12 cm at most in seven loops; 0.32 cm in `Lie_Loop_Side_Right`** (asked 0.2 or less; export26: up to 1.75). The figure lies on its left side there: the stick arm is the top arm, in front of the body, and the collarbone does not take all of it.
+- Frames of a knockdown in which no joint moves: 0 still, with the loop started on the frame the fall first holds its end pose (1 inside `Knockdown_Left_B` on cel, as before).
+
+Cross-fade assumed: 4 frames, both from the fall into the loop and from the loop into the get-up. With at most 0.91 cm between the poses it could be 0; 4 is for the head's turn, which on a clean frame is zero by construction.
+
+### The lying loops, reshaped (108 frames; clean frames 94-107, 0-14 and 40-68)
+
+| Loop | Farthest joint from the rest pose on a clean frame cm (p2_cel / p3_clay) | At the loop's start frame by the rule, worst over lying times 0-110 | At the cut by the rule, worst over lying times 0-110 | Without a rule (any frame) | Stick travel in the loop cm | Chest (neck joint) rise cm | Frame steps with no joint moving 0.02 cm | Slowest frame step cm |
+|---|---|---|---|---|---|---|---|---|
+| Lie_Loop | 0.71 (f 14) / 0.67 (f 14) | 0.71 / 0.67 | 0.71 (L 14) / 0.67 (L 14) | 14.4 / 14.0 | 0.01 / 0.01 | 1.4 / 1.4 | 0 / 0 | 0.033 / 0.030 |
+| Lie_Loop_Front | 0.78 (f 14) / 0.56 (f 14) | 0.78 / 0.56 | 0.78 (L 14) / 0.56 (L 14) | 9.1 / 6.9 | 0.00 / 0.01 | 0.9 / 0.9 | 0 / 0 | 0.032 / 0.030 |
+| Lie_Loop_Side_Left | 0.91 (f 14) / 0.83 (f 14) | 0.91 / 0.83 | 0.91 (L 14) / 0.83 (L 14) | 12.0 / 14.8 | 0.01 / 0.11 | 1.1 / 1.1 | 0 / 0 | 0.022 / 0.022 |
+| Lie_Loop_Side_Right | 0.91 (f 14) / 0.83 (f 14) | 0.91 / 0.83 | 0.91 (L 14) / 0.83 (L 14) | 12.0 / 14.8 | 0.31 / 0.32 | 1.1 / 1.1 | 0 / 0 | 0.024 / 0.020 |
+| Lie_Loop_Wall | 0.85 (f 40) / 0.77 (f 40) | 0.85 / 0.77 | 0.85 (L 26) / 0.77 (L 26) | 11.1 / 11.1 | 0.02 / 0.01 | 0.8 / 0.8 | 0 / 0 | 0.033 / 0.030 |
+| Lie_Loop_Wall_Back | 0.85 (f 40) / 0.77 (f 40) | 0.85 / 0.77 | 0.85 (L 26) / 0.77 (L 26) | 11.1 / 11.1 | 0.02 / 0.01 | 0.8 / 0.8 | 0 / 0 | 0.033 / 0.030 |
+| Lie_Loop_Wall_Left | 0.85 (f 40) / 0.77 (f 40) | 0.85 / 0.77 | 0.85 (L 26) / 0.77 (L 26) | 11.1 / 11.1 | 0.02 / 0.01 | 0.8 / 0.8 | 0 / 0 | 0.033 / 0.030 |
+| Lie_Loop_Wall_Right | 0.85 (f 40) / 0.77 (f 40) | 0.85 / 0.77 | 0.85 (L 26) / 0.77 (L 26) | 11.1 / 11.1 | 0.00 / 0.00 | 0.8 / 0.8 | 0 / 0 | 0.024 / 0.022 |
+
+### For the engine lane, everything in one place
+
+| Fall | Frame from which it holds its end pose (p2_cel / p3_clay) | Its last frame | Loop | Clean frames of the loop (start and cut only on these) | Get-ups that start on the loop's rest pose | Cross-fade assumed |
+|---|---|---|---|---|---|---|
+| Fall | 18 / 18 | 26 | Lie_Loop | 94-107, 0-14, 40-68 | GetUp, GetUp_Quick, GetUp_Snap, GetUp_Late, GetUp_LateLong | 4 frames, fall into loop and loop into get-up |
+| Fall_B | 24 / 24 | 28 | Lie_Loop | 94-107, 0-14, 40-68 | GetUp, GetUp_Quick, GetUp_Snap, GetUp_Late, GetUp_LateLong | 4 frames, fall into loop and loop into get-up |
+| Fall_Light | 13 / 13 | 18 | Lie_Loop | 94-107, 0-14, 40-68 | GetUp, GetUp_Quick, GetUp_Snap, GetUp_Late, GetUp_LateLong | 4 frames, fall into loop and loop into get-up |
+| Fall_Heavy | 28 / 28 | 34 | Lie_Loop | 94-107, 0-14, 40-68 | GetUp, GetUp_Quick, GetUp_Snap, GetUp_Late, GetUp_LateLong | 4 frames, fall into loop and loop into get-up |
+| Fall_Forward | 18 / 18 | 26 | Lie_Loop_Front | 94-107, 0-14, 40-68 | GetUp_Front, GetUp_Quick_Front, GetUp_Snap_Front, GetUp_Late_Front, GetUp_LateLong_Front | 4 frames, fall into loop and loop into get-up |
+| Knockdown_Back | 19 / 19 | 26 | Lie_Loop_Front | 94-107, 0-14, 40-68 | GetUp_Front, GetUp_Quick_Front, GetUp_Snap_Front, GetUp_Late_Front, GetUp_LateLong_Front | 4 frames, fall into loop and loop into get-up |
+| Knockdown_Back_B | 25 / 25 | 28 | Lie_Loop_Front | 94-107, 0-14, 40-68 | GetUp_Front, GetUp_Quick_Front, GetUp_Snap_Front, GetUp_Late_Front, GetUp_LateLong_Front | 4 frames, fall into loop and loop into get-up |
+| Knockdown_Back_Light | 13 / 13 | 18 | Lie_Loop_Front | 94-107, 0-14, 40-68 | GetUp_Front, GetUp_Quick_Front, GetUp_Snap_Front, GetUp_Late_Front, GetUp_LateLong_Front | 4 frames, fall into loop and loop into get-up |
+| Knockdown_Back_Heavy | 28 / 28 | 34 | Lie_Loop_Front | 94-107, 0-14, 40-68 | GetUp_Front, GetUp_Quick_Front, GetUp_Snap_Front, GetUp_Late_Front, GetUp_LateLong_Front | 4 frames, fall into loop and loop into get-up |
+| Knockdown_Left | 18 / 18 | 26 | Lie_Loop_Side_Left | 94-107, 0-14, 40-68 | GetUp_Side_Left, GetUp_Quick_Side_Left, GetUp_Snap_Side_Left, GetUp_Late_Side_Left, GetUp_LateLong_Side_Left | 4 frames, fall into loop and loop into get-up |
+| Knockdown_Left_B | 23 / 21 | 30 | Lie_Loop_Side_Left | 94-107, 0-14, 40-68 | GetUp_Side_Left, GetUp_Quick_Side_Left, GetUp_Snap_Side_Left, GetUp_Late_Side_Left, GetUp_LateLong_Side_Left | 4 frames, fall into loop and loop into get-up |
+| Knockdown_Left_Light | 13 / 13 | 18 | Lie_Loop_Side_Left | 94-107, 0-14, 40-68 | GetUp_Side_Left, GetUp_Quick_Side_Left, GetUp_Snap_Side_Left, GetUp_Late_Side_Left, GetUp_LateLong_Side_Left | 4 frames, fall into loop and loop into get-up |
+| Knockdown_Left_Heavy | 28 / 28 | 34 | Lie_Loop_Side_Left | 94-107, 0-14, 40-68 | GetUp_Side_Left, GetUp_Quick_Side_Left, GetUp_Snap_Side_Left, GetUp_Late_Side_Left, GetUp_LateLong_Side_Left | 4 frames, fall into loop and loop into get-up |
+| Knockdown_Right | 18 / 18 | 26 | Lie_Loop_Side_Right | 94-107, 0-14, 40-68 | GetUp_Side_Right, GetUp_Quick_Side_Right, GetUp_Snap_Side_Right, GetUp_Late_Side_Right, GetUp_LateLong_Side_Right | 4 frames, fall into loop and loop into get-up |
+| Knockdown_Right_B | 23 / 23 | 30 | Lie_Loop_Side_Right | 94-107, 0-14, 40-68 | GetUp_Side_Right, GetUp_Quick_Side_Right, GetUp_Snap_Side_Right, GetUp_Late_Side_Right, GetUp_LateLong_Side_Right | 4 frames, fall into loop and loop into get-up |
+| Trip | 19 / 19 | 26 | Lie_Loop_Side_Right | 94-107, 0-14, 40-68 | GetUp_Side_Right, GetUp_Quick_Side_Right, GetUp_Snap_Side_Right, GetUp_Late_Side_Right, GetUp_LateLong_Side_Right | 4 frames, fall into loop and loop into get-up |
+| Knockdown_Right_Light | 13 / 13 | 18 | Lie_Loop_Side_Right | 94-107, 0-14, 40-68 | GetUp_Side_Right, GetUp_Quick_Side_Right, GetUp_Snap_Side_Right, GetUp_Late_Side_Right, GetUp_LateLong_Side_Right | 4 frames, fall into loop and loop into get-up |
+| Knockdown_Right_Heavy | 28 / 28 | 34 | Lie_Loop_Side_Right | 94-107, 0-14, 40-68 | GetUp_Side_Right, GetUp_Quick_Side_Right, GetUp_Snap_Side_Right, GetUp_Late_Side_Right, GetUp_LateLong_Side_Right | 4 frames, fall into loop and loop into get-up |
+| Board_Fall_Front | 22 / 22 | 28 | Lie_Loop_Wall | 94-107, 0-14, 40-68 | GetUp_Wall, GetUp_Late_Wall, GetUp_LateLong_Wall | 4 frames, fall into loop and loop into get-up |
+| Board_Fall_Back | 22 / 22 | 28 | Lie_Loop_Wall_Back | 94-107, 0-14, 40-68 | GetUp_Wall_Back, GetUp_Late_Wall_Back, GetUp_LateLong_Wall_Back | 4 frames, fall into loop and loop into get-up |
+| Board_Fall_Left | 21 / 21 | 28 | Lie_Loop_Wall_Left | 94-107, 0-14, 40-68 | GetUp_Wall_Left, GetUp_Late_Wall_Left, GetUp_LateLong_Wall_Left | 4 frames, fall into loop and loop into get-up |
+| Board_Fall_Right | 21 / 21 | 28 | Lie_Loop_Wall_Right | 94-107, 0-14, 40-68 | GetUp_Wall_Right, GetUp_Late_Wall_Right, GetUp_LateLong_Wall_Right | 4 frames, fall into loop and loop into get-up |
+
+The rule (L = frames the loop plays, r = L mod 108): start the loop on frame s and it is cut on frame (s + L) mod 108, both clean.
+
+| r = L mod 108 | Start frame s | The loop is cut on frame | The big shift (frames 69-93) is seen |
+|---|---|---|---|
+| 0-14 | 0 | 0-14 | only if L is 108 or more |
+| 15-25 | 40 | 55-65 | only if L is 108 or more |
+| 26-39 | 40 - r (14 down to 1) | 40 | only if L is 108 or more |
+| 40-68 | 0 | 40-68 | only if L is 108 or more |
+| 69-82 | 40 | 1-14 | yes |
+| 83-93 | 14 | 97-107 | yes |
+| 94-107 | 0 | 94-107 | yes |
+
+Checked on the FBX over every fall, knockdowns of 60, 80, 110 and 150 frames, both late get-ups of the direction and both styles, the loop started by the rule on the frame the fall first holds its end pose: frames in which no joint moves 0.02 cm: 1 at most; farthest joint between the fall's end pose and the loop's start frame: 0.91 cm at most; between the loop's cut frame and the get-up's first frame: 0.91 cm at most.
+
+### 3. Looking at the loops at the game's scale
+
+Rendered once, `Lie_Loop` and `Lie_Loop_Side_Left`, 12 frames apart, the figure 110 px tall, export26 above export27, with difference cells. Honestly: **the breathing does not read at that size, in either export.** At export26's 4.2 to 6.4 cm of chest rise (3 to 4 px) the cells look the same to me and the difference cell shows a faint outline; at export27's 1.1 to 1.4 cm there is nothing to see. **The limb shift reads** (8 to 10 px: the knee is visibly drawn up in the cells). So the breath was not enlarged; it is left at a padded player's size, where it also keeps the cut clean. On the ice a lying player will look still except for one shift of a knee and a turn of the head, once per loop, and only when the lying time is 69 frames or more. If that is too still, the answer is a second small shift inside the first window (frames 15 to 39), not a bigger breath.
+
+### Ground, joints, joins
+
+- Ground over all 32 get-ups and the 8 loops: body at or above 0.00 cm, skates at or above 0.00 cm (p2_cel) and 0.13 cm (p3_clay), stick at or above 0.91 cm. Wall plane: at most 1.7 cm past it.
+- Joins: 159 pairs, positions at most 0.0005 cm, rotations 0 deg (the loops' 62 pairs among them). Root: identity keys in all 134 takes of all four files, 60 fps. Meshes unchanged, stick files byte-identical to export26.
+- Pops: no take over the limits, 130 played takes, both styles.
+
+### Not looked at, and known gaps
+
+- Nothing of export27 has been seen in the engine. The rule for the loop's start frame has not been tried there; the engine has to know the lying time when the fall settles.
+- The stick's new path was looked at in one game-camera strip (`GetUp_Late` and `GetUp_Late_Front`, every 2nd frame, both styles). From the back the stick is hidden behind the body from that camera for most of the take: whether it passes through a leg or the trunk was not looked at from any other side. The thirteen other changed get-ups, the side and wall late get-ups and the right-wall takes with the stick down along the wall were checked by numbers only (blade moves, ground, pops, joins), not looked at.
+- The there-and-back and pop-pass numbers that fall short are above. The three untouched wall get-ups fail the 5 cm there-and-back line on clay (6.8) and were not changed because they pass the 40 cm line, which was the brief's condition.
+- The loops were looked at at the game's scale as nine frames each of two of the eight loops; not in motion, and the six other loops not at all this pass (numbers only).
+- `Lie_Loop_Side_Right`'s stick travels 0.32 cm.
+- The bottom hand's distance to the shaft (`hands20.py`) was not run; in the changed get-ups the bottom hand joins the stick on the last key as before.
+- The clay sprint's supporting-skate bump is still as in export25.
+
+### Files
+
+- Export: `C:\Users\kazda\jam\skater-lab\skf\export27\` (`p2_cel\`, `p3_clay\`, `READY.txt`, `DIFF.md` with before and after for every changed take, `JOINS.md`).
+- Sheets: `devlog/shots/20261114-005102-B-lab-skf27-loops-game-scale.png` and `devlog/shots/20261114-005102-B-lab-skf27-stick-path.png`, each with a `.txt` caption.
+- Lab: the pass is one block in `build_clips.py` (snapshot `build_clips_pass27.py`); `it27.sh`, `sum27.js`, `tab27.js`, `loop27.js` (clean frames and the cut rule, checked over lying times 0 to 110), `flick26.js`, `join27.py`, `sheet27.sh`; numbers in `work27\` (`tables.md`, `m\f27_<style>.json`).
+
+### The next three evolutions of this track, ranked, each with its proving number
+
+1. **The get-ups looked at from every side, and the last stick wobbles out.** A fixed set of views (game camera, side, front, above) of every get-up the engine plays, every frame, read once by eye for a stick through a leg or the trunk; then the nine there-and-backs over 5 cm and the five arm steps the pop pass still evens, authored. **Proving numbers:** frames in which the stick's shaft passes within 3 cm of a leg or the trunk: 0 (today not measured); there-and-back over 5 cm: 0 takes (today 9 take-and-style cases, largest 8.7); late get-ups the pop pass changes: 0 of 16 (today 1 and 4).
+2. **A lying player who is not a statue at short lying times.** A second, smaller shift in the loop's first window (a hand or the head, frames 15 to 39), kept inside 1 cm on the clean frames, so that lying times under 69 frames show something too; and `Lie_Loop_Side_Right`'s stick held. **Proving numbers:** lying times from 30 frames on in which a joint moves 5 cm or more: all (today from 69); stick travel in every loop 0.2 cm or less (today 0.32 in one); the cut still 1 cm or less.
+3. **One gate for every export** (carried over three times). `it27.sh` runs every check in order; the gate adds the verdict, including this pass's lines (blade move, there-and-back, loop cut, stick travel), and writes `READY.txt` itself. The under-ice forearm of this pass's first clay build is the kind of fault it would have named in one run. **Proving numbers:** exports that reach the engine with a fault the gate would have caught: 0; every 0.8 cm crossing of the clay sprint within 1 frame of `Stride`'s (today 3).
