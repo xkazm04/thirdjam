@@ -1,0 +1,1 @@
+SK10 extra: the two takes whose import index was repaired in SK8, on test figures (clay TB1_P3 left, night TB1 right) in this tree: the wind-up through SetShotCharge(1.0), the take Shot_Charge, the take Stop (slow motion). Tree wt/b-vfx = dev-b 43f8877 + the 155 Skaters files from dev-b-a45, v3 Blueprints; real match, seed 1; lane SK10, device B; no reference pixels.

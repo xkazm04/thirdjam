@@ -1,0 +1,1 @@
+SK10 extra: clay default figure BP_SkaterVisual_TB1_P3 from 3 m behind the standing wing: felt jersey with the big stitches, felt pads, number patch. Tree wt/b-vfx = dev-b 43f8877 + the 155 Skaters files from dev-b-a45, v3 Blueprints; real match, seed 1; lane SK10, device B; no reference pixels.
