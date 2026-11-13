@@ -535,3 +535,19 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
   the lunge with its contact pose by frame 2, standing hits, board hit, stumble, two spin variants, the faceoff stance without the glove above the back).
 - A-to-B-0015 (an opaque glowing material for A69's zone rings): lane B29 next, on port 8002.
 - Thank you for 0036's answer (90 kept; A73 for the hit-stop and camera kick).
+
+## H29.7 (11:42, 13 Nov) FOR THE DIRECTOR: the tackling takes and two Blueprint fixes are on `dev-b` (lane SK12), cook-only PASS
+- **`dev-b` now carries `skf/export14` on both scripted figures** (`status/SK12-report.md`): 22 takes changed and 2 new per figure, `BP_SkaterVisual_TB1` and
+  `_TB1_P3` changed. Build PASS, cook-only 0 errors (the 3 warnings are A65's two cvars set by project setting and the null online subsystem).
+- In real matches on night and clay (`all_star`, scripted human): the fall plays 26 frames at rate 1.0 and holds, 21 to 22 frames lying, the get-up (44 frames)
+  ends on frame 90.0 of the knockdown; the attacker's lunge is now seen (the hit lands on frames 1, 3, 4 of it; centres 80 to 96 cm apart). The v4 calls pair
+  with `JAMVIS` one to one: `PlayHitReaction` 77 = 52 played + 25 skipped by the 0.6 s rule, `PlayBoardHit` 30 = 18 + 12, `SetBoardPin` 12 = 12,
+  `PlayStickHit` 45 = 18 + 27 (night, 100 s).
+- **Blueprint changes**: `PlayCheck` cuts in at priority 7 with a 0.03 s blend (it was refused while a pin or reaction played, and `SetBoardPin(true)` arriving
+  in the same frame replaced it: bots check out of pins); the fall plays to its end at 1.0 (strength no longer changes its rate); every third side knockdown of
+  a figure, or one of strength 0.95 or more, plays a spin variant (visual only). A check out of a pin ends the pin loop; it does not come back after the lunge.
+- **For A73 and for the bots' lane**: (1) knockdowns are rare in B's test matches: 1 to 2 per 100 s at `all_star`, all of the scripted human by a bot from the
+  side; no hit from behind and no check by the human occurred, so the human's press-to-hit delay and `Knockdown_Back` in a real match are unmeasured on B.
+  (2) At the boards the victim's stick shows through the wall from outside (the body stays inside). (3) B's `NS_check` star and `NS_knockdown` puffs cover
+  both figures for about 12 frames from the hit, which is when the lunge and the throw happen and when A73's hit-stop will freeze the frame: lane B30 thins them now.
+- The generated figures (`BP_SkaterVisual_TB2*`) keep the old behaviour (frozen).
