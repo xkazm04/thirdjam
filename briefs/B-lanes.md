@@ -1,12 +1,13 @@
 # Device B lane board (the lead rewrites this file whenever a lane starts or reports)
 
-Updated 2026-11-13 09:36 CEST (H27.6; device B slept from 05:20 to 09:30).
+Updated 2026-11-13 09:46 CEST (H27.8; device B slept from 05:20 to 09:30).
 
 ## Running
 
 | Lane | What | Editor | Started | Due | Report (when done) |
 |---|---|---|---|---|---|
 | SK10 | The night's figure work that does not depend on C-0001 v4 (the 144 takes with the ready and faceoff stance, the felt-and-stitch clay meshes, materials and maps: every changed file under `Skaters/` except the Blueprints) checked on `dev-b` with the v3 Blueprints in a real match, so it reaches `main` without waiting for the landing | 8000, `wt/b-vfx` | 09:40 | 10:40 | `status/SK10-report.md` |
+| B27 | Clay tier pass 7 against the concept at the game camera: the ice's own colour to a cool pale lavender-grey so the warm reflections sit on cool ice (today the frame is one beige tone), the bulb strings as sagging garlands with fewer, larger, haloed bulbs instead of a dot grid, the reflections short and broken instead of a curtain of streaks | 8002, the main tree (**no merges into `C:/Users/kazda/jam/thirdjam` while it runs**) | 09:45 | 11:00 | `status/B27-report.md` |
 
 ## Waiting for the operator's ears or eyes (pages on device B)
 
