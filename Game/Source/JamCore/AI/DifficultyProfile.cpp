@@ -71,6 +71,7 @@ namespace JamAI
 			Opp.bUseAimCone = true;
 			Opp.bOneTimer = true;   // R-0029 point 4 (lane A39): all_star bots use the one-timer and the deke; pro the one-timer (ProOppSkill); rookie neither
 			Opp.bDeke = true;
+			Opp.CheckMinClosing = 5.0;   // R-0031 point 2 (lane A45): all_star body-checks the carrier (front or side, never from behind); rookie keeps -1 (never)
 			// R-0029 pass 2 (with A31's charge): speed 1.08 (bots may push past 1, the sim clamps them at 1.5): the good playtester 30 % / 25 %
 			// R-0029 with A39's payoffs on (one-timer, burst, deke): speed 1.15 brings the good playtester back to 23 % at 40 seeds (1.08 measured 38 %, 1.12 33 %); A39 section 9.
 			return FJamDifficultyProfile{"all_star", 1.15, 1.0, 4.0, 25.0, 0.0, 60, Opp, 0.2};   // lane A46: mates pass to the open human in 0.2 of the chances
@@ -112,6 +113,8 @@ namespace JamAI
 			if (std::strcmp(Key, "shot_charge_frames") == 0) { K.ShotChargeFrames = static_cast<int>(V); return true; }   // lane A31
 			if (std::strcmp(Key, "one_timer") == 0) { K.bOneTimer = V != 0.0; return true; }   // R-0029 point 4 (lane A39)
 			if (std::strcmp(Key, "deke") == 0) { K.bDeke = V != 0.0; return true; }
+			if (std::strcmp(Key, "check_min_closing") == 0) { K.CheckMinClosing = V; return true; }   // R-0031 point 2 (lane A45); -1 = never
+			if (std::strcmp(Key, "check_from_behind") == 0) { K.bCheckFromBehind = V != 0.0; return true; }
 			return false;
 		}
 	}

@@ -122,6 +122,12 @@ namespace JamAI
 		// Lane A51 (R-0034): the blade follows, and the poke aims at, where the puck sat on the carrier's body this many frames ago (the stick-handling
 		// reaction; rookie 14, pro 8, all_star 5), unless game.stick.sweep.bot_react_frames names a number for every level. 0 = reads the puck live.
 		int SweepReactFrames = 8;
+		// R-0031 point 2 (lane A45): the body check. CheckMinClosing < 0 = this bot never body-checks (rookie, and R-0017 point 4 before this ruling); otherwise a one-frame
+		// check press on the opposing carrier within reach when the closing speed along the line to it, and the bot's own speed along that line (the sim lands a check on
+		// the checker's own speed above check_speed_min), are at least this (m/s; 5 = game.skater.check_speed_min's default). bCheckFromBehind false = never when the
+		// push would run along the carrier's facing (the sim's foul_from_behind band, 0.5; the brain keeps a margin at 0.35), so no bot ever earns the box for it.
+		double CheckMinClosing = -1.0;
+		bool bCheckFromBehind = false;
 	};
 	constexpr int kMaxReactionFrames = 30;
 
@@ -141,6 +147,7 @@ namespace JamAI
 		K.bIntercept = true;
 		K.bUseAimCone = true;
 		K.bOneTimer = true;    // R-0029 point 4 (lane A39): pro bots use the one-timer
+		K.CheckMinClosing = 5.0;   // R-0031 point 2 (lane A45): pro bots body-check the carrier from the front or the side at check_speed_min closing and up
 		return K;
 	}
 
@@ -314,6 +321,7 @@ namespace JamAI
 		ERole Used[kMaxSkaters] = {};
 		int InReach[kMaxSkaters] = {};
 		int Pressed[kMaxSkaters] = {};   // frames the human's blade has been within reach of this carrier
+		int CheckCool[kMaxSkaters] = {};   // R-0031 point 2 (lane A45): frames before this bot may press check again (one press arms the sim's 6-frame window)
 		int DrawJumps = 0;               // diagnostics: early draw presses sent
 		int DrawPresses = 0;   // R-0017: frames an opposing carrier's puck has been inside this bot's blade reach
 		// Lane A31: frames shoot has been held for the current aimed shot (0 = not charging); the goalie intent of the last Decide per skater.

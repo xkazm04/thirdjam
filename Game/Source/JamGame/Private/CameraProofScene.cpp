@@ -249,13 +249,13 @@ void AJamProofScene::StepSim()
 	{
 		Sk[1].bDown = true;
 		Sk[1].DownUntil = F + 60;
-		IJamSkaterVisual::Execute_SetKnockedDown(Visuals[1], true, 1.f, 0.f);
+		IJamSkaterVisual::Execute_SetKnockedDown(Visuals[1], true, 1.f, 0.f, 90);
 		BroadcastEventForProof(JamEvents::Knockdown, 1);
 	}
 	if (Sk[1].bDown && F >= Sk[1].DownUntil)
 	{
 		Sk[1].bDown = false;
-		IJamSkaterVisual::Execute_SetKnockedDown(Visuals[1], false, 0.f, 0.f);
+		IJamSkaterVisual::Execute_SetKnockedDown(Visuals[1], false, 0.f, 0.f, 0);
 	}
 
 	// ---- shots, checks and the puck

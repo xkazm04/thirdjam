@@ -218,6 +218,18 @@ struct JAMCORE_API FJamSkaterState
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bFoulThisFrame = false;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") float LastPassStrength = 0.f;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bAtFaceoff = false;
+	// Lane A45 (C-0001 v4, R-0031 point 1): read-outs for the visual's PlayHitReaction / PlayBoardHit / SetBoardPin / PlayStickHit. Never hashed, never read by the sim.
+	// A skater-skater collision at BumpMinClosing (3 m/s) or more closing with no check landed this frame; BumpDir = the push on this skater (the other towards this one, unit).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bBumpThisFrame = false;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") FVector2D BumpDir = FVector2D(1, 0);
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int64 LastBumpFrame = -1000;
+	// The skater `board` event (A33) fired for this skater this frame; BoardFrames = consecutive frames touching the boards (within BoardContactEpsM of them).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bBoardHitThisFrame = false;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 BoardFrames = 0;
+	// BoardFrames >= BoardPinFrames (10) with a standing opponent within BoardPinRangeM (1.2 m, centre to centre); false while down or in the box.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bBoardPinned = false;
+	// This carrier lost the puck to an opponent's stick this frame: 1 a clean poke (ResolvePokes), 2 a lift (TryLift); 0 otherwise.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 StickHitResult = 0;
 	// R-0029 point 3: the last frame this skater carried the puck (-1000 = never); a check within game.stick.foul_grace_frames of it is not a foul_no_puck.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int64 LastCarryFrame = -1000;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bTouchingPuck = false;

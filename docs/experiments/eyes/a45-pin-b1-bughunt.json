@@ -1,0 +1,63 @@
+{
+  "tool": "thirdjam.eyes/1",
+  "ok": true,
+  "preset": "bug-hunt",
+  "model": "gemini-3.8-flash",
+  "at": "2026-11-12T22:05:28.835Z",
+  "results": [
+    {
+      "ok": true,
+      "preset": "bug-hunt",
+      "model": "gemini-3.8-flash",
+      "stills": [
+        {
+          "label": "A",
+          "path": ".claude/worktrees/a45/docs/experiments/img/tackling/a45-pin-human-f5248-strip.png",
+          "width": 6288,
+          "height": 453
+        }
+      ],
+      "thumbnails": [],
+      "prompt_chars": 2272,
+      "usage": {
+        "prompt": 1641,
+        "output": 292,
+        "thoughts": 0,
+        "total": 1933,
+        "calls": 1
+      },
+      "cost_usd_est": 0.00233,
+      "ms": 5409,
+      "retried": false,
+      "answer": {
+        "stills": [
+          {
+            "label": "Still A",
+            "findings": [
+              {
+                "where": "Top-left corner, debug text banner across the upper border",
+                "what": "Small engine debug overlay text ('a45-pin-human (blue-1, human-ctrl, 3/1) presses into the boards by running...') is visible baked into the top left of the frame strip.",
+                "severity": 2,
+                "confidence": 0.95
+              },
+              {
+                "where": "Center of each panel along the dasher board base",
+                "what": "A yellow conical collision or debug indicator mesh visibly clips straight into and through the dasher board and ice surface during the collision frames (panels 2, 3, 4).",
+                "severity": 4,
+                "confidence": 0.9
+              },
+              {
+                "where": "Panel 7 (seventh subframe from left), full vertical strip",
+                "what": "Vertical brightness banding and discolouration across the ice and dasher board in the seventh subframe compared to adjacent frames.",
+                "severity": 3,
+                "confidence": 0.8
+              }
+            ],
+            "clean": false
+          }
+        ]
+      },
+      "markdown": "**eyes/bug-hunt** A=a45-pin-human-f5248-strip.png (gemini-3.8-flash, in 1641 out 292 tokens, ~$0.0023, 5.4 s)\n- stills:\n  - label: Still A; clean: false\n    - findings:\n      - where: Top-left corner, debug text banner across the upper border; what: Small engine debug overlay text ('a45-pin-human (blue-1, human-ctrl, 3/1) presses into the boards by running...') is visible baked into the top left of the frame strip.; severity: 2; confidence: 0.95\n      - where: Center of each panel along the dasher board base; what: A yellow conical collision or debug indicator mesh visibly clips straight into and through the dasher board and ice surface during the collision frames (panels 2, 3, 4).; severity: 4; confidence: 0.9\n      - where: Panel 7 (seventh subframe from left), full vertical strip; what: Vertical brightness banding and discolouration across the ice and dasher board in the seventh subframe compared to adjacent frames.; severity: 3; confidence: 0.8"
+    }
+  ]
+}

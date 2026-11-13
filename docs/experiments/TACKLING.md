@@ -159,3 +159,89 @@ of it is the reaction layer: the fall, the burst and the kick are there; what hu
 3. The skater `board` event rate: bots chasing a dumped puck hit the end boards at top speed in bunches (three at 0.83-1.0 within 7 frames in the proof run). Options: raise
    the threshold to 6 m/s, or a per-skater gap of 30 frames; both are read-out changes. The clip decides (section 4).
 4. `jam.HitHoldFrames`: the judged value (section 4) can become the default in `SetKnockedDown` with one line.
+
+## 8. C-0001 v4: B's four tackling calls, the down time on the visual, bots that check (lane A45, R-0031, from H12.4, 2026-11-12)
+
+Handoff B-to-A-0028 found four takes on B's figures with no caller (`Check_Hit_*`, `Board_Hit`, `Board_Pin`, `Poke_Hit` / `Lift_Hit`) and asked for the down time on
+`SetKnockedDown`; R-0031 point 2 ended R-0017 point 4's "no bot ever body-checks" for pro and all_star. Code: `JamSkaterVisual.h` (v4), `JamSim.{h,cpp}` (read-outs only,
+never hashed), `JamPawns.{h,cpp}` (the triggers, `JAMVIS` lines), `SkeletalSkaterVisual.*` and `ToySkaterVisual.*` (defaults on existing curves), `JamAICore.{h,cpp}` +
+`DifficultyProfile.*` (the bot check), `EffectsBinder.*` (the glass hook), tests `Jam.Core.TacklingReadouts`, `Jam.Tackling.V4Defaults`; proof driver `tools/qa/v4.py` (+ `stop45.py`,
+`a45strip.sh`, `cartridges/hockey.v4.qa.json`). Status blocks: `status/A45.md`.
+
+### 8.1 Trigger table (what the pawn sends, from which sim read-out)
+
+| Call (C-0001 v4) | Sim read-out on `FJamSkaterState` (one frame, never hashed) | Set where | Rule | B's take | Toy / skeletal default |
+|---|---|---|---|---|---|
+| `SetKnockedDown(true, DirX, DirZ, KnockdownFrames)` | `KnockFrames` on the frame it starts (StepSkater counts it down from the next step) | `UJamSim::KnockDown` (unchanged) | `KnockdownFrames` = the whole down time; `SetKnockedDown(false, 0, 0, 0)` arrives exactly that many frames later | `Knockdown_*` then the matching `GetUp_*`, the get-up timed to end on it | unchanged (both hold their fall while down); the value is logged (`SKELVIS ... down_frames=`) |
+| `PlayHitReaction(DirX, DirZ)` | `bBumpThisFrame`, `BumpDir` (the push on this skater: the other towards it), `LastBumpFrame` | `CollideSkaters`, on the velocities before the contact exchange | a skater-skater collision with closing speed >= 3 m/s (`BumpMinClosing`) and no check landed in the pair this frame; both standing skaters; one per skater per 20 frames (`BumpGapFrames`); never while down | `Check_Hit_Left/_Right/_Back` by the direction against the facing | skeletal: the board lean's 12-frame curve, 14 degrees toward the push; toy: 14 degrees on the check curve (8 in, 12 out) toward the push |
+| `PlayBoardHit()` | `bBoardHitThisFrame` | `CollideSkaterStatic`, with A33's skater `board` event (>= 4 m/s normal speed) | the same frame as the event; Strength stays on the bus | `Board_Hit` | skeletal: the A33 lean (the bus event already starts it; the call stands in when none came); toy: body pitched 12 degrees forward on the check curve |
+| `SetBoardPin(bOn)` | `BoardFrames` (consecutive frames within 5 cm of the boards, `BoardContactEpsM`), `bBoardPinned` | `CollideSkaterStatic` (the counter), the pin loop at the end of `Step` | `BoardFrames` >= 10 (`BoardPinFrames`) and a standing opponent not in the box within 1.2 m centre to centre (`BoardPinRangeM`); off while down or in the box; the pawn sends the change only | `Board_Pin` loop | skeletal: the lean held at its 10-degree floor; toy: the body pitch held 10 degrees |
+| `PlayStickHit(bLifted)` | `StickHitResult` 1 (poke) / 2 (lift) on the carrier | `ResolvePokes` (a clean take from an opposing carrier), `TryLift` (a clean lift) | the frame the puck leaves the carrier; the poker's own `PlayPoke(true)` / `PlayLift()` still play | `Poke_Hit` / `Lift_Hit` | skeletal: the stumble bell (12 degrees, the yaw wobble, the stick 25 cm down for a poke, 25 cm up for a lift) over 20 frames, no jab; toy: the stick knocked 25 degrees aside (poke) or the blade lifted 20 degrees (lift) on the check curve |
+
+The stay-up check B's first trigger names ("a check that lands and does not knock the victim down") has no sim state behind it: every landed check knocks down (section 2);
+`PlayHitReaction` hangs on the second half of B's trigger, the collision. If the stagger proposal of section 2 ever lands (a weak check sets `StumbleFrames` instead of
+`KnockFrames`), its trigger joins this call without a contract change.
+
+Every call is logged once by the pawn: `JAMVIS hit frame=N skater=i team=t dir=(x, z)`, `JAMVIS board ...`, `JAMVIS pin ... on=0|1 board_frames=k`, `JAMVIS stickhit ... lifted=0|1`.
+The frame is the bus's sim frame. B's `SK4KD` / `SK4UP` lines stay.
+
+### 8.2 Bots check (R-0031 point 2; a calibration under R-0021 point 1)
+
+`FJamBotSkill::CheckMinClosing` (-1 = never; **pro and all_star 5.0** = `game.skater.check_speed_min`'s default; rookie -1) and `bCheckFromBehind` (false everywhere); tune keys
+`opp.check_min_closing`, `opp.check_from_behind`. In `FJamBrain::StickPlay`: a one-frame `bCheck` press (the sim re-arms its 6-frame window and plays `PlayCheck` on every frame
+it is held, so the brain presses once and waits 30 frames) when all of these hold: the opposing carrier exists and stands, this bot stands, the carrier's centre is within
+2 x 0.4 + 0.5 m (at 5 m/s closing that gap is the sim's 6-frame window), the closing speed along the line to the carrier and the bot's own speed along it are both >= 5 m/s
+(the sim lands a check on the checker's own speed above `check_speed_min` while the strength is the closing speed), and the push along the carrier's facing is <= 0.35 (the
+sim's `foul_from_behind` band is 0.5; the margin covers the frames to contact), never during a faceoff phase. `bCheck` is copied live into the brain's output like the shot
+(a reaction-delayed press would miss the window). No bot presses on a skater without the puck, so neither of R-0013's fouls is ever earned by a bot's design.
+
+**Grid (hockey.regular, 20 seeds, `tools/playtest/run.mjs`, before = main 1f964a9's binaries untouched, after = this lane; `tools/playtest/out/a45-before.*` / `a45-after.*`):**
+
+| cell | win % before -> after | checks taken by the human per match | the human's checks landed | fouls (from behind / no puck) | idle s | 2-min goals of 20 |
+|---|---|---|---|---|---|---|
+| rookie / novice | 80 -> **80** | 0 -> 0 | 1.5 -> 1.5 | 0.9 (0.8 / 0.1) -> same | 10.2 -> 10.2 | 15 -> 15 |
+| rookie / regular | 100 -> **100** | 0 -> 0 | 1.3 -> 1.3 | same | 0.7 -> 0.7 | 19 -> 19 |
+| rookie / good | 100 -> **100** | 0 -> 0 | 1.6 -> 1.6 | same | 0 -> 0 | 19 -> 19 |
+| pro / novice | 15 -> **10** | 0 -> 0.9 | 1.4 -> 1.5 | 0.7 (0.6 / 0.1) -> 0.9 (0.8 / 0.1) | 23.7 -> 34.7 | 5 -> 3 |
+| pro / regular | 50 -> **35** | 0 -> 2.0 | 3.0 -> 3.5 | 1.2 (1.2 / 0) -> 1.2 (1.0 / 0.2) | 5.7 -> 8.8 | 13 -> 13 |
+| pro / good | 80 -> **60** | 0 -> 3.5 | 3.1 -> 3.5 | 0.4 (0.3 / 0.1) -> 0.5 (0.4 / 0.1) | 1.7 -> 3.5 | 18 -> 15 |
+| all_star / novice | 5 -> **0** | 0 -> 0.8 | 0.3 -> 0.3 | 0.2 -> 0.1 | 37.4 -> 52.5 | 2 -> 1 |
+| all_star / regular | 15 -> **10** | 0 -> 1.6 | 1.2 -> 0.7 | 0.5 -> 0.3 | 14.1 -> 8.3 | 9 -> 8 |
+| all_star / good | 35 -> **20** | 0 -> 2.9 | 2.2 -> 2.3 | 0.3 -> 0.2 | 7.9 -> 4.6 | 11 -> 9 |
+
+Rookie is byte-identical (rookie never checks). At pro and all_star the human now takes 0.8-3.5 checks a match and the curve drops 5-15 points in every cell: pro / regular
+50 -> 35 (R-0029 target about 50), all_star / good 35 -> 20 (target about 25; A39's 1.15 speed had it at 23 on 40 seeds). The fouls column is the human's own (unchanged
+within noise: the bots' from-behind exclusion holds, `fouls_no_puck` stays at 0-0.2). **Reported, not tuned** (R-0031 point 2: lane A3's next pass re-measures); the knob to
+move is `opp.check_min_closing` (a higher floor = fewer, harder checks) before any speed or skill number.
+
+**Determinism baseline, re-recorded** (`Game/logs/a45-tests-1.txt`): `Jam.Core.Determinism` hockey.regular seed 1 frame 600 **`b705e2def86ae838`**, hockey.raw **`e09eebd2cebd1337`**:
+unchanged from main, because that scene runs scripted inputs without the brain; the calibration moves every brain-driven hash instead: `Jam.Bot.VisualSwap` seed 1
+**`df8392caa0c3924b`** on all three tracks (was `1871c1d348fa8b41`); `Jam.Bot.SeasonTakes` and `BundleKeepsRegularHash` agree between their own pairs as before.
+
+### 8.3 Proof (PIE on 8025 from the worktree, 22:50-23:14; `tools/qa/v4.py`, bot-only through `jam.ScriptHuman 1`, pro bots, first to 9, dilation 0.5)
+
+**Run 1, `hockey.v4.qa.json` = the figure-b1 cut (humanoid_b1, B's `BP_SkaterVisual_TB1`)**, 6000 sim frames, `Game/logs/editor-20261112-225027-0.log`: the pawn's calls fire from the
+read-outs: `JAMVIS hit` 37, `board` 12, `pin` 20, `stickhit` 25 in the first 3300 frames (the human itself pinned at frames 482-540 with 29 board frames; a lift took the puck off
+it at 498), and **the bots check**: `check who=4 kind=side_r strength=0.684` + `knockdown who=0` at frame 1872, again at 5903 (0.48) and 5995 (0.52), no foul on any. **B's figure did
+not render**: with the four event names clashing against the interface the Blueprint's graphs fail to compile and the figure is absent from every capture (the pin strip
+`img/tackling/a45-pin-human-f5248-strip.png` shows the boards, the puck disc and the spray at the human's pin at 5248 and no skater; eyes bug-hunt `eyes/a45-pin-b1-bughunt.json` reads
+the disc as "a yellow conical debug indicator clipping into the dasher board" and does not notice the missing figures), so no `SK4KD` / `SK4UP` line was printed either. That is the
+state until B's move of its events onto the interface; the calls, the triggers and the bot checks are proven by the log, the takes are proven when B re-hooks them.
+
+**Run 2, `hockey.v4toy.qa.json` = the same cut on `toy_skeletal`** (the sim is deterministic, so the same match frame for frame; `tools/qa/out/a45toy/`): 1405 frames driven, 275
+captures. **The bot check landing on the human**: orange 4 drives into blue 0 at the side boards, `check side_r 0.684` at 1872, `SKELVIS JamSkater_0 knocked down kind=side_r
+strength=0.68 ... down_frames=90` (the v4 down time arrived), the burst, the toy tips to its right side and lies flat with the stick, `SetKnockedDown(false)` 90 frames later:
+`img/tackling/a45-check-toy-f1872-strip.png` (frames 1869..1890 every 3rd). **The board pin**: blue 0 held on the side boards by orange, `JAMVIS pin frame=1693 on=1 board_frames=10`,
+the figure holds its 10-degree lean into the boards until `on=0` at 1782: `a45-pin-toy-f1693-strip.png` (1690..1711). Around them on camera: `JAMVIS board` on 0 and 4 at 1490-1492,
+`JAMVIS hit` on both at 1513 (the toy's 14-degree tip toward the push), `JAMVIS stickhit lifted=1` on the human at 1522 and 1552 (the stumble layer, stick up).
+
+Eyes bug-hunt (gemini-3.8-flash, `--no-think`, about a quarter of a cent each; `eyes/a45-check-toy-bughunt.json`, `a45-pin-toy-bughunt.json`): on the check strip "the falling blue
+skater's body and stick clip heavily into the ice, the head / torso below the ice plane in later frames" (severity 4): that is the side tip of the stiff toy about its skates (section 2:
+88 degrees over 14 frames) seen from behind, the same reading A33 got on its behind hit; the strip caption text and a backdrop seam are the other two findings. On the pin strip "the
+orange toy figure sinks into the ice up to its lower torso" (severity 4): the orange checker is pitched forward into the human against the boards (the hit tip and the board lean add
+up on a figure that is already leaning), read from a low camera; worth a cap on the summed tips (a follow-up for the figure pass), not a trigger fault. Nothing in either strip is a
+call that fired wrong or late.
+
+Process: editor pid 38380 on 8025 only while proving (22:50-23:14, stopped by `editor.ps1 -Stop`, closed within the grace); one other UnrealEditor.exe on the machine (not mine, not
+touched); never more than two editors plus my commandlets. The read-out test's pin scene needed its puck moved out of the net (A33's `ClearIce` parks it at `(Hx, 0)`, inside the goal
+on the raw rink, which scores on the first step and holds the scene in the goal pause where the pin loop does not run); the rule itself pinned in play from the first run.
