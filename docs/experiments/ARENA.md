@@ -307,3 +307,156 @@ commandlet starts in under a minute (import, clearance and verify ran in one pro
   only the lamp, the digits and the clocks' hands catch the eye. A low warm light behind each long side would show them; or say they should stay dark.
   The same on `p3_clay` at 120 x 60, more mildly (`engine-p3_clay-120x60-boxes`): if the rig's lights do not grow with the rig, the long sides dim on the big rink.
 - The pieces reach, on -y: the table x = -0.70 to +0.70 m, out to y = -(W/2 + 1.92) m, 2.78 m high at the lamp. The goals stand inside the rink.
+
+---
+
+# Evolution 3 (lane A127, Fri 13 Nov 21:15-22:20, 65 minutes): the arena answers the game
+
+## 19. What a player gets
+
+A goal is answered by the building. On the `goal` event the red lamp on the scorer's table and a new goal light behind the scored net flash for 108 frames
+(six pulses, a red point light over each throws the pulse onto the boards, the ice and the net), and the scored net's cords shake and settle in under a
+second. A skater driven hard into the boards in front of a bench, a penalty box or the scorer's table rocks that piece, more for a harder hit. In a mode that
+keeps the whistle, the skater sent off stands inside its team's penalty box instead of on the ice in front of it, and steps back onto the ice the frame the
+penalty ends. Presentation only: no physics body, nothing the sim reads, the hash unchanged.
+
+The six frames after a goal in the +x net on `p3_clay` (sim frames 0, 3, 8, 18, 45, 120; off-screen engine stills, no game: section 25):
+
+![frame 0: the lamp and its light at the peak, the net at rest](img/arena/e3-p3_clay-goal-f000.jpg)
+![frame 3: the net driven back and down](img/arena/e3-p3_clay-goal-f003.jpg)
+![frame 8: the net swung out and up, the pulse fading](img/arena/e3-p3_clay-goal-f008.jpg)
+![frame 18: the second pulse](img/arena/e3-p3_clay-goal-f018.jpg)
+![frame 45: mid-pulse, the net nearly still](img/arena/e3-p3_clay-goal-f045.jpg)
+![frame 120: the still arena again](img/arena/e3-p3_clay-goal-f120.jpg)
+![the scorer's table's lamp on the goal's frame](img/arena/e3-p3_clay-table-f000.jpg)
+![the game camera's view of the scored end on the goal's frame](img/arena/e3-p3_clay-game-f000.jpg)
+![l2_night, the goal's frame](img/arena/e3-l2_night-goal-f000.jpg)
+![a penalty box on the frame of a hard board hit (3.5 degrees)](img/arena/e3-p3_clay-box-hit-f000.jpg)
+
+## 20. The reactions, in numbers (`ARinkActor`, sim frames at 60 Hz)
+
+| Reaction | Starts on | What moves | Curve | Ends |
+|---|---|---|---|---|
+| Lamp | `goal` | scalar `Emissive` on a dynamic instance of B's `MI_Toon_NetFrame` (slot `lamp`): the table's lamp and the scored end's goal light, from the material's own 3.0 to 17.0 | `LampAt`: 1 on the goal's frame, a sawtooth down to 0.35 every 18 frames, the last 36 frames fade | at rest from frame **108** (bar: 120) |
+| Lamp light | `goal` | a red shadowless point light over each of those two lamps, hidden at rest | the lamp's curve x `jam.rink.react.light` (3,000 cd; the table's 0.25 of it; `l2_night` 0.4 of it) | hidden from frame 108 |
+| Net | `goal` | the scored net component's scale: depth x (1 + 0.12 w), height x (1 - 0.06 w); the frame stands | `NetShakeAt`: w = e^(-t/16) sin(2 pi t / 10) | still from frame **54** |
+| Rattle | skater `board`, Strength >= **0.45** | a roll of the piece about its rink-side foot (its own x axis), 3.5 degrees x Strength (clamped to 1) | `RattleAt`: e^(-t/6) cos(2 pi t / 8), full on the hit's frame | still from frame **18** |
+
+- The scored end is the side of the net the puck is in (`Payload.Where.X`), the effects binder's rule for the burst's colour.
+- The whole flash sits inside the goal pause (`game.rules.goal_pause_frames`, 120): no play is lit red.
+- A skater's `board` event carries Strength = normal speed / `game.skater.speed` and exists from 4 m/s (`JamSim.cpp:1562`); 0.45 is about 5 m/s on the regular rink.
+  The piece is the one within 2 m along the boards of the hit: the benches on +y (x = +-0.0833 L, 0.1 L long), the boxes (x = +-3 m) and the table (x = 0) on -y.
+  Nothing of this track stands behind the end boards or the rest of the long sides, so a hit there rocks nothing (on the regular rink the pieces cover 2 x 13 m
+  of bench side and 14.5 m of box side: about 15 % of the 264 m of boards). The glass's own wobble on the tiers that have glass is lane A45's hook in the effects binder.
+- The back-swing of the rock is 1.8 degrees towards the rink: 3.8 cm at the board top, inside the 5 cm gap between a piece and the boards.
+
+## 21. The pieces
+
+| Mesh | Triangles | Size (m) | Slots | Notes |
+|---|---|---|---|---|
+| `/Game/Arena/SM_Arena_GoalLight` (new) | **696** (budget 1,000) | 0.72 x 0.66 x 2.78 | dark, kick, lamp | a squat dark base with an ochre plate, a dark post past the glass line, an ochre collar, a 0.54 m red lamp with a dark cap |
+| `/Game/Arena/SM_Arena_ScorerTable` (changed) | 2,088 (as before) | 1.40 x 1.73 x 2.89 | board, kick, bench, dark, frame, **lamp** | the lamp is a slot of its own and grew from 0.23 to 0.36 m; everything else as evolution 2 |
+
+- Placement: a goal light outside each end board at x = +-(L/2 + 0.2 + 0.05) m, y = 0, yaw -90 on the +x end and +90 on the -x end (the piece's +y points
+  away from the rink, like the benches'). Shown with the boxes and the table; while they show, A25's code housings on the glass rail (`GoalLights`) are
+  hidden: one light behind each net, never both. On the bare tiers and with `jam.rink.arena 0` the code housings stand as before.
+- Materials: device B's, by reference, nothing made and nothing under `Game/Plugins/JamAssets` written. `lamp` -> a dynamic instance of `MI_Toon_NetFrame`
+  made at `Build`; B's master `M_Toon` exposes the scalar `Emissive` (read from the instance as the lamp's resting value, 3.0). **No material of this track's
+  own was needed.** A lamp whose material has no `Emissive` is bound as it is and never lights.
+- The first size (lamp 0.34 m, table lamp 0.23 m) was a dot from the game camera in the first engine stills; the pieces were rebuilt once.
+
+## 22. How it is wired
+
+- **The rink listens to the bus itself**: `ARinkActor::BeginPlay` binds `UJamEventBus::OnJamEvent` (`BindBus`), `EndPlay` unbinds. `EffectsBinder.*` is not
+  edited. `OnJamEvent` -> `ReactToEvent(Event, Payload, Bus->GetSimFrame())` writes the reaction's first frame at once; the actor's tick (enabled only while
+  a reaction is live) calls `AdvanceReactions(Bus->GetSimFrame())`. Time is the bus's sim frame, never wall clock: a pause holds the lamp where it is; a frame
+  earlier than the reaction's start (a new match) ends it.
+- `Build` in the middle of a reaction starts from the still arena (`ResetReactions`).
+- **Neutral values**: `jam.rink.react 0` = the pieces stand, nothing lights or moves, the boxed skater is drawn on the ice (the arena of evolution 2 plus
+  the goal light piece). `jam.rink.arena 0` = the code frame, code benches, code goal-light housings, no reaction (the rink before the track).
+  `jam.rink.react.light 0` = the lamps flash without lighting anything around them.
+- Log lines: `JAMRINK arena reactions: ...` at every `Build`; `JAMRINK react goal end=+x|-x frame=N lamp 3.00 -> 17.00 ...` per goal;
+  `JAMRINK react rattle piece=... strength=... frame=N ...` per rattle.
+
+## 23. The boxed skater stands in its box (`JamPawns`, track F1's file: the exact lines)
+
+`JamCore` cannot see `ARinkActor` (`JamGame` depends on `JamCore`), so the one call goes through a static hook the rink fills:
+
+- `Game/Source/JamCore/Public/JamPawns.h`, after `ApplyRender`'s declaration, **2 lines added**: a comment and
+  `static TFunction<bool(const AJamSkater&, FVector&, FRotator&)> BoxSeat;`
+- `Game/Source/JamCore/Private/JamPawns.cpp`, **2 lines added** and two `const` dropped in `AJamSkater::ApplyRender`: the hook's definition above the function,
+  and inside it, after `Rot` is computed: `if (S.InBox() && BoxSeat) BoxSeat(*this, Loc, Rot);` (`Loc` and `Rot` lost their `const` so the call can write them).
+- `ARinkActor::ServeBoxSeat` (called from `BeginPlay`) sets the hook: the rink of the skater's world answers with `GetPenaltyBoxSeat(Team)`.
+
+The call sits before the hit-stop's hold and catch-up, so a fouler whose hit froze the picture blends from its held pose to the seat instead of popping.
+The sim is untouched: `UJamSim::BoxPos` still holds the skater on the ice 1.61 m from the seat; only the figure is drawn in the box.
+
+## 24. Proof
+
+| What | Result |
+|---|---|
+| Blender build (`arena.py`, 120 x 60) | PASS: goal light 696 triangles (under 1,000), table 2,088; the other eight pieces equal evolution 2's (triangles and sizes) |
+| Headless import (`import_arena.py`) | **A119 IMPORT PASS**: the table and the goal light imported, eight pieces checked and kept; `lamp` on `MI_Toon_NetFrame`; a piece whose slots differ from Blender's is now imported again (the table's triangles and size alone did not show the new slot) |
+| Placement and reactions (`verify_arena.py`, section 4) | **A119 VERIFY PASS, A127 E3 PASS** on 90 x 45, 120 x 60, 140 x 70: goal lights at x = +-(L/2 + 0.25) m, code housings hidden; lamps on dynamic instances of `MI_Toon_NetFrame`; a +x goal: lamp and +x light 3.0 -> 17.0 on the goal's frame, the -x light at rest on every frame, the net's depth off rest at frame 3, all at rest at frame 108; lamp lights on, off, on (table, -x, +x) and all off at 108; a hard hit at the -x box rolls it 3.5 degrees, 0 at frame 18; a soft hit, the puck and an end-board hit rock nothing; a bare tier, `jam.rink.react 0`, `jam.rink.arena 0`: nothing answers |
+| `Jam.Rink.GoalLampAndNet` | PASS. Five goals of a scripted match (frames 6, 266, 526, 786, 1046, the ends alternating), delivered as `AHokejGameMode::DeliverEvents` does (`SetSimFrame`, `Broadcast`) to the real `ARinkActor` in a test world: on each, the lamp's `Emissive` 3.00 -> 17.00 on the goal's frame, 15.99 two frames on, at rest again 108 frames after; the scored end's goal light the same, the other end's at rest; the net's depth off rest by up to 10.1 %, still again by frame 120; **no flash, no light and no shake on any frame without a goal in the last 120**; the sim's hash equal on every frame to a twin's that no rink listens to; `jam.rink.react 0` and `jam.rink.arena 0`: a goal starts nothing |
+| `Jam.Rink.BoardRattle` | PASS. The roll on the hit's frame = 3.5 degrees x Strength (box at 0.80, 1.40 clamped; table 0.60; bench 0.50, 0.90 from 1.5 m past its end), still after 18 frames; nothing for Strength 0.40, for the puck, for the end boards, for a long side where nothing stands; a skater of the real sim driven into the boards at the -x box: one `board` event, Strength 0.90, the box rocks, hash equal to the twin's |
+| `Jam.Rink.PenaltySeat` | PASS. The foul drill of `Jam.Core.Stick`: **300 penalty frames, the figure 0.00 cm from the `Seat` socket on every one** (bar 20 cm; the sim holds the skater 161 cm away), on the ice the frame the penalty ends, hash equal to the twin's on every frame; `jam.rink.react 0` and `jam.rink.arena 0` draw it on the ice |
+| Full `Jam` filter (the gate's invocation plus `-Multiprocess`) | **PASS: 159 tests, 0 failed** (156 before the lane + these three) |
+| Hash | `hockey.boost all_star seed 1: 19607 frames ... sim hash 91199b105218b20d`: the same before the lane and after |
+| Ledger | one row added (`SM_Arena_GoalLight`), the table's row updated; `node tools/gate/check-assets-ledger.mjs` PASS (1698 rows) |
+| Engine stills | three runs looked at: the first (Emissive only) showed the lamp as a flat dot and decided the lamp light and the bigger lamps; a sweep of the light at 100 / 1,000 / 10,000 / 100,000 cd decided 3,000; the last is the set above. Pixels that change by more than 24 of 255 between the still arena and the goal's frame: 13.1 % in the close view and **4.0 % from the game camera on `p3_clay`**, 15.3 % from the game camera on `l2_night`; between a box at rest and on a hard hit's frame 1.6 % |
+| Editor build | PASS three times (224 s, 179 s, 1,022 s: the third waited about fourteen minutes in the machine's build queue) |
+
+Not run: `tools/gate/premerge.ps1` as a whole (its ownership step runs git), the acceptance run (no verb changed), a match (section 25).
+
+## 25. The stills, and what they do not show
+
+`engine_stills.py` with `ARENA_STILLS_REACT=1` renders, off screen and without a game, the real `ARinkActor` in B's rig map at chosen frames of a reaction:
+it calls `ReactToEvent` and `AdvanceReactions` (what the bus and the tick call in a match) and shoots. 32 stills, two tiers, about one minute.
+`ARENA_STILLS_REACT=sweep ARENA_STILLS_LIGHT=100,1000,10000` shoots the goal's frame at several candelas.
+
+What they say, read plainly: on `l2_night` the flash is loud (a red pool over the end boards and the crease); on `p3_clay`, the shipped look, it is clear
+but modest from the game camera (a glowing lamp, a pink wash on the crease, a reflection on the ice: 4 % of the picture): `jam.rink.react.light 10000` is the
+loud version there (the sweep's still, `out/engine-e3-sweep/`), and the number is one console line to change after a look at the game.
+What they lack: motion (a 3.5 degree rock and a 12 % shiver are small in a still and are judged here by their numbers; the eye's verdict needs the game),
+the figures (the boxed skater in its box is proven by distance, not seen), the HUD, B's `NS_goal` burst and `MS_goal` over the same frames.
+**Queued for the Director (the cursor owner's two minutes)**: a Development package, any cut with penalties on, one goal and one foul: look at the scored end
+during the goal pause, the box during the penalty; the log must carry one `JAMRINK react goal` line per `JAMEVENT goal`.
+
+## 26. How to run it again
+
+```
+BL="C:/Program Files/Blender Foundation/Blender 4.2/blender.exe"
+UE="C:/Program Files/Epic Games/UE_5.9/Engine/Binaries/Win64/UnrealEditor-Cmd.exe"
+W=$(pwd -W)
+"$BL" -b --factory-startup -P tools/blender/arena/arena.py -- --length 120 --width 60 --out tools/blender/arena/out
+"$UE" "$W/Game/ThirdJam.uproject" -run=pythonscript -script="$W/tools/blender/arena/import_arena.py" -unattended -nopause -nosplash -NullRHI -Multiprocess -abslog="$W/Game/logs/a127-import.log"
+"$UE" "$W/Game/ThirdJam.uproject" -run=pythonscript -script="$W/tools/blender/arena/verify_arena.py" -unattended -nopause -nosplash -NullRHI -Multiprocess -abslog="$W/Game/logs/a127-verify.log"
+"$UE" "$W/Game/ThirdJam.uproject" -ExecCmds="Automation RunTests Jam.Rink; Quit" -unattended -nullrhi -Multiprocess -nosplash -nopause -log -abslog="$W/Game/logs/a127-rink-tests.log"
+ARENA_STILLS_REACT=1 "$UE" "$W/Game/ThirdJam.uproject" -ExecCmds="py $W/tools/blender/arena/engine_stills.py" -RenderOffScreen -Multiprocess -unattended -nopause -nosplash -log -abslog="$W/Game/logs/a127-stills.log"
+```
+
+## 27. Pitfalls met in evolution 3
+
+1. A lamp's `Emissive` alone does not make a goal loud: under the toon ramp the lit lamp is a flat lighter red with no glow, a dot from the game camera
+   (first stills). What reads is light on the surroundings: a shadowless point light costs nothing at rest (hidden) and little for 108 frames.
+2. Candelas against this project's fixed exposure cannot be guessed: a sweep by cvar in one stills run (four values, 16 stills, two minutes) picked the number.
+3. The same candelas read several times stronger on `l2_night` than on `p3_clay`, and a light 1.5 m from a wall burns it out where one 5 m from the ice
+   does not: the peak is per lamp and per tier (`LampLightPeakAt`).
+4. `import_arena.py` kept a piece whose triangles and size were unchanged although its slots had changed: the slot names are now part of "unchanged".
+5. A game world made in a test (`UWorld::CreateWorld`) dispatches no `BeginPlay` to spawned actors without a game mode: the test calls `DispatchBeginPlay`.
+6. A static array of object pointers (`TObjectPtr<...> X[3]`) is a legal `UPROPERTY`; the lights are created by name in the constructor like the other pieces.
+7. A bash heredoc carrying C++ with apostrophes failed again in this shell (as lane A119 found): patches were written as files.
+
+## 28. For device B and the Director (evolution 3)
+
+- Referenced by name, not edited: `MI_Toon_NetFrame` now also as the parent of three dynamic instances (the lamps) whose `Emissive` this track drives from the
+  instance's own 3.0 to 17.0. If B renames `Emissive` on `M_Toon` the lamps stop lighting (the light and the net go on); no error.
+- A wish to B: a lamp instance (`MI_Toon_Lamp` or any name): red, with an emissive that survives the toon ramp as a glow. The slot is `lamp` on
+  `SM_Arena_ScorerTable` and `SM_Arena_GoalLight`; with it the point light could drop to a third.
+- B's `NS_goal` and `MS_goal` run over the same 108 frames; nobody has seen the four together yet (the Director's packaged look, section 25).
+- `l2_night`: the snow banks that cross the benches and boxes (section 18) are untouched; the goal lights stand at x = +-(L/2 + 0.25 .. 0.91) m, y = +-0.36 m:
+  `rig_clearance.py` does not yet test that footprint.
+- Contract text proposed for `contracts/events.md` (C-0003), under the additions: "`goal` and skater `board` are also heard by `ARinkActor` (lane A127): the
+  scorer's table's lamp, the scored end's goal light and net, and the bench, box or table behind a hard board hit answer them. Cosmetic: frames counted on
+  the bus's sim frame, nothing read by the sim. `jam.rink.react 0` switches it off."

@@ -45,6 +45,11 @@ public:
 	// below it; Pos is the bubble's bottom-centre. Pure (tests call it). The bark's second copy on the strip is gone: the strip at the
 	// bottom centre is the commentator's line, drawn by UJamHudWidget.
 	static FVector2D PushOutOfBand(FVector2D Pos, float Height, float Top, float Bottom, float MinY);
+	// Lane A123 (track U1, evolution 2): no bubble over the middle third of the frame (the centre rectangle [W/3, 2W/3] x [H/3, 2H/3], where the human and
+	// the play are). A bubble whose box [Pos.X - HalfW, Pos.X + HalfW] x [Pos.Y - Height, Pos.Y] meets that rectangle (plus Pad) moves by the shortest of four
+	// ways out: up, down, or sideways while the whole bubble stays in the frame. Pos is the bubble's bottom-centre. Pure (tests call it).
+	// jam.hud.ClearMiddle 0 leaves the bubble over its speaker (235 cm over the feet), as before.
+	static FVector2D PushOutOfMiddle(FVector2D Pos, float HalfW, float Height, float VW, float VH, float Pad = 8.f);
 	// Lane A42 (A48's storyboard finding 5): a speaker farther than this from the camera, or outside the frame, gets no bubble.
 	static constexpr float MaxBubbleDistanceM = 24.f;
 

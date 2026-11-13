@@ -895,9 +895,10 @@ void UJamCommentarySystem::UpdateLoops(const UJamSim& Sim, AHokejGameMode* GM)
 			TurnCooldown = 0;
 		}
 	}
-	if (Skate && Sim.GetSkaters().IsValidIndex(Sim.GetHumanIndex()))
+	const int32 SkateSeat = GM ? GM->GetLocalSeat() : Sim.GetHumanIndex();   // lane A129 (track Q1): the local seat's speed, the guest's on the guest's machine
+	if (Skate && Sim.GetSkaters().IsValidIndex(SkateSeat))
 	{
-		const FJamSkaterState& S = Sim.GetSkaters()[Sim.GetHumanIndex()];
+		const FJamSkaterState& S = Sim.GetSkaters()[SkateSeat];
 		const double Top = FMath::Max(Sim.GetConfig().Skater.Speed, 0.1);
 		Skate->SetFloatParameter(TEXT("Speed"), static_cast<float>(FMath::Clamp(S.Vel.Size() / Top, 0.0, 1.0)));
 		if (TurnCooldown > 0) --TurnCooldown;

@@ -10,11 +10,16 @@
 // (two team benches outside the +y boards where A25's code benches stand, two penalty boxes outside the -y boards at x = -3 and +3, where UJamSim::BoxPos pins a
 // boxed skater). Device B's instances by reference on the five slots. Shown on the dressed tiers, hidden on the bare ones; `jam.rink.arena 0` or a missing mesh
 // gives back A25's code benches. Visual only: no collision, no sim state. docs/experiments/ARENA.md.
+// Lane A127 (track F3, evolution 3): the arena answers the game. On a `goal` event the scorer's table's lamp and the goal light behind the scored net flash and
+// the scored net's cords shake; on a hard skater `board` event the bench, box or table behind that stretch of boards rocks. The rink listens to UJamEventBus
+// itself (BeginPlay) and counts the bus's sim frames, never wall clock. Presentation only: parameters on dynamic material instances and component transforms,
+// no physics body, nothing the sim reads. `jam.rink.react 0` (or `jam.rink.arena 0`) gives back the still arena.
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "JamCartridge.h"
+#include "JamEventBus.h"
 #include "RinkActor.generated.h"
 
 class UProceduralMeshComponent;
@@ -22,6 +27,7 @@ class UBoxComponent;
 class UStaticMeshComponent;
 class UMaterialInterface;
 class UMaterialInstanceDynamic;
+class UPointLightComponent;
 
 UCLASS()
 class JAMGAME_API ARinkActor : public AActor
@@ -66,6 +72,28 @@ public:
 	// cartridge's goal (the table is in RinkActor.cpp) and scales it W/Wv along the goal line and H/Hv up, which keeps the opening exact. The scorer's table
 	// stands between the two penalty boxes at x = 0 on the -y side.
 	static constexpr const TCHAR* ScorerTableMeshPath = TEXT("/Game/Arena/SM_Arena_ScorerTable.SM_Arena_ScorerTable");
+	// Lane A127 (evolution 3): the goal light, a clay post with a red lamp outside the end boards behind each net (arena.py goal_light(); slots dark, kick, lamp).
+	static constexpr const TCHAR* GoalLightMeshPath = TEXT("/Game/Arena/SM_Arena_GoalLight.SM_Arena_GoalLight");
+	// The reactions' numbers (sim frames at 60 Hz). The lamp: lit on the goal's frame, pulsing every LampPulseFrames, fading over the last LampFadeFrames, at its
+	// resting value again from LampFlashFrames on (the bar: back by frame 120). The net: a damped wobble of the scored net's scale (depth and height) for
+	// NetShakeFrames. The rattle: a skater `board` event at RattleMinStrength or more (Strength = normal speed / game.skater.speed) rocks the piece standing
+	// within RattleReachM of the hit along the boards about its rink-side foot, RattleMaxDeg at Strength 1, for RattleFrames.
+	static constexpr int32 LampFlashFrames = 108;
+	static constexpr int32 LampPulseFrames = 18;
+	static constexpr int32 LampFadeFrames = 36;
+	static constexpr float LampPeakEmissive = 14.f;
+	static constexpr int32 NetShakeFrames = 54;
+	static constexpr float NetShakeDepth = 0.12f;
+	static constexpr float NetShakeHeight = 0.06f;
+	static constexpr int32 RattleFrames = 18;
+	static constexpr float RattleMinStrength = 0.45f;
+	static constexpr float RattleMaxDeg = 3.5f;
+	static constexpr double RattleReachM = 2.0;
+	// The lamp lights (candelas at the top of a flash = `jam.rink.react.light`, default 3000, picked from a sweep of off-screen stills at 100 / 1,000 / 10,000 /
+	// 100,000: 1,000 is a halo and a reflection on clay, 10,000 washes the end zone, 100,000 blows the picture out). The scorer's table's light stands 1.5 m
+	// from the boxes' walls and takes TableLightShare of it; on l2_night the same candelas read far stronger against the dark and take NightLightShare.
+	static constexpr float TableLightShare = 0.25f;
+	static constexpr float NightLightShare = 0.4f;
 
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UProceduralMeshComponent> Ice;
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UProceduralMeshComponent> Markings;
@@ -107,6 +135,14 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UStaticMeshComponent> ArenaGoalNetNeg;
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UStaticMeshComponent> ArenaGoalNetPos;
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UStaticMeshComponent> ArenaTable;
+	// Lane A127: the Blender-made goal lights outside the end boards (Neg = behind the -x net, Pos = behind the +x net). While they show, A25's code housings
+	// on the glass rail (`GoalLights`) are hidden: one light behind each net, never both.
+	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UStaticMeshComponent> ArenaGoalLightNeg;
+	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UStaticMeshComponent> ArenaGoalLightPos;
+	// Lane A127: a red point light over each lamp (0 the scorer's table's, 1 the goal light behind the -x net, 2 behind the +x net): no shadows, hidden and at
+	// intensity 0 at rest; during a flash it follows the lamp's curve up to `jam.rink.react.light` candelas, so the boards, the ice and the net behind the
+	// scored goal pulse red with the lamp (the first engine stills: a lamp's Emissive alone is a small flat dot from the game camera).
+	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UPointLightComponent> ArenaLampLights[3];
 	// Behind the +x goal line (team 0 scores here) and behind the -x line (team 1 scores here).
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UBoxComponent> GoalTriggerPos;
 	UPROPERTY(VisibleAnywhere, Category = "Jam|Rink") TObjectPtr<UBoxComponent> GoalTriggerNeg;
@@ -164,6 +200,58 @@ public:
 	// False when the box is not shown (the caller keeps the sim's place on the ice). Presentation only: UJamSim::BoxPos is not changed by this lane.
 	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
 	bool GetPenaltyBoxSeat(int32 Team, FVector& OutLocation, FRotator& OutRotation) const;
+	// ---- Lane A127 (evolution 3): the arena answers the game ----
+	// The pure curves (tests read them). LampAt: 0 outside [0, LampFlashFrames), else 0..1 (1 on the goal's frame). NetShakeAt: 0 outside [0, NetShakeFrames),
+	// else a damped sine in -1..1. RattleAt: 0 outside [0, RattleFrames), else a damped cosine times the clamped Strength.
+	static float LampAt(int64 FramesSince);
+	static float NetShakeAt(int64 FramesSince);
+	static float RattleAt(int64 FramesSince, float Strength);
+	// `jam.rink.react` (default 1): 0 = the pieces stand and never move or light.
+	static bool AreReactionsEnabled();
+	// The bus's delivery (what OnJamEvent calls with the bus's sim frame): `goal` starts the lamp, the scored end's goal light and net; a skater `board` at
+	// RattleMinStrength or more starts a rattle. Applies the reaction's first frame at once. Does nothing while the Blender pieces are not shown.
+	UFUNCTION(BlueprintCallable, Category = "Jam|Rink")
+	void ReactToEvent(FName Event, const FJamEventPayload& Payload, int64 SimFrame);
+	// Writes every live reaction's value for SimFrame (the actor's tick calls it with the bus's frame; a frame before the reaction's start ends it).
+	UFUNCTION(BlueprintCallable, Category = "Jam|Rink")
+	void AdvanceReactions(int64 SimFrame);
+	// Listens to this bus (BeginPlay passes the game instance's); null stops listening.
+	void BindBus(UJamEventBus* InBus);
+	// Read-outs for the proofs. The lamp's Emissive as its dynamic instance holds it (the scorer's table), and its resting value; -1 when there is no lamp.
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	float GetLampEmissive() const;
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	float GetLampRestEmissive() const { return LampRest[0]; }
+	// The goal light's Emissive behind the +x net (End > 0) or the -x net; -1 when there is none.
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	float GetGoalLightEmissive(int32 End) const;
+	// The lamp light's intensity right now in candelas (Index as ArenaLampLights), 0 while it is hidden; and the peak a flash drives it to.
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	float GetLampLightIntensity(int32 Index) const;
+	static float LampLightPeak();
+	// The peak of one lamp's light on this rink's tier: the cvar times the table's share (Index 0) and the night tier's share.
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	float LampLightPeakAt(int32 Index) const;
+	// The net's scale over its resting scale at the +x end (End > 0) or the -x end ((1, 1, 1) at rest), and the rattled piece's roll in degrees right now.
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	FVector GetNetShakeScale(int32 End) const;
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	float GetRattleDeg() const { return RattleDegNow; }
+	// The component rocking right now, or the last one that did ("" before the first).
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	FString GetRattledPieceName() const;
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	int32 GetGoalReactionCount() const { return GoalReactions; }
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	int32 GetRattleCount() const { return RattleReactions; }
+	// True while any reaction is live (a lamp lit, a net or a piece moving).
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	bool IsReacting() const { return GoalFrame >= 0 || RattleFrame >= 0; }
+	// Serves AJamSkater::BoxSeat (JamCore): a boxed skater's figure is drawn at its team's GetPenaltyBoxSeat by the rink of its own world. BeginPlay calls it.
+	static void ServeBoxSeat();
+
+	virtual void Tick(float DeltaSeconds) override;
+
 	// Lane A25 (Director 17:17, eyes finding 3): the far-net beacon column read as noise and as a dithered artefact. `jam.rink.beacon` 0 = off, 1 = B's MI_Trim_Beacon
 	// (translucent, as before), 2 = an opaque emissive column (lab flat instance in the trim colour). Build and the cvar sink apply it.
 	void ApplyBeaconMode();
@@ -172,7 +260,36 @@ public:
 	// The rounded-rectangle outline used for the ice and the boards (rink metres, counter-clockwise from +x).
 	static void Outline(double LengthM, double WidthM, double CornerM, int32 ArcSegments, TArray<FVector2D>& Out);
 
+protected:
+	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type Reason) override;
+
 private:
+	// Lane A127: the reactions' state. LampMids: 0 the scorer's table's lamp, 1 the goal light behind the -x net, 2 behind the +x net (null = no such lamp or
+	// a material without Emissive). The rattle's pieces: bench -x, bench +x, box -x, box +x, table, with the rotation Build gave each.
+	UFUNCTION()
+	void OnJamEvent(FName Event, const FJamEventPayload& Payload);
+	void ResetReactions();
+	void ApplyGoalReaction(int64 Since);
+	void ApplyRattle(int64 Since);
+	UStaticMeshComponent* RattlePiece(int32 Index) const;
+	UPROPERTY(Transient) TObjectPtr<UJamEventBus> ReactBus;
+	UPROPERTY(Transient) TObjectPtr<UMaterialInstanceDynamic> LampMids[3];
+	float LampRest[3] = { -1.f, -1.f, -1.f };
+	FVector NetRestScale = FVector::OneVector;
+	FQuat RattleRestRot[5] = { FQuat::Identity, FQuat::Identity, FQuat::Identity, FQuat::Identity, FQuat::Identity };
+	double RattleCentreX[5] = { 0, 0, 0, 0, 0 };     // rink metres
+	double RattleHalfLen[5] = { 0, 0, 0, 0, 0 };
+	double RinkHalfWidthM = 0.0;
+	int64 GoalFrame = -1;
+	int32 GoalEnd = 0;          // +1 the +x net was scored on, -1 the -x net
+	int64 RattleFrame = -1;
+	int32 RattleIndex = -1;
+	float RattleStrength = 0.f;
+	float RattleDegNow = 0.f;
+	int32 GoalReactions = 0;
+	int32 RattleReactions = 0;
+
 	UMaterialInterface* LoadMat(const TCHAR* Path) const;
 	UMaterialInterface* LoadLook(const TCHAR* LookName, const TCHAR* FallbackPath, bool* bOutFromLook = nullptr) const;
 	// Lane A25: B's /JamAssets/Look/<LookName> first; else lane A23's /Game/LookLab/<LabName> proposal with one log line; else the basic shape material tinted.

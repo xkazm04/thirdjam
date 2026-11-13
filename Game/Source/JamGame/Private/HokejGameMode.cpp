@@ -212,6 +212,7 @@ void AHokejGameMode::StartPlay()
 
 bool AHokejGameMode::LoadCut(const FString& NameOrPath)
 {
+	if (RefuseSimChange(TEXT("a cut load"))) return false;   // lane A129 (track Q1): never one machine's sim alone online
 	const FString Path = UJamCartridge::ResolveCartridgePath(NameOrPath);
 	TArray<FString> Errors;
 	UJamCartridge* C = UJamCartridge::LoadFromFile(Path, Errors, this);
@@ -234,6 +235,7 @@ bool AHokejGameMode::LoadCut(const FString& NameOrPath)
 bool AHokejGameMode::ApplyCartridgeLive(UJamCartridge* NewCartridge)
 {
 	if (!NewCartridge || !Sim || !bBuilt) return false;
+	if (RefuseSimChange(TEXT("a live cut"))) return false;   // lane A129 (track Q1): the Designer's change, a Director's Call, jam.livecut
 	const TArray<FString> Held = Sim->ApplyLiveConfig(NewCartridge->Game);
 	if (Effects) Effects->ApplyLiveConfig(NewCartridge->RawJson);   // lane A14: effects / pickups lists, the `director` trigger
 	const FJamGameConfig& G = Sim->GetConfig();
@@ -556,7 +558,10 @@ void AHokejGameMode::TickLightHold()
 
 AJamSkater* AHokejGameMode::GetHumanSkater() const
 {
-	return (Sim && Skaters.IsValidIndex(Sim->GetHumanIndex())) ? Skaters[Sim->GetHumanIndex()].Get() : nullptr;
+	// Lane A129 (track Q1): this machine's seat (GetLocalSeat: the sim's human offline, the guest's skater on the guest's machine): the skate loop, the
+	// Director's Call controller and the camera follow it. Offline it is the sim's human, as before.
+	const int32 Seat = GetLocalSeat();
+	return Skaters.IsValidIndex(Seat) ? Skaters[Seat].Get() : nullptr;
 }
 
 int32 AHokejGameMode::GetLocalSeat() const
@@ -665,6 +670,7 @@ void AHokejGameMode::HandleRestartPressed()
 void AHokejGameMode::RestartMatch()
 {
 	if (!Sim) return;
+	if (RefuseSimChange(TEXT("a restart"))) return;   // lane A129: online the rematch is the lockstep one (ALobbyGameMode)
 	if (Rules) Rules->ResetMatch();          // lane A15: before the sim's Restart so its faceoff counts in the new match
 	if (ZoneSystem) ZoneSystem->ResetMatch();
 	Sim->Restart();

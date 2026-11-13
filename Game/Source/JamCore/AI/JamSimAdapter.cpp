@@ -212,6 +212,9 @@ namespace JamAI
 		const TArray<FJamSkaterState>& Sk = S.GetSkaters();
 		W.NumSkaters = FMath::Min(Sk.Num(), kMaxSkaters);
 		W.PlayerIndex = S.GetHumanIndex();
+		// Lane A129 (track Q1): a seated guest (UJamSim::SeatGuest, online only) is the brain's second human.
+		W.GuestIndex = -1;
+		for (const FJamSkaterState& K : S.GetSkaters()) if (K.bHuman && K.Index != W.PlayerIndex && K.Index < kMaxSkaters) { W.GuestIndex = K.Index; break; }
 		W.HalfLength = G.Rink.LengthM * 0.5;
 		W.HalfWidth = G.Rink.WidthM * 0.5;
 		W.CornerRadius = G.Rink.CornerRadiusM;

@@ -564,12 +564,15 @@ bool AJamSkater::GetPuckSocketWorld(FVector& Out) const
 	return false;
 }
 
+TFunction<bool(const AJamSkater&, FVector&, FRotator&)> AJamSkater::BoxSeat;   // lane A127 (track F3): set by ARinkActor
+
 void AJamSkater::ApplyRender(const FJamSkaterState& S, float Alpha)
 {
-	const FVector Loc = Lerp2D(S.PrevPos, S.Pos, Alpha, 0.0);
+	FVector Loc = Lerp2D(S.PrevPos, S.Pos, Alpha, 0.0);
 	const double DYaw = FMath::UnwindRadians(S.Yaw - S.PrevYaw);
 	const double Yaw = S.PrevYaw + DYaw * Alpha + FMath::DegreesToRadians(S.SpinVisualYawDeg());   // lane A51 (R-0034): the spin's turn of the figure
-	const FRotator Rot(0.0, FMath::RadiansToDegrees(Yaw), 0.0);
+	FRotator Rot(0.0, FMath::RadiansToDegrees(Yaw), 0.0);
+	if (S.InBox() && BoxSeat) BoxSeat(*this, Loc, Rot);   // lane A127 (track F3): a boxed skater's figure stands in its penalty box (presentation only; the sim keeps BoxPos)
 	// Lane A73: held = the hit frame's pose; catching up = a blend from it to the live pose over HoldTotal frames (w runs 0 -> 1, Alpha inside each frame).
 	if (HoldLeft > 0)
 	{

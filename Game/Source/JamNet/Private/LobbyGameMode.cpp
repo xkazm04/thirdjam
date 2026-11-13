@@ -24,6 +24,7 @@
 #include "HAL/IConsoleManager.h"
 #include "HAL/PlatformMisc.h"
 #include "UnrealClient.h"
+#include "Engine/Engine.h"
 
 static TAutoConsoleVariable<int32> CVarJamNetAutoShot(TEXT("jam.net.AutoShot"), 0,
 	TEXT("1: a lockstep match saves a screenshot at frame 600 (the two-process proof)."));
@@ -35,9 +36,40 @@ static TAutoConsoleVariable<int32> CVarJamNetQuitAtFrame(TEXT("jam.net.QuitAtFra
 static TAutoConsoleVariable<int32> CVarJamNetScriptVerbs(TEXT("jam.net.ScriptVerbs"), 0,
 	TEXT("1: the scripted lockstep human uses every verb (sprint, saucer, brake, spin, check, F); 0: A38's script (poke, pass, shot, check)."));
 
+// Lane A129 (track Q1): the scripted seat as the playtester (A34's classes): it carries, charges and shoots on goal, so a two-process match reaches its end.
+static TAutoConsoleVariable<FString> CVarJamNetScriptPlayer(TEXT("jam.net.ScriptPlayer"), TEXT(""),
+	TEXT("novice|regular|good: with jam.ScriptHuman 1 the lockstep seat is FJamPlaytester of that class (F as RunPlaytestMatch presses it); empty: A38/A120's script."));
+static TAutoConsoleVariable<int32> CVarJamNetProofRematch(TEXT("jam.net.ProofRematch"), 0,
+	TEXT("1: the unattended proof asks for the rematch on the card (the scripted seat, 120 frames after the end) and quits 600 frames into the second match."));
+static TAutoConsoleVariable<int32> CVarJamNetTestLiveCutAt(TEXT("jam.net.TestLiveCutAt"), 0,
+	TEXT("> 0: at this lockstep frame this machine tries a live cut of its own cartridge (ApplyCartridgeLive): the refusal proof."));
+
 namespace
 {
 	constexpr int32 MaxStepsPerTick = 4;
+	constexpr int32 RematchAskFrames = 120;   // the scripted seat asks for the rematch two seconds into the card
+	constexpr int32 RematchProofFrames = 600; // the rematch proof ends ten seconds into the second match
+
+	// JamAI::ParsePlaytester is not exported from JamCore: the same three names here.
+	bool ParseTesterClass(const FString& Name, JamAI::EPlaytester& Out)
+	{
+		if (Name == TEXT("novice")) { Out = JamAI::EPlaytester::Novice; return true; }
+		if (Name == TEXT("regular")) { Out = JamAI::EPlaytester::Regular; return true; }
+		if (Name == TEXT("good")) { Out = JamAI::EPlaytester::Good; return true; }
+		return false;
+	}
+
+	FJamInput FromAIInput(const JamAI::FJamAIInput& A)
+	{
+		// FJamSimAdapter::Step's copy, field by field (the soak's ToInput).
+		FJamInput I;
+		I.Move = FVector2D(A.Move.X, A.Move.Y);
+		I.bShoot = A.bShoot; I.bShootHeld = A.bShootHeld; I.bCheck = A.bCheck; I.bBrake = A.bBrake; I.bPass = A.bPass;
+		I.Stick = FVector2D(A.Stick.X, A.Stick.Y);
+		I.bPoke = A.bPoke; I.bLift = A.bLift; I.bDeke = A.bDeke; I.bSpin = A.bSpin;
+		I.bPassHeld = A.bPassHeld; I.bSprint = A.bSprint; I.bAbility = A.bAbility;
+		return I;
+	}
 }
 
 ALobbyGameMode::ALobbyGameMode()
@@ -67,6 +99,18 @@ void ALobbyGameMode::StartPlay()
 	LocalIndex = LocalSeatOf(Lobby->IsHost(), Human, Guest);
 	RemoteIndex = LocalSeatOf(!Lobby->IsHost(), Human, Guest);
 	Script.bAllVerbs = CVarJamNetScriptVerbs.GetValueOnGameThread() != 0;
+	{
+		JamAI::EPlaytester Kind;
+		const FString Pl = CVarJamNetScriptPlayer.GetValueOnGameThread();
+		bTesterSeat = !Pl.IsEmpty() && ParseTesterClass(Pl, Kind);
+		if (bTesterSeat)
+		{
+			Tester.Reset(Kind, TheSim->GetSeed() * 31 + static_cast<uint64>(LocalIndex));
+			Tester.ChargeFramesMax = TheSim->GetConfig().Shot.ChargeFramesMax;
+			Tester.bSprint = true;
+			UE_LOG(LogJamNet, Log, TEXT("JAMNET scripted seat %d plays as the %s playtester"), LocalIndex, *Pl);
+		}
+	}
 	// Lane A110 (track Q1): the guest's seat plays as a human on both machines, from frame 0 (the mode's ability, a pickup's, the human's check rules, no bot
 	// press at the draw). Both peers seat the same index (WELCOME's), so the sims stay equal; the checkpoint hashes the seat.
 	if (!TheSim->SeatGuest(Guest)) UE_LOG(LogJamNet, Warning, TEXT("JAMNET could not seat the guest at skater %d (frame %lld)"), Guest, TheSim->GetFrame());
@@ -135,6 +179,8 @@ void ALobbyGameMode::PossessLocal(APlayerController* PC)
 		In->RegisterComponent();
 		Mine->AddInstanceComponent(In);
 	}
+	// Lane A129: R on the win / lose card asks for the lockstep rematch (the base game mode's restart is unbound in StartPlay).
+	if (UJamPlayerInput* Pi = Mine->FindComponentByClass<UJamPlayerInput>()) Pi->OnRestart.AddUniqueDynamic(this, &ALobbyGameMode::OnRematchPressed);
 	if (PC->GetPawn() != Mine) PC->Possess(Mine);
 	PC->SetViewTarget(Mine);
 }
@@ -143,7 +189,29 @@ void ALobbyGameMode::PossessLocal(APlayerController* PC)
 FJamInput ALobbyGameMode::ReadLocalInput()
 {
 	static IConsoleVariable* ScriptHuman = IConsoleManager::Get().FindConsoleVariable(TEXT("jam.ScriptHuman"));
-	if (bScriptedHuman || (ScriptHuman && ScriptHuman->GetInt() != 0)) return Script.Think(*GetSim(), LocalIndex);
+	const bool bScripted = bScriptedHuman || (ScriptHuman && ScriptHuman->GetInt() != 0);
+	if (GetSim()->GetPhase() == EJamSimPhase::Over)
+	{
+		// Lane A129: on the card the seat sends nothing but its rematch ask (a level, held until both machines restart).
+		if (bScripted && !bLocalRematch && CVarJamNetProofRematch.GetValueOnGameThread() != 0 && OverAtDriverFrame >= 0 && Driver->GetFrame() >= OverAtDriverFrame + RematchAskFrames)
+		{
+			bLocalRematch = true;
+			UE_LOG(LogJamNet, Log, TEXT("JAMNET rematch asked by seat %d (scripted) at frame %lld"), LocalIndex, Driver->GetFrame());
+		}
+		FJamInput Ask;
+		if (bLocalRematch) JamNet::SetRematchReady(Ask);
+		return Ask;
+	}
+	if (bScripted && bTesterSeat)
+	{
+		JamAI::FJamAIWorld W;
+		BuildBrainWorld(W);
+		W.PlayerIndex = LocalIndex;   // the playtester plays this machine's seat
+		FJamInput Pt = FromAIInput(Tester.Think(W));
+		Pt.bAbility = JamNetPlaytesterAbility(*GetSim(), LocalIndex, Pt);
+		return Pt;
+	}
+	if (bScripted) return Script.Think(*GetSim(), LocalIndex);
 	FJamInput In;
 	AJamSkater* Mine = SkaterActor(LocalIndex);
 	UJamPlayerInput* Pi = Mine ? Mine->FindComponentByClass<UJamPlayerInput>() : nullptr;
@@ -201,11 +269,9 @@ FVector2D ALobbyGameMode::ComposeLocalStick(const FVector2D& PadAim, bool bCurso
 	return Aim.SizeSquared() >= 0.0025 ? Fwd * Aim.Y + Right * Aim.X : FVector2D::ZeroVector;   // AHokejGameMode's dead zone for the delta
 }
 
-// Mirror of AHokejGameMode::GatherInputs for the bot slots (the team signals are not read: see the header).
-void ALobbyGameMode::GatherBotInputs()
+void ALobbyGameMode::BuildBrainWorld(JamAI::FJamAIWorld& W) const
 {
-	UJamSim* TheSim = GetSim();
-	JamAI::FJamAIWorld W;
+	const UJamSim* TheSim = GetSim();
 	JamAI::FJamSimAdapter::BuildWorld(*TheSim, W);
 	if (UJamEffectSystem* Fx = GetEffects())
 	{
@@ -234,6 +300,13 @@ void ALobbyGameMode::GatherBotInputs()
 			W.Skaters[i].bNoShoot = Z->BlocksShot(FVector2D(W.Skaters[i].Pos.X, W.Skaters[i].Pos.Y), ZoneId);
 		}
 	}
+}
+
+// Mirror of AHokejGameMode::GatherInputs for the bot slots (the team signals are not read: see the header).
+void ALobbyGameMode::GatherBotInputs()
+{
+	JamAI::FJamAIWorld W;
+	BuildBrainWorld(W);   // lane A129: W.GuestIndex = the seated guest (FJamSimAdapter): the brain plans with both seats as humans
 	JamAI::FJamAIInput Out[JamAI::kMaxSkaters];
 	LockBrain->Think(W, Out);
 	for (int32 i = 0; i < LockInputs.Num() && i < JamAI::kMaxSkaters; ++i)
@@ -305,6 +378,14 @@ bool ALobbyGameMode::StepLockstep()
 			Lobby->IsHost() ? TEXT("guest's HELLO arrived") : TEXT("join was typed"));
 	}
 	LastFrameAt = FPlatformTime::Seconds();
+	if (RematchAgreed(TheSim->GetPhase(), L, R))
+	{
+		// Lane A129: both seats asked on the card, on the same lockstep frame on both machines: this frame restarts the match instead of stepping it.
+		RestartLockstepMatch();
+		Driver->RecordHash(Driver->GetFrame(), LockstepHash());
+		PushLockstepPresentation();
+		return true;
+	}
 	GatherBotInputs();
 	LockInputs[LocalIndex] = L;
 	LockInputs[RemoteIndex] = R;
@@ -317,7 +398,7 @@ bool ALobbyGameMode::StepLockstep()
 	TheSim->Step(LockInputs);
 	if (UJamZoneSystem* Z = GetZones()) Z->Update(TheSim->GetFrame(), TheSim->GetSkaters(), TheSim->GetPuck());
 	if (UJamEffectSystem* Fx = GetEffects()) Fx->Step();
-	Driver->RecordHash(TheSim->GetFrame(), LockstepHash());
+	Driver->RecordHash(Driver->GetFrame(), LockstepHash());   // lane A129: the lockstep frame (= the sim's until a rematch restarts the sim's at 0)
 	CountProofEvents();
 	DeliverSimEvents();
 	if (LockRink && TheSim->GetRinkRevision() != LockRinkRevision)
@@ -337,7 +418,20 @@ bool ALobbyGameMode::StepLockstep()
 			FScreenshotRequest::RequestScreenshot(FString::Printf(TEXT("JamNet_%s_f600"), Lobby->IsHost() ? TEXT("host") : TEXT("guest")), true, false);
 		}
 	}
+	const int32 LiveCutAt = CVarJamNetTestLiveCutAt.GetValueOnGameThread();
+	if (LiveCutAt > 0 && Driver->GetFrame() == LiveCutAt)
+	{
+		const bool bApplied = ApplyCartridgeLive(GetCartridge());
+		UE_LOG(LogJamNet, Log, TEXT("JAMNET test live cut at frame %lld: %s, hash=%016llx"), Driver->GetFrame(), bApplied ? TEXT("APPLIED") : TEXT("refused"), static_cast<unsigned long long>(LockstepHash()));
+	}
 	const int32 QuitAt = CVarJamNetQuitAtFrame.GetValueOnGameThread();
+	if (QuitAt > 0 && MatchNumber > 1 && TheSim->GetFrame() >= RematchProofFrames && !bQuitRequested)
+	{
+		// Lane A129: the rematch proof: ten seconds into the second match, the final line and the grace.
+		bQuitRequested = true;
+		QuitAtTick = Driver->GetTicks() + 120;
+		LogProofLine(TEXT("proof done"));
+	}
 	if (QuitAt > 0 && TheSim->GetFrame() >= QuitAt && !bQuitRequested)
 	{
 		// Keep pumping (sending our window) for two seconds before quitting: the peer may be up to Delay frames behind across the link and
@@ -539,13 +633,20 @@ void ALobbyGameMode::Tick(float DeltaSeconds)
 		UE_LOG(LogJamNet, Log, TEXT("JAMNET quitting: peer gone after the match ended (jam.net.QuitAtFrame)"));
 		FPlatformMisc::RequestExit(false);
 	}
-	else if (TheSim->GetPhase() == EJamSimPhase::Over && !bEnded)
+	else if (TheSim->GetPhase() == EJamSimPhase::Over && OverAtDriverFrame < 0 && !bEnded)
 	{
-		// The normal win/lose card is A5's; the lobby only records the result and keeps the link open for a rematch later.
+		// The normal win/lose card is A5's (the HUD reads PushLockstepPresentation's phase: this seat's team's result); the lobby records the result and keeps
+		// the link open. Lane A129: the match stays live under the card (bEnded stays false): the rematch is asked there, and a peer that leaves or a desync
+		// still replaces the card.
 		if (Lobby) Lobby->NotifyMatchEnded(FString::Printf(TEXT("%d:%d, agreed on %d checkpoints"), TheSim->GetScore(0), TheSim->GetScore(1), Driver->GetAgreedCheckpoints()));
-		UE_LOG(LogJamNet, Log, TEXT("JAMNET match over frame=%lld winner=%d %s"), TheSim->GetFrame(), TheSim->GetWinner(), *Driver->DescribeStats());
-		bEnded = true;
-		if (CVarJamNetQuitAtFrame.GetValueOnGameThread() > 0 && !bQuitRequested)
+		UE_LOG(LogJamNet, Log, TEXT("JAMNET match over frame=%lld winner=%d match=%d %s"), TheSim->GetFrame(), TheSim->GetWinner(), MatchNumber, *Driver->DescribeStats());
+		OverAtDriverFrame = Driver->GetFrame();
+		const int32 MyTeam = TheSim->GetSkaters().IsValidIndex(LocalIndex) ? TheSim->GetSkaters()[LocalIndex].Team : 0;
+		UE_LOG(LogJamNet, Log, TEXT("JAMNET card: %s for seat %d (team %d), %d:%d for this seat; R asks for the rematch"), TheSim->GetWinner() == MyTeam ? TEXT("WIN") : TEXT("LOSE"),
+			LocalIndex, MyTeam, TheSim->GetScore(MyTeam), TheSim->GetScore(1 - MyTeam));
+		const bool bProofRematch = CVarJamNetProofRematch.GetValueOnGameThread() != 0 && MatchNumber == 1;
+		if (bProofRematch) LogProofLine(TEXT("match over"));
+		if (CVarJamNetQuitAtFrame.GetValueOnGameThread() > 0 && !bQuitRequested && !bProofRematch)
 		{
 			// Lane A120: the unattended proof plays a match to its end: the final line, then the same two-second grace as at QuitAtFrame.
 			bQuitRequested = true;
@@ -554,3 +655,69 @@ void ALobbyGameMode::Tick(float DeltaSeconds)
 		}
 	}
 }
+
+// ---- lane A129 (track Q1): the lockstep rematch and the refused one-machine changes ----
+
+void ALobbyGameMode::RestartLockstepMatch()
+{
+	UJamSim* TheSim = GetSim();
+	// AHokejGameMode::RestartMatch's order on the lockstep match's objects: rules and zones first (the sim's restart fires the period start), then the sim, the
+	// effects, the brain. The guest stays seated (Restart keeps bHuman and grants the mode's ability to every human).
+	if (UJamRuleSystem* RuleSys = GetRules()) RuleSys->ResetMatch();
+	if (UJamZoneSystem* Z = GetZones()) Z->ResetMatch();
+	TheSim->Restart();
+	if (UJamEffectSystem* Fx = GetEffects()) Fx->Restart();
+	AJamPickupActor::DestroyAll(LockPickupActors);
+	LockBrain->ResetBrain();
+	const bool bVerbs = Script.bAllVerbs;
+	Script = FJamNetScriptedHuman();
+	Script.bAllVerbs = bVerbs;
+	JamAI::EPlaytester Kind;
+	if (bTesterSeat && ParseTesterClass(CVarJamNetScriptPlayer.GetValueOnGameThread(), Kind))
+	{
+		const int32 Charge = Tester.ChargeFramesMax;
+		Tester.Reset(Kind, TheSim->GetSeed() * 31 + static_cast<uint64>(LocalIndex) + static_cast<uint64>(MatchNumber));
+		Tester.ChargeFramesMax = Charge;
+		Tester.bSprint = true;
+	}
+	++MatchNumber;
+	bLocalRematch = false;
+	OverAtDriverFrame = -1;
+	bEnded = false;
+	if (Lobby) Lobby->NotifyMatchRestarted();
+	DeliverSimEvents();
+	UE_LOG(LogJamNet, Log, TEXT("JAMNET rematch started match=%d at lockstep frame %lld sim_frame=%lld hash=%016llx"), MatchNumber, Driver->GetFrame(), TheSim->GetFrame(),
+		static_cast<unsigned long long>(LockstepHash()));
+	ShowLine(TEXT("REMATCH: the puck drops"));
+}
+
+void ALobbyGameMode::OnRematchPressed()
+{
+	if (!bLockstep || bEnded || !GetSim() || GetSim()->GetPhase() != EJamSimPhase::Over || bLocalRematch) return;
+	bLocalRematch = true;
+	UE_LOG(LogJamNet, Log, TEXT("JAMNET rematch asked by seat %d (R) at frame %lld"), LocalIndex, Driver ? Driver->GetFrame() : -1);
+	ShowLine(FString::Printf(TEXT("rematch asked: waiting for %s"), Lobby ? *Lobby->GetRemoteName() : TEXT("your friend")));
+}
+
+bool ALobbyGameMode::LiveChangeRefused(bool bInLockstep, const TCHAR* What, FString& OutLine)
+{
+	if (!bInLockstep) return false;
+	OutLine = FString::Printf(TEXT("%s is off in an online match: both games must stay the same (change it before you host)"), What);
+	return true;
+}
+
+bool ALobbyGameMode::RefuseSimChange(const TCHAR* What)
+{
+	FString Line;
+	if (!LiveChangeRefused(bLockstep, What, Line)) return false;
+	UE_LOG(LogJamNet, Warning, TEXT("JAMNET refused %s at frame %lld: one machine's sim never changes alone"), What, GetSim() ? GetSim()->GetFrame() : -1);
+	ShowLine(Line);
+	return true;
+}
+
+void ALobbyGameMode::ShowLine(const FString& Line)
+{
+	UE_LOG(LogJamNet, Log, TEXT("JAMNET screen: %s"), *Line);
+	if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 6.f, FColor::Orange, Line);
+}
+

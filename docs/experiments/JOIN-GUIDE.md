@@ -1,4 +1,4 @@
-# Playing a match between two machines (lane A120, track Q1)
+# Playing a match between two machines (lanes A120 and A129, track Q1)
 
 One page for the operator. Both machines on the **same network** (same router, Wi-Fi or cable). Both run **the same build**: a different build is refused
 at once with a message (below). Protocol of this build: **8**.
@@ -22,7 +22,8 @@ at once with a message (below). Protocol of this build: **8**.
 1. Main menu > **BRAWL WITH A FRIEND**. Type the host's code in the box (*friend's code: ABCD-EFGH*), press **JOIN**.
 2. *Calling the host...*, then *Joined Ada. Waiting for the host to start...*. The rink opens when the host presses START.
 3. You play team 1's forward (orange), a full human seat: your own sprint, saucer, brake, spin, check and **F** (the mode's ability and pickups), your own
-   stamina bar and ability slot. Barks and the booth speak to **you** on your machine (lane A120).
+   stamina bar and ability slot. Barks and the booth speak to **you** on your machine (lane A120); the HUD, the skate sound, the team signals (keys 1 to 4:
+   a bot of *your* team answers) and the camera are yours too, and the bots plan with you as a human, not as a bot teammate (lane A129).
 
 ## 4. What the cards and messages mean
 | You see | Means | Do |
@@ -33,12 +34,17 @@ at once with a message (below). Protocol of this build: **8**.
 | **THE HOST LEFT** / **YOUR FRIEND LEFT**: *Ada left the match* | the other side pressed Esc, quit or closed the game | back to the menu, host again |
 | **CONNECTION LOST**: *no word from Ada for 3 seconds* | the other machine went silent (crash, Wi-Fi gone, sleep) | back to the menu, host again |
 | **DESYNC**: *the two games disagreed at frame N; this cut is over* | the two simulations stopped being identical (a bug: never seen in 1,000 soak matches) | note the frame and the cut, save both logs (`Saved/Logs`), tell Q1 |
-| the normal win / lose card | the match ended | the lobby keeps the link; leave with Esc |
+| **YOU WIN** / **REMATCH?** (the normal card), each machine its own team's | the match ended; the link stays open | press **R** to ask for a rematch; it starts on both when both pressed R (*rematch asked: waiting for Ada*, then *REMATCH: the puck drops*); Esc leaves |
+| *a live cut is off in an online match: both games must stay the same (change it before you host)* (orange) | the Designer panel, a Director's Call or `jam.livecut` tried to change this machine's game alone | nothing: the match goes on unchanged; change the cut before hosting (also *a cut load* / *a restart*) |
 
 ## 5. Tested how (two processes on one machine, headless, the real lobby flow)
 `tools/net/twoproc.ps1` starts a host and a guest (`UnrealEditor-Cmd -game -nullrhi -Multiprocess`, `jam.host` / `jam.join`, sockets on 127.0.0.1 ports
-4720 / 4721), a scripted human on each seat using every verb, to the end of the match:
+4720 / 4721), a scripted human on each seat using every verb, to the end of the match. Lane A129: `-Player good` seats the good playtester on both
+machines (it carries, charges and shoots), `-Rematch` asks for the rematch on the card and plays 10 s of the second match, `-LiveCutAt N` has the guest try a
+live cut at frame N (it must be refused); the guest then takes any free loopback port:
 ```
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\net\twoproc.ps1 -Cut hockey.regular -Name regular -HostPort 4721 -Player good -Verbs -ToEnd -Rematch -Frames 36000 -TimeoutSec 900
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\net\twoproc.ps1 -Cut modes/hockey.mode.shotgun -Name cut -HostPort 4720 -Player good -Verbs -ToEnd -Rematch -Frames 36000 -TimeoutSec 900 -LiveCutAt 1200
 powershell -NoProfile -ExecutionPolicy Bypass -File tools\net\twoproc.ps1 -Cut modes/hockey.mode.shotgun -Name shotgun -HostPort 4720 -GuestPort 4721 -Verbs -ToEnd -Frames 21600
 powershell -NoProfile -ExecutionPolicy Bypass -File tools\net\twoproc.ps1 -Mode refuse     -Cut hockey.regular -Name refuse -HostPort 4720 -GuestPort 4721
 powershell -NoProfile -ExecutionPolicy Bypass -File tools\net\twoproc.ps1 -Mode hostleaves -Cut hockey.regular -Name leaves -HostPort 4720 -GuestPort 4721
@@ -63,3 +69,28 @@ loopback only), Wi-Fi loss. The first real two-machine match is the operator's.
 **Not proven:** a match played *to its end* in two processes. In 48 minutes of scripted two-process play (eight 6-minute runs) the only goal was one in regular 2:
 the bots shoot from the corners and the scripted human never shoots. The lockstep held for all of it (equal hashes at every 600-frame line and at the end); the
 end-of-match path (win card, both quit) is the operator's real match, or the next Q1 lane with a scripted human that scores.
+
+## 7. Results (lane A129, Fri 13 Nov, build 3 of the a104 worktree, protocol 8: the wire did not change)
+The scripted seat on both machines is now the good playtester (`-Player good`): it carries, charges and shoots, so matches end. Every run below: two processes,
+the real lobby, the match played to its end, the card on each machine for its own seat, the rematch asked on the card by both seats and started on both on the
+same lockstep frame with the same hash, then 600 frames of the second match.
+
+| Run | Ended at (frame, score host:guest team) | Cards | Rematch (lockstep frame / hash) | Final (f600 of match 2) |
+|---|---|---|---|---|
+| shotgun 1 (+ live cut by the guest at f1200: refused) | f6049, 1:3, over-hash `b90a97234c08cf88` equal | host LOSE, guest WIN | 6173 / `be00c733a13ab6f6` on both | `df71fb67cd77f216` equal |
+| shotgun 2 | f5508, 3:1, `c1b11375ca848b84` equal | host WIN, guest LOSE | 5632 / `fc662ceb61319c9c` | `31e3b6aa029a0381` equal |
+| shotgun 3 | f14977, 2:3, `9838c036bacb9824` equal | host LOSE, guest WIN | 15101 / `57ae12dcee4d2328` | `31e3b6aa029a0381` equal |
+| regular 1 | f24400, 0:3, `3cc97d1a8e399918` equal | host LOSE, guest WIN | 24524 / `8233401d440dbf34` | `642792e1bc32646e` equal |
+| regular 2 | f9101, 2:3, `4205eb3a9944046b` equal | host LOSE, guest WIN | 9225 / `99477fd28ce3e6e9` | `e6eda122c46b8b83` equal |
+| regular 3 | f17845, 2:3, `129588d6371357a9` equal | host LOSE, guest WIN | 17969 / `fa257ea3f62b9583` | `642792e1bc32646e` equal |
+| shotgun, 40 ms + 5 % loss, 1 | f4577, 3:2 | host WIN, guest LOSE | 4701 / `c2a2bb4ae9861eef` | `a3941caba40de404` equal; longest in-match stall 7 ticks (0.12 s) |
+| shotgun, 40 ms + 5 % loss, 2 | f6806, 3:0 | host WIN, guest LOSE | 6930 / `989955c066d11c4e` | `e850a9bfe2bdfb7a` equal; 7 ticks |
+| shotgun, 40 ms + 5 % loss, 3 | f13172, 3:2 | host WIN, guest LOSE | 13296 / `78404d1c12002df3` | `a9335690517ef2d5` equal; 8 ticks (0.13 s) |
+
+On the impaired link the *match over* log line is printed by the tick that sees the end, which can be up to 3 frames apart on the two machines (catch-up);
+the checkpoints (every 60 frames) all agreed, 0 desync. F presses applied were equal on both machines in all three (host / guest 4 / 16, 9 / 18, 16 / 29).
+
+The live cut on the guest's machine: *a live cut is off in an online match: both games must stay the same (change it before you host)* on its screen, the
+match went on, every checkpoint after it agreed. F on a bad link: the in-process soak (shotgun, 10 % loss + 0 to 6 ticks jitter + 10 % duplicates, 50 matches;
+0 to 6 ticks jitter, 50 matches) lost 0 of 666 and 0 of 626 F presses, 0 of every other press, 0 desync. 600 clean soaked matches with the guest as the brain's
+second human: 0 desync, 0 lost.

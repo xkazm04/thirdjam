@@ -81,3 +81,25 @@ A merges `dev-b` at every half-hour check when it is ahead; B merges main before
 | M1 modes | starts with C0: cage, outnumbered, shotgun differ again; the marathon's horn; take-3 against take-6 | the twelve modes against the vision |
 | F0 design eye | REVIEW-2 when F1, F2, Q2 and C0 have landed (same seeds) | |
 
+**Board at 22:40 (R-0053). Main 41df3e6, pushed and verified. H26 is the newest package; none is cut before I1 and C0 land.**
+Landed since 20:03: A104, A101, A106, A103, A107, A109, A105, A110, A102, A111, A114, A113, A119, A118, A116, A121, A120, A122, A127, A123, A108, A129, A124.
+Parked on the local branch `wip-batch6` (worktree `i1`): A115 (the brain's second evolution, hooks wired), A125 (the shove under the shields, the figure
+calls), with A128 (the standing start, the spin's price) applied on top. Exported and waiting for I1: `tj/a105.patch`, `a125.patch`, `a128.patch`; the curve
+lane's first evolution: `tj/c0.patch`.
+| Track | Worktree | Running now | Then |
+|---|---|---|---|
+| **I1 integration** | `i1` | A138: one shared neutral baseline, what broke law 3, law 3 holds with everything on, the take grace's same-frame hole | lands as one; then C0 on its tree |
+| C0 curve | (fresh, from I1's landing + `c0.patch`) | waits for I1 (brief A133) | the season's ramp; a re-measure after every rule landing |
+| F1 contact | (fresh, after I1) | waits for I1 (brief A132: the press that lands, the hit's size, stale brake flags) | the board check as a play |
+| F2 carrier | `a102` | waits for I1 | a second move after the go; the window by level; the spin from 5 m |
+| Q2 brain | (fresh, after I1) | waits for I1 (brief A134: defend the kept puck, the puck stays with the human's side, shot selection) | |
+| U1 screen | `u1b` | A135: the camera never loses the player | bark text on a lane |
+| F3 arena | `f3b` | A136: the whole boards answer a hit; the goal loud on clay | the box is used |
+| Q3 performance | `q3b` | A137: the rig preload on main, the first 60 frames, the budget at full resolution | |
+| M1 modes | `m1b` | A139: the passing modes pass; the grace keys per mode; the marathon's pace | all twelve on the re-set ladder |
+| S1 soak | `a107` + `clean-main` | A126: a fresh baseline on 41df3e6, the drift gate in the gate, new playtest fields | a baseline again when the curve lands |
+| S2 acceptance | `a108` | A131: the acceptance run tells the game's faults from the machine's (cursor owner) | the queued rows and stills on a new package |
+| Q1 lockstep | `a104` | next: live cuts as lockstep input, a clean rematch | two physical machines with the operator |
+| S3 fuzz | `a109` | next: Designer-reply parity, a timer oracle, rule chains | |
+| F0 design eye | | REVIEW-2 on the first package after the curve | |
+

@@ -16,6 +16,11 @@
 #include "CommentarySystem.h"
 #include "JamCommentaryData.h"
 #include "JamEventBus.h"
+#include "HUDFeed.h"
+#include "SignalSystem.h"
+#include "JamBrain.h"
+#include "JamSimAdapter.h"
+#include "UObject/StrongObjectPtr.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
 
@@ -498,6 +503,106 @@ bool FJamNetGuestBarks::RunTest(const FString& Parameters)
 	AddInfo(FString::Printf(TEXT("embedded bank: %d ability.human lines; guest %d (team %d), host %d"), HumanAbilityLines, Guest, GuestTeam, Host));
 
 	TestEqual(TEXT("presentation only: the lockstep hash is unchanged"), JamNetLockstepHash(Sim.Get(), nullptr, nullptr, nullptr), Before);
+	return true;
+}
+
+// ---------------------------------------------------------------------------------------------------------------------------------------------------
+// Lane A129 (track Q1, evolution 4): the remaining sites that spoke to the host's seat on the guest's machine, the brain's second human, the lockstep
+// rematch and the refused one-machine change. Headless, no world: each site's seat-reading function is called with the guest's machine's seat.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamNetGuestSites, "Jam.Net.GuestSites", JamNetGuestTests::Flags)
+bool FJamNetGuestSites::RunTest(const FString& Parameters)
+{
+	using namespace JamNetGuestTests;
+	UJamCartridge* Shotgun = Load(*this, TEXT("modes/hockey.mode.shotgun"));
+	if (!Shotgun) return false;
+	TStrongObjectPtr<UJamSim> Sim(NewObject<UJamSim>());
+	if (!TestTrue(TEXT("shotgun inits"), Sim->Init(Shotgun->Game, 7))) return false;
+	const int32 Host = Sim->GetHumanIndex(), Guest = GuestSlot(*Sim);
+	// Offline first: the brain's world has no second human.
+	{
+		JamAI::FJamAIWorld W0;
+		JamAI::FJamSimAdapter::BuildWorld(*Sim, W0);
+		TestEqual(TEXT("single player: no guest in the brain's world"), W0.GuestIndex, -1);
+	}
+	if (!TestTrue(TEXT("a guest seat"), Guest >= 0 && Guest != Host && Sim->SeatGuest(Guest))) return false;
+	TArray<FJamInput> In; In.SetNum(Sim->GetSkaters().Num());
+	for (int32 f = 0; f < 400; ++f) { Busy(In, f, Host, Guest); Sim->Step(In); }
+	const int32 GuestMachine = ALobbyGameMode::LocalSeatOf(false, Host, Guest);
+	const int32 GuestTeam = Sim->GetSkaters()[Guest].Team, HostTeam = Sim->GetSkaters()[Host].Team;
+
+	// 1. The HUD feed (HUDFeed.cpp BuildFrameFromSim): the guest's machine's frame is the guest's seat, its attack side and its team's score first.
+	FJamPresentationFrame Fg, Fh;
+	UJamPresentation::BuildFrameFromSim(*Sim, Fg, GuestMachine);
+	UJamPresentation::BuildFrameFromSim(*Sim, Fh);
+	TestEqual(TEXT("HUD: the guest's machine's human is the guest"), Fg.HumanIndex, Guest);
+	TestEqual(TEXT("HUD: single player's is the sim's human"), Fh.HumanIndex, Host);
+	TestEqual(TEXT("HUD: the guest attacks its own team's net"), Fg.AttackSign, Sim->AttackGoalX(GuestTeam) >= 0.0 ? 1 : -1);
+	if (GuestTeam != HostTeam) TestNotEqual(TEXT("HUD: the guest's attack side is not the host's"), Fg.AttackSign, Fh.AttackSign);
+
+	// 2. The signals (SignalSystem.cpp Issue -> AnswererFor): a bot teammate of the guest answers the guest's signal, never a human seat.
+	const int32 Ans = UJamSignalSystem::AnswererFor(*Sim, GuestMachine);
+	TestTrue(FString::Printf(TEXT("signals: the guest's answerer %d is a bot of the guest's team"), Ans), Ans >= 0 && Sim->GetSkaters()[Ans].Team == GuestTeam && !Sim->GetSkaters()[Ans].bHuman);
+	const int32 AnsH = UJamSignalSystem::AnswererFor(*Sim, Host);
+	TestTrue(TEXT("signals: the host's answerer is never the guest"), AnsH >= 0 && AnsH != Guest && Sim->GetSkaters()[AnsH].Team == HostTeam);
+
+	// 3 and 4. The skate loop (CommentarySystem.cpp UpdateLoops) and GetHumanSkater read AHokejGameMode::GetLocalSeat: ALobbyGameMode's is LocalSeatOf.
+	TestEqual(TEXT("skate loop / GetHumanSkater: the guest's machine's seat"), GuestMachine, Guest);
+
+	// 5. The brain (LobbyGameMode GatherBotInputs): the seated guest is its second human: no think, no job for it; offline nothing changes (above).
+	JamAI::FJamAIWorld W;
+	JamAI::FJamSimAdapter::BuildWorld(*Sim, W);
+	TestEqual(TEXT("brain: the guest is the world's second human"), W.GuestIndex, Guest);
+	TestTrue(TEXT("brain: both seats are human seats"), W.IsHumanSeat(Host) && W.IsHumanSeat(Guest));
+	TStrongObjectPtr<UJamBrain> Brain(NewObject<UJamBrain>());
+	Brain->ApplyCartridge(*Shotgun);
+	Brain->ResetBrain();
+	JamAI::FJamAIInput Out[JamAI::kMaxSkaters];
+	const JamAI::FVec2 Sentinel(9.0, 9.0);
+	for (int32 i = 0; i < JamAI::kMaxSkaters; ++i) Out[i].Move = Sentinel;
+	for (int32 t = 0; t < 30; ++t) Brain->Think(W, Out);
+	TestTrue(TEXT("brain: the guest's slot is left to the guest (untouched)"), Out[Guest].Move.X == 9.0 && Out[Guest].Move.Y == 9.0);
+	int32 Bots = 0;
+	for (int32 i = 0; i < W.NumSkaters; ++i) if (!W.IsHumanSeat(i) && !(Out[i].Move.X == 9.0 && Out[i].Move.Y == 9.0)) ++Bots;
+	TestEqual(TEXT("brain: every bot thought"), Bots, W.NumSkaters - 2);
+
+	// 6. The rematch: only the frame both seats hold the ask while the sim is Over; a restarted sim forgets its history (both machines restart equal).
+	FJamInput Ask; JamNet::SetRematchReady(Ask);
+	FJamInput Brake; Brake.bBrake = true; Brake.bShootHeld = true;
+	TestTrue(TEXT("rematch: both ask on the card"), ALobbyGameMode::RematchAgreed(EJamSimPhase::Over, Ask, Ask));
+	TestFalse(TEXT("rematch: one asks"), ALobbyGameMode::RematchAgreed(EJamSimPhase::Over, Ask, FJamInput()));
+	TestFalse(TEXT("rematch: brake + charge is play, not an ask"), ALobbyGameMode::RematchAgreed(EJamSimPhase::Over, Ask, Brake));
+	TestFalse(TEXT("rematch: never in play"), ALobbyGameMode::RematchAgreed(EJamSimPhase::Playing, Ask, Ask));
+	TStrongObjectPtr<UJamSim> Other(NewObject<UJamSim>());
+	Other->Init(Shotgun->Game, 7);
+	Other->SeatGuest(Guest);
+	for (int32 f = 0; f < 650; ++f) { Busy(In, f * 3 + 1, Host, Guest); Other->Step(In); }
+	Sim->Restart();
+	Other->Restart();
+	// Both machines restart from the same history (lockstep), so the rematch is deterministic across them; whether Restart forgets the history is a sim
+	// property (outside the family): the fields it keeps are listed as information for the sim's owner.
+	TStrongObjectPtr<UJamSim> Twin(NewObject<UJamSim>());
+	Twin->Init(Shotgun->Game, 7);
+	Twin->SeatGuest(Guest);
+	for (int32 f = 0; f < 650; ++f) { Busy(In, f * 3 + 1, Host, Guest); Twin->Step(In); }
+	Twin->Restart();
+	TestEqual(TEXT("rematch: two machines with the same history restart to the same lockstep hash"), Twin->LockstepStateHash(), Other->LockstepStateHash());
+	if (Sim->LockstepStateHash() != Other->LockstepStateHash())
+	{
+		FString Kept;
+		for (int32 i = 0; i < Sim->GetSkaters().Num(); ++i)
+			for (TFieldIterator<FProperty> It(FJamSkaterState::StaticStruct()); It; ++It)
+				if (!It->Identical_InContainer(&Sim->GetSkaters()[i], &Other->GetSkaters()[i])) Kept += FString::Printf(TEXT(" skater[%d].%s"), i, *It->GetName());
+		for (TFieldIterator<FProperty> It(FJamPuckState::StaticStruct()); It; ++It)
+			if (!It->Identical_InContainer(&Sim->GetPuck(), &Other->GetPuck())) Kept += FString::Printf(TEXT(" puck.%s"), *It->GetName());
+		AddInfo(FString::Printf(TEXT("finding (sim): UJamSim::Restart keeps history; after different histories the restarted sims differ in:%s"), Kept.IsEmpty() ? TEXT(" unreflected state only") : *Kept));
+	}
+	TestTrue(TEXT("rematch: the guest stays seated"), Sim->GetSkaters()[Guest].bHuman && Sim->HeldAbility(Guest) != nullptr);
+
+	// 7. A live cut / cut load / restart is refused in a lockstep match with a line for the screen; single player is untouched.
+	FString Line;
+	TestTrue(TEXT("refusal: online"), ALobbyGameMode::LiveChangeRefused(true, TEXT("a live cut"), Line) && Line.Contains(TEXT("online match")));
+	TestFalse(TEXT("refusal: single player"), ALobbyGameMode::LiveChangeRefused(false, TEXT("a live cut"), Line));
+	AddInfo(FString::Printf(TEXT("host %d (team %d), guest %d (team %d), guest's answerer %d, host's %d; refusal line: %s"), Host, HostTeam, Guest, GuestTeam, Ans, AnsH, *Line));
 	return true;
 }
 

@@ -401,3 +401,8 @@
 - RESOURCES 21:49 cpu 100% ram 38.4/63GB editors 0 cmd 17 free 543GB
 - link green 21:56: main f86aed0 (A tackle is an event (120-frame release grace, A113), clay goal frames (A119), no cartridg) pushed.
 - RESOURCES 22:20 cpu 55% ram 28.9/63GB editors 0 cmd 5 free 540GB
+- link green 22:23: main 3b496c2 (The carrier's answer inside ten metres (A121), two real processes play a joined match (A12) pushed.
+- link green 22:33: main cd33845 (The arena answers a goal (A127), nothing sits on the play and the marker stays on the helm) pushed.
+- link green 22:37: main 41df3e6 (A joined match plays to its end and everything on the guest's screen is the guest's (A129,) pushed.
+- 22:40 board: main 41df3e6 pushed and verified (23 lanes landed since the 20:03 fix). **Builds no longer queue**: `tools/run/build.ps1` gives each worktree its own TMP and builds with `-NoMutex -NoUBA` in three slots (a landing takes three minutes, was fifteen to forty). **Law 3 broke in the gate** when the brain's second evolution and the shove rule met (stop-and-go 50 %, bar 80 %): both parked on the local branch `wip-batch6` (worktree `i1`) for integration lane A138 (R-0053); the curve lane (brief A133, patch `tj/c0.patch`) takes its tree next. Running: A138 I1, A131 S2 (cursor), A135 U1, A136 F3, A137 Q3, A139 M1, A126 S1. To resume after a restart: `docs/EVOLUTION.md` (the last board), each lane's `status/A1xx.md` in its worktree, the Director's scripts in `%LOCALAPPDATA%\Temp\tj` (`export.sh`, `baseline.sh`, `land.sh`, `fresh.sh`).
+

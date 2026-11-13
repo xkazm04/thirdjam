@@ -62,6 +62,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Jam|Game") AJamSkater* GetHumanSkater() const;
 	// Lane A120 (track Q1): the seat this machine plays, for presentation only (barks, commentary): the sim's human here, ALobbyGameMode's LocalIndex online.
 	virtual int32 GetLocalSeat() const;
+	// Lane A129 (track Q1): true = this change to the sim (What: "a live cut", "a cut load", "a restart") is refused here (an online match: one machine's sim
+	// must never change alone). Single player: false, nothing changes.
+	virtual bool RefuseSimChange(const TCHAR* What) { return false; }
 	// Lane A15 (C-0005): the rule hook (announce text for the RULE: scoreboard line) and the zone system (membership, zone events).
 	UFUNCTION(BlueprintPure, Category = "Jam|Game") UJamRuleSystem* GetRules() const { return Rules; }
 	UFUNCTION(BlueprintPure, Category = "Jam|Game") UJamZoneSystem* GetZones() const { return ZoneSystem; }

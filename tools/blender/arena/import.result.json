@@ -145,7 +145,7 @@
       "triangles": 2088,
       "triangles_blender": 2088,
       "lods": 1,
-      "sections": 5,
+      "sections": 6,
       "uv0_bounds": [
         0.0,
         -0.665,
@@ -164,13 +164,15 @@
         "kick",
         "bench",
         "dark",
-        "frame"
+        "frame",
+        "lamp"
       ],
       "materials": [
         "/JamAssets/Look/MI_Toon_Board.MI_Toon_Board",
         "/JamAssets/Look/MI_Toon_KickPlate.MI_Toon_KickPlate",
         "/JamAssets/Look/MI_Toon_Bench.MI_Toon_Bench",
         "/JamAssets/Look/MI_Toon_Dark.MI_Toon_Dark",
+        "/JamAssets/Look/MI_Toon_NetFrame.MI_Toon_NetFrame",
         "/JamAssets/Look/MI_Toon_NetFrame.MI_Toon_NetFrame"
       ],
       "bounds_min_cm": [
@@ -180,18 +182,18 @@
       ],
       "bounds_max_cm": [
         70.2,
-        166.0,
-        277.4
+        172.9,
+        288.8
       ],
       "size_m": [
         1.404,
-        1.664,
-        2.778
+        1.732,
+        2.892
       ],
       "size_m_blender": [
         1.404,
-        1.664,
-        2.778
+        1.732,
+        2.892
       ],
       "seat_socket_cm": null,
       "nanite": false,
@@ -208,7 +210,7 @@
     },
     "SM_Arena_Goal_W400H061": {
       "path": "/Game/Arena/SM_Arena_Goal_W400H061.SM_Arena_Goal_W400H061",
-      "imported": true,
+      "imported": false,
       "triangles": 1608,
       "triangles_blender": 1608,
       "lods": 1,
@@ -280,7 +282,7 @@
     },
     "SM_Arena_GoalNet_W400H061": {
       "path": "/Game/Arena/SM_Arena_GoalNet_W400H061.SM_Arena_GoalNet_W400H061",
-      "imported": true,
+      "imported": false,
       "triangles": 912,
       "triangles_blender": 912,
       "lods": 1,
@@ -339,7 +341,7 @@
     },
     "SM_Arena_Goal_W600H061": {
       "path": "/Game/Arena/SM_Arena_Goal_W600H061.SM_Arena_Goal_W600H061",
-      "imported": true,
+      "imported": false,
       "triangles": 1848,
       "triangles_blender": 1848,
       "lods": 1,
@@ -411,7 +413,7 @@
     },
     "SM_Arena_GoalNet_W600H061": {
       "path": "/Game/Arena/SM_Arena_GoalNet_W600H061.SM_Arena_GoalNet_W600H061",
-      "imported": true,
+      "imported": false,
       "triangles": 952,
       "triangles_blender": 952,
       "lods": 1,
@@ -470,7 +472,7 @@
     },
     "SM_Arena_Goal_W400H122": {
       "path": "/Game/Arena/SM_Arena_Goal_W400H122.SM_Arena_Goal_W400H122",
-      "imported": true,
+      "imported": false,
       "triangles": 1800,
       "triangles_blender": 1800,
       "lods": 1,
@@ -542,7 +544,7 @@
     },
     "SM_Arena_GoalNet_W400H122": {
       "path": "/Game/Arena/SM_Arena_GoalNet_W400H122.SM_Arena_GoalNet_W400H122",
-      "imported": true,
+      "imported": false,
       "triangles": 992,
       "triangles_blender": 992,
       "lods": 1,
@@ -598,6 +600,69 @@
         "stands_on_the_ice": true,
         "size_matches_blender": true
       }
+    },
+    "SM_Arena_GoalLight": {
+      "path": "/Game/Arena/SM_Arena_GoalLight.SM_Arena_GoalLight",
+      "imported": false,
+      "triangles": 696,
+      "triangles_blender": 696,
+      "lods": 1,
+      "sections": 3,
+      "uv0_bounds": [
+        0.0,
+        -0.06,
+        1.135,
+        1.0
+      ],
+      "uv0_bounds_blender": [
+        0.0,
+        0.0,
+        1.135,
+        1.06
+      ],
+      "vertex_instances": 2088,
+      "slots": [
+        "dark",
+        "kick",
+        "lamp"
+      ],
+      "materials": [
+        "/JamAssets/Look/MI_Toon_Dark.MI_Toon_Dark",
+        "/JamAssets/Look/MI_Toon_KickPlate.MI_Toon_KickPlate",
+        "/JamAssets/Look/MI_Toon_NetFrame.MI_Toon_NetFrame"
+      ],
+      "bounds_min_cm": [
+        -36.2,
+        -5.2,
+        -0.5
+      ],
+      "bounds_max_cm": [
+        36.2,
+        60.8,
+        277.7
+      ],
+      "size_m": [
+        0.724,
+        0.66,
+        2.782
+      ],
+      "size_m_blender": [
+        0.724,
+        0.66,
+        2.782
+      ],
+      "seat_socket_cm": null,
+      "nanite": false,
+      "checks": {
+        "under_budget": true,
+        "triangles_match_blender": true,
+        "slots_match_blender": true,
+        "look_instances_bound": true,
+        "has_uvs": true,
+        "extends_to_plus_y": true,
+        "stands_on_the_ice": true,
+        "size_matches_blender": true
+      }
     }
   },
   "slot_look": {
@@ -607,7 +672,8 @@
     "team": "/JamAssets/Look/MI_Toon_Blue",
     "dark": "/JamAssets/Look/MI_Toon_Dark",
     "frame": "/JamAssets/Look/MI_Toon_NetFrame",
-    "net": "/JamAssets/Look/MI_Toon_NetMesh"
+    "net": "/JamAssets/Look/MI_Toon_NetMesh",
+    "lamp": "/JamAssets/Look/MI_Toon_NetFrame"
   },
   "verdict": "pass"
 }

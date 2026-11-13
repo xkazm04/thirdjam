@@ -275,6 +275,10 @@ namespace JamAI
 		int PuckLastTouch = -1;   // skater that touched the puck last, -1 since the faceoff
 		int NumSkaters = 0;
 		int PlayerIndex = -1;     // the human's skater (-1 = none)
+		// Lane A129 (track Q1): the second human, the guest of an online match (UJamSim::SeatGuest), or -1. The brain neither thinks for it nor gives it a
+		// job (it plans with it as a human, as with PlayerIndex); offline it is -1 and nothing changes.
+		int GuestIndex = -1;
+		bool IsHumanSeat(int i) const { return i == PlayerIndex || (GuestIndex >= 0 && i == GuestIndex); }
 		FJamAISkater Skaters[kMaxSkaters];
 		double HalfLength = 60.0;
 		double HalfWidth = 30.0;

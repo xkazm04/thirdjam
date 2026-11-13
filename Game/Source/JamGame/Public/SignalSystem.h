@@ -11,6 +11,7 @@
 #include "SignalSystem.generated.h"
 
 class UInputAction;
+class UJamSim;
 class UInputMappingContext;
 class APlayerController;
 struct FJamPresentationFrame;
@@ -57,6 +58,8 @@ public:
 	static FName AckSituationFor(EJamTeamIntent Intent);
 	// The intent record for a signal given now (Frames = the default per intent).
 	static FJamTeamIntent Make(EJamTeamIntent Intent, int64 Frame, int32 Issuer, int32 Target);
+	// Lane A129 (track Q1): the bot teammate nearest Seat that answers its signal (never a human seat), or -1.
+	static int32 AnswererFor(const UJamSim& Sim, int32 Seat);
 
 	virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
 	virtual void OnWorldBeginPlay(UWorld& InWorld) override;

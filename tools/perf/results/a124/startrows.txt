@@ -1,0 +1,48 @@
+a124-ab2-old-l2_night_5v5-1 load frame 80.76 ms (GT 78.72, FlushAsyncLoading 0, EngineTickMisc 0.06)  first 60 frames: hitches 39.46, 54.38; max ShadowInitDynamic 0, RT 6.94, GPU 7.67, TSR 2.72  steady GPU null TSR null GT null RT null
+a124-ab2-old-l2_night_5v5-1 row 555 frame 80.8 GT 78.7: TickActors 3.4
+a124-ab2-old-l2_night_5v5-2 load frame 93.91 ms (GT 50.89, FlushAsyncLoading 0.04, EngineTickMisc 32.19)  first 60 frames: hitches 62.08, 34.49, 50.2, 148.71, 41.94, 39.76, 45.05, 36.54; max ShadowInitDynamic 8.34, RT 153.1, GPU 29.08, TSR 2.51  steady GPU 5.01 TSR 0.58 GT 2.4 RT 3.94
+a124-ab2-old-l2_night_5v5-2 row 2 frame 93.9 GT 50.9: EngineTickMisc 32.2, EventWait 22.6, EventWait/Audio 21.0, UI 7.2, ActorSpawning 4.7
+a124-ab2-old-l2_night_5v5-3 load frame 177.28 ms (GT 154.16, FlushAsyncLoading 0.33, EngineTickMisc 123.12)  first 60 frames: hitches 43.78, 35.37; max ShadowInitDynamic 8.31, RT 36.62, GPU 30.83, TSR 3.3  steady GPU 5.15 TSR 0.62 GT 3.14 RT 4.27
+a124-ab2-old-l2_night_5v5-3 row 3 frame 177.3 GT 154.2: EngineTickMisc 123.1, EventWait/Audio 22.7, EventWait 17.3, ActorSpawning 6.9, UI 6.8, EndOfFrameUpdates 5.1, AsyncLoading 4.9
+a124-ab2-old-l2_night_5v5-4 load frame 105.04 ms (GT 64.91, FlushAsyncLoading 0.05, EngineTickMisc 52.75)  first 60 frames: hitches 68.67, 44.54; max ShadowInitDynamic 8.36, RT 49.97, GPU 32.85, TSR 2.67  steady GPU 4.97 TSR 0.57 GT 2.64 RT 4.13
+a124-ab2-old-l2_night_5v5-4 row 2 frame 105.0 GT 64.9: EngineTickMisc 52.8, EventWait/Audio 31.0, EventWait 15.1, UI 6.8, AsyncLoading 5.0, ActorSpawning 4.8
+a124-ab2-old-l2_night_5v5-5 load frame 66.51 ms (GT 43.59, FlushAsyncLoading 0.06, EngineTickMisc 22.5)  first 60 frames: hitches 48.75; max ShadowInitDynamic 8.03, RT 48.61, GPU 34.33, TSR 5.21  steady GPU 4.94 TSR 0.56 GT 2.44 RT 3.88
+a124-ab2-old-l2_night_5v5-5 row 2 frame 66.5 GT 43.6: EventWait/Audio 27.6, EngineTickMisc 22.5, EventWait 20.4, UI 6.2, AsyncLoading 5.0, ActorSpawning 3.6
+a124-ab2-old-l2_night_5v5-6 load frame 84.32 ms (GT 90.26, FlushAsyncLoading 0.06, EngineTickMisc 63.51)  first 60 frames: hitches 49.6; max ShadowInitDynamic 8.41, RT 52.57, GPU 33.97, TSR 3.02  steady GPU 4.55 TSR 0.5 GT 2.64 RT 4.08
+a124-ab2-old-l2_night_5v5-6 row 2 frame 84.3 GT 90.3: EngineTickMisc 63.5, EventWait 18.8, UI 7.1, AsyncLoading 6.2, ActorSpawning 5.5
+a124-ab2-old-p3_clay_5v5-1 load frame 82.67 ms (GT 83.5, FlushAsyncLoading 0, EngineTickMisc 0.07)  first 60 frames: hitches none; max ShadowInitDynamic 0.12, RT 4.84, GPU 5.12, TSR 0.66  steady GPU 5.05 TSR 0.41 GT 3.16 RT 4.46
+a124-ab2-old-p3_clay_5v5-1 row 485 frame 82.7 GT 83.5: UI 15.9
+a124-ab2-old-p3_clay_5v5-2 load frame 94.96 ms (GT 57.18, FlushAsyncLoading 0.07, EngineTickMisc 36.35)  first 60 frames: hitches 36.36, 45, 42.96; max ShadowInitDynamic 8.45, RT 47.38, GPU 29.85, TSR 2.47  steady GPU 5.66 TSR 0.55 GT 2.45 RT 4.02
+a124-ab2-old-p3_clay_5v5-2 row 2 frame 95.0 GT 57.2: EventWait/Audio 38.2, EngineTickMisc 36.3, EventWait 32.9, UI 7.2, ActorSpawning 5.7
+a124-ab2-old-p3_clay_5v5-3 load frame 90.63 ms (GT 89.67, FlushAsyncLoading 0.24, EngineTickMisc 69.95)  first 60 frames: hitches 35.37, 35.7, 102.42; max ShadowInitDynamic 10.97, RT 102.43, GPU 65.74, TSR 10.51  steady GPU 5.6 TSR 0.54 GT 2.55 RT 4.11
+a124-ab2-old-p3_clay_5v5-3 row 2 frame 90.6 GT 89.7: EngineTickMisc 70.0, EventWait 30.4, UI 7.7, ActorSpawning 5.4
+a124-ab2-old-p3_clay_5v5-4 load frame 74.66 ms (GT 38.02, FlushAsyncLoading 0.08, EngineTickMisc 21.29)  first 60 frames: hitches 46.76; max ShadowInitDynamic 7.18, RT 46.69, GPU 28.78, TSR 2.41  steady GPU 5.49 TSR 0.52 GT 1.98 RT 3.54
+a124-ab2-old-p3_clay_5v5-4 row 2 frame 74.7 GT 38.0: EventWait/Audio 36.3, EngineTickMisc 21.3, EventWait 19.5, UI 6.3, ActorSpawning 3.8
+a124-ab2-old-p3_clay_5v5-5 load frame 93.12 ms (GT 64.11, FlushAsyncLoading 0.07, EngineTickMisc 34.34)  first 60 frames: hitches 36.49; max ShadowInitDynamic 7.68, RT 36.57, GPU 9.65, TSR 1.35  steady GPU 4.67 TSR 0.39 GT 2.21 RT 3.8
+a124-ab2-old-p3_clay_5v5-5 row 3 frame 93.1 GT 64.1: EngineTickMisc 34.3, EventWait/Audio 29.1, EventWait 15.0, UI 7.4, GarbageCollectionFull 7.0, ActorSpawning 5.9
+a124-ab2-old-p3_clay_5v5-6 load frame 88.96 ms (GT 57.97, FlushAsyncLoading 0.09, EngineTickMisc 30.09)  first 60 frames: hitches none; max ShadowInitDynamic 6.69, RT 32.26, GPU 12.68, TSR 0.83  steady GPU 4.93 TSR 0.43 GT 2.59 RT 4.25
+a124-ab2-old-p3_clay_5v5-6 row 3 frame 89.0 GT 58.0: EventWait/Audio 31.9, EngineTickMisc 30.1, EventWait 18.3, GarbageCollectionFull 9.1, UI 7.5, ActorSpawning 4.1
+a124-ab2-new-l2_night_5v5-1 load frame 86.34 ms (GT 55.52, FlushAsyncLoading 0.06, EngineTickMisc 34.1)  first 60 frames: hitches 40.24, 61.43, 41.46, 35.72; max ShadowInitDynamic 8.89, RT 57.54, GPU 25.98, TSR 2.2  steady GPU 5.07 TSR 0.58 GT 2.65 RT 4.21
+a124-ab2-new-l2_night_5v5-1 row 6 frame 86.3 GT 55.5: EventWait 35.0, EngineTickMisc 34.1, EventWait/Audio 31.2, UI 7.7, ActorSpawning 5.3
+a124-ab2-new-l2_night_5v5-2 load frame 82.79 ms (GT 84.19, FlushAsyncLoading 0.89, EngineTickMisc 58.67)  first 60 frames: hitches 60.9, 34.45, 118.52, 45.81; max ShadowInitDynamic 8.35, RT 135.68, GPU 17.19, TSR 2.11  steady GPU 4.51 TSR 0.49 GT 2.65 RT 4.65
+a124-ab2-new-l2_night_5v5-2 row 7 frame 82.8 GT 84.2: EngineTickMisc 58.7, EventWait 53.5, UI 7.6, ActorSpawning 5.6
+a124-ab2-new-l2_night_5v5-3 load frame 120.49 ms (GT 120.57, FlushAsyncLoading 0, EngineTickMisc 0.05)  first 60 frames: hitches 40.07, 191.29, 48.67; max ShadowInitDynamic 0.06, RT 203.45, GPU 5.26, TSR 0.66  steady GPU 3.75 TSR 0.42 GT 2.79 RT 4.37
+a124-ab2-new-l2_night_5v5-3 row 504 frame 120.5 GT 120.6: 
+a124-ab2-new-l2_night_5v5-4 load frame 82.26 ms (GT 54.95, FlushAsyncLoading 0.18, EngineTickMisc 32.17)  first 60 frames: hitches 50.74; max ShadowInitDynamic 13.19, RT 50.73, GPU 25.77, TSR 3.11  steady GPU 5.2 TSR 0.62 GT 2.59 RT 4.13
+a124-ab2-new-l2_night_5v5-4 row 40 frame 82.3 GT 54.9: EngineTickMisc 32.2, EventWait 27.8, EventWait/Audio 27.3, UI 7.9, ActorSpawning 5.0
+a124-ab2-new-l2_night_5v5-5 load frame 97.86 ms (GT 99.01, FlushAsyncLoading 0.06, EngineTickMisc 76.32)  first 60 frames: hitches 48.66; max ShadowInitDynamic 8.38, RT 48.63, GPU 28.75, TSR 3.29  steady GPU 4.56 TSR 0.52 GT 2.58 RT 3.89
+a124-ab2-new-l2_night_5v5-5 row 6 frame 97.9 GT 99.0: EngineTickMisc 76.3, EventWait 16.9, UI 9.2, ActorSpawning 5.0
+a124-ab2-new-l2_night_5v5-6 load frame 92.55 ms (GT 55.83, FlushAsyncLoading 0.07, EngineTickMisc 32.02)  first 60 frames: hitches 34.99; max ShadowInitDynamic 7.79, RT 35.77, GPU 8.96, TSR 0.92  steady GPU 4.07 TSR 0.46 GT 2.85 RT 4.35
+a124-ab2-new-l2_night_5v5-6 row 6 frame 92.6 GT 55.8: EventWait/Audio 37.9, EngineTickMisc 32.0, UI 8.5, EventWait 8.0, ActorSpawning 5.2, AddToWorld 2.5
+a124-ab2-new-p3_clay_5v5-1 load frame 98.86 ms (GT 99.03, FlushAsyncLoading 0, EngineTickMisc 0.08)  first 60 frames: hitches none; max ShadowInitDynamic 0.84, RT 19.8, GPU 8.39, TSR 1.89  steady GPU null TSR null GT null RT null
+a124-ab2-new-p3_clay_5v5-1 row 527 frame 98.9 GT 99.0: EventWait 95.9
+a124-ab2-new-p3_clay_5v5-2 load frame 81.38 ms (GT 55.59, FlushAsyncLoading 0.05, EngineTickMisc 34.85)  first 60 frames: hitches 47.47, 56.42; max ShadowInitDynamic 8.83, RT 60.39, GPU 27.03, TSR 2.78  steady GPU 5.66 TSR 0.55 GT 2.45 RT 4.31
+a124-ab2-new-p3_clay_5v5-2 row 11 frame 81.4 GT 55.6: EngineTickMisc 34.8, EventWait/Audio 25.8, EventWait 20.0, UI 6.8, ActorSpawning 5.6
+a124-ab2-new-p3_clay_5v5-3 load frame 89.35 ms (GT 92.33, FlushAsyncLoading 0.05, EngineTickMisc 58.83)  first 60 frames: hitches 47.42; max ShadowInitDynamic 9.74, RT 47.47, GPU 27.37, TSR 3.11  steady GPU 5.88 TSR 0.57 GT 2.54 RT 4.21
+a124-ab2-new-p3_clay_5v5-3 row 6 frame 89.3 GT 92.3: EngineTickMisc 58.8, EventWait 22.5, GarbageCollectionFull 8.8, UI 7.3, ActorSpawning 5.8, AsyncLoading 3.9
+a124-ab2-new-p3_clay_5v5-4 load frame 151.63 ms (GT 122.33, FlushAsyncLoading 0.04, EngineTickMisc 62)  first 60 frames: hitches 35.61, 46.52, 60.34, 36.45, 36.1; max ShadowInitDynamic 8.01, RT 60.39, GPU 24.31, TSR 2.31  steady GPU 5.77 TSR 0.57 GT 2.65 RT 4.16
+a124-ab2-new-p3_clay_5v5-4 row 9 frame 151.6 GT 122.3: EngineTickMisc 62.0, GarbageCollectionFull 42.0, EventWait 31.4, EventWait/Audio 29.5, UI 6.4, ActorSpawning 5.1
+a124-ab2-new-p3_clay_5v5-5 load frame 78.99 ms (GT 57.55, FlushAsyncLoading 0.06, EngineTickMisc 33.96)  first 60 frames: hitches none; max ShadowInitDynamic 8.02, RT 32.27, GPU 8.9, TSR 2.35  steady GPU 5 TSR 0.43 GT 2.86 RT 4.51
+a124-ab2-new-p3_clay_5v5-5 row 6 frame 79.0 GT 57.5: EngineTickMisc 34.0, EventWait/Audio 22.6, EventWait 12.4, UI 7.5, ActorSpawning 6.0
+a124-ab2-new-p3_clay_5v5-6 load frame 83.99 ms (GT 50.17, FlushAsyncLoading 0.1, EngineTickMisc 29.17)  first 60 frames: hitches none; max ShadowInitDynamic 6.94, RT 31.68, GPU 13.9, TSR 2.05  steady GPU 6.29 TSR 0.59 GT 2.32 RT 4.21
+a124-ab2-new-p3_clay_5v5-6 row 6 frame 84.0 GT 50.2: EventWait/Audio 35.0, EngineTickMisc 29.2, EventWait 12.4, UI 8.0, ActorSpawning 4.2
