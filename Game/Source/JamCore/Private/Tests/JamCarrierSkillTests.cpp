@@ -266,6 +266,13 @@ bool FJamMovementStopAndGo::RunTest(const FString& Parameters)
 		FScript At8 = Go, At11 = Go, At12 = Go;
 		At8.BrakeAtM = 8.0; At11.BrakeAtM = 11.0; At12.BrakeAtM = 12.0;
 		const FShare G8 = Share(*C, At8, 200), G8n = Share(*N, At8, 200);
+		// Lane A208 (game.stick.pickup): the body shield's worth is read at the pickup's neutral value on both arms. With the pickup on a lift from behind no
+		// longer takes the puck held ahead with or without the shield (the carrier's own body blocks the lifted puck and his arc takes it back after the
+		// lost-puck frames), so the shield's 10 points are carried by the body itself (94.0 on both arms at the pickup's default).
+		UJamCartridge* Cp = Copy(*C); Cp->Game.Stick.PickupArcM = 0.0; Cp->Game.Stick.bPickupBody = false;
+		UJamCartridge* Np = Copy(*N); Np->Game.Stick.PickupArcM = 0.0; Np->Game.Stick.bPickupBody = false;
+		const FShare G8p = Share(*Cp, At8, 200), G8np = Share(*Np, At8, 200);
+		AddInfo(FString::Printf(TEXT("LAW3 pro stop begun at 8 m at the pickup's neutral: shield %s | body_shield false %s"), *G8p.Line(), *G8np.Line()));
 		const FShare S8 = Share(*C, At8, 200, TEXT("all_star")), S95 = Share(*C, Go, 200, TEXT("all_star")), S11 = Share(*C, At11, 200, TEXT("all_star")), S12 = Share(*C, At12, 200, TEXT("all_star")), SB = Share(*C, Straight, 200, TEXT("all_star"));
 		AddInfo(FString::Printf(TEXT("LAW3 pro stop begun at 8 m: %s"), *G8.Line()));
 		AddInfo(FString::Printf(TEXT("LAW3 pro stop begun at 8 m, body_shield false: %s"), *G8n.Line()));
@@ -289,7 +296,7 @@ bool FJamMovementStopAndGo::RunTest(const FString& Parameters)
 			TestTrue(FString::Printf(TEXT("the presser on its job is worth at least 50 points to the stop at 8 m at all_star (%.1f against %.1f with the switch off)"), 100.0 * S8.PastShare(), 100.0 * S8off.PastShare()), S8.PastShare() >= S8off.PastShare() + 0.50);
 		}
 		TestTrue(FString::Printf(TEXT("at all_star a straight charge beats it at most 1 time in 5 (%.1f %%)"), 100.0 * SB.PastShare()), SB.PastShare() <= 0.20);
-		TestTrue(FString::Printf(TEXT("the body between is worth at least 10 points to the stop-and-go at 8 m (%.1f against %.1f with body_shield false)"), 100.0 * G8.PastShare(), 100.0 * G8n.PastShare()), G8.PastShare() >= G8n.PastShare() + 0.10);
+		TestTrue(FString::Printf(TEXT("the body between is worth at least 10 points to the stop-and-go at 8 m, at the pickup's neutral (%.1f against %.1f with body_shield false)"), 100.0 * G8p.PastShare(), 100.0 * G8np.PastShare()), G8p.PastShare() >= G8np.PastShare() + 0.10);
 		// Lane A121: the window moved about 1.5 m toward the defender (6 m: 2.5 -> 23.5 %; 5 m stays 0): the timing bar is the brief's 5 m, and 6 m against the clean stop.
 		TestTrue(FString::Printf(TEXT("timing is the skill: the stop begun at 5 m beats the defender at most 1 time in 10 (%.1f %%)"), 100.0 * Br.PastShare()), Br.PastShare() <= 0.10);
 		TestTrue(FString::Printf(TEXT("timing is the skill: the stop begun at 6 m is at least 40 points worse than the one at 8 m (%.1f %%)"), 100.0 * L.PastShare()), L.PastShare() <= G8.PastShare() - 0.40);
@@ -323,6 +330,7 @@ bool FJamMovementBodyShield::RunTest(const FString& Parameters)
 {
 	using namespace JamCarrierSkillTests;
 	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
+	if (C) { C->Game.Stick.PickupArcM = 0.0; C->Game.Stick.bPickupBody = false; }   // lane A208: re-staged at game.stick.pickup's neutral: this scene measures the shield against a poke and a lift; the loose puck's pickup has its own (Jam.Core.Possession.*)
 	if (!C) return false;
 	FJamGameConfig On = C->Game, Off = C->Game;
 	On.Stick.bBodyShield = true;
@@ -391,6 +399,7 @@ bool FJamMovementPassiveTake::RunTest(const FString& Parameters)
 {
 	using namespace JamCarrierSkillTests;
 	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
+	if (C) { C->Game.Stick.PickupArcM = 0.0; C->Game.Stick.bPickupBody = false; }   // lane A208: re-staged at game.stick.pickup's neutral: this scene measures the unpressed take of a carried puck (R-0048) against its neutral; the loose puck's pickup has its own (Jam.Core.Possession.*)
 	if (!C) return false;
 	TestFalse(TEXT("game.stick.passive_take is false when the key is absent"), C->Game.Stick.bPassiveTake);
 	TestTrue(TEXT("game.stick.body_shield is true when the key is absent"), C->Game.Stick.bBodyShield);
@@ -770,6 +779,7 @@ bool FJamMovementSpinPrice::RunTest(const FString& Parameters)
 {
 	using namespace JamCarrierSkillTests;
 	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
+	if (C) { C->Game.Stick.PickupArcM = 0.0; C->Game.Stick.bPickupBody = false; }   // lane A208: re-staged at game.stick.pickup's neutral: this scene measures the lift in the spin's exposed end; the loose puck's pickup has its own (Jam.Core.Possession.*)
 	if (!C) return false;
 	TestEqual(TEXT("game.skater.spin.exposed_frames is 5 when the key is absent"), C->Game.Skater.SpinExposedTail, 5);
 	TestEqual(TEXT("the recovery after the spin is off (code only)"), C->Game.Skater.SpinRecoveryFrames, 0);
@@ -1450,6 +1460,8 @@ bool FJamCurveLaw3::RunTest(const FString& Parameters)
 			else if (K == TEXT("burst.accel_mult")) Sk.BurstAccelMult = V;
 			else if (K == TEXT("burst_carry_accel_mult")) Sk.BurstCarryAccelMult = V;
 			else if (K == TEXT("breakaway.speed_bonus")) Sk.BreakawaySpeedBonus = V;
+			else if (K == TEXT("pickup.arc_m")) C->Game.Stick.PickupArcM = V;   // lane A208 (game.stick.pickup): the neutral arm is pickup.arc_m=0;pickup.body=0
+			else if (K == TEXT("pickup.body")) C->Game.Stick.bPickupBody = V > 0.5;
 			else AddError(FString::Printf(TEXT("JAM_LAW3_SET: unknown key %s"), *K));
 		}
 		AddInfo(FString::Printf(TEXT("LAW3T set %s"), *SetEnv));

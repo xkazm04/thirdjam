@@ -1122,6 +1122,16 @@ namespace
 		ReadNumber(St, TEXT("poke_assist_deg"), C.Stick.PokeAssistDeg);   // lane A152 (track F2, R-0059 point 4): a person's poke reaches for a carried puck inside its stick's reach
 		ReadInteger(St, TEXT("stop_grace_frames"), C.Stick.StopGraceFrames);   // lane A163: a person's stop with the puck earns the take grace
 		ReadInteger(St, TEXT("miss_recovery_frames"), C.Stick.MissRecoveryFrames);   // lane A152: a missed poke locks the stick instead of the stumble
+		// Lane A208 (track F0): game.stick.pickup { arc_m, arc_deg, body, sting_mps }: the loose puck is his who touches it
+		if (const FJPtr Pu = Obj(St, TEXT("pickup")))
+		{
+			ReadNumber(Pu, TEXT("arc_m"), C.Stick.PickupArcM);
+			ReadNumber(Pu, TEXT("arc_deg"), C.Stick.PickupArcDeg);
+			ReadBool(Pu, TEXT("body"), C.Stick.bPickupBody);
+			ReadNumber(Pu, TEXT("sting_mps"), C.Stick.PickupStingMps);
+			ReadNumber(Pu, TEXT("body_catch_mps"), C.Stick.PickupBodyCatchMps);
+			ReadBool(Pu, TEXT("block_carried"), C.Stick.bPickupBlockCarried);
+		}
 		// R-0029 point 4 (lane A39): game.stick.deke { offset_m, commit_frames }
 		if (const FJPtr Dk = Obj(St, TEXT("deke")))
 		{

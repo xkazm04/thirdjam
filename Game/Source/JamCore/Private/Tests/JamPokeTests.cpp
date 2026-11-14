@@ -394,6 +394,7 @@ bool FJamMovementPokeReach::RunTest(const FString& Parameters)
 {
 	using namespace JamPokeTests;
 	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
+	if (C) { C->Game.Stick.PickupArcM = 0.0; C->Game.Stick.bPickupBody = false; }   // lane A208: re-staged at game.stick.pickup's neutral: this scene measures the poke that reaches and what it takes; the loose puck's pickup has its own (Jam.Core.Possession.*)
 	if (!C) return false;
 	TestEqual(TEXT("game.stick.poke_assist_deg is 60 when the key is absent"), C->Game.Stick.PokeAssistDeg, 60.0);
 	TestEqual(TEXT("game.stick.miss_recovery_frames is 20 when the key is absent"), C->Game.Stick.MissRecoveryFrames, 20);

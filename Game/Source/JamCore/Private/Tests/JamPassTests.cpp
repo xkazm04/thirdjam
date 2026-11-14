@@ -79,6 +79,7 @@ bool FJamPassReception::RunTest(const FString& Parameters)
 {
 	using namespace JamPassTests;
 	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
+	if (C) { C->Game.Stick.PickupArcM = 0.0; C->Game.Stick.bPickupBody = false; }   // lane A208: re-staged at game.stick.pickup's neutral: this scene measures lane A46's body reception against its neutral; the loose puck's pickup has its own (Jam.Core.Possession.*)
 	if (!C) return false;
 	TestEqual(TEXT("stick.reception_m default 0.9"), C->Game.Stick.ReceptionM, 0.9);
 	{

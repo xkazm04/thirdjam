@@ -531,6 +531,16 @@ public:
 	// held there for ReceptionSettleFrames of settle (a shot inside A39's window is a one-timer); a faster puck bounces off the body unless the blade meets it.
 	static constexpr double BodyReceptionMaxSpeed = 14.0;
 	static constexpr int32 ReceptionSettleFrames = 4;
+	// Lane A208 (game.stick.pickup): the sting. An opposing puck faster than pickup.sting_mps rings off the blade keeping this share of its speed against him,
+	// and off the body with this restitution (a loose rebound).
+	static constexpr double PickupStingKeep = 0.4;
+	static constexpr double PickupBodyBounce = 0.0;   // merged tree: 0 = the old body push for a hard puck (its normal motion taken out, it slides off him): at 0.3 a doubled shot glancing off the crease man went wide (Jam.Core.Payoffs.Deke)
+	// Lane A208: a team-mate's puck rings off the blade only above sting_mps times this (a shot through a mate; no pass is that fast).
+	static constexpr double PickupMateStingMult = 1.5;
+	// Lane A208: a skater stripped by a poke or a lift cannot pick the puck up again for this many frames (it was taken, not dropped).
+	static constexpr int32 PickupLostFrames = 15;
+	// Lane A208 (wave 2): a team-mate's pass in flight is caught within this of his blade point (lane A207's pass.catch_m 1.2), not by the whole arc.
+	static constexpr double PickupMateFlightM = 1.2;
 	// R-0035 (lane A52): the lifted puck. The glass stops a puck under GlassHeightM at the boards (no game.rink.glass_height_m key exists: 2.4 m fixed, a real
 	// rink's 2.4 m of glass over 1.2 m of boards); above it the puck is out of play (a free faceoff at the end it left, as after a foul). A puck whose centre is
 	// within BarRingM + PostRadius of the crossbar's axis rings `post` and reflects; a puck under the bar by more scores, over it by more flies over the net
@@ -958,6 +968,21 @@ private:
 	// StickIn = this frame's stick input (the blade moves after the pass in the step): the human's aim when |StickIn| > 0.05, else last frame's blade.
 	void TryPassPowered(FJamSkaterState& S, int32 HoldFrames, bool bSaucer, const FVector2D& StickIn = FVector2D::ZeroVector);
 	void StepPuck();
+	// Lane A208 (track F0, R-0067 point 2: "the puck moves through them without locking"; game.stick.pickup, docs/experiments/POSSESSION.md): the loose puck is
+	// his who touches it. LoosePickupOn: the rule is on (pickup.arc_m above 0 or pickup.body). MayPlayLoose: S may take a puck nobody carries now (stands, not
+	// braced, the puck under the blades, the puck not his own and not riding with another carrier: R-0048's carried puck is taken only by a press).
+	// TryLoosePickup: one substep's stick arc. Of every skater whose arc (pickup.arc_m from the body, pickup.arc_deg either side of the blade's or the body's
+	// direction) the puck's path [From, now] crosses, the nearest takes it: caught (seated with his motion, his a frame later) or, an opponent's puck faster
+	// than pickup.sting_mps, stung off the blade (a loose rebound). Returns the taker, -1 = none. BodyMeetsPuck: the body's own touch with the rule on: the
+	// path swept against the body circle (no tunnelling at any speed), the puck stopped at him and his, or above sting_mps bounced off him.
+	bool LoosePickupOn() const { return Config.Stick.PickupArcM > 0.0 || Config.Stick.bPickupBody; }
+	bool MayPlayLoose(const FJamSkaterState& S) const;
+	int32 TryLoosePickup(const FVector2D& From, double R);
+	bool BodyMeetsPuck(FJamSkaterState& S, const FVector2D& From, double R);
+	// Lane A208: a net's wall (either net's sides or back) lies across the segment A-B: the arc never takes a puck through a net.
+	bool NetBetween(const FVector2D& A, const FVector2D& B) const;
+	// Lane A208 (pickup.body): another's carried puck inside S's body is pushed out of it; its carrier keeps it (R-0048).
+	void BlockCarried(const FJamSkaterState& S, double R);
 	// R-0035 (lane A52): the free puck's height. StepPuckVertical integrates gravity and the ice bounce for one substep and pins a carried puck to the ice;
 	// ApplyShotLift gives the shot that just left its VZ for LiftForCharge(Charge) over the goal line; TryGoalieSave is the crease skater's save by height
 	// (the saver's index, -1 = no save this substep); OutOfPlay sends a puck over the glass to a free faceoff. All in their own blocks, away from the stick.

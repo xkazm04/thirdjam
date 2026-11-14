@@ -1397,6 +1397,7 @@ bool FJamControlsFirstFiveMinutes::RunTest(const FString&)
 		{
 			FJamGameConfig Cfg = Cart->Game;
 			Cfg.Skater.bChargeDiesOnLoss = A.bKey;
+			Cfg.Stick.PickupArcM = 0.0; Cfg.Stick.bPickupBody = false;   // lane A208: re-staged at game.stick.pickup's neutral: this test measures the mapping; under the pickup seed 3 plays a path where five LMB taps of 4-9 frames read braced (frames 1979-2792, every arm alike: a finding for the contact / controls lanes, StepCrossHold)
 			UJamSim* Sim = NewObject<UJamSim>();
 			Sim->Init(Cfg, static_cast<uint64>(Seed));
 			UJamBrain* Brain = NewObject<UJamBrain>();
@@ -1434,7 +1435,7 @@ bool FJamControlsFirstFiveMinutes::RunTest(const FString&)
 					{
 						Pi->DebugButton(B->Key, false);
 						// a press let go before the threshold that braced (LMB) is a brace on a tap
-						if (B == &L && B->bBraced && B->Len < BraceAt) ++T.BraceOnTap;
+						if (B == &L && B->bBraced && B->Len < BraceAt) { ++T.BraceOnTap; AddInfo(FString::Printf(TEXT("JAMCTRL brace on a tap: seed %d frame %lld down %lld len %d with %d carrier %d last %d"), Seed, (long long)F, (long long)B->Down, B->Len, B->bWith ? 1 : 0, Sim->CarrierIndex(), Sim->GetPuck().LastTouch)); }   // lane A208: the row of the case
 						B->Down = -1;
 						NextPress = F + R.RandRange(8, 70);
 					}

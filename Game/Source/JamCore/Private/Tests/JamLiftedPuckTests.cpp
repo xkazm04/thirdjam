@@ -108,6 +108,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamLiftedShot, "Jam.Core.LiftedShot", JamLifte
 bool FJamLiftedShot::RunTest(const FString&)
 {
 	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
+	if (C) { C->Game.Stick.PickupArcM = 0.0; C->Game.Stick.bPickupBody = false; }   // lane A208: re-staged at game.stick.pickup's neutral: this scene measures the lifted shot's flight over bodies and blades; the loose puck's pickup has its own (Jam.Core.Possession.*)
 	if (!C) return false;
 	FJamGameConfig Cfg = C->Game;
 	TestEqual(TEXT("defaults: tap_m (0 since R-0042: a tap stays on the ice)"), Cfg.Shot.LiftTapM, 0.0);
@@ -302,6 +303,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamSaveByHeight, "Jam.Core.SaveByHeight", JamL
 bool FJamSaveByHeight::RunTest(const FString&)
 {
 	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
+	if (C) { C->Game.Stick.PickupArcM = 0.0; C->Game.Stick.bPickupBody = false; }   // lane A208: re-staged at game.stick.pickup's neutral: this scene measures the crease skater's save by height; the loose puck's pickup has its own (Jam.Core.Possession.*)
 	if (!C) return false;
 	FJamGameConfig Cfg = C->Game;
 	TestEqual(TEXT("defaults: goalie reach"), Cfg.Skater.GoalieReachM, 0.9);

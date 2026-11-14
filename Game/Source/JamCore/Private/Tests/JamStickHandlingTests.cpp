@@ -571,6 +571,7 @@ bool FJamSweepShieldsLift::RunTest(const FString& Parameters)
 {
 	using namespace JamStickHandlingTests;
 	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
+	if (C) { C->Game.Stick.PickupArcM = 0.0; C->Game.Stick.bPickupBody = false; }   // lane A208: re-staged at game.stick.pickup's neutral: this scene measures the sweep's shield against a lift; the loose puck's pickup has its own (Jam.Core.Possession.*)
 	if (!C) return false;
 	const FJamGameConfig& G = C->Game;
 	const FVector2D FwdLeft(0.7071, -0.7071), FwdRight(0.7071, 0.7071);

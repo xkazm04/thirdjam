@@ -211,6 +211,22 @@ struct JAMCORE_API FJamStickConfig
 	// grace's own state (FJamSkaterState::TakeGraceLeft), so the HUD's cue for the grace shows it. 0 = off (the neutral value: the game before the lane).
 	// Needs take_grace_frames above 0 (one rule, one state). A bot's stop earns none (bStopGraceBots below is the measurement's arm).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 StopGraceFrames = 0;
+	// game.stick.pickup (lane A208, track F0; R-0067 point 2, docs/experiments/POSSESSION.md): the loose puck is his who touches it. A puck nobody carries
+	// (not one riding with a carrier: R-0048 holds, that one is taken only by a press) that crosses a standing skater's stick arc, pickup.arc_m from his body
+	// centre within pickup.arc_deg either side of the blade's or the body's direction, is his: seated with his motion (an opponent's puck faster than
+	// pickup.sting_mps stings off the blade instead: a loose rebound). pickup.body: the body stops a loose puck (swept, so no speed tunnels through it) and it
+	// is his; faster than sting_mps it bounces off him. arc_m 0 and body false = the neutral value (the game before the lane: only a puck over 6 m/s at the
+	// blade's 0.6 m disc, a pass at the body, or a body touch that pushed it).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double PickupArcM = 1.5;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double PickupArcDeg = 60.0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") bool bPickupBody = true;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double PickupStingMps = 18.0;
+	// game.stick.pickup.body_catch_mps (lane A208): the body seats a loose puck (it stops at him and is his) only when it meets him slower than this (relative,
+	// into the body); faster it bounces off him (e 0.3) as a loose rebound. The stick arc is not limited by it.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double PickupBodyCatchMps = 18.0;
+	// game.stick.pickup.block_carried (lane A208): with pickup.body, another skater's CARRIED puck is pushed out of a body it meets (no pass-through; the carrier
+	// keeps it in his reach, R-0048). false = a carried puck passes through other bodies as before (R-0048's skip).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") bool bPickupBlockCarried = true;
 	// Not a cartridge key (lane A163): the measurement's arm. true = a bot carrier's stop earns the grace too.
 	bool bStopGraceBots = false;
 	// Not a cartridge key (lane A163, the measurement's third arm; MOVEMENT-7.md section 3): the pickup settles. The frame a skater a person steers becomes
