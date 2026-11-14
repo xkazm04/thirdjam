@@ -1,5 +1,42 @@
 # Lane V3 report: the puck's streak by speed; the pass, shot, possession and body-block sounds (device B), 2026-11-14
 
+## Third session (after the lead's commit 6f69295e): the streak in clay cream on every tier
+
+- GPU from 23:10 to 23:14: GPU-FREE.txt taken ("free from V3 at 22:28"; the b-fig editor then running was headless), written back "free from
+  V3 at 23:14".
+- Editor pid 36428 left through `ExitEditor`; the process is gone. Settings restored: `enable_game_sound` true, `jam.ScriptHuman` 0,
+  `OverridePIEScreenPercentage` 1, `jam.Cut hockey.regular`. No dirty package; no temporary asset. No commit.
+- Changed: **`NS_puck_trail` only** (338,770 -> 338,883 bytes). Its `User.Colour` default is now cream (0.96, 0.92, 0.80), was yellow-green
+  (0.75, 1, 0.15).
+  - Off clay, the material multiplies it by `NightBright` 2.5, which gives exactly the clay cream (2.4, 2.3, 2.0), so the streak is one colour on every tier.
+  - **`M_Fx_PuckTrail` is unchanged.** I left its colour logic alone, so device A can still tint the streak through `User.Colour` if it ever wants to.
+  - Nothing else changed: widths, alphas and the speed rules are as before. Compile up to date, no errors or warnings.
+- Backup of the trail as committed: scratch `v3/bk/NS_puck_trail.6f69295e.uasset`.
+
+**Seen on the GPU** (the same rig and camera as before: the drop moment of a fresh match, four trails at 8 / 20 / 22 / 44 m/s, the doubled shot
+along the red or centre line):
+- `C:/Users/kazda/jam/wt/b-aud/devlog/shots/20261114-231348-B-v3-streak-cream-tiers.png` (+ `-crop.png`, each with a `.txt` caption).
+- Rows: night yellow-green (committed) / night cream / neon yellow-green / neon cream / clay cream.
+
+**What I looked at** (Read: `sheet_cream_c.png`):
+- Night: the streaks are pale cream lines. The doubled shot's line on the red line reads clearly and is no longer a saturated yellow-green; the 20 and
+  22 m/s streaks stay faint.
+- Neon: thin cream-grey lines, calmer than the yellow-green, still readable against the black floor and the white and purple grid.
+- Clay: as before (cream).
+- Nothing is drawn over a figure on any tier: the ribbon lies on the ice and is depth-tested.
+- Number, night: the doubled shot's streak row stands +68 levels (of 255) above the rows 4 px around it, against +35 in yellow-green. Brighter, but not
+  saturated.
+- Neon: my row measure is swamped by the white centre line the streak runs along, so I have no clean number there; judged by eye only.
+
+Ledger rows for this session (`NS_puck_trail` and `M_Fx_PuckTrail` **replace** the rows given in the first hand-back):
+
+| path | kind | size_mb | origin | tool | licence | url | date | device | shipped | note |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Game/Plugins/JamAssets/Content/VFX/NS_puck_trail.uasset | vfx | 0.34 | original | UE 5.9 Niagara via MCP |  |  | 2026-11-14 | B | y | puck ribbon trail by speed: speed max(User.Speed, owner velocity) eased over 0.1 s (held on a near-zero time step or above 90 m/s); visible from a floor (12 m/s while User.Carried is -1, the default; 5 m/s at User.Carried 0; off at 1) over 4 m/s; brightness lerp(0.4, 1, (speed - 12) / 28); width 8 + 12 x (speed - 12) / 28 cm; life 0.15 s, so length = speed x 0.15 s; material M_Fx_PuckTrail; User.Colour default cream (0.96, 0.92, 0.80: x 2.5 off clay = the clay cream on every tier); User.Speed (m/s, default 0), User.Carried (default -1) (lanes B3, B18, B37, V3) (338883 bytes) |
+| Game/Plugins/JamAssets/Content/VFX/M_Fx_PuckTrail.uasset | material | 0.02 | original | UE 5.9 editor via MCP/Python |  |  | 2026-11-14 | B | y | translucent unlit soft ribbon for the puck trail: soft across its width; on clay an HDR cream (2.4, 2.3, 2.0) at ClayOpacity 1.0 times the emitter's speed alpha; off clay the particle colour (NS_puck_trail's User.Colour, cream by default) x 2.5 at 0.8 (MPC_Look.Clay); unchanged in V3's third session (lanes B37, V3) (15702 bytes) |
+
+---
+
 ## Second session (after the lead's commit 8c4ece6e): the streak on night and neon; the thresholds for A207
 
 **No asset changed in this session.**

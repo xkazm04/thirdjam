@@ -1,0 +1,3 @@
+Lane V3, device B, 20261114-231348. The puck's streak made the clay cream on every tier (NS_puck_trail User.Colour default 0.96, 0.92, 0.80, x NightBright 2.5 = the clay cream 2.4, 2.3, 2.0), from the game camera (PIE, hockey.regular with "tier" set per row, the human's camera 3.5 m up, pitch -17.65 deg, the drop moment of a fresh match, the same camera in every row).
+Four test trails at once, nearest to farthest: 8 m/s (slow pass, draws nothing), 20 m/s (full pass), 22 m/s (today's shot), 44 m/s (doubled shot, along the red / centre line).
+Rows: night yellow-green (as committed at 6f69295e, captured 22:27) / night cream / neon yellow-green (22:24) / neon cream / clay cream (unchanged on clay).
