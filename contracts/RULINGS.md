@@ -708,3 +708,14 @@ more, a straight charge under 20 %); (3) the lane writes **the two-column table*
 cells each) and re-sets `Jam.Bot.HumanHasSomethingToDo`'s budget from its own matches; (4) the pass lands **before 07:30** so the operator's package (H28) is
 cut from a measured ladder with its own acceptance run (R-0056); what is not measured by then does not land before he plays; (5) the season is re-read at 200
 a take for the novice after the trim: the ramp of R-0057 holds or the take that breaks it moves one number.
+
+## R-0062 (H27, 2026-11-14 05:30): the ladder the operator plays: five cells within three points, pro on the regular rink at 52.4, as built
+The last pass (A162, 2,000 matches a cell on a7d89871, the instrument the ladder was set with): rookie 85.8 / 83.8 (regular / large rink), pro 52.4 / 50.2,
+all_star 28.8 / 26.1. One number moved: rookie's large-rink red skill 1.12 to 1.14. Rulings: (1) **pro on the regular rink ships as built, 4.4 over its bar**.
+The one lever that moves it (red skill 1.13: 49.3) takes the stop begun at 9.5 m from 97 % to 80.5 %: the stop-and-go is the game's central skill and its
+window is what the operator tests first; a pro that a regular player wins 52 times in 100 is the smaller fault. The 9.5 m bar in
+`Jam.Core.Movement.StopAndGo` stays where lane A121 set it. (2) All_star on the regular rink stays at 28.8: no lever moves it down (checks, speed, red
+skill, pressure, the pass margin: flat or the wrong way). (3) Both are said in the operator's sheet. (4) After 10:00 the curve's next pass starts from the
+operator's answers (which player he is: R-0060; the long shot) and from the rules that wait switched off with their measured costs: the push-out around a
+downed skater (+4.0 at all_star), the check's cooldown and lunge (+0.5 / +1.3 / +2.9 together), the half-second screen (+1.5 / +2.2 / -1.4), the pickup
+that settles (+5.8 / -9.0 / -5.0): the last of these is the first lever found tonight that takes pro DOWN without touching the stop.
