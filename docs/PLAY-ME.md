@@ -20,9 +20,10 @@ If Windows asks about the firewall, that is the joined match's socket: Cancel is
 
 ## Read this first (from the second design review, `docs/design/REVIEW-2.md`, 7,312 measured matches)
 
-- **Check the level you are playing.** Until tonight the menu's AI DIFFICULTY was never passed to a match: the regular cut always played **pro** (a newcomer
-  wins 18 % there). The fix (the player's level wins on PLAY NOW and the cut cards; a fresh profile is rookie; the level is shown at match start) is in the
-  package only if its `package` line in `status/A.md` says so. If it is not: take 1 to 3 of the season are rookie, the regular cut is pro, take 8 is all-star.
+- **The level you pick now reaches the match** (it never did before tonight: the regular cut always played pro, where a newcomer wins 18 %). PLAY NOW and
+  the cut cards play your level; **your first PLAY NOW is ROOKIE** even if you had pro saved (the old save cannot be told from a default); change it in
+  SETTINGS. The season's takes and the modes set their own level. The match card and the pause card show the level in force. This is true of packages from
+  H27 on: check the `package` line in `status/A.md`.
 - **The stop works from 8 m**, the distance from the centre to a winger at a faceoff. From 3 to 6 m it gets you flattened.
 - The three good things to look for are real: **no whistle** in the regular game and the season, **hits that obey speed**, **the stop-and-go**.
 

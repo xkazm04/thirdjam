@@ -1,4 +1,6 @@
 #include "MenuWidget.h"
+#include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
 #include "MenuStyle.h"
 #include "SettingsWidget.h"
 #include "JamCartridge.h"
@@ -794,6 +796,11 @@ void UJamMenuWidget::OnChooseClicked() { ShowScreen(EJamMenuScreen::Cuts); }
 // Lane A144 (track U2): the first press. One match on the regular cut at the settings' difficulty; a rejected cut says so on the first screen.
 bool UJamMenuWidget::PlayNow()
 {
+	// Director (14 Nov, the H27 release): the -cut=<name or path> launch argument wins, as it does in AHokejGameMode::InitGame. The acceptance run starts the
+	// packaged game with its own cut and presses Return here; PLAY NOW loaded hockey.regular through the Designer instead (first to 3), and the run ended
+	// after its third shot. A player never passes -cut.
+	FString LaunchCut;
+	if (FParse::Value(FCommandLine::Get(), TEXT("-cut="), LaunchCut) && !LaunchCut.IsEmpty() && ChooseCut(LaunchCut)) return true;
 	if (ChooseCut(UJamMenuFlow::FirstCut)) return true;
 	if (MainStatus) MainStatus->SetText(FText::FromString(FString::Printf(TEXT("The first match cannot start: %s"), CutsStatus ? *CutsStatus->GetText().ToString() : TEXT("no cut"))));
 	return false;

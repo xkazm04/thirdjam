@@ -120,6 +120,36 @@ namespace JamAI
 		// bot and spin, as BodyCheckShare). 1 = every one (the spin with the cut from 6 m passes a pro 27 %), 0 = none (98 %: the spin's price unpaid).
 		// Tune key hk_spin_end_share. Only read with bReadShield on (the brain of evolution 1 swings at a spin blind).
 		double SpinEndShare = 0.5;
+		// Lane A134 (track Q2, evolution 3; docs/experiments/BRAIN-3.md): the human's side takes a kept puck back. Every field at its default is the brain
+		// of lane A138's tree, bit for bit (the tune key brain3=0; brain2=0 switches these off too). SetEvolution3() turns them on, per side.
+		// YieldArriveS: a loose puck is left to the human by arrival, not by distance: a mate yields only while the human reaches the puck no later than
+		// this many seconds after the mate itself would (ArriveSec: his real velocity and facing, a turn costs time). -1 = the distance rule (yield_margin_m).
+		double YieldArriveS = -1.0;
+		// BackcheckMps (a team without shape jobs: fewer than five): a bot that plays the puck against an opposing carrier faster than this, and is not
+		// goal-side of it, skates for the carrier's lane to our net (the first point on it that it reaches before the carrier), not for the puck behind the
+		// carrier's body, where the body shield refuses its stick. Goal-side again, it meets the carrier from the front. 0 = it chases the puck.
+		double BackcheckMps = 0.0;
+		// StepUpM (a team without shape jobs): the back goes at an opposing carrier in its own half that comes within this many metres of it, from the
+		// front (it is goal-side by its post), instead of waiting for a puck inside 2.5 m. 0 = it holds its post.
+		double StepUpM = 0.0;
+		// MateCheckClosing: the human's mates body-check an opposing carrier from the front or the side at this closing speed and up (the rules of
+		// FJamBotSkill::CheckMinClosing, which the mates' skill does not have). -1 = a mate never checks.
+		double MateCheckClosing = -1.0;
+		// ... only in a team of fewer than MateCheckMaxTeam skaters. 5 (as shipped): three and four a side, where no second defender's stick is near (the
+		// big rinks); the regular game's five keep their mates' rule, so no cell of the ladder moves. 99 = every team (tune key hk_mate_check_max_team;
+		// measured at five a side: regular at pro 67.8 -> 71.0 %, BRAIN-3.md).
+		int MateCheckMaxTeam = 5;
+		// ShotMaxAngleDeg: no aimed shot and no one-timer from further off the net's axis than this (the corner by the goal line, where the mouth is a
+		// slit): the carrier takes the puck to the slot, or passes. 0 = a bot shoots from anywhere in range.
+		double ShotMaxAngleDeg = 0.0;
+		// PincerM (a team without shape jobs, the human's mates): while the human is within this many metres of an opposing carrier, the mate that plays
+		// the puck comes at the carrier from the other side (the point 1.4 m beyond the carrier on the line human -> carrier), so the body cannot shield
+		// the puck from both. 0 = it takes the puck's goal-side, wherever the human is.
+		double PincerM = 0.0;
+		// bPressInHunt (measured, ships off: BRAIN-3.md section 6): the presser of a five keeps its Press job (the gap in front of a carrier that goes) inside
+		// its skill's HuntRadiusM. Off, as on every tree so far: the hunt takes every bot inside the radius off its shape job, the presser included, so the
+		// hunt radius is also the distance at which the presser stops closing under control and charges (it moves the stop-and-go's window: R-0055 point 1).
+		bool bPressInHunt = false;
 		bool Any() const { return bCarryOrPass || bAttackShape || bDefenceShape || bTransition; }
 	};
 	// Lane A115: every rule of evolution 2 on (as ProHockeySense has them) or off (the brain of evolution 1). The tune key brain2 and the tests use it.
@@ -128,6 +158,37 @@ namespace JamAI
 		H.bPassRoom = H.bSupportHuman = H.bChaseAhead = H.bBrakeMeant = H.bStopCut = H.bCarrySprint = H.bReadShield = bOn;
 		H.MateStickFrames = bOn ? 10 : -1;
 		H.bGapControl = false;   // built and measured, not switched on by the profile (BRAIN-2.md): the tune keys opp.hk_gap_control=1;mate.hk_gap_control=1 play it
+	}
+	// Lane A134 (evolution 3, BRAIN-3.md): the rules of evolution 3 as shipped (ApplyDifficultyProfile calls it for each side) or off (lane A138's tree).
+	// bMate: the human's side (the rules that take a kept puck back are his mates'; the opposing side keeps its approach: law 3's drill is measured on it).
+	// The values are BRAIN-3.md's: a rule that is 0 / -1 here was measured and ships at its neutral value (its tune key plays it).
+	constexpr double kEvo3YieldArriveS = -1.0;
+	constexpr double kEvo3BackcheckMps = 0.0;
+	constexpr double kEvo3StepUpM = 10.0;
+	constexpr double kEvo3MateCheckClosing = 2.0;
+	constexpr double kEvo3ShotMaxAngleDeg = 0.0;
+	constexpr double kEvo3PincerM = 0.0;
+	inline void SetEvolution3(FJamHockeySense& H, bool bOn, bool bMate)
+	{
+		H.YieldArriveS = -1.0;
+		H.BackcheckMps = 0.0;
+		H.StepUpM = 0.0;
+		H.MateCheckClosing = -1.0;
+		H.MateCheckMaxTeam = 5;
+		H.ShotMaxAngleDeg = 0.0;
+		H.PincerM = 0.0;
+		// bPressInHunt is a level's switch (BRAIN-3.md section 6: it suits all_star's approach and breaks pro's): on, this leaves it as the level's
+		// profile set it (FJamDifficultyProfile::Opp.Hk.bPressInHunt; no level sets it today); off (brain3=0) switches it off with the rest.
+		if (!bOn) { H.bPressInHunt = false; return; }
+		if (bMate)
+		{
+			H.YieldArriveS = kEvo3YieldArriveS;
+			H.BackcheckMps = kEvo3BackcheckMps;
+			H.StepUpM = kEvo3StepUpM;
+			H.MateCheckClosing = kEvo3MateCheckClosing;
+			H.PincerM = kEvo3PincerM;
+		}
+		H.ShotMaxAngleDeg = kEvo3ShotMaxAngleDeg;
 	}
 	// Lane A94: the sense each level plays (DifficultyProfile.cpp sets the opponents' per level; the human's teammates play ProHockeySense at every level).
 	inline FJamHockeySense ProHockeySense()
@@ -455,6 +516,13 @@ namespace JamAI
 	// a fifth of a second to turn). The last toucher of a puck that leaves it faster than 6 m/s (its own pass or shot) starts a second late: it is the chaser
 	// only when nobody else of its team gets there. -1 = the team has nobody standing.
 	JAMCORE_API int LoosePuckOwner(const FJamAIWorld& W, int Team, double SkaterSpeed);
+	// Lane A134 (evolution 3, BRAIN-3.md). Seconds until skater i can be within a metre of where the loose puck will be (steps of a tenth up to two seconds,
+	// the puck slowing as in LoosePuckOwner; 2.5 + distance / speed when not inside two). The skater first turns: 0.2 s when it already heads for the puck
+	// (its velocity above 1 m/s, else its facing), up to 0.8 s for an about-turn, drifting on its velocity meanwhile; then it covers Speed m/s.
+	JAMCORE_API double ArriveSec(const FJamAIWorld& W, int i, double Speed);
+	// Lane A134: the point on an opposing carrier's lane to Team-of-Id's net that Id reaches before the carrier does (steps of 2 m from 2 m ahead of the
+	// carrier; the carrier at its own speed, at least 3 m/s; Id at Speed), else the last point, 4 m in front of the net.
+	JAMCORE_API FVec2 BackcheckPoint(const FJamAIWorld& W, int Id, int Carrier, double Speed);
 	// Where a teammate of the carrier offers a pass lane: the best of six spots beside and ahead of the carrier (each side: level and wide, ahead, far ahead),
 	// scored by an open lane from the carrier (no opponent within 2 m of it), the free ice round the spot, how far up the ice it is and how near the skater is
 	// to it already; never within 4 m of another teammate.
