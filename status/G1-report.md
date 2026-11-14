@@ -1,5 +1,62 @@
 # G1 report: the GPU lane (device B)
 
+# Hand-back 3 (15:20): job 3, the neon arena
+
+Machine clock 14:58 to 15:20. The editor was restarted once to drop the dirty `Rink` map (pid 10980 left through `ExitEditor` with discard; new pid 40588), and at the end left through `ExitEditor` (see the hand-back message). Cvars put back: `jam.Cut hockey.regular`, `r.Editor.Viewport.OverridePIEScreenPercentage 1`. No dirty package at the end. Builder script: scratch `g1\neon.py` with `g1\params.txt` (re-runnable: it clears the rig map and rebuilds it).
+
+## 1. Done / not done
+- **Done: job 3**, the neon arena, **built into the contract's existing slot `Rigs/LR_L3_Neon` (tier `l3_neon`)**, not as a new `LR_N1_Neon`. Why: `ULookTierSwitcher` already maps `l3_neon` to `/JamAssets/Rigs/LR_L3_Neon`, the map is already in `+MapsToCook`, `contracts/look-tiers.md` says B fills it, and **Glass House, Cage and Bruisers already play on `l3_neon`** (until now on lane A0's empty 8 KB placeholder). A new `LR_N1_Neon` would have needed a tier row in A's code and a cook line before 18:00; this needs neither. If device A still wants the name `LR_N1_Neon`, it is a rename plus one table row.
+- Not done: the figures' trims emissive in team colours (needs device A: below); job 4.
+
+## 2. The item
+**What the rig holds** (86 actors; labels per the contract): `PPV_L3_Neon` (unbound; histogram exposure fixed at 4.2 like night, bias 0, bloom 1.3, blendables `MI_PP_ToonRamp`, `MI_PP_Outline`), `Sky_L3_Neon` (captured scene, not real-time, 0.6, violet 0.45/0.35/1.0), `Spot_L3_Neon_1..4` (night's four overhead spots at 35 % intensity, 18,760 cd, lavender-white), `Fog_L3_Neon` (density 0.012, falloff 0.4, deep violet, from 25 m), and:
+- **The grid on the ice** (`Trim_L3_Neon_G1..39`): its own lattice of two line families at +/-30 degrees to the long axis, 4 m apart, the second family offset half a step, so the ice carries long thin lozenges, not squares; lines 3.5 cm wide, 2 mm proud of the ice, clipped 2 m inside the boards (so they stay inside on Cage 60 x 28 and Bruisers 56 x 28, where the rig scales with length). Material `Look/MI_Neon_Grid` (M_Trim, lilac 0.60/0.45/1.0, Emissive 2.5).
+- **A line of light at the foot of the boards** (`Trim_L3_Neon_B1..28`): 14 cm, 80 cm inside the 90 x 45 m outline, round the corners; `Look/MI_Neon_BoardLine` (orchid 0.85/0.35/1.0, Emissive 20). On top of that the rink's own trims stand on this tier as before (the yellow cap and the blue rail light, A's).
+- **The dark hall** (`Hall_L3_Neon_1..4`): four dark walls (`MI_Toon_Dark`) 65 m and 42 m out, 24 m tall, each with two magenta lines on its inner face at 4.5 m and 13 m (`Trim_L3_Neon_W*`, `Look/MI_Neon_WallLine`, 1.0/0.15/0.6, Emissive 10). Palette: lilac, orchid and magenta on indigo, chosen to stay clear of both team colours (no cyan-on-black, no orange lines).
+- No collision anywhere, no shadows from the strips, nothing gameplay.
+
+**Judged from the game camera with ten figures, un-paused match**: tier forced by passing a copy of `hockey.regular` with `look.tier = "l3_neon"` to `jam.Cut` (scratch `neon.cartridge.json`); the log names `BP_SkaterVisual_TB1` for all ten. **Readability**: the puck's lime halo (the opaque `MI_Trim_PuckHalo` emits off clay) is the brightest thing on the ice and reads at once; blue and orange jerseys stand clear of the lilac lines and the indigo ice; the rink's red/blue markings stay visible under the lattice. Lines never cross a figure (they lie on the ice).
+
+**Frame time against the other rigs** (`ProfileGPU`, PIE, 1920 x 1085, game camera at the centre drop, device B's weak GPU, three samples each; the third sample of each spiked, so I list the first two): neon GPU 13.1 / 13.3 ms (third 12.9), clay 11.8 / 17.6 ms, night 11.5 / 12.1 ms. So neon is about **+1 to +1.5 ms over night** here; noisy; not measured on device A's machine against the 5.5 ms budget.
+
+**The trims emissive in team colours: needs device A.** The figure's materials have the parameters (helmet and jersey are per-figure MIDs with `TeamColour`; `M_Toon` has `Emissive`, `RimColour`, `RimStrength`), but a rig cannot reach a figure's materials. Previewed in PIE (not saved): on the helmet MID (slot 4) and the trim slot (2, as a new MID) `TeamColour` = the jersey's `TeamColour`, `Emissive` 6, `RimColour` = 4 x team colour + 0.05, `RimStrength` 1.5: helmets and trims glow in their own team's colour; modest but visible (`...-neon-trim-glow-ab.png`). Ask: set these on tier `l3_neon` where A already sets the figures' team MIDs.
+
+**Stills** (each with a `.txt` caption):
+- `C:\Users\kazda\jam\wt\b-arena\devlog\shots\20261114-151800-B-g1-neon-gamecam-play.png`
+- `C:\Users\kazda\jam\wt\b-arena\devlog\shots\20261114-151801-B-g1-neon-wide.png`
+- `C:\Users\kazda\jam\wt\b-arena\devlog\shots\20261114-151802-B-g1-neon-boards.png`
+- `C:\Users\kazda\jam\wt\b-arena\devlog\shots\20261114-151803-B-g1-neon-trim-glow-ab.png`
+
+**What I looked at (Read tool):** the placeholder tier was never stilled; first pass (grid white and loud near the camera, a red on-screen warning from a real-time sky capture, no board line visible), second pass (grid lilac and quieter, warning gone, board line still hidden), the glow preview, the board view (line faint), and the final game-camera play frame, board view and wide frame (board line now plain round the whole rink).
+
+## 3. Not verified
+- Cage and Bruisers (smaller rinks): the lattice is inset for them by arithmetic, not seen; the board-foot line is placed for 90 x 45 and on a 60 x 28 rink its long sides sit 1 m outside the boards (behind them, not seen).
+- Glass House's penalty boxes on this rig; obstacles (Cage's pillars) against the lattice.
+- Frame time on device A; cook.
+- A moving puck over the lines (Lumen light from the strips is static, so no trail expected).
+
+## 4. For device A
+- Tier **`l3_neon`**, rig `/JamAssets/Rigs/LR_L3_Neon` (already in your table and cook list). Nothing to wire for the rig; the modes already on `l3_neon` get it.
+- New materials to cook with it (referenced by the map, so the cooker finds them): `Look/MI_Neon_Grid`, `Look/MI_Neon_BoardLine`, `Look/MI_Neon_WallLine`.
+- The rig brings its own lights now, so `OnRigLoaded` hides the persistent sky light and drops the no-rig exposure bias on this tier (your lane A64 path); that is intended.
+- Optional: the team-colour trim values above on `l3_neon`.
+
+## 5. Decisions for the operator
+- The lattice (lozenges at +/-30 degrees) and the lilac/magenta palette, or a quieter ice (grid Emissive 1.5) if it reads busy in play.
+
+## 6. Next three steps
+1. Device A: the figures' trim glow on `l3_neon` (values above), then a still from me.
+2. Neon seen on Cage and Glass House (obstacles, boxes, small rink).
+3. Job 4 (menu scene) if wanted after 16:45.
+
+## 7. Ledger rows
+| Game/Plugins/JamAssets/Content/Rigs/LR_L3_Neon.umap | map | 0.15 | original | UE 5.9 editor via MCP/Python (scratch neon.py) |  |  | 2026-11-14 | B | y | the neon tier's rig (l3_neon), filled from lane A0's placeholder: PPV_L3_Neon, Sky_L3_Neon, Spot_L3_Neon_1-4, Fog_L3_Neon; a lattice of 39 lilac light lines on the ice at +/-30 deg 4 m apart clipped 2 m inside the boards, a 28-segment orchid line at the board foot, four dark hall walls with magenta lines; no collision; seen on the GPU from the game camera with ten figures (lane G1) (160780 bytes) |
+| Game/Plugins/JamAssets/Content/Look/MI_Neon_Grid.uasset | material | 0.01 | original | UE 5.9 editor via MCP/Python |  |  | 2026-11-14 | B | y | instance of M_Trim, TeamColour lilac (0.60, 0.45, 1.0), Emissive 2.5; the ice lattice of LR_L3_Neon (lane G1) (8170 bytes) |
+| Game/Plugins/JamAssets/Content/Look/MI_Neon_BoardLine.uasset | material | 0.01 | original | UE 5.9 editor via MCP/Python |  |  | 2026-11-14 | B | y | instance of M_Trim, TeamColour orchid (0.85, 0.35, 1.0), Emissive 20; the board-foot line of LR_L3_Neon (lane G1) (8038 bytes) |
+| Game/Plugins/JamAssets/Content/Look/MI_Neon_WallLine.uasset | material | 0.01 | original | UE 5.9 editor via MCP/Python |  |  | 2026-11-14 | B | y | instance of M_Trim, TeamColour magenta (1.0, 0.15, 0.6), Emissive 10; the hall wall lines of LR_L3_Neon (lane G1) (8406 bytes) |
+
+---
+
 # Hand-back 2 (14:54): job 2, the menu backdrop, and job 2b, the UI kit on the GPU
 
 Machine clock 14:40 to 14:54, same tree (now at 765c893e with job 1 committed by the lead). The editor was left through `ExitEditor` (pid 32208 gone), the one allowed command `git checkout lane/b-aud -- Game/Plugins/JamAssets/Content/UI` was run (it **stages** the 32 kit files in this tree's index: the lead cleans it up), and the editor was restarted: **pid 10980, port 8008, running, idle, no play session**. The `Rink` map is dirty in memory only (a test actor was added and destroyed; never saved: leave with `bDiscardUnsavedChanges true`). Put back: `LevelEditorPlaySettings` new window 1536 x 878; `jam.Cut` default; no other cvar touched. `r.SetRes 1920x1080w` was used inside play sessions only.

@@ -1,0 +1,1 @@
+Left: figures as they ship on l3_neon. Right: a preview set in PIE only (not saved): helmet MID and trim slot with TeamColour = the jersey colour, Emissive 6, RimColour = 4 x team colour, RimStrength 1.5. What device A would set per figure for emissive team-colour trims.
