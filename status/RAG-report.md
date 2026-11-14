@@ -297,3 +297,188 @@ All in `C:\Users\kazda\jam\rag-lab\film\`. For the GPU lane, in three lines:
 | Game/Plugins/JamAssets/Content/Skaters/Lab/PHYS_SkaterTB1_P3_Rag.uasset | other | 0.03 | original | UE 5.9 PhysicsAssetToolset (MCP) + Python |  |  | 2026-11-14 | B | n | lab, not shipped: 16 bodies for SK_SkaterTB1_P3 (14 fitted capsules with seven radii reduced, a neck sphere, a thin stick capsule at mass scale 0.2), limits and the neck and stick joint anchors set by Python, used only by Lab/BP_SkaterVisual_TB1_P3_Rag (lane RAG) (28883 bytes) |
 | Game/Plugins/JamAssets/Content/Skaters/Lab/PM_RagIce.uasset | other | 0.0 | original | UE 5.9 editor via MCP/Python |  |  | 2026-11-14 | B | n | lab, not shipped: physical material of the child figure's own floor (friction 0.05, restitution 0, combine min) (lane RAG) (1795 bytes) |
 ```
+
+---
+
+# Part 3 (third loop, 03:07 to 03:50): the merged figure with its whip, the landing dips, the night figure, the wall falls
+
+Same tree (`C:\Users\kazda\jam\wt\b-vfx`, branch `lab/ragdoll`, now at 911a334a: the merge of local `dev-b` b65f7525 as 3ee31df1, then one commit of four Lab files; local, not pushed). The merge had no conflict; the rebuild passed in 129 s. Port 8000, every editor `-nullrhi -unattended`: three sessions (pids 17732, 24720, 21548), each left through `ExitEditor` with the discard flag and confirmed gone, the last at 03:42:00. `LogD3D12RHI` lines 0 and `Error:` lines 0 in the three logs. The play world's time advanced in every session; `Slate.bAllowThrottling 0` was not needed. In the lead's tree only this report is mine; `film\loop2\` was not touched.
+
+## 1. What is done, what is not
+
+All five items are done and measured on the merged figure. **Physics alone hands back within 3 cm in 20 of 20 knockdowns on both figures at 5000 / 106; the eight wall takes hand back 8 of 8 with nothing more than 0.2 cm further past the boards than the hand-made twin; two seeded matches on the merged build ran clean with wall falls simulated.** The child now yields to the parent's whip on the head and the stick arm while it simulates and keeps the spine. Not met, with the reasons in numbers below: with the whip on, the hand-back is 19 of 20 on clay and 18 of 20 on night, and every miss is a back fall where the hand-made twin's own left hand flickers; the landing dips reach 20 of 20 on clay only with two physics sub-steps, which is a project setting; 25 cm still cannot be held. I also found and fixed a fault of my own from part 2 (the tick order). Nothing was seen.
+
+## 2. Per evolution
+
+### Evolution 0: onto the merged figure
+
+**A fault of mine that the merge exposed.** In part 2 I made the mesh tick after the figure. That shifted the parent's own lying-loop start by one frame on the child. On the old figure it did not show; on the new one, whose loop start is computed from the frames left, 5 of 20 knockdowns sat 1.4 to 3.8 cm off the twin after the physics was over. The child's tick now runs after its mesh's, as the parent's does. **With the physics switched off the child equals the twin on every point and frame, 0.00 cm, on both figures.** Part 2's "equal to the script-driven run" was measured with the old order and was not repeated.
+
+**Two more changes that the new measure asked for.** The limits on the simulated joints are free now: the ankle cone was turning the feet, so a foot's shape sat up to 5.8 cm off at the hand-back while the ankle point read within 3. The table has a row for it. Continuous collision is on for the simulated bodies.
+
+**`SetTestMode(16)` still exists and switches the whip off. It also forces the lying rule B** (the Blueprint tests `UpMode >= 8`), so a whip-off figure is not a clean twin for a whip-on one after the hold frame. I compare off against off and on against on.
+
+**The table, clay, 5000 / 106, the same 20 knockdowns** (whip on = Strength 1.0 sent to both figures, of which a knockdown takes half):
+
+| | Whip off on both | Whip on on both | Off, 2 sub-steps | On, 2 sub-steps |
+|---|---|---|---|---|
+| Handed back within 3 cm (worst end) | 20 (2.24 cm) | 19 (4.06) | 20 (1.13) | 20 (2.65) |
+| Shape heights within 3 cm at the hand-back (worst) | 20 (0.8) | 19 (3.2) | 20 (0.5) | 20 (2.0) |
+| Every end within 60 cm (furthest) | 20 (50.3) | 20 (50.6) | 20 (46.5) | 20 (46.5) |
+| Every end within 25 cm | 3 | 4 | 10 | 10 |
+| Lag of hands and head during the fall, mean / peak | 6.2 / 50.3 cm | 6.1 / 50.6 | 5.1 / 40.5 | 5.1 / 38.8 |
+| mean by point: left hand, stick hand, head's top | 3.7, 3.9, 11.0 | 3.7, 3.9, 10.8 | 3.2, 3.5, 8.5 | 3.2, 3.5, 8.6 |
+| Knockdowns with a simulated shape under the ice and lower than its twin | 4 (1 frame each, 3.3 cm at most) | 1 (1 frame, 0.9 cm) | **0** | **0** |
+| Blade within 5 cm of the twin's lowest (worst under it) | 19 (5.3) | 20 (3.8) | 20 (1.8) | 20 (3.1) |
+| Pose error two frames after the hand-back, NaN | 0.00, 0 | 0.00, 0 | 0.00, 0 | 0.00, 0 |
+| Get-up end minus release (40 lines) | 0.0 | 0.0 | 0.0 | 0.0 |
+
+- Run-to-run spread: 0.000 cm over 33,908 samples (whip on, twice in one session; night, whip off, across an editor restart from the committed files).
+- Against part 2: the hands lag less (3.7 and 3.9 cm, were 4.8 and 5.5) because the elbows are free; the head is the same.
+- **The one miss with the whip on is the twin, not the physics.** In every back fall, with the figure's defaults, the hand-made twin's left hand alternates about 2 cm up and down on consecutive frames for nine frames in `Lie_Loop_Front` (frames 24 to 32 of a 60-frame knockdown, 54 to 62 of a 113-frame one; six of six back falls, both figures). With `SetTestMode(16)` it does not. In the 60-frame knockdown that window lies on the hand-back and the ragdoll's hand is 4.06 cm from a hand that is jumping.
+
+### Evolution 1: the whip against the physics
+
+**How.** The parent offers no weight to set, so the child does it by override: after the parent's tick has written the whip into the animation Blueprint, and only while the child is simulating, the child sets that Blueprint's `WhipHead` and `WhipArm` back to zero. `WhipRot` (the two spine bones) is not touched. A switch, `RagWhipYield`, default on.
+
+**Proving numbers.**
+
+- Hand-back with whip and physics both on: 19 of 20 on clay (the miss above), 20 of 20 with two sub-steps.
+- **The head's peak lag: 50.6 cm with the whip on against 50.3 physics-only, 0.6 % apart** (38.8 against 40.5 with sub-steps).
+- The spine keeps its whip: `spine_03` is 0.00 cm apart between the child with the yield and without.
+- What the yield removes: up to 4.9 cm at the head's top and 4.1 cm at the stick hand (means 0.9 and 0.2 cm) over the whip's frames.
+
+**What I would ask the figure lane for:** `WhipHeadW` and `WhipArmW`, floats, default 1, multiplied into `WhipHead` and `WhipArm` inside `WhipTick`. The child then sets them to 0 at switch-on and 1 at stop, and no longer needs to name the animation Blueprint (today that one line differs between the clay and the night child).
+
+### Evolution 2: the landing dips
+
+| Step (clay, whip off) | Knockdowns with a shape under the ice and lower than its twin | Frames in all, deepest |
+|---|---|---|
+| The merged figure, part 2's physics asset | 8 of 20 | 16, 7.4 cm |
+| Free limits and continuous collision | 4 of 20 | 4, 3.3 cm |
+| More solver iterations on the bodies | no change | |
+| World solver at 32 iterations | 5 of 20, and the motors feel different | 15, 7.8 cm |
+| **Two physics sub-steps (1/120 s)** | **0 of 20** | 0 |
+
+- **20 of 20 is reached on clay, with the motor unchanged, only with sub-stepping.** That is `bSubstepping`, `MaxSubstepDeltaTime` 0.008333, `MaxSubsteps` 2 in the project's physics settings, device A's file. I set it in my session only; nothing is saved. Its cost in frame time was not measured.
+- Read strictly ("no simulated shape lower than its twin's lowest") it is 13 of 20 even then: the stick lies on the ice at 0.0 to 0.1 cm where the twin's hovers at 1.0 to 1.3. On the ice, not under it.
+- Without sub-stepping: 16 of 20 on clay, 15 of 20 on night; every dip lasts one or two frames and is 4.5 cm at most.
+
+### Evolution 3: the night figure and the wall falls
+
+**The night figure.** `Lab/PHYS_SkaterTB1v2_Rag` (16 bodies fitted to `SK_SkaterTB1v2`; head radius 25.5 to 17 and feet 11.6 to 6 so the twin does not sink them; the same neck, stick, free limits and continuous collision) and `Lab/BP_SkaterVisual_TB1_Rag`, a child of `BP_SkaterVisual_TB1` with the same schedule.
+
+| Night, 5000 / 106 | Whip off | Whip on | Off, 2 sub-steps | On, 2 sub-steps |
+|---|---|---|---|---|
+| Handed back within 3 cm (worst) | 20 (1.88) | 18 (5.15) | 20 (1.02) | 18 (3.46) |
+| Every end within 60 cm (furthest) | 20 (45.9) | 20 (45.9) | 20 (42.7) | 19 (61.1) |
+| Every end within 25 cm | 7 | 8 | 11 | 10 |
+| Lag of hands and head, mean / peak | 6.0 / 45.7 | 6.0 / 45.5 | 5.0 / 35.4 | 5.4 / 48.9 |
+| Under the ice and lower than its twin | 5 (2 frames, 4.5 cm at most) | 0 | 2 (1 frame, 1.5 cm) | 0 |
+| Blade within 5 cm of the twin's (worst under) | 19 (7.5) | 20 (2.1) | 20 (2.5) | 20 (2.5) |
+| NaN, end minus release | 0, 0.0 | 0, 0.0 | 0, 0.0 | 0, 0.0 |
+
+The two misses with the whip on are back falls again, the left hand, the twin's flicker.
+
+**The wall falls.** With `RagWalls` on the child no longer skips them. A second box, `RagWall`, stands at the figure's own wall plane (from the parent's `WallYaw` and `WallD`) while the physics runs, set back 6 cm because the twin's own shapes reach that far. The mesh's 30 cm shift toward the boards moves the motors' targets, so the bodies follow it. And the hand-back now starts no later than 9 frames before the get-up, whatever the fall: a 75-frame wall knockdown gets up at frame 40.
+
+| Eight wall takes (four sides, clay and night, 66 cm from a straight board, shift 30, whip off) | Result |
+|---|---|
+| Handed back within 3 cm | **8 of 8**, worst 0.33 cm |
+| A simulated shape further past the boards plane than its twin | **0 of 8** (largest excess 0.2 cm; the twin's own shapes are up to 5.5 cm past it, its stick on frame 1 of the back fall aside) |
+| Furthest any end got from the twin while the mesh shifted | 13.7 to 23.9 cm |
+| Lowest simulated shape | 0.1 to 2.7 cm under the ice in the eight (the twin 2.2 to 3.3 above); with two sub-steps 0.0 to 0.8 |
+| NaN, get-up end minus release | 0, 0.0 |
+
+**Two seeded matches on the merged build** (`pro`, five a side, scripted human, the final child as every pawn's figure with `RagWalls` on, swapped in as in part 2 and restored the same way):
+
+| | Seed 1 | Seed 7920 |
+|---|---|---|
+| Last sim frame | 6623 | 6360 |
+| Knockdowns | 3 (the human) | 5 (human 4, bot 4 once) |
+| Physics ran | 3 | 5, two of them wall falls |
+| Frames between physics off and the get-up's start, smallest | 30 | 2 (an 83-frame wall fall, by the new rule) |
+| Still simulating at the release | 0 | 0 |
+| Get-up end minus release | 0.0 on 3 | 0.0 on 5 |
+| NaN, `Error:` lines, Blueprint runtime warnings | 0, 0, 0 | 0, 0, 0 |
+
+### Evolution 4: the film scripts
+
+`C:\Users\kazda\jam\rag-lab\film\loop3\` holds the five asset files and its own scripts; `loop2\` and the scripts beside it are as the picture lane has them. For the GPU lane:
+
+1. Copy the five `.uasset` files in `film\loop3\` into `Skaters\Lab\` of the filming tree before its editor starts (they replace loop 2's three).
+2. In a play session run `film\loop3\film3_make_clay.py` (ten pairs as before, blue hand-made, red ends-only, both whipped at Strength 1.0), then `film3_status.py` until `done`, then `film3_off.py`; `film3_make_night.py` is the same on the night figure.
+3. `film3_make_walls_clay.py`: four pairs 66 cm from the +Y boards at x -1500 to +1500, wall ahead, behind, right, left, one every 150 frames from frame 90.
+
+All three ran headless in a clean session (10, 10 and 4 pairs, no error). After that run I added one clearer error message and rebuilt them; the rebuilt files were parsed, not run again. If a make script answers "no player controller yet", the play session was still starting: run it again.
+
+**About the loop 2 film on the merged figure:** it runs, but that child was built before the merge. Its lying loop starts one frame late against the twin (the fault above) and it does not yield to the whip. Loop 3 is the matching set.
+
+## 3. Not verified
+
+- **Anything by eye.**
+- The film scripts on a GPU editor.
+- Clay from a clean start: the first run of the clean session failed to spawn (the play session was not ready), so the across-restart repeat is night's only; clay repeated within one session.
+- The whip at the wall: the wall takes ran with the whip off on both. Corners, and distances other than 66 cm, were not measured against a twin; two wall falls ran in a match without one.
+- The matches used a duplicate of the final clay child with `RagWalls` on. No night match. No twin in a match, so no distances there.
+- Sub-stepping's cost, and whether it changes anything else in the game that uses physics.
+- The frame-time cost of the bodies, a cook, a packaged build.
+- `Trip` and a second knockdown during a simulated one still never occurred.
+
+## 4. For the engine lane
+
+- **The children as they stand** (`RagEnabled` on, `RagWhipYield` on, `RagWalls` off, 5000 / 106, hand-back motor 25000 / 237): physics from frame 4, the hand-back from hold frame + 18 or 9 frames before the get-up, whichever is earlier, over 7 frames.
+- **For the figure lane, three things in the parent:**
+  1. `WhipHeadW` and `WhipArmW` as above.
+  2. The left hand's nine-frame flicker in `Lie_Loop_Front` with the default lying rule (not with `SetTestMode(16)`), in every back fall, both figures.
+  3. On frame 1 of `Board_Fall_Back` the twin's stick reaches 91 cm (clay) and 105 cm (night) past the boards plane, by my stick shape.
+- `SetTestMode(16)` changes the lying rule as well as the whip; a test switch for the whip alone would make clean twins.
+- A fourth tool trap: `summon` in a play session that has no player controller yet spawns nothing and says nothing.
+
+## 5. For the other device
+
+- **To use the children in the game:** in `AHokejGameMode::VisualClassPathsFor`, for `humanoid_b1`: on `p3_clay` first `/JamAssets/Skaters/Lab/BP_SkaterVisual_TB1_P3_Rag.BP_SkaterVisual_TB1_P3_Rag_C`, then today's path; on the other tiers first `/JamAssets/Skaters/Lab/BP_SkaterVisual_TB1_Rag.BP_SkaterVisual_TB1_Rag_C`, then today's. If a child is absent the game falls back as it does now.
+- **Collision channel:** nothing is required. The bodies meet only the child's own floor and wall on the engine's `Destructible` channel, which nothing else here uses. A named channel is tidier, not needed.
+- **Optional, for the dips:** `[/Script/Engine.PhysicsSettings]` `bSubstepping=True`, `MaxSubstepDeltaTime=0.008333`, `MaxSubsteps=2`.
+- Still wanted for testing: a console variable that names a figure class, so no file has to be swapped.
+
+## 6. Decisions for the operator
+
+1. **Ship it or not is the film's call.** Everything a number can show is in place on both figures; what a number cannot show is whether 4 to 11 cm of trailing hands and head reads as life.
+2. **Sub-stepping.** Without it a forearm or the stick is under the ice for one frame in about one fall in four or five. With it, none on clay. It is a global physics setting with an unmeasured cost.
+3. **Wall falls with physics** pass 8 of 8 and ran in a match, but are off by default until they are filmed; one variable turns them on.
+4. **The whip under the physics.** The yield removes at most 5 cm at the head. If the film shows no difference, the yield can stay or go without touching a bound.
+
+## 7. The next three evolutions
+
+1. **The weights in the parent** (`WhipHeadW`, `WhipArmW`) and the child using them. **Proving number: the child's graph names no animation Blueprint, and the 20 knockdowns give the same positions as today's override to 0.01 cm.**
+2. **The cost.** Frame time of ten figures all knocked down at once, with and without two sub-steps, on the GPU editor. **Proving number: the added milliseconds per frame, and the frame rate of a 100 s match with the children against without.**
+3. **Corners and other distances at the wall, with the whip on.** **Proving number: 0 shapes further past the boards than the twin and the hand-back within 3 cm in 12 of 12 (three distances, straight board and corner arc, two figures).**
+
+## Would I ship it
+
+**Yes, if the film is liked, and only then.** The list the lead would adopt, as they are and where they are (the files name each other by path, so they stay under `Skaters/Lab/` or are moved in the editor, not on disk):
+
+- `Game/Plugins/JamAssets/Content/Skaters/Lab/BP_SkaterVisual_TB1_P3_Rag.uasset`
+- `Game/Plugins/JamAssets/Content/Skaters/Lab/BP_SkaterVisual_TB1_Rag.uasset`
+- `Game/Plugins/JamAssets/Content/Skaters/Lab/PHYS_SkaterTB1_P3_Rag.uasset`
+- `Game/Plugins/JamAssets/Content/Skaters/Lab/PHYS_SkaterTB1v2_Rag.uasset`
+- `Game/Plugins/JamAssets/Content/Skaters/Lab/PM_RagIce.uasset`
+
+The other device changes the two class paths in section 5; the collision channel needs no change; sub-stepping is its choice. Before a push: a cook check (five new assets under `Skaters/`), which I did not run. What would make me say no: the film reading as mush, or the cost (unmeasured) showing in the frame rate.
+
+## State left behind
+
+- My tree: `lab/ragdoll` at 911a334a, clean. The shipped `BP_SkaterVisual_TB1_P3`, `BP_SkaterVisual_TB1`, both animation Blueprints and `BP_SkaterVisual_TB2_P3` hash to their LFS ids. The lead's exclude rule hides `Skaters/Lab/`, so the two new files were added with `git add -f`.
+- Console variables and the physics settings were set back before each session ended; none was saved. No process of mine is running.
+- Lab folder additions: `child_tpl3.dsl` (the Blueprint's schedule as written, for both children), `mk_child.py`, `mkvars.sh`, `mk_defaults.py`, `n2_frames.py`, `q3_body.py`, `q5_free.py`, `anaw.mjs`, `casesW.py`, `shapes_night.json`, `runs\F_*.txt` and `runs\S_*.txt` (per-knockdown tables without and with sub-steps), `runs\M3.json`, `runs\M4.json`, `film\loop3\`.
+
+## Ledger rows for part 3 (11 fields; these replace part 2's rows if the files are adopted)
+
+```
+| Game/Plugins/JamAssets/Content/Skaters/Lab/BP_SkaterVisual_TB1_P3_Rag.uasset | other | 0.65 | original | UE 5.9 editor via MCP/Python (Blueprint DSL) |  |  | 2026-11-14 | B | n | lab, not shipped: child Blueprint of BP_SkaterVisual_TB1_P3; ends-only physics on a fall run from SetKnockedDown and its tick (parent called first; ticks after its mesh): forearms, neck and head, shins and feet and the stick from frame 4 to the hand-back (hold frame + 18 or 9 frames before the get-up), zeroes the whip on head and stick arm while simulating (RagWhipYield), wall falls with a wall box behind RagWalls (off); RagAnim, RagFloor, RagWall, physics asset override on Mesh (lane RAG) (683165 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/Lab/BP_SkaterVisual_TB1_Rag.uasset | other | 0.65 | original | UE 5.9 editor via MCP/Python (Blueprint DSL) |  |  | 2026-11-14 | B | n | lab, not shipped: child Blueprint of BP_SkaterVisual_TB1 (the night figure), the same schedule and parts as BP_SkaterVisual_TB1_P3_Rag on PHYS_SkaterTB1v2_Rag (lane RAG) (683039 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/Lab/PHYS_SkaterTB1_P3_Rag.uasset | other | 0.03 | original | UE 5.9 PhysicsAssetToolset (MCP) + Python |  |  | 2026-11-14 | B | n | lab, not shipped: 16 bodies for SK_SkaterTB1_P3 (14 fitted capsules with seven radii reduced, a neck sphere, a thin stick capsule at mass scale 0.2), limits free and continuous collision on the simulated bodies, neck and stick joint anchors set by Python (lane RAG) (28270 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/Lab/PHYS_SkaterTB1v2_Rag.uasset | other | 0.03 | original | UE 5.9 PhysicsAssetToolset (MCP) + Python |  |  | 2026-11-14 | B | n | lab, not shipped: 16 bodies for SK_SkaterTB1v2 (15 fitted capsules with head and feet reduced, a neck sphere, the stick thinned at mass scale 0.2), limits free and continuous collision on the simulated bodies, neck joint anchors set by Python (lane RAG) (28171 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/Lab/PM_RagIce.uasset | other | 0.0 | original | UE 5.9 editor via MCP/Python |  |  | 2026-11-14 | B | n | lab, not shipped: physical material of the children's own floor and wall (friction 0.05, restitution 0, combine min) (lane RAG) (1795 bytes) |
+```
