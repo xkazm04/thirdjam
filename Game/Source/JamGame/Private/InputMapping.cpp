@@ -28,6 +28,12 @@
 // Lane A49: 1 = one JAMCTRL line per sim frame with the stick the human sends and its source (mouse | pad | mousedelta | none); the button edges log always.
 static TAutoConsoleVariable<int32> CVarJamCtrlLog(TEXT("jam.ctrl.Log"), 0, TEXT("1 = JAMCTRL stick line every sim frame (lane A49 proof); button edges always log."));
 
+namespace
+{
+	bool GJamPadLast = false;   // lane A199
+	FJamButtonVerbs GJamLastHumanButtons;   // lane A199: the badge's hold
+}
+
 bool UJamInputMap::LogEnabled()
 {
 	return CVarJamCtrlLog.GetValueOnGameThread() != 0;
@@ -131,7 +137,10 @@ bool FJamBindings::IsReserved(const FKey& Key)
 	return Key == EKeys::Escape || Key == EKeys::Gamepad_Special_Right || Key == EKeys::One || Key == EKeys::Two || Key == EKeys::Three || Key == EKeys::Four
 		|| Key == EKeys::Gamepad_DPad_Up || Key == EKeys::Gamepad_DPad_Down || Key == EKeys::Gamepad_DPad_Left || Key == EKeys::Gamepad_DPad_Right
 		|| Key == EKeys::Mouse2D || Key == EKeys::MouseX || Key == EKeys::MouseY || Key == EKeys::AnyKey
-		|| Key == EKeys::Gamepad_LeftTrigger || Key == EKeys::Gamepad_RightTrigger;   // the triggers are bound as their axis keys
+		|| Key == EKeys::Gamepad_LeftTrigger || Key == EKeys::Gamepad_RightTrigger   // the triggers are bound as their axis keys
+		// Lane A199 (item 3): the sticks' directions skate and aim; a nudge of the stick while a pad cell listens is not a button.
+		|| Key == EKeys::Gamepad_LeftStick_Up || Key == EKeys::Gamepad_LeftStick_Down || Key == EKeys::Gamepad_LeftStick_Left || Key == EKeys::Gamepad_LeftStick_Right
+		|| Key == EKeys::Gamepad_RightStick_Up || Key == EKeys::Gamepad_RightStick_Down || Key == EKeys::Gamepad_RightStick_Left || Key == EKeys::Gamepad_RightStick_Right;
 }
 
 bool FJamBindings::Has(EJamVerb V, const FKey& Key) const
@@ -160,19 +169,23 @@ EJamVerb FJamBindings::WithoutVerbOn(const FKey& Key) const
 
 bool FJamBindings::Rebind(EJamVerb V, const FKey& Key, EJamVerb* OutSwapped)
 {
+	// Lane A199 (A198's FAULT 2; the Director's ruling): rebinding one verb moves that verb and, at most, the verbs that held the new key and may not
+	// share it with it. The rebound verb takes Key in its first slot (its old first key leaves it; a partner that shared the old key - the shot and the
+	// cross-check on LMB - keeps it: the pair splits). A verb that held Key and may not share it takes the rebound verb's old key in its place when that
+	// key fits it (no clash with the verbs still on it), else it just gives Key up - and if that would leave it with no key and no pad button, the
+	// rebinding is refused. Nothing else moves. The table is valid and every verb reachable after any true return.
 	if (OutSwapped) *OutSwapped = EJamVerb::Count;
 	if (V >= EJamVerb::Count || IsReserved(Key)) return false;
 	const bool bPad = Key.IsGamepadKey();
+	auto IsSkateVerb = [](EJamVerb U) { return U >= EJamVerb::SkateForward && U <= EJamVerb::SkateRight; };
 	// The skate directions are keys only (the left stick skates).
-	if (bPad && V >= EJamVerb::SkateForward && V <= EJamVerb::SkateRight) return false;
+	if (bPad && IsSkateVerb(V)) return false;
+	const FJamBindings Was = *this;
 	TArray<FKey>& Mine = bPad ? (*this)[V].Pads : (*this)[V].Keys;
 	if (Mine.Num() > 0 && Mine[0] == Key) return false;
 	const FKey Old = Mine.Num() > 0 ? Mine[0] : FKey();
-	// The key leaves any other slot of this verb (it becomes the first).
 	Mine.Remove(Key);
 	if (Mine.Num() == 0) Mine.Add(Key); else Mine[0] = Key;
-	// Every other verb on the key that may not share it gives it up: it takes the old key in its place (a swap), or loses the key when the old one is
-	// already its own or there was none.
 	for (int32 I = 0; I < NumVerbs; ++I)
 	{
 		const EJamVerb U = VerbAt(I);
@@ -180,26 +193,36 @@ bool FJamBindings::Rebind(EJamVerb V, const FKey& Key, EJamVerb* OutSwapped)
 		TArray<FKey>& Theirs = bPad ? (*this)[U].Pads : (*this)[U].Keys;
 		const int32 At = Theirs.IndexOfByKey(Key);
 		if (At == INDEX_NONE) continue;
-		const bool bOldFits = Old.IsValid() && !Theirs.Contains(Old) && !(U >= EJamVerb::SkateForward && U <= EJamVerb::SkateRight && Old.IsGamepadKey());
+		// Does the old key fit U: not already U's, of the right kind for U, and every verb still on it may share it with U.
+		bool bOldFits = Old.IsValid() && !Theirs.Contains(Old) && !(IsSkateVerb(U) && Old.IsGamepadKey());
+		for (int32 J = 0; J < NumVerbs && bOldFits; ++J)
+		{
+			const EJamVerb W = VerbAt(J);
+			if (W != U && Has(W, Old) && !MayShare(U, W)) bOldFits = false;
+		}
 		if (bOldFits) Theirs[At] = Old; else Theirs.RemoveAt(At);
 		if (OutSwapped && *OutSwapped == EJamVerb::Count) *OutSwapped = U;
 	}
-	// The old key may now clash on a verb that shared nothing with V (a with-verb took it, and another with-verb holds it): the last pass drops the clash
-	// from the verb that received it, so the table stays valid whatever the order.
-	FString Why;
-	if (!IsValid(&Why))
+	if (!IsValid() || !IsPlayable())
 	{
-		for (int32 I = 0; I < NumVerbs; ++I)
+		*this = Was;
+		if (OutSwapped) *OutSwapped = EJamVerb::Count;
+		return false;
+	}
+	return true;
+}
+
+bool FJamBindings::IsPlayable(FString* OutWhy) const
+{
+	// Lane A199 (FAULT 1 / 2): every verb has a key or a pad button; a skate direction a key (the left stick is fixed and always skates).
+	for (int32 I = 0; I < NumVerbs; ++I)
+	{
+		const EJamVerb V = VerbAt(I);
+		const bool bSkate = V >= EJamVerb::SkateForward && V <= EJamVerb::SkateRight;
+		if (Verbs[I].Keys.Num() == 0 && (bSkate || Verbs[I].Pads.Num() == 0))
 		{
-			const EJamVerb U = VerbAt(I);
-			if (U == V || !Old.IsValid()) continue;
-			TArray<FKey>& Theirs = bPad ? (*this)[U].Pads : (*this)[U].Keys;
-			if (!Theirs.Contains(Old)) continue;
-			for (int32 J = 0; J < NumVerbs; ++J)
-			{
-				const EJamVerb W = VerbAt(J);
-				if (W != U && !MayShare(U, W) && Has(W, Old)) { Theirs.Remove(Old); break; }
-			}
+			if (OutWhy) *OutWhy = FString::Printf(TEXT("%s has no key%s"), GVerbs[I].Id, bSkate ? TEXT("") : TEXT(" and no pad button"));
+			return false;
 		}
 	}
 	return true;
@@ -261,10 +284,22 @@ FJamBindings FJamBindings::FromSaved(const TMap<FString, FString>& Saved)
 			}
 			return Keys;
 		};
-		B.Verbs[I].Keys = Parse(KeysPart, false);
-		B.Verbs[I].Pads = Parse(PadsPart, true);
+		TArray<FKey> K = Parse(KeysPart, false), P = Parse(PadsPart, true);
+		// Lane A199 (A198's FAULT 1): an entry with no key the game knows (unknown names, reserved keys, empty) keeps the verb's default.
+		if (K.Num() == 0 && P.Num() == 0)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("JAMCTRL bindings: saved %s=\"%s\" names no usable key or pad button; %s keeps its default"), GVerbs[I].Id, **S, GVerbs[I].Id);
+			continue;
+		}
+		B.Verbs[I].Keys = MoveTemp(K);
+		B.Verbs[I].Pads = MoveTemp(P);
 	}
-	if (!B.IsValid()) return Defaults();
+	FString Why;
+	if (!B.IsValid(&Why) || !B.IsPlayable(&Why))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("JAMCTRL bindings: the saved table is refused whole (%s); the defaults are used"), *Why);
+		return Defaults();
+	}
 	return B;
 }
 
@@ -287,11 +322,18 @@ void FJamButtonResolver::Release(const FKey& Key)
 
 EJamVerb FJamButtonResolver::ActiveVerb(const FKey& Key) const
 {
-	for (const FHeldKey& H : Held) if (H.Key == Key) return H.Verb;
+	for (const FHeldKey& H : Held) if (H.Key == Key) return H.bDead ? EJamVerb::Count : H.Verb;
 	return EJamVerb::Count;
 }
 
 FJamButtonVerbs FJamButtonResolver::Step(bool bWithPuck, const FJamBindings& B)
+{
+	FJamButtonContext C;
+	C.bWith = C.bCarrying = C.bInReach = bWithPuck;
+	return Step(C, B);
+}
+
+FJamButtonVerbs FJamButtonResolver::Step(const FJamButtonContext& C, const FJamBindings& B)
 {
 	FJamButtonVerbs Out;
 	for (FHeldKey& H : Held)
@@ -300,8 +342,10 @@ FJamButtonVerbs FJamButtonResolver::Step(bool bWithPuck, const FJamBindings& B)
 		if (bNew)
 		{
 			H.bNew = false;
+			H.bDead = H.bLevelSent = H.bLevelDropped = false;
+			H.Steps = 0;
 			const EJamVerb With = B.WithVerbOn(H.Key), Without = B.WithoutVerbOn(H.Key);
-			H.Verb = bWithPuck ? (With != EJamVerb::Count ? With : Without) : (Without != EJamVerb::Count ? Without : With);
+			H.Verb = C.bWith ? (With != EJamVerb::Count ? With : Without) : (Without != EJamVerb::Count ? Without : With);
 			switch (H.Verb)
 			{
 			case EJamVerb::Shoot: Out.bShootPress = true; break;
@@ -311,9 +355,45 @@ FJamButtonVerbs FJamButtonResolver::Step(bool bWithPuck, const FJamBindings& B)
 			default: break;
 			}
 		}
-		// The level: held, or pressed and let go since the last step (a tap still holds for one step).
-		if (H.bDown || bNew)
+		else if (C.bDeadAcrossChange && !H.bDead)
 		{
+			// Lane A199 (item 1): the change of possession under a held key. A with-verb dies when the puck is no longer ours; the cross-check when he takes
+			// the puck (the brace ends, and does not come back if he loses it again under the same press); the check (an edge) when the puck becomes ours.
+			switch (H.Verb)
+			{
+			case EJamVerb::Shoot: case EJamVerb::Pass: H.bDead = !C.bWith; break;
+			case EJamVerb::CrossCheck: H.bDead = C.bCarrying; break;
+			case EJamVerb::Check: H.bDead = C.bWith; break;
+			default: break;
+			}
+			if (H.bDead && Out.DeadNow == EJamVerb::Count) Out.DeadNow = H.Verb;
+		}
+		++H.Steps;
+		const bool bWithVerb = H.Verb == EJamVerb::Shoot || H.Verb == EJamVerb::Pass;
+		bool bLevel = false;
+		if (H.bDead)
+		{
+			// A dead shot / pass: the sim fires on the level's fall when it holds a charge and the puck is in reach, so the level is held up while the puck
+			// is still in his reach and falls the first step it is not (a fall with nothing in reach fires nothing and clears the charge).
+			if (bWithVerb && H.bDown && H.bLevelSent && !H.bLevelDropped && C.bInReach) bLevel = true;
+			else H.bLevelDropped = true;
+		}
+		else
+		{
+			switch (H.Verb)
+			{
+			case EJamVerb::Shoot: bLevel = H.bDown || bNew; break;   // held, or a tap inside one step: one step of the level
+			case EJamVerb::Pass:
+				// Item 2: the level starts SaucerDelaySteps late (the saucer needs that many more frames held); a press let go before then sends one step: a flat pass.
+				bLevel = (H.bDown && H.Steps > C.SaucerDelaySteps) || (!H.bDown && !H.bLevelSent);
+				break;
+			case EJamVerb::CrossCheck: bLevel = (H.bDown || bNew) && H.Steps > C.BraceDelaySteps; break;   // item 2: the brace from more frames
+			default: break;
+			}
+		}
+		if (bLevel)
+		{
+			H.bLevelSent = true;
 			switch (H.Verb)
 			{
 			case EJamVerb::Shoot: Out.bShootHeld = true; break;
@@ -321,6 +401,11 @@ FJamButtonVerbs FJamButtonResolver::Step(bool bWithPuck, const FJamBindings& B)
 			case EJamVerb::CrossCheck: Out.bCrossHeld = true; break;
 			default: break;
 			}
+		}
+		if (H.bDown && !H.bDead)
+		{
+			if (H.Verb == EJamVerb::Pass) Out.PassHoldSteps = FMath::Max(Out.PassHoldSteps, H.Steps);
+			if (H.Verb == EJamVerb::CrossCheck) Out.CrossHoldSteps = FMath::Max(Out.CrossHoldSteps, H.Steps);
 		}
 	}
 	Held.RemoveAll([](const FHeldKey& H) { return !H.bDown && !H.bNew; });
@@ -356,10 +441,47 @@ void JamControls::SetCrossHold(FJamInput& In, bool bHeld)
 #endif
 }
 
+static TAutoConsoleVariable<int32> CVarJamCtrlHeldAcrossChange(TEXT("jam.ctrl.HeldAcrossChange"), 1,
+	TEXT("Lane A199: 1 = a button held across a change of possession does nothing until it is released and pressed again (a held cross-check's brace ends when he takes the puck; a held shot or pass dies when the puck is no longer ours); 0 = A183's rule (the verb holds until the release, its level with it)."));
+static TAutoConsoleVariable<int32> CVarJamCtrlSaucerHoldFrames(TEXT("jam.ctrl.SaucerHoldFrames"), 13,
+	TEXT("Lane A199: frames the pass button must be held for a saucer (a press up to one frame less is a tap: a flat pass). 0 = the cartridge's pass.saucer.half_frames (8). Never fewer than that."));
+static TAutoConsoleVariable<int32> CVarJamCtrlBraceHoldFrames(TEXT("jam.ctrl.BraceHoldFrames"), 13,
+	TEXT("Lane A199: frames the cross-check button must be held to brace (a shorter press is the pressed cross-check only). 0 = the sim's CrossHoldTapFrames (10). Never fewer than that."));
+
+int32 JamControls::SaucerHoldFrames(int32 SimHalfFrames)
+{
+	const int32 Want = CVarJamCtrlSaucerHoldFrames.GetValueOnAnyThread();
+	return SimHalfFrames <= 0 ? SimHalfFrames : FMath::Max(SimHalfFrames, Want);
+}
+
+int32 JamControls::BraceHoldFrames()
+{
+	return FMath::Max(UJamSim::CrossHoldTapFrames, CVarJamCtrlBraceHoldFrames.GetValueOnAnyThread());
+}
+
+FJamButtonContext JamControls::ButtonContext(const UJamSim& Sim, int32 Skater)
+{
+	FJamButtonContext C;
+	C.bWith = HasPuckForButtons(Sim, Skater);
+	C.bCarrying = Sim.CarrierIndex() == Skater;
+	const TArray<FJamSkaterState>& Sk = Sim.GetSkaters();
+	C.bInReach = Sk.IsValidIndex(Skater) && FVector2D::Distance(Sk[Skater].Pos, Sim.GetPuck().Pos) <= Sim.CarrierReachM(Skater);
+	C.bDeadAcrossChange = CVarJamCtrlHeldAcrossChange.GetValueOnAnyThread() != 0;
+	const int32 Half = Sim.GetConfig().Pass.SaucerHalfFrames;
+	C.SaucerDelaySteps = Half > 0 ? FMath::Max(0, SaucerHoldFrames(Half) - Half) : 0;
+	C.BraceDelaySteps = FMath::Max(0, BraceHoldFrames() - UJamSim::CrossHoldTapFrames);
+	return C;
+}
+
 FJamButtonVerbs JamControls::ApplyButtons(UJamPlayerInput& Pi, const UJamSim& Sim, int32 Skater, FJamInput& In)
 {
-	const bool bWith = HasPuckForButtons(Sim, Skater);
-	const FJamButtonVerbs V = Pi.StepButtons(bWith);
+	const FJamButtonVerbs V = Pi.StepButtons(ButtonContext(Sim, Skater));
+	GJamLastHumanButtons = V;
+	if (V.DeadNow != EJamVerb::Count)
+	{
+		UE_LOG(LogTemp, Log, TEXT("JAMCTRL btn=dead verb=%s frame=%lld carrier=%d last_touch=%d"), FJamBindings::VerbId(V.DeadNow), static_cast<long long>(Sim.GetFrame()),
+			Sim.CarrierIndex(), Sim.GetPuck().LastTouch);
+	}
 	In.bShootHeld = V.bShootHeld;
 	In.bPassHeld = V.bPassHeld;
 	In.bCheck = V.bCheck;
@@ -534,8 +656,39 @@ namespace
 	}
 }
 
+void UJamInputMap::NoteInputDevice(bool bPad) { GJamPadLast = bPad; }
+bool UJamInputMap::IsPadLast() { return GJamPadLast; }
+const FJamButtonVerbs& JamControls::LastHumanButtons() { return GJamLastHumanButtons; }
+
 FString UJamInputMap::HintStripText()
 {
+	return HintStripTextFor(IsPadLast());
+}
+
+FString UJamInputMap::HintStripTextFor(bool bPad)
+{
+	if (bPad)
+	{
+		// Lane A199 (item 3): the pad's strip, from the pad bindings (the sticks are fixed).
+		auto PadPair = [](TArray<FString>& Out, EJamVerb With, EJamVerb Without)
+		{
+			const FString A = FirstKey(With, true), B = FirstKey(Without, true);
+			if (A == B) Out.Add(FString::Printf(TEXT("%s / %s  %s"), *FJamBindings::VerbLabel(With), *FJamBindings::VerbLabel(Without), *A));
+			else { Out.Add(FString::Printf(TEXT("%s  %s"), *FJamBindings::VerbLabel(With), *A)); Out.Add(FString::Printf(TEXT("%s  %s"), *FJamBindings::VerbLabel(Without), *B)); }
+		};
+		TArray<FString> P;
+		P.Add(TEXT("SKATE  L-STICK"));
+		P.Add(TEXT("BRAKE  STICK BACK"));
+		P.Add(TEXT("AIM  R-STICK"));
+		PadPair(P, EJamVerb::Shoot, EJamVerb::CrossCheck);
+		PadPair(P, EJamVerb::Pass, EJamVerb::Check);
+		P.Add(FString::Printf(TEXT("POKE  %s"), *FirstKey(EJamVerb::Poke, true)));
+		P.Add(FString::Printf(TEXT("ABILITY  %s"), *FirstKey(EJamVerb::Ability, true)));
+		P.Add(FString::Printf(TEXT("SPRINT  %s"), *FirstKey(EJamVerb::Sprint, true)));
+		FString Out = FString::Join(P, TEXT("   "));
+		while (Out.Len() > HintStripMaxChars && P.Num() > 1) { P.Pop(); Out = FString::Join(P, TEXT("   ")); }
+		return Out.Left(HintStripMaxChars);
+	}
 	// Lane A111's seven verbs and the brake, now with the two-role buttons (A183). Entries leave from the end while the line is longer than the strip
 	// holds (HintStripMaxChars, the length the 1280 x 720 strip fits), so a long rebound key name never runs under the radar.
 	TArray<FString> E;
@@ -780,6 +933,7 @@ void UJamPlayerInput::OnMoveDone(const FInputActionValue&)
 void UJamPlayerInput::OnStickAim(const FInputActionValue& V)
 {
 	StickAxis = FVector2D(V.Get<FVector2D>()).ClampAxes(-1.0, 1.0);
+	if (StickAxis.SizeSquared() > 0.09) UJamInputMap::NoteInputDevice(true);   // lane A199
 }
 
 void UJamPlayerInput::OnStickAimDone(const FInputActionValue&)
@@ -790,6 +944,7 @@ void UJamPlayerInput::OnStickAimDone(const FInputActionValue&)
 void UJamPlayerInput::OnStickMouse(const FInputActionValue& V)
 {
 	MouseAimPx += FVector2D(V.Get<FVector2D>());
+	if (FVector2D(V.Get<FVector2D>()).SizeSquared() > 4.0) UJamInputMap::NoteInputDevice(false);   // lane A199: a real mouse move, not a jitter
 	const double L = MouseAimPx.Size();
 	if (L > 200.0) MouseAimPx *= 200.0 / L;
 }
@@ -870,6 +1025,7 @@ void UJamPlayerInput::DebugButton(const FKey& Key, bool bDown)
 {
 	if (bDown)
 	{
+		UJamInputMap::NoteInputDevice(Key.IsGamepadKey());   // lane A199
 		Buttons.Press(Key);
 		// The edges of before for the callers that do not step the buttons (the camera proof scene): a key on shoot / check latches them.
 		const FJamBindings& B = UJamInputMap::Get()->GetBindings();
@@ -881,7 +1037,15 @@ void UJamPlayerInput::DebugButton(const FKey& Key, bool bDown)
 
 FJamButtonVerbs UJamPlayerInput::StepButtons(bool bWithPuck)
 {
-	const FJamButtonVerbs V = Buttons.Step(bWithPuck, UJamInputMap::Get()->GetBindings());
+	FJamButtonContext C;
+	C.bWith = C.bCarrying = C.bInReach = bWithPuck;
+	return StepButtons(C);
+}
+
+FJamButtonVerbs UJamPlayerInput::StepButtons(const FJamButtonContext& C)
+{
+	const FJamButtonVerbs V = Buttons.Step(C, UJamInputMap::Get()->GetBindings());
+	LastButtons = V;
 	bShoot = V.bShootHeld;
 	bPassHeld = V.bPassHeld;
 	bCheck = V.bCheck;
@@ -949,10 +1113,12 @@ FString UJamHudWidget::ButtonsBadgeLine(bool bWithPuck)
 	const FJamBindings& B = UJamInputMap::Get()->GetBindings();
 	TArray<FString> Parts;
 	TArray<FKey> Seen;
+	const bool bPad = UJamInputMap::IsPadLast();   // lane A199 (item 3): the pad's buttons when the pad was touched last
 	for (const EJamVerb V : { EJamVerb::Shoot, EJamVerb::Pass })
 	{
-		if (B[V].Keys.Num() == 0 || Seen.Contains(B[V].Keys[0])) continue;
-		const FKey K = B[V].Keys[0];
+		const TArray<FKey>& L = bPad ? B[V].Pads : B[V].Keys;
+		if (L.Num() == 0 || Seen.Contains(L[0])) continue;
+		const FKey K = L[0];
 		Seen.Add(K);
 		const EJamVerb With = B.WithVerbOn(K), Without = B.WithoutVerbOn(K);
 		const EJamVerb Now = bWithPuck ? (With != EJamVerb::Count ? With : Without) : (Without != EJamVerb::Count ? Without : With);
@@ -993,7 +1159,96 @@ void UJamHudWidget::UpdateButtonsBadge(const FJamPresentationFrame& F)
 		return;
 	}
 	// The same possession the buttons read at the sim step (FJamButtonResolver), on the frame this HUD shows.
-	const FString Line = ButtonsBadgeLine(JamControls::HasPuckForButtons(*Sim, F.HumanIndex));
+	// Lane A199 (item 2): the hold shown: SAUCER / BRACED from the frame the hold counts.
+	const FString Line = JamControls::BadgeLineHeld(JamControls::HasPuckForButtons(*Sim, F.HumanIndex), JamControls::LastHumanButtons(),
+		JamControls::SaucerHoldFrames(Sim->GetConfig().Pass.SaucerHalfFrames), JamControls::BraceHoldFrames());
 	if (ButtonsBadgeText->GetText().ToString() != Line) ButtonsBadgeText->SetText(FText::FromString(Line));
 	ButtonsBadge->SetVisibility(Line.IsEmpty() ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
+}
+
+// ---------------------------------------------------------------- lane A199 (item 4): the profile written whole or not at all
+
+#include "Misc/CoreDelegates.h"
+#include "Misc/ConfigCacheIni.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
+#include "HAL/FileManager.h"
+#if PLATFORM_WINDOWS
+#include "Windows/AllowWindowsPlatformTypes.h"
+#include <windows.h>
+#include "Windows/HideWindowsPlatformTypes.h"
+#endif
+
+namespace
+{
+	bool GJamFailNextAtomicSave = false;
+}
+
+void JamControls::FailNextAtomicSaveForTest()
+{
+	GJamFailNextAtomicSave = true;
+}
+
+bool JamControls::SaveFileAtomically(const FString& Path, const FString& Contents)
+{
+	const FString Full = FPaths::ConvertRelativePathToFull(Path);
+	const FString Dir = FPaths::GetPath(Full);
+	IFileManager::Get().MakeDirectory(*Dir, true);
+	// The temp file beside the target (the same volume, so the rename is one step), never the target itself.
+	const FString Temp = FPaths::CreateTempFilename(*Dir, *(FPaths::GetBaseFilename(Full).Left(32) + TEXT("-")), TEXT(".tmp"));
+	if (!FFileHelper::SaveStringToFile(Contents, *Temp, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM))
+	{
+		IFileManager::Get().Delete(*Temp, false, false, true);
+		return false;
+	}
+	if (GJamFailNextAtomicSave)
+	{
+		// The test's kill between the write and the rename: the target is untouched (the temp file is what a real kill would leave; removed here).
+		GJamFailNextAtomicSave = false;
+		IFileManager::Get().Delete(*Temp, false, false, true);
+		return false;
+	}
+#if PLATFORM_WINDOWS
+	// MoveFileEx with REPLACE_EXISTING renames over the old file in one step (IFileManager::Move deletes the old file first: a kill there leaves none).
+	FString From = Temp, To = Full;
+	FPaths::MakePlatformFilename(From);
+	FPaths::MakePlatformFilename(To);
+	const bool bMoved = !!::MoveFileExW(*From, *To, MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH);
+#else
+	const bool bMoved = IFileManager::Get().Move(*Full, *Temp, true, false, false, true);
+#endif
+	if (!bMoved) IFileManager::Get().Delete(*Temp, false, false, true);
+	return bMoved;
+}
+
+void JamControls::InstallAtomicSave()
+{
+	static bool bInstalled = false;
+	if (bInstalled) return;
+	bInstalled = true;
+	// The engine writes a packaged game's ini in place (FConfigFile::WriteTempFileThenMove is false outside the editor). Its pre-save hook lets a saver
+	// take the write (ini.SkipSaveIfPreSaveSucceeded, 1 by default, then skips its own); a failed atomic write leaves SavedCount alone and the engine writes as before.
+	FCoreDelegates::TSPreSaveConfigFileDelegate().AddLambda([](const TCHAR* IniFilename, const FString& ContentsToSave, int32& SavedCount)
+	{
+		if (!IniFilename || GGameUserSettingsIni.IsEmpty()) return;
+		if (FPaths::ConvertRelativePathToFull(IniFilename) != FPaths::ConvertRelativePathToFull(GGameUserSettingsIni)) return;
+		if (JamControls::SaveFileAtomically(IniFilename, ContentsToSave)) ++SavedCount;
+	});
+}
+
+namespace
+{
+	// Installed when the module loads, before any menu saves the profile.
+	struct FJamAtomicSaveInstaller { FJamAtomicSaveInstaller() { JamControls::InstallAtomicSave(); } } GJamAtomicSaveInstaller;
+}
+
+// ---------------------------------------------------------------- lane A199 (item 2): the badge shows the hold
+
+FString JamControls::BadgeLineHeld(bool bWithPuck, const FJamButtonVerbs& Held, int32 SaucerFrames, int32 BraceFrames)
+{
+	FString Line = UJamHudWidget::ButtonsBadgeLine(bWithPuck);
+	// The words swap on the frame the hold counts: a pass held long enough is a saucer, a cross-check held long enough is a brace.
+	if (bWithPuck && SaucerFrames > 0 && Held.PassHoldSteps >= SaucerFrames) Line = Line.Replace(TEXT("  PASS"), TEXT("  SAUCER"));
+	if (!bWithPuck && BraceFrames > 0 && Held.CrossHoldSteps >= BraceFrames) Line = Line.Replace(TEXT("  CROSS-CHECK"), TEXT("  BRACED"));
+	return Line;
 }

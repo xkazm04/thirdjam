@@ -159,7 +159,16 @@ public:
 	// True: the key was taken (bound, or Esc cancelled). A key of the wrong kind (a pad button on the keys cell) is refused with a line.
 	bool HandleListenedKey(const FKey& Key);
 	void ResetToDefaults();
+	// Lane A199 (item 4): what RESET TO DEFAULTS does: the first press asks (the button reads CONFIRM RESET for ResetConfirmSeconds), the second resets.
+	void RequestReset();
+	bool IsResetArmed() const { return bResetArmed; }
+	static constexpr float ResetConfirmSeconds = 4.f;
+	// Lane A199: a press while listening as the native handlers see it (a key repeat is ignored: a held Enter or A never binds itself).
+	bool TakeListenPress(const FKey& Key, bool bRepeat);
 	FString GetStatusLine() const { return StatusLine; }
+	// Lane A199: public so the tests press through the same handlers Slate calls (a mouse down; a quick second click, which Slate sends as a double-click).
+	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	virtual FReply NativeOnMouseButtonDoubleClick(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	// The cell's text as drawn ("LMB, MMB, MOUSE4"), for tests.
 	FString CellText(EJamVerb Verb, bool bPad) const;
 
@@ -167,7 +176,6 @@ protected:
 	virtual TSharedRef<SWidget> RebuildWidget() override;
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 	virtual FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
-	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	virtual FReply NativeOnMouseWheel(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	virtual FReply NativeOnAnalogValueChanged(const FGeometry& InGeometry, const FAnalogInputEvent& InAnalogEvent) override;
 
@@ -185,6 +193,8 @@ private:
 	// Frames the screen ignores a press after it began listening (the click that started it is still on its way up).
 	int32 ListenGraceTicks = 0;
 	TArray<bool> CellWasPressed;
+	bool bResetArmed = false;        // lane A199
+	float ResetArmedLeft = 0.f;
 
 	UPROPERTY(Transient) TArray<TObjectPtr<UButton>> CellButtons;     // verb * 2 + (pad ? 1 : 0)
 	UPROPERTY(Transient) TArray<TObjectPtr<UTextBlock>> CellTexts;
