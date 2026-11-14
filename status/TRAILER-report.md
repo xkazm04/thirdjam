@@ -250,3 +250,171 @@ make shot 7 read: the brake's spray visible at the game camera's size (B40 and S
 
 Leftovers: nothing running. Files written: `status/TRAILER-report.md` (this), `devlog/shots/20261114-015039-B-trailer-storyboard-A.png` and `.txt`; everything else under
 `C:\Users\kazda\jam\trailer-lab\`.
+
+
+---
+
+# Part two (14 Nov 02:00 to 02:20): the edit as a command, scenario D, scenario C made real
+
+## 1. Summary
+All three of the coordinator's evolutions are done. **4:** `C:\Users\kazda\jam\trailer-lab\edit\edit.mjs` cuts a film from an edit list (JSON) on the CPU: picture and game
+sound per shot, the narration, the game's music, ducking by set amounts while a line plays, loudness for upload, banner cards, then `check-take.mjs` on the result. Proved on
+stand-ins: A at 45 s, A at 30 s, C at 45 s and D at 45 s all **PASS** (1920 x 1080 at 60, exact length, 0 narration overruns, -16.0 to -16.2 LUFS, -1.9 dBTP), and on real
+video sources (a test cut from `hokej-v1.mp4` with a half-speed shot: the cut works; the checker rightly fails it for 41.2 % repeated frames because that source is 30 fps).
+**5:** scenario D, the editor film, written shot by shot with camera, lens, speed and staging, ranked honestly below A, with three legal hybrids. **6:** scenario C to A's depth,
+with two new lines and one line from the game's own bank. `storyboard.html` now has tabs A, C, D. Credits: **155 of 400** in total (two new requests this part, 10 credits).
+Not done: nothing of the three; nothing filmed; the GPU estimate for D is an estimate, not a measurement.
+
+## 2. Evolutions
+
+### Evolution 4: the edit as a command
+Files: `C:\Users\kazda\jam\trailer-lab\edit\edit.mjs` (the command), `edit\make-edl.mjs` (writes A45/A30 from the storyboard), `C:\Users\kazda\jam\trailer-lab\scenarios-CD.mjs`
+(writes C45/D45), the edit lists `edit\A45.json`, `edit\A30.json`, `edit\C45.json`, `edit\D45.json`, the test `edit\T-video.json`, `edit\film-sheet.mjs` (a frame per shot),
+`edit\SATURDAY.txt`. Outputs in `C:\Users\kazda\jam\trailer-lab\edit\out\` (`A45.mp4`, `A30.mp4`, `C45.mp4`, `D45.mp4`, `T-video.mp4`, each with `<name>-result.json`).
+
+The edit list, per shot: `src` (a take or a still), `in`/`out` (seconds in the source), `speed` (0.5 = half speed; out - in = len x speed), `at`/`len` (the slot on the film's
+timeline), `push` (a still's zoom-in), `text`/`text2` (card lines), `fade_in`/`fade_out`. Per film: `voice` (wav, at, slot_end), `sound` (extra sounds laid on the game track:
+tonight's stand-ins), `music`, `duck`, `loudness`, `out`. The command refuses a list whose shots leave a gap, overlap, miss a source or do not add up to the film's length.
+
+What it does: (1) each shot to a 1920 x 1080, 60 fps mezzanine (x264 CRF 17 + PCM stereo) with its own game sound (a take's audio, retimed with the picture; silence for a
+still), the still pushed in from a 2x scale so the motion is smooth (push 2.5 % a second, at least 8 %); (2) concatenated; (3) the mix: game track and music each ducked
+**game -8 dB, music -10 dB while a line plays, 0.15 s down before the line, 0.40 s back up after it**; the narration bus compressed 4:1 above -24 dBFS (5 / 150 ms); music
+bed at -14 dB, 0.5 s fade in, 2.5 s fade out; (4) loudness **-16 LUFS integrated, true-peak ceiling -1.0 dBTP** (gain, then a limiter at -2.0 dBFS to leave room for the AAC
+encode, repeated until within 0.3 LU); (5) AAC 320 kb/s mux; (6) EBU R128 measure, `check-take.mjs` at 60 fps, and an overrun check of every line against its slot end and the
+film's end. I first aimed at -14 LUFS: the stand-in voice needed about 7 dB of limiting to get there (measured: 13.7 dB of gain for 6.8 dB of loudness), so the target is -16
+(the AES streaming range is -16 to -14; set `loudness.I` to -14 for a hotter mix once the real game sound is in).
+
+| film | length | format | loudness | true peak | overruns | check | repeated frames |
+|---|---|---|---|---|---|---|---|
+| A45 | 45.000 s | 1920x1080 @ 60 | -16.1 LUFS | -1.9 dBTP | 0 of 7 | PASS | under 0.5 % (counter reads -0.4) |
+| A30 | 30.000 s | 1920x1080 @ 60 | -16.1 LUFS | -1.9 dBTP | 0 of 5 | PASS | under 0.5 % |
+| C45 | 45.000 s | 1920x1080 @ 60 | -16.0 LUFS | -1.9 dBTP | 0 of 6 | PASS | under 0.5 % |
+| D45 | 45.000 s | 1920x1080 @ 60 | -16.2 LUFS | -1.9 dBTP | 0 of 6 | PASS | |
+| T-video (real 30 fps video, a half-speed shot) | 8.000 s | 1920x1080 @ 60.01 | -16.1 LUFS | -2.0 dBTP | 0 of 1 | FAIL: 41.2 % repeated (correct: 30 fps source) | |
+
+Time on this machine: A30 about 75 s, A45 about 105 s (CPU only). Still: `C:\Users\kazda\jam\thirdjam\devlog\shots\20261114-021528-B-trailer-edit-A45.png` (a frame from the
+middle of each shot of A45: the push-in, the end card with the banner line drawn).
+
+**For whoever cuts on Saturday (also in `C:\Users\kazda\jam\trailer-lab\edit\SATURDAY.txt`):**
+1. Drop the takes in `C:\Users\kazda\jam\trailer-lab\takes\`; in `C:\Users\kazda\jam\trailer-lab\edit\A45.json` (or `A30.json`, `C45.json`) set each shot's `src` to its take and `in`/`out` to the seconds in that take.
+2. Run `node C:\Users\kazda\jam\trailer-lab\edit\edit.mjs C:\Users\kazda\jam\trailer-lab\edit\A45.json`: the film is `edit\out\A45.mp4`, and the last line must read length_ok true, 1920x1080@60, overruns 0, check PASS.
+
+Notes for Saturday: the stand-in `sound` rows must be **removed** from the list once real takes carry their own game sound (they are only there to mark the beats); a 30 fps
+take fails the checker by design (Game Bar must be set to 60); the banner line sits bottom-centre over the banner's art and touches the gouged letters: move it with `text`
+position when the operator sees it.
+
+### Evolution 5: scenario D, "The editor film"
+**Stills looked at for D:** `devlog/shots/20261113-111726-B-b28-hero-low.png` (low camera, caption: x -17, y -7, z 2.2 m, pitch -10, yaw 25: the barn and its lamps read
+as a place), `20261113-232906-B-sk23-board-fall-wall.png` (fixed close camera about 1 m high along the boards: the board fall reads at once), `20261114-004259-B-sk24-lying-loop-test.png`
+(test figures lying, low side view), `20261114-001015-B-b40-ability-kinds.png` (close behind the human: the ability effects read small even close). Caption only: `20261113-103104-B-b27-hero-low`
+(the same camera as B28). In the D sheet I also saw `20261113-221554-B-sk22-stop-human.png` (the stop from above).
+
+Pitch: the key feature filmed the way a film would: the hit at ice level, the contact frames slowed, the figure lying close, the stop's spray into the lens, the boards taking a
+body, the lamp from behind the net. **All footage from device B editor sessions (play-in-editor, Development, clay tier), the menu and the Director's Call included, so
+nothing in it is Shipping and nothing is mixed.** Distances are metres relative to the subject figure (1.7 m tall at game scale: 110 px at 0.65 px a cm); x along its travel,
+y to its left, z above the ice; fov is horizontal (the game camera's is 70).
+
+| # | time (s) | shot | camera | fov | speed | engine lane stages | narration |
+|---|---|---|---|---|---|---|---|
+| 1 | 0.0-2.5 | the slate menu, cursor to CHOOSE YOUR CUT | the menu's own view, window captured | - | 1.0 | Menu map in play-in-editor; `jam.menuscreen main` then `cuts` | A1 "Pick your cut." (0.3) |
+| 2 | 2.5-5.5 | low wide: ten figures at centre ice under the lamps | B28's camera (world x -17, y -7, z 2.2, pitch -10, yaw 25), dolly 1.0 m in over the shot | 50 | 1.0 | hockey.regular on clay, the faceoff, `jam.ScriptHuman 1`; the drop at 5.0 | none |
+| 3 | 5.5-9.0 | tracking beside the blue carrier, the defender growing ahead | y -3.0, z 0.6, 15 degrees ahead of square, follows the carrier's position (not its rotation) | 40 | 1.0 | drill 21 with `jam.ctrl.CarryScript 0` (the straight charge into the defender) | none |
+| 4 | 9.0-13.0 | the head-on hit: real time in, the contact frames slowed, real time out as the victim slides | fixed, 4.0 m from the contact point, square to the travel, z 0.3, tilted up 5 degrees | 35 | 1.0, then 0.25 for 40 source frames from 6 frames before contact (about 2.7 s on screen), then 1.0 | drill 6 (the human carries into the nearest standing pro bot) or drill 21 CarryScript 0; a knockdown of 130 frames or more (Fall_Heavy, the turn in the air) | none (the hit carries it) |
+| 5 | 13.0-17.5 | close on the figure lying, breathing; it springs up into frame | 1.2 m from its chest, z 0.25, level | 30 | 1.0 | `SetKnockedDown(150)` on a test figure (SK24 job 3): Lie_Loop_Front, the 36-frame get-up from frame 115 | A3 "Full speed. Full price." (13.0) |
+| 6 | 17.5-21.5 | the stop: skates across toward the lens, the spray at it, then away | 3.0 m ahead on its line, z 0.2, aimed at the skates | 35 | 0.5 for the 15 frames of the stop, 1.0 after | the human's stop by `SetBraking` at 10 m/s (SK24 job 2), NS_brake on | A4 "Stop. Cut. Gone." (18.0) |
+| 7 | 21.5-25.5 | a figure driven into the boards, sitting down against them | 2.5 m off the boards looking along them, z 1.0 | 40 | 1.0 (0.5 for the 12 frames of impact) | `SetKnockedDown` + `PlayBoardHit` in one frame 66 cm from the boards (SK23 row 1) | none |
+| 8 | 25.5-30.0 | Esc, DIRECTOR'S CALL over the paused clay match, ICE FRICTION to minimum, APPLY | the game camera (the card is UI) | 70 | 1.0 | play-in-editor of hockey.regular; Esc and the slider by hand | A5 "Once a period, you change the rules." (26.0) |
+| 9 | 30.0-35.0 | from above: long glides on glass ice, one slides into the boards | crane 8 m above centre ice, pitch -60, a slow 10-degree yaw | 50 | 1.0 | after APPLY, `jam.ScriptHuman 1`, any check near the boards | A6 "Glass ice. Good luck." (31.5) |
+| 10 | 35.0-40.0 | from behind the net, low: the puck in, the lamp red over the camera, the net shakes | 2.0 m behind the goal line through the net, z 0.5, aimed at the slot | 45 | 1.0 | drill 10 (shots from 10 m) or `NS_goal` staged on the event bus (B41) | A7 "That's the cut." (37.5) |
+| 11 | 40.0-45.0 | the banner and the banner line | - | - | - | generated in the edit | none |
+
+Narration: the A lines re-timed, no new credits: 24 words in 14.5 s of slots (1.66 a second, at most 2.33 in a slot); 36.2 s of the voice track below -50 dBFS. Read:
+`C:\Users\kazda\jam\trailer-lab\read\rough-read-D.wav`; stand-in film `edit\out\D45.mp4`; still `C:\Users\kazda\jam\thirdjam\devlog\shots\20261114-021528-B-trailer-scenario-D.png`.
+
+**How to film it, two routes:** (a) real time: play-in-editor at 1920 x 1080 recorded by Game Bar, with `slomo 0.25` / `slomo 0.5` typed for the slow beats (the world slows,
+the recording stays 60 fps, no retime needed); the game's sound is in the recording but slowed with the world in the slow beats. (b) frame-stepped: the sim is
+deterministic (same cut, seed and frames = same play), so each shot is replayed with a fixed camera and a screenshot is taken at every sim frame from a tick callback (the way
+SK23 and the camera lane's harness already capture), then assembled at 60 fps by `edit.mjs` (a numbered image sequence needs one small addition to it: an `image2` source);
+no frame can drop however slow the GPU, but there is no live sound: the game's own sound files are laid at the logged frames in the edit, and the page must not claim "audio
+captured from the game" for D. Route (b) is the safer on device B's GPU.
+
+**GPU time, an estimate (not measured):** an editor start and the first map load about 10 minutes; per shot about 8 minutes of staging (camera placed, the trigger fired,
+the take checked) and 2 to 4 takes; 9 engine shots: about 1 h 45 min to 2 h 15 min in one session, or two sessions of about 70 minutes. Route (b) adds the capture time per
+frame, unmeasured on this GPU: if a 1080 screenshot costs 0.3 s, 45 s of film (2,700 frames) with two takes is about 30 minutes more. It needs the one editor slot device B
+has (one editor at a time).
+
+**What the engine lane must provide (beyond triggers it already has):** a camera it can place by numbers and make the view (a cine camera actor spawned by script and set as
+the player's view target), one following a skater's position (shot 3), and the world's time dilation on demand. The triggers named above (`SetKnockedDown`, `PlayBoardHit`,
+`SetBraking`, drills 6 / 10 / 21, `NS_goal` on the event bus) are the ones its lanes used this week.
+
+**Ranked against A for a judge (1 to 5, my judgment):**
+
+| | theme | gameplay | look | sound | ambition | total | risk |
+|---|---|---|---|---|---|---|---|
+| A (Shipping, the operator) | 5 | 4 | 4 | 4 | 5 | **22** | shots 5 and 7 need practice |
+| D (editor) | 3 | 3 | 5 | 3 | 4 | 18 | the GPU (three hangs on 13 Nov); not what the judge's download looks like; sound laid, not captured (route b) |
+
+A wins: the operator asked for a gameplay trailer, and a judge scores what he will play; D's beauty is a camera the game does not have, and a judge who downloads the zip
+meets the high game camera. D's best use is the store page and a short separate clip.
+
+**Hybrids that are legal under R-0054 point 4 (development footage never cut against shipped footage):**
+1. **One film entirely in the editor:** D as written (the menu and the Call filmed in the same sessions). Legal; but then nothing in the film is the shipped look (R-0054 point 2 asks the page's clay claims to be backed by package stills, so the page needs Shipping stills anyway).
+2. **A as filmed, D's shots only as stills** for the store page (the hit at ice level, the figure lying close, the lamp from behind the net), each captioned as an editor capture. Legal and cheap: 3 to 5 stills, about 40 minutes of GPU.
+3. **Two separate videos:** A as the submission video, D as a second clip on the page (a "how it moves" reel). Legal if the page lets two videos stand apart; the form takes one video link.
+Not legal as I read the ruling: D's shots cut into A, or a split frame of editor and Shipping.
+
+### Evolution 6: scenario C made real, the fallback film
+Built so that **any one recorded match** (Shipping, the operator) can become a film. Default cut: season take 1 "The Read-Through" (read from its cartridge: 5 v 5, rookie
+bots, clay, first to 2, no whistle), reached from the menu by PLAY THE SEASON; any other match works by editing shot 1's line.
+
+| # | time (s) | length | what must happen | how / likely takes | fallback | narration |
+|---|---|---|---|---|---|---|
+| 1 | 0.0-3.0 | 3.0 | the menu, PLAY THE SEASON: TAKE 1 OF 8, Return | record from the menu; 1 | PLAY NOW (drop the line or keep it: "Take one" still reads) | C1 "Take one." (0.8; new) |
+| 2 | 3.0-5.0 | 2.0 | the MATCH 1 card and the drop, ten figures | free | any faceoff | none |
+| 3 | 5.0-10.0 | 5.0 | the bots move the puck: carrier, outlet, a pass that lands | happens in most minutes at rookie; pick the cleanest | any carry with a teammate in frame | F4 "They pass now." (6.5) |
+| 4 | 10.0-15.0 | 5.0 | the human flattens a carrier (contact about 11.0) | right mouse button, head-on; 2 to 4 tries in a match | any knockdown by blue | A3 "Full speed. Full price." (12.3) |
+| 5 | 15.0-21.0 | 6.0 | a bot flattens the human; it lies and gets up | at rookie bots rarely hit (VOICE glossary): may not happen; at pro it does | a knockdown of anyone, with the line kept | BK1 "Back up, quickly now." (17.5; the game's own bank line `knockdown.human.01`, no credits) |
+| 6 | 21.0-24.0 | 3.0 | stop and go past a defender | as A's shot 7; 2 to 4 tries | cut (shot 5 or 7 absorbs the 3 s) | none |
+| 7 | 24.0-29.0 | 5.0 | Esc, the Director's Call, one slider, APPLY | once a period | none needed (always reachable) | A5 "Once a period, you change the rules." (25.0) |
+| 8 | 29.0-36.0 | 7.0 | the deciding goal: lamp, net, score | the operator scores; first to 2 means the match ends on it | any blue goal | C8 "That's a take." (33.5; new) |
+| 9 | 36.0-41.5 | 5.5 | the end card over the rink | free if he wins (A144: the loss card reads only REMATCH?) | the scoreboard after the goal | none |
+| 10 | 41.5-45.0 | 3.5 | the banner and the banner line | generated | | none |
+
+New lines (game settings, 10 credits): C1 "Take one!" 1.09 s; C8 "That's a take!" 1.47 s. Narration: 23 words in 14.5 s of slots (1.59 a second, at most 2.33 in a slot);
+37.1 s of the voice track below -50 dBFS (82 %). Read `C:\Users\kazda\jam\trailer-lab\read\rough-read-C.wav`; stand-in film `edit\out\C45.mp4` (PASS, -16.0 LUFS, 0 overruns);
+still `C:\Users\kazda\jam\thirdjam\devlog\shots\20261114-021528-B-trailer-scenario-C.png`. Season take 1 plays rookie bots: shot 5 (the human flattened) is the one most likely to
+be missing; a match at pro (PLAY NOW, the regular cut) has it unprompted. If the operator records one pro match of the regular cut, C needs only shot 1's line changed.
+
+### Storyboard
+`C:\Users\kazda\jam\trailer-lab\storyboard.html` now has tabs A, C, D (D's rows add camera, lens, speed and staging); each tab plays its own read with the current shot lit and
+links its stand-in film. `C:\Users\kazda\jam\trailer-lab\read\listen.html` has every take, the bank line and all five reads.
+
+## 3. Not verified (this part)
+- I watched none of the cut films in a player: their numbers are measured (format, length, loudness, overruns, repeated frames) and I looked at one frame per shot of A45 and D45.
+- The duck amounts (-8 game, -10 music) and the -16 LUFS target are chosen, not heard; the real game sound will change the balance.
+- Scenario D: every camera number is a proposal from the stills' cameras, not placed in an editor; the GPU time is an estimate; route (b) needs a small image-sequence addition to `edit.mjs` that I have not written or tested.
+- Scenario C: that season take 1's rookie bots ever flatten the human in a match.
+- The repeated-frames counter reads slightly negative on the stand-in films (-0.3 to -0.4 %): its frame and showinfo counts differ by a few frames; it still caught the 30 fps source.
+
+## 4. For the engine lane
+For D only (Saturday, if the operator chooses D or hybrid 2): a scripted cine camera placed by numbers as the view target, a follow mode on one skater's position, time
+dilation on demand, and the triggers named in D's table. Nothing for A or C.
+
+## 5. For the other device
+Nothing new. If the operator wants hybrid 3 (two videos), the page (`submission/page.md`) needs a place for a second clip: the Director's.
+
+## 6. Decisions for the operator (and the Director)
+1. A, C or D as the submission film (I keep A first, C as the fallback).
+2. D at all: none, hybrid 2 (3 to 5 store stills from an editor session, about 40 minutes of GPU), or hybrid 3 (a second clip); hybrid 1 (D as the only film) I would not choose.
+3. Loudness: -16 LUFS (chosen, less limiting) or -14 (louder, crushes the voice on tonight's stand-ins).
+4. Season take 1 (rookie) or the regular cut at pro as C's match.
+5. The open decisions of part one stand (lines, delivery, second voice, R-0054 split frame, engine logo, who films).
+
+## 7. Next three evolutions
+1. **Film it and cut it the same hour**: the operator's session on H27, then `edit.mjs` on A45.json with real `src`/`in`/`out`; proof: the film PASS (format, 45.000 s), 0 overruns,
+   and the game's own hit and goal within 2 frames of their stand-in beats (then the stand-in rows deleted).
+2. **Image-sequence sources in `edit.mjs`** (for D's route b and for frame-stepped Shipping replays): proof: a 120-frame PNG sequence cut into a shot at 60 fps with 0 repeated frames.
+3. **The five store stills** (part one's evolution 3), from Shipping frames, or hybrid 2's editor stills if he chooses it; proof: five 1920 x 1080 PNGs with captions, each showing clay figures on clay ice.
+
+Leftovers: nothing running that I started. Files written in the repository this part: this section of `status/TRAILER-report.md`; `devlog/shots/20261114-021528-B-trailer-edit-A45.png`,
+`-scenario-D.png`, `-scenario-C.png` and their `.txt` captions. Everything else under `C:\Users\kazda\jam\trailer-lab\`.
