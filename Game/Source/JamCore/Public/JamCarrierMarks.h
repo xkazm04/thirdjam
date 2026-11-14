@@ -108,7 +108,8 @@ namespace JamCarrierMarks
 
 	struct FStopRule
 	{
-		double AheadM = 8.0;           // where the mark stands: five stick lengths from the human, towards the opponent
+		double AheadM = 8.5;           // where the mark stands: five stick lengths from the human, towards the opponent. Lane A194: 8 -> 8.5 m, the stop window's centre
+		                               // since the free skaters are 15 % faster (pro: 8 m 94 %, 8.5 m 99.5 %, 9 m 94.5 %) and drill 21's stop distance; a drawing only
 		double LitNearM = 7.0;         // lit while the opponent is this far off or more ...
 		double LitFarM = 9.0;          // ... and this far off or less, plus the hand's lead. Lane A185 (track F2 evolution 9, MOVEMENT-10.md): 9.5 -> 9 m. With the free skaters
 		                               // 15 % faster (skater.free_speed_mult) the defender closes sooner: the stop begun at 9.5 m passes a pro 78 % (97 before), at 9 m 94.5 %,

@@ -37,6 +37,7 @@ struct FJamLawOneDrill
 	int32 NudgeAtt = -1, NudgeVic = -1, HitAtt = -1, HitVic = -1;
 	double Dir = 1.0;
 	int32 Frames = 0, PressFrame = -1;
+	int32 SeatAt = -1;   // lane A192: the frame the nudge's attacker is seated (the press's frame, or the wind-up's end)
 	bool bLive = false, bDone = false, bWhistleWas = false, bFoul = false;
 	// What happened.
 	int32 NudgeOutcome = 0, HitOutcome = 0, NudgeFrame = -1, HitFrame = -1, HitKnockFrames = 0;
@@ -111,17 +112,23 @@ struct FJamLawOneDrill
 		const double Mag = FMath::Clamp(SpeedMps / FMath::Max(Sim.GetEffectiveStat(EJamStat::SkaterSpeed, NudgeAtt), 1e-6), 0.0, 1.0);
 		Inputs[NudgeAtt].Move = Inputs[NudgeVic].Move = Inputs[HitAtt].Move = FVector2D(Dir * Mag, 0.0);
 		Inputs[HitVic].Move = FVector2D(-Dir * Mag, 0.0);
-		if (PressFrame >= 0) return;
+		auto Seat = [&]()
+		{
+			const FVector2D VicPos = Sk[NudgeVic].Pos, VicVel = Sk[NudgeVic].Vel;
+			const double VicYaw = Sk[NudgeVic].Yaw;
+			Sim.SetSkater(NudgeAtt, VicPos - Sk[NudgeVic].Forward() * SeatM, VicVel, VicYaw);
+		};
+		if (PressFrame >= 0) { if (Frames == SeatAt) Seat(); return; }   // lane A192: seated as the wind-up ends, so the matched-speed touch meets the open window
 		const FVector2D To = Sk[HitVic].Pos - Sk[HitAtt].Pos;
 		const double Gap = To.Size() - 2.0 * UJamSim::SkaterRadius;
 		const double Closing = FVector2D::DotProduct(Sk[HitAtt].Vel - Sk[HitVic].Vel, To.GetSafeNormal());
-		if (Gap > Closing * 2.0 / 60.0 && Frames < LeadFrames + 30) return;
+		// Lane A192: the window opens game.contact.check_windup_frames after the press: the press goes that many frames earlier (0: as before).
+		if (Gap > Closing * (2.0 + Sim.GetConfig().Contact.CheckWindupFrames) / 60.0 && Frames < LeadFrames + 30) return;
 		PressFrame = Frames;
 		HitClosingMps = Closing;
 		NudgeVicSpeedBefore = Sk[NudgeVic].Vel.Size();
-		const FVector2D VicPos = Sk[NudgeVic].Pos, VicVel = Sk[NudgeVic].Vel;
-		const double VicYaw = Sk[NudgeVic].Yaw;
-		Sim.SetSkater(NudgeAtt, VicPos - Sk[NudgeVic].Forward() * SeatM, VicVel, VicYaw);
+		SeatAt = Frames + Sim.GetConfig().Contact.CheckWindupFrames;
+		if (SeatAt == Frames) Seat();
 		Inputs[NudgeAtt].bCheck = true;
 		Inputs[HitAtt].bCheck = true;
 	}

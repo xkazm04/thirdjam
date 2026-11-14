@@ -1006,6 +1006,8 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 	if (Phase == EJamSimPhase::GoalPause)
 	{
 		static const FJamInput Hold = [] { FJamInput I; I.bBrake = true; return I; }();
+		// Lane A192: a wind-up pressed before the goal runs out in the pause as a window opened before it stays open (none at the wind-ups' 0).
+		for (FJamSkaterState& S : Skaters) if (S.CanAct() && (S.CheckWindupLeft > 0 || S.LiftWindupLeft > 0)) StepWindups(S, S.StickLockLeft > 0);
 		for (FJamSkaterState& S : Skaters) { StepSkater(S, Hold); CollideSkaterStatic(S); }
 		CollideSkaters();
 		StepPuck();
@@ -1372,7 +1374,7 @@ void UJamSim::StepSkater(FJamSkaterState& S, const FJamInput& In)
 			&& S.LungeLeft == 0;   // lane A157: no hard stop out of a lunge
 		if (bReverse)
 		{
-			const double Cut = C.ReverseBrakeDecel * FMath::Min(Mag, 1.0) * DT;
+			const double Cut = C.ReverseBrakeDecel * (bCarrying ? FMath::Max(0.0, C.CarryReverseBrakeMult) : 1.0) * FMath::Min(Mag, 1.0) * DT;   // lane A194: the carrier's own (code only, 1 = everyone's)
 			if (V > 1.0)
 			{
 				if (!S.bReverseBrakeLast)
@@ -1704,15 +1706,41 @@ void UJamSim::TryLift(FJamSkaterState& S)
 	if (Frame < S.LiftReadyFrame) return;
 	S.LiftReadyFrame = Frame + 30;
 	S.bLiftThisFrame = true;
-	// Lane A184 (game.contact.cross_windup_frames): the swing commits on the press (its cooldown above, the figure's call) and lands that many frames later
-	// (StepWindups calls ResolveLift): the shove, the strip and the miss as they are below, on the positions of that frame. 0 = at once, as before.
-	if (Config.Contact.CrossWindupFrames > 0)
-	{
-		S.LiftWindupLeft = Config.Contact.CrossWindupFrames;
-		S.WindupFrames = Config.Contact.CrossWindupFrames;
-		return;
-	}
+	// Lane A184 / A192 (game.contact.cross_windup_frames): the stick's part (the strip, the miss) is the press's, as before; the cross-check's body part, the
+	// shove, lands that many frames later on the man it was aimed at (ResolveLift defers it, LandCrossShove lands it), so the figure's take has a beat
+	// before the contact and the stick steal is not slowed. The figure is told the frames on every press. 0 = the shove at once, as before.
+	if (Config.Contact.CrossWindupFrames > 0) S.WindupFrames = Config.Contact.CrossWindupFrames;
 	ResolveLift(S);
+}
+
+// Lane A192: the shove of a cross-check: at once, or deferred by cross_windup_frames to S.CrossTarget (bStickOnly: the stick-only shield had widened it).
+bool UJamSim::CrossShove(FJamSkaterState& S, FJamSkaterState& O, const FVector2D& Dir, bool bStickOnly)
+{
+	if (Config.Contact.CrossWindupFrames <= 0)
+	{
+		ResolveContact(S, O, Dir, (S.Pos + O.Pos) * 0.5, EContactKind::Cross);
+		return true;
+	}
+	S.CrossTarget = O.Index;
+	S.bCrossTargetStickOnly = bStickOnly;
+	S.LiftWindupLeft = Config.Contact.CrossWindupFrames;
+	return false;
+}
+
+// Lane A192: the deferred shove lands if its man is still there to take it: on his feet, out of the box, not shielded, within the shaft's reach, inside
+// the cone, not into his back (unless the stick-only shield had widened it at the press), not where the spin or the sweep shields a carrier.
+void UJamSim::LandCrossShove(FJamSkaterState& S)
+{
+	const int32 T = S.CrossTarget;
+	S.CrossTarget = -1;
+	if (!Skaters.IsValidIndex(T) || !Config.Contact.bMomentum || !Config.Skater.bCheckEnabled) return;
+	FJamSkaterState& O = Skaters[T];
+	if (O.IsDown() || O.InBox() || O.ShieldFrames > 0 || FVector2D::Distance(O.Pos, S.Pos) > SkaterRadius * 2.0 + Config.Contact.CrossReachM || OutsideLiftCone(S, O)) return;
+	if (CarrierIndex() == O.Index && IsShoveShielded(S, O)) return;
+	FVector2D Dir = (O.Pos - S.Pos).GetSafeNormal();
+	if (Dir.IsNearlyZero()) Dir = S.Forward();
+	if (Dot(Dir, O.Forward()) > 0.5 && !S.bCrossTargetStickOnly) return;
+	ResolveContact(S, O, Dir, (S.Pos + O.Pos) * 0.5, EContactKind::Cross);
 }
 
 void UJamSim::ResolveLift(FJamSkaterState& S)
@@ -1750,9 +1778,8 @@ void UJamSim::ResolveLift(FJamSkaterState& S)
 			FVector2D Dir = (O.Pos - S.Pos).GetSafeNormal();
 			if (Dir.IsNearlyZero()) Dir = S.Forward();
 			const bool bFromBehind = Dot(Dir, O.Forward()) > 0.5;
-			if (!bFromBehind || bStickOnly)
+			if ((!bFromBehind || bStickOnly) && CrossShove(S, O, Dir, bStickOnly))   // lane A192: deferred by the wind-up (the tally counts a shove that landed now)
 			{
-				ResolveContact(S, O, Dir, (S.Pos + O.Pos) * 0.5, EContactKind::Cross);
 				if (bStickOnly)
 				{
 					++Tally.Shoves;
@@ -1794,7 +1821,7 @@ void UJamSim::ResolveLift(FJamSkaterState& S)
 			FJamSkaterState& O = Skaters[Best];
 			FVector2D Dir = (O.Pos - S.Pos).GetSafeNormal();
 			if (Dir.IsNearlyZero()) Dir = S.Forward();
-			if (Dot(Dir, O.Forward()) <= 0.5) ResolveContact(S, O, Dir, (S.Pos + O.Pos) * 0.5, EContactKind::Cross);
+			if (Dot(Dir, O.Forward()) <= 0.5) CrossShove(S, O, Dir, false);   // lane A192: at once, or after the wind-up
 		}
 	}
 	Emit(JamEvents::Lift, S.Index, S.BladePos, 0.f, KindMiss, S.BladePos - S.Pos);
@@ -1828,7 +1855,7 @@ void UJamSim::StepCrossHold(FJamSkaterState& S, const FJamInput& In)
 void UJamSim::StepWindups(FJamSkaterState& S, bool bStickLocked)
 {
 	if (S.CheckWindupLeft > 0 && --S.CheckWindupLeft == 0 && !bStickLocked && !CarrierMayNotHit(S)) OpenCheckWindow(S);
-	if (S.LiftWindupLeft > 0 && --S.LiftWindupLeft == 0 && !bStickLocked && !S.bCrossBraced) ResolveLift(S);
+	if (S.LiftWindupLeft > 0 && --S.LiftWindupLeft == 0 && !bStickLocked && !S.bCrossBraced) LandCrossShove(S);   // lane A192: the shove after the wind-up
 }
 
 void UJamSim::OpenCheckWindow(FJamSkaterState& S)
@@ -2070,6 +2097,7 @@ void UJamSim::CollideSkaters()
 					Hitter.bCrossSpent = true;
 					++Hitter.CrossBraceHits;
 					Victim.bCrossBraceHit = true;
+					++Victim.CrossBraceTaken;   // lane A192 read-out
 				}
 				else if (Config.Contact.LatePressFrames > 0)
 				{
@@ -3522,6 +3550,7 @@ uint64 UJamSim::StateHash() const
 		// Lane A184: the hold and the brace once they are up, the wind-ups while they run, behind tags (cross_hold false and the wind-ups at 0: never).
 		if (S.CrossHoldFrames != 0 || S.bCrossBraced || S.bCrossSpent) { H.AddI(-1841); H.AddI(S.CrossHoldFrames); H.AddI(S.bCrossBraced ? 1 : 0); H.AddI(S.bCrossSpent ? 1 : 0); }
 		if (S.CheckWindupLeft != 0 || S.LiftWindupLeft != 0) { H.AddI(-1842); H.AddI(S.CheckWindupLeft); H.AddI(S.LiftWindupLeft); }
+		if (S.LiftWindupLeft != 0) { H.AddI(S.CrossTarget); H.AddI(S.bCrossTargetStickOnly ? 1 : 0); }   // lane A192: the deferred shove's man
 		if (S.StickLockLeft != 0) { H.AddI(0x152A); H.AddI(S.StickLockLeft); }   // lane A152: the miss's recovery only while it runs (stick.miss_recovery_frames 0 hashes as before)
 		// Lane A128: the rest counter and the spin's recovery only while they are up (burst.rest_frames 0 and spin.recovery_frames 0 hash as before).
 		if (S.RestFrames != 0) { H.AddI(0x128A); H.AddI(S.RestFrames); }

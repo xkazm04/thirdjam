@@ -208,13 +208,16 @@ bool FJamStick::RunTest(const FString& Parameters)
 		Park(Sim, { Me, O });
 		Sim->SetPuck(FVector2D(20, 15), FVector2D::ZeroVector);   // the puck is nowhere near
 		Sim->SetSkater(O, FVector2D(0, 0), FVector2D::ZeroVector, 0);
-		Sim->SetSkater(Me, FVector2D(-1.2, 0), FVector2D(8, 0), 0);
+		// Lane A192: the window opens game.contact.check_windup_frames after the press: the charger starts that much ground farther out and the scene runs
+		// that many frames longer (the same contact on the same course).
+		const int32 Wu = Sim->GetConfig().Contact.CheckWindupFrames;
+		Sim->SetSkater(Me, FVector2D(-1.2 - 8.0 * Wu / 60.0, 0), FVector2D(8, 0), 0);
 		TArray<FJamInput> In;
 		In.SetNum(Sim->GetSkaters().Num());
 		In[Me].Move = FVector2D(1, 0);
 		In[Me].bCheck = true;
 		int32 Fouls = 0, Checks = 0;
-		for (int32 F = 0; F < 6; ++F)
+		for (int32 F = 0; F < 6 + Wu; ++F)
 		{
 			Sim->Step(In);
 			In[Me].bCheck = false;
@@ -241,10 +244,10 @@ bool FJamStick::RunTest(const FString& Parameters)
 		Park(S2, { Me, O });
 		S2->SetPuck(FVector2D(20, 15), FVector2D::ZeroVector);
 		S2->SetSkater(O, FVector2D(0, 0), FVector2D::ZeroVector, 0);
-		S2->SetSkater(Me, FVector2D(-1.2, 0), FVector2D(8, 0), 0);
+		S2->SetSkater(Me, FVector2D(-1.2 - 8.0 * Wu / 60.0, 0), FVector2D(8, 0), 0);   // lane A192: as above
 		In[Me].bCheck = true;
 		int32 Fouls2 = 0;
-		for (int32 F = 0; F < 6; ++F) { S2->Step(In); In[Me].bCheck = false; Fouls2 += CountEvents(S2, JamEvents::Foul, NAME_None); }
+		for (int32 F = 0; F < 6 + Wu; ++F) { S2->Step(In); In[Me].bCheck = false; Fouls2 += CountEvents(S2, JamEvents::Foul, NAME_None); }
 		TestEqual(TEXT("penalties off: no foul"), Fouls2, 0);
 		TestEqual(TEXT("penalties off: nobody in the box"), S2->GetSkaters()[Me].PenaltyFrames, 0);
 	}
@@ -268,16 +271,18 @@ bool FJamStick::RunTest(const FString& Parameters)
 		In[Me].bLift = false;
 		TestEqual(*FString::Printf(TEXT("grace %d: the lift stripped O"), Wait), CountEvents(Sim, JamEvents::Lift, FName(TEXT("clean")), Me), 1);
 		const int64 StripFrame = Sim->GetFrame();
-		for (int32 F = 0; F < Wait; ++F) Sim->Step(In);
+		// Lane A192: the press goes the wind-up earlier, so the hit lands as many frames after the strip as it did.
+		for (int32 F = 0; F < Wait - Sim->GetConfig().Contact.CheckWindupFrames; ++F) Sim->Step(In);
 		// Charge O from the side (not from behind): O faces +x, the hit comes along -z.
 		// Lane A92 (R-0045): the puck the lift sent the human's way is parked, so the charger does not carry it (the carrier cannot hit once the grace is over).
 		Sim->SetPuck(FVector2D(-15.0, -10.0), FVector2D::ZeroVector);
-		Sim->SetSkater(Me, FVector2D(0.0, 1.3), FVector2D(0, -8), -UE_DOUBLE_PI * 0.5);
+		const int32 Wu = Sim->GetConfig().Contact.CheckWindupFrames;   // lane A192: the charger starts the wind-up's ground farther out; the scene runs that much longer
+		Sim->SetSkater(Me, FVector2D(0.0, 1.3 + 8.0 * Wu / 60.0), FVector2D(0, -8), -UE_DOUBLE_PI * 0.5);
 		In[Me].Move = FVector2D(0, -1);
 		In[Me].bCheck = true;
 		int32 Checks = 0, Fouls = 0;
 		int64 HitFrame = -1;
-		for (int32 F = 0; F < 8; ++F)
+		for (int32 F = 0; F < 8 + Wu; ++F)
 		{
 			Sim->Step(In);
 			In[Me].bCheck = (F % 4 == 3);

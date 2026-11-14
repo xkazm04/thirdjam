@@ -1814,6 +1814,7 @@ bool FJamContactNeutral::RunTest(const FString& Parameters)
 		if (!C) continue;
 		C->Game.Stick.bSweepShieldOneSided = true;
 		C->Game.Skater.FreeSpeedMult = 1.0;   // lane A185 (track F2): no free-skater speed
+		C->Game.Skater.BreakawaySpeedBonus = 0.2;   // lane A194 (track F2): the breakaway's bonus before that lane
 		C->Game.Stick.bBodyShield = false; C->Game.Stick.bPassiveTake = true; C->Game.Stick.bTeammateTouchTakes = true;   // lane A102: the game before its two stick rules
 		C->Game.Stick.TakeGraceFrames = 0;   // lane A121: and before the take grace (the block's burst.frames 0 and reverse_brake_decel 0 cover its other two)
 		C->Game.Skater.SpinExposedTail = 0;   // lane A128: and before the spin's price (burst.frames 0 covers its standing start)
@@ -2967,14 +2968,23 @@ bool FJamContactCrossHold::RunTest(const FString& Parameters)
 		}
 		TestEqual(TEXT("check_windup_frames 6: the figure is told 6 on the press"), Told, 6);
 		TestEqual(TEXT("check_windup_frames 6: the window opens 6 frames after the press"), Open, 6);
-		int32 Swing = -1, Pressed = -1;
-		for (int32 F = 0; F < 40 && Swing < 0; ++F)
+		// Lane A192: the stick's part is the press's (the strip on frame 0), the shove lands on its man 5 frames later (a standing carrier at arm's length, facing).
+		S.Sim->SetSkater(S.V, FVector2D(0.0, 0.0), FVector2D::ZeroVector, 0.0);
+		if (!HandPuck(S, S.V)) { AddError(TEXT("the victim did not pick the placed puck up")); return false; }
+		S.Sim->SetSkater(S.V, FVector2D(0.0, 0.0), FVector2D::ZeroVector, 0.0);
+		S.Sim->SetSkater(S.A, FVector2D(2.0 * UJamSim::SkaterRadius + S.Cfg.Contact.CrossReachM - 0.1, 0.0), FVector2D::ZeroVector, PI);
+		int32 Swing = -1, Pressed = -1, Shove = -1, ToldX = -1;
+		for (int32 F = 0; F < 12 && Shove < 0; ++F)
 		{
 			TArray<FJamInput> In = Idle(S); In[S.A].bLift = F == 0; S.Sim->Step(In);
-			if (S.Att().bLiftThisFrame) Pressed = F;
+			if (S.Att().bLiftThisFrame) { Pressed = F; ToldX = S.Att().WindupFrames; }
 			for (const FJamSimEvent& E : S.Sim->GetFrameEvents()) if (E.Name == JamEvents::Lift && E.Who == S.A) Swing = F;
+			if (S.Vic().ContactOutcome != 0 && S.Vic().bContactCross) Shove = F;
+			S.Sim->SetSkater(S.V, FVector2D(0.0, 0.0), FVector2D::ZeroVector, 0.0);
+			S.Sim->SetSkater(S.A, FVector2D(2.0 * UJamSim::SkaterRadius + S.Cfg.Contact.CrossReachM - 0.1, 0.0), FVector2D::ZeroVector, PI);
 		}
-		TestTrue(*FString::Printf(TEXT("cross_windup_frames 5: the swing is pressed on frame 0 (%d) and lands on frame 5 (%d)"), Pressed, Swing), Pressed == 0 && Swing == 5);
+		TestTrue(*FString::Printf(TEXT("cross_windup_frames 5: pressed and swung (the strip) on frame 0 (%d, %d), told 5 (%d), the shove lands on frame 5 (%d)"), Pressed, Swing, ToldX, Shove),
+			Pressed == 0 && Swing == 0 && ToldX == 5 && Shove == 5);
 	}
 	{
 		FContactScene S = Make(*this, [](FJamGameConfig& G) { G.Contact.CheckWindupFrames = 0; G.Contact.CrossWindupFrames = 0; });

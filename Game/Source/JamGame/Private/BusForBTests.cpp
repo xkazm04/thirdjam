@@ -116,7 +116,8 @@ bool FJamFxBusForB::RunTest(const FString&)
 			double D;
 			UJamSim* Sim = Scene(G, Me, V, D);
 			Sim->SetSkater(Me, FVector2D(0, 0), FVector2D(D * Speed, 0.0), D > 0 ? 0.0 : PI);
-			Sim->SetSkater(V, FVector2D(D * 1.2, 0.0), FVector2D::ZeroVector, D > 0 ? PI : 0.0);
+			// Lane A192: the window opens game.contact.check_windup_frames after the press: the victim stands the wind-up's ground farther out (the same contact).
+			Sim->SetSkater(V, FVector2D(D * (1.2 + Speed * G.Contact.CheckWindupFrames / 60.0), 0.0), FVector2D::ZeroVector, D > 0 ? PI : 0.0);
 			TArray<FJamInput> In;
 			In.SetNum(Sim->GetSkaters().Num());
 			In[Me].bCheck = true;

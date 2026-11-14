@@ -972,6 +972,7 @@ void UJamHudWidget::RefreshFromFrame(const FJamPresentationFrame& F)
 	UpdatePrompts(F, Frames > 0, bSimAdvanced);
 	UpdateMarks(F);   // lane A166 (track F2): the contested puck and the stop's distance, on the ice (HUDMarks.cpp)
 	UpdateCarrierCues(F);   // lane A163 (track F2): the take grace on the rings, the stick lock on the contact line (after UpdateYours placed the rings)
+	UpdateBraceLine(F);   // lane A192 (track F1): a braced hit given or taken says so on the contact line (HUDBrace.cpp)
 }
 
 // Lane A123 (1): where the human figure's head is. The visual's head_socket (a mesh socket on any of its components: device B's figures; or a scene component of

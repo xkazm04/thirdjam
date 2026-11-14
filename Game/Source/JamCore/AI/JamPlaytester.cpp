@@ -493,10 +493,16 @@ namespace JamAI
 				const double Dc = C.Pos.DistTo(Me.Pos);
 				// Lane A184 (track F1, evolution 9; game.contact.cross_hold): the brace as a person uses it: held from a few metres out when skating at the carrier
 				// fast enough to hurt and not into his back; braced, no check is pressed (the braced body is the hit).
-				if (BraceMode == 1 && Dc > 1e-6 && Dc <= 2.0 * W.SkaterRadius + BraceFromM)
+				if (BraceTarget != W.Carrier) { BraceTarget = -1; }
+				if (BraceMode == 1 && Dc > 1e-6)
 				{
 					const FVec2 Nb = (C.Pos - Me.Pos) * (1.0 / Dc);
-					if ((Me.Vel - C.Vel).Dot(Nb) >= BraceClosingMps && Nb.Dot(C.Facing) < P.CheckFromBehindDot) In.bCrossHold = true;
+					const double Cl = (Me.Vel - C.Vel).Dot(Nb);
+					const bool bFront = Nb.Dot(C.Facing) < P.CheckFromBehindDot;
+					const double Gap = Dc - 2.0 * W.SkaterRadius;
+					// lane A192: commit on a long run only; keep it while still closing on the same man
+					if (BraceTarget < 0 && Gap > BraceMinM && Gap <= BraceFromM && Cl >= BraceClosingMps && bFront) { BraceTarget = W.Carrier; }
+					if (BraceTarget >= 0 && Cl > 0.5 && bFront) { In.bCrossHold = true; } else { BraceTarget = -1; }
 				}
 				if (In.bCrossHold)
 				{
@@ -797,6 +803,7 @@ namespace JamAI
 			Tester.BraceMode = (CfgSim && CfgSim->GetConfig().Contact.bCrossHold && CfgSim->GetConfig().Contact.bMomentum && CfgSim->GetConfig().Skater.bCheckEnabled) ? 1 : 0;   // only where the sim reads the hold
 			if (BraceEnv && std::strcmp(BraceEnv, "off") == 0) { Tester.BraceMode = 0; }
 			if (BraceEnv && std::strcmp(BraceEnv, "always") == 0) { Tester.BraceMode = 2; }
+			if (const char* BcEnv = std::getenv("JAM_PLAYTESTER_BRACE_CLOSING")) { Tester.BraceClosingMps = std::atof(BcEnv); }   // lane A192: a measurement's arm
 			const char* ContestEnv = std::getenv("JAM_PLAYTESTER_CONTEST");   // lane A166: brake = the player obeys the contested-puck mark (a measurement's arm); absent = as shipped
 			Tester.bContestBrake = ContestEnv && std::strcmp(ContestEnv, "brake") == 0;
 			const char* StopMarkEnv = std::getenv("JAM_PLAYTESTER_STOPMARK");   // lane A178: brake = the player obeys the stop's line (a measurement's arm); absent = as shipped

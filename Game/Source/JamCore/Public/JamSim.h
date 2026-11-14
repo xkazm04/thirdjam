@@ -366,9 +366,14 @@ struct JAMCORE_API FJamSkaterState
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bCrossSpent = false;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 CheckWindupLeft = 0;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 LiftWindupLeft = 0;
+	// Lane A192: since evolution 10 LiftWindupLeft counts down to the cross-check's deferred SHOVE (the strip is the press's): CrossTarget, the man it lands on;
+	// bCrossTargetStickOnly, a stick-only shield had widened it at the press (from behind too). RULE STATE, hashed while LiftWindupLeft runs.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 CrossTarget = -1;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bCrossTargetStickOnly = false;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 CrossBraceFrames = 0;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 CrossBraceHits = 0;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bCrossBraceHit = false;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 CrossBraceTaken = 0;   // lane A192 read-out: braced hits taken (the HUD's contact line), read by no rule
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 WindupFrames = 0;
 	// R-0029 point 3: the last frame this skater carried the puck (-1000 = never); a check within game.stick.foul_grace_frames of it is not a foul_no_puck.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int64 LastCarryFrame = -1000;
@@ -706,6 +711,9 @@ public:
 	void StepCrossHold(FJamSkaterState& S, const FJamInput& In);
 	// Lane A184: the lift's swing as TryLift ran it, after the press's cooldown (TryLift calls it at once, or StepWindups when cross_windup_frames runs out).
 	void ResolveLift(FJamSkaterState& S);
+	// Lane A192: the cross-check's shove at once (true) or deferred by cross_windup_frames (false), and its landing after the wind-up.
+	bool CrossShove(FJamSkaterState& S, FJamSkaterState& O, const FVector2D& Dir, bool bStickOnly);
+	void LandCrossShove(FJamSkaterState& S);
 	// Lane A184: the wind-ups' clocks (game.contact.check_windup_frames, cross_windup_frames), in the skater's input step: a check whose wind-up ends opens
 	// its window (and its lunge) now; a cross-check whose wind-up ends swings now.
 	void StepWindups(FJamSkaterState& S, bool bStickLocked);

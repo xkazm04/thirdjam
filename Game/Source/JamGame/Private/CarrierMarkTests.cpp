@@ -40,7 +40,7 @@ bool FJamHudMarks::RunTest(const FString& Parameters)
 	// The stop mark stands inside the window it lights for.
 	{
 		const JamCarrierMarks::FStopRule K;
-		TestTrue(TEXT("the mark's 8 m is inside the 7 to 9 m window, and the armed range is outside it"), K.AheadM > K.LitNearM && K.AheadM < K.LitFarM && K.ArmFarM > K.LitFarM);
+		TestTrue(TEXT("the mark's 8.5 m is inside the 7 to 9 m window, and the armed range is outside it"), K.AheadM > K.LitNearM && K.AheadM < K.LitFarM && K.ArmFarM > K.LitFarM);
 	}
 	// Nothing on a downed figure.
 	{
