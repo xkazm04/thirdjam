@@ -1,0 +1,1 @@
+Lane AR14, device B, GPU editor, tree wt/b-arena (lane/b-arena over f42515a0), PIE floating window, screen percentage override off for the still. Clay, un-paused, the cheer held: two frames with the bounce at 15 cm (1.1 to 2.2 % of the frame differs between two captures) and one with the bounce at 0 (0.02 % between two captures). A still cannot show the motion.

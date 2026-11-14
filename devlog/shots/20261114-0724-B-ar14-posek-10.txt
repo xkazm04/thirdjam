@@ -1,0 +1,1 @@
+Lane AR14, device B, GPU editor, tree wt/b-arena (lane/b-arena over f42515a0), PIE floating window, screen percentage override off for the still. DECISION still 1 of 2 (the size of the cheer): PoseK 1.0, 25 m from the end stand, risen. 5.24 % of the frame changes against rest. This is what I would ship.

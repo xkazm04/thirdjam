@@ -1,0 +1,1 @@
+Lane AR14, device B, GPU editor, tree wt/b-arena (lane/b-arena over f42515a0), PIE floating window, screen percentage override off for the still. Night as saved, read back from disk after a restart: game camera, low camera, bench side, end terrace.
