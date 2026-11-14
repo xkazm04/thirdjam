@@ -330,3 +330,161 @@ Files, in the lab `C:\Users\kazda\jam\sets-lab\dive\`:
 - Checks: `it.sh` (steps build meas check clear head join), `clr.js`, `prove2.js`, `head_dive.py`, `vis_dive.py`, `clear29.py` (copy).
 - Renders: `pair_dive.py`, `render_dive.py`, `strip2.sh`.
 - Gate: `gate_joins_dive.txt`, the gate's log `logs\gate.txt`.
+
+---
+
+# Part 3, third loop (03:42 to 04:30): the victim falls clear, Slide_Tackle_Right clear, the act in the big parts
+
+## 1. Done and not done
+
+All three evolutions are built in both styles. The export `C:\Users\kazda\jam\sets-lab\dive\export\` was replaced in place. It now holds 10 takes per style:
+- Changed: `Dive_Block_Left` and `_Right` (40 frames now), `Slide_Tackle_Left` and `_Right`, and `Slide_Tackle`, which is still the same keys as `_Left`.
+- New: `Fall_Legs_Front` and `Fall_Legs_Back`.
+- Unchanged: `Dive_Block_Hit_*` and `Dive_Block_Front`.
+
+Beside the FBX files are `READY.txt` (written last, every take with its start and end pose and key frames), `JOINS.md` (37 pairs) and `GATE.md`. The gate ran with `--out C:\Users\kazda\jam\sets-lab\dive\gate3`, so its work files are there; only `GATE.md` was copied into the export.
+
+**Gate:** `GATE PASS: 20 rows, 0 failing, 0 with a known exception; p2_cel: 10 files, 10 takes found, 10 checked, READY.txt lists 10; p3_clay: the same`, base export32, 47 s.
+- Its new jitter column (informational, not a fail) shows a joint turning back by more than 1 cm on 2 to 3 frames in a row in:
+  - `Fall_Legs_Back`: hand_l up to 21 cm on cel, lowerarm_r 11.3 cm on clay;
+  - `Dive_Block_Left` on cel: lowerarm_l 17.1 cm from frame 1;
+  - `Dive_Block_Right` on clay: lowerarm_l 13.1 cm from frame 2;
+  - the slides: calf or lowerarm, 2.7 to 6 cm.
+- These are the throw and the fall's flailing. I did not fix them.
+
+**Not met:**
+- **The act's pixel change between frames 12 and 18 is 2.2 to 3.5 times the second loop's** (asked: 3 times). Only one of four take-and-style cases reaches 3 times.
+- **The victim falls clear only with invented travel.** Zero overlap needs the carrier's own skating (front 2.1 m, back 1.6 m) and a sideways knock (1.0 to 1.2 m). Both are invented in the strip, like the attacker's slide.
+  - With the takes alone it cannot be done. With no travel, any lying pose lies on the contact point, and the slider stops 40 cm past it and lies across it.
+  - Without the sideways knock and with the skates exactly on the leading skate, the overlap in my count on cel was 13 frames (front: 7, 8 and 10 to 20, so 10 after contact) and 26 frames (back: 4 to 8 and 16 to 36, so 21 after contact).
+  - This is a request to the other device (section 5).
+
+## 2. Evolutions
+
+### Evolution 1: the victim falls clear
+
+Both takes are 26 frames.
+- **Contact** is at frame 2: the engine starts every fall there, on the attacker's contact frame (thirty-first pass).
+- **`Fall_Legs_Front`**, the slider coming from his front:
+  - The skates are swept back at 2. He tips forward with the feet up behind (5), flops onto the forearms and chest with the head held up (9 to 12), bounces (15).
+  - Ends on **the face-down pose of Fall_Forward / Lie_Loop_Front**, held from 19.
+- **`Fall_Legs_Back`**, from behind:
+  - The skates are swept forward and up at 2. He is upended with the feet high (5 to 9) and sits down hard: **the hips land first** (11 to 12), back curled, head up.
+  - Ends on **Fall's / Lie_Loop's pose on the back**, held from 19.
+- **Joins:** exact against export29 (0.00004 cm or less, 0 deg) and in the gate against export32 (0.0000 cm, 0.000 deg).
+
+**Not head first:**
+- `Fall_Legs_Back` on cel: hips 5 cm off the ice at frame 11, helmet 47 cm.
+- `Fall_Legs_Front` on cel: the helmet's lowest point never goes below 7.5 cm before the settle (at 12). Its last 1.4 cm is the lying pose's cheek on the ice, not an impact.
+
+**Pair strips** (pair3.py): `C:\Users\kazda\jam\thirdjam\devlog\shots\20261114-042658-B-set-dive-victims-fall-clear.png`.
+- `Slide_Tackle_Left` with each victim, from his front and from behind, both styles, game camera behind the attacker. The victim's take runs from its frame 2 at the attacker's frame 10.
+- The overlap count tests every second body vertex of each figure against the other's body (more than 1 cm behind the nearest face, within 15 cm).
+- Travel invented for the strip:
+  - the attacker slides 1.6 m (1.2 m by contact);
+  - the carrier skates on along his facing: front 2.1 m, back 1.6 m, slowing;
+  - he is knocked sideways to the leading leg's side: front 1.2 m over 5 frames, back 1.0 m over 20;
+  - the victim's skates are 20 cm (front) and 30 cm (back) ahead of the leading skate at contact, i.e. at his toe tips or his heels.
+
+| Number | Asked | Front, cel / clay | Back, cel / clay |
+|---|---|---|---|
+| Frames with the bodies overlapping, frames 0 to 36 (after contact) | 0 | 0 / 0 (0 / 0) | 0 / 0 (0 / 0) |
+| Hips apart when both lie (frame 36) | 80 cm or more | 276 / 279 cm | 218 / 211 cm |
+| Same placement, existing `Trip` from its frame 2, front: frames with overlap | (about 16) | 13 (11 to 23) / 11 | |
+
+With the back placement at 20 cm ahead (not 30), frames 5 to 8 had 1 to 7 vertices touching before contact, up to 4.7 cm deep.
+
+What I saw:
+- **From his front:** the orange carrier skates in. At 10 his skates go back and he pitches forward and to the side, flying past the blue slider, and is flat on his chest by 17 to 20, well clear. It reads as being upended over the slider.
+- **From behind:** his feet fly up forward and he sits down hard ahead and to the side of the slider by 20.
+- Both read as a tackle on the ice, not as two players falling over each other.
+- The early front frames are cropped at the top of the tile. The camera is set for the landing.
+
+### Evolution 2: `Slide_Tackle_Right` clear
+
+- The stick is lifted over the trailing leg on the way back from the sweep: an extra key at 12, grip 48 cm up.
+- The leading skate is 10 cm further out beside the trunk, with a 40-degree roll, and the trunk rolls 10 degrees more onto the hip. The same applies to `_Left`.
+
+| Number | Asked | Slide_Tackle_Left cel / clay | Slide_Tackle_Right cel / clay |
+|---|---|---|---|
+| Shaft through a leg, the trunk or the head | 0 | 0 / 0 | **0 / 0** (was 2 / 1) |
+| Leading skate seen from the game camera at frame 10 (vis_dive.py) | 60 % on clay | 71 % / **64 %** | 70 % / **63 %** (was 52 %) |
+| Blade end's height at contact | 3 cm or less | 1.7 / 1.9 cm | 1.7 / 2.0 cm |
+| Blade end's largest one-frame move | 40 cm | 36.4 / 34.7 | 32.7 / 32.1 |
+| Joins, ground, pops | exact; 0 or above; 0 | yes; body 0.6 / 0.66, stick 0.47 / 0.01; 0 | yes; 0.6 / 0.66, 0.76 / 0.44; 0 |
+
+### Evolution 3: the act in the big parts (Dive_Block_Left / _Right, now 40 frames)
+
+What changed:
+- **12:** the free glove is thrown up (70 cm on the left side) and the top leg is down: the wind-up.
+- **15:**
+  - the stick slides 26 cm toward the shot (forward) and 8 cm out;
+  - the glove is slapped down on the ice in front of the chest (82 cm ahead of the root on the left side);
+  - the top leg is kicked up and held to 20, its ankle 44 cm over the lying pose's on cel and 40.4 on clay (was 26 / 24);
+  - the trunk opens to the shot (pelvis pitched 32 degrees, was 50).
+- **The settle** runs 20 to 37, two frames longer, so the larger stick turn stays inside the 40 cm line. The lying pose is held from 37.
+
+| Number (game camera, the figure 110 px; maskdiff.js: figure pixels that change between frames 12 and 18) | Second loop | Third loop | Ratio (asked 3) |
+|---|---|---|---|
+| Dive_Block_Left p2_cel | 728 | 1802 | **2.5** |
+| Dive_Block_Right p2_cel | 816 | 1755 | **2.2** |
+| Dive_Block_Left p3_clay | 563 | 1553 | **2.8** |
+| Dive_Block_Right p3_clay | 526 | 1823 | **3.5** |
+| Knockdown_Left, same frames, for comparison | | 259 / 357 | |
+
+Kept:
+- full cover at 10 (width at cover 328 / 309 cm on the left side);
+- blade end's largest one-frame move 39.2 / 38.1 cm;
+- shaft through 0 of 41 frames, both styles;
+- pops 0, joins exact;
+- nothing under the ice. A first build had the trunk 0.26 cm under at 17 to 19 on cel, fixed by raising the shuffle key 1.2 cm.
+
+**Would a stranger say "blocking" or "knocked down"?** From `C:\Users\kazda\jam\thirdjam\devlog\shots\20261114-042658-B-set-dive-loop3-act-slide.png`, rows 1 and 2 of each style:
+- Frames 15 to 24 show a figure flat on its side with one leg raised high, the stick reaching out ahead and a glove planted forward. `Knockdown_Left` in the same frames lies still, legs together, stick tucked.
+- A stranger would tell them apart and would say the block player is doing something on purpose.
+- Whether he would say "blocking" rather than "sprawling" I cannot claim: the raised leg reads as a leg in the air more than as a wall.
+- In motion the frame 12 to 15 slap and kick will be clearer than in a still. That is not verified.
+
+## 3. Not verified
+
+- Nothing has been seen in the engine.
+- Stills only.
+- The victims' travel, the sideways knock and the skates' placement at contact are invented for the strip.
+- The overlap count is a vertex sample (every second vertex) against the nearest face; a thin part passing between samples could be missed.
+- I did not look at the victims' takes alone, from the side or close.
+- Not rendered: the act from the shooter's side, `Dive_Block_Front` at game scale from the side.
+- The renders are Cycles with simple materials.
+
+## 4. For the engine lane
+
+| Take | Frames | Starts on | Ends on (held from) | Key |
+|---|---|---|---|---|
+| Fall_Legs_Front | 26 | = Fall_Forward frame 0 (play from 2) | Lie_Loop_Front frame 0 (19) | contact at its frame 2 |
+| Fall_Legs_Back | 26 | = Fall frame 0 (play from 2) | Lie_Loop frame 0 (19) | contact at its frame 2 |
+| Dive_Block_Left / _Right | 40 | the falls' start | Lie_Loop_Side_* frame 0 (37) | cover 10, act 12-20 (slap and kick 15), settle 20-37 |
+
+The other takes are as in part 2 (READY.txt).
+- **Trigger:** the attacker's `Slide_Tackle_*` frame 10 starts the victim's `Fall_Legs_Front` (slider coming at his front) or `Fall_Legs_Back` (from behind) at its frame 2.
+- **Must never:** move the root; play the victim's fall without the game moving him clear (section 5).
+
+## 5. For the other device
+
+When the slide tackle lands (attacker frame 10):
+- keep the carrier's own velocity (he slides on);
+- add **a sideways impulse of about 1.0 to 1.2 m over 5 to 20 frames**, to the side of the attacker's leading leg (the attacker's left for `Slide_Tackle_Left`), so the two bodies do not end on one line;
+- choose `Fall_Legs_Front` when the attacker comes at the carrier's front half, and `Fall_Legs_Back` otherwise.
+
+Without the impulse the victim lands on the slider (10 to 21 frames of overlap after contact in my count).
+
+## 6. Decisions for the operator
+
+1. **The sideways knock on a slide tackle.** It is a game rule, not an animation. Accept it, or accept two players piled up.
+2. **The act's size.** The leg kick and glove slap are as big as the toy allows without breaking the stick line; the raised leg may read as comic. Keep it, or go back to the second loop's quieter act.
+
+## 7. The next three evolutions
+
+1. **The act at 3 times everywhere.** A body shuffle of 10 cm along the line at 15 (the whole body sliding toward the shot) and the top arm's glove slap with the elbow lifted. Proving number: maskdiff ratio 3 or more in all four cases (today 2.2 to 3.5).
+2. **The gate's jitter column to zero in the new takes.** `Fall_Legs_Back`'s hand (21 cm), the dives' throw forearm (13 to 17 cm), the slides' calves. Proving number: jitter runs 0 in all 20 rows (today 10).
+3. **The victims seen alone and in motion.** A side and close strip of both falls, and the head's lowest point against the forearms and hips at every landing frame. Proving number: on every frame from contact to the lying pose, the helmet above the forearms or the hips (measured, today only at the landing frames).
+
+Files: the lab is `C:\Users\kazda\jam\sets-lab\dive\`. This loop added `pair3.py`, `pairs3.sh`, `maskdiff.js`, `gate3\` and the log `logs\final3b.txt`; the takes are still in `dive_block.py`.
