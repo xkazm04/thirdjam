@@ -1097,3 +1097,22 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - B filled your existing slot instead of a new name: **`/JamAssets/Rigs/LR_L3_Neon` (tier `l3_neon`)**: your switcher already maps it and it is on the cook list, so Glass House, Cage and Bruisers get it with no code. If you want `LR_N1_Neon` instead, say so. What it is: a dark violet hall, a diamond grid of thin lilac light lines on the ice (B's own: two sets at +/-30 degrees, 4 m apart, 2 m inside the boards), an orchid line at the board foot, magenta lines on the far walls; palette clear of both team colours; the puck's halo the brightest thing on the ice (`devlog/shots/20261114-151800-B-g1-neon-gamecam-play.png`). Your switcher will hide its persistent sky light on this tier now that the rig brings lights: intended.
 - **The figures' trims in team colours need you** (a rig cannot reach a figure's materials): on `l3_neon`, where you set each figure's team colour, set on the helmet (slot 4) and trim (slot 2) materials: `TeamColour` = the jersey's colour, `Emissive` 6, `RimColour` = 4 x team colour + 0.05, `RimStrength` 1.5 (previewed by B: `-151803-B-g1-neon-trim-glow-ab.png`).
 - B's GPU frame on its weak machine: neon about 1 to 1.5 ms over night; please time it on yours.
+
+## H52.5 (15:50, 14 Nov) FOR THE DIRECTOR: **for the 18:00 merge: dev-b at this push**: the hits, the boosts and the celebrations, filmed on the GPU; built on main, cook-only PASS
+- **All by the names you asked, on both figures** (`wt/b-fig/status/E2-report.md`, merged into dev-b as `status/E2-report.md`):
+  - **`SetCrossCheckHold(bool bOn)`**: the figure lab's `CrossCheck_Hold` (stick level across the chest, upper body from spine_01, the legs keep skating:
+    0.00 cm from a control figure), blending in and out over 6 frames; `PlayCrossCheck` from the hold plays `CrossCheck_Release` (a two-handed shove,
+    contact on its frame 3). Reads as a stick across the chest from the game camera (`devlog/shots/20261114-154600-B-e2-hold-gamecam-clay.png`).
+  - **`SetBoostEquipped(FName Kind, bool bOn)`** (`shotgun`, `hip_check`, `shield`, `slow_puck`): a toy keg on the back, a padded bumper on the left
+    hip, a round shield on the back, a snowflake crest on the helmet; several can show; hidden from the knockdown's call frame to the end of the get-up.
+  - **`/JamAssets/Props/SM_Boost_<kind>`** for `speed` (winged bolt), `precision` (target), `heavy_puck` (kettlebell on a puck), `big_puck`, `reverse_other`
+    (two chasing arrows), `custom` (question block), 64 to 83 cm tall, materials bound; each told apart by shape at 25 and 45 m on the GPU. **Add
+    `/JamAssets/Props` to the cook** if it is not.
+  - **`PlayCelebrate(int32 0-3)`**: 0 arms up, 1 stick raised, 2 knee glide, 3 the mate; the figure lab's real takes (58 to 110 frames, start and end on
+    the glide). Your code already calls it: both goals of a seeded match played it. Your camera stays on the human, so the pair is often off screen: framing
+    the scorer in the goal's pause would show it.
+  - **Wind-ups, behind a switch, off by default**: `SetWindupTakes(bool bOn, int32 N)` (N 0 means 8); while on, `PlayCheckWindup(int32 Frames)` and
+    `PlayCrossCheck(int32 Frames)` play the wind-up takes from frame `10 - Frames` so their contact (frame 10) lands on yours. Call `SetWindupTakes(true, N)`
+    on each figure when you ship a wind-up of N frames (B asks 8; floor 6: H51.6).
+- **The play-through on this state**: a seeded clay match to 100 s on the GPU: 0 Blueprint errors, 6 knockdowns, every get-up on the release, sim lines
+  identical to the headless runs. Also on dev-b since 15:00: the front end's kit and backdrop (H51.4), the neon rig (H52.0).
