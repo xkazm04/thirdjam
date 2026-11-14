@@ -1,6 +1,7 @@
 // Lane A196 (track F3, evolution 9): the hits read (HitRead.h, docs/experiments/HITS.md). Presentation only.
 #include "HitRead.h"
 #include "JamPawns.h"
+#include "JamSkaterVisual.h"
 #include "JamEventBus.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -44,10 +45,12 @@ static TAutoConsoleVariable<float> CVarJamHitBraceSet(TEXT("jam.hit.BraceSet"), 
 	TEXT("The braced figure sets itself (lane A210: a bridge on the FIGURE while device B's hold cannot be seen from behind; set it to 0 when B's pose reads): the drawn figure (never the sim) sinks and widens over 6 frames while the cross-check is held and rises again over 6: height x (1 - 0.10 x this), width x (1 + 0.06 x this). 1 (default); 0 = off (package H34)."), ECVF_Default);
 static TAutoConsoleVariable<float> CVarJamHitBraceLean(TEXT("jam.hit.BraceLean"), 12.f,
 	TEXT("With the braced figure's set: degrees the drawn figure pitches forward into the hold, on top of device B's take (12 by default; 0 = none)."), ECVF_Default);
+static TAutoConsoleVariable<int32> CVarJamHitRetimeTest(TEXT("jam.hit.RetimeTest"), 0,
+	TEXT("Proof only (lane A210): N > 0 sends PlayCheckWindup(1) to the human's figure N frames after each of his check presses, as jam.hit.Retime would on a contact inside the wind-up (to see what device B's running take does with it before lane A209's sim is here). 0 = off."), ECVF_Default);
 static TAutoConsoleVariable<float> CVarJamHitPop(TEXT("jam.hit.Pop"), 1.f,
 	TEXT("The hit's coil and drive on the drawn figure (lane A210; never the sim): through a check's or a cross-check's wind-up the figure sinks and widens (height down to x (1 - 0.10 x this)), on the frame before the window opens it springs tall and narrow (x (1 + 0.07 x this)) through the contact, then settles over 8 frames: device B's take, made larger (the helmet's travel from coil to spring at the game camera: 33 px without, 55 px with, at 960 x 540). 1 (default); 0 = off (package H34)."), ECVF_Default);
 static TAutoConsoleVariable<int32> CVarJamHitRetime(TEXT("jam.hit.Retime"), 1,
-	TEXT("A body check that lands before its wind-up is over (lane A209's rule: a meeting inside the wind-up is the hit): 1 (default) the checker's figure is told PlayCheckWindup(1) on the contact frame, so device B's take stands on its contact pose when the man falls instead of in its coil; 0 = the take plays on from where it was."), ECVF_Default);
+	TEXT("A body check that lands before its wind-up is over (lane A209's rule: a meeting inside the wind-up is the hit): 1 (default) the checker's figure is run forward for one sim frame (its time dilation = the frames its take is short of the contact pose), so device B's take stands on its contact pose when the man falls instead of in its coil; 2 = by the call PlayCheckWindup(1) instead (device B's figure ignores it on a running take today); 0 = the take plays on from where it was."), ECVF_Default);
 static constexpr float BurstFramesF = static_cast<float>(FJamHitReadModel::BurstFrames);
 // Lane A210 (the night, R-0067: "technical blue rectangle"): the drawn bars of a cross-check, each behind its own switch.
 static TAutoConsoleVariable<int32> CVarJamHitStreak(TEXT("jam.hit.Streak"), 0,
@@ -716,23 +719,60 @@ int32 AJamHitRead::RetimeFor(int32 PressToContact, int32 Windup)
 	return PressToContact >= 0 && Windup > 0 && Windup - PressToContact >= RetimeLeadFrames ? 1 : -1;
 }
 
+// The re-time, two ways. Mode 1 (default): A's own: device B's figure does nothing with PlayCheckWindup on a running take (strips of 22:17), so the
+// figure's clock is run forward instead: for ONE sim frame the figure actor's time dilation is the frames its take is short of its contact pose
+// (wind-up - press to contact), then it goes back to the hit-stop's hold (or to 1): the take stands on its contact pose from the first held frame.
+// Mode 2: the call PlayCheckWindup(1) by name (for the day B's figure honours it). Presentation only: the sim never sees the figure's clock.
+static void JamHitSetFigureDilation(AJamSkater* Sk, float Dilation)
+{
+	if (!Sk) return;
+	Sk->CustomTimeDilation = Dilation;
+	if (AActor* Fig = Cast<AActor>(Sk->GetVisualObject())) Fig->CustomTimeDilation = Dilation;
+}
+
 void AJamHitRead::RetimeEarly(const UJamSim* Sim, const TArray<TObjectPtr<AJamSkater>>& Skaters)
 {
-	if (CVarJamHitRetime.GetValueOnGameThread() == 0) return;
-	static const FName NamePlayCheckWindup(TEXT("PlayCheckWindup"));
+	static const FName NameWindup(TEXT("PlayCheckWindup"));
+	// Last frame's fast-forwards end here: back to the hold's stand-still while the hit-stop runs, else to the figure's own clock.
+	FastFwdRenderLeft = 0;
+	for (AJamSkater* Sk : Skaters)
+	{
+		if (!Sk || !FastFwd.IsValidIndex(Sk->GetSimIndex()) || !FastFwd[Sk->GetSimIndex()]) continue;
+		FastFwd[Sk->GetSimIndex()] = false;
+		JamHitSetFigureDilation(Sk, Sk->IsHitStopped() ? 0.0001f : 1.f);
+	}
+	const int32 Mode = CVarJamHitRetime.GetValueOnGameThread();
+	const auto Send = [&](int32 Who, int32 ShortFrames, const TCHAR* Why, int32 Windup, int32 PressToContact)
+	{
+		for (AJamSkater* Sk : Skaters)
+		{
+			if (!Sk || Sk->GetSimIndex() != Who) continue;
+			const TCHAR* How = TEXT("none");
+			if (Mode >= 2) { if (AJamSkater::CallFigure(Sk->GetVisualObject(), NameWindup, { 1.0 })) How = TEXT("PlayCheckWindup(1)"); }
+			else
+			{
+				if (FastFwd.Num() <= Who) FastFwd.SetNumZeroed(Who + 1);
+				FastFwd[Who] = true;
+				FastFwdRenderLeft = FastFwdRenderMax;
+				JamHitSetFigureDilation(Sk, static_cast<float>(FMath::Clamp(ShortFrames, 1, 10)));
+				How = TEXT("fast_forward");
+			}
+			UE_LOG(LogJamHit, Log, TEXT("JAMHIT retime frame=%lld checker=%d why=%s windup=%d press_to_contact=%d short_frames=%d how=%s (the take to its contact pose)"),
+				Sim->GetFrame(), Who, Why, Windup, PressToContact, ShortFrames, How);
+			return;
+		}
+	};
+	if (const int32 TestAt = CVarJamHitRetimeTest.GetValueOnGameThread(); TestAt > 0)
+	{
+		for (const FJamHitReadModel::FPress& P : Model.GetPresses())
+			if (P.bHuman && !P.bCross && Sim->GetFrame() - P.PressFrame == TestAt && P.Windup > TestAt) Send(P.Skater, P.Windup - TestAt, TEXT("test"), P.Windup, TestAt);
+	}
+	if (Mode == 0) return;
 	for (const FJamHitReadModel::FHitLog& L : Model.GetFrameLogs())
 	{
 		if (L.Kind != TEXT("check") || !(L.Result == EJamHitResult::Bump || L.Result == EJamHitResult::Stumble || L.Result == EJamHitResult::Down)) continue;
-		const int32 To = RetimeFor(L.PressToContact, L.Windup);
-		if (To < 0 || !TakesOn.IsValidIndex(L.Checker) || !TakesOn[L.Checker]) continue;
-		for (AJamSkater* Sk : Skaters)
-		{
-			if (!Sk || Sk->GetSimIndex() != L.Checker) continue;
-			const bool bSent = AJamSkater::CallFigure(Sk->GetVisualObject(), NamePlayCheckWindup, { static_cast<double>(To) });
-			UE_LOG(LogJamHit, Log, TEXT("JAMHIT retime frame=%lld checker=%d human=%d windup=%d press_to_contact=%d call=%s (the contact came inside the wind-up: the take to its contact pose)"),
-				Sim->GetFrame(), L.Checker, L.bHuman ? 1 : 0, L.Windup, L.PressToContact, bSent ? TEXT("PlayCheckWindup(1)") : TEXT("none"));
-			break;
-		}
+		if (RetimeFor(L.PressToContact, L.Windup) < 0 || !TakesOn.IsValidIndex(L.Checker) || !TakesOn[L.Checker]) continue;
+		Send(L.Checker, L.Windup - L.PressToContact, TEXT("contact"), L.Windup, L.PressToContact);
 	}
 }
 
@@ -868,6 +908,17 @@ void AJamHitRead::Capture(const UJamSim* Sim)
 void AJamHitRead::Render(const UJamSim* Sim, const TArray<TObjectPtr<AJamSkater>>& Skaters, const FVector& PuckAtCm, double FrameF)
 {
 	if (!Sim) return;
+	// Lane A210: a fast-forward ends at the next sim step (RetimeEarly). Should no step come (the sim stood still), it ends here after FastFwdRenderMax
+	// drawn frames, so no figure is left running fast.
+	if (FastFwdRenderLeft > 0 && --FastFwdRenderLeft == 0)
+	{
+		for (AJamSkater* Sk : Skaters)
+		{
+			if (!Sk || !FastFwd.IsValidIndex(Sk->GetSimIndex()) || !FastFwd[Sk->GetSimIndex()]) continue;
+			FastFwd[Sk->GetSimIndex()] = false;
+			JamHitSetFigureDilation(Sk, Sk->IsHitStopped() ? 0.0001f : 1.f);
+		}
+	}
 	const int32 N = Sim->GetSkaters().Num();
 	TArray<FVector> At; At.Init(FVector::ZeroVector, N);
 	TArray<float> Yaw; Yaw.Init(0.f, N);
@@ -913,7 +964,9 @@ void AJamHitRead::Render(const UJamSim* Sim, const TArray<TObjectPtr<AJamSkater>
 			const FVector Scale = BraceSetScale(K, SetAmt) * PopScale(PopHeld[I]);
 			if (!Scale.Equals(FVector::OneVector, 1e-4)) { Sk->SetActorScale3D(Scale); BraceScaled[I] = true; }
 			else if (BraceScaled[I]) { Sk->SetActorScale3D(FVector::OneVector); BraceScaled[I] = false; }
-			if (K > 0.f && SetLean > 0.f && !Sk->IsHitStopped()) Sk->AddActorLocalRotation(FRotator(-SetLean * K, 0.0, 0.0));
+			// Through a hit-stop too: ApplyRender sets the held transform afresh each frame, and a braced figure that stood upright for the hold's frames
+			// would pop at the very moment its hit lands.
+			if (K > 0.f && SetLean > 0.f) Sk->AddActorLocalRotation(FRotator(-SetLean * K, 0.0, 0.0));
 		}
 	}
 	// The lean of the drawn figure (after its ApplyRender set this frame's transform; the next ApplyRender sets it afresh).

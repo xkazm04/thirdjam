@@ -131,10 +131,15 @@ bodies stand held, a few white dashes at the feet, the stick stays raised throug
 
 ### 5.5 A check that lands inside its wind-up (`jam.hit.Retime 1`)
 
-Lane A209's rule for the human ("a meeting inside the wind-up is the hit") would find B's take in its coil when the man falls. On such a contact
-(two frames or more before the wind-up's end) the checker's figure is told `PlayCheckWindup(1)`: the take jumps to the frame before its contact pose,
-the hit-stop holds it there. `AJamHitRead::RetimeFor` (pure, tested). It cannot fire on today's sim (a contact comes only in the window): to be seen
-on A209's build.
+Lane A209's rule for the human ("a meeting inside the wind-up is the hit") finds B's take in its coil when the man falls: the take puts contact on
+its frame 10 and was started at `10 - wind-up`. Device B's figure does nothing with `PlayCheckWindup` on a running take (tested: a proof switch,
+`jam.hit.RetimeTest 3`, on the staged 8 / 8 cut: the crouch goes on to +6 as shipped). So A runs the figure forward itself: on such a contact (two
+frames or more before the wind-up's end, `AJamHitRead::RetimeFor`) the figure actor's time dilation is set, for ONE sim frame, to the frames the take
+is short of its contact pose (wind-up - press to contact), then put back to the hit-stop's stand-still (or to 1). Seen with the proof switch at +3
+(`tools/qa/screen/out/a210-sheets/k12-ff-pair.jpg`, run a210-k12-check8-ff3 against a210-j9-check8-now on the same sim frames): the figure stands
+in its drive pose on +4 (head bone 87 cm ahead and 110 up at +6; 49 / 100 or 29 / 91 without). The sim never sees the figure's clock (hashes
+equal). On today's sim it cannot fire by itself (a contact comes only in the window): the real case, with the hit-stop behind it, is to be seen on
+A209's build. `jam.hit.Retime 2` sends the call instead (for the day B's figure honours it); 0 = off.
 
 ### 5.6 The tackle at 20 and 35 m: the ring grows back with distance (`jam.hit.RingFar 1`)
 
@@ -148,6 +153,22 @@ wrong far from it. Now the quiet ring reads the distance from the camera: within
 the small one (0.95 to 1.35 m, 8 frames); from 10 to 30 m it grows back to package H34's radius (to 3 m), bar width and 14 frames; white at any
 distance. On the screen it is about the same size wherever the hit is. `img/a210/tackle-at-20-and-35-m.jpg`: rows H34, now, at 20 m; rows H34,
 now, at 35 m's size; sim frames 144 to 170.
+
+### 5.7 On the real sim (lane A209's contact in the tree: the human's wind-ups 8 / 8, the pull toward the man)
+
+Drills 1 and 2 from frame 0 on the regular cut at rookie (runs a210-n15-check, a210-n15-cross; 20 presses of the human):
+
+- **The check**: 10 of 10 landed; press to contact 4, 0, 6, 2, 7, 6, 7, 7, 7, 7 frames. At 7 the take is one frame before its contact pose. The five
+  that landed two frames or more inside the wind-up were run forward (5.5): `img/a210/early-contact-retime.jpg` is the same sim frames with
+  `jam.hit.Retime 0` (top: the checker crouched through the hit-stop, standing up when the man is gone) and 1 (bottom: in the drive pose from the
+  frame after the contact, through the hold). The contact frame itself still shows the coil: one frame.
+- **The cross-check**: 4 of 10 landed, every one at press + 8: the shove on the take's frame 10, 0 frames off. `img/a210/cross-check-lands-real.jpg`.
+- **The pull** (`JAMHIT step` lines, `tools/qa/screen/a196/steps.py`): beyond the step his own speed explains it added at most 5.6 cm a frame along
+  his facing (his own step at 12.8 m/s is 21 cm); the step changed by at most 6.2 cm from one frame to the next, as without the pull; across the
+  facing up to 13.7 cm a frame, against 9.7 to 15.2 without the pull (a turning skater slides across his facing by himself). **It reads as a
+  lunge; nothing looks drawn by a string.** Where it would: over about 15 cm a frame across for three frames with the facing not turning, or a step
+  growing by over a third in one frame (status/A210.md, FOR A209).
+- Hashes on the real sim (drill 1, seed 1): the defaults against package H34's look: section 4's proof repeated in status/A210.md, HITS READY 3.
 
 ## 6. The boosts' colours (device B's answer to A-to-B-0031 point 3)
 

@@ -24,7 +24,8 @@
 //   jam.hit.Pop 1: the hit's coil and drive on the drawn figure (its scale, never the sim): sunk through the wind-up, sprung at the window, settled in 8.
 //   jam.hit.BraceSet 1, jam.hit.BraceLean 12: the braced figure sets (a tenth lower, 6 % wider, pitched 12 degrees) while device B's hold cannot be
 //     seen from behind: a bridge on the figure, to be switched off when B's pose reads.
-//   jam.hit.Retime 1: a check that lands inside its wind-up (lane A209's rule) sends the checker's take to its contact pose (PlayCheckWindup(1)).
+//   jam.hit.Retime 1: a check that lands inside its wind-up (lane A209's rule): the checker's figure is run forward for one sim frame (its time dilation =
+//     the frames its take is short of the contact pose): device B's figure ignores PlayCheckWindup on a running take (2 = send that call instead).
 //   jam.hit.BraceArc: the arc's own switch. jam.hit.CaptureBots / CaptureBotsM / CaptureBotsMinM, -JamHitShots=<folder>, JAMHIT stick / step lines: the strips' tools.
 #pragma once
 
@@ -295,10 +296,13 @@ private:
 	TArray<float> PopHeld;
 	int64 StickPressFrame = -1;
 	int32 StickPressWindup = 0;
+	TArray<bool> FastFwd;   // lane A210 (jam.hit.Retime 1): figures whose clock runs forward this sim frame
+	int32 FastFwdRenderLeft = 0;
+	static constexpr int32 FastFwdRenderMax = 30;
 	void RetimeEarly(const UJamSim* Sim, const TArray<TObjectPtr<AJamSkater>>& Skaters);
 public:
-	// Lane A210: the frames-to-contact to re-send to the checker's figure when his check lands PressToContact frames after a press with Windup frames of
-	// wind-up (1: the take jumps to the frame before its contact pose), or -1 when the take is within a frame of it already. Pure.
+	// Lane A210: 1 when a check that lands PressToContact frames after a press with Windup frames of wind-up finds the take RetimeLeadFrames or more
+	// short of its contact pose (the figure is then run forward Windup - PressToContact frames in one), -1 when it is within a frame already. Pure.
 	// The drawn figure's scale for a pop of P (-1 sunk: a tenth lower, 6 % wider; +1 sprung: 7 % taller, 4 % narrower). Pure.
 	static FVector PopScale(float P) { const float A = FMath::Clamp(P, -2.f, 2.f); return A >= 0.f ? FVector(1.f - 0.04f * A, 1.f - 0.04f * A, 1.f + 0.07f * A) : FVector(1.f - 0.06f * A, 1.f - 0.06f * A, 1.f + 0.10f * A); }
 	static constexpr int32 RetimeLeadFrames = 2;
