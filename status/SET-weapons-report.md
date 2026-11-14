@@ -322,3 +322,186 @@ No change. The mallet's reach for a hit is 1.1 to 1.2 m ahead and 0.4 to 0.8 m t
 - Changed: `build_weapons.py` (one per-frame pose hook), `weapons_clips.py`, `weapons_tail.py`
 - Backups of the first loop: `work\*_e2b.py`, `work\export_e2b_backup\`
 - Rebuild per style: `GT=-80 blender -b --factory-startup --python build_weapons.py -- <style> <lab>`, then the `gate.sh` line in section 2.
+
+# Part 3: third loop (03:45 to 04:40): two empty prop files, the attach rule, the cannon in two parts, the giant carry to the side, the rolling pin, the carries over the dash
+
+## 1. Done and not done
+
+All four items of the loop and the three corrections from the engine's first import are done, with the shortfalls listed here. The gate (`--out gate_out`, base export32) gives **`GATE PASS: 26 rows, 0 failing, 0 with a known exception`** (13 takes per style).
+
+Shortfalls:
+- **The crank turns over 7 frames (1 to 8), not 2 or 3.** In 3 frames, `stick_socket` would turn 120 deg per frame, twice the gate's 60 deg limit. The engine could spin a separate crank part faster if it wants.
+- **The crank does not read at the game camera's 110 px.** It shows in the closer row only.
+- **The rolling pin barely reads from behind.** It is carried low in front of the body; only the raised wind-up shows over the head.
+- **The arm smoothing that cleared the gate's new jitter line cost hand contact.** The bottom hand is now up to 4.9 cm off the mallet in `Mallet_Miss`, 3.9 cm off the giant stick in `Giant_Sweep`, and 2.5 / 3.6 cm off in `Mallet_Swing`.
+- **On clay the bottom hand is 2.2 cm from the keg**, against the 2 cm asked.
+
+## 2. Per item
+
+### Correction 1: the empty prop files
+
+**Cause.** `build_props.py` copied the prop object and renamed the copy onto the original's name, then selected it without updating the view layer. For the first props in a session, the FBX exporter found nothing selected and wrote an empty file (4,076 bytes). That hit `Prop_GiantStick` and `Prop_Mallet` in every loop until now.
+
+**Fix.** The copy is now a fresh object with its own name, the view layer is updated, and the script asserts that exactly that object is selected. After the export, every prop file is re-imported into the scene and counted (`PROPCHECK`); a file whose counts differ from the built mesh stops the build. I watched this check fail on the old code (`PROPCHECK FAIL Prop_GiantStick_p2_cel: the file holds 0 verts / 0 tris`) before the fix went in.
+
+Re-import of every prop file in a fresh Blender (`work\reimport.py`):
+
+| File | Bytes | Verts | Tris | Size cm | Built mesh (verts / tris / size) |
+|---|---|---|---|---|---|
+| Prop_GiantStick_p2_cel | 20,764 | 184 | 312 | 56.6 x 11.7 x 303.0 | 184 / 312 / 56.6 x 11.7 x 303.0 |
+| Prop_GiantStick_p3_clay | 20,780 | 184 | 312 | 56.6 x 11.7 x 287.0 | the same |
+| Prop_Mallet_p2_cel | 20,828 | 244 | 404 | 48.0 x 36.0 x 111.0 | the same |
+| Prop_Mallet_p3_clay | 20,988 | 244 | 404 | 48.0 x 36.0 x 107.9 | the same |
+| Prop_PuckCannon (keg), both styles | 23,244 | 264 | 348 | 41.5 x 41.5 x 62.8 | the same |
+| Prop_PuckCannon_Crank, both styles | 16,924 / 16,940 | 52 | 92 | 12.7 x 19.2 x 8.4 | the same |
+| Prop_RollingPin, both styles | 19,276 | 164 | 288 | 22.9 x 22.9 x 96.0 | the same |
+
+**Could the gate have caught it?** No. It reads take files and skips `SM_Stick*`; prop files are never opened. A line for the gate's author: re-import every `Prop_*.fbx` and fail on 0 vertices, or on a count that differs from a list in `READY.txt`.
+
+### Correction 2: the attach rule
+
+**My part 1 recipe was wrong.** A socket on `hand_r` at the stick socket's rest offset does not follow the grip, because `stick_socket` turns against `hand_r` in my takes. The engine's rule is right: attach to `stick_socket` itself and hide the stick's mesh section.
+
+**My renders already parent that way.** Every frame they place the giant stick, the mallet, the rolling pin and the crank with `prop = stick_socket's pose matrix x (fixed offset)`, the prop frame on the bone with no translation. With the prop rigid on `stick_socket`, the props sit in the hands as rendered: the top hand's grip point is 0.0 cm from `stick_socket` in every frame, and the bottom hand distances are as in the tables. The one exception is the keg, which rides `hand_l` (below).
+
+Offsets in Unreal's axes. These are derived from the Blender bone frames with the usual FBX handedness flip (Blender Y becomes Unreal -Y); I have not checked them in the engine:
+- **`Prop_GiantStick`, `Prop_Mallet`, `Prop_RollingPin`, `Prop_PuckCannon_Crank` on `stick_socket`, both styles:**
+  - offset (0, 0, 0) cm;
+  - rotation matrix rows (0.4695, 0.8829, 0) / (0, 0, 1) / (0.8829, -0.4695, 0);
+  - quaternion (w, x, y, z) = (0.60611, -0.60611, -0.36419, -0.36419).
+  - In Blender's bone frame the same rotation is quaternion (0.60611, 0.60611, -0.36419, 0.36419): the prop's -Z (the shaft) along the bone's +Y.
+  - Test first with `SM_Stick_<style>`: it has the same frame, and must lie on the skinned stick in `Glide`.
+- **`Prop_PuckCannon` (the keg) on `hand_l`:**
+  - p2_cel: offset (31.51, 7.47, 9.04) cm; rotation rows (0.7115, 0.6612, 0.2378) / (0.5226, -0.7242, 0.4499) / (0.4697, -0.1958, -0.8608).
+  - p3_clay: offset (27.06, 10.88, 8.79) cm; rotation rows (0.5940, 0.7918, 0.1424) / (0.6505, -0.5769, 0.4941) / (0.4733, -0.2008, -0.8577).
+  - Exact 4x4 in Blender metres: `work\<style>\keg_attach.json` (`keg_off`).
+
+**The two cannon parts in every take:**
+- `Cannon_Carry` and `Cannon_Fire`: both parts shown; the keg on `hand_l`, the crank on `stick_socket`.
+- `Cannon_Kick`, frames 0 to 10: the same.
+- `Cannon_Kick`, frame 11: hide both. The keg is knocked out of his arms. Drop a static keg lying on its side, its axis along the skater's forward axis, the barrel's centre at:
+  - p2_cel: (17.1, -153.6, 21.0) cm in Unreal's skater space (Blender: 0.171, 1.536, 0.21 m: 1.5 m to his left);
+  - p3_clay: (17.8, -150.7, 21.0) cm.
+- The skater's stick stays hidden until the get-up.
+
+### Correction 3: the giant carry skimming on clay
+
+The engine's stand-in reached -0.6 cm on clay. That was my second-loop carry, before this loop's change to the side. The carry blade now rides 17.2 / 15.8 cm over the ice in Glide (cel / clay); lowest over Stride 16.2 / 14.9 cm, over Stride_Sprint 11.7 / 10.6 cm (mesh space, every frame).
+
+### Item 1: the cannon in two parts
+
+- **The parts:** the keg (barrel, hoops, red band, puck, the crank's hub) rides `hand_l`. The crank (post, arm, cream knob) rides `stick_socket` in the right hand.
+- **Turned rather than authored:** in every frame the left hand is turned so the keg keeps its authored angle (after the twist limit). The crank's knob is placed on the hub circle at the crank angle, so the right hand turns the crank while the keg stays still.
+- **The crank sits on top of the keg**, turning about the keg's up axis. On its inner flank, as tried first, the body hid it.
+- **The crank turn:** a full turn over frames 1 to 8 (51.4 deg per frame on `stick_socket`); the puck leaves at 8.
+- **Muzzle at frame 8:** (86.3, -29.2, 73.1) cm (cel), (84.9, -27.6, 68.4) cm (clay), figure space, Blender axes, level and straight ahead.
+- **The bottom hand on the keg:** 0.07 cm (cel), 2.17 cm (clay), in every frame while the keg is in his hands, by construction.
+- **Kick frames 12 to 14:** the keg has left the hands (released after frame 10), so there is no floating hand.
+- **Clear of the body:** keg against the carrier, 0 frames more than 3 cm inside; deepest 1.8 / 2.1 cm (Fire).
+- **What I saw** (cannon sheet):
+  - At the game camera the keg shows at the right hip; the crank is a dot.
+  - In the kick the keg lies beside him from frame 11.
+
+### Item 2: the giant carry from the game camera
+
+- `Giant_Carry` now points 15 deg out to the right with the blade open, as the poke does.
+- The blade is **40 px across at the game camera in every second frame over Stride, Stride_Sprint and Glide**, both styles (asked: 20).
+- 0 frames inside the body, lowest point as in correction 3.
+- What I saw (giant sheet): the blade is a block off to the right of the figure in the stride.
+
+### Item 3: the rolling pin
+
+- **`Prop_RollingPin`:** 288 tris, a cream clay roller 22 cm across with timber handles, 96 cm long. Materials `ClayTimber` (0.62, 0.42, 0.22) and `ClayCream` (0.92, 0.86, 0.72).
+- **The takes:**
+  - `Pin_Carry`: 31 frames, a static hold.
+  - `Pin_Roll`: 31 frames. Wind-up frames 0 to 9, raised over the head; a low two-handed shove; contact at frame 16; back on the carry at 25.
+  - `Pin_Miss`: 41 frames, `Pin_Roll` to frame 16, then it over-reaches and stumbles.
+  - All three start and end on `Pin_Carry` frame 0.
+- **Spacing:** the victim plays `Trip` from the attacker's frame 14, facing him. Its root is 1.04 m ahead on cel, 0.96 m on clay.
+- **The contact** (frames 12 to 23):
+  - What it meets: the roller meets the victim's left shin (`calf_l`), 0.1 cm in at frame 16 (cel), touching on clay.
+  - Deepest: 3.3 / 4.0 cm (shin and lower thigh). Frames more than 5 cm in: 0.
+  - The roller's top is at 45 to 48 cm at contact: below the knee, never near the hip (about 75 cm).
+- **Other numbers:**
+  - Bottom hand at most 0.18 cm from the handle; top hand 0.
+  - Clear of the carrier: 0 frames.
+  - Largest bone turn in one frame: 54.8 deg.
+  - Lowest point of the pin 18.3 / 19.2 cm.
+- **Fall_Legs:** when the dive lane's `Fall_Legs_Front` / `_Back` exist, they take `Trip`'s place at the same spacing. Not tried.
+
+### Item 4: the carries over `Dash_Loop` (the dash lane's export, read only)
+
+Measured by `dash_check.py`: the dash lane's take is imported onto my rig and each carry layered in mesh space from `spine_01`. All four survive:
+
+| Carry over Dash_Loop (25 frames) | Lowest prop point cm (cel / clay) | Frames inside the body |
+|---|---|---|
+| Giant_Carry | 1.9 / 1.4 (only just over the ice) | 0 |
+| Mallet_Carry | 73.8 / 67.7 | 0 |
+| Cannon_Carry | 44.0 / 40.7 | 0 |
+| Pin_Carry | 54.5 / 52.2 | 0 |
+
+Nothing has to be forbidden in the dash on these numbers. The giant carry has the least margin: 1.4 cm on clay.
+
+### The gate this loop
+
+- The first run against export31 passed.
+- After the gate gained its jitter line (base export32) it failed 6 rows. The failing joints ran back and forth by more than 1 cm on 5 frames or more in a row: `Mallet_Carry`, `Mallet_Swing`, `Mallet_Miss` on cel and clay, and `Giant_Sweep` on clay.
+- What fixed them:
+  - the four carry holds are now static, every frame equal to frame 0 (the build's warm-up laps had left a 5 cm wobble in the bottom hand);
+  - the mallet's bottom hand sits nearer the top hand (20 % down the handle);
+  - the arm bones' rotation keys in `Mallet_Swing`, `Mallet_Miss` and `Giant_Sweep` are smoothed with a 1-2-1 filter, twice, from frame 3 to the last-3 (the cost is in section 1).
+- Then: PASS, 26 of 26.
+- What the smoothing also left:
+  - one frame of `Mallet_Miss` (cel, frame 34) has the drum 3.8 cm in his body;
+  - clay `Giant_Sweep` dips the blade 0.02 cm under the ice at its lowest. The gate does not measure props.
+
+### Stills (Blender Cycles on the CPU, frozen frames)
+
+- `C:\Users\kazda\jam\thirdjam\devlog\shots\20261114-043805-B-set-weapons-loop3-cannon.png`
+- `C:\Users\kazda\jam\thirdjam\devlog\shots\20261114-043805-B-set-weapons-loop3-giant.png`
+- `C:\Users\kazda\jam\thirdjam\devlog\shots\20261114-043805-B-set-weapons-loop3-pin.png`
+
+## 3. Not verified
+
+- **The Unreal offsets** are derived, not tried in the engine; the keg offset especially.
+- **The jitter smoothing changed three takes after their last render.** The mallet takes were not re-rendered after it.
+- **The crank turning was not seen at game size.**
+- **The pin pair at the game camera:** the two figures overlap, so the contact reads only in the closer row.
+- **The dash check imports another lane's FBX onto my rig.** It assumes the same bone frames, which the gate's skeleton check supports, but I did not check it by eye.
+- **Stills only, nothing in motion.**
+
+## 4. For the engine lane
+
+| Take | Frames | Event |
+|---|---|---|
+| `Cannon_Fire` | 25 | crank turns over 1-8, puck at 8 |
+| `Cannon_Kick` | 31 | the keg leaves the hands at 11 (drop the static keg, hide both parts); lying on the right side from 23 |
+| `Pin_Carry` | 31 | loop |
+| `Pin_Roll` | 31 | contact 16; back on the carry at 25 |
+| `Pin_Miss` | 41 | back on the carry at 35 |
+
+- The other takes are as in part 2.
+- Attach as in correction 2, and layer every carry in mesh space.
+- Files: `C:\Users\kazda\jam\sets-lab\weapons\export\` (one FBX per take and style, `props\`, `READY.txt`). The gate's table is in `C:\Users\kazda\jam\sets-lab\weapons\gate_out\GATE.md`.
+
+## 5. For the other device
+
+- `SetWeapon(4)` = the rolling pin.
+- `PlayWeapon(4, DirX, DirZ, Frames, bHit)`: the pin's contact comes 16 frames after the use, at the shins, about 1 m ahead. A hit plays `Trip` on the victim (later the dive lane's legs-taken fall).
+
+## 6. Decisions for the operator
+
+1. **The pin carried low in front does not read from behind.** Keep it, or carry it across the shoulders (another pass, with a body-clip risk at the neck).
+2. **The crank turns at a speed the gate allows**, over 7 frames: accept, or let the engine spin it as a separate part.
+
+## 7. The next three evolutions
+
+1. **Win back the bottom hand in the smoothed takes** without the jitter returning: smooth the hand targets, not the rotations. Proving numbers: the bottom hand 2 cm or less in every frame; the gate's jitter 0.
+2. **The pin read from behind:** the shoulder carry. Proving numbers: the roller at least 20 px across at the game camera in the carry; 0 frames inside the body.
+3. **The giant carry's dash margin:** lift it 3 cm in the dash only, or give the dash its own carry. Proving number: the lowest point 4 cm or more over the ice in `Dash_Loop` on clay.
+
+## Files
+
+- New: `dash_check.py`, `work\reimport.py`, `work\<style>\keg_attach.json`, `work\<style>\dash_check.json`, `gate_out\GATE.md`.
+- Changed: `build_props.py` (the fix and the re-import check), `props_mesh.py` (keg, crank, pin), `weapons_spec.py`, `weapons_clips.py`, `weapons_tail.py` (keg on `hand_l`, static carries, arm smoothing), `weapons_meas2.py`, `render_w.py`, `build_weapons.py` (two keg hooks).
+- Backups of loop 2: `work\loop2_backup\`.

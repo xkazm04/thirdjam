@@ -1,0 +1,1 @@
+SET-WEAPONS loop 3, cannon in two parts: the keg on the left hand, the crank on top in the right hand (turns once over frames 1-8, the puck leaves at 8), Cannon_Fire and Cannon_Kick (the keg knocked out of his arms at 11, lying beside him), game camera and closer. Blender Cycles CPU, frozen frames.
