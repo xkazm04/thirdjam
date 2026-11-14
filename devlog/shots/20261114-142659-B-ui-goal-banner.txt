@@ -1,0 +1,1 @@
+U1: T_UI_Banner_Goal (2048x640, alpha) laid at 1280x400 over an engine still (ar7-game-play-2) to judge it at game size: readable, figures above and below stay visible. Composite in Pillow, not an engine capture.
