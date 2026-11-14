@@ -266,7 +266,31 @@ Three evolutions are done.
   - The measured defaults moved to their own list.
   - Added: the trailer, the nine-lane plan, the two handoffs, the second pass and the delete list.
 
-SETS-PLACEHOLDER
+**The three new sets (landed 02:15 to 02:26, Blender, frozen frames, not the engine)** were judged at the game camera. Five pointed faults per lane, full wording on the page and in `round2.mjs`.
+
+**SET-weapons** (`...\20261114-022604-B-set-weapons-props.png`, `-cannon`, `-mallet`, `-giant`):
+- **The puck cannon reads as a real weapon.** It is a grey metal tube with a black muzzle on the shoulder, which is a rocket-launcher silhouette (props rows 5 and 6, and the last two "in the hands" cells; the cannon sheet's closer rows). That breaks the standing rule. Fix: toy colours and shape, a visible puck, carried at the hip.
+- The mallet lands on the victim's head (the mallet sheet, clay pair closer row, frames 14 to 16). Aim it at the shoulder, the backside or the legs.
+- Attacker and victim merge into one blob at the game camera (rows 5 and 9, frames 8 to 20).
+- The giant stick's poke is invisible from behind (only a stub above the helmet, rows 2 and 4). The sweep reads.
+- Cannon_Fire barely moves. Cannon_Kick, Fall_Bonk and the slide tackle all end in the same spread-eagle pose.
+- The mallet and the giant stick do sit in the hands and read as toys.
+
+**SET-dive** (`...\20261114-022026-B-set-dive-dive-block.png`, `-slide-tackle`):
+- The dive is flat by frame 9, as claimed ("full cover from frame 10"). The cover is 60 cm high, not the brief's 45; the report says so.
+- The block then lies still for 20 frames, which is indistinguishable from a knockdown.
+- From the game camera the stick shows as a vertical shaft at frames 18 to 24 (dive) and 6 to 12 (slide). The report says it is flat and pointing away from the camera, but from above it reads like a raised stick.
+- The tackler ends spread-eagled. There is no pair render.
+- The "closer" rows are smaller than the game-camera rows.
+
+**SET-dash** (`...\20261114-021549-B-set-dash-evo1.png`, `-evo2`, `-loop`):
+- At 110 px the dash loop looks like the sprint stride (loop sheet row 5 against row 3).
+- The head drops below the shoulders (side rows, frames 8 to 12).
+- The 170-degree stick swing in and out moves the blade 42 to 56 cm in a frame (evo1 row 1).
+- The bump is hard to tell from the loop.
+- The skid repeats Stop_Hard.
+- The wipeout ends like the forward fall, and the stick leaves the frame.
+- **Corrected in this pass:** I first read the trailing stick as levelled in front. The side rows face left, so the stick trails.
 
 ## 2. Per evolution (round 2)
 
