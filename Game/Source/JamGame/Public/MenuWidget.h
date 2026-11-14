@@ -121,6 +121,24 @@ public:
 	// Enter on the first screen is the acceptance run's Return; left and right on PLAY NOW are the level switch's steps.
 	void PressKeyForQa(const FKey& Key);
 	bool IsPadWalking() const { return WalkScreen >= 0; }
+	// Lane A164 (evolution 4): the first screen has no dead key. A click on a level segment gives the keyboard focus back to PLAY NOW (Slate
+	// would leave it on the menu widget itself: the segments take no focus); Return or the pad's A that reach the menu widget itself on the first
+	// screen press PLAY NOW; the tick sends the focus home whenever it lands on the menu widget itself. For tests: a segment by level, and
+	// whether PLAY NOW has the focus of the menu's player.
+	UButton* GetLevelButton(EJamMenuDifficulty Level) const { const int32 I = static_cast<int32>(Level); return LevelButtons.IsValidIndex(I) ? LevelButtons[I].Get() : nullptr; }
+	bool IsFocusOnPlayNow() const;
+	UJamSettingsWidget* GetSettingsPanel() const { return SettingsPanel; }
+	// QA and tests (jam.menuscreen click <rookie|pro|all_star|play|settingslevel>): a mouse click as Slate gives it, without a cursor: the pointer
+	// moves onto the widget, goes down and comes up, routed by FSlateApplication::RoutePointer*Event down the widget's own path (generated from
+	// the widget tree, so no hit-test grid and no active window are needed), the mouse-down's focus rule included. False with the reason when
+	// the widget has no path. WasLastClickDownOnMenu: after that click's mouse-down the focus sat on the menu widget itself (the fault's state).
+	bool ClickForQa(UWidget* W, FString& Why);
+	bool ClickPlaceForQa(const FString& Name);
+	bool WasLastClickDownOnMenu() const { return bLastClickDownOnMenu; }
+	// QA (jam.menuscreen where): every place on the shown screen a click or a pad can stand on, its label and its centre in the game window's
+	// client pixels and at 1920 x 1080 (JAMMENU place lines), read from the widgets' own painted geometry: no driver hard-codes a number.
+	TArray<FString> GetPlacesForQa() const;
+	void PrintPlacesForQa() const;
 	// The widths the cards' words are wrapped at (slate units).
 	static float ModeTextWidth();
 	static float CutTextWidth();
@@ -158,6 +176,8 @@ private:
 	UFUNCTION() void OnLevelRookieClicked();
 	UFUNCTION() void OnLevelProClicked();
 	UFUNCTION() void OnLevelAllStarClicked();
+	// Lane A164: a segment's click picks the level and gives the focus back to PLAY NOW.
+	void OnSegmentClicked(EJamMenuDifficulty Level);
 	UFUNCTION() UWidget* OnPlayNowNavigate(EUINavigation Direction);
 	void RefreshLevelSwitch();
 	UFUNCTION() void OnControlsClicked();
@@ -189,7 +209,9 @@ private:
 	int32 WalkStart = -1;
 	int32 WalkEdges = 0;
 	int32 WalkTotals[4] = { 0, 0, 0, 0 };   // focusables, reached, traps, backs failed
-	bool bWalkBlind = false;    // this screen: the window's hit-test grid does not hold the menu (an off-screen process), the directions are not judged
+	bool bWalkBlind = false;    // this screen: no direction moved the focus from any place AND the grid has no menu under the opening place: not judged
+	bool bWalkGridHit = false;
+	bool bLastClickDownOnMenu = false;  // lane A164: a diagnostic only (the hit-test grid's path under the opening place reaches it); the verdict reads the moves
 	int32 WalkBlindScreens = 0;
 	TArray<TWeakObjectPtr<UWidget>> WalkNodes;
 	TArray<int32> WalkQueue;

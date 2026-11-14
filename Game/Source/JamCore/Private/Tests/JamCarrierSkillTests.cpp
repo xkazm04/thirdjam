@@ -1413,4 +1413,47 @@ bool FJamCurveLaw3::RunTest(const FString& Parameters)
 	return true;
 }
 
+// Bar.Bot.Hockey5.Stops (lane A167, track Q2, evolution 5; outside the gate's Jam filter; BRAIN-5.md sections 3 and 4). The carry scene of
+// Jam.Core.Movement.StopAndGo, 200 seeds an arm, logged only. PRESSPRO: pro on hockey.regular with its presser kept on its job inside the hunt
+// (opp.hk_press_in_hunt=1). SIX: the stop by distance at each level on the six-skater cuts, as shipped and with the chaser closing under control
+// (opp.hk_press_three=1).
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamHockey5StopsBar, "Bar.Bot.Hockey5.Stops", JamCarrierSkillTests::Flags)
+bool FJamHockey5StopsBar::RunTest(const FString& Parameters)
+{
+	using namespace JamCarrierSkillTests;
+	auto At = [](double M) { FScript S; S.BrakeAtM = M; return S; };
+	FScript Straight;
+	Straight.bStopAndGo = false;
+	if (UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular")))
+	{
+		for (const char* Tune : { "", "opp.hk_press_in_hunt=1", "opp.hunt_radius_m=20", "opp.hk_press_in_hunt=1;opp.hk_press_commit_m=8", "opp.hk_press_in_hunt=1;opp.hk_press_commit_m=8;opp.hunt_radius_m=20",
+			"opp.hk_press_in_hunt=1;opp.hk_press_commit_m=8;opp.hunt_radius_m=20;opp.hk_press_three=1;opp.hk_press_three_commit_m=6;opp.hk_press_retreat_cap=0.7" })
+		{
+			FString L = FString::Printf(TEXT("PRESSPRO pro | %s |"), Tune[0] ? ANSI_TO_TCHAR(Tune) : TEXT("as shipped"));
+			for (double M : { 5.0, 6.0, 8.0, 9.5, 11.0 }) L += FString::Printf(TEXT(" %.1f m %.1f %%"), M, 100.0 * Share(*C, At(M), 200, TEXT("pro"), Tune).PastShare());
+			const FShare S95 = Share(*C, At(9.5), 200, TEXT("pro"), Tune), SB = Share(*C, Straight, 200, TEXT("pro"), Tune);
+			L += FString::Printf(TEXT(" | straight %.1f %% | the stop at 9.5 m: %s"), 100.0 * SB.PastShare(), *S95.Line());
+			AddInfo(L);
+		}
+	}
+	for (const TCHAR* Cut : { TEXT("hockey.arena.large"), TEXT("hockey.chaos"), TEXT("hockey.arena.wide"), TEXT("hockey.boost") })   // hockey.raw reads as the large rink does (build 1: the same numbers)
+	{
+		UJamCartridge* C = LoadPreset(*this, Cut);
+		if (!C) continue;
+		for (const TCHAR* Level : { TEXT("rookie"), TEXT("pro"), TEXT("all_star") })
+		{
+			for (const char* Tune : { "", "opp.hk_press_three=1;opp.hk_press_three_commit_m=6", "opp.hk_press_three=1;opp.hk_press_three_commit_m=6;opp.hk_press_retreat_cap=0.7",
+				"opp.hk_press_three=1;opp.hk_press_three_commit_m=6;opp.hk_press_retreat_cap=0.7;opp.hk_press_in_hunt=1;opp.hk_press_commit_m=8" })
+			{
+				FString L = FString::Printf(TEXT("SIX %s | %s | %s |"), Cut, Level, Tune[0] ? ANSI_TO_TCHAR(Tune) : TEXT("as shipped"));
+				for (double M : { 6.0, 8.0, 9.5, 11.0, 12.0 }) L += FString::Printf(TEXT(" %.1f m %.1f %%"), M, 100.0 * Share(*C, At(M), 200, Level, Tune).PastShare());
+				const FShare S8 = Share(*C, At(8.0), 200, Level, Tune), SB = Share(*C, Straight, 200, Level, Tune);
+				L += FString::Printf(TEXT(" | straight %.1f %% | the stop at 8 m: %s"), 100.0 * SB.PastShare(), *S8.Line());
+				AddInfo(L);
+			}
+		}
+	}
+	return true;
+}
+
 #endif

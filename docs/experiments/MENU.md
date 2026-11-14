@@ -2,7 +2,8 @@
 
 **Two evolutions.** Sections 1 to 6 are evolution 1 (the first screen, the cards, the controls, the lobby), corrected where evolution 2 changed them.
 Section 7 is evolution 2 (the operator's first two minutes: a rookie first match, the brand line that follows the cut, the end card, the hook that ends a
-match, the pad walk) and the level wire. Section 8 is evolution 3 (the level switch on the first screen, the pause card).
+match, the pad walk) and the level wire. Section 8 is evolution 3 (the level switch on the first screen, the pause card). Section 9 is evolution 4
+(lane A164: no dead key on the first screen, the save path, the walk's verdict, the places printed by the game).
 
 A judge opens the game, reads the first screen, picks something and plays. This page is what that path is after lane A144, what it was on main
 `e71ebf7`, and how to look at it again without a window or a cursor. Family: `MenuFlow.*`, `MenuWidget.*`, `SettingsWidget.*`, `MenuGameMode.cpp` (the QA
@@ -46,6 +47,12 @@ Fixed in evolution 2 (section 7): the loss card that read **REMATCH?** over a le
 Still open: `hockey.regular`'s `theme.name` "Night Rink" (the places that print it are listed in the lane's report).
 
 ## 3. Buttons moved or renamed (for the acceptance run's cursor driver)
+
+**Do not copy numbers from this page into a driver: ask the game.** `jam.menuscreen where` prints every place of the shown screen from the widgets'
+own painted geometry (`JAMMENU place screen=main label="PLAY NOW" x=960 y=473 w=556 h=108 at1080=960,473 painted=1`: x, y are the game window's client
+pixels, at1080 the same place on a 1920 x 1080 client); `u2-stills.ps1 -Where` prints all six screens at both sizes into `where-lines.txt`. The tables
+below are evolution 1's history; the current places, as the game printed them on main a9446394 (lane A164, 1920 x 1080 client; 1280 x 720 is x 2/3,
+within a pixel), are in section 9.
 
 Centres in pixels on a 1920 x 1080 client (x 2/3 for 1280 x 720), read from the stills. **No button was renamed; two are new.**
 
@@ -165,12 +172,15 @@ level (ROOKIE on a first run).
 
 **What the acceptance run depends on in the menu** (`tools/qa/accept/accept.ps1`; change none of these without running it):
 1. The first screen opens with the keyboard focus on a button that starts a match: one posted Return must log `JAMMENU start match` within 6 s.
-   That button is PLAY NOW. The level switch under it takes no focus (left and right on PLAY NOW step it), so this holds with the switch.
+   That button is PLAY NOW. The level switch under it takes no focus (left and right on PLAY NOW step it), so this holds with the switch, and
+   (evolution 4) a click on a segment gives the focus back to PLAY NOW: "click PRO, press Return" plays pro.
 2. PLAY NOW obeys the `-cut=` launch argument: the run starts the package with its own cut (`accept-cut.json`: first to 9, rookie on purpose) and
    a PLAY NOW that loads `hockey.regular` instead ends the run after its third shot (it did, once: H27 was not cut).
 3. The launch cut plays its own level: the settings' level never reaches it (`source=launch`).
 4. The log line keeps its first words: `JAMMENU start match` (it now ends `cut=<cut> level=<level or cartridge>`).
-5. Nothing on the first screen takes the focus from PLAY NOW after it opens (the lobby's BACK gives it back).
+5. Nothing on the first screen takes the focus from PLAY NOW after it opens (the lobby's BACK gives it back). Evolution 4: a focus that lands on the
+   menu widget itself (a click on a segment, the title or the card's cloth) goes home to PLAY NOW on the next frame, and a Return or pad A that
+   reaches the menu widget presses PLAY NOW: on the first screen Return and A always start the match (a focused button takes the key as its own click).
 
 **The end card says what happened** (`HUDWidget.cpp`, by the Director's order for this card): the word (**YOU WIN**, **BEATEN**, or **NO WINNER** when the
 match stopped level at the horn: the sim names no winner there and the card used to read as a loss), the score with the player's side first
@@ -246,3 +256,62 @@ the plate's foot (a rule through "F  SHIELD  READY"); the plate is 46 high and t
 **Stills** (`docs/experiments/img/a144-3/`): `first-720-rookie.png`, `first-720-pro.png`, `first-1080-rookie.png`, `first-1080-allstar.png`,
 `pause-720.png` (the table inside the card), `ability-1080.png` (the slot's words clear of its rule), `settings-720-in-step.png` (PRO picked on the
 switch, the SETTINGS button reads PRO in the same process).
+
+## 9. Evolution 4 (lane A164): the first screen has no dead key
+
+**1. Return after a click on a level segment.** Seen twice in a real window (A155): click PRO, press Return, nothing. Cause, read in the code and the
+engine: the segments take no focus (`IsFocusable = false`), the menu widget does (`SetIsFocusable(true)`), and on a mouse-down that sets no focus
+Slate gives the keyboard focus to the leaf-most focusable widget under the pointer (`FSlateApplication::RoutePointerDownEvent`): the menu widget
+itself, whose key handler knew only Back. Now (`MenuWidget.cpp`): a segment's click picks the level and puts the focus back on PLAY NOW
+(`OnSegmentClicked`); a focus on the menu widget itself goes home to PLAY NOW on the next frame (`NativeTick`, first screen only; a focus anywhere else,
+the lobby's boxes included, stays); a Return or pad A that reaches the menu widget on the first screen presses PLAY NOW (`NativeOnKeyDown`; log
+`JAMMENU start key <key> reached the menu: PLAY NOW`). Proof: `Jam.Menu.ClickThenReturn` clicks PRO **by Slate's own pointer routing** (hover, down,
+up down the segment's widget path: `UJamMenuWidget::ClickForQa`, `jam.menuscreen click <rookie|pro|all_star|play|settingslevel>`), reads where the
+mouse-down left the focus (`down_focus=menu_itself`), presses Return and plays pro; then pad A with the focus on the menu itself plays all-star. With
+the two fix lines disabled the same test fails exactly as the window did (Return started nothing, "timed out"). Off screen in the game process:
+`u2-stills.ps1 -ClickReturn`: `JAMMENU click label="PRO" at=960,551 down_focus=menu_itself focus_on_play_now=1`, `JAMMATCH level=pro source=settings`.
+A null-RHI editor game paints and ticks no widget: the test sets PLAY NOW's focus itself (what the screen's first tick does), and the next-frame
+focus-home is proven in the game process, not in the gate.
+
+**2. The save path.** Every way a level is picked (a segment's click, the pad's or arrows' left / right on PLAY NOW, the settings screen's button,
+`jam.menuscreen level`) sets `Difficulty` and `bDifficultyChosen` together and `FJamSettings::Save()` writes all six keys in one loop and one flush; a start
+reads them back through the same `Load()` in a package and in the editor game. The settings panel's other presses (look, volume, barks; and the
+slider, which fires when the panel sets it) now load the profile before they save, so no older copy can put back an older level or pick key.
+`Jam.Menu.ClickThenReturn` reads both keys from the config system after each of the four ways (scratch section, never the player's). Each save logs
+`JAMSETTINGS saved difficulty=<x> chosen=<0|1> to_disk=<0|1>`. **The editor case of A155 (a pick "saved" without `DifficultyChosen`, the restart
+playing rookie) was not the game**: the driver starts the uncooked game with `-game -Multiprocess` (`tools/qa/accept/menu-row.ps1`, line 28), and under
+`-Multiprocess` the engine writes no config file (UE `ConfigContext.cpp` 688-690, `ConfigCacheIni.cpp` 1335-1336); the file it read,
+`Game/Saved/Config/WindowsEditor/GameUserSettings.ini`, holds an older run's five lines (`Difficulty=pro`, no pick key): the old profile, which the rule
+reads as rookie. To prove a pick across a restart in the editor game: add `-MultiprocessSaveConfig` (or drop `-Multiprocess`); the save line then says
+`to_disk=1`. The editor game writes `Saved/Config/WindowsEditor/`, a package `Saved/Config/Windows/`.
+
+**3. The walk in a window that is not the active one** (`verdict=blind`, `reached=0` of 76, A155). The old blind test predicted from the opening
+place's tick geometry and the hit-test grid (the walk's entry step) and then skipped the directions. Now the walk always presses every direction from
+every place and judges what Slate's own navigation did: a screen is `blind` only when no press from any place moved the focus **and** the grid has no
+menu under the opening place; nothing moving while the grid holds the menu is a fail (every place a trap). Each screen's line now carries `moves=`
+and `grid_hit=`. Off screen it is still blind (`moves=0 grid_hit=0` on the four screens with more than one place: that process's grid ends at the
+viewport, so Slate's navigation itself cannot move there); in a window the verdict reads the moves, whatever window is active. Slate's navigation
+does not ask for the active window (`FSlateApplication::AttemptNavigation` / `ExecuteNavigation`); whether the grid holds the menu in an inactive
+window is what the next window run's `grid_hit=` and `moves=` answer. The walk no longer presses left / right on PLAY NOW (the level switch: the walk
+was changing the player's level while it probed).
+
+**4. The places, printed by the game** (`u2-stills.ps1 -Where`, 1920 x 1080 client, main a9446394 + this evolution):
+
+| Screen | Place | Centre |
+|---|---|---|
+| first | PLAY NOW | 960, 473 (556 x 108) |
+| first | ROOKIE / PRO / ALL-STAR | 789, 551 / 960, 551 / 1131, 551 (167 x 40) |
+| first | PLAY THE SEASON / CHOOSE YOUR CUT / DIRECT A CUT / BRAWL WITH A FRIEND | 960, 635 / 702 / 769 / 836 |
+| first | CONTROLS / SETTINGS / CREDITS / QUIT | 696 / 872 / 1048 / 1224, 901 |
+| cuts | mode cards | x 519, 813, 1107, 1401; y 221, 407, 593 |
+| cuts | cut cards (Regular, Raw, Boost / Large Rink, Wide, Chaos) | x 566, 953, 1341; y 787, 891 |
+| cuts | BACK | 429, 969 |
+| direct | sentence box / ROLL / BACK | 897, 422 / 1309, 422 / 609, 772 |
+| settings | API key box / level / look / volume / voice / barks / BACK | 688, 375 / 626, 548 / 650, 677 / 1104, 349 / 1071, 489 / 1072, 641 / 609, 835 |
+| controls, credits | BACK | 429, 907 / 609, 892 |
+
+A155's window read PLAY NOW at 960, 472 and PRO at 959, 551: the same places within a pixel. At 1280 x 720 the game printed PLAY NOW 640, 318 and PRO 640, 369.
+
+**For the operator's sheet:** *The first screen: Enter or A plays one match at the level that is lit; left and right (keys, D-pad or stick) change the
+level; a click on ROOKIE, PRO or ALL-STAR picks it and Enter still plays; Esc or B goes back from any other screen.*
+

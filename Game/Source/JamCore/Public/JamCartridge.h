@@ -346,6 +346,17 @@ struct JAMCORE_API FJamContactConfig
 	// resolved as a late press) the same skater's next check press is dropped: no window, no cue (read-out FJamSkaterState::ChecksCooling). Bots and the
 	// human alike (the brain's own spacing is 30 frames, the scripted human's 30). 0 = the neutral value: every press opens a window (same state hash).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 CheckCooldownFrames = 0;
+	// Lane A165 (track F1, evolution 7; CONTACT-8.md section 1): a mashed button lands nothing. The cooldown alone left the masher a window every
+	// check_cooldown_frames (9.8 landed checks a pro match at 36 against 4.6 timed, lane A157). true = a check press INSIDE the cooldown starts the cooldown
+	// again from that press: a button pressed faster than the cooldown opens one window and then none until the hand has rested a whole cooldown; a press
+	// made after the cooldown never notices. Read only with check_cooldown_frames above 0. false = the neutral value: a dropped press costs nothing more.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") bool bCheckCooldownRestart = false;
+	// Lane A165 (track F1, evolution 7; CONTACT-8.md section 2): the board slam as a play. EARNED: a hit that fells its victim (not an armed hip check) while
+	// the victim's centre is within UJamSim::BoardSlamRangeM (1 m) of the boards and the attacker closes on it ALONG THE BOARDS' NORMAL at
+	// UJamSim::BoardSlamMinMps (4 m/s) or more: driven into the wall, not along it. PAID: this many frames down on top (at skater.knockdown_frames 90; they
+	// scale with it as the others do), the victim's board read-out and the `board` event of a board hit, and the read-outs bContactSlam / ContactSlams for the
+	// glass, the sound and the HUD. 0 = the neutral value: no slam exists (same state hash).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 BoardSlamFrames = 0;
 	// Lane A157 (track F1, evolution 6; CONTACT-7.md section 3): the lunge as a motion. A pressed check was a window on an ordinary collision and its lunge
 	// (lunge_mps) a number in the impulse: the body did nothing, a miss cost nothing. With lunge_frames above 0 a press that opens a window commits the body
 	// for that many frames: lunge_step_mps is added to its velocity along its facing at once (and counts in the hit as real closing speed: the impulse's own

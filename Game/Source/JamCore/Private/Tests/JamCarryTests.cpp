@@ -3,6 +3,7 @@
 //                             whistle), the median length of each class, and what was open to him a second earlier (a pass, the stop, the spin); and
 //                             every knockdown of the human by what he could have done about it, with the frames it cost.
 //   Jam.Core.Movement.StopGrace   the rule game.stick.stop_grace_frames in staged scenes and one match (in the gate)
+//   Jam.Core.Movement.Marks       lane A166: the contested puck and the stop's distance (JamCarrierMarks.h) in staged scenes (in the gate)
 //   env JAM_CARRY_TRACE = "level=pro;player=regular;seeds=40;from=1;rows=0;set=stick.take_grace_frames:30,..." (every part optional)
 #include "Misc/AutomationTest.h"
 #include "JamCartridge.h"
@@ -13,6 +14,7 @@
 #include "JamPlaytester.h"
 #include "DifficultyResolve.h"
 #include "JamBaseline.h"
+#include "JamCarrierMarks.h"
 #include "UObject/Package.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
@@ -39,6 +41,7 @@ namespace JamCarryTests
 		FVector2D Pos[MaxSk], Vel[MaxSk];
 		FVector2D Fwd = FVector2D(1, 0);
 		bool bCarry = false, bPassOn = false, bSpinReady = false, bSprint = false, bBrake = false;
+		bool bContest = false, bStopLit = false;   // lane A166: the two marks as this frame ended
 	};
 
 	struct FCarry
@@ -65,6 +68,8 @@ namespace JamCarryTests
 	struct FDown
 	{
 		int32 Frames = 0, By = -1, CarryAge = 0;
+		int32 ConLead = -1;             // lane A166: frames before his first touch at which the contested mark was first lit (-1: not in the 45 before)
+		bool bStopLit = false;          // lane A166: the stop mark was lit inside the second before the hit
 		bool bBrakedLate = false;
 		double Dist0 = -1;
 		bool bCarry = false, bCross = false, bBoard = false, bSprint = false, bBehind = false, bFront = false, bSpinOrWind = false;
@@ -97,6 +102,15 @@ namespace JamCarryTests
 		int64 LastShot = -1000, LastPass = -1000;
 		int64 BrakeStart = -1000; double BrakeStartSpeed = 0; bool bPrevBrake = false;
 		bool bLastWasDrift = false, bOtherTouched = false; int64 DriftClosed = 0;
+		// Lane A166: the marks against what happened. A touch = every possession of the human by its first frame (the short ones too).
+		JamCarrierMarks::FContestRule ConRule;
+		JamCarrierMarks::FStopRule StopRule;
+		struct FTouch { int64 Frame = 0; int32 Lead = -1; bool bDown = false; };
+		struct FStopEp { int64 Start = 0; bool bBraked = false, bDown = false; };
+		TArray<FTouch> MarkTouches;
+		TArray<FStopEp> StopEps;
+		int32 ConEpisodes = 0;
+		int64 ConFrames = 0, LastCon = -1000, LastStopLit = -1000, StopLitFrames = 0, StopShowFrames = 0;
 		TArray<FCarry> Done;
 		TArray<FDown> Downs;
 		int64 PlayFrames = 0, DownFrames = 0, CarryFrames = 0, LooseFrames = 0, OppFrames = 0, MateFrames = 0;
@@ -156,6 +170,13 @@ namespace JamCarryTests
 		if (H.bReverseBraking && !T.bPrevBrake) { T.BrakeStart = Now; const FSnap* B = T.Back(Now - 1); T.BrakeStartSpeed = B ? B->Vel[T.Me].Size() : H.Vel.Size(); }
 		T.bPrevBrake = H.bReverseBraking;
 		if (Puck.LastTouch != T.Me) T.bOtherTouched = true;
+		// Lane A166: the two marks as this frame ended (what the HUD draws on the next).
+		const JamCarrierMarks::FContested Con = JamCarrierMarks::Contested(*Sim, T.Me, T.ConRule);
+		const JamCarrierMarks::FStopMark StopM = JamCarrierMarks::StopMark(*Sim, T.Me, T.StopRule);
+		if (Con.bOn) { ++T.ConFrames; if (Now - T.LastCon > 10) ++T.ConEpisodes; T.LastCon = Now; }
+		if (StopM.bShow) ++T.StopShowFrames;
+		if (StopM.bLit) { ++T.StopLitFrames; if (Now - T.LastStopLit > 30) { FTrace::FStopEp E; E.Start = Now; T.StopEps.Add(E); } T.LastStopLit = Now; }
+		if (T.StopEps.Num() && Now - T.StopEps.Last().Start <= 90 && H.bReverseBraking) T.StopEps.Last().bBraked = true;
 		int32 PokeBy = -1, LiftBy = -1; bool bKnock = false;
 		for (const FJamSimEvent& E : Sim->GetFrameEvents())
 		{
@@ -206,6 +227,10 @@ namespace JamCarryTests
 			else if (D.bBrakedLate) D.Class = CarryBrakedLate;
 			else if (D.Dist0 >= 7.0) D.Class = CarryStop;
 			else D.Class = CarryNoRoom;
+			// Lane A166: what the marks had said.
+			if (D.bCarry && D.CarryAge < 30 && T.MarkTouches.Num() && Now - T.MarkTouches.Last().Frame <= 30) { T.MarkTouches.Last().bDown = true; D.ConLead = T.MarkTouches.Last().Lead; }
+			for (const FSnap& Sn : T.Snaps) if (Sn.Frame >= Now - 60 && Sn.Frame < Now && Sn.bStopLit) D.bStopLit = true;
+			if (D.bCarry && T.StopEps.Num() && Now - T.StopEps.Last().Start <= 90) T.StopEps.Last().bDown = true;
 			T.Downs.Add(D);
 		}
 		// The carry.
@@ -215,6 +240,11 @@ namespace JamCarryTests
 			{
 				if (T.bLastWasDrift && !T.bOtherTouched && T.Done.Num()) { T.Done.Last().bRegained = true; T.Done.Last().RegainGap = static_cast<int32>(Now - T.DriftClosed) + 30; }
 				T.bLastWasDrift = false;
+				{
+					FTrace::FTouch Tc; Tc.Frame = Now;
+					for (int32 Kb = 45; Kb >= 1 && Tc.Lead < 0; --Kb) { const FSnap* Sb = T.Back(Now - Kb); if (Sb && Sb->bContest) Tc.Lead = Kb; }
+					T.MarkTouches.Add(Tc);
+				}
 				T.bOpen = true; T.Cur = FCarry(); T.Cur.Start = Now; T.Cur.GraceAtStart = H.TakeGraceLeft;
 				for (const FJamSkaterState& O : Sk) if (O.Team != H.Team) T.Cur.StartNearest = FMath::Min(T.Cur.StartNearest, FVector2D::Distance(O.Pos, H.Pos));
 			}
@@ -257,6 +287,7 @@ namespace JamCarryTests
 		S.bSpinReady = Now >= H.SpinReadyFrame && H.SpinFrames == 0 && Sim->GetConfig().Skater.SpinFrames > 0;
 		FVector2D Aim;
 		S.bPassOn = bCarry && Sim->BestPass(T.Me, Aim) >= 0;
+		S.bContest = Con.bOn; S.bStopLit = StopM.bLit;
 	}
 
 	struct FOpt { FString Level = TEXT("pro"), Player = TEXT("regular"), Set; int32 Seeds = 40, Rows = 0, From = 1; };
@@ -300,6 +331,26 @@ namespace JamCarryTests
 	}
 
 	double Median(TArray<int32> A) { if (!A.Num()) return 0.0; A.Sort(); return A[A.Num() / 2]; }
+
+	// Lane A166: env JAM_MARK_RULE = "early=0.25;late=0.6;closing=8;toward=3;hsec=1;near=7;far=11;arm=20;cone=0.82;stopclosing=3" (every part optional): the
+	// marks' rules for this run, so a sweep needs no build. Absent = the shipped rules (JamCarrierMarks.h).
+	FString ReadMarkRule(FTrace& T)
+	{
+		const FString Env = FPlatformMisc::GetEnvironmentVariable(TEXT("JAM_MARK_RULE"));
+		TArray<FString> Parts;
+		Env.ParseIntoArray(Parts, TEXT(";"));
+		for (const FString& Part : Parts)
+		{
+			FString K, Vs;
+			if (!Part.Split(TEXT("="), &K, &Vs)) continue;
+			const double V = FCString::Atod(*Vs);
+			if (K == TEXT("early")) T.ConRule.OppEarlySec = V; else if (K == TEXT("late")) T.ConRule.OppLateSec = V; else if (K == TEXT("closing")) T.ConRule.ClosingMps = V;
+			else if (K == TEXT("toward")) T.ConRule.TowardMps = V; else if (K == TEXT("hsec")) T.ConRule.HumanSecMax = V;
+			else if (K == TEXT("near")) T.StopRule.LitNearM = V; else if (K == TEXT("far")) T.StopRule.LitFarM = V; else if (K == TEXT("arm")) T.StopRule.ArmFarM = V;
+			else if (K == TEXT("cone")) T.StopRule.ConeCos = V; else if (K == TEXT("stopclosing")) T.StopRule.ClosingMps = V; else if (K == TEXT("react")) T.StopRule.ReactSec = V;
+		}
+		return Env;
+	}
 }
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamBarCarryTrace, "Bar.Movement.CarryTrace", JamCarryTests::Flags)
@@ -316,6 +367,10 @@ bool FJamBarCarryTrace::RunTest(const FString& Parameters)
 	TArray<FDown> Downs;
 	int32 Matches = 0, Wins = 0, Touches = 0, Rows = 0;
 	int64 Play = 0, Down = 0, CarryF = 0, Loose = 0, OppF = 0, MateF = 0;
+	TArray<FTrace::FTouch> MarkTouches;
+	TArray<FTrace::FStopEp> StopEps;
+	int64 ConEpisodes = 0, ConFrames = 0, StopLitFrames = 0, StopShowFrames = 0;
+	FString MarkRule;
 	for (int32 Seed = O.From; Seed < O.From + O.Seeds; ++Seed)
 	{
 		UJamCartridge* M = DuplicateObject<UJamCartridge>(C, GetTransientPackage());
@@ -323,6 +378,7 @@ bool FJamBarCarryTrace::RunTest(const FString& Parameters)
 		JamAI::FJamSimAdapter Sim(*M);
 		FTrace* T = new FTrace();
 		T->Sim = &Sim;
+		MarkRule = ReadMarkRule(*T);
 		const JamAI::FJamMatchConfig Cfg = JamAI::ToMatchConfigResolved(*M, *O.Level);
 		const JamAI::FJamPlaytestStats S = JamAI::RunPlaytestMatch(Sim, Cfg, static_cast<uint64>(Seed), Kind, 36000, M->Game.Shot.ChargeFramesMax, false, &CarryTrace, T, 1);
 		if (T->bOpen && Sim.GetSim()) CloseCarry(*T, Whistle, -1, *Sim.GetSim());
@@ -338,6 +394,8 @@ bool FJamBarCarryTrace::RunTest(const FString& Parameters)
 		}
 		All.Append(T->Done);
 		Downs.Append(T->Downs);
+		MarkTouches.Append(T->MarkTouches); StopEps.Append(T->StopEps);
+		ConEpisodes += T->ConEpisodes; ConFrames += T->ConFrames; StopLitFrames += T->StopLitFrames; StopShowFrames += T->StopShowFrames;
 		delete T;
 	}
 	const double Mn = FMath::Max(1, Matches);
@@ -416,6 +474,27 @@ bool FJamBarCarryTrace::RunTest(const FString& Parameters)
 				DownName(K), N, 100.0 * N / FMath::Max(1, Downs.Num()), 100.0 * F / FMath::Max<int64>(1, AllFrames), N ? static_cast<double>(F) / N : 0.0, N ? Closing / N : 0.0, 100.0 * Fast / FMath::Max(1, N), N ? Ratio / N : 0.0, N ? Age / N / 60.0 : 0.0,
 				100.0 * Sprint / FMath::Max(1, N), 100.0 * Cross / FMath::Max(1, N), 100.0 * Board / FMath::Max(1, N), 100.0 * Front / FMath::Max(1, N), 100.0 * Pass / FMath::Max(1, N), DistN ? Dist / DistN : 0.0));
 		}
+	}
+	// Lane A166: the two marks against what happened.
+	{
+		int32 Marked = 0, MarkedDown = 0, Unmarked = 0, UnmarkedDown = 0, Marked20 = 0, Marked20Down = 0;
+		for (const FTrace::FTouch& Tc : MarkTouches)
+		{
+			if (Tc.Lead >= 1) { ++Marked; if (Tc.bDown) ++MarkedDown; if (Tc.Lead >= 20) { ++Marked20; if (Tc.bDown) ++Marked20Down; } }
+			else { ++Unmarked; if (Tc.bDown) ++UnmarkedDown; }
+		}
+		int32 Young = 0, YoungLit = 0, YoungLit20 = 0; TArray<int32> Leads;
+		for (const FDown& D : Downs) if (D.Class == CarryYoung) { ++Young; if (D.ConLead >= 1) { ++YoungLit; Leads.Add(D.ConLead); } if (D.ConLead >= 20) ++YoungLit20; }
+		AddInfo(FString::Printf(TEXT("CARRYTRACE mark contested %s at %s (rule \"%s\"): lit in %lld episodes (%.1f a match), %lld frames (%.2f %% of play) | his %d possessions (%.1f a match): the mark was lit before the touch in %d (%.1f %%), and he was down inside half a second after %d of them (PRECISION %.1f %%); not lit before %d, down after %d (%.1f %%) | lit 20 frames or more before the touch: %d, down after %d (%.1f %%) | the class hit-as-he-won-it: %d knockdowns, the mark was lit before the touch in %d (RECALL %.1f %%), 20 frames or more before in %d (%.1f %%), median lead %.0f frames"),
+			*O.Player, *O.Level, *MarkRule, static_cast<long long>(ConEpisodes), ConEpisodes / Mn, static_cast<long long>(ConFrames), 100.0 * ConFrames / FMath::Max<int64>(1, Play), MarkTouches.Num(), MarkTouches.Num() / Mn,
+			Marked, 100.0 * Marked / FMath::Max(1, MarkTouches.Num()), MarkedDown, 100.0 * MarkedDown / FMath::Max(1, Marked), Unmarked, UnmarkedDown, 100.0 * UnmarkedDown / FMath::Max(1, Unmarked),
+			Marked20, Marked20Down, 100.0 * Marked20Down / FMath::Max(1, Marked20), Young, YoungLit, 100.0 * YoungLit / FMath::Max(1, Young), YoungLit20, 100.0 * YoungLit20 / FMath::Max(1, Young), Median(Leads)));
+		int32 StopClass = 0, StopClassLit = 0, Other = 0, OtherLit = 0, Braked = 0, BrakedDown = 0, NotBraked = 0, NotBrakedDown = 0;
+		for (const FDown& D : Downs) { if (D.Class == CarryStop) { ++StopClass; if (D.bStopLit) ++StopClassLit; } else if (D.Class == CarryBrakedLate || D.Class == CarryNoRoom) { ++Other; if (D.bStopLit) ++OtherLit; } }
+		for (const FTrace::FStopEp& E : StopEps) { if (E.bBraked) { ++Braked; if (E.bDown) ++BrakedDown; } else { ++NotBraked; if (E.bDown) ++NotBrakedDown; } }
+		AddInfo(FString::Printf(TEXT("CARRYTRACE mark stop %s at %s: lit in %d episodes (%.1f a match), shown %lld frames and lit %lld (%.1f %% and %.1f %% of his carry frames) | the class the-stop-was-on: %d knockdowns, the mark was lit inside the second before in %d (RECALL %.1f %%); braked-too-late and no-room: %d, lit before %d | of the lit episodes he braked inside 1.5 s in %d and was down inside 1.5 s in %d of those (%.1f %%); he did not brake in %d and was down in %d (PRECISION %.1f %%)"),
+			*O.Player, *O.Level, StopEps.Num(), StopEps.Num() / Mn, static_cast<long long>(StopShowFrames), static_cast<long long>(StopLitFrames), 100.0 * StopShowFrames / FMath::Max<int64>(1, CarryF), 100.0 * StopLitFrames / FMath::Max<int64>(1, CarryF),
+			StopClass, StopClassLit, 100.0 * StopClassLit / FMath::Max(1, StopClass), Other, OtherLit, Braked, BrakedDown, 100.0 * BrakedDown / FMath::Max(1, Braked), NotBraked, NotBrakedDown, 100.0 * NotBrakedDown / FMath::Max(1, NotBraked)));
 	}
 	TestTrue(TEXT("the trace ran"), Matches > 0);
 	return true;
@@ -514,6 +593,100 @@ bool FJamMovementStopGrace::RunTest(const FString& Parameters)
 		TestTrue(TEXT("pro seed 3: the key at 0 is the shipped cartridge's match"), H[0] == H[1]);
 		TestTrue(TEXT("pro seed 3: the key at 30 is another match (the rule is live in a match)"), H[0] != H[2]);
 		AddInfo(FString::Printf(TEXT("STOPGRACE match pro seed 3, 7200 frames: shipped %016llx, key 0 %016llx, key 30 %016llx"), static_cast<unsigned long long>(H[0]), static_cast<unsigned long long>(H[1]), static_cast<unsigned long long>(H[2])));
+	}
+	return true;
+}
+
+// Lane A166: the two marks' rules in staged scenes (the gate). No match, no statistic: the rule says yes where the picture is the one it was written for.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamMovementMarks, "Jam.Core.Movement.Marks", JamCarryTests::Flags)
+bool FJamMovementMarks::RunTest(const FString& Parameters)
+{
+	using namespace JamCarryTests;
+	TArray<FString> Errors;
+	UJamCartridge* C = UJamCartridge::LoadFromFile(UJamCartridge::ResolveCartridgePath(TEXT("hockey.regular")), Errors);
+	for (const FString& E : Errors) AddError(E);
+	if (!C) return false;
+	// The contested puck: the puck lies at the origin, the human and an opponent skate at it from 6 m on either side.
+	{
+		UJamSim* Sim = NewObject<UJamSim>();
+		Sim->Init(C->Game, 1);
+		Sim->SkipFaceoff();
+		const int32 Me = Sim->GetHumanIndex();
+		int32 Opp = -1, Mate = -1;
+		for (const FJamSkaterState& K : Sim->GetSkaters()) { if (K.Team != Sim->GetSkaters()[Me].Team) { if (Opp < 0) Opp = K.Index; } else if (K.Index != Me && Mate < 0) Mate = K.Index; }
+		const int32 N = Sim->GetSkaters().Num();
+		auto Park = [&]() { for (int32 i = 0; i < N; ++i) Sim->SetSkater(i, FVector2D(-40.0 + i * 1.5, 19.0), FVector2D::ZeroVector, 0); Sim->SetPuck(FVector2D::ZeroVector, FVector2D::ZeroVector); };
+		Park();
+		TestTrue(TEXT("the staged puck is loose"), Sim->CarrierIndex() < 0);
+		Sim->SetSkater(Me, FVector2D(-6.0, 0.0), FVector2D(8.0, 0.0), 0.0);
+		Sim->SetSkater(Opp, FVector2D(6.0, 0.0), FVector2D(-8.0, 0.0), UE_DOUBLE_PI);
+		const JamCarrierMarks::FContested A = JamCarrierMarks::Contested(*Sim, Me);
+		TestTrue(TEXT("head-on for a loose puck, both 6 m off at 8 m/s: contested"), A.bOn && A.Opp == Opp);
+		TestTrue(TEXT("... the human has it in about half a second (4.4 m at 8 m/s), the opponent too, closing at 16 m/s"), FMath::IsNearlyEqual(A.HumanSec, 0.55, 0.02) && FMath::IsNearlyEqual(A.OppSec, 0.55, 0.02) && FMath::IsNearlyEqual(A.ClosingMps, 16.0, 0.1));
+		AddInfo(FString::Printf(TEXT("MARKS contested: human %.2f s, opponent %.2f s, closing %.1f m/s"), A.HumanSec, A.OppSec, A.ClosingMps));
+		Sim->SetSkater(Opp, FVector2D(6.0, 0.0), FVector2D(8.0, 0.0), 0.0);
+		TestFalse(TEXT("the opponent skates away: not contested"), JamCarrierMarks::Contested(*Sim, Me).bOn);
+		Sim->SetSkater(Opp, FVector2D(20.0, 0.0), FVector2D(-8.0, 0.0), UE_DOUBLE_PI);
+		TestFalse(TEXT("the opponent is two seconds off: the puck is the human's, not contested"), JamCarrierMarks::Contested(*Sim, Me).bOn);
+		Sim->SetSkater(Opp, FVector2D(2.5, 0.0), FVector2D(-8.0, 0.0), UE_DOUBLE_PI);
+		TestFalse(TEXT("the opponent is there half a second before him: it is the opponent's puck (the human is the one who arrives second)"), JamCarrierMarks::Contested(*Sim, Me).bOn);
+		Sim->SetSkater(Opp, FVector2D(-6.0, 3.0), FVector2D(8.0, -4.0), 0.0);
+		TestFalse(TEXT("side by side for the same puck (no closing between the two): not contested"), JamCarrierMarks::Contested(*Sim, Me).bOn);
+		Sim->SetSkater(Opp, FVector2D(6.0, 0.0), FVector2D(-8.0, 0.0), UE_DOUBLE_PI);
+		Sim->SetSkater(Me, FVector2D(-6.0, 0.0), FVector2D::ZeroVector, 0.0);
+		TestFalse(TEXT("the human stands: not contested (he is not going for it)"), JamCarrierMarks::Contested(*Sim, Me).bOn);
+		if (Mate >= 0)
+		{
+			Sim->SetSkater(Me, FVector2D(-6.0, 0.0), FVector2D(8.0, 0.0), 0.0);
+			Sim->SetSkater(Opp, FVector2D(-40.0, 19.0), FVector2D::ZeroVector, 0.0);
+			Sim->SetSkater(Mate, FVector2D(6.0, 0.0), FVector2D(-8.0, 0.0), UE_DOUBLE_PI);
+			TestFalse(TEXT("a mate skates at the same puck: not contested"), JamCarrierMarks::Contested(*Sim, Me).bOn);
+		}
+	}
+	// The stop's distance: the human carries at 8 m/s along +x; a defender stands ahead and skates at him at 5 m/s.
+	{
+		UJamSim* Sim = NewObject<UJamSim>();
+		Sim->Init(C->Game, 1);
+		Sim->SkipFaceoff();
+		const int32 Me = Sim->GetHumanIndex();
+		int32 Opp = -1;
+		for (const FJamSkaterState& K : Sim->GetSkaters()) if (K.Team != Sim->GetSkaters()[Me].Team) { Opp = K.Index; break; }
+		const int32 N = Sim->GetSkaters().Num();
+		for (int32 i = 0; i < N; ++i) Sim->SetSkater(i, FVector2D(-40.0 + i * 1.5, 19.0), FVector2D::ZeroVector, 0);
+		Sim->SetSkater(Me, FVector2D(-25.0, 0.0), FVector2D::ZeroVector, 0);
+		Sim->SetPuck(FVector2D(-24.55, 0.0), FVector2D::ZeroVector);
+		TArray<FJamInput> In;
+		In.SetNum(N);
+		In[Me].Stick = FVector2D(1.0, 0.0);
+		for (int32 i = 0; i < 8; ++i) Sim->Step(In);
+		In[Me].Move = FVector2D(1.0, 0.0);
+		int32 Guard = 0;
+		while (Sim->GetSkaters()[Me].Vel.Size() < 8.0 && Guard++ < 240) Sim->Step(In);
+		TestTrue(TEXT("the scene stages: the human carries at 8 m/s"), Sim->CarrierIndex() == Me && Sim->GetSkaters()[Me].Vel.Size() >= 8.0);
+		const FVector2D HP = Sim->GetSkaters()[Me].Pos;
+		auto At = [&](double Dx, double Dy, double Vx) { Sim->SetSkater(Opp, HP + FVector2D(Dx, Dy), FVector2D(Vx, 0.0), UE_DOUBLE_PI); return JamCarrierMarks::StopMark(*Sim, Me); };
+		TestFalse(TEXT("nobody ahead: no mark"), JamCarrierMarks::StopMark(*Sim, Me).bShow);
+		const JamCarrierMarks::FStopMark Far = At(15.0, 0.0, -5.0);
+		TestTrue(TEXT("a closing defender 15 m ahead: the mark is armed, not lit"), Far.bShow && !Far.bLit && Far.Def == Opp);
+		TestTrue(TEXT("... and stands five stick lengths (8 m) from the human, towards him"), FMath::IsNearlyEqual(FVector2D::Distance(Far.At, HP), 8.0, 0.01) && Far.At.X > HP.X);
+		const JamCarrierMarks::FStopMark Lit = At(10.0, 0.0, -5.0);
+		TestTrue(TEXT("the defender 10 m ahead closing at 13 m/s: lit (the stop passes from 9.5 m to 7 m, plus the hand's lead)"), Lit.bShow && Lit.bLit);
+		TestTrue(TEXT("the defender 12.5 m ahead closing at 13 m/s: lit already (a quarter second of lead for the hand: 9.5 m + 3.25 m)"), At(12.5, 0.0, -5.0).bLit);
+		TestFalse(TEXT("the defender 13.5 m ahead closing at 13 m/s: armed, not yet lit (REVIEW-3: a stop begun out there loses the feet at pro and at all_star)"), At(13.5, 0.0, -5.0).bLit);
+		TestFalse(TEXT("the defender 13.5 m ahead standing still (closing at 8 m/s: 9.5 m + 2 m): armed, not yet lit"), At(13.5, 0.0, 0.0).bLit);
+		TestTrue(TEXT("the defender 7.5 m ahead: still lit"), At(7.5, 0.0, -5.0).bLit);
+		TestFalse(TEXT("the defender 6 m ahead: gone (a stop begun here loses the feet)"), At(6.0, 0.0, -5.0).bShow);
+		TestFalse(TEXT("the defender 10 m to the side of his travel: no mark"), At(0.0, 10.0, 0.0).bShow);
+		TestFalse(TEXT("the defender 10 m behind: no mark"), At(-10.0, 0.0, 12.0).bShow);
+		TestFalse(TEXT("the defender 10 m ahead skating away faster than the human: no mark (nothing closes)"), At(10.0, 0.0, 12.0).bShow);
+		AddInfo(FString::Printf(TEXT("MARKS stop: armed at %.1f m (closing %.1f m/s), lit at %.1f m"), Far.DistM, Far.ClosingMps, Lit.DistM));
+		// he brakes: the mark has said what it had to say
+		At(10.0, 0.0, -5.0);
+		In[Me].Move = FVector2D(-1.0, 0.0);
+		Sim->Step(In);
+		Sim->SetSkater(Opp, Sim->GetSkaters()[Me].Pos + FVector2D(10.0, 0.0), FVector2D(-5.0, 0.0), UE_DOUBLE_PI);
+		TestTrue(TEXT("the human reverses: the sim brakes"), Sim->GetSkaters()[Me].bReverseBraking);
+		TestFalse(TEXT("... and the mark is gone while he brakes"), JamCarrierMarks::StopMark(*Sim, Me).bShow);
 	}
 	return true;
 }

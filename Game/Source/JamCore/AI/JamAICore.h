@@ -170,6 +170,32 @@ namespace JamAI
 		// CarryClockS (a team without shape jobs: fewer than five): a carrier that has held the puck this many seconds attacks or moves it: it passes when
 		// the sim's pass has a receiver, else shoots it at the net when it faces up the ice (as a stalled puck is shot away). 0 = it may carry for ever.
 		double CarryClockS = 0.0;
+		// Lane A167 (track Q2, evolution 5; docs/experiments/BRAIN-5.md). Each at its neutral value is the brain of evolution 4, bit for bit (brain5=0).
+		// AvoidDownedM (every bot, both sides): a bot steers round a skater that lies on the ice. A downed skater within this distance plus 2.5 m whose
+		// body is on the bot's way (ahead of its move and within this distance of its line) turns the move onto the tangent of the circle of this radius
+		// round him, on the side the move already leans to; a bot already inside the circle moves out and round (SteerRoundDowned). 0 = it skates at him,
+		// stands at his body circle and pushes him along the ice (B-to-A-0041 point 2; lane A157: 1,554 spells of more than 6 frames in 200 pro matches).
+		double AvoidDownedM = 0.0;
+		// AvoidDownedOut: inside the circle, the share of the move that goes straight away from him (the rest goes round him). 0 = the blend that turns
+		// from mostly round at the circle's edge to mostly out at his body. Measured (BRAIN-5.md): 0.7 takes a sixth more of the spells than the blend.
+		// (Measured and not kept: an exception for a puck that lies at his body, a circle led by his slide, a brake at contact: each read worse.)
+		double AvoidDownedOut = 0.0;
+		// bPressThree (a team without shape jobs: fewer than five): the chaser that is goal-side of an opposing carrier that goes (3 m/s or more), 2.5 m
+		// off or more, plays the Press job's gap (the point in front of the carrier at its speed's gap, moving with it) instead of charging: what
+		// bPressInHunt gives all_star's presser at five a side, for the six-skater cuts. Off = the chaser charges (Attack).
+		bool bPressThree = false;
+		// PressCommitM: the five's presser that closes under control (bPressInHunt) commits inside this distance of the
+		// carrier: it charges (Attack) as a hunting bot does. With bPressInHunt on and this at the level's old hunt radius (pro: 8 m) the presser plays
+		// exactly what it plays today, whatever the hunt radius is: the hunt then moves the other four only. 0 = it never commits (the Press job's own
+		// 2.5 m): all_star's five as shipped since evolution 4.
+		double PressCommitM = 0.0;
+		// PressThreeCommitM: the same for the three's chaser (bPressThree): inside this distance it charges. Its own number: pro's five keeps today's
+		// window with 8 m, the three's chaser gives the stop at 8 m to every level with 6 m (BRAIN-5.md section 4). 0 = the gap's own 2.5 m.
+		double PressThreeCommitM = 0.0;
+		// PressRetreatCap (bPressThree only): the most stick the chaser's gap moves back with. The Press job's own term is the carrier's velocity over
+		// the skater's top speed: on the 120 m rinks, where the top speed is 8 m/s, a carrier at full speed makes that 1, the close is cancelled, the
+		// chaser stands still and a straight charge passes it (measured: 59.5 % at pro). 1 = uncapped; 0.7 closes on every rink (BRAIN-5.md section 4).
+		double PressRetreatCap = 1.0;
 		bool Any() const { return bCarryOrPass || bAttackShape || bDefenceShape || bTransition; }
 	};
 	// Lane A115: every rule of evolution 2 on (as ProHockeySense has them) or off (the brain of evolution 1). The tune key brain2 and the tests use it.
@@ -225,6 +251,19 @@ namespace JamAI
 		if (!bOn) { H.bPressInHunt = false; return; }
 		if (bMate) { H.MateFinishM = kEvo4MateFinishM; H.MateDriveM = kEvo4MateDriveM; H.ScreenFrames = kEvo4ScreenFrames; }
 		else { H.CarryClockS = kEvo4CarryClockS; }
+	}
+	// Lane A167 (evolution 5, BRAIN-5.md): the rules of evolution 5 as shipped (ApplyDifficultyProfile calls it for each side) or off (evolution 4).
+	// Everything ships at its neutral value until the operator has played (the Director, 14 Nov 04:57); BRAIN-5.md has the values that are recommended.
+	// On leaves a level's bPressThree as its profile set it (no level sets it today); off switches it off.
+	constexpr double kEvo5AvoidDownedM = 0.0;
+	constexpr double kEvo5AvoidDownedOut = 0.0;
+	inline void SetEvolution5(FJamHockeySense& H, bool bOn)
+	{
+		H.AvoidDownedM = 0.0;
+		H.AvoidDownedOut = 0.0;
+		if (!bOn) { H.bPressThree = false; H.PressCommitM = 0.0; H.PressThreeCommitM = 0.0; H.PressRetreatCap = 1.0; return; }
+		H.AvoidDownedM = kEvo5AvoidDownedM;
+		H.AvoidDownedOut = kEvo5AvoidDownedOut;
 	}
 	// Lane A94: the sense each level plays (DifficultyProfile.cpp sets the opponents' per level; the human's teammates play ProHockeySense at every level).
 	inline FJamHockeySense ProHockeySense()
@@ -559,6 +598,9 @@ namespace JamAI
 	// Lane A134: the point on an opposing carrier's lane to Team-of-Id's net that Id reaches before the carrier does (steps of 2 m from 2 m ahead of the
 	// carrier; the carrier at its own speed, at least 3 m/s; Id at Speed), else the last point, 4 m in front of the net.
 	JAMCORE_API FVec2 BackcheckPoint(const FJamAIWorld& W, int Id, int Carrier, double Speed);
+	// Lane A167 (evolution 5, BRAIN-5.md): the move of skater Id turned round the nearest downed skater that is on its way (FJamHockeySense::AvoidDownedM
+	// = KeepM); Move itself when nobody lies there. The length of the move is kept. Pure.
+	JAMCORE_API FVec2 SteerRoundDowned(const FJamAIWorld& W, int Id, const FVec2& Move, double KeepM, double OutShare = 0.0);
 	// Where a teammate of the carrier offers a pass lane: the best of six spots beside and ahead of the carrier (each side: level and wide, ahead, far ahead),
 	// scored by an open lane from the carrier (no opponent within 2 m of it), the free ice round the spot, how far up the ice it is and how near the skater is
 	// to it already; never within 4 m of another teammate.

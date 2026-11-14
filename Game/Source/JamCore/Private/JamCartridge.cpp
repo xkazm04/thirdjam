@@ -1206,6 +1206,8 @@ namespace
 			ReadNumber(Ct, TEXT("check_reach_m"), C.Contact.CheckReachM);   // lane A125 (track F1): the check finds its man; 0 = the neutral value
 			ReadNumber(Ct, TEXT("downed_radius_m"), C.Contact.DownedRadiusM);   // lane A157 (track F1): nobody stands in a man who is down; 0 = the neutral value
 			ReadInteger(Ct, TEXT("check_cooldown_frames"), C.Contact.CheckCooldownFrames);   // lane A157: a check press has a cooldown; 0 = the neutral value
+			ReadBool(Ct, TEXT("check_cooldown_restart"), C.Contact.bCheckCooldownRestart);   // lane A165: a press inside the cooldown restarts it; false = the neutral value
+			ReadInteger(Ct, TEXT("board_slam_frames"), C.Contact.BoardSlamFrames);   // lane A165: the board slam, earned and paid; 0 = the neutral value
 			ReadInteger(Ct, TEXT("lunge_frames"), C.Contact.LungeFrames);   // lane A157: the lunge as a motion; 0 = the neutral value
 			ReadNumber(Ct, TEXT("lunge_step_mps"), C.Contact.LungeStepMps);   // lane A157: its forward step; 0 = the neutral value
 		}

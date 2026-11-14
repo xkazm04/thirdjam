@@ -9,7 +9,7 @@
 // QA: jam.menuscreen <main|cuts|direct|settings|credits|controls> shows a screen; jam.menuscreen choose <cut name> picks a cut;
 // jam.menuscreen say <sentence...> directs one; jam.menuscreen play presses PLAY NOW (lane A144). (R-0003 4: names grepped across Game/Source first.)
 static FAutoConsoleCommandWithWorldAndArgs CmdJamMenuScreen(TEXT("jam.menuscreen"),
-	TEXT("Menu QA: jam.menuscreen main|cuts|direct|settings|credits|controls | play | walk | level <rookie|pro|all_star|left|right> | key <left|right|up|down|arrowleft|arrowright|enter|a|b|esc> | choose <cut> | say <sentence>"),
+	TEXT("Menu QA: jam.menuscreen main|cuts|direct|settings|credits|controls | play | walk | where | click <rookie|pro|all_star|play|settingslevel> | level <rookie|pro|all_star|left|right> | key <left|right|up|down|arrowleft|arrowright|enter|a|b|esc> | choose <cut> | say <sentence>"),
 	FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
 	{
 		AJamMenuGameMode* GM = World ? Cast<AJamMenuGameMode>(World->GetAuthGameMode()) : nullptr;
@@ -24,6 +24,8 @@ static FAutoConsoleCommandWithWorldAndArgs CmdJamMenuScreen(TEXT("jam.menuscreen
 		else if (A == TEXT("controls")) Menu->ShowScreen(EJamMenuScreen::Controls);
 		else if (A == TEXT("play")) Menu->PlayNow();
 		else if (A == TEXT("walk")) Menu->StartPadWalk();   // lane A144: the pad walk (JAMMENU walk lines)
+		else if (A == TEXT("where")) Menu->PrintPlacesForQa();
+		else if (A == TEXT("click") && Args.Num() > 1) Menu->ClickPlaceForQa(Args[1].ToLower());   // lane A164: a Slate-routed click, no cursor   // lane A164: the shown screen's places from the widgets' own geometry (JAMMENU place lines)
 		else if (A == TEXT("key") && Args.Num() > 1)
 		{
 			// Lane A144 (evolution 3): a real key or pad press through Slate to the focused widget (no cursor, no window focus).

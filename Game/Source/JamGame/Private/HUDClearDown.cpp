@@ -28,6 +28,10 @@
 #include "JamSim.h"
 #include "JamPawns.h"
 #include "RadarWidget.h"
+#include "Components/StaticMeshComponent.h"
+#include "Components/InstancedStaticMeshComponent.h"
+#include "Engine/StaticMesh.h"
+#include "Materials/MaterialInterface.h"
 
 static TAutoConsoleVariable<int32> CVarJamHudClearDown(TEXT("jam.hud.ClearDown"), 1,
 	TEXT("Nothing drawn on a downed figure: 1 (default) no ring under the human while he is down, no marker on a downed figure, the caption and the contact line off the human, the bark lane off downed figures and nets; 0 the screen of before."), ECVF_Default);
@@ -300,10 +304,79 @@ FString UJamHudWidget::ProbeNameOf(const UWidget* W) const
 	return Top ? Top->GetName() : FString(TEXT("?"));
 }
 
+// Lane A168 (the black post at the faceoff): what stands at the puck. jam.hud.NearPuck 1: at every faceoff hold (20 frames before the drop) and 240
+// frames after each drop, one JAMSCREEN nearpuck line per visible primitive component whose bounds' centre is within 1.5 m of the puck on the ice
+// (an instanced mesh: per instance), with its class, owner, mesh, place, scale, bounds and first material, and a still (u1-post-<tier>-<tag>f<frame>-<hold|play>.png).
+static TAutoConsoleVariable<int32> CVarJamHudNearPuck(TEXT("jam.hud.NearPuck"), 0,
+	TEXT("Proof: 1 = JAMSCREEN nearpuck lines (every visible primitive within 1.5 m of the puck) and a still at each faceoff hold and 240 frames after each drop. 0 off."), ECVF_Default);
+
+static void JamDumpNearPuck(UWorld* World, const FJamPresentationFrame& F, const TCHAR* Why, const FString& Tier)
+{
+	const FVector2D Puck(F.PuckM.X * 100.0, F.PuckM.Y * 100.0);
+	int32 N = 0;
+	auto Line = [&](const UPrimitiveComponent* C, const FVector& Loc, const FVector& Scale, const FVector& Origin, const FVector& Extent, int32 Instance)
+	{
+		const UStaticMeshComponent* SM = Cast<UStaticMeshComponent>(C);
+		const AActor* Owner = C->GetOwner();
+		const UMaterialInterface* Mat = C->GetNumMaterials() > 0 ? C->GetMaterial(0) : nullptr;
+		UE_LOG(LogHokej, Log, TEXT("JAMSCREEN nearpuck %s sim_frame=%lld comp=%s class=%s instance=%d owner=%s owner_class=%s level=%s parent=%s mesh=%s loc=(%.1f,%.1f,%.1f) scale=(%.3f,%.3f,%.3f) bounds_centre=(%.1f,%.1f,%.1f) half_extent=(%.1f,%.1f,%.1f) mat0=%s"),
+			Why, F.SimFrame, *C->GetName(), *C->GetClass()->GetName(), Instance, Owner ? *Owner->GetName() : TEXT("none"), Owner ? *Owner->GetClass()->GetName() : TEXT("none"),
+			Owner && Owner->GetLevel() ? *Owner->GetLevel()->GetOutermost()->GetName() : TEXT("none"), C->GetAttachParent() ? *C->GetAttachParent()->GetName() : TEXT("none"),
+			SM && SM->GetStaticMesh() ? *SM->GetStaticMesh()->GetPathName() : TEXT("none"), Loc.X, Loc.Y, Loc.Z, Scale.X, Scale.Y, Scale.Z, Origin.X, Origin.Y, Origin.Z, Extent.X, Extent.Y, Extent.Z,
+			Mat ? *Mat->GetPathName() : TEXT("none"));
+		++N;
+	};
+	for (TObjectIterator<UPrimitiveComponent> It; It; ++It)
+	{
+		const UPrimitiveComponent* C = *It;
+		if (C->GetWorld() != World || !C->IsRegistered() || !C->IsVisible()) continue;
+		if (const UInstancedStaticMeshComponent* Ism = Cast<UInstancedStaticMeshComponent>(C))
+		{
+			for (int32 i = 0; i < Ism->GetInstanceCount(); ++i)
+			{
+				FTransform T;
+				if (Ism->GetInstanceTransform(i, T, true) && FVector2D::Distance(FVector2D(T.GetLocation()), Puck) <= 150.0) Line(C, T.GetLocation(), T.GetScale3D(), T.GetLocation(), FVector::ZeroVector, i);
+			}
+			continue;
+		}
+		const FBoxSphereBounds B = C->Bounds;
+		if (FVector2D::Distance(FVector2D(B.Origin), Puck) > 150.0) continue;
+		if (B.BoxExtent.GetMax() > 1500.0) continue;   // the ice, the boards, the barn: centred near the dot by being the whole rink
+		Line(C, C->GetComponentLocation(), C->GetComponentScale(), B.Origin, B.BoxExtent, -1);
+	}
+	UE_LOG(LogHokej, Log, TEXT("JAMSCREEN nearpuck %s sim_frame=%lld components=%d puck=(%.1f,%.1f) countdown=%d"), Why, F.SimFrame, N, Puck.X, Puck.Y, F.FaceoffCountdownFrames);
+	const FString Tag = CVarJamHudDownStillTag.GetValueOnGameThread();
+	FScreenshotRequest::RequestScreenshot(FString::Printf(TEXT("u1-post-%s-%s%sf%05lld-%s.png"), *Tier, *Tag, Tag.IsEmpty() ? TEXT("") : TEXT("-"), F.SimFrame, Why), true, false);
+}
+
+static void JamNearPuckTick(UWorld* World, const FJamPresentationFrame& F, const FString& Tier)
+{
+	static int64 LastFrame = -1, DropFrame = -1;
+	static bool bHoldDone = false, bPlayDone = true;
+	if (CVarJamHudNearPuck.GetValueOnGameThread() == 0 || !World) return;
+	if (F.SimFrame < LastFrame) { DropFrame = -1; bHoldDone = false; bPlayDone = true; }
+	LastFrame = F.SimFrame;
+	if (F.FaceoffCountdownFrames > 0)
+	{
+		if (!bHoldDone && F.FaceoffCountdownFrames <= 20) { bHoldDone = true; JamDumpNearPuck(World, F, TEXT("hold"), Tier); }
+		DropFrame = -1;
+	}
+	else
+	{
+		if (bHoldDone) { bHoldDone = false; DropFrame = F.SimFrame; bPlayDone = false; }
+		if (!bPlayDone && DropFrame >= 0 && F.SimFrame - DropFrame >= 240 && F.Phase == EJamPhase::Play) { bPlayDone = true; JamDumpNearPuck(World, F, TEXT("play"), Tier); }
+	}
+}
+
 // The probe. Called at the top of the tick, after this tick's boxes are known and before any widget is moved: every widget still stands where the last
 // tick put it and its cached geometry is the last paint, so the last tick's figure boxes (Prev) are compared with what was drawn over them.
 void UJamHudWidget::ProbeDown(const FJamPresentationFrame& F)
 {
+	if (CVarJamHudNearPuck.GetValueOnGameThread() != 0)
+	{
+		const AHokejGameMode* Mode = GetWorld() ? GetWorld()->GetAuthGameMode<AHokejGameMode>() : nullptr;
+		JamNearPuckTick(GetWorld(), F, Mode && Mode->GetCartridge() ? Mode->GetCartridge()->Game.Look.Tier : FString(TEXT("tier")));
+	}
 	const int32 Every = CVarJamHudDownProbe.GetValueOnGameThread();
 	if (Every <= 0) return;
 	FDownProbe& P = DownProbe;

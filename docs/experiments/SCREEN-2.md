@@ -69,7 +69,7 @@ process a seed, `-RenderOffScreen` (no window, no cursor), 1280 x 720, clay, 90 
 | `down-seed123-f02661-before-after.jpg` | a knockdown at the red line with an opponent standing over him: before the ring across both, after nothing on him. |
 | `downs-after-12-stills.jpg` | twelve stills of seven knockdowns (seeds 2, 4, 5), rule on: open ice, the side board from the crane, a pile at the red line. |
 | `own-marker-f01680-before-after.jpg` | the own-net marker: before, "own 63 m" and its diamond stand on the net; after, the net is there to see. |
-| `puck-post-at-faceoff-f00960.jpg` | the "black post" (not fixed here: see the faults table). |
+| `puck-post-at-faceoff-f00960.jpg` | the "black post" as this part first saw it (fixed by lane A168: `post-at-faceoff-f00070-before-after.jpg`). |
 
 **Not proven off screen** (for the window lane): the contact line's sideways step (the scripted human triggers no contact line in these runs: the rule is
 proven by `Jam.Hud.ClearDown`'s cases only); a hand's eye on the ring coming back at the get-up (12 frames); the caption's two places at 1920 x 1080 and at
@@ -131,8 +131,42 @@ statement, not an eye's). One number gives the camera of before: `jam.camera.Pit
 | 11 | the camera straight down in corners | present: steeper than 60 degrees on 84 of 5,989 frames (90 m), 50 of 5,965 (140 m) | trimmed, not cured: 84 -> 71 and 50 -> 50 (steeper than 70: 13 -> 7, 16 -> 14); see "The camera in corners" |
 | 14 | black clock faces on the penalty boxes on clay | not checked: no still of this lane shows the boxes at reading size (the pieces are track F3's) | unchanged |
 | 16 | distance markers on the goalie and the net | present for the own net (`own-marker-f01680`); the far-net badge stands over the crossbar by lane A76's rule | the own-net marker is not drawn on a net in the frame |
-| 19 | "the lifted puck as a black post" | present, and not a lifted puck: a thin black post stands on the puck AT REST on the faceoff dot (sim frames 960, 3120); a puck in the air is a black dot over its lit disc. About the trail ribbon's width (9 cm; `NS_puck_trail`, "held on a near-zero time step" in ASSETS.md): a vertical ribbon frozen by its own hold rule after the drop | not fixed: `Game/Source/JamCore/Private/JamPawns.cpp` (AJamPuck spawns the trail, line 730) and the asset are outside this track; a finding for the puck's owner and device B |
+| 19 | "the lifted puck as a black post" | present at every centre-ice faceoff hold: not a lifted puck and not the trail (this part first guessed the trail: wrong) but the upright far-puck marker inside device B's disc mesh `/JamAssets/Props/SM_PuckDisc` | gone by default (lane A168, `jam.puck.Post 0`): see "The black post at the faceoff" below |
 | 20 | the bare rink in the first frames of a match | not re-shot by this lane (lane A111's light hold and 2250116 are on this main; device B checks it in its next play-through) | unchanged |
+
+## The black post at the faceoff (lane A168, Sat 14 Nov 05:18 to 05:35)
+
+**What it is.** Device B's mesh `/JamAssets/Props/SM_PuckDisc` (the puck's disc: actor `JamPuck_0`, class `AJamPuck`, component `PuckDisc`, created in
+`AJamPuck::InitPuck`, `Game/Source/JamCore/Private/JamPawns.cpp`). The mesh is not only the halo disc of its ledger row ("60 cm x 4 mm"): in the game its
+bounds are 70 cm across and 45 cm tall, and the ledger lists four material slots on it: Halo (`MI_Trim_PuckHalo`), Beacon (`MI_Fx_PuckBeacon`), Ring
+(`MI_Fx_PuckRing`, FadeStart 0) and Marker (`MI_Fx_PuckMarker`, FadeStart 1200 cm). The upright part is a far-puck marker that its material fades in when
+the camera is more than 12 m from the puck. At the centre-ice faceoff the camera stands 13.5 m behind the dot, so the marker stood on the puck through
+every HOLD; in play the puck is near the human, inside 12 m, and it is faded out. On the clay tier the puck's kit does not emit, so it read as a black post.
+
+**How it was found.** `jam.hud.NearPuck 1` (`HUDClearDown.cpp`): at each faceoff hold, and 240 frames after each drop, one `JAMSCREEN nearpuck` line per
+visible primitive component within 1.5 m of the puck (class, owner, level, mesh path, place, scale, bounds, first material) and a still. At the opening
+hold (sim frame 70) two meshes stand there, both the puck actor's own: the puck (Engine Cylinder, scale 0.24 x 0.24 x 0.08: flat) and `PuckDisc` with
+`bounds_centre=(-1.9,-1.5,22.8) half_extent=(35.0,35.0,22.6)`. No rink prop, no rig actor, no figure part.
+
+**The fix** (device B's plugin untouched): `jam.puck.Post` 0 (default): the disc component's world scale is (1, 1, 0.01) (`AJamPuck::PlaceDiscOnIce`,
+live), so the disc keeps its place and its width (the puck's ring on the ice) and the 45 cm of upright geometry become 4.5 mm under the puck.
+`jam.puck.Post 1` = the marker upright, as before.
+
+**Proof.** The game's own line `JAMPUCK disc post=flat scale_z=0.01 half_height_cm 22.60 -> 0.23 (jam.puck.Post 0)`; the dump at the holds of sim frames
+70 and 974: `comp=PuckDisc scale=(1.000,1.000,0.010) ... half_extent=(35.0,35.0,0.2)`; with `jam.puck.Post=1` the same match gives `half_extent
+(35.0,35.0,22.6)` and the post (`JAMSIM frame=600 hash=8e0fd36aeea524e2` in both). Still: `post-at-faceoff-f00070-before-after.jpg` (the opening hold,
+the puck enlarged under each frame). The full `Jam` filter: 242 of 242 (`Game/logs/u1-automation-post-run1.log`; the new test `Jam.Hud.PuckPostFlat`
+holds the default). Runs: `tools/qa/screen/out/post-find`, `post-before`, `post-after`.
+
+```
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\qa\screen\u5-downs.ps1 -Mode after -Seeds "1" -StillAt 0 -PlaySeconds 26 -ExtraCVars "jam.hud.NearPuck=1" -RunName post-after
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\qa\screen\u5-downs.ps1 -Mode after -Seeds "1" -StillAt 0 -PlaySeconds 26 -ExtraCVars "jam.hud.NearPuck=1,jam.puck.Post=1" -RunName post-before
+```
+(The driver prints FAIL for these two: it wants a knockdown, and 26 seconds have none. The lines and the stills are what is read.)
+
+**For device B**: the marker is yours to redo or to drop (`SM_PuckDisc`'s Beacon and Marker slots; `M_Fx_PuckMark`'s FadeStart): on clay it needs a look
+that reads as a marker, not a pin, and it should not stand on a puck the player is looking straight at. Until then A keeps it flat. Not measured here:
+what a puck far from the camera in play looked like with the marker (it was meant for that case; the HUD's puck arrow covers a puck outside the frame).
 
 ## How to repeat (part 5)
 

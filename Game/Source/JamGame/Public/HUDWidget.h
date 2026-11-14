@@ -301,6 +301,34 @@ public:
 	void UpdateCarrierCues(const FJamPresentationFrame& Frame);
 	bool bCueStickLocked = false, bCuePressIntoGrace = false;
 	int32 CueGraceCarrier = -1;
+	// ---- Lane A166 (track F2, evolution 7): the two warnings on the ice, one function (UpdateMarks, HUDMarks.cpp; called after UpdateCarrierCues).
+	// Presentation only; the rules are JamCarrierMarks.h's. jam.hud.Marks 0 = neither. Their two rings are made on first use and drawn under every element.
+	// The contested puck: a ring of ContestRingRadiusM round the loose puck in the opponent's colour, breathing by MarkPulse. The stop's distance: a ring
+	// 8 m from the carrying human towards the closing opponent, chalk at StopMarkArmedAlpha while armed, the opponent's colour, larger and breathing while lit.
+	static constexpr float ContestRingRadiusM = 1.2f;
+	static constexpr float StopMarkArmedRadiusM = 0.7f;
+	static constexpr float StopMarkLitRadiusM = 1.1f;
+	static constexpr float StopMarkArmedAlpha = 0.6f;
+	static constexpr float MarkDownRadiusM = 1.3f;
+	static constexpr int32 MarkPulseFrames = 20;
+	// 1 to 1.2 and back every MarkPulseFrames sim frames (three times a second): by the sim's frame, so a capture shows the same ring every run.
+	static float MarkPulse(int64 SimFrame)
+	{
+		const int32 P = static_cast<int32>(((SimFrame % MarkPulseFrames) + MarkPulseFrames) % MarkPulseFrames);
+		const float Half = MarkPulseFrames * 0.5f;
+		return 1.f + 0.2f * (P < Half ? P / Half : (MarkPulseFrames - P) / Half);
+	}
+	// A mark is not drawn where its box (grown by PadPx) meets a downed figure's box: nothing lies on the fall, the lying or the get-up (lane A158's rule).
+	static bool MarkMeetsDown(const FVector2D& Min, const FVector2D& Max, const TArray<FBox2D>& Downs, float PadPx = 6.f)
+	{
+		for (const FBox2D& B : Downs) if (Min.X - PadPx < B.Max.X && Max.X + PadPx > B.Min.X && Min.Y - PadPx < B.Max.Y && Max.Y + PadPx > B.Min.Y) return true;
+		return false;
+	}
+	void UpdateMarks(const FJamPresentationFrame& Frame);
+	UPROPERTY(Transient) TObjectPtr<UImage> ContestRing;
+	UPROPERTY(Transient) TObjectPtr<UImage> StopMarkRing;
+	int32 MarkContestOpp = -1;
+	int32 MarkStopState = 0;
 	static bool ShowControlsHint(const FJamPresentationFrame& F) { return F.SimFrame < ControlsHintFrames && F.Phase == EJamPhase::Play; }
 	// The Directors Call prompt shows only after the first goal.
 	static bool ShowDirectorsCall(const FJamPresentationFrame& F) { return F.bDirectorsCallReady && (F.ScoreHome + F.ScoreAway) > 0 && F.Phase != EJamPhase::Win && F.Phase != EJamPhase::Lose; }
