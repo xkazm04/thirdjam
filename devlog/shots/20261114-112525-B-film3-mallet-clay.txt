@@ -1,0 +1,1 @@
+Shot 7, clay: Mallet_Swing from tick 60 (labels show the take frame), victim PlayWeaponHit and a knockdown at 76, NS_mallet_bonk spawned at 77 at the root moved 103 ahead, 45 left, 70 up (B44). Camera on the attacker's left at 1.4 m height. Engine (UE 5.9 GPU editor, play session, un-paused), FILM3.

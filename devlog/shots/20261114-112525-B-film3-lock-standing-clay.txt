@@ -1,0 +1,1 @@
+Shot 2, clay: SetStickLock(true,20) on both at tick 130; the LEFT figure cut with SetStickLock(false) at 140. Blade off the ice from 133, the left one down by 146, the right by 152. Engine (UE 5.9 GPU editor, play session, un-paused), FILM3.

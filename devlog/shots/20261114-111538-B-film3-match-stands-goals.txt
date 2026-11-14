@@ -1,0 +1,1 @@
+Seeded clay match (seed 1, lane/b-fig with dev-b merged, bAutoCheckMiss off): stands behind play at sim 2550 and 5093, the orange goal at 784, the blue goal at 7179. Game-view captures with the HUD. Engine (UE 5.9 GPU editor, play session, un-paused), FILM3.

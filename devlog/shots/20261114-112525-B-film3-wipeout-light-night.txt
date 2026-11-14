@@ -1,0 +1,1 @@
+Shot 12 on the night figure: as on clay; hand_l moves 50 cm in one frame on frames 2 to 3. Engine (UE 5.9 GPU editor, play session, un-paused), FILM3.
