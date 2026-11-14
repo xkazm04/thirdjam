@@ -71,6 +71,7 @@ void UJamLobbySubsystem::ResetSession()
 	bGuestAcked = false;
 	Codes.Reset();
 	CodeAddresses.Reset();
+	CodeKinds.Reset();
 	BoundPort = -1;
 	RemoteName.Reset();
 	GuestIndex = -1;
@@ -134,12 +135,15 @@ bool UJamLobbySubsystem::Host(const FString& InCut, const FString& Name)
 	if (!Link->IsOpen()) { Fail(FString::Printf(TEXT("no free UDP port in %d..%d"), JamNet::BasePort, JamNet::BasePort + JamNet::PortSlots - 1)); return false; }
 	ApplyImpairment(*Link, Seed * 2 + 1);
 	BoundPort = Link->GetBoundPort();
-	TArray<uint32> Addrs = FJamUdpLink::LocalAddresses();
-	Addrs.Add(0x7F000001u);   // loopback last: the two-process test on one machine
-	for (uint32 Ip : Addrs)
+	// Lane A146: only addresses another machine can reach, the LAN first; each says what it is good for.
+	TArray<FJamUdpLink::FAddr> Addrs = FJamUdpLink::ReachableAddresses();
+	FJamUdpLink::FAddr Loop; Loop.Ip = 0x7F000001u; Loop.Kind = FJamUdpLink::EAddrKind::ThisMachine;
+	Addrs.Add(Loop);   // loopback last: the two-process test on one machine
+	for (const FJamUdpLink::FAddr& A : Addrs)
 	{
-		Codes.Add(PortIndex >= 0 ? FJamInviteCode::Encode(Ip, PortIndex) : FString::Printf(TEXT("%s:%d"), *FJamInviteCode::FormatIp(Ip), BoundPort));   // lane A120: a fixed port has no code
-		CodeAddresses.Add(FJamInviteCode::FormatIp(Ip));
+		Codes.Add(PortIndex >= 0 ? FJamInviteCode::Encode(A.Ip, PortIndex) : FString::Printf(TEXT("%s:%d"), *FJamInviteCode::FormatIp(A.Ip), BoundPort));   // lane A120: a fixed port has no code
+		CodeAddresses.Add(FJamInviteCode::FormatIp(A.Ip));
+		CodeKinds.Add(FJamUdpLink::KindLabel(A.Kind));
 	}
 	Driver = NewObject<UJamLockstepDriver>(this);
 	UE_LOG(LogJamNet, Log, TEXT("JAMNET hosting cut=%s seed=%llu port=%d guest_index=%d codes: %s"), *Cut, static_cast<unsigned long long>(Seed), BoundPort, GuestIndex, *GetCodesText().Replace(TEXT("\n"), TEXT(" | ")));
@@ -323,7 +327,9 @@ void UJamLobbySubsystem::TickLobby()
 FString UJamLobbySubsystem::GetCodesText() const
 {
 	FString Out;
-	for (int32 i = 0; i < Codes.Num(); ++i) Out += FString::Printf(TEXT("%s%s   (%s)"), i ? TEXT("\n") : TEXT(""), *Codes[i], *CodeAddresses[i]);
+	// Lane A146: "ABCD-EFGH   same network (address)"; the address in brackets stays last (tools/net/twoproc.ps1 reads it from the log).
+	for (int32 i = 0; i < Codes.Num(); ++i)
+		Out += FString::Printf(TEXT("%s%s   %s (%s)"), i ? TEXT("\n") : TEXT(""), *Codes[i], CodeKinds.IsValidIndex(i) ? *CodeKinds[i] : TEXT(""), *CodeAddresses[i]);
 	return Out;
 }
 

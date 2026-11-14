@@ -19,6 +19,7 @@
 #include "JamEventBus.h"
 #include "JamNetPackets.h"
 #include "JamLink.h"
+#include "JamLink.h"
 #include "JamLockstepDriver.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
@@ -221,6 +222,58 @@ bool FJamNetInviteCodeRoundTrip::RunTest(const FString& Parameters)
 	TestTrue(TEXT("address form"), FJamInviteCode::Decode(TEXT("127.0.0.1:7701"), OutIp, OutPort) && OutIp == 0x7F000001u && OutPort == 7701);
 	TestFalse(TEXT("garbage refused"), FJamInviteCode::Decode(TEXT("HELLO"), OutIp, OutPort));
 	AddInfo(FString::Printf(TEXT("127.0.0.1:7700 = %s, 192.168.1.100:7703 = %s"), *FJamInviteCode::Encode(0x7F000001u, 0), *Code));
+
+	// Lane A146: the host lists only addresses another machine can reach, the LAN first, each with what it is good for. The adapters are the
+	// ones the A device showed (lane A140): its LAN, WSL's virtual switch, Tailscale's tunnel, a Wi-Fi with no address, loopback.
+	using K = FJamUdpLink::EAddrKind;
+	struct FCase { uint32 Ip; bool bUp, bLoopIf, bGateway; const TCHAR* Desc; K Want; const TCHAR* What; };
+	const FCase Cases[] = {
+		{ 0x0A00008Du, true, false, true, TEXT("Realtek PCIe GbE Family Controller | Ethernet 2"), K::Lan, TEXT("the LAN adapter with the router") },
+		{ 0xC0A80164u, true, false, true, TEXT("Intel(R) Wi-Fi 6 AX201 | Wi-Fi"), K::Lan, TEXT("a Wi-Fi LAN") },
+		{ 0xAC19D001u, true, false, false, TEXT("Hyper-V Virtual Ethernet Adapter | vEthernet (WSL (Hyper-V firewall))"), K::Hidden, TEXT("WSL's virtual switch") },
+		{ 0xC0A83801u, true, false, false, TEXT("VirtualBox Host-Only Ethernet Adapter | Ethernet 3"), K::Hidden, TEXT("VirtualBox host-only") },
+		{ 0x64648667u, true, false, false, TEXT("Tailscale Tunnel | Tailscale"), K::Tailnet, TEXT("Tailscale's tunnel") },
+		{ 0x64400001u, true, false, false, TEXT("Wintun Userspace Tunnel | vpn"), K::Tailnet, TEXT("a 100.64/10 overlay without a gateway") },
+		{ 0xA9FE7599u, true, false, false, TEXT("Intel(R) Wi-Fi 6 AX201 | Wi-Fi"), K::Hidden, TEXT("link-local 169.254 (no address)") },
+		{ 0x0A000005u, false, false, true, TEXT("Realtek USB GbE | Ethernet 4"), K::Hidden, TEXT("an adapter that is down") },
+		{ 0x7F000001u, true, true, false, TEXT("Software Loopback Interface 1 | Loopback Pseudo-Interface 1"), K::ThisMachine, TEXT("loopback") },
+		{ 0xC0A80002u, true, false, false, TEXT("Realtek PCIe GbE Family Controller | Ethernet"), K::Lan, TEXT("a cable between two machines (no router)") },
+		{ 0u, true, false, true, TEXT(""), K::Hidden, TEXT("0.0.0.0") },
+	};
+	for (const FCase& C : Cases)
+		TestEqual(*FString::Printf(TEXT("classify %s"), C.What), static_cast<int32>(FJamUdpLink::ClassifyAddress(C.Ip, C.bUp, C.bLoopIf, C.bGateway, C.Desc)), static_cast<int32>(C.Want));
+	// The A device's list in Windows' order (WSL first) comes out LAN first, WSL and the dead Wi-Fi gone, Tailscale after the LAN.
+	TArray<FJamUdpLink::FAddr> List;
+	for (int32 i : { 2, 4, 6, 9, 0 })
+	{
+		FJamUdpLink::FAddr A; A.Ip = Cases[i].Ip; A.bGateway = Cases[i].bGateway;
+		A.Kind = FJamUdpLink::ClassifyAddress(Cases[i].Ip, Cases[i].bUp, Cases[i].bLoopIf, Cases[i].bGateway, Cases[i].Desc);
+		List.Add(A);
+	}
+	FJamUdpLink::SortForScreen(List);
+	TestEqual(TEXT("three listed (LAN, cable LAN, Tailscale)"), List.Num(), 3);
+	if (List.Num() == 3)
+	{
+		TestEqual(TEXT("the LAN with the router first"), List[0].Ip, Cases[0].Ip);
+		TestEqual(TEXT("then the LAN without a router"), List[1].Ip, Cases[9].Ip);
+		TestEqual(TEXT("Tailscale after the LAN"), List[2].Ip, Cases[4].Ip);
+	}
+	TestEqual(TEXT("label: LAN"), FString(FJamUdpLink::KindLabel(K::Lan)), FString(TEXT("same network")));
+	TestEqual(TEXT("label: loopback"), FString(FJamUdpLink::KindLabel(K::ThisMachine)), FString(TEXT("this machine only")));
+	// This machine's real list: no loopback, link-local or hidden address, LAN before Tailscale (only counts logged, no addresses).
+	const TArray<FJamUdpLink::FAddr> Live = FJamUdpLink::ReachableAddresses();
+	int32 Lan = 0, Tail = 0, Bad = 0;
+	bool bOrdered = true;
+	for (int32 i = 0; i < Live.Num(); ++i)
+	{
+		const uint32 Ip = Live[i].Ip;
+		if ((Ip >> 24) == 127 || (Ip >> 16) == 0xA9FEu || Ip == 0 || Live[i].Kind == K::Hidden || Live[i].Kind == K::ThisMachine) ++Bad;
+		if (Live[i].Kind == K::Lan) { ++Lan; if (Tail > 0) bOrdered = false; }
+		if (Live[i].Kind == K::Tailnet) ++Tail;
+	}
+	TestEqual(TEXT("this machine: no loopback, link-local or hidden address listed"), Bad, 0);
+	TestTrue(TEXT("this machine: the LAN before Tailscale"), bOrdered);
+	AddInfo(FString::Printf(TEXT("this machine lists %d address(es): %d same network, %d Tailscale"), Live.Num(), Lan, Tail));
 	return true;
 }
 

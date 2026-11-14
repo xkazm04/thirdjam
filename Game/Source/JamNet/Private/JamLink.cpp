@@ -5,6 +5,13 @@
 #include "SocketSubsystem.h"
 #include "IPAddress.h"
 #include "Interfaces/IPv4/IPv4Address.h"
+#if PLATFORM_WINDOWS
+#include "Windows/AllowWindowsPlatformTypes.h"
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <iphlpapi.h>
+#include "Windows/HideWindowsPlatformTypes.h"
+#endif
 
 FJamUdpLink::~FJamUdpLink()
 {
@@ -129,21 +136,98 @@ bool FJamUdpLink::Recv(TArray<uint8>& Out)
 TArray<uint32> FJamUdpLink::LocalAddresses()
 {
 	TArray<uint32> Out;
+	for (const FAddr& A : ReachableAddresses()) Out.Add(A.Ip);
+	return Out;
+}
+
+FJamUdpLink::EAddrKind FJamUdpLink::ClassifyAddress(uint32 Ip, bool bUp, bool bLoopbackAdapter, bool bGateway, const FString& Description)
+{
+	if (Ip == 0 || Ip == 0xFFFFFFFFu) return EAddrKind::Hidden;
+	if ((Ip >> 24) == 127) return EAddrKind::ThisMachine;
+	if (bLoopbackAdapter) return EAddrKind::Hidden;
+	if ((Ip >> 16) == 0xA9FEu) return EAddrKind::Hidden;                      // 169.254/16: link-local, an adapter that got no address
+	if (!bUp) return EAddrKind::Hidden;
+	if ((Ip >> 28) >= 0xEu) return EAddrKind::Hidden;                         // multicast / reserved
+	const bool bCgnat = (Ip >> 22) == ((100u << 2) | 1u);                     // 100.64.0.0/10
+	if (bCgnat && (!bGateway || Description.Contains(TEXT("Tailscale")))) return EAddrKind::Tailnet;
+	static const TCHAR* Virtual[] = { TEXT("Hyper-V"), TEXT("vEthernet"), TEXT("WSL"), TEXT("VirtualBox"), TEXT("VMware"), TEXT("Docker"), TEXT("Virtual Ethernet"), TEXT("Host-Only"), TEXT("Npcap Loopback") };
+	if (!bGateway) for (const TCHAR* V : Virtual) if (Description.Contains(V)) return EAddrKind::Hidden;   // a virtual switch inside this machine
+	return EAddrKind::Lan;
+}
+
+void FJamUdpLink::SortForScreen(TArray<FAddr>& InOut)
+{
+	auto Rank = [](const FAddr& A) { return A.Kind == EAddrKind::Lan ? (A.bGateway ? 0 : 1) : A.Kind == EAddrKind::Tailnet ? 2 : A.Kind == EAddrKind::ThisMachine ? 3 : 4; };
+	InOut.RemoveAll([](const FAddr& A) { return A.Kind == EAddrKind::Hidden; });
+	InOut.StableSort([&Rank](const FAddr& A, const FAddr& B) { return Rank(A) < Rank(B); });
+}
+
+const TCHAR* FJamUdpLink::KindLabel(EAddrKind Kind)
+{
+	switch (Kind)
+	{
+	case EAddrKind::Lan: return TEXT("same network");
+	case EAddrKind::Tailnet: return TEXT("Tailscale, both signed in");
+	case EAddrKind::ThisMachine: return TEXT("this machine only");
+	default: return TEXT("not reachable");
+	}
+}
+
+TArray<FJamUdpLink::FAddr> FJamUdpLink::ReachableAddresses()
+{
+	TArray<FAddr> Out;
+	auto AddOne = [&Out](uint32 Ip, EAddrKind Kind, bool bGateway)
+	{
+		if (Kind == EAddrKind::Hidden || Kind == EAddrKind::ThisMachine) return;   // loopback: the lobby adds it last
+		for (const FAddr& A : Out) if (A.Ip == Ip) return;
+		FAddr A; A.Ip = Ip; A.Kind = Kind; A.bGateway = bGateway; Out.Add(A);
+	};
+#if PLATFORM_WINDOWS
+	// Windows names the adapter, its state and its gateway; the engine's adapter list gives bare addresses (it listed WSL's switch and missed Tailscale).
+	ULONG Size = 16 * 1024;
+	TArray<uint8> Buf;
+	ULONG Rc = ERROR_BUFFER_OVERFLOW;
+	for (int32 Try = 0; Try < 3 && Rc == ERROR_BUFFER_OVERFLOW; ++Try)
+	{
+		Buf.SetNumZeroed(static_cast<int32>(Size));
+		Rc = ::GetAdaptersAddresses(AF_INET, GAA_FLAG_INCLUDE_GATEWAYS | GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER, nullptr,
+			reinterpret_cast<PIP_ADAPTER_ADDRESSES>(Buf.GetData()), &Size);
+	}
+	if (Rc == NO_ERROR)
+	{
+		for (PIP_ADAPTER_ADDRESSES Ad = reinterpret_cast<PIP_ADAPTER_ADDRESSES>(Buf.GetData()); Ad; Ad = Ad->Next)
+		{
+			const bool bUp = Ad->OperStatus == IfOperStatusUp;
+			const bool bLoop = Ad->IfType == IF_TYPE_SOFTWARE_LOOPBACK;
+			const bool bGateway = Ad->FirstGatewayAddress != nullptr;
+			const FString Desc = FString(Ad->Description ? Ad->Description : L"") + TEXT(" | ") + FString(Ad->FriendlyName ? Ad->FriendlyName : L"");
+			for (PIP_ADAPTER_UNICAST_ADDRESS U = Ad->FirstUnicastAddress; U; U = U->Next)
+			{
+				if (!U->Address.lpSockaddr || U->Address.lpSockaddr->sa_family != AF_INET) continue;
+				const uint32 Ip = ntohl(reinterpret_cast<const sockaddr_in*>(U->Address.lpSockaddr)->sin_addr.s_addr);
+				AddOne(Ip, ClassifyAddress(Ip, bUp, bLoop, bGateway, Desc), bGateway);
+			}
+		}
+		SortForScreen(Out);
+		return Out;
+	}
+#endif
+	// Elsewhere (or if Windows' list failed): the engine's addresses, classified by the address alone; the default-route one counts as gatewayed.
 	ISocketSubsystem* SS = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM);
 	if (!SS) return Out;
 	bool bCanBind = false;
 	TSharedRef<FInternetAddr> Primary = SS->GetLocalHostAddr(*GLog, bCanBind);
 	uint32 PrimaryIp = 0;
-	if (Primary->IsValid()) { Primary->GetIp(PrimaryIp); if (PrimaryIp != 0 && (PrimaryIp >> 24) != 127) Out.Add(PrimaryIp); }
+	if (Primary->IsValid()) { Primary->GetIp(PrimaryIp); AddOne(PrimaryIp, ClassifyAddress(PrimaryIp, true, false, true, FString()), true); }
 	TArray<TSharedPtr<FInternetAddr>> All;
 	SS->GetLocalAdapterAddresses(All);
 	for (const TSharedPtr<FInternetAddr>& A : All)
 	{
 		if (!A.IsValid() || A->GetProtocolType() != FNetworkProtocolTypes::IPv4) continue;
 		uint32 Ip = 0; A->GetIp(Ip);
-		if (Ip == 0 || (Ip >> 24) == 127 || (Ip >> 16) == 0xA9FE) continue;  // loopback, link-local
-		Out.AddUnique(Ip);
+		AddOne(Ip, ClassifyAddress(Ip, true, false, false, FString()), false);
 	}
+	SortForScreen(Out);
 	return Out;
 }
 

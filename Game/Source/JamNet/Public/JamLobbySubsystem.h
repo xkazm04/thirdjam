@@ -102,6 +102,7 @@ private:
 	FString EndReason;
 	TArray<FString> Codes;
 	TArray<FString> CodeAddresses;
+	TArray<FString> CodeKinds;   // lane A146: "same network", "Tailscale, both signed in", "this machine only" (FJamUdpLink::KindLabel)
 	int32 BoundPort = -1;
 	uint64 CartridgeHash = 0;
 	uint64 Seed = 1;

@@ -41,8 +41,22 @@ public:
 	bool IsOpen() const override { return Socket != nullptr; }
 	int32 GetBoundPort() const { return BoundPort; }
 
-	// Every non-loopback IPv4 of this machine (for the host's code list); the first is the default-route one when known.
+	// Every IPv4 of this machine another machine can reach (for the host's code list), in screen order (ReachableAddresses' Ip).
 	static TArray<uint32> LocalAddresses();
+
+	// Lane A146 (track Q1): what one of the host's addresses is good for; the host's screen says it next to the code.
+	// Lan: an adapter with a default gateway (the router), or a private address on a real adapter ("same network").
+	// Tailnet: a 100.64/10 address on an adapter without a gateway (Tailscale's tunnel): reachable from the host's other signed-in machines.
+	// ThisMachine: 127/8 (two copies on one machine). Hidden: never listed (virtual switches such as WSL's / Hyper-V's vEthernet, VirtualBox,
+	// VMware, Docker; link-local 169.254; a disconnected adapter; 0.0.0.0).
+	enum class EAddrKind : uint8 { Lan, Tailnet, ThisMachine, Hidden };
+	struct FAddr { uint32 Ip = 0; EAddrKind Kind = EAddrKind::Hidden; bool bGateway = false; };
+	// Pure (the test seam): one adapter address. Description = the adapter's description and friendly name as Windows reports them.
+	static EAddrKind ClassifyAddress(uint32 Ip, bool bUp, bool bLoopbackAdapter, bool bGateway, const FString& Description);
+	// The listed addresses, Hidden and loopback dropped, ordered: Lan with a gateway, Lan without, Tailnet (loopback is the lobby's, added last).
+	static TArray<FAddr> ReachableAddresses();
+	static void SortForScreen(TArray<FAddr>& InOut);
+	static const TCHAR* KindLabel(EAddrKind Kind);
 
 	// Lane A38: a simulated bad link for measurements (console jam.net.SimDelayMs / jam.net.SimLoss, read by the lobby when it opens the
 	// socket): every outgoing datagram is held DelayMs before it goes out and a Loss fraction is dropped (seeded). Wall clock on purpose:

@@ -631,3 +631,13 @@ regular rink, 99.8 / 79.5 / 82.0 on the large; (5) owed by the brain track: the 
 without the puck is 39.2 % at pro; the bar is 25 %); (6) online, button presses made during a network stall were merged into one frame and half of the F
 presses were lost on a bad link (lane A140 found it; the old soak expected the merge): fixed with a press queue, protocol unchanged; (7) a pinned-hash test
 names its baseline through `JamBaseline.h`, never by its own list of neutral values.
+
+## R-0056 (H26, 2026-11-14 00:54): the operator plays at 10:00 Saturday and sets the last day's priorities
+The operator (00:54): "keep the plan and same good evolutionary effort until 10:00am, I will then play the game and set priorities for last 24h". Rulings:
+(1) the evolution tracks run as they are until 10:00; (2) **the package he plays is cut from main by 09:00** (H27 as soon as the curve lane lands; a later
+package only if it is green by 09:00), through the release chain with the acceptance run green, Shipping, zipped, its line in `status/A.md`; what lands after
+the cut waits for the next package; (3) from 08:00 nothing lands that moves the ladder or a player's verb unless it has run the acceptance run on a package
+of its own tree; presentation, tools, tests and documents land as before; (4) with the package: one page for him, `docs/PLAY-ME.md`: what is new since H26
+in the order he will meet it, the controls, what to try (the stop-and-go, a hit at speed against a nudge, the twelve modes, a joined match), what is known
+to be unfinished, and the questions only he can answer; (5) the design eye's second review (REVIEW-2) runs on that package's commit before 10:00, so his
+play and the measured review can be laid side by side.
