@@ -719,3 +719,18 @@ skill, pressure, the pass margin: flat or the wrong way). (3) Both are said in t
 operator's answers (which player he is: R-0060; the long shot) and from the rules that wait switched off with their measured costs: the push-out around a
 downed skater (+4.0 at all_star), the check's cooldown and lunge (+0.5 / +1.3 / +2.9 together), the half-second screen (+1.5 / +2.2 / -1.4), the pickup
 that settles (+5.8 / -9.0 / -5.0): the last of these is the first lever found tonight that takes pro DOWN without touching the stop.
+
+## R-0063 (H30, 2026-11-14 07:15): the operator plays H30; pro's dial is found and waits for his word
+(1) **The package is H30** (main 95ae15a6, cut 07:03, acceptance green; in a real window: the stop line KEEP, the hint strip, the menu line and the fresh
+zip pass). H29 is the verified fallback. H27 (the menu's double build: the wrong level, a black rink) and H28 (the stop mark lit where the stop loses) are
+withdrawn. Three of the four packages of this night were stopped by an eye or a measurement that the gate did not have: the acceptance run now photographs
+the frame; the menu's start is tested by a click; the stop's distances are swept by level (REVIEW-3). (2) **Pro can be put on its bar without touching the
+stop**: with pro's presser on its job (`Hk.bPressInHunt`, `PressCommitM` 8: by itself hash-identical to today's pro) the hunt radius is a dial the stop
+drill does not read: hunt 11 reads 48.0 / 47.7 (regular / large rink, 2,000), law 3's row unchanged to the digit, the human 0.2 points of play more on the
+ice, the season's ramp better (the novice's take 5 at 72, the step from take 4 13 points). **It is not in the package**: every cartridge at pro inherits
+it, and the modes move about ten points (Bruisers 53 to 43, Fog of War 86 to 76, Glass House 48 to 37 at 100 seeds); arena.wide, boost, chaos and raw are
+unmeasured under it. R-0062 point 1 stands for H30 (pro 52.4). (3) After the operator has played: his word on pro, then one of two prepared patches (lane
+A170): the dial everywhere at pro with the modes re-tuned after it, or the dial for the regular game and the season with the modes and the other pro cuts
+pinned at hunt 8. (4) Held off main until he has played, so that main is what he plays: the modes' re-tune (A173: Sniper five against four, Bruisers on
+56 x 28, Fog of War and Cage no longer a good player's walkover), the arena's seventh evolution (A172: device B's lamp and cords, Glass House proposed
+on the clay rig), and every rule that waits switched off (R-0062 point 4, CONTACT-8, BRAIN-5, MOVEMENT-7).

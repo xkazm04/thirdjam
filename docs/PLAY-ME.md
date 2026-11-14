@@ -1,11 +1,12 @@
 # Play me: what to try on Saturday morning, and what to tell the Director after (R-0056)
 
-**The package:** `Game/Packaged/Hokej_Hokej_H29/Hokej_Hokej_H29.zip` (the last `package` line of `status/A.md` names it and its commit). Unzip into a fresh
+**The package:** `Game/Packaged/Hokej_Hokej_H30/Hokej_Hokej_H30.zip` (the last `package` line of `status/A.md` names it and its commit). Unzip into a fresh
 folder, run the exe. If Windows asks about the firewall, that is the joined match's socket: Cancel is fine for solo play.
 **Do not play H27** (its PLAY NOW built the match twice, played pro whatever was lit and drew a black rink: found in a real window at 03:50, fixed and
 verified in a real window at 04:30; the acceptance run now photographs the frame and fails on a black one) **nor H28** (its stop mark lit too early: obeying it
 at pro failed half the time and cost the feet one try in four; found by the design review at 06:00, one constant).
-The Development twin with the drills and the console is `Game/Packaged/Accept_H29`.
+**H29** is the verified fallback (the same game with the stop mark as a ring, the old line under the level switch and no Space on the hint strip): play it only if
+H30 misbehaves. The Development twin with the drills and the console is `Game/Packaged/Accept_H30`.
 
 ## What changed since the package you last played (H26, Friday 19:46)
 
@@ -17,7 +18,7 @@ The Development twin with the drills and the console is `Game/Packaged/Accept_H2
 | **You keep the puck** until somebody presses for it; a **yellow ring** under a carrier closes while no stick can take his puck | an unpressed blade or a body's touch no longer takes it; half a second of grace after winning it, now shown |
 | **Space takes the puck** when your stick is aimed roughly at it: about one press in ten (it was one in twenty-five), and a miss no longer trips you | the poke (A152): a miss beside a carrier locks your stick for a third of a second instead (your own stumbles: six a match before, under one now) |
 | **Stopping works**, from the same distance at every level | S against your motion brakes hard; a quick first step after a stop; five stick lengths (8 m) at rookie, pro and all-star |
-| **Two marks on the ice**: a ring in the other team's colour round a loose puck means one of them arrives when you do (take it and you may be hit: one time in four at pro; brake short, or let him have it and hit him); a chalk ring five stick lengths ahead of you while you carry turns the defender's colour when the stop is on | the carrier track (A166): two knockdowns in three land as you win the puck, and the stop was on and unused in one in seven |
+| **Two marks on the ice**: a ring in the other team's colour round a loose puck means one of them arrives when you do (take it and you may be hit: one time in four at pro; brake short, or let him have it and hit him); a chalk line across your path, five stick lengths ahead of you while you carry, turns the defender's colour and thickens when the stop is on | the carrier track (A166): two knockdowns in three land as you win the puck, and the stop was on and unused in one in seven |
 | Hits have **sizes**; a **standing skater holds a side hit** | a bump, a stumble, or down for 1 to 2.5 s by the speed brought; the HUD says why a press did not land |
 | **Nothing is drawn on you while you are down**; you are not knocked down again the moment you get up | the ring leaves a downed player and returns after the get-up; 2 s of grace |
 | Your **mates pass to you** and go for loose pucks | the brain plays as a side; bots brake on purpose |
@@ -45,10 +46,10 @@ The Development twin with the drills and the console is `Game/Packaged/Accept_H2
 ## Ten minutes, in this order
 
 1. **A first match on the regular cut at rookie.** Does the first minute explain itself? Is the rink what you want a stranger to see first?
-2. **The stop-and-go.** Carry at a defender, press **S against your motion** (or hold **Ctrl**) when the chalk ring ahead of you turns his colour (he is then six
+2. **The stop-and-go.** Carry at a defender, press **S against your motion** (or hold **Ctrl**) when the chalk line ahead of you turns his colour (he is then six
    to eight stick lengths away and closing: count a beat, then stop: in a head-on rush an instant press still begins too far out; press before he is
-   past the ring: a stop begun as he reaches it works every time), then go the other way. At pro it
-   should work nearly every time from there, and never if you just charge. `jam.ctrl.Drill 21` in the Development package (`Accept_H29`, the console on the tilde key) stages it and says the distance on
+   past the line: a stop begun as he reaches it works every time), then go the other way. At pro it
+   should work nearly every time from there, and never if you just charge. `jam.ctrl.Drill 21` in the Development package (`Accept_H30`, the console on the tilde key) stages it and says the distance on
    screen. This is the game's central skill: does it feel like one?
 3. **Two hits.** Skate beside an opponent at his speed and check him (RMB): a nudge. Then hit one head-on at full speed: he goes down. Same button.
 4. **Keep the puck, and take it.** Carry with a defender on your back and turn your body between him and the puck: his stick should not reach it. Then
@@ -93,8 +94,9 @@ Enter still plays.
 ## What the Director needs from you at 10:00
 
 1. **Feel:** the stop-and-go, the two hits, keeping the puck, Space: right, too easy, too hard? One word each is enough.
-2. **The ladder:** three different games? And which player are you: do your checks land? Pro can now be set to its bar without touching the stop (a dial
-   found at 06:00, being measured for both players): say if 52 % felt too easy.
+2. **The ladder:** three different games? And which player are you: do your checks land? Pro can now be set to its bar (48 %) without touching the stop: one dial,
+   measured at 2,000 matches, 0.2 points of play more on the ice for you, a better ramp in the season; but it makes the modes about ten points harder
+   unless they are pinned. It is NOT in this package: say if pro at 52 % felt too easy and you get a package twenty minutes later.
 3. **RMB:** turn on the cooldown (60 frames, and a too-early press restarts it: a mashed button then lands fewer hits than a timed one, 2.9 against 3.3 a
    match; costs the ladder half a point) and the lunge (a press commits your body; two and a half points at all-star, where the curve has no dial yet)?
    Yes or no to each.
