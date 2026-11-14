@@ -1,0 +1,1 @@
+AR9. The night tier after the usage flag on M_Toon, fresh editor process, frozen at 2.3 s: side boards and game camera. No missing-usage or default-material line in the log.
