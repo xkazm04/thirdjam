@@ -1,0 +1,1 @@
+B42 NS_goal, clay, FROZEN, spawned by me at the far net in blue (the game scored no goal while I watched). Row 1 from the game camera at centre ice, 41 m from the net: +10, +40, +70, +100 sim frames with the frame share of each. Row 2 the same burst 14 m ahead of the camera at +10 and +40.
