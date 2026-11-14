@@ -1,0 +1,1 @@
+SET-WEAPONS mallet: Mallet_Carry, Mallet_Swing, Mallet_Miss, Fall_Bonk at the game camera, both styles, and a pair (a second figure playing Fall_Bonk from the swing frame 14) at the game camera and closer. Blender Cycles CPU, frozen frames.

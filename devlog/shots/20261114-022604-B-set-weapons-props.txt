@@ -1,0 +1,1 @@
+SET-WEAPONS props: Prop_GiantStick, Prop_Mallet, Prop_PuckCannon from three sides (both styles) and in the hands in the carry holds (both styles). Blender Cycles CPU, flat base colours (not the game toon material); frozen stills.

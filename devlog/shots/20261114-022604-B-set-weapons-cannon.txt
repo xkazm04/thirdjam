@@ -1,0 +1,1 @@
+SET-WEAPONS puck cannon: Cannon_Carry, Cannon_Fire (puck leaves frame 8), Cannon_Kick (ends on the back lying pose) at the game camera, both styles, plus closer rows on clay. Blender Cycles CPU, frozen frames.
