@@ -254,6 +254,7 @@ namespace JamAI
 		Brain.Params = C.AI;
 		// lane A3: the sim facts the skills read
 		Brain.Params.InterceptSpeed = C.Speed;
+		Brain.Params.FreeSpeedMult = C.FreeSpeedMult;   // lane A193
 		Brain.Params.AimConeDeg = C.AimConeDeg;
 		FJamPlayerBot Bot;
 		if (Mode == EJamPlayerMode::PlayerBotAI)

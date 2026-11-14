@@ -88,6 +88,7 @@ namespace JamAI
 		}
 		// sim facts the skills read
 		Out.Params.InterceptSpeed = Cart.Game.Skater.Speed;
+		Out.Params.FreeSpeedMult = Cart.Game.Skater.FreeSpeedMult;   // lane A193 (track Q2 evolution 7): read only by the true-speed rules
 		Out.Params.AimConeDeg = Cart.Game.Shot.bHasAimCone ? Cart.Game.Shot.AimConeDeg : 0.0;
 		return true;
 	}

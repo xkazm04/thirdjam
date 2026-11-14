@@ -329,7 +329,7 @@ bool FJamHockey4Neutral::RunTest(const FString& Parameters)
 		Cart->RemoveFromRoot();
 		return FString::Printf(TEXT("%016llx (%lld frames, %d:%d)"), static_cast<unsigned long long>(St.Hash), static_cast<long long>(St.Frames), St.GoalsFor, St.GoalsAgainst);
 	};
-	const FString A1 = Match(nullptr), A2 = Match(nullptr), Off1 = Match("opp.hk_press_in_hunt=0"), Off2 = Match("brain4=0");
+	const FString A1 = Match(nullptr), A2 = Match(nullptr), Off1 = Match("opp.hk_press_in_hunt=0"), Off2 = Match("brain4=0;brain7=1");   // lane A193: brainN=0 also switches evolution 7 off; brain7=1 puts it back as shipped, so the pair compares only evolution N
 	AddInfo(FString::Printf(TEXT("hockey.regular at all_star, the good player, seed 1: as shipped %s; with opp.hk_press_in_hunt=0 %s; with brain4=0 %s"), *A1, *Off1, *Off2));
 	TestEqual(TEXT("the same match twice is the same match"), A1, A2);
 	if (kEvo4MateFinishM == 0.0 && kEvo4CarryClockS == 0.0 && kEvo4MateDriveM == 0.0 && kEvo4ScreenFrames == 0)

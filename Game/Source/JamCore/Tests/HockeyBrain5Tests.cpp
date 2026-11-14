@@ -275,12 +275,12 @@ bool FJamHockey5Neutral::RunTest(const FString& Parameters)
 		Cart->RemoveFromRoot();
 		return FString::Printf(TEXT("%016llx (%lld frames, %d:%d)"), static_cast<unsigned long long>(St.Hash), static_cast<long long>(St.Frames), St.GoalsFor, St.GoalsAgainst);
 	};
-	const FString A1 = Match(nullptr), A2 = Match(nullptr), Off = Match("brain5=0"), On = Match("opp.hk_avoid_downed_m=1.3;mate.hk_avoid_downed_m=1.3");
+	const FString A1 = Match(nullptr), A2 = Match(nullptr), Off = Match("brain5=0;brain7=1"), On = Match("opp.hk_avoid_downed_m=1.3;mate.hk_avoid_downed_m=1.3");
 	AddInfo(FString::Printf(TEXT("hockey.regular at pro, the regular player, seed 1: as shipped %s; with brain5=0 %s; with the keep-out at 1.3 m %s"), *A1, *Off, *On));
 	TestEqual(TEXT("the same match twice is the same match"), A1, A2);
 	if (kEvo5AvoidDownedM == 0.0)
 	{
-		TestEqual(TEXT("as shipped is brain5=0 (every rule ships at its neutral value)"), A1, Off);
+		TestEqual(TEXT("as shipped is brain5=0 (every rule ships at its neutral value)"), A1, Off);   // lane A193: brainN=0 also switches evolution 7 off; brain7=1 puts it back as shipped, so the pair compares only evolution N
 	}
 	return true;
 }

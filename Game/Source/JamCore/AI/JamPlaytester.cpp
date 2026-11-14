@@ -779,6 +779,7 @@ namespace JamAI
 		Brain.Reset();
 		Brain.Params = C.AI;
 		Brain.Params.InterceptSpeed = C.Speed;
+		Brain.Params.FreeSpeedMult = C.FreeSpeedMult;   // lane A193: the brain's true speeds (skater.free_speed_mult)
 		Brain.Params.AimConeDeg = C.AimConeDeg;
 		FJamPlaytester Tester;
 		Tester.Reset(Kind, Seed);

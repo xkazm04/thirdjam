@@ -25,6 +25,7 @@ namespace JamAI
 	{
 		double LengthM = 120.0, WidthM = 60.0, CornerRadiusM = 5.0, BoardRestitution = 0.4, IceFriction = 0.015, GoalWidthM = 4.0;
 		double Speed = 8.0, Accel = 12.0, TurnRate = 5.0, LateralGrip = 3.0, BrakeDecel = 6.0;
+		double FreeSpeedMult = 1.0;   // lane A193: skater.free_speed_mult (lane A185), for the brain's planning only
 		double PuckRadiusM = 0.12, PuckMaxSpeed = 30.0, PuckDrag = 0.0;
 		double ShotReachM = 1.5, ShotSpeed = 18.0, AimConeDeg = 0.0;   // 0 = absent (no aim assist)
 		int ShotCooldownFrames = 24;

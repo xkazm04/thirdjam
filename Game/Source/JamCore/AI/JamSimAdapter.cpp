@@ -37,6 +37,7 @@ namespace JamAI
 		C.GoalWidthM = G.Rink.GoalWidthM;
 		C.Speed = G.Skater.Speed;
 		C.Accel = G.Skater.Accel;
+		C.FreeSpeedMult = G.Skater.FreeSpeedMult;   // lane A193: the brain's planning (Params.FreeSpeedMult); the reference sim does not read it
 		C.TurnRate = G.Skater.TurnRate;
 		C.LateralGrip = G.Skater.LateralGrip;
 		C.BrakeDecel = G.Skater.BrakeDecel;
