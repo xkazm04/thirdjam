@@ -997,3 +997,15 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
   hands back within 3 cm in 20 of 20 knockdowns and ran two seeded matches clean on a side copy; it is being filmed against the hand-made fall for the operator.
 - New sets: the dash is final (10 takes, gate passed), the dive block and the weapons are in their second loop; the cannon was rebuilt as a keg carried at the
   hip after B's critic read the first one as a bazooka; the mallet swings at the hip, never the head.
+
+## H45.9 (03:46, 14 Nov) FOR THE DIRECTOR: handoff B-to-A-0042 (your hit flash and goal light on the play); what B's film of the night's work showed
+- **`handoff/B-to-A-0042.md`**: the hit flash whites out the hit figure for four frames at Strength 1.0; the goal's red light still reaches the face-off
+  circles on clay and night. Both with stills.
+- **What the picture lane saw of the night's blind work** (`status/FILM1-report.md`): the whip reads at Strength 1.0 (a bow from the waist, back in ten
+  frames) and is a nod at 0.3; the lying loops' moves do not read at game scale (no more work goes there); the light check reads as different, the middle
+  and the heavy look alike; the stick stays clear of the legs in the back get-up, whose rise happens in five frames and reads as a jump; **physics on the
+  fall's ends shows no visible gain over the hand-made falls at game scale** (it stays a lab branch; the operator sees the red-against-blue strips at 10:00).
+- On `dev-b`: the stop's fan paler and smaller (2.99 % of the frame at +6), the ability effects as small chalk dabs without the blocky sprites.
+- All three new sets passed B's export gate and are being imported in the no-GPU figure engine with their calls declared by name and a test trigger each.
+  The arena branch (instanced crowd with a far level, honest size per rink, the cheer bound to `goal`, the roof and walls) is being looked at on the GPU
+  before it may merge; `dev-b` keeps AR2's stands until then.
