@@ -5,6 +5,8 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "Types/SlateEnums.h"   // ETextCommit (lane A195)
+#include "InputCoreTypes.h"   // FKey (lane A195)
 #include "LobbyWidget.generated.h"
 
 class UCanvasPanel;
@@ -26,10 +28,20 @@ public:
 	static ULobbyWidget* Open(APlayerController* PC);
 
 	UFUNCTION(BlueprintPure, Category = "Jam|Lobby") FString GetStatusLine() const;
+	// Lane A195 (U2 evolution 7): the lobby in the front end's style table; for the tests: the panel (measured), every fixed word shown, and the rink's
+	// name a cut id is shown by ("hockey.regular" -> "REGULAR").
+	UWidget* GetPanelForTest() const { return Panel; }
+	TArray<FString> GetWordsForTest() const;
+	static FString RinkFor(const FString& CutId);
+	static constexpr float ColumnW = 748.f;
+	// Lane A195 (FAULT 6): the first button a player stands on (HOST when idle), and the keys that leave the lobby for HOME (Esc, pad B: BACK's road).
+	UWidget* GetFirstFocusable() const;
+	static bool IsLeaveKey(const FKey& K);
 
 protected:
 	virtual TSharedRef<SWidget> RebuildWidget() override;
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+	virtual FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;   // lane A195
 
 private:
 	void BuildTree();
@@ -40,6 +52,7 @@ private:
 	UFUNCTION() void OnBack();
 	UFUNCTION() void OnCutPrev();
 	UFUNCTION() void OnCutNext();
+	UFUNCTION() void OnCodeCommitted(const FText& InText, ETextCommit::Type Commit);   // lane A195 (FAULT 7 class)
 
 	UButton* MakeButton(const TCHAR* Name, const FString& Label, UTextBlock*& OutText);
 
@@ -68,6 +81,9 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> StartText;
 	UPROPERTY(Transient) TObjectPtr<UButton> BackButton;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> NameText;
+	UPROPERTY(Transient) TObjectPtr<UWidget> Panel;   // lane A195
+	TSharedPtr<struct FJamMenuPainter> Painter;   // lane A195: the buttons in the item look
+	TWeakObjectPtr<UWidget> PendingFocus;   // lane A195 (FAULT 6)
 
 	TArray<FString> Cuts;
 	int32 CutIndex = 0;

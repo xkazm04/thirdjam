@@ -1,8 +1,8 @@
-# Lane A179 (S3 evolution 5, item 1): the shipping-play row the release chain runs itself on the FRESH ZIP (the file that is handed over, not a staged folder).
+﻿# Lane A179 (S3 evolution 5, item 1): the shipping-play row the release chain runs itself on the FRESH ZIP (the file that is handed over, not a staged folder).
 # The zip is unpacked into tools\qa\out\release\<Name>\unz (removed again unless -Keep), then:
 #   1. ThirdJam.exe starts and a window appears (a 1920x1080 client, windowed),
 #   2. the first screen draws (a still of the menu is not black: lit >= 0.20),
-#   3. one Return -> PLAY NOW -> a match renders: the still 9 s after the Return is lit (lit share >= 0.90; the H27 black world read 0.01),
+#   3. Return on the landing, Return on HOME (PLAY NOW) -> a match renders: the still 9 s after the Return is lit (lit share >= 0.90; the H27 black world read 0.01),
 #   4. the game stays alive for -PlaySeconds (default 30) of skating with W and the mouse, a still every 5 s, each lit >= 0.90,
 #   5. the window's close (WM_CLOSE) ends the process cleanly (exit code 0, no crash report folder newer than the start).
 # A Shipping package has no remote console and no JAM logs: everything is read from the window (stills, the process), as the window lane did.
@@ -38,6 +38,11 @@ try {
         Start-Sleep -Seconds 15; Fg
         $px = HW-Pixels (HW-Shot 'menu'); Row 'menu' ($px | ConvertTo-Json -Compress)
         if ($px.lit -lt 0.2) { Fail "the first screen is dark: lit=$($px.lit)" }
+        # Director, 14 Nov 17:50: since lane A187's front end the first screen is the landing: its Return goes to HOME (PLAY NOW focused), the second plays.
+        # H33's first ship row pressed once and photographed HOME six times (lit 0.69: the barn backdrop). Two Returns, three seconds apart; an old
+        # package (before 13e36667) needs -OldMenu on release-menu.ps1 and is not run through this row any more.
+        HW-Key 'Return'; Start-Sleep -Seconds 3; Fg
+        $px = HW-Pixels (HW-Shot 'home'); Row 'home' ($px | ConvertTo-Json -Compress)
         HW-Key 'Return'; Start-Sleep -Seconds 9; Fg
         $px = HW-Pixels (HW-Shot 'match-9s'); Row 'match_9s' ($px | ConvertTo-Json -Compress)
         if (-not (HW-Alive)) { Fail 'the game is gone after PLAY NOW' }

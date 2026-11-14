@@ -64,9 +64,10 @@ void UJamLockstepDriver::Receive()
 	while (Link->Recv(Bytes))
 	{
 		const JamNet::EType Type = JamNetPeekType(Bytes);
-		if (Type == JamNet::EType::Bye && bHeard && !bLost)
+		if (Type == JamNet::EType::Bye && !bLost)
 		{
 			// Lane A120: the peer left (Esc to the menu, quit, its match ended and it closed): end now instead of waiting out the stall limit.
+			// Lane A204: also before it was heard (it closed while its rink loaded): the link is this session's own, so a BYE on it is never a leftover.
 			bPeerLeft = bLost = true;
 			UE_LOG(LogJamNet, Warning, TEXT("JAMNET lost frame=%lld peer said BYE"), Frame);
 			continue;

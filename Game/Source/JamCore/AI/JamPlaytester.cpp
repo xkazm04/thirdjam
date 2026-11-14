@@ -144,6 +144,7 @@ namespace JamAI
 		LastPassFrame = -1000;
 		LastCheckFrame = -1000;
 		LastDekeFrame = -1000;
+		DodgeWho = -1; SeenHits = SeenLanded = Dodges = 0; bSeenLanded = bDodged = false;   // lane A200
 		PlayFrames = 0;
 		for (bool& B : BrakeRing) { B = false; }
 		bBrakeWanted = false;
@@ -173,12 +174,32 @@ namespace JamAI
 		FJamAIInput Out = Tick >= Delay ? Ring[(Tick - Delay) % RingLen] : FJamAIInput();
 		const bool bBrakeMeant = Tick >= Delay ? BrakeRing[(Tick - Delay) % RingLen] : false;
 		++Tick;
+		// Lane A200: the hit he sees coming (counted always); with bDodge his answer comes after the analog ramp below.
+		TrackThreat(W);
 		// the analog stick: pushed over at a finite rate, never snapped
 		FVec2 Dm = Out.Move - MoveOut;
 		const double L = Dm.Length();
 		if (L > P.StickRamp && L > 1e-9) { Dm = Dm * (P.StickRamp / L); }
 		MoveOut += Dm;
 		Out.Move = MoveOut.LimitLength(1.0);
+		// Lane A200 (bDodge): DodgeReactFrames after the wind-up began he flicks the stick (past the ramp: a reflex, not a steer) across the man's line and
+		// away from him, on the side his skating already leans, until the episode ends: a cut out of the hit's path. Brakes only when he is nearly still.
+		if (bDodge && DodgeWho >= 0 && W.PlayerIndex >= 0 && !W.bFrozen && !W.bFaceoffPhase && W.Frame >= DodgeStart + DodgeReactFrames && W.Frame <= DodgeEnd
+			&& !W.Skaters[W.PlayerIndex].bDown)
+		{
+			const FJamAISkater& Me = W.Skaters[W.PlayerIndex];
+			const FJamAISkater& O = W.Skaters[DodgeWho];
+			const FVec2 ToHim = (O.Pos - Me.Pos).Normalized();
+			const double Sp = Me.Vel.Length();
+			FVec2 Across = ToHim.Perp();
+			const FVec2 Lean = Sp > 1.0 ? Me.Vel : (O.Vel * -1.0);
+			if (Across.Dot(Lean) < 0.0) { Across = Across * -1.0; }
+			Out.Move = (Across - ToHim * 0.5).Normalized();
+			Out.bBrake = false;
+			Out.bCheck = false;
+			MoveOut = Out.Move;
+			bDodged = true;
+		}
 		// Lane A95 (brief A95 job 3): the reverse brake on purpose only. Where the sim would read the input as a reversal (more than 120 degrees off the velocity
 		// above 1 m/s) and the player did not mean to stop, the input is carved: 115 degrees off the velocity on the input's side, the same push.
 		if (!bOldVerbs && W.ReverseBrakeDecel > 0.0 && !bBrakeMeant && W.PlayerIndex >= 0)
@@ -194,6 +215,44 @@ namespace JamAI
 			}
 		}
 		return Out;
+	}
+
+	// Lane A200: see FJamPlaytester::bDodge. An episode ends 2 frames after its last frame (a hit lands on the frame after the window's last at the latest).
+	void FJamPlaytester::TrackThreat(const FJamAIWorld& W)
+	{
+		if (DodgeWho >= 0 && W.Frame > DodgeEnd + 2)
+		{
+			++SeenHits;
+			if (bSeenLanded) { ++SeenLanded; }
+			if (bDodged) { ++Dodges; }
+			DodgeWho = -1;
+		}
+		if (DodgeWho >= 0 || W.PlayerIndex < 0 || W.bFrozen || W.bFaceoffPhase) { return; }
+		const int Pi = W.PlayerIndex;
+		const FJamAISkater& Me = W.Skaters[Pi];
+		if (Me.bDown) { return; }
+		for (int j = 0; j < W.NumSkaters && j < kMaxSkaters; ++j)
+		{
+			const FJamAISkater& O = W.Skaters[j];
+			if (j == Pi || O.Team == Me.Team || O.bDown) { continue; }
+			const bool bCross = O.CrossWindupLeft > 0 && O.CrossTarget == Pi;
+			const bool bCheck = O.CheckWindupLeft > 0;
+			if (!bCross && !bCheck) { continue; }
+			const FVec2 Rel = O.Pos - Me.Pos;
+			const double D = Rel.Length();
+			if (D > DodgeSeeM || D < 1e-6) { continue; }
+			const FVec2 N = Rel * (1.0 / D);
+			if (Me.Facing.Normalized().Dot(N) < -0.17) { continue; }   // behind him: a hit he cannot see
+			if (!bCross && (O.Vel - Me.Vel).Dot(N * -1.0) < 1.0) { continue; }   // not coming at him
+			const bool bHumanSeat = W.IsHumanSeat(j);
+			const int Wu = bCross ? (bHumanSeat ? W.CrossWindupFrames : W.BotCrossWindup()) : (bHumanSeat ? W.CheckWindupFrames : W.BotCheckWindup());
+			const int Left = bCross ? O.CrossWindupLeft : O.CheckWindupLeft;
+			DodgeWho = j;
+			DodgeStart = W.Frame - (Wu > Left ? Wu - Left : 0);
+			DodgeEnd = DodgeStart + Wu + (bCross ? 0 : 6);   // the body check's bot window: UJamSim::CheckWindowFrames
+			bSeenLanded = bDodged = false;
+			return;
+		}
 	}
 
 	FJamAIInput FJamPlaytester::Decide(const FJamAIWorld& W)
@@ -637,7 +696,28 @@ namespace JamAI
 		// Lane A178 (env JAM_PLAYTESTER_STOPMARK=brake; off by default: nothing here runs): the stop's line lit while I carry: stop, then go on.
 		if (bStopMarkBrake && bCarrying && !Me.bDown)
 		{
-			if (StopPhase == 0 && bStopLitNow && W.Frame >= StopBrakeNext && MySpeed > 3.0)
+			if (StopPhase == 0 && bStopLitNow && W.Frame >= StopBrakeNext && MySpeed > 3.0 && StopOnlyNth > 0 && ++StopCandidates != StopOnlyNth)
+			{
+				StopBrakeNext = W.Frame + StopBrakeRearm;   // lane A201: not this light (the paired instrument obeys only the N-th); counted, not obeyed
+			}
+			else if (StopPhase == 0 && StopHandFrames >= 0 && StopPendingAt < 0 && bStopLitNow && W.Frame >= StopBrakeNext && MySpeed > 3.0)
+			{
+				// Lane A201: a hand slower than the class's: the stop is decided now and pressed when the hand gets there (the ring adds ReactionFrames)
+				StopPendingAt = W.Frame + (StopHandFrames > P.ReactionFrames ? StopHandFrames - P.ReactionFrames : 0);
+				StopPendingDef = StopDef;
+				StopBrakeNext = W.Frame + StopBrakeRearm;
+			}
+			if (StopPhase == 0 && StopPendingAt >= 0 && W.Frame >= StopPendingAt)
+			{
+				StopPendingAt = -1;
+				if (MySpeed > 3.0)
+				{
+					StopPhase = 1; StopPhaseStart = W.Frame; ++StopBrakes;
+					StopLine = Me.Vel * (1.0 / MySpeed);
+					StopSide = StopLine.Cross(StopPendingDef - Me.Pos) > 0.0 ? -1.0 : 1.0;
+				}
+			}
+			else if (StopPhase == 0 && StopHandFrames < 0 && bStopLitNow && W.Frame >= StopBrakeNext && MySpeed > 3.0)
 			{
 				StopPhase = 1; StopPhaseStart = W.Frame; StopBrakeNext = W.Frame + StopBrakeRearm; ++StopBrakes;
 				StopLine = Me.Vel * (1.0 / MySpeed);
@@ -658,7 +738,7 @@ namespace JamAI
 				if (W.Frame - StopPhaseStart >= StopCutFrames) { StopPhase = 0; }
 			}
 		}
-		else { StopPhase = 0; }
+		else { StopPhase = 0; StopPendingAt = -1; }
 		// Lane A95 (brief A95 job 3): the reverse brake on purpose. The move reverses against my velocity: the class means to stop (2: always, stop and go;
 		// 1: only on a target within BrakeNearM); Think carves any other reversal into a turn.
 		if (!bOldVerbs && W.ReverseBrakeDecel > 0.0 && P.BrakeIntent > 0 && MySpeed > 1.0 && In.Move.Length() > 1e-6
@@ -805,18 +885,41 @@ namespace JamAI
 			if (BraceEnv && std::strcmp(BraceEnv, "off") == 0) { Tester.BraceMode = 0; }
 			if (BraceEnv && std::strcmp(BraceEnv, "always") == 0) { Tester.BraceMode = 2; }
 			if (const char* BcEnv = std::getenv("JAM_PLAYTESTER_BRACE_CLOSING")) { Tester.BraceClosingMps = std::atof(BcEnv); }   // lane A192: a measurement's arm
-			const char* ContestEnv = std::getenv("JAM_PLAYTESTER_CONTEST");   // lane A166: brake = the player obeys the contested-puck mark (a measurement's arm); absent = as shipped
-			Tester.bContestBrake = ContestEnv && std::strcmp(ContestEnv, "brake") == 0;
-			const char* StopMarkEnv = std::getenv("JAM_PLAYTESTER_STOPMARK");   // lane A178: brake = the player obeys the stop's line (a measurement's arm); absent = as shipped
+			// Lane A166: brake = the player obeys the contested-puck mark (a measurement's arm); absent = as shipped. Lane A201: brake:N obeys only the N-th
+			// showing (the paired instrument); read through FPlatformMisc so CarryTrace's arms reach it.
+			const FString ContestStr = FPlatformMisc::GetEnvironmentVariable(TEXT("JAM_PLAYTESTER_CONTEST"));
+			Tester.bContestBrake = ContestStr.StartsWith(TEXT("brake"));
+			Tester.ContestOnlyNth = ContestStr.StartsWith(TEXT("brake:")) ? FCString::Atoi(*ContestStr.Mid(6)) : 0;
+			// Lane A178: brake = the player obeys the stop's line (a measurement's arm); absent = as shipped. Lane A201: read through FPlatformMisc (as the
+			// rule's arm JAM_MARK_RULE is), so one process can play several arms in a row (Bar.Movement.CarryTrace's JAM_TRACE_ARMS sets both per arm).
+			const FString StopMarkStr = FPlatformMisc::GetEnvironmentVariable(TEXT("JAM_PLAYTESTER_STOPMARK"));
+			const FTCHARToUTF8 StopMark8(*StopMarkStr);
+			const char* StopMarkEnv = StopMarkStr.IsEmpty() ? nullptr : StopMark8.Get();
 			Tester.bStopMarkStopOnly = StopMarkEnv && std::strcmp(StopMarkEnv, "stop") == 0;
 			const char* StopTowardEnv = std::getenv("JAM_PLAYTESTER_STOPMARK_DEFTOWARD");
 			Tester.StopDefTowardMps = StopTowardEnv ? std::atof(StopTowardEnv) : 0.0;
-			Tester.bStopMarkBrake = Tester.bStopMarkStopOnly || (StopMarkEnv && std::strcmp(StopMarkEnv, "brake") == 0);
+			Tester.bStopMarkBrake = Tester.bStopMarkStopOnly || (StopMarkEnv && std::strncmp(StopMarkEnv, "brake", 5) == 0);
+			Tester.StopOnlyNth = StopMarkEnv && std::strncmp(StopMarkEnv, "brake:", 6) == 0 ? std::atoi(StopMarkEnv + 6) : 0;   // lane A201: brake:N obeys only the N-th light (the paired instrument)
+			// Lane A201: JAM_PLAYTESTER_STOPMARK_HAND = frames from the light to the stop reaching the sim (the class's ReactionFrames included); absent = the
+			// class's own lag (regular: 6 frames, faster than a person reads a cue on the ice; the line lights for a press a quarter second late, FStopRule::ReactSec).
+			const FString HandStr = FPlatformMisc::GetEnvironmentVariable(TEXT("JAM_PLAYTESTER_STOPMARK_HAND"));
+			Tester.StopHandFrames = HandStr.IsEmpty() ? -1 : FCString::Atoi(*HandStr);
 			const char* PokeEnv = std::getenv("JAM_PLAYTESTER_POKE");   // lane A152: read = the poke when it can land, old = the press as it was (measurement arms); absent = the config's switch
 			Tester.bPokeReadOn = PokeEnv ? std::strcmp(PokeEnv, "read") == 0 : (CfgSim && CfgSim->GetConfig().Stick.bPlaytesterPokeRead);
 			if (CfgSim && CfgSim->GetConfig().Stick.bPokeRulesOff) { Tester.bPokeReadOn = false; }   // the test seam: the press as it was
+			if (const char* DodgeEnv = std::getenv("JAM_PLAYTESTER_DODGE"))   // lane A200: on = the dodge after 6 frames, N = after N frames (a measurement's arm); absent = off
+			{
+				Tester.bDodge = std::strcmp(DodgeEnv, "on") == 0 || std::atoi(DodgeEnv) > 0;
+				if (std::atoi(DodgeEnv) > 0) { Tester.DodgeReactFrames = std::atoi(DodgeEnv); }
+			}
 			Tester.StickVariant = !StickEnv ? 0 : (std::strcmp(StickEnv, "carry") == 0 ? 2 : (std::strcmp(StickEnv, "front") == 0 ? 3 : (std::strcmp(StickEnv, "short") == 0 ? 4 : 0)));
 		}
+		JamCarrierMarks::FStopRule StopMarkRule = JamCarrierMarks::StopRuleFromEnv();   // lane A201: read once a match
+		const JamCarrierMarks::FContestRule ConMarkRule = JamCarrierMarks::ContestRuleFromEnv();
+		JamCarrierMarks::FMarkShow ConMarkShow;
+		int64 ConShownSince = -1;
+		int ConShowings = 0;
+		if (Tester.StopDefTowardMps > 0.0) StopMarkRule.DefTowardMps = Tester.StopDefTowardMps;
 		FJamAIWorld W;
 		FJamAIInput In[kMaxSkaters];
 		int64_t SinceFaceoff = 0, SinceTouch = 0, CarrySpell = 0;
@@ -851,12 +954,22 @@ namespace JamAI
 			const int PreLastTouch = W.PuckLastTouch;
 			for (int i = 0; i < kMaxSkaters; ++i) { In[i] = FJamAIInput(); }
 			Brain.Think(W, In);
-			if (Pi >= 0 && Tester.bContestBrake) { const UJamSim* MarkSim = Sim.GetSim(); Tester.bContestedNow = MarkSim && JamCarrierMarks::Contested(*MarkSim, Pi).bOn; }   // lane A166
+			if (Pi >= 0 && Tester.bContestBrake)   // lane A166; lane A201: the ring as SHOWN (StepShow, the HUD's hold), the rule by JAM_MARK_RULE (the one parse)
+			{
+				const UJamSim* MarkSim = Sim.GetSim();
+				const bool bPlayNow = MarkSim && MarkSim->GetPhase() == EJamSimPhase::Playing && !MarkSim->IsDrawOpen();
+				if (!bPlayNow) ConMarkShow = JamCarrierMarks::FMarkShow();
+				const JamCarrierMarks::FContested Cn = bPlayNow ? JamCarrierMarks::Contested(*MarkSim, Pi, ConMarkRule) : JamCarrierMarks::FContested();
+				const bool bShownNow = bPlayNow && JamCarrierMarks::StepShow(ConMarkShow, Cn.bOn, Cn.Opp, MarkSim->GetFrame());
+				if (bShownNow && ConMarkShow.Since != ConShownSince) { ConShownSince = ConMarkShow.Since; ++ConShowings; }
+				Tester.bContestedNow = bShownNow && (Tester.ContestOnlyNth <= 0 || ConShowings == Tester.ContestOnlyNth);
+			}
 			if (Pi >= 0 && Tester.bStopMarkBrake)   // lane A178
 			{
 				const UJamSim* MarkSim = Sim.GetSim();
-				JamCarrierMarks::FStopRule MarkRule;
-				MarkRule.DefTowardMps = Tester.StopDefTowardMps;
+				// Lane A201: the rule the screen draws (JamCarrierMarks::StopMark with the shipped FStopRule), or the measurement's arm by JAM_MARK_RULE: the same
+				// parse the trace reads, so the obeying player obeys the light the arm draws (lane A194's arms played identical matches: this read the built rule).
+				const JamCarrierMarks::FStopRule& MarkRule = StopMarkRule;
 				const JamCarrierMarks::FStopMark Mk = MarkSim ? JamCarrierMarks::StopMark(*MarkSim, Pi, MarkRule) : JamCarrierMarks::FStopMark();
 				Tester.bStopLitNow = Mk.bLit;
 				if (Mk.bLit && MarkSim->GetSkaters().IsValidIndex(Mk.Def)) { const FVector2D Dp = MarkSim->GetSkaters()[Mk.Def].Pos; Tester.StopDef = FVec2(Dp.X, Dp.Y); }
@@ -980,6 +1093,7 @@ namespace JamAI
 						if (V.ContactOutcome == UJamSim::ContactDown) { ++St.KdGiven; }
 					}
 					else if (V.bContactCross) { ++St.BotCrossLanded; } else { ++St.BotChecksLanded; }
+					if (V.Index == Pi && V.ContactBy != Pi) { Tester.NoteHitOnMe(V.ContactBy); if (S->GetSkaters().IsValidIndex(V.ContactBy) && S->GetSkaters()[V.ContactBy].Team != V.Team) { ++St.BotHitsOnHuman; } }   // lane A200
 				}
 			}
 			// the sim's own events: checks, knockdowns, fouls, pokes, lifts, passes of the human
@@ -1080,7 +1194,7 @@ namespace JamAI
 				St.DownedPushFrames += K.DownedPushFrames;   // lane A157
 				if (K.Index == Pi) { St.ShieldHuman = K.ContactShielded; } else { St.ShieldBots += K.ContactShielded; }   // lane A177
 				if (K.Index == Pi) { St.BraceFrames = K.CrossBraceFrames; St.BraceHits = K.CrossBraceHits; } else { St.BotBraceHits += K.CrossBraceHits; }   // lane A184
-				if (K.Index == Pi) { St.RevBrakes = K.ReverseBrakes; St.CarrySprintFrames = K.CarrySprintFrames; St.Cuts = Tester.Cuts; St.ChecksCooling = K.ChecksCooling; St.LungesMissed = K.LungesMissed; }
+				if (K.Index == Pi) { St.RevBrakes = K.ReverseBrakes; St.CarrySprintFrames = K.CarrySprintFrames; St.Cuts = Tester.Cuts; St.SeenHits = Tester.SeenHits; St.SeenLanded = Tester.SeenLanded; St.Dodges = Tester.Dodges; St.ChecksCooling = K.ChecksCooling; St.LungesMissed = K.LungesMissed; }
 				else { St.BotRevBrakes += K.ReverseBrakes; St.BotCarrySprintFrames += K.CarrySprintFrames; St.BotChecksCooling += K.ChecksCooling; St.BotLungesMissed += K.LungesMissed; }
 			}
 		}
@@ -1130,6 +1244,8 @@ namespace JamAI
 			S.KdWon, S.KdWon15, S.KdCarry, S.KdNoPuck, static_cast<long long>(S.HumanDownFrames), static_cast<long long>(S.HumanStumbleFrames), S.ShieldHuman, S.ShieldBots);   // lane A177
 		N += std::snprintf(Buf + N, static_cast<size_t>(BufLen - N), ",\"cross_landed\":%d,\"brace_landed\":%d,\"kd_given\":%d,\"brace_frames\":%d,\"brace_hits\":%d,\"bot_brace_hits\":%d,\"bot_cross_landed\":%d,\"bot_checks_landed\":%d",
 			S.CrossLanded, S.BraceLanded, S.KdGiven, S.BraceFrames, S.BraceHits, S.BotBraceHits, S.BotCrossLanded, S.BotChecksLanded);   // lane A184
+		N += std::snprintf(Buf + N, static_cast<size_t>(BufLen - N), ",\"seen_hits\":%d,\"seen_landed\":%d,\"dodges\":%d,\"bot_hits_on_human\":%d",
+			S.SeenHits, S.SeenLanded, S.Dodges, S.BotHitsOnHuman);   // lane A200
 		static const char* ActNames[] = {"idle", "draw", "chase", "carry", "charge", "pass", "support", "forecheck", "poke", "check", "lapse", "one_timer", "deke", "sweep", "spin"};
 		N += std::snprintf(Buf + N, static_cast<size_t>(BufLen - N), ",\"acts\":{");
 		for (int a = 0; a < static_cast<int>(EPlaytesterAct::Count) && N < BufLen; ++a)

@@ -1,23 +1,42 @@
-# Play me: Saturday evening, the package after your notes (R-0064)
+# Play me: Saturday 20:00, the package at the freeze (R-0064, R-0065, R-0066)
 
-**The package:** `Game/Packaged/Hokej_Hokej_H33/Hokej_Hokej_H33.zip` (the last `package` line of `status/A.md` names it and its commit). Unzip into a
-fresh folder, run the exe. If Windows asks about the firewall, that is the joined match's socket: Cancel is fine for solo play. The Development twin
-with the drills and the console (tilde key) is `Game/Packaged/Accept_H33`. The package you played at noon was H31; H32 (13:25) was a checkpoint.
+**The package:** `Game/Packaged/Hokej_Hokej_H34/Hokej_Hokej_H34.zip` (the last `package` line of `status/A.md` names it and its commit). Unzip into
+a fresh folder, run the exe. If Windows asks about the firewall, that is the joined match's socket: Cancel is fine for solo play. The Development twin
+with the drills and the console (tilde key) is `Game/Packaged/Accept_H34`.
+**The fallback** is `Hokej_Hokej_H33` (17:45, main ea0c3b7a): everything below except the bots' new sense, the second ladder, the neon mode's arena and
+the last hour's fixes; its acceptance run, menu row and the unzipped-zip row are green. The package you played at noon was H31.
+From 20:00 the game is frozen: only faults are fixed.
 
-## Your notes, and where each stands in this package
+## Your notes of noon, and where each stands
 
-| Your words | In this package | Still coming today |
+| Your words | In this package | Not done |
 |---|---|---|
-| "Camera around arena borders is autocorrecting unnaturally" | The boards no longer turn the camera at all, and last night's pitch cap (the correction you felt in corners) is off. A stick that stands still keeps its point on the ice while you stand. | The attacked net out of frame when you work the boards inside the blue line. |
-| "Possibility to rebind ... Cross check on Left mouse ... Right mouse if on puck: Pass. Hold for saucer pass" | Done as you ordered: see Controls. Every verb can be rebound in SETTINGS, CONTROLS; a clash swaps the two keys; a badge by the stick says what the two buttons do right now. | A hand in a window on a rebinding and on the pad (proven by tests only); one corner: a puck stripped but still in reach can be shot by letting go of a button held before the strip. |
-| "Crosscheck should be holdable so player with speed momentum can run with held crosscheck into another player" | Hold left mouse without the puck: from the 10th frame you skate braced (a little slower, turning less) and whoever you run into takes the hit by your speed. The screen says BRACED HIT when you land one and RUN THROUGH when you take one. | Device B's braced pose (today a stand-in). |
-| "Menu HUD is a mess, leave concept of director's cut ... profi ... menu UI and landing experience" | A landing screen, then PLAY / SEASON / MODES / CONTROLS / SETTINGS / QUIT; the twelve modes as cards; the Designer is one card at the end of MODES (MAKE YOUR OWN); one style table, a filled focus bar, key hints on every screen. Plain placeholders where device B's art will sit. | Device B's kit (backdrop of the barn, logo, panels, a display font, mode pictures) with the 18:30 package; the pause, end-of-match and settings screens in the same style. |
-| "Animations of crosscheck and body check are short and not clear" | The sim now gives a hit time before it lands (4 frames) so an animation has room; no new animation yet. | Device B's wind-up, contact and follow-through takes; impact effects and sound by weight from A; how long the wind-up must be for an eye is being measured now. |
-| "Special boosts are not seen on ice, not seen equipped on players" | A pickup is a turning shape on a pedestal of light with a ground ring in its kind's colour and a mark on the radar; a skater who holds one wears a ring in that colour; the plate says "F: SHOTGUN" with its state. Stand-in shapes. | Device B's six props and the equipped look. |
-| "Skaters without puck should be 15% faster than now" | Done: everyone without the puck, human and bot, at every level, glide and sprint; the carrier is as he was. A breakaway is a little faster than a chaser again. The bots plan with the new speed. The stop that works is now begun at 8 to 9 m (the drill and the chalk line stand at 8.5). | The ladder's second setting on top of it. |
-| "Puck's white outer ring for visibility can be 50% thinner" | Not yet: it is device B's mesh. A's own flattening of the disc is gone. | With device B's next push. |
-| "Exercise in one director's mode further concept of neon Tron like arena" | Not yet. | Glass House's slot becomes the neon mode (a dark sheet, a grid, lines and trails of light; nobody's design copied): A's half with the 18:30 package, device B's arena rig behind it. |
-| "short celebration animation set after a goal, HUD middle screen large banner saying 'Goal'" | The banner is in: GOAL across the middle band in the scorer's colour with the new score, gone before the faceoff. | Device B's celebration takes (A already calls them). |
+| "Camera around arena borders is autocorrecting unnaturally" | The boards no longer turn the camera, and the pitch correction you felt in corners is off. A stick that stands still keeps its point on the ice while you stand. | The attacked net can still leave the frame when you work the boards inside the blue line. |
+| "Possibility to rebind ... Cross check on Left mouse ... Right mouse if on puck: Pass. Hold for saucer pass" | As you ordered: see Controls. Every control can be rebound (SETTINGS or the pause card, CONTROLS); a move that would leave any control without a key is refused with words; a damaged settings file falls back to the defaults. A pill by the stick says what the two buttons do right now. | A hand in a real window on the rebinding screen and on a pad: proven by tests and a scripted hand only. |
+| "Crosscheck should be holdable so player with speed momentum can run with held crosscheck into another player" | Hold left mouse without the puck: after 0.2 s you skate braced (slower, turning less) and whoever you run into takes the hit by your speed. BRACED HIT / RUN THROUGH on screen; device B's braced pose on the figure; a streak across the chest and an arc on the ice ahead while you hold. | The bots do not brace (measured: it made them weaker). |
+| "Menu HUD is a mess, leave concept of director's cut ... profi ... menu UI and landing experience" | A landing, then HOME: PLAY NOW with the level switch, SEASON, MODES (fourteen cards with pictures), PLAY WITH A FRIEND, CONTROLS, SETTINGS, CREDITS, QUIT (asks once). Device B's barn behind it, its plates and font. The pause card, the end card, the season card, settings, controls and the lobby in the same style. No "cut", no "Director" outside MAKE YOUR OWN (the last card of MODES). | The live arena behind the menu (a still of it stands there). B's frosted logo is switched off: it lost against the backdrop: the plain HOKEJ type stays. |
+| "Animations of crosscheck and body check are short and not clear" | Three things. The bots' body check now winds up 8 frames and their cross-check 12 (yours stay at 4 so the button is not late), with device B's wind-up takes on the bots. Around every hit, on the ice: a chevron of light from the press to the contact (grey on a miss), a ring at contact by the speed brought, an oval of bars round a downed man that counts his time down, an arrow at the screen's edge and a mark on the radar for a man down off screen. | Your own figure keeps a short stand-in lean (B's take needs 6 frames or more). No new sound for a braced hit yet. |
+| "Special boosts are not seen on ice, not seen equipped on players" | Device B's props turn on a pedestal of light with a ground ring and a radar mark; the keg, the hip bumper, the shield or the crest sits on the skater who holds one; the plate says "F: SHOTGUN" and its state. | The speed boost's prop is cyan and its ring yellow: one of them changes. |
+| "Skaters without puck should be 15% faster than now" | Done for human and bots at every level; the carrier is as he was. A breakaway outruns a chaser again. The bots plan with the new speed. | |
+| "Puck's white outer ring for visibility can be 50% thinner" | Done (device B: 18 to 9 cm). | |
+| "Exercise in one director's mode further concept of neon Tron like arena" | Glass House's slot is now **Glow Ice**: dark ice drawn in light: device B's violet hall with a grid of light lines, A's glowing boards and rink lines, short trails in team colours behind every skater and the puck, the figures' trims lit in their team's colour. It plays with the whistle and speed boosts, first to 4. | Its win rate (a regular player 56 %) was read at 17:00, before the bots' new sense. Cage and Bruisers still share the hall's look. |
+| "short celebration animation set after a goal, HUD middle screen large banner saying 'Goal'" | GOAL across the middle band with the new score, on device B's banner art; the scorer and a mate play one of B's four celebrations inside the goal's pause. | The camera stays on you: when you are not the scorer the celebration can be off screen. |
+
+## What else changed since noon, that you did not ask for
+
+- **The bots stopped doing four things a watcher calls broken** (counted over 60 matches, per match): standing at a downed man and pushing him along
+  the ice 2.6 -> 0.4, shooting from beyond 30 m with a mate open nearer 2.6 -> 0.4, carrying the puck back into their own zone with open ice ahead
+  2.7 -> 0.05, two mates skating in a clump 1.4 -> 0.35. They keep the puck better for it; the ladder was set again on top.
+- **The stop line now tells the truth.** It lit about fifteen times a match and a player who obeyed it lost three matches in five. Now it lights about
+  twice a match: when the line across your path turns your opponent's colour, he is alone with you: stop, cut to the open side, go. A pale line means
+  keep playing. It goes out when a stop would come too late.
+- **The ring under a loose puck** means one man is coming for it as fast as you: hold off and let him have it, or take it knowing he hits you. No ring
+  means it is a scramble: go.
+- **A button held while the puck changes hands does nothing** until you let go and press again, in the game's rules now, not only in the mouse layer.
+- **A joined match** no longer dies when one rink loads slower than the other, nor when one player opens the pause card (the card opens over a running
+  match and says so); its lines ("rematch asked", "the puck drops") show in the packaged game; a player who quits or loses the network is named on
+  the other side within a second or three.
+- **QUIT asks once**; SETTINGS and PLAY WITH A FRIEND no longer trap a pad or keyboard player.
 
 ## Controls
 
@@ -34,44 +53,58 @@ saucer) / check, **A** poke, **Y** deke, **B** spin, **R3** ability, **LT** spri
 device you touched last.
 **Every control can be rebound**: SETTINGS (or the pause card), CONTROLS: click a cell, press the new key or pad button; Esc cancels; a clash swaps
 the two and the line says so; a move that would leave a control with no key is refused; RESET TO DEFAULTS asks once more. Saved at once.
-The landing: Enter, the pad's A or a click goes on; on the main screen **Enter plays one match at the level that is lit**; left and right change the level.
+The landing: Enter, the pad's A or a click goes on; on HOME **Enter plays one match at the level that is lit**; left and right change the level.
 
 ## The ladder on this package
 
-Measured on this package's commit with the scripted players the ladder is set with: a newcomer wins **84 %** at rookie (83 on the large rink), a regular
-player **47 %** at pro (49 on the large rink), a good player **30 %** at all-star (27 on the large rink). Targets 85 / 48 / 26. Rookie and the large-rink
-pro cell are read over 2,000 matches, the others over 600. All-star on the regular rink is four points easy: it has no dial of its own yet.
-Everything that moved today moved it (faster skaters, hits that wind up, bots that plan with the new speed), and it is set once more for the 18:30
-package. Rookie is the newcomer's level; if you have played a hockey game, yours is pro.
+| Level (the scripted player it is set with) | Regular rink | Large rink | Target |
+|---|---|---|---|
+| Rookie (a newcomer) | **87 %** | 87 % | 85 |
+| Pro (a regular player) | **48 %** | 51 % | 48 |
+| All-star (a good player) | **28 %** | 25 % | 26 |
+
+Read on this package's own build at 19:20 (600 matches a cell; every cell within 3 of its target). The set itself was made over 2,000 matches a
+cell before the held-button rule landed (85 / 84, 47 / 46, 26 / 25); with that rule switched off the built game replays those rows match for match
+(600 of 600 in every cell), so the difference is that one rule: it makes pro on the large rink about four points easier.
+
+Set twice today, the second time on everything above (faster skaters, hits that wind up, bots that play better). Rookie is the newcomer's level; if
+you have played a hockey game, yours is pro. The stop begun at 8 to 9 m works at every level (pro 94 %; a straight charge never).
 
 ## Ten minutes, in this order
 
-1. **The landing and the menu.** Does it read as a game somebody shipped? What trips the eye first? (The art is placeholder: judge the structure.)
-2. **The buttons.** A match at rookie: shoot and pass on the two buttons, then lose the puck and use the same two to hit. Rebind one verb in SETTINGS,
-   CONTROLS and use it. Does anything fire that you did not mean?
-3. **The held cross-check.** Without the puck, hold left mouse, sprint at a carrier and run through him. Then try it standing: it should do little.
-4. **The boards and the corners.** Carry along the boards and through a corner with the stick aimed: does the picture still move under your cursor?
-5. **Speed.** Chase a carrier down from behind; then carry and feel them catch you. Is the carrier too slow now, or right?
-6. **A boost.** MODES, Arsenal: find a pickup on the ice by eye, take it, see it on you, use it on F.
-7. **A goal.** The banner: big enough, long enough, in the way?
-8. **Pro, one match.** Still the game you won half the time at noon?
+1. **The landing and HOME.** A game somebody shipped? What trips the eye first?
+2. **The buttons.** A match at rookie: shoot and pass on the two buttons, lose the puck and hit with the same two. Rebind one control and use it.
+3. **The held cross-check.** Without the puck, hold left mouse, sprint at a carrier, run through him.
+4. **A hit you take.** At pro, watch a bot wind up on you: do you see it coming now? Can you get out of it?
+5. **The boards and the corners.** Carry along the boards and through a corner with the stick aimed: does the picture still move under your cursor?
+6. **The stop line.** Carry at one defender with open ice behind him; stop when the line turns his colour; go. Then ignore a pale line.
+7. **A boost.** MODES, Arsenal: find a pickup by eye, take it, see it on you, use it on F.
+8. **A goal.** The banner and the celebration.
+9. **The neon mode** (MODES, Glow Ice).
+10. **Pro, one match.** A fair match?
 
 ## Known to be unfinished (do not spend your time finding these)
 
-- Everything in the third column above.
-- The menu's art is placeholder until device B's kit is merged; the arena is not shown behind the menu.
-- Hits have no new animation yet: the 4 frames of wind-up show only as a short delay.
-- The stop line on the ice is still "an offer, not an order" (obeying every lit line loses matches): a rule that lights it only when stopping is
-  right is being built today.
-- The saved bindings across a restart of the packaged game, a mouse button rebound by a real click, and the pad's walk through the new menu are
-  proven by tests, not yet by a hand in a window.
-- The page's stills and the video shots are from Friday's game and are retaken after the freeze.
+- The third column above.
+- **Proven by tests and scripted hands, not by a hand in a real window:** rebinding by a real click and on a pad; the pad's walk through the new
+  screens; alt-tab during a joined match; the window's close button telling the other player at once. Two physical machines have never been tried.
+- **The twelve modes were re-tuned at 17:00, before the bots' new sense and the second ladder:** every one sat between 38 and 66 % for a regular
+  player then; they are measured again in the stabilization phase and may have drifted.
+- The acceptance run has five new rows for the buttons (a held button across a change of possession, the slow tap, the saucer's hold, a refused
+  rebinding, the pad) that are proven headless and wait for their first run in a window.
+- **Found by the check of this package at 19:35, after it was cut (nothing is changed without your word):**
+  the stop line still costs a player who obeys every lit line about 6 points at pro (45 % against 39 % over 2,000 paired matches; the bar was 5;
+  it was 29 points this morning): treat the lit line as good advice, not as an order. One number (how far off the second man must be) brings it to
+  about 3 points at the price of the line lighting once a match instead of twice.
+  And the season steps down 23 points for a newcomer from take 4 to take 5 (77 % to 54 %; the bar is 20): one number of take 5.
+- The page's stills and the video shots are from Friday's game and are retaken from this package.
 
-## What the Director needs from you at 20:00
+## What the Director needs from you now
 
 1. **The buttons and the held cross-check:** right, or what is wrong, one line each.
 2. **The camera at the boards:** cured, better, or the same?
-3. **The menu:** the structure right? Anything that must go or come back before the art lands?
-4. **Speed:** 15 % right? The carrier's handicap right?
-5. **The ladder:** which level is yours now, and was it a fair match?
-6. **Anything that broke** since noon. From 20:00 only faults are fixed.
+3. **The menu:** right? Anything that must change before the page's stills are taken?
+4. **The hits:** do you read a bot's check coming? Is 8 frames enough, too slow, too kind?
+5. **The ladder:** which level is yours, and was it a fair match?
+6. **The neon mode:** keep it, push it, or drop it?
+7. **Anything that broke.** From here only faults are fixed; a fault you name goes first.

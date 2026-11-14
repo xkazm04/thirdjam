@@ -21,6 +21,7 @@
 #include "JamSim.h"
 #include "JamEventBus.h"
 #include "JamRandom.h"
+#include "JamCarrierMarks.h"
 
 struct FJamCarryDrill
 {
@@ -67,6 +68,15 @@ struct FJamCarryDrill
 	double SecondLeadMinM = -100.0;
 	double SecondStopMps = 2.0;
 	double SecondCutDeg = 60.0;
+	// Lane A201 (track F2 evolution 11, MOVEMENT-12.md): the stop on the light. 0 or more: the stop begins this many frames after the stop's line first lights
+	// (JamCarrierMarks::StopMark, the rule the screen draws), wherever the defender then is, instead of at BrakeAtM; -1 = at BrakeAtM (every script before).
+	int32 LightReactFrames = -1;
+	int32 LitAt = -1;           // the frame the line first lit (-1: not yet)
+	// Lane A201 (evolution 12, the late hand): true = the hand presses only if the line is still lit on the frame it presses; a press the line no longer
+	// invites is not made and the carry ends Setup at once ("not invited": the share counts the stops begun while it was lit). LightRule = the line's rule.
+	bool bOnlyWhileLit = false;
+	JamCarrierMarks::FStopRule LightRule;
+	double LightGapM = -1.0;    // the gap at which the stop on the light began
 
 	// The scene and the run.
 	int32 Me = -1, Def = -1;
@@ -86,7 +96,7 @@ struct FJamCarryDrill
 	{
 		End = Running; Frames = Phase = PhaseFrames = 0; PastFrame = -1;
 		BrakeFrames = DefLifts = DefPokes = DefChecks = BodyShieldRefused = 0;
-		Side = 0.0; MinGapM = 1e9; GoWait = -1; GoFrames = -1; SecondAt = -1; SecondCount = 0; LeadRef = 0.0;
+		Side = 0.0; MinGapM = 1e9; GoWait = -1; GoFrames = -1; SecondAt = -1; SecondCount = 0; LeadRef = 0.0; LitAt = -1; LightGapM = -1.0;
 		bPoked = bLifted = bDown = bBodyBefore = false;
 		Me = Sim.GetHumanIndex();
 		Def = -1;
@@ -155,7 +165,9 @@ struct FJamCarryDrill
 		if (Script == 0) return TEXT("STRAIGHT AT HIM: THIS IS WHAT DOES NOT WORK");
 		if (Script == 3) return FString::Printf(TEXT("%s STICK LENGTHS AWAY: CUT AND SPIN, YOUR BACK TO HIS STICK"), N);
 		if (Script == 4) return FString::Printf(TEXT("%s STICK LENGTHS AWAY: CUT AND DEKE TO THE FAR SIDE"), N);
-		return FString::Printf(TEXT("STOP WHEN HE IS %s STICK LENGTHS AWAY. CUT. GO. STILL ON YOUR SHOULDER? CUT BACK"), N);
+		// Lane A201 (evolution 12): the line now lights where the stop pays; the caption says to read it. One line at 1280.
+		(void)N;
+		return FString(TEXT("LINE LIT: STOP. CUT. GO."));   // the box holds about 30 characters on a line at 1280 (34 wrapped: still a201-e12-clay)
 	}
 
 	bool IsLive() const { return End == Running && Me >= 0 && Def >= 0; }
@@ -174,7 +186,17 @@ struct FJamCarryDrill
 		if (bStopAndGo && Frames >= SettleFrames)
 		{
 			const double CutRad = FMath::DegreesToRadians(LiveCutDeg);
-			if (Phase == 0 && Gap <= LiveBrakeAtM) { Phase = bBrake ? 1 : 2; PhaseFrames = 0; Side = D.Pos.Y - S.Pos.Y >= 0.0 ? -1.0 : 1.0; }
+			bool bBegin = Phase == 0 && LightReactFrames < 0 && Gap <= LiveBrakeAtM;
+			if (Phase == 0 && LightReactFrames >= 0)   // lane A201: on the light, after the hand's lag
+			{
+				if (LitAt < 0 && JamCarrierMarks::StopMark(Sim, Me, LightRule).bLit) LitAt = Frames;
+				if (LitAt >= 0 && Frames - LitAt >= LightReactFrames)
+				{
+					if (bOnlyWhileLit && !JamCarrierMarks::StopMark(Sim, Me, LightRule).bLit) { End = Setup; return In; }   // lane A201: not invited
+					bBegin = true; LightGapM = Gap;
+				}
+			}
+			if (bBegin) { Phase = bBrake ? 1 : 2; PhaseFrames = 0; Side = D.Pos.Y - S.Pos.Y >= 0.0 ? -1.0 : 1.0; }
 			if (Phase == 1 && (S.Vel.Size() <= GoBelowMps || PhaseFrames >= 45))
 			{
 				// The go comes ReactFrames after the carrier is slow enough (the stop is held meanwhile).

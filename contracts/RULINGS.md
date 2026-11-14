@@ -795,3 +795,27 @@ key and decided from its measured rows.
 (5) **The ladder is set twice today**: LADDER SET 1 on main (38766fc9: rookie 84 / 83, pro 47 / 49, all_star 30 / 27, regular / large rink);
 LADDER SET 2 after (1) lands. Law 3 stays a gate: where pro can only be bought back by breaking the stop at 9 m, pro stays over.
 (6) **Package H33 is cut without the hits' marks** (they were ready ten minutes after its queue started): they land behind it and ship at 18:30.
+
+## R-0066 (14 Nov, 18:00): the last rulings before the freeze
+
+Decided by the Director under R-0024 from the lanes' rows; the operator reads them at 20:00 and can overturn any by a word.
+(1) **The brain's evolution 8 ships ON, all four rules at once** (a bot leaves a downed man and steers round him; no long shot with a mate open
+nearer; a carrier does not skate back into its own zone with open ice ahead; a clump of two mates splits). Each alone throws the ladder up to eleven
+points, in opposite directions; together with the bots' longer wind-ups the ladder is set once on the sum (LADDER SET 2). Law 3 is untouched by them
+(pro 94.0 at 8 m, the straight charge 0, identical with and without). The bots' own held cross-check stays off: it cost seven points at pro for 0.3
+braced hits a match.
+(2) **A held shot or pass dies when the carrier loses the puck** (`game.skater.charge_dies_on_loss`, ON): R-0065 point 3 inside the sim. No cell
+moves more than 2.2 points; the bots' goals move 0.06 a match at most.
+(3) **The stop line and the loose-puck ring say only what is true** (lane A201): the line lights about twice a match where the stop pays and goes
+out when a press would come too late; the ring shows only when the puck is one man's fight. Presentation and instrument only.
+(4) **Kept out of the last landing before the freeze, on purpose:** the five new acceptance rows for the buttons (proven headless; a row never run in
+a window failed two releases today) and the hardening lane's new test suite (written against an older main). Both land first in the stabilization
+phase, each with its windowed proof.
+(5) **The GPU crash at a match's start** (9 of 30 first starts of the editor binary off screen; 0 of 60 Development and 0 of 20 Shipping package
+starts) is the engine's async compute queue in the editor's first frames: `r.RDG.AsyncCompute=0` goes on every off-screen QA run; the shipped game's
+renderer settings are not touched (the switch costs about 3 ms of GPU time on the neon look).
+(6) **The release chain learned three things today, all from the 4-frame wind-up and the new front end, none a fault of the game:** the drill's
+held cross-check row waits for its man to be on his feet; the ship row presses Return twice (the landing, then PLAY NOW); an acceptance run can be
+played on a Development package alone before a release is cut (`q-landA3.sh`'s second half), which is how H33 was proven.
+(7) **H33** (17:45, main ea0c3b7a) is the verified fallback. The package at the freeze is cut from the last landing; if its acceptance run is red at
+20:00, H33 is what the operator plays and the red row is the first fault of the night.

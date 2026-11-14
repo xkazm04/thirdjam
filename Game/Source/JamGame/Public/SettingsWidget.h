@@ -105,6 +105,11 @@ private:
 	void RefreshLabels();
 
 	UFUNCTION() void OnKeyCommitted(const FText& Text, ETextCommit::Type Commit);
+public:
+	// Lane A195 (FAULT 7): where the focus goes when the key box commits (Enter or Esc): never nowhere.
+	UWidget* FocusAfterKeyBox() const;
+	class UEditableTextBox* GetKeyBox() const { return KeyBox; }
+private:
 	UFUNCTION() void OnClearKey();
 	UFUNCTION() void OnDifficultyClicked();
 	UFUNCTION() void OnTierClicked();
@@ -173,6 +178,11 @@ public:
 	virtual FReply NativeOnMouseButtonDoubleClick(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	// The cell's text as drawn ("LMB, MMB, MOUSE4"), for tests.
 	FString CellText(EJamVerb Verb, bool bPad) const;
+	// Lane A203 (item 3): while a cell listens, a mouse press anywhere on the screen is the press (a Slate input pre-processor, registered by
+	// BeginListen): it never reaches the menu behind the panel. True = registered (false where Slate is not up).
+	bool IsCapturingOutside() const { return ListenCapture.IsValid(); }
+	virtual void ReleaseSlateResources(bool bReleaseChildren) override;
+	virtual void BeginDestroy() override;
 
 protected:
 	virtual TSharedRef<SWidget> RebuildWidget() override;
@@ -191,6 +201,11 @@ private:
 
 	int32 ListenVerb = -1;
 	bool bListenPad = false;
+	// Lane A203 (item 3): the screen-wide capture while listening, and the mouse button whose release it still swallows (EKeys::Invalid = none).
+	TSharedPtr<class IInputProcessor> ListenCapture;
+	FKey SwallowUp;
+	void StopListenCapture();
+	friend class FJamListenCapture;
 	FString StatusLine;
 	// Frames the screen ignores a press after it began listening (the click that started it is still on its way up).
 	int32 ListenGraceTicks = 0;

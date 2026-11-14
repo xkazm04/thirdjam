@@ -26,6 +26,10 @@ struct JAMGAME_API FJamRadarEntry
 
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Radar")
 	bool bHuman = false;
+
+	// Lane A196 (evolution 10): a man down: 1 the human's mate (a hollow square round him), 2 an opponent (an X over him); 0 a plain dot.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Radar")
+	uint8 DownMark = 0;
 };
 
 class SJamRadar;

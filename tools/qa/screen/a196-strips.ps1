@@ -11,6 +11,7 @@ param(
     [string]$Tier = 'clay',
     [ValidateSet('after', 'before')][string]$Mode = 'after',
     [string]$Drills = '23,2,1',
+    [int]$StartDrill = 0,
     [int]$DrillSeconds = 240,
     [int]$BraceSeconds = 40,
     [int]$Port = 4796,
@@ -38,6 +39,7 @@ $shotDir = Join-Path $root 'Game\Saved\Screenshots\WindowsEditor'
 Get-ChildItem $shotDir -Filter 'a196-*.png' -ErrorAction SilentlyContinue | Remove-Item -Force
 $cvars = "jam.screen.HoldStill=1,jam.screen.FadeSeconds=0,jam.hit.Capture=$Strips"
 if ($Mode -eq 'before') { $cvars += ',jam.hit.Tell=0,jam.hit.Lean=0,jam.hit.Burst=0,jam.hit.Down=0,jam.hit.PuckFlash=0' }
+if ($StartDrill -gt 0) { $cvars += ",jam.ctrl.Drill=$StartDrill" }   # evolution 10: the drill from frame 0 (the same frames run to run: before / after pairs)
 if ($ExtraCVars) { $cvars += ",$ExtraCVars" }
 $a = "`"$uproject`" /Game/Maps/Rink -game -RenderOffScreen -Multiprocess -ResX=$ResX -ResY=$ResY -ForceRes -unattended -nosplash -nosound -UseFixedTimeStep -FPS=60 -log -abslog=`"$log`" -ForceLogFlush " +
      "-cut=$cut -dpcvars=$cvars -RemoteConsoleIP=127.0.0.1 -RemoteConsolePort=$Port"

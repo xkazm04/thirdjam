@@ -23,6 +23,7 @@
 #include "HAL/IConsoleManager.h"
 #include "Misc/Paths.h"
 #include "UnrealClient.h"
+#include "Framework/Application/SlateApplication.h"
 
 namespace
 {
@@ -52,13 +53,42 @@ ULobbyWidget* ULobbyWidget::Open(APlayerController* PC)
 	if (!PC) return nullptr;
 	ULobbyWidget* W = CreateWidget<ULobbyWidget>(PC, ULobbyWidget::StaticClass());
 	if (!W) return nullptr;
+	// Lane A195 (FAULT 6, the hardening lane): the lobby takes the keyboard and pad focus on its first button (HOST), as every screen of the front
+	// end does; the viewport kept it before and pad keys and Esc reached nothing. The widget itself is focusable so a key that reaches it (Esc, B) is heard.
+	W->SetIsFocusable(true);
 	W->AddToViewport(20);
 	PC->SetShowMouseCursor(true);
+	W->TakeWidget();
 	FInputModeGameAndUI Mode;
-	Mode.SetWidgetToFocus(W->TakeWidget());
+	UWidget* First = W->GetFirstFocusable();
+	Mode.SetWidgetToFocus(First ? First->TakeWidget() : W->TakeWidget());
 	Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
 	PC->SetInputMode(Mode);
+	W->PendingFocus = First;
+	UE_LOG(LogTemp, Log, TEXT("JAMLOBBY open focus=%s"), First ? *First->GetName() : TEXT("none"));
 	return W;
+}
+
+UWidget* ULobbyWidget::GetFirstFocusable() const
+{
+	// HOST while the host's row stands (idle), else JOIN, else BACK: the first enabled button a player reads.
+	for (UButton* B : { HostButton.Get(), JoinButton.Get(), StartButton.Get(), BackButton.Get() })
+		if (B && B->GetIsEnabled() && B->GetVisibility() != ESlateVisibility::Collapsed && B->GetVisibility() != ESlateVisibility::Hidden) return B;
+	return BackButton;
+}
+
+bool ULobbyWidget::IsLeaveKey(const FKey& K) { return K == EKeys::Escape || K == EKeys::Gamepad_FaceButton_Right; }
+
+FReply ULobbyWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent)
+{
+	// Lane A195 (FAULT 6): Esc and pad B leave the lobby for HOME by BACK's own road (OnBack: what BACK does is unchanged).
+	if (IsLeaveKey(InKeyEvent.GetKey()) && !InKeyEvent.IsRepeat())
+	{
+		UE_LOG(LogTemp, Log, TEXT("JAMLOBBY key %s: back"), *InKeyEvent.GetKey().ToString());
+		OnBack();
+		return FReply::Handled();
+	}
+	return Super::NativeOnKeyDown(InGeometry, InKeyEvent);
 }
 
 UJamLobbySubsystem* ULobbyWidget::Lobby() const
@@ -73,15 +103,28 @@ TSharedRef<SWidget> ULobbyWidget::RebuildWidget()
 	return Super::RebuildWidget();
 }
 
+// Lane A195 (U2 evolution 7): a button in the front end's item look (FJamMenuLook::MakeItem, painted by FJamMenuPainter); what it does is the caller's.
 UButton* ULobbyWidget::MakeButton(const TCHAR* Name, const FString& Label, UTextBlock*& OutText)
 {
-	UButton* B = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), Name);
-	B->SetBackgroundColor(FLinearColor(0.85f, 0.82f, 0.75f, 1.f));
-	OutText = MakeText(WidgetTree, *FString::Printf(TEXT("%s_Text"), Name), 18, FLinearColor(0.05f, 0.05f, 0.06f));
-	OutText->SetText(FText::FromString(Label));
-	OutText->SetShadowOffset(FVector2D::ZeroVector);
-	B->AddChild(OutText);
+	UWidget* Bar = nullptr;
+	UButton* B = FJamMenuLook::MakeItem(WidgetTree, Label, FJamMenuLook::ItemSmall, OutText, Bar, true);
+	B->Rename(Name);
+	if (!Painter) Painter = MakeShared<FJamMenuPainter>();
+	Painter->Add(B, OutText, Bar);
 	return B;
+}
+
+FString ULobbyWidget::RinkFor(const FString& CutId)
+{
+	return UJamMenuFlow::RinkName(CutId);
+}
+
+TArray<FString> ULobbyWidget::GetWordsForTest() const
+{
+	TArray<FString> Out;
+	for (const UTextBlock* T : { Title.Get(), HostHelp.Get(), JoinHelp.Get(), CodesHelp.Get(), StartText.Get() }) if (T) Out.Add(T->GetText().ToString());
+	if (CodeBox) Out.Add(CodeBox->GetHintText().ToString());
+	return Out;
 }
 
 void ULobbyWidget::BuildTree()
@@ -89,6 +132,7 @@ void ULobbyWidget::BuildTree()
 	if (!WidgetTree) WidgetTree = NewObject<UWidgetTree>(this, TEXT("WidgetTree"), RF_Transient);
 	if (WidgetTree->RootWidget) return;
 	UWidgetTree* T = WidgetTree;
+	using L = FJamMenuLook;
 	Root = T->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(), TEXT("Root"));
 	T->RootWidget = Root;
 
@@ -107,52 +151,60 @@ void ULobbyWidget::BuildTree()
 	BackdropSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
 	BackdropSlot->SetOffsets(FMargin(0.f));
 
-	UBorder* Slate = T->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("Slate"));
-	Slate->SetBrushColor(Ink);
-	Slate->SetPadding(FMargin(36, 28));
-	UCanvasPanelSlot* SlateSlot = Root->AddChildToCanvas(Slate);
-	SlateSlot->SetAnchors(FAnchors(0.5f, 0.5f, 0.5f, 0.5f));
-	SlateSlot->SetAlignment(FVector2D(0.5f, 0.5f));
-	SlateSlot->SetAutoSize(true);   // lane A144: as high as its rows (a fixed 760 x 560 left a third of the box empty); the width is the column's box
-	SlateSlot->SetPosition(FVector2D::ZeroVector);
-
+	// Lane A195 (U2 evolution 7): the panel of the style table (the team rule over the panel fill), the title in the menu's face, white and dim type,
+	// the items in the item look. The words name rinks, not cuts. Every row and every button is the one it was; what each button does is unchanged.
 	Column = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("Column"));
 	USizeBox* ColumnBox = T->ConstructWidget<USizeBox>(USizeBox::StaticClass(), TEXT("ColumnBox"));
-	ColumnBox->SetWidthOverride(748.f);
+	ColumnBox->SetWidthOverride(ColumnW);
 	ColumnBox->AddChild(Column);
-	Slate->SetContent(ColumnBox);
+	Panel = L::MakePanel(T, ColumnBox, 0.f, FMargin(L::CardPad, L::Unit * 3.f));
+	UCanvasPanelSlot* PanelSlot = Root->AddChildToCanvas(Panel);
+	PanelSlot->SetAnchors(FAnchors(0.5f, 0.5f, 0.5f, 0.5f));
+	PanelSlot->SetAlignment(FVector2D(0.5f, 0.5f));
+	PanelSlot->SetAutoSize(true);   // lane A144: as high as its rows; the width is the column's box
+	PanelSlot->SetPosition(FVector2D::ZeroVector);
 	auto Row = [&](UWidget* W, float Top = 8.f) { UVerticalBoxSlot* S = Column->AddChildToVerticalBox(W); S->SetPadding(FMargin(0, Top, 0, 0)); S->SetHorizontalAlignment(HAlign_Fill); return S; };
+	auto Words = [&](const TCHAR* Name, int32 Size, FName Face, const FLinearColor& C, int32 Track = 0)
+	{
+		UTextBlock* W = T->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), Name);
+		W->SetFont(L::Font(Size, Face, Track));
+		W->SetColorAndOpacity(FSlateColor(C));
+		W->SetAutoWrapText(false);
+		W->SetWrapTextAt(ColumnW);
+		return W;
+	};
 
-	Title = MakeText(T, TEXT("Title"), 34, Chalk);
+	Title = Words(TEXT("Title"), L::Title, FName("Black"), L::Text(), 120);
 	Title->SetText(FText::FromString(TEXT("PLAY WITH A FRIEND")));
 	Row(Title, 0);
-	Status = MakeText(T, TEXT("Status"), 16, Dim, false);
-	Row(Status, 6);
+	Status = Words(TEXT("Status"), L::Body - 2, FName("Regular"), L::TextDim());
+	Row(Status, 4);
 
 	// Lane A144: the words of JOIN-GUIDE.md sections 2 and 3, where the player needs them.
-	HostHelp = MakeText(T, TEXT("HostHelp"), 15, Chalk, false);
-	HostHelp->SetText(FText::FromString(TEXT("HOST: pick the cut with < > and press HOST. Both machines: the same network, the same build. The match plays at the cut's own level.")));
+	HostHelp = Words(TEXT("HostHelp"), L::Body - 2, FName("Regular"), L::Text());
+	HostHelp->SetText(FText::FromString(TEXT("HOST: pick the rink with < > and press HOST. Both machines: the same network, the same build. The match plays at the rink's own level.")));
 	Row(HostHelp, 16);
 
-	// Host row: < cut > [Host]
+	// Host row: < rink > [Host]
 	HostRow = T->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("HostRow"));
 	UTextBlock* Tmp = nullptr;
 	UButton* Prev = MakeButton(TEXT("CutPrev"), TEXT("<"), Tmp);
 	Prev->OnClicked.AddDynamic(this, &ULobbyWidget::OnCutPrev);
 	HostRow->AddChildToHorizontalBox(Prev);
-	CutText = MakeText(T, TEXT("CutText"), 20, Chalk);
+	CutText = Words(TEXT("CutText"), L::Item - 4, FName("Black"), L::Text(), L::TrackLabel);
 	UHorizontalBoxSlot* CutSlot = HostRow->AddChildToHorizontalBox(CutText);
-	CutSlot->SetPadding(FMargin(14, 6));
+	CutSlot->SetPadding(FMargin(L::Unit * 2.f, 6));
 	CutSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+	CutSlot->SetVerticalAlignment(VAlign_Center);
 	UButton* Next = MakeButton(TEXT("CutNext"), TEXT(">"), Tmp);
 	Next->OnClicked.AddDynamic(this, &ULobbyWidget::OnCutNext);
 	HostRow->AddChildToHorizontalBox(Next);
 	HostButton = MakeButton(TEXT("HostButton"), TEXT("HOST"), Tmp);
 	HostButton->OnClicked.AddDynamic(this, &ULobbyWidget::OnHost);
-	HostRow->AddChildToHorizontalBox(HostButton)->SetPadding(FMargin(14, 0, 0, 0));
+	HostRow->AddChildToHorizontalBox(HostButton)->SetPadding(FMargin(L::Gap, 0, 0, 0));
 	Row(HostRow, 6);
 
-	JoinHelp = MakeText(T, TEXT("JoinHelp"), 15, Chalk, false);
+	JoinHelp = Words(TEXT("JoinHelp"), L::Body - 2, FName("Regular"), L::Text());
 	JoinHelp->SetText(FText::FromString(TEXT("GUEST: type the host's code in the box, press JOIN.")));
 	Row(JoinHelp, 16);
 
@@ -160,43 +212,45 @@ void ULobbyWidget::BuildTree()
 	JoinRow = T->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("JoinRow"));
 	CodeBox = T->ConstructWidget<UEditableTextBox>(UEditableTextBox::StaticClass(), TEXT("CodeBox"));
 	CodeBox->SetHintText(FText::FromString(TEXT("friend's code: ABCD-EFGH")));
-	// Lane A144: chalk on dark (the default light box hid its grey hint).
-	CodeBox->WidgetStyle.SetBackgroundColor(FLinearColor(0.10f, 0.10f, 0.12f, 1.f));
-	CodeBox->WidgetStyle.SetForegroundColor(Chalk);
-	CodeBox->WidgetStyle.SetFocusedForegroundColor(Chalk);
-	CodeBox->WidgetStyle.SetFont(RegularFont(18));
-	CodeBox->WidgetStyle.SetPadding(FMargin(10, 7));
+	// Lane A144: light type on dark (the default light box hid its grey hint); lane A195: the settings' key box.
+	CodeBox->WidgetStyle.SetBackgroundColor(FLinearColor(0.16f, 0.17f, 0.20f, 1.f));
+	CodeBox->WidgetStyle.SetForegroundColor(L::Text());
+	CodeBox->WidgetStyle.SetFocusedForegroundColor(L::Text());
+	CodeBox->WidgetStyle.SetFont(L::Font(L::Body, FName("Regular")));
+	CodeBox->WidgetStyle.SetPadding(FMargin(12, 8));
+	CodeBox->SetClearKeyboardFocusOnCommit(false);   // lane A195 (FAULT 7 class): Enter or Esc in the box hand the focus to JOIN (OnCodeCommitted)
+	CodeBox->OnTextCommitted.AddDynamic(this, &ULobbyWidget::OnCodeCommitted);
 	UHorizontalBoxSlot* CodeSlot = JoinRow->AddChildToHorizontalBox(CodeBox);
 	CodeSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
 	JoinButton = MakeButton(TEXT("JoinButton"), TEXT("JOIN"), Tmp);
 	JoinButton->OnClicked.AddDynamic(this, &ULobbyWidget::OnJoin);
-	JoinRow->AddChildToHorizontalBox(JoinButton)->SetPadding(FMargin(14, 0, 0, 0));
+	JoinRow->AddChildToHorizontalBox(JoinButton)->SetPadding(FMargin(L::Gap, 0, 0, 0));
 	Row(JoinRow, 6);
 
-	CodesText = MakeText(T, TEXT("CodesText"), 30, Chalk);
+	CodesText = Words(TEXT("CodesText"), L::Title - 2, FName("Black"), L::Text(), L::TrackLabel);
 	CodesText->SetJustification(ETextJustify::Center);
 	Row(CodesText, 18);
-	CodesHelp = MakeText(T, TEXT("CodesHelp"), 15, Chalk, false);
+	CodesHelp = Words(TEXT("CodesHelp"), L::Body - 2, FName("Regular"), L::Text());
 	CodesHelp->SetText(FText::FromString(TEXT("Read your friend the code whose address starts like theirs (usually 192.168.). The 127.0.0.1 code is for two copies on one machine.")));
 	CodesHelp->SetJustification(ETextJustify::Center);
 	Row(CodesHelp, 6);
-	WarningText = MakeText(T, TEXT("WarningText"), 14, Dim, false);
+	WarningText = Words(TEXT("WarningText"), L::Caption, FName("Regular"), L::TextDim());
 	Row(WarningText, 8);
 
 	NamesRow = T->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("NamesRow"));
 	HomePlate = T->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("HomePlate"));
-	HomePlate->SetBrushColor(Blue);
-	HomePlate->SetPadding(FMargin(16, 8));
-	HomeName = MakeText(T, TEXT("HomeName"), 22, FLinearColor::White);
+	HomePlate->SetBrush(L::FillBrush(L::Home(), false));
+	HomePlate->SetPadding(FMargin(L::Unit * 2.f, L::Unit));
+	HomeName = Words(TEXT("HomeName"), L::Item - 6, FName("Black"), L::TextOnFocus(), L::TrackLabel);
 	HomePlate->SetContent(HomeName);
 	NamesRow->AddChildToHorizontalBox(HomePlate)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
-	UTextBlock* Vs = MakeText(T, TEXT("Vs"), 22, Dim);
-	Vs->SetText(FText::FromString(TEXT("  vs  ")));
+	UTextBlock* Vs = Words(TEXT("Vs"), L::Item - 6, FName("Black"), L::TextDim());
+	Vs->SetText(FText::FromString(TEXT("  VS  ")));
 	NamesRow->AddChildToHorizontalBox(Vs)->SetVerticalAlignment(VAlign_Center);
 	AwayPlate = T->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("AwayPlate"));
-	AwayPlate->SetBrushColor(Orange);
-	AwayPlate->SetPadding(FMargin(16, 8));
-	AwayName = MakeText(T, TEXT("AwayName"), 22, FLinearColor::White);
+	AwayPlate->SetBrush(L::FillBrush(L::Away(), false));
+	AwayPlate->SetPadding(FMargin(L::Unit * 2.f, L::Unit));
+	AwayName = Words(TEXT("AwayName"), L::Item - 6, FName("Black"), L::TextOnFocus(), L::TrackLabel);
 	AwayPlate->SetContent(AwayName);
 	NamesRow->AddChildToHorizontalBox(AwayPlate)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
 	Row(NamesRow, 18);
@@ -205,10 +259,11 @@ void ULobbyWidget::BuildTree()
 	BackButton = MakeButton(TEXT("BackButton"), TEXT("BACK"), Tmp);
 	BackButton->OnClicked.AddDynamic(this, &ULobbyWidget::OnBack);
 	Bottom->AddChildToHorizontalBox(BackButton);
-	NameText = MakeText(T, TEXT("NameText"), 14, Dim, false);
+	NameText = Words(TEXT("NameText"), L::Caption, FName("Regular"), L::TextDim());
 	UHorizontalBoxSlot* NameSlot = Bottom->AddChildToHorizontalBox(NameText);
 	NameSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
 	NameSlot->SetPadding(FMargin(14, 8));
+	NameSlot->SetVerticalAlignment(VAlign_Center);
 	UTextBlock* StartLabel = nullptr;
 	StartButton = MakeButton(TEXT("StartButton"), TEXT("START"), StartLabel);
 	StartText = StartLabel;
@@ -226,14 +281,29 @@ FString ULobbyWidget::GetStatusLine() const
 void ULobbyWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
+	// Lane A195 (FAULT 6): no dead key. The focus never rests on the lobby itself, on the viewport or on nothing while the lobby is up: it goes to the
+	// first button (a text being typed in the code box keeps its box).
+	if (APlayerController* FPC = GetOwningPlayer())
+	{
+		if (!PendingFocus.IsValid() && FSlateApplication::IsInitialized())
+		{
+			const TSharedPtr<SWidget> KF = FSlateApplication::Get().GetKeyboardFocusedWidget();
+			const FString Type = KF.IsValid() ? KF->GetType().ToString() : FString();
+			if (HasUserFocus(FPC) || !KF.IsValid() || Type.Contains(TEXT("Viewport"))) PendingFocus = GetFirstFocusable();
+		}
+		if (UWidget* P = PendingFocus.Get()) { P->SetFocus(); PendingFocus = nullptr; }
+	}
 	UJamLobbySubsystem* L = Lobby();
 	if (!L || !Status) return;
 	const EJamLobbyState S = L->GetState();
 	const bool bIdle = S == EJamLobbyState::Idle || S == EJamLobbyState::Failed || S == EJamLobbyState::Ended;
 	const bool bHosting = S == EJamLobbyState::Hosting || (S == EJamLobbyState::Ready && L->IsHost()) || S == EJamLobbyState::Starting;
-	Status->SetText(FText::FromString(L->GetStatusText()));
-	Status->SetColorAndOpacity(FSlateColor(S == EJamLobbyState::Failed ? Orange : Dim));
-	if (Cuts.IsValidIndex(CutIndex)) CutText->SetText(FText::FromString(bIdle ? Cuts[CutIndex] : L->GetCut()));
+	// Lane A195: the status in the front end's words (the subsystem says "cut: <id>"; the screen names the rink).
+	FString StatusLine = L->GetStatusText();
+	if (!L->GetCut().IsEmpty()) StatusLine = StatusLine.Replace(*FString::Printf(TEXT("cut: %s"), *L->GetCut()), *FString::Printf(TEXT("rink: %s"), *RinkFor(L->GetCut())));
+	Status->SetText(FText::FromString(StatusLine));
+	Status->SetColorAndOpacity(FSlateColor(S == EJamLobbyState::Failed ? FJamMenuLook::Focus() : FJamMenuLook::TextDim()));
+	if (Cuts.IsValidIndex(CutIndex)) CutText->SetText(FText::FromString(RinkFor(bIdle ? Cuts[CutIndex] : L->GetCut())));   // lane A195: the rink's name, not the id
 	HostRow->SetVisibility(bIdle || bHosting ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
 	HostButton->SetIsEnabled(bIdle);
 	JoinRow->SetVisibility(bIdle || S == EJamLobbyState::Joining ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
@@ -256,6 +326,7 @@ void ULobbyWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 	}
 	StartButton->SetVisibility(L->IsHost() && S == EJamLobbyState::Ready ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
 	NameText->SetText(FText::FromString(bIdle ? FString() : FString::Printf(TEXT("you: %s   port %d"), *L->GetLocalName(), L->GetBoundPort())));
+	if (Painter) Painter->Paint(GetOwningPlayer(), true);   // lane A195: the item look; the hovered item takes the focus
 	// The level change takes the widget with it; nothing to do when the match starts.
 
 	// Proof screenshots (jam.net.AutoShot 1): the screen three seconds after it opened, named by role and state.
@@ -302,6 +373,7 @@ void ULobbyWidget::OnBack()
 			Mode.SetWidgetToFocus(Menu->TakeWidget());
 			PC->SetInputMode(Mode);
 			Menu->ShowScreen(EJamMenuScreen::Main);
+			Menu->FocusFriendAfterLobby();   // lane A195 (FAULT 6): back on HOME, the focus on the entry it left from
 		}
 		else
 		{
@@ -333,14 +405,15 @@ TSharedRef<SWidget> ULobbyCardWidget::RebuildWidget()
 		UCanvasPanel* Root = WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(), TEXT("Root"));
 		WidgetTree->RootWidget = Root;
 		UBorder* Plate = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("Plate"));
-		Plate->SetBrushColor(Ink);
+		Plate->SetBrush(FJamMenuLook::PanelBrush());   // lane A195: the style table's panel
 		Plate->SetPadding(FMargin(48, 28));
 		UVerticalBox* Col = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("Col"));
 		Plate->SetContent(Col);
-		TitleText = MakeText(WidgetTree, TEXT("CardTitle"), 56, Orange);
+		TitleText = MakeText(WidgetTree, TEXT("CardTitle"), 56, FJamMenuLook::Text());
+		TitleText->SetFont(FJamMenuLook::Font(56, FName("Black"), 120));   // lane A195: the front end's display face
 		TitleText->SetJustification(ETextJustify::Center);
 		Col->AddChildToVerticalBox(TitleText);
-		SubtitleText = MakeText(WidgetTree, TEXT("CardSubtitle"), 18, Chalk, false);
+		SubtitleText = MakeText(WidgetTree, TEXT("CardSubtitle"), 18, FJamMenuLook::TextDim(), false);
 		SubtitleText->SetJustification(ETextJustify::Center);
 		Col->AddChildToVerticalBox(SubtitleText)->SetPadding(FMargin(0, 10, 0, 0));
 		UCanvasPanelSlot* S = Root->AddChildToCanvas(Plate);
@@ -352,4 +425,10 @@ TSharedRef<SWidget> ULobbyCardWidget::RebuildWidget()
 	TitleText->SetText(FText::FromString(PendingTitle));
 	SubtitleText->SetText(FText::FromString(PendingSubtitle));
 	return Super::RebuildWidget();
+}
+
+// Lane A195 (FAULT 7 class): the code box never leaves the focus nowhere: Enter or Esc gives it to JOIN (pressing JOIN is still the player's).
+void ULobbyWidget::OnCodeCommitted(const FText& InText, ETextCommit::Type Commit)
+{
+	if ((Commit == ETextCommit::OnEnter || Commit == ETextCommit::OnCleared) && JoinButton) JoinButton->SetFocus();
 }

@@ -211,8 +211,8 @@ void UJamHudWidget::UpdateMarks(const FJamPresentationFrame& F)
 	const int32 StopNow = !Stop.bShow ? 0 : (Stop.bLit ? 2 : 1);
 	if (StopNow != MarkStopState)
 	{
-		UE_LOG(LogTemp, Log, TEXT("JAMHUD frame=%lld mark=stop state=%s def=%d dist=%.1f closing=%.1f shown=%d off=%.0f mode=%d"), F.SimFrame, StopNow == 2 ? TEXT("lit") : StopNow == 1 ? TEXT("armed") : TEXT("off"), Stop.Def, Stop.DistM, Stop.ClosingMps,
-			bStopShown ? 1 : 0, Stop.OffDeg, CVarJamHudStopBarMode.GetValueOnGameThread());
+		UE_LOG(LogTemp, Log, TEXT("JAMHUD frame=%lld mark=stop state=%s def=%d dist=%.1f closing=%.1f shown=%d off=%.0f mode=%d gate=%d second_s=%.2f net=%.1f"), F.SimFrame, StopNow == 2 ? TEXT("lit") : StopNow == 1 ? TEXT("armed") : TEXT("off"), Stop.Def, Stop.DistM, Stop.ClosingMps,
+			bStopShown ? 1 : 0, Stop.OffDeg, CVarJamHudStopBarMode.GetValueOnGameThread(), Stop.Gate, FMath::Min(Stop.SecondSec, 99.0), Stop.NetM);   // lane A201: which gate kept it pale
 	}
 	MarkStopState = StopNow;
 	MarkStill(GContestStill, TEXT("contest"), bConShown || bOppShown, F.SimFrame);

@@ -16,6 +16,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Blueprint/UserWidget.h"
 #include "JamSim.h"
 #include "HitRead.generated.h"
 
@@ -59,7 +60,27 @@ public:
 	static constexpr double BraceRadiusM = 1.35;
 
 	// The burst's ring radius for a hit's closing speed (m/s): 0.8 m at a soft touch to 3.0 m at 14 m/s and over; a braced hit x 1.2.
-	static double BurstRadiusM(double ClosingMps, bool bBraced);   // 1.2 m at a soft touch to 3.0 m at 14 m/s
+	static double BurstRadiusM(double ClosingMps, bool bBraced);
+	// Evolution 10 (the Director: "the ring is the loudest thing on the sheet"): the burst's weight 0..1 by the closing speed (closing / 14 m/s; a bump 0).
+	// The ring keeps its radius by speed; its bars' width, brightness and count follow the weight and fall from the first frame: a light hit is about a
+	// third of evolution 9's (width at weight 0.1: 8 cm against 31). No bar is drawn within BodyClearM of either body (standing: a circle round the
+	// drawn figure; down: round the lying body).
+	static float BurstWeight(double ClosingMps) { return static_cast<float>(FMath::Clamp(ClosingMps / 14.0, 0.0, 1.0)); }
+	static float BurstBarWidthCm(float Weight, float Age01) { return (6.f + 20.f * FMath::Clamp(Weight, 0.f, 1.f)) * (1.f - FMath::Clamp(Age01, 0.f, 1.f)) + 2.f; }
+	static float BurstEmissive(float Weight, float Age01) { const float K = 1.f - FMath::Clamp(Age01, 0.f, 1.f); return (3.f + 12.f * FMath::Clamp(Weight, 0.f, 1.f)) * K * K + 0.5f; }
+	static constexpr double BodyClearM = 0.75;
+	// True when a mark at P (rink metres) keeps clear of a standing body at C, or of a lying one from Feet along Fall (Fall zero: standing).
+	static bool ClearOfBody(const FVector2D& P, const FVector2D& C, const FVector2D& Fall, double Margin);
+	// Evolution 10 item 3: the chevron's tip, metres from the checker's centre towards his target (GapM: centre to centre; < 0 = no target: the tip
+	// runs TellNearM -> TellFarM along his facing), Since frames after the press, over Windup frames: it leaves his body's edge at the press and reaches
+	// the target's near side when the wind-up ends (the window opens), so it meets the man when the contact comes. Scales with whatever the call carries.
+	// Evolution 10 (strips: a tip that ran over the wind-up alone met a man already close on the press): the tip covers the way in proportion to the frames
+	// left to the contact as they look now (TipRemainFrames: the bodies' gap over the closing speed, never before the wind-up ends), so it stands on him
+	// when the bodies meet, at any wind-up length the call carries.
+	static double TipRemainFrames(double GapM, double ClosingMps, float Since, int32 Windup);
+	static double TipDistM(double GapM, float Since, int32 Windup, double ClosingMps);
+	// The tip "meets" the target: within TipMeetM of his near side.
+	static constexpr double TipMeetM = 0.25;
 	// The shards: how many, and whether a direction (unit, rink plane) may carry one for a victim falling along FallDir (none inside 55 degrees of it).
 	static int32 ShardCount(bool bBraced) { return bBraced ? 10 : 6; }
 	static bool ShardAllowed(const FVector2D& ShardDir, const FVector2D& FallDir);
@@ -80,6 +101,8 @@ public:
 		int64 EndFrame = -1;       // the frame it landed or missed (-1 running)
 		EJamHitResult Result = EJamHitResult::None;
 		bool bStripped = false;    // a cross-check's stick took the puck on the press
+		int32 Target = -1;         // evolution 10: the man the chevron points at (the nearest opponent ahead at the press; a cross-check's CrossTarget)
+		int64 TipMetFrame = -1;    // the first sim frame the tip met him
 	};
 	struct FBurst
 	{
@@ -90,6 +113,8 @@ public:
 		double RadiusM = 1.0;
 		bool bBraced = false;
 		FLinearColor Colour = FLinearColor::White;
+		float Weight = 0.f;        // evolution 10: BurstWeight
+		int32 Checker = -1, Victim = -1;
 	};
 	struct FDown
 	{
@@ -114,6 +139,7 @@ public:
 		double BurstM = 0.0;
 		int32 Windup = 0;
 		int32 PressToContact = -1;
+		int32 TipMet = -1;         // evolution 10: frames from the press to the tip meeting the target (-1 never)
 	};
 
 	// After a sim step. SkaterSpeed: game.skater.speed (a check event's Strength is closing / it). TeamColours: the burst and the tells take the checker's.
@@ -131,6 +157,8 @@ public:
 	const TArray<FPress>& GetPresses() const { return Presses; }
 	const TArray<FBurst>& GetBursts() const { return Bursts; }
 	const TArray<FDown>& GetDowns() const { return Downs; }
+	int32 TeamOf(int32 I) const { return Teams.IsValidIndex(I) ? Teams[I] : 0; }
+	FLinearColor ColourOf(int32 Team) const { return Colours[FMath::Clamp(Team, 0, 1)]; }
 	// Running counts (the probe line): hits by result, misses, bursts drawn.
 	int32 Hits = 0, Misses = 0, Strips = 0;
 
@@ -144,8 +172,47 @@ private:
 	TArray<double> BracedSpeed;
 	TArray<int32> Teams;
 	TArray<bool> Down;          // per skater, for the drawing (down skaters show no tells)
+	TArray<FVector2D> PosM;     // per skater, the sim's place this frame (the tip's meeting is judged on it)
+	TArray<FVector2D> FallM;    // per skater, the fall while down (zero standing)
+	TArray<FVector2D> VelM;     // per skater, the sim's velocity this frame (the tip's closing speed)
+	TArray<int32> PrevMissed;   // per skater, the sim's ChecksMissed at the last frame (evolution 10: the miss is the sim's own)
 	int64 LastFrame = -1;
 	FLinearColor Colours[2] = { FLinearColor(1.f, 0.4f, 0.05f), FLinearColor(0.05f, 0.3f, 1.f) };
+};
+
+// Evolution 10 item 2: a man down outside the frame. An arrow on the screen's edge (inset EdgeInsetPx) pointing at him, in his team colour: the human's
+// mates a hollow diamond with a short arrow, opponents a solid triangle; it stays while he is down and off screen. The radar (UJamRadarWidget) marks
+// every downed man (JamHitDowns on the presentation frame). One JAMHIT offscreen line a knockdown it marks (its delay in sim frames).
+struct JAMGAME_API FJamEdgeArrow
+{
+	FVector2D PosPx = FVector2D::ZeroVector;   // the arrow's centre (widget space)
+	float AngleRad = 0.f;                      // where it points (screen x right, y down)
+	bool bMate = false;
+	FLinearColor Colour = FLinearColor::White;
+};
+namespace JamHitEdge
+{
+	constexpr float EdgeInsetPx = 56.f;
+	constexpr float ArrowPx = 30.f;
+	// Off screen: the projected point (widget space; bInFront false when behind the camera) outside the screen. Pure.
+	JAMGAME_API bool IsOffScreen(const FVector2D& P, bool bInFront, const FVector2D& Size);
+	// The arrow's place on the inset edge along the ray from the screen's centre in Dir (screen space, y down). Pure.
+	JAMGAME_API FVector2D EdgePlace(const FVector2D& Size, const FVector2D& Dir, float Inset);
+	// The arrow's outline (closed polyline, widget space) by side: a triangle (opponent) or a diamond with a tip (mate).
+	JAMGAME_API void Outline(const FJamEdgeArrow& A, TArray<FVector2f>& Out);
+}
+
+UCLASS()
+class JAMGAME_API UJamHitEdgeWidget : public UUserWidget
+{
+	GENERATED_BODY()
+public:
+	TWeakObjectPtr<class AJamHitRead> Source;
+	TArray<FJamEdgeArrow> Arrows;
+	virtual int32 NativePaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements,
+		int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
+	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+	TMap<int32, int64> Logged;   // skater -> the down's first frame already logged
 };
 
 UCLASS()
@@ -168,6 +235,11 @@ public:
 	static bool FigureHas(UObject* Figure, const TCHAR* Function);
 
 	const FJamHitReadModel& GetModel() const { return Model; }
+	// Evolution 10: what the edge widget reads (the last render frame's drawn places, the human, the sim frame).
+	TArray<FVector> DrawnAtCm;
+	int32 HumanTeam = 0;
+	int64 SimFrame = 0;
+	static bool OffScreenOn();
 	int32 GetBarsDrawn() const { return BarsDrawn; }
 
 private:
@@ -186,4 +258,9 @@ private:
 	FString CaptureKind;
 	TMap<FString, int32> CapturesPerKind;
 	TArray<bool> LeanApplied;
+	UPROPERTY(Transient) TObjectPtr<UJamHitEdgeWidget> Edge;
+	// PROPS READY: device B's wind-up takes told per figure (jam.hit.BTakes).
+	void TellTakes(const UJamSim* Sim, const TArray<TObjectPtr<AJamSkater>>& Skaters);
+	TArray<bool> TakesOn, TakesWant;
+	TArray<TWeakObjectPtr<UObject>> TakesFig;
 };

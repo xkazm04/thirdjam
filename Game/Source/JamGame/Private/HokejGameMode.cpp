@@ -311,7 +311,7 @@ void AHokejGameMode::StartPlay()
 		FFileHelper::SaveStringToFile(FDateTime::Now().ToString(TEXT("%Y-%m-%d %H:%M:%S ")) + Line + LINE_TERMINATOR, *(FPaths::ProjectLogDir() / TEXT("JamCut.log")),
 			FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM, &IFileManager::Get(), FILEWRITE_Append);
 		UE_LOG(LogHokej, Error, TEXT("%s"), *Line);
-		PendingCutToast = FString::Printf(TEXT("CUT REJECTED: %s\n%s\nPlaying hockey.regular"), *FPaths::GetCleanFilename(GLastCutPath), *Reason.Left(160));
+		PendingCutToast = FString::Printf(TEXT("GAME NOT LOADED: %s\n%s\nPlaying the regular rink"), *FPaths::GetCleanFilename(GLastCutPath), *Reason.Left(160));
 		LoadCut(TEXT("hockey.regular"));
 	}
 }
@@ -1489,6 +1489,10 @@ void AHokejGameMode::PushPresentation()
 			F.PickupColours.Add(JamEffects::KindColour(FJamEffectsConfig::IsBuiltin(Pk.Kind) ? Pk.Kind : FName(TEXT("custom"))));
 		}
 	}
+	// Lane A196 (evolution 10): the downed men for the radar's marks (the middle of the lying body).
+	F.DownsM.Reset();
+	F.DownsTeam.Reset();
+	if (AJamHitRead::OffScreenOn()) for (const FJamSkaterState& St : Sim->GetSkaters()) if (St.IsDown()) { F.DownsM.Add(St.Pos + St.KnockDir.GetSafeNormal() * (FJamHitReadModel::DownBodyM * 0.5)); F.DownsTeam.Add(St.Team); }
 	F.HumanIndex = Sim->GetHumanIndex();
 	if (Sim->GetSkaters().IsValidIndex(F.HumanIndex))
 	{

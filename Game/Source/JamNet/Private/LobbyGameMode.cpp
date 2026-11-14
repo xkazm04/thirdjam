@@ -17,6 +17,8 @@
 #include "InputMapping.h"
 #include "CameraFollow.h"
 #include "DirectorsCallController.h"
+#include "DirectorsCallWidget.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Engine/World.h"
 #include "Engine/GameInstance.h"
 #include "EngineUtils.h"
@@ -42,13 +44,14 @@ static TAutoConsoleVariable<FString> CVarJamNetScriptPlayer(TEXT("jam.net.Script
 	TEXT("novice|regular|good: with jam.ScriptHuman 1 the lockstep seat is FJamPlaytester of that class (F as RunPlaytestMatch presses it); empty: A38/A120's script."));
 static TAutoConsoleVariable<int32> CVarJamNetProofRematch(TEXT("jam.net.ProofRematch"), 0,
 	TEXT("1: the unattended proof asks for the rematch on the card (the scripted seat, 120 frames after the end) and quits 600 frames into the second match."));
+static TAutoConsoleVariable<int32> CVarJamNetProofRematchAsk(TEXT("jam.net.ProofRematchAskFrames"), 120,
+	TEXT("With jam.net.ProofRematch 1: frames on the result card before the scripted seat asks for the rematch (lane A204: 300 = 5 s on the card)."));
 static TAutoConsoleVariable<int32> CVarJamNetTestLiveCutAt(TEXT("jam.net.TestLiveCutAt"), 0,
 	TEXT("> 0: at this lockstep frame this machine tries a live cut of its own cartridge (ApplyCartridgeLive): the refusal proof."));
 
 namespace
 {
 	constexpr int32 MaxStepsPerTick = 4;
-	constexpr int32 RematchAskFrames = 120;   // the scripted seat asks for the rematch two seconds into the card
 	constexpr int32 RematchProofFrames = 600; // the rematch proof ends ten seconds into the second match
 
 	// JamAI::ParsePlaytester is not exported from JamCore: the same three names here.
@@ -203,10 +206,11 @@ FJamInput ALobbyGameMode::ReadLocalInput()
 	if (GetSim()->GetPhase() == EJamSimPhase::Over)
 	{
 		// Lane A129: on the card the seat sends nothing but its rematch ask (a level, held until both machines restart).
-		if (bScripted && !bLocalRematch && CVarJamNetProofRematch.GetValueOnGameThread() != 0 && OverAtDriverFrame >= 0 && Driver->GetFrame() >= OverAtDriverFrame + RematchAskFrames)
+		if (bScripted && !bLocalRematch && CVarJamNetProofRematch.GetValueOnGameThread() != 0 && OverAtDriverFrame >= 0 && Driver->GetFrame() >= OverAtDriverFrame + FMath::Max(1, CVarJamNetProofRematchAsk.GetValueOnGameThread()))
 		{
 			bLocalRematch = true;
 			UE_LOG(LogJamNet, Log, TEXT("JAMNET rematch asked by seat %d (scripted) at frame %lld"), LocalIndex, Driver->GetFrame());
+			ShowLine(FString::Printf(TEXT("rematch asked: waiting for %s"), Lobby ? *Lobby->GetRemoteName() : TEXT("your friend")));   // lane A204: as R does
 		}
 		FJamInput Ask;
 		if (bLocalRematch) JamNet::SetRematchReady(Ask);
@@ -598,17 +602,42 @@ void ALobbyGameMode::EndMatch(const FString& Title, const FString& Subtitle, con
 	if (CVarJamNetQuitAtFrame.GetValueOnGameThread() > 0 && !bExitSent) { bExitSent = true; bQuitRequested = true; UE_LOG(LogJamNet, Log, TEXT("JAMNET quitting: %s (jam.net.QuitAtFrame)"), *Reason); FPlatformMisc::RequestExit(false); }
 	if (bEnded) return;
 	bEnded = true;
+	if (bLockstep && GetSim())
+	{
+		// Lane A204 (evolution 3): the sim stands still from here (Tick): the same frame on both machines when the end is agreed (the peer's BYE, a desync at a
+		// checkpoint), this machine's last stepped frame when the peer was lost.
+		bEndedOnline = true;
+		EndFrame = GetSim()->GetFrame();
+		EndHash = LockstepHash();
+		UE_LOG(LogJamNet, Log, TEXT("JAMNET end card: the sim stands still at frame %lld hash=%016llx"), EndFrame, static_cast<unsigned long long>(EndHash));
+	}
 	bLockstep = false;
 	UE_LOG(LogJamNet, Warning, TEXT("JAMNET match ended: %s (%s)"), *Reason, Driver ? *Driver->DescribeStats() : TEXT(""));
 	LogProofLine(TEXT("ended"));
 	if (Lobby) Lobby->NotifyMatchEnded(Reason);
-	if (APlayerController* PC = GetWorld()->GetFirstPlayerController()) Card = ULobbyCardWidget::Show(PC, Title, Subtitle);
+	if (APlayerController* PC = GetWorld()->GetFirstPlayerController()) Card = ULobbyCardWidget::Show(PC, Title, EndCardSubtitle(Subtitle));   // lane A204: the way back
 }
 
 void ALobbyGameMode::Tick(float DeltaSeconds)
 {
 	if (!bLockstep)
 	{
+		if (Card)
+		{
+			// Lane A204: the end card steps aside while the pause card (its QUIT is the way back to the menu) is open, and comes back when it closes.
+			const UJamDirectorsCallController* PauseCard = UJamDirectorsCallController::Get(this);
+			const ESlateVisibility Want = (PauseCard && PauseCard->IsMenuOpen()) ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible;
+			if (Card->GetVisibility() != Want) Card->SetVisibility(Want);
+		}
+		if (bEndedOnline)
+		{
+			// Lane A204 (evolution 3): nothing steps the sim under a joined match's end card (AHokejGameMode::Tick would play it on as single player).
+			AGameModeBase::Tick(DeltaSeconds);
+			if (++EndStillTicks == 300 && GetSim())
+				UE_LOG(LogJamNet, Log, TEXT("JAMNET end card still after 300 ticks: frame=%lld hash=%016llx (at the end %lld %016llx)"), GetSim()->GetFrame(),
+					static_cast<unsigned long long>(LockstepHash()), EndFrame, static_cast<unsigned long long>(EndHash));
+			return;
+		}
 		if (GetWorld() && GetWorld()->IsPaused()) return;   // lane A204: single player's pause as before (this actor now ticks when paused, for the lockstep)
 		Super::Tick(DeltaSeconds);
 		return;
@@ -746,7 +775,18 @@ bool ALobbyGameMode::RefuseSimChange(const TCHAR* What)
 
 void ALobbyGameMode::ShowLine(const FString& Line)
 {
-	UE_LOG(LogJamNet, Log, TEXT("JAMNET screen: %s"), *Line);
-	if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 6.f, FColor::Orange, Line);
+	// Lane A204 (track N1): the line goes to the HUD's announcement line (the Director's Call overlay, a real widget). It went through
+	// GEngine->AddOnScreenDebugMessage, which Shipping and Test builds compile out: no player of a Shipping package ever read it.
+	const int32 HudCount = RouteLineToHud(this, Line, GetSim() ? GetSim()->GetFrame() : 0);
+	UE_LOG(LogJamNet, Log, TEXT("JAMNET screen: %s (hud=%d)"), *Line, HudCount);
+}
+
+int32 ALobbyGameMode::RouteLineToHud(const UObject* WorldContext, const FString& Line, int64 SimFrame)
+{
+	TArray<UUserWidget*> Found;
+	UWidgetBlueprintLibrary::GetAllWidgetsOfClass(const_cast<UObject*>(WorldContext), Found, UJamDirectorsCallHudWidget::StaticClass(), false);
+	int32 N = 0;
+	for (UUserWidget* W : Found) if (UJamDirectorsCallHudWidget* H = Cast<UJamDirectorsCallHudWidget>(W)) { H->ShowAnnouncement(Line, SimFrame + LineFrames); ++N; }
+	return N;
 }
 

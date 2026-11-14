@@ -1,0 +1,49 @@
+diff -u -r a/Game/Source/JamCore/AI/JamAICore.h b/Game/Source/JamCore/AI/JamAICore.h
+--- a/Game/Source/JamCore/AI/JamAICore.h	2026-11-14 16:05:27.093864700 +0100
++++ b/Game/Source/JamCore/AI/JamAICore.h	2026-11-14 16:05:27.789380500 +0100
+@@ -425,7 +425,9 @@
+ 		K.Hk.BetterByM = 12.0;
+ 		K.SprintShare = 0.35;   // lane A95 (R-0045 law 4): a pro bot sprints in a third of its chases (rookie 0.1, all_star 0.7)
+ 		K.LiftCooldownFrames = 90;   // lane A95 (B-to-A-0037 point 3): a pro bot lifts at most every 1.5 s
+-		K.HuntRadiusM = 8.0;   // lane A133 (CURVE-7.md, R-0055 point 1: the hunt is not a curve lever): 20 -> 8 m (law 3's drill at pro: the stop at 8 m 21.0 % at 20 m, 70.5 % at 10, 98.5 % at 9, 100 % at 8). Lane A112: 8 -> 20. (CURVE-6.md, R-0050: the human keeps the puck): 8 -> 20 m with the poke 2 and the checks from 1: the regular player 71.2 -> 50.2 (2,000; with sprint 0.7 and lift cooldown 45 too: 44.5). Lane A95: 0 -> 8. (R-0041 "pro bots check and lift as a matter of course", CURVE-5.md): the support goes at an opposing carrier within 8 m (0 before)
++		K.HuntRadiusM = 11.0;   // lane A170 (CURVE-10.md): 8 -> 11 m with the presser kept on its job (below): the regular player 52.4 -> 48.0 (2,000), law 3 unchanged digit for digit (8 m 100, 9.5 m 97, straight 0). Neutral: the tune opp.hunt_radius_m=8;opp.hk_press_in_hunt=0;opp.hk_press_commit_m=0. lane A133 (CURVE-7.md, R-0055 point 1: the hunt is not a curve lever): 20 -> 8 m (law 3's drill at pro: the stop at 8 m 21.0 % at 20 m, 70.5 % at 10, 98.5 % at 9, 100 % at 8). Lane A112: 8 -> 20. (CURVE-6.md, R-0050: the human keeps the puck): 8 -> 20 m with the poke 2 and the checks from 1: the regular player 71.2 -> 50.2 (2,000; with sprint 0.7 and lift cooldown 45 too: 44.5). Lane A95: 0 -> 8. (R-0041 "pro bots check and lift as a matter of course", CURVE-5.md): the support goes at an opposing carrier within 8 m (0 before)
++		K.Hk.bPressInHunt = true;   // lane A170 (BRAIN-5.md section 3): the presser stays on its Press job inside the hunt ...
++		K.Hk.PressCommitM = 8.0;   // ... and commits inside 8 m, as at hunt 8: the stop's window stays where it was; the hunt moves the other four only
+ 		K.CheckMinClosing = 1.0;   // lane A112 (CURVE-6.md): 2 -> 1 m/s. Lane A95 (CURVE-5.md): 4 -> 2 m/s: under A92's momentum model a low-speed press is a stumble, not a knockdown. R-0031 point 2 (lane A45): pro bots body-check the carrier from the front or the side at this closing speed and up (lane A70: 5 -> 4, knockdowns of the regular playtester 1.74 -> 1.96 a match, its win share unmoved, CURVE-2.md)
+ 		return K;
+ 	}
+diff -u -r a/Game/Source/JamCore/Tests/HockeyBrain4Tests.cpp b/Game/Source/JamCore/Tests/HockeyBrain4Tests.cpp
+--- a/Game/Source/JamCore/Tests/HockeyBrain4Tests.cpp	2026-11-14 16:05:27.247749000 +0100
++++ b/Game/Source/JamCore/Tests/HockeyBrain4Tests.cpp	2026-11-14 16:05:27.794394600 +0100
+@@ -104,7 +104,7 @@
+ 		ApplyDifficultyProfile(GetDifficultyProfile(EDifficulty::Pro), Pro);
+ 		ApplyDifficultyProfile(GetDifficultyProfile(EDifficulty::AllStar), Star);
+ 		TestTrue(TEXT("all_star's presser stays on its job inside the hunt"), Star.Opp.Hk.bPressInHunt);
+-		TestFalse(TEXT("pro's does not (it breaks pro's drill: BRAIN-3.md section 6)"), Pro.Opp.Hk.bPressInHunt);
++		TestTrue(TEXT("pro's does too, with its commit at 8 m (lane A170: BRAIN-5.md section 3, CURVE-10.md)"), Pro.Opp.Hk.bPressInHunt && Pro.Opp.Hk.PressCommitM == 8.0);
+ 		TestFalse(TEXT("rookie's does not"), Rk.Opp.Hk.bPressInHunt);
+ 		TestFalse(TEXT("the human's mates never carry the switch"), Star.Mate.Hk.bPressInHunt || Pro.Mate.Hk.bPressInHunt);
+ 		for (const char* Tune : { "opp.hk_press_in_hunt=0", "brain4=0", "brain3=0", "brain2=0" })
+diff -u -r a/Game/Source/JamCore/Tests/HockeyBrain5Tests.cpp b/Game/Source/JamCore/Tests/HockeyBrain5Tests.cpp
+--- a/Game/Source/JamCore/Tests/HockeyBrain5Tests.cpp	2026-11-14 16:05:27.354198100 +0100
++++ b/Game/Source/JamCore/Tests/HockeyBrain5Tests.cpp	2026-11-14 16:05:55.289862300 +0100
+@@ -275,7 +275,7 @@
+ 		Cart->RemoveFromRoot();
+ 		return FString::Printf(TEXT("%016llx (%lld frames, %d:%d)"), static_cast<unsigned long long>(St.Hash), static_cast<long long>(St.Frames), St.GoalsFor, St.GoalsAgainst);
+ 	};
+-	const FString A1 = Match(nullptr), A2 = Match(nullptr), Off = Match("brain5=0;brain7=1"), On = Match("opp.hk_avoid_downed_m=1.3;mate.hk_avoid_downed_m=1.3");
++	const FString A1 = Match(nullptr), A2 = Match(nullptr), Off = Match("brain5=0;brain7=1;opp.hk_press_commit_m=8"),   /* lane A189: pro's commit at 8 m is its profile's; brain5=0 clears it */ On = Match("opp.hk_avoid_downed_m=1.3;mate.hk_avoid_downed_m=1.3");
+ 	AddInfo(FString::Printf(TEXT("hockey.regular at pro, the regular player, seed 1: as shipped %s; with brain5=0 %s; with the keep-out at 1.3 m %s"), *A1, *Off, *On));
+ 	TestEqual(TEXT("the same match twice is the same match"), A1, A2);
+ 	if (kEvo5AvoidDownedM == 0.0)
+diff -u -r a/Game/Source/JamCore/Tests/HockeyBrain6Tests.cpp b/Game/Source/JamCore/Tests/HockeyBrain6Tests.cpp
+--- a/Game/Source/JamCore/Tests/HockeyBrain6Tests.cpp	2026-11-14 16:05:27.463894900 +0100
++++ b/Game/Source/JamCore/Tests/HockeyBrain6Tests.cpp	2026-11-14 16:05:28.229234300 +0100
+@@ -221,6 +221,7 @@
+ 		FJamBrain B;
+ 		Start(B);
+ 		B.Params.Opp.Hk.bCoverBestPass = bCoverBestPass;
++		B.Params.Opp.HuntRadiusM = 8.0;   // lane A189: the scene was drawn at pro's 8 m hunt (pro hunts from further out with its presser kept on its job: the cover 9 m off would hunt)
+ 		FJamAIInput In[kMaxSkaters];
+ 		for (int f = 0; f < 100; ++f)   // past the transition's 90 frames
+ 		{

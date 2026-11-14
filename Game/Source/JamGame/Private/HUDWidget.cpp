@@ -26,6 +26,8 @@
 #include "JamSim.h"
 #include "CommentarySystem.h"
 #include "Progression.h"
+#include "MenuFlow.h"
+#include "Misc/Paths.h"
 #include "Engine/GameInstance.h"
 #include "Camera/PlayerCameraManager.h"
 #include "ProfilingDebugging/CpuProfilerTrace.h"
@@ -701,7 +703,7 @@ void UJamHudWidget::BuildTree()
 
 	// ---- Director's Call ready line (lane A5's; the overlay of lane A8 draws the live hint, this one stays for its feed flag).
 	CallText = MakeText(T, TEXT("CallText"), S::LabelFont(true), S::Yellow());
-	CallText->SetText(FText::FromString(TEXT("CALL READY")));   // R-0021 point 3 (lane A47, B-to-A-0030 fault 2): no film word on the ice
+	CallText->SetText(FText::FromString(TEXT("RULE CHANGE READY")));   // lane A195 (evolution 7): the pause item's own words (R-0021 point 3: no film word on the ice)
 	CallText->SetVisibility(ESlateVisibility::Collapsed);
 	Place(Root, CallText, FVector2D(0.5, 1), FVector2D(0.5, 1), FVector2D(0, -40));
 
@@ -904,6 +906,7 @@ void UJamHudWidget::RefreshFromFrame(const FJamPresentationFrame& F)
 	const FString Card = EndCardWord(F.Phase, F.ScoreHome, F.ScoreAway);   // ScoreHome is the player's side (AHokejGameMode fills it so)
 	CardTextBlock->SetText(FText::FromString(Card));
 	const bool bEnd = F.Phase == EJamPhase::Win || F.Phase == EJamPhase::Lose;
+	if (!bEnd) bEndNoted = false;   // lane A195: a rematch notes its own end
 	CardTextBlock->SetVisibility(Card.IsEmpty() ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
 	// The plate shows for the end cards; lane A8's pause card covers the paused phase.
 	CardPlate->SetVisibility(bEnd ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
@@ -918,7 +921,18 @@ void UJamHudWidget::RefreshFromFrame(const FJamPresentationFrame& F)
 		FString Hint;
 		const AHokejGameMode* GM = GetWorld() ? GetWorld()->GetAuthGameMode<AHokejGameMode>() : nullptr;
 		if (const UJamProgression* P = UJamProgression::Get(this); P && GM && GM->GetCartridge()) Hint = P->EndHint(GM->GetCartridge()->SourcePath);
-		PaintEndCardKeys(Hint.IsEmpty() ? EndCardKeys() : Hint, F.Phase == EJamPhase::Win);   // lane A195: the key line as caps, from the live bindings
+		const int32 HumanTeam = F.Skaters.IsValidIndex(F.HumanIndex) ? F.Skaters[F.HumanIndex].TeamId : 0;
+		PaintEndCardKeys(Hint.IsEmpty() ? EndCardKeys() : Hint, F.Phase == EJamPhase::Win, HumanTeam);   // lane A195: the key line as caps, from the live bindings
+		if (!bEndNoted && GM && GM->GetCartridge())
+		{
+			// Lane A195 (evolution 7): HOME's returning panel names this match (score, level, rink) when the player goes back to the menu.
+			bEndNoted = true;
+			const UJamCartridge* C = GM->GetCartridge();
+			FString Rink = UJamMenuFlow::ModeDisplayForId(C->Id).ToUpper();
+			if (const UJamProgression* P = UJamProgression::Get(this); Rink.IsEmpty() && P) Rink = P->ActiveTitle(C->SourcePath).ToUpper();
+			if (Rink.IsEmpty()) { FString Base = FPaths::GetBaseFilename(C->SourcePath); Base.RemoveFromEnd(TEXT(".cartridge")); Rink = UJamMenuFlow::RinkName(Base); }
+			UJamMenuFlow::NoteLastMatch(F.ScoreHome, F.ScoreAway, UJamDirectorsCallHudWidget::LevelLabel(GM->GetLevelInForce()), Rink);
+		}
 	}
 	CallText->SetVisibility(ShowDirectorsCall(F) ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 
@@ -1898,7 +1912,7 @@ void UJamHudWidget::UpdateOwnMarker(const FJamPresentationFrame& F)
 
 // ---------------------------------------------------------------- lane A195: the end card's keys in the front end's look
 
-void UJamHudWidget::PaintEndCardKeys(const FString& KeyLine, bool bWin)
+void UJamHudWidget::PaintEndCardKeys(const FString& KeyLine, bool bWin, int32 HumanTeam)
 {
 	if (!CardHints || !HintText || !CardTextBlock) return;
 	FString Note;
@@ -1915,7 +1929,7 @@ void UJamHudWidget::PaintEndCardKeys(const FString& KeyLine, bool bWin)
 		CardNoteText->SetText(FText::FromString(Note));
 		CardNoteText->SetVisibility(Note.IsEmpty() ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
 	}
-	CardTextBlock->SetColorAndOpacity(FSlateColor(bWin ? FJamMenuLook::Focus() : FJamMenuLook::Text()));
+	CardTextBlock->SetColorAndOpacity(FSlateColor(EndCardWordColour(bWin, HumanTeam)));
 }
 
 void UJamHudWidget::ShowEndCardForTest(const FString& Word, const FString& Score, const FString& KeyLine)
@@ -1931,3 +1945,9 @@ void UJamHudWidget::ShowEndCardForTest(const FString& Word, const FString& Score
 
 UWidget* UJamHudWidget::GetEndCardForTest() const { return CardPlate.Get(); }
 float UJamHudWidget::GetEndCardHintRowWidth() const { return CardHints ? static_cast<float>(CardHints->GetDesiredSize().X) : 0.f; }
+
+FLinearColor UJamHudWidget::EndCardWordColour(bool bWin, int32 HumanTeam)
+{
+	if (!bWin) return FJamMenuLook::Text();
+	return HumanTeam == 1 ? FJamMenuLook::Away() : FJamMenuLook::Home();
+}

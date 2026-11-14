@@ -6,6 +6,7 @@
 #include "InputMapping.h"
 #include "JamCartridge.h"
 #include "Progression.h"
+#include "HUDWidget.h"
 #include "Components/Overlay.h"
 #include "Components/OverlaySlot.h"
 #include "Components/WidgetSwitcher.h"
@@ -115,7 +116,46 @@ FSlateFontInfo FJamMenuLook::Font(int32 Size, FName Face, int32 Tracking)
 
 bool FJamMenuLook::HasKitFont() { return KitFontObject() != nullptr; }
 
+// Lane A195 (KIT, the Director's word of 16:58): device B's kit by element, each with a switch, so an element that is not better with the art keeps
+// the placeholder. Read at a widget's build (a change shows on the next menu).
+static TAutoConsoleVariable<int32> CVarJamMenuKitLogo(TEXT("jam.menu.KitLogo"), 0,
+	TEXT("1: device B's frosted HOKEJ logo (T_UI_Logo_Hokej) in the header and on the landing. 0 (default, lane A195): the menu's own type: the frosted letters let the stands show through and the landing's logo pushed PRESS ENTER off the screen."), ECVF_Default);
+static TAutoConsoleVariable<int32> CVarJamMenuKitBackdrop(TEXT("jam.menu.KitBackdrop"), 1,
+	TEXT("1 (default): device B's still of the barn (T_UI_MenuBackdrop) under the scrim behind every menu screen. 0: the placeholder gradient and strokes."), ECVF_Default);
+static TAutoConsoleVariable<int32> CVarJamMenuKitPlates(TEXT("jam.menu.KitPlates"), 1,
+	TEXT("1 (default): device B's plates (panel, buttons, segments, mode card, header bar). 0: the flat fills of the style table."), ECVF_Default);
+static TAutoConsoleVariable<int32> CVarJamMenuKitPictures(TEXT("jam.menu.KitPictures"), 1,
+	TEXT("1 (default): device B's mode pictures (Modes/T_UI_Mode_<slug>). 0: the team-colour bands with the sides."), ECVF_Default);
+static TAutoConsoleVariable<int32> CVarJamMenuKitFont(TEXT("jam.menu.KitFont"), 1,
+	TEXT("1 (default): device B's display font (Fonts/F_Hokej_Display: Regular, Bold = Roboto Bold Condensed, Black). 0: the engine's Roboto."), ECVF_Default);
+
+bool FJamMenuLook::KitElementOn(const FString& Name)
+{
+	if (Name == TEXT("T_UI_Logo_Hokej")) return CVarJamMenuKitLogo.GetValueOnGameThread() != 0;
+	if (Name == TEXT("T_UI_MenuBackdrop")) return CVarJamMenuKitBackdrop.GetValueOnGameThread() != 0;
+	if (Name.StartsWith(TEXT("Modes/"))) return CVarJamMenuKitPictures.GetValueOnGameThread() != 0;
+	if (Name.StartsWith(TEXT("Fonts/"))) return CVarJamMenuKitFont.GetValueOnGameThread() != 0;
+	return CVarJamMenuKitPlates.GetValueOnGameThread() != 0;
+}
+
 UTexture2D* FJamMenuLook::Kit(const FString& Name)
+{
+	return KitElementOn(Name) ? KitFound(Name) : nullptr;
+}
+
+UTexture2D* FJamMenuLook::KitFound(const FString& InName)
+{
+	// Device B named four mode pictures by the cartridges' file names (power-play, sudden-death, glass-house, fog-of-war): the dashed name is
+	// asked when the underscored one is not there.
+	FString Name = InName;
+	if (Name.StartsWith(TEXT("Modes/T_UI_Mode_")) && Name != TEXT("Modes/T_UI_Mode_make_your_own"))
+	{
+		if (UTexture2D* T = KitFound(Name.Replace(TEXT("_"), TEXT("-")).Replace(TEXT("T-UI-Mode-"), TEXT("T_UI_Mode_")).Replace(TEXT("Modes/T-UI-Mode-"), TEXT("Modes/T_UI_Mode_")), true)) return T;
+	}
+	return KitFound(Name, true);
+}
+
+UTexture2D* FJamMenuLook::KitFound(const FString& Name, bool)
 {
 	FString Leaf = Name;
 	int32 Slash = INDEX_NONE;
@@ -683,6 +723,7 @@ void UJamMenuWidget::BuildTree()
 	Switcher->SetActiveWidgetIndex(0);
 
 	AddV(Chrome, BuildFooter(), FMargin(0));
+	BuildQuitConfirm(Root);   // lane A195 (F6): QUIT asks once
 }
 
 UWidget* UJamMenuWidget::BuildHeader()
@@ -896,6 +937,17 @@ UWidget* UJamMenuWidget::BuildMain()
 	AddV(PV, FeatureBody, FMargin(0));
 	P->SetContent(PV);
 	AddV(F, P, FMargin(0));
+	// Lane A195 (evolution 7): under it, what a shipped game shows a returning player, from what the game holds: the season (Progress.json), the
+	// last match of this process, the lit level's line; a first run gets the two mouse buttons instead (RefreshReturning).
+	UBorder* RP = Box(T, KitOr(TEXT("T_UI_Panel"), Fill(L::Panel(), true)), FMargin(L::CardPad, L::CardPad - 8.f));
+	UVerticalBox* RV = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("Returning"));
+	ReturnTitle = Txt(T, TEXT(""), L::Font(L::Caption + 2, FName("Black"), L::TrackLabel), L::TextDim());
+	AddV(RV, ReturnTitle, FMargin(0, 0, 0, L::Unit));
+	ReturnBody = Wrapped(Txt(T, TEXT(""), L::Font(L::Body, FName("Bold")), L::Text()), FeatureTextW);
+	ReturnBody->SetLineHeightPercentage(1.3f);
+	AddV(RV, ReturnBody, FMargin(0));
+	RP->SetContent(RV);
+	AddV(F, RP, FMargin(0, L::Unit * 2.f, 0, 0));
 	UHorizontalBoxSlot* Gap = AddH(Screen0, T->ConstructWidget<USpacer>(USpacer::StaticClass()), FMargin(0), true);
 	(void)Gap;
 	AddH(Screen0, Sized(T, F, L::FeatureW), FMargin(0, 0, L::SideMargin, 0), false, VAlign_Top);
@@ -998,6 +1050,7 @@ UWidget* UJamMenuWidget::BuildDirect()
 	SentenceBox->WidgetStyle.SetForegroundColor(L::Text());
 	SentenceBox->WidgetStyle.SetFocusedForegroundColor(L::Text());
 	SentenceBox->OnTextCommitted.AddDynamic(this, &UJamMenuWidget::OnSentenceCommitted);
+	SentenceBox->SetClearKeyboardFocusOnCommit(false);   // lane A195 (FAULT 7 class): OnSentenceCommitted hands the focus to ROLL
 	AddH(Row, SentenceBox, FMargin(0, 0, 8, 0), true);
 	auto Small = [&](const FString& Text, UTextBlock*& OutText) -> UButton*
 	{
@@ -1138,6 +1191,7 @@ FString UJamMenuWidget::GetHeaderTitle() const { return HeaderTitle ? HeaderTitl
 
 void UJamMenuWidget::ShowScreen(EJamMenuScreen InScreen)
 {
+	if (IsQuitConfirmOpen()) CloseQuitConfirm(false);   // lane A195: a screen change answers NO
 	Screen = InScreen;
 	if (!Switcher) return;
 	Switcher->SetActiveWidgetIndex(static_cast<int32>(Screen));
@@ -1154,6 +1208,7 @@ void UJamMenuWidget::ShowScreen(EJamMenuScreen InScreen)
 	{
 	case EJamMenuScreen::Main:
 		RefreshSeason();
+		RefreshReturning();   // lane A195
 		break;
 	case EJamMenuScreen::Cuts:
 		if (CutsStatus) { CutsStatus->SetText(FText::GetEmpty()); CutsStatus->SetVisibility(ESlateVisibility::Collapsed); }
@@ -1182,6 +1237,7 @@ void UJamMenuWidget::ShowScreen(EJamMenuScreen InScreen)
 
 UWidget* UJamMenuWidget::GetHomeFocus(EJamMenuScreen InScreen) const
 {
+	if (IsQuitConfirmOpen()) return ConfirmNo;   // lane A195: the question's home is NO
 	auto Back = [&]() -> UWidget* { const int32 I = static_cast<int32>(InScreen); return BackButtons.IsValidIndex(I) ? BackButtons[I].Get() : nullptr; };
 	switch (InScreen)
 	{
@@ -1252,7 +1308,8 @@ void UJamMenuWidget::RefreshFooter()
 	}
 	if (!Focus) Focus = PendingFocus.Get();
 	const UJamMenuRowButton* Row = Cast<UJamMenuRowButton>(Focus);
-	switch (Screen)
+	if (IsQuitConfirmOpen()) Hints = { { TEXT("ENTER / A"), TEXT("SELECT") }, { TEXT("ESC / B"), TEXT("NO") } };   // lane A195 (F6)
+	else switch (Screen)
 	{
 	case EJamMenuScreen::Landing:
 		Hints = { { TEXT("ENTER / A"), TEXT("START") }, { TEXT("CLICK"), TEXT("START") } };
@@ -1812,7 +1869,7 @@ bool UJamMenuWidget::PlayNow()
 	// Lane A144 (the level wire): rookie on a first run, the player's level once picked: ChooseCut gives every regular cut the player's level
 	// (UJamMenuFlow::PlayerLevelFor, ?level=<x>, AHokejGameMode, the brain).
 	if (ChooseCut(UJamMenuFlow::FirstCut)) return true;
-	if (MainStatus) MainStatus->SetText(FText::FromString(FString::Printf(TEXT("The match cannot start: %s"), CutsStatus ? *CutsStatus->GetText().ToString() : TEXT("no cut"))));
+	if (MainStatus) MainStatus->SetText(FText::FromString(FString::Printf(TEXT("The match cannot start: %s"), CutsStatus ? *CutsStatus->GetText().ToString() : TEXT("no rink"))));
 	return false;
 }
 
@@ -1832,6 +1889,7 @@ void UJamMenuWidget::RefreshLevelSwitch()
 	if (HeaderLevel) HeaderLevel->SetText(FText::FromString(FJamSettings::DifficultyLabel(SwitchLevel)));
 	for (FItem& I : Items) if (I.bSegment) I.State = -1;   // the lit segment is painted again
 	if (Before != SwitchLevel) FeatureFor = nullptr;
+	RefreshReturning();   // lane A195: the returning panel names the lit level
 }
 
 void UJamMenuWidget::PickLevel(EJamMenuDifficulty Level)
@@ -1947,11 +2005,16 @@ void UJamMenuWidget::OnCreditsClicked() { ShowScreen(EJamMenuScreen::Credits); }
 void UJamMenuWidget::OnBackClicked() { GoBack(); }
 void UJamMenuWidget::OnControlsBack() { if (Screen == EJamMenuScreen::Controls) GoBack(); }
 void UJamMenuWidget::OnRollClicked() { if (SentenceBox) Direct(SentenceBox->GetText().ToString()); }
-void UJamMenuWidget::OnSentenceCommitted(const FText& InText, ETextCommit::Type Commit) { if (Commit == ETextCommit::OnEnter) Direct(InText.ToString()); }
+void UJamMenuWidget::OnSentenceCommitted(const FText& InText, ETextCommit::Type Commit)
+{
+	if (Commit == ETextCommit::OnEnter && !InText.ToString().TrimStartAndEnd().IsEmpty()) Direct(InText.ToString());
+	// Lane A195 (FAULT 7 class): Enter or Esc never leaves the focus nowhere: ROLL takes it (a pad and the keys leave it as any item).
+	if (Commit == ETextCommit::OnEnter || Commit == ETextCommit::OnCleared) PendingFocus = RollButton.Get();
+}
 
 void UJamMenuWidget::OnQuitClicked()
 {
-	UKismetSystemLibrary::QuitGame(this, GetOwningPlayer(), EQuitPreference::Quit, false);
+	OpenQuitConfirm();   // lane A195 (F6, the hardening lane's menu fuzz): QUIT asks once; YES quits (OnConfirmYes)
 }
 
 // ---------------------------------------------------------------- input and tick
@@ -2052,6 +2115,14 @@ void UJamMenuWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 FReply UJamMenuWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent)
 {
 	const FKey K = InKeyEvent.GetKey();
+	// Lane A195 (F6): while QUIT asks, Esc / B is NO; a press that reaches the menu itself starts nothing (no PLAY NOW behind the question).
+	if (IsQuitConfirmOpen())
+	{
+		if (IsBackKey(K)) CloseQuitConfirm(true);
+		else if (K == EKeys::Enter || K == EKeys::Gamepad_FaceButton_Bottom) PendingFocus = ConfirmNo.Get();
+		else return Super::NativeOnKeyDown(InGeometry, InKeyEvent);
+		return FReply::Handled();
+	}
 	// Lane A187: the landing takes any key (not a held one, not a modifier alone, not Esc) as its press.
 	if (Screen == EJamMenuScreen::Landing && WalkScreen < 0)
 	{
@@ -2270,6 +2341,10 @@ bool UJamMenuWidget::ClickPlaceForQa(const FString& Name)
 		if (ModeGrid) for (UWidget* C : ModeGrid->GetAllChildren()) if (const UJamMenuRowButton* R = Cast<UJamMenuRowButton>(C)) if (R->Kind == EJamMenuRowKind::Open && R->Payload == Payload) W = C;
 	}
 	else if (Name == TEXT("settingslevel") && SettingsPanel) W = SettingsPanel->GetFirstFocusable();
+	else if (Name == TEXT("quit")) W = QuitButton.Get();   // lane A195 (F6): QUIT and its question's two answers
+	else if (Name == TEXT("friend")) W = FriendButton.Get();   // lane A195 (FAULT 6): PLAY WITH A FRIEND
+	else if (Name == TEXT("no")) W = ConfirmNo.Get();
+	else if (Name == TEXT("yes")) W = ConfirmYes.Get();
 	FString Why = TEXT("no such place");
 	const bool bOk = W && ClickForQa(W, Why);
 	if (!bOk) UE_LOG(LogJamMenuUi, Warning, TEXT("JAMMENU click %s failed: %s"), *Name, *Why);
@@ -2423,4 +2498,118 @@ void UJamMenuWidget::TickPadWalk()
 	}
 	WalkPhase = 0;
 	if (++WalkDir >= 4) WalkNode = -1;
+}
+
+// ---------------------------------------------------------------- lane A195 (U2 evolution 7): HOME's returning panel
+
+FString UJamMenuWidget::ReturningText(const FJamSeasonState& Season, bool bHasLast, int32 Mine, int32 Theirs, const FString& Level, const FString& Rink,
+	const FString& LevelLine, FString& OutTitle)
+{
+	bool bPlayedSeason = false;
+	for (const FJamSeasonTakeRow& R : Season.Takes) if (R.Attempts > 0 || R.bWon) { bPlayedSeason = true; break; }
+	TArray<FString> Lines;
+	if (!bPlayedSeason && !bHasLast)
+	{
+		// A first run: the two buttons that matter, from the live bindings.
+		OutTitle = TEXT("YOUR STICK");
+		Lines.Add(FString::Printf(TEXT("WITH THE PUCK:  %s"), *UJamHudWidget::ButtonsBadgeLine(true)));
+		Lines.Add(FString::Printf(TEXT("WITHOUT IT:  %s"), *UJamHudWidget::ButtonsBadgeLine(false)));
+		return FString::Join(Lines, TEXT("\n"));
+	}
+	OutTitle = TEXT("WELCOME BACK");
+	if (Season.bLoaded && bPlayedSeason)
+	{
+		if (Season.bComplete) Lines.Add(FString::Printf(TEXT("SEASON: ALL %d WON"), Season.TakeCount));
+		else
+		{
+			const FString Next = Season.Takes.IsValidIndex(Season.CurrentTake) ? Season.Takes[Season.CurrentTake].Title.ToUpper() : FString();
+			Lines.Add(FString::Printf(TEXT("SEASON: %d OF %d WON.  NEXT: %s"), Season.TakesWon, Season.TakeCount, *Next));
+		}
+	}
+	if (bHasLast)
+	{
+		const TCHAR* Word = Mine > Theirs ? TEXT("WON") : (Mine < Theirs ? TEXT("LOST") : TEXT("LEVEL"));
+		FString Where = Rink.IsEmpty() ? Level : (Level.IsEmpty() ? Rink : Level + TEXT(", ") + Rink);
+		Lines.Add(FString::Printf(TEXT("LAST MATCH: %s %d : %d%s%s"), Word, Mine, Theirs, Where.IsEmpty() ? TEXT("") : TEXT("  /  "), *Where));
+	}
+	if (!LevelLine.IsEmpty()) Lines.Add(LevelLine);
+	return FString::Join(Lines, TEXT("\n"));
+}
+
+void UJamMenuWidget::RefreshReturning()
+{
+	if (!ReturnTitle || !ReturnBody) return;
+	FJamSeasonState Season;
+	if (const UJamProgression* P = UJamProgression::Get(this)) Season = P->GetSeasonState();
+	int32 Mine = 0, Theirs = 0;
+	FString Level, Rink;
+	const bool bHasLast = UJamMenuFlow::GetLastMatch(Mine, Theirs, Level, Rink);
+	const FString LevelLine = GetLevelMeaningLine();   // the lit level's own line (with its name before it, it wrapped one word onto a line of its own)
+	FString Title;
+	const FString Body = ReturningText(Season, bHasLast, Mine, Theirs, Level, Rink, LevelLine, Title);
+	ReturnTitle->SetText(FText::FromString(Title));
+	ReturnBody->SetText(FText::FromString(Body));
+}
+
+FString UJamMenuWidget::GetReturningText() const
+{
+	return (ReturnTitle ? ReturnTitle->GetText().ToString() : FString()) + TEXT("\n") + (ReturnBody ? ReturnBody->GetText().ToString() : FString());
+}
+
+// ---------------------------------------------------------------- lane A195 (F6): QUIT asks once
+
+void UJamMenuWidget::BuildQuitConfirm(UOverlay* Root)
+{
+	UWidgetTree* T = WidgetTree;
+	// A veil over the whole menu (it takes the pointer: nothing behind the question is hovered or clicked), the question on a panel, NO then YES.
+	ConfirmVeil = Solid(T, L::Scrim());
+	ConfirmVeil->SetVisibility(ESlateVisibility::Collapsed);
+	UVerticalBox* V = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("QuitConfirm"));
+	AddV(V, Txt(T, TEXT("QUIT THE GAME?"), L::Font(L::Title, FName("Black"), 120), L::Text()), FMargin(0));
+	AddV(V, Txt(T, TEXT("Your season, your level and your keys are kept."), L::Font(L::Body, FName("Regular")), L::TextDim()), FMargin(0, L::Unit, 0, L::Unit * 3.f));
+	UHorizontalBox* Row = T->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
+	UTextBlock* NoText = nullptr; UTextBlock* YesText = nullptr; UWidget* NoBar = nullptr; UWidget* YesBar = nullptr;
+	ConfirmNo = L::MakeItem(T, TEXT("NO"), L::ItemSmall, NoText, NoBar, true);
+	ConfirmYes = L::MakeItem(T, TEXT("YES, QUIT"), L::ItemSmall, YesText, YesBar, true);
+	AddItem(ConfirmNo, NoText, NoBar);
+	AddItem(ConfirmYes, YesText, YesBar);
+	ConfirmNo->OnClicked.AddDynamic(this, &UJamMenuWidget::OnConfirmNo);
+	ConfirmYes->OnClicked.AddDynamic(this, &UJamMenuWidget::OnConfirmYes);
+	AddH(Row, Sized(T, ConfirmNo, 200.f), FMargin(0, 0, L::Gap, 0));
+	AddH(Row, Sized(T, ConfirmYes, 200.f), FMargin(0));
+	AddV(V, Row, FMargin(0));
+	ConfirmVeil->SetContent(L::MakePanel(T, V, 560.f, FMargin(L::CardPad, L::Unit * 3.f)));
+	if (UBorderSlot* VS = Cast<UBorderSlot>(ConfirmVeil->GetContent() ? ConfirmVeil->GetContent()->Slot : nullptr)) { VS->SetHorizontalAlignment(HAlign_Center); VS->SetVerticalAlignment(VAlign_Center); }   // the slot holds the alignment
+	S::AddO(Root, ConfirmVeil);
+}
+
+bool UJamMenuWidget::IsQuitConfirmOpen() const
+{
+	return ConfirmVeil && ConfirmVeil->GetVisibility() == ESlateVisibility::Visible;
+}
+
+void UJamMenuWidget::OpenQuitConfirm()
+{
+	if (!ConfirmVeil) return;
+	ConfirmVeil->SetVisibility(ESlateVisibility::Visible);
+	PendingFocus = ConfirmNo.Get();   // NO by default: a stray second press answers NO
+	FooterKey.Reset();
+	UE_LOG(LogJamMenuUi, Log, TEXT("JAMMENU confirm quit open (focus=no)"));
+}
+
+void UJamMenuWidget::CloseQuitConfirm(bool bFocusQuit)
+{
+	if (!ConfirmVeil) return;
+	ConfirmVeil->SetVisibility(ESlateVisibility::Collapsed);
+	if (bFocusQuit) PendingFocus = QuitButton.Get();
+	FooterKey.Reset();
+	UE_LOG(LogJamMenuUi, Log, TEXT("JAMMENU confirm quit answer=no"));
+}
+
+void UJamMenuWidget::OnConfirmNo() { CloseQuitConfirm(true); }
+
+void UJamMenuWidget::OnConfirmYes()
+{
+	UE_LOG(LogJamMenuUi, Log, TEXT("JAMMENU confirm quit answer=yes"));
+	UKismetSystemLibrary::QuitGame(this, GetOwningPlayer(), EQuitPreference::Quit, false);
 }

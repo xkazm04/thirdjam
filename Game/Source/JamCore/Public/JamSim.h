@@ -206,6 +206,7 @@ struct JAMCORE_API FJamSkaterState
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int64 DrawFrame = -1;
 
 	// C-0005 charge: frames shoot has been held with the puck in reach (0..shot.charge_frames_max); the visual winds up on it.
+	// Lane A203: -1 = a press the loss of the puck made dead (game.skater.charge_dies_on_loss): nothing charges until the release; never below 0 with the key off.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 ChargeFrames = 0;
 	// Charge 0..1 of the shot that left this frame (0 for a tap or a pass); PlayShoot(Charge) takes it.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") float LastShotCharge = 0.f;
@@ -872,6 +873,8 @@ private:
 	void StepCharge(FJamSkaterState& S, const FJamInput& In);
 	// Lane A77 (R-0036): the held pass charges like the shot and fires on the release; a saucer when held pass.saucer.half_frames or more.
 	void StepPassCharge(FJamSkaterState& S, const FJamInput& In);
+	// Lane A203 (game.skater.charge_dies_on_loss): the carrier who loses the puck loses his held charges (-1: dead until the button is pressed again).
+	void ClearChargeOnLoss(FJamSkaterState& S, const FJamInput& In);
 	void TryPass(FJamSkaterState& S, bool bSaucer = false);
 	// The saucer's flight: VZ so the puck lands SaucerLandFrac of the way to the aim (or at the apex pass.saucer.lift_m when the way is long), with the drag as ApplyShotLift solves it.
 	void ApplySaucerLift(double DistM, double Speed);

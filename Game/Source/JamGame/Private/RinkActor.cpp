@@ -8,6 +8,7 @@
 #include "Materials/MaterialInterface.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "LookTierSwitcher.h"
+#include "NeonArena.h"
 #include "Engine/World.h"
 #include "HAL/IConsoleManager.h"
 #include "UObject/UObjectIterator.h"
@@ -1247,6 +1248,7 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 
 	SetZoneRingsForTier(Game.Look.Tier);
 	SetConstructionVisible(IsConstructionEnabled());
+	UJamNeonArena::ApplyFor(this, Game);   // lane A197: the grid arena on a neon tier (NeonArena.h), empty on every other tier
 	UE_LOG(LogJamSim, Log, TEXT("JAMRINK built %gx%g m corner %g goal %g m, %d obstacles, %d zones (%d on B's strips), outline %d points, construction %s (%d stanchions)"), R.LengthM, R.WidthM, R.CornerRadiusM, R.GoalWidthM, R.Obstacles.Num(), ZonesDrawn, ZoneQuadsDrawn, Line.Num(), IsConstructionEnabled() ? TEXT("on") : TEXT("off"), GlassRail->GetNumSections() > 1 ? GlassRail->GetProcMeshSection(1)->ProcVertexBuffer.Num() / 24 : 0);
 }
 
@@ -2067,6 +2069,7 @@ void ARinkActor::SetZoneRingsForTier(const FString& Tier)
 	// Lane A103: the arena dressing follows the tier through the same call (Build and ULookTierSwitcher::PushGlass both come here).
 	ArenaTier = Tier;
 	ApplyArenaDressing();
+	UJamNeonArena::OnTierChanged(this, Tier);   // lane A197: a tier switch without a rebuild draws or clears the grid arena
 	if (bChanged || bClay) UE_LOG(LogJamSim, Log, TEXT("JAMRINK zone rings %s for tier %s: %d ring components, %d decal quads (glass and rail %s)"), bClay ? TEXT("shown") : TEXT("hidden"), *Tier, ZoneRings.Num(), ZoneQuads.Num(), bClay ? TEXT("hidden") : TEXT("shown"));
 }
 

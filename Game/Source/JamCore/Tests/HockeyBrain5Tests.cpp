@@ -260,7 +260,8 @@ bool FJamHockey5Neutral::RunTest(const FString& Parameters)
 		}
 		if (kEvo5AvoidDownedM == 0.0)
 		{
-			TestTrue(TEXT("as shipped every rule of evolution 5 is at its neutral value"), A.Opp.Hk.AvoidDownedM == 0.0 && A.Mate.Hk.AvoidDownedM == 0.0 && !A.Opp.Hk.bPressThree && !A.Mate.Hk.bPressThree);
+			const double KeepOut = kEvo8ShipDownedLeave ? kEvo8AvoidDownedM : 0.0;   // lane A202: evolution 8's downed rule ships the keep-out on
+			TestTrue(TEXT("as shipped every rule of evolution 5 is at its neutral value (the keep-out: evolution 8's)"), A.Opp.Hk.AvoidDownedM == KeepOut && A.Mate.Hk.AvoidDownedM == KeepOut && !A.Opp.Hk.bPressThree && !A.Mate.Hk.bPressThree);
 		}
 	}
 	auto Match = [this](const char* Tune) -> FString
@@ -275,7 +276,8 @@ bool FJamHockey5Neutral::RunTest(const FString& Parameters)
 		Cart->RemoveFromRoot();
 		return FString::Printf(TEXT("%016llx (%lld frames, %d:%d)"), static_cast<unsigned long long>(St.Hash), static_cast<long long>(St.Frames), St.GoalsFor, St.GoalsAgainst);
 	};
-	const FString A1 = Match(nullptr), A2 = Match(nullptr), Off = Match("brain5=0;brain7=1"), On = Match("opp.hk_avoid_downed_m=1.3;mate.hk_avoid_downed_m=1.3");
+	const FString A1 = Match("brain8=0"), A2 = Match("brain8=0"), Off = Match("brain5=0;brain7=1;brain8=0"),   // lane A202: evolution 8 ships on (its downed rule steers round him): the pair is read with it off
+		 On = Match("opp.hk_avoid_downed_m=1.3;mate.hk_avoid_downed_m=1.3");
 	AddInfo(FString::Printf(TEXT("hockey.regular at pro, the regular player, seed 1: as shipped %s; with brain5=0 %s; with the keep-out at 1.3 m %s"), *A1, *Off, *On));
 	TestEqual(TEXT("the same match twice is the same match"), A1, A2);
 	if (kEvo5AvoidDownedM == 0.0)

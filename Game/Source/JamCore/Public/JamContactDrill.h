@@ -123,11 +123,11 @@ struct FJamLawOneDrill
 		const double Gap = To.Size() - 2.0 * UJamSim::SkaterRadius;
 		const double Closing = FVector2D::DotProduct(Sk[HitAtt].Vel - Sk[HitVic].Vel, To.GetSafeNormal());
 		// Lane A192: the window opens game.contact.check_windup_frames after the press: the press goes that many frames earlier (0: as before).
-		if (Gap > Closing * (2.0 + Sim.GetConfig().Contact.CheckWindupFrames) / 60.0 && Frames < LeadFrames + 30) return;
+		if (Gap > Closing * (2.0 + Sim.GetConfig().Contact.CheckWindupFor(Sk[HitAtt].bHuman)) / 60.0 && Frames < LeadFrames + 30) return;   // lane A200: the presser's own (bot_check_windup_frames for a bot)
 		PressFrame = Frames;
 		HitClosingMps = Closing;
 		NudgeVicSpeedBefore = Sk[NudgeVic].Vel.Size();
-		SeatAt = Frames + Sim.GetConfig().Contact.CheckWindupFrames;
+		SeatAt = Frames + Sim.GetConfig().Contact.CheckWindupFor(Sk[NudgeAtt].bHuman);   // lane A200: the presser's own (bot_check_windup_frames for a bot)
 		if (SeatAt == Frames) Seat();
 		Inputs[NudgeAtt].bCheck = true;
 		Inputs[HitAtt].bCheck = true;

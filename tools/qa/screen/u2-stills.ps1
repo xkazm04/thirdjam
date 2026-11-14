@@ -15,6 +15,7 @@ param(
     [string]$Tag = 'after',
     [int]$Port = 4744,
     [switch]$EndCard,
+    [switch]$HomeAfter,    # lane A195: with -EndCard, back to the menu after the cards and a still of HOME (its returning panel)
     [string]$StartCmd = 'jam.menuscreen play',  # lane A195: -EndCard starts its match with this (jam.menuscreen continue: a season take, its between-takes card)
     [string]$LaunchCut = '',  # start the game with -cut=<this>, as the acceptance run does: PLAY NOW must then start this cut at its own level (JAMMATCH ... source=launch)
     [string]$LevelCut = '',  # with -Level: this cut or mode through the menu (jam.menuscreen choose <name>) instead of PLAY NOW
@@ -32,6 +33,7 @@ param(
     [int]$StartTimeoutSec = 900
 )
 $Screens = @($Screens | ForEach-Object { $_ -split ',' } | Where-Object { $_ })   # -File passes a,b,c as one string
+$Before = @($Before | ForEach-Object { $_ -split ',' } | Where-Object { $_ })   # lane A195: the same for -Before
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..')).Path
 . (Join-Path $root 'tools\run\common.ps1')
 $uproject = Resolve-UProject (Join-Path $root 'Game')
@@ -151,6 +153,8 @@ if ($Level) {
     [void](Console 'r.SetRes 1920x1080w'); Start-Sleep -Seconds 2
     [void](Console 'jam.pausemenu rule'); Still '1080-pause-rule' 900      # lane A195: the rule card and the pause card's CONTROLS
     [void](Console 'jam.pausemenu controls'); Still '1080-pause-controls' 900
+    [void](Console 'jam.pausemenu leave'); Still '1080-pause-leave' 900       # lane A195 (F6): QUIT TO MENU's question
+    [void](Console 'jam.pausemenu no')
     Finish 0 'the level is on the match card and the pause card'
 }
 
@@ -217,6 +221,14 @@ if ($EndCard) {
         Still "720-end-$($card.n)" 1000
         [void](Console 'r.SetRes 1920x1080w')
         if ($card.n -eq 'loss') { [void](Console 'jam.Season.Restart') }
+    }
+    if ($HomeAfter) {
+        # Lane A195 (evolution 7): back to the menu after the match (the pause card's QUIT TO MENU), then HOME: its returning panel names the match.
+        [void](Console 'jam.pausemenu quit')
+        $back = WaitLog 'JAMMENU opens on main' 60
+        Start-Sleep -Seconds 6
+        [void](Console 'jam.menuscreen main'); Still '1080-home-returning' 1500
+        if (-not $back) { Note 'the menu did not say it opened on main' }
     }
     Finish 0 'end cards taken'
 }

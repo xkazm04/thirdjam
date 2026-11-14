@@ -112,6 +112,7 @@ namespace JamAI
 		// contested-puck mark (JamCarrierMarks::Contested, set by RunPlaytestMatch each frame): without the puck he brakes instead of racing an opponent to it.
 		bool bContestBrake = false;
 		bool bContestedNow = false;
+		int ContestOnlyNth = 0;          // lane A201: JAM_PLAYTESTER_CONTEST=brake:N obeys only the N-th showing of the ring (0 = every showing)
 		int ContestBrakeFrames = 0;      // frames the decision braked for it (the stats read it)
 		// Lane A178 (track F2 evolution 8; env JAM_PLAYTESTER_STOPMARK=brake | stop, off by default): the player obeys the stop's line (JamCarrierMarks::StopMark
 		// lit, set by RunPlaytestMatch each frame with the opponent's place). brake = law 3's whole move as drill 21 plays it (FJamCarryDrill, the first move):
@@ -127,8 +128,24 @@ namespace JamAI
 		int StopPhase = 0;               // 0 none, 1 the stop, 2 the cut
 		long long StopPhaseStart = 0, StopBrakeNext = -1;
 		int StopBrakes = 0;
+		int StopOnlyNth = 0, StopCandidates = 0;
+		int StopHandFrames = -1;                  // lane A201: env JAM_PLAYTESTER_STOPMARK_HAND: frames from the light to the stop reaching the sim (-1 = the class's own ReactionFrames)
+		long long StopPendingAt = -1;             // ... the frame the decided stop is pressed
+		FVec2 StopPendingDef;   // lane A201: JAM_PLAYTESTER_STOPMARK=brake:N obeys only the N-th light of the match (0 = every light)
 		enum { StopOnlyFrames = 24, StopCutFrames = 45, StopBrakeRearm = 84 };
 		bool bPokeReadOn = false;        // lane A152: the profile's bPokeRead applies (stick.bPlaytesterPokeRead, or env JAM_PLAYTESTER_POKE=read; =old forces the press as it was)
+		// Lane A200 (track F1, evolution 11; CONTACT-12.md): the hits he can see coming, and his answer to them. A hit is SEEN when an opponent within
+		// DodgeSeeM in front of him (inside 100 degrees of his facing) begins a body check's wind-up while closing on him at 1 m/s or more, or a cross-check's
+		// wind-up aimed at him (FJamAISkater::CheckWindupLeft, CrossWindupLeft / CrossTarget); its episode lasts the wind-up and, for the body check, the bot's
+		// window (UJamSim::CheckWindowFrames). Counted always (SeenHits, SeenLanded: that man's hit landed on him, a stumble or a fall), output untouched.
+		// bDodge (env JAM_PLAYTESTER_DODGE=on, or =N for N frames of reaction; off by default: every measurement before stays comparable): DodgeReactFrames
+		// after the wind-up began (a person's reaction to the figure's take, not the profile's ring) he flicks the stick across the man's line and away from
+		// him (past the analog ramp; on the side his skating leans), no check press, until the episode ends. Dodges: the episodes he answered.
+		bool bDodge = false;
+		int DodgeReactFrames = 6;
+		static constexpr double DodgeSeeM = 5.0;
+		int SeenHits = 0, SeenLanded = 0, Dodges = 0;
+		void NoteHitOnMe(int By) { if (DodgeWho >= 0 && By == DodgeWho) { bSeenLanded = true; } }
 		int StickVariant = 0;            // lane A86 measurement arms (env JAM_PLAYTESTER_STICK): 0 aim, 2 carry (no cursor on a loose puck), 3 front (the carry aim within 60 deg of facing)
 
 		void Reset(EPlaytester Kind, uint64_t Seed);
@@ -157,6 +174,10 @@ namespace JamAI
 		EPlaytesterAct Act = EPlaytesterAct::Idle;
 		int Acts[static_cast<int>(EPlaytesterAct::Count)] = {};
 
+		int DodgeWho = -1;               // lane A200: the man of the hit he sees coming (-1 none)
+		int64_t DodgeStart = 0, DodgeEnd = 0;
+		bool bSeenLanded = false, bDodged = false;
+		void TrackThreat(const FJamAIWorld& W);
 		// A fixed number in [-1, 1] for (seed, window, salt).
 		double Noise(int64_t Window, int Salt) const;
 		FJamAIInput Decide(const FJamAIWorld& W);
@@ -215,6 +236,9 @@ namespace JamAI
 		// braced and hits out of the brace (FJamSkaterState::CrossBraceFrames / CrossBraceHits); BotBraceHits: every other skater's hits out of a brace;
 		// BotCrossLanded / BotChecksLanded: the bots' landed cross-checks and body checks (stumble or down), every bot.
 		int CrossLanded = 0, BraceLanded = 0, KdGiven = 0, BraceFrames = 0, BraceHits = 0, BotBraceHits = 0, BotCrossLanded = 0, BotChecksLanded = 0;
+		// Lane A200 (track F1, evolution 11): the hits he saw coming and those that landed anyway (FJamPlaytester::SeenHits / SeenLanded), the ones he
+		// answered with the dodge (Dodges), and every landed hit of an opponent on him (BotHitsOnHuman: body or cross, stumble or down).
+		int SeenHits = 0, SeenLanded = 0, Dodges = 0, BotHitsOnHuman = 0;
 		int64_t HumanDownFrames = 0, HumanStumbleFrames = 0;
 		int64_t SlamDownFrames = 0;
 		int FoulsFromBehind = 0, FoulsNoPuck = 0;   // the two kinds of foul (contracts/events.md): from behind on the carrier; on a skater without the puck

@@ -10,6 +10,7 @@
 #include "JamRuleSystem.h"
 #include "JamZones.h"
 #include "JamSimAdapter.h"
+#include "DifficultyProfile.h"
 #include "JamBotMatch.h"
 #include "DifficultyResolve.h"
 #include "JamPlaytester.h"
@@ -63,11 +64,13 @@ namespace JamSystemsTests
 		bool bBuilt = false;
 	};
 
-	FOutcome Play(const UJamCartridge& Cart, uint64 Seed, const TCHAR* Level, JamAI::EJamPlayerMode Mode, int64 MaxFrames)
+	FOutcome Play(const UJamCartridge& Cart, uint64 Seed, const TCHAR* Level, JamAI::EJamPlayerMode Mode, int64 MaxFrames, const char* Tune = nullptr)
 	{
 		FOutcome O;
 		JamAI::FJamSimAdapter Sim(Cart);
-		O.Stats = JamAI::RunMatch(Sim, JamAI::ToMatchConfigResolved(Cart, Level), Seed, Mode, MaxFrames, 600);
+		JamAI::FJamMatchConfig Cfg = JamAI::ToMatchConfigResolved(Cart, Level);
+		if (Tune) { char Err[200] = {}; JamAI::ApplyDifficultyTune(Tune, Cfg.AI, Err, sizeof(Err)); }   // lane A202: a brain tune for one test (below)
+		O.Stats = JamAI::RunMatch(Sim, Cfg, Seed, Mode, MaxFrames, 600);
 		const JamAI::FJamSystems& S = Sim.GetSystems();
 		O.bBuilt = Sim.HasSystems() && S.IsBuilt();
 		if (O.bBuilt)
@@ -155,8 +158,10 @@ bool FJamBotBoostPickupsBundle::RunTest(const FString& Parameters)
 	// detours for pickups), the brain's world view carries them, two runs agree. Before A41 this path had no effect system at all.
 	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.boost"));
 	if (!C) return false;
-	const FOutcome A = Play(*C, 1, TEXT("all_star"), JamAI::EJamPlayerMode::PlayerBot, 36000);
-	const FOutcome B = Play(*C, 1, TEXT("all_star"), JamAI::EJamPlayerMode::PlayerBot, 36000);
+	// Lane A202: the match is read with evolution 8 off (brain8=0): with its four rules on seed 1 re-rolls and no bot happens to take a pickup in it; the
+	// pickups' path is what this test pins, not the brain's play.
+	const FOutcome A = Play(*C, 1, TEXT("all_star"), JamAI::EJamPlayerMode::PlayerBot, 36000, "brain8=0");
+	const FOutcome B = Play(*C, 1, TEXT("all_star"), JamAI::EJamPlayerMode::PlayerBot, 36000, "brain8=0");
 	TestTrue(TEXT("the bundle is built"), A.bBuilt);
 	TestTrue(TEXT("pickups spawned"), A.PickupsSpawned >= 1);
 	TestTrue(TEXT("at least one pickup taken"), A.PickupsTaken >= 1);

@@ -697,4 +697,88 @@ bool FJamNetLateFirstPacket::RunTest(const FString& Parameters)
 	return true;
 }
 
+// Lane A204 (track N1, evolution 2): a BYE before the peer was heard. The guest closes its game while its rink loads: its lobby says BYE (shutdown now
+// sends one) and the host's driver, still waiting for a first input packet, ends at once with "left" instead of waiting out the 30 s unheard limit.
+// Before: the driver read a BYE only once heard (bHeard && !bLost) and the host waited 1,800 ticks.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamNetByeBeforeHeard, "Jam.Net.ByeBeforeHeard", JamNetTests::Flags)
+bool FJamNetByeBeforeHeard::RunTest(const FString& Parameters)
+{
+	FJamLoopbackPair Pair(1, 0.0, 7);
+	TStrongObjectPtr<UJamLockstepDriver> Host(NewObject<UJamLockstepDriver>());
+	Host->Start(&Pair.A(), JamNet::InputDelay);
+	FJamInput L, R;
+	for (int32 T = 0; T < 300; ++T) { Host->Pump(); Host->TryStep(FJamInput(), L, R); Pair.Advance(); }
+	TestFalse(TEXT("still waiting, not heard, not lost"), Host->IsLost() || Host->HasHeardPeer());
+	FJamNetLobbyMessage Bye; Bye.Type = JamNet::EType::Bye; Bye.Name = TEXT("Bo");
+	TArray<uint8> Bytes; Bye.Write(Bytes);
+	Pair.B().Send(Bytes);
+	int32 Ticks = 0;
+	for (; Ticks < 120 && !Host->IsLost(); ++Ticks) { Pair.Advance(); Host->Pump(); Host->TryStep(FJamInput(), L, R); }
+	AddInfo(FString::Printf(TEXT("JAMNET bye-before-heard: lost after %d ticks, peer_left=%d, frame %lld"), Ticks, Host->HasPeerLeft() ? 1 : 0, Host->GetFrame()));
+	TestTrue(TEXT("a BYE before the first input ends the wait within 1 s"), Host->IsLost() && Ticks <= 60);
+	TestTrue(TEXT("as the peer leaving (the card says who left), not as a lost connection"), Host->HasPeerLeft());
+	TestEqual(TEXT("at frame 0"), Host->GetFrame(), static_cast<int64>(0));
+	return true;
+}
+
+// Lane A204 (track N1, evolution 2): the network cut on one machine, both ways, and back. A link that drops everything for Cut ticks then delivers
+// again: 2 s (120 ticks) costs a stall and no "connection lost", both sides play on with equal hashes; 4 s (240 ticks) is lost on both sides within
+// 3.5 s (210 ticks) of the cut. (Two processes: tools/soak/lockstep/twoproc5.ps1 -CutAt / -CutMs, console jam.net.testcut.)
+namespace JamNetTests
+{
+	struct FCutLink : public IJamLink
+	{
+		IJamLink* Inner = nullptr;
+		bool bCut = false;
+		bool Send(const TArray<uint8>& Bytes) override { return bCut ? true : Inner->Send(Bytes); }
+		bool Recv(TArray<uint8>& Out) override { while (Inner->Recv(Out)) { if (!bCut) return true; } return false; }
+		bool IsOpen() const override { return true; }
+	};
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamNetCutAndBack, "Jam.Net.CutAndBack", JamNetTests::Flags)
+bool FJamNetCutAndBack::RunTest(const FString& Parameters)
+{
+	UJamCartridge* C = Load(*this, TEXT("hockey.regular"));
+	if (!C) return false;
+	for (const int32 Cut : { 60, 120, 150, 240 })
+	{
+		FJamLoopbackPair Pair(1, 0.0, 11);
+		JamNetTests::FCutLink CutA; CutA.Inner = &Pair.A();
+		FPeer A, B;
+		A.Init(*this, *C, 3, CutA, 0, 5, JamNet::InputDelay);
+		B.Init(*this, *C, 3, Pair.B(), 5, 0, JamNet::InputDelay);
+		int32 LostAtA = -1, LostAtB = -1;
+		const int32 CutStart = 600;
+		constexpr int64 Target = 1200;
+		for (int32 T = 0; T < 2500; ++T)
+		{
+			CutA.bCut = T >= CutStart && T < CutStart + Cut;
+			Pair.Advance();
+			A.Driver->Pump(); B.Driver->Pump();
+			if (A.Sim->GetFrame() < Target) A.Step();
+			if (B.Sim->GetFrame() < Target) B.Step();
+			if (A.Sim->GetFrame() >= Target && B.Sim->GetFrame() >= Target) break;
+			if (A.Driver->IsLost() && LostAtA < 0) LostAtA = T;
+			if (B.Driver->IsLost() && LostAtB < 0) LostAtB = T;
+			if (LostAtA >= 0 && LostAtB >= 0) break;
+		}
+		AddInfo(FString::Printf(TEXT("JAMNET cut %d ticks at %d: lost A at %d, B at %d, frames %lld/%lld, hashes %016llx/%016llx"), Cut, CutStart, LostAtA, LostAtB, A.Driver->GetFrame(), B.Driver->GetFrame(),
+			static_cast<unsigned long long>(A.Hash()), static_cast<unsigned long long>(B.Hash())));
+		if (Cut < JamNet::StallLimitTicks)
+		{
+			TestTrue(FString::Printf(TEXT("a %d-tick cut: neither side lost"), Cut), LostAtA < 0 && LostAtB < 0);
+			TestTrue(FString::Printf(TEXT("a %d-tick cut: both reach frame %lld"), Cut, Target), A.Sim->GetFrame() == Target && B.Sim->GetFrame() == Target);
+			TestFalse(FString::Printf(TEXT("a %d-tick cut: no desync"), Cut), A.Driver->IsDesynced() || B.Driver->IsDesynced());
+			TestEqual(FString::Printf(TEXT("a %d-tick cut: the two sims agree at the end"), Cut), A.Hash(), B.Hash());
+		}
+		else
+		{
+			TestTrue(FString::Printf(TEXT("a %d-tick cut: the cut side is lost within 3.5 s (at %d)"), Cut, LostAtA), LostAtA >= 0 && LostAtA - CutStart <= 210);
+			TestTrue(FString::Printf(TEXT("a %d-tick cut: the other side is lost within 3.5 s (at %d)"), Cut, LostAtB), LostAtB >= 0 && LostAtB - CutStart <= 210);
+		}
+	}
+	return true;
+}
+
 #endif

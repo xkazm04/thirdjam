@@ -16,6 +16,8 @@
 #include "RinkActor.h"
 #include "CameraFollow.h"
 #include "UObject/UObjectIterator.h"
+#include "Misc/PackageName.h"
+#include "HAL/IConsoleManager.h"
 
 DEFINE_LOG_CATEGORY(LogJamLook);
 
@@ -108,9 +110,24 @@ bool ULookTierSwitcher::DoesSupportWorldType(const EWorldType::Type WorldType) c
 	return WorldType == EWorldType::Game || WorldType == EWorldType::PIE;
 }
 
-bool ULookTierSwitcher::SetTier(const FString& Tier, float RinkLengthM)
+// Lane A197 (R-0064 point 8): device B's neon rig. The grid arena's tier (l3_neon) streams /JamAssets/Rigs/LR_N1_Neon when that package exists and
+// `jam.neon.rig` is 1, and today's LR_L3_Neon placeholder otherwise: the mode selects B's rig by name with a fallback, and no schema tier changes.
+static TAutoConsoleVariable<int32> CVarJamNeonRig(TEXT("jam.neon.rig"), 1,
+	TEXT("Lane A197: 1 = the l3_neon tier streams device B's /JamAssets/Rigs/LR_N1_Neon when it exists (default), 0 = always the LR_L3_Neon placeholder."), ECVF_Default);
+
+FString ULookTierSwitcher::ResolveRigMapPath(const FString& Tier)
 {
 	const FString MapPath = GetRigMapPath(Tier);
+	if (Tier == TEXT("l3_neon") && CVarJamNeonRig.GetValueOnGameThread() != 0 && FPackageName::DoesPackageExist(TEXT("/JamAssets/Rigs/LR_N1_Neon")))
+	{
+		return TEXT("/JamAssets/Rigs/LR_N1_Neon.LR_N1_Neon");
+	}
+	return MapPath;
+}
+
+bool ULookTierSwitcher::SetTier(const FString& Tier, float RinkLengthM)
+{
+	const FString MapPath = ResolveRigMapPath(Tier);   // lane A197: B's neon rig by name, today's tier as the fallback
 	if (MapPath.IsEmpty())
 	{
 		UE_LOG(LogJamLook, Error, TEXT("JAMLOOK_UNKNOWN tier '%s' is not in contracts/look-tiers.md; nothing changed"), *Tier);

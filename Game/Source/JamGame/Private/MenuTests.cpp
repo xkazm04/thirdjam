@@ -32,6 +32,8 @@
 #include "InputMappingContext.h"
 #include "MenuStyle.h"
 #include "HUDWidget.h"
+#include "Components/EditableTextBox.h"
+#include "Progression.h"
 #include "Engine/UserInterfaceSettings.h"
 #include "Fonts/FontMeasure.h"
 #include "Rendering/SlateRenderer.h"
@@ -170,8 +172,8 @@ bool FJamDirectorsCallOncePerPeriod::RunTest(const FString&)
 	TestEqual(TEXT("integer tunable rounds"), Pause.FromNormalized(0.5f), 315.0);
 	TestEqual(TEXT("normalized round trip"), Pause.ToNormalized(315.0), 0.5f);
 
-	TestEqual(TEXT("scoreboard line"), UJamDirectorsCallWidget::AnnouncementLine(TEXT("Director's Call: ice is now glass")), FString(TEXT("DIRECTOR'S CALL: ice is now glass")));
-	TestEqual(TEXT("scoreboard line without prefix"), UJamDirectorsCallWidget::AnnouncementLine(TEXT("shot power up (18 -> 20)")), FString(TEXT("DIRECTOR'S CALL: shot power up (18 -> 20)")));
+	TestEqual(TEXT("scoreboard line"), UJamDirectorsCallWidget::AnnouncementLine(TEXT("Director's Call: ice is now glass")), FString(TEXT("RULE CHANGE: ice is now glass")));
+	TestEqual(TEXT("scoreboard line without prefix"), UJamDirectorsCallWidget::AnnouncementLine(TEXT("shot power up (18 -> 20)")), FString(TEXT("RULE CHANGE: shot power up (18 -> 20)")));
 
 	// Lane A42 (y-slots): the MATCH banner's band at 1080p and a bark bubble pushed out of it (above when it fits, else below).
 	float Top = 0.f, Bottom = 0.f;
@@ -1357,7 +1359,106 @@ bool FJamMenuEveryScreenOneLook::RunTest(const FString&)
 	{
 		TestEqual(TEXT("SETTINGS: seven places to stand"), S->GetFocusables().Num(), 7);
 		TestTrue(TEXT("SETTINGS opens on the level"), S->GetFirstFocusable() == S->GetFocusables()[0]);
+		// Lane A195 (FAULT 7): the key box keeps the focus on its commit and hands it to an enabled button (never nowhere): Up, Enter, Esc leaves SETTINGS.
+		TestTrue(TEXT("the key box does not clear the focus on commit"), S->GetKeyBox() && !S->GetKeyBox()->GetClearKeyboardFocusOnCommit());
+		TestTrue(TEXT("the key box hands the focus to an enabled button"), S->FocusAfterKeyBox() && S->FocusAfterKeyBox()->GetIsEnabled());
 	}
+
+	// Lane A195 (evolution 7): the end card's headline in the player's colour; HOME's returning panel; the pause card's two stick lines.
+	TestTrue(TEXT("a win for the home side is in the home blue"), UJamHudWidget::EndCardWordColour(true, 0).Equals(FJamMenuLook::Home()));
+	TestTrue(TEXT("a win for the away side (a joined guest) is in the away orange"), UJamHudWidget::EndCardWordColour(true, 1).Equals(FJamMenuLook::Away()));
+	TestTrue(TEXT("a loss is in the neutral white"), UJamHudWidget::EndCardWordColour(false, 0).Equals(FJamMenuLook::Text()) && UJamHudWidget::EndCardWordColour(false, 1).Equals(FJamMenuLook::Text()));
+	{
+		FJamSeasonState None;
+		FString Title;
+		const FString First = UJamMenuWidget::ReturningText(None, false, 0, 0, FString(), FString(), TEXT("ROOKIE: rookies rarely hit."), Title);
+		TestEqual(TEXT("a first run: the panel's title"), Title, FString(TEXT("YOUR STICK")));
+		TestTrue(*FString::Printf(TEXT("a first run: the two mouse buttons from the bindings ('%s')"), *First.Replace(TEXT("\n"), TEXT(" | "))), First.Contains(TEXT("WITH THE PUCK:")) && First.Contains(TEXT("LMB")) && First.Contains(TEXT("RMB")));
+		FJamSeasonState S;
+		S.bLoaded = true;
+		S.TakeCount = 8;
+		S.TakesWon = 1;
+		S.CurrentTake = 1;
+		FJamSeasonTakeRow R1; R1.Title = TEXT("The Read-Through"); R1.bWon = true; R1.Attempts = 1;
+		FJamSeasonTakeRow R2; R2.Title = TEXT("The Big Room");
+		S.Takes = { R1, R2 };
+		const FString Back = UJamMenuWidget::ReturningText(S, true, 3, 1, TEXT("ROOKIE"), TEXT("REGULAR"), TEXT("ROOKIE: rookies rarely hit."), Title);
+		AddInfo(FString::Printf(TEXT("JAMMENU returning panel: %s / %s"), *Title, *Back.Replace(TEXT("\n"), TEXT(" | "))));
+		TestEqual(TEXT("a returning player: the panel's title"), Title, FString(TEXT("WELCOME BACK")));
+		TestTrue(TEXT("a returning player: the season, the next take by name"), Back.Contains(TEXT("SEASON: 1 OF 8 WON.  NEXT: THE BIG ROOM")));
+		TestTrue(TEXT("a returning player: the last match, its score, level and rink"), Back.Contains(TEXT("LAST MATCH: WON 3 : 1  /  ROOKIE, REGULAR")));
+		TestTrue(TEXT("a returning player: the lit level's line"), Back.Contains(TEXT("ROOKIE: rookies rarely hit.")));
+		NoFilmWords(TEXT("the returning panel"), Back.Replace(TEXT("NEXT: THE BIG ROOM"), TEXT("")));
+	}
+	{
+		TArray<FString> Stick;
+		UJamDirectorsCallWidget::PauseStickText().ParseIntoArrayLines(Stick);
+		TestEqual(TEXT("the pause card's controls: two lines"), Stick.Num(), 2);
+		TestTrue(TEXT("with the puck: LMB shoots, RMB passes"), Stick.Num() == 2 && Stick[0].Contains(TEXT("LMB  SHOOT")) && Stick[0].Contains(TEXT("RMB  PASS")));
+		TestTrue(TEXT("without it: LMB cross-checks, RMB checks"), Stick.Num() == 2 && Stick[1].Contains(TEXT("LMB  CROSS-CHECK")) && Stick[1].Contains(TEXT("RMB  CHECK")));
+		if (FSlateApplication::IsInitialized())
+		{
+			const TSharedRef<FSlateFontMeasure> M = FSlateApplication::Get().GetRenderer()->GetFontMeasureService();
+			for (const FString& Ln : Stick)
+			{
+				const float W = static_cast<float>(M->Measure(Ln, FJamMenuLook::Font(FJamMenuLook::Body, FName("Bold"), FJamMenuLook::TrackLabel)).X);
+				TestTrue(*FString::Printf(TEXT("'%s' fits the pause card (%.0f of %.0f)"), *Ln, W, UJamDirectorsCallWidget::PauseCardInnerWidth), W > 0.f && W <= UJamDirectorsCallWidget::PauseCardInnerWidth);
+			}
+		}
+	}
+	// Lane A195 (F6, the hardening lane's menu fuzz): QUIT on HOME and QUIT TO MENU in a match ask once, NO the home of the question, Esc / B is NO.
+	F.Menu->ShowScreen(EJamMenuScreen::Main);
+	F.Menu->OpenQuitConfirm();
+	TestTrue(TEXT("QUIT asks"), F.Menu->IsQuitConfirmOpen());
+	TestTrue(TEXT("the question's home is NO"), F.Menu->GetHomeFocus(EJamMenuScreen::Main) == F.Menu->GetConfirmNo() && F.Menu->GetConfirmNo() != nullptr);
+	TestNotNull(TEXT("YES stands beside it"), F.Menu->GetConfirmYes());
+	F.Menu->CloseQuitConfirm(true);
+	TestFalse(TEXT("NO closes the question and the game stays"), F.Menu->IsQuitConfirmOpen());
+	F.Menu->OpenQuitConfirm();
+	F.Menu->ShowScreen(EJamMenuScreen::Settings);
+	TestFalse(TEXT("a screen change answers NO"), F.Menu->IsQuitConfirmOpen());
+	{
+		UJamDirectorsCallWidget* Q = CreateWidget<UJamDirectorsCallWidget>(F.World, UJamDirectorsCallWidget::StaticClass());
+		if (TestNotNull(TEXT("the pause card builds"), Q))
+		{
+			Q->AddToRoot();
+			ON_SCOPE_EXIT { Q->ReleaseSlateResources(true); Q->RemoveFromRoot(); };
+			Q->TakeWidget();
+			Q->ShowPause();
+			Q->ShowLeaveConfirm();
+			TestTrue(TEXT("QUIT TO MENU asks"), Q->IsOnLeaveConfirm());
+			TestTrue(*FString::Printf(TEXT("its hints say Esc / B keeps playing ('%s')"), *Q->GetHintLine()), Q->GetHintLine().Contains(TEXT("ESC / B NO, KEEP PLAYING")));
+			TestNotNull(TEXT("NO is there"), Q->GetLeaveNo());
+			Q->AnswerLeave(false);
+			TestFalse(TEXT("NO goes back to the pause menu"), Q->IsOnLeaveConfirm());
+		}
+	}
+	TestEqual(TEXT("the scoreboard's rule line"), UJamDirectorsCallWidget::AnnouncementLine(TEXT("shot power up")), FString(TEXT("RULE CHANGE: shot power up")));
+	return true;
+}
+
+
+// Lane A195 (KIT READY): every name of A-to-B-0028 is found in the plugin (the mode pictures under B's dashed names too), the display font loads with
+// its three faces, and each element has its switch. Skipped (with a line) on a tree without device B's UI kit.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamMenuKitFound, "Jam.Menu.KitFound", JamMenuTests::MenuTestFlags)
+bool FJamMenuKitFound::RunTest(const FString&)
+{
+	if (!FJamMenuLook::KitFound(TEXT("T_UI_Panel"))) { AddInfo(TEXT("JAMMENU kit: not in this tree (device B's UI kit absent): skipped")); return true; }
+	int32 Found = 0, Asked = 0;
+	for (const FString& N : FJamMenuLook::KitNames())
+	{
+		if (N.StartsWith(TEXT("Fonts/"))) continue;
+		++Asked;
+		const bool bFound = FJamMenuLook::KitFound(N) != nullptr;
+		Found += bFound ? 1 : 0;
+		TestTrue(*FString::Printf(TEXT("device B's %s is found"), *N), bFound);
+	}
+	TestTrue(TEXT("device B's display font loads"), FJamMenuLook::HasKitFont());
+	AddInfo(FString::Printf(TEXT("JAMMENU kit found %d of %d textures, font %d"), Found, Asked, FJamMenuLook::HasKitFont() ? 1 : 0));
+	TestFalse(TEXT("the frosted logo is off by default (the menu's own type: jam.menu.KitLogo 0)"), FJamMenuLook::KitElementOn(TEXT("T_UI_Logo_Hokej")));
+	TestNull(TEXT("so the menu asks no logo"), FJamMenuLook::Kit(TEXT("T_UI_Logo_Hokej")));
+	TestTrue(TEXT("the backdrop, the plates, the pictures and the font are on by default"), FJamMenuLook::KitElementOn(TEXT("T_UI_MenuBackdrop")) && FJamMenuLook::KitElementOn(TEXT("T_UI_Panel"))
+		&& FJamMenuLook::KitElementOn(TEXT("Modes/T_UI_Mode_pond")) && FJamMenuLook::KitElementOn(TEXT("Fonts/F_Hokej_Display")));
 	return true;
 }
 

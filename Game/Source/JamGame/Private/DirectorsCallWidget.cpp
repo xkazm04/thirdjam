@@ -5,6 +5,7 @@
 #include "DirectorsCallController.h"
 #include "MenuStyle.h"
 #include "MenuFlow.h"
+#include "HUDWidget.h"
 #include "HokejGameMode.h"
 #include "JamCartridge.h"
 #include "JamJson.h"
@@ -108,7 +109,7 @@ FString UJamDirectorsCallWidget::AnnouncementLine(const FString& Announcement)
 	FString Rest = Announcement.TrimStartAndEnd();
 	const FString Prefix(TEXT("director's call:"));
 	if (Rest.Left(Prefix.Len()).ToLower() == Prefix) Rest = Rest.Mid(Prefix.Len()).TrimStartAndEnd();
-	return FString::Printf(TEXT("DIRECTOR'S CALL: %s"), *Rest);
+	return FString::Printf(TEXT("RULE CHANGE: %s"), *Rest);   // lane A195 (evolution 7, the Director's word): no film word on the scoreboard
 }
 
 FString UJamDirectorsCallWidget::RuleLine(const FString& Text)
@@ -148,7 +149,12 @@ TSharedRef<SWidget> UJamDirectorsCallWidget::RebuildWidget()
 	return Super::RebuildWidget();
 }
 
-// Lane A144 (evolution 3): the pause card's controls table, the same bindings as UJamInputMap::BindingTableText in lines that fit the card.
+// Lane A195 (evolution 7): the two mouse buttons by possession.
+FString UJamDirectorsCallWidget::PauseStickText()
+{
+	return FString::Printf(TEXT("WITH THE PUCK      %s\nWITHOUT IT      %s"), *UJamHudWidget::ButtonsBadgeLine(true), *UJamHudWidget::ButtonsBadgeLine(false));
+}
+
 FString UJamDirectorsCallWidget::PauseControlsText()
 {
 	return UJamInputMap::PauseCardText();   // lane A183: the words from the live bindings
@@ -213,10 +219,14 @@ void UJamDirectorsCallWidget::BuildTree()
 	PauseStatus = L::MakeText(T, TEXT(""), L::Font(L::Body, FName("Regular")), L::TextDim());
 	PauseStatus->SetWrapTextAt(PauseCardInnerWidth);
 	AddV(Pause, PauseStatus, FMargin(0, L::Unit * 1.5f, 0, 0));
-	// Lane A49: the controls card on the pause menu; lane A183: the words from the live bindings. Lane A144: five lines, wrapped at the card's inner width.
-	UTextBlock* Controls = L::MakeText(T, PauseControlsText(), FJamUiStyle::CaptionFont(), L::TextDim());
-	Controls->SetWrapTextAt(PauseCardInnerWidth);
-	AddV(Pause, Controls, FMargin(0, L::Unit * 1.5f, 0, 0));
+	// Lane A195 (evolution 7): the two lines that matter, the two mouse buttons by possession, from the live bindings (the five-line table of lanes
+	// A49 / A183 is CONTROLS' job now: PauseControlsText() keeps it for its tests and the HUD).
+	PauseStick = L::MakeText(T, PauseStickText(), L::Font(L::Body, FName("Bold"), L::TrackLabel), L::Text());
+	PauseStick->SetWrapTextAt(PauseCardInnerWidth);
+	PauseStick->SetLineHeightPercentage(1.25f);
+	AddV(Pause, PauseStick, FMargin(0, L::Unit * 1.5f, 0, 0));
+	UTextBlock* Every = L::MakeText(T, TEXT("EVERY KEY, AND TO REBIND IT: CONTROLS"), L::Font(L::Caption, FName("Bold"), L::TrackLabel), L::TextDim());
+	AddV(Pause, Every, FMargin(0, 4, 0, 0));
 	Switcher->AddChild(Pause);
 
 	// Screen 1: change a rule (the Director's Call of lane A8: one change per period).
@@ -247,6 +257,7 @@ void UJamDirectorsCallWidget::BuildTree()
 		ControlsScreen->OnBack.AddDynamic(this, &UJamDirectorsCallWidget::OnControlsBack);
 		Switcher->AddChild(ControlsScreen);
 	}
+	BuildLeaveConfirm();   // lane A195 (F6)
 	Switcher->SetActiveWidgetIndex(0);
 }
 
@@ -423,7 +434,7 @@ void UJamDirectorsCallWidget::AfterCall(const FJamDirectorsCall& Call)
 	if (Call.bApplied)
 	{
 		// Lane A195: on the pause card the line says what happened in the front end's words (the scoreboard keeps its own line).
-		LastAnnouncement = AnnouncementLine(Call.Announcement).Replace(TEXT("DIRECTOR'S CALL:"), TEXT("RULE CHANGED:"));
+		LastAnnouncement = AnnouncementLine(Call.Announcement);   // lane A195: "RULE CHANGE: ...", the scoreboard's own line
 		if (CallStatus) CallStatus->SetText(FText::FromString(LastAnnouncement));
 		ShowPause();
 	}
@@ -436,7 +447,7 @@ void UJamDirectorsCallWidget::AfterCall(const FJamDirectorsCall& Call)
 void UJamDirectorsCallWidget::OnResumeClicked() { if (Owner.IsValid()) Owner->Resume(); }
 void UJamDirectorsCallWidget::OnCallClicked() { ShowCall(); }
 void UJamDirectorsCallWidget::OnRestartClicked() { if (Owner.IsValid()) Owner->RestartMatch(); }
-void UJamDirectorsCallWidget::OnQuitClicked() { if (Owner.IsValid()) Owner->QuitToMenu(); }
+void UJamDirectorsCallWidget::OnQuitClicked() { ShowLeaveConfirm(); }   // lane A195 (F6): QUIT TO MENU throws the match away: it asks once
 void UJamDirectorsCallWidget::OnApplyClicked() { ApplySelected(); }
 void UJamDirectorsCallWidget::OnBackClicked() { ShowPause(); }
 
@@ -448,7 +459,7 @@ void UJamDirectorsCallWidget::NativeTick(const FGeometry& MyGeometry, float InDe
 	// it goes home to RESUME on the pause menu, to the first slider (or BACK) on the call card. CONTROLS keeps its own focus.
 	if (!PendingFocus.IsValid() && PC && IsOpen() && HasUserFocus(PC) && !IsOnControls())
 	{
-		PendingFocus = bOnCall ? (Rows.Num() ? static_cast<UWidget*>(Rows[0].Slider) : static_cast<UWidget*>(BackButton.Get())) : static_cast<UWidget*>(ResumeButton.Get());
+		PendingFocus = IsOnLeaveConfirm() ? static_cast<UWidget*>(LeaveNo.Get()) : bOnCall ? (Rows.Num() ? static_cast<UWidget*>(Rows[0].Slider) : static_cast<UWidget*>(BackButton.Get())) : static_cast<UWidget*>(ResumeButton.Get());
 	}
 	if (PendingFocus.IsValid())
 	{
@@ -469,7 +480,8 @@ void UJamDirectorsCallWidget::RefreshHints()
 {
 	if (!HintBox || !WidgetTree) return;
 	TArray<TPair<FString, FString>> Hints;
-	if (IsOnControls()) Hints = { { TEXT("ENTER / A"), TEXT("REBIND") }, { TEXT("ARROWS / STICK"), TEXT("MOVE") }, { TEXT("ESC / B"), TEXT("BACK") } };
+	if (IsOnLeaveConfirm()) Hints = { { TEXT("ENTER / A"), TEXT("SELECT") }, { TEXT("ESC / B"), TEXT("NO, KEEP PLAYING") } };   // lane A195 (F6)
+	else if (IsOnControls()) Hints = { { TEXT("ENTER / A"), TEXT("REBIND") }, { TEXT("ARROWS / STICK"), TEXT("MOVE") }, { TEXT("ESC / B"), TEXT("BACK") } };
 	else if (bOnCall) Hints = { { TEXT("LEFT / RIGHT"), TEXT("SLIDE") }, { TEXT("ENTER / A"), TEXT("SELECT") }, { TEXT("ESC / B"), TEXT("BACK") } };
 	else Hints = { { TEXT("ESC / START"), TEXT("RESUME") }, { TEXT("ENTER / A"), TEXT("SELECT") }, { L::RestartKeyCap(), TEXT("RESTART") } };   // three: four ran past the card (A195 still)
 	const FString Key = L::HintsLine(Hints);
@@ -494,6 +506,8 @@ TArray<FString> UJamDirectorsCallWidget::GetPauseLabels() const
 FReply UJamDirectorsCallWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent)
 {
 	const FKey K = InKeyEvent.GetKey();
+	if (IsOnLeaveConfirm() && (K == EKeys::Escape || IsBackKey(K))) { AnswerLeave(false); return FReply::Handled(); }   // lane A195 (F6): Esc / B is NO
+	if (IsOnLeaveConfirm() && (K == EKeys::Enter || K == EKeys::Gamepad_FaceButton_Bottom)) { PendingFocus = LeaveNo.Get(); return FReply::Handled(); }
 	if (IsOnControls() && (K == EKeys::Escape || IsBackKey(K))) { OnControlsBack(); return FReply::Handled(); }   // lane A191: Esc on CONTROLS goes back, not on
 	if (K == EKeys::Escape || K == EKeys::Gamepad_Special_Right)
 	{
@@ -590,7 +604,7 @@ void UJamDirectorsCallHudWidget::BuildTree()
 	Place(LinePill, FVector2D(0.5, 0), FVector2D(0.5, 0), FVector2D(0, 112));
 	UBorder* HintPill = S::Plate(T, S::Pill(0.8f), FMargin(14, 5));
 	HintPill->SetVisibility(ESlateVisibility::Collapsed);
-	ReadyHint = S::IceText(T, TEXT("ESC / START   CALL READY"), S::CaptionFont(), S::Yellow());   // R-0021 point 3 (lane A47): the menu keeps the film words
+	ReadyHint = S::IceText(T, TEXT("ESC / START   RULE CHANGE READY"), S::CaptionFont(), S::Yellow());   // lane A195 (evolution 7): the item's own words
 	ReadyHint->SetVisibility(ESlateVisibility::Collapsed);
 	HintPill->SetContent(ReadyHint);
 	Place(HintPill, FVector2D(0, 1), FVector2D(0, 1), FVector2D(S::EdgePx, -S::EdgePx));
@@ -712,3 +726,53 @@ bool UJamDirectorsCallHudWidget::IsTakeCardVisible() const { return TakeCard && 
 bool UJamDirectorsCallHudWidget::IsLineVisible() const { return Announcement && Announcement->GetVisibility() != ESlateVisibility::Collapsed; }
 
 float UJamDirectorsCallWidget::GetHintRowWidth() const { return HintBox ? static_cast<float>(HintBox->GetDesiredSize().X) : 0.f; }
+
+// ---------------------------------------------------------------- lane A195 (F6): QUIT TO MENU asks once
+
+void UJamDirectorsCallWidget::BuildLeaveConfirm()
+{
+	UWidgetTree* T = WidgetTree;
+	UVerticalBox* Leave = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("LeaveScreen"));
+	AddV(Leave, L::MakeText(T, TEXT("LEAVE THE MATCH?"), L::Font(L::Display - 8, FName("Black"), 120), L::Text()), FMargin(0));
+	UTextBlock* Why = L::MakeText(T, TEXT("The score of this match is thrown away. The season keeps what you have won."), L::Font(L::Body, FName("Regular")), L::TextDim());
+	Why->SetWrapTextAt(PauseCardInnerWidth);
+	AddV(Leave, Why, FMargin(0, L::Unit, 0, L::Unit * 3.f));
+	UTextBlock* Txt = nullptr;
+	UWidget* Bar = nullptr;
+	LeaveNo = L::MakeItem(T, TEXT("NO, KEEP PLAYING"), PauseItemSize, Txt, Bar);
+	Painter.Add(LeaveNo, Txt, Bar);
+	LeaveNo->OnClicked.AddDynamic(this, &UJamDirectorsCallWidget::OnLeaveNo);
+	AddV(Leave, LeaveNo, FMargin(0, 0, 0, L::Gap));
+	LeaveYes = L::MakeItem(T, TEXT("YES, LEAVE TO THE MENU"), PauseItemSize, Txt, Bar);
+	Painter.Add(LeaveYes, Txt, Bar);
+	LeaveYes->OnClicked.AddDynamic(this, &UJamDirectorsCallWidget::OnLeaveYes);
+	AddV(Leave, LeaveYes, FMargin(0));
+	LeaveIndex = Switcher->GetChildrenCount();
+	Switcher->AddChild(Leave);
+}
+
+bool UJamDirectorsCallWidget::IsOnLeaveConfirm() const
+{
+	return Switcher && LeaveIndex >= 0 && Switcher->GetActiveWidgetIndex() == LeaveIndex;
+}
+
+void UJamDirectorsCallWidget::ShowLeaveConfirm()
+{
+	if (!Switcher || LeaveIndex < 0) return;
+	bOnCall = false;
+	Switcher->SetActiveWidgetIndex(LeaveIndex);
+	PendingFocus = LeaveNo.Get();   // NO by default: a stray second press keeps the match
+	RefreshHints();
+	UE_LOG(LogTemp, Log, TEXT("JAMPAUSE confirm leave open (focus=no)"));
+}
+
+void UJamDirectorsCallWidget::AnswerLeave(bool bYes)
+{
+	UE_LOG(LogTemp, Log, TEXT("JAMPAUSE confirm leave answer=%s"), bYes ? TEXT("yes") : TEXT("no"));
+	if (bYes) { if (Owner.IsValid()) Owner->QuitToMenu(); return; }
+	ShowPause();
+	PendingFocus = QuitButton.Get();
+}
+
+void UJamDirectorsCallWidget::OnLeaveNo() { AnswerLeave(false); }
+void UJamDirectorsCallWidget::OnLeaveYes() { AnswerLeave(true); }

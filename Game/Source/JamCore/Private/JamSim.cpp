@@ -1098,7 +1098,7 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 			// Lane A165 (game.contact.check_cooldown_restart): the press inside the cooldown starts it again: a mashed button never opens a second window.
 			if (Config.Contact.bCheckCooldownRestart) S.CheckReadyFrame = Frame + Config.Contact.CheckCooldownFrames;
 		}
-		else if (In.bCheck && Config.Skater.bCheckEnabled && Config.Contact.CheckWindupFrames > 0 && S.CheckWindupLeft > 0)
+		else if (In.bCheck && Config.Skater.bCheckEnabled && Config.Contact.CheckWindupFor(S.bHuman) > 0 && S.CheckWindupLeft > 0)   // lane A200: the skater's own (bot_check_windup_frames)
 		{
 			// Lane A184 (game.contact.check_windup_frames): a press inside a running wind-up is the same press: nothing more.
 		}
@@ -1108,8 +1108,10 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 			const bool bLate = TryLatePress(S);
 			// Lane A184 (game.contact.check_windup_frames): the press commits and the window opens that many frames later (StepWindups), so the figure's take
 			// has a beat before the contact; the cooldown starts and the figure is told on the press. Not for a press the stick's recovery drops just below.
-			const bool bWindup = !bLate && Config.Contact.CheckWindupFrames > 0 && S.StickLockLeft <= 0;
-			if (bWindup) { S.CheckWindupLeft = Config.Contact.CheckWindupFrames; S.WindupFrames = Config.Contact.CheckWindupFrames; }
+			// Lane A200: the skater's own length, by FJamSkaterState::bHuman (bot_check_windup_frames; absent = the shared check_windup_frames).
+			const int32 CheckWu = Config.Contact.CheckWindupFor(S.bHuman);
+			const bool bWindup = !bLate && CheckWu > 0 && S.StickLockLeft <= 0;
+			if (bWindup) { S.CheckWindupLeft = CheckWu; S.WindupFrames = CheckWu; }
 			else if (!bLate) S.CheckWindow = S.bHuman ? HumanCheckWindowFrames : CheckWindowFrames;   // lane A49: the human's press gets 0.2 s to connect
 			S.bCheckThisFrame = true;
 			// Lane A157: the press is a commitment. Its cooldown starts (check_cooldown_frames), and a press that opened a window lunges (lunge_frames,
@@ -1212,6 +1214,7 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 	if (TakeOwner >= 0 && Puck.LastTouch != TakeOwner) TakeOwner = -1;
 	for (FJamSkaterState& S : Skaters)
 	{
+		ClearChargeOnLoss(S, Inputs.IsValidIndex(S.Index) ? Inputs[S.Index] : FJamInput());   // lane A203 (game.skater.charge_dies_on_loss): before bHasPuck moves on
 		S.bHasPuck = (Puck.LastTouch == S.Index) && CarrierIndex() == S.Index;
 		if (S.bHasPuck) S.LastCarryFrame = Frame;
 		if (S.TakeGraceLeft > 0 && (Puck.LastTouch != S.Index || --S.TakeGraceLeft < 0)) S.TakeGraceLeft = 0;
@@ -1709,21 +1712,22 @@ void UJamSim::TryLift(FJamSkaterState& S)
 	// Lane A184 / A192 (game.contact.cross_windup_frames): the stick's part (the strip, the miss) is the press's, as before; the cross-check's body part, the
 	// shove, lands that many frames later on the man it was aimed at (ResolveLift defers it, LandCrossShove lands it), so the figure's take has a beat
 	// before the contact and the stick steal is not slowed. The figure is told the frames on every press. 0 = the shove at once, as before.
-	if (Config.Contact.CrossWindupFrames > 0) S.WindupFrames = Config.Contact.CrossWindupFrames;
+	if (Config.Contact.CrossWindupFor(S.bHuman) > 0) S.WindupFrames = Config.Contact.CrossWindupFor(S.bHuman);   // lane A200: the skater's own (bot_cross_windup_frames)
 	ResolveLift(S);
 }
 
 // Lane A192: the shove of a cross-check: at once, or deferred by cross_windup_frames to S.CrossTarget (bStickOnly: the stick-only shield had widened it).
 bool UJamSim::CrossShove(FJamSkaterState& S, FJamSkaterState& O, const FVector2D& Dir, bool bStickOnly)
 {
-	if (Config.Contact.CrossWindupFrames <= 0)
+	const int32 CrossWu = Config.Contact.CrossWindupFor(S.bHuman);   // lane A200: the skater's own (bot_cross_windup_frames)
+	if (CrossWu <= 0)
 	{
 		ResolveContact(S, O, Dir, (S.Pos + O.Pos) * 0.5, EContactKind::Cross);
 		return true;
 	}
 	S.CrossTarget = O.Index;
 	S.bCrossTargetStickOnly = bStickOnly;
-	S.LiftWindupLeft = Config.Contact.CrossWindupFrames;
+	S.LiftWindupLeft = CrossWu;
 	return false;
 }
 
@@ -2529,11 +2533,13 @@ void UJamSim::StepCharge(FJamSkaterState& S, const FJamInput& In)
 	const int32 Max = Config.Shot.ChargeFramesMax;
 	if (In.bShootHeld)
 	{
+		if (S.ChargeFrames < 0) return;   // lane A203: a charge the loss of the puck cleared: a held button charges nothing until it is pressed again
 		if (Max <= 0) { if (S.ChargeFrames == 0) { TryShoot(S, 0.f); S.ChargeFrames = 1; } return; }   // charging off: a hold is one tap
 		const bool bInReach = FVector2D::Distance(S.Pos, Puck.Pos) <= CarrierReachM(S.Index);   // R-0042 (lane A85): the carrier's reach, the blade's full length included
 		if (bInReach && Frame >= S.ShotReadyFrame) S.ChargeFrames = FMath::Min(S.ChargeFrames + 1, Max);
 		return;
 	}
+	if (S.ChargeFrames < 0) { S.ChargeFrames = 0; return; }   // lane A203: the release of a dead press fires nothing
 	if (S.ChargeFrames > 0)
 	{
 		// R-0044 (lane A91): a hold of shot.tap_frames or fewer is a tap: charge 0, so no speed bonus and the tap's height (on the ice at tap_m 0). A human's
@@ -2800,16 +2806,29 @@ void UJamSim::StepPassCharge(FJamSkaterState& S, const FJamInput& In)
 	const int32 Half = FMath::Max(0, Config.Pass.SaucerHalfFrames);
 	if (In.bPassHeld)
 	{
+		if (S.PassChargeFrames < 0) return;   // lane A203: as the shot's
 		const bool bInReach = FVector2D::Distance(S.Pos, Puck.Pos) <= CarrierReachM(S.Index);   // R-0042 (lane A85)
 		if (bInReach && Frame >= S.ShotReadyFrame) S.PassChargeFrames = FMath::Min(S.PassChargeFrames + 1, FMath::Max(Half, 1));
 		return;
 	}
+	if (S.PassChargeFrames < 0) { S.PassChargeFrames = 0; return; }   // lane A203
 	if (S.PassChargeFrames > 0)
 	{
 		const bool bSaucer = Half > 0 && S.PassChargeFrames >= Half;
 		S.PassChargeFrames = 0;
 		TryPass(S, bSaucer);
 	}
+}
+
+// Lane A203 (track K1, game.skater.charge_dies_on_loss; the Director's ruling on A199's ASK): a skater that stops being the carrier (he carried at the end
+// of the last frame and somebody else has touched the puck since) loses his shot's and pass's charges: a button held then is dead (-1, the charge fields'
+// own memory, hashed as they always were) and charges nothing until it is let go and pressed again, so a strip that leaves the puck in his reach is not
+// shot or passed by the release of a press made before it. Bots, the human, host and guest alike. false = the neutral value (never -1: the game before).
+void UJamSim::ClearChargeOnLoss(FJamSkaterState& S, const FJamInput& In)
+{
+	if (!Config.Skater.bChargeDiesOnLoss || !S.bHasPuck || Puck.LastTouch == S.Index) return;
+	if (In.bShootHeld || S.ChargeFrames > 0) S.ChargeFrames = -1;
+	if (In.bPassHeld || S.PassChargeFrames > 0) S.PassChargeFrames = -1;
 }
 
 void UJamSim::TryPass(FJamSkaterState& S, bool bSaucer)

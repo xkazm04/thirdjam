@@ -42,6 +42,26 @@ public:
 			{
 				Box(L, E.PosPx - FVector2D(8, 8), FVector2D(16, 16), FLinearColor(1.f, 0.9f, 0.2f, 1.f));  // yellow ring under the human
 			}
+			if (E.DownMark == 1)
+			{
+				// Lane A196: a mate down: a hollow square, 2 px lines.
+				const float H2 = E.SizePx * 0.5f;
+				Box(L + 1, E.PosPx + FVector2D(-H2, -H2), FVector2D(E.SizePx, 2), E.Colour);
+				Box(L + 1, E.PosPx + FVector2D(-H2, H2 - 2), FVector2D(E.SizePx, 2), E.Colour);
+				Box(L + 1, E.PosPx + FVector2D(-H2, -H2), FVector2D(2, E.SizePx), E.Colour);
+				Box(L + 1, E.PosPx + FVector2D(H2 - 2, -H2), FVector2D(2, E.SizePx), E.Colour);
+				continue;
+			}
+			if (E.DownMark == 2)
+			{
+				// Lane A196: an opponent down: an X.
+				const float H2 = E.SizePx * 0.5f;
+				TArray<FVector2f> A = { FVector2f(E.PosPx + FVector2D(-H2, -H2)), FVector2f(E.PosPx + FVector2D(H2, H2)) };
+				TArray<FVector2f> B = { FVector2f(E.PosPx + FVector2D(-H2, H2)), FVector2f(E.PosPx + FVector2D(H2, -H2)) };
+				FSlateDrawElement::MakeLines(Out, L + 1, Geo.ToPaintGeometry(), A, ESlateDrawEffect::None, E.Colour, true, 2.5f);
+				FSlateDrawElement::MakeLines(Out, L + 1, Geo.ToPaintGeometry(), B, ESlateDrawEffect::None, E.Colour, true, 2.5f);
+				continue;
+			}
 			Box(L + 1, E.PosPx - FVector2D(E.SizePx * 0.5f, E.SizePx * 0.5f), FVector2D(E.SizePx, E.SizePx), E.Colour);
 		}
 		return L + 2;
@@ -76,6 +96,18 @@ void UJamRadarWidget::BuildEntries(const FJamPresentationFrame& F, TArray<FJamRa
 		E.bHuman = S.bHuman || I == F.HumanIndex;
 		E.SizePx = E.bHuman ? 12.f : 9.f;
 		E.Colour = F.GetTeamColour(S.TeamId);
+		Out.Add(E);
+	}
+	// Lane A196 (evolution 10): the downed men, over the dots: the human's mates a hollow square, opponents an X, 15 px, in the team's colour.
+	const int32 HumanTeam = F.Skaters.IsValidIndex(F.HumanIndex) ? F.Skaters[F.HumanIndex].TeamId : 0;
+	for (int32 I = 0; I < F.DownsM.Num(); ++I)
+	{
+		FJamRadarEntry E;
+		E.PosPx = ToPx(F.DownsM[I]);
+		E.SizePx = 15.f;
+		const int32 Team = F.DownsTeam.IsValidIndex(I) ? F.DownsTeam[I] : 0;
+		E.Colour = F.GetTeamColour(Team);
+		E.DownMark = Team == HumanTeam ? 1 : 2;
 		Out.Add(E);
 	}
 	FJamRadarEntry P;

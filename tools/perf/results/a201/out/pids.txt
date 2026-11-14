@@ -1,0 +1,47 @@
+hash-main 51335
+50032 main-rookie 1-50
+12612 main-rookie 51-100
+55388 main-pro 1-50
+42944 main-pro 51-100
+15348 main-all_star 1-50
+20448 main-all_star 51-100
+m1 51984
+hash-mine 52681
+34124 mine-rookie 1-50
+36032 mine-rookie 51-100
+19368 mine-pro 1-50
+50908 mine-pro 51-100
+12868 mine-all_star 1-50
+23092 mine-all_star 51-100
+m2-pro 57389
+m2-rookie 57393
+m3-pro 63625
+m3-rookie 63629
+m4-pro 2830
+m4-rookie 2832
+m5-pro 3406
+m6-pro 9541
+m6-rookie 9545
+final-pro 24200
+final-rookie 24204
+hash-fin 39628
+44160 fin-rookie 1-50
+40668 fin-rookie 51-100
+37352 fin-pro 1-50
+39004 fin-pro 51-100
+32880 fin-all_star 1-50
+55432 fin-all_star 51-100
+r1-pro 55403
+r1-rookie 55406
+l3late 55410
+r2-pro 61140
+r2-rookie 61143
+final2-pro 6907
+final2-rookie 6913
+hash-fin2 15809
+38116 fin2-rookie 1-50
+13420 fin2-rookie 51-100
+39264 fin2-pro 1-50
+51080 fin2-pro 51-100
+8464 fin2-all_star 1-50
+51772 fin2-all_star 51-100

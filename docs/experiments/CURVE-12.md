@@ -27,3 +27,19 @@ number today: `SetEvolution3` zeroes the opposing side's `StepUpM` in `ApplyDiff
 Built = tune by seed: rookie regular, rookie large, pro large 600 of 600 each. Law 3 on the build: rookie 8 m 100 %, pro 94.0 (9.5 m 83.5), all_star 99.5; a straight charge 0 at every level. Full `Jam` filter on the build with the numbers, the measuring environment
 cleared: 287 of 287. Neutral: `JamBaseline::BrainTune("rookie")` gains `red_skill=0.97` on the regular rink (its large tune already carries its own red);
 the large-rink red skills are not tune keys of the baseline (no pin is a large-rink match at rookie or pro).
+
+## LADDER SET 2 on 38766fc9 + the bots' wind-ups 8 / 12 (A200) + evolution 8 (A202, by `brain8=1`)
+
+| cell (target) | wind-ups only (600) | + evolution 8 (600) | numbers moved | 2,000 with them |
+|---|---|---|---|---|
+| rookie regular (85) | 81.2 | 85.8 | none | **84.8** (83.1-86.3) |
+| rookie large (85) | | 86.7 | none | **84.0** (82.4-85.6) |
+| pro regular (48) | 53.3 | 41.7 | pro `Hk.PressureSec` 0.3 -> **0.6** (1.0: 50.8) | **46.8** (44.6-48.9) |
+| pro large (48) | | 38.7 | the same + pro `LargeRedSkill` 1.18 -> **1.165** (1.15: 52.5) | **46.1** (43.9-48.3) |
+| all_star regular (26) | 31.3 | 25.2 | none | **25.9** (24.0-27.8) |
+| all_star large (26) | | 25.2 | none | **24.9** (23.1-26.9) |
+
+Evolution 8 made the regular rink harder for the player at pro (-11.6 points) and all_star (-6.1) and easier at rookie (+4.6); it does not
+touch law 3 (pro 94.0 / 83.5 / 60.0 / 35.0 / 34.5, straight 0 with and without it). Built = tune for the two pro numbers: 600 of 600 each.
+All_star's brain dial is a profile number now (`ApplyDifficultyProfile` keeps a level's `Opp.Hk.StepUpM`; neutral 100 of 100 seeds a cell): on 38766fc9
+before the wind-ups, second man alone -3.0, with step-up 16 m -7.4 on the regular rink, flat on the large; not needed in this set.

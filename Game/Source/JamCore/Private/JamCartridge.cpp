@@ -1065,6 +1065,7 @@ namespace
 		ReadInteger(Sk, TEXT("pass_lead_frames"), C.Skater.PassLeadFrames);
 		ReadNumber(Sk, TEXT("carry_speed_mult"), C.Skater.CarrySpeedMult);   // lane A82 (R-0041 point 6)
 		ReadNumber(Sk, TEXT("free_speed_mult"), C.Skater.FreeSpeedMult);   // lane A185 (track F2 evolution 9, R-0064 point 2)
+		ReadBool(Sk, TEXT("charge_dies_on_loss"), C.Skater.bChargeDiesOnLoss);   // lane A203 (track K1 evolution 4): false = the neutral value
 		ReadNumber(Sk, TEXT("reverse_brake_decel"), C.Skater.ReverseBrakeDecel);   // lane A93 (R-0045 law 3)
 		// Lane A93 (R-0045 law 3): game.skater.burst { frames, accel_mult }
 		if (const FJPtr Bu = Obj(Sk, TEXT("burst")))
@@ -1217,6 +1218,8 @@ namespace
 			ReadBool(Ct, TEXT("cross_hold"), C.Contact.bCrossHold);   // lane A184: the held cross-check; false = the neutral value
 			ReadInteger(Ct, TEXT("check_windup_frames"), C.Contact.CheckWindupFrames);   // lane A184: the body check's wind-up; 0 = the neutral value
 			ReadInteger(Ct, TEXT("cross_windup_frames"), C.Contact.CrossWindupFrames);   // lane A184: the cross-check's wind-up; 0 = the neutral value
+			ReadInteger(Ct, TEXT("bot_check_windup_frames"), C.Contact.BotCheckWindupFrames);   // lane A200: the bots' own; absent = the shared value
+			ReadInteger(Ct, TEXT("bot_cross_windup_frames"), C.Contact.BotCrossWindupFrames);   // lane A200: the bots' own; absent = the shared value
 		}
 		// Lane A132 (track F1), measurement only (as JAM_PLAYTESTER_VERBS in JamPlaytester.cpp): with JAM_TEST_SHIELD_SHOVE=0 in the environment every cartridge
 		// loads with the shove rule at its neutral value (contact.bShieldShove false: the refusal of main before lane A125; the rule has no key), so the three
@@ -1246,6 +1249,8 @@ namespace
 					else if (Name == TEXT("cross_hold")) C.Contact.bCrossHold = V != 0.0;   // lane A184: law 3's drill and the proofs with the rules on (measurement only)
 					else if (Name == TEXT("check_windup")) C.Contact.CheckWindupFrames = FMath::RoundToInt32(V);
 					else if (Name == TEXT("cross_windup")) C.Contact.CrossWindupFrames = FMath::RoundToInt32(V);
+					else if (Name == TEXT("bot_check_windup")) C.Contact.BotCheckWindupFrames = FMath::RoundToInt32(V);   // lane A200: the gate and law 3 at the bots' arms (measurement only)
+					else if (Name == TEXT("bot_cross_windup")) C.Contact.BotCrossWindupFrames = FMath::RoundToInt32(V);
 					// A151-SEAM-MORE
 				}
 			}

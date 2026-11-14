@@ -22,6 +22,7 @@ class UEditableTextBox;
 class UJamSettingsWidget;
 class UJamMenuWidget;
 class UTexture2D;
+struct FJamSeasonState;
 
 // The screens, in the switcher's order (the values are the switcher's indices: new screens are appended).
 UENUM(BlueprintType)
@@ -116,6 +117,11 @@ struct JAMGAME_API FJamMenuLook
 	static FSlateFontInfo Font(int32 Size, FName Face = FName("Bold"), int32 Tracking = 0);
 	// ---- device B's kit by name (/JamAssets/UI/<Name>), null when absent (asked once per process)
 	static UTexture2D* Kit(const FString& Name);
+	// Lane A195 (KIT): the element's switch (jam.menu.KitLogo, KitBackdrop, KitPlates, KitPictures, KitFont) and the name as found, switch or not
+	// (the mode pictures under their dashed names too). KitFound(Name, true): the plain load.
+	static bool KitElementOn(const FString& Name);
+	static UTexture2D* KitFound(const FString& Name);
+	static UTexture2D* KitFound(const FString& Name, bool bPlain);
 	static bool HasKitFont();
 	// The names the front end looks for (status/A187.md lists them for device B).
 	static TArray<FString> KitNames();
@@ -309,6 +315,23 @@ public:
 	static float ModePitchBoxHeight();
 	// Every MODES card's description as laid out (its desired size after a prepass: the wrapped lines' real height), for the fit test.
 	TArray<FVector2D> GetModePitchSizes() const;
+	// Lane A195 (evolution 7): HOME's returning panel. Pure: the title and lines from the season, the last match of this process and the lit level's
+	// line; a first run (no take played, no match yet) gets the two mouse buttons from the bindings. GetReturningText: the title and body as shown.
+	static FString ReturningText(const FJamSeasonState& Season, bool bHasLast, int32 Mine, int32 Theirs, const FString& Level, const FString& Rink,
+		const FString& LevelLine, FString& OutTitle);
+	FString GetReturningText() const;
+	void RefreshReturning();
+	// Lane A195 (F6): QUIT asks once ("QUIT THE GAME?", NO focused, YES beside it; Esc / B is NO). jam.menuscreen click quit | no | yes.
+	// Lane A195 (FAULT 6): the lobby closed by BACK, Esc or B: HOME's focus goes back to PLAY WITH A FRIEND.
+	void FocusFriendAfterLobby() { PendingFocus = FriendButton.Get(); }
+	void OpenQuitConfirm();
+	void CloseQuitConfirm(bool bFocusQuit);
+	bool IsQuitConfirmOpen() const;
+	UButton* GetConfirmNo() const { return ConfirmNo; }
+	UButton* GetConfirmYes() const { return ConfirmYes; }
+	UFUNCTION() void OnConfirmNo();
+	UFUNCTION() void OnConfirmYes();
+	void BuildQuitConfirm(class UOverlay* Root);
 
 protected:
 	virtual TSharedRef<SWidget> RebuildWidget() override;
@@ -478,6 +501,11 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UButton> ModesButton;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> FeatureTitle;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> FeatureBody;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> ReturnTitle;   // lane A195
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> ReturnBody;
+	UPROPERTY(Transient) TObjectPtr<class UBorder> ConfirmVeil;   // lane A195 (F6)
+	UPROPERTY(Transient) TObjectPtr<UButton> ConfirmNo;
+	UPROPERTY(Transient) TObjectPtr<UButton> ConfirmYes;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> ModeDetail;
 	UPROPERTY(Transient) TObjectPtr<UButton> ContinueButton;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> ContinueText;
