@@ -1,4 +1,5 @@
 #include "DirectorsCallWidget.h"
+#include "SettingsWidget.h"
 #include "Progression.h"
 #include "DirectorsCallController.h"
 #include "MenuStyle.h"
@@ -325,8 +326,15 @@ void UJamDirectorsCallWidget::RefreshState()
 	UJamDesignerSubsystem* D = Designer();
 	const bool bAvailable = D && D->IsDirectorsCallAvailable();
 	int32 Take = 1;
-	if (Owner.IsValid()) if (AHokejGameMode* GM = Owner->GetGameMode()) Take = FMath::Max(1, GM->GetTake());
-	if (TakeText) TakeText->SetText(FText::FromString(FString::Printf(TEXT("PERIOD %d"), Take)));
+	// Lane A144 (the level wire): the pause card names the level in force and whose it is.
+	FString LevelLine;
+	if (Owner.IsValid()) if (AHokejGameMode* GM = Owner->GetGameMode())
+	{
+		Take = FMath::Max(1, GM->GetTake());
+		const FString Level = UJamDirectorsCallHudWidget::LevelLabel(GM->GetLevelInForce());
+		if (!Level.IsEmpty()) LevelLine = FString::Printf(TEXT("   -   %s (%s)"), *Level, GM->IsLevelFromSettings() ? TEXT("YOUR LEVEL") : TEXT("THIS CUT'S OWN"));
+	}
+	if (TakeText) TakeText->SetText(FText::FromString(FString::Printf(TEXT("PERIOD %d%s"), Take, *LevelLine)));
 	if (CallTitle) CallTitle->SetText(FText::FromString(FString::Printf(TEXT("DIRECTOR'S CALL  -  PERIOD %d"), Take)));
 	if (CallButton)
 	{
@@ -520,6 +528,13 @@ void UJamDirectorsCallHudWidget::BuildTree()
 	Place(HintPill, FVector2D(0, 1), FVector2D(0, 1), FVector2D(S::EdgePx, -S::EdgePx));
 }
 
+// Lane A144 (the level wire): "rookie" -> "ROOKIE", "all_star" -> "ALL-STAR" (the settings button's own labels); empty for no level.
+FString UJamDirectorsCallHudWidget::LevelLabel(const FString& Level)
+{
+	EJamMenuDifficulty D;
+	return FJamSettings::ParseDifficulty(Level, D) ? FJamSettings::DifficultyLabel(D) : FString();
+}
+
 void UJamDirectorsCallHudWidget::ShowTake(int32 Take, int64 UntilFrame)
 {
 	if (!TakeCard) return;
@@ -546,6 +561,12 @@ void UJamDirectorsCallHudWidget::ShowTake(int32 Take, int64 UntilFrame)
 	{
 		const FString Mode = UJamMenuFlow::ModeDisplayForId(GM->GetCartridge()->Id);
 		if (!Mode.IsEmpty()) Line = FString::Printf(TEXT("%s   -   %s"), *Mode.ToUpper(), *Line);
+	}
+	// Lane A144 (the level wire): the level in force closes the line ("PERIOD 1   -   FACEOFF   -   ROOKIE"), so nobody plays pro believing it is rookie.
+	if (GM)
+	{
+		const FString Level = LevelLabel(GM->GetLevelInForce());
+		if (!Level.IsEmpty()) Line = FString::Printf(TEXT("%s   -   %s"), *Line, *Level);
 	}
 	TakeSub->SetText(FText::FromString(Note.IsEmpty() ? Line : FString::Printf(TEXT("COACH'S NOTE: %s"), *Note)));
 	// A note needs reading time: the card stays twice as long (2 x TakeCardFrames).

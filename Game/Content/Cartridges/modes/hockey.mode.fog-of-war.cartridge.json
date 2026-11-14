@@ -148,7 +148,7 @@
       "score_to_win": 3,
       "goal_pause_frames": 120,
       "offside": false,
-      "penalties": true
+      "penalties": false
     },
     "teams": [
       {
@@ -208,7 +208,7 @@
     ],
     "ai": {
       "difficulty": "pro",
-      "react_frames": 6
+      "react_frames": 4
     },
     "barks": {
       "enabled": true,
@@ -232,9 +232,9 @@
     "meta": {
       "pitch": "Slow bots in the fog. Slip by, then hit.",
       "facts": [
-        "bots 0.1 s late",
+        "bots 0.07 s late",
         "hits 5x harder",
-        "night rink, fog"
+        "3 v 3, night, fog"
       ]
     }
   }

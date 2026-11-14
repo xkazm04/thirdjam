@@ -106,6 +106,11 @@ struct JAMCORE_API FJamSkaterConfig
 	// Not a cartridge key (lane A128, sweeps 1 and 2): true = the rest ends with the push-off (the first frame the skater thrusts), so the burst is the first
 	// burst.frames of the push; false = the rest ends at the hold speed (a skater creeping under it keeps the burst armed).
 	bool bBurstRestPushOff = true;
+	// game.skater.burst.rest_kept_mps (lane A147, track F2 evolution 4): the first step a skater has earned by standing is not lost to what is not its own
+	// doing. While it does not push and is slower than this, a rested skater keeps its rest and its armed burst (a bump that moves it, a shove); a skater
+	// lying on the ice or held by a stumble counts its rest whatever it slides at (so it gets up with its first step); and turning on the spot is not the
+	// push-off (the burst begins with the first frame of thrust). 0 = the neutral value: lane A128's rule as it was (the rest is lost at 1 m/s).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double BurstRestKeptMps = 3.0;
 	// R-0035 (lane A52): game.skater.goalie { reach_m, block_height_m }: a skater in the crease stance saves a loose shot under block_height_m that passes
 	// within reach_m of it (the human included); a higher puck passes. reach_m 0 = no save by height (the body and the blade stop pucks as before).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double GoalieReachM = 0.9;
@@ -301,6 +306,11 @@ struct JAMCORE_API FJamContactConfig
 	// attacker is closing on it: thrust x clamp(closing speed / this, 0, 1). At matched speed the push in the back is a bump; closing at this speed or more it
 	// is the whole thrust (and with the whistle on the from-behind foul it always was). 0 = the neutral value: the whole thrust from any side (lane A125).
 	double ShoveBehindMatchMps = 3.0;
+	// Not a rule of the game and not a cartridge key (lane A132, track F1): how the SCRIPTED human (FJamPlaytester, the instrument behind every measurement of
+	// "the human") decides its body-check press. true = on the closing speed along the line between it and the carrier (the contact law's own number);
+	// false = on its own speed along that line, as before the lane (five whiffs in six were presses on a carrier skating away at the same pace). It lives here
+	// so that JamBaseline::MakeNeutral can name its neutral value (false): the pinned matches were played by the old press. No sim code reads it.
+	bool bPlaytesterClosingPress = true;
 	// The neutral block (contact.momentum false, contact.carrier_can_hit true): the check rule of main before lane A92.
 	void SetNeutral() { bMomentum = false; bCarrierCanHit = true; }
 };

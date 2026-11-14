@@ -279,6 +279,48 @@ class Piece:
         self.parts[part] = self.parts.get(part, 0) + faces
         return faces
 
+    def dome(self, part, slot, centre, a, b, h, sink, sides=8, wobble=0.012, lean=(0.02, -0.012)):
+        """A round thumb-pressed knob (lane A145): the lump with a belly and a shoulder. An oval a (along x) by b (out) standing on `centre`: a foot ring
+        `sink` under it, a belly ring at 0.34 h (the widest), a shoulder ring at 0.78 h pulled in, one top point at h a little off centre.
+        No bottom: sides x 5 triangles (40 at eight sides). Smooth faces: under the toon ramp it reads as a pressed ball, not as a tent."""
+        cx, co, cz = centre
+        k = len(self.parts) + 1
+        mi = self.slots.index(slot)
+        levels = ((-sink, 0.86), (h * 0.34, 1.0), (h * 0.78, 0.66))
+        rows = []
+        for (z, f) in levels:
+            row = []
+            for i in range(sides):
+                ang = 2.0 * math.pi * (i + 0.5) / sides
+                v = Vector((cx + math.cos(ang) * a * 0.5 * f, co + math.sin(ang) * b * 0.5 * f, cz + z))
+                if z > 0.0:
+                    v = v + self._wob(v * 3.1, wobble, k)
+                row.append(self.bm.verts.new(self._blender(v)))
+            rows.append(row)
+        top = self.bm.verts.new(self._blender(Vector((cx + lean[0], co + lean[1], cz + h))))
+        per = math.pi * (a + b) * 0.5
+        faces = 0
+        for i in range(sides):
+            i2 = (i + 1) % sides
+            u0, u1 = per * i / sides / UV_M, per * (i + 1) / sides / UV_M
+            for r in range(len(levels) - 1):
+                v0, v1 = (levels[r][0] + sink) / UV_M, (levels[r + 1][0] + sink) / UV_M
+                f = self.bm.faces.new((rows[r][i], rows[r][i2], rows[r + 1][i2], rows[r + 1][i]))
+                f.material_index = mi
+                f.smooth = True
+                for loop, uvv in zip(f.loops, ((u0, v0), (u1, v0), (u1, v1), (u0, v1))):
+                    loop[self.uv].uv = uvv
+                faces += 2
+            vs = (levels[-1][0] + sink) / UV_M
+            f = self.bm.faces.new((rows[-1][i], rows[-1][i2], top))
+            f.material_index = mi
+            f.smooth = True
+            for loop, uvv in zip(f.loops, ((u0, vs), (u1, vs), ((u0 + u1) * 0.5, (h + sink + a * 0.25) / UV_M))):
+                loop[self.uv].uv = uvv
+            faces += 1
+        self.parts[part] = self.parts.get(part, 0) + faces
+        return faces
+
     @staticmethod
     def _blender(v):
         """Piece space (x, out, z) metres -> Blender (x, -out, z) centimetres."""
@@ -366,7 +408,7 @@ class Piece:
 
 # ---------------------------------------------------------------- the pieces
 
-def enclosure(pc, length, door_xs, seat_len, seat_x, legs, rings):
+def enclosure(pc, length, door_xs, seat_len, seat_x, legs, rings, loose_door=False):
     """What a bench and a box share: floor, back wall with kick band, end walls, cap rails, seat on legs, backrest, doors."""
     D, WT, WH, FH, BH = P["depth"], P["wall_t"], P["wall_h"], P["floor_h"], P["back_h"]
     RW, RH = P["rail_w"], P["rail_h"]
@@ -399,6 +441,9 @@ def enclosure(pc, length, door_xs, seat_len, seat_x, legs, rings):
     pc.bar("backrest", "kick", "x", seat_len, 0.08, 0.20, (seat_x, D - WT - 0.03, 0.86), rings=rings["backrest"], r=0.03)
     # doors: a leaf hinged at the board line, standing open into the piece; two hinge lumps and a handle
     for dx, swing in door_xs:
+        if loose_door:   # lane A145: the penalty box's door is a mesh of its own (box_door()), hung by ARinkActor on this socket (its hinge) and swung
+            pc.sockets["Door"] = (dx, 0.06, 0.0)
+            continue
         # The leaf lies along local +x from its hinge at (dx, 0.06) in piece space (x, out, z) and is turned about z by `a`:
         # swing +1 (hinge at the left end) from +x towards +out; swing -1 (hinge at the right end) from -x towards +out.
         a = math.radians(P["door_open_deg"]) if swing > 0 else math.pi - math.radians(P["door_open_deg"])
@@ -425,19 +470,49 @@ def penalty_box():
     half = length * 0.5
     D, WT = P["depth"], P["wall_t"]
     enclosure(pc, length, door_xs=[(-half + 0.45, 1.0)], seat_len=2.0, seat_x=half - WT - 1.15, legs=2,
-              rings=dict(floor=3, wall=4, kick=3, rail=20, side_rail=6, seat=3, backrest=2))
+              rings=dict(floor=3, wall=4, kick=3, rail=20, side_rail=6, seat=3, backrest=2), loose_door=True)
     # the clock on the back wall's rail: a chunky disc (rim in the board colour, a dark face, two hands as lumps), on a short post
     back_o = D - WT * 0.5
     zr = P["back_h"] + P["rail_h"] - 0.03
     pc.bar("clock", "dark", "z", 0.20, 0.10, 0.10, (0.0, back_o, zr + 0.09), rings=1, r=0.03, wobble=0.004)
     pc.bar("clock", "board", "o", 0.14, 0.62, 0.62, (0.0, back_o, zr + 0.48), rings=1, r=0.27, segs=4, wobble=0.006, pillow=0.0)
     pc.bar("clock", "dark", "o", 0.03, 0.46, 0.46, (0.0, back_o - 0.075, zr + 0.48), rings=1, r=0.20, segs=4, wobble=0.003, pillow=0.006)
-    pc.bar("clock", "team", "z", 0.19, 0.05, 0.035, (0.0, back_o - 0.10, zr + 0.48 + 0.085), rings=1, r=0.012, wobble=0.002)
+    # lane A145: the long hand is a mesh of its own (box_hand()), turned by ARinkActor about this socket with the penalty's frames; the short one stays
+    pc.sockets["Hand"] = (0.0, back_o - 0.10, zr + 0.48)
     pc.bar("clock", "team", "x", 0.14, 0.035, 0.05, (0.06, back_o - 0.10, zr + 0.48), rings=1, r=0.012, wobble=0.002)
     # where a boxed skater stands: on the floor, clear of the seat and of the door's swing, facing the rink (-out)
     pc.sockets["Seat"] = tuple(P["seat_socket"])
     pc.thumbs_done = pc.thumbs()
     return pc, length
+
+
+DOOR_SLOTS = ["team", "dark"]
+HAND_SLOTS = ["team"]
+HAND = dict(len=0.25, w=0.065, t=0.04, budget=80)
+
+
+def box_door():
+    """The penalty box's door (lane A145): the leaf, its hinge post and its handle as enclosure() built them into the box, but CLOSED (lying along +x from
+    the hinge, along the board line) with the hinge's foot at the origin. ARinkActor hangs it on the box's socket `Door` and turns it about z:
+    0 = closed, door_open_deg = as the box stood before the lane (open into the box)."""
+    pc = Piece("SM_Arena_BoxDoor", seed=43.0, slots=DOOR_SLOTS)
+    zc = P["floor_h"] + 0.04 + P["door_h"] * 0.5
+    pc.bar("door", "team", "x", P["door_w"], P["door_t"], P["door_h"], (P["door_w"] * 0.5 + 0.03, 0, zc), rings=2, r=0.035)
+    pc.bar("door_fittings", "dark", "z", P["door_h"] * 0.8, 0.10, 0.10, (0.0, 0.0, zc), rings=1, r=0.03, wobble=0.004)                     # the hinge post
+    pc.bar("door_fittings", "dark", "x", 0.24, 0.07, 0.07, (P["door_w"] - 0.20, -0.075, zc + 0.08), rings=1, r=0.025, wobble=0.004)      # the handle
+    pc.thumbs_done = 0
+    pc.budget = 400
+    return pc, P["door_w"]
+
+
+def box_hand():
+    """The penalty clock's long hand (lane A145): a bar standing up from the origin (the clock's middle, the box's socket `Hand`), turned by ARinkActor
+    about the box's `out` axis: one turn for one penalty."""
+    pc = Piece("SM_Arena_BoxHand", seed=47.0, slots=HAND_SLOTS)
+    pc.bar("hand", "team", "z", HAND["len"], HAND["w"], HAND["t"], (0.0, 0.0, HAND["len"] * 0.5 - 0.02), rings=1, r=0.012, wobble=0.002)
+    pc.thumbs_done = 0
+    pc.budget = HAND["budget"]
+    return pc, HAND["len"]
 
 
 # ---------------------------------------------------------------- evolution 2 (lane A119): the goal, the scorer's table
@@ -462,7 +537,8 @@ LIGHT = dict(base_w=0.70, base_d=0.56, base_h=0.18, post=0.20, lamp_z=2.16, lamp
 # it; 24 triangles each, so 113 of them on the 140 x 70 rink stay under 3,000 in all). Its origin is the middle of the board top; it reaches from the board's
 # inner face to 6 cm past its outer face and covers the 10 cm trim strip. It is what a hard board hit rocks where no bench, box or table stands.
 CAP_SLOTS = ["kick"]
-CAP = dict(len=0.60, wid=0.26, out=0.03, h=0.34, sink=0.05, sides=8, budget=40)   # the first cap (0.40 x 0.26 m, shoulder at 0.55 h) read as a small tent from the ice
+CAP = dict(len=0.60, wid=0.26, out=0.03, h=0.34, sink=0.05, sides=8, budget=40)
+CAP_ROUND = dict(len=0.56, wid=0.26, out=0.035, h=0.36, sink=0.05, sides=8, budget=48)   # lane A145: the dome (40 triangles); the lump above is the far level   # the first cap (0.40 x 0.26 m, shoulder at 0.55 h) read as a small tent from the ice
 TABLE = dict(width=1.36, sign_z=2.20, sign_h=0.56, sign_w=1.30)
 
 
@@ -634,8 +710,19 @@ def board_cap():
     """The board cap (lane A136): piece space x along the boards, `out` away from the rink, z up from the board top (the origin is the middle of the board
     top, ARinkActor places it at z = 1.2 m on the boards' middle line)."""
     pc = Piece("SM_Arena_BoardCap", seed=97.0, slots=CAP_SLOTS)
-    pc.lump("cap", "kick", (0.0, CAP["out"], 0.0), CAP["len"], CAP["wid"], CAP["h"], CAP["sink"], sides=CAP["sides"])
+    # lane A145: the cap is a dome now (40 triangles: the 24-triangle lump read as a tent); the lump lives on as the far level, board_cap_far()
+    pc.dome("cap", "kick", (0.0, CAP_ROUND["out"], 0.0), CAP_ROUND["len"], CAP_ROUND["wid"], CAP_ROUND["h"], CAP_ROUND["sink"], sides=CAP_ROUND["sides"])
     pc.thumbs_done = 1          # the top point pushed off centre is the one thumb
+    pc.budget = CAP_ROUND["budget"]
+    return pc, CAP_ROUND["len"]
+
+
+def board_cap_far():
+    """The far level of the board cap (lane A145): lane A136's 24-triangle lump, what ARinkActor instances on a rink with more caps than the dome's
+    triangles allow (caps x 40 over 3,000)."""
+    pc = Piece("SM_Arena_BoardCapFar", seed=97.0, slots=CAP_SLOTS)
+    pc.lump("cap", "kick", (0.0, CAP["out"], 0.0), CAP["len"], CAP["wid"], CAP["h"], CAP["sink"], sides=CAP["sides"])
+    pc.thumbs_done = 1
     pc.budget = CAP["budget"]
     return pc, CAP["len"]
 
@@ -885,6 +972,7 @@ def main():
         made += goal(w, h)
     made.append(goal_light())      # lane A127; after the goals, so built[0..2] stay the bench, the box and the table for the renders
     made.append(board_cap())       # lane A136
+    made += [board_cap_far(), box_door(), box_hand()]   # lane A145
     for pc, length in made:
         opening, cell, net_of = getattr(pc, "opening", None), getattr(pc, "cell", None), getattr(pc, "net_of", None)
         slots = list(pc.slots)
@@ -921,7 +1009,9 @@ def main():
         "SM_Arena_ScorerTable": [{"x": 0.0, "y": -y0, "yaw": 180}],
         "SM_Arena_GoalLight": [{"x": -(L * 0.5 + P["board_t"] + P["gap"]), "y": 0.0, "yaw": 90}, {"x": L * 0.5 + P["board_t"] + P["gap"], "y": 0.0, "yaw": -90}],
         "SM_Arena_BoardCap": {"note": "instanced by RinkActor at every stanchion place (the outline's length / 3.6 m, rounded, evenly spaced), on the boards' middle line at z = board height, yaw along the boards",
-                              "spacing_m": 3.6, "triangles_each": CAP["sides"] * 3},
+                              "spacing_m": 3.6, "triangles_each": CAP_ROUND["sides"] * 5, "triangles_each_far": CAP["sides"] * 3},
+        "SM_Arena_BoxDoor": {"note": "hung on the penalty box's socket Door (the hinge); yaw 0 closed, door_open_deg open into the box", "open_deg": P["door_open_deg"]},
+        "SM_Arena_BoxHand": {"note": "on the penalty box's socket Hand (the clock's middle); turned about the box's out axis, one turn for one penalty"},
         "goals": {"note": "x = +-GoalLineX (L/2 - 4), y = 0; yaw -90 on the +x end, +90 on the -x end; the variant nearest the cartridge's goal, scaled W/Wv along the line and H/Hv up",
                   "goal_line_x": L * 0.5 - 4.0, "variants": [goal_name(w, h) for (w, h) in GOAL_VARIANTS], "nets": [net_name(w, h) for (w, h) in GOAL_VARIANTS]},
     }

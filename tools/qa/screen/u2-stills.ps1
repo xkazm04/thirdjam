@@ -3,17 +3,22 @@
 # (jam.menuscreen main|cuts|direct|settings|controls|credits|say <sentence>), the lobby's (jam.lobby, jam.host, jam.leave) and the still command
 # (jam.screen.Still <name>). Both resolutions in one process (r.SetRes). The stills are copied to tools\qa\screen\out\u2-<Tag>\.
 #   powershell -NoProfile -ExecutionPolicy Bypass -File tools\qa\screen\u2-stills.ps1 -Tag after
-#   powershell -NoProfile -ExecutionPolicy Bypass -File tools\qa\screen\u2-stills.ps1 -Tag end-win -EndCard -ScriptHuman 1     (a season take played to its card)
-# -EndCard: instead of the menu screens, starts the season from the menu (jam.Season.Start), waits for the take's result line (JAMSEASON take ... WON|LOST)
-#   and takes the end-of-match card; -ScriptHuman 1 plays the human's seat (it may win), 0 leaves it idle (it loses when the other side scores).
+#   powershell -NoProfile -ExecutionPolicy Bypass -File tools\qa\screen\u2-stills.ps1 -Tag end -EndCard     (both end cards, 90 s)
+# -EndCard: instead of the menu screens, presses PLAY NOW (jam.menuscreen play), ends the match for the other side by real goals
+#   (jam.ctrl.EndMatch 1: the loss card), takes the card at both sizes, restarts the match (jam.Season.Restart, the R key) and ends it for the
+#   player's side (jam.ctrl.EndMatch 0: the win card). The JAMMENU play now / JAMCTRL endmatch lines land in menu-lines.txt.
 # Exit 0: every still asked for exists. 1: one is missing. 2: could not run.
 param(
     [string]$Tag = 'after',
     [int]$Port = 4744,
     [switch]$EndCard,
+    [string]$LaunchCut = '',  # start the game with -cut=<this>, as the acceptance run does: PLAY NOW must then start this cut at its own level (JAMMATCH ... source=launch)
+    [string]$LevelCut = '',  # with -Level: this cut or mode through the menu (jam.menuscreen choose <name>) instead of PLAY NOW
+    [switch]$Level,        # instead of the stills: PLAY NOW, then the match card and the pause card, which name the level in force (JAMMATCH level=... in menu-lines.txt)
+    [switch]$Walk,         # instead of the stills: the pad walk (jam.menuscreen walk); prints its JAMMENU walk lines; exit 0 when the verdict is pass
     [switch]$Say,          # also direct one sentence on the Direct screen: with an API key on the machine this is a live, paid call
     [int]$ScriptHuman = 1,
-    [int]$EndTimeoutSec = 900,
+    [int]$EndTimeoutSec = 120,
     [string[]]$Screens = @('main', 'cuts', 'direct', 'settings', 'controls', 'credits'),
     [int]$StartTimeoutSec = 900
 )
@@ -34,6 +39,7 @@ Get-ChildItem $shotDir -Filter "u2-$Tag-*.png" -ErrorAction SilentlyContinue | R
 $cvars = "jam.screen.FadeSeconds=0,jam.ScriptHuman=$ScriptHuman"
 $a = "`"$uproject`" /Game/Maps/Menu -game -RenderOffScreen -Multiprocess -ResX=1920 -ResY=1080 -ForceRes -unattended -nosplash -nosound -log -abslog=`"$log`" -ForceLogFlush " +
      "-dpcvars=$cvars -RemoteConsoleIP=127.0.0.1 -RemoteConsolePort=$Port"
+if ($LaunchCut) { $a += " -cut=`"$LaunchCut`"" }
 $sw = [Diagnostics.Stopwatch]::StartNew()
 $p = Start-Process -FilePath $exe -ArgumentList $a -PassThru -WindowStyle Hidden
 $start = $p.StartTime
@@ -77,7 +83,7 @@ function Finish([int]$code, [string]$why) {
     if (-not $p.HasExited) { [void](Stop-OwnedTree -ProcessId $p.Id -StartTime $start); Note 'stopped our own game process tree (quit did not exit it)' } else { Note "game exited, code $($p.ExitCode)" }
     $missing = 0
     foreach ($n in $want) { $f = Join-Path $shotDir "$n.png"; if (Test-Path $f) { Copy-Item $f (Join-Path $out "$n.png") -Force } else { $missing++ } }
-    if (Test-Path $log) { Select-String -Path $log -Pattern 'JAMMENU|JAMSEASON|jam\.host|jam\.join' | ForEach-Object { $_.Line } | Set-Content (Join-Path $out 'menu-lines.txt') }
+    if (Test-Path $log) { Select-String -Path $log -Pattern 'JAMMENU|JAMMATCH|JAMSEASON|JAMCTRL endmatch|jam\.host|jam\.join' | ForEach-Object { $_.Line } | Set-Content (Join-Path $out 'menu-lines.txt') }
     if ($code -eq 0 -and ($missing -gt 0 -or $want.Count -eq 0)) { $code = 1; $why = "$missing stills missing of $($want.Count)" }
     Write-Host ("{0} u2-stills {1} ({2}; {3} stills in {4})" -f $(if ($code -eq 0) { 'PASS' } else { 'FAIL' }), $Tag, $why, ($want.Count - $missing), $out)
     exit $code
@@ -90,18 +96,53 @@ if (-not $up) { Finish 2 'the menu never answered its console' }
 Note 'the console answers; letting the menu draw'
 Start-Sleep -Seconds 8
 
-if ($EndCard) {
-    [void](Console 'jam.Season.Reset')
-    [void](Console 'jam.Season.Start')
-    if (-not (WaitLog 'JAMMENU start match' 30)) { Finish 2 'the season did not start a match' }
-    Start-Sleep -Seconds 12
-    Still '1080-season-start' 0
-    if (-not (WaitLog 'JAMSEASON take \d+ .* (WON|LOST)' $EndTimeoutSec)) { Still '1080-end-timeout' 0; [void](Console 'jam.Season.Reset'); Finish 1 'no season result inside the time box' }
-    Still '1080-end-card' 2500
+if ($Level) {
+    if ($LevelCut) { [void](Console "jam.menuscreen choose $LevelCut") } else { [void](Console 'jam.menuscreen play') }
+    if (-not (WaitLog 'JAMMATCH level=' 60)) { Finish 2 'PLAY NOW did not start a match (no JAMMATCH line)' }
+    $shown = $false
+    for ($i = 0; $i -lt 8 -and -not $shown; $i++) { Start-Sleep -Milliseconds 700; Still "1080-match-card-$i" 0; $shown = $true }
+    Still '1080-match-card-late' 900
+    [void](Console 'jam.pausemenu open')
+    Still '1080-pause' 1200
     [void](Console 'r.SetRes 1280x720w'); Start-Sleep -Seconds 2
-    Still '720-end-card' 1500
-    [void](Console 'jam.Season.Reset')
-    Finish 0 'end card taken'
+    Still '720-pause' 800
+    Finish 0 'the level is on the match card and the pause card'
+}
+
+if ($Walk) {
+    [void](Console 'jam.menuscreen walk')
+    $okw = WaitLog 'JAMMENU walk done' 180
+    Still '1080-after-walk' 500
+    $lines = @(Select-String -Path $log -Pattern 'JAMMENU walk' | ForEach-Object { $_.Line -replace '^.*JAMMENU walk', 'JAMMENU walk' })
+    $lines | ForEach-Object { Write-Host "  | $_" }
+    $lines | Set-Content (Join-Path $out 'walk-lines.txt')
+    if (-not $okw) { Finish 1 'the walk did not finish' }
+    if (@($lines | Where-Object { $_ -match 'walk done .*verdict=blind' }).Count -gt 0) { Finish 2 'could not judge the directions: this off-screen process has no menu in its hit-test grid (run jam.menuscreen walk in a windowed game); the opening focus and B were judged, see the lines' }
+    if (@($lines | Where-Object { $_ -match 'walk done .*verdict=pass' }).Count -eq 0) { Finish 1 'the walk found a place the pad cannot reach or leave, or a screen B does not leave' }
+    Finish 0 'the pad walked every screen'
+}
+
+if ($EndCard) {
+    [void](Console 'jam.menuscreen play')
+    if (-not (WaitLog 'JAMMENU start match' 30)) { Finish 2 'PLAY NOW did not start a match' }
+    foreach ($card in @(@{ n = 'loss'; team = 1 }, @{ n = 'win'; team = 0 })) {
+        Start-Sleep -Seconds 12                                   # the rink is up and the first faceoff is over
+        $before = if (Test-Path $log) { @(Select-String -Path $log -Pattern 'JAMCTRL endmatch done').Count } else { 0 }
+        [void](Console "jam.ctrl.EndMatch $($card.team)")
+        $t1 = $sw.Elapsed.TotalSeconds; $done = $false
+        while ($sw.Elapsed.TotalSeconds - $t1 -lt $EndTimeoutSec -and -not $p.HasExited -and -not $done) {
+            Start-Sleep -Milliseconds 500
+            $done = (Test-Path $log) -and (@(Select-String -Path $log -Pattern 'JAMCTRL endmatch done').Count -gt $before)
+        }
+        if (-not $done) { Still "1080-end-$($card.n)-timeout" 0; Finish 1 "the match did not end for team $($card.team) inside the time box" }
+        [void](Console 'r.SetRes 1920x1080w'); Start-Sleep -Seconds 2
+        Still "1080-end-$($card.n)" 1500
+        [void](Console 'r.SetRes 1280x720w'); Start-Sleep -Seconds 2
+        Still "720-end-$($card.n)" 1000
+        [void](Console 'r.SetRes 1920x1080w')
+        if ($card.n -eq 'loss') { [void](Console 'jam.Season.Restart') }
+    }
+    Finish 0 'end cards taken'
 }
 
 foreach ($res in @(@{ n = '1080'; s = '1920x1080w' }, @{ n = '720'; s = '1280x720w' })) {

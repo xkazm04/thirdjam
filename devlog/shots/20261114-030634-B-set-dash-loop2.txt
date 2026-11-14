@@ -1,0 +1,2 @@
+SET-DASH loop 2: Stride and Stride_Sprint (every 5th frame) above the reworked Dash_Loop (every 2nd): free hand tucked on the back, wide pushes, recovering skate kicked up behind; game camera and side, p2_cel then p3_clay.
+Blender (Cycles CPU, 12 samples), lab FBX, not the engine; nothing frozen.

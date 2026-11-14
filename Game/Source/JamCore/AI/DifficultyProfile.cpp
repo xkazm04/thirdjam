@@ -163,6 +163,15 @@ namespace JamAI
 			if (std::strcmp(Key, "hk_round_lead_s") == 0) { K.Hk.RoundLeadS = V; return true; }   // lane A138
 			if (std::strcmp(Key, "hk_round_max_mps") == 0) { K.Hk.RoundMaxMps = V; return true; }
 			if (std::strcmp(Key, "hk_spin_end_share") == 0) { K.Hk.SpinEndShare = V; return true; }
+			// Lane A134 (BRAIN-3.md): the rules of evolution 3, one by one (brain3 switches all of them on both sides)
+			if (std::strcmp(Key, "hk_yield_arrive_s") == 0) { K.Hk.YieldArriveS = V; return true; }
+			if (std::strcmp(Key, "hk_backcheck_mps") == 0) { K.Hk.BackcheckMps = V; return true; }
+			if (std::strcmp(Key, "hk_step_up_m") == 0) { K.Hk.StepUpM = V; return true; }
+			if (std::strcmp(Key, "hk_mate_check_closing") == 0) { K.Hk.MateCheckClosing = V; return true; }
+			if (std::strcmp(Key, "hk_mate_check_max_team") == 0) { K.Hk.MateCheckMaxTeam = static_cast<int>(V); return true; }
+			if (std::strcmp(Key, "hk_shot_max_angle_deg") == 0) { K.Hk.ShotMaxAngleDeg = V; return true; }
+			if (std::strcmp(Key, "hk_pincer_m") == 0) { K.Hk.PincerM = V; return true; }
+			if (std::strcmp(Key, "hk_press_in_hunt") == 0) { K.Hk.bPressInHunt = V != 0.0; return true; }
 			if (std::strcmp(Key, "hk_mate_stick_frames") == 0) { K.Hk.MateStickFrames = static_cast<int>(V); return true; }
 			if (std::strcmp(Key, "hk_attack_shape") == 0) { K.Hk.bAttackShape = V != 0.0; return true; }
 			if (std::strcmp(Key, "hk_defence_shape") == 0) { K.Hk.bDefenceShape = V != 0.0; return true; }
@@ -224,6 +233,10 @@ namespace JamAI
 		// side's: it is what lets the human's stop-and-go beat a defender (law 3). A mate that only chased an opposing carrier won fewer pucks: on the big
 		// ice 46.3 % of pro matches had a 30 s stretch without a human touch with the cap on both sides, 39 % with the mates' off (600 seeds; INTEGRATION.md).
 		P.Mate.Hk.RoundMaxMps = 0.0;
+		// Lane A134 (track Q2, evolution 3; BRAIN-3.md): the human's side takes a kept puck back, and a bot shoots from where a shot can score.
+		// No level's number moves: the rules are the same at every level (the tune key brain3=0 gives back lane A138's tree).
+		SetEvolution3(P.Opp.Hk, true, false);
+		SetEvolution3(P.Mate.Hk, true, true);
 		P.Mate.SprintShare = ProOppSkill().SprintShare;   // lane A95 (R-0045 law 4): the human's teammates sprint as pro bots do at every level
 	}
 
@@ -273,7 +286,12 @@ namespace JamAI
 			else if (std::strcmp(Key, "yield_radius_m") == 0) { P.YieldRadiusM = V; }
 			else if (std::strcmp(Key, "hold_radius_m") == 0) { P.HoldRadiusM = V; }
 			else if (std::strcmp(Key, "stall_frames") == 0) { P.StallFrames = static_cast<int>(V); }
-			else if (std::strcmp(Key, "brain2") == 0) { SetEvolution2(P.Opp.Hk, V != 0.0); SetEvolution2(P.Mate.Hk, V != 0.0); }   // lane A115: 0 = the brain of evolution 1
+			else if (std::strcmp(Key, "brain2") == 0)   // lane A115: 0 = the brain of evolution 1 (and with it evolution 3, which stands on it: lane A134)
+			{
+				SetEvolution2(P.Opp.Hk, V != 0.0); SetEvolution2(P.Mate.Hk, V != 0.0);
+				if (V == 0.0) { SetEvolution3(P.Opp.Hk, false, false); SetEvolution3(P.Mate.Hk, false, true); }
+			}
+			else if (std::strcmp(Key, "brain3") == 0) { SetEvolution3(P.Opp.Hk, V != 0.0, false); SetEvolution3(P.Mate.Hk, V != 0.0, true); }   // lane A134: 0 = lane A138's tree
 			else if (std::strcmp(Key, "sprint") == 0) { P.SprintShare = V; }   // lane A95: as game.ai.sprint (both sides; -1 = the levels' shares)
 			else if (std::strcmp(Key, "guard_range_m") == 0) { P.GuardRangeM = V; P.Opp.GuardRangeM = V; P.Mate.GuardRangeM = V; }   // both sides (opp.* / mate.* for one)
 			else if (std::strcmp(Key, "guard_radius_m") == 0) { P.GuardRadiusM = V; P.Opp.GuardRadiusM = V; P.Mate.GuardRadiusM = V; }

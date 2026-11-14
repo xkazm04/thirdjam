@@ -1,0 +1,1 @@
+AR2, Pond 60 x 30 m (rig scale 0.667): the stands and crowd scale with the rig, so a fan is 1.0 m tall here. Front edge at 17.67 m, device A's bench backs at 16.94 m: 0.7 m walkway.

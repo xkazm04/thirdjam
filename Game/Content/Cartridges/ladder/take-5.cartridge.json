@@ -238,7 +238,8 @@
       }
     ],
     "ai": {
-      "difficulty": "pro"
+      "difficulty": "pro",
+      "red_skill": 0.4
     },
     "look": {
       "tier": "l3_neon",

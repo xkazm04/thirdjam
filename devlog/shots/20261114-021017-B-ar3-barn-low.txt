@@ -1,0 +1,1 @@
+AR3, Blender mock-up (not the engine): a low camera at centre ice looking at an end. Top: the barn as the mock-up had it, walls and a dark roof. Bottom: ten truss bays on the 13.5 m eave, plain bunting across the end at 9 m, the ice machine's gate in the end wall. The new pieces take 20.7 % of this frame at mean luma 20; the ice's mean luma moves by 0.03 %.

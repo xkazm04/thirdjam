@@ -5,6 +5,8 @@
 #include "Misc/AutomationTest.h"
 #include "Tests/AutomationCommon.h"
 #include "Misc/Paths.h"
+#include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
 #include "Misc/FileHelper.h"
 #include "HAL/FileManager.h"
 #include "Engine/Engine.h"
@@ -22,6 +24,9 @@
 #include "JamJson.h"
 #include "JamDesignerSubsystem.h"
 #include "InputMapping.h"
+#include "DifficultyResolve.h"
+#include "JamBrain.h"
+#include "DifficultyProfile.h"
 #include "InputMappingContext.h"
 #include "MenuStyle.h"
 #include "Fonts/FontMeasure.h"
@@ -446,6 +451,307 @@ bool FJamMenuControlsComplete::RunTest(const FString&)
 	TestTrue(TEXT("poke: Space"), Poke && Poke->Keys == TEXT("Space") && Map->IsKeyMapped(Map->Poke, EKeys::SpaceBar));
 	const FJamControlRow* Aim = Row(TEXT("AIM"));
 	TestTrue(TEXT("the mouse aims"), Aim && Aim->Keys.Contains(TEXT("mouse")) && Map->IsKeyMapped(Map->StickMouse, EKeys::Mouse2D));
+	return true;
+}
+
+// ---------------------------------------------------------------- lane A144: the player's level (evolution 2, then the level wire)
+
+// A fresh profile is rookie; a picked level is the player's; the rule says which cut gets the player's level; the option the rink reads.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamMenuFirstMatchLevel, "Jam.Menu.FirstMatchLevel", JamMenuTests::MenuTestFlags)
+bool FJamMenuFirstMatchLevel::RunTest(const FString&)
+{
+	// What counts as a pick: the saved key, or a saved level only the button could have written.
+	TestFalse(TEXT("nothing saved is no pick"), FJamSettings::IsDifficultyChosen(false, false, EJamMenuDifficulty::Pro));
+	TestFalse(TEXT("a saved pro without the key is no pick (every volume change wrote it)"), FJamSettings::IsDifficultyChosen(false, true, EJamMenuDifficulty::Pro));
+	TestTrue(TEXT("a saved all-star is a pick"), FJamSettings::IsDifficultyChosen(false, true, EJamMenuDifficulty::AllStar));
+	TestTrue(TEXT("the saved key is a pick"), FJamSettings::IsDifficultyChosen(true, true, EJamMenuDifficulty::Pro));
+
+	// A fresh profile starts at rookie: the level PLAY NOW plays, the button's line, the settings button.
+	FJamSettings Fresh;
+	TestFalse(TEXT("a fresh profile has no pick"), Fresh.bDifficultyChosen);
+	TestEqual(TEXT("a fresh profile is rookie"), FJamSettings::DifficultyString(Fresh.EffectiveDifficulty()), FString(TEXT("rookie")));
+	TestEqual(TEXT("a fresh profile plays rookie"), UJamMenuFlow::FirstMatchLevel(Fresh), FString(TEXT("rookie")));
+	TestEqual(TEXT("the button says rookie"), UJamMenuFlow::FirstMatchLine(TEXT("rookie")), FString(TEXT("ONE MATCH, ROOKIE.  ENTER / A, OR CLICK.")));
+
+	for (const EJamMenuDifficulty D : { EJamMenuDifficulty::Rookie, EJamMenuDifficulty::Pro, EJamMenuDifficulty::AllStar })
+	{
+		FJamSettings Picked;
+		Picked.Difficulty = D;
+		Picked.bDifficultyChosen = true;
+		const FString Level = FJamSettings::DifficultyString(D);
+		TestEqual(*FString::Printf(TEXT("a picked %s plays %s"), *Level, *Level), UJamMenuFlow::FirstMatchLevel(Picked), Level);
+		TestTrue(*FString::Printf(TEXT("the button names %s"), *Level), UJamMenuFlow::FirstMatchLine(Level).Contains(FJamSettings::DifficultyLabel(D)));
+		// THE RULE: the regular cuts play the player's level; a mode, a take, a saved cut and a path play their own (an empty level).
+		TestEqual(*FString::Printf(TEXT("%s: PLAY NOW's cut plays the player's level"), *Level), UJamMenuFlow::PlayerLevelFor(UJamMenuFlow::FirstCut, false, Picked), Level);
+		TestEqual(*FString::Printf(TEXT("%s: a cut card plays the player's level"), *Level), UJamMenuFlow::PlayerLevelFor(TEXT("hockey.raw"), false, Picked), Level);
+		TestEqual(*FString::Printf(TEXT("%s: a Director's mode keeps its own"), *Level), UJamMenuFlow::PlayerLevelFor(TEXT("modes/hockey.mode.sudden-death"), false, Picked), FString());
+		TestEqual(*FString::Printf(TEXT("%s: a saved cut or a played take keeps its own"), *Level), UJamMenuFlow::PlayerLevelFor(TEXT("My Director's Cut"), true, Picked), FString());
+		TestEqual(*FString::Printf(TEXT("%s: a path (a season take) keeps its own"), *Level), UJamMenuFlow::PlayerLevelFor(TEXT("C:/x/ladder/take-1.cartridge.json"), false, Picked), FString());
+		// The option the rink reads back.
+		TestEqual(*FString::Printf(TEXT("%s travels as an option"), *Level), AHokejGameMode::LevelFromOptions(FString::Printf(TEXT("?cut=hockey.regular?level=%s"), *Level)), Level);
+	}
+	TestEqual(TEXT("no option, no level"), AHokejGameMode::LevelFromOptions(TEXT("?cut=hockey.regular")), FString());
+	TestEqual(TEXT("no such level, no level"), AHokejGameMode::LevelFromOptions(TEXT("?cut=hockey.regular?level=legend")), FString());
+
+	// The brain itself takes each level over a cartridge's own (the call the game mode makes), by its profile name.
+	TArray<FString> Errors;
+	const UJamCartridge* C = UJamCartridge::LoadFromFile(UJamCartridge::ResolveCartridgePath(UJamMenuFlow::FirstCut), Errors);
+	if (!TestNotNull(TEXT("the first cut loads"), C)) return false;
+	for (const TCHAR* Level : { TEXT("rookie"), TEXT("pro"), TEXT("all_star") })
+	{
+		UJamBrain* B = NewObject<UJamBrain>();
+		B->ApplyCartridge(*C, Level);
+		TestEqual(*FString::Printf(TEXT("the brain's profile is %s"), Level), B->Difficulty.ToString(), FString(Level));
+	}
+	UJamBrain* Own = NewObject<UJamBrain>();
+	Own->ApplyCartridge(*C);
+	TestEqual(TEXT("without a level the brain plays the cartridge's own"), Own->Difficulty.ToString(), UJamMenuFlow::CutLevel(*C));
+	return true;
+}
+
+// ---- Jam.Menu.LevelReachesTheBrain: the whole wire, in the game. The menu starts a match, the rink's game mode gives the brain its level.
+// Five matches: PLAY NOW on a fresh profile (rookie), a regular cut with pro picked, with all-star picked (the player's level each time, the
+// brain's profile name), the season's take with all-star picked (the take's own level), a Director's mode with rookie picked (the mode's own).
+
+namespace JamMenuTests
+{
+	struct FLevelStep
+	{
+		const TCHAR* What;
+		int32 Kind;                 // 0 PLAY NOW, 1 a regular cut card, 2 the season, 3 a Director's mode
+		bool bChosen;
+		EJamMenuDifficulty Picked;
+		const TCHAR* Expect;        // the level the brain must play; null = the cartridge's own
+	};
+	static const FLevelStep LevelSteps[] = {
+		{ TEXT("PLAY NOW on a fresh profile"), 0, false, EJamMenuDifficulty::Pro, TEXT("rookie") },
+		{ TEXT("the regular cut with pro picked"), 1, true, EJamMenuDifficulty::Pro, TEXT("pro") },
+		{ TEXT("PLAY NOW with all-star picked"), 0, true, EJamMenuDifficulty::AllStar, TEXT("all_star") },
+		{ TEXT("the season's take with all-star picked"), 2, true, EJamMenuDifficulty::AllStar, nullptr },
+		{ TEXT("Sudden Death with rookie picked"), 3, true, EJamMenuDifficulty::Rookie, nullptr },
+	};
+	static const int32 NumLevelSteps = UE_ARRAY_COUNT(LevelSteps);
+}
+
+class FJamLevelWireCommand : public IAutomationLatentCommand
+{
+public:
+	explicit FJamLevelWireCommand(FAutomationTestBase* InTest) : Test(InTest) {}
+
+	virtual bool Update() override
+	{
+		using namespace JamMenuTests;
+		UWorld* W = GameWorld();
+		if (++Ticks > 2400) { Test->AddError(FString::Printf(TEXT("step %d (%s) timed out in phase %d"), Step, Step < NumLevelSteps ? LevelSteps[Step].What : TEXT("end"), Phase)); return Finish(); }
+		if (Step >= NumLevelSteps)
+		{
+			// Back at the menu once more, then done.
+			AJamMenuGameMode* Menu = W ? Cast<AJamMenuGameMode>(W->GetAuthGameMode()) : nullptr;
+			return Menu && Menu->GetMenu() ? Finish() : false;
+		}
+		const FLevelStep& S = LevelSteps[Step];
+		if (Phase == 0)
+		{
+			AJamMenuGameMode* GM = W ? Cast<AJamMenuGameMode>(W->GetAuthGameMode()) : nullptr;
+			if (!GM || !GM->GetMenu()) return false;
+			FJamSettings Settings;
+			Settings.Difficulty = S.Picked;
+			Settings.bDifficultyChosen = S.bChosen;
+			FJamSettings::SetOverrideForTest(&Settings);
+			bool bStarted = false;
+			switch (S.Kind)
+			{
+			case 0: bStarted = GM->GetMenu()->PlayNow(); break;
+			case 1: bStarted = GM->GetMenu()->ChooseCut(TEXT("hockey.regular")); break;
+			case 2:
+				// The season's own start; where this machine's season cannot start (wrapped, no progress file), the call the season makes for a
+				// take (UJamProgression::StartTake: StartMatch with the take's path, no level).
+				bStarted = GM->GetMenu()->PlaySeason();
+				if (!bStarted)
+				{
+					Test->AddInfo(TEXT("the season did not start on this machine: take 1 is started by its path, as the season starts a take"));
+					UJamMenuFlow::StartMatch(W, UJamCartridge::ResolveCartridgePath(TEXT("ladder/take-1")));
+					bStarted = true;
+				}
+				break;
+			default: bStarted = GM->GetMenu()->ChooseCut(TEXT("modes/hockey.mode.sudden-death")); break;
+			}
+			if (!bStarted) { Test->AddError(FString::Printf(TEXT("%s: the menu did not start a match"), S.What)); return Finish(); }
+			Phase = 1;
+			Ticks = 0;
+			return false;
+		}
+		AHokejGameMode* GM = W ? Cast<AHokejGameMode>(W->GetAuthGameMode()) : nullptr;
+		if (!GM || !GM->GetSim() || !GM->GetBrain() || !GM->GetCartridge() || GM->GetSim()->GetFrame() < 30) return false;
+		const FString Own = UJamMenuFlow::CutLevel(*GM->GetCartridge());
+		const FString Brain = GM->GetBrain()->Difficulty.ToString();
+		Test->AddInfo(FString::Printf(TEXT("JAMMENU level wire: %s -> brain=%s source=%s cartridge_own=%s cut=%s"), S.What, *Brain,
+			GM->IsLevelFromSettings() ? TEXT("settings") : TEXT("cartridge"), *Own, *GM->GetCartridge()->Id));
+		Test->TestEqual(*FString::Printf(TEXT("%s: the game mode names the brain's profile"), S.What), GM->GetLevelInForce(), Brain);
+		if (S.Expect)
+		{
+			Test->TestEqual(*FString::Printf(TEXT("%s: the brain's profile"), S.What), Brain, FString(S.Expect));
+			Test->TestTrue(*FString::Printf(TEXT("%s: the level is the player's"), S.What), GM->IsLevelFromSettings());
+			Test->TestEqual(*FString::Printf(TEXT("%s: it is the regular cut"), S.What), GM->GetCartridge()->Id, FString(TEXT("hockey-regular")));
+		}
+		else
+		{
+			Test->TestEqual(*FString::Printf(TEXT("%s: the brain plays the cartridge's own level"), S.What), Brain, Own);
+			Test->TestFalse(*FString::Printf(TEXT("%s: the setting is ignored"), S.What), GM->IsLevelFromSettings());
+			const FString Picked = FJamSettings::DifficultyString(S.Picked);
+			if (Own == Picked) Test->AddInfo(FString::Printf(TEXT("%s: the cartridge's own level happens to be the picked one (%s): this step proves the source only"), S.What, *Own));
+		}
+		if (UJamDirectorsCallController* Ctl = W->GetSubsystem<UJamDirectorsCallController>())
+		{
+			if (Ctl->GetOverlay())
+			{
+				const FString Sub = Ctl->GetOverlay()->GetTakeSubText();
+				const FString Label = UJamDirectorsCallHudWidget::LevelLabel(Brain);
+				Test->TestTrue(*FString::Printf(TEXT("%s: the match card shows the level (%s)"), S.What, *Sub), Sub.Contains(TEXT("COACH'S NOTE")) || Sub.EndsWith(Label));
+			}
+		}
+		UJamMenuFlow::ReturnToMenu(W);
+		++Step;
+		Phase = 0;
+		Ticks = 0;
+		return false;
+	}
+
+private:
+	bool Finish()
+	{
+		FJamSettings::SetOverrideForTest(nullptr);
+		return true;
+	}
+
+	FAutomationTestBase* Test;
+	int32 Step = 0;
+	int32 Phase = 0;
+	int32 Ticks = 0;
+};
+
+// ---- Jam.Menu.LaunchCutWins (Director, 14 Nov): with -cut=<cut> on the command line PLAY NOW starts that cut, not the regular one, and the match
+// plays the cartridge's own level whatever the settings say (the acceptance run launches the package with its own cut and presses Return on the
+// first screen). The process's own command line is the seam: the launch argument is appended for the test and the line is put back after it.
+class FJamLaunchCutCommand : public IAutomationLatentCommand
+{
+public:
+	FJamLaunchCutCommand(FAutomationTestBase* InTest, const FString& InCut) : Test(InTest), Cut(InCut), SavedCommandLine(FCommandLine::Get()) {}
+
+	virtual bool Update() override
+	{
+		UWorld* W = GameWorld();
+		if (++Ticks > 2400) { Test->AddError(FString::Printf(TEXT("the launch cut test timed out in phase %d"), Phase)); return Finish(); }
+		if (Phase == 0)
+		{
+			AJamMenuGameMode* GM = W ? Cast<AJamMenuGameMode>(W->GetAuthGameMode()) : nullptr;
+			if (!GM || !GM->GetMenu()) return false;
+			// The player picked all-star: the launch cut must not take it.
+			FJamSettings Settings;
+			Settings.Difficulty = EJamMenuDifficulty::AllStar;
+			Settings.bDifficultyChosen = true;
+			FJamSettings::SetOverrideForTest(&Settings);
+			FCommandLine::Append(*FString::Printf(TEXT(" -cut=\"%s\""), *Cut));
+			bAppended = true;
+			if (!Test->TestTrue(TEXT("PLAY NOW starts a match"), GM->GetMenu()->PlayNow())) return Finish();
+			Phase = 1;
+			Ticks = 0;
+			return false;
+		}
+		if (Phase == 1)
+		{
+			AHokejGameMode* GM = W ? Cast<AHokejGameMode>(W->GetAuthGameMode()) : nullptr;
+			if (!GM || !GM->GetSim() || !GM->GetBrain() || !GM->GetCartridge() || GM->GetSim()->GetFrame() < 30) return false;
+			TArray<FString> Errors;
+			const UJamCartridge* Want = UJamCartridge::LoadFromFile(UJamCartridge::ResolveCartridgePath(Cut), Errors);
+			if (Test->TestNotNull(TEXT("the launch cut loads"), Want))
+			{
+				Test->TestEqual(TEXT("PLAY NOW started the launch cut"), GM->GetCartridge()->Id, Want->Id);
+				Test->TestNotEqual(TEXT("and not the regular cut"), GM->GetCartridge()->Id, FString(TEXT("hockey-regular")));
+				Test->TestEqual(TEXT("the brain plays the launch cut's own level"), GM->GetBrain()->Difficulty.ToString(), UJamMenuFlow::CutLevel(*Want));
+			}
+			Test->TestFalse(TEXT("the settings' level is ignored"), GM->IsLevelFromSettings());
+			Test->TestEqual(TEXT("the source is the launch"), GM->GetLevelSource(), FString(TEXT("launch")));
+			Test->AddInfo(FString::Printf(TEXT("JAMMENU launch cut: -cut=%s -> id=%s brain=%s source=%s (settings: all_star picked)"), *Cut, *GM->GetCartridge()->Id,
+				*GM->GetBrain()->Difficulty.ToString(), *GM->GetLevelSource()));
+			// The command line goes back before the menu returns, so no later match of this process sees the argument.
+			Restore();
+			UJamMenuFlow::ReturnToMenu(W);
+			Phase = 2;
+			Ticks = 0;
+			return false;
+		}
+		AJamMenuGameMode* Menu = W ? Cast<AJamMenuGameMode>(W->GetAuthGameMode()) : nullptr;
+		return Menu && Menu->GetMenu() ? Finish() : false;
+	}
+
+private:
+	void Restore()
+	{
+		if (bAppended) { FCommandLine::Set(*SavedCommandLine); bAppended = false; }
+		FJamSettings::SetOverrideForTest(nullptr);
+	}
+	bool Finish()
+	{
+		Restore();
+		return true;
+	}
+
+	FAutomationTestBase* Test;
+	FString Cut;
+	FString SavedCommandLine;
+	bool bAppended = false;
+	int32 Phase = 0;
+	int32 Ticks = 0;
+};
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamMenuLaunchCutWins, "Jam.Menu.LaunchCutWins", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ClientContext | EAutomationTestFlags::ProductFilter)
+bool FJamMenuLaunchCutWins::RunTest(const FString&)
+{
+	FString Already;
+	if (FParse::Value(FCommandLine::Get(), TEXT("-cut="), Already))
+	{
+		AddInfo(TEXT("this process was itself started with -cut=: the test would not prove its own argument; skipped"));
+		return true;
+	}
+	// The acceptance run's own cut when the tree has it (rookie bots on purpose), else a shipped cut that is not the regular one.
+	FString Cut = FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::ProjectDir(), TEXT("../tools/qa/accept/accept-cut.json")));
+	if (!FPaths::FileExists(Cut)) Cut = TEXT("hockey.raw");
+	if (!AutomationOpenMap(UJamMenuFlow::MenuMap))
+	{
+		AddError(FString::Printf(TEXT("cannot open %s"), UJamMenuFlow::MenuMap));
+		return false;
+	}
+	ADD_LATENT_AUTOMATION_COMMAND(FJamLaunchCutCommand(this, Cut));
+	ADD_LATENT_AUTOMATION_COMMAND(FExitGameCommand());
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamMenuLevelReachesTheBrain, "Jam.Menu.LevelReachesTheBrain", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ClientContext | EAutomationTestFlags::ProductFilter)
+bool FJamMenuLevelReachesTheBrain::RunTest(const FString&)
+{
+	if (!AutomationOpenMap(UJamMenuFlow::MenuMap))
+	{
+		AddError(FString::Printf(TEXT("cannot open %s"), UJamMenuFlow::MenuMap));
+		return false;
+	}
+	ADD_LATENT_AUTOMATION_COMMAND(FJamLevelWireCommand(this));
+	ADD_LATENT_AUTOMATION_COMMAND(FExitGameCommand());
+	return true;
+}
+
+// The brand line follows the first cut at run time: the whistle line where the cut has no whistle, the law where it has one. Both trees pass:
+// the rule is tested for both values, the line on screen against the cut on disk.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamMenuBrandLine, "Jam.Menu.BrandLineFollowsTheCut", JamMenuTests::MenuTestFlags)
+bool FJamMenuBrandLine::RunTest(const FString&)
+{
+	TestEqual(TEXT("no whistle in the first cut: the banner"), UJamMenuFlow::BrandLineFor(false), FString(TEXT("Hockey with the whistle taken out.")));
+	TestEqual(TEXT("a whistle in the first cut: the law"), UJamMenuFlow::BrandLineFor(true), FString(TEXT("The speed you bring is the hit you get.")));
+	TArray<FString> Errors;
+	const UJamCartridge* C = UJamCartridge::LoadFromFile(UJamCartridge::ResolveCartridgePath(UJamMenuFlow::FirstCut), Errors);
+	if (!TestNotNull(TEXT("the first cut loads"), C)) return false;
+	TestEqual(TEXT("the line on the first screen is the one for the cut on disk"), UJamMenuFlow::BrandLine(), UJamMenuFlow::BrandLineFor(C->Game.Rules.bPenalties));
+	AddInfo(FString::Printf(TEXT("JAMMENU brand line: rules.penalties %s -> %s"), C->Game.Rules.bPenalties ? TEXT("true") : TEXT("false"), *UJamMenuFlow::BrandLine()));
 	return true;
 }
 

@@ -1,0 +1,135 @@
+Display: Test Completed. Result={Success} Name={StopAndGoSweep} Path={Bar.Movement.StopAndGoSweep}
+SWEEP pro brake at 3 m | go 0.0 | straight 0.0 | gap 0.0 | go: past 0 of 200 (0.0 %), poke 1, down 199; defender presses: lift 199 poke 200 check 199, lifts refused by the body 0; 67 frames a carry | straight: past 0 of 200 (0.0 %), poke 200; defender presses: lift 0 poke 200 check 0, lifts refused by the body 0; 62 frames a carry
+SWEEP pro brake at 4 m | go 6.0 | go: past 12 of 200 (6.0 %), lift 5, down 179, timeout 4; defender presses: lift 152 poke 199 check 200, lifts refused by the body 0; 82 frames a carry
+SWEEP pro brake at 5 m | go 7.0 | go: past 14 of 200 (7.0 %), lift 28, down 153, stumble 4, timeout 1; defender presses: lift 80 poke 67 check 202, lifts refused by the body 0; 80 frames a carry
+SWEEP pro brake at 6 m | go 7.5 | go: past 15 of 200 (7.5 %), lift 65, down 111, stumble 9; defender presses: lift 82 poke 0 check 164, lifts refused by the body 0; 78 frames a carry
+SWEEP pro brake at 7 m | go 66.0 | go: past 132 of 200 (66.0 %), lift 18, down 43, stumble 7; defender presses: lift 18 poke 0 check 130, lifts refused by the body 0; 106 frames a carry
+SWEEP pro brake at 8 m | go 100.0 | go: past 200 of 200 (100.0 %); defender presses: lift 0 poke 0 check 28, lifts refused by the body 0; 123 frames a carry
+SWEEP pro brake at 9.5 m | go 97.0 | go: past 194 of 200 (97.0 %), lift 1, stumble 1, timeout 4; defender presses: lift 1 poke 0 check 9, lifts refused by the body 0; 162 frames a carry
+SWEEP pro brake at 11 m | go 83.5 | go: past 167 of 200 (83.5 %), lift 1, down 7, stumble 5, touch 8, timeout 12; defender presses: lift 1 poke 0 check 88, lifts refused by the body 0; 194 frames a carry
+SWEEP rookie brake at 3 m | go 95.5 | straight 0.0 | gap 95.5 | go: past 191 of 200 (95.5 %), touch 9; defender presses: lift 0 poke 177 check 0, lifts refused by the body 0; 153 frames a carry | straight: past 0 of 200 (0.0 %), poke 156, touch 44; defender presses: lift 0 poke 195 check 0, lifts refused by the body 0; 66 frames a carry
+SWEEP rookie brake at 5 m | go 28.5 | go: past 57 of 200 (28.5 %), down 132, stumble 11; defender presses: lift 0 poke 2 check 162, lifts refused by the body 0; 94 frames a carry
+SWEEP rookie brake at 8 m | go 100.0 | go: past 200 of 200 (100.0 %); defender presses: lift 0 poke 0 check 0, lifts refused by the body 0; 127 frames a carry
+SWEEP all_star brake at 5 m | go 0.0 | straight 0.0 | gap 0.0 | go: past 0 of 200 (0.0 %), down 200; defender presses: lift 127 poke 108 check 200, lifts refused by the body 0; 50 frames a carry | straight: past 0 of 200 (0.0 %), poke 200; defender presses: lift 0 poke 200 check 0, lifts refused by the body 0; 44 frames a carry
+SWEEP all_star brake at 8 m | go 0.0 | go: past 0 of 200 (0.0 %), lift 57, down 143; defender presses: lift 75 poke 0 check 170, lifts refused by the body 0; 54 frames a carry
+SWEEP all_star brake at 10 m | go 57.5 | go: past 115 of 200 (57.5 %), lift 25, down 59, stumble 1; defender presses: lift 25 poke 0 check 116, lifts refused by the body 0; 80 frames a carry
+SWEEP all_star brake at 12 m | go 100.0 | go: past 200 of 200 (100.0 %); defender presses: lift 0 poke 0 check 8, lifts refused by the body 0; 101 frames a carry
+Display: Test Completed. Result={Success} Name={BrakeOnPurpose} Path={Jam.Bot.Hockey2.BrakeOnPurpose}
+hockey.regular pro, ten bots, 2 x 3,600 frames: reverse brakes before 1016, after 217 (decided stops 217, reversals carved 9530); carrier sprint frames before 0, after 866; goals 1 / 1
+Display: Test Completed. Result={Success} Name={LoosePuck} Path={Jam.Bot.Hockey2.LoosePuck}
+Display: Test Completed. Result={Success} Name={Neutral} Path={Jam.Bot.Hockey2.Neutral}
+Display: Test Completed. Result={Success} Name={PassRoom} Path={Jam.Bot.Hockey2.PassRoom}
+a marked human (an opponent 2.3 m off): before, the mate passes onto the marked blade: 1; after: 0
+Display: Test Completed. Result={Success} Name={ShieldHook} Path={Jam.Bot.Hockey2.ShieldHook}
+Display: Test Completed. Result={Success} Name={SupportsHuman} Path={Jam.Bot.Hockey2.SupportsHuman}
+Display: Test Completed. Result={Success} Name={TakeGraceHook} Path={Jam.Bot.Hockey2.TakeGraceHook}
+Display: Test Completed. Result={Success} Name={AttackerBounces} Path={Jam.Core.Contact.AttackerBounces}
+walking at 3 m/s into a standing braced skater's side: outcome 2 ratio 0.53 knock 0 stumble 16 check 1 strength 0.30 recoil 0 att 3.30 -> 1.47 m/s vic 0.00 -> 1.83 m/s frame 7 attacker stumble frames 0
+sprinting at 5 m/s into a standing braced skater's side: outcome 2 ratio 0.85 knock 0 stumble 16 check 1 strength 0.56 recoil 1 att 5.91 -> 1.53 m/s vic 0.00 -> 1.92 m/s frame 4 attacker stumble frames 16
+Display: Test Completed. Result={Success} Name={Boards} Path={Jam.Core.Contact.Boards}
+Display: Test Completed. Result={Success} Name={CarrierRefused} Path={Jam.Core.Contact.CarrierRefused}
+head-on at a carrier with the puck between: refused 0 outcome 3 ratio 1.70 knock 92 stumble 0 check 1 strength 0.77 recoil 0 att 5.99 -> 1.05 m/s vic 2.49 -> 2.45 m/s frame 4
+Display: Test Completed. Result={Success} Name={CheckReach} Path={Jam.Core.Contact.CheckReach}
+Display: Test Completed. Result={Success} Name={FigureCalls} Path={Jam.Core.Contact.FigureCalls}
+Display: Test Completed. Result={Success} Name={Fouls} Path={Jam.Core.Contact.Fouls}
+Display: Test Completed. Result={Success} Name={HeadOn} Path={Jam.Core.Contact.HeadOn}
+head-on at 11.0 m/s each: outcome 3 ratio 4.61 knock 150 stumble 0 check 1 strength 1.00 recoil 0 att 11.00 -> 2.05 m/s vic 11.00 -> 2.05 m/s frame 1
+head-on at 4 and 3 m/s: outcome 3 ratio 1.46 knock 81 stumble 0 check 1 strength 0.63 recoil 0 att 3.99 -> 0.05 m/s vic 2.99 -> 1.05 m/s frame 3
+Display: Test Completed. Result={Success} Name={HitStop} Path={Jam.Core.Contact.HitStop}
+Display: Test Completed. Result={Success} Name={HitStopPick} Path={Jam.Core.Contact.HitStopPick}
+Display: Test Completed. Result={Success} Name={Levers} Path={Jam.Core.Contact.Levers}
+Display: Test Completed. Result={Success} Name={ReleaseGrace} Path={Jam.Core.Contact.ReleaseGrace}
+Display: Test Completed. Result={Success} Name={SameDirection} Path={Jam.Core.Contact.SameDirection}
+same direction, same speed, from behind: outcome 1 ratio 0.35 knock 0 stumble 0 check 0 strength 0.00 recoil 0 att 8.00 -> 8.00 m/s vic 8.00 -> 8.00 m/s frame 0
+same direction, same speed, from the side: outcome 1 ratio 0.28 knock 0 stumble 0 check 0 strength 0.00 recoil 0 att 8.00 -> 8.00 m/s vic 8.00 -> 8.00 m/s frame 0
+Display: Test Completed. Result={Success} Name={ShieldShove} Path={Jam.Core.Contact.ShieldShove}
+Display: Test Completed. Result={Success} Name={SprintFalls} Path={Jam.Core.Contact.SprintFalls}
+side hit closing 3.5 m/s on a walking victim at 5 m/s: outcome 2 ratio 0.90 knock 0 stumble 16 check 1 strength 0.32 recoil 0 att 5.90 -> 4.85 m/s vic 5.20 -> 3.25 m/s frame 1
+side hit closing 3.5 m/s on a sprinting victim at 5 m/s: outcome 3 ratio 1.28 knock 73 stumble 0 check 1 strength 0.32 recoil 0 att 5.90 -> 4.83 m/s vic 5.23 -> 5.74 m/s frame 1
+Display: Test Completed. Result={Success} Name={StandingBrace} Path={Jam.Core.Contact.StandingBrace}
+side body check from 4 m/s on a standing skater: outcome 2 ratio 0.61 knock 0 stumble 16 check 1 strength 0.36 recoil 0 att 3.99 -> 1.75 m/s vic 0.00 -> 2.24 m/s frame 3
+cross-check from 4 m/s from the front on a standing carrier: outcome 3 ratio 1.17 knock 67 stumble 0 check 1 strength 0.36 recoil 0 att 4.00 -> 0.50 m/s vic 0.00 -> 3.38 m/s frame 0 lift_clean 1
+cross-check from 4 m/s from the side on a standing carrier: outcome 2 ratio 0.78 knock 0 stumble 15 check 1 strength 0.36 recoil 1 att 4.00 -> 0.20 m/s vic 0.00 -> 3.32 m/s frame 0 lift_clean 1
+Display: Test Completed. Result={Success} Name={BackUnderFollowCamera} Path={Jam.Core.Movement.BackUnderFollowCamera}
+Display: Test Completed. Result={Success} Name={BodyShield} Path={Jam.Core.Movement.BodyShield}
+Display: Test Completed. Result={Success} Name={BotMatchPro} Path={Jam.Core.Movement.BotMatchPro}
+BOTMATCH pro, as the brain plays it (ai.sprint 0: no bot sprints): 10800 frames over 1 matches, 3 goals, 313 reverse brakes; carrier frames skating 3954, sprinting 844; sticks that took the puck (clean poke or lift by an opponent): 18 from a skating carrier (4.55 per 1000 carry frames), 0 from a sprinting carrier (0.00 per 1000)
+BOTMATCH pro, every carrier holds the sprint: 10800 frames over 1 matches, 3 goals, 302 reverse brakes; carrier frames skating 609, sprinting 4716; sticks that took the puck (clean poke or lift by an opponent): 0 from a skating carrier (0.00 per 1000 carry frames), 12 from a sprinting carrier (2.54 per 1000)
+Display: Test Completed. Result={Success} Name={Burst} Path={Jam.Core.Movement.Burst}
+Display: Test Completed. Result={Success} Name={CarrierSprint} Path={Jam.Core.Movement.CarrierSprint}
+base 11.00 m/s. Walking: carrier 10.118, defender 10.998. Sprinting: carrier 10.927 (x 0.9934 of base), defender 12.648 (x 1.1498); the 8 m gap is 5.02 m after 2 s (walking: 6.47 m); stamina carrier 21600, defender 21600 of 64800; carrier sprint frames 120
+Display: Test Completed. Result={Success} Name={LateAnswer} Path={Jam.Core.Movement.LateAnswer}
+LATE pro from 6 m, the cut alone: past 111 of 200 (55.5 %), down 83, stumble 6; defender presses: lift 0 poke 2 check 164, lifts refused by the body 0; 88 frames a carry
+LATE pro from 6 m, the spin with the cut: past 119 of 200 (59.5 %), lift 81; defender presses: lift 81 poke 0 check 56, lifts refused by the body 0; 93 frames a carry
+LATE pro from 6 m, the deke tap with the cut: past 104 of 200 (52.0 %), down 95, stumble 1; defender presses: lift 28 poke 46 check 133, lifts refused by the body 0; 87 frames a carry
+LATE pro from 6 m, the stop-and-go: past 15 of 200 (7.5 %), lift 65, down 111, stumble 9; defender presses: lift 82 poke 0 check 164, lifts refused by the body 0; 78 frames a carry
+LATE pro from 4 m, the spin with the cut: past 11 of 200 (5.5 %), down 184, stumble 5; defender presses: lift 117 poke 175 check 200, lifts refused by the body 0; 70 frames a carry
+LATE pro from 4 m, the deke tap with the cut: past 2 of 200 (1.0 %), down 195, stumble 3; defender presses: lift 200 poke 161 check 200, lifts refused by the body 0; 66 frames a carry
+LATE pro from 6 m under lane A121's neutral block: the cut alone: past 21 of 200 (10.5 %), down 177, stumble 2; defender presses: lift 13 poke 32 check 199, lifts refused by the body 0; 66 frames a carry
+LATE pro from 6 m under lane A121's neutral block: the spin with the cut: past 126 of 200 (63.0 %), down 70, stumble 4; defender presses: lift 0 poke 0 check 167, lifts refused by the body 0; 90 frames a carry
+LATE pro from 6 m under lane A121's neutral block: the deke tap with the cut: past 77 of 200 (38.5 %), down 123; defender presses: lift 106 poke 17 check 176, lifts refused by the body 0; 77 frames a carry
+Display: Test Completed. Result={Success} Name={PassiveTake} Path={Jam.Core.Movement.PassiveTake}
+Display: Test Completed. Result={Success} Name={PuckDistance} Path={Jam.Core.Movement.PuckDistance}
+full aim: standing blade 1.200 m puck 1.200 m; skating blade 1.200 puck 1.229; sprinting blade 1.600 puck 1.632; after the sprint blade 1.200 puck 1.232; a skater without the puck: blade 1.600; frames not carried 0 of 120; carrier reach 1.65
+Display: Test Completed. Result={Success} Name={ReverseBrake} Path={Jam.Core.Movement.ReverseBrake}
+Display: Test Completed. Result={Success} Name={SpinPrice} Path={Jam.Core.Movement.SpinPrice}
+SPINPRICE the lift from behind, the carrier keeps the puck: mid-spin 1, in the exposed end 0, the same frame with exposed_frames 0 1, one frame before the exposed end 1, after the spin 1
+SPINPRICE pro from 6 m, the spin with the cut: past 119 of 200 (59.5 %), lift 81; defender presses: lift 81 poke 0 check 56, lifts refused by the body 0; 93 frames a carry
+SPINPRICE pro from 5 m, the spin with the cut: past 72 of 200 (36.0 %), lift 53, down 72, stumble 3; defender presses: lift 55 poke 51 check 164, lifts refused by the body 0; 83 frames a carry
+SPINPRICE pro from 7 m, the spin with the cut: past 191 of 200 (95.5 %), lift 9; defender presses: lift 9 poke 0 check 0, lifts refused by the body 0; 112 frames a carry
+SPINPRICE pro from 6 m, the deke tap with the cut: past 104 of 200 (52.0 %), down 95, stumble 1; defender presses: lift 28 poke 46 check 133, lifts refused by the body 0; 87 frames a carry
+SPINPRICE pro the stop begun at 8 m: past 200 of 200 (100.0 %); defender presses: lift 0 poke 0 check 28, lifts refused by the body 0; 123 frames a carry
+SPINPRICE pro from 6 m, the spin with the cut, spin.exposed_frames 0: past 199 of 200 (99.5 %), down 1; defender presses: lift 0 poke 0 check 80, lifts refused by the body 0; 110 frames a carry
+SPINPRICE pro from 5 m, the spin with the cut, spin.exposed_frames 0: past 122 of 200 (61.0 %), down 72, stumble 6; defender presses: lift 2 poke 32 check 173, lifts refused by the body 0; 94 frames a carry
+SPINPRICE pro from 6 m, the deke tap with the cut, spin.exposed_frames 0: past 104 of 200 (52.0 %), down 95, stumble 1; defender presses: lift 28 poke 46 check 133, lifts refused by the body 0; 87 frames a carry
+Display: Test Completed. Result={Success} Name={SprintShield} Path={Jam.Core.Movement.SprintShield}
+the sweep's shield: 12 frames skating (a stick on the old side refused on 11 frames after the sweep), 6 frames sprinting (refused on 5); sprint_shield_mult 1: 12 sprinting
+Display: Test Completed. Result={Success} Name={StandingStart} Path={Jam.Core.Movement.StandingStart}
+STANDING 0 to 8 m/s: after standing 30 frames 24 frames (burst 20), straight out of the faceoff 24 (burst 20), with burst.rest_frames 0: 41 (burst 0)
+STANDING a charge under way (gliding at 6.0 m/s when W goes down): to 8 m/s in 11 frames (burst 0); with burst.rest_frames 0: 11 (burst 0)
+Display: Test Completed. Result={Success} Name={StopAndGo} Path={Jam.Core.Movement.StopAndGo}
+STOPGO pro clean stop-and-go (the stop begins at 9.5 m): past 194 of 200 (97.0 %), lift 1, stumble 1, timeout 4; defender presses: lift 1 poke 0 check 9, lifts refused by the body 0; 162 frames a carry
+STOPGO pro straight charge: past 0 of 200 (0.0 %), poke 200; defender presses: lift 0 poke 200 check 0, lifts refused by the body 0; 62 frames a carry
+STOPGO pro clean stop-and-go, body_shield false: past 124 of 200 (62.0 %), lift 76; defender presses: lift 77 poke 0 check 0, lifts refused by the body 0; 128 frames a carry
+STOPGO pro straight charge, body_shield false: past 0 of 200 (0.0 %), poke 200; defender presses: lift 0 poke 200 check 0, lifts refused by the body 0; 62 frames a carry
+STOPGO pro clean stop-and-go, the game before the lane: past 124 of 200 (62.0 %), lift 76; defender presses: lift 77 poke 0 check 0, lifts refused by the body 0; 128 frames a carry
+STOPGO pro straight charge, the game before the lane: past 0 of 200 (0.0 %), poke 69, lift 4, touch 127; defender presses: lift 4 poke 73 check 0, lifts refused by the body 0; 58 frames a carry
+STOPGO pro stop begun late, at 6 m: past 15 of 200 (7.5 %), lift 65, down 111, stumble 9; defender presses: lift 82 poke 0 check 164, lifts refused by the body 0; 78 frames a carry
+STOPGO pro stop begun at the brief's 5 m: past 14 of 200 (7.0 %), lift 28, down 153, stumble 4, timeout 1; defender presses: lift 80 poke 67 check 202, lifts refused by the body 0; 80 frames a carry
+STOPGO pro clean stop-and-go, the blade left ahead (no mouse): past 166 of 200 (83.0 %), poke 1, lift 31, timeout 2; defender presses: lift 31 poke 2 check 0, lifts refused by the body 0; 137 frames a carry
+STOPGO pro stop begun at 8 m: past 200 of 200 (100.0 %); defender presses: lift 0 poke 0 check 28, lifts refused by the body 0; 123 frames a carry
+STOPGO pro stop begun at 8 m, lane A121's neutral block: past 54 of 200 (27.0 %), lift 57, down 85, stumble 4; defender presses: lift 57 poke 0 check 153, lifts refused by the body 0; 84 frames a carry
+STOPGO pro clean stop-and-go (9.5 m), lane A121's neutral block: past 200 of 200 (100.0 %); defender presses: lift 0 poke 0 check 23, lifts refused by the body 0; 118 frames a carry
+STANDING pro stop begun at 8 m, the blade left ahead (no mouse): past 63 of 200 (31.5 %), poke 137; defender presses: lift 0 poke 137 check 0, lifts refused by the body 0; 90 frames a carry
+STANDING pro stop begun at 8 m: past 200 of 200 (100.0 %); defender presses: lift 0 poke 0 check 28, lifts refused by the body 0; 123 frames a carry
+STANDING pro stop begun at 8 m, burst.rest_frames 0: past 200 of 200 (100.0 %); defender presses: lift 0 poke 0 check 8, lifts refused by the body 0; 129 frames a carry
+STANDING pro the drill's own default script: past 200 of 200 (100.0 %); defender presses: lift 0 poke 0 check 28, lifts refused by the body 0; 123 frames a carry
+LAW3 pro stop begun at 8 m: past 200 of 200 (100.0 %); defender presses: lift 0 poke 0 check 28, lifts refused by the body 0; 123 frames a carry
+LAW3 pro stop begun at 8 m, body_shield false: past 129 of 200 (64.5 %), lift 71; defender presses: lift 141 poke 0 check 0, lifts refused by the body 0; 107 frames a carry
+LAW3 all_star stop begun at 8 m: past 0 of 200 (0.0 %), lift 57, down 143; defender presses: lift 75 poke 0 check 170, lifts refused by the body 0; 54 frames a carry
+LAW3 all_star stop begun at 9.5 m: past 79 of 200 (39.5 %), lift 49, down 68, stumble 4; defender presses: lift 49 poke 0 check 126, lifts refused by the body 0; 72 frames a carry
+LAW3 all_star stop begun at 11 m: past 179 of 200 (89.5 %), lift 2, down 16, stumble 3; defender presses: lift 2 poke 0 check 66, lifts refused by the body 0; 94 frames a carry
+LAW3 all_star stop begun at 12 m: past 200 of 200 (100.0 %); defender presses: lift 0 poke 0 check 8, lifts refused by the body 0; 101 frames a carry
+LAW3 all_star straight charge: past 0 of 200 (0.0 %), poke 200; defender presses: lift 0 poke 200 check 0, lifts refused by the body 0; 44 frames a carry
+LAW3 pro stop begun at 9.5 m: with the mouse 97.0 % past and 99.0 % kept; the blade left ahead 83.0 % past and 84.0 % kept
+Display: Test Completed. Result={Success} Name={TakeGrace} Path={Jam.Core.Movement.TakeGrace}
+Display: Test Completed. Result={Success} Name={ContactBoardMatch} Path={Jam.Core.ContactBoardMatch}
+Display: Test Completed. Result={Success} Name={ContactGraceMatch} Path={Jam.Core.ContactGraceMatch}
+JAMGRACE grace pro seed 1 three minutes, grace 120 (the default): knockdowns of human 7 of bot 9 | down again within 120 frames of release: human 0 bot 0 (by a hit: human 0 bot 0) | stumbled by a hit in that window: human 0 bot 0 | shortest release-to-down gap 139 frames | hits the grace made a bump: on human 0 on bot 0 (thrown by a bot 0) | landed hits on a skater inside its grace 0 | grace at the first release 120 | human's own: soft 0 missed 7 met-a-grace 0
+JAMGRACE grace pro seed 1 three minutes, grace 0: knockdowns of human 5 of bot 6 | down again within 120 frames of release: human 0 bot 1 (by a hit: human 0 bot 1) | stumbled by a hit in that window: human 0 bot 0 | shortest release-to-down gap 111 frames | hits the grace made a bump: on human 0 on bot 0 (thrown by a bot 0) | landed hits on a skater inside its grace 0 | grace at the first release 0 | human's own: soft 0 missed 15 met-a-grace 0
+JAMGRACE grace pro seed 2 three minutes, grace 120 (the default): knockdowns of human 6 of bot 5 | down again within 120 frames of release: human 0 bot 0 (by a hit: human 0 bot 0) | stumbled by a hit in that window: human 0 bot 0 | shortest release-to-down gap 549 frames | hits the grace made a bump: on human 0 on bot 0 (thrown by a bot 0) | landed hits on a skater inside its grace 0 | grace at the first release 120 | human's own: soft 0 missed 9 met-a-grace 0
+JAMGRACE grace pro seed 2 three minutes, grace 0: knockdowns of human 9 of bot 4 | down again within 120 frames of release: human 2 bot 0 (by a hit: human 2 bot 0) | stumbled by a hit in that window: human 0 bot 0 | shortest release-to-down gap 93 frames | hits the grace made a bump: on human 0 on bot 0 (thrown by a bot 0) | landed hits on a skater inside its grace 0 | grace at the first release 0 | human's own: soft 0 missed 7 met-a-grace 0
+JAMGRACE grace pro seed 3 three minutes, grace 120 (the default): knockdowns of human 6 of bot 4 | down again within 120 frames of release: human 0 bot 0 (by a hit: human 0 bot 0) | stumbled by a hit in that window: human 0 bot 0 | shortest release-to-down gap 382 frames | hits the grace made a bump: on human 0 on bot 0 (thrown by a bot 0) | landed hits on a skater inside its grace 0 | grace at the first release 120 | human's own: soft 0 missed 6 met-a-grace 0
+JAMGRACE grace pro seed 3 three minutes, grace 0: knockdowns of human 1 of bot 6 | down again within 120 frames of release: human 0 bot 0 (by a hit: human 0 bot 0) | stumbled by a hit in that window: human 0 bot 0 | shortest release-to-down gap 621 frames | hits the grace made a bump: on human 0 on bot 0 (thrown by a bot 0) | landed hits on a skater inside its grace 0 | grace at the first release 0 | human's own: soft 0 missed 8 met-a-grace 0
+Display: Test Completed. Result={Success} Name={ContactMatch} Path={Jam.Core.ContactMatch}
+JAMCONTACT match pro seed 1: frames 10800 hash 08b27eb4cb328fc5 goals 4:1 | bump read-outs bot 196 human 45 | check events by bot 13 by human 8 | knockdowns of bot 9 of human 7 (bot on bot 6) | lift presses bot 8 human 27 | hits taken (bump/stumble/down) bot 6/5/9 human 0/0/7 | by cross-check (stumble/down) bot 4/1 human 0/0 | down frames bot 1018 human 840 | recoils bot 0 human 0 | refused carrying bot 0 human 0
+JAMCONTACT match pro seed 2: frames 10800 hash 0e8188ad2df690ae goals 1:1 | bump read-outs bot 163 human 33 | check events by bot 10 by human 4 | knockdowns of bot 5 of human 6 (bot on bot 2) | lift presses bot 18 human 31 | hits taken (bump/stumble/down) bot 4/2/5 human 0/1/6 | by cross-check (stumble/down) bot 1/1 human 1/0 | down frames bot 619 human 771 | recoils bot 0 human 0 | refused carrying bot 0 human 0
+JAMCONTACT match pro seed 3: frames 10800 hash 807682b042785e49 goals 0:4 | bump read-outs bot 148 human 37 | check events by bot 10 by human 2 | knockdowns of bot 4 of human 6 (bot on bot 3) | lift presses bot 15 human 23 | hits taken (bump/stumble/down) bot 4/1/4 human 0/1/6 | by cross-check (stumble/down) bot 1/0 human 0/0 | down frames bot 460 human 800 | recoils bot 0 human 0 | refused carrying bot 0 human 0
+JAMCONTACT match all_star seed 1: frames 10800 hash 4d5631825e98bc19 goals 1:3 | bump read-outs bot 178 human 34 | check events by bot 7 by human 2 | knockdowns of bot 3 of human 5 (bot on bot 2) | lift presses bot 6 human 18 | hits taken (bump/stumble/down) bot 2/1/3 human 0/0/5 | by cross-check (stumble/down) bot 0/1 human 0/0 | down frames bot 382 human 707 | recoils bot 0 human 0 | refused carrying bot 0 human 0
+JAMCONTACT match all_star seed 2: frames 10800 hash 13458067d35d1e02 goals 1:2 | bump read-outs bot 164 human 32 | check events by bot 11 by human 1 | knockdowns of bot 4 of human 7 (bot on bot 3) | lift presses bot 12 human 14 | hits taken (bump/stumble/down) bot 4/1/4 human 0/0/7 | by cross-check (stumble/down) bot 0/1 human 0/0 | down frames bot 505 human 896 | recoils bot 0 human 0 | refused carrying bot 0 human 0
+JAMCONTACT match all_star seed 3: frames 10800 hash 2ecfae71e83266cd goals 2:2 | bump read-outs bot 199 human 39 | check events by bot 9 by human 4 | knockdowns of bot 6 of human 6 (bot on bot 3) | lift presses bot 19 human 22 | hits taken (bump/stumble/down) bot 3/1/6 human 1/0/6 | by cross-check (stumble/down) bot 1/0 human 0/0 | down frames bot 687 human 761 | recoils bot 0 human 0 | refused carrying bot 0 human 0
+Display: Test Completed. Result={Success} Name={ContactModes} Path={Jam.Core.ContactModes}
+Display: Test Completed. Result={Success} Name={ContactNeutral} Path={Jam.Core.ContactNeutral}
+Display: Test Completed. Result={Success} Name={ContactReachMatch} Path={Jam.Core.ContactReachMatch}
+Display: Test Completed. Result={Success} Name={ContactTakes} Path={Jam.Core.ContactTakes}
+Display: Test Completed. Result={Success} Name={MovementNeutral} Path={Jam.Core.MovementNeutral}

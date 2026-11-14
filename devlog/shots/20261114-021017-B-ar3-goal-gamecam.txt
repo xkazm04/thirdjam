@@ -1,0 +1,1 @@
+AR3, Blender mock-up of the clay barn (not the engine), Cycles on the CPU at 12 samples: the game camera 12 m inside the side boards, a half-full house of 231 fans in 11 meshes laid out so that no fan has its own mesh among its ten nearest. Top: seated. Bottom: the same frame with every fan in its second pose. 3.1 % of the frame changes; the ice does not (mean luma 167.51 both).

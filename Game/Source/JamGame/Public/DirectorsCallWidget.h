@@ -149,6 +149,9 @@ public:
 	void TickFrame(const FJamPresentationFrame& Frame, bool bCallReady);
 
 	UFUNCTION(BlueprintPure, Category = "Jam|DirectorsCall") FString GetTakeCardText() const;
+	// Lane A144 (the level wire): the small line of the match card (it ends with the level in force), and a level's label.
+	FString GetTakeSubText() const { return TakeSub ? TakeSub->GetText().ToString() : FString(); }
+	static FString LevelLabel(const FString& Level);
 	UFUNCTION(BlueprintPure, Category = "Jam|DirectorsCall") FString GetAnnouncementText() const;
 	bool IsTakeCardVisible() const;
 	// Lane A123 (track U1, evolution 2): the "ESC / START   CALL READY" pill shows when a call is ready by the HUD's own rule (UJamHudWidget::ShowDirectorsCall:

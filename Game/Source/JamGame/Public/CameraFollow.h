@@ -337,7 +337,7 @@ public:
 	static constexpr int32 KickFrames = 8;
 	static constexpr float KickCm = 12.f;
 	static constexpr float KickRollDeg = 1.f;
-	static void KickOffset(int32 FrameIndex, float Strength, const FVector2D& DirWorld, float CamYawDeg, float Scale, FVector& OutOffsetCm, float& OutRollDeg);
+	static void KickOffset(int32 FrameIndex, float Strength, const FVector2D& DirWorld, float CamYawDeg, float Scale, FVector& OutOffsetCm, float& OutRollDeg, bool bBounce = false);
 	UFUNCTION(BlueprintCallable, Category = "Jam|Camera")
 	void StartKick(float Strength, FVector2D DirWorld, float Scale = 1.f);
 	// Lane A101 (track F1): a stumble kicks too, by its ratio: the kick's scale runs StumbleKickMin (3 cm) at bump_ratio to StumbleKickMax (6 cm, a knockdown's
@@ -348,6 +348,17 @@ public:
 	static constexpr float StumbleKickStrength = 0.5f;
 	static float StumbleKickScale(float Ratio, float BumpRatio, float DownRatio);
 	float GetKickScale() const { return KickScale; }
+	// Lane A132 (track F1, evolution 4): the hit has a size. A knockdown the momentum model resolved kicks by the frames its victim lies: DownKickMin of KickCm
+	// (6 cm) at contact.down_frames_min (60) to the whole KickCm (12 cm) at down_frames_max (150), in between by the line. The event's strength (closing speed
+	// over top speed) sized it before, so a slow cross-check to the chest that floored a standing skater kicked like a brush. Pure for tests.
+	static constexpr float DownKickMin = 0.5f;
+	static constexpr float DownKickMax = 1.0f;
+	static float DownKickScale(int32 KnockFrames, int32 FramesMin, int32 FramesMax);
+	// A braced bounce reads as a bounce: the human's own recoil off a more stable skater kicks the camera along the push on it (against its travel), as far as
+	// the hardest stumble (6 cm), and the camera then swings back PAST rest once (about a quarter of the way) before it settles: KickOffset's bBounce shape
+	// (1 - t)^1.5 x cos(1.5 pi t), one change of sign, against a hit's (1 - t)^1.5 that only settles. Not a Blueprint call (StartKick is the hit's).
+	void StartBounceKick(FVector2D DirWorld);
+	bool IsKickBounce() const { return bKickBounce; }
 	int32 GetKickFramesLeft() const { return KickLeft; }
 
 	const FJamCameraFilter& GetFilter() const { return Filter; }
@@ -376,6 +387,7 @@ private:
 	int32 KickLeft = 0;
 	float KickStrength = 0.f;
 	float KickScale = 1.f;   // lane A101: the stumble's share of the kick (1 for a knockdown)
+	bool bKickBounce = false;   // lane A132: the running kick is the human's own bounce (the rebound shape)
 	void ContactKickObserve();
 	FVector2D KickDir = FVector2D(1, 0);
 	UPROPERTY(Transient) TObjectPtr<UJamEventBus> Bus;

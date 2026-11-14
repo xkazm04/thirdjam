@@ -1,0 +1,1 @@
+SET-WEAPONS loop 2, giant stick: Giant_Poke angled 15 deg right with the blade opened (game camera, both styles; closer on clay), Giant_Sweep, and Giant_Carry layered in mesh space over Stride and Stride_Sprint (game camera; clay from the side). Blender Cycles CPU, frozen frames.

@@ -10,6 +10,7 @@
 #include "MenuFlow.generated.h"
 
 class UJamCartridge;
+struct FJamSettings;
 
 // One row of "Choose your cut".
 USTRUCT(BlueprintType)
@@ -70,7 +71,16 @@ public:
 	// Lane A144: the first screen. FirstCut is what PLAY NOW starts (a first match, no choices); the two lines say what the game is.
 	static const TCHAR* FirstCut;   // "hockey.regular"
 	static FString WhatItIsLine();
+	// Evolution 2: the brand line follows the first cut, read at run time: "Hockey with the whistle taken out." when its rules.penalties is false
+	// (R-0054 point 5), the law itself while the cut still has a whistle. BrandLineFor is the rule; BrandLine reads the cut.
 	static FString BrandLine();
+	static FString BrandLineFor(bool bFirstCutHasWhistle);
+	// Evolution 2: the level PLAY NOW plays: the player's own once picked in the settings, rookie on a first run.
+	static FString FirstMatchLevel(const FJamSettings& Settings);
+	// "ONE MATCH, ROOKIE.  ENTER / A, OR CLICK."
+	static FString FirstMatchLine(const FString& Level);
+	// The level a cartridge plays as the game's loader and JamAI::ResolveDifficulty read it: "rookie" | "pro" | "all_star".
+	static FString CutLevel(const UJamCartridge& C);
 	// The one line under a cut card's name: a shipped cut's first four facts ("120 x 60 m, pickups on the ice, first to 3, body checks"), a saved
 	// cut's sentence in quotes. The card shows two lines of it.
 	static FString CutCardLine(const FJamMenuCutRow& Row);
@@ -84,6 +94,13 @@ public:
 	// CutNameOrPath: a shipped name ("hockey.raw") or the absolute path of a saved cut's .cartridge.json.
 	UFUNCTION(BlueprintCallable, Category = "Jam|Menu", meta = (WorldContext = "WorldContext"))
 	static void StartMatch(UObject* WorldContext, const FString& CutNameOrPath);
+	// Lane A144 (the level wire): the same, with the player's level ("rookie" | "pro" | "all_star") as the option ?level=<x> of the rink's open:
+	// AHokejGameMode gives it to the brain in place of the cartridge's own. Empty Level = StartMatch (the cartridge's own level plays).
+	static void StartMatchAtLevel(UObject* WorldContext, const FString& CutNameOrPath, const FString& Level);
+	// THE RULE (Director, 14 Nov): the player's level wins over the cartridge's for the regular cuts: the shipped cuts of Content/Cartridges, which
+	// is what PLAY NOW and the cut cards of CHOOSE YOUR CUT start. The cartridge's own level stays (this returns empty) for a Director's mode
+	// (modes/...), a season take, a played take listed as a cut, and a saved Director's cut: their level is their design.
+	static FString PlayerLevelFor(const FString& CutName, bool bSavedOrTake, const FJamSettings& Settings);
 
 	// Unpauses and opens the menu map.
 	UFUNCTION(BlueprintCallable, Category = "Jam|Menu", meta = (WorldContext = "WorldContext"))

@@ -102,3 +102,64 @@ optimum (1.4): the cell is the brain's (section 7).
 ## 7. Revert and neutral
 Every number of this pass is a profile number: `PreA95Tune` and `JamBaseline::BrainTune` give back the levels before it as a tune (proved by the neutral tests
 above, green). To revert one level, restore its line in `DifficultyProfile.cpp` / `JamAICore.h` (the "before" column of section 4).
+
+## 8. The second landing: the first look is clay; the soak budget; the season (items 5, 6, 4)
+- **Clay (R-0054 point 1)**: `look.tier` `p3_clay` in hockey.regular, hockey.arena.wide, hockey.arena.large, ladder/take-1 to take-4 and the acceptance
+  run's cut (`tools/perf/results/a133/clay.mjs`); takes 5 to 8 and the modes keep theirs. The Designer's cached cuts rebased (33 of 36; the three whose
+  Designer chose neon or day keep it), its data regenerated, the reply corpus rebased (no verdict changed). Re-pinned: `schema/hockey.test.mjs:57`
+  (regular's tier). **The sim's hash does not move**: the full `Jam` filter with the clay content on build 4 logs 196 hash tokens, every one identical to
+  the run before it (the one differing token is a Niagara debugger session id); its one red, `PromptParity`, is the embedded copy, green on build 5.
+- **Soak budget** (`BotTests.cpp:219-223`): faceoffs without a human touch, rookie / novice / hockey.regular, 0 of 9,752 at 2,000 matches; seeds 1-20 read 0 of 94.
+  Budget share + 2 points (R-0039) = 2.0 %.
+- **The season (the novice, 200 a take)**: take-3 86.0, take-4 14.5, take-5 10.5, take-7 14.0, take-8 2.5; takes 4 and 5 at rookie 81.5 and 83.0. The
+  20-point clause is **not met** and cannot be met by takes 4 and 5 alone: from take-3's 86 a ramp of 20 needs take-6 at 26 or more, and take-6 plays pro.
+  No take was changed.
+
+## 9. Evolution 3: the season's ramp (R-0057; 200 matches a take and class, build 6)
+Each take from 4 to 7 may change its level name and carry one `ai.red_skill` (it scales the opposing skaters' top speed, `JamAICore.cpp:337`); take 8 is the
+finale. Candidates were cartridge files written by `tools/perf/results/a133/take-variant.mjs` and played by `curve.mjs` (three processes at most); the
+choice is written into each take and its fallback by `season-apply.mjs 4=rookie 5=pro:0.4 6=pro:0.45 7=pro:0.9 8=all_star:0.7`. Rules and card text untouched.
+"Before" is this tree with the takes as they were (the novice from section 8's run, take-6 from round A; the regular and good players as variants of the old
+level without a red skill); takes 1 to 3 did not change.
+
+| take | level, red skill (before -> after) | novice before -> after | regular before -> after | good before -> after | novice shots a match before -> after |
+|---|---|---|---|---|---|
+| 1 | rookie (unchanged) | 80 -> **80** | 92.5 -> **92.5** | 100 -> **100** | 2.5 -> 2.5 |
+| 2 | rookie (unchanged) | 89 -> **89** | 97.5 -> **97.5** | 99 -> **99** | 3.6 -> 3.6 |
+| 3 | rookie (unchanged) | 86 -> **86** | 99 -> **99** | 100 -> **100** | 4.2 -> 4.2 |
+| 4 | pro -> rookie | 14.5 -> **81.5** | 52 -> **98.5** | 72 -> **100** | 1.5 -> 3.4 |
+| 5 | pro -> pro, red 0.4 | 10.5 -> **67.5** | 47.5 -> **100** | 74.5 -> **99.5** | 1.9 -> 5 |
+| 6 | pro -> pro, red 0.45 | 17.5 -> **58** | 51 -> **99.5** | 76 -> **99.5** | 2.3 -> 4.8 |
+| 7 | pro -> pro, red 0.9 | 14 -> **41** | 33 -> **88** | 60 -> **97.5** | 1.4 -> 3.1 |
+| 8 | all_star -> all_star, red 0.7 | 2.5 -> **10.5** | 18.5 -> **34** | 38.5 -> **45.5** | 0.7 -> 1.3 |
+
+- **Novice, take 3 to 7**: 86 -> 81.5 -> 67.5 -> 58 -> 41: steps 4.5, 14, 9.5, 17 (bar 20 a take); take 7 41 % (bar 15). Takes 1 to 3: 80 / 89 / 86 (bar 80).
+- **Finale**: take 8 the regular player 34.0 % (bar 25; 18.5 before), the good player 45.5 % (about half).
+- The candidates (novice unless named): take-4 pro red 0.7 / 0.8 / 0.9: 30.5 / 23.0 / 18.5, rookie 81.5; take-5 pro red 0.3 / 0.4 / 0.45 / 0.7: 87.5 / 67.5 / 56.0 / 27.5,
+  rookie 83.0; take-6 pro red 0.5 / 0.6: 47.5 / 35.5; take-7 (the wide rink, much the most sensitive) pro red 0.7 / 0.8 / 0.9 / 0.95: 88.5 / 77.0 / 41.0 / 34.0.
+- Read: pro with its own red skill (1.07) is a wall for the novice whatever the take (10 to 18 %); the ramp comes from the opposing forwards' pace.
+  The regular and good players now win takes 4 to 7 at 88 to 100 %, then meet the finale at 34 / 45.5 (a 54-point step for the regular player into take 8):
+  R-0057 bounds the novice's ramp only; a regular player's ramp is a ruling to ask for (section 10 of the report).
+- Tests: `Jam.Progression.*`, `Jam.Designer.*`, `Jam.Bot.*`: 35 pass, 0 fail (`Game/logs/a133/jam-6.log`); re-pinned `ProgressionTests.cpp:162` (take-4's
+  level: rookie). Node tests 243 pass, 1 fail (the worktree's `BarkData.inl` CRLF copy). The Designer's data regenerates unchanged and the reply corpus
+  needs no change (the takes are not embedded in either).
+- Revert: `season-apply.mjs 4=pro 5=pro 6=pro 7=pro 8=all_star` (no red skill) gives the takes back as they were.
+
+### 9b. The levers each take uses, and take 2's waiting room (Director's notes after the design eye's second review)
+- Levers by take (the level each cartridge carries; the menu's difficulty never reaches a take): take 1-3 rookie (none); take 4 rookie (none: the level name
+  alone); take 5 pro + `ai.red_skill` 0.4; take 6 pro + `ai.red_skill` 0.45; take 7 pro + `ai.red_skill` 0.9; take 8 all_star + `ai.red_skill` 0.7.
+  `ai.react_frames` (the review's take-4 lever: novice 48 % at 8) was not needed: rookie gives take 4 a 4.5-point step from take 3.
+- **Take 2, "more ice, and the clock is rolling"**: one rule changed, the clock 3:00 -> **2:00** (`rules.timer_frames` 10800 -> 7200). Measured, 200 a
+  cell (the share of matches with a 30 s stretch without a human touch; the longest stretch's median; `hold_frames` summed; idle seconds; win):
+
+| take 2 arm | novice | regular | good |
+|---|---|---|---|
+| as shipped (3:00) | 56.0 %, p50 31.2 s, hold 190.6 s, idle 36.8 s (19.1 % of play), win 89.0 | 13.5 %, 22.1 s, idle 12.1 s, win 97.5 | 5.0 %, 18.8 s, idle 6.2 s, win 99.0 |
+| **clock 2:00 (written)** | **44.5 %**, p50 29.1 s, hold 133.2 s, idle 24.7 s (18.1 %), win 86.0 | 6.0 %, 19.5 s, idle 7.5 s, win 95.0 | 2.5 %, 16.2 s, idle 3.6 s, win 97.5 |
+| `stick.passive_take` true (the take rule before the kept puck) | 47.0 %, 29.1 s, idle 31.4 s (14.7 %), touches 9.4 a min, **win 72.0** (under take 2's 80 %) | | |
+| rink width 60 -> 45 | 55.0 %, idle 17.7 % | | |
+| `puck.count` 2 | identical to as shipped: the playtest path does not read a second puck (finding) | | |
+
+  Read: the shorter clock cuts the exposure (the waiting rate per minute stays: idle 18 % of play), so it is the least-bad single change that keeps the
+  season's school intact; the cause is the kept puck on 120 m with a novice (the brain track's R-0055 point 5: the human's side does not win a kept puck
+  back). Tests on it: Progression / Designer / Bot 35 pass, 0 fail.

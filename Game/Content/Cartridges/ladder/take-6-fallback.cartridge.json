@@ -234,7 +234,8 @@
       }
     ],
     "ai": {
-      "difficulty": "pro"
+      "difficulty": "pro",
+      "red_skill": 0.45
     },
     "look": {
       "tier": "l2_night",

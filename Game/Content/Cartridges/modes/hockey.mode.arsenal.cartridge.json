@@ -147,7 +147,7 @@
       "score_to_win": 3,
       "goal_pause_frames": 120,
       "offside": false,
-      "penalties": true
+      "penalties": false
     },
     "teams": [
       {
@@ -206,7 +206,7 @@
       }
     ],
     "ai": {
-      "difficulty": "rookie"
+      "difficulty": "pro"
     },
     "barks": {
       "enabled": true,
@@ -230,17 +230,17 @@
     "pickups": [
       {
         "kind": "speed",
-        "spawn_every_frames": 480,
+        "spawn_every_frames": 180,
         "duration_frames": 300,
         "magnitude": 1.5,
-        "max_on_ice": 2
+        "max_on_ice": 4
       },
       {
         "kind": "precision",
-        "spawn_every_frames": 720,
+        "spawn_every_frames": 240,
         "duration_frames": 480,
         "magnitude": 2,
-        "max_on_ice": 2
+        "max_on_ice": 4
       }
     ],
     "abilities": [
@@ -265,8 +265,8 @@
       "pitch": "Grab a boost, get a trick on F.",
       "facts": [
         "boosts give F tricks",
-        "4 abilities",
-        "rookie bots"
+        "a boost every 3 s",
+        "up to 8 on the ice"
       ]
     }
   }

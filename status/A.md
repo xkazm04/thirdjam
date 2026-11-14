@@ -420,3 +420,14 @@
 - link green 01:17: main 0bb47fd (The joined match re-soaked on the integrated game, and a host list a stranger can use (A14) pushed.
 - link green 01:22: main 2a42d88 (The ladder is set on the integrated game, the whistle is out of the regular game, and the ) pushed.
 - link green 01:26: main 84fba56 (A judge's first sixty seconds (A144, track U2): PLAY NOW on the first screen, the controls) pushed.
+- link green 01:32: main 322e6c5 (The camera's hold never turns the camera, so it cannot move the player's path (A135, track) pushed.
+- link green 01:39: main f3f5537 (A hard board hit is seen from the game camera, and a goal runs round the end's caps (A145,) pushed.
+- link green 01:40: main 22214a2 (A knockdown has a size on screen, and a drill films the vision's first law in one take (A1) pushed.
+- RESOURCES 01:41 cpu 97% ram 30.8/63GB editors 0 cmd 10 free 394GB
+- link green 01:46: main 87de2dc (The curve lane's second landing (A133): the soak-set test budget, its season and clay scri) pushed.
+- link green 02:01: main d126779 (The carry drill teaches each level its own stop distance, and an earned first step survive) pushed.
+- 02:21: acceptance run RED on main d126779 (exit 1): no H27. See /c/Users/kazda/AppData/Local/Temp/tj/accept-H27-2.txt
+- link green 02:28: main a9f7443 (On big ice the human's mates check the carrier and the back steps up (A134, track Q2); dev) pushed.
+- link green 02:31: main 4cab387 (The season is a ramp (A133, track C0, R-0057): the novice steps down 86 / 81.5 / 67.5 / 58) pushed.
+- link green 02:37: main c6d8a86 (The settings' level reaches the match, and the end card says what happened (A144, track U2) pushed.
+- link green 02:45: main 425f54e (The first match loads nothing on its start frame (A150, track Q3): the warm scene follows ) pushed.

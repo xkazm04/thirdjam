@@ -29,6 +29,13 @@ struct JAMGAME_API FJamSettings
 	GENERATED_BODY()
 
 	UPROPERTY(BlueprintReadWrite, Category = "Jam|Settings") EJamMenuDifficulty Difficulty = EJamMenuDifficulty::Pro;
+	// Lane A144 (evolution 2): true once the player has picked a level in the settings. Until then PLAY NOW plays rookie (a first run is a
+	// newcomer's): EffectiveDifficulty() is what PLAY NOW plays and what the settings button shows.
+	UPROPERTY(BlueprintReadWrite, Category = "Jam|Settings") bool bDifficultyChosen = false;
+	EJamMenuDifficulty EffectiveDifficulty() const { return bDifficultyChosen ? Difficulty : EJamMenuDifficulty::Rookie; }
+	// The saved DifficultyChosen key says so; so does a saved level other than the default (Save() wrote "pro" on every volume change before
+	// this key existed, so a saved "pro" alone is no pick, while a saved rookie or all-star could only come from the button).
+	static bool IsDifficultyChosen(bool bChosenKey, bool bHasSavedLevel, EJamMenuDifficulty Saved) { return bChosenKey || (bHasSavedLevel && Saved != EJamMenuDifficulty::Pro); }
 	// Empty = the cut's own look tier; else "l1_day" | "l2_night" | "l3_neon" (ULookTierSwitcher::GetKnownTiers).
 	UPROPERTY(BlueprintReadWrite, Category = "Jam|Settings") FString LookTierOverride;
 	// 0..1, applied through FApp::SetVolumeMultiplier.
@@ -42,6 +49,8 @@ struct JAMGAME_API FJamSettings
 	static const TCHAR* Section;   // "Jam.Settings"
 
 	static FJamSettings Load();
+	// Tests: Load() returns this instead of the saved file while it is set (null clears it). Nothing is written.
+	static void SetOverrideForTest(const FJamSettings* Settings);
 	void Save() const;
 	// Applies what applies anywhere (the volume). The look tier is applied per match by UJamDirectorsCallController.
 	void Apply() const;
@@ -62,6 +71,8 @@ public:
 	// Re-reads the settings and the key state (the menu calls it when the screen opens).
 	void Refresh();
 	UWidget* GetFirstFocusable() const;
+	// Lane A144 (the pad walk): everything on the panel a pad can stand on, in reading order.
+	TArray<UWidget*> GetFocusables() const;
 
 	UFUNCTION(BlueprintPure, Category = "Jam|Settings") FJamSettings GetSettings() const { return Settings; }
 

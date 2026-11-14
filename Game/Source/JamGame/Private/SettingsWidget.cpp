@@ -21,12 +21,26 @@ using S = FJamUiStyle;
 
 const TCHAR* FJamSettings::Section = TEXT("Jam.Settings");
 
+namespace
+{
+	TOptional<FJamSettings> GJamSettingsForTest;
+}
+
+void FJamSettings::SetOverrideForTest(const FJamSettings* Settings)
+{
+	if (Settings) GJamSettingsForTest = *Settings; else GJamSettingsForTest.Reset();
+}
+
 FJamSettings FJamSettings::Load()
 {
+	if (GJamSettingsForTest.IsSet()) return GJamSettingsForTest.GetValue();
 	FJamSettings St;
 	if (!GConfig) return St;
 	FString D;
-	if (GConfig->GetString(Section, TEXT("Difficulty"), D, GGameUserSettingsIni)) ParseDifficulty(D, St.Difficulty);
+	bool bHasLevel = false, bChosenKey = false;
+	if (GConfig->GetString(Section, TEXT("Difficulty"), D, GGameUserSettingsIni)) bHasLevel = ParseDifficulty(D, St.Difficulty);
+	GConfig->GetBool(Section, TEXT("DifficultyChosen"), bChosenKey, GGameUserSettingsIni);
+	St.bDifficultyChosen = IsDifficultyChosen(bChosenKey, bHasLevel, St.Difficulty);
 	GConfig->GetString(Section, TEXT("LookTier"), St.LookTierOverride, GGameUserSettingsIni);
 	if (!St.LookTierOverride.IsEmpty() && !ULookTierSwitcher::GetKnownTiers().Contains(St.LookTierOverride)) St.LookTierOverride.Empty();
 	float V = 1.f;
@@ -42,6 +56,7 @@ void FJamSettings::Save() const
 {
 	if (!GConfig) return;
 	GConfig->SetString(Section, TEXT("Difficulty"), *DifficultyString(Difficulty), GGameUserSettingsIni);
+	GConfig->SetBool(Section, TEXT("DifficultyChosen"), bDifficultyChosen, GGameUserSettingsIni);
 	GConfig->SetString(Section, TEXT("LookTier"), *LookTierOverride, GGameUserSettingsIni);
 	GConfig->SetFloat(Section, TEXT("Volume"), Volume, GGameUserSettingsIni);
 	GConfig->SetInt(Section, TEXT("Barks"), Barks, GGameUserSettingsIni);
@@ -165,7 +180,7 @@ void UJamSettingsWidget::BuildTree()
 	KeyState = S::Text(T, TEXT(""), S::CaptionFont(), S::Yellow());
 	AddV(Left, KeyState, FMargin(0, 0, 0, 6));
 
-	Heading(Left, TEXT("signal-defend"), TEXT("AI DIFFICULTY"), TEXT("Rookie, pro or all-star opponents."));
+	Heading(Left, TEXT("signal-defend"), TEXT("AI DIFFICULTY"), TEXT("For PLAY NOW and the cuts. The season and the modes set their own."));
 	DifficultyButton = Button(T, TEXT(""), S::Body + 2, Tmp);
 	DifficultyText = Tmp;
 	DifficultyButton->OnClicked.AddDynamic(this, &UJamSettingsWidget::OnDifficultyClicked);
@@ -229,7 +244,7 @@ void UJamSettingsWidget::Refresh()
 void UJamSettingsWidget::RefreshLabels()
 {
 	if (!DifficultyText) return;
-	DifficultyText->SetText(FText::FromString(FJamSettings::DifficultyLabel(Settings.Difficulty)));
+	DifficultyText->SetText(FText::FromString(FJamSettings::DifficultyLabel(Settings.EffectiveDifficulty())));
 	TierText->SetText(FText::FromString(FJamSettings::TierLabel(Settings.LookTierOverride)));
 	VolumeSlider->SetValue(Settings.Volume);
 	VolumeText->SetText(FText::FromString(FString::Printf(TEXT("%d %%"), FMath::RoundToInt(Settings.Volume * 100.f))));
@@ -274,6 +289,19 @@ UWidget* UJamSettingsWidget::GetFirstFocusable() const
 	return DifficultyButton;
 }
 
+TArray<UWidget*> UJamSettingsWidget::GetFocusables() const
+{
+	TArray<UWidget*> Out;
+	Out.Add(KeyBox.Get());
+	Out.Add(ClearKeyButton.Get());
+	Out.Add(DifficultyButton.Get());
+	Out.Add(TierButton.Get());
+	Out.Add(VolumeSlider.Get());
+	Out.Add(VoiceButton.Get());
+	Out.Add(BarksButton.Get());
+	return Out;
+}
+
 void UJamSettingsWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
@@ -305,7 +333,9 @@ void UJamSettingsWidget::OnClearKey()
 
 void UJamSettingsWidget::OnDifficultyClicked()
 {
-	Settings.Difficulty = static_cast<EJamMenuDifficulty>((static_cast<uint8>(Settings.Difficulty) + 1) % 3);
+	// Lane A144: the button steps on from what it shows (rookie on a first run), and a press is the player's pick from now on.
+	Settings.Difficulty = static_cast<EJamMenuDifficulty>((static_cast<uint8>(Settings.EffectiveDifficulty()) + 1) % 3);
+	Settings.bDifficultyChosen = true;
 	Settings.Save();
 	RefreshLabels();
 }

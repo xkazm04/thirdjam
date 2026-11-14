@@ -59,6 +59,20 @@ public:
 	// Lane A14 (C-0005): the effect system (modifiers, triggers, pickups); its HUD rows are GetEffects()->GetHudFeedFor(human).
 	UFUNCTION(BlueprintPure, Category = "Jam|Game") UJamEffectSystem* GetEffects() const { return Effects; }
 	UFUNCTION(BlueprintPure, Category = "Jam|Game") UJamCartridge* GetCartridge() const { return Cartridge; }
+
+	// Lane A144 (the level wire, Director's order of 14 Nov; REVIEW-2: the menu's AI DIFFICULTY reached no match). The level this match plays is the
+	// brain's profile name ("rookie" | "pro" | "all_star"). It is the PLAYER'S when the rink was opened with ?level=<x> for the cut it then loaded:
+	// the menu does that for the regular cuts (PLAY NOW and the cut cards of CHOOSE YOUR CUT). It is the CARTRIDGE'S OWN for every other start: a
+	// season take, a Director's mode, a saved Director's cut, a joined match (no setting crosses the wire), a tool's -cut= start, a cut loaded
+	// later in the same world. Logged once a match: JAMMATCH level=<x> source=settings|cartridge.
+	UFUNCTION(BlueprintPure, Category = "Jam|Game") FString GetLevelInForce() const;
+	UFUNCTION(BlueprintPure, Category = "Jam|Game") bool IsLevelFromSettings() const { return bLevelFromSettings; }
+	// "settings" (the player's level), "cartridge" (the cut's own), or "launch": the cut came from the -cut= launch argument (the acceptance run,
+	// a tool), which plays the cartridge's own level whatever the settings say (Director, 14 Nov). The word after source= in the JAMMATCH line.
+	UFUNCTION(BlueprintPure, Category = "Jam|Game") FString GetLevelSource() const;
+	const UJamBrain* GetBrain() const { return Brain; }
+	// "level=rookie" among a level's URL options -> "rookie"; empty when absent or no level (then the cartridge's own plays).
+	static FString LevelFromOptions(const FString& Options);
 	UFUNCTION(BlueprintPure, Category = "Jam|Game") AJamSkater* GetHumanSkater() const;
 	// Lane A120 (track Q1): the seat this machine plays, for presentation only (barks, commentary): the sim's human here, ALobbyGameMode's LocalIndex online.
 	virtual int32 GetLocalSeat() const;
@@ -191,6 +205,11 @@ private:
 	UPROPERTY(Transient) TArray<TObjectPtr<AJamSkater>> Skaters;
 	UPROPERTY(Transient) TObjectPtr<AJamPuck> Puck;
 	UPROPERTY(Transient) TObjectPtr<UJamBrain> Brain;
+	// Lane A144: the level the rink's open asked for, the cut it asked it for, and whether the match in play uses it.
+	FString RequestedLevel;
+	FString RequestedForCut;
+	bool bLevelFromSettings = false;
+	bool bCutFromLaunch = false;
 	UPROPERTY(Transient) TObjectPtr<UJamEffectSystem> Effects;
 	UPROPERTY(Transient) TArray<TObjectPtr<AJamPickupActor>> PickupActors;
 	TArray<FName> LastBoost;

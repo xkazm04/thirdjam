@@ -1,0 +1,1 @@
+﻿Lane TRAILER evolution 7: frames 0, 24, 48, 72, 96 of a 120-frame PNG sequence (a window sliding along the SK24 lying-loop strip, made on the CPU) cut by edit.mjs as an image-sequence shot at 60 fps: 120 frames, 2.000 s, 0 repeated frames by check-take.mjs. Not footage; ffmpeg only.

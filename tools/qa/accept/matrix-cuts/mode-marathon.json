@@ -129,14 +129,10 @@
    "glide_drag": 0.147,
    "brake_decel": 6,
    "check_enabled": true,
-   "breakaway": {
-    "speed_bonus": 0.6,
-    "frames": 240
-   },
    "sprint": {
     "bonus": 0.4,
-    "drain_frames": 120,
-    "refill_frames": 600
+    "drain_frames": 240,
+    "refill_frames": 480
    }
   },
   "puck": {
@@ -166,21 +162,14 @@
      {
       "role": "player",
       "spawn": [
-       -7.5,
+       -11.67,
        0
-      ]
-     },
-     {
-      "role": "chaser",
-      "spawn": [
-       -7.5,
-       -7.5
       ]
      },
      {
       "role": "back",
       "spawn": [
-       -30,
+       -35,
        0
       ]
      }
@@ -193,21 +182,14 @@
      {
       "role": "chaser",
       "spawn": [
-       7.5,
+       11.67,
        0
-      ]
-     },
-     {
-      "role": "support",
-      "spawn": [
-       7.5,
-       7.5
       ]
      },
      {
       "role": "back",
       "spawn": [
-       30,
+       35,
        0
       ]
      }
@@ -216,7 +198,8 @@
   ],
   "ai": {
    "difficulty": "pro",
-   "sprint": 0.5
+   "sprint": 0.25,
+   "hold_radius_m": 2.5
   },
   "barks": {
    "enabled": true,
@@ -238,11 +221,11 @@
    "radar": true
   },
   "meta": {
-   "pitch": "Ten minutes, endless ice. Pace it, then punish.",
+   "pitch": "Two on two on endless ice. Bring your legs.",
    "facts": [
-    "140 x 70 m, 10:00",
-    "burst +60 % for 4 s",
-    "everyone sprints"
+    "140 x 70 m, 6:00",
+    "2 v 2, a back each",
+    "sprint +40 % for 4 s"
    ]
   }
  }
