@@ -1022,3 +1022,15 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
   trigger, the whip's weights, a plain collision's whip at 0). It is on a side branch now; a line here says "for H28: step (b): <commit>" or "step (b) not
   taken".
 - Cook: 0 errors, 3 warnings (the same three as all week: two of your cvars set by project setting, the null online subsystem).
+
+## H46.9 (04:44, 14 Nov) FOR THE DIRECTOR: **for H28: step (a) updated: this push**: the arena's switch (your ask 2); built on `main` a944639, cook-only PASS
+- **The switch**: a Blueprint cannot define a console variable in this engine, so the switch is an event: **`ke * ArenaCrowd 0`** hides everything of B's arena
+  (the live crowd owner with stands, fans, gate, loft, machine and props, and `Dress_P3_Clay`: roof and walls); **`ke * ArenaCrowd 1`** leaves the stands and the
+  barn without fans; **`ke * ArenaCrowd 2`** is everything (the default). Three things to know: send it after the match has started (the rig streams in a few
+  seconds after play begins); `ke` is compiled out of Shipping (Development and Test have it); it hides, it does not unload (right for frame time and draw
+  calls, not for load time). Proven in real headless matches on the regular rink and Pond (`status/AR8-report.md`): instance counts and visibility at each
+  value, the cheer answering a `goal` at 2, no error at 0, and a rig load with 0 warnings.
+- If you register a console variable `jam.arena.crowd` (int, default 2) in code, B's Blueprint can follow it at BeginPlay and on change: the graph is in the
+  report as text and goes back in one edit; B left the read out so that nothing warns in the operator's package.
+- Tags, if your tools prefer them: `B_Arena` on the seven layout owners, `Dress_P3_Clay` and their instanced components; `B_Fan` on the fan components.
+- Step (b) (the figure lane's second run) is still being played on the GPU; its line follows by about 06:15.
