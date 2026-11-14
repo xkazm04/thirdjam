@@ -409,4 +409,101 @@ bool FJamPassPower::RunTest(const FString& Parameters)
 	return true;
 }
 
+// Lane A207 (the release's acceptance rows, steps 4 to 6 of HokejAcceptDrill.cpp): the drill's scenes replayed in the sim with the hand the release chain's
+// driver gives (the stick on the drill's cursor target, the hold the act line asks), so each row is proven headless before the window runs it:
+//   shoot_tap / shoot_half / shoot_full: from 10 m straight at the net, held 2 / 8 / 30 frames: a goal within 120 frames (the doubled shot crosses the line
+//     between substeps at 0.22 m a substep: the goal must still count)
+//   pass: a tap at the mate 8 m to the side: caught; pass_power: held 36 frames at a mate 28 m away on the line to the net: leaves at full power, caught
+//   onetimer: the mate's pass from (Gx - 6, 6) to the human at (Gx - 10, -2): received, and a tap inside the window is a one-timer that scores
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamPassShotRows, "Jam.Core.PassShotRows", JamPassStagedTests::Flags)
+bool FJamPassShotRows::RunTest(const FString& Parameters)
+{
+	using namespace JamPassStagedTests;
+	TArray<FString> Errors;
+	UJamCartridge* C = UJamCartridge::LoadFromFile(UJamCartridge::ResolveCartridgePath(TEXT("hockey.regular")), Errors);
+	if (!C) return false;
+	const FJamGameConfig& G = C->Game;
+	// The drill parks every other skater in the human's own corner (HokejAcceptDrill: "Parked skaters sit in the human's own corner").
+	auto Park = [](FPassStage& Sc)
+	{
+		const int32 Team = Sc.Sim->GetSkaters()[Sc.Me].Team;
+		const double Dir = Sc.Sim->AttackGoalX(Team) > 0 ? 1.0 : -1.0;
+		int32 k = 0;
+		for (const FJamSkaterState& S : Sc.Sim->GetSkaters()) if (S.Index != Sc.Me && S.Index != Sc.Mate) Sc.Sim->SetSkater(S.Index, FVector2D(-Dir * (30.0 + 2.0 * (k % 4)), -18.0 + 2.0 * (k++ / 4)), FVector2D::ZeroVector, 0.0);
+	};
+	auto GoalIn = [](FPassStage& Sc, int32 Frames) { const int32 S0 = Sc.Sim->GetScore(0) + Sc.Sim->GetScore(1); for (int32 f = 0; f < Frames; ++f) { Sc.Clear(); Sc.Step(); if (Sc.Sim->GetScore(0) + Sc.Sim->GetScore(1) > S0) return true; } return false; };
+	// Step 4.
+	{
+		static const int32 Holds[3] = {2, 8, 30};
+		static const TCHAR* Names[3] = {TEXT("shoot_tap"), TEXT("shoot_half"), TEXT("shoot_full")};
+		for (int32 k = 0; k < 3; ++k)
+		{
+			FPassStage Sc(*C, G);
+			Park(Sc);
+			const int32 Team = Sc.Sim->GetSkaters()[Sc.Me].Team;
+			const double Gx = Sc.Sim->AttackGoalX(Team), Dir = Gx > 0 ? 1.0 : -1.0;
+			const FVector2D Fwd(Dir, 0.0);
+			Sc.Sim->SetSkater(Sc.Me, FVector2D(Gx - Dir * 10.0, 0.0), FVector2D::ZeroVector, Dir > 0 ? 0.0 : UE_DOUBLE_PI);
+			for (int32 i = 0; i < 2; ++i) { Sc.Sim->SetPuck(Sc.Sim->GetSkaters()[Sc.Me].BladePos, FVector2D::ZeroVector); Sc.Clear(); Sc.In[Sc.Me].Stick = JamAI::FVec2(Fwd.X, Fwd.Y); Sc.Step(); }
+			for (int32 f = 0; f < Holds[k] + 1; ++f) { Sc.Clear(); Sc.In[Sc.Me].Stick = JamAI::FVec2(Fwd.X, Fwd.Y); Sc.In[Sc.Me].bShootHeld = f < Holds[k]; Sc.Step(); }
+			const double V = Sc.Sim->GetPuck().Vel.Size();
+			const bool bGoal = GoalIn(Sc, 120);
+			AddInfo(FString::Printf(TEXT("PASSSHOTROW %s: release %.1f m/s, goal %d"), Names[k], V, bGoal ? 1 : 0));
+			TestTrue(*FString::Printf(TEXT("%s: the shot from 10 m scores (%.1f m/s)"), Names[k], V), bGoal);
+		}
+	}
+	// Step 5: the tap to the mate 8 m to the side, the full pass to the mate 28 m ahead.
+	for (int32 k = 2; k <= 3; ++k)
+	{
+		FPassStage Sc(*C, G);
+		Park(Sc);
+		const int32 Team = Sc.Sim->GetSkaters()[Sc.Me].Team;
+		const double Gx = Sc.Sim->AttackGoalX(Team), Dir = Gx > 0 ? 1.0 : -1.0;
+		const double Face = Dir > 0 ? 0.0 : UE_DOUBLE_PI;
+		const FVector2D HPos = k == 2 ? FVector2D(Gx - Dir * 16.0, -4.0) : FVector2D(Gx - Dir * 40.0, -4.0);
+		const FVector2D MPos = k == 2 ? FVector2D(Gx - Dir * 16.0, 4.0) : FVector2D(Gx - Dir * 12.0, -4.0);
+		Sc.Sim->SetSkater(Sc.Mate, MPos, FVector2D::ZeroVector, Face + UE_DOUBLE_PI);
+		Sc.Sim->SetSkater(Sc.Me, HPos, FVector2D::ZeroVector, Face);
+		const FVector2D ToM = (MPos - HPos).GetSafeNormal();
+		for (int32 i = 0; i < 2; ++i) { Sc.Sim->SetPuck(Sc.Sim->GetSkaters()[Sc.Me].BladePos, FVector2D::ZeroVector); Sc.Clear(); Sc.In[Sc.Me].Stick = JamAI::FVec2(ToM.X, ToM.Y); Sc.Step(); }
+		for (int32 i = 0; i < 40; ++i) { Sc.Clear(); Sc.In[Sc.Me].Stick = JamAI::FVec2(ToM.X, ToM.Y); Sc.Step(); }   // the drill's 45 frames of hand
+		const int32 Hold = k == 2 ? 2 : G.Pass.PowerFullFrames + 6;
+		Sc.Pass(Hold, ToM, [] {});
+		const double V0 = Sc.Sim->GetPuck().Vel.Size();
+		const FFlightOut O = Fly(Sc, 200, [] {});
+		AddInfo(FString::Printf(TEXT("PASSSHOTROW %s: release %.1f m/s (full %.1f), caught %d after %d frames"), k == 2 ? TEXT("pass") : TEXT("pass_power"), V0, Sc.Sim->PassFullSpeed(), O.bCaught ? 1 : 0, O.Frames));
+		if (k == 2) TestTrue(TEXT("pass: the tap reaches the mate 8 m away"), O.bCaught);
+		else TestTrue(*FString::Printf(TEXT("pass_power: the full hold leaves at full power (%.1f) and the mate 28 m away takes it"), V0), O.bCaught && V0 >= Sc.Sim->PassFullSpeed() - 0.5);
+	}
+	// Step 6: the mate's pass to the human, his tap inside the window.
+	{
+		FPassStage Sc(*C, G);
+		Park(Sc);
+		const int32 Team = Sc.Sim->GetSkaters()[Sc.Me].Team;
+		const double Gx = Sc.Sim->AttackGoalX(Team), Dir = Gx > 0 ? 1.0 : -1.0;
+		const FVector2D HPos(Gx - Dir * 10.0, -2.0), MPos(Gx - Dir * 6.0, 6.0);
+		const FVector2D ToNet = (FVector2D(Gx, 0.0) - HPos).GetSafeNormal();
+		Sc.Sim->SetSkater(Sc.Me, HPos, FVector2D::ZeroVector, FMath::Atan2(ToNet.Y, ToNet.X));
+		const FVector2D MToH = (HPos - MPos).GetSafeNormal();
+		Sc.Sim->SetSkater(Sc.Mate, MPos, FVector2D::ZeroVector, FMath::Atan2(MToH.Y, MToH.X));
+		for (int32 i = 0; i < 2; ++i) { Sc.Sim->SetPuck(Sc.Sim->GetSkaters()[Sc.Mate].BladePos, FVector2D::ZeroVector); Sc.Clear(); Sc.In[Sc.Me].Stick = JamAI::FVec2(ToNet.X, ToNet.Y); Sc.Step(); }
+		const int32 R0 = Sc.Sim->GetSkaters()[Sc.Me].PassesReceived;
+		Sc.Clear(); Sc.In[Sc.Mate].bPass = true; Sc.In[Sc.Me].Stick = JamAI::FVec2(ToNet.X, ToNet.Y); Sc.Step();
+		bool bRecv = false, bOne = false, bGoal = false;
+		const int32 S0 = Sc.Sim->GetScore(0) + Sc.Sim->GetScore(1);
+		for (int32 f = 0; f < 200; ++f)
+		{
+			Sc.Clear(); Sc.In[Sc.Me].Stick = JamAI::FVec2(ToNet.X, ToNet.Y);
+			if (bRecv && !bOne) Sc.In[Sc.Me].bShoot = true;
+			Sc.Step();
+			if (!bRecv && Sc.Sim->GetSkaters()[Sc.Me].PassesReceived > R0) bRecv = true;
+			if (Sc.Sim->GetSkaters()[Sc.Me].bOneTimerThisFrame) bOne = true;
+			if (Sc.Sim->GetScore(0) + Sc.Sim->GetScore(1) > S0) { bGoal = true; break; }
+		}
+		AddInfo(FString::Printf(TEXT("PASSSHOTROW onetimer: received %d, one-timer %d, goal %d"), bRecv ? 1 : 0, bOne ? 1 : 0, bGoal ? 1 : 0));
+		TestTrue(TEXT("onetimer: the mate's pass is received and the tap scores or is a one-timer"), bRecv && (bGoal || bOne));
+	}
+	return true;
+}
+
 #endif

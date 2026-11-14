@@ -489,3 +489,4 @@
 - link green 22:24: main 4d644b4d (Skaters who play to score: rookie's opponents arrive, carriers drive the net, the mates sh) pushed.
 - link green 22:35: main bcec1663 (A tackle that is recognised, a bridge for the brace, the boosts' colours by the contract () pushed.
 - link green 23:05: main d0d132bf (A pass arrives and a shot is a shot: the hold is the pass's power, the pass goes to the ma) pushed.
+- link green 23:18: main ffcfd1ce (A check that lands inside its wind-up shows the hit, not the crouch (A210, track F3, the n) pushed.

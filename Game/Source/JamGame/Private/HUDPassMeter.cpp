@@ -15,9 +15,15 @@
 #include "HAL/IConsoleManager.h"
 #include "HokejGameMode.h"
 #include "JamSim.h"
+#include "UnrealClient.h"
 
 static TAutoConsoleVariable<int32> CVarJamHudPassMeter(TEXT("jam.hud.PassMeter"), 1,
 	TEXT("Lane A207: the pass's power line on the ice while the pass is held (1, default); 0 = none."), ECVF_Default);
+static TAutoConsoleVariable<int32> CVarJamHudPassMeterDemo(TEXT("jam.hud.PassMeterDemo"), 0,
+	TEXT("Proof: N > 0 draws the line whenever the human carries, as if the pass were held N frames (for stills from a scripted human, who taps). 0 off."), ECVF_Default);
+static TAutoConsoleVariable<int32> CVarJamHudPassMeterStills(TEXT("jam.hud.PassMeterStills"), 0,
+	TEXT("Proof: N > 0 takes a still (with the HUD) N sim frames into every showing of the line, at most 12: u1-passmeter-f<frame>.png. 0 off."), ECVF_Default);
+namespace { int64 GPassMeterSince = -1; int32 GPassMeterStills = 0; bool GPassMeterTaken = false; }
 
 void UJamHudWidget::UpdatePassMeter(const FJamPresentationFrame& F)
 {
@@ -48,12 +54,14 @@ void UJamHudWidget::UpdatePassMeter(const FJamPresentationFrame& F)
 	if (CVarJamHudPassMeter.GetValueOnGameThread() != 0 && F.Phase == EJamPhase::Play && Sim && PC && Sim->PassPowerOn() && Sim->GetSkaters().IsValidIndex(Sim->GetHumanIndex()))
 	{
 		const FJamSkaterState& Hu = Sim->GetSkaters()[Sim->GetHumanIndex()];
-		if (Hu.PassChargeFrames > 0)
+		const int32 Demo = CVarJamHudPassMeterDemo.GetValueOnGameThread();
+		const int32 Held = Hu.PassChargeFrames > 0 ? Hu.PassChargeFrames : (Demo > 0 && Sim->CarrierIndex() == Hu.Index ? Demo : 0);
+		if (Held > 0)
 		{
 			const FVector2D From = Sim->GetPuck().Pos;
 			FVector2D Aim;
-			Target = Sim->HumanPassTarget(Hu.Index, Hu.BladePos - Hu.Pos, Hu.PassChargeFrames, Aim);
-			ReachM = Sim->PassReachM(Sim->PassSpeedForHold(Hu.PassChargeFrames));
+			Target = Sim->HumanPassTarget(Hu.Index, Hu.BladePos - Hu.Pos, Held, Aim);
+			ReachM = Sim->PassReachM(Sim->PassSpeedForHold(Held));
 			const FVector2D Way = (Aim - From).GetSafeNormal();
 			const double LenM = FMath::Max(1.0, Target >= 0 ? FMath::Min(ReachM, FVector2D::Distance(Aim, From)) : ReachM);
 			const FVector2D End = From + Way * LenM, Mid = From + Way * (LenM * 0.5), Across(-Way.Y, Way.X);
@@ -76,6 +84,22 @@ void UJamHudWidget::UpdatePassMeter(const FJamPresentationFrame& F)
 		}
 	}
 	if (!bShown) Bar->SetVisibility(ESlateVisibility::Collapsed);
+	{
+		// The proof's stills: one per showing, After sim frames into it.
+		const int32 After = CVarJamHudPassMeterStills.GetValueOnGameThread();
+		if (After <= 0 || !bShown) { GPassMeterSince = -1; GPassMeterTaken = false; }
+		else
+		{
+			if (GPassMeterSince < 0 || F.SimFrame < GPassMeterSince) { GPassMeterSince = F.SimFrame; GPassMeterTaken = false; }
+			if (!GPassMeterTaken && GPassMeterStills < 12 && F.SimFrame - GPassMeterSince >= After)
+			{
+				GPassMeterTaken = true; ++GPassMeterStills;
+				const FString Name = FString::Printf(TEXT("u1-passmeter-f%06lld"), F.SimFrame);
+				FScreenshotRequest::RequestScreenshot(Name + TEXT(".png"), true, false);
+				UE_LOG(LogTemp, Log, TEXT("JAMHUD frame=%lld pass_meter_still=%s.png target=%d reach_m=%.1f"), F.SimFrame, *Name, Target, ReachM);
+			}
+		}
+	}
 	const int32 Now = bShown ? (Target >= 0 ? 2 : 1) : 0;
 	if (Now != PassMeterState)
 	{

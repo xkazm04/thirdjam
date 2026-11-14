@@ -12,7 +12,7 @@ const STEPS = {
   2: { name: 'Aim (the cursor at four points)', verbs: ['aim'] },
   3: { name: 'Carry (sweeps at full reach)', verbs: ['carry'] },
   4: { name: 'Shoot (LMB with the puck), blade extended (tap, 8, 30 frames)', verbs: ['shoot_tap', 'shoot_half', 'shoot_full'] },
-  5: { name: 'Pass (RMB with the puck), blade extended (tap, held = saucer)', verbs: ['pass', 'saucer'] },
+  5: { name: 'Pass (RMB with the puck), blade extended (tap; held 36 frames = full power to a mate 28 m away)', verbs: ['pass', 'pass_power'] },   // lane A207 (game.pass.power): the held row is the power, the saucer is the sim's own
   6: { name: 'Receive and one-timer', verbs: ['onetimer'] },
   7: { name: 'Check (RMB without the puck) with closing speed, cross-check (LMB without the puck) from the front: hits by momentum (A92); held cross-check (LMB held, skate in: down by the speed brought, A191)', verbs: ['check', 'crosscheck', 'crosscheck_held'] },
   8: { name: 'Be checked at full speed while standing: down for the frames the hit earned (A92)', verbs: ['checked'] },

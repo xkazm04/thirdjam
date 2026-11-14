@@ -45,6 +45,7 @@ namespace JamAccept
 		int64 ActFrame = -1, MoveFrame = -1, EventFrame = -1, DownFrame = -1, UpFrame = -1, ShotFrame = -1, RecvFrame = -1, CueFrame = -1;
 		double MaxSpeed = 0.0, Closing = 0.0, CamMaxM = 0.0, PuckDistAtAct = -1.0, LastWall = 0.0, GapS = 0.0;
 		int32 SprintFrames = 0, SprintCarryFrames = 0, CarryFrames = 0, ChargeMax = 0, Sweeps0 = 0, Received0 = 0, MateRecv0 = 0, StickHit = 0;
+		double PassV0 = 0.0;   // lane A207: the pass's release speed (step 5)
 		// Lane A92 (R-0045 law 1): the hit by momentum as the sim resolved it: the victim's ContactOutcome (1 bump, 2 stumble, 3 down), its ratio, the frames it went down for.
 		int32 HitOutcome = 0, KnockAt = 0;
 		double HitRatio = 0.0;
@@ -290,7 +291,7 @@ void AHokejGameMode::AcceptDrillObserve()
 			{
 				const TCHAR* Why = bNeedMate ? TEXT("no_mate") : TEXT("no_opp");
 				const TCHAR* V1 = G.Step == 5 ? TEXT("pass") : G.Step == 6 ? TEXT("onetimer") : G.Step == 7 ? TEXT("check") : TEXT("checked");
-				const TCHAR* V2 = G.Step == 5 ? TEXT("saucer") : G.Step == 7 ? TEXT("crosscheck") : nullptr;
+				const TCHAR* V2 = G.Step == 5 ? (Sim->PassPowerOn() ? TEXT("pass_power") : TEXT("saucer")) : G.Step == 7 ? TEXT("crosscheck") : nullptr;   // lane A207: under game.pass.power the held row is the power
 				ACC_LOG(TEXT("step=%d verb=%s ok=0 frame=%lld skipped=%s (this cut has no %s for the step: not run, not a fail)"), G.Step, V1, F, Why, bNeedMate ? TEXT("mate") : TEXT("opponent"));
 				if (V2) ACC_LOG(TEXT("step=%d verb=%s ok=0 frame=%lld skipped=%s (this cut has no %s for the step: not run, not a fail)"), G.Step, V2, F, Why, bNeedMate ? TEXT("mate") : TEXT("opponent"));
 				if (G.Step == 7) ACC_LOG(TEXT("step=7 verb=crosscheck_held ok=0 frame=%lld skipped=%s (this cut has no opponent for the step: not run, not a fail)"), F, Why);   // lane A191
@@ -310,6 +311,13 @@ void AHokejGameMode::AcceptDrillObserve()
 		case 7: HPos = FVector2D(-Dir * 3.5, 0.0); G.bOppLive = true; Sim->SetSkater(G.Opp, FVector2D(Dir * 2.0, 0.0), FVector2D::ZeroVector, FaceYaw + PI); Sim->ClearReleaseGrace(G.Opp); break;   // the check row felled it: a new scene (the release grace would make the cross-check a bump)
 		case 8: HPos = FVector2D(0.0, 0.0); G.bOppLive = true; Sim->SetSkater(G.Opp, FVector2D(Dir * 7.0, 0.0), FVector2D::ZeroVector, FaceYaw + PI); break;
 		default: break;
+		}
+		// Lane A207 (track P1, game.pass.power): step 5's held row is the full pass: the human 28 m from the mate, both on the line y = -4 towards the net, the
+		// mate facing him; nobody in the lane (the parked skaters sit in the human's own corner). A full hold must reach him at full power and be caught.
+		if (G.Step == 5 && G.K == 3 && Sim->PassPowerOn() && Sk.IsValidIndex(G.Mate))
+		{
+			HPos = FVector2D(Gx - Dir * 40.0, -4.0);
+			Sim->SetSkater(G.Mate, FVector2D(Gx - Dir * 12.0, -4.0), FVector2D::ZeroVector, FaceYaw + PI);
 		}
 		// Lane A191: the held cross-check (step 7 k=3) comes from 9 m at 5 m/s with the button held all the way: the speed brought is the hit.
 		if (G.Step == 7 && G.K == 3) HPos = FVector2D(-Dir * 9.0, 0.0);
@@ -424,7 +432,8 @@ void AHokejGameMode::AcceptDrillObserve()
 			break;
 		}
 		case 5:
-			ACC_LOG(TEXT("act step=5 k=%d act=pass frames=%d carrier=%d puck_dist=%.2f reach=%.2f frame=%lld"), G.K, G.K == 2 ? 0 : JamControls::SaucerHoldFrames(Cfg.Pass.SaucerHalfFrames) + 6, C, PuckDist, Reach, F); break;
+			// Lane A207: under game.pass.power the held row holds the full power plus 6 frames (36); before, the saucer's hold plus 6 (19).
+			ACC_LOG(TEXT("act step=5 k=%d act=pass frames=%d carrier=%d puck_dist=%.2f reach=%.2f frame=%lld"), G.K, G.K == 2 ? 0 : (Sim->PassPowerOn() ? Cfg.Pass.PowerFullFrames + 6 : JamControls::SaucerHoldFrames(Cfg.Pass.SaucerHalfFrames) + 6), C, PuckDist, Reach, F); break;
 		case 6:
 			ACC_LOG(TEXT("wait step=6 k=%d mate_carrier=%d frame=%lld"), G.K, C == G.Mate ? 1 : 0, F); G.ActFrame = -1; break;   // the act line comes with the mate's pass
 		case 8:
@@ -581,12 +590,15 @@ void AHokejGameMode::AcceptDrillObserve()
 	case 5:
 	{
 		if (G.K == 1) { if (InPh >= 150) { G.K = 1; G.Ph = EPh::Gap; G.PhFrame = F; G.K = 2; } return; }   // the probe: no verdict
-		if (H.bPassThisFrame && !G.bPassed) { G.bPassed = true; G.EventFrame = F; G.bSaucer = H.bSaucerThisFrame; }
+		if (H.bPassThisFrame && !G.bPassed) { G.bPassed = true; G.EventFrame = F; G.bSaucer = H.bSaucerThisFrame; G.PassV0 = P.Vel.Size(); }
 		if (G.bPassed && !G.bRecv && Sk.IsValidIndex(G.Mate) && (Sk[G.Mate].PassesReceived > G.MateRecv0 || C == G.Mate)) { G.bRecv = true; G.RecvFrame = F; }
-		const bool bEnd = (G.bPassed && (G.bRecv || F - G.EventFrame > 120)) || (!G.bPassed && InPh > 180);
+		const bool bPower = G.K == 3 && Sim->PassPowerOn();   // lane A207
+		const bool bEnd = (G.bPassed && (G.bRecv || F - G.EventFrame > (bPower ? 200 : 120))) || (!G.bPassed && InPh > (bPower ? 240 : 180));
 		if (!bEnd) return;
-		const FString Facts = FString::Printf(TEXT("pass=%d saucer=%d received=%d flight_frames=%lld puck_dist_at_act=%.2f reach=%.2f"), G.bPassed ? 1 : 0, G.bSaucer ? 1 : 0, G.bRecv ? 1 : 0, G.bRecv ? G.RecvFrame - G.EventFrame : -1, G.PuckDistAtAct, Sim->GetEffectiveStat(EJamStat::ShotReach, Me));
+		const FString Facts = FString::Printf(TEXT("pass=%d saucer=%d received=%d flight_frames=%lld puck_dist_at_act=%.2f reach=%.2f release_mps=%.1f full_mps=%.1f mate_dist=%.1f"), G.bPassed ? 1 : 0, G.bSaucer ? 1 : 0, G.bRecv ? 1 : 0, G.bRecv ? G.RecvFrame - G.EventFrame : -1, G.PuckDistAtAct, Sim->GetEffectiveStat(EJamStat::ShotReach, Me),
+			G.PassV0, Sim->PassPowerOn() ? Sim->PassFullSpeed() : Cfg.Skater.PassSpeed, Sk.IsValidIndex(G.Mate) ? FVector2D::Distance(H.Pos, Sk[G.Mate].Pos) : -1.0);
 		if (G.K == 2) Verdict(TEXT("pass"), G.bPassed && G.bRecv, Facts);
+		else if (bPower) Verdict(TEXT("pass_power"), G.bPassed && G.bRecv && G.PassV0 >= Sim->PassFullSpeed() - 0.5, Facts);   // lane A207: the full pass, at full power, caught 28 m away
 		else Verdict(TEXT("saucer"), G.bPassed && G.bSaucer, Facts);
 		Next();
 		return;

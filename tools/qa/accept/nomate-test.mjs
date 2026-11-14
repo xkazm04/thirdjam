@@ -25,7 +25,7 @@ const ueRoot = process.env.UE_ROOT || 'C:/Program Files/Epic Games/UE_5.9';
 const exe = join(ueRoot, 'Engine', 'Binaries', 'Win64', 'UnrealEditor-Cmd.exe');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 export const CASES = [
-  { name: 'nomate', cut: join(HERE, 'nomate-cut.json'), skipped: ['no_mate'], verbs: ['pass', 'saucer', 'onetimer'] },
+  { name: 'nomate', cut: join(HERE, 'nomate-cut.json'), skipped: ['no_mate'], verbs: ['pass', 'pass_power', 'onetimer'] },   // lane A207: the held row is the power (was saucer)
   { name: 'noopp', cut: join(HERE, 'noopp-cut.json'), skipped: ['no_opp'], verbs: ['check', 'crosscheck', 'checked'] },
 ];
 
