@@ -3,6 +3,8 @@
 // the gate's Jam filter) measures the two novice-at-rookie bars rule by rule. Headless, scripted scenes on UJamSim. docs/experiments/MOVEMENT.md.
 //   UnrealEditor-Cmd.exe Game/ThirdJam.uproject -ExecCmds="Automation RunTests Jam.Core.Movement; Quit" -unattended -nullrhi -nosplash -log
 #include "Misc/AutomationTest.h"
+#include "HAL/FileManager.h"
+#include "Misc/Paths.h"
 #include "JamCartridge.h"
 #include "JamSim.h"
 #include "JamBaseline.h"
@@ -19,7 +21,7 @@ namespace JamMovementTests
 	constexpr EAutomationTestFlags Flags = EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter;
 
 	// The neutral block (MOVEMENT.md section 4): with these six values the game is the one main 8f6b157 shipped.
-	const TCHAR* NeutralSkater = TEXT("\"skater\": {\"reverse_brake_decel\": 0, \"burst\": {\"frames\": 0, \"accel_mult\": 1}, \"sprint\": {\"carry_bonus\": 0}, \"spin\": {\"exposed_frames\": 0},");   // lane A128: the whole spin shields
+	const TCHAR* NeutralSkater = TEXT("\"skater\": {\"reverse_brake_decel\": 0, \"burst\": {\"frames\": 0, \"accel_mult\": 1}, \"sprint\": {\"carry_bonus\": 0}, \"spin\": {\"exposed_frames\": 0}, \"free_speed_mult\": 1,");   // lane A128: the whole spin shields; lane A185: no free-skater speed
 	const TCHAR* NeutralStick = TEXT("\"stick\": {\"carry_reach_mult\": 1, \"body_shield\": false, \"passive_take\": true, \"take_grace_frames\": 0, \"lift_cone_deg\": 180, \"sweep\": {\"sprint_shield_mult\": 1}}, \"skater\": {");
 
 	UJamCartridge* LoadPreset(FAutomationTestBase& T, const FString& Name)
@@ -59,6 +61,7 @@ namespace JamMovementTests
 		G.Stick.bSweepShieldOneSided = true;   // R-0044 as amended landed with this lane (both sides): main 8f6b157 shielded one side
 		G.Stick.TakeGraceFrames = 0; G.Skater.bBurstOwnStop = false;   // lane A121 (track F2, evolution 2): no take grace, the burst for any slow skater
 		G.Skater.BurstRestFrames = 0; G.Skater.SpinExposedTail = 0;   // lane A128 (track F2, evolution 3): no standing start, the whole spin shields
+		G.Skater.FreeSpeedMult = 1.0;   // lane A185 (track F2, evolution 9): no free-skater speed
 	}
 
 	// A sim in Playing with everyone parked in the far corner.
@@ -263,7 +266,7 @@ bool FJamMovementReverseBrake::RunTest(const FString& Parameters)
 	TestEqual(TEXT("the neutral block never reverse-brakes"), Free[0].ReverseBrakes + Free[0].BrakeFlagFrames, 0);
 	// 8 m/s (the schema's base speed): the vision's "about half a second".
 	{
-		FJamGameConfig G8 = G; G8.Skater.Speed = 8;
+		FJamGameConfig G8 = G; G8.Skater.Speed = 8; G8.Skater.FreeSpeedMult = 1.0;   // lane A185: a free skater at exactly 8 m/s (the vision's number), not 8 x free_speed_mult
 		const FReverse R8 = Reverse(G8, false);
 		AddInfo(FString::Printf(TEXT("TIMING skater.speed 8: from %.2f m/s still after %d frames (%.2f s), 6 m/s the other way after %d frames"), R8.V0, R8.StillFrames, R8.StillFrames / 60.0, R8.To6Frames));
 		TestTrue(*FString::Printf(TEXT("8 m/s to still in about a third of a second (%d frames, want 17..22; 24 at the 20 m/s^2 before lane A121)"), R8.StillFrames), R8.StillFrames >= 17 && R8.StillFrames <= 22);
@@ -351,6 +354,7 @@ bool FJamMovementBurst::RunTest(const FString& Parameters)
 		int32 ToTop[2] = { -1, -1 }; double Top[2] = { 0, 0 };
 		int32 k = 0;
 		FJamGameConfig AnySlow = G; AnySlow.Skater.bBurstOwnStop = false;   // lane A121: the burst from rest (own_stop false)
+		AnySlow.Skater.FreeSpeedMult = Neutral.Skater.FreeSpeedMult;   // lane A185: the same free-skater speed on both arms (the neutral block's), so only the burst differs
 		for (const FJamGameConfig* Cfg : { static_cast<const FJamGameConfig*>(&AnySlow), static_cast<const FJamGameConfig*>(&Neutral) })
 		{
 			UJamSim* Sim = MakeScene(*Cfg, 1);
@@ -894,6 +898,111 @@ bool FJamMovementBackUnderFollowCamera::RunTest(const FString& Parameters)
 	TestTrue(*FString::Printf(TEXT("held frame: W then S is still inside 40 frames (%d)"), Held.Still), Held.Still > 0 && Held.Still <= 40);
 	TestTrue(*FString::Printf(TEXT("held frame: then it skates back the way it came (%.2f m/s, %.2f m back)"), Held.BackSpeed, Held.BackM), Held.BackSpeed > 6.0 && Held.BackM > 3.0);
 	TestTrue(*FString::Printf(TEXT("the held frame goes back farther than the live camera frame (%.2f m against %.2f m)"), Held.BackM, Live.BackM), Held.BackM > Live.BackM);
+	return true;
+}
+
+// Lane A185 (track F2 evolution 9, R-0064 point 2; docs/experiments/MOVEMENT-10.md): skaters without the puck are 15 % faster. FreeSpeed: from rest along +x for
+// 150 frames, a free skater (the human and a bot), walking and sprinting, and the carrier, at free_speed_mult 1.15 (the default) and at 1 (the neutral value).
+// The free skater's top is 1.15 x, reached in the same time (the frame it passes 95 % of its own top within 2 frames); the carrier's run is the same to the
+// digit (the state hash of the whole scene), walking and sprinting.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamMovementFreeSpeed, "Jam.Core.Movement.FreeSpeed", JamMovementTests::Flags)
+bool FJamMovementFreeSpeed::RunTest(const FString& Parameters)
+{
+	using namespace JamMovementTests;
+	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
+	if (!C) return false;
+	TestEqual(TEXT("skater.free_speed_mult default 1.15"), C->Game.Skater.FreeSpeedMult, 1.15);
+	struct FRun { double Top = 0; int32 To95 = -1; uint64 Hash = 0; FVector2D Pos; bool bCarried = true; };
+	// Who: 0 the human free, 1 a bot free, 2 the human carrying.
+	auto Run = [&](double Mult, int32 Who, bool bSprint) -> FRun
+	{
+		FJamGameConfig G = C->Game;
+		G.Skater.FreeSpeedMult = Mult;
+		UJamSim* Sim = MakeScene(G, 1);
+		const int32 Me = Sim->GetHumanIndex();
+		const int32 S = Who == 1 ? FirstOpponent(Sim, Me) : Me;
+		Sim->SetSkater(S, FVector2D(-30, 0), FVector2D::ZeroVector, 0);
+		if (Who == 2) GivePuck(Sim, S, FVector2D(1, 0));
+		TArray<FJamInput> In;
+		In.SetNum(Sim->GetSkaters().Num());
+		TArray<double> V;
+		FRun R;
+		for (int32 F = 1; F <= 150; ++F)
+		{
+			In[S] = FJamInput(); In[S].Move = FVector2D(1, 0); In[S].bSprint = bSprint;
+			if (Who == 2) In[S].Stick = FVector2D(1, 0);
+			Sim->Step(In);
+			V.Add(Sim->GetSkaters()[S].Vel.Size());
+			if (Who == 2 && Sim->CarrierIndex() != S) R.bCarried = false;
+		}
+		for (double X : V) R.Top = FMath::Max(R.Top, X);
+		for (int32 i = 0; i < V.Num(); ++i) if (V[i] >= 0.95 * R.Top) { R.To95 = i + 1; break; }
+		R.Hash = Sim->StateHash();
+		R.Pos = Sim->GetSkaters()[S].Pos;
+		return R;
+	};
+	const double Base = C->Game.Skater.Speed;
+	for (int32 Sprint = 0; Sprint < 2; ++Sprint)
+	{
+		for (int32 Who = 0; Who < 2; ++Who)
+		{
+			const FRun A = Run(1.0, Who, Sprint != 0), B = Run(1.15, Who, Sprint != 0);
+			const TCHAR* Name = Who == 0 ? TEXT("the human") : TEXT("a bot");
+			const TCHAR* Gait = Sprint ? TEXT("sprinting") : TEXT("gliding");
+			AddInfo(FString::Printf(TEXT("%s free, %s: top %.3f m/s (x %.4f of base) at 1, %.3f (x %.4f) at 1.15; 95 %% of its top in %d and %d frames"), Name, Gait, A.Top, A.Top / Base, B.Top, B.Top / Base, A.To95, B.To95));
+			TestTrue(*FString::Printf(TEXT("%s free, %s: 15 %% more top speed (%.3f / %.3f = %.4f)"), Name, Gait, B.Top, A.Top, B.Top / A.Top), FMath::Abs(B.Top / A.Top - 1.15) < 0.005);
+			TestTrue(*FString::Printf(TEXT("%s free, %s: in the same time (%d and %d frames to 95 %% of its own top)"), Name, Gait, A.To95, B.To95), FMath::Abs(A.To95 - B.To95) <= 2);
+		}
+		const FRun A = Run(1.0, 2, Sprint != 0), B = Run(1.15, 2, Sprint != 0);
+		AddInfo(FString::Printf(TEXT("the carrier, %s: top %.4f m/s at 1, %.4f at 1.15 (x %.4f of base); hash %016llx / %016llx"), Sprint ? TEXT("sprinting") : TEXT("gliding"), A.Top, B.Top, B.Top / Base,
+			static_cast<unsigned long long>(A.Hash), static_cast<unsigned long long>(B.Hash)));
+		TestTrue(TEXT("the carrier kept the puck"), A.bCarried && B.bCarried);
+		TestTrue(*FString::Printf(TEXT("the carrier skates exactly as before (%s): top %.6f = %.6f, the scene's hash the same"), Sprint ? TEXT("sprinting") : TEXT("gliding"), A.Top, B.Top), A.Top == B.Top && A.Pos == B.Pos && A.Hash == B.Hash);
+		const double Want = Base * C->Game.Skater.CarrySpeedMult * (Sprint ? 1.0 + C->Game.Skater.SprintCarryBonus : 1.0);
+		TestTrue(*FString::Printf(TEXT("the carrier's top is base x carry_speed_mult%s (%.3f, want %.3f within 0.02)"), Sprint ? TEXT(" x (1 + carry_bonus)") : TEXT(""), B.Top, Want), FMath::Abs(B.Top - Want) < 0.02);
+	}
+	// The key reads back from a cartridge; out of range is refused.
+	{
+		TArray<FString> Errors;
+		UJamCartridge* V = UJamCartridge::LoadFromString(C->RawJson.Replace(TEXT("\"skater\": {"), TEXT("\"skater\": {\"free_speed_mult\": 1,")), Errors);
+		for (const FString& E : Errors) AddError(FString::Printf(TEXT("free_speed_mult 1 variant: %s"), *E));
+		if (V) TestEqual(TEXT("free_speed_mult 1 read"), V->Game.Skater.FreeSpeedMult, 1.0);
+		Errors.Reset();
+		UJamCartridge* Bad = UJamCartridge::LoadFromString(C->RawJson.Replace(TEXT("\"skater\": {"), TEXT("\"skater\": {\"free_speed_mult\": 0.9,")), Errors);
+		TestTrue(TEXT("free_speed_mult 0.9 (under 1) is refused"), Bad == nullptr || Errors.Num() > 0);
+	}
+	return true;
+}
+
+// Lane A185: FreeSpeedShipped. Every shipped cartridge has the rule: the six hockey.* cuts beside the cartridge folder (the hockey.test.* figure and visual
+// rigs are not shipped), the twelve modes (modes/, not modes/parked/) and the ladder's takes and fallbacks (ladder/): each file found by listing the folders,
+// so a cut added later is read too, and each loads to free_speed_mult 1.15 (none overrides it).
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamMovementFreeSpeedShipped, "Jam.Core.Movement.FreeSpeedShipped", JamMovementTests::Flags)
+bool FJamMovementFreeSpeedShipped::RunTest(const FString& Parameters)
+{
+	const FString Root = UJamCartridge::GetCartridgeDir();
+	struct FFolder { const TCHAR* Sub; int32 AtLeast; int32 Found = 0; };
+	FFolder Folders[] = { { TEXT(""), 6 }, { TEXT("modes"), 12 }, { TEXT("ladder"), 12 } };
+	int32 Read = 0;
+	for (FFolder& Fo : Folders)
+	{
+		TArray<FString> Names;
+		const FString Dir = FString(Fo.Sub).IsEmpty() ? Root : FPaths::Combine(Root, Fo.Sub);
+		IFileManager::Get().FindFiles(Names, *FPaths::Combine(Dir, TEXT("*.cartridge.json")), true, false);
+		Names.Sort();
+		for (const FString& N : Names)
+		{
+			if (N.StartsWith(TEXT("hockey.test."))) continue;
+			++Fo.Found;
+			TArray<FString> Errors;
+			UJamCartridge* C = UJamCartridge::LoadFromFile(FPaths::Combine(Dir, N), Errors);
+			if (!C) { AddError(FString::Printf(TEXT("%s/%s does not load: %s"), Fo.Sub, *N, Errors.Num() ? *Errors[0] : TEXT("no message"))); continue; }
+			++Read;
+			TestEqual(*FString::Printf(TEXT("%s/%s: free_speed_mult"), Fo.Sub, *N), C->Game.Skater.FreeSpeedMult, 1.15);
+		}
+		TestTrue(*FString::Printf(TEXT("'%s': %d shipped cartridges found, at least %d"), Fo.Sub, Fo.Found, Fo.AtLeast), Fo.Found >= Fo.AtLeast);
+	}
+	AddInfo(FString::Printf(TEXT("%d shipped cartridges read: cuts %d, modes %d, ladder %d"), Read, Folders[0].Found, Folders[1].Found, Folders[2].Found));
 	return true;
 }
 

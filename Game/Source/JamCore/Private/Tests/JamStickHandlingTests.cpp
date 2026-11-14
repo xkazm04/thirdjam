@@ -659,7 +659,9 @@ bool FJamCarrierSpeed::RunTest(const FString& Parameters)
 	Run(G, true, Vcs, Vfs, Scs, Sfs, Cis);
 	AddInfo(FString::Printf(TEXT("no sprint: carrier %.3f m/s, free %.3f (ratio %.3f); sprint held: carrier %.3f (stamina %d), free %.3f (stamina %d); full bar %d"), Vc, Vf, Vf > 0 ? Vc / Vf : 0.0, Vcs, Scs, Vfs, Sfs, Sc));
 	TestTrue(TEXT("the carrier kept the puck through the run"), Ci >= 0 && Cis >= 0);
-	TestTrue(*FString::Printf(TEXT("the carrier runs at carry_speed_mult of the free skater (%.3f of %.3f = %.3f, want 0.92 within 0.01)"), Vc, Vf, Vc / Vf), FMath::Abs(Vc / Vf - G.Skater.CarrySpeedMult) < 0.01);
+	// Lane A185 (R-0064 point 2): the free skater has free_speed_mult on top, the carrier not: 0.92 / 1.15 = 0.8 of the free skater's speed.
+	TestTrue(*FString::Printf(TEXT("the carrier runs at carry_speed_mult / free_speed_mult of the free skater (%.3f of %.3f = %.3f, want %.3f within 0.01)"), Vc, Vf, Vc / Vf, G.Skater.CarrySpeedMult / G.Skater.FreeSpeedMult),
+		FMath::Abs(Vc / Vf - G.Skater.CarrySpeedMult / G.Skater.FreeSpeedMult) < 0.01);
 	// Lane A93 (R-0045 law 4): the carrier's sprint is live, smaller than a free skater's, and costs the same bar.
 	TestTrue(*FString::Printf(TEXT("sprint held while carrying adds carry_bonus (%.3f = %.3f x %.2f within 0.02)"), Vcs, Vc, 1.0 + G.Skater.SprintCarryBonus), FMath::Abs(Vcs - Vc * (1.0 + G.Skater.SprintCarryBonus)) < 0.02);
 	TestTrue(*FString::Printf(TEXT("the sprinting carrier is slower than the sprinting free skater (%.3f < %.3f)"), Vcs, Vfs), Vcs < Vfs - 0.5);
@@ -678,6 +680,7 @@ bool FJamCarrierSpeed::RunTest(const FString& Parameters)
 	{
 		FJamGameConfig G1 = G;
 		G1.Skater.CarrySpeedMult = 1.0;
+		G1.Skater.FreeSpeedMult = 1.0;   // lane A185: and no free-skater speed, or the free skater is still the faster
 		double Vc1 = 0, Vf1 = 0; int32 A = 0, B = 0, I = -1;
 		Run(G1, false, Vc1, Vf1, A, B, I);
 		TestTrue(*FString::Printf(TEXT("carry_speed_mult 1: the carrier skates as freely (%.3f vs %.3f)"), Vc1, Vf1), FMath::Abs(Vc1 - Vf1) < 0.02);

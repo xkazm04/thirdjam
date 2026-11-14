@@ -65,6 +65,9 @@ struct JAMCORE_API FJamSkaterConfig
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 PassLeadFrames = 20;
 	// game.skater.carry_speed_mult (lane A82, R-0041 point 6): the carrier's top speed and acceleration as a fraction of a free skater's; the carrier cannot sprint. 1 = off.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double CarrySpeedMult = 0.92;
+	// game.skater.free_speed_mult (lane A185, track F2 evolution 9, R-0064 point 2): a skater without the puck has this much more top speed and thrust, in a
+	// glide and in a sprint, bots and the human alike; the carrier is untouched (so it is slower against everyone by that much). 1 = the neutral value.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double FreeSpeedMult = 1.15;
 	// game.skater.breakaway (R-0029 point 4, lane A39): a carrier past centre ice with no opponent between it and the net gets this fraction more
 	// top speed and acceleration for BreakawayFrames, once per possession (event breakaway). speed_bonus 0 = off.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double BreakawaySpeedBonus = 0.2;

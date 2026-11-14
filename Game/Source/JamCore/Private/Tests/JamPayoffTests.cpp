@@ -336,8 +336,10 @@ bool FJamPayoffBreakaway::RunTest(const FString& Parameters)
 	TestTrue(TEXT("both runs reached the slot"), Arrive[0] > 0 && Arrive[1] > 0);
 	if (Arrive[0] > 0 && Arrive[1] > 0)
 	{
-		TestTrue(*FString::Printf(TEXT("the burst reaches the slot earlier (%d vs %d frames, need 8 fewer)"), Arrive[0], Arrive[1]), Arrive[0] <= Arrive[1] - 8);
-		TestTrue(*FString::Printf(TEXT("... and farther ahead of the chaser (%.2f vs %.2f m, need 1.5 more)"), Gap[0], Gap[1]), Gap[0] >= Gap[1] + 1.5);
+		// Lane A185 (R-0064 point 2): the chaser is a free skater, 15 % faster than before, and closes more of what the burst wins (the burst's 0.92 x 1.2 =
+		// 1.104 of the base is now under a free skater's 1.15): 8 frames and 1.5 m before the lane, 4 frames and 0.74 m after it.
+		TestTrue(*FString::Printf(TEXT("the burst reaches the slot earlier (%d vs %d frames, need 3 fewer)"), Arrive[0], Arrive[1]), Arrive[0] <= Arrive[1] - 3);
+		TestTrue(*FString::Printf(TEXT("... and farther ahead of the chaser (%.2f vs %.2f m, need 0.5 more)"), Gap[0], Gap[1]), Gap[0] >= Gap[1] + 0.5);
 	}
 	return true;
 }

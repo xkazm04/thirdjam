@@ -47,6 +47,7 @@ of them out explicitly, but a Designer or hand-written cartridge may leave them 
 | `skater.breakaway.speed_bonus` | 0.2 | lane A39 (R-0029 point 4): a carrier past centre ice with no opponent between it and the net gets this fraction more top speed and acceleration for `frames`, once per possession (event `breakaway`); 0 = off |
 | `skater.breakaway.frames` | 60 | lane A39 |
 | `skater.carry_speed_mult` | 0.92 | lane A82 (R-0041 point 6): the carrier's top speed and acceleration as a fraction of a free skater's, bots and the human alike; the carrier cannot sprint and its bar does not drain; 1 = no carry penalty |
+| `skater.free_speed_mult` | 1.15 | lane A185 (track F2 evolution 9, R-0064 point 2): a skater without the puck, bots and the human alike, has this much more top speed and acceleration (the higher top in the same time), in a glide and in a sprint; the carrier skates as without it (0.92 of the base, 0.994 sprinting), so it is that much slower against everyone; 1 = the neutral value (the game before the lane) |
 | `skater.sprint.bonus` | 0.15 | lane A49: Shift / LT held adds this fraction to top speed and acceleration while the skater moves and the stamina lasts; bots only with `ai.sprint` (lane A72); 0 = off |
 | `skater.sprint.drain_frames` | 180 | lane A49: frames of sprint from full to empty (3 s) |
 | `skater.sprint.refill_frames` | 360 | lane A49: frames at rest from empty to full (6 s) |

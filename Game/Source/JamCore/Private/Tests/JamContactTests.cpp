@@ -1782,7 +1782,10 @@ bool FJamContactFouls::RunTest(const FString& Parameters)
 		TestTrue(TEXT("the victim carries the puck"), HandPuck(S, S.V));
 		Carry(S, S.V, FVector2D::ZeroVector, FVector2D(8.0, 0.0), 0.0);
 		S.Sim->SetSkater(S.A, FVector2D(-0.78, 0.0), FVector2D(8.0, 0.0), 0.0);
-		const FContactHit H = Run(S, 12, [&](TArray<FJamInput>& In, int32 F) { In[S.A].bCheck = F == 0; In[S.A].Move = FVector2D(0.7, 0.0); In[S.V].Move = FVector2D(0.7, 0.0); });
+		// Lane A185 (R-0064 point 2): the pusher is a free skater with skater.free_speed_mult on its top speed and thrust; its input over that factor is
+		// the same push as before the lane (top and thrust both scale with the input's size), so "the same speed" stays the scene it was.
+		const double FreeIn = 0.7 / FMath::Max(1.0, S.Sim->GetConfig().Skater.FreeSpeedMult);
+		const FContactHit H = Run(S, 12, [&](TArray<FJamInput>& In, int32 F) { In[S.A].bCheck = F == 0; In[S.A].Move = FVector2D(FreeIn, 0.0); In[S.V].Move = FVector2D(0.7, 0.0); });
 		TestTrue(TEXT("a bump from behind at the same speed: no check, no foul"), H.Outcome == UJamSim::ContactBump && !H.bCheck && H.Foul.IsNone());
 	}
 	return true;
@@ -1807,6 +1810,7 @@ bool FJamContactNeutral::RunTest(const FString& Parameters)
 		for (const FString& E : Errors) AddError(FString::Printf(TEXT("neutral blocks in %s: %s"), M.Cart, *E));
 		if (!C) continue;
 		C->Game.Stick.bSweepShieldOneSided = true;
+		C->Game.Skater.FreeSpeedMult = 1.0;   // lane A185 (track F2): no free-skater speed
 		C->Game.Stick.bBodyShield = false; C->Game.Stick.bPassiveTake = true; C->Game.Stick.bTeammateTouchTakes = true;   // lane A102: the game before its two stick rules
 		C->Game.Stick.TakeGraceFrames = 0;   // lane A121: and before the take grace (the block's burst.frames 0 and reverse_brake_decel 0 cover its other two)
 		C->Game.Skater.SpinExposedTail = 0;   // lane A128: and before the spin's price (burst.frames 0 covers its standing start)

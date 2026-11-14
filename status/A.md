@@ -461,3 +461,5 @@
 - package 11:31: `Hokej_Hokej_H31.zip` from main 7f55b48f, acceptance run green (18 verbs through the cursor and the buttons).
 - link green 11:34: main f1c13613 (Package H31 = H30 plus device B's morning: the sheet names it, B-to-A-0043 is answered) pushed.
 - link green 12:30: main 943df8e7 (What waited for the operator's play, landed after it: the marks made to read (A178), the m) pushed.
+- link green 13:18: main 9472de42 (The operator's hands (A183, track K1): LMB shoots with the puck and cross-checks without, ) pushed.
+- package 13:25: `Hokej_Hokej_H32.zip` from main 9472de42, acceptance run green (18 verbs through the cursor and the buttons).

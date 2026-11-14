@@ -5,7 +5,7 @@
 //     time. What it says: "take this and you are hit as you touch it" (brake before it, let him have it and hit him, or cut across).
 //   The stop's distance: a LINE across the human's path (lane A171: it was a ring, and two rings in one colour asked for opposite acts) on the ice five
 //     stick lengths from the carrying human towards the opponent closing ahead of him; chalk and thin while
-//     that opponent is far, his colour, thicker and breathing from a quarter second before he is 9.5 m off until he is 7 m off (the stop passes), gone inside
+//     that opponent is far, his colour, thicker and breathing from a quarter second before he is 9 m off (lane A185; 9.5 before) until he is 7 m off (the stop passes), gone inside
 //     7 m (too late) and while he brakes. Their colour on the ice means act now, here as round the contested puck; yellow stays the take grace's.
 // Neither is drawn where its box would meet a downed figure: lane A158's rule and, since lane A171, lane A158's boxes (DownBoxesNow, made by
 // UpdateKeepClear at the top of the same refresh: every downed figure by its projected bones), the one source every mark and marker yields to.

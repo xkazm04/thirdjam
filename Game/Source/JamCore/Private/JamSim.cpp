@@ -1289,10 +1289,14 @@ void UJamSim::StepSkater(FJamSkaterState& S, const FJamInput& In)
 	else { S.BurstLeft = 0; S.bBurstEarned = false; S.RestFrames = 0; }
 	S.bBraking = S.bReverseBraking = false;
 	bool bThrust = false;   // lane A128: this frame the skater pushed (it could act and had a move input)
-	const double Speed = Eff(EJamStat::SkaterSpeed, S.Index) * BurstMul * SprintMul * CarryMul;
+	// Lane A185 (track F2 evolution 9, R-0064 point 2): a skater without the puck has skater.free_speed_mult more top speed and the same more thrust (it
+	// reaches its higher top in the same time), in a glide and in a sprint, bots and the human alike; the carrier skates exactly as before (its sprint cap
+	// above is still a fraction of the base 1 + sprint.bonus). 1 = the game before the lane.
+	const double FreeMul = bCarrying ? 1.0 : FMath::Max(0.0, C.FreeSpeedMult);
+	const double Speed = Eff(EJamStat::SkaterSpeed, S.Index) * BurstMul * SprintMul * CarryMul * FreeMul;
 	const double FirstStepMul = bCarrying && C.BurstCarryAccelMult > 0.0 ? C.BurstCarryAccelMult : C.BurstAccelMult;   // lane A121: the carrier's own (code only, 0 = everyone's)
 	const double RecoverMul = S.SpinRecoverLeft > 0 ? FMath::Clamp(C.SpinRecoveryAccelMult, 0.0, 1.0) : 1.0;   // lane A128: finding its feet after a spin (code only; 1 = normal)
-	const double Accel = Eff(EJamStat::SkaterAccel, S.Index) * BurstMul * SprintMul * CarryMul * (bFirstStep ? FMath::Max(1.0, FirstStepMul) : 1.0) * RecoverMul;
+	const double Accel = Eff(EJamStat::SkaterAccel, S.Index) * BurstMul * SprintMul * CarryMul * FreeMul * (bFirstStep ? FMath::Max(1.0, FirstStepMul) : 1.0) * RecoverMul;
 	const double TurnRate = Eff(EJamStat::SkaterTurnRate, S.Index);
 	const double Grip = Eff(EJamStat::SkaterGrip, S.Index);
 	// Glide friction scales with the ice: glide_drag was measured at ice_friction 0.015 (DEFAULTS.md). R-0019: the zone under the skater scales speed and glide.

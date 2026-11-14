@@ -50,6 +50,7 @@ namespace JamBaseline
 		G.Contact.LungeFrames = 0; G.Contact.LungeStepMps = 0.0;   // lane A157: game.contact.lunge_frames, game.contact.lunge_step_mps, the lunge as a motion (ship at 0)
 		G.Contact.bCheckCooldownRestart = false; G.Contact.BoardSlamFrames = 0;   // lane A165 (track F1): game.contact.check_cooldown_restart, game.contact.board_slam_frames (ship at false and 0)
 		G.Contact.TakeShieldFrames = 0; G.Contact.bTakeShieldHumanSide = false; G.Contact.TakeShieldStaggerMax = 0;   // lane A177 (track F1): game.contact.take_shield_frames, take_shield_human_side, take_shield_stagger_max (ship at 0, false, 0)
+		G.Skater.FreeSpeedMult = 1.0;             // lane A185 (track F2 evolution 9, R-0064 point 2): game.skater.free_speed_mult (default 1.15)
 		// THE NEXT LANE: your rule's neutral value here, one line.
 	}
 

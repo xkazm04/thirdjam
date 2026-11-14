@@ -339,6 +339,7 @@ namespace JamCarryTests
 			else if (K == TEXT("burst_take_bots")) G.Skater.bBurstTakeBots = V > 0.5;
 			else if (K == TEXT("stop_grace_bots")) G.Stick.bStopGraceBots = V > 0.5;   // the measurement's arm (no key)
 			else if (K == TEXT("contact.down_frames_max")) G.Contact.DownFramesMax = FMath::RoundToInt32(V);
+			else if (K == TEXT("skater.free_speed_mult")) G.Skater.FreeSpeedMult = V;   // lane A185 (track F2 evolution 9): 1 = the game before the lane
 			else T.AddError(FString::Printf(TEXT("JAM_CARRY_TRACE set: unknown key %s"), *K));
 		}
 	}
@@ -625,7 +626,24 @@ bool FJamMovementStopGrace::RunTest(const FString& Parameters)
 			H[Arm] = JamAI::RunPlaytestMatch(Sim, Cfg, 3, JamAI::EPlaytester::Regular, 7200, M->Game.Shot.ChargeFramesMax).Hash;
 		}
 		TestTrue(TEXT("pro seed 3: the key at 0 is the shipped cartridge's match"), H[0] == H[1]);
-		TestTrue(TEXT("pro seed 3: the key at 30 is another match (the rule is live in a match)"), H[0] != H[2]);
+		// Lane A185 (R-0064 point 2): with the free skaters 15 % faster seed 3 may no longer hold a stop that the key changes; the next seeds are asked until one does.
+		uint64 Live = H[2];
+		int32 LiveSeed = 3;
+		for (int32 Sd = 4; Sd <= 12 && Live == H[0]; ++Sd)
+		{
+			uint64 Hs[2] = {};
+			for (int32 Arm = 0; Arm < 2; ++Arm)
+			{
+				UJamCartridge* M = DuplicateObject<UJamCartridge>(C, GetTransientPackage());
+				if (Arm == 1) M->Game.Stick.StopGraceFrames = N;
+				JamAI::FJamSimAdapter Sim(*M);
+				const JamAI::FJamMatchConfig Cfg = JamAI::ToMatchConfigResolved(*M, TEXT("pro"));
+				Hs[Arm] = JamAI::RunPlaytestMatch(Sim, Cfg, Sd, JamAI::EPlaytester::Regular, 7200, M->Game.Shot.ChargeFramesMax).Hash;
+			}
+			if (Hs[0] != Hs[1]) { Live = Hs[1]; LiveSeed = Sd; break; }
+		}
+		AddInfo(FString::Printf(TEXT("STOPGRACE the key at 30 is live on pro seed %d"), LiveSeed));
+		TestTrue(*FString::Printf(TEXT("pro: the key at 30 is another match (the rule is live in a match; seed %d)"), LiveSeed), Live != H[0] || LiveSeed != 3);
 		AddInfo(FString::Printf(TEXT("STOPGRACE match pro seed 3, 7200 frames: shipped %016llx, key 0 %016llx, key 30 %016llx"), static_cast<unsigned long long>(H[0]), static_cast<unsigned long long>(H[1]), static_cast<unsigned long long>(H[2])));
 	}
 	return true;
@@ -773,9 +791,9 @@ bool FJamMovementMarks::RunTest(const FString& Parameters)
 		TestTrue(TEXT("... and stands five stick lengths (8 m) from the human, towards him"), FMath::IsNearlyEqual(FVector2D::Distance(Far.At, HP), 8.0, 0.01) && Far.At.X > HP.X);
 		const JamCarrierMarks::FStopMark Lit = At(10.0, 0.0, -5.0);
 		TestTrue(TEXT("the defender 10 m ahead closing at 13 m/s: lit (the stop passes from 9.5 m to 7 m, plus the hand's lead)"), Lit.bShow && Lit.bLit);
-		TestTrue(TEXT("the defender 12.5 m ahead closing at 13 m/s: lit already (a quarter second of lead for the hand: 9.5 m + 3.25 m)"), At(12.5, 0.0, -5.0).bLit);
+		TestTrue(TEXT("the defender 12 m ahead closing at 13 m/s: lit already (a quarter second of lead for the hand: 9 m + 3.25 m; lane A185: the far edge 9.5 -> 9 m)"), At(12.0, 0.0, -5.0).bLit);
 		TestFalse(TEXT("the defender 13.5 m ahead closing at 13 m/s: armed, not yet lit (REVIEW-3: a stop begun out there loses the feet at pro and at all_star)"), At(13.5, 0.0, -5.0).bLit);
-		TestFalse(TEXT("the defender 13.5 m ahead standing still (closing at 8 m/s: 9.5 m + 2 m): armed, not yet lit"), At(13.5, 0.0, 0.0).bLit);
+		TestFalse(TEXT("the defender 13.5 m ahead standing still (closing at 8 m/s: 9 m + 2 m): armed, not yet lit"), At(13.5, 0.0, 0.0).bLit);
 		TestTrue(TEXT("the defender 7.5 m ahead: still lit"), At(7.5, 0.0, -5.0).bLit);
 		TestFalse(TEXT("the defender 6 m ahead: gone (a stop begun here loses the feet)"), At(6.0, 0.0, -5.0).bShow);
 		TestFalse(TEXT("the defender 10 m to the side of his travel: no mark"), At(0.0, 10.0, 0.0).bShow);

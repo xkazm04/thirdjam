@@ -471,7 +471,8 @@ void AHokejGameMode::AcceptDrillObserve()
 		{
 			// Lane A93 (R-0045 law 4, replacing R-0041 point 6): the carrier may sprint; its sprint raises its speed over the carrier's walk (the free walk of
 			// k=1 x skater.carry_speed_mult) and stays under a free skater's sprint (k=2).
-			const double CarryWalk = G.Speed1 * Cfg.Skater.CarrySpeedMult;
+			// Lane A185 (R-0064 point 2): k=1's free walk has skater.free_speed_mult on it; the carrier's has not.
+			const double CarryWalk = G.Speed1 * Cfg.Skater.CarrySpeedMult / FMath::Max(1.0, Cfg.Skater.FreeSpeedMult);
 			Verdict(TEXT("sprint_carry"), G.CarryFrames >= 60 && G.SprintCarryFrames > 0 && G.MaxSpeed > CarryWalk + 0.2 && G.MaxSpeed < G.Speed2 - 0.2, Facts + FString::Printf(TEXT(" carry_walk=%.2f sprint_speed=%.2f"), CarryWalk, G.Speed2));
 		}
 		Next();

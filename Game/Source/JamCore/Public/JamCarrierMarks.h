@@ -110,7 +110,10 @@ namespace JamCarrierMarks
 	{
 		double AheadM = 8.0;           // where the mark stands: five stick lengths from the human, towards the opponent
 		double LitNearM = 7.0;         // lit while the opponent is this far off or more ...
-		double LitFarM = 9.5;          // ... and this far off or less, plus the hand's lead. Director, 14 Nov, from REVIEW-3's sweep of the stop by distance (200 seeds a row):
+		double LitFarM = 9.0;          // ... and this far off or less, plus the hand's lead. Lane A185 (track F2 evolution 9, MOVEMENT-10.md): 9.5 -> 9 m. With the free skaters
+		                               // 15 % faster (skater.free_speed_mult) the defender closes sooner: the stop begun at 9.5 m passes a pro 78 % (97 before), at 9 m 94.5 %,
+		                               // at 8.5 m 99.5 %, at 8 m 94 %, at 7 m 38 % (Bar.Curve.Law3, 200 seeds); all_star 96 / 99.5 / 100 / 99.5 % at 9.5 / 9 / 8.5 / 8 m.
+		                               // Before that: Director, 14 Nov, from REVIEW-3's sweep of the stop by distance (200 seeds a row):
 		                               // it was 11 m, and a stop begun at 11 / 12 / 13.5 m passes 83.5 / 56.5 / 52 % at pro and 53 / 28.5 / 19.5 % at all_star: the mark lit where
 		                               // obeying it lost the feet. Begun at 9.5 m it passes 100 / 97 / 92 % (rookie / pro / all_star), at 8 m 100 % at every level. The mark's
 		                               // recall of the knockdowns it is for: 76.7 -> 73.8 % at pro, lit frames down a fifth.

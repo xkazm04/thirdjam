@@ -49,6 +49,7 @@
     "skater.pass_lead_frames": "0..60",
     "skater.breakaway.speed_bonus": "0..1",
     "skater.carry_speed_mult": "0.6..1",
+    "skater.free_speed_mult": "1..1.5",
     "skater.breakaway.frames": "0..300",
     "skater.sprint.bonus": "0..1",
     "skater.sprint.drain_frames": "30..1800",
