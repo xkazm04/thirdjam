@@ -1,0 +1,1 @@
+Lane FILM2: export34's middle (6 m/s closing) and heavy (9 m/s) body check from test assets, both roots moving as the sim moves them after a hit: attacker keeps 0.4 v + 0.15, victim leaves at 0.6 v - 0.15.
