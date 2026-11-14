@@ -522,3 +522,53 @@ GPU editor pid 34268, port 8004, tree `b-fig`. It left through `ExitEditor` at 1
 
 ## Ledger
 No new rows: no asset changed in this GPU session, and the fourth hand-back's rows stand.
+
+---
+
+# Sixth hand-back (GPU, 16:52 to 17:03): export39's eight takes
+
+GPU editor pid 32188, port 8004. It left through `ExitEditor` at 17:03 and its process is confirmed gone. `GPU-FREE.txt` = "free from E2 at 17:03". No dirty package at exit. The temporary copies of the previous takes (`AS_…_X38_*`) were deleted and none is left on disk.
+
+## Import (export39 `READY` 16:52), by name from the loopcut file, only where `DIFF.md` lists the take
+- **cel (`p2_cel`), 7 re-keyed:** `Crossover_Left` 40, `Crossover_Right` 40, `Lean_Right` 30, `Trip` 27, `GetUp_Side_Left` 37, `GetUp_Late_Side_Left` 21, `GetUp_LateLong_Side_Right` 37 keys.
+- **clay (`p3_clay`), 7 re-keyed:** `Crossover_Left`, `Lean_Right`, `Trip`, `GetUp_Side_Left`, `GetUp_Late_Side_Left`, `GetUp_LateLong_Side_Right`, `Check_Hit_Right` 21.
+- Not touched: cel `Check_Hit_Right` and clay `Crossover_Right`, which are key-identical in export39.
+
+## Verdict per take: **merge all eight** (none reverted)
+| Take | Verdict | What I saw (side-on from the stick side, at hip height, against the tree's previous take played beside it) |
+|---|---|---|
+| `Crossover_Left` | merge | clay and night: the shaft passes **in front of the shins**; before, it ran into the front shin and knee on frames 6 to 24 |
+| `Crossover_Right` (cel) | merge | night: the shaft in front of the knees; before, through the knee line |
+| `Lean_Right` | merge | clay and night: the shaft farther forward, in front of the front shin, through the held carve |
+| `Trip`, `GetUp_Side_Left`, `GetUp_Late_Side_Left`, `GetUp_LateLong_Side_Right`, `Check_Hit_Right` (clay) | merge | not filmed one by one. The lab's gate shows 0 leg frames, the first and last frames are untouched (joins 0.0000 cm), and the match below plays get-ups on the release |
+
+- **Seeded clay match on the GPU to 100 s:**
+  - 0 Blueprint errors, 0 `Error:` lines
+  - all 6 get-ups end on the release (`end_f` = `down_f`)
+  - sim lines identical to the earlier GPU matches (23 = 23)
+
+## Stills (`devlog\shots\20261114-170000-B-e2-*.png` with captions; each looked at)
+`crossover-left-clay`, `crossover-left-night`, `lean-right-clay`, `lean-right-night`, `crossover-right-night`.
+
+## Not verified
+- The five rarer takes (the trip, the side get-ups, the clay hit reaction) were not filmed one by one.
+- The turns from the game camera.
+
+## Ledger rows, sixth hand-back (14 takes; they replace these files' earlier rows)
+
+| path | kind | size_mb | origin | tool | licence | url | date | device | shipped | note |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_Crossover_Left.uasset | anim | 0.15 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | skf/export39/p2_cel (gate passed, 0 leg frames) loopcut file, take Crossover_Left by name, re-keyed in place on SKEL_SkaterTB1v2: the stick moved out of the legs (DIFF.md), first and last frames as before; seen on the GPU for the turns (lane E2, sixth hand-back) (159568 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_Lean_Right.uasset | anim | 0.14 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | skf/export39/p2_cel (gate passed, 0 leg frames) loopcut file, take Lean_Right by name, re-keyed in place on SKEL_SkaterTB1v2: the stick moved out of the legs (DIFF.md), first and last frames as before; seen on the GPU for the turns (lane E2, sixth hand-back) (145032 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_Trip.uasset | anim | 0.16 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | skf/export39/p2_cel (gate passed, 0 leg frames) loopcut file, take Trip by name, re-keyed in place on SKEL_SkaterTB1v2: the stick moved out of the legs (DIFF.md), first and last frames as before; seen on the GPU for the turns (lane E2, sixth hand-back) (163769 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_GetUp_Side_Left.uasset | anim | 0.16 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | skf/export39/p2_cel (gate passed, 0 leg frames) loopcut file, take GetUp_Side_Left by name, re-keyed in place on SKEL_SkaterTB1v2: the stick moved out of the legs (DIFF.md), first and last frames as before; seen on the GPU for the turns (lane E2, sixth hand-back) (171734 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_GetUp_Late_Side_Left.uasset | anim | 0.14 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | skf/export39/p2_cel (gate passed, 0 leg frames) loopcut file, take GetUp_Late_Side_Left by name, re-keyed in place on SKEL_SkaterTB1v2: the stick moved out of the legs (DIFF.md), first and last frames as before; seen on the GPU for the turns (lane E2, sixth hand-back) (146748 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_GetUp_LateLong_Side_Right.uasset | anim | 0.16 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | skf/export39/p2_cel (gate passed, 0 leg frames) loopcut file, take GetUp_LateLong_Side_Right by name, re-keyed in place on SKEL_SkaterTB1v2: the stick moved out of the legs (DIFF.md), first and last frames as before; seen on the GPU for the turns (lane E2, sixth hand-back) (169080 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_Crossover_Right.uasset | anim | 0.15 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | skf/export39/p2_cel (gate passed, 0 leg frames) loopcut file, take Crossover_Right by name, re-keyed in place on SKEL_SkaterTB1v2: the stick moved out of the legs (DIFF.md), first and last frames as before; seen on the GPU for the turns (lane E2, sixth hand-back) (159316 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_Crossover_Left.uasset | anim | 0.16 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | skf/export39/p3_clay (gate passed, 0 leg frames) loopcut file, take Crossover_Left by name, re-keyed in place on SKEL_SkaterTB1_P3: the stick moved out of the legs (DIFF.md), first and last frames as before; seen on the GPU for the turns (lane E2, sixth hand-back) (168822 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_Lean_Right.uasset | anim | 0.15 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | skf/export39/p3_clay (gate passed, 0 leg frames) loopcut file, take Lean_Right by name, re-keyed in place on SKEL_SkaterTB1_P3: the stick moved out of the legs (DIFF.md), first and last frames as before; seen on the GPU for the turns (lane E2, sixth hand-back) (153315 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_Trip.uasset | anim | 0.17 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | skf/export39/p3_clay (gate passed, 0 leg frames) loopcut file, take Trip by name, re-keyed in place on SKEL_SkaterTB1_P3: the stick moved out of the legs (DIFF.md), first and last frames as before; seen on the GPU for the turns (lane E2, sixth hand-back) (174746 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_GetUp_Side_Left.uasset | anim | 0.18 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | skf/export39/p3_clay (gate passed, 0 leg frames) loopcut file, take GetUp_Side_Left by name, re-keyed in place on SKEL_SkaterTB1_P3: the stick moved out of the legs (DIFF.md), first and last frames as before; seen on the GPU for the turns (lane E2, sixth hand-back) (184560 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_GetUp_Late_Side_Left.uasset | anim | 0.14 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | skf/export39/p3_clay (gate passed, 0 leg frames) loopcut file, take GetUp_Late_Side_Left by name, re-keyed in place on SKEL_SkaterTB1_P3: the stick moved out of the legs (DIFF.md), first and last frames as before; seen on the GPU for the turns (lane E2, sixth hand-back) (148822 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_GetUp_LateLong_Side_Right.uasset | anim | 0.16 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | skf/export39/p3_clay (gate passed, 0 leg frames) loopcut file, take GetUp_LateLong_Side_Right by name, re-keyed in place on SKEL_SkaterTB1_P3: the stick moved out of the legs (DIFF.md), first and last frames as before; seen on the GPU for the turns (lane E2, sixth hand-back) (172716 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_Check_Hit_Right.uasset | anim | 0.15 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | skf/export39/p3_clay (gate passed, 0 leg frames) loopcut file, take Check_Hit_Right by name, re-keyed in place on SKEL_SkaterTB1_P3: the stick moved out of the legs (DIFF.md), first and last frames as before; seen on the GPU for the turns (lane E2, sixth hand-back) (152251 bytes) |
