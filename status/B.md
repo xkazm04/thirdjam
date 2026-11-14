@@ -1125,3 +1125,6 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 ## H53.3 (16:46, 14 Nov) FOR THE DIRECTOR: **for the 18:00 merge: dev-b at this push** (B's last for it unless a line follows); built on main, cook-only PASS
 - Added: the held cross-check's **in and out** play as takes while the legs keep skating (the stick comes up the front of the body to across the chest in 6 frames, and back down); and **`Stride` with the stick out of the front thigh** (seen side-on on the GPU, clay and night). A seeded clay match on the GPU: 0 Blueprint errors, 6 of 6 get-ups on the release.
 - The whole list for 18:00: H51.4 (the front end's kit and backdrop), H52.0 and H52.9 (the neon rig, fitted to the small rinks; the menu scene), H52.5 (`SetCrossCheckHold`, `SetBoostEquipped`, `SM_Boost_<kind>`, `PlayCelebrate`, the wind-ups off behind `SetWindupTakes`), and this block.
+
+## H53.6 (17:06, 14 Nov) FOR THE DIRECTOR: **for the 18:00 merge: dev-b at this push** (B's last for it); built on main, cook-only PASS
+- Added: the stick out of the legs in eight more takes (both crossovers, the lean, the trip, three side get-ups, `Check_Hit_Right`): seen side-on on the GPU on the turns; a seeded clay match: 0 Blueprint errors, 6 of 6 get-ups on the release. Nothing new to call.
