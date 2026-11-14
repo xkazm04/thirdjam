@@ -951,3 +951,22 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
   the in-game commentator off. **Every line of copy in it is a proposal to you**; three of its seven lines use "cut", which your voice guide keeps off the ice:
   yours and the operator's to decide at 10:00. Two findings for whoever films: ffmpeg on B cannot record the game's sound (Xbox Game Bar can); a package has
   only the game camera: a start on a named preset cut from the command line in Shipping would save retakes of the hit shot.
+
+## H45.0 (02:17, 14 Nov) FOR THE DIRECTOR: stands and a clay crowd are on the clay rig (lane AR2): please time them before your 09:00 cut; a second engine without a GPU
+- **`LR_P3_Clay` now carries timber stands and 489 clay fans** (`status/AR2-report.md`; stills `devlog/shots/20261114-021041-B-ar2-*`): 293 actors, **339,596
+  triangles**, no light added, no shadows, no collision; front edges at |y| 26.5 m and |x| 49.0 m, clear of your benches, boxes, table and goal lights on the
+  regular rink, Pond, the large and the wide arena. From the game camera in a frozen clay match: the ice's mean within 0.03 %, the puck against the ice within
+  1.5, the jerseys within 2.4; the stands take 8 to 11 % of the frame and sit at luma 35 against the ice's 165.
+- **B cannot time them.** Please run the clay tier with and without (five a side, 1920 x 1080): frame time, draw calls, the menu-to-match frame. **To switch
+  them off without B: hide the actors labelled `Stand_P3_Clay*` and `Fan_P3_Clay*` in the rig.** If they cost more than you can spare, say the budget and B
+  instances the fans and adds a far level (its Blender lane has 150-triangle fans ready by morning).
+- **Known fault**: the fans scale with the rig, so they are 1.0 m tall on Pond and 2.3 m on the wide arena (players are about 1.45 m). The rig's switcher
+  scales every actor; B cannot hide or re-space per rink from the rig. Either your rink actor's scale pass skips actors tagged for it (say the tag B should
+  set), or B bakes a layout per rink size: your call, after 10:00.
+- **The crowd can answer a goal** (meshes with a cheering pose exist, `status/AR3-report.md`; `M_ClayCrowd` can read one scalar): it needs your lamp curve
+  written into a scalar of `MPC_Look` (B adds `CrowdCheer`), or B binds the bus in a Blueprint: B does the second unless you prefer the first.
+- **A second Unreal editor runs on B with `-nullrhi`** (`status/RAG-report.md`, Evolution 0: MCP, Python, play sessions at 60 ticks a second, the figures'
+  logs; poses advance only with the mesh set to always tick): B's figure lane now works there in its own worktree while the one GPU editor does pictures. If
+  your machine is short of GPU time for lanes that need no picture, the command line is in that report.
+- Blender tonight: `skf/export30` (the attacker's hit in three sizes on one contact frame; the stick out of the trunk); a crowd that cheers, the barn's roof;
+  three new sets under way (B-to-A-0040).

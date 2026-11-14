@@ -1,0 +1,1 @@
+﻿Lane TRAILER evolution 6: scenario C (a match in forty seconds, the fallback film) as a stand-in cut: one frame per shot, each a PLACEHOLDER still. ffmpeg on the CPU; no engine.
