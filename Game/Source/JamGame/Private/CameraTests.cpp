@@ -1552,4 +1552,258 @@ bool FJamHudMarkerFollowsHead::RunTest(const FString&)
 	return true;
 }
 
+
+// ---- lane A186 (track U1, evolution 7): the camera at the boards moves only as the player does (R-0064 point 4). The instrument: a modelled skater works
+// the boards (A135's path generator, the same seeds) and a scripted boards run (along the side board, into the corner, stopped with his back to the glass);
+// every frame the picture of ice points fixed to him (16 points 2.5 and 5 m around him) is compared between the camera and the open-ice rig of the same
+// frame (FJamCameraFilter::LastRigPose): what the camera adds is the boards' correction, in pixels a frame at 1920 x 1080. The cursor is held still at the
+// pixel over a point 2.5 m ahead-right of him and the blade is read through the game's own AHokejGameMode::CursorAimFromRay: the blade's turn the camera
+// adds is what a correction costs his aim. Pure StepThirdPerson + FrameFraction, no world.
+namespace JamA186Test
+{
+	struct FStats
+	{
+		int32 Frames = 0, StillFrames = 0, OverK = 0, OverKStill = 0, Episodes = 0, Reversals = 0, OutFrame = 0, OutThird = 0, OutsideBoards = 0, GuardChest = 0, GuardBoards = 0, YawFrames = 0;
+		float WorstPx = 0.f, WorstStillPx = 0.f, WorstBladeFrame = 0.f, MaxX = 0.f, MaxY = 0.f, MaxYawStep = 0.f, MaxStepCm = 0.f;
+		TArray<float> EpisodeBlade;   // the largest blade turn the camera added inside each correction, degrees
+		TArray<FTransform> Poses;
+		float BladeQuantile(float Q) const { if (EpisodeBlade.Num() == 0) return 0.f; TArray<float> S = EpisodeBlade; S.Sort(); return S[FMath::Clamp((int32)(Q * (S.Num() - 1) + 0.5f), 0, S.Num() - 1)]; }
+	};
+	constexpr float Fov = 70.f, Aspect = 16.f / 9.f;
+	FVector2D Px(const FTransform& T, const FVector& WorldCm, bool& bOn)
+	{
+		const FVector2D F = UJamFollowCamera::FrameFraction(T, Fov, Aspect, WorldCm);
+		bOn = bOn && FMath::Abs(F.X) <= 1.f && FMath::Abs(F.Y) <= 1.f;
+		return FVector2D(F.X * 960.0, -F.Y * 540.0);
+	}
+	// The blade's bearing (degrees) for the cursor at a pixel, read as the game reads it (the ray onto the ice, CursorAimFromRay).
+	bool Blade(const FTransform& T, const FVector2D& Pix, const FVector2D& SkaterM, double& OutDeg)
+	{
+		const double TanH = FMath::Tan(FMath::DegreesToRadians(Fov * 0.5)), TanV = TanH / Aspect;
+		const FVector Dir = T.TransformVectorNoScale(FVector(1.0, Pix.X / 960.0 * TanH, -Pix.Y / 540.0 * TanV)).GetSafeNormal();
+		bool bAiming = true;
+		FVector2D Stick;
+		if (!AHokejGameMode::CursorAimFromRay(T.GetLocation(), Dir, SkaterM, bAiming, Stick) || Stick.SizeSquared() < 1e-8) return false;
+		OutDeg = FMath::RadiansToDegrees(FMath::Atan2(Stick.Y, Stick.X));
+		return true;
+	}
+	// One path through the camera: Pos/Yaw per frame (teleports flagged), the stats of the corrections.
+	FStats Measure(const FJamCameraSettings& C, float L, float W, float R, const TArray<FVector2D>& Pos, const TArray<float>& Yaw, const TArray<bool>& Teleport, bool bKeepPoses = false)
+	{
+		FStats Out;
+		FJamCameraFilter St;
+		FJamCameraRink Rink; Rink.LengthM = L; Rink.WidthM = W; Rink.CornerRadiusM = R;
+		FTransform PrevT, PrevR;
+		FVector2D PrevH;
+		bool bPrev = false;
+		int32 LastCorrFrame = -100, LastSigFrame = -100;
+		FVector2D LastSig = FVector2D::ZeroVector;
+		float EpisodeCum = 0.f, EpisodeMax = 0.f;
+		auto CloseEpisode = [&]() { Out.EpisodeBlade.Add(EpisodeMax); EpisodeCum = 0.f; EpisodeMax = 0.f; };
+		for (int32 i = 0; i < Pos.Num(); ++i)
+		{
+			const FTransform T = UJamFollowCamera::StepThirdPerson(C, St, JamA40Test::Frame(L, W, R, Pos[i], Yaw[i]));
+			const FTransform Rig = St.LastRigPose;
+			if (bKeepPoses) Out.Poses.Add(T);
+			++Out.Frames;
+			const FVector2D Fr = UJamFollowCamera::FrameFraction(T, Fov, Aspect, FVector(Pos[i].X * 100.0, Pos[i].Y * 100.0, C.ChestM * 100.0));
+			Out.MaxX = FMath::Max(Out.MaxX, FMath::Abs((float)Fr.X)); Out.MaxY = FMath::Max(Out.MaxY, FMath::Abs((float)Fr.Y));
+			if (FMath::Abs(Fr.X) > 1.f || FMath::Abs(Fr.Y) > 1.f) ++Out.OutFrame;
+			if (FMath::Abs(Fr.X) > 1.f / 3.f || FMath::Abs(Fr.Y) > 1.f / 3.f) ++Out.OutThird;
+			if (!UJamFollowCamera::IsInsideBoards(JamA40Test::Cam2D(T), Rink, C.BoardsMarginM - 1e-3f)) ++Out.OutsideBoards;
+			if (St.LastBoundGuard == 1) ++Out.GuardChest;
+			if (St.LastBoundGuard == 2) ++Out.GuardBoards;
+			if (bPrev && !Teleport[i])
+			{
+				const bool bStill = FVector2D::Distance(Pos[i], PrevH) < 0.5 / 60.0 && FMath::Abs(FMath::UnwindDegrees(Yaw[i] - Yaw[i - 1])) < 0.05f;   // he neither moves nor turns
+				if (bStill) ++Out.StillFrames;
+				Out.MaxStepCm = FMath::Max(Out.MaxStepCm, (float)FVector::Dist(T.GetLocation(), PrevT.GetLocation()));
+				const float YawStep = FMath::Abs(FMath::UnwindDegrees((float)(T.Rotator().Yaw - PrevT.Rotator().Yaw) - (float)(Rig.Rotator().Yaw - PrevR.Rotator().Yaw)));
+				Out.MaxYawStep = FMath::Max(Out.MaxYawStep, YawStep);
+				if (YawStep > 0.01f) ++Out.YawFrames;
+				// The picture of points fixed to him: the camera's motion over the rig's.
+				float Worst = 0.f;
+				for (int32 k = 0; k < 16; ++k)
+				{
+					const double A = k * (PI / 4.0), Rad = k < 8 ? 2.5 : 5.0;
+					const FVector2D O(FMath::Cos(A) * Rad, FMath::Sin(A) * Rad);
+					bool bOn = true;
+					const FVector2D DA = Px(T, FVector((Pos[i] + O) * 100.0, 0.0), bOn) - Px(PrevT, FVector((PrevH + O) * 100.0, 0.0), bOn);
+					const FVector2D DR = Px(Rig, FVector((Pos[i] + O) * 100.0, 0.0), bOn) - Px(PrevR, FVector((PrevH + O) * 100.0, 0.0), bOn);
+					if (bOn) Worst = FMath::Max(Worst, (float)(DA - DR).Size());
+				}
+				// The cursor, held: the pixel over the point 2.5 m ahead-right of him in the last frame; the blade it gives now against then, camera over rig.
+				float BladeCorr = 0.f;
+				FVector2D AimCorr = FVector2D::ZeroVector;
+				{
+					const float Yc = FMath::DegreesToRadians((float)PrevR.Rotator().Yaw);
+					const FVector2D AimO = FVector2D(FMath::Cos(Yc), FMath::Sin(Yc)) * 2.2 + FVector2D(-FMath::Sin(Yc), FMath::Cos(Yc)) * 1.2;
+					bool bOnA = true, bOnR = true;
+					const FVector2D CA = Px(PrevT, FVector((PrevH + AimO) * 100.0, 0.0), bOnA), CR = Px(PrevR, FVector((PrevH + AimO) * 100.0, 0.0), bOnR);
+					double A0 = 0, A1 = 0, R0 = 0, R1 = 0;
+					if (bOnA && bOnR && Blade(PrevT, CA, PrevH, A0) && Blade(T, CA, Pos[i], A1) && Blade(PrevR, CR, PrevH, R0) && Blade(Rig, CR, Pos[i], R1))
+						BladeCorr = FMath::UnwindDegrees((float)(A1 - A0)) - FMath::UnwindDegrees((float)(R1 - R0));
+					bool bOn2 = true;
+					AimCorr = (Px(T, FVector((Pos[i] + AimO) * 100.0, 0.0), bOn2) - CA) - (Px(Rig, FVector((Pos[i] + AimO) * 100.0, 0.0), bOn2) - CR);
+				}
+				Out.WorstBladeFrame = FMath::Max(Out.WorstBladeFrame, FMath::Abs(BladeCorr));
+				Out.WorstPx = FMath::Max(Out.WorstPx, Worst);
+				if (bStill) Out.WorstStillPx = FMath::Max(Out.WorstStillPx, Worst);
+				if (Worst > 3.f) { ++Out.OverK; if (bStill) ++Out.OverKStill; }
+				// A correction with him still (no move, no turn): its frames, and the blade's turn under the held cursor summed over it.
+				if (bStill && Worst > 0.5f)
+				{
+					if (i - LastCorrFrame > 10) { if (LastCorrFrame > -100) CloseEpisode(); ++Out.Episodes; }
+					LastCorrFrame = i;
+					EpisodeCum += BladeCorr;
+					EpisodeMax = FMath::Max(EpisodeMax, FMath::Abs(EpisodeCum));
+				}
+				if (AimCorr.Size() > 1.0)
+				{
+					if (i - LastSigFrame <= 30 && FVector2D::DotProduct(AimCorr, LastSig) < 0.0) ++Out.Reversals;
+					LastSig = AimCorr; LastSigFrame = i;
+				}
+			}
+			else if (Teleport[i] && LastCorrFrame > -100) { CloseEpisode(); LastCorrFrame = -100; }
+			PrevT = T; PrevR = Rig; PrevH = Pos[i]; bPrev = true;
+		}
+		if (LastCorrFrame > -100) CloseEpisode();
+		return Out;
+	}
+	// A135's modelled skater on the boards (the generator of Jam.Camera.KeepsHuman, the same seeds): the path alone, which reads nothing of the camera.
+	void Path(float L, float W, float R, int32 Seed, TArray<FVector2D>& OutPos, TArray<float>& OutYaw, TArray<bool>& OutTeleport)
+	{
+		FRandomStream Rng(Seed);
+		FJamCameraRink Rink; Rink.LengthM = L; Rink.WidthM = W; Rink.CornerRadiusM = R;
+		FVector2D Pos(-7.5, 0.0), Vel(0.0, 0.0), Target(0.0, 0.0);
+		float Yaw = 0.f, WantYaw = 0.f, WantSpeed = 0.f;
+		int32 Hold = 0, Mode = 0;
+		for (int32 i = 0; i < 6000; ++i)
+		{
+			bool bTeleport = false;
+			if (i > 0 && i % 1500 == 0) { Pos = FVector2D(-7.5, 0.0); Vel = FVector2D::ZeroVector; Yaw = 0.f; Hold = 0; bTeleport = true; }
+			if (--Hold <= 0)
+			{
+				Mode = Rng.RandRange(0, 9);
+				Hold = Rng.RandRange(30, 150);
+				const float Side = Rng.FRand() < 0.5f ? -1.f : 1.f;
+				if (Mode <= 2) Target = FVector2D(Rng.FRandRange(-L * 0.5f, L * 0.5f), Side * W * 0.5f);
+				else if (Mode <= 4) Target = FVector2D(Side * L * 0.5f, (Rng.FRand() < 0.5f ? -1.f : 1.f) * W * 0.5f);
+				else if (Mode == 5) Target = FVector2D(Side * L * 0.5f, Rng.FRandRange(-W * 0.5f, W * 0.5f));
+				else if (Mode <= 7) Target = FVector2D(0.0, 0.0);
+				else if (Mode == 8) { WantYaw = Yaw + 180.f; }
+				else { const float A = Rng.FRandRange(0.f, 2.f * PI); Vel += FVector2D(FMath::Cos(A), FMath::Sin(A)) * 6.0; }
+				WantSpeed = (Mode == 6 || Mode == 7 || Mode == 8) ? 0.f : Rng.FRandRange(5.f, 12.65f);
+			}
+			if (Mode != 8 && Mode != 9)
+			{
+				const FVector2D To = Target - Pos;
+				if (To.Size() > 0.5) WantYaw = FMath::RadiansToDegrees((float)FMath::Atan2(To.Y, To.X));
+			}
+			Yaw = FMath::UnwindDegrees(Yaw + FMath::Clamp(FMath::UnwindDegrees(WantYaw - Yaw), -4.77f, 4.77f));
+			const FVector2D Fwd(FMath::Cos(FMath::DegreesToRadians(Yaw)), FMath::Sin(FMath::DegreesToRadians(Yaw)));
+			const FVector2D Dv = Fwd * WantSpeed - Vel;
+			const double Step = WantSpeed > 0.f ? 12.0 / 60.0 : 20.0 / 60.0;
+			Vel += Dv.Size() > Step ? Dv.GetSafeNormal() * Step : Dv;
+			Pos += Vel / 60.0;
+			const FVector2D In = UJamFollowCamera::NearestInsideBoards(Pos, Rink, 0.45f);
+			if (!In.Equals(Pos, 1e-9)) { Vel *= 0.5; Pos = In; }
+			OutPos.Add(Pos); OutYaw.Add(Yaw); OutTeleport.Add(bTeleport);
+		}
+	}
+	// The scripted boards run on the 90 m rink (600 frames): 7 m/s along the side board, into the corner, down the end board, a stop with his back to
+	// the end glass, two seconds still, then out along the board and still again, his back to the side glass.
+	void BoardsRun(TArray<FVector2D>& OutPos, TArray<float>& OutYaw, TArray<bool>& OutTeleport)
+	{
+		FJamCameraRink Rink; Rink.LengthM = 90.f; Rink.WidthM = 45.f; Rink.CornerRadiusM = 3.75f;
+		FVector2D Pos(10.0, 20.6);
+		float Yaw = 0.f;
+		for (int32 i = 0; i < 600; ++i)
+		{
+			FVector2D Vel(0.0, 0.0);
+			float WantYaw = Yaw;
+			if (i < 200) { Vel = FVector2D(7.0, 0.0); WantYaw = 0.f; }
+			else if (i < 260) { Vel = FVector2D(4.0, -5.0).GetSafeNormal() * 5.0; WantYaw = -70.f; }
+			else if (i < 410) { WantYaw = 180.f; }
+			else if (i < 470) { Vel = FVector2D(-5.0, 2.0); WantYaw = 160.f; }
+			else { WantYaw = -90.f; }
+			Yaw = FMath::UnwindDegrees(Yaw + FMath::Clamp(FMath::UnwindDegrees(WantYaw - Yaw), -4.77f, 4.77f));
+			Pos += Vel / 60.0;
+			Pos = UJamFollowCamera::NearestInsideBoards(Pos, Rink, 0.45f);
+			OutPos.Add(Pos); OutYaw.Add(Yaw); OutTeleport.Add(false);
+		}
+	}
+	FJamCameraSettings Game()
+	{
+		FJamCameraSettings C;
+		C.CornerLiftM = 3.f; C.KeepHumanFrac = 0.31f; C.PitchCapDeg = 55.f;   // the game's camera before this lane (jam.camera.CornerLift, KeepHuman, PitchCap)
+		return C;
+	}
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamCameraBoundsCorrections, "Jam.Camera.BoundsCorrections", EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+bool FJamCameraBoundsCorrections::RunTest(const FString&)
+{
+	using namespace JamA186Test;
+	TestEqual(TEXT("the bound is off in the settings (the neutral value)"), FJamCameraSettings().BoundPx, 0.f);
+	TestFalse(TEXT("the rig yaw is off in the settings (the neutral value: the turns of before)"), FJamCameraSettings().bRigYaw);
+	struct FCfg { const TCHAR* Name; FJamCameraSettings C; };
+	FJamCameraSettings S1; S1.CornerLiftM = 0.f;                 // the boards' clamp, the end lift and the end-board turn (lane A40), the pitch budget (A49)
+	FJamCameraSettings S2 = S1; S2.CornerLiftM = 3.f;           // + the corner lift (A111)
+	FJamCameraSettings S3 = S2; S3.KeepHumanFrac = 0.31f;       // + the keep-in-frame stage (A135: crane, step, slide; no yaw)
+	FJamCameraSettings S4 = Game();                             // + the pitch cap 55 (A158): the game before this lane
+	FJamCameraSettings Y = S4; Y.bRigYaw = true; Y.PitchCapDeg = 0.f;   // this lane: the boards never turn the camera (jam.camera.RigYaw 1), the cap off: the game after
+	FJamCameraSettings Y55 = Y; Y55.PitchCapDeg = 55.f;                // the same with last night's pitch cap (it adds still corrections: off)
+	FJamCameraSettings Bd = Y; Bd.BoundPx = 3.f;                       // the rate bound on top (jam.camera.Bound 3): opt-in, measured not better (CAMERA-3.md)
+	const FCfg Cfgs[] = { { TEXT("clamp+lift+end turn"), S1 }, { TEXT("+corner lift"), S2 }, { TEXT("+keep-in-frame"), S3 }, { TEXT("+pitch cap 55 (before)"), S4 },
+		{ TEXT("rig yaw, cap 0 (after)"), Y }, { TEXT("rig yaw, cap 55"), Y55 }, { TEXT("rig yaw + bound 3 px"), Bd } };
+	struct FRinkCase { const TCHAR* Name; float L, W, R; int32 Seed; };
+	for (const FRinkCase& K : { FRinkCase{ TEXT("90 m"), 90.f, 45.f, 3.75f, 135 }, FRinkCase{ TEXT("140 m"), 140.f, 70.f, 5.83f, 136 }, FRinkCase{ TEXT("120 m, 8.5 m arcs"), 120.f, 60.f, 8.5f, 137 }, FRinkCase{ TEXT("boards run 90 m"), 90.f, 45.f, 3.75f, 0 } })
+	{
+		TArray<FVector2D> Pos; TArray<float> Yaw; TArray<bool> Tp;
+		if (K.Seed == 0) BoardsRun(Pos, Yaw, Tp); else Path(K.L, K.W, K.R, K.Seed, Pos, Yaw, Tp);
+		TMap<FString, FStats> Got;
+		for (const FCfg& Cf : Cfgs)
+		{
+			const FStats R = Measure(Cf.C, K.L, K.W, K.R, Pos, Yaw, Tp);
+			AddInfo(FString::Printf(TEXT("JAMBOUND %s | %s | frames %d (still %d) | still corrections %d | frames over 3 px %d (still %d) | worst px/frame %.1f, still %.1f | reversals in 0.5 s %d | blade a frame worst %.1f deg; a still correction: median %.1f, p90 %.1f, worst %.1f deg (%d) | camera-added yaw on %d frames, worst %.2f deg/frame | chest out of frame %d, out of the middle third %d, max %.3f %.3f | outside the inset %d | guard chest %d boards %d | largest camera step %.0f cm"),
+				K.Name, Cf.Name, R.Frames, R.StillFrames, R.Episodes, R.OverK, R.OverKStill, R.WorstPx, R.WorstStillPx, R.Reversals, R.WorstBladeFrame, R.BladeQuantile(0.5f), R.BladeQuantile(0.9f), R.BladeQuantile(1.f), R.EpisodeBlade.Num(),
+				R.YawFrames, R.MaxYawStep, R.OutFrame, R.OutThird, R.MaxX, R.MaxY, R.OutsideBoards, R.GuardChest, R.GuardBoards, R.MaxStepCm));
+			Got.Add(Cf.Name, R);
+		}
+		const FStats& B = Got[TEXT("+pitch cap 55 (before)")];
+		const FStats& Af = Got[TEXT("rig yaw, cap 0 (after)")];
+		const FStats& Bo = Got[TEXT("rig yaw + bound 3 px")];
+		TestTrue(FString::Printf(TEXT("%s: the camera of before turns at the boards (the test has teeth: %d frames)"), K.Name, B.YawFrames), B.YawFrames > 100);
+		TestEqual(FString::Printf(TEXT("%s: after, frames on which the boards turn the camera"), K.Name), Af.YawFrames, 0);
+		TestTrue(FString::Printf(TEXT("%s: after, no more still frames whose picture moves over 3 px than before (%d, %d)"), K.Name, Af.OverKStill, B.OverKStill), Af.OverKStill <= B.OverKStill);
+		TestTrue(FString::Printf(TEXT("%s: after, a still correction costs the held cursor's blade no more than before (p90 %.1f -> %.1f deg)"), K.Name, B.BladeQuantile(0.9f), Af.BladeQuantile(0.9f)), Af.BladeQuantile(0.9f) <= B.BladeQuantile(0.9f));
+		TestEqual(FString::Printf(TEXT("%s: after, the chest never leaves the frame"), K.Name), Af.OutFrame, 0);
+		TestTrue(FString::Printf(TEXT("%s: after, he is held as before (outside the middle third %d, %d before)"), K.Name, Af.OutThird, B.OutThird), Af.OutThird <= B.OutThird + 2);
+		TestEqual(FString::Printf(TEXT("%s: after, the camera never crosses the boards' inset"), K.Name), Af.OutsideBoards, 0);
+		TestEqual(FString::Printf(TEXT("%s: the opt-in bound never loses him from the frame"), K.Name), Bo.OutFrame, 0);
+		TestEqual(FString::Printf(TEXT("%s: the opt-in bound never crosses the boards' inset"), K.Name), Bo.OutsideBoards, 0);
+		const FStats& C55 = Got[TEXT("rig yaw, cap 55")];
+		TestTrue(FString::Printf(TEXT("%s: the cap off adds no still correction over 3 px that the cap had not (%d, %d with the cap)"), K.Name, Af.OverKStill, C55.OverKStill), Af.OverKStill <= C55.OverKStill);
+	}
+	// Open ice with the rig yaw and the opt-in bound: the rig of before to the bit (straight and through a wide turn, both ways, far net in play).
+	for (int32 Sign : { -1, 1 })
+	{
+		FJamCameraFilter Sa, Sb;
+		int32 Differ = 0;
+		FVector2D Pos(-30.0, -20.0);
+		float Yaw = 20.f;
+		for (int32 i = 0; i < 360; ++i)
+		{
+			if (i >= 150 && i < 300) Yaw += 0.6f;
+			Pos += FVector2D(FMath::Cos(FMath::DegreesToRadians(Yaw)), FMath::Sin(FMath::DegreesToRadians(Yaw))) * (9.0 / 60.0);
+			const FJamPresentationFrame F = JamA40Test::Frame(140.f, 70.f, 5.83f, Pos, Yaw, Sign);
+			const FTransform Ta = UJamFollowCamera::StepThirdPerson(S4, Sa, F), Tb = UJamFollowCamera::StepThirdPerson(Bd, Sb, F);
+			if (!Ta.Equals(Tb, 1e-6)) ++Differ;
+		}
+		TestEqual(FString::Printf(TEXT("open ice, far net at %s: frames whose pose is not the pose of before"), Sign > 0 ? TEXT("+X") : TEXT("-X")), Differ, 0);
+	}
+	return true;
+}
+
 #endif
