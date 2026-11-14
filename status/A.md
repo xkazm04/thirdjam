@@ -422,3 +422,5 @@
 - link green 01:26: main 84fba56 (A judge's first sixty seconds (A144, track U2): PLAY NOW on the first screen, the controls) pushed.
 - link green 01:32: main 322e6c5 (The camera's hold never turns the camera, so it cannot move the player's path (A135, track) pushed.
 - link green 01:39: main f3f5537 (A hard board hit is seen from the game camera, and a goal runs round the end's caps (A145,) pushed.
+- link green 01:40: main 22214a2 (A knockdown has a size on screen, and a drill films the vision's first law in one take (A1) pushed.
+- RESOURCES 01:41 cpu 97% ram 30.8/63GB editors 0 cmd 10 free 394GB

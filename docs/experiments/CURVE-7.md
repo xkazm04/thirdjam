@@ -102,3 +102,15 @@ optimum (1.4): the cell is the brain's (section 7).
 ## 7. Revert and neutral
 Every number of this pass is a profile number: `PreA95Tune` and `JamBaseline::BrainTune` give back the levels before it as a tune (proved by the neutral tests
 above, green). To revert one level, restore its line in `DifficultyProfile.cpp` / `JamAICore.h` (the "before" column of section 4).
+
+## 8. The second landing: the first look is clay; the soak budget; the season (items 5, 6, 4)
+- **Clay (R-0054 point 1)**: `look.tier` `p3_clay` in hockey.regular, hockey.arena.wide, hockey.arena.large, ladder/take-1 to take-4 and the acceptance
+  run's cut (`tools/perf/results/a133/clay.mjs`); takes 5 to 8 and the modes keep theirs. The Designer's cached cuts rebased (33 of 36; the three whose
+  Designer chose neon or day keep it), its data regenerated, the reply corpus rebased (no verdict changed). Re-pinned: `schema/hockey.test.mjs:57`
+  (regular's tier). **The sim's hash does not move**: the full `Jam` filter with the clay content on build 4 logs 196 hash tokens, every one identical to
+  the run before it (the one differing token is a Niagara debugger session id); its one red, `PromptParity`, is the embedded copy, green on build 5.
+- **Soak budget** (`BotTests.cpp:219-223`): faceoffs without a human touch, rookie / novice / hockey.regular, 0 of 9,752 at 2,000 matches; seeds 1-20 read 0 of 94.
+  Budget share + 2 points (R-0039) = 2.0 %.
+- **The season (the novice, 200 a take)**: take-3 86.0, take-4 14.5, take-5 10.5, take-7 14.0, take-8 2.5; takes 4 and 5 at rookie 81.5 and 83.0. The
+  20-point clause is **not met** and cannot be met by takes 4 and 5 alone: from take-3's 86 a ramp of 20 needs take-6 at 26 or more, and take-6 plays pro.
+  No take was changed.

@@ -216,6 +216,8 @@ bool FJamBotHumanHasSomethingToDo::RunTest(const FString& Parameters)
 		// 2,000 matches on 5 v 5 is 13.1 %; the budget is that share plus 2 points (R-0039's rule), 15.1 %, until the final curve pass re-measures it.
 		// Lane A95 (CURVE-5.md, the vision on one tree and the final profiles): the soak's share over 2,000 matches is 7.26 % (rookie, novice, hockey.regular); the
 		// budget is that share plus 2 points (R-0039's rule), 9.3 %.
+		// Lane A133 (CURVE-7.md) measured 0 of 9,752 faceoffs over 2,000 matches on the re-set ladder with the old press (it proposed 2.0 %). Nobody has measured
+		// the ladder and the new press together, so the Director kept 9.3 % at the landing of 14 Nov; the soak lane re-measures it on main.
 		// Lane A132 (track F1, CONTACT-5.md section 2): the novice now presses its check on closing speed (FJamPlaytester, contact.bPlaytesterClosingPress). Re-measured
 		// on main e44df14 with it: 4.44 % over 600 matches (151 of 3,399 faceoffs; 5.54 % with the old press, 196 of 3,541), seeds 1-20 give 4 of 100 (6 of 108
 		// before). R-0039's rule (the share plus 2 points) would set 6.4 %, 6 faceoffs of these 100: two above the count, which is one standard error of a
