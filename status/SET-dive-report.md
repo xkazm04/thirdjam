@@ -153,3 +153,180 @@ Files: the lab is `C:\Users\kazda\jam\sets-lab\dive\`.
 - Checks: `it.sh` (build, meas, check, join; one Blender at a time), `join_dive.py`, `sum.js`, `prove.js`.
 - Sheets: `render_dive.py` (Cycles on the CPU) and `strip2.sh`.
 - Numbers and logs: `work\<style>\m\` and `logs\final_run.txt`.
+
+---
+
+# Part 2, second loop (02:22 to 03:45): the stick's path and the body, the block as an act, the chest-first block, the slide tackle from behind
+
+## 1. Done and not done
+
+All three evolutions are built in both styles, plus the lead's addition (the block is an act). The lab export `C:\Users\kazda\jam\sets-lab\dive\export\` was replaced in place: one FBX per take, `READY.txt` (written last), `JOINS.md` (29 pairs) and the gate's `GATE.md`.
+
+The export holds 8 takes:
+- `Dive_Block_Left`, `Dive_Block_Right`: changed, now **38 frames**, with the act.
+- `Dive_Block_Hit_Left`, `Dive_Block_Hit_Right`: changed, the stick kept off the legs.
+- `Dive_Block_Front`: new.
+- `Slide_Tackle_Left`, `Slide_Tackle_Right`: new.
+- `Slide_Tackle`: kept under the first loop's name, the same keys as `_Left`.
+
+The gate passed: `GATE PASS: 16 rows, 0 failing ... p2_cel: 8 files, 8 takes found, 8 checked, READY.txt lists 8; p3_clay: the same`, against base export31, in 65 s. Besides `GATE.md` the gate also wrote its work files `gate_work\` into the export folder.
+
+Not met:
+- **The highest point at full cover:**
+  - side blocks 59.6 to 60.6 cm; the chest-first block 61.4 (cel) and 57.6 (clay). Asked: 50 for the chest-first block, about 45 for the side blocks.
+  - On this figure the floor is the head. The face-down lying pose itself is 54.5 / 52.1 cm, and its highest point is the helmet.
+  - Pushing the crown further forward put the helmet into the ice face first (-1.4 cm), so I backed off to keep the helmet clear: it is 3.7 cm off the ice at frame 10 on cel and 19.9 on clay.
+  - During the act (head up) the highest point is 64 cm.
+- **`Slide_Tackle_Right`: the shaft is 3.9 to 4.7 cm inside a leg for 2 frames (cel, 12 to 13) and 1 frame (clay, 13).** I tried four stick paths after contact. Each one that cleared the leg put the stick or the body under the ice or broke the 40 cm line, so I kept this one.
+- **The dive is 38 frames.** The first brief asked for 24 to 30. The act (10 to 20) plus a settle inside the 40 cm blade line (a 160 degree stick turn takes at least 13 frames) does not fit in 30.
+
+## 2. Evolutions
+
+### Evolution 1: the stick's path and the body, and the block as an act (Dive_Block_Left / _Right, the hit takes)
+
+What changed:
+- **The throw** is spread evenly over frames 0 to 10 (linear keys).
+- **The stick at cover** is laid across the game camera's view (yaw 70 degrees out to the side, was 45 toward the shooter), and stays braced out on the ice to frame 20.
+- **The act, frames 12 to 20:**
+  - The head comes up off the ice and the face turns to the shooter. Neck and head angles are solved per key toward a target direction (`aim_head26`).
+  - The top leg stacks and lifts.
+  - At frame 15 the stick hand and the top glove reach once more (8 cm out), and at 18 there is a shuffle.
+- **The settle, frames 20 to 35:** the stick comes in over the ice as part of it. There is one key a frame on an even speed profile with 3-frame ramps, the trunk rolls back with it, and the top glove lifts 16 cm while the shaft passes under it.
+- **Lying pose** from 35, held to 38.
+- **Hit takes:** the stick's far end is turned 16 degrees off the drawn-up legs during the jolt, and the head moves away from the stick on the right side. The take is back on the lying pose from 10.
+
+Proving numbers, measured on the FBX, cel / clay:
+
+| Number | Asked | Dive_Block_Left | Dive_Block_Right |
+|---|---|---|---|
+| Blade end, largest one-frame move | 40 cm or less | 39.2 / 38.1 | 39.1 / 36.0 |
+| Frames with 5 cm of shaft more than 3 cm inside a leg, the trunk or the head (clear29.py) | 0 | 0 of 39 / 0 of 39 | 0 / 0 |
+| Full cover from frame | 12 or less | 10 / 10 | 10 / 10 |
+| Width across the shot line at full cover; frames 10 to 20 | | 328 / 309 cm; 328-338 / 309-319 | 313 / 295; 313-327 / 295-307 |
+| Highest point at full cover; during the act | ~45 (not met) | 59.6 / 60.2; 66.7-69.7 / 63.0-66.5 | 59.6 / 60.6; same |
+| Act 12-20: helmet's lowest point above the ice (lying pose) | up | 17.6-21.4 (10.6) / 24.8-29.1 (14.9) cm | same |
+| Act 12-20: face direction from the shooter (yaw; at cover f10; lying) | turned | 0.1-0.4 deg (29.9; 7.8), pitch +9 to +16 (lying +2.7) | same |
+| Act 12-20: the top leg's lift (ankle over the lying pose's) | | 26.0 / 23.9 cm | 26.0 / 23.9 cm |
+| Pop steps over the limits | 0 | 0 / 0 | 0 / 0 |
+
+- **Hit takes:** blade end at most 37.8 cm in one frame; shaft through 0 of 13 frames; body 0 cm or above; pops 0.
+- **The slides:** blade end at most 36.4 cm. Shaft through: `_Left` 0, `_Right` 2 / 1 (above).
+- **Glove and shaft**, `C:\Users\kazda\jam\thirdjam\devlog\shots\20261114-033953-B-set-dive-glove-shaft.png`, cel, frames 24 to 35, close from above and from the shooter:
+  - The shaft swings round in front over the ice and passes under the lifted top glove at 32 to 33. The glove is above it and touching it.
+  - By 35 the stick lies along the body as in the lying pose.
+  - I saw no shaft through the glove at that size; hands are left out of clear29's measure.
+- **Knockdown comparison**, in `C:\Users\kazda\jam\thirdjam\devlog\shots\20261114-033953-B-set-dive-loop2-blocks-slides.png` (rows 1 and 2 of each style):
+  - From frame 10 to 24 the block shows the stick laid out across the screen past the glove and a leg lifted off the other leg. `Knockdown_Left` lies with the stick tucked and the legs together from 15.
+  - Honestly: a stranger would tell them apart by the stick and the raised leg while they are on screen together, frames 10 to 24.
+  - The head's turn does not read at 110 px: the helmet is a white ball.
+  - From 32 on the two are the same picture, because the block settles onto the knockdown's own lying pose by design.
+
+### Evolution 2: the chest-first block (`Dive_Block_Front`, one centred take)
+
+**Why one take, not `_Left_B` / `_Right_B`:** with the body flat on the chest across the shot line, the two sides would differ only in the head's turn toward the shooter. That turn does not read at 110 px (see above), so the two would be the same picture. The game faces the figure along the dive, across the lane, and the width counts along the dive (x).
+
+Keys:
+- 3: gather.
+- 6: airborne, near horizontal.
+- 9: the forearms take the ice, the head held off it.
+- 10: full cover, arms stretched ahead, the stick flat out ahead-right.
+- 12-20: the act. The head comes up looking along the ice, a skate lifts behind, the stick reaches at 15, a shuffle at 18.
+- 20-35: the settle. The stick turns back round the stick side to lie along the body.
+- 35-38: the face-down lying pose of Fall_Forward / Lie_Loop_Front.
+
+| Number (cel / clay) | Asked | Value |
+|---|---|---|
+| Full cover from frame | 10 | 10 / 10 |
+| Width across the shot line (along the dive) at full cover; frames 10 to 20 | 250 or more | 317 / 297 cm; 306-317 / 287-297 |
+| Highest point at full cover | 50 or less | **61.4 / 57.6 cm, NOT MET** (the lying pose itself 54.5 / 52.1; during the act 64.0-64.5 / 61.2-61.6) |
+| Landing: the helmet's lowest point at frames 8, 9, 10, 11 | not face first | 24.9, 13.2, 3.7, 14.4 cm / 37.6, 27.8, 19.9, 25.2 cm. The elbow joints are at 19.8 / 20.3 cm at frame 9, below the helmet, so the forearms land first. On cel the helmet comes within 3.7 cm of the ice at frame 10. |
+| Act: face pitch (lying pose) | | +16.5 (-22.9) |
+| Act: the lifted skate (lying pose's ankle) | | 26 / 25.9 cm (22.8 / 23.6): only 3 cm of lift |
+| Joins (last frame = Lie_Loop_Front, GetUp_Front, GetUp_Late_Front frame 0, Fall_Forward end; frame 0 = Fall_Forward frame 0) | exact | ≤ 0.00004 cm, 0 deg |
+| Lowest body / stick | 0 or above | 0.31 / 1.39 cm; 0.47 / 0.54 cm |
+| Pops; shaft through; blade end | 0; 0; 40 | 0; 0 of 39; 38.2 / 33.0 cm |
+
+What I saw (game camera, `...20261114-033953-B-set-dive-loop2-blocks-slides.png`, rows 4 and 5 of each style): the game camera here is behind the figure, along the dive. From there the body is foreshortened and the stick reaches out ahead-right from frame 9. The settle swings the stick round to the right and back, 28 to 32. From the side (closer row) the body is flat along the ice from 9, with the stick ahead. In the game the camera will mostly see this take from the side, because the dive runs across the lane. That view at game scale was not rendered.
+
+### Evolution 3: the slide tackle that reads from behind (Slide_Tackle_Left / _Right)
+
+- **Leading leg:** goes out to the side of the trunk (ankle 37 cm off the centre line) and forward.
+- **Stick at contact:** the grip is higher (30 cm) with the shaft angled down, so the ice clamp lays the blade on the ice. Its margin is 1.4 cm for these takes; a per-take setting was added in my copy of the lab's bake.
+- **`_Right`:** down on the left hip, the right leg leading. The stick sweeps across from right to left. The trunk rolls less and leans back more than the mirror would, so the high stick shoulder can reach the ice.
+- **Contact** stays at frame 10.
+
+| Number (cel / clay) | Asked | Slide_Tackle_Left | Slide_Tackle_Right |
+|---|---|---|---|
+| Blade end's height at contact (frame 10) | 3 cm or less | 1.70 / 1.93 cm (stick's lowest point 0.81 / 0.41) | 1.67 / 1.96 cm (0.78 / 0.44) |
+| Leading skate seen from the game camera at frame 10 (vis_dive.py: share of the skate's vertices a ray to the camera reaches) | outside the silhouette | 70 % / 52 % (trailing skate 16 % / 31 %) | 70 % / 52 % (trailing 26 % / 31 %) |
+| Leading ankle from the hips; blade from the hips at contact | | 71 / 63 cm; 205 / 196 cm | 75 / 68 cm; 159 / 152 cm |
+| Joins (Lie_Loop, GetUp, GetUp_Late frame 0, Fall end; frame 0 = Trip frame 0) | exact | ≤ 0.00004 cm, 0 deg | same |
+| Ground, pops, blade end | | body 0.6 / 0.66, stick 0.48 / 0.02; pops 0; 36.4 / 34.7 cm | body 0.6 / 0.66, stick 0.76 / 0.07; pops 0; 32.7 / 32.1 cm |
+
+**The pair strip:** `C:\Users\kazda\jam\thirdjam\devlog\shots\20261114-033953-B-set-dive-slide-meets-trip.png`, both styles, game camera behind the attacker, the attacker in blue and the victim in orange.
+- **Setup:** the victim faces the attacker with its skates on the attacker's leading skate at frame 10, and starts `Trip` there. The takes have no travel, so the attacker's slide (1.2 m to contact, 1.6 m in all) is put on the attacker's object for this strip only.
+- **What I saw:** up to frame 14 it reads as a tackle on the ice. The blue figure slides in low, stick and skate reaching the orange skates at 10, and orange's leg kicks out sideways as he twists away (12 to 14).
+- **From frame 17 on it reads as two players falling over each other.** `Trip` throws the victim onto his side toward where the attacker lies, and from 20 the two bodies lie across and partly inside each other.
+- The tackle reads; the landing does not. Proposal 1 below addresses it.
+
+## 3. Not verified
+
+- Nothing has been seen in the engine.
+- I looked at stills only, never in motion.
+- The head's turn toward the shooter is measured (0.1 to 0.4 degrees) but does not read at game scale.
+- I did not render `Dive_Block_Front` from the side at game scale, which is the view the game will mostly give.
+- The pair strip's travel is invented for the strip. In the game the victim also moves, and the attacker's slide is the game's.
+- The glove and shaft were looked at close only on cel `Dive_Block_Left`, frames 24 to 35; hands are not in clear29's measure.
+- The renders are Cycles with simple materials, not the game's look.
+- Not done in this loop: `Dive_Block_Hit_*` and the slides from the shooter's side; the head yaw of the right-hand takes beyond the numbers.
+
+## 4. For the engine lane
+
+| Take | Frames (0..N) | Starts on | Ends on (held from) | Trigger | Key frames |
+|---|---|---|---|---|---|
+| Dive_Block_Left | 38 | the falls' start (= Knockdown_Left frame 0) | Lie_Loop_Side_Left frame 0 (35) | block, side +1 | cover 10; act 12-20; settle 20-35 |
+| Dive_Block_Right | 38 | = Knockdown_Right frame 0 | Lie_Loop_Side_Right frame 0 (35) | block, side -1 | same |
+| Dive_Block_Hit_Left / _Right | 12 | Lie_Loop_Side_* frame 0 | same pose (10) | puck hits a lying blocker | jolt 2 |
+| Dive_Block_Front | 38 | = Fall_Forward frame 0 | Lie_Loop_Front frame 0 (35) | block, chest first (the figure faced along the dive) | forearms 9; cover 10; act 12-20 |
+| Slide_Tackle_Left | 24 | = Trip frame 0 | Lie_Loop frame 0 (19) | slide tackle, down on the right hip | contact 10 |
+| Slide_Tackle_Right | 24 | = Trip frame 0 | Lie_Loop frame 0 (19) | slide tackle, down on the left hip | contact 10 |
+| Slide_Tackle | 24 | | | the first loop's name, same keys as `_Left` | contact 10 |
+
+- **Must never:**
+  - move the root;
+  - be cut in the act (10 to 20);
+  - for a lock shorter than 38 frames, cut the dive: scale its play rate instead, so the act and the settle both play;
+  - play `Trip` on a victim standing where the attacker will lie (see the pair strip).
+- **Lying and get-ups:** loops and get-ups follow from the hold frame with the twenty-seventh pass's clean-frame rule and a 4-frame fade.
+
+## 5. For the other device
+
+As sent in the first part, with these changes:
+- `PlayDiveBlock(DirX, DirZ, Frames)`: Frames is at least 38. `SetKnockedDown(true)` starts at the dive's frame 35.
+- New: `PlayDiveBlockFront(DirX, DirZ, Frames)`. Dir is the dive's direction: the figure is faced along it, across the shot line. Frames is at least 38.
+- `PlaySlideTackle(Frames, Side, ContactFrame = 10)`: Side is +1 for `_Left` (right hip) and -1 for `_Right`, for example the side away from the carrier's stick.
+- **On a hit, the game should push the victim away from the attacker's lying spot** (along DirX/DirZ, about 1 m) while `Trip` plays, or the two land on each other.
+
+## 6. Decisions for the operator
+
+1. **The cover height.** The toy's head sets a floor of about 52 to 55 cm for any lying block on this figure. Accept about 60 cm, or make the head smaller in the lying blocks (a figure change, not an animation one).
+2. **The dive's length.** 38 frames (the act plus a clean settle), or a 30-frame version with no act and a faster stick (blade about 55 cm a frame).
+3. **The slide's victim.** Keep `Trip` with the game pushing the victim clear, or add a victim fall that goes away from the attacker (`Fall_Legs_Front`, falling forward over the slider).
+
+## 7. The next three evolutions
+
+1. **The tackle's landing apart.** A victim take that falls forward and away over the slider's legs, ending face down (`Fall_Legs_Front`), and the pair strip again with the same placement. Proving numbers:
+   - frames after contact in which the two bodies interpenetrate (mesh against mesh, measured): 0 (today about 16, from 20 on, by eye);
+   - victim lying 80 cm or more from the attacker's hips.
+2. **`Slide_Tackle_Right` clear, and the slides at the game's side view.** Proving numbers:
+   - shaft through a leg: 0 frames (today 2 / 1);
+   - leading skate visible from the game camera: 60 % or more on clay (today 52 %).
+3. **The act reads at 110 px.** Make the head and top arm's move bigger than the turn of a white ball: the top glove lifting off the ice at the second reach, and the stick sliding 20 cm along the ice. Proving numbers:
+   - at game scale, pixels changed between frames 12 and 18 inside the figure's box: 3 times today's;
+   - a stranger tells the block from `Knockdown_Left` in a single still at frame 18 (a two-person check, not something I can measure alone).
+
+Files, in the lab `C:\Users\kazda\jam\sets-lab\dive\`:
+- Takes and build: `dive_block.py`, built by `mkbuild.sh` into `build_dive.py`.
+- Checks: `it.sh` (steps build meas check clear head join), `clr.js`, `prove2.js`, `head_dive.py`, `vis_dive.py`, `clear29.py` (copy).
+- Renders: `pair_dive.py`, `render_dive.py`, `strip2.sh`.
+- Gate: `gate_joins_dive.txt`, the gate's log `logs\gate.txt`.

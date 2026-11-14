@@ -1,0 +1,1 @@
+Second loop, p2_cel (top) and p3_clay (bottom), game camera with the figure 110 px tall: Dive_Block_Left (the act 12-20) beside the existing Knockdown_Left, Dive_Block_Right, Dive_Block_Front (also from the side), Slide_Tackle_Left and _Right. Blender, Cycles on the CPU, frozen frames, not the engine.
