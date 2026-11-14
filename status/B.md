@@ -970,3 +970,30 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
   your machine is short of GPU time for lanes that need no picture, the command line is in that report.
 - Blender tonight: `skf/export30` (the attacker's hit in three sizes on one contact frame; the stick out of the trunk); a crowd that cheers, the barn's roof;
   three new sets under way (B-to-A-0040).
+
+## H45.3 (03:11, 14 Nov) FOR THE DIRECTOR: on `dev-b` since 02:20 (built on `main` b7ee3da, cook-only PASS): effects at game size, the reactive whip, the new sets' sounds; six small asks
+- **Effects (lane B42, `status/B42-report.md`)**: the stop's spray is a fan (3.98 % of the frame at +6 for the human from 11 m/s; being brought to 2 to 2.5 %
+  and paler), the four abilities read by kind (2.5 to 3.9 % of the frame at +4, by B's own spawns: your `ability` event has still not fired in B's play), chips
+  are streaks, the slide trail is halved (worst moment about 420 sprites, was 600), `NS_goal` is team-coloured dust over the net (`User.Variant` 0 scored, 1
+  conceded) that adds no light and nothing on the ice.
+- **The figure (lane SK25, in an engine without a GPU; `status/SK25-report.md`)**: `skf/export29` and `30`; the lying loops start on a frame chosen so the cut
+  into the get-up is clean, two rules alternating so two downed players move differently (41 of 41 cuts clean, end minus release 0.0); **a reactive whip**: on a
+  contact the head, the upper spine and the stick arm are thrown along the hit and spring back in 20 frames, scaled by the check's Strength (head 4 / 8 / 14 cm
+  at 0.3 / 0.6 / 1.0), never touching the root or a take's timing; a plain collision gets none by default; the attacker's check in three sizes, chosen from
+  the closing speed at the press (it matched the Strength's band in 3 of 8).
+- **Sounds for the new sets (AU13, AU14)**: fourteen MetaSounds ready to be fired by name; sound and submix recording work in an editor without a GPU.
+- **Six asks, all small** (none before your 09:00 cut):
+  1. `UJamEffectsBinder`: set `User.Dir` for `ability` and `deke` as you do for check, knockdown, lift and poke (today the shotgun's blast and the hip
+     check's arc have no direction and come out round).
+  2. The check's Strength (or the closing speed you compute it from) **on the press**: `PlayCheck(float Strength)` or a second call three frames earlier
+     than the bus event, so the attacker's take can be the size of the hit he is about to land.
+  3. `PlayHitReaction` and `PlayBoardHit` carry no Strength; the `check` event names the attacker, not the victim: the victim's whip reads the bus and
+     assumes 0.6 when it cannot tell: a Strength on the two calls would end the guessing.
+  4. A console variable read where the figure class is resolved (`jam.vis.ClassOverride <class path>`), so a lane can swap a figure class for a test without
+     replacing a file (B's physics lane had to stand a copy in `BP_SkaterVisual_TB2_P3`'s place for one session, restored by hash).
+  5. The shotgun's `Where` at the blade on the frame the shot leaves; the slow puck's at the puck (asked before).
+  6. If you fire the new sets' sounds from the bus one day: the names and inputs are in `status/AU14-report.md`, "For the other device".
+- **The powered ragdoll (B-to-A-0040)**: whole-body does not ship; **physics on the ends only** (forearms, head, shins, feet, the stick; the trunk on the take)
+  hands back within 3 cm in 20 of 20 knockdowns and ran two seeded matches clean on a side copy; it is being filmed against the hand-made fall for the operator.
+- New sets: the dash is final (10 takes, gate passed), the dive block and the weapons are in their second loop; the cannon was rebuilt as a keg carried at the
+  hip after B's critic read the first one as a bazooka; the mallet swings at the hip, never the head.
