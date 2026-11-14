@@ -33,6 +33,9 @@ namespace JamAI
 		double LargeRedSkill = 0.0;
 		// lane A112 (R-0048 point 4): the human's teammates' speed scale when a human plays (0 = SpeedScale, every bot's: the game before; tune key mate_speed_scale)
 		double MateSpeedScale = 0.0;
+		// lane A193 (track Q2, evolution 7; BRAIN-7.md): the level's bots plan with the true speeds (skater.free_speed_mult): SetEvolution7 on both sides.
+		// Rookie keeps the old planning (it is 17 points under its bar after the speed rule; its bots misjudging a free skater is in the level's favour).
+		bool bTrueSpeeds = true;
 	};
 
 	// The three profiles. Never null; an out-of-range level returns pro.

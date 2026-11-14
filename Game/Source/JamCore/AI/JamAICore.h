@@ -213,6 +213,14 @@ namespace JamAI
 		// a side, as since evolution 3; 99 = a five's backs too: the last line meets a carrier that has got past the presser, inside StepUpM, from the
 		// front, instead of waiting for a puck inside 2.5 m (all_star's second candidate: BRAIN-6.md).
 		int StepUpMaxTeam = 5;
+		// Lane A193 (track Q2, evolution 7; docs/experiments/BRAIN-7.md). The brain plans with the speeds the sim gives: a skater without the puck has
+		// skater.free_speed_mult more top speed and thrust (lane A185, UJamSim::StepSkater's FreeMul), the carrier none. Off = evolution 6, bit for bit (brain7=0).
+		// bTrueSpeed: every arrival estimate of a skater without the puck reads its top speed with the multiplier (FJamAIParams::FreeSpeedMult): the yield's
+		// arrival race (the human and the mate), the loose-puck owner, the backcheck point and the chase intercept. Off = skater.speed for everyone.
+		bool bTrueSpeed = false;
+		// bTrueGap: the Press job's gap (and the three's chaser's) moves back with the carrier's velocity over the presser's TRUE top speed (with the
+		// multiplier): it holds the gap instead of opening it by the multiplier. Off = over skater.speed.
+		bool bTrueGap = false;
 		bool Any() const { return bCarryOrPass || bAttackShape || bDefenceShape || bTransition; }
 	};
 	// Lane A115: every rule of evolution 2 on (as ProHockeySense has them) or off (the brain of evolution 1). The tune key brain2 and the tests use it.
@@ -290,6 +298,14 @@ namespace JamAI
 		H.FreshTakeFrames = 0;
 		if (!bOn) { H.bSecondManHunts = false; H.bCoverBestPass = false; H.StepUpMaxTeam = 5; return; }
 		H.FreshTakeFrames = kEvo6FreshTakeFrames;
+	}
+	// Lane A193 (evolution 7, BRAIN-7.md): the brain knows how fast everyone is, as shipped (ApplyDifficultyProfile calls it for each side) or off (evolution 6).
+	constexpr bool kEvo7TrueSpeed = true;
+	constexpr bool kEvo7TrueGap = false;   // measured: it moves law 3's window out (pro: the stop at 8 m 94 -> 80 %, under the gate's 90); its key opp.hk_true_gap=1 plays it (BRAIN-7.md)
+	inline void SetEvolution7(FJamHockeySense& H, bool bOn)
+	{
+		H.bTrueSpeed = bOn && kEvo7TrueSpeed;
+		H.bTrueGap = bOn && kEvo7TrueGap;
 	}
 	// Lane A94: the sense each level plays (DifficultyProfile.cpp sets the opponents' per level; the human's teammates play ProHockeySense at every level).
 	inline FJamHockeySense ProHockeySense()
@@ -429,6 +445,7 @@ namespace JamAI
 		FJamBotSkill Opp = ProOppSkill();
 		// lane A3: sim facts the skills read (filled from the cartridge by the match config / resolver)
 		double InterceptSpeed = 8.0;   // skater.speed (m/s) for the intercept solve
+		double FreeSpeedMult = 1.0;    // lane A193: skater.free_speed_mult (lane A185): a skater without the puck's top speed over skater.speed; read only with bTrueSpeed / bTrueGap
 		double AimConeDeg = 0.0;       // shot.aim_cone_deg, 0 = no assist
 		// Godot ai.json, not in the cartridge:
 		double MinSeparation = 4.0;
@@ -692,6 +709,10 @@ namespace JamAI
 	public:
 		enum class EJob : uint8_t { None, Puck, Support, Far, Point, Press, Cover, Weak };
 		EJob LastJob(int i) const { return Job[i]; }
+		// Lane A193 (evolution 7): a skater without the puck's top speed as a sense plans it (skater.speed, times free_speed_mult with bTrueSpeed), and
+		// the presser's own top speed for the gap's retreat (with bTrueGap). Off: exactly InterceptSpeed (x 1.0).
+		double FreeSpeed(const FJamHockeySense& H) const { return Params.InterceptSpeed * (H.bTrueSpeed ? Params.FreeSpeedMult : 1.0); }
+		double GapSpeed(const FJamHockeySense& H) const { return Params.InterceptSpeed * (H.bTrueGap ? Params.FreeSpeedMult : 1.0); }
 	private:
 		static constexpr int kPhaseHist = 64;
 		struct FPoss { int Team = -1; int64_t Since = 0; };

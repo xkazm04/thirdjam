@@ -196,3 +196,26 @@ the stabilization phase. Lanes run on Opus; Fable only for animation and 3D mode
 | the ladder after 2c and 5 | C0 (starts when A184 and A185 are on main): six cells at 2,000, targets 85 / 48 / 26, law 3 a gate; pro's dial, the take shield, the cooldown decided inside it | | 18:30 |
 | the release | S2: the acceptance driver and the release rows on the new controls and the new first screen | | each package |
 Merge clock for dev-b: 15:00 and 18:00. After 20:00: only faults; the soak, the fuzz, the window rows and the submission's writing run through the night.
+
+## Board at 14:45, Saturday 14 Nov (after the operator's notes of 12:20, R-0064)
+
+Main `58af359f`. Landed since the 12:45 board: controls and rebinding (9472de42), free skaters +15 % (1f4be055), the camera at the boards (f7d0b97c),
+the front end (13e36667), the held cross-check with protocol 9 (7bd1d000), the still-hand aim and the badge (7d944ee1), the hits' wind-ups 4 / 4 with
+the breakaway's bonus 0.3 and the stop at 8.5 m (97cf7add), the bots planning with true speeds (58af359f). Packages: H32 (13:25). Next: H33 about 16:00
+(waits for the ladder's first set on this commit), then 18:30; freeze 20:00.
+
+| Lane | Track | Worktree | Evolution | Wanted |
+|---|---|---|---|---|
+| A189 | C0 curve | c0b | the ladder on the new base: six cells, then pass 2 (season ramp, R-0060 column, shield and cooldown prices) | LADDER SET 1 15:40, SET 2 17:45 |
+| A195 | U2 front end | u2 | every screen in the style table (pause, end card, season card, settings, controls); backdrop; device B's kit by name | SCREENS READY 17:15 |
+| A196 | F3 on the ice | f3c | a hit read by an eye: tell before, burst at contact, mark after; boosts with B's props | HITS READY 17:00 |
+| A197 | M1 modes | m1b | Glass House's slot becomes the neon grid mode; twelve modes on the faster skaters | GRID READY 17:00, MODES TABLE 17:30 |
+| A198 | S3 hardening | s3b | soak, lockstep on protocol 9, input fuzz, the bindings file, front end fuzz, frame time | HARD READY 1 17:30, 2 19:30 |
+| A199 | K1 controls | a108 | a button held across a change of possession; tap against hold; the pad; rebinding's edges | CONTROLS READY 4 17:00 |
+| A200 | F1 contact | f1b | how long a wind-up must be for an eye (bots 6 to 12 frames apart from the human's 4) and its price | WINDUP TABLE 16:15, READY 17:00 |
+| A201 | F2 movement | f2b | the stop line lights only when stopping is right (obeying it lost half the wins) | MARKS READY 17:00 |
+| A202 | Q2 brain | q2b | the bots do nothing stupid in front of the operator: detectors over traces, the top three fixed behind switches | WATCH TABLE 16:00, READY 17:30 |
+
+Device B (answered 14:16, five Opus lanes): hit takes and `SetCrossCheckHold` (15:40 to 15:45), boost props (15:45), UI kit and backdrop (18:00 merge),
+the neon rig (17:45), the puck's ring (first), celebration takes (17:00). `handoff/A-to-B-0029.md`: the hits' frames and the question of length.
+Decisions waiting on tables: the bots' wind-up length (16:15), what of the brain's fixes goes on (17:30), the take shield and the cooldown (pass 2).

@@ -605,7 +605,7 @@ namespace JamAI
 				// for while an opponent took it).
 				if (Hy.YieldArriveS >= 0.0 && Ch < 0 && !P.bDown && Db < Params.YieldRadiusM)
 				{
-					bYield = ArriveSec(W, W.PlayerIndex, Params.InterceptSpeed) <= ArriveSec(W, Id, Params.InterceptSpeed * Params.SpeedScale) + Hy.YieldArriveS;
+					bYield = ArriveSec(W, W.PlayerIndex, FreeSpeed(Hy)) <= ArriveSec(W, Id, FreeSpeed(Hy) * Params.SpeedScale) + Hy.YieldArriveS;   // lane A193: both free skaters
 				}
 			}
 			else if (Role != ERole::Back)
@@ -624,7 +624,7 @@ namespace JamAI
 		if (SkillOf(W, Id).Hk.bChaseAhead && Job[Id] == EJob::None && !bStalled && W.CarrierOrHolder() < 0 && W.PuckLastTouch == Id && Role != ERole::Back
 			&& W.PuckVel.Length() > 6.0 && W.PuckVel.Dot(Pp - Me) > 0.0)
 		{
-			const int Own = LoosePuckOwner(W, S.Team, Params.InterceptSpeed * Params.SpeedScale);
+			const int Own = LoosePuckOwner(W, S.Team, FreeSpeed(SkillOf(W, Id).Hk) * Params.SpeedScale);   // lane A193: a loose puck: everyone is free
 			bOwnPass = Own >= 0 && Own != Id;
 		}
 		if (bOwnPass) { Role = ERole::Support; D = 99.0; }
@@ -697,7 +697,8 @@ namespace JamAI
 			{
 				const double Gap = Clamp(Vc.Length() * 0.3, 1.0, 3.0);
 				const FVec2 T = Cp + Ug * Gap + FVec2(0.0, -Sign(Cp.Y) * 0.8);
-				Out = Arrive(Me, T, 1.5) + (Vc * (1.0 / (Params.InterceptSpeed > 1.0 ? Params.InterceptSpeed : 1.0))).LimitLength(Hk.Hk.PressRetreatCap);
+				const double Gs = GapSpeed(Hk.Hk);   // lane A193: the chaser's own top speed (bTrueGap)
+				Out = Arrive(Me, T, 1.5) + (Vc * (1.0 / (Gs > 1.0 ? Gs : 1.0))).LimitLength(Hk.Hk.PressRetreatCap);
 				return Out + Separate(Me, W, Id, Params.SeparateRadius) * 1.2;
 			}
 		}
@@ -1496,7 +1497,7 @@ namespace JamAI
 				const FVec2 Ug = (W.OwnGoal(S.Team) - Cb.Pos).Normalized();
 				if ((Me - Cb.Pos).Dot(Ug) <= 0.0 && Me.DistTo(Cb.Pos) > 2.5)
 				{
-					return (BackcheckPoint(W, Id, Cs, Params.InterceptSpeed * Params.SpeedScale) - Me).Normalized();
+					return (BackcheckPoint(W, Id, Cs, FreeSpeed(K.Hk) * Params.SpeedScale) - Me).Normalized();   // lane A193: the backchecker is free; the carrier at its measured speed
 				}
 			}
 		}
@@ -1512,7 +1513,7 @@ namespace JamAI
 			// lane A3: earliest t with |Pp + V t - Me| = speed * t (speed = own top speed), capped like the plain lead
 			const FVec2 R = Pp - Me;
 			const FVec2 V = W.PuckVel.LimitLength(25.0);
-			const double Sp = Params.InterceptSpeed * Params.SpeedScale;
+			const double Sp = FreeSpeed(K.Hk) * Params.SpeedScale;   // lane A193: the chaser is free
 			const double A = V.Dot(V) - Sp * Sp, B = 2.0 * R.Dot(V), C = R.Dot(R);
 			double T = -1.0;
 			if (std::fabs(A) < 1e-9)
@@ -1912,7 +1913,7 @@ namespace JamAI
 					// shape formed round that skater, beat the human to loose pucks: its touches 23.8 -> 22.0 a minute, the pile 11.9 -> 12.6 %; BRAIN.md)
 					// Lane A115 (REVIEW-CODE.md, severity 3): with bChaseAhead the owner is the skater that reaches where the puck will be first, and a passer is
 					// not the owner of its own pass (on a 15 m pass it was, for half the flight: it chased its own pass).
-					if (H.bChaseAhead) { Own = LoosePuckOwner(W, Team, Params.InterceptSpeed * Params.SpeedScale); }
+					if (H.bChaseAhead) { Own = LoosePuckOwner(W, Team, FreeSpeed(H) * Params.SpeedScale); }   // lane A193
 					else
 					{
 						double Bd = 1e18;
@@ -2048,7 +2049,8 @@ namespace JamAI
 			if (!bCarrier || Spd < 3.0 || Me.DistTo(Cp) < 2.5 || !bGoalSide) { bToPuck = true; return true; }
 			const double Gap = Clamp(Spd * 0.3, 1.0, 3.0);
 			T = Cp + Ug * Gap + FVec2(0.0, -Sign(Cp.Y) * 0.8);
-			Out = Arrive(Me, T, 1.5) + Vc * (1.0 / (Params.InterceptSpeed > 1.0 ? Params.InterceptSpeed : 1.0));
+			const double Gs = GapSpeed(SkillOf(W, Id).Hk);   // lane A193: the presser's own top speed (bTrueGap)
+			Out = Arrive(Me, T, 1.5) + Vc * (1.0 / (Gs > 1.0 ? Gs : 1.0));
 			return true;
 		}
 		case EJob::Cover:
