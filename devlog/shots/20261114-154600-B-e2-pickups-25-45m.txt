@@ -1,0 +1,1 @@
+The six SM_Boost_* pickups (speed, precision, heavy_puck, big_puck, reverse_other, custom) at 25 m (near row) and 45 m (far row) from a replica of the game camera (3.5 m up, -17.65 deg, 70 deg FOV). Bare meshes at scale 1 on the ice; A188's pedestal not present.
