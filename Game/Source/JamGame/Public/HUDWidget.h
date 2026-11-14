@@ -59,6 +59,11 @@ public:
 	// spaces between them (it was four), 143 characters: under the 146 of the ten-verb line this strip's width and type were sized for.
 	// Lane A183: from the live bindings (UJamInputMap::HintStripText; defined in InputMapping.cpp).
 	static FString ControlsHintText();
+	// Lane A191: what the two-role buttons do right now ("LMB  SHOOT     RMB  PASS" with the puck, "LMB  CROSS-CHECK     RMB  CHECK" without), from the
+	// live bindings and the sim's possession (JamControls::HasPuckForButtons); a pill bottom left, at most ButtonsBadgeMaxW wide. Defined in InputMapping.cpp.
+	static FString ButtonsBadgeLine(bool bWithPuck);
+	static constexpr float ButtonsBadgeMaxW = 480.f;
+	FString GetButtonsBadgeShown() const;
 	static bool IsControlsHintSpent() { return bControlsHintSpent; }
 	static void SetControlsHintSpent(bool bSpent) { bControlsHintSpent = bSpent; }   // tests and jam.ui.hintreset
 	// The live rule: the frame window, and not spent this session (bEveryMatch: the neutral value, the strip in every match).
@@ -552,6 +557,11 @@ protected:
 	virtual void NativeDestruct() override;
 
 private:
+	// Lane A191: the buttons' badge (built and updated in InputMapping.cpp: one call each from BuildTree and RefreshFromFrame).
+	void BuildButtonsBadge();
+	void UpdateButtonsBadge(const FJamPresentationFrame& Frame);
+	UPROPERTY(Transient) TObjectPtr<UBorder> ButtonsBadge;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> ButtonsBadgeText;
 	// Lane A18 preview counter (declared by lane A16 to keep the tree compiling, R-0003 point 5).
 	int32 FaceoffPreview = 0;
 	void BuildTree();

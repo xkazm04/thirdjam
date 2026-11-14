@@ -16,6 +16,14 @@
 #include "MenuFlow.h"
 #include "HUDWidget.h"
 #include "SettingsWidget.h"
+#include "MenuStyle.h"
+#include "HokejGameMode.h"
+#include "HUDFeed.h"
+#include "Blueprint/WidgetTree.h"
+#include "Components/CanvasPanel.h"
+#include "Components/CanvasPanelSlot.h"
+#include "Components/Border.h"
+#include "Components/TextBlock.h"
 
 // Lane A49: 1 = one JAMCTRL line per sim frame with the stick the human sends and its source (mouse | pad | mousedelta | none); the button edges log always.
 static TAutoConsoleVariable<int32> CVarJamCtrlLog(TEXT("jam.ctrl.Log"), 0, TEXT("1 = JAMCTRL stick line every sim frame (lane A49 proof); button edges always log."));
@@ -336,8 +344,7 @@ bool JamControls::HasPuckForButtons(const UJamSim& Sim, int32 Skater)
 }
 
 // A184 (the contact lane) adds FJamInput::bCrossHold. Until that field is on this tree the hold is computed, logged and dropped here.
-// THE DIRECTOR FLIPS THIS ONE LINE when A183 and A184 are both on main: 0 -> 1.
-#define JAM_INPUT_HAS_CROSS_HOLD 1
+// The switch is JAM_INPUT_HAS_CROSS_HOLD in InputMapping.h (lane A191 moved it there: the acceptance drill's held cross-check row reads it too).
 
 void JamControls::SetCrossHold(FJamInput& In, bool bHeld)
 {
@@ -903,4 +910,90 @@ void UJamPlayerInput::DebugInjectKey(APlayerController* PC, FKey Key, float Valu
 FString UJamHudWidget::ControlsHintText()
 {
 	return UJamInputMap::HintStripText();
+}
+
+// ---------------------------------------------------------------- lane A191: a still hand keeps its point on the ice
+
+static TAutoConsoleVariable<int32> CVarJamCtrlAimAnchor(TEXT("jam.ctrl.AimAnchor"), 1,
+	TEXT("Lane A191: 1 = while the cursor's pixel is still and the skater stands, the blade keeps its offset from him (a camera correction no longer swings it); 0 = the cursor re-projected every sim step (the aim of before)."));
+static TAutoConsoleVariable<float> CVarJamCtrlAimAnchorSpeed(TEXT("jam.ctrl.AimAnchorSpeed"), 0.3f,
+	TEXT("Lane A191: the skater's speed (m/s) under which a still cursor anchors (measured: 0.3 drifts least from the cursor's true point; 1 and 2 drift up to 64 deg)."));
+
+FVector2D FJamAimAnchor::Step(const FVector2D& PixelPx, const FVector2D& HitM, const FVector2D& SkaterM, bool bOn, double StandSpeedMps)
+{
+	const double Speed = bHave ? FVector2D::Distance(SkaterM, LastSkater) * 60.0 : 1e9;   // one call a sim step (60 Hz); a faceoff's teleport re-projects
+	const bool bPixelMoved = !bHave || FVector2D::Distance(PixelPx, LastPx) >= 0.5;
+	if (!bOn || bPixelMoved || Speed >= StandSpeedMps)
+	{
+		Offset = HitM - SkaterM;
+		bAnchored = false;
+		LastPx = PixelPx;   // the reference pixel moves only when the anchor lets go: a slow drift of the hand adds up to half a pixel, then re-projects
+	}
+	else bAnchored = true;
+	LastSkater = SkaterM;
+	bHave = true;
+	return SkaterM + Offset;
+}
+
+FVector2D FJamAimAnchor::StepLive(const FVector2D& PixelPx, const FVector2D& HitM, const FVector2D& SkaterM)
+{
+	return Step(PixelPx, HitM, SkaterM, CVarJamCtrlAimAnchor.GetValueOnGameThread() != 0, CVarJamCtrlAimAnchorSpeed.GetValueOnGameThread());
+}
+
+// ---------------------------------------------------------------- lane A191: what the buttons do right now (the HUD's badge)
+
+static TAutoConsoleVariable<int32> CVarJamHudButtonsBadge(TEXT("jam.hud.ButtonsBadge"), 1, TEXT("Lane A191: 1 = the bottom-left pill says what LMB / RMB do right now (SHOOT or CROSS-CHECK, PASS or CHECK); 0 = hidden."));
+
+FString UJamHudWidget::ButtonsBadgeLine(bool bWithPuck)
+{
+	const FJamBindings& B = UJamInputMap::Get()->GetBindings();
+	TArray<FString> Parts;
+	TArray<FKey> Seen;
+	for (const EJamVerb V : { EJamVerb::Shoot, EJamVerb::Pass })
+	{
+		if (B[V].Keys.Num() == 0 || Seen.Contains(B[V].Keys[0])) continue;
+		const FKey K = B[V].Keys[0];
+		Seen.Add(K);
+		const EJamVerb With = B.WithVerbOn(K), Without = B.WithoutVerbOn(K);
+		const EJamVerb Now = bWithPuck ? (With != EJamVerb::Count ? With : Without) : (Without != EJamVerb::Count ? Without : With);
+		if (Now != EJamVerb::Count) Parts.Add(FString::Printf(TEXT("%s  %s"), *UJamInputMap::KeyName(K), *FJamBindings::VerbLabel(Now)));
+	}
+	return FString::Join(Parts, TEXT("     "));
+}
+
+FString UJamHudWidget::GetButtonsBadgeShown() const
+{
+	return ButtonsBadgeText && ButtonsBadge && ButtonsBadge->GetVisibility() != ESlateVisibility::Collapsed ? ButtonsBadgeText->GetText().ToString() : FString();
+}
+
+void UJamHudWidget::BuildButtonsBadge()
+{
+	using S = FJamUiStyle;
+	if (!WidgetTree || !Root) return;
+	ButtonsBadge = S::Plate(WidgetTree, S::Pill(0.72f, 0.f), FMargin(14, 5));
+	ButtonsBadge->SetVisibility(ESlateVisibility::Collapsed);
+	ButtonsBadgeText = S::Text(WidgetTree, TEXT(""), S::Font(S::Body - 2, FName("Bold"), 20), S::Paper());
+	ButtonsBadge->SetContent(ButtonsBadgeText);
+	UCanvasPanelSlot* BadgeSlot = Root->AddChildToCanvas(ButtonsBadge);
+	// Bottom left under the hint strip (whose foot stands 96 above the bottom edge), clear of the commentary strip (centre, 880 wide) and the stamina bar.
+	BadgeSlot->SetAnchors(FAnchors(0, 1, 0, 1));
+	BadgeSlot->SetAlignment(FVector2D(0, 1));
+	BadgeSlot->SetAutoSize(true);
+	BadgeSlot->SetPosition(FVector2D(S::EdgePx, -S::EdgePx));
+}
+
+void UJamHudWidget::UpdateButtonsBadge(const FJamPresentationFrame& F)
+{
+	if (!ButtonsBadge || !ButtonsBadgeText) return;
+	const AHokejGameMode* GM = GetWorld() ? GetWorld()->GetAuthGameMode<AHokejGameMode>() : nullptr;
+	const UJamSim* Sim = GM ? GM->GetSim() : nullptr;
+	if (CVarJamHudButtonsBadge.GetValueOnGameThread() == 0 || !Sim || !Sim->GetSkaters().IsValidIndex(F.HumanIndex))
+	{
+		ButtonsBadge->SetVisibility(ESlateVisibility::Collapsed);
+		return;
+	}
+	// The same possession the buttons read at the sim step (FJamButtonResolver), on the frame this HUD shows.
+	const FString Line = ButtonsBadgeLine(JamControls::HasPuckForButtons(*Sim, F.HumanIndex));
+	if (ButtonsBadgeText->GetText().ToString() != Line) ButtonsBadgeText->SetText(FText::FromString(Line));
+	ButtonsBadge->SetVisibility(Line.IsEmpty() ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
 }

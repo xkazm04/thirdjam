@@ -622,6 +622,7 @@ void UJamHudWidget::BuildTree()
 	StripSlot->SetAnchors(FAnchors(0, 1, 1, 1));
 	StripSlot->SetAlignment(FVector2D(0, 1));
 	StripSlot->SetOffsets(FMargin(S::EdgePx, -96, ControlsRightInsetPx, 44));
+	BuildButtonsBadge();   // lane A191: what LMB / RMB do right now (InputMapping.cpp)
 
 	// ---- Lane A64: a notice plate top-left (a rejected -cut cartridge), 4 s.
 	ToastPlate = S::Plate(T, S::Pill(0.86f), FMargin(16, 6));
@@ -894,6 +895,7 @@ void UJamHudWidget::RefreshFromFrame(const FJamPresentationFrame& F)
 	}
 
 	UpdateContactLine(F);   // lane A101
+	UpdateButtonsBadge(F);   // lane A191 (InputMapping.cpp)
 
 	// Controls strip: full for 8 s, fading over the last 2 s of the hint window.
 	// Lane A111: the first match of a session only; spent once the window has run out in play or the human has shot (HandleJamEvent).

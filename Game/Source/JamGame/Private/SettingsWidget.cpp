@@ -480,9 +480,9 @@ void UJamControlsWidget::BuildTree()
 	S::AddO(Root, Box);
 	AddV(Box, S::Section(T, TEXT("CONTROLS")), FMargin(0, 0, 0, 4));
 	UTextBlock* How = S::Text(T, TEXT("Click a key or a pad button, then press the new one. Esc cancels. Saved at once."), S::CaptionFont(), S::Muted());
-	How->SetWrapTextAt(820.f);
+	How->SetWrapTextAt(700.f);
 	AddV(Box, How, FMargin(0, 0, 0, 6));
-	const float VerbW = 290.f, KeysW = 300.f, PadW = 200.f;
+	const float VerbW = 250.f, KeysW = 270.f, PadW = 180.f;   // lane A191: 724 with the gaps: inside the pause card's 744 as well as the menu card
 	auto Fixed = [&](UHorizontalBox* Row, UWidget* W, float Width)
 	{
 		USizeBox* Size = T->ConstructWidget<USizeBox>(USizeBox::StaticClass());
@@ -521,7 +521,7 @@ void UJamControlsWidget::BuildTree()
 		AddV(Box, Row, FMargin(0, 1));
 	}
 	StatusText = S::Text(T, TEXT(""), S::BodyFont(), S::Yellow());
-	StatusText->SetWrapTextAt(820.f);
+	StatusText->SetWrapTextAt(700.f);
 	AddV(Box, StatusText, FMargin(0, 6, 0, 0));
 	UHorizontalBox* Buttons = T->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
 	UTextBlock* RT = nullptr;

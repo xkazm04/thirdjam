@@ -199,6 +199,10 @@ void UJamDirectorsCallWidget::BuildTree()
 	RestartButton->OnClicked.AddDynamic(this, &UJamDirectorsCallWidget::OnRestartClicked);
 	Tinted.Add(TPair<TWeakObjectPtr<UButton>, TWeakObjectPtr<UTextBlock>>(RestartButton, Txt));
 	AddV(Pause, RestartButton, FMargin(120, 4));
+	ControlsButton = Button(T, TEXT("CONTROLS"), S::Label, Txt);   // lane A191: rebind mid-match (the CONTROLS screen, SettingsWidget.cpp)
+	ControlsButton->OnClicked.AddDynamic(this, &UJamDirectorsCallWidget::OnControlsClicked);
+	Tinted.Add(TPair<TWeakObjectPtr<UButton>, TWeakObjectPtr<UTextBlock>>(ControlsButton, Txt));
+	AddV(Pause, ControlsButton, FMargin(120, 4));
 	QuitButton = Button(T, TEXT("QUIT TO MENU"), S::Label, Txt);
 	QuitButton->OnClicked.AddDynamic(this, &UJamDirectorsCallWidget::OnQuitClicked);
 	Tinted.Add(TPair<TWeakObjectPtr<UButton>, TWeakObjectPtr<UTextBlock>>(QuitButton, Txt));
@@ -245,8 +249,32 @@ void UJamDirectorsCallWidget::BuildTree()
 	AddH(Actions, BackButton, FMargin(0));
 	AddV(Call, Actions, FMargin(0, 4, 0, 0), HAlign_Center);
 	Switcher->AddChild(Call);
+	// Screen 2 (lane A191): the CONTROLS screen, the same one the front end shows.
+	ControlsScreen = UJamSettingsWidget::MakeControlsScreen(this);
+	if (ControlsScreen)
+	{
+		ControlsScreen->OnBack.AddDynamic(this, &UJamDirectorsCallWidget::OnControlsBack);
+		Switcher->AddChild(ControlsScreen);
+	}
 	Switcher->SetActiveWidgetIndex(0);
 }
+
+void UJamDirectorsCallWidget::ShowControls()
+{
+	if (!Switcher || !ControlsScreen) return;
+	bOnCall = false;
+	ControlsScreen->Refresh();
+	Switcher->SetActiveWidgetIndex(2);
+	PendingFocus = ControlsScreen->GetFirstFocusable();
+}
+
+bool UJamDirectorsCallWidget::IsOnControls() const
+{
+	return Switcher && ControlsScreen && Switcher->GetActiveWidgetIndex() == 2;
+}
+
+void UJamDirectorsCallWidget::OnControlsClicked() { ShowControls(); }
+void UJamDirectorsCallWidget::OnControlsBack() { ShowPause(); PendingFocus = ControlsButton.Get(); }
 
 void UJamDirectorsCallWidget::RebuildRows()
 {
@@ -440,6 +468,7 @@ void UJamDirectorsCallWidget::NativeTick(const FGeometry& MyGeometry, float InDe
 FReply UJamDirectorsCallWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent)
 {
 	const FKey K = InKeyEvent.GetKey();
+	if (IsOnControls() && (K == EKeys::Escape || IsBackKey(K))) { OnControlsBack(); return FReply::Handled(); }   // lane A191: Esc on CONTROLS goes back, not on
 	if (K == EKeys::Escape || K == EKeys::Gamepad_Special_Right)
 	{
 		if (Owner.IsValid()) Owner->Resume();

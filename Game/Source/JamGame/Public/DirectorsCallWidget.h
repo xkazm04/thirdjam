@@ -115,6 +115,8 @@ private:
 	UFUNCTION() void OnQuitClicked();
 	UFUNCTION() void OnApplyClicked();
 	UFUNCTION() void OnBackClicked();
+	UFUNCTION() void OnControlsClicked();   // lane A191: the CONTROLS screen from the pause card
+	UFUNCTION() void OnControlsBack();
 
 	TWeakObjectPtr<UJamDirectorsCallController> Owner;
 	TArray<FJamCallTunable> Tunables;
@@ -137,6 +139,13 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> CallStatus;
 	UPROPERTY(Transient) TObjectPtr<UButton> ApplyButton;
 	UPROPERTY(Transient) TObjectPtr<UButton> BackButton;
+	UPROPERTY(Transient) TObjectPtr<UButton> ControlsButton;   // lane A191
+	UPROPERTY(Transient) TObjectPtr<class UJamControlsWidget> ControlsScreen;   // lane A191: screen 2 of the switcher
+public:
+	// Lane A191: the CONTROLS screen (rebind every verb) as the pause card's third screen; BACK or Esc returns to the pause menu.
+	void ShowControls();
+	bool IsOnControls() const;
+	class UJamControlsWidget* GetControlsScreen() const { return ControlsScreen; }
 };
 
 // The overlay: period card and the Director's Call scoreboard line. Frames are simulation frames from the presentation feed.

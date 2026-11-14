@@ -7,6 +7,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 #include "JamSim.h"
+#include "InputMapping.h"   // lane A191: FJamAimAnchor
 #include "HokejGameMode.generated.h"
 
 class UJamCartridge;
@@ -127,11 +128,14 @@ private:
 	// CursorAimFromRay (the ray from the camera through the cursor; bInOutAiming is the hysteresis state, this game mode's bCursorAiming).
 public:
 	static bool CursorAimFromRay(const FVector& RayOrigin, const FVector& RayDir, const FVector2D& SkaterPosM, bool& bInOutAiming, FVector2D& OutStick);
+	// Lane A191: the same from the ice point (metres) the blade aims at (CursorAimFromRay's hit, or the still hand's anchored point).
+	static bool CursorAimFromHit(const FVector2D& HitM, const FVector2D& SkaterPosM, bool& bInOutAiming, FVector2D& OutStick);
 protected:
 	void EnsureMatchInputMode(APlayerController* PC);   // lane A110: the lobby sets the same cursor mode (A49), or the cursor is hidden and never aims
 	bool bMatchInputModeSet = false;
 	bool CursorAimRink(APlayerController* PC, const FVector2D& SkaterPosM, FVector2D& OutStick);
 	bool bCursorAiming = false;
+	FJamAimAnchor AimAnchor;   // lane A191: a still hand keeps its point on the ice (jam.ctrl.AimAnchor)
 private:
 	// Lane A49: the button edges logged once per press (JAMCTRL btn=...), the sprint level and brake level on change.
 	bool bLastSprint = false, bLastBrake = false, bLastShootHeld = false, bLastPassHeld = false;

@@ -16,8 +16,13 @@
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "Internationalization/Regex.h"
+#include "HokejGameMode.h"
+#include "MenuStyle.h"
+#include "Fonts/FontMeasure.h"
+#include "Rendering/SlateRenderer.h"
 
 #if WITH_DEV_AUTOMATION_TESTS   // Director, 14 Nov: the gate's guard step (lane A159) caught this file with no guard on its first landing
+
 
 namespace JamControlsTests
 {
@@ -469,6 +474,192 @@ bool FJamControlsScreen::RunTest(const FString&)
 	// Reset.
 	W->ResetToDefaults();
 	TestTrue(TEXT("RESET TO DEFAULTS: the game and the profile have the defaults"), UJamInputMap::Get()->GetBindings() == FJamBindings::Defaults() && FJamBindings::FromSaved(FJamSettings::Load().Controls) == FJamBindings::Defaults());
+	return true;
+}
+
+// ---------------------------------------------------------------- lane A191 (evolution 2): the still hand's aim, the held cross-check, the badge, the pause card
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamControlsAimAnchor, "Jam.Controls.AimAnchor", JamControlsTests::Flags)
+bool FJamControlsAimAnchor::RunTest(const FString&)
+{
+	// A standing skater, the cursor still, the camera correcting: the ice point under the pixel walks 0.4 m sideways over 30 frames.
+	const FVector2D Sk(10.0, 5.0), Px(1100.0, 600.0);
+	FJamAimAnchor A;
+	FVector2D Got = A.Step(Px, Sk + FVector2D(2.5, 0.0), Sk, true, 0.3);
+	TestTrue(TEXT("the first step aims at the cursor's ice point"), Got.Equals(Sk + FVector2D(2.5, 0.0), 1e-6));
+	double WorstTurn = 0.0;
+	for (int32 F = 1; F <= 30; ++F)
+	{
+		Got = A.Step(Px, Sk + FVector2D(2.5, 0.4 * F / 30.0), Sk, true, 0.3);
+		WorstTurn = FMath::Max(WorstTurn, FMath::Abs(FMath::RadiansToDegrees(FMath::Atan2(Got.Y - Sk.Y, Got.X - Sk.X))));
+	}
+	TestTrue(TEXT("a still hand on a standing skater: the blade holds through the correction (0 deg)"), WorstTurn < 1e-6 && A.IsAnchored());
+	// The hand moves (one pixel): the aim takes the cursor's point at once.
+	Got = A.Step(Px + FVector2D(1.0, 0.0), Sk + FVector2D(2.5, 0.4), Sk, true, 0.3);
+	TestTrue(TEXT("a moved pixel re-projects"), Got.Equals(Sk + FVector2D(2.5, 0.4), 1e-6) && !A.IsAnchored());
+	// A drift under half a pixel adds up: the reference stays where the anchor began, so 0.3 + 0.3 px re-projects.
+	FJamAimAnchor D;
+	D.Step(Px, Sk + FVector2D(2.5, 0.0), Sk, true, 0.3);
+	D.Step(Px + FVector2D(0.3, 0.0), Sk + FVector2D(2.5, 0.1), Sk, true, 0.3);
+	TestTrue(TEXT("0.3 px: still anchored"), D.IsAnchored());
+	Got = D.Step(Px + FVector2D(0.6, 0.0), Sk + FVector2D(2.5, 0.2), Sk, true, 0.3);
+	TestTrue(TEXT("0.6 px from where the anchor began: re-projected"), !D.IsAnchored() && Got.Equals(Sk + FVector2D(2.5, 0.2), 1e-6));
+	// The skater skates (1 m/s): the camera leads him, the cursor's point is what the blade follows.
+	FJamAimAnchor M;
+	M.Step(Px, Sk + FVector2D(2.5, 0.0), Sk, true, 0.3);
+	const FVector2D Sk2 = Sk + FVector2D(1.0 / 60.0, 0.0);
+	Got = M.Step(Px, Sk2 + FVector2D(2.5, 0.3), Sk2, true, 0.3);
+	TestTrue(TEXT("a skating skater (1 m/s, over 0.3): re-projected"), !M.IsAnchored() && Got.Equals(Sk2 + FVector2D(2.5, 0.3), 1e-6));
+	// Off: the aim of before (every step re-projected).
+	FJamAimAnchor O;
+	O.Step(Px, Sk + FVector2D(2.5, 0.0), Sk, false, 0.3);
+	Got = O.Step(Px, Sk + FVector2D(2.5, 0.3), Sk, false, 0.3);
+	TestTrue(TEXT("jam.ctrl.AimAnchor 0: re-projected every step"), Got.Equals(Sk + FVector2D(2.5, 0.3), 1e-6));
+	// The stick from the anchored point is the stick of before for the same point (CursorAimFromHit is CursorAimFromRay's ice math).
+	bool bA = false, bB = false;
+	FVector2D S1, S2;
+	const FVector Origin(1000.0, 500.0, 350.0), Dir = (FVector(1250.0, 520.0, 0.0) - Origin).GetSafeNormal();
+	AHokejGameMode::CursorAimFromRay(Origin, Dir, Sk, bA, S1);
+	const FVector HitW = Origin + Dir * (-Origin.Z / Dir.Z);
+	AHokejGameMode::CursorAimFromHit(FVector2D(HitW.X / 100.0, HitW.Y / 100.0), Sk, bB, S2);
+	TestTrue(TEXT("CursorAimFromHit gives CursorAimFromRay's stick"), S1.Equals(S2, 1e-9) && bA == bB);
+	IConsoleVariable* Cv = IConsoleManager::Get().FindConsoleVariable(TEXT("jam.ctrl.AimAnchor"));
+	TestTrue(TEXT("jam.ctrl.AimAnchor ships on (the measured variant: status/A191.md)"), Cv && Cv->GetInt() == 1);
+	IConsoleVariable* Sp = IConsoleManager::Get().FindConsoleVariable(TEXT("jam.ctrl.AimAnchorSpeed"));
+	TestTrue(TEXT("jam.ctrl.AimAnchorSpeed is 0.3 m/s"), Sp && FMath::IsNearlyEqual(Sp->GetFloat(), 0.3f));
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamControlsHeldCrossCheck, "Jam.Controls.HeldCrossCheck", JamControlsTests::Flags)
+bool FJamControlsHeldCrossCheck::RunTest(const FString&)
+{
+	// The acceptance drill's step 7 k=3 in the staged sim: the human comes from 9 m at 5 m/s with the cross-check held (bLift on the press, bCrossHold every
+	// frame) into a carrier that stands: the man goes down by the speed brought. Runs once A184's FJamInput::bCrossHold is on the tree (JAM_INPUT_HAS_CROSS_HOLD 1).
+#if JAM_INPUT_HAS_CROSS_HOLD
+	FJamGameConfig Cfg;
+	if (!LoadRegular(*this, Cfg)) return false;
+	UJamSim* Sim = NewObject<UJamSim>();
+	Sim->Init(Cfg, 1);
+	Sim->SkipFaceoff();
+	const int32 Me = Sim->GetHumanIndex();
+	int32 Opp = -1;
+	for (const FJamSkaterState& S : Sim->GetSkaters()) if (S.Team != Sim->GetSkaters()[Me].Team) { Opp = S.Index; break; }
+	if (!TestTrue(TEXT("an opponent"), Opp >= 0)) return false;
+	for (const FJamSkaterState& S : Sim->GetSkaters()) if (S.Index != Me && S.Index != Opp) Sim->SetSkater(S.Index, FVector2D(-25.0, -10.0 + S.Index), FVector2D::ZeroVector, 0.0);
+	Sim->SetSkater(Me, FVector2D(-9.0, 0.0), FVector2D(5.0, 0.0), 0.0);
+	Sim->SetSkater(Opp, FVector2D(2.0, 0.0), FVector2D::ZeroVector, PI);
+	Sim->ClearReleaseGrace(Opp);
+	Sim->SetPuck(FVector2D(2.45, 0.0), FVector2D::ZeroVector);
+	TArray<FJamInput> In;
+	In.Init(FJamInput(), Sim->GetSkaters().Num());
+	bool bDown = false;
+	double Closing = 0.0;
+	for (int32 F = 0; F < 240 && !bDown; ++F)
+	{
+		In[Me] = FJamInput();
+		In[Me].Move = FVector2D(1.0, 0.0);
+		In[Me].bLift = F == 0;
+		JamControls::SetCrossHold(In[Me], true);
+		Sim->Step(In);
+		const FJamSkaterState& H = Sim->GetSkaters()[Me];
+		const FJamSkaterState& O = Sim->GetSkaters()[Opp];
+		if (Closing == 0.0 && FVector2D::Distance(H.Pos, O.Pos) <= UJamSim::SkaterRadius * 2.0 + 0.25) Closing = (H.Vel - O.Vel).Size();
+		bDown = O.IsDown();
+	}
+	AddInfo(FString::Printf(TEXT("JAMCTRL held cross-check: down=%d closing=%.2f"), bDown ? 1 : 0, Closing));
+	TestTrue(TEXT("held into a standing man at speed: he goes down"), bDown);
+#else
+	AddInfo(TEXT("JAMCTRL held cross-check: skipped (JAM_INPUT_HAS_CROSS_HOLD 0: A184's FJamInput::bCrossHold is not on this tree; the drill's row logs skipped=no_hold)"));
+	FJamInput In;
+	JamControls::SetCrossHold(In, true);   // compiles and does nothing without the field
+#endif
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamControlsButtonsBadge, "Jam.Controls.ButtonsBadge", JamControlsTests::Flags)
+bool FJamControlsButtonsBadge::RunTest(const FString&)
+{
+	FRestoreBindings Restore;
+	UJamInputMap::Get()->ApplyBindings(FJamBindings::Defaults());
+	TestEqual(TEXT("with the puck"), UJamHudWidget::ButtonsBadgeLine(true), FString(TEXT("LMB  SHOOT     RMB  PASS")));
+	TestEqual(TEXT("without"), UJamHudWidget::ButtonsBadgeLine(false), FString(TEXT("LMB  CROSS-CHECK     RMB  CHECK")));
+	// Within a frame: on every frame of a staged pickup and loss the badge and an LMB press read the same possession (HasPuckForButtons of that frame).
+	FJamGameConfig Cfg;
+	if (!LoadRegular(*this, Cfg)) return false;
+	UJamSim* Sim = NewObject<UJamSim>();
+	Sim->Init(Cfg, 1);
+	Sim->SkipFaceoff();
+	TArray<FJamInput> In;
+	In.Init(FJamInput(), Sim->GetSkaters().Num());
+	int32 Agree = 0, Frames = 0, Flips = 0;
+	bool bLast = false;
+	for (int32 F = 0; F < 90; ++F)
+	{
+		const FJamSkaterState& T = Sim->GetSkaters()[0];
+		// Carried for 40 frames, then an opponent's (on his blade: his touch; a loose puck of our own would still read "with": our pass in flight).
+		int32 Opp = -1;
+		for (const FJamSkaterState& S : Sim->GetSkaters()) if (S.Team != T.Team) { Opp = S.Index; break; }
+		const FJamSkaterState& Holder = F < 40 || Opp < 0 ? T : Sim->GetSkaters()[Opp];
+		Sim->SetPuck(Holder.Pos + Holder.Forward() * 0.45, Holder.Vel);
+		Sim->Step(In);
+		const bool bWith = JamControls::HasPuckForButtons(*Sim, 0);
+		FJamButtonResolver R;
+		R.Press(EKeys::LeftMouseButton);
+		const FJamButtonVerbs V = R.Step(bWith, UJamInputMap::Get()->GetBindings());
+		const FString Line = UJamHudWidget::ButtonsBadgeLine(bWith);
+		Agree += (V.bShootPress == Line.Contains(TEXT("LMB  SHOOT")) && V.bLift == Line.Contains(TEXT("LMB  CROSS-CHECK"))) ? 1 : 0;
+		if (F > 0 && bWith != bLast) ++Flips;
+		bLast = bWith;
+		++Frames;
+	}
+	AddInfo(FString::Printf(TEXT("JAMCTRL badge: %d of %d frames agree with the press, %d flips"), Agree, Frames, Flips));
+	TestEqual(TEXT("the badge says what an LMB press does on every frame"), Agree, Frames);
+	TestTrue(TEXT("the staging flipped possession"), Flips >= 1);
+	// The fit: the pill's words at the HUD's type, with the longest key names, inside ButtonsBadgeMaxW.
+	const TSharedRef<FSlateFontMeasure> Measure = FSlateApplication::Get().GetRenderer()->GetFontMeasureService();
+	const FSlateFontInfo Font = FJamUiStyle::Font(FJamUiStyle::Body - 2, FName("Bold"), 20);
+	auto Width = [&](const FString& S) { return static_cast<float>(Measure->Measure(S, Font).X) + 28.f; };
+	float Widest = FMath::Max(Width(UJamHudWidget::ButtonsBadgeLine(true)), Width(UJamHudWidget::ButtonsBadgeLine(false)));
+	FJamBindings L = FJamBindings::Defaults();
+	L.Rebind(EJamVerb::CrossCheck, EKeys::BackSpace);
+	L.Rebind(EJamVerb::Shoot, EKeys::BackSpace);   // a two-role key with a long name
+	L.Rebind(EJamVerb::Check, EKeys::CapsLock);
+	L.Rebind(EJamVerb::Pass, EKeys::CapsLock);
+	UJamInputMap::Get()->ApplyBindings(L);
+	const FString LongWith = UJamHudWidget::ButtonsBadgeLine(true), LongWithout = UJamHudWidget::ButtonsBadgeLine(false);
+	Widest = FMath::Max(Widest, FMath::Max(Width(LongWith), Width(LongWithout)));
+	AddInfo(FString::Printf(TEXT("JAMCTRL badge widest %.0f of %.0f ('%s')"), Widest, UJamHudWidget::ButtonsBadgeMaxW, *LongWithout));
+	TestTrue(TEXT("the badge fits its corner at 1280 x 720 (the 1920 x 1080 layout units), long names too"), Widest > 0.f && Widest <= UJamHudWidget::ButtonsBadgeMaxW);
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamControlsPauseCard, "Jam.Controls.FromThePauseCard", JamControlsTests::Flags)
+bool FJamControlsPauseCard::RunTest(const FString&)
+{
+	const FJamSettings Fresh;
+	FJamSettings::SetOverrideForTest(&Fresh);
+	ON_SCOPE_EXIT { FJamSettings::SetOverrideForTest(nullptr); };
+	if (!GEngine || !FSlateApplication::IsInitialized()) { AddInfo(TEXT("no Slate: skipped")); return true; }
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false, TEXT("JamControlsPauseWorld"));
+	GEngine->CreateNewWorldContext(EWorldType::Game).SetCurrentWorld(World);
+	ON_SCOPE_EXIT { GEngine->DestroyWorldContext(World); World->DestroyWorld(false); };
+	UJamDirectorsCallWidget* P = CreateWidget<UJamDirectorsCallWidget>(World, UJamDirectorsCallWidget::StaticClass());
+	if (!TestNotNull(TEXT("the pause card builds"), P)) return false;
+	P->AddToRoot();
+	ON_SCOPE_EXIT { P->ReleaseSlateResources(true); P->RemoveFromRoot(); };
+	TSharedRef<SWidget> Slate = P->TakeWidget();
+	TestNotNull(TEXT("the pause card carries the CONTROLS screen"), P->GetControlsScreen());
+	P->ShowControls();
+	TestTrue(TEXT("CONTROLS opens on the pause card"), P->IsOnControls());
+	Slate->SlatePrepass(1.f);
+	const FVector2D Size = Slate->GetDesiredSize();
+	UJamControlsWidget* C = P->GetControlsScreen();
+	const FVector2D CSize = C ? FVector2D(C->TakeWidget()->GetDesiredSize()) : FVector2D::ZeroVector;
+	AddInfo(FString::Printf(TEXT("JAMCTRL pause card with CONTROLS %.0f x %.0f; the screen %.0f x %.0f (card inner %.0f)"), Size.X, Size.Y, CSize.X, CSize.Y, UJamDirectorsCallWidget::PauseCardInnerWidth));
+	TestTrue(TEXT("the CONTROLS screen fits the card's inner width"), CSize.X > 100.f && CSize.X <= UJamDirectorsCallWidget::PauseCardInnerWidth);
+	TestTrue(TEXT("the card fits 1080 high"), Size.Y > 100.f && Size.Y <= 1080.f);
+	if (C) C->OnBack.Broadcast();
+	TestFalse(TEXT("BACK returns to the pause menu"), P->IsOnControls());
 	return true;
 }
 

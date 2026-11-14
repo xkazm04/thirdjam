@@ -112,6 +112,32 @@ private:
 	TArray<FHeldKey> Held;
 };
 
+// Lane A191 (the camera lane's finding A186, R-0064's first weak point): a still hand keeps its point on the ice. The blade aims at the cursor's ice point,
+// re-projected through the camera every sim step, so a camera correction swings the blade under a still mouse. While the cursor's pixel has not moved
+// (under half a pixel) and the skater stands (under jam.ctrl.AimAnchorSpeed m/s), the aim keeps its offset from the skater; otherwise it re-projects.
+// Measured (tools/qa/aim/a191-aim.py, status/A191.md): the still-cursor turn through corrections 17.1 -> 0 deg worst, the drift from the cursor's true
+// point in play p90 0 deg (worst 5.5 deg at 2 s); an always-on anchor or a catch-up drifts p90 25 to 140 deg in open ice (the camera leads the skater).
+struct JAMGAME_API FJamAimAnchor
+{
+	// The ice point to aim at (metres). PixelPx: the cursor's pixel; HitM: its ice point through the camera now; SkaterM: the skater now. Call once a sim step.
+	FVector2D Step(const FVector2D& PixelPx, const FVector2D& HitM, const FVector2D& SkaterM, bool bOn, double StandSpeedMps);
+	// The same with jam.ctrl.AimAnchor and jam.ctrl.AimAnchorSpeed.
+	FVector2D StepLive(const FVector2D& PixelPx, const FVector2D& HitM, const FVector2D& SkaterM);
+	void Reset() { bHave = false; bAnchored = false; }
+	bool IsAnchored() const { return bAnchored; }
+
+private:
+	bool bHave = false;
+	bool bAnchored = false;
+	FVector2D LastPx = FVector2D::ZeroVector;
+	FVector2D LastSkater = FVector2D::ZeroVector;
+	FVector2D Offset = FVector2D::ZeroVector;
+};
+
+// A184 (the contact lane) adds FJamInput::bCrossHold. THE DIRECTOR FLIPS THIS ONE LINE when A184's field is on main: 0 -> 1. It turns on the write of
+// the level (JamControls::SetCrossHold), the acceptance drill's held cross-check row (step 7 k=3) and its test (Jam.Controls.HeldCrossCheck).
+#define JAM_INPUT_HAS_CROSS_HOLD 1
+
 namespace JamControls
 {
 	// "With the puck" for the two-role buttons: the skater carries it, or (jam.ctrl.OurPuckShoots 1, the default) the puck is loose and was last

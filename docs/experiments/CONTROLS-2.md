@@ -23,6 +23,9 @@ saucer pass. Crosscheck should be holdable so player with speed momentum can run
 | Aim | mouse | right stick | fixed |
 | Signals | 1-4 | D-pad | fixed (SignalSystem) |
 
+Q (pass), MMB and mouse 4 (cross-check), X (pass) and LB (cross-check) stay as second bindings: the operator did not ask to free them (lane A191,
+the Director's word); a player who wants them free rebinds them on the CONTROLS screen.
+
 What moved on the pad: RB was the check only, now pass with the puck / check without; RT was the shot only, now shot / cross-check; LB and X stay as
 second bindings (cross-check, pass). On the mouse: RMB was the check only; Q and MMB stay as second bindings.
 
@@ -38,7 +41,7 @@ second bindings (cross-check, pass). On the mouse: RMB was the check only; Q and
 - Shared keys: only one with-verb and one without-verb may share a key; any other clash is refused or swapped (FJamBindings::Rebind, IsValid).
 
 ## The held cross-check (A184's field)
-InputMapping.cpp: `#define JAM_INPUT_HAS_CROSS_HOLD 0`. When A184's `FJamInput::bCrossHold` is on main the Director sets it to 1;
+InputMapping.h (lane A191 moved it from InputMapping.cpp): `#define JAM_INPUT_HAS_CROSS_HOLD 0`. When A184's `FJamInput::bCrossHold` is on main the Director sets it to 1;
 `JamControls::SetCrossHold` then writes the level (held and not carrying). Until then the level is computed and logged (`JAMCTRL btn=crosshold held=`).
 The lockstep wire for the field (a flag bit) is A184's.
 
@@ -57,3 +60,35 @@ the live mapping context.
 ## The acceptance run
 `tools/qa/accept/keys.json`: shoot LMB, crosscheck LMB, pass RMB, check RMB, onetimer LMB; `accept.ps1` presses from it (`-OldKeys` = the table of
 before). Jam.Controls.AcceptKeysMatchDefaults holds the file against the defaults.
+
+## Evolution 2 (lane A191)
+
+### A still hand keeps its point on the ice (jam.ctrl.AimAnchor, FJamAimAnchor)
+The blade aims at the cursor's ice point, re-projected through the camera every sim step (AHokejGameMode::CursorAimRink), so a camera correction
+swings the blade under a still mouse (A186: up to 14.8 deg a still correction after its rig-yaw fix). Measured on A186's three real-match camera logs
+with `tools/qa/aim/a191-aim.py` (the table in status/A191.md): A = the blade's turn under a still cursor through corrections with the skater still;
+B = the drift between the blade's aim and the cursor's true ice point in play after the hand stops.
+
+| variant (camera with A186's fix) | A worst deg | B p90 at 0.25 / 1 / 2 s | B worst at 2 s |
+|---|---|---|---|
+| 0 re-project every step (before) | 17.1 | 0 / 0 / 0 | 0 |
+| 1 anchor whenever the pixel is still | 0.0 | 48 / 140 / 147 | 179 |
+| 2 anchor while the camera's correction stage moves the picture | 0.0 | 19 / 87 / 116 | 176 |
+| 3 catch-up, tau 0.25 s | 2.5 | 28 / 35 / 37 | 89 |
+| **4 anchor while the skater stands (< 0.3 m/s)** | **0.0** | **0 / 0 / 0** | **5.5** |
+
+Shipped: variant 4, `jam.ctrl.AimAnchor 1`, `jam.ctrl.AimAnchorSpeed 0.3`. A pixel move of half a pixel or more (summed from where the anchor began),
+or the skater skating, re-projects at once. `jam.ctrl.AimAnchor 0` = the aim of before.
+
+### The held cross-check row (acceptance step 7 k=3)
+The drill stages the human 9 m out at 5 m/s, the carrier standing; the driver holds LMB (`act=lmb_hold ms=2200`) while W carries him in; the verdict
+`crosscheck_held`: the man went down, with the closing speed at the first touch. With `JAM_INPUT_HAS_CROSS_HOLD 0` the row logs `skipped=no_hold`
+(accept.mjs: not run, not a fail); Jam.Controls.HeldCrossCheck runs the same staging in the sim once the switch is 1.
+
+### What the buttons do right now (the HUD's badge)
+A pill bottom left: "LMB  SHOOT     RMB  PASS" with the puck, "LMB  CROSS-CHECK     RMB  CHECK" without, from the live bindings and the possession the
+buttons read (JamControls::HasPuckForButtons) on the frame shown. `jam.hud.ButtonsBadge 0` hides it. Widest with long key names 446 of 480 units.
+
+### CONTROLS from the pause card
+The pause card's CONTROLS button opens the same screen (its third screen); BACK or Esc returns to the pause menu. The screen is 724 wide (the card's
+inner 744).

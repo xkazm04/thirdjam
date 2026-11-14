@@ -740,15 +740,17 @@ bool AHokejGameMode::CursorAimRink(APlayerController* PC, const FVector2D& Skate
 	if (!PC->GetMousePosition(MX, MY)) return false;
 	FVector O, D;
 	if (!PC->DeprojectScreenPositionToWorld(MX, MY, O, D)) return false;
-	return CursorAimFromRay(O, D, SkaterPosM, bCursorAiming, OutStick);
+	if (D.Z >= -1e-4) { AimAnchor.Reset(); return false; }
+	// Lane A191: a still hand on a standing skater keeps its point on the ice through the camera's corrections (FJamAimAnchor, jam.ctrl.AimAnchor).
+	const FVector Hit = O + D * (-O.Z / D.Z);
+	const FVector2D AimM = AimAnchor.StepLive(FVector2D(MX, MY), FVector2D(Hit.X / 100.0, Hit.Y / 100.0), SkaterPosM);
+	return CursorAimFromHit(AimM, SkaterPosM, bCursorAiming, OutStick);
 }
 
-bool AHokejGameMode::CursorAimFromRay(const FVector& O, const FVector& D, const FVector2D& SkaterPosM, bool& bInOutAiming, FVector2D& OutStick)
+bool AHokejGameMode::CursorAimFromHit(const FVector2D& HitM, const FVector2D& SkaterPosM, bool& bInOutAiming, FVector2D& OutStick)
 {
 	OutStick = FVector2D::ZeroVector;
-	if (D.Z >= -1e-4) return false;
-	const FVector Hit = O + D * (-O.Z / D.Z);   // the ice is z = 0 (UJamSim::ToWorld)
-	const FVector2D Delta = FVector2D(Hit.X / 100.0, Hit.Y / 100.0) - SkaterPosM;
+	const FVector2D Delta = HitM - SkaterPosM;
 	const double Dist = Delta.Size();
 	const double Enter = bInOutAiming ? 0.5 : 0.7;   // hysteresis: a cursor parked on the skater holds the blade ahead without flapping at the edge
 	if (Dist < Enter) { bInOutAiming = false; return true; }
@@ -756,6 +758,14 @@ bool AHokejGameMode::CursorAimFromRay(const FVector& O, const FVector& D, const 
 	const double Mag = 0.5 + 0.5 * FMath::Clamp((Dist - 0.5) / 2.5, 0.0, 1.0);
 	OutStick = Delta / Dist * Mag;
 	return true;
+}
+
+bool AHokejGameMode::CursorAimFromRay(const FVector& O, const FVector& D, const FVector2D& SkaterPosM, bool& bInOutAiming, FVector2D& OutStick)
+{
+	OutStick = FVector2D::ZeroVector;
+	if (D.Z >= -1e-4) return false;
+	const FVector Hit = O + D * (-O.Z / D.Z);   // the ice is z = 0 (UJamSim::ToWorld)
+	return CursorAimFromHit(FVector2D(Hit.X / 100.0, Hit.Y / 100.0), SkaterPosM, bInOutAiming, OutStick);
 }
 
 void AHokejGameMode::RestartPlayer(AController* NewPlayer)
