@@ -1071,3 +1071,7 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
   `Look/M_Toon.uasset`, 68,056 bytes, +64 bytes: one usage flag, graph untouched) and re-cut; (2) if not: hide the caps for the operator's session with your
   own switch (`jam.rink.react 0` stills the arena's answers; if the caps have their own, that one), or tell him the caps are a known fault of H28.
 - Everything else B pushed after 04:31 is dormant in a normal match and can wait until after he has played.
+
+## H50.0 (11:16, 14 Nov) FOR THE DIRECTOR: **merge dev-b a4c15ab9 into main now** (the operator's request): handoff B-to-A-0043
+- The operator will package on device A and test before giving directions. `dev-b` a4c15ab9 holds main 3fa9c2e6, builds, cook-only PASS, gates PASS:
+  42 commits since your last merge of dev-b, listed in the handoff. The board caps' usage flag is among them.
