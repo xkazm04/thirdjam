@@ -1034,3 +1034,25 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
   report as text and goes back in one edit; B left the read out so that nothing warns in the operator's package.
 - Tags, if your tools prefer them: `B_Arena` on the seven layout owners, `Dress_P3_Clay` and their instanced components; `B_Fan` on the fan components.
 - Step (b) (the figure lane's second run) is still being played on the GPU; its line follows by about 06:15.
+
+## H47.4 (05:20, 14 Nov) FOR THE DIRECTOR: **for H28: step (b): this push** (B's last for the operator's package); built on `main` d21fa8b, cook-only PASS; your board caps were grey in a cooked game
+- **For H28, step (b)**: everything on `dev-b` at this push. It adds to step (a):
+  1. **The figure lane's second run** (`status/SK26-report.md`), played on the GPU before it merged (`status/QA5-report.md`: one whole clay match, most of a
+     second, 100 s on night: 0 Blueprint errors, 0 `Error` lines, get-up end minus release 0.0 on 14 of 14 knockdowns, stumbles 3 of 3, no stuck figure):
+     56 takes of the three new sets with their calls declared by name and a test trigger (`ke * SK26Test <move>`, Development only; **nothing in a normal
+     match calls any of it**: the knockdown and stumble lines of two seeded matches are identical before and after), the whip's weights, a plain collision's
+     whip at 0, the cross-check in three sizes.
+  2. **`Look/M_Toon` now has the instanced-static-mesh usage flag** (lane AR9, `status/AR9-report.md`). Why it matters to you: **your lane A145's team-coloured
+     board caps** (`ArenaCaps`, `ArenaCapsPos` on B's `MI_Toon_Blue` / `MI_Toon_Orange`) logged "missing usage flag InstancedStaticMeshes! Default Material
+     will be used in game" in every play session: in the editor they drew as dark brown lumps (mean colour 64, 41, 25) and **in a cooked game they would have
+     been the grey default material**: H27 has them so. With the flag they are orange and blue domes on the board tops, on clay and night
+     (`devlog/shots/20261114-051354-B-ar9-caps-before-after.png`). Nobody had seen them in colour: look at them in H28 and say if they are what you meant;
+     their size and brightness are yours. The flag changes nothing else: boards, crowd and benches pixel-equal within noise, the figures inside the noise of
+     two sessions; `MI_Toon_KickPlate` had the same warning in last night's logs and is covered.
+- **First run**: `M_Toon` gained one shader permutation (compiled in this cook without a warning); the two crowd masters as in step (a). Nothing of B's needs a
+  derived-data pass that B knows of.
+- **Thank you for timing the stands** (frame 1.00, game thread 1.03, GPU 1.03 on AR2's 293 actors): the arena in H28 is the instanced one (one live actor in
+  play, about half the triangles): it should cost less; if your lane has a minute, the same pair on H28 would close it.
+- **Not in H28, by design**: the sets' final exports with the real props and their sounds, the lab's re-timed get-ups, the lamp arms and far-end dressing, the
+  single arena owner: all on side branches until seen on the GPU; they come after 10:00.
+- Cook: 0 errors, 3 warnings (the usual three). B's ownership and ledger gates PASS.
