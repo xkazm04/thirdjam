@@ -59,12 +59,13 @@ The landing: Enter, the pad's A or a click goes on; on HOME **Enter plays one ma
 
 | Level (the scripted player it is set with) | Regular rink | Large rink | Target |
 |---|---|---|---|
-| Rookie (a newcomer) | **85 %** | 84 % | 85 |
-| Pro (a regular player) | **47 %** | 46 % | 48 |
-| All-star (a good player) | **26 %** | 25 % | 26 |
+| Rookie (a newcomer) | **87 %** | 87 % | 85 |
+| Pro (a regular player) | **48 %** | 51 % | 48 |
+| All-star (a good player) | **28 %** | 25 % | 26 |
 
-Each cell over 2,000 matches on this package's rules (the bots' new sense played by its switch; the built game is replayed against these rows by seed
-in the stabilization phase).
+Read on this package's own build at 19:20 (600 matches a cell; every cell within 3 of its target). The set itself was made over 2,000 matches a
+cell before the held-button rule landed (85 / 84, 47 / 46, 26 / 25); with that rule switched off the built game replays those rows match for match
+(600 of 600 in every cell), so the difference is that one rule: it makes pro on the large rink about four points easier.
 
 Set twice today, the second time on everything above (faster skaters, hits that wind up, bots that play better). Rookie is the newcomer's level; if
 you have played a hockey game, yours is pro. The stop begun at 8 to 9 m works at every level (pro 94 %; a straight charge never).
@@ -91,6 +92,11 @@ you have played a hockey game, yours is pro. The stop begun at 8 to 9 m works at
   player then; they are measured again in the stabilization phase and may have drifted.
 - The acceptance run has five new rows for the buttons (a held button across a change of possession, the slow tap, the saucer's hold, a refused
   rebinding, the pad) that are proven headless and wait for their first run in a window.
+- **Found by the check of this package at 19:35, after it was cut (nothing is changed without your word):**
+  the stop line still costs a player who obeys every lit line about 6 points at pro (45 % against 39 % over 2,000 paired matches; the bar was 5;
+  it was 29 points this morning): treat the lit line as good advice, not as an order. One number (how far off the second man must be) brings it to
+  about 3 points at the price of the line lighting once a match instead of twice.
+  And the season steps down 23 points for a newcomer from take 4 to take 5 (77 % to 54 %; the bar is 20): one number of take 5.
 - The page's stills and the video shots are from Friday's game and are retaken from this package.
 
 ## What the Director needs from you now

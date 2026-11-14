@@ -478,3 +478,5 @@
 - 17:14: acceptance run RED on main dfe00726 (exit 1): no H33. See /c/Users/kazda/AppData/Local/Temp/tj/accept-H33-2.txt
 - link green 17:34: main ea0c3b7a (Merge dev-b at 1da715c1 (the 18:00 merge, early); the bots' wind-ups 8 / 12; the stop line) pushed.
 - package 17:47: `Hokej_Hokej_H33.zip` from main ea0c3b7a, acceptance run green on its Development twin Accept_T1 (10 steps and the pixel row, first try, no warning); the menu row green; the ship row green on the fresh zip after the row learned the landing (two Returns: its first try photographed HOME six times: the row's fault, not the package's).
+- link green 18:57: main 576c6040 (The freeze landing: the bots' new sense ON and the ladder set on it; hits with device B's ) pushed.
+- package 19:04: `Hokej_Hokej_H34.zip` from main 576c6040, acceptance run green (18 verbs through the cursor and the buttons).
