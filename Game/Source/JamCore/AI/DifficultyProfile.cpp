@@ -19,7 +19,7 @@ namespace JamAI
 			FJamDifficultyProfile P{"pro", D.SpeedScale, D.RedSkill, D.YieldMarginM, D.YieldRadiusM, D.HoldRadiusM, D.StallFrames, D.Opp, 0.4};
 			// Lane A112 (CURVE-6.md): the pro's aggression numbers moved in ProOppSkill (JamAICore.h), the brain's default
 			P.MateSpeedScale = 1.0;   // lane A112 (R-0048 point 4): the human's mates skate at the human's pace (the same as SpeedScale at pro)
-			P.LargeRedSkill = 1.15;   // lane A154 (CURVE-8.md): 1.12 -> 1.15 (main 4cab387, after BRAIN-3 / CONTACT-5 / MOVEMENT-5: the regular player on 120 x 60 54.8 at 1.12, 48.2 at 1.15, 43.3 at 1.17 (600)). Lane A133 (CURVE-7.md): 1.065 -> 1.12 (the regular player on 120 x 60 with the hunt 8 and the carry: 69.8 at 1.065, 55.5 at 1.1, 47.8 at 1.13, 41.2 at 1.16 (600); 44.9 at 1.13 (2,000)). Lane A112 (CURVE-6.md): 1.04 -> 1.065 (the regular player on 120 x 60 with the new aggression: 57.1 at 1.04 (2,000)). Lane A95 (CURVE-5.md): 0.97 -> 1.04 (the regular player on 120 x 60 with the vision: 82.8 at 0.97 (600), 41.5 at 1.06 (2,000)). Lane A70: 0.97
+			P.LargeRedSkill = 1.18;   // lane A189 (CURVE-12.md): 1.15 -> 1.18 on main 58af359f (the regular player on 120 x 60 56.5 -> 46.2, 600; 1.21: 41.7). Lane A154 (CURVE-8.md): 1.12 -> 1.15 (main 4cab387, after BRAIN-3 / CONTACT-5 / MOVEMENT-5: the regular player on 120 x 60 54.8 at 1.12, 48.2 at 1.15, 43.3 at 1.17 (600)). Lane A133 (CURVE-7.md): 1.065 -> 1.12 (the regular player on 120 x 60 with the hunt 8 and the carry: 69.8 at 1.065, 55.5 at 1.1, 47.8 at 1.13, 41.2 at 1.16 (600); 44.9 at 1.13 (2,000)). Lane A112 (CURVE-6.md): 1.04 -> 1.065 (the regular player on 120 x 60 with the new aggression: 57.1 at 1.04 (2,000)). Lane A95 (CURVE-5.md): 0.97 -> 1.04 (the regular player on 120 x 60 with the vision: 82.8 at 0.97 (600), 41.5 at 1.06 (2,000)). Lane A70: 0.97
 			return P;
 		}
 
@@ -28,7 +28,7 @@ namespace JamAI
 			FJamBotSkill Opp;
 			Opp.ReactionFrames = 0;
 			Opp.AimErrorDeg = 0.0;
-			Opp.ShootExtraM = 25.0;    // lane A112 (CURVE-6.md): reach + 25 m (with the poke: the novice 99.3 -> 86.2; 30 m: 82.3; the rookie scored 0.26 a match on the kept puck). R-0029 P3: 5 (13 before)
+			Opp.ShootExtraM = 20.0;    // lane A189 (CURVE-12.md): 25 -> 20 with red skill 0.97 -> 0.80 after the speed rule (the novice 71.2 -> 83.0, 600, main 58af359f). Lane A112 (CURVE-6.md): reach + 25 m (with the poke: the novice 99.3 -> 86.2; 30 m: 82.3; the rookie scored 0.26 a match on the kept puck). R-0029 P3: 5 (13 before)
 			Opp.GuardRadiusM = 10.0;   // R-0029 P1 (5 / 45 before): the rookie back's guard post 10 m out, only within 20 m of its net
 			Opp.GuardRangeM = 20.0;
 			Opp.bBlockShots = true;
@@ -54,11 +54,12 @@ namespace JamAI
 			// Lane A70 (CURVE-2.md): red skill 0.75 -> 0.8, the novice 90.8 -> 85.8 % over 2,000 matches (speed 0.9 moved nothing).
 			// Lane A95 (CURVE-5.md, 2,000 matches): red skill 0.8 -> 0.97 with the checks from 6 m/s and the sprint 0.2 (the novice 97.0 -> 84.8 at red 1.0, 600 matches); the
 			// principles stay late and loose (0.6, 24 frames): tightening them to pro's took 3.5 points and is not what a rookie is.
-			FJamDifficultyProfile P{"rookie", 0.85, 0.97, 4.0, 25.0, 0.0, 60, Opp, 0.6};   // lane A46: mates pass to the open human in 0.6 of the chances (every chance before)
+			// Lane A189 (CURVE-12.md): red skill 0.97 -> 0.80 with the shot reach 25 -> 20 m (free skaters 15 % faster: the novice 71.2 -> 83.0, 600).
+			FJamDifficultyProfile P{"rookie", 0.85, 0.80, 4.0, 25.0, 0.0, 60, Opp, 0.6};   // lane A46: mates pass to the open human in 0.6 of the chances (every chance before)
 			P.MateSpeedScale = 1.0;   // lane A112 (R-0048 point 4): the human's mates skate at the human's pace (0.85 before)
 			P.bTrueSpeeds = false;    // lane A193 (BRAIN-7.md): rookie's bots plan at skater.speed as before (its matches are main's, hash for hash)
 			P.LargeSpeedScale = 0.9;   // R-0029: large-rink rookie offsets from the playtester grid (novice 85 %, 19:43); 1.0 / 0.93 before
-			P.LargeRedSkill = 1.14;   // lane A162 (CURVE-9.md): 1.12 -> 1.14 (main a7d89871, after CONTACT-6 / MOVEMENT-6 / BRAIN-4, the closing press: the novice on 120 x 60 88.5 at 1.12, 83.8 at 1.14 (2,000)). Lane A133 (CURVE-7.md): 0.98 -> 1.12 with the poke 10 (the novice on 120 x 60: 99.5 at 0.98, 97.3 at 1.03, 91.3 at 1.08, 84.7 at 1.12, 75.7 at 1.16 (600)). Lane A112 (CURVE-6.md): 0.9 -> 0.98 (with the poke, the shot range and the mates at 1.0 the novice on 120 x 60: 94.9 at 0.9 (2,000), 93.3 at 0.93, 89.7 at 0.96, 77.7 at 1.02 (600)). Lane A95 (CURVE-5.md): 0.97 -> 0.9 (the novice on 120 x 60 with the vision, 2,000 each: 93.0 at 0.86, 89.0 at 0.89, 86.0 at 0.9, 75.1 at 0.92; 62.0 at 0.97 (600)). Lane A70: 0.97
+			P.LargeRedSkill = 1.11;   // lane A189 (CURVE-12.md): 1.14 -> 1.11 with the shot reach 20 (the novice on 120 x 60 80.5 -> 85.0, 600, main 58af359f). Lane A162 (CURVE-9.md): 1.12 -> 1.14 (main a7d89871, after CONTACT-6 / MOVEMENT-6 / BRAIN-4, the closing press: the novice on 120 x 60 88.5 at 1.12, 83.8 at 1.14 (2,000)). Lane A133 (CURVE-7.md): 0.98 -> 1.12 with the poke 10 (the novice on 120 x 60: 99.5 at 0.98, 97.3 at 1.03, 91.3 at 1.08, 84.7 at 1.12, 75.7 at 1.16 (600)). Lane A112 (CURVE-6.md): 0.9 -> 0.98 (with the poke, the shot range and the mates at 1.0 the novice on 120 x 60: 94.9 at 0.9 (2,000), 93.3 at 0.93, 89.7 at 0.96, 77.7 at 1.02 (600)). Lane A95 (CURVE-5.md): 0.97 -> 0.9 (the novice on 120 x 60 with the vision, 2,000 each: 93.0 at 0.86, 89.0 at 0.89, 86.0 at 0.9, 75.1 at 0.92; 62.0 at 0.97 (600)). Lane A70: 0.97
 			return P;
 		}
 
