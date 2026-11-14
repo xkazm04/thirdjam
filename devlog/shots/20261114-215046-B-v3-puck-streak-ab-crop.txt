@@ -1,0 +1,5 @@
+Lane V3, device B, 20261114-215046. The puck's streak by speed, from the game camera (PIE, hockey.regular, human's camera 3.5 m up, pitch -17.65 deg), the same moment of a fresh match each row (3 s after the drop).
+Four test trails cross the view at once, nearest to farthest: 8 m/s (a slow pass), 20 m/s (a full pass), 22 m/s (today's shot, between tap 18 and full 26), 44 m/s (a doubled shot). Each streak's head is at the frame's middle depth line; the trail system is the shipped NS_puck_trail moved by script.
+Row 1 BEFORE (NS_puck_trail as at dev-b 27a0ba99): three faint blue-grey lines, hard to see on the ice.
+Row 2 AFTER (User.Carried left at its default -1 = what the game draws today with no change by device A): the slow pass draws nothing; full pass and today's shot a cream streak; the doubled shot a streak twice as long, wider and brighter.
+Row 3 AFTER with User.Carried = 0 (what A's one call would add): the slow pass also draws a short faint streak.
