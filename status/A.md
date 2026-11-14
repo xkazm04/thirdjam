@@ -421,3 +421,4 @@
 - link green 01:22: main 2a42d88 (The ladder is set on the integrated game, the whistle is out of the regular game, and the ) pushed.
 - link green 01:26: main 84fba56 (A judge's first sixty seconds (A144, track U2): PLAY NOW on the first screen, the controls) pushed.
 - link green 01:32: main 322e6c5 (The camera's hold never turns the camera, so it cannot move the player's path (A135, track) pushed.
+- link green 01:39: main f3f5537 (A hard board hit is seen from the game camera, and a goal runs round the end's caps (A145,) pushed.
