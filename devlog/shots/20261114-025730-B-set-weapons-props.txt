@@ -1,0 +1,1 @@
+SET-WEAPONS props (after the critic): Prop_GiantStick, Prop_Mallet and the rebuilt Prop_PuckCannon (a wooden barrel with hoops, a crank, a puck in the mouth) from three sides, both styles, and in the hands in the carry holds (the cannon at the right hip). Blender Cycles CPU, flat base colours; frozen stills.

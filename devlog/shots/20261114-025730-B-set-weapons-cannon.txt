@@ -1,0 +1,1 @@
+SET-WEAPONS puck cannon (rebuilt after the critic): the barrel prop, in the hands at the right hip, silhouettes only (game camera, side, front left), Cannon_Carry / Cannon_Fire (puck leaves at 8) / Cannon_Kick (ends on the right-side lying pose) at the game camera and closer, both styles. Blender Cycles CPU, frozen frames.
