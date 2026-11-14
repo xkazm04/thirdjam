@@ -1,0 +1,59 @@
+loose  2 m/s front  feet             | neutral his     inside  0 his@ 39 | rule his     inside  0 his@  1
+loose  2 m/s front  body             | neutral his     inside  0 his@ 44 | rule his     inside  0 his@  1
+loose  2 m/s front  blade            | neutral untaken inside  0 his@ -1 | rule his     inside  0 his@ 36
+loose  2 m/s side   feet             | neutral his     inside  0 his@ 39 | rule his     inside  0 his@  1
+loose  2 m/s side   body             | neutral his     inside  0 his@ 54 | rule his     inside  0 his@ 10
+loose  2 m/s side   blade            | neutral untaken inside  0 his@ -1 | rule his     inside  0 his@ 12
+loose  2 m/s behind feet             | neutral his     inside  0 his@ 39 | rule his     inside  0 his@  1
+loose  2 m/s behind body             | neutral his     inside  0 his@ 44 | rule his     inside  0 his@  1
+loose  2 m/s behind blade            | neutral his     inside  0 his@  3 | rule his     inside  0 his@  1
+loose  6 m/s front  feet             | neutral his     inside  0 his@ 29 | rule his     inside  0 his@ 15
+loose  6 m/s front  body             | neutral his     inside  0 his@ 30 | rule his     inside  0 his@ 16
+loose  6 m/s front  blade            | neutral his     inside  0 his@ 42 | rule his     inside  0 his@ 27
+loose  6 m/s side   feet             | neutral his     inside  0 his@ 29 | rule his     inside  0 his@ 15
+loose  6 m/s side   body             | neutral his     inside  0 his@ 32 | rule his     inside  0 his@ 19
+loose  6 m/s side   blade            | neutral untaken inside  0 his@ -1 | rule his     inside  0 his@ 20
+loose  6 m/s behind feet             | neutral his     inside  0 his@ 29 | rule his     inside  0 his@ 15
+loose  6 m/s behind body             | neutral his     inside  0 his@ 30 | rule his     inside  0 his@ 16
+loose  6 m/s behind blade            | neutral his     inside  0 his@ 16 | rule his     inside  0 his@  5
+loose 12 m/s front  feet             | neutral bounce  inside  0 his@ -1 | rule his     inside  0 his@  8
+loose 12 m/s front  body             | neutral bounce  inside  0 his@  8 | rule his     inside  0 his@  8
+loose 12 m/s front  blade            | neutral bounce  inside  0 his@ 13 | rule his     inside  0 his@ 13
+loose 12 m/s side   feet             | neutral bounce  inside  0 his@ -1 | rule his     inside  0 his@  8
+loose 12 m/s side   body             | neutral bounce  inside  0 his@  9 | rule his     inside  0 his@  9
+loose 12 m/s side   blade            | neutral bounce  inside  0 his@ -1 | rule his     inside  0 his@ 10
+loose 12 m/s behind feet             | neutral bounce  inside  0 his@ -1 | rule his     inside  0 his@  8
+loose 12 m/s behind body             | neutral bounce  inside  0 his@  8 | rule his     inside  0 his@  8
+loose 12 m/s behind blade            | neutral bounce  inside  0 his@ -1 | rule his     inside  0 his@  3
+loose 20 m/s front  feet             | neutral bounce  inside  0 his@  5 | rule bounce  inside  0 his@  5
+loose 20 m/s front  body             | neutral bounce  inside  0 his@ -1 | rule bounce  inside  0 his@  5
+loose 20 m/s front  blade            | neutral bounce  inside  0 his@ -1 | rule bounce  inside  0 his@  8
+loose 20 m/s side   feet             | neutral bounce  inside  0 his@  5 | rule bounce  inside  0 his@  5
+loose 20 m/s side   body             | neutral bounce  inside  0 his@ -1 | rule bounce  inside  0 his@ -1
+loose 20 m/s side   blade            | neutral bounce  inside  0 his@  6 | rule bounce  inside  0 his@  6
+loose 20 m/s behind feet             | neutral bounce  inside  0 his@  5 | rule bounce  inside  0 his@  5
+loose 20 m/s behind body             | neutral bounce  inside  0 his@ -1 | rule bounce  inside  0 his@  5
+loose 20 m/s behind blade            | neutral bounce  inside  0 his@ -1 | rule bounce  inside  0 his@ -1
+skate over walk   lateral 0.0        | neutral his     inside  0 his@ 51 | rule his     inside  0 his@ 29
+skate over walk   lateral 0.3        | neutral his     inside  0 his@ 53 | rule his     inside  0 his@ 29
+skate over walk   lateral 0.8        | neutral untaken inside  0 his@ -1 | rule his     inside  0 his@ 33
+skate over glide  lateral 0.0        | neutral his     inside  0 his@ 25 | rule his     inside  0 his@ 15
+skate over glide  lateral 0.3        | neutral his     inside  0 his@ 26 | rule his     inside  0 his@ 15
+skate over glide  lateral 0.8        | neutral untaken inside  0 his@ -1 | rule his     inside  0 his@ 17
+skate over sprint lateral 0.0        | neutral his     inside  0 his@ 17 | rule his     inside  0 his@ 10
+skate over sprint lateral 0.3        | neutral bounce  inside  0 his@ 18 | rule his     inside  0 his@ 10
+skate over sprint lateral 0.8        | neutral untaken inside  0 his@ -1 | rule his     inside  0 his@ 11
+pass  8 m/s at his feet              | neutral his     inside  0 his@ 20 | rule his     inside  0 his@ 15
+pass  8 m/s 1 m off his stick        | neutral his     inside  0 his@ 33 | rule his     inside  0 his@ 28
+pass  8 m/s at his skates            | neutral his     inside  0 his@ 20 | rule his     inside  0 his@ 15
+pass 14 m/s at his feet              | neutral his     inside  0 his@ 11 | rule his     inside  0 his@  8
+pass 14 m/s 1 m off his stick        | neutral his     inside  0 his@ 18 | rule his     inside  0 his@ 15
+pass 14 m/s at his skates            | neutral his     inside  0 his@ 11 | rule his     inside  0 his@  8
+pass 20 m/s at his feet              | neutral his     inside  0 his@  8 | rule his     inside  0 his@  6
+pass 20 m/s 1 m off his stick        | neutral his     inside  0 his@ 13 | rule his     inside  0 his@ 11
+pass 20 m/s at his skates            | neutral his     inside  0 his@  8 | rule his     inside  0 his@  6
+pass 26 m/s at his feet              | neutral his     inside  0 his@  6 | rule his     inside  0 his@  5
+pass 26 m/s 1 m off his stick        | neutral his     inside  0 his@ 10 | rule his     inside  0 his@  8
+pass 26 m/s at his skates            | neutral his     inside  0 his@  6 | rule his     inside  0 his@  5
+shot 25 m/s into his body            | neutral bounce  inside  0 his@ -1 | rule bounce  inside  0 his@ -1
+shot 35 m/s into his body            | neutral bounce  inside  0 his@  6 | rule bounce  inside  0 his@  6

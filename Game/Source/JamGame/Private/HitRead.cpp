@@ -1,8 +1,10 @@
 // Lane A196 (track F3, evolution 9): the hits read (HitRead.h, docs/experiments/HITS.md). Presentation only.
 #include "HitRead.h"
 #include "JamPawns.h"
+#include "JamSkaterVisual.h"
 #include "JamEventBus.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
 #include "Materials/MaterialInterface.h"
@@ -34,8 +36,21 @@ static TAutoConsoleVariable<float> CVarJamHitScale(TEXT("jam.hit.Scale"), 1.f,
 static TAutoConsoleVariable<int32> CVarJamHitBTakes(TEXT("jam.hit.BTakes"), 2,
 	TEXT("Device B's wind-up takes: SetWindupTakes(true, 8) by name on 2 (default from lane A210: every figure, the human's too: the figure does the hitting; at a 4-frame wind-up B's take starts inside its coil and still shows the drive and the follow-through), 1 the bots' figures only (package H34: the human on A's stand-in lean), 0 none. A's lean stands down exactly on the figures told."), ECVF_Default);
 static TAutoConsoleVariable<int32> CVarJamHitCaptureBots(TEXT("jam.hit.CaptureBots"), 0,
-	TEXT("With jam.hit.Capture: 1 = a bot's check or cross-check pressed within 14 m of the human is a strip too (botcheck / botcross). Lane A210."), ECVF_Default);
-static constexpr double CaptureBotsM = 14.0;
+	TEXT("With jam.hit.Capture: 1 = a bot's check or cross-check pressed inside the distance band (jam.hit.CaptureBotsMinM .. CaptureBotsM from the human) is a strip too (botcheck / botcross), and a hit between two bots that lands (bothit, from the contact); 2 = the same, only when the man is inside the picture (20 % in from every edge). Lane A210."), ECVF_Default);
+static TAutoConsoleVariable<float> CVarJamHitCaptureBotsM(TEXT("jam.hit.CaptureBotsM"), 14.f,
+	TEXT("With jam.hit.CaptureBots 1: a bot's press is filmed when it is between jam.hit.CaptureBotsMinM and this many metres from the human (14: near; 40 with a minimum of 18: the hits at 20 and 35 m). Lane A210."), ECVF_Default);
+static TAutoConsoleVariable<float> CVarJamHitCaptureBotsMinM(TEXT("jam.hit.CaptureBotsMinM"), 0.f,
+	TEXT("With jam.hit.CaptureBots 1: the nearest a filmed bot press may be to the human, in metres (0). Lane A210."), ECVF_Default);
+static TAutoConsoleVariable<float> CVarJamHitBraceSet(TEXT("jam.hit.BraceSet"), 1.f,
+	TEXT("The braced figure sets itself (lane A210: a bridge on the FIGURE while device B's hold cannot be seen from behind; set it to 0 when B's pose reads): the drawn figure (never the sim) sinks and widens over 6 frames while the cross-check is held and rises again over 6: height x (1 - 0.10 x this), width x (1 + 0.06 x this). 1 (default); 0 = off (package H34)."), ECVF_Default);
+static TAutoConsoleVariable<float> CVarJamHitBraceLean(TEXT("jam.hit.BraceLean"), 12.f,
+	TEXT("With the braced figure's set: degrees the drawn figure pitches forward into the hold, on top of device B's take (12 by default; 0 = none)."), ECVF_Default);
+static TAutoConsoleVariable<int32> CVarJamHitRetimeTest(TEXT("jam.hit.RetimeTest"), 0,
+	TEXT("Proof only (lane A210): N > 0 sends PlayCheckWindup(1) to the human's figure N frames after each of his check presses, as jam.hit.Retime would on a contact inside the wind-up (to see what device B's running take does with it before lane A209's sim is here). 0 = off."), ECVF_Default);
+static TAutoConsoleVariable<float> CVarJamHitPop(TEXT("jam.hit.Pop"), 1.f,
+	TEXT("The hit's coil and drive on the drawn figure (lane A210; never the sim): through a check's or a cross-check's wind-up the figure sinks and widens (height down to x (1 - 0.10 x this)), on the frame before the window opens it springs tall and narrow (x (1 + 0.07 x this)) through the contact, then settles over 8 frames: device B's take, made larger (the helmet's travel from coil to spring at the game camera: 33 px without, 55 px with, at 960 x 540). 1 (default); 0 = off (package H34)."), ECVF_Default);
+static TAutoConsoleVariable<int32> CVarJamHitRetime(TEXT("jam.hit.Retime"), 1,
+	TEXT("A body check that lands before its wind-up is over (lane A209's rule: a meeting inside the wind-up is the hit): 1 (default) the checker's figure is run forward for one sim frame (its time dilation = the frames its take is short of the contact pose), so device B's take stands on its contact pose when the man falls instead of in its coil; 2 = by the call PlayCheckWindup(1) instead (device B's figure ignores it on a running take today); 0 = the take plays on from where it was."), ECVF_Default);
 static constexpr float BurstFramesF = static_cast<float>(FJamHitReadModel::BurstFrames);
 // Lane A210 (the night, R-0067: "technical blue rectangle"): the drawn bars of a cross-check, each behind its own switch.
 static TAutoConsoleVariable<int32> CVarJamHitStreak(TEXT("jam.hit.Streak"), 0,
@@ -44,6 +59,8 @@ static TAutoConsoleVariable<int32> CVarJamHitBraceBar(TEXT("jam.hit.BraceBar"), 
 	TEXT("The bar of light across the chest of a held cross-check, in the team's colour: 0 (default from lane A210: this is the technical blue rectangle of R-0067) not drawn, 1 drawn (package H34)."), ECVF_Default);
 static TAutoConsoleVariable<int32> CVarJamHitQuiet(TEXT("jam.hit.Quiet"), 1,
 	TEXT("The marks as quiet helpers (lane A210): 1 (default) the chevron and the brace's arc thin and in the ice's white, the contact ring small (jam.hit.RingScale), white and gone in 8 frames; 0 = package H34's marks (fat, in the team's colour, a ring to 3 m for 14 frames)."), ECVF_Default);
+static TAutoConsoleVariable<int32> CVarJamHitRingFar(TEXT("jam.hit.RingFar"), 1,
+	TEXT("With jam.hit.Quiet 1: 1 (default) the contact ring grows back with the distance from the camera: the small ring within 10 m (the human's own hits), package H34's size and 14 frames from 30 m (a hit across the rink is 30 px of bodies: the ring says where), white at any distance; 0 = the small ring everywhere."), ECVF_Default);
 static TAutoConsoleVariable<float> CVarJamHitRingScale(TEXT("jam.hit.RingScale"), 0.45f,
 	TEXT("With jam.hit.Quiet 1: the contact ring's radius as a share of package H34's (0.8 to 3.0 m by closing speed), never under 0.95 m. Default 0.45."), ECVF_Default);
 static TAutoConsoleVariable<int32> CVarJamHitBraceArc(TEXT("jam.hit.BraceArc"), 1,
@@ -449,19 +466,24 @@ void FJamHitReadModel::Draw(double FrameF, const TArray<FVector>& At, const TArr
 		{
 			// Lane A210: the small ring (Sw.RingScale < 1: the radius scaled, never under RingMinM so it clears the two bodies; Sw.RingLife: its share of
 			// BurstFrames; Sw.bRingTeam false: the ice's own white all the way, no slab in the checker's colour).
-			const float A = static_cast<float>((FrameF - static_cast<double>(B.Frame)) / (BurstFrames * FMath::Clamp(Sw.RingLife, 0.1f, 1.f)));
-			if (A < 0.f || A >= 1.f) continue;
 			const FVector C(B.AtM.X * 100.0, B.AtM.Y * 100.0, 0.0);
+			// Lane A210 (the hit at 20 and 35 m): the small ring is for a hit NEAR the eye, where it covered the two bodies; far off the bodies are 30 px and
+			// the ring is what says 'a hit, there'. Far01: 0 within RingNearM of the eye (the quiet ring), 1 from RingFarM (package H34's size and life,
+			// still white): about the same size on the screen at any distance. Sw.bRingByDistance false: near everywhere.
+			const float Far01 = Sw.bRingByDistance && Sw.RingScale < 1.f ? static_cast<float>(FMath::Clamp((FVector::Dist(C, Sw.EyeAtCm) / 100.0 - RingNearM) / (RingFarM - RingNearM), 0.0, 1.0)) : 0.f;
+			const bool bQuiet = Sw.RingScale < 1.f && Far01 < 0.999f;
+			const float A = static_cast<float>((FrameF - static_cast<double>(B.Frame)) / (BurstFrames * FMath::Lerp(FMath::Clamp(Sw.RingLife, 0.1f, 1.f), 1.f, Far01)));
+			if (A < 0.f || A >= 1.f) continue;
 			const FLinearColor Col = Sw.bRingTeam ? FMath::Lerp(FLinearColor::White, B.Colour, FMath::Min(1.f, A * 2.f)) : FLinearColor::White;
-			const double RingM = Sw.RingScale < 1.f ? FMath::Max(RingMinM, B.RadiusM * Sw.RingScale) : B.RadiusM;
-			const float WideK = Sw.RingScale < 1.f ? 0.45f : 1.f;
+			const double RingM = Sw.RingScale < 1.f ? FMath::Lerp(FMath::Max(RingMinM, B.RadiusM * Sw.RingScale), FMath::Max(RingMinM, B.RadiusM), static_cast<double>(Far01)) : B.RadiusM;
+			const float WideK = Sw.RingScale < 1.f ? FMath::Lerp(0.45f, 1.f, Far01) : 1.f;
 			// Evolution 10: width, brightness and count by the hit's weight, all falling from the first frame; nothing within BodyClearM of either body.
 			const float Em = BurstEmissive(B.Weight, A);
-			const double R = RingM * 100.0 * Sc * (Sw.RingScale < 1.f ? 0.8 + 0.2 * EaseOut(A) : 0.45 + 0.55 * EaseOut(A));
+			const double R = RingM * 100.0 * Sc * (bQuiet ? FMath::Lerp(0.8 + 0.2 * EaseOut(A), 0.45 + 0.55 * EaseOut(A), static_cast<double>(Far01)) : 0.45 + 0.55 * EaseOut(A));
 			const int32 Segs = 10 + FMath::RoundToInt(6.f * B.Weight);
 			const int32 First = Out.Num();
 			Ring(Out, C, R, Segs, Segs, BurstBarWidthCm(B.Weight, A) * WideK * Sc, 4.0, GroundZ, Col, Em * WideK, EJamHitLayer::Burst, 0.6);
-			if (B.bBraced && A > 0.15f && Sw.RingScale >= 1.f) Ring(Out, C, R * 0.62, 12, 12, BurstBarWidthCm(B.Weight, A) * 0.7f * Sc, 4.0, GroundZ, Col, Em, EJamHitLayer::Burst, 0.6);
+			if (B.bBraced && A > 0.15f && !bQuiet) Ring(Out, C, R * 0.62, 12, 12, BurstBarWidthCm(B.Weight, A) * 0.7f * Sc, 4.0, GroundZ, Col, Em, EJamHitLayer::Burst, 0.6);
 			const auto ClearOfBoth = [&](const FVector& Pc)
 			{
 				const FVector2D P(Pc.X / 100.0, Pc.Y / 100.0);
@@ -482,14 +504,14 @@ void FJamHitReadModel::Draw(double FrameF, const TArray<FVector>& At, const TArr
 				const double Ang = Base + 2.0 * UE_DOUBLE_PI * (i + 0.5) / Count;
 				const FVector2D D(FMath::Cos(Ang), FMath::Sin(Ang));
 				if (!ShardAllowed(D, B.FallM)) continue;
-				const double Dist = RingM * 100.0 * Sc * (Sw.RingScale < 1.f ? 0.9 + 0.5 * EaseOut(A) : 0.25 + 0.6 * EaseOut(A));
+				const double Dist = RingM * 100.0 * Sc * (bQuiet ? FMath::Lerp(0.9 + 0.5 * EaseOut(A), 0.25 + 0.6 * EaseOut(A), static_cast<double>(Far01)) : 0.25 + 0.6 * EaseOut(A));
 				FJamHitBar S;
 				// A victim who stays up: shards that rise (45 to 80 cm); one who goes down: ice spray that stays on the ice (nothing over the lying figure).
 				const bool bLow = !B.FallM.IsNearlyZero();
 				S.CentreCm = C + FVector(D.X, D.Y, 0.0) * Dist + FVector(0, 0, bLow ? GroundZ + 2.0 : 45.0 + 35.0 * A);
 				S.YawDeg = static_cast<float>(FMath::RadiansToDegrees(Ang));
 				S.PitchDeg = bLow ? 0.f : 25.f;
-				S.SizeCm = FVector((60.0 * (1.0 - A) + 15.0) * Sc * (Sw.RingScale < 1.f ? 0.6 : 1.0), (bLow ? 14.0 : 10.0) * WideK, bLow ? 4.0 : 10.0 * WideK);
+				S.SizeCm = FVector((60.0 * (1.0 - A) + 15.0) * Sc * (bQuiet ? FMath::Lerp(0.6, 1.0, static_cast<double>(Far01)) : 1.0), (bLow ? 14.0 : 10.0) * WideK, bLow ? 4.0 : 10.0 * WideK);
 				S.Colour = Col; S.Emissive = Em * WideK; S.Layer = static_cast<uint8>(EJamHitLayer::Shard);
 				if (ClearOfBoth(S.CentreCm)) Out.Add(S);
 			}
@@ -548,6 +570,42 @@ float FJamHitReadModel::LeanFor(int32 I, double FrameF) const
 		const int32 Ended = P.EndFrame >= 0 ? static_cast<int32>(P.EndFrame - P.PressFrame) : -1;
 		// A cross-check: the same shape with a one-frame window (the shove's frame).
 		return CheckLeanDeg(Since, P.Windup, P.bCross ? 1 : P.Window, P.bCross && Ended < 0 ? -1 : Ended) * (P.bCross ? 0.8f : 1.f);
+	}
+	return 0.f;
+}
+
+// Lane A210: the coil and the drive as one number, -1 (sunk: the coil) .. +1 (sprung: the drive), Since frames after a press with Windup frames of
+// wind-up; End = the frame it ended (the contact, the miss) or would at the latest; bLanded: the contact came (the drive whatever the frame: lane A209's
+// rule lets a body meet inside the wind-up). Sinks over the wind-up (eased, fully sunk three frames before its end), springs from -1 to +1 over the two
+// frames up to the window (sprung on the frame it opens), holds to End, settles over PopSettleFrames.
+float FJamHitReadModel::CheckPop(float Since, int32 Windup, float End, bool bLanded)
+{
+	if (Since < 0.f) return 0.f;
+	const float W = static_cast<float>(FMath::Max(Windup, 1));
+	const float Launch = FMath::Max(W - 2.f, 0.f);
+	const auto Shape = [Launch](float T)
+	{
+		if (T < Launch) { const float K = FMath::Clamp(T / FMath::Max(Launch - 1.f, 1.f), 0.f, 1.f); return -(1.f - (1.f - K) * (1.f - K)); }
+		return FMath::Clamp(-1.f + (T - Launch) * 1.f, -1.f, 1.f);
+	};
+	if (Since <= End) return Shape(Since);
+	const float At = bLanded ? 1.f : Shape(End);
+	return At * (1.f - FMath::Clamp((Since - End) / PopSettleFrames, 0.f, 1.f));
+}
+
+float FJamHitReadModel::PopFor(int32 I, double FrameF) const
+{
+	if (Down.IsValidIndex(I) && Down[I]) return 0.f;
+	for (int32 k = Presses.Num() - 1; k >= 0; --k)
+	{
+		const FPress& P = Presses[k];
+		if (P.Skater != I) continue;
+		if (P.EndFrame >= 0 && P.Result == EJamHitResult::None) return 0.f;
+		const bool bLanded = P.EndFrame >= 0 && (P.Result == EJamHitResult::Down || P.Result == EJamHitResult::Stumble || P.Result == EJamHitResult::Bump);
+		// A miss holds the drive four frames into the window at most (the lunge on air), a cross-check one frame past its shove.
+		const float Latest = static_cast<float>(FMath::Max(P.Windup, 1) + (P.bCross ? 1 : FMath::Min(P.Window, 4)));
+		const float End = P.EndFrame >= 0 ? FMath::Min(static_cast<float>(P.EndFrame - P.PressFrame), bLanded ? 1e6f : Latest) : Latest;
+		return CheckPop(static_cast<float>(FrameF - static_cast<double>(P.PressFrame)), P.Windup, End, bLanded) * (P.bCross ? 0.7f : 1.f);
 	}
 	return 0.f;
 }
@@ -647,7 +705,133 @@ void AJamHitRead::StepSim(UWorld* World, const UJamSim* Sim, const TArray<TObjec
 			L.Frame, *L.Kind, HitResultName(L.Result), L.Checker, L.Victim, L.bHuman ? 1 : 0, L.ClosingMps, L.BurstM, L.Windup, L.PressToContact, L.TipMet);
 	}
 	Slot->TellTakes(Sim, Skaters);
+	Slot->RetimeEarly(Sim, Skaters);
+	Slot->StepBraceSet(Sim);
+	Slot->LogStick(Sim, Skaters);
 	Slot->Capture(Sim);
+}
+
+// Lane A210: a body check that lands RetimeLeadFrames or more before its wind-up ends finds device B's take still in its coil (the take puts contact on
+// its frame 10 and was started at 10 - wind-up). The checker's figure is told PlayCheckWindup(1) by name on that frame: the take jumps to the frame
+// before its contact pose, the hit-stop holds it there, the follow-through plays on. Only on figures told SetWindupTakes (TakesOn). Presentation only.
+int32 AJamHitRead::RetimeFor(int32 PressToContact, int32 Windup)
+{
+	return PressToContact >= 0 && Windup > 0 && Windup - PressToContact >= RetimeLeadFrames ? 1 : -1;
+}
+
+// The re-time, two ways. Mode 1 (default): A's own: device B's figure does nothing with PlayCheckWindup on a running take (strips of 22:17), so the
+// figure's clock is run forward instead: for ONE sim frame the figure actor's time dilation is the frames its take is short of its contact pose
+// (wind-up - press to contact), then it goes back to the hit-stop's hold (or to 1): the take stands on its contact pose from the first held frame.
+// Mode 2: the call PlayCheckWindup(1) by name (for the day B's figure honours it). Presentation only: the sim never sees the figure's clock.
+static void JamHitSetFigureDilation(AJamSkater* Sk, float Dilation)
+{
+	if (!Sk) return;
+	Sk->CustomTimeDilation = Dilation;
+	if (AActor* Fig = Cast<AActor>(Sk->GetVisualObject())) Fig->CustomTimeDilation = Dilation;
+}
+
+void AJamHitRead::RetimeEarly(const UJamSim* Sim, const TArray<TObjectPtr<AJamSkater>>& Skaters)
+{
+	static const FName NameWindup(TEXT("PlayCheckWindup"));
+	// Last frame's fast-forwards end here: back to the hold's stand-still while the hit-stop runs, else to the figure's own clock.
+	FastFwdRenderLeft = 0;
+	for (AJamSkater* Sk : Skaters)
+	{
+		if (!Sk || !FastFwd.IsValidIndex(Sk->GetSimIndex()) || !FastFwd[Sk->GetSimIndex()]) continue;
+		FastFwd[Sk->GetSimIndex()] = false;
+		JamHitSetFigureDilation(Sk, Sk->IsHitStopped() ? 0.0001f : 1.f);
+	}
+	const int32 Mode = CVarJamHitRetime.GetValueOnGameThread();
+	const auto Send = [&](int32 Who, int32 ShortFrames, const TCHAR* Why, int32 Windup, int32 PressToContact)
+	{
+		for (AJamSkater* Sk : Skaters)
+		{
+			if (!Sk || Sk->GetSimIndex() != Who) continue;
+			const TCHAR* How = TEXT("none");
+			if (Mode >= 2) { if (AJamSkater::CallFigure(Sk->GetVisualObject(), NameWindup, { 1.0 })) How = TEXT("PlayCheckWindup(1)"); }
+			else
+			{
+				if (FastFwd.Num() <= Who) FastFwd.SetNumZeroed(Who + 1);
+				FastFwd[Who] = true;
+				FastFwdRenderLeft = FastFwdRenderMax;
+				JamHitSetFigureDilation(Sk, static_cast<float>(FMath::Clamp(ShortFrames, 1, 10)));
+				How = TEXT("fast_forward");
+			}
+			UE_LOG(LogJamHit, Log, TEXT("JAMHIT retime frame=%lld checker=%d why=%s windup=%d press_to_contact=%d short_frames=%d how=%s (the take to its contact pose)"),
+				Sim->GetFrame(), Who, Why, Windup, PressToContact, ShortFrames, How);
+			return;
+		}
+	};
+	if (const int32 TestAt = CVarJamHitRetimeTest.GetValueOnGameThread(); TestAt > 0)
+	{
+		for (const FJamHitReadModel::FPress& P : Model.GetPresses())
+			if (P.bHuman && !P.bCross && Sim->GetFrame() - P.PressFrame == TestAt && P.Windup > TestAt) Send(P.Skater, P.Windup - TestAt, TEXT("test"), P.Windup, TestAt);
+	}
+	if (Mode == 0) return;
+	for (const FJamHitReadModel::FHitLog& L : Model.GetFrameLogs())
+	{
+		if (L.Kind != TEXT("check") || !(L.Result == EJamHitResult::Bump || L.Result == EJamHitResult::Stumble || L.Result == EJamHitResult::Down)) continue;
+		if (RetimeFor(L.PressToContact, L.Windup) < 0 || !TakesOn.IsValidIndex(L.Checker) || !TakesOn[L.Checker]) continue;
+		Send(L.Checker, L.Windup - L.PressToContact, TEXT("contact"), L.Windup, L.PressToContact);
+	}
+}
+
+// Lane A210: how far each figure is into its braced set (0..1), 6 sim frames in and out (the length of device B's CrossCheck_Hold_In / _Out).
+void AJamHitRead::StepBraceSet(const UJamSim* Sim)
+{
+	const TArray<FJamSkaterState>& S = Sim->GetSkaters();
+	if (BraceSetK.Num() != S.Num()) BraceSetK.Init(0.f, S.Num());
+	for (int32 i = 0; i < S.Num(); ++i) BraceSetK[i] = FMath::Clamp(BraceSetK[i] + (S[i].bCrossBraced && !S[i].IsDown() ? 1.f : -1.f) / BraceSetFrames, 0.f, 1.f);
+}
+
+// Lane A210 (with jam.hit.Capture on): where device B's take holds the human's stick, every 10th sim frame of a hold and on the frames 2, 6 and 10 of a
+// press: the stick_socket bone, the two hands and the head in the figure's own frame (x ahead, y to his right, z up, cm) and the shaft's direction.
+// For the FOR B list: numbers instead of adjectives. Nothing reads it back.
+void AJamHitRead::LogStick(const UJamSim* Sim, const TArray<TObjectPtr<AJamSkater>>& Skaters)
+{
+	if (CVarJamHitCapture.GetValueOnGameThread() <= 0) return;
+	const int32 H = Sim->GetHumanIndex();
+	if (!Sim->GetSkaters().IsValidIndex(H)) return;
+	const FJamSkaterState& S = Sim->GetSkaters()[H];
+	const int64 F = Sim->GetFrame();
+	if (S.bCheckThisFrame || S.bLiftThisFrame) StickPressFrame = F;
+	if (S.bCheckThisFrame || S.bLiftThisFrame) StickPressWindup = FMath::Max(S.WindupFrames, 0);
+	const int64 Since = StickPressFrame >= 0 ? F - StickPressFrame : -1;
+	// The human's step on each frame of his wind-up and two after (lane A209's pull toward the man rides on it): along and across his facing, in cm.
+	if (Since >= 0 && Since <= StickPressWindup + 2)
+	{
+		const FVector2D D = (S.Pos - S.PrevPos) * 100.0, Fw(FMath::Cos(S.Yaw), FMath::Sin(S.Yaw));
+		UE_LOG(LogJamHit, Log, TEXT("JAMHIT step frame=%lld since_press=%lld windup=%d along_cm=%.1f across_cm=%.1f speed_mps=%.2f yaw_step_deg=%.1f"), F, Since, StickPressWindup,
+			FVector2D::DotProduct(D, Fw), FVector2D::DotProduct(D, FVector2D(-Fw.Y, Fw.X)), S.Vel.Size(), FMath::RadiansToDegrees(FMath::UnwindRadians(S.Yaw - S.PrevYaw)));
+	}
+	const bool bPressFrame = Since == 2 || Since == 6 || Since == 8 || Since == 10 || Since == 14;
+	if (!(S.bCrossBraced && F % 10 == 0) && !bPressFrame) return;
+	for (AJamSkater* Sk : Skaters)
+	{
+		if (!Sk || Sk->GetSimIndex() != H) continue;
+		const AActor* Fig = Cast<AActor>(Sk->GetVisualObject());
+		const USkeletalMeshComponent* Mesh = Fig ? Fig->FindComponentByClass<USkeletalMeshComponent>() : nullptr;
+		if (!Mesh) return;
+		const FTransform Inv = Sk->GetActorTransform().Inverse();
+		const auto Local = [&](const TCHAR* Bone) { return Inv.TransformPosition(Mesh->GetSocketLocation(FName(Bone))); };
+		const FVector St = Local(TEXT("stick_socket")), Hr = Local(TEXT("hand_r")), Hl = Local(TEXT("hand_l")), Hd = Local(TEXT("head"));
+		const FVector Shaft = Inv.TransformVectorNoScale(Mesh->GetSocketTransform(FName(TEXT("stick_socket"))).GetUnitAxis(EAxis::Z));
+		UE_LOG(LogJamHit, Log, TEXT("JAMHIT stick frame=%lld braced=%d since_press=%lld stick=(%.0f, %.0f, %.0f) hand_r=(%.0f, %.0f, %.0f) hand_l=(%.0f, %.0f, %.0f) head=(%.0f, %.0f, %.0f) shaft=(%.2f, %.2f, %.2f) (figure frame: x ahead, y right, z up, cm)"),
+			F, S.bCrossBraced ? 1 : 0, Since, St.X, St.Y, St.Z, Hr.X, Hr.Y, Hr.Z, Hl.X, Hl.Y, Hl.Z, Hd.X, Hd.Y, Hd.Z, Shaft.X, Shaft.Y, Shaft.Z);
+		return;
+	}
+}
+
+// Lane A210 (jam.hit.CaptureBots 2): the rink point P (metres) is inside the picture, Margin (a share of the size) in from every edge.
+static bool JamHitOnScreen(const UWorld* World, const FVector2D& PM, float Margin)
+{
+	const APlayerController* PC = World ? World->GetFirstPlayerController() : nullptr;
+	int32 W = 0, H = 0;
+	FVector2D Px;
+	if (!PC) return false;
+	PC->GetViewportSize(W, H);
+	if (W <= 0 || H <= 0 || !PC->ProjectWorldLocationToScreen(FVector(PM.X * 100.0, PM.Y * 100.0, 90.0), Px)) return false;
+	return Px.X > W * Margin && Px.X < W * (1.f - Margin) && Px.Y > H * Margin && Px.Y < H * (1.f - Margin);
 }
 
 void AJamHitRead::Capture(const UJamSim* Sim)
@@ -673,10 +857,26 @@ void AJamHitRead::Capture(const UJamSim* Sim)
 		{
 			for (const FJamSkaterState& B : Sim->GetSkaters())
 			{
-				if (B.bHuman || !(B.bCheckThisFrame || B.bLiftThisFrame) || FVector2D::Distance(B.Pos, S.Pos) > CaptureBotsM) continue;
+				if (B.bHuman || !(B.bCheckThisFrame || B.bLiftThisFrame) || FVector2D::Distance(B.Pos, S.Pos) > CVarJamHitCaptureBotsM.GetValueOnGameThread() || FVector2D::Distance(B.Pos, S.Pos) < CVarJamHitCaptureBotsMinM.GetValueOnGameThread()) continue;
+				if (CVarJamHitCaptureBots.GetValueOnGameThread() >= 2 && !JamHitOnScreen(GetWorld(), B.Pos, 0.2f)) continue;
 				Kind = B.bCheckThisFrame ? TEXT("botcheck") : TEXT("botcross");
 				Until = F + FMath::Max(B.WindupFrames, 0) + (B.bCheckThisFrame ? 6 : 0) + 30;
 				UE_LOG(LogJamHit, Log, TEXT("JAMHIT capture bot kind=%s frame=%lld skater=%d windup=%d dist_m=%.1f"), *Kind, F, B.Index, B.WindupFrames, FVector2D::Distance(B.Pos, S.Pos));
+				break;
+			}
+		}
+		// Lane A210: a hit between two bots that put a man down or made him stumble, inside the same distance band from the human: a strip from the
+		// contact on (bothit): what a knockdown at 20 and 35 m looks like from the game camera (the wind-up is not to be seen at that size anyway).
+		if (Kind.IsEmpty() && CVarJamHitCaptureBots.GetValueOnGameThread() != 0)
+		{
+			for (const FJamHitReadModel::FHitLog& L : Model.GetFrameLogs())
+			{
+				if (L.Checker == H || L.Victim == H || !Sim->GetSkaters().IsValidIndex(L.Victim) || !(L.Result == EJamHitResult::Down || L.Result == EJamHitResult::Stumble)) continue;
+				const double D = FVector2D::Distance(Sim->GetSkaters()[L.Victim].Pos, S.Pos);
+				if (D > CVarJamHitCaptureBotsM.GetValueOnGameThread() || D < CVarJamHitCaptureBotsMinM.GetValueOnGameThread()) continue;
+				if (CVarJamHitCaptureBots.GetValueOnGameThread() >= 2 && !JamHitOnScreen(GetWorld(), Sim->GetSkaters()[L.Victim].Pos, 0.2f)) continue;
+				Kind = TEXT("bothit"); Until = F + 45;
+				UE_LOG(LogJamHit, Log, TEXT("JAMHIT capture bot kind=bothit frame=%lld checker=%d victim=%d result=%s closing=%.1f dist_m=%.1f"), F, L.Checker, L.Victim, HitResultName(L.Result), L.ClosingMps, D);
 				break;
 			}
 		}
@@ -708,6 +908,17 @@ void AJamHitRead::Capture(const UJamSim* Sim)
 void AJamHitRead::Render(const UJamSim* Sim, const TArray<TObjectPtr<AJamSkater>>& Skaters, const FVector& PuckAtCm, double FrameF)
 {
 	if (!Sim) return;
+	// Lane A210: a fast-forward ends at the next sim step (RetimeEarly). Should no step come (the sim stood still), it ends here after FastFwdRenderMax
+	// drawn frames, so no figure is left running fast.
+	if (FastFwdRenderLeft > 0 && --FastFwdRenderLeft == 0)
+	{
+		for (AJamSkater* Sk : Skaters)
+		{
+			if (!Sk || !FastFwd.IsValidIndex(Sk->GetSimIndex()) || !FastFwd[Sk->GetSimIndex()]) continue;
+			FastFwd[Sk->GetSimIndex()] = false;
+			JamHitSetFigureDilation(Sk, Sk->IsHitStopped() ? 0.0001f : 1.f);
+		}
+	}
 	const int32 N = Sim->GetSkaters().Num();
 	TArray<FVector> At; At.Init(FVector::ZeroVector, N);
 	TArray<float> Yaw; Yaw.Init(0.f, N);
@@ -731,10 +942,33 @@ void AJamHitRead::Render(const UJamSim* Sim, const TArray<TObjectPtr<AJamSkater>
 	if (CVarJamHitQuiet.GetValueOnGameThread() != 0)
 	{
 		Sw.bThinTell = true; Sw.bRingTeam = false; Sw.RingLife = 8.f / BurstFramesF; Sw.RingScale = FMath::Clamp(CVarJamHitRingScale.GetValueOnGameThread(), 0.1f, 0.99f);
+		const APlayerController* PC = GetWorld() ? GetWorld()->GetFirstPlayerController() : nullptr;
+		if (PC && PC->PlayerCameraManager && CVarJamHitRingFar.GetValueOnGameThread() != 0) { Sw.bRingByDistance = true; Sw.EyeAtCm = PC->PlayerCameraManager->GetCameraLocation(); }
 	}
 	TArray<FJamHitBar> Bars;
 	Model.Draw(FrameF, At, Yaw, PuckAtCm, Sw, Bars);
 	ApplyBars(Bars);
+	// Lane A210: the drawn figure's own size: the braced set (jam.hit.BraceSet / jam.hit.BraceLean) and the hit's coil and drive (jam.hit.Pop). All 0:
+	// nothing is touched. The scale is set on every frame a figure is off its own size and put back to 1 once; through a hit-stop it keeps the contact
+	// frame's; the pitch rides on the transform ApplyRender set this frame.
+	{
+		const float SetAmt = FMath::Clamp(CVarJamHitBraceSet.GetValueOnGameThread(), 0.f, 2.f), SetLean = FMath::Clamp(CVarJamHitBraceLean.GetValueOnGameThread(), 0.f, 30.f);
+		const float PopAmt = FMath::Clamp(CVarJamHitPop.GetValueOnGameThread(), 0.f, 2.f);
+		if (BraceScaled.Num() != N) { BraceScaled.Init(false, N); PopHeld.Init(0.f, N); }
+		for (AJamSkater* Sk : Skaters)
+		{
+			if (!Sk || !BraceSetK.IsValidIndex(Sk->GetSimIndex())) continue;
+			const int32 I = Sk->GetSimIndex();
+			const float K = SetAmt > 0.f ? FMath::InterpEaseInOut(0.f, 1.f, BraceSetK[I], 2.f) : 0.f;
+			if (!Sk->IsHitStopped()) PopHeld[I] = PopAmt > 0.f ? Model.PopFor(I, FrameF) * PopAmt : 0.f;
+			const FVector Scale = BraceSetScale(K, SetAmt) * PopScale(PopHeld[I]);
+			if (!Scale.Equals(FVector::OneVector, 1e-4)) { Sk->SetActorScale3D(Scale); BraceScaled[I] = true; }
+			else if (BraceScaled[I]) { Sk->SetActorScale3D(FVector::OneVector); BraceScaled[I] = false; }
+			// Through a hit-stop too: ApplyRender sets the held transform afresh each frame, and a braced figure that stood upright for the hold's frames
+			// would pop at the very moment its hit lands.
+			if (K > 0.f && SetLean > 0.f) Sk->AddActorLocalRotation(FRotator(-SetLean * K, 0.0, 0.0));
+		}
+	}
 	// The lean of the drawn figure (after its ApplyRender set this frame's transform; the next ApplyRender sets it afresh).
 	const int32 Mode = LeanMode();
 	if (Mode == 0) return;
@@ -1168,6 +1402,31 @@ bool FJamHitQuiet::RunTest(const FString&)
 	TestEqual(TEXT("ships: no bar across the chest of a held cross-check"), CVarJamHitBraceBar.GetValueOnGameThread(), 0);
 	TestEqual(TEXT("ships: the quiet marks"), CVarJamHitQuiet.GetValueOnGameThread(), 1);
 	TestEqual(TEXT("ships: device B's takes on every figure, the human's too"), CVarJamHitBTakes.GetValueOnGameThread(), 2);
+	// The bridge for the brace: the figure itself sets (nothing drawn on it).
+	TestEqual(TEXT("ships: the braced figure sets"), CVarJamHitBraceSet.GetValueOnGameThread(), 1.f, 1e-6f);
+	TestEqual(TEXT("ships: the coil and the drive on the figure"), CVarJamHitPop.GetValueOnGameThread(), 1.f, 1e-6f);
+	TestTrue(TEXT("not set: the figure's own size"), AJamHitRead::BraceSetScale(0.f, 1.f).Equals(FVector::OneVector, 1e-6));
+	TestTrue(TEXT("set: a tenth lower, 6 % wider"), AJamHitRead::BraceSetScale(1.f, 1.f).Equals(FVector(1.06, 1.06, 0.90), 1e-5));
+	TestTrue(TEXT("half way in: between the two"), AJamHitRead::BraceSetScale(0.5f, 1.f).Z < 1.f && AJamHitRead::BraceSetScale(0.5f, 1.f).Z > 0.90f);
+	TestTrue(TEXT("the switch at 0: untouched"), AJamHitRead::BraceSetScale(1.f, 0.f).Equals(FVector::OneVector, 1e-6));
+	// The coil and the drive (jam.hit.Pop): sunk through the wind-up, sprung at the window, settled 8 frames after the end.
+	TestEqual(TEXT("the press frame: his own size"), FJamHitReadModel::CheckPop(0.f, 8, 12.f, false), 0.f, 1e-6f);
+	TestTrue(TEXT("half way through the wind-up: sinking"), FJamHitReadModel::CheckPop(3.f, 8, 12.f, false) < -0.5f);
+	TestEqual(TEXT("three frames before the window: fully sunk"), FJamHitReadModel::CheckPop(5.f, 8, 12.f, false), -1.f, 1e-6f);
+	TestEqual(TEXT("a frame before the window: half sprung"), FJamHitReadModel::CheckPop(7.f, 8, 12.f, false), 0.f, 1e-6f);
+	TestEqual(TEXT("the frame the window opens: fully sprung"), FJamHitReadModel::CheckPop(8.f, 8, 12.f, false), 1.f, 1e-6f);
+	TestEqual(TEXT("settled 8 frames after the end"), FJamHitReadModel::CheckPop(12.f + FJamHitReadModel::PopSettleFrames, 8, 12.f, false), 0.f, 1e-6f);
+	TestEqual(TEXT("a contact inside the wind-up: the drive from that frame"), FJamHitReadModel::CheckPop(3.5f, 8, 3.f, true), 1.f - 0.5f / FJamHitReadModel::PopSettleFrames, 1e-5f);
+	TestTrue(TEXT("sunk: lower and wider"), AJamHitRead::PopScale(-1.f).Z < 1.f && AJamHitRead::PopScale(-1.f).X > 1.f);
+	TestTrue(TEXT("sprung: taller and narrower"), AJamHitRead::PopScale(1.f).Z > 1.f && AJamHitRead::PopScale(1.f).X < 1.f);
+	TestTrue(TEXT("at rest: his own size"), AJamHitRead::PopScale(0.f).Equals(FVector::OneVector, 1e-6));
+	// A contact inside the wind-up: the take is sent to its contact pose; a contact at the wind-up's end or in the window is left alone.
+	TestEqual(TEXT("contact on frame 2 of 8: re-timed to one frame before the take's contact"), AJamHitRead::RetimeFor(2, 8), 1);
+	TestEqual(TEXT("contact on frame 6 of 8: re-timed"), AJamHitRead::RetimeFor(6, 8), 1);
+	TestEqual(TEXT("contact on frame 7 of 8: within a frame, left alone"), AJamHitRead::RetimeFor(7, 8), -1);
+	TestEqual(TEXT("contact at the wind-up's end: left alone"), AJamHitRead::RetimeFor(8, 8), -1);
+	TestEqual(TEXT("contact in the window: left alone"), AJamHitRead::RetimeFor(13, 8), -1);
+	TestEqual(TEXT("no wind-up: nothing to re-time"), AJamHitRead::RetimeFor(0, 0), -1);
 	const auto DrawWith = [](const FJamHitReadModel& M, double FrameF, const TArray<FJamSkaterState>& S, const FJamHitReadModel::FDrawSwitches& Sw, TArray<FJamHitBar>& Out)
 	{
 		TArray<FVector> At; TArray<float> Yaw;
@@ -1269,6 +1528,17 @@ bool FJamHitQuiet::RunTest(const FString&)
 			TestEqual(TEXT("now: the ring is gone 8 frames after the contact"), Count(Bars, EJamHitLayer::Burst) + Count(Bars, EJamHitLayer::Shard), 0);
 			DrawWith(M, 108.0 + 8.5, S, H34, Bars);
 			TestTrue(TEXT("package H34: it burned on to 14"), Count(Bars, EJamHitLayer::Burst) > 0);
+			// The same hit 40 m from the eye: the ring at package H34's size and life again, still white; 5 m from the eye: the small one.
+			FJamHitReadModel::FDrawSwitches FarSw = Now; FarSw.bRingByDistance = true; FarSw.EyeAtCm = C + FVector(-4000.0, 0.0, 350.0);
+			DrawWith(M, 116.0, S, FarSw, Bars);
+			TestTrue(FString::Printf(TEXT("40 m from the eye: the ring reaches past 2 m again (%.2f m)"), Reach(Bars)), Reach(Bars) > 2.0);
+			for (const FJamHitBar& B : Bars) if (B.Layer == static_cast<uint8>(EJamHitLayer::Burst)) TestTrue(TEXT("40 m from the eye: still white"), B.Colour.Equals(FLinearColor::White, 0.001f));
+			FarSw.EyeAtCm = C + FVector(-500.0, 0.0, 350.0);
+			DrawWith(M, 112.0, S, FarSw, Bars);
+			TestTrue(FString::Printf(TEXT("5 m from the eye: the small ring (%.2f m)"), Reach(Bars)), Reach(Bars) <= 1.35 + 1e-6);
+			FarSw.EyeAtCm = C + FVector(-2000.0, 0.0, 350.0);
+			DrawWith(M, 112.0, S, FarSw, Bars);
+			TestTrue(FString::Printf(TEXT("20 m from the eye: between the two (%.2f m)"), Reach(Bars)), Reach(Bars) > 1.35 && Reach(Bars) < 2.3);
 			DrawWith(M, 112.0, S, Now, Bars);
 			TestTrue(TEXT("the downed man's oval stays"), Count(Bars, EJamHitLayer::Down) > 0);
 		}

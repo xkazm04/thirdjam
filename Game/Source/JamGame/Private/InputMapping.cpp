@@ -480,7 +480,7 @@ FJamButtonContext JamControls::ButtonContext(const UJamSim& Sim, int32 Skater)
 	C.bInReach = Sk.IsValidIndex(Skater) && FVector2D::Distance(Sk[Skater].Pos, Sim.GetPuck().Pos) <= Sim.CarrierReachM(Skater);
 	C.bDeadAcrossChange = CVarJamCtrlHeldAcrossChange.GetValueOnAnyThread() != 0;
 	const int32 Half = Sim.GetConfig().Pass.SaucerHalfFrames;
-	C.SaucerDelaySteps = Half > 0 ? FMath::Max(0, SaucerHoldFrames(Half) - Half) : 0;
+	C.SaucerDelaySteps = Half > 0 && Sim.GetConfig().Pass.PowerFullFrames <= 0 ? FMath::Max(0, SaucerHoldFrames(Half) - Half) : 0;   // lane A207: under game.pass.power the hold is the power: the level goes at once
 	C.BraceDelaySteps = FMath::Max(0, BraceHoldFrames() - UJamSim::CrossHoldTapFrames);
 	return C;
 }

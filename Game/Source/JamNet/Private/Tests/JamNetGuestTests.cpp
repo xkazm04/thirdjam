@@ -312,6 +312,7 @@ namespace JamNetGuestTests
 	const FGuard PuckGuards[] = {
 		{ TEXT("ShotgunBy"), TEXT("ShotgunFrames"), 5 }, { TEXT("ShotgunMul"), TEXT("ShotgunFrames"), 5 },
 		{ TEXT("SlowBy"), TEXT("SlowFrames"), 5 }, { TEXT("SlowMul"), TEXT("SlowFrames"), 5 },
+		{ TEXT("PassBy"), TEXT("PassFrames"), 5 },   // lane A207: the pass in flight
 	};
 
 	void SetInt(FProperty* P, void* Container, int64 V)

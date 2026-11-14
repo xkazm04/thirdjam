@@ -349,6 +349,11 @@ public:
 	// opponent's brace (CrossBraceTaken grew) shows BraceLineFor(false). Presentation only; a restart (the counters back to 0) shows nothing.
 	static FString BraceLineFor(bool bGiven) { return bGiven ? TEXT("BRACED HIT") : TEXT("RUN THROUGH"); }
 	void UpdateBraceLine(const FJamPresentationFrame& Frame);
+	// ---- Lane A207 (track P1): the pass's power by the stick (UpdatePassMeter, HUDPassMeter.cpp; called after UpdateBraceLine): while the human holds the
+	// pass with the puck, a line on the ice as far as the pass would still be a pass, towards the mate it would go to (his colour) or along the stick (chalk).
+	void UpdatePassMeter(const FJamPresentationFrame& Frame);
+	UPROPERTY(Transient) TObjectPtr<UBorder> PassMeterBar;
+	int32 PassMeterState = 0;
 	int32 BraceSeenGiven = 0, BraceSeenTaken = 0;
 	bool bCueStickLocked = false, bCuePressIntoGrace = false;
 	int32 CueGraceCarrier = -1;

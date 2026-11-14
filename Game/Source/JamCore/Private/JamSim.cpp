@@ -917,6 +917,7 @@ void UJamSim::SetPuck(const FVector2D& Pos, const FVector2D& Vel, double Z, doub
 	Puck.Vel = Vel;
 	Puck.Z = Puck.PrevZ = FMath::Max(0.0, Z);   // R-0035 (lane A52)
 	Puck.VZ = VZ;
+	Puck.PassFrames = 0; Puck.PassBy = -1;   // lane A207: a placed puck is no pass in flight
 	// Lane A121 (R-0049 point 2): a puck placed by a scene (a test, a drill) is not won: whoever carries it first has no take grace. Only where the grace
 	// is on, so game.stick.take_grace_frames 0 leaves no trace.
 	if (Config.Stick.TakeGraceFrames > 0) { TakeOwner = TakeOwnerPlaced; for (FJamSkaterState& S : Skaters) S.TakeGraceLeft = 0; }
@@ -1081,7 +1082,7 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 		if (In.bAbility) TryAbility(S);   // lane A84 (R-0041 point 3): F, before the shot so a shotgun with the puck fires this frame
 		if (In.bShoot) TryShoot(S, 0.f);
 		StepCharge(S, In);
-		if (In.bPass) TryPass(S);
+		if (In.bPass) { if (PassPowerOn()) TryPassPowered(S, -1, false, In.Stick); else TryPass(S); }   // lane A207: the powered edge pass aims with this frame's stick
 		StepPassCharge(S, In);   // lane A77 (R-0036): the held pass, a saucer on a long enough hold
 		if (In.bDeke) TryDeke(S);
 		if (In.bSpin) TrySpin(S);   // lane A51 (R-0034)
@@ -1673,6 +1674,7 @@ void UJamSim::ResolvePokes()
 			const int32 C = CarrierIndex();
 			const bool bFromOpponent = C >= 0 && Skaters[C].Team != S.Team;
 			if (bFromOpponent) Skaters[C].StickHitResult = 1;   // lane A45 read-out: the carrier's PlayStickHit(false)
+			if (bFromOpponent && LoosePickupOn()) { Skaters[C].DeflectCooldown = PickupLostFrames; S.SettleFrames = FMath::Max(S.SettleFrames, ReceptionSettleFrames); }   // lane A208: the poke's puck is the poker's, not the stripped man's arc's
 			// Clean take: the puck comes to the blade with the poker's motion, a touch towards the body.
 			Puck.Vel = S.Vel * 0.6 + (S.Pos - Puck.Pos).GetSafeNormal() * 1.5;
 			Puck.LastTouch = S.Index;
@@ -1740,10 +1742,10 @@ void UJamSim::LandCrossShove(FJamSkaterState& S)
 	S.CrossTarget = -1;
 	if (!Skaters.IsValidIndex(T) || !Config.Contact.bMomentum || !Config.Skater.bCheckEnabled) return;
 	FJamSkaterState& O = Skaters[T];
-	// Lane A209: a pulled human's committed shove (contact.check_pull_m) lands one frame's pull farther, inside 90 degrees of his facing or aim, and in the back
+	// Lane A209: a pulled human's committed shove (contact.check_pull_m) lands two frames' pull farther, inside 90 degrees of his facing or aim, and in the back
 	// of a man without the puck (as it was taken at the press: cross_any_man).
 	const bool bPulled = PullsHuman(S) && Config.Contact.CrossWindupFor(S.bHuman) > 0;
-	const double LandReach = SkaterRadius * 2.0 + Config.Contact.CrossReachM + (bPulled ? Config.Contact.CheckPullM / Config.Contact.CrossWindupFor(S.bHuman) : 0.0);
+	const double LandReach = SkaterRadius * 2.0 + Config.Contact.CrossReachM + (bPulled ? 2.0 * Config.Contact.CheckPullM / Config.Contact.CrossWindupFor(S.bHuman) : 0.0);   // wave 2: two frames' pull (0.75 m of gap at 8)
 	const bool bOutCone = bPulled ? Dot((O.Pos - S.Pos).GetSafeNormal(), S.Forward()) < 0.0 && Dot((O.Pos - S.Pos).GetSafeNormal(), (S.BladePos - S.Pos).GetSafeNormal()) < 0.0 : OutsideCrossCone(S, O);
 	if (O.IsDown() || O.InBox() || O.ShieldFrames > 0 || FVector2D::Distance(O.Pos, S.Pos) > LandReach || bOutCone) return;
 	if (CarrierIndex() == O.Index && IsShoveShielded(S, O)) return;
@@ -1811,6 +1813,7 @@ void UJamSim::ResolveLift(FJamSkaterState& S)
 		Puck.LastTouch = S.Index;
 		++S.Touches;
 		O.StickHitResult = 2;   // lane A45 read-out: the carrier's PlayStickHit(true)
+		if (LoosePickupOn()) O.DeflectCooldown = PickupLostFrames;   // lane A208: the lifted puck is not the lifted man's arc's at once
 		Emit(JamEvents::Lift, S.Index, O.Pos, 1.f, KindClean, O.Pos - S.Pos);   // lane A95 (B-to-A-0037): Dir attacker -> victim, in the frame of the lift
 		return;
 	}
@@ -1977,6 +1980,19 @@ double UJamSim::CrossPullFor(const FJamSkaterState& S) const
 	return PullsHuman(S) && Config.Contact.CrossWindupFor(S.bHuman) > 0 ? Config.Contact.CheckPullM : 0.0;
 }
 
+bool UJamSim::CrossMeets(const FJamSkaterState& X, const FJamSkaterState& O) const
+{
+	return PullsHuman(X) && X.LiftWindupLeft > 0 && X.CrossTarget == O.Index && !X.bCrossBraced && X.CanAct() && Config.Contact.CrossWindupFor(X.bHuman) > 0;
+}
+
+bool UJamSim::LandCrossOnMeeting(FJamSkaterState& X)
+{
+	const int32 T = X.CrossTarget;
+	X.LiftWindupLeft = 0;
+	LandCrossShove(X);
+	return Skaters.IsValidIndex(T) && Skaters[T].ContactBy == X.Index && Skaters[T].ContactOutcome >= ContactStumble;
+}
+
 void UJamSim::EndWindupOnContact(FJamSkaterState& S)
 {
 	if (PullsHuman(S)) S.CheckWindupLeft = 0;
@@ -2002,10 +2018,12 @@ void UJamSim::StepCheckPull(FJamSkaterState& S)
 	const int32 CheckWu = Config.Contact.CheckWindupFor(S.bHuman);
 	if (CheckWu > 0 && (S.CheckWindupLeft > 0 || S.CheckWindow > 0))
 	{
-		// in the window (after the wind-up) what is left is spread over its frames, at most half of the pull in all
-		const int32 Left = S.CheckWindupLeft > 0 ? S.CheckWindupLeft : FMath::Max(1, S.CheckWindow);
-		const double Cap = S.CheckWindupLeft > 0 ? PullM / CheckWu : FMath::Min(PullM / CheckWu, 0.5 * PullM / Left);
-		const int32 T = PullTarget(S, Cap * Left + S.Vel.Size() * Left * DT);
+		// In the window (after the wind-up) the man still within half of the pull (and what his speed covers in the window's frames left) is drawn at once, at
+		// most half of the pull over the human's window in all (a frame's share of it each frame), so the bodies meet early in the window.
+		const bool bWound = S.CheckWindupLeft > 0;
+		const int32 Left = bWound ? S.CheckWindupLeft : 1;
+		const double Cap = bWound ? PullM / CheckWu : 0.5 * PullM / HumanCheckWindowFrames;
+		const int32 T = PullTarget(S, bWound ? Cap * Left + S.Vel.Size() * Left * DT : 0.5 * PullM + S.Vel.Size() * FMath::Max(1, S.CheckWindow) * DT);
 		if (T >= 0)
 		{
 			const FJamSkaterState& O = Skaters[T];
@@ -2025,7 +2043,15 @@ void UJamSim::StepCheckPull(FJamSkaterState& S)
 	if (CrossWu > 0 && S.LiftWindupLeft > 0 && Skaters.IsValidIndex(S.CrossTarget) && !S.bCrossBraced)
 	{
 		const FJamSkaterState& O = Skaters[S.CrossTarget];
-		if (!O.IsDown() && !O.InBox()) Pull(O, S.LiftWindupLeft, PullM / CrossWu, Config.Contact.CrossReachM * 0.5);
+		// to half of arm's length by half of the wind-up (then kept there), so a man who moves in the wind-up is followed; at most the pull's share a frame
+		if (!O.IsDown() && !O.InBox()) Pull(O, FMath::Max(1, (S.LiftWindupLeft + 1) / 2), PullM / CrossWu, Config.Contact.CrossReachM * 0.5);
+	}
+	// The held brace (contact.cross_hold): the braced human is drawn onto the man in front of him within BracePullGapM, a frame's share of the pull at a time,
+	// so a body passing by the stick's width meets it (the brace's own rule then decides: not into a back, by the speed brought).
+	if (S.bCrossBraced && CrossWu > 0)
+	{
+		const int32 T = PullTarget(S, BracePullGapM);
+		if (T >= 0) Pull(Skaters[T], 1, PullM / CrossWu, PullGoalGapM);
 	}
 }
 
@@ -2201,6 +2227,7 @@ void UJamSim::CollideSkaters()
 				const bool bBa = !bA && !bB && Braced(A, B, N), bBb = !bA && !bB && Braced(B, A, -N);
 				if (bA && (!bB || Dot(A.Vel, N) >= Dot(B.Vel, -N))) { bLanded = ResolveContact(A, B, N, Contact, EContactKind::Body) >= ContactStumble; EndWindupOnContact(A); }   // lane A209: the end call
 				else if (bB) { bLanded = ResolveContact(B, A, -N, Contact, EContactKind::Body) >= ContactStumble; EndWindupOnContact(B); }
+				else if (CrossMeets(A, B) || CrossMeets(B, A)) bLanded = LandCrossOnMeeting(CrossMeets(A, B) ? A : B);   // lane A209: the pulled cross-check meets its man in the wind-up
 				else if (bBa || bBb)
 				{
 					const bool bFromA = bBa && (!bBb || Dot(A.Vel, N) >= Dot(B.Vel, -N));
@@ -2700,7 +2727,9 @@ void UJamSim::TryShoot(FJamSkaterState& S, float Charge)
 		}
 	}
 	const double MaxSpeed = Eff(EJamStat::PuckMaxSpeed, -1);
-	double Speed = FMath::Min(Eff(EJamStat::ShotSpeed, S.Index) + FMath::Clamp(static_cast<double>(Charge), 0.0, 1.0) * Config.Shot.ChargeSpeedBonus, MaxSpeed);
+	// Lane A207 (game.shot.speed_scale): the shot's speed and its cap scaled alike (1 = the game before the lane).
+	double Speed = FMath::Min((Eff(EJamStat::ShotSpeed, S.Index) + FMath::Clamp(static_cast<double>(Charge), 0.0, 1.0) * Config.Shot.ChargeSpeedBonus) * ShotSpeedScale(), MaxSpeed * PuckCapScale());
+	Puck.PassFrames = 0; Puck.PassBy = -1;   // lane A207: a shot is no pass in flight
 	// Lane A84 (R-0041 point 3): an armed shotgun leaves at magnitude x the speed (over puck.max_speed by the same factor) and flies through the crowd (StepShotgun).
 	if (S.AbilityArmed == AbShotgun)
 	{
@@ -2734,11 +2763,11 @@ void UJamSim::TryShoot(FJamSkaterState& S, float Charge)
 	S.DekeFrames = 0;
 	S.DekeSide = 0;
 	if (bOneTimer) { S.bOneTimerThisFrame = true; ++S.OneTimers; }
-	Emit(JamEvents::Shot, S.Index, Puck.Pos, static_cast<float>(Speed / MaxSpeed), bOneTimer ? KindOneTimer : NAME_None);
+	Emit(JamEvents::Shot, S.Index, Puck.Pos, static_cast<float>(Speed / (MaxSpeed * PuckCapScale())), bOneTimer ? KindOneTimer : NAME_None);   // lane A207: the read-out's scale as before
 	// Lane A32: the shot in flight, for "save".
 	ShotFrame = Frame;
 	ShotBy = S.Index;
-	ShotStrength = static_cast<float>(FMath::Clamp(Speed / MaxSpeed, 0.0, 1.0));
+	ShotStrength = static_cast<float>(FMath::Clamp(Speed / (MaxSpeed * PuckCapScale()), 0.0, 1.0));   // lane A207
 	ApplySlowPuck(S);   // lane A84: an armed slow puck takes this shot
 }
 
@@ -2919,15 +2948,17 @@ void UJamSim::StepPassCharge(FJamSkaterState& S, const FJamInput& In)
 	{
 		if (S.PassChargeFrames < 0) return;   // lane A203: as the shot's
 		const bool bInReach = FVector2D::Distance(S.Pos, Puck.Pos) <= CarrierReachM(S.Index);   // R-0042 (lane A85)
-		if (bInReach && Frame >= S.ShotReadyFrame) S.PassChargeFrames = FMath::Min(S.PassChargeFrames + 1, FMath::Max(Half, 1));
+		if (bInReach && Frame >= S.ShotReadyFrame) S.PassChargeFrames = FMath::Min(S.PassChargeFrames + 1, PassPowerOn() ? FMath::Max(Config.Pass.PowerFullFrames, Half) : FMath::Max(Half, 1));   // lane A207: the hold is the power
 		return;
 	}
 	if (S.PassChargeFrames < 0) { S.PassChargeFrames = 0; return; }   // lane A203
 	if (S.PassChargeFrames > 0)
 	{
 		const bool bSaucer = Half > 0 && S.PassChargeFrames >= Half;
+		const int32 Held = S.PassChargeFrames;
 		S.PassChargeFrames = 0;
-		TryPass(S, bSaucer);
+		if (PassPowerOn()) TryPassPowered(S, Held, bSaucer && !S.bHuman, In.Stick);   // lane A207: the human's hold is power (his saucer is the sim's); a bot's hold is still its saucer
+		else TryPass(S, bSaucer);
 	}
 }
 
@@ -2944,6 +2975,7 @@ void UJamSim::ClearChargeOnLoss(FJamSkaterState& S, const FJamInput& In)
 
 void UJamSim::TryPass(FJamSkaterState& S, bool bSaucer)
 {
+	if (PassPowerOn()) { TryPassPowered(S, -1, bSaucer); return; }   // lane A207 (game.pass.power): the edge pass, its speed solved for the man
 	if (Frame < S.ShotReadyFrame) return;
 	if (FVector2D::Distance(S.Pos, Puck.Pos) > CarrierReachM(S.Index)) return;   // R-0042 (lane A85)
 	FVector2D Aim;
@@ -3001,6 +3033,319 @@ void UJamSim::ApplySaucerLift(double DistM, double Speed)
 	Puck.Z = 1e-6;   // off the ice from this frame (StepPuckVertical integrates it; the hash sees it)
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+// Lane A207 (track P1, the night of 14 Nov; docs/experiments/PASS-SHOT.md): the pass by power, aimed at a man, caught by a forgiving blade.
+// The puck on the ice slows as dv/dt = -k v - f (puck.drag k per second, the ice's friction f = ice_friction x g): v(t) = (v0 + f/k) e^(-kt) - f/k, and the
+// way from v0 to v1 is (v0 - v1)/k - (f/k^2) ln((k v0 + f)/(k v1 + f)). StepPuck integrates the same law in substeps (within centimetres over 30 m).
+// ---------------------------------------------------------------------------------------------------------------------
+
+namespace JamPassPower
+{
+	double Way(double K, double F, double V0, double V1)   // metres from V0 down to V1 (V1 <= V0)
+	{
+		if (K > 1e-6) return (V0 - V1) / K - (F / (K * K)) * FMath::Loge((K * V0 + F) / FMath::Max(1e-9, K * V1 + F));
+		if (F > 1e-9) return (V0 * V0 - V1 * V1) / (2.0 * F);
+		return 1e9;
+	}
+	double StopTime(double K, double F, double V0)
+	{
+		if (K > 1e-6) return F > 1e-9 ? FMath::Loge((K * V0 + F) / F) / K : 1e9;
+		return F > 1e-9 ? V0 / F : 1e9;
+	}
+	double Flown(double K, double F, double V0, double T)   // metres flown after T seconds (it stops at v = 0)
+	{
+		const double Tt = FMath::Min(T, StopTime(K, F, V0));
+		if (K > 1e-6) return ((V0 + F / K) * (1.0 - FMath::Exp(-K * Tt))) / K - (F / K) * Tt;
+		return V0 * Tt - 0.5 * F * Tt * Tt;
+	}
+	double SpeedAt(double K, double F, double V0, double T)
+	{
+		if (K > 1e-6) return FMath::Max(0.0, (V0 + F / K) * FMath::Exp(-K * T) - F / K);
+		return FMath::Max(0.0, V0 - F * T);
+	}
+}
+
+double UJamSim::PuckSpeedAfter(double V0, double DistM) const
+{
+	const double K = Eff(EJamStat::PuckDrag, -1), F = Eff(EJamStat::IceFriction, -1) * Gravity;
+	if (DistM <= 0.0) return V0;
+	if (JamPassPower::Way(K, F, V0, 0.0) <= DistM) return 0.0;
+	double Lo = 0.0, Hi = V0;
+	for (int32 i = 0; i < 40; ++i) { const double Mid = 0.5 * (Lo + Hi); if (JamPassPower::Way(K, F, V0, Mid) > DistM) Lo = Mid; else Hi = Mid; }
+	return 0.5 * (Lo + Hi);
+}
+
+double UJamSim::PuckSpeedToArrive(double DistM, double ArriveMps) const
+{
+	const double K = Eff(EJamStat::PuckDrag, -1), F = Eff(EJamStat::IceFriction, -1) * Gravity;
+	const double A = FMath::Max(0.0, ArriveMps);
+	if (DistM <= 0.0) return A;
+	double Lo = A, Hi = FMath::Max(A + 1.0, 200.0);
+	for (int32 i = 0; i < 48; ++i) { const double Mid = 0.5 * (Lo + Hi); if (JamPassPower::Way(K, F, Mid, A) < DistM) Lo = Mid; else Hi = Mid; }
+	return 0.5 * (Lo + Hi);
+}
+
+double UJamSim::PassReachM(double V0) const
+{
+	const double K = Eff(EJamStat::PuckDrag, -1), F = Eff(EJamStat::IceFriction, -1) * Gravity;
+	return V0 > Config.Pass.PowerArriveMps ? FMath::Min(200.0, JamPassPower::Way(K, F, V0, Config.Pass.PowerArriveMps)) : 0.0;
+}
+
+int32 UJamSim::HumanPassTarget(int32 Skater, const FVector2D& StickDir, int32 HoldFrames, FVector2D& OutAim) const
+{
+	OutAim = Puck.Pos;
+	if (!Skaters.IsValidIndex(Skater)) return -1;
+	const double Speed = PassPowerOn() ? PassSpeedForHold(HoldFrames) : FMath::Min(Config.Skater.PassSpeed, Eff(EJamStat::PuckMaxSpeed, -1));
+	const FVector2D Dir = StickDir.IsNearlyZero() ? Skaters[Skater].Forward() : StickDir.GetSafeNormal();
+	const int32 To = Config.Pass.AimConeDeg > 0.0 ? PickReceiverInCone(Skaters[Skater], Dir, Speed, OutAim) : -1;
+	if (To < 0) OutAim = Puck.Pos + Dir * FMath::Max(2.0, PassReachM(Speed));
+	return To;
+}
+
+double UJamSim::PassFullSpeed() const
+{
+	const double MaxSpeed = Eff(EJamStat::PuckMaxSpeed, -1);
+	const double Tap = FMath::Min(Config.Skater.PassSpeed, MaxSpeed);
+	const double Way = FMath::Clamp(Config.Pass.PowerReachShare, 0.05, 1.0) * Config.Rink.LengthM;
+	return FMath::Clamp(PuckSpeedToArrive(Way, Config.Pass.PowerArriveMps), Tap, MaxSpeed);
+}
+
+double UJamSim::PassSpeedForHold(int32 HoldFrames) const
+{
+	const double Tap = FMath::Min(Config.Skater.PassSpeed, Eff(EJamStat::PuckMaxSpeed, -1));
+	const int32 TapF = FMath::Max(0, Config.Shot.TapFrames);
+	const int32 FullF = FMath::Max(TapF + 1, Config.Pass.PowerFullFrames);
+	if (HoldFrames <= TapF) return Tap;
+	const double Frac = FMath::Clamp(static_cast<double>(HoldFrames - TapF) / static_cast<double>(FullF - TapF), 0.0, 1.0);
+	return FMath::Lerp(Tap, PassFullSpeed(), Frac);
+}
+
+bool UJamSim::AimPassAt(int32 Passer, int32 Receiver, double Speed, FVector2D& OutAim, double& OutSpeed, double& OutArrive, double& OutFlightS) const
+{
+	OutAim = Puck.Pos; OutSpeed = 0.0; OutArrive = 0.0; OutFlightS = 0.0;
+	if (!Skaters.IsValidIndex(Passer) || !Skaters.IsValidIndex(Receiver) || Passer == Receiver) return false;
+	const FJamSkaterState& T = Skaters[Receiver];
+	const double K = Eff(EJamStat::PuckDrag, -1), F = Eff(EJamStat::IceFriction, -1) * Gravity;
+	const double MaxSpeed = Eff(EJamStat::PuckMaxSpeed, -1);
+	const double Tap = FMath::Min(Config.Skater.PassSpeed, MaxSpeed);
+	const double Full = PassPowerOn() ? PassFullSpeed() : Tap;
+	const FVector2D From = Puck.Pos;
+	auto Target = [&](double t) { return T.BladePos + T.Vel * t; };
+	// The meeting time for a release speed V: the first t (to 4 s) at which the puck has flown as far as his blade is from the release then.
+	auto Meet = [&](double V, double& OutT) -> bool
+	{
+		auto Gap = [&](double t) { return JamPassPower::Flown(K, F, V, t) - (Target(t) - From).Size(); };
+		double Lo = 0.0, Hi = -1.0;
+		for (int32 i = 1; i <= 80; ++i) { const double t = 0.05 * i; if (Gap(t) >= 0.0) { Hi = t; Lo = t - 0.05; break; } }
+		if (Hi < 0.0) return false;
+		for (int32 i = 0; i < 30; ++i) { const double Mid = 0.5 * (Lo + Hi); if (Gap(Mid) >= 0.0) Hi = Mid; else Lo = Mid; }
+		OutT = Hi;
+		return true;
+	};
+	double V = Speed > 0.0 ? FMath::Min(Speed, MaxSpeed) : Tap;
+	if (Speed <= 0.0)
+	{
+		// The speed that arrives at arrive_mps where he will be, solved against the moving target (a few rounds converge), clamped tap..full.
+		double t = (Target(0.0) - From).Size() / FMath::Max(1.0, Tap);
+		for (int32 r = 0; r < 4; ++r)
+		{
+			V = FMath::Clamp(PuckSpeedToArrive((Target(t) - From).Size(), Config.Pass.PowerArriveMps), Tap, Full);
+			double Tm = 0.0;
+			if (!Meet(V, Tm)) break;
+			t = Tm;
+		}
+	}
+	OutSpeed = V;
+	double Tm = 0.0;
+	if (!Meet(V, Tm))
+	{
+		// He outruns this pass: aim where it comes nearest to his blade before it stops (the most he can be given; he may still skate onto it).
+		const double TStop = FMath::Min(4.0, JamPassPower::StopTime(K, F, V));
+		double BestT = TStop, BestGap = -1e300;
+		for (int32 i = 1; i <= 80; ++i)
+		{
+			const double t = FMath::Min(TStop, 0.05 * i);
+			const double Gp = JamPassPower::Flown(K, F, V, t) - (Target(t) - From).Size();
+			if (Gp > BestGap) { BestGap = Gp; BestT = t; }
+			if (t >= TStop) break;
+		}
+		OutAim = Target(BestT);
+		OutFlightS = BestT;
+		return false;
+	}
+	OutAim = Target(Tm);
+	OutFlightS = Tm;
+	OutArrive = JamPassPower::SpeedAt(K, F, V, Tm);
+	return true;
+}
+
+double UJamSim::PassLane(int32 Team, const FVector2D& From, const FVector2D& To, double& OutAlong) const
+{
+	const FVector2D Seg = To - From;
+	const double D = Seg.Size();
+	const FVector2D Dir = D > 1e-9 ? Seg / D : FVector2D(1.0, 0.0);
+	double Lane = 1e300;
+	OutAlong = 0.0;
+	for (const FJamSkaterState& O : Skaters)
+	{
+		if (O.Team == Team || O.InBox()) continue;
+		const double T0 = FMath::Clamp(Dot(O.Pos - From, Dir), 0.0, D);
+		const double Dl = FVector2D::Distance(From + Dir * T0, O.Pos);
+		if (Dl < Lane) { Lane = Dl; OutAlong = T0; }
+	}
+	return Lane;
+}
+
+int32 UJamSim::PickReceiverPowered(const FJamSkaterState& S, FVector2D& OutAim, bool bSaucer) const
+{
+	// PickReceiver's score (open lane, up the ice, short) on the powered flight: the aim is his blade where it will be, the speed the one that arrives alive.
+	const FVector2D Attack(AttackGoalX(S.Team) > 0 ? 1.0 : -1.0, 0.0);
+	int32 Best = -1;
+	double BestScore = -1e300;
+	for (const FJamSkaterState& T : Skaters)
+	{
+		if (T.Team != S.Team || T.Index == S.Index || T.IsDown() || T.InBox()) continue;
+		FVector2D Aim; double V = 0, Arr = 0, Tf = 0;
+		if (!AimPassAt(S.Index, T.Index, -1.0, Aim, V, Arr, Tf) || Arr < PassCatchMinMps) continue;
+		const FVector2D To = Aim - Puck.Pos;
+		const double D = To.Size();
+		if (D < 2.0 || D > 45.0) continue;
+		const FVector2D Dir = To / D;
+		double LaneAlong = 0.0;
+		const double Lane = PassLane(S.Team, Puck.Pos, Aim, LaneAlong);
+		const double Open = FMath::Min(Lane, 4.0) / 4.0;
+		const double Ahead = Dot(Dir, Attack);
+		const double PassScore = Open * 2.0 + Ahead - D / 60.0;
+		const bool bOverBlade = bSaucer && Lane >= SaucerLaneMinM && LaneAlong > SaucerAirFromM && LaneAlong < D * SaucerLandFrac - 0.5;
+		if (Lane < 0.9 && !bOverBlade) continue;
+		if (PassScore > BestScore) { BestScore = PassScore; Best = T.Index; OutAim = Aim; }
+	}
+	return Best;
+}
+
+int32 UJamSim::PickReceiverInCone(const FJamSkaterState& S, const FVector2D& Dir, double Speed, FVector2D& OutAim) const
+{
+	// The human's pass: the mate nearest the stick's line (the smaller of the angles to where he is and to where the pass meets him) inside the cone.
+	const double Cone = FMath::Clamp(Config.Pass.AimConeDeg, 0.0, 90.0);
+	int32 Best = -1;
+	double BestAng = 1e300, BestD = 1e300;
+	for (const FJamSkaterState& T : Skaters)
+	{
+		if (T.Team != S.Team || T.Index == S.Index || T.IsDown() || T.InBox()) continue;
+		const FVector2D Now = T.Pos - Puck.Pos;
+		if (Now.Size() < 1.5) continue;
+		FVector2D Aim; double V = 0, Arr = 0, Tf = 0;
+		AimPassAt(S.Index, T.Index, Speed, Aim, V, Arr, Tf);
+		const FVector2D Lead = Aim - Puck.Pos;
+		auto Ang = [&](const FVector2D& W) { return W.IsNearlyZero() ? 180.0 : FMath::RadiansToDegrees(FMath::Acos(FMath::Clamp(Dot(Dir, W.GetSafeNormal()), -1.0, 1.0))); };
+		const double A = FMath::Min(Ang(Now), Ang(Lead));
+		if (A > Cone) continue;
+		const double D = Now.Size();
+		if (A < BestAng - 1.0 || (A <= BestAng + 1.0 && D < BestD)) { BestAng = A; BestD = D; Best = T.Index; OutAim = Aim; }
+	}
+	return Best;
+}
+
+void UJamSim::TryPassPowered(FJamSkaterState& S, int32 HoldFrames, bool bSaucer, const FVector2D& StickIn)
+{
+	if (Frame < S.ShotReadyFrame) return;
+	if (FVector2D::Distance(S.Pos, Puck.Pos) > CarrierReachM(S.Index)) return;   // R-0042 (lane A85)
+	const double MaxSpeed = Eff(EJamStat::PuckMaxSpeed, -1);
+	const double Tap = FMath::Min(Config.Skater.PassSpeed, MaxSpeed);
+	const double HeldSpeed = HoldFrames >= 0 ? PassSpeedForHold(HoldFrames) : -1.0;   // an edge pass: the speed solved for its man
+	FVector2D Aim = Puck.Pos;
+	int32 To = -1;
+	double Speed = HeldSpeed;
+	if (S.bHuman && Config.Pass.AimConeDeg > 0.0)
+	{
+		// The human aims with the stick (the blade's direction; the facing when the stick is at rest). Nobody in the cone: the pass goes along the stick.
+		FVector2D Dir = StickIn.Size() > 0.05 ? StickIn.GetSafeNormal() : (S.bStickAimed ? (S.BladePos - S.Pos).GetSafeNormal() : S.Forward());
+		if (Dir.IsNearlyZero()) Dir = S.Forward();
+		To = PickReceiverInCone(S, Dir, HeldSpeed, Aim);
+		if (To < 0) { Aim = Puck.Pos + Dir * 20.0; if (Speed <= 0.0) Speed = Tap; }
+	}
+	else
+	{
+		To = PickReceiverPowered(S, Aim, bSaucer && Config.Pass.SaucerLiftM > 0.0);
+		if (To < 0) return;
+	}
+	if (To >= 0)
+	{
+		double V = 0, Arr = 0, Tf = 0;
+		AimPassAt(S.Index, To, HeldSpeed, Aim, V, Arr, Tf);
+		Speed = V;
+	}
+	Speed = FMath::Clamp(Speed, 1.0, MaxSpeed);
+	// The saucer under power: a bot's held saucer as before, or the sim's own when an opposing blade sits on the flat line where the saucer flies over it.
+	bool bLift = bSaucer && Config.Pass.SaucerLiftM > 0.0;
+	if (!bLift && Config.Pass.SaucerLiftM > 0.0 && To >= 0)
+	{
+		const FVector2D Seg = Aim - Puck.Pos;
+		const double D = Seg.Size();
+		const FVector2D Dir = D > 1e-9 ? Seg / D : FVector2D(1.0, 0.0);
+		for (const FJamSkaterState& O : Skaters)
+		{
+			if (O.Team == S.Team || O.InBox() || !O.CanAct()) continue;
+			const double Along = Dot(O.BladePos - Puck.Pos, Dir);
+			if (Along <= SaucerAirFromM || Along >= D * SaucerLandFrac - 0.5) continue;
+			const double Off = FVector2D::Distance(Puck.Pos + Dir * Along, O.BladePos);
+			const double BodyOff = FVector2D::Distance(Puck.Pos + Dir * FMath::Clamp(Dot(O.Pos - Puck.Pos, Dir), 0.0, D), O.Pos);
+			if (Off < DeflectRangeM + 0.1 && BodyOff >= SaucerLaneMinM) { bLift = true; break; }
+		}
+	}
+	Puck.Vel = (Aim - Puck.Pos).GetSafeNormal() * Speed;
+	if (Puck.Vel.IsNearlyZero()) Puck.Vel = S.Forward() * Speed;
+	if (bLift)
+	{
+		ApplySaucerLift(FVector2D::Distance(Aim, Puck.Pos), Speed);
+		S.bSaucerThisFrame = true;
+		++S.Saucers;
+	}
+	else { Puck.Z = 0.0; Puck.VZ = 0.0; }
+	Puck.LastTouch = S.Index;
+	if (Config.Pass.CatchM > 0.0) { Puck.PassFrames = PassFlightFrames; Puck.PassBy = S.Index; }
+	S.ShotReadyFrame = Frame + PassCooldownFrames;
+	S.ChargeFrames = 0;
+	S.DekeFrames = 0;
+	S.DekeSide = 0;
+	S.PassReceivedFrame = -1;
+	S.SettleFrames = 0;
+	S.bPassThisFrame = true;
+	S.LastShotCharge = 0.f;
+	S.LastPassStrength = static_cast<float>(Speed / MaxSpeed);
+	++S.Passes;
+	Emit(JamEvents::Pass, S.Index, Puck.Pos, static_cast<float>(Speed / MaxSpeed), FName(*FString::Printf(TEXT("%sto_%d"), bLift ? TEXT("saucer_") : TEXT(""), To)));
+	if (Puck.ShotgunFrames != 0) { Puck.ShotgunFrames = 0; Puck.ShotgunBy = -1; Puck.ShotgunMul = 1.0; }
+	ApplySlowPuck(S);
+}
+
+bool UJamSim::TryCatchPass(FJamSkaterState& S)
+{
+	if (Config.Pass.CatchM <= 0.0 || Puck.PassFrames <= 0 || !Skaters.IsValidIndex(Puck.PassBy) || Puck.LastTouch != Puck.PassBy) return false;
+	if (S.Index == Puck.PassBy || S.Team != Skaters[Puck.PassBy].Team || !S.CanAct() || S.bCrossBraced || S.DeflectCooldown != 0 || Puck.Z >= BladeClearM) return false;
+	const double Sp = Puck.Vel.Size();
+	if (Sp < PassCatchMinMps) return false;
+	const FVector2D FromBlade = Puck.Pos - S.BladePos;
+	const double Db = FromBlade.Size();
+	if (Db >= Config.Pass.CatchM) return false;
+	if (Db >= DeflectRangeM && Dot(Puck.Vel - S.Vel, FromBlade) >= 0.0) return false;   // past him and going away: not his (inside the blade disc it always is)
+	Puck.Pos = S.BladePos;
+	Puck.Vel = S.Vel;
+	Puck.Z = 0.0; Puck.VZ = 0.0;
+	S.SettleFrames = ReceptionSettleFrames;
+	++S.PassesReceived;
+	if (Config.Shot.OneTimerWindowFrames > 0) S.PassReceivedFrame = Frame;
+	Puck.LastTouch = S.Index;
+	Puck.PassFrames = 0; Puck.PassBy = -1;
+	S.DeflectCooldown = 10;
+	return true;
+}
+
+bool UJamSim::OwnPuckClears(const FJamSkaterState& S) const
+{
+	return Config.Pass.bClearOwnBody && Puck.LastTouch == S.Index && Frame < S.ShotReadyFrame && (Puck.Vel - S.Vel).Size() > 4.0;
+}
+
 bool UJamSim::CollidePuckCircle(const FVector2D& C, double CR, double R, double E)
 {
 	const FVector2D Dlt = Puck.Pos - C;
@@ -3051,6 +3396,175 @@ bool UJamSim::CollidePuckSegment(const FVector2D& A, const FVector2D& B, const F
 	return CollidePuckCircle(End, 0.0, R, E);
 }
 
+// ---- Lane A208 (track F0, R-0067 point 2; game.stick.pickup, docs/experiments/POSSESSION.md): the loose puck is his who touches it. Its own functions; StepPuck
+// calls TryLoosePickup once a substep and BodyMeetsPuck in place of the body's push. Nothing here runs with pickup.arc_m 0 and pickup.body false. ----
+
+bool UJamSim::MayPlayLoose(const FJamSkaterState& S) const
+{
+	if (Phase != EJamSimPhase::Playing || bDrawOpen || !S.CanAct() || S.bCrossBraced || Puck.ShotgunFrames > 0) return false;
+	if (S.DeflectCooldown > 0 && Puck.LastTouch != S.Index) return false;   // he just lost it to a press (PickupLostFrames) or just touched another puck: not his at once (his own bobble he may take back)
+	// A carrier who stumbles (shoved, not down) keeps his puck through the stumble while it lies in his reach (R-0048: the stumble loosens nothing a stick
+	// did not take); a man knocked down has lost it.
+	if (Skaters.IsValidIndex(Puck.LastTouch) && Puck.LastTouch != S.Index)
+	{
+		const FJamSkaterState& L = Skaters[Puck.LastTouch];
+		if (L.IsStumbling() && !L.IsDown() && FVector2D::Distance(L.Pos, Puck.Pos) <= CarrierReachM(L.Index)) return false;
+	}
+	if (Puck.Z >= BladeClearM) return false;   // over the blades: the body below still stops it (BodyMeetsPuck's old push)
+	const int32 Rider = RidingCarrier();
+	return Rider < 0;   // R-0048: a puck riding with a carrier (his own or another's) is not a loose puck; a press takes it
+}
+
+int32 UJamSim::TryLoosePickup(const FVector2D& From, double R)
+{
+	if (Config.Stick.PickupArcM <= 0.0) return -1;
+	const FVector2D Path = Puck.Pos - From;
+	const double Len2 = Path.SizeSquared();
+	const double CosArc = FMath::Cos(FMath::DegreesToRadians(FMath::Clamp(Config.Stick.PickupArcDeg, 0.0, 180.0)));
+	int32 Best = -1;
+	double BestD = 1e9;
+	FVector2D BestAt = Puck.Pos;
+	for (const FJamSkaterState& S : Skaters)
+	{
+		if (S.InBox() || !MayPlayLoose(S)) continue;
+		if (Puck.Z >= Config.Skater.GoalieBlockHeightM && InCreaseStance(S)) continue;   // R-0035: a puck over the crease skater's block height passes him (as his body and blade let it, StepPuck's skater loop)
+		// The point of this substep's path nearest his body: the arc meets the path, not only where the puck ends (no speed skips the arc).
+		const double T = Len2 > 1e-12 ? FMath::Clamp(Dot(S.Pos - From, Path) / Len2, 0.0, 1.0) : 1.0;
+		const FVector2D At = From + Path * T;
+		const FVector2D To = At - S.Pos;
+		const double D = To.Size();
+		// His own puck (he shot, passed or lost it) only when it comes back at him: the puck that just left his blade is never caught again.
+		if (Puck.LastTouch == S.Index && (Dot(Puck.Vel - S.Vel, To) >= 0.0 || OwnPuckClears(S))) continue;   // ... and never while lane A207's clear_own_body lets his just-released puck through him
+		if (NetBetween(S.Pos, At)) continue;   // never through a net's wall (the back, the sides)
+		if (Puck.PassFrames > 0 && Skaters.IsValidIndex(Puck.PassBy) && Puck.LastTouch == Puck.PassBy && Skaters[Puck.PassBy].Team == S.Team && S.Index != Puck.PassBy && (Puck.Vel - S.Vel).Size() > PassCatchMinMps) continue;   // a pass in flight to a mate is lane A207's (TryCatchPass)
+		// An opposing puck in flight (a pass or a shot, over DeflectMinSpeed against him) meets the blade itself, and only an aimed one (C-0005: a passive blade is
+		// no goalie), not the arc: the arc is the reach for a puck he can play, not a wall across the passing lane (with the arc on every pass through traffic was
+		// intercepted: Bar.Possession.Trace D1, POSSESSION.md).
+		const bool bHardOpp = Skaters.IsValidIndex(Puck.LastTouch) && Skaters[Puck.LastTouch].Team != S.Team && (Puck.Vel - S.Vel).Size() > DeflectMinSpeed;
+		// Wave 2: a team-mate's puck in flight (a pass) is caught near his blade (PickupMateFlightM of the blade point: lane A207's pass.catch_m, which owns passes
+		// in flight after the merge) and by his body, not by the whole arc: a pass to the man is not caught by every mate whose arc it crosses on the way
+		// (Jam.Bot.PassesToHuman: 0.90 a match at rookie under the arc).
+		const bool bMateFlight = Skaters.IsValidIndex(Puck.LastTouch) && Puck.LastTouch != S.Index && Skaters[Puck.LastTouch].Team == S.Team && (Puck.Vel - S.Vel).Size() > DeflectMinSpeed;
+		bool bIn = FVector2D::Distance(At, S.BladePos) <= (bMateFlight ? PickupMateFlightM : DeflectRangeM) && (!bHardOpp || S.bStickAimed);   // the blade's own disc (a sprinting carrier's blade reaches 1.6 m)
+		if (!bIn && !bHardOpp && !bMateFlight && D <= Config.Stick.PickupArcM)
+		{
+			const FVector2D BladeDir = (S.BladePos - S.Pos).GetSafeNormal();
+			bIn = D < 1e-6 || Dot(To, S.Forward()) >= CosArc * D || (!BladeDir.IsNearlyZero() && Dot(To, BladeDir) >= CosArc * D);
+		}
+		if (bIn && D < BestD) { BestD = D; Best = S.Index; BestAt = At; }
+	}
+	if (Best < 0) return -1;
+	FJamSkaterState& S = Skaters[Best];
+	const bool bMate = Skaters.IsValidIndex(Puck.LastTouch) && Puck.LastTouch != S.Index && Skaters[Puck.LastTouch].Team == S.Team;
+	const bool bOpp = Skaters.IsValidIndex(Puck.LastTouch) && Skaters[Puck.LastTouch].Team != S.Team;
+	const FVector2D Rel = Puck.Vel - S.Vel;
+	if (bOpp) CheckSave(S);   // lane A32's read-out: a stick about to stop a shot on goal
+	Puck.Pos = BestAt;
+	if ((bOpp && Rel.Size() > Config.Stick.PickupStingMps) || (bMate && Rel.Size() > Config.Stick.PickupStingMps * PickupMateStingMult))   // a mate's shot (faster than any pass) rings off too
+	{
+		// The sting: a hard opposing shot is not caught on the blade, it rings off it (a loose rebound he or anyone can take).
+		const FVector2D Nb = (BestAt - S.BladePos).Size() > 1e-6 ? (BestAt - S.BladePos).GetSafeNormal() : -Rel.GetSafeNormal();
+		const double Vn = Dot(Rel, Nb);
+		Puck.Vel = S.Vel + (Vn < 0.0 ? Rel - Nb * (2.0 * Vn) : Rel) * PickupStingKeep;
+	}
+	else
+	{
+		Puck.Vel = S.Vel;   // caught: the puck moves with him and the carry draws it onto the blade
+		if (FVector2D::Distance(Puck.Pos, S.Pos) > CarrierReachM(S.Index) - 0.05) Puck.Pos = S.BladePos;   // met by the blade beyond his carry reach: seated on the blade (else it stopped dead out of his reach, his and not his)
+		S.SettleFrames = FMath::Max(S.SettleFrames, ReceptionSettleFrames);
+		if (bMate && Rel.Size() > DeflectMinSpeed)
+		{
+			++S.PassesReceived;   // lane A46's count: a pass received
+			if (Config.Shot.OneTimerWindowFrames > 0) S.PassReceivedFrame = Frame;
+		}
+	}
+	Puck.LastTouch = S.Index;
+	S.DeflectCooldown = 10;
+	return Best;
+}
+
+bool UJamSim::NetBetween(const FVector2D& A, const FVector2D& B) const
+{
+	const double GL = GoalLineX();
+	const double Hw = Config.Rink.GoalWidthM * 0.5;
+	auto Cross = [](const FVector2D& P, const FVector2D& Q, const FVector2D& U, const FVector2D& V)
+	{
+		const auto Side = [](const FVector2D& O, const FVector2D& X, const FVector2D& Y) { return (X.X - O.X) * (Y.Y - O.Y) - (X.Y - O.Y) * (Y.X - O.X); };
+		const double D1 = Side(U, V, P), D2 = Side(U, V, Q), D3 = Side(P, Q, U), D4 = Side(P, Q, V);
+		return ((D1 > 0.0) != (D2 > 0.0)) && ((D3 > 0.0) != (D4 > 0.0));
+	};
+	for (int32 Side = -1; Side <= 1; Side += 2)
+	{
+		const double X0 = Side * GL, X1 = Side * (GL + NetDepth);
+		if (Cross(A, B, FVector2D(X0, -Hw), FVector2D(X1, -Hw)) || Cross(A, B, FVector2D(X0, Hw), FVector2D(X1, Hw)) || Cross(A, B, FVector2D(X1, -Hw), FVector2D(X1, Hw))) return true;
+	}
+	return false;
+}
+
+void UJamSim::BlockCarried(const FJamSkaterState& S, double R)
+{
+	{ const int32 Ci = RidingCarrier(); if (Skaters.IsValidIndex(Ci) && Skaters[Ci].DekeFrames > 0) return; }   // a deke's puck goes round the man (the deke must beat him: Jam.Core.Payoffs.Deke)
+	// Lane A208: another's carried puck meets this body: it is pushed out of him like off the boards (no pass-through), its carrier keeps it (R-0048: no take
+	// by a touch; LastTouch does not move) and the carry draws it back to his blade. Its motion into the body is taken out, nothing else.
+	const double Min = SkaterRadius + R;
+	const FVector2D Dlt = Puck.Pos - S.Pos;
+	const double Dist = Dlt.Size();
+	if (Dist >= Min) return;
+	FVector2D N = Dist > 1e-9 ? Dlt / Dist : (Puck.PrevPos - S.Pos).GetSafeNormal();
+	// Out on the carrier's side of the body, never the far side: a puck skated into a man stays with its carrier (R-0048), it is not left behind him.
+	const int32 Ci = RidingCarrier();
+	const FVector2D ToC = Skaters.IsValidIndex(Ci) ? (Skaters[Ci].Pos - S.Pos).GetSafeNormal() : FVector2D::ZeroVector;
+	if (!ToC.IsNearlyZero() && Dot(N, ToC) < 0.0) { const FVector2D Tn = N - ToC * Dot(N, ToC); N = Tn.IsNearlyZero() ? ToC : Tn.GetSafeNormal(); }
+	Puck.Pos = S.Pos + N * Min;
+	const double Vn = Dot(Puck.Vel - S.Vel, N);
+	if (Vn < 0.0) Puck.Vel -= N * Vn;
+}
+
+bool UJamSim::BodyMeetsPuck(FJamSkaterState& S, const FVector2D& From, double R)
+{
+	if (RidingCarrier() == S.Index) return false;   // his own carried puck: the carry owns it (a push-out from behind against the carry's pull held it inside him)
+	const double Min = SkaterRadius + R;
+	FVector2D Dlt = Puck.Pos - S.Pos;
+	double Dist = Dlt.Size();
+	if (Dist >= Min)
+	{
+		// Swept: the substep's path against the body circle (the first entry), so a puck at any speed meets the body it crosses.
+		const FVector2D Dp = Puck.Pos - From;
+		const double A = Dp.SizeSquared();
+		const FVector2D F = From - S.Pos;
+		const double C = F.SizeSquared() - Min * Min;
+		if (A < 1e-12 || C <= 0.0) return false;
+		const double B = 2.0 * Dot(F, Dp);
+		const double Disc = B * B - 4.0 * A * C;
+		if (Disc < 0.0) return false;
+		const double T = (-B - FMath::Sqrt(Disc)) / (2.0 * A);
+		if (T < 0.0 || T > 1.0) return false;
+		Puck.Pos = From + Dp * T;
+		Dlt = Puck.Pos - S.Pos;
+		Dist = Dlt.Size();
+	}
+	const FVector2D N = Dist > 1e-9 ? Dlt / Dist : S.Forward();
+	Puck.Pos = S.Pos + N * Min;
+	const FVector2D Rel = Puck.Vel - S.Vel;
+	const double Vn = Dot(Rel, N);
+	if (Vn < 0 && Puck.LastTouch != S.Index) CheckSave(S);   // lane A32: the body about to stop a shot on goal
+	if (MayPlayLoose(S))
+	{
+		const bool bMate = Skaters.IsValidIndex(Puck.LastTouch) && Puck.LastTouch != S.Index && Skaters[Puck.LastTouch].Team == S.Team;
+		if (Vn < 0.0 && -Vn > FMath::Min(Config.Stick.PickupStingMps, Config.Stick.PickupBodyCatchMps)) Puck.Vel -= N * ((1.0 + PickupBodyBounce) * Vn);   // too fast to seat (body_catch_mps) or the sting: it bounces off him, loose
+		else
+		{
+			Puck.Vel = S.Vel;   // it stops at him and is his: the carry draws it to the blade
+			S.SettleFrames = FMath::Max(S.SettleFrames, ReceptionSettleFrames);
+			if (bMate && Rel.Size() > DeflectMinSpeed) { ++S.PassesReceived; if (Config.Shot.OneTimerWindowFrames > 0) S.PassReceivedFrame = Frame; }
+		}
+	}
+	else if (Vn < 0) Puck.Vel -= N * Vn;   // the push as before (a downed or braced body, a puck over the blades, the draw)
+	if (S.DeflectCooldown > 0 && S.CanAct() && Puck.LastTouch != S.Index) return true;   // just stripped by a press: his body stops it but does not take it back
+	Puck.LastTouch = S.Index;
+	return true;
+}
+
 void UJamSim::StepPuck()
 {
 	const double H = DT / PuckSubsteps;
@@ -3080,7 +3594,7 @@ void UJamSim::StepPuck()
 			Puck.Vel *= NewSp / Sp;
 		}
 		const double Sp2 = Puck.Vel.Size();
-		const double Cap = Puck.ShotgunFrames > 0 ? MaxSpeed * Puck.ShotgunMul : MaxSpeed;   // lane A84: the shotgun's own cap
+		const double Cap = (Puck.ShotgunFrames > 0 ? MaxSpeed * Puck.ShotgunMul : MaxSpeed) * PuckCapScale();   // lane A84: the shotgun's own cap; lane A207: x the shot's speed scale
 		if (Sp2 > Cap) Puck.Vel *= Cap / Sp2;
 
 		const FVector2D Prev = Puck.Pos;
@@ -3092,6 +3606,7 @@ void UJamSim::StepPuck()
 			const int32 Saver = TryGoalieSave(R, MaxSpeed);
 			if (Saver >= 0) Touched[Saver] = true;
 		}
+		if (LoosePickupOn()) { const int32 Taker = TryLoosePickup(Prev, R); if (Taker >= 0) Touched[Taker] = true; }   // lane A208 (game.stick.pickup): the stick arc takes a loose puck
 
 		// Skater bodies push the puck (dribbling, as in the Godot pack); the carrier's blade pulls it (C-0005 carry assist, R-0013 stick).
 		for (FJamSkaterState& S : Skaters)
@@ -3100,18 +3615,20 @@ void UJamSim::StepPuck()
 			if (Puck.ShotgunFrames > 0 && S.IsDown()) continue;   // lane A84: the shotgun goes through the bodies it knocked down
 			// R-0035 (lane A52): a puck over the body passes; over a crease skater's block height it passes too (the low shot through the stance is the hard one).
 			if (Puck.Z >= BodyHeightM || (Puck.Z >= Config.Skater.GoalieBlockHeightM && InCreaseStance(S))) continue;
+			if (OwnPuckClears(S)) continue;   // lane A207 (game.pass.clear_own_body)
+			if (TryCatchPass(S)) { Touched[S.Index] = true; continue; }   // lane A207 (game.pass.catch_m): a pass in flight on a mate's blade
 			// Lane A102 (R-0048, on the design eye's 924 matches: a carry lasted a median 0.7 to 0.9 s and the puck was on nobody's blade 60 % of play): a puck
 			// that rides with its carrier is not taken by another skater's unpressed blade or by a body's touch. It leaves by a shot, a pass, a poke, a lift, a
 			// check or stumble that loosens it (the carrier can no longer act: nothing rides), or the carrier's own release. game.stick.passive_take true = as
 			// before. A teammate never takes it by touch under either value (bTeammateTouchTakes is the tests' switch for older commits).
 			{
 				const int32 Rider = RidingCarrier();
-				if (Rider >= 0 && Rider != S.Index && !(Skaters[Rider].Team == S.Team ? Config.Stick.bTeammateTouchTakes : Config.Stick.bPassiveTake)) continue;
+				if (Rider >= 0 && Rider != S.Index && !(Skaters[Rider].Team == S.Team ? Config.Stick.bTeammateTouchTakes : Config.Stick.bPassiveTake)) { if (Config.Stick.bPickupBody && Config.Stick.bPickupBlockCarried) BlockCarried(S, R); continue; }   // lane A208: with pickup.body his body still stops it (no take)
 			}
 			// C-0005 deflection: an opponent's shot passing within DeflectRangeM of the blade bounces off it at 70 %; a teammate's puck (a pass)
 			// is received instead: the blade takes most of its speed and the carry assist settles it.
 			// Lane A77 (R-0036): a puck over BladeClearM flies over the blades (the saucer's point); the body below still stops it.
-			if (S.DeflectCooldown == 0 && Puck.LastTouch != S.Index && S.CanAct() && Puck.Z < BladeClearM && !S.bCrossBraced)   // lane A184: a braced blade takes nothing
+			if (S.DeflectCooldown == 0 && Puck.LastTouch != S.Index && S.CanAct() && Puck.Z < BladeClearM && !S.bCrossBraced && Config.Stick.PickupArcM <= 0.0)   // lane A184: a braced blade takes nothing; lane A208: the pickup arc replaces it
 			{
 				const FVector2D FromBlade = Puck.Pos - S.BladePos;
 				const double Db = FromBlade.Size();
@@ -3164,6 +3681,7 @@ void UJamSim::StepPuck()
 					continue;
 				}
 			}
+			if (Config.Stick.bPickupBody && Puck.ShotgunFrames == 0) { if (BodyMeetsPuck(S, Prev, R)) Touched[S.Index] = true; continue; }   // lane A208 (game.stick.pickup.body): swept, it stops at him and is his
 			const FVector2D Dlt = Puck.Pos - S.Pos;
 			const double Min = SkaterRadius + R;
 			const double Dist = Dlt.Size();
@@ -3193,6 +3711,7 @@ void UJamSim::StepPuck()
 				Puck.Vel = C.Vel;
 			}
 		}
+		if (Config.Stick.bPickupBody && Config.Stick.bPickupBlockCarried && RidingCarrier() >= 0) for (const FJamSkaterState& S : Skaters) if (!S.InBox() && S.Index != RidingCarrier()) BlockCarried(S, R);   // lane A208: the carry's pull never draws a carried puck into another body
 
 		// Boards.
 		FVector2D N;
@@ -3289,6 +3808,8 @@ void UJamSim::StepPuck()
 		}
 	}
 
+	// Lane A207: the pass in flight ends on another skater's touch, under PassCatchMinMps, or after PassFlightFrames.
+	if (Puck.PassFrames > 0 && (--Puck.PassFrames == 0 || Puck.LastTouch != Puck.PassBy || Puck.Vel.Size() < PassCatchMinMps)) { Puck.PassFrames = 0; Puck.PassBy = -1; }
 	for (FJamSkaterState& S : Skaters)
 	{
 		if (Touched[S.Index] && !S.bTouchingPuck) ++S.Touches;
@@ -3706,6 +4227,7 @@ uint64 UJamSim::StateHash() const
 	if (Puck.Z != 0.0 || Puck.VZ != 0.0) { H.AddQ(Puck.Z, 1000.0); H.AddQ(Puck.VZ, 1000.0); }
 	if (Puck.ShotgunFrames != 0) { H.AddI(Puck.ShotgunFrames); H.AddI(Puck.ShotgunBy); H.AddQ(Puck.ShotgunMul, 1000.0); }   // lane A84
 	if (Puck.SlowFrames != 0) { H.AddI(Puck.SlowFrames); H.AddI(Puck.SlowBy); H.AddQ(Puck.SlowMul, 1000.0); }
+	if (Puck.PassFrames != 0) { H.AddI(Puck.PassFrames); H.AddI(Puck.PassBy); }   // lane A207: the pass in flight (only while game.pass.catch_m is on)
 	// C-0005: active modifier ids, and rule state only when it left its default (so a match without seams hashes as before).
 	for (const FJamActiveModifier& M : ActiveModifiers) H.AddI(M.Id);
 	if (ScoreMultiplier[0] != 1 || ScoreMultiplier[1] != 1) { H.AddI(ScoreMultiplier[0]); H.AddI(ScoreMultiplier[1]); }

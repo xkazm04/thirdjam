@@ -196,3 +196,15 @@ Fired on the frame F (gamepad R3) uses the held ability. A knockdown caused by t
 - **The arena listens (lane A127).** `goal` and the skater `board` event are also heard by `ARinkActor`: the scorer's table's lamp, the scored end's goal light and net, and the bench, box or table behind a hard board hit answer them. Cosmetic: frames are counted on the bus's sim frame and nothing is read by the sim. `jam.rink.react 0` switches it off.
 - **Online (lane A120).** Presentation keys on the local seat (`GetLocalSeat()`); the sim keys on the human index. A guest's own goal, hit and ability speak to the guest on the guest's machine.
 - **What the bus tells the figure and the sounds (lane A143; device B's answer to A-to-B-0024).** `ability` carries its kind as `Variant`: shotgun 0, hip_check 1, shield 2, slow_puck 3. A grant (Strength 0) is quiet in the binder; a use (Strength 1) fires in the step that carries the F press, before any hit. New payload field `Outcome` (FName; absent = NAME_None): on a landed `check`, `stumble` (no knockdown follows) or `down` (a `knockdown` of the victim follows in the same frame). The binder sends a stumble's check as `Variant` 4; 0 to 3 keep the side (front, side_l, side_r, behind), which also rides `User.Dir`. The log line ends with ` outcome=<x>` after `kind=` only when set. Online, `Dir` now travels on every bus event (it was zero on the guest and the host alike). A check's Strength is the closing speed over `skater.speed` (1 for a hip check), not the impulse-to-stability ratio an earlier line of this contract claimed.
+
+## Additions (R-0067, the night of 14 Nov: device B's H55.6)
+| Event | When | Who | Where | Strength | Kind / Variant |
+|---|---|---|---|---|---|
+| `possess` | a puck nobody carried becomes a skater's (the pickup of lane A208: a loose puck, a rebound, a pass received) | the new carrier | the puck | the puck's speed at the take / `game.puck.max_speed` | Variant 0 the stick took it, 1 the skates or the body |
+Constant: `JamEvents::Possess`. Sound `MS_possess` (device B); no visual. Not emitted for a puck taken off a carrier by a press (that is `poke`, `lift`, `check`).
+Variants of existing events, sent by A from this night on: `shot` Variant 1 when the exit speed is over 30 m/s or the shot is a one-timer (the crack);
+`shot_blocked` Variant 1 when a shot is stopped by a skater's body or stick (a padded thud; Strength = the puck's speed / `game.puck.max_speed`;
+Variant 0 stays the refused shot of a `no_shoot` zone). `pass` keeps Strength = pass speed / `game.puck.max_speed` (the sound goes from a tap to a snap).
+Figure calls by name, behind an exists-check (contract of record: `contracts/skater-visual.md` is not edited tonight; device B's `status/E3-report.md`
+is the reference): `PlayReceive()` on the frame a pass reaches the receiver; `SetPassCharge(0..1)` every frame a pass is held and 0 on release or
+cancel; `PlayCallForPass()` at most every 0.5 s; `SetLookAtPuck(false)` once at spawn on the human's figure.

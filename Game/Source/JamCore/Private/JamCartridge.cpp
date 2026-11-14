@@ -1122,6 +1122,16 @@ namespace
 		ReadNumber(St, TEXT("poke_assist_deg"), C.Stick.PokeAssistDeg);   // lane A152 (track F2, R-0059 point 4): a person's poke reaches for a carried puck inside its stick's reach
 		ReadInteger(St, TEXT("stop_grace_frames"), C.Stick.StopGraceFrames);   // lane A163: a person's stop with the puck earns the take grace
 		ReadInteger(St, TEXT("miss_recovery_frames"), C.Stick.MissRecoveryFrames);   // lane A152: a missed poke locks the stick instead of the stumble
+		// Lane A208 (track F0): game.stick.pickup { arc_m, arc_deg, body, sting_mps }: the loose puck is his who touches it
+		if (const FJPtr Pu = Obj(St, TEXT("pickup")))
+		{
+			ReadNumber(Pu, TEXT("arc_m"), C.Stick.PickupArcM);
+			ReadNumber(Pu, TEXT("arc_deg"), C.Stick.PickupArcDeg);
+			ReadBool(Pu, TEXT("body"), C.Stick.bPickupBody);
+			ReadNumber(Pu, TEXT("sting_mps"), C.Stick.PickupStingMps);
+			ReadNumber(Pu, TEXT("body_catch_mps"), C.Stick.PickupBodyCatchMps);
+			ReadBool(Pu, TEXT("block_carried"), C.Stick.bPickupBlockCarried);
+		}
 		// R-0029 point 4 (lane A39): game.stick.deke { offset_m, commit_frames }
 		if (const FJPtr Dk = Obj(St, TEXT("deke")))
 		{
@@ -1157,6 +1167,7 @@ namespace
 		ReadInteger(Shot, TEXT("charge_frames_max"), C.Shot.ChargeFramesMax);
 		ReadNumber(Shot, TEXT("charge_speed_bonus"), C.Shot.ChargeSpeedBonus);
 		ReadInteger(Shot, TEXT("tap_frames"), C.Shot.TapFrames);   // R-0044 (lane A91)
+		ReadNumber(Shot, TEXT("speed_scale"), C.Shot.SpeedScale);   // lane A207
 		ReadBool(Shot, TEXT("deflect"), C.Shot.bDeflect);
 		// R-0029 point 4 (lane A39): game.shot.one_timer { window_frames, cone_bonus_deg }
 		if (const FJPtr Ot = Obj(Shot, TEXT("one_timer")))
@@ -1180,6 +1191,16 @@ namespace
 				ReadInteger(Sc, TEXT("half_frames"), C.Pass.SaucerHalfFrames);
 				ReadNumber(Sc, TEXT("lift_m"), C.Pass.SaucerLiftM);
 			}
+			// Lane A207: game.pass.power { full_frames, reach_share, arrive_mps }, game.pass.aim { cone_deg }, catch_m, clear_own_body
+			if (const FJPtr Pw = Obj(Ps, TEXT("power")))
+			{
+				ReadInteger(Pw, TEXT("full_frames"), C.Pass.PowerFullFrames);
+				ReadNumber(Pw, TEXT("reach_share"), C.Pass.PowerReachShare);
+				ReadNumber(Pw, TEXT("arrive_mps"), C.Pass.PowerArriveMps);
+			}
+			if (const FJPtr Am = Obj(Ps, TEXT("aim"))) ReadNumber(Am, TEXT("cone_deg"), C.Pass.AimConeDeg);
+			ReadNumber(Ps, TEXT("catch_m"), C.Pass.CatchM);
+			ReadBool(Ps, TEXT("clear_own_body"), C.Pass.bClearOwnBody);
 		}
 		// Lane A92 (R-0045): game.contact, contact by momentum (absent = the defaults; the neutral block is momentum false + carrier_can_hit true).
 		if (const FJPtr Ct = Obj(G, TEXT("contact")))

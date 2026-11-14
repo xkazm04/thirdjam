@@ -10,6 +10,7 @@
 #include "Misc/AutomationTest.h"
 #include "JamCartridge.h"
 #include "JamSim.h"
+#include "JamBaseline.h"   // lane A207: PassShotNeutral
 #include "JamEventBus.h"
 #include "JamAICore.h"
 #include "JamSimAdapter.h"
@@ -159,6 +160,7 @@ bool FJamPayoffOneTimer::RunTest(const FString& Parameters)
 	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
 	if (!C) return false;
 	FJamGameConfig G = C->Game;
+	JamBaseline::PassShotNeutral(G);   // lane A207: this scene pins the pass and shot before game.pass.power / aim / catch_m / clear_own_body and game.shot.speed_scale: their neutral values
 	// The scene's pass crosses 16 m; the sim receives a teammate's puck on the blade only above 6 m/s (DeflectMinSpeed), and 14 m/s minus puck.drag 0.5
 	// per metre arrives at 5.9: the scene passes at 20 m/s (a scene number, not a calibration).
 	G.Skater.PassSpeed = 20.0;

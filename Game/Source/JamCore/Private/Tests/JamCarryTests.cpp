@@ -745,6 +745,7 @@ bool FJamMovementStopGrace::RunTest(const FString& Parameters)
 	UJamCartridge* C = UJamCartridge::LoadFromFile(UJamCartridge::ResolveCartridgePath(TEXT("hockey.regular")), Errors);
 	for (const FString& E : Errors) AddError(E);
 	if (!C) return false;
+	C->Game.Stick.PickupArcM = 0.0; C->Game.Stick.bPickupBody = false;   // lane A208: re-staged at game.stick.pickup's neutral: this scene measures the stop's grace against a poke; the loose puck's pickup has its own (Jam.Core.Possession.*)
 	TestEqual(TEXT("game.stick.stop_grace_frames is 0 when the key is absent: the rule ships at its neutral value"), C->Game.Stick.StopGraceFrames, 0);
 	TestFalse(TEXT("... and the measurement's arm is off"), C->Game.Stick.bStopGraceBots);
 	const int32 N = 30;

@@ -4,6 +4,7 @@
 #include "Misc/AutomationTest.h"
 #include "JamCartridge.h"
 #include "JamSim.h"
+#include "JamBaseline.h"   // lane A207: PassShotNeutral
 #include "JamEventBus.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
@@ -70,7 +71,9 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamFeelDepth, "Jam.Core.FeelDepth", JamFeelDep
 bool FJamFeelDepth::RunTest(const FString& Parameters)
 {
 	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
+	if (C) { C->Game.Stick.PickupArcM = 0.0; C->Game.Stick.bPickupBody = false; }   // lane A208: re-staged at game.stick.pickup's neutral: this scene measures the C-0005 blade deflection, which the pickup arc replaces when on; the loose puck's pickup has its own (Jam.Core.Possession.*)
 	if (!C) return false;
+	JamBaseline::PassShotNeutral(C->Game);   // lane A207: this scene pins the pass and shot before game.pass.power / aim / catch_m / clear_own_body and game.shot.speed_scale: their neutral values
 	const FJamGameConfig& G = C->Game;
 	TestEqual(TEXT("pass_speed default 14"), G.Skater.PassSpeed, 14.0);
 	TestEqual(TEXT("pass_lead_frames default 20"), G.Skater.PassLeadFrames, 20);

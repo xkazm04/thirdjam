@@ -158,6 +158,7 @@ bool FJamBotBoostPickupsBundle::RunTest(const FString& Parameters)
 	// detours for pickups), the brain's world view carries them, two runs agree. Before A41 this path had no effect system at all.
 	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.boost"));
 	if (!C) return false;
+	C->Game.Stick.PickupArcM = 0.0; C->Game.Stick.bPickupBody = false;   // lane A208: and at game.stick.pickup's neutral: under the pickup seed 1 re-rolls again and no bot drives over a pickup (the pickups' path is what this test pins)
 	// Lane A202: the match is read with evolution 8 off (brain8=0): with its four rules on seed 1 re-rolls and no bot happens to take a pickup in it; the
 	// pickups' path is what this test pins, not the brain's play.
 	const FOutcome A = Play(*C, 1, TEXT("all_star"), JamAI::EJamPlayerMode::PlayerBot, 36000, "brain8=0");

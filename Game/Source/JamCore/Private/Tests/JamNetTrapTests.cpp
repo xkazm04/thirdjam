@@ -5,6 +5,7 @@
 #include "Misc/AutomationTest.h"
 #include "JamCartridge.h"
 #include "JamSim.h"
+#include "JamBaseline.h"   // lane A207: PassShotNeutral
 #include "JamBrain.h"
 #include "JamSimAdapter.h"
 
@@ -36,6 +37,9 @@ bool FJamNetTrap::RunTest(const FString& Parameters)
 	UJamCartridge* C = UJamCartridge::LoadFromFile(UJamCartridge::ResolveCartridgePath(TEXT("hockey.regular")), Errors);
 	for (const FString& E : Errors) AddError(E);
 	if (!C) return false;
+	// Lane A207: seed 15 is the net's sample match, pinned on the pass and shot it was found with (with them on, skater 8 presses behind the net 72 frames at
+	// frame 2135: a finding for the brain, status/A207.md).
+	JamBaseline::PassShotNeutral(C->Game);
 
 	UJamSim* Sim = NewObject<UJamSim>();
 	Sim->Init(C->Game, 15);

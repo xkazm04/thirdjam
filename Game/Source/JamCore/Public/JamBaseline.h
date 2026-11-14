@@ -21,6 +21,12 @@
 namespace JamBaseline
 {
 	// Every rule since the vision's commit at its neutral value, in the order the rules landed.
+	// Lane A207 (track P1, docs/experiments/PASS-SHOT.md): the pass and the shot before the lane (scenes that pin them call this alone).
+	inline void PassShotNeutral(FJamGameConfig& G)
+	{
+		G.Pass.PowerFullFrames = 0; G.Pass.AimConeDeg = 0.0; G.Pass.CatchM = 0.0; G.Pass.bClearOwnBody = false; G.Shot.SpeedScale = 1.0;
+	}
+
 	inline void MakeNeutral(FJamGameConfig& G)
 	{
 		G.Contact.BoardBonus = 1.0;               // lane A101 (track F1): game.contact.board_bonus (default 1.25)
@@ -55,6 +61,8 @@ namespace JamBaseline
 		G.Skater.BreakawaySpeedBonus = 0.2;       // lane A194 (track F2 evolution 10): game.skater.breakaway.speed_bonus (default 0.3)
 		G.Skater.bChargeDiesOnLoss = false;      // lane A203 (track K1 evolution 4): game.skater.charge_dies_on_loss (ships true since the Director, 17:01)
 		G.Contact.CheckPullM = 0.0; G.Contact.bCrossAnyMan = false;   // lane A209 (track F1, the night): game.contact.check_pull_m, cross_any_man (ship 1.0, true)
+		PassShotNeutral(G);                      // lane A207 (track P1): game.pass.power / aim / catch_m / clear_own_body (ship 30, 25, 1.2, true), game.shot.speed_scale (ships 2)
+		G.Stick.PickupArcM = 0.0; G.Stick.bPickupBody = false;   // lane A208 (track F0, R-0067 point 2): game.stick.pickup.arc_m, pickup.body (default 1.5 and true)
 		// THE NEXT LANE: your rule's neutral value here, one line.
 	}
 

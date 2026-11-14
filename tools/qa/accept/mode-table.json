@@ -40,7 +40,7 @@
    "pass": {
     "by_design": "the plain cartridge is first_to 3: the drill's three shoot goals end the match after step 4, so steps 5 to 10 are never staged (the acceptance cut plays first_to 9; the 12 mode cuts and the tiers do too)"
    },
-   "saucer": {
+   "pass_power": {
     "by_design": "the plain cartridge is first_to 3: the drill's three shoot goals end the match after step 4, so steps 5 to 10 are never staged (the acceptance cut plays first_to 9; the 12 mode cuts and the tiers do too)"
    },
    "onetimer": {

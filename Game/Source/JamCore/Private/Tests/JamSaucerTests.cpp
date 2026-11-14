@@ -6,6 +6,7 @@
 #include "Misc/AutomationTest.h"
 #include "JamCartridge.h"
 #include "JamSim.h"
+#include "JamBaseline.h"   // lane A207: PassShotNeutral
 #include "JamEventBus.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
@@ -93,6 +94,7 @@ bool FJamSaucerPass::RunTest(const FString& Parameters)
 	using namespace JamSaucerTests;
 	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
 	if (!C) return false;
+	JamBaseline::PassShotNeutral(C->Game);   // lane A207: this scene pins the pass and shot before game.pass.power / aim / catch_m / clear_own_body and game.shot.speed_scale: their neutral values
 	const FJamGameConfig& G = C->Game;
 	TestEqual(TEXT("pass.saucer.half_frames default 8"), G.Pass.SaucerHalfFrames, 8);
 	TestEqual(TEXT("pass.saucer.lift_m default 0.35"), G.Pass.SaucerLiftM, 0.35);

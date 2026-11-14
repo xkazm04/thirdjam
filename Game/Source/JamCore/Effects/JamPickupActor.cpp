@@ -689,6 +689,13 @@ bool FJamFxBoostLook::RunTest(const FString&)
 	TestEqual(TEXT("precision is a diamond"), AJamPickupActor::StandInShape(TEXT("precision")), FName(TEXT("diamond")));
 	TestNotEqual(TEXT("the two silhouettes differ in mesh"), AJamPickupActor::StandInMeshPath(TEXT("cone")), AJamPickupActor::StandInMeshPath(TEXT("diamond")));
 	TestFalse(TEXT("speed and precision differ in colour"), JamEffects::KindColour(TEXT("speed")).Equals(JamEffects::KindColour(TEXT("precision")), 0.05f));
+	// Lane A210: the kinds' colours are the contract's (contracts/events.md, the pickup kind's colour; device B's props and effects carry the same).
+	TestTrue(TEXT("speed is the contract's cyan"), JamEffects::KindColour(TEXT("speed")).Equals(FLinearColor(0.1f, 0.9f, 1.0f), 0.001f));
+	TestTrue(TEXT("precision is the contract's magenta"), JamEffects::KindColour(TEXT("precision")).Equals(FLinearColor(1.0f, 0.2f, 0.9f), 0.001f));
+	TestTrue(TEXT("heavy_puck is the contract's violet"), JamEffects::KindColour(TEXT("heavy_puck")).Equals(FLinearColor(0.55f, 0.3f, 1.0f), 0.001f));
+	TestTrue(TEXT("big_puck is the contract's amber"), JamEffects::KindColour(TEXT("big_puck")).Equals(FLinearColor(1.0f, 0.75f, 0.1f), 0.001f));
+	TestTrue(TEXT("reverse_other is the contract's red"), JamEffects::KindColour(TEXT("reverse_other")).Equals(FLinearColor(1.0f, 0.15f, 0.1f), 0.001f));
+	TestTrue(TEXT("custom and unknown are white"), JamEffects::KindColour(TEXT("custom")).Equals(FLinearColor::White, 0.001f) && JamEffects::KindColour(TEXT("no_such_kind")).Equals(FLinearColor::White, 0.001f));
 	TestEqual(TEXT("B's prop by name"), AJamPickupActor::BoostPropPath(TEXT("speed")), FString(TEXT("/JamAssets/Props/SM_Boost_speed.SM_Boost_speed")));
 	TestEqual(TEXT("the beacon is on by default"), AJamPickupActor::BeaconOn(), true);
 	// The low profile: never full height over a skater or the puck.

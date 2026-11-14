@@ -15,10 +15,10 @@ for (const label of process.argv.slice(2)) {
   const out = {
     label, n, win: pct(ms.filter((m) => m.result === 'win').length, n),
     body: { press: s('b_press'), per_match: +(s('b_press') / n).toFixed(1), landed_pct: pct(s('b_landed'), s('b_press')), contact_pct: pct(s('b_landed') + s('b_bump') + s('b_other'), s('b_press')), down_pct: pct(s('b_down'), s('b_press')), bump_pct: pct(s('b_bump'), s('b_press')), other_pct: pct(s('b_other'), s('b_press')),
-      in25: s('b_press25'), in25_landed_pct: pct(s('b_landed25'), s('b_press25')), miss_pct: Object.fromEntries(bMiss.map((k) => [k.slice(2), pct(s(k), s('b_press'))])), wide_of_gap_misses: s('b_wide'),
+      in25: s('b_press25'), in25_landed_pct: pct(s('b_landed25'), s('b_press25')), in25_contact_pct: pct(s('b_contact25'), s('b_press25')), miss_pct: Object.fromEntries(bMiss.map((k) => [k.slice(2), pct(s(k), s('b_press'))])), wide_of_gap_misses: s('b_wide'),
       landed_mean: { dist_m: +(s('b_land_dist_cm') / 100 / Math.max(1, s('b_landed'))).toFixed(2), angle_deg: +(s('b_land_ang_deg') / Math.max(1, s('b_landed'))).toFixed(1), press_to_contact_frames: +(s('b_land_frames') / Math.max(1, s('b_landed'))).toFixed(1) } },
     cross: { press: s('c_press'), per_match: +(s('c_press') / n).toFixed(1), landed_pct: pct(s('c_landed'), s('c_press')), contact_pct: pct(s('c_landed') + s('c_bump'), s('c_press')), down_pct: pct(s('c_down'), s('c_press')), bump_pct: pct(s('c_bump'), s('c_press')), strips: s('c_strip'), accepted_pct: pct(s('c_accepted'), s('c_press')),
-      in25: s('c_press25'), in25_landed_pct: pct(s('c_landed25'), s('c_press25')), miss_pct: Object.fromEntries(cMiss.map((k) => [k.slice(2), pct(s(k), s('c_press'))])) },
+      in25: s('c_press25'), in25_landed_pct: pct(s('c_landed25'), s('c_press25')), in25_contact_pct: pct(s('c_contact25'), s('c_press25')), in25_miss_pct: Object.fromEntries(cMiss.map((k) => [k.slice(2), pct(s('c25_' + k.slice(2)), s('c_press25'))])), miss_pct: Object.fromEntries(cMiss.map((k) => [k.slice(2), pct(s(k), s('c_press'))])) },
     brace: { holds: s('h_holds'), landed_pct: pct(s('h_landed'), s('h_holds')), bump_pct: pct(s('h_bump'), s('h_holds')), none_pct: pct(s('h_none'), s('h_holds')) },
     nobody: { press: s('n_press'), landed: s('n_landed') }, elsewhere: s('x_elsewhere'),
     human_down_pct: pct(sum('human_down_frames'), sum('play_frames')), knockdowns: +(sum('knockdowns') / n).toFixed(2), kd_given: +(sum('kd_given') / n).toFixed(2),
