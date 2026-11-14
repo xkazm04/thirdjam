@@ -4976,3 +4976,65 @@ The attacker's root moves at the closing speed until contact, at the sim's speed
 1. **The engine's film of export36/37**: the wind takes at the chosen N, the hold over a sprint. Proving number: the coil visible on at least 4 frames at N = 8; the shaft level within 10 deg over the sprint in the film.
 2. **`Stride`'s shaft out of the front thigh** (12 / 6 frames today, the clear29 measure). Proving number: 0 frames with 5 cm of shaft more than 3 cm inside a leg, both styles.
 3. **The heavy wind's stick-side forearm at contact** (9.6 / 9.0 cm from export35's). Proving number: under 2 cm for every joint at contact in all six wind takes.
+
+## Thirty-eighth pass: the shaft out of Stride's front thigh; a leg check in the gate (SKF38, 15:34 to 16:14)
+
+Done. **`Stride`: frames with 5 cm of shaft more than 3 cm inside a leg 12 -> 0 (cel) and 6 -> 0 (clay); inside the trunk 0 in both.** The loop's wrap, Burst's end (`Stride@0`) and the dash lane's `Dash_End` landing (`Stride@34`) are untouched: frames 0 to 13 and 34 to 60 have the same joint positions as export37 (0.000 cm). **`Stride_Sprint` and `Glide`: 0 leg frames and 0 trunk frames, both styles** (they had none). **The gate now judges the shaft through a leg** (the same measure and line as the trunk). **Step 3 (the heavy wind forearm) is not done**: one fix tried and taken back. `C:\Users\kazda\jam\skater-lab\skf\export38\` is complete: 164 takes, 1 changed (`Stride`); gate green with the new check. One Blender process of this lane at a time; CPU only; no git, no editor.
+
+### For the engine lane
+
+| Take | What changed | What to do |
+|---|---|---|
+| `Stride` | the stick heel carried up to 7 cm farther forward on frames 13 to 34 (full from 17 to 28, 0 at 13 and 34); the same stick angles; frames 0 to 13 and 34 to 60 unchanged | re-import it; nothing else changes (the 163 other takes are key-identical to export37) |
+
+### 1. The shaft out of the front thigh
+
+Where it was (clear29's measure on export37): frames 14 to 30 on cel, 17 to 23 on clay, the shaft 3.4 to 4.1 cm inside the support thigh while the other leg pushes; the gate's leg line (2 samples, 5 cm) on 12 / 6 frames. The fix is a new opt-in in the bake, `stick_bump` (frames, ramps, dx, dy): the stick's heel moved by up to dx with a flat top and smooth ramps, exactly 0 at the window's ends, so every frame outside it is solved as before. `P38["stride_dx"]` = 0.07 m; the window 13 to 34.
+
+Two windows were tried first and taken back: from frame 4, a stick 1 cm farther forward at frames 6 to 8 put the clay shaft into the belly (it already lies 3.9 cm in there on one sample) and failed the trunk line; from frame 10, the stick met the clay figure's recovering knee at 12. From 13 neither happens.
+
+| Measure (p2_cel / p3_clay) | export37 | export38 |
+|---|---|---|
+| Stride: frames with 5 cm of shaft more than 3 cm inside a leg | 12 / 6 | **0 / 0** |
+| Stride: frames with the same inside the trunk | 0 / 0 | **0 / 0** |
+| Stride: deepest single shaft sample in a leg / the trunk, cm | 3.9 / 3.2, 4.1 / 3.9 | 3.7 / 5.3, 4.0 / 3.9 (single samples, under the line; one more on cel in the trunk) |
+| Stride_Sprint: leg / trunk frames | 0 / 0, 0 / 0 | 0 / 0, 0 / 0 |
+| Glide: leg / trunk frames | 0 / 0, 0 / 0 | 0 / 0, 0 / 0 |
+| Stride frames 0 to 13 and 34 to 60 against export37: largest joint position / bone rotation difference | | 0.000 cm / 0.09 deg (cel), 0.000 cm / 0.08 deg (clay) |
+| Burst, Glide, Stride_Sprint against export37 (unchanged takes, the same read-back) | | 0.000 cm / 0.07 to 0.09 deg |
+
+- The rotation differences of 0.03 to 0.09 deg are on every frame of every take read back twice from FBX (Burst, Glide and Stride_Sprint are key-identical and show the same), so frame 34 and frame 0 are as they were: the joins to `Glide` (by Burst), `Burst` (`Stride@0`, JOINS.md 0 cm, 0 deg) and `Dash_End` (`Stride@34`) keep. No other take of this lab starts or ends on a Stride frame (the joins files list only `Burst end=Stride@0`).
+- Top hand on the stick: the gate's hand check passes (the right arm reaches 0.98 of its length at the most, the grip within 0.2 cm); bottom hand on the shaft in every frame (gap at most 0.2 cm). Lowest body / skate / stick 12.34 / 0.05 / 0.69 cm (cel), 12.34 / 0.14 / 0.17 (clay): nothing under the ice.
+- Inside the window the joints move up to 19 cm (cel) / 11 cm (clay) from export37's: the arms follow the stick forward.
+- **What it looks like** (`skf38-stride-p2_cel`, export37 above export38, game camera and front): no visible change at game size; from the front the stick is seen end-on and the change cannot be told either. I did not render a side view from the stick side, and did not open the clay sheet.
+
+### 2. The leg check in the gate
+
+`gate_fbx.py` has measured the shaft against the legs since the twenty-ninth pass and `gate_md.js` did not judge it. Now it does: a new column `Shaft through a leg, frames` and a check `legs` that fails at 3 frames or more, as the trunk (the old program is `gate_md_v2.js`; GATE-README point 11). Run on export37 it fails `Stride` on both styles, as it should. **Nine other rows already had it in export37** and are on `gate_known_skf38.txt` as `legs`: Crossover_Left (4 frames cel, 31 clay), Crossover_Right (11 cel), Lean_Right (31 cel), GetUp_Side_Left (4), GetUp_Late_Side_Left (3), GetUp_LateLong_Side_Right (4), Trip (5) on cel, Check_Hit_Right (8) on clay. The crossovers and the lean are played in matches; they are the next stick jobs.
+
+### 3. The heavy wind takes' stick-side forearm (step 3): not done
+
+I tried carrying the old take's roll and bend state into the wind take from its load key (a new opt-in, `seed_at`, still in the bake): the stick-side forearm at contact went from 9.6 to 12.1 cm (cel). Taken back; the two heavy wind takes are key-identical to export37 (the free glove 0.0 cm as there).
+
+### The export
+
+`C:\Users\kazda\jam\skater-lab\skf\export38\`: `READY.txt` (last), `DIFF.md` (1 take, `Stride`, with its reason), `JOINS.md` (159 pairs, at most 0.0005 cm), `GATE.md` (with the leg column).
+
+- Gate: 328 rows, 0 failing, 10 on the known list (the clay aim hold's shaft; the nine `legs` rows above); 164 takes per style. Pop limits: 0 of 160 played takes over. Root identity keys, 60 fps, bones, rest pose, meshes and stick files as export37.
+
+### Not looked at, and known gaps
+
+- Nothing of export38 seen in the engine or in motion; the stride's change was not seen from the stick side.
+- The dash lane's `Dash_End` was not read: its landing is checked by Stride@34 being unchanged, not by the dash lane's own join.
+- One single shaft sample in cel's trunk now 5.3 cm deep (1 sample; the line is 2).
+
+### Files
+
+- Lab: `build_clips.py` (the thirty-eighth pass block; the bake's `stick_bump` and `seed_at`), `it38.sh`, `cmp38.py`, `tab38.js`, `sheet38.sh`, `gate_md.js` (the leg check; `gate_md_v2.js` the old one), `gate_known_skf38.txt`, `gate_joins_skf38.txt`, GATE-README point 11.
+- Sheets in `devlog/shots/`: `20261114-161257-B-lab-skf38-stride-p2_cel.png`, `-stride-p3_clay`, each with its `.txt`.
+
+### The next three evolutions of this track, ranked
+
+1. **The crossovers and the lean out of the legs**: `Crossover_Left` (4 / 31 frames), `Crossover_Right` (11 cel), `Lean_Right` (31 cel), played in every turn. Proving number: 0 leg frames in all three, both styles, their loops seamless; off the known list.
+2. **The engine's film of export36 to 38**: the wind takes, the hold over a sprint, the stride. Proving number: the coil seen on at least 4 frames at N = 8; no stick through a leg in the film.
+3. **The heavy wind's stick-side forearm at contact** (9.6 / 9.0 cm). A different way than carrying state: the forearm's bend direction given on the load and pre-contact keys (`er`) as the contact's. Proving number: under 2 cm for every joint at contact in all six wind takes.
