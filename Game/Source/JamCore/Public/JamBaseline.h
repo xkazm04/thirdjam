@@ -48,6 +48,7 @@ namespace JamBaseline
 		G.Contact.DownedRadiusM = 0.0;            // lane A157 (track F1): game.contact.downed_radius_m, the push-out around a downed skater (ships at 0)
 		G.Contact.CheckCooldownFrames = 0;        // lane A157: game.contact.check_cooldown_frames (ships at 0)
 		G.Contact.LungeFrames = 0; G.Contact.LungeStepMps = 0.0;   // lane A157: game.contact.lunge_frames, game.contact.lunge_step_mps, the lunge as a motion (ship at 0)
+		G.Contact.bCheckCooldownRestart = false; G.Contact.BoardSlamFrames = 0;   // lane A165 (track F1): game.contact.check_cooldown_restart, game.contact.board_slam_frames (ship at false and 0)
 		// THE NEXT LANE: your rule's neutral value here, one line.
 	}
 
@@ -65,10 +66,10 @@ namespace JamBaseline
 	// not a tune key: no pin is an all_star match on the large rink).
 	inline const char* BrainTune(const char* Level = "pro", bool bLargeRink = false)
 	{
-		if (Level && Level[0] == 'r') return bLargeRink ? "brain2=0;brain3=0;brain4=0;opp.poke_frames=-1;opp.shoot_extra_m=5;mate_speed_scale=0;red_skill=0.9" : "brain2=0;brain3=0;brain4=0;opp.poke_frames=-1;opp.shoot_extra_m=5;mate_speed_scale=0";
-		if (Level && Level[0] == 'a') return "brain2=0;brain3=0;brain4=0;opp.hunt_radius_m=20;opp.shoot_extra_m=40;mate_speed_scale=0;speed_scale=1.4";   // lane A154: all_star speed 1.4 -> 1.45
-		return bLargeRink ? "brain2=0;brain3=0;brain4=0;opp.poke_frames=6;opp.hunt_radius_m=8;opp.check_min_closing=2;opp.hk_pressure_s=1.4;opp.hk_better_by_m=3;mate_speed_scale=0;red_skill=1.04"
-			: "brain2=0;brain3=0;brain4=0;opp.poke_frames=6;opp.hunt_radius_m=8;opp.check_min_closing=2;opp.hk_pressure_s=1.4;opp.hk_better_by_m=3;mate_speed_scale=0";
+		if (Level && Level[0] == 'r') return bLargeRink ? "brain2=0;brain3=0;brain4=0;brain5=0;opp.poke_frames=-1;opp.shoot_extra_m=5;mate_speed_scale=0;red_skill=0.9" : "brain2=0;brain3=0;brain4=0;brain5=0;opp.poke_frames=-1;opp.shoot_extra_m=5;mate_speed_scale=0";
+		if (Level && Level[0] == 'a') return "brain2=0;brain3=0;brain4=0;brain5=0;opp.hunt_radius_m=20;opp.shoot_extra_m=40;mate_speed_scale=0;speed_scale=1.4";   // lane A154: all_star speed 1.4 -> 1.45
+		return bLargeRink ? "brain2=0;brain3=0;brain4=0;brain5=0;opp.poke_frames=6;opp.hunt_radius_m=8;opp.check_min_closing=2;opp.hk_pressure_s=1.4;opp.hk_better_by_m=3;mate_speed_scale=0;red_skill=1.04"
+			: "brain2=0;brain3=0;brain4=0;brain5=0;opp.poke_frames=6;opp.hunt_radius_m=8;opp.check_min_closing=2;opp.hk_pressure_s=1.4;opp.hk_better_by_m=3;mate_speed_scale=0";
 	}
 
 	// Lane A133 (track C0): the shipped cuts' whistle. Lane A112 took it out of hockey.regular, hockey.arena.wide, hockey.arena.large and the season's takes

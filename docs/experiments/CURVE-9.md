@@ -66,3 +66,36 @@ the one line. Pro on the small ice as built plays build 1's matches exactly (600
 **Pro on the small ice is outside 3** and no number fixes it under the gate as it stands. Two ways out, both the Director's: (a) ship it as built
 (52.4: inside EVOLUTION-COMMON's 4-point rule); (b) pro red 1.07 -> 1.13 (49.3; measured, built, reverted) with A121's 9.5 m bar in `StopAndGo` lowered
 to what R-0061 names as law 3 (the stop begun at 8 m: 99 % at 1.13). All_star on the small ice is 2.8 over and stays: no lever moves it down.
+
+## 4. R-0060's two columns on the package's ladder (600 a cell, the same seeds)
+
+| cell | closing press (A132: the ladder's instrument) | course press (A151: as the config ships) | course - closing |
+|---|---|---|---|
+| novice at rookie, regular | 85.3 | 86.8 | +1.5 |
+| regular at pro, regular | 50.5 | **56.0** | +5.5 |
+| good at all_star, regular | 29.8 | 31.0 | +1.2 |
+| novice at rookie, large | 83.7 | 85.2 | +1.5 |
+| regular at pro, large | 46.7 | 50.0 | +3.3 |
+| good at all_star, large | 25.3 | 25.7 | +0.4 |
+
+A player who lands most of his checks finds pro about five points easier on the small ice (R-0060 read +3.5 on the tree before the brace and the poke).
+
+**`Jam.Bot.HumanHasSomethingToDo`**: the novice at rookie on hockey.regular, faceoffs without a human touch inside 600 frames: 0 of 2,905 with the course
+press (what the test plays; seeds 1-20 0 of 100), 0 of 9,680 with the closing press at 2,000. Proposed budget (R-0039, the share plus 2 points): **2.0 %**.
+The number in `BotTests.cpp` is unchanged (the Director sets it).
+
+## 5. The season (200 a take, the closing press, the level each take's cartridge carries)
+
+| take | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+|---|---|---|---|---|---|---|---|---|
+| novice | 81.5 | 84.5 | 89.0 | 85.0 | 65.5 | 60.5 | 54.0 | 7.0 |
+| regular | | | | | | | | **30.0** |
+| good | | | | | | | | 54.0 |
+
+R-0057 holds with no take changed: steps from take 3 to 7 are 4.0, 19.5, 5.0, 6.5 (bar 20); take 7 54.0 (bar 15). The step from 4 to 5 is half a point
+inside its bar on 200 matches (one standard error is about 4): the first take to watch if anything lands under pro.
+
+## 6. Findings
+- `Jam.Core.Movement.StopAndGo` (`JamCarrierSkillTests.cpp:231`, `:291`) holds A121's 9.5 m bar at pro (95 %), stricter than R-0061's law 3 (8 m at 80 %).
+  It is what keeps pro's red skill from being a curve lever: a contract question for the Director (which distance is law 3's gate at pro).
+- The ladder's 600-seed cells read pro's levers with ±4 points of noise even paired (hk_pressure_s 0.2: -3.8 at 600, -0.3 at 2,000): a trim is chosen at 2,000.

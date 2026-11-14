@@ -176,6 +176,9 @@ namespace JamAI
 		// Items 2 and 3: the human's presses the cooldown dropped and lunges that met nobody (FJamSkaterState::ChecksCooling, LungesMissed); the bots' summed,
 		// with the bots' presses that opened a window (bCheckThisFrame frames).
 		int ChecksCooling = 0, LungesMissed = 0, BotChecksCooling = 0, BotLungesMissed = 0, BotCheckPresses = 0;
+		// Lane A165 (track F1, evolution 7): board slams (FJamSkaterState::bContactSlam) of any skater, the frames down they gave, the human's own.
+		int Slams = 0, SlamsHuman = 0;
+		int64_t SlamDownFrames = 0;
 		int FoulsFromBehind = 0, FoulsNoPuck = 0;   // the two kinds of foul (contracts/events.md): from behind on the carrier; on a skater without the puck
 		int64_t BoxFrames = 0;           // frames the human sat in the penalty box
 		int Pokes = 0, PokesClean = 0, Lifts = 0, Passes = 0;

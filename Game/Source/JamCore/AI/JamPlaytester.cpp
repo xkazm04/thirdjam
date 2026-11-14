@@ -773,6 +773,11 @@ namespace JamAI
 		// every N frames, whatever it sees (the hand that holds the window open). Never set in a game or in the gate.
 		const char* MashEnv = std::getenv("JAM_PLAYTESTER_MASH");
 		const int MashPeriod = MashEnv ? std::atoi(MashEnv) : 0;
+		// Lane A165, measurement only: JAM_PLAYTESTER_MASH=N:J presses every N frames give or take J (a hand that tries to keep a rhythm), seeded by the match.
+		const char* MashColon = MashEnv ? std::strchr(MashEnv, ':') : nullptr;
+		const int MashJitter = MashColon ? std::atoi(MashColon + 1) : 0;
+		int64_t NextMash = 0;
+		uint64_t MashCount = 0;
 		const FName KindShotgun(TEXT("shotgun"));   // lane A126
 		St.Faceoffs = 1;
 		const int TouchWindow = 600;
@@ -789,7 +794,13 @@ namespace JamAI
 			Brain.Think(W, In);
 			if (Pi >= 0 && Tester.bContestBrake) { const UJamSim* MarkSim = Sim.GetSim(); Tester.bContestedNow = MarkSim && JamCarrierMarks::Contested(*MarkSim, Pi).bOn; }   // lane A166
 			if (Pi >= 0) { In[Pi] = Tester.Think(W); ++St.Acts[static_cast<int>(Tester.LastAct())]; }
-			if (Pi >= 0 && MashPeriod > 0 && F % MashPeriod == 0) { In[Pi].bCheck = true; }   // lane A157: the masher (measurement only)
+			if (Pi >= 0 && MashPeriod > 0 && F >= NextMash)   // lane A157: the masher (measurement only); lane A165: with a jitter
+			{
+				In[Pi].bCheck = true;
+				uint64_t Hm = Seed + 0x9E3779B97F4A7C15ull * (++MashCount);
+				Hm ^= Hm >> 31; Hm *= 0xBF58476D1CE4E5B9ull; Hm ^= Hm >> 29;
+				NextMash = F + MashPeriod + (MashJitter > 0 ? static_cast<int>(Hm % static_cast<uint64_t>(2 * MashJitter + 1)) - MashJitter : 0);
+			}
 			if (Pi >= 0) { if (const UJamSim* AbSim = Sim.GetSim()) { In[Pi].bAbility = PlaytesterAbility(*AbSim, Pi, In[Pi]); } }   // lane A84
 			const FJamAIStepEvents Ev = Sim.Step(In);
 			++St.Frames;
@@ -935,6 +946,7 @@ namespace JamAI
 						if (K.ContactOutcome == UJamSim::ContactDown)
 						{
 							if (K.bContactBoard) { ++St.HitsBoardDown; St.HitsBoardDownFrames += K.KnockFrames; } else { ++St.HitsOpenDown; St.HitsOpenDownFrames += K.KnockFrames; }
+							if (K.bContactSlam) { ++St.Slams; St.SlamDownFrames += K.KnockFrames; if (K.ContactBy == Pi) { ++St.SlamsHuman; } }   // lane A165
 						}
 						else if (K.ContactOutcome == UJamSim::ContactStumble) { if (K.bContactBoard) { ++St.HitsBoardStumble; } else { ++St.HitsOpenStumble; } }
 						if (K.ContactOutcome >= UJamSim::ContactStumble && K.ContactBy == Pi) { if (K.bContactBoard) { ++St.HitsHumanBoard; } else { ++St.HitsHumanOpen; } }
@@ -1012,6 +1024,7 @@ namespace JamAI
 			S.HitsHumanBoard, S.HitsHumanOpen);
 		N += std::snprintf(Buf + N, static_cast<size_t>(BufLen - N), ",\"checks_cooling\":%d,\"lunges_missed\":%d,\"bot_check_presses\":%d,\"bot_checks_cooling\":%d,\"bot_lunges_missed\":%d",
 			S.ChecksCooling, S.LungesMissed, S.BotCheckPresses, S.BotChecksCooling, S.BotLungesMissed);
+		N += std::snprintf(Buf + N, static_cast<size_t>(BufLen - N), ",\"slams\":%d,\"slams_human\":%d,\"slam_down_frames\":%lld", S.Slams, S.SlamsHuman, static_cast<long long>(S.SlamDownFrames));   // lane A165
 		static const char* ActNames[] = {"idle", "draw", "chase", "carry", "charge", "pass", "support", "forecheck", "poke", "check", "lapse", "one_timer", "deke", "sweep", "spin"};
 		N += std::snprintf(Buf + N, static_cast<size_t>(BufLen - N), ",\"acts\":{");
 		for (int a = 0; a < static_cast<int>(EPlaytesterAct::Count) && N < BufLen; ++a)

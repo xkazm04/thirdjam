@@ -2511,6 +2511,31 @@ bool FJamContactDownedPushOut::RunTest(const FString& Parameters)
 	TestTrue(*FString::Printf(TEXT("neutral: the same skater is still behind the body it pushes (x %.2f against %.2f)"), On0.AttEnd.X, On0.VicEnd.X), On0.AttEnd.X > On0.VicEnd.X);
 	// A radius under the body's own circle keeps the two circles apart (0.8 m), without the push on the downed man.
 	TestTrue(*FString::Printf(TEXT("0.2: the keep-out is never less than the two body circles (closest %.3f m), and the downed man is not pushed"), Into2.MinDist), Into2.MinDist > 0.8 - 1e-6 && SamePath(Into2, Away0) < 1e-9);
+	// Lane A165: the body's own circle is hard. A skater put 0.3 m from a downed man's root (where a pile-up squeezes it) is out of the two circles in one
+	// step and out of the keep-out three steps later.
+	{
+		FContactScene S = Make(*this, [](FJamGameConfig& G) { G.Contact.DownedRadiusM = 0.6; });
+		if (!S.Ok()) return false;
+		S.Sim->SetSkater(S.V, FVector2D::ZeroVector, FVector2D::ZeroVector, PI);
+		S.Sim->SetSkater(S.A, FVector2D(1.3, 0.0), FVector2D(-9.0, 0.0), PI);
+		int32 HitFrame = -1;
+		double D1 = -1.0, D4 = -1.0;
+		for (int32 F = 0; F < 40; ++F)
+		{
+			TArray<FJamInput> In;
+			In.SetNum(S.Sim->GetSkaters().Num());
+			In[S.A].bCheck = F == 0;
+			S.Sim->Step(In);
+			if (HitFrame < 0) { if (S.Vic().ContactOutcome == UJamSim::ContactDown) HitFrame = F; continue; }
+			const double D = FVector2D::Distance(S.Att().Pos, S.Vic().Pos);
+			if (F == HitFrame + 10) S.Sim->SetSkater(S.A, S.Vic().Pos + FVector2D(0.0, 0.3), FVector2D::ZeroVector, 0.0);
+			if (F == HitFrame + 11) D1 = D;
+			if (F == HitFrame + 14) D4 = D;
+		}
+		AddInfo(FString::Printf(TEXT("JAMDOWNED squeezed (downed_radius_m 0.60): put 0.3 m from the downed man's root: %.3f m one step later, %.3f m four steps later"), D1, D4));
+		TestTrue(*FString::Printf(TEXT("0.6: a skater squeezed 0.3 m from the root is out of the two body circles in one step (%.3f m)"), D1), D1 > 0.8 - 1e-6);
+		TestTrue(*FString::Printf(TEXT("0.6: ... and out of the keep-out three steps later (%.3f m)"), D4), D4 > 1.0 - 1e-6);
+	}
 	return true;
 }
 // ---- Lane A157 (track F1, evolution 6, CONTACT-7.md sections 2 and 3): a check is a commitment -------------------------------------------------------------
@@ -2626,6 +2651,116 @@ bool FJamContactLunge::RunTest(const FString& Parameters)
 	TestTrue(*FString::Printf(TEXT("12 / 1.5: the lunge that meets a body is the hit it was (outcome %d against %d, ratio %.3f against %.3f: the impulse's lunge is the motion now)"), Hit.Outcome, Hit0.Outcome, Hit.Ratio, Hit0.Ratio),
 		Hit.Outcome == Hit0.Outcome && FMath::Abs(Hit.Ratio - Hit0.Ratio) < 0.03 * Hit0.Ratio);
 	TestTrue(TEXT("12 / 1.5: it ends in the body: no lunge left, no miss charged"), Hit.LeftAfterHit == 0 && Hit.Missed == 0);
+	return true;
+}
+// ---- Lane A165 (track F1, evolution 7, CONTACT-8.md) ---------------------------------------------------------------------------------------------------------
+//   Jam.Core.Contact.CooldownRestart  game.contact.check_cooldown_restart with check_cooldown_frames 36: a button mashed every 12 frames opens ONE window
+//                                     and no other; a press every 37 frames opens every one; a dropped press costs a whole cooldown from that press;
+//                                     false (the neutral value): the cooldown of lane A157 (a window every 36 frames); with no cooldown the key is not read
+//   Jam.Core.Contact.BoardSlam        game.contact.board_slam_frames 30: a knockdown within 1 m of the boards closing along their normal at 4 m/s or more
+//                                     lasts 30 frames longer and fires the board read-out and event; along the boards, beyond 1 m, under 4 m/s along the
+//                                     normal it is the hit it was; 0 (the neutral value): no slam
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamContactCooldownRestart, "Jam.Core.Contact.CooldownRestart", JamContactTests::Flags)
+bool FJamContactCooldownRestart::RunTest(const FString& Parameters)
+{
+	struct FOut { int32 Presses = 0, Cooling = 0, WindowFrames = 0, Outcome = 0, HitFrame = -1, ContactFrame = -1; };
+	// The victim stands at the centre dot facing the human, who glides at it at 9 m/s from Start metres; Press says on which frames check is pressed. 160 frames.
+	auto Play = [this](const TCHAR* Name, int32 Cooldown, bool bRestart, double Start, TFunctionRef<bool(int32)> Press) -> FOut
+	{
+		FOut O;
+		FContactScene S = Make(*this, [Cooldown, bRestart](FJamGameConfig& G) { G.Contact.CheckCooldownFrames = Cooldown; G.Contact.bCheckCooldownRestart = bRestart; });
+		if (!S.Ok()) return O;
+		S.Sim->SetSkater(S.V, FVector2D::ZeroVector, FVector2D::ZeroVector, 0.0);
+		S.Sim->SetSkater(S.A, FVector2D(Start, 0.0), FVector2D(-9.0, 0.0), PI);
+		for (int32 F = 0; F < 160; ++F)
+		{
+			TArray<FJamInput> In;
+			In.SetNum(S.Sim->GetSkaters().Num());
+			In[S.A].bCheck = Press(F);
+			S.Sim->Step(In);
+			if (S.Att().bCheckThisFrame) ++O.Presses;
+			if (S.Att().CheckWindow > 0) ++O.WindowFrames;
+			if (O.ContactFrame < 0 && S.Vic().Vel.Size() > 1e-3) O.ContactFrame = F;
+			if (O.HitFrame < 0 && S.Vic().ContactOutcome != 0) { O.HitFrame = F; O.Outcome = S.Vic().ContactOutcome; }
+		}
+		O.Cooling = S.Att().ChecksCooling;
+		AddInfo(FString::Printf(TEXT("JAMRESTART %s (check_cooldown_frames %d, restart %d, from %.2f m): presses that opened a window %d, dropped %d, frames with a window open %d of 160 | the bodies met at frame %d, hit at frame %d outcome %d"),
+			Name, Cooldown, bRestart ? 1 : 0, Start, O.Presses, O.Cooling, O.WindowFrames, O.ContactFrame, O.HitFrame, O.Outcome));
+		return O;
+	};
+	auto Every = [](int32 N) { return [N](int32 F) { return F % N == 0; }; };
+	// From 28 m the bodies do not meet in 160 frames: the press accounting.
+	const FOut Plain = Play(TEXT("mashed every 12, the cooldown alone"), 36, false, 28.0, Every(12));
+	const FOut Mash = Play(TEXT("mashed every 12, restart"), 36, true, 28.0, Every(12));
+	const FOut Timed = Play(TEXT("pressed every 37, restart"), 36, true, 28.0, Every(37));
+	const FOut Rest = Play(TEXT("pressed at 0, 20 and 60, restart"), 36, true, 28.0, [](int32 F) { return F == 0 || F == 20 || F == 60; });
+	const FOut Early = Play(TEXT("pressed at 0, 20 and 50, restart"), 36, true, 28.0, [](int32 F) { return F == 0 || F == 20 || F == 50; });
+	const FOut NoCool = Play(TEXT("mashed every 12, restart without a cooldown"), 0, true, 28.0, Every(12));
+	TestTrue(*FString::Printf(TEXT("false (neutral): the masher opens a window every 36 frames (%d presses of 14, %d dropped)"), Plain.Presses, Plain.Cooling), Plain.Presses == 5 && Plain.Cooling == 9);
+	TestTrue(*FString::Printf(TEXT("true: the masher opens ONE window and no other (%d press, %d dropped, %d frames open)"), Mash.Presses, Mash.Cooling, Mash.WindowFrames), Mash.Presses == 1 && Mash.Cooling == 13 && Mash.WindowFrames == 12);
+	TestTrue(*FString::Printf(TEXT("true: a press every 37 frames opens every window (%d of 5, none dropped)"), Timed.Presses), Timed.Presses == 5 && Timed.Cooling == 0);
+	TestTrue(TEXT("true: a dropped press at 20 moves the cooldown to 56: the press at 60 opens a window"), Rest.Presses == 2 && Rest.Cooling == 1);
+	TestTrue(TEXT("true: ... and the press at 50 does not (36 frames from the first, inside 36 from the dropped one)"), Early.Presses == 1 && Early.Cooling == 2);
+	TestTrue(TEXT("true with check_cooldown_frames 0: the key is not read, every press opens a window"), NoCool.Presses == 14 && NoCool.Cooling == 0);
+	// The bodies meet about frame 27.
+	const FOut None = Play(TEXT("no press"), 36, true, 4.85, [](int32) { return false; });
+	if (!TestTrue(*FString::Printf(TEXT("the staged bodies meet between frames 20 and 40 (frame %d)"), None.ContactFrame), None.ContactFrame >= 20 && None.ContactFrame <= 40)) return false;
+	const FOut MashHit = Play(TEXT("mashed into him, restart"), 36, true, 4.85, Every(12));
+	const int32 At = None.ContactFrame - 3;
+	const FOut TimedHit = Play(TEXT("one timed press, restart"), 36, true, 4.85, [At](int32 F) { return F == At; });
+	TestEqual(TEXT("true: the mashed button does not land the hit"), MashHit.Outcome, 0);
+	TestTrue(TEXT("true: the press timed for the contact lands it"), TimedHit.Outcome >= UJamSim::ContactStumble && TimedHit.HitFrame == None.ContactFrame);
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamContactBoardSlam, "Jam.Core.Contact.BoardSlam", JamContactTests::Flags)
+bool FJamContactBoardSlam::RunTest(const FString& Parameters)
+{
+	struct FOut { FContactHit H; bool bSlam = false, bContactBoard = false; int32 Slams = 0, BoardEvents = 0; };
+	// The victim stands Gap metres from the +z side boards facing along them; the attacker comes from 1 m away at Speed along a line AngleDeg off straight
+	// at the boards (0 = straight in, 90 = along them), and presses.
+	auto Hit = [this](const TCHAR* Name, int32 SlamFrames, double Bonus, double Gap, double AngleDeg, double Speed) -> FOut
+	{
+		FOut O;
+		FContactScene S = Make(*this, [SlamFrames, Bonus](FJamGameConfig& G) { G.Contact.BoardSlamFrames = SlamFrames; G.Contact.BoardBonus = Bonus; });
+		if (!S.Ok()) return O;
+		const double Hz = S.Cfg.Rink.WidthM * 0.5;
+		const double A = FMath::DegreesToRadians(AngleDeg);
+		const FVector2D Dir(FMath::Sin(A), FMath::Cos(A));
+		const FVector2D VPos(0.0, Hz - Gap);
+		S.Sim->SetSkater(S.V, VPos, FVector2D::ZeroVector, 0.0);
+		S.Sim->SetSkater(S.A, VPos - Dir * 1.0, Dir * Speed, FMath::Atan2(Dir.Y, Dir.X));
+		O.H = Run(S, 12, [&](TArray<FJamInput>& In, int32 F) { In[S.A].bCheck = F == 0; });
+		O.bSlam = S.Vic().bContactSlam; O.bContactBoard = S.Vic().bContactBoard; O.Slams = S.Vic().ContactSlams;
+		for (const FJamSimEvent& E : S.Sim->GetFrameEvents()) if (E.Name == JamEvents::Board && E.Who == S.V) ++O.BoardEvents;
+		AddInfo(FString::Printf(TEXT("JAMSLAM %s (board_slam_frames %d, board_bonus %.2f, %.1f m from the boards, %.0f degrees off straight in, %.1f m/s = %.1f m/s along the normal): outcome %d ratio %.3f down %d frames | slam %d (counted %d) board read-out %d board events %d"),
+			Name, SlamFrames, Bonus, Gap, AngleDeg, Speed, Speed * FMath::Cos(A), O.H.Outcome, O.H.Ratio, O.H.KnockFrames, O.bSlam ? 1 : 0, O.Slams, O.bContactBoard ? 1 : 0, O.BoardEvents));
+		return O;
+	};
+	const FOut Off = Hit(TEXT("straight in, the neutral value"), 0, 1.25, 0.8, 0.0, 9.0);
+	const FOut On = Hit(TEXT("straight in"), 30, 1.25, 0.8, 0.0, 9.0);
+	if (!TestEqual(TEXT("the staged hit fells the victim at the neutral value"), Off.H.Outcome, UJamSim::ContactDown)) return false;
+	TestTrue(TEXT("0 (neutral): no slam, nothing counted; the board hit of lane A101 as it was"), !Off.bSlam && Off.Slams == 0 && Off.bContactBoard && Off.BoardEvents == 1);
+	TestTrue(TEXT("30: the same hit is a slam (the same outcome and ratio)"), On.bSlam && On.Slams == 1 && On.H.Outcome == Off.H.Outcome && On.H.Ratio == Off.H.Ratio);
+	TestEqual(TEXT("30: ... and lasts 30 frames longer"), On.H.KnockFrames, Off.H.KnockFrames + 30);
+	TestTrue(TEXT("30: ... with the board read-out and one board event"), On.bContactBoard && On.BoardEvents == 1);
+	// Not earned: along the boards, beyond 1 m, too little speed along the normal.
+	const FOut Along0 = Hit(TEXT("along the boards, the neutral value"), 0, 1.25, 0.8, 90.0, 9.0);
+	const FOut Along = Hit(TEXT("along the boards"), 30, 1.25, 0.8, 90.0, 9.0);
+	TestTrue(TEXT("30, along the boards: down, no slam, the frames of the neutral value"), Along.H.Outcome == UJamSim::ContactDown && !Along.bSlam && Along.Slams == 0 && Along.H.KnockFrames == Along0.H.KnockFrames);
+	const FOut Far0 = Hit(TEXT("1.3 m out, the neutral value"), 0, 1.25, 1.3, 0.0, 9.0);
+	const FOut Far = Hit(TEXT("1.3 m out"), 30, 1.25, 1.3, 0.0, 9.0);
+	TestTrue(TEXT("30, 1.3 m from the boards: the board bonus still counts, no slam, the frames of the neutral value"), Far.H.Outcome == UJamSim::ContactDown && Far.bContactBoard && !Far.bSlam && Far.H.KnockFrames == Far0.H.KnockFrames);
+	const FOut Oblique0 = Hit(TEXT("70 degrees off, the neutral value"), 0, 1.25, 0.8, 70.0, 9.0);
+	const FOut Oblique = Hit(TEXT("70 degrees off"), 30, 1.25, 0.8, 70.0, 9.0);
+	TestTrue(TEXT("30, 70 degrees off straight in (3.1 m/s along the normal): down, no slam"), Oblique.H.Outcome == UJamSim::ContactDown && !Oblique.bSlam && Oblique.H.KnockFrames == Oblique0.H.KnockFrames);
+	const FOut Angled = Hit(TEXT("30 degrees off"), 30, 1.25, 0.8, 30.0, 9.0);
+	TestTrue(TEXT("30, 30 degrees off straight in (7.8 m/s along the normal): a slam"), Angled.H.Outcome == UJamSim::ContactDown && Angled.bSlam);
+	// A slam is a board hit whatever board_bonus says.
+	const FOut NoBonus0 = Hit(TEXT("straight in, board_bonus 1, the neutral value"), 0, 1.0, 0.8, 0.0, 9.0);
+	const FOut NoBonus = Hit(TEXT("straight in, board_bonus 1"), 30, 1.0, 0.8, 0.0, 9.0);
+	TestTrue(TEXT("board_bonus 1, slam 0: down, no board read-out (lane A101's neutral)"), NoBonus0.H.Outcome == UJamSim::ContactDown && !NoBonus0.bContactBoard && NoBonus0.BoardEvents == 0);
+	TestTrue(TEXT("board_bonus 1, slam 30: the slam fires the board read-out and event itself, 30 frames on top"), NoBonus.bSlam && NoBonus.bContactBoard && NoBonus.BoardEvents == 1 && NoBonus.H.KnockFrames == NoBonus0.H.KnockFrames + 30);
 	return true;
 }
 

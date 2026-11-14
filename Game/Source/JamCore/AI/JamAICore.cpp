@@ -365,6 +365,11 @@ namespace JamAI
 			{
 				Dir = Dir.Normalized();
 			}
+			// Lane A167 (evolution 5): the bot steers round a skater that lies on the ice (FJamHockeySense::AvoidDownedM; 0 = it skates at him)
+			{
+				const FJamHockeySense& Hd = SkillOf(W, i).Hk;
+				if (Hd.AvoidDownedM > 0.0 && Dir.Length() > 0.05) { Dir = SteerRoundDowned(W, i, Dir, Hd.AvoidDownedM, Hd.AvoidDownedOut); }
+			}
 			// Lane A85 (found by Jam.Core.NetTrap once R-0042's flat tap re-rolled its match): a bot behind a net (between its back and the end boards, inside
 			// the net's width + 1.2 m) whose way leads back to the middle goes round the side of the net, not into its back: FJamPlayerBot's rule (lane A3,
 			// 16:12) for the bots. Before, a back whose guard spot lay through its own net pressed into the hull until the puck moved (47 frames, hockey.regular
@@ -665,13 +670,32 @@ namespace JamAI
 			&& W.Skaters[W.Carrier].Pos.DistTo(Me) < Hk.HuntRadiusM;
 		// Lane A94 (R-0045 law 2): a bot with a shape job plays it (AssignJobs); the stall, the hunt and a yield to the human's puck keep the old roles
 		// Lane A134: bPressInHunt keeps the presser on its job inside the hunt radius (off as shipped: the hunt takes it off, as before)
-		if (Job[Id] != EJob::None && !bStalled && (!bHunt || (Hk.Hk.bPressInHunt && Job[Id] == EJob::Press)) && W.CarrierOrHolder() != Id && !(bYield && Job[Id] == EJob::Puck))
+		// Lane A167: ... until the carrier is inside PressCommitM, where the presser commits as a hunting bot does (0 = it never does)
+		const bool bPressKeeps = Hk.Hk.bPressInHunt && Job[Id] == EJob::Press
+			&& !(Hk.Hk.PressCommitM > 0.0 && W.Carrier >= 0 && W.Carrier < W.NumSkaters && W.Skaters[W.Carrier].Pos.DistTo(Me) < Hk.Hk.PressCommitM);
+		if (Job[Id] != EJob::None && !bStalled && (!bHunt || bPressKeeps) && W.CarrierOrHolder() != Id && !(bYield && Job[Id] == EJob::Puck))
 		{
 			bool bToPuck = false;
 			if (JobSteer(W, Id, Out, bToPuck))
 			{
 				Used[Id] = Job[Id] == EJob::Point ? ERole::Back : ((Job[Id] == EJob::Puck || Job[Id] == EJob::Press) ? ERole::Chaser : ERole::Support);
 				if (bToPuck) { Out = Attack(W, Id, Me, Pp, Dirg, D, bShoot, bAimed, bDeke, bPass); }
+				return Out + Separate(Me, W, Id, Params.SeparateRadius) * 1.2;
+			}
+		}
+		// Lane A167 (evolution 5): the chaser of a team without shape jobs closes under control (FJamHockeySense::bPressThree): goal-side of an opposing
+		// carrier that goes, it plays the Press job's gap (JobSteer, EJob::Press) instead of the charge; the stick and the body play as before (StickPlay).
+		if (Hk.Hk.bPressThree && Job[Id] == EJob::None && Role == ERole::Chaser && !bStalled && W.Carrier >= 0 && W.Carrier < W.NumSkaters
+			&& W.Skaters[W.Carrier].Team != S.Team && !W.Skaters[W.Carrier].bDown && TeamSize(W, S.Team) < 5)
+		{
+			const FVec2 Cp = W.Skaters[W.Carrier].Pos;
+			const FVec2 Vc = W.Skaters[W.Carrier].Vel;
+			const FVec2 Ug = (OwnGoal - Cp).Normalized();
+			if (Vc.Length() >= 3.0 && Me.DistTo(Cp) >= (Hk.Hk.PressThreeCommitM > 2.5 ? Hk.Hk.PressThreeCommitM : 2.5) && (Me - Cp).Dot(Ug) > 0.0)
+			{
+				const double Gap = Clamp(Vc.Length() * 0.3, 1.0, 3.0);
+				const FVec2 T = Cp + Ug * Gap + FVec2(0.0, -Sign(Cp.Y) * 0.8);
+				Out = Arrive(Me, T, 1.5) + (Vc * (1.0 / (Params.InterceptSpeed > 1.0 ? Params.InterceptSpeed : 1.0))).LimitLength(Hk.Hk.PressRetreatCap);
 				return Out + Separate(Me, W, Id, Params.SeparateRadius) * 1.2;
 			}
 		}
@@ -1606,6 +1630,40 @@ namespace JamAI
 			if ((K.Pos + K.Vel * (t < Turn ? t : Turn)).DistTo(At) <= Cover) { return t; }
 		}
 		return 2.5 + K.Pos.DistTo(Pp) / Sp;
+	}
+
+	FVec2 SteerRoundDowned(const FJamAIWorld& W, int Id, const FVec2& Move, double KeepM, double OutShare)
+	{
+		constexpr double LookM = 2.5;
+		const double Len = Move.Length();
+		if (KeepM <= 0.0 || Len < 1e-6 || Id < 0 || Id >= W.NumSkaters) { return Move; }
+		const FVec2 M = Move * (1.0 / Len);
+		const FVec2 Me = W.Skaters[Id].Pos;
+		int Best = -1;
+		double BestD = 1e18;
+		for (int d = 0; d < W.NumSkaters; ++d)
+		{
+			if (d == Id || !W.Skaters[d].bDown) { continue; }
+			const FVec2 Rel = W.Skaters[d].Pos - Me;
+			const double Dist = Rel.Length();
+			if (Dist > KeepM + LookM || Dist >= BestD) { continue; }
+			if (Dist > KeepM && (Rel.Dot(M) <= 0.0 || std::fabs(Rel.Cross(M)) >= KeepM)) { continue; }   // behind the move, or the line clears his circle
+			Best = d; BestD = Dist;
+		}
+		if (Best < 0) { return Move; }
+		const FVec2 Rel = W.Skaters[Best].Pos - Me;
+		if (BestD < 1e-6) { return Move; }
+		const FVec2 To = Rel * (1.0 / BestD);
+		const double Side = To.Cross(M) >= 0.0 ? 1.0 : -1.0;   // the side of him the move already leans to (counter-clockwise from the line to him: +)
+		if (BestD > KeepM)
+		{
+			// outside his circle: the tangent on that side
+			return Rotate(To, Side * std::asin(KeepM / BestD)) * Len;
+		}
+		// inside it: out and round (mostly out near his body, mostly round near the circle's edge)
+		const double In = 1.0 - BestD / KeepM;
+		if (OutShare > 0.0) { return (Rotate(To, Side * kPi * 0.5) * (1.0 - OutShare) + To * (-OutShare)).Normalized() * Len; }
+		return (Rotate(To, Side * kPi * 0.5) * (1.0 - 0.5 * In) + To * (-(0.4 + In))).Normalized() * Len;
 	}
 
 	FVec2 BackcheckPoint(const FJamAIWorld& W, int Id, int Carrier, double Speed)

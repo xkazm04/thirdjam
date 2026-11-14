@@ -969,6 +969,7 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 		S.StickHitResult = 0;
 		S.ContactOutcome = 0; S.ContactRatio = 0.f; S.bContactCross = false; S.bCheckRefused = false; S.bRecoilThisFrame = false;   // lane A92 read-outs
 		S.ContactBy = -1; S.bContactBoard = false;   // lane A101 read-outs
+		S.bContactSlam = false;   // lane A165 read-out
 		S.bContactGrace = false;   // lane A113 read-out
 		S.bAbilityThisFrame = false;   // lane A84
 	}
@@ -1086,6 +1087,8 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 		{
 			// Lane A157 (game.contact.check_cooldown_frames): a press inside the cooldown of the last one is dropped: no window, no late press, no cue.
 			++S.ChecksCooling;
+			// Lane A165 (game.contact.check_cooldown_restart): the press inside the cooldown starts it again: a mashed button never opens a second window.
+			if (Config.Contact.bCheckCooldownRestart) S.CheckReadyFrame = Frame + Config.Contact.CheckCooldownFrames;
 		}
 		else if (In.bCheck && Config.Skater.bCheckEnabled)
 		{
@@ -2076,7 +2079,11 @@ void UJamSim::PushOutOfDowned(FJamSkaterState& Up, const FJamSkaterState& Down, 
 	FVector2D N = Up.Pos - Down.Pos;
 	const double Dist = N.Size();
 	N = Dist > 1e-9 ? N / Dist : FVector2D(Up.Team == 0 ? -1.0 : 1.0, 0.0);
-	Up.Pos += N * FMath::Min(Keep - Dist, DownedPushOutMps * DT);
+	// Lane A165: the body's own circle is hard, the keep-out around it is eased. A skater squeezed inside the two circles (a pile-up, a lunge's speed) is
+	// moved out to them at once, as the ordinary collision this replaces did; from there to Keep it gives way at DownedPushOutMps.
+	double Move = FMath::Min(Keep - Dist, DownedPushOutMps * DT);
+	if (Dist + Move < SkaterRadius * 2.0) Move = SkaterRadius * 2.0 - Dist;
+	Up.Pos += N * Move;
 	const FVector2D Rel = Up.Vel - Down.Vel;
 	const double Vn = Dot(Rel, N);
 	if (Vn >= 0.0) return;   // already leaving
@@ -2240,6 +2247,16 @@ int32 UJamSim::ResolveContact(FJamSkaterState& Att, FJamSkaterState& Vic, const 
 	Vic.bContactCross = Kind == EContactKind::Cross;
 	Vic.ContactBy = Att.Index;   // lane A101 read-out
 	const float Strength = bHip ? 1.f : static_cast<float>(FMath::Clamp(Closing / Config.Skater.Speed, 0.0, 1.0));   // contracts/events.md: closing speed / skater.speed
+	// Lane A165 (track F1, evolution 7; game.contact.board_slam_frames): the board slam, earned. The hit fells its victim (the grace has had its say above),
+	// the victim's centre is within BoardSlamRangeM of the boards and the attacker closes on it along the boards' outward normal at BoardSlamMinMps or
+	// more, on the velocities before anything below moves them. board_slam_frames 0 (the neutral value): never.
+	bool bSlam = false;
+	if (K.BoardSlamFrames > 0 && Outcome == ContactDown && !bHip && !Vic.InBox())
+	{
+		FVector2D Ns;
+		const double Ds = BoardDistance(Vic.Pos, Ns);
+		bSlam = -Ds <= BoardSlamRangeM && Dot(Att.Vel - Vic.Vel, Ns) >= BoardSlamMinMps;
+	}
 	auto React = [&](FJamSkaterState& S, const FVector2D& Push, bool bForce)
 	{
 		if (bForce || Frame - S.LastBumpFrame >= BumpGapFrames) { S.bBumpThisFrame = true; S.BumpDir = Push; S.LastBumpFrame = Frame; }   // lane A45 read-out: PlayHitReaction
@@ -2265,7 +2282,7 @@ int32 UJamSim::ResolveContact(FJamSkaterState& Att, FJamSkaterState& Vic, const 
 		FireRule(EJamRuleTrigger::OnCheck, Att.Index, Att.Team, NAME_None, Strength);
 		// Lane A101: a landed hit the boards answered: the victim's board read-out (the figure's board-hit take) and a `board` event (Kind skater, the glass and
 		// the sound) go out with the check's strength, at the point of the boards nearest the victim. Read-outs and an event only: nothing hashed.
-		if (Board > 1.0)
+		if (Board > 1.0 || bSlam)   // lane A165: a slam is a board hit whatever board_bonus says
 		{
 			FVector2D Nb;
 			const double Db = BoardDistance(Vic.Pos, Nb);
@@ -2313,6 +2330,13 @@ int32 UJamSim::ResolveContact(FJamSkaterState& Att, FJamSkaterState& Vic, const 
 				const double T = FMath::Clamp((PhysRatio - K.DownRatio) / FMath::Max(1e-6, K.DownFullRatio - K.DownRatio), 0.0, 1.0);
 				const double Frames = FMath::Lerp(static_cast<double>(K.DownFramesMin), static_cast<double>(FMath::Max(K.DownFramesMin, K.DownFramesMax)), T);
 				Vic.KnockFrames = FMath::Max(1, FMath::RoundToInt32(Vic.KnockFrames * Frames / ReferenceKnockdownFrames));
+				// Lane A165: the slam, paid: board_slam_frames on top (scaled with skater.knockdown_frames as the frames above), and its read-outs.
+				if (bSlam)
+				{
+					Vic.KnockFrames += FMath::RoundToInt32(K.BoardSlamFrames * Eff(EJamStat::KnockdownFrames, Vic.Index) / ReferenceKnockdownFrames);
+					Vic.bContactSlam = true;
+					++Vic.ContactSlams;
+				}
 			}
 		}
 		Vic.Vel += Dir * (Give * MassA / MassV);
