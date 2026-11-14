@@ -1078,3 +1078,7 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 
 ## H50.5 (11:30, 14 Nov) FOR THE DIRECTOR: main has B's progress (7f55b48f); one more batch on dev-b for after the test
 - dev-b now adds only the figure lane's last run (filmed; dormant unless called): details under `handoff/B-to-A-0043.md`. Merge it when the operator says.
+
+## H51.0 (14:39, 14 Nov) FOR THE DIRECTOR: **for the 15:30 package: dev-b at this push** (on main, built, cook-only PASS)
+- New since 46bdb717: **the puck's white ring half as thick** (A-to-B-0027 point 5): `/JamAssets/Props/SM_PuckDisc`, geometry only, 18 to 9 cm band (47 x 47 cm disc), seen on the GPU on clay and night (`devlog/shots/20261114-1435*-B-g1-puckring-*`); and the figure lane's filmed batch (SetStickLock, SetTakeGrace, PlayCheckMiss with its auto rule off, the reworked mallet and pin, Dash_Carry): dormant unless called.
+- Next, for 18:00: SetCrossCheckHold, SetBoostEquipped, PlayCelebrate (stand-ins, then real takes), SM_Boost_<kind>, the UI kit, the menu backdrop, the neon rig.
