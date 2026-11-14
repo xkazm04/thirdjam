@@ -1,0 +1,1 @@
+Zoomed crops of the GPU still (nearest neighbour, crops 100x100 or 100x60 stretched to 300x300, so slopes look steeper than they are): panel chamfer, Normal button chamfer, Focused/Pressed edges, Lit segment, card chamfer, panel interior. Corners crisp, no stretching, no banding.

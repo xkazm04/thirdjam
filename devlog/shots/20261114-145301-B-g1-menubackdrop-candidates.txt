@@ -1,0 +1,1 @@
+Three backdrop candidates (rows A end-high, B corner-high, C centre-low); left raw, right at 35 % brightness (a stand-in for the menu scrim) with device A home menu (menu-2/2-home-1080.png) laid over. C chosen.
