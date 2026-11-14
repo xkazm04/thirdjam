@@ -28,7 +28,7 @@ Proved in the brief's order (log `C:\Users\kazda\jam\wt\b-vfx\Game\logs\editor-2
 | The figure's Blueprint logs as usual | yes | 104 `LogBlueprintUserMessages` lines in the first 40 s (`SK6RX hit`, `SK24 brk`, `SK22 brake`); a match knockdown at sim frame 521: `SK6KD down_f 113`, `SK4KD AS_SkaterTB1_P3_Fall`, `SK4UP ... GetUp`, `SK6REL ... end_minus_rel_f 0.000007`; the pawn's `JAMVIS knockdown / getup / hit / board` lines |
 
 - **Tick rate: 60.2 sim frames per wall second** in the match (113 sim frames between log stamps 00.45.50:455 and 00.45.52:333). Memory 3.0 GB working set. 24 play sessions were started and stopped in this lane (counted in the log) with no hang, no assertion and a clean `LogExit: Exiting.` at the end.
-- **The one thing to know: nothing is ever "rendered", so a figure's pose does not advance.** The figure meshes use `OnlyTickPoseWhenRendered`. Headless, a montage sat at position 0.0 and the pelvis stayed at z 57.33 on four figures. The Blueprint's time logic and its logs still run. One Python line per figure on the play-session instance fixes it (nothing saved): `mesh.set_editor_property('visibility_based_anim_tick_option', unreal.VisibilityBasedAnimTickOption.ALWAYS_TICK_POSE_AND_REFRESH_BONES)`. After it: pelvis z 72.8 to 74.6, `Stop_Hard` at 0.25 s.
+- **The one thing to know: nothing is ever "rendered", so a figure's pose does not advance.** The figure meshes use `OnlyTickPoseWhenRendered`. Headless, a montage sat at position 0.0 and the pelvis stayed at z 57.33 on four figures. The Blueprint's time logic and its logs still run. One Python line per figure on the play-session instance fixes it (nothing saved), **and it must be set without change notification**: `mesh.set_editor_property('visibility_based_anim_tick_option', unreal.VisibilityBasedAnimTickOption.ALWAYS_TICK_POSE_AND_REFRESH_BONES, unreal.PropertyAccessChangeNotifyMode.NEVER)`. **Corrected 04:20 (the figure lane's finding, confirmed here):** the line as I first gave it, without the third argument, re-runs the figure's construction and resets its Blueprint variables to the class defaults (`HoldAt`, `StumF`, `RxGap` read 0 afterwards instead of 9.0, 16, 0.35). Part 4 says which of this lane's runs were made that way and what it changed. After it: pelvis z 72.8 to 74.6, `Stop_Hard` at 0.25 s.
 - `ExitEditor` needs `{"bDiscardUnsavedChanges":true}` if anything is unsaved; the process was gone 6 s later.
 - Not tried headless: a cook, `-run=pythonscript`, Niagara, sound. A modal dialog would have no window to click; none appeared.
 
@@ -121,7 +121,7 @@ No take was added or changed. If the film makes this worth another day, the beha
 - Nothing is needed for the experiment. The bodies meet only the figure's own floor on the engine's unused `Destructible` channel, so `Game/Config` is untouched.
 - If it ever ships: one named collision channel for "figure bodies against the ice" in `DefaultEngine.ini`, in place of `Destructible`.
 - A warning for device A's `PA_P4_*` assets, made with the same toolset: limits set with `PhysicsAssetToolset.SetConstraintLimits` read back correctly and are not what a running figure has (finding 2).
-- A headless editor needs the pose tick line from Evolution 0 for any bone measurement; `tools/run/editor.ps1` already forwards `-nullrhi -unattended` through `-ExtraArgs`.
+- A headless editor needs the pose tick line from Evolution 0 (in its corrected form, with `PropertyAccessChangeNotifyMode.NEVER`) for any bone measurement; `tools/run/editor.ps1` already forwards `-nullrhi -unattended` through `-ExtraArgs`.
 
 ## 6. Decisions for the operator
 
@@ -481,4 +481,156 @@ The other device changes the two class paths in section 5; the collision channel
 | Game/Plugins/JamAssets/Content/Skaters/Lab/PHYS_SkaterTB1_P3_Rag.uasset | other | 0.03 | original | UE 5.9 PhysicsAssetToolset (MCP) + Python |  |  | 2026-11-14 | B | n | lab, not shipped: 16 bodies for SK_SkaterTB1_P3 (14 fitted capsules with seven radii reduced, a neck sphere, a thin stick capsule at mass scale 0.2), limits free and continuous collision on the simulated bodies, neck and stick joint anchors set by Python (lane RAG) (28270 bytes) |
 | Game/Plugins/JamAssets/Content/Skaters/Lab/PHYS_SkaterTB1v2_Rag.uasset | other | 0.03 | original | UE 5.9 PhysicsAssetToolset (MCP) + Python |  |  | 2026-11-14 | B | n | lab, not shipped: 16 bodies for SK_SkaterTB1v2 (15 fitted capsules with head and feet reduced, a neck sphere, the stick thinned at mass scale 0.2), limits free and continuous collision on the simulated bodies, neck joint anchors set by Python (lane RAG) (28171 bytes) |
 | Game/Plugins/JamAssets/Content/Skaters/Lab/PM_RagIce.uasset | other | 0.0 | original | UE 5.9 editor via MCP/Python |  |  | 2026-11-14 | B | n | lab, not shipped: physical material of the children's own floor and wall (friction 0.05, restitution 0, combine min) (lane RAG) (1795 bytes) |
+```
+
+---
+
+# Part 4 (fourth loop, 03:45 to 04:35): the cost, the wall at three distances and in the corners, the adoption note
+
+Same tree (`C:\Users\kazda\jam\wt\b-vfx`, branch `lab/ragdoll`, now at c1e028af: one more local commit of the two children; not pushed), port 8000, every editor `-nullrhi -unattended`. Three sessions (pids 37656, 36360, 39204), each left through `ExitEditor` with the discard flag and confirmed gone, the last at 04:25:00. `LogD3D12RHI` lines 0 and `Error:` lines 0 in their logs. In the lead's tree only this report is mine; `film\loop2\` and `film\loop3\` were not touched.
+
+## 1. What is done, what is not
+
+The cost is measured, the twelve wall cases pass, and `C:\Users\kazda\jam\rag-lab\ADOPT.md` is written. **The measurement found a cost I had not seen and this loop removed it:** the children as filmed in loop 3 kept their physics bodies alive all match long, about 2 ms of game-thread time a frame for ten figures with nobody down. The children now make their bodies at the knockdown and remove them at the hand-back: the positions are the same to 0.01 cm and a figure nobody knocks down costs nothing extra. Ten down at once could not be staged with pawns; I used ten test figures beside the match's ten, as you allowed. The GPU side is not in any number here. **And the figure lane's finding is true of this lane's runs too:** the recipe line I gave in part 1 wiped the hand-made twin in every twin test; the section after the cost says what that changed (nothing in the 20-knockdown table re-run with the cure, one wall case's first eleven frames) and part 1's recipe is corrected in place.
+
+## 2. Per evolution
+
+### Evolution 1: the cost
+
+**How it was measured.** The engine's CSV profiler (`CsvProfile Frames=N`) in a headless play session at the fixed 60 ticks a second. `stat unit`'s `GameThreadTime` reads 0 without a viewport, so **game-thread time here is the sum of the profiler's exclusive game-thread timers per frame** (`Exclusive/GameThread/*`, less the profiler's own). The physics part is three of them (`Physics`, `EventWait/EndPhysics`, `SyncBodies`); the workers' share is `Exclusive/AllWorkers/Physics`.
+
+**The scene.** The regular match (its ten pawn figures, shipped) plus ten test figures of the class under test standing at mid-ice, so twenty figures; every figure's pose forced to tick, as rendering would. "Nobody down": 840 frames per run. "Ten down": all ten test figures knocked down in the same frame, six times per run, frames 4 to 53 after each call, 300 frames per run. Three other editors were running on the machine throughout.
+
+| Mean ms per frame (each run listed) | Game thread | Of it physics | Workers' physics | 95th percentile of the game thread |
+|---|---|---|---|---|
+| (a) shipped figures, nobody down | 6.25, 7.15, 7.50 | 0.41 | 0.28 | 9.4 to 10.9 |
+| shipped figures, ten down (hand-made falls) | 9.06, 7.55, 9.16 | 0.43 | 0.29 | 11.6 to 14.3 |
+| (b) children as filmed in loop 3, nobody down | 8.38, 9.71 | 1.30 | 1.02 | 11.8 to 13.2 |
+| **(b) children with bodies on demand, nobody down** | **7.09** | **0.38** | 0.27 | 10.7 |
+| (c) children, ten down, no sub-steps | 12.50, 12.69, 13.10 | 3.50 | 2.62 | 16.6 to 18.6 |
+| (d) children, ten down, two sub-steps | 14.11, 14.79, 14.70 | 5.18 | 4.28 | 18.4 to 20.3 |
+| children with bodies on demand, nobody down, two sub-steps | 7.20 | 0.55 | 0.40 | 10.3 |
+| *the cure applied (figures whole):* shipped, nobody down | 10.55, 5.90 | 0.34 | 0.25 | 9.9 to 16.4 |
+| shipped, ten down (hand-made falls) | 9.53, 7.10 | 0.35 | 0.25 | 11.4 to 13.1 |
+| children with bodies on demand, nobody down | 5.09, 9.78 | 0.32 | 0.24 | 8.0 to 11.3 |
+| children with bodies on demand, ten down, no sub-steps | 8.20, 15.13 | 2.66 | 1.98 | 12.8 to 18.3 |
+
+**How far to trust it.** Inside a run the frames' standard deviation is 1.3 to 3.2 ms; five runs, two of them with shipped figures, contain stalls of 67 to 133 ms and read 4.7 to 9.1. **The game-thread totals follow the machine's other load more than my scene:** the same case read 5.1 and 9.8 ms nobody down, and 8.2 and 15.1 ms ten down, in two runs minutes apart, while three other editors worked. **The physics columns are the numbers to use:** they repeat to 0.1 ms with nobody down and to 0.3 ms with ten down within one kind of run. The upper rows were measured with every figure wiped (below); the four cured rows are with whole figures.
+
+**Added milliseconds per frame, against (a):**
+
+| | Game thread | Physics alone |
+|---|---|---|
+| (b) nobody down, loop 3's children | +2.1 | +0.89 |
+| (b) nobody down, bodies on demand | +0.1 (inside the spread) | 0.0 |
+| (c) ten down at once | +5.8 (+4.2 against shipped figures falling); with the cure anything from -1.3 to +8.0 against shipped figures falling, which is the machine's load, not a measurement | +3.1; with the cure +2.3 |
+| (d) ten down at once, two sub-steps | +7.6 (+5.9 against shipped figures falling) | +4.8 |
+| two sub-steps with nobody down | +0.2 | +0.14 |
+
+- **Per figure that is down: +0.23 to +0.31 ms of physics a frame** (whole and wiped figures), for the 35 to 50 frames the physics runs, and about +0.4 ms of game thread where two adjacent runs agreed (+0.48 and +0.59 with sub-steps).
+- **Making the bodies costs about 0.5 to 1.1 ms per figure, once, in the frame of the call**: ten knockdown calls took 9.8 to 24.1 ms (median 16.0) on the children against 4.4 to 12.1 (median 5.0) on shipped figures, by Python's clock around the ten calls; with the cure, in the quieter pair of runs, 7.1 to 11.5 (median 8.2) against 3.0 to 12.7 (median 3.5).
+
+**My verdict against a 16.7 ms frame.** In play it fits. My four matches had 3 to 6 knockdowns in 100 s, so the cost is a quarter to half a millisecond on the frames of a fall, up to a millisecond once at the hit, and nothing otherwise. If the other device holds its frame with more than a millisecond of game-thread headroom, this does not break it. Ten down at once is another matter: +2.3 to +3.1 ms of physics, and game-thread totals of 8 to 15 ms with up to one frame in twenty over 16.7 ms, on this machine with three other editors running; that case was staged and does not occur in a match. Sub-stepping costs little in play (+0.14 ms always, +0.17 ms more per figure down); I would still leave it off unless the film shows the one-frame dips.
+
+**What changed in the children to remove the idle cost.** The mesh no longer carries the physics asset. At `SetKnockedDown(true)` the child gives it to the mesh (variable `RagPA`) and binds the motor component; when the physics stops it unbinds and takes it away. **Positions against loop 3's children: 0.000 cm** on the 20 clay knockdowns with the whip off and with it on (33,908 samples each), the 20 night knockdowns, and the 12 wall cases (30,324 coordinates per figure).
+
+### Evolution 2: the wall at three distances and in the corners, whip on
+
+Twelve cases, six per figure: a straight board at 40, 66 and 90 cm (mesh shift 5, 30, 30 cm) and three corner arcs at 40, 66 and 90 cm from the arc; the wall ahead, behind and to each side; Strength 1.0 sent to both figures; `RagWalls` on.
+
+| | Clay (6) | Night (6) |
+|---|---|---|
+| Handed back within 3 cm | **6 of 6** (0.09 to 0.82 cm, and 2.34 in a corner at 66 cm) | **6 of 6** (0.15 to 0.27, and 2.28 in the same corner case) |
+| A simulated shape further past the boards than its twin ever is in that take | **0 of 6** | **0 of 6** |
+| Furthest a simulated shape is past the boards plane | 6.3 cm (the head; the wall box stands 6 cm behind the plane) | 0.9 cm |
+| Further past the plane than the twin on the same frame, at most | 3.4 cm | 0.0 cm |
+| Lowest simulated shape (no sub-steps) | 0.1 to 1.0 cm under the ice | 1.6 to 2.7 cm under |
+| NaN, get-up end minus release (12 lines per figure) | 0, 0.0 | 0, 0.0 |
+
+So 12 of 12 on both counts as I defined them, with one honest caveat: on the same frame the clay ragdoll's head can be up to 3.4 cm nearer the boards than the twin's, inside the 6 cm I set the wall back.
+
+For the figure lane, from the twin alone: the stick is 14 to 18 cm past the boards plane in the first three frames of `Board_Fall_Front` at 40 and 66 cm, and 74 to 105 cm past it on frame 1 of `Board_Fall_Back` at 66 and 90 cm.
+
+### Evolution 3: the adoption note
+
+`C:\Users\kazda\jam\rag-lab\ADOPT.md`: the five files and where they go, that they name each other by path, the checks before a push with the cook check, the two class paths, the switches and their defaults, three ways to turn it off, and the steps for when the parent gains `WhipHeadW` and `WhipArmW`.
+
+### The film folders
+
+`film\loop4\` holds the five files as they now are (bodies on demand) and its own scripts (`film4_make_clay.py`, `film4_make_night.py`, `film4_make_walls_clay.py`, `film4_status.py`, `film4_off.py`). `loop3\` is as it was. **The picture lane can film either: the motion is the same to 0.01 cm.** Adopt from `loop4`.
+
+**From a clean start on the committed files** (a fresh editor, the fourth commit): the 20 clay knockdowns with the whip on and the 20 night knockdowns give the positions of part 3 to 0.000 cm (33,908 samples each, across the restart), and the three `film4` scripts ran headless (10, 10 and 4 pairs, no error). After that I rebuilt the `film4` scripts once more with the cure below; the rebuilt files were parsed, not run again.
+
+### The headless recipe wiped the twin: what that did to this lane's numbers
+
+**Confirmed here.** A plain `set_editor_property` of the mesh's pose-tick option on a play-session figure resets the figure's Blueprint variables: in my harness the hand-made twin read `HoldAt` 0, `StumF` 0, `RxGap` 0 afterwards; with `unreal.PropertyAccessChangeNotifyMode.NEVER` it reads 9.0, 16, 0.35 and the pose still ticks.
+
+**Which of my runs set it the plain way:**
+
+| Runs | Who was wiped | What it changed |
+|---|---|---|
+| Every 20-knockdown table of parts 2, 3 and 4, both figures | the hand-made twin, always. The child's mesh already had the option, so that line changed nothing on it; I also set the child's own variables the plain way and cannot say now whether that wiped it | **Nothing I measure.** Re-run with the cure, clay, whip on, 5000 / 106: every number of the table is the same (19 of 20, worst 4.06 cm, lag 6.1 / 50.6 cm, blade 20 of 20) and every recorded value of twin and child equals the wiped run's: 0.000 cm over 135,632 values |
+| The wall cases of parts 3 and 4 | the same | Clay re-run with the cure: the child's 50,540 recorded values are unchanged and five of six twins are unchanged. In the sixth (`Board_Fall_Front` at 40 cm) the whole twin's first eleven frames differ from the wiped twin's by up to 20.4 cm at the blade. Hand-back 6 of 6 with the same values, nothing further past the boards than the twin. Night was not re-run |
+| The cost runs of the table's upper rows | all twenty figures, the match's pawn figures included | Re-measured with whole figures in the four cured rows: the physics timers moved by a few tenths, the totals by the machine's load |
+| The seeded matches of parts 2 and 3 | nobody: my recorder only reads, and the child's own default already ticks its pose | nothing |
+| Part 1's demonstration on the ten game figures | all ten | only that demonstration |
+
+**Why it did not matter for the falls:** each fall writes its own hold frame before the child reads it (the hold frames in my records are 13 to 28, never 0), and get-up end minus release comes from the call's own length. What the wipe zeroes is what begin-play sets: reaction gaps, the stumble and brake gates.
+
+**Corrected:** part 1's recipe (in place, marked), my harness (`rag2.py`, `cost.py`), and the `film4` scripts, which now also set the pose option before the team colour. **Not corrected, because the picture lane is using them:** the scripts beside `loop2` and in `loop3` set the option the plain way, after the team colour. The motion they film is the measured one. Whether the wipe also resets the team colour I could not see; if blue and red look alike in that film, that is why, and the child is the figure 150 cm to the twin's right.
+
+**No match was run with the on-demand children.** I queued one (seed 7920, swapped in as before); its first step was refused because the freshly started editor was still busy, the script's guard then skipped the swap, and I did not retry in the time left. The swapped file was never replaced (its hash is the LFS id). Parts 2 and 3's matches ran with the earlier children.
+
+## 3. Not verified
+
+- A match with the on-demand children (above); the night wall cases with the cure; the other 20-knockdown tables with the cure (only clay with the whip on was re-run).
+- **Anything by eye**, and anything on the GPU side: these are game-thread and physics timers of a headless editor, not frame times of the game.
+- Ten pawns down at once: the ten were test figures, standing still, beside the match's ten shipped figures.
+- The idle cost of the children as pawn figures in a match was not timed; the "nothing extra" is from ten test children.
+- The cost of making the bodies inside one frame: timed by Python's clock around ten calls, not by the profiler.
+- The night figure's cost (clay only).
+- The game-thread totals: 5 to 10.5 ms for the same shipped scene depending on the minute, so they are not the game's real game-thread time; only the physics timers repeat.
+- The film scripts on a GPU editor; a cook; a packaged build.
+
+## 4. For the engine lane
+
+- **The children as they now stand:** no bodies until a knockdown; bodies and motors made in the frame of `SetKnockedDown(true)`; physics from frame 4; hand-back from hold frame + 18 or 9 frames before the get-up; bodies removed when the physics stops. `RagEnabled` on, `RagWhipYield` on, `RagWalls` off, 5000 / 106.
+- **Must never:** give the mesh a physics asset in the Blueprint's defaults again (that is the idle cost); call anything on the mesh's bodies outside a fall (there are none).
+- For the figure lane: the stick past the boards in `Board_Fall_Front` and `Board_Fall_Back`, above.
+- A fifth tool trap: `execute_python` refuses an `import` inside an `if`; the whole script fails with "imports must be at the top level". A sixth: an MCP call made while a freshly started editor is still loading answers "the Unreal Editor is running a slow task" and does nothing.
+- **The figure lane's cure is the rule for every script here:** properties of a play-session figure are set with `PropertyAccessChangeNotifyMode.NEVER`.
+- When the parent's `WhipHeadW`, `WhipArmW` and `SetTestMode(32)` reach `dev-b`: the children need no change to keep working; `ADOPT.md` section 7 has the check to run first and the steps to move the yield onto the weights.
+
+## 5. For the other device
+
+- The two class paths, as in part 3 and in `ADOPT.md` section 4. No collision channel change.
+- **The cost to expect on the game thread:** nothing with nobody down; +0.2 to +0.4 ms a frame per figure that is down, for under a second; +0.5 to +1 ms once in the frame of the knockdown. With `bSubstepping` and two sub-steps: +0.14 ms always and +0.6 ms per figure down.
+
+## 6. Decisions for the operator
+
+1. **Ship or not is still the film's call**; the cost no longer argues against it.
+2. **Sub-stepping** is cheap in play. It is still a global physics setting; take it only if the one-frame dips show.
+3. **Wall falls with physics** now pass 12 of 12 at three distances and in corners with the whip on. They are still off by default until filmed.
+
+## 7. The next three evolutions
+
+1. **The weights in the parent** when the figure lane has them (`ADOPT.md` section 7). **Proving number: the child names no animation Blueprint and the 20 knockdowns keep their positions to 0.01 cm.**
+2. **The cost on the GPU machine with pawns.** The children as the game's figures in a 100 s match, the profiler's physics timers against the shipped figures. **Proving number: the mean and 95th-percentile game-thread time of the two matches within 0.3 ms of each other outside falls.**
+3. **The knockdown frame.** Make the bodies one frame after the call, spread over the three frames before the physics starts, if the one-off millisecond shows. **Proving number: no frame of a knockdown more than 0.5 ms above its neighbours in the profiler.**
+
+## Would I ship it
+
+Unchanged: **yes, if the film is liked, and only then**; the list is the five files in `film\loop4\`, and `ADOPT.md` is the procedure. The cost was my open reason to say no; measured, it is a quarter to half a millisecond during a fall and nothing otherwise.
+
+## State left behind
+
+- My tree: `lab/ragdoll` at c1e028af, clean. The shipped figure Blueprints, both animation Blueprints and `BP_SkaterVisual_TB2_P3` hash to their LFS ids.
+- The physics settings and console variables were set back before each session ended; none was saved. No process of mine is running.
+- Lab folder additions: `ADOPT.md`, `child_tpl4.dsl` (the schedule as now written into both children), `lazy.py`, `cost.py`, `cost.sh`, `costsum.mjs`, `csvstat.mjs`, `casesW12.py`, `anaw2.mjs`, `runs\cost_*\` (the profiler captures), `runs\W12C.json`, `runs\W12N.json`, `runs\L_*.json`, `runs\CWc.json` and `runs\W12Cc.json` (the cured re-runs), `film\loop4\`.
+
+## Ledger rows for part 4 (11 fields; the two children replace part 3's rows, the other three rows of part 3 stand)
+
+```
+| Game/Plugins/JamAssets/Content/Skaters/Lab/BP_SkaterVisual_TB1_P3_Rag.uasset | other | 0.67 | original | UE 5.9 editor via MCP/Python (Blueprint DSL) |  |  | 2026-11-14 | B | n | lab, not shipped: child Blueprint of BP_SkaterVisual_TB1_P3; ends-only physics on a fall run from SetKnockedDown and its tick (parent called first; ticks after its mesh): the physics bodies are made at the knockdown (RagPA) and removed at the hand-back; forearms, neck and head, shins and feet and the stick from frame 4 to the hand-back (hold frame + 18 or 9 frames before the get-up); zeroes the whip on head and stick arm while simulating (RagWhipYield); wall falls with a wall box behind RagWalls (off); RagAnim, RagFloor, RagWall (lane RAG) (704796 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/Lab/BP_SkaterVisual_TB1_Rag.uasset | other | 0.67 | original | UE 5.9 editor via MCP/Python (Blueprint DSL) |  |  | 2026-11-14 | B | n | lab, not shipped: child Blueprint of BP_SkaterVisual_TB1 (the night figure), the same schedule and parts as BP_SkaterVisual_TB1_P3_Rag on PHYS_SkaterTB1v2_Rag (lane RAG) (704662 bytes) |
 ```
