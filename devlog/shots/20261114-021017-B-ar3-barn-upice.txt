@@ -1,0 +1,1 @@
+AR3, Blender mock-up (not the engine): the game camera turned up the ice, 38 m from the end boards, without (top) and with (bottom) the new pieces. Only the gate and the tips of the bunting reach the frame: 0.74 % of it, mean luma 34; the ice's mean luma moves by 0.06 %. From the game camera at the side boards none of the new pieces is in frame at all.

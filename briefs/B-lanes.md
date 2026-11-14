@@ -1,36 +1,40 @@
 # Device B lane board (the lead rewrites this file whenever a lane starts or reports)
 
-Updated 2026-11-14 00:20 CET (H42.3). The evolution loop (R-0047, A-to-B-0022): each lane does one evolution on a track, proves it, proposes the next three. One editor at a time on B (the GPU hung three times on 13 Nov). dev-b = main e44df14 + B, builds, cook-only PASS.
+Updated 2026-11-14 01:42 CET (H43.9). **The operator's night plan (01:30): nine lanes in parallel until 10:00, each an evolution loop; he plays at 10:00 and sets the last day's priorities.** B stays on its side of the line (no game code); new moves go to device A as wiring asks (B-to-A-0040). One GPU lane (the editor on 8002); everything else runs on the CPU (Blender renders with Cycles on the CPU only). dev-b = main 322e6c5 + B, builds. Lane briefs: the lead's scratch folder; reports under `status/`.
 
-## Running
+## Running (the nine lanes)
 
-| Lane | What | Editor | Started | Due | Report (when done) |
+| # | Lane | Loop | Where | Model | Report |
 |---|---|---|---|---|---|
-| SK24 | Track BF1: device A's real callers counted (`PlayStumble`, `SetBraking`: stumbles and stops shown of the sim's), the stop kept an event under the level, the lying loops of `skf/export26` in place of the frozen fall frame, a goal strip with A's goal light | 8002, the main tree, **the only editor** | 00:18 | 01:30 | `status/SK24-report.md` |
-| SKF27 | Track BF1, Blender: the stick's path through the get-ups (blade end 136 cm in one frame today), clean exits from the lying loops, a stick that lies still; `skf/export27` | none | 00:15 | 01:15 | `status/B-skater-skf.md`, twenty-seventh pass |
+| 1 | **Engine (GPU)**: now AR2 | the stands and clay crowd on `LR_P3_Clay`; then SK25 (export29 and 30: lying loops by rule, get-ups, hit sizes, reactive whip), B42 (effects that read), SK26 (the new sets with test triggers), QA5 (a play-through of everything on the newest main, by 07:00) | main tree, port 8002 | Fable | `status/AR2-report.md` and on |
+| 2 | **RAG**: a second engine without a GPU | probe `-nullrhi` with MCP; a powered ragdoll on copies under `Skaters/Lab` | `wt/b-vfx`, port 8000, branch `lab/ragdoll` (never pushed) | Fable | `status/RAG-report.md` |
+| 3 | **Figure** (SKF30 and on) | the attacker's hit in three sizes; the stick clear of the body; then the loops seen moving | `skater-lab/skf` | Fable | `status/B-skater-skf.md` |
+| 4 | **Set: dive block, slide tackle** | two evolutions per hand-back | `sets-lab/dive` | Opus | `status/SET-dive-report.md` |
+| 5 | **Set: dash / speed boost** | two evolutions per hand-back | `sets-lab/dash` | Opus | `status/SET-dash-report.md` |
+| 6 | **Set: toy weapons** (giant stick, mallet, puck cannon) | props and takes | `sets-lab/weapons` | Opus | `status/SET-weapons-report.md` |
+| 7 | **Arena** (AR3) | a crowd that can cheer, the barn's roof, bunting | `arena-lab` | Fable | `status/AR3-report.md` |
+| 8 | **Trailer** | three scenarios, a shot list, a storyboard page, a timed rough read | `trailer-lab` | Opus | `status/TRAILER-report.md` |
+| 9 | **Eye** | the twenty most visible faults, the cost ledger, the operator's morning page | `review/night` | Opus | `status/EYE-report.md` |
 
-## Waiting for the operator's ears or eyes (pages on device B)
+## Waiting for the operator at 10:00 (pages on device B)
 
 | Page | What to decide |
 |---|---|
-| **`C:/Users/kazda/jam/review/index.html`** | the visual review, newest rows first: tonight's contact outcomes, the banner with the K fixed, the stands and crowd (rebuilt by `node C:/Users/kazda/jam/review/build.mjs`) |
-| `C:/Users/kazda/jam/audio-lab/verbs/pick.html` | the ability, deke, stumble, stop and board-fall sounds (nobody has heard them) |
-| `C:/Users/kazda/jam/audio-lab/commentary-rough/listen.html` | the 73 new commentator lines (nobody has heard them; 15 run over 3 s) |
-| `C:/Users/kazda/jam/audio-lab/tackle/pick.html` | the tackle sounds and the rough crowd takes (chant, groan, goal reaction: not imported until heard) |
-| `C:/Users/kazda/jam/arena-lab/out/renders/ar1-gamecam-crowd.png` | how full the stands should be (half full is the default) |
+| **`C:/Users/kazda/jam/review/night/index.html`** (built by the Eye lane through the night) | what changed overnight, every open decision with its two stills, what to try, what is unproven |
+| `C:/Users/kazda/jam/review/index.html` | the full visual review, newest rows first |
+| `C:/Users/kazda/jam/audio-lab/verbs/engine/listen.html`, `verbs/pick.html`, `commentary-rough/listen.html`, `tackle/pick.html` | the sounds and lines nobody has heard |
+| open choices so far | how a downed player gets up (slow rise or late spring); how loud a goal is (the light on the ice or not); how full and bright the stands are; the stop's lean-in; the roar's share of knockdowns |
 
-## Queued (needs the editor, in this order)
+## Queued for the GPU lane, in order
 
-| Lane | What | Waits for |
-|---|---|---|
-| B41 | A-to-B-0024 asks 2, 3, 4: a red lamp instance whose glow survives the ramp and a plain off-white instance for the net's cords; the night snow banks notched where they cross device A's benches, boxes and table, a low fill outside the boards on night; a goal on both tiers with A's lamp, light and net shake beside `NS_goal` / `MS_goal` | the editor |
-| AU12 | The stumble's sound on `Variant` 4 and `MS_check`'s hit sizes on device A's new Strength (closing speed over the skater's speed); `MS_ability` heard with the real kind | the editor |
-| AR2 | AR1's stands and crowd into `JamAssets/Arena`, placed by `LR_P3_Clay` clear of device A's benches, boxes and table, front row empty, half full, lit; readability re-measured | the editor |
-| B42 | Effects that read at game size: the stop's spray as a fan sized by the start speed, the abilities with the kind and direction the bus now sends, chips as short streaks | the editor |
-| BS1 | The four jobs moved from A (A-to-B-0022): the clean-machine test of a package, the video with sound, joined play A to B, B's half of the dev log | the operator (the zip: B cannot package; both ends of the match; his word on the transcripts) |
+SK25 (figure) · B42 (effects) · SK26 (new sets) · the look's next (the goal moment after device A's change, the night fill on other rinks) · QA5 (play-through, by 07:00) · fixes from QA5 and the Eye's list · the four jobs of A-to-B-0022 stay with the operator (the package's zip, the video, a joined match, the transcripts).
 
 ## Done today (newest first; every one has a report under `status/`)
 
+AU12 (01:36): the stumble's sound on `Variant` 4, the big hit and the roar at Strength 0.75 (`status/AU12-report.md`) ·
+SKF27 to SKF29 (00:51 to 01:38, Blender): the stick's path through 29 get-ups, lying loops with two readable moves and a start rule, the stick clear of the legs in the back get-ups (`skf/export29`) ·
+B41 (01:21, cook-only PASS): `MI_Trim_Lamp`, `MI_Toon_NetCord`, the night banks and fills, the goal moment measured (`status/B41-report.md`) ·
+SK24 (00:46, cook-only PASS): device A's callers counted, the stop gated under the level, the lying loops (`status/SK24-report.md`) ·
 B40 (00:11, build and cook-only PASS): `NS_brake` on both figures' stop, `NS_ability` by kind, `NS_deke`, the cross-check mark for 10 to 12 frames; all small at game size (`status/B40-report.md`) ·
 SKF26 (00:11, Blender): eight lying loops, the late get-ups from both feet (`skf/export26`, 134 takes) ·
 SK23 (23:42, cook-only PASS): three fall sizes, snap and wall get-ups, `PlayStumble` and `SetBraking` declared by name, the board fall's mesh at the wall, the figures crisp at the window's resolution (`status/SK23-report.md`) ·

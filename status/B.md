@@ -919,3 +919,35 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - **The lying loops are in** (`skf/export26`): a downed figure breathes, rolls its head and shifts a limb in place of holding the fall's last frame: 1 frame with
   no joint moving in a 150-frame knockdown (was 88 to 103), cross-faded 5 frames into the get-up, the get-up still ending on the release.
 - Not done: the goal strip with your goal light (the look lane B41 takes it, starting now); the late get-ups stay behind a test switch until the operator chooses.
+
+## H43.4 (01:22, 14 Nov) FOR THE DIRECTOR: A-to-B-0024 asks 2, 3, 4 done (lane B41): the lamp and cord instances, the night banks and fill, the goal moment
+- **Bind** slot `lamp` to `/JamAssets/Look/MI_Trim_Lamp.MI_Trim_Lamp` (`Emissive`: off 0.5 or under, lit 3, flashing 8 to 12, a peak of 9 to 12 keeps it red)
+  and slot `net` to `/JamAssets/Look/MI_Toon_NetCord.MI_Toon_NetCord`.
+- **The goal's point light turns the ice pink on both tiers** (clay: R +30 to +36 near the net for 108 frames; night: a hard-edged patch 8 m wide). Tested numbers
+  that keep it off the ice: radius 350 on all three lamp lights, the scored end's light at `jam.rink.react.loud 0`'s place, peak 800 cd on clay and 320 cd on
+  night. Details and stills under the handoff's answer.
+- The night rig's banks leave your pieces clear on three rink sizes; three shadowless fills light the pieces above the boards (ice +0.01 %).
+- Blender: `skf/export28` (the stick's path through 29 get-ups; lying loops with two readable moves and a start-frame rule); `export29` (the stick clear of the
+  legs) is being built; the engine takes the newest after the sound lane.
+- Next on B's editor: AU12 (the stumble's sound on `Variant` 4, hit sizes on your new Strength), then the animation import, the stands, stronger effects.
+
+## H43.9 (01:42, 14 Nov) FOR THE DIRECTOR: the operator's night plan for B: nine lanes until 10:00; handoff B-to-A-0040; AU12 landed
+- **The operator (01:30) asked B to run parallel evolution loops until 10:00** and chose: B stays on its side (no game code), three new sets (dive block and
+  slide tackle, dash, toy weapons for modes), nine lanes, a powered-ragdoll experiment on a side copy. **`handoff/B-to-A-0040.md`** lists the sets and the
+  call each will ask of you: nothing before your 09:00 cut; B's last push meant for that package is by 07:30.
+- **AU12 on `dev-b`** (`status/AU12-report.md`): the stumble's sound on `Variant` 4 (5 of 6 stumbles would have played a body hit before); the big hit and
+  the roar from Strength 0.75 on your new scale (3 of 10 knockdowns; the widest gap in the sample lies there); the four ability kinds give four sounds through
+  the binder. **No `ability` or `deke` event fired in 366 s of B's play, including 62 s of the arsenal mode**: B's sounds and effects for them stay unproven
+  in a match until one does. A run of yours that prints landed checks by `Outcome` and Strength over 1,000 s would give the thresholds a real sample.
+- `dev-b` = `main` 322e6c5 + B, builds. Running: the stands on the clay rig (the one GPU lane), a second engine without a GPU as a probe, five Blender lanes
+  on the CPU, the trailer's scenarios, a critic.
+
+## H44.3 (02:02, 14 Nov) FOR THE DIRECTOR: handoff B-to-A-0041 (a critic's twenty faults: eleven are yours, two of them hide the tackle); the video's scenarios
+- **`handoff/B-to-A-0041.md`**: the selection ring and the caption are drawn over a downed human; an opponent stands inside a downed body for 24 frames; the
+  camera in corners; 183 MB of unused figures in the cook (your word needed before B touches them); five timings for a quiet GPU.
+- **The video**: B's trailer lane wrote three 45-second scenarios with a shot list, a storyboard and a timed rough read (`status/TRAILER-report.md`; the lab is
+  `C:/Users/kazda/jam/trailer-lab/` on device B). Its pick opens on the slate menu and the cut cards, types "make it faster", shows a full-speed hit, the
+  fall and get-up, the stop-and-go, a Director's Call that turns the ice to glass, a goal, the banner: all from one recording of the H27 Shipping package with
+  the in-game commentator off. **Every line of copy in it is a proposal to you**; three of its seven lines use "cut", which your voice guide keeps off the ice:
+  yours and the operator's to decide at 10:00. Two findings for whoever films: ffmpeg on B cannot record the game's sound (Xbox Game Bar can); a package has
+  only the game camera: a start on a named preset cut from the command line in Shipping would save retakes of the hit shot.

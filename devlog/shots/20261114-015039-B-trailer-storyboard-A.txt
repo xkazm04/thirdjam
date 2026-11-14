@@ -1,0 +1,1 @@
+﻿Lane TRAILER: storyboard sheet of trailer scenario A (45.0 s, 11 shots), each tile the nearest existing still as a PLACEHOLDER with the shot's timecode and narration line. Not footage: composed with ffmpeg from devlog/docs stills; no engine, no Blender.
