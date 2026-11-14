@@ -4424,3 +4424,135 @@ The hips' offset from the root along the drive, cm, per frame (p2_cel; the left 
 1. **The hit filmed, in the lab, with both pawns moving.** A short film per same-size pair at 60 fps with the roots keyed as the sim moves them (the attacker closing at its size's speed and keeping a named share of it, the victim's pawn knocked away), full reach beside half reach, body check and cross-check, on the CPU. It answers what this pass and the last could not: whether the body leaving and rejoining its pawn reads. Proving numbers: frames in which the attacker's hips move backwards over the ice, per take and pawn speed (today only the table's bound: 3.6 to 7.4 m/s for the body checks); films made, 0 today, 8 or more.
 2. **The last pair and the last row.** A board fall whose chest the open-ice heavy can meet without the wall plane giving (or the engine told to use the board take within a named distance of the boards), and the aim grid re-fitted around `Aim_N46_R100` so the shaft comes out of clay's trunk and the grid's blend check still passes. Proving numbers: body-check pairs within 10 cm, 15 of 15 (today 14); rows on the known list, 0 (today 1).
 3. **The victims after the first two frames.** Frames 3 to 6 of the changed falls looked at and shaped (the fold now comes one frame later and faster), the side bump leaving along the drive, the remaining victim takes (`_B`, `Trip`, `Fall_Forward`, three board falls) brought to the common place where a wall allows. Proving numbers: largest fall of the chest in one frame in the first six frames, per take (today up to 34 cm in `Knockdown_Left`), under 25; the side bump's leave within 10 deg (today 32); victim takes on the common place, 20 of 30 today.
+
+## Thirty-third pass: the heavy check as its own picture; a get-up that rises; the reach with the roots travelling; the loop's flutter (SKF33, 04:10 to 04:38)
+
+Done: the lead's addition (the loop's flutter) and all three evolutions, with these short of their bars. **The heavy's mask bar (heavy-to-middle at least twice middle-to-light) is met in 12 of 18 readings**: the left-shoulder heavy at all three frames in both styles; the right-shoulder heavy at contact and (cel) +4 but 1.81 to 1.94 at +8; the heavy cross-check at contact and +4 but 1.38 / 1.47 at +8. **The get-up's weight onto a hand and a knee first is not done**: the rise is re-timed (largest one-frame rise of the head 16.2 cm down to 5.3), not re-posed. **The reach**: half reach does not meet the chest (28 to 33 cm short) and full reach meets both bars only for the middle and the heavy at their bands' middle speeds and above; the light and the light and middle cross-check cannot come back behind a pawn that has almost stopped. `C:\Users\kazda\jam\skater-lab\skf\export33\` is complete: 149 takes, 15 changed against export32, each named; the gate green with the one known row. One Blender process of this lane at a time, CPU renders only, no git, no editor.
+
+### For the engine lane, in one table
+
+| What | Take names | Import? | What to know |
+|---|---|---|---|
+| The lying loop's flutter, mended | `Lie_Loop_Front` | **yes, by name**: it replaces the engine-side smoothing | the left arm no longer alternates (frames on which the left hand turns back by more than 1 cm: 0, both styles); the move, the clean frames, the cut-frame table and the wrap as they were |
+| The back get-up that rises | `GetUp`, `GetUp_Front`, `GetUp_Side_Left`, `GetUp_Side_Right` | yes, by name | the same 36 frames, first and last frames and poses; only the timing changed: from lying to the knee in 10 frames instead of 5 (`GetUp`) |
+| The heavy check, a new picture | `Check_Heavy`, `Check_Deliver_Right_Heavy`, `Check_Deliver_Left_Heavy`; `Check_Deliver_Right_Heavy_Half` | **only after the film**, with the other body checks | contact frame 3 and 24 frames as before; the bottom hand is OFF the stick from frame 1 to 18; both skates are off the ice in frames 3 to 5 (a hop) |
+| The heavy cross-check, a new picture | `Lift_Heavy` | only after the film | contact frame 2 and 24 frames as before; both skates off the ice in frames 2 to 4 |
+| The middle check's way back, evened | `Check`, `Check_Deliver_Right`, `Check_Deliver_Left`, `Check_Deliver_Right_Half` | only after the film | nothing but keys 12 and 19 moved |
+| The board take's hand | `Check_Deliver_Right_Heavy_Board` | with the other new takes | the bottom hand's ping-pong in frames 3 to 9 taken out |
+| The reach I would film first | see section 3 | | middle and heavy: full reach; light: half reach or export30's light; cross-check: light and middle without reach (export31's `Lift_Light`, `Lift`), heavy with it |
+
+### 0. The lying loop's flutter (the lead's addition, done first)
+
+The engine lane was right and its numbers are mine exactly: in `Lie_Loop_Front` the left hand turned back on consecutive frames on **11 frames on p2_cel (frames 21 to 33, up to 6.0 cm) and 9 on p3_clay (23 to 31, up to 3.0 cm)**; the forearm's elbow end did the same by up to 12.3 cm. It is not a pop-pass artefact (loops do not go through the pop pass): the left arm's solve alternated between two elbow places while the hand dragged across the plateau of the first move. A new per-take switch in the bake (`calm`: named bones, a frame span, passes of (previous + 2 x own + next) / 4 on the rotations) takes a strict alternation out and leaves the slow move.
+
+- **Frames in which the left hand moves more than 1 cm against the trend of its neighbours: 0 on both styles** (before: 11 and 9). The same for the forearm.
+- **The same scan over all eight loops: 0 of 8 with any joint alternating**, both styles, before and after the fix except `Lie_Loop_Front`.
+- **Over every take** (`jit33.js` on the measured takes; the gate now measures all 149): at the lead's wording (a joint alternating on three consecutive frames by more than 1 cm) 34 of the 81 takes I had measured on p2_cel and 35 on p3_clay have one, and almost all of them are real: a limb changing direction twice in a fall, a bounce, a hit. So the gate FAILS at 5 such frames in a row (a ping-pong) and shows shorter runs with the joint. What it found at 5: **one more, `Check_Deliver_Right_Heavy_Board`: the bottom hand back and forth on 7 frames from frame 3, up to 20.7 cm on cel** (a real one, in a take of the thirty-first pass): calmed the same way. What it shows under 5 and I did not touch: `Fall` and `Fall_B` (the right forearm, runs of 4, up to 13.8 and 14.6 cm, frames 5 to 8 and 3 to 6), `Knockdown_Right_Heavy`, `Knockdown_Right`, `Knockdown_Back_B` (a calf, runs of 3). Those two forearms are the ones I would look at next.
+- **In the gate**: a `Jitter` column in `GATE.md` and a `jitter` check (a joint turning back by more than 1 cm on 5 frames in a row or more; 13 joints tracked). It costs nothing to speak of (positions that were already evaluated). `GATE-README.md` says it. The set lanes' next gate run will show it for their takes; I have not run it on them.
+
+### 1. The heavy check as its own picture
+
+What the film showed is what the masks say: on export32 the heavy and the middle were the same picture with a longer hold. New in `Check_Heavy` / `Check_Deliver_Right_Heavy` / `Check_Deliver_Left_Heavy` (and `_Half` in step), with the contact frame (3), the shoulder's place at contact and the length (24) as they were:
+
+- **The stick whips round behind**: drawn back from the load on (frame 1), behind the body in the top hand at contact, blade up; it comes round to the front again by 19.
+- **The free arm is flung wide**: the bottom hand leaves the stick at frame 1 and is out and up from contact to the stagger.
+- **The body is thrown off its skates**: the trunk nearly level at contact, both legs trailing, **both skates off the ice in frames 3 to 5** (the lowest skate point 12 to 14 cm up at contact). That is a deliberate hop. The lab's ground rule is "nothing under the ice"; nothing in it or in the gate asks for a skate on the ice, and the falls leave it too. Said here because it is the first attacker take that does.
+- **A spin of the trunk in the follow-through**: on through the contact to 95 deg at frame 7 (the landing, low), then **a stagger**: up on one skate with the other knee and the free arm high (11), back the other way (15), two hands on the stick at 19, the stance at 24.
+- The hips' way back to the root is in even steps (at most 5.5 cm a frame; it was 9.6).
+
+`Lift_Heavy`, the same idea with two hands on the stick: a dive through the shove (the trunk level, both legs trailing off the ice in frames 2 to 4), the stick slanted at contact, not level, and driven up over the head (4), a low landing with a twist (6), a stagger with the stick held high (10, 13). Contact frame 2, the shaft's place at contact and 24 frames as they were.
+
+**Measured as asked** (`mask33.py`): the figure's mask from the game camera (behind, 35 deg down, 110 px per 1.70 m), light, middle and heavy at the same frames; the difference of two masks is the pixels that are figure in one and not in the other. Two readings: "shape" with the two masks laid on each other at the hips (the picture alone), "with place" as they stand (the travel counts too, and by +8 the light has gone home, which makes the middle-to-light number large for a reason that is not the picture). The bar: heavy-to-middle at least twice middle-to-light.
+
+| Family | Frame | Middle to light, px (p2_cel / p3_clay) | Heavy to middle, px | Ratio, shape (bar 2) | Ratio with place |
+|---|---|---|---|---|---|
+| Body check, right shoulder | contact (3) | 951 / 847 | 2110 / 1840 | **2.22 / 2.17** | 1.90 / 1.76 |
+| Body check, right shoulder | +4 (7) | 1236 / 1156 | 2583 / 2225 | **2.09 / 1.92** | 2.05 / 1.87 |
+| Body check, right shoulder | +8 (11) | 1211 / 1149 | 2355 / 2077 | **1.94 / 1.81** | 1.04 / 0.91 |
+| Body check, left shoulder | contact (3) | 874 / 752 | 1923 / 1662 | **2.20 / 2.21** | 1.56 / 1.43 |
+| Body check, left shoulder | +4 (7) | 1173 / 1044 | 2878 / 2440 | **2.45 / 2.34** | 2.57 / 2.16 |
+| Body check, left shoulder | +8 (11) | 1095 / 998 | 2527 / 2248 | **2.31 / 2.25** | 1.22 / 1.10 |
+| Cross-check | contact (2) | 1023 / 880 | 2014 / 1840 | **1.97 / 2.09** | 2.49 / 2.50 |
+| Cross-check | +4 (6) | 973 / 931 | 2232 / 2001 | **2.29 / 2.15** | 2.40 / 2.36 |
+| Cross-check | +8 (10) | 1207 / 1139 | 1661 / 1673 | **1.38 / 1.47** | 0.86 / 0.83 |
+
+**12 of the 18 shape readings are at or over the bar.** Met at all three frames: the left-shoulder heavy, both styles. Short: the right-shoulder heavy at +8 (1.94 / 1.81) and at +4 on clay (1.92); the heavy cross-check at contact on cel (1.97) and at +8 (1.38 / 1.47: at frame 10 its stagger is still too near the middle's way back). The left and right heavy are mirrors; they read differently because the camera sees the stick side of one and the free-arm side of the other. With place the bar is met at +4 only (and at contact for the cross-check): at +8 the light has gone home, so middle-to-light is travel there, not picture. In `skf33-heavy-masks` the heavy is another picture at every one of the three frames by eye (a spread figure with the stick out behind, a low ball, a figure up on one skate with the stick high); the number says the stagger at +8 needs one more round, and I did not have the time for it.
+
+Kept: shoulder to chest at contact with the new contact pose 5.0 / 6.9 cm (heavy on a heavy fall); the spin takes the shoulder 30 deg off the line through the contact (it was 0); the cross-check's shaft to the chest's skin 3.2 cm on cel and **7.0 on clay (over the 5 of the last pass: the slanted stick sits 3 cm low and 5.5 in on clay)**; pop limits 0 of 145 played takes over; the gate green.
+
+### 2. A get-up that rises, not jumps
+
+The film's jump is in the numbers: in `GetUp` the head rose **16.2 cm in one frame** (frame 3) and went from 22 to 73 cm up in frames 0 to 5. The four 36-frame get-ups are re-timed, not re-posed: a per-take time warp in the bake (`warp33.json`, made by `warp33.js` from export32's measured hips and head) spreads the rise at the start under a limit (5 cm a frame for `GetUp`'s head, 6.5 for the others) and lets the frames after it pay evenly. Every pose and every path is the take's own, so the stick's path is the same line; first and last frames are untouched (the last is settled on the stance as in the thirty-second pass, because the tighter later half left 17 deg of roll behind).
+
+| Take | Largest one-frame rise of the hips cm: export32 | export33 | of the head: export32 | export33 | From lying to the hips over half height, frames: export32 | export33 | Blade end's largest one-frame move cm, export33 |
+|---|---|---|---|---|---|---|---|
+| GetUp | 4.4 (p2_cel) | 4.9 / 3.0 | 16.2 (p2_cel) | **5.3 / 5.8** | 11 (p2_cel) | 15 / 14 | 18.7 / 17.9 |
+| GetUp_Front | 4.4 (p2_cel) | 3.5 / 4.3 | 8.5 (p2_cel) | **6.4 / 7.1** | 9 (p2_cel) | 10 / 5 | 22.5 / 21.3 |
+| GetUp_Side_Left | 3.4 (p2_cel) | 3.4 / 3.1 | 8.2 (p2_cel) | **6.5 / 7.3** | 8 (p2_cel) | 8 / 6 | 17.1 / 15.7 |
+| GetUp_Side_Right | 3.4 (p2_cel) | 3.4 / 3.1 | 8.2 (p2_cel) | **6.5 / 7.3** | 8 (p2_cel) | 8 / 6 | 13.8 / 13.4 |
+
+- **Largest one-frame rise of the hips and of the head: under 8 cm in all four, both styles** (bar 8).
+- **From lying to the knee over ten frames**: `GetUp`'s head is 22, 27, 32, 37, 42, 47, 52, 57, 61, 67, 72 cm up over frames 0 to 10 (export32: 22, 29, 44, 60, 70, 73 over frames 0 to 5).
+- **The 40 cm line**: kept (table). **The shaft's clearance**: the gate's trunk check passes all four; the leg frames were not measured again (the poses are the same, their frame counts may differ by the re-timing).
+- **Not done: the weight visibly going onto a hand and a knee first.** A re-timing shows the take's own in-between poses longer; it does not add a pose. In `skf33-getup` the body now comes up through a sit with the hand on the ice over ten frames, but there is no frame where the knee is under it before the trunk rises. That needs one new key per take.
+- The later half is tighter, as allowed: `GetUp`'s largest step is 1.65 of its old frames.
+
+### 3. The reach with the roots travelling
+
+**What I read** (`Game/Source/JamCore/Private/JamSim.cpp`: `ResolveContact`, `CollideSkaters`; `JamCartridge.h`; `docs/experiments/CONTACT.md`; CONTACT-4 and CONTACT-5 are about the hold and the reach of the press and do not change this):
+
+- A landed body check: the attacker gives half of `lunge_mps` (1.5) to the victim, then the collision's exchange with a bounce of 0.2 (`SkaterSkaterBounce`), and the two are set two radii (80 cm) apart on that frame. With equal masses and a standing victim, closing speed v: **the attacker keeps 0.4 v + 0.15 m/s, the victim leaves at 0.6 v - 0.15**.
+- A cross-check: no body contact; the attacker gives half of (v + `thrust_mps` 3.0): **the attacker keeps 0.5 v - 1.5 m/s (nothing under 3 m/s), the victim leaves at 0.5 v + 1.5**.
+- Strength = v / `skater.speed` (11 m/s), so with my split by Strength the light is under 3.85 m/s, the middle 3.85 to 7.7, the heavy above.
+
+**What I assumed**: the victim standing; equal masses; no friction and no hit-stop hold in the frames after contact; the take's frame 0 three frames before contact (two for the cross-check); my Strength split.
+
+| Size and reach | Take | Hips ahead of the root at contact / at the farthest, cm | Shoulder to chest at the contact frame, roots 80 cm apart, cm (p2_cel / p3_clay) | Closing speed m/s: the band's low end, a middle value, its high end | The attacker's pawn after the hit, cm a frame | Frames in which the hips move backwards over the ice (largest step back cm; all of it cm), p2_cel |
+|---|---|---|---|---|---|---|
+| light, full reach | Check_Deliver_Right_Light | 58 / 60 | 4.3 / 6.1 | 2, 3, 3.85 | 1.6, 2.3, 2.8 | 8 (10.8; 47), 8 (10.1; 42), 8 (9.6; 37) |
+| light, half reach | Check_Deliver_Right_Light_Half | 29 / 31 | 32.5 / 33.3 | 2, 3, 3.85 | 1.6, 2.3, 2.8 | 8 (4.9; 18), 6 (4.3; 14), 6 (3.7; 10) |
+| middle, full reach | Check_Deliver_Right | 58 / 64 | 2.8 / 4.3 | 3.85, 6, 7.7 | 2.8, 4.3, 5.4 | 18 (1.5; 7), 1 (0.1; 0), 0 |
+| middle, half reach | Check_Deliver_Right_Half | 29 / 34 | 29.5 / 29.7 | 3.85, 6, 7.7 | 2.8, 4.3, 5.4 | 0, 0, 0 |
+| heavy, full reach | Check_Deliver_Right_Heavy | 53 / 69 | 5.0 / 6.9 | 7.7, 9, 11 | 5.4, 6.3, 7.6 | 4 (0.1; 1), 0, 0 |
+| heavy, half reach | Check_Deliver_Right_Heavy_Half | 26 / 34 | 27.8 / 28.8 | 7.7, 9, 11 | 5.4, 6.3, 7.6 | 0, 0, 0 |
+| cross-check light, full reach | Lift_Light | 64 / 66 | the shaft: see the pair table | 2, 3, 3.85 | 0.0, 0.0, 0.7 | 8 (15.1; 66), 8 (15.1; 66), 8 (14.4; 60) |
+| cross-check middle, full reach | Lift | 56 / 61 | the shaft: see the pair table | 3.85, 6, 7.7 | 0.7, 2.5, 3.9 | 14 (7.6; 50), 10 (5.8; 26), 5 (4.4; 15) |
+| cross-check heavy, full reach | Lift_Heavy | 47 / 61 | the shaft: see the pair table | 7.7, 9, 11 | 3.9, 5.0, 6.7 | 10 (0.7; 2), 0, 0 |
+
+- **The shoulder at the contact frame**: the sim sets the roots 80 cm apart on the contact frame whatever the speed, so travel changes nothing there: full reach meets the chest (within 10 cm, as the pair tables say), **half reach does not** (28 to 33 cm between the joints in every size). Half reach never catches up afterwards either: the victim leaves faster than the attacker follows.
+- **So half reach is not the default.** The choice per size, by the bar of no frame backwards:
+  - **Middle: full reach.** With the way back evened in this pass it has 1 backward frame of 0.1 cm at 6 m/s closing and none at 7.7; at the band's low end (3.85 m/s) 18 frames with at most 1.5 cm back in a frame, 7 cm in all.
+  - **Heavy: full reach.** 0 backward frames at 9 and 11 m/s; at 7.7 m/s 4 frames of 0.1 cm (1 cm in all).
+  - **Light: neither meets both bars.** Full reach meets the chest and slides back on 8 frames, up to 10 cm in a frame, 37 to 47 cm in all; half reach misses the chest by 33 cm and still slides on 6 to 8 frames, up to 4.9 cm in a frame, 10 to 18 cm in all. A 13-frame take cannot go 58 cm out and come back behind a pawn that keeps 1.35 m/s. I would use half reach for the light (the shove reads as a shove and the slide is small) or export30's light, and not the full one.
+  - **Cross-check: full reach only for the heavy.** After a light or middle cross-check the attacker's pawn keeps 0 to 2.35 m/s, so a body that went 56 to 66 cm out has to come all the way back over the ice (light: 8 frames, up to 15 cm in a frame, 60 to 66 cm in all; middle: 5 to 14 frames, 15 to 50 cm in all). For those two the reach should not be used: export31's `Lift_Light` and `Lift` (no reach, the stick a stick's length short) are the honest ones until the sim lets the attacker follow. `Lift_Heavy` at 9 m/s: 0 backward frames (at 7.7 m/s 10 frames of at most 0.7 cm, 2 cm in all).
+- `skf33-travel-cel` / `-clay` show the eight cases with both roots travelling at the middle speeds of the table.
+
+### The export
+
+`C:\Users\kazda\jam\skater-lab\skf\export33\`: `READY.txt` (written last, with its `Takes:` line), `DIFF.md` (against export32), `JOINS.md` (159 pairs), `GATE.md`. 149 takes, the same names as export32.
+
+- **15 takes of export32 differ, the same 15 in both styles and both files, each named with its reason in `DIFF.md`; no other take differs**: the four heavy checks, `Lift_Heavy`, the four middle checks, the four 36-frame get-ups, `Lie_Loop_Front`, `Check_Deliver_Right_Heavy_Board`. The clay aim holds are among the identical ones. Bones, parents, rest pose, meshes and stick files as export32; root identity keys in all takes; 60 fps.
+- **Gate: 298 take-and-style rows, 0 failing, 1 passing on the known list (the clay aim hold, as export32); 149 takes found and checked per style, the same as `READY.txt` lists; the new jitter check among the checks.****
+- Joins: 159 pairs, positions at most 0.0005 cm, rotations 0 deg, both styles. Pop limits: 0 of 145 played takes over, both styles.
+
+### Not looked at, and known gaps
+
+- **Nothing of export33 has been seen in the engine or in motion.** The heavy's new picture, the re-timed get-up and the travelling pairs are stills.
+- In `skf33-travel-cel` the half-reach rows look much like the full-reach rows at the contact frame at game size: 29 cm between the joints is about 9 cm of air between the skins, 6 px. By the 10 cm bar half reach does not meet; whether the eye minds is for the film. `skf33-travel-clay` shows the same.
+- The heavy takes were looked at from the game camera only (the masks' view), at three frames; not from the side, not the left one, not the `_Half` one, and not frame by frame through the hop and the spin. The stick behind at contact was not paired against a victim (it could pass through a second player beside the attacker).
+- `GetUp_Front` and the two side get-ups after the re-timing: numbers only. Leg frames of the shaft in the four get-ups: not measured again.
+- The travel table leaves out friction, the hit-stop's hold and a moving victim, and uses my own split of the sizes by Strength.
+- `Fall` and `Fall_B` have a right forearm that turns back on 4 frames in a row by up to 14 cm (the jitter column): seen in the number, not looked at, not mended.
+- The gate's jitter check was run on my own export only.
+- The one known row (`Aim_N46_R100` on clay) and the open-ice heavy against the board fall are as in the thirty-second pass.
+
+### Files
+
+- Lab: `build_clips.py` (the thirty-third pass block; the bake's `warp` and `calm`; this state is `build_clips_pass33.py`), `warp33.js`, `warp33.json`, `mask33.py`, `jit33.js`, `travel33.js`, `pair33.py` (two figures with the roots travelling), `pair33.js`, `tab33.js`, `it33.sh`, `sheet33.sh`. The gate: `gate_fbx.py` and `gate_md.js` with the jitter check, `GATE-README.md` updated.
+- Sheets in `devlog/shots/`: `20261114-043832-B-lab-skf33-heavy-masks.png`, `20261114-043832-B-lab-skf33-getup.png`, `20261114-043832-B-lab-skf33-travel-cel.png`, `20261114-043832-B-lab-skf33-travel-clay.png`, each with its `.txt` caption.
+
+### The next three evolutions of this track, ranked, each with its proving number
+
+1. **The heavy's last third and the get-up's missing pose.** One more round on the heavy's frames 9 to 13 (both the check and the cross-check) so the stagger is its own picture too, and one new key per 36-frame get-up with the knee under the body and a hand on the ice before the trunk rises. Proving numbers: mask readings at or over 2, 18 of 18 (today 12); in each get-up a frame with a knee joint and a hand joint under 20 cm while the head is under 60 cm (today none); the cross-check's shaft on clay back within 5 cm (today 7.0).
+2. **A light hit and a cross-check that do not need to come back.** The light body check and the light and middle cross-check re-authored so the body goes out no farther than their pawn's speed after the hit can pay for (18 to 22 cm for the light at 3 m/s), with the arm or the stick, not the hips, closing the rest. Proving numbers: frames in which the hips move backwards over the ice at the band's low, middle and high speed, 0 in all nine rows of the travel table (today 0 in 4 rows at every speed); shoulder or glove to chest at contact, said per take.
+3. **The jitter column's other finds and the two forearms.** `Fall` and `Fall_B` (runs of 4, up to 14.6 cm), then the runs of 3, looked at one by one and either calmed or said to be real. Proving number: takes with a run of 4 or more in the gate's jitter column, 0 (today 2); and the gate's fail line moved from 5 to 4.
