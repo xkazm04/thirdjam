@@ -12,6 +12,7 @@
 #include "JamDesignerSubsystem.h"
 #include "DirectorsCallController.h"
 #include "HUDFeed.h"
+#include "MenuWidget.h"
 #include "DirectorsCallWidget.generated.h"
 
 class UWidgetSwitcher;
@@ -59,7 +60,10 @@ class JAMGAME_API UJamDirectorsCallWidget : public UUserWidget
 public:
 	// Lane A144 (evolution 3): the pause card is 800 wide with 28 of padding a side; its controls table is written to that width
 	// (Jam.Menu.PauseCardFits measures every line against it).
-	static constexpr float PauseCardWidth = 800.f;
+	// Lane A195: 808 wide with 32 of padding a side (the style table's card padding): the inner width stays 744.
+	static constexpr float PauseCardWidth = 808.f;
+	static constexpr float PauseCardPad = 32.f;
+	static constexpr int32 PauseItemSize = 22;
 	static constexpr float PauseCardInnerWidth = 744.f;
 	static FString PauseControlsText();
 	static UJamDirectorsCallWidget* CreateAndAdd(APlayerController* PC, UJamDirectorsCallController* InOwner);
@@ -121,7 +125,10 @@ private:
 	TWeakObjectPtr<UJamDirectorsCallController> Owner;
 	TArray<FJamCallTunable> Tunables;
 	TArray<FRow> Rows;
-	TArray<TPair<TWeakObjectPtr<UButton>, TWeakObjectPtr<UTextBlock>>> Tinted;
+	// Lane A195: the items in the front end's look (the focus fill and bar), and the key hints under the card.
+	FJamMenuPainter Painter;
+	void RefreshHints();
+	FString HintKey;
 	TWeakObjectPtr<UWidget> PendingFocus;
 	bool bOnCall = false;
 	FString LastAnnouncement;
@@ -141,11 +148,19 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UButton> BackButton;
 	UPROPERTY(Transient) TObjectPtr<UButton> ControlsButton;   // lane A191
 	UPROPERTY(Transient) TObjectPtr<class UJamControlsWidget> ControlsScreen;   // lane A191: screen 2 of the switcher
+	UPROPERTY(Transient) TObjectPtr<class UHorizontalBox> HintBox;   // lane A195
 public:
 	// Lane A191: the CONTROLS screen (rebind every verb) as the pause card's third screen; BACK or Esc returns to the pause menu.
 	void ShowControls();
 	bool IsOnControls() const;
 	class UJamControlsWidget* GetControlsScreen() const { return ControlsScreen; }
+	// Lane A195 (tests and QA): the key hints under the card as one line, the title and buttons as shown, the painted state of a button.
+	FString GetHintLine() const { return HintKey; }
+	// The key hints' row as laid out (after a prepass), for the fit test: it stays inside PauseCardInnerWidth.
+	float GetHintRowWidth() const;
+	TArray<FString> GetPauseLabels() const;
+	UButton* GetResumeButton() const { return ResumeButton; }
+	int32 GetPaintedState(const UButton* B) const { return Painter.StateOf(B); }
 };
 
 // The overlay: period card and the Director's Call scoreboard line. Frames are simulation frames from the presentation feed.

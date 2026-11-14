@@ -776,3 +776,22 @@ arena's binding, the take shield and the fresh take switched off). Pro's dial, t
 contact lanes inside the new ladder, which is re-set once (1) and (2) are on main: targets 85 / 48 / 26, law 3 a gate.
 (12) **The clock**: packages at about 15:30 (controls, speed, camera) and 18:30 (menu, hits, boosts, the goal); at 20:00 the game freezes for the
 stabilization phase: from then only faults are fixed.
+
+## R-0065 (14 Nov, 16:00): the afternoon's rulings on the way to the 18:30 package
+
+Decided by the Director under R-0024 from the lanes' tables; the operator reads them at 20:00 and can overturn any by a word.
+(1) **The wind-up's length**: the bots' body check winds up 8 frames and the bots' cross-check 12; the human's own press keeps 4 and 4 so his button
+does not feel late (`contact.bot_check_windup_frames`, `contact.bot_cross_windup_frames`). From lane A200's table (600 paired seeds): the body
+check at 8 costs the ladder -0.3 / +5.8 / +4.0 (the game gets easier at pro and all_star: the curve's second pass buys it back), the cross-check at
+12 is free, the human's knockdowns at pro fall from 7.4 to 6.3 a match. A scripted dodge of a hit seen coming was worth nothing: the longer wind-up
+is for the eye and for the animation, not a new mechanic.
+(2) **Rebinding one verb of a shared pair** (shoot / cross-check on one button, pass / body check on the other) splits the pair: the rebound verb
+takes the new key alone, its partner keeps the old one; a swap happens only with the verb that held the new key; a move that would leave any verb
+without a key is refused with words. A saved table in which a verb the game cannot be played without is unreachable is refused whole for the defaults.
+(3) **A button held across a change of possession does nothing until it is released and pressed again**; a brace ends on taking the puck. A slow
+tap (to 0.2 s) stays a tap on both buttons. The same rule inside the sim (a held charge cleared when the carrier loses the puck) is built behind a
+key and decided from its measured rows.
+(4) **In a joined match the pause card opens without pausing the world** and says so; solo play pauses as today.
+(5) **The ladder is set twice today**: LADDER SET 1 on main (38766fc9: rookie 84 / 83, pro 47 / 49, all_star 30 / 27, regular / large rink);
+LADDER SET 2 after (1) lands. Law 3 stays a gate: where pro can only be bought back by breaking the stop at 9 m, pro stays over.
+(6) **Package H33 is cut without the hits' marks** (they were ready ten minutes after its queue started): they land behind it and ship at 18:30.

@@ -51,6 +51,15 @@ public:
 	// Lane A129 (track Q1): one machine's sim never changes alone. In a lockstep match a live cut (the Designer's, a Director's Call, jam.livecut), a cut
 	// load and a restart are refused with a line on screen; the rematch from the card is the lockstep one (both seats ask, both machines restart).
 	virtual bool RefuseSimChange(const TCHAR* What) override;
+	// Lane A204 (track N1, FAULT 4): in a lockstep match the world never pauses (the Director's ruling: the pause card opens over a match that goes on). A paused
+	// world stopped this machine's lockstep and the other machine called the connection lost 3 s later. Every pause goes through here (the pause card's
+	// UGameplayStatics::SetGamePaused, the engine's focus-loss pause): refused while bLockstep; single player and the cards after the match pause as before.
+	virtual bool AllowPausing(APlayerController* PC = nullptr) override;
+	static bool PauseAllowedOnline(bool bInLockstep) { return !bInLockstep; }
+	// Lane A204: while this machine's pause card is open its seat sends neutral input (no move, no press: the skater coasts); the lockstep keeps sending.
+	static bool LocalSeatNeutral(bool bPauseCardOpen, EJamSimPhase Phase) { return bPauseCardOpen && Phase != EJamSimPhase::Over; }
+	// Test hook (Jam.Net.PauseCardOnline): the lockstep flag as StartPlay sets it, without a lobby.
+	void SetLockstepForTest(bool bOn) { bLockstep = bOn; }
 	static bool LiveChangeRefused(bool bInLockstep, const TCHAR* What, FString& OutLine);
 	// Lane A129: the frame both seats' applied inputs ask for the rematch (JamNet::IsRematchReady) while the sim is Over.
 	static bool RematchAgreed(EJamSimPhase Phase, const FJamInput& L, const FJamInput& R) { return Phase == EJamSimPhase::Over && JamNet::IsRematchReady(L) && JamNet::IsRematchReady(R); }
@@ -114,6 +123,7 @@ private:
 	// Lane A120: frames each seat's applied input held a verb: [0] host seat, [1] guest seat; sprint, pass held, brake, spin, check, ability.
 	int32 VerbFrames[2][6] = {};
 	bool bLockstep = false;
+	bool bCardNeutral = false;   // lane A204: the pause card was open on the last local read (for the open / closed log lines)
 	bool bEnded = false;
 	bool bShotTaken = false;
 	bool bQuitRequested = false;

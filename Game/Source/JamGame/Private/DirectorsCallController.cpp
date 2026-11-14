@@ -19,7 +19,7 @@ DEFINE_LOG_CATEGORY(LogJamDirectorsCall);
 
 // QA: jam.pausemenu open|close|call|apply <key> <value>|restart|quit (R-0003 4: name grepped across Game/Source first).
 static FAutoConsoleCommandWithWorldAndArgs CmdJamPauseMenu(TEXT("jam.pausemenu"),
-	TEXT("Pause menu QA: jam.pausemenu open | close | call | apply <key> <value> | restart | quit"),
+	TEXT("Pause menu QA: jam.pausemenu open | close | call|rule | controls | apply <key> <value> | restart | quit"),
 	FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
 	{
 		UJamDirectorsCallController* C = World ? World->GetSubsystem<UJamDirectorsCallController>() : nullptr;
@@ -27,7 +27,8 @@ static FAutoConsoleCommandWithWorldAndArgs CmdJamPauseMenu(TEXT("jam.pausemenu")
 		const FString A = Args[0].ToLower();
 		if (A == TEXT("open")) C->Pause();
 		else if (A == TEXT("close")) C->Resume();
-		else if (A == TEXT("call")) { C->Pause(); if (C->GetMenu()) C->GetMenu()->ShowCall(); }
+		else if (A == TEXT("call") || A == TEXT("rule")) { C->Pause(); if (C->GetMenu()) C->GetMenu()->ShowCall(); }   // lane A195: "rule", the item's name now (CHANGE A RULE)
+		else if (A == TEXT("controls")) { C->Pause(); if (C->GetMenu()) C->GetMenu()->ShowControls(); }   // lane A195: the pause card's CONTROLS
 		else if (A == TEXT("apply") && Args.Num() > 2) { C->Pause(); if (C->GetMenu()) { C->GetMenu()->ShowCall(); C->GetMenu()->ApplyValue(FName(*Args[1]), FCString::Atod(*Args[2])); } }
 		else if (A == TEXT("restart")) C->RestartMatch();
 		else if (A == TEXT("quit")) C->QuitToMenu();
@@ -221,8 +222,13 @@ void UJamDirectorsCallController::Pause()
 	if (!bActive) return;
 	EnsureWidgets();
 	if (!Menu) return;
-	UGameplayStatics::SetGamePaused(GetWorld(), true);
+	// Lane A204 (track N1, FAULT 4): a joined match refuses the world pause (ALobbyGameMode::AllowPausing): the card opens over a match that goes on, says so
+	// in one line, and this seat sends neutral input while it is open. Single player pauses as before.
+	const bool bWorldPaused = UGameplayStatics::SetGamePaused(GetWorld(), true);
+	AHokejGameMode* GM = GetGameMode();
+	const bool bGoesOn = !bWorldPaused && GM && !GM->AllowPausing(GetPC());
 	Menu->Open();
+	if (bGoesOn && Overlay) Overlay->ShowAnnouncement(TEXT("The match goes on"), CurrentSimFrame() + AnnouncementFrames);
 	if (APlayerController* PC = GetPC())
 	{
 		PC->bShowMouseCursor = true;
@@ -231,7 +237,7 @@ void UJamDirectorsCallController::Pause()
 		Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
 		PC->SetInputMode(Mode);
 	}
-	UE_LOG(LogJamDirectorsCall, Log, TEXT("JAMCALL paused at frame %lld"), CurrentSimFrame());
+	UE_LOG(LogJamDirectorsCall, Log, TEXT("JAMCALL paused at frame %lld world_paused=%d%s"), CurrentSimFrame(), bWorldPaused ? 1 : 0, bGoesOn ? TEXT(" (online: the match goes on)") : TEXT(""));
 }
 
 void UJamDirectorsCallController::Resume()

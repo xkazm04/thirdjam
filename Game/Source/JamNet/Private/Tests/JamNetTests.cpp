@@ -651,4 +651,50 @@ bool FJamNetRefuseMismatch::RunTest(const FString& Parameters)
 	return true;
 }
 
+// Lane A204 (track N1, FAULT 3): copied from lane A198's Bar.Net.LateFirstPacket (s3b), plus the mirror. A peer that waits for the other's first input packet
+// (its rink still loading: no packet for Wait ticks, under the unheard limit of 1,800) must play on when that packet arrives; before the fix the stall ticks
+// counted while unheard met the heard limit of 180 at once and the waiting side called the connection lost at frame 0 (seen 4 of 5 two-process starts).
+// Late=0: the guest loads late (the host waits); Late=1: the host loads late (the guest waits: the same driver on the other side).
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamNetLateFirstPacket, "Jam.Net.LateFirstPacket", JamNetTests::Flags)
+bool FJamNetLateFirstPacket::RunTest(const FString& Parameters)
+{
+	for (const int32 Late : { 0, 1 })
+	for (const int32 Wait : { 100, 170, 200, 300, 600, 1700 })
+	{
+		FJamLoopbackPair Pair(1, 0.0, 7);
+		TStrongObjectPtr<UJamLockstepDriver> Early(NewObject<UJamLockstepDriver>()), Slow(NewObject<UJamLockstepDriver>());
+		Early->Start(Late == 0 ? &Pair.A() : &Pair.B(), JamNet::InputDelay);
+		FJamInput L, R;
+		for (int32 T = 0; T < Wait; ++T) { Early->Pump(); Early->TryStep(FJamInput(), L, R); Pair.Advance(); }
+		const bool bLostWaiting = Early->IsLost();
+		Slow->Start(Late == 0 ? &Pair.B() : &Pair.A(), JamNet::InputDelay);
+		for (int32 T = 0; T < 600; ++T) { Early->Pump(); Slow->Pump(); Early->TryStep(FJamInput(), L, R); Slow->TryStep(FJamInput(), L, R); Pair.Advance(); }
+		const TCHAR* Who = Late == 0 ? TEXT("host waits for the guest") : TEXT("guest waits for the host");
+		AddInfo(FString::Printf(TEXT("JAMNET late-first-packet %s wait=%d lost_while_waiting=%d waiting_lost=%d late_lost=%d frames=%lld/%lld"), Who, Wait, bLostWaiting ? 1 : 0,
+			Early->IsLost() ? 1 : 0, Slow->IsLost() ? 1 : 0, Early->GetFrame(), Slow->GetFrame()));
+		TestFalse(FString::Printf(TEXT("%s %d ticks: not lost while waiting"), Who, Wait), bLostWaiting);
+		TestFalse(FString::Printf(TEXT("%s %d ticks: the waiting side does not lose the match"), Who, Wait), Early->IsLost());
+		TestFalse(FString::Printf(TEXT("%s %d ticks: the late side does not lose the match"), Who, Wait), Slow->IsLost());
+		TestTrue(FString::Printf(TEXT("%s %d ticks: the match runs"), Who, Wait), Early->GetFrame() > 500 && Slow->GetFrame() > 500);
+	}
+	// The limit itself still holds: heard, then silent for StallLimitTicks, is lost; never heard for ten times that, is lost.
+	{
+		FJamLoopbackPair Pair(1, 0.0, 7);
+		TStrongObjectPtr<UJamLockstepDriver> A(NewObject<UJamLockstepDriver>()), B(NewObject<UJamLockstepDriver>());
+		A->Start(&Pair.A(), JamNet::InputDelay); B->Start(&Pair.B(), JamNet::InputDelay);
+		FJamInput L, R;
+		for (int32 T = 0; T < 300; ++T) { A->Pump(); B->Pump(); A->TryStep(FJamInput(), L, R); B->TryStep(FJamInput(), L, R); Pair.Advance(); }
+		int32 Silent = 0;
+		while (!A->IsLost() && Silent < 1000) { A->Pump(); A->TryStep(FJamInput(), L, R); Pair.Advance(); ++Silent; }
+		TestTrue(FString::Printf(TEXT("a heard peer that goes silent is lost after about %d ticks (took %d)"), JamNet::StallLimitTicks, Silent), A->IsLost() && Silent <= JamNet::StallLimitTicks + JamNet::InputDelay + 2);   // the last Delay frames of input are already here
+		TStrongObjectPtr<UJamLockstepDriver> Alone(NewObject<UJamLockstepDriver>());
+		FJamLoopbackPair Empty(1, 0.0, 7);
+		Alone->Start(&Empty.A(), JamNet::InputDelay);
+		int32 T = 0;
+		for (; T < JamNet::StallLimitTicks * 10 + 10 && !Alone->IsLost(); ++T) { Alone->Pump(); Alone->TryStep(FJamInput(), L, R); Empty.Advance(); }
+		TestTrue(TEXT("a peer never heard is lost at the unheard limit"), Alone->IsLost() && T >= JamNet::StallLimitTicks * 10 - 1);
+	}
+	return true;
+}
+
 #endif

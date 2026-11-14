@@ -69,8 +69,8 @@ struct JAMGAME_API FJamSettings
 	static FString DifficultyString(EJamMenuDifficulty D);
 	static bool ParseDifficulty(const FString& S, EJamMenuDifficulty& Out);
 	static FString DifficultyLabel(EJamMenuDifficulty D);   // "ROOKIE" | "PRO" | "ALL-STAR"
-	static FString TierLabel(const FString& Tier);          // "" -> "CUT'S OWN", "l2_night" -> "NIGHT (L2)"
-	static FString BarksLabel(int32 Barks, const FString& Intensity);  // "OFF" | "CUT'S OWN" | "ON, QUIET" ...
+	static FString TierLabel(const FString& Tier);          // "" -> "EACH RINK'S OWN" (lane A195), "l2_night" -> "NIGHT (L2)"
+	static FString BarksLabel(int32 Barks, const FString& Intensity);  // "OFF" | "MODE'S OWN" | "ON, QUIET" ...
 };
 
 class UJamControlsWidget;
@@ -132,6 +132,8 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UButton> BarksButton;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> BarksText;
 	int32 VoiceStatusTick = 0;
+	// Lane A195: the buttons in the front end's item look (MenuWidget.h, FJamMenuPainter; made in BuildTree).
+	TSharedPtr<struct FJamMenuPainter> Painter;
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FJamControlsBackSignature);
@@ -204,4 +206,6 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UButton> BackButton;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> BackText;
 	UPROPERTY(Transient) TObjectPtr<UBorder> ListenVeil;
+	// Lane A195: the cells and buttons in the front end's item look (MenuWidget.h, FJamMenuPainter; made in BuildTree).
+	TSharedPtr<struct FJamMenuPainter> Painter;
 };

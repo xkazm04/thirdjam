@@ -21,6 +21,7 @@ class UJamZoneSystem;
 class UJamEffectSystem;
 class AJamPickupActor;
 class AJamBoostAura;
+class AJamHitRead;
 class UJamHudWidget;
 
 JAMGAME_API DECLARE_LOG_CATEGORY_EXTERN(LogHokej, Log, All);
@@ -219,6 +220,7 @@ private:
 	UPROPERTY(Transient) TArray<TObjectPtr<AJamPickupActor>> PickupActors;
 	// Lane A188: the equipped look, one per skater that has held an ability (AJamBoostAura, JamPickupActor.h).
 	UPROPERTY(Transient) TArray<TObjectPtr<AJamBoostAura>> BoostAuras;
+	UPROPERTY(Transient) TObjectPtr<AJamHitRead> HitRead;   // lane A196: the hits read (HitRead.h), made on the first sim step
 	TArray<FName> LastBoost;
 	// Lane A31 (B-to-A-0024 point 3): the goalie stance last sent per skater: -2 off, else the side (-1, 0, +1); SetGoalieStance goes out on a change.
 	TArray<int8> LastGoalie;

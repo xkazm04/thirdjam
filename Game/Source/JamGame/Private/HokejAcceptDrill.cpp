@@ -605,7 +605,11 @@ void AHokejGameMode::AcceptDrillObserve()
 			// held=1, from the log), the opponent went down, the closing speed at the first touch.
 			if (G.CueFrame < 0 && Gap <= 0.25) { G.CueFrame = F; G.Closing = Closing; G.MaxSpeed = H.Vel.Size(); }
 			if (O.ContactOutcome > G.HitOutcome) { G.HitOutcome = O.ContactOutcome; G.HitRatio = O.ContactRatio; }
-			if (G.DownFrame < 0 && O.IsDown()) { G.DownFrame = F; G.bKnock = true; G.KnockAt = O.KnockFrames; }
+			// Director, 14 Nov 16:35 (the H33 release, four tries): with the cross-check's wind-up the pressed shove of k=2 lands 4 frames later, so its man was still
+			// down (2 frames left) when this stage began: the row read that old knockdown and ended untouched after 10 frames. A knockdown counts only once
+			// the man has been seen on his feet in this stage (UpFrame marks it here).
+			if (G.UpFrame < 0) { if (!O.IsDown()) G.UpFrame = F; else if (InPh <= 150) return; }
+			if (G.DownFrame < 0 && G.UpFrame >= 0 && O.IsDown()) { G.DownFrame = F; G.bKnock = true; G.KnockAt = O.KnockFrames; }
 			if (!((G.DownFrame >= 0 && F - G.DownFrame >= 10) || (G.CueFrame >= 0 && F - G.CueFrame > 60) || InPh > 300)) return;
 			Verdict(TEXT("crosscheck_held"), G.bKnock && G.CueFrame >= 0,
 				FString::Printf(TEXT("touched=%d down=%d knock_frames=%d outcome=%d ratio=%.2f closing=%.2f speed=%.2f"), G.CueFrame >= 0 ? 1 : 0, G.bKnock ? 1 : 0, G.KnockAt, G.HitOutcome, G.HitRatio, G.Closing, G.MaxSpeed));

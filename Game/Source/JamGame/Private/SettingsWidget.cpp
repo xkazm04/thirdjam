@@ -9,6 +9,7 @@
 #include "Blueprint/WidgetTree.h"
 #include "GameFramework/PlayerController.h"
 #include "MenuStyle.h"
+#include "MenuWidget.h"
 #include "LookTierSwitcher.h"
 #include "SignalSystem.h"
 #include "JamDesignerSubsystem.h"
@@ -139,7 +140,7 @@ void FJamSettings::Apply() const
 FString FJamSettings::BarksLabel(int32 Barks, const FString& Intensity)
 {
 	if (Barks == 0) return TEXT("OFF");
-	const FString Base = Barks < 0 ? TEXT("CUT'S OWN") : TEXT("ON");
+	const FString Base = Barks < 0 ? TEXT("MODE'S OWN") : TEXT("ON");
 	return Intensity.IsEmpty() ? Base : Base + TEXT(", ") + Intensity.ToUpper();
 }
 
@@ -173,7 +174,7 @@ FString FJamSettings::DifficultyLabel(EJamMenuDifficulty D)
 
 FString FJamSettings::TierLabel(const FString& Tier)
 {
-	if (Tier.IsEmpty()) return TEXT("CUT'S OWN");
+	if (Tier.IsEmpty()) return TEXT("EACH RINK'S OWN");
 	if (Tier == TEXT("l1_day")) return TEXT("DAY (L1)");
 	if (Tier == TEXT("l2_night")) return TEXT("NIGHT (L2)");
 	if (Tier == TEXT("l3_neon")) return TEXT("NEON (L3)");
@@ -194,6 +195,8 @@ void UJamSettingsWidget::BuildTree()
 	if (WidgetTree->RootWidget) return;
 	UWidgetTree* T = WidgetTree;
 	Settings = FJamSettings::Load();
+	using L = FJamMenuLook;
+	Painter = MakeShared<FJamMenuPainter>();
 
 	// The panel sits on the 880 card inside 32 units of padding a side: two columns of 394 with 28 between them.
 	const float ColumnTextW = 386.f;
@@ -201,16 +204,21 @@ void UJamSettingsWidget::BuildTree()
 	Root = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("SettingsRoot"));
 	T->RootWidget = Root;
 
-	// A heading with its kit icon and a caption under it.
-	auto Heading = [&](UVerticalBox* Col, const FString& Icon, const FString& Title, const FString& Caption)
+	// Lane A195 (U2 evolution 6): the front end's look (FJamMenuLook): a heading in white caps with its caption in the dim face (the kit icons and the
+	// yellow of the slate kit are gone), the buttons in the item look. The words name modes and rinks, not cuts. What each setting does is unchanged.
+	auto Heading = [&](UVerticalBox* Col, const FString& Title, const FString& Caption)
 	{
-		UHorizontalBox* H = T->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
-		if (!Icon.IsEmpty()) AddH(H, S::Icon(T, Icon, 22.f), FMargin(0, 0, 8, 0));
-		AddH(H, S::Text(T, Title, S::Font(S::Body, FName("Bold"), S::TrackLabel), S::Yellow()), FMargin(0));
-		AddV(Col, H, FMargin(0, 10, 0, 0));
-		UTextBlock* C = S::Text(T, Caption, S::CaptionFont(), S::Muted());
+		AddV(Col, L::MakeText(T, Title, L::Font(L::Body, FName("Black"), L::TrackLabel), L::Text()), FMargin(0, L::Unit * 2.f, 0, 2));
+		UTextBlock* C = L::MakeText(T, Caption, L::Font(L::Caption + 1, FName("Regular")), L::TextDim());
 		C->SetWrapTextAt(ColumnTextW);   // lane A144: a fixed wrap width, so the screen's measure does not wait for a layout pass
-		AddV(Col, C, FMargin(0, 0, 0, 4));
+		AddV(Col, C, FMargin(0, 0, 0, L::Unit));
+	};
+	auto Item = [&](const TCHAR* Label, UTextBlock*& OutText) -> UButton*
+	{
+		UWidget* Bar = nullptr;
+		UButton* B = L::MakeItem(T, Label, L::ItemSmall, OutText, Bar);
+		Painter->Add(B, OutText, Bar);
+		return B;
 	};
 
 	UHorizontalBox* Columns = T->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
@@ -221,80 +229,84 @@ void UJamSettingsWidget::BuildTree()
 	AddV(Root, Columns, FMargin(0));
 	UTextBlock* Tmp = nullptr;
 
-	// Left column: the API key, the AI difficulty, the look tier.
-	Heading(Left, TEXT("cut-directors"), TEXT("API KEY"), TEXT("Typed here, kept on this machine only; the Designer directs live cuts with it."));
+	// Left column: the AI difficulty, the look, the API key.
+	Heading(Left, TEXT("AI LEVEL"), TEXT("For PLAY NOW. The season and the modes set their own."));
+	DifficultyButton = Item(TEXT(""), Tmp);
+	DifficultyText = Tmp;
+	DifficultyButton->OnClicked.AddDynamic(this, &UJamSettingsWidget::OnDifficultyClicked);
+	AddV(Left, DifficultyButton, FMargin(0), HAlign_Left);
+
+	Heading(Left, TEXT("LOOK"), TEXT("Each rink's own look, or one look for every rink."));
+	TierButton = Item(TEXT(""), Tmp);
+	TierText = Tmp;
+	TierButton->OnClicked.AddDynamic(this, &UJamSettingsWidget::OnTierClicked);
+	AddV(Left, TierButton, FMargin(0), HAlign_Left);
+
+	Heading(Left, TEXT("API KEY"), TEXT("Typed here, kept on this machine only: MAKE YOUR OWN writes new games live with it."));
 	UHorizontalBox* KeyRow = T->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
 	KeyBox = T->ConstructWidget<UEditableTextBox>(UEditableTextBox::StaticClass(), TEXT("KeyBox"));
 	KeyBox->SetIsPassword(true);
 	KeyBox->SetHintText(FText::FromString(TEXT("paste key, Enter")));
 	KeyBox->SetMinDesiredWidth(220.f);
-	KeyBox->WidgetStyle.SetFont(S::BodyFont());
-	KeyBox->WidgetStyle.SetPadding(FMargin(10, 7));
-	// Lane A144: chalk on dark (the default light box hid its grey hint).
+	KeyBox->WidgetStyle.SetFont(L::Font(L::Body, FName("Regular")));
+	KeyBox->WidgetStyle.SetPadding(FMargin(12, 8));
+	// Lane A144: light type on dark (the default light box hid its grey hint); lane A195: the panel's fill and edge.
 	KeyBox->WidgetStyle.SetBackgroundColor(FLinearColor(0.16f, 0.17f, 0.20f, 1.f));
-	KeyBox->WidgetStyle.SetForegroundColor(S::Chalk());
-	KeyBox->WidgetStyle.SetFocusedForegroundColor(S::Chalk());
+	KeyBox->WidgetStyle.SetForegroundColor(L::Text());
+	KeyBox->WidgetStyle.SetFocusedForegroundColor(L::Text());
 	KeyBox->OnTextCommitted.AddDynamic(this, &UJamSettingsWidget::OnKeyCommitted);
-	AddH(KeyRow, KeyBox, FMargin(0, 0, 8, 0), true);
-	ClearKeyButton = Button(T, TEXT("CLEAR"), S::Caption + 1, Tmp);
+	AddH(KeyRow, KeyBox, FMargin(0, 0, L::Gap, 0), true);
+	ClearKeyButton = Item(TEXT("CLEAR"), Tmp);
 	ClearKeyText = Tmp;
 	ClearKeyButton->OnClicked.AddDynamic(this, &UJamSettingsWidget::OnClearKey);
 	AddH(KeyRow, ClearKeyButton, FMargin(0));
-	AddV(Left, KeyRow, FMargin(0, 0, 0, 2));
-	KeyState = S::Text(T, TEXT(""), S::CaptionFont(), S::Yellow());
+	AddV(Left, KeyRow, FMargin(0, 0, 0, 4));
+	KeyState = L::MakeText(T, TEXT(""), L::Font(L::Caption, FName("Bold"), L::TrackLabel), L::TextDim());
 	AddV(Left, KeyState, FMargin(0, 0, 0, 6));
 
-	Heading(Left, TEXT("signal-defend"), TEXT("AI DIFFICULTY"), TEXT("For PLAY NOW and the cuts. The season and the modes set their own."));
-	DifficultyButton = Button(T, TEXT(""), S::Body + 2, Tmp);
-	DifficultyText = Tmp;
-	DifficultyButton->OnClicked.AddDynamic(this, &UJamSettingsWidget::OnDifficultyClicked);
-	AddV(Left, DifficultyButton, FMargin(0, 0, 0, 6), HAlign_Left);
-
-	Heading(Left, TEXT("upscale"), TEXT("LOOK"), TEXT("The cut's own look, or one look for every cut."));
-	TierButton = Button(T, TEXT(""), S::Body + 2, Tmp);
-	TierText = Tmp;
-	TierButton->OnClicked.AddDynamic(this, &UJamSettingsWidget::OnTierClicked);
-	AddV(Left, TierButton, FMargin(0, 0, 0, 6), HAlign_Left);
-
 	// Right column: the volume, the voice signals, the barks.
-	Heading(Right, TEXT("voice"), TEXT("VOLUME"), TEXT("Everything the game plays."));
+	Heading(Right, TEXT("VOLUME"), TEXT("Everything the game plays."));
 	UHorizontalBox* VolRow = T->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
 	VolumeSlider = T->ConstructWidget<USlider>(USlider::StaticClass(), TEXT("VolumeSlider"));
 	VolumeSlider->SetStepSize(0.05f);
 	VolumeSlider->RequiresControllerLock = false;
 	VolumeSlider->IsFocusable = true;
-	VolumeSlider->SetWidgetStyle(S::SliderStyle());
+	FSliderStyle Sl = S::SliderStyle();
+	Sl.SetHoveredThumbImage(FSlateBrush(FSlateRoundedBoxBrush(L::Focus(), 7.f)));
+	Sl.SetNormalThumbImage(FSlateBrush(FSlateRoundedBoxBrush(L::Text(), 7.f)));
+	VolumeSlider->SetWidgetStyle(Sl);
+	VolumeSlider->SetSliderHandleColor(L::Text());
+	VolumeSlider->SetSliderBarColor(L::Chosen());
 	VolumeSlider->OnValueChanged.AddDynamic(this, &UJamSettingsWidget::OnVolumeChanged);
 	USizeBox* VolBox = T->ConstructWidget<USizeBox>(USizeBox::StaticClass());
 	VolBox->SetWidthOverride(260.f);
 	VolBox->AddChild(VolumeSlider);
 	AddH(VolRow, VolBox, FMargin(0, 0, 12, 0));
-	VolumeText = S::Text(T, TEXT(""), S::Font(S::Body + 2, FName("Bold")), S::Chalk());
+	VolumeText = L::MakeText(T, TEXT(""), L::Font(L::Body + 2, FName("Black")), L::Text());
 	AddH(VolRow, VolumeText);
 	AddV(Right, VolRow, FMargin(0, 4, 0, 6));
 
 	// Voice signals (lane A11's recognizer); keyboard signals 1-4 stay on regardless.
-	Heading(Right, TEXT("signal-pass"), TEXT("VOICE SIGNALS"), TEXT("Say a signal instead of pressing 1-4; the keys always work."));
+	Heading(Right, TEXT("VOICE SIGNALS"), TEXT("Say a signal instead of pressing 1-4; the keys always work."));
 	UHorizontalBox* VoiceRow = T->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
-	VoiceButton = Button(T, TEXT(""), S::Body + 2, Tmp);
+	VoiceButton = Item(TEXT(""), Tmp);
 	VoiceText = Tmp;
 	VoiceButton->OnClicked.AddDynamic(this, &UJamSettingsWidget::OnVoiceClicked);
 	AddH(VoiceRow, VoiceButton, FMargin(0, 0, 12, 0));
-	VoiceStatusText = S::Text(T, TEXT(""), S::CaptionFont(), S::Muted());
+	VoiceStatusText = L::MakeText(T, TEXT(""), L::Font(L::Caption, FName("Regular")), L::TextDim());
 	VoiceStatusText->SetWrapTextAt(200.f);
 	AddH(VoiceRow, VoiceStatusText, FMargin(0), true);
 	AddV(Right, VoiceRow, FMargin(0, 0, 0, 6));
 
-	// Barks (lane A12): off, the cut's own, on; the intensity override rides along.
-	Heading(Right, TEXT("barks"), TEXT("BARKS"), TEXT("What the other skaters shout: off, the cut's own, or on (quiet, normal, loud)."));
-	BarksButton = Button(T, TEXT(""), S::Body + 2, Tmp);
+	// Barks (lane A12): off, the mode's own, on; the intensity override rides along.
+	Heading(Right, TEXT("BARKS"), TEXT("What the other skaters shout: off, the mode's own, or on (quiet, normal, loud)."));
+	BarksButton = Item(TEXT(""), Tmp);
 	BarksText = Tmp;
 	BarksButton->OnClicked.AddDynamic(this, &UJamSettingsWidget::OnBarksClicked);
-	AddV(Right, BarksButton, FMargin(0, 0, 0, 6), HAlign_Left);
+	AddV(Right, BarksButton, FMargin(0), HAlign_Left);
 
-	// Lane A144 (track U2): the controls have a screen of their own, one press from the first screen (UJamMenuFlow::ControlRows, held against the
-	// bindings by Jam.Menu.ControlsComplete); the run-on paragraph that stood here split verb from key at every line end.
-	Heading(Root, TEXT("settings"), TEXT("CONTROLS"), TEXT("The full list: BACK, then CONTROLS on the first screen. In a match: Esc."));
+	// Lane A144: the controls have a screen of their own; lane A195: say where, in the words of the screens.
+	Heading(Right, TEXT("CONTROLS"), TEXT("Rebind any key: CONTROLS on HOME, or Esc in a match, then CONTROLS."));
 
 	RefreshLabels();
 }
@@ -314,8 +326,8 @@ void UJamSettingsWidget::RefreshLabels()
 	VolumeText->SetText(FText::FromString(FString::Printf(TEXT("%d %%"), FMath::RoundToInt(Settings.Volume * 100.f))));
 	bool bHasKey = false;
 	if (UGameInstance* GI = GetGameInstance()) if (UJamDesignerSubsystem* D = GI->GetSubsystem<UJamDesignerSubsystem>()) bHasKey = D->HasApiKey();
-	KeyState->SetText(FText::FromString(bHasKey ? TEXT("key: set") : TEXT("key: none (cached cuts only)")));
-	KeyState->SetColorAndOpacity(FSlateColor(bHasKey ? S::Yellow() : S::Muted()));
+	KeyState->SetText(FText::FromString(bHasKey ? TEXT("KEY: SET") : TEXT("KEY: NONE (SAVED GAMES ONLY)")));
+	KeyState->SetColorAndOpacity(FSlateColor(bHasKey ? FJamMenuLook::Chosen() : FJamMenuLook::TextDim()));
 	ClearKeyButton->SetIsEnabled(bHasKey);
 	if (VoiceText) VoiceText->SetText(FText::FromString(UJamSignalSystem::IsVoiceSignalsEnabled() ? TEXT("VOICE: ON") : TEXT("VOICE: OFF")));
 	if (VoiceStatusText) VoiceStatusText->SetText(FText::FromString(VoiceStatus()));
@@ -357,10 +369,10 @@ UWidget* UJamSettingsWidget::GetFirstFocusable() const
 TArray<UWidget*> UJamSettingsWidget::GetFocusables() const
 {
 	TArray<UWidget*> Out;
+	Out.Add(DifficultyButton.Get());   // lane A195: in reading order (the level and the look head the left column now)
+	Out.Add(TierButton.Get());
 	Out.Add(KeyBox.Get());
 	Out.Add(ClearKeyButton.Get());
-	Out.Add(DifficultyButton.Get());
-	Out.Add(TierButton.Get());
 	Out.Add(VolumeSlider.Get());
 	Out.Add(VoiceButton.Get());
 	Out.Add(BarksButton.Get());
@@ -370,11 +382,7 @@ TArray<UWidget*> UJamSettingsWidget::GetFocusables() const
 void UJamSettingsWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
-	Tint(ClearKeyButton, ClearKeyText);
-	Tint(DifficultyButton, DifficultyText);
-	Tint(TierButton, TierText);
-	Tint(VoiceButton, VoiceText);
-	Tint(BarksButton, BarksText);
+	if (Painter) Painter->Paint(GetOwningPlayer(), true);   // lane A195: the item look (the orange focus fill and bar); the hovered item takes the focus
 	// The recognizer's state changes on its own (microphone, start-up): re-read it twice a second.
 	if (VoiceStatusText && ++VoiceStatusTick % 30 == 0) VoiceStatusText->SetText(FText::FromString(VoiceStatus()));
 }
@@ -473,15 +481,19 @@ void UJamControlsWidget::BuildTree()
 	if (WidgetTree->RootWidget) return;
 	UWidgetTree* T = WidgetTree;
 	SetIsFocusable(true);
+	using L = FJamMenuLook;
+	Painter = MakeShared<FJamMenuPainter>();
 
+	// Lane A195 (U2 evolution 6): the screen in the front end's look (FJamMenuLook): white type, verbs in the dim caption face, the cells and the two
+	// buttons in the item look (the orange focus fill, the white bar), the listening veil in the style table's scrim. What a cell does is A183's.
 	UOverlay* Root = T->ConstructWidget<UOverlay>(UOverlay::StaticClass(), TEXT("ControlsRoot"));
 	T->RootWidget = Root;
 	UVerticalBox* Box = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("ControlsRows"));
 	S::AddO(Root, Box);
-	AddV(Box, S::Section(T, TEXT("CONTROLS")), FMargin(0, 0, 0, 4));
-	UTextBlock* How = S::Text(T, TEXT("Click a key or a pad button, then press the new one. Esc cancels. Saved at once."), S::CaptionFont(), S::Muted());
-	How->SetWrapTextAt(700.f);
-	AddV(Box, How, FMargin(0, 0, 0, 6));
+	AddV(Box, L::MakeText(T, TEXT("REBIND ANY KEY"), L::Font(L::Title - 8, FName("Black"), 120), L::Text()), FMargin(0));
+	UTextBlock* How = L::MakeText(T, TEXT("Click a key or a pad button, then press the new one. Esc cancels. Saved at once."), L::Font(L::Body - 2, FName("Regular")), L::TextDim());
+	How->SetWrapTextAt(744.f);   // lane A195: the pause card's inner width (the menu's panel is wider)
+	AddV(Box, How, FMargin(0, 2, 0, L::Unit));
 	const float VerbW = 250.f, KeysW = 270.f, PadW = 180.f;   // lane A191: 724 with the gaps: inside the pause card's 744 as well as the menu card
 	auto Fixed = [&](UHorizontalBox* Row, UWidget* W, float Width)
 	{
@@ -490,29 +502,30 @@ void UJamControlsWidget::BuildTree()
 		Size->AddChild(W);
 		AddH(Row, Size, FMargin(0, 0, 8, 0), false, VAlign_Center);
 	};
+	const FSlateFontInfo HeadFont = L::Font(L::Caption, FName("Bold"), L::TrackLabel);
 	{
 		UHorizontalBox* Head = T->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
-		Fixed(Head, S::Text(T, TEXT(""), S::CaptionFont(), S::Muted()), VerbW);
-		Fixed(Head, S::Text(T, TEXT("MOUSE AND KEYS"), S::CaptionFont(), S::Muted()), KeysW);
-		Fixed(Head, S::Text(T, TEXT("PAD"), S::CaptionFont(), S::Muted()), PadW);
+		Fixed(Head, L::MakeText(T, TEXT(""), HeadFont, L::TextDim()), VerbW);
+		Fixed(Head, L::MakeText(T, TEXT("MOUSE AND KEYS"), HeadFont, L::TextDim()), KeysW);
+		Fixed(Head, L::MakeText(T, TEXT("PAD"), HeadFont, L::TextDim()), PadW);
 		AddV(Box, Head, FMargin(0, 0, 0, 2));
 	}
 	CellButtons.Init(nullptr, FJamBindings::NumVerbs * 2);
 	CellTexts.Init(nullptr, FJamBindings::NumVerbs * 2);
+	const FMargin CellPad(12, 3);   // a row a line high: fifteen rows and the buttons inside the menu card and the pause card
 	for (const EJamVerb V : GControlRowsOrder)
 	{
 		UHorizontalBox* Row = T->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
-		Fixed(Row, S::Text(T, RowLabel(V), S::Font(S::Body - 2, FName("Black")), S::Yellow()), VerbW);
+		Fixed(Row, L::MakeText(T, RowLabel(V), L::Font(L::Body - 3, FName("Bold"), 20), L::Text()), VerbW);
 		for (int32 Pad = 0; Pad < 2; ++Pad)
 		{
 			const int32 Cell = static_cast<int32>(V) * 2 + Pad;
-			UTextBlock* Txt = nullptr;
-			UButton* B = Button(T, TEXT(""), S::Caption + 1, Txt);
-			FButtonStyle Tight = S::ButtonStyle();   // a row a line high: fifteen rows and the buttons inside the menu card
-			Tight.SetNormalPadding(FMargin(12, 2));
-			Tight.SetPressedPadding(FMargin(12, 3, 12, 1));
-			B->SetStyle(Tight);
+			UButton* B = T->ConstructWidget<UButton>(UButton::StaticClass());
+			UTextBlock* Txt = L::MakeText(T, TEXT(""), L::Font(L::Caption + 1, FName("Bold"), 20), L::Text());
+			Txt->SetJustification(ETextJustify::Center);
+			B->AddChild(Txt);
 			B->SetIsEnabled(!(Pad == 1 && IsSkate(V)));   // the left stick skates: no pad cell for the four directions
+			Painter->Add(B, Txt, nullptr, CellPad);
 			CellButtons[Cell] = B;
 			CellTexts[Cell] = Txt;
 			// UButton's click carries no payload: the tick tells which cell was clicked (OnCellClicked).
@@ -520,26 +533,30 @@ void UJamControlsWidget::BuildTree()
 		}
 		AddV(Box, Row, FMargin(0, 1));
 	}
-	StatusText = S::Text(T, TEXT(""), S::BodyFont(), S::Yellow());
+	StatusText = L::MakeText(T, TEXT(""), L::Font(L::Body, FName("Bold")), L::Focus());
 	StatusText->SetWrapTextAt(700.f);
 	AddV(Box, StatusText, FMargin(0, 6, 0, 0));
 	UHorizontalBox* Buttons = T->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
 	UTextBlock* RT = nullptr;
-	ResetButton = Button(T, TEXT("RESET TO DEFAULTS"), S::Body, RT);
+	UWidget* RBar = nullptr;
+	ResetButton = L::MakeItem(T, TEXT("RESET TO DEFAULTS"), L::ItemSmall, RT, RBar);
 	ResetText = RT;
+	Painter->Add(ResetButton, RT, RBar);
 	ResetButton->OnClicked.AddDynamic(this, &UJamControlsWidget::OnResetClicked);
-	AddH(Buttons, ResetButton, FMargin(0, 0, 12, 0));
+	AddH(Buttons, ResetButton, FMargin(0, 0, L::Gap, 0));
 	UTextBlock* BT = nullptr;
-	BackButton = Button(T, TEXT("BACK"), S::Body, BT);
+	UWidget* BBar = nullptr;
+	BackButton = L::MakeItem(T, TEXT("BACK"), L::ItemSmall, BT, BBar);
 	BackText = BT;
+	Painter->Add(BackButton, BT, BBar);
 	BackButton->OnClicked.AddDynamic(this, &UJamControlsWidget::OnBackClicked);
 	AddH(Buttons, BackButton, FMargin(0));
-	AddV(Box, Buttons, FMargin(0, 8, 0, 0), HAlign_Left);
+	AddV(Box, Buttons, FMargin(0, L::Unit, 0, 0), HAlign_Left);
 
 	// The veil while a cell listens: it covers the rows so the next mouse press reaches this widget, not a button under the cursor.
-	ListenVeil = S::Plate(T, FLinearColor(0.f, 0.f, 0.f, 0.55f), FMargin(0));
+	ListenVeil = S::Plate(T, L::Scrim(), FMargin(0));
 	ListenVeil->SetVisibility(ESlateVisibility::Collapsed);
-	UTextBlock* Press = S::Text(T, TEXT("PRESS THE NEW KEY  -  ESC CANCELS"), S::Font(S::Body + 4, FName("Black"), 30), S::Yellow());
+	UTextBlock* Press = L::MakeText(T, TEXT("PRESS THE NEW KEY  -  ESC CANCELS"), L::Font(L::Item, FName("Black"), 120), L::Text());
 	Press->SetJustification(ETextJustify::Center);
 	ListenVeil->SetHorizontalAlignment(HAlign_Center);
 	ListenVeil->SetVerticalAlignment(VAlign_Center);
@@ -736,10 +753,8 @@ void UJamControlsWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTi
 		bool& bWas = CellWasPressed[I];
 		if (bWas && !bNow && B->IsHovered() && !IsListening()) OnCellClicked(I);
 		bWas = bNow;
-		S::Tint(B, CellTexts[I]);
 	}
-	S::Tint(ResetButton, ResetText);
-	S::Tint(BackButton, BackText);
+	if (Painter) Painter->Paint(GetOwningPlayer(), !IsListening());   // lane A195: the item look; the hovered item takes the focus (not while a cell listens)
 }
 
 FReply UJamControlsWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent)

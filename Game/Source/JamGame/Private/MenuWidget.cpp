@@ -3,6 +3,7 @@
 #include "Misc/Parse.h"
 #include "MenuStyle.h"
 #include "SettingsWidget.h"
+#include "InputMapping.h"
 #include "JamCartridge.h"
 #include "Progression.h"
 #include "Components/Overlay.h"
@@ -142,6 +143,210 @@ TArray<FString> FJamMenuLook::KitNames()
 	return Out;
 }
 
+// ---------------------------------------------------------------- lane A195: the makers every screen uses
+
+FSlateBrush FJamMenuLook::FillBrush(const FLinearColor& C, bool bEdge)
+{
+	return bEdge ? FSlateBrush(FSlateRoundedBoxBrush(C, 4.f, PanelEdge(), 1.f)) : FSlateBrush(FSlateRoundedBoxBrush(C, 4.f));
+}
+
+FSlateBrush FJamMenuLook::KitOr(const TCHAR* Name, const FSlateBrush& Fallback)
+{
+	if (UTexture2D* T = Kit(Name))
+	{
+		FSlateBrush B = FJamUiStyle::BoxBrush(T, FMargin(0.2f, 0.35f));
+		B.ImageSize = B.ImageSize * 0.5f;
+		return B;
+	}
+	return Fallback;
+}
+
+FSlateBrush FJamMenuLook::PanelBrush() { return KitOr(TEXT("T_UI_Panel"), FillBrush(Panel(), true)); }
+
+FButtonStyle FJamMenuLook::ItemStyle(int32 State, bool bSegment, const FMargin& Pad)
+{
+	// The item look: a flat fill in the panel colour at rest, a solid accent fill (and a white bar at its left edge) on the focus, the home blue
+	// for the chosen level segment. Device B's button plates replace the flat fills by name when they are in the plugin.
+	FButtonStyle St;
+	FSlateBrush B;
+	switch (State)
+	{
+	case 0: B = KitOr(TEXT("T_UI_Button_Disabled"), FillBrush(FLinearColor(Ink().R, Ink().G, Ink().B, 0.55f), false)); break;
+	case 2: B = KitOr(TEXT("T_UI_Button_Focused"), FillBrush(Focus(), false)); break;
+	case 3: B = KitOr(TEXT("T_UI_Segment_Lit"), FillBrush(Chosen(), false)); break;
+	default: B = KitOr(bSegment ? TEXT("T_UI_Segment_Unlit") : TEXT("T_UI_Button_Normal"), FillBrush(Panel(), true)); break;
+	}
+	St.SetNormal(B);
+	St.SetHovered(B);
+	FSlateBrush P = State == 2 ? KitOr(TEXT("T_UI_Button_Pressed"), FillBrush(FLinearColor::FromSRGBColor(FColor(0xC9, 0x52, 0x0E)), false)) : B;
+	St.SetPressed(P);
+	St.SetDisabled(B);
+	St.SetNormalPadding(Pad);
+	St.SetPressedPadding(Pad);
+	return St;
+}
+
+UTextBlock* FJamMenuLook::MakeText(UWidgetTree* T, const FString& Str, const FSlateFontInfo& F, const FLinearColor& C)
+{
+	UTextBlock* W = T->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
+	W->SetText(FText::FromString(Str));
+	W->SetFont(F);
+	W->SetColorAndOpacity(FSlateColor(C));
+	return W;
+}
+
+UButton* FJamMenuLook::MakeItem(UWidgetTree* T, const FString& Label, int32 Size, UTextBlock*& OutText, UWidget*& OutBar, bool bCentre)
+{
+	UButton* B = T->ConstructWidget<UButton>(UButton::StaticClass());
+	B->SetStyle(ItemStyle(1));
+	UHorizontalBox* Row = T->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
+	UBorder* Bar = T->ConstructWidget<UBorder>(UBorder::StaticClass());
+	Bar->SetBrushColor(FLinearColor::Transparent);
+	USizeBox* BarBox = T->ConstructWidget<USizeBox>(USizeBox::StaticClass());
+	BarBox->SetWidthOverride(FocusBarW);
+	BarBox->AddChild(Bar);
+	if (USizeBoxSlot* Sl = Cast<USizeBoxSlot>(Bar->Slot)) { Sl->SetHorizontalAlignment(HAlign_Fill); Sl->SetVerticalAlignment(VAlign_Fill); }
+	UHorizontalBoxSlot* BS = Row->AddChildToHorizontalBox(BarBox);
+	BS->SetVerticalAlignment(VAlign_Fill);
+	OutText = MakeText(T, Label, Font(Size, FName("Bold"), TrackLabel), Text());
+	if (bCentre) OutText->SetJustification(ETextJustify::Center);
+	UHorizontalBoxSlot* TS = Row->AddChildToHorizontalBox(OutText);
+	TS->SetPadding(FMargin(ItemPadX, Unit + 4.f, ItemPadX + FocusBarW, Unit + 4.f));
+	TS->SetVerticalAlignment(VAlign_Center);
+	if (bCentre) TS->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+	B->AddChild(Row);
+	if (UButtonSlot* Sl = Cast<UButtonSlot>(Row->Slot)) { Sl->SetHorizontalAlignment(HAlign_Fill); Sl->SetVerticalAlignment(VAlign_Fill); Sl->SetPadding(FMargin(0)); }
+	OutBar = Bar;
+	return B;
+}
+
+UWidget* FJamMenuLook::MakeTeamRule(UWidgetTree* T, float Height, float Width)
+{
+	UHorizontalBox* H = T->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
+	for (const FLinearColor& C : { Home(), Away() })
+	{
+		UBorder* Piece = T->ConstructWidget<UBorder>(UBorder::StaticClass());
+		Piece->SetBrushColor(C);
+		USizeBox* SB = T->ConstructWidget<USizeBox>(USizeBox::StaticClass());
+		if (Width > 0.f) SB->SetWidthOverride(Width * 0.5f);
+		SB->SetHeightOverride(Height);
+		SB->AddChild(Piece);
+		UHorizontalBoxSlot* Sl = H->AddChildToHorizontalBox(SB);
+		if (Width <= 0.f) Sl->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+	}
+	return H;
+}
+
+UWidget* FJamMenuLook::MakePanel(UWidgetTree* T, UWidget* Content, float Width, const FMargin& Pad)
+{
+	UVerticalBox* V = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass());
+	UVerticalBoxSlot* RS = V->AddChildToVerticalBox(MakeTeamRule(T, 4.f));
+	RS->SetHorizontalAlignment(HAlign_Fill);
+	UBorder* P = T->ConstructWidget<UBorder>(UBorder::StaticClass());
+	P->SetBrush(PanelBrush());
+	P->SetPadding(Pad);
+	P->SetContent(Content);
+	UVerticalBoxSlot* PS = V->AddChildToVerticalBox(P);
+	PS->SetHorizontalAlignment(HAlign_Fill);
+	if (Width <= 0.f) return V;
+	USizeBox* SB = T->ConstructWidget<USizeBox>(USizeBox::StaticClass());
+	SB->SetWidthOverride(Width);
+	SB->AddChild(V);
+	return SB;
+}
+
+void FJamMenuLook::FillHints(UWidgetTree* T, UHorizontalBox* Box, const TArray<TPair<FString, FString>>& Hints)
+{
+	if (!T || !Box) return;
+	Box->ClearChildren();
+	for (const TPair<FString, FString>& H : Hints)
+	{
+		UBorder* Cap = T->ConstructWidget<UBorder>(UBorder::StaticClass());
+		Cap->SetBrush(FillBrush(FLinearColor(1, 1, 1, 0.14f), false));
+		Cap->SetPadding(FMargin(Unit, 3.f));
+		Cap->SetContent(MakeText(T, H.Key, Font(Caption, FName("Black"), 40), Text()));
+		UHorizontalBoxSlot* CS = Box->AddChildToHorizontalBox(Cap);
+		CS->SetPadding(FMargin(0, 0, Unit, 0));
+		CS->SetVerticalAlignment(VAlign_Center);
+		UHorizontalBoxSlot* AS = Box->AddChildToHorizontalBox(MakeText(T, H.Value, Font(Caption, FName("Bold"), TrackLabel), TextDim()));
+		AS->SetPadding(FMargin(0, 0, &H == &Hints.Last() ? 0.f : Unit * 4.f, 0));   // no gap after the last: the row is as wide as its words
+		AS->SetVerticalAlignment(VAlign_Center);
+	}
+}
+
+FString FJamMenuLook::HintsLine(const TArray<TPair<FString, FString>>& Hints)
+{
+	FString Line;
+	for (const TPair<FString, FString>& H : Hints) Line += FString::Printf(TEXT("%s %s   "), *H.Key, *H.Value);
+	Line.TrimEndInline();
+	return Line;
+}
+
+FString FJamMenuLook::RestartKeyCap()
+{
+	const FJamVerbBinding& Bi = UJamInputMap::Get()->GetBindings()[EJamVerb::Restart];
+	FString Cap = Bi.Keys.Num() ? UJamInputMap::KeyName(Bi.Keys[0]) : FString(TEXT("-"));
+	if (Bi.Pads.Num()) Cap += TEXT(" / ") + UJamInputMap::KeyName(Bi.Pads[0]);
+	return Cap;
+}
+
+// ---- the painter
+
+void FJamMenuPainter::Add(UButton* B, UTextBlock* T, UWidget* Bar, const FMargin& Pad)
+{
+	if (!B) return;
+	FEntry E;
+	E.Button = B;
+	E.Text = T;
+	E.Bar = Bar;
+	E.Pad = Pad;
+	Entries.Add(E);
+	B->SetStyle(FJamMenuLook::ItemStyle(1, false, Pad));
+	B->SetBackgroundColor(FLinearColor::White);
+}
+
+int32 FJamMenuPainter::StateOf(const UButton* B) const
+{
+	for (const FEntry& E : Entries) if (E.Button.Get() == B) return E.State;
+	return -1;
+}
+
+void FJamMenuPainter::Paint(APlayerController* PC, bool bHoverFocus)
+{
+	// The pointer moved: the item under it takes the focus (so Enter presses what the pointer is on, and one item is lit).
+	if (bHoverFocus && FSlateApplication::IsInitialized())
+	{
+		const FVector2D Pointer = FSlateApplication::Get().GetCursorPos();
+		if (!Pointer.Equals(LastCursor, 0.5))
+		{
+			const bool bFirst = LastCursor.X < 0.f;
+			LastCursor = Pointer;
+			const TSharedPtr<SWidget> KF = FSlateApplication::Get().GetKeyboardFocusedWidget();
+			const bool bTyping = KF.IsValid() && KF->GetType().ToString().Contains(TEXT("EditableText"));   // a key being typed keeps its box
+			if (!bFirst && !bTyping && PC)
+				for (const FEntry& E : Entries)
+				{
+					UButton* B = E.Button.Get();
+					if (B && B->IsHovered() && B->GetIsEnabled() && B->IsVisible() && !B->HasUserFocus(PC)) { B->SetFocus(); break; }
+				}
+		}
+	}
+	for (FEntry& E : Entries)
+	{
+		UButton* B = E.Button.Get();
+		if (!B) continue;
+		const bool bEnabled = B->GetIsEnabled();
+		const bool bHot = bEnabled && ((PC && B->HasUserFocus(PC)) || B->HasFocusedDescendants() || (!bHoverFocus && B->IsHovered()));
+		const int32 State = !bEnabled ? 0 : (bHot ? 2 : 1);
+		if (State == E.State) continue;
+		E.State = State;
+		B->SetStyle(FJamMenuLook::ItemStyle(State, false, E.Pad));
+		B->SetBackgroundColor(FLinearColor::White);
+		if (UTextBlock* Tb = E.Text.Get()) Tb->SetColorAndOpacity(FSlateColor(State == 0 ? FJamMenuLook::Disabled() : (State == 2 ? FJamMenuLook::TextOnFocus() : FJamMenuLook::Text())));
+		if (UBorder* Bar = Cast<UBorder>(E.Bar.Get())) Bar->SetBrushColor(State == 2 ? FJamMenuLook::TextOnFocus() : FLinearColor::Transparent);
+	}
+}
+
 namespace
 {
 	// ---- widths in slate units (lane A144's measures, re-laid on lane A187's panels)
@@ -162,41 +367,10 @@ namespace
 
 	// The item look: a flat fill in the panel colour at rest, a solid accent fill (and a white bar at its left edge) on the focus, the home blue
 	// for the chosen level segment. Device B's button plates replace the flat fills by name when they are in the plugin.
-	FSlateBrush Fill(const FLinearColor& C, bool bEdge)
-	{
-		return bEdge ? FSlateBrush(FSlateRoundedBoxBrush(C, 4.f, L::PanelEdge(), 1.f)) : FSlateBrush(FSlateRoundedBoxBrush(C, 4.f));
-	}
-	FSlateBrush KitOr(const TCHAR* Name, const FSlateBrush& Fallback)
-	{
-		if (UTexture2D* T = L::Kit(Name))
-		{
-			FSlateBrush B = S::BoxBrush(T, FMargin(0.2f, 0.35f));
-			B.ImageSize = B.ImageSize * 0.5f;
-			return B;
-		}
-		return Fallback;
-	}
-	// State: 0 disabled, 1 rest, 2 focus, 3 chosen (a lit level segment).
-	FButtonStyle ItemStyle(int32 State, bool bSegment)
-	{
-		FButtonStyle St;
-		FSlateBrush B;
-		switch (State)
-		{
-		case 0: B = KitOr(TEXT("T_UI_Button_Disabled"), Fill(FLinearColor(L::Ink().R, L::Ink().G, L::Ink().B, 0.55f), false)); break;
-		case 2: B = KitOr(TEXT("T_UI_Button_Focused"), Fill(L::Focus(), false)); break;
-		case 3: B = KitOr(TEXT("T_UI_Segment_Lit"), Fill(L::Chosen(), false)); break;
-		default: B = KitOr(bSegment ? TEXT("T_UI_Segment_Unlit") : TEXT("T_UI_Button_Normal"), Fill(L::Panel(), true)); break;
-		}
-		St.SetNormal(B);
-		St.SetHovered(B);
-		FSlateBrush P = State == 2 ? KitOr(TEXT("T_UI_Button_Pressed"), Fill(FLinearColor::FromSRGBColor(FColor(0xC9, 0x52, 0x0E)), false)) : B;
-		St.SetPressed(P);
-		St.SetDisabled(B);
-		St.SetNormalPadding(FMargin(0));
-		St.SetPressedPadding(FMargin(0));
-		return St;
-	}
+	// Lane A195: the bodies moved onto FJamMenuLook (every screen outside the menu uses them too); these names stay for the menu's call sites.
+	FSlateBrush Fill(const FLinearColor& C, bool bEdge) { return L::FillBrush(C, bEdge); }
+	FSlateBrush KitOr(const TCHAR* Name, const FSlateBrush& Fallback) { return L::KitOr(Name, Fallback); }
+	FButtonStyle ItemStyle(int32 State, bool bSegment) { return L::ItemStyle(State, bSegment); }
 
 	UTextBlock* Txt(UWidgetTree* T, const FString& Str, const FSlateFontInfo& F, const FLinearColor& C)
 	{
@@ -445,16 +619,30 @@ void UJamMenuWidget::BuildTree()
 	}
 	else
 	{
+		// Lane A195 (U2 evolution 6, item 3): until device B's still, the best without an asset: a gradient from a cold arena blue at the top into the
+		// ink (18 bands, a step of one or two levels each: no banding an eye finds), and the two team strokes drifting slowly (NativeTick, DriftSeconds).
+		UVerticalBox* Grad = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("BackdropGradient"));
+		const FLinearColor Top = FLinearColor::FromSRGBColor(FColor(0x17, 0x20, 0x34));
+		constexpr int32 Bands = 18;
+		for (int32 i = 0; i < Bands; ++i)
+		{
+			const float A = static_cast<float>(i) / static_cast<float>(Bands - 1);
+			UVerticalBoxSlot* Sl = Grad->AddChildToVerticalBox(Solid(T, FMath::Lerp(Top, L::Ink(), FMath::SmoothStep(0.f, 1.f, A))));
+			Sl->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+		}
+		Grad->SetVisibility(ESlateVisibility::HitTestInvisible);
+		S::AddO(Root, Grad);
 		int32 k = 0;
 		for (const FLinearColor& C : { L::Home(), L::Away() })
 		{
-			UBorder* Stroke = Solid(T, FLinearColor(C.R, C.G, C.B, 0.10f));
+			UBorder* Stroke = Solid(T, FLinearColor(C.R, C.G, C.B, 0.12f));
 			USizeBox* SB = Sized(T, Stroke, 200.f, 240.f);   // drawn 6x taller by its render scale: a decoration asks the layout for no height
 			SB->SetRenderTransformPivot(FVector2D(0.5f, 0.5f));
 			SB->SetRenderTransformAngle(18.f);
 			SB->SetRenderScale(FVector2D(1.f, 6.f));
 			SB->SetVisibility(ESlateVisibility::HitTestInvisible);
 			S::AddO(Root, SB, HAlign_Right, VAlign_Center, FMargin(0, 0, k == 0 ? 520.f : 260.f, 0));
+			BackdropStrokes.Add(SB);
 			++k;
 		}
 	}
@@ -484,7 +672,11 @@ void UJamMenuWidget::BuildTree()
 	Put(OnPanel(BuildDirect(), L::PanelW), HAlign_Center, VAlign_Top, Below);
 	Put(OnPanel(BuildSettings(), L::PanelW), HAlign_Center, VAlign_Top, Below);
 	Put(OnPanel(BuildCredits(), L::PanelW), HAlign_Center, VAlign_Top, Below);
-	Put(OnPanel(BuildControls(), ControlsW), HAlign_Center, VAlign_Top, Below);
+	{
+		// Lane A195: the rebinding screen is 724 wide: on the 880 panel (the wide one left half of it empty); today's card keeps the wide one.
+		UWidget* Ctl = BuildControls();
+		Put(OnPanel(Ctl, ControlsScreen ? L::PanelW : ControlsW), HAlign_Center, VAlign_Top, Below);
+	}
 	Put(BuildLanding(), HAlign_Fill, VAlign_Fill, FMargin(0));
 	Put(BuildModes(), HAlign_Center, VAlign_Top, Below);
 	Put(BuildSeason(), HAlign_Center, VAlign_Top, Below);
@@ -1842,6 +2034,10 @@ void UJamMenuWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 		Switcher->SetRenderOpacity(A);
 		Switcher->SetRenderTranslation(FVector2D((1.f - A) * L::TransitionSlide, 0.f));
 	}
+	// Lane A195: the backdrop's strokes drift, slowly and in opposite phase.
+	DriftT += InDeltaTime;
+	for (int32 k = 0; k < BackdropStrokes.Num(); ++k)
+		if (UWidget* St = BackdropStrokes[k].Get()) St->SetRenderTranslation(FVector2D(L::DriftUnits * FMath::Sin(DriftT * 2.f * PI / L::DriftSeconds + k * PI), 0.f));
 	if (Screen == EJamMenuScreen::Landing && LandingPrompt)
 	{
 		PulseT += InDeltaTime;

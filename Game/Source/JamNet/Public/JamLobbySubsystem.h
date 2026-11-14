@@ -109,5 +109,6 @@ private:
 	int32 GuestIndex = -1;
 	int64 LobbyTicks = 0;
 	int64 StartTicks = 0;
+	double GuestOpenAt = 0.0;   // lane A204: jam.net.TestRinkDelayMs: when the guest opens the rink (0: not waiting)
 	double JoinedAt = 0.0;
 };

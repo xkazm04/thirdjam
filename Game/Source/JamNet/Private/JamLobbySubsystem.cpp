@@ -20,6 +20,8 @@ static TAutoConsoleVariable<float> CVarJamNetSimDelayMs(TEXT("jam.net.SimDelayMs
 static TAutoConsoleVariable<int32> CVarJamNetTestVersion(TEXT("jam.net.TestVersion"), 0, TEXT("> 0: the guest's HELLO carries this protocol byte (the refusal proof: a guest on another build)."));
 // Lane A120: a fixed UDP port for this process (host or guest), for runs on one machine beside other lanes' processes; 0 = the host scans BasePort.., the guest any.
 static TAutoConsoleVariable<int32> CVarJamNetPort(TEXT("jam.net.Port"), 0, TEXT("> 0: bind exactly this UDP port (host and guest). The host's invite codes then read ip:port."));
+// Lane A204 (track N1): the slow-loading guest of FAULT 3 on demand: the guest opens the rink this many ms after the host's START (a busy machine's 6 s load).
+static TAutoConsoleVariable<int32> CVarJamNetTestRinkDelayMs(TEXT("jam.net.TestRinkDelayMs"), 0, TEXT("> 0: the guest opens the rink this many ms after START (the late-load proof)."));
 static TAutoConsoleVariable<float> CVarJamNetSimLoss(TEXT("jam.net.SimLoss"), 0.f, TEXT("Drop this fraction of outgoing JamNet datagrams (simulated loss, 0..1)."));
 
 namespace
@@ -76,6 +78,7 @@ void UJamLobbySubsystem::ResetSession()
 	RemoteName.Reset();
 	GuestIndex = -1;
 	LobbyTicks = StartTicks = 0;
+	GuestOpenAt = 0.0;
 }
 
 void UJamLobbySubsystem::SetState(EJamLobbyState S)
@@ -302,8 +305,14 @@ void UJamLobbySubsystem::TickLobby()
 			if (M.Type == JamNet::EType::Bye) { Fail(FString::Printf(TEXT("%s left"), *RemoteName)); return; }
 			if (bHost && M.Type == JamNet::EType::Hello) { if (M.Flags & 1) bGuestAcked = true; else SendLobby(static_cast<uint8>(JamNet::EType::Welcome)); }
 			if (!bHost && M.Type == JamNet::EType::Welcome) SendLobby(static_cast<uint8>(JamNet::EType::Hello), 1);
-			if (!bHost && M.Type == JamNet::EType::Start) { OpenRink(); return; }
+			if (!bHost && M.Type == JamNet::EType::Start)
+			{
+				const int32 DelayMs = CVarJamNetTestRinkDelayMs.GetValueOnGameThread();
+				if (DelayMs <= 0) { OpenRink(); return; }
+				if (GuestOpenAt <= 0.0) { GuestOpenAt = FPlatformTime::Seconds() + DelayMs / 1000.0; UE_LOG(LogJamNet, Log, TEXT("JAMNET test: the guest opens the rink %d ms late (jam.net.TestRinkDelayMs)"), DelayMs); }
+			}
 		}
+		if (!bHost && GuestOpenAt > 0.0 && FPlatformTime::Seconds() >= GuestOpenAt) { GuestOpenAt = 0.0; OpenRink(); return; }
 		if (bHost && !bGuestAcked && LobbyTicks % ResendEvery == 0) SendLobby(static_cast<uint8>(JamNet::EType::Welcome));
 		if (bHost && bGuestAcked && bAutoStart) StartMatch();
 		break;
