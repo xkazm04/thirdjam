@@ -113,9 +113,9 @@
   "ai": [],
   "game": {
     "rink": {
-      "length_m": 90,
-      "width_m": 45,
-      "corner_radius_m": 3.75,
+      "length_m": 70,
+      "width_m": 35,
+      "corner_radius_m": 3.5,
       "board_restitution": 0.4,
       "ice_friction": 0.015,
       "goal_width_m": 4
@@ -147,7 +147,7 @@
       "score_to_win": 3,
       "goal_pause_frames": 120,
       "offside": false,
-      "penalties": true
+      "penalties": false
     },
     "teams": [
       {
@@ -157,21 +157,21 @@
           {
             "role": "player",
             "spawn": [
-              -7.5,
+              -5.83,
               0
             ]
           },
           {
             "role": "chaser",
             "spawn": [
-              -7.5,
-              -7.5
+              -5.83,
+              -5.83
             ]
           },
           {
             "role": "back",
             "spawn": [
-              -22.5,
+              -17.5,
               0
             ]
           }
@@ -184,35 +184,35 @@
           {
             "role": "chaser",
             "spawn": [
-              7.5,
+              5.83,
               0
             ]
           },
           {
             "role": "support",
             "spawn": [
-              7.5,
-              7.5
+              5.83,
+              5.83
             ]
           },
           {
             "role": "support",
             "spawn": [
-              7.5,
-              -7.5
+              5.83,
+              -5.83
             ]
           },
           {
             "role": "chaser",
             "spawn": [
-              15,
+              11.67,
               0
             ]
           },
           {
             "role": "back",
             "spawn": [
-              22.5,
+              17.5,
               0
             ]
           }
@@ -221,7 +221,8 @@
     ],
     "ai": {
       "difficulty": "pro",
-      "sprint": 0.75
+      "sprint": 0.75,
+      "hold_radius_m": 2
     },
     "barks": {
       "enabled": true,

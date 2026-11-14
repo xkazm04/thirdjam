@@ -231,9 +231,12 @@
    "pitch": "One goal ends it. The meanest bots alive.",
    "facts": [
     "first goal wins",
-    "120 x 60 m rink",
-    "all-star bots"
+    "3 v 3 on 120 x 60 m",
+    "no grace on a steal"
    ]
+  },
+  "stick": {
+   "take_grace_frames": 0
   }
  }
 }
