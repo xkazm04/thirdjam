@@ -110,6 +110,10 @@ Enter still plays.
    puts a man down (the one place "a hit obeys momentum" is bent), and pro gets 3 points easier, all-star 6 (pro's dial pays pro back; all-star has
    no dial yet). Yes or no. With it: the push-out that ends a skater standing at a downed body (measured together: 1,468 such moments in 200 pro
    matches become 2).
+   The other way to the same end, from the brain: the bots do not body-check a man in his first frames with the puck at all (8 frames: your knockdowns
+   6.8 to 5.0 a match for under a point at pro; 15 frames: 6.8 to 3.2 for six points). The cap keeps the hit and softens it; this takes the hit away.
+   And if you say yes to everything that waits: you lie on the ice half as much at every level, rookie and pro stay on their bars with two numbers
+   (measured at 2,000), and all-star gets about eight points easier (37 %) with no setting yet that brings it back.
 4. **The look:** clay with the stands as the first look: yes? Anything that reads badly from the game camera?
 5. **Which three modes stay on the page**, if only three could.
 6. **New verbs from device B** (figures, sounds and effects exist; none is wired): a **dash**, a **slide tackle**, a **dive block**, and toy weapons for the modes

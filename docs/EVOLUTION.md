@@ -165,3 +165,15 @@ Waiting for his word, each measured and ready as a patch in the Director's folde
 | The arena's seventh evolution (A172) | exported, held | device B's lamp and cords; Glass House proposed on the clay rig | none (presentation) |
 | The half-second screen, the pickup that settles, the three's chaser | on main or measured, off | see BRAIN-4, MOVEMENT-7, BRAIN-5 | the pickup: +5.8 / -9.0 / -5.0: the one rule that takes pro and all_star down |
 All_star on the regular rink has no profile lever left (checks, speed, red skill, pressure, the commit distance: flat or the wrong way): the brain track's.
+
+
+**Board at 09:15. Every lane has reported and stopped; the machine is quiet. The operator plays H30 at 10:00.** Added since 08:20, all prepared, none landed:
+| What | Where | The number |
+|---|---|---|
+| "Everything on" with two profile numbers (A182) | `tools/perf/results/a182/A182-sunday-ladder.patch` on top of the pinned dial patch; `docs/experiments/CURVE-11.md` | rookie 85.8, pro 47.0 / 49.1 (hunt 14), all_star 37.0 with no lever; he lies on the ice 9.1 to 5.0 % of play at pro |
+| The brain's own answer to "hit as he wins the puck" (A181) | exported, off; `docs/experiments/BRAIN-6.md` | no check on a carry younger than 8 frames: knockdowns 6.8 to 5.0, pro +0.8; 15 frames: to 3.2, pro +5.7 |
+| All_star's dial (A181) | exported, off | the second man hunts and the backs step up at 16 m: -2.2 at 2,000: two points, not eleven |
+| The submission's words (A180) | on main: `submission/TRUTH.md`, `page.md`, `form.md`, `SUNDAY.md`, `video/SHOTLIST.md` | twelve of thirteen video shots must be recorded; the a155 stills are H27's: the page's pictures are to be retaken |
+Order of landing after his word (each a gated landing, then one package with the release rows): the take shield or the brain's fresh take (his choice),
+the contact set's switches, pro's dial pinned (11, or 14 with the set), rookie's red skill, the marks made to read (A178), the modes' re-tune (A173),
+the arena (A172); then the curve lane re-reads six cells at 2,000 on the built tree and the window rows read the package.
