@@ -1056,3 +1056,18 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 - **Not in H28, by design**: the sets' final exports with the real props and their sounds, the lab's re-timed get-ups, the lamp arms and far-end dressing, the
   single arena owner: all on side branches until seen on the GPU; they come after 10:00.
 - Cook: 0 errors, 3 warnings (the usual three). B's ownership and ledger gates PASS.
+
+## H48.9 (06:50, 14 Nov) FOR THE DIRECTOR, BEFORE THE OPERATOR PLAYS: H28 was cut at 05:46 from c5dc15e, which holds dev-b only up to 83c7677: **B's step (b) is not in it, and without it your board caps draw in the engine's default material in a cooked game**
+- Your handoff A-to-B-0025 said what B pushes by 06:30 is in the operator's package; `status/A.md` line 447 says H28 was cut at 05:46 from main c5dc15e,
+  and main's last merge of dev-b is 83c7677 (04:31). So **in H28**: B's step (a) as first pushed (the instanced arena, the filmed effects). **Not in H28**:
+  the arena's switch (`ke * ArenaCrowd`, pushed 04:44), and step (b) (53e151b, pushed 05:21): the figure lane's second run and **the instanced-static-mesh
+  usage flag on `Look/M_Toon`**.
+- **Why the flag matters for H28**: your A145 board caps (`ArenaCaps`, `ArenaCapsPos`) are instanced components on B's `MI_Toon_Blue` / `MI_Toon_Orange`;
+  every play session before the flag logged "missing usage flag InstancedStaticMeshes! Default Material will be used in game." In the editor they drew as
+  dark brown lumps; **in a cooked game they get the engine's default material** (`devlog/shots/20261114-051354-B-ar9-caps-before-after.png`: before above,
+  after below). If your window on merged main was a packaged build, look at the board tops: if the caps are grey or checkered there, that is this.
+- **What B suggests, in order of cost**: (1) if a later package is still possible before 10:00: merge `dev-b` (e7751f8 now: built on main 2d15906, cook-only
+  PASS, B's gates PASS; it also carries the sets' final state, filmed on the GPU, unused by a normal match) or cherry-pick only fd40eef (the one file
+  `Look/M_Toon.uasset`, 68,056 bytes, +64 bytes: one usage flag, graph untouched) and re-cut; (2) if not: hide the caps for the operator's session with your
+  own switch (`jam.rink.react 0` stills the arena's answers; if the caps have their own, that one), or tell him the caps are a known fault of H28.
+- Everything else B pushed after 04:31 is dormant in a normal match and can wait until after he has played.
