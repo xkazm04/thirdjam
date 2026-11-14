@@ -67,6 +67,9 @@ static TAutoConsoleVariable<int32> CVarJamScriptHuman(TEXT("jam.ScriptHuman"), 0
 // Lane A135 (track U1, evolution 4; ScriptedHumanInput by the Director's order): the scripted human steers as a hand does, through the camera.
 static TAutoConsoleVariable<int32> CVarJamScriptHumanCam(TEXT("jam.ScriptHumanCam"), 0,
 	TEXT("N > 0 (with jam.ScriptHuman 1): the script's move is turned into held keys (W A S D, eight ways) in the camera's frame, re-decided every N sim frames (12 = a hand's 200 ms), and read back through the live camera's yaw every frame as ReadHumanInput reads the keys: a camera that turns turns the skater. JAMSCREEN hand lines every 600 frames. 0 = the script writes its move on the ice directly (as before). Proofs only."));
+// Lane A163 (track F2, evolution 6): the headless proof of the carrier's cues (JAMVIS sticklock / takegrace from the pawn): the scripted human pokes.
+static TAutoConsoleVariable<int32> CVarJamScriptHumanPoke(TEXT("jam.ScriptHumanPoke"), 0,
+	TEXT("N > 0 (with jam.ScriptHuman 1): the scripted human presses poke when an opposing carrier is within 2.5 m, at most once every N sim frames. 0 = never (as before). Proofs only."));
 // Lane A49: the tackle / cross-check drill (packaged proof of complaint 5). 1 = tackle (right mouse), 2 = cross-check (middle mouse); resets to 0 after 10 attempts.
 // Lane A73: the still capture of the tackling proof (see StillsObserve).
 static TAutoConsoleVariable<int32> CVarJamCtrlStills(TEXT("jam.ctrl.Stills"), 0,
@@ -867,6 +870,18 @@ FJamInput AHokejGameMode::ScriptedHumanInput()
 	// In the faceoff: press at the drop (the first clean press wins the draw).
 	if (Sim->IsDrawOpen() && S.bCentre) { In.bPoke = true; return In; }
 	if (Sim->GetPhase() != EJamSimPhase::Playing) { ScriptCharge = 0; return In; }
+	// Lane A163: the proof's poke (jam.ScriptHumanPoke N; 0 by default: nothing here runs).
+	if (const int32 PokeEvery = CVarJamScriptHumanPoke.GetValueOnGameThread(); PokeEvery > 0)
+	{
+		static int64 LastScriptPoke = -1;
+		const int32 Ci = Sim->CarrierIndex();
+		const int64 Now = Sim->GetFrame();
+		if (Ci >= 0 && Ci != Me && Sim->GetSkaters()[Ci].Team != S.Team && FVector2D::Distance(Sim->GetSkaters()[Ci].Pos, S.Pos) < 2.5 && (LastScriptPoke < 0 || Now < LastScriptPoke || Now - LastScriptPoke >= PokeEvery))
+		{
+			In.bPoke = true;
+			LastScriptPoke = Now;
+		}
+	}
 	FVector2D Aim;
 	if (bHave && GoalDist > 30.0 && Sim->GetFrame() - ScriptLastPass > 600 && Sim->BestPass(Me, Aim) >= 0)
 	{

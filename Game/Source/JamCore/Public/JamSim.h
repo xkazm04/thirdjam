@@ -321,6 +321,17 @@ struct JAMCORE_API FJamSkaterState
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") FVector2D LateVelSelf = FVector2D::ZeroVector;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") FVector2D LateVelOther = FVector2D::ZeroVector;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 ChecksLate = 0;
+	// Lane A157 (track F1, evolution 6) read-out, never hashed, never read by the sim: frames in which the push-out around a downed skater
+	// (game.contact.downed_radius_m) turned this skater's course along the body (a match statistic; 0 for ever at the key's neutral value).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 DownedPushFrames = 0;
+	// Lane A157 (track F1, evolution 6): the check's cooldown and the lunge. RULE STATE, hashed in StateHash() while not 0 (so the keys' neutral values hash
+	// as before): CheckReadyFrame, the first frame this skater's next check press is taken again (game.contact.check_cooldown_frames; 0 = never set);
+	// LungeLeft, frames left of the lunge a pressed check began (game.contact.lunge_frames; 0 = none). Read-outs, never hashed, read by no rule:
+	// ChecksCooling (presses the cooldown dropped), LungesMissed (lunges that ran out on nobody).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int64 CheckReadyFrame = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 LungeLeft = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 ChecksCooling = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 LungesMissed = 0;
 	// R-0029 point 3: the last frame this skater carried the puck (-1000 = never); a check within game.stick.foul_grace_frames of it is not a foul_no_puck.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int64 LastCarryFrame = -1000;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bTouchingPuck = false;
@@ -447,6 +458,7 @@ public:
 	static constexpr int32 DrawWindowFrames = 30;
 	static constexpr int32 BoxFrames = 300;          // the default of game.rules.penalty_frames (lane A72)
 	static constexpr int32 FoulPauseFrames = 60;
+	static constexpr double StopGraceMinMps = 6.0;   // lane A163 (game.stick.stop_grace_frames): the stop that earns the grace begins at this speed or more (a shuffle on the spot earns nothing)
 	static constexpr double PokeTakeM = 0.35;        // blade-to-puck distance (beyond the puck radius) that takes the puck
 	static constexpr double DeflectRangeM = 0.6;     // C-0005: a shot passing within this of a stick deflects
 	static constexpr double DeflectKeep = 0.7;       // ... at 70 % of its speed
@@ -628,6 +640,19 @@ public:
 	// ResolveContact on the velocities the two met with, then the bounce of that meeting (a bump leaves today's velocities alone). True = resolved; no
 	// window opens. False = nothing to resolve: the caller opens the window as before.
 	bool TryLatePress(FJamSkaterState& S);
+	// Lane A157 (track F1, evolution 6): the push-out around a downed skater (game.contact.downed_radius_m above 0; CollideSkaters calls it for a pair of
+	// which exactly one is down, in place of the ordinary collision). Up, on its feet, is closer than Keep to Down's root: Up alone moves out along the line
+	// between them, at most DownedPushOutMps (a skater that was already inside when the other fell is eased out, not thrown); the speed Up had into the
+	// body, measured against Down's own slide, is turned along the body: Up keeps at least DownedSlideShare of its speed, on the side it was already
+	// passing (its facing decides a dead-centre course), so a skater steering into a downed man goes round him. Down's position and velocity are not
+	// written. Deterministic: arithmetic on the two states, in CollideSkaters' pair order.
+	void PushOutOfDowned(FJamSkaterState& Up, const FJamSkaterState& Down, double Keep);
+	static constexpr double DownedPushOutMps = 6.0;
+	static constexpr double DownedSlideShare = 0.8;
+	// Lane A157 (track F1, evolution 6): the lunge as a motion (game.contact.lunge_frames, game.contact.lunge_step_mps). While a lunge runs the skater turns
+	// at LungeSteerShare of its turn rate; a lunge that runs out on nobody costs LungeMissCost x lunge_step_mps of speed.
+	static constexpr double LungeSteerShare = 0.25;
+	static constexpr double LungeMissCost = 2.0;
 	static constexpr double LatePressRangeM = 0.7;
 	// The impulse a hit by Attacker on Victim along HitDir carries, in kg m/s: mass x max(0, closing speed along HitDir + lunge_mps (Body) or thrust_mps (Cross)).
 	double ContactImpulse(const FJamSkaterState& Attacker, const FJamSkaterState& Victim, const FVector2D& HitDir, EContactKind Kind) const;

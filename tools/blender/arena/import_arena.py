@@ -21,6 +21,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(HERE, "out")
 DEST = "/Game/Arena"
 FORCE = os.environ.get("ARENA_FORCE", "") == "1"
+# lane A160: pieces imported again although their triangles, slots and size are the same (a face that changed its slot: the penalty box's clock)
+FORCE_ONLY = [n for n in os.environ.get("ARENA_FORCE_ONLY", "").split(",") if n]
 # slot name (the FBX material name) -> device B's instance. RinkActor re-binds `team` per side (MI_Toon_Blue / MI_Toon_Orange) at Build.
 SLOT_LOOK = {
     "board": "/JamAssets/Look/MI_Toon_Board",
@@ -112,7 +114,7 @@ def goal_opening(mesh, goal):
 def unchanged(name, want):
     """The asset already in /Game/Arena when it equals Blender's build (triangles and size within 2 cm), else None."""
     path = DEST + "/" + name
-    if FORCE or not unreal.EditorAssetLibrary.does_asset_exist(path):
+    if FORCE or name in FORCE_ONLY or not unreal.EditorAssetLibrary.does_asset_exist(path):
         return None
     mesh = unreal.load_asset(path)
     if not mesh or not isinstance(mesh, unreal.StaticMesh) or mesh.get_num_triangles(0) != want["triangles"]:

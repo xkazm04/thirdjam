@@ -209,6 +209,9 @@ namespace JamNetGuestTests
 	const FReadout SkaterReadouts[] = {
 		{ TEXT("ChecksMissed"), TEXT("read-out counter behind the HUD's MISSED line (lane A113); read by no rule") },
 		{ TEXT("ChecksLate"), TEXT("read-out counter: check presses the late-press rule resolved (lane A151); read by no rule") },
+		{ TEXT("DownedPushFrames"), TEXT("read-out counter: frames the push-out around a downed skater turned this skater's course (lane A157); read by no rule") },
+		{ TEXT("ChecksCooling"), TEXT("read-out counter: check presses the cooldown dropped (lane A157); read by no rule") },
+		{ TEXT("LungesMissed"), TEXT("read-out counter: lunges that ran out on nobody (lane A157); read by no rule") },
 		{ TEXT("ChecksGraced"), TEXT("read-out counter behind the HUD's JUST GOT UP line (lane A113); read by no rule") },
 		{ TEXT("ChecksSoft"), TEXT("read-out counter behind the HUD's TOO SOFT line (lane A113); read by no rule") },
 		{ TEXT("ContactGraced"), TEXT("read-out counter behind the HUD's contact line (lane A113); read by no rule") },

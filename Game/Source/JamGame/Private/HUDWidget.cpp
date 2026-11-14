@@ -244,6 +244,9 @@ static TAutoConsoleVariable<int32> CVarJamHudLabelPlates(TEXT("jam.hud.LabelPlat
 // Lane A74 (R-0038): the off-screen puck marker, 0 = off, 1 = on (default).
 // Lane A76: 1 = HUD pass 3 (default), 0 = the A74 layout, for the before column of the proof (same package).
 static TAutoConsoleVariable<int32> CVarJamHudPass3(TEXT("jam.hud.Pass3"), 1, TEXT("HUD pass 3 (lifted far-net badge, edge slots, rink-sized MATCH card): 1 on, 0 the A74 layout."), ECVF_Default);
+// Lane A158 (track U1, evolution 5, the critic's fault 16): the own-net marker stood on the goalie and the net whenever that net was in the frame.
+static TAutoConsoleVariable<int32> CVarJamHudOwnMarkOnNet(TEXT("jam.hud.OwnMarkOnNet"), 0,
+	TEXT("The own-net marker (diamond and 'own NN m') while that net is in the frame: 0 (default) not drawn (the net is there to see), 1 drawn on it as before. Off screen it is the edge chevron either way."), ECVF_Default);
 static TAutoConsoleVariable<int32> CVarJamHudPuckMarker(TEXT("jam.hud.PuckMarker"), 1,
 	TEXT("Edge arrow with the distance pointing at the puck (or its carrier) when it is outside the inner 85 % of the frame: 0 off, 1 on."), ECVF_Default);
 
@@ -732,6 +735,9 @@ void UJamHudWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 		if (P->HasFrame())
 		{
 			RefreshFromFrame(P->GetFrame());
+			// Lane A158: the contact line's place, after everything in the refresh that may show it this tick (lane A163's carrier cues show it last):
+			// off the human and off a downed figure, along its own row.
+			PlaceContactLine();
 			// Lane A14's feed: one slot per row that touches the human (icon name, effect id and the seconds left).
 			TRACE_CPUPROFILER_EVENT_SCOPE(JamHud_EffectsFeed);
 			const AHokejGameMode* GM = GetWorld() ? GetWorld()->GetAuthGameMode<AHokejGameMode>() : nullptr;
@@ -804,6 +810,10 @@ void UJamHudWidget::RefreshFromFrame(const FJamPresentationFrame& F)
 		return;
 	}
 	TRACE_CPUPROFILER_EVENT_SCOPE(JamHud_Refresh);
+	// Lane A158: the boxes kept clear this tick (the human's figure, every downed figure), then the probe: before any widget is moved.
+	if (F.SimFrame < LastSimFrame) { HumanUpSince = -1; bHumanDownNow = false; }
+	UpdateKeepClear(F);
+	ProbeDown(F);
 	ScoreHome->SetText(FText::FromString(FString::Printf(TEXT("%02d"), F.ScoreHome)));
 	ScoreAway->SetText(FText::FromString(FString::Printf(TEXT("%02d"), F.ScoreAway)));
 	HomeBox->SetBrushColor(F.TeamColour0);
@@ -953,9 +963,10 @@ void UJamHudWidget::RefreshFromFrame(const FJamPresentationFrame& F)
 	{ TRACE_CPUPROFILER_EVENT_SCOPE(JamHud_Radar); Radar->SetFrame(F); }
 	{ TRACE_CPUPROFILER_EVENT_SCOPE(JamHud_NetMarkers); UpdateMarker(F); UpdateOwnMarker(F); }
 	{ TRACE_CPUPROFILER_EVENT_SCOPE(JamHud_Yours); UpdateYours(F); }
-	{ TRACE_CPUPROFILER_EVENT_SCOPE(JamHud_PuckMarker); UpdatePuckMarker(F, bCount || Frames > 0 || F.SimFrame < PuckMarkerCardFrames); ResolveEdgeSlots(); UpdateLabelPlates(); }
+	{ TRACE_CPUPROFILER_EVENT_SCOPE(JamHud_PuckMarker); UpdatePuckMarker(F, bCount || Frames > 0 || F.SimFrame < PuckMarkerCardFrames); ResolveEdgeSlots(); YieldToDowned(); UpdateLabelPlates(); }
 	{ TRACE_CPUPROFILER_EVENT_SCOPE(JamHud_Commentary); UpdateCommentary(F); }
 	UpdatePrompts(F, Frames > 0, bSimAdvanced);
+	UpdateCarrierCues(F);   // lane A163 (track F2): the take grace on the rings, the stick lock on the contact line (after UpdateYours placed the rings)
 }
 
 // Lane A123 (1): where the human figure's head is. The visual's head_socket (a mesh socket on any of its components: device B's figures; or a scene component of
@@ -1358,8 +1369,26 @@ void UJamHudWidget::UpdateCommentary(const FJamPresentationFrame& F)
 		CommentaryText->SetWrapTextAt(FMath::Clamp(VW - 600.f, 560.f, 880.f));
 		// Lane A111: docked on the bottom edge (it floated 110 px up, over the play); over the controls strip and the CALL READY line while they show.
 		const bool bCallLine = CallText && CallText->GetVisibility() != ESlateVisibility::Collapsed;
-		if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(CommentaryStrip->Slot))
-			CS->SetPosition(FVector2D(0, CommentaryStripY(CVarJamHudDockCommentary.GetValueOnGameThread() != 0, bHintThisFrame, bCallLine)));
+		const float DockY = CommentaryStripY(CVarJamHudDockCommentary.GetValueOnGameThread() != 0, bHintThisFrame, bCallLine);
+		float PosY = DockY;
+		// Lane A158 (the critic's fault 2): the caption never lies on the human or on a downed figure. From its dock it goes to the slot under the scoreboard
+		// (under the overlay's line and the one-time prompt while they show) and keeps that place until its line ends.
+		if (ClearDownOn())
+		{
+			const float VH = VS.Y / FMath::Max(UWidgetLayoutLibrary::GetViewportScale(this), 0.01f);
+			if (CommentaryFrame != CaptionPlaceLine) { CaptionPlaceLine = CommentaryFrame; CaptionPlaceNow = 0; }
+			const FVector2D Sz(FMath::Max(CommentaryStrip->GetDesiredSize().X, 240.0), FMath::Max(CommentaryStrip->GetDesiredSize().Y, 40.0));
+			const float HalfW = static_cast<float>(Sz.X) * 0.5f;
+			float TopY = PromptSlotY;
+			if (OverlayForPrompt.IsValid() && OverlayForPrompt->IsLineVisible()) TopY = PromptSlotLowY;
+			if (PromptPlate && PromptPlate->GetVisibility() != ESlateVisibility::Collapsed) TopY = FMath::Max(TopY, static_cast<float>(PromptPlaceNow.Y) + PromptSlotH + 10.f);
+			const FVector2D DockMin(VW * 0.5f - HalfW, VH + DockY - Sz.Y), DockMax(VW * 0.5f + HalfW, VH + DockY);
+			const FVector2D TopMin(VW * 0.5f - HalfW, TopY), TopMax(VW * 0.5f + HalfW, TopY + Sz.Y);
+			const int32 Place = CaptionPlace(CaptionPlaceNow, !BoxMeetsAny(DockMin, DockMax, KeepBoxesNow), !BoxMeetsAny(TopMin, TopMax, KeepBoxesNow));
+			if (Place < 0) CommentaryStrip->SetRenderOpacity(0.f);   // both places taken: not drawn this frame (the voice plays on)
+			else { CaptionPlaceNow = Place; if (Place == 1) PosY = TopY + static_cast<float>(Sz.Y) - VH; }
+		}
+		if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(CommentaryStrip->Slot)) CS->SetPosition(FVector2D(0, PosY));
 	}
 }
 
@@ -1452,7 +1481,9 @@ void UJamHudWidget::UpdateYours(const FJamPresentationFrame& F)
 	FVector2D Centre, Size;
 	float DistM = 0.f;
 	const bool bOn = ProjectGroundRing(Me.PosM, YouRingRadiusM, Centre, Size, DistM);
-	const float RingAlpha = bOn ? RingAlphaAt(DistM) : 0.f;
+	// Lane A158: no ring while he is down (it lay across the body: the critic's fault 1); back over RingBackFrames after the get-up. The chevron stays.
+	// Nor across a downed figure beside him (StepRingYield).
+	const float RingAlpha = (bOn ? RingAlphaAt(DistM) : 0.f) * RingDownAlpha(ClearDownOn(), bHumanDownNow, F.SimFrame, HumanUpSince) * StepRingYield(bOn, Centre, Size);
 	if (RingAlpha > 0.f)
 	{
 		YouRing->SetColorAndOpacity(FLinearColor(Team.R, Team.G, Team.B, RingAlpha));
@@ -1706,6 +1737,56 @@ FString UJamHudWidget::GetTakeText() const
 	return bRule ? TakeText->GetText().ToString() + TEXT(": ") + GoalRuleText->GetText().ToString() : TakeText->GetText().ToString();
 }
 
+// Lane A163 (track F2, evolution 6): the carrier's cues (HUDWidget.h has the rules). Runs after UpdateYours has placed and coloured the rings this frame and
+// touches them only while a grace runs; the contact line is F1's plate, shown through ShowContactLine as its own lines are.
+void UJamHudWidget::UpdateCarrierCues(const FJamPresentationFrame& F)
+{
+	const AHokejGameMode* GM = GetWorld() ? GetWorld()->GetAuthGameMode<AHokejGameMode>() : nullptr;
+	const UJamSim* Sim = GM ? GM->GetSim() : nullptr;
+	if (!Sim) return;
+	const TArray<FJamSkaterState>& Sk = Sim->GetSkaters();
+	const int32 Hi = Sim->GetHumanIndex();
+	const int32 Ci = Sim->CarrierIndex();
+	// The take grace: the carrier's ring in yellow, closing to its own size as the grace runs out.
+	const bool bGrace = Sk.IsValidIndex(Ci) && Sim->InTakeGrace(Sk[Ci]);
+	if (bGrace)
+	{
+		const int32 Total = Sim->GetConfig().Stick.TakeGraceFrames;
+		const int32 Left = Sk[Ci].TakeGraceLeft > 0 ? Sk[Ci].TakeGraceLeft : Total;   // the frame the puck is won in: the grace stands, its count starts with the next
+		UImage* Ring = Ci == Hi ? YouRing.Get() : CarrierRing.Get();
+		const bool bRing = Ring && Ring->GetVisibility() != ESlateVisibility::Collapsed;
+		if (bRing)
+		{
+			const FLinearColor Y = S::Yellow();
+			Ring->SetColorAndOpacity(FLinearColor(Y.R, Y.G, Y.B, Ring->GetColorAndOpacity().A));
+			if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(Ring->Slot)) CS->SetSize(CS->GetSize() * TakeGraceRingScale(Left, Total));
+		}
+		if (CueGraceCarrier != Ci)
+		{
+			UE_LOG(LogTemp, Log, TEXT("JAMHUD frame=%lld cue=take_grace carrier=%d human=%d frames=%d ring=%s shown=%d scale=%.2f"), F.SimFrame, Ci, Ci == Hi ? 1 : 0, Left, Ci == Hi ? TEXT("YouRing") : TEXT("CarrierRing"),
+				bRing ? 1 : 0, TakeGraceRingScale(Left, Total));
+		}
+	}
+	CueGraceCarrier = bGrace ? Ci : -1;
+	// The stick lock, and the press a grace refuses: the contact line.
+	if (!Sk.IsValidIndex(Hi)) return;
+	const FJamSkaterState& Hu = Sk[Hi];
+	const bool bLocked = Hu.StickLockLeft > 0;
+	const bool bInto = Hu.PokeWindow > 0 && Hu.bPokeArmed && bGrace && Ci != Hi && Sk[Ci].Team != Hu.Team;
+	if ((bLocked && !bCueStickLocked) || (bInto && !bCuePressIntoGrace && !bLocked))
+	{
+		const FString Line = CarrierCueLine(bLocked, bInto);
+		ShowContactLine(Line);
+		UE_LOG(LogTemp, Log, TEXT("JAMHUD frame=%lld cue=%s contact_line=%s lock_left=%d"), F.SimFrame, bLocked ? TEXT("stick_lock") : TEXT("press_into_grace"), *Line.Replace(TEXT(" "), TEXT("_")), Hu.StickLockLeft);
+	}
+	else if (!bLocked && bCueStickLocked && !bContactPending && GetContactText() == CarrierCueLine(true, false))
+	{
+		ContactStart = CarrierCueFadeStart(F.SimFrame);   // the lock is over: the line fades now
+	}
+	bCueStickLocked = bLocked;
+	bCuePressIntoGrace = bInto;
+}
+
 void UJamHudWidget::UpdateOwnMarker(const FJamPresentationFrame& F)
 {
 	APlayerController* PC = GetOwningPlayer();
@@ -1740,7 +1821,8 @@ void UJamHudWidget::UpdateOwnMarker(const FJamPresentationFrame& F)
 	OwnText->SetText(FText::FromString(OwnMarker.Text));
 	if (UCanvasPanelSlot* TS = Cast<UCanvasPanelSlot>(OwnText->Slot)) { TS->SetPosition(OwnMarker.ScreenPos + FVector2D(0, 10)); }
 	PlaceMarkerArrow(OwnArrow, Sp, OwnMarker.ScreenPos, bBehind, VW);
-	const bool bBadge = ShowNetBadges(F.Phase, CVarJamHudLabelPlates.GetValueOnGameThread() != 0);   // lane A111: as the far net's
+	// Lane A158: not drawn on a net that is in the frame (it stood on the goalie and the net); the edge chevron when the net is out of the frame, as before.
+	const bool bBadge = ShowNetBadges(F.Phase, CVarJamHudLabelPlates.GetValueOnGameThread() != 0) && ShowOwnMarker(OwnMarker.bOnScreen, CVarJamHudOwnMarkOnNet.GetValueOnGameThread() != 0);   // lane A111: as the far net's
 	OwnDiamond->SetVisibility(bBadge ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	OwnText->SetVisibility(bBadge ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	if (!bBadge && OwnArrow) OwnArrow->SetVisibility(ESlateVisibility::Collapsed);

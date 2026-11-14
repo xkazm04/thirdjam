@@ -131,6 +131,17 @@ struct JAMGAME_API FJamCameraSettings
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
 	float KeepRiseM = 0.2f;
 
+	// Lane A158 (track U1, evolution 5; B-to-A-0041 point 3, the critic's fault 11): the pitch cap. Where the boards take the arm the crane kept the arm's
+	// length by height, so a corner was seen from 6 to 7.5 m straight above (pitch to 79 degrees: heads and shoulders, three bodies one shape). With
+	// PitchCapDeg > 0 the crane and the rig's lifts give only the height at which the pitch that holds the chest is no steeper than the cap: the camera
+	// comes down and in along the line of the cap, never nearer to the chest than PitchCapDistM and never under the open-ice height; where the boards leave less arm than
+	// that (his back at the glass), the pitch goes over the cap by what is missing, from PitchCapDistM instead of from the crane's top. No yaw, no move of
+	// the foot: height and pitch alone. 0 = off (the settings default and the neutral value); the game: jam.camera.PitchCap.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
+	float PitchCapDeg = 0.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
+	float PitchCapDistM = 5.f;
+
 	// Lane A135, evolution 4 (the Director's order: "the yaw out of the hold"): the move input is read in the live camera's yaw, so a camera the hold turns
 	// turns W with it. With this on the hold is position, height and pitch alone: the slide is repeated against the boards' inset (a slide the glass stopped
 	// goes on along the glass), and what is still left is answered by the least step of the foot towards the point over the skater (from there he is always

@@ -93,6 +93,61 @@ public:
 	}
 	// jam.hud.ClearMiddle (1 default, 0 the screen of before): the bark bubbles, the YOU tag and the net labels keep out of the middle third during play.
 	static bool ClearMiddleOn();
+	// ---- Lane A158 (track U1, evolution 5; B-to-A-0041 point 1): nothing is drawn on top of the key feature (the fall, the lying, the get-up).
+	// jam.hud.ClearDown 1 (default; 0 = the screen of before):
+	//   - the ring under the human is not drawn while he is down (the chevron over the helmet stays); it comes back over RingBackFrames after the get-up;
+	//   - a marker at a skater's feet or over the world (the carrier's ring, the net badges and their labels, the puck arrow) is not drawn on a frame its box
+	//     meets a downed figure's box;
+	//   - the commentator's caption leaves its dock on the bottom edge for the slot under the scoreboard while the human's box (up or down) or a downed
+	//     figure's box is under the dock; it keeps the place it took until its line ends (no hopping); with both places taken it is not drawn that frame;
+	//   - the contact line steps sideways along its own row, to the side with room, off the human and off a downed figure;
+	//   - the bark lane yields to the same boxes and to a net (UJamBarkWidget reads GetKeepClear).
+	// A figure's box: its bones projected onto the screen plus FigurePadCm (a skinned figure: device B's), else the bounds of its meshes.
+	static bool ClearDownOn();
+	static constexpr int32 RingBackFrames = 12;
+	// The human's ring beside a downed figure (he stands over the man he felled, or beside a mate who is down): it lay across that body too. It fades out
+	// over RingYieldFrames while its box meets a downed figure's and comes back the same way. Pure: the share after one sim frame.
+	static constexpr int32 RingYieldFrames = 6;
+	static float RingYieldStep(float Share, bool bOnDowned) { return FMath::Clamp(Share + (bOnDowned ? -1.f : 1.f) / static_cast<float>(RingYieldFrames), 0.f, 1.f); }
+	static constexpr float FigurePadCm = 14.f;
+	static constexpr float KeepClearPadPx = 6.f;
+	// The ring's share while the rule is on: 0 down, a ramp over RingBackFrames from the frame he is up again (UpSinceFrame; < 0 = never down). Pure.
+	static float RingDownAlpha(bool bRuleOn, bool bDown, int64 SimFrame, int64 UpSinceFrame)
+	{
+		if (!bRuleOn) return 1.f;
+		if (bDown) return 0.f;
+		if (UpSinceFrame < 0 || SimFrame < UpSinceFrame) return 1.f;
+		return FMath::Clamp(static_cast<float>(SimFrame - UpSinceFrame + 1) / static_cast<float>(RingBackFrames), 0.f, 1.f);
+	}
+	static bool BoxesMeet(const FVector2D& AMin, const FVector2D& AMax, const FVector2D& BMin, const FVector2D& BMax, float Pad = 0.f)
+	{
+		return AMin.X - Pad < BMax.X && AMax.X + Pad > BMin.X && AMin.Y - Pad < BMax.Y && AMax.Y + Pad > BMin.Y;
+	}
+	static bool BoxMeetsAny(const FVector2D& Min, const FVector2D& Max, const TArray<FBox2D>& Boxes, float Pad = KeepClearPadPx)
+	{
+		for (const FBox2D& B : Boxes) if (BoxesMeet(Min, Max, B.Min, B.Max, Pad)) return true;
+		return false;
+	}
+	// The caption's place: 0 its dock on the bottom edge, 1 the slot under the scoreboard, -1 not drawn this frame. Current: the place this line holds
+	// (-1 or 0 at a new line). It stays where it is while that place is free; else it takes the other when that is free. Pure.
+	static int32 CaptionPlace(int32 Current, bool bDockFree, bool bTopFree)
+	{
+		const int32 Cur = Current == 1 ? 1 : 0;
+		if (Cur == 0 ? bDockFree : bTopFree) return Cur;
+		if (Cur == 0 ? bTopFree : bDockFree) return 1 - Cur;
+		return -1;
+	}
+	// The contact line's step along its row: the centre x (Slate units) nearest to WantX at which the box [x - HalfW, x + HalfW] x [Y0, Y1] meets none of
+	// Boxes (plus Pad) inside [MinX, MaxX]; false when the row has no such place. Pure.
+	static bool SideStep(float WantX, float HalfW, float Y0, float Y1, const TArray<FBox2D>& Boxes, float MinX, float MaxX, float Pad, float& OutX);
+	// The boxes of this tick (Slate units of the viewport), for the bark lane: the human's figure, every downed figure, both nets. False when the HUD has
+	// not ticked this frame or the rule is off.
+	static bool GetKeepClear(TArray<FBox2D>& OutFigures, TArray<FBox2D>& OutNets);
+	// A figure's box on the screen (see above). Source: 2 bones, 1 mesh bounds, 0 none. PadCm is added around it at the figure's depth.
+	static int32 FigureBoxOnScreen(APlayerController* PC, const class AJamSkater* Skater, float PadCm, FBox2D& OutBox);
+	// Lane A158, item 4: the own-net marker (the diamond and "own NN m") is not drawn while that net is in the frame: it stood on the goalie and the net
+	// (the critic's fault 16); off screen it is the edge chevron with its distance, as before. jam.hud.OwnMarkOnNet 1 = drawn on the net as before.
+	static bool ShowOwnMarker(bool bOnScreen, bool bDrawOnNet) { return bDrawOnNet || !bOnScreen; }
 	// (1) The marker follows the figure: the chevron's tip stands YouMarkerGapPx over the projection of the figure's head anchor (the visual's head_socket, else the
 	// top of its bounds, else the point YouMarkerHeadM over the skater's point on the ice: the rule of before, jam.hud.MarkerAnchor 0). HeadLiftCm is added to a
 	// mesh-socket anchor along the head's own axis (from the "head" bone to the socket; the world's up where the mesh has no such bone), so it holds for a
@@ -228,6 +283,24 @@ public:
 	void ShowContactLine(const FString& Text);
 	FString GetContactText() const;
 	FString GetToastText() const;
+	// ---- Lane A163 (track F2, evolution 6): the carrier's cues, one function (UpdateCarrierCues, called last in RefreshFromFrame). Presentation only: it
+	// reads the sim's skaters and writes nothing back; no widget of its own.
+	// The take grace (game.stick.take_grace_frames: the half second after a skater wins the puck in which no stick takes it): the ring under that carrier
+	// (YouRing for the human, CarrierRing for anybody else) is drawn in the HUD's yellow at TakeGraceRingScale times its size: 1.5 as the grace begins, its
+	// own size as it ends, so the ring closes like a clock. A ring UpdateYours hid this frame stays hidden.
+	static constexpr float TakeGraceRingGrow = 0.5f;
+	static float TakeGraceRingScale(int32 GraceLeft, int32 GraceFrames)
+	{
+		return GraceLeft <= 0 || GraceFrames <= 0 ? 1.f : 1.f + TakeGraceRingGrow * FMath::Clamp(static_cast<float>(GraceLeft) / static_cast<float>(GraceFrames), 0.f, 1.f);
+	}
+	// The stick lock (game.stick.miss_recovery_frames: after a person's missed poke Space and RMB do nothing while it runs) and the press a carrier's grace
+	// refuses: the contact line says which. The lock wins (it is the one that costs him).
+	static FString CarrierCueLine(bool bStickLocked, bool bPressIntoGrace) { return bStickLocked ? TEXT("STICK LOCKED") : bPressIntoGrace ? TEXT("JUST WON IT") : TEXT(""); }
+	// STICK LOCKED stands for the lock's length: when the lock ends, the line is put at the start of its fade (ContactFadeFrames).
+	static int64 CarrierCueFadeStart(int64 SimFrame) { return SimFrame - (ContactLineFrames - ContactFadeFrames); }
+	void UpdateCarrierCues(const FJamPresentationFrame& Frame);
+	bool bCueStickLocked = false, bCuePressIntoGrace = false;
+	int32 CueGraceCarrier = -1;
 	static bool ShowControlsHint(const FJamPresentationFrame& F) { return F.SimFrame < ControlsHintFrames && F.Phase == EJamPhase::Play; }
 	// The Directors Call prompt shows only after the first goal.
 	static bool ShowDirectorsCall(const FJamPresentationFrame& F) { return F.bDirectorsCallReady && (F.ScoreHome + F.ScoreAway) > 0 && F.Phase != EJamPhase::Win && F.Phase != EJamPhase::Lose; }
@@ -449,6 +522,47 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> CommentaryText;
 	UPROPERTY(Transient) TObjectPtr<class UJamEventBus> Bus;
 	void UpdateCommentary(const FJamPresentationFrame& Frame);
+	// ---- Lane A158 (evolution 5): the boxes kept clear this tick, the yield pass, the probe.
+	void UpdateKeepClear(const FJamPresentationFrame& Frame);
+	void YieldToDowned();
+	void PlaceContactLine();
+	void ProbeDown(const FJamPresentationFrame& Frame);
+	bool WidgetBoxOnScreen(const UWidget* W, FBox2D& OutBox) const;     // from the canvas slot, this tick's place
+	bool PaintedBoxOnScreen(const UWidget* W, FBox2D& OutBox) const;    // from the last paint (any widget of any tree)
+	FString ProbeNameOf(const UWidget* W) const;
+	TArray<TWeakObjectPtr<class AJamSkater>> SkaterActors;
+	int32 SkaterSearchTick = 0;
+	bool bHumanDownNow = false;
+	int64 HumanUpSince = -1;
+	bool bHasHumanBox = false;
+	FBox2D HumanBoxNow = FBox2D(ForceInit);
+	TArray<FBox2D> DownBoxesNow;        // every downed figure's box (the human's too)
+	TArray<FBox2D> KeepBoxesNow;        // the human's box (up or down) and every downed figure's
+	TArray<int32> DownWhoNow;           // the skater of each of DownBoxesNow, and its box's source (2 bones, 1 bounds)
+	TArray<int32> DownSourceNow;
+	float RingYield = 1.f;              // the ring's share beside a downed figure (RingYieldStep)
+	float StepRingYield(bool bOn, const FVector2D& Centre, const FVector2D& Size);
+	int32 CaptionPlaceNow = 0;
+	int64 CaptionPlaceLine = -1000000;
+	float ContactStepX = 0.f;
+	bool bContactStepped = false;
+	static uint64 KeepClearTick;
+	static TArray<FBox2D> KeepClearFigures;
+	static TArray<FBox2D> KeepClearNets;
+	// The probe (jam.hud.DownProbe N): what the last tick drew against the boxes of the last tick, per knockdown.
+	struct FDownRun { int64 Start = -1; int32 Frames = 0, HitFrames = 0, ChevronFrames = 0, Source = 0, Stills = 0; TMap<FString, int32> By; };
+	struct FDownProbe
+	{
+		TMap<int32, FDownRun> Open;      // by skater index
+		struct FPrev { int32 Who = -1; bool bHuman = false; FBox2D Box = FBox2D(ForceInit); int32 Source = 0; };
+		TArray<FPrev> Prev;              // the downed figures' boxes of the last tick
+		bool bPrevHumanUp = false; FBox2D PrevHumanBox = FBox2D(ForceInit);
+		int64 PrevFrame = -1, LastLogged = -1;
+		int32 HumanDowns = 0, HumanClean = 0, OtherDowns = 0, OtherClean = 0;
+		int64 HumanFrames = 0, HumanHit = 0, OtherFrames = 0, OtherHit = 0, UpFrames = 0, UpCaptionHit = 0, Elements = 0;
+		TMap<FString, int32> HumanBy, OtherBy;
+	};
+	FDownProbe DownProbe;
 	void UpdatePuckMarker(const FJamPresentationFrame& Frame, bool bCovered);
 	void ResolveEdgeSlots();   // lane A76: one slot rule for the puck chevron, the net chevrons and their labels
 	// Lane A111: the dark plates behind the three distance labels follow their labels after the slot rule has run.

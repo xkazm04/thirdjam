@@ -69,7 +69,7 @@
     },
     "SM_Arena_PenaltyBox": {
       "path": "/Game/Arena/SM_Arena_PenaltyBox.SM_Arena_PenaltyBox",
-      "imported": true,
+      "imported": false,
       "triangles": 1872,
       "triangles_blender": 1872,
       "lods": 1,
@@ -153,7 +153,7 @@
     },
     "SM_Arena_ScorerTable": {
       "path": "/Game/Arena/SM_Arena_ScorerTable.SM_Arena_ScorerTable",
-      "imported": false,
+      "imported": true,
       "triangles": 2088,
       "triangles_blender": 2088,
       "lods": 1,
@@ -678,7 +678,7 @@
     },
     "SM_Arena_BoardCap": {
       "path": "/Game/Arena/SM_Arena_BoardCap.SM_Arena_BoardCap",
-      "imported": true,
+      "imported": false,
       "triangles": 40,
       "triangles_blender": 40,
       "lods": 1,
@@ -737,7 +737,7 @@
     },
     "SM_Arena_BoardCapFar": {
       "path": "/Game/Arena/SM_Arena_BoardCapFar.SM_Arena_BoardCapFar",
-      "imported": true,
+      "imported": false,
       "triangles": 24,
       "triangles_blender": 24,
       "lods": 1,
@@ -796,7 +796,7 @@
     },
     "SM_Arena_BoxDoor": {
       "path": "/Game/Arena/SM_Arena_BoxDoor.SM_Arena_BoxDoor",
-      "imported": true,
+      "imported": false,
       "triangles": 208,
       "triangles_blender": 208,
       "lods": 1,
@@ -857,7 +857,7 @@
     },
     "SM_Arena_BoxHand": {
       "path": "/Game/Arena/SM_Arena_BoxHand.SM_Arena_BoxHand",
-      "imported": true,
+      "imported": false,
       "triangles": 64,
       "triangles_blender": 64,
       "lods": 1,
@@ -876,10 +876,10 @@
       ],
       "vertex_instances": 192,
       "slots": [
-        "team"
+        "dark"
       ],
       "materials": [
-        "/JamAssets/Look/MI_Toon_Blue.MI_Toon_Blue"
+        "/JamAssets/Look/MI_Toon_Dark.MI_Toon_Dark"
       ],
       "bounds_min_cm": [
         -3.3,

@@ -2428,8 +2428,8 @@
           "light_neg": 3.0,
           "net_pos_scale": [
             1.0,
-            1.0,
-            1.0
+            1.0663,
+            0.9669
           ],
           "reacting": true
         },
@@ -2444,8 +2444,8 @@
           "light_neg": 3.0,
           "net_pos_scale": [
             1.0,
-            1.1007,
-            0.9496
+            1.0946,
+            0.9527
           ],
           "reacting": true
         },
@@ -2460,8 +2460,8 @@
           "light_neg": 3.0,
           "net_pos_scale": [
             1.0,
-            1.0946,
-            0.9527
+            1.0549,
+            0.9725
           ],
           "reacting": true
         },
@@ -2476,8 +2476,8 @@
           "light_neg": 3.0,
           "net_pos_scale": [
             1.0,
-            0.9308,
-            1.0346
+            0.9598,
+            1.0201
           ],
           "reacting": true
         },
@@ -2492,8 +2492,8 @@
           "light_neg": 3.0,
           "net_pos_scale": [
             1.0,
-            0.9629,
-            1.0185
+            0.9785,
+            1.0108
           ],
           "reacting": true
         },
@@ -2508,8 +2508,8 @@
           "light_neg": 3.0,
           "net_pos_scale": [
             1.0,
-            1.0,
-            1.0
+            0.996,
+            1.002
           ],
           "reacting": true
         },
@@ -2566,7 +2566,7 @@
         "lamp": 15.4833,
         "light_neg": 15.4833,
         "light_pos": 3.0,
-        "net_neg_scale_y": 1.0946
+        "net_neg_scale_y": 1.0549
       },
       "rattle": {
         "piece": "ArenaBoxNeg",
@@ -2642,8 +2642,8 @@
           "light_neg": 3.0,
           "net_pos_scale": [
             1.0,
-            1.0,
-            1.0
+            1.0663,
+            0.9669
           ],
           "reacting": true
         },
@@ -2658,8 +2658,8 @@
           "light_neg": 3.0,
           "net_pos_scale": [
             1.0,
-            1.1007,
-            0.9496
+            1.0946,
+            0.9527
           ],
           "reacting": true
         },
@@ -2674,8 +2674,8 @@
           "light_neg": 3.0,
           "net_pos_scale": [
             1.0,
-            1.0946,
-            0.9527
+            1.0549,
+            0.9725
           ],
           "reacting": true
         },
@@ -2690,8 +2690,8 @@
           "light_neg": 3.0,
           "net_pos_scale": [
             1.0,
-            0.9308,
-            1.0346
+            0.9598,
+            1.0201
           ],
           "reacting": true
         },
@@ -2706,8 +2706,8 @@
           "light_neg": 3.0,
           "net_pos_scale": [
             1.0,
-            0.9629,
-            1.0185
+            0.9785,
+            1.0108
           ],
           "reacting": true
         },
@@ -2722,8 +2722,8 @@
           "light_neg": 3.0,
           "net_pos_scale": [
             1.0,
-            1.0,
-            1.0
+            0.996,
+            1.002
           ],
           "reacting": true
         },
@@ -2780,7 +2780,7 @@
         "lamp": 15.4833,
         "light_neg": 15.4833,
         "light_pos": 3.0,
-        "net_neg_scale_y": 1.0946
+        "net_neg_scale_y": 1.0549
       },
       "rattle": {
         "piece": "ArenaBoxNeg",
@@ -2856,8 +2856,8 @@
           "light_neg": 3.0,
           "net_pos_scale": [
             1.0,
-            1.0,
-            1.0
+            1.0663,
+            0.9669
           ],
           "reacting": true
         },
@@ -2872,8 +2872,8 @@
           "light_neg": 3.0,
           "net_pos_scale": [
             1.0,
-            1.1007,
-            0.9496
+            1.0946,
+            0.9527
           ],
           "reacting": true
         },
@@ -2888,8 +2888,8 @@
           "light_neg": 3.0,
           "net_pos_scale": [
             1.0,
-            1.0946,
-            0.9527
+            1.0549,
+            0.9725
           ],
           "reacting": true
         },
@@ -2904,8 +2904,8 @@
           "light_neg": 3.0,
           "net_pos_scale": [
             1.0,
-            0.9308,
-            1.0346
+            0.9598,
+            1.0201
           ],
           "reacting": true
         },
@@ -2920,8 +2920,8 @@
           "light_neg": 3.0,
           "net_pos_scale": [
             1.0,
-            0.9629,
-            1.0185
+            0.9785,
+            1.0108
           ],
           "reacting": true
         },
@@ -2936,8 +2936,8 @@
           "light_neg": 3.0,
           "net_pos_scale": [
             1.0,
-            1.0,
-            1.0
+            0.996,
+            1.002
           ],
           "reacting": true
         },
@@ -2994,7 +2994,7 @@
         "lamp": 15.4833,
         "light_neg": 15.4833,
         "light_pos": 3.0,
-        "net_neg_scale_y": 1.0946
+        "net_neg_scale_y": 1.0549
       },
       "rattle": {
         "piece": "ArenaBoxNeg",
@@ -3188,11 +3188,11 @@
       ],
       "shown": true,
       "visible": true,
-      "mesh": "SM_Arena_BoardCapFar",
-      "round": false,
+      "mesh": "SM_Arena_BoardCap",
+      "round": true,
       "material_pos": "MI_Toon_Orange",
       "material": "MI_Toon_Blue",
-      "triangles": 2352,
+      "triangles": 3920,
       "widest_gap_m": 3.604,
       "z_cm": [
         120.0,
@@ -3319,11 +3319,11 @@
       ],
       "shown": true,
       "visible": true,
-      "mesh": "SM_Arena_BoardCapFar",
-      "round": false,
+      "mesh": "SM_Arena_BoardCap",
+      "round": true,
       "material_pos": "MI_Toon_Orange",
       "material": "MI_Toon_Blue",
-      "triangles": 2736,
+      "triangles": 4560,
       "widest_gap_m": 3.63,
       "z_cm": [
         120.0,
@@ -3450,11 +3450,11 @@
       ],
       "shown": true,
       "visible": true,
-      "mesh": "SM_Arena_BoardCapFar",
-      "round": false,
+      "mesh": "SM_Arena_BoardCap",
+      "round": true,
       "material_pos": "MI_Toon_Orange",
       "material": "MI_Toon_Blue",
-      "triangles": 2352,
+      "triangles": 3920,
       "widest_gap_m": 3.604,
       "z_cm": [
         120.0,
@@ -3669,7 +3669,7 @@
           360.0,
           360.0
         ],
-        "caps_in_the_air_f9": 3,
+        "caps_in_the_air_f9": 5,
         "end_light_cd": 6000.0,
         "reacting_after_108": false
       },
@@ -3758,7 +3758,7 @@
           360.0,
           360.0
         ],
-        "caps_in_the_air_f9": 3,
+        "caps_in_the_air_f9": 5,
         "end_light_cd": 6000.0,
         "reacting_after_108": false
       },
@@ -3847,7 +3847,7 @@
           72.0,
           72.0
         ],
-        "caps_in_the_air_f9": 3,
+        "caps_in_the_air_f9": 5,
         "end_light_cd": 1200.0,
         "reacting_after_108": false
       },
@@ -3906,6 +3906,136 @@
         ]
       },
       "ok": true
+    }
+  },
+  "e6": {
+    "jam.rink.arena.bare": 1,
+    "jam.rink.react.loud": 0,
+    "jam.rink.react.light": 1600.0,
+    "domes": {
+      "90x45": {
+        "caps": 73,
+        "round": true,
+        "triangles": 2920,
+        "mesh": "SM_Arena_BoardCap"
+      },
+      "120x60": {
+        "caps": 98,
+        "round": true,
+        "triangles": 3920,
+        "mesh": "SM_Arena_BoardCap"
+      },
+      "140x70": {
+        "caps": 114,
+        "round": true,
+        "triangles": 4560,
+        "mesh": "SM_Arena_BoardCap"
+      }
+    },
+    "pond": {
+      "goals_shown": true,
+      "goal_mesh": "SM_Arena_Goal_W600H061",
+      "code_frame_visible": false,
+      "caps_shown": true,
+      "caps_round": true,
+      "caps": 49,
+      "dressing_shown": false,
+      "boxes_shown": false,
+      "outside_visible": [],
+      "seat": false
+    },
+    "glass_house": {
+      "boxes_shown": true,
+      "dressing_shown": false,
+      "penalty_frames": 600,
+      "visible": [
+        "arena_box_neg",
+        "arena_box_pos",
+        "arena_box_door_neg",
+        "arena_box_door_pos",
+        "arena_box_hand_neg",
+        "arena_box_hand_pos"
+      ],
+      "seat_team1_cm": [
+        265.0,
+        -2337.0,
+        10.0
+      ],
+      "light_peak_cd": 150.0,
+      "light_at_rest_cd": [
+        0.0,
+        0.0
+      ],
+      "light_cd_f0": [
+        0.0,
+        12.5
+      ],
+      "light_cd_f30": [
+        0.0,
+        150.0
+      ],
+      "light_cd_f599": [
+        0.0,
+        12.5
+      ],
+      "light_cd_f600": [
+        0.0,
+        0.0
+      ],
+      "reacting_after": false,
+      "jam.rink.react.box 0": {
+        "light_cd_f30": [
+          0.0,
+          0.0
+        ],
+        "hand_deg_f30": 18.0
+      }
+    },
+    "neon_without_whistle": {
+      "boxes_shown": false,
+      "box_visible": false,
+      "seat": false,
+      "goals_shown": true
+    },
+    "goal_first_frames": {
+      "lamp": 0,
+      "net": 0,
+      "caps": 0,
+      "wave_light": 1
+    },
+    "goal_light": {
+      "p3_clay_peak_cd": [
+        200.0,
+        800.0,
+        800.0
+      ],
+      "radius_cm": [
+        350.0,
+        350.0,
+        350.0
+      ],
+      "end_light_cm": [
+        4510.0,
+        0.0,
+        300.0
+      ],
+      "wave_radius_cm": [
+        350.0,
+        350.0
+      ],
+      "l2_night_peak_cd": [
+        80.0,
+        320.0,
+        320.0
+      ],
+      "ok": true
+    },
+    "ok": {
+      "domes": true,
+      "pond": true,
+      "glass_house": true,
+      "neon_without_whistle": true,
+      "goal_timing": true
     }
   },
   "verdict": "pass"

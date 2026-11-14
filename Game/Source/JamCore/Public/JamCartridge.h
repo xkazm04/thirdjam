@@ -94,6 +94,10 @@ struct JAMCORE_API FJamSkaterConfig
 	// Not a cartridge key (lane A121 measured it as the other candidate, MOVEMENT-3.md): the carrier's own burst multiplier; 0 = accel_mult, as everyone's.
 	// Bar.Movement.StopAndGoSweep sets it.
 	double BurstCarryAccelMult = 0.0;
+	// Not a cartridge key (lane A163, the measurement's second arm; docs/experiments/MOVEMENT-7.md section 3): the take's first step. The frame a skater a
+	// person steers wins the puck (the frame its take grace begins), its first-step burst runs this many frames. 0 = off. bBurstTakeBots: every skater's.
+	int32 BurstTakeFrames = 0;
+	bool bBurstTakeBots = false;
 	// game.skater.burst.rest_frames (lane A128, track F2 evolution 3; the Director's ruling on lane A121's open question): a skater that starts from rest has
 	// earned its first step. Slower than 1 m/s (UJamSim::BurstRestSpeed) for this many frames in a row (a faceoff, a get-up, a full stop), its burst is armed
 	// while it stands and runs burst.frames from the frame it moves off. Never on a charge already under way. 0 = the neutral value (lane A121's rule: only a
@@ -193,6 +197,20 @@ struct JAMCORE_API FJamStickConfig
 	// its stick for this many frames (no poke, no lift, no check; it skates and steers) where it cost stumble_frames without control. 0 = the neutral value: the
 	// stumble. A bot's miss stays the stumble: it is what the carrier's sweep and stop earn (with the recovery for bots too, all_star read -5.5 points on 600).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 MissRecoveryFrames = 20;
+	// game.stick.stop_grace_frames (lane A163, track F2 evolution 6; docs/experiments/MOVEMENT-7.md): the stop tucks the puck. On the frame the reverse brake
+	// of a carrier a person steers begins (law 3's stop: input against a velocity of UJamSim::StopGraceMinMps or more), its puck gets the take grace for this
+	// many frames: no poke and no lift takes it. A body check still loosens it (law 1) and a sprinting carrier has to stop first (law 4). It is the take
+	// grace's own state (FJamSkaterState::TakeGraceLeft), so the HUD's cue for the grace shows it. 0 = off (the neutral value: the game before the lane).
+	// Needs take_grace_frames above 0 (one rule, one state). A bot's stop earns none (bStopGraceBots below is the measurement's arm).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 StopGraceFrames = 0;
+	// Not a cartridge key (lane A163): the measurement's arm. true = a bot carrier's stop earns the grace too.
+	bool bStopGraceBots = false;
+	// Not a cartridge key (lane A163, the measurement's third arm; MOVEMENT-7.md section 3): the pickup settles. The frame a skater a person steers becomes
+	// the puck's new carrier (a loose puck picked up at speed, a take), the puck is seated on its blade for this many frames as a pass's reception is
+	// (FJamSkaterState::SettleFrames: the carry assist holds it whatever its speed against the body). 0 = off: a puck met at more than 4 m/s against the
+	// body is touched and slides on. bPickupSettleBots: every skater's.
+	int32 PickupSettleFrames = 0;
+	bool bPickupSettleBots = false;
 	// Not a cartridge key (lane A152): the instrument. The scripted human (regular and good) presses a poke when it can land: its aim leads its own reaction, and
 	// it does not press into a take grace or a body between. false = the press as it was (every measurement before the lane).
 	bool bPlaytesterPokeRead = false;
@@ -316,6 +334,27 @@ struct JAMCORE_API FJamContactConfig
 	// Ships at 0: at 1.0 the playtester's whiffs fall from 60 % to 51 % of its presses, not under the 40 % asked for (five whiffs in six are presses on a man it
 	// is not closing on, which no bend of direction cures), and Jam.Bot.HumanHasSomethingToDo leaves its budget (docs/experiments/CONTACT-4.md section 6).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double CheckReachM = 0.0;
+	// Lane A157 (track F1, evolution 6; B-to-A-0041 point 2; docs/experiments/CONTACT-7.md section 1): nobody stands in a man who is down. A downed skater
+	// was an ordinary 0.4 m body circle: a skater on its feet stopped 0.8 m from its root (on the lying figure, which is longer than the circle), pushed it
+	// along the ice and bounced off it. With this key above 0 a downed skater's body has THIS radius for every skater on its feet (roots kept
+	// skater radius + downed_radius_m apart, never less than the two circles): the one on its feet alone gives way (at most UJamSim::DownedPushOutMps), the
+	// speed it had into the body turns along it (it goes round), and the downed skater is neither moved nor given any speed. The puck sees the same 0.4 m
+	// circle as before. Two downed skaters, and the hit that fells a skater, collide as before. 0 = the neutral value: the game before the lane (same state hash).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double DownedRadiusM = 0.0;
+	// Lane A157 (track F1, evolution 6; R-0060 point 4; CONTACT-7.md section 2): a check press has a cooldown. A press opened a window whenever it came, so
+	// RMB every 12 frames kept the human's window open for ever: the hit needed no timing. For this many frames after a press that opened a window (or
+	// resolved as a late press) the same skater's next check press is dropped: no window, no cue (read-out FJamSkaterState::ChecksCooling). Bots and the
+	// human alike (the brain's own spacing is 30 frames, the scripted human's 30). 0 = the neutral value: every press opens a window (same state hash).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 CheckCooldownFrames = 0;
+	// Lane A157 (track F1, evolution 6; CONTACT-7.md section 3): the lunge as a motion. A pressed check was a window on an ordinary collision and its lunge
+	// (lunge_mps) a number in the impulse: the body did nothing, a miss cost nothing. With lunge_frames above 0 a press that opens a window commits the body
+	// for that many frames: lunge_step_mps is added to its velocity along its facing at once (and counts in the hit as real closing speed: the impulse's own
+	// lunge_mps is reduced by it while the lunge runs, so a head-on hit is the hit it was), its turn rate is UJamSim::LungeSteerShare of normal and it cannot
+	// brake by reversing. A lunge that ends in a body ends there. One that runs out on nobody is the miss: the skater loses UJamSim::LungeMissCost x
+	// lunge_step_mps of its speed (the step and as much again). No second lunge starts inside one. Both 0 = the neutral value (same state hash).
+	// The name game.contact.lunge_mps was taken (lane A92: the impulse's number), hence lunge_step_mps.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 LungeFrames = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double LungeStepMps = 0.0;
 	// Not a cartridge key (lane A138, R-0050 point 2 is a rule; R-0053 point 5 asks every rule for its neutral). true = a shield refuses the stick and never the
 	// shove (lane A125: the body shield and the take grace refuse the take only; where only they refuse it, the cross-check's shove is contact from any side).
 	// false = the refusal of main before lane A125: whatever refuses the lift refuses the shove too, and a lift from behind is never a shove. JamBaseline.h sets it.

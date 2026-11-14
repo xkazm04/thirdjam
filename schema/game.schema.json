@@ -470,6 +470,12 @@
           "maximum": 90,
           "description": "Lane A152 (track F2; R-0059 point 4): a miss costs a recovery, not a fall. A poke of the skater a person steers whose window runs out next to an opposing carrier locks its stick for this many physics frames: no poke, no stick lift and no body check, while it skates and steers as it likes. Leave the key out for the default in DEFAULTS.md; 0 = the neutral value (the game before the lane): the miss costs stumble_frames without control instead. A bot's miss stays the stumble (the carrier's sweep and stop earn it); a poke the take grace refused costs neither; with stumble_frames 0 a miss costs nothing at all."
         },
+        "stop_grace_frames": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 120,
+          "description": "Lane A163 (track F2 evolution 6): the stop tucks the puck. On the frame the reverse brake of a carrier a person steers begins (input against a velocity of 6 m/s or more), its puck gets the take grace for this many physics frames: no poke and no stick lift takes it; a body check still loosens it, and a sprinting carrier has to stop first. Needs take_grace_frames above 0. Leave the key out for the default in DEFAULTS.md; 0 = off, the neutral value (the game before the lane)."
+        },
         "poke_window_frames": {
           "type": "integer",
           "minimum": 2,
@@ -877,6 +883,30 @@
           "minimum": 0,
           "maximum": 3,
           "description": "The check finds its man: while a human skater's check window is open (12 frames) its velocity is turned onto the collision course with the nearest standing opponent whose body is within this many metres of its own and inside 60 degrees of where it is going or facing. The speed is kept and none is added (the hit's strength stays the contact law's), the position is untouched; a bot aims its own check. Part of the momentum model (contact.momentum true). 0 = the neutral value: the press goes where the skater was going."
+        },
+        "downed_radius_m": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 2,
+          "description": "Nobody stands in a man who is down (B-to-A-0041 point 2): with this above 0 a downed skater's body has this radius for every skater on its feet (roots kept 0.4 m + this apart, never less than the two 0.4 m body circles): the skater on its feet alone gives way (eased out at 6 m/s at most), the speed it had into the body turns along it (it goes round), and the downed skater is neither moved nor given any speed. The puck sees the same body as before; two downed skaters and the hit that fells a skater collide as before. 0 = the neutral value: a downed skater is an ordinary body (others stop 0.8 m from its root, push it along the ice and bounce off it)."
+        },
+        "check_cooldown_frames": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 120,
+          "description": "A check press has a cooldown (R-0060 point 4): for this many frames after a check press that opened a window, the same skater's next check press is dropped (no window, no cue), so a mashed button holds no window open: at the human's 12-frame window a button mashed without pause has one open 12 frames in every this-many. Bots and the human alike (the brain spaces its own presses 30 frames apart). 0 = the neutral value: every press opens a window."
+        },
+        "lunge_frames": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 30,
+          "description": "The lunge as a motion: a check press that opens a window commits the body for this many frames: lunge_step_mps is added along its facing at once, it turns at a quarter of its turn rate and cannot brake by reversing. A lunge that ends in a body ends there; one that runs out on nobody costs twice lunge_step_mps of speed (the miss). Part of the momentum model (contact.momentum true). 0 = the neutral value: a press moves nothing."
+        },
+        "lunge_step_mps": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 4,
+          "description": "The lunge's forward step in m/s, added to the velocity along the facing when a lunge starts (lunge_frames above 0). It is real closing speed in the hit, so the impulse's own lunge_mps is reduced by it while the lunge runs (at lunge_step_mps = lunge_mps a head-on hit is the hit it was). 0 = the neutral value."
         }
       }
     },

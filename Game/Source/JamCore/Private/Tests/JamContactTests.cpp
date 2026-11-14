@@ -2416,5 +2416,217 @@ bool FJamContactLatePress::RunTest(const FString& Parameters)
 	}
 	return true;
 }
+// ---- Lane A157 (track F1, evolution 6, CONTACT-7.md section 1): nobody stands in a man who is down -------------------------------------------------------
+//   Jam.Core.Contact.DownedPushOut   game.contact.downed_radius_m 0.6: a skater on its feet is kept 1.0 m (root to root) from a downed skater, alone gives
+//                                    way, goes round him, and the downed skater's slide is the slide of a skater nobody touched; 0 (the neutral value) = the
+//                                    ordinary 0.4 m body circle: the skater stops 0.8 m from the root and pushes the downed man along; the hit that fells
+//                                    is the same hit at either value
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamContactDownedPushOut, "Jam.Core.Contact.DownedPushOut", JamContactTests::Flags)
+bool FJamContactDownedPushOut::RunTest(const FString& Parameters)
+{
+	struct FOut
+	{
+		int32 HitFrame = -1, Knock = 0, Outcome = 0, In06 = 0, In09 = 0, LastInKeep = -1, Push = 0, Frames = 0, VicPush = 0;
+		float Ratio = 0.f;
+		double MinDist = 1e9, MinSpeedAfter6 = 1e9;
+		FVector2D VicEnd = FVector2D::ZeroVector, AttEnd = FVector2D::ZeroVector;
+		TArray<FVector2D> VicPath;
+	};
+	// The victim stands at the centre dot with its back to the human, who glides at it at 9 m/s from 1.3 m and presses: down (a hit from behind: the long
+	// knockdown; the whistle is off in the scene). From the frame after the hit the human:
+	//   Into  skates straight at the man on the ice, every frame;
+	//   Away  is lifted off the scene (the downed man's own slide: the reference);
+	//   On    keeps its course, the line through the body.
+	enum { Into, Away, On };
+	auto Play = [this](const TCHAR* Name, double Radius, int32 Mode) -> FOut
+	{
+		FOut O;
+		FContactScene S = Make(*this, [Radius](FJamGameConfig& G) { G.Contact.DownedRadiusM = Radius; });
+		if (!S.Ok()) return O;
+		S.Sim->SetSkater(S.V, FVector2D::ZeroVector, FVector2D::ZeroVector, PI);
+		S.Sim->SetSkater(S.A, FVector2D(1.3, 0.0), FVector2D(-9.0, 0.0), PI);
+		const double Keep = FMath::Max(2.0 * UJamSim::SkaterRadius, UJamSim::SkaterRadius + Radius);
+		for (int32 F = 0; F < 240; ++F)
+		{
+			TArray<FJamInput> In;
+			In.SetNum(S.Sim->GetSkaters().Num());
+			In[S.A].bCheck = F == 0;
+			if (O.HitFrame >= 0 && Mode == Into) In[S.A].Move = (S.Vic().Pos - S.Att().Pos).GetSafeNormal();
+			if (O.HitFrame >= 0 && Mode == On) In[S.A].Move = FVector2D(-1.0, 0.0);
+			S.Sim->Step(In);
+			if (O.HitFrame < 0)
+			{
+				if (S.Vic().ContactOutcome == 0) continue;
+				O.HitFrame = F; O.Outcome = S.Vic().ContactOutcome; O.Ratio = S.Vic().ContactRatio; O.Knock = S.Vic().KnockFrames;
+				if (Mode == Away) S.Sim->SetSkater(S.A, FVector2D(20.0, 10.0), FVector2D::ZeroVector, 0.0);
+				continue;
+			}
+			if (!S.Vic().IsDown()) break;
+			const int32 After = F - O.HitFrame;
+			const double D = FVector2D::Distance(S.Att().Pos, S.Vic().Pos);
+			++O.Frames;
+			O.VicPath.Add(S.Vic().Pos);
+			O.VicEnd = S.Vic().Pos; O.AttEnd = S.Att().Pos;
+			if (Mode == Away) continue;
+			O.MinDist = FMath::Min(O.MinDist, D);
+			if (D < 0.6) ++O.In06;
+			if (D < 0.9) ++O.In09;
+			if (D < Keep - 1e-6) O.LastInKeep = After;
+			if (After > 6) O.MinSpeedAfter6 = FMath::Min(O.MinSpeedAfter6, S.Att().Vel.Size());
+		}
+		O.Push = S.Att().DownedPushFrames; O.VicPush = S.Vic().DownedPushFrames;
+		AddInfo(FString::Printf(TEXT("JAMDOWNED %s (downed_radius_m %.2f, keep %.2f m): hit at frame %d outcome %d ratio %.3f down %d frames | %d frames lying: closest root to root %.3f m, frames within 0.6 m %d, within 0.9 m %d, last frame inside the keep-out %d after the hit | push-out frames %d | the downed man ends at (%.3f, %.3f), the skater at (%.3f, %.3f), its slowest after frame 6: %.2f m/s"),
+			Name, Radius, Keep, O.HitFrame, O.Outcome, O.Ratio, O.Knock, O.Frames, O.MinDist, O.In06, O.In09, O.LastInKeep, O.Push, O.VicEnd.X, O.VicEnd.Y, O.AttEnd.X, O.AttEnd.Y, O.MinSpeedAfter6));
+		return O;
+	};
+	auto SamePath = [](const FOut& X, const FOut& Y)
+	{
+		if (X.VicPath.Num() != Y.VicPath.Num()) return 1e9;
+		double Worst = 0.0;
+		for (int32 i = 0; i < X.VicPath.Num(); ++i) Worst = FMath::Max(Worst, FVector2D::Distance(X.VicPath[i], Y.VicPath[i]));
+		return Worst;
+	};
+	const FOut Into0 = Play(TEXT("into him, the neutral value"), 0.0, Into);
+	const FOut Away0 = Play(TEXT("nobody near, the neutral value"), 0.0, Away);
+	const FOut On0 = Play(TEXT("on course, the neutral value"), 0.0, On);
+	const FOut Into6 = Play(TEXT("into him"), 0.6, Into);
+	const FOut Away6 = Play(TEXT("nobody near"), 0.6, Away);
+	const FOut On6 = Play(TEXT("on course"), 0.6, On);
+	const FOut Into2 = Play(TEXT("into him, a radius under the body's own"), 0.2, Into);
+	if (!TestTrue(TEXT("the staged hit fells the victim"), Into0.Outcome == UJamSim::ContactDown && Into0.Knock >= 90)) return false;
+	// The hit itself is the ordinary collision at any value.
+	TestTrue(TEXT("the hit that fells is the same hit with the key on (outcome, ratio, frames down)"), Into6.Outcome == Into0.Outcome && Into6.Ratio == Into0.Ratio && Into6.Knock == Into0.Knock && Into6.HitFrame == Into0.HitFrame);
+	// The neutral value: the game as it was.
+	TestTrue(*FString::Printf(TEXT("neutral: a skater skating into a downed man stops at the two body circles (closest %.3f m: never under 0.8, B's 0.6 m bar already holds)"), Into0.MinDist), Into0.MinDist > 0.8 - 1e-6 && Into0.In06 == 0);
+	TestTrue(*FString::Printf(TEXT("neutral: and stays there, on the lying figure (%d of %d frames within 0.9 m)"), Into0.In09, Into0.Frames), Into0.In09 > Into0.Frames / 2);
+	TestTrue(*FString::Printf(TEXT("neutral: and pushes the downed man along (he ends %.2f m from where his own slide ends)"), FVector2D::Distance(Into0.VicEnd, Away0.VicEnd)), FVector2D::Distance(Into0.VicEnd, Away0.VicEnd) > 0.3);
+	TestEqual(TEXT("neutral: the push-out never runs"), Into0.Push + On0.Push + Into0.VicPush, 0);
+	// The key on.
+	TestTrue(*FString::Printf(TEXT("0.6: inside the keep-out (1.0 m) for the first %d frames after the hit at most (eased out at 6 m/s), never again"), Into6.LastInKeep), Into6.LastInKeep <= 3 && On6.LastInKeep <= 3);
+	TestTrue(TEXT("0.6: no frame within 0.6 m, and none within 0.9 m after the easing"), Into6.In06 == 0 && Into6.In09 <= 2 && On6.In06 == 0 && On6.In09 <= 2);
+	TestTrue(*FString::Printf(TEXT("0.6: the downed man slides as if nobody were near (the largest difference of his path %.2e m, skating into him; %.2e m, on course)"), SamePath(Into6, Away6), SamePath(On6, Away6)), SamePath(Into6, Away6) < 1e-9 && SamePath(On6, Away6) < 1e-9);
+	TestTrue(TEXT("0.6: the rule ran on the skater on its feet, never on the downed one"), Into6.Push > 0 && On6.Push > 0 && Into6.VicPush == 0 && On6.VicPush == 0);
+	TestTrue(*FString::Printf(TEXT("0.6: the skater who keeps his course goes round the body and is past it when the man gets up (x %.2f against the downed man's %.2f), never slower than %.2f m/s"), On6.AttEnd.X, On6.VicEnd.X, On6.MinSpeedAfter6),
+		On6.AttEnd.X < On6.VicEnd.X - 1.0 && On6.MinSpeedAfter6 > 2.0);
+	TestTrue(*FString::Printf(TEXT("neutral: the same skater is still behind the body it pushes (x %.2f against %.2f)"), On0.AttEnd.X, On0.VicEnd.X), On0.AttEnd.X > On0.VicEnd.X);
+	// A radius under the body's own circle keeps the two circles apart (0.8 m), without the push on the downed man.
+	TestTrue(*FString::Printf(TEXT("0.2: the keep-out is never less than the two body circles (closest %.3f m), and the downed man is not pushed"), Into2.MinDist), Into2.MinDist > 0.8 - 1e-6 && SamePath(Into2, Away0) < 1e-9);
+	return true;
+}
+// ---- Lane A157 (track F1, evolution 6, CONTACT-7.md sections 2 and 3): a check is a commitment -------------------------------------------------------------
+//   Jam.Core.Contact.CheckCooldown   game.contact.check_cooldown_frames 40: of a button mashed every 12 frames two presses in five open a window, the hit
+//                                    that meets the body between two of them does not land, a single press timed for it does; 0 (the neutral value):
+//                                    every press opens a window and the masher's hit lands
+//   Jam.Core.Contact.Lunge           game.contact.lunge_frames 12, lunge_step_mps 1.5: a press steps the body forward 1.5 m/s and holds its line (a quarter
+//                                    of the turn); the lunge that meets nobody costs 3 m/s; the one that meets a body is the hit it was (the impulse's
+//                                    lunge is the motion now); no second lunge inside one; both 0 (the neutral value): a press moves nothing
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamContactCheckCooldown, "Jam.Core.Contact.CheckCooldown", JamContactTests::Flags)
+bool FJamContactCheckCooldown::RunTest(const FString& Parameters)
+{
+	struct FOut { int32 Presses = 0, Cooling = 0, Missed = 0, WindowFrames = 0, Outcome = 0, HitFrame = -1, ContactFrame = -1; };
+	// The victim stands at the centre dot facing the human, who glides at it at 9 m/s from Start metres. Mash > 0: check pressed every Mash frames from
+	// frame 0; Single >= 0: one press on that frame. 80 frames.
+	auto Play = [this](const TCHAR* Name, int32 Cooldown, double Start, int32 Mash, int32 Single) -> FOut
+	{
+		FOut O;
+		FContactScene S = Make(*this, [Cooldown](FJamGameConfig& G) { G.Contact.CheckCooldownFrames = Cooldown; });
+		if (!S.Ok()) return O;
+		S.Sim->SetSkater(S.V, FVector2D::ZeroVector, FVector2D::ZeroVector, 0.0);
+		S.Sim->SetSkater(S.A, FVector2D(Start, 0.0), FVector2D(-9.0, 0.0), PI);
+		for (int32 F = 0; F < 80; ++F)
+		{
+			TArray<FJamInput> In;
+			In.SetNum(S.Sim->GetSkaters().Num());
+			In[S.A].bCheck = (Mash > 0 && F % Mash == 0) || F == Single;
+			S.Sim->Step(In);
+			if (S.Att().bCheckThisFrame) ++O.Presses;
+			if (S.Att().CheckWindow > 0) ++O.WindowFrames;
+			if (O.ContactFrame < 0 && S.Vic().Vel.Size() > 1e-3) O.ContactFrame = F;
+			if (O.HitFrame < 0 && S.Vic().ContactOutcome != 0) { O.HitFrame = F; O.Outcome = S.Vic().ContactOutcome; }
+		}
+		O.Cooling = S.Att().ChecksCooling; O.Missed = S.Att().ChecksMissed;
+		AddInfo(FString::Printf(TEXT("JAMCOOL %s (check_cooldown_frames %d, from %.2f m, mash every %d, single press at %d): presses that opened a window %d, dropped %d, windows run out %d, frames with a window open %d of 80 | the bodies met at frame %d, hit at frame %d outcome %d"),
+			Name, Cooldown, Start, Mash, Single, O.Presses, O.Cooling, O.Missed, O.WindowFrames, O.ContactFrame, O.HitFrame, O.Outcome));
+		return O;
+	};
+	// Far away (the bodies never meet in 80 frames): the press accounting.
+	const FOut Far0 = Play(TEXT("mashed on open ice, the neutral value"), 0, 30.0, 12, -1);
+	const FOut Far40 = Play(TEXT("mashed on open ice"), 40, 30.0, 12, -1);
+	TestTrue(TEXT("neutral: every one of the 7 presses opens a window, none is dropped"), Far0.Presses == 7 && Far0.Cooling == 0);
+	TestTrue(*FString::Printf(TEXT("neutral: the masher's window is open nearly all the time (%d of 80 frames)"), Far0.WindowFrames), Far0.WindowFrames >= 70);
+	TestTrue(TEXT("40: the presses at frames 0 and 48 open a window, the five between and after are dropped"), Far40.Presses == 2 && Far40.Cooling == 5);
+	TestTrue(*FString::Printf(TEXT("40: the masher's window is open %d of 80 frames (two windows of 12)"), Far40.WindowFrames), Far40.WindowFrames >= 22 && Far40.WindowFrames <= 24);
+	// The bodies meet about frame 27, between the masher's two windows under the cooldown.
+	const FOut None = Play(TEXT("no press"), 0, 4.85, 0, -1);
+	if (!TestTrue(*FString::Printf(TEXT("the staged bodies meet between frames 20 and 40 (frame %d)"), None.ContactFrame), None.ContactFrame >= 20 && None.ContactFrame <= 40)) return false;
+	const FOut Mash0 = Play(TEXT("mashed into him, the neutral value"), 0, 4.85, 12, -1);
+	const FOut Mash40 = Play(TEXT("mashed into him"), 40, 4.85, 12, -1);
+	const FOut Timed0 = Play(TEXT("one timed press, the neutral value"), 0, 4.85, 0, None.ContactFrame - 3);
+	const FOut Timed40 = Play(TEXT("one timed press"), 40, 4.85, 0, None.ContactFrame - 3);
+	TestTrue(TEXT("neutral: the mashed button lands the hit (a window is always open)"), Mash0.Outcome >= UJamSim::ContactStumble && Mash0.HitFrame == None.ContactFrame);
+	TestEqual(TEXT("40: the mashed button does not (the bodies meet between its two windows)"), Mash40.Outcome, 0);
+	TestTrue(TEXT("a press timed for the contact lands at either value, the same hit"), Timed0.Outcome >= UJamSim::ContactStumble && Timed40.Outcome == Timed0.Outcome && Timed40.HitFrame == Timed0.HitFrame);
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamContactLunge, "Jam.Core.Contact.Lunge", JamContactTests::Flags)
+bool FJamContactLunge::RunTest(const FString& Parameters)
+{
+	struct FOut { double Speed1 = 0, Speed16 = 0, SpeedMax = 0, Yaw5 = 0; int32 Missed = 0, LeftAfterHit = -1, Outcome = 0, HitFrame = -1, Left1 = 0; float Ratio = 0.f; };
+	// The human at Pos gliding at Speed along -x (facing it), the victim at the centre dot facing the human (or parked far away: bVictim false).
+	// Presses on the frames in Press; Turn: move input across its course from frame 0. 30 frames.
+	auto Play = [this](const TCHAR* Name, int32 Frames, double Step, double StartX, double Speed, bool bVictim, bool bTurn, std::initializer_list<int32> Press) -> FOut
+	{
+		FOut O;
+		FContactScene S = Make(*this, [Frames, Step](FJamGameConfig& G) { G.Contact.LungeFrames = Frames; G.Contact.LungeStepMps = Step; });
+		if (!S.Ok()) return O;
+		S.Sim->SetSkater(S.V, bVictim ? FVector2D::ZeroVector : FVector2D(0.0, 11.0), FVector2D::ZeroVector, 0.0);
+		S.Sim->SetSkater(S.A, FVector2D(StartX, 0.0), FVector2D(-Speed, 0.0), PI);
+		const double Yaw0 = S.Att().Yaw;
+		for (int32 F = 0; F < 30; ++F)
+		{
+			TArray<FJamInput> In;
+			In.SetNum(S.Sim->GetSkaters().Num());
+			for (int32 P : Press) if (P == F) In[S.A].bCheck = true;
+			if (bTurn) In[S.A].Move = FVector2D(0.0, 1.0);
+			S.Sim->Step(In);
+			const double V = S.Att().Vel.Size();
+			O.SpeedMax = FMath::Max(O.SpeedMax, V);
+			if (F == 0) { O.Speed1 = V; O.Left1 = S.Att().LungeLeft; }
+			if (F == 15) O.Speed16 = V;
+			if (F == 4) O.Yaw5 = FMath::Abs(FMath::FindDeltaAngleRadians(Yaw0, S.Att().Yaw));
+			if (O.HitFrame < 0 && S.Vic().ContactOutcome != 0) { O.HitFrame = F; O.Outcome = S.Vic().ContactOutcome; O.Ratio = S.Vic().ContactRatio; O.LeftAfterHit = S.Att().LungeLeft; }
+		}
+		O.Missed = S.Att().LungesMissed;
+		AddInfo(FString::Printf(TEXT("JAMLUNGE %s (lunge_frames %d, lunge_step_mps %.1f, %.1f m/s from x %.1f): speed after the press's frame %.2f, after 16 frames %.2f, highest %.2f m/s | turned %.3f rad in 5 frames | lunge frames left after the press's frame %d | lunges missed %d | hit at frame %d outcome %d ratio %.3f, lunge left after it %d"),
+			Name, Frames, Step, Speed, StartX, O.Speed1, O.Speed16, O.SpeedMax, O.Yaw5, O.Left1, O.Missed, O.HitFrame, O.Outcome, O.Ratio, O.LeftAfterHit));
+		return O;
+	};
+	// From a standstill.
+	const FOut Stand0 = Play(TEXT("standing, the neutral value"), 0, 0.0, 10.0, 0.0, false, false, { 0 });
+	const FOut Stand = Play(TEXT("standing"), 12, 1.5, 10.0, 0.0, false, false, { 0 });
+	TestTrue(TEXT("neutral: a press moves nothing, no lunge runs, none is missed"), Stand0.SpeedMax < 1e-6 && Stand0.Left1 == 0 && Stand0.Missed == 0);
+	TestTrue(*FString::Printf(TEXT("12 / 1.5: a standing skater's press steps it forward (%.2f m/s after the press's frame), 12 frames of lunge to come"), Stand.Speed1), Stand.Speed1 > 1.3 && Stand.Speed1 <= 1.5 && Stand.Left1 == 12);
+	TestTrue(*FString::Printf(TEXT("12 / 1.5: the lunge met nobody: one miss, and the skater stands again (%.2f m/s)"), Stand.Speed16), Stand.Missed == 1 && Stand.Speed16 < 1e-6);
+	// At speed, nobody there.
+	const FOut Glide0 = Play(TEXT("gliding, the neutral value"), 0, 0.0, 10.0, 6.0, false, false, { 0 });
+	const FOut Glide = Play(TEXT("gliding"), 12, 1.5, 10.0, 6.0, false, false, { 0 });
+	TestTrue(*FString::Printf(TEXT("12 / 1.5: the step is on top of the glide (%.2f against %.2f m/s)"), Glide.Speed1, Glide0.Speed1), Glide.Speed1 > Glide0.Speed1 + 1.3);
+	TestTrue(*FString::Printf(TEXT("12 / 1.5: the miss costs the step and as much again (%.2f against %.2f m/s after 16 frames)"), Glide.Speed16, Glide0.Speed16), Glide.Missed == 1 && Glide.Speed16 < Glide0.Speed16 - 1.2 && Glide.Speed16 > Glide0.Speed16 - 1.8);
+	const FOut Twice = Play(TEXT("gliding, pressed again inside the lunge"), 12, 1.5, 10.0, 6.0, false, false, { 0, 6 });
+	TestTrue(*FString::Printf(TEXT("12 / 1.5: no second lunge inside one (highest speed %.2f m/s, one miss)"), Twice.SpeedMax), Twice.SpeedMax < 7.6 && Twice.Missed == 1);
+	// Committed to its line.
+	const FOut Turn0 = Play(TEXT("turning, the neutral value"), 0, 0.0, 10.0, 6.0, false, true, { 0 });
+	const FOut Turn = Play(TEXT("turning"), 12, 1.5, 10.0, 6.0, false, true, { 0 });
+	TestTrue(*FString::Printf(TEXT("12 / 1.5: a lunging skater turns a quarter of what it would (%.3f against %.3f rad in 5 frames)"), Turn.Yaw5, Turn0.Yaw5), Turn0.Yaw5 > 0.05 && Turn.Yaw5 > 0.2 * Turn0.Yaw5 && Turn.Yaw5 < 0.3 * Turn0.Yaw5);
+	// Into a body: the hit it was.
+	const FOut Hit0 = Play(TEXT("the hit, the neutral value"), 0, 0.0, 1.3, 9.0, true, false, { 0 });
+	const FOut Hit = Play(TEXT("the hit"), 12, 1.5, 1.3, 9.0, true, false, { 0 });
+	if (!TestTrue(TEXT("the staged press lands at the neutral value"), Hit0.Outcome >= UJamSim::ContactStumble)) return false;
+	TestTrue(*FString::Printf(TEXT("12 / 1.5: the lunge that meets a body is the hit it was (outcome %d against %d, ratio %.3f against %.3f: the impulse's lunge is the motion now)"), Hit.Outcome, Hit0.Outcome, Hit.Ratio, Hit0.Ratio),
+		Hit.Outcome == Hit0.Outcome && FMath::Abs(Hit.Ratio - Hit0.Ratio) < 0.03 * Hit0.Ratio);
+	TestTrue(TEXT("12 / 1.5: it ends in the body: no lunge left, no miss charged"), Hit.LeftAfterHit == 0 && Hit.Missed == 0);
+	return true;
+}
 
 #endif

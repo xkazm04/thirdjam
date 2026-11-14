@@ -27,7 +27,19 @@ param(
     # Lane A150: 'open' (default, lane A106: the remote console's open /Game/Maps/Rink) or 'play' (PLAY NOW's own path: jam.menuscreen play).
     [ValidateSet('open', 'play')][string]$StartPath = 'open',
     # Lane A150: no -cut on the command line (the operator's PLAY NOW: hockey.regular from the menu's own guess).
-    [switch]$NoCut
+    [switch]$NoCut,
+    # Lane A161: -Offscreen renders with no window (-RenderOffscreen at ResX x ResY): no foreground, no cursor, for a lane that does not own them.
+    [switch]$Offscreen,
+    # Lane A161: a file of actor names (one a line). From sim frame 600 the play window alternates every -ToggleSec seconds between those actors hidden
+    # and shown (ke <name> SetActorHiddenInGame 1|0, one connection per toggle), starting with -ToggleFirst; each toggle is a line in events.log.
+    [string]$ToggleFile = '',
+    [int]$ToggleSec = 20,
+    [ValidateSet('hide', 'show')][string]$ToggleFirst = 'hide',
+    # Lane A161: or two raw console commands toggled the same way (state 'hide' sends -ToggleHideCmd, 'show' -ToggleShowCmd), e.g. a cvar's two values.
+    [string]$ToggleHideCmd = '', [string]$ToggleShowCmd = '',
+    # Lane A161: or the actors of a streamed level whose static mesh matches a regex (labels are editor-only, so the actors are found in the match:
+    # 'getall StaticMeshComponent StaticMesh', its lines in game.log whose path holds -ToggleLevel and whose mesh matches -ToggleMeshes).
+    [string]$ToggleMeshes = '', [string]$ToggleLevel = 'LR_P3_Clay'
 )
 $wt = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $Exe = (Resolve-Path $Exe).Path
@@ -44,7 +56,7 @@ $script:gamePid = -1
 $others = OtherWindows
 Note "other game/editor windows at start: $($others -join ' ')"
 $cutArg = if ($NoCut) { '' } else { "-cut=`"$cut`" " }
-$a = "$cutArg-dpcvars=jam.ScriptHuman=1,r.GPUCsvStatsEnabled=1$(if ($Dp) { ',' + $Dp }) -windowed -ResX=$ResX -ResY=$ResY -WinX=40 -WinY=40 -log -abslog=`"$log`" -statnamedevents -RemoteConsoleIP=127.0.0.1 -RemoteConsolePort=$Port"
+$a = "$cutArg-dpcvars=jam.ScriptHuman=1,r.GPUCsvStatsEnabled=1$(if ($Dp) { ',' + $Dp }) $(if ($Offscreen) { "-RenderOffscreen -ResX=$ResX -ResY=$ResY" } else { "-windowed -ResX=$ResX -ResY=$ResY -WinX=40 -WinY=40" }) -log -abslog=`"$log`" -statnamedevents -RemoteConsoleIP=127.0.0.1 -RemoteConsolePort=$Port"
 if ($Trace) { $a += " -trace=$TraceChannels -tracefile=`"$(Join-Path $out 'trace.utrace')`"" }
 $p = Start-Process -FilePath $Exe -ArgumentList $a -PassThru
 $null = $p.Handle
@@ -85,6 +97,30 @@ function Console([string]$cmd, [int]$waitSec = 15) {
     return $false
 }
 
+# Lane A161: many console commands over one connection (the toggle of the stands: 293 ke lines).
+function ConsoleBatch([string[]]$cmds, [int]$waitSec = 30) {
+    $okN = 0
+    try {
+        $c = New-Object System.Net.Sockets.TcpClient; $c.ReceiveTimeout = $waitSec * 1000; $c.Connect('127.0.0.1', $Port)
+        $s = $c.GetStream(); $w = New-Object IO.StreamWriter($s); $w.NewLine = "`n"; $w.AutoFlush = $true; $r = New-Object IO.StreamReader($s)
+        $w.WriteLine('{"id":1,"op":"hello","version":1}'); $null = $r.ReadLine()
+        $first = $script:rcId + 1
+        foreach ($cmd in $cmds) { $script:rcId++; $w.WriteLine((@{ id = $script:rcId; op = 'exec'; cmd = $cmd } | ConvertTo-Json -Compress)) }
+        $t0 = $sw.Elapsed.TotalSeconds; $got = 0
+        while ($got -lt $cmds.Count -and $sw.Elapsed.TotalSeconds - $t0 -lt $waitSec) { $l = $r.ReadLine(); if ($null -eq $l) { break }; if ($l -match '^\{"id":(\d+),') { if ([int]$Matches[1] -ge $first) { $got++; if ($l.Contains('"ok":true')) { $okN++ } } } }
+        $c.Close()
+    } catch { Note "console batch: $($_.Exception.Message)" }
+    return $okN
+}
+$toggleNames = @(); if ($ToggleFile) { $toggleNames = @(Get-Content $ToggleFile | Where-Object { $_.Trim() }) }
+function Toggle([string]$state) {
+    $v = if ($state -eq 'hide') { 1 } else { 0 }
+    $t0 = $sw.Elapsed.TotalSeconds
+    $cmds = if ($toggleNames.Count -gt 0) { @($toggleNames | ForEach-Object { "ke $_ SetActorHiddenInGame $v" }) } elseif ($state -eq 'hide') { @($ToggleHideCmd) } else { @($ToggleShowCmd) }
+    $n = ConsoleBatch $cmds
+    Note ("TOGGLE {0} {1} of {2} ok in {3:0.00} s" -f $state, $n, $cmds.Count, ($sw.Elapsed.TotalSeconds - $t0))
+}
+
 # 1. Menu up, a fixed wait (the preload of lane A65 runs in it), CSV on, Enter.
 if (-not (WaitLog '/Game/Maps/Menu' 120)) { Note 'menu map never logged' }
 Note 'menu map logged'
@@ -101,7 +137,26 @@ if ($Memreport) { Console 'memreport -full' 40 | Out-Null; Start-Sleep -Seconds 
 if ($PlaySeconds -gt 0) {
     Note "play window: $PlaySeconds s"
     $t0 = $sw.Elapsed.TotalSeconds
-    while ($sw.Elapsed.TotalSeconds - $t0 -lt $PlaySeconds) { if ($p.HasExited) { Note 'game exited during the match'; break }; Start-Sleep -Seconds 1 }
+    $state = $ToggleFirst; $nextToggle = 0
+    if ($ToggleMeshes) {
+        Console 'getall StaticMeshComponent StaticMesh' 20 | Out-Null
+        Start-Sleep -Seconds 2
+        $fs = [IO.File]::Open($log, 'Open', 'Read', 'ReadWrite'); $sr = New-Object IO.StreamReader($fs); $txt = $sr.ReadToEnd(); $sr.Close()
+        $found = @{}
+        foreach ($ln in ($txt -split "`n")) {
+            if ($ln -match '\d+\) StaticMeshComponent (\S+)\.StaticMeshComponent0\.StaticMesh = .*StaticMesh''([^'']+)''') {
+                $actorPath = $Matches[1]; $meshPath = $Matches[2]
+                if ($actorPath.Contains($ToggleLevel) -and $meshPath -match $ToggleMeshes) { $found[($actorPath -split '\.')[-1]] = 1 } }
+        }
+        $toggleNames = @($found.Keys | Sort-Object)
+        Note "toggle actors: $($toggleNames.Count) in $ToggleLevel whose mesh matches '$ToggleMeshes'"
+        $toggleNames | Set-Content (Join-Path $out 'toggle-actors.txt')
+    }
+    while ($sw.Elapsed.TotalSeconds - $t0 -lt $PlaySeconds) {
+        if ($p.HasExited) { Note 'game exited during the match'; break }
+        if (($toggleNames.Count -gt 0 -or $ToggleHideCmd) -and $sw.Elapsed.TotalSeconds - $t0 -ge $nextToggle) { Toggle $state; $state = if ($state -eq 'hide') { 'show' } else { 'hide' }; $nextToggle += $ToggleSec }
+        Start-Sleep -Milliseconds 250
+    }
     Console 'csvprofile stop' | Out-Null
     Start-Sleep -Seconds 3
 }

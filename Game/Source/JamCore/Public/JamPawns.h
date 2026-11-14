@@ -158,6 +158,7 @@ private:
 	bool bWasPinned = false;   // lane A45 (C-0001 v4): SetBoardPin level, sent on the change
 	int32 SeenSoft = 0, SeenMissed = 0, SeenGraced = 0;   // lane A113: the sim's press counters at the last frame applied (the JAMVIS press line)
 	bool bWasBraking = false;   // lane A125: SetBraking level, sent on the change
+	bool bWasTakeGrace = false, bWasStickLock = false;   // lane A163 (track F2): the take grace and the stick lock at the last frame applied (the JAMVIS takegrace / sticklock lines)
 	double LastSimSpeed = 0.0;   // lane A125: the sim speed at the last frame applied (SetBraking's Decel)
 	// Lane A45: the sim frame for the JAMVIS log lines (from the event bus; -1 without one). Log only, never feeds the pose.
 	int64 SimFrameForLog() const;

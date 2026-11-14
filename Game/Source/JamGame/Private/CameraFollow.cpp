@@ -47,6 +47,11 @@ static TAutoConsoleVariable<float> CVarJamCameraKeepStep(TEXT("jam.camera.KeepSt
 	TEXT("Metres a sim frame the hold's own move of the camera's foot may change by (0.6 default; 0 = no limit: build 9's hold, which never turned the camera and snapped by up to 3 m). Presentation only."), ECVF_Default);
 static TAutoConsoleVariable<float> CVarJamCameraKeepNet(TEXT("jam.camera.KeepNet"), 0.f,
 	TEXT("Inside the blue line, with the attacked net within 30 degrees of the camera's yaw, the net's mouth is kept inside this fraction of the half frame's height by pitch and by giving the crane's height back: 0 = off (the default: not proven better, see docs/experiments/SCREEN.md part 4), 0.9 = on. Presentation only."), ECVF_Default);
+// Lane A158 (track U1, evolution 5): the pitch cap (FJamCameraSettings::PitchCapDeg). 0 = off, the camera of before.
+static TAutoConsoleVariable<float> CVarJamCameraPitchCap(TEXT("jam.camera.PitchCap"), 55.f,
+	TEXT("Degrees under the horizon the camera looks down at most where the boards take its arm (a corner is not seen from straight above): the crane gives only the height that pitch allows, never nearer to the chest than jam.camera.PitchCapDist, never under the open-ice height. 0 = off (the camera of before). Presentation only."), ECVF_Default);
+static TAutoConsoleVariable<float> CVarJamCameraPitchCapDist(TEXT("jam.camera.PitchCapDist"), 5.f,
+	TEXT("Metres: the nearest the pitch cap brings the camera to the human's chest (5 default)."), ECVF_Default);
 static TAutoConsoleVariable<int32> CVarJamCameraProbe(TEXT("jam.camera.Probe"), 0,
 	TEXT("N > 0: a JAMSCREEN camera line every N sim frames, counted from the first: frames with the human's chest outside the middle third and outside the frame, the puck out of frame while the human carries, the attacked net out of frame while he is inside the blue line, the camera's largest step. Lane A135 proof."));
 static TAutoConsoleVariable<float> CVarJamCameraKeepYaw(TEXT("jam.camera.KeepYaw"), 0.f,
@@ -375,7 +380,8 @@ void UJamFollowCamera::KeepHumanInFrame(const FJamCameraSettings& C, const FJamC
 	const double MaxDown = 89.5;                                                 // the camera does not look past straight down
 	// A chest further than this share of the height in front of the camera's foot cannot be reached by the pitch (the tangent of how far past the nadir the edge reaches).
 	const double Reach = FMath::Tan(FMath::DegreesToRadians(MaxDown + EdgeDeg - 90.0));
-	const double Down1 = -(double)InOutPitchDeg;
+	// Evolution 5 (lane A158): with the pitch cap on, the pitch the stage asks for is no steeper than the cap (the chest's budget still has the last word).
+	const double Down1 = C.PitchCapDeg > 0.f ? FMath::Min(-(double)InOutPitchDeg, (double)C.PitchCapDeg) : -(double)InOutPitchDeg;
 
 	// The crane. The rig's arm: over the ice (distance and off-axis) and from the chest up to the camera; the crane keeps its length, the height moving by
 	// at most KeepRiseM a frame (a height short of the crane's costs nothing: the steps below hold the chest at any height).
@@ -413,6 +419,19 @@ void UJamFollowCamera::KeepHumanInFrame(const FJamCameraSettings& C, const FJamC
 				H = Lo;
 			}
 		}
+	}
+	// Evolution 5 (lane A158), the pitch cap: the crane and the rig's own lifts (the corner lift raised the camera to 6.5 m over a skater 2 m ahead of it)
+	// give no more height than the cap's pitch needs to hold the chest (the pitch may sit EdgeDeg over the chest's bearing), no less than keeps the camera
+	// PitchCapDistM from the chest, and never under the open-ice rig's height. The rate limit below eases it.
+	if (C.PitchCapDeg > 0.f)
+	{
+		const double Y0 = FMath::DegreesToRadians((double)InOutYawDeg);
+		const FVector2D ToH = HumanM - InOutPosM;
+		const double Ahead = ToH.X * FMath::Cos(Y0) + ToH.Y * FMath::Sin(Y0);
+		const double ZCap = FMath::Max(Ahead, 0.0) * FMath::Tan(FMath::DegreesToRadians(FMath::Min((double)C.PitchCapDeg + EdgeDeg, 89.0)));
+		const double ZNear = FMath::Sqrt(FMath::Max((double)C.PitchCapDistM * C.PitchCapDistM - ToH.SizeSquared(), 0.0));
+		const double ZRig = FMath::Max((double)C.HeightM - C.ChestM, 0.5);
+		H = FMath::Min(H, (double)C.ChestM + FMath::Max3(ZCap, ZNear, ZRig));
 	}
 	if (PrevHeightM > 0.f && C.KeepRiseM > 0.f) H = FMath::Clamp(H, (double)PrevHeightM - C.KeepRiseM, (double)PrevHeightM + C.KeepRiseM);
 	double Z = FMath::Max(H - C.ChestM, 0.5);
@@ -872,6 +891,8 @@ void UJamFollowCamera::StepSimFrame(const FJamPresentationFrame& Frame)
 			Live.KeepNoYaw = FMath::Clamp(CVarJamCameraKeepNoYaw.GetValueOnGameThread(), 0, 2);                   // evolution 4
 			Live.KeepStepM = FMath::Clamp(CVarJamCameraKeepStep.GetValueOnGameThread(), 0.f, 10.f);
 			Live.KeepNetFrac = FMath::Clamp(CVarJamCameraKeepNet.GetValueOnGameThread(), 0.f, 1.f);              // evolution 4
+			Live.PitchCapDeg = FMath::Clamp(CVarJamCameraPitchCap.GetValueOnGameThread(), 0.f, 89.f);            // lane A158, evolution 5
+			Live.PitchCapDistM = FMath::Clamp(CVarJamCameraPitchCapDist.GetValueOnGameThread(), 2.f, 12.f);
 			if (GEngine && GEngine->GameViewport && GEngine->GameViewport->Viewport)
 			{
 				const FIntPoint Sz = GEngine->GameViewport->Viewport->GetSizeXY();

@@ -764,6 +764,8 @@ bool FJamCameraKeepsHuman::RunTest(const FString&)
 	{
 		int32 Frames = 0, OutThird = 0, OutFrame = 0, OutsideBoards = 0;
 		float MaxX = 0.f, MaxY = 0.f, MaxStepCm = 0.f, MaxPitchStep = 0.f, MaxYawStep = 0.f, MaxH = 0.f;
+		int32 Over55 = 0, Over60 = 0, Over70 = 0, Near5 = 0;   // lane A158: frames looking down steeper than 55.5 / 60 / 70 degrees, frames nearer than 4.99 m to the chest
+		float MaxDown = 0.f, MinDistM = 1e9f;
 		TArray<float> Yaw;
 		TArray<bool> In30;   // the chest inside 0.31 of the half frame on this frame (the stage's own fraction)
 	};
@@ -819,6 +821,16 @@ bool FJamCameraKeepsHuman::RunTest(const FString&)
 			if (FMath::Abs(Fr.X) > 1.f || FMath::Abs(Fr.Y) > 1.f) ++Out.OutFrame;
 			if (!UJamFollowCamera::IsInsideBoards(JamA40Test::Cam2D(T), Rink, C.BoardsMarginM - 1e-3f)) ++Out.OutsideBoards;
 			Out.MaxH = FMath::Max(Out.MaxH, (float)T.GetLocation().Z / 100.f);
+			{
+				const float Down = -(float)T.Rotator().Pitch;
+				const float DistM = (float)FVector::Dist(T.GetLocation(), FVector(Pos.X * 100.0, Pos.Y * 100.0, C.ChestM * 100.0)) / 100.f;
+				Out.MaxDown = FMath::Max(Out.MaxDown, Down);
+				Out.MinDistM = FMath::Min(Out.MinDistM, DistM);
+				if (Down > 55.5f) ++Out.Over55;
+				if (Down > 60.f) ++Out.Over60;
+				if (Down > 70.f) ++Out.Over70;
+				if (DistM < 4.99f) ++Out.Near5;
+			}
 			if (bPrev && !bTeleport)
 			{
 				Out.MaxStepCm = FMath::Max(Out.MaxStepCm, (float)FVector::Dist(T.GetLocation(), Prev.GetLocation()));
@@ -945,6 +957,31 @@ bool FJamCameraKeepsHuman::RunTest(const FString&)
 				Ch.NoYaw, Ch.StepM, Yd, YdMax, R.OutThird, R.OutFrame, R.MaxX, R.MaxY, R.MaxStepCm, R.MaxPitchStep, R.MaxYawStep));
 		}
 	}
+	// Lane A158 (evolution 5): the pitch cap on the same three paths. Height and pitch alone: the yaw of every frame is the yaw without the cap, the foot
+	// stays inside the boards, he is held as before, nothing snaps; the frames seen from steeply above fall.
+	TestEqual(TEXT("the pitch cap is off in the settings (the neutral value)"), FJamCameraSettings().PitchCapDeg, 0.f);
+	for (const FRinkCase& K : { FRinkCase{ TEXT("90 m"), 90.f, 45.f, 3.75f, 135 }, FRinkCase{ TEXT("140 m"), 140.f, 70.f, 5.83f, 136 }, FRinkCase{ TEXT("120 m, 8.5 m arcs"), 120.f, 60.f, 8.5f, 137 } })
+	{
+		const FRun B = Skate(K.L, K.W, K.R, K.Seed, On);
+		for (const float Cap : { 50.f, 55.f, 60.f })
+		{
+			FJamCameraSettings Capped = On;
+			Capped.PitchCapDeg = Cap;
+			const FRun R = Skate(K.L, K.W, K.R, K.Seed, Capped);
+			int32 YawDiff = 0;
+			for (int32 i = 0; i < R.Yaw.Num(); ++i) if (FMath::Abs(FMath::UnwindDegrees(R.Yaw[i] - B.Yaw[i])) > 0.01f) ++YawDiff;
+			AddInfo(FString::Printf(TEXT("JAMSCREEN pitchcap %s cap %.0f: frames steeper than 55.5 deg %d -> %d, than 60 deg %d -> %d, than 70 deg %d -> %d; steepest %.1f -> %.1f deg; highest %.2f -> %.2f m; nearest to the chest %.2f -> %.2f m (frames under 4.99 m: %d -> %d); chest outside the middle third %d -> %d (outside the frame %d -> %d, largest %.3f, %.3f); yaw not the yaw without the cap on %d frames; largest step a frame: camera %.0f -> %.0f cm, pitch %.2f -> %.2f deg"),
+				K.Name, Cap, B.Over55, R.Over55, B.Over60, R.Over60, B.Over70, R.Over70, B.MaxDown, R.MaxDown, B.MaxH, R.MaxH, B.MinDistM, R.MinDistM, B.Near5, R.Near5, B.OutThird, R.OutThird, B.OutFrame, R.OutFrame, R.MaxX, R.MaxY, YawDiff,
+				B.MaxStepCm, R.MaxStepCm, B.MaxPitchStep, R.MaxPitchStep));
+			TestEqual(FString::Printf(TEXT("%s, cap %.0f: frames whose yaw is not the yaw without the cap"), K.Name, Cap), YawDiff, 0);
+			TestEqual(FString::Printf(TEXT("%s, cap %.0f: frames with the chest outside the frame"), K.Name, Cap), R.OutFrame, 0);
+			TestEqual(FString::Printf(TEXT("%s, cap %.0f: the camera never crosses the boards' inset"), K.Name, Cap), R.OutsideBoards, 0);
+			TestTrue(FString::Printf(TEXT("%s, cap %.0f: the camera is never higher than without the cap (%.2f, %.2f m)"), K.Name, Cap, R.MaxH, B.MaxH), R.MaxH <= B.MaxH + 0.01f);
+			TestTrue(FString::Printf(TEXT("%s, cap %.0f: no more frames steeper than 60 degrees than without the cap (%d, %d)"), K.Name, Cap, R.Over60, B.Over60), R.Over60 <= B.Over60);
+			TestTrue(FString::Printf(TEXT("%s, cap %.0f: he is held as without the cap (outside the middle third on %d frames, %d without; at most 20)"), K.Name, Cap, R.OutThird, B.OutThird), R.OutThird <= FMath::Max(B.OutThird + 4, 20) && R.OutThird <= 24);
+			TestTrue(FString::Printf(TEXT("%s, cap %.0f: no snap (camera %.0f cm, pitch %.2f deg a frame)"), K.Name, Cap, R.MaxStepCm, R.MaxPitchStep), R.MaxStepCm <= 150.f && R.MaxPitchStep <= 15.f);
+		}
+	}
 	// For the next lane: the same model with the crane rising at 0.4 m a frame (the default is 0.2).
 	{
 		FJamCameraSettings Fast = On;
@@ -952,6 +989,73 @@ bool FJamCameraKeepsHuman::RunTest(const FString&)
 		const FRun R = Skate(90.f, 45.f, 3.75f, 135, Fast);
 		AddInfo(FString::Printf(TEXT("JAMSCREEN keep 90 m with KeepRiseM 0.4: outside the middle third %d; largest step a frame: camera %.0f cm, pitch %.2f deg, yaw %.2f deg"), R.OutThird, R.MaxStepCm, R.MaxPitchStep, R.MaxYawStep));
 	}
+	return true;
+}
+
+// ---- lane A158 (track U1, evolution 5): nothing is drawn on top of the key feature. Pure rules, no world.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamHudClearDown, "Jam.Hud.ClearDown", EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+bool FJamHudClearDown::RunTest(const FString&)
+{
+	TestTrue(TEXT("the rule is on by default"), UJamHudWidget::ClearDownOn());
+	// The ring: gone while he is down, back over RingBackFrames from the frame he is up; the neutral value draws it always.
+	TestEqual(TEXT("ring: never down"), UJamHudWidget::RingDownAlpha(true, false, 500, -1), 1.f);
+	TestEqual(TEXT("ring: down"), UJamHudWidget::RingDownAlpha(true, true, 500, -1), 0.f);
+	TestEqual(TEXT("ring: down, whatever the memory says"), UJamHudWidget::RingDownAlpha(true, true, 500, 400), 0.f);
+	TestEqual(TEXT("ring: the first frame up"), UJamHudWidget::RingDownAlpha(true, false, 600, 600), 1.f / UJamHudWidget::RingBackFrames);
+	TestEqual(TEXT("ring: half way back"), UJamHudWidget::RingDownAlpha(true, false, 605, 600), 0.5f);
+	TestEqual(TEXT("ring: back"), UJamHudWidget::RingDownAlpha(true, false, 600 + UJamHudWidget::RingBackFrames, 600), 1.f);
+	TestEqual(TEXT("ring: a restart (the frame count went back)"), UJamHudWidget::RingDownAlpha(true, false, 10, 600), 1.f);
+	TestEqual(TEXT("ring: the neutral value draws it on a downed human"), UJamHudWidget::RingDownAlpha(false, true, 500, -1), 1.f);
+	// The ring beside a downed figure: out over RingYieldFrames, back the same way.
+	{
+		float Share = 1.f;
+		for (int32 i = 0; i < UJamHudWidget::RingYieldFrames; ++i) Share = UJamHudWidget::RingYieldStep(Share, true);
+		TestEqual(TEXT("ring: gone after RingYieldFrames on a downed figure"), Share, 0.f);
+		TestEqual(TEXT("ring: it stays gone"), UJamHudWidget::RingYieldStep(Share, true), 0.f);
+		Share = UJamHudWidget::RingYieldStep(Share, false);
+		TestTrue(TEXT("ring: it starts back once clear"), Share > 0.f && Share < 1.f);
+		for (int32 i = 0; i < UJamHudWidget::RingYieldFrames; ++i) Share = UJamHudWidget::RingYieldStep(Share, false);
+		TestEqual(TEXT("ring: back"), Share, 1.f);
+	}
+	// Boxes.
+	TestTrue(TEXT("boxes that overlap meet"), UJamHudWidget::BoxesMeet(FVector2D(0, 0), FVector2D(10, 10), FVector2D(9, 9), FVector2D(20, 20)));
+	TestFalse(TEXT("boxes that touch do not"), UJamHudWidget::BoxesMeet(FVector2D(0, 0), FVector2D(10, 10), FVector2D(10, 0), FVector2D(20, 10)));
+	TestTrue(TEXT("a pad makes neighbours meet"), UJamHudWidget::BoxesMeet(FVector2D(0, 0), FVector2D(10, 10), FVector2D(14, 0), FVector2D(20, 10), 6.f));
+	// The caption: its dock, the slot under the scoreboard when the dock is taken, no hop back, nothing when both are taken.
+	TestEqual(TEXT("caption: the dock when it is free"), UJamHudWidget::CaptionPlace(0, true, true), 0);
+	TestEqual(TEXT("caption: the top when a figure is under the dock"), UJamHudWidget::CaptionPlace(0, false, true), 1);
+	TestEqual(TEXT("caption: it stays at the top while the top is free (no hop back)"), UJamHudWidget::CaptionPlace(1, true, true), 1);
+	TestEqual(TEXT("caption: back to the dock when the top is taken"), UJamHudWidget::CaptionPlace(1, true, false), 0);
+	TestEqual(TEXT("caption: not drawn when both are taken"), UJamHudWidget::CaptionPlace(0, false, false), -1);
+	TestEqual(TEXT("caption: not drawn when both are taken (from the top)"), UJamHudWidget::CaptionPlace(1, false, false), -1);
+	TestEqual(TEXT("caption: a hidden frame keeps the dock as its place"), UJamHudWidget::CaptionPlace(-1, true, false), 0);
+	// The contact line's step along its row (1920 wide, the row 850..888, the line 300 wide).
+	{
+		const float VW = 1920.f, HalfW = 150.f, Y0 = 850.f, Y1 = 888.f, Pad = 6.f, MinX = 48.f + HalfW, MaxX = VW - 430.f - HalfW;
+		float X = 0.f;
+		TArray<FBox2D> None;
+		TestTrue(TEXT("contact: a free row"), UJamHudWidget::SideStep(960.f, HalfW, Y0, Y1, None, MinX, MaxX, Pad, X));
+		TestEqual(TEXT("contact: it stays at the centre"), X, 960.f);
+		TArray<FBox2D> Lying = { FBox2D(FVector2D(900, 800), FVector2D(1220, 900)) };   // a figure lying under the centre, more of it to the right
+		TestTrue(TEXT("contact: a figure under the centre"), UJamHudWidget::SideStep(960.f, HalfW, Y0, Y1, Lying, MinX, MaxX, Pad, X));
+		TestTrue(FString::Printf(TEXT("contact: it steps to the nearer side, clear of the figure (%.0f)"), X), X + HalfW + Pad <= 900.f && X < 960.f);
+		TestFalse(TEXT("contact: its box there meets nothing"), UJamHudWidget::BoxMeetsAny(FVector2D(X - HalfW, Y0), FVector2D(X + HalfW, Y1), Lying, Pad));
+		float X2 = 0.f;
+		TestTrue(TEXT("contact: from where it stepped to"), UJamHudWidget::SideStep(X, HalfW, Y0, Y1, Lying, MinX, MaxX, Pad, X2));
+		TestEqual(TEXT("contact: it stays there (no hop)"), X2, X);
+		TArray<FBox2D> Above = { FBox2D(FVector2D(900, 500), FVector2D(1220, 700)) };   // a figure over the row: not on it
+		TestTrue(TEXT("contact: a figure above the row"), UJamHudWidget::SideStep(960.f, HalfW, Y0, Y1, Above, MinX, MaxX, Pad, X));
+		TestEqual(TEXT("contact: the centre"), X, 960.f);
+		TArray<FBox2D> Wall = { FBox2D(FVector2D(0, 800), FVector2D(1920, 900)) };       // the row is taken from edge to edge
+		TestFalse(TEXT("contact: no place on the row"), UJamHudWidget::SideStep(960.f, HalfW, Y0, Y1, Wall, MinX, MaxX, Pad, X));
+		TArray<FBox2D> Left = { FBox2D(FVector2D(100, 800), FVector2D(1000, 900)) };     // only the right is free, short of the ability plate
+		TestTrue(TEXT("contact: only the right is free"), UJamHudWidget::SideStep(960.f, HalfW, Y0, Y1, Left, MinX, MaxX, Pad, X));
+		TestTrue(FString::Printf(TEXT("contact: right of the figure, left of the ability plate (%.0f)"), X), X - HalfW - Pad >= 1000.f && X <= MaxX);
+	}
+	// The own-net marker: not on a net that is in the frame; the edge chevron when it is not; the neutral value draws it either way.
+	TestFalse(TEXT("own marker: not drawn on a net in the frame"), UJamHudWidget::ShowOwnMarker(true, false));
+	TestTrue(TEXT("own marker: drawn for a net out of the frame"), UJamHudWidget::ShowOwnMarker(false, false));
+	TestTrue(TEXT("own marker: the neutral value"), UJamHudWidget::ShowOwnMarker(true, true));
 	return true;
 }
 

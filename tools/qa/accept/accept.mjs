@@ -108,6 +108,13 @@ for (let s = from; s <= to; s++) {
   const ok = rows.every((r) => r.ok);
   table.push({ step: s, name: def.name, ok, verbs: rows });
 }
+// A155 (PIXEL ROW): the driver photographs the live window before it quits it (PIXEL lit= mean=). A frame whose lit share is under 0.20 is a black world with its HUD on top: a real fail.
+const px = ev.match(/PIXEL lit=([0-9.]+) mean=([0-9.]+)/);
+if (px) {
+  const lit = +px[1], mean = +px[2], pok = lit >= 0.2;
+  if (!pok) { allOk = false; anyReal = true; }
+  table.push({ step: 'px', name: 'The frame is not black (one still of the window before the quit)', ok: pok, verbs: [{ verb: 'pixels', ok: pok, machine: '', facts: `lit_share=${lit} mean_luminance=${mean} (a rendered rink reads 0.99 / 148; the black world with its HUD 0.01 / 1; the menu card 0.38)${pok ? '' : ' BLACK FRAME'}` }] });
+} else console.log('WARN no PIXEL line in events.log: the frame was not photographed');
 const pk = ev.match(/pass key resolved: (\w+)/) || ev.match(/pass key unresolved/);
 const warns = [...new Set((ev.match(/WARN [^\r\n]*shared OS cursor[^\r\n]*/g) || []).map((w) => w.replace(/\d+:[A-Za-z]:[^ ]*/g, '<other>')))];
 console.log(`acceptance run: ${logPath}`);
