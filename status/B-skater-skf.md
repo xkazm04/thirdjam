@@ -3625,3 +3625,192 @@ One render batch, repeated once after `GetUp_Wall_Right` was taken back (two sho
 1. **The loops seen moving, and judged.** Everything about the loops' character so far is from stills and numbers: nobody has watched one. A short clip per loop at the game camera (the engine's play strip, or frames from the lab stitched to a GIF at 60 fps), read once for the brief's words: dazed, not writhing, no clutching, nothing that reads as injury. Then the moves retimed or swapped where one reads wrong, and a third move per loop so rule A and rule B are not the only two things a downed player does. **Proving numbers:** loops watched in motion: 8 of 8 (today 0); moves per loop that read at the game camera: 3 (today 2); the cut still 1 cm or less and the stick 0.2 cm or less.
 2. **The get-ups from every side, every frame.** This pass looked at two get-ups from the side and from above at every 2nd or 3rd frame. A fixed set of views of all 32 get-ups, every frame, with the shaft's distance to the legs and the trunk measured on the mesh, not read by eye. **Proving numbers:** frames in which the stick's shaft is inside a leg or the trunk: 0 over all 32 get-ups (today not measured; by eye, the shaft at the right shin in the get-ups from the back); there-and-back over 5 cm: 0 takes (today 6 take-and-style cases, largest 8.7).
 3. **One gate for every export** (carried over four times). `it28.sh` runs every check in order; the gate adds the verdict, with this track's lines (blade move, there-and-back, loop cut, travel shown, stick travel, under the ice), and writes `READY.txt` itself. This pass's cel elbow under the ice and the clay rest pose adapted twice were both caught by reading a table; the gate would have named them in one run. **Proving numbers:** exports that reach the engine with a fault the gate would have caught: 0; every 0.8 cm crossing of the clay sprint within 1 frame of `Stride`'s (today 3).
+
+## Twenty-ninth pass: the stick against the body, measured; the back get-ups carried clear (SKF29, 01:20 to 01:37)
+
+Done in part. The measure exists and both tables are below. The five get-ups from the back are carried clear of the legs through the sit (40 leg frames down to 6 over both styles). **The proving number, 0 frames over all 32 get-ups, is not met: 83 leg frames and 31 trunk frames remain (export28: 117 and 32).** `Lie_Loop_Front` has its forearm drag. `C:\Users\kazda\jam\skater-lab\skf\export29\` is complete (`READY.txt`, `DIFF.md`, `JOINS.md`): the same 134 take names as export28; 6 takes differ, deliberately: `GetUp`, `GetUp_Quick`, `GetUp_Snap`, `GetUp_Late`, `GetUp_LateLong` and `Lie_Loop_Front`. Everything else is key-identical to export28. One Blender process at a time; the renders were one batch of four short sessions at the end.
+
+**The engine table of the twenty-eighth pass stays valid as it is.** One loop changed (`Lie_Loop_Front`): its frames, its clean frames (93-107, 0-15, 39-69), the start rules and its place between falls and get-ups are unchanged; only what its first move shows is different.
+
+### 1. The measure
+
+`clear29.py`, on the skinned mesh of the FBX, every frame. The shaft's axis (from the knob end to the heel, 1.49 m on cel and 1.56 m on clay) is sampled every 2.5 cm; for each sample the nearest point of the body mesh is taken with its face normal, and the sample is inside when it lies squarely behind that face. Faces are sorted by the bone that weighs most on them into legs, trunk and head; arms and hands are left out, and so are the samples within a glove's reach of either hand (the hands hold the stick and rest on the hip).
+
+One thing the measure showed before any get-up: **in the ready stance itself (`Glide`) the shaft is inside the front thigh and the hip**, by 2.6 and 2.3 cm on cel (4 and 3 samples) and 1.2 and 1.8 cm on clay. The figure is bulky and the stick is held close; every take that ends or starts on the stance has that. So a frame is counted as **through** a leg or the trunk only when 5 cm of shaft or more (2 samples) is more than 3 cm inside; less than that, or outside but within 3 cm, is counted as grazing. With that line the stance counts as grazing, not through.
+
+### The get-ups: export29, with export28 beside it
+
+| Take | Style | Frames with the shaft inside a leg | inside the trunk | inside the head | Deepest in a leg or the trunk cm | Frames within 3 cm of a leg or the trunk (not inside) | Before: inside a leg / the trunk |
+|---|---|---|---|---|---|---|---|
+| GetUp | p2_cel | 1 (30) | 1 (33) | none | 4.0 | 11 (0-2, 27-29, 31-32, 34-36) | 5 / 3 |
+| GetUp | p3_clay | 2 (33-34) | 2 (33-34) | none | 7.4 | 12 (0-3, 27-32, 35-36) | 1 / 0 |
+| GetUp_Front | p2_cel | 3 (30, 32-33) | 1 (34) | none | 4.8 | 8 (0-1, 27-29, 31, 35-36) | 3 / 1 |
+| GetUp_Front | p3_clay | none | none | none |  | 23 (0-1, 16-36) | 0 / 0 |
+| GetUp_Late | p2_cel | none | 1 (19) | none | 5.1 | 6 (0-1, 16-18, 20) | 6 / 1 |
+| GetUp_Late | p3_clay | none | none | none |  | 7 (0-1, 16-20) | 3 / 0 |
+| GetUp_LateLong | p2_cel | 1 (33) | 1 (35) | none | 5.5 | 18 (0-13, 31-32, 34, 36) | 10 / 1 |
+| GetUp_LateLong | p3_clay | none | none | none |  | 20 (0-13, 31-36) | 4 / 0 |
+| GetUp_LateLong_Front | p2_cel | 1 (35) | none | none | 5.3 | 21 (0-12, 28-34, 36) | 1 / 0 |
+| GetUp_LateLong_Front | p3_clay | none | none | none |  | 28 (0-13, 23-36) | 0 / 0 |
+| GetUp_LateLong_Side_Left | p2_cel | 2 (13, 21) | none | none | 4.0 | 22 (14-20, 22-36) | 2 / 0 |
+| GetUp_LateLong_Side_Left | p3_clay | 1 (14) | none | none | 4.6 | 22 (13, 15-18, 20-36) | 1 / 0 |
+| GetUp_LateLong_Side_Right | p2_cel | 4 (3-4, 13, 16) | none | none | 5.3 | 33 (0-2, 5-12, 14-15, 17-36) | 4 / 0 |
+| GetUp_LateLong_Side_Right | p3_clay | 2 (14, 16) | none | none | 4.8 | 35 (0-13, 15, 17-36) | 2 / 0 |
+| GetUp_LateLong_Wall | p2_cel | 1 (26) | none | none | 3.5 | 29 (0-15, 23-25, 27-36) | 1 / 0 |
+| GetUp_LateLong_Wall | p3_clay | none | none | none |  | 33 (0-17, 22-36) | 0 / 0 |
+| GetUp_LateLong_Wall_Back | p2_cel | 1 (26) | none | none | 3.5 | 29 (0-15, 23-25, 27-36) | 1 / 0 |
+| GetUp_LateLong_Wall_Back | p3_clay | none | none | none |  | 33 (0-17, 22-36) | 0 / 0 |
+| GetUp_LateLong_Wall_Left | p2_cel | 1 (26) | none | none | 3.5 | 29 (0-15, 23-25, 27-36) | 1 / 0 |
+| GetUp_LateLong_Wall_Left | p3_clay | none | none | none |  | 31 (0-13, 20-36) | 0 / 0 |
+| GetUp_LateLong_Wall_Right | p2_cel | 10 (0-3, 10-14, 35) | none | none | 5.2 | 11 (4-9, 15-16, 33-34, 36) | 10 / 0 |
+| GetUp_LateLong_Wall_Right | p3_clay | 15 (0-14) | none | none | 6.3 | 10 (15-16, 18-20, 32-36) | 15 / 0 |
+| GetUp_Late_Front | p2_cel | 1 (19) | 1 (19) | none | 5.5 | 8 (0, 13-18, 20) | 1 / 1 |
+| GetUp_Late_Front | p3_clay | none | none | none |  | 13 (0, 9-20) | 0 / 0 |
+| GetUp_Late_Side_Left | p2_cel | 3 (2-3, 5) | none | none | 4.7 | 16 (1, 4, 6, 8-20) | 3 / 0 |
+| GetUp_Late_Side_Left | p3_clay | 1 (2) | none | none | 5.0 | 19 (1, 3-20) | 1 / 0 |
+| GetUp_Late_Side_Right | p2_cel | 1 (19) | none | none | 5.3 | 15 (0-5, 9-10, 13-18, 20) | 1 / 0 |
+| GetUp_Late_Side_Right | p3_clay | 1 (2) | none | none | 4.1 | 18 (0-1, 3-4, 7-20) | 1 / 0 |
+| GetUp_Late_Wall | p2_cel | none | none | none |  | 14 (0-2, 10-20) | 0 / 0 |
+| GetUp_Late_Wall | p3_clay | none | none | none |  | 16 (0-3, 9-20) | 0 / 0 |
+| GetUp_Late_Wall_Back | p2_cel | none | none | none |  | 14 (0-2, 10-20) | 0 / 0 |
+| GetUp_Late_Wall_Back | p3_clay | none | none | none |  | 16 (0-3, 9-20) | 0 / 0 |
+| GetUp_Late_Wall_Left | p2_cel | none | none | none |  | 14 (0-2, 10-20) | 0 / 0 |
+| GetUp_Late_Wall_Left | p3_clay | none | none | none |  | 16 (0-2, 8-20) | 0 / 0 |
+| GetUp_Late_Wall_Right | p2_cel | 3 (0-1, 19) | none | none | 5.1 | 5 (2-3, 17-18, 20) | 3 / 0 |
+| GetUp_Late_Wall_Right | p3_clay | 2 (0-1) | none | none | 6.2 | 9 (2-3, 5-6, 16-20) | 2 / 0 |
+| GetUp_Quick | p2_cel | 1 (17) | 1 (19) | none | 5.1 | 6 (0-1, 15-16, 18, 20) | 3 / 2 |
+| GetUp_Quick | p3_clay | none | 1 (18) | none | 4.2 | 7 (0-1, 15-17, 19-20) | 1 / 0 |
+| GetUp_Quick_Front | p2_cel | 2 (17-18) | none | none | 5.1 | 5 (0, 15-16, 19-20) | 2 / 0 |
+| GetUp_Quick_Front | p3_clay | none | none | none |  | 13 (0, 9-20) | 0 / 0 |
+| GetUp_Quick_Side_Left | p2_cel | 2 (1, 14) | none | none | 4.6 | 18 (2-13, 15-20) | 2 / 0 |
+| GetUp_Quick_Side_Left | p3_clay | 1 (13) | none | none | 3.5 | 18 (1-5, 7-12, 14-20) | 1 / 0 |
+| GetUp_Quick_Side_Right | p2_cel | 1 (18) | none | none | 3.5 | 14 (0-2, 9-17, 19-20) | 1 / 0 |
+| GetUp_Quick_Side_Right | p3_clay | none | none | none |  | 18 (0-2, 6-20) | 0 / 0 |
+| GetUp_Side_Left | p2_cel | 4 (4, 25, 33-34) | 1 (34) | none | 5.6 | 29 (1-3, 5-7, 11-24, 26-32, 35-36) | 4 / 1 |
+| GetUp_Side_Left | p3_clay | 2 (23-24) | none | none | 3.7 | 25 (1-4, 6-7, 15-16, 18-22, 25-36) | 2 / 0 |
+| GetUp_Side_Right | p2_cel | 1 (33) | 1 (34) | none | 4.7 | 22 (0-4, 10, 17, 20-32, 35-36) | 1 / 1 |
+| GetUp_Side_Right | p3_clay | none | none | none |  | 29 (0-3, 10, 13-36) | 0 / 0 |
+| GetUp_Snap | p2_cel | none | 1 (19) | none | 5.1 | 6 (0-1, 16-18, 20) | 5 / 2 |
+| GetUp_Snap | p3_clay | 1 (1) | none | none | 3.5 | 6 (0, 16-20) | 2 / 0 |
+| GetUp_Snap_Front | p2_cel | 1 (19) | 1 (19) | none | 5.5 | 6 (0, 15-18, 20) | 1 / 1 |
+| GetUp_Snap_Front | p3_clay | none | none | none |  | 12 (0, 9-10, 12-20) | 0 / 0 |
+| GetUp_Snap_Side_Left | p2_cel | 2 (2, 5) | none | none | 4.9 | 18 (1, 3-4, 6-20) | 2 / 0 |
+| GetUp_Snap_Side_Left | p3_clay | none | none | none |  | 20 (1-20) | 0 / 0 |
+| GetUp_Snap_Side_Right | p2_cel | none | none | none |  | 20 (0-12, 14-20) | 0 / 0 |
+| GetUp_Snap_Side_Right | p3_clay | 1 (1) | none | none | 3.8 | 16 (0, 2-3, 7, 9-20) | 1 / 0 |
+| GetUp_Wall | p2_cel | 1 (11) | 2 (15-16) | none | 4.3 | 26 (0-1, 10, 12-14, 17-36) | 1 / 2 |
+| GetUp_Wall | p3_clay | none | 4 (16-19) | none | 4.6 | 28 (0-3, 9-15, 20-36) | 0 / 4 |
+| GetUp_Wall_Back | p2_cel | 1 (11) | 2 (15-16) | none | 4.3 | 26 (0-1, 10, 12-14, 17-36) | 1 / 2 |
+| GetUp_Wall_Back | p3_clay | none | 4 (16-19) | none | 4.6 | 28 (0-3, 9-15, 20-36) | 0 / 4 |
+| GetUp_Wall_Left | p2_cel | 1 (11) | 2 (15-16) | none | 4.3 | 26 (0-1, 10, 12-14, 17-36) | 1 / 2 |
+| GetUp_Wall_Left | p3_clay | none | 4 (16-19) | none | 4.6 | 26 (0-1, 9-15, 20-36) | 0 / 4 |
+| GetUp_Wall_Right | p2_cel | 2 (0-1) | none | none | 4.4 | 6 (31-36) | 2 / 0 |
+| GetUp_Wall_Right | p3_clay | 2 (0-1) | none | none | 4.1 | 11 (2-3, 28-36) | 2 / 0 |
+
+Over 32 takes and both styles (e29): frames with the shaft inside a leg 83, inside the trunk 31, inside the head 0; takes with any frame inside a leg or the trunk: 29. Before (e28): 117, 32, 0. Shaft through the trunk for 3 frames or more: GetUp_Wall p3_clay 4; GetUp_Wall_Back p3_clay 4; GetUp_Wall_Left p3_clay 4.
+
+### What was changed, and what the numbers became
+
+- **The get-ups from the back** (`GetUp`, `GetUp_Quick`, `GetUp_Snap`, `GetUp_Late`, `GetUp_LateLong`): the same authored path, with the stick turned 25 degrees outward to the stick side and the grip moved 10 cm outward, both rising and falling once over the take (a half sine). Through the sit the shaft now lies beside the planted skate and the shin, not over them. Frames through a leg, both styles together: 40 before, 6 after; through the trunk: 9 before, 8 after. What is left is at the ends: frame 1 on clay `GetUp_Snap` (the stick leaving the lying pose beside the thigh) and the last one to three frames before the ready stance, where the stick comes in to the hip (4 to 7 cm deep for a frame or two, against the stance's own 2.6). On clay `GetUp` those last frames got worse: 2 leg and 2 trunk frames at 33-34 where export28 had 1 and 0.
+- **Tried first and taken out:** a guard in the path that turned the stick away from leg and trunk capsules frame by frame, on all 26 takes that have an authored path. It cut the leg frames by a third (117 to 81) but put the blade end at 40 to 70 cm in one frame in twelve takes and brought back there-and-backs of up to 26 cm. The code is still in `build_clips.py` (`clear=True`), not called.
+- **Not fixed, named by the table:** the side and front get-ups (1 to 4 leg frames each, at the start beside the lying leg and at the end into the stance); the right-wall get-ups, where the stick lies along the wall beside the leg while the figure sits (`GetUp_LateLong_Wall_Right`: 10 leg frames on cel, 15 on clay; `GetUp_Late_Wall_Right` and `GetUp_Wall_Right`: 2 to 3); `GetUp_Wall`, `GetUp_Wall_Back`, `GetUp_Wall_Left`, the only get-ups with **the shaft through the trunk for 3 frames or more: 4 frames on clay (16-19), 2 on cel (15-16)**, while the figure is on one knee with the stick planted across the body. These three are keyed, not on a path.
+
+**Proving numbers:**
+- **Frames with the shaft through a leg or the trunk over all 32 get-ups: 83 and 31** (asked 0; export28: 117 and 32). In the five back get-ups: 6 and 8 (export28: 40 and 9).
+- **Blade end's largest one-frame move: 33.3 cm at most** (the 40 cm line holds).
+- **There and back over 5 cm: 6 take-and-style cases, the same as in export28** (asked 0 if it came with the same edits: it did not).
+- Late get-ups the pop pass changes: 0 of 16 on both styles, as in export28.
+
+### 2. The falls and stumbles (a table, no edits)
+
+Twenty-six takes: the falls, knockdowns, the trip, the board falls and the four stumbles. Frames with the shaft through a leg: 35; through the trunk: 33; through the head: 4 (both styles together). **Five take-and-style cases have the shaft through the trunk for 3 frames or more, the brief's line for a fix: `Stumble_Front` (5 frames), `Stumble_Left` (4), `Stumble_Back` and `Stumble_Right` (3 each), all on cel at frames 24 to 28, and `Knockdown_Right_Heavy` on cel (3 frames, not in a row: 12, 16, 18). They are not fixed in this pass.** The stumbles' frames are the ones in which the stick comes back in to the hip for the ready stance, 4.3 to 5.6 cm deep where the stance itself is 2.3; they need their last keys re-authored, and I ran out of builds. On clay the stumbles have at most 2 trunk frames (`Stumble_Left`, with 3 leg frames). `Board_Fall_Right` has the shaft through a leg for its last 8 or 9 frames on both styles: the wall pose at a right wall, the stick along the wall beside the leg, which is also what the right-wall get-ups start from.
+
+| Take | Style | Frames with the shaft inside a leg | inside the trunk | inside the head | Deepest in a leg or the trunk cm | Frames within 3 cm of a leg or the trunk (not inside) |
+|---|---|---|---|---|---|---|
+| Board_Fall_Back | p2_cel | none | none | none |  | 12 (0, 18-28) |
+| Board_Fall_Back | p3_clay | none | none | none |  | 12 (0, 18-28) |
+| Board_Fall_Front | p2_cel | none | none | none |  | 12 (0, 18-28) |
+| Board_Fall_Front | p3_clay | none | none | none |  | 12 (0, 18-28) |
+| Board_Fall_Left | p2_cel | none | none | none |  | 13 (0, 17-28) |
+| Board_Fall_Left | p3_clay | none | none | none |  | 13 (0, 17-28) |
+| Board_Fall_Right | p2_cel | 8 (21-28) | none | none | 3.7 | 18 (0-1, 5-20) |
+| Board_Fall_Right | p3_clay | 9 (20-28) | none | none | 4.1 | 20 (0-19) |
+| Fall | p2_cel | none | 1 (2) | none | 5.8 | 17 (0-1, 3, 12-13, 15-26) |
+| Fall | p3_clay | none | none | none |  | 19 (0-3, 12-26) |
+| Fall_B | p2_cel | none | 1 (2) | none | 5.8 | 11 (0-1, 3, 19-20, 23-28) |
+| Fall_B | p3_clay | none | none | none |  | 15 (0-4, 19-28) |
+| Fall_Forward | p2_cel | none | none | none |  | 14 (0, 11-12, 16-26) |
+| Fall_Forward | p3_clay | none | none | none |  | 14 (0, 11-12, 16-26) |
+| Fall_Heavy | p2_cel | none | 1 (2) | 1 (17) | 5.8 | 14 (0-1, 3, 23-25, 27-34) |
+| Fall_Heavy | p3_clay | none | none | 1 (16) |  | 15 (0-3, 16, 23-24, 27-34) |
+| Fall_Light | p2_cel | 2 (4-5) | 2 (5, 12) | none | 5.2 | 8 (0, 11, 13-18) |
+| Fall_Light | p3_clay | none | none | none |  | 10 (0, 4-5, 12-18) |
+| Knockdown_Back | p2_cel | 1 (18) | 2 (16, 18) | none | 5.2 | 12 (0, 14-15, 17, 19-26) |
+| Knockdown_Back | p3_clay | none | 2 (15, 18) | none | 5.8 | 13 (0-1, 14, 16-17, 19-26) |
+| Knockdown_Back_B | p2_cel | none | none | none |  | 18 (0-1, 11-21, 24-28) |
+| Knockdown_Back_B | p3_clay | none | none | none |  | 21 (0-1, 4-6, 11-21, 24-28) |
+| Knockdown_Back_Heavy | p2_cel | none | none | none |  | 16 (0, 19-21, 23-34) |
+| Knockdown_Back_Heavy | p3_clay | none | none | none |  | 16 (0-1, 18-19, 23-34) |
+| Knockdown_Back_Light | p2_cel | none | none | none |  | 7 (0, 13-18) |
+| Knockdown_Back_Light | p3_clay | none | none | none |  | 7 (0, 13-18) |
+| Knockdown_Left | p2_cel | none | none | none |  | 1 (0) |
+| Knockdown_Left | p3_clay | none | none | none |  | 2 (0-1) |
+| Knockdown_Left_B | p2_cel | none | none | none |  | 7 (0-1, 3, 15-16, 18-19) |
+| Knockdown_Left_B | p3_clay | none | none | none |  | 7 (0-4, 18, 20) |
+| Knockdown_Left_Heavy | p2_cel | none | none | none |  | 5 (0, 14-17) |
+| Knockdown_Left_Heavy | p3_clay | none | 2 (14-15) | 2 (7, 10) | 4.1 | 7 (0-1, 4, 6, 9, 16, 18) |
+| Knockdown_Left_Light | p2_cel | none | none | none |  | 1 (0) |
+| Knockdown_Left_Light | p3_clay | none | none | none |  | 5 (0, 5-8) |
+| Knockdown_Right | p2_cel | 2 (12, 14) | none | none | 4.3 | 18 (0-2, 4, 11, 13, 15-26) |
+| Knockdown_Right | p3_clay | none | none | none |  | 26 (0-9, 11-26) |
+| Knockdown_Right_B | p2_cel | none | none | none |  | 11 (0-2, 23-30) |
+| Knockdown_Right_B | p3_clay | none | none | none |  | 14 (0-2, 13-15, 23-30) |
+| Knockdown_Right_Heavy | p2_cel | 1 (18) | 3 (12, 16, 18) | none | 6.3 | 27 (0-2, 4-6, 11, 13-15, 17, 19-34) |
+| Knockdown_Right_Heavy | p3_clay | 1 (13) | 1 (13) | none | 5.2 | 24 (0-3, 5, 9, 11-12, 14, 20-34) |
+| Knockdown_Right_Light | p2_cel | 1 (10) | none | none | 5.5 | 8 (0, 12-18) |
+| Knockdown_Right_Light | p3_clay | none | none | none |  | 13 (0, 6-10, 12-18) |
+| Stumble_Back | p2_cel | none | 3 (24-26) | none | 4.3 | 8 (0, 23, 27-32) |
+| Stumble_Back | p3_clay | none | none | none |  | 12 (0, 22-32) |
+| Stumble_Front | p2_cel | none | 5 (24-28) | none | 5.6 | 7 (0, 22-23, 29-32) |
+| Stumble_Front | p3_clay | 1 (27) | none | none | 5.4 | 11 (0, 22-26, 28-32) |
+| Stumble_Left | p2_cel | none | 4 (24-27) | none | 4.9 | 9 (0-1, 22-23, 28-32) |
+| Stumble_Left | p3_clay | 3 (25-27) | 2 (25-26) | none | 4.9 | 15 (0-1, 5-9, 22-24, 28-32) |
+| Stumble_Right | p2_cel | none | 3 (25-27) | none | 5.0 | 9 (0, 22-24, 28-32) |
+| Stumble_Right | p3_clay | none | none | none |  | 14 (0-1, 3, 22-32) |
+| Trip | p2_cel | 5 (8-9, 12-14) | 1 (12) | none | 5.8 | 15 (0, 10-11, 15-26) |
+| Trip | p3_clay | 1 (9) | none | none | 3.9 | 21 (0-1, 7-8, 10-26) |
+
+Over 26 takes and both styles (e29): frames with the shaft inside a leg 35, inside the trunk 33, inside the head 4; takes with any frame inside a leg or the trunk: 15. Shaft through the trunk for 3 frames or more: Knockdown_Right_Heavy p2_cel 3; Stumble_Back p2_cel 3; Stumble_Front p2_cel 5; Stumble_Left p2_cel 4; Stumble_Right p2_cel 3.
+
+### 3. `Lie_Loop_Front`
+
+Its first move now has the forearm's drag the other loops have: the free glove slides 10 cm in beside the helmet and the elbow comes up (the elbow travels 30 cm on cel, 17 cm on clay), with the leg's slide and the head's lift as before. Frames, clean frames and the second move are unchanged. Checked as in the last pass: every lying time from 25 frames shows 15.5 cm or more of travel with either rule; start and cut frames within 0.76 cm of the rest pose; the stick does not move (0.01 cm); nothing nearer the ice than the rest pose. On cel the elbow's 30 cm is the largest move in any loop: not looked at.
+
+### Ground, joints, joins
+
+- Ground over the 32 get-ups and the 8 loops: body at or above 0.00 cm, skates at or above 0.00 cm (p2_cel) and 0.13 cm (p3_clay), stick at or above 0.91 cm; the top hand is on the stick in every frame.
+- Wall plane: at most 1.7 cm past it (no wall take changed).
+- Joins: 159 pairs, positions at most 0.0005 cm, rotations 0 deg. Root: identity keys in all 134 takes of all four files, 60 fps. Meshes unchanged, stick files byte-identical to export28.
+- Pops: no take over the limits, 130 played takes, both styles. The late get-ups keep 5 frames from hips-half to the release and a skate at most 6 cm in one frame of the last 6.
+
+### Not looked at, and known gaps
+
+- Nothing of export29 has been seen in the engine.
+- The measure is new and was checked against one thing only: the back get-ups, where it found the frames the last pass's side strip showed by eye, and found them gone after the change in the sheet's cells from above. It has not been checked against a take where the answer is known to be zero other than by the ready stance, and the 3 cm line was chosen so that the stance does not count: a different line gives different totals.
+- The blade (the hook beyond the heel) is not in the measure, only the shaft; arms and hands are left out by design, so a shaft through a forearm would not be counted.
+- The back get-ups were looked at before and after from above (four takes) and from the side (`GetUp_Late`), every 2nd or 4th frame, both styles. No other take was looked at this pass.
+- The 83 and 31 frames that remain, and the stumbles and wall get-ups with the shaft through the trunk for 3 frames or more, are in the export.
+- `Lie_Loop_Front` was not rendered: numbers only.
+- The bottom hand's distance to the shaft (`hands20.py`) was not run. The clay sprint's supporting-skate bump is still as in export25.
+
+### Files
+
+- Export: `C:\Users\kazda\jam\skater-lab\skf\export29\` (`p2_cel\`, `p3_clay\`, `READY.txt`, `DIFF.md`, `JOINS.md`).
+- Sheet: `devlog/shots/20261114-013753-B-lab-skf29-back-getups.png` with a `.txt` caption.
+- Lab: `clear29.py` (the measure, in Blender on the FBX) and `clear29.js` (its tables); the pass is one block in `build_clips.py` (snapshot `build_clips_pass29.py`; `path27` got the outward carry and the unused guard); `it29.sh`, `sum29.js`, `tab29.js`, `loop29.js`, `join29.py`, `sheet29.sh`; numbers in `work29\` (`clear_e28_<style>.json`, `clear_e29_<style>.json`, `clear_getups.md`, `clear_falls.md`, `tables.md`).
+
+### The next three evolutions of this track, ranked, each with its proving number
+
+1. **The stick clear of the body, finished, with the measure as the gate.** What remains is known by take and frame: the last frames into the ready stance and the first out of the lying pose in most get-ups; the side and front get-ups; the right wall, where the stick lies beside the sitting leg; the three keyed wall get-ups and the four cel stumbles with the shaft through the trunk for 3 frames or more. And the stance itself: every take inherits its 1 to 3 cm, so the grip a few centimetres off the hip in the ready stance would clear all of them at once, at the price of changing `Glide` and everything that joins it. That is a decision for the coordinator, not a lab edit. **Proving numbers:** frames with the shaft through a leg or the trunk: 0 over the 32 get-ups (today 83 and 31) and 0 over the 26 falls and stumbles (today 35 and 33); takes with the shaft through the trunk for 3 frames or more: 0 (today 8 take-and-style cases); the ready stance's own depth 1 cm or less (today 2.6 on cel), if the stance is opened.
+2. **The loops seen moving, and a third move.** Carried over: nobody has watched a loop. A clip per loop at the game camera, read for the brief's words, then the moves retimed where one reads wrong and a third move per loop. **Proving numbers:** loops watched in motion 8 of 8 (today 0); moves per loop that read at the game camera 3 (today 2); the cut 1 cm or less, the stick 0.2 cm or less.
+3. **One gate for every export** (carried over five times), now with a seventh line: `clear29.py`. This pass's guard that broke the 40 cm line in twelve takes was caught by reading a table after the build; the gate would have failed the build and named them. **Proving numbers:** exports that reach the engine with a fault the gate would have caught: 0; every 0.8 cm crossing of the clay sprint within 1 frame of `Stride`'s (today 3).
