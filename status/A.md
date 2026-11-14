@@ -417,3 +417,4 @@
 - RESOURCES 00:34 cpu 100% ram 39.5/63GB editors 0 cmd 7 free 409GB
 - link green 00:45: main 19405f2 (The camera never loses the player (A135, track U1): the chest inside the middle third on e) pushed.
 - 00:54 **operator: the loop runs as it is until 10:00; he then plays and sets the last 24 hours' priorities** (R-0056). Package for him cut from main by 09:00 (H27 after the curve lane A133 lands); `docs/PLAY-ME.md` with it; REVIEW-2 on that commit. Main 19405f2 (211 tests). Running: A133 C0, A132 F1, A134 Q2, A147 F2, A145 F3, A146 Q1, A144 U2, A135 U1.
+- link green 01:17: main 0bb47fd (The joined match re-soaked on the integrated game, and a host list a stranger can use (A14) pushed.

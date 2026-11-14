@@ -31,6 +31,8 @@ namespace JamAI
 		// R-0009 point 4: per-level offsets for a large rink (length >= LargeRinkM), applied by ResolveDifficulty; 0 = same as above
 		double LargeSpeedScale = 0.0;
 		double LargeRedSkill = 0.0;
+		// lane A112 (R-0048 point 4): the human's teammates' speed scale when a human plays (0 = SpeedScale, every bot's: the game before; tune key mate_speed_scale)
+		double MateSpeedScale = 0.0;
 	};
 
 	// The three profiles. Never null; an out-of-range level returns pro.
@@ -45,7 +47,7 @@ namespace JamAI
 	void ApplyDifficultyProfile(const FJamDifficultyProfile& Profile, FJamAIParams& P);
 
 	// Tuning hook for tools/sweep (not a cartridge path): "opp.reaction_frames=6;opp.aim_error_deg=4;hold_radius_m=3;...".
-	// Keys: speed_scale red_skill yield_margin_m yield_radius_m hold_radius_m stall_frames guard_range_m guard_radius_m and opp.* / mate.*
+	// Keys: speed_scale mate_speed_scale (lane A112; 0 = speed_scale) red_skill yield_margin_m yield_radius_m hold_radius_m stall_frames guard_range_m guard_radius_m and opp.* / mate.*
 	// reaction_frames aim_error_deg shoot_extra_m aim_tolerance_deg lead_frames intercept(0|1) use_aim_cone(0|1) clear_lane(0|1) pass_to_human(0..1 share) block_shots(0|1) block_min_dist_m poke_frames(-1 never)
 	// lift(0|1) pass_out(0|1) read_lanes(0|1) seek_pickups(0|1) one_timer(0|1) deke(0|1) check_min_closing(m/s, -1 never) check_from_behind(0|1).
 	// Returns false and writes the first bad pair into Err.

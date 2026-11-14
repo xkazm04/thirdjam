@@ -47,7 +47,23 @@ namespace JamBaseline
 	// THE NEXT LANE: your brain rule's off-switch here, one pair.
 	// Level ("rookie", "pro", "all_star"; every pin so far is a pro match): THE CURVE LANE: when you move a level's profile numbers, the numbers that level
 	// had before you go here for that level (as JamAI::PreA95Tune carries the levels of the commit before the vision), and the pins stay where they are.
-	inline const char* BrainTune(const char* Level = "pro") { (void)Level; return "brain2=0"; }
+	// Lanes A112 / A133 (track C0, CURVE-6.md, CURVE-7.md): each level's profile numbers those lanes moved, back to the values main had before them
+	// (rookie: poke never, shot reach + 5, mates at speed_scale; pro: poke after 6 frames, hunt 8 m, checks from 2 m/s, pressure 1.4 s / better by 3 m; all_star: hunt 20, shot reach + 40,
+	// mates at speed_scale). The large-rink offsets are not tune keys: every pin is a hockey.regular match.
+	// bLargeRink: a rink of JamAI::LargeRinkM or longer, whose red skill offsets the curve lanes also moved (pro 1.04, rookie 0.9; all_star's large speed is
+	// not a tune key: no pin is an all_star match on the large rink).
+	inline const char* BrainTune(const char* Level = "pro", bool bLargeRink = false)
+	{
+		if (Level && Level[0] == 'r') return bLargeRink ? "brain2=0;opp.poke_frames=-1;opp.shoot_extra_m=5;mate_speed_scale=0;red_skill=0.9" : "brain2=0;opp.poke_frames=-1;opp.shoot_extra_m=5;mate_speed_scale=0";
+		if (Level && Level[0] == 'a') return "brain2=0;opp.hunt_radius_m=20;opp.shoot_extra_m=40;mate_speed_scale=0";
+		return bLargeRink ? "brain2=0;opp.poke_frames=6;opp.hunt_radius_m=8;opp.check_min_closing=2;opp.hk_pressure_s=1.4;opp.hk_better_by_m=3;mate_speed_scale=0;red_skill=1.04"
+			: "brain2=0;opp.poke_frames=6;opp.hunt_radius_m=8;opp.check_min_closing=2;opp.hk_pressure_s=1.4;opp.hk_better_by_m=3;mate_speed_scale=0";
+	}
+
+	// Lane A133 (track C0): the shipped cuts' whistle. Lane A112 took it out of hockey.regular, hockey.arena.wide, hockey.arena.large and the season's takes
+	// (rules.penalties false: content, not a rule, so not in MakeNeutral, whose callers may switch the whistle off themselves). A pin made on one of those cuts
+	// before lane A112, with the cut's own rules, calls this after MakeNeutral.
+	inline void WithWhistle(FJamGameConfig& G) { G.Rules.bPenalties = true; }
 
 	// The brain's reads of track F2's shields (lane A115's two hooks, wired at the landing of 22:20): dead, as on any commit before them. Call on the world
 	// right after FJamSimAdapter::BuildWorld when replaying such a commit with the body shield or the take grace on. (A template: no brain header here.)

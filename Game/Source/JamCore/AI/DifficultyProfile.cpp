@@ -17,7 +17,9 @@ namespace JamAI
 			const FJamAIParams D;
 			// Lane A46 (PAYOFFS.md section 6): the human's teammates pass to the open human in 0.4 of the chances at pro (0 before: the one-timer never reached the human).
 			FJamDifficultyProfile P{"pro", D.SpeedScale, D.RedSkill, D.YieldMarginM, D.YieldRadiusM, D.HoldRadiusM, D.StallFrames, D.Opp, 0.4};
-			P.LargeRedSkill = 1.04;   // lane A95 (CURVE-5.md): 0.97 -> 1.04 (the regular player on 120 x 60 with the vision: 82.8 at 0.97 (600), 41.5 at 1.06 (2,000)). Lane A70: 0.97
+			// Lane A112 (CURVE-6.md): the pro's aggression numbers moved in ProOppSkill (JamAICore.h), the brain's default
+			P.MateSpeedScale = 1.0;   // lane A112 (R-0048 point 4): the human's mates skate at the human's pace (the same as SpeedScale at pro)
+			P.LargeRedSkill = 1.12;   // lane A133 (CURVE-7.md): 1.065 -> 1.12 (the regular player on 120 x 60 with the hunt 8 and the carry: 69.8 at 1.065, 55.5 at 1.1, 47.8 at 1.13, 41.2 at 1.16 (600); 44.9 at 1.13 (2,000)). Lane A112 (CURVE-6.md): 1.04 -> 1.065 (the regular player on 120 x 60 with the new aggression: 57.1 at 1.04 (2,000)). Lane A95 (CURVE-5.md): 0.97 -> 1.04 (the regular player on 120 x 60 with the vision: 82.8 at 0.97 (600), 41.5 at 1.06 (2,000)). Lane A70: 0.97
 			return P;
 		}
 
@@ -26,7 +28,7 @@ namespace JamAI
 			FJamBotSkill Opp;
 			Opp.ReactionFrames = 0;
 			Opp.AimErrorDeg = 0.0;
-			Opp.ShootExtraM = 5.0;     // R-0029 P3 (13 before): shoot from reach + 5 m
+			Opp.ShootExtraM = 25.0;    // lane A112 (CURVE-6.md): reach + 25 m (with the poke: the novice 99.3 -> 86.2; 30 m: 82.3; the rookie scored 0.26 a match on the kept puck). R-0029 P3: 5 (13 before)
 			Opp.GuardRadiusM = 10.0;   // R-0029 P1 (5 / 45 before): the rookie back's guard post 10 m out, only within 20 m of its net
 			Opp.GuardRangeM = 20.0;
 			Opp.bBlockShots = true;
@@ -35,7 +37,7 @@ namespace JamAI
 			Opp.LeadFrames = 15;
 			Opp.bIntercept = false;
 			Opp.bUseAimCone = true;
-			Opp.PokeFrames = -1;   // R-0017: rookie bots never poke
+			Opp.PokeFrames = 10;   // lane A133 (CURVE-7.md): 6 -> 10 (the novice 79.3 -> 86.8 on the integrated tree; 8: 84.3). Lane A112 (R-0050 point 4, CURVE-6.md): the rookie pokes after 6 frames in reach (pro's old timing; never before, R-0017): with the kept puck it had no way to take one but a hit
 			Opp.SweepReactFrames = 14;   // lane A51 (R-0034): the rookie's blade reads the carried puck 14 frames late
 			Opp.ShotChargeFrames = 0;   // lane A31 (B-to-A-0024): rookie taps its shots
 			// Lane A94 (R-0045 law 2): the rookie knows the hockey principles and executes them late and loosely: it reads a change of possession 24 frames
@@ -53,8 +55,9 @@ namespace JamAI
 			// Lane A95 (CURVE-5.md, 2,000 matches): red skill 0.8 -> 0.97 with the checks from 6 m/s and the sprint 0.2 (the novice 97.0 -> 84.8 at red 1.0, 600 matches); the
 			// principles stay late and loose (0.6, 24 frames): tightening them to pro's took 3.5 points and is not what a rookie is.
 			FJamDifficultyProfile P{"rookie", 0.85, 0.97, 4.0, 25.0, 0.0, 60, Opp, 0.6};   // lane A46: mates pass to the open human in 0.6 of the chances (every chance before)
+			P.MateSpeedScale = 1.0;   // lane A112 (R-0048 point 4): the human's mates skate at the human's pace (0.85 before)
 			P.LargeSpeedScale = 0.9;   // R-0029: large-rink rookie offsets from the playtester grid (novice 85 %, 19:43); 1.0 / 0.93 before
-			P.LargeRedSkill = 0.9;   // lane A95 (CURVE-5.md): 0.97 -> 0.9 (the novice on 120 x 60 with the vision, 2,000 each: 93.0 at 0.86, 89.0 at 0.89, 86.0 at 0.9, 75.1 at 0.92; 62.0 at 0.97 (600)). Lane A70: 0.97
+			P.LargeRedSkill = 1.12;   // lane A133 (CURVE-7.md): 0.98 -> 1.12 with the poke 10 (the novice on 120 x 60: 99.5 at 0.98, 97.3 at 1.03, 91.3 at 1.08, 84.7 at 1.12, 75.7 at 1.16 (600)). Lane A112 (CURVE-6.md): 0.9 -> 0.98 (with the poke, the shot range and the mates at 1.0 the novice on 120 x 60: 94.9 at 0.9 (2,000), 93.3 at 0.93, 89.7 at 0.96, 77.7 at 1.02 (600)). Lane A95 (CURVE-5.md): 0.97 -> 0.9 (the novice on 120 x 60 with the vision, 2,000 each: 93.0 at 0.86, 89.0 at 0.89, 86.0 at 0.9, 75.1 at 0.92; 62.0 at 0.97 (600)). Lane A70: 0.97
 			return P;
 		}
 
@@ -63,7 +66,7 @@ namespace JamAI
 			FJamBotSkill Opp;
 			Opp.ReactionFrames = 0;
 			Opp.AimErrorDeg = 0.0;
-			Opp.ShootExtraM = 40.0;
+			Opp.ShootExtraM = 60.0;   // lane A112 (CURVE-6.md): 40 -> 60 (with the hunt 30 and the mates at 1.0: the good player 40.0 -> 32.0, 2,000)
 			Opp.AimToleranceDeg = 20.0;
 			Opp.LeadFrames = 60;
 			Opp.bClearLane = true;
@@ -85,7 +88,7 @@ namespace JamAI
 			Opp.bOneTimer = true;   // R-0029 point 4 (lane A39): all_star bots use the one-timer and the deke; pro the one-timer (ProOppSkill); rookie neither
 			Opp.bDeke = true;
 			Opp.CheckMinClosing = 2.0;   // lane A95 (CURVE-5.md): 3 -> 2 m/s (with A92's model a low-speed press stumbles). Before:   // R-0031 point 2 (lane A45): all_star body-checks the carrier (front or side, never from behind); rookie keeps -1 (never). Lane A70: 5 -> 3 (knockdowns of the good playtester 2.73 -> 3.00 a match at speed 1.3, its win share 26.5 -> 26.8)
-			Opp.HuntRadiusM = 20.0;   // lane A95 (R-0041 "all_star hunts", CURVE-5.md): 10 -> 20 m. Before: 10.   // lane A79 (R-0041 point 1, CURVE-3.md): the support goes at an opposing carrier within 10 m (good 26.8 -> 21.4, regular 13.3 -> 11.8 at speed 1.3)
+			Opp.HuntRadiusM = 30.0;   // lane A112 (CURVE-6.md): 20 -> 30 m. Lane A95 (R-0041 "all_star hunts", CURVE-5.md): 10 -> 20 m. Before: 10.   // lane A79 (R-0041 point 1, CURVE-3.md): the support goes at an opposing carrier within 10 m (good 26.8 -> 21.4, regular 13.3 -> 11.8 at speed 1.3)
 			// Lane A94 (R-0045 law 2): all_star executes the hockey principles at once and fully (pro: ProHockeySense, share 0.85, 8 frames late)
 			Opp.Hk = ProHockeySense();
 			Opp.Hk.ShapeShare = 1.0;
@@ -101,7 +104,8 @@ namespace JamAI
 			// Lane A95 (CURVE-5.md, 2,000 matches): with the levers above red skill 1.0 -> 0.9 and speed 1.2 -> 1.4 (speed last, as the brief orders): the good
 			// player 62.0 -> 25.8 at 600 matches; 27.9 at 2,000 (1.5: 30.7, saturated: the sim clamps a bot at 1.5 and pace costs stability).
 			FJamDifficultyProfile P{"all_star", 1.4, 0.9, 4.0, 25.0, 0.0, 60, Opp, 0.2};
-			P.LargeSpeedScale = 1.22;   // lane A95 (CURVE-5.md): the good player on 120 x 60 at speed 1.4: 5.7 % (600), 1.25: 19.2 (2,000), 1.2: 32.3 (600)
+			P.MateSpeedScale = 1.0;   // lane A112 (R-0048 point 4): the opposing side's speed only; the human's mates skate at the human's pace (1.4 before: 15.5 against his 11.3 m/s)
+			P.LargeSpeedScale = 1.42;   // lane A133 (CURVE-7.md): 1.34 -> 1.42 (the good player on 120 x 60: 38.3 at 1.34, 33.8 at 1.38, 27.5 at 1.42 (600); all_star harder than pro there, R-0055 point 3). Lane A112 (CURVE-6.md): 1.22 -> 1.34 (the mates no longer share it; the good player on 120 x 60: 45.0 at 1.22, 37.3 at 1.27, 28.3 at 1.32 (600), 29.1 at 1.32 (2,000)). Lane A95 (CURVE-5.md): the good player on 120 x 60 at speed 1.4: 5.7 % (600), 1.25: 19.2 (2,000), 1.2: 32.3 (600)
 			return P;   // lane A46: mates pass to the open human in 0.2 of the chances
 		}
 
@@ -206,6 +210,7 @@ namespace JamAI
 	void ApplyDifficultyProfile(const FJamDifficultyProfile& Profile, FJamAIParams& P)
 	{
 		P.SpeedScale = Profile.SpeedScale;
+		P.MateSpeedScale = Profile.MateSpeedScale;   // lane A112
 		P.RedSkill = Profile.RedSkill;
 		P.YieldMarginM = Profile.YieldMarginM;
 		P.YieldRadiusM = Profile.YieldRadiusM;
@@ -227,13 +232,13 @@ namespace JamAI
 		switch (Level)
 		{
 		case EDifficulty::Rookie: return bLargeRink
-			? "brain2=0;sprint=-1;opp.sprint_share=0;mate.sprint_share=0;opp.lift_cooldown_frames=0;red_skill=0.97;opp.check_min_closing=-1"
-			: "brain2=0;sprint=-1;opp.sprint_share=0;mate.sprint_share=0;opp.lift_cooldown_frames=0;red_skill=0.8;opp.check_min_closing=-1";
+			? "brain2=0;sprint=-1;opp.sprint_share=0;mate.sprint_share=0;opp.lift_cooldown_frames=0;red_skill=0.97;opp.check_min_closing=-1;opp.poke_frames=-1;opp.shoot_extra_m=5;mate_speed_scale=0"
+			: "brain2=0;sprint=-1;opp.sprint_share=0;mate.sprint_share=0;opp.lift_cooldown_frames=0;red_skill=0.8;opp.check_min_closing=-1;opp.poke_frames=-1;opp.shoot_extra_m=5;mate_speed_scale=0";
 		case EDifficulty::AllStar: return "brain2=0;sprint=-1;opp.sprint_share=0;mate.sprint_share=0;opp.lift_cooldown_frames=0;speed_scale=1.2;red_skill=1.0;opp.shot_charge_frames=18;"
-			"opp.forecheck_yield_frames=12;opp.check_min_closing=3;opp.hunt_radius_m=10;opp.hk_better_by_m=3;opp.hk_pressure_s=1.4";
+			"opp.forecheck_yield_frames=12;opp.check_min_closing=3;opp.hunt_radius_m=10;opp.hk_better_by_m=3;opp.hk_pressure_s=1.4;opp.shoot_extra_m=40;mate_speed_scale=0";
 		default: return bLargeRink
-			? "brain2=0;sprint=-1;opp.sprint_share=0;mate.sprint_share=0;opp.lift_cooldown_frames=0;red_skill=0.97;opp.shoot_extra_m=13;opp.hunt_radius_m=0;opp.check_min_closing=4"
-			: "brain2=0;sprint=-1;opp.sprint_share=0;mate.sprint_share=0;opp.lift_cooldown_frames=0;red_skill=0.95;opp.shoot_extra_m=13;opp.hunt_radius_m=0;opp.check_min_closing=4";
+			? "brain2=0;sprint=-1;opp.sprint_share=0;mate.sprint_share=0;opp.lift_cooldown_frames=0;red_skill=0.97;opp.shoot_extra_m=13;opp.hunt_radius_m=0;opp.check_min_closing=4;opp.poke_frames=6;opp.hk_pressure_s=1.4;opp.hk_better_by_m=3;mate_speed_scale=0"
+			: "brain2=0;sprint=-1;opp.sprint_share=0;mate.sprint_share=0;opp.lift_cooldown_frames=0;red_skill=0.95;opp.shoot_extra_m=13;opp.hunt_radius_m=0;opp.check_min_closing=4;opp.poke_frames=6;opp.hk_pressure_s=1.4;opp.hk_better_by_m=3;mate_speed_scale=0";
 		}
 	}
 
@@ -263,6 +268,7 @@ namespace JamAI
 			else if (std::strncmp(Key, "mate.", 5) == 0) { bOk = SetSkill(P.Mate, Key + 5, V); }
 			else if (std::strcmp(Key, "speed_scale") == 0) { P.SpeedScale = V; }
 			else if (std::strcmp(Key, "red_skill") == 0) { P.RedSkill = V; }
+			else if (std::strcmp(Key, "mate_speed_scale") == 0) { P.MateSpeedScale = V; }   // lane A112 (R-0048 point 4): 0 = speed_scale
 			else if (std::strcmp(Key, "yield_margin_m") == 0) { P.YieldMarginM = V; }
 			else if (std::strcmp(Key, "yield_radius_m") == 0) { P.YieldRadiusM = V; }
 			else if (std::strcmp(Key, "hold_radius_m") == 0) { P.HoldRadiusM = V; }

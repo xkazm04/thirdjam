@@ -1,6 +1,6 @@
 {
   "schema": "tj.designer-cache/1",
-  "base_sha256": "4d816b850120a5f25c5235ffca25a5431e172f0b891554d9096757989dcf0095",
+  "base_sha256": "d4df8c74449c9931971a77cdfb4a704696f42f7ed9032b11aadcd0883f262e4a",
   "generated_by": "claude CLI, tools/designer-eval/loop.mjs chain over hockey.regular ; teams copied from the 5 v 5 hockey.regular by the Director (A83 landing, 2026-11-13)",
   "cuts": [
     {
@@ -168,7 +168,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": true
+            "penalties": false
           },
           "teams": [
             {
@@ -262,7 +262,7 @@
             "intensity": "normal"
           },
           "look": {
-            "tier": "l2_night",
+            "tier": "p3_clay",
             "trim_colour_hex": "#38BDF8",
             "fog_density": 0,
             "wet_ice": false
@@ -444,7 +444,7 @@
             "mode": "timer",
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": true,
+            "penalties": false,
             "timer_frames": 14400,
             "hooks": [
               {
@@ -555,7 +555,7 @@
             "intensity": "normal"
           },
           "look": {
-            "tier": "l2_night",
+            "tier": "p3_clay",
             "trim_colour_hex": "#38BDF8",
             "fog_density": 0,
             "wet_ice": false
@@ -741,7 +741,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": true
+            "penalties": false
           },
           "teams": [
             {
@@ -835,7 +835,7 @@
             "intensity": "quiet"
           },
           "look": {
-            "tier": "l2_night",
+            "tier": "p3_clay",
             "trim_colour_hex": "#38BDF8",
             "fog_density": 0,
             "wet_ice": false
@@ -1046,7 +1046,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": true
+            "penalties": false
           },
           "teams": [
             {
@@ -1140,7 +1140,7 @@
             "intensity": "normal"
           },
           "look": {
-            "tier": "l2_night",
+            "tier": "p3_clay",
             "trim_colour_hex": "#38BDF8",
             "fog_density": 0,
             "wet_ice": false
@@ -1321,7 +1321,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": true
+            "penalties": false
           },
           "teams": [
             {
@@ -1415,7 +1415,7 @@
             "intensity": "normal"
           },
           "look": {
-            "tier": "l2_night",
+            "tier": "p3_clay",
             "trim_colour_hex": "#38BDF8",
             "fog_density": 0,
             "wet_ice": false
@@ -1595,7 +1595,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": true
+            "penalties": false
           },
           "teams": [
             {
@@ -1689,7 +1689,7 @@
             "intensity": "normal"
           },
           "look": {
-            "tier": "l2_night",
+            "tier": "p3_clay",
             "trim_colour_hex": "#38BDF8",
             "fog_density": 0,
             "wet_ice": false
@@ -1868,7 +1868,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": true
+            "penalties": false
           },
           "teams": [
             {
@@ -1962,7 +1962,7 @@
             "intensity": "normal"
           },
           "look": {
-            "tier": "l2_night",
+            "tier": "p3_clay",
             "trim_colour_hex": "#38BDF8",
             "fog_density": 0,
             "wet_ice": false
@@ -2143,7 +2143,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": true
+            "penalties": false
           },
           "teams": [
             {
@@ -2237,7 +2237,7 @@
             "intensity": "normal"
           },
           "look": {
-            "tier": "l2_night",
+            "tier": "p3_clay",
             "trim_colour_hex": "#38BDF8",
             "fog_density": 0,
             "wet_ice": false
@@ -2451,7 +2451,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": true
+            "penalties": false
           },
           "teams": [
             {
@@ -2545,7 +2545,7 @@
             "intensity": "normal"
           },
           "look": {
-            "tier": "l2_night",
+            "tier": "p3_clay",
             "trim_colour_hex": "#38BDF8",
             "fog_density": 0,
             "wet_ice": false
@@ -2724,7 +2724,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": true,
+            "penalties": false,
             "hooks": [],
             "variants": {}
           },
@@ -2836,7 +2836,7 @@
             "intensity": "normal"
           },
           "look": {
-            "tier": "l2_night",
+            "tier": "p3_clay",
             "trim_colour_hex": "#38BDF8",
             "fog_density": 0,
             "wet_ice": false
@@ -3013,7 +3013,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": true
+            "penalties": false
           },
           "teams": [
             {
@@ -3107,7 +3107,7 @@
             "intensity": "normal"
           },
           "look": {
-            "tier": "l2_night",
+            "tier": "p3_clay",
             "trim_colour_hex": "#38BDF8",
             "fog_density": 0,
             "wet_ice": false
@@ -3302,7 +3302,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": true
+            "penalties": false
           },
           "effects": [
             {
@@ -3422,7 +3422,7 @@
             "intensity": "normal"
           },
           "look": {
-            "tier": "l2_night",
+            "tier": "p3_clay",
             "trim_colour_hex": "#38BDF8",
             "fog_density": 0,
             "wet_ice": false
@@ -3617,7 +3617,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": true,
+            "penalties": false,
             "hooks": [
               {
                 "id": "neon-goal-flash",
@@ -3903,7 +3903,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": true
+            "penalties": false
           },
           "teams": [
             {
@@ -4179,7 +4179,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": true
+            "penalties": false
           },
           "teams": [
             {
@@ -4273,7 +4273,7 @@
             "intensity": "normal"
           },
           "look": {
-            "tier": "l2_night",
+            "tier": "p3_clay",
             "trim_colour_hex": "#38BDF8",
             "fog_density": 0,
             "wet_ice": false
@@ -4455,7 +4455,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": true
+            "penalties": false
           },
           "teams": [
             {
@@ -4549,7 +4549,7 @@
             "intensity": "normal"
           },
           "look": {
-            "tier": "l2_night",
+            "tier": "p3_clay",
             "trim_colour_hex": "#38BDF8",
             "fog_density": 0,
             "wet_ice": false
@@ -4729,7 +4729,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": true
+            "penalties": false
           },
           "teams": [
             {
@@ -4823,7 +4823,7 @@
             "intensity": "normal"
           },
           "look": {
-            "tier": "l2_night",
+            "tier": "p3_clay",
             "trim_colour_hex": "#38BDF8",
             "fog_density": 0,
             "wet_ice": false
@@ -5006,7 +5006,7 @@
             "timer_frames": 3600,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": true
+            "penalties": false
           },
           "teams": [
             {
@@ -5100,7 +5100,7 @@
             "intensity": "normal"
           },
           "look": {
-            "tier": "l2_night",
+            "tier": "p3_clay",
             "trim_colour_hex": "#38BDF8",
             "fog_density": 0,
             "wet_ice": false
@@ -5277,7 +5277,7 @@
             "mode": "timer",
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": true,
+            "penalties": false,
             "timer_frames": 18000,
             "hooks": [
               {
@@ -5388,7 +5388,7 @@
             "intensity": "normal"
           },
           "look": {
-            "tier": "l2_night",
+            "tier": "p3_clay",
             "trim_colour_hex": "#38BDF8",
             "fog_density": 0,
             "wet_ice": false
@@ -5566,7 +5566,7 @@
             "score_to_win": 1,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": true,
+            "penalties": false,
             "variants": {
               "sudden_death": true
             }
@@ -5663,7 +5663,7 @@
             "intensity": "normal"
           },
           "look": {
-            "tier": "l2_night",
+            "tier": "p3_clay",
             "trim_colour_hex": "#38BDF8",
             "fog_density": 0,
             "wet_ice": false
@@ -5866,7 +5866,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": true
+            "penalties": false
           },
           "teams": [
             {
@@ -5960,7 +5960,7 @@
             "intensity": "normal"
           },
           "look": {
-            "tier": "l2_night",
+            "tier": "p3_clay",
             "trim_colour_hex": "#38BDF8",
             "fog_density": 0,
             "wet_ice": false
@@ -6205,7 +6205,7 @@
             "mode": "timer",
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": true,
+            "penalties": false,
             "timer_frames": 14400,
             "hooks": [
               {
@@ -6316,7 +6316,7 @@
             "intensity": "normal"
           },
           "look": {
-            "tier": "l2_night",
+            "tier": "p3_clay",
             "trim_colour_hex": "#38BDF8",
             "fog_density": 0,
             "wet_ice": false
@@ -6498,7 +6498,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": true
+            "penalties": false
           },
           "teams": [
             {
@@ -6592,7 +6592,7 @@
             "intensity": "normal"
           },
           "look": {
-            "tier": "l2_night",
+            "tier": "p3_clay",
             "trim_colour_hex": "#38BDF8",
             "fog_density": 0,
             "wet_ice": false
@@ -6772,7 +6772,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": true
+            "penalties": false
           },
           "teams": [
             {
@@ -6866,7 +6866,7 @@
             "intensity": "normal"
           },
           "look": {
-            "tier": "l2_night",
+            "tier": "p3_clay",
             "trim_colour_hex": "#38BDF8",
             "fog_density": 0,
             "wet_ice": false
@@ -7045,7 +7045,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": true
+            "penalties": false
           },
           "teams": [
             {
@@ -7139,7 +7139,7 @@
             "intensity": "normal"
           },
           "look": {
-            "tier": "l2_night",
+            "tier": "p3_clay",
             "trim_colour_hex": "#38BDF8",
             "fog_density": 0,
             "wet_ice": false
@@ -7342,7 +7342,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": true
+            "penalties": false
           },
           "teams": [
             {
@@ -7436,7 +7436,7 @@
             "intensity": "quiet"
           },
           "look": {
-            "tier": "l2_night",
+            "tier": "p3_clay",
             "trim_colour_hex": "#38BDF8",
             "fog_density": 0,
             "wet_ice": false
@@ -7616,7 +7616,7 @@
             "score_to_win": 5,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": true
+            "penalties": false
           },
           "teams": [
             {
@@ -7710,7 +7710,7 @@
             "intensity": "normal"
           },
           "look": {
-            "tier": "l2_night",
+            "tier": "p3_clay",
             "trim_colour_hex": "#38BDF8",
             "fog_density": 0,
             "wet_ice": false
@@ -7891,7 +7891,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": true
+            "penalties": false
           },
           "teams": [
             {
@@ -8165,7 +8165,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": true
+            "penalties": false
           },
           "teams": [
             {
@@ -8259,7 +8259,7 @@
             "intensity": "normal"
           },
           "look": {
-            "tier": "l2_night",
+            "tier": "p3_clay",
             "trim_colour_hex": "#38BDF8",
             "fog_density": 0,
             "wet_ice": false
@@ -8439,7 +8439,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": true
+            "penalties": false
           },
           "teams": [
             {
@@ -8533,7 +8533,7 @@
             "intensity": "normal"
           },
           "look": {
-            "tier": "l2_night",
+            "tier": "p3_clay",
             "trim_colour_hex": "#38BDF8",
             "fog_density": 0,
             "wet_ice": false
@@ -8740,7 +8740,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": true
+            "penalties": false
           },
           "teams": [
             {
@@ -8834,7 +8834,7 @@
             "intensity": "normal"
           },
           "look": {
-            "tier": "l2_night",
+            "tier": "p3_clay",
             "trim_colour_hex": "#38BDF8",
             "fog_density": 0,
             "wet_ice": false
@@ -9017,7 +9017,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": true,
+            "penalties": false,
             "hooks": [
               {
                 "id": "catch-up-boost",
@@ -9129,7 +9129,7 @@
             "intensity": "normal"
           },
           "look": {
-            "tier": "l2_night",
+            "tier": "p3_clay",
             "trim_colour_hex": "#38BDF8",
             "fog_density": 0,
             "wet_ice": false
@@ -9325,7 +9325,7 @@
             "timer_frames": 14400,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": true
+            "penalties": false
           },
           "teams": [
             {
@@ -9419,7 +9419,7 @@
             "intensity": "normal"
           },
           "look": {
-            "tier": "l2_night",
+            "tier": "p3_clay",
             "trim_colour_hex": "#38BDF8",
             "fog_density": 0,
             "wet_ice": false
@@ -9606,7 +9606,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": true
+            "penalties": false
           },
           "teams": [
             {
@@ -9700,7 +9700,7 @@
             "intensity": "normal"
           },
           "look": {
-            "tier": "l2_night",
+            "tier": "p3_clay",
             "trim_colour_hex": "#38BDF8",
             "fog_density": 0,
             "wet_ice": false
@@ -9887,7 +9887,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": true
+            "penalties": false
           },
           "teams": [
             {
@@ -9981,7 +9981,7 @@
             "intensity": "normal"
           },
           "look": {
-            "tier": "l2_night",
+            "tier": "p3_clay",
             "trim_colour_hex": "#38BDF8",
             "fog_density": 0,
             "wet_ice": false
@@ -10171,7 +10171,7 @@
             "score_to_win": 3,
             "goal_pause_frames": 120,
             "offside": false,
-            "penalties": true
+            "penalties": false
           },
           "teams": [
             {
@@ -10265,7 +10265,7 @@
             "intensity": "normal"
           },
           "look": {
-            "tier": "l2_night",
+            "tier": "p3_clay",
             "trim_colour_hex": "#38BDF8",
             "fog_density": 0,
             "wet_ice": false

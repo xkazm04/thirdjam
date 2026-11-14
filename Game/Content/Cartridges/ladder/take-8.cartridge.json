@@ -167,7 +167,7 @@
       "score_to_win": 3,
       "goal_pause_frames": 120,
       "offside": false,
-      "penalties": true,
+      "penalties": false,
       "variants": {
         "shrink_per_goal": 0.1
       }

@@ -332,7 +332,9 @@ namespace JamAI
 			}
 			// lane A3 (R-0009): the back is the net's last line (no goalies): it keeps full speed and reacts at once at every level
 			const bool bBackRole = W.Skaters[i].Role == ERole::Back;
-			double Sc = Params.SpeedScale * (W.Skaters[i].Team != PlayerTeam && !bBackRole ? Params.RedSkill : 1.0);
+			// lane A112 (R-0048 point 4): the level's speed scale is the opposing side's; the human's mates skate at MateSpeedScale when it is set (0 = SpeedScale)
+			const bool bHumansMate = W.PlayerIndex >= 0 && W.Skaters[i].Team == PlayerTeam && Params.MateSpeedScale > 0.0;
+			double Sc = (bHumansMate ? Params.MateSpeedScale : Params.SpeedScale) * (W.Skaters[i].Team != PlayerTeam && !bBackRole ? Params.RedSkill : 1.0);
 			if (W.Carrier == i) { Sc *= SkillOf(W, i).CarrySpeed; }
 			// R-0007 TeamIntent praise: +10% for the praised teammate (the sim caps |Move| at 1, so it lifts scaled-down bots only)
 			if (W.PlayerIndex >= 0 && W.Skaters[i].Team == PlayerTeam && TeamIntent.Kind == ETeamIntent::Praise && TeamIntent.Active(W.Frame)

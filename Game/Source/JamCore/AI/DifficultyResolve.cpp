@@ -57,6 +57,7 @@ namespace JamAI
 			if (Ai && Ai->IsObject() && Ai->Has(K.Name))
 			{
 				*K.Dst = K.Src;
+				if (K.Dst == &Out.Params.SpeedScale) { Out.Params.MateSpeedScale = 0.0; }   // lane A112: a cartridge's own speed scale is every bot's (the mode keeps its character)
 				Out.ExplicitKeys.Add(FString(TEXT("game.ai.")) + K.Name);
 			}
 		}
@@ -82,7 +83,7 @@ namespace JamAI
 		// 3. Designer values (the loader already folded them into Cart.Game.Ai; a value outranks the game field)
 		if (Values && Values->IsObject())
 		{
-			if (Values->Has(TEXT("ai_speed_scale"))) { Out.Params.SpeedScale = G.SpeedScale; Out.ExplicitKeys.Add(TEXT("values.ai_speed_scale")); }
+			if (Values->Has(TEXT("ai_speed_scale"))) { Out.Params.SpeedScale = G.SpeedScale; Out.Params.MateSpeedScale = 0.0; Out.ExplicitKeys.Add(TEXT("values.ai_speed_scale")); }
 			if (Values->Has(TEXT("ai_red_skill"))) { Out.Params.RedSkill = G.RedSkill; Out.ExplicitKeys.Add(TEXT("values.ai_red_skill")); }
 		}
 		// sim facts the skills read
