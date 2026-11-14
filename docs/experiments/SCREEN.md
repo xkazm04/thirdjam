@@ -411,3 +411,146 @@ python tools/qa/screen/u1-sheet.py tools/qa/screen/out/clay-after               
 ```
 Two processes may run side by side on their own ports. In a fresh worktree the engine did not honour `-abslog`: the script then finds the process's log
 under `Game\Saved\Logs` by its port and copies it to the run's folder. `tools/qa/screen/u1-console.ps1 -Port N -Cmd "..."` sends one console command.
+
+---
+
+# Part 4: the hold never turns the camera, and the loop is measured (lane A135, track U1, evolution 4, Sat 14 Nov 00:25 to 01:30)
+
+Sources: the Director's order after evolution 3 (three items: the yaw out of the hold or proven harmless; the attacked net in frame inside the blue line; the
+prompt's lower slot off the attacked net). Family as part 3, plus `AHokejGameMode::ScriptedHumanInput` (this one function, by that order). Nothing here is
+sim: no file under `JamCore` changed, no state field was added; the scripted human's new switch is off by default. Status and every intermediate number:
+`status/A135.md` (second heading).
+
+## What changed, and the neutral value of each
+
+| # | Fault or question | Rule now | Where | Neutral value |
+|---|---|---|---|---|
+| 1a | Nobody could see the loop without a hand: the scripted human wrote its move on the ice directly, so no headless run could show what a turning camera does to a player holding W | `jam.ScriptHumanCam N`: the script's move becomes held keys (eight ways in the camera's frame, re-decided every N frames; 12 = a hand's 200 ms) and is read back through the follow camera's yaw every frame, with lane A93's held back-yaw, as `ReadHumanInput` reads the keys. `JAMSCREEN hand` lines (the steering error). `tools/qa/screen/u1-handcmp.py` compares two runs of the same match: the first hash and the first place that differ, the track's distance, the frames the hold turned the camera | `AHokejGameMode::ScriptedHumanInput`, `FJamCameraFilter::LastYawOutDeg` | `jam.ScriptHumanCam 0` (the default: the script as before; hashes unchanged) |
+| 1b | Evolution 3's hold turned the camera on 3 to 4 % of the frames, by up to 27 degrees | The hold is position, height and pitch alone. The slide is repeated against the boards' inset (a slide the glass stopped goes on along the glass); what is left is the least step of the foot towards the point over him; the hold's own move of the foot changes by at most 0.6 m a frame; **the camera is never turned** | `UJamFollowCamera::KeepHumanInFrame`, `FJamCameraSettings::KeepNoYaw`, `KeepStepM`, `FJamCameraFilter::KeepOffsetM`, `LastKeepYawDeg` | `jam.camera.KeepNoYaw 0` = evolution 3's hold. `1` = the yaw as a guard for the frames the limited move does not hold. `jam.camera.KeepStep 0` = no limit |
+| 2 | The attacked net out of frame inside the blue line | Taken apart by cause (below): most of those frames have the net beside the picture, which only a turned camera can show. A rule for the rest (the pitch looks up to the net inside the chest's budget, the crane gives height back, down to 2.2 m with the boards right behind him) is written and **ships off**: it did not prove better | `FJamCameraSettings::KeepNetFrac`, `NetKeepBearingDeg`, `KeepNetMinHeightM` | `jam.camera.KeepNet 0` is the default (0.9 = on) |
+| 3 | In its lower slot the prompt lay on the attacked net | The prompt takes the first place clear of the net's box (the net's mouth on the screen joined with its badge and label): top centre, lower centre, then beside the net with 120 units to spare, then right beside it. While the net is under it the prompt is a ghost (a quarter of its ink: the net shows through), and it moves only off a net that has stood under it for 45 frames (a net sweeping across the picture as he turns does not push it about) | `UJamHudWidget::PromptPlace`, `PromptBoxMeets`, `NetBoxOnScreen`, `UpdatePrompts` | `jam.hud.PromptOffNet 0` (evolution 3's two slots) |
+
+## Proof
+
+### The gate
+- Editor builds green (five in this evolution; the final one, build 13, 01:20: build 12 plus the prompt's ghost, the camera's code is build 12's).
+- `Automation RunTests Jam`, headless, on build 13: **195 of 195 Success** (`Game/logs/u1-automation-ev4-run2.log`; build 12: 195 of 195 too, `...-ev4-run1.log`). Evolution 3 had 194;
+  `Jam.Hud.PromptOffNet` is new, and `Jam.Camera.KeepsHuman` now asserts that the yaw is the yaw of before on every frame. Only this step of
+  `tools/gate/premerge.ps1` was run by the lane.
+- Hash: `Jam.Core.Determinism` hockey.regular `0ff7ea98d5570484`, hockey.raw `8425610943e6dd92`: unchanged. Source files changed in this evolution:
+  `CameraFollow.h/.cpp`, `HUDWidget.h/.cpp`, `CameraTests.cpp`, and `HokejGameMode.cpp` (`ScriptedHumanInput` and its console variable only).
+
+### 1: the loop, seen and measured
+The regular game five a side, pro, the scripted human **steering through the camera** (`-Hand 12`), 1280 x 720, one off-screen process per run, the same
+match in every run until a camera turns the keys. A = the hold off (`-Mode base3`).
+
+| The hold | 90 m: frames the hold turned the camera | 90 m: his track against the hold off | 140 m: frames turned | 140 m: his track |
+|---|---|---|---|---|
+| Evolution 3 (one slide, then the yaw) | 395 of 5,976 (at most 29.2 deg) | first 2 cm apart at frame 386; 2.00 m after 60 frames, 2.95 m after 120, then another match | 150 of 5,996 (20.4 deg) | 0.09 m / 0.01 m, another match by 300 frames |
+| `KeepNoYaw 1` (the yaw as a guard), step 0.6 | 76 of 5,997 (14.9 deg) | first apart at 951; 0.24 m after 60 frames, 0.86 m after 120, then another match | 24 of 5,992 (15.1 deg) | 0.04 m / 0.05 m / 0.16 m, another match later |
+| **`KeepNoYaw 2`, step 0.6 (the default)** | **0** | **the same match: 10 of 10 hashes equal (frames 600 to 6,000), the track equal to the centimetre on 5,996 frames** | **0** | **the same match** |
+| `KeepNoYaw 2`, step 1.0 | 0 | the same match | 0 | the same match |
+
+So lane A64's loop is real and now visible without a hand: evolution 3's hold moved the scripted hand's skater by 2 to 3 m inside two seconds on 90 m. With
+the yaw as a guard the effect is smaller but not under half a metre (0.86 m after two seconds). With the camera never turned there is nothing to measure:
+the keys are read in the same yaw on every frame, and the match is the same match to the hash. Any single turned frame makes it another match in the end
+(the bots answer a skater a centimetre elsewhere), so zero is the only clean number.
+
+What never turning costs, in those same runs (chest outside the middle third, of about 5,996 frames):
+
+| | 90 m | 140 m |
+|---|---|---|
+| The hold off | 497 | 146 |
+| `KeepNoYaw 1`, step 0.6 | 0 | 0 |
+| **`KeepNoYaw 2`, step 0.6 (the default)** | **40** (six frames in a row at most; furthest 0.54 of the half frame; never outside the frame) | **15** (five in a row; 0.52) |
+| `KeepNoYaw 2`, step 1.0 | 22 (four in a row; 0.46; the pitch up to 15.8 deg in a frame) | 5 (three in a row; 0.45) |
+| `KeepNoYaw 1`, no limit on the step (build 9) | 0, with the camera never turned too, but 2.9 to 3.6 m of camera and 17 to 18 deg of pitch in one frame | 0 (1 frame turned by 0.03 deg) |
+
+**The Director's bar, said plainly.** "0 frames whose yaw differs, chest lost still 0" is met only by the hold without a limit on its step, which snaps.
+"The remaining yaw frames do not move his path by more than half a metre" is not true of the guard. The default takes the first half of the bar whole
+(0 yaw frames, the path proven untouched) and misses the second by 40 and 15 frames of 6,000, a tenth of a second at a time, with the player always in the
+picture. The other two choices are one console variable away.
+
+The model in the gate (`Jam.Camera.KeepsHuman`, 6,000 frames a rink, the skater working the boards):
+
+| Rink | Frames whose yaw is not the yaw of before: evolution 3 -> now | Chest outside the middle third: before any hold -> evolution 3 -> now | Largest step a frame: camera, pitch |
+|---|---|---|---|
+| 90 x 45 m | 144 (21.9 deg) -> **0** | 481 -> 0 -> 13 (furthest 0.51 of the half frame) | 98 cm, 9.7 deg |
+| 140 x 70 m | 60 (7.3 deg) -> **0** | 71 -> 0 -> 0 | 101 cm, 6.2 deg |
+| 120 x 60 m, 8.5 m arcs | 60 (17.6 deg) -> **0** | 107 -> 0 -> 7 (0.52) | 102 cm, 7.4 deg |
+
+Asserted: the yaw of before on every frame; at most 20 of 6,000 frames outside the middle third, none outside the frame, never past 0.6; no frame moves the
+camera by more than 1.5 m or tilts it by more than 15 degrees; with `KeepNoYaw 1` and with evolution 3's hold the chest is never outside; open ice is the
+pose of before on 360 of 360 frames. The test also prints nine choices of the two settings on the 90 m path (in `status/A135.md`).
+
+### 1: the standard match (the scripted human of parts 1 to 3, who reads only the sim)
+The same 6,000 frames as part 3 (evolution 3's hold = `-Mode base4`, run on the same build):
+
+| | 90 m: evolution 3 -> now | 140 m: evolution 3 -> now |
+|---|---|---|
+| Frames the hold turned the camera | 205 (at most 24.7 deg) -> **0** | 248 (27.4 deg) -> **0** |
+| Chest outside the middle third (main before evolution 3: 438 and 523) | 0 -> 35 (six in a row at most, furthest 0.55 of the half frame) | 0 -> 38 (six in a row, 0.55) |
+| Chest outside the frame | 0 -> 0 | 0 -> 0 |
+| The puck out of frame while he carries | 0 -> 0 of 1,531 | 2 -> 2 of 2,718 |
+| Largest step in one frame: camera, pitch, yaw | 72 cm, 5.3, 6.0 deg -> 112 cm, 10.1, 5.1 deg | 70 cm, 4.7, 8.8 deg -> 102 cm, 9.5, 6.4 deg |
+
+The yaw's largest step is now main's own (5.1 and 6.4 degrees: his spin); the camera's and the pitch's are larger than evolution 3's (the foot does by
+moving what the yaw did by turning).
+
+### 2: the attacked net, taken apart
+The row of part 3 ("the attacked net out of the frame while he is inside the blue line and the camera looks up the rink", the camera within 90 degrees of
+the net): 66 of 397 on 90 m and 189 of 535 on 140 m (65 and 187 with evolution 3's hold; 67 and 189 on main). **Not brought to 0, and it cannot be by a
+camera that may not turn.** Read from the per-frame lines (the net's place in the frame and its bearing off the camera's yaw, `nx ny netbear`):
+
+| The standard match, 6,000 frames | 90 m | 140 m |
+|---|---|---|
+| Frames with the net out of the frame (he is past the blue line, the camera within 90 deg of the net) | 123 of 455 | 305 of 651 |
+| ... of them with the net more than 35 degrees off the camera's yaw (the frame is 35 degrees wide either side) | **123** | **304** |
+| Frames with the net within 30 degrees of the yaw (the probe's `facing`, in play) | 202 | 199 |
+| ... of them with the net out of the frame | **0** (0 with evolution 3's hold, too) | **0** (0) |
+
+(The first two rows count every phase; the probe's 66 and 189 count play only.) So whenever the camera looks at the net he attacks, the net is in the
+picture, on every frame, and it was before this lane; every frame without it is a frame the camera looks more than 35 degrees past it, because he skates
+across the zone or away from the net. To show it there the camera must turn towards it: lane A64's lead, the loop item 1 removes.
+
+The rule written for the remaining case (boards right behind him, the camera close and high: chest and net do not fit the height together) did not prove
+itself: in the camera-relative runs, where that case occurs, the net within 30 degrees was out on 13 of 121 and 13 of 311 frames with the rule against
+21 of 407 without the hold and 11 of 761 with evolution 3's (different matches, so no pair). It ships at its neutral value.
+
+### 3: the prompt off the net
+- By test (`Jam.Hud.PromptOffNet`): the fault's still as a case (evolution 3's lower slot meets that net; the place chosen does not, stands in the top
+  row beside the net, whole in the frame); a net under both rows leaves the top centre alone; a far net in the top row gives the lower centre; and a sweep
+  of net boxes up to 400 units wide over the upper half of two frame shapes, three pill widths, the top row free or taken: the prompt on the net 0 times,
+  outside the frame 0 times.
+- In the game (90 m, the standard match, the brake prompt asked into the lower row at sim frame 1416 as in part 3): `JAMSCREEN prompt place at sim frame
+  1416: x -522 y 206 (net box 947..1106 x 156..252)`: beside the net, not on it. Then the net sweeps towards the pill as he turns: at sim frame 1440 (the
+  frame of part 3's fault) the pill's end is over the net's corner and the pill is a ghost, the net showing through; the net stays, and at 1483 the pill
+  moves once, to the other side. `img/a135/ev4-prompt-ghost-and-move-clay-90.jpg` (sim frames 1440 and 1500, build 13).
+- How it got there: build 9 put the pill 16 units beside the net and the sweeping net pushed it 20 times in 5 s; build 11 (centres first, 120 units of
+  room) still moved 4 times in 6 frames under a fast sweep; build 12 (move after 12 frames on the net) moved 5 times in 5 s with its end on the net's
+  corner in between; build 13 is the ghost and the 45 frames: 2 places in those 5 s.
+- Not proven: a net straight ahead for the whole 5 s on the long rink (the 140 m runs put the pill in the lower centre with the net far off the picture).
+
+### Stills
+Read before the report: the 90 m sheet 3 and the 140 m night sheet 2 of the final build (`img/a135/ev4-sheet-clay-90-3.jpg`,
+`ev4-sheet-night-140-2.jpg`: 18 stills, build 12) and the prompt's two stills (build 13). The human is inside the rectangle or on its edge in all 18; the pictures are part 3's to the
+eye (the frames that differ are the transients, a tenth of a second each, which a still every three seconds does not catch). Three stills land for this
+evolution, beside part 3's ten.
+
+### What is not proven here
+- **A real hand.** The scripted hand holds eight-way keys for 200 ms; it does not aim with the cursor (the stick input stays zero). The cursor's point is
+  deprojected through the live camera and stays true for any pose; with the camera never turned by the hold its bearing is the bearing of before.
+- **The acceptance run**: not run (not the cursor owner). With `KeepNoYaw 2` the rows that could move are the ones part 3 names (2 aim, 10 resume_aim,
+  3 carry, 9 sweep, 8 checked), now only through the camera's height, pitch and place at the boards, never its yaw.
+- **A package**, the menu's way into a match, other aspect ratios.
+
+## How to repeat (part 4)
+
+```
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\qa\screen\u1-stills.ps1 -Tier clay -Mode base3 -PlaySeconds 175 -Port 4735 -CamLog -Hand 12 -EveryFrames 100000 -RunName hand-90-off
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\qa\screen\u1-stills.ps1 -Tier clay -Mode after -PlaySeconds 175 -Port 4798 -CamLog -Hand 12 -EveryFrames 100000 -RunName hand-90-on
+python tools/qa/screen/u1-handcmp.py tools/qa/screen/out/hand-90-off/game.log tools/qa/screen/out/hand-90-on/game.log 90 45
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\qa\screen\u1-stills.ps1 -Tier clay -Mode base4 ...      # evolution 4's rules at their neutral values = evolution 3
+```
+`-ExtraCVars "jam.camera.KeepNoYaw=1"` (the guard), `"jam.camera.KeepStep=1.0"`, `"jam.camera.KeepNet=0.9"` try the other choices without a build. Runs
+that take no stills (`-EveryFrames 100000`) may share a tier with one that does; start them together (each clears its tier's stills when it starts).

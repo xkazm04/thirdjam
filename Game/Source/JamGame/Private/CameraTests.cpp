@@ -749,6 +749,9 @@ bool FJamCameraKeepsHuman::RunTest(const FString&)
 	Off.CornerLiftM = 3.f;   // the game camera of before this lane: the corner lift on
 	FJamCameraSettings On = Off;
 	On.KeepHumanFrac = 0.31f;   // the game's value (jam.camera.KeepHuman)
+	TestEqual(TEXT("the hold never turns the camera (evolution 4's default)"), On.KeepNoYaw, 2);
+	FJamCameraSettings Ev3 = On;
+	Ev3.KeepNoYaw = 0;          // evolution 3's hold: one slide, then the yaw (jam.camera.KeepNoYaw 0)
 
 	struct FRun
 	{
@@ -835,9 +838,25 @@ bool FJamCameraKeepsHuman::RunTest(const FString&)
 			YawDiffMax = FMath::Max(YawDiffMax, D);
 			if (A.In30[i]) ++YawDiffHeld;
 		}
+		{
+			const FRun E = Skate(K.L, K.W, K.R, K.Seed, Ev3);
+			int32 EYaw = 0;
+			float EYawMax = 0.f;
+			for (int32 i = 0; i < E.Yaw.Num(); ++i) { const float D = FMath::Abs(FMath::UnwindDegrees(E.Yaw[i] - A.Yaw[i])); if (D > 0.01f) { ++EYaw; EYawMax = FMath::Max(EYawMax, D); } }
+			AddInfo(FString::Printf(TEXT("JAMSCREEN keep %s, the yaw out of the hold: frames whose yaw is not the yaw of before: evolution 3's hold %d (at most %.1f deg) -> %d (at most %.1f deg); chest outside the middle third %d -> %d; largest camera step %.0f -> %.0f cm"),
+				K.Name, EYaw, EYawMax, YawDiff, YawDiffMax, E.OutThird, B.OutThird, E.MaxStepCm, B.MaxStepCm));
+			TestEqual(FString::Printf(TEXT("%s: evolution 3's hold still holds him (the neutral value)"), K.Name), E.OutThird, 0);
+			FJamCameraSettings Guard = On;
+			Guard.KeepNoYaw = 1;
+			TestEqual(FString::Printf(TEXT("%s: with the yaw as a guard (KeepNoYaw 1) the chest is never outside the middle third"), K.Name), Skate(K.L, K.W, K.R, K.Seed, Guard).OutThird, 0);
+		}
 		AddInfo(FString::Printf(TEXT("JAMSCREEN keep %s: chest outside the middle third on %d -> %d of %d frames (outside the frame %d -> %d); max |x| %.3f -> %.3f, max |y| %.3f -> %.3f; largest step a frame: camera %.0f -> %.0f cm, pitch %.2f -> %.2f deg, yaw %.2f -> %.2f deg; highest %.2f -> %.2f m; the yaw is not the yaw of before on %d frames (at most %.1f deg), %d of them frames the rig of before held him inside 0.31"),
 			K.Name, A.OutThird, B.OutThird, B.Frames, A.OutFrame, B.OutFrame, A.MaxX, B.MaxX, A.MaxY, B.MaxY, A.MaxStepCm, B.MaxStepCm, A.MaxPitchStep, B.MaxPitchStep, A.MaxYawStep, B.MaxYawStep, A.MaxH, B.MaxH, YawDiff, YawDiffMax, YawDiffHeld));
-		TestEqual(FString::Printf(TEXT("%s: frames with the chest outside the middle third"), K.Name), B.OutThird, 0);
+		// Evolution 4: the camera is never turned; the frames its limited move does not yet hold him are few, short and inside the picture.
+		TestEqual(FString::Printf(TEXT("%s: frames whose yaw is not the yaw of before"), K.Name), YawDiff, 0);
+		TestTrue(FString::Printf(TEXT("%s: frames with the chest outside the middle third: %d (at most 20 of 6,000)"), K.Name, B.OutThird), B.OutThird <= 20);
+		TestEqual(FString::Printf(TEXT("%s: frames with the chest outside the frame"), K.Name), B.OutFrame, 0);
+		TestTrue(FString::Printf(TEXT("%s: he is never past 0.6 of the half frame (%.3f, %.3f)"), K.Name, B.MaxX, B.MaxY), B.MaxX <= 0.6f && B.MaxY <= 1.f / 3.f);
 		TestTrue(FString::Printf(TEXT("%s: the camera of before loses him on this path (the test has teeth)"), K.Name), A.OutThird > 50);
 		TestEqual(FString::Printf(TEXT("%s: the camera never crosses the boards' inset"), K.Name), B.OutsideBoards, 0);
 		// The yaw is touched only where the rig of before did not hold him: never on a frame it had him inside 0.30.
@@ -846,7 +865,7 @@ bool FJamCameraKeepsHuman::RunTest(const FString&)
 		// arm, no frame moves the camera by more than a metre and a half, tilts it by more than 15 degrees or turns it by more than 25 (the model's worst
 		// turn is 19.5 degrees, one frame of a spin at the glass on the 90 m rink; the largest steps are printed above).
 		TestTrue(FString::Printf(TEXT("%s: no snap in pitch (%.2f deg per frame)"), K.Name, B.MaxPitchStep), B.MaxPitchStep <= 15.f);
-		TestTrue(FString::Printf(TEXT("%s: no snap in yaw (%.2f deg per frame)"), K.Name, B.MaxYawStep), B.MaxYawStep <= 25.f);
+		TestTrue(FString::Printf(TEXT("%s: no snap in yaw (%.2f deg per frame)"), K.Name, B.MaxYawStep), B.MaxYawStep <= 15.f);
 		TestTrue(FString::Printf(TEXT("%s: no snap in position (%.0f cm per frame)"), K.Name, B.MaxStepCm), B.MaxStepCm <= 150.f);
 	}
 
@@ -901,6 +920,23 @@ bool FJamCameraKeepsHuman::RunTest(const FString&)
 		AddInfo(FString::Printf(TEXT("JAMSCREEN keep open ice, far net at %s: the pose is not the pose of before on %d of 360 frames (yaw by at most %.6f deg, pitch %.6f deg, roll %.6f deg, the camera by at most %.6f cm; frames %d to %d)"),
 			Sign > 0 ? TEXT("+X") : TEXT("-X"), Differ, MaxYawDiff, MaxPitchDiff, MaxRollDiff, MaxPosDiffCm, FirstDiffer, LastDiffer));
 		TestEqual(FString::Printf(TEXT("open ice at 9 m/s, straight and turning, far net at %s: frames whose pose is not the pose of before"), Sign > 0 ? TEXT("+X") : TEXT("-X")), Differ, 0);
+	}
+	// The choices behind evolution 4's default, on the 90 m path: the yaw as a guard (1) or never (2), and the limit on the hold's own move of the foot.
+	{
+		const FRun A0 = Skate(90.f, 45.f, 3.75f, 135, Off);
+		struct FChoice { int32 NoYaw; float StepM; };
+		for (const FChoice& Ch : { FChoice{ 1, 0.f }, FChoice{ 1, 0.3f }, FChoice{ 1, 0.6f }, FChoice{ 1, 1.0f }, FChoice{ 1, 1.5f }, FChoice{ 2, 0.3f }, FChoice{ 2, 0.6f }, FChoice{ 2, 1.0f }, FChoice{ 2, 1.5f } })
+		{
+			FJamCameraSettings V = On;
+			V.KeepNoYaw = Ch.NoYaw;
+			V.KeepStepM = Ch.StepM;
+			const FRun R = Skate(90.f, 45.f, 3.75f, 135, V);
+			int32 Yd = 0;
+			float YdMax = 0.f;
+			for (int32 i = 0; i < R.Yaw.Num(); ++i) { const float D = FMath::Abs(FMath::UnwindDegrees(R.Yaw[i] - A0.Yaw[i])); if (D > 0.01f) { ++Yd; YdMax = FMath::Max(YdMax, D); } }
+			AddInfo(FString::Printf(TEXT("JAMSCREEN keep choice 90 m: KeepNoYaw %d, KeepStepM %.1f: yaw not the yaw of before on %d frames (at most %.1f deg); chest outside the middle third %d (outside the frame %d, largest %.3f, %.3f); largest step a frame: camera %.0f cm, pitch %.2f deg, yaw %.2f deg"),
+				Ch.NoYaw, Ch.StepM, Yd, YdMax, R.OutThird, R.OutFrame, R.MaxX, R.MaxY, R.MaxStepCm, R.MaxPitchStep, R.MaxYawStep));
+		}
 	}
 	// For the next lane: the same model with the crane rising at 0.4 m a frame (the default is 0.2).
 	{
@@ -983,6 +1019,43 @@ bool FJamHudPromptKeys::RunTest(const FString&)
 	TestEqual(TEXT("the neutral value"), UJamHudWidget::BrakePromptText(false, true), UJamHudWidget::PromptText(UJamHudWidget::EPrompt::Brake));
 	for (const FString& Line : { Keys, Pad }) TestTrue(TEXT("one line of the pill (60 characters at most)"), Line.Len() <= 60 && Line.EndsWith(TEXT(": STOP, THEN GO")));
 	AddInfo(FString::Printf(TEXT("JAMSCREEN prompt keys: keys \"%s\"; pad \"%s\""), *Keys, *Pad));
+	return true;
+}
+
+// ---- lane A135, evolution 4: the prompt keeps off the attacked net. Pure rule.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamHudPromptOffNet, "Jam.Hud.PromptOffNet", EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+bool FJamHudPromptOffNet::RunTest(const FString&)
+{
+	const float VW = 1920.f, HalfW = 300.f, Top = UJamHudWidget::PromptSlotY, Low = UJamHudWidget::PromptSlotLowY;
+	const FVector2D None(0, 0);
+	TestTrue(TEXT("no net in the picture: top centre"), UJamHudWidget::PromptPlace(VW, HalfW, false, false, None, None).Equals(FVector2D(0, Top)));
+	TestTrue(TEXT("no net, the top row taken: lower centre (evolution 3's rule)"), UJamHudWidget::PromptPlace(VW, HalfW, true, false, None, None).Equals(FVector2D(0, Low)));
+	// The fault's still: the net straight ahead, its badge at the top centre, its mouth just under it.
+	const FVector2D NetMin(870, 150), NetMax(1050, 270);
+	const FVector2D P1 = UJamHudWidget::PromptPlace(VW, HalfW, false, true, NetMin, NetMax);
+	TestTrue(TEXT("evolution 3's lower slot lay on this net"), UJamHudWidget::PromptBoxMeets(FVector2D(0, Low), VW, HalfW, NetMin, NetMax));
+	TestFalse(TEXT("the place chosen is clear of the net"), UJamHudWidget::PromptBoxMeets(P1, VW, HalfW, NetMin, NetMax));
+	TestEqual(TEXT("... in the top row"), (float)P1.Y, Top);
+	TestTrue(TEXT("... beside the net, on its nearer side, whole in the frame"), P1.X < 0.f && VW * 0.5f + P1.X - HalfW >= 8.f && VW * 0.5f + P1.X + HalfW <= NetMin.X - 12.f);
+	// A net low in the picture leaves the top centre alone; the top row taken sends the prompt to the lower row beside the net.
+	TestTrue(TEXT("a net under both rows: top centre"), UJamHudWidget::PromptPlace(VW, HalfW, false, true, FVector2D(870, 400), FVector2D(1050, 520)).Equals(FVector2D(0, Top)));
+	TestTrue(TEXT("a net in the top row only (far, small): the lower row centre, which does not move with the net"), UJamHudWidget::PromptPlace(VW, HalfW, false, true, FVector2D(1000, 109), FVector2D(1130, 182)).Equals(FVector2D(0, Low)));
+	const FVector2D P2 = UJamHudWidget::PromptPlace(VW, HalfW, true, true, NetMin, NetMax);
+	TestTrue(TEXT("the top row taken: the lower row, clear of the net"), P2.Y == Low && !UJamHudWidget::PromptBoxMeets(P2, VW, HalfW, NetMin, NetMax));
+	// Every net box up to 400 wide anywhere in the upper half of two frame shapes, three pill widths, the top row free or taken: never on the net.
+	int32 Tried = 0, OnNet = 0, Outside = 0;
+	for (float W : { 1920.f, 2580.f }) for (float Hw : { 240.f, 300.f, 340.f }) for (int32 Taken = 0; Taken < 2; ++Taken)
+		for (float Nw = 60.f; Nw <= 400.f; Nw += 85.f) for (float Nx = -100.f; Nx <= W - 60.f; Nx += 47.f) for (float Ny = 60.f; Ny <= 500.f; Ny += 31.f)
+		{
+			const FVector2D Mn(Nx, Ny), Mx(Nx + Nw, Ny + Nw * 0.45f + 36.f);
+			const FVector2D P = UJamHudWidget::PromptPlace(W, Hw, Taken != 0, true, Mn, Mx);
+			++Tried;
+			if (UJamHudWidget::PromptBoxMeets(P, W, Hw, Mn, Mx)) ++OnNet;
+			if (W * 0.5f + P.X - Hw < 0.f || W * 0.5f + P.X + Hw > W) ++Outside;
+		}
+	AddInfo(FString::Printf(TEXT("JAMSCREEN prompt off net: %d net boxes tried; the prompt on the net %d; outside the frame %d"), Tried, OnNet, Outside));
+	TestEqual(TEXT("places on the net"), OnNet, 0);
+	TestEqual(TEXT("places outside the frame"), Outside, 0);
 	return true;
 }
 
