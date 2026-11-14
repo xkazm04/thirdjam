@@ -343,6 +343,8 @@ const TArray<FJamModeCard>& UJamMenuFlow::ModeCards()
 		M.Display = C->Title;
 		M.Pitch = C->MetaPitch;
 		M.Facts = C->MetaFacts;
+		if (C->Game.Teams.Num() > 0) M.HomeSkaters = C->Game.Teams[0].Skaters.Num();
+		if (C->Game.Teams.Num() > 1) M.AwaySkaters = C->Game.Teams[1].Skaters.Num();
 		Cards.Add(M);
 	}
 	return Cards;

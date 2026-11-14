@@ -464,3 +464,4 @@
 - link green 13:18: main 9472de42 (The operator's hands (A183, track K1): LMB shoots with the puck and cross-checks without, ) pushed.
 - package 13:25: `Hokej_Hokej_H32.zip` from main 9472de42, acceptance run green (18 verbs through the cursor and the buttons).
 - link green 13:30: main 1f4be055 (Skaters without the puck are 15 % faster (A185, track F2, evolution 9; R-0064 point 2: the) pushed.
+- link green 13:33: main f7d0b97c (At the boards the camera no longer turns on its own (A186, track U1, evolution 7; R-0064 p) pushed.
