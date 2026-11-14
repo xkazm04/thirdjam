@@ -246,6 +246,35 @@ namespace JamAI
 		// bMateTrueScale: the yield's arrival race (YieldArriveS >= 0 only) plans the human's mate at MateSpeedScale when it is set, the scale it skates
 		// at (lane A112), not SpeedScale. Off = SpeedScale (all_star: the mate thinks it is 45 % faster than it is).
 		bool bMateTrueScale = false;
+		// Lane A206 (track Q2, evolution 9; docs/experiments/BRAIN-9.md): ten skaters who play hockey (R-0067 point 1). Each at its neutral value is
+		// evolution 8 as shipped, bit for bit (brain9=0). ShipEvolution9 sets the rules every level plays; a level's own numbers are its profile's.
+		// ShootExtra9M: > 0 = the bot's shot reach (it shoots when the net is nearer than reach + this) instead of FJamBotSkill::ShootExtraM.
+		double ShootExtra9M = 0.0;
+		// bAimCone9: the bot knows the sim's aim cone (as FJamBotSkill::bUseAimCone): without it a bot shoots only facing the net within atan(1.4 / d).
+		bool bAimCone9 = false;
+		// OppPace9: > 0 = the opposing side's pace (SpeedScale x RedSkill, the backs excepted) is at least this (rookie: its bots arrive; clumsy, not slow).
+		double OppPace9 = 0.0;
+		// AimError9Deg: > 0 = the bot's aim error is at least this many degrees (a wider aim instead of a slower skater).
+		double AimError9Deg = 0.0;
+		// React9Frames: > 0 = the bot's steering reaction delay is at least this many frames (a later read; the back still reacts at once).
+		int React9Frames = 0;
+		// bNetFront9: the attack goes to the net: the Far job's first skater stands at the net front whenever its side has the puck in the attacking half
+		// (before: only past the attacking third line), and the close support skates level with the carrier, not 4 m behind him.
+		bool bNetFront9 = false;
+		// bChipUp9: Attack's board chip only when the chip goes up the ice (facing at least 60 deg towards the attacked end); else the bot carries off the boards.
+		bool bChipUp9 = false;
+		// DriveNet9M: > 0 = a carrier inside this many metres of the net with its lane to the net open (no standing opponent within 1.5 m of the line in the
+		// 6 m ahead) keeps the puck and goes at the net, shooting when its reach and facing allow: no pass for an opponent's arrival (DriveNet).
+		double DriveNet9M = 0.0;
+		// Pressure9S: > 0 = the carry-or-pass pressure time (FJamHockeySense::PressureSec) is this instead (the human's mates: 1.4 s passed at every shadow).
+		double Pressure9S = 0.0;
+		// ShotCharge9Frames: > 0 = the bot's shot wind-up is at least this many frames (rookie tapped its shots at 18 m/s while skating at 13: the tap left
+		// at 5 m/s relative to its own stick, which took it back in 7 % of its shots, and the rest arrived soft).
+		int ShotCharge9Frames = 0;
+		// bOneTimer9: the bot one-times a received pass (as FJamBotSkill::bOneTimer): the human's mates at the net front finish his pass.
+		bool bOneTimer9 = false;
+		// Poke9Frames: > 0 = the bot pokes an opposing carrier's puck only after it has sat this many frames in its blade's reach (at least; a slower stick).
+		int Poke9Frames = 0;
 		bool Any() const { return bCarryOrPass || bAttackShape || bDefenceShape || bTransition; }
 	};
 	// Lane A115: every rule of evolution 2 on (as ProHockeySense has them) or off (the brain of evolution 1). The tune key brain2 and the tests use it.
@@ -360,6 +389,22 @@ namespace JamAI
 		if (kEvo8ShipLongPass) { H.LongPassM = kEvo8LongPassM; }
 		if (kEvo8ShipOwnZoneTurn) { H.bOwnZoneTurn = kEvo8OwnZoneTurn; }
 		if (kEvo8ShipClump) { H.ClumpFrames = kEvo8ClumpFrames; }
+	}
+	// Lane A206 (evolution 9, BRAIN-9.md): the rules every level plays (on) or none (off: evolution 8 as shipped, the old game to the hash). The level's
+	// own numbers (OppPace9, AimError9Deg, React9Frames) are its profile's; off zeroes them too.
+	constexpr double kEvo9MateShootExtraM = 15.0;   // the human's mates shoot from inside 16.5 m (reach 1.5 + 15), with the aim cone
+	constexpr double kEvo9DriveNetM = 22.0;
+	constexpr double kEvo9MatePressureS = 0.6;      // the opposing side's at rookie and pro
+	inline void SetEvolution9(FJamHockeySense& H, bool bOn, bool bMate)
+	{
+		if (bMate) { H.ShootExtra9M = bOn ? kEvo9MateShootExtraM : 0.0; }   // the opponents' reach is their level's (rookie's profile; off zeroes it below)
+		H.bAimCone9 = bOn && bMate;
+		H.bOneTimer9 = bOn && bMate;
+		H.bNetFront9 = bOn;
+		H.bChipUp9 = bOn;
+		H.DriveNet9M = bOn ? kEvo9DriveNetM : 0.0;
+		H.Pressure9S = (bOn && bMate) ? kEvo9MatePressureS : 0.0;
+		if (!bOn) { H.OppPace9 = 0.0; H.AimError9Deg = 0.0; H.React9Frames = 0; H.ShotCharge9Frames = 0; H.Poke9Frames = 0; H.ShootExtra9M = 0.0; }
 	}
 	// Lane A94: the sense each level plays (DifficultyProfile.cpp sets the opponents' per level; the human's teammates play ProHockeySense at every level).
 	inline FJamHockeySense ProHockeySense()
@@ -828,6 +873,7 @@ namespace JamAI
 		FVec2 OwnZoneTurn(const FJamAIWorld& W, int Id, const FVec2& Dir) const;
 		FVec2 SplitClump(const FJamAIWorld& W, int Id, const FVec2& Dir);
 		void LongShotToPass(const FJamAIWorld& W, int Id, FJamAIInput& In) const;
+		bool DriveNet(const FJamAIWorld& W, int Id, const FVec2& Aim, double Dgoal) const;   // lane A206 (evolution 9)
 	private:
 		int DownNear[kMaxSkaters] = {};
 		int64_t DownNearFrame[kMaxSkaters] = {};

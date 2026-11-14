@@ -80,6 +80,9 @@ static TAutoConsoleVariable<int32> CVarJamCtrlHandPuck(TEXT("jam.ctrl.HandPuck")
 	TEXT("1 = drills 10 / 11 hand the puck to the human (10) or the scripted teammate (11) whenever nobody on the human's team carries and no shot is being measured; JAMDRILL hand_puck lines. Lane A82 proof."));
 static TAutoConsoleVariable<int32> CVarJamCtrlDrill(TEXT("jam.ctrl.Drill"), 0,
 	TEXT("1 = tackle drill, 2 = cross-check drill: the human chases the carrier and presses once in range, 10 attempts, JAMDRILL lines. Lane A49 proof. 3 = sweep drill, 4 = spin drill (lane A51): the cursor and the keys stay real, the skating carries the puck at the nearest defender; JAMDRILL stick lines. 7 = sweep past a defender, 8 = spin with the puck, 9 = saucer over a defender's blade, 10 = shots from 10 m, 11 = one-timers off a scripted teammate (lane A77): JAMCUE lines for the driver, JAMDRILL stick / saucer / shot / onetimer lines. 20 = the acceptance run (lane A87, tools/qa/accept): JAMACCEPT lines. 21 = the carry drill (lane A102): the human carries at a standing defender the brain plays, 20 rounds, JAMDRILL carry lines; jam.ctrl.CarryScript picks who skates. 22 = the law-1 drill (lane A132, R-0054 point 3): a check from behind at matched speed (a nudge, both skate on) beside the same press at full closing speed (down), on the same frame, 3 rounds, JAMDRILL law1 lines; jam.ctrl.LawHuman picks which of the two the human throws."));
+// Lane A210 (track F3): drills 1 and 5 press this many frames earlier (a longer wind-up staged by a cartridge needs the lead); 0 = the drill as it was.
+static TAutoConsoleVariable<int32> CVarJamCtrlDrillLead(TEXT("jam.ctrl.DrillLead"), 0,
+	TEXT("Drill 1 (and 5): frames added to the lead at which the scripted human presses its body check (lane A210: a wind-up of 8 staged by a cartridge wants 4). 0 = as before."));
 // Lane A102 (track F2, carrier skill): drill 21, the packaged face of Jam.Core.Movement.StopAndGo. The scene and the scripted human are FJamCarryDrill
 // (JamCore/Public/JamCarryDrill.h), the code the headless test runs: the human carries at 9 m/s at the opposing chaser standing 12 m ahead, which the real brain
 // plays; everyone else is parked in a corner. 20 rounds (the round number is the scene's seed), a JAMDRILL carry result line each and a summary; then the
@@ -1159,7 +1162,7 @@ FJamInput AHokejGameMode::DrillInput()
 	const double Gap = Dist - UJamSim::SkaterRadius * 2.0;
 	const double Closing = Dist > 1e-6 ? FVector2D::DotProduct(S.Vel - V.Vel, ToC / Dist) : 0.0;
 	bool bInRange = Mode == 2 ? Gap <= Sim->GetConfig().Stick.LiftRangeM - 0.2
-		: (Gap <= 0.25 || (Closing > 0.5 && Gap <= Closing * (UJamSim::HumanCheckWindowFrames - 3) * UJamSim::DT));
+		: (Gap <= 0.25 || (Closing > 0.5 && Gap <= Closing * (UJamSim::HumanCheckWindowFrames - 3 + CVarJamCtrlDrillLead.GetValueOnGameThread()) * UJamSim::DT));   // lane A210: + jam.ctrl.DrillLead frames (0 = as before)
 	if (Mode == 6)
 	{
 		// Lane A73: an opponent carries while the human should be the carrier: skate at it and take the puck back with a check (not an attempt of this drill).

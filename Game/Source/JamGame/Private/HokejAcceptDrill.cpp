@@ -602,7 +602,7 @@ void AHokejGameMode::AcceptDrillObserve()
 		// frames before contact, inside the human's 12-frame window whatever the hand's latency; the MMB cue comes at cross_reach_m (the shove needs arm's length).
 		const bool bCue = !Cfg.Contact.bMomentum ? (Gap <= 0.25 || (Closing > 0.5 && Gap <= Closing * (UJamSim::HumanCheckWindowFrames - 6) * UJamSim::DT))
 			: G.K == 1 ? (Gap <= 0.25 || (Closing > 0.5 && Gap <= Closing * (UJamSim::HumanCheckWindowFrames - 2 + Cfg.Contact.CheckWindupFrames) * UJamSim::DT))   // lane A192: the cue comes the wind-up earlier
-			: Gap <= Cfg.Contact.CrossReachM;
+			: Gap <= Cfg.Contact.CrossReachM * 0.5 + FMath::Max(0.0, Closing) * Cfg.Contact.CrossWindupFrames * UJamSim::DT;   // lane A209: the shove lands the wind-up later, at half of arm's length (4 frames: 0.52 m as before; 8: 0.78 m)
 		if (G.K == 3)
 		{
 			// Lane A191: the held cross-check. The button was pressed at the stage (act=lmb_hold); he skates in with it held: the man goes down by the speed brought

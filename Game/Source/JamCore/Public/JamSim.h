@@ -760,6 +760,20 @@ public:
 	static constexpr double CheckReachAcrossMax = 0.866;   // sin 60: at least half of the speed still closes
 	int32 CheckReachTarget(const FJamSkaterState& S) const;
 	void StepCheckReach(FJamSkaterState& S);
+	// Lane A209 (track F1, the night; game.contact.check_pull_m, cross_any_man; FJamContactConfig has the rule). StepCheckPull runs after StepCheckReach in the
+	// skater's input step: during a human's body-check wind-up (and the window's first frames) it bends his velocity onto the collision course with his man
+	// and draws his root toward him, spreading what his own closing will not cover over the wind-up's frames left (at most check_pull_m / the wind-up a
+	// frame), so the bodies touch as it ends; during his cross-check's wind-up it draws him toward CrossTarget to half of cross_reach_m. Speed is never
+	// added. PullTarget: the nearest opponent on his feet, out of the box, inside CheckReachConeDeg of S's facing, going or stick, gap at most MaxGap; -1 none.
+	// PullsHuman: the rule applies to S (a human, the key on, momentum on). EndWindupOnContact: a body check that met its man inside the wind-up is spent.
+	static constexpr double PullGoalGapM = -0.01;   // the bodies just overlap at the wind-up's end, so the meeting registers on that frame
+	bool PullsHuman(const FJamSkaterState& S) const;
+	int32 PullTarget(const FJamSkaterState& S, double MaxGap) const;
+	void StepCheckPull(FJamSkaterState& S);
+	void EndWindupOnContact(FJamSkaterState& S);
+	double CrossPullFor(const FJamSkaterState& S) const;
+	// Lane A209: the cross-check's cone for a pulled human: stick.lift_cone_deg of his facing OR of his stick's aim (the mouse); everyone else OutsideLiftCone.
+	bool OutsideCrossCone(const FJamSkaterState& S, const FJamSkaterState& O) const;
 	// The carrier cannot hit (game.contact.carrier_can_hit false): true when S carries the puck and no opponent carried it within stick.foul_grace_frames, so a
 	// take off an opponent's stick in the same breath still finishes its hit (the mirror of R-0029 point 3, where the victim that just lost the puck still counts
 	// as the carrier). The brain reads it.
@@ -868,7 +882,8 @@ private:
 	void CollideSkaters();
 	// Lane A92: one hit resolved by momentum (a pressed check at contact, or a cross-check): the outcome by impulse / stability, the stumble or the knockdown,
 	// the loose puck, the speed that changes hands, the attacker's recoil, the check event and the foul. Returns ContactBump / ContactStumble / ContactDown.
-	int32 ResolveContact(FJamSkaterState& Attacker, FJamSkaterState& Victim, const FVector2D& Dir, const FVector2D& Contact, EContactKind Kind);
+	// Lane A209: MinOutcome (default ContactNone: as before) raises the outcome before the grace, the shield and the stumble rules read it (LandCrossShove: a pulled human's shove is a stumble at least).
+	int32 ResolveContact(FJamSkaterState& Attacker, FJamSkaterState& Victim, const FVector2D& Dir, const FVector2D& Contact, EContactKind Kind, int32 MinOutcome = 0);
 	void TryShoot(FJamSkaterState& S, float Charge);
 	void StepCharge(FJamSkaterState& S, const FJamInput& In);
 	// Lane A77 (R-0036): the held pass charges like the shot and fires on the release; a saucer when held pass.saucer.half_frames or more.

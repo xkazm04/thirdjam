@@ -97,7 +97,7 @@ bool FJamTacklingEvents::RunTest(const FString& Parameters)
 			// Lane A192: the window opens game.contact.check_windup_frames after the press: the checker starts that much ground farther out (the same contact).
 			Sim->SetSkater(0, C.From * (1.2 + V * Sim->GetConfig().Contact.CheckWindupFor(Sim->GetSkaters()[0].bHuman) / 60.0), Dir * V, FMath::Atan2(Dir.Y, Dir.X));   // lane A200: the presser's own (bot_check_windup_frames for a bot)
 			uint64 Hash = 0;
-			const FJamSimEvent E = RunUntil(Sim, JamEvents::Check, 0, 12, &Hash);
+			const FJamSimEvent E = RunUntil(Sim, JamEvents::Check, 0, 8 + Sim->GetConfig().Contact.CheckWindupFor(Sim->GetSkaters()[0].bHuman), &Hash);   // lane A209: the window's frames after the presser's own wind-up (was 12 at 4)
 			const FString Label = FString::Printf(TEXT("%s at %.0f m/s"), C.Name, V);
 			if (!TestEqual(*FString::Printf(TEXT("%s: a check lands"), *Label), E.Name.ToString(), JamEvents::Check.ToString())) continue;
 			TestEqual(*FString::Printf(TEXT("%s: who = the checker"), *Label), E.Who, 0);

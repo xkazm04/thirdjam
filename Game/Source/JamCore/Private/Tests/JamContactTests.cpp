@@ -214,6 +214,7 @@ namespace JamContactTests
 		S.Cfg.Contact.CheckWindupFrames = 0;
 		S.Cfg.Contact.CrossWindupFrames = 0;
 		S.Cfg.Contact.BotCheckWindupFrames = S.Cfg.Contact.BotCrossWindupFrames = -1;   // lane A200: and the bots' own (absent = the shared value)
+		S.Cfg.Contact.CheckPullM = 0.0; S.Cfg.Contact.bCrossAnyMan = false; S.Cfg.Contact.CheckReachM = 0.0;   // lane A209: and the hit that finds its man (Jam.Core.Contact.HitFindsMan sets them)
 		Edit(S.Cfg);
 		S.Sim = NewObject<UJamSim>();
 		S.Sim->Init(S.Cfg, 7);
@@ -789,7 +790,7 @@ bool FJamContactCheckReach::RunTest(const FString& Parameters)
 	{
 		TArray<FString> Errors;
 		const UJamCartridge* C = UJamCartridge::LoadFromFile(UJamCartridge::ResolveCartridgePath(TEXT("hockey.regular")), Errors);
-		if (C) TestEqual(TEXT("game.contact.check_reach_m is 0 (off) when the key is absent"), C->Game.Contact.CheckReachM, 0.0, 1e-12);
+		if (C) TestEqual(TEXT("game.contact.check_reach_m is 1.0 (on, lane A209) when the key is absent"), C->Game.Contact.CheckReachM, 1.0, 1e-12);   // lane A209: was 0 (off)
 	}
 	return true;
 }
@@ -1823,6 +1824,7 @@ bool FJamContactNeutral::RunTest(const FString& Parameters)
 		C->Game.Stick.PokeAssistDeg = 0.0; C->Game.Stick.MissRecoveryFrames = 0;   // lane A152 (track F2): and before the poke that reaches and the miss's recovery
 		C->Game.Contact.bCrossHold = false; C->Game.Contact.CheckWindupFrames = 0; C->Game.Contact.CrossWindupFrames = 0;   // lane A184: and before the held cross-check and the wind-ups
 		C->Game.Contact.BotCheckWindupFrames = C->Game.Contact.BotCrossWindupFrames = -1;   // lane A200: and the bots' own
+		C->Game.Contact.CheckPullM = 0.0; C->Game.Contact.bCrossAnyMan = false; C->Game.Contact.CheckReachM = 0.0;   // lane A209: and before the hit that finds its man
 		C->Game.Skater.bChargeDiesOnLoss = false;   // lane A203 (track K1): and before the charge that dies with the puck
 		FContactCount Count;
 		JamAI::FJamSimAdapter Sim(*C);

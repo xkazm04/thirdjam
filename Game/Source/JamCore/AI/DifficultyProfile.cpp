@@ -49,6 +49,16 @@ namespace JamAI
 			Opp.SprintShare = 0.2;   // lane A95 (R-0045 law 4, CURVE-5.md): the rookie sprints little (pro 0.35, all_star 1.0)
 			Opp.CheckMinClosing = 6.0;   // lane A95 (R-0041 "rookie bots rarely check", CURVE-5.md): checks only from 6 m/s of closing (pro 2, all_star 2); -1 (never) before
 			Opp.DrawJumpPct = 100; // 16:23: the rookie centre always jumps early (the human takes the opening touch)
+			// Lane A206 (evolution 9, R-0067 point 1, BRAIN-9.md): rookie's bots are clumsy, not absent. Their pace (0.85 x red 0.80 = 0.68 of a mate's on the
+			// regular rink: they never arrived, 2.4 s a match in their attacking third) is at least OppPace9. A later read (React9Frames 6) broke rookie's stop
+			// window (the drill's 8.5 m stop past rookie's defender 88.5 %, bar 95; with pace 0.95 and no late read 100 %): not used.
+			// Eased by execution instead (sweep R1 / R2, the novice on the regular rink, 200 a cell; as shipped with pace 0.95 alone 58.7 at 600): pace 0.9, the poke
+			// after 20 frames in reach (10), the aim 6 deg wide (no aim cone), the shot from inside 11.5 m (21.5): 81.5. Each alone: 71.0 / 65.5 / 60.0 / 71.0.
+			// The poke at 20 let law 3's straight charge through at rookie (59.5 %); 16: 46.0 %, 14: 4.5 % (the cell 79.5), 12: 0 % (76.5): 14.
+			Opp.Hk.OppPace9 = 0.9;
+			Opp.Hk.Poke9Frames = 14;
+			Opp.Hk.AimError9Deg = 6.0;
+			Opp.Hk.ShootExtra9M = 10.0;
 			// R-0029 P2: speed 0.85 / red skill 0.75 (0.96 / 0.88 before, tuned against the scripted human); measured with lane A34's novice.
 			// Stall 60: the stall rule is what lets a rookie shoot at all (SeasonTakes needs one AI shot per match).
 			// Lane A70 (CURVE-2.md): red skill 0.75 -> 0.8, the novice 90.8 -> 85.8 % over 2,000 matches (speed 0.9 moved nothing).
@@ -207,6 +217,20 @@ namespace JamAI
 			if (std::strcmp(Key, "hk_true_lead") == 0) { K.Hk.bTrueLead = V != 0.0; return true; }   // lane A202 item 4 (off; not in brain8)
 			if (std::strcmp(Key, "hk_mate_true_scale") == 0) { K.Hk.bMateTrueScale = V != 0.0; return true; }
 
+			// Lane A206 (BRAIN-9.md): the rules of evolution 9 (brain9 switches them on and off)
+			if (std::strcmp(Key, "hk_shoot_extra9_m") == 0) { K.Hk.ShootExtra9M = V; return true; }
+			if (std::strcmp(Key, "hk_aim_cone9") == 0) { K.Hk.bAimCone9 = V != 0.0; return true; }
+			if (std::strcmp(Key, "hk_opp_pace9") == 0) { K.Hk.OppPace9 = V; return true; }
+			if (std::strcmp(Key, "hk_aim_error9_deg") == 0) { K.Hk.AimError9Deg = V; return true; }
+			if (std::strcmp(Key, "hk_react9_frames") == 0) { K.Hk.React9Frames = static_cast<int>(V); return true; }
+			if (std::strcmp(Key, "hk_net_front9") == 0) { K.Hk.bNetFront9 = V != 0.0; return true; }
+			if (std::strcmp(Key, "hk_chip_up9") == 0) { K.Hk.bChipUp9 = V != 0.0; return true; }
+			if (std::strcmp(Key, "hk_drive_net9_m") == 0) { K.Hk.DriveNet9M = V; return true; }
+			if (std::strcmp(Key, "hk_pressure9_s") == 0) { K.Hk.Pressure9S = V; return true; }
+			if (std::strcmp(Key, "hk_poke9_frames") == 0) { K.Hk.Poke9Frames = static_cast<int>(V); return true; }
+			if (std::strcmp(Key, "hk_one_timer9") == 0) { K.Hk.bOneTimer9 = V != 0.0; return true; }
+			if (std::strcmp(Key, "hk_shot_charge9_frames") == 0) { K.Hk.ShotCharge9Frames = static_cast<int>(V); return true; }
+
 			if (std::strcmp(Key, "hk_mate_drive_m") == 0) { K.Hk.MateDriveM = V; return true; }
 			if (std::strcmp(Key, "hk_screen_frames") == 0) { K.Hk.ScreenFrames = static_cast<int>(V); return true; }
 			if (std::strcmp(Key, "hk_press_in_hunt") == 0) { K.Hk.bPressInHunt = V != 0.0; return true; }
@@ -285,6 +309,8 @@ namespace JamAI
 		SetEvolution7(P.Mate.Hk, Profile.bTrueSpeeds);
 		ShipEvolution8(P.Opp.Hk);   // lane A202 (track Q2, evolution 8; BRAIN-8.md): the four rules as kEvo8Ship* say (all on since 16:52)
 		ShipEvolution8(P.Mate.Hk);
+		SetEvolution9(P.Opp.Hk, true, false);   // lane A206 (track Q2, evolution 9; BRAIN-9.md): ships on; brain9=0 (and every older brainN=0) is evolution 8
+		SetEvolution9(P.Mate.Hk, true, true);
 		// Lane A189 (CURVE-12.md): a level's own step-up distance survives the evolutions (SetEvolution3 zeroes the opposing side's StepUpM, a rule of the
 		// human's side there). With hk_second_man_hunts and hk_step_up_max_team (kept by SetEvolution6 on) it is all_star's brain dial (BRAIN-6.md). 0 = none (every level today).
 		if (Profile.Opp.Hk.StepUpM > 0.0) { P.Opp.Hk.StepUpM = Profile.Opp.Hk.StepUpM; }
@@ -328,6 +354,8 @@ namespace JamAI
 			if (NumEnd == Eq + 1 || *NumEnd != 0) { *Eq = '='; SetErr(Err, ErrLen, "not a number", Pair); return false; }
 			const char* Key = Pair;
 			bool bOk = true;
+			// lane A206: every brain switch at 0 also switches evolution 9 off (its rules stand on all of them)
+			if (std::strncmp(Key, "brain", 5) == 0 && V == 0.0) { SetEvolution9(P.Opp.Hk, false, false); SetEvolution9(P.Mate.Hk, false, true); }
 			if (std::strncmp(Key, "opp.", 4) == 0) { bOk = SetSkill(P.Opp, Key + 4, V); }
 			else if (std::strncmp(Key, "mate.", 5) == 0) { bOk = SetSkill(P.Mate, Key + 5, V); }
 			else if (std::strcmp(Key, "speed_scale") == 0) { P.SpeedScale = V; }
@@ -347,6 +375,7 @@ namespace JamAI
 				SetEvolution3(P.Opp.Hk, V != 0.0, false); SetEvolution3(P.Mate.Hk, V != 0.0, true);
 				if (V == 0.0) { SetEvolution4(P.Opp.Hk, false, false); SetEvolution4(P.Mate.Hk, false, true); SetEvolution5(P.Opp.Hk, false); SetEvolution5(P.Mate.Hk, false); SetEvolution6(P.Opp.Hk, false); SetEvolution6(P.Mate.Hk, false); SetEvolution7(P.Opp.Hk, false); SetEvolution7(P.Mate.Hk, false); SetEvolution8(P.Opp.Hk, false); SetEvolution8(P.Mate.Hk, false); }
 			}
+			else if (std::strcmp(Key, "brain9") == 0) { SetEvolution9(P.Opp.Hk, V != 0.0, false); SetEvolution9(P.Mate.Hk, V != 0.0, true); }   // lane A206: 0 = evolution 8 as shipped
 			else if (std::strcmp(Key, "brain8") == 0) { SetEvolution8(P.Opp.Hk, V != 0.0); SetEvolution8(P.Mate.Hk, V != 0.0); }   // lane A202: 0 = evolution 7, 1 = every rule of evolution 8 on
 			else if (std::strcmp(Key, "brain7") == 0) { SetEvolution7(P.Opp.Hk, V != 0.0); SetEvolution7(P.Mate.Hk, V != 0.0); if (V == 0.0) { SetEvolution8(P.Opp.Hk, false); SetEvolution8(P.Mate.Hk, false); } }   // lane A193: 0 = evolution 6
 			else if (std::strcmp(Key, "brain6") == 0) { SetEvolution6(P.Opp.Hk, V != 0.0); SetEvolution6(P.Mate.Hk, V != 0.0); if (V == 0.0) { SetEvolution7(P.Opp.Hk, false); SetEvolution7(P.Mate.Hk, false); SetEvolution8(P.Opp.Hk, false); SetEvolution8(P.Mate.Hk, false); } }   // lane A181: 0 = evolution 5

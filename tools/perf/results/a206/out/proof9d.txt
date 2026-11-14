@@ -1,0 +1,6 @@
+rk-reg A-rk-reg vs P9d-rk-reg: 100 of 100 shared seeds identical
+rk-large A-rk-large vs P9d-rk-large: 100 of 100 shared seeds identical
+pro-reg A-pro-reg vs P9d-pro-reg: 100 of 100 shared seeds identical
+pro-large A-pro-large vs P9d-pro-large: 100 of 100 shared seeds identical
+as-reg A-as-reg vs P9d-as-reg: 100 of 100 shared seeds identical
+as-large A-as-large vs P9d-as-large: 100 of 100 shared seeds identical

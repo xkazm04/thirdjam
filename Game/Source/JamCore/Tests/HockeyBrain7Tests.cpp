@@ -189,7 +189,7 @@ bool FJamHockey7Neutral::RunTest(const FString& Parameters)
 		Cart->RemoveFromRoot();
 		return FString::Printf(TEXT("%016llx (%lld frames, %d:%d)"), static_cast<unsigned long long>(St.Hash), static_cast<long long>(St.Frames), St.GoalsFor, St.GoalsAgainst);
 	};
-	const FString A1 = Match(nullptr, 0.0), A2 = Match(nullptr, 0.0), Off = Match("brain7=0", 0.0), N1 = Match(nullptr, 1.0), N0 = Match("brain7=0;brain8=1", 1.0);   // lane A202: brain7=0 also switches evolution 8 off; brain8=1 puts it back as shipped
+	const FString A1 = Match(nullptr, 0.0), A2 = Match(nullptr, 0.0), Off = Match("brain7=0", 0.0), N1 = Match(nullptr, 1.0), N0 = Match("brain7=0;brain8=1;brain9=1", 1.0);   // lane A202: brain7=0 also switches evolution 8 off; brain8=1 puts it back as shipped   // lane A206: brain9=1 too
 	AddInfo(FString::Printf(TEXT("hockey.regular at pro, the regular player, seed 1: as shipped %s; brain7=0 %s; free_speed_mult 1: as shipped %s, brain7=0 %s"), *A1, *Off, *N1, *N0));
 	TestEqual(TEXT("the same match twice is the same match"), A1, A2);
 	TestEqual(TEXT("free_speed_mult 1: the rule reads only the multiplier (as shipped = brain7=0)"), N1, N0);
