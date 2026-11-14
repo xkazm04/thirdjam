@@ -159,7 +159,7 @@ bool FJamSeasonRoundTrip::RunTest(const FString& Parameters)
 	const FJamLadder& L = P->GetLadder();
 	TestEqual(TEXT("eight takes"), L.Takes.Num(), 8);
 	using JamAI::EDifficulty;
-	static const EDifficulty Levels[] = { EDifficulty::Rookie, EDifficulty::Rookie, EDifficulty::Rookie, EDifficulty::Pro,   // lane A112 (R-0048 point 3): take-3 is rookie
+	static const EDifficulty Levels[] = { EDifficulty::Rookie, EDifficulty::Rookie, EDifficulty::Rookie, EDifficulty::Rookie,   // lane A112 (R-0048 point 3): take-3 is rookie; lane A133 (R-0057): take-4 too (the season's ramp)
 		 EDifficulty::Pro, EDifficulty::Pro, EDifficulty::Pro, EDifficulty::AllStar };
 	for (int32 i = 0; i < L.Takes.Num(); ++i)
 	{

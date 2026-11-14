@@ -427,3 +427,4 @@
 - link green 01:46: main 87de2dc (The curve lane's second landing (A133): the soak-set test budget, its season and clay scri) pushed.
 - link green 02:01: main d126779 (The carry drill teaches each level its own stop distance, and an earned first step survive) pushed.
 - 02:21: acceptance run RED on main d126779 (exit 1): no H27. See /c/Users/kazda/AppData/Local/Temp/tj/accept-H27-2.txt
+- link green 02:28: main a9f7443 (On big ice the human's mates check the carrier and the back steps up (A134, track Q2); dev) pushed.

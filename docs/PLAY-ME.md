@@ -37,7 +37,9 @@ If Windows asks about the firewall, that is the joined match's socket: Cancel is
 4. **Keep the puck.** Carry with a defender on your back and turn your body between him and the puck: his stick should not reach it.
 5. **The season's take 3 and take 4.** Take 3 is easy now (a novice wins 86 %); the step to take 4 is still too steep (the curve lane is on it).
 6. **Pro, one match.** A regular player wins about half. All-star is the wall (about a quarter).
-7. **Three modes:** Shotgun (F clears the lane), Cage (tight box, the boards hit back), Pond (five a side, pass and skate, nobody gets hit).
+7. **Three modes** (all pro now; a regular player wins 50 to 75 %): **Shotgun** (ten bodies on tight ice, F clears the lane), **Fog of War** (the stop-and-go
+   mode: slow-reacting bots in the fog, slip by, then hit), **Outnumbered** (three against five: keep the puck, a shield on F). Cage and Pond are the other
+   two worth a minute. Glass House is the only mode with a whistle left. (True of a package that carries the modes lane's landing: see its `package` line.)
 8. **A joined match**, if device B is at hand: `docs/experiments/JOIN-GUIDE.md`. Two processes play to the final card with a rematch on this machine;
    two physical machines have never been tried.
 
