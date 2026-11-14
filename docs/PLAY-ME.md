@@ -18,7 +18,7 @@ H30 misbehaves. The Development twin with the drills and the console is `Game/Pa
 | **You keep the puck** until somebody presses for it; a **yellow ring** under a carrier closes while no stick can take his puck | an unpressed blade or a body's touch no longer takes it; half a second of grace after winning it, now shown |
 | **Space takes the puck** when your stick is aimed roughly at it: about one press in ten (it was one in twenty-five), and a miss no longer trips you | the poke (A152): a miss beside a carrier locks your stick for a third of a second instead (your own stumbles: six a match before, under one now) |
 | **Stopping works**, from the same distance at every level | S against your motion brakes hard; a quick first step after a stop; five stick lengths (8 m) at rookie, pro and all-star |
-| **Two marks on the ice**: a ring in the other team's colour round a loose puck means one of them arrives when you do (take it and you may be hit: one time in four at pro; brake short, or let him have it and hit him); a chalk line across your path, five stick lengths ahead of you while you carry, turns the defender's colour and thickens when the stop is on | the carrier track (A166): two knockdowns in three land as you win the puck, and the stop was on and unused in one in seven |
+| **Two marks on the ice**: a ring in the other team's colour round a loose puck means one of them arrives when you do (take it and you may be hit: one time in four at pro; brake short, or let him have it and hit him); a chalk line five stick lengths ahead of you while you carry turns the defender's colour and thickens at the last moment a stop still works against him: **an offer, not an order** (see "Read this first") | the carrier track (A166): two knockdowns in three land as you win the puck, and the stop was on and unused in one in seven |
 | Hits have **sizes**; a **standing skater holds a side hit** | a bump, a stumble, or down for 1 to 2.5 s by the speed brought; the HUD says why a press did not land |
 | **Nothing is drawn on you while you are down**; you are not knocked down again the moment you get up | the ring leaves a downed player and returns after the get-up; 2 s of grace |
 | Your **mates pass to you** and go for loose pucks | the brain plays as a side; bots brake on purpose |
@@ -40,13 +40,17 @@ H30 misbehaves. The Development twin with the drills and the console is `Game/Pa
   Tell the Director which you are: the curve follows your answer today.
 - **The stop works from 8 m**, the distance from the centre to a winger at a faceoff: five stick lengths, at every level (200 of 200 at each). At pro, from 3 to 6 m it
   gets you flattened, and from 12 m or more it fails half the time: the window is 8 to 9.5 m. At rookie almost any stop works.
+- **The stop line is an offer, not an order** (measured at 08:30, after the package was cut): a scripted player who stopped at EVERY lit line won half as
+  often (pro 53 % to 25 %) and fell more: the stop beats one defender on open ice, and in a match the next one arrives. Use the stop when one man comes at
+  you with room behind him; ignore the line otherwise. The ring round a loose puck is the mark that pays (a quarter fewer falls for two or three points
+  of wins). In this package the line is thin and can lie off to one side when the defender comes from the side; both are fixed and waiting.
 - **Mashing RMB beats timing it today** (measured: about 20 hits a match against 4.6, and four points more wins at pro): a press costs nothing. A cooldown
   and a lunge that fix it are built and switched off, waiting for your word (see the last section).
 
 ## Ten minutes, in this order
 
 1. **A first match on the regular cut at rookie.** Does the first minute explain itself? Is the rink what you want a stranger to see first?
-2. **The stop-and-go.** Carry at a defender, press **S against your motion** (or hold **Ctrl**) when the chalk line ahead of you turns his colour (he is then six
+2. **The stop-and-go.** Carry at a defender, against ONE defender with open ice behind him, press **S against your motion** (or hold **Ctrl**) when the chalk line ahead of you turns his colour (he is then six
    to eight stick lengths away and closing: count a beat, then stop: in a head-on rush an instant press still begins too far out; press before he is
    past the line: a stop begun as he reaches it works every time), then go the other way. At pro it
    should work nearly every time from there, and never if you just charge. `jam.ctrl.Drill 21` in the Development package (`Accept_H30`, the console on the tilde key) stages it and says the distance on
@@ -100,6 +104,16 @@ Enter still plays.
 3. **RMB:** turn on the cooldown (60 frames, and a too-early press restarts it: a mashed button then lands fewer hits than a timed one, 2.9 against 3.3 a
    match; costs the ladder half a point) and the lunge (a press commits your body; two and a half points at all-star, where the curve has no dial yet)?
    Yes or no to each.
+3a. **On the ice as you win the puck** (two knockdowns in three at pro): a rule is built and off: for a quarter second after anyone wins the puck, a hit
+   that would fell him is a stumble instead (he keeps his feet, loses half his speed and the puck; a harder hit is a longer stumble). Measured: your
+   knockdowns at pro 6.9 to 3.7 a match, on the ice 9 % of play to 4.5 %. The price: in that quarter second a head-on hit at full speed no longer
+   puts a man down (the one place "a hit obeys momentum" is bent), and pro gets 3 points easier, all-star 6 (pro's dial pays pro back; all-star has
+   no dial yet). Yes or no. With it: the push-out that ends a skater standing at a downed body (measured together: 1,468 such moments in 200 pro
+   matches become 2).
+   The other way to the same end, from the brain: the bots do not body-check a man in his first frames with the puck at all (8 frames: your knockdowns
+   6.8 to 5.0 a match for under a point at pro; 15 frames: 6.8 to 3.2 for six points). The cap keeps the hit and softens it; this takes the hit away.
+   And if you say yes to everything that waits: you lie on the ice half as much at every level, rookie and pro stay on their bars with two numbers
+   (measured at 2,000), and all-star gets about eight points easier (37 %) with no setting yet that brings it back.
 4. **The look:** clay with the stands as the first look: yes? Anything that reads badly from the game camera?
 5. **Which three modes stay on the page**, if only three could.
 6. **New verbs from device B** (figures, sounds and effects exist; none is wired): a **dash**, a **slide tackle**, a **dive block**, and toy weapons for the modes

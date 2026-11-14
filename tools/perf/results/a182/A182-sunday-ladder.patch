@@ -1,0 +1,37 @@
+diff -u -r a/Game/Source/JamCore/AI/DifficultyProfile.cpp b/Game/Source/JamCore/AI/DifficultyProfile.cpp
+--- a/Game/Source/JamCore/AI/DifficultyProfile.cpp	2026-11-14 08:31:35.000450000 +0100
++++ b/Game/Source/JamCore/AI/DifficultyProfile.cpp	2026-11-14 08:31:35.122671100 +0100
+@@ -54,7 +54,8 @@
+ 			// Lane A70 (CURVE-2.md): red skill 0.75 -> 0.8, the novice 90.8 -> 85.8 % over 2,000 matches (speed 0.9 moved nothing).
+ 			// Lane A95 (CURVE-5.md, 2,000 matches): red skill 0.8 -> 0.97 with the checks from 6 m/s and the sprint 0.2 (the novice 97.0 -> 84.8 at red 1.0, 600 matches); the
+ 			// principles stay late and loose (0.6, 24 frames): tightening them to pro's took 3.5 points and is not what a rookie is.
+-			FJamDifficultyProfile P{"rookie", 0.85, 0.97, 4.0, 25.0, 0.0, 60, Opp, 0.6};   // lane A46: mates pass to the open human in 0.6 of the chances (every chance before)
++			// Lane A182 (CURVE-11.md): red skill 0.97 -> 1.03 with everything on (the novice 89.3 -> 84.7, 600). Neutral: JamBaseline::BrainTune("rookie") red_skill=0.97.
++			FJamDifficultyProfile P{"rookie", 0.85, 1.03, 4.0, 25.0, 0.0, 60, Opp, 0.6};   // lane A46: mates pass to the open human in 0.6 of the chances (every chance before)
+ 			P.MateSpeedScale = 1.0;   // lane A112 (R-0048 point 4): the human's mates skate at the human's pace (0.85 before)
+ 			P.LargeSpeedScale = 0.9;   // R-0029: large-rink rookie offsets from the playtester grid (novice 85 %, 19:43); 1.0 / 0.93 before
+ 			P.LargeRedSkill = 1.14;   // lane A162 (CURVE-9.md): 1.12 -> 1.14 (main a7d89871, after CONTACT-6 / MOVEMENT-6 / BRAIN-4, the closing press: the novice on 120 x 60 88.5 at 1.12, 83.8 at 1.14 (2,000)). Lane A133 (CURVE-7.md): 0.98 -> 1.12 with the poke 10 (the novice on 120 x 60: 99.5 at 0.98, 97.3 at 1.03, 91.3 at 1.08, 84.7 at 1.12, 75.7 at 1.16 (600)). Lane A112 (CURVE-6.md): 0.9 -> 0.98 (with the poke, the shot range and the mates at 1.0 the novice on 120 x 60: 94.9 at 0.9 (2,000), 93.3 at 0.93, 89.7 at 0.96, 77.7 at 1.02 (600)). Lane A95 (CURVE-5.md): 0.97 -> 0.9 (the novice on 120 x 60 with the vision, 2,000 each: 93.0 at 0.86, 89.0 at 0.89, 86.0 at 0.9, 75.1 at 0.92; 62.0 at 0.97 (600)). Lane A70: 0.97
+diff -u -r a/Game/Source/JamCore/AI/JamAICore.h b/Game/Source/JamCore/AI/JamAICore.h
+--- a/Game/Source/JamCore/AI/JamAICore.h	2026-11-14 08:31:34.980425800 +0100
++++ b/Game/Source/JamCore/AI/JamAICore.h	2026-11-14 08:31:35.121670000 +0100
+@@ -379,7 +379,7 @@
+ 		K.Hk.BetterByM = 12.0;
+ 		K.SprintShare = 0.35;   // lane A95 (R-0045 law 4): a pro bot sprints in a third of its chases (rookie 0.1, all_star 0.7)
+ 		K.LiftCooldownFrames = 90;   // lane A95 (B-to-A-0037 point 3): a pro bot lifts at most every 1.5 s
+-		K.HuntRadiusM = 11.0;   // lane A170 (CURVE-10.md): 8 -> 11 m with the presser kept on its job (below): the regular player 52.4 -> 48.0 (2,000), law 3 unchanged digit for digit (8 m 100, 9.5 m 97, straight 0). Neutral: the tune opp.hunt_radius_m=8;opp.hk_press_in_hunt=0;opp.hk_press_commit_m=0. lane A133 (CURVE-7.md, R-0055 point 1: the hunt is not a curve lever): 20 -> 8 m (law 3's drill at pro: the stop at 8 m 21.0 % at 20 m, 70.5 % at 10, 98.5 % at 9, 100 % at 8). Lane A112: 8 -> 20. (CURVE-6.md, R-0050: the human keeps the puck): 8 -> 20 m with the poke 2 and the checks from 1: the regular player 71.2 -> 50.2 (2,000; with sprint 0.7 and lift cooldown 45 too: 44.5). Lane A95: 0 -> 8. (R-0041 "pro bots check and lift as a matter of course", CURVE-5.md): the support goes at an opposing carrier within 8 m (0 before)
++		K.HuntRadiusM = 14.0;   // lane A182 (CURVE-11.md): 11 -> 14 m with the contact set, the take shield, the screen and the mates' keep-out on (pro 54.8 -> about 48 on both rinks). Lane A170 (CURVE-10.md): 8 -> 11 m with the presser kept on its job (below): the regular player 52.4 -> 48.0 (2,000), law 3 unchanged digit for digit (8 m 100, 9.5 m 97, straight 0). Neutral: the tune opp.hunt_radius_m=8;opp.hk_press_in_hunt=0;opp.hk_press_commit_m=0. lane A133 (CURVE-7.md, R-0055 point 1: the hunt is not a curve lever): 20 -> 8 m (law 3's drill at pro: the stop at 8 m 21.0 % at 20 m, 70.5 % at 10, 98.5 % at 9, 100 % at 8). Lane A112: 8 -> 20. (CURVE-6.md, R-0050: the human keeps the puck): 8 -> 20 m with the poke 2 and the checks from 1: the regular player 71.2 -> 50.2 (2,000; with sprint 0.7 and lift cooldown 45 too: 44.5). Lane A95: 0 -> 8. (R-0041 "pro bots check and lift as a matter of course", CURVE-5.md): the support goes at an opposing carrier within 8 m (0 before)
+ 		K.Hk.bPressInHunt = true;   // lane A170 (BRAIN-5.md section 3): the presser stays on its Press job inside the hunt ...
+ 		K.Hk.PressCommitM = 8.0;   // ... and commits inside 8 m, as at hunt 8: the stop's window stays where it was; the hunt moves the other four only
+ 		K.CheckMinClosing = 1.0;   // lane A112 (CURVE-6.md): 2 -> 1 m/s. Lane A95 (CURVE-5.md): 4 -> 2 m/s: under A92's momentum model a low-speed press is a stumble, not a knockdown. R-0031 point 2 (lane A45): pro bots body-check the carrier from the front or the side at this closing speed and up (lane A70: 5 -> 4, knockdowns of the regular playtester 1.74 -> 1.96 a match, its win share unmoved, CURVE-2.md)
+diff -u -r a/Game/Source/JamCore/Public/JamBaseline.h b/Game/Source/JamCore/Public/JamBaseline.h
+--- a/Game/Source/JamCore/Public/JamBaseline.h	2026-11-14 08:31:35.021722600 +0100
++++ b/Game/Source/JamCore/Public/JamBaseline.h	2026-11-14 08:31:35.122671100 +0100
+@@ -66,7 +66,7 @@
+ 	// not a tune key: no pin is an all_star match on the large rink).
+ 	inline const char* BrainTune(const char* Level = "pro", bool bLargeRink = false)
+ 	{
+-		if (Level && Level[0] == 'r') return bLargeRink ? "brain2=0;brain3=0;brain4=0;brain5=0;opp.poke_frames=-1;opp.shoot_extra_m=5;mate_speed_scale=0;red_skill=0.9" : "brain2=0;brain3=0;brain4=0;brain5=0;opp.poke_frames=-1;opp.shoot_extra_m=5;mate_speed_scale=0";
++		if (Level && Level[0] == 'r') return bLargeRink ? "brain2=0;brain3=0;brain4=0;brain5=0;opp.poke_frames=-1;opp.shoot_extra_m=5;mate_speed_scale=0;red_skill=0.9" : "brain2=0;brain3=0;brain4=0;brain5=0;opp.poke_frames=-1;opp.shoot_extra_m=5;mate_speed_scale=0;red_skill=0.97";   /* lane A182: rookie red 0.97 -> 1.03 */
+ 		if (Level && Level[0] == 'a') return "brain2=0;brain3=0;brain4=0;brain5=0;opp.hunt_radius_m=20;opp.shoot_extra_m=40;mate_speed_scale=0;speed_scale=1.4";   // lane A154: all_star speed 1.4 -> 1.45
+ 		return bLargeRink ? "brain2=0;brain3=0;brain4=0;brain5=0;opp.poke_frames=6;opp.hunt_radius_m=8;opp.check_min_closing=2;opp.hk_pressure_s=1.4;opp.hk_better_by_m=3;mate_speed_scale=0;red_skill=1.04"
+ 			: "brain2=0;brain3=0;brain4=0;brain5=0;opp.poke_frames=6;opp.hunt_radius_m=8;opp.check_min_closing=2;opp.hk_pressure_s=1.4;opp.hk_better_by_m=3;mate_speed_scale=0";

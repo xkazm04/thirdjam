@@ -1,119 +1,146 @@
 # HOKEJ
 
 <!--
-  Page text v3 (lane A142, track D1, 2026-11-13 night, main 41df3e6). Every sentence has a row in submission/TRUTH.md (IDs in the margin comments below).
+  Page text v4 (lane A180, track D1, Sat 14 Nov 2026 08:00, main 9e452219 = the game of package H30). Every sentence has a row in submission/TRUTH.md
+  (IDs in the margin comments: N.. = this morning's facts, PG.. = Friday's rows re-read).
   Voice: docs/experiments/VOICE.md (rough, funny, never cruel, teen-rated, no names, no brands, no real league, team or player).
-  MARKS: [waits: <lane>] = true only when that lane lands; strip the mark when it lands, DELETE the sentence if it does not (list: submission/README.md).
-         <...> = a blank only the operator can fill (list: submission/README.md, "The operator's questions").
-  Vendor names live in credits.md, form.md and the dev log, not here (question O5 asks whether this page may name them).
+  SLOTS: [O<n>: ...] = a blank only the operator can fill; the question with that number is in submission/README.md section 1. Nothing in a slot is a guess.
+         Before publishing: grep -n "[[]O[0-9]" submission/page.md must return nothing.
+  No [waits: ...] tag is left: what Friday's page waited for has landed or is said as a limit.
+  NUMBERS: no win rate and no percentage on this page (TRUTH N20): "about half", "one in ten", "about a second" are as exact as it gets.
+  Vendor names live in credits.md, form.md and the dev log, not here (O5 asks whether this page may name them).
   Three lengths: A (one line), B (60 words), C (the full page).
 -->
 
 ## A. The one-line pitch
 
-Hockey for clay skaters: the speed you bring is the hit you get. <!-- PG05, PG10 -->
+Hockey with the whistle taken out: clay skaters, and the speed you bring is the hit you get. <!-- N05, N11, N04 -->
 
 ## B. The 60-word blurb
 
-HOKEJ is rough hockey for clay skaters. The mouse is your stick. The speed you bring is the hit you get, so brake, cut, go. The puck stays yours until someone presses for it. Five a side, and the bots pass the puck. Twelve cuts change the rules. Once a period, the Director moves one dial. Nobody here is polite. <!-- PG03, PG05, PG06, PG62, PG07, PG42, PG04, PG08 -->
+HOKEJ is rough five-a-side hockey for clay skaters, with the whistle taken out. The mouse is your stick. The speed you bring is the hit you get: a nudge beside a man, a flattening head-on. Stop five stick lengths short of a defender, cut, go. Twelve cuts change the rules. Once a period, you move one dial. Nobody is polite. <!-- N05, PG03, N04, N03, N10, PG04, PG08 -->
 
 ## C. The full page
 
-*Real hits. The speed you bring is the hit you get.* <!-- PG10 -->
+*Hockey with the whistle taken out.* <!-- N05: the game prints this line on its own first screen -->
 
-*Hockey with the whistle taken out.* [waits: A133] <!-- PG01: strike this line if A133 does not land; the strapline above stands alone -->
-
-You skate. You aim the stick with the mouse. The other team wants you on the ice, and the ice is not soft.
+You skate, and the mouse is your stick. Five clay skaters a side on a clay rink, timber stands along the boards, a clay crowd in them, and nobody blows a whistle. One law is left: the speed you bring is the hit you get. Drift beside a man at his speed and your check is a nudge. Meet him head-on at full speed and he is on the ice. When it is you on the ice, you get up. <!-- PG03, N11, N05, N04 -->
 
 ### First minute
 
-Press play. Five clay skaters a side, blue against orange, and you are the blue one with the mouse. Skate with W A S D. The blade follows your cursor on the ice. Hold the left button to charge a shot, let go to fire. Skate at a carrier and press the right button. Get hit back. Get up. Try Q to pass. By the first goal you will know whether this is your game. <!-- PG21, PG47, PG07, PG25 -->
+Press PLAY NOW. Your first match is at ROOKIE, the newcomer's level; the switch under the button also reads PRO and ALL-STAR, and the level you light is the level you get. Blue against orange, and you are the blue one under the yellow chevron. Skate with W A S D. The blade follows your cursor on the ice. Hold the left button to load a shot, let go to fire. Skate at a carrier and press the right button. Get hit back. Get up. Q passes. The first faceoff lists the keys along the bottom of the screen. By the first goal you will know whether this is your game. <!-- N01, PG47, PG21, PG25, PG14 -->
 
-### Three things no other hockey game says
+### Three things this game says
 
-1. **The speed you bring is the hit you get.** Two skaters gliding the same way just bump. Head-on at full speed is the biggest hit in the game, and the one who throws it pays for it too. Carry the puck and you cannot check: the carrier hits nothing, so the carrier runs. Get up from a knockdown and for two seconds a hit on you is a bump at most. <!-- PG11, PG12, PG13, PG63 -->
-2. **The puck is yours until someone presses for it.** Nobody gets it by brushing past. It leaves you by a shot, a pass, a poke, a lift or a check, or because you let go. <!-- PG62 -->
-3. **Stop. Then go.** Hit S against your own motion to brake hard, cut, and burst away. A defender at full sprint is always faster than you in a straight line, so the way past him is the stop. In our drill a standing pro defender loses to it; the gate fails if it stops working. [waits: A135] for the on-ice prompt that tells you the brake is there. <!-- PG14, PG15, PG16, PG06 -->
+1. **The speed you bring is the hit you get.** One button, three sizes: a bump, a stumble, or down for a second or two, by the speed between the two bodies. Beside a man at his speed: a nudge. Head-on at full speed: the biggest hit in the game. A skater who stands still holds a hit from the side. Carry the puck and you cannot check, so the carrier runs. Nothing is drawn on you while you are down, and for two seconds after you get up a hit on you is a bump at most. <!-- N04, PG11, PG12, PG13, N08, PG63 -->
+2. **The puck is yours until someone presses for it.** That is the rule: it leaves you by a shot, a pass, a poke, a lift or a check. Win it and a yellow ring closes under you: for that half second no stick can take it. Want his? Wait for his ring to close, then Space jabs for the puck. About one jab in ten comes away with it, and a miss beside a carrier locks your stick for a moment. <!-- N07, N06, PG22 -->
+3. **Stop. Then go.** Press S against your own motion (or hold Ctrl) and you brake hard; the first step after a stop is quick. Charge straight at a defender who is set for you and you do not get through. Stop five stick lengths short of him, cut, go: that works, and from the same distance at every level. <!-- PG14, PG15, PG16, N03 -->
+
+### Two marks on the ice
+
+A ring in the other team's colour round a loose puck: one of them arrives when you do. Take it and you may be hit; brake short, or let him have it and hit him. A chalk line five stick lengths ahead of you while you carry: it turns the defender's colour and thickens at the last moment a stop still works against him. The line is an offer, not an order. It beats one man with open ice behind him, and the next man is already coming. <!-- N09 -->
+
+### Three levels
+
+- **ROOKIE.** "New to hockey games? Start here: rookies rarely hit." A newcomer wins most of these. If you have played a hockey game before, you will win it, quickly.
+- **PRO.** "Played one before? Pros hit as a habit." About even for someone who has.
+- **ALL-STAR.** "The wall. All-stars hunt the puck. Beat pro first."
+
+The quoted lines are the menu's own. The level you light plays PLAY NOW and the plain cuts; the season's takes and the Director's modes bring their own, and the match card tells you which one you are in. <!-- N01, N02 -->
+
+### The season
+
+Eight takes: The Read-Through, The Big Room, Rough Cut, Set Pieces, Second Wind, The Last Word, Slow Motion, The Final Cut. The first four are a school on the clay rink against rookies. Then the lights change (neon, night), the bots turn pro, and the finale is against all-stars. Said plainly: a newcomer feels the step at take five and hits a wall at take eight; someone who has played before walks through seven and meets the wall at the eighth. <!-- N12, PG26 -->
 
 ### The bots
 
-Five a side, and they play it: they carry while the lane is open, pass when you close in, and have stopped charging a wall of defenders. Rookie, pro, all-star: the harder the level, the more it hits, and the top one also skates faster. [waits: A133] The ladder is being re-set tonight, so no level here carries a win rate. Brakes on purpose, a bot carrier that sprints, bots that read your shield: [waits: A138]. <!-- PG17, PG18 -->
+Five a side, and they play as a side: your mates pass to you and go for loose pucks; the other five carry while the lane is open, pass when you close in, brake on purpose and sprint with the puck. They also shoot from much too far out (see the limits). <!-- PG07, PG17, N19 -->
 
 ### Twelve cuts, and the Director
 
-A cut is a rule set written as data, no code. Pick one in CHOOSE YOUR CUT. <!-- PG42 -->
+A cut is a rule set written as data, no code. Pick one under CHOOSE YOUR CUT. <!-- PG42, N10 -->
 
-- **Pond**: skate and pass on a pond. Nobody hits.
-- **Cage**: eight bodies in a tight box. The boards hit back.
-- **Sniper**: a full-height net and a low guard. Lift it.
-- **Marathon**: eight minutes on long ice. Pace it, then go.
-- **Power Play**: four against three. Move it and shoot.
-- **Shotgun**: tight ice, ten bodies. F is one blast, and every skater within a metre of its path goes down. Yours too.
-- **Sudden Death**: one goal ends it, against the top level. [waits: A133]
-- **Outnumbered**: three against five. Keep the puck, take the heat. F is a shield.
-- **Glass House**: every hit is a gamble. Fouls cost ten seconds.
-- **Arsenal**: grab a boost, get a trick on F: a shotgun, a hip check, a shield or a slow puck.
-- **Bruisers**: five a side, heavy bodies, no whistle. Hit.
-- **Fog of War**: night and fog. Slip by, then hit. [waits: A139]
+- **Pond**: pond hockey, five a side. Pass, skate, nobody gets hit.
+- **Cage**: a tight box, eight bodies, four pillars on the ice. The boards hit back.
+- **Sniper**: three a side, a big net, a low guard. Lift it, bury it.
+- **Marathon**: three on three on endless ice. Bring your legs.
+- **Power Play**: five on three, and the five are yours. Move it, fire it, repeat.
+- **Shotgun**: tight ice, ten bodies. F is one blast that clears the lane: anyone near its path goes down. Yours too.
+- **Sudden Death**: five a side, one goal ends it. The meanest bots alive.
+- **Outnumbered**: three on five. Keep the puck, take the heat. F is a shield.
+- **Glass House**: the only whistle left. Foul and sit ten seconds.
+- **Arsenal**: grab a boost, get a trick on F: a shotgun, a hip check, a shield or a slow puck. Each trick fires three times.
+- **Bruisers**: five a side, heavy bodies. Hit.
+- **Fog of War**: three a side, night and fog, bots that react late. Slip by, then hit.
 
-<!-- PG30 to PG42, PG19, PG20 -->
+<!-- PG30 to PG41, PG19, PG20: each line is the card the menu prints, cartridge game.meta -->
 
-The Director also lives inside the match. Press Esc: TIME OUT. Once a period the Director's Call lets you move one dial (the ice, the boards, how fast the bots skate, how hard the shot flies) and the scoreboard tells everyone the new rule. <!-- PG04, PG29 -->
+The Director also lives inside the match. Esc is TIME OUT. Once a period the Director's Call is yours: move one dial (how fast everyone skates, how hard the shot flies, how slippery the ice is, how sharp the bots are), hit APPLY, and the scoreboard tells everyone the new rule. <!-- PG04, PG29 -->
 
-DIRECT A CUT takes one sentence from you. Without a key it hands you the nearest of the cuts we already shot. With your own key (typed under SETTINGS, never bundled with the game) the Designer writes a new cut from your sentence. <!-- PG44 -->
+DIRECT A CUT takes one sentence from you. Without a key it hands you the nearest of the cuts we already shot, or you pick one of the sentences on the screen. With your own key (typed under SETTINGS, never bundled with the game) the Designer writes a new cut from your sentence. <!-- PG44 -->
 
 ### Two machines
 
-BRAWL WITH A FRIEND: one of you hosts, one types the invite code, same network. You each get a full seat: your own sprint, saucer, brake, spin, check and F, and the bots on your side plan with you as a human. The two games stay identical frame by frame; we tested that as two copies on one machine through a whole match and a rematch, and 1,000 soak matches never drifted. We have not yet played it across two real machines. <TWO-MACHINE RESULT: operator> <!-- PG61 -->
+BRAWL WITH A FRIEND: one of you hosts, the other types the invite code, both on the same network. Each of you gets a full seat: your own sprint, saucer, brake, spin, check and F, and the bots on your side plan with you as a human. The two games stay identical frame by frame. We have played it as two copies of the game on one machine, through the real lobby, to the final card and into a rematch, and a thousand soak matches never drifted. Two physical machines have never been tried. [O13: the result of the first match between two machines, or this sentence stays as it is] <!-- N13, PG61 -->
 
-### The rink answers
+### The rink
 
-Benches and penalty boxes with open doors. Clay goal frames. Score, and a red lamp pulses over the net, the net shakes, and a bench or a penalty box rattles when someone is thrown into the boards next to it. <!-- PG50 -->
+A clay rink with timber stands along both sides and a clay crowd in them. Benches, penalty boxes, clay goal frames. Score, and a red lamp lights over the net and the net shakes. Throw someone into the boards and the boards rock. Later takes and some modes change the scene: neon, night, fog. [O3: the operator's yes to clay with the stands as the first look, after he has seen it at 10:00] <!-- N11, PG50 -->
 
 ### Controls
 
 | Action | Keyboard and mouse | Pad |
 |---|---|---|
 | Skate | W A S D or arrows | left stick |
-| Brake hard | S against your motion (or Ctrl) | left stick click |
-| Aim the stick | mouse (the blade follows the cursor on the ice) | right stick |
-| Shoot (hold to charge, a tap is a flat shot) | left mouse | RT |
-| Body check | right mouse | RB |
-| Cross-check: lift the puck off a carrier | middle mouse or mouse 4 | LB |
-| Pass (hold for a saucer that flies over a blade) | Q | X |
-| Ability (when a cut or a pickup gives you one) | F | R3 |
-| Spin off a check | E | B |
+| Aim the stick | the mouse (the blade follows the cursor on the ice) | right stick |
+| Shoot (a tap is a flat shot; hold to load it, let go to fire) | left mouse button | RT |
+| Check (come in fast or it is a bump) | right mouse button | RB |
+| Cross-check: on top of the carrier, lift the puck off him | middle mouse or mouse 4 | LB |
+| Pass (a tap is flat; held, it is a saucer over the sticks) | Q | X |
+| Ability (the cut's trick or a pickup's, when the slot is lit) | F | R3 |
+| Spin off a man who is on you | E | B |
 | Deke | mouse wheel | Y |
-| Poke the puck (it rarely wins alone) | Space | A |
 | Sprint | Shift | LT |
+| Brake hard | S against your motion, or Ctrl | stick back, or L3 |
+| Poke: jab for the puck (about one in ten) | Space | A |
 | Team signals | 1 2 3 4 | D-pad |
+| Restart | R | View |
 | Pause, Time Out, Director's Call | Esc | Start |
-| Restart | R | Back |
 
-<!-- PG27, PG28, PG22, PG24 -->
+The same list is in the game under CONTROLS and on the pause card. <!-- PG27, PG28: follows the controls screen, still a155-03 -->
 
-### Look and sound
+### Sound
 
-Clay figures, blue against orange, on a rink the cut dresses its own way: some cuts are night, some are day, some are neon. A booth talks over every hit; some of the hit lines are captions with no voice yet [waits: device B, BF3]. <!-- PG02, PG45, PG46 removed; PG47, PG48 -->
+A booth with a line for most things that happen to you, shown as captions on the screen. [O16: whether the booth's voice is heard in the submitted package: the operator's ear at 10:00; until then the page promises the captions only] <!-- PG48 -->
 
 ### How it was made
 
-Made with Unreal Engine 5.9 (C++ gameplay, Blueprint visuals, Niagara, MetaSounds). The code, the tests, the build gate and the dev log were written and run by AI coding agents directed by the team. The dev log (Glass Box) is the whole story, turn by turn, from our side's sessions and the notes of the second machine's. [waits: device B, BS1, for its transcripts] AI-generated content is declared as such and is not claimed as sourced: concept and menu images from an image-generation model, skater meshes and some animation from 3D-generation services, the commentator and sound effects from a voice-and-audio service. Original: the rink, the materials, the effects, every MetaSound and everything procedural. <ORIGINAL-CLAIM CHECK: operator, O6> Sourced (not ours, not scored): the engine's own content and one shipped graphics-upscaling library. Vendors, licences and every row: `credits.md` and the dev log. <!-- PG51 to PG56 -->
+Made with Unreal Engine 5.9 (C++ gameplay, Blueprint visuals, Niagara, MetaSounds). The code, the tests, the build gate and the dev log were written and run by AI coding agents directed by the team; the rules on this page were measured in thousands of simulated matches, and the limits below are those measurements. The dev log (Glass Box) is the whole story, turn by turn. [O8: where the dev log is hosted, and whether the second machine's transcripts are in it] AI-generated content is declared as such and is not claimed as sourced: concept and menu images from an image-generation model, skater figures and some animation from 3D-generation services, the commentator and sound effects from a voice-and-audio service. [O5: whether this page may name the tool vendors; today it does not] Original: the rink and its dressing, the materials, the effects, every MetaSound and everything procedural. [O6: this "original" list holds only once the asset ledger's gate has passed on the tree that ships] Sourced (not ours, not scored): the engine's own content and one shipped graphics-upscaling library. Vendors, licences and every row: `credits.md` and the dev log. <!-- PG51 to PG56 -->
 
 ### Known limits, said plainly
 
-- The screen shows a knockdown better than a bump or a stumble. [waits: A132]
-- Nobody has played the pad yet. It is mapped, not play-tested.
-- The brake has no spray or sound worth the name yet. [waits: device B, BF1]
-- No crowd in the stands yet. [waits: device B, BF2]
-- The levels are being re-set tonight: do not trust a level's name for how hard it is. [waits: A133]
-- Cancel on the firewall prompt is not tested; the prompt is there because Play With A Friend opens a socket. <!-- PG59 -->
-- The joined match is tested on one machine, not two. <!-- PG61 -->
+[O15: this list is true of package H30; if a later package is submitted, each line is re-read against it and the lines its changes cured are deleted]
+
+- Your carry is short: about a second before the puck leaves you, often by your own shot or pass, sometimes off your own blade with nobody near. The rule keeps your puck from a stick that only brushes it. It does not yet make the puck stick. <!-- N15 -->
+- Space is a gamble: about one jab in ten. <!-- N16 -->
+- Hammering the right button lands more checks than timing it. We know. <!-- N17 -->
+- At pro you spend real time on the ice, most often in the moment you win the puck. The ring round a loose puck is the warning. <!-- N22 -->
+- The stop beats one defender. It does not win you a match by itself, and stopping at every lit line loses you more than it wins. <!-- N18 -->
+- Opponents shoot from the far side of the red line, and it goes in more often than it should. <!-- N19 -->
+- On the big rinks you can skate half a minute without touching the puck. <!-- R3:154 -->
+- A skater can stand at a downed body and push it along the ice. <!-- PM:82 -->
+- The two marks on the ice were new on the last night, and nobody had played with them when this was written. <!-- N09 -->
+- The season is a school and then a wall, with no step between for someone who has played before. <!-- N12 -->
+- Bruisers and Cage play closer to the regular game than their cards promise. <!-- N21 -->
+- In corners the camera looks down steeply, and the net you attack can leave the picture. Glass House: the penalty box is below the picture, so you never see the boxed skater sit. <!-- PM:90-91 -->
+- The pad is mapped. No person has play-tested it. <!-- PG28 -->
+- Cancel on the firewall prompt: we expect it to be fine for solo play, and it is not tested. The prompt is there because BRAWL WITH A FRIEND opens a socket. [O7: the clean-machine test on the second machine settles this line] <!-- PG59 -->
+- The joined match is played on one machine, never yet across two. <!-- N13 -->
 
 ### Team
 
-TEAM: <names and roles: operator>
+[O1: team names and roles]
 
 ### How to run
 
-Unzip `Hokej_Hokej.zip` [waits: the Director's real package run], run `ThirdJam.exe` (the game's internal project name; the game is HOKEJ). Windows 10 or 11, a GPU that does DirectX 12. First launch compiles shaders for a few seconds. Windows may ask about the firewall the first time: solo play does not need network access, so we expect Cancel to be fine (not tested), and Play With A Friend needs Allow. If it will not start, run `Engine\Extras\Redist\en-us\vc_redist.x64.exe` once. `README.txt` in the zip says the same, with the controls. <!-- PG58 to PG60 -->
+Unzip [O15: the name of the submitted zip; today it is `Hokej_Hokej_H30.zip`], run `ThirdJam.exe` (the game's internal project name; the game is HOKEJ). Windows 10 or 11, a GPU that does DirectX 12. First launch compiles shaders for a few seconds. Windows may ask about the firewall the first time: solo play does not need network access, so we expect Cancel to be fine (not tested), and BRAWL WITH A FRIEND needs Allow. If it will not start, run `Engine\Extras\Redist\en-us\vc_redist.x64.exe` once. `README.txt` in the zip says the same, with the controls. <!-- PG58 to PG60, N14 -->

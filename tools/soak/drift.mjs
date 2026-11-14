@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Lane A116 (track S1 soak, evolution 2): the drift gate for modes and takes. Documented in docs/experiments/SOAK-DRIFT.md.
-//   node tools/soak/drift.mjs --uproject <abs .uproject of a BUILT checkout> [--out tools/soak/out/drift-<stamp>] [--seeds 100] [--max 16] [--only modes|takes]
+//   node tools/soak/drift.mjs --uproject <abs .uproject of a BUILT checkout> [--out tools/soak/out/drift-<stamp>] [--seeds 100] [--max 16] [--only modes|takes|cuts|arenas]
 //                             [--baseline tools/soak/baseline.json] [--threshold 10] [--update-baseline] [--from <out dir of an earlier run>]
 // It plays the twelve modes (regular class, at the mode's own level; Marathon with -playersprint and --max-frames 36000: its clock is 8:00 since A122) and the eight season takes
 // (novice, regular and good class, at the take's level) through the shared driver (cells.mjs), reads each mode's character number (tools/playtest/modes.mjs CHARACTER) and
@@ -33,6 +33,12 @@ export function buildPlan(cartDir, seeds) {
     const take = f.replace('.cartridge.json', ''); const lvl = levelOf(join(ladder, f));
     for (const cls of CLASSES) plan.push({ label: `t-${take}-${cls}`, cls, lvl, cart: `ladder/${take}`, seeds: `1-${seeds}` });
   }
+  // lane A174: the regular cuts (the regular cut at all three levels, the other cuts at pro) and the arenas (pro), novice, regular and good class
+  const LEVELS = ['rookie', 'pro', 'all_star'];
+  for (const [file, pre, name] of [['hockey.regular', 'r', 'regular'], ['hockey.boost', 'r', 'boost'], ['hockey.chaos', 'r', 'chaos'], ['hockey.raw', 'r', 'raw'], ['hockey.arena.large', 'a', 'large'], ['hockey.arena.wide', 'a', 'wide']]) {
+    if (!existsSync(join(cartDir, file + '.cartridge.json'))) continue;
+    for (const lvl of name === 'regular' ? LEVELS : ['pro']) for (const cls of CLASSES) plan.push({ label: pre + '-' + name + '-' + cls + '-' + lvl, cls, lvl, cart: file, seeds: '1-' + seeds });
+  }
   return plan;
 }
 
@@ -45,7 +51,9 @@ const avg = (a) => (a.length ? a.reduce((s, x) => s + x, 0) / a.length : 0);
 export function measure(label, ms) {
   const cell = { n: ms.length, win: winPct(ms), unfinished: ms.filter((m) => !['win', 'loss', 'draw'].includes(m.result)).length, frames: Math.round(avg(ms.map((m) => m.frames))), digest: digest(ms),
     // read-outs the tracks ask for (kept, not gated): the human's knockdowns per match, idle seconds per match, share of matches with a 30 s stretch without a human touch
-    kd: r2(avg(ms.map((m) => m.knockdowns || 0))), idle_s: r2(avg(ms.map((m) => (m.idle_frames || 0) / 60))), no_touch30_pct: ms.length ? r2(100 * ms.filter((m) => (m.max_no_touch || 0) >= 1800).length / ms.length) : 0 };
+    kd: r2(avg(ms.map((m) => m.knockdowns || 0))), idle_s: r2(avg(ms.map((m) => (m.idle_frames || 0) / 60))), no_touch30_pct: ms.length ? r2(100 * ms.filter((m) => (m.max_no_touch || 0) >= 1800).length / ms.length) : 0,
+    // lane A174: goals per match of the human's side and the other side (kept, not gated; absent in baselines taken before 14 Nov 06:00)
+    gf: r2(avg(ms.map((m) => (m.goals || [0, 0])[0]))), ga: r2(avg(ms.map((m) => (m.goals || [0, 0])[1]))) };
   if (label.startsWith('m-')) {
     const slug = label.slice(2); const ch = CHARACTER[slug];
     if (ch) { cell.character = ch.label; cell.value = r2(ch.of(ms)); }
@@ -106,7 +114,9 @@ export async function main(argv) {
   const seeds = +opt('seeds', baseline?.seeds || 100); const threshold = +opt('threshold', 10); const only = opt('only');
   let plan = buildPlan(cartDir, seeds);
   if (!plan.length) return die(`no cartridges under ${cartDir}`);
-  if (only) plan = plan.filter((c) => c.label.startsWith(only === 'modes' ? 'm-' : 't-'));
+  if (only) plan = plan.filter((c) => c.label.startsWith({ modes: 'm-', takes: 't-', cuts: 'r-', arenas: 'a-' }[only] || 't-'));
+  const cellsOpt = opt('cells');   // lane A174: --cells m-cage,t-take-3-good,r-regular-regular-pro plays only those labels (the gate's small set)
+  if (cellsOpt) { const want = cellsOpt.split(','); plan = plan.filter((c) => want.includes(c.label)); const miss = want.filter((w) => !plan.some((c) => c.label === w)); if (miss.length) return die('no such cell: ' + miss.join(', ')); }
   const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\..+/, '').replace('T', '-');
   const out = resolve(from || opt('out', join(here, 'out', `drift-${stamp}`)));
   let soakCode = 0, faults = 0;
@@ -120,7 +130,7 @@ export async function main(argv) {
   const now = measureDir(out, plan);
   if (has('update-baseline')) {
     if (faults) return die(`refusing to write a baseline from a run with ${faults} faults (see ${join(out, 'faults.jsonl')})`);
-    const prev = baseline?.cells || {}; const cells = only ? { ...prev, ...now } : now;
+    const prev = baseline?.cells || {}; const cells = (only || cellsOpt) ? { ...prev, ...now } : now;
     const doc = { schema: 'thirdjam.soak.baseline/1', taken: new Date().toISOString().slice(0, 16), build: opt('build', 'unnamed (pass --build "<commit> <what>")'), seeds, marathon_cap: MARATHON_CAP, cells };
     writeFileSync(baselineFile, JSON.stringify(doc, null, 1) + '\n');
     console.log(`PASS drift baseline written: ${Object.keys(cells).length} cells, ${seeds} seeds each -> ${baselineFile}`);
@@ -133,7 +143,7 @@ export async function main(argv) {
   for (const m of r.moved) console.log(`MOVED ${m.key}: ${m.base} -> ${m.now} (${m.delta >= 0 ? '+' : ''}${m.delta}${m.pct === null ? '' : `, ${m.pct >= 0 ? '+' : ''}${m.pct} %`}${m.sigmas !== undefined ? `, ${m.sigmas} sigma of sampling noise` : ''})`);
   for (const l of r.added) console.log(`NEW cell ${l}: not in the baseline (update it to keep this one)`);
   for (const l of r.removed) console.log(`GONE cell ${l}: in the baseline, not played`);
-  const bad = r.moved.length > 0 || faults > 0 || (!only && r.removed.length > 0);
+  const bad = r.moved.length > 0 || faults > 0 || (!only && !cellsOpt && r.removed.length > 0);
   console.log(`${bad ? 'FAIL' : 'PASS'} drift ${r.compared} cells compared, ${r.identical} bit-identical, ${r.moved.length} numbers moved more than ${threshold} %, ${faults} faults, ${r.added.length} new`);
   console.log(JSON.stringify({ tool: 'thirdjam.drift/1', verdict: bad ? 'fail' : 'pass', exit: bad ? 1 : 0, compared: r.compared, identical: r.identical, moved: r.moved, added: r.added, removed: r.removed, faults, out }));
   return bad ? 1 : 0;
