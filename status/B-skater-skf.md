@@ -4813,3 +4813,86 @@ Five things that still look wrong:
 3. **At the moment of a hit the two figures are in each other.** The checker's front leg is where the other man's legs are for a frame or two. From the game camera it is one blob; close up it is two toys pushed together. `20261114-040847-B-lab-skf32-contact-side.png`.
 4. **A man lying on the ice still looks like a dropped toy.** The small moves I gave him while he lies (a forearm dragged in, a knee drawn up) cannot be made out at game size; the film says so, and no more work went into them. `20261114-032247-B-film1-lying.png`.
 5. **The new get-up from the back is a scramble.** He rolls, turns a quarter turn on the ice, lifts his head and drops it again before he is on a knee. The numbers I was asked for are met; in the stills it works; I do not trust it until it has been seen moving, and it is the get-up a player sees most. `20261114-061844-B-lab-skf35-getup-roll.png` (the second row).
+
+## Thirty-sixth pass: hits with a wind-up; the held cross-check; celebrations (SKF36, 14:16 to 15:08)
+
+Done, all three jobs, as new takes beside the old ones (no take of export35 changed). **The body check (three sizes, both shoulders) and the cross-check have a wind-up: contact on frame 10 after the call (167 ms), the coil formed by frame 5 and deepest at 7.** **The held cross-check is a 60-frame upper-body loop with its 6-frame in and out and a release with contact on frame 3.** **Four celebrations, 60 to 110 frames, each from and to Glide frame 0.** `C:\Users\kazda\jam\skater-lab\skf\export36\` is complete: 164 takes (149 + 15 new), the gate green (328 rows, 0 failing, the one known row). Looked at from the game camera and the side, both styles, on the final build. One Blender process of this lane at a time (checked in the process list; the other Blender processes seen were not mine); CPU renders only, no git, no editor.
+
+### For the engine lane
+
+| Take | Frames (last frame index) | Start pose | End pose | Contact frame | What triggers it |
+|---|---|---|---|---|---|
+| `Check_Deliver_Right_Wind`, `Check_Deliver_Left_Wind` | 37 | stance (Check@0) | stance | **10** | `PlayCheckWindup(Frames)` / `PlayCheck` on the press: play from frame `10 - Frames` (whole take for 10) |
+| `Check_Deliver_Right_Light_Wind`, `Check_Deliver_Left_Light_Wind` | 20 | stance | stance | **10** | as above, light band |
+| `Check_Deliver_Right_Heavy_Wind`, `Check_Deliver_Left_Heavy_Wind` | 31 | stance | stance | **10** | as above, heavy band |
+| `CrossCheck_Wind` | 32 | stance | stance | **10** | `PlayCrossCheck(Frames)` on the press: play from frame `10 - Frames` |
+| `CrossCheck_Hold_In` | 6 | stance | Hold@0 | - | `SetCrossCheckHold(true)` |
+| `CrossCheck_Hold` | 60, loop (loopcut file: 59) | Hold@0 | Hold@0 | - | while braced; upper body from `spine_01` up, layered over Glide / Stride / Stride_Sprint |
+| `CrossCheck_Hold_Out` | 6 | Hold@0 | stance | - | `SetCrossCheckHold(false)` without a hit |
+| `CrossCheck_Release` | 24 | Hold@0 | stance | **3** | the braced hit (`bCrossBraceHit`): start it 3 frames before the bodies meet if the sim can tell, else on the hit (frames 0 to 2 are a 1-frame draw-in) |
+| `Celebrate_ArmsUp` | 90 | glide (Glide@0) | glide | - | `PlayCelebrate(arms_up)` / index 0, the scorer |
+| `Celebrate_StickRaise` | 90 | glide | glide | - | `PlayCelebrate(stick_raise)` / index 1, the scorer |
+| `Celebrate_KneeGlide` | 110 | glide | glide | - | `PlayCelebrate(knee_glide)` / index 2, the scorer (down on the left knee 16 to 70) |
+| `Celebrate_Mate` | 60 | glide | glide | - | `PlayCelebrate` index 3, the nearest mate (two stick lifts at 7 and 16, the free arm up 30 to 42) |
+
+The answer to device A's question (A-to-B-0027 1a, CONTACT-10 section 3): **call on the press and land on our contact frame**, the take started at `10 - N` for the wind-up N the sim uses. Our ask: **N = 8** (start at frame 2: the whole coil is seen, 133 ms of wait); **6 is the floor** (start at 4: the coil is a frame short of formed, still read in the sheets); at A's recommended 4 the take starts on frame 6, inside the coil, and the eye gets two frames of it before the drive: it reads as a quick dip, not a wind-up. The trade, plainly: every frame of wind-up is a sixtieth of a second the player waits for the hit; CONTACT-10 measured 6 / 6 at -4.0 / -2.3 points (pro / all_star) against 0.0 / 0.0 for 4 / 4. A blend-in of 3 to 4 frames into the take's start frame is assumed.
+
+### 1. The hits with a wind-up
+
+How: `coil36(k)`: the trunk turned away from the victim (the hitting shoulder drawn back), down 11 cm x size, the stick swung out low to the stick side, the head held on the victim; formed at 5, a little deeper at 7, two frames into the old take's pre-contact frame (9) and its contact (10). After the contact every key is the old take's, 7 frames later (the cross-check 8). The light one draws the free glove to the chest (its contact is the glove). The cross-check's coil: the bar cocked high under the chin in both hands, elbows back, low over the skates; at the belly (first try) it looked like the shove itself from the game camera.
+
+| Take | Shoulder line turned at the coil (frame 7) against frame 0, deg (p2_cel / p3_clay) | Hips' lowest / start height cm | Contact frame against the old take's contact frame, largest joint difference cm |
+|---|---|---|---|
+| Check_Deliver_Right_Wind | -36.6 / -40.1 | 63 / 78 (cel) | 0.0 / 0.0 |
+| Check_Deliver_Left_Wind | 31.0 / 25.9 | 63 / 78 | 0.0 / 0.0 |
+| Check_Deliver_Right_Light_Wind | -24.1 / -26.1 | 67 / 78 | 0.0 / 0.5 |
+| Check_Deliver_Left_Light_Wind | 24.1 / 23.6 | 67 / 78 | 0.0 / 0.4 |
+| Check_Deliver_Right_Heavy_Wind | -41.6 / -44.2 | 60 / 91 | 69 / 41 (the free glove only; body, shoulders and stick within 2, the top hand 10; equal again by contact +4) |
+| Check_Deliver_Left_Heavy_Wind | 32.5 / 32.4 | 60 / 91 | 16 / 14 (the free glove) |
+| CrossCheck_Wind | 0 / -1.2 (square: its wind-up is the bar drawn in and up) | 61 / 78 | 0.0 / 0.0, and every frame after the contact equal to Lift's (0.0 cm) |
+
+- The heavy's free glove at contact is not where export35 had it: the pop pass spreads the arm's fling differently after the coil. Everything else meets the old contact pose; the pairing measures of the thirty-first to thirty-fourth passes hold for the body.
+- Largest one-frame bone turn from frame 3 on: 60.0 at the most (clay, Check_Deliver_Left_Wind, clavicle at 8; the gate's line is 60, passed); a one-frame coil-to-drive (first build) popped the clavicle 98 deg: now two frames.
+- **What it looks like** (`skf36-hits-*`): from the game camera the coil is clear in frames 4 to 8: the figure drops and the stick swings out to the right, the back twisted; then the drive. The cross-check's coil reads less: from behind the cocked bar and the shove are both a level bar, told apart by the crouch and the bar's height. The body check is the stronger picture.
+
+### 2. The held cross-check
+
+| Measure (p2_cel / p3_clay) | CrossCheck_Hold |
+|---|---|
+| Shaft to horizontal, every frame | 2 deg / 2 deg |
+| Shaft across the body (90 = straight across) | 84 / 84 deg |
+| Stick socket (top hand) height | 97 to 99 / 92 to 94 cm (chest to shoulder) |
+| Bottom hand on the shaft | 61 of 61 frames, gap at most 0.07 / 0.08 cm |
+| In / Out / Release / CrossCheck_Wind: bottom hand on the shaft | every frame, gap at most 0.18 / 0.2 cm (a first build copied Lift's keys before the twentieth pass mends them: clay's bottom hand was 14.5 cm off in the way back; now Lift's mended way back) |
+
+The loop breathes 1 cm (the hips and the bar); the legs are the stance's so the take also plays alone. From the game camera the long level shaft out to the left of the body is the signal at every frame of the loop (`skf36-hold-*`).
+
+### 3. Celebrations
+
+Each starts and ends on Glide frame 0 (the ready glide, not the tackling stance: the tackling stance's bottom hand sits 3.8 cm from the glide's, the gate's first find). Head's largest one-frame rise 10 cm in ArmsUp and StickRaise (the jump up to full height between 8 and 16), 2 to 3 cm in the others. ArmsUp: both arms up in a V, the stick in the top hand pointing up, two pumps. StickRaise: the stick held level overhead in both hands, rocked side to side. KneeGlide: down on the left knee by 16, fist pumps, leaning back with both arms up until 70, up by 98. Mate: two stick lifts in front and the free arm up, 60 frames.
+
+### The export
+
+`C:\Users\kazda\jam\skater-lab\skf\export36\`: `READY.txt` (written last, `Takes:` line), `DIFF.md` (against export35: no take differs; 15 new named), `JOINS.md` (159 pairs, the lying joins; the new takes' joins are the gate's, `gate_joins_skf36.txt`), `GATE.md`.
+
+- Gate: 328 take-and-style rows, 0 failing, 1 passing on the known list (Aim_N46_R100 on clay); 164 takes found and checked per style. Joins of the 15 new takes: 0.0000 cm, 0.000 deg at both ends, both styles.
+- Bones, parents, rest pose, meshes, stick files as export35; root identity keys in all 164 takes; 60 fps. Pop limits: 0 of 160 played takes over, both styles.
+
+### Not looked at, and known gaps
+
+- **Nothing of export36 has been seen in the engine or in motion**; stills every one to ten frames only.
+- The hold was looked at alone on the stance legs, not layered over a stride (the engine's blend); the bar's height over a sprint lean is not measured.
+- The left-shoulder and left-light wind takes: by their numbers only (the sheets show the right ones).
+- The travel table (backward frames over the ice) was not run for the wind takes; the hips stay over the root in the coil (at most 3 to 4 cm back), and after the contact the take is the old one.
+- Celebrations: no taunt, nothing pointed at anyone; whether they read as joyful in motion is not seen.
+
+### Files
+
+- Lab: `build_clips.py` (the thirty-sixth pass block), `it36.sh`, `sheet36.sh`, `meas36.py`, `tab36.js`, `gate_joins_skf36.txt`.
+- Sheets in `devlog/shots/`: `20261114-145649-B-lab-skf36-hits-p2_cel.png`, `-hits-p3_clay`, `-hold-p2_cel`, `-hold-p3_clay`, `-celeb-p2_cel`, `-celeb-p3_clay`, each with its `.txt`.
+
+### The next three evolutions of this track, ranked
+
+1. **Seen in the engine**: the wind takes at the chosen N, the hold layered over Stride_Sprint, the release on a braced hit. Proving number: the engine's film shows the coil on at least 4 frames at N = 8 and the bar level within 10 deg over a sprint.
+2. **A cross-check wind-up that reads from behind**: the bar drawn back over the stick-side shoulder (a diagonal) rather than level under the chin. Proving number: the game-camera mask of frame 7 against frame 10 differs by at least 1800 px (not measured today).
+3. **The heavy's free glove at contact back where export35 had it** (69 / 41 cm off today): the pop window kept off the free arm in the wind takes. Proving number: contact-frame joint difference under 2 cm for all six wind takes.

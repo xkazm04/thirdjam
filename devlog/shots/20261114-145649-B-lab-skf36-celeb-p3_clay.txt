@@ -1,0 +1,1 @@
+SKF36 (p3_clay), export36: celebrations. Celebrate_ArmsUp (90 frames), Celebrate_StickRaise (90), Celebrate_KneeGlide (110), Celebrate_Mate (60); each starts and ends on Glide frame 0. Top game camera (~110 px), bottom side. Lab only, not seen in the engine.
