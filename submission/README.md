@@ -1,55 +1,83 @@
-# Submission checklist (lane A88 first version 14:45; lane A96 pass 2 17:55; lane A142 pass 3, Fri 13 Nov night, main 41df3e6)
+# Submission checklist (lane A88 first version Fri 14:45; A96 pass 2 Fri 17:55; A142 pass 3 Fri night; **lane A180 pass 4, Sat 14 Nov 08:00, main 9e452219 = the game of package H30**)
 
-Rules digest: `docs/PLAN.md` section 2. Submit Sunday 22:00 internal; Monday 02:59 is the real deadline. The text of the page, the form, the tagline and the video script is now
-checked sentence by sentence in **`submission/TRUTH.md`** (96 rows: before 47 true, 16 false, 30 unproven, 3 n/a; after 66 true of main, 20 waiting for a lane, 10 a marked question).
-Pass 3 ran no game and no build: it is reading and writing text.
+Rules digest: `docs/PLAN.md` section 2. Submit Sunday 22:00 internal; Monday 02:59 is the real deadline. The last day as a checklist with times and owners: **`submission/SUNDAY.md`**.
+The text of the page, the form and the taglines is checked sentence by sentence in **`submission/TRUTH.md`** (pass 2: Friday's 96 rows and one new tagline re-read against this main: 55 true, 31 changed by the night,
+5 false, 6 the operator's; plus 14 facts of this morning that must be findable and 9 things measured false that must not be said). The video's shots against what exists: **`submission/video/SHOTLIST.md`**.
+Pass 4 ran no game and no build, and recorded nothing: it is reading, looking at stills, and writing.
 
-## 1. The operator's questions, in the order he will meet them
-Each is a blank or a choice in the text: the file and the mark are named. Nothing below was invented to fill a gap.
+## 1. The operator's questions, re-read on Saturday morning
 
-| # | Question | Where it bites | Why the repository cannot say |
+He plays package H30 at 10:00 (`docs/PLAY-ME.md`). **Nothing in the submission's text assumes an answer**: each open question is a slot `[O<n>: ...]` in the file named, and the sentence round it is true without the answer.
+Find every slot: `grep -n "[[]O[0-9]" submission/page.md submission/form.md submission/tagline.md`.
+
+### 1a. The fourteen of Friday night
+
+| # | Question | This morning | Where it bites now |
 |---|---|---|---|
-| O1 | **Team names and roles** (and how many people: two devices worked on it) | `page.md` Team, `form.md` Members, `docs/SUBMISSION.md` | his to give; the old skeleton said 1 |
-| O2 | **Who presses submit, and when** (Sunday 22:00 internal) | the form | his |
-| O3 | **Which look does a newcomer meet first, and is it clay?** The regular cut is the night tier (`l2_night`); six modes are `p3_clay`; R-0041 point 5 calls P3 clay the shipped look. Also: may the page claim an ink outline and spot pools? Needs a still of the package at 1080p | `page.md` "Look and sound", taglines 1 and 2 | no document shows the packaged first screen; B owns the look |
-| O4 | **Main prize and the one modifier prize.** Glass Box is the one the repository supports (the log exists and builds); the plan said Render Royalty; Solo Driver does not apply to two people | `form.md` | no decision recorded |
-| O5 | **May the page name tool vendors?** The page says "an image-generation model, 3D-generation services, a voice-and-audio service"; `form.md` "Tools you used" names them. **Is a Rodin or Tripo asset shipped?** (`docs/SUBMISSION.md`: list Rodin only if the ledger shows a shipped Rodin asset; the P4 rows in `credits.md` are Epic clips, `shipped` n) | `page.md`, `form.md` | policy and a ledger fact |
-| O6 | **The "original" claim for the arena pieces** (benches, boxes, goal frames, goal light, scorer's table: A's Blender work) needs their ledger rows: run `node tools/gate/check-assets-ledger.mjs` on the tree that ships | `page.md` "How it was made" | the gate was last run on A96's tree |
-| O7 | **Test Cancel on the firewall prompt** (solo play after Cancel), once, on a clean profile | `page.md` limits and How to run, `package/README.txt` | "only claimed, never tested" (clean-profile section below) |
-| O8 | **Hosting link for the dev log** (a 7.8 MB self-contained page; rebuild Sunday), and whether device B's transcripts exist | `form.md` | his; B's transcripts: none found |
-| O9 | **The same-direction shot** (shot 5 of the video): no drill stages it. Play it by hand, have a lane write a drill, or drop the split frame | `video/script-v2.md` | no console drill; drill 5 is a stumble |
-| O10 | **Development takes in the video**: drills (shots 5 to 7, 9) exist only in a Development package, whose ice measured darker than Shipping's. Allow them, or play by hand | `video/script-v2.md` | A88's measurement |
-| O11 | **The P4 removal** (`ledger-proposals.md`: 149 rows, 100 MB of A's files, all `shipped` n): yes or no | the zip's size and the ledger | a proposal for the Director |
-| O12 | **Audio**: can device B capture the final 30 to 60 s of play with sound from the next package (A-to-B-0020 point 5)? Otherwise a silent cut with the game's own commentator and music muxed in | `video/script-v2.md` | open since Friday |
-| O13 | **The first two-machine match**: the joined match is tested as two processes on one machine through a match and a rematch; two real machines and a real firewall prompt are the operator's (with B). Send the result and the page's two-machine sentence is finished | `page.md` "Two machines" | `JOIN-GUIDE.md` section 5 |
-| O14 | **The banner if the curve lane does not land**: "Hockey with the whistle taken out" needs the whistle out of the regular cut and the takes (A133). Fallback: "Real hits. The speed you bring is the hit you get." Say which he prefers if it comes to that | `tagline.md`, `page.md` | R-0048 point 2 waits on A133 |
+| O1 | **Team names and roles**, and how many people | **OPEN** | `page.md` Team, `form.md` Members |
+| O2 | **Who presses submit, and when** | **OPEN** | `SUNDAY.md` (Sunday 22:00, the last line) |
+| O3 | Which look a newcomer meets first, and is it clay | **ANSWERED BY THE NIGHT**: the first look is clay (R-0054 point 1), and H30 shows the clay rink with timber stands and a clay crowd from the first match (`docs/PLAY-ME.md` line 15). What is left is his eye's yes at 10:00 (the sheet's question 4). The ink outline and the spot pools stay off the page: no still of a package shows them | one slot in `page.md` "The rink"; `tagline.md` line 3 |
+| O4 | **Main prize and the one modifier prize** (Glass Box is the claim the repository supports) | **OPEN** | `form.md` |
+| O5 | **May the page name tool vendors? Is a Rodin or Tripo asset shipped?** | **OPEN** | `page.md` "How it was made", `form.md` tools |
+| O6 | The "original" claim needs the asset ledger's gate on the tree that ships | **OPEN, and wider**: the night merged device B's stands, crowd, roof and walls, fourteen MetaSounds and three figure sets; `credits.md` and the gate's last run are Friday afternoon's. The Director regenerates `credits.md` and reruns `node tools/gate/check-assets-ledger.mjs` on the final tree (Sunday); the operator only has to accept the sentence the result allows | `page.md` "How it was made", `form.md` sourced assets |
+| O7 | Test **Cancel on the firewall prompt** once on a clean profile | **OPEN, and moved**: in three fresh unzips on this machine (H27, H28, H29) no firewall prompt of ours appeared, so Cancel could not be pressed here (`status/A155.md`). Device B's clean-machine test of the zip is where it gets pressed | `page.md` limits and How to run |
+| O8 | **Hosting link for the dev log**, and device B's transcripts | **OPEN**: device B waits for his word on exporting its transcripts (`docs/PLAY-ME.md` question 8) | `page.md` "How it was made", `form.md` |
+| O9 | The same-direction shot: no drill stages it | **ANSWERED BY THE NIGHT**: `jam.ctrl.Drill 22` stages both halves, the nudge and the hit (lane A132; frames `shots/a155-06`, `-07`) | `video/SHOTLIST.md` shots 5 and 6 |
+| O10 | May Development takes be in the video | **ANSWERED** by R-0054 point 4: only beside another Development take (a split frame), never cut against Shipping footage. What is left is in O17 | `video/SHOTLIST.md` |
+| O11 | **The P4 removal** (149 rows, 100 MB, all unshipped): yes or no | **OPEN**; device B asks the same about 183 MB of unused figures in the cook (handoff B-to-A-0041) | the zip's size, the ledger |
+| O12 | Can device B capture play with sound | **HALF ANSWERED**: a recipe exists and is not run (the system's game recorder on device B records the game's sound; ffmpeg there cannot; this machine has no capture device). Who records, and where: O17 | `video/SHOTLIST.md` section 4 |
+| O13 | **The first two-machine match** | **OPEN**: two processes on one machine play to the final card with a rematch; two physical machines have never been tried (`docs/PLAY-ME.md` step 8) | `page.md` "Two machines" |
+| O14 | The banner if the whistle's removal did not land | **ANSWERED BY THE NIGHT**: it landed. No foul in 8,600 measured matches of the regular cut, the large rink and the season; eleven of twelve modes; Glass House keeps the whistle on purpose. The game prints "Hockey with the whistle taken out." on its own first screen | the banner stands (`tagline.md`) |
 
-## 2. What is done (true of main today, by the truth table)
-- `page.md` v3: three lengths (pitch 13 words, blurb exactly 60), the first minute, the three things no other hockey game says, the bots, the twelve cuts and what the Director's Call really is (one dial, once a period), the joined match with its limit, the arena that answers a goal, the controls table (15 rows, matches `InputMapping.cpp`), the tools in plain words, known limits said plainly.
-- `form.md` re-checked (the video row no longer points at a file that does not exist; the prizes are the operator's); `docs/SUBMISSION.md` skeleton no longer says 1 member or "3v3".
-- `video/script-v2.md` names for each shot the drill, console command or cut that stages it today (`jam.ctrl.Drill 21` with `jam.ctrl.CarryScript 1` for the stop-and-go: it exists now, the old script said to write it), and what device B captures with sound.
-- Not touched, still right at A96's tree: `credits.md` (62 sourced rows, 1 shipped), `package/README.txt`, `devlog/index.html`, `shots/` (the 8 stills are of H24).
+**Still open: O1, O2, O4, O5, O6, O7, O8, O11, O13** (nine). **Answered by the night: O3 (but for his eye), O9, O10, O14** (four). **Half: O12** (folded into O17).
 
-## 3. What waits for the next package or a lane (each is tagged `[waits: ...]` in the text)
-| Mark | Sentence in the text | When it is true |
-|---|---|---|
-| A133 | "Hockey with the whistle taken out" (page, tagline 1, the video's end card); take-3 at rookie; "the harder the level, the more it hits, the top one is faster"; Sudden Death "against the top level"; "the ladder is being re-set" | the curve lane lands: the whistle off in `hockey.regular` and the takes (R-0048 point 2), the ladder re-set |
-| A138 | the brain brakes on purpose, a bot carrier sprints, bots read your shield; the shove under a shield | the integration lane lands the brain's second evolution and the shove rule (R-0053 points 2 and 3) |
-| A135 | the brake prompt on the ice; the clipped hint line | the screen lane lands (camera, prompts) |
-| A132 | the screen shows a knockdown better than a bump (a limit, not a promise) | the hit's size on screen lands |
-| A139 | Fog of War "slow" bots removed from the card; the modes' second evolution | the modes lane lands |
-| device B BF1 | the brake's spray and pose (video shot 6) | B delivers |
-| device B BF2 | a crowd (the page says there is none yet) | B delivers |
-| device B BF3 | the 72 contact lines with a voice; the ability's burst and sound (shot 7) | B delivers (R-0051 point 2) |
-| device B BS1 | the dev log's second half (B's transcripts); the video with sound | B delivers |
-| the Director | `Hokej_Hokej.zip` from a real `package.ps1 -Submission` run on the final tree, unzipped and checked (`README.txt`, entry names with `/`); the clean-profile run repeated on it; the next package (H27) for every video shot | after A133 and A138 (R-0053 point 6) |
-| capture lane | the stale "3 v 3" menu line checked in the take; five skaters a side counted in the take; the stills refreshed from the next package (the 8 in `shots/` are H24; the design eye asks for four more, `REVIEW-1.md` section 7) | after the next package |
+### 1b. New questions the night raised
 
-## 4. If a lane does not land (so Sunday has no surprises)
-Delete the tagged sentences and use the fallback beside them. A133 not landed: banner "Real hits. The speed you bring is the hit you get."; drop "Hockey with the whistle taken out" and the level sentences. A138: drop the one tagged sentence in "The bots". A135 and A132: the limits stay as they read. Device B items: the limits already say they are missing. The page is true of the package that ships when every `[waits: ...]` is stripped or its sentence deleted: find them with `grep -n "waits:" submission/page.md submission/form.md submission/video/script-v2.md`.
+| # | Question | Why it is his | Where it bites |
+|---|---|---|---|
+| O15 | **Which package is submitted: H30 as he played it, or a later one?** Waiting for his word, each built and measured (`docs/EVOLUTION.md`, the board of 08:20; `docs/PLAY-ME.md` questions 2, 3, 3a): pro's dial (pro at its bar; everywhere, or pinned to the regular game and the season); the check's cooldown; the lunge; the hit that is a stumble as you win the puck; the push-out round a downed skater; the marks made to read; the modes' re-tune; the arena's seventh evolution. Rule changes freeze Saturday 19:00, content Saturday 22:00 | each one changes what is true: see the list under this table | `page.md` "Known limits" and "How to run"; `form.md` Zip; every "about" on the page |
+| O16 | **Does the booth speak?** 412 lines are recorded; whether they are heard in the package depends on device B's audio at that commit (`docs/PLAY-ME.md` line 96). Also: did device B's goal effect show | only an ear in front of the package can say; the page promises captions only until then | `page.md` "Sound" |
+| O17 | **The film**: which scenario (device B ranks A, "The Director's Chair", first, with a 30 s cut and scenario C as the fallback); **who records it and on which machine** (it needs the game's sound and a hand on the mouse; about 30 to 45 minutes); the narration lines (B's seven proposals put the word "cut" on the ice, which the voice guide keeps for the menu: allowed in a trailer, or the copy lines of `video/SHOTLIST.md`); B's excited or dry delivery; a second voice or the commentator alone; whether a split frame of two Development drills may sit inside a Shipping film; the engine's logo on the end card (the rule allows it, nobody has the file: leave it out unless he wants it) | copy and tone are ours, the choice and the hands are his | `video/SHOTLIST.md`, `form.md` Video, `SUNDAY.md` |
+| O18 | **Which three modes lead**, if only three could (`docs/PLAY-ME.md` question 5) | the page lists twelve as the menu does; the film has room for one (today: Shotgun, if its blast reads on screen) | `video/SHOTLIST.md` shot 11 |
+| O19 | **Does the last day add a verb** from device B's new sets (a dash, a slide tackle, a dive block, toy weapons)? None is wired | a new verb is a new row in the controls table, on the controls screen and in the truth table, and a new shot; "none" keeps today's text final | `page.md` Controls |
+| O20 | **The page's five pictures.** The twelve frames of the real window taken in the night are of H27 (no stands, no crowd, the old cards): one is page-worthy, three are fallbacks (`video/SHOTLIST.md` section 1). Five are to be retaken from the submitted package, or pulled as frames from his own recording | which five he wants the page to open with; the Director's window lane takes them | the page's pictures, `shots/` |
+| O21 | **The zip to device B for the clean-machine test**: device B waits for it (`docs/PLAY-ME.md` question 8) | his word starts it; it also settles O7 and can carry O13 | `SUNDAY.md` |
+
+**What each answer to O15 does to the text** (so the page can be finished in ten minutes after he speaks):
+- Pro's dial, either patch: nothing. The page says "about even", never a number.
+- The check's cooldown on: delete the limit "Hammering the right button lands more checks than timing it."
+- The hit as you win the puck is a stumble: soften the limit "At pro you spend real time on the ice"; and "the speed you bring is the hit you get" then has one stated exception (a quarter second after anyone wins the puck), which the page must say in the same breath.
+- The push-out on: delete the limit "A skater can stand at a downed body and push it along the ice."
+- The marks made to read: the "Two marks" paragraph stands; "thickens" is truer.
+- The modes' re-tune: re-read four mode lines against the new cards (Sniper becomes five against four, Bruisers moves to a smaller rink) and delete the limit about Bruisers and Cage.
+- A new verb (O19): one row in Controls.
+- Any later package: "How to run" and the form's Zip row take its name; the truth table's header takes its commit.
+
+## 2. What is done (true of main this morning, by the truth table)
+- `TRUTH.md` pass 2: Friday's rows re-read with a source line each; the corrected sentences; the facts that must be findable (the level switch, one stop distance, hits by closing speed, no whistle outside one mode, Space and the locked stick, nothing drawn on a downed player, the two marks and "an offer, not an order", the twelve modes as their cards print them, the clay rink with stands and a crowd, the season's eight takes and its ramp, the joined match and exactly what was never tried).
+- `page.md` v4: three lengths (the blurb counted at 60 words), no `[waits: ...]` tag, no win rate, the limits rewritten from the play sheet and REVIEW-3, ten slots. `form.md` pass 4. `tagline.md`: the banner is true; a list of lines not to write.
+- `video/SHOTLIST.md`: the twelve stills judged one by one; the thirteen shots of a 45 s film with what exists and what must be recorded (twelve of thirteen).
+- `SUNDAY.md`: the last day counted back from Sunday 22:00.
+- `package/README.txt` (the text file that ships beside the exe): eight lines made true of this morning (PLAY NOW and the three levels, the menu's name BRAWL WITH A FRIEND, no whistle but in one mode, the nudge at matched speed, the stop from five stick lengths, Space at one in ten, the pad not play-tested); the claim "Cancel is fine" is replaced by "solo play does not need network access" until device B's test (O7). It changes the zip's contents by one text file: the Director takes it with the next package or leaves it.
+- Not touched by this pass, and stale in places: `credits.md` (Friday's tree), `video/script-v2.md` (its shot table is superseded by `video/SHOTLIST.md`; its staging notes for Shipping and Development still hold), `devlog/index.html` (rebuilt Sunday).
+
+## 3. What still waits, and for whom
+| Waits for | What |
+|---|---|
+| the operator at 10:00 | O1, O2, O4, O5, O8, O11, O13 and O15 to O21 (section 1) |
+| the Director, after his word | the submitted package cut and named (`package.ps1 -Submission`), unzipped and checked; `credits.md` regenerated and the ledger gate rerun on that tree (O6); `package/README.txt` re-read once more against the final controls screen; the five page pictures (O20); the dev log rebuilt |
+| device B | the clean-machine test of the zip (O7, O21); the recording with sound if he records there (O17); the cut by `edit.mjs`; its transcripts if he says yes (O8); a match between two machines if both are at hand (O13) |
+| this track's next lane | the page finished from his answers (ten minutes: the list under O15), the slots stripped, the film's captions checked against the takes, `SUNDAY.md` ticked |
+
+## 4. If an answer does not come
+A slot whose question is not answered by Sunday 18:00 is removed **with its sentence's claim**, never filled: O13 leaves "Two physical machines have never been tried." as the last word; O16 leaves the captions; O6 unanswered removes the word "Original" and its list; O5 unanswered leaves the vendors unnamed on the page (they are named in `credits.md` and the form); O7 leaves "not tested". O1, O2 and O4 have no fallback: the form cannot be sent without them.
 
 ## 5. What only the operator can do
-O1, O2, O4, O5, O8, O13 (names, submit, prize, vendor policy, hosting, the first two-machine match), plus the final upload and the confirmation screenshot (`docs/SUBMISSION.md` checklist).
+O1, O2, O4, O5, O8, O13, O15, O17 (names, submit, prize, vendor policy, hosting, the first two-machine match, which package, which film and whose hands), plus the final upload and the confirmation screenshot (`docs/SUBMISSION.md` checklist).
+
+---
+
+*Below: the record of passes 1 to 3 (Thursday and Friday), kept as written. Package and lane names in it are of those days.*
 
 ## The asset ledger (item 5), after pass 2
 `node tools/gate/check-assets-ledger.mjs` **PASS**, 1,654 rows (was parsed as 1,401: a paragraph inside the table ended it, so 253 rows of device A's `Game/Content/**` were never validated; moved above the table). Fixed: `T_UI_RingPlain` origin `original` (a PowerShell-drawn circle, no generative model), nine P4 sourced animation rows now carry licence and url, twelve `AS_P4_*` size_mb rows updated. Six WARN left, all device B's (`BP_SkaterVisual_*`, listed in `ledger-proposals.md`), and one for device A's `vfx/font/other` 76.5 MB against a 40 MB slice, which is the 56.2 MB DLSS library alone. P4 removal (149 rows, 100 MB of A's files, all `shipped` = n) is a proposal for the Director, nothing deleted.
@@ -77,3 +105,6 @@ Shipping cannot be asked anything: no log, no console, no state hash (PARITY.md)
 
 ## Files added or changed by lane A142 (pass 3)
 `submission/TRUTH.md` (new), `submission/page.md`, `submission/form.md`, `submission/tagline.md`, `submission/README.md`, `submission/video/script-v2.md`, `submission/video/cutlist.md` (header), `docs/SUBMISSION.md`, `status/A142.md`. The repository `README.md` describes the prep repository, not the game: unchanged.
+
+## Files added or changed by lane A180 (pass 4)
+`submission/TRUTH.md` (pass 2), `submission/page.md` (v4), `submission/form.md`, `submission/tagline.md`, `submission/README.md` (sections 1 to 5), `submission/video/SHOTLIST.md` (new), `submission/SUNDAY.md` (new), `submission/package/README.txt` (eight lines), `submission/video/script-v2.md` (one pointer line under the title), `status/A180.md`. Not touched: `credits.md`, `ledger-proposals.md`, `devlog/`, `shots/`, `video/cutlist.md`, `video/*.mp4`, `video/takes/`, `docs/SUBMISSION.md`.

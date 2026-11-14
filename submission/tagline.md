@@ -1,26 +1,42 @@
-# Title treatments and taglines (lane A89, for lane A88's page)
+# Title treatments and taglines (lane A89's words; truth marks re-read by lane A180, Sat 14 Nov 2026 08:00)
 
-Device B owns the logo and the banner; these are the words only. Voice: `docs/experiments/VOICE.md`. Teen rating holds: no gore, clay figures, no real names.
+Device B owns the logo and the banner; these are the words only. Voice: `docs/experiments/VOICE.md`. Teen rating holds: no gore, clay figures, no real names, no brands.
+
+## The banner
+
+**Hockey with the whistle taken out.**
+
+True of the game this morning (TRUTH N05, TG01): no fouls and no box in the regular game, the season and eleven of twelve modes; one mode, Glass House, keeps the whistle on purpose. The game prints this line on its own first screen. Friday's fallback line is no longer needed as a fallback.
 
 ## Three title treatments
 
-1. **HOKEJ** alone, set heavy and slightly tilted like a body mid-check, with the dot of nothing: the word is the hit. Subline, small, in chalk: *a rough game for clay skaters*.
-2. **HOKEJ** over a second line, **DIRECTOR'S CUT**, the second line struck through by a skate scratch in the ice and rewritten under it as **THE HARD CUT**. Says the jam theme and the brand in one look.
+1. **HOKEJ** alone, set heavy and slightly tilted like a body mid-check: the word is the hit. Subline, small, in chalk: *a rough game for clay skaters*.
+2. **HOKEJ** over a second line, **DIRECTOR'S CUT**, the second line struck through by a skate scratch in the ice and rewritten under it as **THE HARD CUT**. Says the jam theme and the game in one look.
 3. **HO-KEJ** split in two by a crack running through the middle, like glass after a hit; the second half sits one notch lower, knocked down. No subline: the crack is the tagline.
 
-## Five taglines
+The banner picture that exists: `devlog/shots/20261113-205819-B-br4-banner-1920.png` (device B: HOKEJ gouged in the ice, 1920 x 1080).
 
-1. Hockey with the whistle taken out.
-2. Clay skaters. Real hits.
-3. Pass it. Or get flattened.
-4. Rewrite the rules, then try to survive them.
-5. Five on five, and nobody is polite.
+## Six taglines, each true this morning
 
-Ranked for the page: 1 for the banner, 5 for the trailer, 2 for the store line, 4 for the jam theme (Director's Cut), 3 for the first screen of the page.
+| # | Line | Where it goes | Truth row |
+|---|---|---|---|
+| 1 | Hockey with the whistle taken out. | the banner, the video's end card | TG01 |
+| 2 | The speed you bring is the hit you get. | under the banner; the first screen of the page | TG06 |
+| 3 | Clay skaters. Real hits. | the store line | TG02 |
+| 4 | Rewrite the rules, then try to survive them. | the jam theme (Director's Cut) | TG04 |
+| 5 | Five on five, and nobody is polite. | the trailer | TG05 |
+| 6 | Pass it. Or get flattened. | spare | TG03 |
 
-## Truth marks (lane A142; rows TG01 to TG05 of `submission/TRUTH.md`)
-- 1 "Hockey with the whistle taken out." is true only when lane A133 lands (the regular cut and the takes lose the whistle, R-0048 point 2). Today `hockey.regular` has `rules.penalties` true. If A133 does not land, the banner is 2 or 4.
-- 2 "Clay skaters. Real hits.": the hits are true; the clay depends on which look the first screen shows (question O3 in `submission/README.md`).
-- 3 "Pass it. Or get flattened." and 5 "Five on five, and nobody is polite." are true of main.
-- 4 "Rewrite the rules, then try to survive them.": true as the jam's theme line; the page says what the Director's Call really is (one dial, once a period).
-- New, from the design eye's review (`docs/design/REVIEW-1.md` section 4), true of main and what the build already keeps in every match: **"The speed you bring is the hit you get."** The page's strapline uses it.
+## Lines NOT to write (each was measured false or can go stale within a day: TRUTH N15 to N23)
+
+- anything that says the puck sticks to you or the carry is long (it lasts about a second);
+- anything that says Space takes the puck when you press it (about one press in ten);
+- "time your hits" (hammering the button lands more today);
+- "stop on the line" as an order (the line is an offer);
+- any win rate or percentage: "three levels, a newcomer's, yours, and a wall" is fine, a number is not;
+- a horn, an ink outline, a replay.
+
+## Open with the operator
+
+- [O17] The video's narration lines proposed by device B ("Pick your cut.", "Full speed. Full price.", "Stop. Cut. Gone.", "Once a period, you change the rules.", "That's the cut.") use the word "cut" on the ice, which the voice guide keeps for the menu: allowed in a trailer, or rewritten? They are proposals; none is on the page.
+- [O3] "Clay skaters" in line 3 rests on clay being the first look: true by cartridge and by a window still; his eye says yes or no at 10:00.

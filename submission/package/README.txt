@@ -4,7 +4,8 @@ Rough hockey for clay skaters.  You skate.  The mouse is your stick.  You hit pe
 HOW TO START
 1. Unzip the whole folder somewhere you can write (Desktop or Documents is fine; not inside Program Files).
 2. Run ThirdJam.exe.  (ThirdJam is the game's internal project name; the game on screen is HOKEJ.)
-3. First launch compiles shaders for a few seconds.  Then the menu.  Pick a cut and play.
+3. First launch compiles shaders for a few seconds.  Then the menu.  PLAY NOW starts one match at the level that is lit.
+   ROOKIE is the newcomer's level, PRO is for anyone who has played a hockey game, ALL-STAR is the wall.
 
 WHAT YOU NEED
 - Windows 10 or 11, 64 bit.  A graphics card that does DirectX 12.  About 450 MB of disk when unpacked.
@@ -14,8 +15,8 @@ WHAT YOU NEED
 
 THE WINDOWS FIREWALL PROMPT
 The first time you run the game from a new folder, Windows may ask whether HOKEJ may access public and private
-networks.  The game opens a network socket at start for its two-player mode (Play With A Friend).
-Solo play does not need it, so Cancel is fine.  Choose Allow only if you want to play with a friend.
+networks.  The game opens a network socket at start for its two-player mode (BRAWL WITH A FRIEND).
+Solo play does not need network access.  Choose Allow if you want to play with a friend.
 
 CONTROLS (keyboard and mouse)
   W A S D / arrows   skate (S against your motion is a hard brake: stop, cut, go)
@@ -27,18 +28,19 @@ CONTROLS (keyboard and mouse)
   F                  your ability, when a mode or a pickup gives you one
   E                  spin off a check
   Mouse wheel        deke
-  Space              poke the puck off a carrier
+  Space              poke: jab for the puck (about one jab in ten takes it)
   Shift              sprint
   Ctrl               brake
   Esc                pause, Time Out, the Director's Call
   R                  restart the match
 Gamepad: left stick skate, right stick aim, RT shoot, RB check, LB cross-check, X pass, R3 ability, B spin,
-Y deke, A poke, LT sprint, Start pause.
+Y deke, A poke, LT sprint, Start pause.  The pad is mapped; no person has play-tested it yet.
 
 THE SHORT VERSION OF THE RULES
-Hits obey momentum.  Skaters going the same way bump; head-on at full speed flattens.
-If you carry the puck you cannot check; you win by stopping and cutting.
-Five a side, and the other four pass.  Once per period the Director can change one rule.
+No whistle (one mode, Glass House, keeps it).  Hits obey momentum: beside a skater at his speed a check
+is a nudge; head-on at full speed flattens.
+If you carry the puck you cannot check.  Stop five stick lengths short of a defender, cut, go.
+Five a side, and your mates pass.  Once per period the Director's Call (Esc) moves one dial.
 
 CREDITS AND TOOLS
 This game was made for the Third Jam with Unreal Engine 5.9.  The code, the tests and the dev log were written and run
