@@ -103,6 +103,14 @@ namespace
 
 // Lane A73 (B-to-A-0036 point 4): the frames the figures, the puck and the presentation frame hold on a knockdown that involves the human. Presentation only:
 // the sim steps every frame whatever this says; 0 turns the hit-stop off. The operator tastes it with jam.hitstop 0..6.
+// Lane A168 (track U1, the black post at the faceoff; B-to-A-0041 point 4, the critic's fault 19). Device B's /JamAssets/Props/SM_PuckDisc is not only the
+// halo disc: it carries upright geometry 45 cm tall (its Beacon and Marker slots: MI_Fx_PuckBeacon, MI_Fx_PuckMarker with FadeStart 1200 cm), a far-puck
+// marker its material fades in when the camera is more than 12 m from the puck. At the centre-ice faceoff the camera stands 13.5 m behind the dot, so the
+// marker stood on the puck through every HOLD, and on the clay tier (no emission on the puck's kit) it read as a black post. The plugin is device B's and
+// is not touched: the disc component keeps its place and its width (the puck's ring on the ice) and loses its height.
+static TAutoConsoleVariable<int32> CVarJamPuckPost(TEXT("jam.puck.Post"), 0,
+	TEXT("The upright far-puck marker in the puck disc's mesh (SM_PuckDisc): 0 (default) flat: the disc's world scale is (1, 1, 0.01), 45 cm of post become 4.5 mm under the puck; 1 upright, as before. Live. Presentation only."), ECVF_Default);
+
 static TAutoConsoleVariable<int32> CVarJamHitStop(TEXT("jam.hitstop"), 3,
 	TEXT("Hit-stop frames (0..6, default 3) on a knockdown that involves the human: both figures, the puck, the camera and the HUD hold the hit frame while the sim runs on. 0 = off."));
 
@@ -813,5 +821,15 @@ void AJamPuck::PlaceDiscOnIce(const FVector& PuckCm)
 {
 	// The disc is attached under the puck mesh (parent-local z -0.45 of a 0.08 m tall unit cylinder = 3.6 cm under the centre, 0.4 cm over the ice when the
 	// puck sits on it); with the puck in the air it is placed in world space at the same 0.4 cm over the ice.
-	if (Disc) Disc->SetWorldLocation(FVector(PuckCm.X, PuckCm.Y, (HalfHeightM - 0.45 * 0.08) * 100.0));
+	if (!Disc) return;
+	Disc->SetWorldLocation(FVector(PuckCm.X, PuckCm.Y, (HalfHeightM - 0.45 * 0.08) * 100.0));
+	// Lane A168: the disc's height (see jam.puck.Post). Set on a change only; one JAMPUCK line says what the disc's bounds became.
+	const double WantZ = CVarJamPuckPost.GetValueOnGameThread() != 0 ? 1.0 : 0.01;
+	if (!FMath::IsNearlyEqual(Disc->GetComponentScale().Z, WantZ, 1e-4))
+	{
+		const double Before = Disc->Bounds.BoxExtent.Z;
+		Disc->SetWorldScale3D(FVector(1.0, 1.0, WantZ));
+		UE_LOG(LogJamSim, Log, TEXT("JAMPUCK disc post=%s scale_z=%.2f half_height_cm %.2f -> %.2f (jam.puck.Post %d)"), WantZ < 1.0 ? TEXT("flat") : TEXT("upright"), WantZ, Before,
+			Disc->Bounds.BoxExtent.Z, CVarJamPuckPost.GetValueOnGameThread());
+	}
 }

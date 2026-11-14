@@ -505,3 +505,123 @@ Nothing has to be forbidden in the dash on these numbers. The giant carry has th
 - New: `dash_check.py`, `work\reimport.py`, `work\<style>\keg_attach.json`, `work\<style>\dash_check.json`, `gate_out\GATE.md`.
 - Changed: `build_props.py` (the fix and the re-import check), `props_mesh.py` (keg, crank, pin), `weapons_spec.py`, `weapons_clips.py`, `weapons_tail.py` (keg on `hand_l`, static carries, arm smoothing), `weapons_meas2.py`, `render_w.py`, `build_weapons.py` (two keg hooks).
 - Backups of loop 2: `work\loop2_backup\`.
+
+# Part 4: fourth loop (06:40 to 07:15), after the engine film: the mallet low, the pin low, the pin's victim chosen
+
+## 1. Done and not done
+
+I looked at the film first (`C:\Users\kazda\jam\wt\b-fig\devlog\shots\20261114-063416-B-film2-game-scale-a.png`). It shows both faults:
+- row 5, cells 3 and 4: the mallet's drum standing over the attacker's head, face to face with the victim;
+- row 6: the pin's attacker rearing up with the pin over his head (cell 3), and the victim pitching over his back with his legs in the air (cells 7 to 9).
+
+Both are rebuilt. The gate (`--out gate_out`, base export35) gives **`GATE PASS: 26 rows, 0 failing, 1 with a known exception`**. The exception is the hidden stick's shaft check on clay `Mallet_Swing`, which is on my known list (the stick is hidden while a weapon is held).
+
+Not done, or only in part:
+- **The giant carry's margin over the ice in the dash is unchanged** (1.4 cm on clay, 1.9 on cel). Lifting it 4 cm more broke a bone-turn limit in clay `Giant_Poke` (63 deg). I took it back.
+- **The low mallet carry goes under the ice in `Dash_Loop`** (-1.6 cm cel, -2.3 cm clay). The engine should not show the mallet carry in a dash (section 4).
+- **The pin's bottom hand is 2.5 cm off for one frame** (frame 2) on both styles; asked 2.
+- **On clay the mallet's drum clears the lower shoulder by only 0.6 cm** at frame 14.
+
+## 2. Per item
+
+### 1. The mallet, low
+
+- **Carry (`Mallet_Carry`):** the drum low by the right skate. Its top is 66 / 65 cm high, 45 / 35 cm under the shoulder (cel / clay).
+- **`Mallet_Swing`:**
+  - frames 0 to 11: drawn back behind the right hip, the drum out to the right side, where the game camera sees it;
+  - frames 11 to 17: a flat swing round at hip height, the end face leading;
+  - frame 17: contact at the victim's hip, as before; then across to the left, and back to the carry by 30.
+  - Wind-up: 11 frames.
+- **`Mallet_Miss`:** the same to frame 17, then carried round low; back on the carry by 42.
+- **Proving number: the drum's highest point against the attacker's lower shoulder, every frame:**
+  - `Mallet_Swing` and `Mallet_Miss`: always under it, by at least 3.3 cm on cel and 0.6 cm on clay. Closest at frames 14 to 15, where the twist lowers one shoulder.
+  - `Mallet_Carry`: 45 / 35 cm under.
+  - The drum is measured alone (the handle's knob above the top hand is left out).
+- **Contact at frame 17:**
+  - Drum centre (114.9, 25.3, 72.9) cm (cel), 117.7 cm from the hips; clay (110.5, 24.3, 70.1).
+  - With the victim (`Fall_Bonk` from the attacker's frame 16, root at (1.08, 0.72) m, facing him), the drum meets the victim's pelvis: 0.8 cm in on cel, 1.4 cm into the upper thigh on clay.
+  - Deepest: 4.1 cm on cel, 5.1 cm on clay. On clay it is more than 5 cm in for 2 frames (18 and 23; asked: no more than 2).
+- **Other numbers:**
+  - Bottom hand at most 1.8 / 1.9 cm from the handle in every mallet take (in loop 3 it was up to 4.9).
+  - The arm smoothing is gone, and the gate's jitter check passes.
+  - Lowest drum point 13.7 / 12.1 cm.
+- **What I saw** (mallet pair sheet):
+  - The drum stays low and out to the right side through the wind-up, comes round at hip height, and meets the victim's side.
+  - The victim sits and falls back.
+  - Nothing goes up over anyone's head.
+
+### 2. The rolling pin, low, and the victim's fall
+
+- **The attacker:**
+  - `Pin_Carry`: carried like a bat at the right side, both hands on the near handle. It reads from behind: a cream bar out to the right of the figure.
+  - `Pin_Roll`: the pin is drawn in across the belly at hip height (frames 0 to 10; the hands slide apart), then a low push from the hip.
+  - Contact at frame 16 at the shins, as in loop 3.
+  - The pin's highest point is at least 9.8 cm (cel) / 3.4 cm (clay) under the attacker's lower shoulder in every frame of `Pin_Roll`, `Pin_Miss` and `Pin_Carry`.
+- **The victim:** four candidates measured (`victim_pick.py`). Each victim faces the attacker and starts its take on the attacker's frame 15. Its root is 1.04 m ahead on cel and 0.96 m on clay, the spacing at which the roller just meets the shins. Numbers are cel / clay:
+
+| Victim take | Pelvis travel at the end, away from the attacker | Frames with any victim vertex at or behind the attacker's pelvis | Frames with the two bodies under 1 cm apart |
+|---|---|---|---|
+| `Fall_Legs_Back` (dive lane) | +30 / +30 cm | 0 / 0 | 5 / 7 |
+| `Fall_Bonk` (mine) | +30 / +30 cm | 0 / 0 | 3 / 5 |
+| `Trip` (figure lab) | 0 / 0 cm | 0 / 0 | 4 / 7 |
+| `Fall_Legs_Front` (dive lane; what the film plays) | **-30 / -30 cm** | **22 / 23** | 25 / 27 |
+
+- **My choice: `Fall_Legs_Back`.**
+  - Seen from the side (pin pair sheet): the skates shoot forward toward the attacker, the body drops back onto the seat and the back, and he ends lying away from him.
+  - That is the `Fall_Swept` the lead described, so I did not build a new take.
+  - The dive lane's export carries it in both styles. I have not checked that its end pose is the lab's back lying pose.
+- **Second choice: `Fall_Bonk`.** He sits where he stood and falls back, his feet staying low.
+- **`Fall_Legs_Front` must not follow a frontal low hit:** it throws the body over the attacker, as the film shows.
+- **The two bodies are under 1 cm apart for 3 to 7 frames around the hit** with every candidate (the attacker's push meets the victim's legs). No vertex passes the attacker's pelvis with the two I recommend.
+
+### 3. From my own list
+
+- **The bottom hand in the takes I smoothed last loop:**
+  - The smoothing is removed; the mallet takes were rebuilt.
+  - Bottom hand now: `Mallet_Swing` 1.8 / 1.9 cm, `Mallet_Miss` 1.8 / 1.9 cm, `Giant_Sweep` 0.18 / 0.18 cm (was 2.5 to 4.9).
+  - `Giant_Sweep`'s jitter was cured by bringing its front keys in by 10 cm (the right arm had been at full reach).
+- **The pin read from the game camera in the carry:** done (the bat carry, above).
+- **The giant carry's dash margin:** not improved (section 1).
+
+### Sheets (Blender Cycles on the CPU, frozen frames; the victim in the other team's colour, orange)
+
+- `C:\Users\kazda\jam\thirdjam\devlog\shots\20261114-071011-B-set-weapons-loop4-mallet-pair.png`: both styles, the game camera and from the front right, plus `Mallet_Miss`.
+- `C:\Users\kazda\jam\thirdjam\devlog\shots\20261114-071011-B-set-weapons-loop4-pin-pair.png`: the carry, the roll, and the pair from the side and the game camera with `Fall_Legs_Back`, `Fall_Legs_Front` and `Fall_Bonk`, both styles.
+
+## 3. Not verified
+
+- **Not seen in the engine:** the new mallet and pin takes, and the pin with `Fall_Legs_Back`.
+- **Another lane's FBX:** `Fall_Legs_Back` was taken from the dive lane's export, with only its bone channels copied onto my rig. Its end pose against the lying loops is the dive lane's to state.
+- **The bodies-touching numbers are vertex-to-vertex distances**, not a test of one body inside the other.
+- **Stills only.**
+
+## 4. For the engine lane
+
+| Take | Frames | Events |
+|---|---|---|
+| `Mallet_Swing` | 37 | wind-up 0-11 low behind the hip; contact 17 at the hip; back on the carry by 30 |
+| `Mallet_Miss` | 50 | back on the carry by 42 |
+| `Pin_Roll` | 31 | contact 16 at the shins; back on the carry by 26 |
+| `Pin_Miss` | 41 | back on the carry by 37 |
+
+- **Victim of a pin hit:** play `Fall_Legs_Back` (dive lane) from the attacker's frame 15, the victim 1.0 m ahead and facing him (1.04 m on cel, 0.96 m on clay); `Fall_Bonk` is the alternative. Never `Fall_Legs_Front` after a frontal pin hit.
+- **Victim of a mallet hit:** `Fall_Bonk` from frame 16, at (1.08, 0.72) m from the attacker's root (ahead, to his left), facing him.
+- **In a dash:** do not show the mallet carry (its drum goes under the ice in `Dash_Loop`). The giant carry survives by only 1.4 cm on clay. The cannon and pin carries survive with room.
+- The prop attachments are unchanged from part 3; the engine has them working.
+
+## 5. For the other device
+No change.
+
+## 6. Decisions for the operator
+1. **The pin's victim:** `Fall_Legs_Back` (skates shoot up toward the attacker, he lands on his back away from him) or `Fall_Bonk` (sits down where he stood, calmer)?
+2. **In the dash:** hide the mallet, or should I lift its carry? Lifting puts the drum higher at the side.
+
+## 7. The next three evolutions
+1. **A dash-only carry for the giant stick and the mallet** (or a lift layered over the dash). Proving number: the lowest prop point 4 cm or more over the ice in `Dash_Loop`, both styles.
+2. **The pin's bottom hand within 2 cm in every frame** (frame 2 is 2.5 now) and the clay mallet's 0.6 cm under the shoulder widened to 3. Proving numbers: as named.
+3. **The pin and mallet pairs filmed in the engine with the chosen victims**, read for the brief's line by a critic. Proving number: no frame in which a weapon is above a shoulder or a victim moves toward his attacker.
+
+## Files
+- New: `victim_pick.py` (writes `work\<style>\victim_pick.json` and `anim_vic.blend`).
+- Changed: `weapons_clips.py` (mallet and pin), `weapons_tail.py` (the drum and shoulder heights, no smoothing), `render_w.py` (`RENDER_BLEND`, the victim in the other team's colour, the imported take's object scale undone), `dash_check.py` and `victim_pick.py` (only the bone channels of another lane's take).
+- Backups: `work\loop3_backup\`.

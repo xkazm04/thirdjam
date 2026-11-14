@@ -896,6 +896,16 @@
           "maximum": 120,
           "description": "A check press has a cooldown (R-0060 point 4): for this many frames after a check press that opened a window, the same skater's next check press is dropped (no window, no cue), so a mashed button holds no window open: at the human's 12-frame window a button mashed without pause has one open 12 frames in every this-many. Bots and the human alike (the brain spaces its own presses 30 frames apart). 0 = the neutral value: every press opens a window."
         },
+        "check_cooldown_restart": {
+          "type": "boolean",
+          "description": "A mashed button lands nothing: true = a check press inside the cooldown (check_cooldown_frames) starts the cooldown again from that press, so a button pressed faster than the cooldown opens one window and no other until the hand has rested a whole cooldown; a press made after the cooldown never notices. Read only with check_cooldown_frames above 0. false = the neutral value: a dropped press costs nothing more."
+        },
+        "board_slam_frames": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 120,
+          "description": "The board slam as a play. Earned: a hit that fells its victim while the victim's centre is within 1 m of the boards and the attacker closes on it along the boards' normal at 4 m/s or more (driven into the wall, not along it). Paid: this many frames down on top (at skater.knockdown_frames 90; they scale with it), the victim's board read-out and the board event. 0 = the neutral value: no slam exists."
+        },
         "lunge_frames": {
           "type": "integer",
           "minimum": 0,

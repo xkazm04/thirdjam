@@ -921,4 +921,191 @@ bool FJamMenuPauseCardFits::RunTest(const FString&)
 	return true;
 }
 
+// ---------------------------------------------------------------- lane A164, evolution 4: the first screen has no dead key
+
+namespace JamMenuTests
+{
+	// The profile as the game saved it: both keys of the level, read from the config system (the scratch section this test saves into).
+	static FString SavedLevelKeys()
+	{
+		FString D, C;
+		if (GConfig)
+		{
+			GConfig->GetString(FJamSettings::Section, TEXT("Difficulty"), D, GGameUserSettingsIni);
+			GConfig->GetString(FJamSettings::Section, TEXT("DifficultyChosen"), C, GGameUserSettingsIni);
+		}
+		return FString::Printf(TEXT("Difficulty=%s DifficultyChosen=%s"), *D, *C);
+	}
+
+	static void FocusPlayNow(UJamMenuWidget* Menu)
+	{
+		// What the first screen's first tick does (ShowScreen -> PendingFocus); a null-RHI game ticks no widget, so the test does it.
+		if (Menu && Menu->GetFirstPress()) Menu->GetFirstPress()->SetFocus();
+	}
+
+	static void FocusMenuItself(UJamMenuWidget* Menu)
+	{
+		// Where Slate leaves the keyboard focus after a click on something that takes none: the menu widget itself (the fault's state).
+		if (Menu && Menu->GetCachedWidget().IsValid()) FSlateApplication::Get().SetUserFocus(0, Menu->GetCachedWidget(), EFocusCause::Mouse);
+	}
+}
+
+// "Click PRO, press Return" plays pro; every way a level is picked saves both keys at once; a start reads them back. Two matches through the menu.
+// The profile is the game's own Save() and Load() through the config system in a scratch section (emptied after; the player's section and file
+// are never touched), so the keys this test reads are the keys a package writes.
+class FJamClickThenReturnCommand : public IAutomationLatentCommand
+{
+public:
+	explicit FJamClickThenReturnCommand(FAutomationTestBase* InTest) : Test(InTest), RealSection(FJamSettings::Section) {}
+
+	virtual bool Update() override
+	{
+		using namespace JamMenuTests;
+		UWorld* W = GameWorld();
+		if (++Ticks > 2400) { Test->AddError(FString::Printf(TEXT("timed out in phase %d"), Phase)); return Finish(); }
+		AJamMenuGameMode* MenuGM = W ? Cast<AJamMenuGameMode>(W->GetAuthGameMode()) : nullptr;
+		UJamMenuWidget* Menu = MenuGM ? MenuGM->GetMenu() : nullptr;
+		switch (Phase)
+		{
+		case 0:
+			if (!Menu) return false;
+			FJamSettings::Section = TEXT("Jam.Settings.A164Test");
+			FJamSettings::SetOverrideForTest(nullptr);
+			bScratch = true;
+			GConfig->EmptySection(FJamSettings::Section, GGameUserSettingsIni);
+			Menu->ShowScreen(EJamMenuScreen::Main);
+			return Next();
+		case 1:
+		{
+			if (!Menu || Ticks < 10) return false;
+			FocusPlayNow(Menu);
+			Test->TestTrue(TEXT("the first screen: the focus on PLAY NOW"), Menu->IsFocusOnPlayNow());
+			Test->TestTrue(TEXT("a fresh profile: the switch shows ROOKIE"), Menu->GetSwitchLevel() == EJamMenuDifficulty::Rookie);
+			// Click PRO by its own click path (Slate's pointer routing down the segment's path).
+			FString Why;
+			if (!Menu->ClickForQa(Menu->GetLevelButton(EJamMenuDifficulty::Pro), Why))
+			{
+				Test->AddError(FString::Printf(TEXT("cannot click the PRO segment: %s"), *Why));
+				return Finish();
+			}
+			Test->AddInfo(FString::Printf(TEXT("after the mouse-down Slate gave the focus to %s (the cause of the dead Return when it is the menu itself)"),
+				Menu->WasLastClickDownOnMenu() ? TEXT("the menu widget itself") : TEXT("something else")));
+			Test->TestTrue(TEXT("the click picked PRO"), Menu->GetSwitchLevel() == EJamMenuDifficulty::Pro);
+			Test->TestEqual(TEXT("the click saved both keys in one save"), SavedLevelKeys(), FString(TEXT("Difficulty=pro DifficultyChosen=True")));
+			Test->TestTrue(TEXT("after the click the focus is back on PLAY NOW"), Menu->IsFocusOnPlayNow());
+			// Return, as a key given to Slate for the focused widget, in the same frame as the click.
+			Menu->PressKeyForQa(EKeys::Enter);
+			Expect = TEXT("pro");
+			What = TEXT("click PRO, then Return");
+			Phase = 3;
+			return Next();
+		}
+		case 4:
+		case 9:
+			if (!CheckMatch(W)) return false;
+			return Next();
+		case 5:
+		case 10:
+			if (!Menu) return false;
+			if (Phase == 10) return Finish();
+			Menu->ShowScreen(EJamMenuScreen::Settings);
+			return Next();
+		case 6:
+		{
+			if (!Menu || Ticks < 6) return false;
+			// The settings screen's level button: PRO -> ALL-STAR.
+			FString Why;
+			UJamSettingsWidget* Panel = Menu->GetSettingsPanel();
+			if (!Panel || !Menu->ClickForQa(Panel->GetFirstFocusable(), Why))
+			{
+				Test->AddError(FString::Printf(TEXT("cannot click the settings' level button: %s"), Panel ? *Why : TEXT("no settings panel")));
+				return Finish();
+			}
+			Test->TestEqual(TEXT("the settings' button saved both keys (all-star)"), SavedLevelKeys(), FString(TEXT("Difficulty=all_star DifficultyChosen=True")));
+			// The QA hook (jam.menuscreen level rookie), the console's path.
+			GEngine->Exec(W, TEXT("jam.menuscreen level rookie"));
+			Test->TestEqual(TEXT("jam.menuscreen level saved both keys (rookie)"), SavedLevelKeys(), FString(TEXT("Difficulty=rookie DifficultyChosen=True")));
+			Menu->ShowScreen(EJamMenuScreen::Main);
+			return Next();
+		}
+		case 7:
+			if (!Menu || Ticks < 6) return false;
+			Test->TestTrue(TEXT("the first screen re-reads the profile: ROOKIE"), Menu->GetSwitchLevel() == EJamMenuDifficulty::Rookie);
+			// The pad: D-pad right on PLAY NOW steps the level and keeps the focus.
+			FocusPlayNow(Menu);
+			Menu->PressKeyForQa(EKeys::Gamepad_DPad_Right);
+			Test->TestEqual(TEXT("the pad's right saved both keys (pro)"), SavedLevelKeys(), FString(TEXT("Difficulty=pro DifficultyChosen=True")));
+			Test->TestTrue(TEXT("the pad's right keeps the focus on PLAY NOW"), Menu->IsFocusOnPlayNow());
+			{
+				FString Why;
+				if (!Menu->ClickForQa(Menu->GetLevelButton(EJamMenuDifficulty::AllStar), Why))
+				{
+					Test->AddError(FString::Printf(TEXT("cannot click the ALL-STAR segment: %s"), *Why));
+					return Finish();
+				}
+			}
+			Test->TestEqual(TEXT("the ALL-STAR click saved both keys"), SavedLevelKeys(), FString(TEXT("Difficulty=all_star DifficultyChosen=True")));
+			// The pad's A reaching the menu widget itself (nothing of the screen focused) starts the match: no tick between, so the guard is not what helps.
+			FocusMenuItself(Menu);
+			Menu->PressKeyForQa(EKeys::Gamepad_FaceButton_Bottom);
+			Expect = TEXT("all_star");
+			What = TEXT("click ALL-STAR, focus on the menu itself, pad A");
+			Phase = 8;
+			return Next();
+		default:
+			return Finish();
+		}
+	}
+
+private:
+	bool Next() { ++Phase; Ticks = 0; return false; }
+
+	bool CheckMatch(UWorld* W)
+	{
+		AHokejGameMode* GM = W ? Cast<AHokejGameMode>(W->GetAuthGameMode()) : nullptr;
+		if (!GM || !GM->GetSim() || !GM->GetBrain() || !GM->GetCartridge() || GM->GetSim()->GetFrame() < 30) return false;
+		const FString Brain = GM->GetBrain()->Difficulty.ToString();
+		Test->AddInfo(FString::Printf(TEXT("JAMMENU click then key: %s -> brain=%s source=%s cut=%s saved: %s"), *What, *Brain, *GM->GetLevelSource(), *GM->GetCartridge()->Id,
+			*JamMenuTests::SavedLevelKeys()));
+		Test->TestEqual(*FString::Printf(TEXT("%s: the match plays the picked level"), *What), Brain, Expect);
+		Test->TestEqual(*FString::Printf(TEXT("%s: the level is the player's"), *What), GM->GetLevelSource(), FString(TEXT("settings")));
+		Test->TestEqual(*FString::Printf(TEXT("%s: PLAY NOW's cut"), *What), GM->GetCartridge()->Id, FString(TEXT("hockey-regular")));
+		UJamMenuFlow::ReturnToMenu(W);
+		return true;
+	}
+
+	bool Finish()
+	{
+		if (bScratch)
+		{
+			GConfig->EmptySection(FJamSettings::Section, GGameUserSettingsIni);
+			GConfig->Flush(false, GGameUserSettingsIni);
+			FJamSettings::Section = RealSection;
+			bScratch = false;
+		}
+		return true;
+	}
+
+	FAutomationTestBase* Test;
+	const TCHAR* RealSection;
+	bool bScratch = false;
+	int32 Phase = 0;
+	int32 Ticks = 0;
+	FString Expect;
+	FString What;
+};
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamMenuClickThenReturn, "Jam.Menu.ClickThenReturn", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ClientContext | EAutomationTestFlags::ProductFilter)
+bool FJamMenuClickThenReturn::RunTest(const FString&)
+{
+	if (!AutomationOpenMap(UJamMenuFlow::MenuMap))
+	{
+		AddError(FString::Printf(TEXT("cannot open %s"), UJamMenuFlow::MenuMap));
+		return false;
+	}
+	ADD_LATENT_AUTOMATION_COMMAND(FJamClickThenReturnCommand(this));
+	ADD_LATENT_AUTOMATION_COMMAND(FExitGameCommand());
+	return true;
+}
+
 #endif

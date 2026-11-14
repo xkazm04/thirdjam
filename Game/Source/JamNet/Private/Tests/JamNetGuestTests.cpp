@@ -212,6 +212,8 @@ namespace JamNetGuestTests
 		{ TEXT("DownedPushFrames"), TEXT("read-out counter: frames the push-out around a downed skater turned this skater's course (lane A157); read by no rule") },
 		{ TEXT("ChecksCooling"), TEXT("read-out counter: check presses the cooldown dropped (lane A157); read by no rule") },
 		{ TEXT("LungesMissed"), TEXT("read-out counter: lunges that ran out on nobody (lane A157); read by no rule") },
+		{ TEXT("bContactSlam"), TEXT("read-out, one frame: this frame's knockdown was a board slam (lane A165); read by no rule") },
+		{ TEXT("ContactSlams"), TEXT("read-out counter: board slams taken (lane A165); read by no rule") },
 		{ TEXT("ChecksGraced"), TEXT("read-out counter behind the HUD's JUST GOT UP line (lane A113); read by no rule") },
 		{ TEXT("ChecksSoft"), TEXT("read-out counter behind the HUD's TOO SOFT line (lane A113); read by no rule") },
 		{ TEXT("ContactGraced"), TEXT("read-out counter behind the HUD's contact line (lane A113); read by no rule") },

@@ -440,3 +440,9 @@
 - link green 04:27: main a9446394 (PLAY NOW plays the level that is lit: the match is built once (Director, from lane A155's ) pushed.
 - link green 04:44: main a46c8081 (Merge device B's night (dev-b 83c76776) with the arena's last pass (A160), the unused figu) pushed.
 - link green 04:52: main 1f5b6389 (Nothing is drawn over a downed player (A158, track U1), and the contact track's next three) pushed.
+- link green 05:00: main d21fa8b8 (The player sees why: a yellow ring while no stick can take the puck, STICK LOCKED after a ) pushed.
+- link green 05:21: main 85de64b8 (Click a level, press Return, play that level: the first screen has no dead key (A164, trac) pushed.
+- link green 05:31: main 84ab6c03 (The ladder the operator plays (A162, track C0, the last pass: R-0061, R-0062): five cells ) pushed.
+- link green 05:37: main c5dc15e5 (No black post at the faceoff (A168), two marks on the ice before the knockdowns a player c) pushed.
+- package 05:46: `Hokej_Hokej_H28.zip` from main c5dc15e5, acceptance run green (18 verbs through the cursor and the buttons).
+- link green 05:57: main ca493723 (Rules that wait switched off, measured for the operator's answers: a mashed check lands no) pushed.

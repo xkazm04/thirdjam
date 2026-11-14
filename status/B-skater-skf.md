@@ -4692,3 +4692,124 @@ The masks again (`mask33.py`, this export). First column of ratios: the masks as
 1. **The back get-up's roll.** `GetUp` with a new first third: from lying on the back a roll onto the side (the side get-up's lying pose by about frame 6), then the side get-up's beat and push up; its own stick path re-authored for it and measured against the legs. Proving numbers: frames with a knee and a hand down before the head is over 60 cm, 4 or more in `GetUp`, both styles (0 today); the head's largest one-frame rise under 8 cm; frames with the shaft through a leg no more than today's 3.
 2. **The three sizes as three pictures, by a number that can be kept.** Each pair of sizes (light and middle, middle and heavy, light and heavy), body check and cross-check, at contact, +4 and +8, masks as they stand: every one over a floor, and the floor chosen by looking (I would start at 1800 px of about 3400). Then the frames that fall under it re-shaped. Proving number: readings under the floor, 0 of 54 (not counted today).
 3. **A cross-check that can meet.** With the engine lane: either the sim's cross-check distance shown shorter on screen (the attacker's figure drawn up to the victim over the two frames before contact and let go after) or a cross-check that is a stick's end, not its middle, at 120 cm. In the lab: the take for whichever is chosen. Proving numbers: the shaft or the stick's end within 5 cm of the chest's skin at contact in the light and middle (57 to 71 cm short today), with 0 backward frames kept in all nine rows.
+
+## Thirty-fifth pass: the back get-up's roll; the side get-ups' head; the three sizes by a floor; a note for the morning (SKF35, 05:41 to 06:19)
+
+Done, all four, with these said plainly. **The back get-up has its beat: 9 / 10 frames with a knee and a hand down before the head is over 60 cm (0 before), the head's largest one-frame rise 8.0 / 7.7 cm.** It is a first version of a new move: on the way from his back to his side he also turns a quarter turn on the ice, and the head goes up to 60 cm and down to 36 before the knee is under him; the numbers are met and I would not put it in front of the operator before someone has seen it move. **The side get-ups' head is 41 to 44 cm in the held beat** (it was 27 to 36) with the beat frames kept; on the way into the beat it still passes 34 to 35 cm for a frame. **The quick and the snap get-up from the back jumped too (24.5 and 13.7 cm in one frame) and are re-timed (7.8 and 7.1).** **By the floor asked, 30 of the 54 readings are under it; with the masks laid on each other at the hips, 8**: the list is below, and the floor itself is harsh where export30's heavy stood 22 cm from its middle. `C:\Users\kazda\jam\skater-lab\skf\export35\` is complete: 149 takes, 5 changed against export34; the gate green at the jitter line of 4 with the one known row. One Blender process of this lane at a time, checked in the process list before each start; CPU renders only, no git, no editor.
+
+### For the engine lane
+
+| What | Take names | Import? | What to know |
+|---|---|---|---|
+| The back get-up, rebuilt | `GetUp` | yes, by name, **after a look**: it is the get-up seen most and it is a new move | 36 frames, first and last frames as before; a roll onto the side (frames 0 to about 9), a knee and a hand down (frames 12 to 20 on p2_cel), the push up, the kneel at frame 25, the stand-up in the last six frames |
+| The side get-ups | `GetUp_Side_Left`, `GetUp_Side_Right` | yes, by name | as export34 with the head higher in the beat; the kneel at frame 23 |
+| The quick and the snap get-up from the back | `GetUp_Quick`, `GetUp_Snap` | yes, by name | 20 frames, first and last frames and poses as before; only the timing (the jump at the start is spread) |
+| Everything else | | nothing new | 144 takes key-identical to export34 |
+
+### 1. The back get-up's roll
+
+`GetUp` is rebuilt on the side get-up. From its own first frame (lying on the back, untouched) the body rolls onto its side: the side get-up's lying pose, on the shoulder and elbow. From there it is `GetUp_Side_Right`: its poses and its stick path, with the same beat (the take's own kneel with the trunk leant 44 deg over a planted hand) and the push up. 36 frames; the last frame is the stance (settled, exact). The roll takes about nine frames: at four the head rose 14 cm in one frame, at six 10.
+
+| Take | Beat frames (a knee and a hand down, the hips up, before the head is over 60 cm), p2_cel / p3_clay: export34 | export35 | Which frames (p2_cel) | Lowest head in those frames cm: export34 | export35 | Largest one-frame rise of the hips cm | of the head cm | Blade end's largest one-frame move cm | Frames with the shaft through a leg: export34 | export35 | through the trunk, export35 |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| GetUp | 0 / 0 | **9 / 10** | 12 to 20 | - / - | 36 / 37 | 4.4 / 4.0 | 8.0 / 7.7 | 21.4 / 20.8 | 3 / 3 | 2 / 0 | 1 / 0 |
+| GetUp_Side_Left | 5 / 5 | **6 / 6** | 11 to 16 | 34 / 33 | 42 / 41 | 3.4 / 3.1 | 6.9 / 6.5 | 16.7 / 15.4 | 3 / 0 | 4 / 0 | 2 / 2 |
+| GetUp_Side_Right | 10 / 9 | **11 / 11** | 8 to 18 | 27 / 28 | 34 / 35 | 3.4 / 3.1 | 6.9 / 6.5 | 15.4 / 15.1 | 1 / 0 | 1 / 0 | 1 / 0 |
+| GetUp_Front | 9 / 7 | **9 / 7** | 8 to 16 | 39 / 39 | 39 / 39 | 6.1 / 5.8 | 6.4 / 6.0 | 31.4 / 30.0 | 0 / 0 | 0 / 0 | 0 / 0 |
+
+- **Beat frames in `GetUp`: 9 / 10 (p2_cel / p3_clay); the bar was 4 or more.** The head is first over 60 cm at frame 22.
+- **Head rise under 8 cm a frame: 8.0 / 7.7 cm at the most** (p2_cel / p3_clay; the first frames of the roll; on cel it is on the line, not under it; the hips at most 4.4).
+- **The stick**: the blade end's largest one-frame move and the frames with the shaft through a leg or the trunk are in the table (40 cm line; the gate's trunk line is 3 frames). The path is the side get-up's from the roll's end on, and a blend from the back-lying place to it during the roll.
+- **The gate found the roll under the ice** on its first run (the body's skin 3.2 cm under at frame 6 on cel, 1.8 on clay: a straight blend from lying on the back to lying on the side passes through it): the hips are lifted by up to 5.5 cm through frames 1 to 9, and the gate passes. For two or three frames the body is that much off the ice.
+- **What it looks like** (`skf35-getup-roll`, from the side, export34 above export35): he does come over onto his side, gets a knee and a hand under him with his head down, waits, and pushes up. But the side get-up's lying pose lies across where the back one lies along, so **the roll is also a quarter turn on the ice**, and the head's height goes 22, 60, 36, 44 cm before the push up: up with the roll and the side take's own start, down into the beat. In stills at every second frame it reads as a scramble onto hands and knees. Whether that is a man getting up or a toy being turned over I cannot tell without seeing it move. Export34's `GetUp` (re-timed, no beat) is the safe one until then.
+
+**The quick and the snap get-up from the back** had the same jump:
+
+| Take | Largest one-frame rise of the head cm (p2_cel / p3_clay): export34 | export35 | of the hips: export34 | export35 | Blade end's largest one-frame move cm: export34 | export35 | Frames with the shaft through a leg: export34 | export35 |
+|---|---|---|---|---|---|---|---|---|
+| GetUp_Quick | 24.5 / 25.6 (frame 2) | **7.8 / 8.1** | 7.1 / 4.9 | 6.9 / 4.3 | 32.5 / 31.2 | 32.1 / 30.9 | 0 / 1 | 1 / 0 |
+| GetUp_Snap | 13.7 / 12.9 (frame 19) | **7.1 / 7.7** | 7.0 / 6.4 | 7.0 / 6.0 | 33.9 / 32.5 | 23.1 / 21.8 | 1 / 0 | 2 / 2 |
+
+Both were over 10 cm and the mend was cheap: the thirty-third pass's re-timing (`warp35.js`, a limit of 7 cm a frame on head and hips; the same poses and paths; first and last frames untouched; the end was already settled). The front and side ones of the quick and the snap get-up I did not measure for this.
+
+### 2. The side get-ups' head
+
+The beat's lean is 44 deg again, not 52. What I moved is **the hips' line, not the counting pose**: at 44 deg clay's head went 3 cm over the 60 line on the way in because the hips were coming up under a trunk that was still on its way down; the hips now start four frames after the trunk (three before), so the head's high point on the way in is 55 cm on both styles. The counting rule is the thirty-fourth pass's, unchanged (knee joint 22 cm or less, hand joint 20 or less, hips 38 or more, before the head is over 60).
+
+- **Head in the held beat: 44 cm on p2_cel and 42 on p3_clay** (frames 12 to 16); it was 27 to 36.
+- **Beat frames kept**: 6 / 6 in `GetUp_Side_Left` (5 / 5 before) and 11 / 11 in `GetUp_Side_Right` (10 / 9). Frames with the shaft through a leg: 4 / 0 and 1 / 0 (3 / 0 and 1 / 0 before: one more on cel in `GetUp_Side_Left`).
+- **Not 40 everywhere**: the first beat frames of `GetUp_Side_Right` (8 to 10) have the head at 34 to 40 cm, and one frame before the knee is down it is 34 to 35: the trunk is fully leant before the hips are up. That dip is the price of keeping clay under the 60 line; bringing the hips up sooner trades one for the other.
+- Largest one-frame rise of the head 6.9 / 6.5 cm, of the hips 3.4 / 3.1. The kneel is at frame 23 (22 before).
+
+### 3. The three sizes measured by a floor
+
+The measure: for each pair of sizes, the pixels that are figure in one mask and not in the other (`mask33.py`: the game camera from behind and above, 110 px per 1.70 m; the masks as they stand), at the contact frame, +4 and +8, for the body check from each shoulder and the cross-check, both styles: 54 readings. "Not enough" is what export30's middle and heavy differed by in the same family, frame and style (the film could not tell those two apart); the floor is twice that (`floor35.js`).
+
+| Family | Frame | Not enough: export30's middle-to-heavy, px (p2_cel / p3_clay) | The floor (twice it) | Light and middle | Middle and heavy | Light and heavy | Under the floor |
+|---|---|---|---|---|---|---|---|
+| Body check, right shoulder | contact (3) | 1037 / 976 | 2074 / 1952 | 2806 / 2434 | 2192 / 1968 | 3072 / 2828 | none |
+| Body check, right shoulder | +4 (7) | 1501 / 1712 | 3002 / 3424 | 2631 / 2480 | 2294 / 2085 | 2819 / 2383 | light and middle cel 2631; light and middle clay 2480; middle and heavy cel 2294; middle and heavy clay 2085; light and heavy cel 2819; light and heavy clay 2383 |
+| Body check, right shoulder | +8 (11) | 1541 / 1474 | 3082 / 2948 | 2266 / 2246 | 3379 / 3051 | 3575 / 3391 | light and middle cel 2266; light and middle clay 2246 |
+| Body check, left shoulder | contact (3) | 952 / 928 | 1904 / 1856 | 2192 / 2114 | 1837 / 1638 | 2799 / 2592 | middle and heavy cel 1837; middle and heavy clay 1638 |
+| Body check, left shoulder | +4 (7) | 1590 / 1544 | 3180 / 3088 | 2316 / 2220 | 2748 / 2417 | 2800 / 2399 | light and middle cel 2316; light and middle clay 2220; middle and heavy cel 2748; middle and heavy clay 2417; light and heavy cel 2800; light and heavy clay 2399 |
+| Body check, left shoulder | +8 (11) | 1498 / 1421 | 2996 / 2842 | 2209 / 2183 | 3352 / 2983 | 3431 / 3122 | light and middle cel 2209; light and middle clay 2183 |
+| Cross-check | contact (2) | 786 / 781 | 1572 / 1562 | 1025 / 970 | 3820 / 3591 | 3681 / 3453 | light and middle cel 1025; light and middle clay 970 |
+| Cross-check | +4 (6) | 1586 / 1533 | 3172 / 3066 | 1031 / 960 | 2754 / 2625 | 2683 / 2507 | light and middle cel 1031; light and middle clay 960; middle and heavy cel 2754; middle and heavy clay 2625; light and heavy cel 2683; light and heavy clay 2507 |
+| Cross-check | +8 (10) | 1264 / 1198 | 2528 / 2396 | 1250 / 1126 | 3002 / 2710 | 2398 / 2226 | light and middle cel 1250; light and middle clay 1126; light and heavy cel 2398; light and heavy clay 2226 |
+
+- **Readings under the floor, masks as they stand: 30 of 54.** They are named in the table's last column.
+- **With the two masks laid on each other at the hips** (the floor then twice export30's own aligned middle-to-heavy): **8 of 54**, all of them light against middle: the body check at +8 from both shoulders (1216 / 1134 and 1189 / 1095 px against floors of 1908 to 2320), the left-shoulder check at contact (990 / 890 against 1108 / 1040) and the cross-check at +8 (1130 / 996 against 1160 / 1216).
+- **What the list says, read as pictures:**
+  - **The light and the middle cross-check are the same picture** (about 1000 px apart at every frame, under every floor): since the thirty-fourth pass both are a shove of the arms on the spot. That is a real find and the film would say the same.
+  - **At +8 the light and the middle body check are close**: the light has finished and the middle is on its way back in a crouch not unlike a stance.
+  - **At +4 nothing passes as the masks stand, and that is the floor, not the takes**: export30's heavy stood 22 cm past its middle at +4, so its 'not enough' is 1500 to 1700 px and the floor 3000 to 3400. Two figures of about 3400 px each would have to be half clear of each other. The film's verdict on export30 was about the picture, not the place, which is why I give the aligned reading beside it.
+  - Middle against heavy passes at contact from the right shoulder (2192 / 1968 over 2074 / 1952), misses by a little from the left (1837 / 1638 under 1904 / 1856), and passes at +8 from both.
+- Nothing was re-shaped for this in this pass: the measure and the list are the work.
+
+### The export
+
+`C:\Users\kazda\jam\skater-lab\skf\export35\`: `READY.txt` (written last, with its `Takes:` line), `DIFF.md` (against export34), `JOINS.md` (159 pairs), `GATE.md`. 149 takes, the same names as export34.
+
+- **5 takes of export34 differ, the same in both styles and both files, each named with its reason in `DIFF.md`; no other take differs**: `GetUp`, `GetUp_Side_Left`, `GetUp_Side_Right`, `GetUp_Quick`, `GetUp_Snap`. Bones, parents, rest pose, meshes and stick files as export34; root identity keys in all takes; 60 fps.
+- **Gate at the jitter line of 4: 298 take-and-style rows, 0 failing, 1 passing on the known list (the clay aim hold, as before); 149 takes found and checked per style, the same as READY.txt lists.****
+- Joins: 159 pairs, positions at most 0.0005 cm, rotations 0 deg, both styles. Pop limits: 0 of 145 played takes over, both styles.
+- One Blender process of this lane at a time in this pass: checked in the process list before each start; no chain was stopped.
+
+### Not looked at, and known gaps
+
+- **Nothing of export35 has been seen in the engine or in motion**, and the back get-up above all needs it.
+- The new `GetUp` was looked at from the side only, every second frame, and in the build before the 5.5 cm lift of the roll (the sheet filed is from the final build; I did not look at it again); not from the game camera, not from above (where the quarter turn would show best).
+- `GetUp_Quick` and `GetUp_Snap`: numbers only, no picture. The other six quick and snap get-ups and the eight late ones were not measured for the jump (the late back ones rise 13 to 15 cm in a frame by the thirty-fourth pass's measurements; they were not in this brief and are not mended).
+- The side get-ups after the change: `GetUp_Side_Right` on the sheet, `GetUp_Side_Left` by its numbers.
+- The floor uses export30's masks from the same camera; I did not look at those tiles, only at their numbers.
+- The masks of export35 are from the build before the roll's lift; no take in them changed between the two builds.
+- The one known row (`Aim_N46_R100` on clay) and the open-ice heavy against the board fall are as before.
+
+### Files
+
+- Lab: `build_clips.py` (the thirty-fifth pass block; this state is `build_clips_pass35.py`), `warp35.js`, `warp35.json`, `floor35.js`, `report35.js`, `tab35.js`, `it35.sh`, `sheet35.sh`; `mask33.py` now also gives light-to-heavy.
+- Sheet in `devlog/shots/`: `20261114-061844-B-lab-skf35-getup-roll.png` with its `.txt` caption.
+
+### The next three evolutions of this track, ranked, each with its proving number
+
+1. **The back get-up, seen and then finished.** A film of export35's `GetUp` beside export34's at game size and from above; then either the roll about his own length (the side take's lying pose turned to lie along the back one's line, the quarter turn moved into the push up where the side get-up already has it) or back to export34's. Proving numbers: the body's turn about the vertical during the first ten frames, under 20 deg (about 90 today); the head's height never falling more than 10 cm before the beat (it falls 20 today); 4 or more beat frames kept.
+2. **The late get-ups' jump.** `GetUp_Late` and `GetUp_LateLong` (the ones the engine plays after a lying loop) from the back and the other sides, measured and re-timed as the quick and the snap were. Proving number: largest one-frame rise of the head in the 16 late get-ups, under 8 cm in all (13.6 to 14.6 in the two back ones today).
+3. **The sizes that are one picture.** The light and the middle cross-check told apart (the middle with a step and a longer shove), and the light and the middle body check at +8. Proving number: readings under the floor with the masks aligned, 0 of 54 (8 today); the floor as the masks stand given again with a 'not enough' taken at the hips, so that it measures the picture.
+
+### For the operator's morning: the figure's animation tonight
+
+Five things that got visibly better, each with the still that shows it (all in `devlog/shots/`):
+
+1. **A hit and a fall are one event now.** The checker's shoulder is in the other man's chest at the moment of the hit; before tonight there was half a metre of air between them and the man fell anyway. `20261114-040847-B-lab-skf32-contact-side.png` (the old takes above the new).
+2. **The big hit is its own picture.** The heavy check used to be the ordinary check held a little longer. Now the player leaves the ice, throws his free arm wide, whips the stick round behind him, spins and staggers out of it. `20261114-043816-B-lab-skf33-heavy-masks.png`.
+3. **Getting up is not a jump any more.** A player used to snap from flat on the ice to sitting upright in a twentieth of a second. From his front or his side he now gets a knee and a hand under him, waits a beat with his head down, and pushes up. `20261114-053940-B-lab-skf34-getup-beat.png` (the old takes above the new).
+4. **The stick stays out of the body.** It no longer passes through the trunk or the legs while a player falls, lies or gets up; the engine's own film of the get-up shows it held. `20261114-032248-B-film1-getup.png`.
+5. **A light hit is a shove, and nothing slides backwards after a hit.** The small hit is a hand to the chest with the weight over the skates; the bigger ones are timed so that the player never travels backwards over the ice to rejoin his place. `20261114-053940-B-lab-skf34-travel-cel.png`.
+
+Five things that still look wrong:
+
+1. **The middle and the heavy hit throw the body more than half a metre ahead of where the game thinks the player is, and bring it back.** In stills it reads as a lunge; nobody has seen it move, and it could read as the player snapping forward and being reeled in. The engine keeps the older takes until it has been filmed. `20261114-043816-B-lab-skf33-travel-cel.png`.
+2. **The small and the middle cross-check do not touch.** The game calls the hit when the two are a stick's length and more apart; the stick ends half a metre short of the other man, and in the middle one he falls anyway. It will look like a miss that knocks a man down. `20261114-053940-B-lab-skf34-travel-cel.png` (rows five and six).
+3. **At the moment of a hit the two figures are in each other.** The checker's front leg is where the other man's legs are for a frame or two. From the game camera it is one blob; close up it is two toys pushed together. `20261114-040847-B-lab-skf32-contact-side.png`.
+4. **A man lying on the ice still looks like a dropped toy.** The small moves I gave him while he lies (a forearm dragged in, a knee drawn up) cannot be made out at game size; the film says so, and no more work went into them. `20261114-032247-B-film1-lying.png`.
+5. **The new get-up from the back is a scramble.** He rolls, turns a quarter turn on the ice, lifts his head and drops it again before he is on a knee. The numbers I was asked for are met; in the stills it works; I do not trust it until it has been seen moving, and it is the get-up a player sees most. `20261114-061844-B-lab-skf35-getup-roll.png` (the second row).

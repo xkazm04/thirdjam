@@ -1,0 +1,1 @@
+AR12, Blender mock-up (not the engine): the game camera at the side boards. Top: the stands in AR1's vertex colours. Bottom: AR12's: seat planks light, treads and risers dark, the aisle's steps marked. The figures' mean luma stays 54; the stands' goes from 37 to 25, so figures against stands go from 18 to 29 apart. Nothing in the stands is brighter than 89 (boards 146).

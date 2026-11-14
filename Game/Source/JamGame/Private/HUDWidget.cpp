@@ -966,6 +966,7 @@ void UJamHudWidget::RefreshFromFrame(const FJamPresentationFrame& F)
 	{ TRACE_CPUPROFILER_EVENT_SCOPE(JamHud_PuckMarker); UpdatePuckMarker(F, bCount || Frames > 0 || F.SimFrame < PuckMarkerCardFrames); ResolveEdgeSlots(); YieldToDowned(); UpdateLabelPlates(); }
 	{ TRACE_CPUPROFILER_EVENT_SCOPE(JamHud_Commentary); UpdateCommentary(F); }
 	UpdatePrompts(F, Frames > 0, bSimAdvanced);
+	UpdateMarks(F);   // lane A166 (track F2): the contested puck and the stop's distance, on the ice (HUDMarks.cpp)
 	UpdateCarrierCues(F);   // lane A163 (track F2): the take grace on the rings, the stick lock on the contact line (after UpdateYours placed the rings)
 }
 

@@ -332,6 +332,11 @@ struct JAMCORE_API FJamSkaterState
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 LungeLeft = 0;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 ChecksCooling = 0;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 LungesMissed = 0;
+	// Lane A165 (track F1, evolution 7) read-outs, never hashed, never read by the sim. bContactSlam: the hit ContactOutcome reports this frame was a board
+	// slam (game.contact.board_slam_frames above 0: the victim felled within BoardSlamRangeM of the boards by a hit closing along their normal at
+	// BoardSlamMinMps or more); bContactBoard and the `board` event go out with it. ContactSlams counts them on the victim (a match statistic).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bContactSlam = false;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 ContactSlams = 0;
 	// R-0029 point 3: the last frame this skater carried the puck (-1000 = never); a check within game.stick.foul_grace_frames of it is not a foul_no_puck.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int64 LastCarryFrame = -1000;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bTouchingPuck = false;
@@ -642,7 +647,8 @@ public:
 	bool TryLatePress(FJamSkaterState& S);
 	// Lane A157 (track F1, evolution 6): the push-out around a downed skater (game.contact.downed_radius_m above 0; CollideSkaters calls it for a pair of
 	// which exactly one is down, in place of the ordinary collision). Up, on its feet, is closer than Keep to Down's root: Up alone moves out along the line
-	// between them, at most DownedPushOutMps (a skater that was already inside when the other fell is eased out, not thrown); the speed Up had into the
+	// between them: at once as far as the two body circles (lane A165: the body itself is hard, as in the ordinary collision), and from there to Keep at
+	// DownedPushOutMps at most (a skater that was already inside when the other fell is eased out, not thrown); the speed Up had into the
 	// body, measured against Down's own slide, is turned along the body: Up keeps at least DownedSlideShare of its speed, on the side it was already
 	// passing (its facing decides a dead-centre course), so a skater steering into a downed man goes round him. Down's position and velocity are not
 	// written. Deterministic: arithmetic on the two states, in CollideSkaters' pair order.
@@ -653,6 +659,11 @@ public:
 	// at LungeSteerShare of its turn rate; a lunge that runs out on nobody costs LungeMissCost x lunge_step_mps of speed.
 	static constexpr double LungeSteerShare = 0.25;
 	static constexpr double LungeMissCost = 2.0;
+	// Lane A165 (track F1, evolution 7): the board slam (game.contact.board_slam_frames). Earned by a knockdown whose victim's centre is within
+	// BoardSlamRangeM of the boards (0.6 m of ice between its body and them) with the attacker closing on it along the boards' outward normal at
+	// BoardSlamMinMps or more. ResolveContact reads both.
+	static constexpr double BoardSlamRangeM = 1.0;
+	static constexpr double BoardSlamMinMps = 4.0;
 	static constexpr double LatePressRangeM = 0.7;
 	// The impulse a hit by Attacker on Victim along HitDir carries, in kg m/s: mass x max(0, closing speed along HitDir + lunge_mps (Body) or thrust_mps (Cross)).
 	double ContactImpulse(const FJamSkaterState& Attacker, const FJamSkaterState& Victim, const FVector2D& HitDir, EContactKind Kind) const;

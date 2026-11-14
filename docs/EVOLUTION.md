@@ -123,3 +123,27 @@ A152 (the poke), A154 (the ladder check), A153 item 1 (one stop distance). The o
 | Q1 lockstep | `a104` | idle (live cuts as protocol 9: not before the operator plays) | two physical machines with the operator |
 | D1 submission | `d1` | idle until the operator answers the fourteen questions | the page and the video's shot list after 10:00 |
 | Device B | `dev-b` | nine lanes (B-to-A-0040): three new figure sets, stands and crowd, effects, a critic (B-to-A-0041: answered in A-to-B-0025) | last push for the package by 06:30 |
+
+
+**Board at 06:00 (R-0062). Main ca493723 pushed (265 tests). Package H28 cut at 05:46 from c5dc15e5: acceptance green on the first try with the
+black-frame row; in a real window: the faceoff without the post, STICK LOCKED by hand, the menu on a clean profile, the Shipping zip unzipped fresh and
+played, the ice marks KEEP. H27 is dead (its PLAY NOW built the match twice: the wrong level, a black rink). The operator plays H28 at 10:00.**
+| Track | Worktree | Running now | Wanted by |
+|---|---|---|---|
+| S2 acceptance | `a108` | A155: the matrix on H28's modes, then its report (cursor owner until 07:15) | 07:15 |
+| F0 design eye | `f0b` | A169: REVIEW-3 on c5dc15e5: the play sheet line by line, the ranked ten | sheet verdict 08:15, top ten 09:15 |
+| C0 curve | `c0b` | A170: the hunt dial that puts pro at 48 without touching the stop (the brain lane's Press job), for both players of R-0060; the price of the switched-off set | `DIAL READY` 08:30 |
+| M1 modes | `m1b` | A173: the twelve modes re-measured on this main; Sniper, Arsenal, the good class | the table 07:30 |
+| U1 screen | `u1b` | A171: one down rule for the new marks, TOO SOON, the last overlaps, why the contested ring did not read | after 10:00 |
+| F3 arena | `f3c` | A172: the Glass House box in the camera's picture, B's lamp and cords, A's pieces against B's stands | after 10:00 |
+| Q3 performance | `q3b` | A175: the first match's start on a cold shader cache, a timed goal, the figure Blueprints' tick for B | after 10:00 |
+| S1 soak | `a107` | A174: a drift run, every stale cell re-taken on this main, the hour's soak | after 10:00 |
+| F1 contact | `f1b` | idle (A165 landed off): next: the hand that aims for the wall; the whole set on with the curve | the operator's word |
+| F2 carrier | `f2b` | idle (A166 landed on: the marks): next: the instrument obeys the stop mark; the pickup that settles with the curve | the operator's word |
+| Q2 brain | `q2b` | idle (A167 landed off): next: keep-out plus push-out on main; pro's presser on its job, then the hunt as the curve's dial (A170 measures it) | the operator's word |
+| S3 hardening | `a109` | idle (A159 landed): next: the double-build row from inside a match; a Shipping compile in the gate | |
+| U2 menu | `u2` | idle (A164 landed): next: every first-screen button clicked by the acceptance run; the no-dead-key rule on the other screens | |
+| Device B | `dev-b` | merged at 83c76776 (a46c8081); A-to-B-0025 and 0026 open | its answers |
+Switched off and measured, waiting for the operator: the push-out round a downed skater (+2.7 all_star), the check's cooldown with restart (free) and
+lunge (+2.5), the board slam, the half-second screen (+1.5 / +2.2 / -1.4), the stop's grace, the pickup that settles, the mates' keep-out, pro's
+presser on its job, the three's chaser.
