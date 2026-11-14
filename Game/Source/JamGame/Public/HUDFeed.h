@@ -69,6 +69,10 @@ struct JAMGAME_API FJamPresentationFrame
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Presentation")
 	FVector2D PuckM = FVector2D::ZeroVector;
 
+	// Lane A188: the pickups on the ice (rink metres) and their kind's colour, for the radar. Empty in a match without pickups.
+	TArray<FVector2D> PickupsM;
+	TArray<FLinearColor> PickupColours;
+
 	// Index into Skaters of the skater the camera follows (the human).
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Presentation")
 	int32 HumanIndex = 0;

@@ -71,8 +71,13 @@ H30 misbehaves. The Development twin with the drills and the console is `Game/Pa
 
 ## Controls
 
-Mouse aims the stick. **LMB** shoot (a tap is a flat shot, hold to lift). **RMB** check. **MMB** cross-check or lift. **Q** pass (hold for a saucer). **F** ability.
-**E** spin. **Wheel** deke. **Shift** sprint. **S against your motion** brake. **Space** poke. **Esc** pause, the Director's call after a goal.
+**New since noon (your order): the mouse buttons change with the puck.** Mouse aims the stick.
+**LMB**: with the puck: shoot (a tap is a flat shot, hold to lift); without it: cross-check (hold it and skate into a man: from the 15:30 package).
+**RMB**: with the puck: pass (hold for a saucer); without it: body check. A press keeps its meaning until you let go. A puck your own side has just
+passed counts as "with the puck" for LMB, so a one-timer is still one press.
+**Space** poke. **F** ability. **E** spin. **Wheel** deke. **Shift** sprint. **S against your motion** or **Ctrl** brake. **Esc** pause.
+Q and MMB still work as second keys. **Every verb can be rebound**: SETTINGS, CONTROLS: click a row, press the new key; a clash swaps the two.
+The pad: RT shoot / cross-check, RB pass / check, A poke, Y deke, B spin, R3 ability, LT sprint.
 The first screen: **Enter** or the pad's **A** plays one match at the level that is lit; left and right change the level; a click on a level picks it and
 Enter still plays.
 

@@ -497,6 +497,7 @@ void AHokejGameMode::BuildMatch()
 
 	// Lane A14 (C-0005): the effect system binds itself as the sim's modifier source and owns the pickups.
 	AJamPickupActor::DestroyAll(PickupActors);
+	AJamBoostAura::DestroyAll(BoostAuras);   // lane A188
 	Effects = NewObject<UJamEffectSystem>(this);
 	{
 		TArray<FString> EffectErrors;
@@ -789,6 +790,7 @@ void AHokejGameMode::RestartMatch()
 	Sim->Restart();
 	if (Effects) Effects->Restart();   // lane A14
 	AJamPickupActor::DestroyAll(PickupActors);
+	AJamBoostAura::DestroyAll(BoostAuras);   // lane A188
 	Brain->ResetBrain();
 	bResultReported = false;
 	Accumulator = 0.0;
@@ -932,13 +934,9 @@ FJamInput AHokejGameMode::ReadHumanInput()
 	const FVector2D Fwd(FMath::Cos(Yaw), FMath::Sin(Yaw));
 	const FVector2D Right(-FMath::Sin(Yaw), FMath::Cos(Yaw));
 	In.Move = MoveFwd * Axis.Y + MoveRight * Axis.X;
-	// C-0005 charged shot: the human sends the held level; the sim charges while the puck is in reach and fires on release (a tap = a short charge).
-	Pi->ConsumeShootPressed();
-	In.bShootHeld = Pi->IsShootHeld();
-	// Lane A77 (R-0036): the pass is a held level like the shot: the sim's StepPassCharge fires it on the release (a tap flat, a hold of pass.saucer.half_frames a saucer).
-	Pi->ConsumePassPressed();
-	In.bPassHeld = Pi->IsPassHeld();
-	In.bCheck = Pi->ConsumeCheckPressed();
+	// Lane A183 (R-0064 point 1): the two-role buttons, resolved by the sim's possession on this frame before the input is recorded: LMB / RT shoot with
+	// the puck (the held level, C-0005) and cross-check without (bLift, held = bCrossHold); RMB / RB pass with it (the held level, A77) and check without.
+	const FJamButtonVerbs Btn = JamControls::ApplyButtons(*Pi, *Sim, Sim->GetHumanIndex(), In);
 	In.bBrake = Pi->IsBrakeHeld();  // A5: Ctrl / gamepad B (FEEL.md proposal 6)
 	In.bSprint = Pi->IsSprintHeld();   // lane A49: Shift / LT
 	// R-0013 (lane A16) + lane A49: the stick. Right stick first (absolute, camera-relative like Move); then the cursor on the ice (the blade points at the cursor,
@@ -966,7 +964,7 @@ FJamInput AHokejGameMode::ReadHumanInput()
 	}
 	In.Stick = StickRink;
 	In.bPoke = Pi->ConsumePokePressed();
-	In.bLift = Pi->ConsumeLiftPressed();
+	Pi->ConsumeLiftPressed();   // lane A183: the cross-check comes from ApplyButtons above
 	In.bDeke = Pi->ConsumeDekePressed();   // lane A39 (R-0029 point 4): IA_Deke, wheel / gamepad Y (lane A84: Q went to the pass)
 	In.bSpin = Pi->ConsumeSpinPressed();   // lane A51 (R-0034): IA_Spin, E / gamepad B
 	In.bAbility = Pi->ConsumeAbilityPressed();   // lane A84 (R-0041 point 3): IA_Ability, F / gamepad R3
@@ -977,9 +975,13 @@ FJamInput AHokejGameMode::ReadHumanInput()
 		UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld stick=(%.3f,%.3f) src=%s move=(%.2f,%.2f) shoot=%d sprint=%d brake=%d"), Frame, In.Stick.X, In.Stick.Y, Src,
 			In.Move.X, In.Move.Y, In.bShootHeld ? 1 : 0, In.bSprint ? 1 : 0, In.bBrake ? 1 : 0);
 	}
-	if (In.bCheck) UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=check (right mouse / RB)"), Frame);
+	if (In.bCheck) UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=check (without the puck: %s)"), Frame, *UJamInputMap::VerbKeysText(EJamVerb::Check, false));
 	if (In.bPoke) UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=poke (space / A)"), Frame);
-	if (In.bLift) UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=lift (middle mouse, mouse 4 / LB)"), Frame);
+	if (In.bLift) UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=lift (the cross-check, without the puck: %s)"), Frame, *UJamInputMap::VerbKeysText(EJamVerb::CrossCheck, false));
+	{
+		static bool bLastCrossHeld = false;   // lane A183: the held cross-check's edges (the level A184's bCrossHold carries)
+		if (Btn.bCrossHeld != bLastCrossHeld) { bLastCrossHeld = Btn.bCrossHeld; UE_LOG(LogHokej, Log, TEXT("JAMCTRL frame=%lld btn=crosshold held=%d"), Frame, Btn.bCrossHeld ? 1 : 0); }
+	}
 	// Lane A85: the pass's release as the sim will see it this step (A82's JAMSHOT release for the pass): the hold's charge, the cooldown, the puck against the
 	// carrier's reach, and whom a flat pass and a saucer would go to. A hold that fires nothing says why here.
 	if (!In.bPassHeld && bLastPassHeld && Sim->GetSkaters().IsValidIndex(Sim->GetHumanIndex()))
@@ -1398,6 +1400,7 @@ void AHokejGameMode::DeliverEvents()
 		Pl.Dir = FVector(E.Dir.X, E.Dir.Y, 0.0);   // lane A47 (B-to-A-0029): rink (x, z) -> world (x, y), the same axes as ToWorld
 		Pl.Outcome = E.Outcome;   // lane A143: stumble / down on a landed check
 		Bus->Broadcast(E.Name, Pl);
+		if (E.Name == JamEvents::Goal) JamBoostLook::CelebrateGoal(Sim, Skaters, E.Who, E.Where);   // lane A188: device B's PlayCelebrate by name, inside the goal's pause
 	}
 	if (Effects)
 	{
@@ -1462,6 +1465,17 @@ void AHokejGameMode::PushPresentation()
 		F.Skaters.Add(Ps);
 	}
 	F.PuckM = Sim->GetPuck().Pos;
+	// Lane A188: the pickups on the ice for the radar, in their kind's colour.
+	F.PickupsM.Reset();
+	F.PickupColours.Reset();
+	if (Effects)
+	{
+		for (const FJamPickupOnIce& Pk : Effects->GetPickups())
+		{
+			F.PickupsM.Add(Pk.Pos);
+			F.PickupColours.Add(JamEffects::KindColour(FJamEffectsConfig::IsBuiltin(Pk.Kind) ? Pk.Kind : FName(TEXT("custom"))));
+		}
+	}
 	F.HumanIndex = Sim->GetHumanIndex();
 	if (Sim->GetSkaters().IsValidIndex(F.HumanIndex))
 	{
@@ -1471,14 +1485,22 @@ void AHokejGameMode::PushPresentation()
 		// Lane A84 (R-0041 point 3): the ability slot. The kind held (or the one still armed / running after its last charge), its state and the cooldown.
 		const FJamAbilityConfig* Ab = Sim->HeldAbility(H.Index);
 		const FName Kind = Ab ? Ab->Kind : (!H.AbilityArmed.IsNone() ? H.AbilityArmed : (H.ShieldFrames > 0 ? FName(TEXT("shield")) : NAME_None));
+		bool bPreviewLive = false;
+		const FName Preview = Kind.IsNone() ? AJamBoostAura::PreviewKind(bPreviewLive) : NAME_None;   // lane A188: proof only (jam.boost.Preview), empty by default
+		if (!Preview.IsNone())
+		{
+			F.HumanAbility = Preview.ToString().Replace(TEXT("_"), TEXT(" ")).ToUpper();
+			F.HumanAbilityState = !bPreviewLive ? FString(TEXT("READY  x3")) : Preview == FName(TEXT("shield")) ? FString(TEXT("ON 6.0s  x3")) : UJamHudWidget::AbilityArmedWord(Preview) + TEXT("  x3");
+			F.bHumanAbilityLive = bPreviewLive;
+		}
 		if (!Kind.IsNone())
 		{
 			F.HumanAbility = Kind.ToString().Replace(TEXT("_"), TEXT(" ")).ToUpper();
 			const int64 Now = Sim->GetFrame();
 			const int32 Cool = Ab ? (Ab->CooldownFrames > 0 ? Ab->CooldownFrames : UJamSim::AbilityDefaultCooldown(Kind)) : 1;
 			const int64 Left = FMath::Max<int64>(0, H.AbilityReadyFrame - Now);
-			if (H.ShieldFrames > 0) F.HumanAbilityState = FString::Printf(TEXT("SHIELD %.1fs"), H.ShieldFrames / 60.f);
-			else if (!H.AbilityArmed.IsNone()) F.HumanAbilityState = TEXT("ARMED");
+			if (H.ShieldFrames > 0) F.HumanAbilityState = FString::Printf(TEXT("ON %.1fs"), H.ShieldFrames / 60.f);   // lane A188: the plate read "SHIELD  SHIELD 4.2s"
+			else if (!H.AbilityArmed.IsNone()) F.HumanAbilityState = UJamHudWidget::AbilityArmedWord(H.AbilityArmed);   // lane A188: what fires it, not "ARMED"
 			else if (Left > 0) F.HumanAbilityState = FString::Printf(TEXT("%llds"), (Left + 59) / 60);
 			else F.HumanAbilityState = TEXT("READY");
 			if (H.AbilityCharges > 0) F.HumanAbilityState += FString::Printf(TEXT("  x%d"), H.AbilityCharges);
@@ -1609,7 +1631,16 @@ void AHokejGameMode::Tick(float DeltaSeconds)
 		if (Skaters.IsValidIndex(Carrier) && Skaters[Carrier] && Skaters[Carrier]->GetPuckSocketWorld(SocketCm)) Puck->ApplyRenderAt(SocketCm);
 		else Puck->ApplyRender(Sim->GetPuck(), Alpha);
 	}
-	AJamPickupActor::Sync(GetWorld(), Effects, PickupActors, static_cast<double>(Sim->GetFrame()) + Alpha);   // lane A14
+	{
+		// Lane A14; lane A188: the beacons stay low over the skaters and the puck, the held abilities are drawn on their skaters, and the probe measures.
+		TArray<FVector2D> KeepClear;
+		for (const FJamSkaterState& St : Sim->GetSkaters()) KeepClear.Add(St.Pos);
+		KeepClear.Add(Sim->GetPuck().Pos);
+		const double FrameF = static_cast<double>(Sim->GetFrame()) + Alpha;
+		AJamPickupActor::Sync(GetWorld(), Effects, PickupActors, FrameF, &KeepClear);
+		AJamBoostAura::Sync(GetWorld(), Sim, Skaters, BoostAuras, FrameF);
+		if (Sim->GetSkaters().IsValidIndex(Sim->GetHumanIndex())) AJamPickupActor::Probe(GetWorld()->GetFirstPlayerController(), PickupActors, Sim->GetSkaters()[Sim->GetHumanIndex()].Pos, Sim->GetFrame());
+	}
 	// Lane A73: the camera interpolates between its last two sim poses with this alpha; while the hit frame is held it sits on the hit frame's pose (alpha 1).
 	const bool bHeld = Sim->GetFrame() >= HitStopStartFrame && Sim->GetFrame() <= HitStopEndFrame;
 	if (UJamPresentation* Pres = UJamPresentation::Get(this)) Pres->SetRenderAlpha(bHeld ? 1.f : Alpha);

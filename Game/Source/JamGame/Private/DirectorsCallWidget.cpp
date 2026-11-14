@@ -1,4 +1,5 @@
 #include "DirectorsCallWidget.h"
+#include "InputMapping.h"
 #include "SettingsWidget.h"
 #include "Progression.h"
 #include "DirectorsCallController.h"
@@ -147,12 +148,7 @@ TSharedRef<SWidget> UJamDirectorsCallWidget::RebuildWidget()
 // Lane A144 (evolution 3): the pause card's controls table, the same bindings as UJamInputMap::BindingTableText in lines that fit the card.
 FString UJamDirectorsCallWidget::PauseControlsText()
 {
-	return FString(
-		TEXT("SKATE  WASD / L-STICK      AIM STICK  MOUSE / R-STICK      SHOOT  HOLD LMB / RT\n")
-		TEXT("CHECK  RMB / RB      CROSS-CHECK  MMB, MOUSE4 / LB      DEKE  WHEEL / Y\n")
-		TEXT("SPIN  E / B      SPRINT  SHIFT / LT      POKE  SPACE / A      PASS  Q / X\n")
-		TEXT("ABILITY  F / R3      SIGNALS  1-4 / D-PAD      RESTART  R / VIEW\n")
-		TEXT("BRAKE  REVERSE (W THEN S) OR CTRL / L-STICK CLICK      PAUSE  ESC / MENU"));
+	return UJamInputMap::PauseCardText();   // lane A183: the words from the live bindings
 }
 
 void UJamDirectorsCallWidget::BuildTree()

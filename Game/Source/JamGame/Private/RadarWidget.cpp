@@ -59,6 +59,15 @@ void UJamRadarWidget::BuildEntries(const FJamPresentationFrame& F, TArray<FJamRa
 	{
 		return FVector2D((M.X + L * 0.5f) / L * RadarWidthPx, (M.Y + Wd * 0.5f) / Wd * RadarHeightPx);
 	};
+	// Lane A188: the pickups first (drawn under the skaters): a 7 px square in the kind's colour.
+	for (int32 I = 0; I < F.PickupsM.Num(); ++I)
+	{
+		FJamRadarEntry E;
+		E.PosPx = ToPx(F.PickupsM[I]);
+		E.SizePx = 7.f;
+		E.Colour = F.PickupColours.IsValidIndex(I) ? F.PickupColours[I] : FLinearColor::White;
+		Out.Add(E);
+	}
 	for (int32 I = 0; I < F.Skaters.Num(); ++I)
 	{
 		const FJamPresentationSkater& S = F.Skaters[I];

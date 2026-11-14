@@ -38,7 +38,7 @@
 #include "InputModifiers.h"
 
 // Lane A84: the ability slot plate width (slate units at 1080p).
-static constexpr float AbilitySlotW = 380.f;
+static constexpr float AbilitySlotW = 440.f;   // lane A188: 380 clipped "x3" after "F: SHOTGUN  NEXT SHOT" in the stills
 
 int32 UJamHudWidget::FaceoffsThisSession = 0;
 bool UJamHudWidget::bControlsHintSpent = false;
@@ -852,13 +852,14 @@ void UJamHudWidget::RefreshFromFrame(const FJamPresentationFrame& F)
 		if (bShow)
 		{
 			const bool bReady = F.HumanAbilityReady01 >= 0.999f;
-			AbilityText->SetText(FText::FromString(FString::Printf(TEXT("F  %s  %s"), *F.HumanAbility, *F.HumanAbilityState)));
+			AbilityText->SetText(FText::FromString(AbilityPlateText(F.HumanAbility, F.HumanAbilityState)));   // lane A188: "F: SHOTGUN  READY", the key from the bindings
 			AbilityText->SetColorAndOpacity(FSlateColor(F.bHumanAbilityLive ? S::Yellow() : bReady ? S::Paper() : FLinearColor(0.6f, 0.6f, 0.6f, 1.f)));
 			AbilityFill->SetBrushColor(F.bHumanAbilityLive ? S::Yellow() : bReady ? S::Chalk() : FLinearColor(0.45f, 0.45f, 0.45f, 1.f));
 			if (UCanvasPanelSlot* FS = Cast<UCanvasPanelSlot>(AbilityFill->Slot)) FS->SetSize(FVector2D(FMath::Max(2.f, (AbilitySlotW - 20.f) * FMath::Clamp(F.HumanAbilityReady01, 0.f, 1.f)), 4.f));
 		}
 	}
 	TimerText->SetVisibility(F.bHasTimer ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+	UpdateGoalBanner(F);   // lane A188 (HUDGoalBanner.cpp): the GOAL banner
 
 	const FString Card = EndCardWord(F.Phase, F.ScoreHome, F.ScoreAway);   // ScoreHome is the player's side (AHokejGameMode fills it so)
 	CardTextBlock->SetText(FText::FromString(Card));

@@ -487,9 +487,10 @@ bool FJamMenuControlsComplete::RunTest(const FString&)
 	const FJamControlRow* Check = Row(TEXT("CHECK"));
 	TestTrue(TEXT("check: right mouse"), Check && Check->Keys.Contains(TEXT("right mouse")) && Map->IsKeyMapped(Map->Check, EKeys::RightMouseButton));
 	const FJamControlRow* Lift = Row(TEXT("CROSS-CHECK"));
-	TestTrue(TEXT("cross-check or lift: middle mouse"), Lift && Lift->Verb.Contains(TEXT("LIFT")) && Lift->Keys.Contains(TEXT("middle mouse")) && Map->IsKeyMapped(Map->Lift, EKeys::MiddleMouseButton));
+	// Lane A183 (R-0064 point 1): the cross-check is LMB without the puck, MMB and mouse 4 its second bindings; the pass is RMB with the puck, Q its second.
+	TestTrue(TEXT("cross-check: left mouse without the puck, middle mouse too"), Lift && Lift->Verb.Contains(TEXT("WITHOUT")) && Lift->Keys.Contains(TEXT("left mouse")) && Lift->Keys.Contains(TEXT("middle mouse")) && Map->IsKeyMapped(Map->Lift, EKeys::MiddleMouseButton));
 	const FJamControlRow* Pass = Row(TEXT("PASS"));
-	TestTrue(TEXT("pass: Q, held is a saucer"), Pass && Pass->Keys == TEXT("Q") && Pass->Note.Contains(TEXT("saucer")) && Map->IsKeyMapped(Map->Pass, EKeys::Q));
+	TestTrue(TEXT("pass: right mouse with the puck or Q, held is a saucer"), Pass && Pass->Keys.Contains(TEXT("right mouse")) && Pass->Keys.Contains(TEXT("Q")) && Pass->Note.Contains(TEXT("saucer")) && Map->IsKeyMapped(Map->Pass, EKeys::Q));
 	const FJamControlRow* Ability = Row(TEXT("ABILITY"));
 	TestTrue(TEXT("ability: F"), Ability && Ability->Keys == TEXT("F") && Map->IsKeyMapped(Map->Ability, EKeys::F));
 	const FJamControlRow* Spin = Row(TEXT("SPIN"));

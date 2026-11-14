@@ -586,7 +586,7 @@ bool FJamHudRules::RunTest(const FString&)
 	TestTrue(TEXT("the hint names the poke and its key"), UJamHudWidget::ControlsHintText().Contains(TEXT("POKE  SPACE")));
 	TestTrue(TEXT("the hint names the ability and its key"), UJamHudWidget::ControlsHintText().Contains(TEXT("ABILITY  F")));
 	TestTrue(TEXT("every verb of before is still in it"), UJamHudWidget::ControlsHintText().Contains(TEXT("SKATE  WASD")) && UJamHudWidget::ControlsHintText().Contains(TEXT("AIM  MOUSE"))
-		&& UJamHudWidget::ControlsHintText().Contains(TEXT("SHOOT  HOLD LMB")) && UJamHudWidget::ControlsHintText().Contains(TEXT("PASS  Q")) && UJamHudWidget::ControlsHintText().Contains(TEXT("CHECK  RMB"))
+		&& UJamHudWidget::ControlsHintText().Contains(TEXT("SHOOT / CROSS-CHECK  LMB")) && UJamHudWidget::ControlsHintText().Contains(TEXT("PASS / CHECK  RMB"))   // lane A183 (R-0064 point 1): the two-role buttons
 		&& UJamHudWidget::ControlsHintText().Contains(TEXT("SPRINT  SHIFT")));
 	TestTrue(TEXT("the hint is shorter than the ten-verb line (146 characters)"), UJamHudWidget::ControlsHintText().Len() < 146);
 	TestEqual(TEXT("the hint window is 8 s"), UJamHudWidget::ControlsHintFrames, static_cast<int64>(480));
@@ -1087,19 +1087,7 @@ bool FJamHudClearDown::RunTest(const FString&)
 	return true;
 }
 
-// ---- lane A168 (track U1): the black post at the faceoff. The upright marker in device B's puck disc is flat by default (jam.puck.Post 0); the proof
-// in the game is the JAMPUCK line and the disc's bounds in the JAMSCREEN nearpuck lines (jam.hud.NearPuck 1).
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamHudPuckPostFlat, "Jam.Hud.PuckPostFlat", EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
-bool FJamHudPuckPostFlat::RunTest(const FString&)
-{
-	IConsoleVariable* Post = IConsoleManager::Get().FindConsoleVariable(TEXT("jam.puck.Post"));
-	TestNotNull(TEXT("jam.puck.Post exists"), Post);
-	if (Post) TestEqual(TEXT("the puck disc's upright marker is flat by default"), Post->GetInt(), 0);
-	IConsoleVariable* Dump = IConsoleManager::Get().FindConsoleVariable(TEXT("jam.hud.NearPuck"));
-	TestNotNull(TEXT("jam.hud.NearPuck exists"), Dump);
-	if (Dump) TestEqual(TEXT("the proof's dump is off by default"), Dump->GetInt(), 0);
-	return true;
-}
+// ---- lane A168's Jam.Hud.PuckPostFlat went with jam.puck.Post (lane A188): device B's disc no longer carries the upright marker.
 
 // ---- lane A171 (track U1, evolution 6): TOO SOON, and the last overlaps. Pure rules and a staged sim, no world.
 //   Jam.Hud.TooSoon     the contact line's word for a press the check cooldown dropped, where it stands among the others, and on the sim with

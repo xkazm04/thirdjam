@@ -1,4 +1,13 @@
 #include "SettingsWidget.h"
+#include "InputMapping.h"
+#include "Components/Border.h"
+#include "Components/Overlay.h"
+#include "Components/OverlaySlot.h"
+#include "Components/Button.h"
+#include "Components/TextBlock.h"
+#include "Components/VerticalBox.h"
+#include "Blueprint/WidgetTree.h"
+#include "GameFramework/PlayerController.h"
 #include "MenuStyle.h"
 #include "LookTierSwitcher.h"
 #include "SignalSystem.h"
@@ -24,6 +33,7 @@ DEFINE_LOG_CATEGORY_STATIC(LogJamSettings, Log, All);
 // type and plates from FJamUiStyle. The settings themselves (load, save, apply) are lane A8's.
 
 const TCHAR* FJamSettings::Section = TEXT("Jam.Settings");
+const TCHAR* FJamSettings::ControlsSection = TEXT("Jam.Controls");   // lane A183
 
 namespace
 {
@@ -53,6 +63,8 @@ FJamSettings FJamSettings::FromSaved(const TMap<FString, FString>& Saved)
 	if (const FString* B = Saved.Find(TEXT("Barks"))) St.Barks = FMath::Clamp(FCString::Atoi(**B), -1, 1);
 	if (const FString* I = Saved.Find(TEXT("BarkIntensity"))) St.BarkIntensity = *I;
 	if (St.BarkIntensity != TEXT("quiet") && St.BarkIntensity != TEXT("normal") && St.BarkIntensity != TEXT("loud")) St.BarkIntensity.Empty();
+	// Lane A183: the bindings, "Controls.<verb>" -> "Keys|Pads".
+	for (const TPair<FString, FString>& P : Saved) if (P.Key.StartsWith(TEXT("Controls."))) St.Controls.Add(P.Key.Mid(9), P.Value);
 	return St;
 }
 
@@ -65,6 +77,7 @@ TMap<FString, FString> FJamSettings::ToSaved() const
 	Out.Add(TEXT("Volume"), FString::SanitizeFloat(Volume));
 	Out.Add(TEXT("Barks"), FString::FromInt(Barks));
 	Out.Add(TEXT("BarkIntensity"), BarkIntensity);
+	for (const TPair<FString, FString>& P : Controls) Out.Add(TEXT("Controls.") + P.Key, P.Value);   // lane A183
 	return Out;
 }
 
@@ -78,6 +91,13 @@ FJamSettings FJamSettings::Load()
 		FString Value;
 		if (GConfig->GetString(Section, Key, Value, GGameUserSettingsIni)) Saved.Add(Key, Value);
 	}
+	// Lane A183: the bindings' own section, one key per verb.
+	for (int32 I = 0; I < FJamBindings::NumVerbs; ++I)
+	{
+		FString Value;
+		const TCHAR* Id = FJamBindings::VerbId(static_cast<EJamVerb>(I));
+		if (GConfig->GetString(ControlsSection, Id, Value, GGameUserSettingsIni)) Saved.Add(FString(TEXT("Controls.")) + Id, Value);
+	}
 	return FromSaved(Saved);
 }
 
@@ -87,7 +107,12 @@ void FJamSettings::Save() const
 	if (GJamSettingsForTest.IsSet()) { GJamSettingsForTest = *this; return; }
 	if (!GConfig) return;
 	// Every key in one save and one flush: the level and its pick key never travel apart.
-	for (const TPair<FString, FString>& P : ToSaved()) GConfig->SetString(Section, *P.Key, *P.Value, GGameUserSettingsIni);
+	for (const TPair<FString, FString>& P : ToSaved())
+	{
+		// Lane A183: the bindings go to their own section, in the same save and flush.
+		if (P.Key.StartsWith(TEXT("Controls."))) GConfig->SetString(ControlsSection, *P.Key.Mid(9), *P.Value, GGameUserSettingsIni);
+		else GConfig->SetString(Section, *P.Key, *P.Value, GGameUserSettingsIni);
+	}
 	GConfig->Flush(false, GGameUserSettingsIni);
 	// Lane A164 (evolution 4): say whether this save reaches the disk. A process started with -Multiprocess (the gate, the off-screen stills, an
 	// uncooked `-game -Multiprocess` window) keeps it in memory only (the engine's ConfigContext / AreWritesAllowedGlobally), so a restart of such a
@@ -401,4 +426,314 @@ void UJamSettingsWidget::OnVolumeChanged(float V)
 	Settings.Apply();
 	Settings.Save();
 	VolumeText->SetText(FText::FromString(FString::Printf(TEXT("%d %%"), FMath::RoundToInt(Settings.Volume * 100.f))));
+}
+
+// ---------------------------------------------------------------- lane A183: the CONTROLS screen
+
+UJamControlsWidget* UJamSettingsWidget::MakeControlsScreen(UObject* Outer)
+{
+	if (UWidget* W = Cast<UWidget>(Outer)) return CreateWidget<UJamControlsWidget>(W, UJamControlsWidget::StaticClass());
+	if (APlayerController* PC = Cast<APlayerController>(Outer)) return CreateWidget<UJamControlsWidget>(PC, UJamControlsWidget::StaticClass());
+	if (UWorld* World = Cast<UWorld>(Outer)) return CreateWidget<UJamControlsWidget>(World, UJamControlsWidget::StaticClass());
+	if (UGameInstance* GI = Cast<UGameInstance>(Outer)) return CreateWidget<UJamControlsWidget>(GI, UJamControlsWidget::StaticClass());
+	if (Outer && Outer->GetWorld()) return CreateWidget<UJamControlsWidget>(Outer->GetWorld(), UJamControlsWidget::StaticClass());
+	return nullptr;
+}
+
+namespace
+{
+	// The rows in the order a player reads them (the two-role buttons first, as two rows each).
+	const EJamVerb GControlRowsOrder[] = { EJamVerb::Shoot, EJamVerb::CrossCheck, EJamVerb::Pass, EJamVerb::Check, EJamVerb::Poke, EJamVerb::Deke, EJamVerb::Spin,
+		EJamVerb::Ability, EJamVerb::Sprint, EJamVerb::Brake, EJamVerb::SkateForward, EJamVerb::SkateBack, EJamVerb::SkateLeft, EJamVerb::SkateRight, EJamVerb::Restart };
+
+	FString RowLabel(EJamVerb V)
+	{
+		switch (V)
+		{
+		case EJamVerb::Shoot: return TEXT("SHOOT (WITH THE PUCK)");
+		case EJamVerb::CrossCheck: return TEXT("CROSS-CHECK (WITHOUT)");
+		case EJamVerb::Pass: return TEXT("PASS (WITH THE PUCK)");
+		case EJamVerb::Check: return TEXT("CHECK (WITHOUT)");
+		default: return FJamBindings::VerbLabel(V);
+		}
+	}
+
+	bool IsSkate(EJamVerb V) { return V >= EJamVerb::SkateForward && V <= EJamVerb::SkateRight; }
+}
+
+TSharedRef<SWidget> UJamControlsWidget::RebuildWidget()
+{
+	BuildTree();
+	return Super::RebuildWidget();
+}
+
+void UJamControlsWidget::BuildTree()
+{
+	if (!WidgetTree) WidgetTree = NewObject<UWidgetTree>(this, TEXT("WidgetTree"), RF_Transient);
+	if (WidgetTree->RootWidget) return;
+	UWidgetTree* T = WidgetTree;
+	SetIsFocusable(true);
+
+	UOverlay* Root = T->ConstructWidget<UOverlay>(UOverlay::StaticClass(), TEXT("ControlsRoot"));
+	T->RootWidget = Root;
+	UVerticalBox* Box = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("ControlsRows"));
+	S::AddO(Root, Box);
+	AddV(Box, S::Section(T, TEXT("CONTROLS")), FMargin(0, 0, 0, 4));
+	UTextBlock* How = S::Text(T, TEXT("Click a key or a pad button, then press the new one. Esc cancels. Saved at once."), S::CaptionFont(), S::Muted());
+	How->SetWrapTextAt(820.f);
+	AddV(Box, How, FMargin(0, 0, 0, 6));
+	const float VerbW = 290.f, KeysW = 300.f, PadW = 200.f;
+	auto Fixed = [&](UHorizontalBox* Row, UWidget* W, float Width)
+	{
+		USizeBox* Size = T->ConstructWidget<USizeBox>(USizeBox::StaticClass());
+		Size->SetWidthOverride(Width);
+		Size->AddChild(W);
+		AddH(Row, Size, FMargin(0, 0, 8, 0), false, VAlign_Center);
+	};
+	{
+		UHorizontalBox* Head = T->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
+		Fixed(Head, S::Text(T, TEXT(""), S::CaptionFont(), S::Muted()), VerbW);
+		Fixed(Head, S::Text(T, TEXT("MOUSE AND KEYS"), S::CaptionFont(), S::Muted()), KeysW);
+		Fixed(Head, S::Text(T, TEXT("PAD"), S::CaptionFont(), S::Muted()), PadW);
+		AddV(Box, Head, FMargin(0, 0, 0, 2));
+	}
+	CellButtons.Init(nullptr, FJamBindings::NumVerbs * 2);
+	CellTexts.Init(nullptr, FJamBindings::NumVerbs * 2);
+	for (const EJamVerb V : GControlRowsOrder)
+	{
+		UHorizontalBox* Row = T->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
+		Fixed(Row, S::Text(T, RowLabel(V), S::Font(S::Body - 2, FName("Black")), S::Yellow()), VerbW);
+		for (int32 Pad = 0; Pad < 2; ++Pad)
+		{
+			const int32 Cell = static_cast<int32>(V) * 2 + Pad;
+			UTextBlock* Txt = nullptr;
+			UButton* B = Button(T, TEXT(""), S::Caption + 1, Txt);
+			FButtonStyle Tight = S::ButtonStyle();   // a row a line high: fifteen rows and the buttons inside the menu card
+			Tight.SetNormalPadding(FMargin(12, 2));
+			Tight.SetPressedPadding(FMargin(12, 3, 12, 1));
+			B->SetStyle(Tight);
+			B->SetIsEnabled(!(Pad == 1 && IsSkate(V)));   // the left stick skates: no pad cell for the four directions
+			CellButtons[Cell] = B;
+			CellTexts[Cell] = Txt;
+			// UButton's click carries no payload: the tick tells which cell was clicked (OnCellClicked).
+			Fixed(Row, B, Pad ? PadW : KeysW);
+		}
+		AddV(Box, Row, FMargin(0, 1));
+	}
+	StatusText = S::Text(T, TEXT(""), S::BodyFont(), S::Yellow());
+	StatusText->SetWrapTextAt(820.f);
+	AddV(Box, StatusText, FMargin(0, 6, 0, 0));
+	UHorizontalBox* Buttons = T->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
+	UTextBlock* RT = nullptr;
+	ResetButton = Button(T, TEXT("RESET TO DEFAULTS"), S::Body, RT);
+	ResetText = RT;
+	ResetButton->OnClicked.AddDynamic(this, &UJamControlsWidget::OnResetClicked);
+	AddH(Buttons, ResetButton, FMargin(0, 0, 12, 0));
+	UTextBlock* BT = nullptr;
+	BackButton = Button(T, TEXT("BACK"), S::Body, BT);
+	BackText = BT;
+	BackButton->OnClicked.AddDynamic(this, &UJamControlsWidget::OnBackClicked);
+	AddH(Buttons, BackButton, FMargin(0));
+	AddV(Box, Buttons, FMargin(0, 8, 0, 0), HAlign_Left);
+
+	// The veil while a cell listens: it covers the rows so the next mouse press reaches this widget, not a button under the cursor.
+	ListenVeil = S::Plate(T, FLinearColor(0.f, 0.f, 0.f, 0.55f), FMargin(0));
+	ListenVeil->SetVisibility(ESlateVisibility::Collapsed);
+	UTextBlock* Press = S::Text(T, TEXT("PRESS THE NEW KEY  -  ESC CANCELS"), S::Font(S::Body + 4, FName("Black"), 30), S::Yellow());
+	Press->SetJustification(ETextJustify::Center);
+	ListenVeil->SetHorizontalAlignment(HAlign_Center);
+	ListenVeil->SetVerticalAlignment(VAlign_Center);
+	ListenVeil->SetContent(Press);
+	S::AddO(Root, ListenVeil);
+	RefreshCells();
+}
+
+void UJamControlsWidget::Refresh()
+{
+	if (ListenVeil) ListenVeil->SetVisibility(ESlateVisibility::Collapsed);
+	ListenVerb = -1;
+	StatusLine.Reset();
+	RefreshCells();
+}
+
+FString UJamControlsWidget::CellText(EJamVerb Verb, bool bPad) const
+{
+	if (bPad && IsSkate(Verb)) return TEXT("LEFT STICK");
+	const FString T = UJamInputMap::VerbKeysText(Verb, bPad);
+	return T.IsEmpty() ? FString(TEXT("-")) : T;
+}
+
+void UJamControlsWidget::RefreshCells()
+{
+	for (int32 I = 0; I < CellTexts.Num(); ++I)
+	{
+		if (!CellTexts[I]) continue;
+		const EJamVerb V = static_cast<EJamVerb>(I / 2);
+		const bool bPad = (I % 2) == 1;
+		const bool bHere = ListenVerb == I / 2 && bListenPad == bPad;
+		CellTexts[I]->SetText(FText::FromString(bHere ? FString(TEXT("...")) : CellText(V, bPad)));
+	}
+	if (StatusText) StatusText->SetText(FText::FromString(StatusLine));
+}
+
+UWidget* UJamControlsWidget::GetFirstFocusable() const
+{
+	return CellButtons.IsValidIndex(0) ? CellButtons[0].Get() : nullptr;
+}
+
+TArray<UWidget*> UJamControlsWidget::GetFocusables() const
+{
+	TArray<UWidget*> Out;
+	for (const EJamVerb V : GControlRowsOrder)
+	{
+		for (int32 Pad = 0; Pad < 2; ++Pad)
+		{
+			const int32 Cell = static_cast<int32>(V) * 2 + Pad;
+			if (CellButtons.IsValidIndex(Cell) && CellButtons[Cell] && CellButtons[Cell]->GetIsEnabled()) Out.Add(CellButtons[Cell]);
+		}
+	}
+	Out.Add(ResetButton.Get());
+	Out.Add(BackButton.Get());
+	return Out;
+}
+
+void UJamControlsWidget::BeginListen(EJamVerb Verb, bool bPad)
+{
+	if (Verb >= EJamVerb::Count || (bPad && IsSkate(Verb))) return;
+	ListenVerb = static_cast<int32>(Verb);
+	bListenPad = bPad;
+	ListenGraceTicks = 2;
+	StatusLine = FString::Printf(TEXT("%s: press the new %s (Esc cancels)"), *RowLabel(Verb), bPad ? TEXT("pad button") : TEXT("key or mouse button"));
+	if (ListenVeil) ListenVeil->SetVisibility(ESlateVisibility::Visible);
+	SetKeyboardFocus();
+	RefreshCells();
+}
+
+bool UJamControlsWidget::HandleListenedKey(const FKey& InKey)
+{
+	if (ListenVerb < 0) return false;
+	FKey Key = InKey;
+	// The digital trigger events stand for the trigger axes the game binds.
+	if (Key == EKeys::Gamepad_RightTrigger) Key = EKeys::Gamepad_RightTriggerAxis;
+	if (Key == EKeys::Gamepad_LeftTrigger) Key = EKeys::Gamepad_LeftTriggerAxis;
+	const EJamVerb V = static_cast<EJamVerb>(ListenVerb);
+	auto Stop = [&](const FString& Line)
+	{
+		ListenVerb = -1;
+		StatusLine = Line;
+		if (ListenVeil) ListenVeil->SetVisibility(ESlateVisibility::Collapsed);
+		RefreshCells();
+		return true;
+	};
+	if (Key == EKeys::Escape || Key == EKeys::Gamepad_Special_Right) return Stop(TEXT("Cancelled: nothing changed."));
+	if (Key.IsGamepadKey() != bListenPad)
+	{
+		StatusLine = bListenPad ? TEXT("That is a key: press a pad button (Esc cancels).") : TEXT("That is a pad button: press a key or a mouse button (Esc cancels).");
+		RefreshCells();
+		return false;
+	}
+	if (FJamBindings::IsReserved(Key)) { StatusLine = FString::Printf(TEXT("%s is the game's own (pause, the aim, the signals): pick another."), *UJamInputMap::KeyName(Key)); RefreshCells(); return false; }
+	FJamBindings B = UJamInputMap::Get()->GetBindings();
+	EJamVerb Swapped = EJamVerb::Count;
+	if (!B.Rebind(V, Key, &Swapped)) return Stop(FString::Printf(TEXT("%s is already %s's."), *UJamInputMap::KeyName(Key), *RowLabel(V)));
+	SaveAndApply(B);
+	FString Line = FString::Printf(TEXT("%s is now on %s."), *RowLabel(V), *UJamInputMap::KeyName(Key));
+	if (Swapped != EJamVerb::Count)
+	{
+		const FJamVerbBinding& Was = UJamInputMap::Get()->GetBindings()[Swapped];
+		const TArray<FKey>& L = bListenPad ? Was.Pads : Was.Keys;
+		Line += FString::Printf(TEXT(" It was %s's: %s moved to %s."), *RowLabel(Swapped), *RowLabel(Swapped), L.Num() ? *UJamInputMap::KeyName(L[0]) : TEXT("no key (bind it again)"));
+	}
+	return Stop(Line);
+}
+
+void UJamControlsWidget::SaveAndApply(const FJamBindings& B)
+{
+	UJamInputMap::Get()->ApplyBindings(B);
+	FJamSettings St = FJamSettings::Load();
+	St.Controls = UJamInputMap::Get()->GetBindings().ToSaved();
+	St.Save();
+}
+
+void UJamControlsWidget::ResetToDefaults()
+{
+	ListenVerb = -1;
+	if (ListenVeil) ListenVeil->SetVisibility(ESlateVisibility::Collapsed);
+	SaveAndApply(FJamBindings::Defaults());
+	StatusLine = TEXT("Every control is back on its default.");
+	RefreshCells();
+}
+
+void UJamControlsWidget::OnResetClicked() { ResetToDefaults(); }
+
+void UJamControlsWidget::OnBackClicked()
+{
+	if (IsListening()) { HandleListenedKey(EKeys::Escape); return; }
+	OnBack.Broadcast();
+}
+
+void UJamControlsWidget::OnCellClicked(int32 Cell)
+{
+	BeginListen(static_cast<EJamVerb>(Cell / 2), (Cell % 2) == 1);
+}
+
+void UJamControlsWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+	Super::NativeTick(MyGeometry, InDeltaTime);
+	if (ListenGraceTicks > 0) --ListenGraceTicks;
+	// The cells' clicks: a UButton's OnClicked carries no index, so the tick asks which cell went from pressed to released (the press and release
+	// both inside the button: a click).
+	CellWasPressed.SetNum(CellButtons.Num());
+	for (int32 I = 0; I < CellButtons.Num(); ++I)
+	{
+		UButton* B = CellButtons[I];
+		if (!B) continue;
+		const bool bNow = B->IsPressed();
+		bool& bWas = CellWasPressed[I];
+		if (bWas && !bNow && B->IsHovered() && !IsListening()) OnCellClicked(I);
+		bWas = bNow;
+		S::Tint(B, CellTexts[I]);
+	}
+	S::Tint(ResetButton, ResetText);
+	S::Tint(BackButton, BackText);
+}
+
+FReply UJamControlsWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent)
+{
+	const FKey Key = InKeyEvent.GetKey();
+	if (IsListening())
+	{
+		HandleListenedKey(Key);
+		return FReply::Handled();
+	}
+	if (Key == EKeys::Escape || Key == EKeys::Gamepad_FaceButton_Right) { OnBack.Broadcast(); return FReply::Handled(); }
+	// The pad's A on a focused cell starts it listening.
+	if (Key == EKeys::Gamepad_FaceButton_Bottom || Key == EKeys::Enter)
+	{
+		for (int32 I = 0; I < CellButtons.Num(); ++I) if (CellButtons[I] && CellButtons[I]->HasAnyUserFocus()) { OnCellClicked(I); return FReply::Handled(); }
+	}
+	return Super::NativeOnKeyDown(InGeometry, InKeyEvent);
+}
+
+FReply UJamControlsWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	if (IsListening() && ListenGraceTicks <= 0) { HandleListenedKey(InMouseEvent.GetEffectingButton()); return FReply::Handled(); }
+	return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
+}
+
+FReply UJamControlsWidget::NativeOnMouseWheel(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	if (IsListening()) { HandleListenedKey(InMouseEvent.GetWheelDelta() > 0.f ? EKeys::MouseScrollUp : EKeys::MouseScrollDown); return FReply::Handled(); }
+	return Super::NativeOnMouseWheel(InGeometry, InMouseEvent);
+}
+
+FReply UJamControlsWidget::NativeOnAnalogValueChanged(const FGeometry& InGeometry, const FAnalogInputEvent& InAnalogEvent)
+{
+	const FKey Key = InAnalogEvent.GetKey();
+	if (IsListening() && bListenPad && (Key == EKeys::Gamepad_RightTriggerAxis || Key == EKeys::Gamepad_LeftTriggerAxis) && InAnalogEvent.GetAnalogValue() > 0.5f)
+	{
+		HandleListenedKey(Key);
+		return FReply::Handled();
+	}
+	return Super::NativeOnAnalogValueChanged(InGeometry, InAnalogEvent);
 }

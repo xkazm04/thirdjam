@@ -57,7 +57,8 @@ public:
 	static constexpr int64 ControlsHintFrames = 480;
 	// Lane A171 (REVIEW-3 item 8: "the first screen never told me Space exists"): the poke and the ability's key are in the strip: nine verbs, three
 	// spaces between them (it was four), 143 characters: under the 146 of the ten-verb line this strip's width and type were sized for.
-	static FString ControlsHintText() { return TEXT("SKATE  WASD   BRAKE  PRESS AGAINST YOUR MOTION   AIM  MOUSE   SHOOT  HOLD LMB   PASS  Q   POKE  SPACE   CHECK  RMB   ABILITY  F   SPRINT  SHIFT"); }
+	// Lane A183: from the live bindings (UJamInputMap::HintStripText; defined in InputMapping.cpp).
+	static FString ControlsHintText();
 	static bool IsControlsHintSpent() { return bControlsHintSpent; }
 	static void SetControlsHintSpent(bool bSpent) { bControlsHintSpent = bSpent; }   // tests and jam.ui.hintreset
 	// The live rule: the frame window, and not spent this session (bEveryMatch: the neutral value, the strip in every match).
@@ -744,4 +745,36 @@ private:
 	int32 DrawPreviewFrames = 0;
 	bool bLastDrawWon = false;
 	bool bCountdownSeen = false;
+
+	// ---- Lane A188 (track F3, evolution 8, R-0064 points 6 and 9; HUDGoalBanner.cpp): the GOAL banner and the ability plate's words.
+public:
+	// The banner's opacity Since frames into a goal pause of PauseFrames: in over GoalBannerInFrames, held, out over GoalBannerOutFrames ending
+	// GoalBannerLeadFrames before the pause ends (before the faceoff's countdown); 0 outside. A short pause shares its frames in thirds.
+	static constexpr int32 GoalBannerInFrames = 12;
+	static constexpr int32 GoalBannerOutFrames = 12;
+	static constexpr int32 GoalBannerLeadFrames = 6;
+	static float GoalBannerAlpha(int32 Since, int32 PauseFrames);
+	// The banner's band: its centre's height as a share of the screen (0.30, the middle band above the play), or 0.205 when the scorer's figure
+	// (ScorerTopY..ScorerFootY, shares of the screen) would be under the band at 0.30. ScorerTopY < 0 = no scorer on screen.
+	static float GoalBannerCentreY(float ScorerTopY, float ScorerFootY);
+	// "2 : 1", the scoring side's number first as the scoreboard reads (home : away).
+	static FString GoalBannerScore(int32 Home, int32 Away);
+	// The ability plate (lane A84's): "<key>: <KIND>  <state>", the key from the live bindings (UJamInputMap::BindingTableText's ABILITY row).
+	static FString AbilityPlateText(const FString& Kind, const FString& State);
+	static FString AbilityKeyName();
+	// What fires an armed ability: NEXT SHOT (shotgun), NEXT HIT (hip_check), NEXT PASS (slow_puck), else ARMED.
+	static FString AbilityArmedWord(FName Kind);
+	UFUNCTION(BlueprintPure, Category = "Jam|Hud") FString GetGoalBannerText() const;
+	UFUNCTION(BlueprintPure, Category = "Jam|Hud") float GetGoalBannerOpacity() const { return GoalBannerOpacity; }
+private:
+	void UpdateGoalBanner(const FJamPresentationFrame& Frame);
+	UPROPERTY(Transient) TObjectPtr<UBorder> GoalBannerPlate;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> GoalBannerWord;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> GoalBannerScoreText;
+	int64 GoalBannerStart = -1;      // the sim frame the goal pause began (-1: no banner)
+	int32 GoalBannerLastHome = -1;
+	int32 GoalBannerLastAway = -1;
+	int32 GoalBannerTeam = -1;       // 0 the human's side scored, 1 the other side
+	float GoalBannerY = 0.30f;
+	float GoalBannerOpacity = 0.f;
 };

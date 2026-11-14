@@ -1,4 +1,5 @@
 #include "MenuFlow.h"
+#include "InputMapping.h"
 #include "JamCartridge.h"
 #include "JamJson.h"
 #include "Progression.h"
@@ -433,37 +434,8 @@ FString UJamMenuFlow::CutCardLine(const FJamMenuCutRow& Row)
 
 const TArray<FJamControlRow>& UJamMenuFlow::ControlRows()
 {
-	// Kept by hand next to UJamInputMap::Build() (InputMapping.cpp); Jam.Menu.ControlsComplete fails when the two part ways.
-	static const TArray<FJamControlRow> Rows = {
-		{ TEXT("SKATE"), TEXT("W A S D or arrows"), TEXT("left stick"), TEXT("you glide: speed is built, not given"),
-			{ EKeys::W, EKeys::A, EKeys::S, EKeys::D, EKeys::Up, EKeys::Down, EKeys::Left, EKeys::Right, EKeys::Gamepad_Left2D } },
-		{ TEXT("AIM THE STICK"), TEXT("the mouse"), TEXT("right stick"), TEXT("the blade follows the cursor"),
-			{ EKeys::Mouse2D, EKeys::Gamepad_Right2D } },
-		{ TEXT("SHOOT"), TEXT("left mouse button"), TEXT("RT"), TEXT("a tap is a flat shot; hold to load it, let go to fire"),
-			{ EKeys::LeftMouseButton, EKeys::Gamepad_RightTriggerAxis } },
-		{ TEXT("CHECK"), TEXT("right mouse button"), TEXT("RB"), TEXT("the body check: come in fast or it is a bump"),
-			{ EKeys::RightMouseButton, EKeys::Gamepad_RightShoulder } },
-		{ TEXT("CROSS-CHECK / LIFT"), TEXT("middle mouse or mouse 4"), TEXT("LB"), TEXT("on top of the carrier: lift the puck off him"),
-			{ EKeys::MiddleMouseButton, EKeys::ThumbMouseButton, EKeys::Gamepad_LeftShoulder } },
-		{ TEXT("PASS"), TEXT("Q"), TEXT("X"), TEXT("a tap is a flat pass; held, it is a saucer over the sticks"),
-			{ EKeys::Q, EKeys::Gamepad_FaceButton_Left } },
-		{ TEXT("ABILITY"), TEXT("F"), TEXT("R3 (stick click)"), TEXT("the cut's trick or a pickup's, when the slot is lit"),
-			{ EKeys::F, EKeys::Gamepad_RightThumbstick } },
-		{ TEXT("SPIN"), TEXT("E"), TEXT("B"), TEXT("spin off a man who is on you"),
-			{ EKeys::E, EKeys::Gamepad_FaceButton_Right } },
-		{ TEXT("DEKE"), TEXT("mouse wheel"), TEXT("Y"), TEXT("the carrier's fake"),
-			{ EKeys::MouseScrollUp, EKeys::MouseScrollDown, EKeys::Gamepad_FaceButton_Top } },
-		{ TEXT("SPRINT"), TEXT("Shift"), TEXT("LT"), TEXT("while the legs last"),
-			{ EKeys::LeftShift, EKeys::Gamepad_LeftTriggerAxis } },
-		{ TEXT("BRAKE"), TEXT("S against your motion, or Ctrl"), TEXT("stick back, or L3"), TEXT("stop hard, then go: it beats a man who charges"),
-			{ EKeys::LeftControl, EKeys::Gamepad_LeftThumbstick } },
-		{ TEXT("POKE"), TEXT("Space"), TEXT("A"), TEXT("jab the puck loose"),
-			{ EKeys::SpaceBar, EKeys::Gamepad_FaceButton_Bottom } },
-		{ TEXT("SIGNALS"), TEXT("1 2 3 4"), TEXT("D-pad"), TEXT("a call to your mates"), {} },
-		{ TEXT("RESTART"), TEXT("R"), TEXT("View"), TEXT("the match again"),
-			{ EKeys::R, EKeys::Gamepad_Special_Left } },
-		{ TEXT("PAUSE"), TEXT("Esc"), TEXT("Start"), TEXT("the pause card and the Director's Call"),
-			{ EKeys::Escape, EKeys::Gamepad_Special_Right } },
-	};
+	// Lane A183: from the live bindings (UJamInputMap::ControlRowsFromBindings); Jam.Menu.ControlsComplete holds them against the mapping context.
+	static TArray<FJamControlRow> Rows;
+	Rows = UJamInputMap::ControlRowsFromBindings();
 	return Rows;
 }

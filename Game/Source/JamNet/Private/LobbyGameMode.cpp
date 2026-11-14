@@ -230,14 +230,9 @@ FJamInput ALobbyGameMode::ReadLocalInput()
 	}
 	else bBackYawHeld = false;
 	In.Move = FVector2D(FMath::Cos(MoveYaw), FMath::Sin(MoveYaw)) * Axis.Y + FVector2D(-FMath::Sin(MoveYaw), FMath::Cos(MoveYaw)) * Axis.X;
-	// C-0005 charged shot: the held level travels; the sim charges while the puck is in reach and fires on release.
-	Pi->ConsumeShootPressed();
-	In.bShootHeld = Pi->IsShootHeld();
-	// Lane A104: the pass is a held level as in AHokejGameMode::ReadHumanInput (lane A77, R-0036): the sim fires it on the release, a saucer on a long hold.
-	// Protocol 6 carried the level, but the lobby sent the press as the bPass edge: online, a human's pass was always flat and Q never made a saucer.
-	Pi->ConsumePassPressed();
-	In.bPassHeld = Pi->IsPassHeld();
-	In.bCheck = Pi->ConsumeCheckPressed();
+	// Lane A183 (R-0064 point 1): the two-role buttons as in AHokejGameMode::ReadHumanInput, resolved by this machine's sim on this frame before the input
+	// is sent: the wire and the lockstep see verbs only (shoot / pass held levels, the check and cross-check edges), so both peers step the same stream.
+	JamControls::ApplyButtons(*Pi, *GetSim(), LocalIndex, In);
 	In.bBrake = Pi->IsBrakeHeld();
 	// R-0013 + lane A49, as AHokejGameMode::ReadHumanInput: the right stick, then the cursor on the ice (the blade points at the cursor), then the mouse
 	// delta. Lane A110: before, online the stick followed the mouse delta only (CursorAimRink was private), so the guest's and the host's blade never sat
@@ -250,7 +245,7 @@ FJamInput ALobbyGameMode::ReadLocalInput()
 	if (bCursor) Pi->ResetMouseAim();
 	In.Stick = ComposeLocalStick(Pad, bCursor, CursorStick, bCursor ? FVector2D::ZeroVector : Pi->GetMouseAimPx(), GetSim()->GetConfig().Stick.MouseSensitivity, Yaw);
 	In.bPoke = Pi->ConsumePokePressed();
-	In.bLift = Pi->ConsumeLiftPressed();
+	Pi->ConsumeLiftPressed();   // lane A183: the cross-check comes from ApplyButtons above
 	In.bDeke = Pi->ConsumeDekePressed();   // lane A39 (R-0029 point 4)
 	In.bSprint = Pi->IsSprintHeld();        // R-0037 (A56 found them dead online): the sprint and the spin reach the lockstep driver
 	In.bSpin = Pi->ConsumeSpinPressed();
