@@ -746,6 +746,28 @@ bool FJamMovementNeutral::RunTest(const FString& Parameters)
 			TestNotEqual(TEXT("A128 defaults: the same match is another match"), B.Hash, N3.Hash);
 		}
 	}
+	// Lane A147 (track F2, evolution 4): its neutral block, written as a cartridge author would (game.skater.burst.rest_kept_mps 0), on today's game. The
+	// match is printed, not pinned (R-0053 point 5: no new pin on a default-profile match while the curve lane re-sets the levels): on main d4bb4da the default
+	// match of this seed was 4229 frames, 1:3, hash 7683cee2cf6589d1 (the full Jam filter of that commit), and this line read the same on the lane's final
+	// build (MOVEMENT-5.md section 5). JamBaseline::MakeNeutral carries the key's neutral for every older pin.
+	{
+		FString Raw = C->RawJson;
+		TestEqual(TEXT("one game.skater anchor for lane A147's neutral block"), Raw.ReplaceInline(TEXT("\"skater\": {"), TEXT("\"skater\": {\"burst\": {\"rest_kept_mps\": 0}, ")), 1);
+		TArray<FString> Errors;
+		UJamCartridge* E4 = UJamCartridge::LoadFromString(Raw, Errors);
+		for (const FString& E : Errors) AddError(FString::Printf(TEXT("lane A147's neutral block: %s"), *E));
+		TestEqual(TEXT("game.skater.burst.rest_kept_mps is 3 when the key is absent"), C->Game.Skater.BurstRestKeptMps, 3.0);
+		if (E4)
+		{
+			TestTrue(TEXT("A147 neutral: burst.rest_kept_mps 0, the rest of the burst object keeps its defaults"), E4->Game.Skater.BurstRestKeptMps == 0.0 && E4->Game.Skater.BurstRestFrames == C->Game.Skater.BurstRestFrames
+				&& E4->Game.Skater.BurstFrames == C->Game.Skater.BurstFrames && E4->Game.Skater.bBurstOwnStop == C->Game.Skater.bBurstOwnStop);
+			const FBot N4 = NetTrapMatch(*E4, TEXT("pro"), 15, 6000);
+			AddInfo(FString::Printf(TEXT("lane A147's neutral block, hockey.regular pro seed 15: %lld frames, %d:%d, hash %s (main d4bb4da's default match: 4229 frames, 1:3, 7683cee2cf6589d1)"), N4.Frames, N4.Score0, N4.Score1, *N4.Hash));
+			FJamGameConfig Base = C->Game;
+			JamBaseline::MakeNeutral(Base);
+			TestEqual(TEXT("A147: the shared baseline carries the key's neutral value"), Base.Skater.BurstRestKeptMps, 0.0);
+		}
+	}
 	return true;
 }
 

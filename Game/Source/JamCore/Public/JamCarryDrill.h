@@ -10,6 +10,8 @@
 // BrakeAtM 9.5 was the clean stop against a pro (lane A102): the brain does not leave its defender standing, it sends it at the carrier (11 m/s at contact), and
 // a stop begun at the brief's 5 m is run over in the middle of the brake (0 of 200). MOVEMENT-2.md section 3 has the share by where the stop begins. Since lane
 // A121 the window's centre is 8 m, and since lane A128 that is the drill's default (MOVEMENT-4.md).
+// Lane A147: the stop's distance is the level's (StopAtForLevel: pro and rookie 8 m, all_star 12 m), the drill says it in stick lengths (CoachLine), and a
+// carrier that is straight again with the defender still on its shoulder cuts back once more (SecondMove; MOVEMENT-5.md).
 // A carry ends Past (2 m beyond the defender along the attack with the puck, and still with it half a second later), or by how the puck was lost.
 // Header only; no state in the sim. docs/experiments/MOVEMENT-2.md.
 #pragma once
@@ -46,6 +48,24 @@ struct FJamCarryDrill
 	// A person is not a metronome: the seed moves the approach speed (+-0.5 m/s), the defender's distance (+-1 m) and offset across the line (+-1.5 m), the
 	// gap at which the stop begins (+-0.75 m), the cut's angle (+-10 degrees) and the frames before the go (0 to 4), each times Spread. 0 = the script exactly.
 	double Spread = 1.0;
+	// Lane A147 (track F2, evolution 4): the second move. A stop begun early (9.5 m) brings a pro that turns with the carrier and then rides 1.5 m behind
+	// its shoulder to the end boards (MOVEMENT-4.md section 8), or level with it on the goal side: a footrace the carrier cannot win in a straight line
+	// (law 4). The footrace is what triggers the second move: the carrier is going straight again, is not yet past (never 2 m beyond the defender), the
+	// defender is within SecondGapM, and over the last SecondWait frames the carrier gained less than SecondGainM on it along the attack.
+	// 1 = the cut back: SecondCutDeg off the line to the other side, at speed (the default: never worse than one move at any distance measured, and it
+	// frees the carrier a pro contains level on the goal side). 2 = it stops again first (pulls against its own velocity until slower than SecondStopMps).
+	// Measured and not the default: a pro on the shoulder brakes with the carrier and the second stop ends under its stick or its body (9.5 m: 96.0 % against
+	// 97.5 %; 10 m 87.5 against 96.5). 0 = one move only (the script of lanes A102 to A128). At most SecondMax answers a carry, each back the other way.
+	// SecondAfter > 0 is the first form that was measured and dropped (frames after the go, any phase; MOVEMENT-5.md section 1).
+	int32 SecondMove = 1;
+	int32 SecondWait = 30;
+	int32 SecondMax = 2;
+	int32 SecondAfter = 0;
+	double SecondGapM = 3.0;
+	double SecondGainM = 0.5;
+	double SecondLeadMinM = -100.0;
+	double SecondStopMps = 2.0;
+	double SecondCutDeg = 60.0;
 
 	// The scene and the run.
 	int32 Me = -1, Def = -1;
@@ -55,6 +75,8 @@ struct FJamCarryDrill
 	double Side = 0.0, CarryMag = 1.0, MinGapM = 1e9;
 	double LiveCarryMps = 9.0, LiveDefenderM = 12.0, LiveBrakeAtM = 9.5, LiveCutDeg = 60.0;   // the script's numbers with this seed's spread
 	int32 ReactFrames = 0, GoWait = -1;
+	int32 GoFrames = -1, SecondAt = -1, SecondCount = 0;   // lane A147: frames since the go (-1 before it); the frame the second move began (-1 = it did not); how many
+	double LeadRef = 0.0;                                   // lane A147: the carrier's lead along the attack SecondWait frames ago
 	FVector2D StickDir = FVector2D(1, 0);
 	bool bPoked = false, bLifted = false, bDown = false, bBodyBefore = false;
 
@@ -63,7 +85,7 @@ struct FJamCarryDrill
 	{
 		End = Running; Frames = Phase = PhaseFrames = 0; PastFrame = -1;
 		BrakeFrames = DefLifts = DefPokes = DefChecks = BodyShieldRefused = 0;
-		Side = 0.0; MinGapM = 1e9; GoWait = -1;
+		Side = 0.0; MinGapM = 1e9; GoWait = -1; GoFrames = -1; SecondAt = -1; SecondCount = 0; LeadRef = 0.0;
 		bPoked = bLifted = bDown = bBodyBefore = false;
 		Me = Sim.GetHumanIndex();
 		Def = -1;
@@ -103,7 +125,32 @@ struct FJamCarryDrill
 		D.bBrake = false;
 		D.BrakeAtM = AtM;
 		D.Answer = InAnswer;
+		D.SecondMove = 0;   // lane A147: the late answer is one move (its numbers are lane A128's and lane A138's)
 		return D;
+	}
+
+	// Lane A147 (track F2, evolution 4): the stop's window is the level's. Where the scripted stop begins against each level's defender (MOVEMENT-5.md
+	// section 2: pro creeps into its gap and the window's centre is 8 m; all_star commits at once with its first step and the window is 10 to 12 m (11 m 89 %, 12 m 100 %); rookie
+	// lets anything from 7 m out pass). Drill 21 script 1 takes its distance from here; jam.ctrl.CarryBrakeAtM overrides it.
+	static double StopAtForLevel(FName Level)
+	{
+		static const FName AllStar(TEXT("all_star")), Rookie(TEXT("rookie"));
+		return Level == AllStar ? 12.0 : Level == Rookie ? 8.0 : 8.0;
+	}
+	// The distance in words a player can use: stick lengths (ReachM = the body's centre to the blade at full reach, UJamSim::SkaterRadius + game.stick.reach_m: 1.6 m). 8 m = "FIVE", 12 m = "EIGHT" (7.5 rounds up).
+	static const TCHAR* StickLengthsWord(double AtM, double ReachM)
+	{
+		static const TCHAR* Words[13] = { TEXT("ONE"), TEXT("ONE"), TEXT("TWO"), TEXT("THREE"), TEXT("FOUR"), TEXT("FIVE"), TEXT("SIX"), TEXT("SEVEN"), TEXT("EIGHT"), TEXT("NINE"), TEXT("TEN"), TEXT("ELEVEN"), TEXT("TWELVE") };
+		return Words[FMath::Clamp(FMath::RoundToInt32(AtM / FMath::Max(ReachM, 0.1) + 1e-6), 1, 12)];
+	}
+	// The drill's on-screen line for a script (1 = the stop-and-go, 3 / 4 = the late answers, 0 = the straight charge, 2 = by hand: the stop's line).
+	static FString CoachLine(int32 Script, double AtM, double ReachM)
+	{
+		const TCHAR* N = StickLengthsWord(AtM, ReachM);
+		if (Script == 0) return TEXT("STRAIGHT AT HIM: THIS IS WHAT DOES NOT WORK");
+		if (Script == 3) return FString::Printf(TEXT("%s STICK LENGTHS AWAY: CUT AND SPIN, YOUR BACK TO HIS STICK"), N);
+		if (Script == 4) return FString::Printf(TEXT("%s STICK LENGTHS AWAY: CUT AND DEKE TO THE FAR SIDE"), N);
+		return FString::Printf(TEXT("STOP WHEN HE IS %s STICK LENGTHS AWAY. CUT. GO. STILL ON YOUR SHOULDER? CUT BACK"), N);
 	}
 
 	bool IsLive() const { return End == Running && Me >= 0 && Def >= 0; }
@@ -130,9 +177,30 @@ struct FJamCarryDrill
 				if (GoWait-- <= 0) { Phase = 2; PhaseFrames = 0; }
 			}
 			if (Phase == 2 && ((S.Pos.X - D.Pos.X) * Dir >= 1.0 || PhaseFrames >= 75)) { Phase = 3; PhaseFrames = 0; }
+			// Lane A147: the second move, once, when the first did not shake the defender: SecondAfter frames after the go it is still within SecondGapM
+			// and the carrier is not yet past (2 m beyond it along the attack). 4 = the second stop, 5 = the cut back, 6 = straight again.
+			if (GoFrames >= 0) ++GoFrames;
+			if (Phase == 2 && GoFrames < 0) GoFrames = 0;
+			if (Phase == 4 && (S.Vel.Size() <= SecondStopMps || PhaseFrames >= 45)) { Phase = 5; PhaseFrames = 0; }
+			if (Phase == 5 && ((S.Pos.X - D.Pos.X) * Dir >= 1.0 || PhaseFrames >= 60)) { Phase = 6; PhaseFrames = 0; }
+			const double Lead = (S.Pos.X - D.Pos.X) * Dir;
+			const bool bStraightAgain = Phase == 3 || Phase == 6;
+			bool bStuck = false;   // the footrace: straight again, and SecondWait frames brought less than SecondGainM
+			if (bStraightAgain && PhaseFrames == 0) LeadRef = Lead;
+			else if (bStraightAgain && SecondWait > 0 && PhaseFrames % SecondWait == 0) { bStuck = Lead - LeadRef < SecondGainM; LeadRef = Lead; }
+			const bool bFirstForm = SecondAfter > 0 && (Phase == 2 || Phase == 3) && GoFrames >= SecondAfter;
+			if (SecondMove != 0 && SecondCount < SecondMax && PastFrame < 0 && (SecondAfter > 0 ? bFirstForm : bStuck) && Gap <= SecondGapM && Lead < 2.0 && Lead >= SecondLeadMinM)
+			{
+				if (Phase == 6) Side = -Side;   // the next answer goes back the other way
+				Phase = SecondMove == 2 ? 4 : 5; PhaseFrames = 0; ++SecondCount;
+				if (SecondAt < 0) SecondAt = Frames;
+			}
+			const double Cut2Rad = FMath::DegreesToRadians(SecondCutDeg);
 			if (Phase == 1) { Move = FVector2D(-Dir, Side).GetSafeNormal(); ++BrakeFrames; }   // S and the side key
 			else if (Phase == 2) Move = FVector2D(Dir * FMath::Cos(CutRad), Side * FMath::Sin(CutRad));
-			else if (Phase == 3) Move = FVector2D(Dir, 0.0);
+			else if (Phase == 3 || Phase == 6) Move = FVector2D(Dir, 0.0);
+			else if (Phase == 4) { Move = S.Vel.SizeSquared() > 1e-6 ? -S.Vel.GetSafeNormal() : FVector2D(-Dir, 0.0); ++BrakeFrames; }   // against its own velocity: the reverse brake
+			else if (Phase == 5) Move = FVector2D(Dir * FMath::Cos(Cut2Rad), -Side * FMath::Sin(Cut2Rad));
 			if (Phase == 2 && PhaseFrames == 0) { In.bSpin = Answer == 1; In.bDeke = Answer == 2; }   // lane A121: the late answer goes with the cut
 			++PhaseFrames;
 			if (bStickAway && Phase >= 1 && Gap > 1e-6) StickTo = (S.Pos - D.Pos) / Gap;

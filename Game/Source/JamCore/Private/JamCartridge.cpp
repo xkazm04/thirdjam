@@ -1072,6 +1072,7 @@ namespace
 			ReadNumber(Bu, TEXT("accel_mult"), C.Skater.BurstAccelMult);
 			ReadBool(Bu, TEXT("own_stop"), C.Skater.bBurstOwnStop);   // lane A121 (track F2): the first step is earned by a stop or a cut of the skater's own
 			ReadInteger(Bu, TEXT("rest_frames"), C.Skater.BurstRestFrames);   // lane A128 (track F2): and by standing still (the standing start)
+			ReadNumber(Bu, TEXT("rest_kept_mps"), C.Skater.BurstRestKeptMps);   // lane A147 (track F2): a bump, a slide or a turn on the spot does not spend it
 		}
 		// R-0029 point 4 (lane A39): game.skater.breakaway { speed_bonus, frames }
 		if (const FJPtr Ba = Obj(Sk, TEXT("breakaway")))

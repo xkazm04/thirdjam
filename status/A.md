@@ -424,3 +424,4 @@
 - link green 01:39: main f3f5537 (A hard board hit is seen from the game camera, and a goal runs round the end's caps (A145,) pushed.
 - link green 01:40: main 22214a2 (A knockdown has a size on screen, and a drill films the vision's first law in one take (A1) pushed.
 - RESOURCES 01:41 cpu 97% ram 30.8/63GB editors 0 cmd 10 free 394GB
+- link green 01:46: main 87de2dc (The curve lane's second landing (A133): the soak-set test budget, its season and clay scri) pushed.

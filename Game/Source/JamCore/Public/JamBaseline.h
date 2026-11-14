@@ -38,6 +38,7 @@ namespace JamBaseline
 		G.Contact.ShoveBehindMatchMps = 0.0;      // lane A138 (track I1, R-0053 point 3): a push in the back at matched speed is a bump (a rule, no key; 0 = off)
 		G.Stick.bTakeGraceSameFrame = false;      // lane A138 (track I1): the take grace covers the frame the puck is won in (a rule, no key)
 		G.Contact.bPlaytesterClosingPress = false;   // lane A132 (track F1): the scripted human presses its check on closing speed (the instrument, no key; false = its own speed, as the pins were played)
+		G.Skater.BurstRestKeptMps = 0.0;          // lane A147 (track F2): game.skater.burst.rest_kept_mps (default 3)
 		// THE NEXT LANE: your rule's neutral value here, one line.
 	}
 

@@ -1176,6 +1176,7 @@ void UJamSim::StepSkater(FJamSkaterState& S, const FJamInput& In)
 {
 	const FJamSkaterConfig& C = Config.Skater;
 	const double OldYaw = S.Yaw;
+	const bool bLaidOut = S.IsDown() || S.IsStumbling();   // lane A147: as this frame began (the release below ends it)
 	// C-0005: per-skater effective stats (base values when no modifier touches them).
 	// R-0029 point 4 (lane A39): the breakaway burst lifts top speed and thrust by speed_bonus while it runs.
 	const double Burst = S.BreakawayFrames > 0 ? 1.0 + FMath::Max(0.0, Config.Skater.BreakawaySpeedBonus) : 1.0;
@@ -1224,7 +1225,10 @@ void UJamSim::StepSkater(FJamSkaterState& S, const FJamInput& In)
 		const bool bArmOwn = bCut || (S.Vel.SizeSquared() < BurstSlowSpeed * BurstSlowSpeed && (!C.bBurstOwnStop || S.bBurstEarned));
 		// Lane A128 (skater.burst.rest_frames): the standing start. A skater that has been at rest for rest_frames (RestFrames, counted below) has its burst
 		// armed while it stands; it runs from the frame the skater is no longer at rest. A skater creeping above the rest speed spends it.
-		const bool bRested = C.BurstRestFrames > 0 && S.RestFrames >= C.BurstRestFrames && S.Vel.SizeSquared() < BurstRestSpeed * BurstRestSpeed;
+		// Lane A147 (skater.burst.rest_kept_mps): a rested skater that something else moved (a bump, a slide on the ice) keeps its armed burst while it is
+		// slower than rest_kept_mps: the first step is lost to its own push only. 0 = the rest speed, lane A128's rule.
+		const double RestKept = C.BurstRestKeptMps > 0.0 ? FMath::Max(BurstRestSpeed, C.BurstRestKeptMps) : BurstRestSpeed;
+		const bool bRested = C.BurstRestFrames > 0 && S.RestFrames >= C.BurstRestFrames && S.Vel.SizeSquared() < RestKept * RestKept;
 		const bool bArm = bArmOwn || bRested;
 		if (bArmOwn) S.BurstLeft = C.BurstFrames;
 		else if (bRested) S.BurstLeft = FMath::Max(S.BurstLeft, C.BurstRestBurstFrames > 0 ? FMath::Min(C.BurstRestBurstFrames, C.BurstFrames) : C.BurstFrames);
@@ -1305,6 +1309,7 @@ void UJamSim::StepSkater(FJamSkaterState& S, const FJamInput& In)
 			FVector2D Side = S.Vel - Fwd * Along;
 			// A skater that is (nearly) still with its back to the input turns on the spot: a thrust along the facing would only be braked away next frame.
 			const bool bPivot = C.ReverseBrakeDecel > 0.0 && Mag > 0.05 && V < PivotSpeed && Dot(Move, Fwd) < ReverseBrakeDot * Mag;
+			if (bPivot && C.BurstRestKeptMps > 0.0) bThrust = false;   // lane A147: turning on the spot is not the push-off: the burst begins with the first frame of thrust
 			if (Mag > 0.05 && !In.bBrake && !bPivot && Along < Top)
 			{
 				Along = FMath::Min(Top, Along + Accel * Mag * DT);
@@ -1328,9 +1333,12 @@ void UJamSim::StepSkater(FJamSkaterState& S, const FJamInput& In)
 	if (C.BurstRestFrames > 0 && C.BurstFrames > 0)
 	{
 		const double V2 = S.Vel.SizeSquared();
-		const double Hold = FMath::Max(BurstRestSpeed, C.BurstRestHoldMps);
+		// Lane A147 (skater.burst.rest_kept_mps): the rest is kept up to rest_kept_mps while the skater does not push, and a skater that lies on the ice or
+		// is held by a stumble counts its rest whatever it slides at. 0 = lane A128's rule.
+		const double Hold = FMath::Max3(BurstRestSpeed, C.BurstRestHoldMps, C.BurstRestKeptMps);
 		const bool bPush = C.bBurstRestPushOff && bThrust;   // the push-off ends the rest: the burst is the first burst.frames of the push
-		if (V2 < BurstRestSpeed * BurstRestSpeed && !bPush) S.RestFrames = FMath::Min(S.RestFrames + 1, C.BurstRestFrames);
+		const bool bLaidRest = C.BurstRestKeptMps > 0.0 && bLaidOut;
+		if ((V2 < BurstRestSpeed * BurstRestSpeed || bLaidRest) && !bPush) S.RestFrames = FMath::Min(S.RestFrames + 1, C.BurstRestFrames);
 		else if (V2 >= Hold * Hold || bPush) S.RestFrames = 0;
 	}
 	else S.RestFrames = 0;

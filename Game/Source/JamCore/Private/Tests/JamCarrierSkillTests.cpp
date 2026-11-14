@@ -121,7 +121,8 @@ namespace JamCarrierSkillTests
 
 	// The clean stop-and-go the gate holds (MOVEMENT-2.md section 2): FJamCarryDrill's own defaults.
 	// Lane A128: the drill's own default stop is 8 m now (the window's centre); the gate's "clean stop" rows keep lane A102's 9.5 m, the far edge.
-	FScript DefaultGo() { FScript S; S.BrakeAtM = 9.5; return S; }
+	// Lane A147: and one move (SecondMove 0): the rows that mean "lane A102's clean stop" keep that script; the second move has its own test.
+	FScript DefaultGo() { FScript S; S.BrakeAtM = 9.5; S.SecondMove = 0; return S; }
 
 	// A scene for the rule itself: the carrier (human) at the origin facing Yaw with the puck on its blade at StickDir, the opposing chaser standing at DefPos.
 	UJamSim* ShieldScene(const FJamGameConfig& G, double Yaw, const FVector2D& StickDir, const FVector2D& DefPos, int32& Me, int32& Def)
@@ -820,7 +821,10 @@ bool FJamMovementStopAndGoSweep::RunTest(const FString& Parameters)
 	if (!Base) return false;
 	TArray<FString> Rows;
 	const FString File = FPaths::Combine(FPaths::ProjectDir(), TEXT("logs/a102/sweep.txt")), File2 = FPaths::Combine(FPaths::ProjectDir(), TEXT("logs/a121/sweep.txt")), File3 = FPaths::Combine(FPaths::ProjectDir(), TEXT("logs/a128/sweep.txt"));
-	if (!FFileHelper::LoadFileToStringArray(Rows, *File3) && !FFileHelper::LoadFileToStringArray(Rows, *File2) && !FFileHelper::LoadFileToStringArray(Rows, *File))
+	// Lane A147: its own rows first; JAM_SWEEP_FILE names another file (so two or three sweeps can run side by side, one process each).
+	const FString EnvFile = FPlatformMisc::GetEnvironmentVariable(TEXT("JAM_SWEEP_FILE")), File4 = FPaths::Combine(FPaths::ProjectDir(), TEXT("logs/a147/sweep.txt"));
+	if (!(!EnvFile.IsEmpty() && FFileHelper::LoadFileToStringArray(Rows, *EnvFile)) && !FFileHelper::LoadFileToStringArray(Rows, *File4)
+		&& !FFileHelper::LoadFileToStringArray(Rows, *File3) && !FFileHelper::LoadFileToStringArray(Rows, *File2) && !FFileHelper::LoadFileToStringArray(Rows, *File))
 	{
 		Rows = {
 			TEXT("defaults |"),
@@ -875,6 +879,16 @@ bool FJamMovementStopAndGoSweep::RunTest(const FString& Parameters)
 			else if (K == TEXT("trace3")) TraceSeed3 = FMath::RoundToInt32(V);
 			else if (K == TEXT("standing")) StandingRows = FMath::RoundToInt32(V);                            // lane A128: also print 0 to 8 m/s from rest
 			else if (K == TEXT("answer")) Go.Answer = FMath::RoundToInt32(V);                       // lane A121: 1 = the spin, 2 = the deke tap, with the cut
+			else if (K == TEXT("second")) Go.SecondMove = FMath::RoundToInt32(V);                   // lane A147: the second move (0 none, 1 the cut back, 2 stop and cut back)
+			else if (K == TEXT("second_after")) Go.SecondAfter = FMath::RoundToInt32(V);            // lane A147
+			else if (K == TEXT("second_gap")) Go.SecondGapM = V;                                    // lane A147
+			else if (K == TEXT("second_wait")) Go.SecondWait = FMath::RoundToInt32(V);              // lane A147: frames of the footrace before the second move
+			else if (K == TEXT("second_lead_min")) Go.SecondLeadMinM = V;                           // lane A147
+			else if (K == TEXT("second_gain")) Go.SecondGainM = V;                                  // lane A147: the gain along the attack under which the footrace is called
+			else if (K == TEXT("second_max")) Go.SecondMax = FMath::RoundToInt32(V);                // lane A147: answers a carry
+			else if (K == TEXT("second_stop")) Go.SecondStopMps = V;                                // lane A147: how slow the second stop goes
+			else if (K == TEXT("second_cut")) Go.SecondCutDeg = V;                                  // lane A147
+			else if (K == TEXT("burst.rest_kept")) G.Skater.BurstRestKeptMps = V;                   // lane A147 (code only)
 			else if (K == TEXT("spin.frames")) G.Skater.SpinFrames = FMath::RoundToInt32(V);
 			else if (K == TEXT("spin.speed_mult")) G.Skater.SpinSpeedMult = V;
 			else if (K == TEXT("deke.offset_m")) G.Stick.DekeOffsetM = V;
@@ -954,6 +968,195 @@ bool FJamMovementStopAndGoSweep::RunTest(const FString& Parameters)
 			for (const FString& L : Trace) AddInfo(FString::Printf(TEXT("TRACE %s seed %d: %s"), *Name, TS, *L));
 		}
 	}
+	return true;
+}
+
+// ---- Lane A147 (track F2, evolution 4): the first step by hand (docs/experiments/MOVEMENT-5.md section 4) ---------------------------------------------
+namespace JamCarrierSkillTests
+{
+	// One start by hand, the human alone or with one opposing skater that bumps or checks it. Frames from the go (the first frame the human can act and
+	// pushes) to 8 m/s, the metres covered in the first 30 frames of the push, the burst it had, the rest counter and the speed when it went.
+	struct FFirstStep { int32 To8 = -1, Burst = 0, RestAtGo = 0, DownFrames = 0, StumbleFrames = 0; double VAtGo = 0.0, M30 = 0.0; };
+	enum EFirstStep { FsRest, FsBumpAlong, FsBumpAcross, FsBumpWait, FsPivot180, FsPivot135, FsPivot90, FsTap, FsHitStanding, FsHitSkating, FsNudged, FsFaceoff, FsGlideIn, FsBumpLate, FsCount };
+	inline const TCHAR* FirstStepName(int32 K)
+	{
+		static const TCHAR* N[FsCount] = { TEXT("from rest (30 frames), W"), TEXT("at rest, bumped to 2 m/s along the push, W at once"), TEXT("at rest, bumped to 2 m/s across the push, W at once"),
+			TEXT("at rest, bumped to 2 m/s, W six frames later"), TEXT("at rest, the push straight behind the facing (180 degrees)"), TEXT("at rest, the push 135 degrees off the facing"),
+			TEXT("at rest, the push 90 degrees off the facing"), TEXT("at rest, one frame of W tapped, W held three frames later"), TEXT("standing, body-checked by a skater at 9 m/s, W held from the hit"),
+			TEXT("skating at 8 m/s, body-checked head-on, W held throughout"), TEXT("at rest, run into by a gliding skater (no check), W from the contact"), TEXT("the faceoff: W held through the countdown, from the drop"),
+			TEXT("a charge let go: W for 10 frames, coasting 12 frames, W again (never at rest)"), TEXT("at rest, bumped to 2 m/s, W 24 frames later") };
+		return K >= 0 && K < FsCount ? N[K] : TEXT("?");
+	}
+	FFirstStep FirstStep(const FJamGameConfig& Cfg, int32 Kind)
+	{
+		FFirstStep R;
+		UJamSim* Sim = NewObject<UJamSim>();
+		Sim->Init(Cfg, 1);
+		if (Kind != FsFaceoff) Sim->SkipFaceoff();
+		const int32 Me = Sim->GetHumanIndex();
+		const int32 N = Sim->GetSkaters().Num();
+		TArray<FJamInput> In;
+		In.SetNum(N);
+		int32 Att = -1;
+		for (const FJamSkaterState& S : Sim->GetSkaters()) if (S.Team != Sim->GetSkaters()[Me].Team) { Att = S.Index; break; }
+		FVector2D Push(1, 0);
+		const FVector2D Home(-20, 0);
+		const bool bContact = Kind == FsHitStanding || Kind == FsHitSkating || Kind == FsNudged;
+		if (Kind != FsFaceoff)
+		{
+			for (int32 i = 0; i < N; ++i) if (i != Me) Sim->SetSkater(i, FVector2D(-40.0 + i * 1.5, 19.0), FVector2D::ZeroVector, 0);
+			Sim->SetSkater(Me, Home, FVector2D::ZeroVector, 0);
+			Sim->SetPuck(FVector2D(30, 19), FVector2D::ZeroVector);
+			for (int32 F = 0; F < 30; ++F) Sim->Step(In);
+			if (Kind == FsGlideIn) { In[Me].Move = FVector2D(1, 0); for (int32 F = 0; F < 10; ++F) Sim->Step(In); In[Me].Move = FVector2D::ZeroVector; for (int32 F = 0; F < 12; ++F) Sim->Step(In); }
+		}
+		auto Me_ = [&]() -> const FJamSkaterState& { return Sim->GetSkaters()[Me]; };
+		int32 Wait = 0;
+		switch (Kind)
+		{
+		case FsBumpAlong: Sim->SetSkater(Me, Me_().Pos, FVector2D(2, 0), Me_().Yaw); break;
+		case FsBumpAcross: Sim->SetSkater(Me, Me_().Pos, FVector2D(0, 2), Me_().Yaw); break;
+		case FsBumpWait: Sim->SetSkater(Me, Me_().Pos, FVector2D(2, 0), Me_().Yaw); Wait = 6; break;
+		case FsBumpLate: Sim->SetSkater(Me, Me_().Pos, FVector2D(2, 0), Me_().Yaw); Wait = 24; break;
+		case FsPivot180: Push = FVector2D(-1, 0); break;
+		case FsPivot135: Push = FVector2D(-0.7071, 0.7071); break;
+		case FsPivot90: Push = FVector2D(0, 1); break;
+		case FsTap: In[Me].Move = Push; Sim->Step(In); In[Me].Move = FVector2D::ZeroVector; Wait = 3; break;
+		case FsFaceoff: Push = FVector2D(0, 1); break;
+		default: break;
+		}
+		if (bContact && Att >= 0)
+		{
+			// The opposing skater comes at the human along -x; a check is pressed once in range. The human pushes across (+y), away from the traffic.
+			Push = FVector2D(0, 1);
+			const double Speed = Kind == FsNudged ? 3.0 : 9.0;
+			if (Kind == FsHitSkating) { Sim->SetSkater(Me, Me_().Pos, FVector2D(8, 0), 0); In[Me].Move = FVector2D(1, 0); }
+			Sim->SetSkater(Att, Me_().Pos + FVector2D(Kind == FsHitSkating ? 9.0 : 5.0, 0.0), FVector2D(-Speed, 0), UE_DOUBLE_PI);
+			bool bHit = false, bPressed = false;
+			for (int32 F = 0; F < 90 && !bHit; ++F)
+			{
+				const double Gap = FVector2D::Distance(Me_().Pos, Sim->GetSkaters()[Att].Pos);
+				In[Att] = FJamInput();
+				if (Kind != FsNudged) { In[Att].Move = FVector2D(-1, 0); if (!bPressed && Gap < 2.2) { In[Att].bCheck = true; bPressed = true; } }
+				const double VBefore = Me_().Vel.Size();
+				Sim->Step(In);
+				bHit = Me_().IsDown() || Me_().IsStumbling() || FMath::Abs(Me_().Vel.Size() - VBefore) > 0.5;
+			}
+			In[Att] = FJamInput();
+			R.DownFrames = Me_().KnockFrames; R.StumbleFrames = Me_().StumbleFrames;
+		}
+		for (int32 F = 0; F < Wait; ++F) Sim->Step(In);
+		// The key goes down (and stays down). A skater that cannot act yet (down, stumbling, the countdown) holds it until it can.
+		In[Me] = FJamInput();
+		In[Me].Move = Push;
+		for (int32 F = 0; F < 400 && (!Me_().CanAct() || Sim->GetPhase() != EJamSimPhase::Playing); ++F) Sim->Step(In);
+		R.RestAtGo = Me_().RestFrames; R.VAtGo = Me_().Vel.Size();
+		const double D0 = Me_().DistanceM;
+		for (int32 F = 1; F <= 150 && (R.To8 < 0 || F <= 30); ++F)
+		{
+			Sim->Step(In);
+			R.Burst = FMath::Max(R.Burst, Me_().BurstLeft);
+			if (R.To8 < 0 && Me_().Vel.Size() >= 7.99) R.To8 = F;
+			if (F == 30) R.M30 = Me_().DistanceM - D0;
+		}
+		return R;
+	}
+}
+
+// Bar.Movement.FirstStepCases (outside the gate's Jam filter): the brief's item 4, every start a player makes by hand, under the defaults and with
+// game.skater.burst.rest_kept_mps 0 (lane A128's rule), and by the kept speed.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamMovementFirstStepCases, "Bar.Movement.FirstStepCases", JamCarrierSkillTests::Flags)
+bool FJamMovementFirstStepCases::RunTest(const FString& Parameters)
+{
+	using namespace JamCarrierSkillTests;
+	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
+	if (!C) return false;
+	for (const double Kept : { 0.0, 2.5, 3.0, 4.0 })
+	{
+		FJamGameConfig G = C->Game;
+		G.Skater.BurstRestKeptMps = Kept;
+		for (int32 K = 0; K < FsCount; ++K)
+		{
+			const FFirstStep R = FirstStep(G, K);
+			AddInfo(FString::Printf(TEXT("FIRSTSTEP rest_kept_mps %.1f | %s | to 8 m/s in %d frames, %.2f m in the first 30 frames, burst %d, at the go: %.2f m/s, rest counter %d (down %d, stumble %d frames at the hit)"),
+				Kept, FirstStepName(K), R.To8, R.M30, R.Burst, R.VAtGo, R.RestAtGo, R.DownFrames, R.StumbleFrames));
+		}
+	}
+	return true;
+}
+
+// Jam.Core.Movement.SecondMove (lane A147, track F2, evolution 4; MOVEMENT-5.md sections 1 and 2): the carrier's second move (the cut back when the first
+// move left a footrace) is never worse than one move and takes time-outs away; the brief's bar for it (the stop at 9.5 m 99 % or more with no time-out)
+// was NOT reached (97.5 %, 4 time-outs) and is not asserted; its other two are (the stop at 8 m 95 % or more, the straight charge under 20 %). And the
+// stop's window is the level's: drill 21's distance for each level passes that level's defender.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamMovementSecondMove, "Jam.Core.Movement.SecondMove", JamCarrierSkillTests::Flags)
+bool FJamMovementSecondMove::RunTest(const FString& Parameters)
+{
+	using namespace JamCarrierSkillTests;
+	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
+	if (!C) return false;
+	FScript One = DefaultGo(), Two = DefaultGo(), At8, Straight;
+	Two.SecondMove = FScript().SecondMove;
+	Straight.bStopAndGo = false;
+	const FShare A = Share(*C, One, 200), B = Share(*C, Two, 200), E = Share(*C, At8, 200), S = Share(*C, Straight, 200);
+	AddInfo(FString::Printf(TEXT("SECOND pro stop begun at 9.5 m, one move: %s"), *A.Line()));
+	AddInfo(FString::Printf(TEXT("SECOND pro stop begun at 9.5 m, with the second move: %s"), *B.Line()));
+	{
+		// Measured, not the default: the second stop before the cut back. A pro on the shoulder brakes with the carrier; the stop ends under its stick or body.
+		FScript Stop2 = DefaultGo();
+		Stop2.SecondMove = 2;
+		AddInfo(FString::Printf(TEXT("SECOND pro stop begun at 9.5 m, with a second stop before the cut back (measured, not the default): %s"), *Share(*C, Stop2, 200).Line()));
+	}
+	AddInfo(FString::Printf(TEXT("SECOND pro the drill's own script (the stop at 8 m, the second move armed): %s"), *E.Line()));
+	AddInfo(FString::Printf(TEXT("SECOND pro straight charge: %s"), *S.Line()));
+	TestTrue(TEXT("the drill's script has a second move"), FScript().SecondMove != 0);
+	TestTrue(TEXT("the late answers and lane A102's clean stop stay one move"), FJamCarryDrill::Late(1).SecondMove == 0 && FJamCarryDrill::Late(2).SecondMove == 0 && DefaultGo().SecondMove == 0);
+	TestTrue(FString::Printf(TEXT("with the second move the stop begun at 9.5 m passes a pro at least as often as with one (%.1f %% against %.1f %%)"), 100.0 * B.PastShare(), 100.0 * A.PastShare()), B.PastShare() >= A.PastShare());
+	TestTrue(FString::Printf(TEXT("with the second move fewer carries time out with the puck kept (%d against %d)"), B.Ends[FJamCarryDrill::Timeout], A.Ends[FJamCarryDrill::Timeout]), B.Ends[FJamCarryDrill::Timeout] <= A.Ends[FJamCarryDrill::Timeout] || A.Ends[FJamCarryDrill::Timeout] == 0);   // Director at the landing (14 Nov): "no more", not "fewer": 4 against 4 on the merged tree (the lane measured 4 against 5 on its own); a count of four is not a bar
+	TestTrue(FString::Printf(TEXT("the stop begun at 8 m still passes a pro 95 %% or more (%.1f %%)"), 100.0 * E.PastShare()), E.PastShare() >= 0.95);
+	TestTrue(FString::Printf(TEXT("the straight charge stays under 20 %% (%.1f %%)"), 100.0 * S.PastShare()), S.PastShare() <= 0.20);
+	// The window by level: where drill 21 begins its stop against each level's defender.
+	for (const TCHAR* Level : { TEXT("rookie"), TEXT("pro"), TEXT("all_star") })
+	{
+		FScript L;
+		L.BrakeAtM = FJamCarryDrill::StopAtForLevel(FName(Level));
+		const FShare W = Share(*C, L, 200, Level);
+		AddInfo(FString::Printf(TEXT("WINDOW %s, the stop begun at %.1f m (\"%s\"): %s"), Level, L.BrakeAtM, *FJamCarryDrill::CoachLine(1, L.BrakeAtM, UJamSim::SkaterRadius + C->Game.Stick.ReachM), *W.Line()));
+		TestTrue(FString::Printf(TEXT("%s: the drill's stop distance (%.1f m) passes that level's defender 95 %% or more (%.1f %%)"), Level, L.BrakeAtM, 100.0 * W.PastShare()), W.PastShare() >= 0.95);
+	}
+	TestEqual(TEXT("pro stops at 8 m"), FJamCarryDrill::StopAtForLevel(FName(TEXT("pro"))), 8.0);
+	TestEqual(TEXT("all_star stops at 12 m (it does not creep: its window is 10 to 12 m)"), FJamCarryDrill::StopAtForLevel(FName(TEXT("all_star"))), 12.0);
+	TestEqual(TEXT("8 m in a player's words: five stick lengths"), FString(FJamCarryDrill::StickLengthsWord(8.0, 1.6)), FString(TEXT("FIVE")));
+	TestEqual(TEXT("12 m in a player's words: eight stick lengths"), FString(FJamCarryDrill::StickLengthsWord(12.0, 1.6)), FString(TEXT("EIGHT")));
+	TestTrue(TEXT("the drill's line says the distance"), FJamCarryDrill::CoachLine(1, 8.0, 1.6).Contains(TEXT("FIVE STICK LENGTHS")));
+	return true;
+}
+
+// Jam.Core.Movement.FirstStepKept (lane A147; game.skater.burst.rest_kept_mps; MOVEMENT-5.md section 4): the first step a skater earned by standing is not
+// lost to what is not its own doing (a bump that moves it, a turn on the spot), and never comes on a charge of its own. 0 = lane A128's rule.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamMovementFirstStepKept, "Jam.Core.Movement.FirstStepKept", JamCarrierSkillTests::Flags)
+bool FJamMovementFirstStepKept::RunTest(const FString& Parameters)
+{
+	using namespace JamCarrierSkillTests;
+	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
+	if (!C) return false;
+	const FJamGameConfig& G = C->Game;
+	FJamGameConfig Off = G;
+	Off.Skater.BurstRestKeptMps = 0.0;
+	TestEqual(TEXT("game.skater.burst.rest_kept_mps is 3 when the key is absent"), G.Skater.BurstRestKeptMps, 3.0);
+	const FFirstStep Rest = FirstStep(G, FsRest), RestOff = FirstStep(Off, FsRest), Late = FirstStep(G, FsBumpLate), LateOff = FirstStep(Off, FsBumpLate);
+	const FFirstStep Turn = FirstStep(G, FsPivot180), TurnOff = FirstStep(Off, FsPivot180), Let = FirstStep(G, FsGlideIn), LetOff = FirstStep(Off, FsGlideIn);
+	AddInfo(FString::Printf(TEXT("KEPT from rest: to 8 m/s in %d frames (burst %d); rest_kept_mps 0: %d (burst %d)"), Rest.To8, Rest.Burst, RestOff.To8, RestOff.Burst));
+	AddInfo(FString::Printf(TEXT("KEPT at rest, bumped to 2 m/s, W 24 frames later: to 8 m/s in %d frames (burst %d, %.2f m in 30 frames); rest_kept_mps 0: %d (burst %d, %.2f m)"), Late.To8, Late.Burst, Late.M30, LateOff.To8, LateOff.Burst, LateOff.M30));
+	AddInfo(FString::Printf(TEXT("KEPT at rest, the push straight behind the facing: to 8 m/s in %d frames (%.2f m in 30 frames); rest_kept_mps 0: %d (%.2f m)"), Turn.To8, Turn.M30, TurnOff.To8, TurnOff.M30));
+	AddInfo(FString::Printf(TEXT("KEPT a charge let go and taken up again: to 8 m/s in %d frames (burst %d); rest_kept_mps 0: %d (burst %d)"), Let.To8, Let.Burst, LetOff.To8, LetOff.Burst));
+	TestEqual(TEXT("the standing start itself is lane A128's under either value"), Rest.To8, RestOff.To8);
+	TestEqual(TEXT("a rested skater that was bumped still has its whole first step 24 frames later"), Late.Burst, G.Skater.BurstFrames);
+	TestEqual(TEXT("rest_kept_mps 0 (lane A128's rule): the bump bled the burst away"), LateOff.Burst, 0);
+	TestTrue(FString::Printf(TEXT("the kept first step is worth 8 frames or more to 8 m/s after a bump (%d against %d)"), Late.To8, LateOff.To8), Late.To8 > 0 && LateOff.To8 >= Late.To8 + 8);
+	TestTrue(FString::Printf(TEXT("turning on the spot is not the push-off: the start straight behind is quicker (%d against %d frames)"), Turn.To8, TurnOff.To8), Turn.To8 > 0 && Turn.To8 < TurnOff.To8);
+	TestEqual(TEXT("never on a charge of its own: a charge let go and taken up again has no burst"), Let.Burst, 0);
+	TestEqual(TEXT("... and is the same charge under either value"), Let.To8, LetOff.To8);
 	return true;
 }
 

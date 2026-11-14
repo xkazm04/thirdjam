@@ -653,3 +653,18 @@ at 29.6 % (3.6 over, inside the bar): the numbers are saturated; it is the brain
 before every push**, not only by the release chain: twice now a test written below its file's automation guard passed every gate and stopped a release at
 its first step (H26 on Friday, H27 tonight). The landing chain gains the step; until it has it, the Director scans for tests outside a guard at each
 landing.
+
+## R-0058 (H26, 2026-11-14 01:47): one stop distance for every level; landings run one at a time
+(1) Lane A134 found why all_star's stop-and-go window sat at 10 to 12 m: the hunt takes every bot inside its radius off its job, the presser included, so
+at all_star (hunt 30 m) the presser charges from far out where at pro (hunt 8 m) it closes under control. Keeping the presser on its job inside the hunt
+(`opp.hk_press_in_hunt`) makes the stop at 8 m pass 100 % at all_star for one point of the cell. **Ruled: all_star's presser stays on its job** (one line in
+all_star's profile), so the game teaches one distance at every level: **stop when he is 8 m away, five stick lengths**; the carry drill's all_star distance
+goes back to 8 m (lane A147 set 12 m for the game as it was) and R-0055 point 2's "all_star's window is 10 to 12 m" is replaced: the bar at all_star is the
+stop at 8 m at 80 % or more, as at pro. The switch stays off at pro (it breaks pro's drill: the Press job's gap there is the brain track's later work). The
+brain lane's fourth evolution does it, with all_star's cells on both rinks at 600 and law 3 at both levels. (2) On big ice the human's side now checks the
+carrier and the back steps up (39.2 % to 32.0 % of matches with a 30 s stretch without the puck at pro; the bar stays 25 %): landed for teams under five;
+the mates' check at five a side stays off (all_star +6.2) until the curve is next re-set. (3) **One landing or release in the main checkout at a time**:
+at 01:30 two landings overlapped (a queue read a stale "exited" line in the file it watched) and one commit swept in another lane's patch before its gate;
+the next gate ran on the combined tree and was green (220 tests), so nothing untested was pushed; the landing and release scripts now hold a lock, and a
+queue waits on the lock, never on another task's output. (4) Exports leave `contracts/` and `docs/PLAY-ME.md` out (the Director's copies travelled in a
+lane's patch and collided with main).

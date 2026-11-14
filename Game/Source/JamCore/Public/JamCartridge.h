@@ -106,6 +106,11 @@ struct JAMCORE_API FJamSkaterConfig
 	// Not a cartridge key (lane A128, sweeps 1 and 2): true = the rest ends with the push-off (the first frame the skater thrusts), so the burst is the first
 	// burst.frames of the push; false = the rest ends at the hold speed (a skater creeping under it keeps the burst armed).
 	bool bBurstRestPushOff = true;
+	// game.skater.burst.rest_kept_mps (lane A147, track F2 evolution 4): the first step a skater has earned by standing is not lost to what is not its own
+	// doing. While it does not push and is slower than this, a rested skater keeps its rest and its armed burst (a bump that moves it, a shove); a skater
+	// lying on the ice or held by a stumble counts its rest whatever it slides at (so it gets up with its first step); and turning on the spot is not the
+	// push-off (the burst begins with the first frame of thrust). 0 = the neutral value: lane A128's rule as it was (the rest is lost at 1 m/s).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double BurstRestKeptMps = 3.0;
 	// R-0035 (lane A52): game.skater.goalie { reach_m, block_height_m }: a skater in the crease stance saves a loose shot under block_height_m that passes
 	// within reach_m of it (the human included); a higher puck passes. reach_m 0 = no save by height (the body and the blade stop pucks as before).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double GoalieReachM = 0.9;

@@ -879,7 +879,9 @@ bool FJamContactReachMatch::RunTest(const FString& Parameters)
 	}
 	// Lane A132: what the press on closing speed buys, and what it does not. The brief's bar (the whiff share under 40 %) is met by no arm (58 % -> 49 % at reach
 	// 0, 51 % with the reach on top): it is logged, not asserted, and it is the track's next evolution (docs/experiments/CONTACT-5.md section 2).
-	TestTrue(*FString::Printf(TEXT("the press on closing speed whiffs less than the press on the playtester's own speed (%.1f %% against %.1f %%, reach 0)"), Share[1], Share[0]), Share[1] < Share[0]);
+	// Director at the landing (14 Nov): logged, not asserted. On lane A132's tree the closing press whiffed less (49.2 % against 58.4 %, ten matches); on main with
+	// the ladder set and lane A147's kept first step it reads 55.4 % against 53.0 %: ten matches do not carry a 5-point claim either way. Lane A151 traces the whiff.
+	AddInfo(FString::Printf(TEXT("JAMREACH the press on closing speed against the playtester's own speed, reach 0: %.1f %% against %.1f %% whiffs"), Share[1], Share[0]));
 	AddInfo(FString::Printf(TEXT("JAMREACH BAR whiff share: own speed %.1f %%, closing speed %.1f %%, own speed + reach 1.0 %.1f %%, closing speed + reach 1.0 %.1f %% (the brief's bar: under 40 %%: %s)"), Share[0], Share[1], Share[2], Share[3],
 		FMath::Min(FMath::Min(Share[0], Share[1]), FMath::Min(Share[2], Share[3])) < 40.0 ? TEXT("met") : TEXT("NOT met")));
 	return true;

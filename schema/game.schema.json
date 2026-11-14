@@ -310,6 +310,12 @@
               "minimum": 0,
               "maximum": 120,
               "description": "Lane A128 (track F2, evolution 3): the standing start. A skater that has been slower than 1 m/s for this many physics frames in a row (after a faceoff, after getting up, after a full stop) and is not pushing has earned its first step: its burst is armed while it stands and runs burst.frames from its first push (a gentle push spends it as a hard one does). A charge already under way never has it. Leave the key out for 6; 0 = the neutral value (the game before the lane: only a stop or a cut of the skater's own arms the burst)."
+            },
+            "rest_kept_mps": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 8,
+              "description": "Lane A147 (track F2, evolution 4): the first step a skater earned by standing is not lost to what is not its own doing. While it does not push and is slower than this speed (m/s), a rested skater keeps its rest and its armed burst (a bump or a shove that moves it); a skater lying on the ice or held by a stumble counts its rest whatever it slides at, so it gets up with its first step; and turning on the spot is not the push-off (the burst begins with the first frame of thrust). Leave the key out for 3; 0 = the neutral value (lane A128's rule: the rest is lost at 1 m/s and a pivot spends the burst)."
             }
           }
         },
