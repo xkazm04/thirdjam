@@ -91,6 +91,13 @@ public:
 	static constexpr int32 LampPulseFrames = 18;
 	static constexpr int32 LampFadeFrames = 36;
 	static constexpr float LampPeakEmissive = 14.f;
+	// Lane A172 (evolution 7): device B's lamp instance and cords (`jam.rink.lamp.trim`, `jam.rink.net.cord`): the lamp rests off and flashes to 11.
+	static constexpr const TCHAR* LampTrimPath = TEXT("/JamAssets/Look/MI_Trim_Lamp.MI_Trim_Lamp");
+	static constexpr const TCHAR* NetCordPath = TEXT("/JamAssets/Look/MI_Toon_NetCord.MI_Toon_NetCord");
+	static constexpr float LampTrimRest = 0.5f;
+	// 9 from a sweep of off-screen stills on p3_clay (ARENA-2.md section 13): the lamp's body reads R/G 2.55 at 6, 2.17 at 8, 2.05 at 9, 1.96 at 10, 1.87 at 11:
+	// above 9 it turns orange. Device B's range is 8 to 12.
+	static constexpr float LampTrimPeak = 9.f;
 	static constexpr int32 NetShakeFrames = 54;
 	static constexpr float NetShakeDepth = 0.12f;
 	static constexpr float NetShakeHeight = 0.06f;
@@ -159,7 +166,8 @@ public:
 	// and 2.5 m wide, the nearest ice is 2.2 m away at the radius's edge: the figure, the back wall and the clock are lit, the ice is not.
 	static constexpr double BoxLightHeightM = 1.9;
 	static constexpr double BoxLightTowardsRinkM = 0.0;
-	static constexpr float BoxLightRadiusCm = 250.f;
+	// Lane A172: 2.2 m (it was 2.5: on the clay rig, where no glass stands between, a pool showed on the ice at the board foot 2.2 m from the light).
+	static constexpr float BoxLightRadiusCm = 220.f;
 	// Lane A160: the goal's lights at device B's numbers (see `jam.rink.react.light`): 3.5 m unless the goal is loud; the quiet wave lights ride the
 	// boards' inner face instead of 2 m inside the rink.
 	static constexpr float LampLightRadiusCm = 350.f;
@@ -315,6 +323,14 @@ public:
 	float GetLampEmissive() const;
 	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
 	float GetLampRestEmissive() const { return LampRest[0]; }
+	// Lane A172: what a flash adds to the resting Emissive at its top (14 on the net frame's red, 10.5 on device B's MI_Trim_Lamp), which lamp material
+	// the rink bound, and the look name on the goals' cords.
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	float GetLampPeakAdd() const { return LampPeakAdd; }
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	bool IsLampTrim() const { return bLampTrim; }
+	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
+	FString GetCordLookName() const { return CordLookName; }
 	// The goal light's Emissive behind the +x net (End > 0) or the -x net; -1 when there is none.
 	UFUNCTION(BlueprintPure, Category = "Jam|Rink")
 	float GetGoalLightEmissive(int32 End) const;
@@ -453,6 +469,9 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UJamEventBus> ReactBus;
 	UPROPERTY(Transient) TObjectPtr<UMaterialInstanceDynamic> LampMids[3];
 	float LampRest[3] = { -1.f, -1.f, -1.f };
+	float LampPeakAdd = LampPeakEmissive;   // lane A172
+	bool bLampTrim = false;
+	FString CordLookName;
 	FVector NetRestScale = FVector::OneVector;
 	FQuat RattleRestRot[5] = { FQuat::Identity, FQuat::Identity, FQuat::Identity, FQuat::Identity, FQuat::Identity };
 	double RattleCentreX[5] = { 0, 0, 0, 0, 0 };     // rink metres

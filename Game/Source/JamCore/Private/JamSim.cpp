@@ -700,6 +700,7 @@ void UJamSim::FaceoffReset()
 		S.DekeSide = 0;
 		S.SweepFrames = S.SweepSide = 0;   // lane A51: a faceoff ends the sweep shield and the spin
 		S.TakeGraceLeft = 0;               // lane A121: and the take grace (the draw's winner wins the puck anew)
+		S.TakeShieldLeft = 0;              // lane A177: and the take shield
 		S.bBurstEarned = false;            // lane A121: at a faceoff everybody merely stands
 		S.RestFrames = Config.Skater.BurstFrames > 0 ? FMath::Max(0, Config.Skater.BurstRestFrames) : 0;   // lane A128: and has stood long enough: the draw starts with the first step
 		S.SpinRecoverLeft = 0;
@@ -970,6 +971,7 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 		S.ContactOutcome = 0; S.ContactRatio = 0.f; S.bContactCross = false; S.bCheckRefused = false; S.bRecoilThisFrame = false;   // lane A92 read-outs
 		S.ContactBy = -1; S.bContactBoard = false;   // lane A101 read-outs
 		S.bContactSlam = false;   // lane A165 read-out
+		S.bContactShield = false;   // lane A177 read-out
 		S.bContactGrace = false;   // lane A113 read-out
 		S.bAbilityThisFrame = false;   // lane A84
 	}
@@ -1197,8 +1199,18 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 		S.bHasPuck = (Puck.LastTouch == S.Index) && CarrierIndex() == S.Index;
 		if (S.bHasPuck) S.LastCarryFrame = Frame;
 		if (S.TakeGraceLeft > 0 && (Puck.LastTouch != S.Index || --S.TakeGraceLeft < 0)) S.TakeGraceLeft = 0;
+		// Lane A177 (game.contact.take_shield_frames): the take shield's clock, the take grace's own: it runs while the puck is still this skater's.
+		if (S.TakeShieldLeft > 0) { if (Puck.LastTouch != S.Index) S.TakeShieldLeft = 0; else --S.TakeShieldLeft; }
 		if (S.bHasPuck && TakeOwner != S.Index)
 		{
+			// Lane A177: a puck won (not a placed one) arms the take shield for the frames after this one; with take_shield_human_side only on a side
+			// that has a human on it. take_shield_frames 0: nothing is written.
+			if (Config.Contact.TakeShieldFrames > 0 && TakeOwner != TakeOwnerPlaced)
+			{
+				bool bSide = !Config.Contact.bTakeShieldHumanSide;
+				if (!bSide) for (const FJamSkaterState& O : Skaters) if (O.bHuman && O.Team == S.Team) { bSide = true; break; }
+				if (bSide) S.TakeShieldLeft = Config.Contact.TakeShieldFrames;
+			}
 			S.TakeGraceLeft = TakeOwner == TakeOwnerPlaced ? 0 : FMath::Max(0, Config.Stick.TakeGraceFrames);
 			// Lane A163 (code only, the measurement's arm: FJamSkaterConfig::BurstTakeFrames, 0 = nothing here runs): the take's first step.
 			if (Config.Skater.BurstTakeFrames > 0 && Config.Skater.BurstFrames > 0 && TakeOwner != TakeOwnerPlaced && (S.bHuman || Config.Skater.bBurstTakeBots)) S.BurstLeft = FMath::Max(S.BurstLeft, Config.Skater.BurstTakeFrames);
@@ -2231,6 +2243,11 @@ int32 UJamSim::ResolveContact(FJamSkaterState& Att, FJamSkaterState& Vic, const 
 	const double PhysRatio = Impulse / FMath::Max(1e-6, StabV);
 	const double Ratio = PhysRatio * (ReferenceCheckSpeedMin / FMath::Max(0.5, Eff(EJamStat::CheckSpeedMin, Att.Index)));
 	int32 Outcome = bHip || Ratio >= K.DownRatio ? ContactDown : Ratio >= K.BumpRatio ? ContactStumble : ContactBump;
+	// Lane A177 (track F1, evolution 8; game.contact.take_shield_frames): a skater that won the puck inside the last take_shield_frames keeps its feet: the
+	// hit that would fell it is a stumble (TakeShieldLeft is only ever set with the key on; an armed hip check keeps its rule). Read before the line below, so
+	// a skater already stumbling takes a bump, as from any stumble.
+	const bool bShielded = Outcome == ContactDown && !bHip && Vic.TakeShieldLeft > 0;
+	if (bShielded) Outcome = ContactStumble;
 	if (Outcome == ContactStumble && (Vic.IsStumbling() || K.StaggerFrames <= 0)) Outcome = ContactBump;   // a stumbling skater is not stumbled again (no lock)
 	// Lane A113 (R-0049 point 1): a tackle is an event, not a rhythm. A skater released from a knockdown inside the last contact.release_grace_frames takes a bump
 	// at most, whatever the ratio (an armed hip check too: its charge stays armed). The attacker pays as for any bump (the recoil test below reads Outcome).
@@ -2246,6 +2263,7 @@ int32 UJamSim::ResolveContact(FJamSkaterState& Att, FJamSkaterState& Vic, const 
 	Vic.ContactRatio = static_cast<float>(Ratio);
 	Vic.bContactCross = Kind == EContactKind::Cross;
 	Vic.ContactBy = Att.Index;   // lane A101 read-out
+	if (bShielded && !bGraced) { Vic.bContactShield = true; ++Vic.ContactShielded; }   // lane A177 read-outs
 	const float Strength = bHip ? 1.f : static_cast<float>(FMath::Clamp(Closing / Config.Skater.Speed, 0.0, 1.0));   // contracts/events.md: closing speed / skater.speed
 	// Lane A165 (track F1, evolution 7; game.contact.board_slam_frames): the board slam, earned. The hit fells its victim (the grace has had its say above),
 	// the victim's centre is within BoardSlamRangeM of the boards and the attacker closes on it along the boards' outward normal at BoardSlamMinMps or
@@ -2301,7 +2319,15 @@ int32 UJamSim::ResolveContact(FJamSkaterState& Att, FJamSkaterState& Vic, const 
 		{
 			++Vic.ContactStumbles;
 			Vic.Vel *= 0.5;
-			Vic.StumbleFrames = FMath::Max(Vic.StumbleFrames, K.StaggerFrames);
+			// Lane A177 (game.contact.take_shield_stagger_max): the capped hit's stumble follows the line the frames down follow: stagger_frames at down_ratio
+			// to take_shield_stagger_max at down_full_ratio. 0 (or not above stagger_frames): the flat cap.
+			int32 Stagger = K.StaggerFrames;
+			if (bShielded && K.TakeShieldStaggerMax > K.StaggerFrames)
+			{
+				const double Ts = FMath::Clamp((PhysRatio - K.DownRatio) / FMath::Max(1e-6, K.DownFullRatio - K.DownRatio), 0.0, 1.0);
+				Stagger = FMath::RoundToInt32(FMath::Lerp(static_cast<double>(K.StaggerFrames), static_cast<double>(K.TakeShieldStaggerMax), Ts));
+			}
+			Vic.StumbleFrames = FMath::Max(Vic.StumbleFrames, Stagger);
 			React(Vic, Dir, true);
 			// The puck comes loose from loose_ratio (the knockdown's rule for where it goes).
 			if (Ratio >= K.LooseRatio && Puck.LastTouch == Vic.Index && FVector2D::Distance(Vic.Pos, Puck.Pos) <= CarrierReachM(Vic.Index))
@@ -3396,6 +3422,7 @@ uint64 UJamSim::StateHash() const
 		// Lane A121: the earned first step and the take grace only while they are up (burst.own_stop false and stick.take_grace_frames 0 hash as before).
 		if (S.bBurstEarned) H.AddI(0x121B);
 		if (S.TakeGraceLeft != 0) H.AddI(S.TakeGraceLeft);
+		if (S.TakeShieldLeft != 0) { H.AddI(-1771); H.AddI(S.TakeShieldLeft); }   // lane A177: the take shield only while it runs (contact.take_shield_frames 0: never)
 		if (S.StickLockLeft != 0) { H.AddI(0x152A); H.AddI(S.StickLockLeft); }   // lane A152: the miss's recovery only while it runs (stick.miss_recovery_frames 0 hashes as before)
 		// Lane A128: the rest counter and the spin's recovery only while they are up (burst.rest_frames 0 and spin.recovery_frames 0 hash as before).
 		if (S.RestFrames != 0) { H.AddI(0x128A); H.AddI(S.RestFrames); }

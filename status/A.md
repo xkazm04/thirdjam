@@ -459,3 +459,4 @@
 - link green 09:12: main de80fb5f (What waits for the operator's word, measured: the "everything on" ladder (A182), the brain) pushed.
 - link green 11:24: main 7f55b48f (Merge device B's progress (dev-b 46bdb717: B-to-A-0043) into main for the package the oper) pushed.
 - package 11:31: `Hokej_Hokej_H31.zip` from main 7f55b48f, acceptance run green (18 verbs through the cursor and the buttons).
+- link green 11:34: main f1c13613 (Package H31 = H30 plus device B's morning: the sheet names it, B-to-A-0043 is answered) pushed.

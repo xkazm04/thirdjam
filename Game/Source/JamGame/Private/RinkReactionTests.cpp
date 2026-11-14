@@ -226,14 +226,14 @@ bool FJamRinkGoalLampAndNet::RunTest(const FString&)
 		const TMap<int64, FVector>& OtherNet = End > 0 ? NetNeg : NetPos;
 		float Peak2 = 0.f, PeakLight2 = 0.f;
 		for (int64 F = G; F <= G + 2; ++F) { Peak2 = FMath::Max(Peak2, At(Lamp, F)); PeakLight2 = FMath::Max(PeakLight2, At(Scored, F)); }
-		TestTrue(FString::Printf(TEXT("goal %d: the lamp's Emissive rises within 2 frames"), i + 1), Peak2 > Rest + 0.9f * ARinkActor::LampPeakEmissive);
+		TestTrue(FString::Printf(TEXT("goal %d: the lamp's Emissive rises within 2 frames"), i + 1), Peak2 > Rest + 0.9f * Rink->GetLampPeakAdd());
 		TestEqual(FString::Printf(TEXT("goal %d: the lamp was at rest the frame before"), i + 1), At(Lamp, G - 1), Rest);
 		TestEqual(FString::Printf(TEXT("goal %d: the lamp is back by frame 120"), i + 1), At(Lamp, G + 120), Rest);
 		int64 Back = -1;
 		for (int64 F = G; F <= G + 120; ++F) if (At(Lamp, F) == Rest) { Back = F - G; break; }
 		if (bLights)
 		{
-			TestTrue(FString::Printf(TEXT("goal %d: the goal light behind the scored net rises within 2 frames"), i + 1), PeakLight2 > Rest + 0.9f * ARinkActor::LampPeakEmissive);
+			TestTrue(FString::Printf(TEXT("goal %d: the goal light behind the scored net rises within 2 frames"), i + 1), PeakLight2 > Rest + 0.9f * Rink->GetLampPeakAdd());
 			TestEqual(FString::Printf(TEXT("goal %d: that goal light is back by frame 120"), i + 1), At(Scored, G + 120), Rest);
 		}
 		const FVector CdGoal = At(Cd, G), CdAfter = At(Cd, G + 120);

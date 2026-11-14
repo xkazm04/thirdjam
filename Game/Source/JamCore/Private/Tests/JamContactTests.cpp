@@ -2763,5 +2763,89 @@ bool FJamContactBoardSlam::RunTest(const FString& Parameters)
 	TestTrue(TEXT("board_bonus 1, slam 30: the slam fires the board read-out and event itself, 30 frames on top"), NoBonus.bSlam && NoBonus.bContactBoard && NoBonus.BoardEvents == 1 && NoBonus.H.KnockFrames == NoBonus0.H.KnockFrames + 30);
 	return true;
 }
+// ---- Lane A177 (track F1, evolution 8, CONTACT-9.md section 1): a hit inside a carry's first frames is capped at a stumble --------------------------------
+//   Jam.Core.Contact.TakeShield      game.contact.take_shield_frames 15: a skater that WON the puck (it came from somebody else) is hit four frames later
+//                                    by the hit that fells it at the neutral value: a stumble of stagger_frames, the puck loose, its feet kept; the same
+//                                    hit after the 15 frames, on a puck that was placed, and under take_shield_human_side on a side without a human, fells
+//                                    it as before; take_shield_stagger_max 45: the capped stumble grows with the hit; 0 (the neutral value): nothing is armed
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamContactTakeShield, "Jam.Core.Contact.TakeShield", JamContactTests::Flags)
+bool FJamContactTakeShield::RunTest(const FString& Parameters)
+{
+	struct FOut { int32 ShieldAtWin = -1, Outcome = 0, Stumble = 0, Knock = 0, Shielded = 0, HitAge = -1, AttOutcome = 0; float Ratio = 0.f; bool bShieldFlag = false, bPuckLoose = false, bWon = false; };
+	// A third skater carries a placed puck and is lifted away; the victim is put on the loose puck and wins it (a puck that changed hands). Wait frames
+	// later the human is sent at it head-on at Speed from 1.3 m and presses: the bodies meet four steps after. bPlaced: the victim gets a placed puck instead
+	// (nobody lost it: no take).
+	auto Play = [this](const TCHAR* Name, int32 Frames, bool bHumanSide, int32 StaggerMax, int32 Wait, double Speed, bool bPlaced) -> FOut
+	{
+		FOut O;
+		FContactScene S = Make(*this, [=](FJamGameConfig& G) { G.Contact.TakeShieldFrames = Frames; G.Contact.bTakeShieldHumanSide = bHumanSide; G.Contact.TakeShieldStaggerMax = StaggerMax; });
+		if (!S.Ok()) return O;
+		auto StepIdle = [&S]() { TArray<FJamInput> In; In.SetNum(S.Sim->GetSkaters().Num()); S.Sim->Step(In); };
+		const FVector2D Spot(0.0, 0.0);
+		S.Sim->SetSkater(S.A, FVector2D(20.0, 8.0), FVector2D::ZeroVector, PI);
+		if (bPlaced)
+		{
+			S.Sim->SetSkater(S.V, Spot, FVector2D::ZeroVector, 0.0);
+			if (!HandPuck(S, S.V)) { AddError(TEXT("the placed puck was not picked up")); return O; }
+		}
+		else
+		{
+			int32 Third = -1;
+			for (const FJamSkaterState& K : S.Sim->GetSkaters()) if (K.Index != S.A && K.Index != S.V) { Third = K.Index; break; }
+			if (Third < 0) { AddError(TEXT("no third skater in the scene")); return O; }
+			const FVector2D Park = S.Sim->GetSkaters()[Third].Pos;
+			S.Sim->SetSkater(S.V, FVector2D(-20.0, -8.0), FVector2D::ZeroVector, 0.0);
+			S.Sim->SetSkater(Third, Spot, FVector2D::ZeroVector, 0.0);
+			if (!HandPuck(S, Third)) { AddError(TEXT("the third skater did not pick the placed puck up")); return O; }
+			const FVector2D PuckAt = S.Sim->GetPuck().Pos;
+			S.Sim->SetSkater(Third, Park, FVector2D::ZeroVector, 0.0);
+			S.Sim->SetSkater(S.V, PuckAt - FVector2D(0.45, 0.0), FVector2D::ZeroVector, 0.0);
+			for (int32 F = 0; F < 40 && S.Sim->CarrierIndex() != S.V; ++F) StepIdle();
+		}
+		O.bWon = S.Sim->CarrierIndex() == S.V;
+		if (!O.bWon) { AddError(FString::Printf(TEXT("%s: the victim did not get the puck"), Name)); return O; }
+		O.ShieldAtWin = S.Vic().TakeShieldLeft;
+		for (int32 F = 0; F < Wait; ++F) StepIdle();
+		S.Sim->SetSkater(S.A, S.Vic().Pos + FVector2D(1.3, 0.0), FVector2D(-Speed, 0.0), PI);
+		for (int32 F = 0; F < 12; ++F)
+		{
+			TArray<FJamInput> In;
+			In.SetNum(S.Sim->GetSkaters().Num());
+			In[S.A].bCheck = F == 0;
+			S.Sim->Step(In);
+			if (S.Att().ContactOutcome != 0) O.AttOutcome = S.Att().ContactOutcome;
+			if (S.Vic().ContactOutcome == 0) continue;
+			O.Outcome = S.Vic().ContactOutcome; O.Ratio = S.Vic().ContactRatio; O.Stumble = S.Vic().StumbleFrames; O.Knock = S.Vic().KnockFrames;
+			O.bShieldFlag = S.Vic().bContactShield; O.HitAge = Wait + F + 1;
+			O.bPuckLoose = S.Sim->CarrierIndex() != S.V;
+			break;
+		}
+		O.Shielded = S.Vic().ContactShielded;
+		AddInfo(FString::Printf(TEXT("JAMSHIELD %s (take_shield_frames %d, human side only %d, stagger max %d, %s puck, the hit %d frames after the take at %.0f m/s): shield left at the take %d | outcome %d ratio %.3f stumble %d knock %d | capped %d (counted %d) | the puck loose %d"),
+			Name, Frames, bHumanSide ? 1 : 0, StaggerMax, bPlaced ? TEXT("a placed") : TEXT("a won"), O.HitAge, Speed, O.ShieldAtWin, O.Outcome, O.Ratio, O.Stumble, O.Knock, O.bShieldFlag ? 1 : 0, O.Shielded, O.bPuckLoose ? 1 : 0));
+		return O;
+	};
+	const FOut Off = Play(TEXT("the neutral value"), 0, false, 0, 0, 9.0, false);
+	if (!TestTrue(TEXT("the staged hit fells the fresh carrier at the neutral value"), Off.bWon && Off.Outcome == UJamSim::ContactDown && Off.Knock > 0)) return false;
+	TestTrue(TEXT("0 (neutral): nothing is armed at the take, nothing capped"), Off.ShieldAtWin == 0 && !Off.bShieldFlag && Off.Shielded == 0);
+	const FOut On = Play(TEXT("inside the shield"), 15, false, 0, 0, 9.0, false);
+	TestEqual(TEXT("15: the take arms the shield for 15 frames"), On.ShieldAtWin, 15);
+	TestTrue(*FString::Printf(TEXT("15: the same hit %d frames after the take is a stumble of stagger_frames, the same ratio, no knockdown"), On.HitAge), On.Outcome == UJamSim::ContactStumble && On.Stumble == 16 && On.Knock == 0 && On.Ratio == Off.Ratio);
+	TestTrue(TEXT("15: it is counted, and the puck comes loose (the stumble's own rule)"), On.bShieldFlag && On.Shielded == 1 && On.bPuckLoose);
+	const FOut Late = Play(TEXT("after the shield"), 15, false, 0, 14, 9.0, false);
+	TestTrue(*FString::Printf(TEXT("15: the hit %d frames after the take fells him as before"), Late.HitAge), Late.HitAge > 15 && Late.Outcome == UJamSim::ContactDown && Late.Knock == Off.Knock && !Late.bShieldFlag);
+	const FOut Placed = Play(TEXT("a placed puck"), 15, false, 0, 0, 9.0, true);
+	TestTrue(TEXT("15: a puck that was placed is not a puck won: no shield, down"), Placed.ShieldAtWin == 0 && Placed.Outcome == UJamSim::ContactDown);
+	const FOut Side = Play(TEXT("the human's side only, the victim a bot of the other side"), 15, true, 0, 0, 9.0, false);
+	TestTrue(TEXT("take_shield_human_side: a side without a human gets no shield, down"), Side.ShieldAtWin == 0 && Side.Outcome == UJamSim::ContactDown);
+	// The cap that scales: the stumble grows with the hit.
+	const FOut Flat = Play(TEXT("a hard hit, the flat cap"), 15, false, 0, 0, 14.0, false);
+	const FOut Soft = Play(TEXT("the scaled cap"), 15, false, 45, 0, 9.0, false);
+	const FOut Hard = Play(TEXT("a hard hit, the scaled cap"), 15, false, 45, 0, 14.0, false);
+	TestTrue(*FString::Printf(TEXT("flat: a hit of ratio %.2f is the same 16-frame stumble as one of %.2f"), Flat.Ratio, On.Ratio), Flat.Outcome == UJamSim::ContactStumble && Flat.Stumble == 16 && Flat.Ratio > On.Ratio);
+	TestTrue(*FString::Printf(TEXT("stagger max 45: the stumble follows the hit (%d frames at ratio %.2f, %d at %.2f), never a knockdown"), Soft.Stumble, Soft.Ratio, Hard.Stumble, Hard.Ratio),
+		Soft.Outcome == UJamSim::ContactStumble && Hard.Outcome == UJamSim::ContactStumble && Soft.Stumble >= 16 && Hard.Stumble > Soft.Stumble && Hard.Stumble <= 45 && Hard.Knock == 0);
+	return true;
+}
 
 #endif

@@ -357,6 +357,17 @@ struct JAMCORE_API FJamContactConfig
 	// scale with it as the others do), the victim's board read-out and the `board` event of a board hit, and the read-outs bContactSlam / ContactSlams for the
 	// glass, the sound and the HUD. 0 = the neutral value: no slam exists (same state hash).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 BoardSlamFrames = 0;
+	// Lane A177 (track F1, evolution 8; REVIEW-3 item 2, MOVEMENT-7 section 4; CONTACT-9.md section 1): "I touched the puck and I was on the ice." Two in three
+	// of the human's knockdowns at pro land inside half a second of his winning the puck (8 frames after it on average, at 16 m/s of closing): nothing a hand
+	// answers. take_shield_frames: for this many frames after a skater WINS the puck (it comes to it from somebody else: UJamSim's TakeOwner, the take grace's
+	// own clock; not a placed puck), a hit that would fell it is capped at a stumble: it keeps its feet, loses half its speed, its control for the stumble and
+	// the puck (the stumble's own rules); the attacker pays as for any stumble. An armed hip check keeps its rule. 0 = the neutral value (same state hash).
+	// take_shield_human_side: true = only for skaters of a side that has a human on it (the bots that win a puck against him are felled as before).
+	// take_shield_stagger_max: the cap that scales (law 1 read on the stumble): above stagger_frames, a capped hit's stumble lasts from stagger_frames at
+	// down_ratio to this many frames at down_full_ratio (the same line the frames down follow). 0 = the flat cap: every capped hit is stagger_frames.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 TakeShieldFrames = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") bool bTakeShieldHumanSide = false;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 TakeShieldStaggerMax = 0;
 	// Lane A157 (track F1, evolution 6; CONTACT-7.md section 3): the lunge as a motion. A pressed check was a window on an ordinary collision and its lunge
 	// (lunge_mps) a number in the impulse: the body did nothing, a miss cost nothing. With lunge_frames above 0 a press that opens a window commits the body
 	// for that many frames: lunge_step_mps is added to its velocity along its facing at once (and counts in the hit as real closing speed: the impulse's own

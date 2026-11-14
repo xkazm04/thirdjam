@@ -77,6 +77,35 @@ namespace JamCarrierMarks
 		return R;
 	}
 
+	// Lane A178 (track F2, evolution 8, docs/experiments/MOVEMENT-9.md): what is SHOWN is not the rule frame by frame. A real window (package H30) read the
+	// contested ring's median time on screen as 5 frames, 8 showings of one frame: nobody saw it. A showing, once begun, stands MinFrames at least, and
+	// stands through a gap of the rule of up to LingerFrames (one episode, one showing: no flicker). The HUD and the trace step the same state.
+	struct FShowRule
+	{
+		int32 MinFrames = 24;          // the least time on screen (the screen lane's number: 0.4 s)
+		int32 LingerFrames = 12;       // the rule may be off this long inside one showing
+	};
+	struct FMarkShow
+	{
+		int64 Since = -1, LastOn = -1, Until = -1;
+		int32 Opp = -1;                // the opponent of the rule's last yes
+		int32 Showings = 0;
+		bool Shown(int64 Frame) const { return Since >= 0 && Frame >= Since && Frame <= Until; }
+	};
+	// One step a sim frame. bOn: the rule's answer this frame. Returns whether the mark is shown on Frame.
+	inline bool StepShow(FMarkShow& S, bool bOn, int32 Opp, int64 Frame, const FShowRule& K = FShowRule())
+	{
+		if (S.Since >= 0 && Frame < S.LastOn) S = FMarkShow();   // the clock went back: a restart
+		if (bOn)
+		{
+			if (!(S.Since >= 0 && Frame >= S.Since && Frame <= S.Until + 1)) { S.Since = Frame; ++S.Showings; }   // the frame after its last is still the same showing
+			S.LastOn = Frame;
+			S.Opp = Opp;
+			S.Until = FMath::Max(S.Since + FMath::Max(1, K.MinFrames) - 1, Frame + FMath::Max(0, K.LingerFrames));
+		}
+		return S.Shown(Frame);
+	}
+
 	struct FStopRule
 	{
 		double AheadM = 8.0;           // where the mark stands: five stick lengths from the human, towards the opponent
@@ -88,8 +117,13 @@ namespace JamCarrierMarks
 		double ReactSec = 0.25;        // the mark lights this long before the opponent is at LitFarM at the pace the two close at, so a stop pressed a quarter
 		                               // second after it lights begins inside the window (head-on at 15 m/s the window itself lasts a quarter second)
 		double ArmFarM = 20.0;         // armed (shown, not lit) from here in
+		double ArmClosingMps = 2.0;    // lane A178: ... while the two close at this pace or more. The lit state keeps ClosingMps (8). Before, one number armed and
+		                               // lit: in the window's drill the pale bar came up at 13.4 m and turned at 11.8 m, 3 to 10 frames later: nobody saw chalk
+		                               // turn to colour. Armed from the moment he carries at an opponent ahead, the pale bar is there for the whole approach.
 		double ClosingMps = 8.0;       // the two close at this pace or more (Director, 14 Nov, REVIEW-3's stopclosing=8: it was 3; see FContestRule::ClosingMps)
 		double SpeedMps = 3.0;         // the human moves at this pace or more (a stop is a move only for one who moves)
+		double DefTowardMps = 0.0;     // lane A178: to LIGHT, the opponent himself skates at the human at this pace or more (0 = no such condition: package H30, where
+		                               // the human's own 8 m/s at a standing opponent lights the line). A measurement's number (JAM_MARK_RULE deftoward=): see MOVEMENT-9.
 		double ConeCos = 0.5;          // the opponent is within 60 degrees of the human's travel (35 degrees finds 59 % of the knockdowns it is for, 60 degrees 72 %, at the same precision)
 	};
 	struct FStopMark
@@ -97,7 +131,10 @@ namespace JamCarrierMarks
 		bool bShow = false, bLit = false;
 		int32 Def = -1;
 		double DistM = 0.0, ClosingMps = 0.0;
-		FVector2D At = FVector2D::ZeroVector;   // the mark's place on the ice (rink metres)
+		FVector2D At = FVector2D::ZeroVector;   // the mark's place on the ice (rink metres): AheadM from him towards the opponent
+		// Lane A178: his travel (unit), the mark's place straight ahead on it (AheadM), and how far off his travel the opponent is (degrees).
+		FVector2D Head = FVector2D(1.0, 0.0), AtPath = FVector2D::ZeroVector;
+		double OffDeg = 0.0;
 	};
 
 	inline FStopMark StopMark(const UJamSim& Sim, int32 Me, const FStopRule& K = FStopRule())
@@ -118,10 +155,18 @@ namespace JamCarrierMarks
 			const FVector2D N = To / D;
 			if (FVector2D::DotProduct(N, Head) < K.ConeCos) continue;
 			const double Closing = FVector2D::DotProduct(H.Vel - O.Vel, N);
-			if (Closing < K.ClosingMps) continue;
-			if (!R.bShow || D < R.DistM) { R.bShow = true; R.Def = O.Index; R.DistM = D; R.ClosingMps = Closing; R.At = H.Pos + N * K.AheadM; }
+			if (Closing < FMath::Min(K.ArmClosingMps, K.ClosingMps)) continue;
+			// Lane A178: the opponent the stop is on for wins over a nearer one that merely stands ahead; among equals the nearer.
+			const bool bLitNow = Closing >= K.ClosingMps && D <= K.LitFarM + FMath::Clamp(Closing, 0.0, 25.0) * K.ReactSec
+				&& (K.DefTowardMps <= 0.0 || -FVector2D::DotProduct(O.Vel, N) >= K.DefTowardMps);
+			if (!R.bShow || (bLitNow && !R.bLit) || (bLitNow == R.bLit && D < R.DistM))
+			{
+				R.bShow = true; R.bLit = bLitNow; R.Def = O.Index; R.DistM = D; R.ClosingMps = Closing; R.At = H.Pos + N * K.AheadM;
+				R.OffDeg = FMath::RadiansToDegrees(FMath::Acos(FMath::Clamp(FVector2D::DotProduct(N, Head), -1.0, 1.0)));
+			}
 		}
-		R.bLit = R.bShow && R.DistM <= K.LitFarM + FMath::Clamp(R.ClosingMps, 0.0, 25.0) * K.ReactSec;
+		R.Head = Head;
+		R.AtPath = H.Pos + Head * K.AheadM;
 		return R;
 	}
 }

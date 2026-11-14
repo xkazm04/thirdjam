@@ -734,3 +734,45 @@ A170): the dial everywhere at pro with the modes re-tuned after it, or the dial 
 pinned at hunt 8. (4) Held off main until he has played, so that main is what he plays: the modes' re-tune (A173: Sniper five against four, Bruisers on
 56 x 28, Fog of War and Cage no longer a good player's walkover), the arena's seventh evolution (A172: device B's lamp and cords, Glass House proposed
 on the clay rig), and every rule that waits switched off (R-0062 point 4, CONTACT-8, BRAIN-5, MOVEMENT-7).
+
+## R-0064 (H31, 2026-11-14 12:25): the operator has played H31; his directions for the run to 20:00
+His words: "the positive thing is that game is playable and player can exercise base mechanics and give a goal. Weakest points: 1. Camera around arena
+borders is autocorrecting unnaturally making hard to recalibrate 2. Key bindings: Possibility to rebind needs to be there. And rebinding: a) Cross check
+on Left mouse. available only if plaeyr not on puck, if yes then shoot b) Right mouse if on puck: Pass. Hold for saucer pass c) Crosscheck should be
+holdable so player with speed momentum can run with held crosscheck into another player 2. Menu HUD is a mess, leave concept of director's cut and try
+to create profi NHL-like menu UI and landing experience - you can use Device B for that 3. Animations of crosscheck and body check are short and not
+clear, may need today to evolve 4. Special boosts are not seen on ice, not seen equipped on players 5. Skaters without puck should be 15% faster than
+now 6. Puck's white outer ring for visibility can be 50% thinner 7. Exercise in one director's mode further concept of neon Tron like arena 8. Nice to
+have: short celebration animation set after a goal, HUD middle screen large banner saying 'Goal' ... Plan please again load of infinite improvement
+loops together with my notes in mind, with plan for you and Device B. Use primarily Opus, outside animations and 3D modelling decisions. Next stop will
+be before night around 20:00 where we transition into stabilization phase and hardening/stabilization of the game".
+Rulings (the Director's readings are marked as such; he corrects them by a word):
+(1) **Controls** (his 2a to 2c, as written): **LMB**: with the puck, shoot (tap flat, hold to lift, as today); without it, cross-check, and **held**: a
+skater who holds it and skates into an opponent delivers the cross-check by the momentum he brings. **RMB**: with the puck, pass (hold for a saucer);
+without it, body check (the Director's reading: he named RMB only "if on puck"; the check stays where the hand knows it). Q and MMB stay as second
+bindings until the rebinding screen exists, then they are free. **Every verb can be rebound** on a controls screen, saved with the profile, shown in the
+hint strip and the controls card from the bindings, never from fixed text. The acceptance run presses the new defaults.
+(2) **Speed**: a skater without the puck is 15 % faster than today at every level, bots and human alike; the carrier skates as today (so the carrier is
+slower by that much against everyone: VISION's "carrier slower"). Law 3's stop distance and the whole ladder are re-read after it.
+(3) **The menu**: the Director's reading of "leave concept of director's cut": the menu stops presenting the game as cuts to direct: no DIRECT A CUT, no
+cut cards as the first thing. A professional sports-game front end instead: a landing screen on the arena, PLAY (the level switch), SEASON, MODES,
+CONTROLS and SETTINGS, QUIT; the Designer's sentence box moves to a single entry inside MODES or leaves the front end. No league, team or broadcaster
+name, logo or likeness anywhere ("NHL-like" is a standard of finish, not a look to copy). Device B draws it; device A builds it.
+(4) **The camera at the boards** (his 1): no correction the player did not cause: the pitch cap of last night (55 degrees) and the keep-in-frame stage
+are re-made so the picture near the boards moves only as fast as the player does; if that cannot be had by 16:00 the cap goes back to off.
+(5) **The hits read** (his 3): device B makes the body check and the cross-check longer and clearer (a wind-up an eye catches, the contact, a follow
+through), and a held cross-check pose for a skater in motion; device A gives each call the frames it needs and holds the hit a beat.
+(6) **Boosts are seen** (his 4): on the ice (a pickup an eye finds from the game camera on every rink) and on the skater who carries one (a prop or an
+effect by kind, and its name on the HUD).
+(7) **The puck's outer ring** half as thick (his 6): device B's mesh or material; device A's scale on the disc goes.
+(8) **One mode on a neon grid arena** (his 7): one of the twelve (the Director picks Glass House's slot unless the modes lane names a better one) plays in
+a dark hall with lines of light: device B builds the rig, device A wires it. No film's or game's look is copied: its own grid, its own colours.
+(9) **A goal is an event** (his 8, nice to have): a large GOAL banner mid-screen, and a short celebration by the scorers (device B's takes), inside the
+pause that already follows a goal.
+(10) **Models**: lanes run on Opus; Fable only where the work is an animation or a 3D modelling decision (device B's figure, set and arena lanes; device
+A's lanes that judge a figure or a mesh by eye).
+(11) **What waited for his play** and he did not speak to: landed as measured where it changes no rule (the marks made to read, the modes' re-tune, the
+arena's binding, the take shield and the fresh take switched off). Pro's dial, the take shield, the cooldown and the lunge are decided by the curve and
+contact lanes inside the new ladder, which is re-set once (1) and (2) are on main: targets 85 / 48 / 26, law 3 a gate.
+(12) **The clock**: packages at about 15:30 (controls, speed, camera) and 18:30 (menu, hits, boosts, the goal); at 20:00 the game freezes for the
+stabilization phase: from then only faults are fixed.

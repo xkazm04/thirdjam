@@ -347,13 +347,21 @@ public:
 	// for opposite acts): never a ring. A LINE on the ice across the human's path, 8 m from him towards the closing opponent: StopBarHalfWidthM to either
 	// side of that point (two stick lengths in all), perpendicular to his travel; chalk at StopMarkArmedAlpha and StopBarArmedThickM while armed; the
 	// opponent's colour, StopBarLitThickM thick and breathing while lit. A ring says "this puck"; a line across the way says "stop here".
-	static constexpr float ContestRingRadiusM = 1.2f;
-	static constexpr float StopBarHalfWidthM = 1.6f;
-	static constexpr float StopBarArmedThickM = 0.16f;
-	static constexpr float StopBarLitThickM = 0.40f;
-	static constexpr float StopBarArmedMinPx = 4.f;
-	static constexpr float StopBarLitMinPx = 9.f;
-	static constexpr float StopMarkArmedAlpha = 0.6f;
+	// Lane A178 (track F2, evolution 8; what a real window read on package H30, docs/experiments/MOVEMENT-9.md): the contested ring was on screen 5 frames
+	// (median) and seen on no still; the lit line was 8 px high at 1920 x 1080, the thinnest orange thing on the ice, and its chalk state lasted a tenth
+	// of a second. So: the contested mark is two rings round the puck (ContestRingRadiusM and ContestInnerRadiusM: a target, larger than any ring under a
+	// skater) and a ring under the opponent who is coming (ContestOppRadiusM), all three in his colour, breathing together, on screen for
+	// jam.hud.ContestHold frames at least (JamCarrierMarks::StepShow); the lit line is a metre deep (StopBarLitMinPx at least); the chalk line 0.45 m, 9 px at least, at 90 %, and the chalk
+	// line is there from the moment he carries at an opponent ahead (FStopRule::ArmClosingMps).
+	static constexpr float ContestRingRadiusM = 1.8f;
+	static constexpr float ContestInnerRadiusM = 1.1f;
+	static constexpr float ContestOppRadiusM = 1.0f;
+	static constexpr float StopBarHalfWidthM = 1.6f;   // two stick lengths in all, as lane A171 set it (Jam.Hud.ClearEdges holds it): the window asked for depth, not width
+	static constexpr float StopBarArmedThickM = 0.45f;
+	static constexpr float StopBarLitThickM = 1.0f;
+	static constexpr float StopBarArmedMinPx = 9.f;    // at 6 px and 60 % the chalk line was faint on pale ice at 1920 x 1080 (capture a178-drill-1080, frame 511)
+	static constexpr float StopBarLitMinPx = 20.f;
+	static constexpr float StopMarkArmedAlpha = 0.9f;
 	// The line on the screen from its four projected points (its two ends A and B; T0 and T1 the near and far edge of its thickness at its middle):
 	// centre, size (length x thickness, the thickness measured across the line and never under MinThickPx), the angle to turn it by, and the box it
 	// covers once turned (what the down rule tests). False for a line with no length. Pure (tests call it).
@@ -393,6 +401,8 @@ public:
 	void UpdateMarks(const FJamPresentationFrame& Frame);
 	UPROPERTY(Transient) TObjectPtr<UImage> ContestRing;
 	UPROPERTY(Transient) TObjectPtr<UBorder> StopMarkBar;   // lane A171: a line, not a ring
+	UPROPERTY(Transient) TObjectPtr<UImage> ContestRingInner;   // lane A178: the second ring round the contested puck
+	UPROPERTY(Transient) TObjectPtr<UImage> ContestOppRing;     // lane A178: the ring under the opponent who is coming
 	int32 MarkContestOpp = -1;
 	int32 MarkStopState = 0;
 	static bool ShowControlsHint(const FJamPresentationFrame& F) { return F.SimFrame < ControlsHintFrames && F.Phase == EJamPhase::Play; }

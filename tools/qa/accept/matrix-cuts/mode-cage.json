@@ -249,7 +249,7 @@
   ],
   "ai": {
    "difficulty": "pro",
-   "body_check": 0.5
+   "body_check": 0.85
   },
   "barks": {
    "enabled": true,
@@ -285,7 +285,8 @@
   },
   "contact": {
    "board_bonus": 2,
-   "release_grace_frames": 45
+   "release_grace_frames": 45,
+   "check_reach_m": 2
   }
  }
 }

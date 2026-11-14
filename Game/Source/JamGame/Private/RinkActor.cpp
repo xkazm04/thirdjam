@@ -63,12 +63,21 @@ static TAutoConsoleVariable<int32> CVarRinkReactHitTint(TEXT("jam.rink.react.hit
 // Lane A160 (evolution 6): the box seen from the ice. Candelas of the light inside a penalty box while its penalty runs (p3_clay; every other tier takes
 // a fifth: the same share as the hit flash). 0 = the dark box of evolution 5. The door hides behind the boards and the clock's hand is 20 pixels from the
 // game camera (lane A145's finding): what is seen from the ice is the lit box with the boxed figure in it.
-static TAutoConsoleVariable<float> CVarRinkReactBox(TEXT("jam.rink.react.box"), 750.f,
+// Lane A172: 450 (it was 750): from the game camera's real pose beside the box on the clay rig 750 bleached the boxed figure's head and shoulders.
+static TAutoConsoleVariable<float> CVarRinkReactBox(TEXT("jam.rink.react.box"), 450.f,
 	TEXT("Candelas of the light inside a penalty box while its penalty runs (p3_clay; other tiers take a fifth); 0 = no light. Lane A160."));
 // Lane A160: on the bare tiers (l1_day, l3_neon) the Blender goals and the board caps stand too: they are on the ice and on the boards, inside the rig's
 // light, and the pond's own goal (SM_Arena_Goal_W600H061) was built for a cut that plays on l1_day and never showed. 0 = the code frame and no caps there.
 static TAutoConsoleVariable<int32> CVarRinkArenaBare(TEXT("jam.rink.arena.bare"), 1,
 	TEXT("1 (default): on the bare tiers (l1_day, l3_neon) the Blender goals and the board caps stand; 0: the code net frame and no caps there, as before lane A160."));
+// Lane A172 (evolution 7): device B's lamp and cords (handoff A-to-B-0024, B's answer to ask 2). The lamps' slot `lamp` takes B's MI_Trim_Lamp (an
+// instance of M_Trim, whose Emissive is a true emissive: on M_Toon it is a rim term and the lamp flattened): off at LampTrimRest, flashing to LampTrimPeak
+// (B: 0.5 or under reads off, 8 to 12 flashes, from about 15 it loses its red). The goals' slot `net` takes B's plain off-white MI_Toon_NetCord.
+// 0 = evolution 6's materials: the net frame's red on the lamps (rest 3, peak 17) and MI_Toon_NetMesh on the cords.
+static TAutoConsoleVariable<int32> CVarRinkLampTrim(TEXT("jam.rink.lamp.trim"), 1,
+	TEXT("1 (default): the goal lamps are device B's MI_Trim_Lamp, off at rest (Emissive 0.5) and flashing to 9; 0: MI_Toon_NetFrame as before lane A172 (rest 3, peak 17). Read at Build."));
+static TAutoConsoleVariable<int32> CVarRinkNetCord(TEXT("jam.rink.net.cord"), 1,
+	TEXT("1 (default): the Blender goals' cords are device B's MI_Toon_NetCord (plain off-white); 0: MI_Toon_NetMesh as before lane A172. Read at Build."));
 // Lane A145: the goal wave. The share of the scored end's light that each of the two travelling lights reaches at the end of a pulse. 0 = no wave.
 // 0.12 from a sweep (section 41): the game camera's picture of the scored end changes 14.8 % on the goal's frame, 16.2 % in the middle of a pulse and
 // 14.6 % at its end (10.4 % and 6.2 % without the wave); at 0.5 the troughs were louder than the goal's own frame (26 %).
@@ -363,6 +372,12 @@ ARinkActor::ARinkActor()
 			Ac->SetVisibility(false);
 			*UseSlots[i] = Ac;
 		}
+	}
+	// Lane A172: the rink's own boards, trim, kick plate, caps, boxes and benches also take lighting channel 1: the quiet goal's lights shine on that
+	// channel alone (PlaceLampLights), so they light these and nothing else: not their own lamps, which stand 0.4 m from them, and not the ice.
+	for (UPrimitiveComponent* P : TArray<UPrimitiveComponent*>{ Boards.Get(), Trim.Get(), TrimOrange.Get(), KickPlate.Get(), ArenaCaps.Get(), ArenaCapsPos.Get(), ArenaBoxNeg.Get(), ArenaBoxPos.Get(), ArenaBenchNeg.Get(), ArenaBenchPos.Get() })
+	{
+		if (P) P->LightingChannels.bChannel1 = true;
 	}
 	GoalTriggerPos = CreateDefaultSubobject<UBoxComponent>(TEXT("GoalTriggerPos"));
 	GoalTriggerNeg = CreateDefaultSubobject<UBoxComponent>(TEXT("GoalTriggerNeg"));
@@ -1037,18 +1052,27 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 				GetCapTriangles(), bCapsRound ? TEXT("the dome") : TEXT("the far level"), AreCapsEnabled() ? 1 : 0);
 		}
 		{
+			// Lane A172: device B's lamp instance on the slot `lamp` (the net frame's red stays on the table's slot `frame` and on the goals).
+			UMaterialInterface* LampMat = FrameMat;
+			bLampTrim = false;
+			if (CVarRinkLampTrim.GetValueOnGameThread() != 0)
+			{
+				if (UMaterialInterface* TrimLamp = LoadObject<UMaterialInterface>(nullptr, LampTrimPath, nullptr, LOAD_NoWarn | LOAD_Quiet)) { LampMat = TrimLamp; bLampTrim = true; }
+			}
+			LampPeakAdd = bLampTrim ? LampTrimPeak - LampTrimRest : LampPeakEmissive;
 			UStaticMeshComponent* const LampOn[3] = { ArenaTable.Get(), ArenaGoalLightNeg.Get(), ArenaGoalLightPos.Get() };
 			for (int32 i = 0; i < 3; ++i)
 			{
 				LampMids[i] = nullptr;
 				LampRest[i] = -1.f;
 				UStaticMeshComponent* C = LampOn[i];
-				if (!C || !C->GetStaticMesh() || !FrameMat) continue;
+				if (!C || !C->GetStaticMesh() || !LampMat) continue;
 				const int32 Slot = C->GetMaterialIndex(FName(TEXT("lamp")));
 				if (Slot == INDEX_NONE) continue;
 				float Rest = 0.f;
-				if (FrameMat->IsA<UMaterialInstanceDynamic>() || !FrameMat->GetScalarParameterValue(FHashedMaterialParameterInfo(TEXT("Emissive")), Rest)) { C->SetMaterial(Slot, FrameMat); continue; }
-				UMaterialInstanceDynamic* D = UMaterialInstanceDynamic::Create(FrameMat, this);
+				if (LampMat->IsA<UMaterialInstanceDynamic>() || !LampMat->GetScalarParameterValue(FHashedMaterialParameterInfo(TEXT("Emissive")), Rest)) { C->SetMaterial(Slot, LampMat); continue; }
+				UMaterialInstanceDynamic* D = UMaterialInstanceDynamic::Create(LampMat, this);
+				if (bLampTrim) { Rest = LampTrimRest; D->SetScalarParameterValue(TEXT("Emissive"), Rest); }   // lane A172: B's instance ships lit (3): a goal lamp rests off
 				C->SetMaterial(Slot, D);
 				LampMids[i] = D;
 				LampRest[i] = Rest;
@@ -1068,7 +1092,9 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 			}
 			UE_LOG(LogJamSim, Log, TEXT("JAMRINK arena reactions: goal light mesh %s at x +-%.2f m; lamps table %s, -x %s, +x %s (Emissive at rest %.2f, peak +%.1f for %d frames); jam.rink.react %d"),
 				LightMesh ? TEXT("loaded") : TEXT("missing"), EndX / UU, LampMids[0] ? TEXT("yes") : TEXT("no"), LampMids[1] ? TEXT("yes") : TEXT("no"), LampMids[2] ? TEXT("yes") : TEXT("no"),
-				LampRest[0], LampPeakEmissive, LampFlashFrames, AreReactionsEnabled() ? 1 : 0);
+				LampRest[0], LampPeakAdd, LampFlashFrames, AreReactionsEnabled() ? 1 : 0);
+			UE_LOG(LogJamSim, Log, TEXT("JAMRINK arena lamps: slot lamp on %s (rest %.2f, peak %.2f); jam.rink.lamp.trim %d"), bLampTrim ? TEXT("MI_Trim_Lamp") : TEXT("MI_Toon_NetFrame"),
+				LampRest[0], LampRest[0] + LampPeakAdd, CVarRinkLampTrim.GetValueOnGameThread());
 		}
 		// The goal: the variant nearest the cartridge's opening (by the ratio of widths and heights), scaled to it. The mesh's +x runs along the goal line and
 		// its +y into the net, so the +x end takes yaw -90 and the -x end yaw +90. Frame on B's MI_Toon_NetFrame, cords on B's MI_Toon_NetMesh.
@@ -1088,6 +1114,11 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 		const FVector GoalScale = Variant ? FVector(R.GoalWidthM / Variant->WidthM, 1.0, NetH / Variant->HeightM) : FVector::OneVector;
 		NetRestScale = GoalScale;   // lane A127: the net's shake is a wobble of this scale
 		UMaterialInterface* CordMat = LoadLook(TEXT("MI_Toon_NetMesh"), NetMaterialPath);
+		CordLookName = TEXT("MI_Toon_NetMesh");
+		if (CVarRinkNetCord.GetValueOnGameThread() != 0)   // lane A172: device B's plain off-white cords
+		{
+			if (UMaterialInterface* Cord = LoadObject<UMaterialInterface>(nullptr, NetCordPath, nullptr, LOAD_NoWarn | LOAD_Quiet)) { CordMat = Cord; CordLookName = TEXT("MI_Toon_NetCord"); }
+		}
 		for (int32 S = -1; S <= 1; S += 2)
 		{
 			UStaticMeshComponent* const Pair[2] = { S > 0 ? ArenaGoalPos.Get() : ArenaGoalNeg.Get(), S > 0 ? ArenaGoalNetPos.Get() : ArenaGoalNetNeg.Get() };
@@ -1651,7 +1682,7 @@ void ARinkActor::ApplyGoalReaction(int64 Since)
 	for (const int32 i : { 0, EndLamp })
 	{
 		if (!LampMids[i]) continue;
-		LampMids[i]->SetScalarParameterValue(TEXT("Emissive"), LampRest[i] + L * LampPeakEmissive);   // L = 0 writes the resting value exactly
+		LampMids[i]->SetScalarParameterValue(TEXT("Emissive"), LampRest[i] + L * LampPeakAdd);   // L = 0 writes the resting value exactly
 		if (UPointLightComponent* Light = ArenaLampLights[i])
 		{
 			const float Candelas = L * LampLightPeakAt(i);
@@ -1838,6 +1869,13 @@ void ARinkActor::PlaceLampLights()
 	// Lane A160: device B's radius (3.5 m: the lamp, the board top and the caps, not the ice) unless the goal is loud (evolution 4's 16 m and 14 m).
 	for (UPointLightComponent* Light : { ArenaLampLights[0].Get(), ArenaLampLights[1].Get(), ArenaLampLights[2].Get() }) if (Light) Light->SetAttenuationRadius(IsGoalLoud() ? LampLightRadiusLoudCm : LampLightRadiusCm);
 	for (UPointLightComponent* Light : { ArenaWaveLights[0].Get(), ArenaWaveLights[1].Get() }) if (Light) Light->SetAttenuationRadius(IsGoalLoud() ? WaveLightRadiusLoudCm : LampLightRadiusCm);
+	// Lane A172: quiet, the goal's lights shine on lighting channel 1 only (the rink's boards, trim, kick plate, caps, boxes and benches): the lamp's own
+	// light bleached the lamp it stands beside (its body read R/G 1.37 on a goal's frame, 2.05 unlit at the same Emissive), and it cannot reach the ice.
+	// Loud (`jam.rink.react.loud 1`) they light everything, as in evolution 5.
+	for (UPointLightComponent* Light : { ArenaLampLights[0].Get(), ArenaLampLights[1].Get(), ArenaLampLights[2].Get(), ArenaWaveLights[0].Get(), ArenaWaveLights[1].Get() })
+	{
+		if (Light) Light->SetLightingChannels(IsGoalLoud(), !IsGoalLoud(), false);
+	}
 	// Evolution 3's places, in each piece's own space: 3 m up, a little to the rink's side of the lamp (the piece's -y; the table's lamp stands at its back).
 	const FVector LightLocal[3] = { FVector(0.0, 105.0, 305.0), FVector(0.0, -15.0, 300.0), FVector(0.0, -15.0, 300.0) };
 	UStaticMeshComponent* const LampOn[3] = { ArenaTable.Get(), ArenaGoalLightNeg.Get(), ArenaGoalLightPos.Get() };

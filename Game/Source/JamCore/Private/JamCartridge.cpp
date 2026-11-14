@@ -1208,6 +1208,9 @@ namespace
 			ReadInteger(Ct, TEXT("check_cooldown_frames"), C.Contact.CheckCooldownFrames);   // lane A157: a check press has a cooldown; 0 = the neutral value
 			ReadBool(Ct, TEXT("check_cooldown_restart"), C.Contact.bCheckCooldownRestart);   // lane A165: a press inside the cooldown restarts it; false = the neutral value
 			ReadInteger(Ct, TEXT("board_slam_frames"), C.Contact.BoardSlamFrames);   // lane A165: the board slam, earned and paid; 0 = the neutral value
+			ReadInteger(Ct, TEXT("take_shield_frames"), C.Contact.TakeShieldFrames);   // lane A177: a hit inside a carry's first frames is capped at a stumble; 0 = the neutral value
+			ReadBool(Ct, TEXT("take_shield_human_side"), C.Contact.bTakeShieldHumanSide);   // lane A177: only for a side with a human on it; false = every skater
+			ReadInteger(Ct, TEXT("take_shield_stagger_max"), C.Contact.TakeShieldStaggerMax);   // lane A177: the capped hit's stumble scales up to this; 0 = flat
 			ReadInteger(Ct, TEXT("lunge_frames"), C.Contact.LungeFrames);   // lane A157: the lunge as a motion; 0 = the neutral value
 			ReadNumber(Ct, TEXT("lunge_step_mps"), C.Contact.LungeStepMps);   // lane A157: its forward step; 0 = the neutral value
 		}
@@ -1234,6 +1237,8 @@ namespace
 					if (Name == TEXT("side_brace")) C.Contact.StandSideBrace = V;
 					else if (Name == TEXT("brace_exchange")) C.Contact.bBraceExchange = V != 0.0;
 					else if (Name == TEXT("late_press")) C.Contact.LatePressFrames = FMath::RoundToInt32(V);
+					else if (Name == TEXT("take_shield")) C.Contact.TakeShieldFrames = FMath::RoundToInt32(V);   // lane A177: law 3's drill with the take shield on (measurement only)
+					else if (Name == TEXT("take_shield_max")) C.Contact.TakeShieldStaggerMax = FMath::RoundToInt32(V);
 					// A151-SEAM-MORE
 				}
 			}

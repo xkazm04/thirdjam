@@ -71,8 +71,8 @@
   "rigs": {
     "LR_L2_Night": {
       "loaded": true,
-      "actors": 166,
-      "sized": 156,
+      "actors": 171,
+      "sized": 158,
       "crossing": [
         {
           "actor": "SkyB_L2_Night_Dome",
@@ -185,86 +185,6 @@
             30000
           ],
           "volume": "goal_pos"
-        },
-        {
-          "actor": "Snow_L2_Night_Bank_3",
-          "class": "StaticMeshActor",
-          "hidden_in_game": false,
-          "min_cm": [
-            -4420,
-            -2530,
-            -1
-          ],
-          "max_cm": [
-            4420,
-            -2319,
-            60
-          ],
-          "volume": "box_neg"
-        },
-        {
-          "actor": "Snow_L2_Night_Bank_3",
-          "class": "StaticMeshActor",
-          "hidden_in_game": false,
-          "min_cm": [
-            -4420,
-            -2530,
-            -1
-          ],
-          "max_cm": [
-            4420,
-            -2319,
-            60
-          ],
-          "volume": "box_pos"
-        },
-        {
-          "actor": "Snow_L2_Night_Bank_3",
-          "class": "StaticMeshActor",
-          "hidden_in_game": false,
-          "min_cm": [
-            -4420,
-            -2530,
-            -1
-          ],
-          "max_cm": [
-            4420,
-            -2319,
-            60
-          ],
-          "volume": "table"
-        },
-        {
-          "actor": "Snow_L2_Night_Bank_4",
-          "class": "StaticMeshActor",
-          "hidden_in_game": false,
-          "min_cm": [
-            -4420,
-            2319,
-            -1
-          ],
-          "max_cm": [
-            4420,
-            2530,
-            60
-          ],
-          "volume": "bench_neg"
-        },
-        {
-          "actor": "Snow_L2_Night_Bank_4",
-          "class": "StaticMeshActor",
-          "hidden_in_game": false,
-          "min_cm": [
-            -4420,
-            2319,
-            -1
-          ],
-          "max_cm": [
-            4420,
-            2530,
-            60
-          ],
-          "volume": "bench_pos"
         },
         {
           "actor": "SkyCap_L2_Night",
@@ -379,12 +299,47 @@
           "volume": "goal_pos"
         }
       ],
-      "near": []
+      "near": [
+        {
+          "actor": "Snow_L2_Night_Bank_4",
+          "class": "StaticMeshActor",
+          "hidden_in_game": false,
+          "min_cm": [
+            -4420,
+            2319,
+            -1
+          ],
+          "max_cm": [
+            -1260,
+            2530,
+            60
+          ],
+          "volume": "bench_neg",
+          "gap_cm": 54
+        },
+        {
+          "actor": "Snow_L2_Night_Bank_4b",
+          "class": "StaticMeshActor",
+          "hidden_in_game": false,
+          "min_cm": [
+            1260,
+            2319,
+            -1
+          ],
+          "max_cm": [
+            4420,
+            2530,
+            60
+          ],
+          "volume": "bench_pos",
+          "gap_cm": 54
+        }
+      ]
     },
     "LR_P3_Clay": {
       "loaded": true,
-      "actors": 125,
-      "sized": 102,
+      "actors": 123,
+      "sized": 100,
       "crossing": [
         {
           "actor": "SkyCap_P3_Clay",
@@ -497,6 +452,86 @@
             35000
           ],
           "volume": "goal_pos"
+        },
+        {
+          "actor": "Dress_P3_Clay",
+          "class": "StaticMeshActor",
+          "hidden_in_game": false,
+          "min_cm": [
+            -600,
+            -3734,
+            -168
+          ],
+          "max_cm": [
+            1215,
+            3734,
+            1350
+          ],
+          "volume": "bench_neg"
+        },
+        {
+          "actor": "Dress_P3_Clay",
+          "class": "StaticMeshActor",
+          "hidden_in_game": false,
+          "min_cm": [
+            -600,
+            -3734,
+            -168
+          ],
+          "max_cm": [
+            1215,
+            3734,
+            1350
+          ],
+          "volume": "bench_pos"
+        },
+        {
+          "actor": "Dress_P3_Clay",
+          "class": "StaticMeshActor",
+          "hidden_in_game": false,
+          "min_cm": [
+            -600,
+            -3734,
+            -168
+          ],
+          "max_cm": [
+            1215,
+            3734,
+            1350
+          ],
+          "volume": "box_neg"
+        },
+        {
+          "actor": "Dress_P3_Clay",
+          "class": "StaticMeshActor",
+          "hidden_in_game": false,
+          "min_cm": [
+            -600,
+            -3734,
+            -168
+          ],
+          "max_cm": [
+            1215,
+            3734,
+            1350
+          ],
+          "volume": "box_pos"
+        },
+        {
+          "actor": "Dress_P3_Clay",
+          "class": "StaticMeshActor",
+          "hidden_in_game": false,
+          "min_cm": [
+            -600,
+            -3734,
+            -168
+          ],
+          "max_cm": [
+            1215,
+            3734,
+            1350
+          ],
+          "volume": "table"
         }
       ],
       "near": []

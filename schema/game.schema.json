@@ -906,6 +906,22 @@
           "maximum": 120,
           "description": "The board slam as a play. Earned: a hit that fells its victim while the victim's centre is within 1 m of the boards and the attacker closes on it along the boards' normal at 4 m/s or more (driven into the wall, not along it). Paid: this many frames down on top (at skater.knockdown_frames 90; they scale with it), the victim's board read-out and the board event. 0 = the neutral value: no slam exists."
         },
+        "take_shield_frames": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 60,
+          "description": "A hit inside a carry's first frames is capped at a stumble (REVIEW-3 item 2): for this many frames after a skater wins the puck (it comes to it from somebody else; not a placed puck), a hit that would fell it is a stumble: it keeps its feet, loses half its speed, its control for the stumble and the puck; the attacker pays as for any stumble; an armed hip check keeps its rule. Part of the momentum model (contact.momentum true). 0 = the neutral value: the hit lands as the contact law says."
+        },
+        "take_shield_human_side": {
+          "type": "boolean",
+          "description": "true = the take shield (take_shield_frames) only for skaters of a side that has a human on it; a bot of the other side that wins the puck is felled as before. false = the neutral value: every skater. Read only with take_shield_frames above 0."
+        },
+        "take_shield_stagger_max": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 90,
+          "description": "The capped hit's stumble scales with the hit: from stagger_frames at down_ratio to this many frames at down_full_ratio (the line the frames down follow), so a bigger hit still costs more. 0 (or not above stagger_frames) = the neutral value: the flat cap, every capped hit is stagger_frames. Read only with take_shield_frames above 0."
+        },
         "lunge_frames": {
           "type": "integer",
           "minimum": 0,

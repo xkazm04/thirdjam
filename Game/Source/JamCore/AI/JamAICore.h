@@ -196,6 +196,22 @@ namespace JamAI
 		// the skater's top speed: on the 120 m rinks, where the top speed is 8 m/s, a carrier at full speed makes that 1, the close is cancelled, the
 		// chaser stands still and a straight charge passes it (measured: 59.5 % at pro). 1 = uncapped; 0.7 closes on every rink (BRAIN-5.md section 4).
 		double PressRetreatCap = 1.0;
+		// Lane A181 (track Q2, evolution 6; docs/experiments/BRAIN-6.md). Each at its neutral value is the brain of evolution 5, bit for bit (brain6=0).
+		// FreshTakeFrames: a bot presses no body check on a carrier that has had the puck for fewer than this many frames: it plays the puck, not the man
+		// that has only just touched it (lane A157 / CONTACT-9: most of the human's knockdowns land within half a second of his winning the puck).
+		// The stick and the approach are untouched; the check goes the frame his carry is this old. 0 = it checks him as he wins it.
+		int FreshTakeFrames = 0;
+		// bSecondManHunts (a level's switch; with bPressInHunt): only the first presser of a carry closes under control. A presser that takes the job
+		// over while the same opposing skater still carries (the first one was beaten) hunts: it charges from the hunt radius as before R-0058. The first
+		// man teaches the stop at 8 m; the second punishes a carrier that has spent it. Off = every presser closes under control.
+		bool bSecondManHunts = false;
+		// bCoverBestPass (a level's switch): the five's Cover job stands on the lane to the team-mate the carrier's pass would go to right now (the sim's
+		// own pick: FJamAIWorld::CarrierBestPass / HolderBestPass), not to the carrier's nearest team-mate. Off = the nearest one (lane A94).
+		bool bCoverBestPass = false;
+		// StepUpMaxTeam (a level's number, with StepUpM of evolution 3): the back steps up only in a team of fewer skaters than this. 5 = three and four
+		// a side, as since evolution 3; 99 = a five's backs too: the last line meets a carrier that has got past the presser, inside StepUpM, from the
+		// front, instead of waiting for a puck inside 2.5 m (all_star's second candidate: BRAIN-6.md).
+		int StepUpMaxTeam = 5;
 		bool Any() const { return bCarryOrPass || bAttackShape || bDefenceShape || bTransition; }
 	};
 	// Lane A115: every rule of evolution 2 on (as ProHockeySense has them) or off (the brain of evolution 1). The tune key brain2 and the tests use it.
@@ -264,6 +280,15 @@ namespace JamAI
 		if (!bOn) { H.bPressThree = false; H.PressCommitM = 0.0; H.PressThreeCommitM = 0.0; H.PressRetreatCap = 1.0; return; }
 		H.AvoidDownedM = kEvo5AvoidDownedM;
 		H.AvoidDownedOut = kEvo5AvoidDownedOut;
+	}
+	// Lane A181 (evolution 6, BRAIN-6.md): the rules of evolution 6 as shipped (ApplyDifficultyProfile calls it for each side) or off (evolution 5).
+	// Every value ships neutral (the Director, 14 Nov 08:10: nothing lands before the operator has played). On leaves a level's bSecondManHunts alone.
+	constexpr int kEvo6FreshTakeFrames = 0;
+	inline void SetEvolution6(FJamHockeySense& H, bool bOn)
+	{
+		H.FreshTakeFrames = 0;
+		if (!bOn) { H.bSecondManHunts = false; H.bCoverBestPass = false; H.StepUpMaxTeam = 5; return; }
+		H.FreshTakeFrames = kEvo6FreshTakeFrames;
 	}
 	// Lane A94: the sense each level plays (DifficultyProfile.cpp sets the opponents' per level; the human's teammates play ProHockeySense at every level).
 	inline FJamHockeySense ProHockeySense()
@@ -650,6 +675,10 @@ namespace JamAI
 		int Charging[kMaxSkaters] = {};
 		int PassHold[kMaxSkaters] = {};   // lane A77 (R-0036): frames pass has been held for a saucer (0 = not holding)
 		bool bGoalieNow[kMaxSkaters] = {};
+		// Lane A181 (evolution 6): per defending team, the opposing carrier it presses and the first presser of that carry; the pressers after it are second men
+		int PressCarrier[2] = {-1, -1};
+		int PressFirst[2] = {-1, -1};
+		bool bSecondMan[kMaxSkaters] = {};
 		int GoalieSideNow[kMaxSkaters] = {};
 		void StickPlay(const FJamAIWorld& W, int Id, FJamAIInput& In);
 		// Lane A94 (R-0045 law 2): possession per frame (a ring, for the late read), the shape job per skater (AssignJobs, once per Think), and the frames

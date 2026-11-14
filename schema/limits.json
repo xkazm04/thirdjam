@@ -130,6 +130,8 @@
     "contact.downed_radius_m": "0..2",
     "contact.check_cooldown_frames": "0..120",
     "contact.board_slam_frames": "0..120",
+    "contact.take_shield_frames": "0..60",
+    "contact.take_shield_stagger_max": "0..90",
     "contact.lunge_frames": "0..30",
     "contact.lunge_step_mps": "0..4",
     "rules.mode": "first_to|timer",

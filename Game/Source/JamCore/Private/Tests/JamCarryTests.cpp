@@ -4,6 +4,7 @@
 //                             every knockdown of the human by what he could have done about it, with the frames it cost.
 //   Jam.Core.Movement.StopGrace   the rule game.stick.stop_grace_frames in staged scenes and one match (in the gate)
 //   Jam.Core.Movement.Marks       lane A166: the contested puck and the stop's distance (JamCarrierMarks.h) in staged scenes (in the gate)
+//   Jam.Core.Movement.MarkShow    lane A178: a mark, once lit, stands 24 frames and through a flicker (JamCarrierMarks::StepShow), in the gate
 //   env JAM_CARRY_TRACE = "level=pro;player=regular;seeds=40;from=1;rows=0;set=stick.take_grace_frames:30,..." (every part optional)
 #include "Misc/AutomationTest.h"
 #include "JamCartridge.h"
@@ -106,11 +107,17 @@ namespace JamCarryTests
 		JamCarrierMarks::FContestRule ConRule;
 		JamCarrierMarks::FStopRule StopRule;
 		struct FTouch { int64 Frame = 0; int32 Lead = -1; bool bDown = false; };
-		struct FStopEp { int64 Start = 0; bool bBraked = false, bDown = false; };
+		struct FStopEp { int64 Start = 0; bool bBraked = false, bDown = false; int32 Armed = 0; double OffDeg = 0.0; };   // lane A178: frames armed before it lit; the opponent's angle off his travel
 		TArray<FTouch> MarkTouches;
 		TArray<FStopEp> StopEps;
 		int32 ConEpisodes = 0;
 		int64 ConFrames = 0, LastCon = -1000, LastStopLit = -1000, StopLitFrames = 0, StopShowFrames = 0;
+		// Lane A178: what is shown (the hold), each showing's frames on screen; the stop line's armed run before each light and each lit run.
+		JamCarrierMarks::FShowRule ShowRule;
+		JamCarrierMarks::FMarkShow ConShow;
+		int64 ConShownSince = -1;
+		TArray<int32> ConOnScreen, LitRuns;
+		int32 ArmedRun = 0, LitRun = 0;
 		TArray<FCarry> Done;
 		TArray<FDown> Downs;
 		int64 PlayFrames = 0, DownFrames = 0, CarryFrames = 0, LooseFrames = 0, OppFrames = 0, MateFrames = 0;
@@ -173,9 +180,15 @@ namespace JamCarryTests
 		// Lane A166: the two marks as this frame ended (what the HUD draws on the next).
 		const JamCarrierMarks::FContested Con = JamCarrierMarks::Contested(*Sim, T.Me, T.ConRule);
 		const JamCarrierMarks::FStopMark StopM = JamCarrierMarks::StopMark(*Sim, T.Me, T.StopRule);
-		if (Con.bOn) { ++T.ConFrames; if (Now - T.LastCon > 10) ++T.ConEpisodes; T.LastCon = Now; }
+		// Lane A178: the mark as SHOWN (JamCarrierMarks::StepShow: the HUD steps the same state); a phase that is not play ends a showing, as the HUD hides it.
+		if (!bPlaying) T.ConShow = JamCarrierMarks::FMarkShow();
+		const bool bConShown = bPlaying && JamCarrierMarks::StepShow(T.ConShow, Con.bOn, Con.Opp, Now, T.ShowRule);
+		if (bConShown) { if (T.ConShownSince < 0) { T.ConShownSince = Now; ++T.ConEpisodes; } ++T.ConFrames; }
+		else if (T.ConShownSince >= 0) { T.ConOnScreen.Add(static_cast<int32>(Now - T.ConShownSince)); T.ConShownSince = -1; }
+		if (StopM.bShow && !StopM.bLit) ++T.ArmedRun; else if (!StopM.bShow) T.ArmedRun = 0;
+		if (StopM.bLit) ++T.LitRun; else if (T.LitRun > 0) { T.LitRuns.Add(T.LitRun); T.LitRun = 0; }
 		if (StopM.bShow) ++T.StopShowFrames;
-		if (StopM.bLit) { ++T.StopLitFrames; if (Now - T.LastStopLit > 30) { FTrace::FStopEp E; E.Start = Now; T.StopEps.Add(E); } T.LastStopLit = Now; }
+		if (StopM.bLit) { ++T.StopLitFrames; if (Now - T.LastStopLit > 30) { FTrace::FStopEp E; E.Start = Now; E.Armed = T.ArmedRun; E.OffDeg = StopM.OffDeg; T.StopEps.Add(E); } T.LastStopLit = Now; }
 		if (T.StopEps.Num() && Now - T.StopEps.Last().Start <= 90 && H.bReverseBraking) T.StopEps.Last().bBraked = true;
 		int32 PokeBy = -1, LiftBy = -1; bool bKnock = false;
 		for (const FJamSimEvent& E : Sim->GetFrameEvents())
@@ -287,7 +300,7 @@ namespace JamCarryTests
 		S.bSpinReady = Now >= H.SpinReadyFrame && H.SpinFrames == 0 && Sim->GetConfig().Skater.SpinFrames > 0;
 		FVector2D Aim;
 		S.bPassOn = bCarry && Sim->BestPass(T.Me, Aim) >= 0;
-		S.bContest = Con.bOn; S.bStopLit = StopM.bLit;
+		S.bContest = bConShown; S.bStopLit = StopM.bLit;
 	}
 
 	struct FOpt { FString Level = TEXT("pro"), Player = TEXT("regular"), Set; int32 Seeds = 40, Rows = 0, From = 1; };
@@ -348,6 +361,8 @@ namespace JamCarryTests
 			else if (K == TEXT("toward")) T.ConRule.TowardMps = V; else if (K == TEXT("hsec")) T.ConRule.HumanSecMax = V;
 			else if (K == TEXT("near")) T.StopRule.LitNearM = V; else if (K == TEXT("far")) T.StopRule.LitFarM = V; else if (K == TEXT("arm")) T.StopRule.ArmFarM = V;
 			else if (K == TEXT("cone")) T.StopRule.ConeCos = V; else if (K == TEXT("stopclosing")) T.StopRule.ClosingMps = V; else if (K == TEXT("react")) T.StopRule.ReactSec = V;
+			else if (K == TEXT("minshow")) T.ShowRule.MinFrames = FMath::RoundToInt32(V); else if (K == TEXT("linger")) T.ShowRule.LingerFrames = FMath::RoundToInt32(V);   // lane A178
+			else if (K == TEXT("armclosing")) T.StopRule.ArmClosingMps = V; else if (K == TEXT("deftoward")) T.StopRule.DefTowardMps = V;
 		}
 		return Env;
 	}
@@ -370,6 +385,7 @@ bool FJamBarCarryTrace::RunTest(const FString& Parameters)
 	TArray<FTrace::FTouch> MarkTouches;
 	TArray<FTrace::FStopEp> StopEps;
 	int64 ConEpisodes = 0, ConFrames = 0, StopLitFrames = 0, StopShowFrames = 0;
+	TArray<int32> ConOnScreen, LitRuns;   // lane A178
 	FString MarkRule;
 	for (int32 Seed = O.From; Seed < O.From + O.Seeds; ++Seed)
 	{
@@ -395,6 +411,7 @@ bool FJamBarCarryTrace::RunTest(const FString& Parameters)
 		All.Append(T->Done);
 		Downs.Append(T->Downs);
 		MarkTouches.Append(T->MarkTouches); StopEps.Append(T->StopEps);
+		ConOnScreen.Append(T->ConOnScreen); LitRuns.Append(T->LitRuns);
 		ConEpisodes += T->ConEpisodes; ConFrames += T->ConFrames; StopLitFrames += T->StopLitFrames; StopShowFrames += T->StopShowFrames;
 		delete T;
 	}
@@ -496,6 +513,23 @@ bool FJamBarCarryTrace::RunTest(const FString& Parameters)
 			*O.Player, *O.Level, StopEps.Num(), StopEps.Num() / Mn, static_cast<long long>(StopShowFrames), static_cast<long long>(StopLitFrames), 100.0 * StopShowFrames / FMath::Max<int64>(1, CarryF), 100.0 * StopLitFrames / FMath::Max<int64>(1, CarryF),
 			StopClass, StopClassLit, 100.0 * StopClassLit / FMath::Max(1, StopClass), Other, OtherLit, Braked, BrakedDown, 100.0 * BrakedDown / FMath::Max(1, Braked), NotBraked, NotBrakedDown, 100.0 * NotBrakedDown / FMath::Max(1, NotBraked)));
 	}
+	// Lane A178: what a window can read: the time each mark is on screen, the armed state before the light, the line by the opponent's side.
+	{
+		int32 One = 0, Under12 = 0;
+		for (const int32 D : ConOnScreen) { if (D <= 1) ++One; if (D < 12) ++Under12; }
+		AddInfo(FString::Printf(TEXT("CARRYTRACE mark seen contested %s at %s (rule \"%s\"): shown %d times (%.1f a match), on screen a median of %.0f frames, one frame only in %d, under 12 frames in %d (%.1f %%)"),
+			*O.Player, *O.Level, *MarkRule, ConOnScreen.Num(), ConOnScreen.Num() / Mn, Median(ConOnScreen), One, Under12, 100.0 * Under12 / FMath::Max(1, ConOnScreen.Num())));
+		TArray<int32> Armed; int32 ArmedShort = 0, Side = 0, SideNoBrake = 0, SideDown = 0, Front = 0, FrontNoBrake = 0, FrontDown = 0;
+		for (const FTrace::FStopEp& E : StopEps)
+		{
+			Armed.Add(E.Armed); if (E.Armed < 12) ++ArmedShort;
+			if (E.OffDeg >= 40.0) { ++Side; if (!E.bBraked) { ++SideNoBrake; if (E.bDown) ++SideDown; } }
+			else { ++Front; if (!E.bBraked) { ++FrontNoBrake; if (E.bDown) ++FrontDown; } }
+		}
+		AddInfo(FString::Printf(TEXT("CARRYTRACE mark seen stop %s at %s: %d lit showings (%.1f a match), lit a median of %.0f frames at a time; armed before the light a median of %.0f frames, under 12 frames in %d (%.1f %%) | the opponent 40 degrees or more off his travel as it lit: %d (%.1f %%), no brake %d, down inside 1.5 s %d (%.1f %%); inside 40 degrees: %d, no brake %d, down %d (%.1f %%)"),
+			*O.Player, *O.Level, StopEps.Num(), StopEps.Num() / Mn, Median(LitRuns), Median(Armed), ArmedShort, 100.0 * ArmedShort / FMath::Max(1, StopEps.Num()),
+			Side, 100.0 * Side / FMath::Max(1, StopEps.Num()), SideNoBrake, SideDown, 100.0 * SideDown / FMath::Max(1, SideNoBrake), Front, FrontNoBrake, FrontDown, 100.0 * FrontDown / FMath::Max(1, FrontNoBrake)));
+	}
 	TestTrue(TEXT("the trace ran"), Matches > 0);
 	return true;
 }
@@ -593,6 +627,55 @@ bool FJamMovementStopGrace::RunTest(const FString& Parameters)
 		TestTrue(TEXT("pro seed 3: the key at 0 is the shipped cartridge's match"), H[0] == H[1]);
 		TestTrue(TEXT("pro seed 3: the key at 30 is another match (the rule is live in a match)"), H[0] != H[2]);
 		AddInfo(FString::Printf(TEXT("STOPGRACE match pro seed 3, 7200 frames: shipped %016llx, key 0 %016llx, key 30 %016llx"), static_cast<unsigned long long>(H[0]), static_cast<unsigned long long>(H[1]), static_cast<unsigned long long>(H[2])));
+	}
+	return true;
+}
+
+// Lane A178: what is shown is not the rule frame by frame (JamCarrierMarks::StepShow), in the gate: no sim, the state alone.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamMovementMarkShow, "Jam.Core.Movement.MarkShow", JamCarryTests::Flags)
+bool FJamMovementMarkShow::RunTest(const FString& Parameters)
+{
+	using namespace JamCarrierMarks;
+	const FShowRule K;
+	TestTrue(TEXT("the least time on screen is 24 frames and a gap of 12 does not end a showing"), K.MinFrames == 24 && K.LingerFrames == 12);
+	// The rule says yes for ONE frame: the mark stands 24.
+	{
+		FMarkShow S;
+		int32 Shown = 0;
+		for (int64 F = 100; F < 200; ++F) if (StepShow(S, F == 100, 5, F)) ++Shown;
+		TestEqual(TEXT("one frame of the rule: 24 frames on screen"), Shown, 24);
+		TestEqual(TEXT("... one showing, and it remembers who was coming"), S.Showings == 1 ? S.Opp : -1, 5);
+	}
+	// A flicker (on 5, off 8, on 5): one showing, on screen from the first yes to 12 frames after the last, 24 at least.
+	{
+		FMarkShow S;
+		int32 Shown = 0;
+		for (int64 F = 0; F < 100; ++F) if (StepShow(S, F < 5 || (F >= 13 && F < 18), 3, F)) ++Shown;
+		TestEqual(TEXT("a flicker is one showing"), S.Showings, 1);
+		TestEqual(TEXT("... on screen from frame 0 to frame 17 + 12"), Shown, 30);
+	}
+	// A long yes: shown while the rule holds and 12 frames more; then a new yes two seconds later is a second showing.
+	{
+		FMarkShow S;
+		int32 Shown = 0;
+		for (int64 F = 0; F < 300; ++F) if (StepShow(S, F < 60 || F == 200, 3, F)) ++Shown;
+		TestEqual(TEXT("60 frames of the rule: 72 on screen; a yes at frame 200: 24 more"), Shown, 72 + 24);
+		TestEqual(TEXT("... two showings"), S.Showings, 2);
+	}
+	// The clock goes back (a restart): the state starts again.
+	{
+		FMarkShow S;
+		StepShow(S, true, 3, 5000);
+		TestFalse(TEXT("a restart: nothing shown at frame 10 from a showing of frame 5000"), StepShow(S, false, -1, 10));
+	}
+	// The package's screen again: MinFrames 1 and no linger is the rule frame by frame.
+	{
+		FShowRule Raw; Raw.MinFrames = 1; Raw.LingerFrames = 0;
+		FMarkShow S;
+		int32 Shown = 0;
+		for (int64 F = 0; F < 50; ++F) if (StepShow(S, F == 3 || F == 4 || F == 9, 3, F, Raw)) ++Shown;
+		TestEqual(TEXT("minshow 1, linger 0: shown exactly while the rule says yes"), Shown, 3);
+		TestEqual(TEXT("... and a gap is a new showing"), S.Showings, 2);
 	}
 	return true;
 }
@@ -699,6 +782,12 @@ bool FJamMovementMarks::RunTest(const FString& Parameters)
 		TestFalse(TEXT("the defender 10 m behind: no mark"), At(-10.0, 0.0, 12.0).bShow);
 		TestFalse(TEXT("the defender 10 m ahead skating away faster than the human: no mark (nothing closes)"), At(10.0, 0.0, 12.0).bShow);
 		AddInfo(FString::Printf(TEXT("MARKS stop: armed at %.1f m (closing %.1f m/s), lit at %.1f m"), Far.DistM, Far.ClosingMps, Lit.DistM));
+		// Lane A178: armed from the moment he carries at an opponent ahead (the two closing at 2 m/s or more); lit keeps its 8 m/s.
+		const JamCarrierMarks::FStopMark Slow = At(8.0, 0.0, 5.0);
+		TestTrue(TEXT("the defender 8 m ahead backing off at 5 m/s (closing at 3): the pale line is there, not lit"), Slow.bShow && !Slow.bLit);
+		const JamCarrierMarks::FStopMark Wide = At(8.0, 8.0, -5.0);
+		TestTrue(TEXT("the defender 45 degrees off his travel: the mark knows the angle, and its place across his path is straight ahead of him"),
+			Wide.bShow && FMath::IsNearlyEqual(Wide.OffDeg, 45.0, 1.0) && FMath::IsNearlyEqual(Wide.AtPath.Y, HP.Y, 0.01) && FMath::IsNearlyEqual(Wide.AtPath.X - HP.X, 8.0, 0.01) && Wide.At.Y > HP.Y + 1.0);
 		// he brakes: the mark has said what it had to say
 		At(10.0, 0.0, -5.0);
 		In[Me].Move = FVector2D(-1.0, 0.0);

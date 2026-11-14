@@ -113,9 +113,9 @@
   "ai": [],
   "game": {
     "rink": {
-      "length_m": 70,
-      "width_m": 35,
-      "corner_radius_m": 3.5,
+      "length_m": 56,
+      "width_m": 28,
+      "corner_radius_m": 3,
       "board_restitution": 0.4,
       "ice_friction": 0.015,
       "goal_width_m": 4
@@ -159,35 +159,35 @@
           {
             "role": "player",
             "spawn": [
-              -5.83,
+              -4.67,
               0
             ]
           },
           {
             "role": "chaser",
             "spawn": [
-              -5.83,
-              -5.83
+              -4.67,
+              -4.67
             ]
           },
           {
             "role": "support",
             "spawn": [
-              -5.83,
-              5.83
+              -4.67,
+              4.67
             ]
           },
           {
             "role": "support",
             "spawn": [
-              -11.67,
+              -9.33,
               0
             ]
           },
           {
             "role": "back",
             "spawn": [
-              -17.5,
+              -14,
               0
             ]
           }
@@ -200,35 +200,35 @@
           {
             "role": "chaser",
             "spawn": [
-              5.83,
+              4.67,
               0
             ]
           },
           {
             "role": "support",
             "spawn": [
-              5.83,
-              5.83
+              4.67,
+              4.67
             ]
           },
           {
             "role": "support",
             "spawn": [
-              5.83,
-              -5.83
+              4.67,
+              -4.67
             ]
           },
           {
             "role": "chaser",
             "spawn": [
-              11.67,
+              9.33,
               0
             ]
           },
           {
             "role": "back",
             "spawn": [
-              17.5,
+              14,
               0
             ]
           }
@@ -262,7 +262,7 @@
     "meta": {
       "pitch": "Five a side, heavy bodies. Hit everything.",
       "facts": [
-        "5 v 5 on 70 x 35 m",
+        "5 v 5 on 56 x 28 m",
         "130 kg, first to 2",
         "checks find the man"
       ]

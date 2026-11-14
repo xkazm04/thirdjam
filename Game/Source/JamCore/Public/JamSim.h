@@ -337,6 +337,14 @@ struct JAMCORE_API FJamSkaterState
 	// BoardSlamMinMps or more); bContactBoard and the `board` event go out with it. ContactSlams counts them on the victim (a match statistic).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bContactSlam = false;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 ContactSlams = 0;
+	// Lane A177 (track F1, evolution 8): the take shield (game.contact.take_shield_frames). RULE STATE, hashed in StateHash() while not 0 (so the key's neutral
+	// value hashes as before): TakeShieldLeft, frames left in which a hit that would fell this skater is capped at a stumble; set to take_shield_frames at
+	// the end of the frame it wins the puck, counted down at the end of every frame after, 0 the moment the puck is somebody else's or nobody's. Read-outs,
+	// never hashed, read by no rule: bContactShield (the hit ContactOutcome reports this frame would have felled it and the shield made it a stumble),
+	// ContactShielded (a count on the victim).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 TakeShieldLeft = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bContactShield = false;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 ContactShielded = 0;
 	// R-0029 point 3: the last frame this skater carried the puck (-1000 = never); a check within game.stick.foul_grace_frames of it is not a foul_no_puck.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int64 LastCarryFrame = -1000;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bTouchingPuck = false;

@@ -1456,4 +1456,41 @@ bool FJamHockey5StopsBar::RunTest(const FString& Parameters)
 	return true;
 }
 
+// Bar.Bot.Hockey6.Law3Row (lane A181, track Q2, evolution 6; outside the gate's Jam filter; BRAIN-6.md). Law 3's row in the carry scene of
+// Jam.Core.Movement.StopAndGo on hockey.regular, 200 seeds a number, logged only, for each arm of JAM_A181_TUNES ("name:tune|name:tune"; default: as
+// shipped) at each level of JAM_A181_LEVELS (default "all_star,pro"): the stop begun at 8 / 9 / 9.5 / 11 / 12 m, and the straight charge.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamHockey6Law3RowBar, "Bar.Bot.Hockey6.Law3Row", JamCarrierSkillTests::Flags)
+bool FJamHockey6Law3RowBar::RunTest(const FString& Parameters)
+{
+	using namespace JamCarrierSkillTests;
+	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
+	if (!C) return false;
+	const FString TunesEnv = FPlatformMisc::GetEnvironmentVariable(TEXT("JAM_A181_TUNES"));
+	const FString LevelsEnv = FPlatformMisc::GetEnvironmentVariable(TEXT("JAM_A181_LEVELS"));
+	TArray<FString> Arms, Levels;
+	(TunesEnv.IsEmpty() ? FString(TEXT("as shipped:")) : TunesEnv).ParseIntoArray(Arms, TEXT("|"), true);
+	(LevelsEnv.IsEmpty() ? FString(TEXT("all_star,pro")) : LevelsEnv).ParseIntoArray(Levels, TEXT(","), true);
+	FScript Straight;
+	Straight.bStopAndGo = false;
+	for (const FString& Level : Levels)
+	{
+		for (const FString& Arm : Arms)
+		{
+			FString Name = Arm, Tune;
+			Arm.Split(TEXT(":"), &Name, &Tune);
+			const FTCHARToUTF8 TuneA(*Tune);
+			FString L = FString::Printf(TEXT("LAW3ROW %s | %s |"), *Level, *Name);
+			for (double M : { 8.0, 9.0, 9.5, 11.0, 12.0 })
+			{
+				FScript S;
+				S.BrakeAtM = M;
+				L += FString::Printf(TEXT(" %.1f m %.1f"), M, 100.0 * Share(*C, S, 200, *Level, TuneA.Get()).PastShare());
+			}
+			L += FString::Printf(TEXT(" | straight %.1f"), 100.0 * Share(*C, Straight, 200, *Level, TuneA.Get()).PastShare());
+			AddInfo(L);
+		}
+	}
+	return true;
+}
+
 #endif

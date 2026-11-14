@@ -101,6 +101,21 @@ namespace JamAI
 		bool bContestBrake = false;
 		bool bContestedNow = false;
 		int ContestBrakeFrames = 0;      // frames the decision braked for it (the stats read it)
+		// Lane A178 (track F2 evolution 8; env JAM_PLAYTESTER_STOPMARK=brake | stop, off by default): the player obeys the stop's line (JamCarrierMarks::StopMark
+		// lit, set by RunPlaytestMatch each frame with the opponent's place). brake = law 3's whole move as drill 21 plays it (FJamCarryDrill, the first move):
+		// when the line lights he pulls back and to the open side until he is slower than 2 m/s (45 frames at most), cuts 60 degrees off his line to the side the
+		// opponent is not on for StopCutFrames, then the script goes on; not again for StopBrakeRearm frames. stop = the stop alone (he brakes StopOnlyFrames
+		// and the script goes on straight): the arm that shows what the line is worth to a player who reads "stop" and no more.
+		bool bStopMarkBrake = false;
+		bool bStopMarkStopOnly = false;
+		bool bStopLitNow = false;
+		double StopDefTowardMps = 0.0;   // env JAM_PLAYTESTER_STOPMARK_DEFTOWARD: the instrument's line lights only for an opponent skating at him this fast (a measurement's arm; 0 = the shipped rule)
+		FVec2 StopDef, StopLine = FVec2(1.0, 0.0);
+		double StopSide = 1.0;
+		int StopPhase = 0;               // 0 none, 1 the stop, 2 the cut
+		long long StopPhaseStart = 0, StopBrakeNext = -1;
+		int StopBrakes = 0;
+		enum { StopOnlyFrames = 24, StopCutFrames = 45, StopBrakeRearm = 84 };
 		bool bPokeReadOn = false;        // lane A152: the profile's bPokeRead applies (stick.bPlaytesterPokeRead, or env JAM_PLAYTESTER_POKE=read; =old forces the press as it was)
 		int StickVariant = 0;            // lane A86 measurement arms (env JAM_PLAYTESTER_STICK): 0 aim, 2 carry (no cursor on a loose puck), 3 front (the carry aim within 60 deg of facing)
 
@@ -178,6 +193,12 @@ namespace JamAI
 		int ChecksCooling = 0, LungesMissed = 0, BotChecksCooling = 0, BotLungesMissed = 0, BotCheckPresses = 0;
 		// Lane A165 (track F1, evolution 7): board slams (FJamSkaterState::bContactSlam) of any skater, the frames down they gave, the human's own.
 		int Slams = 0, SlamsHuman = 0;
+		// Lane A177 (track F1, evolution 8; REVIEW-3 item 2): the human's knockdowns by what he held. KdWon: the puck his for under half a second (frames since
+		// he won it under 30: "hit as he won it"); KdWon15: of those, inside 15 frames; KdCarry: carrying for longer; KdNoPuck: the rest. HumanDownFrames:
+		// play frames he lay on the ice; HumanStumbleFrames: play frames he stumbled. ShieldHuman / ShieldBots: hits the take shield capped
+		// (FJamSkaterState::ContactShielded), on the human and on every other skater.
+		int KdWon = 0, KdWon15 = 0, KdCarry = 0, KdNoPuck = 0, ShieldHuman = 0, ShieldBots = 0;
+		int64_t HumanDownFrames = 0, HumanStumbleFrames = 0;
 		int64_t SlamDownFrames = 0;
 		int FoulsFromBehind = 0, FoulsNoPuck = 0;   // the two kinds of foul (contracts/events.md): from behind on the carrier; on a skater without the puck
 		int64_t BoxFrames = 0;           // frames the human sat in the penalty box

@@ -22,6 +22,21 @@ bool FJamHudMarks::RunTest(const FString& Parameters)
 	// The sizes: the contested ring is wider than the carrier's (0.8 m) and the human's (1.1 m) rings; the lit stop mark is larger than the armed one.
 	TestTrue(TEXT("the contested puck's ring is larger than the rings under skaters"), UJamHudWidget::ContestRingRadiusM > UJamHudWidget::YouRingRadiusM && UJamHudWidget::ContestRingRadiusM > UJamHudWidget::CarrierRingRadiusM);
 	TestTrue(TEXT("the stop mark grows when it lights (lane A171: a line that thickens, not a ring)"), UJamHudWidget::StopBarLitThickM > UJamHudWidget::StopBarArmedThickM && UJamHudWidget::StopBarLitMinPx > UJamHudWidget::StopBarArmedMinPx && UJamHudWidget::StopMarkArmedAlpha < 1.f);
+	// Lane A178: what a real window could not read on package H30. The contested mark is a target (two rings, the outer larger than any ring under a
+	// skater by half) with a ring under the opponent who comes; the lit line is a metre deep and never under 18 px, three times the chalk line.
+	TestTrue(TEXT("the contested mark: an outer ring of 1.8 m, an inner one inside it, a ring under the opponent"), UJamHudWidget::ContestRingRadiusM >= 1.5f * UJamHudWidget::YouRingRadiusM
+		&& UJamHudWidget::ContestInnerRadiusM < UJamHudWidget::ContestRingRadiusM - 0.5f && UJamHudWidget::ContestOppRadiusM > UJamHudWidget::CarrierRingRadiusM);
+	TestTrue(TEXT("the lit line is at least twice the chalk line, in metres and in pixels, and never under 20 px"), UJamHudWidget::StopBarLitThickM >= 2.f * UJamHudWidget::StopBarArmedThickM && UJamHudWidget::StopBarLitMinPx >= 2.f * UJamHudWidget::StopBarArmedMinPx
+		&& UJamHudWidget::StopBarLitMinPx >= 20.f);
+	{
+		// The line on the screen: a level line 300 px long whose depth projects to 5 px is drawn 20 px thick when lit and 9 when armed.
+		FVector2D C, Sz, Mn, Mx;
+		float Ang = 0.f;
+		UJamHudWidget::StopBarLayout(FVector2D(100, 400), FVector2D(400, 400), FVector2D(250, 398), FVector2D(250, 403), UJamHudWidget::StopBarLitMinPx, C, Sz, Ang, Mn, Mx);
+		TestTrue(TEXT("lit: 20 px at least"), FMath::IsNearlyEqual(static_cast<float>(Sz.Y), UJamHudWidget::StopBarLitMinPx, 0.01f) && FMath::IsNearlyEqual(static_cast<float>(Sz.X), 300.f, 0.01f));
+		UJamHudWidget::StopBarLayout(FVector2D(100, 400), FVector2D(400, 400), FVector2D(250, 398), FVector2D(250, 403), UJamHudWidget::StopBarArmedMinPx, C, Sz, Ang, Mn, Mx);
+		TestTrue(TEXT("armed: 9 px at least"), FMath::IsNearlyEqual(static_cast<float>(Sz.Y), UJamHudWidget::StopBarArmedMinPx, 0.01f));
+	}
 	// The stop mark stands inside the window it lights for.
 	{
 		const JamCarrierMarks::FStopRule K;
