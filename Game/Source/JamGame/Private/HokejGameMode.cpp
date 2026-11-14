@@ -63,6 +63,9 @@ static TAutoConsoleVariable<FString> CVarJamCut(TEXT("jam.Cut"), TEXT("hockey.re
 	TEXT("Cartridge the Hokej game mode loads at start (name in Content/Cartridges or a path). The -cut=<name> launch argument wins."));
 static TAutoConsoleVariable<int32> CVarJamScriptHuman(TEXT("jam.ScriptHuman"), 0,
 	TEXT("1: the human's skater plays itself (skate behind the puck, shoot when lined up). For PIE proofs through MCP."));
+// Lane A135 (track U1, evolution 4; ScriptedHumanInput by the Director's order): the scripted human steers as a hand does, through the camera.
+static TAutoConsoleVariable<int32> CVarJamScriptHumanCam(TEXT("jam.ScriptHumanCam"), 0,
+	TEXT("N > 0 (with jam.ScriptHuman 1): the script's move is turned into held keys (W A S D, eight ways) in the camera's frame, re-decided every N sim frames (12 = a hand's 200 ms), and read back through the live camera's yaw every frame as ReadHumanInput reads the keys: a camera that turns turns the skater. JAMSCREEN hand lines every 600 frames. 0 = the script writes its move on the ice directly (as before). Proofs only."));
 // Lane A49: the tackle / cross-check drill (packaged proof of complaint 5). 1 = tackle (right mouse), 2 = cross-check (middle mouse); resets to 0 after 10 attempts.
 // Lane A73: the still capture of the tackling proof (see StillsObserve).
 static TAutoConsoleVariable<int32> CVarJamCtrlStills(TEXT("jam.ctrl.Stills"), 0,
@@ -699,6 +702,58 @@ FJamInput AHokejGameMode::ScriptedHumanInput()
 	FJamInput In;
 	const FVector2D D = Behind - S.Pos;
 	In.Move = D.Size() > 0.3 ? D.GetSafeNormal() : ToGoal;
+	// Lane A135 (track U1, evolution 4): the same move through the camera (jam.ScriptHumanCam N). The hand looks at the picture, picks the keys that point
+	// where the script wants to go (eight ways in the camera's frame), holds them for N frames, and the game reads the held keys in the live camera's yaw every
+	// frame (with lane A93's rule: while the keys pull back, in the yaw of the moment the pull began), exactly as ReadHumanInput does. So a camera that turns
+	// under held keys turns the skater: the loop lane A64 measured, now visible to a headless run. The yaw is the follow camera's own of the last sim frame
+	// (FJamCameraFilter::LastYawOutDeg: exact, so two runs whose cameras never differ in yaw play the same match to the bit). State: one game mode at a time.
+	if (const int32 React = CVarJamScriptHumanCam.GetValueOnGameThread(); React > 0 && !In.Move.IsNearlyZero())
+	{
+		struct FHand
+		{
+			int64 Frame = -1, Decided = -1000000, N = 0, Over45 = 0;
+			FVector2D Keys = FVector2D(0, 1);
+			bool bBack = false;
+			double BackYaw = 0.0, Sum = 0.0, Max = 0.0;
+		};
+		static FHand Hand;
+		const int64 Now = Sim->GetFrame();
+		if (Now < Hand.Frame) Hand = FHand();   // a new match
+		Hand.Frame = Now;
+		double CamYaw = S.Yaw;
+		if (const AJamSkater* HumanActor = GetHumanSkater())
+		{
+			const UJamFollowCamera* Cam = HumanActor->FindComponentByClass<UJamFollowCamera>();
+			if (Cam && Cam->GetFilter().bInit) CamYaw = FMath::DegreesToRadians(static_cast<double>(Cam->GetFilter().LastYawOutDeg));
+		}
+		const FVector2D Want = In.Move.GetSafeNormal();
+		if (Now - Hand.Decided >= React)
+		{
+			const FVector2D CamFwd(FMath::Cos(CamYaw), FMath::Sin(CamYaw)), CamRight(-FMath::Sin(CamYaw), FMath::Cos(CamYaw));
+			const double A = FMath::Atan2(FVector2D::DotProduct(Want, CamRight), FVector2D::DotProduct(Want, CamFwd));   // 0 = W, a quarter turn = D
+			const double A8 = FMath::RoundToDouble(A / (UE_DOUBLE_PI / 4.0)) * (UE_DOUBLE_PI / 4.0);
+			Hand.Keys = FVector2D(FMath::Sin(A8), FMath::Cos(A8));   // x right, y forward
+			Hand.Decided = Now;
+			Hand.bBack = false;   // a new decision is a new press: a pull back is read in the yaw of this moment (build 9 kept the first pull's yaw for ever)
+		}
+		double MoveYaw = CamYaw;
+		if (Hand.Keys.Y < -0.3)
+		{
+			if (!Hand.bBack) { Hand.bBack = true; Hand.BackYaw = CamYaw; }
+			MoveYaw = Hand.BackYaw;
+		}
+		else Hand.bBack = false;
+		const FVector2D MoveFwd(FMath::Cos(MoveYaw), FMath::Sin(MoveYaw)), MoveRight(-FMath::Sin(MoveYaw), FMath::Cos(MoveYaw));
+		In.Move = MoveFwd * Hand.Keys.Y + MoveRight * Hand.Keys.X;
+		// How far the move the game got is from the move the script wanted (the eight ways cost up to 22.5 degrees by themselves).
+		const double Err = FMath::RadiansToDegrees(FMath::Acos(FMath::Clamp(FVector2D::DotProduct(Want, In.Move), -1.0, 1.0)));
+		++Hand.N; Hand.Sum += Err; Hand.Max = FMath::Max(Hand.Max, Err); if (Err > 45.0) ++Hand.Over45;
+		if (Hand.N % 600 == 0)
+		{
+			UE_LOG(LogHokej, Log, TEXT("JAMSCREEN hand sim_frame=%lld frames=%lld react=%d steer_err_mean=%.2f steer_err_max=%.1f over_45=%lld pos=(%.2f,%.2f)"), Now, Hand.N, React,
+				Hand.Sum / static_cast<double>(Hand.N), Hand.Max, Hand.Over45, S.Pos.X, S.Pos.Y);
+		}
+	}
 	const FVector2D ToPuck = PuckPos - S.Pos;
 	const double Dist = ToPuck.Size();
 	const double GoalDist = FVector2D::Distance(PuckPos, Goal);

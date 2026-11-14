@@ -131,6 +131,37 @@ struct JAMGAME_API FJamCameraSettings
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
 	float KeepRiseM = 0.2f;
 
+	// Lane A135, evolution 4 (the Director's order: "the yaw out of the hold"): the move input is read in the live camera's yaw, so a camera the hold turns
+	// turns W with it. With this on the hold is position, height and pitch alone: the slide is repeated against the boards' inset (a slide the glass stopped
+	// goes on along the glass), and what is still left is answered by the least step of the foot towards the point over the skater (from there he is always
+	// in the frame). Build 9 did exactly that and turned the camera on 0 frames, but the least step is not always a small one: 2.9 m of camera and 18 degrees
+	// of pitch in one frame. So the hold's own move of the foot (its offset from the rig's foot) changes by at most KeepStepM a frame, and the yaw stays as a
+	// guard for the frames the limited move does not yet hold him, counted (FJamCameraFilter::LastKeepYawDeg; the probe's yaw_changed).
+	// 2 = never the yaw (the default): the limited move alone; a frame it does not yet hold him is a frame his chest is outside the fraction (measured: 40 and
+	// 15 of 6,000 frames, six in a row at most, never outside the frame). With it the hold cannot move a hand's path: the camera-relative scripted human plays
+	// the same match to the hash with the hold on and off. 1 = the yaw as that guard (chest lost 0; the camera turned on 76 and 24 frames and his track
+	// was 0.9 m off two seconds later). 0 = evolution 3's hold (one slide, then the yaw: 395 and 150 frames, 3 m off). From jam.camera.KeepNoYaw.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
+	int32 KeepNoYaw = 2;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
+	float KeepStepM = 0.6f;
+
+	// Lane A135, evolution 4: the net the human attacks is kept in the frame while he is inside the blue line and the camera looks its way (the net's mouth
+	// within NetKeepBearingDeg of the camera's yaw: what a camera that may not turn can show). 0 = off (the neutral value, the tests' default); the game
+	// camera sets it from jam.camera.KeepNet. The rule is in KeepHumanInFrame: the pitch looks as far up as the chest's budget lets it, and when that is
+	// not enough the crane gives height back (the camera comes down behind him as far as the boards allow) by at most KeepRiseM a frame.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
+	float KeepNetFrac = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
+	float NetKeepBearingDeg = 30.f;
+
+	// With the boards right behind him the camera is close, and even at the rig's height the chest and the net do not fit the frame's height together: for
+	// the net the camera may then come down to this height (an over-the-shoulder view at the attacked net).
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
+	float KeepNetMinHeightM = 2.2f;
+
 	// The far net is kept in frame when the human is within this distance of it.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
 	float NetFrameNearM = 16.f;
@@ -183,6 +214,14 @@ struct JAMGAME_API FJamCameraFilter
 	FJamSpring Corner;
 	// A135: the height the keep-human stage gave last frame (0 = none yet, or the stage is off): its crane moves from it by at most KeepRiseM a frame.
 	float KeepHeightM = 0.f;
+	// A135, evolution 4, diagnostics of the last step (not state): the camera's yaw as the rig gave it and as the hold left it, and the difference
+	// (0 wherever the hold is position, height and pitch alone). The camera-relative scripted human reads LastYawOutDeg.
+	float LastYawRigDeg = 0.f;
+	float LastYawOutDeg = 0.f;
+	float LastKeepYawDeg = 0.f;
+	// A135, evolution 4: the hold's own move of the foot on the last frame (its point minus the rig's), which the next frame may change by KeepStepM at most.
+	FVector2D KeepOffsetM = FVector2D::ZeroVector;
+	bool bKeepOffset = false;
 
 	// Diagnostics of the last step (not state): the displacement the boards imposed over the arm length (0 = free, 1 = a whole arm) and its direction (into the rink).
 	float LastClampS = 0.f;
@@ -264,7 +303,7 @@ public:
 	// hold), PrevHeightM the height this stage gave on the frame before (0 = none: no limit on the rise). In and out: the camera's point on the ice (metres),
 	// its height (metres), its pitch and its yaw (degrees). Pure: the one value of state is the caller's.
 	static void KeepHumanInFrame(const FJamCameraSettings& C, const FJamCameraRink& Rink, const FVector2D& PivotM, const FVector2D& HumanM, float PrevHeightM,
-		FVector2D& InOutPosM, float& InOutHeightM, float& InOutPitchDeg, float& InOutYawDeg);
+		FVector2D& InOutPosM, float& InOutHeightM, float& InOutPitchDeg, float& InOutYawDeg, const FVector2D* NetM = nullptr, const FVector2D* PrevOffsetM = nullptr);
 
 	// A111. The share of the frame that is ice: of Cols x Rows rays through the frame (horizontal FOV, aspect), the fraction that meet z = 0 inside the boards.
 	static float IceShare(const FTransform& Pose, float HFovDeg, float Aspect, const FJamCameraRink& Rink, int32 Cols = 16, int32 Rows = 9);
@@ -345,6 +384,8 @@ private:
 	struct FKeepProbe
 	{
 		int64 Frames = 0, OutThird = 0, OutFrame = 0, Carry = 0, CarryPuckOut = 0, Zone = 0, ZoneNetOut = 0, Pulled = 0, Craned = 0;
+		int64 YawChanged = 0, Facing = 0, FacingNetOut = 0;   // evolution 4: frames the hold turned the camera; in the zone with the net within 30 degrees of the yaw
+		float MaxKeepYaw = 0.f;
 		float MaxX = 0.f, MaxY = 0.f, MaxStepCm = 0.f, MaxPitchStep = 0.f, MaxYawStep = 0.f, MaxHeightM = 0.f;
 		FVector PrevLoc = FVector::ZeroVector;
 		float PrevPitch = 0.f, PrevYaw = 0.f;

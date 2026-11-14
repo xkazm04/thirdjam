@@ -641,3 +641,15 @@ of its own tree; presentation, tools, tests and documents land as before; (4) wi
 in the order he will meet it, the controls, what to try (the stop-and-go, a hit at speed against a nudge, the twelve modes, a joined match), what is known
 to be unfinished, and the questions only he can answer; (5) the design eye's second review (REVIEW-2) runs on that package's commit before 10:00, so his
 play and the measured review can be laid side by side.
+
+## R-0057 (H26, 2026-11-14 01:27): the season is a ramp, and every take may move; a Shipping compile is part of every landing
+(1) The curve lane measured the season on the re-set ladder: a novice wins take 3 86 %, then take 4 14.5 %, take 5 10.5 %, take 7 14 %, take 8 2.5 %: a
+cliff after the third match. **The season is the newcomer's school**: takes 1 to 3 stay as they are (rookie; a novice wins 80 % or more); from take 3 to
+take 7 the novice's win rate falls by **no more than 20 points a take** and take 7 is no lower than 15 %; every take from 4 to 7 may change its level name
+and carry one `ai.red_skill` (and nothing else of the profile); **take 8 is the finale**: a regular player wins it at least 25 % (18.5 % today) and a good
+player about half; a take's own rules and its card text stay (a take that is about the hit stays about the hit); the fallbacks follow their takes. The
+curve lane's third evolution sets it, 200 matches a take and class, and it lands before the operator's package. (2) All_star on the regular rink stays
+at 29.6 % (3.6 over, inside the bar): the numbers are saturated; it is the brain track's to move, not tonight's. (3) **The Shipping target is compiled
+before every push**, not only by the release chain: twice now a test written below its file's automation guard passed every gate and stopped a release at
+its first step (H26 on Friday, H27 tonight). The landing chain gains the step; until it has it, the Director scans for tests outside a guard at each
+landing.

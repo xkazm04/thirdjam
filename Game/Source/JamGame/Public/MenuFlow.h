@@ -6,6 +6,7 @@
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "JamDesignerSubsystem.h"
+#include "InputCoreTypes.h"
 #include "MenuFlow.generated.h"
 
 class UJamCartridge;
@@ -46,12 +47,36 @@ struct JAMGAME_API FJamModeCard
 	TArray<FString> Facts;
 };
 
+// Lane A144 (track U2): one row of the CONTROLS screen. Bound lists the keys of UJamInputMap's context the row speaks for: Jam.Menu.ControlsComplete
+// holds the rows against the bindings in both directions (a key bound and not listed fails, a key listed and not bound fails). A row with no Bound
+// keys is read outside that context (the team signals).
+struct JAMGAME_API FJamControlRow
+{
+	FString Verb;
+	// Mouse and keys.
+	FString Keys;
+	FString Pad;
+	// What it does, one short line.
+	FString Note;
+	TArray<FKey> Bound;
+};
+
 UCLASS()
 class JAMGAME_API UJamMenuFlow : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 
 public:
+	// Lane A144: the first screen. FirstCut is what PLAY NOW starts (a first match, no choices); the two lines say what the game is.
+	static const TCHAR* FirstCut;   // "hockey.regular"
+	static FString WhatItIsLine();
+	static FString BrandLine();
+	// The one line under a cut card's name: a shipped cut's first four facts ("120 x 60 m, pickups on the ice, first to 3, body checks"), a saved
+	// cut's sentence in quotes. The card shows two lines of it.
+	static FString CutCardLine(const FJamMenuCutRow& Row);
+	// The CONTROLS screen's rows, in the order a hand learns them.
+	static const TArray<FJamControlRow>& ControlRows();
+
 	static const TCHAR* MenuMap;   // "/Game/Maps/Menu"
 	static const TCHAR* RinkMap;   // "/Game/Maps/Rink"
 
@@ -68,8 +93,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Jam|Menu")
 	static FString DisplayNameFor(const FJamCutInfo& Cut);
 
-	// One line: "Night Rink: 120 x 60 m, first to 3, body checks, 3 pickup kinds".
-	static FString DescribeCut(const UJamCartridge& C);
+	// One line: "Night Rink: 120 x 60 m, first to 3, body checks, 3 pickup kinds". Lane A144: bWithName false leaves the theme name out (a shipped
+	// cut's row is headed by its own name; "Night Rink" over a cut that plays on clay told the player wrongly).
+	static FString DescribeCut(const UJamCartridge& C, bool bWithName = true);
 	// "speed 8 m/s   shot 18 m/s   ice 0.015   bounce 0.4"
 	static FString KeyTunables(const UJamCartridge& C);
 	// Loads every cut once to describe it; a cut that fails to load is listed with the error as its description.

@@ -55,6 +55,10 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UButton> JoinButton;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> CodesText;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> WarningText;
+	// Lane A144 (track U2): who does what, in docs/experiments/JOIN-GUIDE.md's words: over the host's row, over the guest's row, under the codes.
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> HostHelp;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> JoinHelp;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> CodesHelp;
 	UPROPERTY(Transient) TObjectPtr<UHorizontalBox> NamesRow;
 	UPROPERTY(Transient) TObjectPtr<UBorder> HomePlate;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> HomeName;

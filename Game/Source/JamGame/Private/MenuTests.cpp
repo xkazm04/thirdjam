@@ -21,6 +21,12 @@
 #include "JamCartridge.h"
 #include "JamJson.h"
 #include "JamDesignerSubsystem.h"
+#include "InputMapping.h"
+#include "InputMappingContext.h"
+#include "MenuStyle.h"
+#include "Fonts/FontMeasure.h"
+#include "Rendering/SlateRenderer.h"
+#include "Framework/Application/SlateApplication.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
 
@@ -264,6 +270,182 @@ bool FJamMenuDirectorsChoices::RunTest(const FString&)
 		TestFalse(*FString::Printf(TEXT("%s pitch"), *M.Name), M.Pitch.IsEmpty());
 	}
 	TestTrue(TEXT("the regular cut is not a mode"), UJamMenuFlow::ModeDisplayForId(TEXT("hockey-regular")).IsEmpty());
+	return true;
+}
+
+// ---------------------------------------------------------------- lane A144 (track U2): the first screen, the fit, the controls
+
+namespace JamMenuTests
+{
+	// A menu widget in a game world of its own. No game instance, so no Designer and no season: the first screen, the mode cards (read from disk),
+	// the settings, the credits and the controls build as they do in the game; the cut cards are checked from the rows.
+	struct FMenuFixture
+	{
+		UWorld* World = nullptr;
+		UJamMenuWidget* Menu = nullptr;
+
+		FMenuFixture()
+		{
+			if (!GEngine || !FSlateApplication::IsInitialized()) return;
+			World = UWorld::CreateWorld(EWorldType::Game, false, TEXT("JamMenuTestWorld"));
+			if (!World) return;
+			FWorldContext& Ctx = GEngine->CreateNewWorldContext(EWorldType::Game);
+			Ctx.SetCurrentWorld(World);
+			Menu = CreateWidget<UJamMenuWidget>(World, UJamMenuWidget::StaticClass());
+			if (Menu) { Menu->AddToRoot(); Menu->TakeWidget(); Menu->ShowScreen(EJamMenuScreen::Main); }
+		}
+		~FMenuFixture()
+		{
+			if (Menu) { Menu->ReleaseSlateResources(true); Menu->RemoveFromRoot(); }
+			if (World) { GEngine->DestroyWorldContext(World); World->DestroyWorld(false); }
+		}
+	};
+
+	// The viewport in slate units at both shipped resolutions: the DPI curve scales by the short side over 1080 (1280 x 720 at 2/3 is 1920 x 1080).
+	constexpr float ViewW = 1920.f;
+	constexpr float ViewH = 1080.f;
+}
+
+// The first screen says what the game is and opens on PLAY NOW: one match on the regular cut, five a side as the line says.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamMenuFirstScreen, "Jam.Menu.FirstScreen", JamMenuTests::MenuTestFlags)
+bool FJamMenuFirstScreen::RunTest(const FString&)
+{
+	JamMenuTests::FMenuFixture F;
+	if (!TestNotNull(TEXT("the menu builds in a test world"), F.Menu)) return false;
+	const TArray<FString> Labels = F.Menu->GetMainLabels();
+	const TArray<FString> Expected = { TEXT("PLAY NOW"), TEXT("PLAY THE SEASON"), TEXT("CHOOSE YOUR CUT"), TEXT("DIRECT A CUT"), TEXT("BRAWL WITH A FRIEND"),
+		TEXT("CONTROLS"), TEXT("SETTINGS"), TEXT("CREDITS"), TEXT("QUIT") };
+	TestEqual(TEXT("nine buttons on the first screen"), Labels.Num(), Expected.Num());
+	for (int32 i = 0; i < Expected.Num() && i < Labels.Num(); ++i)
+	{
+		TestTrue(*FString::Printf(TEXT("button %d is %s (it reads %s)"), i + 1, *Expected[i], *Labels[i]), Labels[i].StartsWith(Expected[i]));
+	}
+	TestNotNull(TEXT("the screen has a first press"), F.Menu->GetFirstPress());
+	TestEqual(TEXT("PLAY NOW starts the regular cut"), FString(UJamMenuFlow::FirstCut), FString(TEXT("hockey.regular")));
+
+	// The line is true of the cut the first press starts.
+	TArray<FString> Errors;
+	const UJamCartridge* C = UJamCartridge::LoadFromFile(UJamCartridge::ResolveCartridgePath(UJamMenuFlow::FirstCut), Errors);
+	if (!TestNotNull(TEXT("the first cut loads"), C)) return false;
+	const FString What = UJamMenuFlow::WhatItIsLine();
+	TestTrue(TEXT("the line says what the game is, in one line"), What.Contains(TEXT("hockey")) && What.Len() <= 64);
+	TestTrue(TEXT("five a side, as the line says"), What.Contains(TEXT("Five-a-side")) && C->Game.Teams.Num() == 2 && C->Game.Teams[0].Skaters.Num() == 5 && C->Game.Teams[1].Skaters.Num() == 5);
+	// R-0054 point 5: the whistle line only when the first cut has no whistle.
+	TestTrue(TEXT("the brand line does not promise a whistle-free game the first cut does not play"), !UJamMenuFlow::BrandLine().Contains(TEXT("whistle")) || !C->Game.Rules.bPenalties);
+	return true;
+}
+
+// Twelve cards, every name inside its card, and every screen inside the 720p viewport by the widget's own desired size.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamMenuFitsTheScreen, "Jam.Menu.FitsTheScreen", JamMenuTests::MenuTestFlags)
+bool FJamMenuFitsTheScreen::RunTest(const FString&)
+{
+	JamMenuTests::FMenuFixture F;
+	if (!TestNotNull(TEXT("the menu builds in a test world"), F.Menu)) return false;
+	const TPair<EJamMenuScreen, const TCHAR*> Screens[] = {
+		{ EJamMenuScreen::Main, TEXT("main") }, { EJamMenuScreen::Cuts, TEXT("cuts") }, { EJamMenuScreen::Direct, TEXT("direct") },
+		{ EJamMenuScreen::Settings, TEXT("settings") }, { EJamMenuScreen::Credits, TEXT("credits") }, { EJamMenuScreen::Controls, TEXT("controls") } };
+	for (const TPair<EJamMenuScreen, const TCHAR*>& Sc : Screens)
+	{
+		const FVector2D Size = F.Menu->MeasureScreen(Sc.Key);
+		// The test world has no Designer, so the cuts screen is measured without its cut cards: the "No cuts found" line (one body line and its
+		// 6 units of padding: 35) stands where the two rows of cut cards (CutListHeight) are in the game.
+		const float Extra = Sc.Key == EJamMenuScreen::Cuts ? UJamMenuWidget::CutListHeight() - 35.f : 0.f;
+		AddInfo(FString::Printf(TEXT("JAMMENU measure %s %.0f x %.0f of %.0f x %.0f"), Sc.Value, Size.X, Size.Y + Extra, JamMenuTests::ViewW, JamMenuTests::ViewH));
+		TestTrue(*FString::Printf(TEXT("%s is at most %.0f wide (%.0f)"), Sc.Value, JamMenuTests::ViewW, Size.X), Size.X > 100.f && Size.X <= JamMenuTests::ViewW);
+		TestTrue(*FString::Printf(TEXT("%s is at most %.0f high (%.0f)"), Sc.Value, JamMenuTests::ViewH, Size.Y + Extra), Size.Y > 100.f && Size.Y + Extra <= JamMenuTests::ViewH);
+	}
+
+	// The twelve cards are on the screen, and their words fit the card's own text width with the card's own type: the name on one line, the pitch
+	// on two, every fact on one (a fact that wrapped left an orphan unit: "catch passes at 3 / m").
+	F.Menu->MeasureScreen(EJamMenuScreen::Cuts);
+	TestEqual(TEXT("twelve mode cards on the cuts screen"), F.Menu->GetModeButtons().Num(), 12);
+	const TSharedRef<FSlateFontMeasure> Measure = FSlateApplication::Get().GetRenderer()->GetFontMeasureService();
+	const float TextW = UJamMenuWidget::ModeTextWidth();
+	float WidestName = 0.f, WidestPitch = 0.f, WidestFact = 0.f;
+	FString WidestNameIs;
+	for (const FJamModeCard& M : UJamMenuFlow::AvailableModeCards())
+	{
+		const float NameW = static_cast<float>(Measure->Measure(M.Display.ToUpper(), UJamMenuWidget::ModeNameFont()).X);
+		const float PitchW = static_cast<float>(Measure->Measure(M.Pitch, UJamMenuWidget::ModePitchFont()).X);
+		if (NameW > WidestName) { WidestName = NameW; WidestNameIs = M.Display; }
+		WidestPitch = FMath::Max(WidestPitch, PitchW);
+		TestTrue(*FString::Printf(TEXT("%s fits its card on one line (%.0f of %.0f)"), *M.Display, NameW, TextW), NameW > 0.f && NameW <= TextW);
+		// Two lines hold at most 1.75 widths of words (the break between them costs up to a word).
+		TestTrue(*FString::Printf(TEXT("%s pitch fits two lines (%.0f of %.0f)"), *M.Display, PitchW, 1.75f * TextW), PitchW > 0.f && PitchW <= 1.75f * TextW);
+		for (const FString& Fact : M.Facts)
+		{
+			const float FactW = static_cast<float>(Measure->Measure(FString::Printf(TEXT("- %s"), *Fact), UJamMenuWidget::ModeFactFont()).X);
+			WidestFact = FMath::Max(WidestFact, FactW);
+			TestTrue(*FString::Printf(TEXT("%s fact '%s' fits one line (%.0f of %.0f)"), *M.Display, *Fact, FactW, TextW), FactW > 0.f && FactW <= TextW);
+		}
+	}
+	AddInfo(FString::Printf(TEXT("JAMMENU measure cards: widest name %.0f (%s), widest pitch %.0f, widest fact %.0f, text width %.0f"), WidestName, *WidestNameIs, WidestPitch, WidestFact, TextW));
+
+	// The cut cards: every shipped cut's name on one line and its line on two, inside a third of the list.
+	for (const FJamMenuCutRow& R : UJamMenuFlow::BuildCutRows(MakeDesigner()->ListCuts()))
+	{
+		const float W = static_cast<float>(Measure->Measure(R.Display.ToUpper(), UJamMenuWidget::CutNameFont()).X);
+		TestTrue(*FString::Printf(TEXT("%s fits a cut card (%.0f of %.0f)"), *R.Display, W, UJamMenuWidget::CutTextWidth()), W > 0.f && W <= UJamMenuWidget::CutTextWidth());
+		TestFalse(*FString::Printf(TEXT("%s is described by its own facts, not by a theme name"), *R.Display), R.Description.Contains(TEXT("Night Rink")));
+		const float LineW = static_cast<float>(Measure->Measure(UJamMenuFlow::CutCardLine(R), UJamMenuWidget::CutLineFont()).X);
+		TestTrue(*FString::Printf(TEXT("%s line fits two lines of its card (%.0f of %.0f)"), *R.Display, LineW, 1.75f * UJamMenuWidget::CutTextWidth()), LineW > 0.f && LineW <= 1.75f * UJamMenuWidget::CutTextWidth());
+	}
+	return true;
+}
+
+// The CONTROLS screen against the bindings: every key UJamInputMap binds is on a row, every key a row names is bound, and the rows say the
+// things a hand cannot guess (a tap is a flat shot, a held pass is a saucer, S against your motion brakes).
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamMenuControlsComplete, "Jam.Menu.ControlsComplete", JamMenuTests::MenuTestFlags)
+bool FJamMenuControlsComplete::RunTest(const FString&)
+{
+	UJamInputMap* Map = UJamInputMap::Get();
+	if (!TestNotNull(TEXT("the input map"), Map) || !TestNotNull(TEXT("its context"), Map->Context.Get())) return false;
+	const TArray<FJamControlRow>& Rows = UJamMenuFlow::ControlRows();
+	TSet<FKey> Listed;
+	for (const FJamControlRow& R : Rows)
+	{
+		TestTrue(*FString::Printf(TEXT("%s has keys, a pad button and a line"), *R.Verb), !R.Verb.IsEmpty() && !R.Keys.IsEmpty() && !R.Pad.IsEmpty() && !R.Note.IsEmpty());
+		for (const FKey& K : R.Bound)
+		{
+			Listed.Add(K);
+			const bool bBound = Map->Context->GetMappings().ContainsByPredicate([&](const FEnhancedActionKeyMapping& M) { return M.Key == K; });
+			TestTrue(*FString::Printf(TEXT("%s names %s, which the game binds"), *R.Verb, *K.ToString()), bBound);
+		}
+	}
+	int32 Bound = 0;
+	for (const FEnhancedActionKeyMapping& M : Map->Context->GetMappings())
+	{
+		++Bound;
+		TestTrue(*FString::Printf(TEXT("the bound key %s is on the controls screen"), *M.Key.ToString()), Listed.Contains(M.Key));
+	}
+	AddInfo(FString::Printf(TEXT("JAMMENU controls: %d rows, %d keys listed, %d mappings bound"), Rows.Num(), Listed.Num(), Bound));
+
+	auto Row = [&](const TCHAR* Verb) -> const FJamControlRow*
+	{
+		return Rows.FindByPredicate([&](const FJamControlRow& R) { return R.Verb.StartsWith(Verb); });
+	};
+	const FJamControlRow* Shoot = Row(TEXT("SHOOT"));
+	TestTrue(TEXT("shoot: left mouse, a tap is a flat shot"), Shoot && Shoot->Keys.Contains(TEXT("left mouse")) && Shoot->Note.Contains(TEXT("tap is a flat shot")) && Map->IsKeyMapped(Map->Shoot, EKeys::LeftMouseButton));
+	const FJamControlRow* Check = Row(TEXT("CHECK"));
+	TestTrue(TEXT("check: right mouse"), Check && Check->Keys.Contains(TEXT("right mouse")) && Map->IsKeyMapped(Map->Check, EKeys::RightMouseButton));
+	const FJamControlRow* Lift = Row(TEXT("CROSS-CHECK"));
+	TestTrue(TEXT("cross-check or lift: middle mouse"), Lift && Lift->Verb.Contains(TEXT("LIFT")) && Lift->Keys.Contains(TEXT("middle mouse")) && Map->IsKeyMapped(Map->Lift, EKeys::MiddleMouseButton));
+	const FJamControlRow* Pass = Row(TEXT("PASS"));
+	TestTrue(TEXT("pass: Q, held is a saucer"), Pass && Pass->Keys == TEXT("Q") && Pass->Note.Contains(TEXT("saucer")) && Map->IsKeyMapped(Map->Pass, EKeys::Q));
+	const FJamControlRow* Ability = Row(TEXT("ABILITY"));
+	TestTrue(TEXT("ability: F"), Ability && Ability->Keys == TEXT("F") && Map->IsKeyMapped(Map->Ability, EKeys::F));
+	const FJamControlRow* Spin = Row(TEXT("SPIN"));
+	TestTrue(TEXT("spin: E"), Spin && Spin->Keys == TEXT("E") && Map->IsKeyMapped(Map->Spin, EKeys::E));
+	const FJamControlRow* Deke = Row(TEXT("DEKE"));
+	TestTrue(TEXT("deke: the wheel"), Deke && Deke->Keys.Contains(TEXT("wheel")) && Map->IsKeyMapped(Map->Deke, EKeys::MouseScrollUp));
+	const FJamControlRow* Sprint = Row(TEXT("SPRINT"));
+	TestTrue(TEXT("sprint: Shift"), Sprint && Sprint->Keys == TEXT("Shift") && Map->IsKeyMapped(Map->Sprint, EKeys::LeftShift));
+	const FJamControlRow* Brake = Row(TEXT("BRAKE"));
+	TestTrue(TEXT("brake: S against your motion"), Brake && Brake->Keys.Contains(TEXT("S against your motion")) && Map->IsKeyMapped(Map->Brake, EKeys::LeftControl));
+	const FJamControlRow* Poke = Row(TEXT("POKE"));
+	TestTrue(TEXT("poke: Space"), Poke && Poke->Keys == TEXT("Space") && Map->IsKeyMapped(Map->Poke, EKeys::SpaceBar));
+	const FJamControlRow* Aim = Row(TEXT("AIM"));
+	TestTrue(TEXT("the mouse aims"), Aim && Aim->Keys.Contains(TEXT("mouse")) && Map->IsKeyMapped(Map->StickMouse, EKeys::Mouse2D));
 	return true;
 }
 

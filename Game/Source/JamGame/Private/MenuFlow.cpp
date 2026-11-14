@@ -11,6 +11,7 @@
 
 const TCHAR* UJamMenuFlow::MenuMap = TEXT("/Game/Maps/Menu");
 const TCHAR* UJamMenuFlow::RinkMap = TEXT("/Game/Maps/Rink");
+const TCHAR* UJamMenuFlow::FirstCut = TEXT("hockey.regular");
 
 DEFINE_LOG_CATEGORY_STATIC(LogJamMenu, Log, All);
 
@@ -64,7 +65,7 @@ FString UJamMenuFlow::DisplayNameFor(const FJamCutInfo& Cut)
 	return Out.IsEmpty() ? Cut.Name : Out + TEXT(" Cut");
 }
 
-FString UJamMenuFlow::DescribeCut(const UJamCartridge& C)
+FString UJamMenuFlow::DescribeCut(const UJamCartridge& C, bool bWithName)
 {
 	const FJamGameConfig& G = C.Game;
 	TArray<FString> Bits;
@@ -93,6 +94,7 @@ FString UJamMenuFlow::DescribeCut(const UJamCartridge& C)
 	else if (G.Pickups.Num() > 1) Bits.Add(FString::Printf(TEXT("%d pickup kinds"), G.Pickups.Num()));
 	if (G.Rink.Obstacles.Num()) Bits.Add(FString::Printf(TEXT("%d obstacles"), G.Rink.Obstacles.Num()));
 	if (!Lead && G.Skater.Speed >= 10) Bits.Add(TEXT("fast skaters"));
+	if (!bWithName) return FString::Join(Bits, TEXT(", "));
 	const FString Name = C.ThemeName.IsEmpty() ? C.Title : C.ThemeName;
 	return FString::Printf(TEXT("%s: %s"), *Name, *FString::Join(Bits, TEXT(", ")));
 }
@@ -119,7 +121,7 @@ TArray<FJamMenuCutRow> UJamMenuFlow::BuildCutRows(const TArray<FJamCutInfo>& Cut
 		TArray<FString> Errors;
 		if (UJamCartridge* C = UJamCartridge::LoadFromFile(I.Path, Errors, GetTransientPackage()))
 		{
-			R.Description = DescribeCut(*C);
+			R.Description = DescribeCut(*C, I.bSaved);
 			R.Tunables = KeyTunables(*C);
 			if (I.bSaved && !I.Sentence.IsEmpty()) R.Description = FString::Printf(TEXT("\"%s\"  %s"), *I.Sentence, *R.Description);
 		}
@@ -331,4 +333,63 @@ FString UJamMenuFlow::ModeDisplayForId(const FString& CartridgeId)
 		if (C.Id == CartridgeId) return C.Display;
 	}
 	return FString();
+}
+
+// ---------------------------------------------------------------- the first screen and the controls (lane A144, track U2)
+
+FString UJamMenuFlow::WhatItIsLine()
+{
+	return TEXT("Five-a-side hockey. WASD skates, the mouse is your stick.");
+}
+
+FString UJamMenuFlow::BrandLine()
+{
+	// R-0054 point 5: "Hockey with the whistle taken out" waits for the regular cut to lose its whistle; until then the law itself.
+	return TEXT("The speed you bring is the hit you get.");
+}
+
+FString UJamMenuFlow::CutCardLine(const FJamMenuCutRow& Row)
+{
+	if (Row.bSaved && !Row.Sentence.IsEmpty()) return FString::Printf(TEXT("\"%s\""), *Row.Sentence);
+	TArray<FString> Bits;
+	Row.Description.ParseIntoArray(Bits, TEXT(", "));
+	if (Bits.Num() > 4) Bits.SetNum(4);
+	return FString::Join(Bits, TEXT(", "));
+}
+
+const TArray<FJamControlRow>& UJamMenuFlow::ControlRows()
+{
+	// Kept by hand next to UJamInputMap::Build() (InputMapping.cpp); Jam.Menu.ControlsComplete fails when the two part ways.
+	static const TArray<FJamControlRow> Rows = {
+		{ TEXT("SKATE"), TEXT("W A S D or arrows"), TEXT("left stick"), TEXT("you glide: speed is built, not given"),
+			{ EKeys::W, EKeys::A, EKeys::S, EKeys::D, EKeys::Up, EKeys::Down, EKeys::Left, EKeys::Right, EKeys::Gamepad_Left2D } },
+		{ TEXT("AIM THE STICK"), TEXT("the mouse"), TEXT("right stick"), TEXT("the blade follows the cursor"),
+			{ EKeys::Mouse2D, EKeys::Gamepad_Right2D } },
+		{ TEXT("SHOOT"), TEXT("left mouse button"), TEXT("RT"), TEXT("a tap is a flat shot; hold to load it, let go to fire"),
+			{ EKeys::LeftMouseButton, EKeys::Gamepad_RightTriggerAxis } },
+		{ TEXT("CHECK"), TEXT("right mouse button"), TEXT("RB"), TEXT("the body check: come in fast or it is a bump"),
+			{ EKeys::RightMouseButton, EKeys::Gamepad_RightShoulder } },
+		{ TEXT("CROSS-CHECK / LIFT"), TEXT("middle mouse or mouse 4"), TEXT("LB"), TEXT("on top of the carrier: lift the puck off him"),
+			{ EKeys::MiddleMouseButton, EKeys::ThumbMouseButton, EKeys::Gamepad_LeftShoulder } },
+		{ TEXT("PASS"), TEXT("Q"), TEXT("X"), TEXT("a tap is a flat pass; held, it is a saucer over the sticks"),
+			{ EKeys::Q, EKeys::Gamepad_FaceButton_Left } },
+		{ TEXT("ABILITY"), TEXT("F"), TEXT("R3 (stick click)"), TEXT("the cut's trick or a pickup's, when the slot is lit"),
+			{ EKeys::F, EKeys::Gamepad_RightThumbstick } },
+		{ TEXT("SPIN"), TEXT("E"), TEXT("B"), TEXT("spin off a man who is on you"),
+			{ EKeys::E, EKeys::Gamepad_FaceButton_Right } },
+		{ TEXT("DEKE"), TEXT("mouse wheel"), TEXT("Y"), TEXT("the carrier's fake"),
+			{ EKeys::MouseScrollUp, EKeys::MouseScrollDown, EKeys::Gamepad_FaceButton_Top } },
+		{ TEXT("SPRINT"), TEXT("Shift"), TEXT("LT"), TEXT("while the legs last"),
+			{ EKeys::LeftShift, EKeys::Gamepad_LeftTriggerAxis } },
+		{ TEXT("BRAKE"), TEXT("S against your motion, or Ctrl"), TEXT("stick back, or L3"), TEXT("stop hard, then go: it beats a man who charges"),
+			{ EKeys::LeftControl, EKeys::Gamepad_LeftThumbstick } },
+		{ TEXT("POKE"), TEXT("Space"), TEXT("A"), TEXT("jab the puck loose"),
+			{ EKeys::SpaceBar, EKeys::Gamepad_FaceButton_Bottom } },
+		{ TEXT("SIGNALS"), TEXT("1 2 3 4"), TEXT("D-pad"), TEXT("a call to your mates"), {} },
+		{ TEXT("RESTART"), TEXT("R"), TEXT("View"), TEXT("the match again"),
+			{ EKeys::R, EKeys::Gamepad_Special_Left } },
+		{ TEXT("PAUSE"), TEXT("Esc"), TEXT("Start"), TEXT("the pause card and the Director's Call"),
+			{ EKeys::Escape, EKeys::Gamepad_Special_Right } },
+	};
+	return Rows;
 }

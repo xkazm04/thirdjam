@@ -146,6 +146,15 @@ public:
 	// An edge marker (a net badge, the puck's arrow) at P holds the top slot when it stands in the prompt's box: the prompt then takes the lower slot.
 	static bool InPromptSlot(const FVector2D& P, float VW, float HalfW) { return P.Y < PromptSlotY + PromptSlotH + 24.f && FMath::Abs(P.X - VW * 0.5f) < HalfW + 80.f; }
 	static float PromptSlotFor(bool bTopSlotTaken) { return bTopSlotTaken ? PromptSlotLowY : PromptSlotY; }
+	// Lane A135, evolution 4 (its own still, 90 m sim frame 1440: in its lower slot the prompt lay on the net the human attacks). The lower slot was taken
+	// when the far-net badge stood in the top slot, which is when the net is straight ahead and just under the badge. The prompt now takes the first of six
+	// places whose box is inside the frame and does not meet the net's box (the net's own mouth on the screen joined with its badge and label, plus Pad):
+	// top centre, the lower row centre, the top row beside the net (the nearer side first, 120 units clear of it), the lower row beside it, and last the
+	// same four right beside the net (16 units). bTopTaken (the overlay's line, the
+	// own-net badge or the puck's arrow in the top slot, or a prompt asked into the lower row) rules the top row out. The place is (the box's centre from the
+	// frame's centre, the box's top), Slate units. Nothing fits: the lower row centre, as before. jam.hud.PromptOffNet 0: evolution 3's two slots. Pure.
+	static FVector2D PromptPlace(float VW, float HalfW, bool bTopTaken, bool bHasNet, const FVector2D& NetMin, const FVector2D& NetMax, float Pad = 12.f);
+	static bool PromptBoxMeets(const FVector2D& Place, float VW, float HalfW, const FVector2D& NetMin, const FVector2D& NetMax, float Pad = 12.f);
 	static FString PromptText(EPrompt P)
 	{
 		switch (P)
@@ -460,6 +469,17 @@ private:
 	int64 PromptShown = -1;
 	bool bPromptLow = false;   // this prompt took the lower slot (it does not jump back up)
 	bool bPreviewLow = false;  // lane A135: a previewed prompt asked for the lower slot (the proof's still)
+	// Lane A135, evolution 4: where this prompt stands (it keeps its place while the place is clear of the net), and the net's box on the screen.
+	FVector2D PromptPlaceNow = FVector2D(0, PromptSlotY);
+	bool bPromptPlaced = false;
+	// A net sweeping across the picture as he turns does not push the prompt about (build 12 moved it after 12 frames: five moves in 5 s, and its end
+	// stood on the net's corner in between). While the net is under the prompt the prompt is a ghost (a quarter of its ink, eased over 6 ticks: the net
+	// shows through); it moves only off a net that has stood under it for PromptOnNetFrames (three quarters of a second: he is looking at it).
+	static constexpr int32 PromptOnNetFrames = 45;
+	static constexpr float PromptGhostAlpha = 0.25f;
+	int64 PromptOnNetSince = -1;
+	float PromptGhost = 1.f;
+	bool NetBoxOnScreen(const FJamPresentationFrame& F, FVector2D& OutMin, FVector2D& OutMax) const;
 	static bool bPadInUse;     // lane A135: the device the player last touched
 	void WatchInputDevice();
 	float LastNearestOpponentM = -1.f;

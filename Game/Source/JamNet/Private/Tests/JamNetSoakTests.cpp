@@ -975,7 +975,6 @@ bool FJamNetSoakMismatch::RunTest(const FString& Parameters)
 	return true;
 }
 
-#endif
 
 // Lane A120 (track Q1): the soak's field compare covers whole arrays. One element of one C array (the guest's MoveHist[7], the burst's ring) is nudged on
 // the guest's machine after frame 300 of a clean regular match: the compare must name that element at that frame (it compared element 0 only before), and
@@ -1006,3 +1005,5 @@ bool FJamNetSoakFieldArrays::RunTest(const FString& Parameters)
 	TestTrue(TEXT("the driver raised DESYNC at the checkpoint"), M.bDesyncDriver && M.DriverDesyncFrame == 300);
 	return true;
 }
+
+#endif   // WITH_DEV_AUTOMATION_TESTS (moved to the end: lane A120's test below the old guard broke the Shipping compile, H27 release, 14 Nov 01:22)

@@ -15,13 +15,15 @@
 # Lane A135 (evolution 3): every run also logs the camera probe (jam.camera.Probe 600: a JAMSCREEN camera line every 10 s of play: frames with the human's
 #   chest outside the middle third); -CamLog adds jam.camera.Log 1 (a JAMCAM line per sim frame; tools\qa\screen\u1-camstat.py reads them).
 #   -Mode base3: evolution 3's rules at their neutral values (jam.camera.KeepHuman 0, jam.hud.BarkLane 0, jam.hud.PromptKeys 0).
+#   Evolution 4: -Mode base4 = evolution 4's rules at their neutral values (jam.camera.KeepNoYaw 0, jam.camera.KeepNet 0, jam.hud.PromptOffNet 0);
+#   -Hand N = the scripted human steers through the camera (jam.ScriptHumanCam N); -RunName <folder> names the run's folder under out\.
 #   -At "sec:command;sec:command": console commands sent over the remote console that many seconds after the match is built (jam.ui.prompt brake,
 #   jam.screen.Still <name>). Where the engine does not honour -abslog (seen in a fresh worktree: the log went to Game\Saved\Logs), the script finds the
 #   process's log there by its port and reads that.
 # Exit 0: the first-frame still and at least one sim-frame still exist. 1: missing. 2: could not run.
 param(
     [ValidateSet('clay', 'night')][string]$Tier = 'clay',
-    [ValidateSet('after', 'before', 'base', 'base3')][string]$Mode = 'after',
+    [ValidateSet('after', 'before', 'base', 'base3', 'base4')][string]$Mode = 'after',
     [ValidateSet(90, 140)][int]$Rink = 90,
     [int]$PlaySeconds = 50,
     [int]$EveryFrames = 180,
@@ -30,6 +32,8 @@ param(
     [string]$ExtraCVars = '',
     [string]$At = '',
     [switch]$CamLog,
+    [int]$Hand = 0,
+    [string]$RunName = '',
     [int]$StartTimeoutSec = 900
 )
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..')).Path
@@ -39,6 +43,7 @@ $engine = Get-EngineRoot $uproject
 $exe = Join-Path $engine 'Engine\Binaries\Win64\UnrealEditor.exe'
 if (-not $uproject -or -not (Test-Path $exe)) { Write-Host "FAIL u1-stills: no project or no $exe"; exit 2 }
 $name = if ($Rink -eq 140) { "$Tier-140-$Mode" } else { "$Tier-$Mode" }
+if ($RunName) { $name = $RunName }
 $out = Join-Path $root "tools\qa\screen\out\$name"
 New-Item -ItemType Directory -Force (Join-Path $out 'shots') | Out-Null
 Get-ChildItem (Join-Path $out 'shots') -Filter '*.png' -ErrorAction SilentlyContinue | Remove-Item -Force
@@ -51,6 +56,8 @@ $shotDir = Join-Path $root 'Game\Saved\Screenshots\WindowsEditor'
 Get-ChildItem $shotDir -Filter "u1-*$tierId*.png" -ErrorAction SilentlyContinue | Remove-Item -Force
 $cvars = "jam.ScriptHuman=1,jam.screen.HoldStill=1,jam.screen.FadeSeconds=0,jam.screen.StillEvery=$EveryFrames,jam.hud.MarkerProbe=600,jam.camera.Probe=600"
 if ($CamLog) { $cvars += ',jam.camera.Log=1' }
+if ($Hand -gt 0) { $cvars += ",jam.ScriptHumanCam=$Hand" }   # evolution 4: the scripted human steers through the camera, keys re-decided every $Hand frames
+if ($Mode -eq 'base4') { $cvars += ',jam.camera.KeepNoYaw=0,jam.camera.KeepNet=0,jam.hud.PromptOffNet=0' }   # evolution 4 (lane A135) at its neutral values = evolution 3
 if ($Mode -eq 'base3') { $cvars += ',jam.camera.KeepHuman=0,jam.hud.BarkLane=0,jam.hud.PromptKeys=0' }   # evolution 3 (lane A135)
 $neutral2 = ',jam.hud.MarkerAnchor=0,jam.hud.ClearMiddle=0,jam.hud.CallPillAfterGoal=0,jam.hud.CleanPlate=0,jam.hud.Prompts=0'   # evolution 2 (lane A123)
 if ($Mode -eq 'before') { $cvars += ',jam.screen.LightHold=0,jam.hud.YouMarker=0,jam.hud.LabelPlates=0,jam.hud.DockCommentary=0,jam.hud.HintEveryMatch=1,jam.camera.CornerLift=0' + $neutral2 }
@@ -109,7 +116,7 @@ function Finish([int]$code, [string]$why) {
     Note "$n stills copied to $out\shots"
     if (Test-Path $log) {
         if ($log -ne (Join-Path $out 'game.log')) { Copy-Item $log (Join-Path $out 'game.log') -Force; $log = Join-Path $out 'game.log' }
-        Select-String -Path $log -Pattern 'JAMSCREEN light|JAMSCREEN first|JAMSCREEN marker|JAMSCREEN prompt|JAMSCREEN camera|JAMSCREEN bark|JAMEVENT goal|JAMLOOK tier=|JAMLOOK rig .* loaded|JAMCUT rejected' | ForEach-Object { $_.Line } | Set-Content (Join-Path $out 'screen-lines.txt')
+        Select-String -Path $log -Pattern 'JAMSCREEN light|JAMSCREEN first|JAMSCREEN marker|JAMSCREEN prompt|JAMSCREEN camera|JAMSCREEN bark|JAMSCREEN hand|JAMSIM frame=|JAMEVENT goal|JAMLOOK tier=|JAMLOOK rig .* loaded|JAMCUT rejected' | ForEach-Object { $_.Line } | Set-Content (Join-Path $out 'screen-lines.txt')
         Get-Content (Join-Path $out 'screen-lines.txt') | ForEach-Object { Write-Host "  | $_" }
     }
     $first = Test-Path (Join-Path $out "shots\u1-first-$tierId.png")

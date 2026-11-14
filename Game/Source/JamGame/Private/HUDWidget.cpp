@@ -72,6 +72,72 @@ static TAutoConsoleVariable<int32> CVarJamHudPromptPad(TEXT("jam.hud.PromptPad")
 static TAutoConsoleVariable<int32> CVarJamHudPromptProof(TEXT("jam.hud.PromptProof"), 0,
 	TEXT("N > 0: at sim frame N the brake prompt is shown in its lower slot (the proof's still of the slot; the remote console is not needed). Lane A135."), ECVF_Default);
 
+// Lane A135, evolution 4: the prompt keeps off the attacked net (UJamHudWidget::PromptPlace).
+static TAutoConsoleVariable<int32> CVarJamHudPromptOffNet(TEXT("jam.hud.PromptOffNet"), 1,
+	TEXT("1 = the one-time prompt takes a place clear of the attacked net and its badge (the top row beside the net before the lower row); 0 = evolution 3's two slots (the lower one whenever the badge holds the top). Presentation only."), ECVF_Default);
+
+bool UJamHudWidget::PromptBoxMeets(const FVector2D& Place, float VW, float HalfW, const FVector2D& NetMin, const FVector2D& NetMax, float Pad)
+{
+	const float Cx = VW * 0.5f + static_cast<float>(Place.X), Top = static_cast<float>(Place.Y);
+	return !(Cx + HalfW < NetMin.X - Pad || Cx - HalfW > NetMax.X + Pad || Top + PromptSlotH < NetMin.Y - Pad || Top > NetMax.Y + Pad);
+}
+
+FVector2D UJamHudWidget::PromptPlace(float VW, float HalfW, bool bTopTaken, bool bHasNet, const FVector2D& NetMin, const FVector2D& NetMax, float Pad)
+{
+	// The centres first (they do not move with the net), then beside the net with room to spare (the net sweeps across the picture as he turns: the first
+	// build put the prompt 16 units from it and the net pushed it along, frame after frame), and only then right beside it.
+	const float Edge = 8.f;
+	auto Clear = [&](const FVector2D& P, bool bTop)
+	{
+		if (bTop && bTopTaken) return false;
+		const float Cx = VW * 0.5f + static_cast<float>(P.X);
+		if (Cx - HalfW < Edge || Cx + HalfW > VW - Edge) return false;
+		return !(bHasNet && PromptBoxMeets(P, VW, HalfW, NetMin, NetMax, Pad));
+	};
+	if (Clear(FVector2D(0, PromptSlotY), true)) return FVector2D(0, PromptSlotY);
+	if (Clear(FVector2D(0, PromptSlotLowY), false)) return FVector2D(0, PromptSlotLowY);
+	if (bHasNet)
+	{
+		for (float Gap : { 120.f, 16.f })
+		{
+			const float Left = static_cast<float>(NetMin.X) - Pad - Gap - HalfW - VW * 0.5f, Right = static_cast<float>(NetMax.X) + Pad + Gap + HalfW - VW * 0.5f;
+			const float Near = FMath::Abs(Left) <= FMath::Abs(Right) ? Left : Right, Far = FMath::Abs(Left) <= FMath::Abs(Right) ? Right : Left;
+			for (float Y : { PromptSlotY, PromptSlotLowY }) for (float X : { Near, Far })
+				if (Clear(FVector2D(X, Y), Y == PromptSlotY)) return FVector2D(X, Y);
+		}
+	}
+	return FVector2D(0, PromptSlotLowY);
+}
+
+// The attacked net on the screen: its mouth (2 m either side of its centre, from the ice to the crossbar) joined with its badge and distance label where
+// they are drawn. False when neither is in the picture.
+bool UJamHudWidget::NetBoxOnScreen(const FJamPresentationFrame& F, FVector2D& OutMin, FVector2D& OutMax) const
+{
+	bool bAny = false;
+	OutMin = FVector2D(1e9, 1e9);
+	OutMax = FVector2D(-1e9, -1e9);
+	auto Add = [&](const FVector2D& P) { OutMin.X = FMath::Min(OutMin.X, P.X); OutMin.Y = FMath::Min(OutMin.Y, P.Y); OutMax.X = FMath::Max(OutMax.X, P.X); OutMax.Y = FMath::Max(OutMax.Y, P.Y); bAny = true; };
+	const float VW = static_cast<float>(UWidgetLayoutLibrary::GetViewportSize(const_cast<UJamHudWidget*>(this)).X) / FMath::Max(UWidgetLayoutLibrary::GetViewportScale(const_cast<UJamHudWidget*>(this)), 0.01f);
+	if (NetDiamond && NetDiamond->GetVisibility() != ESlateVisibility::Collapsed)
+	{
+		const FVector2D P = Marker.ScreenPos;
+		const bool bLeft = P.X > VW - 200.f;
+		const float LabelW = 12.f * Marker.Text.Len() + 2.f * LabelPlatePadX;
+		Add(P + FVector2D(bLeft ? -24.f - LabelW : -14.f, -18.f));
+		Add(P + FVector2D(bLeft ? 14.f : 24.f + LabelW, 18.f));
+	}
+	if (APlayerController* PC = GetOwningPlayer())
+	{
+		const FVector Net = F.GetFarNetWorldCm();
+		FVector2D C[4];
+		const FVector W[4] = { FVector(Net.X, Net.Y - 200.0, 0.0), FVector(Net.X, Net.Y + 200.0, 0.0), FVector(Net.X, Net.Y - 200.0, NetCrossbarCm), FVector(Net.X, Net.Y + 200.0, NetCrossbarCm) };
+		bool bAll = true;
+		for (int32 i = 0; i < 4; ++i) bAll &= UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(PC, W[i], C[i], false);
+		if (bAll) for (const FVector2D& P : C) Add(P);
+	}
+	return bAny;
+}
+
 FString UJamHudWidget::KeyLabel(const FKey& Key)
 {
 	if (Key == EKeys::LeftControl || Key == EKeys::RightControl) return TEXT("CTRL");
@@ -983,6 +1049,7 @@ void UJamHudWidget::UpdatePrompts(const FJamPresentationFrame& F, bool bCounting
 			PromptShown = F.SimFrame;
 			bPromptLow = bPreviewLow;
 			bPreviewLow = false;
+			bPromptPlaced = false;
 			if (Due == EPrompt::Kept) bKeptPromptSpent = true; else bBrakePromptSpent = true;
 			PromptTextBlock->SetText(FText::FromString(LivePromptText(Due)));
 			UE_LOG(LogHokej, Log, TEXT("JAMSCREEN prompt %s at sim frame %lld (nearest opponent %.1f m)%s: %s"), Due == EPrompt::Kept ? TEXT("kept") : TEXT("brake"), F.SimFrame, Nearest,
@@ -1004,15 +1071,45 @@ void UJamHudWidget::UpdatePrompts(const FJamPresentationFrame& F, bool bCounting
 	const float VWp = static_cast<float>(UWidgetLayoutLibrary::GetViewportSize(this).X) / FMath::Max(UWidgetLayoutLibrary::GetViewportScale(this), 0.01f);
 	const float HalfWp = FMath::Max(240.f, static_cast<float>(PromptPlate->GetDesiredSize().X) * 0.5f);
 	bool bTaken = OverlayForPrompt.IsValid() && OverlayForPrompt->IsLineVisible();
-	const UWidget* EdgeMarks[] = { NetDiamond.Get(), OwnDiamond.Get(), PuckArrow.Get() };
+	// Lane A135, evolution 4: the far-net badge no longer sends the prompt down onto the net; the net's box decides the place instead.
+	const bool bOffNet = CVarJamHudPromptOffNet.GetValueOnGameThread() != 0;
+	const UWidget* EdgeMarks[] = { bOffNet ? nullptr : NetDiamond.Get(), OwnDiamond.Get(), PuckArrow.Get() };
 	for (const UWidget* Mark : EdgeMarks)
 	{
 		const UCanvasPanelSlot* MS = Mark && Mark->GetVisibility() != ESlateVisibility::Collapsed && Mark->GetRenderOpacity() > 0.f ? Cast<UCanvasPanelSlot>(Mark->Slot) : nullptr;
 		if (MS && InPromptSlot(MS->GetPosition(), VWp, HalfWp)) bTaken = true;
 	}
-	if (bTaken) bPromptLow = true;
-	const float Y = PromptSlotFor(bPromptLow);
-	if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(PromptPlate->Slot)) CS->SetPosition(FVector2D(0, Y));
+	float X = 0.f, Y = PromptSlotY;
+	if (!bOffNet)
+	{
+		PromptGhost = 1.f;
+		if (bTaken) bPromptLow = true;
+		Y = PromptSlotFor(bPromptLow);
+	}
+	else
+	{
+		FVector2D NetMin, NetMax;
+		const bool bNet = NetBoxOnScreen(F, NetMin, NetMax);
+		// The prompt keeps its place while that place is clear; it moves only off the net or out of a taken top row.
+		const bool bInTop = PromptPlaceNow.Y < PromptSlotLowY - 1.f;
+		const bool bOnNet = bPromptPlaced && bNet && PromptBoxMeets(PromptPlaceNow, VWp, HalfWp, NetMin, NetMax);
+		if (!bOnNet) PromptOnNetSince = -1;
+		else if (PromptOnNetSince < 0) PromptOnNetSince = F.SimFrame;
+		PromptGhost = FMath::Clamp(PromptGhost + (bOnNet ? -0.125f : 0.125f), PromptGhostAlpha, 1.f);
+		PromptPlate->SetRenderOpacity(Alpha * PromptGhost);
+		const bool bKeep = bPromptPlaced && !(bInTop && (bTaken || bPromptLow)) && !(bOnNet && F.SimFrame - PromptOnNetSince >= PromptOnNetFrames);
+		if (!bKeep)
+		{
+			PromptOnNetSince = -1;
+			PromptPlaceNow = PromptPlace(VWp, HalfWp, bTaken || bPromptLow, bNet, NetMin, NetMax);
+			if (bPromptPlaced || PromptPlaceNow.X != 0.f) UE_LOG(LogHokej, Log, TEXT("JAMSCREEN prompt place at sim frame %lld: x %+.0f y %.0f (net box %.0f..%.0f x %.0f..%.0f, net on screen %d, top taken %d)"), F.SimFrame,
+				PromptPlaceNow.X, PromptPlaceNow.Y, NetMin.X, NetMax.X, NetMin.Y, NetMax.Y, bNet ? 1 : 0, (bTaken || bPromptLow) ? 1 : 0);
+			bPromptPlaced = true;
+		}
+		X = static_cast<float>(PromptPlaceNow.X);
+		Y = static_cast<float>(PromptPlaceNow.Y);
+	}
+	if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(PromptPlate->Slot)) CS->SetPosition(FVector2D(X, Y));
 	PromptBandTick = GFrameCounter;
 	PromptBandTop = Y;
 }

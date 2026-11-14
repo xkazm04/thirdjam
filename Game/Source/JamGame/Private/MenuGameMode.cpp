@@ -6,10 +6,10 @@
 #include "HAL/IConsoleManager.h"
 #include "Engine/World.h"
 
-// QA: jam.menuscreen <main|cuts|direct|settings|credits> shows a screen; jam.menuscreen choose <cut name> picks a cut;
-// jam.menuscreen say <sentence...> directs one. (R-0003 4: names grepped across Game/Source first.)
+// QA: jam.menuscreen <main|cuts|direct|settings|credits|controls> shows a screen; jam.menuscreen choose <cut name> picks a cut;
+// jam.menuscreen say <sentence...> directs one; jam.menuscreen play presses PLAY NOW (lane A144). (R-0003 4: names grepped across Game/Source first.)
 static FAutoConsoleCommandWithWorldAndArgs CmdJamMenuScreen(TEXT("jam.menuscreen"),
-	TEXT("Menu QA: jam.menuscreen main|cuts|direct|settings|credits | choose <cut> | say <sentence>"),
+	TEXT("Menu QA: jam.menuscreen main|cuts|direct|settings|credits|controls | play | choose <cut> | say <sentence>"),
 	FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
 	{
 		AJamMenuGameMode* GM = World ? Cast<AJamMenuGameMode>(World->GetAuthGameMode()) : nullptr;
@@ -21,6 +21,8 @@ static FAutoConsoleCommandWithWorldAndArgs CmdJamMenuScreen(TEXT("jam.menuscreen
 		else if (A == TEXT("direct")) Menu->ShowScreen(EJamMenuScreen::Direct);
 		else if (A == TEXT("settings")) Menu->ShowScreen(EJamMenuScreen::Settings);
 		else if (A == TEXT("credits")) Menu->ShowScreen(EJamMenuScreen::Credits);
+		else if (A == TEXT("controls")) Menu->ShowScreen(EJamMenuScreen::Controls);
+		else if (A == TEXT("play")) Menu->PlayNow();
 		else if (A == TEXT("choose") && Args.Num() > 1) Menu->ChooseCut(Args[1]);
 		else if (A == TEXT("say") && Args.Num() > 1)
 		{
