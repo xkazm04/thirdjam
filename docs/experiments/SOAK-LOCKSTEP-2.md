@@ -168,3 +168,66 @@ guest could not hold one). Table by `node tools/soak/lockstep/modes-table.mjs Ga
 
 The ten modes without an ability show "F applied 0": their cartridges grant none, so the harness never presses F. Speed is A56's and A104's, 0.9994
 clean and 0.6244 at the worst mix. Raw output: `Game/Saved/SoakLockstep/a110/*.jsonl` (not landed).
+
+# Evolution 6: the joined match on the integrated main, the host's list a stranger can use (lane A146, track Q1, protocol 8, wire unchanged)
+
+Status with timestamps: `status/A146.md`. The tree: main `d4bb4da` (the brain's second evolution with a second human, the shove rule, the rest and spin
+counters, the take grace's same-frame cover, the whole-skater restart, the re-made modes) plus this lane's host list (JamNet only: no sim, no wire).
+
+## 1. The re-soak (A56's harness, `Bar.Net.SoakLossy -SoakProfiles=clean,loss30-jitter0-6-dup10`, 200 seeds per mode and profile, 3600 frames)
+**5200 matches** (the twelve modes and hockey.regular, clean and at 30 % loss with 0..6-tick jitter and 10 % duplicates): **0 desync, 0 silent drift,
+0 lost, 0 missed checkpoints, 0 of 1 076 839 edge presses lost** (A140's accounting: read / applied / in flight), 18.7 M frames, F applied 26 214.
+Outnumbered now grants an ability (F applied 10 092 and 9921; A110 saw 0): the re-made mode's F travels clean at 30 % loss.
+`Jam.Net.HashCoverage` on this tree: 64 fields seen by `LockstepStateHash()`, 73 listed read-outs, **0 untagged** (A110: 59 / 64): every field added
+tonight is hashed or listed. Table by `node tools/soak/lockstep/modes-table.mjs Game/Saved/SoakLockstep/a146/*.jsonl`:
+
+| mode | profile | matches | desync | silent drift | lost | missed | edge presses lost | speed | F applied | abilities used (guest) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| arsenal | clean | 200 | 0 | 0 | 0 | 0 | 0 | 0.9994 | 360 | 70 (33) |
+| arsenal | loss30-jitter0-6-dup10 | 200 | 0 | 0 | 0 | 0 | 0 | 0.6244 | 317 | 77 (41) |
+| bruisers | clean | 200 | 0 | 0 | 0 | 0 | 0 | 0.9994 | 0 | 0 (0) |
+| bruisers | loss30-jitter0-6-dup10 | 200 | 0 | 0 | 0 | 0 | 0 | 0.6244 | 0 | 0 (0) |
+| cage | clean | 200 | 0 | 0 | 0 | 0 | 0 | 0.9994 | 0 | 0 (0) |
+| cage | loss30-jitter0-6-dup10 | 200 | 0 | 0 | 0 | 0 | 0 | 0.6244 | 0 | 0 (0) |
+| fog-of-war | clean | 200 | 0 | 0 | 0 | 0 | 0 | 0.9994 | 0 | 0 (0) |
+| fog-of-war | loss30-jitter0-6-dup10 | 200 | 0 | 0 | 0 | 0 | 0 | 0.6244 | 0 | 0 (0) |
+| glass-house | clean | 200 | 0 | 0 | 0 | 0 | 0 | 0.9994 | 0 | 0 (0) |
+| glass-house | loss30-jitter0-6-dup10 | 200 | 0 | 0 | 0 | 0 | 0 | 0.6244 | 0 | 0 (0) |
+| hockey.regular | clean | 200 | 0 | 0 | 0 | 0 | 0 | 0.9994 | 0 | 0 (0) |
+| hockey.regular | loss30-jitter0-6-dup10 | 200 | 0 | 0 | 0 | 0 | 0 | 0.6244 | 0 | 0 (0) |
+| marathon | clean | 200 | 0 | 0 | 0 | 0 | 0 | 0.9994 | 0 | 0 (0) |
+| marathon | loss30-jitter0-6-dup10 | 200 | 0 | 0 | 0 | 0 | 0 | 0.6244 | 0 | 0 (0) |
+| outnumbered | clean | 200 | 0 | 0 | 0 | 0 | 0 | 0.9994 | 10092 | 1306 (696) |
+| outnumbered | loss30-jitter0-6-dup10 | 200 | 0 | 0 | 0 | 0 | 0 | 0.6244 | 9921 | 1332 (682) |
+| pond | clean | 200 | 0 | 0 | 0 | 0 | 0 | 0.9994 | 0 | 0 (0) |
+| pond | loss30-jitter0-6-dup10 | 200 | 0 | 0 | 0 | 0 | 0 | 0.6244 | 0 | 0 (0) |
+| power-play | clean | 200 | 0 | 0 | 0 | 0 | 0 | 0.9994 | 0 | 0 (0) |
+| power-play | loss30-jitter0-6-dup10 | 200 | 0 | 0 | 0 | 0 | 0 | 0.6244 | 0 | 0 (0) |
+| shotgun | clean | 200 | 0 | 0 | 0 | 0 | 0 | 0.9994 | 2638 | 790 (451) |
+| shotgun | loss30-jitter0-6-dup10 | 200 | 0 | 0 | 0 | 0 | 0 | 0.6244 | 2886 | 822 (458) |
+| sniper | clean | 200 | 0 | 0 | 0 | 0 | 0 | 0.9994 | 0 | 0 (0) |
+| sniper | loss30-jitter0-6-dup10 | 200 | 0 | 0 | 0 | 0 | 0 | 0.6244 | 0 | 0 (0) |
+| sudden-death | clean | 200 | 0 | 0 | 0 | 0 | 0 | 0.9994 | 0 | 0 (0) |
+| sudden-death | loss30-jitter0-6-dup10 | 200 | 0 | 0 | 0 | 0 | 0 | 0.6244 | 0 | 0 (0) |
+
+**Two processes** (`tools/net/twoproc.ps1`, loopback, the good playtester on both seats with every verb, to the end, the rematch asked on the card
+by both, 600 frames of match 2):
+
+| Run | Ended (frame, host:guest) | Rematch (lockstep frame / hash) | f600 of match 2 | Presses lost (host / guest) |
+|---|---|---|---|---|
+| shotgun 1, 2, 3 (4720/4721) | f5563 0:3, f7863 3:2, f9661 2:3 | 5687, 7987, 9785 / `cdf539f1b6b0fb72` | `26d1048974e568c7`, `223902a4b0d0b433`, `5b09196003e7b21e` equal | 0 / 0 (F 17/17 + 11/11, 16/16 + 18/18, 17/17 + 24/24) |
+| regular 1, 2, 3 (4740/4741) | f8527 1:3, f5966 2:3, f3225 0:3 | 8651, 6090, 3349 / `39e7cbb95339847b` | `833110a48e17e71c`, `446a9aae7f217d08`, `7a4970997533071f` equal | 0 / 0 |
+| LAN shotgun (host on UDP 7700 every address; the guest typed the *same network* code) | f5629 1:3 | 5753 / `cdf539f1b6b0fb72` | `77eb02753124a7ad` equal | 0 / 0 (F 10/10 + 18/18) |
+
+Every rematch starts at the fresh match's hash of its cut (A140's whole-skater restart holds on the integrated tree). Gate: full `Jam` filter
+**208 of 208**, exit 0; `Jam.Core.Determinism` seed 1 f600 hockey.regular `ef34dd88c7c62b47`, hockey.raw `79d43eb5ea69a468` (main's).
+
+## 2. The host's list (`FJamUdpLink::ReachableAddresses`, `JamLink.cpp`)
+The engine's adapter list gives bare addresses: the host listed WSL's virtual switch (a 172.x address no other machine can reach) and missed the
+Tailscale tunnel. Now Windows' own list (`GetAdaptersAddresses` with gateways) is read and each address classified (`ClassifyAddress`, pure):
+an adapter with a default gateway is **same network** (listed first), a private address on a real adapter without a gateway (a cable between two
+machines) is **same network** after it, a 100.64/10 address without a gateway (Tailscale) is **Tailscale, both signed in**, loopback is **this machine
+only** (last, the lobby's). Hidden: virtual switches (Hyper-V / vEthernet / WSL, VirtualBox, VMware, Docker) without a gateway, link-local 169.254,
+adapters that are down, 0.0.0.0. The screen reads `ABCD-EFGH   same network (address)`. `Jam.Net.InviteCodeRoundTrip` checks 11 adapters as the A
+device reports them, the order, and this machine's live list (logged as counts: 2 listed, 1 same network, 1 Tailscale). Other platforms keep the
+engine's list, classified by address alone.

@@ -259,8 +259,10 @@ bool FJamBotMatchWithEffects::RunTest(const FString& Parameters)
 	AddInfo(FString::Printf(TEXT("hockey.boost seed 1: %d frames, %d pickups taken, %d effects started, hash %016llx"), FramesA, TakenA, StartedA, static_cast<unsigned long long>(A)));
 	// Lane A39 (R-0029 point 4): with the payoffs on, seed 1's match ends at frame 4494 before any pickup is taken (5427 frames and one take with the keys off);
 	// the take is a property of the match, not of one seed: seeds 2 and 3 are tried when seed 1 took none.
+	// Lane A133 (CURVE-7.md): all_star's large-rink speed 1.34 -> 1.42 makes this 120 m bot-only match a 3:0 inside ~2,300 frames on seeds 1 to 3 (pickups
+	// spawn from frame 900): seeds up to 12 are tried, the property unchanged.
 	int32 TakenAll = TakenA;
-	for (uint64 Seed = 2; Seed <= 3 && TakenAll == 0; ++Seed)
+	for (uint64 Seed = 2; Seed <= 12 && TakenAll == 0; ++Seed)
 	{
 		int32 Taken, Frames, Started;
 		const uint64 H = Run(Seed, Taken, Frames, Started);
@@ -268,7 +270,7 @@ bool FJamBotMatchWithEffects::RunTest(const FString& Parameters)
 		AddInfo(FString::Printf(TEXT("hockey.boost seed %llu: %d frames, %d pickups taken, %d effects started, hash %016llx"), Seed, Frames, Taken, Started, static_cast<unsigned long long>(H)));
 		TakenAll += Taken;
 	}
-	TestTrue(TEXT("at least one pickup was taken (seeds 1 to 3)"), TakenAll >= 1);
+	TestTrue(TEXT("at least one pickup was taken (seeds 1 to 12)"), TakenAll >= 1);
 	return true;
 }
 

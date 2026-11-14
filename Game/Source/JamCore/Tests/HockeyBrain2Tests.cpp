@@ -520,13 +520,13 @@ bool FJamHockey2Neutral::RunTest(const FString& Parameters)
 			TArray<FString> Errors;
 			UJamCartridge* Cart = UJamCartridge::LoadFromFile(UJamCartridge::ResolveCartridgePath(P.Cart), Errors);
 			if (!Cart) { AddError(FString::Printf(TEXT("FAIL %s does not load"), P.Cart)); return false; }
-			if (Arm == 0) { JamBaseline::MakeNeutral(Cart->Game); }
+			if (Arm == 0) { JamBaseline::MakeNeutral(Cart->Game); JamBaseline::WithWhistle(Cart->Game); }   // lane A133: the pins blew the whistle (lane A112 took it out of the cuts)
 			FJamMatchConfig C = ToMatchConfigResolved(*Cart, TEXT("pro"));
 			SetSense(C.AI, Arm == 1);
 			if (Arm == 0)
 			{
 				char Err[200] = {};
-				TestTrue(TEXT("the shared baseline's brain tune applies"), ApplyDifficultyTune(JamBaseline::BrainTune(), C.AI, Err, sizeof(Err)));
+				TestTrue(TEXT("the shared baseline's brain tune applies"), ApplyDifficultyTune(JamBaseline::BrainTune("pro", Cart->Game.Rink.LengthM >= JamAI::LargeRinkM), C.AI, Err, sizeof(Err)));
 			}
 			FJamSimAdapter Sim(*Cart);
 			const FJamPlaytestStats St = RunPlaytestMatch(Sim, C, P.Seed, EPlaytester::Regular, 36000, Cart->Game.Shot.ChargeFramesMax, false, nullptr, nullptr, 0);

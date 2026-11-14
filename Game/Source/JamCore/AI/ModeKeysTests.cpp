@@ -159,10 +159,10 @@ bool FJamModeKeysPenalty::RunTest(const FString& Parameters)
 	TArray<FString> Errors;
 	auto Pen = [&](int32 Frames, bool bExpect)
 	{
-		return JamModeKeysTests::Variant(*this, { { TEXT("\"penalties\": true"), FString::Printf(TEXT("\"penalties\": true, \"penalty_frames\": %d"), Frames) } }, Errors, bExpect);
+		return JamModeKeysTests::Variant(*this, { { TEXT("\"penalties\": false"), FString::Printf(TEXT("\"penalties\": true, \"penalty_frames\": %d"), Frames) } }, Errors, bExpect);   // lane A112: hockey.regular has no whistle (R-0048)
 	};
 	UJamCartridge* Short = Pen(120, true);
-	UJamCartridge* Absent = JamModeKeysTests::Variant(*this, {}, Errors);
+	UJamCartridge* Absent = JamModeKeysTests::Variant(*this, { { TEXT("\"penalties\": false"), TEXT("\"penalties\": true") } }, Errors);
 	if (!Short || !Absent) return false;
 	TestEqual(TEXT("absent = 300"), Absent->Game.Rules.PenaltyFrames, UJamSim::BoxFrames);
 	TestEqual(TEXT("penalty_frames 120 loads"), Short->Game.Rules.PenaltyFrames, 120);

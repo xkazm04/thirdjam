@@ -1158,4 +1158,37 @@ bool FJamIntegrationCarry::RunTest(const FString& Parameters)
 	return true;
 }
 
+// Bar.Curve.Law3 (lane A133, outside the gate's Jam filter): law 3's drill (R-0053, R-0055) under candidate profile tunes, so the curve lane measures a
+// profile number against the gate before it builds it. JAM_LAW3_TUNES = "level:tune|level:tune|..." (a tune of "-" = the level as shipped); 200 seeds an arm:
+// the stop at 8, 9.5, 10, 11, 12 m and the straight charge.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamCurveLaw3, "Bar.Curve.Law3", JamCarrierSkillTests::Flags)
+bool FJamCurveLaw3::RunTest(const FString& Parameters)
+{
+	using namespace JamCarrierSkillTests;
+	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
+	if (!C) return false;
+	FString Env = FPlatformMisc::GetEnvironmentVariable(TEXT("JAM_LAW3_TUNES"));
+	if (Env.IsEmpty()) Env = TEXT("pro:-|all_star:-");
+	TArray<FString> Arms;
+	Env.ParseIntoArray(Arms, TEXT("|"));
+	for (const FString& Arm : Arms)
+	{
+		FString Level, Tune;
+		if (!Arm.Split(TEXT(":"), &Level, &Tune)) { Level = Arm; Tune = TEXT("-"); }
+		const FTCHARToUTF8 T8(*Tune);
+		const char* T = Tune == TEXT("-") ? nullptr : T8.Get();
+		for (const double At : { 8.0, 9.5, 10.0, 11.0, 12.0 })
+		{
+			FScript S;
+			S.BrakeAtM = At;
+			AddInfo(FString::Printf(TEXT("LAW3T %s | %s | stop at %.1f m: %s"), *Level, *Tune, At, *CarryHow(*C, S, 200, *Level, T).Line()));
+		}
+		FScript Straight;
+		Straight.BrakeAtM = 9.5;
+		Straight.bStopAndGo = false;
+		AddInfo(FString::Printf(TEXT("LAW3T %s | %s | straight charge: %s"), *Level, *Tune, *CarryHow(*C, Straight, 200, *Level, T).Line()));
+	}
+	return true;
+}
+
 #endif

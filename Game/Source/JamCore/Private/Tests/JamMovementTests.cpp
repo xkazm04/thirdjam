@@ -717,7 +717,7 @@ bool FJamMovementNeutral::RunTest(const FString& Parameters)
 			TestTrue(TEXT("A121 neutral: take_grace_frames 0, reverse_brake_decel 20, burst.own_stop false"), E2->Game.Stick.TakeGraceFrames == 0 && E2->Game.Skater.ReverseBrakeDecel == 20.0 && !E2->Game.Skater.bBurstOwnStop);
 			TestTrue(TEXT("A121 neutral: the rest of the burst object keeps its defaults"), E2->Game.Skater.BurstFrames == C->Game.Skater.BurstFrames && E2->Game.Skater.BurstAccelMult == C->Game.Skater.BurstAccelMult);
 			// Lane A138 (R-0053 point 5): the tree before the lane is the shared baseline with lane A102's kept puck back on; its brain was evolution 1 and read no shield.
-			JamBaseline::MakeNeutral(E2->Game); JamBaseline::WithKeptPuck(E2->Game);
+			JamBaseline::MakeNeutral(E2->Game); JamBaseline::WithKeptPuck(E2->Game); JamBaseline::WithWhistle(E2->Game);   // lane A133: the pin blew the whistle
 			const FBot N2 = NetTrapMatch(*E2, TEXT("pro"), 15, 6000, JamBaseline::BrainTune(), true);
 			AddInfo(FString::Printf(TEXT("lane A121's neutral block, hockey.regular pro seed 15: %lld frames, %d:%d, hash %s (the tree before the lane: 6000 frames, 2:0, fc59e23598229ebc)"), N2.Frames, N2.Score0, N2.Score1, *N2.Hash));
 			TestEqual(TEXT("A121 neutral block: the pro bot match's hash is the baseline's"), N2.Hash, FString(TEXT("fc59e23598229ebc")));
@@ -739,7 +739,7 @@ bool FJamMovementNeutral::RunTest(const FString& Parameters)
 			TestTrue(TEXT("A128 neutral: the rest of the burst and spin objects keep their defaults"), E3->Game.Skater.BurstFrames == C->Game.Skater.BurstFrames && E3->Game.Skater.bBurstOwnStop == C->Game.Skater.bBurstOwnStop
 				&& E3->Game.Skater.SpinFrames == C->Game.Skater.SpinFrames && E3->Game.Skater.SpinStaminaCost == C->Game.Skater.SpinStaminaCost);
 			// Lane A138 (R-0053 point 5): the tree before the lane is the shared baseline with lane A102's kept puck and lane A121's three rules back on.
-			JamBaseline::MakeNeutral(E3->Game); JamBaseline::WithKeptPuck(E3->Game); JamBaseline::WithCarrierAnswer(E3->Game);
+			JamBaseline::MakeNeutral(E3->Game); JamBaseline::WithKeptPuck(E3->Game); JamBaseline::WithCarrierAnswer(E3->Game); JamBaseline::WithWhistle(E3->Game);   // lane A133: the pin blew the whistle
 			const FBot N3 = NetTrapMatch(*E3, TEXT("pro"), 15, 6000, JamBaseline::BrainTune(), true);
 			AddInfo(FString::Printf(TEXT("lane A128's neutral block, hockey.regular pro seed 15: %lld frames, %d:%d, hash %s (the tree before the lane: 6000 frames, 1:1, c8ae80c1dbdc45b0)"), N3.Frames, N3.Score0, N3.Score1, *N3.Hash));
 			TestEqual(TEXT("A128 neutral block: the pro bot match's hash is the baseline's"), N3.Hash, FString(TEXT("c8ae80c1dbdc45b0")));

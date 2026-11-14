@@ -149,7 +149,7 @@
       "score_to_win": 3,
       "goal_pause_frames": 120,
       "offside": false,
-      "penalties": true
+      "penalties": false
     },
     "teams": [
       {
@@ -236,10 +236,10 @@
       }
     ],
     "ai": {
-      "difficulty": "pro"
+      "difficulty": "rookie"
     },
     "look": {
-      "tier": "l2_night",
+      "tier": "p3_clay",
       "trim_colour_hex": "#38BDF8",
       "fog_density": 0,
       "wet_ice": false

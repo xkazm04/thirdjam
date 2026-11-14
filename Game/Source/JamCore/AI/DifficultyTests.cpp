@@ -77,7 +77,8 @@ bool FJamDifficultyProfilesResolve::RunTest(const FString& Parameters)
 		TestTrue(TEXT("teammate yield rookie >= pro"), R.YieldMarginM >= P.YieldMarginM && R.YieldRadiusM >= P.YieldRadiusM);
 		TestTrue(TEXT("shot range rookie <= pro <= all_star"), R.Opp.ShootExtraM <= P.Opp.ShootExtraM && P.Opp.ShootExtraM <= S.Opp.ShootExtraM);
 		TestTrue(TEXT("all_star intercepts"), S.Opp.bIntercept);
-		TestTrue(TEXT("R-0017: rookie never pokes, pro and all_star do, all_star sooner"), R.Opp.PokeFrames < 0 && P.Opp.PokeFrames >= 0 && S.Opp.PokeFrames >= 0 && S.Opp.PokeFrames <= P.Opp.PokeFrames);
+		// R-0050 point 4 (lane A112): with the kept puck the rookie pokes too (it had no way to take a carried puck but a hit); the later the easier
+		TestTrue(TEXT("R-0017 / R-0050: every level pokes, rookie latest, all_star soonest"), R.Opp.PokeFrames >= P.Opp.PokeFrames && P.Opp.PokeFrames >= S.Opp.PokeFrames && S.Opp.PokeFrames >= 0);
 		TestTrue(TEXT("R-0013 draws: the opposing centre jumps early least often at all_star (the human's opening touch)"),
 			S.Opp.DrawJumpPct <= P.Opp.DrawJumpPct && S.Opp.DrawJumpPct <= R.Opp.DrawJumpPct && S.Opp.DrawJumpPct > 0);
 		TestTrue(TEXT("R-0017: only all_star seeks pickups"), !R.Opp.bSeekPickups && !P.Opp.bSeekPickups && S.Opp.bSeekPickups);

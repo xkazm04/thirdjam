@@ -68,9 +68,10 @@ bool FJamStick::RunTest(const FString& Parameters)
 {
 	UJamCartridge* C = LoadPreset(*this, TEXT("hockey.regular"));
 	if (!C) return false;
-	const FJamGameConfig& G = C->Game;
+	FJamGameConfig G = C->Game;
 	TestTrue(TEXT("regular has the body check (R-0013)"), G.Skater.bCheckEnabled);
-	TestTrue(TEXT("regular has penalties (R-0013)"), G.Rules.bPenalties);
+	TestFalse(TEXT("regular has no whistle (R-0048 point 2; lane A112)"), G.Rules.bPenalties);
+	G.Rules.bPenalties = true;   // lane A112: the cases below are about the whistle's rules (fouls, the box), which modes keep: switched on here
 
 	// 1. Faceoff: countdown, drop, the human (a centre) wins with the first clean press after the drop.
 	{

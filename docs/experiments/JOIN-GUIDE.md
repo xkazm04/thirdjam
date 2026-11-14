@@ -1,4 +1,4 @@
-# Playing a match between two machines (lanes A120, A129, A140; track Q1)
+# Playing a match between two machines (lanes A120, A129, A140, A146; track Q1)
 
 One page for the operator, in the order you will do it. Protocol of this build: **8**. Both machines on the **same network** (same router, Wi-Fi or
 cable) and running **the same package**: a different build is refused at once with a message (section 5).
@@ -6,24 +6,37 @@ cable) and running **the same package**: a different build is refused at once wi
 ## 1. Before you start (both machines)
 - Copy the **same package folder** (`Windows\` with `ThirdJam.exe`) to both machines. Play from that folder; do not move it afterwards (see the firewall).
 - The cut you will play (`hockey.regular`, `modes/hockey.mode.shotgun`, ...) is part of the package: nothing to copy if both run the same package.
-- Note each machine's network address: Start > `cmd` > `ipconfig`, the **IPv4 Address** of the adapter that is connected (on the A device today:
-  `10.0.0.141`, *Ethernet 2*). The two machines' addresses must start the same (for example both `10.0.0.` or both `192.168.1.`).
+- Note each machine's network address: Start > `cmd` > `ipconfig`, the **IPv4 Address** of the adapter that is connected (the one with a
+  *Default Gateway*: your LAN address). The two machines' addresses must start the same (for example both `10.0.0.` or both `192.168.1.`).
 
 ## 2. The firewall prompt (once per machine, per package folder)
-The first time `ThirdJam.exe` **from a given folder** hosts or joins, Windows shows **"Windows Security Alert: Windows Defender Firewall has blocked some
-features of this app"**, naming *ThirdJam.exe* (publisher unknown) and its path. Tick **Private networks** (the home network is *Private* on the A device:
-*Ethernet 2* is Private) and press **Allow access**. Windows remembers the folder: a package in a **new folder asks again** (the A device already holds one
-allow rule per package folder made so far, about 45). If you pressed Cancel: Windows Security > Firewall & network protection > *Allow an app through
-firewall* > *Change settings* > find ThirdJam (the right path) > tick **Private** > OK. Nothing else is needed on one network. Across the internet the host's
-router would have to forward UDP 7700 to the host (not tested, not needed this weekend).
+The paragraph below is the one proposed for `submission/package/README.txt` (lane A146):
+
+> **The Windows firewall prompt.** The first time you host or join a match with a friend, Windows shows *"Windows Defender Firewall has blocked some
+> features of this app"* for ThirdJam.exe. To play with a friend, tick **Private networks** and press **Allow access** (Public is not needed at home).
+> Solo play uses no network, so Cancel is fine if you only play alone. Windows asks once **per folder**: unpack the game once and always play from that
+> folder; a copy in a new folder asks again. Both machines need the answer. If you pressed Cancel and want to play together later: Windows Security >
+> Firewall & network protection > Allow an app through firewall > Change settings > ThirdJam (the path of this folder) > tick Private > OK.
+
+Notes for the operator: on one network nothing else is needed. The A device already holds one allow rule per package folder made so far (about 45);
+the editor binary is allowed already, so runs on the editor binary never prompt. Across the internet the host's router would have to forward UDP 7700 to
+the host (not tested, not needed this weekend). Never change these settings from a script: the prompt is the operator's to answer.
 
 ## 3. Host (either machine)
 1. Main menu > **BRAWL WITH A FRIEND**. The screen **PLAY WITH A FRIEND** opens; the status line reads *Host a match and read your friend the code, or type
    theirs.*; the warning under it: *LAN only: your friend must be on the same network, unless your router forwards UDP port 7700 to this computer.*
 2. Pick the cut with `<` `>` and press **HOST**. The status line: *Waiting for a friend... cut: modes/hockey.mode.shotgun*. Below it the **invite codes**, one per
-   network address of this machine, as `1800-138F   (10.0.0.141)`. On the A device there are three: `10.0.0.141` (the LAN: read the guest this one),
-   `172.25.208.1` (WSL's virtual network: never reachable from another machine) and `127.0.0.1` (two copies on one machine only). **Read the guest the code whose
-   address starts like the guest's own address.** The game listens on UDP **7700** (7701 to 7715 if 7700 is taken by another copy; the code carries the port).
+   address another machine can reach, each saying what it is for (lane A146), for example:
+   ```
+   ABCD-EFGH   same network (your LAN address)
+   JKLM-NPQR   Tailscale, both signed in (your Tailscale address)
+   STUV-WXYZ   this machine only (127.0.0.1)
+   ```
+   **Read the guest the first line, the one marked *same network*.** It is the address with the router (the LAN); an address without a router (a cable
+   between two machines) is also *same network*, listed after it. *Tailscale, both signed in* appears only when Tailscale runs, and works only if the guest's
+   machine is signed in to the same tailnet. *this machine only* is for two copies on one machine. Virtual networks inside the computer (WSL's and
+   Hyper-V's *vEthernet*, VirtualBox, VMware, Docker), adapters without an address (169.254...) and disconnected adapters are not listed: no other machine can
+   reach them. The game listens on UDP **7700** (7701 to 7715 if 7700 is taken by another copy; the code carries the port).
 3. When the guest arrives: *Bo is here. Press Start.* and the names *Ada vs Bo*. Press **START**: *Starting...*, then both machines load the rink (*In the match.*).
 
 ## 4. Guest
@@ -66,7 +79,7 @@ match (shotgun `d4a5a086d4cc5b1e`, regular `2709733ac85dd9be` in every run below
 
 | Run | Ended (frame, score host:guest) | Rematch (lockstep frame / hash) | f600 of match 2 | Presses lost (host / guest) |
 |---|---|---|---|---|
-| **LAN** shotgun: host on UDP 7700, guest typed `1800-138F` (10.0.0.141) | f8610, 1:3 | 8734 / `d4a5a086d4cc5b1e` | `e9bb4b1d38505d7e` equal | (build before the queue) |
+| **LAN** shotgun: host on UDP 7700, guest typed the code of the LAN address | f8610, 1:3 | 8734 / `d4a5a086d4cc5b1e` | `e9bb4b1d38505d7e` equal | (build before the queue) |
 | **LAN** regular, final build | f5573, 3:0 | 5697 / `2709733ac85dd9be` | `52a85ef47d232c8b` equal | 0 / 0 |
 | **package** shotgun 1, 2, 3 | f8549 3:2, f4936 3:2, f10354 3:2 | `d4a5a086d4cc5b1e` | `22387dafc893d8bc`, `e0f8bc8429f7d8fa`, `a41a4b24fd5f4fda` equal | 0 / 0 in all |
 | **package** regular 1, 2, 3 | f6751 0:3, f11412 3:2, f12147 0:3 | `2709733ac85dd9be` | `52a85ef47d232c8b`, `1824c25bd5c306ff`, `2fabe3559bc7de45` equal | 0 / 0 in all |
@@ -87,3 +100,11 @@ its seat, still in flight at the end, and folded. Protocol 8 OR'd every press re
 16 of 32, 13 of 29, 21 of 50 and 26 of 47 F presses that way, and the in-process soak could not see it (it expected the OR). Now a stall's presses queue one
 frame each (`jam.net.PressQueue`, 16; 1 gives back the fold), presses before the first frame are not read, and a held key's repeats are absorbed. No wire
 change: protocol 8.
+
+## 8. Re-run on the integrated game (lane A146, Sat 14 Nov, protocol 8)
+The same runs on main `d4bb4da` (the brain's second evolution, the shove rule, the standing start, the re-made modes) with the new host list:
+shotgun x3 and regular x3 (two processes, to the end, rematch) all PASS, 0 desync, 0 presses lost, every rematch at its cut's fresh hash
+(shotgun `cdf539f1b6b0fb72`, regular `39e7cbb95339847b`); the LAN run listed three codes, *same network* first, *Tailscale, both signed in* second,
+*this machine only* last (no WSL line), and the guest typing the *same network* code played to the end and the rematch. The in-process soak: 5200
+matches (twelve modes and regular, clean and 30 % loss + jitter + duplicates), 0 desync, 0 of 1 076 839 presses lost. Details: `SOAK-LOCKSTEP-2.md`,
+evolution 6.

@@ -227,7 +227,7 @@ namespace JamAI
 		K.ShootExtraM = 30.0;  // lane A95 (CURVE-5.md): 13 -> 30, the pro bot shoots from reach + 30 m (A94's carry-or-pass halved its shots; the single biggest lever, regular 82 -> 67). 16:30 sweep: 13
 		K.LeadFrames = 60;
 		K.DrawJumpPct = 100;   // 16:18: the pro centre never wins the draw outright (the sim's own bot timing still can); with it the human touches the puck inside 600 frames after every faceoff
-		K.PokeFrames = 6;      // R-0017: pokes after the puck has sat 6 frames inside blade reach
+		K.PokeFrames = 2;      // lane A112 (CURVE-6.md): 6 -> 2 (the regular player on the kept puck 71.2 -> 60.8 alone). R-0017: pokes after the puck has sat 6 frames inside blade reach
 		K.bLift = true;
 		K.bPassOut = false;    // 15:13 sweep: pro passing kept the puck from the human past 600 frames after faceoffs (HumanHasSomethingToDo); all_star passes
 		K.bReadLanes = true;
@@ -236,10 +236,15 @@ namespace JamAI
 		K.bUseAimCone = true;
 		K.bOneTimer = true;    // R-0029 point 4 (lane A39): pro bots use the one-timer
 		K.Hk = ProHockeySense();   // lane A94 (R-0045 law 2)
+		// Lane A133 (CURVE-7.md): the pro carrier carries through the forecheck as all_star's does: it moves the puck under pressure only when the first
+		// opponent arrives inside 0.3 s (1.4) and passes only to a mate 12 m nearer the net (3). The regular player 74.0 -> 51.0 (600; hunt 8); law 3's drill
+		// does not see it (100 % at 8 m). The human's mates keep ProHockeySense's 1.4 / 3 (ApplyDifficultyProfile).
+		K.Hk.PressureSec = 0.3;
+		K.Hk.BetterByM = 12.0;
 		K.SprintShare = 0.35;   // lane A95 (R-0045 law 4): a pro bot sprints in a third of its chases (rookie 0.1, all_star 0.7)
 		K.LiftCooldownFrames = 90;   // lane A95 (B-to-A-0037 point 3): a pro bot lifts at most every 1.5 s
-		K.HuntRadiusM = 8.0;   // lane A95 (R-0041 "pro bots check and lift as a matter of course", CURVE-5.md): the support goes at an opposing carrier within 8 m (0 before)
-		K.CheckMinClosing = 2.0;   // lane A95 (CURVE-5.md): 4 -> 2 m/s: under A92's momentum model a low-speed press is a stumble, not a knockdown. R-0031 point 2 (lane A45): pro bots body-check the carrier from the front or the side at this closing speed and up (lane A70: 5 -> 4, knockdowns of the regular playtester 1.74 -> 1.96 a match, its win share unmoved, CURVE-2.md)
+		K.HuntRadiusM = 8.0;   // lane A133 (CURVE-7.md, R-0055 point 1: the hunt is not a curve lever): 20 -> 8 m (law 3's drill at pro: the stop at 8 m 21.0 % at 20 m, 70.5 % at 10, 98.5 % at 9, 100 % at 8). Lane A112: 8 -> 20. (CURVE-6.md, R-0050: the human keeps the puck): 8 -> 20 m with the poke 2 and the checks from 1: the regular player 71.2 -> 50.2 (2,000; with sprint 0.7 and lift cooldown 45 too: 44.5). Lane A95: 0 -> 8. (R-0041 "pro bots check and lift as a matter of course", CURVE-5.md): the support goes at an opposing carrier within 8 m (0 before)
+		K.CheckMinClosing = 1.0;   // lane A112 (CURVE-6.md): 2 -> 1 m/s. Lane A95 (CURVE-5.md): 4 -> 2 m/s: under A92's momentum model a low-speed press is a stumble, not a knockdown. R-0031 point 2 (lane A45): pro bots body-check the carrier from the front or the side at this closing speed and up (lane A70: 5 -> 4, knockdowns of the regular playtester 1.74 -> 1.96 a match, its win share unmoved, CURVE-2.md)
 		return K;
 	}
 
@@ -250,6 +255,7 @@ namespace JamAI
 		double YieldRadiusM = 15.0;    // game.ai.yield_radius_m
 		double HoldRadiusM = 0.0;      // game.ai.hold_radius_m (lane A3: pro profile 0 on puck.drag 0.5; A2's 4.5 handed the human the puck)
 		double SpeedScale = 1.0;       // game.ai.speed_scale
+		double MateSpeedScale = 0.0;   // lane A112 (R-0048 point 4): the human's teammates' top speed as a fraction of skater.speed when a human plays; 0 = SpeedScale (every bot's: the game before)
 		double SprintShare = -1.0;     // lane A72 (ask A2): game.ai.sprint, the share of two-second windows a chasing bot sprints (0 = never); lane A95: -1 (absent) = each side's FJamBotSkill::SprintShare (the level's)
 		double RedSkill = 1.07;        // lane A95 (CURVE-5.md): pro 0.95 -> 1.07. game.ai.red_skill (drives the side without the player); pro 0.95 by lane A70 (CURVE-2.md: regular playtester 50.6 % over 2,000 matches; 0.94 by R-0029 pass 2 measured 52.3 on main 7dfbeb5)
 		// lane A3: skill per side. Opp = the side without the human (team 1 in pure bot-vs-bot); Mate = the human's side.

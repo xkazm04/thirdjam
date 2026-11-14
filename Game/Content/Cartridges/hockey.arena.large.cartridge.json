@@ -147,7 +147,7 @@
       "timer_frames": 10800,
       "goal_pause_frames": 120,
       "offside": false,
-      "penalties": true
+      "penalties": false
     },
     "teams": [
       {
@@ -209,7 +209,7 @@
       "difficulty": "pro"
     },
     "look": {
-      "tier": "l2_night",
+      "tier": "p3_clay",
       "trim_colour_hex": "#38BDF8",
       "fog_density": 0,
       "wet_ice": false

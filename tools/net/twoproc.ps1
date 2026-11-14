@@ -104,7 +104,7 @@ if ($Lan) {
     }
     Write-Host "INFO twoproc: host's codes: $hostingLine"
     $code = ''
-    foreach ($part in ($hostingLine -split '\|')) { if ($part -match '^\s*(\S+)\s+\(([0-9.]+)\)') { if ($Matches[2] -eq $LanIp) { $code = $Matches[1] } } }
+    foreach ($part in ($hostingLine -split '\|')) { if ($part -match '^\s*(\S+)\s+[^(]*\(([0-9.]+)\)') { if ($Matches[2] -eq $LanIp) { $code = $Matches[1] } } }
     if (-not $code) { Write-Host "FAIL -Lan: the host listed no code for $LanIp"; if (-not $h.HasExited) { Stop-Process -Id $h.Id -Force -Confirm:$false }; Write-Host '{"tool":"thirdjam.net/1","verdict":"fail","exit":1}'; exit 1 }
     $joinAddr = $code
     Write-Host "INFO twoproc: the guest types $code ($LanIp)"
