@@ -11,6 +11,9 @@
 #include "Misc/Paths.h"
 #include "HAL/FileManager.h"
 #include "Engine/World.h"
+#include "Engine/Engine.h"
+#include "Engine/GameInstance.h"
+#include "JamDesignerSubsystem.h"
 
 const TCHAR* UJamMenuFlow::MenuMap = TEXT("/Game/Maps/Menu");
 const TCHAR* UJamMenuFlow::RinkMap = TEXT("/Game/Maps/Rink");
@@ -46,6 +49,13 @@ void UJamMenuFlow::StartMatchAtLevel(UObject* WorldContext, const FString& CutNa
 	const bool bPlainName = !CutNameOrPath.Contains(TEXT("/")) && !CutNameOrPath.Contains(TEXT("\\")) && !CutNameOrPath.Contains(TEXT(":")) && !CutNameOrPath.Contains(TEXT(" "));
 	// Lane A144: the level is an option of this open only (never a console variable that outlives it): the next match that names none plays its
 	// cartridge's own.
+	// Director, 14 Nov (lane A155, the real window): the rink this call opens loads the cut itself, with the level asked for here. A Designer
+	// LoadCut just before this call had scheduled the same load for the next frame: it arrived in the new map and built the match a second time
+	// at the cartridge's own level (PLAY NOW with ROOKIE lit played PRO). The scheduled apply is taken back.
+	if (const UWorld* W = GEngine ? GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull) : nullptr)
+	{
+		if (UGameInstance* GI = W->GetGameInstance()) if (UJamDesignerSubsystem* D = GI->GetSubsystem<UJamDesignerSubsystem>()) D->CancelScheduledApply();
+	}
 	TArray<FString> Options;
 	if (bPlainName) Options.Add(FString::Printf(TEXT("cut=%s"), *CutNameOrPath));
 	if (!Level.IsEmpty()) Options.Add(FString::Printf(TEXT("level=%s"), *Level));

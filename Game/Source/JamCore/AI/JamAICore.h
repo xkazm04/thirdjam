@@ -215,7 +215,7 @@ namespace JamAI
 	constexpr double kEvo4MateFinishM = 0.0;
 	constexpr double kEvo4CarryClockS = 0.0;
 	constexpr double kEvo4MateDriveM = 0.0;
-	constexpr int kEvo4ScreenFrames = 0;
+	constexpr int kEvo4ScreenFrames = 0;   // neutral tonight (the Director, 03:36: the ladder is being measured on the landing). Recommended: 30 (half a second: rookie +1.5, pro +2.2, all_star -1.4 at 600; BRAIN-4.md section 3)
 	inline void SetEvolution4(FJamHockeySense& H, bool bOn, bool bMate)
 	{
 		H.MateFinishM = 0.0;

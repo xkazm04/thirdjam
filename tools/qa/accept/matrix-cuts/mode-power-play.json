@@ -113,9 +113,9 @@
  "ai": [],
  "game": {
   "rink": {
-   "length_m": 70,
-   "width_m": 35,
-   "corner_radius_m": 3.5,
+   "length_m": 60,
+   "width_m": 30,
+   "corner_radius_m": 3,
    "board_restitution": 0.4,
    "ice_friction": 0.015,
    "goal_width_m": 4
@@ -129,7 +129,7 @@
    "glide_drag": 0.147,
    "brake_decel": 6,
    "check_enabled": true,
-   "carry_speed_mult": 0.8,
+   "carry_speed_mult": 0.65,
    "pass_lead_frames": 20
   },
   "puck": {
@@ -163,36 +163,36 @@
      {
       "role": "player",
       "spawn": [
-       -5.83,
+       -5,
        0
       ]
      },
      {
       "role": "support",
       "spawn": [
-       -5.83,
-       -5.83
+       -5,
+       -5
       ]
      },
      {
       "role": "support",
       "spawn": [
-       -5.83,
-       5.83
+       -5,
+       5
       ]
      },
      {
       "role": "back",
       "spawn": [
-       -17.5,
-       -3.89
+       -15,
+       -3.33
       ]
      },
      {
       "role": "back",
       "spawn": [
-       -17.5,
-       3.89
+       -15,
+       3.33
       ]
      }
     ]
@@ -204,21 +204,21 @@
      {
       "role": "chaser",
       "spawn": [
-       5.83,
+       5,
        0
       ]
      },
      {
       "role": "support",
       "spawn": [
-       5.83,
-       5.83
+       5,
+       5
       ]
      },
      {
       "role": "back",
       "spawn": [
-       17.5,
+       15,
        0
       ]
      }
@@ -255,7 +255,7 @@
    "pitch": "Five on three. Move it, fire it, repeat.",
    "facts": [
     "5 v 3 for you",
-    "carry at 80 % speed",
+    "carry at 65 % speed",
     "one-timers, 4:00"
    ]
   }

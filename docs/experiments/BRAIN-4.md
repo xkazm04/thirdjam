@@ -58,9 +58,10 @@ the regular rink at all_star), and `brain3=0` / `brain2=0` switch it off with th
 at every level. No hash of a shipped cut's default match is pinned: `Jam.Bot.Hockey4.Neutral` plays one all_star match twice and asserts the two hashes
 equal, and logs the match with the switch off (seed 1: as shipped 24,893 frames 3:2, off 3,572 frames 0:3).
 
-**The gate.** The full `Jam` filter on the final build (build 2): **236 of 236** (`Game/logs/a153/ue-full-2.log`; 230 on main a9f7443, 6 new; no "missing
-usage flag" line). Build 1 (item 1 with the first two neutral rules): 234 of 234, and build 2 as shipped plays build 1's matches (100 of 100 hashes at pro
-and at all_star on the regular rink), so every number of this section is the final source's. The gate's node tests: 243 pass, 1 fail that is the
+**The gate.** The full `Jam` filter on the final build (build 6: item 1 on, every rule of items 2 and 3 at its neutral value): **236 of 236**
+(`Game/logs/a153/ue-full-6.log`; 230 on main a9f7443, 6 new; no "missing usage flag" line), law 3 in it as in the table above. What landed first as main
+a7d89871 was build 2 (236 of 236); **build 6 as shipped plays build 2's matches**: 100 of 100 hashes equal at rookie, at pro and at all_star on the regular rink and at pro and at all_star on the large (`Game/logs/a153/b10.txt`). Build 1, on which this section's cells and the drill
+were measured: 234 of 234, and build 2 as shipped plays build 1's matches (100 of 100 hashes at pro and at all_star on the regular rink). The gate's node tests: 243 pass, 1 fail that is the
 worktree's (`BarkData.inl` against `barks.json`, the CRLF copy). `Jam.Bot.Hockey4.*` (6 new):
 
 | test | before | after |
@@ -69,23 +70,23 @@ worktree's (`BarkData.inl` against `barks.json`, the CRLF copy). `Jam.Bot.Hockey
 | `MateFinish` (item 2) | a mate 10 m out, 10 degrees off the net, the lane open but for the last man: carries on | shoots; an opponent on the lane, 22 m out, 30 degrees off: unchanged |
 | `CarryClock` (item 3) | a carrier that holds the puck at centre ice for 200 frames: never releases it | with a 2 s clock it shoots or passes from frame 120 |
 | `MateDrive` (item 2) | a mate 22 m out with an open lane, the human open and better placed: it hands him the puck (19 pass frames in half a second) | it keeps it (0); a human set up for the one-timer still gets it |
-| `Screen` (item 2) | the human's first frame with the puck, an opponent 5 m from him: his mate goes off to offer a lane (-0.90) | it steps between them (1.00); once the frames are up, as before |
+| `Screen` (item 2) | five a side, the human's first frame with the puck, an opponent 5 m from him: his mate goes off to offer a lane (-0.90) | it steps between them (1.00); once the frames are up, as before; three a side: no screen (-0.90 in both arms) |
 | `Neutral` | | `brain4=0` puts every rule of evolution 4 at its neutral value; the same match twice is the same match |
 
 No field was added to skater or puck state. The opposing side's approach changes at all_star only, and only at five a side.
 
-## 2. Items 2 and 3: four rules in the code at their neutral values (measured below as profile tunes; what ships is in `SetEvolution4`, `JamAICore.h`)
+## 2. Items 2 and 3: four rules in the code at their neutral values, each measured as a profile tune (what ships is in `SetEvolution4`, `JamAICore.h`)
 
 | field, tune key | rule | where |
 |---|---|---|
 | `MateFinishM`, `mate.hk_mate_finish_m` | A mate that carries the puck inside this distance of the opposing net, at most 60 degrees off its axis, with an open lane (no standing opponent within 1.2 m of the line puck to net up to 3 m in front of the net: the last man in his crease does not close a lane) finishes: inside the sim's aim cone it counts as lined up; it does not give the puck to a better-placed mate or to the human by its coin (a human set up for the one-timer still gets it, pressure still moves the puck). | `Attack` |
 | `MateDriveM`, `mate.hk_mate_drive_m` | The same open lane out to this distance: the mate takes the puck to the net itself and does not hand it off on the way. | `Attack` |
-| `ScreenFrames`, `mate.hk_screen_frames` | For this many frames after the human takes the puck, the mate nearest the opponent nearest him (within 8 m of him, not on him already) stands in that opponent's way, 1.2 m from it on the line to the human, instead of offering a lane. | `Decide`, `JobSteer`, `ScreenPoint` |
+| `ScreenFrames`, `mate.hk_screen_frames` | For this many frames after the human takes the puck, the mate nearest the opponent nearest him (within 8 m of him, not on him already) stands in that opponent's way, 1.2 m from it on the line to the human, instead of offering a lane. Only in a line-up with another forward to offer the lane (not three a side). | `Decide`, `JobSteer`, `ScreenPoint` |
 | `CarryClockS`, `opp.hk_carry_clock_s` | A team without shape jobs (fewer than five): a carrier that has held the puck this many seconds passes when the sim's pass has a receiver, else shoots it at the net once it faces up the ice. | `Attack` |
 
 Switch: the tune `brain4=0` puts all four at their neutral values and all_star's presser back on the hunt (evolution 3); each rule alone by its key.
 
-## 3. Item 2: a mate that finishes. Measured; nothing ships on.
+## 3. Item 2: a mate that finishes, a mate that screens. The finish changes nothing; the half-second screen is recommended and ships neutral tonight.
 
 30 regular matches at pro an arm, traced frame by frame (`tools/perf/results/a153/pt.sh ... 1-30 1`; `tools/perf/results/a153/releases.mjs` for the
 mates' releases, `docs/design/review-1/humancarry.mjs` for the carries; about 156 carries after a mate's pass an arm):
@@ -96,6 +97,7 @@ mates' releases, `docs/design/review-1/humancarry.mjs` for the carries; about 15
 | the finish inside 15 m (the brief's rule) | 18 % | 45 % | 0.90 s | 1.42 | 0.77 | 3.00 | 2.03 |
 | the finish, and a mate holds the puck 45 frames before handing it off (`mate.hk_min_carry_frames=45`) | 24 % | 48 % | 0.92 s | 1.32 | 0.67 | 2.73 | 2.20 |
 | the drive at 25 m with the finish | 19 % | 45 % | 0.90 s | 1.39 | 0.80 | 3.07 | 2.10 |
+| the screen for 30 frames | 24 % | 48 % | 0.97 s | 1.49 | 0.73 | 2.37 | 2.40 |
 | the screen for 60 frames | 22 % | 48 % | 0.97 s | 1.41 | 0.83 | 2.47 | 2.27 |
 | **the screen for 120 frames** | **30 %** | 52 % | 1.07 s | **1.61** | 0.57 | 2.23 | 2.03 |
 | the screen for 60 frames with the drive and the finish | 23 % | 47 % | 0.92 s | 1.39 | 0.87 | 2.60 | 2.43 |
@@ -110,17 +112,30 @@ mates' releases, `docs/design/review-1/humancarry.mjs` for the carries; about 15
 3. **The screen is the rule that moves the human's own numbers.** With the nearest mate standing in his nearest opponent's way for two seconds, the puck
    is still his two seconds after a mate's pass in 30 % of the cases (18 %), and he receives 1.61 passes a minute (1.44). The mates then shoot less (3.1
    to 2.2 a match): the screener is not on its lane. Thirty matches an arm: the 12 points are about two and a half standard errors.
-4. **And it is worth more than the ladder's 4 points at pro**, so it ships at its neutral value:
+4. **At two seconds, and at one, it is worth more than the ladder's 4 points; at half a second it is inside them.** The cells (600 each; idle30 = the
+   share of matches with a 30 s stretch without a human touch):
 
-| cell (600) | as shipped | the screen for 120 frames | the move |
-|---|---|---|---|
-| novice at rookie, regular (ladder 85.3) | 84.7 (2.73 : 1.21) | SCR_RK | |
-| regular at pro, regular (49.1) | 50.5 (2.08 : 2.05) | **55.7** (2.21 : 1.92); at 60 frames 55.7 as well (2.21 : 1.93) | **+5.2** |
-| good at all_star, regular (29.6) | 32.7 (1.62 : 2.41) | 32.7 (1.70 : 2.40) | 0.0 |
-| regular at pro, large | 54.8; idle30 56.2 % | SCR_LARGE | |
+| cell | as shipped | the screen for 30 frames | for 60 frames | for 120 frames |
+|---|---|---|---|---|
+| novice at rookie, regular (ladder 85.3) | 84.7 (2.73 : 1.21); idle30 28.5 % | 86.2 (2.76 : 1.05): **+1.5**; idle30 22.3 % | | 89.0 (2.80 : 1.01): **+4.3**; idle30 20.2 % |
+| regular at pro, regular (49.1) | 50.5 (2.08 : 2.05); idle30 8.0 % | 52.7 (2.11 : 2.01): **+2.2**; idle30 4.7 % | 55.7 (2.21 : 1.93): **+5.2** | 55.7 (2.21 : 1.92): **+5.2** |
+| good at all_star, regular (29.6) | 32.7 (1.62 : 2.41) | 31.3 (1.58 : 2.45): **-1.4** | | 32.7 (1.70 : 2.40): 0.0 |
+| regular at pro, large | 54.8; idle30 56.2 % | | | 56.2; idle30 55.5 %: nothing on the big ice |
 
-   What pays it back, by the curve lane's rule (aggression first): a notch of pro's forecheck. The screen on (`kEvo4ScreenFrames` 120 in `JamAICore.h`)
-   with the pro cell re-set is the brain track's proposal for the next curve pass.
+   - **What ships tonight: neutral** (`kEvo4ScreenFrames` 0), by the Director's word of 03:36: item 1 landed as main a7d89871 and the ladder's last pass
+     is being measured on that commit for the operator's play; a rule that moves a cell 2.2 points afterwards would unmeasure it.
+   - **What the brain track recommends, to be switched on with the curve after that play: the half-second screen, `kEvo4ScreenFrames` 30** (one
+     constant in `JamAICore.h`). It is inside the 4-point rule at all three levels (+1.5 / +2.2 / -1.4), takes six points off the newcomer's waiting at
+     rookie (28.5 to 22.3 % of matches hold a half-minute without the puck; pro 8.0 to 4.7 %; 600 seeds each) and reads 24 % against 18 % on "still his
+     two seconds after a mate's pass" (30 matches: one and a third standard errors, and short of the bar of 30). The long screen (60 or 120 frames) is
+     over the rule at rookie and at pro: a notch of pro's forecheck pays back its 5 points (aggression first), for 30 % on the review's number.
+   - **The screen is for a line-up with another forward.** Played at three a side by the only forward, it made the big ice worse at pro (59.8 % of
+     matches with a half-minute without the puck against 56.2 %; win 54.3; all_star large 28.7): `ScreenPoint` now refuses when the line-up has no
+     other forward (counted from the line-up, not from who stands at the moment), so the big ice plays without it.
+   - Proof that the recommended value is what was measured (build 5: the constant at 30, the line-up limit in): full `Jam` filter 236 of 236
+     (`Game/logs/a153/ue-full-5.log`); the default against the tune measured on build 2: 100 of 100 hashes equal at rookie, at pro and at all_star on
+     the regular rink; the big ice at pro and at all_star against the cells without any screen: 100 of 100 each; `mate.hk_screen_frames=0` against build
+     2's pro cell: 100 of 100.
 
 ## 4. Item 3: the big ice. Measured; nothing ships on.
 
@@ -146,8 +161,8 @@ Regular at pro on hockey.arena.large, 600 seeds an arm (`tools/perf/results/a153
 ## 5. What does not hold, and what is open
 
 1. Item 2's three bars at pro on the regular rink, as shipped: the mates' releases from inside 15 m 0.77 a match (bar 1.5: **not met**, and not a
-   brain number); passes received a minute 1.44 (the review: 1.54; **not moved**); still his two seconds after a mate's pass 18 % (bar 30: **not met**
-   as shipped; 30 % with the screen, which waits for the curve).
+   brain number); passes received a minute 1.44 (the review: 1.54; **not moved**); still his two seconds after a mate's pass 18 % (bar 30: **not met**;
+   24 % with the half-second screen that is recommended, 30 % with the two-second screen that needs the curve).
 2. Item 3's bar: 56.2 % against 25 % (**not met**; the clock at 4 s reads 40.8 % and waits for the curve).
 3. All_star's long stop: begun at 11 or 12 m it no longer passes (47.5 and 35 %; the carry times out with the puck kept). R-0058 rules the one distance;
    a player who stops early at all_star is contained, not beaten.

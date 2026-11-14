@@ -1691,11 +1691,16 @@ namespace JamAI
 		if (Opp < 0 || Bd < 1.5) { return false; }   // nobody near him, or the opponent is on him already: no room to stand between
 		const FVec2 Op = W.Skaters[Opp].Pos;
 		const double Mine = W.Skaters[Id].Pos.DistTo(Op);
+		int Others = 0;
 		for (int m = 0; m < W.NumSkaters; ++m)
 		{
-			if (m == Id || m == Hi || W.Skaters[m].Team != W.Skaters[Id].Team || W.Skaters[m].bDown || W.Skaters[m].Role == ERole::Back) { continue; }
-			if (W.Skaters[m].Pos.DistTo(Op) < Mine - 1e-9) { return false; }   // a nearer mate screens; this one offers a lane
+			if (m == Id || m == Hi || W.Skaters[m].Team != W.Skaters[Id].Team || W.Skaters[m].Role == ERole::Back) { continue; }
+			++Others;   // the line-up's other forwards, standing or not: the rule is the team's shape, not the moment's
+			if (!W.Skaters[m].bDown && W.Skaters[m].Pos.DistTo(Op) < Mine - 1e-9) { return false; }   // a nearer mate screens; this one offers a lane
 		}
+		// No other forward in the line-up (three a side: the human, one forward, the back): the only forward offers the lane. Measured on the big ice at pro with
+		// the screen played by that forward: 59.8 % of matches with a 30 s stretch without the puck against 56.2 % (BRAIN-4.md section 3).
+		if (Others == 0) { return false; }
 		Out = Op + W.Skaters[Opp].Vel * 0.2 + (Hp - Op).Normalized() * 1.2;
 		return true;
 	}

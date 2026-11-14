@@ -19,6 +19,9 @@
 // Lane A149 (track M1, evolution 3): the twelve on the set ladder (docs/experiments/MODES-5.md). The table carries the share of matches with 30 s without a
 // human touch, and a novice run (--player novice) is read against the novice's floor (10 % or more) instead of the 15 to 85 % band. Both are notes, not failures.
 //
+// Lane A156 (track M1, evolution 4): the table carries the human's own passes a play minute (the bar of a mode that went to five a side is 2 or more: the
+// regular game reads 2.8; docs/experiments/MODES-6.md). A note, not a failure.
+//
 // Exit: 0 every mode passed, 1 a mode failed (invalid, a cell failed, unfinished matches, or its number within a third of regular), 2 could not run.
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
@@ -121,6 +124,7 @@ function cell(s) {
 const signed = (p) => (p === null ? 'new' : `${p > 0 ? '+' : ''}${p} %`);
 const winPct = (ms) => (ms.length ? r1((100 * ms.filter((m) => m.result === 'win').length) / ms.length) : 0);
 const downs = (ms) => r2(avg(ms.map((m) => m.knockdowns || 0)));
+const humanPasses = (ms) => r2(perPlayMin(ms, (m) => m.passes || 0));
 const noTouch30 = (ms) => (ms.length ? r1((100 * ms.filter((m) => (m.max_no_touch || 0) >= 1800).length) / ms.length) : 0);
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
@@ -185,8 +189,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const base = Object.fromEntries(done.filter((d) => d && d.kind === 'regular').map((d) => [d.base, d]));
   const results = [];
   const lines = [
-    '| mode | level | character number | mode | regular | ratio | a third apart | win % mode / regular | win band | match s mode / regular | human knockdowns / match mode / regular | 30 s without the puck, % of matches mode / regular | unfinished |',
-    '|---|---|---|---|---|---|---|---|---|---|---|---|---|',
+    '| mode | level | character number | mode | regular | ratio | a third apart | win % mode / regular | win band | match s mode / regular | human knockdowns / match mode / regular | 30 s without the puck, % of matches mode / regular | human passes / play min mode / regular | unfinished |',
+    '|---|---|---|---|---|---|---|---|---|---|---|---|---|---|',
   ];
   for (const d of done.filter((x) => x && x.kind === 'mode')) {
     const ch = CHARACTER[d.mode.slug] || CHARACTER[d.mode.slug.split('-')[0]] || CHARACTER.sniper;
@@ -203,10 +207,10 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     const inBand = win >= band[0] && win <= band[1];
     const r = { mode: d.mode.id, title: d.mode.title, level: d.level, sprint: d.sprint || undefined, character: ch.label, value: r2(mine), regular_value: r2(theirs), ratio, change_pct: pctChange,
       verdict: ok ? 'pass' : 'fail', win_pct: win, regular_win_pct: b ? winPct(b.ms) : undefined, win_in_band: inBand, match_s: d.s.match_s, regular_match_s: b?.s.match_s,
-      human_knockdowns: downs(d.ms), regular_human_knockdowns: b ? downs(b.ms) : undefined, no_touch30_pct: noTouch30(d.ms), regular_no_touch30_pct: b ? noTouch30(b.ms) : undefined, unfinished: d.s.unfinished, mode_cell: cell(d.s), regular_cell: b ? cell(b.s) : undefined };
+      human_knockdowns: downs(d.ms), regular_human_knockdowns: b ? downs(b.ms) : undefined, no_touch30_pct: noTouch30(d.ms), regular_no_touch30_pct: b ? noTouch30(b.ms) : undefined, human_passes_per_min: humanPasses(d.ms), regular_human_passes_per_min: b ? humanPasses(b.ms) : undefined, unfinished: d.s.unfinished, mode_cell: cell(d.s), regular_cell: b ? cell(b.s) : undefined };
     results.push(r);
     console.log(`${ok ? 'PASS' : 'FAIL'} mode ${d.mode.id} (${d.base}): ${ch.label} ${r.value} vs regular ${r.regular_value} (${signed(pctChange)}), win ${win} % vs ${r.regular_win_pct} %${inBand ? '' : ` (OUTSIDE ${band[0]}-${band[1]})`}, unfinished ${d.s.unfinished}`);
-    lines.push(`| ${d.mode.id} | ${d.base} | ${ch.label} | **${r.value}** | ${r.regular_value} | ${ratio === null ? 'n/a' : ratio} | ${ok ? 'yes' : '**NO**'} | ${win} / ${r.regular_win_pct} | ${inBand ? 'in' : '**out**'} | ${d.s.match_s} / ${b?.s.match_s} | ${r.human_knockdowns} / ${r.regular_human_knockdowns} | ${r.no_touch30_pct} / ${r.regular_no_touch30_pct} | ${d.s.unfinished} |`);
+    lines.push(`| ${d.mode.id} | ${d.base} | ${ch.label} | **${r.value}** | ${r.regular_value} | ${ratio === null ? 'n/a' : ratio} | ${ok ? 'yes' : '**NO**'} | ${win} / ${r.regular_win_pct} | ${inBand ? 'in' : '**out**'} | ${d.s.match_s} / ${b?.s.match_s} | ${r.human_knockdowns} / ${r.regular_human_knockdowns} | ${r.no_touch30_pct} / ${r.regular_no_touch30_pct} | ${r.human_passes_per_min} / ${r.regular_human_passes_per_min} | ${d.s.unfinished} |`);
   }
   mkdirSync(dirname(outBase), { recursive: true });
   writeFileSync(`${outBase}.jsonl`, done.filter(Boolean).flatMap((d) => d.ms.map((m) => JSON.stringify({ ...m, mode: d.kind === 'mode' ? d.mode.id : 'regular' }))).join('\n') + '\n');

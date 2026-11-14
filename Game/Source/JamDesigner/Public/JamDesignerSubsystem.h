@@ -108,6 +108,10 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Jam|Designer") UJamCartridge* GetCurrentCartridge() const { return Current; }
 	// True between a LoadCut and the next frame, when the match rebuild and OnCutChanged run (R-0017: never inside a callback).
 	UFUNCTION(BlueprintPure, Category = "Jam|Designer") bool IsCutApplyPending() const { return bApplyScheduled; }
+	// Director, 14 Nov (lane A155's finding in the real window): a caller that opens the rink itself right after LoadCut (the menu) takes the
+	// scheduled apply back. Without this the new map's game mode built the match from its open (the player's level), and one frame later the
+	// scheduled apply loaded the same file again by its path: a second build, and the cartridge's own level instead of the player's.
+	void CancelScheduledApply();
 	// Makes C current without loading a file (the game mode calls this with the cartridge it booted, so a Director's Call has a base).
 	UFUNCTION(BlueprintCallable, Category = "Jam|Designer") void SetCurrentCartridge(UJamCartridge* C) { Current = C; }
 
@@ -189,5 +193,6 @@ private:
 	bool bCallUsedThisPeriod = false;
 	bool bBusy = false;
 	bool bApplyScheduled = false;
+	bool bApplyCancelled = false;
 	FString PendingApplyPath;
 };
