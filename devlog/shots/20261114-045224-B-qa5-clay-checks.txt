@@ -1,0 +1,1 @@
+QA5 B1. Clay, seed 7920, un-paused at the window's resolution, cropped on the figure that starts the take, frames 0 to 22 from its start: a cross-check taken by the human (Lift_Hit), a cross-check thrown (Lift), and four body checks (Check_Deliver_Right in the middle and heavy sizes). The white-blue flashes and flecks are the effects lane's.
