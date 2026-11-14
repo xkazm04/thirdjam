@@ -12,6 +12,14 @@
 //   AFTER (jam.hit.Down): a downed skater lies in a ring of 12 bars on the ice round his body that go out one by one as his down frames run out
 //     (a countdown an eye reads; on the ice only: nothing over the figure). (jam.hit.PuckFlash): a puck stripped by a stick lift flashes a ring.
 //   PROOF (jam.hit.Capture N): a still every sim frame from each of the human's presses to 30 frames after its contact or miss, N strips a kind.
+// Lane A210 (the night of 14 Nov, R-0067, docs/experiments/HITS-2.md): "crosscheck has bug in animation displaying technical blue rectangle instead of
+// animating player with stick into its position". The rectangle was this file's own bar across the chest of a held cross-check (and the bar across the
+// stick of a pressed one). What ships now: THE FIGURE DOES THE HITTING, the marks are quiet helpers.
+//   jam.hit.BraceBar 0, jam.hit.Streak 0: the two bars over the figure are not drawn (1 = package H34).
+//   jam.hit.BTakes 2: device B's wind-up takes on every figure, the human's too; A's stand-in lean stands down wherever B's take plays.
+//   jam.hit.Quiet 1: the chevron and the brace's arc 7 cm wide in the ice's white; the contact ring 0.95 to 1.35 m (jam.hit.RingScale), white, 8 frames,
+//     no second ring on a braced hit (0 = package H34: 18 cm in the team's colour, a ring to 3 m for 14 frames). The downed man's oval is unchanged.
+//   jam.hit.BraceArc: the arc's own switch. jam.hit.CaptureBots, -JamHitShots=<folder>: the strips' tools.
 #pragma once
 
 #include "CoreMinimal.h"
@@ -58,6 +66,7 @@ public:
 	static constexpr double TellNearM = 1.4;    // the chevron's tip: from here at the press (outside the HUD's YOU and carrier rings, ~1 m) ...
 	static constexpr double TellFarM = 2.4;     // ... to here when the wind-up is done
 	static constexpr double BraceRadiusM = 1.35;
+	static constexpr double RingMinM = 0.95;         // lane A210: the small contact ring never closer than this to the contact point (it clears the two bodies)
 
 	// The burst's ring radius for a hit's closing speed (m/s): 0.8 m at a soft touch to 3.0 m at 14 m/s and over; a braced hit x 1.2.
 	static double BurstRadiusM(double ClosingMps, bool bBraced);
@@ -148,7 +157,10 @@ public:
 
 	// The bars for a render frame. SkaterAtCm / SkaterYawDeg: where each skater is drawn (the figure's interpolated place; index = sim index).
 	// PuckAtCm: the drawn puck. The cvar switches are passed in so the tests choose them.
-	struct FDrawSwitches { bool bTell = true; bool bBurst = true; bool bDown = true; bool bFlash = true; float Scale = 1.f; };
+	struct FDrawSwitches { bool bTell = true; bool bBurst = true; bool bDown = true; bool bFlash = true; float Scale = 1.f; bool bStreak = true; bool bBraceBar = true; bool bBraceArc = true;
+		// Lane A210 (the quiet marks; the defaults here are package H34's, the game's are jam.hit.Quiet 1): bThinTell a thin white chevron and arc;
+		// RingScale < 1 the small contact ring (radius x RingScale, never under RingMinM); bRingTeam false: white, no team colour; RingLife: its share of BurstFrames.
+		bool bThinTell = false; float RingScale = 1.f; bool bRingTeam = true; float RingLife = 1.f; };
 	void Draw(double FrameF, const TArray<FVector>& SkaterAtCm, const TArray<float>& SkaterYawDeg, const FVector& PuckAtCm, const FDrawSwitches& Sw, TArray<FJamHitBar>& Out) const;
 	// The figure lean for skater I this render frame (degrees, + = top back); 0 = upright.
 	float LeanFor(int32 I, double FrameF) const;

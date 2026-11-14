@@ -482,3 +482,4 @@
 - package 19:04: `Hokej_Hokej_H34.zip` from main 576c6040, acceptance run green (18 verbs through the cursor and the buttons).
 - link green 19:38: main b530b4eb (The play sheet for H34: the ladder as read on the package's own build, and two findings of) pushed.
 - link green 20:41: main 023c7dfb (R-0067: the operator played H34 and called it unplayable; the night's briefs and device B') pushed.
+- link green 21:16: main db7471e3 (Handoff A-to-B-0033: the hits' takes as the game camera sees them (lane A210's list); merg) pushed.

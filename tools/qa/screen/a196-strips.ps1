@@ -14,7 +14,7 @@ param(
     [int]$StartDrill = 0,
     [int]$DrillSeconds = 240,
     [int]$BraceSeconds = 40,
-    [int]$Port = 4796,
+    [int]$Port = 4810,
     [int]$Strips = 10,
     [int]$ResX = 960, [int]$ResY = 540,
     [string]$ExtraCVars = '',
@@ -36,17 +36,19 @@ $log = Join-Path $out 'game.log'
 Remove-Item $log -ErrorAction SilentlyContinue
 $cut = (Join-Path $root $Cut).Replace('\', '/')
 $shotDir = Join-Path $root 'Game\Saved\Screenshots\WindowsEditor'
+# A210: the stills go straight to this run's own folder (-JamHitShots), so two runs can film side by side in one checkout (each on its own port).
+$shotsOut = (Join-Path $out 'shots').Replace('\', '/')
 Get-ChildItem $shotDir -Filter 'a196-*.png' -ErrorAction SilentlyContinue | Remove-Item -Force
-$cvars = "jam.screen.HoldStill=1,jam.screen.FadeSeconds=0,jam.hit.Capture=$Strips"
+$cvars = "r.RDG.AsyncCompute=0,jam.screen.HoldStill=1,jam.screen.FadeSeconds=0,jam.hit.Capture=$Strips"   # A210: AsyncCompute off on every run (R-0066 point 5: the first-match GPU fault)
 if ($Mode -eq 'before') { $cvars += ',jam.hit.Tell=0,jam.hit.Lean=0,jam.hit.Burst=0,jam.hit.Down=0,jam.hit.PuckFlash=0' }
 if ($StartDrill -gt 0) { $cvars += ",jam.ctrl.Drill=$StartDrill" }   # evolution 10: the drill from frame 0 (the same frames run to run: before / after pairs)
 if ($ExtraCVars) { $cvars += ",$ExtraCVars" }
 $a = "`"$uproject`" /Game/Maps/Rink -game -RenderOffScreen -Multiprocess -ResX=$ResX -ResY=$ResY -ForceRes -unattended -nosplash -nosound -UseFixedTimeStep -FPS=60 -log -abslog=`"$log`" -ForceLogFlush " +
-     "-cut=$cut -dpcvars=$cvars -RemoteConsoleIP=127.0.0.1 -RemoteConsolePort=$Port"
+     "-cut=$cut -dpcvars=$cvars -RemoteConsoleIP=127.0.0.1 -RemoteConsolePort=$Port -JamHitShots=`"$shotsOut`""
 $sw = [Diagnostics.Stopwatch]::StartNew()
 $p = Start-Process -FilePath $exe -ArgumentList $a -PassThru -WindowStyle Hidden
 $start = $p.StartTime
-@{ pid = $p.Id; start = $start.ToString('o'); args = $a; lane = 'A196' } | ConvertTo-Json -Compress | Set-Content (Join-Path $out 'game.json')
+@{ pid = $p.Id; start = $start.ToString('o'); args = $a; lane = 'A210' } | ConvertTo-Json -Compress | Set-Content (Join-Path $out 'game.json')
 $events = Join-Path $out 'events.log'
 Remove-Item $events -ErrorAction SilentlyContinue
 function Note([string]$s) { $line = ('{0,7:n1}s  {1}' -f $sw.Elapsed.TotalSeconds, $s); Write-Host $line; Add-Content $events $line }
@@ -90,7 +92,8 @@ function Finish([int]$code, [string]$why) {
     if (-not $p.HasExited) { [void](Stop-OwnedTree -ProcessId $p.Id -StartTime $start); Note 'stopped our own game process tree (quit did not exit it)' } else { Note "game exited, code $($p.ExitCode)" }
     $n = 0
     Get-ChildItem $shotDir -Filter 'a196-*.png' -ErrorAction SilentlyContinue | ForEach-Object { Move-Item $_.FullName (Join-Path $out "shots\$($_.Name)") -Force; $n++ }
-    Note "$n stills moved to $out\shots"
+    $n = @(Get-ChildItem (Join-Path $out 'shots') -Filter 'a196-*.png' -ErrorAction SilentlyContinue).Count
+    Note "$n stills in $out\shots"
     if (Test-Path $log) {
         if ($log -ne (Join-Path $out 'game.log')) { Copy-Item $log (Join-Path $out 'game.log') -Force; $log = Join-Path $out 'game.log' }
         Select-String -Path $log -Pattern 'JAMHIT|JAMDRILL|JAMVIS crosscheck|JAMVIS crosshold|JAMHITSTOP|contact_line|JAMSIM frame=|JAMCUT rejected' | ForEach-Object { $_.Line } | Set-Content (Join-Path $out 'hit-lines.txt')
