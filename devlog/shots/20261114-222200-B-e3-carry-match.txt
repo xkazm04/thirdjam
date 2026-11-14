@@ -1,0 +1,1 @@
+E3 GPU, seeded clay match, game camera, frames where the human's figure has bPuck on: on 2 and 4 he is down or being hit with bPuck still on (the stale SetHasPuck reported to A); on 3 the puck shows at his blade's side.

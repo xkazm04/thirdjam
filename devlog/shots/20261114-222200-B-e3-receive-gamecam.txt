@@ -1,0 +1,1 @@
+E3 GPU, game camera behind a clay figure: no take, then the Receive stand-in frozen at 0.033 / 0.067 / 0.1 s: no visible change (the blade is behind the body).

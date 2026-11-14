@@ -1,0 +1,1 @@
+E3 GPU, 20 m side-on: CallForPass at 0.05 / 0.1 / 0.15 s: the stick goes behind the body; does not read at 20 m.
