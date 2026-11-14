@@ -1098,7 +1098,7 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 			// Lane A165 (game.contact.check_cooldown_restart): the press inside the cooldown starts it again: a mashed button never opens a second window.
 			if (Config.Contact.bCheckCooldownRestart) S.CheckReadyFrame = Frame + Config.Contact.CheckCooldownFrames;
 		}
-		else if (In.bCheck && Config.Skater.bCheckEnabled && Config.Contact.CheckWindupFrames > 0 && S.CheckWindupLeft > 0)
+		else if (In.bCheck && Config.Skater.bCheckEnabled && Config.Contact.CheckWindupFor(S.bHuman) > 0 && S.CheckWindupLeft > 0)   // lane A200: the skater's own (bot_check_windup_frames)
 		{
 			// Lane A184 (game.contact.check_windup_frames): a press inside a running wind-up is the same press: nothing more.
 		}
@@ -1108,8 +1108,10 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 			const bool bLate = TryLatePress(S);
 			// Lane A184 (game.contact.check_windup_frames): the press commits and the window opens that many frames later (StepWindups), so the figure's take
 			// has a beat before the contact; the cooldown starts and the figure is told on the press. Not for a press the stick's recovery drops just below.
-			const bool bWindup = !bLate && Config.Contact.CheckWindupFrames > 0 && S.StickLockLeft <= 0;
-			if (bWindup) { S.CheckWindupLeft = Config.Contact.CheckWindupFrames; S.WindupFrames = Config.Contact.CheckWindupFrames; }
+			// Lane A200: the skater's own length, by FJamSkaterState::bHuman (bot_check_windup_frames; absent = the shared check_windup_frames).
+			const int32 CheckWu = Config.Contact.CheckWindupFor(S.bHuman);
+			const bool bWindup = !bLate && CheckWu > 0 && S.StickLockLeft <= 0;
+			if (bWindup) { S.CheckWindupLeft = CheckWu; S.WindupFrames = CheckWu; }
 			else if (!bLate) S.CheckWindow = S.bHuman ? HumanCheckWindowFrames : CheckWindowFrames;   // lane A49: the human's press gets 0.2 s to connect
 			S.bCheckThisFrame = true;
 			// Lane A157: the press is a commitment. Its cooldown starts (check_cooldown_frames), and a press that opened a window lunges (lunge_frames,
@@ -1709,21 +1711,22 @@ void UJamSim::TryLift(FJamSkaterState& S)
 	// Lane A184 / A192 (game.contact.cross_windup_frames): the stick's part (the strip, the miss) is the press's, as before; the cross-check's body part, the
 	// shove, lands that many frames later on the man it was aimed at (ResolveLift defers it, LandCrossShove lands it), so the figure's take has a beat
 	// before the contact and the stick steal is not slowed. The figure is told the frames on every press. 0 = the shove at once, as before.
-	if (Config.Contact.CrossWindupFrames > 0) S.WindupFrames = Config.Contact.CrossWindupFrames;
+	if (Config.Contact.CrossWindupFor(S.bHuman) > 0) S.WindupFrames = Config.Contact.CrossWindupFor(S.bHuman);   // lane A200: the skater's own (bot_cross_windup_frames)
 	ResolveLift(S);
 }
 
 // Lane A192: the shove of a cross-check: at once, or deferred by cross_windup_frames to S.CrossTarget (bStickOnly: the stick-only shield had widened it).
 bool UJamSim::CrossShove(FJamSkaterState& S, FJamSkaterState& O, const FVector2D& Dir, bool bStickOnly)
 {
-	if (Config.Contact.CrossWindupFrames <= 0)
+	const int32 CrossWu = Config.Contact.CrossWindupFor(S.bHuman);   // lane A200: the skater's own (bot_cross_windup_frames)
+	if (CrossWu <= 0)
 	{
 		ResolveContact(S, O, Dir, (S.Pos + O.Pos) * 0.5, EContactKind::Cross);
 		return true;
 	}
 	S.CrossTarget = O.Index;
 	S.bCrossTargetStickOnly = bStickOnly;
-	S.LiftWindupLeft = Config.Contact.CrossWindupFrames;
+	S.LiftWindupLeft = CrossWu;
 	return false;
 }
 

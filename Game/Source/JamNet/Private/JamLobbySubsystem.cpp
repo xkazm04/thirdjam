@@ -8,6 +8,7 @@
 #include "Engine/World.h"
 #include "Engine/GameInstance.h"
 #include "Engine/Engine.h"
+#include "Engine/GameViewportClient.h"
 #include "GameFramework/PlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "Misc/FileHelper.h"
@@ -55,8 +56,29 @@ namespace
 
 void UJamLobbySubsystem::Deinitialize()
 {
+	// Lane A204 (track N1): the game closing (quit, the engine's exit) in any state with a peer says BYE, so the other side gets words at once; before,
+	// a guest that closed while its rink loaded left the host waiting the 30 s unheard limit.
+	SayByeNow(TEXT("shutting down"));
+	if (GEngine && GEngine->GameViewport && CloseHandle.IsValid()) GEngine->GameViewport->OnCloseRequested().Remove(CloseHandle);
+	CloseHandle.Reset();
 	ResetSession();
 	Super::Deinitialize();
+}
+
+void UJamLobbySubsystem::SayByeNow(const TCHAR* Why)
+{
+	if (bByeSent || !Link || !Link->HasPeer() || State == EJamLobbyState::Idle) return;
+	bByeSent = true;
+	SendLobby(static_cast<uint8>(JamNet::EType::Bye));
+	UE_LOG(LogJamNet, Log, TEXT("JAMNET %s in state %d: BYE sent"), Why, static_cast<int32>(State));
+}
+
+void UJamLobbySubsystem::WatchWindowClose()
+{
+	// Lane A204: the window's close button (and Alt+F4) says BYE the moment it is pressed, before the engine's shutdown flushes its loading (6.6 s on
+	// the editor binary with a rink loading); Deinitialize says it too for every other way out.
+	if (CloseHandle.IsValid() || !GEngine || !GEngine->GameViewport) return;
+	CloseHandle = GEngine->GameViewport->OnCloseRequested().AddLambda([this](FViewport*) { SayByeNow(TEXT("window closed")); });
 }
 
 IJamLink* UJamLobbySubsystem::GetLink() const
@@ -79,6 +101,7 @@ void UJamLobbySubsystem::ResetSession()
 	GuestIndex = -1;
 	LobbyTicks = StartTicks = 0;
 	GuestOpenAt = 0.0;
+	bByeSent = false;
 }
 
 void UJamLobbySubsystem::SetState(EJamLobbyState S)
@@ -131,6 +154,7 @@ bool UJamLobbySubsystem::Host(const FString& InCut, const FString& Name)
 	FString Why;
 	if (!ComputeCartridgeHash(Cut, CartridgeHash, Seed, GuestIndex, Why)) { Fail(Why); return false; }
 	Link = MakeUnique<FJamUdpLink>();
+	WatchWindowClose();   // lane A204
 	int32 PortIndex = 0;
 	const int32 FixedPort = CVarJamNetPort.GetValueOnGameThread();
 	if (FixedPort > 0) { if (Link->Bind(FixedPort) <= 0) { Fail(FString::Printf(TEXT("UDP port %d is taken (jam.net.Port)"), FixedPort)); return false; } PortIndex = -1; }
@@ -163,6 +187,7 @@ bool UJamLobbySubsystem::Join(const FString& Code, const FString& Name)
 	uint32 Ip = 0; int32 Port = 0;
 	if (!FJamInviteCode::Decode(Code, Ip, Port)) { Fail(FString::Printf(TEXT("\"%s\" is not an invite code (8 letters and digits, shown as ABCD-EFGH)"), *Code)); return false; }
 	Link = MakeUnique<FJamUdpLink>();
+	WatchWindowClose();   // lane A204
 	if (Link->Bind(FMath::Max(0, CVarJamNetPort.GetValueOnGameThread())) <= 0) { Fail(TEXT("could not open a UDP socket")); return false; }
 	ApplyImpairment(*Link, 2);
 	BoundPort = Link->GetBoundPort();
@@ -185,7 +210,7 @@ bool UJamLobbySubsystem::StartMatch()
 
 void UJamLobbySubsystem::Leave()
 {
-	if (Link && Link->HasPeer()) SendLobby(static_cast<uint8>(JamNet::EType::Bye));
+	if (Link && Link->HasPeer() && !bByeSent) SendLobby(static_cast<uint8>(JamNet::EType::Bye));
 	ResetSession();
 	SetState(EJamLobbyState::Idle);
 }
@@ -396,6 +421,16 @@ static FAutoConsoleCommandWithWorldAndArgs CmdJamStart(TEXT("jam.start"), TEXT("
 	FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
 	{
 		if (UJamLobbySubsystem* L = LobbyFor(World)) UE_LOG(LogJamNet, Display, TEXT("jam.start: %s"), L->StartMatch() ? TEXT("starting") : TEXT("not ready (host with a guest present only)"));
+	}));
+
+// Lane A204 (track N1): the network cut for N ms on this machine and back (the 2 s cut proof, tools/soak/lockstep/twoproc5.ps1 -CutAt).
+static FAutoConsoleCommandWithWorldAndArgs CmdJamNetTestCut(TEXT("jam.net.testcut"), TEXT("jam.net.testcut <ms>: this machine's link drops everything both ways for ms, then comes back."),
+	FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray<FString>& Args, UWorld* World)
+	{
+		UJamLobbySubsystem* L = LobbyFor(World);
+		const int32 Ms = Args.Num() ? FCString::Atoi(*Args[0]) : 2000;
+		if (L && L->CutLinkFor(Ms / 1000.0)) { UE_LOG(LogJamNet, Warning, TEXT("JAMNET test cut: the link is cut for %d ms"), Ms); }
+		else { UE_LOG(LogJamNet, Warning, TEXT("JAMNET test cut: no link")); }
 	}));
 
 static FAutoConsoleCommandWithWorldAndArgs CmdJamLeave(TEXT("jam.leave"), TEXT("jam.leave: leave the lobby or the match."),

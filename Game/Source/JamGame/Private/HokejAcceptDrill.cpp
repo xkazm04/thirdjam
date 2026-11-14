@@ -173,7 +173,7 @@ void AHokejGameMode::AcceptDrillInputs(TArray<FJamInput>& All)
 			const double Gap = Dist - UJamSim::SkaterRadius * 2.0;
 			const double Closing = Dist > 1e-6 ? FVector2D::DotProduct(O.Vel - H.Vel, ToH / Dist) : 0.0;
 			// Lane A192: the window opens game.contact.check_windup_frames after the press: the opponent presses that much earlier (as the brain does).
-			const int32 Wu = Sim->GetConfig().Contact.CheckWindupFrames;
+			const int32 Wu = Sim->GetConfig().Contact.CheckWindupFor(O.bHuman);   // lane A200: the presser's own (bot_check_windup_frames for a bot)
 			if ((Gap <= 0.25 + Closing * Wu * UJamSim::DT || (Closing > 0.5 && Gap <= Closing * (UJamSim::CheckWindowFrames - 2 + Wu) * UJamSim::DT)) && !H.IsDown() && O.CanAct() && G.DownFrame < 0)
 			{
 				In.bCheck = true;
@@ -267,6 +267,11 @@ void AHokejGameMode::AcceptDrillObserve()
 	if (G.Ph == EPh::Stage)
 	{
 		if (Sim->GetPhase() != EJamSimPhase::Playing) return;
+		// Director, 14 Nov 17:15 (the H33 release, second cut): step 7's rows share one opponent. With the cross-check's wind-up the pressed shove of k=2
+		// lands 4 frames later, so its man was still down when k=3 was staged: the stage's ClearReleaseGrace came before his get-up, the get-up then gave
+		// him his two seconds of grace, and the held cross-check at 14.7 m/s was a bump (JAMVIS grace grace_left=75). The stage waits for a man on his feet
+		// (bounded: 300 frames), so the grace it clears is the one he would have carried.
+		if (G.Step == 7 && G.K > 1 && G.Opp >= 0 && Sim->GetSkaters().IsValidIndex(G.Opp) && Sim->GetSkaters()[G.Opp].IsDown() && InPh <= 300) return;
 		// Reset the scratch, stage the step's scene.
 		const FState Keep = G;
 		G = FState();

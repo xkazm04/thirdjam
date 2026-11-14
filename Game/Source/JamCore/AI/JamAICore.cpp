@@ -1151,7 +1151,11 @@ namespace JamAI
 			const double Dist = Rel.Length();
 			// Lane A184 (game.contact.check_windup_frames): the window opens that many frames after the press, so the press goes as much earlier: the arm gap
 			// grows by the ground the closing speed covers in the wind-up (0 frames: the gap as it was, the same presses).
-			const double WindupLeadM = (W.CheckWindupFrames > 0 && Dist > 1e-6) ? Clamp((S.Vel - T.Vel).Dot(Rel * (1.0 / Dist)), 0.0, 1e9) * W.CheckWindupFrames / 60.0 : 0.0;
+			// Lane A200: a bot's own length (W.BotCheckWindup(): bot_check_windup_frames, absent = the shared one); with FJamHockeySense::bWindupLeadNoBrake
+			// (off) no lead on a carrier that is braking.
+			const int BotWu = W.BotCheckWindup();
+			const bool bLead = BotWu > 0 && Dist > 1e-6 && !(K.Hk.bWindupLeadNoBrake && T.bBraking);
+			const double WindupLeadM = bLead ? Clamp((S.Vel - T.Vel).Dot(Rel * (1.0 / Dist)), 0.0, 1e9) * BotWu / 60.0 : 0.0;
 			if (Dist > 1e-6 && Dist <= 2.0 * W.SkaterRadius + CheckArmGapM + WindupLeadM && !T.bDown && T.GraceFrames <= 0)   // lane A113 (R-0049 point 1): no check starts on a skater inside its release grace
 			{
 				const FVec2 N = Rel * (1.0 / Dist);   // the push: checker towards the carrier

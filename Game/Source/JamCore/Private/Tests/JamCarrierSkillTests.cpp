@@ -1154,6 +1154,15 @@ bool FJamMovementSecondMove::RunTest(const FString& Parameters)
 		AddInfo(FString::Printf(TEXT("WINDOW %s, the stop begun at %.1f m (\"%s\"): %s"), Level, L.BrakeAtM, *FJamCarryDrill::CoachLine(1, L.BrakeAtM, UJamSim::SkaterRadius + C->Game.Stick.ReachM), *W.Line()));
 		TestTrue(FString::Printf(TEXT("%s: the drill's stop distance (%.1f m) passes that level's defender 95 %% or more (%.1f %%; lane A194: the bar back with the drill at the window's centre)"), Level, L.BrakeAtM, 100.0 * W.PastShare()), W.PastShare() >= 0.95);
 	}
+	// Lane A201 (track F2 evolution 11): the stop begun on the light of the stop's line (the rule the screen draws, JamCarrierMarks::StopMark), a quarter
+	// second after it lights (the hand's lag the rule's ReactSec allows for), passes law 3's defender at pro.
+	{
+		FScript L;
+		L.LightReactFrames = 15;
+		const FShare W = Share(*C, L, 200, TEXT("pro"));
+		AddInfo(FString::Printf(TEXT("LIGHT pro, the stop begun 15 frames after the line lit: %s"), *W.Line()));
+		TestTrue(FString::Printf(TEXT("pro: the stop begun on the light passes 90 %% or more (%.1f %%)"), 100.0 * W.PastShare()), W.PastShare() >= 0.90);
+	}
 	// Lane A194: the window's centre since the free skaters are 15 % faster (lane A185): 8.5 m at every level, still five stick lengths.
 	TestEqual(TEXT("pro stops at 8.5 m"), FJamCarryDrill::StopAtForLevel(FName(TEXT("pro"))), 8.5);
 	TestEqual(TEXT("all_star stops at 8.5 m too (R-0058 point 1: one stop distance at every level)"), FJamCarryDrill::StopAtForLevel(FName(TEXT("all_star"))), 8.5);
@@ -1458,6 +1467,12 @@ bool FJamCurveLaw3::RunTest(const FString& Parameters)
 		Straight.BrakeAtM = 9.5;
 		Straight.bStopAndGo = false;
 		AddInfo(FString::Printf(TEXT("LAW3T %s | %s | straight charge: %s"), *Level, *Tune, *CarryHow(*C, Straight, 200, *Level, T).Line()));
+		for (const int32 React : { 0, 6, 9, 12, 15, 18, 21, 24 })   // lane A201: the stop begun on the stop line's light, after the hand's lag
+		{
+			FScript L;
+			L.LightReactFrames = React;
+			AddInfo(FString::Printf(TEXT("LAW3T %s | %s | stop on the light + %d frames: %s"), *Level, *Tune, React, *CarryHow(*C, L, 200, *Level, T).Line()));
+		}
 	}
 	return true;
 }

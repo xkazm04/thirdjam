@@ -1,0 +1,1 @@
+SKF37 (p2_cel): CrossCheck_Hold layered over Stride and Stride_Sprint from spine_01 in mesh space (layer37.py, as the engine's layered blend per bone), every 4th frame 0 to 60, game camera (~110 px) and side. Shaft never inside legs, trunk or head (clear29 measure, 0 samples in any of 61 frames each); shaft lowest point 0.96 / 0.92 m. Lab only, not the engine's own blend.

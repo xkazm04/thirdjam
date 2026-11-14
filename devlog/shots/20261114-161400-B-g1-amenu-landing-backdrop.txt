@@ -1,0 +1,1 @@
+Device A's real front end (Menu.umap, AJamMenuGameMode, dev-b 02bf9732 build) in a play session at 1920x1085 (cropped to 1080), jam.menuscreen landing, captured with shot showui: T_UI_MenuBackdrop under A's scrim behind the HOKEJ logo.

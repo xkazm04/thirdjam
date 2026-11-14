@@ -1,0 +1,1 @@
+Crossover_Left, clay figure, side view from the stick side at hip height, take frames 0 6 12 18 24 30 36 (frame 0 tile empty: camera still moving). Top export39 (imported), bottom the tree's previous take (temporary copy, deleted). export39: the shaft passes in front of the shins; before: it runs into the front shin and knee on frames 6 to 24.

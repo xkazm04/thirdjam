@@ -1,0 +1,1 @@
+SKF39 (p3_clay): the rest of the leg rows, export38 above export39: Trip and GetUp_Side_Left, game camera and from the stick side. The stick moved by 6 cm inside windows round their leg frames; first and last frames untouched (joins 0.0000 cm). Lab only.

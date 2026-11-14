@@ -278,6 +278,9 @@ namespace JamAI
 		W.LiftRange = G.Stick.LiftRangeM;
 		W.LiftConeDeg = G.Stick.LiftConeDeg;   // lane A95 (B-to-A-0037)
 		W.CheckWindupFrames = G.Contact.CheckWindupFrames;   // lane A184
+		W.CrossWindupFrames = G.Contact.CrossWindupFrames;
+		W.BotCheckWindupFrames = G.Contact.CheckWindupFor(false);   // lane A200: the bots' own (absent = the shared value)
+		W.BotCrossWindupFrames = G.Contact.CrossWindupFor(false);
 		W.ReverseBrakeDecel = G.Skater.ReverseBrakeDecel;   // lane A95: the movement verbs the playtester uses only when they exist
 		W.BurstFrames = G.Skater.BurstFrames;
 		W.SprintCarryBonus = G.Skater.SprintCarryBonus;
@@ -309,6 +312,10 @@ namespace JamAI
 			O.bHasPuck = K.bHasPuck;
 			O.bDown = K.IsDown() || K.InBox();   // lane A105: a boxed skater is off the ice for every brain read (pressure, outlets, jobs), like one knocked down
 			O.GraceFrames = K.GraceFrames;   // lane A113
+			O.CheckWindupLeft = K.CheckWindupLeft;   // lane A200: the hit a person sees coming (the playtester's dodge reads it) and a braking carrier (the brain's lead)
+			O.CrossWindupLeft = K.LiftWindupLeft;
+			O.CrossTarget = K.LiftWindupLeft > 0 ? K.CrossTarget : -1;
+			O.bBraking = K.bBraking;
 			// HOOK (lane A115 for track F2, lane A121): once FJamSkaterState::TakeGraceLeft is in this tree, uncomment this line: the brain then presses no poke
 			// or lift on a carrier inside its take grace and contains it instead (JamAI::StickCannotTake in JamAICore.cpp). Until then the field stays 0.
 			O.TakeGraceFrames = K.TakeGraceLeft;   // wired at landing (Director): the rule is on main

@@ -474,3 +474,5 @@
 - link green 15:43: main 972ba542 (A held button does nothing across a change of possession; rebinding can never leave a cont) pushed.
 - link green 15:55: main 38766fc9 (The ladder after the speed rule, first set: four profile numbers (A189, track C0, evolutio) pushed.
 - 16:33: acceptance run RED on main 38766fc9 (exit 3): no H33. See /c/Users/kazda/AppData/Local/Temp/tj/accept-H33-4.txt
+- link green 16:51: main dfe00726 (Hits read by an eye, every screen one product, a joined match survives a slow load and a p) pushed.
+- 17:14: acceptance run RED on main dfe00726 (exit 1): no H33. See /c/Users/kazda/AppData/Local/Temp/tj/accept-H33-2.txt

@@ -44,6 +44,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Jam|Lobby") bool Join(const FString& Code, const FString& Name);
 	UFUNCTION(BlueprintCallable, Category = "Jam|Lobby") bool StartMatch();
 	UFUNCTION(BlueprintCallable, Category = "Jam|Lobby") void Leave();
+	// Lane A204: jam.net.testcut: false without a link.
+	bool CutLinkFor(double Seconds) { if (!Link) return false; Link->CutFor(Seconds); return true; }
 	// Host: start as soon as the guest is ready (the two-process test).
 	UFUNCTION(BlueprintCallable, Category = "Jam|Lobby") void SetAutoStart(bool bOn) { bAutoStart = bOn; }
 
@@ -87,6 +89,11 @@ private:
 	void OpenRink();
 	bool ComputeCartridgeHash(const FString& InCut, uint64& OutHash, uint64& OutSeed, int32& OutGuestIndex, FString& OutError) const;
 	void ResetSession();
+	// Lane A204: BYE once per session (the window's close, the shutdown); WatchWindowClose binds the game viewport's close request.
+	void SayByeNow(const TCHAR* Why);
+	void WatchWindowClose();
+	FDelegateHandle CloseHandle;
+	bool bByeSent = false;
 
 	TUniquePtr<FJamUdpLink> Link;
 	UPROPERTY(Transient) TObjectPtr<UJamLockstepDriver> Driver;

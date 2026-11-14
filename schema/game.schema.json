@@ -955,6 +955,18 @@
           "minimum": 0,
           "maximum": 12,
           "description": "The cross-check's wind-up (R-0064 point 5): a pressed cross-check (the stick lift's swing: its shove, its strip and its miss) lands this many frames after the press, on the positions of that frame; the swing's cooldown and the figure's call stay on the press. 0 = the neutral value: the swing lands on the press's frame."
+        },
+        "bot_check_windup_frames": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 12,
+          "description": "The bots' own body-check wind-up (lane A200, track F1, evolution 11): the same rule as check_windup_frames for every skater the game does not seat as a human (both sides' bots; the online guest is a human), so the bots' wind-up can be longer than the human's, whose own press must not feel late. Absent = 8 (ships on: 133 ms, a beat the eye reads). The neutral value is the shared check_windup_frames (set it equal to it)."
+        },
+        "bot_cross_windup_frames": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 12,
+          "description": "The bots' own cross-check wind-up (lane A200, track F1, evolution 11): the same rule as cross_windup_frames for every skater the game does not seat as a human (both sides' bots; the online guest is a human): the pressed cross-check's shove lands this many frames after the press. Absent = 12 (ships on). The neutral value is the shared cross_windup_frames (set it equal to it)."
         }
       }
     },

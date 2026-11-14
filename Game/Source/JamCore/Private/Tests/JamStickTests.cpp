@@ -210,7 +210,7 @@ bool FJamStick::RunTest(const FString& Parameters)
 		Sim->SetSkater(O, FVector2D(0, 0), FVector2D::ZeroVector, 0);
 		// Lane A192: the window opens game.contact.check_windup_frames after the press: the charger starts that much ground farther out and the scene runs
 		// that many frames longer (the same contact on the same course).
-		const int32 Wu = Sim->GetConfig().Contact.CheckWindupFrames;
+		const int32 Wu = Sim->GetConfig().Contact.CheckWindupFor(Sim->GetSkaters()[Me].bHuman);   // lane A200: the presser's own (bot_check_windup_frames for a bot)
 		Sim->SetSkater(Me, FVector2D(-1.2 - 8.0 * Wu / 60.0, 0), FVector2D(8, 0), 0);
 		TArray<FJamInput> In;
 		In.SetNum(Sim->GetSkaters().Num());
@@ -272,11 +272,11 @@ bool FJamStick::RunTest(const FString& Parameters)
 		TestEqual(*FString::Printf(TEXT("grace %d: the lift stripped O"), Wait), CountEvents(Sim, JamEvents::Lift, FName(TEXT("clean")), Me), 1);
 		const int64 StripFrame = Sim->GetFrame();
 		// Lane A192: the press goes the wind-up earlier, so the hit lands as many frames after the strip as it did.
-		for (int32 F = 0; F < Wait - Sim->GetConfig().Contact.CheckWindupFrames; ++F) Sim->Step(In);
+		for (int32 F = 0; F < Wait - Sim->GetConfig().Contact.CheckWindupFor(Sim->GetSkaters()[Me].bHuman); ++F) Sim->Step(In);   // lane A200: the presser's own (bot_check_windup_frames for a bot)
 		// Charge O from the side (not from behind): O faces +x, the hit comes along -z.
 		// Lane A92 (R-0045): the puck the lift sent the human's way is parked, so the charger does not carry it (the carrier cannot hit once the grace is over).
 		Sim->SetPuck(FVector2D(-15.0, -10.0), FVector2D::ZeroVector);
-		const int32 Wu = Sim->GetConfig().Contact.CheckWindupFrames;   // lane A192: the charger starts the wind-up's ground farther out; the scene runs that much longer
+		const int32 Wu = Sim->GetConfig().Contact.CheckWindupFor(Sim->GetSkaters()[Me].bHuman);   // lane A200: the presser's own; lane A192: the charger starts the wind-up's ground farther out; the scene runs that much longer
 		Sim->SetSkater(Me, FVector2D(0.0, 1.3 + 8.0 * Wu / 60.0), FVector2D(0, -8), -UE_DOUBLE_PI * 0.5);
 		In[Me].Move = FVector2D(0, -1);
 		In[Me].bCheck = true;

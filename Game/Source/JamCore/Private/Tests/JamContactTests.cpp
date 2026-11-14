@@ -213,6 +213,7 @@ namespace JamContactTests
 		// Lane A184: the scenes press and land on the same frame as they were written; the wind-ups (shipped at 4) are off in a scene unless its Edit sets them.
 		S.Cfg.Contact.CheckWindupFrames = 0;
 		S.Cfg.Contact.CrossWindupFrames = 0;
+		S.Cfg.Contact.BotCheckWindupFrames = S.Cfg.Contact.BotCrossWindupFrames = -1;   // lane A200: and the bots' own (absent = the shared value)
 		Edit(S.Cfg);
 		S.Sim = NewObject<UJamSim>();
 		S.Sim->Init(S.Cfg, 7);
@@ -1821,6 +1822,7 @@ bool FJamContactNeutral::RunTest(const FString& Parameters)
 		C->Game.Contact.bPlaytesterClosingPress = false;   // lane A132: and played by the scripted human's old check press (on its own speed)
 		C->Game.Stick.PokeAssistDeg = 0.0; C->Game.Stick.MissRecoveryFrames = 0;   // lane A152 (track F2): and before the poke that reaches and the miss's recovery
 		C->Game.Contact.bCrossHold = false; C->Game.Contact.CheckWindupFrames = 0; C->Game.Contact.CrossWindupFrames = 0;   // lane A184: and before the held cross-check and the wind-ups
+		C->Game.Contact.BotCheckWindupFrames = C->Game.Contact.BotCrossWindupFrames = -1;   // lane A200: and the bots' own
 		FContactCount Count;
 		JamAI::FJamSimAdapter Sim(*C);
 		Count.Sim = &Sim;
@@ -2991,6 +2993,71 @@ bool FJamContactCrossHold::RunTest(const FString& Parameters)
 		if (!S.Ok()) return false;
 		TArray<FJamInput> In = Idle(S); In[S.A].bCheck = true; S.Sim->Step(In);
 		TestTrue(TEXT("the wind-ups at 0 (neutral): the window opens on the press, nothing is told"), S.Att().CheckWindow > 0 && S.Att().WindupFrames == 0 && S.Att().CheckWindupLeft == 0);
+	}
+	// 5. Lane A200 (track F1, evolution 11; CONTACT-12.md): the bots' own wind-ups (bot_check_windup_frames, bot_cross_windup_frames). The sim decides by
+	// FJamSkaterState::bHuman (hashed; SeatGuest sets it on both peers): the human keeps the shared length, a bot waits its own, the online guest is a human.
+	{
+		// Press a check on frame 0 with skater Who standing alone; the frame its window opens (-1 none in 16) and the frames the figure was told.
+		auto CheckOpen = [&](FContactScene& S, int32 Who, int32& Told) -> int32
+		{
+			for (const FJamSkaterState& K : S.Sim->GetSkaters()) S.Sim->SetSkater(K.Index, FVector2D(-27.0 + 6.0 * K.Index, -10.0), FVector2D::ZeroVector, 0.0);
+			Told = 0;
+			for (int32 F = 0; F < 90; ++F) { TArray<FJamInput> In = Idle(S); S.Sim->Step(In); }   // any cooldown of an earlier press runs out
+			for (const FJamSkaterState& K : S.Sim->GetSkaters()) S.Sim->SetSkater(K.Index, FVector2D(-27.0 + 6.0 * K.Index, -10.0), FVector2D::ZeroVector, 0.0);
+			for (int32 F = 0; F < 16; ++F)
+			{
+				TArray<FJamInput> In = Idle(S); In[Who].bCheck = F == 0; S.Sim->Step(In);
+				if (F == 0) Told = S.Sim->GetSkaters()[Who].WindupFrames;
+				if (S.Sim->GetSkaters()[Who].CheckWindow > 0) return F;
+			}
+			return -1;
+		};
+		FContactScene S = Make(*this, [](FJamGameConfig& G) { G.Contact.CheckWindupFrames = 4; G.Contact.CrossWindupFrames = 4; G.Contact.BotCheckWindupFrames = 8; G.Contact.BotCrossWindupFrames = 10; });
+		if (!S.Ok()) return false;
+		TestTrue(TEXT("the attacker is the human, the victim a bot"), S.Att().bHuman && !S.Vic().bHuman);
+		int32 Told = 0;
+		const int32 HumanOpen = CheckOpen(S, S.A, Told);
+		TestTrue(*FString::Printf(TEXT("bots 8: the human's press keeps the shared 4 (told %d, opens on frame %d)"), Told, HumanOpen), Told == 4 && HumanOpen == 4);
+		const int32 BotOpen = CheckOpen(S, S.V, Told);
+		TestTrue(*FString::Printf(TEXT("bots 8: a bot's press waits 8 (told %d, opens on frame %d)"), Told, BotOpen), Told == 8 && BotOpen == 8);
+		// The bot's cross-check: the strip is the press's, the shove lands on frame 10 (a standing carrier at arm's length, facing).
+		S.Sim->SetSkater(S.A, FVector2D(0.0, 0.0), FVector2D::ZeroVector, 0.0);
+		if (!HandPuck(S, S.A)) { AddError(TEXT("the human did not pick the placed puck up")); return false; }
+		auto Place = [&]() {
+			S.Sim->SetSkater(S.A, FVector2D(0.0, 0.0), FVector2D::ZeroVector, 0.0);
+			S.Sim->SetSkater(S.V, FVector2D(2.0 * UJamSim::SkaterRadius + S.Cfg.Contact.CrossReachM - 0.1, 0.0), FVector2D::ZeroVector, PI);
+		};
+		Place();
+		int32 ToldX = -1, Shove = -1;
+		for (int32 F = 0; F < 16 && Shove < 0; ++F)
+		{
+			TArray<FJamInput> In = Idle(S); In[S.V].bLift = F == 0; S.Sim->Step(In);
+			if (S.Vic().bLiftThisFrame) ToldX = S.Vic().WindupFrames;
+			if (S.Att().ContactOutcome != 0 && S.Att().bContactCross) Shove = F;
+			Place();
+		}
+		TestTrue(*FString::Printf(TEXT("bot_cross_windup_frames 10: a bot's shove is told 10 (%d) and lands on frame 10 (%d)"), ToldX, Shove), ToldX == 10 && Shove == 10);
+		// The online guest's seat is a human: SeatGuest (on both peers at frame 0) makes the bot slot a human and its press keeps the shared 4.
+		FContactScene G = Make(*this, [](FJamGameConfig& C) { C.Contact.CheckWindupFrames = 4; C.Contact.BotCheckWindupFrames = 8; });
+		if (!G.Ok()) return false;
+		TestTrue(*FString::Printf(TEXT("the victim's seat can be the guest's (frame %lld)"), G.Sim->GetFrame()), G.Sim->SeatGuest(G.V));
+		const int32 GuestOpen = CheckOpen(G, G.V, Told);
+		TestTrue(*FString::Printf(TEXT("the guest (bHuman) keeps the shared 4 (told %d, opens on frame %d)"), Told, GuestOpen), Told == 4 && GuestOpen == 4);
+	}
+	{
+		// Absent (the neutral value): a bot waits the shared length.
+		FContactScene S = Make(*this, [](FJamGameConfig& G) { G.Contact.CheckWindupFrames = 6; });
+		if (!S.Ok()) return false;
+		TestTrue(TEXT("bot keys absent in the shipped cartridge"), S.Cfg.Contact.BotCheckWindupFrames < 0 && S.Cfg.Contact.BotCrossWindupFrames < 0);
+		for (const FJamSkaterState& K : S.Sim->GetSkaters()) S.Sim->SetSkater(K.Index, FVector2D(-27.0 + 6.0 * K.Index, -10.0), FVector2D::ZeroVector, 0.0);
+		int32 Open = -1, Told = 0;
+		for (int32 F = 0; F < 12 && Open < 0; ++F)
+		{
+			TArray<FJamInput> In = Idle(S); In[S.V].bCheck = F == 0; S.Sim->Step(In);
+			if (F == 0) Told = S.Vic().WindupFrames;
+			if (S.Vic().CheckWindow > 0) Open = F;
+		}
+		TestTrue(*FString::Printf(TEXT("bot keys absent: a bot waits the shared 6 (told %d, opens on frame %d)"), Told, Open), Told == 6 && Open == 6);
 	}
 	return true;
 }

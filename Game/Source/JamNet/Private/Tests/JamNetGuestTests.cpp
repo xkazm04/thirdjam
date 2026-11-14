@@ -12,6 +12,9 @@
 #include "JamNetPackets.h"
 #include "HokejGameMode.h"
 #include "LobbyGameMode.h"
+#include "DirectorsCallWidget.h"
+#include "Framework/Application/SlateApplication.h"
+#include "Blueprint/UserWidget.h"
 #include "BarkSystem.h"
 #include "CommentarySystem.h"
 #include "JamCommentaryData.h"
@@ -653,6 +656,40 @@ bool FJamNetPauseCardOnline::RunTest(const FString& Parameters)
 		TestTrue(TEXT("after the match (the lockstep off) the pause is allowed again"), GM->AllowPausing(nullptr));
 		GM->Destroy();
 	}
+	GEngine->DestroyWorldContext(World);
+	World->DestroyWorld(false);
+	return true;
+}
+
+// Lane A204 (track N1, evolution 2): the lobby's lines ("rematch asked: waiting for ...", "REMATCH: the puck drops", the refused live changes) reach
+// a real HUD text. They went through GEngine->AddOnScreenDebugMessage, compiled out of Shipping: a Shipping player never read one. Here the debug
+// overlay is switched off (bEnableOnScreenDebugMessages = false, the nearest a Development test gets to Shipping) and the line must still be the
+// HUD overlay's announcement text, visible. The end card's line names the way back to the menu.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamNetLobbyLineOnHud, "Jam.Net.LobbyLineOnHud", JamNetGuestTests::Flags)
+bool FJamNetLobbyLineOnHud::RunTest(const FString& Parameters)
+{
+	TestTrue(TEXT("the end card says the way back"), ALobbyGameMode::EndCardSubtitle(TEXT("no word from Bo for 3 seconds")).Contains(TEXT("QUIT: back to the menu")));
+	if (!GEngine || !FSlateApplication::IsInitialized()) { AddInfo(TEXT("no Slate: the routing half is skipped")); return true; }
+	UWorld* World = UWorld::CreateWorld(EWorldType::Game, false, TEXT("JamNetHudLineWorld"));
+	if (!TestNotNull(TEXT("a test world"), World)) return false;
+	FWorldContext& Ctx = GEngine->CreateNewWorldContext(EWorldType::Game);
+	Ctx.SetCurrentWorld(World);
+	const bool bWasOverlay = GEngine->bEnableOnScreenDebugMessages;
+	GEngine->bEnableOnScreenDebugMessages = false;
+	TestEqual(TEXT("no HUD in the world: nobody to tell (the caller logs hud=0)"), ALobbyGameMode::RouteLineToHud(World, TEXT("nobody"), 0), 0);
+	UJamDirectorsCallHudWidget* Hud = CreateWidget<UJamDirectorsCallHudWidget>(World, UJamDirectorsCallHudWidget::StaticClass());
+	if (TestNotNull(TEXT("the HUD overlay"), Hud))
+	{
+		Hud->AddToRoot();
+		Hud->TakeWidget();
+		const FString Line = TEXT("rematch asked: waiting for Bo");
+		TestEqual(TEXT("one HUD got the line"), ALobbyGameMode::RouteLineToHud(World, Line, 1200), 1);
+		TestEqual(TEXT("the HUD's announcement text is the line"), Hud->GetAnnouncementText(), Line);
+		TestTrue(TEXT("and it is visible"), Hud->IsLineVisible());
+		Hud->ReleaseSlateResources(true);
+		Hud->RemoveFromRoot();
+	}
+	GEngine->bEnableOnScreenDebugMessages = bWasOverlay;
 	GEngine->DestroyWorldContext(World);
 	World->DestroyWorld(false);
 	return true;

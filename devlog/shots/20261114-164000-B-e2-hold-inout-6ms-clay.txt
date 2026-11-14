@@ -1,0 +1,1 @@
+Hold in (top, ticks +0 to +9 after SetCrossCheckHold(true)) and out (bottom), clay at 6 m/s, side-on stick side: the stick comes up along the front of the body into the across-the-chest brace in 6 frames and back down to the ice; no frame shows a hand through the body.

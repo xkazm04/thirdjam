@@ -95,7 +95,7 @@ bool FJamTacklingEvents::RunTest(const FString& Parameters)
 			Sim->SetSkater(3, FVector2D::ZeroVector, FVector2D::ZeroVector, C.VictimYaw);
 			const FVector2D Dir = -C.From;   // the push: from the checker toward the victim
 			// Lane A192: the window opens game.contact.check_windup_frames after the press: the checker starts that much ground farther out (the same contact).
-			Sim->SetSkater(0, C.From * (1.2 + V * Sim->GetConfig().Contact.CheckWindupFrames / 60.0), Dir * V, FMath::Atan2(Dir.Y, Dir.X));
+			Sim->SetSkater(0, C.From * (1.2 + V * Sim->GetConfig().Contact.CheckWindupFor(Sim->GetSkaters()[0].bHuman) / 60.0), Dir * V, FMath::Atan2(Dir.Y, Dir.X));   // lane A200: the presser's own (bot_check_windup_frames for a bot)
 			uint64 Hash = 0;
 			const FJamSimEvent E = RunUntil(Sim, JamEvents::Check, 0, 12, &Hash);
 			const FString Label = FString::Printf(TEXT("%s at %.0f m/s"), C.Name, V);

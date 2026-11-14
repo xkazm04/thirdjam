@@ -1082,3 +1082,49 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
 ## H51.0 (14:39, 14 Nov) FOR THE DIRECTOR: **for the 15:30 package: dev-b at this push** (on main, built, cook-only PASS)
 - New since 46bdb717: **the puck's white ring half as thick** (A-to-B-0027 point 5): `/JamAssets/Props/SM_PuckDisc`, geometry only, 18 to 9 cm band (47 x 47 cm disc), seen on the GPU on clay and night (`devlog/shots/20261114-1435*-B-g1-puckring-*`); and the figure lane's filmed batch (SetStickLock, SetTakeGrace, PlayCheckMiss with its auto rule off, the reworked mallet and pin, Dash_Carry): dormant unless called.
 - Next, for 18:00: SetCrossCheckHold, SetBoostEquipped, PlayCelebrate (stand-ins, then real takes), SM_Boost_<kind>, the UI kit, the menu backdrop, the neon rig.
+
+## H51.4 (14:57, 14 Nov) FOR THE DIRECTOR: **the front end's kit is on dev-b** (for the 18:00 merge; built, cook-only PASS)
+- Under `/JamAssets/UI/` by A-to-B-0028's names: `T_UI_MenuBackdrop` (the clay barn at rest, 1920 x 1080), `T_UI_Logo_Hokej`, `T_UI_Panel`, `T_UI_HeaderBar`, `T_UI_Card_Mode`, `T_UI_Button_Normal/_Focused/_Pressed/_Disabled`, `T_UI_Segment_Lit/_Unlit`, `T_UI_Banner_Goal`, `Modes/T_UI_Mode_<slug>` for all 14, and `Fonts/F_Hokej_Display` (Regular = Roboto Regular, Bold = Roboto Bold Condensed, Black = Roboto Black: the engine's own Roboto, Apache 2.0: credit it in the dev log). Seen on the GPU in a throwaway widget: 9-slice corners hold, no banding, all three weights draw (`devlog/shots/20261114-145302-B-g1-uikit-gpu.png`).
+- **Add `/JamAssets/UI` to your always-cook list** (until then the cook carries none of it). Colours, focus state and type sizes: `status/U1-report.md` section 4. UMG trap: set each box brush's image size to half its texture size (button 96 x 48, panel 128 x 128, segment 64 x 32, card 128 x 160), or the corners grow with the widget. `T_UI_Panel` and `T_UI_Card_Mode` are slightly see-through by design (fine over your scrim).
+- Mocks to build to: `devlog/shots/20261114-142659-B-ui-mock-landing.png`, `-ui-mock-modes.png`.
+- Still to come for 18:00: SetCrossCheckHold / SetBoostEquipped / PlayCelebrate with the real props and takes, SM_Boost_<kind>, the neon rig.
+
+## H51.6 (15:07, 14 Nov) FOR THE DIRECTOR: the hits' timing (your question in A-to-B-0027 point 1a; for CONTACT-10's lane)
+- **Call on the press and land on B's contact frame.** B's wind-up takes (`Check_Deliver_*_Wind` by size and side, `CrossCheck_Wind`) put contact on their **frame 10**; the figure starts them at frame `10 - N` where N is your wind-up in sim frames. **B asks N = 8** (133 ms); **6 is the floor**; at 4 the take starts inside the coil and reads as a dip, not a wind-up. B knows CONTACT-10 measured N = 6 at -4.0 / -2.3 points (pro / all_star): yours to weigh.
+- Held cross-check takes exist (`CrossCheck_Hold` loop, `_Hold_In` / `_Hold_Out` 6 frames, `CrossCheck_Release` contact on frame 3) and four celebrations (`PlayCelebrate` 0 arms_up, 1 stick_raise, 2 knee_glide, 3 mate); they are being imported and filmed for the 18:00 merge.
+
+## H52.0 (15:22, 14 Nov) FOR THE DIRECTOR: **the neon arena is on dev-b** (for the 18:00 merge; built, cook-only PASS)
+- B filled your existing slot instead of a new name: **`/JamAssets/Rigs/LR_L3_Neon` (tier `l3_neon`)**: your switcher already maps it and it is on the cook list, so Glass House, Cage and Bruisers get it with no code. If you want `LR_N1_Neon` instead, say so. What it is: a dark violet hall, a diamond grid of thin lilac light lines on the ice (B's own: two sets at +/-30 degrees, 4 m apart, 2 m inside the boards), an orchid line at the board foot, magenta lines on the far walls; palette clear of both team colours; the puck's halo the brightest thing on the ice (`devlog/shots/20261114-151800-B-g1-neon-gamecam-play.png`). Your switcher will hide its persistent sky light on this tier now that the rig brings lights: intended.
+- **The figures' trims in team colours need you** (a rig cannot reach a figure's materials): on `l3_neon`, where you set each figure's team colour, set on the helmet (slot 4) and trim (slot 2) materials: `TeamColour` = the jersey's colour, `Emissive` 6, `RimColour` = 4 x team colour + 0.05, `RimStrength` 1.5 (previewed by B: `-151803-B-g1-neon-trim-glow-ab.png`).
+- B's GPU frame on its weak machine: neon about 1 to 1.5 ms over night; please time it on yours.
+
+## H52.5 (15:50, 14 Nov) FOR THE DIRECTOR: **for the 18:00 merge: dev-b at this push**: the hits, the boosts and the celebrations, filmed on the GPU; built on main, cook-only PASS
+- **All by the names you asked, on both figures** (`wt/b-fig/status/E2-report.md`, merged into dev-b as `status/E2-report.md`):
+  - **`SetCrossCheckHold(bool bOn)`**: the figure lab's `CrossCheck_Hold` (stick level across the chest, upper body from spine_01, the legs keep skating:
+    0.00 cm from a control figure), blending in and out over 6 frames; `PlayCrossCheck` from the hold plays `CrossCheck_Release` (a two-handed shove,
+    contact on its frame 3). Reads as a stick across the chest from the game camera (`devlog/shots/20261114-154600-B-e2-hold-gamecam-clay.png`).
+  - **`SetBoostEquipped(FName Kind, bool bOn)`** (`shotgun`, `hip_check`, `shield`, `slow_puck`): a toy keg on the back, a padded bumper on the left
+    hip, a round shield on the back, a snowflake crest on the helmet; several can show; hidden from the knockdown's call frame to the end of the get-up.
+  - **`/JamAssets/Props/SM_Boost_<kind>`** for `speed` (winged bolt), `precision` (target), `heavy_puck` (kettlebell on a puck), `big_puck`, `reverse_other`
+    (two chasing arrows), `custom` (question block), 64 to 83 cm tall, materials bound; each told apart by shape at 25 and 45 m on the GPU. **Add
+    `/JamAssets/Props` to the cook** if it is not.
+  - **`PlayCelebrate(int32 0-3)`**: 0 arms up, 1 stick raised, 2 knee glide, 3 the mate; the figure lab's real takes (58 to 110 frames, start and end on
+    the glide). Your code already calls it: both goals of a seeded match played it. Your camera stays on the human, so the pair is often off screen: framing
+    the scorer in the goal's pause would show it.
+  - **Wind-ups, behind a switch, off by default**: `SetWindupTakes(bool bOn, int32 N)` (N 0 means 8); while on, `PlayCheckWindup(int32 Frames)` and
+    `PlayCrossCheck(int32 Frames)` play the wind-up takes from frame `10 - Frames` so their contact (frame 10) lands on yours. Call `SetWindupTakes(true, N)`
+    on each figure when you ship a wind-up of N frames (B asks 8; floor 6: H51.6).
+- **The play-through on this state**: a seeded clay match to 100 s on the GPU: 0 Blueprint errors, 6 knockdowns, every get-up on the release, sim lines
+  identical to the headless runs. Also on dev-b since 15:00: the front end's kit and backdrop (H51.4), the neon rig (H52.0).
+
+## H52.9 (16:16, 14 Nov) FOR THE DIRECTOR: added for the 18:00 merge (built, cook-only PASS)
+- **Neon on the modes' rinks**: on Cage (60 x 28), Bruisers and Glass House the grid and its frame line now stay inside the boards (the rig scales with length only; the line is a frame 2.2 m inside at full size, 0.46 to 1.45 m inside on Cage). Seen on the GPU, frozen at the drop.
+- **The menu scene** `/JamAssets/Maps/L_MenuScene`: your rink actor built for 90 x 45 on clay and saved, the clay rig streamed in, a camera named and tagged `MenuCamera` at the backdrop's viewpoint (auto-activate player 0), `GameModeBase`, no figures; it plays and shows the backdrop's picture live. Needs a `+MapsToCook` line when you use it; if you change the rink's look it needs a rebuild in the editor (or build the rink at runtime).
+- In your `Menu.umap` with B's backdrop: the home screen reads well; on the landing the frosted logo lets the stands show through its letters: a darker scrim there, or say so and B makes an opaque logo. Note for your QA: driving `jam.menuscreen` through the MCP Python tool records the widget text in the undo buffer and crashed B's editor on stopping the play session; use the console tool instead.
+
+## H53.3 (16:46, 14 Nov) FOR THE DIRECTOR: **for the 18:00 merge: dev-b at this push** (B's last for it unless a line follows); built on main, cook-only PASS
+- Added: the held cross-check's **in and out** play as takes while the legs keep skating (the stick comes up the front of the body to across the chest in 6 frames, and back down); and **`Stride` with the stick out of the front thigh** (seen side-on on the GPU, clay and night). A seeded clay match on the GPU: 0 Blueprint errors, 6 of 6 get-ups on the release.
+- The whole list for 18:00: H51.4 (the front end's kit and backdrop), H52.0 and H52.9 (the neon rig, fitted to the small rinks; the menu scene), H52.5 (`SetCrossCheckHold`, `SetBoostEquipped`, `SM_Boost_<kind>`, `PlayCelebrate`, the wind-ups off behind `SetWindupTakes`), and this block.
+
+## H53.6 (17:06, 14 Nov) FOR THE DIRECTOR: **for the 18:00 merge: dev-b at this push** (B's last for it); built on main, cook-only PASS
+- Added: the stick out of the legs in eight more takes (both crossovers, the lean, the trip, three side get-ups, `Check_Hit_Right`): seen side-on on the GPU on the turns; a seeded clay match: 0 Blueprint errors, 6 of 6 get-ups on the release. Nothing new to call.

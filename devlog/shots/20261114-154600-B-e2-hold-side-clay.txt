@@ -1,0 +1,1 @@
+Clay figure skating at 6 m/s with SetCrossCheckHold(true) (export36 CrossCheck_Hold), side-on 4 m, tick 60. From the side the shaft slants up past the face: it can read as a raised stick from this angle.

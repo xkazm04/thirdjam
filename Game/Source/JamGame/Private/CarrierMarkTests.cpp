@@ -41,6 +41,9 @@ bool FJamHudMarks::RunTest(const FString& Parameters)
 	{
 		const JamCarrierMarks::FStopRule K;
 		TestTrue(TEXT("the mark's 8.5 m is inside the 7 to 9 m window, and the armed range is outside it"), K.AheadM > K.LitNearM && K.AheadM < K.LitFarM && K.ArmFarM > K.LitFarM);
+		// Lane A201 (MOVEMENT-12): the HUD draws the light through the gates: the second man, the slot, his own half (the boards' gate measured and off).
+		TestTrue(TEXT("A201: the line the screen draws lights only where the stop pays: the second man 0.5 s, the slot 12 m, his own half 1.5 s"),
+			K.SecondSec == 0.5 && K.SlotM == 12.0 && K.OwnHalfSecondSec == 1.5 && K.BoardRoomM == 0.0);
 	}
 	// Nothing on a downed figure.
 	{

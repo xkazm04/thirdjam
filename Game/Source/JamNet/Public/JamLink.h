@@ -65,6 +65,10 @@ public:
 	int32 GetSimDropped() const { return SimDropped; }
 	double GetSimDelayMs() const { return SimDelayMs; }
 	double GetSimLoss() const { return SimLoss; }
+	// Lane A204 (track N1): the cable pulled for Seconds (console jam.net.testcut <ms> on one machine): nothing goes out, everything that arrives is
+	// dropped, then the wire comes back. Wall clock on purpose, as the impairment above.
+	void CutFor(double Seconds);
+	bool IsCut() const;
 
 private:
 	void FlushHeld();
@@ -76,6 +80,7 @@ private:
 	struct FHeld { double ReadyAt; TArray<uint8> Bytes; };
 	TArray<FHeld> Held;
 	double SimDelayMs = 0.0;
+	double CutUntil = 0.0;   // lane A204: FPlatformTime::Seconds() until which the link is cut
 	double SimLoss = 0.0;
 	int32 SimDropped = 0;
 	FJamRandom SimRng;

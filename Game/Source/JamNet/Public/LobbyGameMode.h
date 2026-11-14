@@ -81,6 +81,14 @@ private:
 	void BuildBrainWorld(JamAI::FJamAIWorld& W) const;   // lane A129: the brain's and the scripted playtester's view (pickups, slow ice, no-shoot zones)
 	void RestartLockstepMatch();
 	void ShowLine(const FString& Line);
+public:
+	// Lane A204: a line a player must read, on every HUD overlay of the world (UJamDirectorsCallHudWidget's announcement line) until SimFrame + LineFrames
+	// (the sim stands still on the result card: the line stays there). Returns the number of HUD widgets that got it (0: none in this world yet).
+	static int32 RouteLineToHud(const UObject* WorldContext, const FString& Line, int64 SimFrame);
+	static constexpr int64 LineFrames = 360;
+	// Lane A204: the line under every end card's reason: the way back (Esc opens the pause card once the match is over; QUIT is the menu).
+	static FString EndCardSubtitle(const FString& Reason) { return Reason + TEXT("   -   ESC, then QUIT: back to the menu"); }
+private:
 	FJamInput ReadLocalInput();
 	uint64 LockstepHash() const;
 	void CountProofEvents();

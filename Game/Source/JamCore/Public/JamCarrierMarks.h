@@ -129,6 +129,17 @@ namespace JamCarrierMarks
 		double DefTowardMps = 0.0;     // lane A178: to LIGHT, the opponent himself skates at the human at this pace or more (0 = no such condition: package H30, where
 		                               // the human's own 8 m/s at a standing opponent lights the line). A measurement's number (JAM_MARK_RULE deftoward=): see MOVEMENT-9.
 		double ConeCos = 0.5;          // the opponent is within 60 degrees of the human's travel (35 degrees finds 59 % of the knockdowns it is for, 60 degrees 72 %, at the same precision)
+		// Lane A201 (track F2 evolution 11, MOVEMENT-12.md): the line lights only where the stop pays. The rule above sees one opponent; the match has more.
+		// Each gate below keeps the line pale (shown, armed) where the light would teach a stop that loses; 0 = the gate is off (all four 0 = the line of
+		// lane A194: JAM_MARK_RULE "second=0;slot=0;own=0", the neutral arm). Shipped: 0.5 s, 12 m, 1.5 s (MOVEMENT-12 section 3): at pro the line lights
+		// about twice a match instead of fourteen times, and a player who obeys every light wins within 5 points of one who ignores it (19 of 100 before).
+		double SecondSec = 0.5;        // another opponent (not the one the stop is on) reaches the stopping point inside this many seconds at a free skater's true
+		                               // speed (his effective speed x skater.free_speed_mult, the brain's planning speed since brain7): no light
+		double SlotM = 12.0;           // the human is this close to the mouth of the net he attacks or closer: no light (shooting is the play there)
+		double BoardRoomM = 0.0;       // the stopping point is this close to the boards or closer: no light (no room for the go)
+		double OwnHalfSecondSec = 1.5; // in his own half (as far from the mouth of the net he attacks as the centre line or farther) the second man must be this many
+		                               // seconds or more from the stopping point (0 = no own-half rule): the stop there hands the forecheck the puck's tempo, and only
+		                               // a carrier truly alone with one man (drill 21's scene) gains by it
 	};
 	struct FStopMark
 	{
@@ -139,7 +150,41 @@ namespace JamCarrierMarks
 		// Lane A178: his travel (unit), the mark's place straight ahead on it (AheadM), and how far off his travel the opponent is (degrees).
 		FVector2D Head = FVector2D(1.0, 0.0), AtPath = FVector2D::ZeroVector;
 		double OffDeg = 0.0;
+		// Lane A201: what the gates read (filled whenever the line is shown). The stopping point: where his reverse brake ends from this speed; the
+		// nearest other opponent's seconds to it (1e9: none); his distance to the mouth of the net he attacks; the stopping point's distance to the boards.
+		// bRawLit: lit by the one-opponent rule before the gates; Gate: the first gate that kept it pale (0 none, 1 the second man, 2 the slot, 3 the boards, 4 his own half with a second man inside OwnHalfSecondSec).
+		FVector2D StopAt = FVector2D::ZeroVector;
+		double SecondSec = 1e9, NetM = 0.0, BoardM = 0.0;
+		int32 SecondOpp = -1, Gate = 0;
+		bool bRawLit = false;
 	};
+
+	// Lane A201: the rule's numbers by name, "near=7;far=9;second=0.8;slot=10;boards=2;..." (every part optional; unknown parts ignored). The measurement's
+	// arms (env JAM_MARK_RULE) reach the HUD's rule, the trace's and the scripted player's through this one parse, so an arm that changes the light
+	// changes what the obeying player obeys (lane A194's arms did not: its instrument read the built rule).
+	inline void ApplyStopRuleSpec(FStopRule& K, const FString& Spec)
+	{
+		TArray<FString> Parts;
+		Spec.ParseIntoArray(Parts, TEXT(";"));
+		for (const FString& Part : Parts)
+		{
+			FString Key, Vs;
+			if (!Part.Split(TEXT("="), &Key, &Vs)) continue;
+			const double V = FCString::Atod(*Vs);
+			if (Key == TEXT("near")) K.LitNearM = V; else if (Key == TEXT("far")) K.LitFarM = V; else if (Key == TEXT("arm")) K.ArmFarM = V;
+			else if (Key == TEXT("cone")) K.ConeCos = V; else if (Key == TEXT("stopclosing")) K.ClosingMps = V; else if (Key == TEXT("react")) K.ReactSec = V;
+			else if (Key == TEXT("armclosing")) K.ArmClosingMps = V; else if (Key == TEXT("deftoward")) K.DefTowardMps = V; else if (Key == TEXT("ahead")) K.AheadM = V;
+			else if (Key == TEXT("second")) K.SecondSec = V; else if (Key == TEXT("slot")) K.SlotM = V; else if (Key == TEXT("boards")) K.BoardRoomM = V;
+			else if (Key == TEXT("own")) K.OwnHalfSecondSec = V;
+		}
+	}
+	// The shipped rule, or a measurement's arm by env JAM_MARK_RULE (never set in a game or in the gate).
+	inline FStopRule StopRuleFromEnv()
+	{
+		FStopRule K;
+		ApplyStopRuleSpec(K, FPlatformMisc::GetEnvironmentVariable(TEXT("JAM_MARK_RULE")));
+		return K;
+	}
 
 	inline FStopMark StopMark(const UJamSim& Sim, int32 Me, const FStopRule& K = FStopRule())
 	{
@@ -171,6 +216,30 @@ namespace JamCarrierMarks
 		}
 		R.Head = Head;
 		R.AtPath = H.Pos + Head * K.AheadM;
+		if (!R.bShow) return R;
+		// Lane A201: the gates. The stopping point from his speed and the carrier's reverse brake; every other opponent's time to it.
+		const FJamSkaterConfig& SkC = Sim.GetConfig().Skater;
+		const double Decel = FMath::Max(1.0, SkC.ReverseBrakeDecel * FMath::Max(0.1, SkC.CarryReverseBrakeMult));
+		R.StopAt = H.Pos + Head * (Speed * Speed / (2.0 * Decel));
+		for (const FJamSkaterState& O : Sk)
+		{
+			if (O.Team == H.Team || !O.CanAct() || O.Index == R.Def) continue;
+			const double True = FMath::Max(1.0, Sim.GetEffectiveStat(EJamStat::SkaterSpeed, O.Index) * FMath::Max(0.1, SkC.FreeSpeedMult));
+			const double Sec = FMath::Max(0.0, FVector2D::Distance(O.Pos, R.StopAt) - ReachM) / True;
+			if (Sec < R.SecondSec) { R.SecondSec = Sec; R.SecondOpp = O.Index; }
+		}
+		R.NetM = FVector2D::Distance(H.Pos, FVector2D(Sim.AttackGoalX(H.Team), 0.0));
+		FVector2D BoardN;
+		R.BoardM = -Sim.BoardDistance(R.StopAt, BoardN);
+		R.bRawLit = R.bLit;
+		if (R.bLit)
+		{
+			if (K.SecondSec > 0.0 && R.SecondSec < K.SecondSec) R.Gate = 1;
+			else if (K.SlotM > 0.0 && R.NetM <= K.SlotM) R.Gate = 2;
+			else if (K.BoardRoomM > 0.0 && R.BoardM <= K.BoardRoomM) R.Gate = 3;
+			else if (K.OwnHalfSecondSec > 0.0 && R.NetM >= Sim.GoalLineX() && R.SecondSec < K.OwnHalfSecondSec) R.Gate = 4;
+			if (R.Gate != 0) R.bLit = false;
+		}
 		return R;
 	}
 }

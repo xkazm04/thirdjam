@@ -1,0 +1,1 @@
+Seeded clay match (clayA, seed 1), goal at sim 1095: the scorer (orange) plays Celebrate_StickRaise after PlayCelebrate from device A's goal code. Camera moved in front of him by the watcher.

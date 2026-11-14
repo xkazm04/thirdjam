@@ -221,6 +221,10 @@ namespace JamAI
 		// bTrueGap: the Press job's gap (and the three's chaser's) moves back with the carrier's velocity over the presser's TRUE top speed (with the
 		// multiplier): it holds the gap instead of opening it by the multiplier. Off = over skater.speed.
 		bool bTrueGap = false;
+		// Lane A200 (track F1, evolution 11; CONTACT-12.md): the check press leads by the wind-up (FJamAIWorld::BotCheckWindup) only while the carrier is not
+		// braking (FJamAISkater::bBraking): against a stop the lead overshoots and its presses are whiffs or late hits (law 3's late-stop lines). Off = evolution
+		// 10's lead on every carrier. Tune key hk_windup_brake.
+		bool bWindupLeadNoBrake = false;
 		bool Any() const { return bCarryOrPass || bAttackShape || bDefenceShape || bTransition; }
 	};
 	// Lane A115: every rule of evolution 2 on (as ProHockeySense has them) or off (the brain of evolution 1). The tune key brain2 and the tests use it.
@@ -492,6 +496,13 @@ namespace JamAI
 		// just won it: FJamSkaterState::TakeGraceLeft; the sim's refusal sits in IsPokeShielded). 0 = none. Nothing fills it in this tree:
 		// FJamSimAdapter::BuildWorld sets it once the sim exposes it (the line is there, commented). The brain's read is StickCannotTake() below.
 		int TakeGraceFrames = 0;
+		// Lane A200 (track F1, evolution 11): what a person sees of a hit coming (the figure's wind-up take): frames left of a pressed body check's wind-up
+		// (FJamSkaterState::CheckWindupLeft) and of a pressed cross-check's deferred shove (LiftWindupLeft) with the man it is aimed at (CrossTarget, -1 none);
+		// bBraking: the skater braked on the last step (FJamSkaterState::bBraking, Ctrl or the reverse brake). The adapter fills them; 0 / -1 / false = unseen.
+		int CheckWindupLeft = 0;
+		int CrossWindupLeft = 0;
+		int CrossTarget = -1;
+		bool bBraking = false;
 	};
 
 	// Read-only view of the simulation for one frame.
@@ -555,6 +566,13 @@ namespace JamAI
 		double LiftRange = 1.0;         // game.stick.lift_range_m
 		double LiftConeDeg = 180.0;     // lane A95 (B-to-A-0037): game.stick.lift_cone_deg (the brain lifts only inside it)
 		int CheckWindupFrames = 0;      // lane A184: game.contact.check_windup_frames (a pressed check's window opens this many frames after the press: press that much earlier)
+		// Lane A200: the bots' own wind-ups (game.contact.bot_check_windup_frames, bot_cross_windup_frames as UJamSim plays them: absent = the shared value);
+		// -1 = not filled (a world built by hand): the shared CheckWindupFrames. BotCheckWindup() is the length a bot's press waits.
+		int BotCheckWindupFrames = -1;
+		int BotCrossWindupFrames = -1;
+		int BotCheckWindup() const { return BotCheckWindupFrames >= 0 ? BotCheckWindupFrames : CheckWindupFrames; }
+		int CrossWindupFrames = 0;      // lane A200: game.contact.cross_windup_frames (the pressed cross-check's shove lands this many frames after the press)
+		int BotCrossWindup() const { return BotCrossWindupFrames >= 0 ? BotCrossWindupFrames : CrossWindupFrames; }
 		// Lane A95 (R-0045 law 3 / 4): the movement verbs the sim offers (A93's keys; 0 = the verb is off). The playtester uses a verb only when it exists.
 		double ReverseBrakeDecel = 0.0; // game.skater.reverse_brake_decel
 		int BurstFrames = 0;            // game.skater.burst.frames

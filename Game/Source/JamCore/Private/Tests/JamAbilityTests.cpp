@@ -306,7 +306,9 @@ bool FJamAbilitiesShield::RunTest(const FString& Parameters)
 		if (bShield) Sc.Press(&FJamInput::bAbility);
 		const double D = Sc.Dir;
 		const int32 O = Sc.Opps[0];
-		Sc.Sim->SetSkater(O, FVector2D(D * 1.4, 0.0), FVector2D(-D * 7.0, 0.0), D > 0 ? PI : 0.0);
+		// Lane A200: the window opens game.contact.bot_check_windup_frames after the press: the charger starts that much ground farther out (the same contact).
+		const double Wu = Sc.Sim->GetConfig().Contact.CheckWindupFor(Sc.Sim->GetSkaters()[O].bHuman);
+		Sc.Sim->SetSkater(O, FVector2D(D * (1.4 + 7.0 * Wu / 60.0), 0.0), FVector2D(-D * 7.0, 0.0), D > 0 ? PI : 0.0);
 		Sc.In[O].bCheck = true;
 		Sc.Step();
 		Sc.In[O].bCheck = false;

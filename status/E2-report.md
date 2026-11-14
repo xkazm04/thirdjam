@@ -1,0 +1,574 @@
+# Lane E2 report, first hand-back (jobs 1 to 4): the figure's new calls, built and proved headless
+
+Device B, tree `C:\Users\kazda\jam\wt\b-fig` (branch `lane/b-fig`, at dev-b 68bf1cb1, rebuilt: PASS 323.9 s). Headless editor only (port 8004).
+No git and no cook. Assets were changed only under `Game/Plugins/JamAssets/Content/Skaters/`: 4 changed, 12 new. **Nothing was seen on a GPU**: the film script is `status\E2-film.md`.
+
+## 1. Done / not done
+
+| Job | Verdict | The number that decides it |
+|---|---|---|
+| 1. `SetCrossCheckHold(bool bOn)` | **Done**, both figures | hold weight 0.17 a frame: 1.0 six frames after the call, 0 six frames after the off call. Legs 0.00 cm from a control figure through the hold, clay and night. `PlayCrossCheck` from the hold plays `CrossCheck_Release` |
+| 2. `SetBoostEquipped(FName Kind, bool bOn)` | **Done** with stand-in props | all 4 kinds shown on and gone off; an unknown kind is ignored. Through a 110-frame knockdown the keg stays 9.05 to 9.16 cm from `spine_03` |
+| 3. `PlayCelebrate` | **Done**, with an **int32** input `Which` (0 to 2 scorer, 3 mate) | 4 takes by name, 58 frames each; skipped while down. In a seeded match the game called it 4 times (2 goals × scorer and mate) |
+| 4. Proof and film script | **Done** | two seeded clay matches: sim lines and all 12 `JAMSIM` hashes identical, 0 Blueprint errors. Test sessions: 0 errors. Film script written |
+| 5. Imports, wind-ups behind a switch | **Not started** (second hand-back) | the boosts lane's export folder exists, but has no `READY.txt` yet (3 `SM_Equip_*_p3_clay.fbx` seen); `export36` does not exist |
+
+## 2. Per item
+
+### Job 1: the held cross-check
+- **What changed:**
+  - **The animation Blueprints** (`ABP_SkaterTB1`, `ABP_SkaterTB1_P3`):
+    - a new Layered blend per bone, `AnimGraphNode_LayeredBoneBlend_0`, after the carry and aim layer (`LayeredBoneBlend_1`) and before `LocalToComponentSpace_0`. Its layer setup is copied from the carry layer: from `spine_01` up, rotation blended in mesh space.
+    - its pose comes from `AnimGraphNode_SequencePlayer_9`, which loops `CrossCheck_Hold`.
+    - its weight comes from a new float variable `HoldW`.
+    - The slot is after this layer, so any take (a fall, a get-up, a check) covers the hold.
+  - **New stand-in takes** (both styles):
+    - `CrossCheck_Hold`: `Lift`'s contact frame 2, held (2 keys).
+    - `CrossCheck_Release`: `Lift` from frame 2 to the end (23 keys, 0.367 s).
+    - A re-import by name re-keys them (the import pattern lanes SK26 to SK30 used), so the Blender lane's takes replace them without any wiring.
+  - **The figure Blueprints** (`BP_SkaterVisual_TB1`, `_P3`), new events:
+    - `SetCrossCheckHold(bOn)` ramps `HoldW` through `HoldTick`, run from the tick while `bHoldRun` is set: 6 frames in, 6 frames out. The weight is forced to 0 while down or getting up.
+    - `PlayCrossCheck(Frames)` (int) logs. If the skater is held, or the hold ended under 0.1 s ago, it calls `CrossRelease(1)`.
+    - `CrossRelease` ends the hold in 3 frames and plays `CrossCheck_Release` (blend 0.05 / 0.15 s, priority 6). It sets `LiftPlayT`, so a `PlayLift` on the same frame is skipped.
+    - **The brace's hit:** a `check` bus event for this skater while held (or within 0.1 s of the hold ending) now plays the release instead of the body check's take (`OnBusEvent`, flag `bRelNow`). With no hold, the old path runs unchanged.
+- **Proving numbers** (test figures, headless; clay / night):
+  - H1 skating 6 m/s, hold from tick 30 to 150:
+    - weight 0.167, 0.333 … 1.0 at tick 36; 0 at tick 156
+    - legs (feet, calves, thighs, pelvis, root) **0.00 cm** from the control H0 over ticks 42 to 148
+    - arms and stick up to 91.9 / 100.2 cm from H0 (the pose); back to 0.00 after tick 170
+    - held pose: hands 94 to 96 cm high, about 60 cm ahead of the hips, 46 cm apart; the blade 110 cm high
+    - largest one-frame arm step in the ramps: 19.7 / 21.6 cm (H0 2.2 / 2.5)
+  - H5 at 9 m/s: the same ramps; the feet keep striding (6.7 / 7.2 cm a frame).
+  - H2 standing, hold on, then `PlayCrossCheck(0)` + `PlayLift()` on tick 90:
+    - `CrossCheck_Release` plays ticks 90 to 104, and no Lift take
+    - hold weight 0.67, 0.33, 0 over ticks 91 to 93
+    - `hand_r` drops 13 cm (clay) / 14 cm (night) on tick 90
+  - H3, `PlayCrossCheck(0)` + `PlayLift()` with no hold: today's `Lift_Light` (clay) / `Lift` (night). Unchanged.
+  - H4, a knockdown during the hold: weight 0 from tick 61. The fall, the lie and the get-up play as today.
+- **Still:** none (headless). I looked at the per-frame bone recordings (`logs\w6_cT.json`, `w6_cT2.json`, `w6_nT.json`, through `ana.py`) and the log lines, not at pictures.
+
+### Job 2: the equipped props (stand-ins: my choice)
+- **What changed:** four hidden, no-collision StaticMeshComponents on both figures, placed on the Glide pose and attached (KeepRelative) to their bone when shown:
+
+| Kind | Component | Stand-in | Rides on | Where (cel) |
+|---|---|---|---|---|
+| `shotgun` | `BoostShotgun` | the puck cannon's keg (`SM_Prop_PuckCannon_*`), 0.75 | `spine_03` | on the back, centre 30 cm (clay 37) behind the joint, tilted 20 deg |
+| `hip_check` | `BoostHip` | the mallet (`SM_Prop_Mallet_*`), 0.55 | `pelvis` | hanging at the right hip, 34 cm out |
+| `shield` | `BoostShield` | a round timber disc (`/Engine/BasicShapes/Cylinder` 46 × 6 cm, `MI_Prop_ClayTimber`) | `spine_03` | on the back |
+| `slow_puck` | `BoostSlow` | the rolling pin (`SM_Prop_RollingPin_*`), 0.6 | `spine_01` | across the lower back |
+
+  - `SetBoostEquipped(Kind, bOn)` shows or hides that kind's prop (helper event `EquipShow`).
+  - Off hides only that kind; an unknown kind logs and does nothing. A knockdown keeps the prop attached.
+- **Proving numbers:**
+  - Shown and hidden on the right ticks: E1 20 to 250. E5: slow on 20, off 100, shotgun on 120; `hip_check` off when not shown changes nothing; `bogus` is ignored.
+  - E1 knocked down with the keg on: keg to `spine_03` 9.05 to 9.16 cm on every frame (it rides the body).
+  - Clay, standing, centres: keg (-12.7, 0, 101.4) against `spine_03` (9, 0, 106), measured before I moved it 8 cm further back.
+- **Not verified:** whether a prop cuts into the skin. I placed them against joints with the skin depths a figure-lab pass measured on the chest (11.6 cel / 20.3 clay); only a GPU still decides (film shot 7). Still: none.
+
+### Job 3: the celebrations
+- **What changed:**
+  - **Inputs:** `PlayCelebrate(int32 Which)`. A's `CallPlayCelebrate` accepts one input of name, string or number. I chose the number because it alone tells the mate apart: A sends the scorer 0 to 2 by the goal count, and the mate 3.
+  - **Takes:** 0 `Celebrate_ArmsUp`, 1 `_StickRaise`, 2 `_KneeGlide`, 3 `_Mate`; anything else plays ArmsUp. They are new stand-ins: copies of `Celebrate`, 73 keys, 1.2 s each. Blend 0.15 / 0.25 s, priority 6.
+  - **While down or getting up:** skipped, with a log line.
+- **Proving numbers:**
+  - C0 to C3: each take by name on ticks 30 to 88. C4, down: skipped.
+  - In the seeded match: `JAMFIG celebrate frame=1095 … scorer=5:stick_raise:PlayCelebrate mate=7:knee_glide:PlayCelebrate`; the figure logged `celebrate 1, 2, 3, 3`.
+
+### Job 4: the proof
+- **Two seeded clay matches**, both run after the change (cartridge `clayA`, seed 1, scripted human, headless, to sim frame 7156):
+  - sim knockdown, stumble and check lines: 26 = 26, **identical**
+  - all 12 `JAMSIM` hashes identical (frame 7200 `09e05efd4cd8c0c6`)
+  - **0 Blueprint errors** in each; 4 `PlayCheck`, 7 check bus events, 0 misses
+- **The new calls in a normal match:**
+  - `PlayCrossCheck` 10 times: a log line only, since nobody holds
+  - `PlayCelebrate` 4 times
+  - `SetCrossCheckHold` 0 times: no input reaches `bCrossHold` on this tree, and the bots ship at -1
+  - `SetBoostEquipped` 0 times
+- **"Equal to before":** these lines are NOT equal to FILM3's match on the same seed (first difference at sim 1427 against 1503). The reason is A's code merged since then (A184 to A191: speed, controls, contact). The figure feeds nothing into the sim (CallFigure's return is only logged). The two runs prove the sim is deterministic with the new figure. There is no pre-change run on this tree; making one would have needed git.
+- **Test sessions** (clay twice, night once): 0 Blueprint errors, 0 `Error:` lines.
+- **Film script:** `C:\Users\kazda\jam\wt\b-fig\status\E2-film.md` (7 shots).
+
+## 3. Not verified
+- **The GPU:** nothing seen, no still.
+  - The stand-in hold pose's look: the blade is 110 cm up; it may read as a raised stick.
+  - The props against the skin.
+  - The release's 13 cm drop on its first frame.
+- **The brace's hit** (bus `check` while held, leading to the release): not exercised. Test figures have no sim index, and no brace happens in a match yet.
+- **`PlayCrossCheck` with Frames > 0** (a wind-up): it logs the frames and does nothing more, by design until job 5.
+- **The night figure on the night level:** it was tested on clay.
+
+## 4. For device A (exact names; all on `BP_SkaterVisual_TB1` and `_TB1_P3`, by name)
+
+| Call | Inputs | What the figure does |
+|---|---|---|
+| `SetCrossCheckHold(bool bOn)` | level | the braced upper body over 6 frames in, 6 out; legs untouched; nothing visible under a take, while down or getting up |
+| `PlayCrossCheck(int32 Frames)` | frames to contact (today 0) | from the hold (or within 0.1 s of its end): `CrossCheck_Release` (22 frames) and the same frame's `PlayLift` is skipped; otherwise a log line only and `PlayLift` plays as today |
+| `SetBoostEquipped(FName Kind, bool bOn)` | `shotgun`, `hip_check`, `shield`, `slow_puck` | that kind's prop on or off; it stays on through falls |
+| `PlayCelebrate(int32 Which)` | 0 to 2 the scorer's three, 3 the mate | a 1.2 s take (stand-in); skipped while down |
+| test moves | `ke * SK26Test 30` hold on, `31` off, `32` PlayCrossCheck, `33` to `36` celebrate 0 to 3, `37` to `40` equip the four kinds, `41` all off | on the human's figure |
+
+- **A brace that lands:** today it arrives as a `check` bus event, and the figure plays the release from it. If A calls `PlayCrossCheck` on that frame as well, the figure plays it once (it skips the second call).
+- **The wind-ups:** I have no frames ask yet. When A answers, job 5 adds the wind-up takes behind a switch.
+
+## 5. Decisions for the operator
+1. **The held pose's stand-in is `Lift`'s shove frame**, with the arms out (hands 60 cm forward) and the blade 110 cm up. Ship it until the proper `CrossCheck_Hold` arrives, or wait for the Blender lane's take?
+2. **The equipped stand-ins:** keg on the back (shotgun), mallet at the hip (hip_check), timber disc on the back (shield), rolling pin across the lower back (slow_puck). Fine as placeholders until the props lane's equipped props land?
+3. **A goal now plays the stand-in `Celebrate` on two figures** in every match, since A's code already calls it. Keep it, or hold `PlayCelebrate` back until the real takes arrive?
+
+## 6. The next three steps
+1. Job 5: import `export36` (the four `CrossCheck_*` and four `Celebrate_*` takes) and the boosts lane's equipped props by name, once their `READY.txt` files exist. Wire `_Hold_In` and `_Hold_Out` in place of the weight ramp. Proving numbers: keys equal to the export, the hold's legs still 0.00 cm, 0 errors.
+2. Put the wind-up takes for `PlayCheck` and `PlayCrossCheck` behind a switch (`bWindupTakes`, default off), timed to A's frames. Proving number: the take's contact frame lands on A's contact frame (0 frames off).
+3. Measure the brace's hit in a match once the controls lane lands (`JAM_PLAYTESTER_BRACE=always`). Proving numbers: every `E2 cross release why 2` has a `check` bus event on the same frame, and 0 body-check takes from a brace.
+
+## Editors and tools
+- **Mine:** pid 27948, headless, port 8004, started 14:22:35. It is **still running** for job 5; the map `/Game/Maps/Rink` is dirty from spawning test actors and must not be saved.
+  - Game sound off in memory and `Slate.bAllowThrottling` 0; both go back on before I exit.
+  - Not touched: UnrealEditor pid 32208 (started 14:22:59, not mine) and Blender pid 27228.
+- **Lab:** `C:\Users\kazda\AppData\Local\Temp\claude\6d8eaecb999746c2\1f5c7b1e-557b-4c70-b752-8370d9dbef0b\scratchpad\e2\`
+  - scripts: `assets.py`, `abph.mjs`, `abpset.py`, `equip.py`, `e2bp.mjs`, `gen.py`, `w3.py`, `ana.py`
+  - the DSL before and after: `bk\`
+  - logs: `logs\full_m1.txt`, `full_m2.txt`, `w6_*.json`
+
+## Ledger rows (16: 4 changed, 12 new)
+
+| path | kind | size_mb | origin | tool | licence | url | date | device | shipped | note |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Game/Plugins/JamAssets/Content/Skaters/BP_SkaterVisual_TB1.uasset | other | 11.08 | original | Blender 4.2 Python script (lane S4) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | implements IJamSkaterVisual (lane B4); SetNumber live, SetTeam sets CrestTeam (lane B12); C-0001 v4 (lane SK6); tackling (lanes SK12, SK14, SK15); + SlideFx Niagara component (NS_slide_trail) (lane B30); walls (lane SK16); cross-check (lanes SK17, SK18); reactions (lanes SK19, QA3); SK2Tick pushes the aim values once per call (lane QA4); the stumble's own take told by the check bus event (PlayStumbleNow), board falls on four sides with wall get-ups when PlayBoardHit comes with a knockdown, quick get-ups under 80 frames, the hard stop derived from the speed, the deke on its bus event (lane SK21); the hard stop gated to an event (lane SK22); StopTick plays MS_brake (lane AU11); fall sizes, snap get-up, GetUp_Wall_Back, wall shift, PlayStumble and SetBraking by name, late get-ups' test switch (lane SK23); + BrakeFx Niagara component (NS_brake) (lane B40); the pawn's PlayStumble covers every stumble, the level-driven gated stop, lying loops from the fall's end pose (lane SK24); whip weights, check sizes, the eleven set calls, WeaponMesh on stick_socket, test trigger SK26Test (lane SK26); the timed get-up on its frame, UpBlend (lane SK29); SetStickLock and SetTakeGrace (layers through the ABP's LockRot/GraceRot, not under a take of priority 5 or more), PlayCheckMiss and the miss rule (no check bus event within 0.108 s of PlayCheck), the pin's victim Fall_Legs_Back, the skid's hold sway (SkidSway 1.5), UpBlendQ, test calls Tune and TestBusCheck (lane SK30, previous run); SetHasPuck stored in bPuck and Dash_Carry at the dash loop's start with the puck, EndDash reason 4 plays Dash_Wipeout_Light, the carried prop hidden and the stick shown from the dash's first frame (lane SK30); the miss rule behind bAutoCheckMiss (bool, default false, Instance Editable): PlayCheck arms it only when true, PlayCheckMiss unchanged (lane FILM3); SetCrossCheckHold(bool) ramps the ABP's HoldW over 6 frames (HoldTick), PlayCrossCheck(int) and a check bus event while held play CrossCheck_Release (CrossRelease), SetBoostEquipped(Name, bool) shows four stand-in prop components BoostShotgun/BoostHip/BoostShield/BoostSlow (keg, mallet, timber disc, rolling pin) attached to spine_03/pelvis/spine_03/spine_01, PlayCelebrate(int 0-3) plays Celebrate_ArmsUp/_StickRaise/_KneeGlide/_Mate, test moves 30-41 (lane E2) (11075011 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/BP_SkaterVisual_TB1_P3.uasset | other | 11.28 | original | UE 5.9 editor via MCP/Python (Blueprint DSL) | | | 2026-11-14 | B | y | duplicate of BP_SkaterVisual_TB1 for the p3_clay figure: P3 takes, ABP, blade offset (5.13,-140.72,9.65), H0 4.6, number on the Trim-slot patch (lane SKI3); C-0001 v4 (lane SK6); ContactShadow plane (lane SK8); tackling, walls, cross-check and reactions as BP_SkaterVisual_TB1 (lanes SK12 to SK19, QA3); + SlideFx (NS_slide_trail) (lane B30); ContactShadow 2.2 x 0.95 m while down (lane SK16); SK2Tick (lane QA4); stumble, board falls, quick get-ups, hard stop, deke (lane SK21); the gated hard stop (lane SK22); MS_brake (lane AU11); lane SK23's calls; + BrakeFx (NS_brake) (lane B40); lane SK24's stop and lying loops; lane SK26's calls, WeaponMesh and test trigger; the timed get-up's start and blend (lane SK29); the three calls, the miss rule, the pin's victim, the skid's sway, UpBlendQ and the test calls as BP_SkaterVisual_TB1 (lane SK30, previous run); Dash_Carry with the puck, EndDash reason 4 (Dash_Wipeout_Light), the prop hidden from the dash's first frame, as BP_SkaterVisual_TB1 (lane SK30); the miss rule behind bAutoCheckMiss (default false, Instance Editable) as BP_SkaterVisual_TB1 (lane FILM3); SetCrossCheckHold, PlayCrossCheck and the brace's release, SetBoostEquipped with four stand-in prop components (placed for the clay body: keg 37 cm, disc 23 cm, pin 27 cm behind their joints), PlayCelebrate(int 0-3) and test moves 30-41 as BP_SkaterVisual_TB1, on the P3 takes and ABP_SkaterTB1_P3 (lane E2) (11283943 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/ABP_SkaterTB1.uasset | anim | 0.95 | original | Blender 4.2 Python script (lane S4) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | AnimBP: idle, skate blend, lean, falls, get-up, DefaultSlot (lane B4); +the carry layer on the aim layer's input: four bool switches (Giant_Carry, Mallet_Carry, Cannon_Carry, Boost_Take), mesh space from spine_01 (lane SK26); the carry layer's fifth switch: bCarry5 with Pin_Carry, under the boost beat (lane SK28); two Modify Bone nodes at the end of the whip chain: spine_01 (GraceRot, alpha GraceA) and stick_socket (LockRot, alpha StickA), driven by the figure's SetTakeGrace and SetStickLock layers (lane SK30); the held cross-check's layer: a Layered blend per bone (spine_01 up, mesh-space rotation, as the carry layer's) after LayeredBoneBlend_1, pose a looping Sequence Player on CrossCheck_Hold, weight HoldW (float) set by the figure (lane E2) (952835 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/ABP_SkaterTB1_P3.uasset | other | 0.95 | original | UE 5.9 editor via MCP/Python | | | 2026-11-14 | B | y | duplicate of ABP_SkaterTB1 on SKEL_SkaterTB1_P3, every player re-pointed to the P3 takes and blend spaces (lane SKI3); +the carry layer's four switches as ABP_SkaterTB1 (lane SK26); the carry layer's fifth switch (bCarry5, Pin_Carry) as ABP_SkaterTB1 (lane SK28); the trunk and stick Modify Bone nodes (GraceRot/GraceA, LockRot/StickA) as ABP_SkaterTB1 (lane SK30); the held cross-check's layer (HoldW, CrossCheck_Hold of the P3 takes) as ABP_SkaterTB1 (lane E2) (948687 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_CrossCheck_Hold.uasset | anim | 0.12 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | stand-in until the figure lab's CrossCheck_Hold: AS_SkaterTB1v2_Lift's contact frame 2 held, 2 keys, on SKEL_SkaterTB1v2 (re-import by name re-keys it); the ABP's hold layer plays it from spine_01 up (lane E2) (118393 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_CrossCheck_Release.uasset | anim | 0.15 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | stand-in until the figure lab's CrossCheck_Release: AS_SkaterTB1v2_Lift from frame 2 to its end, 23 keys, 0.367 s (re-import by name re-keys it); played by CrossRelease from the hold (lane E2) (149323 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_Celebrate_ArmsUp.uasset | anim | 0.20 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | stand-in until the figure lab's Celebrate_ArmsUp: a copy of AS_SkaterTB1v2_Celebrate, 73 keys, 1.2 s (re-import by name re-keys it); PlayCelebrate(0) (lane E2) (200084 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_Celebrate_StickRaise.uasset | anim | 0.20 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | stand-in until the figure lab's Celebrate_StickRaise: a copy of AS_SkaterTB1v2_Celebrate, 73 keys, 1.2 s (re-import by name re-keys it); PlayCelebrate(1) (lane E2) (200104 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_Celebrate_KneeGlide.uasset | anim | 0.20 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | stand-in until the figure lab's Celebrate_KneeGlide: a copy of AS_SkaterTB1v2_Celebrate, 73 keys, 1.2 s (re-import by name re-keys it); PlayCelebrate(2) (lane E2) (200099 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_Celebrate_Mate.uasset | anim | 0.20 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | stand-in until the figure lab's Celebrate_Mate: a copy of AS_SkaterTB1v2_Celebrate, 73 keys, 1.2 s (re-import by name re-keys it); PlayCelebrate(3) (lane E2) (200074 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_CrossCheck_Hold.uasset | anim | 0.13 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | stand-in until the figure lab's CrossCheck_Hold: AS_SkaterTB1_P3_Lift's contact frame 2 held, 2 keys, on SKEL_SkaterTB1_P3 (re-import by name re-keys it); the ABP's hold layer plays it from spine_01 up (lane E2) (127679 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_CrossCheck_Release.uasset | anim | 0.16 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | stand-in until the figure lab's CrossCheck_Release: AS_SkaterTB1_P3_Lift from frame 2 to its end, 23 keys, 0.367 s (re-import by name re-keys it); played by CrossRelease from the hold (lane E2) (158609 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_Celebrate_ArmsUp.uasset | anim | 0.22 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | stand-in until the figure lab's Celebrate_ArmsUp: a copy of AS_SkaterTB1_P3_Celebrate, 73 keys, 1.2 s (re-import by name re-keys it); PlayCelebrate(0) (lane E2) (216385 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_Celebrate_StickRaise.uasset | anim | 0.22 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | stand-in until the figure lab's Celebrate_StickRaise: a copy of AS_SkaterTB1_P3_Celebrate, 73 keys, 1.2 s (re-import by name re-keys it); PlayCelebrate(1) (lane E2) (216405 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_Celebrate_KneeGlide.uasset | anim | 0.22 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | stand-in until the figure lab's Celebrate_KneeGlide: a copy of AS_SkaterTB1_P3_Celebrate, 73 keys, 1.2 s (re-import by name re-keys it); PlayCelebrate(2) (lane E2) (216400 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_Celebrate_Mate.uasset | anim | 0.22 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | stand-in until the figure lab's Celebrate_Mate: a copy of AS_SkaterTB1_P3_Celebrate, 73 keys, 1.2 s (re-import by name re-keys it); PlayCelebrate(3) (lane E2) (216375 bytes) |
+
+---
+
+# Second hand-back (job 5, parts 1 and 2; 15:05): the boosts lane's pickups and equipped set imported and wired
+
+Same tree and editor (pid 27948, headless, port 8004); on top of the coordinator's commit 89620a6d. There are 48 assets: 46 new and 2 changed (the figure Blueprints).
+**Part 3 is not started**: `C:\Users\kazda\jam\skater-lab\skf\export36\READY.txt` does not exist (checked at 15:03).
+
+## 1. Done / not done
+
+| Part | Verdict | Proving number |
+|---|---|---|
+| 1. Six pickups `SM_Boost_<kind>` | **Done** | 6 imported to `/JamAssets/Props/`. Tris 400 / 840 / 692 / 560 / 608 / 1,124, the same as the manifest. Slots `Clay` and `Accent` bound to 12 new instances of `M_PickupProp` (the material `SM_Pickup_*` use). Sizes are as in the manifest (speed 54.7 × 92.5 × 78.9 cm, base at z 0) |
+| 2. Equipped set, wired | **Done** | The socket rule reproduces the lab's placement exactly: in Glide, the lowest prop vertex equals the lab's to **0.01 cm** for all 8 (clay: keg 96.45 against the lab's 96.46, bumper 73.19 / 73.19, shield 88.41 / 88.41, crest 146.24 / 146.24; cel 100.15 / 100.15, 69.35 / 69.35, 92.10 / 92.11, 154.76 / 154.76). The prop in the bone frame equals the socket to 0.002 cm on every frame. Hidden from the knockdown's second frame to the end of the get-up |
+| 3. `export36` | **Waiting** | there is no `READY.txt` yet |
+
+## 2. Per item
+
+### Pickups
+- **What changed:**
+  - `SM_Boost_speed`, `_precision`, `_heavy_puck`, `_big_puck`, `_reverse_other`, `_custom`: FBX static mesh, no collision generated, combined.
+  - The FBX importer had suffixed five meshes' slots (`Clay_001` …). I renamed them back to `Clay` / `Accent`.
+  - **Colours:** `M_PickupProp` takes no colour parameter; it takes a `BaseColorTex`. So each slot gets an 8 × 8 solid texture `T_Boost_<kind>_<Clay|Accent>` (sRGB) in the manifest's sRGB colour, under an instance `MI_Boost_<kind>_<Clay|Accent>`. Each instance has the same scalars as `MI_PickupProp_speed`: Emissive 5, ClayProp 1, ClayPropSat 1.7, ClayPropGlow 0.3, ClayRim 1.6, ClayRimPower 1.6.
+  - The older `SM_Pickup_*`, `MI_PickupProp_*` and `T_Pickup_*` are left untouched: A's code loads `SM_Boost_*`.
+- **Not verified:** the look. Materials don't compile headless, so the colours, emissive and rim are not seen. Film steps are in `E2-film.md`.
+- **The film rows are tested headless:** 12 pickups were present in the play session (6 at 25 m, 6 at 45 m), then removed.
+
+### Equipped set
+- **What changed:**
+  - **Imported:** `SM_Equip_<shotgun|hip_check|shield|slow_puck>_<p3_clay|p2_cel>` under `/JamAssets/Skaters/Props/`, with eight `MI_Equip_<kind>_<Clay|Accent>`. These are copies of `MI_Prop_ClayTimber` (`M_Toon`, as the weapon props use), each `TeamColour` the manifest's colour in linear.
+  - **The four components are re-used:** `BoostShotgun`, `BoostHip`, `BoostShield`, `BoostSlow`. Each now holds the props lane's mesh (clay on `_P3`, cel on the night figure) at scale 1 with no material override.
+  - **Relative transform (the socket):** pivot × inverse(the bone's reference-pose component transform), computed in the engine from the skeletal mesh's reference pose, with Unreal Y = −Blender Y. It equals the manifest's Unreal column:
+
+    | Kind | Bone | Clay socket | Cel socket | Rotation |
+    |---|---|---|---|---|
+    | shotgun | spine_03 | (-32.32, 2.47, 0) | (-29.80, 2.76, 0) | roll -90 |
+    | hip_check | pelvis | (0, -5, 0) | (0, 3, 0) | roll -90 |
+    | shield | spine_03 | (-21.22, 5.47, 0) | (-18.70, 5.76, 0) | roll -90 |
+    | slow_puck | **head** | (0.62, -32.51, 0) | (0.44, -34.97, 0) | roll -90 |
+
+  - **Blueprint logic:**
+    - `SetBoostEquipped(Kind, bOn)` sets `bEqShotgun` / `bEqHip` / `bEqShield` / `bEqSlow` and `bEqAny`, then `EquipApply`.
+    - `EquipApply` shows each prop (attached KeepRelative to its bone) when it is on and the figure is not down or getting up (`bEqHid` = `bDown` or `bUpRun`).
+    - `EquipTick` runs from the tick while `bEqAny` is set and re-applies on a change of down / up.
+    - Several kinds can be shown at once; an unknown kind logs and does nothing.
+- **Proving numbers** (headless test figures `fa_Q`, clay `w6_cQ`, night `w6_nQ`; 0 Blueprint errors):
+  - In the bone frame, every prop sits at its socket on all 260 Glide and 260 Stride frames: spread 0.001 to 0.002 cm.
+  - **Glide, the lowest vertex** (all 120 frames; the lab every 2nd frame): equal to the lab's to 0.01 cm, all 8 (table above). The engine therefore places the props where the lab measured them, so the lab's clearances hold in Glide:
+    - clay keg: 1.21 cm off the nearest body face, 0 frames inside
+    - cel keg: 0.58 cm
+    - That is closer than the "about 2 cm" asked; the placement is the lab's, not mine.
+  - **Stride:** the bumper and the crest match the lab (72.66 / 72.63, 141.66 / 141.65). **The keg and the shield sit 1.9 to 3.1 cm lower than the lab measured** (clay keg 96.80 against 98.66; shield 88.63 against 91.68; cel keg 100.58 against 101.87). The props ride `spine_03` exactly, so the engine's `Stride` take must bend the upper spine differently from export35's. Clearance in the engine's Stride is therefore **not proved**.
+  - **Knockdown** (K0 to K3, `Knockdown_Back` from tick 40 to the get-up's end on 148, released on 150):
+    - hidden from tick 41 to 150, shown again on 151, all 4 kinds
+    - one frame shown at tick 40, the take's first frame (the hide comes from the next tick)
+    - so nothing goes under the ice
+  - Figure M skating with all four: all shown from tick 12; the shield off at 250 leaves three.
+- **Seeded clay match again** (`m3`, after the change): sim lines 26 = 26, the hash list equal to m1 and m2, 0 Blueprint errors. `SetBoostEquipped` was not called (this cartridge has no abilities).
+- **What I looked at:** the per-frame bone and prop-transform recordings, with the props' 178 to 526 mesh vertices placed through them (`anaq.py`), plus the lab's `summary_<style>.txt` and `equip_<style>.json`. No picture.
+
+## 3. Not verified
+- **Nothing seen on a GPU:** the pickups' colours and emissive; the props against the jersey.
+- **Clearance against the skin in the engine:** there is no skinned-vertex access headless. It is proved only by equality with the lab's placement in Glide; Stride differs (above).
+- **The knockdown's first frame:** the prop is still shown on it.
+- **A's own call in a match:** no boost cartridge was run. `jam.boost.Preview shotgun` would show it on the human.
+
+## 4. For device A
+- Pickups: `/JamAssets/Props/SM_Boost_<kind>` for the six kinds. No code change is needed; materials are bound on the mesh.
+- `SetBoostEquipped(FName Kind, bool bOn)`: unchanged name and inputs. The props are now the real ones. They hide themselves while the skater is down or getting up, and come back after, still equipped.
+- `/JamAssets/Props` still needs to be in the cook (A188 loads by path).
+
+## 5. Decisions for the operator
+1. **The keg sits 1.2 cm (clay) / 0.6 cm (cel) off the jersey in Glide**, as the props lab placed it; the coordinator asked for about 2 cm. Move it back 1 cm? (Change one number per style.)
+2. The old `SM_Pickup_*` meshes and textures: delete them now that `SM_Boost_*` exist, or keep them?
+
+## 6. The next three steps
+1. Part 3 as soon as `export36\READY.txt` exists: the hits' wind-ups behind a switch, the held cross-check, the celebrations.
+2. Hide the prop on the knockdown's own frame (in `KnockDown`), and re-check the engine's `Stride` against export35's.
+3. The GPU look at the pickups (25 / 45 m) and the equipped set, from the film script.
+
+## Ledger rows, job 5 (48: 46 new, 2 changed; replace the Blueprints' rows above)
+
+| path | kind | size_mb | origin | tool | licence | url | date | device | shipped | note |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Game/Plugins/JamAssets/Content/Props/SM_Boost_speed.uasset | mesh | 0.08 | original | Blender 4.2 Python script (lane B2 boosts) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | sets-lab/boosts/export/SM_Boost_speed.fbx (gate: READY 14:48) by name, static mesh, no collision, base centre at z 0; slots Clay and Accent bound to MI_Boost_speed_Clay / _Accent; loaded by device A's pickup as /JamAssets/Props/SM_Boost_speed (lane E2) (82518 bytes) |
+| Game/Plugins/JamAssets/Content/Props/T_Boost_speed_Clay.uasset | texture | 0.01 | original | Python (zlib PNG writer) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | 8 x 8 solid colour, sRGB, the boosts manifest's Clay colour for speed; BaseColorTex of MI_Boost_speed_Clay (M_PickupProp takes no colour parameter) (lane E2) (11363 bytes) |
+| Game/Plugins/JamAssets/Content/Props/MI_Boost_speed_Clay.uasset | material | 0.01 | original | UE 5.9 editor via MCP/Python | | | 2026-11-14 | B | n | instance of M_PickupProp, scalars as MI_PickupProp_speed (Emissive 5, ClayProp 1, ClayPropSat 1.7, ClayPropGlow 0.3, ClayRim 1.6, ClayRimPower 1.6), BaseColorTex T_Boost_speed_Clay; slot Clay of SM_Boost_speed (lane E2) (6380 bytes) |
+| Game/Plugins/JamAssets/Content/Props/T_Boost_speed_Accent.uasset | texture | 0.01 | original | Python (zlib PNG writer) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | 8 x 8 solid colour, sRGB, the boosts manifest's Accent colour for speed; BaseColorTex of MI_Boost_speed_Accent (M_PickupProp takes no colour parameter) (lane E2) (11409 bytes) |
+| Game/Plugins/JamAssets/Content/Props/MI_Boost_speed_Accent.uasset | material | 0.01 | original | UE 5.9 editor via MCP/Python | | | 2026-11-14 | B | n | instance of M_PickupProp, scalars as MI_PickupProp_speed (Emissive 5, ClayProp 1, ClayPropSat 1.7, ClayPropGlow 0.3, ClayRim 1.6, ClayRimPower 1.6), BaseColorTex T_Boost_speed_Accent; slot Accent of SM_Boost_speed (lane E2) (6396 bytes) |
+| Game/Plugins/JamAssets/Content/Props/SM_Boost_precision.uasset | mesh | 0.09 | original | Blender 4.2 Python script (lane B2 boosts) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | sets-lab/boosts/export/SM_Boost_precision.fbx (gate: READY 14:48) by name, static mesh, no collision, base centre at z 0; slots Clay and Accent bound to MI_Boost_precision_Clay / _Accent; loaded by device A's pickup as /JamAssets/Props/SM_Boost_precision (lane E2) (93569 bytes) |
+| Game/Plugins/JamAssets/Content/Props/T_Boost_precision_Clay.uasset | texture | 0.01 | original | Python (zlib PNG writer) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | 8 x 8 solid colour, sRGB, the boosts manifest's Clay colour for precision; BaseColorTex of MI_Boost_precision_Clay (M_PickupProp takes no colour parameter) (lane E2) (11455 bytes) |
+| Game/Plugins/JamAssets/Content/Props/MI_Boost_precision_Clay.uasset | material | 0.01 | original | UE 5.9 editor via MCP/Python | | | 2026-11-14 | B | n | instance of M_PickupProp, scalars as MI_PickupProp_speed (Emissive 5, ClayProp 1, ClayPropSat 1.7, ClayPropGlow 0.3, ClayRim 1.6, ClayRimPower 1.6), BaseColorTex T_Boost_precision_Clay; slot Clay of SM_Boost_precision (lane E2) (6412 bytes) |
+| Game/Plugins/JamAssets/Content/Props/T_Boost_precision_Accent.uasset | texture | 0.01 | original | Python (zlib PNG writer) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | 8 x 8 solid colour, sRGB, the boosts manifest's Accent colour for precision; BaseColorTex of MI_Boost_precision_Accent (M_PickupProp takes no colour parameter) (lane E2) (11501 bytes) |
+| Game/Plugins/JamAssets/Content/Props/MI_Boost_precision_Accent.uasset | material | 0.01 | original | UE 5.9 editor via MCP/Python | | | 2026-11-14 | B | n | instance of M_PickupProp, scalars as MI_PickupProp_speed (Emissive 5, ClayProp 1, ClayPropSat 1.7, ClayPropGlow 0.3, ClayRim 1.6, ClayRimPower 1.6), BaseColorTex T_Boost_precision_Accent; slot Accent of SM_Boost_precision (lane E2) (6428 bytes) |
+| Game/Plugins/JamAssets/Content/Props/SM_Boost_heavy_puck.uasset | mesh | 0.08 | original | Blender 4.2 Python script (lane B2 boosts) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | sets-lab/boosts/export/SM_Boost_heavy_puck.fbx (gate: READY 14:48) by name, static mesh, no collision, base centre at z 0; slots Clay and Accent bound to MI_Boost_heavy_puck_Clay / _Accent; loaded by device A's pickup as /JamAssets/Props/SM_Boost_heavy_puck (lane E2) (88111 bytes) |
+| Game/Plugins/JamAssets/Content/Props/T_Boost_heavy_puck_Clay.uasset | texture | 0.01 | original | Python (zlib PNG writer) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | 8 x 8 solid colour, sRGB, the boosts manifest's Clay colour for heavy_puck; BaseColorTex of MI_Boost_heavy_puck_Clay (M_PickupProp takes no colour parameter) (lane E2) (11800 bytes) |
+| Game/Plugins/JamAssets/Content/Props/MI_Boost_heavy_puck_Clay.uasset | material | 0.01 | original | UE 5.9 editor via MCP/Python | | | 2026-11-14 | B | n | instance of M_PickupProp, scalars as MI_PickupProp_speed (Emissive 5, ClayProp 1, ClayPropSat 1.7, ClayPropGlow 0.3, ClayRim 1.6, ClayRimPower 1.6), BaseColorTex T_Boost_heavy_puck_Clay; slot Clay of SM_Boost_heavy_puck (lane E2) (6420 bytes) |
+| Game/Plugins/JamAssets/Content/Props/T_Boost_heavy_puck_Accent.uasset | texture | 0.01 | original | Python (zlib PNG writer) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | 8 x 8 solid colour, sRGB, the boosts manifest's Accent colour for heavy_puck; BaseColorTex of MI_Boost_heavy_puck_Accent (M_PickupProp takes no colour parameter) (lane E2) (11525 bytes) |
+| Game/Plugins/JamAssets/Content/Props/MI_Boost_heavy_puck_Accent.uasset | material | 0.01 | original | UE 5.9 editor via MCP/Python | | | 2026-11-14 | B | n | instance of M_PickupProp, scalars as MI_PickupProp_speed (Emissive 5, ClayProp 1, ClayPropSat 1.7, ClayPropGlow 0.3, ClayRim 1.6, ClayRimPower 1.6), BaseColorTex T_Boost_heavy_puck_Accent; slot Accent of SM_Boost_heavy_puck (lane E2) (6436 bytes) |
+| Game/Plugins/JamAssets/Content/Props/SM_Boost_big_puck.uasset | mesh | 0.08 | original | Blender 4.2 Python script (lane B2 boosts) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | sets-lab/boosts/export/SM_Boost_big_puck.fbx (gate: READY 14:48) by name, static mesh, no collision, base centre at z 0; slots Clay and Accent bound to MI_Boost_big_puck_Clay / _Accent; loaded by device A's pickup as /JamAssets/Props/SM_Boost_big_puck (lane E2) (85029 bytes) |
+| Game/Plugins/JamAssets/Content/Props/T_Boost_big_puck_Clay.uasset | texture | 0.01 | original | Python (zlib PNG writer) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | 8 x 8 solid colour, sRGB, the boosts manifest's Clay colour for big_puck; BaseColorTex of MI_Boost_big_puck_Clay (M_PickupProp takes no colour parameter) (lane E2) (11433 bytes) |
+| Game/Plugins/JamAssets/Content/Props/MI_Boost_big_puck_Clay.uasset | material | 0.01 | original | UE 5.9 editor via MCP/Python | | | 2026-11-14 | B | n | instance of M_PickupProp, scalars as MI_PickupProp_speed (Emissive 5, ClayProp 1, ClayPropSat 1.7, ClayPropGlow 0.3, ClayRim 1.6, ClayRimPower 1.6), BaseColorTex T_Boost_big_puck_Clay; slot Clay of SM_Boost_big_puck (lane E2) (6404 bytes) |
+| Game/Plugins/JamAssets/Content/Props/T_Boost_big_puck_Accent.uasset | texture | 0.01 | original | Python (zlib PNG writer) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | 8 x 8 solid colour, sRGB, the boosts manifest's Accent colour for big_puck; BaseColorTex of MI_Boost_big_puck_Accent (M_PickupProp takes no colour parameter) (lane E2) (11479 bytes) |
+| Game/Plugins/JamAssets/Content/Props/MI_Boost_big_puck_Accent.uasset | material | 0.01 | original | UE 5.9 editor via MCP/Python | | | 2026-11-14 | B | n | instance of M_PickupProp, scalars as MI_PickupProp_speed (Emissive 5, ClayProp 1, ClayPropSat 1.7, ClayPropGlow 0.3, ClayRim 1.6, ClayRimPower 1.6), BaseColorTex T_Boost_big_puck_Accent; slot Accent of SM_Boost_big_puck (lane E2) (6420 bytes) |
+| Game/Plugins/JamAssets/Content/Props/SM_Boost_reverse_other.uasset | mesh | 0.08 | original | Blender 4.2 Python script (lane B2 boosts) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | sets-lab/boosts/export/SM_Boost_reverse_other.fbx (gate: READY 14:48) by name, static mesh, no collision, base centre at z 0; slots Clay and Accent bound to MI_Boost_reverse_other_Clay / _Accent; loaded by device A's pickup as /JamAssets/Props/SM_Boost_reverse_other (lane E2) (86721 bytes) |
+| Game/Plugins/JamAssets/Content/Props/T_Boost_reverse_other_Clay.uasset | texture | 0.01 | original | Python (zlib PNG writer) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | 8 x 8 solid colour, sRGB, the boosts manifest's Clay colour for reverse_other; BaseColorTex of MI_Boost_reverse_other_Clay (M_PickupProp takes no colour parameter) (lane E2) (11548 bytes) |
+| Game/Plugins/JamAssets/Content/Props/MI_Boost_reverse_other_Clay.uasset | material | 0.01 | original | UE 5.9 editor via MCP/Python | | | 2026-11-14 | B | n | instance of M_PickupProp, scalars as MI_PickupProp_speed (Emissive 5, ClayProp 1, ClayPropSat 1.7, ClayPropGlow 0.3, ClayRim 1.6, ClayRimPower 1.6), BaseColorTex T_Boost_reverse_other_Clay; slot Clay of SM_Boost_reverse_other (lane E2) (6444 bytes) |
+| Game/Plugins/JamAssets/Content/Props/T_Boost_reverse_other_Accent.uasset | texture | 0.01 | original | Python (zlib PNG writer) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | 8 x 8 solid colour, sRGB, the boosts manifest's Accent colour for reverse_other; BaseColorTex of MI_Boost_reverse_other_Accent (M_PickupProp takes no colour parameter) (lane E2) (11594 bytes) |
+| Game/Plugins/JamAssets/Content/Props/MI_Boost_reverse_other_Accent.uasset | material | 0.01 | original | UE 5.9 editor via MCP/Python | | | 2026-11-14 | B | n | instance of M_PickupProp, scalars as MI_PickupProp_speed (Emissive 5, ClayProp 1, ClayPropSat 1.7, ClayPropGlow 0.3, ClayRim 1.6, ClayRimPower 1.6), BaseColorTex T_Boost_reverse_other_Accent; slot Accent of SM_Boost_reverse_other (lane E2) (6460 bytes) |
+| Game/Plugins/JamAssets/Content/Props/SM_Boost_custom.uasset | mesh | 0.10 | original | Blender 4.2 Python script (lane B2 boosts) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | sets-lab/boosts/export/SM_Boost_custom.fbx (gate: READY 14:48) by name, static mesh, no collision, base centre at z 0; slots Clay and Accent bound to MI_Boost_custom_Clay / _Accent; loaded by device A's pickup as /JamAssets/Props/SM_Boost_custom (lane E2) (103039 bytes) |
+| Game/Plugins/JamAssets/Content/Props/T_Boost_custom_Clay.uasset | texture | 0.01 | original | Python (zlib PNG writer) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | 8 x 8 solid colour, sRGB, the boosts manifest's Clay colour for custom; BaseColorTex of MI_Boost_custom_Clay (M_PickupProp takes no colour parameter) (lane E2) (11387 bytes) |
+| Game/Plugins/JamAssets/Content/Props/MI_Boost_custom_Clay.uasset | material | 0.01 | original | UE 5.9 editor via MCP/Python | | | 2026-11-14 | B | n | instance of M_PickupProp, scalars as MI_PickupProp_speed (Emissive 5, ClayProp 1, ClayPropSat 1.7, ClayPropGlow 0.3, ClayRim 1.6, ClayRimPower 1.6), BaseColorTex T_Boost_custom_Clay; slot Clay of SM_Boost_custom (lane E2) (6388 bytes) |
+| Game/Plugins/JamAssets/Content/Props/T_Boost_custom_Accent.uasset | texture | 0.01 | original | Python (zlib PNG writer) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | 8 x 8 solid colour, sRGB, the boosts manifest's Accent colour for custom; BaseColorTex of MI_Boost_custom_Accent (M_PickupProp takes no colour parameter) (lane E2) (11433 bytes) |
+| Game/Plugins/JamAssets/Content/Props/MI_Boost_custom_Accent.uasset | material | 0.01 | original | UE 5.9 editor via MCP/Python | | | 2026-11-14 | B | n | instance of M_PickupProp, scalars as MI_PickupProp_speed (Emissive 5, ClayProp 1, ClayPropSat 1.7, ClayPropGlow 0.3, ClayRim 1.6, ClayRimPower 1.6), BaseColorTex T_Boost_custom_Accent; slot Accent of SM_Boost_custom (lane E2) (6404 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/Props/SM_Equip_shotgun_p3_clay.uasset | mesh | 0.08 | original | Blender 4.2 Python script (lane B2 boosts) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | sets-lab/boosts/export/SM_Equip_shotgun_p3_clay.fbx by name, static mesh, prop frame = figure rest frame at the pivot; slots Clay/Accent bound to MI_Equip_shotgun_Clay / _Accent; shown on its bone by SetBoostEquipped on the clay figure BP_SkaterVisual_TB1_P3 (lane E2) (79761 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/Props/SM_Equip_shotgun_p2_cel.uasset | mesh | 0.08 | original | Blender 4.2 Python script (lane B2 boosts) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | sets-lab/boosts/export/SM_Equip_shotgun_p2_cel.fbx by name, static mesh, prop frame = figure rest frame at the pivot; slots Clay/Accent bound to MI_Equip_shotgun_Clay / _Accent; shown on its bone by SetBoostEquipped on the night figure BP_SkaterVisual_TB1 (lane E2) (79738 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/Props/MI_Equip_shotgun_Clay.uasset | material | 0.00 | original | UE 5.9 editor via MCP/Python | | | 2026-11-14 | B | n | duplicate of MI_Prop_ClayTimber (M_Toon), TeamColour the boosts manifest's Clay colour for shotgun (sRGB to linear); slot Clay of SM_Equip_shotgun_p3_clay and _p2_cel (lane E2) (4879 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/Props/MI_Equip_shotgun_Accent.uasset | material | 0.00 | original | UE 5.9 editor via MCP/Python | | | 2026-11-14 | B | n | duplicate of MI_Prop_ClayTimber (M_Toon), TeamColour the boosts manifest's Accent colour for shotgun (sRGB to linear); slot Accent of SM_Equip_shotgun_p3_clay and _p2_cel (lane E2) (4891 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/Props/SM_Equip_hip_check_p3_clay.uasset | mesh | 0.08 | original | Blender 4.2 Python script (lane B2 boosts) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | sets-lab/boosts/export/SM_Equip_hip_check_p3_clay.fbx by name, static mesh, prop frame = figure rest frame at the pivot; slots Clay/Accent bound to MI_Equip_hip_check_Clay / _Accent; shown on its bone by SetBoostEquipped on the clay figure BP_SkaterVisual_TB1_P3 (lane E2) (83809 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/Props/SM_Equip_hip_check_p2_cel.uasset | mesh | 0.08 | original | Blender 4.2 Python script (lane B2 boosts) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | sets-lab/boosts/export/SM_Equip_hip_check_p2_cel.fbx by name, static mesh, prop frame = figure rest frame at the pivot; slots Clay/Accent bound to MI_Equip_hip_check_Clay / _Accent; shown on its bone by SetBoostEquipped on the night figure BP_SkaterVisual_TB1 (lane E2) (83744 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/Props/MI_Equip_hip_check_Clay.uasset | material | 0.00 | original | UE 5.9 editor via MCP/Python | | | 2026-11-14 | B | n | duplicate of MI_Prop_ClayTimber (M_Toon), TeamColour the boosts manifest's Clay colour for hip_check (sRGB to linear); slot Clay of SM_Equip_hip_check_p3_clay and _p2_cel (lane E2) (4891 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/Props/MI_Equip_hip_check_Accent.uasset | material | 0.00 | original | UE 5.9 editor via MCP/Python | | | 2026-11-14 | B | n | duplicate of MI_Prop_ClayTimber (M_Toon), TeamColour the boosts manifest's Accent colour for hip_check (sRGB to linear); slot Accent of SM_Equip_hip_check_p3_clay and _p2_cel (lane E2) (4903 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/Props/SM_Equip_shield_p3_clay.uasset | mesh | 0.08 | original | Blender 4.2 Python script (lane B2 boosts) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | sets-lab/boosts/export/SM_Equip_shield_p3_clay.fbx by name, static mesh, prop frame = figure rest frame at the pivot; slots Clay/Accent bound to MI_Equip_shield_Clay / _Accent; shown on its bone by SetBoostEquipped on the clay figure BP_SkaterVisual_TB1_P3 (lane E2) (79544 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/Props/SM_Equip_shield_p2_cel.uasset | mesh | 0.08 | original | Blender 4.2 Python script (lane B2 boosts) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | sets-lab/boosts/export/SM_Equip_shield_p2_cel.fbx by name, static mesh, prop frame = figure rest frame at the pivot; slots Clay/Accent bound to MI_Equip_shield_Clay / _Accent; shown on its bone by SetBoostEquipped on the night figure BP_SkaterVisual_TB1 (lane E2) (79524 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/Props/MI_Equip_shield_Clay.uasset | material | 0.00 | original | UE 5.9 editor via MCP/Python | | | 2026-11-14 | B | n | duplicate of MI_Prop_ClayTimber (M_Toon), TeamColour the boosts manifest's Clay colour for shield (sRGB to linear); slot Clay of SM_Equip_shield_p3_clay and _p2_cel (lane E2) (4873 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/Props/MI_Equip_shield_Accent.uasset | material | 0.00 | original | UE 5.9 editor via MCP/Python | | | 2026-11-14 | B | n | duplicate of MI_Prop_ClayTimber (M_Toon), TeamColour the boosts manifest's Accent colour for shield (sRGB to linear); slot Accent of SM_Equip_shield_p3_clay and _p2_cel (lane E2) (4885 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/Props/SM_Equip_slow_puck_p3_clay.uasset | mesh | 0.10 | original | Blender 4.2 Python script (lane B2 boosts) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | sets-lab/boosts/export/SM_Equip_slow_puck_p3_clay.fbx by name, static mesh, prop frame = figure rest frame at the pivot; slots Clay/Accent bound to MI_Equip_slow_puck_Clay / _Accent; shown on its bone by SetBoostEquipped on the clay figure BP_SkaterVisual_TB1_P3 (lane E2) (102496 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/Props/SM_Equip_slow_puck_p2_cel.uasset | mesh | 0.10 | original | Blender 4.2 Python script (lane B2 boosts) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | sets-lab/boosts/export/SM_Equip_slow_puck_p2_cel.fbx by name, static mesh, prop frame = figure rest frame at the pivot; slots Clay/Accent bound to MI_Equip_slow_puck_Clay / _Accent; shown on its bone by SetBoostEquipped on the night figure BP_SkaterVisual_TB1 (lane E2) (102433 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/Props/MI_Equip_slow_puck_Clay.uasset | material | 0.00 | original | UE 5.9 editor via MCP/Python | | | 2026-11-14 | B | n | duplicate of MI_Prop_ClayTimber (M_Toon), TeamColour the boosts manifest's Clay colour for slow_puck (sRGB to linear); slot Clay of SM_Equip_slow_puck_p3_clay and _p2_cel (lane E2) (4891 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/Props/MI_Equip_slow_puck_Accent.uasset | material | 0.00 | original | UE 5.9 editor via MCP/Python | | | 2026-11-14 | B | n | duplicate of MI_Prop_ClayTimber (M_Toon), TeamColour the boosts manifest's Accent colour for slow_puck (sRGB to linear); slot Accent of SM_Equip_slow_puck_p3_clay and _p2_cel (lane E2) (4903 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/BP_SkaterVisual_TB1.uasset | other | 10.67 | original | Blender 4.2 Python script (lane S4) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | as the first E2 row above (lanes B4 to FILM3, E2), and: the four Boost* components now hold the props lane's SM_Equip_<kind>_p2_cel at the socket rule (pivot x inverse of the bone's reference-pose component transform: shotgun spine_03 (-29.80, 2.76, 0), hip_check pelvis (0, 3, 0), shield spine_03 (-18.70, 5.76, 0), slow_puck head (0.44, -34.97, 0), roll -90), SetBoostEquipped keeps one bool per kind (bEqShotgun, bEqHip, bEqShield, bEqSlow, bEqAny), EquipApply/EquipTick hide them while down or getting up (lane E2, job 5) (11185004 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/BP_SkaterVisual_TB1_P3.uasset | other | 10.87 | original | UE 5.9 editor via MCP/Python (Blueprint DSL) | | | 2026-11-14 | B | y | as the first E2 row above (lanes SKI3 to FILM3, E2), and: the four Boost* components now hold SM_Equip_<kind>_p3_clay at the socket rule (shotgun spine_03 (-32.32, 2.47, 0), hip_check pelvis (0, -5, 0), shield spine_03 (-21.22, 5.47, 0), slow_puck head (0.62, -32.51, 0), roll -90), SetBoostEquipped with one bool per kind, the props hidden while down or getting up (EquipApply/EquipTick), as BP_SkaterVisual_TB1 (lane E2, job 5) (11393953 bytes) |
+
+---
+
+# Third hand-back (part 3, the GPU film, the merge verdict; 15:50)
+
+## Merge verdict for 18:00: **merge**, with one named setting: the wind-up takes stay **off** (`bWindupTakes` false, the default) until device A answers how it times contact
+
+Every item was seen on a GPU (pid 17896, port 8004, 15:24 to 15:45) and every number holds:
+- **Seeded clay match on the GPU to 100 s** (sim 6000):
+  - 0 Blueprint errors, 0 `Error:` lines
+  - 6 knockdowns, all 6 get-ups end on the release (`SK6UPEND end_f` = `down_f`: 150/150, 150/150, 70/70, 95/95, 139/139, 150/150)
+  - sim lines identical to the headless runs (23 = 23 up to sim 6000)
+- **Celebrations play after both goals** in that match. Device A's code calls them, and they are now the figure lab's real takes. Nothing needs holding back.
+- **GPU released:** `C:\Users\kazda\jam\GPU-FREE.txt` = "free from E2 at 15:45". My editor left through `ExitEditor` and its process is confirmed gone. No editor is running.
+
+## Part 3: export36 and export37 imported by name; the props hidden on the knockdown's own frame
+- **export36** (`READY` 15:08), the 15 new takes per style:
+  - re-keyed over my stand-ins: `CrossCheck_Hold` (60 keys, loop), `CrossCheck_Release` (25 keys, contact frame 3), `Celebrate_ArmsUp` 91, `_StickRaise` 91, `_KneeGlide` 111, `_Mate` 61
+  - new: `CrossCheck_Hold_In` / `_Out` (7 keys), `CrossCheck_Wind` (33), `Check_Deliver_<Right|Left>[_Light|_Heavy]_Wind` (21 / 32 / 38)
+- **export37** (`READY` 15:31): `CrossCheck_Wind` and `Check_Deliver_<Right|Left>_Heavy_Wind` re-keyed over export36's. Same key counts; 3 per style replaced.
+- **The wind-ups**, behind a switch (both figures):
+  - Call `SetWindupTakes(bool bOn, int32 N)`; N 0 means 8. `bWindupTakes` defaults to false.
+  - With it on, `PlayCheck` plays `Check_Deliver_<side><size>_Wind` from frame 10 − N.
+  - `PlayCheckWindup(Frames)` (A's call) re-times the same take to frame 10 − Frames.
+  - `PlayCrossCheck(Frames)` with no hold plays `CrossCheck_Wind` from frame 10 − N (Frames when > 0) and skips the same frame's `PlayLift`.
+  - With it off, today's takes play unchanged (test figure W2: `Check_Deliver_Left_Light`; X1: `Lift_Light`).
+  - Measured headless: W0 from 0.033 s (frame 2); W1 re-timed by `PlayCheckWindup(4)` to 0.1 s (frame 6); X0 `CrossCheck_Wind` from frame 2.
+- **`_Hold_In` / `_Hold_Out` are imported but not wired**, with a reason:
+  - They are full-body takes with stance legs.
+  - Played in the default slot, they would stop a skating figure's stride for 6 frames.
+  - The hold stays as before: the real `CrossCheck_Hold` loop as an upper-body layer from `spine_01`, its weight ramped over 6 frames each way.
+  - Wiring them right needs an upper-body slot in the hold layer; that is the next step.
+  - Measured with the real Hold: legs 0.00 cm from the control; largest one-frame arm step 17.1 cm (clay) / 19.1 (night).
+- **The props on the knockdown's own frame:** `KnockDown` now calls `EquipApply` right after `bDown` is set. Test K0: shown on tick 39, **hidden on tick 40** (the knockdown's call frame), shown again on 151 after the get-up.
+- **Pickups fix found on the GPU:** `T_Boost_heavy_puck_Clay`, the violet one, had been imported as a normal map, so it rendered orange. I set its compression to Default and sRGB on; it is violet in the re-shot still. The other 11 textures were already Default.
+
+## The GPU film (what I looked at, with the Read tool)
+
+Stills are in `C:\Users\kazda\jam\wt\b-fig\devlog\shots\` as `20261114-154600-B-e2-*.png`, each with a `.txt` caption. 14 stills:
+
+| Shot | What I saw | Still |
+|---|---|---|
+| Held cross-check: **stick across the chest or a raised stick?** | **From the game camera: across the chest.** The stick is held nearly level in front of the chest and out to the left. **From the side at hip height** the shaft slants up past the face and could read as raised; the operator never sees that angle | `…-hold-gamecam-clay.png`, `…-hold-side-clay.png`, `…-night-figure-sheet.png` |
+| Release from the hold | A two-handed shove forward at chest height, 3 frames after the call; no snap | `…-release-clay.png` |
+| Four props on a skating figure | Keg over the green shield on the back, yellow bumper on the left back of the hips, snowflake crest on the helmet. **Nothing seen cutting into the jersey or arms**, clay and night, from behind, the side and the game camera | `…-props-back34-clay.png`, `…-props-behind-clay.png`, `…-props-gamecam-clay.png` |
+| Six pickups at 25 m and 45 m | Each tells apart by shape and colour at both distances. big_puck shows mostly its dark band from this side; its yellow faces are edge-on at its 40 deg tilt, and A's spin will turn them | `…-pickups-25-45m.png`, `…-pickups-25-45m-zoom.png` |
+| Celebrations on test figures | ArmsUp, KneeGlide, StickRaise (the stick level overhead), Mate: each reads at once | `…-celebrations-clay.png` |
+| Celebrations in a match | Goal 1 (sim 1095): the orange scorer in StickRaise. Goal 2 (sim 4043): orange 14 in KneeGlide, the mate's stick up beside him. The game camera, 44 frames after the goal, shows the GOAL banner but not the pair | `…-match-celebrate-scorer.png`, `…-match-celebrate-kneeglide.png`, `…-match-goal-gamecam.png` |
+| Wind-ups (switch on) | `CrossCheck_Wind` from frame 2: a low coil with the stick back, then the thrust | `…-crosscheck-wind-sheet.png` |
+
+- **Not seen:**
+  - The pickups on A's pedestal of light; these were bare meshes standing on the ice.
+  - The body-check wind-ups' heavy and middle sizes (only the light one was filmed).
+  - `_Hold_In` / `_Hold_Out`, which are not wired.
+  - Sound.
+- **The game camera does not follow a celebration:** the camera stays on the human, so after a goal the celebrating pair is often off screen. A could frame the scorer during the goal's pause; that is a question for A, not the figure.
+
+## For device A
+- **Merge:** `lane/b-fig` as it stands in the tree. Everything was saved before the GPU session; the only dirty package at exit was the `Rink` map, which held my test actors and was discarded.
+- **New calls:**
+  - `SetWindupTakes(bool bOn, int32 N)`
+  - `PlayCheckWindup(int32 Frames)` (the name A already sends)
+  - `PlayCrossCheck(int32 Frames)` plays the wind-up only with the switch on.
+- **To turn the wind-ups on** when A ships `check_windup_frames` / `cross_windup_frames` > 0: call `SetWindupTakes(true, <A's frames>)` on each figure, or set `bWindupTakes` on the class default. The take's contact (frame 10) then lands on A's contact frame.
+- `/JamAssets/Props` must be in the cook list (the pickups).
+
+## Decisions for the operator
+1. **The held cross-check reads as a stick across the chest from the game camera, but as a raised stick from the side.** Keep it (the game is played from behind), or ask the figure lab to lower the blade?
+2. **Wind-ups:** they stay off until A times the contact. The lab's ask is N = 8.
+
+## The next three steps
+1. Wire `_Hold_In` / `_Hold_Out` through an upper-body slot in the hold layer. Proving number: legs still 0.00 cm from the control through the in and out.
+2. Film the body-check wind-ups (middle, heavy) and the pickups on A's pedestal from the game camera in a boost cartridge.
+3. Turn the wind-ups on in a seeded match when A answers. Proving number: the take's contact frame lands on the sim's check event (0 frames off).
+
+## Ledger rows, part 3 (32: 30 takes, 2 Blueprints; the Blueprint rows replace the earlier ones; the 12 re-keyed takes replace their stand-in rows)
+
+| path | kind | size_mb | origin | tool | licence | url | date | device | shipped | note |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_CrossCheck_Hold.uasset | anim | 0.16 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | skf/export36/p2_cel (gate passed) loopcut file, take CrossCheck_Hold by name on SKEL_SkaterTB1v2, re-keyed by name over lane E2's stand-in; the ABP's hold layer (spine_01 up) loops it while SetCrossCheckHold is on (lane E2) (170236 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_CrossCheck_Release.uasset | anim | 0.15 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | skf/export36/p2_cel (gate passed) loopcut file, take CrossCheck_Release by name on SKEL_SkaterTB1v2, re-keyed by name over lane E2's stand-in; played from the hold by CrossRelease (PlayCrossCheck or a check bus event while held), contact frame 3 (lane E2) (152811 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_Celebrate_ArmsUp.uasset | anim | 0.21 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | skf/export36/p2_cel (gate passed) loopcut file, take Celebrate_ArmsUp by name on SKEL_SkaterTB1v2, re-keyed by name over lane E2's stand-in; PlayCelebrate(0) (lane E2) (223156 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_Celebrate_StickRaise.uasset | anim | 0.23 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | skf/export36/p2_cel (gate passed) loopcut file, take Celebrate_StickRaise by name on SKEL_SkaterTB1v2, re-keyed by name over lane E2's stand-in; PlayCelebrate(1) (lane E2) (237736 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_Celebrate_KneeGlide.uasset | anim | 0.23 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | skf/export36/p2_cel (gate passed) loopcut file, take Celebrate_KneeGlide by name on SKEL_SkaterTB1v2, re-keyed by name over lane E2's stand-in; PlayCelebrate(2) (lane E2) (246214 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_Celebrate_Mate.uasset | anim | 0.18 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | skf/export36/p2_cel (gate passed) loopcut file, take Celebrate_Mate by name on SKEL_SkaterTB1v2, re-keyed by name over lane E2's stand-in; PlayCelebrate(3), the nearest mate (lane E2) (188586 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_CrossCheck_Hold_In.uasset | anim | 0.11 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | skf/export36/p2_cel (gate passed) loopcut file, take CrossCheck_Hold_In by name on SKEL_SkaterTB1v2, a new asset; imported, not wired (full-body stance legs; needs an upper-body slot) (lane E2) (118526 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_CrossCheck_Hold_Out.uasset | anim | 0.11 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | skf/export36/p2_cel (gate passed) loopcut file, take CrossCheck_Hold_Out by name on SKEL_SkaterTB1v2, a new asset; imported, not wired (full-body stance legs; needs an upper-body slot) (lane E2) (118539 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_CrossCheck_Wind.uasset | anim | 0.16 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | skf/export37/p2_cel (gate passed; export37 replaced export36's take) loopcut file, take CrossCheck_Wind by name on SKEL_SkaterTB1v2, a new asset; behind bWindupTakes (default off): PlayCrossCheck plays it from frame 10-N, contact frame 10 (lane E2) (171559 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_Check_Deliver_Right_Wind.uasset | anim | 0.17 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | skf/export36/p2_cel (gate passed) loopcut file, take Check_Deliver_Right_Wind by name on SKEL_SkaterTB1v2, a new asset; behind bWindupTakes (default off): PlayCheck plays it from frame 10-N (PlayCheckWindup re-times), contact frame 10 (lane E2) (177743 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_Check_Deliver_Left_Wind.uasset | anim | 0.17 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | skf/export36/p2_cel (gate passed) loopcut file, take Check_Deliver_Left_Wind by name on SKEL_SkaterTB1v2, a new asset; behind bWindupTakes (default off): PlayCheck plays it from frame 10-N (PlayCheckWindup re-times), contact frame 10 (lane E2) (177730 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_Check_Deliver_Right_Light_Wind.uasset | anim | 0.14 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | skf/export36/p2_cel (gate passed) loopcut file, take Check_Deliver_Right_Light_Wind by name on SKEL_SkaterTB1v2, a new asset; behind bWindupTakes (default off): PlayCheck plays it from frame 10-N (PlayCheckWindup re-times), contact frame 10 (lane E2) (147357 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_Check_Deliver_Left_Light_Wind.uasset | anim | 0.14 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | skf/export36/p2_cel (gate passed) loopcut file, take Check_Deliver_Left_Light_Wind by name on SKEL_SkaterTB1v2, a new asset; behind bWindupTakes (default off): PlayCheck plays it from frame 10-N (PlayCheckWindup re-times), contact frame 10 (lane E2) (147344 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_Check_Deliver_Right_Heavy_Wind.uasset | anim | 0.17 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | skf/export37/p2_cel (gate passed; export37 replaced export36's take) loopcut file, take Check_Deliver_Right_Heavy_Wind by name on SKEL_SkaterTB1v2, a new asset; behind bWindupTakes (default off): PlayCheck plays it from frame 10-N (PlayCheckWindup re-times), contact frame 10 (lane E2) (177267 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_Check_Deliver_Left_Heavy_Wind.uasset | anim | 0.17 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | skf/export37/p2_cel (gate passed; export37 replaced export36's take) loopcut file, take Check_Deliver_Left_Heavy_Wind by name on SKEL_SkaterTB1v2, a new asset; behind bWindupTakes (default off): PlayCheck plays it from frame 10-N (PlayCheckWindup re-times), contact frame 10 (lane E2) (177140 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_CrossCheck_Hold.uasset | anim | 0.17 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | skf/export36/p3_clay (gate passed) loopcut file, take CrossCheck_Hold by name on SKEL_SkaterTB1_P3, re-keyed by name over lane E2's stand-in; the ABP's hold layer (spine_01 up) loops it while SetCrossCheckHold is on (lane E2) (179522 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_CrossCheck_Release.uasset | anim | 0.15 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | skf/export36/p3_clay (gate passed) loopcut file, take CrossCheck_Release by name on SKEL_SkaterTB1_P3, re-keyed by name over lane E2's stand-in; played from the hold by CrossRelease (PlayCrossCheck or a check bus event while held), contact frame 3 (lane E2) (162097 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_Celebrate_ArmsUp.uasset | anim | 0.23 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | skf/export36/p3_clay (gate passed) loopcut file, take Celebrate_ArmsUp by name on SKEL_SkaterTB1_P3, re-keyed by name over lane E2's stand-in; PlayCelebrate(0) (lane E2) (241185 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_Celebrate_StickRaise.uasset | anim | 0.24 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | skf/export36/p3_clay (gate passed) loopcut file, take Celebrate_StickRaise by name on SKEL_SkaterTB1_P3, re-keyed by name over lane E2's stand-in; PlayCelebrate(1) (lane E2) (247029 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_Celebrate_KneeGlide.uasset | anim | 0.25 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | skf/export36/p3_clay (gate passed) loopcut file, take Celebrate_KneeGlide by name on SKEL_SkaterTB1_P3, re-keyed by name over lane E2's stand-in; PlayCelebrate(2) (lane E2) (266163 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_Celebrate_Mate.uasset | anim | 0.19 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | skf/export36/p3_clay (gate passed) loopcut file, take Celebrate_Mate by name on SKEL_SkaterTB1_P3, re-keyed by name over lane E2's stand-in; PlayCelebrate(3), the nearest mate (lane E2) (197879 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_CrossCheck_Hold_In.uasset | anim | 0.11 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | skf/export36/p3_clay (gate passed) loopcut file, take CrossCheck_Hold_In by name on SKEL_SkaterTB1_P3, a new asset; imported, not wired (full-body stance legs; needs an upper-body slot) (lane E2) (118552 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_CrossCheck_Hold_Out.uasset | anim | 0.11 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | skf/export36/p3_clay (gate passed) loopcut file, take CrossCheck_Hold_Out by name on SKEL_SkaterTB1_P3, a new asset; imported, not wired (full-body stance legs; needs an upper-body slot) (lane E2) (118565 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_CrossCheck_Wind.uasset | anim | 0.16 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | skf/export37/p3_clay (gate passed; export37 replaced export36's take) loopcut file, take CrossCheck_Wind by name on SKEL_SkaterTB1_P3, a new asset; behind bWindupTakes (default off): PlayCrossCheck plays it from frame 10-N, contact frame 10 (lane E2) (169886 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_Check_Deliver_Right_Wind.uasset | anim | 0.17 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | skf/export36/p3_clay (gate passed) loopcut file, take Check_Deliver_Right_Wind by name on SKEL_SkaterTB1_P3, a new asset; behind bWindupTakes (default off): PlayCheck plays it from frame 10-N (PlayCheckWindup re-times), contact frame 10 (lane E2) (177769 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_Check_Deliver_Left_Wind.uasset | anim | 0.17 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | skf/export36/p3_clay (gate passed) loopcut file, take Check_Deliver_Left_Wind by name on SKEL_SkaterTB1_P3, a new asset; behind bWindupTakes (default off): PlayCheck plays it from frame 10-N (PlayCheckWindup re-times), contact frame 10 (lane E2) (177756 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_Check_Deliver_Right_Light_Wind.uasset | anim | 0.14 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | skf/export36/p3_clay (gate passed) loopcut file, take Check_Deliver_Right_Light_Wind by name on SKEL_SkaterTB1_P3, a new asset; behind bWindupTakes (default off): PlayCheck plays it from frame 10-N (PlayCheckWindup re-times), contact frame 10 (lane E2) (147383 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_Check_Deliver_Left_Light_Wind.uasset | anim | 0.14 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | skf/export36/p3_clay (gate passed) loopcut file, take Check_Deliver_Left_Light_Wind by name on SKEL_SkaterTB1_P3, a new asset; behind bWindupTakes (default off): PlayCheck plays it from frame 10-N (PlayCheckWindup re-times), contact frame 10 (lane E2) (147370 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_Check_Deliver_Right_Heavy_Wind.uasset | anim | 0.17 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | skf/export37/p3_clay (gate passed; export37 replaced export36's take) loopcut file, take Check_Deliver_Right_Heavy_Wind by name on SKEL_SkaterTB1_P3, a new asset; behind bWindupTakes (default off): PlayCheck plays it from frame 10-N (PlayCheckWindup re-times), contact frame 10 (lane E2) (175843 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_Check_Deliver_Left_Heavy_Wind.uasset | anim | 0.17 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | skf/export37/p3_clay (gate passed; export37 replaced export36's take) loopcut file, take Check_Deliver_Left_Heavy_Wind by name on SKEL_SkaterTB1_P3, a new asset; behind bWindupTakes (default off): PlayCheck plays it from frame 10-N (PlayCheckWindup re-times), contact frame 10 (lane E2) (175548 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/BP_SkaterVisual_TB1.uasset | other | 11.02 | original | Blender 4.2 Python script (lane S4) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | as the job-5 E2 row above (lanes up to FILM3, E2 jobs 1 to 5), and: the equipped props hidden on the knockdown's own frame (EquipApply called in KnockDown right after bDown), the wind-up takes behind bWindupTakes (bool, default false) with WindN (int, 0 = 8) and WindT0: SetWindupTakes(bool, int), ChkCut branches to ChkCutWind (Check_Deliver_<side><size>_Wind from frame 10-N), PlayCheckWindup(int) re-times it, PlayCrossCheck(int) plays CrossCheck_Wind via CrossWind when not held (lane E2, part 3) (11552300 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/BP_SkaterVisual_TB1_P3.uasset | other | 11.22 | original | UE 5.9 editor via MCP/Python (Blueprint DSL) | | | 2026-11-14 | B | y | as the job-5 E2 row above (lanes up to FILM3, E2 jobs 1 to 5), and: the equipped props hidden on the knockdown's own frame (EquipApply called in KnockDown right after bDown), the wind-up takes behind bWindupTakes (bool, default false) with WindN (int, 0 = 8) and WindT0: SetWindupTakes(bool, int), ChkCut branches to ChkCutWind (Check_Deliver_<side><size>_Wind from frame 10-N), PlayCheckWindup(int) re-times it, PlayCrossCheck(int) plays CrossCheck_Wind via CrossWind when not held (lane E2, part 3) (11761301 bytes) |
+
+---
+
+# Fourth hand-back (headless, 16:10 onward): the hold's in and out through the hold layer, the middle and heavy wind-ups proved, export38
+
+Headless editor pid 14124 (port 8004, started 15:52). The tree is as it was merged; dev-b is not merged into it. 0 Blueprint errors in every session.
+
+## The hold's in and out, while the legs keep skating
+- **What changed** (both animation Blueprints; there is no new skeleton slot):
+  - The hold layer (`LayeredBoneBlend_0`, `spine_01` up, mesh space) now takes its pose from two Blend Poses by Bool:
+    - `BlendListByBool_9` on `bHoldOut`: `CrossCheck_Hold_Out` through `SequenceEvaluator_2` at `HoldOutT`
+    - otherwise `BlendListByBool_10` on `bHoldIn`: `CrossCheck_Hold_In` through `SequenceEvaluator_0` at `HoldInT`
+    - otherwise the `CrossCheck_Hold` loop through `SequenceEvaluator_3` at `HoldLoopT`
+  - Blend times are 0. The loop's time starts at 0 where Hold_In ends (Hold@0).
+  - The old `SequencePlayer_9` is left unconnected.
+  - New ABP variables: `bHoldIn`, `bHoldOut`, `HoldInT`, `HoldOutT`, `HoldLoopT`.
+  - The figure's `HoldTick` sets them:
+    - in for the first 0.1 s after `SetCrossCheckHold(true)`
+    - out from `false` on
+    - the loop time is (t − 0.1) mod 0.9833 s
+  - The 6-frame weight ramp stays: the in and out takes start and end on stance, so the weight carries the change from and to the skating arms.
+- **Proving numbers** (test figures `fa_I`, clay `w6_cI2`, night `w6_nI2`):
+  - **Legs (feet, calves, thighs, pelvis, root) 0.00 cm from a control figure through in, hold and out**, at 6 m/s and at 9 m/s, clay and night, ticks 0 to 219.
+  - **The in and out are what plays:**
+    - Against the earlier ramp-only hold, the right hand differs by 21.6 cm on tick 33 and 19.5 cm on tick 155, and by 0.0 to 0.3 cm once held.
+    - With the takes, the hand travels out at the side at waist height (z 78 to 80 cm). The plain blend dipped it through the body (z 70, y 4).
+  - **Largest one-frame arm step:** 24.3 cm (clay) / 26.6 cm (night) on the last frame of the in, against the control's 2.2 / 2.5 cm and 17.1 for the ramp-only blend. The brace is a fast 6-frame move. Not seen on a GPU.
+- **Not done:** I could not set the Blend list's "reset child on activation" from Python. I made the loop an evaluator on its own time instead, so it is not needed.
+
+## The middle and heavy body-check wind-ups, switch on
+- A test call `TestChkCut(Size, bRight)` sets the check size and cuts.
+- Results (`SetWindupTakes(true, 0)`, so N = 8, start frame 2 on tick 30; the contact frame 10 is due on tick 38):
+
+  | Figure | Take | Hand forward peak (clay) | Night |
+  |---|---|---|---|
+  | M1 | `Check_Deliver_Right_Wind` | hand_r 103.2 cm on **tick 38** | 103.6 on 38 |
+  | M2 | `Check_Deliver_Left_Wind` | hand_l 104.9 on **38** | 109.4 on 38 |
+  | M3 | `Check_Deliver_Right_Heavy_Wind` (export37) | hand_r 96.4 on **39** | 96.4 on 39 |
+  | M4 | `Check_Deliver_Left_Heavy_Wind` (export37) | hand_l 96.7 on **40** | 96.8 on 40 |
+  | C1 / C2, switch off | `Check_Deliver_Right` / `_Heavy` | unchanged (peaks 46 / 68 cm on 32 / 37) | same |
+
+- The middle wind-ups peak exactly on the contact frame. The heavy ones peak 1 to 2 frames after it: the heavy follows through past the contact.
+
+## export38: `Stride` imported by name (its `DIFF.md` names only `Stride`)
+- **Import:** `C:\Users\kazda\jam\skater-lab\skf\export38\READY.txt` (16:14). `Stride` was re-keyed by name from the loopcut file, 60 keys, both styles (`replaced`, 60 → 60). The other 163 takes are key-identical to export37 by the lab's `DIFF.md`, so I did not touch them.
+- **The loop and its joins** (component-space joints, every key):
+  - last key against the first: 0.46 cm (cel) / 0.42 cm (clay), the same as before the import
+  - largest key-to-key step inside the loop: 6.44 / 5.32 cm, the same as before
+  - so the wrap keeps
+- **Shaft against the thighs** (my axis measure: the nearest distance from the stick shaft, socket to blade point, to the thigh-to-calf line; not the skin):
+
+  | Style | Before | After |
+  |---|---|---|
+  | cel | min 1.83 cm (key 1), 26 keys under 5 cm | min 1.75 cm (key 21), 32 keys under 5 cm |
+  | clay | min 4.64 cm (key 4), 5 keys under 5 cm | min 2.21 cm (key 17), 20 keys under 5 cm |
+
+  By this crude measure the shaft runs nearer the leg's axis in the changed frames, which **contradicts the lab's skin measure** (legs 12 → 0 frames cel, 6 → 0 clay). Two caveats:
+  - My line-to-line distance knows no skin or volume.
+  - The tree's `Stride` before the import may not have been export37's. I measured it 1.9 to 3.1 cm lower on the back in the props check, which suggests an older solve.
+
+  **Not proved either way headless.** One GPU look from the game camera at a striding figure decides it.
+- **Seeded clay match after all of this** (`m5`, headless, to sim 7156):
+  - sim lines 26 = 26, identical to m1
+  - 0 Blueprint errors
+  - all 7 get-ups end on the release (`end_f` = `down_f`)
+  - `PlayCelebrate` 4 times, `PlayCrossCheck` 10 times, as before
+
+## Verdict for a later merge: **merge** the hold's in and out and the wind-up proofs (the wind-ups stay off). **Merge `Stride` only after one GPU look**
+- **The hold's in and out:**
+  - legs exactly as a control figure at 6 and 9 m/s, 0 errors, the match unchanged
+  - the brace is a fast 6-frame move: the arms' largest step is 24 to 27 cm in a frame; take one look on a GPU when the window allows
+- **`Stride`** is the loop the game plays most. Hold it out of a package until a GPU look at a striding figure shows the shaft clear of the front thigh: my axis numbers contradict the lab's skin measure. Without that look, leave the tree's `Stride` as merged (revert the re-key) and ship the rest.
+
+## Not verified
+- Nothing in this hand-back was seen on a GPU (headless only, as asked).
+- The shaft against the skin in `Stride`.
+- The hold's in and out in motion.
+
+## For device A
+- Nothing new to call.
+- `TestChkCut(int32 Size, bool bRight)` is a test call only.
+
+## Decisions for the operator
+1. `Stride` from export38: take it after one look from the game camera, or keep the merged one?
+
+## The next three steps
+1. A GPU look at `Stride` (export38) and at the hold's in and out from the game camera.
+2. Delete the unconnected `SequencePlayer_9` from both animation Blueprints once the in and out are accepted.
+3. The heavy wind-ups' peak one to two frames after the contact: ask the lab whether the heavy contact should move to frame 11, or time A's contact to the peak.
+
+## Ledger rows, fourth hand-back (6 rows; they replace the earlier rows of the same files)
+
+| path | kind | size_mb | origin | tool | licence | url | date | device | shipped | note |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Game/Plugins/JamAssets/Content/Skaters/ABP_SkaterTB1.uasset | anim | 0.98 | original | Blender 4.2 Python script (lane S4) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | as the job-1 E2 row (lanes B4 to SK30, E2), and: the hold layer's pose through two Blend Poses by Bool (bHoldOut: CrossCheck_Hold_Out on HoldOutT; bHoldIn: CrossCheck_Hold_In on HoldInT; else the CrossCheck_Hold loop through a Sequence Evaluator on HoldLoopT), blend 0; SequencePlayer_9 left unconnected (lane E2, fourth hand-back) (1029336 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/ABP_SkaterTB1_P3.uasset | other | 0.98 | original | UE 5.9 editor via MCP/Python | | | 2026-11-14 | B | y | as the job-1 E2 row (lanes SKI3 to SK30, E2), and: the hold layer's in, loop and out as ABP_SkaterTB1 on the P3 takes (lane E2, fourth hand-back) (1025198 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/BP_SkaterVisual_TB1.uasset | other | 11.12 | original | Blender 4.2 Python script (lane S4) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | as the part-3 E2 row above, and: HoldTick sets the ABP's bHoldIn (first 0.1 s of the hold), bHoldOut, HoldInT, HoldOutT and HoldLoopT ((t-0.1) mod 0.9833 s); test call TestChkCut(Size, bRight) (lane E2, fourth hand-back) (11656719 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/BP_SkaterVisual_TB1_P3.uasset | other | 11.32 | original | UE 5.9 editor via MCP/Python (Blueprint DSL) | | | 2026-11-14 | B | y | as the part-3 E2 row above, and: HoldTick drives the hold layer's in, loop and out, and TestChkCut, as BP_SkaterVisual_TB1 (lane E2, fourth hand-back) (11865740 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_Stride.uasset | anim | 0.19 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | skf/export38/p2_cel (gate passed) loopcut file, take Stride by name, re-keyed in place on SKEL_SkaterTB1v2, 60 keys: the stick heel carried farther forward on frames 13 to 34 (the shaft out of the front thigh, by the lab's skin measure); loop join 0.46 cm unchanged; not yet seen on a GPU (lane E2, fourth hand-back) (200781 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_Stride.uasset | anim | 0.20 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | skf/export38/p3_clay (gate passed) loopcut file, take Stride by name, re-keyed in place on SKEL_SkaterTB1_P3, 60 keys: the stick heel farther forward on frames 13 to 34; loop join 0.42 cm unchanged; not yet seen on a GPU (lane E2, fourth hand-back) (210094 bytes) |
+
+---
+
+# Fifth hand-back (GPU, 16:30 to 16:43): `Stride` and the hold's in and out settled on the GPU
+
+GPU editor pid 34268, port 8004, tree `b-fig`. It left through `ExitEditor` at 16:43 and its process is confirmed gone. `C:\Users\kazda\jam\GPU-FREE.txt` = "free from E2 at 16:43". No dirty package at exit. The tree is not changed: I added no asset, and the temporary export37 copies are deleted.
+
+## Verdict per item
+| Item | Verdict | Why |
+|---|---|---|
+| export38 `Stride` | **merge (keep)** | **Seen:** from the stick side at hip height on frames 17, 21, 25 and 28, export38's shaft runs **in front of the front knee**, clay and night. export37's shaft runs **into the front thigh** on the same frames. My axis measure from the fourth hand-back was misleading. From the game camera the shaft is mostly behind the body in both versions, so no difference reads there. Not reverted |
+| Hold in / out (`CrossCheck_Hold_In` / `_Out` in the hold layer) | **merge** | The 6-frame brace reads at 6 and 9 m/s, side-on and from the game camera. The stick comes up along the front of the body to across the chest and goes back down to the ice. **No frame shows a hand through the body**, clay and night |
+| Seeded clay match on the GPU to 100 s | **pass** | 0 Blueprint errors. All 6 get-ups end on the release (`end_f` = `down_f`). Sim lines identical to the earlier GPU match (23 = 23) |
+
+- **How it was compared:**
+  - export37's `Stride` was imported by name as a temporary take (`AS_…_X34_Stride`, both styles) and looped on a figure beside export38's.
+  - Afterwards both temporary assets were deleted: `delete_asset` true, and no `X34` file is left under `Skaters/`.
+
+## Stills (`C:\Users\kazda\jam\wt\b-fig\devlog\shots\20261114-164000-B-e2-*.png`, each with a caption; I looked at each with the Read tool)
+- `stride-side-clay`, `stride-side-night`: export38 (top) against export37 (bottom), frames 17 / 21 / 25 / 28
+- `stride-cycle-clay`: the whole cycle side-on, both versions
+- `stride-gamecam-clay`: both versions from the game camera
+- `hold-inout-6ms-clay`, `hold-inout-9ms-clay`, `hold-inout-gamecam-clay`, `hold-inout-6ms-night`
+
+## Not verified
+- Stride_Sprint and Glide; the lab says they are unchanged.
+- The hold's in and out at the moment a hit lands.
+
+## Ledger
+No new rows: no asset changed in this GPU session, and the fourth hand-back's rows stand.
+
+---
+
+# Sixth hand-back (GPU, 16:52 to 17:03): export39's eight takes
+
+GPU editor pid 32188, port 8004. It left through `ExitEditor` at 17:03 and its process is confirmed gone. `GPU-FREE.txt` = "free from E2 at 17:03". No dirty package at exit. The temporary copies of the previous takes (`AS_…_X38_*`) were deleted and none is left on disk.
+
+## Import (export39 `READY` 16:52), by name from the loopcut file, only where `DIFF.md` lists the take
+- **cel (`p2_cel`), 7 re-keyed:** `Crossover_Left` 40, `Crossover_Right` 40, `Lean_Right` 30, `Trip` 27, `GetUp_Side_Left` 37, `GetUp_Late_Side_Left` 21, `GetUp_LateLong_Side_Right` 37 keys.
+- **clay (`p3_clay`), 7 re-keyed:** `Crossover_Left`, `Lean_Right`, `Trip`, `GetUp_Side_Left`, `GetUp_Late_Side_Left`, `GetUp_LateLong_Side_Right`, `Check_Hit_Right` 21.
+- Not touched: cel `Check_Hit_Right` and clay `Crossover_Right`, which are key-identical in export39.
+
+## Verdict per take: **merge all eight** (none reverted)
+| Take | Verdict | What I saw (side-on from the stick side, at hip height, against the tree's previous take played beside it) |
+|---|---|---|
+| `Crossover_Left` | merge | clay and night: the shaft passes **in front of the shins**; before, it ran into the front shin and knee on frames 6 to 24 |
+| `Crossover_Right` (cel) | merge | night: the shaft in front of the knees; before, through the knee line |
+| `Lean_Right` | merge | clay and night: the shaft farther forward, in front of the front shin, through the held carve |
+| `Trip`, `GetUp_Side_Left`, `GetUp_Late_Side_Left`, `GetUp_LateLong_Side_Right`, `Check_Hit_Right` (clay) | merge | not filmed one by one. The lab's gate shows 0 leg frames, the first and last frames are untouched (joins 0.0000 cm), and the match below plays get-ups on the release |
+
+- **Seeded clay match on the GPU to 100 s:**
+  - 0 Blueprint errors, 0 `Error:` lines
+  - all 6 get-ups end on the release (`end_f` = `down_f`)
+  - sim lines identical to the earlier GPU matches (23 = 23)
+
+## Stills (`devlog\shots\20261114-170000-B-e2-*.png` with captions; each looked at)
+`crossover-left-clay`, `crossover-left-night`, `lean-right-clay`, `lean-right-night`, `crossover-right-night`.
+
+## Not verified
+- The five rarer takes (the trip, the side get-ups, the clay hit reaction) were not filmed one by one.
+- The turns from the game camera.
+
+## Ledger rows, sixth hand-back (14 takes; they replace these files' earlier rows)
+
+| path | kind | size_mb | origin | tool | licence | url | date | device | shipped | note |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_Crossover_Left.uasset | anim | 0.15 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | skf/export39/p2_cel (gate passed, 0 leg frames) loopcut file, take Crossover_Left by name, re-keyed in place on SKEL_SkaterTB1v2: the stick moved out of the legs (DIFF.md), first and last frames as before; seen on the GPU for the turns (lane E2, sixth hand-back) (159568 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_Lean_Right.uasset | anim | 0.14 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | skf/export39/p2_cel (gate passed, 0 leg frames) loopcut file, take Lean_Right by name, re-keyed in place on SKEL_SkaterTB1v2: the stick moved out of the legs (DIFF.md), first and last frames as before; seen on the GPU for the turns (lane E2, sixth hand-back) (145032 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_Trip.uasset | anim | 0.16 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | skf/export39/p2_cel (gate passed, 0 leg frames) loopcut file, take Trip by name, re-keyed in place on SKEL_SkaterTB1v2: the stick moved out of the legs (DIFF.md), first and last frames as before; seen on the GPU for the turns (lane E2, sixth hand-back) (163769 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_GetUp_Side_Left.uasset | anim | 0.16 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | skf/export39/p2_cel (gate passed, 0 leg frames) loopcut file, take GetUp_Side_Left by name, re-keyed in place on SKEL_SkaterTB1v2: the stick moved out of the legs (DIFF.md), first and last frames as before; seen on the GPU for the turns (lane E2, sixth hand-back) (171734 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_GetUp_Late_Side_Left.uasset | anim | 0.14 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | skf/export39/p2_cel (gate passed, 0 leg frames) loopcut file, take GetUp_Late_Side_Left by name, re-keyed in place on SKEL_SkaterTB1v2: the stick moved out of the legs (DIFF.md), first and last frames as before; seen on the GPU for the turns (lane E2, sixth hand-back) (146748 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_GetUp_LateLong_Side_Right.uasset | anim | 0.16 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | skf/export39/p2_cel (gate passed, 0 leg frames) loopcut file, take GetUp_LateLong_Side_Right by name, re-keyed in place on SKEL_SkaterTB1v2: the stick moved out of the legs (DIFF.md), first and last frames as before; seen on the GPU for the turns (lane E2, sixth hand-back) (169080 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1v2_Crossover_Right.uasset | anim | 0.15 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | n | skf/export39/p2_cel (gate passed, 0 leg frames) loopcut file, take Crossover_Right by name, re-keyed in place on SKEL_SkaterTB1v2: the stick moved out of the legs (DIFF.md), first and last frames as before; seen on the GPU for the turns (lane E2, sixth hand-back) (159316 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_Crossover_Left.uasset | anim | 0.16 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | skf/export39/p3_clay (gate passed, 0 leg frames) loopcut file, take Crossover_Left by name, re-keyed in place on SKEL_SkaterTB1_P3: the stick moved out of the legs (DIFF.md), first and last frames as before; seen on the GPU for the turns (lane E2, sixth hand-back) (168822 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_Lean_Right.uasset | anim | 0.15 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | skf/export39/p3_clay (gate passed, 0 leg frames) loopcut file, take Lean_Right by name, re-keyed in place on SKEL_SkaterTB1_P3: the stick moved out of the legs (DIFF.md), first and last frames as before; seen on the GPU for the turns (lane E2, sixth hand-back) (153315 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_Trip.uasset | anim | 0.17 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | skf/export39/p3_clay (gate passed, 0 leg frames) loopcut file, take Trip by name, re-keyed in place on SKEL_SkaterTB1_P3: the stick moved out of the legs (DIFF.md), first and last frames as before; seen on the GPU for the turns (lane E2, sixth hand-back) (174746 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_GetUp_Side_Left.uasset | anim | 0.18 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | skf/export39/p3_clay (gate passed, 0 leg frames) loopcut file, take GetUp_Side_Left by name, re-keyed in place on SKEL_SkaterTB1_P3: the stick moved out of the legs (DIFF.md), first and last frames as before; seen on the GPU for the turns (lane E2, sixth hand-back) (184560 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_GetUp_Late_Side_Left.uasset | anim | 0.14 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | skf/export39/p3_clay (gate passed, 0 leg frames) loopcut file, take GetUp_Late_Side_Left by name, re-keyed in place on SKEL_SkaterTB1_P3: the stick moved out of the legs (DIFF.md), first and last frames as before; seen on the GPU for the turns (lane E2, sixth hand-back) (148822 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_GetUp_LateLong_Side_Right.uasset | anim | 0.16 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | skf/export39/p3_clay (gate passed, 0 leg frames) loopcut file, take GetUp_LateLong_Side_Right by name, re-keyed in place on SKEL_SkaterTB1_P3: the stick moved out of the legs (DIFF.md), first and last frames as before; seen on the GPU for the turns (lane E2, sixth hand-back) (172716 bytes) |
+| Game/Plugins/JamAssets/Content/Skaters/AS_SkaterTB1_P3_Check_Hit_Right.uasset | anim | 0.15 | original | Blender 4.2 Python script (lane SKF) + UE 5.9 via MCP/Python | | | 2026-11-14 | B | y | skf/export39/p3_clay (gate passed, 0 leg frames) loopcut file, take Check_Hit_Right by name, re-keyed in place on SKEL_SkaterTB1_P3: the stick moved out of the legs (DIFF.md), first and last frames as before; seen on the GPU for the turns (lane E2, sixth hand-back) (152251 bytes) |

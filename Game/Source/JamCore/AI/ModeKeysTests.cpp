@@ -184,7 +184,7 @@ bool FJamModeKeysPenalty::RunTest(const FString& Parameters)
 		Sim->SetPuck(FVector2D(20, 15), FVector2D::ZeroVector);
 		Sim->SetSkater(O, FVector2D(0, 0), FVector2D::ZeroVector, 0);
 		// Lane A192: the window opens game.contact.check_windup_frames after the press: the charger starts that much ground farther out, the scene runs that much longer.
-		const int32 Wu = Sim->GetConfig().Contact.CheckWindupFrames;
+		const int32 Wu = Sim->GetConfig().Contact.CheckWindupFor(Sim->GetSkaters()[Me].bHuman);   // lane A200: the presser's own (bot_check_windup_frames for a bot)
 		Sim->SetSkater(Me, FVector2D(-1.2 - 8.0 * Wu / 60.0, 0), FVector2D(8, 0), 0);
 		TArray<FJamInput> In;
 		In.SetNum(Sim->GetSkaters().Num());

@@ -111,6 +111,7 @@ bool FJamBotPlayerBotWins::RunTest(const FString& Parameters)
 	// wins it 3:0 and 3:2). The gate plays them with the wind-ups at 0; Jam.Core.Contact.* and the ladder's cells cover the wind-ups.
 	Cart->Game.Contact.CheckWindupFrames = 0;
 	Cart->Game.Contact.CrossWindupFrames = 0;
+	Cart->Game.Contact.BotCheckWindupFrames = Cart->Game.Contact.BotCrossWindupFrames = -1;   // lane A200: and the bots' own
 	const JamAI::FJamMatchConfig C = JamAI::ToMatchConfig(Cart->Game);
 	const int32 Pi = C.PlayerIndex();
 	const int32 PlayerTeam = C.Skaters[Pi].Team;

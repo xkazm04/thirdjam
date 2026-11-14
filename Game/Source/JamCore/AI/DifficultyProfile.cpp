@@ -198,6 +198,7 @@ namespace JamAI
 			// Lane A193 (BRAIN-7.md): the rules of evolution 7 (brain7 switches them off)
 			if (std::strcmp(Key, "hk_true_speed") == 0) { K.Hk.bTrueSpeed = V != 0.0; return true; }
 			if (std::strcmp(Key, "hk_true_gap") == 0) { K.Hk.bTrueGap = V != 0.0; return true; }
+			if (std::strcmp(Key, "hk_windup_brake") == 0) { K.Hk.bWindupLeadNoBrake = V != 0.0; return true; }   // lane A200 (CONTACT-12.md): no wind-up lead on a braking carrier
 
 			if (std::strcmp(Key, "hk_mate_drive_m") == 0) { K.Hk.MateDriveM = V; return true; }
 			if (std::strcmp(Key, "hk_screen_frames") == 0) { K.Hk.ScreenFrames = static_cast<int>(V); return true; }

@@ -21,6 +21,7 @@
 #include "JamSim.h"
 #include "JamEventBus.h"
 #include "JamRandom.h"
+#include "JamCarrierMarks.h"
 
 struct FJamCarryDrill
 {
@@ -67,6 +68,11 @@ struct FJamCarryDrill
 	double SecondLeadMinM = -100.0;
 	double SecondStopMps = 2.0;
 	double SecondCutDeg = 60.0;
+	// Lane A201 (track F2 evolution 11, MOVEMENT-12.md): the stop on the light. 0 or more: the stop begins this many frames after the stop's line first lights
+	// (JamCarrierMarks::StopMark, the rule the screen draws), wherever the defender then is, instead of at BrakeAtM; -1 = at BrakeAtM (every script before).
+	int32 LightReactFrames = -1;
+	int32 LitAt = -1;           // the frame the line first lit (-1: not yet)
+	double LightGapM = -1.0;    // the gap at which the stop on the light began
 
 	// The scene and the run.
 	int32 Me = -1, Def = -1;
@@ -86,7 +92,7 @@ struct FJamCarryDrill
 	{
 		End = Running; Frames = Phase = PhaseFrames = 0; PastFrame = -1;
 		BrakeFrames = DefLifts = DefPokes = DefChecks = BodyShieldRefused = 0;
-		Side = 0.0; MinGapM = 1e9; GoWait = -1; GoFrames = -1; SecondAt = -1; SecondCount = 0; LeadRef = 0.0;
+		Side = 0.0; MinGapM = 1e9; GoWait = -1; GoFrames = -1; SecondAt = -1; SecondCount = 0; LeadRef = 0.0; LitAt = -1; LightGapM = -1.0;
 		bPoked = bLifted = bDown = bBodyBefore = false;
 		Me = Sim.GetHumanIndex();
 		Def = -1;
@@ -174,7 +180,13 @@ struct FJamCarryDrill
 		if (bStopAndGo && Frames >= SettleFrames)
 		{
 			const double CutRad = FMath::DegreesToRadians(LiveCutDeg);
-			if (Phase == 0 && Gap <= LiveBrakeAtM) { Phase = bBrake ? 1 : 2; PhaseFrames = 0; Side = D.Pos.Y - S.Pos.Y >= 0.0 ? -1.0 : 1.0; }
+			bool bBegin = Phase == 0 && LightReactFrames < 0 && Gap <= LiveBrakeAtM;
+			if (Phase == 0 && LightReactFrames >= 0)   // lane A201: on the light, after the hand's lag
+			{
+				if (LitAt < 0 && JamCarrierMarks::StopMark(Sim, Me).bLit) LitAt = Frames;
+				if (LitAt >= 0 && Frames - LitAt >= LightReactFrames) { bBegin = true; LightGapM = Gap; }
+			}
+			if (bBegin) { Phase = bBrake ? 1 : 2; PhaseFrames = 0; Side = D.Pos.Y - S.Pos.Y >= 0.0 ? -1.0 : 1.0; }
 			if (Phase == 1 && (S.Vel.Size() <= GoBelowMps || PhaseFrames >= 45))
 			{
 				// The go comes ReactFrames after the carrier is slow enough (the stop is held meanwhile).

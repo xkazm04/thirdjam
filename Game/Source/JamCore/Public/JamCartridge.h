@@ -386,6 +386,16 @@ struct JAMCORE_API FJamContactConfig
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") bool bCrossHold = true;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 CheckWindupFrames = 4;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 CrossWindupFrames = 4;
+	// Lane A200 (track F1, evolution 11; docs/experiments/CONTACT-12.md): the bots' own wind-ups. bot_check_windup_frames, bot_cross_windup_frames: the same two
+	// rules for a skater the sim does not seat as a human (FJamSkaterState::bHuman false: every bot of both sides; the online guest's seat is a human), so the
+	// bots' wind-up can be longer than the human's, whose own press must not feel late. -1 = the shared value above (the neutral value: the same state hash;
+	// JamBaseline::MakeNeutral sets it). Ship ON (the Director, 15:53, from CONTACT-12.md's table): the bots' body check 8 (133 ms, an eye's beat), their
+	// cross-check 12; the human keeps 4 / 4. A cartridge that sets the key overrides it (0..12). CheckWindupFor / CrossWindupFor are the one place the sim,
+	// the brain's adapter and the tests read them.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 BotCheckWindupFrames = 8;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 BotCrossWindupFrames = 12;
+	int32 CheckWindupFor(bool bHuman) const { return (!bHuman && BotCheckWindupFrames >= 0) ? BotCheckWindupFrames : CheckWindupFrames; }
+	int32 CrossWindupFor(bool bHuman) const { return (!bHuman && BotCrossWindupFrames >= 0) ? BotCrossWindupFrames : CrossWindupFrames; }
 	// Lane A157 (track F1, evolution 6; CONTACT-7.md section 3): the lunge as a motion. A pressed check was a window on an ordinary collision and its lunge
 	// (lunge_mps) a number in the impulse: the body did nothing, a miss cost nothing. With lunge_frames above 0 a press that opens a window commits the body
 	// for that many frames: lunge_step_mps is added to its velocity along its facing at once (and counts in the hit as real closing speed: the impulse's own

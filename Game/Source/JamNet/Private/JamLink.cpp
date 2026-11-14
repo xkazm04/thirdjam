@@ -86,9 +86,20 @@ void FJamUdpLink::FlushHeld()
 	if (N) Held.RemoveAt(0, N);
 }
 
+void FJamUdpLink::CutFor(double Seconds)
+{
+	CutUntil = FPlatformTime::Seconds() + FMath::Max(0.0, Seconds);
+}
+
+bool FJamUdpLink::IsCut() const
+{
+	return CutUntil > 0.0 && FPlatformTime::Seconds() < CutUntil;
+}
+
 bool FJamUdpLink::Send(const TArray<uint8>& Bytes)
 {
 	if (!Socket || !Peer.IsValid()) return false;
+	if (IsCut()) return true;   // lane A204: the cut wire swallows it
 	// Counted as offered to the wire: the bandwidth figure is what the game sends; what the (simulated) wire loses is its business.
 	BytesSent += Bytes.Num();
 	++PacketsSent;
@@ -125,6 +136,7 @@ bool FJamUdpLink::Recv(TArray<uint8>& Out)
 	uint32 Ip = 0; int32 Port = 0;
 	while (RecvFrom(Out, Ip, Port))
 	{
+		if (IsCut()) continue;   // lane A204: arrived while the wire is cut: lost
 		if (!Peer.IsValid()) return true;
 		uint32 PeerIp = 0; Peer->GetIp(PeerIp);
 		if (PeerIp == Ip && Peer->GetPort() == Port) return true;

@@ -51,7 +51,7 @@ namespace JamBaseline
 		G.Contact.bCheckCooldownRestart = false; G.Contact.BoardSlamFrames = 0;   // lane A165 (track F1): game.contact.check_cooldown_restart, game.contact.board_slam_frames (ship at false and 0)
 		G.Contact.TakeShieldFrames = 0; G.Contact.bTakeShieldHumanSide = false; G.Contact.TakeShieldStaggerMax = 0;   // lane A177 (track F1): game.contact.take_shield_frames, take_shield_human_side, take_shield_stagger_max (ship at 0, false, 0)
 		G.Skater.FreeSpeedMult = 1.0;             // lane A185 (track F2 evolution 9, R-0064 point 2): game.skater.free_speed_mult (default 1.15)
-		G.Contact.bCrossHold = false; G.Contact.CheckWindupFrames = 0; G.Contact.CrossWindupFrames = 0;   // lane A184 (track F1): game.contact.cross_hold, check_windup_frames, cross_windup_frames
+		G.Contact.bCrossHold = false; G.Contact.CheckWindupFrames = 0; G.Contact.CrossWindupFrames = 0; G.Contact.BotCheckWindupFrames = G.Contact.BotCrossWindupFrames = -1;   // lane A200: bot_*_windup_frames absent; lane A184 (track F1): game.contact.cross_hold, check_windup_frames, cross_windup_frames
 		G.Skater.BreakawaySpeedBonus = 0.2;       // lane A194 (track F2 evolution 10): game.skater.breakaway.speed_bonus (default 0.3)
 		// THE NEXT LANE: your rule's neutral value here, one line.
 	}

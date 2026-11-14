@@ -17,6 +17,8 @@
 #include "InputMapping.h"
 #include "CameraFollow.h"
 #include "DirectorsCallController.h"
+#include "DirectorsCallWidget.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Engine/World.h"
 #include "Engine/GameInstance.h"
 #include "EngineUtils.h"
@@ -602,13 +604,20 @@ void ALobbyGameMode::EndMatch(const FString& Title, const FString& Subtitle, con
 	UE_LOG(LogJamNet, Warning, TEXT("JAMNET match ended: %s (%s)"), *Reason, Driver ? *Driver->DescribeStats() : TEXT(""));
 	LogProofLine(TEXT("ended"));
 	if (Lobby) Lobby->NotifyMatchEnded(Reason);
-	if (APlayerController* PC = GetWorld()->GetFirstPlayerController()) Card = ULobbyCardWidget::Show(PC, Title, Subtitle);
+	if (APlayerController* PC = GetWorld()->GetFirstPlayerController()) Card = ULobbyCardWidget::Show(PC, Title, EndCardSubtitle(Subtitle));   // lane A204: the way back
 }
 
 void ALobbyGameMode::Tick(float DeltaSeconds)
 {
 	if (!bLockstep)
 	{
+		if (Card)
+		{
+			// Lane A204: the end card steps aside while the pause card (its QUIT is the way back to the menu) is open, and comes back when it closes.
+			const UJamDirectorsCallController* PauseCard = UJamDirectorsCallController::Get(this);
+			const ESlateVisibility Want = (PauseCard && PauseCard->IsMenuOpen()) ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible;
+			if (Card->GetVisibility() != Want) Card->SetVisibility(Want);
+		}
 		if (GetWorld() && GetWorld()->IsPaused()) return;   // lane A204: single player's pause as before (this actor now ticks when paused, for the lockstep)
 		Super::Tick(DeltaSeconds);
 		return;
@@ -746,7 +755,18 @@ bool ALobbyGameMode::RefuseSimChange(const TCHAR* What)
 
 void ALobbyGameMode::ShowLine(const FString& Line)
 {
-	UE_LOG(LogJamNet, Log, TEXT("JAMNET screen: %s"), *Line);
-	if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 6.f, FColor::Orange, Line);
+	// Lane A204 (track N1): the line goes to the HUD's announcement line (the Director's Call overlay, a real widget). It went through
+	// GEngine->AddOnScreenDebugMessage, which Shipping and Test builds compile out: no player of a Shipping package ever read it.
+	const int32 HudCount = RouteLineToHud(this, Line, GetSim() ? GetSim()->GetFrame() : 0);
+	UE_LOG(LogJamNet, Log, TEXT("JAMNET screen: %s (hud=%d)"), *Line, HudCount);
+}
+
+int32 ALobbyGameMode::RouteLineToHud(const UObject* WorldContext, const FString& Line, int64 SimFrame)
+{
+	TArray<UUserWidget*> Found;
+	UWidgetBlueprintLibrary::GetAllWidgetsOfClass(const_cast<UObject*>(WorldContext), Found, UJamDirectorsCallHudWidget::StaticClass(), false);
+	int32 N = 0;
+	for (UUserWidget* W : Found) if (UJamDirectorsCallHudWidget* H = Cast<UJamDirectorsCallHudWidget>(W)) { H->ShowAnnouncement(Line, SimFrame + LineFrames); ++N; }
+	return N;
 }
 

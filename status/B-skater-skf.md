@@ -4813,3 +4813,296 @@ Five things that still look wrong:
 3. **At the moment of a hit the two figures are in each other.** The checker's front leg is where the other man's legs are for a frame or two. From the game camera it is one blob; close up it is two toys pushed together. `20261114-040847-B-lab-skf32-contact-side.png`.
 4. **A man lying on the ice still looks like a dropped toy.** The small moves I gave him while he lies (a forearm dragged in, a knee drawn up) cannot be made out at game size; the film says so, and no more work went into them. `20261114-032247-B-film1-lying.png`.
 5. **The new get-up from the back is a scramble.** He rolls, turns a quarter turn on the ice, lifts his head and drops it again before he is on a knee. The numbers I was asked for are met; in the stills it works; I do not trust it until it has been seen moving, and it is the get-up a player sees most. `20261114-061844-B-lab-skf35-getup-roll.png` (the second row).
+
+## Thirty-sixth pass: hits with a wind-up; the held cross-check; celebrations (SKF36, 14:16 to 15:08)
+
+Done, all three jobs, as new takes beside the old ones (no take of export35 changed). **The body check (three sizes, both shoulders) and the cross-check have a wind-up: contact on frame 10 after the call (167 ms), the coil formed by frame 5 and deepest at 7.** **The held cross-check is a 60-frame upper-body loop with its 6-frame in and out and a release with contact on frame 3.** **Four celebrations, 60 to 110 frames, each from and to Glide frame 0.** `C:\Users\kazda\jam\skater-lab\skf\export36\` is complete: 164 takes (149 + 15 new), the gate green (328 rows, 0 failing, the one known row). Looked at from the game camera and the side, both styles, on the final build. One Blender process of this lane at a time (checked in the process list; the other Blender processes seen were not mine); CPU renders only, no git, no editor.
+
+### For the engine lane
+
+| Take | Frames (last frame index) | Start pose | End pose | Contact frame | What triggers it |
+|---|---|---|---|---|---|
+| `Check_Deliver_Right_Wind`, `Check_Deliver_Left_Wind` | 37 | stance (Check@0) | stance | **10** | `PlayCheckWindup(Frames)` / `PlayCheck` on the press: play from frame `10 - Frames` (whole take for 10) |
+| `Check_Deliver_Right_Light_Wind`, `Check_Deliver_Left_Light_Wind` | 20 | stance | stance | **10** | as above, light band |
+| `Check_Deliver_Right_Heavy_Wind`, `Check_Deliver_Left_Heavy_Wind` | 31 | stance | stance | **10** | as above, heavy band |
+| `CrossCheck_Wind` | 32 | stance | stance | **10** | `PlayCrossCheck(Frames)` on the press: play from frame `10 - Frames` |
+| `CrossCheck_Hold_In` | 6 | stance | Hold@0 | - | `SetCrossCheckHold(true)` |
+| `CrossCheck_Hold` | 60, loop (loopcut file: 59) | Hold@0 | Hold@0 | - | while braced; upper body from `spine_01` up, layered over Glide / Stride / Stride_Sprint |
+| `CrossCheck_Hold_Out` | 6 | Hold@0 | stance | - | `SetCrossCheckHold(false)` without a hit |
+| `CrossCheck_Release` | 24 | Hold@0 | stance | **3** | the braced hit (`bCrossBraceHit`): start it 3 frames before the bodies meet if the sim can tell, else on the hit (frames 0 to 2 are a 1-frame draw-in) |
+| `Celebrate_ArmsUp` | 90 | glide (Glide@0) | glide | - | `PlayCelebrate(arms_up)` / index 0, the scorer |
+| `Celebrate_StickRaise` | 90 | glide | glide | - | `PlayCelebrate(stick_raise)` / index 1, the scorer |
+| `Celebrate_KneeGlide` | 110 | glide | glide | - | `PlayCelebrate(knee_glide)` / index 2, the scorer (down on the left knee 16 to 70) |
+| `Celebrate_Mate` | 60 | glide | glide | - | `PlayCelebrate` index 3, the nearest mate (two stick lifts at 7 and 16, the free arm up 30 to 42) |
+
+The answer to device A's question (A-to-B-0027 1a, CONTACT-10 section 3): **call on the press and land on our contact frame**, the take started at `10 - N` for the wind-up N the sim uses. Our ask: **N = 8** (start at frame 2: the whole coil is seen, 133 ms of wait); **6 is the floor** (start at 4: the coil is a frame short of formed, still read in the sheets); at A's recommended 4 the take starts on frame 6, inside the coil, and the eye gets two frames of it before the drive: it reads as a quick dip, not a wind-up. The trade, plainly: every frame of wind-up is a sixtieth of a second the player waits for the hit; CONTACT-10 measured 6 / 6 at -4.0 / -2.3 points (pro / all_star) against 0.0 / 0.0 for 4 / 4. A blend-in of 3 to 4 frames into the take's start frame is assumed.
+
+### 1. The hits with a wind-up
+
+How: `coil36(k)`: the trunk turned away from the victim (the hitting shoulder drawn back), down 11 cm x size, the stick swung out low to the stick side, the head held on the victim; formed at 5, a little deeper at 7, two frames into the old take's pre-contact frame (9) and its contact (10). After the contact every key is the old take's, 7 frames later (the cross-check 8). The light one draws the free glove to the chest (its contact is the glove). The cross-check's coil: the bar cocked high under the chin in both hands, elbows back, low over the skates; at the belly (first try) it looked like the shove itself from the game camera.
+
+| Take | Shoulder line turned at the coil (frame 7) against frame 0, deg (p2_cel / p3_clay) | Hips' lowest / start height cm | Contact frame against the old take's contact frame, largest joint difference cm |
+|---|---|---|---|
+| Check_Deliver_Right_Wind | -36.6 / -40.1 | 63 / 78 (cel) | 0.0 / 0.0 |
+| Check_Deliver_Left_Wind | 31.0 / 25.9 | 63 / 78 | 0.0 / 0.0 |
+| Check_Deliver_Right_Light_Wind | -24.1 / -26.1 | 67 / 78 | 0.0 / 0.5 |
+| Check_Deliver_Left_Light_Wind | 24.1 / 23.6 | 67 / 78 | 0.0 / 0.4 |
+| Check_Deliver_Right_Heavy_Wind | -41.6 / -44.2 | 60 / 91 | 69 / 41 (the free glove only; body, shoulders and stick within 2, the top hand 10; equal again by contact +4) |
+| Check_Deliver_Left_Heavy_Wind | 32.5 / 32.4 | 60 / 91 | 16 / 14 (the free glove) |
+| CrossCheck_Wind | 0 / -1.2 (square: its wind-up is the bar drawn in and up) | 61 / 78 | 0.0 / 0.0, and every frame after the contact equal to Lift's (0.0 cm) |
+
+- The heavy's free glove at contact is not where export35 had it: the pop pass spreads the arm's fling differently after the coil. Everything else meets the old contact pose; the pairing measures of the thirty-first to thirty-fourth passes hold for the body.
+- Largest one-frame bone turn from frame 3 on: 60.0 at the most (clay, Check_Deliver_Left_Wind, clavicle at 8; the gate's line is 60, passed); a one-frame coil-to-drive (first build) popped the clavicle 98 deg: now two frames.
+- **What it looks like** (`skf36-hits-*`): from the game camera the coil is clear in frames 4 to 8: the figure drops and the stick swings out to the right, the back twisted; then the drive. The cross-check's coil reads less: from behind the cocked bar and the shove are both a level bar, told apart by the crouch and the bar's height. The body check is the stronger picture.
+
+### 2. The held cross-check
+
+| Measure (p2_cel / p3_clay) | CrossCheck_Hold |
+|---|---|
+| Shaft to horizontal, every frame | 2 deg / 2 deg |
+| Shaft across the body (90 = straight across) | 84 / 84 deg |
+| Stick socket (top hand) height | 97 to 99 / 92 to 94 cm (chest to shoulder) |
+| Bottom hand on the shaft | 61 of 61 frames, gap at most 0.07 / 0.08 cm |
+| In / Out / Release / CrossCheck_Wind: bottom hand on the shaft | every frame, gap at most 0.18 / 0.2 cm (a first build copied Lift's keys before the twentieth pass mends them: clay's bottom hand was 14.5 cm off in the way back; now Lift's mended way back) |
+
+The loop breathes 1 cm (the hips and the bar); the legs are the stance's so the take also plays alone. From the game camera the long level shaft out to the left of the body is the signal at every frame of the loop (`skf36-hold-*`).
+
+### 3. Celebrations
+
+Each starts and ends on Glide frame 0 (the ready glide, not the tackling stance: the tackling stance's bottom hand sits 3.8 cm from the glide's, the gate's first find). Head's largest one-frame rise 10 cm in ArmsUp and StickRaise (the jump up to full height between 8 and 16), 2 to 3 cm in the others. ArmsUp: both arms up in a V, the stick in the top hand pointing up, two pumps. StickRaise: the stick held level overhead in both hands, rocked side to side. KneeGlide: down on the left knee by 16, fist pumps, leaning back with both arms up until 70, up by 98. Mate: two stick lifts in front and the free arm up, 60 frames.
+
+### The export
+
+`C:\Users\kazda\jam\skater-lab\skf\export36\`: `READY.txt` (written last, `Takes:` line), `DIFF.md` (against export35: no take differs; 15 new named), `JOINS.md` (159 pairs, the lying joins; the new takes' joins are the gate's, `gate_joins_skf36.txt`), `GATE.md`.
+
+- Gate: 328 take-and-style rows, 0 failing, 1 passing on the known list (Aim_N46_R100 on clay); 164 takes found and checked per style. Joins of the 15 new takes: 0.0000 cm, 0.000 deg at both ends, both styles.
+- Bones, parents, rest pose, meshes, stick files as export35; root identity keys in all 164 takes; 60 fps. Pop limits: 0 of 160 played takes over, both styles.
+
+### Not looked at, and known gaps
+
+- **Nothing of export36 has been seen in the engine or in motion**; stills every one to ten frames only.
+- The hold was looked at alone on the stance legs, not layered over a stride (the engine's blend); the bar's height over a sprint lean is not measured.
+- The left-shoulder and left-light wind takes: by their numbers only (the sheets show the right ones).
+- The travel table (backward frames over the ice) was not run for the wind takes; the hips stay over the root in the coil (at most 3 to 4 cm back), and after the contact the take is the old one.
+- Celebrations: no taunt, nothing pointed at anyone; whether they read as joyful in motion is not seen.
+
+### Files
+
+- Lab: `build_clips.py` (the thirty-sixth pass block), `it36.sh`, `sheet36.sh`, `meas36.py`, `tab36.js`, `gate_joins_skf36.txt`.
+- Sheets in `devlog/shots/`: `20261114-145649-B-lab-skf36-hits-p2_cel.png`, `-hits-p3_clay`, `-hold-p2_cel`, `-hold-p3_clay`, `-celeb-p2_cel`, `-celeb-p3_clay`, each with its `.txt`.
+
+### The next three evolutions of this track, ranked
+
+1. **Seen in the engine**: the wind takes at the chosen N, the hold layered over Stride_Sprint, the release on a braced hit. Proving number: the engine's film shows the coil on at least 4 frames at N = 8 and the bar level within 10 deg over a sprint.
+2. **A cross-check wind-up that reads from behind**: the bar drawn back over the stick-side shoulder (a diagonal) rather than level under the chin. Proving number: the game-camera mask of frame 7 against frame 10 differs by at least 1800 px (not measured today).
+3. **The heavy's free glove at contact back where export35 had it** (69 / 41 cm off today): the pop window kept off the free arm in the wind takes. Proving number: contact-frame joint difference under 2 cm for all six wind takes.
+
+## Thirty-seventh pass: a cross-check wind-up that reads from behind; the heavy's free glove; the hold over the stride; the travel table (SKF37, 15:10 to 15:31)
+
+Done, all four. **`CrossCheck_Wind`'s coil is now a slanted bar (38 deg below level, from the stick-side shoulder down to the left, the blade low out to the left) in frames 4 to 8, the level shove at contact 10 as before.** **The heavy wind takes' free glove at contact is 0.0 / 0.0 cm (cel) and 0.0 / 1.0 cm (clay, right / left) from export35's** (69 / 41 cm in export36). **`CrossCheck_Hold` layered from spine_01 over `Stride` and `Stride_Sprint` (mesh space): the shaft is inside the legs, trunk or head in 0 of 61 frames each, both styles; nothing needed fixing.** **The travel table: 0 backward frames in every wind row, at all three speeds, both styles (and 0 before contact).** `C:\Users\kazda\jam\skater-lab\skf\export37\` is complete: 164 takes, 3 changed against export36, each named in `DIFF.md`; gate green. One Blender process of this lane at a time; CPU only; no git, no editor.
+
+### For the engine lane
+
+| Take | What changed | Frames, poses, contact |
+|---|---|---|
+| `CrossCheck_Wind` | the coil only (frames 1 to 9): a slanted bar instead of a level one | 32, stance to stance, contact 10; frames 10 on key-identical to export36 |
+| `Check_Deliver_Right_Heavy_Wind`, `Check_Deliver_Left_Heavy_Wind` | the coil at 4, the old take's load key at 7, the free glove at contact on export35's | 31, stance to stance, contact 10 |
+| everything else | nothing | 161 takes key-identical to export36 |
+
+Re-import only these three if export36 is already in; the calls are unchanged (play from `10 - N`).
+
+### 1. A cross-check wind-up that reads from behind
+
+The coil (`XC37_COIL`, formed at 5, deepest at 7): the top hand rises to the stick-side shoulder (stick socket 0.99 / 1.05 m at 4 / 7 on cel, from 0.86 at the stance), the shaft goes down to the left at 38 deg below level with the blade low beside the left skate, the trunk loaded 12 deg to the stick side, the head on the victim. At 10 the shaft is level (2 deg above) as in export36. **What it looks like** (`skf37-xcheck-*`, export36 above export37): from the game camera the coil is a short slanted stick low on the left; the shove is the long level bar at chest height: two silhouettes. It is not the bar carried "over the shoulder" (the knob is at the shoulder, the blade stays low); a bar over the shoulder was not tried in this pass. Gate: shaft through the trunk on 1 frame (3; the line is 3), largest one-frame turn 51.7 / 53.7 deg (lowerarm_r, 4 to 5).
+
+### 2. The heavy wind takes' free glove
+
+The cause was the pop pass: the old take reaches its contact from its load in two one-frame steps (legal before frame 3, where the line is 115 deg); at frames 8 to 10 the line is 55 and the pass spread a 107 deg swing of the free arm over frames 5 to 13. Now the old load key is frame 7 (two frames to the pre-contact frame 9), the coil is at 4, and the pre-contact glove is a quarter of the way to the contact's (its step into contact was 63 deg).
+
+| Take | Free glove at contact against export35's, cm (p2_cel / p3_clay): export36 | export37 | Largest joint difference at contact, export37 |
+|---|---|---|---|
+| Check_Deliver_Right_Heavy_Wind | 69 / 41 | **0.0 / 0.0** | 9.6 / 9.0 cm, the stick-side forearm (the top hand and stick within 0.0; the elbow's carried bend) |
+| Check_Deliver_Left_Heavy_Wind | 16 / 14 | **0.0 / 1.0** | 0.3 / 0.5 cm |
+
+The coil reads as before at 4 to 6; at 7 the figure is in the old load (the trunk turned 18 deg, not 42).
+
+### 3. The hold over the stride
+
+`layer37.py`: every bone from spine_01 down its chain takes `CrossCheck_Hold`'s armature-space rotation at frame f mod 60, every other bone and the pelvis's place `Stride`'s / `Stride_Sprint`'s at f; baked into `HoldOver_Stride` and `HoldOver_Stride_Sprint` (61 frames), then clear29.py's measure on the skinned body (shaft samples every 2.5 cm, a sample inside when behind the nearest face; the gate's line 5 cm more than 3 cm in).
+
+| Layered take (p2_cel / p3_clay) | Frames with shaft samples inside legs / trunk / head | Lowest shaft point m |
+|---|---|---|
+| HoldOver_Stride | 0 / 0 / 0 of 61, both styles (not a single sample inside) | 1.01 / 0.96 |
+| HoldOver_Stride_Sprint | 0 / 0 / 0 of 61, both styles | 0.96 / 0.92 |
+| (`Stride` alone, for reference, export37 = export35) | legs/trunk: 12 frames (16 to 30) cel, 6 (17 to 23) clay | 0.02 / -0.01 |
+
+- The shaft never comes near a leg: at chest height the nearest body part to every sample is an arm or a glove (so the measure has no "least distance" to legs or trunk to give).
+- **What it looks like** (`skf37-layer-*`, every fourth frame): the legs stride, the level shaft holds at chest height out to the left in every frame from the game camera. From the side the trunk stays as upright as the hold's (mesh space keeps the upper body's orientation while the stride's hips pitch): over the sprint it leans back a little against the legs. Nothing to fix for the shaft; whether the upright trunk over a sprint reads as braced or stiff is a question for the engine's film.
+- Found on the way, not mine to fix today: **`Stride` alone has the shaft more than 3 cm inside the front thigh on 12 / 6 frames** (the clear29 measure; the gate does not check legs). The same in export35.
+
+### 4. The travel table for the wind takes (travel34.js's rule; `travel37.js`)
+
+The attacker's root moves at the closing speed until contact, at the sim's speed after it (body: 0.4 v + 0.15; cross-check: max(0, 0.5 v - 1.5)); counted, frames in which the hips move backwards over the ice. Added: the same count before contact (the coil) at the closing speed.
+
+| Take | Contact | Speeds m/s | Backward frames after contact, p2_cel / p3_clay | Before contact |
+|---|---|---|---|---|
+| Check_Deliver_Right_Light_Wind, _Left_Light_Wind | 10 | 2, 3, 3.85 | 0, 0, 0 / 0, 0, 0 | 0 |
+| Check_Deliver_Right_Wind, _Left_Wind | 10 | 3.85, 6, 7.7 | 0, 0, 0 / 0, 0, 0 | 0 |
+| Check_Deliver_Right_Heavy_Wind, _Left_Heavy_Wind | 10 | 7.7, 9, 11 | 0, 0, 0 / 0, 0, 0 | 0 |
+| CrossCheck_Wind | 10 | 3.85, 6, 7.7 | 0, 0, 0 / 0, 0, 0 | 0 |
+
+**0 backward frames in all 7 wind rows at all speeds, both styles.** The hips at contact and their farthest are the old takes' (12 / 12, 58 / 60, 53 / 69 cm; 0 for the cross-check).
+
+### The export
+
+`C:\Users\kazda\jam\skater-lab\skf\export37\`: `READY.txt` (last), `DIFF.md` (3 takes, each with its reason), `JOINS.md` (159 pairs, at most 0.0005 cm), `GATE.md`.
+
+- Gate: 328 rows, 0 failing, 1 on the known list (Aim_N46_R100 on clay); 164 takes per style; the three changed takes' joins 0.0000 cm / 0.000 deg at both ends. Pop limits: 0 of 160 played takes over. Root identity keys, 60 fps, bones, rest pose, meshes and stick files as export36.
+
+### Not looked at, and known gaps
+
+- Nothing of export37 seen in the engine or in motion.
+- The layering is my reproduction of a mesh-space layered blend per bone, not the engine's node; the engine's own film is the proof.
+- The left-side heavy and the left cross-check side: numbers only.
+- The cross-check coil was judged by eye from stills; no mask number.
+
+### Files
+
+- Lab: `build_clips.py` (the thirty-seventh pass block; the twentieth pass mend of `Lift` carries `CrossCheck_Wind`'s first three keys from it), `it37.sh`, `layer37.py`, `meas37.py`, `travel37.js`, `tab37.js`, `sheet37.sh`, `gate_joins_skf37.txt`; `work37/layer_<style>.blend` (the layered takes).
+- Sheets in `devlog/shots/`: `20261114-152957-B-lab-skf37-xcheck-p2_cel.png`, `-xcheck-p3_clay`, `-layer-p2_cel`, `-layer-p3_clay`, each with its `.txt`.
+
+### The next three evolutions of this track, ranked
+
+1. **The engine's film of export36/37**: the wind takes at the chosen N, the hold over a sprint. Proving number: the coil visible on at least 4 frames at N = 8; the shaft level within 10 deg over the sprint in the film.
+2. **`Stride`'s shaft out of the front thigh** (12 / 6 frames today, the clear29 measure). Proving number: 0 frames with 5 cm of shaft more than 3 cm inside a leg, both styles.
+3. **The heavy wind's stick-side forearm at contact** (9.6 / 9.0 cm from export35's). Proving number: under 2 cm for every joint at contact in all six wind takes.
+
+## Thirty-eighth pass: the shaft out of Stride's front thigh; a leg check in the gate (SKF38, 15:34 to 16:14)
+
+Done. **`Stride`: frames with 5 cm of shaft more than 3 cm inside a leg 12 -> 0 (cel) and 6 -> 0 (clay); inside the trunk 0 in both.** The loop's wrap, Burst's end (`Stride@0`) and the dash lane's `Dash_End` landing (`Stride@34`) are untouched: frames 0 to 13 and 34 to 60 have the same joint positions as export37 (0.000 cm). **`Stride_Sprint` and `Glide`: 0 leg frames and 0 trunk frames, both styles** (they had none). **The gate now judges the shaft through a leg** (the same measure and line as the trunk). **Step 3 (the heavy wind forearm) is not done**: one fix tried and taken back. `C:\Users\kazda\jam\skater-lab\skf\export38\` is complete: 164 takes, 1 changed (`Stride`); gate green with the new check. One Blender process of this lane at a time; CPU only; no git, no editor.
+
+### For the engine lane
+
+| Take | What changed | What to do |
+|---|---|---|
+| `Stride` | the stick heel carried up to 7 cm farther forward on frames 13 to 34 (full from 17 to 28, 0 at 13 and 34); the same stick angles; frames 0 to 13 and 34 to 60 unchanged | re-import it; nothing else changes (the 163 other takes are key-identical to export37) |
+
+### 1. The shaft out of the front thigh
+
+Where it was (clear29's measure on export37): frames 14 to 30 on cel, 17 to 23 on clay, the shaft 3.4 to 4.1 cm inside the support thigh while the other leg pushes; the gate's leg line (2 samples, 5 cm) on 12 / 6 frames. The fix is a new opt-in in the bake, `stick_bump` (frames, ramps, dx, dy): the stick's heel moved by up to dx with a flat top and smooth ramps, exactly 0 at the window's ends, so every frame outside it is solved as before. `P38["stride_dx"]` = 0.07 m; the window 13 to 34.
+
+Two windows were tried first and taken back: from frame 4, a stick 1 cm farther forward at frames 6 to 8 put the clay shaft into the belly (it already lies 3.9 cm in there on one sample) and failed the trunk line; from frame 10, the stick met the clay figure's recovering knee at 12. From 13 neither happens.
+
+| Measure (p2_cel / p3_clay) | export37 | export38 |
+|---|---|---|
+| Stride: frames with 5 cm of shaft more than 3 cm inside a leg | 12 / 6 | **0 / 0** |
+| Stride: frames with the same inside the trunk | 0 / 0 | **0 / 0** |
+| Stride: deepest single shaft sample in a leg / the trunk, cm | 3.9 / 3.2, 4.1 / 3.9 | 3.7 / 5.3, 4.0 / 3.9 (single samples, under the line; one more on cel in the trunk) |
+| Stride_Sprint: leg / trunk frames | 0 / 0, 0 / 0 | 0 / 0, 0 / 0 |
+| Glide: leg / trunk frames | 0 / 0, 0 / 0 | 0 / 0, 0 / 0 |
+| Stride frames 0 to 13 and 34 to 60 against export37: largest joint position / bone rotation difference | | 0.000 cm / 0.09 deg (cel), 0.000 cm / 0.08 deg (clay) |
+| Burst, Glide, Stride_Sprint against export37 (unchanged takes, the same read-back) | | 0.000 cm / 0.07 to 0.09 deg |
+
+- The rotation differences of 0.03 to 0.09 deg are on every frame of every take read back twice from FBX (Burst, Glide and Stride_Sprint are key-identical and show the same), so frame 34 and frame 0 are as they were: the joins to `Glide` (by Burst), `Burst` (`Stride@0`, JOINS.md 0 cm, 0 deg) and `Dash_End` (`Stride@34`) keep. No other take of this lab starts or ends on a Stride frame (the joins files list only `Burst end=Stride@0`).
+- Top hand on the stick: the gate's hand check passes (the right arm reaches 0.98 of its length at the most, the grip within 0.2 cm); bottom hand on the shaft in every frame (gap at most 0.2 cm). Lowest body / skate / stick 12.34 / 0.05 / 0.69 cm (cel), 12.34 / 0.14 / 0.17 (clay): nothing under the ice.
+- Inside the window the joints move up to 19 cm (cel) / 11 cm (clay) from export37's: the arms follow the stick forward.
+- **What it looks like** (`skf38-stride-p2_cel`, export37 above export38, game camera and front): no visible change at game size; from the front the stick is seen end-on and the change cannot be told either. I did not render a side view from the stick side, and did not open the clay sheet.
+
+### 2. The leg check in the gate
+
+`gate_fbx.py` has measured the shaft against the legs since the twenty-ninth pass and `gate_md.js` did not judge it. Now it does: a new column `Shaft through a leg, frames` and a check `legs` that fails at 3 frames or more, as the trunk (the old program is `gate_md_v2.js`; GATE-README point 11). Run on export37 it fails `Stride` on both styles, as it should. **Nine other rows already had it in export37** and are on `gate_known_skf38.txt` as `legs`: Crossover_Left (4 frames cel, 31 clay), Crossover_Right (11 cel), Lean_Right (31 cel), GetUp_Side_Left (4), GetUp_Late_Side_Left (3), GetUp_LateLong_Side_Right (4), Trip (5) on cel, Check_Hit_Right (8) on clay. The crossovers and the lean are played in matches; they are the next stick jobs.
+
+### 3. The heavy wind takes' stick-side forearm (step 3): not done
+
+I tried carrying the old take's roll and bend state into the wind take from its load key (a new opt-in, `seed_at`, still in the bake): the stick-side forearm at contact went from 9.6 to 12.1 cm (cel). Taken back; the two heavy wind takes are key-identical to export37 (the free glove 0.0 cm as there).
+
+### The export
+
+`C:\Users\kazda\jam\skater-lab\skf\export38\`: `READY.txt` (last), `DIFF.md` (1 take, `Stride`, with its reason), `JOINS.md` (159 pairs, at most 0.0005 cm), `GATE.md` (with the leg column).
+
+- Gate: 328 rows, 0 failing, 10 on the known list (the clay aim hold's shaft; the nine `legs` rows above); 164 takes per style. Pop limits: 0 of 160 played takes over. Root identity keys, 60 fps, bones, rest pose, meshes and stick files as export37.
+
+### Not looked at, and known gaps
+
+- Nothing of export38 seen in the engine or in motion; the stride's change was not seen from the stick side.
+- The dash lane's `Dash_End` was not read: its landing is checked by Stride@34 being unchanged, not by the dash lane's own join.
+- One single shaft sample in cel's trunk now 5.3 cm deep (1 sample; the line is 2).
+
+### Files
+
+- Lab: `build_clips.py` (the thirty-eighth pass block; the bake's `stick_bump` and `seed_at`), `it38.sh`, `cmp38.py`, `tab38.js`, `sheet38.sh`, `gate_md.js` (the leg check; `gate_md_v2.js` the old one), `gate_known_skf38.txt`, `gate_joins_skf38.txt`, GATE-README point 11.
+- Sheets in `devlog/shots/`: `20261114-161257-B-lab-skf38-stride-p2_cel.png`, `-stride-p3_clay`, each with its `.txt`.
+
+### The next three evolutions of this track, ranked
+
+1. **The crossovers and the lean out of the legs**: `Crossover_Left` (4 / 31 frames), `Crossover_Right` (11 cel), `Lean_Right` (31 cel), played in every turn. Proving number: 0 leg frames in all three, both styles, their loops seamless; off the known list.
+2. **The engine's film of export36 to 38**: the wind takes, the hold over a sprint, the stride. Proving number: the coil seen on at least 4 frames at N = 8; no stick through a leg in the film.
+3. **The heavy wind's stick-side forearm at contact** (9.6 / 9.0 cm). A different way than carrying state: the forearm's bend direction given on the load and pre-contact keys (`er`) as the contact's. Proving number: under 2 cm for every joint at contact in all six wind takes.
+
+## Thirty-ninth pass: the shaft out of the legs in the turns, and in every other take (SKF39, 16:16 to 16:52)
+
+Done, and the rest of the list too. **Frames with 5 cm of shaft more than 3 cm inside a leg are now 0 in every one of the 164 takes, both styles: the gate's known list has no leg row left** (only the clay aim hold's trunk row, as before). The turns: `Crossover_Left` 4 -> 0 (cel) and 31 -> 0 (clay), `Crossover_Right` 11 -> 0 (cel), `Lean_Right` 31 -> 0 (cel). The rest: `Trip` 5 -> 0, `GetUp_Side_Left` 4 -> 0, `GetUp_Late_Side_Left` 3 -> 0, `GetUp_LateLong_Side_Right` 4 -> 0 (cel), `Check_Hit_Right` 8 -> 0 (clay). `C:\Users\kazda\jam\skater-lab\skf\export39\` is complete: 7 takes changed per style (8 names), each named in `DIFF.md`; gate green. One Blender process of this lane at a time; CPU only; no git, no editor.
+
+### For the engine lane
+
+| Take | Styles changed | What changed | Joins |
+|---|---|---|---|
+| `Crossover_Left` | both | the stick heel 10 cm to the left, the stick turned 12 deg left about it, on every key | loop, seam 0 cm |
+| `Crossover_Right` | cel only | the heel 6 cm back, turned 12 deg left, every key | loop, seam 0 cm |
+| `Lean_Right` | both | the heel 7 cm forward in the held carve | loop, seam 0 cm |
+| `Trip`, `GetUp_Side_Left`, `GetUp_Late_Side_Left`, `GetUp_LateLong_Side_Right` | both | the stick 6 cm (Trip back; the get-ups forward, `GetUp_Late_Side_Left` also 8 cm right) inside windows round their leg frames | first and last frames untouched: Check@0 and the lying poses at 0.0000 cm, 0.000 deg (gate) |
+| `Check_Hit_Right` | clay only | the stick 6 cm back in frames 0 to 12 | Check@0 at both ends, 0.0000 cm |
+
+Re-import these eight; the calls are unchanged. The turns' loops meet the stride and glide by the engine's blend (no take of this lab is joined to them: the joins files list none), and their wraps are exact.
+
+### 1. The turns
+
+Each is a loop whose every key carries the carve's stick (heel on the ice). The same move on every key keeps the loop seamless (`stk32`, the thirty-second pass's heel-and-turn). First try, 7 cm forward on all three: the lean was mended, the crossovers got worse (the shaft into the trunk on 8 to 36 frames). Then a sweep in a measuring build (`SKF39_SWEEP`, 27 test takes per crossover: forward -6 / 0 / +6 cm, left -10 / 0 / +10 cm, turned -12 / 0 / +12 deg, never exported): the chosen ones have no shaft sample inside at all, both styles. The first pick (10 cm right) left the bottom hand 5 to 9 cm off the shaft (clips_report), so the next one in the list was taken: Crossover_Left 10 cm left, Crossover_Right 6 cm back. On clay, `Crossover_Right` moved left its bottom hand 4.7 cm off the shaft and had no leg frame to mend: it is left as it was.
+
+| Take (p2_cel / p3_clay) | Leg frames: export38 | export39 | Trunk frames, export39 | Bottom hand off the shaft at most, cm: export38 | export39 | Wrap |
+|---|---|---|---|---|---|---|
+| Crossover_Left | 4 / 31 | **0 / 0** | 0 / 0 | 0.2 / 0.2 | 0.05 / 0.18 | 0 cm |
+| Crossover_Right | 11 / 0 | **0 / 0** | 0 / 0 | 0.05 / 0.2 | 0.05 / 0.2 (clay unchanged) | 0 cm |
+| Lean_Right | 31 / 0 | **0 / 0** | 0 / 0 | 0.04 / 0.18 | 0.2 / 0.2 | 0 cm |
+| Lean_Left (not changed) | 0 / 0 | 0 / 0 | 0 / 0 | | | |
+
+### 2. The rest of the leg rows
+
+The bake's `stick_bump` now takes a list of windows and moves whichever stick mode a frame has (heel, grip or grip from the shoulder). Windows round each take's leg frames that leave the first and last frames alone; six moves per take swept in a second measuring build (`SKF39_SWEEP2`, into `export39s`, never used); the chosen per style:
+
+| Take | Window(s), frames | Move (forward, left) m, cel / clay | Leg frames export38 -> export39 (cel / clay) | Trunk frames, export39 |
+|---|---|---|---|---|
+| Trip | 5 to 17 | (-0.06, 0) / (-0.06, 0) | 5 / 1 -> **0 / 0** (clay's single was under the line) | 0 / 1 |
+| GetUp_Side_Left | 3 to 11, 25 to 36 | (0.06, 0) / (0.06, 0) | 4 / 0 -> **0 / 0** | 0 / 0 (it had 2 / 2) |
+| GetUp_Late_Side_Left | 0 to 8 | (0.06, -0.08) / same | 3 / 1 -> **0 / 0** | 0 / 0 |
+| GetUp_LateLong_Side_Right | 0 to 19 | (0.06, 0) / same | 4 / 2 -> **0 / 0** | 0 / 0 |
+| Check_Hit_Right | 0 to 12 | none / (-0.06, 0) | 1 / 8 -> **1 / 0** (cel's single frame is under the line; any move made cel worse) | 1 / 0 |
+
+Joins: every one at 0.0000 cm and 0.000 deg at both ends (the gate). Bottom hand as before (0.04 / 0.2 cm). Nothing under the ice (the gate; Trip's body touches 0.00 cm on cel as in export38).
+
+### 3. Looked at
+
+`skf39-turns-p2_cel` (export38 above export39, the game camera and, this time, **from the stick side**: `sidefar`, the figure's right, orthographic): in export38's `Crossover_Left` the shaft runs over the front of the crossing thigh at frames 16 to 20; in export39 it runs from the hip past the front of the legs; `Lean_Right`'s stick sits a little ahead. From the game camera the crossovers' stick is mostly hidden by the body in both: no visible change at game size. `skf39-rest-p2_cel` (Trip, GetUp_Side_Left): no visible change but the stick a few cm off; nothing breaks. The clay sheets I composed and did not open.
+
+### The export
+
+`C:\Users\kazda\jam\skater-lab\skf\export39\`: `READY.txt` (last), `DIFF.md` (8 names, each with its reason and style), `JOINS.md` (159 pairs, at most 0.0005 cm), `GATE.md`.
+
+- Gate: 328 rows, 0 failing, 1 on the known list (`gate_known_skf39.txt`: the clay aim hold's shaft only); 164 takes per style. Pop limits: 0 of 160 played takes over. Root identity keys, 60 fps, bones, rest pose, meshes and stick files as export38.
+
+### Not looked at, and known gaps
+
+- Nothing of export39 seen in the engine or in motion; the clay sheets not opened.
+- The shaft against the arms is not measured by anyone (the measure skips arms and gloves).
+- Single shaft samples (under the line) remain in a few takes (the deepest 4 to 5 cm, one sample).
+
+### Files
+
+- Lab: `build_clips.py` (the thirty-ninth pass block; `stick_bump` with lists and any stick mode; the two sweeps behind `SKF39_SWEEP` / `SKF39_SWEEP2`), `it39.sh`, `it39s.sh` (the measuring build), `tab39.js`, `sheet39.sh`, `gate_known_skf39.txt`, `gate_joins_skf39.txt`.
+- Sheets in `devlog/shots/`: `20261114-165007-B-lab-skf39-turns-p2_cel.png`, `-turns-p3_clay`, `-rest-p2_cel`, `-rest-p3_clay`, each with its `.txt`.
+
+### The next three evolutions of this track, ranked
+
+1. **The engine's film of export36 to 39** (wind-ups, the hold over a sprint, the stride and the turns). Proving number: no stick through a leg in the film at the game camera; the coil seen on at least 4 frames at N = 8.
+2. **The heavy wind's stick-side forearm at contact** (9.6 / 9.0 cm). The forearm's bend direction given on the load and pre-contact keys. Proving number: under 2 cm for every joint at contact in all six wind takes.
+3. **The single samples**: the deepest single shaft samples in the trunk and legs (4 to 5 cm in Stride, Lean_Right, Trip) taken under 3 cm. Proving number: no shaft sample more than 3 cm inside a leg or the trunk in the ten most played takes.
