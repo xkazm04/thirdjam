@@ -69,9 +69,9 @@
     },
     "SM_Arena_PenaltyBox": {
       "path": "/Game/Arena/SM_Arena_PenaltyBox.SM_Arena_PenaltyBox",
-      "imported": false,
-      "triangles": 2144,
-      "triangles_blender": 2144,
+      "imported": true,
+      "triangles": 1872,
+      "triangles_blender": 1872,
       "lods": 1,
       "sections": 5,
       "uv0_bounds": [
@@ -86,7 +86,7 @@
         3.035,
         1.803
       ],
-      "vertex_instances": 6432,
+      "vertex_instances": 5616,
       "slots": [
         "board",
         "kick",
@@ -109,7 +109,7 @@
       "bounds_max_cm": [
         225.5,
         166.1,
-        266.1
+        266.2
       ],
       "size_m": [
         4.515,
@@ -127,6 +127,16 @@
         10.0
       ],
       "nanite": false,
+      "door_socket_cm": [
+        -175.0,
+        6.0,
+        0.0
+      ],
+      "hand_socket_cm": [
+        0.0,
+        141.0,
+        235.0
+      ],
       "checks": {
         "under_budget": true,
         "triangles_match_blender": true,
@@ -136,7 +146,9 @@
         "extends_to_plus_y": true,
         "stands_on_the_ice": true,
         "size_matches_blender": true,
-        "seat_socket": true
+        "seat_socket": true,
+        "door_socket": true,
+        "hand_socket": true
       }
     },
     "SM_Arena_ScorerTable": {
@@ -667,6 +679,65 @@
     "SM_Arena_BoardCap": {
       "path": "/Game/Arena/SM_Arena_BoardCap.SM_Arena_BoardCap",
       "imported": true,
+      "triangles": 40,
+      "triangles_blender": 40,
+      "lods": 1,
+      "sections": 1,
+      "uv0_bounds": [
+        0.0,
+        0.725,
+        0.644,
+        1.0
+      ],
+      "uv0_bounds_blender": [
+        0.0,
+        0.0,
+        0.644,
+        0.275
+      ],
+      "vertex_instances": 120,
+      "slots": [
+        "kick"
+      ],
+      "materials": [
+        "/JamAssets/Look/MI_Toon_KickPlate.MI_Toon_KickPlate"
+      ],
+      "bounds_min_cm": [
+        -25.6,
+        -8.8,
+        -5.0
+      ],
+      "bounds_max_cm": [
+        26.0,
+        15.9,
+        36.0
+      ],
+      "size_m": [
+        0.515,
+        0.247,
+        0.41
+      ],
+      "size_m_blender": [
+        0.515,
+        0.247,
+        0.41
+      ],
+      "seat_socket_cm": null,
+      "nanite": false,
+      "checks": {
+        "under_budget": true,
+        "triangles_match_blender": true,
+        "slots_match_blender": true,
+        "look_instances_bound": true,
+        "has_uvs": true,
+        "extends_to_plus_y": true,
+        "stands_on_the_ice": true,
+        "size_matches_blender": true
+      }
+    },
+    "SM_Arena_BoardCapFar": {
+      "path": "/Game/Arena/SM_Arena_BoardCapFar.SM_Arena_BoardCapFar",
+      "imported": true,
       "triangles": 24,
       "triangles_blender": 24,
       "lods": 1,
@@ -709,6 +780,126 @@
         0.554,
         0.237,
         0.39
+      ],
+      "seat_socket_cm": null,
+      "nanite": false,
+      "checks": {
+        "under_budget": true,
+        "triangles_match_blender": true,
+        "slots_match_blender": true,
+        "look_instances_bound": true,
+        "has_uvs": true,
+        "extends_to_plus_y": true,
+        "stands_on_the_ice": true,
+        "size_matches_blender": true
+      }
+    },
+    "SM_Arena_BoxDoor": {
+      "path": "/Game/Arena/SM_Arena_BoxDoor.SM_Arena_BoxDoor",
+      "imported": true,
+      "triangles": 208,
+      "triangles_blender": 208,
+      "lods": 1,
+      "sections": 2,
+      "uv0_bounds": [
+        0.0,
+        -0.129,
+        0.603,
+        1.0
+      ],
+      "uv0_bounds_blender": [
+        0.0,
+        0.0,
+        0.603,
+        1.129
+      ],
+      "vertex_instances": 624,
+      "slots": [
+        "team",
+        "dark"
+      ],
+      "materials": [
+        "/JamAssets/Look/MI_Toon_Blue.MI_Toon_Blue",
+        "/JamAssets/Look/MI_Toon_Dark.MI_Toon_Dark"
+      ],
+      "bounds_min_cm": [
+        -5.1,
+        -10.9,
+        13.3
+      ],
+      "bounds_max_cm": [
+        109.2,
+        5.0,
+        121.9
+      ],
+      "size_m": [
+        1.143,
+        0.16,
+        1.086
+      ],
+      "size_m_blender": [
+        1.143,
+        0.16,
+        1.086
+      ],
+      "seat_socket_cm": null,
+      "nanite": false,
+      "checks": {
+        "under_budget": true,
+        "triangles_match_blender": true,
+        "slots_match_blender": true,
+        "look_instances_bound": true,
+        "has_uvs": true,
+        "extends_to_plus_y": true,
+        "stands_on_the_ice": true,
+        "size_matches_blender": true
+      }
+    },
+    "SM_Arena_BoxHand": {
+      "path": "/Game/Arena/SM_Arena_BoxHand.SM_Arena_BoxHand",
+      "imported": true,
+      "triangles": 64,
+      "triangles_blender": 64,
+      "lods": 1,
+      "sections": 1,
+      "uv0_bounds": [
+        0.0,
+        0.909,
+        0.201,
+        1.0
+      ],
+      "uv0_bounds_blender": [
+        0.0,
+        0.0,
+        0.201,
+        0.091
+      ],
+      "vertex_instances": 192,
+      "slots": [
+        "team"
+      ],
+      "materials": [
+        "/JamAssets/Look/MI_Toon_Blue.MI_Toon_Blue"
+      ],
+      "bounds_min_cm": [
+        -3.3,
+        -2.0,
+        -3.2
+      ],
+      "bounds_max_cm": [
+        3.2,
+        2.1,
+        24.2
+      ],
+      "size_m": [
+        0.065,
+        0.04,
+        0.274
+      ],
+      "size_m_blender": [
+        0.065,
+        0.04,
+        0.274
       ],
       "seat_socket_cm": null,
       "nanite": false,

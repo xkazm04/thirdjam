@@ -205,6 +205,7 @@ void UJamSim::Restart()
 	DekeCommitSide = 0;
 	DekeCommitSkater = -1;
 	Puck = FJamPuckState();
+	ShieldShoveTally[0] = ShieldShoveTally[1] = FJamShieldShoveTally();   // lane A132: a count, not state
 	FrameEvents.Reset();
 	// C-0005: rule state back to defaults; a shrunk or grown rink goes back to the geometry of the cartridge.
 	ScoreMultiplier[0] = ScoreMultiplier[1] = 1;
@@ -673,6 +674,11 @@ void UJamSim::FaceoffReset()
 		S.KnockFrames = 0;
 		S.StumbleFrames = 0;
 		S.GraceFrames = 0;   // lane A113: a faceoff sets everybody up; no grace is owed after it
+		// Lane A132 (track F1): the brake read-outs are this frame's truth only. StepSkater clears them at its start, so a brake of the frame the faceoff was set in
+		// (the goal pause's glide to a stop, a period's last frame, a drill's own FaceoffReset) stood on a skater that had been put on its mark with no speed
+		// until the next step: the figure's stop pose and spray on a standing skater, a brake frame too many in whoever counts the flag. Read-outs only
+		// (never hashed; bReverseBrakeLast, which is state, is left as the step wrote it).
+		S.bBraking = S.bReverseBraking = false;
 		S.PokeWindow = 0;
 		S.bPokeArmed = false;
 		S.bTouchingPuck = false;
@@ -1580,12 +1586,27 @@ void UJamSim::TryLift(FJamSkaterState& S)
 		// Lane A138 (R-0053 point 5): contact.bShieldShove false (no key; JamBaseline.h) restores main's refusal before lane A125: any shield refuses the shove too.
 		const bool bShoveRefused = Config.Contact.bShieldShove ? IsShoveShielded(S, O) : bStickRefused;
 		const bool bStickOnly = bStickRefused && !bShoveRefused;
+		// Lane A132 (track F1): the count of what the rule does in a match (ShieldShoveTally: not state, never hashed, read by no rule). A press whose take only a
+		// stick-only shield refuses (the body shield, the take grace) is counted in both arms of bShieldShove, so the neutral arm says how many presses did nothing.
+		FJamShieldShoveTally& Tally = ShieldShoveTally[S.bHuman ? 1 : 0];
+		const bool bTallyStickOnly = bStickRefused && O.ShieldFrames == 0 && !IsShoveShielded(S, O);
+		if (bTallyStickOnly) { ++Tally.Presses; if (FVector2D::Distance(O.Pos, S.Pos) <= SkaterRadius * 2.0 + Config.Contact.CrossReachM) ++Tally.AtArm; }
 		if (Config.Contact.bMomentum && Config.Contact.ThrustMps > 0.0 && Config.Skater.bCheckEnabled && !O.IsDown() && O.ShieldFrames == 0 && !bShoveRefused
 			&& FVector2D::Distance(O.Pos, S.Pos) <= SkaterRadius * 2.0 + Config.Contact.CrossReachM)
 		{
 			FVector2D Dir = (O.Pos - S.Pos).GetSafeNormal();
 			if (Dir.IsNearlyZero()) Dir = S.Forward();
-			if (Dot(Dir, O.Forward()) <= 0.5 || bStickOnly) ResolveContact(S, O, Dir, (S.Pos + O.Pos) * 0.5, EContactKind::Cross);
+			const bool bFromBehind = Dot(Dir, O.Forward()) > 0.5;
+			if (!bFromBehind || bStickOnly)
+			{
+				ResolveContact(S, O, Dir, (S.Pos + O.Pos) * 0.5, EContactKind::Cross);
+				if (bStickOnly)
+				{
+					++Tally.Shoves;
+					if (bFromBehind) ++Tally.FromBehind;
+					if (O.ContactOutcome == ContactDown) ++Tally.Down; else if (O.ContactOutcome == ContactStumble) ++Tally.Stumble; else ++Tally.Bump;
+				}
+			}
 		}
 		// Lane A82 (R-0040 point 1): the lift is shielded like the poke. A77 measured 19 and 11 clean lifts inside the sweep's and the spin's shield windows: the
 		// lift at contact (1.7 m body to body) took the puck the poke could not reach. A spinning carrier's body is between (no lift takes the carried puck); a sweep

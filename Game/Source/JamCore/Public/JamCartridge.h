@@ -301,6 +301,11 @@ struct JAMCORE_API FJamContactConfig
 	// attacker is closing on it: thrust x clamp(closing speed / this, 0, 1). At matched speed the push in the back is a bump; closing at this speed or more it
 	// is the whole thrust (and with the whistle on the from-behind foul it always was). 0 = the neutral value: the whole thrust from any side (lane A125).
 	double ShoveBehindMatchMps = 3.0;
+	// Not a rule of the game and not a cartridge key (lane A132, track F1): how the SCRIPTED human (FJamPlaytester, the instrument behind every measurement of
+	// "the human") decides its body-check press. true = on the closing speed along the line between it and the carrier (the contact law's own number);
+	// false = on its own speed along that line, as before the lane (five whiffs in six were presses on a carrier skating away at the same pace). It lives here
+	// so that JamBaseline::MakeNeutral can name its neutral value (false): the pinned matches were played by the old press. No sim code reads it.
+	bool bPlaytesterClosingPress = true;
 	// The neutral block (contact.momentum false, contact.carrier_can_hit true): the check rule of main before lane A92.
 	void SetNeutral() { bMomentum = false; bCarrierCanHit = true; }
 };

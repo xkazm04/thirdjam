@@ -33,7 +33,22 @@ ONLY = os.environ.get("ARENA_STILLS_ONLY", "")            # e.g. "l2_night-90" t
 SUFFIX = os.environ.get("ARENA_STILLS_SUFFIX", "")        # appended to the file names (an A/B)
 NO_STENCIL = os.environ.get("ARENA_STILLS_NO_STENCIL", "").split(",")   # component properties whose custom depth is switched off (an A/B of the outline)
 JOBS = [("p3_clay", "LR_P3_Clay", 1.0, 90, 45), ("p3_clay", "LR_P3_Clay", 1.0, 120, 60), ("l2_night", "LR_L2_Night", 0.0, 90, 45), ("l2_night", "LR_L2_Night", 0.0, 120, 60)]
-REACT = os.environ.get("ARENA_STILLS_REACT", "") in ("1", "sweep", "place", "caps")   # lane A127: the reactions' stills
+REACT = os.environ.get("ARENA_STILLS_REACT", "") in ("1", "sweep", "place", "caps", "e5")   # lane A127: the reactions' stills
+# Lane A145 (evolution 5). ARENA_STILLS_REACT=e5: what a player sees of a hard board hit from the game camera 12 m off the boards (at rest, on the hit's
+# frame at Strength 0.45 / 0.8 / 1.0, frames 3 and 6, with `jam.rink.react.hit 0`), the goal's frames with the wave (ARENA_STILLS_WAVE="0,0.5": the shares
+# of `jam.rink.react.wave`) at ARENA_STILLS_GOAL_FRAMES, the penalty box in use (a foul's frames), and the round caps. ARENA_STILLS_E5 picks the parts
+# ("sweep,hit,goal,box,caps"; "sweep" = the hit's frame for every tint of ARENA_STILLS_TINTS and candela of ARENA_STILLS_LIGHT). ARENA_STILLS_GPU=1 adds
+# ten ProfileGPU pairs from the 12 m view, the arena at rest then a Strength 1 hit's frame held.
+E5 = os.environ.get("ARENA_STILLS_REACT", "") == "e5"
+E5_PARTS = [p for p in os.environ.get("ARENA_STILLS_E5", "hit,goal,box,caps").split(",") if p]
+HIT_TINTS = [int(v) for v in os.environ.get("ARENA_STILLS_TINTS", "0,1,2").split(",")]
+HIT_CDS = [float(v) for v in os.environ.get("ARENA_STILLS_LIGHT", "1500,3000,6000").split(",")] if E5 else []
+WAVES = [float(v) for v in os.environ.get("ARENA_STILLS_WAVE", "0.12").split(",")]
+GOAL_FRAMES = [int(v) for v in os.environ.get("ARENA_STILLS_GOAL_FRAMES", "0,9,17,45").split(",")]
+HIT_RADII = [float(v) for v in os.environ.get("ARENA_STILLS_HIT_RADIUS", "").split(",") if v]          # metres; empty = the build's radius (the sweep only)
+HIT_STRENGTHS = [float(v) for v in os.environ.get("ARENA_STILLS_STRENGTHS", "0.8").split(",")]
+E5_CVARS = ("jam.rink.react.hit", "jam.rink.react.hit.tint", "jam.rink.react.wave")
+E5_DEFAULTS = {}
 # Lane A136 (evolution 4). ARENA_STILLS_REACT=place: the goal's frame from the game camera on p3_clay with the scored end's lamp light at several places
 # (ARENA_STILLS_PLACES="dx,y,z;..." in metres from the goal line, "cur" = where Build put it) and candelas (ARENA_STILLS_LIGHT), with stand-ins for a puck
 # and two figures (engine cylinders on B's instances, transient) so a washed-out picture shows. ARENA_STILLS_REACT=caps: the board caps from the game
@@ -54,6 +69,9 @@ if PLACE:
 if CAPS:
     OUT = os.path.join(HERE, "out", "engine-e4-caps")
     JOBS = [("p3_clay", "LR_P3_Clay", 1.0, 90, 45), ("p3_clay", "LR_P3_Clay", 1.0, 120, 60), ("l2_night", "LR_L2_Night", 0.0, 90, 45)]
+if E5:
+    OUT = os.path.join(HERE, "out", "engine-e5")
+    JOBS = [("p3_clay", "LR_P3_Clay", 1.0, 90, 45), ("l2_night", "LR_L2_Night", 0.0, 90, 45)]
 if os.environ.get("ARENA_STILLS_OUT", ""):
     OUT = os.path.join(HERE, "out", os.environ["ARENA_STILLS_OUT"])
 
@@ -67,6 +85,38 @@ def views(length, width):
     bx = 0.0833 * length
     if REACT:   # (name, eye, target, action): action = ("goal", frames since the goal) | ("rattle", frames since the hit) | None (the still arena)
         hw = width * 0.5
+        if E5:      # lane A145: the hit from the game camera 12 m off the boards, the goal with its wave, the box in use, the round caps
+            hx, hy = length * 0.25, hw - 0.4
+            eye, tgt = (hx - 8.0, hw - 12.0, 3.5), (hx, hy, 0.6)
+            geye, gtgt = (gl - 11.0, 1.9, 3.5), (gl - 1.5, 0.6, 0.6)
+            out = []
+            if "sweep" in E5_PARTS:
+                out.append(("sweep-rest", eye, tgt, None))
+                for radius in (HIT_RADII or [None]):
+                    for strength in HIT_STRENGTHS:
+                        for tint in HIT_TINTS:
+                            for cd in HIT_CDS:
+                                out.append(("sweep-r%03d-s%03d-t%d-cd%05d" % (round((radius or 0) * 10), round(strength * 100), tint, cd), eye, tgt, ("hit", 0, (hx, hy), strength, tint, cd, radius)))
+            if "hit" in E5_PARTS:
+                out.append(("hit-rest", eye, tgt, None))
+                out += [("hit-s080-f%03d" % f, eye, tgt, ("hit", f, (hx, hy), 0.8)) for f in (0, 4)]
+                out += [("hit-s045-f000", eye, tgt, ("hit", 0, (hx, hy), 0.45)), ("hit-s100-f000", eye, tgt, ("hit", 0, (hx, hy), 1.0))]
+                out.append(("hit-s080-f000-quiet", eye, tgt, ("hit", 0, (hx, hy), 0.8, None, 0.0)))     # jam.rink.react.hit 0: evolution 4's hit
+                beye, btgt = (-hx - 8.0, hw - 12.0, 3.5), (-hx, hy, 0.6)
+                out += [("hitblue-rest", beye, btgt, None), ("hitblue-s080-f000", beye, btgt, ("hit", 0, (-hx, hy), 0.8))]
+            if "goal" in E5_PARTS:
+                out.append(("goal-rest", geye, gtgt, None))
+                for share in WAVES:
+                    out += [("goal-w%03d-f%03d" % (round(share * 100), f), geye, gtgt, ("goalw", f, share)) for f in GOAL_FRAMES]
+            if "box" in E5_PARTS:   # the +x box (team 1's, orange); both boxes take a foul in these stills
+                beye, btgt = (3.0 - 5.5, -(hw - 5.5), 2.0), (3.0, -(hw + 0.8), 1.0)
+                ceye, ctgt = (-4.0, -(hw - 13.0), 3.5), (3.5, -(hw + 0.8), 1.1)
+                out += [("box-rest", beye, btgt, None)] + [("box-foul-f%03d" % f, beye, btgt, ("foul", f)) for f in (11, 150)]
+                out += [("boxgame-rest", ceye, ctgt, None), ("boxgame-foul-f011", ceye, ctgt, ("foul", 11))]
+            if "caps" in E5_PARTS:
+                out += [("caps-side-pos", (-6.0, hw - 12.0, 3.5), (2.0, hw - 1.0, 0.6), None),
+                        ("caps-close", (-3.2, hw - 3.6, 2.1), (0.0, hw + 0.1, 1.3), None)]     # the centre line: blue caps to the left, orange to the right
+            return out
         if PLACE:   # lane A136: the game camera's view of the scored end: at rest, then the goal's frame for every place and candela
             eye, tgt = (gl - 11.0, 1.9, 3.5), (gl - 1.5, 0.6, 0.6)
             out = [("place-rest", eye, tgt, None)]
@@ -175,7 +225,7 @@ class Run:
         cc.set_editor_property("constrain_aspect_ratio", False)
         self.les.editor_set_game_view(True)
         self.les.pilot_level_actor(self.cam)
-        if PLACE:   # stand-ins: pucks in the crease and the slot, two figures (engine cylinders, B's instances by reference, transient)
+        if PLACE or E5:   # stand-ins: pucks in the crease and the slot, two figures (engine cylinders, B's instances by reference, transient)
             gl = length * 0.5 - 4.0
             for nm, mat, loc, sc in (("puck", "MI_Toon_Dark", (gl - 1.6, 0.7, 0.04), (0.16, 0.16, 0.05)), ("fig0", "MI_Toon_Blue", (gl - 3.2, -1.6, 0.9), (0.55, 0.55, 1.8)),
                                      ("fig1", "MI_Toon_Orange", (gl - 5.5, 2.3, 0.9), (0.55, 0.55, 1.8)), ("puck2", "MI_Toon_Dark", (gl - 6.0, -0.8, 0.04), (0.16, 0.16, 0.05))):
@@ -209,12 +259,43 @@ class Run:
     def react(self, action, length, width):
         """Lane A127: puts the rink at one frame of a reaction (or at rest). The same two calls the event bus and the actor's tick make in a match."""
         self.rink.advance_reactions(10 ** 9)          # whatever the last still left live ends: the still arena
+        if E5:      # lane A145: the cvars a still before may have changed go back to what the build has
+            for name in E5_CVARS:
+                if name not in E5_DEFAULTS:
+                    E5_DEFAULTS[name] = unreal.SystemLibrary.get_console_variable_float_value(name)
+                    log("default %s %g" % (name, E5_DEFAULTS[name]))
+                unreal.SystemLibrary.execute_console_command(self.world(), "%s %g" % (name, E5_DEFAULTS[name]))
         if not action:
             return
         pl = unreal.JamEventPayload()
         if action[0] == "goal" and len(action) > 2:
             unreal.SystemLibrary.execute_console_command(self.world(), "jam.rink.react.light %g" % action[2])
-        if action[0] == "cap":    # lane A136: a hard skater `board` event at (x, y) metres
+        if action[0] == "hit":    # lane A145: a hard skater `board` event at (x, y) metres with a Strength, the board's normal in the payload
+            if len(action) > 4 and action[4] is not None:
+                unreal.SystemLibrary.execute_console_command(self.world(), "jam.rink.react.hit.tint %d" % action[4])
+            if len(action) > 5:
+                unreal.SystemLibrary.execute_console_command(self.world(), "jam.rink.react.hit %g" % action[5])
+            if len(action) > 6 and action[6]:      # a trial radius for the flash (the sweep): the build's own stays otherwise
+                for light in self.rink.get_editor_property("arena_hit_lights"):
+                    light.set_attenuation_radius(action[6] * 100.0)
+            pl.set_editor_property("who", 0)
+            pl.set_editor_property("where", unreal.Vector(action[2][0] * 100.0, action[2][1] * 100.0, 4.0))
+            pl.set_editor_property("strength", action[3])
+            pl.set_editor_property("kind", "skater")
+            pl.set_editor_property("dir", unreal.Vector(0.0, -1.0 if action[2][1] > 0 else 1.0, 0.0))
+            self.rink.react_to_event("board", pl, 1000)
+        elif action[0] == "goalw":   # lane A145: a goal in the +x net with the wave's share
+            unreal.SystemLibrary.execute_console_command(self.world(), "jam.rink.react.wave %g" % action[2])
+            pl.set_editor_property("where", unreal.Vector((length * 0.5 - 4.0 + 0.5) * 100.0, 0.0, 4.0))
+            pl.set_editor_property("strength", 1.0)
+            self.rink.react_to_event("goal", pl, 1000)
+        elif action[0] == "foul":    # lane A145: a foul by a skater of each team (skater 0 is team 0's, skater 99 is past any team 0): both boxes are used
+            pl.set_editor_property("strength", 1.0)
+            pl.set_editor_property("kind", "foul_no_puck")
+            for who in (0, 99):
+                pl.set_editor_property("who", who)
+                self.rink.react_to_event("foul", pl, 1000)
+        elif action[0] == "cap":    # lane A136: a hard skater `board` event at (x, y) metres
             pl.set_editor_property("who", 0)
             pl.set_editor_property("where", unreal.Vector(action[2][0] * 100.0, action[2][1] * 100.0, 4.0))
             pl.set_editor_property("strength", 1.0)
@@ -231,7 +312,12 @@ class Run:
             pl.set_editor_property("kind", "skater")
             self.rink.react_to_event("board", pl, 1000)
         self.rink.advance_reactions(1000 + action[1])
-        if len(action) > 3 and action[3]:      # lane A136: the scored end's lamp light moved to a trial place (metres: from the goal line along x, y, z)
+        if E5:
+            log("e5 %s frame %d: hit lights cd %s wave lights cd %s box door %s hand %s caps round=%s reacting=%s" % (action[0], action[1],
+                [round(self.rink.get_hit_light_intensity(i), 1) for i in range(4)], [round(self.rink.get_wave_light_intensity(i), 1) for i in range(2)],
+                [round(self.rink.get_box_door_deg(t), 1) for t in range(2)], [round(self.rink.get_box_hand_deg(t), 1) for t in range(2)],
+                self.rink.are_caps_round(), self.rink.is_reacting()))
+        if action[0] == "goal" and len(action) > 3 and action[3]:      # lane A136: the scored end's lamp light moved to a trial place (metres: from the goal line along x, y, z)
             lights = self.rink.get_editor_property("arena_lamp_lights")
             lights[2].set_relative_location(unreal.Vector((length * 0.5 - 4.0 + action[3][0]) * 100.0, action[3][1] * 100.0, action[3][2] * 100.0), False, False)
             if len(action[3]) > 3:
@@ -273,7 +359,11 @@ class Run:
                     else:
                         cmd, wait = self.gpu.pop(0)
                         log("gpu %s" % cmd)
-                        unreal.SystemLibrary.execute_console_command(self.world(), cmd)
+                        if cmd.startswith("a145.hit"):     # lane A145: the arena at rest (0) or a Strength 1 hit's frame held (1)
+                            tier, rig, clay, length, width = JOBS[self.job]
+                            self.react(("hit", 0, (length * 0.25, width * 0.5 - 0.4), 1.0) if cmd.endswith("1") else None, length, width)
+                        else:
+                            unreal.SystemLibrary.execute_console_command(self.world(), cmd)
                         if cmd.startswith("jam.rink.caps"):
                             self.rink.set_construction_visible(True)     # what the cvar sink does at the end of the frame
                         self.wait = wait
@@ -300,6 +390,19 @@ class Run:
         tier, rig, clay, length, width = JOBS[self.job]
         self.view += 1
         if self.view >= len(views(length, width)):
+            if E5 and GPU and self.job == 0:     # lane A145: ProfileGPU pairs from the 12 m view, the hit's flash off and on
+                hw = width * 0.5
+                e = unreal.Vector((length * 0.25 - 8.0) * 100.0, (hw - 12.0) * 100.0, 350.0)
+                t = unreal.Vector(length * 0.25 * 100.0, (hw - 0.4) * 100.0, 60.0)
+                self.rink.advance_reactions(10 ** 9)
+                self.cam.set_actor_location_and_rotation(e, unreal.MathLibrary.find_look_at_rotation(e, t), False, False)
+                self.les.pilot_level_actor(self.cam)
+                self.gpu = []
+                for i in range(int(os.environ.get("ARENA_STILLS_GPU_PAIRS", "10"))):
+                    self.gpu += [("a145.hit 0", 24), ("ProfileGPU", 10), ("a145.hit 1", 24), ("ProfileGPU", 10)]
+                self.wait = 40
+                self.state = "gpu"
+                return
             if CAPS and GPU and self.job == 0:
                 hw = width * 0.5
                 e = unreal.Vector(-600.0, (hw - 12.0) * 100.0, 350.0)

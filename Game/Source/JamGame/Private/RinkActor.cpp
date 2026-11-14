@@ -15,6 +15,7 @@
 #include "Components/PointLightComponent.h"
 #include "Components/InstancedStaticMeshComponent.h"
 #include "JamPawns.h"
+#include "Engine/StaticMeshSocket.h"
 
 // Lane A25: the construction layer's switch. 0 hides the kick plate, glass rail, net frame extras, goal lights, benches and the extra markings on every rink
 // actor (the "before" of the ProfileGPU pair); 1 shows them. Read at Build and on every change.
@@ -46,6 +47,20 @@ static TAutoConsoleVariable<float> CVarRinkReactLight(TEXT("jam.rink.react.light
 // the lamp behind the end boards at half the candelas.
 static TAutoConsoleVariable<int32> CVarRinkReactLoud(TEXT("jam.rink.react.loud"), 1,
 	TEXT("1: a goal's red light hangs over the scored net and lights the end zone; 0: the light beside the lamp behind the end boards at half the candelas (lane A127's). Lane A136."));
+
+// Lane A145 (evolution 5): the hit flash. Candelas of the point light a hard board hit throws at the hit's place at Strength 1 (l2_night takes a fifth).
+// 0 = no flash: the quiet hit of evolution 4. The tint: 0 warm white, 1 the half's team colour (blue on x < 0, orange on x > 0), 2 the lamps' red.
+// 300 cd inside a 4.5 m radius from two sweeps of off-screen stills from the game camera 12 m off the boards (ARENA.md section 40): at a 9 m radius
+// 1,500 cd washed 15 to 23 % of the picture; 300 cd in 4.5 m changes 4.0 % at Strength 0.45 and 5.0 % at 0.8 on p3_clay, a pool at the hit.
+static TAutoConsoleVariable<float> CVarRinkReactHit(TEXT("jam.rink.react.hit"), 300.f,
+	TEXT("Candelas of the flash a hard skater board hit throws on the boards and the ice at the hit, at Strength 1 (l2_night takes a fifth); 0 = no flash. Lane A145."));
+static TAutoConsoleVariable<int32> CVarRinkReactHitTint(TEXT("jam.rink.react.hit.tint"), 1,
+	TEXT("The hit flash's colour: 0 warm white, 1 the team colour of the half (blue on x < 0, orange on x > 0), 2 the goal lamps' red. Lane A145."));
+// Lane A145: the goal wave. The share of the scored end's light that each of the two travelling lights reaches at the end of a pulse. 0 = no wave.
+// 0.12 from a sweep (section 41): the game camera's picture of the scored end changes 14.8 % on the goal's frame, 16.2 % in the middle of a pulse and
+// 14.6 % at its end (10.4 % and 6.2 % without the wave); at 0.5 the troughs were louder than the goal's own frame (26 %).
+static TAutoConsoleVariable<float> CVarRinkReactWave(TEXT("jam.rink.react.wave"), 0.12f,
+	TEXT("A goal runs round the scored end's caps: the two travelling lights' share of the end light's candelas at the end of each pulse; 0 = no wave (no cap hops on a goal). Lane A145."));
 
 // Lane A119: the goal meshes arena.py builds (tools/blender/arena/arena.py GOAL_VARIANTS): the opening each was built for. Build takes the nearest and scales it.
 namespace
@@ -281,6 +296,44 @@ ARinkActor::ARinkActor()
 	ArenaCaps->SetCustomDepthStencilValue(1);
 	ArenaCaps->SetCastShadow(false);
 	ArenaCaps->SetVisibility(false);
+	// Lane A145: the x >= 0 half's caps (orange), the hit and wave lights, the boxes' doors and clock hands.
+	ArenaCapsPos = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("ArenaCapsPos"));
+	ArenaCapsPos->SetupAttachment(Root);
+	ArenaCapsPos->SetMobility(EComponentMobility::Movable);
+	ArenaCapsPos->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	ArenaCapsPos->SetRenderCustomDepth(true);
+	ArenaCapsPos->SetCustomDepthStencilValue(1);
+	ArenaCapsPos->SetCastShadow(false);
+	ArenaCapsPos->SetVisibility(false);
+	{
+		static_assert(CapRipples == 4, "ArenaHitLights holds one light per ripple");
+		static const TCHAR* const FlashNames[6] = { TEXT("ArenaHitLight0"), TEXT("ArenaHitLight1"), TEXT("ArenaHitLight2"), TEXT("ArenaHitLight3"), TEXT("ArenaWaveLightNeg"), TEXT("ArenaWaveLightPos") };
+		for (int32 i = 0; i < 6; ++i)
+		{
+			UPointLightComponent* L = CreateDefaultSubobject<UPointLightComponent>(FlashNames[i]);
+			L->SetupAttachment(Root);
+			L->SetMobility(EComponentMobility::Movable);
+			L->IntensityUnits = ELightUnits::Candelas;
+			L->Intensity = 0.f;
+			L->LightColor = i < 4 ? FColor(255, 236, 200) : FColor(255, 36, 16);
+			L->AttenuationRadius = i < 4 ? HitLightRadiusCm : 1400.f;
+			L->CastShadows = false;
+			L->SetVisibility(false);
+			if (i < 4) ArenaHitLights[i] = L; else ArenaWaveLights[i - 4] = L;
+		}
+		static const TCHAR* const UseNames[4] = { TEXT("ArenaBoxDoorNeg"), TEXT("ArenaBoxDoorPos"), TEXT("ArenaBoxHandNeg"), TEXT("ArenaBoxHandPos") };
+		TObjectPtr<UStaticMeshComponent>* const UseSlots[4] = { &ArenaBoxDoorNeg, &ArenaBoxDoorPos, &ArenaBoxHandNeg, &ArenaBoxHandPos };
+		for (int32 i = 0; i < 4; ++i)
+		{
+			UStaticMeshComponent* Ac = CreateDefaultSubobject<UStaticMeshComponent>(UseNames[i]);
+			Ac->SetupAttachment(i % 2 == 0 ? ArenaBoxNeg.Get() : ArenaBoxPos.Get());
+			Ac->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			Ac->SetRenderCustomDepth(true);
+			Ac->SetCustomDepthStencilValue(1);
+			Ac->SetVisibility(false);
+			*UseSlots[i] = Ac;
+		}
+	}
 	GoalTriggerPos = CreateDefaultSubobject<UBoxComponent>(TEXT("GoalTriggerPos"));
 	GoalTriggerNeg = CreateDefaultSubobject<UBoxComponent>(TEXT("GoalTriggerNeg"));
 	for (UBoxComponent* B : { GoalTriggerPos.Get(), GoalTriggerNeg.Get() })
@@ -851,6 +904,27 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 		Dress(ArenaBenchPos, BenchMesh, FVector(BenchX, Y0, 0.0), 0.0, BenchScale, true);
 		Dress(ArenaBoxNeg, BoxMesh, FVector(-PenaltyBoxCentreXM * UU, -Y0, 0.0), 180.0, 1.0, false);
 		Dress(ArenaBoxPos, BoxMesh, FVector(PenaltyBoxCentreXM * UU, -Y0, 0.0), 180.0, 1.0, true);
+		// Lane A145 (evolution 5): the box's door and its clock's long hand, meshes of their own hung on the box mesh's sockets `Door` (the hinge's foot) and
+		// `Hand` (the clock's middle). A box mesh without the sockets (the one before the lane, door and hand built in) leaves them empty: nothing shows twice.
+		{
+			UStaticMesh* DoorMesh = LoadObject<UStaticMesh>(nullptr, BoxDoorMeshPath, nullptr, LOAD_NoWarn | LOAD_Quiet);
+			UStaticMesh* HandMesh = LoadObject<UStaticMesh>(nullptr, BoxHandMeshPath, nullptr, LOAD_NoWarn | LOAD_Quiet);
+			UStaticMeshComponent* const Use[4] = { ArenaBoxDoorNeg.Get(), ArenaBoxDoorPos.Get(), ArenaBoxHandNeg.Get(), ArenaBoxHandPos.Get() };
+			int32 Hung = 0;
+			for (int32 i = 0; i < 4; ++i)
+			{
+				const UStaticMeshSocket* Sock = BoxMesh ? BoxMesh->FindSocket(FName(i < 2 ? TEXT("Door") : TEXT("Hand"))) : nullptr;
+				UStaticMesh* Mesh = Sock ? (i < 2 ? DoorMesh : HandMesh) : nullptr;
+				Dress(Use[i], Mesh, Sock ? Sock->RelativeLocation : FVector::ZeroVector, 0.0, 1.0, i % 2 == 1);
+				if (Mesh && Use[i]) ++Hung;
+			}
+			PenaltyFramesCfg = Game.Rules.PenaltyFrames > 0 ? Game.Rules.PenaltyFrames : 300;
+			TeamSplit = Game.Teams.Num() > 0 ? Game.Teams[0].Skaters.Num() : 0;
+			for (FBoxUse& U : BoxUse) U = FBoxUse();
+			BoxSeenAt[0] = BoxSeenAt[1] = -1;
+			UE_LOG(LogJamSim, Log, TEXT("JAMRINK arena box use: door mesh %s, hand mesh %s, %d of 4 hung on the boxes' sockets; a penalty is %d frames, team 0 is skaters 0..%d"),
+				DoorMesh ? TEXT("loaded") : TEXT("missing"), HandMesh ? TEXT("loaded") : TEXT("missing"), Hung, PenaltyFramesCfg, TeamSplit - 1);
+		}
 		// Lane A119: the scorer's table between the two boxes (their inner ends stand 1.48 m apart on every rink), and the goals on the goal lines.
 		UStaticMesh* TableMesh = LoadObject<UStaticMesh>(nullptr, ScorerTableMeshPath, nullptr, LOAD_NoWarn | LOAD_Quiet);
 		UMaterialInterface* FrameMat = LoadConstructionMat(TEXT("MI_Toon_NetFrame"), TEXT("MI_LL_NetFrame"), FLinearColor(0.7f, 0.03f, 0.02f));
@@ -867,33 +941,54 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 		// Lane A136 (evolution 4): the board caps. One instance at every stanchion place on the boards' middle line, its origin on the board top, turned so its
 		// overhang points away from the rink; each a little different in size and turn (from its index: no random source). B's MI_Toon_KickPlate by reference.
 		{
-			UStaticMesh* CapMesh = LoadObject<UStaticMesh>(nullptr, BoardCapMeshPath, nullptr, LOAD_NoWarn | LOAD_Quiet);
+			// Lane A145 (evolution 5): the cap is a dome (40 triangles) in the team colour of its half; a rink whose caps would pass CapTriangleBudget as
+			// domes takes the far level, lane A136's 24-triangle lump (one level for the whole ring: an instanced component draws one).
+			UStaticMesh* RoundMesh = LoadObject<UStaticMesh>(nullptr, BoardCapMeshPath, nullptr, LOAD_NoWarn | LOAD_Quiet);
+			UStaticMesh* FarMesh = LoadObject<UStaticMesh>(nullptr, BoardCapFarMeshPath, nullptr, LOAD_NoWarn | LOAD_Quiet);
+			bCapsRound = RoundMesh && (!FarMesh || CapAtM.Num() * RoundMesh->GetNumTriangles(0) <= CapTriangleBudget);
+			UStaticMesh* CapMesh = bCapsRound ? RoundMesh : (FarMesh ? FarMesh : RoundMesh);
 			for (FCapRipple& Rp : CapRipple) Rp = FCapRipple();
 			CapNow.Reset();
 			CapRest.Reset();
+			CapSide.Reset();
+			CapInst.Reset();
 			bCapsLive = false;
-			if (ArenaCaps)
+			UInstancedStaticMeshComponent* const CapComps[2] = { ArenaCaps.Get(), ArenaCapsPos.Get() };
+			if (CapComps[0] && CapComps[1])
 			{
-				ArenaCaps->ClearInstances();
-				ArenaCaps->SetStaticMesh(CapMesh);
+				TArray<FTransform> Half[2];
+				for (int32 s = 0; s < 2; ++s)
+				{
+					CapComps[s]->ClearInstances();
+					CapComps[s]->SetStaticMesh(CapMesh);
+				}
 				if (CapMesh)
 				{
-					const int32 KickSlot = ArenaCaps->GetMaterialIndex(FName(TEXT("kick")));
-					if (KickSlot != INDEX_NONE) ArenaCaps->SetMaterial(KickSlot, LoadConstructionMat(TEXT("MI_Toon_KickPlate"), TEXT("MI_LL_KickPlate"), FLinearColor(0.85f, 0.72f, 0.12f), 1.2f));
+					UMaterialInterface* const TeamMat[2] = { LoadConstructionMat(TEXT("MI_Toon_Blue"), TEXT("MI_LL_NetFrame"), FLinearColor(0.05f, 0.25f, 0.85f), 1.2f, true),
+						LoadConstructionMat(TEXT("MI_Toon_Orange"), TEXT("MI_LL_NetFrame"), FLinearColor(0.95f, 0.45f, 0.08f), 1.2f, true) };
+					for (int32 s = 0; s < 2; ++s)
+					{
+						const int32 KickSlot = CapComps[s]->GetMaterialIndex(FName(TEXT("kick")));
+						if (KickSlot != INDEX_NONE && TeamMat[s]) CapComps[s]->SetMaterial(KickSlot, TeamMat[s]);
+					}
 					for (int32 k = 0; k < CapAtM.Num(); ++k)
 					{
 						uint32 Hh = static_cast<uint32>(k + 1) * 2654435761u;
 						Hh ^= Hh >> 15;
 						const double Size = 0.90 + 0.16 * ((Hh & 0xffu) / 255.0);   // at 1.06 the cap still ends at the board's inner face
 						const double Turn = -9.0 + 18.0 * (((Hh >> 8) & 0xffu) / 255.0);
+						const int32 Side = CapAtM[k].X >= 0.0 ? 1 : 0;
 						CapRest.Add(FTransform(FRotator(0.0, CapYawDeg[k] + Turn, 0.0), FVector(CapAtM[k].X * UU, CapAtM[k].Y * UU, BoardHeightM * UU), FVector(Size)));
+						CapSide.Add(static_cast<uint8>(Side));
+						CapInst.Add(Half[Side].Num());
+						Half[Side].Add(CapRest.Last());
 					}
-					ArenaCaps->AddInstances(CapRest, false, false);
+					for (int32 s = 0; s < 2; ++s) if (Half[s].Num() > 0) CapComps[s]->AddInstances(Half[s], false, false);
 				}
 			}
-			UE_LOG(LogJamSim, Log, TEXT("JAMRINK arena caps: mesh %s, %d caps on the board top (one every %.2f m of the ring), %d triangles in all; jam.rink.caps %d"),
+			UE_LOG(LogJamSim, Log, TEXT("JAMRINK arena caps: mesh %s, %d caps on the board top (one every %.2f m of the ring), %d triangles in all, %s in the team colours; jam.rink.caps %d"),
 				CapMesh ? TEXT("loaded") : TEXT("missing"), CapRest.Num(), CapRest.Num() > 0 ? 2.0 * (R.LengthM + R.WidthM - (4.0 - UE_DOUBLE_PI) * FMath::Clamp(R.CornerRadiusM, 0.0, FMath::Min(R.LengthM, R.WidthM) * 0.5)) / CapRest.Num() : 0.0,
-				GetCapTriangles(), AreCapsEnabled() ? 1 : 0);
+				GetCapTriangles(), bCapsRound ? TEXT("the dome") : TEXT("the far level"), AreCapsEnabled() ? 1 : 0);
 		}
 		{
 			UStaticMeshComponent* const LampOn[3] = { ArenaTable.Get(), ArenaGoalLightNeg.Get(), ArenaGoalLightPos.Get() };
@@ -1133,12 +1228,16 @@ void ARinkActor::ApplyArenaDressing()
 	if (GoalLights) GoalLights->SetVisibility(bConstruction && !bShowLights);
 	PlaceLampLights();   // lane A136: `jam.rink.react.loud` may have changed
 	// Lane A136: the board caps stand with the pieces; `jam.rink.caps 0` takes them away alone.
-	const bool bShowCaps = bShow && AreCapsEnabled() && ArenaCaps && ArenaCaps->GetStaticMesh() != nullptr && CapRest.Num() > 0;
+	const bool bShowCaps = bShow && AreCapsEnabled() && ArenaCaps && ArenaCapsPos && ArenaCaps->GetStaticMesh() != nullptr && CapRest.Num() > 0;
 	if (ArenaCaps) ArenaCaps->SetVisibility(bShowCaps);
+	if (ArenaCapsPos) ArenaCapsPos->SetVisibility(bShowCaps);
+	// Lane A145: the boxes' doors and clock hands stand with their boxes.
+	for (UStaticMeshComponent* C : { ArenaBoxDoorNeg.Get(), ArenaBoxDoorPos.Get(), ArenaBoxHandNeg.Get(), ArenaBoxHandPos.Get() }) if (C) C->SetVisibility(bShow && C->GetStaticMesh() != nullptr);
 	if (!bShowCaps) ResetCaps();
 	bCapsShown = bShowCaps;
 	// The still arena: with the pieces hidden or `jam.rink.react 0` every lamp is at rest and every piece where Build put it.
 	if (!bShow || !bShowGoals || !AreReactionsEnabled()) ResetReactions();
+	ApplyBox(LastBoxFrame);   // lane A145: the door's resting place follows `jam.rink.react` (closed while the arena answers, open as it was built before with 0)
 	if (bShowGoals != bArenaGoalShown)
 	{
 		bArenaGoalShown = bShowGoals;
@@ -1206,6 +1305,114 @@ float ARinkActor::CapRockAt(int64 FramesSince, float Strength)
 	return FMath::Clamp(Strength, 0.f, 1.f) * FMath::Exp(-T / 4.f) * FMath::Cos(2.f * UE_PI * T / 8.f);
 }
 
+float ARinkActor::HitFlashAt(int64 FramesSince, float Strength)
+{
+	if (FramesSince < 0 || FramesSince >= HitFlashFrames) return 0.f;
+	const float T = 1.f - static_cast<float>(FramesSince) / static_cast<float>(HitFlashFrames);
+	return FMath::Clamp(Strength, 0.f, 1.f) * T * T;
+}
+
+float ARinkActor::HitLightPeak()
+{
+	return FMath::Max(0.f, CVarRinkReactHit.GetValueOnGameThread());
+}
+
+float ARinkActor::HitLightPeakHere() const
+{
+	return HitLightPeak() * (ArenaTier == TEXT("l2_night") ? NightLightShare : 1.f);
+}
+
+float ARinkActor::GetHitLightIntensity(int32 Index) const
+{
+	const UPointLightComponent* Light = Index >= 0 && Index < CapRipples ? ArenaHitLights[Index].Get() : nullptr;
+	return Light && Light->IsVisible() ? Light->Intensity : 0.f;
+}
+
+float ARinkActor::GetWaveLightIntensity(int32 Index) const
+{
+	const UPointLightComponent* Light = Index >= 0 && Index < 2 ? ArenaWaveLights[Index].Get() : nullptr;
+	return Light && Light->IsVisible() ? Light->Intensity : 0.f;
+}
+
+float ARinkActor::WaveShare()
+{
+	return FMath::Clamp(CVarRinkReactWave.GetValueOnGameThread(), 0.f, 4.f);
+}
+
+float ARinkActor::DoorAt(int64 FramesSince)
+{
+	if (FramesSince < 0 || FramesSince >= DoorCycleFrames) return 0.f;
+	if (FramesSince < DoorOpenFrames)
+	{
+		const float T = static_cast<float>(FramesSince + 1) / static_cast<float>(DoorOpenFrames);   // open on frame DoorOpenFrames - 1
+		return T * T * (3.f - 2.f * T);
+	}
+	if (FramesSince < DoorOpenFrames + DoorHoldFrames) return 1.f;
+	const float T = 1.f - static_cast<float>(FramesSince - DoorOpenFrames - DoorHoldFrames + 1) / static_cast<float>(DoorCloseFrames);
+	return T * T * (3.f - 2.f * T);
+}
+
+bool ARinkActor::IsBoxUsable() const
+{
+	return ArenaBoxDoorNeg && ArenaBoxDoorPos && ArenaBoxHandNeg && ArenaBoxHandPos && ArenaBoxDoorNeg->GetStaticMesh() && ArenaBoxDoorPos->GetStaticMesh()
+		&& ArenaBoxHandNeg->GetStaticMesh() && ArenaBoxHandPos->GetStaticMesh();
+}
+
+void ARinkActor::NoteBoxed(int32 Team) const
+{
+	if (Team == 0 || Team == 1) BoxSeenAt[Team] = ReactBus ? ReactBus->GetSimFrame() : -1;
+}
+
+FTransform ARinkActor::GetCapTransform(int32 Index) const
+{
+	FTransform X = FTransform::Identity;
+	if (!CapSide.IsValidIndex(Index) || !CapInst.IsValidIndex(Index)) return X;
+	const UInstancedStaticMeshComponent* Comp = CapSide[Index] ? ArenaCapsPos.Get() : ArenaCaps.Get();
+	if (Comp) Comp->GetInstanceTransform(CapInst[Index], X, false);
+	return X;
+}
+
+// The boxes in use at SimFrame: a foul swings the fouler's team's door open (in), the clock's hand turns once in the penalty's frames, the door swings
+// again at the end (out). The sim serves the first penalty frame on the frame after the foul's and releases the skater on foul + penalty_frames
+// (Jam.Rink.HitSeenBoxUsed measures both on a real foul), so the penalty's frame k is bus frame foul + k.
+void ARinkActor::ApplyBox(int64 SimFrame)
+{
+	LastBoxFrame = SimFrame;
+	const bool bReact = AreReactionsEnabled();
+	bool bLive = false;
+	for (int32 t = 0; t < 2; ++t)
+	{
+		FBoxUse& U = BoxUse[t];
+		float Door = bReact ? 0.f : 1.f;   // at rest: closed while the arena answers the game; with `jam.rink.react 0` open, as the box mesh had it before the lane
+		float Hand = 0.f;
+		if (U.FoulFrame >= 0)
+		{
+			const int64 Since = SimFrame - U.FoulFrame;
+			const int64 EndSince = static_cast<int64>(U.Frames);         // the frame the skater is back on the ice
+			if (!bReact || Since < 0 || Since >= EndSince + DoorCycleFrames) U = FBoxUse();   // over, or a frame before its start: a new match began
+			else
+			{
+				bLive = true;
+				Door = FMath::Max(DoorAt(Since), DoorAt(Since - EndSince));
+				Hand = Since < EndSince ? 360.f * static_cast<float>(Since) / static_cast<float>(FMath::Max(1, U.Frames)) : 0.f;
+				if (Since >= EndSince && !U.bEndLogged)
+				{
+					U.bEndLogged = true;
+					UE_LOG(LogJamSim, Log, TEXT("JAMRINK react box end team=%d frame=%lld: the penalty's %d frames are over, the door opens again, the hand is back at the top"), t,
+						static_cast<long long>(SimFrame), U.Frames);
+				}
+			}
+		}
+		BoxDoorDegNow[t] = DoorOpenDeg * Door;
+		BoxHandDegNow[t] = Hand;
+		// The door turns about its hinge (the component's origin on the socket) from along the boards into the box; the hand about the box's `out` axis:
+		// a positive pitch takes the hand's top towards the box's -x, clockwise for somebody on the ice.
+		if (UStaticMeshComponent* D = t == 0 ? ArenaBoxDoorNeg.Get() : ArenaBoxDoorPos.Get()) D->SetRelativeRotation(FRotator(0.0, BoxDoorDegNow[t], 0.0));
+		if (UStaticMeshComponent* Hd = t == 0 ? ArenaBoxHandNeg.Get() : ArenaBoxHandPos.Get()) Hd->SetRelativeRotation(FRotator(BoxHandDegNow[t], 0.0, 0.0));
+	}
+	bBoxLive = bLive;
+}
+
 int32 ARinkActor::GetCapTriangles() const
 {
 	const UStaticMesh* Mesh = nullptr;
@@ -1236,16 +1443,69 @@ void ARinkActor::ApplyCaps(int64 SimFrame)
 			V.Y += CapHopCm * FMath::Abs(Cv);       // the hop is always up
 		}
 	}
-	if (ArenaCaps && ArenaCaps->GetInstanceCount() == N)
+	// Lane A145: the hit flash, one light per ripple (it stands where ReactToEvent put it), Strength x a square fall over HitFlashFrames.
+	for (int32 i = 0; i < CapRipples; ++i)
 	{
-		for (const TPair<int32, FVector2f>& Was : CapNow) if (!Next.Contains(Was.Key) && CapRest.IsValidIndex(Was.Key)) ArenaCaps->UpdateInstanceTransform(Was.Key, CapRest[Was.Key], false, true, true);
+		UPointLightComponent* Light = ArenaHitLights[i];
+		if (!Light) continue;
+		const float Candelas = CapRipple[i].Frame >= 0 ? HitLightPeakHere() * HitFlashAt(SimFrame - CapRipple[i].Frame, CapRipple[i].Strength) : 0.f;
+		Light->SetIntensity(Candelas);
+		Light->SetVisibility(Candelas > 0.f);
+	}
+	// Lane A145: the goal wave. In every pulse of the lamp a front leaves the goal light and runs WaveReachM along the end boards both ways; the caps behind
+	// the scored goal line hop as it passes, and a light rides each front, growing while the lamp's own pulse falls.
+	float WaveCandelas = 0.f;
+	double WaveAtM = 0.0;
+	if (GoalFrame >= 0 && bCapsShown && N > 0 && CapAtM.Num() == N && WaveShare() > 0.f)
+	{
+		const int64 Since = SimFrame - GoalFrame;
+		if (Since >= 0 && Since < LampFlashFrames)
+		{
+			bLive = true;
+			const int64 Left = LampFlashFrames - Since;
+			const float Envelope = Left >= LampFadeFrames ? 1.f : static_cast<float>(Left) / static_cast<float>(LampFadeFrames);
+			const int32 InPulse = static_cast<int32>(Since % LampPulseFrames);
+			for (int32 k = 0; k < N; ++k)
+			{
+				if (CapAtM[k].X * GoalEnd <= GoalLineXM) continue;
+				const double Along = FMath::Abs(CapAtM[k].Y);
+				if (Along > WaveReachM) continue;
+				int64 T = InPulse - FMath::RoundToInt32(Along / WaveReachM * (LampPulseFrames - 1));   // frames since the front passed this cap
+				if (T < 0)
+				{
+					if (Since < LampPulseFrames) continue;   // the first front has not reached it yet
+					T += LampPulseFrames;                    // still swinging from the pulse before
+				}
+				const float Cv = CapRockAt(T, 1.f) * WaveCapShare * Envelope;
+				if (Cv == 0.f) continue;
+				FVector2f& V = Next.FindOrAdd(k, FVector2f::ZeroVector);
+				V.X += CapRockDeg * Cv;
+				V.Y += CapHopCm * FMath::Abs(Cv);
+			}
+			const float Phase = static_cast<float>(InPulse) / static_cast<float>(LampPulseFrames);
+			WaveAtM = Phase * WaveReachM;
+			WaveCandelas = LampLightPeakAt(GoalEnd > 0 ? 2 : 1) * WaveShare() * Phase * Envelope;
+		}
+	}
+	for (int32 s = 0; s < 2; ++s)
+	{
+		UPointLightComponent* Light = ArenaWaveLights[s];
+		if (!Light) continue;
+		if (WaveCandelas > 0.f) Light->SetRelativeLocation(FVector(GoalEnd * (GoalLineXM + 4.0 - WaveLightInM) * UU, (s == 0 ? -1.0 : 1.0) * WaveAtM * UU, WaveLightHeightM * UU));
+		Light->SetIntensity(WaveCandelas);
+		Light->SetVisibility(WaveCandelas > 0.f);
+	}
+	if (ArenaCaps && ArenaCapsPos && CapSide.Num() == N && CapInst.Num() == N && ArenaCaps->GetInstanceCount() + ArenaCapsPos->GetInstanceCount() == N)
+	{
+		auto Write = [this](int32 K, const FTransform& X) { (CapSide[K] ? ArenaCapsPos : ArenaCaps)->UpdateInstanceTransform(CapInst[K], X, false, true, true); };
+		for (const TPair<int32, FVector2f>& Was : CapNow) if (!Next.Contains(Was.Key) && CapRest.IsValidIndex(Was.Key)) Write(Was.Key, CapRest[Was.Key]);
 		for (const TPair<int32, FVector2f>& P : Next)
 		{
 			// A roll about the cap's own x axis (along the boards): positive tips its top towards its +y, away from the rink.
 			FTransform X = CapRest[P.Key];
 			X.SetRotation(X.GetRotation() * FRotator(0.0, 0.0, P.Value.X).Quaternion());
 			X.AddToTranslation(FVector(0.0, 0.0, P.Value.Y));
-			ArenaCaps->UpdateInstanceTransform(P.Key, X, false, true, true);
+			Write(P.Key, X);
 		}
 	}
 	CapNow = MoveTemp(Next);
@@ -1312,6 +1572,8 @@ void ARinkActor::ResetReactions()
 	GoalFrame = -1;
 	RattleFrame = -1;
 	RattleDegNow = 0.f;
+	for (FBoxUse& U : BoxUse) U = FBoxUse();   // lane A145
+	ApplyBox(LastBoxFrame);
 }
 
 void ARinkActor::ReactToEvent(FName Event, const FJamEventPayload& Payload, int64 SimFrame)
@@ -1325,6 +1587,7 @@ void ARinkActor::ReactToEvent(FName Event, const FJamEventPayload& Payload, int6
 		GoalEnd = Local.X > 0.0 ? 1 : -1;   // the side of the net the puck is in (the binder's rule for the burst's colour)
 		++GoalReactions;
 		ApplyGoalReaction(0);
+		ApplyCaps(SimFrame);   // lane A145: the wave's first front leaves the goal light
 		UE_LOG(LogJamSim, Log, TEXT("JAMRINK react goal end=%s frame=%lld lamp %.2f -> %.2f net shake %d frames"), GoalEnd > 0 ? TEXT("+x") : TEXT("-x"),
 			static_cast<long long>(SimFrame), LampRest[0], GetLampEmissive(), NetShakeFrames);
 	}
@@ -1347,13 +1610,24 @@ void ARinkActor::ReactToEvent(FName Event, const FJamEventPayload& Payload, int6
 			CapRipple[Slot].Frame = SimFrame;
 			CapRipple[Slot].Index = Cap;
 			CapRipple[Slot].Strength = Payload.Strength;
+			// Lane A145: the flash stands at the hit: the event's place moved HitLightInM into the rink along the board's normal (the payload's Dir; without
+			// one, towards the rink's middle), HitLightHeightM up, in the colour `jam.rink.react.hit.tint` names.
+			if (UPointLightComponent* Light = ArenaHitLights[Slot])
+			{
+				FVector2D In(GetActorTransform().InverseTransformVectorNoScale(Payload.Dir));
+				if (In.IsNearlyZero()) In = FVector2D(-X, -Y);
+				In = In.GetSafeNormal();
+				Light->SetRelativeLocation(FVector((X + In.X * HitLightInM) * UU, (Y + In.Y * HitLightInM) * UU, HitLightHeightM * UU));
+				const int32 Tint = CVarRinkReactHitTint.GetValueOnGameThread();
+				Light->SetLightColor(Tint == 0 ? FLinearColor(1.f, 0.84f, 0.58f) : Tint == 2 ? FLinearColor(1.f, 0.017f, 0.005f) : X < 0.0 ? FLinearColor(0.05f, 0.30f, 1.f) : FLinearColor(1.f, 0.36f, 0.03f));
+			}
 			LastCapIndex = Cap;
 			LastCapDistM = static_cast<float>(FMath::Sqrt(BestSq));
 			++CapRockReactions;
 			ApplyCaps(SimFrame);
 			bAnswered = true;
-			UE_LOG(LogJamSim, Log, TEXT("JAMRINK react board cap=%d of %d strength=%.2f frame=%lld tilt %.1f deg hop %.1f cm, %.2f m from the hit"), Cap, CapRest.Num(),
-				Payload.Strength, static_cast<long long>(SimFrame), GetCapTiltDeg(Cap), GetCapHopCm(Cap), LastCapDistM);
+			UE_LOG(LogJamSim, Log, TEXT("JAMRINK react board cap=%d of %d strength=%.2f frame=%lld tilt %.1f deg hop %.1f cm, %.2f m from the hit, flash %.0f cd"), Cap, CapRest.Num(),
+				Payload.Strength, static_cast<long long>(SimFrame), GetCapTiltDeg(Cap), GetCapHopCm(Cap), LastCapDistM, GetHitLightIntensity(Slot));
 		}
 		// Lane A127: the bench, box or table behind a long side's hit rocks too (an end board or a corner has none).
 		if (bArenaShown && FMath::Abs(Y) >= RinkHalfWidthM - 1.5)
@@ -1383,6 +1657,18 @@ void ARinkActor::ReactToEvent(FName Event, const FJamEventPayload& Payload, int6
 		}
 		if (!bAnswered) return;
 	}
+	else if (Event == JamEvents::Foul && bArenaShown)
+	{
+		// Lane A145: the fouler's team's box is used. The bus names the fouler by its index (team 0's skaters first); the penalty is game.rules.penalty_frames.
+		const int32 Team = Payload.Who >= 0 && Payload.Who < TeamSplit ? 0 : 1;
+		BoxUse[Team] = FBoxUse();
+		BoxUse[Team].FoulFrame = SimFrame;
+		BoxUse[Team].Frames = PenaltyFramesCfg;
+		++BoxReactions;
+		ApplyBox(SimFrame);
+		UE_LOG(LogJamSim, Log, TEXT("JAMRINK react box team=%d who=%d frame=%lld penalty=%d frames: the door %.1f deg on its way to %.0f (open by frame +%d), the hand %.1f deg; meshes %s"), Team, Payload.Who,
+			static_cast<long long>(SimFrame), PenaltyFramesCfg, BoxDoorDegNow[Team], DoorOpenDeg, DoorOpenFrames - 1, BoxHandDegNow[Team], IsBoxUsable() ? TEXT("hung") : TEXT("missing"));
+	}
 	else return;
 	if (HasActorBegunPlay()) SetActorTickEnabled(true);
 }
@@ -1403,6 +1689,7 @@ void ARinkActor::AdvanceReactions(int64 SimFrame)
 		else ApplyRattle(Since);
 	}
 	if (bCapsLive) ApplyCaps(SimFrame);
+	if (bBoxLive) ApplyBox(SimFrame);   // lane A145
 }
 
 float ARinkActor::GetLampEmissive() const
@@ -1480,7 +1767,7 @@ void ARinkActor::BindBus(UJamEventBus* InBus)
 
 void ARinkActor::OnJamEvent(FName Event, const FJamEventPayload& Payload)
 {
-	if (Event != JamEvents::Goal && Event != JamEvents::Board) return;
+	if (Event != JamEvents::Goal && Event != JamEvents::Board && Event != JamEvents::Foul) return;
 	ReactToEvent(Event, Payload, ReactBus ? ReactBus->GetSimFrame() : -1);
 }
 
@@ -1496,7 +1783,7 @@ void ARinkActor::ServeBoxSeat()
 			const ARinkActor* Rk = W.Get();
 			FVector L;
 			FRotator R;
-			if (Rk && Rk->GetWorld() == World && Rk->GetPenaltyBoxSeat(Skater.GetTeam(), L, R)) { Location = L; Rotation = R; return true; }
+			if (Rk && Rk->GetWorld() == World && Rk->GetPenaltyBoxSeat(Skater.GetTeam(), L, R)) { Rk->NoteBoxed(Skater.GetTeam()); Location = L; Rotation = R; return true; }
 		}
 		return false;
 	};
@@ -1520,8 +1807,18 @@ void ARinkActor::EndPlay(const EEndPlayReason::Type Reason)
 void ARinkActor::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-	AdvanceReactions(ReactBus ? ReactBus->GetSimFrame() : -1);
-	if (!IsReacting()) SetActorTickEnabled(false);
+	const int64 Now = ReactBus ? ReactBus->GetSimFrame() : -1;
+	AdvanceReactions(Now);
+	// Lane A145: the frame a boxed figure is no longer drawn in its box (the BoxSeat hook noted it last on BoxSeenAt), beside what the box shows then.
+	for (int32 t = 0; t < 2; ++t)
+	{
+		if (BoxSeenAt[t] < 0 || Now <= BoxSeenAt[t] + 1) continue;
+		const int64 End = BoxUse[t].FoulFrame >= 0 ? BoxUse[t].FoulFrame + BoxUse[t].Frames : -1;
+		UE_LOG(LogJamSim, Log, TEXT("JAMRINK box left team=%d frame=%lld last_seen=%lld counted_end=%lld door %.1f deg hand %.1f deg"), t, static_cast<long long>(Now),
+			static_cast<long long>(BoxSeenAt[t]), static_cast<long long>(End), BoxDoorDegNow[t], BoxHandDegNow[t]);
+		BoxSeenAt[t] = -1;
+	}
+	if (!IsReacting() && BoxSeenAt[0] < 0 && BoxSeenAt[1] < 0) SetActorTickEnabled(false);
 }
 
 bool ARinkActor::GetPenaltyBoxSeat(int32 Team, FVector& OutLocation, FRotator& OutRotation) const

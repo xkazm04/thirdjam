@@ -33,6 +33,8 @@ SLOT_LOOK = {
     "lamp": "/JamAssets/Look/MI_Toon_NetFrame",    # lane A127: the table's lamp and the goal lights' (RinkActor puts a dynamic instance of it on the slot and drives its Emissive)
 }
 TRI_BUDGET = 3000
+CAPS = ("SM_Arena_BoardCap", "SM_Arena_BoardCapFar")     # lane A145: the dome and its far level (lane A136's lump)
+LOOSE = ("SM_Arena_BoxDoor", "SM_Arena_BoxHand")         # lane A145: hung on a socket of the penalty box; the origin is a pivot, not a foot on the ice
 
 
 def log(msg):
@@ -181,13 +183,21 @@ def main():
             # Unreal flips V on import (v -> 1 - v): the extents must match Blender's, the U range exactly
             "has_uvs": uvn > 0 and abs(uvb[0] - bu0[0]) < 0.01 and abs(uvb[2] - bu1[0]) < 0.01 and abs((uvb[3] - uvb[1]) - (bu1[1] - bu0[1])) < 0.01 and (uvb[2] - uvb[0]) > 0.1,
             # the goal light is a post, half a metre deep; lane A136: the board cap sits on the board top, from the board's inner face (10 cm) to past its outer one
-            "extends_to_plus_y": (box.max.y > 13.0 and box.min.y > -10.0) if name == "SM_Arena_BoardCap" else (box.max.y > (30.0 if name == "SM_Arena_GoalLight" else 100.0) and box.min.y > -30.0),
+            # lane A145: a loose piece has its pivot at the origin instead (the door's hinge post at x 0, the hand's foot at z 0)
+            "extends_to_plus_y": ((-8.0 < box.min.x < 0.0 and box.min.y > -13.0 and box.max.y < 13.0) if name == "SM_Arena_BoxDoor" else (abs(box.min.x) < 5.0 and -4.0 < box.min.z < 0.0)) if name in LOOSE
+            else (box.max.y > 13.0 and box.min.y > -10.0) if name in CAPS else (box.max.y > (30.0 if name == "SM_Arena_GoalLight" else 100.0) and box.min.y > -30.0),
             # a net hangs from the bars: its lowest cord ends in the bottom bar; lane A136: the board cap's foot ring sinks 5 cm into the board top (its z 0)
-            "stands_on_the_ice": (-6.5 < box.min.z < -3.0) if name == "SM_Arena_BoardCap" else abs(box.min.z) < (8.0 if "net_of" in blender[name] else 5.0),
+            "stands_on_the_ice": True if name in LOOSE else (-6.5 < box.min.z < -3.0) if name in CAPS else abs(box.min.z) < (8.0 if "net_of" in blender[name] else 5.0),
             "size_matches_blender": all(abs(a - b) < 0.02 for a, b in zip(size, blender[name]["dimensions_m"])),
         }
         if name == "SM_Arena_PenaltyBox":
             checks["seat_socket"] = socket is not None
+            # lane A145: the door's hinge and the clock's middle, where ARinkActor hangs SM_Arena_BoxDoor and SM_Arena_BoxHand
+            for sock in ("Door", "Hand"):
+                s2 = mesh.find_socket(sock)
+                want = blender[name].get("sockets", {}).get(sock)
+                row[sock.lower() + "_socket_cm"] = [round(s2.relative_location.x, 1), round(s2.relative_location.y, 1), round(s2.relative_location.z, 1)] if s2 else None
+                checks[sock.lower() + "_socket"] = s2 is not None and want is not None and all(abs(a - b * 100.0) < 1.0 for a, b in zip(row[sock.lower() + "_socket_cm"], want))
         if "goal" in blender[name]:
             g = blender[name]["goal"]
             half, height = goal_opening(mesh, g)

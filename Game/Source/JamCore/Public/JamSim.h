@@ -391,6 +391,12 @@ struct JAMCORE_API FJamSimEvent
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") FName Outcome = NAME_None;
 };
 
+// Lane A132 (track F1): UJamSim::ShieldShoveTally (a count for tests and measurements, not state).
+struct FJamShieldShoveTally
+{
+	int32 Presses = 0, AtArm = 0, Shoves = 0, FromBehind = 0, Bump = 0, Stumble = 0, Down = 0;
+};
+
 UCLASS(BlueprintType)
 class JAMCORE_API UJamSim : public UObject
 {
@@ -619,6 +625,11 @@ public:
 	// Test seam, not state and never hashed: TryLift takes the stick as refused (what IsLiftShielded answers for a body shield or a take grace on a tree that has
 	// them), so a scene can force the shield predicate by hand on a tree without those keys. False in every game.
 	bool bTestStickRefused = false;
+	// Lane A132 (track F1): what the shove rule does in a match, counted by TryLift for tests and measurements. Not state, never hashed, read by no rule; [0] the
+	// presses of a bot, [1] of a human. Presses: a lift pressed at an opposing carrier inside range and cone whose take only a stick-only shield refused (the body
+	// shield, the take grace: not the spin, the sweep or the shield ability); AtArm: of those, the ones at arm's length (contact.cross_reach_m); Shoves: the ones
+	// that resolved as a cross-check's shove (none with contact.bShieldShove false), FromBehind of them along the carrier's facing, and the outcome of each.
+	FJamShieldShoveTally ShieldShoveTally[2];
 	// Lane A125 (track F1): the check finds its man (game.contact.check_reach_m, 0 = off). While a HUMAN skater's check window is open, its velocity is turned
 	// onto the collision course with the nearest standing opponent whose body is within check_reach_m of its own and inside CheckReachConeDeg of where it is
 	// going or facing: the man's speed across the line between them is matched (up to CheckReachAcrossMax of the skater's speed), the rest of the skater's

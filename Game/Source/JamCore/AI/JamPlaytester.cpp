@@ -476,11 +476,14 @@ namespace JamAI
 					if (Me.bCanLift && C.Pos.DistTo(Me.Pos) <= 2.0 * W.SkaterRadius + W.LiftRange * 0.9) { In.bLift = true; }
 				}
 				// a body check when closing fast and not from behind (the sim's foul line is 0.5 on the contact normal . the victim's facing)
+				// Lane A132 (track F1): "closing" is the CLOSING speed along the line between the two (the contact law's own number), not the playtester's own
+				// speed along it: five whiffs in six were presses on a carrier skating away at the same pace (49 of 58, CONTACT-4.md section 6), which a person
+				// stops doing in a minute. JAM_PLAYTESTER_CHECK=old (bOldCheck) is the press as it was, for the before arm of a measurement.
 				const double Dc = C.Pos.DistTo(Me.Pos);
 				if (Dc < 1.8 && MySpeed > 5.0 && W.Frame - LastCheckFrame > 30)
 				{
 					const FVec2 N = (C.Pos - Me.Pos).Normalized();
-					if (N.Dot(C.Facing) < P.CheckFromBehindDot && Me.Vel.Dot(N) > 4.0)
+					if (N.Dot(C.Facing) < P.CheckFromBehindDot && (bOldCheck ? Me.Vel.Dot(N) : (Me.Vel - C.Vel).Dot(N)) > 4.0)
 					{
 						In.bCheck = true;
 						LastCheckFrame = W.Frame;
@@ -695,6 +698,9 @@ namespace JamAI
 			Tester.bRestStick = StickEnv && std::strcmp(StickEnv, "rest") == 0;
 			const char* VerbsEnv = std::getenv("JAM_PLAYTESTER_VERBS");   // lane A95: the before arm of job 3 (measurement only)
 			Tester.bOldVerbs = VerbsEnv && std::strcmp(VerbsEnv, "old") == 0;
+			const char* CheckEnv = std::getenv("JAM_PLAYTESTER_CHECK");   // lane A132: the before arm of the press on closing speed (measurement only)
+			const UJamSim* CfgSim = Sim.GetSim();
+			Tester.bOldCheck = (CheckEnv && std::strcmp(CheckEnv, "old") == 0) || (CfgSim && !CfgSim->GetConfig().Contact.bPlaytesterClosingPress);
 			Tester.StickVariant = !StickEnv ? 0 : (std::strcmp(StickEnv, "carry") == 0 ? 2 : (std::strcmp(StickEnv, "front") == 0 ? 3 : (std::strcmp(StickEnv, "short") == 0 ? 4 : 0)));
 		}
 		FJamAIWorld W;

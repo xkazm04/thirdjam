@@ -518,6 +518,10 @@ TArray<FSoftObjectPath> UJamPreloadSubsystem::MatchPaths(FName Visual, const FSt
 		Add(ARinkActor::PenaltyBoxMeshPath);
 		Add(ARinkActor::ScorerTableMeshPath);
 		Add(ARinkActor::GoalLightMeshPath);
+		Add(ARinkActor::BoardCapMeshPath);       // lane A145: lane A136's cap was not in the list (one synchronous load at every match start)
+		Add(ARinkActor::BoardCapFarMeshPath);    // lane A145: the cap's far level
+		Add(ARinkActor::BoxDoorMeshPath);        // lane A145: the penalty box's door
+		Add(ARinkActor::BoxHandMeshPath);        // lane A145: the penalty clock's hand
 		static const TCHAR* const GoalNames[] = { TEXT("W400H061"), TEXT("W600H061"), TEXT("W400H122") };
 		for (const TCHAR* G : GoalNames)
 		{

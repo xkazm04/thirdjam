@@ -111,14 +111,16 @@ int32 AJamSkater::HitStopFrames()
 	return FMath::Clamp(CVarJamHitStop.GetValueOnGameThread(), 0, 6);
 }
 
-// Lane A101 (track F1): the hold reads the hit. At jam.hitstop 3: stumble 1 or 2, knockdown 2 to 5 by the ratio; a bump holds nothing.
+// Lane A101 (track F1): the hold reads the hit. At jam.hitstop 3: stumble 1 or 2, knockdown 2 to 6 by the ratio; a bump holds nothing.
+// Lane A132 (track F1, evolution 4): the hit has a size. A knockdown holds 2 frames at down_ratio (1.0) and 6 at down_full_ratio (3.0) and above (5 before): the
+// biggest hit in the game holds three times the smallest knockdown, as it lies two and a half times as long (60 to 150 frames).
 int32 AJamSkater::HitStopFramesFor(int32 Outcome, float Ratio, const FJamContactConfig& K, int32 Base)
 {
 	if (Base <= 0) return 0;
 	if (Outcome == UJamSim::ContactNone) return FMath::Clamp(Base, 0, 6);   // a knockdown the model did not resolve (contact.momentum false): as before
 	double At3 = 0.0;
 	if (Outcome == UJamSim::ContactStumble) At3 = static_cast<double>(Ratio) >= 0.5 * (K.BumpRatio + K.DownRatio) - 1e-6 ? 2.0 : 1.0;   // the read-out is a float: 0.7f is the middle
-	else if (Outcome == UJamSim::ContactDown) At3 = FMath::Lerp(2.0, 5.0, FMath::Clamp((static_cast<double>(Ratio) - K.DownRatio) / FMath::Max(1e-6, K.DownFullRatio - K.DownRatio), 0.0, 1.0));
+	else if (Outcome == UJamSim::ContactDown) At3 = FMath::Lerp(2.0, 6.0, FMath::Clamp((static_cast<double>(Ratio) - K.DownRatio) / FMath::Max(1e-6, K.DownFullRatio - K.DownRatio), 0.0, 1.0));
 	else return 0;   // a bump
 	return FMath::Clamp(FMath::RoundToInt32(At3 * Base / 3.0), 1, 6);
 }
