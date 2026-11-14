@@ -1,0 +1,1 @@
+The whole Stride cycle side-on, frames 0 8 13 17 21 25 28 31 34 45: export38 top, export37 bottom. Frames 0 to 13 and 34 on look the same.
