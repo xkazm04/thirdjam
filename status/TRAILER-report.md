@@ -418,3 +418,78 @@ Nothing new. If the operator wants hybrid 3 (two videos), the page (`submission/
 
 Leftovers: nothing running that I started. Files written in the repository this part: this section of `status/TRAILER-report.md`; `devlog/shots/20261114-021528-B-trailer-edit-A45.png`,
 `-scenario-D.png`, `-scenario-C.png` and their `.txt` captions. Everything else under `C:\Users\kazda\jam\trailer-lab\`.
+
+
+---
+
+# Part three (14 Nov 02:20 to 02:30): image sequences in the edit, the capture brief for D's stills, the operator's page
+
+## 1. Summary
+All three are done. **7:** a shot's `src` in `edit.mjs` may now be a folder of numbered PNG or JPG frames, or an ffmpeg pattern, played at a stated `src_fps`. Proved on
+a 120-frame sequence made on the CPU from an existing strip: 120 frames, 2.000 s, 0 repeated frames, check PASS. I also found and fixed the bug behind the checker's
+slightly negative repeated-frame reading. **8:** `C:\Users\kazda\jam\trailer-lab\capture-D-stills.md` is a one-page brief an engine lane can run in one session of about 40
+minutes: five store stills, each with camera, aim, lens, trigger, capture frame, what must and must not be in frame, and a caption proposal. **9:**
+`C:\Users\kazda\jam\trailer-lab\OPERATOR.md` is the operator's two-minute page. No sound-service use this part (155 of 400 credits in total). Nothing was filmed or captured.
+
+## 2. Evolutions
+
+### Evolution 7: image-sequence sources
+- `edit.mjs`: `src` may be a folder (the frames must share one prefix, one digit width and one extension; the start number is read from the first file; the command refuses
+  a folder whose names do not match) or a pattern such as `.../frame_%04d.png` with an optional `start_number`. A sequence needs `src_fps`. `in`/`out` are seconds of the
+  sequence; `speed` works as for video; a sequence shorter than `out` holds its last frame and says so. An empty `voice` list is now allowed.
+- Proof: `C:\Users\kazda\jam\trailer-lab\edit\seqtest\frame_0001.png` to `frame_0120.png` (a 16:9 window sliding 36.5 px a frame along
+  `devlog/shots/20261114-004300-B-sk24-lying-loop-play.png`, scaled to 1920 x 1080; every frame differs). Cut by `edit\T-seq.json` to `edit\out\T-seq.mp4`:
+  **120 frames, 2.000 s, 0 repeated frames (kept 120 of 120), max gap 17 ms, 1920 x 1080, check PASS**. The stream's average rate reads 60.03 because of the MP4 time base's
+  rounding over 2 s; every frame gap is 16 or 17 ms. A half-speed sequence shot (60 source frames shown over 120) is also cut correctly, and the checker fails it for
+  repeated frames, as it should.
+- Still: `C:\Users\kazda\jam\thirdjam\devlog\shots\20261114-022426-B-trailer-image-sequence.png` (frames 0, 24, 48, 72, 96 of the cut).
+- **The negative counter, explained and fixed.** `check-take.mjs` counted frames by parsing ffprobe's `pts_time` lines with `Number()`. The first frame of every shot (a
+  key frame with side data) is printed with a trailing comma (`2.000000,`), so it parsed as NaN and was dropped. The frame count came out one short per shot, and "kept
+  frames / frames" went above 1. Now the frame count is the decoder's own (`-count_frames`, `nb_read_frames`), the kept count reads only showinfo's per-frame lines,
+  and the time list uses `parseFloat`. Re-checked: A45 2,700 of 2,700 kept, A30 1,800 of 1,800, C45 2,700 of 2,700, D45 2,700 of 2,700: **0 % repeated**; the 30 fps test cut T-video 281 of 480 kept (41.46 %, FAIL, correct). The max gap now reads 17 ms
+  (it read 34 ms when a shot's first frame was missing).
+
+### Evolution 8: the capture brief for D's stills (hybrid 2)
+`C:\Users\kazda\jam\trailer-lab\capture-D-stills.md`. In store-page order:
+1. **The hit at ice level.** Drill 6; capture at the check event's frame + 1 (inside the hit-stop). Camera 4.0 m square to the travel, 0.3 m up, aimed at the contact point at 0.9 m, fov 35. Proposed caption: *The speed you bring is the hit you get.*
+2. **The barn.** Match start; device B's hero camera (x -17, y -7, z 2.2, pitch -10, yaw 25), fov 50. Proposed caption: *Five clay skaters a side, in a timber barn.*
+3. **Down, close.** `SetKnockedDown(150)`; capture at + 60. Camera 1.2 m beside the chest, 0.25 m up, fov 30. Proposed caption: *Everybody gets back up.*
+4. **The boards.** `SetKnockedDown(110)` and `PlayBoardHit` together, 66 cm off the boards; capture at + 5 and + 24. Camera 2.5 m off the boards, 1.0 m up, fov 40. Proposed caption: *The boards hit back.*
+5. **The lamp.** Drill 10 or `NS_goal` staged; capture at + 10. Camera 2.0 m behind the goal line, 0.5 m up, looking out through the net, fov 45. Proposed caption: *Score, and the barn answers.*
+
+Fixed for all five:
+- the clay tier;
+- `HighResShot` at 1920 x 1080, then 3840 x 2160 of the same paused frame if the session allows (keep only the 1080 one if the poses differ);
+- no HUD, no on-screen text, no annotations, no editor icons, and no human ring where a bot can be the subject.
+
+Order and timing: 10 min to start, then 2, 1, 3, 4, 5 at about 4 to 8 min each, then the 4K pass of the best two. That order is also the priority if the session is cut short.
+The page also has an optional separate short clip (about 15 s, about 30 more minutes of GPU), never cut into A.
+
+### Evolution 9: the operator's page
+`C:\Users\kazda\jam\trailer-lab\OPERATOR.md`. It has:
+- the three films in one sentence each, my pick (A) and why;
+- what filming A takes on Saturday: about 30 to 45 minutes of his time, Game Bar set once, the commentator's voice off, Win+Alt+R, and the play order with keys and likely tries (head-on hit 3 to 6 tries with the right mouse button, stop and go 3 to 5 with S then W, the Director's Call once per period with Esc, one blue goal);
+- what D costs (about 2 h of device B's editor and GPU) and gives, and its cheapest use (five stills, about 40 minutes);
+- five questions, each with a suggested answer: A with C as backup; the seven lines yes; the excited delivery (not heard by me); D as five store pictures only; he films A himself, on his machine if it records game sound, otherwise at device B.
+
+## 3. Not verified
+- `HighResShot` leaving out the HUD in this project's play-in-editor (standard engine behaviour; the brief asks the lane to check the first still).
+- Every camera number in the brief; the 40-minute session (an estimate).
+- The operator page's minute counts.
+- `edit.mjs` on a real engine frame dump (tested only on frames made from a still).
+
+## 4. For the engine lane
+`capture-D-stills.md`, only if the operator picks hybrid 2. It needs a script-placed cine camera as the view target, `pause`, and `HighResShot`. The triggers are the ones device B's lanes used this week.
+
+## 5. For the other device
+Nothing. The five caption proposals and the seven lines are the Director's to rule on.
+
+## 6. Decisions for the operator
+The five questions on `OPERATOR.md`; part one and two's decisions are folded into them.
+
+## 7. Next three evolutions (when footage exists)
+1. Cut A from the operator's real takes. Proof: PASS at 45.000 s, 0 overruns, 0 % repeated on play, the real hit and goal sounds within 2 frames of their beats.
+2. The five store stills, from Shipping frames for the page's clay claims, plus the D stills if chosen. Proof: five 1920 x 1080 PNGs with captions, and R-0054 point 2 met.
+3. The 30 s cut from the same takes. Proof: PASS at 30.000 s with the theme on screen at 0.0 s.
+
+Leftovers: nothing running that I started. Repository files this part: this section; `devlog/shots/20261114-022426-B-trailer-image-sequence.png` and `.txt`.
