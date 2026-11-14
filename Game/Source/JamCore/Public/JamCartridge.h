@@ -316,6 +316,27 @@ struct JAMCORE_API FJamContactConfig
 	// Ships at 0: at 1.0 the playtester's whiffs fall from 60 % to 51 % of its presses, not under the 40 % asked for (five whiffs in six are presses on a man it
 	// is not closing on, which no bend of direction cures), and Jam.Bot.HumanHasSomethingToDo leaves its budget (docs/experiments/CONTACT-4.md section 6).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double CheckReachM = 0.0;
+	// Lane A157 (track F1, evolution 6; B-to-A-0041 point 2; docs/experiments/CONTACT-7.md section 1): nobody stands in a man who is down. A downed skater
+	// was an ordinary 0.4 m body circle: a skater on its feet stopped 0.8 m from its root (on the lying figure, which is longer than the circle), pushed it
+	// along the ice and bounced off it. With this key above 0 a downed skater's body has THIS radius for every skater on its feet (roots kept
+	// skater radius + downed_radius_m apart, never less than the two circles): the one on its feet alone gives way (at most UJamSim::DownedPushOutMps), the
+	// speed it had into the body turns along it (it goes round), and the downed skater is neither moved nor given any speed. The puck sees the same 0.4 m
+	// circle as before. Two downed skaters, and the hit that fells a skater, collide as before. 0 = the neutral value: the game before the lane (same state hash).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double DownedRadiusM = 0.0;
+	// Lane A157 (track F1, evolution 6; R-0060 point 4; CONTACT-7.md section 2): a check press has a cooldown. A press opened a window whenever it came, so
+	// RMB every 12 frames kept the human's window open for ever: the hit needed no timing. For this many frames after a press that opened a window (or
+	// resolved as a late press) the same skater's next check press is dropped: no window, no cue (read-out FJamSkaterState::ChecksCooling). Bots and the
+	// human alike (the brain's own spacing is 30 frames, the scripted human's 30). 0 = the neutral value: every press opens a window (same state hash).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 CheckCooldownFrames = 0;
+	// Lane A157 (track F1, evolution 6; CONTACT-7.md section 3): the lunge as a motion. A pressed check was a window on an ordinary collision and its lunge
+	// (lunge_mps) a number in the impulse: the body did nothing, a miss cost nothing. With lunge_frames above 0 a press that opens a window commits the body
+	// for that many frames: lunge_step_mps is added to its velocity along its facing at once (and counts in the hit as real closing speed: the impulse's own
+	// lunge_mps is reduced by it while the lunge runs, so a head-on hit is the hit it was), its turn rate is UJamSim::LungeSteerShare of normal and it cannot
+	// brake by reversing. A lunge that ends in a body ends there. One that runs out on nobody is the miss: the skater loses UJamSim::LungeMissCost x
+	// lunge_step_mps of its speed (the step and as much again). No second lunge starts inside one. Both 0 = the neutral value (same state hash).
+	// The name game.contact.lunge_mps was taken (lane A92: the impulse's number), hence lunge_step_mps.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 LungeFrames = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double LungeStepMps = 0.0;
 	// Not a cartridge key (lane A138, R-0050 point 2 is a rule; R-0053 point 5 asks every rule for its neutral). true = a shield refuses the stick and never the
 	// shove (lane A125: the body shield and the take grace refuse the take only; where only they refuse it, the cross-check's shove is contact from any side).
 	// false = the refusal of main before lane A125: whatever refuses the lift refuses the shove too, and a lift from behind is never a shove. JamBaseline.h sets it.

@@ -157,6 +157,20 @@ namespace JamAI
 		// Lane A151 (track F1): the human's check presses that opened a window (bCheckThisFrame frames) and the windows that ran out on nobody
 		// (FJamSkaterState::ChecksMissed, the HUD's MISSED). Read-outs on the playtest line: check_presses, check_whiffs.
 		int CheckPresses = 0, CheckWhiffs = 0;
+		// Lane A157 (track F1, evolution 6): read-outs on the playtest line.
+		// downed_*: B-to-A-0041 point 2's bar. DownedFrames: frames any skater lay on the ice. A skater on its feet with its root within 0.6 m (B's bar) or
+		// 0.9 m (at the downed skater's 0.4 m body circle: standing on the lying figure) of a downed skater's root: the spells longer than 6 frames, the
+		// longest spell, the pair-frames; the frames the sim's push-out turned a course (FJamSkaterState::DownedPushFrames, all skaters).
+		int64_t DownedFrames = 0, DownedIn06Frames = 0, DownedIn09Frames = 0, DownedPushFrames = 0;
+		int DownedIn06Spells = 0, DownedIn06Max = 0, DownedIn09Spells = 0, DownedIn09Max = 0;
+		// hits_*: item 4, the board slam's read. Landed hits (a pressed check or a cross-check: FJamSkaterState::ContactOutcome stumble or down) by where:
+		// the boards answered (bContactBoard: the victim within 1.5 m of the boards and pushed into them, game.contact.board_bonus above 1) or open ice;
+		// the frames down they gave; the human's own (ContactBy = the human).
+		int HitsBoardDown = 0, HitsOpenDown = 0, HitsBoardStumble = 0, HitsOpenStumble = 0, HitsHumanBoard = 0, HitsHumanOpen = 0;
+		int64_t HitsBoardDownFrames = 0, HitsOpenDownFrames = 0;
+		// Items 2 and 3: the human's presses the cooldown dropped and lunges that met nobody (FJamSkaterState::ChecksCooling, LungesMissed); the bots' summed,
+		// with the bots' presses that opened a window (bCheckThisFrame frames).
+		int ChecksCooling = 0, LungesMissed = 0, BotChecksCooling = 0, BotLungesMissed = 0, BotCheckPresses = 0;
 		int FoulsFromBehind = 0, FoulsNoPuck = 0;   // the two kinds of foul (contracts/events.md): from behind on the carrier; on a skater without the puck
 		int64_t BoxFrames = 0;           // frames the human sat in the penalty box
 		int Pokes = 0, PokesClean = 0, Lifts = 0, Passes = 0;

@@ -755,6 +755,11 @@ namespace JamAI
 		bool bWaitingTouch = Pi >= 0;
 		int LastLead = 0;
 		int PrevStumble = 0;   // lane A126
+		int DownRun06[kMaxSkaters * kMaxSkaters] = {}, DownRun09[kMaxSkaters * kMaxSkaters] = {};   // lane A157: [on its feet * kMaxSkaters + downed] frames in a row inside 0.6 m / 0.9 m
+		// Lane A157, measurement only (R-0060 point 4): JAM_PLAYTESTER_MASH=N makes the scripted human a masher: on top of its own presses it presses check
+		// every N frames, whatever it sees (the hand that holds the window open). Never set in a game or in the gate.
+		const char* MashEnv = std::getenv("JAM_PLAYTESTER_MASH");
+		const int MashPeriod = MashEnv ? std::atoi(MashEnv) : 0;
 		const FName KindShotgun(TEXT("shotgun"));   // lane A126
 		St.Faceoffs = 1;
 		const int TouchWindow = 600;
@@ -770,6 +775,7 @@ namespace JamAI
 			for (int i = 0; i < kMaxSkaters; ++i) { In[i] = FJamAIInput(); }
 			Brain.Think(W, In);
 			if (Pi >= 0) { In[Pi] = Tester.Think(W); ++St.Acts[static_cast<int>(Tester.LastAct())]; }
+			if (Pi >= 0 && MashPeriod > 0 && F % MashPeriod == 0) { In[Pi].bCheck = true; }   // lane A157: the masher (measurement only)
 			if (Pi >= 0) { if (const UJamSim* AbSim = Sim.GetSim()) { In[Pi].bAbility = PlaytesterAbility(*AbSim, Pi, In[Pi]); } }   // lane A84
 			const FJamAIStepEvents Ev = Sim.Step(In);
 			++St.Frames;
@@ -892,9 +898,38 @@ namespace JamAI
 				if (Sk.IsValidIndex(Pi) && Sk[Pi].InBox()) { ++St.BoxFrames; }
 				if (Sk.IsValidIndex(Pi)) { if (Sk[Pi].bCheckThisFrame) { ++St.CheckPresses; } St.CheckWhiffs = Sk[Pi].ChecksMissed; }   // lane A151: read-outs
 				if (Sk.IsValidIndex(Pi)) { const int Sf = Sk[Pi].StumbleFrames; if (Sf > 0 && PrevStumble == 0) { ++St.Stumbles; } PrevStumble = Sf; }   // lane A126
+				// Lane A157 (track F1, evolution 6): the downed-body read-outs (B-to-A-0041 point 2) and the landed hits by where (item 4). Read-outs only.
+				{
+					const int Ns = Sk.Num() < kMaxSkaters ? Sk.Num() : kMaxSkaters;
+					for (int d = 0; d < Ns; ++d)
+					{
+						const bool bDown = Sk[d].IsDown() && !Sk[d].InBox();
+						if (bDown) { ++St.DownedFrames; }
+						for (int u = 0; u < Ns; ++u)
+						{
+							if (u == d) { continue; }
+							int& R6 = DownRun06[u * kMaxSkaters + d];
+							int& R9 = DownRun09[u * kMaxSkaters + d];
+							const double Dd = (bDown && !Sk[u].IsDown() && !Sk[u].InBox()) ? FVector2D::Distance(Sk[u].Pos, Sk[d].Pos) : 1e9;
+							if (Dd < 0.6) { ++St.DownedIn06Frames; if (++R6 == 7) { ++St.DownedIn06Spells; } if (R6 > St.DownedIn06Max) { St.DownedIn06Max = R6; } } else { R6 = 0; }
+							if (Dd < 0.9) { ++St.DownedIn09Frames; if (++R9 == 7) { ++St.DownedIn09Spells; } if (R9 > St.DownedIn09Max) { St.DownedIn09Max = R9; } } else { R9 = 0; }
+						}
+					}
+					for (int k = 0; k < Ns; ++k)
+					{
+						const FJamSkaterState& K = Sk[k];
+						if (K.ContactOutcome == UJamSim::ContactDown)
+						{
+							if (K.bContactBoard) { ++St.HitsBoardDown; St.HitsBoardDownFrames += K.KnockFrames; } else { ++St.HitsOpenDown; St.HitsOpenDownFrames += K.KnockFrames; }
+						}
+						else if (K.ContactOutcome == UJamSim::ContactStumble) { if (K.bContactBoard) { ++St.HitsBoardStumble; } else { ++St.HitsOpenStumble; } }
+						if (K.ContactOutcome >= UJamSim::ContactStumble && K.ContactBy == Pi) { if (K.bContactBoard) { ++St.HitsHumanBoard; } else { ++St.HitsHumanOpen; } }
+					}
+				}
 				for (int32 k = 0; k < Sk.Num(); ++k)   // lane A72 (asks A2, A3): the sprint applied this frame
 				{
 					if (k == Pi && Sk[k].BurstLeft > 0) { ++St.BurstFrames; }   // lane A95
+					if (k != Pi && Sk[k].bCheckThisFrame) { ++St.BotCheckPresses; }   // lane A157
 					if (!Sk[k].bSprinting) { continue; }
 					if (k == Pi) { ++St.SprintFrames; } else { ++St.BotSprintFrames; }
 				}
@@ -917,8 +952,9 @@ namespace JamAI
 		{
 			for (const FJamSkaterState& K : S->GetSkaters())
 			{
-				if (K.Index == Pi) { St.RevBrakes = K.ReverseBrakes; St.CarrySprintFrames = K.CarrySprintFrames; St.Cuts = Tester.Cuts; }
-				else { St.BotRevBrakes += K.ReverseBrakes; St.BotCarrySprintFrames += K.CarrySprintFrames; }
+				St.DownedPushFrames += K.DownedPushFrames;   // lane A157
+				if (K.Index == Pi) { St.RevBrakes = K.ReverseBrakes; St.CarrySprintFrames = K.CarrySprintFrames; St.Cuts = Tester.Cuts; St.ChecksCooling = K.ChecksCooling; St.LungesMissed = K.LungesMissed; }
+				else { St.BotRevBrakes += K.ReverseBrakes; St.BotCarrySprintFrames += K.CarrySprintFrames; St.BotChecksCooling += K.ChecksCooling; St.BotLungesMissed += K.LungesMissed; }
 			}
 		}
 		return St;
@@ -953,6 +989,15 @@ namespace JamAI
 			S.Cuts, static_cast<long long>(S.RevBrakes), static_cast<long long>(S.CarrySprintFrames), static_cast<long long>(S.BurstFrames), static_cast<long long>(S.BotRevBrakes),
 			static_cast<long long>(S.BotCarrySprintFrames));   // lane A95
 		N += std::snprintf(Buf + N, static_cast<size_t>(BufLen - N), ",\"check_presses\":%d,\"check_whiffs\":%d", S.CheckPresses, S.CheckWhiffs);   // lane A151
+		// Lane A157 (track F1, evolution 6): the downed-body read-outs and the landed hits by where (FJamPlaytestStats has the meanings).
+		N += std::snprintf(Buf + N, static_cast<size_t>(BufLen - N), ",\"downed_frames\":%lld,\"downed_in06_spells\":%d,\"downed_in06_max\":%d,\"downed_in06_frames\":%lld,\"downed_in09_spells\":%d,\"downed_in09_max\":%d,\"downed_in09_frames\":%lld,\"downed_push_frames\":%lld",
+			static_cast<long long>(S.DownedFrames), S.DownedIn06Spells, S.DownedIn06Max, static_cast<long long>(S.DownedIn06Frames), S.DownedIn09Spells, S.DownedIn09Max,
+			static_cast<long long>(S.DownedIn09Frames), static_cast<long long>(S.DownedPushFrames));
+		N += std::snprintf(Buf + N, static_cast<size_t>(BufLen - N), ",\"hits_board_down\":%d,\"hits_board_down_frames\":%lld,\"hits_open_down\":%d,\"hits_open_down_frames\":%lld,\"hits_board_stumble\":%d,\"hits_open_stumble\":%d,\"hits_human_board\":%d,\"hits_human_open\":%d",
+			S.HitsBoardDown, static_cast<long long>(S.HitsBoardDownFrames), S.HitsOpenDown, static_cast<long long>(S.HitsOpenDownFrames), S.HitsBoardStumble, S.HitsOpenStumble,
+			S.HitsHumanBoard, S.HitsHumanOpen);
+		N += std::snprintf(Buf + N, static_cast<size_t>(BufLen - N), ",\"checks_cooling\":%d,\"lunges_missed\":%d,\"bot_check_presses\":%d,\"bot_checks_cooling\":%d,\"bot_lunges_missed\":%d",
+			S.ChecksCooling, S.LungesMissed, S.BotCheckPresses, S.BotChecksCooling, S.BotLungesMissed);
 		static const char* ActNames[] = {"idle", "draw", "chase", "carry", "charge", "pass", "support", "forecheck", "poke", "check", "lapse", "one_timer", "deke", "sweep", "spin"};
 		N += std::snprintf(Buf + N, static_cast<size_t>(BufLen - N), ",\"acts\":{");
 		for (int a = 0; a < static_cast<int>(EPlaytesterAct::Count) && N < BufLen; ++a)

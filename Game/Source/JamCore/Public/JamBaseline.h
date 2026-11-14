@@ -44,6 +44,9 @@ namespace JamBaseline
 		G.Contact.StandSideBrace = 0.0;           // lane A151 (track F1): the standing skater's brace against a body hit from the side (a rule, no key yet; 0 = stand_brace there too)
 		G.Contact.bBraceExchange = false;         // lane A151: the brace is mass in the skater-to-skater bounce (a rule, no key yet)
 		G.Stick.PokeAssistDeg = 0.0; G.Stick.MissRecoveryFrames = 0; G.Stick.bPlaytesterPokeRead = false;   // lane A152 (track F2, R-0059 point 4): game.stick.poke_assist_deg, game.stick.miss_recovery_frames, the scripted human's poke read (the instrument, no key)
+		G.Contact.DownedRadiusM = 0.0;            // lane A157 (track F1): game.contact.downed_radius_m, the push-out around a downed skater (ships at 0)
+		G.Contact.CheckCooldownFrames = 0;        // lane A157: game.contact.check_cooldown_frames (ships at 0)
+		G.Contact.LungeFrames = 0; G.Contact.LungeStepMps = 0.0;   // lane A157: game.contact.lunge_frames, game.contact.lunge_step_mps, the lunge as a motion (ship at 0)
 		// THE NEXT LANE: your rule's neutral value here, one line.
 	}
 

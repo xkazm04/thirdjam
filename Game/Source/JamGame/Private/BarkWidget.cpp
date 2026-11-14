@@ -275,6 +275,10 @@ void UJamBarkWidget::Layout()
 	auto LaneCovered = [&](const FVector2D& Min, const FVector2D& Max) -> bool
 	{
 		if (!PC || !P || !P->HasFrame()) return false;
+		// Lane A158: the HUD's boxes of this tick: the human's figure and every downed figure by their bones (a lying figure is not the standing box below),
+		// and both nets (the critic's fault 3: a bubble over the net).
+		TArray<FBox2D> KeepFigures, KeepNets;
+		if (UJamHudWidget::GetKeepClear(KeepFigures, KeepNets) && (UJamHudWidget::BoxMeetsAny(Min, Max, KeepFigures) || UJamHudWidget::BoxMeetsAny(Min, Max, KeepNets))) return true;
 		const FJamPresentationFrame& F = P->GetFrame();
 		for (const FJamPresentationSkater& Sk : F.Skaters)
 		{

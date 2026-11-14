@@ -675,6 +675,7 @@ void UJamSim::FaceoffReset()
 		S.StumbleFrames = 0;
 		S.GraceFrames = 0;   // lane A113: a faceoff sets everybody up; no grace is owed after it
 		S.LateFrames = 0;    // lane A151: nor a late press
+		S.CheckReadyFrame = 0; S.LungeLeft = 0;   // lane A157: nor a cooldown or a lunge
 		// Lane A132 (track F1): the brake read-outs are this frame's truth only. StepSkater clears them at its start, so a brake of the frame the faceoff was set in
 		// (the goal pause's glide to a stop, a period's last frame, a drill's own FaceoffReset) stood on a skater that had been put on its mark with no speed
 		// until the next step: the figure's stop pose and spray on a standing skater, a brake frame too many in whoever counts the flag. Read-outs only
@@ -1081,11 +1082,29 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 			S.bCheckRefused = true;
 			++S.ChecksRefused;
 		}
+		else if (In.bCheck && Config.Skater.bCheckEnabled && Config.Contact.CheckCooldownFrames > 0 && Frame < S.CheckReadyFrame)
+		{
+			// Lane A157 (game.contact.check_cooldown_frames): a press inside the cooldown of the last one is dropped: no window, no late press, no cue.
+			++S.ChecksCooling;
+		}
 		else if (In.bCheck && Config.Skater.bCheckEnabled)
 		{
 			// Lane A151 (contact.LatePressFrames): a press just after an unpressed body contact is that hit; otherwise the window opens as before.
-			if (!TryLatePress(S)) S.CheckWindow = S.bHuman ? HumanCheckWindowFrames : CheckWindowFrames;   // lane A49: the human's press gets 0.2 s to connect
+			const bool bLate = TryLatePress(S);
+			if (!bLate) S.CheckWindow = S.bHuman ? HumanCheckWindowFrames : CheckWindowFrames;   // lane A49: the human's press gets 0.2 s to connect
 			S.bCheckThisFrame = true;
+			// Lane A157: the press is a commitment. Its cooldown starts (check_cooldown_frames), and a press that opened a window lunges (lunge_frames,
+			// lunge_step_mps: UJamSim::StepSkater runs it, ResolveContact ends it in a body). Not for a press the stick's recovery drops just below, and no
+			// second lunge inside one. Both keys at 0: nothing is written.
+			if (S.StickLockLeft <= 0)
+			{
+				if (Config.Contact.CheckCooldownFrames > 0) S.CheckReadyFrame = Frame + Config.Contact.CheckCooldownFrames;
+				if (!bLate && Config.Contact.LungeFrames > 0 && Config.Contact.bMomentum && S.LungeLeft == 0)
+				{
+					S.LungeLeft = Config.Contact.LungeFrames + 1;   // the press's own frame and lunge_frames after it: it ends on the frame the human's window of the same length does
+					S.Vel += S.Forward() * FMath::Max(0.0, Config.Contact.LungeStepMps);
+				}
+			}
 		}
 		StepCheckReach(S);   // lane A125 (track F1): an open window bends toward its man (contact.check_reach_m; 0 = off)
 		// Lane A152 (track F2, game.stick.miss_recovery_frames): the recovery after a missed poke. While it runs the stick is locked: no poke, no lift, and a
@@ -1267,6 +1286,7 @@ void UJamSim::StepSkater(FJamSkaterState& S, const FJamInput& In)
 	{
 		// R-0013: sitting out a penalty at the side boards; no input, no contact.
 		--S.PenaltyFrames;
+		S.LungeLeft = 0;   // lane A157: no lunge is owed in the box
 		S.Pos = S.PrevPos = BoxPos(S.Team);
 		S.Vel = FVector2D::ZeroVector;
 		S.YawRate = 0;
@@ -1302,14 +1322,16 @@ void UJamSim::StepSkater(FJamSkaterState& S, const FJamInput& In)
 		const double Top = Speed * Mag * Ice.SpeedMul;
 		if (Mag > 0.05)
 		{
-			S.Yaw = RotateToward(S.Yaw, FMath::Atan2(Move.Y, Move.X), TurnRate * DT);
+			// Lane A157 (game.contact.lunge_frames): a lunging skater is committed to its line: it turns at LungeSteerShare of its turn rate.
+			S.Yaw = RotateToward(S.Yaw, FMath::Atan2(Move.Y, Move.X), S.LungeLeft > 0 ? TurnRate * DT * LungeSteerShare : TurnRate * DT);
 		}
 		const FVector2D Fwd = S.Forward();
 		// Lane A93 (R-0045 law 3): braking by reversing. Move input more than 120 degrees from the velocity is a hard stop: the whole velocity loses
 		// reverse_brake_decel (x the input's size up to 1) per second until the skater is still, while the body keeps turning to the input; then the normal
 		// thrust takes over the other way. Ctrl keeps its own rule below. reverse_brake_decel 0 = off.
 		const double V = S.Vel.Size();
-		const bool bReverse = C.ReverseBrakeDecel > 0.0 && Mag > 0.05 && !In.bBrake && V > 1e-6 && Dot(Move, S.Vel) < ReverseBrakeDot * Mag * V;
+		const bool bReverse = C.ReverseBrakeDecel > 0.0 && Mag > 0.05 && !In.bBrake && V > 1e-6 && Dot(Move, S.Vel) < ReverseBrakeDot * Mag * V
+			&& S.LungeLeft == 0;   // lane A157: no hard stop out of a lunge
 		if (bReverse)
 		{
 			const double Cut = C.ReverseBrakeDecel * FMath::Min(Mag, 1.0) * DT;
@@ -1355,6 +1377,19 @@ void UJamSim::StepSkater(FJamSkaterState& S, const FJamInput& In)
 		else if (V2 >= Hold * Hold || bPush) S.RestFrames = 0;
 	}
 	else S.RestFrames = 0;
+	// Lane A157 (track F1, game.contact.lunge_frames): the lunge's clock. A skater felled or stumbled inside its lunge is out of it (nothing more is
+	// charged); a lunge that ends in a body was ended by ResolveContact; one that runs out here met nobody: the miss costs LungeMissCost x lunge_step_mps.
+	if (S.LungeLeft > 0)
+	{
+		if (!S.CanAct()) S.LungeLeft = 0;
+		else if (--S.LungeLeft == 0)
+		{
+			const double Vl = S.Vel.Size();
+			const double Cost = LungeMissCost * FMath::Max(0.0, Config.Contact.LungeStepMps);
+			S.Vel = Vl > Cost ? S.Vel * ((Vl - Cost) / Vl) : FVector2D::ZeroVector;
+			++S.LungesMissed;
+		}
+	}
 	const FVector2D Before = S.Pos;
 	S.Pos += S.Vel * DT;
 	S.DistanceM += FVector2D::Distance(Before, S.Pos);
@@ -1874,6 +1909,9 @@ void UJamSim::CollideSkaterStatic(FJamSkaterState& S)
 void UJamSim::CollideSkaters()
 {
 	const double R2 = SkaterRadius * 2.0;
+	// Lane A157 (track F1, game.contact.downed_radius_m): the distance kept between the root of a skater on its feet and the root of a downed one
+	// (0 = the key at its neutral value: a downed skater is an ordinary body, the code below as it was).
+	const double DownKeep = Config.Contact.DownedRadiusM > 0.0 ? FMath::Max(R2, SkaterRadius + Config.Contact.DownedRadiusM) : 0.0;
 	for (int32 i = 0; i < Skaters.Num(); ++i)
 	{
 		for (int32 j = i + 1; j < Skaters.Num(); ++j)
@@ -1883,6 +1921,12 @@ void UJamSim::CollideSkaters()
 			if (A.InBox() || B.InBox()) continue;
 			const FVector2D Dlt = B.Pos - A.Pos;
 			const double Dist = Dlt.Size();
+			if (DownKeep > 0.0 && A.IsDown() != B.IsDown())
+			{
+				// One of the two was down before this contact (the hit that fells a skater is the ordinary collision: neither is down yet when it is read).
+				if (Dist < DownKeep) PushOutOfDowned(A.IsDown() ? B : A, A.IsDown() ? A : B, DownKeep);
+				continue;
+			}
 			if (Dist >= R2) continue;
 			const FVector2D N = Dist > 1e-9 ? Dlt / Dist : FVector2D(A.Team == 0 ? 1.0 : -1.0, 0.0);
 			const FVector2D Contact = A.Pos + N * (Dist * 0.5);
@@ -2008,6 +2052,24 @@ void UJamSim::CollideSkaters()
 	}
 }
 
+// Lane A157 (track F1, evolution 6; docs/experiments/CONTACT-7.md section 1): nobody stands in a man who is down.
+void UJamSim::PushOutOfDowned(FJamSkaterState& Up, const FJamSkaterState& Down, double Keep)
+{
+	FVector2D N = Up.Pos - Down.Pos;
+	const double Dist = N.Size();
+	N = Dist > 1e-9 ? N / Dist : FVector2D(Up.Team == 0 ? -1.0 : 1.0, 0.0);
+	Up.Pos += N * FMath::Min(Keep - Dist, DownedPushOutMps * DT);
+	const FVector2D Rel = Up.Vel - Down.Vel;
+	const double Vn = Dot(Rel, N);
+	if (Vn >= 0.0) return;   // already leaving
+	const FVector2D T(-N.Y, N.X);
+	const double Vt = Dot(Rel, T);
+	const double Side = Vt > 1e-9 ? 1.0 : Vt < -1e-9 ? -1.0 : (Dot(Up.Forward(), T) >= 0.0 ? 1.0 : -1.0);
+	// What it had along the body it keeps; what it had into the body turns along it at DownedSlideShare (never more speed than it came with).
+	Up.Vel = Down.Vel + T * (Side * FMath::Sqrt(Vt * Vt + FMath::Square(DownedSlideShare * Vn)));
+	++Up.DownedPushFrames;
+}
+
 // Lane A151 (track F1, evolution 5; docs/experiments/CONTACT-6.md section 2): the late press.
 bool UJamSim::TryLatePress(FJamSkaterState& S)
 {
@@ -2105,7 +2167,9 @@ double UJamSim::BoardFactor(const FJamSkaterState& Vic, const FVector2D& HitDir)
 
 double UJamSim::ContactImpulse(const FJamSkaterState& Attacker, const FJamSkaterState& Victim, const FVector2D& HitDir, EContactKind Kind) const
 {
-	const double Push = Kind == EContactKind::Cross ? CrossThrust(Attacker, Victim, HitDir) : Config.Contact.LungeMps;
+	// Lane A157: a body check out of a running lunge already carries lunge_step_mps as real speed; the impulse's own lunge counts only for the rest.
+	const double Push = Kind == EContactKind::Cross ? CrossThrust(Attacker, Victim, HitDir)
+		: Attacker.LungeLeft > 0 ? FMath::Max(0.0, Config.Contact.LungeMps - FMath::Max(0.0, Config.Contact.LungeStepMps)) : Config.Contact.LungeMps;
 	return FMath::Max(1.0, Eff(EJamStat::SkaterMass, Attacker.Index)) * FMath::Max(0.0, Dot(Attacker.Vel - Victim.Vel, HitDir) + Push);
 }
 
@@ -2133,6 +2197,7 @@ int32 UJamSim::ResolveContact(FJamSkaterState& Att, FJamSkaterState& Vic, const 
 	// Lane A101: the boards are a body. A victim pushed into boards it stands within ContactBoardRangeM of cannot give way: the impulse counts x BoardFactor
 	// (game.contact.board_bonus; exactly 1 at the neutral value). The attacker's own recoil reads the impulse without it (FreeImpulse).
 	const double FreeImpulse = ContactImpulse(Att, Vic, Dir, Kind);
+	Att.LungeLeft = 0;   // lane A157: the lunge ended in a body (read by ContactImpulse just above; no miss is charged)
 	const double Board = BoardFactor(Vic, Dir);
 	const double Impulse = FreeImpulse * Board;
 	const double StabV = StabilityOf(Vic, Dir, Kind);
@@ -3283,6 +3348,9 @@ uint64 UJamSim::StateHash() const
 		if (S.GraceFrames != 0) { H.AddI(-113); H.AddI(S.GraceFrames); }
 		// Lane A151 (track F1): the late press's memory only while it runs, behind a tag (contact.LatePressFrames 0: never, so the neutral value hashes as before).
 		if (S.LateFrames != 0) { H.AddI(-151); H.AddI(S.LateFrames); H.AddI(S.LateWho); H.AddV(S.LateDir, 1000.0); H.AddV(S.LateVelSelf, 1000.0); H.AddV(S.LateVelOther, 1000.0); }
+		// Lane A157 (track F1): the check's cooldown and the lunge only once they are set, behind tags (check_cooldown_frames 0 and lunge_frames 0: never).
+		if (S.CheckReadyFrame != 0) { H.AddI(-1572); H.AddI(S.CheckReadyFrame); }
+		if (S.LungeLeft != 0) { H.AddI(-1573); H.AddI(S.LungeLeft); }
 		// Lane A121: the earned first step and the take grace only while they are up (burst.own_stop false and stick.take_grace_frames 0 hash as before).
 		if (S.bBurstEarned) H.AddI(0x121B);
 		if (S.TakeGraceLeft != 0) H.AddI(S.TakeGraceLeft);

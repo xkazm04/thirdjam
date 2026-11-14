@@ -1203,6 +1203,10 @@ namespace
 			ReadNumber(Ct, TEXT("board_bonus"), C.Contact.BoardBonus);   // lane A101 (track F1): the boards are a body; 1 = the neutral value
 			ReadInteger(Ct, TEXT("release_grace_frames"), C.Contact.ReleaseGraceFrames);   // lane A113 (R-0049 point 1): 0 = the neutral value
 			ReadNumber(Ct, TEXT("check_reach_m"), C.Contact.CheckReachM);   // lane A125 (track F1): the check finds its man; 0 = the neutral value
+			ReadNumber(Ct, TEXT("downed_radius_m"), C.Contact.DownedRadiusM);   // lane A157 (track F1): nobody stands in a man who is down; 0 = the neutral value
+			ReadInteger(Ct, TEXT("check_cooldown_frames"), C.Contact.CheckCooldownFrames);   // lane A157: a check press has a cooldown; 0 = the neutral value
+			ReadInteger(Ct, TEXT("lunge_frames"), C.Contact.LungeFrames);   // lane A157: the lunge as a motion; 0 = the neutral value
+			ReadNumber(Ct, TEXT("lunge_step_mps"), C.Contact.LungeStepMps);   // lane A157: its forward step; 0 = the neutral value
 		}
 		// Lane A132 (track F1), measurement only (as JAM_PLAYTESTER_VERBS in JamPlaytester.cpp): with JAM_TEST_SHIELD_SHOVE=0 in the environment every cartridge
 		// loads with the shove rule at its neutral value (contact.bShieldShove false: the refusal of main before lane A125; the rule has no key), so the three
