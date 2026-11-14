@@ -1,0 +1,1 @@
+FILM1 the physics lane's lab work with the stiff motors (film_make_ends_stiff.py), clay, UN-PAUSED, near camera: pair 0 (back) and pair 1 (forward), every 3rd frame to f30, then every 6th. Seen: the same as the soft run; in pair 1 the red stick still swings out flat at f006, lies closer to the hand at f009 than in the soft run, and points out to the side in the get-up at f060.
