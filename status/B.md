@@ -951,3 +951,74 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
   the in-game commentator off. **Every line of copy in it is a proposal to you**; three of its seven lines use "cut", which your voice guide keeps off the ice:
   yours and the operator's to decide at 10:00. Two findings for whoever films: ffmpeg on B cannot record the game's sound (Xbox Game Bar can); a package has
   only the game camera: a start on a named preset cut from the command line in Shipping would save retakes of the hit shot.
+
+## H45.0 (02:17, 14 Nov) FOR THE DIRECTOR: stands and a clay crowd are on the clay rig (lane AR2): please time them before your 09:00 cut; a second engine without a GPU
+- **`LR_P3_Clay` now carries timber stands and 489 clay fans** (`status/AR2-report.md`; stills `devlog/shots/20261114-021041-B-ar2-*`): 293 actors, **339,596
+  triangles**, no light added, no shadows, no collision; front edges at |y| 26.5 m and |x| 49.0 m, clear of your benches, boxes, table and goal lights on the
+  regular rink, Pond, the large and the wide arena. From the game camera in a frozen clay match: the ice's mean within 0.03 %, the puck against the ice within
+  1.5, the jerseys within 2.4; the stands take 8 to 11 % of the frame and sit at luma 35 against the ice's 165.
+- **B cannot time them.** Please run the clay tier with and without (five a side, 1920 x 1080): frame time, draw calls, the menu-to-match frame. **To switch
+  them off without B: hide the actors labelled `Stand_P3_Clay*` and `Fan_P3_Clay*` in the rig.** If they cost more than you can spare, say the budget and B
+  instances the fans and adds a far level (its Blender lane has 150-triangle fans ready by morning).
+- **Known fault**: the fans scale with the rig, so they are 1.0 m tall on Pond and 2.3 m on the wide arena (players are about 1.45 m). The rig's switcher
+  scales every actor; B cannot hide or re-space per rink from the rig. Either your rink actor's scale pass skips actors tagged for it (say the tag B should
+  set), or B bakes a layout per rink size: your call, after 10:00.
+- **The crowd can answer a goal** (meshes with a cheering pose exist, `status/AR3-report.md`; `M_ClayCrowd` can read one scalar): it needs your lamp curve
+  written into a scalar of `MPC_Look` (B adds `CrowdCheer`), or B binds the bus in a Blueprint: B does the second unless you prefer the first.
+- **A second Unreal editor runs on B with `-nullrhi`** (`status/RAG-report.md`, Evolution 0: MCP, Python, play sessions at 60 ticks a second, the figures'
+  logs; poses advance only with the mesh set to always tick): B's figure lane now works there in its own worktree while the one GPU editor does pictures. If
+  your machine is short of GPU time for lanes that need no picture, the command line is in that report.
+- Blender tonight: `skf/export30` (the attacker's hit in three sizes on one contact frame; the stick out of the trunk); a crowd that cheers, the barn's roof;
+  three new sets under way (B-to-A-0040).
+
+## H45.3 (03:11, 14 Nov) FOR THE DIRECTOR: on `dev-b` since 02:20 (built on `main` b7ee3da, cook-only PASS): effects at game size, the reactive whip, the new sets' sounds; six small asks
+- **Effects (lane B42, `status/B42-report.md`)**: the stop's spray is a fan (3.98 % of the frame at +6 for the human from 11 m/s; being brought to 2 to 2.5 %
+  and paler), the four abilities read by kind (2.5 to 3.9 % of the frame at +4, by B's own spawns: your `ability` event has still not fired in B's play), chips
+  are streaks, the slide trail is halved (worst moment about 420 sprites, was 600), `NS_goal` is team-coloured dust over the net (`User.Variant` 0 scored, 1
+  conceded) that adds no light and nothing on the ice.
+- **The figure (lane SK25, in an engine without a GPU; `status/SK25-report.md`)**: `skf/export29` and `30`; the lying loops start on a frame chosen so the cut
+  into the get-up is clean, two rules alternating so two downed players move differently (41 of 41 cuts clean, end minus release 0.0); **a reactive whip**: on a
+  contact the head, the upper spine and the stick arm are thrown along the hit and spring back in 20 frames, scaled by the check's Strength (head 4 / 8 / 14 cm
+  at 0.3 / 0.6 / 1.0), never touching the root or a take's timing; a plain collision gets none by default; the attacker's check in three sizes, chosen from
+  the closing speed at the press (it matched the Strength's band in 3 of 8).
+- **Sounds for the new sets (AU13, AU14)**: fourteen MetaSounds ready to be fired by name; sound and submix recording work in an editor without a GPU.
+- **Six asks, all small** (none before your 09:00 cut):
+  1. `UJamEffectsBinder`: set `User.Dir` for `ability` and `deke` as you do for check, knockdown, lift and poke (today the shotgun's blast and the hip
+     check's arc have no direction and come out round).
+  2. The check's Strength (or the closing speed you compute it from) **on the press**: `PlayCheck(float Strength)` or a second call three frames earlier
+     than the bus event, so the attacker's take can be the size of the hit he is about to land.
+  3. `PlayHitReaction` and `PlayBoardHit` carry no Strength; the `check` event names the attacker, not the victim: the victim's whip reads the bus and
+     assumes 0.6 when it cannot tell: a Strength on the two calls would end the guessing.
+  4. A console variable read where the figure class is resolved (`jam.vis.ClassOverride <class path>`), so a lane can swap a figure class for a test without
+     replacing a file (B's physics lane had to stand a copy in `BP_SkaterVisual_TB2_P3`'s place for one session, restored by hash).
+  5. The shotgun's `Where` at the blade on the frame the shot leaves; the slow puck's at the puck (asked before).
+  6. If you fire the new sets' sounds from the bus one day: the names and inputs are in `status/AU14-report.md`, "For the other device".
+- **The powered ragdoll (B-to-A-0040)**: whole-body does not ship; **physics on the ends only** (forearms, head, shins, feet, the stick; the trunk on the take)
+  hands back within 3 cm in 20 of 20 knockdowns and ran two seeded matches clean on a side copy; it is being filmed against the hand-made fall for the operator.
+- New sets: the dash is final (10 takes, gate passed), the dive block and the weapons are in their second loop; the cannon was rebuilt as a keg carried at the
+  hip after B's critic read the first one as a bazooka; the mallet swings at the hip, never the head.
+
+## H45.9 (03:46, 14 Nov) FOR THE DIRECTOR: handoff B-to-A-0042 (your hit flash and goal light on the play); what B's film of the night's work showed
+- **`handoff/B-to-A-0042.md`**: the hit flash whites out the hit figure for four frames at Strength 1.0; the goal's red light still reaches the face-off
+  circles on clay and night. Both with stills.
+- **What the picture lane saw of the night's blind work** (`status/FILM1-report.md`): the whip reads at Strength 1.0 (a bow from the waist, back in ten
+  frames) and is a nod at 0.3; the lying loops' moves do not read at game scale (no more work goes there); the light check reads as different, the middle
+  and the heavy look alike; the stick stays clear of the legs in the back get-up, whose rise happens in five frames and reads as a jump; **physics on the
+  fall's ends shows no visible gain over the hand-made falls at game scale** (it stays a lab branch; the operator sees the red-against-blue strips at 10:00).
+- On `dev-b`: the stop's fan paler and smaller (2.99 % of the frame at +6), the ability effects as small chalk dabs without the blocky sprites.
+- All three new sets passed B's export gate and are being imported in the no-GPU figure engine with their calls declared by name and a test trigger each.
+  The arena branch (instanced crowd with a far level, honest size per rink, the cheer bound to `goal`, the roof and walls) is being looked at on the GPU
+  before it may merge; `dev-b` keeps AR2's stands until then.
+
+## H46.6 (04:25, 14 Nov) FOR THE DIRECTOR: **for H28: step (a): the commit after c5828485** (this push): the arena as instances, the effects as filmed; built on `main` a7d8987, cook-only PASS
+- **For H28, step (a)**: everything on `dev-b` at this push. New since 8073e1ae (the commit your lane A161 is proving): the picture lane's FILM1 (the stop's
+  fan paler and smaller, ability effects as chalk dabs on `VFX/M_Fx_Chalk`), the fourteen MetaSounds of the new sets (unused by the game), and **the arena
+  rebuilt** (lanes AR5 and AR7): the answer under `handoff/A-to-B-0025.md` has the numbers. **Please time this arena, not AR2's 293 actors.**
+- **The switch** (your ask 2): no cvar yet; in `LR_P3_Clay` hide the live `BP_ArenaCrowd` actor (stands and crowd) and `Dress_P3_Clay` (roof, walls, props).
+  Say the cvar name you want and B adds it.
+- **First run** (your ask 1): two new masters compile on first use (`Look/M_ClayCrowd`, `Arena/M_ArenaWood`): the cook compiled their shader maps for SM5 and
+  SM6 without a warning; B cannot time a first-run pass. Nothing else here should need one.
+- **Step (b), by about 06:15, only if B's play-through passes it**: the figure lane's second run (56 takes of the new sets, their calls by name, a test
+  trigger, the whip's weights, a plain collision's whip at 0). It is on a side branch now; a line here says "for H28: step (b): <commit>" or "step (b) not
+  taken".
+- Cook: 0 errors, 3 warnings (the same three as all week: two of your cvars set by project setting, the null online subsystem).

@@ -1,0 +1,2 @@
+SET-DASH evolution 1: Dash_Start (10), Dash_Loop (24), Dash_End (12), Dash_Bump (9), game camera and side, p2_cel on top, p3_clay below.
+Blender (Cycles CPU, 12 samples), lab FBX, not the engine; nothing frozen.

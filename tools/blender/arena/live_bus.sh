@@ -17,13 +17,16 @@ MAX_FRAMES=${4:-14400}
 TIMEOUT=${5:-420}
 MIN_FOULS=${6:-0}
 UE="${TJ_UE_CMD:-C:/Program Files/Epic Games/UE_5.9/Engine/Binaries/Win64/UnrealEditor-Cmd.exe}"
-LOG="$W/Game/logs/a145-live-bus.log"
+# Lane A160: LIVE_BUS_LOG names the log (default as before), LIVE_BUS_DPCVARS adds console variables at start (e.g. jam.ctrl.Drill=1: lane A49's tackle
+# drill, whose tackles from behind are fouls in a cut that whistles); min goals may be 0.
+LOG="${LIVE_BUS_LOG:-$W/Game/logs/a145-live-bus.log}"
+EXTRA_DP="${LIVE_BUS_DPCVARS:+,$LIVE_BUS_DPCVARS}"
 [ -x "$UE" ] || { echo "A136 LIVE BUS could not run: no engine at $UE"; exit 2; }
 mkdir -p "$W/Game/logs"
 rm -f "$LOG"
 # MSYS_NO_PATHCONV: Git Bash would turn /Game/Maps/Rink into a Windows path under its own install
 MSYS_NO_PATHCONV=1 "$UE" "$W/Game/ThirdJam.uproject" /Game/Maps/Rink -game -nullrhi -Multiprocess -unattended -nosplash -NoSound -log -abslog="$LOG" \
-    -cut="$CUT" -dpcvars=t.MaxFPS=60,jam.ScriptHuman=1 -RemoteConsoleIP=127.0.0.1 -RemoteConsolePort="$PORT" > /dev/null 2>&1 &
+    -cut="$CUT" -dpcvars=t.MaxFPS=60,jam.ScriptHuman=1$EXTRA_DP -RemoteConsoleIP=127.0.0.1 -RemoteConsolePort="$PORT" > /dev/null 2>&1 &
 PID=$!
 echo "INFO live bus: cut $CUT, port $PORT, my pid $PID, log $LOG"
 T0=$SECONDS
@@ -48,4 +51,4 @@ if kill -0 "$PID" 2>/dev/null; then
     kill "$PID" 2>/dev/null
     sleep 2
 fi
-python "$W/tools/blender/arena/live_bus_check.py" "$LOG" "$MIN_FOULS"
+python "$W/tools/blender/arena/live_bus_check.py" "$LOG" "$MIN_FOULS" "$MIN_GOALS"

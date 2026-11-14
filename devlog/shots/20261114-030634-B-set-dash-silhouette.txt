@@ -1,0 +1,2 @@
+SET-DASH loop 2: silhouette masks from the game camera (figure about 110 px), 8 matching phases: Stride, Stride_Sprint, the new Dash_Loop with and without its stick; p2_cel above, p3_clay below.
+Blender (Cycles CPU masks), lab FBX, not the engine; nothing frozen.

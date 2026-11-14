@@ -89,10 +89,10 @@
       "triangles": 1872,
       "triangles_by_slot": {
         "board": 432,
-        "kick": 272,
+        "kick": 432,
         "bench": 96,
-        "team": 720,
-        "dark": 352
+        "team": 656,
+        "dark": 256
       },
       "triangles_by_part": {
         "floor": 96,
@@ -153,9 +153,9 @@
       "triangles": 2088,
       "triangles_by_slot": {
         "board": 440,
-        "kick": 544,
-        "bench": 80,
-        "dark": 672,
+        "kick": 416,
+        "bench": 144,
+        "dark": 736,
         "frame": 224,
         "lamp": 128
       },
@@ -606,7 +606,7 @@
     "SM_Arena_BoxHand": {
       "triangles": 64,
       "triangles_by_slot": {
-        "team": 64
+        "dark": 64
       },
       "triangles_by_part": {
         "hand": 64
@@ -632,7 +632,7 @@
       "length_m": 0.25,
       "thumb_presses": 0,
       "slots": [
-        "team"
+        "dark"
       ],
       "fbx_mb": 0.017
     }
@@ -715,5 +715,5 @@
       ]
     }
   },
-  "total_s": 1.0
+  "total_s": 5.7
 }

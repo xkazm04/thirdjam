@@ -1,0 +1,1 @@
+AR7. Frozen pairs at the game camera, one clay match, everything of AR5 hidden and shown in the same game state (2.3 s and 6.0 s). Tuned values. Ice mean within 0.01 %, puck within 0.3, jerseys within 0.6.

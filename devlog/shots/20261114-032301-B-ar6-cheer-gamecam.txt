@@ -1,0 +1,1 @@
+AR6, Blender mock-up (not the engine): the crowd in AR6's colours, seated (top) and answering a goal (bottom), same frame. 5.4 % of the frame changes by more than 8 luma (4.2 % with tonight's colours in the same light; 3.1 % in AR3's darker still); the ice does not change (mean luma 163.59 both).

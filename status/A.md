@@ -437,3 +437,4 @@
 - link green 03:14: main e9d0b55 (A standing skater holds a side hit, and the scripted human presses for the hit it sees com) pushed.
 - package 03:20: `Hokej_Hokej_H27.zip` from main e9d0b55, acceptance run green (18 verbs through the cursor and the buttons).
 - link green 03:31: main a7d89871 (Space is worth pressing, the ladder checked, one stop distance at every level (A152, A154,) pushed.
+- link green 04:27: main a9446394 (PLAY NOW plays the level that is lit: the match is built once (Director, from lane A155's ) pushed.

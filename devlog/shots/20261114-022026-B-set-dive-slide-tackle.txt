@@ -1,0 +1,1 @@
+Slide_Tackle (contact frame 10) and the existing Trip chosen as the victim, p2_cel (top) and p3_clay (bottom): game camera with the figure 110 px tall and a closer row from the side. Blender, Cycles on the CPU (12 samples, 6 threads), frozen frames, not the engine.

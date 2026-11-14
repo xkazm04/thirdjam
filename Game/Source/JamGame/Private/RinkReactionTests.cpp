@@ -149,6 +149,8 @@ bool FJamRinkGoalLampAndNet::RunTest(const FString&)
 	TArray<int64> GoalFrames;
 	TArray<int32> GoalEnds;
 	TMap<int64, float> Lamp, LightPos, LightNeg;
+	TMap<int64, float> CapsUp, WaveCd;   // lane A160: caps off the board top and the wave lights' candelas on every frame
+	TArray<int32> OwnTiming;             // lane A160: the rink's own read-out (GetGoalFirstFrame), four numbers a goal
 	TMap<int64, FVector> NetPos, NetNeg, Cd;   // Cd: the lamp lights' candelas (x the table's, y behind the -x net, z behind the +x net)
 	int64 LastShot = -Gap;
 	int32 Shots = 0, HashDiffs = 0;
@@ -188,6 +190,13 @@ bool FJamRinkGoalLampAndNet::RunTest(const FString&)
 		NetPos.Add(F, Rink->GetNetShakeScale(1));
 		NetNeg.Add(F, Rink->GetNetShakeScale(-1));
 		Cd.Add(F, FVector(Rink->GetLampLightIntensity(0), Rink->GetLampLightIntensity(1), Rink->GetLampLightIntensity(2)));
+		{
+			int32 Up = 0;
+			for (int32 k = 0; k < Rink->GetCapCount(); ++k) if (Rink->GetCapHopCm(k) > 0.f) ++Up;
+			CapsUp.Add(F, static_cast<float>(Up));
+			WaveCd.Add(F, Rink->GetWaveLightIntensity(0) + Rink->GetWaveLightIntensity(1));
+			if (GoalFrames.Num() > 0 && F == GoalFrames.Last() + ARinkActor::LampPulseFrames) for (int32 w = 0; w < 4; ++w) OwnTiming.Add(Rink->GetGoalFirstFrame(w));
+		}
 	}
 	TestEqual(TEXT("five goals in the scripted match"), GoalFrames.Num(), Goals);
 	TestEqual(TEXT("the rink answered five goals"), Rink->GetGoalReactionCount(), Goals);
@@ -246,6 +255,35 @@ bool FJamRinkGoalLampAndNet::RunTest(const FString&)
 		TestTrue(FString::Printf(TEXT("goal %d: the net is still again by frame 120"), i + 1), AtRest(At(ScoredNet, G + 120)));
 		TestFalse(FString::Printf(TEXT("goal %d: the other end's light stays dark"), i + 1), bOtherLit);
 		TestFalse(FString::Printf(TEXT("goal %d: the other net stands still"), i + 1), bOtherMoved);
+		// Lane A160 (evolution 6): the goal is one moment. Frames between the sim's goal (the frame the score changed, the frame of the bus's broadcast, the
+		// frame UJamEffectsBinder starts device B's NS_goal) and the first frame each of the rink's reactions is off rest, read from the components.
+		{
+			int32 First[4] = { -1, -1, -1, -1 };
+			int32 DeepAt = -1;
+			double DeepNow = 0.0;
+			for (int32 D = 0; D < ARinkActor::LampPulseFrames; ++D)
+			{
+				const int64 F = G + D;
+				if (First[0] < 0 && (At(Lamp, F) > Rest || (End > 0 ? At(Cd, F).Z : At(Cd, F).Y) > 0.0)) First[0] = D;
+				if (First[1] < 0 && !AtRest(At(ScoredNet, F))) First[1] = D;
+				if (First[2] < 0 && At(CapsUp, F) > 0.f) First[2] = D;
+				if (First[3] < 0 && At(WaveCd, F) > 0.f) First[3] = D;
+				const double Off = FMath::Abs(At(ScoredNet, F).Y - 1.0);
+				if (Off > DeepNow) { DeepNow = Off; DeepAt = D; }
+			}
+			TestEqual(FString::Printf(TEXT("goal %d: the lamp and its light are on the sim's goal frame"), i + 1), First[0], 0);
+			TestEqual(FString::Printf(TEXT("goal %d: the net bulges on the sim's goal frame"), i + 1), First[1], 0);
+			TestTrue(FString::Printf(TEXT("goal %d: the net is deepest within 2 frames"), i + 1), DeepAt >= 0 && DeepAt <= 2);
+			TestEqual(FString::Printf(TEXT("goal %d: a cap of the scored end's boards hops on the sim's goal frame"), i + 1), First[2], 0);
+			TestTrue(FString::Printf(TEXT("goal %d: the wave's lights come on the frame after (they grow over the pulse)"), i + 1), First[3] == 1);
+			if (TestTrue(FString::Printf(TEXT("goal %d: the rink read its own timing out"), i + 1), OwnTiming.Num() >= 4 * (i + 1)))
+			{
+				TestTrue(FString::Printf(TEXT("goal %d: the rink's own timing line says the same four numbers"), i + 1),
+					OwnTiming[4 * i] == First[0] && OwnTiming[4 * i + 1] == First[1] && OwnTiming[4 * i + 2] == First[2] && OwnTiming[4 * i + 3] == First[3]);
+			}
+			AddInfo(FString::Printf(TEXT("A160 goal %d sim frame %lld end %s: frames after the sim's goal to the first frame off rest: lamp +%d, net +%d (deepest +%d, %.3f), caps +%d, wave lights +%d"),
+				i + 1, G, End > 0 ? TEXT("+x") : TEXT("-x"), First[0], First[1], DeepAt, DeepNow, First[2], First[3]));
+		}
 		AddInfo(FString::Printf(TEXT("A127 goal %d frame %lld end %s: lamp %.2f -> %.2f on the goal's frame, %.2f two frames on, at rest again %lld frames after; scored light %.2f; net depth off rest by up to %.3f"),
 			i + 1, G, End > 0 ? TEXT("+x") : TEXT("-x"), Rest, At(Lamp, G), At(Lamp, G + 2), Back, At(Scored, G), Deep));
 	}
@@ -530,7 +568,8 @@ bool FJamRinkBoardCaps::RunTest(const FString&)
 		for (int32 i = 0; i < Line.Num(); ++i) Perimeter += FVector2D::Distance(Line[i], Line[(i + 1) % Line.Num()]);
 		TestEqual(*(Tag + TEXT(": one cap at every stanchion place")), N, FMath::Max(4, FMath::RoundToInt32(Perimeter / ARinkActor::StanchionSpacingM)));
 		TestEqual(*(Tag + TEXT(": one instance for every cap")), Rink->ArenaCaps && Rink->ArenaCapsPos ? Rink->ArenaCaps->GetInstanceCount() + Rink->ArenaCapsPos->GetInstanceCount() : -1, N);   // lane A145: the two halves
-		TestTrue(*(Tag + TEXT(": the caps add fewer than 3,000 triangles")), Rink->GetCapTriangles() > 0 && Rink->GetCapTriangles() < 3000);
+		// Lane A160: the dome on every shipped rink (it was the 90 x 45 rink's alone under a budget of 3,000).
+		TestTrue(*(Tag + TEXT(": the caps are the dome, within the triangle budget")), Rink->AreCapsRound() && Rink->GetCapTriangles() == N * 40 && Rink->GetCapTriangles() <= ARinkActor::CapTriangleBudget);
 
 		// Every quarter metre of the outline: a skater's centre 0.45 m inside the boards, a hard hit.
 		int64 Frame = 1000;
@@ -683,6 +722,15 @@ bool FJamRinkBoardCaps::RunTest(const FString&)
 	}
 	// The loud goal's light: over the net by default; `jam.rink.react.loud 0` puts it back beside the lamp at evolution 3's candelas.
 	{
+		// Lane A160: the quiet light (device B's numbers) is the default now; the loud goal is `jam.rink.react.loud 1`.
+		FCvarGuard LoudOn(TEXT("jam.rink.react.loud"));
+		TestEqual(TEXT("the goal's light is quiet by default (device B's numbers)"), LoudOn.Was, 0);
+		const FVector Quiet = Rink->ArenaLampLights[2]->GetRelativeLocation();
+		TestTrue(TEXT("by default the +x end's light stands beside the lamp, outside the end boards, in a 3.5 m radius"), Quiet.X > HalfL && FMath::IsNearlyEqual(Rink->ArenaLampLights[2]->AttenuationRadius, ARinkActor::LampLightRadiusCm, 0.01f));
+		TestTrue(TEXT("by default 800 cd at the scored end on p3_clay, 200 at the table"), FMath::IsNearlyEqual(Rink->LampLightPeakAt(2), 800.f, 0.01f) && FMath::IsNearlyEqual(Rink->LampLightPeakAt(0), 200.f, 0.01f));
+		LoudOn.Set(1);
+		Rink->SetConstructionVisible(true);
+		TestTrue(TEXT("jam.rink.react.loud 1: the 16 m radius of evolution 4"), FMath::IsNearlyEqual(Rink->ArenaLampLights[2]->AttenuationRadius, ARinkActor::LampLightRadiusLoudCm, 0.01f));
 		const float Loud = Rink->LampLightPeakAt(2), LoudTable = Rink->LampLightPeakAt(0);
 		const FVector Over = Rink->ArenaLampLights[2]->GetRelativeLocation();
 		TestTrue(TEXT("the +x end's light hangs over the net, behind the goal line and inside the end boards"), Over.X > Cfg.Rink.GoalLineX() * 100.0 && Over.X < HalfL && FMath::IsNearlyZero(Over.Y, 1e-3) && FMath::IsNearlyEqual(Over.Z, ARinkActor::EndLightHeightM * 100.0, 1e-3));
@@ -897,9 +945,21 @@ bool FJamRinkHitSeenBoxUsed::RunTest(const FString&)
 		ARinkActor* BigRink = SpawnRink(W2, Big);
 		if (TestNotNull(TEXT("the 140 x 70 rink spawned"), BigRink))
 		{
-			TestFalse(TEXT("140 x 70: more caps than the dome's budget allows, the rink takes the far level"), BigRink->AreCapsRound());
-			TestTrue(TEXT("140 x 70: 24 triangles a cap, within the budget"), BigRink->GetCapTriangles() == BigRink->GetCapCount() * 24 && BigRink->GetCapTriangles() <= ARinkActor::CapTriangleBudget);
-			AddInfo(FString::Printf(TEXT("A145 caps: 140 x 70: %d caps, %d triangles (the far level)"), BigRink->GetCapCount(), BigRink->GetCapTriangles()));
+			// Lane A160: the biggest shipped rink takes the dome too.
+			TestTrue(TEXT("140 x 70: the caps are the dome"), BigRink->AreCapsRound());
+			TestTrue(TEXT("140 x 70: 40 triangles a cap, within the budget"), BigRink->GetCapTriangles() == BigRink->GetCapCount() * 40 && BigRink->GetCapTriangles() <= ARinkActor::CapTriangleBudget);
+			AddInfo(FString::Printf(TEXT("A160 caps: 140 x 70: %d caps, %d triangles (the dome)"), BigRink->GetCapCount(), BigRink->GetCapTriangles()));
+		}
+		FJamGameConfig Huge = Cfg;
+		Huge.Rink.LengthM = 240.0;
+		Huge.Rink.WidthM = 120.0;
+		FTestWorld W3;
+		ARinkActor* HugeRink = SpawnRink(W3, Huge);
+		if (TestNotNull(TEXT("a 240 x 120 rink spawned"), HugeRink))
+		{
+			TestFalse(TEXT("240 x 120: more caps than the dome's budget allows, the rink takes the far level"), HugeRink->AreCapsRound());
+			TestTrue(TEXT("240 x 120: 24 triangles a cap, within the budget"), HugeRink->GetCapTriangles() == HugeRink->GetCapCount() * 24 && HugeRink->GetCapTriangles() <= ARinkActor::CapTriangleBudget);
+			AddInfo(FString::Printf(TEXT("A160 caps: 240 x 120: %d caps, %d triangles (the far level)"), HugeRink->GetCapCount(), HugeRink->GetCapTriangles()));
 		}
 	}
 
@@ -1037,6 +1097,127 @@ bool FJamRinkHitSeenBoxUsed::RunTest(const FString&)
 		Rink->AdvanceReactions(Frame + 200);
 	}
 	Rink->BindBus(nullptr);
+	return true;
+}
+
+// Lane A160 (track F3, evolution 6): Jam.Rink.BoxSeenFromIce. In a cut that whistles the penalty boxes stand on a bare tier too (Glass House plays on
+// l3_neon), the boxed figure gets its seat there, and a box in use is lit from inside for the penalty's frames; without the whistle a bare tier shows no
+// box and a dressed tier's boxes are furniture: no light at rest. The bare tiers show the Blender goals and the caps (`jam.rink.arena.bare`).
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamRinkBoxSeenFromIce, "Jam.Rink.BoxSeenFromIce", JamRinkReactionTests::Flags)
+bool FJamRinkBoxSeenFromIce::RunTest(const FString&)
+{
+	FJamGameConfig Cfg;
+	if (!LoadRegular(*this, Cfg)) return false;
+	FVector Loc;
+	FRotator Rot;
+	// 1. Glass House's own cartridge: the one cut that whistles, on a bare tier.
+	{
+		TArray<FString> Errors;
+		UJamCartridge* C = UJamCartridge::LoadFromFile(UJamCartridge::ResolveCartridgePath(TEXT("modes/hockey.mode.glass-house")), Errors);
+		for (const FString& E : Errors) AddError(FString::Printf(TEXT("hockey.mode.glass-house: %s"), *E));
+		if (!TestNotNull(TEXT("Glass House loads"), C)) return false;
+		const FJamGameConfig Glass = C->Game;
+		TestTrue(TEXT("Glass House whistles"), Glass.Rules.bPenalties);
+		TestTrue(TEXT("Glass House plays on a bare tier"), ARinkActor::IsBareTier(Glass.Look.Tier));
+		FTestWorld W;
+		ARinkActor* Rink = SpawnRink(W, Glass);
+		if (!TestNotNull(TEXT("the rink spawned"), Rink)) return false;
+		UJamEventBus* Bus = MakeBus();
+		Rink->BindBus(Bus);
+		TestFalse(TEXT("Glass House: the benches and the table stay hidden (a bare tier)"), Rink->IsArenaDressingShown());
+		TestTrue(TEXT("Glass House: the two penalty boxes stand"), Rink->AreBoxesShown() && Rink->ArenaBoxNeg->IsVisible() && Rink->ArenaBoxPos->IsVisible());
+		TestTrue(TEXT("Glass House: their doors and hands stand with them"), Rink->IsBoxUsable() && Rink->ArenaBoxDoorNeg->IsVisible() && Rink->ArenaBoxHandPos->IsVisible());
+		TestFalse(TEXT("Glass House: the benches are not shown"), Rink->ArenaBenchNeg->IsVisible() || Rink->ArenaBenchPos->IsVisible());
+		TestTrue(TEXT("Glass House: a boxed figure has a seat in each box"), Rink->GetPenaltyBoxSeat(0, Loc, Rot) && Rink->GetPenaltyBoxSeat(1, Loc, Rot));
+		TestTrue(TEXT("the seat is outside the -y boards"), Loc.Y < -(Glass.Rink.WidthM * 50.0 + 20.0));
+		TestTrue(TEXT("at rest no box is lit"), Rink->GetBoxLightIntensity(0) == 0.f && Rink->GetBoxLightIntensity(1) == 0.f && !Rink->IsReacting());
+		const int32 P = Rink->GetBoxPenaltyFrames();
+		TestEqual(TEXT("the penalty is the cartridge's"), P, Glass.Rules.PenaltyFrames);
+		const float Peak = Rink->BoxLightPeakHere();
+		TestTrue(TEXT("the box's light has candelas (a fifth of the cvar off clay)"), Peak > 0.f && FMath::IsNearlyEqual(Peak, ARinkActor::BoxLightPeak() * ARinkActor::NightLightShare, 0.01f));
+		FJamEventPayload Foul;
+		Foul.Who = 0;      // team 0's first skater: the box at x = -3
+		Foul.Strength = 1.f;
+		Foul.Kind = FName(TEXT("foul_from_behind"));
+		const int64 F0 = 5000;
+		Bus->SetSimFrame(F0);
+		Bus->Broadcast(JamEvents::Foul, Foul);
+		TestTrue(TEXT("the fouler's box is lit on the foul's frame"), Rink->GetBoxLightIntensity(0) > 0.f);
+		int32 Dark = 0, OtherLit = 0, Full = 0;
+		float MaxCd = 0.f;
+		for (int64 D = 0; D < P; ++D)
+		{
+			Bus->SetSimFrame(F0 + D);
+			Rink->AdvanceReactions(F0 + D);
+			const float Cd = Rink->GetBoxLightIntensity(0);
+			if (Cd <= 0.f) ++Dark;
+			if (FMath::IsNearlyEqual(Cd, Peak, 0.01f)) ++Full;
+			MaxCd = FMath::Max(MaxCd, Cd);
+			if (Rink->GetBoxLightIntensity(1) > 0.f) ++OtherLit;
+		}
+		TestEqual(TEXT("the box is lit on every frame of the penalty"), Dark, 0);
+		TestTrue(TEXT("at the peak outside the fades"), Full >= P - 2 * ARinkActor::BoxLightFadeFrames && FMath::IsNearlyEqual(MaxCd, Peak, 0.01f));
+		TestEqual(TEXT("the other box stays dark"), OtherLit, 0);
+		Bus->SetSimFrame(F0 + P);
+		Rink->AdvanceReactions(F0 + P);
+		TestEqual(TEXT("dark on the frame the skater is back on the ice"), Rink->GetBoxLightIntensity(0), 0.f);
+		Bus->SetSimFrame(F0 + P + ARinkActor::DoorCycleFrames);
+		Rink->AdvanceReactions(F0 + P + ARinkActor::DoorCycleFrames);
+		TestFalse(TEXT("nothing is live after the door's second swing"), Rink->IsReacting());
+		AddInfo(FString::Printf(TEXT("A160 box: Glass House (%s, penalty %d frames): boxes shown, seat y %.0f cm, light %.0f cd on %d of %d frames at the peak, 0 dark, the other box 0"),
+			*Glass.Look.Tier, P, Loc.Y, Peak, Full, P));
+		// the neutral value
+		{
+			IConsoleVariable* BoxVar = IConsoleManager::Get().FindConsoleVariable(TEXT("jam.rink.react.box"));
+			const float BoxWas = BoxVar ? BoxVar->GetFloat() : 0.f;
+			if (BoxVar) BoxVar->Set(0.f, ECVF_SetByCode);
+			Bus->SetSimFrame(F0 + 2000);
+			Bus->Broadcast(JamEvents::Foul, Foul);
+			Rink->AdvanceReactions(F0 + 2030);
+			TestTrue(TEXT("jam.rink.react.box 0: the box is used (the hand runs) and stays dark: evolution 5's box"), Rink->GetBoxLightIntensity(0) == 0.f && Rink->GetBoxHandDeg(0) > 0.f);
+			Rink->AdvanceReactions(F0 + 2000 + P + ARinkActor::DoorCycleFrames);
+			if (BoxVar) BoxVar->Set(BoxWas, ECVF_SetByCode);
+		}
+		// the goals and the caps on the bare tier, and their neutral value
+		TestTrue(TEXT("Glass House: the Blender goals and the caps stand (jam.rink.arena.bare 1)"), Rink->IsArenaGoalShown() && Rink->AreCapsShown() && Rink->AreCapsRound());
+		{
+			FCvarGuard Guard(TEXT("jam.rink.arena.bare"));
+			Guard.Set(0);
+			Rink->SetConstructionVisible(true);   // what the cvar sink does on a change
+			TestTrue(TEXT("jam.rink.arena.bare 0: the code frame and no caps, as before; the boxes stay (the whistle)"), !Rink->IsArenaGoalShown() && !Rink->AreCapsShown() && Rink->AreBoxesShown());
+		}
+		Rink->SetConstructionVisible(true);
+		TestTrue(TEXT("back at 1 the goals stand again"), Rink->IsArenaGoalShown());
+		Rink->BindBus(nullptr);
+	}
+	// 2. A bare tier without the whistle: no box, no seat (as before the lane).
+	{
+		FJamGameConfig Quiet = Cfg;
+		Quiet.Look.Tier = TEXT("l3_neon");
+		Quiet.Rules.bPenalties = false;
+		FTestWorld W;
+		ARinkActor* Rink = SpawnRink(W, Quiet);
+		if (!TestNotNull(TEXT("the quiet neon rink spawned"), Rink)) return false;
+		TestTrue(TEXT("no whistle on a bare tier: no box, no seat"), !Rink->AreBoxesShown() && !Rink->ArenaBoxNeg->IsVisible() && !Rink->GetPenaltyBoxSeat(0, Loc, Rot));
+		UJamEventBus* Bus = MakeBus();
+		Rink->BindBus(Bus);
+		FJamEventPayload Foul;
+		Foul.Who = 0;
+		Bus->SetSimFrame(100);
+		Bus->Broadcast(JamEvents::Foul, Foul);
+		TestTrue(TEXT("no whistle on a bare tier: a foul event answers nothing"), Rink->GetBoxReactionCount() == 0 && Rink->GetBoxLightIntensity(0) == 0.f);
+		Rink->BindBus(nullptr);
+	}
+	// 3. The shipped look without the whistle (hockey.regular): the boxes are furniture.
+	{
+		FTestWorld W;
+		ARinkActor* Rink = SpawnRink(W, Cfg);
+		if (!TestNotNull(TEXT("the regular rink spawned"), Rink)) return false;
+		TestFalse(TEXT("hockey.regular does not whistle"), Cfg.Rules.bPenalties);
+		TestTrue(TEXT("p3_clay: the boxes stand as furniture, dark, their doors closed, their hands at the top"), Rink->AreBoxesShown() && Rink->IsArenaDressingShown()
+			&& Rink->GetBoxLightIntensity(0) == 0.f && Rink->GetBoxLightIntensity(1) == 0.f && Rink->GetBoxDoorDeg(0) == 0.f && Rink->GetBoxHandDeg(1) == 0.f && !Rink->IsReacting());
+		TestTrue(TEXT("p3_clay: the box's light would take the cvar's candelas"), FMath::IsNearlyEqual(Rink->BoxLightPeakHere(), ARinkActor::BoxLightPeak(), 0.01f));
+	}
 	return true;
 }
 

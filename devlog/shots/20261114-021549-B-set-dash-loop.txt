@@ -1,0 +1,2 @@
+SET-DASH: Stride and Stride_Sprint (every 5th frame) above the new Dash_Loop (24 frames, every 2nd), game camera (figure about 110 px) and side; p2_cel on top, p3_clay below.
+Blender (Cycles CPU, 12 samples), frames from the lab FBX, not the engine; nothing frozen.

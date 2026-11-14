@@ -20,7 +20,7 @@ Builds two static meshes, each under 3,000 triangles, each with UVs (world scale
   SM_Arena_PenaltyBox  a penalty box: floor, back wall, two side walls, cap rail, a short seat, one door, a clock on the back wall,
                        and the socket SOCKET_Seat (Unreal socket "Seat"): where a boxed skater stands.
 
-Slots: board (walls), kick (kick band, seat, backrest), bench (floor), team (cap rail, doors), dark (legs, hinges, handles, the clock's face).
+Slots: board (walls), kick (kick band, seat, backrest), bench (floor), team (cap rail, doors), dark (legs, hinges, handles, the clock's hands and post; lane A160: its rim is kick and its face board).
 
 Frame of each piece: origin on the ice (z = 0) at the middle of its rink-side edge; +x along the boards; the piece extends AWAY from the rink.
 "out" (away from the rink) is Blender -Y, because Unreal's FBX import flips Y: in Unreal the piece extends along +Y. RinkActor turns the pieces on the
@@ -471,15 +471,16 @@ def penalty_box():
     D, WT = P["depth"], P["wall_t"]
     enclosure(pc, length, door_xs=[(-half + 0.45, 1.0)], seat_len=2.0, seat_x=half - WT - 1.15, legs=2,
               rings=dict(floor=3, wall=4, kick=3, rail=20, side_rail=6, seat=3, backrest=2), loose_door=True)
-    # the clock on the back wall's rail: a chunky disc (rim in the board colour, a dark face, two hands as lumps), on a short post
+    # the clock on the back wall's rail: a chunky disc on a short post. Lane A160 (evolution 6): the face was the slot `dark` and read as a black disc, the
+    # darkest thing in the clay frame (device B's critic, fault 14). Now an ochre rim (kick), a plaster face (board) and dark hands: a clock face on clay.
     back_o = D - WT * 0.5
     zr = P["back_h"] + P["rail_h"] - 0.03
     pc.bar("clock", "dark", "z", 0.20, 0.10, 0.10, (0.0, back_o, zr + 0.09), rings=1, r=0.03, wobble=0.004)
-    pc.bar("clock", "board", "o", 0.14, 0.62, 0.62, (0.0, back_o, zr + 0.48), rings=1, r=0.27, segs=4, wobble=0.006, pillow=0.0)
-    pc.bar("clock", "dark", "o", 0.03, 0.46, 0.46, (0.0, back_o - 0.075, zr + 0.48), rings=1, r=0.20, segs=4, wobble=0.003, pillow=0.006)
+    pc.bar("clock", "kick", "o", 0.14, 0.62, 0.62, (0.0, back_o, zr + 0.48), rings=1, r=0.27, segs=4, wobble=0.006, pillow=0.0)
+    pc.bar("clock", "board", "o", 0.03, 0.46, 0.46, (0.0, back_o - 0.075, zr + 0.48), rings=1, r=0.20, segs=4, wobble=0.003, pillow=0.006)
     # lane A145: the long hand is a mesh of its own (box_hand()), turned by ARinkActor about this socket with the penalty's frames; the short one stays
     pc.sockets["Hand"] = (0.0, back_o - 0.10, zr + 0.48)
-    pc.bar("clock", "team", "x", 0.14, 0.035, 0.05, (0.06, back_o - 0.10, zr + 0.48), rings=1, r=0.012, wobble=0.002)
+    pc.bar("clock", "dark", "x", 0.14, 0.035, 0.05, (0.06, back_o - 0.10, zr + 0.48), rings=1, r=0.012, wobble=0.002)
     # where a boxed skater stands: on the floor, clear of the seat and of the door's swing, facing the rink (-out)
     pc.sockets["Seat"] = tuple(P["seat_socket"])
     pc.thumbs_done = pc.thumbs()
@@ -487,7 +488,7 @@ def penalty_box():
 
 
 DOOR_SLOTS = ["team", "dark"]
-HAND_SLOTS = ["team"]
+HAND_SLOTS = ["dark"]      # lane A160: a dark hand on the plaster face (it was the team colour on a black face)
 HAND = dict(len=0.25, w=0.065, t=0.04, budget=80)
 
 
@@ -509,7 +510,7 @@ def box_hand():
     """The penalty clock's long hand (lane A145): a bar standing up from the origin (the clock's middle, the box's socket `Hand`), turned by ARinkActor
     about the box's `out` axis: one turn for one penalty."""
     pc = Piece("SM_Arena_BoxHand", seed=47.0, slots=HAND_SLOTS)
-    pc.bar("hand", "team", "z", HAND["len"], HAND["w"], HAND["t"], (0.0, 0.0, HAND["len"] * 0.5 - 0.02), rings=1, r=0.012, wobble=0.002)
+    pc.bar("hand", "dark", "z", HAND["len"], HAND["w"], HAND["t"], (0.0, 0.0, HAND["len"] * 0.5 - 0.02), rings=1, r=0.012, wobble=0.002)
     pc.thumbs_done = 0
     pc.budget = HAND["budget"]
     return pc, HAND["len"]
@@ -676,9 +677,10 @@ def scorer_table():
         pc.bar("sign_posts", "dark", "z", sz - sh * 0.5 - WH + 0.10, 0.11, 0.11, (sx * 0.46, back_o, (sz - sh * 0.5 + WH) * 0.5), rings=1, r=0.03)
     pc.bar("sign", "board", "x", sw, 0.16, sh, (0, back_o, sz), rings=6, r=0.07, segs=2, wobble=0.008)
     pc.rails.append(("x", -sw * 0.5 + 0.3, sw * 0.5 - 0.3, back_o, sz + sh * 0.5))
-    pc.bar("sign_face", "dark", "x", sw - 0.22, 0.03, sh - 0.20, (0, back_o - 0.085, sz), rings=1, r=0.012, wobble=0.003, pillow=0.004)
+    # lane A160: the sign's face was the slot `dark` too (luma 1 on clay, the largest black thing above the play): a pale face (bench) with dark digits
+    pc.bar("sign_face", "bench", "x", sw - 0.22, 0.03, sh - 0.20, (0, back_o - 0.085, sz), rings=1, r=0.012, wobble=0.003, pillow=0.004)
     for sx in (-1, 1):
-        pc.bar("sign_digits", "kick", "z", 0.24, 0.17, 0.04, (sx * 0.30, back_o - 0.105, sz), rings=1, r=0.015, wobble=0.003)
+        pc.bar("sign_digits", "dark", "z", 0.24, 0.17, 0.04, (sx * 0.30, back_o - 0.105, sz), rings=1, r=0.015, wobble=0.003)
         pc.bar("sign_digits", "frame", "x", 0.06, 0.04, 0.06, (0.0, back_o - 0.105, sz + sx * 0.07), rings=1, r=0.015, wobble=0.002)
     # lane A127: the lamp grew from 0.23 to 0.36 m (it is what a goal lights; at 0.23 it was a dot from the ice)
     pc.bar("lamp", "dark", "z", 0.07, 0.44, 0.44, (0, back_o, sz + sh * 0.5 + 0.02), rings=1, r=0.19, segs=2, wobble=0.004)

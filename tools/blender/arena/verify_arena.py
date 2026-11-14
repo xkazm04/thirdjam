@@ -90,14 +90,22 @@ def main():
     report = {"sizes": {}, "tiers": {}, "checks": {}}
     ok = True
 
-    def build(length, width, tier, goal=None):
+    def build(length, width, tier, goal=None, whistle=0, corner=None):
         cfg = unreal.JamGameConfig()
+        # lane A160: the config's default rules whistle; every shipped cut but Glass House has the whistle off, and so has this check unless asked
+        rules = cfg.get_editor_property("rules")
+        rules.set_editor_property("penalties", whistle > 0)
+        if whistle > 0:
+            rules.set_editor_property("penalty_frames", int(whistle))
+        cfg.set_editor_property("rules", rules)
         r = cfg.get_editor_property("rink")
         r.set_editor_property("length_m", float(length))
         r.set_editor_property("width_m", float(width))
         if goal:
             r.set_editor_property("goal_width_m", float(goal[0]))
             r.set_editor_property("goal_height_m", float(goal[1]))
+        if corner:
+            r.set_editor_property("corner_radius_m", float(corner))
         cfg.set_editor_property("rink", r)
         look = cfg.get_editor_property("look")
         look.set_editor_property("tier", tier)
@@ -109,6 +117,16 @@ def main():
     nets_visible = lambda: bool(rink.get_editor_property("nets").is_visible())
     with open(os.path.join(OUT, "import.json")) as fh:
         imported = json.load(fh)["pieces"]
+    # Lane A160: sections 1 to 6 check the arena of evolutions 1 to 5, where a bare tier shows no Blender piece: that is `jam.rink.arena.bare 0` now (the
+    # neutral value; every Build reads it). Section 7 runs at the default.
+    bare_default = unreal.SystemLibrary.get_console_variable_int_value("jam.rink.arena.bare")
+    unreal.SystemLibrary.execute_console_command(world, "jam.rink.arena.bare 0")
+    # The same for the goal's light: sections 3 to 6 check evolution 4's loud goal (6,000 cd over the net), which is `jam.rink.react.loud 1` with
+    # `jam.rink.react.light 6000` now; the default is device B's quiet light (section 7).
+    loud_default = unreal.SystemLibrary.get_console_variable_int_value("jam.rink.react.loud")
+    light_default = unreal.SystemLibrary.get_console_variable_float_value("jam.rink.react.light")
+    unreal.SystemLibrary.execute_console_command(world, "jam.rink.react.loud 1")
+    unreal.SystemLibrary.execute_console_command(world, "jam.rink.react.light 6000")
 
     # ---- 1. places, scale, meshes and materials on three rinks (tier l2_night)
     for (length, width) in ((120, 60), (90, 45), (140, 70)):
@@ -434,9 +452,9 @@ def main():
         row["end_light_cm"] = [round(lx.x, 1), round(lx.y, 1), round(lx.z, 1)]
         row["end_light_peak_cd"] = [round(rink.lamp_light_peak_at(i), 1) for i in range(3)]
         light_ok = near(lx.x, (length * 0.5 - 4.0 + 3.0) * 100.0) and near(lx.y, 0.0) and near(lx.z, 360.0)
-        row["ok"] = (n >= 4 and row["instances"] == n and row["shown"] and row["visible"] and row["mesh"] == ("SM_Arena_BoardCap" if n * 40 <= 3000 else "SM_Arena_BoardCapFar")
-                     and row["round"] == (n * 40 <= 3000) and row["triangles"] == n * (40 if row["round"] else 24) and row["material"] == "MI_Toon_Blue" and row["material_pos"] == "MI_Toon_Orange"
-                     and 0 < row["triangles"] <= 3000 and row["widest_gap_m"] <= 3.7 and row["z_cm"] == [120.0, 120.0] and outside == 0 and row["custom_depth"] and not row["cast_shadow"] and hit_ok and light_ok)
+        row["ok"] = (n >= 4 and row["instances"] == n and row["shown"] and row["visible"] and row["mesh"] == ("SM_Arena_BoardCap" if n * 40 <= 6000 else "SM_Arena_BoardCapFar")
+                     and row["round"] == (n * 40 <= 6000) and row["triangles"] == n * (40 if row["round"] else 24) and row["material"] == "MI_Toon_Blue" and row["material_pos"] == "MI_Toon_Orange"
+                     and 0 < row["triangles"] <= 6000 and row["widest_gap_m"] <= 3.7 and row["z_cm"] == [120.0, 120.0] and outside == 0 and row["custom_depth"] and not row["cast_shadow"] and hit_ok and light_ok)
         e4_ok = e4_ok and row["ok"]
         report["e4"]["%dx%d %s" % (length, width, tier)] = row
         log("e4 %dx%d %s ok=%s: %d caps, %d triangles, widest gap %.2f m, hits %s, end light %s cd %s" % (length, width, tier, row["ok"], n, row["triangles"], row["widest_gap_m"],
@@ -572,6 +590,106 @@ def main():
     ok = ok and e5_ok
     log("e5 neutral ok=%s %s" % (still5_ok, json.dumps(still5)))
     log("A145 E5 %s" % ("PASS" if e5_ok else "FAIL"))
+
+    # ---- 7. lane A160 (evolution 6): the dome on every rink, the bare tiers' goals and caps, the box seen from the ice, a goal's timing
+    unreal.SystemLibrary.execute_console_command(world, "jam.rink.arena.bare %d" % bare_default)
+    unreal.SystemLibrary.execute_console_command(world, "jam.rink.react.loud %d" % loud_default)
+    unreal.SystemLibrary.execute_console_command(world, "jam.rink.react.light %g" % light_default)
+    report["e6"] = {"jam.rink.arena.bare": bare_default, "jam.rink.react.loud": loud_default, "jam.rink.react.light": light_default}
+    box_cd = unreal.SystemLibrary.get_console_variable_float_value("jam.rink.react.box")
+    vis = lambda n: bool(rink.get_editor_property(n).is_visible())
+    mesh_of = lambda n: (rink.get_editor_property(n).get_editor_property("static_mesh").get_name() if rink.get_editor_property(n).get_editor_property("static_mesh") else None)
+    e6_ok = bare_default == 1 and box_cd > 0.0
+    # the dome on the regular, the large and the wide rink
+    domes = {}
+    for length, width, corner in ((90, 45, 3.75), (120, 60, 5.0), (140, 70, 5.83)):
+        build(length, width, "p3_clay", corner=corner)
+        domes["%dx%d" % (length, width)] = {"caps": rink.get_cap_count(), "round": bool(rink.are_caps_round()), "triangles": rink.get_cap_triangles(), "mesh": mesh_of("arena_caps")}
+    report["e6"]["domes"] = domes
+    domes_ok = all(d["round"] and d["mesh"] == "SM_Arena_BoardCap" and d["triangles"] == d["caps"] * 40 for d in domes.values())
+    # the pond: l1_day (a bare tier), 60 x 30, a 6 m goal, no whistle: its own Blender goal and the caps stand, no piece outside the boards
+    build(60, 30, "l1_day", goal=(6.0, 0.61), corner=3.0)
+    pond = {"goals_shown": bool(rink.is_arena_goal_shown()), "goal_mesh": mesh_of("arena_goal_pos"), "code_frame_visible": nets_visible(), "caps_shown": bool(rink.are_caps_shown()),
+            "caps_round": bool(rink.are_caps_round()), "caps": rink.get_cap_count(), "dressing_shown": bool(rink.is_arena_dressing_shown()), "boxes_shown": bool(rink.are_boxes_shown()),
+            "outside_visible": [n for n in ("arena_bench_neg", "arena_bench_pos", "arena_box_neg", "arena_box_pos", "arena_table", "arena_goal_light_neg", "arena_goal_light_pos") if vis(n)],
+            "seat": seat_of(rink, 0) is not None}
+    report["e6"]["pond"] = pond
+    pond_ok = (pond["goals_shown"] and pond["goal_mesh"] == "SM_Arena_Goal_W600H061" and not pond["code_frame_visible"] and pond["caps_shown"] and pond["caps_round"]
+               and not pond["dressing_shown"] and not pond["boxes_shown"] and pond["outside_visible"] == [] and not pond["seat"])
+    # Glass House: l3_neon with the whistle (600 frames): the two boxes alone outside the boards, a seat, a light in the used box
+    build(90, 45, "l3_neon", whistle=600, corner=3.75)
+    s1 = seat_of(rink, 1)
+    glass = {"boxes_shown": bool(rink.are_boxes_shown()), "dressing_shown": bool(rink.is_arena_dressing_shown()), "penalty_frames": rink.get_box_penalty_frames(),
+             "visible": [n for n in ("arena_bench_neg", "arena_bench_pos", "arena_box_neg", "arena_box_pos", "arena_box_door_neg", "arena_box_door_pos", "arena_box_hand_neg", "arena_box_hand_pos",
+                                     "arena_table", "arena_goal_light_neg", "arena_goal_light_pos") if vis(n)],
+             "seat_team1_cm": [round(s1[0].x, 1), round(s1[0].y, 1), round(s1[0].z, 1)] if s1 else None, "light_peak_cd": round(rink.box_light_peak_here(), 1),
+             "light_at_rest_cd": [round(rink.get_box_light_intensity(t), 1) for t in range(2)]}
+    frame = 90000
+    rink.advance_reactions(frame)
+    pl = unreal.JamEventPayload()
+    pl.set_editor_property("who", 0)       # no teams in this config: every index is team 1's, the box at x = +3
+    pl.set_editor_property("strength", 1.0)
+    pl.set_editor_property("kind", "foul_from_behind")
+    rink.react_to_event("foul", pl, frame)
+    glass["light_cd_f0"] = [round(rink.get_box_light_intensity(t), 1) for t in range(2)]
+    rink.advance_reactions(frame + 30)
+    glass["light_cd_f30"] = [round(rink.get_box_light_intensity(t), 1) for t in range(2)]
+    rink.advance_reactions(frame + 599)
+    glass["light_cd_f599"] = [round(rink.get_box_light_intensity(t), 1) for t in range(2)]
+    rink.advance_reactions(frame + 600)
+    glass["light_cd_f600"] = [round(rink.get_box_light_intensity(t), 1) for t in range(2)]
+    rink.advance_reactions(frame + 600 + 80)
+    glass["reacting_after"] = bool(rink.is_reacting())
+    unreal.SystemLibrary.execute_console_command(world, "jam.rink.react.box 0")
+    rink.react_to_event("foul", pl, frame + 2000)
+    rink.advance_reactions(frame + 2030)
+    glass["jam.rink.react.box 0"] = {"light_cd_f30": [round(rink.get_box_light_intensity(t), 1) for t in range(2)], "hand_deg_f30": round(rink.get_box_hand_deg(1), 2)}
+    unreal.SystemLibrary.execute_console_command(world, "jam.rink.react.box %g" % box_cd)
+    rink.advance_reactions(frame + 2000 + 600 + 80)
+    report["e6"]["glass_house"] = glass
+    glass_ok = (glass["boxes_shown"] and not glass["dressing_shown"] and glass["penalty_frames"] == 600
+                and glass["visible"] == ["arena_box_neg", "arena_box_pos", "arena_box_door_neg", "arena_box_door_pos", "arena_box_hand_neg", "arena_box_hand_pos"]
+                and glass["seat_team1_cm"] is not None and glass["seat_team1_cm"][1] < -2270.0 and near(glass["light_peak_cd"], box_cd * 0.2, 0.5)
+                and glass["light_at_rest_cd"] == [0.0, 0.0] and glass["light_cd_f0"][0] == 0.0 and glass["light_cd_f0"][1] > 0.0
+                and glass["light_cd_f30"][0] == 0.0 and near(glass["light_cd_f30"][1], box_cd * 0.2, 0.5) and glass["light_cd_f599"][1] > 0.0 and glass["light_cd_f600"] == [0.0, 0.0]
+                and not glass["reacting_after"] and glass["jam.rink.react.box 0"]["light_cd_f30"] == [0.0, 0.0] and near(glass["jam.rink.react.box 0"]["hand_deg_f30"], 18.0, 0.1))
+    # a bare tier without the whistle: no box, no seat
+    build(90, 45, "l3_neon", corner=3.75)
+    quiet = {"boxes_shown": bool(rink.are_boxes_shown()), "box_visible": vis("arena_box_pos"), "seat": seat_of(rink, 1) is not None, "goals_shown": bool(rink.is_arena_goal_shown())}
+    report["e6"]["neon_without_whistle"] = quiet
+    quiet_ok = not quiet["boxes_shown"] and not quiet["box_visible"] and not quiet["seat"] and quiet["goals_shown"]
+    # a goal's timing on the regular rink: the first frame each reaction is off rest after the goal's bus frame
+    build(90, 45, "p3_clay", corner=3.75)
+    frame = 120000
+    rink.advance_reactions(frame)
+    pl = unreal.JamEventPayload()
+    pl.set_editor_property("where", unreal.Vector((90 * 0.5 - 3.5) * 100.0, 0.0, 4.0))
+    pl.set_editor_property("strength", 1.0)
+    rink.react_to_event("goal", pl, frame)
+    for f in range(0, 19):
+        rink.advance_reactions(frame + f)
+    timing = [rink.get_goal_first_frame(w) for w in range(4)]
+    rink.advance_reactions(frame + 200)
+    report["e6"]["goal_first_frames"] = {"lamp": timing[0], "net": timing[1], "caps": timing[2], "wave_light": timing[3]}
+    timing_ok = timing == [0, 0, 0, 1]
+    # the goal's light at device B's numbers (the defaults): beside the lamp outside the end boards, a 3.5 m radius, 800 cd on clay and 320 on night
+    lamps = rink.get_editor_property("arena_lamp_lights")
+    lx = lamps[2].get_editor_property("relative_location")
+    quiet_light = {"p3_clay_peak_cd": [round(rink.lamp_light_peak_at(i), 1) for i in range(3)], "radius_cm": [round(l.get_editor_property("attenuation_radius"), 1) for l in lamps],
+                   "end_light_cm": [round(lx.x, 1), round(lx.y, 1), round(lx.z, 1)],
+                   "wave_radius_cm": [round(l.get_editor_property("attenuation_radius"), 1) for l in rink.get_editor_property("arena_wave_lights")]}
+    build(90, 45, "l2_night", corner=3.75)
+    quiet_light["l2_night_peak_cd"] = [round(rink.lamp_light_peak_at(i), 1) for i in range(3)]
+    report["e6"]["goal_light"] = quiet_light
+    light_ok = (loud_default == 0 and near(light_default, 1600.0, 0.01) and quiet_light["p3_clay_peak_cd"] == [200.0, 800.0, 800.0] and quiet_light["l2_night_peak_cd"] == [80.0, 320.0, 320.0]
+                and quiet_light["radius_cm"] == [350.0, 350.0, 350.0] and quiet_light["wave_radius_cm"] == [350.0, 350.0] and quiet_light["end_light_cm"][0] > 4500.0)
+    e6_ok = bool(e6_ok and light_ok)
+    report["e6"]["goal_light"]["ok"] = light_ok
+    e6_ok = bool(e6_ok and domes_ok and pond_ok and glass_ok and quiet_ok and timing_ok)
+    report["e6"]["ok"] = {"domes": domes_ok, "pond": pond_ok, "glass_house": glass_ok, "neon_without_whistle": quiet_ok, "goal_timing": timing_ok}
+    ok = ok and e6_ok
+    log("e6 %s" % json.dumps(report["e6"]))
+    log("A160 E6 %s" % ("PASS" if e6_ok else "FAIL"))
 
     eas.destroy_actor(rink)
     report["verdict"] = "pass" if ok else "fail"

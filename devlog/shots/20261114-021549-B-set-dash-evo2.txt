@@ -1,0 +1,2 @@
+SET-DASH evolution 2: the lab's Stop_Hard above Dash_Skid (20, hold 6-10), Dash_Wipeout (24, ends face down) and Boost_Take (11, fist pump over Stride), game camera and side, p2_cel on top, p3_clay below.
+Blender (Cycles CPU, 12 samples), lab FBX, not the engine; nothing frozen.

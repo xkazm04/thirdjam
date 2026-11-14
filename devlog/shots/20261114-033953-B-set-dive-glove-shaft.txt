@@ -1,0 +1,1 @@
+Dive_Block_Left p2_cel frames 24-35, close from above and from the shooter: the top glove and the stick's shaft during the settle. Blender, Cycles on the CPU, frozen frames, not the engine.

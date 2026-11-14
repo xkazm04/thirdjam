@@ -244,3 +244,200 @@ All of these are on the page, each with two stills.
 3. **The reference check made sure:** cross-check `refs.mjs`'s 256 "named by nothing" packages against the two figure Blueprints' text dumps (SK23 and SK24
    kept them in their lab folders) and the binder's name rules. Proving number: a delete list on which **every** entry is named by no package, no string and
    no name rule, with its MB total. That is the input for cost evolutions 1, 2 and 6.
+
+---
+
+# Round 2 (02:05 to 02:40): the second pass, the delete list made sure, the page tightened
+
+*(Written after the lead's re-brief. Round 1 above stands. New page content is listed under Evolution 6.)*
+
+## 1. Summary (round 2)
+
+Three evolutions are done.
+
+- **Evolution 4, the second pass:** a verdict line on every new still that landed after 01:55 (SKF29, TRAILER, AR2 ×10, AR3 ×5, SKF30 ×2), and at least four pointed faults per lane. The trailer's scenario A is read as a jam judge reads it.
+- **Evolution 5, the delete list made sure:** a reachability walk over every package's name table. Its roots are game code, the binder's and the rink's run-time name rules, `commentary.json`'s 412 lines, the rigs and device A's packages. Result:
+  - **445 files, 131.0 MB, are safe for B to delete**;
+  - **214 files, 68.9 MB, need device A's word**;
+  - 48 files, 7.0 MB, are held back by hand with a reason each.
+  - Nothing was deleted.
+- **Evolution 6, the page tightened:**
+  - The first screen now holds one line and one still per track, and only the choices that need the operator.
+  - The measured defaults moved to their own list.
+  - Added: the trailer, the nine-lane plan, the two handoffs, the second pass and the delete list.
+
+**The three new sets (landed 02:15 to 02:26, Blender, frozen frames, not the engine)** were judged at the game camera. Five pointed faults per lane, full wording on the page and in `round2.mjs`.
+
+**SET-weapons** (`...\20261114-022604-B-set-weapons-props.png`, `-cannon`, `-mallet`, `-giant`):
+- **The puck cannon reads as a real weapon.** It is a grey metal tube with a black muzzle on the shoulder, which is a rocket-launcher silhouette (props rows 5 and 6, and the last two "in the hands" cells; the cannon sheet's closer rows). That breaks the standing rule. Fix: toy colours and shape, a visible puck, carried at the hip.
+- The mallet lands on the victim's head (the mallet sheet, clay pair closer row, frames 14 to 16). Aim it at the shoulder, the backside or the legs.
+- Attacker and victim merge into one blob at the game camera (rows 5 and 9, frames 8 to 20).
+- The giant stick's poke is invisible from behind (only a stub above the helmet, rows 2 and 4). The sweep reads.
+- Cannon_Fire barely moves. Cannon_Kick, Fall_Bonk and the slide tackle all end in the same spread-eagle pose.
+- The mallet and the giant stick do sit in the hands and read as toys.
+
+**SET-dive** (`...\20261114-022026-B-set-dive-dive-block.png`, `-slide-tackle`):
+- The dive is flat by frame 9, as claimed ("full cover from frame 10"). The cover is 60 cm high, not the brief's 45; the report says so.
+- The block then lies still for 20 frames, which is indistinguishable from a knockdown.
+- From the game camera the stick shows as a vertical shaft at frames 18 to 24 (dive) and 6 to 12 (slide). The report says it is flat and pointing away from the camera, but from above it reads like a raised stick.
+- The tackler ends spread-eagled. There is no pair render.
+- The "closer" rows are smaller than the game-camera rows.
+
+**SET-dash** (`...\20261114-021549-B-set-dash-evo1.png`, `-evo2`, `-loop`):
+- At 110 px the dash loop looks like the sprint stride (loop sheet row 5 against row 3).
+- The head drops below the shoulders (side rows, frames 8 to 12).
+- The 170-degree stick swing in and out moves the blade 42 to 56 cm in a frame (evo1 row 1).
+- The bump is hard to tell from the loop.
+- The skid repeats Stop_Hard.
+- The wipeout ends like the forward fall, and the stick leaves the frame.
+- **Corrected in this pass:** I first read the trailing stick as levelled in front. The side rows face left, so the stick trails.
+
+## 2. Per evolution (round 2)
+
+### Evolution 4: the second pass
+
+Verdicts (looked at with the Read tool, at full size where it mattered):
+
+| Still | Verdict |
+|---|---|
+| `C:\Users\kazda\jam\thirdjam\devlog\shots\20261114-013753-B-lab-skf29-back-getups.png` | real gain, invisible at sheet scale: from above the stick lies beside the right skate (export29); from the side the two exports look the same. The proof is the measure (40 → 6 leg frames), not the picture |
+| `...\20261114-015039-B-trailer-storyboard-A.png` | complete and honest (every tile marked placeholder); weak opening, 9 s of menus |
+| `...\20261114-021041-B-ar2-game-ab.png` | the proof frame: stands fill the top band, ice -0.03 %, jerseys within 2.4; fault 12 (empty barn) is fixed |
+| `...\20261114-021041-B-ar2-game-play-1.png` | un-paused, clay: the house reads as rows of small dolls in a dark timber band; the play is unaffected |
+| `...\20261114-021041-B-ar2-game-play-2.png` | the corner from almost straight above: near stands read as empty benches; the caption ("near centre ice") does not match the picture |
+| `...\20261114-021041-B-ar2-side-corner-ab.png` | before/after at board height: the stands replace the bare apron cleanly; no piece of device A's is crossed |
+| `...\20261114-021041-B-ar2-low.png` | low view: the house is dim (band luma 30) and the fans in team-less clothes |
+| `...\20261114-021041-B-ar2-wide.png` | fault: fans scaled to 2.3 m on the wide arena, heads as large as the players' |
+| `...\20261114-021041-B-ar2-far-end.png`, `-large.png`, `-pond.png` | captions read, not judged at full size: placement on four rink sizes, nothing crosses device A's pieces |
+| `...\20261114-021017-B-ar3-goal-gamecam.png` | the goal answer at the game camera changes 3.1 % of a dark band: it cannot be read |
+| `...\20261114-021017-B-ar3-goal-low.png` | from a low camera the cheer reads (arms up, half risen) but stays in shadow |
+| `...\20261114-021017-B-ar3-pieces.png` | the figures are good clay toys close up; muted, scarfless |
+| `...\20261114-021017-B-ar3-barn-low.png` | the roof reads only from a low camera; the bunting is a faint row on dark timber |
+| `...\20261114-021017-B-ar3-barn-upice.png` | caption read: 0.74 % of the game camera's frame; nothing to judge |
+| `...\20261114-021203-B-lab-skf30-hit-sizes.png` | the body check reads in three sizes; the cross-check in two |
+| `...\20261114-021203-B-lab-skf30-stick-fixes.png` | the fix shows only in the measure; in Stumble_Left the stick is out of sight for frames 22 to 32 in both exports |
+
+**Faults per lane, pointed** (full wording on the page and in `C:\Users\kazda\jam\review\night\round2.mjs`).
+
+**AR2:**
+1. At the game camera the crowd is a dim brown lattice, not people. Band luma fell from 57 to 40 (`ar2-game-ab`, top band of both "after" tiles).
+2. From the corner camera the near stands show empty timber, and the caption does not match the picture (`ar2-game-play-2`, top right, 1000-1900 by 0-450).
+3. On the wide arena the fans are 2.3 m tall, larger than the players (`ar2-wide`, side-board and bench tiles).
+4. No team colour anywhere in the house (`ar2-low`; `ar2-side-corner-ab` after).
+5. Dark slabs sit on the board cap, and were there before this lane (`ar2-low` at 330-360, 630-660 and 900-920 by 593-610). Owner unknown.
+
+**AR3:**
+1. The goal answer cannot be read at the game camera: 3.1 % of the frame changes, in shadow (`ar3-goal-gamecam`, top against bottom).
+2. The cheer is a pose swap with no motion between, so 231 fans would pop in one frame.
+3. The roof, bunting and gate appear in no game-camera frame, or in 0.74 % of one. They serve only a trailer, menu or replay camera, and none of those exists.
+4. The bunting is a faint muted row (`ar3-barn-low` bottom, 300-820 by 820-845).
+5. Tonight's scarfless fans mixed with AR1's scarved ones will make an inconsistent house (`ar3-pieces`).
+
+**SKF30:**
+1. The light body check is hard to tell from gliding: row 1, and row 7 on clay.
+2. Lift and Lift_Heavy look nearly the same: rows 5-6 and 11-12, frames 3 to 10.
+3. The heavy body check (24 frames) recovers before the medium one (30): row 3 is up by frame 18.
+4. In the medium and heavy checks the stick trails a metre behind, flat, and reads like a swung bat from above (rows 2 and 3, frames 4 to 12). Check it against the teen rule at the game camera.
+5. The sheet has no victim and only the right shoulder. In `skf30-stick-fixes`, Stumble_Left loses sight of the stick for frames 22 to 32.
+
+**SKF29 (four, all I can point at):**
+1. Export29's stick points straight ahead of the sitting figure, about a body length, from frame 6 to 14 (rows 2, 4, 6, 8). From the high game camera it may read as a raised stick.
+2. The proving number is not met: 83 leg frames and 31 trunk frames remain over the 32 get-ups.
+3. The ready stance itself has the shaft 1 to 3 cm inside the thigh.
+4. There is no game-camera row: the claims are made from views the game never shows.
+
+**The trailer, read as a jam judge reads its first ten seconds.**
+
+The first ten seconds are menus:
+- 0 to 2.5 s: the slate.
+- 2.5 to 5 s: twelve cards in text too small to read at video size.
+- 5 to 9 s: a text box being typed into.
+
+The first hockey frame is at 9.0 s and the hit at about 12.5 s. A judge sees UI, not clay toys on ice, and not the tackle, which is the game. Further weaknesses:
+- "make it faster" produces no visible change in the film.
+- The theme is only words on screens until the Director's Call at 26.5 s.
+- Every shot is the high game camera, so the film inherits the HUD faults (ring and caption over the downed player, in shot 6).
+- The end card is a Blender render, the best-looking frame in a Shipping film.
+- The recorder (Game Bar with sound, 60 fps) is untried.
+
+**Proposal: keep A, but open cold on the hit.** Shot 5 at 0.0 to 2.5 s (contact, the hold, the slide), then the menu as the "how". Nothing new needs filming.
+
+### Evolution 5: the delete list made sure (`C:\Users\kazda\jam\review\night\deletelist.mjs`; table `C:\Users\kazda\jam\review\night\deletelist.md`, 707 rows; data `deletelist.json`)
+
+**Method.** Every `/JamAssets/...` string in every package's name table is an edge. The walk starts from these roots:
+- every JamAssets name in game C++, ini and json, including the plugin's own `commentary.json` (all 412 line ids have a wave);
+- the binder's and the rink's run-time name rules: `NS_<event>` and `MS_<event>` for the 33 events in `JamEventBus.cpp`, `VO_Commentator_<line id>`, `MI_`/`SM_Pickup_<kind>`, `MI_Zone_<kind>[_Ring]`;
+- the rigs, named by `LookTierSwitcher.cpp`;
+- device A's packages under `Game/Content`.
+
+A package is "needs A" when it is reached only through:
+- `BP_SkaterVisual_TB2`, `_TB2_P3` or `_TB2_P4`, which only `generated_b2` selects (the test cartridges `hockey.test.visual-b2` and `figure-b2`, `VisualSwapTests.cpp`, the fuzz sweep);
+- or test files;
+- or device A's packages.
+
+The figure Blueprints name their takes by hard path (checked in the bytes: `AS_SkaterTB1_P3_Deke_Left`, `_Stumble_Back`, `_Stop_Hard`, `_Check_Hit_*`), so a take named in no package is truly unwired. That was cross-read with `skf\export26\READY.txt` and the SK21 to SK24 reports.
+
+| Class | Files | MB | What it is |
+|---|---|---|---|
+| **safe for B** (one engine slot after 10:00, then a cook-only run) | 445 | 131.0 | the old hybrid figure (SK_SkaterTB2, _TB2_P3, their 151 takes, `_old` Blueprints): 43.1; the P4 lab figure and its looks (`BP_SkaterVisual_P4Lab`, P4E, `M_/MI_P4_*`, `NS_P4Lab_spray`): 40.7; generated P4D: 21.1; the film props and the replaced arena pieces with their textures and instances (42 files): 13.4; generated P2C/P3C leftovers (old base colour etc.): 6.8; 22 leftovers of the shipped figure (old aim holds Front/Left/Right/FarReach, Celebrate, the old Check, Idle_Faceoff, Shot_Charge, the old Stop and Stumble, both styles; `MI_SkaterTB1_P3_Pads`, `SM_SkaterTB1_P3_Stick`): 3.3; the UI copies of the crests and numbers, the backdrop hills, film-themed sounds (clapper, projector, UI click), the unused fx masters `M_Fx_Sprite`/`M_Fx_Ribbon`/`MI_Fx_Ring`: about 2.7 |
+| **needs A's word** | 214 | 68.9 | the generated_b2 figure on its three tiers: `BP_SkaterVisual_TB2`/`_P3`/`_P4`, their meshes SK_SkaterGen_P2C/P3C and SK_SkaterTB2_P4, 200 takes, textures, AnimBPs, blend spaces |
+| **keep, held by hand** | 48 | 7.0 | second takes and crowd alternates until heard (23, 4.6 MB); `GetUp_Late_Wall*`, `Stride_Sprint`, `Burst` (the operator's get-up choice, SK23's next steps; 12, 1.9 MB); `MS_bump` + `SFX_Bump_a/b/c` (waits for A's bump event); AR2's two not-yet-ledgered pieces; `MS_arena_room`; `SFX_BoardsFall_a/b` (AU11 decision 1); `MI_Trim_Lamp`, `MI_Toon_NetCord` (B41's, for A to bind); `SC_Ambience`, `SCM_Volume` (a sound class can be set in project settings) |
+
+**Proving number:** every one of the 445 "safe" entries is reached by no package, no game or test string, and no name rule. The method has only these limits, written in `deletelist.mjs`:
+- a path built by a Blueprint from string pieces would not be seen. None was found for the figures: their takes are hard paths.
+- device A's packages outside `Game/Content` are not scanned.
+
+That 131 MB is 38 % of JamAssets. With A's word on the 68.9 MB the total is 200 MB (58 %).
+
+### Evolution 6: the page, tightened (`C:\Users\kazda\jam\review\night\index.html`; content in `round2.mjs`, rebuilt by `build.mjs`)
+
+**What is new on the page:**
+
+1. **What changed:** nine tracks, one line and one still each, rewritten short.
+   - Arena now shows AR2's engine A/B still.
+   - Trailer and Critic rows were added.
+   - New sets show their newest `-B-set-` still as soon as one lands.
+2. **What you must decide** is cut to seven: get-up; goal loudness; the crowd (neutral and half full, or team colours rising on a goal); which trailer and whether it may say "cut"; listen to the unheard sounds; whether `generated_b2` must stay selectable; the new sets.
+   - Each is shown as A or B with two stills (150 px high, so the first screen is shorter).
+   - The duplicate get-up still is fixed.
+   - "Effect size" was dropped: B42 has it.
+3. **Defaults I set, change if you disagree** (new): fourteen measured defaults with their lane. These include the roar at 0.75, the ooh floor, the quiet stumble, the hard stop on ten figures, the board-fall sound, the bot's 8 s bar, the fall-size bars, the lamp at 12, the night fill, the cross-check mark, the stands at 489 fans, the crowd's scaling, the scoreboard and AR3's roof.
+4. **Device B tonight: nine lanes** (new table): lane, what it loops on, and what has landed. Report and still counts are read from disk at each build.
+5. **Handoffs to device A tonight** (new): B-to-A-0040 and 0041, one line each.
+6. **The trailer** (new section): the pick, the seven lines with their times, the three questions it leaves, the critic's five points on the first ten seconds, and links to `storyboard.html`, `read\listen.html` and `animatic-A.mp4`.
+7. **The critic's second pass** (new): a verdict and faults for SKF29, TRAILER, AR2, AR3 and SKF30.
+8. **The delete list** (new): the three classes with counts and MB, linked to `deletelist.md`.
+
+## 3. Not verified (round 2)
+
+- The delete list is a static walk. Before deleting, open the engine's reference viewer on the 445 and run a cook-only check after the delete. A Blueprint path assembled from string pieces would escape the walk; none was found.
+- The AR2 verdicts are from frozen A/B pairs and two un-paused stills taken at 8 to 17 ticks a second. AR3 is Blender only, at 12 samples, and the denoiser smears faces.
+- The trailer verdict is from the storyboard sheet and the report. I did not play the animatic or listen to the read.
+- The SKF30 stick-trail and "swung bat" reading is from above. The game camera view of it is not rendered.
+
+## 4. For the engine lane (round 2)
+
+- **AR2 follow-up:**
+  - light on the crowd, or brighter hats and scarves, so the band reads as people;
+  - on Pond, wide and large, scale the stands' depth, not the fans;
+  - fill the near corner rows, so the corner camera does not show empty benches.
+- **If AR3's cheer goes in:** blend over 6 to 10 frames, not a one-frame swap, and only the scoring side's half. Proving number: the cheer covers at least 5 % of the game camera's frame and no fan changes pose in a single frame.
+- **The delete slot after 10:00:** delete the 445 "safe" files in one editor session with redirectors fixed, then a cook-only run. Proving number: cook PASS and JamAssets down by 131 MB.
+
+## 5. For the other device (round 2)
+
+- **B-to-A-0041 point 4, made exact:** 214 files, 68.9 MB, leave the package if `generated_b2` is dropped from `hockey.test.visual-b2`, `hockey.test.figure-b2`, `VisualSwapTests.cpp` (line 22) and the fuzz sweep `skater.visual`, and `HokejGameMode::VisualClassPathsFor`'s `VisualB2` branch goes. The list is `C:\Users\kazda\jam\review\night\deletelist.md`, class "needs A".
+- **For the trailer (A owns the copy):** a cold open on the hit, and a `-cut=` start in Shipping (already TRAILER's ask).
+
+## 6. Decisions for the operator (round 2)
+
+1. The crowd: neutral and half full as placed, or team-colour scarves with the scoring half rising on a goal. The critic says the second, with light on it.
+2. The trailer: scenario A or C; whether it may say "cut"; and the critic's cold open on the hit.
+3. Whether `generated_b2` must stay selectable (68.9 MB).
+4. As before: the get-up and the goal loudness. The new sets come when they land.
+
+## 7. The next three evolutions (round 2)
+
+1. **The sets, judged as they land:** dive, dash and weapons sheets at game size. Proving number: per lane, a verdict on every sheet and at least five pointed faults, with explicit lines on "flat by the frame it claims", "prop in the hands" and "reads as a real weapon or cruelty".
+2. **One engine picture of tonight's work for the operator:** once B42 and the animation import land, a single sheet with the same moments before and after (stop spray, ability, goal, a downed player with the stands behind). Proving number: 4 of 4 moments in un-paused engine stills, each against its critic's number (spray at least 1.5 %, ability at least 2 %, burst at least 3 %, the downed figure clear of HUD and other skaters).
+3. **The delete list turned into the engine lane's script input:** a plain path list (445 lines), plus a one-page check, in the delete slot's order, of what to verify in the editor (the reference viewer on the 10 largest). Proving number: the list's MB equals the cook's drop within 1 %.

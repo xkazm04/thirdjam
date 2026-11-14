@@ -23,6 +23,7 @@ param(
 )
 $ErrorActionPreference = 'Continue'
 $here = $PSScriptRoot
+. (Join-Path $here 'winhand.ps1')   # A155: the still and the pixel count (the frame-is-not-black row)
 # A131: the driver is the hand: it must not be the slow link on a busy machine. 1 ms timer resolution (Sleep otherwise rounds to 15.6 ms) and above-normal priority.
 Add-Type -Namespace A131 -Name Win -MemberDefinition '[DllImport("winmm.dll")] public static extern uint timeBeginPeriod(uint ms);'
 [void][A131.Win]::timeBeginPeriod(1)
@@ -183,6 +184,9 @@ function Finish([int]$code, [string]$why) {
     $script:defer = $false; FlushNotes
     Note $why
     $o = Others; if ($o.Count) { Note "WARN other ThirdJam processes at the end (shared OS cursor): $($o -join ' ')" }
+    # A155 (PIXEL ROW): one still of the live window before it is quit, and what share of it is not black. A packaged match drawing the HUD over a black world (H27, 14 Nov: the menu's
+    # double build tore the look down) passed every verb; accept.mjs fails the run on this line when the share is under 0.20 (a lit rink reads 0.99, the black world with its HUD 0.01).
+    try { if ($h -ne [IntPtr]::Zero -and -not $p.HasExited) { $script:hwh = $h; $script:hwout = $out; $png = HW-Shot 'pixel'; $px = HW-Pixels $png; Note ('PIXEL lit={0} mean={1} file={2}' -f $px.lit, $px.mean, $png) } else { Note 'PIXEL none (no window to photograph)' } } catch { Note "PIXEL none ($($_.Exception.Message))" }
     Start-Sleep -Seconds 2
     if (-not $p.HasExited) { Console 'quit' 3 | Out-Null }
     for ($i = 0; $i -lt 60 -and -not $p.HasExited; $i++) { Start-Sleep -Milliseconds 500 }

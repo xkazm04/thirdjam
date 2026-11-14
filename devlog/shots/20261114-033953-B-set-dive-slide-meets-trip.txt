@@ -1,0 +1,1 @@
+Slide_Tackle_Left (blue) meeting the existing Trip (orange) at the attacker's frame 10, game camera behind the attacker, both styles; the attacker's 1.2 m slide to contact is put on the object for this strip (the takes have no travel). Blender, Cycles on the CPU, frozen frames, not the engine.

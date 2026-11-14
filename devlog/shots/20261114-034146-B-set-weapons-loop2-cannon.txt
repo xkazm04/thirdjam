@@ -1,0 +1,1 @@
+SET-WEAPONS loop 2, cannon: Cannon_Fire with the bigger recoil (step back, the keg jumps at 10 and settles by 17) at the game camera and closer, Cannon_Kick, the carry over Stride and Stride_Sprint. Blender Cycles CPU, frozen frames.

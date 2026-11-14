@@ -1,0 +1,1 @@
+SET-WEAPONS giant stick: Giant_Carry, Giant_Poke (every 2nd frame), Giant_Sweep (every 2nd frame) at the game camera (figure 110 px), both styles, plus closer front-left rows on clay. Blender Cycles CPU, frozen frames.

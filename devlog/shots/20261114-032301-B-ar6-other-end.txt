@@ -1,0 +1,1 @@
+AR6, Blender mock-up (not the engine): the game camera up the ice at the end without the gate, 38 m from its boards, before (top) and with the sliding door and its hoist, the firewood and the bench (bottom). Only the door and hoist show over the end stands: 0.64 % of the frame at mean luma 17; ice mean luma 168.84 both. The 18 lamp arms are above this frame.

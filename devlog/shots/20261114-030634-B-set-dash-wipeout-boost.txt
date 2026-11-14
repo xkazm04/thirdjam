@@ -1,0 +1,2 @@
+SET-DASH loop 2: Dash_Wipeout (bigger bounce at 15-17) and Boost_Take (the arm no longer flung out at frame 1), every frame, game camera and side, both styles.
+Blender (Cycles CPU, 12 samples), lab FBX, not the engine; nothing frozen.

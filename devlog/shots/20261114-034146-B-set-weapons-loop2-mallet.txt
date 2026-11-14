@@ -1,0 +1,1 @@
+SET-WEAPONS loop 2, mallet: the pair at the game camera and closer (victim Fall_Bonk from the attacker frame 16 at 1.08, 0.72 m; contact frame 17 at the left hip), Mallet_Carry from behind and the side (the drum off the helmet), the carry over Stride and Stride_Sprint. Blender Cycles CPU, frozen frames.

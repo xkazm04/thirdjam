@@ -1,0 +1,1 @@
+﻿Lane TRAILER evolution 4: one frame from the middle of each shot of the 45 s stand-in film cut by trailer-lab/edit/edit.mjs (placeholder stills with a slow push-in, the rough read, stand-in sounds, the banner end card). 1920x1080 at 60, -16.1 LUFS, 0 narration overruns, check PASS. ffmpeg on the CPU; no engine, no Blender.

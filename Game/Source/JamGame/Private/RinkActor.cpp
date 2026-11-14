@@ -41,11 +41,15 @@ static TAutoConsoleVariable<int32> CVarRinkCaps(TEXT("jam.rink.caps"), 1,
 	TEXT("1: clay caps stand on the board top round the whole ring on the dressed tiers and rock when a skater hits the boards hard; 0: no caps. Lane A136."));
 
 // Lane A127: the lamp lights' intensity at the top of a flash, in candelas. 0 = the lamps flash without lighting anything around them.
-static TAutoConsoleVariable<float> CVarRinkReactLight(TEXT("jam.rink.react.light"), 6000.f,
+// Lane A160 (evolution 6): device B measured the goal on both tiers (A-to-B-0024, B's answer to ask 4; B-to-A-0041 point 6): this light was what fought
+// B's NS_goal (pink ice for 108 frames: 11 to 16 % of the ice pixels on clay). B's numbers are the default now: 1,600 here with `jam.rink.react.loud 0`
+// = 800 cd at the scored end on p3_clay and 320 on l2_night, inside a 3.5 m radius beside the lamp behind the end boards: the light is off the ice and
+// B's effect carries the moment. `jam.rink.react.loud 1` with `jam.rink.react.light 6000` gives back evolution 5's loud goal.
+static TAutoConsoleVariable<float> CVarRinkReactLight(TEXT("jam.rink.react.light"), 1600.f,
 	TEXT("Candelas of the red point light over the scored end's net at the top of a goal's flash (the scorer's table's takes an eighth, l2_night a fifth); 0 = no light. Lanes A127, A136."));
 // Lane A136 (evolution 4): the loud goal. 1 = the scored end's light hangs over the net (it reaches the crease and the slot); 0 = evolution 3's light, beside
 // the lamp behind the end boards at half the candelas.
-static TAutoConsoleVariable<int32> CVarRinkReactLoud(TEXT("jam.rink.react.loud"), 1,
+static TAutoConsoleVariable<int32> CVarRinkReactLoud(TEXT("jam.rink.react.loud"), 0,
 	TEXT("1: a goal's red light hangs over the scored net and lights the end zone; 0: the light beside the lamp behind the end boards at half the candelas (lane A127's). Lane A136."));
 
 // Lane A145 (evolution 5): the hit flash. Candelas of the point light a hard board hit throws at the hit's place at Strength 1 (l2_night takes a fifth).
@@ -56,6 +60,15 @@ static TAutoConsoleVariable<float> CVarRinkReactHit(TEXT("jam.rink.react.hit"), 
 	TEXT("Candelas of the flash a hard skater board hit throws on the boards and the ice at the hit, at Strength 1 (l2_night takes a fifth); 0 = no flash. Lane A145."));
 static TAutoConsoleVariable<int32> CVarRinkReactHitTint(TEXT("jam.rink.react.hit.tint"), 1,
 	TEXT("The hit flash's colour: 0 warm white, 1 the team colour of the half (blue on x < 0, orange on x > 0), 2 the goal lamps' red. Lane A145."));
+// Lane A160 (evolution 6): the box seen from the ice. Candelas of the light inside a penalty box while its penalty runs (p3_clay; every other tier takes
+// a fifth: the same share as the hit flash). 0 = the dark box of evolution 5. The door hides behind the boards and the clock's hand is 20 pixels from the
+// game camera (lane A145's finding): what is seen from the ice is the lit box with the boxed figure in it.
+static TAutoConsoleVariable<float> CVarRinkReactBox(TEXT("jam.rink.react.box"), 750.f,
+	TEXT("Candelas of the light inside a penalty box while its penalty runs (p3_clay; other tiers take a fifth); 0 = no light. Lane A160."));
+// Lane A160: on the bare tiers (l1_day, l3_neon) the Blender goals and the board caps stand too: they are on the ice and on the boards, inside the rig's
+// light, and the pond's own goal (SM_Arena_Goal_W600H061) was built for a cut that plays on l1_day and never showed. 0 = the code frame and no caps there.
+static TAutoConsoleVariable<int32> CVarRinkArenaBare(TEXT("jam.rink.arena.bare"), 1,
+	TEXT("1 (default): on the bare tiers (l1_day, l3_neon) the Blender goals and the board caps stand; 0: the code net frame and no caps there, as before lane A160."));
 // Lane A145: the goal wave. The share of the scored end's light that each of the two travelling lights reaches at the end of a pulse. 0 = no wave.
 // 0.12 from a sweep (section 41): the game camera's picture of the scored end changes 14.8 % on the goal's frame, 16.2 % in the middle of a pulse and
 // 14.6 % at its end (10.4 % and 6.2 % without the wave); at 0.5 the troughs were louder than the goal's own frame (26 %).
@@ -285,6 +298,23 @@ ARinkActor::ARinkActor()
 			L->CastShadows = false;
 			L->SetVisibility(false);
 			ArenaLampLights[i] = L;
+		}
+	}
+	// Lane A160: the light inside each penalty box. Movable, shadowless, hidden at rest; Build places it.
+	{
+		static const TCHAR* const BoxLightNames[2] = { TEXT("ArenaBoxLightNeg"), TEXT("ArenaBoxLightPos") };
+		for (int32 i = 0; i < 2; ++i)
+		{
+			UPointLightComponent* L = CreateDefaultSubobject<UPointLightComponent>(BoxLightNames[i]);
+			L->SetupAttachment(Root);
+			L->SetMobility(EComponentMobility::Movable);
+			L->IntensityUnits = ELightUnits::Candelas;
+			L->Intensity = 0.f;
+			L->LightColor = FColor(255, 236, 200);
+			L->AttenuationRadius = BoxLightRadiusCm;
+			L->CastShadows = false;
+			L->SetVisibility(false);
+			ArenaBoxLights[i] = L;
 		}
 	}
 	// Lane A136: the board caps, one instanced component (one draw for the ring). Empty and hidden until Build finds the mesh.
@@ -920,6 +950,22 @@ void ARinkActor::Build(const FJamGameConfig& Game)
 			}
 			PenaltyFramesCfg = Game.Rules.PenaltyFrames > 0 ? Game.Rules.PenaltyFrames : 300;
 			TeamSplit = Game.Teams.Num() > 0 ? Game.Teams[0].Skaters.Num() : 0;
+			// Lane A160: the cut's whistle (the boxes stand on a bare tier only with it), and each box's light: over the seat, a step towards the boards.
+			bWhistle = Game.Rules.bPenalties;
+			{
+				const UStaticMeshSocket* SeatSock = BoxMesh ? BoxMesh->FindSocket(FName(TEXT("Seat"))) : nullptr;
+				const FVector SeatLocal = SeatSock ? SeatSock->RelativeLocation : FVector(0.0, 90.0, 0.0);
+				UStaticMeshComponent* const Boxes[2] = { ArenaBoxNeg.Get(), ArenaBoxPos.Get() };
+				for (int32 t = 0; t < 2; ++t)
+				{
+					if (!ArenaBoxLights[t] || !Boxes[t]) continue;
+					// the box's own +y points away from the rink (the piece is turned 180 degrees): towards the boards is its -y
+					ArenaBoxLights[t]->SetRelativeLocation(Boxes[t]->GetRelativeTransform().TransformPosition(SeatLocal + FVector(0.0, -BoxLightTowardsRinkM * UU, BoxLightHeightM * UU)));
+					ArenaBoxLights[t]->SetAttenuationRadius(BoxLightRadiusCm);
+					ArenaBoxLights[t]->SetIntensity(0.f);
+					ArenaBoxLights[t]->SetVisibility(false);
+				}
+			}
 			for (FBoxUse& U : BoxUse) U = FBoxUse();
 			BoxSeenAt[0] = BoxSeenAt[1] = -1;
 			UE_LOG(LogJamSim, Log, TEXT("JAMRINK arena box use: door mesh %s, hand mesh %s, %d of 4 hung on the boxes' sockets; a penalty is %d frames, team 0 is skaters 0..%d"),
@@ -1208,6 +1254,15 @@ void ARinkActor::ApplyArenaDressing()
 	const bool bConstruction = KickPlate ? KickPlate->IsVisible() : IsConstructionEnabled();
 	const bool bShow = bHave && bConstruction && IsArenaDressingEnabled() && !IsBareTier(ArenaTier);
 	for (UStaticMeshComponent* C : Pieces) if (C) C->SetVisibility(bShow);
+	// Lane A160: in a cut that whistles the two penalty boxes stand on a bare tier too (Glass House plays on l3_neon: the one mode with a penalty had no
+	// box, and its boxed figure stood on the ice at the boards). Without the whistle a bare tier shows no box, as before.
+	const bool bHaveBoxes = ArenaBoxNeg && ArenaBoxPos && ArenaBoxNeg->GetStaticMesh() && ArenaBoxPos->GetStaticMesh();
+	const bool bShowBoxes = bShow || (bHaveBoxes && bConstruction && IsArenaDressingEnabled() && bWhistle);
+	if (ArenaBoxNeg) ArenaBoxNeg->SetVisibility(bShowBoxes);
+	if (ArenaBoxPos) ArenaBoxPos->SetVisibility(bShowBoxes);
+	bBoxesShown = bShowBoxes;
+	// Lane A160: the goals and the caps stand on a bare tier too (`jam.rink.arena.bare`); the pieces outside the boards do not.
+	const bool bInside = bConstruction && IsArenaDressingEnabled() && (!IsBareTier(ArenaTier) || IsBareDressed());
 	// A25's code benches stand where the Blender benches go: one or the other, never both.
 	if (Benches) Benches->SetVisibility(bConstruction && !bShow);
 	// Lane A119: the scorer's table stands with the boxes; the goals follow the same rule on their own meshes, and the code frame with its sheet netting
@@ -1216,7 +1271,7 @@ void ARinkActor::ApplyArenaDressing()
 	UStaticMeshComponent* const Goals[4] = { ArenaGoalNeg.Get(), ArenaGoalPos.Get(), ArenaGoalNetNeg.Get(), ArenaGoalNetPos.Get() };
 	bool bHaveGoals = true;
 	for (const UStaticMeshComponent* C : Goals) bHaveGoals = bHaveGoals && C && C->GetStaticMesh();
-	const bool bShowGoals = bHaveGoals && bConstruction && IsArenaDressingEnabled() && !IsBareTier(ArenaTier);
+	const bool bShowGoals = bHaveGoals && bInside;
 	for (UStaticMeshComponent* C : Goals) if (C) C->SetVisibility(bShowGoals);
 	if (Nets) Nets->SetVisibility(!bShowGoals);
 	// Lane A127: the Blender goal lights stand with the boxes and the table; A25's code housings on the glass rail show exactly when they do not.
@@ -1228,15 +1283,15 @@ void ARinkActor::ApplyArenaDressing()
 	if (GoalLights) GoalLights->SetVisibility(bConstruction && !bShowLights);
 	PlaceLampLights();   // lane A136: `jam.rink.react.loud` may have changed
 	// Lane A136: the board caps stand with the pieces; `jam.rink.caps 0` takes them away alone.
-	const bool bShowCaps = bShow && AreCapsEnabled() && ArenaCaps && ArenaCapsPos && ArenaCaps->GetStaticMesh() != nullptr && CapRest.Num() > 0;
+	const bool bShowCaps = (bShow || (bHave && bInside)) && AreCapsEnabled() && ArenaCaps && ArenaCapsPos && ArenaCaps->GetStaticMesh() != nullptr && CapRest.Num() > 0;
 	if (ArenaCaps) ArenaCaps->SetVisibility(bShowCaps);
 	if (ArenaCapsPos) ArenaCapsPos->SetVisibility(bShowCaps);
 	// Lane A145: the boxes' doors and clock hands stand with their boxes.
-	for (UStaticMeshComponent* C : { ArenaBoxDoorNeg.Get(), ArenaBoxDoorPos.Get(), ArenaBoxHandNeg.Get(), ArenaBoxHandPos.Get() }) if (C) C->SetVisibility(bShow && C->GetStaticMesh() != nullptr);
+	for (UStaticMeshComponent* C : { ArenaBoxDoorNeg.Get(), ArenaBoxDoorPos.Get(), ArenaBoxHandNeg.Get(), ArenaBoxHandPos.Get() }) if (C) C->SetVisibility(bShowBoxes && C->GetStaticMesh() != nullptr);
 	if (!bShowCaps) ResetCaps();
 	bCapsShown = bShowCaps;
 	// The still arena: with the pieces hidden or `jam.rink.react 0` every lamp is at rest and every piece where Build put it.
-	if (!bShow || !bShowGoals || !AreReactionsEnabled()) ResetReactions();
+	if ((!bShow && !bShowBoxes && !bShowCaps) || !bShowGoals || !AreReactionsEnabled()) ResetReactions();
 	ApplyBox(LastBoxFrame);   // lane A145: the door's resting place follows `jam.rink.react` (closed while the arena answers, open as it was built before with 0)
 	if (bShowGoals != bArenaGoalShown)
 	{
@@ -1282,7 +1337,9 @@ float ARinkActor::LampAt(int64 FramesSince)
 float ARinkActor::NetShakeAt(int64 FramesSince)
 {
 	if (FramesSince < 0 || FramesSince >= NetShakeFrames) return 0.f;
-	const float T = static_cast<float>(FramesSince);
+	// Lane A160: one frame ahead (NetShakeLeadFrames), so the cords are already driven back on the goal's own frame (0.55 of the deepest) and deepest on
+	// the next two: the bulge starts with the lamp and device B's NS_goal instead of a frame after them.
+	const float T = static_cast<float>(FramesSince + NetShakeLeadFrames);
 	return FMath::Exp(-T / 16.f) * FMath::Sin(2.f * UE_PI * T / 10.f);
 }
 
@@ -1319,7 +1376,7 @@ float ARinkActor::HitLightPeak()
 
 float ARinkActor::HitLightPeakHere() const
 {
-	return HitLightPeak() * (ArenaTier == TEXT("l2_night") ? NightLightShare : 1.f);
+	return HitLightPeak() * (ArenaTier == TEXT("l2_night") || IsBareTier(ArenaTier) ? NightLightShare : 1.f);   // lane A160: the bare tiers take night's share (the caps stand there now)
 }
 
 float ARinkActor::GetHitLightIntensity(int32 Index) const
@@ -1337,6 +1394,53 @@ float ARinkActor::GetWaveLightIntensity(int32 Index) const
 float ARinkActor::WaveShare()
 {
 	return FMath::Clamp(CVarRinkReactWave.GetValueOnGameThread(), 0.f, 4.f);
+}
+
+float ARinkActor::BoxLightPeak()
+{
+	return FMath::Max(0.f, CVarRinkReactBox.GetValueOnGameThread());
+}
+
+float ARinkActor::BoxLightPeakHere() const
+{
+	return BoxLightPeak() * (ArenaTier == TEXT("p3_clay") ? 1.f : NightLightShare);
+}
+
+float ARinkActor::GetBoxLightIntensity(int32 Team) const
+{
+	const UPointLightComponent* Light = ArenaBoxLights[Team == 0 ? 0 : 1].Get();
+	return Light && Light->IsVisible() ? Light->Intensity : 0.f;
+}
+
+bool ARinkActor::IsBareDressed()
+{
+	return CVarRinkArenaBare.GetValueOnGameThread() != 0;
+}
+
+// Lane A160: what a goal's reactions really did, frame by frame after the bus's goal frame (the frame the sim scored: AHokejGameMode::DeliverEvents
+// broadcasts the sim's events in the tick that stepped it, and UJamEffectsBinder starts device B's NS_goal on that same broadcast). Each reaction's first
+// frame off rest is read from the components themselves, and one line is logged when all four have shown or the first pulse is over.
+void ARinkActor::NoteGoalTiming(int64 Since)
+{
+	if (bGoalTimingLogged || Since < 0) return;
+	const int32 F = static_cast<int32>(Since);
+	const int32 EndLamp = GoalEnd > 0 ? 2 : 1;
+	if (GoalSeenAt[0] < 0 && ((LampMids[0] && GetLampEmissive() > LampRest[0]) || (LampMids[EndLamp] && GetGoalLightEmissive(GoalEnd) > LampRest[EndLamp])
+		|| GetLampLightIntensity(0) > 0.f || GetLampLightIntensity(EndLamp) > 0.f)) GoalSeenAt[0] = F;
+	if (GoalSeenAt[1] < 0 && !GetNetShakeScale(GoalEnd).Equals(FVector::OneVector, 1e-6)) GoalSeenAt[1] = F;
+	if (GoalSeenAt[2] < 0)
+	{
+		for (const TPair<int32, FVector2f>& P : CapNow)
+		{
+			if (P.Value.Y > 0.f && CapAtM.IsValidIndex(P.Key) && CapAtM[P.Key].X * GoalEnd > GoalLineXM) { GoalSeenAt[2] = F; break; }
+		}
+	}
+	if (GoalSeenAt[3] < 0 && (GetWaveLightIntensity(0) > 0.f || GetWaveLightIntensity(1) > 0.f)) GoalSeenAt[3] = F;
+	const bool bAll = GoalSeenAt[0] >= 0 && GoalSeenAt[1] >= 0 && GoalSeenAt[2] >= 0 && GoalSeenAt[3] >= 0;
+	if (!bAll && Since < LampPulseFrames) return;
+	bGoalTimingLogged = true;
+	UE_LOG(LogJamSim, Log, TEXT("JAMRINK goal timing end=%s frame=%lld: first frame off rest after the goal's bus frame: lamp +%d net +%d caps +%d wave_light +%d (-1 = not in the first %d frames)"),
+		GoalEnd > 0 ? TEXT("+x") : TEXT("-x"), static_cast<long long>(GoalFrame), GoalSeenAt[0], GoalSeenAt[1], GoalSeenAt[2], GoalSeenAt[3], LampPulseFrames);
 }
 
 float ARinkActor::DoorAt(int64 FramesSince)
@@ -1385,6 +1489,7 @@ void ARinkActor::ApplyBox(int64 SimFrame)
 		FBoxUse& U = BoxUse[t];
 		float Door = bReact ? 0.f : 1.f;   // at rest: closed while the arena answers the game; with `jam.rink.react 0` open, as the box mesh had it before the lane
 		float Hand = 0.f;
+		float Lit = 0.f;     // lane A160: the box's light, on while the penalty runs
 		if (U.FoulFrame >= 0)
 		{
 			const int64 Since = SimFrame - U.FoulFrame;
@@ -1395,6 +1500,7 @@ void ARinkActor::ApplyBox(int64 SimFrame)
 				bLive = true;
 				Door = FMath::Max(DoorAt(Since), DoorAt(Since - EndSince));
 				Hand = Since < EndSince ? 360.f * static_cast<float>(Since) / static_cast<float>(FMath::Max(1, U.Frames)) : 0.f;
+				if (Since < EndSince) Lit = FMath::Min(1.f, static_cast<float>(Since + 1) / BoxLightFadeFrames) * FMath::Min(1.f, static_cast<float>(EndSince - Since) / BoxLightFadeFrames);
 				if (Since >= EndSince && !U.bEndLogged)
 				{
 					U.bEndLogged = true;
@@ -1405,6 +1511,12 @@ void ARinkActor::ApplyBox(int64 SimFrame)
 		}
 		BoxDoorDegNow[t] = DoorOpenDeg * Door;
 		BoxHandDegNow[t] = Hand;
+		if (UPointLightComponent* Light = ArenaBoxLights[t])
+		{
+			const float Candelas = bBoxesShown ? BoxLightPeakHere() * Lit : 0.f;
+			Light->SetIntensity(Candelas);
+			Light->SetVisibility(Candelas > 0.f);
+		}
 		// The door turns about its hinge (the component's origin on the socket) from along the boards into the box; the hand about the box's `out` axis:
 		// a positive pitch takes the hand's top towards the box's -x, clockwise for somebody on the ice.
 		if (UStaticMeshComponent* D = t == 0 ? ArenaBoxDoorNeg.Get() : ArenaBoxDoorPos.Get()) D->SetRelativeRotation(FRotator(0.0, BoxDoorDegNow[t], 0.0));
@@ -1470,7 +1582,8 @@ void ARinkActor::ApplyCaps(int64 SimFrame)
 				if (CapAtM[k].X * GoalEnd <= GoalLineXM) continue;
 				const double Along = FMath::Abs(CapAtM[k].Y);
 				if (Along > WaveReachM) continue;
-				int64 T = InPulse - FMath::RoundToInt32(Along / WaveReachM * (LampPulseFrames - 1));   // frames since the front passed this cap
+				// Lane A160: the front leaves from the posts (WaveStartHalfM off the middle), so the nearest caps hop on the goal's own frame on every rink.
+				int64 T = InPulse - FMath::RoundToInt32(FMath::Max(0.0, Along - WaveStartHalfM) / WaveReachM * (LampPulseFrames - 1));   // frames since the front passed this cap
 				if (T < 0)
 				{
 					if (Since < LampPulseFrames) continue;   // the first front has not reached it yet
@@ -1491,7 +1604,7 @@ void ARinkActor::ApplyCaps(int64 SimFrame)
 	{
 		UPointLightComponent* Light = ArenaWaveLights[s];
 		if (!Light) continue;
-		if (WaveCandelas > 0.f) Light->SetRelativeLocation(FVector(GoalEnd * (GoalLineXM + 4.0 - WaveLightInM) * UU, (s == 0 ? -1.0 : 1.0) * WaveAtM * UU, WaveLightHeightM * UU));
+		if (WaveCandelas > 0.f) Light->SetRelativeLocation(FVector(GoalEnd * (GoalLineXM + 4.0 - (IsGoalLoud() ? WaveLightInM : WaveLightInQuietM)) * UU, (s == 0 ? -1.0 : 1.0) * WaveAtM * UU, WaveLightHeightM * UU));
 		Light->SetIntensity(WaveCandelas);
 		Light->SetVisibility(WaveCandelas > 0.f);
 	}
@@ -1586,8 +1699,11 @@ void ARinkActor::ReactToEvent(FName Event, const FJamEventPayload& Payload, int6
 		GoalFrame = SimFrame;
 		GoalEnd = Local.X > 0.0 ? 1 : -1;   // the side of the net the puck is in (the binder's rule for the burst's colour)
 		++GoalReactions;
+		for (int32& Seen : GoalSeenAt) Seen = -1;   // lane A160: the measured first frame of each reaction, logged once (NoteGoalTiming)
+		bGoalTimingLogged = false;
 		ApplyGoalReaction(0);
 		ApplyCaps(SimFrame);   // lane A145: the wave's first front leaves the goal light
+		NoteGoalTiming(0);
 		UE_LOG(LogJamSim, Log, TEXT("JAMRINK react goal end=%s frame=%lld lamp %.2f -> %.2f net shake %d frames"), GoalEnd > 0 ? TEXT("+x") : TEXT("-x"),
 			static_cast<long long>(SimFrame), LampRest[0], GetLampEmissive(), NetShakeFrames);
 	}
@@ -1657,7 +1773,7 @@ void ARinkActor::ReactToEvent(FName Event, const FJamEventPayload& Payload, int6
 		}
 		if (!bAnswered) return;
 	}
-	else if (Event == JamEvents::Foul && bArenaShown)
+	else if (Event == JamEvents::Foul && bBoxesShown)
 	{
 		// Lane A145: the fouler's team's box is used. The bus names the fouler by its index (team 0's skaters first); the penalty is game.rules.penalty_frames.
 		const int32 Team = Payload.Who >= 0 && Payload.Who < TeamSplit ? 0 : 1;
@@ -1689,6 +1805,7 @@ void ARinkActor::AdvanceReactions(int64 SimFrame)
 		else ApplyRattle(Since);
 	}
 	if (bCapsLive) ApplyCaps(SimFrame);
+	if (GoalFrame >= 0 && !bGoalTimingLogged) NoteGoalTiming(SimFrame - GoalFrame);   // lane A160
 	if (bBoxLive) ApplyBox(SimFrame);   // lane A145
 }
 
@@ -1704,7 +1821,7 @@ float ARinkActor::LampLightPeak()
 
 float ARinkActor::LampLightPeakAt(int32 Index) const
 {
-	const bool bNight = ArenaTier == TEXT("l2_night");
+	const bool bNight = ArenaTier == TEXT("l2_night") || IsBareTier(ArenaTier);   // lane A160: the bare tiers take night's share (the goals stand there now)
 	if (!IsGoalLoud()) return LampLightPeak() * 0.5f * (Index == 0 ? TableLightShareE3 : 1.f) * (bNight ? NightLightShareE3 : 1.f);   // evolution 3's light
 	// The table's light keeps what it had on both tiers (750 cd, 300 on l2_night): its night share is evolution 3's.
 	if (Index == 0) return LampLightPeak() * TableLightShare * (bNight ? NightLightShareE3 : 1.f);
@@ -1718,6 +1835,9 @@ bool ARinkActor::IsGoalLoud()
 
 void ARinkActor::PlaceLampLights()
 {
+	// Lane A160: device B's radius (3.5 m: the lamp, the board top and the caps, not the ice) unless the goal is loud (evolution 4's 16 m and 14 m).
+	for (UPointLightComponent* Light : { ArenaLampLights[0].Get(), ArenaLampLights[1].Get(), ArenaLampLights[2].Get() }) if (Light) Light->SetAttenuationRadius(IsGoalLoud() ? LampLightRadiusLoudCm : LampLightRadiusCm);
+	for (UPointLightComponent* Light : { ArenaWaveLights[0].Get(), ArenaWaveLights[1].Get() }) if (Light) Light->SetAttenuationRadius(IsGoalLoud() ? WaveLightRadiusLoudCm : LampLightRadiusCm);
 	// Evolution 3's places, in each piece's own space: 3 m up, a little to the rink's side of the lamp (the piece's -y; the table's lamp stands at its back).
 	const FVector LightLocal[3] = { FVector(0.0, 105.0, 305.0), FVector(0.0, -15.0, 300.0), FVector(0.0, -15.0, 300.0) };
 	UStaticMeshComponent* const LampOn[3] = { ArenaTable.Get(), ArenaGoalLightNeg.Get(), ArenaGoalLightPos.Get() };
@@ -1825,7 +1945,7 @@ bool ARinkActor::GetPenaltyBoxSeat(int32 Team, FVector& OutLocation, FRotator& O
 {
 	const UStaticMeshComponent* C = Team == 0 ? ArenaBoxNeg.Get() : ArenaBoxPos.Get();
 	static const FName SeatSocket(TEXT("Seat"));
-	if (!bArenaShown || !C || !C->GetStaticMesh() || !C->DoesSocketExist(SeatSocket)) return false;
+	if (!bBoxesShown || !C || !C->GetStaticMesh() || !C->DoesSocketExist(SeatSocket)) return false;   // lane A160: the boxes, not the whole dressing (a bare tier that whistles)
 	OutLocation = C->GetSocketLocation(SeatSocket);
 	// Facing the rink: the box stands on the -y side, so the rink is along the actor's +y.
 	OutRotation = GetActorTransform().TransformVectorNoScale(FVector::YAxisVector).Rotation();

@@ -1,0 +1,1 @@
+SET-WEAPONS mallet (after the critic: low flat swing, contact at the hip): the contact frame 17 of Mallet_Swing with a victim, from the front left and from the game camera; Mallet_Carry, Mallet_Swing, Mallet_Miss, Fall_Bonk (hit from the side, sat down, onto the back), both styles. Blender Cycles CPU, frozen frames.
