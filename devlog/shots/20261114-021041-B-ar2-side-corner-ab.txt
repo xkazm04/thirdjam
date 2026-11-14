@@ -1,0 +1,1 @@
+AR2, over the side boards and into a corner from game-camera height, before and after. Stands and crowd take 18.3 % and 19.6 % of these frames; band mean luma 48 to 36.5 and 45 to 34 (they replace the lit wall foot and the apron); median 31 to 32, 99th percentile 91 and 68. Nothing stands inside the clear zones: the walkway behind device A's boxes is 2.1 m.

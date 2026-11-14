@@ -1,0 +1,1 @@
+AR2, the clay tier with the timber stands and the clay crowd, game camera in an un-paused match, 90 ticks after the first knockdown. The match ran at 17 ticks a second while frames were being captured (five Blender lanes on the CPU).
