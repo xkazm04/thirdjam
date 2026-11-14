@@ -700,6 +700,8 @@ void UJamSim::FaceoffReset()
 		S.DekeSide = 0;
 		S.SweepFrames = S.SweepSide = 0;   // lane A51: a faceoff ends the sweep shield and the spin
 		S.TakeGraceLeft = 0;               // lane A121: and the take grace (the draw's winner wins the puck anew)
+		S.TakeShieldLeft = 0;              // lane A177: and the take shield
+		S.CheckWindupLeft = S.LiftWindupLeft = 0; S.bCrossBraced = false;   // lane A184: and the wind-ups and the brace (a hold still down counts on)
 		S.bBurstEarned = false;            // lane A121: at a faceoff everybody merely stands
 		S.RestFrames = Config.Skater.BurstFrames > 0 ? FMath::Max(0, Config.Skater.BurstRestFrames) : 0;   // lane A128: and has stood long enough: the draw starts with the first step
 		S.SpinRecoverLeft = 0;
@@ -970,6 +972,8 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 		S.ContactOutcome = 0; S.ContactRatio = 0.f; S.bContactCross = false; S.bCheckRefused = false; S.bRecoilThisFrame = false;   // lane A92 read-outs
 		S.ContactBy = -1; S.bContactBoard = false;   // lane A101 read-outs
 		S.bContactSlam = false;   // lane A165 read-out
+		S.bContactShield = false;   // lane A177 read-out
+		S.bCrossBraceHit = false; S.WindupFrames = 0;   // lane A184 read-outs
 		S.bContactGrace = false;   // lane A113 read-out
 		S.bAbilityThisFrame = false;   // lane A84
 	}
@@ -1069,7 +1073,9 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 		if (S.CheckWindow > 0 && --S.CheckWindow == 0 && !CarrierMayNotHit(S)) ++S.ChecksMissed;
 		if (S.LateFrames > 0) --S.LateFrames;   // lane A151: the late press's frames run out (set to late_press_frames + 1 by the contact, which is stepped after this loop)
 		if (S.ShieldFrames > 0) --S.ShieldFrames;   // lane A84: the shield runs while the puck is live
-		if (!S.CanAct()) { S.ChargeFrames = 0; continue; }
+		StepCrossHold(S, In);   // lane A184 (game.contact.cross_hold): the brace, before anything this frame reads it
+		if (!S.CanAct()) { S.ChargeFrames = 0; S.CheckWindupLeft = 0; S.LiftWindupLeft = 0; continue; }   // lane A184: a wind-up dies with the feet
+		StepWindups(S, S.StickLockLeft > 0);   // lane A184: a wind-up pressed on an earlier frame ends here (none at check_windup_frames / cross_windup_frames 0)
 		if (In.bAbility) TryAbility(S);   // lane A84 (R-0041 point 3): F, before the shot so a shotgun with the puck fires this frame
 		if (In.bShoot) TryShoot(S, 0.f);
 		StepCharge(S, In);
@@ -1090,11 +1096,19 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 			// Lane A165 (game.contact.check_cooldown_restart): the press inside the cooldown starts it again: a mashed button never opens a second window.
 			if (Config.Contact.bCheckCooldownRestart) S.CheckReadyFrame = Frame + Config.Contact.CheckCooldownFrames;
 		}
+		else if (In.bCheck && Config.Skater.bCheckEnabled && Config.Contact.CheckWindupFrames > 0 && S.CheckWindupLeft > 0)
+		{
+			// Lane A184 (game.contact.check_windup_frames): a press inside a running wind-up is the same press: nothing more.
+		}
 		else if (In.bCheck && Config.Skater.bCheckEnabled)
 		{
 			// Lane A151 (contact.LatePressFrames): a press just after an unpressed body contact is that hit; otherwise the window opens as before.
 			const bool bLate = TryLatePress(S);
-			if (!bLate) S.CheckWindow = S.bHuman ? HumanCheckWindowFrames : CheckWindowFrames;   // lane A49: the human's press gets 0.2 s to connect
+			// Lane A184 (game.contact.check_windup_frames): the press commits and the window opens that many frames later (StepWindups), so the figure's take
+			// has a beat before the contact; the cooldown starts and the figure is told on the press. Not for a press the stick's recovery drops just below.
+			const bool bWindup = !bLate && Config.Contact.CheckWindupFrames > 0 && S.StickLockLeft <= 0;
+			if (bWindup) { S.CheckWindupLeft = Config.Contact.CheckWindupFrames; S.WindupFrames = Config.Contact.CheckWindupFrames; }
+			else if (!bLate) S.CheckWindow = S.bHuman ? HumanCheckWindowFrames : CheckWindowFrames;   // lane A49: the human's press gets 0.2 s to connect
 			S.bCheckThisFrame = true;
 			// Lane A157: the press is a commitment. Its cooldown starts (check_cooldown_frames), and a press that opened a window lunges (lunge_frames,
 			// lunge_step_mps: UJamSim::StepSkater runs it, ResolveContact ends it in a body). Not for a press the stick's recovery drops just below, and no
@@ -1102,7 +1116,7 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 			if (S.StickLockLeft <= 0)
 			{
 				if (Config.Contact.CheckCooldownFrames > 0) S.CheckReadyFrame = Frame + Config.Contact.CheckCooldownFrames;
-				if (!bLate && Config.Contact.LungeFrames > 0 && Config.Contact.bMomentum && S.LungeLeft == 0)
+				if (!bLate && !bWindup && Config.Contact.LungeFrames > 0 && Config.Contact.bMomentum && S.LungeLeft == 0)
 				{
 					S.LungeLeft = Config.Contact.LungeFrames + 1;   // the press's own frame and lunge_frames after it: it ends on the frame the human's window of the same length does
 					S.Vel += S.Forward() * FMath::Max(0.0, Config.Contact.LungeStepMps);
@@ -1114,8 +1128,10 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 		// check pressed now or still open is dropped (the skater skates and steers; it does not fall).
 		const bool bStickLocked = S.StickLockLeft > 0;
 		if (bStickLocked) { --S.StickLockLeft; S.CheckWindow = 0; S.bCheckThisFrame = false; }
-		if (In.bPoke && !bStickLocked) TryPoke(S);
-		if (In.bLift && !bStickLocked) TryLift(S);
+		if (bStickLocked) { S.CheckWindupLeft = 0; S.LiftWindupLeft = 0; }   // lane A184: the recovery drops a wind-up as it drops a window
+		// Lane A184 (game.contact.cross_hold): braced, the stick is across the body: no poke and no lift (the brace's price).
+		if (In.bPoke && !bStickLocked && !S.bCrossBraced) TryPoke(S);
+		if (In.bLift && !bStickLocked && !S.bCrossBraced) TryLift(S);
 	}
 	for (FJamSkaterState& S : Skaters)
 	{
@@ -1197,8 +1213,18 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 		S.bHasPuck = (Puck.LastTouch == S.Index) && CarrierIndex() == S.Index;
 		if (S.bHasPuck) S.LastCarryFrame = Frame;
 		if (S.TakeGraceLeft > 0 && (Puck.LastTouch != S.Index || --S.TakeGraceLeft < 0)) S.TakeGraceLeft = 0;
+		// Lane A177 (game.contact.take_shield_frames): the take shield's clock, the take grace's own: it runs while the puck is still this skater's.
+		if (S.TakeShieldLeft > 0) { if (Puck.LastTouch != S.Index) S.TakeShieldLeft = 0; else --S.TakeShieldLeft; }
 		if (S.bHasPuck && TakeOwner != S.Index)
 		{
+			// Lane A177: a puck won (not a placed one) arms the take shield for the frames after this one; with take_shield_human_side only on a side
+			// that has a human on it. take_shield_frames 0: nothing is written.
+			if (Config.Contact.TakeShieldFrames > 0 && TakeOwner != TakeOwnerPlaced)
+			{
+				bool bSide = !Config.Contact.bTakeShieldHumanSide;
+				if (!bSide) for (const FJamSkaterState& O : Skaters) if (O.bHuman && O.Team == S.Team) { bSide = true; break; }
+				if (bSide) S.TakeShieldLeft = Config.Contact.TakeShieldFrames;
+			}
 			S.TakeGraceLeft = TakeOwner == TakeOwnerPlaced ? 0 : FMath::Max(0, Config.Stick.TakeGraceFrames);
 			// Lane A163 (code only, the measurement's arm: FJamSkaterConfig::BurstTakeFrames, 0 = nothing here runs): the take's first step.
 			if (Config.Skater.BurstTakeFrames > 0 && Config.Skater.BurstFrames > 0 && TakeOwner != TakeOwnerPlaced && (S.bHuman || Config.Skater.bBurstTakeBots)) S.BurstLeft = FMath::Max(S.BurstLeft, Config.Skater.BurstTakeFrames);
@@ -1231,7 +1257,8 @@ void UJamSim::StepSkater(FJamSkaterState& S, const FJamInput& In)
 	const bool bCarrying = CarrierIndex() == S.Index;
 	const double CarryMul = bCarrying ? FMath::Clamp(C.CarrySpeedMult, 0.0, 1.0) : 1.0;
 	const double SprintBonus = bCarrying ? FMath::Max(0.0, C.SprintCarryBonus) : C.SprintBonus;
-	const bool bWantSprint = In.bSprint && C.SprintBonus > 0.0 && SprintBonus > 0.0 && S.Stamina > 0 && In.Move.SizeSquared() > 0.0025 && S.CanAct() && !S.InBox();
+	const bool bWantSprint = In.bSprint && C.SprintBonus > 0.0 && SprintBonus > 0.0 && S.Stamina > 0 && In.Move.SizeSquared() > 0.0025 && S.CanAct() && !S.InBox()
+		&& !S.bCrossBraced;   // lane A184: no sprint while braced (the brace's price; never set with contact.cross_hold off)
 	S.bSprinting = bWantSprint;
 	if (bWantSprint) S.Stamina = FMath::Max(0, S.Stamina - FMath::Max(1, C.SprintRefillFrames));
 	else if (S.Stamina < Full) S.Stamina = FMath::Min(Full, S.Stamina + FMath::Max(1, C.SprintDrainFrames));
@@ -1277,11 +1304,15 @@ void UJamSim::StepSkater(FJamSkaterState& S, const FJamInput& In)
 	else { S.BurstLeft = 0; S.bBurstEarned = false; S.RestFrames = 0; }
 	S.bBraking = S.bReverseBraking = false;
 	bool bThrust = false;   // lane A128: this frame the skater pushed (it could act and had a move input)
-	const double Speed = Eff(EJamStat::SkaterSpeed, S.Index) * BurstMul * SprintMul * CarryMul;
+	// Lane A185 (track F2 evolution 9, R-0064 point 2): a skater without the puck has skater.free_speed_mult more top speed and the same more thrust (it
+	// reaches its higher top in the same time), in a glide and in a sprint, bots and the human alike; the carrier skates exactly as before (its sprint cap
+	// above is still a fraction of the base 1 + sprint.bonus). 1 = the game before the lane.
+	const double FreeMul = bCarrying ? 1.0 : FMath::Max(0.0, C.FreeSpeedMult);
+	const double Speed = Eff(EJamStat::SkaterSpeed, S.Index) * BurstMul * SprintMul * CarryMul * FreeMul * (S.bCrossBraced ? CrossHoldSpeedShare : 1.0);   // lane A184: the brace's price
 	const double FirstStepMul = bCarrying && C.BurstCarryAccelMult > 0.0 ? C.BurstCarryAccelMult : C.BurstAccelMult;   // lane A121: the carrier's own (code only, 0 = everyone's)
 	const double RecoverMul = S.SpinRecoverLeft > 0 ? FMath::Clamp(C.SpinRecoveryAccelMult, 0.0, 1.0) : 1.0;   // lane A128: finding its feet after a spin (code only; 1 = normal)
-	const double Accel = Eff(EJamStat::SkaterAccel, S.Index) * BurstMul * SprintMul * CarryMul * (bFirstStep ? FMath::Max(1.0, FirstStepMul) : 1.0) * RecoverMul;
-	const double TurnRate = Eff(EJamStat::SkaterTurnRate, S.Index);
+	const double Accel = Eff(EJamStat::SkaterAccel, S.Index) * BurstMul * SprintMul * CarryMul * FreeMul * (bFirstStep ? FMath::Max(1.0, FirstStepMul) : 1.0) * RecoverMul;
+	const double TurnRate = Eff(EJamStat::SkaterTurnRate, S.Index) * (S.bCrossBraced ? CrossHoldTurnShare : 1.0);   // lane A184: the brace's price
 	const double Grip = Eff(EJamStat::SkaterGrip, S.Index);
 	// Glide friction scales with the ice: glide_drag was measured at ice_friction 0.015 (DEFAULTS.md). R-0019: the zone under the skater scales speed and glide.
 	const FJamIceFactors Ice = ZoneSource ? ZoneSource->IceAt(S.Pos) : FJamIceFactors();
@@ -1673,6 +1704,19 @@ void UJamSim::TryLift(FJamSkaterState& S)
 	if (Frame < S.LiftReadyFrame) return;
 	S.LiftReadyFrame = Frame + 30;
 	S.bLiftThisFrame = true;
+	// Lane A184 (game.contact.cross_windup_frames): the swing commits on the press (its cooldown above, the figure's call) and lands that many frames later
+	// (StepWindups calls ResolveLift): the shove, the strip and the miss as they are below, on the positions of that frame. 0 = at once, as before.
+	if (Config.Contact.CrossWindupFrames > 0)
+	{
+		S.LiftWindupLeft = Config.Contact.CrossWindupFrames;
+		S.WindupFrames = Config.Contact.CrossWindupFrames;
+		return;
+	}
+	ResolveLift(S);
+}
+
+void UJamSim::ResolveLift(FJamSkaterState& S)
+{
 	const int32 C = CarrierIndex();
 	// Lane A95 (B-to-A-0037): the cone. A carrier more than stick.lift_cone_deg off the attacker's facing is neither lifted nor shoved (the swing is a miss):
 	// B measured 7 of 20 clean lifts on a victim behind the attacker's shoulder, the shove at empty ice.
@@ -1754,6 +1798,47 @@ void UJamSim::TryLift(FJamSkaterState& S)
 		}
 	}
 	Emit(JamEvents::Lift, S.Index, S.BladePos, 0.f, KindMiss, S.BladePos - S.Pos);
+}
+
+// Lane A184 (track F1, evolution 9; game.contact.cross_hold): the brace. The hold counts while the skater could brace (on its feet, out of the box, not the
+// carrier); from CrossHoldTapFrames it is braced unless the brace was spent (a body met, or the skater lost its feet while braced), which lasts until
+// the button is released. Nothing is written with the key off, so the neutral value hashes as before.
+void UJamSim::StepCrossHold(FJamSkaterState& S, const FJamInput& In)
+{
+	if (!Config.Contact.bCrossHold || !Config.Contact.bMomentum || !Config.Skater.bCheckEnabled)
+	{
+		S.CrossHoldFrames = 0; S.bCrossBraced = false; S.bCrossSpent = false;
+		return;
+	}
+	if (!In.bCrossHold) { S.CrossHoldFrames = 0; S.bCrossBraced = false; S.bCrossSpent = false; return; }
+	if (!S.CanAct() || S.InBox())
+	{
+		if (S.bCrossBraced) S.bCrossSpent = true;   // felled or stumbled out of the brace: spent until the release
+		S.bCrossBraced = false;
+		return;
+	}
+	if (CarrierIndex() == S.Index) { S.CrossHoldFrames = 0; S.bCrossBraced = false; return; }   // the carrier's button is the shot
+	S.CrossHoldFrames = FMath::Min(S.CrossHoldFrames + 1, CrossHoldTapFrames);
+	S.bCrossBraced = !S.bCrossSpent && S.CrossHoldFrames >= CrossHoldTapFrames;
+	if (S.bCrossBraced) ++S.CrossBraceFrames;
+}
+
+// Lane A184 (game.contact.check_windup_frames, cross_windup_frames): the wind-ups end. Called before this frame's presses, so a wind-up of N frames ends N
+// frames after its press. The carrier cannot hit (its window is not opened); a braced skater does not swing; the stick's recovery drops both.
+void UJamSim::StepWindups(FJamSkaterState& S, bool bStickLocked)
+{
+	if (S.CheckWindupLeft > 0 && --S.CheckWindupLeft == 0 && !bStickLocked && !CarrierMayNotHit(S)) OpenCheckWindow(S);
+	if (S.LiftWindupLeft > 0 && --S.LiftWindupLeft == 0 && !bStickLocked && !S.bCrossBraced) ResolveLift(S);
+}
+
+void UJamSim::OpenCheckWindow(FJamSkaterState& S)
+{
+	S.CheckWindow = S.bHuman ? HumanCheckWindowFrames : CheckWindowFrames;
+	if (Config.Contact.LungeFrames > 0 && Config.Contact.bMomentum && S.LungeLeft == 0)
+	{
+		S.LungeLeft = Config.Contact.LungeFrames + 1;
+		S.Vel += S.Forward() * FMath::Max(0.0, Config.Contact.LungeStepMps);
+	}
 }
 
 // Lane A95 (B-to-A-0037): is the victim more than stick.lift_cone_deg off the attacker's facing? 180 (or more) = no cone.
@@ -1964,8 +2049,28 @@ void UJamSim::CollideSkaters()
 					return Checker.CheckWindow > 0 && Checker.CanAct() && !Victim.IsDown() && Victim.ShieldFrames == 0 && (Checker.AbilityArmed == AbHipCheck || !CarrierMayNotHit(Checker));
 				};
 				const bool bA = Can(A, B), bB = Can(B, A);
+				// Lane A184 (game.contact.cross_hold): a braced skater (never one with the key off) whose body meets an opponent delivers the cross-check by the
+				// momentum he brings: the pressed cross-check's own rule (ResolveContact, EContactKind::Cross: closing speed + thrust_mps), not into a back (a
+				// pressed cross-check from behind is a stick lift), not on a body the spin or the sweep shields. A pressed check of either goes first.
+				auto Braced = [&](const FJamSkaterState& Hitter, const FJamSkaterState& Victim, const FVector2D& Dir)
+				{
+					return Hitter.bCrossBraced && Hitter.CanAct() && !Victim.IsDown() && Victim.ShieldFrames == 0 && !CarrierMayNotHit(Hitter)
+						&& Dot(Dir, Victim.Forward()) <= 0.5 && !(CarrierIndex() == Victim.Index && IsShoveShielded(Hitter, Victim));
+				};
+				const bool bBa = !bA && !bB && Braced(A, B, N), bBb = !bA && !bB && Braced(B, A, -N);
 				if (bA && (!bB || Dot(A.Vel, N) >= Dot(B.Vel, -N))) bLanded = ResolveContact(A, B, N, Contact, EContactKind::Body) >= ContactStumble;
 				else if (bB) bLanded = ResolveContact(B, A, -N, Contact, EContactKind::Body) >= ContactStumble;
+				else if (bBa || bBb)
+				{
+					const bool bFromA = bBa && (!bBb || Dot(A.Vel, N) >= Dot(B.Vel, -N));
+					FJamSkaterState& Hitter = bFromA ? A : B;
+					FJamSkaterState& Victim = bFromA ? B : A;
+					bLanded = ResolveContact(Hitter, Victim, bFromA ? N : -N, Contact, EContactKind::Cross) >= ContactStumble;
+					Hitter.bCrossBraced = false;   // the brace is spent on this body until the button is released
+					Hitter.bCrossSpent = true;
+					++Hitter.CrossBraceHits;
+					Victim.bCrossBraceHit = true;
+				}
 				else if (Config.Contact.LatePressFrames > 0)
 				{
 					// Lane A151 (track F1): no check was open when these two met. A human who was closing on the other keeps the meeting for late_press_frames
@@ -2225,12 +2330,20 @@ int32 UJamSim::ResolveContact(FJamSkaterState& Att, FJamSkaterState& Vic, const 
 	Att.LungeLeft = 0;   // lane A157: the lunge ended in a body (read by ContactImpulse just above; no miss is charged)
 	const double Board = BoardFactor(Vic, Dir);
 	const double Impulse = FreeImpulse * Board;
-	const double StabV = StabilityOf(Vic, Dir, Kind);
+	double StabV = StabilityOf(Vic, Dir, Kind);
+	// Lane A184 (game.contact.cross_hold): a braced skater has his stick across, not his body set: hit by a man closing faster than he skates into it himself,
+	// he stands at CrossHoldExposed of his stability (the brace's price; bCrossBraced is never set with the key off).
+	if (Vic.bCrossBraced && Dot(Att.Vel, Dir) > Dot(Vic.Vel, -Dir)) StabV *= CrossHoldExposed;
 	// skater.check_speed_min keeps a meaning: a mode that lowered it (hits from low speeds) hits harder by 5 / value; the default 5 changes nothing. The
 	// outcome reads the scaled ratio; the frames down read the physical one (PhysRatio), so such a mode's low-speed knockdown is a short one, not the maximum.
 	const double PhysRatio = Impulse / FMath::Max(1e-6, StabV);
 	const double Ratio = PhysRatio * (ReferenceCheckSpeedMin / FMath::Max(0.5, Eff(EJamStat::CheckSpeedMin, Att.Index)));
 	int32 Outcome = bHip || Ratio >= K.DownRatio ? ContactDown : Ratio >= K.BumpRatio ? ContactStumble : ContactBump;
+	// Lane A177 (track F1, evolution 8; game.contact.take_shield_frames): a skater that won the puck inside the last take_shield_frames keeps its feet: the
+	// hit that would fell it is a stumble (TakeShieldLeft is only ever set with the key on; an armed hip check keeps its rule). Read before the line below, so
+	// a skater already stumbling takes a bump, as from any stumble.
+	const bool bShielded = Outcome == ContactDown && !bHip && Vic.TakeShieldLeft > 0;
+	if (bShielded) Outcome = ContactStumble;
 	if (Outcome == ContactStumble && (Vic.IsStumbling() || K.StaggerFrames <= 0)) Outcome = ContactBump;   // a stumbling skater is not stumbled again (no lock)
 	// Lane A113 (R-0049 point 1): a tackle is an event, not a rhythm. A skater released from a knockdown inside the last contact.release_grace_frames takes a bump
 	// at most, whatever the ratio (an armed hip check too: its charge stays armed). The attacker pays as for any bump (the recoil test below reads Outcome).
@@ -2246,6 +2359,7 @@ int32 UJamSim::ResolveContact(FJamSkaterState& Att, FJamSkaterState& Vic, const 
 	Vic.ContactRatio = static_cast<float>(Ratio);
 	Vic.bContactCross = Kind == EContactKind::Cross;
 	Vic.ContactBy = Att.Index;   // lane A101 read-out
+	if (bShielded && !bGraced) { Vic.bContactShield = true; ++Vic.ContactShielded; }   // lane A177 read-outs
 	const float Strength = bHip ? 1.f : static_cast<float>(FMath::Clamp(Closing / Config.Skater.Speed, 0.0, 1.0));   // contracts/events.md: closing speed / skater.speed
 	// Lane A165 (track F1, evolution 7; game.contact.board_slam_frames): the board slam, earned. The hit fells its victim (the grace has had its say above),
 	// the victim's centre is within BoardSlamRangeM of the boards and the attacker closes on it along the boards' outward normal at BoardSlamMinMps or
@@ -2301,7 +2415,15 @@ int32 UJamSim::ResolveContact(FJamSkaterState& Att, FJamSkaterState& Vic, const 
 		{
 			++Vic.ContactStumbles;
 			Vic.Vel *= 0.5;
-			Vic.StumbleFrames = FMath::Max(Vic.StumbleFrames, K.StaggerFrames);
+			// Lane A177 (game.contact.take_shield_stagger_max): the capped hit's stumble follows the line the frames down follow: stagger_frames at down_ratio
+			// to take_shield_stagger_max at down_full_ratio. 0 (or not above stagger_frames): the flat cap.
+			int32 Stagger = K.StaggerFrames;
+			if (bShielded && K.TakeShieldStaggerMax > K.StaggerFrames)
+			{
+				const double Ts = FMath::Clamp((PhysRatio - K.DownRatio) / FMath::Max(1e-6, K.DownFullRatio - K.DownRatio), 0.0, 1.0);
+				Stagger = FMath::RoundToInt32(FMath::Lerp(static_cast<double>(K.StaggerFrames), static_cast<double>(K.TakeShieldStaggerMax), Ts));
+			}
+			Vic.StumbleFrames = FMath::Max(Vic.StumbleFrames, Stagger);
 			React(Vic, Dir, true);
 			// The puck comes loose from loose_ratio (the knockdown's rule for where it goes).
 			if (Ratio >= K.LooseRatio && Puck.LastTouch == Vic.Index && FVector2D::Distance(Vic.Pos, Puck.Pos) <= CarrierReachM(Vic.Index))
@@ -2831,7 +2953,7 @@ void UJamSim::StepPuck()
 			// C-0005 deflection: an opponent's shot passing within DeflectRangeM of the blade bounces off it at 70 %; a teammate's puck (a pass)
 			// is received instead: the blade takes most of its speed and the carry assist settles it.
 			// Lane A77 (R-0036): a puck over BladeClearM flies over the blades (the saucer's point); the body below still stops it.
-			if (S.DeflectCooldown == 0 && Puck.LastTouch != S.Index && S.CanAct() && Puck.Z < BladeClearM)
+			if (S.DeflectCooldown == 0 && Puck.LastTouch != S.Index && S.CanAct() && Puck.Z < BladeClearM && !S.bCrossBraced)   // lane A184: a braced blade takes nothing
 			{
 				const FVector2D FromBlade = Puck.Pos - S.BladePos;
 				const double Db = FromBlade.Size();
@@ -2865,7 +2987,7 @@ void UJamSim::StepPuck()
 			// Lane A46 (PAYOFFS.md section 6): body reception. A teammate's pass in flight (nobody carries it) that reaches the body within stick.reception_m,
 			// not only the blade disc, at DeflectMinSpeed..BodyReceptionMaxSpeed is seated on the blade like a blade reception, with ReceptionSettleFrames of
 			// settle in which the carry assist holds it there; a faster pass bounces off the body as before (the blade above still takes it). reception_m 0 = off.
-			if (Config.Stick.ReceptionM > 0.0 && S.DeflectCooldown == 0 && Puck.LastTouch != S.Index && S.CanAct() && Puck.Z < BladeClearM
+			if (Config.Stick.ReceptionM > 0.0 && S.DeflectCooldown == 0 && Puck.LastTouch != S.Index && S.CanAct() && Puck.Z < BladeClearM && !S.bCrossBraced   // lane A184
 				&& Skaters.IsValidIndex(Puck.LastTouch) && Skaters[Puck.LastTouch].Team == S.Team && CarrierIndex() < 0)
 			{
 				const FVector2D FromBody = Puck.Pos - S.Pos;
@@ -3396,6 +3518,10 @@ uint64 UJamSim::StateHash() const
 		// Lane A121: the earned first step and the take grace only while they are up (burst.own_stop false and stick.take_grace_frames 0 hash as before).
 		if (S.bBurstEarned) H.AddI(0x121B);
 		if (S.TakeGraceLeft != 0) H.AddI(S.TakeGraceLeft);
+		if (S.TakeShieldLeft != 0) { H.AddI(-1771); H.AddI(S.TakeShieldLeft); }   // lane A177: the take shield only while it runs (contact.take_shield_frames 0: never)
+		// Lane A184: the hold and the brace once they are up, the wind-ups while they run, behind tags (cross_hold false and the wind-ups at 0: never).
+		if (S.CrossHoldFrames != 0 || S.bCrossBraced || S.bCrossSpent) { H.AddI(-1841); H.AddI(S.CrossHoldFrames); H.AddI(S.bCrossBraced ? 1 : 0); H.AddI(S.bCrossSpent ? 1 : 0); }
+		if (S.CheckWindupLeft != 0 || S.LiftWindupLeft != 0) { H.AddI(-1842); H.AddI(S.CheckWindupLeft); H.AddI(S.LiftWindupLeft); }
 		if (S.StickLockLeft != 0) { H.AddI(0x152A); H.AddI(S.StickLockLeft); }   // lane A152: the miss's recovery only while it runs (stick.miss_recovery_frames 0 hashes as before)
 		// Lane A128: the rest counter and the spin's recovery only while they are up (burst.rest_frames 0 and spin.recovery_frames 0 hash as before).
 		if (S.RestFrames != 0) { H.AddI(0x128A); H.AddI(S.RestFrames); }

@@ -57,7 +57,13 @@ public:
 	static constexpr int64 ControlsHintFrames = 480;
 	// Lane A171 (REVIEW-3 item 8: "the first screen never told me Space exists"): the poke and the ability's key are in the strip: nine verbs, three
 	// spaces between them (it was four), 143 characters: under the 146 of the ten-verb line this strip's width and type were sized for.
-	static FString ControlsHintText() { return TEXT("SKATE  WASD   BRAKE  PRESS AGAINST YOUR MOTION   AIM  MOUSE   SHOOT  HOLD LMB   PASS  Q   POKE  SPACE   CHECK  RMB   ABILITY  F   SPRINT  SHIFT"); }
+	// Lane A183: from the live bindings (UJamInputMap::HintStripText; defined in InputMapping.cpp).
+	static FString ControlsHintText();
+	// Lane A191: what the two-role buttons do right now ("LMB  SHOOT     RMB  PASS" with the puck, "LMB  CROSS-CHECK     RMB  CHECK" without), from the
+	// live bindings and the sim's possession (JamControls::HasPuckForButtons); a pill bottom left, at most ButtonsBadgeMaxW wide. Defined in InputMapping.cpp.
+	static FString ButtonsBadgeLine(bool bWithPuck);
+	static constexpr float ButtonsBadgeMaxW = 480.f;
+	FString GetButtonsBadgeShown() const;
 	static bool IsControlsHintSpent() { return bControlsHintSpent; }
 	static void SetControlsHintSpent(bool bSpent) { bControlsHintSpent = bSpent; }   // tests and jam.ui.hintreset
 	// The live rule: the frame window, and not spent this session (bEveryMatch: the neutral value, the strip in every match).
@@ -347,13 +353,21 @@ public:
 	// for opposite acts): never a ring. A LINE on the ice across the human's path, 8 m from him towards the closing opponent: StopBarHalfWidthM to either
 	// side of that point (two stick lengths in all), perpendicular to his travel; chalk at StopMarkArmedAlpha and StopBarArmedThickM while armed; the
 	// opponent's colour, StopBarLitThickM thick and breathing while lit. A ring says "this puck"; a line across the way says "stop here".
-	static constexpr float ContestRingRadiusM = 1.2f;
-	static constexpr float StopBarHalfWidthM = 1.6f;
-	static constexpr float StopBarArmedThickM = 0.16f;
-	static constexpr float StopBarLitThickM = 0.40f;
-	static constexpr float StopBarArmedMinPx = 4.f;
-	static constexpr float StopBarLitMinPx = 9.f;
-	static constexpr float StopMarkArmedAlpha = 0.6f;
+	// Lane A178 (track F2, evolution 8; what a real window read on package H30, docs/experiments/MOVEMENT-9.md): the contested ring was on screen 5 frames
+	// (median) and seen on no still; the lit line was 8 px high at 1920 x 1080, the thinnest orange thing on the ice, and its chalk state lasted a tenth
+	// of a second. So: the contested mark is two rings round the puck (ContestRingRadiusM and ContestInnerRadiusM: a target, larger than any ring under a
+	// skater) and a ring under the opponent who is coming (ContestOppRadiusM), all three in his colour, breathing together, on screen for
+	// jam.hud.ContestHold frames at least (JamCarrierMarks::StepShow); the lit line is a metre deep (StopBarLitMinPx at least); the chalk line 0.45 m, 9 px at least, at 90 %, and the chalk
+	// line is there from the moment he carries at an opponent ahead (FStopRule::ArmClosingMps).
+	static constexpr float ContestRingRadiusM = 1.8f;
+	static constexpr float ContestInnerRadiusM = 1.1f;
+	static constexpr float ContestOppRadiusM = 1.0f;
+	static constexpr float StopBarHalfWidthM = 1.6f;   // two stick lengths in all, as lane A171 set it (Jam.Hud.ClearEdges holds it): the window asked for depth, not width
+	static constexpr float StopBarArmedThickM = 0.45f;
+	static constexpr float StopBarLitThickM = 1.0f;
+	static constexpr float StopBarArmedMinPx = 9.f;    // at 6 px and 60 % the chalk line was faint on pale ice at 1920 x 1080 (capture a178-drill-1080, frame 511)
+	static constexpr float StopBarLitMinPx = 20.f;
+	static constexpr float StopMarkArmedAlpha = 0.9f;
 	// The line on the screen from its four projected points (its two ends A and B; T0 and T1 the near and far edge of its thickness at its middle):
 	// centre, size (length x thickness, the thickness measured across the line and never under MinThickPx), the angle to turn it by, and the box it
 	// covers once turned (what the down rule tests). False for a line with no length. Pure (tests call it).
@@ -393,6 +407,8 @@ public:
 	void UpdateMarks(const FJamPresentationFrame& Frame);
 	UPROPERTY(Transient) TObjectPtr<UImage> ContestRing;
 	UPROPERTY(Transient) TObjectPtr<UBorder> StopMarkBar;   // lane A171: a line, not a ring
+	UPROPERTY(Transient) TObjectPtr<UImage> ContestRingInner;   // lane A178: the second ring round the contested puck
+	UPROPERTY(Transient) TObjectPtr<UImage> ContestOppRing;     // lane A178: the ring under the opponent who is coming
 	int32 MarkContestOpp = -1;
 	int32 MarkStopState = 0;
 	static bool ShowControlsHint(const FJamPresentationFrame& F) { return F.SimFrame < ControlsHintFrames && F.Phase == EJamPhase::Play; }
@@ -541,6 +557,11 @@ protected:
 	virtual void NativeDestruct() override;
 
 private:
+	// Lane A191: the buttons' badge (built and updated in InputMapping.cpp: one call each from BuildTree and RefreshFromFrame).
+	void BuildButtonsBadge();
+	void UpdateButtonsBadge(const FJamPresentationFrame& Frame);
+	UPROPERTY(Transient) TObjectPtr<UBorder> ButtonsBadge;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> ButtonsBadgeText;
 	// Lane A18 preview counter (declared by lane A16 to keep the tree compiling, R-0003 point 5).
 	int32 FaceoffPreview = 0;
 	void BuildTree();
@@ -734,4 +755,36 @@ private:
 	int32 DrawPreviewFrames = 0;
 	bool bLastDrawWon = false;
 	bool bCountdownSeen = false;
+
+	// ---- Lane A188 (track F3, evolution 8, R-0064 points 6 and 9; HUDGoalBanner.cpp): the GOAL banner and the ability plate's words.
+public:
+	// The banner's opacity Since frames into a goal pause of PauseFrames: in over GoalBannerInFrames, held, out over GoalBannerOutFrames ending
+	// GoalBannerLeadFrames before the pause ends (before the faceoff's countdown); 0 outside. A short pause shares its frames in thirds.
+	static constexpr int32 GoalBannerInFrames = 12;
+	static constexpr int32 GoalBannerOutFrames = 12;
+	static constexpr int32 GoalBannerLeadFrames = 6;
+	static float GoalBannerAlpha(int32 Since, int32 PauseFrames);
+	// The banner's band: its centre's height as a share of the screen (0.30, the middle band above the play), or 0.205 when the scorer's figure
+	// (ScorerTopY..ScorerFootY, shares of the screen) would be under the band at 0.30. ScorerTopY < 0 = no scorer on screen.
+	static float GoalBannerCentreY(float ScorerTopY, float ScorerFootY);
+	// "2 : 1", the scoring side's number first as the scoreboard reads (home : away).
+	static FString GoalBannerScore(int32 Home, int32 Away);
+	// The ability plate (lane A84's): "<key>: <KIND>  <state>", the key from the live bindings (UJamInputMap::BindingTableText's ABILITY row).
+	static FString AbilityPlateText(const FString& Kind, const FString& State);
+	static FString AbilityKeyName();
+	// What fires an armed ability: NEXT SHOT (shotgun), NEXT HIT (hip_check), NEXT PASS (slow_puck), else ARMED.
+	static FString AbilityArmedWord(FName Kind);
+	UFUNCTION(BlueprintPure, Category = "Jam|Hud") FString GetGoalBannerText() const;
+	UFUNCTION(BlueprintPure, Category = "Jam|Hud") float GetGoalBannerOpacity() const { return GoalBannerOpacity; }
+private:
+	void UpdateGoalBanner(const FJamPresentationFrame& Frame);
+	UPROPERTY(Transient) TObjectPtr<UBorder> GoalBannerPlate;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> GoalBannerWord;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> GoalBannerScoreText;
+	int64 GoalBannerStart = -1;      // the sim frame the goal pause began (-1: no banner)
+	int32 GoalBannerLastHome = -1;
+	int32 GoalBannerLastAway = -1;
+	int32 GoalBannerTeam = -1;       // 0 the human's side scored, 1 the other side
+	float GoalBannerY = 0.30f;
+	float GoalBannerOpacity = 0.f;
 };

@@ -15,7 +15,7 @@ namespace JamNet
 {
 	constexpr uint32 Magic = 0x4A4E4554u;  // 'JNET'
 	// 1: Move + shoot/check/brake (H6). 2: every FJamInput field, 32-bit frames in the header (H11.5, lane A38).
-	constexpr uint8 Version = 8;   // lane A104 (track Q1): the 60-frame checkpoint is JamNetLockstepHash (the sim's LockstepStateHash, the rules' and zones' hashes); a 7 peer would show a false DESYNC. 7: lane A84 (R-0041 point 3): FJamInput::bAbility travels (flag bit 2048, an edge). 6: lane A77 (R-0036): FJamInput::bPassHeld travels (flag bit 1024, a held level). 5: lane A51 (R-0034): FJamInput::bSpin travels (flag bit 512). 4: bSprint (flag 256, two flag bytes); 3: bDeke (flag 128, lane A39)
+	constexpr uint8 Version = 9;   // lane A184 (track F1, R-0064 point 1): FJamInput::bCrossHold travels (flag bit 4096, a held level); an 8 peer would drop the brace and desync at its first braced frame. 8: lane A104 (track Q1): the 60-frame checkpoint is JamNetLockstepHash (the sim's LockstepStateHash, the rules' and zones' hashes); a 7 peer would show a false DESYNC. 7: lane A84 (R-0041 point 3): FJamInput::bAbility travels (flag bit 2048, an edge). 6: lane A77 (R-0036): FJamInput::bPassHeld travels (flag bit 1024, a held level). 5: lane A51 (R-0034): FJamInput::bSpin travels (flag bit 512). 4: bSprint (flag 256, two flag bytes); 3: bDeke (flag 128, lane A39)
 	// Frames between a local input being read and the frame it is applied on both sides.
 	constexpr int32 InputDelay = 3;
 	// Inputs per packet (the last Window frames of local input); loss is covered by the next packet, never by retransmit.
@@ -56,7 +56,7 @@ struct JAMNET_API FJamNetQuantInput
 	int16 StickY = 0;  // Stick.Y
 	uint16 Flags = 0;
 
-	enum EFlag : uint16 { Shoot = 1, Check = 2, Brake = 4, ShootHeld = 8, Pass = 16, Poke = 32, Lift = 64, Deke = 128, Sprint = 256, Spin = 512, PassHeld = 1024, Ability = 2048 };   // Ability: lane A84 (R-0041 point 3), an edge   // PassHeld: lane A77 (R-0036), a held level   // Spin: lane A51 (R-0034), an edge   // Sprint: lane A49 (R-0032), a held level   // Deke: lane A39 (R-0029 point 4)
+	enum EFlag : uint16 { Shoot = 1, Check = 2, Brake = 4, ShootHeld = 8, Pass = 16, Poke = 32, Lift = 64, Deke = 128, Sprint = 256, Spin = 512, PassHeld = 1024, Ability = 2048, CrossHold = 4096 };   // CrossHold: lane A184 (R-0064 point 1), a held level   // Ability: lane A84 (R-0041 point 3), an edge   // PassHeld: lane A77 (R-0036), a held level   // Spin: lane A51 (R-0034), an edge   // Sprint: lane A49 (R-0032), a held level   // Deke: lane A39 (R-0029 point 4)
 	// Edge presses: the driver keeps one read during a stall; the held levels (ShootHeld, Brake, Sprint) are re-read every frame.
 	static constexpr uint16 EdgeFlags = Shoot | Check | Pass | Poke | Lift | Deke | Spin | Ability;
 	static constexpr int32 WireBytes = 10;   // two flag bytes since protocol 4

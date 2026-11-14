@@ -48,12 +48,24 @@ static TAutoConsoleVariable<float> CVarJamCameraKeepStep(TEXT("jam.camera.KeepSt
 static TAutoConsoleVariable<float> CVarJamCameraKeepNet(TEXT("jam.camera.KeepNet"), 0.f,
 	TEXT("Inside the blue line, with the attacked net within 30 degrees of the camera's yaw, the net's mouth is kept inside this fraction of the half frame's height by pitch and by giving the crane's height back: 0 = off (the default: not proven better, see docs/experiments/SCREEN.md part 4), 0.9 = on. Presentation only."), ECVF_Default);
 // Lane A158 (track U1, evolution 5): the pitch cap (FJamCameraSettings::PitchCapDeg). 0 = off, the camera of before.
-static TAutoConsoleVariable<float> CVarJamCameraPitchCap(TEXT("jam.camera.PitchCap"), 55.f,
-	TEXT("Degrees under the horizon the camera looks down at most where the boards take its arm (a corner is not seen from straight above): the crane gives only the height that pitch allows, never nearer to the chest than jam.camera.PitchCapDist, never under the open-ice height. 0 = off (the camera of before). Presentation only."), ECVF_Default);
+// Lane A186 (evolution 7): default 0. With the boards no longer turning the camera, the cap only added corrections while the human stood (Jam.Camera.
+// BoundsCorrections: still frames over 3 px 0 -> 4 on 140 m, never fewer) and trimmed the steep corner frames by little (SCREEN-2.md: 84 -> 71): off.
+static TAutoConsoleVariable<float> CVarJamCameraPitchCap(TEXT("jam.camera.PitchCap"), 0.f,
+	TEXT("Degrees under the horizon the camera looks down at most where the boards take its arm (a corner is not seen from straight above): the crane gives only the height that pitch allows, never nearer to the chest than jam.camera.PitchCapDist, never under the open-ice height. 0 = off (the default since lane A186: it added corrections the player did not cause; 55 = last night's cap). Presentation only."), ECVF_Default);
 static TAutoConsoleVariable<int32> CVarJamCameraPitchCapAfter(TEXT("jam.camera.PitchCapAfter"), 0,
 	TEXT("0 (default until measured in the game: it follows the package): evolution 5's cap. 1: the pitch cap is read a second time from where the keep-human stage left the camera's foot (it bites in a squeezed corner); 0: evolution 5's cap. Presentation only."), ECVF_Default);
 static TAutoConsoleVariable<float> CVarJamCameraPitchCapDist(TEXT("jam.camera.PitchCapDist"), 5.f,
 	TEXT("Metres: the nearest the pitch cap brings the camera to the human's chest (5 default)."), ECVF_Default);
+// Lane A186 (track U1, evolution 7): the boards never turn the camera (jam.camera.RigYaw, on) and the opt-in rate bound on the boards' corrections
+// (jam.camera.Bound, off: measured not better in the model, docs/experiments/CAMERA-3.md).
+static TAutoConsoleVariable<float> CVarJamCameraBound(TEXT("jam.camera.Bound"), 0.f,
+	TEXT("Pixels a sim frame (at 1920 x 1080) the boards' corrections (the stages' position, height, pitch and yaw over the open-ice rig) may move the picture of the ice while the human stands; while he skates the camera follows the stages and closes what it owes at his own image's speed (jam.camera.BoundOwn); the chest guard (jam.camera.BoundGuard) and the boards' inset win over it. 0 = off (the default: measured not better, CAMERA-3.md). Presentation only."), ECVF_Default);
+static TAutoConsoleVariable<int32> CVarJamCameraRigYaw(TEXT("jam.camera.RigYaw"), 1,
+	TEXT("1 (default) = the boards never turn the follow camera: no turn along the rink at an end board, no middle-third yaw budget (the keep-in-frame stage holds the human by position, height and pitch). 0 = the turns of before. Presentation only."), ECVF_Default);
+static TAutoConsoleVariable<float> CVarJamCameraBoundOwn(TEXT("jam.camera.BoundOwn"), 1.f,
+	TEXT("The share of the human's own image speed the bounded corrections may take when he skates (1 default: as fast as he does)."), ECVF_Default);
+static TAutoConsoleVariable<float> CVarJamCameraBoundGuard(TEXT("jam.camera.BoundGuard"), 0.6f,
+	TEXT("The share of the half frame past which the bound gives way so the human's chest stays in the frame (0.6 default)."), ECVF_Default);
 static TAutoConsoleVariable<int32> CVarJamCameraProbe(TEXT("jam.camera.Probe"), 0,
 	TEXT("N > 0: a JAMSCREEN camera line every N sim frames, counted from the first: frames with the human's chest outside the middle third and outside the frame, the puck out of frame while the human carries, the attacked net out of frame while he is inside the blue line, the camera's largest step. Lane A135 proof."));
 static TAutoConsoleVariable<float> CVarJamCameraKeepYaw(TEXT("jam.camera.KeepYaw"), 0.f,
@@ -250,12 +262,13 @@ FTransform UJamFollowCamera::StepThirdPerson(const FJamCameraSettings& C, FJamCa
 	const FJamPresentationSkater& S = Frame.Skaters[Frame.HumanIndex];
 	// Lane A49: a teleport (the faceoff reset after a goal moves the skaters to the dots, 5 m and more in one frame) snaps the filter instead of lagging behind it:
 	// the human is the pivot every frame, and the 17 frames of "skater behind the camera" after a goal (packaged run bindings4) do not happen.
-	if (State.bInit && FVector2D::Distance(S.PosM, State.PivotM) > 5.0) { State.Reset(S.PosM, S.YawDeg); State.YawOffsetDeg.bInit = false; State.Lift.bInit = false; State.PitchDeg.bInit = false; State.Corner.bInit = false; State.KeepHeightM = 0.f; State.bKeepOffset = false; }
+	if (State.bInit && FVector2D::Distance(S.PosM, State.PivotM) > 5.0) { State.Reset(S.PosM, S.YawDeg); State.YawOffsetDeg.bInit = false; State.Lift.bInit = false; State.PitchDeg.bInit = false; State.Corner.bInit = false; State.KeepHeightM = 0.f; State.bKeepOffset = false; State.RigLead.bInit = false; State.bBound = false; }
 	State.Step(S.PosM, S.YawDeg, C.LagFrames);
 	const FJamCameraRink Rink = FJamCameraRink::FromFrame(Frame);
 	const FVector NetCm = Frame.GetFarNetWorldCm();
 	const float Lead = FarNetLeadDeg(C, State.PivotM, State.YawDeg, FVector2D(NetCm.X / 100.0, NetCm.Y / 100.0));
 	if (!State.YawOffsetDeg.bInit) { State.YawOffsetDeg.Reset(Lead); }
+	if (!State.RigLead.bInit) { State.RigLead.Reset(Lead); }
 	if (!State.Lift.bInit) { State.Lift.Reset(0.f); }
 	const float Omega = C.SpringFrames > 0.f ? 1.f / C.SpringFrames : 0.f;
 
@@ -281,7 +294,7 @@ FTransform UJamFollowCamera::StepThirdPerson(const FJamCameraSettings& C, FJamCa
 	const float Along = P0.X < 0.0 ? 0.f : 180.f;  // away from the end board the camera stands at
 	const float DeltaAlong = FMath::UnwindDegrees(Along - YawBase);
 	const float WHead = FMath::Clamp(FMath::Cos(FMath::DegreesToRadians(DeltaAlong)), 0.f, 1.f);
-	float OffsetTarget = Lead + S0 * WEnd * WHead * DeltaAlong;
+	float OffsetTarget = C.bRigYaw ? Lead : Lead + S0 * WEnd * WHead * DeltaAlong;   // lane A186: with bRigYaw the boards never turn the camera
 	// Lane A64: keep the far net (near the far end) and then a loose puck inside KeepYawDeg of the camera yaw, the puck last so it wins over the net;
 	// the human's middle-third clamp below still has the last word. A point behind the camera (more than 100 degrees off) is not chased.
 	if (C.KeepYawDeg > 0.f)
@@ -305,7 +318,7 @@ FTransform UJamFollowCamera::StepThirdPerson(const FJamCameraSettings& C, FJamCa
 	// the pivot (a bearing means nothing there).
 	{
 		const FVector2D ToPivot0 = State.PivotM - P0;
-		if (ToPivot0.Size() > 1.0)
+		if (ToPivot0.Size() > 1.0 && !C.bRigYaw)
 		{
 			const float Bearing0 = FMath::RadiansToDegrees((float)FMath::Atan2(ToPivot0.Y, ToPivot0.X));
 			const float Rel = FMath::UnwindDegrees(State.YawDeg + OffsetTarget - Bearing0);
@@ -313,6 +326,7 @@ FTransform UJamFollowCamera::StepThirdPerson(const FJamCameraSettings& C, FJamCa
 		}
 	}
 	State.YawOffsetDeg.Step(OffsetTarget, Omega);
+	State.RigLead.Step(Lead, Omega);   // lane A186: the open-ice rig's yaw (in open ice the same target as the offset, so the same value to the bit)
 
 	// 2. The arm with the new yaw, and the boards' answer: the nearest point inside (the camera slides along the glass; the position never crosses it).
 	const float YawCam = FMath::UnwindDegrees(State.YawDeg + State.YawOffsetDeg.X);
@@ -366,6 +380,103 @@ FTransform UJamFollowCamera::StepThirdPerson(const FJamCameraSettings& C, FJamCa
 		State.bKeepOffset = true;
 	}
 	else { State.KeepHeightM = 0.f; State.bKeepOffset = false; }
+	// 6. Lane A186 (evolution 7): the corrections the boards' stages asked for, bounded (FJamCameraSettings::BoundPx).
+	{
+		const float YawRig = FMath::UnwindDegrees(State.YawDeg + State.RigLead.X);
+		const FVector2D OpenPos = Desired(YawRig);
+		const float RigPitch = DerivedPitchDeg(C);
+		State.LastRigPose = FTransform(FRotator(RigPitch, YawRig, 0.f), FVector(OpenPos.X * 100.0, OpenPos.Y * 100.0, C.HeightM * 100.0));
+		// The bound's reference: the same arm where the glass lets it stand (the boards' inset is a wall, not a correction).
+		const FVector2D RigPos = NearestInsideBoards(OpenPos, Rink, C.BoardsMarginM);
+		State.LastBoundGuard = 0;
+		if (C.BoundPx > 0.f)
+		{
+			const double CWant[5] = { PosM.X - RigPos.X, PosM.Y - RigPos.Y, (double)HeightM - C.HeightM, (double)Pitch - RigPitch, (double)FMath::UnwindDegrees(YawOut - YawRig) };
+			if (!State.bBound)
+			{
+				for (int32 i = 0; i < 5; ++i) { State.BoundCorr[i] = CWant[i]; State.BoundVel[i] = 0.0; }
+				State.bBound = true;
+			}
+			else
+			{
+				const double Focal = 960.0 / FMath::Tan(FMath::DegreesToRadians(FMath::Clamp((double)C.FovDeg, 1.0, 179.0) * 0.5));   // pixels per unit of tangent, 1920 wide
+				const double DistChest = FMath::Max(1.0, FMath::Sqrt(FVector2D::DistSquared(PosM, S.PosM) + FMath::Square((double)HeightM - C.ChestM)));
+				const double PxPerM = Focal / DistChest, PxPerDeg = Focal * PI / 180.0;
+				const double Wt[5] = { PxPerM, PxPerM, PxPerM, PxPerDeg, PxPerDeg };
+				const double OwnPx = Focal * FVector2D::Distance(S.PosM, State.BoundLastHumanM) / DistChest;   // his own image's speed, were the camera still
+				const double Speed = C.BoundPx;
+				double E[5], ELen2 = 0.0;
+				for (int32 i = 0; i < 5; ++i) { E[i] = (i == 4 ? FMath::UnwindDegrees(CWant[i] - State.BoundCorr[i]) : CWant[i] - State.BoundCorr[i]) * Wt[i]; ELen2 += E[i] * E[i]; }
+				const double ELen = FMath::Sqrt(ELen2);
+				// He skates (his own image moves BoundOwnGain x BoundPx or more a frame): the camera follows the stages' own motion of this frame, and what it
+				// still owed from before closes no faster than his own image moves.
+				if (C.BoundOwnGain > 0.f && OwnPx * C.BoundOwnGain >= Speed)
+				{
+					double G[5], GLen2 = 0.0;
+					for (int32 i = 0; i < 5; ++i) { G[i] = i == 4 ? FMath::UnwindDegrees(State.BoundWant[i] - State.BoundCorr[i]) : State.BoundWant[i] - State.BoundCorr[i]; GLen2 += FMath::Square(G[i] * Wt[i]); }
+					const double GLen = FMath::Sqrt(GLen2), Close = OwnPx * C.BoundOwnGain;
+					if (GLen <= Close)
+					{
+						for (int32 i = 0; i < 5; ++i) { State.BoundVel[i] = i == 4 ? FMath::UnwindDegrees(CWant[i] - State.BoundCorr[i]) : CWant[i] - State.BoundCorr[i]; State.BoundCorr[i] = CWant[i]; }
+					}
+					else
+					{
+						const double Shrink = Close / GLen;
+						for (int32 i = 0; i < 5; ++i)
+						{
+							const double Follow = i == 4 ? FMath::UnwindDegrees(CWant[i] - State.BoundWant[i]) : CWant[i] - State.BoundWant[i];
+							State.BoundVel[i] = Follow + G[i] * Shrink;
+							State.BoundCorr[i] += State.BoundVel[i];
+						}
+					}
+				}
+				else
+				{
+					// He stands (or creeps): the correction moves towards what the stages ask by at most BoundPx of picture a frame (no carried momentum:
+					// when he stops, the camera's own motion stops with him and what is left settles slowly).
+					const double K = ELen > Speed ? Speed / ELen : 1.0;
+					if (K >= 1.0) { for (int32 i = 0; i < 5; ++i) { State.BoundVel[i] = i == 4 ? FMath::UnwindDegrees(CWant[i] - State.BoundCorr[i]) : CWant[i] - State.BoundCorr[i]; State.BoundCorr[i] = CWant[i]; } }
+					else { for (int32 i = 0; i < 5; ++i) { State.BoundVel[i] = E[i] / Wt[i] * K; State.BoundCorr[i] += State.BoundVel[i]; } }
+				}
+				// The guards: the chest no further out than BoundGuardFrac of the half frame (the least share of the rest of the step that holds him), then the boards' inset.
+				auto Pose = [&](const double* Cr) { return FTransform(FRotator((float)(RigPitch + Cr[3]), FMath::UnwindDegrees((float)(YawRig + Cr[4])), 0.f), FVector((RigPos.X + Cr[0]) * 100.0, (RigPos.Y + Cr[1]) * 100.0, (C.HeightM + Cr[2]) * 100.0)); };
+				const FVector ChestCm(S.PosM.X * 100.0, S.PosM.Y * 100.0, C.ChestM * 100.0);
+				auto Holds = [&](const double* Cr) { const FVector2D F = FrameFraction(Pose(Cr), C.FovDeg, C.KeepAspect, ChestCm); return FMath::Abs(F.X) <= C.BoundGuardFrac && FMath::Abs(F.Y) <= C.BoundGuardFrac; };
+				if (C.BoundGuardFrac > 0.f && !Holds(State.BoundCorr))
+				{
+					const double Was[5] = { State.BoundCorr[0], State.BoundCorr[1], State.BoundCorr[2], State.BoundCorr[3], State.BoundCorr[4] };
+					double Cr[5];
+					auto Blend = [&](double T) { for (int32 i = 0; i < 5; ++i) Cr[i] = Was[i] + (i == 4 ? FMath::UnwindDegrees(CWant[i] - Was[i]) : CWant[i] - Was[i]) * T; };
+					double Lo = 0.0, Hi = 1.0;
+					for (int32 n = 0; n < 14; ++n) { const double Mid = 0.5 * (Lo + Hi); Blend(Mid); if (Holds(Cr)) Hi = Mid; else Lo = Mid; }
+					Blend(Hi);
+					for (int32 i = 0; i < 5; ++i) { State.BoundVel[i] += Cr[i] - State.BoundCorr[i]; State.BoundCorr[i] = Cr[i]; }
+					State.LastBoundGuard = 1;
+				}
+				const FVector2D Cam(RigPos.X + State.BoundCorr[0], RigPos.Y + State.BoundCorr[1]);
+				if (!IsInsideBoards(Cam, Rink, C.BoardsMarginM))
+				{
+					const FVector2D In = NearestInsideBoards(Cam, Rink, C.BoardsMarginM);
+					State.BoundVel[0] += In.X - Cam.X; State.BoundVel[1] += In.Y - Cam.Y;
+					State.BoundCorr[0] = In.X - RigPos.X; State.BoundCorr[1] = In.Y - RigPos.Y;
+					State.LastBoundGuard = 2;
+				}
+			}
+			State.BoundCorr[4] = FMath::UnwindDegrees(State.BoundCorr[4]);
+			for (int32 i = 0; i < 5; ++i) State.BoundWant[i] = CWant[i];
+			bool bAsAsked = true;
+			for (int32 i = 0; i < 5; ++i) bAsAsked &= State.BoundCorr[i] == CWant[i];
+			if (!bAsAsked)
+			{
+				PosM = FVector2D(RigPos.X + State.BoundCorr[0], RigPos.Y + State.BoundCorr[1]);
+				HeightM = (float)(C.HeightM + State.BoundCorr[2]);
+				Pitch = FMath::Clamp((float)(RigPitch + State.BoundCorr[3]), -89.5f, 89.5f);
+				YawOut = FMath::UnwindDegrees((float)(YawRig + State.BoundCorr[4]));
+			}
+		}
+		else State.bBound = false;
+		State.BoundLastHumanM = S.PosM;
+	}
 	State.LastYawRigDeg = YawCam;
 	State.LastYawOutDeg = YawOut;
 	State.LastKeepYawDeg = FMath::UnwindDegrees(YawOut - YawCam);
@@ -922,6 +1033,10 @@ void UJamFollowCamera::StepSimFrame(const FJamPresentationFrame& Frame)
 			Live.PitchCapDeg = FMath::Clamp(CVarJamCameraPitchCap.GetValueOnGameThread(), 0.f, 89.f);            // lane A158, evolution 5
 			Live.PitchCapDistM = FMath::Clamp(CVarJamCameraPitchCapDist.GetValueOnGameThread(), 2.f, 12.f);
 			Live.bPitchCapAfterKeep = CVarJamCameraPitchCapAfter.GetValueOnGameThread() != 0;                    // lane A171, evolution 6
+			Live.BoundPx = FMath::Clamp(CVarJamCameraBound.GetValueOnGameThread(), 0.f, 200.f);                 // lane A186, evolution 7
+			Live.bRigYaw = CVarJamCameraRigYaw.GetValueOnGameThread() != 0;
+			Live.BoundOwnGain = FMath::Clamp(CVarJamCameraBoundOwn.GetValueOnGameThread(), 0.f, 4.f);
+			Live.BoundGuardFrac = FMath::Clamp(CVarJamCameraBoundGuard.GetValueOnGameThread(), 0.34f, 1.f);
 			if (GEngine && GEngine->GameViewport && GEngine->GameViewport->Viewport)
 			{
 				const FIntPoint Sz = GEngine->GameViewport->Viewport->GetSizeXY();
@@ -981,10 +1096,12 @@ void UJamFollowCamera::StepSimFrame(const FJamPresentationFrame& Frame)
 		const float CamYawR = FMath::DegreesToRadians((float)PoseCurrent.Rotator().Yaw);
 		const FVector2D NetTo(NetW.X - PoseCurrent.GetLocation().X, NetW.Y - PoseCurrent.GetLocation().Y);
 		const float NetBear = FMath::RadiansToDegrees(FMath::Atan2((float)(-NetTo.X * FMath::Sin(CamYawR) + NetTo.Y * FMath::Cos(CamYawR)), (float)(NetTo.X * FMath::Cos(CamYawR) + NetTo.Y * FMath::Sin(CamYawR))));
-		UE_LOG(LogTemp, Log, TEXT("JAMCAM frame=%lld x=%.3f y=%.3f third=%d yaw=%.1f pitch=%.1f lift=%.2f clamp=%.2f h=%.2f px=%.2f py=%.2f kyaw=%.2f nx=%.3f ny=%.3f netbear=%.1f zone=%d cx=%.2f cy=%.2f"), Frame.SimFrame, F.X, F.Y,
+		UE_LOG(LogTemp, Log, TEXT("JAMCAM frame=%lld x=%.3f y=%.3f third=%d yaw=%.1f pitch=%.1f lift=%.2f clamp=%.2f h=%.2f px=%.2f py=%.2f kyaw=%.2f nx=%.3f ny=%.3f netbear=%.1f zone=%d cx=%.2f cy=%.2f rx=%.3f ry=%.3f ryaw=%.3f bg=%d fyaw=%.3f fpitch=%.3f fcx=%.3f fcy=%.3f fh=%.3f"), Frame.SimFrame, F.X, F.Y,
 			(FMath::Abs(F.X) <= 1.f / 3.f && FMath::Abs(F.Y) <= 1.f / 3.f) ? 1 : 0, PoseCurrent.Rotator().Yaw, PoseCurrent.Rotator().Pitch, Filter.Lift.X, Filter.LastClampS,
 			PoseCurrent.GetLocation().Z / 100.0, S.PosM.X, S.PosM.Y, Filter.LastKeepYawDeg, NetF.X, NetF.Y, NetBear,
-			(Frame.Phase == EJamPhase::Play && S.PosM.X * Frame.AttackSign > Frame.RinkLengthM / 6.f) ? 1 : 0, PoseCurrent.GetLocation().X / 100.0, PoseCurrent.GetLocation().Y / 100.0);
+			(Frame.Phase == EJamPhase::Play && S.PosM.X * Frame.AttackSign > Frame.RinkLengthM / 6.f) ? 1 : 0, PoseCurrent.GetLocation().X / 100.0, PoseCurrent.GetLocation().Y / 100.0,
+			Filter.LastRigPose.GetLocation().X / 100.0, Filter.LastRigPose.GetLocation().Y / 100.0, Filter.LastRigPose.Rotator().Yaw, Filter.LastBoundGuard,
+			PoseCurrent.Rotator().Yaw, PoseCurrent.Rotator().Pitch, PoseCurrent.GetLocation().X / 100.0, PoseCurrent.GetLocation().Y / 100.0, PoseCurrent.GetLocation().Z / 100.0);
 	}
 }
 

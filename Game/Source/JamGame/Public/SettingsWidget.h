@@ -45,8 +45,13 @@ struct JAMGAME_API FJamSettings
 	// Bark intensity override: "" = the cut's own, else "quiet" | "normal" | "loud". Pushed to a jam.BarkIntensity console variable
 	// when lane A12 provides one; until then stored only (the report names the patch).
 	UPROPERTY(BlueprintReadWrite, Category = "Jam|Settings") FString BarkIntensity;
+	// Lane A183 (R-0064 point 1): the player's bindings in their saved form (FJamBindings::ToSaved: verb id -> "Keys|Pads"); empty = the defaults.
+	// Saved in the settings file's own section [Jam.Controls], in the same save and flush as [Jam.Settings]; ToSaved / FromSaved carry them as
+	// "Controls.<verb>" keys so a test holds them across a "restart" like the level.
+	UPROPERTY(BlueprintReadWrite, Category = "Jam|Settings") TMap<FString, FString> Controls;
 
 	static const TCHAR* Section;   // "Jam.Settings"
+	static const TCHAR* ControlsSection;   // "Jam.Controls" (lane A183)
 
 	static FJamSettings Load();
 	// Lane A144 (evolution 3): the saved form, key by key, the one Load() reads and Save() writes (GameUserSettings.ini, [Jam.Settings]). A test
@@ -68,12 +73,21 @@ struct JAMGAME_API FJamSettings
 	static FString BarksLabel(int32 Barks, const FString& Intensity);  // "OFF" | "CUT'S OWN" | "ON, QUIET" ...
 };
 
+class UJamControlsWidget;
+class UBorder;
+enum class EJamVerb : uint8;
+struct FJamBindings;
+
 UCLASS()
 class JAMGAME_API UJamSettingsWidget : public UUserWidget
 {
 	GENERATED_BODY()
 
 public:
+	// Lane A183: the CONTROLS screen (every verb rebindable), for the front end to show where it shows a screen. Outer: a widget, a player controller,
+	// a world or a game instance (what CreateWidget takes). Its OnBack fires on BACK, or Esc / pad B when no row listens.
+	static UJamControlsWidget* MakeControlsScreen(UObject* Outer);
+
 	// Re-reads the settings and the key state (the menu calls it when the screen opens).
 	void Refresh();
 	UWidget* GetFirstFocusable() const;
@@ -118,4 +132,66 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UButton> BarksButton;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> BarksText;
 	int32 VoiceStatusTick = 0;
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FJamControlsBackSignature);
+
+// Lane A183 (R-0064 point 1): the CONTROLS screen. One row per verb (the two-role buttons as two rows: "SHOOT (WITH THE PUCK)", "CROSS-CHECK
+// (WITHOUT)"), each with its keys and its pad buttons. Click a cell (or stand on it with the pad and press A) and it listens: the next key, mouse
+// button, wheel or pad button goes on that verb (the keys cell takes keys and mouse, the pad cell pad buttons); Esc cancels. A key another verb held is
+// swapped onto it (the screen says which). RESET TO DEFAULTS. Every change is saved with the profile at once ([Jam.Controls]) and applied to the game.
+UCLASS()
+class JAMGAME_API UJamControlsWidget : public UUserWidget
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(BlueprintAssignable, Category = "Jam|Settings") FJamControlsBackSignature OnBack;
+
+	// Re-reads the bindings into the cells (call when the screen opens).
+	void Refresh();
+	UWidget* GetFirstFocusable() const;
+	TArray<UWidget*> GetFocusables() const;
+
+	// The listening state and the press it takes (the native key and mouse handlers call these; tests call them directly).
+	void BeginListen(EJamVerb Verb, bool bPad);
+	bool IsListening() const { return ListenVerb >= 0; }
+	// True: the key was taken (bound, or Esc cancelled). A key of the wrong kind (a pad button on the keys cell) is refused with a line.
+	bool HandleListenedKey(const FKey& Key);
+	void ResetToDefaults();
+	FString GetStatusLine() const { return StatusLine; }
+	// The cell's text as drawn ("LMB, MMB, MOUSE4"), for tests.
+	FString CellText(EJamVerb Verb, bool bPad) const;
+
+protected:
+	virtual TSharedRef<SWidget> RebuildWidget() override;
+	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+	virtual FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
+	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	virtual FReply NativeOnMouseWheel(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	virtual FReply NativeOnAnalogValueChanged(const FGeometry& InGeometry, const FAnalogInputEvent& InAnalogEvent) override;
+
+private:
+	void BuildTree();
+	void RefreshCells();
+	void SaveAndApply(const FJamBindings& B);
+	void OnCellClicked(int32 Cell);
+	UFUNCTION() void OnResetClicked();
+	UFUNCTION() void OnBackClicked();
+
+	int32 ListenVerb = -1;
+	bool bListenPad = false;
+	FString StatusLine;
+	// Frames the screen ignores a press after it began listening (the click that started it is still on its way up).
+	int32 ListenGraceTicks = 0;
+	TArray<bool> CellWasPressed;
+
+	UPROPERTY(Transient) TArray<TObjectPtr<UButton>> CellButtons;     // verb * 2 + (pad ? 1 : 0)
+	UPROPERTY(Transient) TArray<TObjectPtr<UTextBlock>> CellTexts;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> StatusText;
+	UPROPERTY(Transient) TObjectPtr<UButton> ResetButton;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> ResetText;
+	UPROPERTY(Transient) TObjectPtr<UButton> BackButton;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> BackText;
+	UPROPERTY(Transient) TObjectPtr<UBorder> ListenVeil;
 };

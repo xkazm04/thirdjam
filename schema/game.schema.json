@@ -278,6 +278,12 @@
           "maximum": 1,
           "description": "Lane A82 (R-0041 point 6): the puck carrier's top speed and acceleration as a fraction of a free skater's, bots and the human alike; the carrier's sprint is skater.sprint.carry_bonus (lane A93). Leave the key out for 0.92; 1 = the carrier skates as freely as before."
         },
+        "free_speed_mult": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 1.5,
+          "description": "Lane A185 (R-0064 point 2): a skater without the puck, bots and the human alike, has this much more top speed and acceleration (it reaches the higher top in the same time), in a glide and in a sprint; the puck carrier skates as without it, so it is that much slower against everyone. Leave the key out for 1.15; 1 = the neutral value (the game before the lane)."
+        },
         "reverse_brake_decel": {
           "type": "number",
           "minimum": 0,
@@ -906,6 +912,22 @@
           "maximum": 120,
           "description": "The board slam as a play. Earned: a hit that fells its victim while the victim's centre is within 1 m of the boards and the attacker closes on it along the boards' normal at 4 m/s or more (driven into the wall, not along it). Paid: this many frames down on top (at skater.knockdown_frames 90; they scale with it), the victim's board read-out and the board event. 0 = the neutral value: no slam exists."
         },
+        "take_shield_frames": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 60,
+          "description": "A hit inside a carry's first frames is capped at a stumble (REVIEW-3 item 2): for this many frames after a skater wins the puck (it comes to it from somebody else; not a placed puck), a hit that would fell it is a stumble: it keeps its feet, loses half its speed, its control for the stumble and the puck; the attacker pays as for any stumble; an armed hip check keeps its rule. Part of the momentum model (contact.momentum true). 0 = the neutral value: the hit lands as the contact law says."
+        },
+        "take_shield_human_side": {
+          "type": "boolean",
+          "description": "true = the take shield (take_shield_frames) only for skaters of a side that has a human on it; a bot of the other side that wins the puck is felled as before. false = the neutral value: every skater. Read only with take_shield_frames above 0."
+        },
+        "take_shield_stagger_max": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 90,
+          "description": "The capped hit's stumble scales with the hit: from stagger_frames at down_ratio to this many frames at down_full_ratio (the line the frames down follow), so a bigger hit still costs more. 0 (or not above stagger_frames) = the neutral value: the flat cap, every capped hit is stagger_frames. Read only with take_shield_frames above 0."
+        },
         "lunge_frames": {
           "type": "integer",
           "minimum": 0,
@@ -917,6 +939,22 @@
           "minimum": 0,
           "maximum": 4,
           "description": "The lunge's forward step in m/s, added to the velocity along the facing when a lunge starts (lunge_frames above 0). It is real closing speed in the hit, so the impulse's own lunge_mps is reduced by it while the lunge runs (at lunge_step_mps = lunge_mps a head-on hit is the hit it was). 0 = the neutral value."
+        },
+        "cross_hold": {
+          "type": "boolean",
+          "description": "The held cross-check (R-0064 points 1 and 5): the cross-check button held 10 frames or more without the puck braces the skater (stick across the body): the first opponent his body meets while braced takes the cross-check by the momentum he brings (closing speed plus thrust_mps, the pressed cross-check's own line; not into a back); then the brace is spent until the button is released. A tap is the pressed cross-check as before. Its prices: no poke, no lift, no pass reception and no sprint while braced, top speed x 0.9 and turning x 0.7, and a braced skater hit by a man closing faster than he skates himself stands at 0.75 of his stability. Part of the momentum model (contact.momentum true). false = the neutral value: the held button does nothing."
+        },
+        "check_windup_frames": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 12,
+          "description": "The body check's wind-up (R-0064 point 5): a pressed check opens its window this many frames after the press, so the figure's take has a beat the eye catches before the contact; the cooldown and the figure's call stay on the press, a press inside the wind-up is the same press, a skater that loses its feet or gets the puck in it loses the press. 0 = the neutral value: the window opens on the press's frame."
+        },
+        "cross_windup_frames": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 12,
+          "description": "The cross-check's wind-up (R-0064 point 5): a pressed cross-check (the stick lift's swing: its shove, its strip and its miss) lands this many frames after the press, on the positions of that frame; the swing's cooldown and the figure's call stay on the press. 0 = the neutral value: the swing lands on the press's frame."
         }
       }
     },

@@ -11,10 +11,10 @@ const STEPS = {
   1: { name: 'Skate, sprint, brake (W, Shift, S)', verbs: ['skate', 'sprint', 'sprint_carry', 'brake'] },
   2: { name: 'Aim (the cursor at four points)', verbs: ['aim'] },
   3: { name: 'Carry (sweeps at full reach)', verbs: ['carry'] },
-  4: { name: 'Shoot, blade extended (tap, 8, 30 frames)', verbs: ['shoot_tap', 'shoot_half', 'shoot_full'] },
-  5: { name: 'Pass, blade extended (tap, held = saucer)', verbs: ['pass', 'saucer'] },
+  4: { name: 'Shoot (LMB with the puck), blade extended (tap, 8, 30 frames)', verbs: ['shoot_tap', 'shoot_half', 'shoot_full'] },
+  5: { name: 'Pass (RMB with the puck), blade extended (tap, held = saucer)', verbs: ['pass', 'saucer'] },
   6: { name: 'Receive and one-timer', verbs: ['onetimer'] },
-  7: { name: 'Check (RMB) with closing speed, cross-check (MMB) from the front: hits by momentum (A92)', verbs: ['check', 'crosscheck'] },
+  7: { name: 'Check (RMB without the puck) with closing speed, cross-check (LMB without the puck) from the front: hits by momentum (A92); held cross-check (LMB held, skate in: down by the speed brought, A191)', verbs: ['check', 'crosscheck', 'crosscheck_held'] },
   8: { name: 'Be checked at full speed while standing: down for the frames the hit earned (A92)', verbs: ['checked'] },
   9: { name: 'Deke (wheel), spin (E), sweep', verbs: ['deke', 'spin', 'sweep'] },
   10: { name: 'Pause and resume (Esc), then aim', verbs: ['resume_aim'] },
@@ -96,7 +96,7 @@ for (let s = from; s <= to; s++) {
   const rows = def.verbs.map((verb, i) => {
     const v = verdicts.find((x) => x.step === s && x.verb === verb);
     if (!v) { allOk = false; if (machineAbort) anyMachine = true; else anyReal = true; return { verb, ok: false, machine: machineAbort ? 'run aborted' : '', facts: 'no verdict line (the run never reached it: see events.log)' }; }
-    const skipped = !v.ok && /skipped=(no_mate|no_opp)/.test(v.facts);   // A179: the cut has no mate / opponent for the step: not run, not a fail
+    const skipped = !v.ok && /skipped=(no_mate|no_opp|no_hold)/.test(v.facts);   // A179: the cut has no mate / opponent for the step: not run, not a fail
     if (!v.ok && !skipped) allOk = false;
     const io = inputs(s, i, v);
     let extra = '';

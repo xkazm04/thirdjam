@@ -457,3 +457,13 @@
 - link green 08:11: main 9e452219 (Pro's dial measured for both players and kept as two patches; the price of everything that) pushed.
 - link green 08:34: main 9163e300 (The submission's words are true of the game as it is this morning (A180, track D1): the tr) pushed.
 - link green 09:12: main de80fb5f (What waits for the operator's word, measured: the "everything on" ladder (A182), the brain) pushed.
+- link green 11:24: main 7f55b48f (Merge device B's progress (dev-b 46bdb717: B-to-A-0043) into main for the package the oper) pushed.
+- package 11:31: `Hokej_Hokej_H31.zip` from main 7f55b48f, acceptance run green (18 verbs through the cursor and the buttons).
+- link green 11:34: main f1c13613 (Package H31 = H30 plus device B's morning: the sheet names it, B-to-A-0043 is answered) pushed.
+- link green 12:30: main 943df8e7 (What waited for the operator's play, landed after it: the marks made to read (A178), the m) pushed.
+- link green 13:18: main 9472de42 (The operator's hands (A183, track K1): LMB shoots with the puck and cross-checks without, ) pushed.
+- package 13:25: `Hokej_Hokej_H32.zip` from main 9472de42, acceptance run green (18 verbs through the cursor and the buttons).
+- link green 13:30: main 1f4be055 (Skaters without the puck are 15 % faster (A185, track F2, evolution 9; R-0064 point 2: the) pushed.
+- link green 13:33: main f7d0b97c (At the boards the camera no longer turns on its own (A186, track U1, evolution 7; R-0064 p) pushed.
+- link green 13:36: main 13e36667 (A front end that looks like a game a studio shipped (A187, track U2, evolution 5; R-0064 p) pushed.
+- link green 13:45: main 7bd1d000 (A cross-check you carry into a man (A184, track F1, evolution 9; R-0064 point 1c: the oper) pushed.

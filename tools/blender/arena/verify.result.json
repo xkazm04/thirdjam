@@ -3961,22 +3961,22 @@
         -2337.0,
         10.0
       ],
-      "light_peak_cd": 150.0,
+      "light_peak_cd": 90.0,
       "light_at_rest_cd": [
         0.0,
         0.0
       ],
       "light_cd_f0": [
         0.0,
-        12.5
+        7.5
       ],
       "light_cd_f30": [
         0.0,
-        150.0
+        90.0
       ],
       "light_cd_f599": [
         0.0,
-        12.5
+        7.5
       ],
       "light_cd_f600": [
         0.0,
@@ -4037,6 +4037,43 @@
       "neon_without_whistle": true,
       "goal_timing": true
     }
+  },
+  "e7": {
+    "jam.rink.lamp.trim": 1,
+    "jam.rink.net.cord": 1,
+    "lamp_trim": true,
+    "lamp_parent": {
+      "arena_table": "MI_Trim_Lamp",
+      "arena_goal_light_neg": "MI_Trim_Lamp",
+      "arena_goal_light_pos": "MI_Trim_Lamp"
+    },
+    "table_frame_slot": "MI_Toon_NetFrame",
+    "goal_frame_slot": "MI_Toon_NetFrame",
+    "cords": {
+      "arena_goal_net_neg": "MI_Toon_NetCord",
+      "arena_goal_net_pos": "MI_Toon_NetCord"
+    },
+    "cord_look": "MI_Toon_NetCord",
+    "rest": 0.5,
+    "rest_now": 0.5,
+    "peak_add": 8.5,
+    "goal_f0": {
+      "table": 9.0,
+      "scored_end": 9.0,
+      "other_end": 0.5
+    },
+    "after": {
+      "table": 0.5,
+      "scored_end": 0.5
+    },
+    "neutral": {
+      "lamp_trim": false,
+      "lamp_parent": "MI_Toon_NetFrame",
+      "cords": "MI_Toon_NetMesh",
+      "rest": 3.0,
+      "peak_add": 14.0
+    },
+    "ok": true
   },
   "verdict": "pass"
 }

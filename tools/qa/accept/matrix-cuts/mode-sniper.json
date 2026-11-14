@@ -182,10 +182,24 @@
       ]
      },
      {
+      "role": "support",
+      "spawn": [
+       -7.5,
+       7.5
+      ]
+     },
+     {
       "role": "back",
       "spawn": [
        -22.5,
-       0
+       -5
+      ]
+     },
+     {
+      "role": "back",
+      "spawn": [
+       -22.5,
+       5
       ]
      }
     ]
@@ -209,6 +223,13 @@
       ]
      },
      {
+      "role": "support",
+      "spawn": [
+       7.5,
+       -7.5
+      ]
+     },
+     {
       "role": "back",
       "spawn": [
        22.5,
@@ -219,7 +240,8 @@
    }
   ],
   "ai": {
-   "difficulty": "pro"
+   "difficulty": "pro",
+   "hold_radius_m": 1
   },
   "barks": {
    "enabled": true,
@@ -245,7 +267,7 @@
    "facts": [
     "net 1.22 m high",
     "pads at 0.15 m",
-    "3 v 3, shot 26 m/s"
+    "5 v 4, shot 26 m/s"
    ]
   }
  }

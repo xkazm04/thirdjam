@@ -1,12 +1,14 @@
 # Play me: what to try on Saturday morning, and what to tell the Director after (R-0056)
 
-**The package:** `Game/Packaged/Hokej_Hokej_H30/Hokej_Hokej_H30.zip` (the last `package` line of `status/A.md` names it and its commit). Unzip into a fresh
+**The package:** `Game/Packaged/Hokej_Hokej_H31/Hokej_Hokej_H31.zip` (the last `package` line of `status/A.md` names it and its commit). Unzip into a fresh
 folder, run the exe. If Windows asks about the firewall, that is the joined match's socket: Cancel is fine for solo play.
 **Do not play H27** (its PLAY NOW built the match twice, played pro whatever was lit and drew a black rink: found in a real window at 03:50, fixed and
 verified in a real window at 04:30; the acceptance run now photographs the frame and fails on a black one) **nor H28** (its stop mark lit too early: obeying it
 at pro failed half the time and cost the feet one try in four; found by the design review at 06:00, one constant).
-**H29** is the verified fallback (the same game with the stop mark as a ring, the old line under the level switch and no Space on the hint strip): play it only if
-H30 misbehaves. The Development twin with the drills and the console is `Game/Packaged/Accept_H30`.
+**H31** (11:31) is H30 plus device B's progress of the morning (team-coloured board caps in the cooked game, the crowd as instanced meshes with a wave
+on a goal, the barn's roof and lamp arms, stands on the night look, get-ups with a hand and a knee, the far-puck marker gone at its source); its
+acceptance run and both window rows are green. **H30** is the game you were handed at 10:00. **H29** is the verified fallback (the same game with the stop mark as a ring, the old line under the level switch and no Space on the hint strip): play it only if
+H30 misbehaves. The Development twin with the drills and the console is `Game/Packaged/Accept_H31`.
 
 ## What changed since the package you last played (H26, Friday 19:46)
 
@@ -53,7 +55,7 @@ H30 misbehaves. The Development twin with the drills and the console is `Game/Pa
 2. **The stop-and-go.** Carry at a defender, against ONE defender with open ice behind him, press **S against your motion** (or hold **Ctrl**) when the chalk line ahead of you turns his colour (he is then six
    to eight stick lengths away and closing: count a beat, then stop: in a head-on rush an instant press still begins too far out; press before he is
    past the line: a stop begun as he reaches it works every time), then go the other way. At pro it
-   should work nearly every time from there, and never if you just charge. `jam.ctrl.Drill 21` in the Development package (`Accept_H30`, the console on the tilde key) stages it and says the distance on
+   should work nearly every time from there, and never if you just charge. `jam.ctrl.Drill 21` in the Development package (`Accept_H31`, the console on the tilde key) stages it and says the distance on
    screen. This is the game's central skill: does it feel like one?
 3. **Two hits.** Skate beside an opponent at his speed and check him (RMB): a nudge. Then hit one head-on at full speed: he goes down. Same button.
 4. **Keep the puck, and take it.** Carry with a defender on your back and turn your body between him and the puck: his stick should not reach it. Then
@@ -69,8 +71,13 @@ H30 misbehaves. The Development twin with the drills and the console is `Game/Pa
 
 ## Controls
 
-Mouse aims the stick. **LMB** shoot (a tap is a flat shot, hold to lift). **RMB** check. **MMB** cross-check or lift. **Q** pass (hold for a saucer). **F** ability.
-**E** spin. **Wheel** deke. **Shift** sprint. **S against your motion** brake. **Space** poke. **Esc** pause, the Director's call after a goal.
+**New since noon (your order): the mouse buttons change with the puck.** Mouse aims the stick.
+**LMB**: with the puck: shoot (a tap is a flat shot, hold to lift); without it: cross-check (hold it and skate into a man: from the 15:30 package).
+**RMB**: with the puck: pass (hold for a saucer); without it: body check. A press keeps its meaning until you let go. A puck your own side has just
+passed counts as "with the puck" for LMB, so a one-timer is still one press.
+**Space** poke. **F** ability. **E** spin. **Wheel** deke. **Shift** sprint. **S against your motion** or **Ctrl** brake. **Esc** pause.
+Q and MMB still work as second keys. **Every verb can be rebound**: SETTINGS, CONTROLS: click a row, press the new key; a clash swaps the two.
+The pad: RT shoot / cross-check, RB pass / check, A poke, Y deke, B spin, R3 ability, LT sprint.
 The first screen: **Enter** or the pad's **A** plays one match at the level that is lit; left and right change the level; a click on a level picks it and
 Enter still plays.
 

@@ -127,6 +127,11 @@ def main():
     light_default = unreal.SystemLibrary.get_console_variable_float_value("jam.rink.react.light")
     unreal.SystemLibrary.execute_console_command(world, "jam.rink.react.loud 1")
     unreal.SystemLibrary.execute_console_command(world, "jam.rink.react.light 6000")
+    # Lane A172: and the lamps' and cords' materials of evolutions 3 to 6 (the net frame's red, rest 3 and peak 17; MI_Toon_NetMesh): the neutral values.
+    lamp_default = unreal.SystemLibrary.get_console_variable_int_value("jam.rink.lamp.trim")
+    cord_default = unreal.SystemLibrary.get_console_variable_int_value("jam.rink.net.cord")
+    unreal.SystemLibrary.execute_console_command(world, "jam.rink.lamp.trim 0")
+    unreal.SystemLibrary.execute_console_command(world, "jam.rink.net.cord 0")
 
     # ---- 1. places, scale, meshes and materials on three rinks (tier l2_night)
     for (length, width) in ((120, 60), (90, 45), (140, 70)):
@@ -595,6 +600,8 @@ def main():
     unreal.SystemLibrary.execute_console_command(world, "jam.rink.arena.bare %d" % bare_default)
     unreal.SystemLibrary.execute_console_command(world, "jam.rink.react.loud %d" % loud_default)
     unreal.SystemLibrary.execute_console_command(world, "jam.rink.react.light %g" % light_default)
+    unreal.SystemLibrary.execute_console_command(world, "jam.rink.lamp.trim %d" % lamp_default)
+    unreal.SystemLibrary.execute_console_command(world, "jam.rink.net.cord %d" % cord_default)
     report["e6"] = {"jam.rink.arena.bare": bare_default, "jam.rink.react.loud": loud_default, "jam.rink.react.light": light_default}
     box_cd = unreal.SystemLibrary.get_console_variable_float_value("jam.rink.react.box")
     vis = lambda n: bool(rink.get_editor_property(n).is_visible())
@@ -690,6 +697,43 @@ def main():
     ok = ok and e6_ok
     log("e6 %s" % json.dumps(report["e6"]))
     log("A160 E6 %s" % ("PASS" if e6_ok else "FAIL"))
+
+    # ---- 8. lane A172 (evolution 7): device B's lamp and cords on the slots `lamp` and `net`
+    report["e7"] = {"jam.rink.lamp.trim": lamp_default, "jam.rink.net.cord": cord_default}
+    mat_on = lambda prop, slot: (lambda c: (lambda i: (c.get_material(i).get_name() if i >= 0 and c.get_material(i) else None))(c.get_material_index(slot)))(rink.get_editor_property(prop))
+    parent_of = lambda prop, slot: (lambda c: (lambda i: (c.get_material(i).get_editor_property("parent").get_name() if i >= 0 and c.get_material(i) and isinstance(c.get_material(i), unreal.MaterialInstanceDynamic) else None))(c.get_material_index(slot)))(rink.get_editor_property(prop))
+    build(90, 45, "p3_clay", corner=3.75)
+    e7 = {"lamp_trim": bool(rink.is_lamp_trim()), "lamp_parent": {p: parent_of(p, "lamp") for p in ("arena_table", "arena_goal_light_neg", "arena_goal_light_pos")},
+          "table_frame_slot": mat_on("arena_table", "frame"), "goal_frame_slot": mat_on("arena_goal_pos", "frame"),
+          "cords": {p: mat_on(p, "net") for p in ("arena_goal_net_neg", "arena_goal_net_pos")}, "cord_look": str(rink.get_cord_look_name()),
+          "rest": round(rink.get_lamp_rest_emissive(), 3), "rest_now": round(rink.get_lamp_emissive(), 3), "peak_add": round(rink.get_lamp_peak_add(), 3)}
+    frame = 150000
+    rink.advance_reactions(frame)
+    pl = unreal.JamEventPayload()
+    pl.set_editor_property("where", unreal.Vector((90 * 0.5 - 3.5) * 100.0, 0.0, 4.0))
+    pl.set_editor_property("strength", 1.0)
+    rink.react_to_event("goal", pl, frame)
+    e7["goal_f0"] = {"table": round(rink.get_lamp_emissive(), 3), "scored_end": round(rink.get_goal_light_emissive(1), 3), "other_end": round(rink.get_goal_light_emissive(-1), 3)}
+    rink.advance_reactions(frame + 200)
+    e7["after"] = {"table": round(rink.get_lamp_emissive(), 3), "scored_end": round(rink.get_goal_light_emissive(1), 3)}
+    unreal.SystemLibrary.execute_console_command(world, "jam.rink.lamp.trim 0")
+    unreal.SystemLibrary.execute_console_command(world, "jam.rink.net.cord 0")
+    build(90, 45, "p3_clay", corner=3.75)
+    e7["neutral"] = {"lamp_trim": bool(rink.is_lamp_trim()), "lamp_parent": parent_of("arena_table", "lamp"), "cords": mat_on("arena_goal_net_pos", "net"), "rest": round(rink.get_lamp_rest_emissive(), 3), "peak_add": round(rink.get_lamp_peak_add(), 3)}
+    unreal.SystemLibrary.execute_console_command(world, "jam.rink.lamp.trim %d" % lamp_default)
+    unreal.SystemLibrary.execute_console_command(world, "jam.rink.net.cord %d" % cord_default)
+    build(90, 45, "p3_clay", corner=3.75)
+    report["e7"].update(e7)
+    e7_ok = (lamp_default == 1 and cord_default == 1 and e7["lamp_trim"] and all(v == "MI_Trim_Lamp" for v in e7["lamp_parent"].values())
+             and e7["table_frame_slot"] == "MI_Toon_NetFrame" and e7["goal_frame_slot"] == "MI_Toon_NetFrame"
+             and all(v == "MI_Toon_NetCord" for v in e7["cords"].values()) and e7["cord_look"] == "MI_Toon_NetCord"
+             and e7["rest"] == 0.5 and e7["rest_now"] == 0.5 and e7["peak_add"] == 8.5 and e7["goal_f0"] == {"table": 9.0, "scored_end": 9.0, "other_end": 0.5}
+             and e7["after"] == {"table": 0.5, "scored_end": 0.5}
+             and e7["neutral"] == {"lamp_trim": False, "lamp_parent": "MI_Toon_NetFrame", "cords": "MI_Toon_NetMesh", "rest": e7["neutral"]["rest"], "peak_add": 14.0} and e7["neutral"]["rest"] > 0.5)
+    report["e7"]["ok"] = bool(e7_ok)
+    ok = ok and e7_ok
+    log("e7 %s" % json.dumps(report["e7"]))
+    log("A172 E7 %s" % ("PASS" if e7_ok else "FAIL"))
 
     eas.destroy_actor(rink)
     report["verdict"] = "pass" if ok else "fail"

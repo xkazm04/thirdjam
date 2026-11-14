@@ -103,13 +103,8 @@ namespace
 
 // Lane A73 (B-to-A-0036 point 4): the frames the figures, the puck and the presentation frame hold on a knockdown that involves the human. Presentation only:
 // the sim steps every frame whatever this says; 0 turns the hit-stop off. The operator tastes it with jam.hitstop 0..6.
-// Lane A168 (track U1, the black post at the faceoff; B-to-A-0041 point 4, the critic's fault 19). Device B's /JamAssets/Props/SM_PuckDisc is not only the
-// halo disc: it carries upright geometry 45 cm tall (its Beacon and Marker slots: MI_Fx_PuckBeacon, MI_Fx_PuckMarker with FadeStart 1200 cm), a far-puck
-// marker its material fades in when the camera is more than 12 m from the puck. At the centre-ice faceoff the camera stands 13.5 m behind the dot, so the
-// marker stood on the puck through every HOLD, and on the clay tier (no emission on the puck's kit) it read as a black post. The plugin is device B's and
-// is not touched: the disc component keeps its place and its width (the puck's ring on the ice) and loses its height.
-static TAutoConsoleVariable<int32> CVarJamPuckPost(TEXT("jam.puck.Post"), 0,
-	TEXT("The upright far-puck marker in the puck disc's mesh (SM_PuckDisc): 0 (default) flat: the disc's world scale is (1, 1, 0.01), 45 cm of post become 4.5 mm under the puck; 1 upright, as before. Live. Presentation only."), ECVF_Default);
+// Lane A168 flattened device B's puck disc (jam.puck.Post 0: world scale z 0.01) to hide the upright far-puck marker it carried. Lane A188 (R-0064 point
+// 7): device B's push removed the marker from /JamAssets/Props/SM_PuckDisc (dev-b 46bdb717, on main), so the disc keeps its own scale; the cvar is gone.
 
 static TAutoConsoleVariable<int32> CVarJamHitStop(TEXT("jam.hitstop"), 3,
 	TEXT("Hit-stop frames (0..6, default 3) on a knockdown that involves the human: both figures, the puck, the camera and the HUD hold the hit frame while the sim runs on. 0 = off."));
@@ -439,6 +434,23 @@ void AJamSkater::ApplySimFrame(const FJamSkaterState& S)
 	// B-to-A-0024 point 2 (lane A31): PlayShoot only for a shot; a pass is PlayPass alone (below), never a charge-0 shot in the same frame.
 	if (S.bShotThisFrame) IJamSkaterVisual::Execute_PlayShoot(V, S.LastShotCharge);
 	if (S.bCheckThisFrame) IJamSkaterVisual::Execute_PlayCheck(V);
+	// Lane A184 (track F1, evolution 9; A-to-B-0027 point 1): by name (CallFigure), so the game runs before device B's figure has them and uses them after:
+	// the frames from the press to the contact for the two takes, and the braced pose of the held cross-check.
+	{
+		static const FName NamePlayCheckWindup(TEXT("PlayCheckWindup")), NamePlayCrossCheck(TEXT("PlayCrossCheck")), NameSetCrossCheckHold(TEXT("SetCrossCheckHold"));
+		if (S.bCheckThisFrame && S.WindupFrames > 0) CallFigure(V, NamePlayCheckWindup, { static_cast<double>(S.WindupFrames) });
+		if (S.bLiftThisFrame)
+		{
+			const bool bSent = CallFigure(V, NamePlayCrossCheck, { static_cast<double>(S.WindupFrames) });
+			if (S.bHuman) UE_LOG(LogJamSim, Log, TEXT("JAMVIS crosscheck frame=%lld skater=%d team=%d human=1 to_contact=%d call=%s"), SimFrameForLog(), S.Index, S.Team, S.WindupFrames, bSent ? TEXT("PlayCrossCheck") : TEXT("PlayLift"));
+		}
+		if (S.bCrossBraced != bWasCrossBraced)
+		{
+			bWasCrossBraced = S.bCrossBraced;
+			const bool bSent = CallFigure(V, NameSetCrossCheckHold, { bWasCrossBraced ? 1.0 : 0.0 });
+			if (S.bHuman) UE_LOG(LogJamSim, Log, TEXT("JAMVIS crosshold frame=%lld skater=%d team=%d human=1 on=%d speed=%.2f call=%s"), SimFrameForLog(), S.Index, S.Team, bWasCrossBraced ? 1 : 0, S.Vel.Size(), bSent ? TEXT("SetCrossCheckHold") : TEXT("none"));
+		}
+	}
 	if (S.IsDown() != bWasDown)
 	{
 		bWasDown = S.IsDown();
@@ -823,13 +835,12 @@ void AJamPuck::PlaceDiscOnIce(const FVector& PuckCm)
 	// puck sits on it); with the puck in the air it is placed in world space at the same 0.4 cm over the ice.
 	if (!Disc) return;
 	Disc->SetWorldLocation(FVector(PuckCm.X, PuckCm.Y, (HalfHeightM - 0.45 * 0.08) * 100.0));
-	// Lane A168: the disc's height (see jam.puck.Post). Set on a change only; one JAMPUCK line says what the disc's bounds became.
-	const double WantZ = CVarJamPuckPost.GetValueOnGameThread() != 0 ? 1.0 : 0.01;
-	if (!FMath::IsNearlyEqual(Disc->GetComponentScale().Z, WantZ, 1e-4))
+	// Lane A188: the disc at its own scale (B's mesh without the marker); one JAMPUCK line the first time it is placed.
+	static bool bDiscLogged = false;   // once per process
+	if (!bDiscLogged)
 	{
-		const double Before = Disc->Bounds.BoxExtent.Z;
-		Disc->SetWorldScale3D(FVector(1.0, 1.0, WantZ));
-		UE_LOG(LogJamSim, Log, TEXT("JAMPUCK disc post=%s scale_z=%.2f half_height_cm %.2f -> %.2f (jam.puck.Post %d)"), WantZ < 1.0 ? TEXT("flat") : TEXT("upright"), WantZ, Before,
-			Disc->Bounds.BoxExtent.Z, CVarJamPuckPost.GetValueOnGameThread());
+		bDiscLogged = true;
+		UE_LOG(LogJamSim, Log, TEXT("JAMPUCK disc scale=(%.2f,%.2f,%.2f) half_extent_cm=(%.1f,%.1f,%.1f) (lane A188: no flattening)"), Disc->GetComponentScale().X, Disc->GetComponentScale().Y,
+			Disc->GetComponentScale().Z, Disc->Bounds.BoxExtent.X, Disc->Bounds.BoxExtent.Y, Disc->Bounds.BoxExtent.Z);
 	}
 }

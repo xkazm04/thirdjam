@@ -65,6 +65,9 @@ struct JAMCORE_API FJamSkaterConfig
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 PassLeadFrames = 20;
 	// game.skater.carry_speed_mult (lane A82, R-0041 point 6): the carrier's top speed and acceleration as a fraction of a free skater's; the carrier cannot sprint. 1 = off.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double CarrySpeedMult = 0.92;
+	// game.skater.free_speed_mult (lane A185, track F2 evolution 9, R-0064 point 2): a skater without the puck has this much more top speed and thrust, in a
+	// glide and in a sprint, bots and the human alike; the carrier is untouched (so it is slower against everyone by that much). 1 = the neutral value.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double FreeSpeedMult = 1.15;
 	// game.skater.breakaway (R-0029 point 4, lane A39): a carrier past centre ice with no opponent between it and the net gets this fraction more
 	// top speed and acceleration for BreakawayFrames, once per possession (event breakaway). speed_bonus 0 = off.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double BreakawaySpeedBonus = 0.2;
@@ -357,6 +360,31 @@ struct JAMCORE_API FJamContactConfig
 	// scale with it as the others do), the victim's board read-out and the `board` event of a board hit, and the read-outs bContactSlam / ContactSlams for the
 	// glass, the sound and the HUD. 0 = the neutral value: no slam exists (same state hash).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 BoardSlamFrames = 0;
+	// Lane A177 (track F1, evolution 8; REVIEW-3 item 2, MOVEMENT-7 section 4; CONTACT-9.md section 1): "I touched the puck and I was on the ice." Two in three
+	// of the human's knockdowns at pro land inside half a second of his winning the puck (8 frames after it on average, at 16 m/s of closing): nothing a hand
+	// answers. take_shield_frames: for this many frames after a skater WINS the puck (it comes to it from somebody else: UJamSim's TakeOwner, the take grace's
+	// own clock; not a placed puck), a hit that would fell it is capped at a stumble: it keeps its feet, loses half its speed, its control for the stumble and
+	// the puck (the stumble's own rules); the attacker pays as for any stumble. An armed hip check keeps its rule. 0 = the neutral value (same state hash).
+	// take_shield_human_side: true = only for skaters of a side that has a human on it (the bots that win a puck against him are felled as before).
+	// take_shield_stagger_max: the cap that scales (law 1 read on the stumble): above stagger_frames, a capped hit's stumble lasts from stagger_frames at
+	// down_ratio to this many frames at down_full_ratio (the same line the frames down follow). 0 = the flat cap: every capped hit is stagger_frames.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 TakeShieldFrames = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") bool bTakeShieldHumanSide = false;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 TakeShieldStaggerMax = 0;
+	// Lane A184 (track F1, evolution 9; R-0064 points 1 and 5; docs/experiments/CONTACT-10.md): the held cross-check and the wind-ups.
+	// cross_hold: FJamInput::bCrossHold held UJamSim::CrossHoldTapFrames or more braces the skater (stick across the body): the first opponent his body meets
+	// while braced takes the cross-check by the momentum he brings (law 1's line by closing speed, the cross-check's thrust_mps on top, as a pressed
+	// cross-check); then the brace is spent until the button is released. Its prices are UJamSim::CrossHold*: no poke, lift, reception or sprint, a little
+	// top speed and turning, and a braced skater hit by a faster man is easier to fell. false = the neutral value: bCrossHold does nothing (same state hash).
+	// check_windup_frames, cross_windup_frames: the hit has a beat the eye catches. A pressed body check opens its window this many frames after the press
+	// (the cooldown and the figure's call stay on the press); a pressed cross-check (the lift's swing: its shove and its strip) resolves this many frames
+	// after the press. The figure is told the frames on the press. 0 = the neutral value: the hit lands on the press's frame, as before (same state hash).
+	// cross_hold ships ON (R-0064: the operator's order; CONTACT-10.md section 0). The wind-ups ship at 0 in this landing: measured and recommended at 4 / 4
+	// (the three cells -1.3 / 0.0 / 0.0 with the brace), but 17 staged tests and law 3's drill press and land on one frame (CONTACT-10.md section 4): the next
+	// evolution names their wind-up and turns these two on. JamBaseline::MakeNeutral gives back the game before the lane (false, 0, 0: hash-identical).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") bool bCrossHold = true;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 CheckWindupFrames = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 CrossWindupFrames = 0;
 	// Lane A157 (track F1, evolution 6; CONTACT-7.md section 3): the lunge as a motion. A pressed check was a window on an ordinary collision and its lunge
 	// (lunge_mps) a number in the impulse: the body did nothing, a miss cost nothing. With lunge_frames above 0 a press that opens a window commits the body
 	// for that many frames: lunge_step_mps is added to its velocity along its facing at once (and counts in the hit as real closing speed: the impulse's own

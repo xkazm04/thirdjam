@@ -10,7 +10,10 @@
 # Exit: 0 pass; 1 fail (the game is wrong: two builds, black frame, wrong level, no match); 3 machine (another game or window disturbed it: no window, no menu, a press that
 # started nothing after four tries, the game gone; the caller repeats once, as for accept.ps1); 2 could not run. The last stdout line is JSON `thirdjam.releasemenu/1`.
 # It takes the cursor and posts keys to its own window: run it where nothing else drives a window. Stops only the process it started.
-param([string]$Package = '', [string]$Name = 'release-menu', [int]$Port = 4779, [string[]]$Scenarios = @(), [double]$LitMin = 0.90)
+# Lane A187 (U2 evolution 5): a player's start opens on the landing (HOKEJ, PRESS ENTER). Its first Return goes to HOME with PLAY NOW focused
+# (`JAMMENU landing press`), the second Return plays; `where` is read after the landing's press. -OldMenu: the menu before the landing (one Return on
+# the first screen, `where` at once), kept to flip back in a hurry.
+param([string]$Package = '', [string]$Name = 'release-menu', [int]$Port = 4779, [string[]]$Scenarios = @(), [double]$LitMin = 0.90, [switch]$OldMenu)
 $Scenarios = @($Scenarios | ForEach-Object { $_ -split ',' } | Where-Object { $_ })
 . (Join-Path $PSScriptRoot 'winhand.ps1')
 $root = Split-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) -Parent
@@ -30,6 +33,14 @@ function Mach([string]$k, [string]$why) { [void]$script:machine.Add("${k}: $why"
 function CleanProfile { if (Test-Path $saved) { Remove-Item $saved -Recurse -Force -ErrorAction SilentlyContinue } }
 # one press that must start a match; repeated (as accept.ps1 does) when no `JAMMENU start match` follows within 6 s: under load the first screen has not always taken its focus
 function PressUntilStart([scriptblock]$press, [int]$m) { for ($i = 0; $i -lt 4; $i++) { & $press; if (HW-Wait 'JAMMENU start match' 6 $m) { return $true }; HW-Note "press $($i + 1) started nothing, again" }; return $false }
+# Lane A187: the landing's press (one Return), before the scenario's own press; false (a machine row) when the landing never said it took it. -OldMenu: nothing.
+function PastLanding([string]$k) {
+    if ($OldMenu) { return $true }
+    $l0 = HW-Mark; HW-Key 'Return'
+    if (-not (HW-Wait 'JAMMENU landing press' 8 $l0)) { Mach $k 'the landing took no Return (no JAMMENU landing press line)'; return $false }
+    Start-Sleep -Milliseconds 500
+    return $true
+}
 function Judge([string]$k, [int]$m) {
     Start-Sleep -Seconds 9
     $mt = @(HW-Lines 'JAMMATCH level=' $m); $ca = @(HW-Lines 'JAMCART loaded' $m); $lk = @(HW-Lines 'JAMLOOK tier=' $m)
@@ -62,6 +73,7 @@ try {
     if (Test-Path $saved) { Rename-Item $saved $aside; $moved = $true; HW-Note 'Saved renamed aside' }
     if (Want 'return') {
         Launch 'return' {
+            if (-not (PastLanding 'return')) { return }
             $m = HW-Mark
             if (-not (PressUntilStart { HW-Key 'Return' } $m)) { Mach 'return' 'four Returns started no match (the window was not taking input)'; return }
             Judge 'return' $m
@@ -69,6 +81,7 @@ try {
     }
     if (Want 'click') {
         Launch 'click' {
+            if (-not (PastLanding 'click')) { return }
             $m0 = HW-Mark
             [void](HW-Console 'jam.menuscreen where' 8)
             $pl = HW-Wait 'JAMMENU place [^\r\n]*PLAY NOW[^\r\n]*' 8 $m0

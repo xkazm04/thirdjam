@@ -177,3 +177,22 @@ All_star on the regular rink has no profile lever left (checks, speed, red skill
 Order of landing after his word (each a gated landing, then one package with the release rows): the take shield or the brain's fresh take (his choice),
 the contact set's switches, pro's dial pinned (11, or 14 with the set), rookie's red skill, the marks made to read (A178), the modes' re-tune (A173),
 the arena (A172); then the curve lane re-reads six cells at 2,000 on the built tree and the window rows read the package.
+
+
+**Board at 12:45 (R-0064: the operator has played H31; his directions). Main 943df8e7. Packages at about 15:30 and 18:30; the game freezes at 20:00 for
+the stabilization phase. Lanes run on Opus; Fable only for animation and 3D modelling decisions (device B's figure, set and arena lanes).**
+| His point | Device A lane (worktree) | Device B (A-to-B-0027) | For the package of |
+|---|---|---|---|
+| 1 the camera at the boards | A186 U1 (`u1b`): the corrections found and bounded; what the blade does under a correction | | 15:30 |
+| 2 the controls and rebinding | A183 K1 (`a108`): LMB shoot / cross-check (held), RMB pass / check; a rebinding screen; the words from the bindings; the acceptance driver's keys | | 15:30 (defaults), 18:30 (rebinding screen) |
+| 2c the held cross-check | A184 F1 (`f1b`): the brace as a commitment with its prices; a wind-up the sim owns | the held pose `SetCrossCheckHold` | 15:30 |
+| the menu | A187 U2 (`u2`): landing, PLAY, SEASON, MODES, CONTROLS, SETTINGS; one style table; the arena behind it | the menu scene, a UI kit, two mocks | 18:30 |
+| 3 the hits read | A184 (the wind-up, the hit-stop, the calls' frames) | the body check and the cross-check longer and clearer | 18:30 |
+| 4 boosts seen | A188 F3 (`f3c`): pickups an eye finds; the boost on the skater and on the HUD | props by kind, `SetBoost` | 15:30 (stand-ins), 18:30 (B's props) |
+| 5 free skaters +15 % | A185 F2 (`f2b`): the rule; law 3's rows; the six cells | | 15:30 |
+| 6 the puck's ring half as thick | A188 (A's scale off the disc) | the ring's mesh or material | 15:30 |
+| 7 one mode on a neon grid arena | M1 (starts when B names its rig; the Director's pick: Glass House's slot) | the look rig | 18:30 |
+| 8 a goal is an event | A188: the GOAL banner; the celebration's call | three or four takes, `PlayCelebrate` | 15:30 (banner), 18:30 (takes) |
+| the ladder after 2c and 5 | C0 (starts when A184 and A185 are on main): six cells at 2,000, targets 85 / 48 / 26, law 3 a gate; pro's dial, the take shield, the cooldown decided inside it | | 18:30 |
+| the release | S2: the acceptance driver and the release rows on the new controls and the new first screen | | each package |
+Merge clock for dev-b: 15:00 and 18:00. After 20:00: only faults; the soak, the fuzz, the window rows and the submission's writing run through the night.

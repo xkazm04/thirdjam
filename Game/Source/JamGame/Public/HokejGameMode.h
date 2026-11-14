@@ -7,6 +7,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 #include "JamSim.h"
+#include "InputMapping.h"   // lane A191: FJamAimAnchor
 #include "HokejGameMode.generated.h"
 
 class UJamCartridge;
@@ -19,6 +20,7 @@ class UJamRuleSystem;
 class UJamZoneSystem;
 class UJamEffectSystem;
 class AJamPickupActor;
+class AJamBoostAura;
 class UJamHudWidget;
 
 JAMGAME_API DECLARE_LOG_CATEGORY_EXTERN(LogHokej, Log, All);
@@ -126,11 +128,14 @@ private:
 	// CursorAimFromRay (the ray from the camera through the cursor; bInOutAiming is the hysteresis state, this game mode's bCursorAiming).
 public:
 	static bool CursorAimFromRay(const FVector& RayOrigin, const FVector& RayDir, const FVector2D& SkaterPosM, bool& bInOutAiming, FVector2D& OutStick);
+	// Lane A191: the same from the ice point (metres) the blade aims at (CursorAimFromRay's hit, or the still hand's anchored point).
+	static bool CursorAimFromHit(const FVector2D& HitM, const FVector2D& SkaterPosM, bool& bInOutAiming, FVector2D& OutStick);
 protected:
 	void EnsureMatchInputMode(APlayerController* PC);   // lane A110: the lobby sets the same cursor mode (A49), or the cursor is hidden and never aims
 	bool bMatchInputModeSet = false;
 	bool CursorAimRink(APlayerController* PC, const FVector2D& SkaterPosM, FVector2D& OutStick);
 	bool bCursorAiming = false;
+	FJamAimAnchor AimAnchor;   // lane A191: a still hand keeps its point on the ice (jam.ctrl.AimAnchor)
 private:
 	// Lane A49: the button edges logged once per press (JAMCTRL btn=...), the sprint level and brake level on change.
 	bool bLastSprint = false, bLastBrake = false, bLastShootHeld = false, bLastPassHeld = false;
@@ -212,6 +217,8 @@ private:
 	bool bCutFromLaunch = false;
 	UPROPERTY(Transient) TObjectPtr<UJamEffectSystem> Effects;
 	UPROPERTY(Transient) TArray<TObjectPtr<AJamPickupActor>> PickupActors;
+	// Lane A188: the equipped look, one per skater that has held an ability (AJamBoostAura, JamPickupActor.h).
+	UPROPERTY(Transient) TArray<TObjectPtr<AJamBoostAura>> BoostAuras;
 	TArray<FName> LastBoost;
 	// Lane A31 (B-to-A-0024 point 3): the goalie stance last sent per skater: -2 off, else the side (-1, 0, +1); SetGoalieStance goes out on a change.
 	TArray<int8> LastGoalie;

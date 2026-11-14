@@ -359,9 +359,11 @@ bool FJamMenuFirstScreen::RunTest(const FString&)
 	}
 	TestTrue(TEXT("each level has its own line"), UJamMenuFlow::LevelMeaning(TEXT("rookie")) != UJamMenuFlow::LevelMeaning(TEXT("pro")) && UJamMenuFlow::LevelMeaning(TEXT("pro")) != UJamMenuFlow::LevelMeaning(TEXT("all_star")));
 	const TArray<FString> Labels = F.Menu->GetMainLabels();
-	const TArray<FString> Expected = { TEXT("PLAY NOW"), TEXT("PLAY THE SEASON"), TEXT("CHOOSE YOUR CUT"), TEXT("DIRECT A CUT"), TEXT("BRAWL WITH A FRIEND"),
+	// Lane A187 (R-0064 point 3): the front end of a sports game: no cut to direct on MAIN.
+	const TArray<FString> Expected = { TEXT("PLAY NOW"), TEXT("SEASON"), TEXT("MODES"), TEXT("PLAY WITH A FRIEND"),
 		TEXT("CONTROLS"), TEXT("SETTINGS"), TEXT("CREDITS"), TEXT("QUIT") };
-	TestEqual(TEXT("nine buttons on the first screen"), Labels.Num(), Expected.Num());
+	TestEqual(TEXT("eight buttons on MAIN"), Labels.Num(), Expected.Num());
+	for (const FString& Lb : Labels) TestFalse(*FString::Printf(TEXT("MAIN does not present the game as cuts to direct (%s)"), *Lb), Lb.Contains(TEXT("CUT")) || Lb.Contains(TEXT("DIRECT")));
 	for (int32 i = 0; i < Expected.Num() && i < Labels.Num(); ++i)
 	{
 		TestTrue(*FString::Printf(TEXT("button %d is %s (it reads %s)"), i + 1, *Expected[i], *Labels[i]), Labels[i].StartsWith(Expected[i]));
@@ -392,7 +394,10 @@ bool FJamMenuFitsTheScreen::RunTest(const FString&)
 	if (!TestNotNull(TEXT("the menu builds in a test world"), F.Menu)) return false;
 	const TPair<EJamMenuScreen, const TCHAR*> Screens[] = {
 		{ EJamMenuScreen::Main, TEXT("main") }, { EJamMenuScreen::Cuts, TEXT("cuts") }, { EJamMenuScreen::Direct, TEXT("direct") },
-		{ EJamMenuScreen::Settings, TEXT("settings") }, { EJamMenuScreen::Credits, TEXT("credits") }, { EJamMenuScreen::Controls, TEXT("controls") } };
+		{ EJamMenuScreen::Settings, TEXT("settings") }, { EJamMenuScreen::Credits, TEXT("credits") }, { EJamMenuScreen::Controls, TEXT("controls") },
+		{ EJamMenuScreen::Landing, TEXT("landing") }, { EJamMenuScreen::Modes, TEXT("modes") }, { EJamMenuScreen::Season, TEXT("season") } };
+	// Lane A187: 1280 x 720, 1920 x 1080 and 2560 x 1440 are all 1920 x 1080 slate units (the DPI curve scales by the short side), so this one measure
+	// holds the layout at the three sizes.
 	for (const TPair<EJamMenuScreen, const TCHAR*>& Sc : Screens)
 	{
 		const FVector2D Size = F.Menu->MeasureScreen(Sc.Key);
@@ -406,10 +411,23 @@ bool FJamMenuFitsTheScreen::RunTest(const FString&)
 		if (Sc.Key == EJamMenuScreen::Main) TestTrue(*FString::Printf(TEXT("the first screen is at most 1000 high (%.0f)"), Size.Y), Size.Y <= 1000.f);
 	}
 
-	// The twelve cards are on the screen, and their words fit the card's own text width with the card's own type: the name on one line, the pitch
-	// on two, every fact on one (a fact that wrapped left an orphan unit: "catch passes at 3 / m").
-	F.Menu->MeasureScreen(EJamMenuScreen::Cuts);
-	TestEqual(TEXT("twelve mode cards on the cuts screen"), F.Menu->GetModeButtons().Num(), 12);
+	// The twelve cards are on MODES (lane A187), and their words fit the card's own text width with the card's own type: the name on one line, the
+	// pitch on two; the facts, one line under the grid for the focused card, fit that line.
+	F.Menu->MeasureScreen(EJamMenuScreen::Modes);
+	TestEqual(TEXT("twelve mode cards on MODES"), F.Menu->GetModeButtons().Num(), 12);
+	// Director 13:35: every card's description inside its box, descenders included: its laid-out height (the wrapped lines at the card's type) against
+	// the box, and two full lines of the face against the box. Slate units: the same at 1280 x 720 and 1920 x 1080.
+	{
+		const TArray<FVector2D> Pitches = F.Menu->GetModePitchSizes();
+		TestEqual(TEXT("fourteen card descriptions laid out"), Pitches.Num(), 14);
+		const float Box = UJamMenuWidget::ModePitchBoxHeight();
+		const float LineH = static_cast<float>(FSlateApplication::Get().GetRenderer()->GetFontMeasureService()->GetMaxCharacterHeight(UJamMenuWidget::ModePitchFont()));
+		AddInfo(FString::Printf(TEXT("JAMMENU measure card description: line %.1f, box %.0f"), LineH, Box));
+		TestTrue(*FString::Printf(TEXT("two full lines (%.1f) fit the description box (%.0f)"), 2.f * LineH, Box), LineH > 0.f && 2.f * LineH <= Box);
+		for (int32 i = 0; i < Pitches.Num(); ++i)
+			TestTrue(*FString::Printf(TEXT("card %d description %.0f x %.1f inside %.0f x %.0f"), i + 1, Pitches[i].X, Pitches[i].Y, UJamMenuWidget::ModeTextWidth(), Box),
+				Pitches[i].Y > 0.f && Pitches[i].Y <= Box && Pitches[i].X <= UJamMenuWidget::ModeTextWidth() + 0.5f);
+	}
 	const TSharedRef<FSlateFontMeasure> Measure = FSlateApplication::Get().GetRenderer()->GetFontMeasureService();
 	const float TextW = UJamMenuWidget::ModeTextWidth();
 	float WidestName = 0.f, WidestPitch = 0.f, WidestFact = 0.f;
@@ -423,11 +441,12 @@ bool FJamMenuFitsTheScreen::RunTest(const FString&)
 		TestTrue(*FString::Printf(TEXT("%s fits its card on one line (%.0f of %.0f)"), *M.Display, NameW, TextW), NameW > 0.f && NameW <= TextW);
 		// Two lines hold at most 1.75 widths of words (the break between them costs up to a word).
 		TestTrue(*FString::Printf(TEXT("%s pitch fits two lines (%.0f of %.0f)"), *M.Display, PitchW, 1.75f * TextW), PitchW > 0.f && PitchW <= 1.75f * TextW);
-		for (const FString& Fact : M.Facts)
 		{
-			const float FactW = static_cast<float>(Measure->Measure(FString::Printf(TEXT("- %s"), *Fact), UJamMenuWidget::ModeFactFont()).X);
+			const FString Line = FString::Printf(TEXT("%s   /   %s"), *M.Display.ToUpper(), *FString::Join(M.Facts, TEXT("   /   ")));
+			const float FactW = static_cast<float>(Measure->Measure(Line, FJamMenuLook::Font(FJamMenuLook::Body - 1, FName("Bold"), 20)).X);
 			WidestFact = FMath::Max(WidestFact, FactW);
-			TestTrue(*FString::Printf(TEXT("%s fact '%s' fits one line (%.0f of %.0f)"), *M.Display, *Fact, FactW, TextW), FactW > 0.f && FactW <= TextW);
+			TestTrue(*FString::Printf(TEXT("%s facts fit the line under the grid (%.0f of %.0f)"), *M.Display, FactW, UJamMenuWidget::ModeDetailWidth()), FactW > 0.f && FactW <= UJamMenuWidget::ModeDetailWidth());
+			TestTrue(*FString::Printf(TEXT("%s sides read (%d v %d)"), *M.Display, M.HomeSkaters, M.AwaySkaters), M.HomeSkaters > 0 && M.AwaySkaters > 0);
 		}
 	}
 	AddInfo(FString::Printf(TEXT("JAMMENU measure cards: widest name %.0f (%s), widest pitch %.0f, widest fact %.0f, text width %.0f"), WidestName, *WidestNameIs, WidestPitch, WidestFact, TextW));
@@ -448,6 +467,85 @@ bool FJamMenuFitsTheScreen::RunTest(const FString&)
 		const float LineW = static_cast<float>(Measure->Measure(UJamMenuFlow::CutCardLine(R), UJamMenuWidget::CutLineFont()).X);
 		TestTrue(*FString::Printf(TEXT("%s line fits two lines of its card (%.0f of %.0f)"), *R.Display, LineW, 1.75f * UJamMenuWidget::CutTextWidth()), LineW > 0.f && LineW <= 1.75f * UJamMenuWidget::CutTextWidth());
 	}
+	return true;
+}
+
+// Lane A187 (track U2 evolution 5, R-0064 point 3): the front end. The landing's press goes to MAIN with PLAY NOW as its home; every screen has a
+// header, live key hints, a home focus and a parent (Back from everywhere); MODES holds the twelve modes, ALL RINKS and MAKE YOUR OWN (the Designer's
+// screen, last); the style table keeps its spacing on the 8-unit grid and its transition under 200 ms; nothing of the front end names a league.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamMenuFrontEnd, "Jam.Menu.FrontEnd", JamMenuTests::MenuTestFlags)
+bool FJamMenuFrontEnd::RunTest(const FString&)
+{
+	const FJamSettings Fresh = FJamSettings();
+	FJamSettings::SetOverrideForTest(&Fresh);
+	ON_SCOPE_EXIT { FJamSettings::SetOverrideForTest(nullptr); };
+	JamMenuTests::FMenuFixture F;
+	if (!TestNotNull(TEXT("the menu builds in a test world"), F.Menu)) return false;
+
+	// The landing, then MAIN with PLAY NOW: the release row's two Returns.
+	F.Menu->ShowScreen(EJamMenuScreen::Landing);
+	TestEqual(TEXT("the landing is shown"), static_cast<int32>(F.Menu->GetScreen()), static_cast<int32>(EJamMenuScreen::Landing));
+	TestTrue(TEXT("the landing's hints say what starts it"), F.Menu->GetHintLine().Contains(TEXT("ENTER / A START")));
+	TestNotNull(TEXT("the landing has one place to stand"), F.Menu->GetHomeFocus(EJamMenuScreen::Landing));
+	F.Menu->PressStart();
+	TestEqual(TEXT("the landing's press opens MAIN"), static_cast<int32>(F.Menu->GetScreen()), static_cast<int32>(EJamMenuScreen::Main));
+	TestTrue(TEXT("MAIN's home is PLAY NOW (a second Enter plays)"), F.Menu->GetHomeFocus(EJamMenuScreen::Main) == F.Menu->GetFirstPress());
+	TestEqual(TEXT("MAIN's header"), F.Menu->GetHeaderTitle(), FString(TEXT("HOME")));
+	F.Menu->PressStart();
+	TestEqual(TEXT("a press on MAIN is not a landing press"), static_cast<int32>(F.Menu->GetScreen()), static_cast<int32>(EJamMenuScreen::Main));
+
+	// Every screen: a header (but the landing), key hints, a home, and Back to its parent.
+	const EJamMenuScreen All[] = { EJamMenuScreen::Main, EJamMenuScreen::Season, EJamMenuScreen::Modes, EJamMenuScreen::Cuts, EJamMenuScreen::Direct,
+		EJamMenuScreen::Settings, EJamMenuScreen::Credits, EJamMenuScreen::Controls };
+	for (const EJamMenuScreen Sc : All)
+	{
+		const FString Name = UJamMenuWidget::ScreenName(Sc);
+		EJamMenuScreen Parsed;
+		TestTrue(*FString::Printf(TEXT("%s parses back"), *Name), UJamMenuWidget::ParseScreen(Name, Parsed) && Parsed == Sc);
+		F.Menu->ShowScreen(Sc);
+		TestFalse(*FString::Printf(TEXT("%s has a header"), *Name), F.Menu->GetHeaderTitle().IsEmpty());
+		TestTrue(*FString::Printf(TEXT("%s has key hints with Back or Title (%s)"), *Name, *F.Menu->GetHintLine()), F.Menu->GetHintLine().Contains(TEXT("ESC / B")));
+		TestNotNull(*FString::Printf(TEXT("%s has a home focus"), *Name), F.Menu->GetHomeFocus(Sc));
+		const EJamMenuScreen Parent = UJamMenuWidget::ParentOf(Sc);
+		F.Menu->GoBack();
+		TestEqual(*FString::Printf(TEXT("Back from %s"), *Name), static_cast<int32>(F.Menu->GetScreen()), static_cast<int32>(Parent));
+	}
+	TestEqual(TEXT("MAKE YOUR OWN goes back to MODES"), static_cast<int32>(UJamMenuWidget::ParentOf(EJamMenuScreen::Direct)), static_cast<int32>(EJamMenuScreen::Modes));
+	TestEqual(TEXT("ALL RINKS goes back to MODES"), static_cast<int32>(UJamMenuWidget::ParentOf(EJamMenuScreen::Cuts)), static_cast<int32>(EJamMenuScreen::Modes));
+	TestEqual(TEXT("the landing stays"), static_cast<int32>(UJamMenuWidget::ParentOf(EJamMenuScreen::Landing)), static_cast<int32>(EJamMenuScreen::Landing));
+
+	// MODES: the twelve, then ALL RINKS, then MAKE YOUR OWN; MAKE YOUR OWN opens the Designer's screen.
+	F.Menu->ShowScreen(EJamMenuScreen::Modes);
+	const TArray<FString> Cards = F.Menu->GetModeCardNames();
+	TestEqual(TEXT("fourteen cards on MODES"), Cards.Num(), 14);
+	if (Cards.Num() >= 2)
+	{
+		TestEqual(TEXT("the last card is MAKE YOUR OWN"), Cards.Last(), FString(TEXT("MAKE YOUR OWN")));
+		TestEqual(TEXT("ALL RINKS before it"), Cards[Cards.Num() - 2], FString(TEXT("ALL RINKS")));
+	}
+	F.Menu->OnRowClicked(EJamMenuRowKind::Open, TEXT("direct"));
+	TestEqual(TEXT("MAKE YOUR OWN opens the Designer's screen"), static_cast<int32>(F.Menu->GetScreen()), static_cast<int32>(EJamMenuScreen::Direct));
+	F.Menu->GoBack();
+	F.Menu->OnRowClicked(EJamMenuRowKind::Open, TEXT("cuts"));
+	TestEqual(TEXT("ALL RINKS opens the rinks"), static_cast<int32>(F.Menu->GetScreen()), static_cast<int32>(EJamMenuScreen::Cuts));
+
+	// SEASON without a game instance says so and still has its Back.
+	F.Menu->ShowScreen(EJamMenuScreen::Season);
+	TestNotNull(TEXT("SEASON without a season: the home is BACK"), F.Menu->GetHomeFocus(EJamMenuScreen::Season));
+
+	// The style table.
+	for (const float V : FJamMenuLook::GridValues())
+		TestTrue(*FString::Printf(TEXT("%.0f is on the 8-unit grid"), V), FMath::IsNearlyZero(FMath::Fmod(V, FJamMenuLook::Unit)));
+	TestTrue(TEXT("a screen comes in under 200 ms"), FJamMenuLook::TransitionSeconds > 0.f && FJamMenuLook::TransitionSeconds < 0.2f);
+	TestTrue(TEXT("the focus colour is not the chosen colour"), !FJamMenuLook::Focus().Equals(FJamMenuLook::Chosen()));
+	TestTrue(TEXT("device B's names are listed"), FJamMenuLook::KitNames().Num() >= 20);
+
+	// No league, team or broadcaster: the words of MAIN, MODES and the hints carry none of the marks a sports game's menu would borrow.
+	TArray<FString> Words = F.Menu->GetMainLabels();
+	Words.Append(Cards);
+	for (const FString& W : Words)
+		for (const TCHAR* Mark : { TEXT("NHL"), TEXT("NATIONAL HOCKEY"), TEXT("EA SPORTS"), TEXT("ESPN"), TEXT("STANLEY") })
+			TestFalse(*FString::Printf(TEXT("'%s' carries no mark (%s)"), *W, Mark), W.ToUpper().Contains(Mark));
 	return true;
 }
 
@@ -487,9 +585,10 @@ bool FJamMenuControlsComplete::RunTest(const FString&)
 	const FJamControlRow* Check = Row(TEXT("CHECK"));
 	TestTrue(TEXT("check: right mouse"), Check && Check->Keys.Contains(TEXT("right mouse")) && Map->IsKeyMapped(Map->Check, EKeys::RightMouseButton));
 	const FJamControlRow* Lift = Row(TEXT("CROSS-CHECK"));
-	TestTrue(TEXT("cross-check or lift: middle mouse"), Lift && Lift->Verb.Contains(TEXT("LIFT")) && Lift->Keys.Contains(TEXT("middle mouse")) && Map->IsKeyMapped(Map->Lift, EKeys::MiddleMouseButton));
+	// Lane A183 (R-0064 point 1): the cross-check is LMB without the puck, MMB and mouse 4 its second bindings; the pass is RMB with the puck, Q its second.
+	TestTrue(TEXT("cross-check: left mouse without the puck, middle mouse too"), Lift && Lift->Verb.Contains(TEXT("WITHOUT")) && Lift->Keys.Contains(TEXT("left mouse")) && Lift->Keys.Contains(TEXT("middle mouse")) && Map->IsKeyMapped(Map->Lift, EKeys::MiddleMouseButton));
 	const FJamControlRow* Pass = Row(TEXT("PASS"));
-	TestTrue(TEXT("pass: Q, held is a saucer"), Pass && Pass->Keys == TEXT("Q") && Pass->Note.Contains(TEXT("saucer")) && Map->IsKeyMapped(Map->Pass, EKeys::Q));
+	TestTrue(TEXT("pass: right mouse with the puck or Q, held is a saucer"), Pass && Pass->Keys.Contains(TEXT("right mouse")) && Pass->Keys.Contains(TEXT("Q")) && Pass->Note.Contains(TEXT("saucer")) && Map->IsKeyMapped(Map->Pass, EKeys::Q));
 	const FJamControlRow* Ability = Row(TEXT("ABILITY"));
 	TestTrue(TEXT("ability: F"), Ability && Ability->Keys == TEXT("F") && Map->IsKeyMapped(Map->Ability, EKeys::F));
 	const FJamControlRow* Spin = Row(TEXT("SPIN"));

@@ -153,6 +153,7 @@ namespace JamAI
 			if (std::strcmp(Key, "deke") == 0) { K.bDeke = V != 0.0; return true; }
 			if (std::strcmp(Key, "check_min_closing") == 0) { K.CheckMinClosing = V; return true; }   // R-0031 point 2 (lane A45); -1 = never
 			if (std::strcmp(Key, "check_from_behind") == 0) { K.bCheckFromBehind = V != 0.0; return true; }
+			if (std::strcmp(Key, "cross_hold_closing") == 0) { K.CrossHoldClosing = V; return true; }   // lane A184: the bots' brace; -1 = never
 			if (std::strcmp(Key, "hunt_radius_m") == 0) { K.HuntRadiusM = V; return true; }   // R-0041 point 1 (lane A79)
 			// Lane A94 (R-0045 law 2): the hockey principles. hk_on 0 | 1 switches all four; the others tune one.
 			if (std::strcmp(Key, "hk_on") == 0) { K.Hk.bCarryOrPass = K.Hk.bAttackShape = K.Hk.bDefenceShape = K.Hk.bTransition = V != 0.0; return true; }
@@ -187,6 +188,12 @@ namespace JamAI
 			if (std::strcmp(Key, "hk_press_three_commit_m") == 0) { K.Hk.PressThreeCommitM = V; return true; }
 			if (std::strcmp(Key, "hk_avoid_downed_out") == 0) { K.Hk.AvoidDownedOut = V; return true; }
 			if (std::strcmp(Key, "hk_press_retreat_cap") == 0) { K.Hk.PressRetreatCap = V; return true; }
+			// Lane A181 (BRAIN-6.md): the rules of evolution 6 (brain6 switches them off)
+			if (std::strcmp(Key, "hk_fresh_take_frames") == 0) { K.Hk.FreshTakeFrames = static_cast<int>(V); return true; }
+			if (std::strcmp(Key, "hk_second_man_hunts") == 0) { K.Hk.bSecondManHunts = V != 0.0; return true; }
+			if (std::strcmp(Key, "hk_cover_best_pass") == 0) { K.Hk.bCoverBestPass = V != 0.0; return true; }
+			if (std::strcmp(Key, "hk_step_up_max_team") == 0) { K.Hk.StepUpMaxTeam = static_cast<int>(V); return true; }
+
 			if (std::strcmp(Key, "hk_mate_drive_m") == 0) { K.Hk.MateDriveM = V; return true; }
 			if (std::strcmp(Key, "hk_screen_frames") == 0) { K.Hk.ScreenFrames = static_cast<int>(V); return true; }
 			if (std::strcmp(Key, "hk_press_in_hunt") == 0) { K.Hk.bPressInHunt = V != 0.0; return true; }
@@ -259,6 +266,8 @@ namespace JamAI
 		SetEvolution4(P.Mate.Hk, true, true);
 		SetEvolution5(P.Opp.Hk, true);   // lane A167 (track Q2, evolution 5; BRAIN-5.md): every value neutral as shipped
 		SetEvolution5(P.Mate.Hk, true);
+		SetEvolution6(P.Opp.Hk, true);   // lane A181 (track Q2, evolution 6; BRAIN-6.md): every value neutral as shipped
+		SetEvolution6(P.Mate.Hk, true);
 		P.Mate.SprintShare = ProOppSkill().SprintShare;   // lane A95 (R-0045 law 4): the human's teammates sprint as pro bots do at every level
 	}
 
@@ -311,15 +320,16 @@ namespace JamAI
 			else if (std::strcmp(Key, "brain2") == 0)   // lane A115: 0 = the brain of evolution 1 (and with it evolution 3, which stands on it: lane A134)
 			{
 				SetEvolution2(P.Opp.Hk, V != 0.0); SetEvolution2(P.Mate.Hk, V != 0.0);
-				if (V == 0.0) { SetEvolution3(P.Opp.Hk, false, false); SetEvolution3(P.Mate.Hk, false, true); SetEvolution4(P.Opp.Hk, false, false); SetEvolution4(P.Mate.Hk, false, true); SetEvolution5(P.Opp.Hk, false); SetEvolution5(P.Mate.Hk, false); }
+				if (V == 0.0) { SetEvolution3(P.Opp.Hk, false, false); SetEvolution3(P.Mate.Hk, false, true); SetEvolution4(P.Opp.Hk, false, false); SetEvolution4(P.Mate.Hk, false, true); SetEvolution5(P.Opp.Hk, false); SetEvolution5(P.Mate.Hk, false); SetEvolution6(P.Opp.Hk, false); SetEvolution6(P.Mate.Hk, false); }
 			}
 			else if (std::strcmp(Key, "brain3") == 0)   // lane A134: 0 = lane A138's tree (and with it evolution 4: lane A153)
 			{
 				SetEvolution3(P.Opp.Hk, V != 0.0, false); SetEvolution3(P.Mate.Hk, V != 0.0, true);
-				if (V == 0.0) { SetEvolution4(P.Opp.Hk, false, false); SetEvolution4(P.Mate.Hk, false, true); SetEvolution5(P.Opp.Hk, false); SetEvolution5(P.Mate.Hk, false); }
+				if (V == 0.0) { SetEvolution4(P.Opp.Hk, false, false); SetEvolution4(P.Mate.Hk, false, true); SetEvolution5(P.Opp.Hk, false); SetEvolution5(P.Mate.Hk, false); SetEvolution6(P.Opp.Hk, false); SetEvolution6(P.Mate.Hk, false); }
 			}
-			else if (std::strcmp(Key, "brain5") == 0) { SetEvolution5(P.Opp.Hk, V != 0.0); SetEvolution5(P.Mate.Hk, V != 0.0); }   // lane A167: 0 = evolution 4
-			else if (std::strcmp(Key, "brain4") == 0) { SetEvolution4(P.Opp.Hk, V != 0.0, false); SetEvolution4(P.Mate.Hk, V != 0.0, true); if (V == 0.0) { SetEvolution5(P.Opp.Hk, false); SetEvolution5(P.Mate.Hk, false); } }   // lane A153: 0 = evolution 3 (all_star's presser hunts again)
+			else if (std::strcmp(Key, "brain6") == 0) { SetEvolution6(P.Opp.Hk, V != 0.0); SetEvolution6(P.Mate.Hk, V != 0.0); }   // lane A181: 0 = evolution 5
+			else if (std::strcmp(Key, "brain5") == 0) { SetEvolution5(P.Opp.Hk, V != 0.0); SetEvolution5(P.Mate.Hk, V != 0.0); if (V == 0.0) { SetEvolution6(P.Opp.Hk, false); SetEvolution6(P.Mate.Hk, false); } }   // lane A167: 0 = evolution 4
+			else if (std::strcmp(Key, "brain4") == 0) { SetEvolution4(P.Opp.Hk, V != 0.0, false); SetEvolution4(P.Mate.Hk, V != 0.0, true); if (V == 0.0) { SetEvolution5(P.Opp.Hk, false); SetEvolution5(P.Mate.Hk, false); SetEvolution6(P.Opp.Hk, false); SetEvolution6(P.Mate.Hk, false); } }   // lane A153: 0 = evolution 3 (all_star's presser hunts again)
 			else if (std::strcmp(Key, "sprint") == 0) { P.SprintShare = V; }   // lane A95: as game.ai.sprint (both sides; -1 = the levels' shares)
 			else if (std::strcmp(Key, "guard_range_m") == 0) { P.GuardRangeM = V; P.Opp.GuardRangeM = V; P.Mate.GuardRangeM = V; }   // both sides (opp.* / mate.* for one)
 			else if (std::strcmp(Key, "guard_radius_m") == 0) { P.GuardRadiusM = V; P.Opp.GuardRadiusM = V; P.Mate.GuardRadiusM = V; }

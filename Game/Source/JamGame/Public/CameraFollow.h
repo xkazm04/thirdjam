@@ -201,6 +201,26 @@ struct JAMGAME_API FJamCameraSettings
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
 	float FarNetBiasFarM = 20.f;
 
+	// Lane A186 (track U1, evolution 7; R-0064 point 4: "no correction the player did not cause"), opt-in, OFF in the game (jam.camera.Bound 0): measured
+	// not better than bRigYaw alone (docs/experiments/CAMERA-3.md). The corrections are what the boards' stages add to the rig where the glass lets it
+	// stand (the same arm, the rig's height and pitch, the rig's yaw): position, height, pitch and yaw. With BoundPx > 0, while the human stands (his own
+	// image moves less than BoundPx / BoundOwnGain pixels a frame) the correction moves towards what the stages ask by at most BoundPx pixels of picture a
+	// sim frame at 1920 x 1080 (a metre weighs the focal length over the distance to the chest, a degree the focal length); while he skates the camera
+	// follows the stages' own motion and closes what it still owes at his own image's speed. The chest guard (never past BoundGuardFrac of the half frame)
+	// and the boards' inset win over it. Open ice is the rig to the bit. 0 = off (the settings default and the game's).
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
+	float BoundPx = 0.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
+	float BoundOwnGain = 1.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
+	float BoundGuardFrac = 0.6f;
+	// Lane A186: the boards never turn the camera: the yaw is the rig's (the skater's, through the lag, plus the far-net lead): no turn along the rink at an
+	// end board (lane A40) and no middle-third yaw budget (lane A49); the keep-in-frame stage holds him by position, height and pitch (KeepNoYaw 2). The move
+	// keys and the cursor's bearing are read in the camera's yaw: a turn the boards make turns his hands. false = the turns of before (the settings default);
+	// the game: jam.camera.RigYaw.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
+	bool bRigYaw = false;
+
 	// From the cartridge's game.camera (JamCore's FJamCameraConfig): mode, distance, height, look-ahead, lag, fov, boards margin, end height, far-net bias. Off-axis stays 0.7 m.
 	static FJamCameraSettings FromCartridge(const struct FJamCameraConfig& Cartridge);
 };
@@ -246,6 +266,18 @@ struct JAMGAME_API FJamCameraFilter
 	// Diagnostics of the last step (not state): the displacement the boards imposed over the arm length (0 = free, 1 = a whole arm) and its direction (into the rink).
 	float LastClampS = 0.f;
 	FVector2D LastClampNormal = FVector2D::ZeroVector;
+
+	// Lane A186, evolution 7 (FJamCameraSettings::BoundPx): the correction the camera carries (metres x, y, height; degrees pitch, yaw) and its speed in the
+	// same units, the human's position of the last step (his own speed), and the open-ice rig's pose of the last step (diagnostics for the tests: the
+	// reference a correction is measured from). LastBoundGuard: 0 the bound held, 1 the chest guard took more, 2 the boards' inset took more.
+	FJamSpring RigLead;   // the far-net lead alone, through the yaw offset's spring (the open-ice rig's yaw)
+	bool bBound = false;
+	double BoundCorr[5] = { 0, 0, 0, 0, 0 };
+	double BoundVel[5] = { 0, 0, 0, 0, 0 };
+	double BoundWant[5] = { 0, 0, 0, 0, 0 };   // what the stages asked for on the last frame
+	FVector2D BoundLastHumanM = FVector2D::ZeroVector;
+	FTransform LastRigPose = FTransform::Identity;
+	int32 LastBoundGuard = 0;
 
 	// alpha = 1 - exp(-1 / lag_frames), 1 when lag_frames == 0.
 	static float AlphaForLag(int32 LagFrames);

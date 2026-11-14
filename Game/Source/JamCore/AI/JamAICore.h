@@ -76,6 +76,7 @@ namespace JamAI
 		bool bPassHeld = false;    // lane A77 (R-0036): pass held (FJamInput::bPassHeld) for the saucer: held W.SaucerHalfFrames then released; the sim lifts the pass
 		bool bSprint = false;      // lane A72 (asks A2, A3): sprint held (FJamInput::bSprint); the brain with game.ai.sprint, the playtester with -playersprint
 		bool bAbility = false;     // lane A84 (R-0041 point 3): the held ability on F (FJamInput::bAbility); the playtester sends it, the brain never does
+		bool bCrossHold = false;   // lane A184 (R-0064 point 1): the held cross-check (FJamInput::bCrossHold), a level; the playtester, and bots with FJamBotSkill::CrossHoldClosing
 	};
 
 	// Lane A94 (R-0045 law 2, docs/VISION.md section 2, docs/experiments/BRAIN.md): the hockey principles. Every level knows them; the level decides how
@@ -196,6 +197,22 @@ namespace JamAI
 		// the skater's top speed: on the 120 m rinks, where the top speed is 8 m/s, a carrier at full speed makes that 1, the close is cancelled, the
 		// chaser stands still and a straight charge passes it (measured: 59.5 % at pro). 1 = uncapped; 0.7 closes on every rink (BRAIN-5.md section 4).
 		double PressRetreatCap = 1.0;
+		// Lane A181 (track Q2, evolution 6; docs/experiments/BRAIN-6.md). Each at its neutral value is the brain of evolution 5, bit for bit (brain6=0).
+		// FreshTakeFrames: a bot presses no body check on a carrier that has had the puck for fewer than this many frames: it plays the puck, not the man
+		// that has only just touched it (lane A157 / CONTACT-9: most of the human's knockdowns land within half a second of his winning the puck).
+		// The stick and the approach are untouched; the check goes the frame his carry is this old. 0 = it checks him as he wins it.
+		int FreshTakeFrames = 0;
+		// bSecondManHunts (a level's switch; with bPressInHunt): only the first presser of a carry closes under control. A presser that takes the job
+		// over while the same opposing skater still carries (the first one was beaten) hunts: it charges from the hunt radius as before R-0058. The first
+		// man teaches the stop at 8 m; the second punishes a carrier that has spent it. Off = every presser closes under control.
+		bool bSecondManHunts = false;
+		// bCoverBestPass (a level's switch): the five's Cover job stands on the lane to the team-mate the carrier's pass would go to right now (the sim's
+		// own pick: FJamAIWorld::CarrierBestPass / HolderBestPass), not to the carrier's nearest team-mate. Off = the nearest one (lane A94).
+		bool bCoverBestPass = false;
+		// StepUpMaxTeam (a level's number, with StepUpM of evolution 3): the back steps up only in a team of fewer skaters than this. 5 = three and four
+		// a side, as since evolution 3; 99 = a five's backs too: the last line meets a carrier that has got past the presser, inside StepUpM, from the
+		// front, instead of waiting for a puck inside 2.5 m (all_star's second candidate: BRAIN-6.md).
+		int StepUpMaxTeam = 5;
 		bool Any() const { return bCarryOrPass || bAttackShape || bDefenceShape || bTransition; }
 	};
 	// Lane A115: every rule of evolution 2 on (as ProHockeySense has them) or off (the brain of evolution 1). The tune key brain2 and the tests use it.
@@ -264,6 +281,15 @@ namespace JamAI
 		if (!bOn) { H.bPressThree = false; H.PressCommitM = 0.0; H.PressThreeCommitM = 0.0; H.PressRetreatCap = 1.0; return; }
 		H.AvoidDownedM = kEvo5AvoidDownedM;
 		H.AvoidDownedOut = kEvo5AvoidDownedOut;
+	}
+	// Lane A181 (evolution 6, BRAIN-6.md): the rules of evolution 6 as shipped (ApplyDifficultyProfile calls it for each side) or off (evolution 5).
+	// Every value ships neutral (the Director, 14 Nov 08:10: nothing lands before the operator has played). On leaves a level's bSecondManHunts alone.
+	constexpr int kEvo6FreshTakeFrames = 0;
+	inline void SetEvolution6(FJamHockeySense& H, bool bOn)
+	{
+		H.FreshTakeFrames = 0;
+		if (!bOn) { H.bSecondManHunts = false; H.bCoverBestPass = false; H.StepUpMaxTeam = 5; return; }
+		H.FreshTakeFrames = kEvo6FreshTakeFrames;
 	}
 	// Lane A94: the sense each level plays (DifficultyProfile.cpp sets the opponents' per level; the human's teammates play ProHockeySense at every level).
 	inline FJamHockeySense ProHockeySense()
@@ -337,6 +363,10 @@ namespace JamAI
 		// push would run along the carrier's facing (the sim's foul_from_behind band, 0.5; the brain keeps a margin at 0.35), so no bot ever earns the box for it.
 		double CheckMinClosing = -1.0;
 		bool bCheckFromBehind = false;
+		// Lane A184 (track F1, evolution 9; game.contact.cross_hold): the bot braces (holds the cross-check) on an opposing carrier it closes on at this many m/s
+		// or more, from the front or the side, inside CrossHoldRangeM of contact, and lets go when that is no longer so. -1 = never (every level ships at -1:
+		// the neutral value; the sim ignores the hold with cross_hold off anyway). Tune key cross_hold_closing.
+		double CrossHoldClosing = -1.0;
 		// Lane A72 (ask A5, game.ai.body_check): the share of the chances above that the bot takes; the coin is a fixed function of the skater and the
 		// one-second window. 1 = every chance (the levels' own rule), 0 = never. Only a cartridge that writes game.ai.body_check changes it.
 		double BodyCheckShare = 1.0;
@@ -507,6 +537,7 @@ namespace JamAI
 		double CarrierReach() const { return (ShotReach > SkaterRadius + StickReach ? ShotReach : SkaterRadius + StickReach) + 0.05; }
 		double LiftRange = 1.0;         // game.stick.lift_range_m
 		double LiftConeDeg = 180.0;     // lane A95 (B-to-A-0037): game.stick.lift_cone_deg (the brain lifts only inside it)
+		int CheckWindupFrames = 0;      // lane A184: game.contact.check_windup_frames (a pressed check's window opens this many frames after the press: press that much earlier)
 		// Lane A95 (R-0045 law 3 / 4): the movement verbs the sim offers (A93's keys; 0 = the verb is off). The playtester uses a verb only when it exists.
 		double ReverseBrakeDecel = 0.0; // game.skater.reverse_brake_decel
 		int BurstFrames = 0;            // game.skater.burst.frames
@@ -650,6 +681,10 @@ namespace JamAI
 		int Charging[kMaxSkaters] = {};
 		int PassHold[kMaxSkaters] = {};   // lane A77 (R-0036): frames pass has been held for a saucer (0 = not holding)
 		bool bGoalieNow[kMaxSkaters] = {};
+		// Lane A181 (evolution 6): per defending team, the opposing carrier it presses and the first presser of that carry; the pressers after it are second men
+		int PressCarrier[2] = {-1, -1};
+		int PressFirst[2] = {-1, -1};
+		bool bSecondMan[kMaxSkaters] = {};
 		int GoalieSideNow[kMaxSkaters] = {};
 		void StickPlay(const FJamAIWorld& W, int Id, FJamAIInput& In);
 		// Lane A94 (R-0045 law 2): possession per frame (a ring, for the late read), the shape job per skater (AssignJobs, once per Think), and the frames

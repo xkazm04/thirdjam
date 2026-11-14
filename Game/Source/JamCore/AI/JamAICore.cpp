@@ -142,7 +142,8 @@ namespace JamAI
 		PossNow = FPoss();
 		for (int i = 0; i < kMaxSkaters; ++i) { Job[i] = EJob::None; CarryFrames[i] = 0; }
 		// lane A115
-		for (int i = 0; i < kMaxSkaters; ++i) { BrakeHold[i] = 0; BrakeCool[i] = 0; bWantStop[i] = false; bPlaysPuck[i] = false; PassHold[i] = 0; }
+		for (int i = 0; i < kMaxSkaters; ++i) { BrakeHold[i] = 0; BrakeCool[i] = 0; bWantStop[i] = false; bPlaysPuck[i] = false; PassHold[i] = 0; bSecondMan[i] = false; }
+		PressCarrier[0] = PressCarrier[1] = PressFirst[0] = PressFirst[1] = -1;
 		MeantBrakes = 0;
 		Carves = 0;
 	}
@@ -465,6 +466,7 @@ namespace JamAI
 			Out[i].bPoke = In.bPoke;
 			Out[i].bCheck = In.bCheck;   // R-0031 point 2 (lane A45): the check press is live like the shot (a delayed press misses the 6-frame window)
 			Out[i].bLift = In.bLift;
+			Out[i].bCrossHold = In.bCrossHold;   // lane A184: the brace is live like the press it replaces
 			Out[i].bGoalie = In.bGoalie;
 			Out[i].GoalieSide = In.GoalieSide;
 			Out[i].bDeke = In.bDeke;   // lane A39: live, like the shot: a delayed deke would miss the moment
@@ -671,7 +673,7 @@ namespace JamAI
 		// Lane A94 (R-0045 law 2): a bot with a shape job plays it (AssignJobs); the stall, the hunt and a yield to the human's puck keep the old roles
 		// Lane A134: bPressInHunt keeps the presser on its job inside the hunt radius (off as shipped: the hunt takes it off, as before)
 		// Lane A167: ... until the carrier is inside PressCommitM, where the presser commits as a hunting bot does (0 = it never does)
-		const bool bPressKeeps = Hk.Hk.bPressInHunt && Job[Id] == EJob::Press
+		const bool bPressKeeps = Hk.Hk.bPressInHunt && Job[Id] == EJob::Press && !(Hk.Hk.bSecondManHunts && bSecondMan[Id])   // lane A181: a second man hunts
 			&& !(Hk.Hk.PressCommitM > 0.0 && W.Carrier >= 0 && W.Carrier < W.NumSkaters && W.Skaters[W.Carrier].Pos.DistTo(Me) < Hk.Hk.PressCommitM);
 		if (Job[Id] != EJob::None && !bStalled && (!bHunt || bPressKeeps) && W.CarrierOrHolder() != Id && !(bYield && Job[Id] == EJob::Puck))
 		{
@@ -708,7 +710,7 @@ namespace JamAI
 			// Lane A134 (evolution 3): the back of a team without shape jobs steps up: an opposing carrier in our half within StepUpM of it is met from the front
 			bool bStepUp = false;
 			if (Hk.Hk.StepUpM > 0.0 && Job[Id] == EJob::None && D < Hk.Hk.StepUpM && W.Carrier >= 0 && W.Skaters[W.Carrier].Team != S.Team && !W.Skaters[W.Carrier].bDown
-				&& Pp.X * OwnGoal.X > 0.0 && TeamSize(W, S.Team) < 5)
+				&& Pp.X * OwnGoal.X > 0.0 && TeamSize(W, S.Team) < Hk.Hk.StepUpMaxTeam)   // lane A181: 5 as shipped (three a side); a level may lift it
 			{
 				const FVec2 Cp = W.Skaters[W.Carrier].Pos;
 				bStepUp = (Me - Cp).Dot(OwnGoal - Cp) > 0.0;
@@ -862,6 +864,16 @@ namespace JamAI
 				if (Dd < Best) { Best = Dd; Mate = o; }
 			}
 			return Mate;
+		}
+		// Lane A181 (evolution 6): whom the Cover job covers: the carrier's nearest team-mate (Outlet), or, with bCoverBestPass, the one its pass would go to
+		int CoverMate(const FJamAIWorld& W, int C, bool bBestPass)
+		{
+			if (bBestPass)
+			{
+				const int Bp = W.Carrier == C ? W.CarrierBestPass : (W.Holder == C ? W.HolderBestPass : -1);
+				if (Bp >= 0 && Bp < W.NumSkaters && Bp != C && W.Skaters[Bp].Team == W.Skaters[C].Team && !W.Skaters[Bp].bDown) { return Bp; }
+			}
+			return Outlet(W, C);
 		}
 	}
 
@@ -1127,14 +1139,19 @@ namespace JamAI
 		if (CheckCool[Id] > 0) { --CheckCool[Id]; }
 		// Lane A134 (evolution 3): the human's mates check too (FJamHockeySense::MateCheckClosing): a kept puck leaves by a body, not by a stick from behind
 		const double CheckMin = (K.CheckMinClosing < 0.0 && bMateStick && K.Hk.MateCheckClosing >= 0.0 && TeamSize(W, S.Team) < K.Hk.MateCheckMaxTeam) ? K.Hk.MateCheckClosing : K.CheckMinClosing;
-		if (CheckMin >= 0.0 && bOppCarrier && !S.bDown && CheckCool[Id] <= 0 && !W.bFaceoffPhase)
+		// Lane A181 (evolution 6): no check on a carrier that has only just won the puck (FJamHockeySense::FreshTakeFrames): the puck, not the man
+		const bool bFreshTake = K.Hk.FreshTakeFrames > 0 && bOppCarrier && CarryFrames[C] < K.Hk.FreshTakeFrames;
+		if (CheckMin >= 0.0 && bOppCarrier && !bFreshTake && !S.bDown && CheckCool[Id] <= 0 && !W.bFaceoffPhase)
 		{
 			constexpr int CheckCoolFrames = 30;
 			constexpr double CheckArmGapM = 0.5;
 			const FJamAISkater& T = W.Skaters[C];
 			const FVec2 Rel = T.Pos - S.Pos;
 			const double Dist = Rel.Length();
-			if (Dist > 1e-6 && Dist <= 2.0 * W.SkaterRadius + CheckArmGapM && !T.bDown && T.GraceFrames <= 0)   // lane A113 (R-0049 point 1): no check starts on a skater inside its release grace
+			// Lane A184 (game.contact.check_windup_frames): the window opens that many frames after the press, so the press goes as much earlier: the arm gap
+			// grows by the ground the closing speed covers in the wind-up (0 frames: the gap as it was, the same presses).
+			const double WindupLeadM = (W.CheckWindupFrames > 0 && Dist > 1e-6) ? Clamp((S.Vel - T.Vel).Dot(Rel * (1.0 / Dist)), 0.0, 1e9) * W.CheckWindupFrames / 60.0 : 0.0;
+			if (Dist > 1e-6 && Dist <= 2.0 * W.SkaterRadius + CheckArmGapM + WindupLeadM && !T.bDown && T.GraceFrames <= 0)   // lane A113 (R-0049 point 1): no check starts on a skater inside its release grace
 			{
 				const FVec2 N = Rel * (1.0 / Dist);   // the push: checker towards the carrier
 				const double Closing = (S.Vel - T.Vel).Dot(N);
@@ -1148,6 +1165,22 @@ namespace JamAI
 					In.bCheck = true;
 					CheckCool[Id] = CheckCoolFrames;
 				}
+			}
+		}
+		// Lane A184 (track F1, evolution 9; game.contact.cross_hold): the bot's brace. Held on an opposing carrier it is closing on at K.CrossHoldClosing or more,
+		// from the front or the side (the sim's braced hit is not into a back), within CrossHoldRangeM of contact; let go otherwise, so the sim's brace re-arms
+		// after it was spent. -1 (every level) = never: the input stays false.
+		In.bCrossHold = false;
+		if (K.CrossHoldClosing >= 0.0 && bOppCarrier && C != Id && !bFreshTake && !S.bDown && !W.bFaceoffPhase)
+		{
+			constexpr double CrossHoldRangeM = 4.0;
+			const FJamAISkater& T = W.Skaters[C];
+			const FVec2 Rel = T.Pos - S.Pos;
+			const double Dist = Rel.Length();
+			if (Dist > 1e-6 && Dist <= 2.0 * W.SkaterRadius + CrossHoldRangeM && !T.bDown && T.GraceFrames <= 0)
+			{
+				const FVec2 N = Rel * (1.0 / Dist);
+				if ((S.Vel - T.Vel).Dot(N) >= K.CrossHoldClosing && N.Dot(T.Facing.Normalized()) <= 0.35) In.bCrossHold = true;
 			}
 		}
 		// R-0019: never shoot from inside a no_shoot zone
@@ -1905,10 +1938,18 @@ namespace JamAI
 			{
 				int Kp = bTrans ? Nearest(Cp, false) : Nearest(Cp, true);
 				if (Kp < 0) { Kp = Nearest(Cp, false); }
+				// Lane A181 (evolution 6): the first presser of an opposing skater's carry is remembered; a later one is a second man (bSecondManHunts)
+				for (int i = 0; i < W.NumSkaters; ++i) { if (W.Skaters[i].Team == Team) { bSecondMan[i] = false; } }
+				if (!bTheirs) { PressCarrier[Team] = -1; PressFirst[Team] = -1; }
+				else if (Kp >= 0)
+				{
+					if (PressCarrier[Team] != C) { PressCarrier[Team] = C; PressFirst[Team] = Fw[Kp]; }
+					bSecondMan[Fw[Kp]] = Fw[Kp] != PressFirst[Team];
+				}
 				if (Kp >= 0) { Give(Take(Kp), EJob::Press); }
 				if (bTheirs && NF > 0)
 				{
-					const int M = FiveLocal::Outlet(W, C);
+					const int M = FiveLocal::CoverMate(W, C, H.bCoverBestPass);
 					const int Kc = M >= 0 ? Nearest(LerpV(Cp, W.Skaters[M].Pos, 0.4), false) : -1;
 					if (Kc >= 0) { Give(Take(Kc), EJob::Cover); }
 				}
@@ -2014,7 +2055,7 @@ namespace JamAI
 		{
 			// the carrier's nearest pass: on the lane, nearer the receiver than the carrier (goal-side of the pass). A loose puck: goal-side of the opponent
 			// nearest our net (not the one nearest the puck).
-			const int M = bCarrier ? FiveLocal::Outlet(W, C) : -1;
+			const int M = bCarrier ? FiveLocal::CoverMate(W, C, SkillOf(W, Id).Hk.bCoverBestPass) : -1;
 			if (M >= 0) { T = LerpV(Cp, W.Skaters[M].Pos, 0.7) - S.Vel * 0.2; break; }
 			int Mark = -1, Np = -1;
 			double Bp = 1e18, Bg = 1e18;

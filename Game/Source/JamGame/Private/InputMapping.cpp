@@ -11,6 +11,19 @@
 #include "Engine/World.h"
 #include "InputKeyEventArgs.h"
 #include "HAL/IConsoleManager.h"
+#include "UObject/UObjectIterator.h"
+#include "JamSim.h"
+#include "MenuFlow.h"
+#include "HUDWidget.h"
+#include "SettingsWidget.h"
+#include "MenuStyle.h"
+#include "HokejGameMode.h"
+#include "HUDFeed.h"
+#include "Blueprint/WidgetTree.h"
+#include "Components/CanvasPanel.h"
+#include "Components/CanvasPanelSlot.h"
+#include "Components/Border.h"
+#include "Components/TextBlock.h"
 
 // Lane A49: 1 = one JAMCTRL line per sim frame with the stick the human sends and its source (mouse | pad | mousedelta | none); the button edges log always.
 static TAutoConsoleVariable<int32> CVarJamCtrlLog(TEXT("jam.ctrl.Log"), 0, TEXT("1 = JAMCTRL stick line every sim frame (lane A49 proof); button edges always log."));
@@ -55,6 +68,308 @@ UJamInputMap* UJamInputMap::Get()
 	return Cached.Get();
 }
 
+// ---------------------------------------------------------------- lane A183: the bindings
+
+namespace
+{
+	struct FVerbInfo { const TCHAR* Id; const TCHAR* Label; int32 Role; };
+	const FVerbInfo GVerbs[FJamBindings::NumVerbs] = {
+		{ TEXT("Shoot"), TEXT("SHOOT"), 1 }, { TEXT("CrossCheck"), TEXT("CROSS-CHECK"), 2 }, { TEXT("Pass"), TEXT("PASS"), 1 }, { TEXT("Check"), TEXT("CHECK"), 2 },
+		{ TEXT("Poke"), TEXT("POKE"), 0 }, { TEXT("Deke"), TEXT("DEKE"), 0 }, { TEXT("Spin"), TEXT("SPIN"), 0 }, { TEXT("Ability"), TEXT("ABILITY"), 0 },
+		{ TEXT("Sprint"), TEXT("SPRINT"), 0 }, { TEXT("Brake"), TEXT("BRAKE"), 0 },
+		{ TEXT("SkateForward"), TEXT("SKATE FORWARD"), 0 }, { TEXT("SkateBack"), TEXT("SKATE BACK"), 0 }, { TEXT("SkateLeft"), TEXT("SKATE LEFT"), 0 },
+		{ TEXT("SkateRight"), TEXT("SKATE RIGHT"), 0 }, { TEXT("Restart"), TEXT("RESTART"), 0 } };
+
+	EJamVerb VerbAt(int32 I) { return static_cast<EJamVerb>(I); }
+}
+
+bool FJamBindings::operator==(const FJamBindings& O) const
+{
+	for (int32 I = 0; I < NumVerbs; ++I) if (!(Verbs[I] == O.Verbs[I])) return false;
+	return true;
+}
+
+FJamBindings FJamBindings::Defaults()
+{
+	// R-0064 point 1 (the operator, 14 Nov): LMB shoot with the puck / cross-check without (held); RMB pass with the puck (held = saucer) / check without.
+	// The pad follows the same rule on RT and RB. Q (pass), MMB and mouse 4 (cross-check), X (pass) and LB (cross-check) stay as second bindings.
+	FJamBindings B;
+	auto Set = [&](EJamVerb V, TArray<FKey> Keys, TArray<FKey> Pads) { B[V].Keys = MoveTemp(Keys); B[V].Pads = MoveTemp(Pads); };
+	Set(EJamVerb::Shoot, { EKeys::LeftMouseButton }, { EKeys::Gamepad_RightTriggerAxis });
+	Set(EJamVerb::CrossCheck, { EKeys::LeftMouseButton, EKeys::MiddleMouseButton, EKeys::ThumbMouseButton }, { EKeys::Gamepad_RightTriggerAxis, EKeys::Gamepad_LeftShoulder });
+	Set(EJamVerb::Pass, { EKeys::RightMouseButton, EKeys::Q }, { EKeys::Gamepad_RightShoulder, EKeys::Gamepad_FaceButton_Left });
+	Set(EJamVerb::Check, { EKeys::RightMouseButton }, { EKeys::Gamepad_RightShoulder });
+	Set(EJamVerb::Poke, { EKeys::SpaceBar }, { EKeys::Gamepad_FaceButton_Bottom });
+	Set(EJamVerb::Deke, { EKeys::MouseScrollUp, EKeys::MouseScrollDown }, { EKeys::Gamepad_FaceButton_Top });
+	Set(EJamVerb::Spin, { EKeys::E }, { EKeys::Gamepad_FaceButton_Right });
+	Set(EJamVerb::Ability, { EKeys::F }, { EKeys::Gamepad_RightThumbstick });
+	Set(EJamVerb::Sprint, { EKeys::LeftShift }, { EKeys::Gamepad_LeftTriggerAxis });
+	Set(EJamVerb::Brake, { EKeys::LeftControl }, { EKeys::Gamepad_LeftThumbstick });
+	Set(EJamVerb::SkateForward, { EKeys::W, EKeys::Up }, {});
+	Set(EJamVerb::SkateBack, { EKeys::S, EKeys::Down }, {});
+	Set(EJamVerb::SkateLeft, { EKeys::A, EKeys::Left }, {});
+	Set(EJamVerb::SkateRight, { EKeys::D, EKeys::Right }, {});
+	Set(EJamVerb::Restart, { EKeys::R }, { EKeys::Gamepad_Special_Left });
+	return B;
+}
+
+int32 FJamBindings::Role(EJamVerb V) { return V < EJamVerb::Count ? GVerbs[static_cast<int32>(V)].Role : 0; }
+const TCHAR* FJamBindings::VerbId(EJamVerb V) { return V < EJamVerb::Count ? GVerbs[static_cast<int32>(V)].Id : TEXT(""); }
+FString FJamBindings::VerbLabel(EJamVerb V) { return V < EJamVerb::Count ? GVerbs[static_cast<int32>(V)].Label : TEXT(""); }
+
+bool FJamBindings::MayShare(EJamVerb A, EJamVerb B)
+{
+	const int32 RA = Role(A), RB = Role(B);
+	return A != B && RA != 0 && RB != 0 && RA != RB;
+}
+
+bool FJamBindings::IsReserved(const FKey& Key)
+{
+	if (!Key.IsValid()) return true;
+	if (Key == EKeys::Gamepad_LeftTriggerAxis || Key == EKeys::Gamepad_RightTriggerAxis) return false;   // the triggers bind as their axis keys
+	if (Key.IsAxis1D() || Key.IsAxis2D() || Key.IsAxis3D()) return true;
+	return Key == EKeys::Escape || Key == EKeys::Gamepad_Special_Right || Key == EKeys::One || Key == EKeys::Two || Key == EKeys::Three || Key == EKeys::Four
+		|| Key == EKeys::Gamepad_DPad_Up || Key == EKeys::Gamepad_DPad_Down || Key == EKeys::Gamepad_DPad_Left || Key == EKeys::Gamepad_DPad_Right
+		|| Key == EKeys::Mouse2D || Key == EKeys::MouseX || Key == EKeys::MouseY || Key == EKeys::AnyKey
+		|| Key == EKeys::Gamepad_LeftTrigger || Key == EKeys::Gamepad_RightTrigger;   // the triggers are bound as their axis keys
+}
+
+bool FJamBindings::Has(EJamVerb V, const FKey& Key) const
+{
+	return V < EJamVerb::Count && ((*this)[V].Keys.Contains(Key) || (*this)[V].Pads.Contains(Key));
+}
+
+TArray<EJamVerb> FJamBindings::VerbsOn(const FKey& Key) const
+{
+	TArray<EJamVerb> Out;
+	for (int32 I = 0; I < NumVerbs; ++I) if (Has(VerbAt(I), Key)) Out.Add(VerbAt(I));
+	return Out;
+}
+
+EJamVerb FJamBindings::WithVerbOn(const FKey& Key) const
+{
+	for (int32 I = 0; I < NumVerbs; ++I) if (GVerbs[I].Role == 1 && Has(VerbAt(I), Key)) return VerbAt(I);
+	return EJamVerb::Count;
+}
+
+EJamVerb FJamBindings::WithoutVerbOn(const FKey& Key) const
+{
+	for (int32 I = 0; I < NumVerbs; ++I) if (GVerbs[I].Role == 2 && Has(VerbAt(I), Key)) return VerbAt(I);
+	return EJamVerb::Count;
+}
+
+bool FJamBindings::Rebind(EJamVerb V, const FKey& Key, EJamVerb* OutSwapped)
+{
+	if (OutSwapped) *OutSwapped = EJamVerb::Count;
+	if (V >= EJamVerb::Count || IsReserved(Key)) return false;
+	const bool bPad = Key.IsGamepadKey();
+	// The skate directions are keys only (the left stick skates).
+	if (bPad && V >= EJamVerb::SkateForward && V <= EJamVerb::SkateRight) return false;
+	TArray<FKey>& Mine = bPad ? (*this)[V].Pads : (*this)[V].Keys;
+	if (Mine.Num() > 0 && Mine[0] == Key) return false;
+	const FKey Old = Mine.Num() > 0 ? Mine[0] : FKey();
+	// The key leaves any other slot of this verb (it becomes the first).
+	Mine.Remove(Key);
+	if (Mine.Num() == 0) Mine.Add(Key); else Mine[0] = Key;
+	// Every other verb on the key that may not share it gives it up: it takes the old key in its place (a swap), or loses the key when the old one is
+	// already its own or there was none.
+	for (int32 I = 0; I < NumVerbs; ++I)
+	{
+		const EJamVerb U = VerbAt(I);
+		if (U == V || MayShare(U, V)) continue;
+		TArray<FKey>& Theirs = bPad ? (*this)[U].Pads : (*this)[U].Keys;
+		const int32 At = Theirs.IndexOfByKey(Key);
+		if (At == INDEX_NONE) continue;
+		const bool bOldFits = Old.IsValid() && !Theirs.Contains(Old) && !(U >= EJamVerb::SkateForward && U <= EJamVerb::SkateRight && Old.IsGamepadKey());
+		if (bOldFits) Theirs[At] = Old; else Theirs.RemoveAt(At);
+		if (OutSwapped && *OutSwapped == EJamVerb::Count) *OutSwapped = U;
+	}
+	// The old key may now clash on a verb that shared nothing with V (a with-verb took it, and another with-verb holds it): the last pass drops the clash
+	// from the verb that received it, so the table stays valid whatever the order.
+	FString Why;
+	if (!IsValid(&Why))
+	{
+		for (int32 I = 0; I < NumVerbs; ++I)
+		{
+			const EJamVerb U = VerbAt(I);
+			if (U == V || !Old.IsValid()) continue;
+			TArray<FKey>& Theirs = bPad ? (*this)[U].Pads : (*this)[U].Keys;
+			if (!Theirs.Contains(Old)) continue;
+			for (int32 J = 0; J < NumVerbs; ++J)
+			{
+				const EJamVerb W = VerbAt(J);
+				if (W != U && !MayShare(U, W) && Has(W, Old)) { Theirs.Remove(Old); break; }
+			}
+		}
+	}
+	return true;
+}
+
+bool FJamBindings::IsValid(FString* OutWhy) const
+{
+	for (int32 I = 0; I < NumVerbs; ++I)
+	{
+		for (const TArray<FKey>* L : { &Verbs[I].Keys, &Verbs[I].Pads })
+		{
+			for (const FKey& K : *L)
+			{
+				for (int32 J = I + 1; J < NumVerbs; ++J)
+				{
+					if (Has(VerbAt(J), K) && !MayShare(VerbAt(I), VerbAt(J)))
+					{
+						if (OutWhy) *OutWhy = FString::Printf(TEXT("%s is on %s and %s"), *K.ToString(), GVerbs[I].Id, GVerbs[J].Id);
+						return false;
+					}
+				}
+			}
+		}
+	}
+	return true;
+}
+
+TMap<FString, FString> FJamBindings::ToSaved() const
+{
+	TMap<FString, FString> Out;
+	for (int32 I = 0; I < NumVerbs; ++I)
+	{
+		TArray<FString> K, P;
+		for (const FKey& Key : Verbs[I].Keys) K.Add(Key.GetFName().ToString());
+		for (const FKey& Key : Verbs[I].Pads) P.Add(Key.GetFName().ToString());
+		Out.Add(GVerbs[I].Id, FString::Join(K, TEXT(",")) + TEXT("|") + FString::Join(P, TEXT(",")));
+	}
+	return Out;
+}
+
+FJamBindings FJamBindings::FromSaved(const TMap<FString, FString>& Saved)
+{
+	FJamBindings B = Defaults();
+	for (int32 I = 0; I < NumVerbs; ++I)
+	{
+		const FString* S = Saved.Find(GVerbs[I].Id);
+		if (!S) continue;
+		FString KeysPart, PadsPart;
+		if (!S->Split(TEXT("|"), &KeysPart, &PadsPart)) continue;
+		auto Parse = [](const FString& Part, bool bPad)
+		{
+			TArray<FString> Names;
+			Part.ParseIntoArray(Names, TEXT(","));
+			TArray<FKey> Keys;
+			for (const FString& N : Names)
+			{
+				const FKey K(*N.TrimStartAndEnd());
+				if (K.IsValid() && !IsReserved(K) && K.IsGamepadKey() == bPad && !Keys.Contains(K)) Keys.Add(K);
+			}
+			return Keys;
+		};
+		B.Verbs[I].Keys = Parse(KeysPart, false);
+		B.Verbs[I].Pads = Parse(PadsPart, true);
+	}
+	if (!B.IsValid()) return Defaults();
+	return B;
+}
+
+// ---- the resolver
+
+void FJamButtonResolver::Press(const FKey& Key)
+{
+	for (FHeldKey& H : Held) if (H.Key == Key) { if (!H.bDown) { H.bDown = true; H.bNew = true; H.Verb = EJamVerb::Count; } return; }
+	FHeldKey H;
+	H.Key = Key;
+	H.bDown = true;
+	H.bNew = true;
+	Held.Add(H);
+}
+
+void FJamButtonResolver::Release(const FKey& Key)
+{
+	for (FHeldKey& H : Held) if (H.Key == Key) H.bDown = false;
+}
+
+EJamVerb FJamButtonResolver::ActiveVerb(const FKey& Key) const
+{
+	for (const FHeldKey& H : Held) if (H.Key == Key) return H.Verb;
+	return EJamVerb::Count;
+}
+
+FJamButtonVerbs FJamButtonResolver::Step(bool bWithPuck, const FJamBindings& B)
+{
+	FJamButtonVerbs Out;
+	for (FHeldKey& H : Held)
+	{
+		const bool bNew = H.bNew;
+		if (bNew)
+		{
+			H.bNew = false;
+			const EJamVerb With = B.WithVerbOn(H.Key), Without = B.WithoutVerbOn(H.Key);
+			H.Verb = bWithPuck ? (With != EJamVerb::Count ? With : Without) : (Without != EJamVerb::Count ? Without : With);
+			switch (H.Verb)
+			{
+			case EJamVerb::Shoot: Out.bShootPress = true; break;
+			case EJamVerb::Pass: Out.bPassPress = true; break;
+			case EJamVerb::Check: Out.bCheck = true; break;
+			case EJamVerb::CrossCheck: Out.bLift = true; break;
+			default: break;
+			}
+		}
+		// The level: held, or pressed and let go since the last step (a tap still holds for one step).
+		if (H.bDown || bNew)
+		{
+			switch (H.Verb)
+			{
+			case EJamVerb::Shoot: Out.bShootHeld = true; break;
+			case EJamVerb::Pass: Out.bPassHeld = true; break;
+			case EJamVerb::CrossCheck: Out.bCrossHeld = true; break;
+			default: break;
+			}
+		}
+	}
+	Held.RemoveAll([](const FHeldKey& H) { return !H.bDown && !H.bNew; });
+	return Out;
+}
+
+// ---- the sim side
+
+static TAutoConsoleVariable<int32> CVarJamCtrlOurPuckShoots(TEXT("jam.ctrl.OurPuckShoots"), 1,
+	TEXT("Lane A183: 1 = the two-role buttons read 'with the puck' as carrying it OR a loose puck last touched by the skater's own team (a pass of ours in flight, so the one-timer's early press is a shot); 0 = carrying only."));
+
+bool JamControls::HasPuckForButtons(const UJamSim& Sim, int32 Skater)
+{
+	const TArray<FJamSkaterState>& Sk = Sim.GetSkaters();
+	if (!Sk.IsValidIndex(Skater)) return false;
+	const int32 Carrier = Sim.CarrierIndex();
+	if (Carrier == Skater) return true;
+	if (Carrier >= 0 || CVarJamCtrlOurPuckShoots.GetValueOnAnyThread() == 0) return false;
+	const int32 Last = Sim.GetPuck().LastTouch;
+	return Sk.IsValidIndex(Last) && Sk[Last].Team == Sk[Skater].Team;
+}
+
+// A184 (the contact lane) adds FJamInput::bCrossHold. Until that field is on this tree the hold is computed, logged and dropped here.
+// The switch is JAM_INPUT_HAS_CROSS_HOLD in InputMapping.h (lane A191 moved it there: the acceptance drill's held cross-check row reads it too).
+
+void JamControls::SetCrossHold(FJamInput& In, bool bHeld)
+{
+#if JAM_INPUT_HAS_CROSS_HOLD
+	In.bCrossHold = bHeld;
+#else
+	(void)In;
+	(void)bHeld;
+#endif
+}
+
+FJamButtonVerbs JamControls::ApplyButtons(UJamPlayerInput& Pi, const UJamSim& Sim, int32 Skater, FJamInput& In)
+{
+	const bool bWith = HasPuckForButtons(Sim, Skater);
+	const FJamButtonVerbs V = Pi.StepButtons(bWith);
+	In.bShootHeld = V.bShootHeld;
+	In.bPassHeld = V.bPassHeld;
+	In.bCheck = V.bCheck;
+	In.bLift = V.bLift;
+	SetCrossHold(In, V.bCrossHeld && Sim.CarrierIndex() != Skater);
+	return V;
+}
+
+// ---- the context
+
 void UJamInputMap::Build()
 {
 	Move = MakeAction(this, TEXT("IA_Move"), EInputActionValueType::Axis2D);
@@ -72,80 +387,287 @@ void UJamInputMap::Build()
 	Sprint = MakeAction(this, TEXT("IA_Sprint"), EInputActionValueType::Boolean);   // lane A49
 	Spin = MakeAction(this, TEXT("IA_Spin"), EInputActionValueType::Boolean);   // lane A51 (R-0034)
 	Ability = MakeAction(this, TEXT("IA_Ability"), EInputActionValueType::Boolean);   // lane A84 (R-0041 point 3)
+	// Lane A183: Shoot, Lift, Pass and Check are no longer mapped to keys (the button slots carry their keys); they stay as the verbs' names for IsKeyMapped.
+	ButtonSlots.SetNum(NumButtonSlots);
+	SlotKeys.SetNum(NumButtonSlots);
+	for (int32 I = 0; I < NumButtonSlots; ++I) ButtonSlots[I] = MakeAction(this, *FString::Printf(TEXT("IA_Button%02d"), I), EInputActionValueType::Boolean);
 	Context = NewObject<UInputMappingContext>(this, TEXT("IMC_Hokej"));
+	// The player's saved bindings (the profile's [Jam.Controls]; a test's settings seam when one is set), else the defaults.
+	const FJamSettings Saved = FJamSettings::Load();
+	Bindings = Saved.Controls.Num() ? FJamBindings::FromSaved(Saved.Controls) : FJamBindings::Defaults();
+	MapAll();
+}
 
-	// WASD and arrows: a 1D key feeds X; W / Up swizzle it onto Y, S / Down swizzle and negate, A / Left negate.
+void UJamInputMap::MapAll()
+{
+	Context->UnmapAll();
+	const FJamBindings& B = Bindings;
+	// The skate keys: a 1D key feeds X; forward swizzles it onto Y, back swizzles and negates, left negates.
+	auto Skate = [&](EJamVerb V, bool bSwizzle, bool bNegate)
 	{
-		FEnhancedActionKeyMapping& W = Context->MapKey(Move, EKeys::W); AddSwizzle(Context, W);
-		FEnhancedActionKeyMapping& S = Context->MapKey(Move, EKeys::S); AddSwizzle(Context, S); AddNegate(Context, S);
-		FEnhancedActionKeyMapping& A = Context->MapKey(Move, EKeys::A); AddNegate(Context, A);
-		Context->MapKey(Move, EKeys::D);
-		FEnhancedActionKeyMapping& U = Context->MapKey(Move, EKeys::Up); AddSwizzle(Context, U);
-		FEnhancedActionKeyMapping& Dn = Context->MapKey(Move, EKeys::Down); AddSwizzle(Context, Dn); AddNegate(Context, Dn);
-		FEnhancedActionKeyMapping& L = Context->MapKey(Move, EKeys::Left); AddNegate(Context, L);
-		Context->MapKey(Move, EKeys::Right);
-	}
+		for (const FKey& K : B[V].Keys)
+		{
+			FEnhancedActionKeyMapping& M = Context->MapKey(Move, K);
+			if (bSwizzle) AddSwizzle(Context, M);
+			if (bNegate) AddNegate(Context, M);
+		}
+	};
+	Skate(EJamVerb::SkateForward, true, false);
+	Skate(EJamVerb::SkateBack, true, true);
+	Skate(EJamVerb::SkateLeft, false, true);
+	Skate(EJamVerb::SkateRight, false, false);
 	{
 		FEnhancedActionKeyMapping& Stick = Context->MapKey(Move, EKeys::Gamepad_Left2D);
 		UInputModifierDeadZone* DZ = NewObject<UInputModifierDeadZone>(Context);
 		DZ->LowerThreshold = 0.25f;
 		Stick.Modifiers.Add(DZ);
 	}
-	// Lane A49 (the operator's mapping, CONTROLS.md): the mouse buttons carry the stick verbs the hands are on anyway; Shift is the sprint, no longer the check.
-	Context->MapKey(Shoot, EKeys::LeftMouseButton);               // hold to charge, release to shoot
-	Context->MapKey(Shoot, EKeys::Gamepad_RightTriggerAxis);      // RT (analog key, pressed past the actuation threshold)
-	Context->MapKey(Check, EKeys::RightMouseButton);              // body check / tackle
-	Context->MapKey(Check, EKeys::Gamepad_RightShoulder);         // RB
-	Context->MapKey(Brake, EKeys::LeftControl);
-	Context->MapKey(Brake, EKeys::Gamepad_LeftThumbstick);        // left stick click (lane A51: B went to the spin, R-0034; the left trigger to the sprint, A49)
-	Context->MapKey(Sprint, EKeys::LeftShift);
-	Context->MapKey(Sprint, EKeys::Gamepad_LeftTriggerAxis);      // LT
-	Context->MapKey(Restart, EKeys::R);
-	Context->MapKey(Restart, EKeys::Gamepad_Special_Left);        // Back / View
-	// R-0013 (lane A16): the stick.
+	// The plain verbs, one action each.
+	const TPair<EJamVerb, UInputAction*> Plain[] = { { EJamVerb::Poke, Poke }, { EJamVerb::Deke, Deke }, { EJamVerb::Spin, Spin }, { EJamVerb::Ability, Ability },
+		{ EJamVerb::Sprint, Sprint }, { EJamVerb::Brake, Brake }, { EJamVerb::Restart, Restart } };
+	for (const TPair<EJamVerb, UInputAction*>& P : Plain)
+	{
+		for (const FKey& K : B[P.Key].Keys) Context->MapKey(P.Value, K);
+		for (const FKey& K : B[P.Key].Pads) Context->MapKey(P.Value, K);
+	}
+	// The fixed ones: the stick's aim and the pause.
 	Context->MapKey(StickAim, EKeys::Gamepad_Right2D);
 	Context->MapKey(StickMouse, EKeys::Mouse2D);
-	Context->MapKey(Poke, EKeys::SpaceBar);
-	Context->MapKey(Poke, EKeys::Gamepad_FaceButton_Bottom);      // A
-	Context->MapKey(Lift, EKeys::MiddleMouseButton);              // the cross-check
-	Context->MapKey(Lift, EKeys::ThumbMouseButton);               // mouse 4
-	Context->MapKey(Lift, EKeys::Gamepad_LeftShoulder);           // LB
-	// Lane A39 (R-0029 point 4): the deke. Lane A84 (R-0041 point 3): Q went to the pass; the deke keeps the wheel and gamepad Y.
-	Context->MapKey(Deke, EKeys::MouseScrollUp);
-	Context->MapKey(Deke, EKeys::MouseScrollDown);
-	Context->MapKey(Deke, EKeys::Gamepad_FaceButton_Top);         // Y
-	// Lane A51 (R-0034): the spin on E / gamepad B; the pass moves to F (gamepad X unchanged).
-	Context->MapKey(Spin, EKeys::E);
-	Context->MapKey(Spin, EKeys::Gamepad_FaceButton_Right);  // B
-	// Lane A84 (R-0041 point 3): the pass (and its held saucer) moves to Q, gamepad X unchanged; F is the held ability. The gamepad's ability is the right
-	// stick click (R3): the D-pad is the four signals (lane A12) and LT the sprint (lane A49), so R3 is the one free button.
-	Context->MapKey(Pass, EKeys::Q);
-	Context->MapKey(Pass, EKeys::Gamepad_FaceButton_Left);   // X
-	Context->MapKey(Ability, EKeys::F);
-	Context->MapKey(Ability, EKeys::Gamepad_RightThumbstick);   // R3
 	Context->MapKey(Pause, EKeys::Escape);
 	Context->MapKey(Pause, EKeys::Gamepad_Special_Right);       // Start / Menu
+	// The two-role verbs: one slot action per distinct key, resolved by possession at the step (FJamButtonResolver).
+	for (FKey& K : SlotKeys) K = FKey();
+	int32 Used = 0;
+	for (const EJamVerb V : { EJamVerb::Shoot, EJamVerb::CrossCheck, EJamVerb::Pass, EJamVerb::Check })
+	{
+		for (const TArray<FKey>* L : { &B[V].Keys, &B[V].Pads })
+		{
+			for (const FKey& K : *L)
+			{
+				if (SlotKeys.Contains(K)) continue;
+				if (Used >= NumButtonSlots) { UE_LOG(LogTemp, Warning, TEXT("JAMCTRL bindings: more than %d button keys; %s is not mapped"), NumButtonSlots, *K.ToString()); continue; }
+				SlotKeys[Used] = K;
+				Context->MapKey(ButtonSlots[Used], K);
+				++Used;
+			}
+		}
+	}
+}
+
+void UJamInputMap::ApplyBindings(const FJamBindings& In)
+{
+	FString Why;
+	if (!In.IsValid(&Why)) { UE_LOG(LogTemp, Warning, TEXT("JAMCTRL bindings refused: %s"), *Why); return; }
+	if (In == Bindings) return;
+	Bindings = In;
+	MapAll();
+	for (TObjectIterator<UEnhancedInputLocalPlayerSubsystem> It; It; ++It)
+	{
+		if (It->HasAnyFlags(RF_ClassDefaultObject) || !It->GetLocalPlayer()) continue;
+		It->RequestRebuildControlMappings();
+	}
+	UE_LOG(LogTemp, Log, TEXT("JAMCTRL bindings applied: %s"), *BindingTableText(true));
+}
+
+// ---- the words
+
+FString UJamInputMap::KeyName(const FKey& Key)
+{
+	if (!Key.IsValid()) return FString();
+	static const TPair<FKey, const TCHAR*> Names[] = {
+		{ EKeys::LeftMouseButton, TEXT("LMB") }, { EKeys::RightMouseButton, TEXT("RMB") }, { EKeys::MiddleMouseButton, TEXT("MMB") },
+		{ EKeys::ThumbMouseButton, TEXT("MOUSE4") }, { EKeys::ThumbMouseButton2, TEXT("MOUSE5") }, { EKeys::MouseScrollUp, TEXT("WHEEL UP") },
+		{ EKeys::MouseScrollDown, TEXT("WHEEL DOWN") }, { EKeys::SpaceBar, TEXT("SPACE") }, { EKeys::LeftControl, TEXT("CTRL") }, { EKeys::RightControl, TEXT("R-CTRL") },
+		{ EKeys::LeftShift, TEXT("SHIFT") }, { EKeys::RightShift, TEXT("R-SHIFT") }, { EKeys::LeftAlt, TEXT("ALT") }, { EKeys::RightAlt, TEXT("R-ALT") },
+		{ EKeys::Enter, TEXT("ENTER") }, { EKeys::Tab, TEXT("TAB") }, { EKeys::BackSpace, TEXT("BACKSPACE") }, { EKeys::CapsLock, TEXT("CAPS") },
+		{ EKeys::Up, TEXT("UP") }, { EKeys::Down, TEXT("DOWN") }, { EKeys::Left, TEXT("LEFT") }, { EKeys::Right, TEXT("RIGHT") },
+		{ EKeys::Gamepad_RightTriggerAxis, TEXT("RT") }, { EKeys::Gamepad_LeftTriggerAxis, TEXT("LT") }, { EKeys::Gamepad_RightShoulder, TEXT("RB") },
+		{ EKeys::Gamepad_LeftShoulder, TEXT("LB") }, { EKeys::Gamepad_FaceButton_Bottom, TEXT("A") }, { EKeys::Gamepad_FaceButton_Right, TEXT("B") },
+		{ EKeys::Gamepad_FaceButton_Left, TEXT("X") }, { EKeys::Gamepad_FaceButton_Top, TEXT("Y") }, { EKeys::Gamepad_LeftThumbstick, TEXT("L3") },
+		{ EKeys::Gamepad_RightThumbstick, TEXT("R3") }, { EKeys::Gamepad_Special_Left, TEXT("VIEW") }, { EKeys::Gamepad_Special_Right, TEXT("MENU") },
+		{ EKeys::Escape, TEXT("ESC") } };
+	for (const TPair<FKey, const TCHAR*>& N : Names) if (N.Key == Key) return N.Value;
+	FString S = Key.GetDisplayName(false).ToString().ToUpper();
+	if (S.IsEmpty()) S = Key.GetFName().ToString().ToUpper();
+	return S.Left(KeyNameMax);
+}
+
+FString UJamInputMap::VerbKeysText(EJamVerb V, bool bPad)
+{
+	const FJamVerbBinding& Bi = Get()->GetBindings()[V];
+	const TArray<FKey>& L = bPad ? Bi.Pads : Bi.Keys;
+	TArray<FString> Parts;
+	for (const FKey& K : L)
+	{
+		FString N = KeyName(K);
+		if (K == EKeys::MouseScrollUp || K == EKeys::MouseScrollDown) N = TEXT("WHEEL");
+		Parts.AddUnique(N);
+	}
+	return FString::Join(Parts, TEXT(", "));
+}
+
+namespace
+{
+	FString FirstKey(EJamVerb V, bool bPad = false)
+	{
+		const FJamVerbBinding& Bi = UJamInputMap::Get()->GetBindings()[V];
+		const TArray<FKey>& L = bPad ? Bi.Pads : Bi.Keys;
+		if (L.Num() == 0) return TEXT("-");
+		if (L[0] == EKeys::MouseScrollUp || L[0] == EKeys::MouseScrollDown) return TEXT("WHEEL");
+		return UJamInputMap::KeyName(L[0]);
+	}
+
+	// "WASD" when the four skate keys are single letters, else "W/A/S/D" with their names.
+	FString SkateKeys()
+	{
+		const FString F = FirstKey(EJamVerb::SkateForward), L = FirstKey(EJamVerb::SkateLeft), B = FirstKey(EJamVerb::SkateBack), R = FirstKey(EJamVerb::SkateRight);
+		if (F.Len() == 1 && L.Len() == 1 && B.Len() == 1 && R.Len() == 1) return F + L + B + R;
+		return FString::Printf(TEXT("%s/%s/%s/%s"), *F, *L, *B, *R);
+	}
+
+	// The two-role pair as one entry when both roles start on the same key ("SHOOT / CROSS-CHECK  LMB"), else two entries.
+	void Pair(TArray<FString>& Out, EJamVerb With, EJamVerb Without)
+	{
+		const FString A = FirstKey(With), B = FirstKey(Without);
+		if (A == B) Out.Add(FString::Printf(TEXT("%s / %s  %s"), *FJamBindings::VerbLabel(With), *FJamBindings::VerbLabel(Without), *A));
+		else { Out.Add(FString::Printf(TEXT("%s  %s"), *FJamBindings::VerbLabel(With), *A)); Out.Add(FString::Printf(TEXT("%s  %s"), *FJamBindings::VerbLabel(Without), *B)); }
+	}
+}
+
+FString UJamInputMap::HintStripText()
+{
+	// Lane A111's seven verbs and the brake, now with the two-role buttons (A183). Entries leave from the end while the line is longer than the strip
+	// holds (HintStripMaxChars, the length the 1280 x 720 strip fits), so a long rebound key name never runs under the radar.
+	TArray<FString> E;
+	E.Add(FString::Printf(TEXT("SKATE  %s"), *SkateKeys()));
+	E.Add(FString::Printf(TEXT("BRAKE  %s AGAINST YOUR MOTION"), *FirstKey(EJamVerb::SkateBack)));
+	E.Add(TEXT("AIM  MOUSE"));
+	Pair(E, EJamVerb::Shoot, EJamVerb::CrossCheck);
+	Pair(E, EJamVerb::Pass, EJamVerb::Check);
+	E.Add(FString::Printf(TEXT("POKE  %s"), *FirstKey(EJamVerb::Poke)));
+	E.Add(FString::Printf(TEXT("ABILITY  %s"), *FirstKey(EJamVerb::Ability)));
+	E.Add(FString::Printf(TEXT("SPRINT  %s"), *FirstKey(EJamVerb::Sprint)));
+	FString Out = FString::Join(E, TEXT("   "));
+	while (Out.Len() > HintStripMaxChars && E.Num() > 1) { E.Pop(); Out = FString::Join(E, TEXT("   ")); }
+	return Out.Left(HintStripMaxChars);
+}
+
+FString UJamInputMap::PauseCardText()
+{
+	// Lane A144's five lines (the card's inner width, about 80 characters), from the bindings: first keys only (the CONTROLS screen lists the second ones).
+	auto Short = [](EJamVerb V) { const FString P = FirstKey(V, true); return P == TEXT("-") ? FirstKey(V) : FString::Printf(TEXT("%s / %s"), *FirstKey(V), *P); };
+	auto PairLine = [&](EJamVerb With, EJamVerb Without, const TCHAR* Shared, const TCHAR* WithNote, const TCHAR* WithoutNote)
+	{
+		if (Short(With) == Short(Without)) return FString::Printf(TEXT("%s / %s  %s  %s"), *FJamBindings::VerbLabel(With), *FJamBindings::VerbLabel(Without), *Short(With), Shared);
+		return FString::Printf(TEXT("%s  %s  %s      %s  %s  %s"), *FJamBindings::VerbLabel(With), *Short(With), WithNote, *FJamBindings::VerbLabel(Without), *Short(Without), WithoutNote);
+	};
+	TArray<FString> L;
+	L.Add(FString::Printf(TEXT("SKATE  %s / L-STICK      AIM  MOUSE / R-STICK      SPRINT  %s"), *SkateKeys(), *Short(EJamVerb::Sprint)));
+	L.Add(PairLine(EJamVerb::Shoot, EJamVerb::CrossCheck, TEXT("(WITH / WITHOUT THE PUCK: HOLD TO HIT)"), TEXT(""), TEXT("(HOLD TO HIT)")));
+	L.Add(PairLine(EJamVerb::Pass, EJamVerb::Check, TEXT("(WITH / WITHOUT THE PUCK)"), TEXT("(HOLD = SAUCER)"), TEXT("")) + TEXT("      PAUSE  ESC / MENU"));
+	L.Add(FString::Printf(TEXT("POKE  %s      DEKE  %s      SPIN  %s      ABILITY  %s"), *Short(EJamVerb::Poke), *Short(EJamVerb::Deke), *Short(EJamVerb::Spin), *Short(EJamVerb::Ability)));
+	L.Add(FString::Printf(TEXT("BRAKE  %s BACK OR %s    SIGNALS  1-4 / D-PAD    RESTART  %s"), *FirstKey(EJamVerb::SkateBack), *Short(EJamVerb::Brake), *Short(EJamVerb::Restart)));
+	for (FString& Line : L) Line.TrimEndInline();
+	return FString::Join(L, TEXT("\n"));
+}
+
+TArray<FJamControlRow> UJamInputMap::ControlRowsFromBindings()
+{
+	const FJamBindings& B = Get()->GetBindings();
+	auto Prose = [](const FKey& K) -> FString
+	{
+		if (K == EKeys::LeftMouseButton) return TEXT("left mouse button");
+		if (K == EKeys::RightMouseButton) return TEXT("right mouse button");
+		if (K == EKeys::MiddleMouseButton) return TEXT("middle mouse");
+		if (K == EKeys::ThumbMouseButton) return TEXT("mouse 4");
+		if (K == EKeys::ThumbMouseButton2) return TEXT("mouse 5");
+		if (K == EKeys::MouseScrollUp || K == EKeys::MouseScrollDown) return TEXT("mouse wheel");
+		if (K == EKeys::LeftShift) return TEXT("Shift");
+		if (K == EKeys::LeftControl) return TEXT("Ctrl");
+		if (K == EKeys::SpaceBar) return TEXT("Space");
+		if (K == EKeys::Gamepad_RightThumbstick) return TEXT("R3 (stick click)");
+		if (K == EKeys::Gamepad_LeftThumbstick) return TEXT("L3");
+		if (K == EKeys::Gamepad_Special_Left) return TEXT("View");
+		if (K.IsGamepadKey()) return UJamInputMap::KeyName(K);
+		return K.GetDisplayName(false).ToString();
+	};
+	auto Join = [&](const TArray<FKey>& L)
+	{
+		TArray<FString> P;
+		for (const FKey& K : L) P.AddUnique(Prose(K));
+		return P.Num() ? FString::Join(P, TEXT(" or ")) : FString(TEXT("-"));
+	};
+	auto All = [&](EJamVerb V) { TArray<FKey> K = B[V].Keys; K.Append(B[V].Pads); return K; };
+	auto Row = [&](const TCHAR* Verb, EJamVerb V, const TCHAR* Note) { return FJamControlRow{ Verb, Join(B[V].Keys), Join(B[V].Pads), Note, All(V) }; };
+	TArray<FJamControlRow> Rows;
+	{
+		TArray<FKey> Skate;
+		for (const EJamVerb V : { EJamVerb::SkateForward, EJamVerb::SkateLeft, EJamVerb::SkateBack, EJamVerb::SkateRight }) Skate.Append(B[V].Keys);
+		TArray<FString> First;
+		for (const EJamVerb V : { EJamVerb::SkateForward, EJamVerb::SkateLeft, EJamVerb::SkateBack, EJamVerb::SkateRight }) First.Add(B[V].Keys.Num() ? Prose(B[V].Keys[0]) : FString(TEXT("-")));
+		const bool bArrows = B[EJamVerb::SkateForward].Keys.Contains(EKeys::Up);
+		TArray<FKey> Bound = Skate;
+		Bound.Add(EKeys::Gamepad_Left2D);
+		Rows.Add({ TEXT("SKATE"), FString::Join(First, TEXT(" ")) + (bArrows ? TEXT(" or arrows") : TEXT("")), TEXT("left stick"), TEXT("you glide: speed is built, not given"), Bound });
+	}
+	Rows.Add({ TEXT("AIM THE STICK"), TEXT("the mouse"), TEXT("right stick"), TEXT("the blade follows the cursor"), { EKeys::Mouse2D, EKeys::Gamepad_Right2D } });
+	Rows.Add(Row(TEXT("SHOOT (WITH THE PUCK)"), EJamVerb::Shoot, TEXT("a tap is a flat shot; hold to load it, let go to fire")));
+	Rows.Add(Row(TEXT("CROSS-CHECK (WITHOUT)"), EJamVerb::CrossCheck, TEXT("hold it and skate into a man: your speed is the hit")));
+	Rows.Add(Row(TEXT("PASS (WITH THE PUCK)"), EJamVerb::Pass, TEXT("a tap is a flat pass; held, it is a saucer over the sticks")));
+	Rows.Add(Row(TEXT("CHECK (WITHOUT)"), EJamVerb::Check, TEXT("the body check: come in fast or it is a bump")));
+	Rows.Add(Row(TEXT("ABILITY"), EJamVerb::Ability, TEXT("the cut's trick or a pickup's, when the slot is lit")));
+	Rows.Add(Row(TEXT("SPIN"), EJamVerb::Spin, TEXT("spin off a man who is on you")));
+	Rows.Add(Row(TEXT("DEKE"), EJamVerb::Deke, TEXT("the carrier's fake")));
+	Rows.Add(Row(TEXT("SPRINT"), EJamVerb::Sprint, TEXT("while the legs last")));
+	{
+		FJamControlRow Br = Row(TEXT("BRAKE"), EJamVerb::Brake, TEXT("stop hard, then go: it beats a man who charges"));
+		Br.Keys = FString::Printf(TEXT("%s against your motion, or %s"), B[EJamVerb::SkateBack].Keys.Num() ? *Prose(B[EJamVerb::SkateBack].Keys[0]) : TEXT("back"), *Br.Keys);
+		Br.Pad = FString::Printf(TEXT("stick back, or %s"), *Br.Pad);
+		Rows.Add(Br);
+	}
+	Rows.Add(Row(TEXT("POKE"), EJamVerb::Poke, TEXT("jab the puck loose")));
+	Rows.Add({ TEXT("SIGNALS"), TEXT("1 2 3 4"), TEXT("D-pad"), TEXT("a call to your mates"), {} });
+	Rows.Add(Row(TEXT("RESTART"), EJamVerb::Restart, TEXT("the match again")));
+	Rows.Add({ TEXT("PAUSE"), TEXT("Esc"), TEXT("Start"), TEXT("the pause card and the Director's Call"), { EKeys::Escape, EKeys::Gamepad_Special_Right } });
+	return Rows;
 }
 
 FString UJamInputMap::BindingTableText(bool bOneLine)
 {
-	// Kept by hand next to Build() so the strip, the pause card and CONTROLS.md say the same thing.
-	static const TCHAR* Rows[][2] = {
-		{ TEXT("SKATE"), TEXT("WASD / L-STICK") }, { TEXT("AIM STICK"), TEXT("MOUSE / R-STICK") }, { TEXT("SHOOT"), TEXT("HOLD LMB / RT") },
-		{ TEXT("CHECK"), TEXT("RMB / RB") }, { TEXT("CROSS-CHECK"), TEXT("MMB, MOUSE4 / LB") }, { TEXT("DEKE"), TEXT("WHEEL / Y") },
-		{ TEXT("SPIN"), TEXT("E / B") }, { TEXT("SPRINT"), TEXT("SHIFT / LT") }, { TEXT("POKE"), TEXT("SPACE / A") }, { TEXT("PASS"), TEXT("Q / X") }, { TEXT("ABILITY"), TEXT("F / R3") }, { TEXT("SIGNALS"), TEXT("1-4 / D-PAD") },
-		{ TEXT("BRAKE"), TEXT("REVERSE / CTRL / L-STICK CLICK") }, { TEXT("RESTART"), TEXT("R / VIEW") }, { TEXT("PAUSE"), TEXT("ESC / MENU") } };
+	// Lane A183: from the bindings (lane A49 kept it by hand next to Build()). One verb a row, the verb's name before the double space.
+	TArray<TPair<FString, FString>> Rows;
+	auto KP = [](EJamVerb V) { const FString P = VerbKeysText(V, true); return P.IsEmpty() ? VerbKeysText(V, false) : VerbKeysText(V, false) + TEXT(" / ") + P; };
+	Rows.Add({ TEXT("SKATE"), SkateKeys() + TEXT(" / L-STICK") });
+	Rows.Add({ TEXT("AIM"), TEXT("MOUSE / R-STICK") });
+	Rows.Add({ TEXT("SHOOT"), KP(EJamVerb::Shoot) + TEXT(" (WITH THE PUCK; HOLD TO LIFT)") });
+	Rows.Add({ TEXT("CROSS-CHECK"), KP(EJamVerb::CrossCheck) + TEXT(" (WITHOUT THE PUCK; HOLD IT INTO A MAN)") });
+	Rows.Add({ TEXT("PASS"), KP(EJamVerb::Pass) + TEXT(" (WITH THE PUCK; HOLD = SAUCER)") });
+	Rows.Add({ TEXT("CHECK"), KP(EJamVerb::Check) + TEXT(" (WITHOUT THE PUCK)") });
+	Rows.Add({ TEXT("DEKE"), KP(EJamVerb::Deke) });
+	Rows.Add({ TEXT("SPIN"), KP(EJamVerb::Spin) });
+	Rows.Add({ TEXT("SPRINT"), KP(EJamVerb::Sprint) });
+	Rows.Add({ TEXT("POKE"), KP(EJamVerb::Poke) });
+	Rows.Add({ TEXT("ABILITY"), KP(EJamVerb::Ability) });
+	Rows.Add({ TEXT("SIGNALS"), TEXT("1-4 / D-PAD") });
+	Rows.Add({ TEXT("BRAKE"), FString::Printf(TEXT("%s AGAINST YOUR MOTION / %s"), *FirstKey(EJamVerb::SkateBack), *KP(EJamVerb::Brake)) });
+	Rows.Add({ TEXT("RESTART"), KP(EJamVerb::Restart) });
+	Rows.Add({ TEXT("PAUSE"), TEXT("ESC / MENU") });
 	FString Out;
-	for (const auto& R : Rows)
+	for (const TPair<FString, FString>& R : Rows)
 	{
 		if (!Out.IsEmpty()) Out += bOneLine ? TEXT("      ") : TEXT("\n");
-		Out += FString::Printf(TEXT("%s  %s"), R[0], R[1]);
+		Out += FString::Printf(TEXT("%s  %s"), *R.Key, *R.Value);
 	}
 	return Out;
 }
 
 bool UJamInputMap::IsKeyMapped(const UInputAction* Action, const FKey& Key) const
 {
+	// Lane A183: the two-role verbs answer from the bindings (their keys sit on the button slots).
+	if (Action == Shoot) return Bindings.Has(EJamVerb::Shoot, Key) && SlotKeys.Contains(Key);
+	if (Action == Lift) return Bindings.Has(EJamVerb::CrossCheck, Key) && SlotKeys.Contains(Key);
+	if (Action == Pass) return Bindings.Has(EJamVerb::Pass, Key) && SlotKeys.Contains(Key);
+	if (Action == Check) return Bindings.Has(EJamVerb::Check, Key) && SlotKeys.Contains(Key);
 	for (const FEnhancedActionKeyMapping& M : Context->GetMappings())
 	{
 		if (M.Action == Action && M.Key == Key)
@@ -221,10 +743,12 @@ void UJamPlayerInput::TryBind()
 	EIC->BindAction(M->Move, ETriggerEvent::Triggered, this, &UJamPlayerInput::OnMove);
 	EIC->BindAction(M->Move, ETriggerEvent::Completed, this, &UJamPlayerInput::OnMoveDone);
 	EIC->BindAction(M->Move, ETriggerEvent::Canceled, this, &UJamPlayerInput::OnMoveDone);
-	EIC->BindAction(M->Shoot, ETriggerEvent::Started, this, &UJamPlayerInput::OnShootStarted);
-	EIC->BindAction(M->Shoot, ETriggerEvent::Completed, this, &UJamPlayerInput::OnShootDone);
-	EIC->BindAction(M->Check, ETriggerEvent::Started, this, &UJamPlayerInput::OnCheckStarted);
-	EIC->BindAction(M->Check, ETriggerEvent::Completed, this, &UJamPlayerInput::OnCheckDone);
+	// Lane A183: the two-role buttons (shoot / cross-check, pass / check) arrive per key on the slot actions; StepButtons resolves them by possession.
+	for (int32 I = 0; I < UJamInputMap::NumButtonSlots; ++I)
+	{
+		EIC->BindAction(M->ButtonSlots[I], ETriggerEvent::Started, this, &UJamPlayerInput::OnSlotStarted, I);
+		EIC->BindAction(M->ButtonSlots[I], ETriggerEvent::Completed, this, &UJamPlayerInput::OnSlotDone, I);
+	}
 	EIC->BindAction(M->Brake, ETriggerEvent::Started, this, &UJamPlayerInput::OnBrakeStarted);
 	EIC->BindAction(M->Brake, ETriggerEvent::Completed, this, &UJamPlayerInput::OnBrakeDone);
 	EIC->BindAction(M->Sprint, ETriggerEvent::Started, this, &UJamPlayerInput::OnSprintStarted);
@@ -234,10 +758,7 @@ void UJamPlayerInput::TryBind()
 	EIC->BindAction(M->StickAim, ETriggerEvent::Canceled, this, &UJamPlayerInput::OnStickAimDone);
 	EIC->BindAction(M->StickMouse, ETriggerEvent::Triggered, this, &UJamPlayerInput::OnStickMouse);
 	EIC->BindAction(M->Poke, ETriggerEvent::Started, this, &UJamPlayerInput::OnPokeStarted);
-	EIC->BindAction(M->Lift, ETriggerEvent::Started, this, &UJamPlayerInput::OnLiftStarted);
 	EIC->BindAction(M->Deke, ETriggerEvent::Started, this, &UJamPlayerInput::OnDekeStarted);
-	EIC->BindAction(M->Pass, ETriggerEvent::Started, this, &UJamPlayerInput::OnPassStarted);
-	EIC->BindAction(M->Pass, ETriggerEvent::Completed, this, &UJamPlayerInput::OnPassDone);   // lane A77 (R-0036): the held pass
 	EIC->BindAction(M->Spin, ETriggerEvent::Started, this, &UJamPlayerInput::OnSpinStarted);   // lane A51
 	EIC->BindAction(M->Ability, ETriggerEvent::Started, this, &UJamPlayerInput::OnAbilityStarted);   // lane A84
 	EIC->BindAction(M->Restart, ETriggerEvent::Started, this, &UJamPlayerInput::OnRestartStarted);
@@ -329,6 +850,45 @@ bool UJamPlayerInput::ConsumeCheckPressed()
 	return B;
 }
 
+// ---------------------------------------------------------------- lane A183: the two-role buttons
+
+void UJamPlayerInput::OnSlotStarted(int32 Slot)
+{
+	const UJamInputMap* M = UJamInputMap::Get();
+	if (!M->SlotKeys.IsValidIndex(Slot) || !M->SlotKeys[Slot].IsValid()) return;
+	DebugButton(M->SlotKeys[Slot], true);
+}
+
+void UJamPlayerInput::OnSlotDone(int32 Slot)
+{
+	const UJamInputMap* M = UJamInputMap::Get();
+	if (!M->SlotKeys.IsValidIndex(Slot) || !M->SlotKeys[Slot].IsValid()) return;
+	DebugButton(M->SlotKeys[Slot], false);
+}
+
+void UJamPlayerInput::DebugButton(const FKey& Key, bool bDown)
+{
+	if (bDown)
+	{
+		Buttons.Press(Key);
+		// The edges of before for the callers that do not step the buttons (the camera proof scene): a key on shoot / check latches them.
+		const FJamBindings& B = UJamInputMap::Get()->GetBindings();
+		if (B.Has(EJamVerb::Shoot, Key)) bShootLatch = true;
+		if (B.Has(EJamVerb::Check, Key)) bCheckLatch = true;
+	}
+	else Buttons.Release(Key);
+}
+
+FJamButtonVerbs UJamPlayerInput::StepButtons(bool bWithPuck)
+{
+	const FJamButtonVerbs V = Buttons.Step(bWithPuck, UJamInputMap::Get()->GetBindings());
+	bShoot = V.bShootHeld;
+	bPassHeld = V.bPassHeld;
+	bCheck = V.bCheck;
+	bShootLatch = bCheckLatch = bLiftLatch = bPassLatch = false;   // the step has spoken for this frame's presses
+	return V;
+}
+
 void UJamPlayerInput::DebugInjectKey(APlayerController* PC, FKey Key, float Value, bool bGamepad)
 {
 	if (!PC)
@@ -344,4 +904,96 @@ void UJamPlayerInput::DebugInjectKey(APlayerController* PC, FKey Key, float Valu
 	{
 		PC->InputKey(FInputKeyEventArgs(nullptr, Device, Key, Value > 0.f ? IE_Pressed : IE_Released, 1.f, false, 0));
 	}
+}
+
+// Lane A183: the HUD's first hint strip takes its words from the live bindings. Defined here so the HUD's own file (other lanes edit it today) is not touched.
+FString UJamHudWidget::ControlsHintText()
+{
+	return UJamInputMap::HintStripText();
+}
+
+// ---------------------------------------------------------------- lane A191: a still hand keeps its point on the ice
+
+static TAutoConsoleVariable<int32> CVarJamCtrlAimAnchor(TEXT("jam.ctrl.AimAnchor"), 1,
+	TEXT("Lane A191: 1 = while the cursor's pixel is still and the skater stands, the blade keeps its offset from him (a camera correction no longer swings it); 0 = the cursor re-projected every sim step (the aim of before)."));
+static TAutoConsoleVariable<float> CVarJamCtrlAimAnchorSpeed(TEXT("jam.ctrl.AimAnchorSpeed"), 0.3f,
+	TEXT("Lane A191: the skater's speed (m/s) under which a still cursor anchors (measured: 0.3 drifts least from the cursor's true point; 1 and 2 drift up to 64 deg)."));
+
+FVector2D FJamAimAnchor::Step(const FVector2D& PixelPx, const FVector2D& HitM, const FVector2D& SkaterM, bool bOn, double StandSpeedMps)
+{
+	const double Speed = bHave ? FVector2D::Distance(SkaterM, LastSkater) * 60.0 : 1e9;   // one call a sim step (60 Hz); a faceoff's teleport re-projects
+	const bool bPixelMoved = !bHave || FVector2D::Distance(PixelPx, LastPx) >= 0.5;
+	if (!bOn || bPixelMoved || Speed >= StandSpeedMps)
+	{
+		Offset = HitM - SkaterM;
+		bAnchored = false;
+		LastPx = PixelPx;   // the reference pixel moves only when the anchor lets go: a slow drift of the hand adds up to half a pixel, then re-projects
+	}
+	else bAnchored = true;
+	LastSkater = SkaterM;
+	bHave = true;
+	return SkaterM + Offset;
+}
+
+FVector2D FJamAimAnchor::StepLive(const FVector2D& PixelPx, const FVector2D& HitM, const FVector2D& SkaterM)
+{
+	return Step(PixelPx, HitM, SkaterM, CVarJamCtrlAimAnchor.GetValueOnGameThread() != 0, CVarJamCtrlAimAnchorSpeed.GetValueOnGameThread());
+}
+
+// ---------------------------------------------------------------- lane A191: what the buttons do right now (the HUD's badge)
+
+static TAutoConsoleVariable<int32> CVarJamHudButtonsBadge(TEXT("jam.hud.ButtonsBadge"), 1, TEXT("Lane A191: 1 = the bottom-left pill says what LMB / RMB do right now (SHOOT or CROSS-CHECK, PASS or CHECK); 0 = hidden."));
+
+FString UJamHudWidget::ButtonsBadgeLine(bool bWithPuck)
+{
+	const FJamBindings& B = UJamInputMap::Get()->GetBindings();
+	TArray<FString> Parts;
+	TArray<FKey> Seen;
+	for (const EJamVerb V : { EJamVerb::Shoot, EJamVerb::Pass })
+	{
+		if (B[V].Keys.Num() == 0 || Seen.Contains(B[V].Keys[0])) continue;
+		const FKey K = B[V].Keys[0];
+		Seen.Add(K);
+		const EJamVerb With = B.WithVerbOn(K), Without = B.WithoutVerbOn(K);
+		const EJamVerb Now = bWithPuck ? (With != EJamVerb::Count ? With : Without) : (Without != EJamVerb::Count ? Without : With);
+		if (Now != EJamVerb::Count) Parts.Add(FString::Printf(TEXT("%s  %s"), *UJamInputMap::KeyName(K), *FJamBindings::VerbLabel(Now)));
+	}
+	return FString::Join(Parts, TEXT("     "));
+}
+
+FString UJamHudWidget::GetButtonsBadgeShown() const
+{
+	return ButtonsBadgeText && ButtonsBadge && ButtonsBadge->GetVisibility() != ESlateVisibility::Collapsed ? ButtonsBadgeText->GetText().ToString() : FString();
+}
+
+void UJamHudWidget::BuildButtonsBadge()
+{
+	using S = FJamUiStyle;
+	if (!WidgetTree || !Root) return;
+	ButtonsBadge = S::Plate(WidgetTree, S::Pill(0.72f, 0.f), FMargin(14, 5));
+	ButtonsBadge->SetVisibility(ESlateVisibility::Collapsed);
+	ButtonsBadgeText = S::Text(WidgetTree, TEXT(""), S::Font(S::Body - 2, FName("Bold"), 20), S::Paper());
+	ButtonsBadge->SetContent(ButtonsBadgeText);
+	UCanvasPanelSlot* BadgeSlot = Root->AddChildToCanvas(ButtonsBadge);
+	// Bottom left under the hint strip (whose foot stands 96 above the bottom edge), clear of the commentary strip (centre, 880 wide) and the stamina bar.
+	BadgeSlot->SetAnchors(FAnchors(0, 1, 0, 1));
+	BadgeSlot->SetAlignment(FVector2D(0, 1));
+	BadgeSlot->SetAutoSize(true);
+	BadgeSlot->SetPosition(FVector2D(S::EdgePx, -S::EdgePx));
+}
+
+void UJamHudWidget::UpdateButtonsBadge(const FJamPresentationFrame& F)
+{
+	if (!ButtonsBadge || !ButtonsBadgeText) return;
+	const AHokejGameMode* GM = GetWorld() ? GetWorld()->GetAuthGameMode<AHokejGameMode>() : nullptr;
+	const UJamSim* Sim = GM ? GM->GetSim() : nullptr;
+	if (CVarJamHudButtonsBadge.GetValueOnGameThread() == 0 || !Sim || !Sim->GetSkaters().IsValidIndex(F.HumanIndex))
+	{
+		ButtonsBadge->SetVisibility(ESlateVisibility::Collapsed);
+		return;
+	}
+	// The same possession the buttons read at the sim step (FJamButtonResolver), on the frame this HUD shows.
+	const FString Line = ButtonsBadgeLine(JamControls::HasPuckForButtons(*Sim, F.HumanIndex));
+	if (ButtonsBadgeText->GetText().ToString() != Line) ButtonsBadgeText->SetText(FText::FromString(Line));
+	ButtonsBadge->SetVisibility(Line.IsEmpty() ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
 }

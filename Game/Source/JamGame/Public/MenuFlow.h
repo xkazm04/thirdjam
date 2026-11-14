@@ -46,6 +46,9 @@ struct JAMGAME_API FJamModeCard
 	FString Pitch;
 	// Three facts against the Regular Cut.
 	TArray<FString> Facts;
+	// Lane A187: the skaters a side (home, away) as the cartridge sets them, for the MODES card ("5 A SIDE", "4 AGAINST 5"); 0 when unread.
+	int32 HomeSkaters = 0;
+	int32 AwaySkaters = 0;
 };
 
 // Lane A144 (track U2): one row of the CONTROLS screen. Bound lists the keys of UJamInputMap's context the row speaks for: Jam.Menu.ControlsComplete

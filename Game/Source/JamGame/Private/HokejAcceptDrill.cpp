@@ -10,6 +10,7 @@
 // Steps (docs/experiments/ACCEPT.md): 1 skate / sprint / sprint_carry / brake (lane A93, R-0045 laws 3 and 4), 2 aim, 3 carry, 4 shoot_tap / shoot_half / shoot_full, 5 pass / saucer, 6 onetimer,
 // 7 check / crosscheck, 8 checked, 9 deke / spin / sweep, 10 resume_aim. jam.accept.From / jam.accept.To run a part. A QA drill: nothing here runs unless the cvar is 20.
 #include "HokejGameMode.h"
+#include "InputMapping.h"   // lane A191: JAM_INPUT_HAS_CROSS_HOLD (the held cross-check row)
 #include "JamSim.h"
 #include "JamPawns.h"
 #include "JamEventBus.h"
@@ -80,7 +81,7 @@ namespace JamAccept
 	// Steps and the number of sub-attempts each has.
 	static int32 SubsOf(int32 Step)
 	{
-		switch (Step) { case 1: return 4; case 2: return 4; case 3: return 1; case 4: return 3; case 5: return 3; case 6: return 2; case 7: return 2; case 8: return 1; case 9: return 3; case 10: return 2; default: return 0; }
+		switch (Step) { case 1: return 4; case 2: return 4; case 3: return 1; case 4: return 3; case 5: return 3; case 6: return 2; case 7: return 3; case 8: return 1; case 9: return 3; case 10: return 2; default: return 0; }
 	}
 }
 
@@ -163,7 +164,7 @@ void AHokejGameMode::AcceptDrillInputs(TArray<FJamInput>& All)
 		// Lane A92: in the check sub-step the carrier skates at the human; in the cross-check sub-step it stands (the vision's case: the thrust from the front beats a
 		// standing skater), a creep that keeps the puck on its blade. Under the neutral block both skate as before.
 		// It holds the puck behind its body there (the stick back at full reach), out of the human's blade: the hit comes at its chest, the puck stays its own.
-		const bool bStand = G.Step == 7 && G.K == 2 && Sim->GetConfig().Contact.bMomentum;
+		const bool bStand = G.Step == 7 && G.K >= 2 && Sim->GetConfig().Contact.bMomentum;   // lane A191: k=3 (the held cross-check) the same
 		if (G.Step == 7) { In.Move = ToH.GetSafeNormal() * (bStand ? 0.04 : 0.3); In.Stick = bStand ? -O.Forward() : O.Forward() * 0.5; }
 		if (G.Step == 8 && G.Ph == EPh::Measure)
 		{
@@ -285,6 +286,7 @@ void AHokejGameMode::AcceptDrillObserve()
 				const TCHAR* V2 = G.Step == 5 ? TEXT("saucer") : G.Step == 7 ? TEXT("crosscheck") : nullptr;
 				ACC_LOG(TEXT("step=%d verb=%s ok=0 frame=%lld skipped=%s (this cut has no %s for the step: not run, not a fail)"), G.Step, V1, F, Why, bNeedMate ? TEXT("mate") : TEXT("opponent"));
 				if (V2) ACC_LOG(TEXT("step=%d verb=%s ok=0 frame=%lld skipped=%s (this cut has no %s for the step: not run, not a fail)"), G.Step, V2, F, Why, bNeedMate ? TEXT("mate") : TEXT("opponent"));
+				if (G.Step == 7) ACC_LOG(TEXT("step=7 verb=crosscheck_held ok=0 frame=%lld skipped=%s (this cut has no opponent for the step: not run, not a fail)"), F, Why);   // lane A191
 				G.K = SubsOf(G.Step);
 				Next();
 				return;
@@ -302,8 +304,17 @@ void AHokejGameMode::AcceptDrillObserve()
 		case 8: HPos = FVector2D(0.0, 0.0); G.bOppLive = true; Sim->SetSkater(G.Opp, FVector2D(Dir * 7.0, 0.0), FVector2D::ZeroVector, FaceYaw + PI); break;
 		default: break;
 		}
-		Sim->SetSkater(Me, HPos, G.Step == 7 ? Fwd * 4.0 : FVector2D::ZeroVector, FaceYaw);
+		// Lane A191: the held cross-check (step 7 k=3) comes from 9 m at 5 m/s with the button held all the way: the speed brought is the hit.
+		if (G.Step == 7 && G.K == 3) HPos = FVector2D(-Dir * 9.0, 0.0);
+		Sim->SetSkater(Me, HPos, G.Step == 7 ? Fwd * (G.K == 3 ? 5.0 : 4.0) : FVector2D::ZeroVector, FaceYaw);
 		ACC_LOG(TEXT("stage step=%d k=%d frame=%lld human=(%.1f,%.1f)"), G.Step, G.K, F, HPos.X, HPos.Y);
+		if (G.Step == 7 && G.K == 3 && !JAM_INPUT_HAS_CROSS_HOLD)
+		{
+			// Lane A191: the row waits for A184's FJamInput::bCrossHold (InputMapping.h, JAM_INPUT_HAS_CROSS_HOLD): not run, not a fail.
+			ACC_LOG(TEXT("step=7 verb=crosscheck_held ok=0 frame=%lld skipped=no_hold (FJamInput::bCrossHold is not on this build: JAM_INPUT_HAS_CROSS_HOLD 0)"), F);
+			Next();
+			return;
+		}
 		if (G.Step == 7)
 		{
 			// the opponent carries; the human comes in at 4 m/s with W held (camera-relative forward = the skater's facing after the camera's reset)
@@ -312,6 +323,8 @@ void AHokejGameMode::AcceptDrillObserve()
 			Sim->SetPuck(O.Pos + O.Forward() * (G.K == 2 && Sim->GetConfig().Contact.bMomentum ? -0.45 : 0.45), FVector2D::ZeroVector);   // lane A92: behind it in the cross-check sub-step
 			// Lane A92: the cross-check sub-step glides in at its 4 m/s (W for a blink), so the hand's latency of one to six frames still presses inside cross_reach_m.
 			ACC_LOG(TEXT("act step=7 k=%d act=keys keys=W ms=%d frame=%lld"), G.K, G.K == 2 && Sim->GetConfig().Contact.bMomentum ? 30 : 1500, F);
+			// Lane A191: k=3: the cross-check button goes down now and stays down (LMB without the puck; the driver holds it for ms) while W carries him in.
+			if (G.K == 3) ACC_LOG(TEXT("act step=7 k=3 act=lmb_hold ms=2200 frame=%lld"), F);
 			G.ActFrame = F;
 			G.Ph = EPh::Measure;
 		}
@@ -471,7 +484,8 @@ void AHokejGameMode::AcceptDrillObserve()
 		{
 			// Lane A93 (R-0045 law 4, replacing R-0041 point 6): the carrier may sprint; its sprint raises its speed over the carrier's walk (the free walk of
 			// k=1 x skater.carry_speed_mult) and stays under a free skater's sprint (k=2).
-			const double CarryWalk = G.Speed1 * Cfg.Skater.CarrySpeedMult;
+			// Lane A185 (R-0064 point 2): k=1's free walk has skater.free_speed_mult on it; the carrier's has not.
+			const double CarryWalk = G.Speed1 * Cfg.Skater.CarrySpeedMult / FMath::Max(1.0, Cfg.Skater.FreeSpeedMult);
 			Verdict(TEXT("sprint_carry"), G.CarryFrames >= 60 && G.SprintCarryFrames > 0 && G.MaxSpeed > CarryWalk + 0.2 && G.MaxSpeed < G.Speed2 - 0.2, Facts + FString::Printf(TEXT(" carry_walk=%.2f sprint_speed=%.2f"), CarryWalk, G.Speed2));
 		}
 		Next();
@@ -582,6 +596,20 @@ void AHokejGameMode::AcceptDrillObserve()
 		const bool bCue = !Cfg.Contact.bMomentum ? (Gap <= 0.25 || (Closing > 0.5 && Gap <= Closing * (UJamSim::HumanCheckWindowFrames - 6) * UJamSim::DT))
 			: G.K == 1 ? (Gap <= 0.25 || (Closing > 0.5 && Gap <= Closing * (UJamSim::HumanCheckWindowFrames - 2) * UJamSim::DT))
 			: Gap <= Cfg.Contact.CrossReachM;
+		if (G.K == 3)
+		{
+			// Lane A191: the held cross-check. The button was pressed at the stage (act=lmb_hold); he skates in with it held: the man goes down by the speed brought
+			// (A184's held cross-check: delivered on contact while bCrossHold is high). The verdict: the human's held level reached the sim (JAMCTRL btn=crosshold
+			// held=1, from the log), the opponent went down, the closing speed at the first touch.
+			if (G.CueFrame < 0 && Gap <= 0.25) { G.CueFrame = F; G.Closing = Closing; G.MaxSpeed = H.Vel.Size(); }
+			if (O.ContactOutcome > G.HitOutcome) { G.HitOutcome = O.ContactOutcome; G.HitRatio = O.ContactRatio; }
+			if (G.DownFrame < 0 && O.IsDown()) { G.DownFrame = F; G.bKnock = true; G.KnockAt = O.KnockFrames; }
+			if (!((G.DownFrame >= 0 && F - G.DownFrame >= 10) || (G.CueFrame >= 0 && F - G.CueFrame > 60) || InPh > 300)) return;
+			Verdict(TEXT("crosscheck_held"), G.bKnock && G.CueFrame >= 0,
+				FString::Printf(TEXT("touched=%d down=%d knock_frames=%d outcome=%d ratio=%.2f closing=%.2f speed=%.2f"), G.CueFrame >= 0 ? 1 : 0, G.bKnock ? 1 : 0, G.KnockAt, G.HitOutcome, G.HitRatio, G.Closing, G.MaxSpeed));
+			Next();
+			return;
+		}
 		if (G.CueFrame < 0 && bCue)
 		{
 			G.CueFrame = F; G.Closing = Closing; G.MaxSpeed = H.Vel.Size();

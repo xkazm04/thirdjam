@@ -5,7 +5,7 @@
 //     time. What it says: "take this and you are hit as you touch it" (brake before it, let him have it and hit him, or cut across).
 //   The stop's distance: a LINE across the human's path (lane A171: it was a ring, and two rings in one colour asked for opposite acts) on the ice five
 //     stick lengths from the carrying human towards the opponent closing ahead of him; chalk and thin while
-//     that opponent is far, his colour, thicker and breathing from a quarter second before he is 9.5 m off until he is 7 m off (the stop passes), gone inside
+//     that opponent is far, his colour, thicker and breathing from a quarter second before he is 9 m off (lane A185; 9.5 before) until he is 7 m off (the stop passes), gone inside
 //     7 m (too late) and while he brakes. Their colour on the ice means act now, here as round the contested puck; yellow stays the take grace's.
 // Neither is drawn where its box would meet a downed figure: lane A158's rule and, since lane A171, lane A158's boxes (DownBoxesNow, made by
 // UpdateKeepClear at the top of the same refresh: every downed figure by its projected bones), the one source every mark and marker yields to.
@@ -33,11 +33,20 @@ static TAutoConsoleVariable<int32> CVarJamHudMarkStills(TEXT("jam.hud.MarkStills
 static TAutoConsoleVariable<FString> CVarJamHudMarkStillTag(TEXT("jam.hud.MarkStillTag"), TEXT("p3_clay"),
 	TEXT("Proof: the tag in the names of the marks' stills (the capture driver collects stills by the look tier's id)."), ECVF_Default);
 
+// Lane A178 (track F2, evolution 8): what a real window could not read on package H30 (docs/experiments/MOVEMENT-9.md).
+static TAutoConsoleVariable<int32> CVarJamHudContestHold(TEXT("jam.hud.ContestHold"), 24,
+	TEXT("The contested mark's least time on screen once lit, in sim frames (a gap of the rule of half that inside one showing does not end it: no flicker). 0 = the rule frame by frame (package H30: a median of 5 frames on screen)."), ECVF_Default);
+static TAutoConsoleVariable<int32> CVarJamHudStopBarMode(TEXT("jam.hud.StopBarMode"), 1,
+	TEXT("Where the stop's line lies: 1 (default) across the human's path always, straight ahead of him at the mark's distance; 0 (package H30) at the point towards the closing opponent: off to one side when he comes from the side."), ECVF_Default);
+
 namespace
 {
+	JamCarrierMarks::FMarkShow GContestShow;   // one HUD at a time: the contested mark's showing (stepped by the sim's frame)
+	int64 GContestShownSince = -1;
+
 	// The proof's stills: one per showing, StillAfter sim frames into it (the HUD may see a sim frame twice or skip one: at or after, once).
 	struct FMarkStill { int64 Since = -1; bool bTaken = false; };
-	FMarkStill GContestStill, GStopStill;
+	FMarkStill GContestStill, GStopStill, GArmedStill;
 	void MarkStill(FMarkStill& St, const TCHAR* Kind, bool bShown, int64 SimFrame)
 	{
 		const int32 After = CVarJamHudMarkStills.GetValueOnGameThread();
@@ -95,7 +104,9 @@ void UJamHudWidget::UpdateMarks(const FJamPresentationFrame& F)
 	if (!ContestRing) ContestRing = MakeMarkRing(WidgetTree, Root, TEXT("ContestRing"));
 	if (!StopMarkBar) StopMarkBar = JamMakeMarkBar(WidgetTree, Root, TEXT("StopMarkBar"));
 	UBorder* StopBar = StopMarkBar.Get();
-	if (!ContestRing || !StopBar) return;
+	if (!ContestRingInner) ContestRingInner = MakeMarkRing(WidgetTree, Root, TEXT("ContestRingInner"));
+	if (!ContestOppRing) ContestOppRing = MakeMarkRing(WidgetTree, Root, TEXT("ContestOppRing"));
+	if (!ContestRing || !StopBar || !ContestRingInner || !ContestOppRing) return;
 	auto Hide = [](UWidget* W) { if (W) W->SetVisibility(ESlateVisibility::Collapsed); };
 	const AHokejGameMode* GM = GetWorld() ? GetWorld()->GetAuthGameMode<AHokejGameMode>() : nullptr;
 	const UJamSim* Sim = GM ? GM->GetSim() : nullptr;
@@ -103,8 +114,9 @@ void UJamHudWidget::UpdateMarks(const FJamPresentationFrame& F)
 	const bool bOn = CVarJamHudMarks.GetValueOnGameThread() != 0 && F.Phase == EJamPhase::Play && Sim && PC;
 	if (!bOn)
 	{
-		Hide(ContestRing); Hide(StopBar);
+		Hide(ContestRing); Hide(StopBar); Hide(ContestRingInner); Hide(ContestOppRing);
 		MarkContestOpp = -1; MarkStopState = 0;
+		GContestShow = JamCarrierMarks::FMarkShow(); GContestShownSince = -1;
 		return;
 	}
 	const TArray<FJamSkaterState>& Sk = Sim->GetSkaters();
@@ -115,25 +127,50 @@ void UJamHudWidget::UpdateMarks(const FJamPresentationFrame& F)
 
 	// The contested puck.
 	const JamCarrierMarks::FContested Con = JamCarrierMarks::Contested(*Sim, Hi);
-	bool bConShown = false;
-	if (Con.bOn && Sk.IsValidIndex(Con.Opp))
+	// Lane A178: the showing. Once the rule has said yes the mark stands jam.hud.ContestHold frames at least and through a short gap of the rule; it
+	// follows the puck (the hit lands eight frames after his touch: the ring round the puck he now carries is still the warning).
+	const int32 Hold = CVarJamHudContestHold.GetValueOnGameThread();
+	bool bConOn = Con.bOn;
+	int32 ConOpp = Con.Opp;
+	if (Hold > 0)
 	{
-		FVector2D C, Sz;
-		float Dist = 0.f;
-		if (ProjectGroundRing(Sim->GetPuck().Pos, ContestRingRadiusM * Pulse, C, Sz, Dist) && !MarkMeetsDown(C - Sz * 0.5f, C + Sz * 0.5f, Downs, MarkDownPadPx))
-		{
-			const FLinearColor Col = F.GetTeamColour(Sk[Con.Opp].Team);
-			ContestRing->SetColorAndOpacity(FLinearColor(Col.R, Col.G, Col.B, 1.f));
-			ContestRing->SetVisibility(ESlateVisibility::HitTestInvisible);
-			if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(ContestRing->Slot)) { CS->SetPosition(C); CS->SetSize(Sz); }
-			bConShown = true;
-		}
+		JamCarrierMarks::FShowRule SR;
+		SR.MinFrames = Hold; SR.LingerFrames = Hold / 2;
+		bConOn = JamCarrierMarks::StepShow(GContestShow, Con.bOn, Con.Opp, F.SimFrame, SR);
+		ConOpp = GContestShow.Opp;
 	}
-	if (!bConShown) Hide(ContestRing);
-	const int32 ConNow = Con.bOn ? Con.Opp : -1;
+	bool bConShown = false, bOppShown = false;
+	if (bConOn && Sk.IsValidIndex(ConOpp))
+	{
+		const FLinearColor Team = F.GetTeamColour(Sk[ConOpp].Team);
+		const FLinearColor Col(Team.R, Team.G, Team.B, 1.f);
+		auto Ring = [&](UImage* I, const FVector2D& PosM, float RadiusM)
+		{
+			FVector2D C, Sz;
+			float Dist = 0.f;
+			if (!ProjectGroundRing(PosM, RadiusM, C, Sz, Dist) || MarkMeetsDown(C - Sz * 0.5f, C + Sz * 0.5f, Downs, MarkDownPadPx)) return false;
+			I->SetColorAndOpacity(Col);
+			I->SetVisibility(ESlateVisibility::HitTestInvisible);
+			if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(I->Slot)) { CS->SetPosition(C); CS->SetSize(Sz); }
+			return true;
+		};
+		// Once the puck is HIS (the showing still stands its least time), the two rings round the puck would lie on his own ring and on the yellow of his
+		// take grace (capture a178b-free-m1, frame 3412: five rings under one skater): they go, and the ring under the one who is coming stays: it is
+		// that skater the warning is about now.
+		const bool bMine = Sim->CarrierIndex() == Hi;
+		bConShown = !bMine && Ring(ContestRing, Sim->GetPuck().Pos, ContestRingRadiusM * Pulse);
+		if (!bConShown || !Ring(ContestRingInner, Sim->GetPuck().Pos, ContestInnerRadiusM * Pulse)) Hide(ContestRingInner);
+		bOppShown = (bConShown || bMine) && !Sk[ConOpp].IsDown() && Ring(ContestOppRing, Sk[ConOpp].Pos, ContestOppRadiusM * Pulse);
+	}
+	if (!bConShown) { Hide(ContestRing); Hide(ContestRingInner); }
+	if (!bOppShown) Hide(ContestOppRing);
+	const int32 ConNow = bConOn ? ConOpp : -1;
 	if ((ConNow >= 0) != (MarkContestOpp >= 0))
 	{
-		UE_LOG(LogTemp, Log, TEXT("JAMHUD frame=%lld mark=contested on=%d opp=%d human_s=%.2f opp_s=%.2f closing=%.1f shown=%d"), F.SimFrame, ConNow >= 0 ? 1 : 0, ConNow, Con.HumanSec, Con.OppSec, Con.ClosingMps, bConShown ? 1 : 0);
+		const int64 OnScreen = ConNow >= 0 || GContestShownSince < 0 ? 0 : F.SimFrame - GContestShownSince;
+		UE_LOG(LogTemp, Log, TEXT("JAMHUD frame=%lld mark=contested on=%d opp=%d human_s=%.2f opp_s=%.2f closing=%.1f shown=%d hold=%d opp_ring=%d on_screen=%lld"), F.SimFrame, ConNow >= 0 ? 1 : 0, ConNow, Con.HumanSec, Con.OppSec,
+			Con.ClosingMps, bConShown || bOppShown ? 1 : 0, Hold, bOppShown ? 1 : 0, static_cast<long long>(OnScreen));
+		GContestShownSince = ConNow >= 0 ? F.SimFrame : -1;
 	}
 	MarkContestOpp = ConNow;
 
@@ -148,7 +185,11 @@ void UJamHudWidget::UpdateMarks(const FJamPresentationFrame& F)
 		const FVector2D Way = Me.Vel.SizeSquared() > 1.0 ? Me.Vel.GetSafeNormal() : (Stop.At - Me.Pos).GetSafeNormal();
 		const FVector2D Across(-Way.Y, Way.X);
 		const double ThickM = Stop.bLit ? StopBarLitThickM * Pulse : StopBarArmedThickM;
-		const FVector2D Ends[4] = { Stop.At - Across * StopBarHalfWidthM, Stop.At + Across * StopBarHalfWidthM, Stop.At - Way * (ThickM * 0.5), Stop.At + Way * (ThickM * 0.5) };
+		// Lane A178 (jam.hud.StopBarMode): across his path ALWAYS (straight ahead of him at the mark's distance), whatever side the opponent comes from. In
+		// package H30 it lay at the point towards the opponent: for one 40 to 60 degrees off his travel that is a dash off to one side, level across the
+		// screen, that crosses nobody's way. The line is about HIS motion (press against it): it belongs on his path.
+		const FVector2D StopAt = CVarJamHudStopBarMode.GetValueOnGameThread() != 0 ? Stop.AtPath : Stop.At;
+		const FVector2D Ends[4] = { StopAt - Across * StopBarHalfWidthM, StopAt + Across * StopBarHalfWidthM, StopAt - Way * (ThickM * 0.5), StopAt + Way * (ThickM * 0.5) };
 		FVector2D Px[4];
 		bool bAll = !Way.IsNearlyZero();
 		for (int32 i = 0; i < 4 && bAll; ++i) bAll = UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(PC, UJamSim::ToWorld(Ends[i], 0.03), Px[i], false);
@@ -170,10 +211,11 @@ void UJamHudWidget::UpdateMarks(const FJamPresentationFrame& F)
 	const int32 StopNow = !Stop.bShow ? 0 : (Stop.bLit ? 2 : 1);
 	if (StopNow != MarkStopState)
 	{
-		UE_LOG(LogTemp, Log, TEXT("JAMHUD frame=%lld mark=stop state=%s def=%d dist=%.1f closing=%.1f shown=%d"), F.SimFrame, StopNow == 2 ? TEXT("lit") : StopNow == 1 ? TEXT("armed") : TEXT("off"), Stop.Def, Stop.DistM, Stop.ClosingMps,
-			bStopShown ? 1 : 0);
+		UE_LOG(LogTemp, Log, TEXT("JAMHUD frame=%lld mark=stop state=%s def=%d dist=%.1f closing=%.1f shown=%d off=%.0f mode=%d"), F.SimFrame, StopNow == 2 ? TEXT("lit") : StopNow == 1 ? TEXT("armed") : TEXT("off"), Stop.Def, Stop.DistM, Stop.ClosingMps,
+			bStopShown ? 1 : 0, Stop.OffDeg, CVarJamHudStopBarMode.GetValueOnGameThread());
 	}
 	MarkStopState = StopNow;
-	MarkStill(GContestStill, TEXT("contest"), bConShown, F.SimFrame);
+	MarkStill(GContestStill, TEXT("contest"), bConShown || bOppShown, F.SimFrame);
 	MarkStill(GStopStill, TEXT("stop"), bStopShown && Stop.bLit, F.SimFrame);
+	MarkStill(GArmedStill, TEXT("armed"), bStopShown && !Stop.bLit, F.SimFrame);
 }

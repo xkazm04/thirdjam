@@ -33,12 +33,25 @@ ONLY = os.environ.get("ARENA_STILLS_ONLY", "")            # e.g. "l2_night-90" t
 SUFFIX = os.environ.get("ARENA_STILLS_SUFFIX", "")        # appended to the file names (an A/B)
 NO_STENCIL = os.environ.get("ARENA_STILLS_NO_STENCIL", "").split(",")   # component properties whose custom depth is switched off (an A/B of the outline)
 JOBS = [("p3_clay", "LR_P3_Clay", 1.0, 90, 45), ("p3_clay", "LR_P3_Clay", 1.0, 120, 60), ("l2_night", "LR_L2_Night", 0.0, 90, 45), ("l2_night", "LR_L2_Night", 0.0, 120, 60)]
-REACT = os.environ.get("ARENA_STILLS_REACT", "") in ("1", "sweep", "place", "caps", "e5", "e6")   # lane A127: the reactions' stills
+REACT = os.environ.get("ARENA_STILLS_REACT", "") in ("1", "sweep", "place", "caps", "e5", "e6", "e7")   # lane A127: the reactions' stills
+# Lane A172 (evolution 7): ARENA_STILLS_REACT=e7 (it runs as e6 with its own jobs and views): Glass House as it ships (l3_neon) and on the clay rig, both
+# with the whistle, from the game camera's REAL poses: `JAMCAM` lines of a live headless match (jam.camera.Log 1; tools/blender/arena/cam_box.py picks
+# them), given in ARENA_STILLS_POSES as name:x,y,h,yaw,pitch[:foul] separated by ';' (metres and degrees; `:foul` = the +x box in use, a stand-in at its
+# seat). And the lamps and cords close: at rest and at the top of a goal's flash.
+E7 = os.environ.get("ARENA_STILLS_REACT", "") == "e7"
+E7_POSES = [p for p in os.environ.get("ARENA_STILLS_POSES", "").split(";") if p]
+# ARENA_STILLS_RINKS=56x28x3,60x30x3,... (length x width x corner radius): instead, one clay job a rink with the game camera beside the boxes and the
+# benches (A's pieces against device B's stands and crowd). ARENA_STILLS_LAMP=6,8,9,11: the +x goal light's lamp held at each Emissive (the peak's sweep).
+E7_RINKS = [tuple(float(v) for v in r.split("x")) for r in os.environ.get("ARENA_STILLS_RINKS", "").split(",") if r]
+E7_LAMP = [float(v) for v in os.environ.get("ARENA_STILLS_LAMP", "").split(",") if v]
+# ARENA_STILLS_LAMPZ=3.0,3.6,3.9: a goal's frame with the scored end's light at each height (metres) over its place beside the lamp: how far it must hang
+# from the lamp not to bleach it.
+E7_LAMPZ = [float(v) for v in os.environ.get("ARENA_STILLS_LAMPZ", "").split(",") if v]
 # Lane A160 (evolution 6): ARENA_STILLS_REACT=e6: every prop the A side places, from the game camera's own pose (UJamFollowCamera::ComputeThirdPersonPose:
 # 6 m behind the skater, 0.7 m to its right, 3.5 m up, pitch -atan(3.5 / 11) = -17.65 degrees, FOV 70) with the skater at the faceoff and in each corner,
 # beside each piece, on the regular (90 x 45), the large (120 x 60), the wide (140 x 70) and the pond (60 x 30, a 6 m goal), 1920 x 1080; the goal's first
 # frames; Glass House (90 x 45, l3_neon, the one mode that whistles) with a boxed stand-in. ARENA_STILLS_E6 picks parts: props,rinks,goal,glass.
-E6 = os.environ.get("ARENA_STILLS_REACT", "") == "e6"
+E6 = os.environ.get("ARENA_STILLS_REACT", "") in ("e6", "e7")
 E6_PARTS = [p for p in os.environ.get("ARENA_STILLS_E6", "props,rinks,goal,glass").split(",") if p]
 E6_GOAL_FRAMES = [int(v) for v in os.environ.get("ARENA_STILLS_GOAL_FRAMES", "0,1,2,3,9").split(",")]
 EXTRA = {}       # (tier, length, width) -> what the cartridge of that rink sets beside its size
@@ -96,6 +109,16 @@ if E6:
         JOBS.append(("l3_neon", "LR_L3_Neon", 0.0, 90, 45))
     EXTRA = {("p3_clay", 90, 45): {"corner": 3.75}, ("p3_clay", 120, 60): {"corner": 5.0}, ("p3_clay", 140, 70): {"corner": 5.83},
              ("l1_day", 60, 30): {"corner": 3.0, "goal_w": 6.0}, ("l3_neon", 90, 45): {"corner": 3.75, "penalties": 600}}
+    if os.environ.get("ARENA_STILLS_REACT", "") == "e7":
+        OUT = os.path.join(HERE, "out", "engine-e7")
+        JOBS = [("l3_neon", "LR_L3_Neon", 0.0, 90, 45), ("p3_clay", "LR_P3_Clay", 1.0, 90, 45)]
+        EXTRA[("p3_clay", 90, 45)] = {"corner": 3.75, "penalties": 600}      # Glass House's rules on the clay rig
+        if E7_RINKS:
+            JOBS = [("p3_clay", "LR_P3_Clay", 1.0, int(r[0]), int(r[1])) for r in E7_RINKS]
+            for r in E7_RINKS:
+                EXTRA[("p3_clay", int(r[0]), int(r[1]))] = {"corner": r[2]}
+        if E7_LAMP or E7_LAMPZ:
+            JOBS = [("p3_clay", "LR_P3_Clay", 1.0, 90, 45)]
 if os.environ.get("ARENA_STILLS_OUT", ""):
     OUT = os.path.join(HERE, "out", os.environ["ARENA_STILLS_OUT"])
 
@@ -118,6 +141,32 @@ def views(length, width):
     bx = 0.0833 * length
     if REACT:   # (name, eye, target, action): action = ("goal", frames since the goal) | ("rattle", frames since the hit) | None (the still arena)
         hw = width * 0.5
+        if E7 and E7_RINKS:
+            out = []
+            for name, px, py, yaw in (("rink-boxes", -9.0, -(hw - 5.0), -25.0), ("rink-benches", -bx - 9.0, hw - 5.0, 25.0), ("rink-end", gl - 6.0, 1.0, 0.0)):
+                eye, tgt = game_cam(px, py, yaw)
+                out.append((name, eye, tgt, None))
+            return out
+        if E7 and E7_LAMPZ:
+            cd = unreal.SystemLibrary.get_console_variable_float_value("jam.rink.react.light")
+            return [("lampz-z%03d" % round(z * 100), (gl - 1.0, 2.2, 2.6), (gl + 4.6, 0.0, 2.0), ("goal", 0, cd, (4.0 + 0.2 + 0.05 - 0.15, 0.0, z))) for z in E7_LAMPZ]                  + [("lampz-game-z%03d" % round(z * 100), game_cam(gl - 6.0, 1.0, 0.0)[0], game_cam(gl - 6.0, 1.0, 0.0)[1], ("goal", 0, cd, (4.0 + 0.2 + 0.05 - 0.15, 0.0, z))) for z in E7_LAMPZ]
+        if E7 and E7_LAMP:
+            return [("lampsweep-e%04d" % round(v * 100), (gl - 1.0, 2.2, 2.6), (gl + 4.6, 0.0, 2.0), ("lampset", 0, v)) for v in E7_LAMP] \
+                 + [("lampsweep-game-e%04d" % round(v * 100), game_cam(gl - 6.0, 1.0, 0.0)[0], game_cam(gl - 6.0, 1.0, 0.0)[1], ("lampset", 0, v)) for v in E7_LAMP]
+        if E7:
+            import math
+            out = []
+            for spec in E7_POSES:
+                parts = spec.split(":")
+                x, y, h, yaw, pitch = [float(v) for v in parts[1].split(",")]
+                cy, sy, cp, sp = math.cos(math.radians(yaw)), math.sin(math.radians(yaw)), math.cos(math.radians(pitch)), math.sin(math.radians(pitch))
+                out.append(("pose-" + parts[0], (x, y, h), (x + cp * cy * 10.0, y + cp * sy * 10.0, h + sp * 10.0), ("foul6", 300) if len(parts) > 2 and parts[2] == "foul" else None))
+            if tier_now() == "p3_clay":      # the lamps and the cords: the +x goal close, at rest and on a goal's frame; the goal light and the table's lamp
+                out += [("lamp-goal-rest", (gl - 5.0, 1.3, 2.2), (gl + 0.5, 0.0, 0.3), None), ("lamp-goal-f000", (gl - 5.0, 1.3, 2.2), (gl + 0.5, 0.0, 0.3), ("goalw", 0, None)),
+                        ("lamp-light-rest", (gl - 1.0, 2.2, 2.6), (gl + 4.6, 0.0, 2.0), None), ("lamp-light-f000", (gl - 1.0, 2.2, 2.6), (gl + 4.6, 0.0, 2.0), ("goalw", 0, None)),
+                        ("lamp-game-f000", game_cam(gl - 6.0, 1.0, 0.0)[0], game_cam(gl - 6.0, 1.0, 0.0)[1], ("goalw", 0, None)),
+                        ("lamp-table-f000", (-3.6, -(hw - 7.5), 2.9), (0.2, -(hw + 0.9), 1.9), ("goalw", 0, None))]
+            return out
         if E6:
             out = []
             hl = length * 0.5
@@ -360,7 +409,7 @@ class Run:
             c.set_editor_property("custom_depth_stencil_value", 1)
             self.boxed = a
             a.set_is_temporarily_hidden_in_editor(True)
-        if PLACE or E5 or (E6 and tier == "p3_clay" and length == 90 and "goal" in E6_PARTS):   # stand-ins: pucks in the crease and the slot, two figures (engine cylinders, B's instances by reference, transient)
+        if PLACE or E5 or (E6 and not E7 and tier == "p3_clay" and length == 90 and "goal" in E6_PARTS):   # stand-ins: pucks in the crease and the slot, two figures (engine cylinders, B's instances by reference, transient)
             gl = length * 0.5 - 4.0
             for nm, mat, loc, sc in (("puck", "MI_Toon_Dark", (gl - 1.6, 0.7, 0.04), (0.16, 0.16, 0.05)), ("fig0", "MI_Toon_Blue", (gl - 3.2, -1.6, 0.9), (0.55, 0.55, 1.8)),
                                      ("fig1", "MI_Toon_Orange", (gl - 5.5, 2.3, 0.9), (0.55, 0.55, 1.8)), ("puck2", "MI_Toon_Dark", (gl - 6.0, -0.8, 0.04), (0.16, 0.16, 0.05))):
@@ -440,6 +489,12 @@ class Run:
             pl.set_editor_property("where", unreal.Vector((length * 0.5 - 4.0 + 0.5) * 100.0, 0.0, 4.0))
             pl.set_editor_property("strength", 1.0)
             self.rink.react_to_event("goal", pl, 1000)
+        elif action[0] == "lampset":  # lane A172: the +x goal light's lamp held at one Emissive (its dynamic instance on the slot `lamp`), no reaction
+            comp = self.rink.get_editor_property("arena_goal_light_pos")
+            mid = comp.get_material(comp.get_material_index("lamp"))
+            mid.set_scalar_parameter_value("Emissive", action[2])
+            log("e7 lamp held at Emissive %g on %s" % (action[2], mid.get_name()))
+            return
         elif action[0] == "foul6":   # lane A160: a foul by a skater of team 1 (no teams in this config: every index is team 1's): the +x box
             if len(action) > 2:
                 unreal.SystemLibrary.execute_console_command(self.world(), "jam.rink.react.box %g" % action[2])

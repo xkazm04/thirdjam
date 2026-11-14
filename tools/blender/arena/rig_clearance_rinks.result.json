@@ -1,0 +1,403 @@
+{
+  "rinks": {
+    "LR_P3_Clay 56x28": {
+      "scale": 0.6222,
+      "tier_shipped_on_this_rink": true,
+      "cuts": [
+        "hockey.mode.shotgun"
+      ],
+      "crowd_actor": null,
+      "crowd_instances_judged": 0,
+      "crossings": []
+    },
+    "LR_P3_Clay 60x28": {
+      "scale": 0.6667,
+      "tier_shipped_on_this_rink": false,
+      "cuts": [
+        "hockey.mode.cage"
+      ],
+      "crowd_actor": "Crowd_P3_Clay_k0667",
+      "crowd_instances_judged": 530,
+      "crossings": []
+    },
+    "LR_P3_Clay 60x30": {
+      "scale": 0.6667,
+      "tier_shipped_on_this_rink": true,
+      "cuts": [
+        "hockey.mode.pond",
+        "hockey.mode.power-play"
+      ],
+      "crowd_actor": "Crowd_P3_Clay_k0667",
+      "crowd_instances_judged": 530,
+      "crossings": []
+    },
+    "LR_P3_Clay 70x35": {
+      "scale": 0.7778,
+      "tier_shipped_on_this_rink": false,
+      "cuts": [
+        "hockey.mode.bruisers",
+        "hockey.mode.outnumbered"
+      ],
+      "crowd_actor": "Crowd_P3_Clay_k0778",
+      "crowd_instances_judged": 566,
+      "crossings": []
+    },
+    "LR_P3_Clay 90x45": {
+      "scale": 1.0,
+      "tier_shipped_on_this_rink": true,
+      "cuts": [
+        "hockey.chaos",
+        "hockey.regular",
+        "take-1",
+        "take-3",
+        "take-4",
+        "take-5",
+        "take-6",
+        "take-8",
+        "hockey.mode.arsenal",
+        "hockey.mode.fog-of-war",
+        "hockey.mode.glass-house",
+        "hockey.mode.sniper"
+      ],
+      "crowd_actor": "Crowd_P3_Clay_k1000",
+      "crowd_instances_judged": 725,
+      "crossings": []
+    },
+    "LR_P3_Clay 120x60": {
+      "scale": 1.3333,
+      "tier_shipped_on_this_rink": true,
+      "cuts": [
+        "hockey.arena.large",
+        "hockey.boost",
+        "hockey.raw",
+        "take-2",
+        "hockey.mode.sudden-death"
+      ],
+      "crowd_actor": "Crowd_P3_Clay_k1333",
+      "crowd_instances_judged": 909,
+      "crossings": []
+    },
+    "LR_P3_Clay 140x70": {
+      "scale": 1.5556,
+      "tier_shipped_on_this_rink": true,
+      "cuts": [
+        "hockey.arena.wide",
+        "take-7",
+        "hockey.mode.marathon"
+      ],
+      "crowd_actor": "Crowd_P3_Clay_k1556",
+      "crowd_instances_judged": 1035,
+      "crossings": []
+    },
+    "LR_L2_Night 56x28": {
+      "scale": 0.6222,
+      "tier_shipped_on_this_rink": false,
+      "cuts": [
+        "hockey.mode.shotgun"
+      ],
+      "crowd_actor": null,
+      "crowd_instances_judged": 0,
+      "crossings": [
+        {
+          "actor": "Snow_L2_Night_Bank_1",
+          "what": "StaticMeshActor",
+          "piece": "goal_light_pos",
+          "min_cm": [
+            2843,
+            -1350,
+            -1
+          ],
+          "max_cm": [
+            2974,
+            1350,
+            37
+          ]
+        },
+        {
+          "actor": "Snow_L2_Night_Bank_2",
+          "what": "StaticMeshActor",
+          "piece": "goal_light_neg",
+          "min_cm": [
+            -2974,
+            -1350,
+            -1
+          ],
+          "max_cm": [
+            -2843,
+            1350,
+            37
+          ]
+        }
+      ]
+    },
+    "LR_L2_Night 60x28": {
+      "scale": 0.6667,
+      "tier_shipped_on_this_rink": false,
+      "cuts": [
+        "hockey.mode.cage"
+      ],
+      "crowd_actor": null,
+      "crowd_instances_judged": 0,
+      "crossings": [
+        {
+          "actor": "Snow_L2_Night_Bank_1",
+          "what": "StaticMeshActor",
+          "piece": "goal_light_pos",
+          "min_cm": [
+            3046,
+            -1447,
+            -1
+          ],
+          "max_cm": [
+            3187,
+            1447,
+            40
+          ]
+        },
+        {
+          "actor": "Snow_L2_Night_Bank_2",
+          "what": "StaticMeshActor",
+          "piece": "goal_light_neg",
+          "min_cm": [
+            -3187,
+            -1447,
+            -1
+          ],
+          "max_cm": [
+            -3046,
+            1447,
+            40
+          ]
+        }
+      ]
+    },
+    "LR_L2_Night 60x30": {
+      "scale": 0.6667,
+      "tier_shipped_on_this_rink": false,
+      "cuts": [
+        "hockey.mode.pond",
+        "hockey.mode.power-play"
+      ],
+      "crowd_actor": null,
+      "crowd_instances_judged": 0,
+      "crossings": [
+        {
+          "actor": "Snow_L2_Night_Bank_1",
+          "what": "StaticMeshActor",
+          "piece": "goal_light_pos",
+          "min_cm": [
+            3046,
+            -1447,
+            -1
+          ],
+          "max_cm": [
+            3187,
+            1447,
+            40
+          ]
+        },
+        {
+          "actor": "Snow_L2_Night_Bank_2",
+          "what": "StaticMeshActor",
+          "piece": "goal_light_neg",
+          "min_cm": [
+            -3187,
+            -1447,
+            -1
+          ],
+          "max_cm": [
+            -3046,
+            1447,
+            40
+          ]
+        }
+      ]
+    },
+    "LR_L2_Night 70x35": {
+      "scale": 0.7778,
+      "tier_shipped_on_this_rink": false,
+      "cuts": [
+        "hockey.mode.bruisers",
+        "hockey.mode.outnumbered"
+      ],
+      "crowd_actor": null,
+      "crowd_instances_judged": 0,
+      "crossings": [
+        {
+          "actor": "Snow_L2_Night_Bank_1",
+          "what": "StaticMeshActor",
+          "piece": "goal_light_pos",
+          "min_cm": [
+            3553,
+            -1688,
+            -1
+          ],
+          "max_cm": [
+            3718,
+            1688,
+            47
+          ]
+        },
+        {
+          "actor": "Snow_L2_Night_Bank_2",
+          "what": "StaticMeshActor",
+          "piece": "goal_light_neg",
+          "min_cm": [
+            -3718,
+            -1688,
+            -1
+          ],
+          "max_cm": [
+            -3553,
+            1688,
+            47
+          ]
+        }
+      ]
+    },
+    "LR_L2_Night 90x45": {
+      "scale": 1.0,
+      "tier_shipped_on_this_rink": true,
+      "cuts": [
+        "hockey.chaos",
+        "hockey.regular",
+        "take-1",
+        "take-3",
+        "take-4",
+        "take-5",
+        "take-6",
+        "take-8",
+        "hockey.mode.arsenal",
+        "hockey.mode.fog-of-war",
+        "hockey.mode.glass-house",
+        "hockey.mode.sniper"
+      ],
+      "crowd_actor": null,
+      "crowd_instances_judged": 0,
+      "crossings": [
+        {
+          "actor": "Snow_L2_Night_Bank_1",
+          "what": "StaticMeshActor",
+          "piece": "goal_light_pos",
+          "min_cm": [
+            4569,
+            -2170,
+            -1
+          ],
+          "max_cm": [
+            4780,
+            2170,
+            60
+          ]
+        },
+        {
+          "actor": "Snow_L2_Night_Bank_2",
+          "what": "StaticMeshActor",
+          "piece": "goal_light_neg",
+          "min_cm": [
+            -4780,
+            -2170,
+            -1
+          ],
+          "max_cm": [
+            -4569,
+            2170,
+            60
+          ]
+        }
+      ]
+    },
+    "LR_L2_Night 120x60": {
+      "scale": 1.3333,
+      "tier_shipped_on_this_rink": true,
+      "cuts": [
+        "hockey.arena.large",
+        "hockey.boost",
+        "hockey.raw",
+        "take-2",
+        "hockey.mode.sudden-death"
+      ],
+      "crowd_actor": null,
+      "crowd_instances_judged": 0,
+      "crossings": [
+        {
+          "actor": "Snow_L2_Night_Bank_1",
+          "what": "StaticMeshActor",
+          "piece": "goal_light_pos",
+          "min_cm": [
+            6092,
+            -2893,
+            -1
+          ],
+          "max_cm": [
+            6373,
+            2893,
+            80
+          ]
+        },
+        {
+          "actor": "Snow_L2_Night_Bank_2",
+          "what": "StaticMeshActor",
+          "piece": "goal_light_neg",
+          "min_cm": [
+            -6373,
+            -2893,
+            -1
+          ],
+          "max_cm": [
+            -6092,
+            2893,
+            80
+          ]
+        }
+      ]
+    },
+    "LR_L2_Night 140x70": {
+      "scale": 1.5556,
+      "tier_shipped_on_this_rink": true,
+      "cuts": [
+        "hockey.arena.wide",
+        "take-7",
+        "hockey.mode.marathon"
+      ],
+      "crowd_actor": null,
+      "crowd_instances_judged": 0,
+      "crossings": []
+    }
+  },
+  "crowd_actors": {
+    "LR_P3_Clay": {
+      "0.667": {
+        "actor": "Crowd_P3_Clay_k0667",
+        "instances": 530
+      },
+      "0.711": {
+        "actor": "Crowd_P3_Clay_k0711",
+        "instances": 534
+      },
+      "0.778": {
+        "actor": "Crowd_P3_Clay_k0778",
+        "instances": 566
+      },
+      "0.889": {
+        "actor": "Crowd_P3_Clay_k0889",
+        "instances": 667
+      },
+      "1.000": {
+        "actor": "Crowd_P3_Clay_k1000",
+        "instances": 725
+      },
+      "1.333": {
+        "actor": "Crowd_P3_Clay_k1333",
+        "instances": 909
+      },
+      "1.556": {
+        "actor": "Crowd_P3_Clay_k1556",
+        "instances": 1035
+      }
+    },
+    "LR_L2_Night": {}
+  },
+  "crossings_on_shipped_rinks": 4,
+  "verdict": "fail"
+}

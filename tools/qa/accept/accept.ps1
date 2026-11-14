@@ -19,7 +19,10 @@ param(
     [int]$Seconds = 420,
     [int]$Port = 4661,
     [int]$TapMs = 10,
-    [int]$ResX = 1280, [int]$ResY = 720
+    [int]$ResX = 1280, [int]$ResY = 720,
+    # Lane A183: the hand presses the bindings of keys.json beside this script (the game's defaults, R-0064 point 1: shoot and cross-check on LMB, pass and
+    # check on RMB). -OldKeys gives back the table of before (pass on the probed Q / F, cross-check on MMB) for a package older than A183.
+    [switch]$OldKeys
 )
 $ErrorActionPreference = 'Continue'
 $here = $PSScriptRoot
@@ -108,6 +111,11 @@ public static class A87W {
     PostMessage(h, 0x020A, (IntPtr)(long)((uint)(delta & 0xFFFF) << 16), (IntPtr)(long)((uint)(p.Y & 0xFFFF) << 16 | (uint)(p.X & 0xFFFF))); }
 }
 "@
+# Lane A183: the key table. Jam.Controls.AcceptKeysMatchDefaults holds keys.json against the game's FJamBindings::Defaults().
+$hand = @{ shoot = 'LMB'; crosscheck = 'LMB'; pass = 'RMB'; check = 'RMB'; onetimer = 'LMB' }
+if (-not $OldKeys) { try { $kj = Get-Content (Join-Path $here 'keys.json') -Raw | ConvertFrom-Json; foreach ($n in @('shoot', 'crosscheck', 'pass', 'check', 'onetimer')) { if ($kj.$n) { $hand[$n] = [string]$kj.$n } } } catch {} }
+else { $hand.crosscheck = 'MMB'; $hand.pass = 'KEY' }
+$btnOf = @{ LMB = 0; RMB = 1; MMB = 2 }
 $vk = @{ W = 0x57; S = 0x53; SHIFT = 0x10; E = 0x45; Q = 0x51; F = 0x46; ESC = 0x1B }
 $ch = @{ W = 119; S = 115; SHIFT = 0; E = 101; Q = 113; F = 102; ESC = 27 }
 
@@ -319,10 +327,14 @@ while ($sw.Elapsed.TotalSeconds - $t0 -lt $Seconds) {
                         if ($tap) { while ($sp.Elapsed.TotalMilliseconds -lt $want) { } } else { Start-Sleep -Milliseconds $want }   # a tap is spun, not slept: a Sleep on a busy machine ran 120 ms where 40 was asked (charge 7 against a band of 4)
                         [A87W]::Button($h, 0, $script:hx, $script:hy, $false); $held = [int]$sp.Elapsed.TotalMilliseconds
                         Note "act lmb held $held ms (wanted $want) [$rest]"; Note "HOLD step=$stepN k=$kN want_ms=$want held_ms=$held" }
-                    'probe_pass' { ProbePass }
-                    'pass' { if (-not $script:passKey) { ProbePass }; $fr = Num $rest 'frames' 0; $want = [int][Math]::Max(40, $fr * 1000.0 / 60.0 + 10); $sp = [Diagnostics.Stopwatch]::StartNew(); [A87W]::Key($h, $vk[$script:passKey], $ch[$script:passKey], $want); $held = [int]$sp.Elapsed.TotalMilliseconds; Note "act pass key $($script:passKey) held $held ms (wanted $want) [$rest]"; Note "HOLD step=$stepN k=$kN want_ms=$want held_ms=$held" }
-                    'rmb' { [A87W]::Button($h, 1, $script:hx, $script:hy, $true); Start-Sleep -Milliseconds 40; [A87W]::Button($h, 1, $script:hx, $script:hy, $false); Note "act rmb [$rest]" }
-                    'mmb' { [A87W]::Button($h, 2, $script:hx, $script:hy, $true); Start-Sleep -Milliseconds 40; [A87W]::Button($h, 2, $script:hx, $script:hy, $false); Note "act mmb [$rest]" }
+                    'probe_pass' { if ($btnOf.ContainsKey($hand.pass)) { $script:passKey = $hand.pass; Note "pass key resolved: $($hand.pass) (the A183 key table: the pass is a mouse button with the puck, no probe)" } else { ProbePass } }
+                    'pass' { $fr = Num $rest 'frames' 0; $want = [int][Math]::Max(40, $fr * 1000.0 / 60.0 + 10); $sp = [Diagnostics.Stopwatch]::StartNew()
+                        if ($btnOf.ContainsKey($hand.pass)) { $b = $btnOf[$hand.pass]; [A87W]::Button($h, $b, $script:hx, $script:hy, $true); Start-Sleep -Milliseconds $want; [A87W]::Button($h, $b, $script:hx, $script:hy, $false); $pk = $hand.pass }
+                        else { if (-not $script:passKey) { ProbePass }; [A87W]::Key($h, $vk[$script:passKey], $ch[$script:passKey], $want); $pk = $script:passKey }
+                        $held = [int]$sp.Elapsed.TotalMilliseconds; Note "act pass key $pk held $held ms (wanted $want) [$rest]"; Note "HOLD step=$stepN k=$kN want_ms=$want held_ms=$held" }
+                    'rmb' { $b = $btnOf[$hand.check]; [A87W]::Button($h, $b, $script:hx, $script:hy, $true); Start-Sleep -Milliseconds 40; [A87W]::Button($h, $b, $script:hx, $script:hy, $false); Note "act rmb (the check: $($hand.check)) [$rest]" }
+                    'mmb' { $b = $btnOf[$hand.crosscheck]; [A87W]::Button($h, $b, $script:hx, $script:hy, $true); Start-Sleep -Milliseconds 40; [A87W]::Button($h, $b, $script:hx, $script:hy, $false); Note "act mmb (the cross-check: $($hand.crosscheck)) [$rest]" }
+                    'lmb_hold' { $ms = Num $rest 'ms' 2000; $b = $btnOf[$hand.crosscheck]; $sp = [Diagnostics.Stopwatch]::StartNew(); [A87W]::Button($h, $b, $script:hx, $script:hy, $true); Start-Sleep -Milliseconds $ms; [A87W]::Button($h, $b, $script:hx, $script:hy, $false); Note "act lmb_hold (the held cross-check: $($hand.crosscheck)) held $([int]$sp.Elapsed.TotalMilliseconds) ms (wanted $ms) [$rest]" }   # lane A191
                     'wheel' { [A87W]::Wheel($h, $script:hx, $script:hy, 120); Note "act wheel +120 [$rest]" }
                     'key' { $k = 'E'; if ($rest -match 'key=(\w+)') { $k = $Matches[1] }; [A87W]::Key($h, $vk[$k], $ch[$k], 40); Note "act key $k [$rest]" }
                     'sweep' { $n = Num $rest 'n' 1; Sweep (Num $rest 'lx') (Num $rest 'ly') (Num $rest 'rx') (Num $rest 'ry') $n; $script:hx = Num $rest 'lx'; $script:hy = Num $rest 'ly'; Note "act sweep x$n [$rest]" }

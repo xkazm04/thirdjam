@@ -172,3 +172,169 @@ LIVE_BUS_LOG="$W/Game/logs/a160-live-bus.log" tools/blender/arena/live_bus.sh "$
 - **Director**: `Jam.Rink.BoxSeenFromIce` loads `modes/hockey.mode.glass-house`: if that cut ever drops the whistle or leaves the bare tier, the test says so
   first. Contract text proposed for `contracts/events.md`: to the sentence of `ARENA.md` section 48 add "a foul lights that box from inside for the penalty's
   frames; on a bare tier the boxes stand only in a cut with `game.rules.penalties`. The goal's light is 800 cd (320 off clay) in 3.5 m beside the lamp."
+
+---
+
+# Evolution 7 (lane A172, Sat 14 Nov 05:58 to 07:20)
+
+Worktree `f3c`, moved to main ca493723 at 05:58 (by its files: device B's stands, crowd, `MI_Trim_Lamp`, `MI_Toon_NetCord` are on it). Presentation only: no sim
+state, no field added to `FJamSkaterState` or `FJamPuckState`, the hash unchanged.
+
+## 11. What a player gets
+
+- **The goal lamps are device B's lamp and the nets have B's cords.** At rest the lamp is a dark red clay ball (it was lit all the time); on a goal it flashes
+  to an Emissive of 9 and is still red. The cords are plain off-white.
+- **The box a boxed player sits in is dimmer and throws nothing on the ice** (450 cd in 2.2 m; it bleached the figure on the clay rig).
+- **Nothing was moved** (section 12): the measurement says a move does not make the boxed skater seen, and the one case where he is always seen would be lost.
+
+![Glass House as it ships (l3_neon), the game camera's real pose while the human is boxed: his box, lit, a stand-in at the seat](img/arena/e7-glass-neon-boxed-human.jpg)
+![the same pose on the clay rig with device B's stands and crowd](img/arena/e7-glass-clay-boxed-human.jpg)
+![the lamp at rest and at the top of a goal's flash (Emissive 0.5 and 9)](img/arena/e7-lamp-rest-and-peak.jpg)
+![the cords on clay](img/arena/e7-cords.jpg)
+
+## 12. Item 1: is the boxed skater seen? The game camera's real poses
+
+Three live headless Glass House matches (port 4772; the human's penalties on this tree's build, the bot's penalty and the whole-match shares from a match run
+on the baseline's binaries of 04:09 with this tree's content, before the lane saw the tree had moved; `jam.camera.Log 1`: one `JAMCAM` line a frame with the camera's place, yaw, pitch and
+height; `tools/blender/arena/cam_box.py` and `cam_grid.py` put points of the rink through `UJamFollowCamera::FrameFraction`'s own maths, FOV 70, 16:9).
+
+| Case | The camera | The box in the picture |
+|---|---|---|
+| **The human is boxed** (2 penalties of 600 frames, the tackle drill's fouls; `a172-live-glass-drill-b2.log`) | The sim pins him at `BoxPos` (-3.0, -21.8) and the camera follows him: eye (-8.95, -21.09, 3.50) yaw 0.0 pitch -17.7; the second time eye (-7.89, -18.25, 5.85) yaw -29.3 pitch -36.6 | **598 of 598 and 596 of 596 frames**: his seat at (-0.48, -0.13) and (-0.32, +0.12) of the picture, 7 and 9 m off |
+| **A bot is boxed** (team 1's skater 5, frames 1,428 to 2,026 of a match without the drill; `a172-live-glass-play.log`) | with the human, wherever the play is | **0 of 598 frames**: the window lane's finding, reproduced |
+| Normal play, the whole match (9,368 frames) | | a box on the -y boards 10 to 11 % of the frames at any distance, **5.0 to 5.4 % within 30 m** (a 1.8 m figure is 82 pixels or more there) |
+
+Would another place do better? Twenty-eight places round the boards, the share of normal play's frames with a figure there inside the picture and within 30 m:
+**every place is between 2.6 and 6.7 %** (the best: the +x end boards at y -10; the far side boards, +y: 4.7 to 6.3 %; where the boxes stand: 5.0 to 5.4 %).
+At any distance the end the human attacks leads (26 % against 10 %), 40 to 55 m away. A camera that rides 6 m behind its skater sees 30 m of rink: no fixed
+place is in its picture. And the sim's `BoxPos` is where the camera goes when the human himself sits: a box on the far side boards would be **out of his
+picture on 598 of 598 frames** (45 m to his right), on the far end boards 53 m off.
+
+**So the boxes stay.** What the lane's stills show from the real poses: the boxed human's box fills the left of his picture, lit, with the figure in it, on neon
+and (better: no glass between) on clay. What would make a boxed BOT seen is not a place: a glance of the camera at the box when the whistle goes (camera
+lane), or the HUD (HUD lane). Not built here: both are outside the family, and a picture in the corner is ruled out.
+
+## 13. Item 3: device B's lamp and cords
+
+| | Before | Now |
+|---|---|---|
+| Slot `lamp` (the table's lamp, both goal lights) | a dynamic instance of `MI_Toon_NetFrame`: rest 3 (lit all the time), peak 17 | a dynamic instance of **`MI_Trim_Lamp`**: rest **0.5** (B: reads off), peak **9** |
+| Slot `net` (the Blender goals' cords) | `MI_Toon_NetMesh` | **`MI_Toon_NetCord`** |
+| Neutral | | `jam.rink.lamp.trim 0`, `jam.rink.net.cord 0` (read at Build): evolution 6's materials and numbers |
+
+The peak from a sweep of off-screen stills on `p3_clay` (the +x goal light close, its lamp held at each Emissive, the lamp's own pixels):
+
+| Emissive | 0.5 (rest) | 6 | 8 | **9** | 10 | 11 |
+|---|---|---|---|---|---|---|
+| mean R, G, B | 124, 16, 9 | 254, 100, 52 | 254, 117, 62 | **254, 124, 66** | 254, 130, 70 | 254, 136, 73 |
+| R / G | 7.9 | 2.55 | 2.17 | **2.05** | 1.96 | 1.87 |
+
+9 is the top of what is still red (R at least twice G) and the bottom of the Director's 9 to 12. At 9 the lamp is orange-red, not deep red: redder is 6 to 8, below his range.
+**On a goal's frame** the lamp's own light stands 0.4 m from it (device B's place) and bleached it: R/G 1.37, 39 % of its pixels pale. The quiet goal's
+lights now shine on lighting channel 1 alone, which only the rink's own boards, trim, kick plate, caps, boxes and benches take: on the goal's frame the
+lamp reads **R/G 2.05 with no pale pixel**, the board top under it is +15.6 red, and the ice cannot be reached at all (ice strip +0.1 to +0.8 red, 0.7 % of
+its pixels by more than 12). `jam.rink.react.loud 1` puts the lights back on every channel (evolution 5's loud goal).
+The cords on clay, the +x goal from 5 m: **luma 185 on the side panel, 199 at the crossbar** (darkest tenth 168; the bar is 60). Both paths are in the
+preload's `MatchPaths` (`EffectsBinder.cpp`, two lines).
+
+## 14. Item 2: Glass House on the clay rig
+
+The one line, for the modes lane: `Game/Content/Cartridges/modes/hockey.mode.glass-house.cartridge.json`, `game.look.tier`: `"l3_neon"` -> `"p3_clay"` (the rest of
+its `look` block already equals `hockey.regular`'s). Nothing else is needed on the A side: on a dressed tier the boxes, the seat, the door, the clock and the
+box's light already stand (`Jam.Rink.BoxSeenFromIce` part 3 runs that path), and the rink reads the whistle from the same cartridge.
+
+| | As it ships (`l3_neon`) | On the clay rig (`p3_clay`) |
+|---|---|---|
+| The hall | a black void over the boards, no stands (the rig is one of the contract's empty placeholders) | device B's barn, stands and crowd |
+| The ice and boards | blue ice, boards and every clay instance bloomed to white | the shipped look |
+| The glass | drawn (a grey band with stanchions) | **not drawn**: the clay rig's boards are open (`ARinkActor` hides the glass and the rail on `p3_clay`) |
+| The box in use | seen through the glass, white on white, told by its glow | seen over open boards: the team colour, the figure, the clock |
+| A hit flash, the goal's light | a fifth of the candelas (night's share) | full |
+
+**Recommendation: move it to clay.** The mode's idea is the whistle and the box ("the only whistle left: foul and sit 10 s"), and the box is what gains: on
+clay it is the only cut where a lit box with a man in it is in the picture. The word "glass" is what does not survive: the clay rig has no glass, and the
+mode's name would then be a figure of speech. If the name must stay literal, the glass on clay is device B's (`M_Toon_Rail` clips the rail there; A draws
+the band only off clay). Stills each way from the same real poses: `e7-glass-neon-*.jpg` and `e7-glass-clay-*.jpg`.
+
+## 15. Item 4: A's pieces against device B's stands on every rink
+
+`rig_clearance.py` now judges every shipped rink size: the rig is scaled by length / 90 while A's boxes, table and goal lights keep their size, and B's
+stands and crowd are one `BP_ArenaCrowd` actor a scale (`Crowd_P3_Clay_k0667` ... `k1556`), each a set of instanced meshes: **every instance is judged**
+(530 to 1,035 a rink: stands, fans, the barn's gate, ice machine and loft), with the hall's bays, bunting and trusses.
+
+| Rink (clay) | Shipped cuts on clay | B's crowd actor | Crossings with A's benches, boxes, table, goal lights, boards and caps |
+|---|---|---|---|
+| 56 x 28 | Shotgun | **none for scale 0.622** (the nearest is `k0667`) | 0 (nothing of the crowd judged) |
+| 60 x 28 | none on clay (Cage is neon) | `k0667`, 530 instances | 0 |
+| 60 x 30 | Pond, Power Play | `k0667`, 530 | **0** |
+| 70 x 35 | none on clay (Bruisers neon, Outnumbered day) | `k0778`, 566 | 0 |
+| 90 x 45 | the regular cut, takes, Arsenal, Sniper | `k1000`, 725 | **0** |
+| 120 x 60 | the large rink, take 2, Sudden Death | `k1333`, 909 | **0** |
+| 140 x 70 | the wide rink, take 7, Marathon | `k1556`, 1,035 | **0** |
+
+Seven sizes are shipped; B's seven crowd actors are for scales 0.667, 0.711, 0.778, 0.889, 1.0, 1.333 and 1.556: 0.711 and 0.889 fit no shipped cartridge, and 0.622 (56 m) has none. **Zero crossings on clay.** Two findings for B: Shotgun's 56 m rink has no
+crowd actor of its own scale; on `l2_night` the end snow banks `Snow_L2_Night_Bank_1 / _2` run under the goal lights' feet on 90 x 45 and 120 x 60 (the
+post stands in the bank: 0.4 to 0.6 m of snow round a 3 m post; B notched the side banks for the boxes and benches, not the end ones). Bounds are boxes
+through the serialized transforms: a slanted piece is judged by its box. A still a rink: `img/arena/e7-rink-*.jpg`.
+
+## 16. Item 5: is `NS_goal` spawned, and where (for device B)
+
+From H28's own window log (`Game/Packaged/Accept_H28/Windows/ThirdJam/Saved/Logs/ThirdJam-backup-2026.11.14-05.01.17.log`, read only), five goals:
+
+```
+[05.00.24:735][172]LogJamEvents: JAMEVENT goal who=0 where=(4116.2,-0.0,4.0) strength=1.000 frame=1880 kind=none
+[05.00.24:840][179]LogJamFx: JAMFX goal scorer_team=0 human_team=0 variant=0
+[05.00.24:869][180]LogJamSim: JAMRINK react goal end=+x frame=1880 lamp 3.00 -> 17.00 net shake 54 frames
+```
+
+- **Asked for on every goal**: 5 `JAMEVENT goal` = 5 `JAMFX goal` = 5 `JAMRINK react goal`; no `JAMFX missing` line (the binder logs a missing system once,
+  `EffectsBinder.cpp` line 162), so `/JamAssets/VFX/NS_goal` loaded. The binder writes no line when the component is made: a spawn that returned nothing
+  cannot be told from this log. One line after `SpawnSystemAtLocation` (the system's name, the place, whether a component came back) would settle it: the
+  binder is A's file but not this track's.
+- **Where**: at the event's place, the puck's: **15 to 16 cm behind the goal line, 4 cm above the ice: inside the net**, under a 0.61 m crossbar and the
+  net's top. From the game camera (3.5 m up, 6 m behind the shooter) that point is behind the frame and under the cords. `User.Colour` the scoring team's,
+  `User.Strength` 1, `User.Variant` 0 (the human's team scored), no rotation.
+- **A stall on the first goal**: 105 ms pass between the bus's line and the binder's, 135 ms to the rink's (19 and 13 ms on the second goal): a listener
+  ahead of the binder loads or builds something the first time. A burst born inside a 100 ms stall starts with one long step. The performance lane's.
+- Proposal: the burst born at the goal mouth's middle at the crossbar's height or above (one offset in the binder for `goal`, or inside the system), so it
+  rises over the net; B's critic's bar (3 % of the frame at +10) cannot be met from inside the net.
+
+## 17. Proof (evolution 7)
+
+| What | Result |
+|---|---|
+| Editor builds on the moved tree | PASS: 113 actions (the checkout), then 83 s, 208 s, 34 s, 34 s; one failed compile between (a local named `Trim` hid the rink's member) |
+| `Jam.Rink` on build 3 | **6 / 6 PASS** (`GoalLampAndNet` and the others read the lamp's peak through `GetLampPeakAdd()`) |
+| `verify_arena.py` on the final build (build 4) | **A119 VERIFY PASS, A127 E3, A136 E4, A145 E5, A160 E6 PASS** (sections 1 to 6 under the neutral values, now with `jam.rink.lamp.trim 0` and `jam.rink.net.cord 0`), new section 8 **A172 E7 PASS**: the three lamps on dynamic instances of `MI_Trim_Lamp`, the table's and the goals' frames still `MI_Toon_NetFrame`, both nets on `MI_Toon_NetCord`, rest 0.5, a goal's frame 9.0 at the table and the scored end and 0.5 at the other end, 0.5 again after; the neutrals give back `MI_Toon_NetFrame` (rest 3.0, +14) and `MI_Toon_NetMesh` |
+| Full `Jam` filter (the gate's invocation) on the final build | **265 passed, 0 failed, exit 0** (`Game/logs/a172-automation-full.log`); the lane adds no automation test |
+| Hash | `hockey.boost all_star seed 1: 6683 frames ... sim hash c24c8c7aadad167f` and `Carpet Cut seed 1: 13888 frames, 3:1 ... sim hash d6dcb27a53b45420`: the same two lines as the main checkout's newest gate log (`premerge-automation-ue-20261114-064608.log`, 267 tests: main has moved on by two) |
+| Live matches (headless, port 4772, `jam.camera.Log 1`) | three: the drill match on the baseline's binaries, a match without the drill (one bot's penalty: 0 of 598 frames), the drill match again on this tree's build (two human penalties: 598 of 598 and 596 of 596 frames; the poses equal the first run's to 0.05 m and 0.1 degree) |
+| Clearance (`rig_clearance.py`, a commandlet) | section 15: 0 crossings on clay on every shipped rink; the script's own verdict line says FAIL for the two night snow banks under the goal lights |
+| Stills | 20 from the real poses (the first run lost its GPU device after 7: run again), 12 of the lamp's sweep, 8 of the light's height (the move did not hold: the cvar sink puts the light back; not used), 18 final on build 3, 21 of the seven rinks, 7 on build 4 for the lamp; looked at as sheets and crops; sixteen landed |
+
+Not run: `tools/gate/premerge.ps1` as a whole, the Shipping compile (no code outside the editor's reach was added: two cvars, constants, one loop over lights),
+the acceptance run (no verb changed), a windowed match, GPU pairs. Not proven in a game: the lighting channel (stills only), the lamp and cords under the
+game's own post settings, the stands' per-scale visibility (the driver scales every actor of the rig itself).
+
+## 18. Neutral values, and how to run it again
+
+`jam.rink.lamp.trim 0` and `jam.rink.net.cord 0` give back evolution 6's lamps and cords; `jam.rink.react.box 750` its box light's candelas (the radius is a
+constant, 2.2 m, was 2.5). The peak (9) and the rest (0.5) are constants (`LampTrimPeak`, `LampTrimRest`).
+
+```
+W=$(pwd -W); UE="C:/Program Files/Epic Games/UE_5.9/Engine/Binaries/Win64/UnrealEditor-Cmd.exe"
+# the game camera's real poses: a live headless match with jam.camera.Log=1 (the lane's runner: one process, port 4772, stopped by the script)
+bash tools/blender/arena/run_live.sh "$W/Game/Content/Cartridges/modes/hockey.mode.glass-house.cartridge.json" a172-live 9000 200 [jam.ctrl.Drill=1]
+python tools/blender/arena/cam_box.py Game/logs/a172-live.log ; python tools/blender/arena/cam_grid.py Game/logs/a172-live.log
+ARENA_STILLS_REACT=e7 ARENA_STILLS_POSES="boxed-human-1:-2.95,-21.09,3.5,0.0,-17.7:foul;play-23m:-3.84,-0.16,3.5,-84.2,-17.7:foul" "$UE" "$W/Game/ThirdJam.uproject" -ExecCmds="py $W/tools/blender/arena/engine_stills.py" -RenderOffScreen -Multiprocess -unattended -nopause -nosplash -log -abslog="$W/Game/logs/a172-stills.log"
+ARENA_STILLS_REACT=e7 ARENA_STILLS_LAMP=0.5,6,8,9,10,11 ARENA_STILLS_OUT=engine-e7-lamp "$UE" ... (the same line)
+ARENA_STILLS_REACT=e7 ARENA_STILLS_RINKS=56x28x3,60x28x2,60x30x3,70x35x3.5,90x45x3.75,120x60x5,140x70x5.83 ARENA_STILLS_OUT=engine-e7-rinks "$UE" ... (the same line)
+"$UE" "$W/Game/ThirdJam.uproject" -run=pythonscript -script="$W/tools/blender/arena/rig_clearance.py" -unattended -nopause -nosplash -NullRHI -Multiprocess -abslog="$W/Game/logs/a172-clearance.log"
+```
+
+Pitfalls met: (1) the stills' poses for the boxed human are the logged ones moved 6 m along the boards to the other box: the driver's config has no teams,
+so its fouler is always team 1; the picture is the same, the box is the orange one. (2) A following camera has no near and no far side: measure the real
+poses before moving a piece for it. (3) One union box over an actor built of instances spans the rink and crosses everything: judge instances. (4) A
+shadowless light 2.5 m wide, 2.2 m from the ice, still paints the board foot on the clay rig, where no glass hides it. (5) The off-screen editor lost its
+GPU device once (`GPU Crashed or D3D Device Removed` on a shared card): the job was run again alone. (6) `git log -1` answered a second before the
+Director's checkout finished: a tree is told by its files too.

@@ -279,6 +279,7 @@ namespace JamAI
 		}
 		const bool bMateCarries = W.Carrier >= 0 && W.Carrier != Pi && W.Skaters[W.Carrier].Team == Me.Team;
 		const bool bOppCarries = W.Carrier >= 0 && W.Skaters[W.Carrier].Team != Me.Team;
+		if (BraceMode == 2 && !bCarrying) { In.bCrossHold = true; }   // lane A184: the "held all match" arm (measurement only)
 
 		if (bCarrying)
 		{
@@ -490,6 +491,18 @@ namespace JamAI
 				// speed along it: five whiffs in six were presses on a carrier skating away at the same pace (49 of 58, CONTACT-4.md section 6), which a person
 				// stops doing in a minute. JAM_PLAYTESTER_CHECK=old (bOldCheck) is the press as it was, for the before arm of a measurement.
 				const double Dc = C.Pos.DistTo(Me.Pos);
+				// Lane A184 (track F1, evolution 9; game.contact.cross_hold): the brace as a person uses it: held from a few metres out when skating at the carrier
+				// fast enough to hurt and not into his back; braced, no check is pressed (the braced body is the hit).
+				if (BraceMode == 1 && Dc > 1e-6 && Dc <= 2.0 * W.SkaterRadius + BraceFromM)
+				{
+					const FVec2 Nb = (C.Pos - Me.Pos) * (1.0 / Dc);
+					if ((Me.Vel - C.Vel).Dot(Nb) >= BraceClosingMps && Nb.Dot(C.Facing) < P.CheckFromBehindDot) In.bCrossHold = true;
+				}
+				if (In.bCrossHold)
+				{
+					Act = EPlaytesterAct::Check;
+				}
+				else
 				// Lane A151 (track F1, CONTACT-6.md section 2): the press on course and time. Everything decided here reaches the sim ReactionFrames later (Think's
 				// ring), and the sim's check is a window of UJamSim::HumanCheckWindowFrames on an ordinary collision of the two bodies. So the press goes when the
 				// straight course of the two brings the centres within two radii between 1 and 7 frames after the press arrives (the window's first half: the
@@ -507,7 +520,8 @@ namespace JamAI
 							const double ToContact = 60.0 * (-Bq - std::sqrt(Disc)) / V2;   // frames until the bodies meet on this course
 							const int Pct = CoursePctOverride >= 0 ? CoursePctOverride : P.CheckPct;
 							const double CheckCoin = (Noise(W.Frame / 120, 53) + 1.0) * 50.0;
-							if (ToContact >= P.ReactionFrames + 1.0 && ToContact <= P.ReactionFrames + 7.0 && (Pct >= 100 || CheckCoin < Pct))
+							const double Wu = static_cast<double>(W.CheckWindupFrames);   // lane A184: the window opens that many frames after the press: press as much earlier
+							if (ToContact >= P.ReactionFrames + 1.0 + Wu && ToContact <= P.ReactionFrames + 7.0 + Wu && (Pct >= 100 || CheckCoin < Pct))
 							{
 								In.bCheck = true;
 								LastCheckFrame = W.Frame;
@@ -516,7 +530,7 @@ namespace JamAI
 						}
 					}
 				}
-				else if (Dc < 1.8 && MySpeed > 5.0 && W.Frame - LastCheckFrame > 30)
+				else if (Dc < 1.8 + Clamp((Me.Vel - C.Vel).Dot((C.Pos - Me.Pos).Normalized()), 0.0, 1e9) * W.CheckWindupFrames / 60.0 && MySpeed > 5.0 && W.Frame - LastCheckFrame > 30)   // lane A184: the wind-up's ground
 				{
 					const FVec2 N = (C.Pos - Me.Pos).Normalized();
 					if (N.Dot(C.Facing) < P.CheckFromBehindDot && (bOldCheck ? Me.Vel.Dot(N) : (Me.Vel - C.Vel).Dot(N)) > 4.0)
@@ -614,6 +628,31 @@ namespace JamAI
 			In.Move = MySpeed > 1.5 ? Me.Vel * (-1.0 / MySpeed) : FVec2();
 			bContestStop = MySpeed > 1.5;
 		}
+		// Lane A178 (env JAM_PLAYTESTER_STOPMARK=brake; off by default: nothing here runs): the stop's line lit while I carry: stop, then go on.
+		if (bStopMarkBrake && bCarrying && !Me.bDown)
+		{
+			if (StopPhase == 0 && bStopLitNow && W.Frame >= StopBrakeNext && MySpeed > 3.0)
+			{
+				StopPhase = 1; StopPhaseStart = W.Frame; StopBrakeNext = W.Frame + StopBrakeRearm; ++StopBrakes;
+				StopLine = Me.Vel * (1.0 / MySpeed);
+				StopSide = StopLine.Cross(StopDef - Me.Pos) > 0.0 ? -1.0 : 1.0;   // the opponent on my left: to the right
+			}
+			if (StopPhase == 1)
+			{
+				// the stop: S and the side key (the sim's reverse brake); the stop alone: straight back
+				const FVec2 Back = bStopMarkStopOnly ? StopLine * -1.0 : (StopLine * -1.0 + Rotate(StopLine, DegToRad(90.0) * StopSide)).Normalized();
+				if (MySpeed > 1.5) { In.Move = Back; bContestStop = true; }
+				const long long Age = W.Frame - StopPhaseStart;
+				if (bStopMarkStopOnly) { if (Age >= StopOnlyFrames) { StopPhase = 0; } }
+				else if (MySpeed <= 2.0 || Age >= 45) { StopPhase = 2; StopPhaseStart = W.Frame; }
+			}
+			else if (StopPhase == 2)
+			{
+				In.Move = Rotate(StopLine, DegToRad(60.0) * StopSide);   // the go: off the line, to the open side
+				if (W.Frame - StopPhaseStart >= StopCutFrames) { StopPhase = 0; }
+			}
+		}
+		else { StopPhase = 0; }
 		// Lane A95 (brief A95 job 3): the reverse brake on purpose. The move reverses against my velocity: the class means to stop (2: always, stop and go;
 		// 1: only on a target within BrakeNearM); Think carves any other reversal into a turn.
 		if (!bOldVerbs && W.ReverseBrakeDecel > 0.0 && P.BrakeIntent > 0 && MySpeed > 1.0 && In.Move.Length() > 1e-6
@@ -753,8 +792,18 @@ namespace JamAI
 			if (bEnvCourse && CheckEnv[6] == ':') { Tester.CoursePctOverride = std::atoi(CheckEnv + 7); }   // course:NN = NN per cent of the chances
 			Tester.bOldCheck = (CheckEnv && std::strcmp(CheckEnv, "old") == 0) || (!bEnvClosing && !bEnvCourse && CfgSim && !CfgSim->GetConfig().Contact.bPlaytesterClosingPress);
 			Tester.bCourseCheck = !Tester.bOldCheck && (bEnvCourse || (!bEnvClosing && CfgSim && CfgSim->GetConfig().Contact.bPlaytesterCoursePress));
+			// Lane A184: the brace follows the rule's switch; JAM_PLAYTESTER_BRACE=off | always names a measurement's arm.
+			const char* BraceEnv = std::getenv("JAM_PLAYTESTER_BRACE");
+			Tester.BraceMode = (CfgSim && CfgSim->GetConfig().Contact.bCrossHold && CfgSim->GetConfig().Contact.bMomentum && CfgSim->GetConfig().Skater.bCheckEnabled) ? 1 : 0;   // only where the sim reads the hold
+			if (BraceEnv && std::strcmp(BraceEnv, "off") == 0) { Tester.BraceMode = 0; }
+			if (BraceEnv && std::strcmp(BraceEnv, "always") == 0) { Tester.BraceMode = 2; }
 			const char* ContestEnv = std::getenv("JAM_PLAYTESTER_CONTEST");   // lane A166: brake = the player obeys the contested-puck mark (a measurement's arm); absent = as shipped
 			Tester.bContestBrake = ContestEnv && std::strcmp(ContestEnv, "brake") == 0;
+			const char* StopMarkEnv = std::getenv("JAM_PLAYTESTER_STOPMARK");   // lane A178: brake = the player obeys the stop's line (a measurement's arm); absent = as shipped
+			Tester.bStopMarkStopOnly = StopMarkEnv && std::strcmp(StopMarkEnv, "stop") == 0;
+			const char* StopTowardEnv = std::getenv("JAM_PLAYTESTER_STOPMARK_DEFTOWARD");
+			Tester.StopDefTowardMps = StopTowardEnv ? std::atof(StopTowardEnv) : 0.0;
+			Tester.bStopMarkBrake = Tester.bStopMarkStopOnly || (StopMarkEnv && std::strcmp(StopMarkEnv, "brake") == 0);
 			const char* PokeEnv = std::getenv("JAM_PLAYTESTER_POKE");   // lane A152: read = the poke when it can land, old = the press as it was (measurement arms); absent = the config's switch
 			Tester.bPokeReadOn = PokeEnv ? std::strcmp(PokeEnv, "read") == 0 : (CfgSim && CfgSim->GetConfig().Stick.bPlaytesterPokeRead);
 			if (CfgSim && CfgSim->GetConfig().Stick.bPokeRulesOff) { Tester.bPokeReadOn = false; }   // the test seam: the press as it was
@@ -768,6 +817,8 @@ namespace JamAI
 		bool bWaitingTouch = Pi >= 0;
 		int LastLead = 0;
 		int PrevStumble = 0;   // lane A126
+		int PrevOwner = -1, PrevCarrier = -1;   // lane A177: the puck's owner (UJamSim::GetTakeOwner) and its carrier at the end of the frame before
+		int64_t OwnSince = 0;                   // ... and the frame count at which the human last won it
 		int DownRun06[kMaxSkaters * kMaxSkaters] = {}, DownRun09[kMaxSkaters * kMaxSkaters] = {};   // lane A157: [on its feet * kMaxSkaters + downed] frames in a row inside 0.6 m / 0.9 m
 		// Lane A157, measurement only (R-0060 point 4): JAM_PLAYTESTER_MASH=N makes the scripted human a masher: on top of its own presses it presses check
 		// every N frames, whatever it sees (the hand that holds the window open). Never set in a game or in the gate.
@@ -793,6 +844,15 @@ namespace JamAI
 			for (int i = 0; i < kMaxSkaters; ++i) { In[i] = FJamAIInput(); }
 			Brain.Think(W, In);
 			if (Pi >= 0 && Tester.bContestBrake) { const UJamSim* MarkSim = Sim.GetSim(); Tester.bContestedNow = MarkSim && JamCarrierMarks::Contested(*MarkSim, Pi).bOn; }   // lane A166
+			if (Pi >= 0 && Tester.bStopMarkBrake)   // lane A178
+			{
+				const UJamSim* MarkSim = Sim.GetSim();
+				JamCarrierMarks::FStopRule MarkRule;
+				MarkRule.DefTowardMps = Tester.StopDefTowardMps;
+				const JamCarrierMarks::FStopMark Mk = MarkSim ? JamCarrierMarks::StopMark(*MarkSim, Pi, MarkRule) : JamCarrierMarks::FStopMark();
+				Tester.bStopLitNow = Mk.bLit;
+				if (Mk.bLit && MarkSim->GetSkaters().IsValidIndex(Mk.Def)) { const FVector2D Dp = MarkSim->GetSkaters()[Mk.Def].Pos; Tester.StopDef = FVec2(Dp.X, Dp.Y); }
+			}
 			if (Pi >= 0) { In[Pi] = Tester.Think(W); ++St.Acts[static_cast<int>(Tester.LastAct())]; }
 			if (Pi >= 0 && MashPeriod > 0 && F >= NextMash)   // lane A157: the masher (measurement only); lane A165: with a jitter
 			{
@@ -900,6 +960,20 @@ namespace JamAI
 					if (W.Carrier < 0) { ++WinLoose; } else if (W.Skaters[W.Carrier].Team == W.Skaters[Pi].Team) { ++WinMate; } else { ++WinOpp; }
 				}
 			}
+			// Lane A184: the hits of this frame from the victims' read-outs (who hit, what kind, out of a brace)
+			if (const UJamSim* S = Sim.GetSim())
+			{
+				for (const FJamSkaterState& V : S->GetSkaters())
+				{
+					if (V.ContactOutcome < UJamSim::ContactStumble || V.ContactBy < 0) { continue; }
+					if (V.ContactBy == Pi)
+					{
+						if (V.bContactCross) { ++St.CrossLanded; if (V.bCrossBraceHit) { ++St.BraceLanded; } }
+						if (V.ContactOutcome == UJamSim::ContactDown) { ++St.KdGiven; }
+					}
+					else if (V.bContactCross) { ++St.BotCrossLanded; } else { ++St.BotChecksLanded; }
+				}
+			}
 			// the sim's own events: checks, knockdowns, fouls, pokes, lifts, passes of the human
 			if (const UJamSim* S = Sim.GetSim())
 			{
@@ -910,7 +984,17 @@ namespace JamAI
 					if (E.Who != Pi) { continue; }
 					if (E.Name == JamEvents::Ability) { if (E.Strength > 0.5f) { ++St.AbilitiesUsed; } continue; }
 					if (E.Name == JamEvents::Check) { ++St.ChecksLanded; }
-					else if (E.Name == JamEvents::Knockdown) { ++St.Knockdowns; if (E.Kind == KindCheck) { ++St.ChecksTaken; } }
+					else if (E.Name == JamEvents::Knockdown)
+					{
+						++St.Knockdowns; if (E.Kind == KindCheck) { ++St.ChecksTaken; }
+						// lane A177: what he held on the frame before the hit
+						if (PrevOwner == Pi && PrevCarrier == Pi)
+						{
+							const int64_t His = St.Frames - OwnSince;
+							if (His < 30) { ++St.KdWon; if (His <= 15) { ++St.KdWon15; } } else { ++St.KdCarry; }
+						}
+						else { ++St.KdNoPuck; }
+					}
 					else if (E.Name == JamEvents::Foul) { ++St.Fouls; if (E.Kind == KindFoulBehind) { ++St.FoulsFromBehind; } else { ++St.FoulsNoPuck; } }
 					else if (E.Name == JamEvents::Poke) { ++St.Pokes; if (E.Strength > 0.5f) { ++St.PokesClean; } }
 					else if (E.Name == JamEvents::Lift) { if (E.Strength > 0.5f) { ++St.Lifts; } }
@@ -921,6 +1005,13 @@ namespace JamAI
 				}
 				const TArray<FJamSkaterState>& Sk = S->GetSkaters();
 				if (Sk.IsValidIndex(Pi) && Sk[Pi].InBox()) { ++St.BoxFrames; }
+				// lane A177: the owner and the carrier for the next frame's knockdown; the human's frames on the ice and stumbling (play frames)
+				{
+					const int Ow = S->GetTakeOwner();
+					if (Ow == Pi && PrevOwner != Pi) { OwnSince = St.Frames; }
+					PrevOwner = Ow; PrevCarrier = (Sk.IsValidIndex(Pi) && Sk[Pi].bHasPuck) ? Pi : -1;   // the sim's own possession flag
+					if (bPlay && Sk.IsValidIndex(Pi)) { if (Sk[Pi].IsDown()) { ++St.HumanDownFrames; } else if (Sk[Pi].IsStumbling()) { ++St.HumanStumbleFrames; } }
+				}
 				if (Sk.IsValidIndex(Pi)) { if (Sk[Pi].bCheckThisFrame) { ++St.CheckPresses; } St.CheckWhiffs = Sk[Pi].ChecksMissed; }   // lane A151: read-outs
 				if (Sk.IsValidIndex(Pi)) { const int Sf = Sk[Pi].StumbleFrames; if (Sf > 0 && PrevStumble == 0) { ++St.Stumbles; } PrevStumble = Sf; }   // lane A126
 				// Lane A157 (track F1, evolution 6): the downed-body read-outs (B-to-A-0041 point 2) and the landed hits by where (item 4). Read-outs only.
@@ -979,6 +1070,8 @@ namespace JamAI
 			for (const FJamSkaterState& K : S->GetSkaters())
 			{
 				St.DownedPushFrames += K.DownedPushFrames;   // lane A157
+				if (K.Index == Pi) { St.ShieldHuman = K.ContactShielded; } else { St.ShieldBots += K.ContactShielded; }   // lane A177
+				if (K.Index == Pi) { St.BraceFrames = K.CrossBraceFrames; St.BraceHits = K.CrossBraceHits; } else { St.BotBraceHits += K.CrossBraceHits; }   // lane A184
 				if (K.Index == Pi) { St.RevBrakes = K.ReverseBrakes; St.CarrySprintFrames = K.CarrySprintFrames; St.Cuts = Tester.Cuts; St.ChecksCooling = K.ChecksCooling; St.LungesMissed = K.LungesMissed; }
 				else { St.BotRevBrakes += K.ReverseBrakes; St.BotCarrySprintFrames += K.CarrySprintFrames; St.BotChecksCooling += K.ChecksCooling; St.BotLungesMissed += K.LungesMissed; }
 			}
@@ -1025,6 +1118,10 @@ namespace JamAI
 		N += std::snprintf(Buf + N, static_cast<size_t>(BufLen - N), ",\"checks_cooling\":%d,\"lunges_missed\":%d,\"bot_check_presses\":%d,\"bot_checks_cooling\":%d,\"bot_lunges_missed\":%d",
 			S.ChecksCooling, S.LungesMissed, S.BotCheckPresses, S.BotChecksCooling, S.BotLungesMissed);
 		N += std::snprintf(Buf + N, static_cast<size_t>(BufLen - N), ",\"slams\":%d,\"slams_human\":%d,\"slam_down_frames\":%lld", S.Slams, S.SlamsHuman, static_cast<long long>(S.SlamDownFrames));   // lane A165
+		N += std::snprintf(Buf + N, static_cast<size_t>(BufLen - N), ",\"kd_won\":%d,\"kd_won15\":%d,\"kd_carry\":%d,\"kd_nopuck\":%d,\"human_down_frames\":%lld,\"human_stumble_frames\":%lld,\"shield_human\":%d,\"shield_bots\":%d",
+			S.KdWon, S.KdWon15, S.KdCarry, S.KdNoPuck, static_cast<long long>(S.HumanDownFrames), static_cast<long long>(S.HumanStumbleFrames), S.ShieldHuman, S.ShieldBots);   // lane A177
+		N += std::snprintf(Buf + N, static_cast<size_t>(BufLen - N), ",\"cross_landed\":%d,\"brace_landed\":%d,\"kd_given\":%d,\"brace_frames\":%d,\"brace_hits\":%d,\"bot_brace_hits\":%d,\"bot_cross_landed\":%d,\"bot_checks_landed\":%d",
+			S.CrossLanded, S.BraceLanded, S.KdGiven, S.BraceFrames, S.BraceHits, S.BotBraceHits, S.BotCrossLanded, S.BotChecksLanded);   // lane A184
 		static const char* ActNames[] = {"idle", "draw", "chase", "carry", "charge", "pass", "support", "forecheck", "poke", "check", "lapse", "one_timer", "deke", "sweep", "spin"};
 		N += std::snprintf(Buf + N, static_cast<size_t>(BufLen - N), ",\"acts\":{");
 		for (int a = 0; a < static_cast<int>(EPlaytesterAct::Count) && N < BufLen; ++a)
