@@ -1,0 +1,1 @@
+T_UI_MenuBackdrop as imported (candidate C): clay barn at rest, Rink map in PIE with every figure and the puck hidden, camera at centre ice behind the near boards (x 900, y -2300, 3.8 m up, pitch +3, yaw 90, FOV 90), exposure -0.5, vignette 0.6, white balance 5200 K, saturation 0.9 (camera post-process, unsaved). HighResShot 1920x1080.
