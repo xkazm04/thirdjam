@@ -21,7 +21,7 @@ bool FJamHudMarks::RunTest(const FString& Parameters)
 	TestTrue(TEXT("three breaths a second: readable inside a third of a second"), UJamHudWidget::MarkPulseFrames == 20);
 	// The sizes: the contested ring is wider than the carrier's (0.8 m) and the human's (1.1 m) rings; the lit stop mark is larger than the armed one.
 	TestTrue(TEXT("the contested puck's ring is larger than the rings under skaters"), UJamHudWidget::ContestRingRadiusM > UJamHudWidget::YouRingRadiusM && UJamHudWidget::ContestRingRadiusM > UJamHudWidget::CarrierRingRadiusM);
-	TestTrue(TEXT("the stop mark grows when it lights"), UJamHudWidget::StopMarkLitRadiusM > UJamHudWidget::StopMarkArmedRadiusM && UJamHudWidget::StopMarkArmedAlpha < 1.f);
+	TestTrue(TEXT("the stop mark grows when it lights (lane A171: a line that thickens, not a ring)"), UJamHudWidget::StopBarLitThickM > UJamHudWidget::StopBarArmedThickM && UJamHudWidget::StopBarLitMinPx > UJamHudWidget::StopBarArmedMinPx && UJamHudWidget::StopMarkArmedAlpha < 1.f);
 	// The stop mark stands inside the window it lights for.
 	{
 		const JamCarrierMarks::FStopRule K;

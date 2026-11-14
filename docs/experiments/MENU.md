@@ -315,3 +315,11 @@ A155's window read PLAY NOW at 960, 472 and PRO at 959, 551: the same places wit
 **For the operator's sheet:** *The first screen: Enter or A plays one match at the level that is lit; left and right (keys, D-pad or stick) change the
 level; a click on ROOKIE, PRO or ALL-STAR picks it and Enter still plays; Esc or B goes back from any other screen.*
 
+**Who each level is for (lane A176, the design review's item 5).** The line under the switch now opens with who the lit level is for, in the same
+widget, type and wrap, so nothing on the screen moves (`u2-stills.ps1 -Where` before and after: every place of all six screens identical at both
+sizes); PLAY NOW's caption is unchanged (*ONE MATCH, ROOKIE.*). No number in it, so the curve cannot make it stale (`Jam.Menu.FirstScreen` holds that):
+- rookie: *New to hockey games? Start here: rookies rarely hit.*
+- pro: *Played one before? Pros hit as a habit.*
+- all-star: *The wall. All-stars hunt the puck. Beat pro first.*
+These replace evolution 3's three lines in section 8 (which carried the ladder's numbers). Still: `img/a164/first-1080-rookie-who.png`.
+

@@ -138,3 +138,10 @@ repeats a machine run (up to `-Retries 2`, folders `<name>-t1`, `-t2`; `-Repeat 
 `tools/qa/accept/accept.ps1`, `accept.mjs`, `accept-cut.json`, `accept-cut-reach165.json`, `shipping-probe.ps1`; `Game/Source/JamGame/Private/HokejAcceptDrill.cpp` (new);
 `Game/Source/JamGame/Public/HokejGameMode.h` (two declarations); `Game/Source/JamGame/Private/HokejGameMode.cpp` (three hook lines and the cvar help: drill 20 keeps
 `ReadHumanInput`, the input hook after the A82 hand-puck block, the observe hook before `MechDrillObserve`; drills 7-11 untouched).
+
+## The frame is not black (lane A155, 14 Nov: the pixel row)
+H27 passed 19 of 19 verbs three times while every menu start drew a black world with only the HUD on top (the menu's second build: `ACCEPT-WINDOW.md`). The run now takes
+one `PrintWindow` still of the live window before it quits it (`accept.ps1`, `Finish`: event line `PIXEL lit= mean= file=`, still `pixel.png` in the run folder) and
+`accept.mjs` adds step `px`, verb `pixels`: **fail (exit 1) when the lit share (pixels above luminance 12 of 255) is under 0.20.** A rendered rink reads 0.99 / 148, the
+menu card 0.38, the black world with its HUD 0.01 / 0.5. No timing changes (after the last verb). `winhand.ps1` holds the window hand (`HW-Start`, `HW-Click`, `HW-Shot`,
+`HW-Pixels`, `HW-Console`, `HW-Close`); `menu-row.ps1`, `drills-row.ps1`, `look-row.ps1`, `shipping-play.ps1` use it.

@@ -142,6 +142,15 @@ struct JAMGAME_API FJamCameraSettings
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
 	float PitchCapDistM = 5.f;
 
+	// Lane A171 (track U1, evolution 6): the cap read a second time, from where the keep-human stage LEFT the camera's foot. Evolution 5's cap read the arm
+	// from the rig's foot, before that stage brought the foot in behind him: in a squeezed corner it saw more arm than there was and did not bite (sim frame
+	// 2280 of the standard match: 6.46 m up, pitch 62 degrees, with and without the cap). With this on, the height is taken down again to what the cap's pitch
+	// needs from the foot's final place: no lower than keeps PitchCapDistM to the chest, than the open-ice height, than the pitch needs to reach a skater
+	// behind the foot, than holds him across the frame as well as before; by at most KeepRiseM a frame. Height and pitch alone. false = evolution 5's cap
+	// (the settings default; the game: jam.camera.PitchCapAfter).
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jam|Camera")
+	bool bPitchCapAfterKeep = false;
+
 	// Lane A135, evolution 4 (the Director's order: "the yaw out of the hold"): the move input is read in the live camera's yaw, so a camera the hold turns
 	// turns W with it. With this on the hold is position, height and pitch alone: the slide is repeated against the boards' inset (a slide the glass stopped
 	// goes on along the glass), and what is still left is answered by the least step of the foot towards the point over the skater (from there he is always

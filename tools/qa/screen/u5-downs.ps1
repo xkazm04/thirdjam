@@ -21,6 +21,9 @@ param(
     [string]$ExtraCVars = '',
     [string]$RunName = '',
     [switch]$CamLog,
+    [int]$MarkStills = 0,          # lane A171: jam.hud.MarkStills N (lane A166's stills of the two ice marks, N frames into each showing)
+    [int]$CheckCooldown = 0,       # lane A171: game.contact.check_cooldown_frames for this run (0 = the cut's own: off)
+    [string]$GameKeys = '',        # lane A171: JSON put first inside the cut's "game" object, e.g. '"contact": { "check_cooldown_frames": 40 },'
     [int]$StartTimeoutSec = 900
 )
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..')).Path
@@ -29,6 +32,7 @@ $uproject = Resolve-UProject (Join-Path $root 'Game')
 $engine = Get-EngineRoot $uproject
 $exe = Join-Path $engine 'Engine\Binaries\Win64\UnrealEditor.exe'
 if (-not $uproject -or -not (Test-Path $exe)) { Write-Host "FAIL u5-downs: no project or no $exe"; exit 2 }
+if ($CheckCooldown -gt 0) { $GameKeys = '"contact": { "check_cooldown_frames": ' + $CheckCooldown + ' },' }
 $SeedList = @($Seeds.Split(',') | Where-Object { $_.Trim() } | ForEach-Object { [int]$_.Trim() })
 if ($StillEvery -gt 0 -and $SeedList.Count -ne 1) { Write-Host 'FAIL u5-downs: -StillEvery needs exactly one seed'; exit 2 }
 $name = if ($RunName) { $RunName } else { "downs-$Tier-$Mode" }
@@ -52,12 +56,14 @@ foreach ($seed in $SeedList) {
     New-Item -ItemType Directory -Force (Join-Path $dir 'shots') | Out-Null
     Get-ChildItem (Join-Path $dir 'shots') -Filter '*.png' -ErrorAction SilentlyContinue | Remove-Item -Force
     $cut = Join-Path $dir 'cut.json'
-    ($cutText -replace '"seed":\s*\d+', "`"seed`": $seed") | Set-Content $cut -Encoding utf8
+    $cutSeed = $cutText -replace '"seed":\s*\d+', "`"seed`": $seed"
+    if ($GameKeys) { $k = $cutSeed.IndexOf('"game": {'); if ($k -lt 0) { Write-Host 'FAIL u5-downs: the cut has no "game": { to put -GameKeys in'; exit 2 }; $cutSeed = $cutSeed.Insert($k + 9, "`n    $GameKeys") }
+    [IO.File]::WriteAllText($cut, $cutSeed, (New-Object Text.UTF8Encoding($false)))
     $log = Join-Path $dir 'game.log'
     Remove-Item $log -ErrorAction SilentlyContinue
     $marker = "u5run=$name-seed$seed-$PID"
     $a = "`"$uproject`" /Game/Maps/Rink -game -RenderOffScreen -Multiprocess -ResX=$ResX -ResY=$ResY -ForceRes -unattended -nosplash -nosound -log -abslog=`"$log`" -ForceLogFlush " +
-         "-cut=$($cut.Replace('\', '/')) -dpcvars=$cvars,jam.hud.DownStillTag=$tag -$marker"
+         "-cut=$($cut.Replace('\', '/')) -dpcvars=$cvars,jam.hud.DownStillTag=$tag$(if ($MarkStills -gt 0) { ",jam.hud.MarkStills=$MarkStills,jam.hud.MarkStillTag=$tierId-$tag" }) -$marker"
     $p = Start-Process -FilePath $exe -ArgumentList $a -PassThru -WindowStyle Hidden
     $runs += [pscustomobject]@{ seed = $seed; tag = $tag; dir = $dir; log = $log; marker = $marker; p = $p; start = $p.StartTime; built = $false; builtAt = 0.0 }
     Write-Host ("{0,7:n1}s  started seed {1} pid {2} ({3} {4})" -f $sw.Elapsed.TotalSeconds, $seed, $p.Id, $tierId, $Mode)
@@ -102,7 +108,7 @@ foreach ($r in $runs) {
     $glog = Join-Path $r.dir 'game.log'
     $lines = Select-String -Path $glog -Pattern 'JAMSCREEN down who=' | ForEach-Object { $_.Line -replace '^.*JAMSCREEN down ', '' }
     $lines | Set-Content (Join-Path $r.dir 'downs.txt')
-    Select-String -Path $glog -Pattern 'JAMSCREEN downs |JAMSCREEN camera|JAMSCREEN marker|JAMSIM frame=|JAMLOOK tier=|JAMCUT rejected|JAMMATCH level' | ForEach-Object { $_.Line -replace '^\[[^\]]*\]\[[^\]]*\]', '' } | Set-Content (Join-Path $r.dir 'sim-lines.txt')
+    Select-String -Path $glog -Pattern 'JAMSCREEN downs |JAMSCREEN camera|JAMSCREEN marker|JAMSIM frame=|JAMLOOK tier=|JAMCUT rejected|JAMMATCH level|JAMHUD frame=\d+ (mark|contact_line|cue|mark_still)' | ForEach-Object { $_.Line -replace '^\[[^\]]*\]\[[^\]]*\]', '' } | Set-Content (Join-Path $r.dir 'sim-lines.txt')
     $h = 0; $hc = 0
     foreach ($l in $lines) {
         if ($l -notmatch 'who=(\d+) human=(\d) start=(\d+) end=(\d+) seen=(\d+) hit_frames=(\d+) by=(\S+)') { continue }
@@ -114,7 +120,7 @@ foreach ($r in $runs) {
     $n = 0
     Get-ChildItem $shotDir -Filter "u1-*$tierId*.png" -ErrorAction SilentlyContinue | Where-Object { $_.LastWriteTime -ge $r.start } | ForEach-Object {
         # a knockdown still carries its process's tag (jam.hud.DownStillTag); a periodic still belongs to the one seed of the run
-        $mine = if ($_.Name -like 'u1-down-*') { $_.Name -like "u1-down-$tierId-$($r.tag)-f*" } else { $SeedList.Count -eq 1 }
+        $mine = if ($_.Name -like 'u1-down-*') { $_.Name -like "u1-down-$tierId-$($r.tag)-f*" } elseif ($_.Name -like 'u1-mark-*') { $_.Name -like "u1-mark-$tierId-$($r.tag)-*" } else { $SeedList.Count -eq 1 }
         if ($mine) { Copy-Item $_.FullName (Join-Path $r.dir "shots\$($_.Name)") -Force; $n++ }
     }
     $sum += "seed $($r.seed): the human down $h times, $hc with no HUD element over him; $n stills; built=$($r.built) exit=$($r.p.HasExited)"

@@ -50,6 +50,8 @@ static TAutoConsoleVariable<float> CVarJamCameraKeepNet(TEXT("jam.camera.KeepNet
 // Lane A158 (track U1, evolution 5): the pitch cap (FJamCameraSettings::PitchCapDeg). 0 = off, the camera of before.
 static TAutoConsoleVariable<float> CVarJamCameraPitchCap(TEXT("jam.camera.PitchCap"), 55.f,
 	TEXT("Degrees under the horizon the camera looks down at most where the boards take its arm (a corner is not seen from straight above): the crane gives only the height that pitch allows, never nearer to the chest than jam.camera.PitchCapDist, never under the open-ice height. 0 = off (the camera of before). Presentation only."), ECVF_Default);
+static TAutoConsoleVariable<int32> CVarJamCameraPitchCapAfter(TEXT("jam.camera.PitchCapAfter"), 0,
+	TEXT("0 (default until measured in the game: it follows the package): evolution 5's cap. 1: the pitch cap is read a second time from where the keep-human stage left the camera's foot (it bites in a squeezed corner); 0: evolution 5's cap. Presentation only."), ECVF_Default);
 static TAutoConsoleVariable<float> CVarJamCameraPitchCapDist(TEXT("jam.camera.PitchCapDist"), 5.f,
 	TEXT("Metres: the nearest the pitch cap brings the camera to the human's chest (5 default)."), ECVF_Default);
 static TAutoConsoleVariable<int32> CVarJamCameraProbe(TEXT("jam.camera.Probe"), 0,
@@ -525,6 +527,32 @@ void UJamFollowCamera::KeepHumanInFrame(const FJamCameraSettings& C, const FJamC
 		const double Depth = F * FMath::Cos(Th) + Z * FMath::Sin(Th);
 		return Depth > 1e-3 ? FMath::Abs(R) / (Depth * TanH) : 9.0;
 	};
+	// Evolution 6 (lane A171): the pitch cap, read again from the foot's final place (see bPitchCapAfterKeep).
+	if (C.PitchCapDeg > 0.f && C.bPitchCapAfterKeep)
+	{
+		const double Y0 = FMath::DegreesToRadians((double)InOutYawDeg);
+		const double Ahead = To.X * FMath::Cos(Y0) + To.Y * FMath::Sin(Y0);
+		const double ZCap = FMath::Max(Ahead, 0.0) * FMath::Tan(FMath::DegreesToRadians(FMath::Min((double)C.PitchCapDeg + EdgeDeg, 89.0)));
+		const double ZNear = FMath::Sqrt(FMath::Max((double)C.PitchCapDistM * C.PitchCapDistM - To.SizeSquared(), 0.0));
+		const double ZRig = FMath::Max((double)C.HeightM - C.ChestM, 0.5);
+		const double ZReach = Ahead < 0.0 ? -Ahead / Reach : 0.0;   // a skater behind the foot: the height the pitch needs to reach him at all
+		double HWant = (double)C.ChestM + FMath::Max(FMath::Max3(ZCap, ZNear, ZRig), ZReach);
+		if (PrevHeightM > 0.f && C.KeepRiseM > 0.f) HWant = FMath::Max(HWant, (double)PrevHeightM - C.KeepRiseM);
+		if (HWant < H - 1e-6)
+		{
+			// Lower only as far as he is held across the frame as well as he was (a lower camera is nearer: the same offset is a larger share of the frame).
+			const double HOld = H;
+			double DownTmp = 0.0;
+			const double Share = FMath::Max(Across(InOutYawDeg, DownTmp), Frac);
+			auto Holds = [&](double Hh) { H = Hh; Z = FMath::Max(Hh - C.ChestM, 0.5); double D = 0.0; return Across(InOutYawDeg, D) <= Share + 1e-9; };
+			if (!Holds(HWant))
+			{
+				double Lo = HWant, Hi = HOld;
+				for (int32 i = 0; i < 12; ++i) { const double Mid = 0.5 * (Lo + Hi); if (Holds(Mid)) Hi = Mid; else Lo = Mid; }
+				Holds(Hi);
+			}
+		}
+	}
 	// The yaw, last: the largest share of the yaw's angle off the bearing to the chest that still holds him (looking straight along the bearing he is at
 	// the centre; 20 halvings).
 	double Yaw = InOutYawDeg, Down = Down1;
@@ -893,6 +921,7 @@ void UJamFollowCamera::StepSimFrame(const FJamPresentationFrame& Frame)
 			Live.KeepNetFrac = FMath::Clamp(CVarJamCameraKeepNet.GetValueOnGameThread(), 0.f, 1.f);              // evolution 4
 			Live.PitchCapDeg = FMath::Clamp(CVarJamCameraPitchCap.GetValueOnGameThread(), 0.f, 89.f);            // lane A158, evolution 5
 			Live.PitchCapDistM = FMath::Clamp(CVarJamCameraPitchCapDist.GetValueOnGameThread(), 2.f, 12.f);
+			Live.bPitchCapAfterKeep = CVarJamCameraPitchCapAfter.GetValueOnGameThread() != 0;                    // lane A171, evolution 6
 			if (GEngine && GEngine->GameViewport && GEngine->GameViewport->Viewport)
 			{
 				const FIntPoint Sz = GEngine->GameViewport->Viewport->GetSizeXY();

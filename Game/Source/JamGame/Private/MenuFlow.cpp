@@ -403,9 +403,11 @@ FString UJamMenuFlow::FirstMatchLine(const FString& Level)
 
 FString UJamMenuFlow::LevelMeaning(const FString& Level)
 {
-	if (Level == TEXT("rookie")) return TEXT("Rookies rarely hit. Learn the hits here: a first-timer wins most nights.");
-	if (Level == TEXT("all_star")) return TEXT("All-stars hunt whoever has the puck. A good player wins one night in four.");
-	return TEXT("Pros hit as a habit. Even odds for a regular.");
+	// Lane A176: who each level is for, in one line (the design review: a regular player cleans up rookie, a newcomer is buried at pro, and the first
+	// PLAY NOW is rookie with nothing saying it is the newcomer's level). No number that the curve could make stale.
+	if (Level == TEXT("rookie")) return TEXT("New to hockey games? Start here: rookies rarely hit.");
+	if (Level == TEXT("all_star")) return TEXT("The wall. All-stars hunt the puck. Beat pro first.");
+	return TEXT("Played one before? Pros hit as a habit.");
 }
 
 FString UJamMenuFlow::CutLevel(const UJamCartridge& C)
