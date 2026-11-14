@@ -13,6 +13,8 @@
 #include "HokejGameMode.h"
 #include "BarkWidget.h"
 #include "DirectorsCallWidget.h"
+#include "JamSim.h"
+#include "JamCartridge.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
 
@@ -580,6 +582,12 @@ bool FJamHudRules::RunTest(const FString&)
 	TestFalse(TEXT("no hint once spent"), UJamHudWidget::ShowControlsHintLive(F, true, false));
 	TestTrue(TEXT("every match: the neutral value"), UJamHudWidget::ShowControlsHintLive(F, true, true));
 	TestTrue(TEXT("the hint names the brake"), UJamHudWidget::ControlsHintText().Contains(TEXT("BRAKE")));
+	// Lane A171 (REVIEW-3 item 8): the poke and the ability are in the first strip, by the keys the input map binds.
+	TestTrue(TEXT("the hint names the poke and its key"), UJamHudWidget::ControlsHintText().Contains(TEXT("POKE  SPACE")));
+	TestTrue(TEXT("the hint names the ability and its key"), UJamHudWidget::ControlsHintText().Contains(TEXT("ABILITY  F")));
+	TestTrue(TEXT("every verb of before is still in it"), UJamHudWidget::ControlsHintText().Contains(TEXT("SKATE  WASD")) && UJamHudWidget::ControlsHintText().Contains(TEXT("AIM  MOUSE"))
+		&& UJamHudWidget::ControlsHintText().Contains(TEXT("SHOOT  HOLD LMB")) && UJamHudWidget::ControlsHintText().Contains(TEXT("PASS  Q")) && UJamHudWidget::ControlsHintText().Contains(TEXT("CHECK  RMB"))
+		&& UJamHudWidget::ControlsHintText().Contains(TEXT("SPRINT  SHIFT")));
 	TestTrue(TEXT("the hint is shorter than the ten-verb line (146 characters)"), UJamHudWidget::ControlsHintText().Len() < 146);
 	TestEqual(TEXT("the hint window is 8 s"), UJamHudWidget::ControlsHintFrames, static_cast<int64>(480));
 	// The marker over the human: always on; off, lane A42's fade rule.
@@ -963,6 +971,26 @@ bool FJamCameraKeepsHuman::RunTest(const FString&)
 	for (const FRinkCase& K : { FRinkCase{ TEXT("90 m"), 90.f, 45.f, 3.75f, 135 }, FRinkCase{ TEXT("140 m"), 140.f, 70.f, 5.83f, 136 }, FRinkCase{ TEXT("120 m, 8.5 m arcs"), 120.f, 60.f, 8.5f, 137 } })
 	{
 		const FRun B = Skate(K.L, K.W, K.R, K.Seed, On);
+		// Lane A171 (evolution 6): the cap read again from the foot's final place, beside evolution 5's cap at 55.
+		{
+			FJamCameraSettings Ev5 = On;
+			Ev5.PitchCapDeg = 55.f;
+			FJamCameraSettings After = Ev5;
+			After.bPitchCapAfterKeep = true;
+			const FRun E = Skate(K.L, K.W, K.R, K.Seed, Ev5), R = Skate(K.L, K.W, K.R, K.Seed, After);
+			int32 YawDiff = 0;
+			for (int32 i = 0; i < R.Yaw.Num(); ++i) if (FMath::Abs(FMath::UnwindDegrees(R.Yaw[i] - B.Yaw[i])) > 0.01f) ++YawDiff;
+			AddInfo(FString::Printf(TEXT("JAMSCREEN pitchcap-after %s cap 55, no cap -> evolution 5 -> read after the stage: frames steeper than 55.5 deg %d -> %d -> %d, than 60 deg %d -> %d -> %d, than 70 deg %d -> %d -> %d; steepest %.1f -> %.1f -> %.1f deg; highest %.2f -> %.2f -> %.2f m; nearest to the chest %.2f -> %.2f -> %.2f m (frames under 4.99 m: %d -> %d -> %d); chest outside the middle third %d -> %d -> %d (outside the frame %d, largest %.3f, %.3f); yaw not the yaw without the cap on %d frames; largest step a frame: camera %.0f -> %.0f -> %.0f cm, pitch %.2f -> %.2f -> %.2f deg"),
+				K.Name, B.Over55, E.Over55, R.Over55, B.Over60, E.Over60, R.Over60, B.Over70, E.Over70, R.Over70, B.MaxDown, E.MaxDown, R.MaxDown, B.MaxH, E.MaxH, R.MaxH, B.MinDistM, E.MinDistM, R.MinDistM,
+				B.Near5, E.Near5, R.Near5, B.OutThird, E.OutThird, R.OutThird, R.OutFrame, R.MaxX, R.MaxY, YawDiff, B.MaxStepCm, E.MaxStepCm, R.MaxStepCm, B.MaxPitchStep, E.MaxPitchStep, R.MaxPitchStep));
+			TestEqual(FString::Printf(TEXT("%s, the cap read after the stage: frames whose yaw is not the yaw without the cap"), K.Name), YawDiff, 0);
+			TestEqual(FString::Printf(TEXT("%s, the cap read after the stage: frames with the chest outside the frame"), K.Name), R.OutFrame, 0);
+			TestEqual(FString::Printf(TEXT("%s, the cap read after the stage: the camera never crosses the boards' inset"), K.Name), R.OutsideBoards, 0);
+			TestTrue(FString::Printf(TEXT("%s, the cap read after the stage: no more frames steeper than 60 degrees than evolution 5's cap (%d, %d)"), K.Name, R.Over60, E.Over60), R.Over60 <= E.Over60);
+			TestTrue(FString::Printf(TEXT("%s, the cap read after the stage: he is held as without the cap (outside the middle third on %d frames, %d without)"), K.Name, R.OutThird, B.OutThird), R.OutThird <= FMath::Max(B.OutThird + 4, 20) && R.OutThird <= 24);
+			TestTrue(FString::Printf(TEXT("%s, the cap read after the stage: no snap (camera %.0f cm, pitch %.2f deg a frame)"), K.Name, R.MaxStepCm, R.MaxPitchStep), R.MaxStepCm <= 150.f && R.MaxPitchStep <= 15.f);
+			TestTrue(FString::Printf(TEXT("%s, the cap read after the stage: the camera is never higher than with evolution 5's cap (%.2f, %.2f m)"), K.Name, R.MaxH, E.MaxH), R.MaxH <= E.MaxH + 0.01f);
+		}
 		for (const float Cap : { 50.f, 55.f, 60.f })
 		{
 			FJamCameraSettings Capped = On;
@@ -1070,6 +1098,144 @@ bool FJamHudPuckPostFlat::RunTest(const FString&)
 	IConsoleVariable* Dump = IConsoleManager::Get().FindConsoleVariable(TEXT("jam.hud.NearPuck"));
 	TestNotNull(TEXT("jam.hud.NearPuck exists"), Dump);
 	if (Dump) TestEqual(TEXT("the proof's dump is off by default"), Dump->GetInt(), 0);
+	return true;
+}
+
+// ---- lane A171 (track U1, evolution 6): TOO SOON, and the last overlaps. Pure rules and a staged sim, no world.
+//   Jam.Hud.TooSoon     the contact line's word for a press the check cooldown dropped, where it stands among the others, and on the sim with
+//                       game.contact.check_cooldown_frames on: a mashed button raises the read-out the line reads; with the key off (as shipped) never.
+//   Jam.Hud.ClearEdges  the caption's row under the scoreboard (clear of the MATCH card, the prompt, a net's pill), the prompt under the card, the
+//                       own-net marker above the radar; the marks' pad over a downed figure.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamHudTooSoon, "Jam.Hud.TooSoon", EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+bool FJamHudTooSoon::RunTest(const FString&)
+{
+	// The word and its place: after everything that landed or was refused, before MISSED.
+	TestEqual(TEXT("a press the cooldown dropped"), UJamHudWidget::ContactLineFor(false, false, false, false, false, true), FString(TEXT("TOO SOON")));
+	TestEqual(TEXT("with the last window running out on the same frame: the press he just made"), UJamHudWidget::ContactLineFor(false, false, false, true, false, true), FString(TEXT("TOO SOON")));
+	TestEqual(TEXT("a soft hit on the same frame wins"), UJamHudWidget::ContactLineFor(false, false, true, false, false, true), FString(TEXT("TOO SOFT")));
+	TestEqual(TEXT("a refused press wins"), UJamHudWidget::ContactLineFor(true, false, false, false, false, true), FString(TEXT("NOT WITH THE PUCK")));
+	TestEqual(TEXT("his own bounce wins"), UJamHudWidget::ContactLineFor(false, true, false, false, false, true), FString(TEXT("BOUNCED OFF")));
+	TestEqual(TEXT("the grace wins"), UJamHudWidget::ContactLineFor(false, false, false, false, true, true), FString(TEXT("JUST GOT UP")));
+	TestEqual(TEXT("the lines of before are the lines of before"), UJamHudWidget::ContactLineFor(false, false, false, true), FString(TEXT("MISSED")));
+	TestTrue(TEXT("nothing: no line"), UJamHudWidget::ContactLineFor(false, false, false, false, false, false).IsEmpty());
+
+	// The read-out the line reads, on the sim: the human stands alone in open ice and presses check every 12 frames for 60 frames.
+	TArray<FString> Errors;
+	UJamCartridge* C = UJamCartridge::LoadFromFile(UJamCartridge::ResolveCartridgePath(TEXT("hockey.regular")), Errors);
+	for (const FString& E : Errors) AddError(E);
+	if (!C) return false;
+	TestEqual(TEXT("hockey.regular ships the cooldown off (the line cannot show in the shipped game)"), C->Game.Contact.CheckCooldownFrames, 0);
+	auto Mash = [&](int32 Cooldown, bool bRestart, int32& OutLines) -> int32
+	{
+		FJamGameConfig G = C->Game;
+		G.Contact.CheckCooldownFrames = Cooldown;
+		G.Contact.bCheckCooldownRestart = bRestart;
+		UJamSim* Sim = NewObject<UJamSim>();
+		Sim->Init(G, 1);
+		Sim->SkipFaceoff();
+		const int32 Me = Sim->GetHumanIndex();
+		const int32 N = Sim->GetSkaters().Num();
+		for (int32 i = 0; i < N; ++i) Sim->SetSkater(i, FVector2D(-40.0 + i * 1.5, 19.0), FVector2D::ZeroVector, 0);   // everybody else lined up far away
+		Sim->SetSkater(Me, FVector2D(10.0, -10.0), FVector2D::ZeroVector, 0);
+		Sim->SetPuck(FVector2D(-30.0, -15.0), FVector2D::ZeroVector);
+		// The HUD's own rule, frame by frame: a line when the counter rises (UpdateContactLine's ContactSeenCooling).
+		int32 Seen = 0;
+		OutLines = 0;
+		for (int32 F = 0; F < 60; ++F)
+		{
+			TArray<FJamInput> In;
+			In.SetNum(N);
+			In[Me].bCheck = F % 12 == 0;
+			Sim->Step(In);
+			const FJamSkaterState& Hu = Sim->GetSkaters()[Me];
+			const bool bCooling = Hu.ChecksCooling > Seen;
+			Seen = Hu.ChecksCooling;
+			if (UJamHudWidget::ContactLineFor(false, false, false, false, false, bCooling) == TEXT("TOO SOON")) ++OutLines;
+		}
+		return Sim->GetSkaters()[Me].ChecksCooling;
+	};
+	int32 LinesOff = 0, Lines40 = 0, LinesRestart = 0;
+	const int32 Off = Mash(0, false, LinesOff), On40 = Mash(40, false, Lines40), Restart = Mash(36, true, LinesRestart);
+	AddInfo(FString::Printf(TEXT("JAMSCREEN toosoon five presses 12 frames apart: the cooldown dropped %d with the key off, %d at check_cooldown_frames 40 (TOO SOON lines %d), %d at 36 with check_cooldown_restart (lines %d)"),
+		Off, On40, Lines40, Restart, LinesRestart));
+	TestEqual(TEXT("the key off (as shipped): no press is dropped"), Off, 0);
+	TestEqual(TEXT("the key off: no TOO SOON line"), LinesOff, 0);
+	TestTrue(FString::Printf(TEXT("check_cooldown_frames 40: the mash has presses dropped (%d)"), On40), On40 >= 2);
+	TestEqual(TEXT("one TOO SOON line a dropped press"), Lines40, On40);
+	TestTrue(FString::Printf(TEXT("check_cooldown_restart: every press after the first is dropped (%d of 4)"), Restart), Restart == 4 && LinesRestart == 4);
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJamHudClearEdges, "Jam.Hud.ClearEdges", EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::ProductFilter)
+bool FJamHudClearEdges::RunTest(const FString&)
+{
+	TestFalse(TEXT("the rule is off by default (it follows the package; one number turns it on)"), UJamHudWidget::ClearEdgesOn());
+	const float VW = 1920.f, VH = 1080.f, Top = UJamHudWidget::PromptSlotY, H = 44.f, X0 = 660.f, X1 = 1260.f, Gap = 8.f, MaxY = VH / 3.f;
+	// The caption's row under the scoreboard.
+	{
+		TArray<FBox2D> None;
+		TestEqual(TEXT("an empty band: the first row"), UJamHudWidget::FirstClearY(Top, H, X0, X1, None, Gap, MaxY), Top);
+		// The far net's distance pill straight ahead (the window lane's 081-knock: "49 m" under "Flattened!").
+		TArray<FBox2D> Pill = { FBox2D(FVector2D(960, 128), FVector2D(1050, 164)) };
+		const float UnderPill = UJamHudWidget::FirstClearY(Top, H, X0, X1, Pill, Gap, MaxY);
+		TestEqual(TEXT("a net's pill in the first row: the row under it"), UnderPill, 172.f);
+		TestEqual(TEXT("the row it took is kept while it is clear (the same answer from there)"), UJamHudWidget::FirstClearY(UnderPill, H, X0, X1, Pill, Gap, MaxY), UnderPill);
+		TArray<FBox2D> PillAside = { FBox2D(FVector2D(1400, 128), FVector2D(1490, 164)) };
+		TestEqual(TEXT("a pill beside the row: the first row"), UJamHudWidget::FirstClearY(Top, H, X0, X1, PillAside, Gap, MaxY), Top);
+		// The MATCH card (its band 121..295) with the prompt in the row under it.
+		float BandTop = 0.f, BandBottom = 0.f;
+		UJamDirectorsCallHudWidget::BannerBandPx(VH, BandTop, BandBottom);
+		TArray<FBox2D> Card = { FBox2D(FVector2D(VW * 0.5f - 232.f, BandTop), FVector2D(VW * 0.5f + 232.f, BandBottom)) };
+		const float UnderCard = UJamHudWidget::FirstClearY(Top, H, X0, X1, Card, Gap, MaxY);
+		TestEqual(TEXT("the MATCH card up: the row under its band"), UnderCard, BandBottom + Gap);
+		TestTrue(TEXT("that row ends above the middle third"), UnderCard + H <= MaxY);
+		Card.Add(FBox2D(FVector2D(700, BandBottom + 8.f), FVector2D(1220, BandBottom + 8.f + UJamHudWidget::PromptSlotH)));
+		TestEqual(TEXT("the card and the prompt under it: no row above the middle third (the caption keeps its dock or is not drawn)"), UJamHudWidget::FirstClearY(Top, H, X0, X1, Card, Gap, MaxY), -1.f);
+		// Two things stacked: the answer clears both whatever their order.
+		TArray<FBox2D> Two = { FBox2D(FVector2D(900, 160), FVector2D(1000, 200)), FBox2D(FVector2D(800, 110), FVector2D(1100, 156)) };
+		TestEqual(TEXT("a pill under a prompt: under both"), UJamHudWidget::FirstClearY(Top, H, X0, X1, Two, Gap, MaxY), 208.f);
+	}
+	// The prompt under the MATCH card.
+	{
+		float BandTop = 0.f, BandBottom = 0.f;
+		UJamDirectorsCallHudWidget::BannerBandPx(VH, BandTop, BandBottom);
+		TestEqual(TEXT("the prompt's first row lies in the card's band: under the band"), UJamHudWidget::UnderBand(UJamHudWidget::PromptSlotY, UJamHudWidget::PromptSlotH, BandTop, BandBottom), BandBottom + 8.f);
+		TestEqual(TEXT("its lower row too"), UJamHudWidget::UnderBand(UJamHudWidget::PromptSlotLowY, UJamHudWidget::PromptSlotH, BandTop, BandBottom), BandBottom + 8.f);
+		TestTrue(TEXT("under the band is above the middle third"), BandBottom + 8.f + UJamHudWidget::PromptSlotH <= VH / 3.f);
+		TestEqual(TEXT("a row clear of the band stays"), UJamHudWidget::UnderBand(320.f, UJamHudWidget::PromptSlotH, BandTop, BandBottom), 320.f);
+	}
+	// The own-net marker above the radar and the ability plate.
+	{
+		const FVector2D InCorner = UJamHudWidget::KeepOffRadar(FVector2D(VW - 88.f, VH - 104.f), VW, VH, 60.f, 40.f);
+		TestTrue(FString::Printf(TEXT("a marker in the bottom right corner is lifted: its label ends above the ability plate (y %.0f)"), InCorner.Y), InCorner.Y + 40.f <= VH - 240.f && InCorner.X == VW - 88.f);
+		const FVector2D Left = FVector2D(88.f, VH - 104.f);
+		TestTrue(TEXT("the bottom left corner is not the radar's"), UJamHudWidget::KeepOffRadar(Left, VW, VH, 60.f, 40.f) == Left);
+		const FVector2D High = FVector2D(VW - 88.f, 500.f);
+		TestTrue(TEXT("the right edge above the corner is free"), UJamHudWidget::KeepOffRadar(High, VW, VH, 60.f, 40.f) == High);
+		const FVector2D Mid = FVector2D(VW - 500.f, VH - 104.f);
+		TestTrue(TEXT("the bottom edge left of the plate is free"), UJamHudWidget::KeepOffRadar(Mid, VW, VH, 60.f, 40.f) == Mid);
+	}
+	// The stop's line on the screen (lane A171): its length, its thickness across itself and never under the minimum, its turn, the box it covers.
+	{
+		FVector2D C, Sz, Min, Max;
+		float Deg = 0.f;
+		TestTrue(TEXT("a line lying level"), UJamHudWidget::StopBarLayout(FVector2D(400, 300), FVector2D(600, 300), FVector2D(500, 294), FVector2D(500, 306), 4.f, C, Sz, Deg, Min, Max));
+		TestTrue(FString::Printf(TEXT("level: 200 long, 12 thick, not turned, its box 400..600 x 294..306 (%.0f x %.0f, %.1f deg)"), Sz.X, Sz.Y, Deg),
+			FMath::IsNearlyEqual(Sz.X, 200.0, 0.01) && FMath::IsNearlyEqual(Sz.Y, 12.0, 0.01) && FMath::IsNearlyZero(Deg, 0.01f) && C.Equals(FVector2D(500, 300), 0.01) && Min.Equals(FVector2D(400, 294), 0.01) && Max.Equals(FVector2D(600, 306), 0.01));
+		TestTrue(TEXT("a far line (its thickness a pixel on the screen)"), UJamHudWidget::StopBarLayout(FVector2D(400, 300), FVector2D(600, 300), FVector2D(500, 299.5), FVector2D(500, 300.5), 4.f, C, Sz, Deg, Min, Max));
+		TestEqual(TEXT("... is never thinner than the minimum"), static_cast<float>(Sz.Y), 4.f);
+		TestTrue(TEXT("a line seen at a slant"), UJamHudWidget::StopBarLayout(FVector2D(400, 300), FVector2D(500, 400), FVector2D(445, 355), FVector2D(455, 345), 4.f, C, Sz, Deg, Min, Max));
+		TestTrue(FString::Printf(TEXT("slanted: turned 45 degrees, 141 long, 14 thick (%.1f deg, %.1f x %.1f)"), Deg, Sz.X, Sz.Y), FMath::IsNearlyEqual(Deg, 45.f, 0.01f) && FMath::IsNearlyEqual(Sz.X, 141.42, 0.01) && FMath::IsNearlyEqual(Sz.Y, 14.14, 0.01));
+		TestTrue(TEXT("... and its box holds both ends and the thickness"), Min.X < 400.0 && Min.Y < 300.0 && Max.X > 500.0 && Max.Y > 400.0 && Max.X - Min.X < 112.0);
+		TestFalse(TEXT("a line with no length is not drawn"), UJamHudWidget::StopBarLayout(FVector2D(400, 300), FVector2D(400.2, 300), FVector2D(400, 299), FVector2D(400, 301), 4.f, C, Sz, Deg, Min, Max));
+		TestTrue(TEXT("two stick lengths wide in all; lit it is thicker than armed"), UJamHudWidget::StopBarHalfWidthM * 2.f == 3.2f && UJamHudWidget::StopBarLitThickM > UJamHudWidget::StopBarArmedThickM);
+	}
+	// The marks yield to the same boxes as the markers, with the markers' pad (lane A166's rings; lane A158's boxes).
+	{
+		TArray<FBox2D> Down = { FBox2D(FVector2D(200, 100), FVector2D(300, 160)) };
+		TestTrue(TEXT("a mark 10 px from a downed figure's box is not drawn (the pad is 16)"), UJamHudWidget::MarkMeetsDown(FVector2D(100, 100), FVector2D(190, 150), Down, UJamHudWidget::MarkDownPadPx));
+		TestFalse(TEXT("20 px away: drawn"), UJamHudWidget::MarkMeetsDown(FVector2D(100, 100), FVector2D(180, 150), Down, UJamHudWidget::MarkDownPadPx));
+	}
 	return true;
 }
 

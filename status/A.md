@@ -448,3 +448,4 @@
 - link green 05:57: main ca493723 (Rules that wait switched off, measured for the operator's answers: a mashed check lands no) pushed.
 - link green 06:07: main 2d159065 (The stop mark lights where the stop works (Director, from REVIEW-3's sweep), and the play ) pushed.
 - package 06:27: `Hokej_Hokej_H29.zip` from main 2d159065, acceptance run green (18 verbs through the cursor and the buttons).
+- link green 06:44: main d896a87f (The level switch says who each level is for (A176), the design eye's third review (A169), ) pushed.

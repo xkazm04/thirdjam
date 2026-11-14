@@ -23,7 +23,13 @@ namespace JamCarrierMarks
 		double TowardMps = 3.0;        // the puck and each of the two close at this pace or more
 		double OppEarlySec = 0.25;     // the opponent is there no more than this before him (earlier: it is the opponent's puck and the human is the hitter)
 		double OppLateSec = 0.6;       // ... and no more than this after him
-		double ClosingMps = 8.0;       // the two close on each other at this pace or more (head-on, not side by side)
+		double ClosingMps = 12.0;      // the two close on each other at this pace or more (head-on, not side by side). Director, 14 Nov, from REVIEW-3's
+		                               // sweep by JAM_MARK_RULE (closing=12;stopclosing=8): it was 8, and the ring showed 18.6 / 19.3 / 29.4 times a match
+		                               // (rookie / pro / all_star) for 2.85 knockdowns at rookie, right 15.6 % of the time there; at 12: 11.4 / 13.4 / 22.6,
+		                               // recall down 6 to 8 points.
+		int32 AfterDropFrames = 0;     // 0 = off (the Director, 06:45: lane A171 measured the quiet second: at rookie it takes 0.3 rings a match, at pro it takes 206 of the 316
+		                               // knockdowns the ring precedes: he is flattened as he wins the draw. The rule stays, off.) Was 60: REVIEW-3 item 1: no ring for this long after a faceoff's drop: it lit in the second after
+		                               // most draws the human won (two centres head-on at the puck is every draw, not a warning). 0 = as before.
 	};
 	struct FContested
 	{
@@ -49,6 +55,7 @@ namespace JamCarrierMarks
 		FContested R;
 		const TArray<FJamSkaterState>& Sk = Sim.GetSkaters();
 		if (!Sk.IsValidIndex(Me) || Sim.GetPhase() != EJamSimPhase::Playing || Sim.IsDrawOpen() || Sim.CarrierIndex() >= 0) return R;
+		if (K.AfterDropFrames > 0 && Sim.GetDropFrame() >= 0 && Sim.GetFrame() - Sim.GetDropFrame() < K.AfterDropFrames) return R;
 		const FJamSkaterState& H = Sk[Me];
 		if (!H.CanAct()) return R;
 		const FVector2D P = Sim.GetPuck().Pos, PV = Sim.GetPuck().Vel;
@@ -81,7 +88,7 @@ namespace JamCarrierMarks
 		double ReactSec = 0.25;        // the mark lights this long before the opponent is at LitFarM at the pace the two close at, so a stop pressed a quarter
 		                               // second after it lights begins inside the window (head-on at 15 m/s the window itself lasts a quarter second)
 		double ArmFarM = 20.0;         // armed (shown, not lit) from here in
-		double ClosingMps = 3.0;       // the two close at this pace or more
+		double ClosingMps = 8.0;       // the two close at this pace or more (Director, 14 Nov, REVIEW-3's stopclosing=8: it was 3; see FContestRule::ClosingMps)
 		double SpeedMps = 3.0;         // the human moves at this pace or more (a stop is a move only for one who moves)
 		double ConeCos = 0.5;          // the opponent is within 60 degrees of the human's travel (35 degrees finds 59 % of the knockdowns it is for, 60 degrees 72 %, at the same precision)
 	};

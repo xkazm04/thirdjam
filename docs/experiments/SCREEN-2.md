@@ -184,3 +184,84 @@ python tools\qa\screen\u5-pitch.py tools\qa\screen\out\cap-off\seed1\game.log to
 seed, `downs.txt` (one `JAMSCREEN down` line a knockdown), `sim-lines.txt` and `shots\` (two stills of every knockdown of the human, 25 and 75 frames in).
 The probe is in the game: `jam.hud.DownProbe N` (lines every N sim frames and one per knockdown), `jam.hud.DownStills N`, `jam.hud.DownStillTag <tag>`.
 A match ends at the third goal and the end card stays up: more seeds give more knockdowns, more seconds do not. One process takes about 3 GB.
+
+# Part 6: two marks, two shapes; less of them; Space and F on the first strip (lane A171, track U1, evolution 6, Sat 14 Nov 06:01 to 07:10)
+
+The design review of the package's commit (`docs/design/REVIEW-3.md`, items 1 and 8) put two screen faults at the top of what the operator feels:
+"orange rings keep appearing and I do not know which one wants what", and a first strip that names neither Space nor F. Presentation only: the default
+match's hash is the hash of before (`hockey.regular seed 1 ... the tree as it stands: 5712 frames, hash a62c05bf23232586`, `bare eec9827f89f90f64 after
+6000 frames`: in main's own gate logs of 05:52 and 06:02, in this lane's gate on the tree before the change, and in its gate after).
+
+## What changed, and the way back for each
+
+| Change | Where | The way back |
+|---|---|---|
+| **A. The stop mark is a line, never a ring.** A bar on the ice across the human's path at the mark's place (8 m from him towards the closing opponent), perpendicular to his travel, 3.2 m wide (two stick lengths); armed: chalk at 0.6, 16 cm thick (never under 4 px); lit: the defender's colour, 40 cm thick and breathing (never under 9 px); white with an ink edge so chalk reads on pale ice. The contested puck keeps its ring. A ring says "this puck"; a line across the way says "stop here". | `HUDMarks.cpp` (`UpdateMarks`, `JamMakeMarkBar`), `UJamHudWidget::StopBarLayout`, `StopMarkBar` | none shipped (the ring's code is gone); `jam.hud.Marks 0` = no marks at all, as before |
+| **B1. No contested ring for 60 frames after a faceoff's drop.** | `JamCarrierMarks::FContestRule::AfterDropFrames` (60), `UJamSim::GetDropFrame` (a getter: no state) | `AfterDropFrames = 0` |
+| **B2. The rule's thresholds are the review's**: the two close at 12 m/s or more for the contested ring (was 8), at 8 m/s or more for the stop mark (was 3). | `FContestRule::ClosingMps`, `FStopRule::ClosingMps` | 8 and 3; per run: `JAM_MARK_RULE="closing=8;stopclosing=3"` |
+| (main's own change, taken over so this build equals main's rule: the stop mark lights from 9.5 m, was 11) | `FStopRule::LitFarM` | main's |
+| **C. The first hint strip names the poke and the ability**: `SKATE WASD  BRAKE PRESS AGAINST YOUR MOTION  AIM MOUSE  SHOOT HOLD LMB  PASS Q  POKE SPACE  CHECK RMB  ABILITY F  SPRINT SHIFT`: nine verbs, three spaces between them (it was four), 143 characters (the strip's width and type were sized for the 146 of the old ten-verb line). | `UJamHudWidget::ControlsHintText` | the old string |
+| **D. One down rule for the marks.** `UpdateMarks` no longer builds boxes of its own round downed skaters: it reads lane A158's `DownBoxesNow` (every downed figure by its projected bones, made at the top of the same refresh) with the markers' pad (16 px); the line is tested by the box it covers once turned. And the rings of lane A163's take grace (drawn at up to 1.5 x their size after the HUD's own yield had run) are tested again at the size drawn. | `HUDMarks.cpp`, `MarkDownPadPx`; `HUDClearDown.cpp` (`YieldOverlayToDowned`) | `jam.hud.ClearDown 0` for the rings |
+
+## Proof
+
+- **Gate**: the full `Jam` filter, headless: **267 of 267** on the closed state's build (`Game/logs/u1-automation-ev6-run3.log`): main's 265 +
+  `Jam.Hud.TooSoon` + `Jam.Hud.ClearEdges` (the line's layout: length, thickness across itself, the minimum, the turn, the box). `Jam.Core.Movement.Marks`
+  (lane A166's rule test) is green with one scene added: head-on in the second after a drop is not contested; with `AfterDropFrames 0` it is; the old
+  scenes are staged a second after the drop. `Jam.Menu.FitsTheScreen` green. Hashes as above.
+- **Shipping compiles**: `tools/run/build.ps1 -Config Shipping` on the same source: `ThirdJam Shipping in 694.2s`, verdict pass (`Game/logs/build-ThirdJam-Shipping-20261114-062808.log`).
+- **D, the bar: no mark over a downed figure.** Off screen, clay, 90 m, pro, 1280 x 720, eight seeds (2, 4, 5, 6, 7, 8, 9, 10; `out/ev6b-downs-a`, `-b`):
+  the human down **26 times, 26 with no HUD element over his box on any frame** (2,715 frames seen, 0 hit); other skaters down 7 times (613 frames): his
+  chevron on 80 frames, the Director's Call plate 31, the scoreboard 14, the prompt 8, an unnamed plate 4; **the contested ring and the stop line over a
+  downed figure: 0 frames of 33 knockdowns** (in those matches the ring showed 49 times and the line lit 36 times; four showings were withheld, `shown=0`).
+  The carrier's ring lay on the downed human for 11 frames of one knockdown before the rings' second test (build 1); 0 after.
+- **A, stills** (`docs/experiments/img/a171/`): `stop-line-lit-and-hint-strip-f000131.jpg` (the line lit, orange, at the left; the human's ring yellow in
+  its take grace; the strip under him), `contested-ring-f002391.jpg`, `ring-and-line-side-by-side.jpg`, `marks-11-stills.jpg` (eight rings, three lines).
+  **Both marks in one frame cannot happen**: the ring needs a loose puck (`CarrierIndex() < 0`), the line needs the human carrying it
+  (`CarrierIndex() == Me`): the side-by-side is two frames. No still of the armed (chalk) line: with the stop's closing at 8 m/s an armed phase lasts at
+  most 11 frames in these eight matches (it was the mark's usual state before), and a capture every 4 frames slowed the game before it got there.
+- **C, the strip at 1280 x 720**: `stop-line-lit-and-hint-strip-f000131.jpg`: the nine verbs end 52 px inside the strip's right end; the test holds the
+  two new verbs, every old one and the 146-character bound.
+- **B, re-measured with lane A166's trace** (`Bar.Movement.CarryTrace`, 100 matches a cell, seeds 1 to 100; the same matches as REVIEW-3's and
+  MOVEMENT-8's: 3,142 possessions and 154 class knockdowns at rookie, 3,808 and 439 at pro in every row):
+
+| Cell | Rule | Contested ring a match | lit before his touch | precision (down inside 0.5 s) | recall of "hit as he won it" | ... 20 frames or more before | Stop mark lit a match | its recall | its precision |
+|---|---|---|---|---|---|---|---|---|---|
+| rookie, the novice | as it was (REVIEW-3) | 18.6 | | 15.6 % | | | 15.2 | | |
+| rookie, the novice | old thresholds + B1 (`closing=8;stopclosing=3`) | 18.3 | 24.9 % | 15.6 % | 79.2 % (122 of 154) | 14.9 % | 14.4 | 81.2 % | 8.2 % |
+| rookie, the novice | **the new defaults** | **11.1** | 16.3 % | **21.5 %** | **71.4 %** (110 of 154) | 10.4 % | **12.0** | 73.4 % | 8.5 % |
+| pro, the regular | as it was (MOVEMENT-8) | 19.3 | 30.9 % | 26.8 % | 72.0 % (316 of 439) | 59.5 % | | | |
+| pro, the regular | old thresholds + B1 | 15.8 | 21.4 % | 13.5 % | **25.1 %** (110 of 439) | 11.4 % | 13.8 | 73.8 % | 24.7 % |
+| pro, the regular | **the new defaults** | **9.9** | 13.5 % | 14.8 % | **17.3 %** (76 of 439) | 7.1 % | **12.3** | 66.0 % | 25.5 % |
+
+  **What the table says, plainly.** At rookie the review's promise holds (18.6 to 11.1 rings a match, right more often, recall 8 points down), and the
+  cut comes from the thresholds: the quiet second after a drop takes 0.3 rings a match there. **At pro the quiet second is where the ring was right**:
+  it takes 3.5 rings a match and 206 of the 316 knockdowns the ring used to precede: recall 72.0 to 25.1 % before the thresholds, 17.3 % with them. At pro
+  the opposing centre flattens him as he wins the draw; the ring said so a quarter of a second before (median lead 15 frames: too late to act on, which
+  is the review's own point about it). B1 is in as ordered; whether pro should keep that ring is one number (`AfterDropFrames`), and it is the
+  Director's.
+- **How long the marks are on the screen** (`tools/qa/screen/u6-marks.py`, the eight matches): the ring: 49 showings, median 5 sim frames, 42 under a
+  third of a second; the line lit: 36 showings, median 4 frames, 34 under a third of a second. Before the new rule (five matches, build 1): the ring 48
+  showings, median 11 frames, 35 under a third of a second, every one drawn. The window lane's "not visible in the one episode it lit" (15 frames) is
+  the ring's usual life, not a fault of that episode: it is drawn, it is thin (the plain chalk ring, about 3 px at 720p beside the human's 12 px ring)
+  and it is over before an eye lands on it. One constant would make it read: a least time on the screen once lit (24 frames). Not done here (the order
+  was: the ring stays as it is).
+
+## In the tree, switched off (it follows the package, by the Director's order)
+
+Written and gated before the order changed, left in because this lane has no way to take a change out of its tree: `jam.hud.ClearEdges` **0** (1: the
+caption's row under the scoreboard clear of the MATCH card, the prompt and the net's distance pill; the prompt under the MATCH card; the own-net marker
+above the radar; the Director's Call plates off downed figures), `jam.camera.PitchCapAfter` **0** (1: the pitch cap read again after the keep-human
+stage; not measured in the game), and `TOO SOON` on the contact line (inert while `game.contact.check_cooldown_frames` is 0, as shipped; proven by
+`Jam.Hud.TooSoon` on a staged sim with the key on; not seen in a match: the scripted human presses no check).
+
+## How to repeat (part 6)
+
+```
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\qa\screen\u1-gate.ps1 -Tag ev6
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\qa\screen\u5-downs.ps1 -Mode after -Seeds "2,4,5,6" -MarkStills 8 -RunName ev6-a
+python tools\qa\screen\u6-marks.py tools\qa\screen\out\ev6-a\seed2\game.log tools\qa\screen\out\ev6-a\seed4\game.log
+set JAM_CARRY_TRACE=level=rookie;player=novice;seeds=100
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\qa\screen\u1-gate.ps1 -Tag trace-rookie -Filter Bar.Movement.CarryTrace     (the CARRYTRACE mark lines)
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\run\build.ps1 -Project <worktree>\Game -Config Shipping
+```

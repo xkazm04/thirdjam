@@ -738,6 +738,7 @@ void UJamHudWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 			// Lane A158: the contact line's place, after everything in the refresh that may show it this tick (lane A163's carrier cues show it last):
 			// off the human and off a downed figure, along its own row.
 			PlaceContactLine();
+			YieldOverlayToDowned();   // lane A171: the Director's Call widget's plates, off a downed figure
 			// Lane A14's feed: one slot per row that touches the human (icon name, effect id and the seconds left).
 			TRACE_CPUPROFILER_EVENT_SCOPE(JamHud_EffectsFeed);
 			const AHokejGameMode* GM = GetWorld() ? GetWorld()->GetAuthGameMode<AHokejGameMode>() : nullptr;
@@ -1148,6 +1149,13 @@ void UJamHudWidget::UpdatePrompts(const FJamPresentationFrame& F, bool bCounting
 		X = static_cast<float>(PromptPlaceNow.X);
 		Y = static_cast<float>(PromptPlaceNow.Y);
 	}
+	// Lane A171: not under the MATCH card (the card covered the prompt at a faceoff): the row under the card's band while the card is up, its own row after.
+	if (ClearEdgesOn() && OverlayForPrompt.IsValid())
+	{
+		const float VHp = static_cast<float>(UWidgetLayoutLibrary::GetViewportSize(this).Y) / FMath::Max(UWidgetLayoutLibrary::GetViewportScale(this), 0.01f);
+		float BandTop = 0.f, BandBottom = 0.f;
+		if (OverlayForPrompt->GetBannerBandPx(VHp, BandTop, BandBottom) && FMath::Abs(X) < HalfWp + UJamDirectorsCallHudWidget::MatchCardW * 0.5f) Y = UnderBand(Y, PromptSlotH, BandTop, BandBottom);
+	}
 	if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(PromptPlate->Slot)) CS->SetPosition(FVector2D(X, Y));
 	PromptBandTick = GFrameCounter;
 	PromptBandTop = Y;
@@ -1377,17 +1385,24 @@ void UJamHudWidget::UpdateCommentary(const FJamPresentationFrame& F)
 		if (ClearDownOn())
 		{
 			const float VH = VS.Y / FMath::Max(UWidgetLayoutLibrary::GetViewportScale(this), 0.01f);
-			if (CommentaryFrame != CaptionPlaceLine) { CaptionPlaceLine = CommentaryFrame; CaptionPlaceNow = 0; }
+			if (CommentaryFrame != CaptionPlaceLine) { CaptionPlaceLine = CommentaryFrame; CaptionPlaceNow = 0; CaptionTopYNow = -1.f; }
 			const FVector2D Sz(FMath::Max(CommentaryStrip->GetDesiredSize().X, 240.0), FMath::Max(CommentaryStrip->GetDesiredSize().Y, 40.0));
 			const float HalfW = static_cast<float>(Sz.X) * 0.5f;
-			float TopY = PromptSlotY;
-			if (OverlayForPrompt.IsValid() && OverlayForPrompt->IsLineVisible()) TopY = PromptSlotLowY;
-			if (PromptPlate && PromptPlate->GetVisibility() != ESlateVisibility::Collapsed) TopY = FMath::Max(TopY, static_cast<float>(PromptPlaceNow.Y) + PromptSlotH + 10.f);
+			// Lane A171: the top place is the first row under the scoreboard clear of what stands in that band (TopBandObstacles: the overlay's line, the
+			// MATCH card, the prompt, the net and puck markers); the caption keeps the row it took while that row is clear; no row above the middle third:
+			// no top place.
+			TArray<FBox2D> TopTaken;
+			TopBandObstacles(TopTaken, VW, VH);
+			const float RowX0 = VW * 0.5f - HalfW, RowX1 = VW * 0.5f + HalfW, RowH = static_cast<float>(Sz.Y);
+			float TopY = CaptionTopYNow;
+			if (TopY < 0.f || FirstClearY(TopY, RowH, RowX0, RowX1, TopTaken, 8.f, VH / 3.f) != TopY) TopY = FirstClearY(PromptSlotY, RowH, RowX0, RowX1, TopTaken, 8.f, VH / 3.f);
+			const bool bTopRow = TopY >= 0.f;
+			if (!bTopRow) TopY = PromptSlotY;
 			const FVector2D DockMin(VW * 0.5f - HalfW, VH + DockY - Sz.Y), DockMax(VW * 0.5f + HalfW, VH + DockY);
 			const FVector2D TopMin(VW * 0.5f - HalfW, TopY), TopMax(VW * 0.5f + HalfW, TopY + Sz.Y);
-			const int32 Place = CaptionPlace(CaptionPlaceNow, !BoxMeetsAny(DockMin, DockMax, KeepBoxesNow), !BoxMeetsAny(TopMin, TopMax, KeepBoxesNow));
+			const int32 Place = CaptionPlace(CaptionPlaceNow, !BoxMeetsAny(DockMin, DockMax, KeepBoxesNow), bTopRow && !BoxMeetsAny(TopMin, TopMax, KeepBoxesNow));
 			if (Place < 0) CommentaryStrip->SetRenderOpacity(0.f);   // both places taken: not drawn this frame (the voice plays on)
-			else { CaptionPlaceNow = Place; if (Place == 1) PosY = TopY + static_cast<float>(Sz.Y) - VH; }
+			else { CaptionPlaceNow = Place; if (Place == 1) { CaptionTopYNow = TopY; PosY = TopY + static_cast<float>(Sz.Y) - VH; } }
 		}
 		if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(CommentaryStrip->Slot)) CS->SetPosition(FVector2D(0, PosY));
 	}
@@ -1707,12 +1722,15 @@ void UJamHudWidget::UpdateContactLine(const FJamPresentationFrame& F)
 		ContactSeenSoft = Hu.ChecksSoft;
 		ContactSeenMissed = Hu.ChecksMissed;
 		ContactSeenGraced = Hu.ChecksGraced;
-		if (bBounced || bRefused || bSoft || bMissed || bGraced)
+		// Lane A171: a press the check cooldown dropped (a counter, as the others; it rises only with game.contact.check_cooldown_frames on).
+		const bool bCooling = Hu.ChecksCooling > ContactSeenCooling;
+		ContactSeenCooling = Hu.ChecksCooling;
+		if (bBounced || bRefused || bSoft || bMissed || bGraced || bCooling)
 		{
-			const FString Line = ContactLineFor(bRefused, bBounced, bSoft, bMissed, bGraced);
+			const FString Line = ContactLineFor(bRefused, bBounced, bSoft, bMissed, bGraced, bCooling);
 			ShowContactLine(Line);
-			UE_LOG(LogTemp, Log, TEXT("JAMHUD frame=%lld contact_line=%s refused=%d recoils=%d soft=%d missed=%d graced=%d"), F.SimFrame, *Line.Replace(TEXT(" "), TEXT("_")), Hu.ChecksRefused, Hu.ContactRecoils,
-				Hu.ChecksSoft, Hu.ChecksMissed, Hu.ChecksGraced);
+			UE_LOG(LogTemp, Log, TEXT("JAMHUD frame=%lld contact_line=%s refused=%d recoils=%d soft=%d missed=%d graced=%d cooling=%d"), F.SimFrame, *Line.Replace(TEXT(" "), TEXT("_")), Hu.ChecksRefused, Hu.ContactRecoils,
+				Hu.ChecksSoft, Hu.ChecksMissed, Hu.ChecksGraced, Hu.ChecksCooling);
 		}
 	}
 	if (bContactPending) { ContactStart = F.SimFrame; bContactPending = false; }
@@ -1818,6 +1836,8 @@ void UJamHudWidget::UpdateOwnMarker(const FJamPresentationFrame& F)
 	// Lane A42: the own-net marker was flush on the screen edge (eyes pass); it stays MarkerEdgePx inside with an arrow towards the net.
 	// The bottom room (56) keeps its caption above the ready pill (bottom-left, 40 px tall at the 24 px edge).
 	OwnMarker.ScreenPos = ClampMarker(Sp, VW, VH, 40.f, 150.f, 56.f);
+	// Lane A171: never under the radar or the ability plate (the label "own 8 m" lay under the radar: evolution 5's still f03057).
+	if (ClearEdgesOn()) OwnMarker.ScreenPos = KeepOffRadar(OwnMarker.ScreenPos, VW, VH, 60.f, 40.f);
 	if (UCanvasPanelSlot* DS = Cast<UCanvasPanelSlot>(OwnDiamond->Slot)) { DS->SetPosition(OwnMarker.ScreenPos); }
 	OwnText->SetText(FText::FromString(OwnMarker.Text));
 	if (UCanvasPanelSlot* TS = Cast<UCanvasPanelSlot>(OwnText->Slot)) { TS->SetPosition(OwnMarker.ScreenPos + FVector2D(0, 10)); }
