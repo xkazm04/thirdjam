@@ -1,0 +1,1 @@
+Dive_Block_Left (ke * SK26Test 1) on the standing human, NS_dive attached at take frame 9, frozen at frame 13, clay: left as merged (dust 4 dabs per patch, alpha 0.8), right B45 (2 per patch, alpha 0.55); top game camera, bottom side camera 6 m. Engine (GPU).
