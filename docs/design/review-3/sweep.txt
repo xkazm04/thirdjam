@@ -1,0 +1,30 @@
+# lane A169 (REVIEW-3): the stop's window by where the stop begins, at every level (rows read by Bar.Movement.StopAndGoSweep through JAM_SWEEP_FILE)
+rookie brake at 3 m | brake_at=3, level=0, seeds=200
+rookie brake at 4 m | brake_at=4, level=0, seeds=200, straight=0
+rookie brake at 5 m | brake_at=5, level=0, seeds=200, straight=0
+rookie brake at 6 m | brake_at=6, level=0, seeds=200, straight=0
+rookie brake at 7 m | brake_at=7, level=0, seeds=200, straight=0
+rookie brake at 8 m | brake_at=8, level=0, seeds=200, straight=0
+rookie brake at 9.5 m | brake_at=9.5, level=0, seeds=200, straight=0
+rookie brake at 11 m | brake_at=11, level=0, seeds=200, straight=0
+rookie brake at 12 m | brake_at=12, level=0, seeds=200, straight=0
+rookie brake at 13.5 m | brake_at=13.5, level=0, seeds=200, straight=0
+pro brake at 3 m | brake_at=3, level=1, seeds=200
+pro brake at 4 m | brake_at=4, level=1, seeds=200, straight=0
+pro brake at 5 m | brake_at=5, level=1, seeds=200, straight=0
+pro brake at 6 m | brake_at=6, level=1, seeds=200, straight=0
+pro brake at 7 m | brake_at=7, level=1, seeds=200, straight=0
+pro brake at 8 m | brake_at=8, level=1, seeds=200, straight=0
+pro brake at 9.5 m | brake_at=9.5, level=1, seeds=200, straight=0
+pro brake at 11 m | brake_at=11, level=1, seeds=200, straight=0
+pro brake at 12 m | brake_at=12, level=1, seeds=200, straight=0
+pro brake at 13.5 m | brake_at=13.5, level=1, seeds=200, straight=0
+all_star brake at 3 m | brake_at=3, level=2, seeds=200
+all_star brake at 5 m | brake_at=5, level=2, seeds=200, straight=0
+all_star brake at 6 m | brake_at=6, level=2, seeds=200, straight=0
+all_star brake at 7 m | brake_at=7, level=2, seeds=200, straight=0
+all_star brake at 8 m | brake_at=8, level=2, seeds=200, straight=0
+all_star brake at 9.5 m | brake_at=9.5, level=2, seeds=200, straight=0
+all_star brake at 11 m | brake_at=11, level=2, seeds=200, straight=0
+all_star brake at 12 m | brake_at=12, level=2, seeds=200, straight=0
+all_star brake at 13.5 m | brake_at=13.5, level=2, seeds=200, straight=0

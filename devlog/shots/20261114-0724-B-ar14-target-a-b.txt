@@ -1,0 +1,1 @@
+Lane AR14, device B, GPU editor, tree wt/b-arena (lane/b-arena over f42515a0), PIE floating window, screen percentage override off for the still. Clay, risen: every fan on pose A, every fan on pose B, mixed as shipped. A against B differ in 2.84 % of the frame, so the instanced path reads UV channels 5 to 7.

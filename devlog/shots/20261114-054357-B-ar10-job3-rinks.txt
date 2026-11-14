@@ -1,0 +1,1 @@
+AR10. The single owner on Pond, the wide and the large arena and on a 100 x 50 rink that has no baked layout: stands and fans built for each length at BeginPlay (476, 932, 834 and 722 fans).

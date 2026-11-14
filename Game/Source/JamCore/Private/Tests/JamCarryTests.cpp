@@ -616,6 +616,25 @@ bool FJamMovementMarks::RunTest(const FString& Parameters)
 		for (const FJamSkaterState& K : Sim->GetSkaters()) { if (K.Team != Sim->GetSkaters()[Me].Team) { if (Opp < 0) Opp = K.Index; } else if (K.Index != Me && Mate < 0) Mate = K.Index; }
 		const int32 N = Sim->GetSkaters().Num();
 		auto Park = [&]() { for (int32 i = 0; i < N; ++i) Sim->SetSkater(i, FVector2D(-40.0 + i * 1.5, 19.0), FVector2D::ZeroVector, 0); Sim->SetPuck(FVector2D::ZeroVector, FVector2D::ZeroVector); };
+		// Lane A171 (REVIEW-3 item 1): the rule is quiet for AfterDropFrames after a drop (SkipFaceoff is a drop). On the drop's own frame the staged
+		// head-on is not contested; the scene below is staged once that second has passed.
+		{
+			Park();
+			Sim->SetSkater(Me, FVector2D(-6.0, 0.0), FVector2D(8.0, 0.0), 0.0);
+			Sim->SetSkater(Opp, FVector2D(6.0, 0.0), FVector2D(-8.0, 0.0), UE_DOUBLE_PI);
+			JamCarrierMarks::FContestRule Quiet;
+			Quiet.AfterDropFrames = 60;
+			TestFalse(TEXT("head-on for a loose puck in the second after a drop, with the quiet second on (AfterDropFrames 60): no ring"), JamCarrierMarks::Contested(*Sim, Me, Quiet).bOn);
+			TestTrue(TEXT("the shipped rule has no quiet second (at pro the draw is where he is flattened)"), JamCarrierMarks::FContestRule().AfterDropFrames == 0);
+			JamCarrierMarks::FContestRule NoWait;
+			NoWait.AfterDropFrames = 0;
+			TestTrue(TEXT("... the same scene with AfterDropFrames 0: contested, as before"), JamCarrierMarks::Contested(*Sim, Me, NoWait).bOn);
+			Park();
+			TArray<FJamInput> Idle;
+			Idle.SetNum(N);
+			for (int32 i = 0; i < Quiet.AfterDropFrames; ++i) Sim->Step(Idle);
+			TestTrue(TEXT("a second after the drop the quiet rule is awake"), Sim->GetFrame() - Sim->GetDropFrame() >= Quiet.AfterDropFrames);
+		}
 		Park();
 		TestTrue(TEXT("the staged puck is loose"), Sim->CarrierIndex() < 0);
 		Sim->SetSkater(Me, FVector2D(-6.0, 0.0), FVector2D(8.0, 0.0), 0.0);

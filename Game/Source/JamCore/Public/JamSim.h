@@ -624,6 +624,8 @@ public:
 	FVector2D GetFaceoffDot() const { return FaceoffDot; }
 	// True between the drop and the moment a centre won the puck.
 	bool IsDrawOpen() const { return bDrawOpen; }
+	// Lane A171: the frame of the last drop (-1 before the first): read by the marks' rule (JamCarrierMarks.h), which is quiet for a second after a draw.
+	int64 GetDropFrame() const { return DropFrame; }
 	// Lane A92 (R-0045, docs/VISION.md law 1, docs/experiments/CONTACT.md): contact by momentum. The kinds of hit and the three outcomes.
 	enum class EContactKind : uint8 { Body, Cross };
 	static constexpr int32 ContactNone = 0;

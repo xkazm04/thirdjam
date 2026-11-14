@@ -1,0 +1,30 @@
+SWEEP rookie brake at 3 m | go 95.5 | straight 0.0 | gap 95.5 | go: past 191 of 200 (95.5 %), touch 9; defender presses: lift 0 poke 177 check 0, lifts refused by the body 0; 153 frames a carry | straight: past 0 of 200 (0.0 %), poke 156, touch 44; defender presses: lift 0 poke 195 check 0, lifts refused by the body 0; 66 frames a carry
+SWEEP rookie brake at 4 m | go 74.5 | go: past 149 of 200 (74.5 %), poke 3, down 43, stumble 3, touch 2; defender presses: lift 0 poke 62 check 46, lifts refused by the body 0; 133 frames a carry
+SWEEP rookie brake at 5 m | go 28.5 | go: past 57 of 200 (28.5 %), down 132, stumble 11; defender presses: lift 0 poke 2 check 162, lifts refused by the body 0; 94 frames a carry
+SWEEP rookie brake at 6 m | go 70.5 | go: past 141 of 200 (70.5 %), down 47, stumble 12; defender presses: lift 0 poke 0 check 147, lifts refused by the body 0; 108 frames a carry
+SWEEP rookie brake at 7 m | go 100.0 | go: past 200 of 200 (100.0 %); defender presses: lift 0 poke 0 check 30, lifts refused by the body 0; 121 frames a carry
+SWEEP rookie brake at 8 m | go 100.0 | go: past 200 of 200 (100.0 %); defender presses: lift 0 poke 0 check 0, lifts refused by the body 0; 127 frames a carry
+SWEEP rookie brake at 9.5 m | go 100.0 | go: past 200 of 200 (100.0 %); defender presses: lift 0 poke 0 check 0, lifts refused by the body 0; 144 frames a carry
+SWEEP rookie brake at 11 m | go 100.0 | go: past 200 of 200 (100.0 %); defender presses: lift 0 poke 0 check 0, lifts refused by the body 0; 167 frames a carry
+SWEEP rookie brake at 12 m | go 100.0 | go: past 200 of 200 (100.0 %); defender presses: lift 0 poke 0 check 0, lifts refused by the body 0; 178 frames a carry
+SWEEP rookie brake at 13.5 m | go 100.0 | go: past 200 of 200 (100.0 %); defender presses: lift 0 poke 0 check 0, lifts refused by the body 0; 183 frames a carry
+SWEEP pro brake at 3 m | go 0.0 | straight 0.0 | gap 0.0 | go: past 0 of 200 (0.0 %), poke 1, down 199; defender presses: lift 199 poke 200 check 199, lifts refused by the body 0; 67 frames a carry | straight: past 0 of 200 (0.0 %), poke 200; defender presses: lift 0 poke 200 check 0, lifts refused by the body 0; 62 frames a carry
+SWEEP pro brake at 4 m | go 5.5 | go: past 11 of 200 (5.5 %), lift 5, down 179, timeout 5; defender presses: lift 152 poke 199 check 200, lifts refused by the body 0; 82 frames a carry
+SWEEP pro brake at 5 m | go 7.5 | go: past 15 of 200 (7.5 %), lift 28, down 153, stumble 4; defender presses: lift 80 poke 67 check 202, lifts refused by the body 0; 78 frames a carry
+SWEEP pro brake at 6 m | go 7.5 | go: past 15 of 200 (7.5 %), lift 65, down 111, stumble 9; defender presses: lift 82 poke 0 check 164, lifts refused by the body 0; 78 frames a carry
+SWEEP pro brake at 7 m | go 66.0 | go: past 132 of 200 (66.0 %), lift 18, down 43, stumble 7; defender presses: lift 18 poke 0 check 130, lifts refused by the body 0; 106 frames a carry
+SWEEP pro brake at 8 m | go 100.0 | go: past 200 of 200 (100.0 %); defender presses: lift 0 poke 0 check 28, lifts refused by the body 0; 123 frames a carry
+SWEEP pro brake at 9.5 m | go 97.0 | go: past 194 of 200 (97.0 %), lift 1, stumble 1, timeout 4; defender presses: lift 1 poke 0 check 9, lifts refused by the body 0; 162 frames a carry
+SWEEP pro brake at 11 m | go 83.5 | go: past 167 of 200 (83.5 %), lift 1, down 7, stumble 5, touch 8, timeout 12; defender presses: lift 1 poke 0 check 88, lifts refused by the body 0; 194 frames a carry
+SWEEP pro brake at 12 m | go 56.5 | go: past 113 of 200 (56.5 %), lift 6, down 40, stumble 6, touch 9, timeout 26; defender presses: lift 6 poke 0 check 171, lifts refused by the body 0; 207 frames a carry
+SWEEP pro brake at 13.5 m | go 52.0 | go: past 104 of 200 (52.0 %), lift 15, down 49, stumble 5, touch 7, timeout 20; defender presses: lift 15 poke 0 check 183, lifts refused by the body 0; 195 frames a carry
+SWEEP all_star brake at 3 m | go 41.5 | straight 0.0 | gap 41.5 | go: past 83 of 200 (41.5 %), poke 67, lift 41, down 2, stumble 1, timeout 6; defender presses: lift 41 poke 198 check 27, lifts refused by the body 0; 117 frames a carry | straight: past 0 of 200 (0.0 %), poke 200; defender presses: lift 0 poke 200 check 0, lifts refused by the body 0; 63 frames a carry
+SWEEP all_star brake at 5 m | go 4.5 | go: past 9 of 200 (4.5 %), lift 97, down 91, stumble 3; defender presses: lift 116 poke 0 check 134, lifts refused by the body 0; 81 frames a carry
+SWEEP all_star brake at 6 m | go 55.5 | go: past 111 of 200 (55.5 %), lift 37, down 44, stumble 8; defender presses: lift 37 poke 0 check 149, lifts refused by the body 0; 103 frames a carry
+SWEEP all_star brake at 7 m | go 97.5 | go: past 195 of 200 (97.5 %), lift 1, down 3, stumble 1; defender presses: lift 1 poke 0 check 92, lifts refused by the body 0; 120 frames a carry
+SWEEP all_star brake at 8 m | go 100.0 | go: past 200 of 200 (100.0 %); defender presses: lift 0 poke 0 check 12, lifts refused by the body 0; 125 frames a carry
+SWEEP all_star brake at 9.5 m | go 92.0 | go: past 184 of 200 (92.0 %), stumble 2, timeout 14; defender presses: lift 0 poke 1 check 9, lifts refused by the body 0; 154 frames a carry
+SWEEP all_star brake at 11 m | go 53.0 | go: past 106 of 200 (53.0 %), down 15, stumble 15, timeout 64; defender presses: lift 0 poke 0 check 59, lifts refused by the body 0; 218 frames a carry
+SWEEP all_star brake at 12 m | go 28.5 | go: past 57 of 200 (28.5 %), lift 1, down 52, stumble 16, touch 1, timeout 73; defender presses: lift 1 poke 0 check 121, lifts refused by the body 0; 221 frames a carry
+SWEEP all_star brake at 13.5 m | go 19.5 | go: past 39 of 200 (19.5 %), lift 2, down 65, stumble 20, touch 3, timeout 71; defender presses: lift 2 poke 0 check 123, lifts refused by the body 0; 208 frames a carry
+JAMSCREEN prompts in a modelled session: kept at frame 200, brake at frame 500

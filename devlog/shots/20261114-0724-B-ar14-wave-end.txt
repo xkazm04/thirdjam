@@ -1,0 +1,1 @@
+Lane AR14, device B, GPU editor, tree wt/b-arena (lane/b-arena over f42515a0), PIE floating window, screen percentage override off for the still. Clay, 25 m from the end stand, the cheer at frames +0, +8, +14, +20, +28, +60, +108, +130 after the goal. The end stand is the nearest to the net: nearly all of it is up by +8 (4.19 % of the frame of 4.76 %), down again at +108.

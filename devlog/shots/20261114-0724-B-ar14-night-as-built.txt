@@ -1,0 +1,1 @@
+Lane AR14, device B, GPU editor, tree wt/b-arena (lane/b-arena over f42515a0), PIE floating window, screen percentage override off for the still. Night as AR11 built it (before tuning), regular rink: game camera, low camera, far end, bench side, box side, end terrace. Crowd and stands are black shapes against the sky.

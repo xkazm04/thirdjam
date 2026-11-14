@@ -81,7 +81,8 @@ public:
 	static FString FirstMatchLine(const FString& Level);
 	// Lane A144 (evolution 3): what a level means, one line under the first screen's switch, in the voice's words (VOICE.md: rookies rarely hit,
 	// pros hit as a habit, all-stars hunt the carrier) and true of the ladder as set (R-0046: a newcomer wins 85 % at rookie, a regular player
-	// half at pro, a good player a quarter at all-star).
+	// half at pro, a good player a quarter at all-star). Lane A176: the line first says who the level is for (rookie: new to hockey games; pro:
+	// played one before; all-star: the wall), with no number the curve could make stale.
 	static FString LevelMeaning(const FString& Level);
 	// The level a cartridge plays as the game's loader and JamAI::ResolveDifficulty read it: "rookie" | "pro" | "all_star".
 	static FString CutLevel(const UJamCartridge& C);

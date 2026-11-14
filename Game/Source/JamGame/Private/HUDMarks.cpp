@@ -3,11 +3,12 @@
 // BuildTree) and drawn under every other HUD element.
 //   The contested puck: a pulsing ring in the opponent's colour round a loose puck that the human and an opponent will reach head-on at about the same
 //     time. What it says: "take this and you are hit as you touch it" (brake before it, let him have it and hit him, or cut across).
-//   The stop's distance: a small ring on the ice five stick lengths from the carrying human towards the opponent closing ahead of him; chalk while
-//     that opponent is far, his colour, larger and breathing from a quarter second before he is 9.5 m off until he is 7 m off (the stop passes), gone inside
+//   The stop's distance: a LINE across the human's path (lane A171: it was a ring, and two rings in one colour asked for opposite acts) on the ice five
+//     stick lengths from the carrying human towards the opponent closing ahead of him; chalk and thin while
+//     that opponent is far, his colour, thicker and breathing from a quarter second before he is 9.5 m off until he is 7 m off (the stop passes), gone inside
 //     7 m (too late) and while he brakes. Their colour on the ice means act now, here as round the contested puck; yellow stays the take grace's.
-// Neither is drawn where its box would meet a downed figure (lane A158's rule; its own boxes, HUDClearDown.cpp, are not in this tree: a ground box round
-// each downed skater stands in for them here).
+// Neither is drawn where its box would meet a downed figure: lane A158's rule and, since lane A171, lane A158's boxes (DownBoxesNow, made by
+// UpdateKeepClear at the top of the same refresh: every downed figure by its projected bones), the one source every mark and marker yields to.
 #include "HUDWidget.h"
 #include "MenuStyle.h"
 #include "Blueprint/WidgetTree.h"
@@ -15,6 +16,7 @@
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/Image.h"
+#include "Components/Border.h"
 #include "GameFramework/PlayerController.h"
 #include "Engine/World.h"
 #include "HAL/IConsoleManager.h"
@@ -69,12 +71,31 @@ namespace
 	}
 }
 
+// Lane A171: the stop's line: a white bar with an ink edge (chalk reads on pale ice only with an edge), tinted, sized and turned by the caller.
+static UBorder* JamMakeMarkBar(UWidgetTree* Tree, UCanvasPanel* Root, const TCHAR* Name)
+{
+	if (!Tree || !Root) return nullptr;
+	UBorder* B = Tree->ConstructWidget<UBorder>(UBorder::StaticClass(), Name);
+	B->SetBrush(FJamUiStyle::Rounded(FLinearColor::White, 2.f, FLinearColor(0.f, 0.f, 0.f, 0.9f), 1.5f));
+	B->SetRenderTransformPivot(FVector2D(0.5, 0.5));
+	B->SetVisibility(ESlateVisibility::Collapsed);
+	if (UCanvasPanelSlot* CS = Root->AddChildToCanvas(B))
+	{
+		CS->SetAnchors(FAnchors(0.f, 0.f));
+		CS->SetAlignment(FVector2D(0.5f, 0.5f));
+		CS->SetAutoSize(false);
+		CS->SetZOrder(-1);   // on the ice: under every other element
+	}
+	return B;
+}
+
 void UJamHudWidget::UpdateMarks(const FJamPresentationFrame& F)
 {
 	if (!Root || !WidgetTree) return;
 	if (!ContestRing) ContestRing = MakeMarkRing(WidgetTree, Root, TEXT("ContestRing"));
-	if (!StopMarkRing) StopMarkRing = MakeMarkRing(WidgetTree, Root, TEXT("StopMarkRing"));
-	if (!ContestRing || !StopMarkRing) return;
+	if (!StopMarkBar) StopMarkBar = JamMakeMarkBar(WidgetTree, Root, TEXT("StopMarkBar"));
+	UBorder* StopBar = StopMarkBar.Get();
+	if (!ContestRing || !StopBar) return;
 	auto Hide = [](UWidget* W) { if (W) W->SetVisibility(ESlateVisibility::Collapsed); };
 	const AHokejGameMode* GM = GetWorld() ? GetWorld()->GetAuthGameMode<AHokejGameMode>() : nullptr;
 	const UJamSim* Sim = GM ? GM->GetSim() : nullptr;
@@ -82,25 +103,14 @@ void UJamHudWidget::UpdateMarks(const FJamPresentationFrame& F)
 	const bool bOn = CVarJamHudMarks.GetValueOnGameThread() != 0 && F.Phase == EJamPhase::Play && Sim && PC;
 	if (!bOn)
 	{
-		Hide(ContestRing); Hide(StopMarkRing);
+		Hide(ContestRing); Hide(StopBar);
 		MarkContestOpp = -1; MarkStopState = 0;
 		return;
 	}
 	const TArray<FJamSkaterState>& Sk = Sim->GetSkaters();
 	const int32 Hi = Sim->GetHumanIndex();
-	// Where the downed figures are on the screen: the ground under each (1.3 m round it) and the point over its head.
-	TArray<FBox2D> Downs;
-	for (const FJamSkaterState& K : Sk)
-	{
-		if (!K.IsDown()) continue;
-		FVector2D C, Sz;
-		float Dist = 0.f;
-		if (!ProjectGroundRing(K.Pos, MarkDownRadiusM, C, Sz, Dist)) continue;
-		FBox2D B(C - Sz * 0.5f, C + Sz * 0.5f);
-		FVector2D Head;
-		if (UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(PC, UJamSim::ToWorld(K.Pos, 1.9), Head, false)) B += Head;
-		Downs.Add(B);
-	}
+	// Where the downed figures are on the screen: this tick's boxes of lane A158 (lane A171: one source; the marks had a ground ring of their own).
+	const TArray<FBox2D>& Downs = DownBoxesNow;
 	const float Pulse = MarkPulse(F.SimFrame);
 
 	// The contested puck.
@@ -110,7 +120,7 @@ void UJamHudWidget::UpdateMarks(const FJamPresentationFrame& F)
 	{
 		FVector2D C, Sz;
 		float Dist = 0.f;
-		if (ProjectGroundRing(Sim->GetPuck().Pos, ContestRingRadiusM * Pulse, C, Sz, Dist) && !MarkMeetsDown(C - Sz * 0.5f, C + Sz * 0.5f, Downs))
+		if (ProjectGroundRing(Sim->GetPuck().Pos, ContestRingRadiusM * Pulse, C, Sz, Dist) && !MarkMeetsDown(C - Sz * 0.5f, C + Sz * 0.5f, Downs, MarkDownPadPx))
 		{
 			const FLinearColor Col = F.GetTeamColour(Sk[Con.Opp].Team);
 			ContestRing->SetColorAndOpacity(FLinearColor(Col.R, Col.G, Col.B, 1.f));
@@ -132,21 +142,31 @@ void UJamHudWidget::UpdateMarks(const FJamPresentationFrame& F)
 	bool bStopShown = false;
 	if (Stop.bShow)
 	{
-		FVector2D C, Sz;
-		float Dist = 0.f;
-		const float Radius = Stop.bLit ? StopMarkLitRadiusM * Pulse : StopMarkArmedRadiusM;
-		if (ProjectGroundRing(Stop.At, Radius, C, Sz, Dist) && !MarkMeetsDown(C - Sz * 0.5f, C + Sz * 0.5f, Downs))
+		// Lane A171: a line across his path at the mark's place: perpendicular to his travel (to the way to the opponent when he barely moves), two stick
+		// lengths wide; its four points go through the camera (the ends, and the near and far edge of its thickness).
+		const FJamSkaterState& Me = Sk[Hi];
+		const FVector2D Way = Me.Vel.SizeSquared() > 1.0 ? Me.Vel.GetSafeNormal() : (Stop.At - Me.Pos).GetSafeNormal();
+		const FVector2D Across(-Way.Y, Way.X);
+		const double ThickM = Stop.bLit ? StopBarLitThickM * Pulse : StopBarArmedThickM;
+		const FVector2D Ends[4] = { Stop.At - Across * StopBarHalfWidthM, Stop.At + Across * StopBarHalfWidthM, Stop.At - Way * (ThickM * 0.5), Stop.At + Way * (ThickM * 0.5) };
+		FVector2D Px[4];
+		bool bAll = !Way.IsNearlyZero();
+		for (int32 i = 0; i < 4 && bAll; ++i) bAll = UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(PC, UJamSim::ToWorld(Ends[i], 0.03), Px[i], false);
+		FVector2D C, Sz, BoxMin, BoxMax;
+		float AngleDeg = 0.f;
+		if (bAll && StopBarLayout(Px[0], Px[1], Px[2], Px[3], Stop.bLit ? StopBarLitMinPx : StopBarArmedMinPx, C, Sz, AngleDeg, BoxMin, BoxMax) && !MarkMeetsDown(BoxMin, BoxMax, Downs, MarkDownPadPx))
 		{
-			// Lit in the closing opponent's colour, as the contested ring is: their colour on the ice = act now. (Yellow is the take grace's: lit yellow, the
-			// mark stood beside the human's own yellow ring after a draw he won: two yellows saying two things. Capture 2, frame 1040.)
+			// Lit in the closing opponent's colour, as the contested ring is: their colour on the ice = act now; the SHAPE says which act. (Yellow is the take
+			// grace's: lit yellow, the mark stood beside the human's own yellow ring after a draw he won: two yellows saying two things. Capture 2, frame 1040.)
 			const FLinearColor Col = Stop.bLit && Sk.IsValidIndex(Stop.Def) ? F.GetTeamColour(Sk[Stop.Def].Team) : FJamUiStyle::Paper();
-			StopMarkRing->SetColorAndOpacity(FLinearColor(Col.R, Col.G, Col.B, Stop.bLit ? 1.f : StopMarkArmedAlpha));
-			StopMarkRing->SetVisibility(ESlateVisibility::HitTestInvisible);
-			if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(StopMarkRing->Slot)) { CS->SetPosition(C); CS->SetSize(Sz); }
+			StopBar->SetBrushColor(FLinearColor(Col.R, Col.G, Col.B, Stop.bLit ? 1.f : StopMarkArmedAlpha));
+			StopBar->SetRenderTransformAngle(AngleDeg);
+			StopBar->SetVisibility(ESlateVisibility::HitTestInvisible);
+			if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(StopBar->Slot)) { CS->SetPosition(C); CS->SetSize(Sz); }
 			bStopShown = true;
 		}
 	}
-	if (!bStopShown) Hide(StopMarkRing);
+	if (!bStopShown) Hide(StopBar);
 	const int32 StopNow = !Stop.bShow ? 0 : (Stop.bLit ? 2 : 1);
 	if (StopNow != MarkStopState)
 	{

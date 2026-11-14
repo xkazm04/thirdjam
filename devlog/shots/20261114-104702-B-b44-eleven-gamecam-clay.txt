@@ -1,0 +1,1 @@
+Push, skid, wipeout, dive, dive hit, slide, mallet, cannon after the gate fix at the game camera behind the human, clay, engine (GPU), frozen (crop). Mallet and cannon spawn points are mirrored by my test helper.

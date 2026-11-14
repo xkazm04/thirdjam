@@ -147,3 +147,33 @@ played, the ice marks KEEP. H27 is dead (its PLAY NOW built the match twice: the
 Switched off and measured, waiting for the operator: the push-out round a downed skater (+2.7 all_star), the check's cooldown with restart (free) and
 lunge (+2.5), the board slam, the half-second screen (+1.5 / +2.2 / -1.4), the stop's grace, the pickup that settles, the mates' keep-out, pro's
 presser on its job, the three's chaser.
+
+
+**Board at 08:20 (R-0063). Main = package H30's game (cut 07:03 from 95ae15a6; verified in a real window: the stop line, the hint strip, the menu line,
+the fresh zip). H29 is the fallback; H27 and H28 are withdrawn. Every lane has reported; the machine is quiet for the operator's play at 10:00.**
+Waiting for his word, each measured and ready as a patch in the Director's folder or switched off on main:
+| What | State | What it buys | What it costs |
+|---|---|---|---|
+| Pro's dial (hunt 11, the presser on its job) | two patches: `tools/perf/results/a170/A170-pro-hunt11.patch` (everywhere at pro) and `-pinned.patch` (the regular game and the season; modes and four cuts pinned) | pro 48.0 / 47.7 (52.4 / 50.2 today); the season's step 4 to 5 from 19.5 to 13 | the human 0.2 points of play more on the ice; unpinned: the modes about ten points harder |
+| A hit as he wins the puck is a stumble (`contact.take_shield_frames` 15, scaled to 45) | exported (A177), off | his knockdowns at pro 6.9 to 3.7 a match, lying down 9.1 to 4.5 % of play | pro +2.8, all_star +6.0 (2,000); law 1 off for a head-on hit in that window |
+| The push-out round a downed skater with the mates' keep-out | on main, off | spells at a downed body 1,468 to 2 in 200 pro matches | -2.3 / -1.2 / +2.8 |
+| The check's cooldown 60 with restart | on main, off | a mashed button lands 2.9 a match (20.4 today; timed 3.3) | half a point |
+| The lunge (12 frames, 1.5 m/s), the board slam (30 frames) | on main, off | a press commits the body; a slam lasts 25 frames longer | lunge +2.5 at all_star; slam +1.8 |
+| The whole contact set | | he lies 4.4 % of play at pro, 6.1 % at all_star | pro +3.4 (the dial at 12 pays it), all_star +7.3 (no lever) |
+| The marks made to read (A178) | exported, held | the contested ring on screen 28 frames (4 today); the stop line three times as thick and always across his path | none (presentation) |
+| The modes' re-tune (A173) | exported, held | Sniper passes; Bruisers distinct again; Fog of War and Cage no longer a good player's walkover | measured at hunt 8: pin or re-measure with the dial |
+| The arena's seventh evolution (A172) | exported, held | device B's lamp and cords; Glass House proposed on the clay rig | none (presentation) |
+| The half-second screen, the pickup that settles, the three's chaser | on main or measured, off | see BRAIN-4, MOVEMENT-7, BRAIN-5 | the pickup: +5.8 / -9.0 / -5.0: the one rule that takes pro and all_star down |
+All_star on the regular rink has no profile lever left (checks, speed, red skill, pressure, the commit distance: flat or the wrong way): the brain track's.
+
+
+**Board at 09:15. Every lane has reported and stopped; the machine is quiet. The operator plays H30 at 10:00.** Added since 08:20, all prepared, none landed:
+| What | Where | The number |
+|---|---|---|
+| "Everything on" with two profile numbers (A182) | `tools/perf/results/a182/A182-sunday-ladder.patch` on top of the pinned dial patch; `docs/experiments/CURVE-11.md` | rookie 85.8, pro 47.0 / 49.1 (hunt 14), all_star 37.0 with no lever; he lies on the ice 9.1 to 5.0 % of play at pro |
+| The brain's own answer to "hit as he wins the puck" (A181) | exported, off; `docs/experiments/BRAIN-6.md` | no check on a carry younger than 8 frames: knockdowns 6.8 to 5.0, pro +0.8; 15 frames: to 3.2, pro +5.7 |
+| All_star's dial (A181) | exported, off | the second man hunts and the backs step up at 16 m: -2.2 at 2,000: two points, not eleven |
+| The submission's words (A180) | on main: `submission/TRUTH.md`, `page.md`, `form.md`, `SUNDAY.md`, `video/SHOTLIST.md` | twelve of thirteen video shots must be recorded; the a155 stills are H27's: the page's pictures are to be retaken |
+Order of landing after his word (each a gated landing, then one package with the release rows): the take shield or the brain's fresh take (his choice),
+the contact set's switches, pro's dial pinned (11, or 14 with the set), rookie's red skill, the marks made to read (A178), the modes' re-tune (A173),
+the arena (A172); then the curve lane re-reads six cells at 2,000 on the built tree and the window rows read the package.

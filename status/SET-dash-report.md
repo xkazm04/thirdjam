@@ -351,3 +351,80 @@ As part 1, plus a side for the outcome: `EndDash(uint8 Reason, float DirX, float
 3. **Side and size variants of the wipeout** (a wall clip ending at the wall lying pose, and a lighter tumble). Proving numbers: joins to `Lie_Loop_Wall` and `Lie_Loop_Front` exact; gate PASS.
 
 Files (loop 2): the builder parts (`dash_a.py`, `dash_b.py`, `dash_bake.py`, `dash_tail.py`, `assemble.sh` on `build_clips_pass30_orig.py`; loop-1 parts kept as `*_loop1.py`), `iter.sh`, `sil.sh`/`sil.js` (silhouettes), `strip.sh` (every frame), `anchors2.js`, `bias.js`, `gate_joins_dash.txt`. Numbers: `work\checks.txt`, `work\clear.txt`, `work\blade.txt`, `work\sil_final.txt`, `work\anchors.md`. Gate input: `export_gate\` (its `GATE.md` copied into `export\`).
+
+---
+
+# Part 3: the third loop (stopped at the lead's call; closed 10:00 by this machine's clock)
+
+## 1. Done / not done, and what went wrong
+
+**The export is consistent again.** `C:\Users\kazda\jam\sets-lab\dash\export\` holds 12 takes per style (14 files, counting the two loop `_loopcut` files). `READY.txt` lists all 12 with start pose, end pose and key frames and was written last. The fixed gate (base export35, `--out C:\Users\kazda\jam\sets-lab\dash\gate_out`) gives **GATE PASS: 24 rows, 0 failing; 12 files, 12 takes found, 12 checked, READY.txt lists 12** per style; only its `GATE.md` is copied in. No Blender process of mine is running.
+
+**Why the folder was inconsistent: my fault.** `run_dash.sh` writes the per-take FBX into `export\` on every build, so the iteration builds of this loop (from about 03:13) overwrote the delivered loop-2 files and added unlisted ones, while `READY.txt` still said loop 2.
+
+The final chain (build, then checks, silhouettes, gate) was moved to the background when a message arrived, and I did not get back to it until the lead's call. That chain removed the export at its start and rebuilt it; by this machine's clock it was at 09:57 in its check step, and I stopped it there. It did not reach its join, silhouette or overlap re-runs, so those numbers below are from the identical build at 03:29.
+
+The fix for next time: iteration builds write to a scratch folder; only a final build writes `export\`.
+
+**Did any of the ten takes the engine has change after 03:07? No re-keying.** The ten are `Dash_Start`, `Dash_Loop`, `Dash_End`, `Dash_Bump`, `Dash_Bump_Left`, `Dash_Bump_Right`, `Dash_Skid`, `Dash_Skid_Left`, `Dash_Wipeout`, `Boost_Take`.
+- Their source was not edited in this loop: the only edits that touch them are a stick parameter that was tried at -0.20 for one build around 03:15 and set back to its loop-2 value (-0.12), and the new takes added after them.
+- Their gate rows now are identical to loop 2's gate rows: lowest points, worst turns, frames, root keys and joins. For example:
+  - `Dash_Loop`: 31.2 (calf_r, 9) / 24.4, lowest stick 19.26.
+  - `Dash_Start`: 27.2 / 28.6.
+  - `Dash_Bump_Right`: 51 / 87.6.
+  - `Dash_Wipeout`: 43.3 / 63.
+- The files were rewritten (new timestamps) with the same keys. I cannot byte-compare with the loop-2 files: they were overwritten. The engine's loop-2 import stays valid.
+
+**The four items:**
+
+| Item | State |
+|---|---|
+| 1. The stick's line off the right skate | **Met without a change.** Measured (`overlap.py`: the stick's and the right skate's triangles rasterised from the 110 px game camera): 0 of 25 `Dash_Loop` frames overlap, both styles; the nearest gap is 8.1 px (cel) and 5.1 px (clay). My loop-2 "about 7 frames per push" was by eye and wrong: what touches the skate's line in the renders is the glove and the stick's grip end. A try with the top hand 8 cm further out (gap larger) broke the 40 cm line in `Dash_Wipeout` (40.5) and put the shaft in a leg in `Dash_Skid_Left`, so it was not kept. Silhouette ratio unchanged (2.83 / 2.65). |
+| 2a. `Dash_Wipeout_Light` | **Done, in the export.** 22 frames, `Dash_Loop` 0 to `Stride` 0: a skate catches (3), three scrambling steps (7, 11, 15) with the free arm windmilling, a crouch (19). The stick sweeps back to the front over 12-22 (blade at most 37.9 / 36.4 cm a frame). Shaft 0 frames in the body. Gate PASS with its join `Stride@0`. Looked at every frame, both styles: the windmilling arm and the stumble read; the steps are small. |
+| 2b. `Dash_Wipeout_Wall` | **Built, looked at, held back** (`C:\Users\kazda\jam\sets-lab\dash\held\`, not in the export). It ends exactly on the pose `Board_Fall_Front` ends on **in export30** (the front wall lying pose = `Lie_Loop_Wall` 0 = `GetUp_Wall` 0). The figure lane has since changed that pose: against export35 the gate fails its join by 10.7 cm (cel) / 13.3 cm (clay) at the right thigh. It needs one rebuild on `build_clips_pass35.py` (about a minute). Otherwise: blade at most 15.1 cm a frame, shaft clear, slam into the boards at frame 3, slide down, the bounce at 18. In its first two frames the body is up to 35 cm past the 35 cm wall plane: the dash pose leans far forward before contact. The engine should start it about 2 frames (0.6 m at dash speed) before the root reaches 35 cm from the boards. |
+| 3. The loop judged for speed | **Done: strides, not flicker; no `Dash_Loop_B` built.** Speed used: the dash at 1.6 × the 11 m/s top speed (`docs\experiments\MOVEMENT.md` "0 to top speed 11 m/s", `ABILITIES.md` "1.6x top speed") = 17.6 m/s = 0.293 m a frame; the sprint at 12.648 m/s (MOVEMENT.md, the defender sprinting). Side view, orthographic, 110 px figure. Two cycles, every frame on one row (`speed.sh`): the figures cover each other into a smear at 19 px a frame. With every 3rd frame (`speed2.sh`, 57 px apart) each push shows as its own shape: the leg goes out wide, back, kicks up behind, and returns over 12 frames, and each push covers 3.5 m, two body heights. That reads as long, fast strides, not a flicker. It is brisk (5 pushes a second), and only stills were judged, not playback. Sheets: `C:\Users\kazda\jam\sets-lab\dash\sheets\speed-p2.png`, `C:\Users\kazda\jam\sets-lab\dash\sheets\speed-p2-k.png`. |
+| 4. `Dash_Carry` | **Done, in the export.** 24 frames, a loop on `Dash_Loop`'s phase. Pelvis, legs, spine, neck and head are `Dash_Loop` frame for frame (0.000 cm). Both hands are on the shaft and the blade lies flat on the ice 1.2 m ahead and to the stick side, swaying 6 cm with the pushes (blade end 151 / 147 cm from the root, lowest stick 0.7 / 0.31 cm). Shaft 0 frames in the body after moving the blade to the stick side (centred, it went through the folded trunk for 6 to 8 frames). Gate PASS. For the engine: a layer from `spine_01` up over `Dash_Loop` (only the clavicles, arms, hands and the stick differ). |
+
+**What the trailing-stick dash should do when the skater already carries the puck:** never trail. A carrier plays `Dash_Carry`'s upper body over the dash legs from the first frame:
+- `Dash_Start`'s legs with `Dash_Carry` layered from `spine_01`.
+- `Dash_Loop` with the layer.
+- `Dash_End`'s legs with the layer until it joins `Stride`.
+
+`Dash_Start` and `Dash_End` swing the stick 170 deg round the right side and would throw the puck off the blade. The trailing stick is for the dash without the puck, and for a carrier whose puck is lost by the bump or the wipeout.
+
+## 2. Proving numbers (from the 03:29 build, identical source to the final export)
+
+- Gate on the final export: PASS 24 of 24. Joins to the base: `Glide`@0, `Stride`@0 / 11 / 34, `GetUp_Front`@0 all within the gate's limits. Pops 0. Top hand 0 cm. Nothing under the ice beyond 0.05 cm.
+- Blade end's largest one-frame move: at most 38.3 cm in the 12 exported takes (`Dash_Carry` 1.6).
+- Shaft more than 3 cm inside a leg, the trunk or the head: 0 frames in all 12 takes, both styles (03:29 build).
+- Stick and right skate overlap from the game camera: 0 of 25 loop frames, both styles.
+
+## 3. Not verified
+
+- `JOINS.md` is not in the export: the join script for the dash-to-dash pairs (`Dash_Loop` > `Dash_Wipeout_Light`, `Dash_Carry` wrap) was in the stopped part of the chain. The gate checks only joins to base takes. The 21 dash-to-dash joins of loop 2 come from the same code and were exact.
+- The silhouette and overlap numbers were not re-measured on the final files (same source as 03:29).
+- Nothing seen in the engine. The speed judgement is from stills, not playback.
+- `Dash_Wipeout_Wall` is held back (above).
+
+## 4. For the engine lane
+
+Part 2's table holds for the ten takes. New in the export:
+
+| Take | Frames | Starts on | Ends on | Note |
+|---|---|---|---|---|
+| Dash_Wipeout_Light | 22 | Dash_Loop frame 0 (cross-fade 3) | Stride frame 0 | the dash clips something small; no lying |
+| Dash_Carry | 24, loop | (layer) | (layer) | layer from `spine_01` over Dash_Loop on the same frame; blend in and out over 4 to 6 frames |
+
+## 5. For the other device
+
+`EndDash` Reason 4 = clipped something small and kept the feet → `Dash_Wipeout_Light`. Reason 5 (when `Dash_Wipeout_Wall` ships) = met the boards head-on. With the puck, the figure needs to know the dasher carries it (the game already knows the carrier) to pick `Dash_Carry`.
+
+## 6. Decisions for the operator
+
+Unchanged: the tucked arm against a swinging one, the trailing stick, the wipeout's tone.
+
+## 7. Next three
+
+1. `Dash_Wipeout_Wall` rebuilt on export35's wall pose. Proving numbers: gate PASS with `end=wall`; 0 frames more than 2 cm past the wall plane from frame 3 on.
+2. `JOINS.md` for every dash-to-dash pair, and iteration builds moved out of `export\`. Proving numbers: all pairs within 0.0005 cm and 0 deg; the export folder's file times equal `READY.txt`'s build.
+3. The loop played at 60 fps for a real fast-against-frantic judgement (a clip from the existing frames). Proving number: clips watched 2 of 2.

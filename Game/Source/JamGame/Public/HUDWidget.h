@@ -55,7 +55,9 @@ public:
 	// session (process): the hint is spent when its window has run out once or the human has taken a first shot (ControlsHintSpent); later matches show nothing
 	// (the pause card has the full table). jam.hud.HintEveryMatch 1 gives back the strip in every match.
 	static constexpr int64 ControlsHintFrames = 480;
-	static FString ControlsHintText() { return TEXT("SKATE  WASD    BRAKE  PRESS AGAINST YOUR MOTION    AIM  MOUSE    SHOOT  HOLD LMB    PASS  Q    CHECK  RMB    SPRINT  SHIFT"); }
+	// Lane A171 (REVIEW-3 item 8: "the first screen never told me Space exists"): the poke and the ability's key are in the strip: nine verbs, three
+	// spaces between them (it was four), 143 characters: under the 146 of the ten-verb line this strip's width and type were sized for.
+	static FString ControlsHintText() { return TEXT("SKATE  WASD   BRAKE  PRESS AGAINST YOUR MOTION   AIM  MOUSE   SHOOT  HOLD LMB   PASS  Q   POKE  SPACE   CHECK  RMB   ABILITY  F   SPRINT  SHIFT"); }
 	static bool IsControlsHintSpent() { return bControlsHintSpent; }
 	static void SetControlsHintSpent(bool bSpent) { bControlsHintSpent = bSpent; }   // tests and jam.ui.hintreset
 	// The live rule: the frame window, and not spent this session (bEveryMatch: the neutral value, the strip in every match).
@@ -148,6 +150,40 @@ public:
 	// Lane A158, item 4: the own-net marker (the diamond and "own NN m") is not drawn while that net is in the frame: it stood on the goalie and the net
 	// (the critic's fault 16); off screen it is the edge chevron with its distance, as before. jam.hud.OwnMarkOnNet 1 = drawn on the net as before.
 	static bool ShowOwnMarker(bool bOnScreen, bool bDrawOnNet) { return bDrawOnNet || !bOnScreen; }
+	// ---- Lane A171 (track U1, evolution 6): the last overlaps. jam.hud.ClearEdges 1 (default; 0 = as before):
+	//   - the caption's place under the scoreboard is the first row clear of the overlay's line, the MATCH card, the one-time prompt and the net and puck
+	//     markers standing in that band (the far net's distance pill stood under "Flattened!"), and there is none when that row would reach into the
+	//     middle third; the caption keeps the row it took while the row is clear;
+	//   - the one-time prompt stands under the MATCH card while the card is up (the card covered it at a faceoff);
+	//   - the own-net marker and its label stand above the radar and the ability plate, never under them;
+	//   - the Director's Call widget's plates (the CALL READY pill, the line, the MATCH card) are not drawn on a frame they would lie on a downed figure.
+	static bool ClearEdgesOn();
+	// The first y at or under StartY at which a row [X0, X1] x [y, y + H] meets none of Taken (each kept Gap away); -1 when the row would end below MaxY. Pure.
+	static float FirstClearY(float StartY, float H, float X0, float X1, const TArray<FBox2D>& Taken, float Gap, float MaxY)
+	{
+		float Y = StartY;
+		for (int32 Pass = 0; Pass < 8; ++Pass)
+		{
+			bool bMoved = false;
+			for (const FBox2D& B : Taken)
+			{
+				if (X0 < B.Max.X + Gap && X1 > B.Min.X - Gap && Y < B.Max.Y + Gap && Y + H > B.Min.Y - Gap) { Y = static_cast<float>(B.Max.Y) + Gap; bMoved = true; }
+			}
+			if (!bMoved) break;
+		}
+		return Y + H <= MaxY ? Y : -1.f;
+	}
+	// The prompt under a band (the MATCH card's): its own y when its row [Y, Y + H] is clear of [BandTop, BandBottom], else Gap under the band. Pure.
+	static float UnderBand(float Y, float H, float BandTop, float BandBottom, float Gap = 8.f) { return (Y < BandBottom && Y + H > BandTop) ? BandBottom + Gap : Y; }
+	// A marker at P (its label HalfW to either side and Below under it) is lifted above the bottom right corner's furniture: the radar's frame (264 x 140
+	// from the edge) and the ability plate over it (404 wide, up to 240 over the bottom edge). Pure.
+	static constexpr float CornerFurnitureW = 410.f;
+	static constexpr float CornerFurnitureH = 246.f;
+	static FVector2D KeepOffRadar(FVector2D P, float VW, float VH, float HalfW, float Below)
+	{
+		if (P.X + HalfW > VW - CornerFurnitureW && P.Y + Below > VH - CornerFurnitureH) P.Y = VH - CornerFurnitureH - Below;
+		return P;
+	}
 	// (1) The marker follows the figure: the chevron's tip stands YouMarkerGapPx over the projection of the figure's head anchor (the visual's head_socket, else the
 	// top of its bounds, else the point YouMarkerHeadM over the skater's point on the ice: the rule of before, jam.hud.MarkerAnchor 0). HeadLiftCm is added to a
 	// mesh-socket anchor along the head's own axis (from the "head" bone to the socket; the world's up where the mesh has no such bone), so it holds for a
@@ -276,9 +312,12 @@ public:
 	// Lane A113 (track F1): the soft hit explains itself. The human's pressed check that resolved as a bump (ChecksSoft): TOO SOFT; one that met a skater inside
 	// its release grace (ChecksGraced): JUST GOT UP; a window that ran out on nobody (ChecksMissed): MISSED. One line a frame: the grace first (a charge into a
 	// skater that just got up can bounce the human too, and the grace is the reason), then the bounce, the refused press, the soft hit, the miss.
-	static FString ContactLineFor(bool bRefused, bool bBounced, bool bSoft = false, bool bMissed = false, bool bGraced = false)
+	// Lane A171 (track U1, evolution 6): a press the check cooldown dropped (game.contact.check_cooldown_frames, off as shipped; the read-out
+	// FJamSkaterState::ChecksCooling) says TOO SOON: the sim drops it with no window and no cue, so a mashed button felt dead. It stands before MISSED (the
+	// window of the press before ran out on the same frames: the press he just made is the one to explain) and after everything that landed or was refused.
+	static FString ContactLineFor(bool bRefused, bool bBounced, bool bSoft = false, bool bMissed = false, bool bGraced = false, bool bCooling = false)
 	{
-		return bGraced ? TEXT("JUST GOT UP") : bBounced ? TEXT("BOUNCED OFF") : bRefused ? TEXT("NOT WITH THE PUCK") : bSoft ? TEXT("TOO SOFT") : bMissed ? TEXT("MISSED") : TEXT("");
+		return bGraced ? TEXT("JUST GOT UP") : bBounced ? TEXT("BOUNCED OFF") : bRefused ? TEXT("NOT WITH THE PUCK") : bSoft ? TEXT("TOO SOFT") : bCooling ? TEXT("TOO SOON") : bMissed ? TEXT("MISSED") : TEXT("");
 	}
 	void ShowContactLine(const FString& Text);
 	FString GetContactText() const;
@@ -303,13 +342,40 @@ public:
 	int32 CueGraceCarrier = -1;
 	// ---- Lane A166 (track F2, evolution 7): the two warnings on the ice, one function (UpdateMarks, HUDMarks.cpp; called after UpdateCarrierCues).
 	// Presentation only; the rules are JamCarrierMarks.h's. jam.hud.Marks 0 = neither. Their two rings are made on first use and drawn under every element.
-	// The contested puck: a ring of ContestRingRadiusM round the loose puck in the opponent's colour, breathing by MarkPulse. The stop's distance: a ring
-	// 8 m from the carrying human towards the closing opponent, chalk at StopMarkArmedAlpha while armed, the opponent's colour, larger and breathing while lit.
+	// The contested puck: a ring of ContestRingRadiusM round the loose puck in the opponent's colour, breathing by MarkPulse.
+	// The stop's distance (lane A171, REVIEW-3 item 1: "orange rings keep appearing and I do not know which one wants what": two rings in one colour asked
+	// for opposite acts): never a ring. A LINE on the ice across the human's path, 8 m from him towards the closing opponent: StopBarHalfWidthM to either
+	// side of that point (two stick lengths in all), perpendicular to his travel; chalk at StopMarkArmedAlpha and StopBarArmedThickM while armed; the
+	// opponent's colour, StopBarLitThickM thick and breathing while lit. A ring says "this puck"; a line across the way says "stop here".
 	static constexpr float ContestRingRadiusM = 1.2f;
-	static constexpr float StopMarkArmedRadiusM = 0.7f;
-	static constexpr float StopMarkLitRadiusM = 1.1f;
+	static constexpr float StopBarHalfWidthM = 1.6f;
+	static constexpr float StopBarArmedThickM = 0.16f;
+	static constexpr float StopBarLitThickM = 0.40f;
+	static constexpr float StopBarArmedMinPx = 4.f;
+	static constexpr float StopBarLitMinPx = 9.f;
 	static constexpr float StopMarkArmedAlpha = 0.6f;
-	static constexpr float MarkDownRadiusM = 1.3f;
+	// The line on the screen from its four projected points (its two ends A and B; T0 and T1 the near and far edge of its thickness at its middle):
+	// centre, size (length x thickness, the thickness measured across the line and never under MinThickPx), the angle to turn it by, and the box it
+	// covers once turned (what the down rule tests). False for a line with no length. Pure (tests call it).
+	static bool StopBarLayout(const FVector2D& A, const FVector2D& B, const FVector2D& T0, const FVector2D& T1, float MinThickPx, FVector2D& OutCentre, FVector2D& OutSize, float& OutAngleDeg,
+		FVector2D& OutBoxMin, FVector2D& OutBoxMax)
+	{
+		const FVector2D Along = B - A;
+		const double Len = Along.Size();
+		if (Len < 1.0) return false;
+		const FVector2D Dir = Along / Len;
+		const FVector2D Tv = T1 - T0;
+		const double Thick = FMath::Max(FMath::Abs(Tv.X * Dir.Y - Tv.Y * Dir.X), static_cast<double>(MinThickPx));
+		OutCentre = (A + B) * 0.5;
+		OutSize = FVector2D(Len, Thick);
+		OutAngleDeg = static_cast<float>(FMath::RadiansToDegrees(FMath::Atan2(Dir.Y, Dir.X)));
+		const FVector2D Half(FMath::Abs(Dir.X) * Len * 0.5 + FMath::Abs(Dir.Y) * Thick * 0.5, FMath::Abs(Dir.Y) * Len * 0.5 + FMath::Abs(Dir.X) * Thick * 0.5);
+		OutBoxMin = OutCentre - Half;
+		OutBoxMax = OutCentre + Half;
+		return true;
+	}
+	// Lane A171: the marks yield to lane A158's boxes of the downed figures (DownBoxesNow: one source for every mark and marker), with the markers' pad.
+	static constexpr float MarkDownPadPx = 16.f;
 	static constexpr int32 MarkPulseFrames = 20;
 	// 1 to 1.2 and back every MarkPulseFrames sim frames (three times a second): by the sim's frame, so a capture shows the same ring every run.
 	static float MarkPulse(int64 SimFrame)
@@ -326,7 +392,7 @@ public:
 	}
 	void UpdateMarks(const FJamPresentationFrame& Frame);
 	UPROPERTY(Transient) TObjectPtr<UImage> ContestRing;
-	UPROPERTY(Transient) TObjectPtr<UImage> StopMarkRing;
+	UPROPERTY(Transient) TObjectPtr<UBorder> StopMarkBar;   // lane A171: a line, not a ring
 	int32 MarkContestOpp = -1;
 	int32 MarkStopState = 0;
 	static bool ShowControlsHint(const FJamPresentationFrame& F) { return F.SimFrame < ControlsHintFrames && F.Phase == EJamPhase::Play; }
@@ -503,6 +569,7 @@ private:
 	bool bContactPending = false;
 	int32 ContactSeenRefused = 0, ContactSeenRecoils = 0;
 	int32 ContactSeenSoft = 0, ContactSeenMissed = 0, ContactSeenGraced = 0;   // lane A113
+	int32 ContactSeenCooling = 0;                                              // lane A171
 	void UpdateContactLine(const FJamPresentationFrame& Frame);
 	UPROPERTY(Transient) TObjectPtr<UJamRadarWidget> Radar;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> CallText;
@@ -569,6 +636,10 @@ private:
 	TArray<int32> DownWhoNow;           // the skater of each of DownBoxesNow, and its box's source (2 bones, 1 bounds)
 	TArray<int32> DownSourceNow;
 	float RingYield = 1.f;              // the ring's share beside a downed figure (RingYieldStep)
+	float CaptionTopYNow = -1.f;        // lane A171: the row under the scoreboard this caption line took (-1: none yet)
+	int32 OverlayYieldTick = 0;
+	void TopBandObstacles(TArray<FBox2D>& Out, float VW, float VH) const;
+	void YieldOverlayToDowned();
 	float StepRingYield(bool bOn, const FVector2D& Centre, const FVector2D& Size);
 	int32 CaptionPlaceNow = 0;
 	int64 CaptionPlaceLine = -1000000;

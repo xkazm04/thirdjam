@@ -242,14 +242,22 @@ function Hold([string]$keys, [int]$ms) {
     }
 }
 function ProbePass {
-    foreach ($k in @('Q', 'F')) {
-        $mark = $script:all.Length
-        [A87W]::Key($h, $vk[$k], $ch[$k], 60)
-        if (WaitLog 'btn=pass held=1' 1 $mark) { $script:passKey = $k; Note "pass key resolved: $k (JAMCTRL btn=pass held=1 after $k)"; return }
-        Note "pass probe: $k raised no JAMCTRL btn=pass line"
-        Start-Sleep -Milliseconds 300
+    # A179 (item 3): the btn=pass line can come late (0.9 s on Bruisers, H29: the old 1 s wait took F for the pass key). Each key gets 2 s, and the pair is re-probed
+    # until the line arrives or 5 s have passed; events.log says which round and how late.
+    $tp = $sw.Elapsed.TotalSeconds; $round = 0
+    while ($true) {
+        $round++
+        foreach ($k in @('Q', 'F')) {
+            $mark = $script:all.Length; $tk = $sw.Elapsed.TotalSeconds
+            [A87W]::Key($h, $vk[$k], $ch[$k], 60)
+            if (WaitLog 'btn=pass held=1' 2 $mark) { $script:passKey = $k; Note ("pass key resolved: $k (JAMCTRL btn=pass held=1 after $k, {0:0.00} s late, probe round $round)" -f ($sw.Elapsed.TotalSeconds - $tk)); return }
+            Note "pass probe: $k raised no JAMCTRL btn=pass line within 2 s (round $round)"
+            Start-Sleep -Milliseconds 300
+        }
+        if ($sw.Elapsed.TotalSeconds - $tp -ge 5 -or $p.HasExited) { break }
+        Note "pass probe: no line after round $round ($([int]($sw.Elapsed.TotalSeconds - $tp)) s of 5); re-probing"
     }
-    $script:passKey = 'F'; Note 'pass key unresolved: neither Q nor F raised JAMCTRL btn=pass; using F'
+    $script:passKey = 'F'; Note "pass key unresolved: neither Q nor F raised JAMCTRL btn=pass in $round round(s); using F"
 }
 function Sweep([int]$lx, [int]$ly, [int]$rx, [int]$ry, [int]$n) {
     for ($c = 0; $c -lt $n; $c++) {

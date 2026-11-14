@@ -96,14 +96,15 @@ for (let s = from; s <= to; s++) {
   const rows = def.verbs.map((verb, i) => {
     const v = verdicts.find((x) => x.step === s && x.verb === verb);
     if (!v) { allOk = false; if (machineAbort) anyMachine = true; else anyReal = true; return { verb, ok: false, machine: machineAbort ? 'run aborted' : '', facts: 'no verdict line (the run never reached it: see events.log)' }; }
-    if (!v.ok) allOk = false;
+    const skipped = !v.ok && /skipped=(no_mate|no_opp)/.test(v.facts);   // A179: the cut has no mate / opponent for the step: not run, not a fail
+    if (!v.ok && !skipped) allOk = false;
     const io = inputs(s, i, v);
     let extra = '';
     if (io.btn.length) extra += ` input=[${[...new Set(io.btn)].join(',')}]`;
     if (io.rel.length) extra += ` releases=[${io.rel.map((r) => `charge_frames ${r.charge_frames} puck_dist ${r.puck_dist} reach ${r.reach} carrier ${r.carrier}`).join('; ')}]`;
     let machine = '';
-    if (!v.ok) { machine = (lateByStep[s] || []).join('; ') || (warnsEarly.length && !['skate', 'sprint', 'sprint_carry', 'brake'].includes(verb) ? 'a foreign game shared the cursor' : ''); if (machine) anyMachine = true; else anyReal = true; }
-    return { verb, ok: v.ok, machine, facts: v.facts + extra + (machine ? ` MACHINE[${machine}]` : '') };
+    if (!v.ok && !skipped) { machine = (lateByStep[s] || []).join('; ') || (warnsEarly.length && !['skate', 'sprint', 'sprint_carry', 'brake'].includes(verb) ? 'a foreign game shared the cursor' : ''); if (machine) anyMachine = true; else anyReal = true; }
+    return { verb, ok: v.ok || skipped, skipped, machine, facts: v.facts + extra + (machine ? ` MACHINE[${machine}]` : '') };
   });
   const ok = rows.every((r) => r.ok);
   table.push({ step: s, name: def.name, ok, verbs: rows });
@@ -123,9 +124,9 @@ console.log(`begin: human ${b.human} mate ${b.mate} opp ${b.opp}; shot_reach ${b
 console.log('');
 console.log('| step | verb | result | facts |');
 console.log('|---|---|---|---|');
-for (const t of table) for (const r of t.verbs) console.log(`| ${t.step} ${t.name} | ${r.verb} | ${r.ok ? 'PASS' : (r.machine ? 'MACHINE' : 'FAIL')} | ${r.facts.replace(/\|/g, '/')} |`);
+for (const t of table) for (const r of t.verbs) console.log(`| ${t.step} ${t.name} | ${r.verb} | ${r.skipped ? 'SKIP' : r.ok ? 'PASS' : (r.machine ? 'MACHINE' : 'FAIL')} | ${r.facts.replace(/\|/g, '/')} |`);
 console.log('');
-for (const t of table) console.log(`${t.ok ? 'PASS' : 'FAIL'} step ${t.step} ${t.name}: ${t.verbs.map((r) => `${r.verb} ${r.ok ? 'ok' : 'FAIL'}`).join(', ')}`);
+for (const t of table) console.log(`${t.ok ? 'PASS' : 'FAIL'} step ${t.step} ${t.name}: ${t.verbs.map((r) => `${r.verb} ${r.skipped ? 'SKIP' : r.ok ? 'ok' : 'FAIL'}`).join(', ')}`);
 console.log(`summary line: ${summary ?? 'none (the run did not finish)'}`);
 const verdict = allOk ? 'pass' : (anyReal ? 'fail' : 'machine');
 if (verdict === 'machine') console.log(`MACHINE: no row failed on the game's account; the machine did: ${machineAbort ?? Object.entries(lateByStep).map(([k, v]) => `step ${k}: ${v.join(', ')}`).join(' | ') ?? ''}${warnsEarly.length ? ' foreign game on the cursor' : ''} -> repeat the run`);

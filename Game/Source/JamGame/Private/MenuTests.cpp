@@ -346,6 +346,17 @@ bool FJamMenuFirstScreen::RunTest(const FString&)
 	F.Menu->StepLevel(1);
 	TestEqual(TEXT("the right end holds at ALL-STAR"), static_cast<int32>(F.Menu->GetSwitchLevel()), static_cast<int32>(EJamMenuDifficulty::AllStar));
 	// The three meanings are three different lines, and none names a number the ladder does not hold.
+	// Lane A176: the line says who the level is for, and carries no number the curve could make stale.
+	TestTrue(TEXT("rookie is for players new to hockey games"), UJamMenuFlow::LevelMeaning(TEXT("rookie")).StartsWith(TEXT("New to hockey games")));
+	TestTrue(TEXT("pro is for players who have played one"), UJamMenuFlow::LevelMeaning(TEXT("pro")).StartsWith(TEXT("Played one before")));
+	TestTrue(TEXT("all-star is the wall"), UJamMenuFlow::LevelMeaning(TEXT("all_star")).StartsWith(TEXT("The wall")));
+	for (const TCHAR* Level : { TEXT("rookie"), TEXT("pro"), TEXT("all_star") })
+	{
+		const FString L = UJamMenuFlow::LevelMeaning(Level);
+		bool bDigit = false;
+		for (const TCHAR C : L) bDigit |= FChar::IsDigit(C);
+		TestFalse(*FString::Printf(TEXT("the %s line has no number that can go stale"), Level), bDigit || L.Contains(TEXT("%")));
+	}
 	TestTrue(TEXT("each level has its own line"), UJamMenuFlow::LevelMeaning(TEXT("rookie")) != UJamMenuFlow::LevelMeaning(TEXT("pro")) && UJamMenuFlow::LevelMeaning(TEXT("pro")) != UJamMenuFlow::LevelMeaning(TEXT("all_star")));
 	const TArray<FString> Labels = F.Menu->GetMainLabels();
 	const TArray<FString> Expected = { TEXT("PLAY NOW"), TEXT("PLAY THE SEASON"), TEXT("CHOOSE YOUR CUT"), TEXT("DIRECT A CUT"), TEXT("BRAWL WITH A FRIEND"),

@@ -28,6 +28,7 @@
 #include "JamSim.h"
 #include "JamPawns.h"
 #include "RadarWidget.h"
+#include "DirectorsCallWidget.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
@@ -48,6 +49,79 @@ TArray<FBox2D> UJamHudWidget::KeepClearFigures;
 TArray<FBox2D> UJamHudWidget::KeepClearNets;
 
 bool UJamHudWidget::ClearDownOn() { return CVarJamHudClearDown.GetValueOnGameThread() != 0; }
+
+// Lane A171 (track U1, evolution 6): the last overlaps (see HUDWidget.h).
+static TAutoConsoleVariable<int32> CVarJamHudClearEdges(TEXT("jam.hud.ClearEdges"), 0,
+	TEXT("0 (default until the Director turns it on: it follows the package): as on main. 1: the caption's row under the scoreboard and the one-time prompt keep clear of the MATCH card and the net / puck markers, the own-net label stands above the radar and the ability plate, the Director's Call plates are not drawn on a downed figure; 0 as before."), ECVF_Default);
+
+bool UJamHudWidget::ClearEdgesOn() { return CVarJamHudClearEdges.GetValueOnGameThread() != 0; }
+
+// What stands in the band under the scoreboard this tick, as boxes in the viewport's Slate units.
+void UJamHudWidget::TopBandObstacles(TArray<FBox2D>& Out, float VW, float VH) const
+{
+	Out.Reset();
+	const UJamDirectorsCallHudWidget* Overlay = OverlayForPrompt.Get();
+	// The overlay's line (a call's result, a RULE line) holds the first row; the prompt's own box wherever it stands.
+	if (Overlay && Overlay->IsLineVisible()) Out.Add(FBox2D(FVector2D(VW * 0.5f - 480.f, PromptSlotY - 4.f), FVector2D(VW * 0.5f + 480.f, PromptSlotLowY - 10.f)));
+	if (PromptPlate && PromptPlate->GetVisibility() != ESlateVisibility::Collapsed)
+	{
+		FBox2D B(ForceInit);
+		if (WidgetBoxOnScreen(PromptPlate, B)) Out.Add(B);
+	}
+	if (!ClearEdgesOn()) return;
+	float BandTop = 0.f, BandBottom = 0.f;
+	if (Overlay && Overlay->GetBannerBandPx(VH, BandTop, BandBottom))
+		Out.Add(FBox2D(FVector2D(VW * 0.5f - UJamDirectorsCallHudWidget::MatchCardW * 0.5f - 8.f, BandTop), FVector2D(VW * 0.5f + UJamDirectorsCallHudWidget::MatchCardW * 0.5f + 8.f, BandBottom)));
+	const UWidget* const Marks[] = { NetDiamond.Get(), NetText.Get(), NetArrow.Get(), OwnDiamond.Get(), OwnText.Get(), OwnArrow.Get(), PuckArrow.Get(), PuckText.Get() };
+	for (const UWidget* W : Marks)
+	{
+		if (!W || W->GetVisibility() == ESlateVisibility::Collapsed || W->GetRenderOpacity() <= 0.f) continue;
+		FBox2D B(ForceInit);
+		if (WidgetBoxOnScreen(W, B) && B.Min.Y < VH / 3.f) Out.Add(B.ExpandBy(10.f));   // the label's plate and a turned chevron paint past the slot's box
+	}
+}
+
+// The Director's Call widget (another widget: its line, its MATCH card, its CALL READY pill, each a child of its root canvas, shown and hidden by
+// visibility alone): a child whose painted box meets a downed figure's box is drawn with no ink this tick, and with all of it again when clear.
+void UJamHudWidget::YieldOverlayToDowned()
+{
+	// The rings again, at the size they are drawn: lane A163's take grace (UpdateCarrierCues, last in the refresh) draws the carrier's ring and the human's at
+	// up to 1.5 x their size after the HUD's own yield ran (the carrier's ring lay on the downed human for 11 frames of one knockdown in eight). Down wins.
+	if (ClearDownOn() && DownBoxesNow.Num() > 0)
+	{
+		UWidget* const Rings[] = { YouRing.Get(), CarrierRing.Get() };
+		for (UWidget* W : Rings)
+		{
+			if (!W || W->GetVisibility() == ESlateVisibility::Collapsed) continue;
+			FBox2D B(ForceInit);
+			if (WidgetBoxOnScreen(W, B) && BoxMeetsAny(B.Min, B.Max, DownBoxesNow, 16.f)) W->SetVisibility(ESlateVisibility::Collapsed);
+		}
+	}
+	if (!OverlayForPrompt.IsValid() && (OverlayYieldTick++ % 60) == 0)
+	{
+		for (TObjectIterator<UJamDirectorsCallHudWidget> It; It; ++It) if (It->GetWorld() == GetWorld() && !It->HasAnyFlags(RF_ClassDefaultObject)) { OverlayForPrompt = *It; break; }
+	}
+	UJamDirectorsCallHudWidget* Overlay = OverlayForPrompt.Get();
+	UPanelWidget* Canvas = Overlay && Overlay->WidgetTree ? Cast<UPanelWidget>(Overlay->WidgetTree->RootWidget) : nullptr;
+	if (!Canvas) return;
+	const bool bOn = ClearDownOn() && ClearEdgesOn() && DownBoxesNow.Num() > 0;
+	const FVector2D VS = UWidgetLayoutLibrary::GetViewportSize(this);
+	const float Scale = FMath::Max(UWidgetLayoutLibrary::GetViewportScale(this), 0.01f);
+	const double ScreenArea = (VS.X / Scale) * (VS.Y / Scale);
+	for (int32 i = 0; i < Canvas->GetChildrenCount(); ++i)
+	{
+		UWidget* W = Canvas->GetChildAt(i);
+		if (!W) continue;
+		bool bHide = false;
+		if (bOn && W->GetVisibility() != ESlateVisibility::Collapsed)
+		{
+			FBox2D B(ForceInit);
+			bHide = PaintedBoxOnScreen(W, B) && B.GetSize().X * B.GetSize().Y < 0.4 * ScreenArea && BoxMeetsAny(B.Min, B.Max, DownBoxesNow);
+		}
+		const float Want = bHide ? 0.f : 1.f;
+		if (W->GetRenderOpacity() != Want) W->SetRenderOpacity(Want);
+	}
+}
 
 bool UJamHudWidget::GetKeepClear(TArray<FBox2D>& OutFigures, TArray<FBox2D>& OutNets)
 {
@@ -291,7 +365,7 @@ FString UJamHudWidget::ProbeNameOf(const UWidget* W) const
 	while (Top && Top->GetParent() && Top->GetParent() != Root.Get()) Top = Top->GetParent();
 	struct FRow { const UWidget* W; const TCHAR* Name; };
 	const FRow Rows[] = {
-		{ YouRing.Get(), TEXT("ring") }, { CarrierRing.Get(), TEXT("carrier_ring") }, { YouChevron.Get(), TEXT("chevron") }, { YouTag.Get(), TEXT("you_tag") },
+		{ StopMarkBar.Get(), TEXT("stop_mark") }, { ContestRing.Get(), TEXT("contest_ring") }, { YouRing.Get(), TEXT("ring") }, { CarrierRing.Get(), TEXT("carrier_ring") }, { YouChevron.Get(), TEXT("chevron") }, { YouTag.Get(), TEXT("you_tag") },
 		{ CommentaryStrip.Get(), TEXT("caption") }, { ContactPlate.Get(), TEXT("contact_line") }, { PromptPlate.Get(), TEXT("prompt") }, { ToastPlate.Get(), TEXT("toast") },
 		{ NetDiamond.Get(), TEXT("net_badge") }, { NetText.Get(), TEXT("net_badge") }, { NetArrow.Get(), TEXT("net_badge") }, { NetPlate.Get(), TEXT("net_badge") },
 		{ OwnDiamond.Get(), TEXT("own_badge") }, { OwnText.Get(), TEXT("own_badge") }, { OwnArrow.Get(), TEXT("own_badge") }, { OwnPlate.Get(), TEXT("own_badge") },

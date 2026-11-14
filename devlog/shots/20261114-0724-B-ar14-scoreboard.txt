@@ -1,0 +1,1 @@
+Lane AR14, device B, GPU editor, tree wt/b-arena (lane/b-arena over f42515a0), PIE floating window, screen percentage override off for the still. Clay, the hung scoreboard: from a low camera on the ice looking up 38 degrees, and from the far end. It is out of both game-camera frames (see clay-game-rest).

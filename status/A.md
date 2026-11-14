@@ -446,3 +446,13 @@
 - link green 05:37: main c5dc15e5 (No black post at the faceoff (A168), two marks on the ice before the knockdowns a player c) pushed.
 - package 05:46: `Hokej_Hokej_H28.zip` from main c5dc15e5, acceptance run green (18 verbs through the cursor and the buttons).
 - link green 05:57: main ca493723 (Rules that wait switched off, measured for the operator's answers: a mashed check lands no) pushed.
+- link green 06:07: main 2d159065 (The stop mark lights where the stop works (Director, from REVIEW-3's sweep), and the play ) pushed.
+- package 06:27: `Hokej_Hokej_H29.zip` from main 2d159065, acceptance run green (18 verbs through the cursor and the buttons).
+- link green 06:44: main d896a87f (The level switch says who each level is for (A176), the design eye's third review (A169), ) pushed.
+- link green 06:54: main 95ae15a6 (The stop mark is a line, not a second ring; Space and F in the hint strip; one down rule f) pushed.
+- package 07:03: `Hokej_Hokej_H30.zip` from main 95ae15a6, acceptance run green (18 verbs through the cursor and the buttons).
+- link green 07:13: main 3fa9c2e6 (H30 is the package the operator plays (R-0063): the window lane's tools and report (A155),) pushed.
+- link green 07:38: main 05c70170 (A soak baseline that is true of the package: 60 cells on ca493723, every one bit-identical) pushed.
+- link green 08:02: main 81eebe96 (The release chain runs the rows that caught H27 by hand; the acceptance drill cannot crash) pushed.
+- link green 08:11: main 9e452219 (Pro's dial measured for both players and kept as two patches; the price of everything that) pushed.
+- link green 08:34: main 9163e300 (The submission's words are true of the game as it is this morning (A180, track D1): the tr) pushed.

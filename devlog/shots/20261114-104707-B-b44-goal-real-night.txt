@@ -1,0 +1,1 @@
+A real goal on night (drill 10, the human scripted), NS_goal spawned by the binder at the puck in the net, game camera ~18 m, engine (GPU), un-paused HighResShot at +4, +10, +40, +70, +100, +108: navy dust above the net, faint by +70, not seen at +108 although 68 particles live.

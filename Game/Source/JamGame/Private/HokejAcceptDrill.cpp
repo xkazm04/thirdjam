@@ -273,6 +273,23 @@ void AHokejGameMode::AcceptDrillObserve()
 		if (G.K == 1) { G.AimFacts.Reset(); G.AimOk = 0; G.OtOk = 0; G.OtFacts.Reset(); }
 		G.PhFrame = F;
 		G.bPinPuck = true;
+		// Lane A179 (R-0065 item 2): a cut without a mate (a two-a-side whose other skater is a back, the old Marathon) or without a non-back opponent has nothing for the
+		// steps that stage one: G.Mate / G.Opp stay -1 and Sk[-1] crashed the game (3 of 3 matrix runs). The step is skipped and each of its verbs is recorded as
+		// `skipped=no_mate` / `skipped=no_opp` (ok=0 but not a fail: tools/qa/accept/accept.mjs reads it as SKIP, mode-table.json can carry it); the drill goes on.
+		{
+			const bool bNeedMate = G.Step == 5 || G.Step == 6, bNeedOpp = G.Step == 7 || G.Step == 8;
+			if ((bNeedMate && !Sk.IsValidIndex(G.Mate)) || (bNeedOpp && !Sk.IsValidIndex(G.Opp)))
+			{
+				const TCHAR* Why = bNeedMate ? TEXT("no_mate") : TEXT("no_opp");
+				const TCHAR* V1 = G.Step == 5 ? TEXT("pass") : G.Step == 6 ? TEXT("onetimer") : G.Step == 7 ? TEXT("check") : TEXT("checked");
+				const TCHAR* V2 = G.Step == 5 ? TEXT("saucer") : G.Step == 7 ? TEXT("crosscheck") : nullptr;
+				ACC_LOG(TEXT("step=%d verb=%s ok=0 frame=%lld skipped=%s (this cut has no %s for the step: not run, not a fail)"), G.Step, V1, F, Why, bNeedMate ? TEXT("mate") : TEXT("opponent"));
+				if (V2) ACC_LOG(TEXT("step=%d verb=%s ok=0 frame=%lld skipped=%s (this cut has no %s for the step: not run, not a fail)"), G.Step, V2, F, Why, bNeedMate ? TEXT("mate") : TEXT("opponent"));
+				G.K = SubsOf(G.Step);
+				Next();
+				return;
+			}
+		}
 		const double Dir = G.Dir, Gx = G.Gx;
 		FVector2D HPos(-Dir * 5.0, 0.0);
 		switch (G.Step)
@@ -338,6 +355,7 @@ void AHokejGameMode::AcceptDrillObserve()
 				ACC_LOG(TEXT("act step=5 k=1 act=probe_pass frame=%lld"), F);   // no puck yet: the driver finds which key raises JAMCTRL btn=pass
 				G.ActFrame = F; G.Ph = EPh::Measure; G.PhFrame = F; return;
 			}
+			if (!Sk.IsValidIndex(G.Mate)) { G.K = SubsOf(G.Step); Next(); return; }   // A179: staged only with a mate (see the Stage guard); never Sk[-1]
 			CursorLine(OnScreenTarget(Pos, (Sk[G.Mate].Pos - Pos).GetSafeNormal(), 6.0, 2.0), TEXT("mate"));
 			Hand(Me);
 			G.Ph = EPh::Hand; G.PhFrame = F; return;
