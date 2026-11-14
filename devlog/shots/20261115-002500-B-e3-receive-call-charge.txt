@@ -1,0 +1,1 @@
+E3 GPU, clay, export42's Receive (frames 2, 5), CallForPass (frames 5, 10) and the Pass_Charge layer at full charge (SetPassCharge 1.0), game camera row 1, 20 m row 2. From behind: Receive not visible (the blade is behind him), CallForPass and the charge show the stick out to his left.
