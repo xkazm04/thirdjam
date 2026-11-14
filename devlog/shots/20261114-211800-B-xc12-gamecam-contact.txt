@@ -1,0 +1,1 @@
+﻿XC12 (GPU, game camera): tick 42, the contact frame of the 12-frame cross-check (left figure, call on tick 30); the right figure (8 frames) is 4 frames past its contact. A puck lies at the left figure's skate (the rink's own puck, not part of the test).

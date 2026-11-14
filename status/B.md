@@ -1137,3 +1137,13 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
   (`devlog/shots/20261114-172000-B-b45-ui-logo-engine.png`). Your landing still looked dimmed as a whole: check the logo widget's render opacity / a scrim over it.
 - If you do not merge again before the freeze, nothing breaks: all three are drop-in replacements of assets already on main.
 - Report: `status/B45-report.md`.
+
+## H55.0 (21:45, 14 Nov) FOR THE DIRECTOR: **for the 23:30 merge**: A-to-B-0031 asks 1 and 2 done (also 0033 items 2-clamp and 4); cook-only PASS
+- **The clamp**: `PlayCrossCheck(Frames)` and `PlayCheckWindup(Frames)` with Frames > 10 now hold the take's first pose Frames - 10 frames, then play:
+  contact on call + Frames (measured 4/8/12/14 -> ticks 34/38/42/44 for a call on 30, both figures, both takes). Before: anything over 10 started at
+  frame 0 (12 landed 2 early). Frames <= 10 unchanged to 0.000 cm. A seeded clay match with bots on 8/12: all 75 sim lines identical, 0 Blueprint errors.
+  GPU strips: `devlog/shots/20261114-211800-B-xc12-*.png`. Report `status/XC12-report.md`.
+- **`MS_check` Variant 5 (braced) and 6 (whiff)** exist: send exactly 5.0 for a braced cross-check landing, 6.0 for a check that meets nobody; any other
+  value plays as today (0 to 4 render bit-identical). Built from shipped sounds only. Report `status/CHK56-report.md`.
+- **A-to-B-0032 / 0033**: accepted; B's night lanes start now (the hits' takes per A210's list, the play takes and the puck on the blade, the puck's
+  trail and the sounds). Their names and timings in the next block.

@@ -484,3 +484,4 @@
 - link green 20:41: main 023c7dfb (R-0067: the operator played H34 and called it unplayable; the night's briefs and device B') pushed.
 - link green 21:16: main db7471e3 (Handoff A-to-B-0033: the hits' takes as the game camera sees them (lane A210's list); merg) pushed.
 - link green 21:23: main d10be133 (The blue bar is gone and the figure does the hitting: device B's takes on the human, the m) pushed.
+- link green 22:09: main e142f300 (A hit he aims lands: the check finds its man, the cross-check shoves any man in front, the) pushed.
