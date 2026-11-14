@@ -108,7 +108,7 @@ bool FJamProgressionUnlocks::RunTest(const FString& Parameters)
 	TestFalse(TEXT("another cut is not"), P->IsSeasonMatch(UJamCartridge::ResolveCartridgePath(TEXT("hockey.regular"))));
 	P->RecordResult(Take1, false);
 	TestEqual(TEXT("loss keeps take 1"), P->GetSeasonState().CurrentTake, 0);
-	TestEqual(TEXT("loss hint"), P->EndHint(Take1), FString(TEXT("R  REMATCH      ESC  PAUSE")));
+	TestEqual(TEXT("loss hint"), P->EndHint(Take1), FString(TEXT("R  REMATCH      ESC  MENU")));
 	TestFalse(TEXT("loss: R restarts the same cut"), P->HandleRestart(nullptr));
 	TestFalse(TEXT("take 2 still locked"), P->GetSeasonState().Takes[1].bUnlocked);
 
@@ -119,7 +119,7 @@ bool FJamProgressionUnlocks::RunTest(const FString& Parameters)
 	TestEqual(TEXT("win moves to take 2"), S.CurrentTake, 1);
 	TestTrue(TEXT("take 2 unlocked"), S.Takes[1].bUnlocked);
 	TestEqual(TEXT("two attempts on take 1"), S.Takes[0].Attempts, 2);
-	TestEqual(TEXT("win hint"), P->EndHint(Take1), FString(TEXT("R  NEXT MATCH: THE BIG ROOM      ESC  PAUSE")));
+	TestEqual(TEXT("win hint"), P->EndHint(Take1), FString(TEXT("R  NEXT MATCH: THE BIG ROOM      ESC  MENU")));
 
 	// A result for a cut that is not the running take is ignored.
 	P->RecordResult(P->TakePath(5), true);
@@ -159,7 +159,7 @@ bool FJamSeasonRoundTrip::RunTest(const FString& Parameters)
 	const FJamLadder& L = P->GetLadder();
 	TestEqual(TEXT("eight takes"), L.Takes.Num(), 8);
 	using JamAI::EDifficulty;
-	static const EDifficulty Levels[] = { EDifficulty::Rookie, EDifficulty::Rookie, EDifficulty::Rookie, EDifficulty::Pro,   // lane A112 (R-0048 point 3): take-3 is rookie
+	static const EDifficulty Levels[] = { EDifficulty::Rookie, EDifficulty::Rookie, EDifficulty::Rookie, EDifficulty::Rookie,   // lane A112 (R-0048 point 3): take-3 is rookie; lane A133 (R-0057): take-4 too (the season's ramp)
 		 EDifficulty::Pro, EDifficulty::Pro, EDifficulty::Pro, EDifficulty::AllStar };
 	for (int32 i = 0; i < L.Takes.Num(); ++i)
 	{

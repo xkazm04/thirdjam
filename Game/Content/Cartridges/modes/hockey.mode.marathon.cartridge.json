@@ -152,7 +152,7 @@
       "goal_pause_frames": 120,
       "offside": false,
       "penalties": false,
-      "timer_frames": 28800
+      "timer_frames": 21600
     },
     "teams": [
       {
@@ -198,7 +198,8 @@
     ],
     "ai": {
       "difficulty": "pro",
-      "sprint": 0.25
+      "sprint": 0.25,
+      "hold_radius_m": 2.5
     },
     "barks": {
       "enabled": true,
@@ -222,8 +223,8 @@
     "meta": {
       "pitch": "Two on two on endless ice. Bring your legs.",
       "facts": [
-        "140 x 70 m, 8:00",
-        "2 v 2, no whistle",
+        "140 x 70 m, 6:00",
+        "2 v 2, a back each",
         "sprint +40 % for 4 s"
       ]
     }

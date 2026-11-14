@@ -56,16 +56,17 @@ namespace JamBaseline
 	// not a tune key: no pin is an all_star match on the large rink).
 	inline const char* BrainTune(const char* Level = "pro", bool bLargeRink = false)
 	{
-		if (Level && Level[0] == 'r') return bLargeRink ? "brain2=0;opp.poke_frames=-1;opp.shoot_extra_m=5;mate_speed_scale=0;red_skill=0.9" : "brain2=0;opp.poke_frames=-1;opp.shoot_extra_m=5;mate_speed_scale=0";
-		if (Level && Level[0] == 'a') return "brain2=0;opp.hunt_radius_m=20;opp.shoot_extra_m=40;mate_speed_scale=0";
-		return bLargeRink ? "brain2=0;opp.poke_frames=6;opp.hunt_radius_m=8;opp.check_min_closing=2;opp.hk_pressure_s=1.4;opp.hk_better_by_m=3;mate_speed_scale=0;red_skill=1.04"
-			: "brain2=0;opp.poke_frames=6;opp.hunt_radius_m=8;opp.check_min_closing=2;opp.hk_pressure_s=1.4;opp.hk_better_by_m=3;mate_speed_scale=0";
+		if (Level && Level[0] == 'r') return bLargeRink ? "brain2=0;brain3=0;opp.poke_frames=-1;opp.shoot_extra_m=5;mate_speed_scale=0;red_skill=0.9" : "brain2=0;brain3=0;opp.poke_frames=-1;opp.shoot_extra_m=5;mate_speed_scale=0";
+		if (Level && Level[0] == 'a') return "brain2=0;brain3=0;opp.hunt_radius_m=20;opp.shoot_extra_m=40;mate_speed_scale=0";
+		return bLargeRink ? "brain2=0;brain3=0;opp.poke_frames=6;opp.hunt_radius_m=8;opp.check_min_closing=2;opp.hk_pressure_s=1.4;opp.hk_better_by_m=3;mate_speed_scale=0;red_skill=1.04"
+			: "brain2=0;brain3=0;opp.poke_frames=6;opp.hunt_radius_m=8;opp.check_min_closing=2;opp.hk_pressure_s=1.4;opp.hk_better_by_m=3;mate_speed_scale=0";
 	}
 
 	// Lane A133 (track C0): the shipped cuts' whistle. Lane A112 took it out of hockey.regular, hockey.arena.wide, hockey.arena.large and the season's takes
 	// (rules.penalties false: content, not a rule, so not in MakeNeutral, whose callers may switch the whistle off themselves). A pin made on one of those cuts
 	// before lane A112, with the cut's own rules, calls this after MakeNeutral.
 	inline void WithWhistle(FJamGameConfig& G) { G.Rules.bPenalties = true; }
+	// brain3=0: lane A134 (track Q2, evolution 3), both sides, every rule (brain2=0 switches them off as well; the pair is here so the list reads whole).
 
 	// The brain's reads of track F2's shields (lane A115's two hooks, wired at the landing of 22:20): dead, as on any commit before them. Call on the world
 	// right after FJamSimAdapter::BuildWorld when replaying such a commit with the body shield or the take grace on. (A template: no brain header here.)

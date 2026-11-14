@@ -263,9 +263,33 @@ void AHokejGameMode::InitGame(const FString& MapName, const FString& Options, FS
 {
 	Super::InitGame(MapName, Options, ErrorMessage);
 	FString Cut;
-	if (FParse::Value(FCommandLine::Get(), TEXT("-cut="), Cut) || FParse::Value(FCommandLine::Get(), TEXT("cut="), Cut)) CutName = Cut;
+	bool bCutFromCommandLine = false;
+	if (FParse::Value(FCommandLine::Get(), TEXT("-cut="), Cut) || FParse::Value(FCommandLine::Get(), TEXT("cut="), Cut)) { CutName = Cut; bCutFromCommandLine = true; }
 	else if (UGameplayStatics::HasOption(Options, TEXT("cut"))) CutName = UGameplayStatics::ParseOption(Options, TEXT("cut"));
 	else CutName = CVarJamCut.GetValueOnGameThread();
+	// Lane A144 (the level wire): the player's level travels as an option of this open and is good for the cut this open names. A cut named on
+	// the command line is a tool's (the acceptance run, the stills): it plays its own level whatever the menu asked for.
+	RequestedLevel = bCutFromCommandLine ? FString() : LevelFromOptions(Options);
+	RequestedForCut = CutName;
+	bCutFromLaunch = bCutFromCommandLine;
+}
+
+FString AHokejGameMode::GetLevelSource() const
+{
+	if (bLevelFromSettings) return TEXT("settings");
+	return bCutFromLaunch && CutName == RequestedForCut ? TEXT("launch") : TEXT("cartridge");
+}
+
+FString AHokejGameMode::LevelFromOptions(const FString& Options)
+{
+	if (!UGameplayStatics::HasOption(Options, TEXT("level"))) return FString();
+	const FString Level = UGameplayStatics::ParseOption(Options, TEXT("level"));
+	return (Level == TEXT("rookie") || Level == TEXT("pro") || Level == TEXT("all_star")) ? Level : FString();
+}
+
+FString AHokejGameMode::GetLevelInForce() const
+{
+	return Brain ? Brain->Difficulty.ToString() : FString();
 }
 
 void AHokejGameMode::StartPlay()
@@ -318,7 +342,8 @@ bool AHokejGameMode::ApplyCartridgeLive(UJamCartridge* NewCartridge)
 	if (Effects) Effects->ApplyLiveConfig(NewCartridge->RawJson);   // lane A14: effects / pickups lists, the `director` trigger
 	const FJamGameConfig& G = Sim->GetConfig();
 	// R-0009 point 3: the brain resolves difficulty profile -> explicit game.ai -> Designer values itself (lane A3).
-	Brain->ApplyCartridge(*NewCartridge);
+	// Lane A144: a live cut does not change whose level the match plays.
+	Brain->ApplyCartridge(*NewCartridge, bLevelFromSettings ? *RequestedLevel : nullptr);
 	if (Rink && Rink->IceMid) Rink->IceMid->SetScalarParameterValue(TEXT("Wet"), G.Look.bWetIce ? 1.f : 0.f);
 	if (ULookTierSwitcher* Look = GetWorld()->GetSubsystem<ULookTierSwitcher>())
 	{
@@ -476,8 +501,12 @@ void AHokejGameMode::BuildMatch()
 
 	Brain = NewObject<UJamBrain>(this);
 	// R-0009 point 3: the brain resolves difficulty profile -> explicit game.ai -> Designer values itself (lane A3).
-	Brain->ApplyCartridge(*Cartridge);
+	// Lane A144 (the level wire): the player's level when this open asked for one for this cut, and never in a match that refuses a change of
+	// its sim (a joined match: both machines play the cartridge's own). Else the cartridge's own, as before.
+	bLevelFromSettings = !RequestedLevel.IsEmpty() && CutName == RequestedForCut && !RefuseSimChange(TEXT("a level"));
+	Brain->ApplyCartridge(*Cartridge, bLevelFromSettings ? *RequestedLevel : nullptr);
 	Brain->ResetBrain();
+	UE_LOG(LogHokej, Log, TEXT("JAMMATCH level=%s source=%s cut=%s id=%s"), *Brain->Difficulty.ToString(), *GetLevelSource(), *CutName, *Cartridge->Id);
 
 	UClass* VisualClass = ResolveVisualClass(G.Skater.Visual, G.Look.Tier);
 	SpawnedVisualClass = VisualClass;

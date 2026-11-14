@@ -278,7 +278,14 @@ bool FJamHudText::RunTest(const FString&)
 	TestEqual(TEXT("timer 3:00"), UJamHudWidget::FormatTimer(180 * 60), FString(TEXT("3:00")));
 	TestEqual(TEXT("timer rounds up"), UJamHudWidget::FormatTimer(59), FString(TEXT("0:01")));
 	TestEqual(TEXT("win card"), UJamHudWidget::CardFor(EJamPhase::Win), FString(TEXT("YOU WIN")));
-	TestEqual(TEXT("lose card"), UJamHudWidget::CardFor(EJamPhase::Lose), FString(TEXT("REMATCH?")));
+	// Lane A144 (evolution 2): the end card says what happened: the word, the score with the player's side first, the next keys.
+	TestEqual(TEXT("lose card"), UJamHudWidget::CardFor(EJamPhase::Lose), FString(TEXT("BEATEN")));
+	TestEqual(TEXT("win word"), UJamHudWidget::EndCardWord(EJamPhase::Win, 3, 1), FString(TEXT("YOU WIN")));
+	TestEqual(TEXT("loss word"), UJamHudWidget::EndCardWord(EJamPhase::Lose, 1, 3), FString(TEXT("BEATEN")));
+	TestEqual(TEXT("level at the horn is no loss"), UJamHudWidget::EndCardWord(EJamPhase::Lose, 1, 1), FString(TEXT("NO WINNER")));
+	TestEqual(TEXT("no word in play"), UJamHudWidget::EndCardWord(EJamPhase::Play, 1, 1), FString());
+	TestEqual(TEXT("score line, the player's side first"), UJamHudWidget::EndCardScore(1, 3), FString(TEXT("YOU  1 : 3  THEM")));
+	TestEqual(TEXT("next keys"), UJamHudWidget::EndCardKeys(), FString(TEXT("R  REMATCH      ESC  MENU")));
 	TestTrue(TEXT("no card in play"), UJamHudWidget::CardFor(EJamPhase::Play).IsEmpty());
 	return true;
 }

@@ -235,11 +235,11 @@
    "foul_grace_frames": 0
   },
   "meta": {
-   "pitch": "Every hit is a gamble. Fouls cost 10 s.",
+   "pitch": "The only whistle left. Foul and sit 10 s.",
    "facts": [
-    "10 s in the box",
-    "bots always hit",
-    "checks from 3 m/s"
+    "no hits from behind",
+    "hit the carrier only",
+    "hits 1.7x harder"
    ]
   }
  }

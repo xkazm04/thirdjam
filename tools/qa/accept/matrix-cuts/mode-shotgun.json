@@ -79,7 +79,7 @@
    "type": "number",
    "min": 0,
    "max": 1,
-   "default": 0.4,
+   "default": 0.9,
    "description": "How bouncy the boards are. 0 is dead, 1 is a perfect bounce."
   },
   {
@@ -113,10 +113,10 @@
  "ai": [],
  "game": {
   "rink": {
-   "length_m": 90,
-   "width_m": 45,
-   "corner_radius_m": 3.75,
-   "board_restitution": 0.4,
+   "length_m": 56,
+   "width_m": 28,
+   "corner_radius_m": 3,
+   "board_restitution": 0.9,
    "ice_friction": 0.015,
    "goal_width_m": 4
   },
@@ -128,7 +128,8 @@
    "mass": 80,
    "glide_drag": 0.147,
    "brake_decel": 6,
-   "check_enabled": true
+   "check_enabled": true,
+   "check_speed_min": 2
   },
   "puck": {
    "radius_m": 0.12,
@@ -157,22 +158,36 @@
      {
       "role": "player",
       "spawn": [
-       -7.5,
+       -4.67,
        0
       ]
      },
      {
       "role": "chaser",
       "spawn": [
-       -7.5,
-       -7.5
+       -4.67,
+       -4.67
+      ]
+     },
+     {
+      "role": "support",
+      "spawn": [
+       -4.67,
+       4.67
       ]
      },
      {
       "role": "back",
       "spawn": [
-       -22.5,
-       0
+       -14,
+       -3.11
+      ]
+     },
+     {
+      "role": "back",
+      "spawn": [
+       -14,
+       3.11
       ]
      }
     ]
@@ -184,22 +199,36 @@
      {
       "role": "chaser",
       "spawn": [
-       7.5,
+       4.67,
        0
       ]
      },
      {
       "role": "support",
       "spawn": [
-       7.5,
-       7.5
+       4.67,
+       4.67
+      ]
+     },
+     {
+      "role": "support",
+      "spawn": [
+       4.67,
+       -4.67
       ]
      },
      {
       "role": "back",
       "spawn": [
-       22.5,
-       0
+       14,
+       3.11
+      ]
+     },
+     {
+      "role": "back",
+      "spawn": [
+       14,
+       -3.11
       ]
      }
     ]
@@ -235,11 +264,11 @@
    }
   ],
   "meta": {
-   "pitch": "F fires a shot that drops the crowd.",
+   "pitch": "Tight ice, ten bodies. F clears the lane.",
    "facts": [
     "F: shotgun shot",
     "back every 20 s",
-    "1.5x, knocks down"
+    "56 x 28 m, 5 v 5"
    ]
   }
  }

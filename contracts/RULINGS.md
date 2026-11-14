@@ -668,3 +668,21 @@ at 01:30 two landings overlapped (a queue read a stale "exited" line in the file
 the next gate ran on the combined tree and was green (220 tests), so nothing untested was pushed; the landing and release scripts now hold a lock, and a
 queue waits on the lock, never on another task's output. (4) Exports leave `contracts/` and `docs/PLAY-ME.md` out (the Director's copies travelled in a
 lane's patch and collided with main).
+
+## R-0059 (H26, 2026-11-14 02:04): what the second design review found (REVIEW-2, 7,312 matches on the ladder's commit), and who fixes what before 09:00
+(1) **The menu's difficulty setting was never read by a match**: every cut played its cartridge's own level, and the regular cut says pro: a newcomer wins
+18 % there (86 % at rookie). Ruled: for the regular cuts (PLAY NOW and the cut cards) **the player's level wins** over the cartridge's; the season's takes
+and the Director's modes keep their own; a fresh profile is **rookie**; the level in force is logged at match start and shown on screen (menu lane A144,
+before anything else). (2) **The whistle leaves every mode but Glass House** (seven of twelve still carried it; a foul in 15 of 40 Shotgun matches): modes
+lane A149. (3) **The season**: the ramp of R-0057 is met by the curve lane (the novice 86 / 81.5 / 67.5 / 58 / 41 from take 3 to take 7; the finale 34 % for
+a regular player); take 2 is a waiting room (30 s without the puck in 37 of 60 first tries): one change to take 2, measured (same lane). (4) **Space is
+worth pressing**: a poke takes the puck 4 % of the time at pro (10 % on Friday) and a missed poke trips the poker: the human's 6.3 stumbles a match are his
+own missed pokes: carrier track's next evolution: the poke takes the puck at least 15 % of presses for a human-class player against a carrier that is not
+shielding, and a miss costs a recovery, not a fall, with the cells inside 4 points. (5) **Known and not fixed before the operator plays**, said in his sheet:
+opponents shoot from the red line (median release 35.7 m at pro: the long shot is one of the ladder's levers; removing it costs 10 points at pro and 23 at
+all_star: the curve track's next pass buys it back with checks and the poke); the human lies on the ice 7.8 % of play at pro; the carry's median is 0.90 s
+at pro (0.75 on Friday; the bar is 1.5); the puck is on nobody's blade 55 % of play. (6) **Good now, and not to be broken** (the review's list): no foul in
+6,312 matches of the regular cut and takes; the first match moves (first shot after 35 s, was 82; take 1 lasts 2.2 minutes, was 4.2); law 1 holds in real
+matches (frames down follow closing speed); the stop-and-go is a skill with a window (100 % at 8 m, 0 % straight); the bots brake on purpose (2,146 to 270 a
+match) and sprint with the puck; the ladder reads 86 / 51 / 23 on 200 fresh seeds. (7) The play sheet (`docs/PLAY-ME.md`) is corrected by the review's
+verdict: the stop's distance, where each level is until the wire lands, the modes that still whistle, the big ice.

@@ -240,7 +240,8 @@
       }
     ],
     "ai": {
-      "difficulty": "all_star"
+      "difficulty": "all_star",
+      "red_skill": 0.7
     },
     "look": {
       "tier": "l3_neon",

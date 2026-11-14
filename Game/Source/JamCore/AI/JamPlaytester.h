@@ -81,6 +81,10 @@ namespace JamAI
 		int Cuts = 0;                    // lane A95: cuts made (the stats read it)
 		bool bOldVerbs = false;          // lane A95: the before arm of job 3 (env JAM_PLAYTESTER_VERBS=old): no brake intent, no cut, no carry sprint (measurement only)
 		bool bOldCheck = false;          // lane A132: the check press on the playtester's own speed along the line, as before (contact.bPlaytesterClosingPress false, or env JAM_PLAYTESTER_CHECK=old for a measurement's before arm)
+		// Lane A134 (track Q2, evolution 3, item 1): the scripted human reads the body shield and the take grace as a person does (the HUD and the figure
+		// show both): no poke and no lift the sim would refuse (StickCannotTake), so the poke is there the frame the puck is in the open.
+		// env JAM_PLAYTESTER_READ=0 | 1 forces it (measurement). Off: it swings into every shield (14 pokes a match on the big ice, 0.7 clean).
+		bool bReadShield = false;
 		int StickVariant = 0;            // lane A86 measurement arms (env JAM_PLAYTESTER_STICK): 0 aim, 2 carry (no cursor on a loose puck), 3 front (the carry aim within 60 deg of facing)
 
 		void Reset(EPlaytester Kind, uint64_t Seed);

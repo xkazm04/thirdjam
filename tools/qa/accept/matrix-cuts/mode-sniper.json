@@ -146,13 +146,13 @@
    "speed": 26,
    "cooldown_frames": 24,
    "aim_cone_deg": 8,
-   "charge_frames_max": 60,
+   "charge_frames_max": 40,
    "charge_speed_bonus": 12,
    "lift": {
     "tap_m": 0.1,
     "half_m": 0.7,
     "full_m": 1.1,
-    "half_frames": 20
+    "half_frames": 10
    }
   },
   "rules": {
@@ -245,7 +245,7 @@
    "facts": [
     "net 1.22 m high",
     "pads at 0.15 m",
-    "shot 26 m/s"
+    "3 v 3, shot 26 m/s"
    ]
   }
  }

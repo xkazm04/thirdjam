@@ -113,8 +113,8 @@
   "ai": [],
   "game": {
     "rink": {
-      "length_m": 64,
-      "width_m": 32,
+      "length_m": 56,
+      "width_m": 28,
       "corner_radius_m": 3,
       "board_restitution": 0.9,
       "ice_friction": 0.015,
@@ -128,7 +128,8 @@
       "mass": 80,
       "glide_drag": 0.147,
       "brake_decel": 6,
-      "check_enabled": true
+      "check_enabled": true,
+      "check_speed_min": 2
     },
     "puck": {
       "radius_m": 0.12,
@@ -147,7 +148,7 @@
       "score_to_win": 3,
       "goal_pause_frames": 120,
       "offside": false,
-      "penalties": true
+      "penalties": false
     },
     "teams": [
       {
@@ -157,36 +158,36 @@
           {
             "role": "player",
             "spawn": [
-              -5.33,
+              -4.67,
               0
             ]
           },
           {
             "role": "chaser",
             "spawn": [
-              -5.33,
-              -5.33
+              -4.67,
+              -4.67
             ]
           },
           {
             "role": "support",
             "spawn": [
-              -5.33,
-              5.33
+              -4.67,
+              4.67
             ]
           },
           {
             "role": "back",
             "spawn": [
-              -16,
-              -3.56
+              -14,
+              -3.11
             ]
           },
           {
             "role": "back",
             "spawn": [
-              -16,
-              3.56
+              -14,
+              3.11
             ]
           }
         ]
@@ -198,36 +199,36 @@
           {
             "role": "chaser",
             "spawn": [
-              5.33,
+              4.67,
               0
             ]
           },
           {
             "role": "support",
             "spawn": [
-              5.33,
-              5.33
+              4.67,
+              4.67
             ]
           },
           {
             "role": "support",
             "spawn": [
-              5.33,
-              -5.33
+              4.67,
+              -4.67
             ]
           },
           {
             "role": "back",
             "spawn": [
-              16,
-              3.56
+              14,
+              3.11
             ]
           },
           {
             "role": "back",
             "spawn": [
-              16,
-              -3.56
+              14,
+              -3.11
             ]
           }
         ]
@@ -267,7 +268,7 @@
       "facts": [
         "F: shotgun shot",
         "back every 20 s",
-        "64 x 32 m, 5 v 5"
+        "56 x 28 m, 5 v 5"
       ]
     }
   }

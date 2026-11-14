@@ -23,7 +23,11 @@ param(
     [switch]$Trace,
     [string]$TraceChannels = 'cpu,gpu,frame,bookmark',
     [int]$ResX = 1920, [int]$ResY = 1080,
-    [int]$Port = 4706
+    [int]$Port = 4706,
+    # Lane A150: 'open' (default, lane A106: the remote console's open /Game/Maps/Rink) or 'play' (PLAY NOW's own path: jam.menuscreen play).
+    [ValidateSet('open', 'play')][string]$StartPath = 'open',
+    # Lane A150: no -cut on the command line (the operator's PLAY NOW: hockey.regular from the menu's own guess).
+    [switch]$NoCut
 )
 $wt = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $Exe = (Resolve-Path $Exe).Path
@@ -39,13 +43,14 @@ function OtherWindows { @(Get-Process -ErrorAction SilentlyContinue | Where-Obje
 $script:gamePid = -1
 $others = OtherWindows
 Note "other game/editor windows at start: $($others -join ' ')"
-$a = "-cut=`"$cut`" -dpcvars=jam.ScriptHuman=1,r.GPUCsvStatsEnabled=1$(if ($Dp) { ',' + $Dp }) -windowed -ResX=$ResX -ResY=$ResY -WinX=40 -WinY=40 -log -abslog=`"$log`" -statnamedevents -RemoteConsoleIP=127.0.0.1 -RemoteConsolePort=$Port"
+$cutArg = if ($NoCut) { '' } else { "-cut=`"$cut`" " }
+$a = "$cutArg-dpcvars=jam.ScriptHuman=1,r.GPUCsvStatsEnabled=1$(if ($Dp) { ',' + $Dp }) -windowed -ResX=$ResX -ResY=$ResY -WinX=40 -WinY=40 -log -abslog=`"$log`" -statnamedevents -RemoteConsoleIP=127.0.0.1 -RemoteConsolePort=$Port"
 if ($Trace) { $a += " -trace=$TraceChannels -tracefile=`"$(Join-Path $out 'trace.utrace')`"" }
 $p = Start-Process -FilePath $Exe -ArgumentList $a -PassThru
 $null = $p.Handle
 $start = $p.StartTime
 $script:gamePid = $p.Id
-@{ pid = $p.Id; start = $start.ToString('o'); exe = $Exe; args = $a; tier = $Tier; lane = 'A106'; dp = $Dp; others = $others } | ConvertTo-Json -Compress | Set-Content (Join-Path $out 'run.json')
+@{ pid = $p.Id; start = $start.ToString('o'); exe = $Exe; args = $a; tier = $Tier; lane = 'A106'; dp = $Dp; startpath = $StartPath; nocut = [bool]$NoCut; others = $others } | ConvertTo-Json -Compress | Set-Content (Join-Path $out 'run.json')
 Note "start pid $($p.Id) $a"
 
 function LogHas([string]$pat) {
@@ -86,7 +91,8 @@ Note 'menu map logged'
 Start-Sleep -Seconds $WaitMenu
 Console 'csvprofile start' | Out-Null
 if ($Trace) { Console 'trace.bookmark A106_open' | Out-Null }
-if (Console 'open /Game/Maps/Rink' 20) { Note 'open Rink sent (no posted input)' } else { Note 'FAIL: open Rink did not answer' }
+$startCmd = if ($StartPath -eq 'play') { 'jam.menuscreen play' } else { 'open /Game/Maps/Rink' }
+if (Console $startCmd 20) { Note "$startCmd sent (no posted input)" } else { Note "FAIL: $startCmd did not answer" }
 if (WaitLog 'JAMCART loaded' 120) { Note 'JAMCART loaded seen' } else { Note 'FAIL: no JAMCART loaded' }
 if (WaitLog 'JAMSIM frame=600 ' 90) { Note 'sim frame 600 seen (10 s into the match)' } else { Note 'no JAMSIM frame=600' }
 if ($PlaySeconds -le 0) { Console 'csvprofile stop' | Out-Null; Start-Sleep -Seconds 3 }

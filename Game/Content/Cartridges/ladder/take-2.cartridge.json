@@ -144,7 +144,7 @@
     },
     "rules": {
       "mode": "timer",
-      "timer_frames": 10800,
+      "timer_frames": 7200,
       "goal_pause_frames": 120,
       "offside": false,
       "penalties": false

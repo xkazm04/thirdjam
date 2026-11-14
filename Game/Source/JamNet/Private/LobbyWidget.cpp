@@ -131,7 +131,7 @@ void ULobbyWidget::BuildTree()
 
 	// Lane A144: the words of JOIN-GUIDE.md sections 2 and 3, where the player needs them.
 	HostHelp = MakeText(T, TEXT("HostHelp"), 15, Chalk, false);
-	HostHelp->SetText(FText::FromString(TEXT("HOST: pick the cut with < > and press HOST. Both machines: the same network, the same build.")));
+	HostHelp->SetText(FText::FromString(TEXT("HOST: pick the cut with < > and press HOST. Both machines: the same network, the same build. The match plays at the cut's own level.")));
 	Row(HostHelp, 16);
 
 	// Host row: < cut > [Host]
