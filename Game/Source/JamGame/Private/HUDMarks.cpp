@@ -4,7 +4,7 @@
 //   The contested puck: a pulsing ring in the opponent's colour round a loose puck that the human and an opponent will reach head-on at about the same
 //     time. What it says: "take this and you are hit as you touch it" (brake before it, let him have it and hit him, or cut across).
 //   The stop's distance: a small ring on the ice five stick lengths from the carrying human towards the opponent closing ahead of him; chalk while
-//     that opponent is far, his colour, larger and breathing from a quarter second before he is 11 m off until he is 7 m off (the stop passes), gone inside
+//     that opponent is far, his colour, larger and breathing from a quarter second before he is 9.5 m off until he is 7 m off (the stop passes), gone inside
 //     7 m (too late) and while he brakes. Their colour on the ice means act now, here as round the contested puck; yellow stays the take grace's.
 // Neither is drawn where its box would meet a downed figure (lane A158's rule; its own boxes, HUDClearDown.cpp, are not in this tree: a ground box round
 // each downed skater stands in for them here).

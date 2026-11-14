@@ -74,7 +74,10 @@ namespace JamCarrierMarks
 	{
 		double AheadM = 8.0;           // where the mark stands: five stick lengths from the human, towards the opponent
 		double LitNearM = 7.0;         // lit while the opponent is this far off or more ...
-		double LitFarM = 11.0;         // ... and this far off or less, plus the hand's lead:
+		double LitFarM = 9.5;          // ... and this far off or less, plus the hand's lead. Director, 14 Nov, from REVIEW-3's sweep of the stop by distance (200 seeds a row):
+		                               // it was 11 m, and a stop begun at 11 / 12 / 13.5 m passes 83.5 / 56.5 / 52 % at pro and 53 / 28.5 / 19.5 % at all_star: the mark lit where
+		                               // obeying it lost the feet. Begun at 9.5 m it passes 100 / 97 / 92 % (rookie / pro / all_star), at 8 m 100 % at every level. The mark's
+		                               // recall of the knockdowns it is for: 76.7 -> 73.8 % at pro, lit frames down a fifth.
 		double ReactSec = 0.25;        // the mark lights this long before the opponent is at LitFarM at the pace the two close at, so a stop pressed a quarter
 		                               // second after it lights begins inside the window (head-on at 15 m/s the window itself lasts a quarter second)
 		double ArmFarM = 20.0;         // armed (shown, not lit) from here in

@@ -670,9 +670,10 @@ bool FJamMovementMarks::RunTest(const FString& Parameters)
 		TestTrue(TEXT("a closing defender 15 m ahead: the mark is armed, not lit"), Far.bShow && !Far.bLit && Far.Def == Opp);
 		TestTrue(TEXT("... and stands five stick lengths (8 m) from the human, towards him"), FMath::IsNearlyEqual(FVector2D::Distance(Far.At, HP), 8.0, 0.01) && Far.At.X > HP.X);
 		const JamCarrierMarks::FStopMark Lit = At(10.0, 0.0, -5.0);
-		TestTrue(TEXT("the defender 10 m ahead: lit (the stop passes from 11 m to 7 m)"), Lit.bShow && Lit.bLit);
-		TestTrue(TEXT("the defender 13.5 m ahead closing at 13 m/s: lit already (a quarter second of lead for the hand: 11 m + 3.3 m)"), At(13.5, 0.0, -5.0).bLit);
-		TestFalse(TEXT("the defender 13.5 m ahead standing still (closing at 8 m/s: 11 m + 2 m): armed, not yet lit"), At(13.5, 0.0, 0.0).bLit);
+		TestTrue(TEXT("the defender 10 m ahead closing at 13 m/s: lit (the stop passes from 9.5 m to 7 m, plus the hand's lead)"), Lit.bShow && Lit.bLit);
+		TestTrue(TEXT("the defender 12.5 m ahead closing at 13 m/s: lit already (a quarter second of lead for the hand: 9.5 m + 3.25 m)"), At(12.5, 0.0, -5.0).bLit);
+		TestFalse(TEXT("the defender 13.5 m ahead closing at 13 m/s: armed, not yet lit (REVIEW-3: a stop begun out there loses the feet at pro and at all_star)"), At(13.5, 0.0, -5.0).bLit);
+		TestFalse(TEXT("the defender 13.5 m ahead standing still (closing at 8 m/s: 9.5 m + 2 m): armed, not yet lit"), At(13.5, 0.0, 0.0).bLit);
 		TestTrue(TEXT("the defender 7.5 m ahead: still lit"), At(7.5, 0.0, -5.0).bLit);
 		TestFalse(TEXT("the defender 6 m ahead: gone (a stop begun here loses the feet)"), At(6.0, 0.0, -5.0).bShow);
 		TestFalse(TEXT("the defender 10 m to the side of his travel: no mark"), At(0.0, 10.0, 0.0).bShow);

@@ -445,3 +445,4 @@
 - link green 05:31: main 84ab6c03 (The ladder the operator plays (A162, track C0, the last pass: R-0061, R-0062): five cells ) pushed.
 - link green 05:37: main c5dc15e5 (No black post at the faceoff (A168), two marks on the ice before the knockdowns a player c) pushed.
 - package 05:46: `Hokej_Hokej_H28.zip` from main c5dc15e5, acceptance run green (18 verbs through the cursor and the buttons).
+- link green 05:57: main ca493723 (Rules that wait switched off, measured for the operator's answers: a mashed check lands no) pushed.
