@@ -422,11 +422,26 @@ FString UJamHudWidget::CardFor(EJamPhase Phase)
 	switch (Phase)
 	{
 	case EJamPhase::Win: return TEXT("YOU WIN");
-	case EJamPhase::Lose: return TEXT("REMATCH?");
+	case EJamPhase::Lose: return TEXT("BEATEN");   // lane A144: "REMATCH?" asked a question and never said the match was lost; R REMATCH is on the key line
 	case EJamPhase::Paused: return TEXT("PAUSED");
 	default: return FString();
 	}
 }
+
+FString UJamHudWidget::EndCardWord(EJamPhase Phase, int32 Mine, int32 Theirs)
+{
+	// Level at the end: the sim stopped the match at its horn with no winner. Not a loss, and the card says so.
+	if (Phase == EJamPhase::Lose && Mine == Theirs) return TEXT("NO WINNER");
+	return CardFor(Phase);
+}
+
+FString UJamHudWidget::EndCardScore(int32 Mine, int32 Theirs)
+{
+	return FString::Printf(TEXT("YOU  %d : %d  THEM"), Mine, Theirs);
+}
+
+FString UJamHudWidget::GetCardScoreText() const { return CardScoreText ? CardScoreText->GetText().ToString() : FString(); }
+FString UJamHudWidget::GetCardKeysText() const { return HintText ? HintText->GetText().ToString() : FString(); }
 
 TSharedRef<SWidget> UJamHudWidget::RebuildWidget()
 {
@@ -686,15 +701,20 @@ void UJamHudWidget::BuildTree()
 	Place(Root, FaceoffHintPlate, FVector2D(0.5, 0.66), FVector2D(0.5, 0), FVector2D(RingOffsetXPx, 124));
 
 	// ---- Win / lose cards on a slate plate with a clapper stripe, and the restart hint under it.
-	CardPlate = S::Plate(T, S::Panel(0.94f), FMargin(0, 0, 0, 18));
+	CardPlate = S::Plate(T, S::Panel(0.94f), FMargin(0, 0, 0, 30));   // lane A144: 18 put the key line on the plate's chalk edge
 	CardPlate->SetVisibility(ESlateVisibility::Collapsed);
 	UVerticalBox* CardBody = T->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass());
 	S::AddV(CardBody, S::Clapper(T, 10, 14), FMargin(0));
 	CardTextBlock = MakeText(T, TEXT("CardText"), S::Font(S::Display, FName("Black"), S::TrackTitle), S::Paper());
 	CardTextBlock->SetJustification(ETextJustify::Center);
-	S::AddV(CardBody, CardTextBlock, FMargin(48, 14, 48, 2), HAlign_Center);
+	S::AddV(CardBody, CardTextBlock, FMargin(48, 14, 48, 0), HAlign_Center);
+	// Lane A144: the score under the word, the player's side first.
+	CardScoreText = MakeText(T, TEXT("CardScore"), S::Font(S::Label + 6, FName("Black"), S::TrackLabel), S::Paper());
+	CardScoreText->SetJustification(ETextJustify::Center);
+	CardScoreText->SetVisibility(ESlateVisibility::Collapsed);
+	S::AddV(CardBody, CardScoreText, FMargin(32, 0, 32, 8), HAlign_Center);
 	HintText = MakeText(T, TEXT("HintText"), S::Font(S::Body, FName("Bold"), 40), S::Yellow());
-	HintText->SetText(FText::FromString(TEXT("R  RESTART      ESC  PAUSE")));
+	HintText->SetText(FText::FromString(EndCardKeys()));
 	HintText->SetJustification(ETextJustify::Center);
 	S::AddV(CardBody, HintText, FMargin(32, 0, 32, 0), HAlign_Center);
 	CardPlate->SetContent(CardBody);
@@ -827,20 +847,25 @@ void UJamHudWidget::RefreshFromFrame(const FJamPresentationFrame& F)
 	}
 	TimerText->SetVisibility(F.bHasTimer ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 
-	const FString Card = CardFor(F.Phase);
+	const FString Card = EndCardWord(F.Phase, F.ScoreHome, F.ScoreAway);   // ScoreHome is the player's side (AHokejGameMode fills it so)
 	CardTextBlock->SetText(FText::FromString(Card));
 	const bool bEnd = F.Phase == EJamPhase::Win || F.Phase == EJamPhase::Lose;
 	CardTextBlock->SetVisibility(Card.IsEmpty() ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
 	// The plate shows for the end cards; lane A8's pause card covers the paused phase.
 	CardPlate->SetVisibility(bEnd ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	HintText->SetVisibility(bEnd ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+	if (CardScoreText)
+	{
+		CardScoreText->SetVisibility(bEnd ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+		if (bEnd) CardScoreText->SetText(FText::FromString(EndCardScore(F.ScoreHome, F.ScoreAway)));
+	}
 	if (bEnd)
 	{
 		// Lane A17: a season take's end card says what R does next (NEXT TAKE after a win, RETAKE after a loss).
 		FString Hint;
 		const AHokejGameMode* GM = GetWorld() ? GetWorld()->GetAuthGameMode<AHokejGameMode>() : nullptr;
 		if (const UJamProgression* P = UJamProgression::Get(this); P && GM && GM->GetCartridge()) Hint = P->EndHint(GM->GetCartridge()->SourcePath);
-		HintText->SetText(FText::FromString(Hint.IsEmpty() ? FString(TEXT("R  RESTART      ESC  PAUSE")) : Hint));
+		HintText->SetText(FText::FromString(Hint.IsEmpty() ? EndCardKeys() : Hint));
 		CardTextBlock->SetColorAndOpacity(FSlateColor(F.Phase == EJamPhase::Win ? S::Yellow() : S::Paper()));
 	}
 	CallText->SetVisibility(ShowDirectorsCall(F) ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);

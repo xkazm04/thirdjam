@@ -232,6 +232,14 @@ public:
 	// The Directors Call prompt shows only after the first goal.
 	static bool ShowDirectorsCall(const FJamPresentationFrame& F) { return F.bDirectorsCallReady && (F.ScoreHome + F.ScoreAway) > 0 && F.Phase != EJamPhase::Win && F.Phase != EJamPhase::Lose; }
 	static FString CardFor(EJamPhase Phase);
+	// Lane A144 (evolution 2, by the Director's order for this card): the end card says what happened. The word: YOU WIN, BEATEN, or NO WINNER
+	// when the match stopped level at the horn (the sim names no winner; it used to read as a loss with no word of why). The score line is the
+	// player's side first: "YOU  3 : 1  THEM". The key line outside a season match: EndCardKeys().
+	static FString EndCardWord(EJamPhase Phase, int32 Mine, int32 Theirs);
+	static FString EndCardScore(int32 Mine, int32 Theirs);
+	static FString EndCardKeys() { return TEXT("R  REMATCH      ESC  MENU"); }
+	FString GetCardScoreText() const;
+	FString GetCardKeysText() const;
 	// Lane A14 (C-0005): the active-effects strip under the score, "BOLT speed 4.2s    WEIGHT heavy_puck 1.0s" (icon name, effect id, seconds left); empty = hidden.
 	static FString FormatEffects(const TArray<FJamEffectHudEntry>& Rows);
 
@@ -403,6 +411,7 @@ private:
 	// Lane A18: the plates and strips of the slate kit around the elements above.
 	UPROPERTY(Transient) TObjectPtr<UBorder> ControlsStrip;
 	UPROPERTY(Transient) TObjectPtr<UBorder> CardPlate;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> CardScoreText;   // lane A144: the score on the end card
 	// Lane A49: the sprint stamina bar (bottom centre, above the strips): a dark back plate and a fill that shrinks with the stamina; hidden while full and idle.
 	UPROPERTY(Transient) TObjectPtr<UBorder> StaminaBack;
 	UPROPERTY(Transient) TObjectPtr<UBorder> StaminaFill;

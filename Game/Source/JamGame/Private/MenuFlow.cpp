@@ -2,6 +2,9 @@
 #include "JamCartridge.h"
 #include "JamJson.h"
 #include "Progression.h"
+#include "SettingsWidget.h"
+#include "DifficultyResolve.h"
+#include "DifficultyProfile.h"
 #include "Kismet/GameplayStatics.h"
 #include "HAL/IConsoleManager.h"
 #include "Misc/FileHelper.h"
@@ -17,6 +20,19 @@ DEFINE_LOG_CATEGORY_STATIC(LogJamMenu, Log, All);
 
 void UJamMenuFlow::StartMatch(UObject* WorldContext, const FString& CutNameOrPath)
 {
+	StartMatchAtLevel(WorldContext, CutNameOrPath, FString());
+}
+
+FString UJamMenuFlow::PlayerLevelFor(const FString& CutName, bool bSavedOrTake, const FJamSettings& Settings)
+{
+	if (bSavedOrTake) return FString();
+	// A shipped cut is a plain name; a mode is "modes/<name>", a take or a preview is a path.
+	if (CutName.Contains(TEXT("/")) || CutName.Contains(TEXT("\\")) || CutName.Contains(TEXT(":"))) return FString();
+	return FirstMatchLevel(Settings);
+}
+
+void UJamMenuFlow::StartMatchAtLevel(UObject* WorldContext, const FString& CutNameOrPath, const FString& Level)
+{
 	if (IConsoleVariable* V = IConsoleManager::Get().FindConsoleVariable(TEXT("jam.Cut")))
 	{
 		V->Set(*CutNameOrPath, ECVF_SetByCode);
@@ -25,10 +41,15 @@ void UJamMenuFlow::StartMatch(UObject* WorldContext, const FString& CutNameOrPat
 	{
 		UE_LOG(LogJamMenu, Warning, TEXT("JAMMENU the jam.Cut console variable does not exist; the rink will load its default cut"));
 	}
-	UE_LOG(LogJamMenu, Log, TEXT("JAMMENU start match cut=%s"), *CutNameOrPath);
+	UE_LOG(LogJamMenu, Log, TEXT("JAMMENU start match cut=%s level=%s"), *CutNameOrPath, Level.IsEmpty() ? TEXT("cartridge") : *Level);
 	// Plain names also travel as a URL option (the game mode reads either); paths stay in the console variable only.
 	const bool bPlainName = !CutNameOrPath.Contains(TEXT("/")) && !CutNameOrPath.Contains(TEXT("\\")) && !CutNameOrPath.Contains(TEXT(":")) && !CutNameOrPath.Contains(TEXT(" "));
-	UGameplayStatics::OpenLevel(WorldContext, FName(RinkMap), true, bPlainName ? FString::Printf(TEXT("cut=%s"), *CutNameOrPath) : FString());
+	// Lane A144: the level is an option of this open only (never a console variable that outlives it): the next match that names none plays its
+	// cartridge's own.
+	TArray<FString> Options;
+	if (bPlainName) Options.Add(FString::Printf(TEXT("cut=%s"), *CutNameOrPath));
+	if (!Level.IsEmpty()) Options.Add(FString::Printf(TEXT("level=%s"), *Level));
+	UGameplayStatics::OpenLevel(WorldContext, FName(RinkMap), true, FString::Join(Options, TEXT("?")));
 }
 
 void UJamMenuFlow::ReturnToMenu(UObject* WorldContext)
@@ -342,10 +363,44 @@ FString UJamMenuFlow::WhatItIsLine()
 	return TEXT("Five-a-side hockey. WASD skates, the mouse is your stick.");
 }
 
+FString UJamMenuFlow::BrandLineFor(bool bFirstCutHasWhistle)
+{
+	// R-0054 point 5: the banner is "Hockey with the whistle taken out" where it is true; the law itself where the first cut still has a whistle.
+	return bFirstCutHasWhistle ? TEXT("The speed you bring is the hit you get.") : TEXT("Hockey with the whistle taken out.");
+}
+
 FString UJamMenuFlow::BrandLine()
 {
-	// R-0054 point 5: "Hockey with the whistle taken out" waits for the regular cut to lose its whistle; until then the law itself.
-	return TEXT("The speed you bring is the hit you get.");
+	// Read from the cartridge each time the first screen is built, so the line is right on every tree (a cut that cannot be read keeps the law).
+	TArray<FString> Errors;
+	const UJamCartridge* C = UJamCartridge::LoadFromFile(UJamCartridge::ResolveCartridgePath(FirstCut), Errors);
+	return BrandLineFor(!C || C->Game.Rules.bPenalties);
+}
+
+// ---------------------------------------------------------------- the player's level (lane A144: evolution 2, then the level wire)
+
+FString UJamMenuFlow::FirstMatchLevel(const FJamSettings& Settings)
+{
+	return FJamSettings::DifficultyString(Settings.EffectiveDifficulty());
+}
+
+FString UJamMenuFlow::FirstMatchLine(const FString& Level)
+{
+	EJamMenuDifficulty D = EJamMenuDifficulty::Pro;
+	FJamSettings::ParseDifficulty(Level, D);
+	return FString::Printf(TEXT("ONE MATCH, %s.  ENTER / A, OR CLICK."), *FJamSettings::DifficultyLabel(D));
+}
+
+FString UJamMenuFlow::CutLevel(const UJamCartridge& C)
+{
+	JamAI::FJamDifficultyResolution R;
+	JamAI::ResolveDifficulty(C, R);
+	switch (R.Level)
+	{
+	case JamAI::EDifficulty::Rookie: return TEXT("rookie");
+	case JamAI::EDifficulty::AllStar: return TEXT("all_star");
+	default: return TEXT("pro");
+	}
 }
 
 FString UJamMenuFlow::CutCardLine(const FJamMenuCutRow& Row)

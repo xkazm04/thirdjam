@@ -56,8 +56,9 @@ the host (not tested, not needed this weekend). Never change these settings from
 | **YOU WIN** (the winner) / **REMATCH?** (the loser) | the match ended; each machine shows its own team's card | **R** on both: *rematch asked: waiting for Ada*, then *REMATCH: the puck drops* (a fresh match, lane A140); Esc leaves |
 | **THE HOST LEFT** / **YOUR FRIEND LEFT**: *Ada left the match* | the other side pressed Esc, quit or closed the game | back to the menu, host again |
 | **CONNECTION LOST**: *no word from Ada for 3 seconds* | the other machine went silent (crash, Wi-Fi gone, sleep) | back to the menu, host again |
-| **DESYNC**: *the two games disagreed at frame N; this cut is over* | the two simulations stopped being identical (a bug: never seen) | note the frame and the cut, save both `Saved/Logs`, tell Q1 |
-| *a live cut is off in an online match: both games must stay the same (change it before you host)* (orange) | the Designer panel, a Director's Call or `jam.livecut` tried to change one machine's game | nothing: the match goes on; change the cut before hosting |
+| **DESYNC**: *the two games disagreed at frame N; this cut is over* | the two simulations stopped being identical (a bug: never seen in 1,000 soak matches) | note the frame and the cut, save both logs (`Saved/Logs`), tell Q1 |
+| **YOU WIN** / **BEATEN** / **NO WINNER** (the normal card, lane A144: the word, then *YOU 3 : 1 THEM*, then the keys), each machine its own team's | the match ended; the link stays open | press **R** to ask for a rematch; it starts on both when both pressed R (*rematch asked: waiting for Ada*, then *REMATCH: the puck drops*); Esc leaves |
+| *a live cut is off in an online match: both games must stay the same (change it before you host)* (orange) | the Designer panel, a Director's Call or `jam.livecut` tried to change this machine's game alone | nothing: the match goes on unchanged; change the cut before hosting (also *a cut load* / *a restart*) |
 
 ## 6. How it was tested (one machine, two headless processes, the real lobby flow)
 `tools/net/twoproc.ps1` starts a host and a guest (`-nullrhi`), each seat played by the good playtester using every verb, to the end of the match, both

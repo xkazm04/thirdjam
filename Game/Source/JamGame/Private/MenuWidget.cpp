@@ -16,6 +16,10 @@
 #include "Components/ButtonSlot.h"
 #include "Components/EditableTextBox.h"
 #include "Components/Spacer.h"
+#include "Components/Slider.h"
+#include "Framework/Application/SlateApplication.h"
+#include "Widgets/SWindow.h"
+#include "Input/HittestGrid.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "GameFramework/PlayerController.h"
 #include "Engine/GameInstance.h"
@@ -211,9 +215,9 @@ UWidget* UJamMenuWidget::BuildMain()
 		PlayNowText = S::Text(T, TEXT("PLAY NOW"), S::Font(S::Title + 4, FName("Black"), S::TrackTitle), S::Chalk());
 		PlayNowText->SetJustification(ETextJustify::Center);
 		AddV(Body, PlayNowText, FMargin(0), HAlign_Center);
-		UTextBlock* Sub = S::Text(T, TEXT("ONE MATCH, THE REGULAR CUT.  ENTER / A, OR CLICK."), S::CaptionFont(), S::Muted());
-		Sub->SetJustification(ETextJustify::Center);
-		AddV(Body, Sub, FMargin(0, 0, 0, 2), HAlign_Center);
+		PlayNowSub = S::Text(T, UJamMenuFlow::FirstMatchLine(TEXT("rookie")), S::CaptionFont(), S::Muted());
+		PlayNowSub->SetJustification(ETextJustify::Center);
+		AddV(Body, PlayNowSub, FMargin(0, 0, 0, 2), HAlign_Center);
 		PlayNowButton->AddChild(Body);
 		PlayNowButton->OnClicked.AddDynamic(this, &UJamMenuWidget::OnPlayNowClicked);
 		AddTinted(PlayNowButton, PlayNowText);
@@ -690,7 +694,8 @@ bool UJamMenuWidget::ChooseCut(const FString& Name)
 		UE_LOG(LogJamMenuUi, Warning, TEXT("JAMMENU cut %s rejected: %s"), *Name, *Err);
 		return false;
 	}
-	UJamMenuFlow::StartMatch(this, Row && Row->bSaved ? Row->Path : Name);
+	// Lane A144 (the level wire): a regular cut plays the player's level; a mode, a take and a saved cut play their own (UJamMenuFlow::PlayerLevelFor).
+	UJamMenuFlow::StartMatchAtLevel(this, Row && Row->bSaved ? Row->Path : Name, UJamMenuFlow::PlayerLevelFor(Name, Row && Row->bSaved, FJamSettings::Load()));
 	return true;
 }
 
@@ -801,10 +806,15 @@ bool UJamMenuWidget::PlayNow()
 	// after its third shot. A player never passes -cut.
 	FString LaunchCut;
 	if (FParse::Value(FCommandLine::Get(), TEXT("-cut="), LaunchCut) && !LaunchCut.IsEmpty() && ChooseCut(LaunchCut)) return true;
+	// Lane A144 (the level wire): rookie on a first run, the player's level once picked in the settings: ChooseCut gives every regular cut the
+	// player's level (UJamMenuFlow::PlayerLevelFor, ?level=<x>, AHokejGameMode, the brain). With -cut= on the command line the game mode plays the
+	// cartridge's own level whatever the menu asks (JAMMATCH ... source=launch).
 	if (ChooseCut(UJamMenuFlow::FirstCut)) return true;
 	if (MainStatus) MainStatus->SetText(FText::FromString(FString::Printf(TEXT("The first match cannot start: %s"), CutsStatus ? *CutsStatus->GetText().ToString() : TEXT("no cut"))));
 	return false;
 }
+
+FString UJamMenuWidget::GetFirstPressLine() const { return PlayNowSub ? PlayNowSub->GetText().ToString() : FString(); }
 
 void UJamMenuWidget::OnPlayNowClicked() { PlayNow(); }
 void UJamMenuWidget::OnControlsClicked() { ShowScreen(EJamMenuScreen::Controls); }
@@ -820,6 +830,8 @@ TArray<FJamCutInfo> UJamMenuWidget::ListCutsWithSeason() const
 
 void UJamMenuWidget::RefreshSeason()
 {
+	// Lane A144 (evolution 2): the first screen re-reads the settings each time it shows: PLAY NOW's line names the level it will play.
+	if (PlayNowSub) PlayNowSub->SetText(FText::FromString(UJamMenuFlow::FirstMatchLine(UJamMenuFlow::FirstMatchLevel(FJamSettings::Load()))));
 	if (!SeasonText) return;
 	UJamProgression* P = UJamProgression::Get(this);
 	const FJamSeasonState St = P ? P->GetSeasonState() : FJamSeasonState();
@@ -874,6 +886,7 @@ void UJamMenuWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 		PendingFocus->SetFocus();
 		PendingFocus = nullptr;
 	}
+	if (WalkScreen >= 0) TickPadWalk();
 	for (const TPair<TWeakObjectPtr<UButton>, TWeakObjectPtr<UTextBlock>>& P : Tinted)
 	{
 		if (P.Key.IsValid() && P.Value.IsValid()) Tint(P.Key.Get(), P.Value.Get());
@@ -888,4 +901,219 @@ FReply UJamMenuWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEv
 		return FReply::Handled();
 	}
 	return Super::NativeOnKeyDown(InGeometry, InKeyEvent);
+}
+
+// ---------------------------------------------------------------- the pad walk (lane A144, evolution 2; jam.menuscreen walk)
+
+namespace
+{
+	const EJamMenuScreen WalkOrder[] = { EJamMenuScreen::Main, EJamMenuScreen::Cuts, EJamMenuScreen::Direct, EJamMenuScreen::Settings, EJamMenuScreen::Credits, EJamMenuScreen::Controls };
+	const TCHAR* WalkNames[] = { TEXT("main"), TEXT("cuts"), TEXT("direct"), TEXT("settings"), TEXT("credits"), TEXT("controls") };
+	const int32 WalkUser = 0;
+
+	FString WalkLabel(const UWidget* W)
+	{
+		if (const UJamMenuRowButton* R = Cast<UJamMenuRowButton>(W)) return R->TintText ? R->TintText->GetText().ToString() : R->Payload;
+		if (const UButton* B = Cast<UButton>(W))
+		{
+			// The label is the first text under the button (PLAY NOW's is inside a box).
+			TArray<const UWidget*> Stack = { B->GetChildAt(0) };
+			while (Stack.Num())
+			{
+				const UWidget* C = Stack.Pop();
+				if (const UTextBlock* T = Cast<UTextBlock>(C)) return T->GetText().ToString();
+				if (const UPanelWidget* P = Cast<UPanelWidget>(C)) for (int32 i = P->GetChildrenCount() - 1; i >= 0; --i) Stack.Add(P->GetChildAt(i));
+			}
+		}
+		return W ? W->GetName() : FString(TEXT("none"));
+	}
+
+	void WalkPress(const FKey& Key)
+	{
+		const FKeyEvent Ev(Key, FModifierKeysState(), WalkUser, false, 0, 0);
+		FSlateApplication::Get().ProcessKeyDownEvent(Ev);
+		FSlateApplication::Get().ProcessKeyUpEvent(Ev);
+	}
+}
+
+TArray<UWidget*> UJamMenuWidget::FocusablesOf(EJamMenuScreen InScreen) const
+{
+	TArray<UWidget*> All;
+	auto Back = [&](int32 i) { if (BackButtons.IsValidIndex(i)) All.Add(BackButtons[i]); };
+	switch (InScreen)
+	{
+	case EJamMenuScreen::Main:
+		for (UButton* B : { PlayNowButton.Get(), SeasonButton.Get(), ChooseButton.Get(), DirectButton.Get(), FriendButton.Get(), ControlsButton.Get(), SettingsButton.Get(), CreditsButton.Get(), QuitButton.Get() }) All.Add(B);
+		break;
+	case EJamMenuScreen::Cuts:
+		for (UJamMenuRowButton* B : GetModeButtons()) All.Add(B);
+		for (UJamMenuRowButton* B : GetCutButtons()) All.Add(B);
+		Back(0);
+		break;
+	case EJamMenuScreen::Direct:
+		All.Add(SentenceBox.Get());
+		All.Add(RollButton.Get());
+		if (SentenceList) for (UWidget* W : SentenceList->GetAllChildren()) All.Add(W);
+		Back(1);
+		break;
+	case EJamMenuScreen::Settings:
+		if (SettingsPanel) All = SettingsPanel->GetFocusables();
+		Back(2);
+		break;
+	case EJamMenuScreen::Credits: Back(3); break;
+	case EJamMenuScreen::Controls: Back(4); break;
+	}
+	// A disabled or hidden thing is no place to stand (the season before it loads, CLEAR without a key).
+	All.RemoveAll([](const UWidget* W) { return !W || !W->GetIsEnabled() || !W->IsVisible(); });
+	return All;
+}
+
+int32 UJamMenuWidget::WalkFocusedIndex() const
+{
+	// The focused Slate widget or the place it is inside (a text box's and a slider's focus sits on an inner widget).
+	for (TSharedPtr<SWidget> F = FSlateApplication::Get().GetUserFocusedWidget(WalkUser); F.IsValid(); F = F->GetParentWidget())
+	{
+		for (int32 i = 0; i < WalkNodes.Num(); ++i)
+		{
+			if (WalkNodes[i].IsValid() && WalkNodes[i]->GetCachedWidget() == F) return i;
+		}
+	}
+	return -1;
+}
+
+void UJamMenuWidget::StartPadWalk()
+{
+	WalkScreen = 0;
+	WalkNode = -2;
+	WalkPhase = 0;
+	for (int32& T : WalkTotals) T = 0;
+	WalkBlindScreens = 0;
+	UE_LOG(LogJamMenuUi, Log, TEXT("JAMMENU walk begin screens=%d"), static_cast<int32>(UE_ARRAY_COUNT(WalkOrder)));
+}
+
+void UJamMenuWidget::TickPadWalk()
+{
+	if (!FSlateApplication::IsInitialized()) { WalkScreen = -1; return; }
+	if (WalkScreen >= static_cast<int32>(UE_ARRAY_COUNT(WalkOrder)))
+	{
+		// blind: the directions could not be judged in this process (its hit-test grid does not hold the menu): run it in a windowed game.
+		const TCHAR* Verdict = WalkTotals[3] > 0 ? TEXT("fail") : (WalkBlindScreens > 0 ? TEXT("blind")
+			: (WalkTotals[0] > 0 && WalkTotals[0] == WalkTotals[1] && WalkTotals[2] == 0 ? TEXT("pass") : TEXT("fail")));
+		UE_LOG(LogJamMenuUi, Log, TEXT("JAMMENU walk done focusables=%d reached=%d traps=%d back_failed=%d blind_screens=%d verdict=%s"), WalkTotals[0], WalkTotals[1], WalkTotals[2],
+			WalkTotals[3], WalkBlindScreens, Verdict);
+		WalkScreen = -1;
+		ShowScreen(EJamMenuScreen::Main);
+		return;
+	}
+	++WalkPhase;
+	static const FKey Dirs[] = { EKeys::Gamepad_DPad_Up, EKeys::Gamepad_DPad_Down, EKeys::Gamepad_DPad_Left, EKeys::Gamepad_DPad_Right };
+
+	if (WalkNode == -2)
+	{
+		// Entering a screen: show it, let it take its focus and paint (navigation reads the painted screen's hit-test grid).
+		if (WalkPhase == 1) ShowScreen(WalkOrder[WalkScreen]);
+		if (WalkPhase < 10) return;
+		WalkNodes.Reset();
+		for (UWidget* W : FocusablesOf(WalkOrder[WalkScreen])) WalkNodes.Add(W);
+		WalkReached.Reset();
+		WalkQueue.Reset();
+		WalkOut.Init(0, WalkNodes.Num());
+		WalkEdges = 0;
+		WalkStart = WalkFocusedIndex();
+		const int32 Seed = WalkStart >= 0 ? WalkStart : (WalkNodes.Num() ? 0 : -1);
+		// Directional navigation reads the window's hit-test grid and nothing else. In an off-screen process (-RenderOffScreen) that grid ends at
+		// the game viewport: the menu is drawn but not in it, so no press can move the focus and no walk can be judged. Measured, not assumed: the
+		// grid's path under the centre of the place the screen opened on must reach that place.
+		bWalkBlind = true;
+		if (Seed >= 0 && WalkNodes[Seed].IsValid() && WalkNodes[Seed]->GetCachedWidget().IsValid())
+		{
+			const TSharedRef<SWidget> Slate = WalkNodes[Seed]->GetCachedWidget().ToSharedRef();
+			const TSharedPtr<SWindow> Win = FSlateApplication::Get().FindWidgetWindow(Slate);
+			const FGeometry G = Slate->GetTickSpaceGeometry();
+			const FVector2D Centre = FVector2D(G.GetAbsolutePosition()) + FVector2D(G.GetAbsoluteSize()) * 0.5;
+			if (Win.IsValid())
+			{
+				for (const FWidgetAndPointer& W : Win->GetHittestGrid().GetBubblePath(Centre, 0.f, true, WalkUser)) if (W.Widget == Slate) bWalkBlind = false;
+			}
+		}
+		if (Seed >= 0 && !bWalkBlind) { WalkReached.Add(Seed); WalkQueue.Add(Seed); }
+		WalkNode = -1;
+		WalkPhase = 0;
+		return;
+	}
+	if (WalkNode == -1)
+	{
+		if (WalkQueue.Num())
+		{
+			WalkNode = WalkQueue.Pop();
+			WalkDir = 0;
+			WalkPhase = 0;
+			return;
+		}
+		WalkNode = -3;
+		WalkPhase = 0;
+		return;
+	}
+	if (WalkNode == -3)
+	{
+		// B from the place the screen opened on: the first screen is back (on the first screen B does nothing).
+		const bool bMain = WalkOrder[WalkScreen] == EJamMenuScreen::Main;
+		if (WalkPhase == 1 && !bMain)
+		{
+			const int32 From = WalkStart >= 0 ? WalkStart : 0;
+			if (WalkNodes.IsValidIndex(From) && WalkNodes[From].IsValid() && WalkNodes[From]->GetCachedWidget().IsValid())
+				FSlateApplication::Get().SetUserFocus(WalkUser, WalkNodes[From]->GetCachedWidget(), EFocusCause::SetDirectly);
+		}
+		if (WalkPhase == 3 && !bMain) WalkPress(EKeys::Gamepad_FaceButton_Right);
+		if (WalkPhase < 5) return;
+		const bool bBack = Screen == EJamMenuScreen::Main;
+		int32 Traps = 0;
+		TArray<FString> Unreached;
+		for (int32 i = 0; i < WalkNodes.Num(); ++i)
+		{
+			if (!WalkReached.Contains(i)) Unreached.Add(WalkLabel(WalkNodes[i].Get()));
+			else if (WalkNodes.Num() > 1 && WalkOut[i] == 0) ++Traps;
+		}
+		const FString OpensOnText = WalkNodes.IsValidIndex(WalkStart) ? WalkLabel(WalkNodes[WalkStart].Get()) : FString(TEXT("nothing"));
+		const TCHAR* BackText = bMain ? TEXT("n/a") : (bBack ? TEXT("yes") : TEXT("NO"));
+		if (bWalkBlind)
+		{
+			// The opening focus and the B press are real (the key went down the focus path); the directions were not judged.
+			UE_LOG(LogJamMenuUi, Log, TEXT("JAMMENU walk screen=%s focusables=%d grid=blind opens_on=%s back=%s"), WalkNames[WalkScreen], WalkNodes.Num(), *OpensOnText, BackText);
+			++WalkBlindScreens;
+			Traps = 0;
+		}
+		else
+		{
+			UE_LOG(LogJamMenuUi, Log, TEXT("JAMMENU walk screen=%s focusables=%d reached=%d traps=%d moves=%d opens_on=%s back=%s unreachable=[%s]"), WalkNames[WalkScreen],
+				WalkNodes.Num(), WalkReached.Num(), Traps, WalkEdges, *OpensOnText, BackText, *FString::Join(Unreached, TEXT(" | ")));
+		}
+		WalkTotals[0] += WalkNodes.Num();
+		WalkTotals[1] += WalkReached.Num();
+		WalkTotals[2] += Traps;
+		if (!bBack && !bMain) ++WalkTotals[3];
+		++WalkScreen;
+		WalkNode = -2;
+		WalkPhase = 0;
+		return;
+	}
+
+	// Probing one place in one direction: stand on it (tick 1), press (tick 3), see where the focus went (tick 4).
+	UWidget* Here = WalkNodes.IsValidIndex(WalkNode) ? WalkNodes[WalkNode].Get() : nullptr;
+	const bool bSkip = !Here || !Here->GetCachedWidget().IsValid() || (Here->IsA<USlider>() && WalkDir >= 2);   // left / right on the slider move the volume, by design
+	if (!bSkip)
+	{
+		if (WalkPhase == 1) FSlateApplication::Get().SetUserFocus(WalkUser, Here->GetCachedWidget(), EFocusCause::SetDirectly);
+		if (WalkPhase == 3) WalkPress(Dirs[WalkDir]);
+		if (WalkPhase < 4) return;
+		const int32 To = WalkFocusedIndex();
+		if (To >= 0 && To != WalkNode)
+		{
+			++WalkOut[WalkNode];
+			++WalkEdges;
+			if (!WalkReached.Contains(To)) { WalkReached.Add(To); WalkQueue.Add(To); }
+		}
+	}
+	WalkPhase = 0;
+	if (++WalkDir >= 4) WalkNode = -1;
 }

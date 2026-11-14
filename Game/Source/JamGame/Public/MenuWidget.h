@@ -90,9 +90,20 @@ public:
 	// 720p by 2/3). Every text of the menu wraps at a fixed width, so the measure does not depend on a first layout pass.
 	TArray<FString> GetMainLabels() const;
 	UButton* GetFirstPress() const { return PlayNowButton; }
+	// Evolution 2: the line under PLAY NOW, and what it will start (re-read from the settings each time the first screen shows).
+	FString GetFirstPressLine() const;
 	TArray<UJamMenuRowButton*> GetModeButtons() const;
 	TArray<UJamMenuRowButton*> GetCutButtons() const;
 	FVector2D MeasureScreen(EJamMenuScreen InScreen);
+
+	// Lane A144 (evolution 2): the pad walk, `jam.menuscreen walk`. On every screen in turn it stands on each thing a pad can stand on, presses the
+	// D-pad each way (key events given to Slate, the path a real pad's take; no cursor, no window focus), follows where the focus goes, then presses
+	// B and checks the first screen is back. One JAMMENU walk line a screen (focusables, reached, traps = a place no direction leaves, unreachable
+	// names, back) and a JAMMENU walk done line. A never pressed: A on a button is a click, and the acceptance run's Return covers PLAY NOW.
+	// Directional navigation reads the window's hit-test grid, and only a windowed game has the menu in it: in an off-screen process the walk
+	// says grid=blind for the screen and verdict=blind at the end (the opening focus and the B press are still judged there).
+	void StartPadWalk();
+	bool IsPadWalking() const { return WalkScreen >= 0; }
 	// The widths the cards' words are wrapped at (slate units).
 	static float ModeTextWidth();
 	static float CutTextWidth();
@@ -146,6 +157,23 @@ private:
 	UFUNCTION() void OnSaveResultClicked();
 	UFUNCTION() void OnTryAgainClicked();
 
+	void TickPadWalk();
+	TArray<UWidget*> FocusablesOf(EJamMenuScreen InScreen) const;
+	int32 WalkFocusedIndex() const;
+	int32 WalkScreen = -1;      // index into the walk's screen order; -1 = no walk
+	int32 WalkNode = -2;        // -2 entering a screen, -1 taking the next place, -3 the B press, else the place being probed
+	int32 WalkDir = 0;
+	int32 WalkPhase = 0;        // ticks into the current step
+	int32 WalkStart = -1;
+	int32 WalkEdges = 0;
+	int32 WalkTotals[4] = { 0, 0, 0, 0 };   // focusables, reached, traps, backs failed
+	bool bWalkBlind = false;    // this screen: the window's hit-test grid does not hold the menu (an off-screen process), the directions are not judged
+	int32 WalkBlindScreens = 0;
+	TArray<TWeakObjectPtr<UWidget>> WalkNodes;
+	TArray<int32> WalkQueue;
+	TArray<int32> WalkOut;
+	TSet<int32> WalkReached;
+
 	EJamMenuScreen Screen = EJamMenuScreen::Main;
 	TArray<FJamMenuCutRow> Rows;
 	FJamDesignerResult Last;
@@ -160,6 +188,8 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UWidget> TitlePicture;
 	UPROPERTY(Transient) TObjectPtr<UButton> PlayNowButton;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> PlayNowText;
+	// Evolution 2: the small line under PLAY NOW names the level the match will play ("ONE MATCH, ROOKIE.  ENTER / A, OR CLICK.").
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> PlayNowSub;
 	UPROPERTY(Transient) TObjectPtr<UButton> ControlsButton;
 	// The first screen's buttons in reading order (GetMainLabels).
 	UPROPERTY(Transient) TArray<TObjectPtr<UTextBlock>> MainLabels;

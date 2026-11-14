@@ -108,7 +108,7 @@ bool FJamProgressionUnlocks::RunTest(const FString& Parameters)
 	TestFalse(TEXT("another cut is not"), P->IsSeasonMatch(UJamCartridge::ResolveCartridgePath(TEXT("hockey.regular"))));
 	P->RecordResult(Take1, false);
 	TestEqual(TEXT("loss keeps take 1"), P->GetSeasonState().CurrentTake, 0);
-	TestEqual(TEXT("loss hint"), P->EndHint(Take1), FString(TEXT("R  REMATCH      ESC  PAUSE")));
+	TestEqual(TEXT("loss hint"), P->EndHint(Take1), FString(TEXT("R  REMATCH      ESC  MENU")));
 	TestFalse(TEXT("loss: R restarts the same cut"), P->HandleRestart(nullptr));
 	TestFalse(TEXT("take 2 still locked"), P->GetSeasonState().Takes[1].bUnlocked);
 
@@ -119,7 +119,7 @@ bool FJamProgressionUnlocks::RunTest(const FString& Parameters)
 	TestEqual(TEXT("win moves to take 2"), S.CurrentTake, 1);
 	TestTrue(TEXT("take 2 unlocked"), S.Takes[1].bUnlocked);
 	TestEqual(TEXT("two attempts on take 1"), S.Takes[0].Attempts, 2);
-	TestEqual(TEXT("win hint"), P->EndHint(Take1), FString(TEXT("R  NEXT MATCH: THE BIG ROOM      ESC  PAUSE")));
+	TestEqual(TEXT("win hint"), P->EndHint(Take1), FString(TEXT("R  NEXT MATCH: THE BIG ROOM      ESC  MENU")));
 
 	// A result for a cut that is not the running take is ignored.
 	P->RecordResult(P->TakePath(5), true);

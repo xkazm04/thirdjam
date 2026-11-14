@@ -449,9 +449,9 @@ bool UJamProgression::HandleRestart(UObject* WorldContext)
 FString UJamProgression::EndHint(const FString& CartridgePath) const
 {
 	if (!IsSeasonMatch(CartridgePath) || LastResult == EJamTakeResult::None) return FString();
-	if (LastResult == EJamTakeResult::Lost) return TEXT("R  REMATCH      ESC  PAUSE");
+	if (LastResult == EJamTakeResult::Lost) return TEXT("R  REMATCH      ESC  MENU");
 	if (!Ladder.Takes.IsValidIndex(ActiveTake + 1)) return TEXT("SEASON COMPLETE      R  MENU");
-	return FString::Printf(TEXT("R  NEXT MATCH: %s      ESC  PAUSE"), *Ladder.Takes[ActiveTake + 1].Title.ToUpper());
+	return FString::Printf(TEXT("R  NEXT MATCH: %s      ESC  MENU"), *Ladder.Takes[ActiveTake + 1].Title.ToUpper());
 }
 
 FString UJamProgression::ActiveNote(const FString& CartridgePath) const
