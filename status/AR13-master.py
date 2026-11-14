@@ -5,7 +5,7 @@
 #   2. M_ClayCrowd: the wave and the bounce. Each fan rises over 8 of the Blueprint's 28 frames, started by its delay (data 4, 0 at the scored net
 #      to 1 at the far corner):  amount = smoothstep(saturate(E * (1 + WaveK) - WaveK * delay)) * weight * PoseK, E the end's scalar in MPC_Crowd.
 #      The bounce: BounceCm (15) * amount * |sin(2 pi (2.2 t + phase))| straight up, the phase from the fan's coat value (data 1).
-#   3. M_ArenaWood: base colour (and the wash that is made from it) multiplied by the vertex colour, decoded like the crowd's (power 2.2).
+#   3. M_ArenaWood: base colour (and the wash that is made from it) multiplied by the vertex colour, taken as it is (power 1.0 since AR14: the 2.2 decode made the stands nearly black on screen).
 #
 # Per-instance data on the fans after AR13: 0 weight, 1 coat value, 2 accent value, 3 end (+1 / -1), 4 delay, 5 target (0 A, 1 B).
 # The script is safe to run twice: each part looks for its own nodes first.
@@ -109,7 +109,7 @@ def wood(m):
             for nm, src in zip(names, MEL.get_inputs_for_material_expression(m, e)):
                 if src == bc: users.append((e, nm))
     vc = node(m, E.MaterialExpressionVertexColor, x + 60, y - 260)
-    pw = node(m, E.MaterialExpressionPower, x + 240, y - 260, const_exponent=2.2); wire(vc, pw, 'Base')
+    pw = node(m, E.MaterialExpressionPower, x + 240, y - 260, const_exponent=1.0); wire(vc, pw, 'Base')
     mul = node(m, E.MaterialExpressionMultiply, x + 420, y - 120); wire(bc, mul, 'A'); wire(pw, mul, 'B')
     if not MEL.connect_material_property(mul, '', MP.MP_BASE_COLOR): raise RuntimeError('cannot connect the base colour')
     for e, nm in users: wire(mul, e, nm)
