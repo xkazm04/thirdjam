@@ -1,0 +1,1 @@
+Shot 1, clay figure on a treadmill at 6 m/s, SetStickLock(true,20) at tick 30; labels are tick, take and frame. The blade lift is hard to see from this angle. Engine (UE 5.9 GPU editor, play session, un-paused), FILM3. Test figures in a drill session.

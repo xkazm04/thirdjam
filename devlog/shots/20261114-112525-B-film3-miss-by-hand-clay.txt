@@ -1,0 +1,1 @@
+Shot 5, clay: PlayCheck at tick 460, no check bus event. LEFT: PlayCheckMiss() called by hand at 467, which plays Stumble_Back 467-488. RIGHT: the figure's own rule is now off by default, so its check returns clean (Check_Deliver 460-467, then skating). Engine (UE 5.9 GPU editor, play session, un-paused), FILM3.

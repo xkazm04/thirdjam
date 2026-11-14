@@ -1,0 +1,1 @@
+Shot 12, clay: PlayDash(96) at 190, EndDash(4) at 230, so Dash_Wipeout_Light plays 230-243, then skating; no fall. On frames 2 to 3 the arms snap out (hand_l moves 68 cm in one frame). Engine (UE 5.9 GPU editor, play session, un-paused), FILM3.

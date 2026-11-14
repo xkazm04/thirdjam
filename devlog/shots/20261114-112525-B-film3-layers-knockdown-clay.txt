@@ -1,0 +1,1 @@
+Shot 4, clay: two figures knocked down at tick 320 (110 frames); one gets SetStickLock at 330 and SetTakeGrace at 335 (KD, on the right), the other no calls (K0, left). They look the same: 0.00 cm apart in every joint. Engine (UE 5.9 GPU editor, play session, un-paused), FILM3.

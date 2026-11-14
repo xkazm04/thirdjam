@@ -1,0 +1,1 @@
+Shot 6, clay: LEFT bAutoCheckMiss switched on for this figure only, PlayCheck at 560 with no bus event, so the rule's stumble plays from 567. RIGHT a landed check (bus event at +2) returns clean. The rule still works when it is switched on. Engine (UE 5.9 GPU editor, play session, un-paused), FILM3.

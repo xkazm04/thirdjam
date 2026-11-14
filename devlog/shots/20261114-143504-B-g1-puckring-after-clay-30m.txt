@@ -1,0 +1,1 @@
+After: camera 30 m from the puck (25 deg off the long axis, 3.5 m up, FOV 70), clay; puck at the frame centre, halved ring.

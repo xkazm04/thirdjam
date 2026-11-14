@@ -1,0 +1,1 @@
+Shot 11, clay, 8 m/s treadmill: SetHasPuck(true) at 20, PlayDash(96) at 40: Dash_Carry 49-135, the stick forward with the blade on the ice (4.1 to 4.2 cm high). NS_dash_streak on the pelvis and NS_dash_push at the skates were spawned, but they cannot be seen from this angle. Engine (UE 5.9 GPU editor, play session, un-paused), FILM3.

@@ -1,0 +1,1 @@
+Shot 9, clay, 8 m/s treadmill: SetWeapon(2) at 370, PlayDash(82) at 410. The mallet is gone and the stick back during the dash (recorded: prop shown on 0 of 92 dash frames), and the mallet is back after it (tick 527). The pin figure is hidden behind this one. The still asked on tick 409 still shows the mallet. Engine (UE 5.9 GPU editor, play session, un-paused), FILM3.
