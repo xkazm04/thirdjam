@@ -1,0 +1,2 @@
+SET-DASH loop 2: the new mirrors Dash_Skid_Left and Dash_Bump_Right, every frame, game camera and side, both styles.
+Blender (Cycles CPU, 12 samples), lab FBX, not the engine; nothing frozen.

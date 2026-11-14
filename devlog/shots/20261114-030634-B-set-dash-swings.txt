@@ -1,0 +1,2 @@
+SET-DASH loop 2: the stick swing tamed: Dash_Start, Dash_End, Dash_Skid every frame (blade end at most 38.3 cm a frame), game camera and side, both styles.
+Blender (Cycles CPU, 12 samples), lab FBX, not the engine; nothing frozen.

@@ -136,3 +136,218 @@ Files: `C:\Users\kazda\jam\sets-lab\dash\export\<style>\SK_Skater_<style>_<Take>
 3. **Mirrors and the bump with a hit side:** `Dash_Skid_Left`, and `Dash_Bump_Right` (right shoulder, stick side). The lab's `mirror_all` gives them cheaply. **Proving numbers:** joins 0.0005 cm / 0 deg for the 4 new pairs; pops 0; the mirror's pelvis yaw +86 against -86.
 
 Files: lab `C:\Users\kazda\jam\sets-lab\dash\` (`build_dash.py` and its parts, `run_dash.sh`, `check_dash.sh`, `clear_dash.sh`, `sheet_dash.sh`, `render_dash.py`, `join_dash.py`, `sum_dash.js`, `blade.js`, `skid.js`; numbers in `work\<style>\` `meas.json`, `joins.json`, `check_fbx.json`, `clear.json`; `work\checks.txt`).
+
+---
+
+# Part 2: the second loop (02:21 to 03:12)
+
+## 1. Done / not done
+
+All three evolutions are done, plus the lead's silhouette addition, in both styles. `C:\Users\kazda\jam\sets-lab\dash\export\` is replaced in place: 10 takes per style (`READY.txt` last), `JOINS.md` and `GATE.md`. The rebuild is on the lab's new `build_clips_pass30.py`; my 8 reference takes are identical to export30 (0 cm, 0 deg).
+
+Met:
+- The stick's swing: the blade end moves at most 38.3 cm in one frame in all takes (target 40; part 1: 56).
+- The shaft: 0 frames more than 3 cm inside a leg, the trunk or the head, all takes, both styles (part 1: 8 on p2_cel).
+- The clay supporting skate: at most 0.29 cm in `Dash_Loop` and 0.64 cm through `Dash_Skid`'s hold (target 0.8; part 1: 1.3 and 1.4).
+- The top hand stays on the stick. Joins are exact (21 pairs). No take pops. The figure lane's `gate.sh` passes all 20 take-and-style rows.
+
+New takes and names:
+- `Dash_Skid_Left`, the mirror of `Dash_Skid`.
+- `Dash_Bump_Right`, which leads with the right (stick) shoulder.
+- `Dash_Bump_Left`: today's bump leads with the **left** shoulder, so it now has a side name. `Dash_Bump` is kept with identical keys so the import already made does not break.
+
+`Dash_Wipeout` has no side bias. Every take was rendered and looked at frame by frame, and two things only visible that way were fixed. The dash loop's silhouette was reworked after the critic's note: from the game camera it now differs from the sprint by 2.65 to 2.83 times what the sprint differs from the stride, and by 2.19 to 2.36 times with the stick hidden.
+
+Changed from part 1, which the engine lane must know:
+- `Dash_End` now ends on `Stride` frame **34**, not 30. `Stride`'s own frame 30 has the shaft in the leg and the trunk on p2_cel.
+- `Dash_Skid`'s hold is frames **6-9**, not 6-10.
+
+## 2. Evolutions
+
+### Evolution 1: the stick's swing tamed, the shaft out of the legs, the clay skates down
+
+What changed:
+- **The trail.** The trailing stick sits 20 to 25 deg nearer the side (yaw -130 instead of -155) and nearly level (tilt 88). The top hand is held 10 cm further back.
+- **The swing in and out of the trail.** It is now one even sweep over 10 frames in `Dash_Start` (0-10), `Dash_End` (0-10) and `Dash_Skid` (9-20); in part 1 it took 9 frames. During the sweep the hand rises 20 cm and the blade travels 5 cm over the ice (10 cm in the skid's return). `Dash_Wipeout`'s flung stick is swept over frames 4-13.
+- **Clay skates.** The clay support skate sits under the knee in the recover key (x +10 cm). The clay skid stands 3 cm higher with its skates 6 cm further toward the way it faces.
+- **`Dash_End`** ends on `Stride` 34.
+
+Proving numbers, p2_cel / p3_clay:
+
+| Take | Blade end's largest one-frame move cm (part 1) | Shaft frames inside leg / trunk / head (part 1, p2_cel) |
+|---|---|---|
+| Dash_Start | 38.3 / 36.8 (45.7 / 43.6) | 0 / 0 (2) |
+| Dash_Loop | 2.3 / 2.3 (2.2) | 0 / 0 (0) |
+| Dash_End | 37.7 / 36.3 (43.5 / 42.1) | 0 / 0 (3) |
+| Dash_Bump(_Left) | 21.8 / 22.3 | 0 / 0 (2) |
+| Dash_Bump_Right | 10.8 / 11.3 | 0 / 0 |
+| Dash_Skid | 38.2 / 37.0 (55.8 / 53.7) | 0 / 0 (1) |
+| Dash_Skid_Left | 37.6 / 35.8 | 0 / 0 |
+| Dash_Wipeout | 37.0 / 35.1 (53.7 / 50.9) | 0 / 0 (0) |
+| Boost_Take | 0.3 / 0.2 | 0 / 0 |
+
+For comparison, `Stride` itself scores 12 shaft frames (p2_cel) and 6 (p3_clay) on the same measure (`clear29.py`).
+
+Other proving numbers:
+- **Clay supporting skate in `Dash_Loop`:** at most 0.29 cm on every frame (p2_cel 0.42).
+- **Clay `Dash_Skid` hold (frames 4 to 11):** 0.62 to 0.64 cm.
+- **Top hand on the stick:** 0 cm in every frame.
+- **Joins:** 21 pairs, at most 0.00004 cm, 0 deg.
+- **Gate (export30 base):** PASS, 20 of 20; joins to `Glide`, `Stride`@0/11/34 and `GetUp_Front`@0 all at 0.0000 cm (one at 0.0010 cm), 0 deg.
+- **Pops:** 0 of 18 played takes over the limits.
+
+Still: `C:\Users\kazda\jam\thirdjam\devlog\shots\20261114-030634-B-set-dash-swings.png` (Start, End and Skid at every frame).
+
+What I saw: the stick still swings round the right side, but it sweeps evenly and stays low and near the figure. Seen at every frame, there is no frame where it jumps.
+
+### Evolution 2: mirrors and missing sides
+
+- **`Dash_Bump_Left`** (the old `Dash_Bump`) leads with the left shoulder: pelvis yaw -40 at contact frame 5.
+- **`Dash_Bump_Right`** leads with the right (stick) shoulder: pelvis yaw +40 at 5. Its body is mirrored. The stick stays trailing in the right hand and the free arm swings out to the left for balance.
+- **`Dash_Skid_Left`** turns left, pelvis +86 deg (`Dash_Skid`: -86). Same hips (56.0 / 56.4 cm), same hold, the stick trailing behind the turned body.
+
+Joins (both styles): the four new pairs (`Dash_Loop` > `Dash_Bump_Left`/`Dash_Bump_Right` > `Dash_Loop`; `Dash_Loop` > `Dash_Skid_Left` > `Glide`) are at most 0.00002 cm, 0 deg.
+
+`Dash_Wipeout` side bias, measured on the FBX (`bias.js`):
+- Pelvis and head lateral position: 0 cm from frame 3 to the end.
+- Pelvis yaw: 0 deg from frame 3 on. The 9 deg and 10 cm at frame 0 are the loop's right-push lean.
+- The body's lateral centre stays within ±3 cm and ends at +2 / +1 cm, exactly as `Fall_Forward` ends.
+
+**It does not veer.**
+
+Still: `C:\Users\kazda\jam\thirdjam\devlog\shots\20261114-030634-B-set-dash-mirrors.png`. Seen at every frame: both mirrors read as the mirror of their twin. The right bump reads as a drive of the stick-side shoulder.
+
+### Evolution 3: seen frame by frame, the silhouette, and the effect anchors
+
+**The silhouette (the lead's addition).** I rendered silhouette masks from the game camera, at about 110 px, of `Stride`, `Stride_Sprint` and the loop at 8 matching phases (`sil.sh`). I measured the bounding box and the pixels that differ (XOR) between sprint and stride, and between dash and sprint, at the same phase.
+
+Candidates tried on p2_cel (ratio of dash-vs-sprint to sprint-vs-stride; body only = stick hidden):
+
+| Candidate | With stick | Body only |
+|---|---|---|
+| Part 1's loop | 2.14 | 1.67 |
+| A: free hand tucked on the lower back | 2.25 | 1.78 |
+| B: A + pushes 42 cm back | 2.23 | 1.76 |
+| D: A + pushes 56 cm out to the side | | 1.97 |
+| E: D + trunk 8 deg lower, head kept up | | 2.17 |
+| **H (chosen): E + the recovering skate kicked up 50 cm behind (speed skater)** | **2.83 / 2.65** (p2 / p3) | **2.36 / 2.19** |
+
+The chosen loop against the references (p2_cel / p3_clay):
+
+| | Stride | Stride_Sprint | Dash_Loop (loop 2) |
+|---|---|---|---|
+| Trunk lean from vertical | 32.8 deg | 50.3 | **72.5** (part 1: 64.5) |
+| Hips | 77.7 / 73.6 cm | 74.7 / 70.8 | 68.5 / 65.1 |
+| Top of the figure | 155.7 / 147.0 cm | 143.6 / 135.5 | **122.6 / 115.1** (21 cm under Sprint) |
+| Body length front to back | 96 / 86 cm | 89 / 84 | **113 / 101** (+27 % / +20 % on Sprint) |
+| Body width | 82 / 83 cm | 98 / 97 | 104 / 102 |
+| Silhouette box from the game camera (px, w × h) | 54 × 102 | 63 × 99 | 131 × 95 with stick, 67 × 90 / 66 × 83 without |
+| XOR against Sprint, 8 phases | 4507 / 4447 px | – | 12758 / 11772 px with stick, 10667 / 9776 without |
+
+What the camera now sees:
+- One arm gone (tucked on the back).
+- A low squat back with the helmet sunk into it.
+- Legs splayed wide, with a skate kicking up behind on every push.
+- The stick as a long diagonal line trailing toward the camera.
+
+**Honestly:** with the stick, I think a stranger would tell dash from sprint in one still: the trailing stick line and the missing arm are unlike anything else in the set. With the stick hidden, probably not reliably in one still. The body is squatter and wider, but at 110 px it is still "a blue skater crouching". In motion the kicked-up skate on every push and the 2.5-times cadence should carry it (not verified in motion).
+
+The footprint grew by about a quarter in length, not by a third. The pushes reach 30 cm back and 56 cm out, wider than Sprint's 41 cm, against the brief's "shorter pushes" from part 1; the lead's silhouette note overrides that.
+
+Still: `C:\Users\kazda\jam\thirdjam\devlog\shots\20261114-030634-B-set-dash-silhouette.png` (masks), `C:\Users\kazda\jam\thirdjam\devlog\shots\20261114-030634-B-set-dash-loop2.png` (renders against Stride and Sprint).
+
+**Every frame looked at.** All 10 takes × 2 views × 2 styles, 592 frames (`strip.sh`, sheets in `C:\Users\kazda\jam\sets-lab\dash\sheets\strip\`). What every frame showed that every second frame had not:
+
+1. `Boost_Take` frame 1: the free arm was flung out sideways for one frame before going up (the upper arm turned 104 deg in that frame). **Fixed:** the hand now leaves the shaft upward. The largest upper-arm step is 49.5 deg; seen again at every frame, it is clean.
+2. `Dash_Wipeout`: after the belly landing (frame 10) nothing moved for 14 frames, and the bounce with the skates kicking up at 16 was invisible (14 cm). **Fixed:** the skates rise 17 cm, from 23 to 40 cm up (frames 13 to 16). Seen at every frame, the kick reads on p2_cel and faintly on clay.
+3. Not changed, noted:
+   - `Dash_Start` frames 4 to 7: from the side the stick disappears behind the body mid-sweep, so from the side the launch reads only as a crouch.
+   - In every take, from the game camera, the trailing stick overlaps the right skate's line for frames 3 to 9 of each push. Measured clear of the leg, but at 110 px it can read as touching.
+   - `Dash_Bump_Left` at game size is still a rise and a quarter turn: modest.
+
+Still: `C:\Users\kazda\jam\thirdjam\devlog\shots\20261114-030634-B-set-dash-wipeout-boost.png`.
+
+**Effect anchors (for the effects lane).** One row per spray, from `meas21.py` on the FBX (`anchors2.js`).
+- A skate sprays while it is on the ice (lowest point under 0.8 cm) and moves against the root faster than 1.5 cm per frame; the spray leaves along that motion. In the skids' hold both skates throw snow ahead along the travel. The wipeout's chest and hips are on the ice from frame 13.
+- Positions are the ankle joint, cm, root space (X forward = the travel, Y = the figure's left, Z up); the blade's bottom edge is 13 to 14 cm under it.
+- Direction is a unit vector in root space. Frames are each take's own, 60 fps.
+
+| Style | Take | Frames | Part | Position at the first frame (cm) | Position at the last frame (cm) | Spray direction (X, Y) | What |
+|---|---|---|---|---|---|---|---|
+| p2_cel | Dash_Start | 3-6 | left skate | 9, 23, 14 | 16, 5, 14 | 0.33, -0.94 | push: snow thrown out and back |
+| p2_cel | Dash_Start | 3-9 | right skate | 7, -23, 15 | -27, -51, 13 | -0.78, -0.63 | push: snow thrown out and back |
+| p2_cel | Dash_Loop | 2-12 | left skate | 15, 6, 14 | -26, 50, 13 | -0.68, 0.73 | push: snow thrown out and back |
+| p2_cel | Dash_Loop | 14-23 | right skate | 15, -6, 14 | -25, -51, 13 | -0.66, -0.75 | push: snow thrown out and back |
+| p2_cel | Dash_Skid | 0-1 | left skate | 13, 4, 13 | 18, 4, 13 | 1.00, 0.00 | push: snow thrown out and back |
+| p2_cel | Dash_Skid | 2-13 | left skate | 29, 4, 13 | 36, 4, 13 | 1.00, 0.00 | skid: snow thrown ahead along the travel |
+| p2_cel | Dash_Skid | 14-19 | left skate | 33, 7, 13 | 10, 19, 13 | -0.88, 0.48 | push: snow thrown out and back |
+| p2_cel | Dash_Skid | 2-13 | right skate | -15, -32, 13 | 3, -16, 15 | 1.00, 0.00 | skid: snow thrown ahead along the travel |
+| p2_cel | Dash_Skid | 16-17 | right skate | 5, -17, 14 | 7, -18, 13 | 0.88, -0.48 | push: snow thrown out and back |
+| p2_cel | Dash_Skid_Left | 2-13 | left skate | 10, 9, 15 | 3, 16, 15 | 1.00, 0.00 | skid: snow thrown ahead along the travel |
+| p2_cel | Dash_Skid_Left | 16-17 | left skate | 5, 17, 14 | 7, 18, 13 | 0.92, 0.38 | push: snow thrown out and back |
+| p2_cel | Dash_Skid_Left | 0-1 | right skate | -26, -50, 13 | -13, -50, 14 | 0.91, 0.41 | push: snow thrown out and back |
+| p2_cel | Dash_Skid_Left | 2-13 | right skate | 12, -27, 21 | 36, -4, 13 | 1.00, 0.00 | skid: snow thrown ahead along the travel |
+| p2_cel | Dash_Skid_Left | 14-20 | right skate | 33, -7, 13 | 7, -20, 13 | -0.88, -0.47 | push: snow thrown out and back |
+| p2_cel | Dash_Wipeout | 13-19 | chest (neck joint) | 72, 0, 18 | 72, 0, 19 | 1.00, 0.00 | belly on the ice: a puff thrown ahead along the travel |
+| p2_cel | Dash_Wipeout | 13-19 | hips | 30, 0, 18 | 30, 0, 18 | 1.00, 0.00 | belly on the ice: a puff thrown ahead along the travel |
+| p3_clay | Dash_Start | 3-6 | left skate | 9, 25, 15 | 15, 8, 15 | 0.33, -0.94 | push: snow thrown out and back |
+| p3_clay | Dash_Start | 8-9 | right skate | -16, -44, 14 | -24, -49, 14 | -0.79, -0.61 | push: snow thrown out and back |
+| p3_clay | Dash_Loop | 1-12 | left skate | 15, 7, 14 | -23, 48, 14 | -0.68, 0.73 | push: snow thrown out and back |
+| p3_clay | Dash_Loop | 12-23 | right skate | 12, -7, 14 | -21, -50, 14 | -0.62, -0.78 | push: snow thrown out and back |
+| p3_clay | Dash_Skid | 0-1 | left skate | 12, 7, 14 | 16, 5, 14 | 0.87, -0.49 | push: snow thrown out and back |
+| p3_clay | Dash_Skid | 2-13 | left skate | 26, -1, 14 | 33, 4, 14 | 1.00, 0.00 | skid: snow thrown ahead along the travel |
+| p3_clay | Dash_Skid | 14-19 | left skate | 31, 8, 14 | 9, 21, 14 | -0.83, 0.55 | push: snow thrown out and back |
+| p3_clay | Dash_Skid | 2-13 | right skate | -15, -37, 14 | 2, -19, 14 | 1.00, 0.00 | skid: snow thrown ahead along the travel |
+| p3_clay | Dash_Skid_Left | 2-13 | left skate | 6, 14, 14 | 2, 19, 14 | 1.00, 0.00 | skid: snow thrown ahead along the travel |
+| p3_clay | Dash_Skid_Left | 0-1 | right skate | -23, -48, 14 | -11, -47, 15 | 0.84, 0.54 | push: snow thrown out and back |
+| p3_clay | Dash_Skid_Left | 3-13 | right skate | 30, 1, 14 | 33, -4, 14 | 1.00, 0.00 | skid: snow thrown ahead along the travel |
+| p3_clay | Dash_Skid_Left | 14-20 | right skate | 31, -8, 14 | 6, -22, 14 | -0.85, -0.53 | push: snow thrown out and back |
+| p3_clay | Dash_Wipeout | 13-19 | chest (neck joint) | 71, 0, 19 | 71, 0, 20 | 1.00, 0.00 | belly on the ice: a puff thrown ahead along the travel |
+| p3_clay | Dash_Wipeout | 13-19 | hips | 30, 0, 19 | 30, 0, 19 | 1.00, 0.00 | belly on the ice: a puff thrown ahead along the travel |
+
+For a streak: from the hips (0, 0, 68 / 65 cm) for the whole of `Dash_Loop`, pointing straight back (-1, 0). Also from the trailing blade end, which sits at about (-115, -110, 19 to 42) cm on p2_cel, i.e. behind and right of the root.
+
+## 3. Not verified
+
+- Nothing in the engine: the import, the layered `Boost_Take`, the play-rate rule and the start-frame rules after `Dash_Wipeout` are untried.
+- "Seen in motion" here means stills of every frame side by side, not playback at 60 fps. Whether the 24-frame loop with a skate kicking up every 12 frames looks fast or frantic in motion is unjudged.
+- The silhouette numbers come from one camera (the lab's 110 px game-camera stand-in, orthographic, 35 deg down), not the engine's camera, lens or lighting.
+- The clay skid's hips are now 2 cm under `Stop_Hard`'s (56.4 against 58.3; in part 1 they were 5 cm under); on p2_cel it is still 5 cm (56.0 against 61.0).
+- The effect anchors are numbers only; no effect was built on them.
+- `Dash_Bump` and `Dash_Bump_Left` are the same take under two names, both in the export.
+
+## 4. For the engine lane
+
+As part 1's table, with these changes:
+
+| Take | Frames | Starts on | Ends on | Note |
+|---|---|---|---|---|
+| Dash_End | 12 | Dash_Loop 0 | **Stride frame 34**: continue Stride from 34 | was 30 |
+| Dash_Skid | 20 | Dash_Loop 0 | Glide 0 | turns right; **hold any frame of 6-9** (was 6-10), then 9-20 |
+| Dash_Skid_Left | 20 | Dash_Loop 0 | Glide 0 | turns left; hold 6-9; otherwise as Dash_Skid |
+| Dash_Bump_Left | 9 | Dash_Loop 0 (cross-fade 3) | Dash_Loop 0 | left shoulder leads; contact frame 5; identical to `Dash_Bump` |
+| Dash_Bump_Right | 9 | Dash_Loop 0 (cross-fade 3) | Dash_Loop 0 | right shoulder leads; contact frame 5 |
+
+- Which side: pick the bump by the side the victim is on (victim to the dasher's left: `_Left`), and the skid by the braking turn's side.
+- Unchanged: `Dash_Start` (10 frames, from Glide 0), `Dash_Loop` (24, loop), `Dash_Wipeout` (24, face down, then `Lie_Loop_Front` and the `GetUp_*Front` family), `Boost_Take` (11, over Stride 0-11, layer from `spine_01` up).
+- Never: start Stride at 30 after `Dash_End` (use 34). Never pair a skid's side against the turn. Never move the root.
+
+## 5. For the other device
+
+As part 1, plus a side for the outcome: `EndDash(uint8 Reason, float DirX, float DirZ)`.
+- For Reason 1 (skid), the sign of `DirZ` (the turn, + = left) picks `Dash_Skid_Left` or `Dash_Skid`.
+- For Reason 2 (bump), `DirZ`'s sign (the victim on the dasher's left, +) picks `Dash_Bump_Left` or `Dash_Bump_Right`.
+- Nothing new is needed beyond that sign.
+
+## 6. Decisions for the operator
+
+1. Still open from part 1: the trailing stick, the wipeout's tone. The left skid now exists.
+2. New: the reworked loop is a speed skater's: one arm on the back, very wide pushes, a skate kicked up behind on every push. It reads as "a different gait" more than as a hockey player at full speed. Is that the dash the game wants, or should the arm stay swinging (body-only silhouette ratio 1.97 instead of 2.36)?
+
+## 7. The next three evolutions, each with a proving number
+
+1. **The loop watched at 60 fps** from frames already rendered (a clip per style at game size), judged once for fast against frantic. Retime to a 28-frame loop if frantic. Proving numbers: clips watched 2 of 2; silhouette ratio kept at 2.0 or more.
+2. **The dash stick held clear of the skate line from the game camera:** the trail lifted 10 cm and 10 deg further out, so its line does not cross the right skate at 110 px. Proving number: frames where the stick's mask overlaps the right skate's mask, 0 of 24 (today about 7 per push, by eye).
+3. **Side and size variants of the wipeout** (a wall clip ending at the wall lying pose, and a lighter tumble). Proving numbers: joins to `Lie_Loop_Wall` and `Lie_Loop_Front` exact; gate PASS.
+
+Files (loop 2): the builder parts (`dash_a.py`, `dash_b.py`, `dash_bake.py`, `dash_tail.py`, `assemble.sh` on `build_clips_pass30_orig.py`; loop-1 parts kept as `*_loop1.py`), `iter.sh`, `sil.sh`/`sil.js` (silhouettes), `strip.sh` (every frame), `anchors2.js`, `bias.js`, `gate_joins_dash.txt`. Numbers: `work\checks.txt`, `work\clear.txt`, `work\blade.txt`, `work\sil_final.txt`, `work\anchors.md`. Gate input: `export_gate\` (its `GATE.md` copied into `export\`).
