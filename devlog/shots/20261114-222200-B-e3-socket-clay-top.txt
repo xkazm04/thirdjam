@@ -1,0 +1,1 @@
+E3 GPU, clay figure striding, straight carry (aim 0 deg, 1.25 m), game frozen per frame, the game's own puck (drawn radius 12 cm) placed at the socket, top view. Left: today's puck_socket (blade through the puck). Middle: lane HP's offset (sized for r 3.81: blade still through the drawn puck). Right: the shipped offset (19.42,-141.45,4.80): the puck rests against the blade face.

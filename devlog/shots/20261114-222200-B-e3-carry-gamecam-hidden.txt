@@ -1,0 +1,1 @@
+E3 GPU, A's game camera (6 m behind, 3.5 m up, 25 deg down, FOV 70, 960x540) on a clay figure carrying straight ahead at 1.25 m (near figure): stick and puck entirely hidden behind the hips (HP's question: yes). The far figure carries at 35 deg / 1.45 m: its stick shows to the left.

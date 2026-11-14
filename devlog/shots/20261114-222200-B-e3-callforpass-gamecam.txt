@@ -1,0 +1,1 @@
+E3 GPU, game camera: no take, CallForPass frozen at 0.05 (blade swung out and up to the left), 0.1 (tap), 0.15 (second lift): the swing out reads; the tap itself is small.

@@ -1147,3 +1147,30 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
   value plays as today (0 to 4 render bit-identical). Built from shipped sounds only. Report `status/CHK56-report.md`.
 - **A-to-B-0032 / 0033**: accepted; B's night lanes start now (the hits' takes per A210's list, the play takes and the puck on the blade, the puck's
   trail and the sounds). Their names and timings in the next block.
+
+## H55.6 (22:32, 14 Nov) FOR THE DIRECTOR: **for the 23:30 merge**: the puck on the blade, the play calls, skaters who look at the puck, the puck's streak, the play sounds; cook-only PASS
+- **The puck on the blade** (0032 point 2): `puck_socket` sat ON the blade, so the blade cut through the drawn puck on every carrying frame (496 of 496).
+  Moved, same bone `stick_socket`, onto the blade's forehand face sized for your 12 cm drawn puck: clay (19.42, -141.45, 4.80), night (25.31, -150.14,
+  14.68). Nothing for A to change (`GetPuckSocketWorld` reads it). GPU: `devlog/shots/20261114-222200-B-e3-socket-*.png`.
+- **Seen by B, yours to fix**: (1) a puck carried straight at 1.25 m is hidden behind the hips at the human's camera (neither stick nor puck shows;
+  at 35 degrees / 1.45 m both show: `-e3-carry-gamecam-hidden.png`); (2) the figures are told `SetHasPuck(true)` on frames where the sim's
+  `CarrierIndex` names nobody or another skater: the puck is drawn at the carrier's socket on 86 % of the human's carrying frames, 18 to 46 % of the
+  bots'; the human's figure is still told it has the puck while down or hit (`-e3-carry-match.png`). Both are part of "the puck does not stick".
+- **New calls on both figures, by name** (numbers as doubles are fine):
+  - `PlayReceive()` once on the frame a pass reaches the receiver (stand-in now; the real `Receive` with the 03:00 merge).
+  - `SetPassCharge(float 0..1)` every frame while a pass is held, 0 once on release or cancel; `PlayPass` stays the release.
+  - `PlayCallForPass()` once per ask, at most every 0.5 s (stand-in now; the real take at 03:00).
+  - `SetLookAtPuck(bool)`: **call `SetLookAtPuck(false)` once at spawn on the human's figure** (his helmet turning over his shoulder reads as looking
+    away). Every other skater turns head and chest to the puck by itself (no call), clamped to 60 degrees, off while carrying, down, in a hit, a goalie
+    or at a faceoff.
+  - `SetShotCharge`: unchanged (it already grows the wind-up).
+- **The puck's streak by speed** (`NS_puck_trail`): length speed x 0.15 s, width and brightness by speed, guard raised to 90 m/s: a 2x shot draws twice
+  as long; nothing while slow or carried; needs no call. Optional: `Trail->SetVariableFloat("User.Carried", bCarried ? 1 : 0)` in `AJamPuck` on each
+  change of possession (then slow passes draw a faint streak). GPU: `devlog/shots/20261114-215046-B-v3-puck-streak-ab.png`.
+- **Sounds** (all headless-rendered; existing variants unchanged):
+  - `MS_pass`: soft tap to sharp snap by Strength. If `puck.max_speed` changes from 30 tonight, keep Strength = speed / max (or tell B the max).
+  - `MS_shot`: a crack layered at Strength 1.0 or **Variant 1**: send Variant 1 when the exit speed is over 30 m/s (or a one-timer).
+  - `MS_shot_blocked` **Variant 1** = a padded body thud (Strength = puck speed / max); Variant 0 is today's sound.
+  - **`MS_possess`** (new): asks a new bus event `possess`: a loose puck becomes a skater's; Who = the new carrier, Pos = the puck, Strength = the
+    puck's speed at the take / max, Variant 0 stick, 1 skates or body. Unreferenced until you send it.
+- Reports: `status/E3-report.md`, `status/V3-report.md`. The hits' takes (HX, HB) and the play takes (HP) come with the 03:00 merge.
