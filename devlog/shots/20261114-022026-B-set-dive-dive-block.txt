@@ -1,0 +1,1 @@
+Dive_Block_Left / _Right and Dive_Block_Hit_Left, p2_cel (top) and p3_clay (bottom): game camera with the figure 110 px tall (wide tiles) and a closer row from the shooter. Blender, Cycles on the CPU (12 samples, 6 threads), frozen frames, not the engine.
