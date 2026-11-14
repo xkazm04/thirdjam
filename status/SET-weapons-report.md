@@ -181,3 +181,144 @@ Numbers:
 The superseded props, mallet and cannon sheets of 02:26 were removed from `devlog\shots`; the giant sheet of 02:26 still stands.
 
 Rebuild: one Blender run per style, about 25 s.
+
+# Part 2: second loop (03:00 to 03:45): the export gate, a poke that reads from behind, carries over skating, props clear of the body, a cannon shot that reads
+
+## 1. Done and not done
+
+Items 1 to 3 are done. Item 4 is done in part. Item 5 (the rolling pin) is not started: item 4 is not finished, and the order put it last.
+
+- **The gate:** the figure lane's `gate.sh` (against export31) gives `GATE PASS: 20 rows, 0 failing, 2 with a known exception`. The exceptions are the hidden-stick shaft check on clay `Cannon_Fire` and `Cannon_Kick` (why: section 2). The first run failed three rows; I fixed all three.
+- **The poke:** it now goes 15 deg right of the line with the blade opened, and is 43 px across at the game camera at contact (asked: 20 or more).
+- **The carries over Stride, Stride_Sprint and Glide:** all three props stay at or above the ice and clear of the legs in every frame **when the layer is blended in mesh space**. In local space the giant blade goes 29 to 91 cm under the ice: the engine must blend this layer in mesh space (section 4).
+- **The mallet carry:** the drum is off the helmet (0.0 cm into the head, both styles).
+- **Props clear of the body:** 0 frames with a prop more than 3 cm inside its carrier, in every take, both styles. At contact the mallet's drum meets the victim's left hip and never goes more than 5 cm into him.
+- **The cannon shot:** bigger now (a step back, the keg jumping up and settling). The bottom hand stays on the keg in `Cannon_Fire` (0.2 / 0.3 cm). Not done:
+  - **The crank turning before the shot cannot be done with one rigid prop on one socket.** The crank turns with the hand, so the keg would turn too. Counter-proposal: a second prop, or a crank bone; one pass, and it needs the engine to attach two parts.
+  - **The bottom hand still comes off the keg in `Cannon_Kick` frames 12 to 14:** 5.0 / 12.0 / 7.0 cm on cel, 8.3 / 15.7 / 9.4 cm on clay (it was 28 cm). Out there the arm cannot reach the keg.
+
+## 2. Per item
+
+**1. The gate.** First run: `FAIL p2_cel Giant_Poke: ground` (a skate 0.07 cm under the ice, limit 0.05), `FAIL p2_cel Giant_Sweep: shaft`, `FAIL p3_clay Giant_Poke: shaft`. The giant stick lies on the same line as the hidden stick from the grip, so those shaft frames are real. All three are fixed: the poke's skates are raised 0.6 cm, and the heel targets are moved out to the stick side by 15 to 30 cm.
+
+The gate itself changed during this loop (from 03:12 it reads every FBX in the style folder and its `takes\` subfolder, and counts `READY.txt`'s take list):
+- My first export layout (one combined file plus a `takes\` subfolder) counted every take twice. The export is back to one file per take in the style folder.
+- `READY.txt` now has a `Takes:` line and a `Take  frames` table the gate reads: 10 listed, 10 checked, both styles.
+
+**The gate is wrong about one check, which I left as a known exception** (`gate_known_weapons.txt`): `shaft` on the cannon and mallet takes. It measures the skinned stick, which the engine hides while a weapon is held. The keg and the mallet are not on that line. The props themselves are measured against the body in item 3.
+
+Final run: all 20 pass. Joins at both ends are within 0.001 cm and 0.000 deg of the named pose (`own:<Weapon>_Carry@0`, `glide`, `lying_back`, `lying_side_right`). The largest bone turn in one frame is 54.8 deg.
+
+Full table: `C:\Users\kazda\jam\sets-lab\weapons\export\GATE.md`.
+
+**2. The poke and the carries over skating.**
+
+`Giant_Poke` is now 18 frames (was 17), contact at frame 9:
+- 15 deg right of the line, the blade turned 80 deg open about the shaft.
+- At the game camera the blade is 43.0 px across and 18.7 px high (cel), 42.9 / 19.3 px (clay). Before: about 6 px across.
+- Reach at contact: 273 / 264 cm from the hips, 23 deg to the right.
+- What I saw (giant sheet, rows 1 to 3): the stick goes out to the right of the figure and the blade shows as a block from behind.
+
+The carries, layered from `spine_01` up (mesh space keeps spine_01's armature rotation; local space copies the local channels). Lowest prop point, cm, cel / clay:
+
+| Carry | over Glide | over Stride | over Stride_Sprint | Frames with the prop more than 3 cm inside the carrier |
+|---|---|---|---|---|
+| Giant_Carry, mesh space | 5.7 / 5.4 | 4.7 / 4.4 | 0.19 / 0.19 | 0 |
+| Giant_Carry, local space | 5.7 / 5.4 | -28.6 / -28.0 | -91.0 / -88.6 | 0 |
+| Mallet_Carry, mesh space | 89.1 / 82.1 | 88.1 / 81.1 | 83.6 / 76.9 | 0 |
+| Cannon_Carry, mesh space | 77.2 / 73.9 | 76.2 / 72.9 | 71.7 / 68.7 | 0 |
+
+- To keep the giant blade over the ice in the sprint, the carry's blade now rides 9 cm over the ice in Glide (was 0).
+- What I saw: from the side (clay, over the sprint) the blade slides just over the ice ahead and the shaft stays clear of the legs. From the game camera the giant carry still shows only as a short stub over the head, because the stick points straight ahead.
+- The mallet's drum is off the helmet: the deepest the drum goes into the head is 0.0 cm on both styles. I moved it 5 cm further out to the right and back.
+
+**3. Props clear of the body.** Measured on the skinned body, every frame:
+- Samples: the prop's vertices plus its axis.
+- A sample is inside when it lies behind the nearest face; the figure lane's method.
+- Parts: legs, trunk, head. Arms left out, and samples within 13 / 11 cm of the wrists.
+- A frame counts when 2 or more samples are more than 3 cm inside.
+
+Result: **0 frames in all 9 prop takes, both styles** (first run: `Giant_Poke` 4, `Giant_Sweep` 3, `Mallet_Swing` 1, `Mallet_Miss` 1, `Cannon_Fire` 4, `Cannon_Kick` 2). The deepest single sample left in any take is 4.1 cm (cel `Giant_Poke`, at the hip beside the top hand).
+
+What changed to get there:
+- The giant stick's heel targets moved to the stick side.
+- The mallet's recovery comes back low across the front, not over the head.
+- The keg sits 4 cm further out to the right.
+- The cannon kick's roll holds the keg up at the chest.
+
+**The mallet against a victim:**
+- Setup: the victim plays `Fall_Bonk` from the attacker's frame 16, facing the attacker, its root at (1.08, 0.72) m from the attacker's root (x forward, y left).
+- The drum's leading end face at contact (frame 17) is at (107, 46, 73) cm (cel) and (103, 45, 70) cm (clay). The swing is now lower: its centre is at 73 / 70 cm high.
+- What it meets: the victim's left hip, 0.8 cm into the pelvis (cel) and 1.4 cm into the upper thigh (clay).
+- Deepest over frames 14 to 25: 3.6 / 2.4 cm. Frames more than 5 cm in: 0 (asked: no more than 2).
+- Placements from y 0.44 to 0.82 m are in `weapons_meas2.json`: closer than 0.48 m the drum goes over 5 cm into him for 1 to 2 frames; past 0.76 m it misses.
+- What I saw (mallet sheet, rows 1 to 4): at 17 the red drum's end face is on the victim's left hip and backside; he sits down and lies back by 25.
+
+**4. The cannon shot.** `Cannon_Fire` is now 25 frames (was 21). The puck still leaves at frame 8:
+- frame 9: the upper body thrown back 13.5 cm and the muzzle 34 deg up;
+- frame 10: 18 cm back and 45 deg up; the front skate lifts and steps back, set down at 12;
+- frame 14: the keg dips 6 deg low;
+- frame 17: back level;
+- frame 21: back on the carry.
+
+Muzzle at frame 8: (79.8, -39.9, 92.1) cm (cel), (78.5, -39.4, 89.0) cm (clay), level and straight ahead. The keg sits 4 cm further right than in the first loop.
+
+The bottom hand's target now follows the keg in every frame, not just at the keys. Bottom hand to the keg:
+- `Cannon_Fire`: at most 0.22 / 0.31 cm.
+- `Cannon_Kick`: frames 12 to 14 as given in section 1 (was 28 cm).
+
+What I saw (cannon sheet): at the game camera, frames 10 to 12 show the figure leaning back with the keg up, a clear pose change against frames 0 to 8. The crank does not turn.
+
+**Stills (Blender Cycles on the CPU, frozen frames):**
+- `C:\Users\kazda\jam\thirdjam\devlog\shots\20261114-034146-B-set-weapons-loop2-giant.png`
+- `C:\Users\kazda\jam\thirdjam\devlog\shots\20261114-034146-B-set-weapons-loop2-mallet.png`
+- `C:\Users\kazda\jam\thirdjam\devlog\shots\20261114-034146-B-set-weapons-loop2-cannon.png`
+
+## 3. Not verified
+
+- **Nothing seen in the engine:** the mesh-space layer, the prop sockets, the victim spacing.
+- **The prop-against-body measure is mine** (`weapons_meas2.py`, built on clear29's idea). It ran in Blender on the baked actions, not on the FBX, and nobody else has checked it.
+- **The victim measure uses one fixed placement and facing.** The engine places the victim wherever the sim puts him.
+- **The layer test is my model of the engine's layered blend** (local versus mesh space). It has not been compared with the engine's actual result.
+- **Stills only**, not in motion.
+
+## 4. For the engine lane (changes from part 1)
+
+Lengths and timings:
+
+| Take | Frames | Contact / event | Back on the carry from |
+|---|---|---|---|
+| `Giant_Poke` | 18 (was 17) | contact frame 9 | - |
+| `Mallet_Swing` | 37 (was 33) | contact frame 17 | 30 |
+| `Mallet_Miss` | 50 (was 45) | - | 42 |
+| `Cannon_Fire` | 25 (was 21) | puck leaves at frame 8 | 21 |
+
+Everything else as in part 1.
+
+- **Carry layers:** blend them **in mesh space** from `spine_01` (spine_01 keeps its mesh-space rotation). In local space the giant blade sinks up to 91 cm in the sprint.
+- **Victim spacing for a mallet hit:** about 1.1 m ahead and 0.7 m to the attacker's left, facing the attacker. Start `Fall_Bonk` at the attacker's frame 16.
+- **Files:** `C:\Users\kazda\jam\sets-lab\weapons\export\<style>\SK_Skater_<style>_<Take>.fbx` and `...\export\props\`, with `GATE.md` beside them.
+- **The props were rebuilt:** the cannon's keg is 4 cm further from the grip. Same attach rule as before.
+
+## 5. For the other device
+No change. The mallet's reach for a hit is 1.1 to 1.2 m ahead and 0.4 to 0.8 m to the attacker's left at contact.
+
+## 6. Decisions for the operator
+1. **The cannon's crank:** accept a keg that does not show its crank turning, or spend a pass on a two-part prop (keg on one hand, crank on the other).
+2. **The giant carry from the game camera** shows only as a stub over the head. Accept, or carry it angled out to the side the way the poke goes.
+
+## 7. The next three evolutions
+1. **Finish the cannon:**
+   - A crank that turns: a second prop on `hand_r` and the keg on a socket on `hand_l`.
+   - The bottom hand kept within 2 cm through the kick: a shorter throw-back, or let the hand off on purpose and catch the keg again.
+   - Proving numbers: the crank turns 360 deg in the 2 frames before frame 8; the bottom hand to the keg 2 cm or less in every frame up to 21.
+2. **The rolling pin** (item 5 of this loop). Proving numbers: as for the other props; contact at the hip; nothing to the head.
+3. **The giant carry readable from the game camera:** the carry angled 15 deg to the side like the poke. Proving numbers: the blade 20 px or more across at the game camera in the carry over Stride; still 0 cm or more over the ice and 0 frames inside the body.
+
+## Files
+- Lab: `C:\Users\kazda\jam\sets-lab\weapons\`
+- New this loop: `weapons_meas2.py` (items 2C, 2D, 3), `gate_joins_weapons.txt`, `gate_known_weapons.txt`
+- Results: `work\<style>\weapons_meas2.json`
+- Changed: `build_weapons.py` (one per-frame pose hook), `weapons_clips.py`, `weapons_tail.py`
+- Backups of the first loop: `work\*_e2b.py`, `work\export_e2b_backup\`
+- Rebuild per style: `GT=-80 blender -b --factory-startup --python build_weapons.py -- <style> <lab>`, then the `gate.sh` line in section 2.
