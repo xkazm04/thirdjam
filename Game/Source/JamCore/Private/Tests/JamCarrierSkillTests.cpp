@@ -47,7 +47,7 @@ namespace JamCarrierSkillTests
 	}
 
 	// One carry at the opposing chaser, which the real brain plays at Level from a standstill; everyone else is parked in a corner with no input.
-	FRun Carry(const UJamCartridge& C, uint64 Seed, const FScript& Script, const TCHAR* Level = TEXT("pro"), TArray<FString>* Trace = nullptr, UJamSim* Sim = nullptr, UJamBrain* Brain = nullptr)
+	FRun Carry(const UJamCartridge& C, uint64 Seed, const FScript& Script, const TCHAR* Level = TEXT("pro"), TArray<FString>* Trace = nullptr, UJamSim* Sim = nullptr, UJamBrain* Brain = nullptr, const char* Tune = nullptr)
 	{
 		FJamCarryDrill D = Script;
 		if (!Sim) Sim = NewObject<UJamSim>();
@@ -56,6 +56,13 @@ namespace JamCarrierSkillTests
 		Sim->SkipFaceoff();
 		if (!D.Stage(*Sim, Seed)) return D;
 		Brain->ApplyCartridge(C, Level);
+		if (Tune && *Tune)   // lane A153: a profile tune on top of the level (a rule's neutral arm in the same run)
+		{
+			char Err[200] = {};
+			JamAI::ApplyDifficultyTune(Tune, Brain->EditParams(), Err, sizeof(Err));
+			Brain->SpeedScale = static_cast<float>(Brain->EditParams().SpeedScale);
+			Brain->RedSkill = static_cast<float>(Brain->EditParams().RedSkill);
+		}
 		Brain->ResetBrain();
 		TArray<FJamInput> In;
 		In.SetNum(Sim->GetSkaters().Num());
@@ -104,14 +111,14 @@ namespace JamCarrierSkillTests
 		}
 	};
 
-	FShare Share(const UJamCartridge& C, const FScript& Sc, int32 Seeds, const TCHAR* Level = TEXT("pro"))
+	FShare Share(const UJamCartridge& C, const FScript& Sc, int32 Seeds, const TCHAR* Level = TEXT("pro"), const char* Tune = nullptr)
 	{
 		FShare S;
 		UJamSim* Sim = NewObject<UJamSim>();
 		UJamBrain* Brain = NewObject<UJamBrain>();
 		for (int32 Seed = 1; Seed <= Seeds; ++Seed)
 		{
-			const FRun R = Carry(C, static_cast<uint64>(Seed), Sc, Level, nullptr, Sim, Brain);
+			const FRun R = Carry(C, static_cast<uint64>(Seed), Sc, Level, nullptr, Sim, Brain, Tune);
 			++S.N; ++S.Ends[R.End]; S.BodyShieldRefused += R.BodyShieldRefused; S.DefLifts += R.DefLifts; S.DefPokes += R.DefPokes; S.DefChecks += R.DefChecks; S.Frames += R.Frames;
 		}
 		return S;
@@ -263,8 +270,17 @@ bool FJamMovementStopAndGo::RunTest(const FString& Parameters)
 		TestTrue(FString::Printf(TEXT("law 3 (R-0053): at pro a stop begun at 8 m beats the defender at least 8 times in 10 (%.1f %%)"), 100.0 * G8.PastShare()), G8.PastShare() >= 0.80);
 		TestTrue(FString::Printf(TEXT("law 3 (R-0053): at pro a straight charge beats it at most 1 time in 5 (%.1f %%)"), 100.0 * B.PastShare()), B.PastShare() <= 0.20);
 		TestTrue(FString::Printf(TEXT("the gap between the two is at least 47 points (%.1f)"), 100.0 * (G8.PastShare() - B.PastShare())), G8.PastShare() - B.PastShare() >= 0.47);
-		const double StarBest = FMath::Max(FMath::Max(S8.PastShare(), S95.PastShare()), FMath::Max(S11.PastShare(), S12.PastShare()));
-		TestTrue(FString::Printf(TEXT("law 3 (R-0053): at all_star the stop passes at least 50 %% where its window is (8 m %.1f, 9.5 m %.1f, 11 m %.1f, 12 m %.1f)"), 100.0 * S8.PastShare(), 100.0 * S95.PastShare(), 100.0 * S11.PastShare(), 100.0 * S12.PastShare()), StarBest >= 0.50);
+		// Lane A153 (R-0058 point 1, which replaces R-0055 point 2): one stop distance at every level. All_star's presser stays on its job inside the hunt,
+		// so the bar at all_star is pro's: the stop begun at 8 m passes 80 % or more (before: 50 % at the best of the four distances, which was 12 m).
+		AddInfo(FString::Printf(TEXT("LAW3 all_star by distance: 8 m %.1f, 9.5 m %.1f, 11 m %.1f, 12 m %.1f"), 100.0 * S8.PastShare(), 100.0 * S95.PastShare(), 100.0 * S11.PastShare(), 100.0 * S12.PastShare()));
+		TestTrue(FString::Printf(TEXT("law 3 (R-0058): at all_star a stop begun at 8 m beats the defender at least 8 times in 10 (%.1f %%)"), 100.0 * S8.PastShare()), S8.PastShare() >= 0.80);
+		{
+			// the rule's neutral value inside this run: with the switch off (the tune opp.hk_press_in_hunt=0) the same 200 carries are the game before the lane
+			const FShare S8off = Share(*C, At8, 200, TEXT("all_star"), "opp.hk_press_in_hunt=0"), S12off = Share(*C, At12, 200, TEXT("all_star"), "opp.hk_press_in_hunt=0");
+			AddInfo(FString::Printf(TEXT("LAW3 all_star, opp.hk_press_in_hunt=0 (the game before lane A153): stop begun at 8 m: %s"), *S8off.Line()));
+			AddInfo(FString::Printf(TEXT("LAW3 all_star, opp.hk_press_in_hunt=0: stop begun at 12 m: %s"), *S12off.Line()));
+			TestTrue(FString::Printf(TEXT("the presser on its job is worth at least 50 points to the stop at 8 m at all_star (%.1f against %.1f with the switch off)"), 100.0 * S8.PastShare(), 100.0 * S8off.PastShare()), S8.PastShare() >= S8off.PastShare() + 0.50);
+		}
 		TestTrue(FString::Printf(TEXT("at all_star a straight charge beats it at most 1 time in 5 (%.1f %%)"), 100.0 * SB.PastShare()), SB.PastShare() <= 0.20);
 		TestTrue(FString::Printf(TEXT("the body between is worth at least 10 points to the stop-and-go at 8 m (%.1f against %.1f with body_shield false)"), 100.0 * G8.PastShare(), 100.0 * G8n.PastShare()), G8.PastShare() >= G8n.PastShare() + 0.10);
 		// Lane A121: the window moved about 1.5 m toward the defender (6 m: 2.5 -> 23.5 %; 5 m stays 0): the timing bar is the brief's 5 m, and 6 m against the clean stop.
@@ -865,6 +881,8 @@ bool FJamMovementStopAndGoSweep::RunTest(const FString& Parameters)
 			else if (K == TEXT("burst.own_stop")) G.Skater.bBurstOwnStop = V != 0.0;                 // lane A121
 			else if (K == TEXT("burst.carry_accel_mult")) G.Skater.BurstCarryAccelMult = V;         // lane A121 (code only)
 			else if (K == TEXT("take_grace")) G.Stick.TakeGraceFrames = FMath::RoundToInt32(V);     // lane A121
+			else if (K == TEXT("miss_recovery")) G.Stick.MissRecoveryFrames = FMath::RoundToInt32(V);   // lane A152
+			else if (K == TEXT("poke_assist")) G.Stick.PokeAssistDeg = V;                             // lane A152
 			else if (K == TEXT("burst.rest_frames")) G.Skater.BurstRestFrames = FMath::RoundToInt32(V);         // lane A128
 			else if (K == TEXT("burst.rest_hold")) G.Skater.BurstRestHoldMps = V;                             // lane A128 (code only)
 			else if (K == TEXT("burst.rest_push")) G.Skater.bBurstRestPushOff = V != 0.0;                     // lane A128 (code only)
@@ -1125,7 +1143,8 @@ bool FJamMovementSecondMove::RunTest(const FString& Parameters)
 		TestTrue(FString::Printf(TEXT("%s: the drill's stop distance (%.1f m) passes that level's defender 95 %% or more (%.1f %%)"), Level, L.BrakeAtM, 100.0 * W.PastShare()), W.PastShare() >= 0.95);
 	}
 	TestEqual(TEXT("pro stops at 8 m"), FJamCarryDrill::StopAtForLevel(FName(TEXT("pro"))), 8.0);
-	TestEqual(TEXT("all_star stops at 12 m (it does not creep: its window is 10 to 12 m)"), FJamCarryDrill::StopAtForLevel(FName(TEXT("all_star"))), 12.0);
+	TestEqual(TEXT("all_star stops at 8 m too (R-0058 point 1: one stop distance at every level)"), FJamCarryDrill::StopAtForLevel(FName(TEXT("all_star"))), 8.0);
+	TestEqual(TEXT("rookie stops at 8 m"), FJamCarryDrill::StopAtForLevel(FName(TEXT("rookie"))), 8.0);
 	TestEqual(TEXT("8 m in a player's words: five stick lengths"), FString(FJamCarryDrill::StickLengthsWord(8.0, 1.6)), FString(TEXT("FIVE")));
 	TestEqual(TEXT("12 m in a player's words: eight stick lengths"), FString(FJamCarryDrill::StickLengthsWord(12.0, 1.6)), FString(TEXT("EIGHT")));
 	TestTrue(TEXT("the drill's line says the distance"), FJamCarryDrill::CoachLine(1, 8.0, 1.6).Contains(TEXT("FIVE STICK LENGTHS")));

@@ -56,6 +56,19 @@ namespace
 	constexpr float CutListH = 2.f * (CutBodyH + 14.f + 2.f * ModeSlotPad) + 4.f;   // 204: two rows of cut cards
 	constexpr float BodyTextW = SlateWidth - 2.f * ScreenPadX;   // 816: a paragraph on an 880 card
 
+	// A segment of the first screen's level switch: lit (the level in force: a yellow edge on a yellow wash) or not (a chalk edge).
+	FButtonStyle LevelSegmentStyle(bool bLit)
+	{
+		FButtonStyle St = S::ButtonStyle();
+		const FLinearColor Wash(S::Yellow().R, S::Yellow().G, S::Yellow().B, 0.16f);
+		St.SetNormal(bLit ? S::Rounded(Wash, 8.f, S::Yellow(), 2.f) : S::Rounded(S::SlateDark(), 8.f, FLinearColor(S::Paper().R, S::Paper().G, S::Paper().B, 0.35f), 1.f));
+		St.SetHovered(S::Rounded(FLinearColor(S::Blue().R, S::Blue().G, S::Blue().B, 0.45f), 8.f, S::Yellow(), 2.f));
+		St.SetPressed(S::Rounded(FLinearColor(S::Orange().R, S::Orange().G, S::Orange().B, 0.55f), 8.f, S::Yellow(), 2.f));
+		St.SetNormalPadding(FMargin(6, 5));
+		St.SetPressedPadding(FMargin(6, 6, 6, 4));
+		return St;
+	}
+
 	// A text box that reads on the slate: chalk on dark (the engine's default is a light box whose grey hint could not be read).
 	void DarkBox(UEditableTextBox* Box)
 	{
@@ -160,7 +173,7 @@ void UJamMenuWidget::BuildTree()
 	// The title: HOKEJ only (R-0013 point 5). The generated HOKEJ slate when it is there, the chalk letters otherwise.
 	if (UTexture2D* TitleArt = Art(TEXT("T_UI_TitleHokej")))
 	{
-		TitlePicture = Picture(T, TitleArt, 480.f);   // lane A144: 560 before the first screen got its two lines and PLAY NOW
+		TitlePicture = Picture(T, TitleArt, 400.f);   // lane A144: 560 before the first screen got its two lines and PLAY NOW, 480 before the level switch
 		AddV(CardBody, TitlePicture, FMargin(0, 6, 0, 4), HAlign_Center);
 	}
 	else
@@ -198,7 +211,7 @@ UWidget* UJamMenuWidget::BuildMain()
 	AddV(Box, What, FMargin(0, 0, 0, 1), HAlign_Center);
 	UTextBlock* Brand = Wrapped(S::Text(T, UJamMenuFlow::BrandLine(), S::Font(S::Body, FName("Italic")), S::Yellow()), BodyTextW);
 	Brand->SetJustification(ETextJustify::Center);
-	AddV(Box, Brand, FMargin(0, 0, 0, 10), HAlign_Center);
+	AddV(Box, Brand, FMargin(0, 0, 0, 6), HAlign_Center);
 
 	// PLAY NOW: the first press. A first match on the regular cut, no choices; the screen opens on it, so Enter / A starts it. Twice the label of
 	// the other buttons, a yellow edge, and the words that say what to press.
@@ -222,7 +235,44 @@ UWidget* UJamMenuWidget::BuildMain()
 		PlayNowButton->OnClicked.AddDynamic(this, &UJamMenuWidget::OnPlayNowClicked);
 		AddTinted(PlayNowButton, PlayNowText);
 		MainLabels.Add(PlayNowText);
-		AddV(Box, PlayNowButton, FMargin(130, 2, 130, 6));
+		AddV(Box, PlayNowButton, FMargin(130, 2, 130, 4));
+		// Evolution 3: left and right on PLAY NOW step the level (the focus stays on the button).
+		FCustomWidgetNavigationDelegate Nav;
+		Nav.BindDynamic(this, &UJamMenuWidget::OnPlayNowNavigate);
+		PlayNowButton->SetNavigationRuleCustom(EUINavigation::Left, Nav);
+		PlayNowButton->SetNavigationRuleCustom(EUINavigation::Right, Nav);
+	}
+
+	// Lane A144 (evolution 3): the level is chosen where it is played. "<  ROOKIE | PRO | ALL-STAR  >" under PLAY NOW, the level in force lit, and
+	// one line on what it means. The segments take a click and no focus: with the keys or the pad the level is stepped from PLAY NOW itself.
+	{
+		UHorizontalBox* Row = T->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("LevelSwitch"));
+		AddH(Row, S::Text(T, TEXT("<"), S::Font(S::Body, FName("Black")), S::Muted()), FMargin(0, 0, 8, 0));
+		LevelButtons.Reset();
+		LevelTexts.Reset();
+		for (const EJamMenuDifficulty D : { EJamMenuDifficulty::Rookie, EJamMenuDifficulty::Pro, EJamMenuDifficulty::AllStar })
+		{
+			UButton* B = T->ConstructWidget<UButton>(UButton::StaticClass());
+			B->SetStyle(LevelSegmentStyle(false));
+			B->IsFocusable = false;
+			UTextBlock* Txt = S::Text(T, FJamSettings::DifficultyLabel(D), S::Font(S::Body - 2, FName("Black"), 30), S::Muted());
+			Txt->SetJustification(ETextJustify::Center);
+			B->AddChild(Txt);
+			switch (D)
+			{
+			case EJamMenuDifficulty::Rookie: B->OnClicked.AddDynamic(this, &UJamMenuWidget::OnLevelRookieClicked); break;
+			case EJamMenuDifficulty::Pro: B->OnClicked.AddDynamic(this, &UJamMenuWidget::OnLevelProClicked); break;
+			default: B->OnClicked.AddDynamic(this, &UJamMenuWidget::OnLevelAllStarClicked); break;
+			}
+			LevelButtons.Add(B);
+			LevelTexts.Add(Txt);
+			AddH(Row, B, FMargin(2, 0), true);
+		}
+		AddH(Row, S::Text(T, TEXT(">"), S::Font(S::Body, FName("Black")), S::Muted()), FMargin(8, 0, 0, 0));
+		AddV(Box, Row, FMargin(130, 0, 130, 2));
+		LevelMeaningText = Wrapped(S::Text(T, UJamMenuFlow::LevelMeaning(TEXT("rookie")), S::CaptionFont(), S::Chalk()), BodyTextW);
+		LevelMeaningText->SetJustification(ETextJustify::Center);
+		AddV(Box, LevelMeaningText, FMargin(0, 0, 0, 6), HAlign_Center);
 	}
 
 	UTextBlock* Txt = nullptr;
@@ -232,7 +282,7 @@ UWidget* UJamMenuWidget::BuildMain()
 		Target = B;
 		AddTinted(B, Txt);
 		MainLabels.Add(Txt);
-		AddV(Box, B, FMargin(130, 3));
+		AddV(Box, B, FMargin(130, 2));
 	};
 	// Lane A17: the season of takes (docs/experiments/LADDER.md); the label says which take is next.
 	Add(SeasonButton, TEXT("PLAY THE SEASON"));
@@ -816,6 +866,61 @@ bool UJamMenuWidget::PlayNow()
 
 FString UJamMenuWidget::GetFirstPressLine() const { return PlayNowSub ? PlayNowSub->GetText().ToString() : FString(); }
 
+// ---------------------------------------------------------------- the level switch (lane A144, evolution 3)
+
+void UJamMenuWidget::RefreshLevelSwitch()
+{
+	// The level in force is the saved one (rookie until the player has picked): the switch, PLAY NOW's line and the meaning line all read it.
+	const FJamSettings Settings = FJamSettings::Load();
+	SwitchLevel = Settings.EffectiveDifficulty();
+	const FString Level = FJamSettings::DifficultyString(SwitchLevel);
+	if (PlayNowSub) PlayNowSub->SetText(FText::FromString(UJamMenuFlow::FirstMatchLine(Level)));
+	if (LevelMeaningText) LevelMeaningText->SetText(FText::FromString(UJamMenuFlow::LevelMeaning(Level)));
+	for (int32 i = 0; i < LevelButtons.Num() && i < LevelTexts.Num(); ++i)
+	{
+		const bool bLit = i == static_cast<int32>(SwitchLevel);
+		if (LevelButtons[i]) LevelButtons[i]->SetStyle(LevelSegmentStyle(bLit));
+		if (LevelTexts[i]) LevelTexts[i]->SetColorAndOpacity(FSlateColor(bLit ? S::Yellow() : S::Muted()));
+	}
+}
+
+void UJamMenuWidget::PickLevel(EJamMenuDifficulty Level)
+{
+	FJamSettings Settings = FJamSettings::Load();
+	Settings.Difficulty = Level;
+	Settings.bDifficultyChosen = true;   // the player's pick from now on, as a press of the SETTINGS button is
+	Settings.Save();
+	RefreshLevelSwitch();
+	UE_LOG(LogJamMenuUi, Log, TEXT("JAMMENU level picked=%s"), *FJamSettings::DifficultyString(Level));
+}
+
+void UJamMenuWidget::StepLevel(int32 Delta)
+{
+	const int32 Now = static_cast<int32>(FJamSettings::Load().EffectiveDifficulty());
+	const int32 Next = FMath::Clamp(Now + (Delta < 0 ? -1 : 1), 0, 2);
+	if (Next != Now) PickLevel(static_cast<EJamMenuDifficulty>(Next));
+}
+
+void UJamMenuWidget::OnLevelRookieClicked() { PickLevel(EJamMenuDifficulty::Rookie); }
+void UJamMenuWidget::OnLevelProClicked() { PickLevel(EJamMenuDifficulty::Pro); }
+void UJamMenuWidget::OnLevelAllStarClicked() { PickLevel(EJamMenuDifficulty::AllStar); }
+
+UWidget* UJamMenuWidget::OnPlayNowNavigate(EUINavigation Direction)
+{
+	if (Direction == EUINavigation::Left) StepLevel(-1);
+	else if (Direction == EUINavigation::Right) StepLevel(1);
+	return PlayNowButton;   // the focus stays: Enter / A is still the match
+}
+
+TArray<FString> UJamMenuWidget::GetSwitchLabels() const
+{
+	TArray<FString> Out;
+	for (const TObjectPtr<UTextBlock>& T : LevelTexts) if (T) Out.Add(T->GetText().ToString());
+	return Out;
+}
+
+FString UJamMenuWidget::GetLevelMeaningLine() const { return LevelMeaningText ? LevelMeaningText->GetText().ToString() : FString(); }
+
 void UJamMenuWidget::OnPlayNowClicked() { PlayNow(); }
 void UJamMenuWidget::OnControlsClicked() { ShowScreen(EJamMenuScreen::Controls); }
 
@@ -831,7 +936,7 @@ TArray<FJamCutInfo> UJamMenuWidget::ListCutsWithSeason() const
 void UJamMenuWidget::RefreshSeason()
 {
 	// Lane A144 (evolution 2): the first screen re-reads the settings each time it shows: PLAY NOW's line names the level it will play.
-	if (PlayNowSub) PlayNowSub->SetText(FText::FromString(UJamMenuFlow::FirstMatchLine(UJamMenuFlow::FirstMatchLevel(FJamSettings::Load()))));
+	RefreshLevelSwitch();
 	if (!SeasonText) return;
 	UJamProgression* P = UJamProgression::Get(this);
 	const FJamSeasonState St = P ? P->GetSeasonState() : FJamSeasonState();
@@ -979,6 +1084,16 @@ int32 UJamMenuWidget::WalkFocusedIndex() const
 		}
 	}
 	return -1;
+}
+
+void UJamMenuWidget::PressKeyForQa(const FKey& Key)
+{
+	if (!FSlateApplication::IsInitialized() || !Key.IsValid()) return;
+	const TSharedPtr<SWidget> Before = FSlateApplication::Get().GetUserFocusedWidget(WalkUser);
+	WalkPress(Key);
+	const TSharedPtr<SWidget> After = FSlateApplication::Get().GetUserFocusedWidget(WalkUser);
+	UE_LOG(LogJamMenuUi, Log, TEXT("JAMMENU key %s focus_on_play_now=%d focus_moved=%d level=%s"), *Key.ToString(),
+		PlayNowButton && PlayNowButton->GetCachedWidget() == After ? 1 : 0, Before != After ? 1 : 0, *FJamSettings::DifficultyString(SwitchLevel));
 }
 
 void UJamMenuWidget::StartPadWalk()

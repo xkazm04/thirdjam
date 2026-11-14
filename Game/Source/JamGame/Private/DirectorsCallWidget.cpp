@@ -144,6 +144,17 @@ TSharedRef<SWidget> UJamDirectorsCallWidget::RebuildWidget()
 	return Super::RebuildWidget();
 }
 
+// Lane A144 (evolution 3): the pause card's controls table, the same bindings as UJamInputMap::BindingTableText in lines that fit the card.
+FString UJamDirectorsCallWidget::PauseControlsText()
+{
+	return FString(
+		TEXT("SKATE  WASD / L-STICK      AIM STICK  MOUSE / R-STICK      SHOOT  HOLD LMB / RT\n")
+		TEXT("CHECK  RMB / RB      CROSS-CHECK  MMB, MOUSE4 / LB      DEKE  WHEEL / Y\n")
+		TEXT("SPIN  E / B      SPRINT  SHIFT / LT      POKE  SPACE / A      PASS  Q / X\n")
+		TEXT("ABILITY  F / R3      SIGNALS  1-4 / D-PAD      RESTART  R / VIEW\n")
+		TEXT("BRAKE  REVERSE (W THEN S) OR CTRL / L-STICK CLICK      PAUSE  ESC / MENU"));
+}
+
 void UJamDirectorsCallWidget::BuildTree()
 {
 	if (!WidgetTree) WidgetTree = NewObject<UWidgetTree>(this, TEXT("WidgetTree"), RF_Transient);
@@ -156,7 +167,7 @@ void UJamDirectorsCallWidget::BuildTree()
 	S::AddO(Root, Dimmer);
 
 	USizeBox* CardBox = T->ConstructWidget<USizeBox>(USizeBox::StaticClass());
-	CardBox->SetWidthOverride(800.f);
+	CardBox->SetWidthOverride(PauseCardWidth);
 	S::AddO(Root, CardBox, HAlign_Center, VAlign_Center);
 	const bool bFrameArt = S::Art(TEXT("T_UI_CallCard")) != nullptr;
 	// The generated frame carries its own clapper stripe (the top 7 %), so the body starts under it.
@@ -201,10 +212,10 @@ void UJamDirectorsCallWidget::BuildTree()
 	PauseStatus->SetAutoWrapText(true);
 	AddV(Pause, PauseStatus, FMargin(0, 10, 0, 0));
 	// Lane A49: the controls card on the pause menu (the same table as UJamInputMap::BindingTableText and docs/experiments/CONTROLS.md).
-	UTextBlock* Controls = S::Text(T,
-		TEXT("SKATE  WASD / L-STICK      AIM STICK  MOUSE / R-STICK      SHOOT  HOLD LMB / RT      CHECK  RMB / RB\n")
-		TEXT("CROSS-CHECK  MMB, MOUSE4 / LB      DEKE  WHEEL / Y      SPIN  E / B      SPRINT  SHIFT / LT      POKE  SPACE / A\n")
-		TEXT("PASS  Q / X      ABILITY  F / R3      SIGNALS  1-4 / D-PAD      BRAKE  REVERSE (W THEN S) OR CTRL / L-STICK CLICK      RESTART  R / VIEW      PAUSE  ESC / MENU"), S::CaptionFont(), S::Chalk());   // lane A51 (R-0034): spin E / B; lane A84 (R-0041 point 3): pass Q, ability F / R3; lane A93 (R-0045 law 3): braking by reversing
+	// Lane A144 (evolution 3, by the Director's order for this card): five lines of at most 80 characters, and a wrap at the card's inner width.
+	// The three lines before ran to 100, 105 and 150 characters on a card 744 units wide inside: at 1280 x 720 the third reached past both edges.
+	UTextBlock* Controls = S::Text(T, PauseControlsText(), S::CaptionFont(), S::Chalk());   // spin E / B (A51), pass Q, ability F / R3 (A84), brake by reversing (A93)
+	Controls->SetWrapTextAt(PauseCardInnerWidth);
 	Controls->SetJustification(ETextJustify::Center);
 	AddV(Pause, Controls, FMargin(0, 12, 0, 0));
 	UTextBlock* Keys = S::Text(T, TEXT("ESC / START  resume      STICK  move      A  select      B  back"), S::CaptionFont(), S::Muted());

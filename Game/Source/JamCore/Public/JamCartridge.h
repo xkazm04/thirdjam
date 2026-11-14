@@ -183,6 +183,25 @@ struct JAMCORE_API FJamStickConfig
 	// a pass, the draw: the puck came to it from somebody else) cannot be poked or lifted for this many frames; a body check still loosens it. 0 = off (the
 	// neutral value: the game before the lane, where device B counted a stick takeaway 1.4 times a second).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 TakeGraceFrames = 30;
+	// game.stick.poke_assist_deg (lane A152, track F2; R-0059 point 4, docs/experiments/MOVEMENT-6.md): the poke reaches. Inside the open window of a skater a
+	// person steers (bHuman), a puck an opponent carries is taken when it is within the stick's full reach of the poker's body (what a perfectly aimed blade
+	// could take, never further) and within this many degrees of the direction the blade is aimed in; the shields refuse it as before. Before, the blade
+	// itself had to be within 0.35 m of the puck on one of the window's frames: an aim that trails a skating carrier by a tenth of a second missed.
+	// 0 = off (the neutral value: the game before the lane). Bots keep the blade rule (their aim's lag is the level's lever).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") double PokeAssistDeg = 60.0;
+	// game.stick.miss_recovery_frames (lane A152): a miss costs a recovery, not a fall. A person's poke (bHuman) that runs out next to an opposing carrier locks
+	// its stick for this many frames (no poke, no lift, no check; it skates and steers) where it cost stumble_frames without control. 0 = the neutral value: the
+	// stumble. A bot's miss stays the stumble: it is what the carrier's sweep and stop earn (with the recovery for bots too, all_star read -5.5 points on 600).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 MissRecoveryFrames = 20;
+	// Not a cartridge key (lane A152): the instrument. The scripted human (regular and good) presses a poke when it can land: its aim leads its own reaction, and
+	// it does not press into a take grace or a body between. false = the press as it was (every measurement before the lane).
+	bool bPlaytesterPokeRead = false;
+	// Not a cartridge key (lane A152): a test seam. true = the poke as it was before the lane whatever the two keys and the switch above say (the blade rule,
+	// the stumble, the old press). Jam.Core.Movement.PokeNeutral plays one seed with the keys at their neutral values and once more with the keys on and
+	// this seam closed, and asserts the two hashes equal: the neutral values are the game before, with no pinned constant.
+	bool bPokeRulesOff = false;
+	// Not a cartridge key (lane A152): the measurement's arm. true = a bot's missed poke costs the recovery too, where it keeps the stumble.
+	bool bMissRecoveryBots = false;
 	// Not a cartridge key. R-0048 point 2: a teammate never takes a carried puck by touch, under either value of passive_take (a pass is a pass). true brings
 	// back the teammate's touch of the game before lane A102, which the neutral-block tests need to replay older commits' matches hash for hash.
 	bool bTeammateTouchTakes = false;
@@ -311,6 +330,30 @@ struct JAMCORE_API FJamContactConfig
 	// false = on its own speed along that line, as before the lane (five whiffs in six were presses on a carrier skating away at the same pace). It lives here
 	// so that JamBaseline::MakeNeutral can name its neutral value (false): the pinned matches were played by the old press. No sim code reads it.
 	bool bPlaytesterClosingPress = true;
+	// Lane A151 (track F1, evolution 5; CONTACT-6.md section 2), the same kind of switch: the scripted human presses its check ON COURSE AND TIME. The trace:
+	// its whole input arrives ReactionFrames late (6 for the regular player), and the press on "centres under 1.8 m, closing over 4 m/s" never asked whether
+	// the course meets the body: on the frame the sim got a whiffed press the two were already separating. true = it presses when the straight course of
+	// the two bodies brings them together (centres under two radii) inside the check window as it will be delivered: what a person does who presses for the
+	// hit he sees coming. false = the press of lane A132 (or the older one, by bPlaytesterClosingPress). No sim code reads it. JamBaseline.h: false.
+	bool bPlaytesterCoursePress = true;
+	// Lane A151 (track F1, evolution 5; docs/experiments/CONTACT-6.md section 3; VISION law 1: "Stationary player can resist most of side tackles"). Not cartridge
+	// keys yet (proposed: game.contact.stand_side_brace, game.contact.brace_exchange). StandSideBrace: the brace of a standing skater against a BODY hit from
+	// the side (the push across its facing), in place of stand_brace there; it falls off linearly to stand_brace at the edge of the front arc (the push 60
+	// degrees off head-on), so the front stays the weak side of a man who stands. 0 = the neutral value: the side takes stand_brace (at 1.5 a pressed side
+	// hit closing at 9 m/s was ratio 1.17: down). 5: the same hit is ratio 0.35, a bump; from the side only a hit closing above 10.5 m/s stumbles him.
+	// Not for the puck carrier (it keeps stand_brace, and the equal bounce below): law 3 is a gate, and a carrier that stops too late is not saved by standing.
+	double StandSideBrace = 5.0;
+	// Lane A151 (track F1, evolution 5; CONTACT-6.md section 2). Not a cartridge key yet (proposed: game.contact.late_press_frames). The late press: a check is
+	// a window that must be open BEFORE the bodies meet; a hand that presses as it feels the contact is a frame or six late, the bounce has already parted
+	// the two, and the press ran out on nobody (the trace: in 18 of 66 whiffs the bodies had met 1 to 6 frames before the press arrived). For this many frames
+	// after a HUMAN skater's body met an opponent's with no check open, its check press resolves as that hit, on the velocities the two met with
+	// (UJamSim::TryLatePress). A bot's press is its brain's and gets none (as the human's 12-frame window, lane A49). 0 = the neutral value: no such press.
+	int32 LatePressFrames = 0;
+	// bBraceExchange: the brace is mass in the bounce. The skater-to-skater exchange (UJamSim::CollideSkaters) was an equal-mass bounce whatever the contact
+	// law had said: a standing skater who took a hit as a bump left it with 0.6 x the closing speed (5.4 m/s from a 9 m/s hit; lane A147 read 6.6). true = a
+	// skater on its feet who stands braced against the push (UJamSim::BraceOf) weighs its brace in that exchange between opponents: at brace 5 it leaves a
+	// 9 m/s side hit at 1.8 m/s (0.9 when the attacker recoiled first), and the one who ran into it stops. false = the neutral value: the equal bounce.
+	bool bBraceExchange = true;
 	// The neutral block (contact.momentum false, contact.carrier_can_hit true): the check rule of main before lane A92.
 	void SetNeutral() { bMomentum = false; bCarrierCanHit = true; }
 };

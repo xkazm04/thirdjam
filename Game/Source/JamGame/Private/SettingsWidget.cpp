@@ -31,36 +31,58 @@ void FJamSettings::SetOverrideForTest(const FJamSettings* Settings)
 	if (Settings) GJamSettingsForTest = *Settings; else GJamSettingsForTest.Reset();
 }
 
-FJamSettings FJamSettings::Load()
+namespace
 {
-	if (GJamSettingsForTest.IsSet()) return GJamSettingsForTest.GetValue();
+	const TCHAR* const SavedKeys[] = { TEXT("Difficulty"), TEXT("DifficultyChosen"), TEXT("LookTier"), TEXT("Volume"), TEXT("Barks"), TEXT("BarkIntensity") };
+}
+
+FJamSettings FJamSettings::FromSaved(const TMap<FString, FString>& Saved)
+{
 	FJamSettings St;
-	if (!GConfig) return St;
-	FString D;
 	bool bHasLevel = false, bChosenKey = false;
-	if (GConfig->GetString(Section, TEXT("Difficulty"), D, GGameUserSettingsIni)) bHasLevel = ParseDifficulty(D, St.Difficulty);
-	GConfig->GetBool(Section, TEXT("DifficultyChosen"), bChosenKey, GGameUserSettingsIni);
+	if (const FString* D = Saved.Find(TEXT("Difficulty"))) bHasLevel = ParseDifficulty(*D, St.Difficulty);
+	if (const FString* C = Saved.Find(TEXT("DifficultyChosen"))) bChosenKey = C->ToBool();
 	St.bDifficultyChosen = IsDifficultyChosen(bChosenKey, bHasLevel, St.Difficulty);
-	GConfig->GetString(Section, TEXT("LookTier"), St.LookTierOverride, GGameUserSettingsIni);
+	if (const FString* L = Saved.Find(TEXT("LookTier"))) St.LookTierOverride = *L;
 	if (!St.LookTierOverride.IsEmpty() && !ULookTierSwitcher::GetKnownTiers().Contains(St.LookTierOverride)) St.LookTierOverride.Empty();
-	float V = 1.f;
-	if (GConfig->GetFloat(Section, TEXT("Volume"), V, GGameUserSettingsIni)) St.Volume = FMath::Clamp(V, 0.f, 1.f);
-	int32 B = -1;
-	if (GConfig->GetInt(Section, TEXT("Barks"), B, GGameUserSettingsIni)) St.Barks = FMath::Clamp(B, -1, 1);
-	GConfig->GetString(Section, TEXT("BarkIntensity"), St.BarkIntensity, GGameUserSettingsIni);
+	if (const FString* V = Saved.Find(TEXT("Volume"))) St.Volume = FMath::Clamp(FCString::Atof(**V), 0.f, 1.f);
+	if (const FString* B = Saved.Find(TEXT("Barks"))) St.Barks = FMath::Clamp(FCString::Atoi(**B), -1, 1);
+	if (const FString* I = Saved.Find(TEXT("BarkIntensity"))) St.BarkIntensity = *I;
 	if (St.BarkIntensity != TEXT("quiet") && St.BarkIntensity != TEXT("normal") && St.BarkIntensity != TEXT("loud")) St.BarkIntensity.Empty();
 	return St;
 }
 
+TMap<FString, FString> FJamSettings::ToSaved() const
+{
+	TMap<FString, FString> Out;
+	Out.Add(TEXT("Difficulty"), DifficultyString(Difficulty));
+	Out.Add(TEXT("DifficultyChosen"), bDifficultyChosen ? TEXT("True") : TEXT("False"));
+	Out.Add(TEXT("LookTier"), LookTierOverride);
+	Out.Add(TEXT("Volume"), FString::SanitizeFloat(Volume));
+	Out.Add(TEXT("Barks"), FString::FromInt(Barks));
+	Out.Add(TEXT("BarkIntensity"), BarkIntensity);
+	return Out;
+}
+
+FJamSettings FJamSettings::Load()
+{
+	if (GJamSettingsForTest.IsSet()) return GJamSettingsForTest.GetValue();
+	if (!GConfig) return FJamSettings();
+	TMap<FString, FString> Saved;
+	for (const TCHAR* Key : SavedKeys)
+	{
+		FString Value;
+		if (GConfig->GetString(Section, Key, Value, GGameUserSettingsIni)) Saved.Add(Key, Value);
+	}
+	return FromSaved(Saved);
+}
+
 void FJamSettings::Save() const
 {
+	// A test's profile stays in memory: nothing of a test reaches the player's file.
+	if (GJamSettingsForTest.IsSet()) { GJamSettingsForTest = *this; return; }
 	if (!GConfig) return;
-	GConfig->SetString(Section, TEXT("Difficulty"), *DifficultyString(Difficulty), GGameUserSettingsIni);
-	GConfig->SetBool(Section, TEXT("DifficultyChosen"), bDifficultyChosen, GGameUserSettingsIni);
-	GConfig->SetString(Section, TEXT("LookTier"), *LookTierOverride, GGameUserSettingsIni);
-	GConfig->SetFloat(Section, TEXT("Volume"), Volume, GGameUserSettingsIni);
-	GConfig->SetInt(Section, TEXT("Barks"), Barks, GGameUserSettingsIni);
-	GConfig->SetString(Section, TEXT("BarkIntensity"), *BarkIntensity, GGameUserSettingsIni);
+	for (const TPair<FString, FString>& P : ToSaved()) GConfig->SetString(Section, *P.Key, *P.Value, GGameUserSettingsIni);
 	GConfig->Flush(false, GGameUserSettingsIni);
 }
 

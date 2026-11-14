@@ -1117,6 +1117,8 @@ namespace
 		ReadBool(St, TEXT("body_shield"), C.Stick.bBodyShield);   // lane A102 (track F2): puck protection with the body
 		ReadBool(St, TEXT("passive_take"), C.Stick.bPassiveTake);   // lane A102 (R-0048): false = a carried puck leaves its carrier only by a press
 		ReadInteger(St, TEXT("take_grace_frames"), C.Stick.TakeGraceFrames);   // lane A121 (R-0049 point 2): no poke or lift on a skater that just won the puck
+		ReadNumber(St, TEXT("poke_assist_deg"), C.Stick.PokeAssistDeg);   // lane A152 (track F2, R-0059 point 4): a person's poke reaches for a carried puck inside its stick's reach
+		ReadInteger(St, TEXT("miss_recovery_frames"), C.Stick.MissRecoveryFrames);   // lane A152: a missed poke locks the stick instead of the stumble
 		// R-0029 point 4 (lane A39): game.stick.deke { offset_m, commit_frames }
 		if (const FJPtr Dk = Obj(St, TEXT("deke")))
 		{
@@ -1208,6 +1210,26 @@ namespace
 		{
 			static const bool bNoShieldShove = FPlatformMisc::GetEnvironmentVariable(TEXT("JAM_TEST_SHIELD_SHOVE")) == TEXT("0");
 			if (bNoShieldShove) C.Contact.bShieldShove = false;
+		}
+		// Lane A151 (track F1), measurement only, the same pattern: JAM_TEST_A151="name=value;..." in the environment sets this lane's rules that have no key
+		// yet on every cartridge that loads, so one set of binaries plays each rule alone on paired seeds (tools/perf/results/a151). Never set in a game or the gate.
+		{
+			static const FString Seam = FPlatformMisc::GetEnvironmentVariable(TEXT("JAM_TEST_A151"));
+			if (!Seam.IsEmpty())
+			{
+				TArray<FString> Pairs;
+				Seam.ParseIntoArray(Pairs, TEXT(";"));
+				for (const FString& Pair : Pairs)
+				{
+					FString Name, Value;
+					if (!Pair.Split(TEXT("="), &Name, &Value)) continue;
+					const double V = FCString::Atod(*Value);
+					if (Name == TEXT("side_brace")) C.Contact.StandSideBrace = V;
+					else if (Name == TEXT("brace_exchange")) C.Contact.bBraceExchange = V != 0.0;
+					else if (Name == TEXT("late_press")) C.Contact.LatePressFrames = FMath::RoundToInt32(V);
+					// A151-SEAM-MORE
+				}
+			}
 		}
 
 		FJPtr Rules = Obj(G, TEXT("rules"));

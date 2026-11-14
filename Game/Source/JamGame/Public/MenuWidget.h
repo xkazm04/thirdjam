@@ -8,6 +8,8 @@
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
 #include "MenuFlow.h"
+#include "SettingsWidget.h"
+#include "Blueprint/WidgetNavigation.h"
 #include "MenuWidget.generated.h"
 
 class UWidgetSwitcher;
@@ -92,6 +94,18 @@ public:
 	UButton* GetFirstPress() const { return PlayNowButton; }
 	// Evolution 2: the line under PLAY NOW, and what it will start (re-read from the settings each time the first screen shows).
 	FString GetFirstPressLine() const;
+
+	// Lane A144 (evolution 3): the level is chosen where it is played. Three segments under PLAY NOW (ROOKIE / PRO / ALL-STAR, the level in force
+	// lit); a click picks one; with the keys or the pad, left and right ON PLAY NOW step it (a custom navigation rule on the button: arrows, D-pad
+	// and stick alike), so the focus stays on PLAY NOW and one Enter still starts the match. A pick writes the setting the SETTINGS button writes
+	// (FJamSettings::Difficulty with bDifficultyChosen) and both screens re-read it when they show.
+	UFUNCTION(BlueprintCallable, Category = "Jam|Menu") void PickLevel(EJamMenuDifficulty Level);
+	// One step left (-1) or right (+1); the ends hold (rookie is the left end, all-star the right).
+	UFUNCTION(BlueprintCallable, Category = "Jam|Menu") void StepLevel(int32 Delta);
+	// What the switch shows: the lit segment, the three labels, the line under it.
+	EJamMenuDifficulty GetSwitchLevel() const { return SwitchLevel; }
+	TArray<FString> GetSwitchLabels() const;
+	FString GetLevelMeaningLine() const;
 	TArray<UJamMenuRowButton*> GetModeButtons() const;
 	TArray<UJamMenuRowButton*> GetCutButtons() const;
 	FVector2D MeasureScreen(EJamMenuScreen InScreen);
@@ -103,6 +117,9 @@ public:
 	// Directional navigation reads the window's hit-test grid, and only a windowed game has the menu in it: in an off-screen process the walk
 	// says grid=blind for the screen and verdict=blind at the end (the opening focus and the B press are still judged there).
 	void StartPadWalk();
+	// QA (jam.menuscreen key <name>): one key or pad press given to Slate for the focused widget, down and up, as the walk gives its presses.
+	// Enter on the first screen is the acceptance run's Return; left and right on PLAY NOW are the level switch's steps.
+	void PressKeyForQa(const FKey& Key);
 	bool IsPadWalking() const { return WalkScreen >= 0; }
 	// The widths the cards' words are wrapped at (slate units).
 	static float ModeTextWidth();
@@ -138,6 +155,11 @@ private:
 	void AddTinted(UButton* B, UTextBlock* T) { Tinted.Add(TPair<TWeakObjectPtr<UButton>, TWeakObjectPtr<UTextBlock>>(B, T)); }
 
 	UFUNCTION() void OnPlayNowClicked();
+	UFUNCTION() void OnLevelRookieClicked();
+	UFUNCTION() void OnLevelProClicked();
+	UFUNCTION() void OnLevelAllStarClicked();
+	UFUNCTION() UWidget* OnPlayNowNavigate(EUINavigation Direction);
+	void RefreshLevelSwitch();
 	UFUNCTION() void OnControlsClicked();
 	UFUNCTION() void OnChooseClicked();
 	// Lane A17: "PLAY THE SEASON" (starts or resumes the season through UJamProgression).
@@ -190,6 +212,11 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> PlayNowText;
 	// Evolution 2: the small line under PLAY NOW names the level the match will play ("ONE MATCH, ROOKIE.  ENTER / A, OR CLICK.").
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> PlayNowSub;
+	// Evolution 3: the level switch (three click-only segments) and the line that says what the lit level means.
+	UPROPERTY(Transient) TArray<TObjectPtr<UButton>> LevelButtons;
+	UPROPERTY(Transient) TArray<TObjectPtr<UTextBlock>> LevelTexts;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> LevelMeaningText;
+	EJamMenuDifficulty SwitchLevel = EJamMenuDifficulty::Rookie;
 	UPROPERTY(Transient) TObjectPtr<UButton> ControlsButton;
 	// The first screen's buttons in reading order (GetMainLabels).
 	UPROPERTY(Transient) TArray<TObjectPtr<UTextBlock>> MainLabels;

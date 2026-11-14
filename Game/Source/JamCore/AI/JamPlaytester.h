@@ -62,7 +62,16 @@ namespace JamAI
 		int CutPct = 0;
 		int CutFrames = 10;
 		double CutDefenderM = 5.0;
+		// Lane A151 (track F1): with the press on course and time, the share of the hits it sees coming that the player presses for (per cent of 2-second
+		// windows, as OneTimerPct). 100 = every one: 5.2 to 5.9 landed checks a match where the press of lane A132 landed 3.2 to 3.9 (600 matches a cell),
+		// which moves the ladder's all_star cell by 5.3 points. 60 (every profile): 4.2 to 4.5 landed a match, whiffs 16 % at pro (54 %), and the three cells
+		// move -3.7 / +2.0 / +2.4 (600 seeds, paired; CONTACT-6.md section 2).
+		int CheckPct = 60;
 		int CarrySprintPct = 0;
+		// Lane A152 (track F2, R-0059 point 4): the poke when it can land. The player aims the blade where the puck will be when its hand arrives (its own
+		// reaction ahead, on the carrier's and its own velocity) and does not press into a take grace that will still run then or a body between (the
+		// brain's BodyShields). The regular and the good player; the novice presses whenever the puck is near. Only with FJamPlaytester::bPokeReadOn.
+		bool bPokeRead = false;
 	};
 	FJamPlaytesterProfile PlaytesterProfile(EPlaytester Kind);
 	const char* PlaytesterName(EPlaytester Kind);
@@ -80,11 +89,14 @@ namespace JamAI
 		bool bRestStick = false;         // lane A86 (R-0043 point 2): the old stick (left at rest while carrying, the before arm); env JAM_PLAYTESTER_STICK=rest
 		int Cuts = 0;                    // lane A95: cuts made (the stats read it)
 		bool bOldVerbs = false;          // lane A95: the before arm of job 3 (env JAM_PLAYTESTER_VERBS=old): no brake intent, no cut, no carry sprint (measurement only)
+		int CoursePctOverride = -1;      // lane A151, measurement only: env JAM_PLAYTESTER_CHECK=course:NN plays the press on course and time at NN per cent of the chances (-1 = the profile's CheckPct)
+		bool bCourseCheck = false;       // lane A151: the check press on course and time (contact.bPlaytesterCoursePress, or env JAM_PLAYTESTER_CHECK=course; =closing forces lane A132's press)
 		bool bOldCheck = false;          // lane A132: the check press on the playtester's own speed along the line, as before (contact.bPlaytesterClosingPress false, or env JAM_PLAYTESTER_CHECK=old for a measurement's before arm)
 		// Lane A134 (track Q2, evolution 3, item 1): the scripted human reads the body shield and the take grace as a person does (the HUD and the figure
 		// show both): no poke and no lift the sim would refuse (StickCannotTake), so the poke is there the frame the puck is in the open.
 		// env JAM_PLAYTESTER_READ=0 | 1 forces it (measurement). Off: it swings into every shield (14 pokes a match on the big ice, 0.7 clean).
 		bool bReadShield = false;
+		bool bPokeReadOn = false;        // lane A152: the profile's bPokeRead applies (stick.bPlaytesterPokeRead, or env JAM_PLAYTESTER_POKE=read; =old forces the press as it was)
 		int StickVariant = 0;            // lane A86 measurement arms (env JAM_PLAYTESTER_STICK): 0 aim, 2 carry (no cursor on a loose puck), 3 front (the carry aim within 60 deg of facing)
 
 		void Reset(EPlaytester Kind, uint64_t Seed);
@@ -142,6 +154,9 @@ namespace JamAI
 		// lane A3 (R-0029): in the faceoff windows that ran out without a human touch, frames by who held the puck
 		int64_t WoMateFrames = 0, WoOppFrames = 0, WoLooseFrames = 0;
 		int ChecksLanded = 0, ChecksTaken = 0, Fouls = 0;
+		// Lane A151 (track F1): the human's check presses that opened a window (bCheckThisFrame frames) and the windows that ran out on nobody
+		// (FJamSkaterState::ChecksMissed, the HUD's MISSED). Read-outs on the playtest line: check_presses, check_whiffs.
+		int CheckPresses = 0, CheckWhiffs = 0;
 		int FoulsFromBehind = 0, FoulsNoPuck = 0;   // the two kinds of foul (contracts/events.md): from behind on the carrier; on a skater without the puck
 		int64_t BoxFrames = 0;           // frames the human sat in the penalty box
 		int Pokes = 0, PokesClean = 0, Lifts = 0, Passes = 0;

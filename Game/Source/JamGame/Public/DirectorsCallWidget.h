@@ -57,6 +57,11 @@ class JAMGAME_API UJamDirectorsCallWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
+	// Lane A144 (evolution 3): the pause card is 800 wide with 28 of padding a side; its controls table is written to that width
+	// (Jam.Menu.PauseCardFits measures every line against it).
+	static constexpr float PauseCardWidth = 800.f;
+	static constexpr float PauseCardInnerWidth = 744.f;
+	static FString PauseControlsText();
 	static UJamDirectorsCallWidget* CreateAndAdd(APlayerController* PC, UJamDirectorsCallController* InOwner);
 
 	// Shows the pause menu (the call card is rebuilt from the current cut).

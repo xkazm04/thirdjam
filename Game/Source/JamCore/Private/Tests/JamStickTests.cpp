@@ -147,7 +147,11 @@ bool FJamStick::RunTest(const FString& Parameters)
 		TestFalse(TEXT("no stumble on a clean poke"), Sim->GetSkaters()[Me].IsStumbling());
 
 		// Miss: armed (carrier within reach + 1 m) but the blade falls short.
-		UJamSim* S2 = MakeSim(G, 1, true);
+		// Lane A152: the blade rule and the stumble are the neutral values of game.stick.poke_assist_deg and miss_recovery_frames (a person's poke now reaches
+		// a puck inside its stick's reach and its miss costs a recovery: Jam.Core.Movement.PokeReach, .PokeRecovery). This block keeps the rule underneath.
+		FJamGameConfig GBlade = G;
+		GBlade.Stick.PokeAssistDeg = 0.0; GBlade.Stick.MissRecoveryFrames = 0;
+		UJamSim* S2 = MakeSim(GBlade, 1, true);
 		Park(S2, { Me, O });
 		S2->SetSkater(O, FVector2D(0, 0), FVector2D::ZeroVector, 0);
 		S2->SetSkater(Me, FVector2D(2.9, 0), FVector2D::ZeroVector, UE_DOUBLE_PI);   // inside the arming distance (two bodies + reach + 1 m = 3.0)
@@ -247,6 +251,7 @@ bool FJamStick::RunTest(const FString& Parameters)
 
 	// 5b. R-0029 point 3, foul grace: the human lifts the puck off O, then checks O from the side. Six frames after the strip the check is clean
 	// (O carried within foul_grace_frames); twenty frames after, the same check is foul_no_puck.
+	G.Contact.StandSideBrace = 0.0;   // lane A151 (track F1): this scene and the next stage their rule with a body check from the side on a STANDING skater without the puck, at the brace that hit had (CONTACT-6.md section 3)
 	for (const int32 Wait : { 6, 20 })
 	{
 		UJamSim* Sim = MakeSim(G, 1, true);

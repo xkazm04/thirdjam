@@ -686,3 +686,25 @@ at pro (0.75 on Friday; the bar is 1.5); the puck is on nobody's blade 55 % of p
 matches (frames down follow closing speed); the stop-and-go is a skill with a window (100 % at 8 m, 0 % straight); the bots brake on purpose (2,146 to 270 a
 match) and sprint with the puck; the ladder reads 86 / 51 / 23 on 200 fresh seeds. (7) The play sheet (`docs/PLAY-ME.md`) is corrected by the review's
 verdict: the stop's distance, where each level is until the wire lands, the modes that still whistle, the big ice.
+
+## R-0060 (H26, 2026-11-14 02:59): the instrument changed under the ladder; the ladder stays where it was set
+Lane A151 traced why the scripted human whiffed half its checks and fixed the script (it presses for the hit it sees coming: whiffs 54 % to 16 % at pro).
+That changes the instrument the ladder is measured with: paired on 600 seeds the cells read 84.8 / 56.3 / 31.5 where the same tree read 87.2 / 52.8 / 28.2
+with the old press. Rulings: (1) **the ladder is not re-set to the new script before the operator plays**: it was set and accepted on a player who whiffs
+half his checks; a player who lands most of them finds pro easier (about 56 %); which player the operator is, he says at 10:00, and the curve follows his
+answer on Saturday; the curve lane reports both columns on the package's commit; (2) **a standing skater without the puck holds a side hit** (VISION law 1 in
+the operator's words: "Stationary player can resist most of side tackles"): on, with its neutral; a standing carrier is not braced; (3) the **late press**
+(a check pressed up to six frames after the bodies met still counts) stays off: it is the first thing to turn on if the operator says his checks do not
+land: one number; (4) a check press has no cooldown (RMB every 12 frames keeps the window open): the contact track's next evolution, with the lunge as a
+motion; (5) the HUD's contact line cannot be proven headless (the HUD does not tick without a renderer): the acceptance lane reads it in the window.
+
+## R-0061 (H27, 2026-11-14 03:20): one more curve pass, on the commit that carries the brace, the poke and the brain's one stop distance
+The ladder check (A154) measured main before three things reached it: the standing brace (A151: pro about +1.5), the poke that takes the puck and the miss
+that costs a recovery (A152: pro about +3.2), and all_star's presser inside the hunt (A153). Each is inside the 4-point rule alone; together pro sits about
+five points over its bar. Rulings: (1) **one last pass** by the curve lane on the commit that carries all three, measured with **the instrument the ladder
+was set with** (`JAM_PLAYTESTER_CHECK=closing`: R-0060 point 1), 600 a cell then 2,000 near a bar, targets 85 / 48 / 26 within 3; (2) **at most three profile
+numbers** move (aggression first, speed last; the hunt radius is not a lever: R-0055); law 3 stays a gate at every level (the stop begun at 8 m at 80 % or
+more, a straight charge under 20 %); (3) the lane writes **the two-column table** owed under R-0060 on that commit (the old press and the new press, six
+cells each) and re-sets `Jam.Bot.HumanHasSomethingToDo`'s budget from its own matches; (4) the pass lands **before 07:30** so the operator's package (H28) is
+cut from a measured ladder with its own acceptance run (R-0056); what is not measured by then does not land before he plays; (5) the season is re-read at 200
+a take for the novice after the trim: the ramp of R-0057 holds or the take that breaks it moves one number.

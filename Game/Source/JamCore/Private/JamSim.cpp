@@ -674,6 +674,7 @@ void UJamSim::FaceoffReset()
 		S.KnockFrames = 0;
 		S.StumbleFrames = 0;
 		S.GraceFrames = 0;   // lane A113: a faceoff sets everybody up; no grace is owed after it
+		S.LateFrames = 0;    // lane A151: nor a late press
 		// Lane A132 (track F1): the brake read-outs are this frame's truth only. StepSkater clears them at its start, so a brake of the frame the faceoff was set in
 		// (the goal pause's glide to a stop, a period's last frame, a drill's own FaceoffReset) stood on a skater that had been put on its mark with no speed
 		// until the next step: the figure's stop pose and spray on a standing skater, a brake frame too many in whoever counts the flag. Read-outs only
@@ -681,6 +682,7 @@ void UJamSim::FaceoffReset()
 		S.bBraking = S.bReverseBraking = false;
 		S.PokeWindow = 0;
 		S.bPokeArmed = false;
+		S.StickLockLeft = 0;   // lane A152: a faceoff ends the miss's recovery
 		S.bTouchingPuck = false;
 		S.bHasPuck = false;
 		S.bCentre = false;
@@ -926,6 +928,11 @@ void UJamSim::SetSkater(int32 Index, const FVector2D& Pos, const FVector2D& Vel,
 	S.Yaw = S.PrevYaw = Yaw;
 }
 
+void UJamSim::ClearReleaseGrace(int32 Index)
+{
+	if (Skaters.IsValidIndex(Index)) Skaters[Index].GraceFrames = 0;
+}
+
 void UJamSim::Step(const TArray<FJamInput>& Inputs)
 {
 	FrameEvents.Reset();
@@ -1058,6 +1065,7 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 		const FJamInput& In = Inputs.IsValidIndex(S.Index) ? Inputs[S.Index] : FJamInput();
 		// Lane A113: a window that runs out on nobody is a whiff (the read-out counter behind the HUD's MISSED); a skater that took the puck inside its window did not miss.
 		if (S.CheckWindow > 0 && --S.CheckWindow == 0 && !CarrierMayNotHit(S)) ++S.ChecksMissed;
+		if (S.LateFrames > 0) --S.LateFrames;   // lane A151: the late press's frames run out (set to late_press_frames + 1 by the contact, which is stepped after this loop)
 		if (S.ShieldFrames > 0) --S.ShieldFrames;   // lane A84: the shield runs while the puck is live
 		if (!S.CanAct()) { S.ChargeFrames = 0; continue; }
 		if (In.bAbility) TryAbility(S);   // lane A84 (R-0041 point 3): F, before the shot so a shotgun with the puck fires this frame
@@ -1075,12 +1083,17 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 		}
 		else if (In.bCheck && Config.Skater.bCheckEnabled)
 		{
-			S.CheckWindow = S.bHuman ? HumanCheckWindowFrames : CheckWindowFrames;   // lane A49: the human's press gets 0.2 s to connect
+			// Lane A151 (contact.LatePressFrames): a press just after an unpressed body contact is that hit; otherwise the window opens as before.
+			if (!TryLatePress(S)) S.CheckWindow = S.bHuman ? HumanCheckWindowFrames : CheckWindowFrames;   // lane A49: the human's press gets 0.2 s to connect
 			S.bCheckThisFrame = true;
 		}
 		StepCheckReach(S);   // lane A125 (track F1): an open window bends toward its man (contact.check_reach_m; 0 = off)
-		if (In.bPoke) TryPoke(S);
-		if (In.bLift) TryLift(S);
+		// Lane A152 (track F2, game.stick.miss_recovery_frames): the recovery after a missed poke. While it runs the stick is locked: no poke, no lift, and a
+		// check pressed now or still open is dropped (the skater skates and steers; it does not fall).
+		const bool bStickLocked = S.StickLockLeft > 0;
+		if (bStickLocked) { --S.StickLockLeft; S.CheckWindow = 0; S.bCheckThisFrame = false; }
+		if (In.bPoke && !bStickLocked) TryPoke(S);
+		if (In.bLift && !bStickLocked) TryLift(S);
 	}
 	for (FJamSkaterState& S : Skaters)
 	{
@@ -1530,6 +1543,21 @@ void UJamSim::TryPoke(FJamSkaterState& S)
 	S.bPokeArmed = C >= 0 && Skaters[C].Team != S.Team && FVector2D::Distance(Skaters[C].Pos, S.Pos) <= SkaterRadius * 2.0 + Config.Stick.ReachM + 1.0;
 }
 
+// Lane A152 (track F2, game.stick.poke_assist_deg; R-0059 point 4): the poke reaches. A person's open poke takes a puck an opponent carries when the puck is
+// within the stick's full reach of the poker's body (the furthest a perfectly aimed blade takes from: never further) and within poke_assist_deg of the
+// direction the blade is aimed in. The caller applies the shields, the poker's control and the puck's height as for the blade. 0 = off; bots: never.
+bool UJamSim::PokeReaches(const FJamSkaterState& S, int32 Carrier) const
+{
+	const double Deg = Config.Stick.PokeAssistDeg;
+	if (Deg <= 0.0 || Config.Stick.bPokeRulesOff || !S.bHuman || !Skaters.IsValidIndex(Carrier) || Carrier == S.Index || Skaters[Carrier].Team == S.Team) return false;
+	const FVector2D To = Puck.Pos - S.Pos;
+	const double D = To.Size();
+	if (D > SkaterRadius + Config.Stick.ReachM + Eff(EJamStat::PuckRadius, -1) + PokeTakeM) return false;
+	const FVector2D Aim = (S.BladePos - S.Pos).GetSafeNormal();
+	if (D < 1e-6 || Aim.IsNearlyZero()) return true;
+	return Dot(To, Aim) >= FMath::Cos(FMath::DegreesToRadians(FMath::Min(Deg, 180.0))) * D;
+}
+
 // After the puck moved: an open poke window whose blade reaches the puck takes it; a window that runs out while armed stumbles.
 void UJamSim::ResolvePokes()
 {
@@ -1540,8 +1568,15 @@ void UJamSim::ResolvePokes()
 		// Lane A51 (R-0034): a poke at a carrier that sweeps (the side the puck left) or spins (the body is between) never reaches the puck; the window runs out as a miss.
 		const int32 Ci = CarrierIndex();
 		const bool bShielded = Ci >= 0 && Ci != S.Index && Skaters[Ci].Team != S.Team && IsPokeShielded(S, Skaters[Ci]);
-		if (S.CanAct() && !bShielded && Puck.Z < BladeClearM && FVector2D::Distance(S.BladePos, Puck.Pos) <= R + PokeTakeM)   // lane A77: a puck over the blades is not poked
+		const bool bReached = PokeReaches(S, Ci);   // lane A152: a person's poke reaches for a carried puck inside its stick's reach (stick.poke_assist_deg; 0 = never)
+		if (S.CanAct() && !bShielded && Puck.Z < BladeClearM && (bReached || FVector2D::Distance(S.BladePos, Puck.Pos) <= R + PokeTakeM))   // lane A77: a puck over the blades is not poked
 		{
+			// Lane A152: the blade goes to the puck it reached for (as far as the stick goes), so the figure's stick and the take agree.
+			if (bReached && FVector2D::Distance(S.BladePos, Puck.Pos) > R + PokeTakeM)
+			{
+				const FVector2D To = Puck.Pos - S.Pos;
+				S.BladePos = S.Pos + To.GetSafeNormal() * FMath::Min(To.Size(), SkaterRadius + Config.Stick.ReachM);
+			}
 			const int32 C = CarrierIndex();
 			const bool bFromOpponent = C >= 0 && Skaters[C].Team != S.Team;
 			if (bFromOpponent) Skaters[C].StickHitResult = 1;   // lane A45 read-out: the carrier's PlayStickHit(false)
@@ -1560,7 +1595,17 @@ void UJamSim::ResolvePokes()
 			S.bPokeArmed = false;
 			// Lane A121 (R-0049 point 2): a poke that ran out on a carrier in its take grace costs no stumble (nobody can see the grace: it refuses, it does not punish).
 			const bool bGraceOnly = Ci >= 0 && Ci != S.Index && Skaters[Ci].Team != S.Team && InTakeGrace(Skaters[Ci]);
-			if (!bGraceOnly) S.StumbleFrames = Config.Stick.StumbleFrames;
+			// Lane A152 (game.stick.miss_recovery_frames): a miss costs a recovery, not a fall: the stick is locked for that many frames (the poke's and the
+			// lift's ready frames carry it, so the brain's and the HUD's "can poke" read it without a change). 0 = the stumble, as before. A cut whose
+			// stumble_frames is 0 (hockey.raw: a miss costs nothing) gets no recovery either. A person's miss only: a bot's miss stays the stumble (the carrier's
+			// sweep and stop earn it; stick.bMissRecoveryBots is the measurement's arm).
+			if (!bGraceOnly && Config.Stick.MissRecoveryFrames > 0 && Config.Stick.StumbleFrames > 0 && !Config.Stick.bPokeRulesOff && (S.bHuman || Config.Stick.bMissRecoveryBots))
+			{
+				S.StickLockLeft = Config.Stick.MissRecoveryFrames;
+				S.PokeReadyFrame = FMath::Max<int64>(S.PokeReadyFrame, Frame + 1 + Config.Stick.MissRecoveryFrames);
+				S.LiftReadyFrame = FMath::Max<int64>(S.LiftReadyFrame, Frame + 1 + Config.Stick.MissRecoveryFrames);
+			}
+			else if (!bGraceOnly) S.StumbleFrames = Config.Stick.StumbleFrames;
 			S.PokeResult = -1;
 			Emit(JamEvents::Poke, S.Index, S.BladePos, 0.f, KindMiss, (Ci >= 0 && Skaters[Ci].Team != S.Team ? Skaters[Ci].Pos : S.BladePos) - S.Pos);   // lane A95: Dir toward the carrier
 		}
@@ -1856,6 +1901,21 @@ void UJamSim::CollideSkaters()
 				const bool bA = Can(A, B), bB = Can(B, A);
 				if (bA && (!bB || Dot(A.Vel, N) >= Dot(B.Vel, -N))) bLanded = ResolveContact(A, B, N, Contact, EContactKind::Body) >= ContactStumble;
 				else if (bB) bLanded = ResolveContact(B, A, -N, Contact, EContactKind::Body) >= ContactStumble;
+				else if (Config.Contact.LatePressFrames > 0)
+				{
+					// Lane A151 (track F1): no check was open when these two met. A human who was closing on the other keeps the meeting for late_press_frames
+					// (TryLatePress): the velocities before the exchange below. A weaker touch of the same man inside those frames does not replace it.
+					auto Note = [&](FJamSkaterState& X, const FJamSkaterState& O, const FVector2D& Dir)
+					{
+						const double Closing = Dot(X.Vel - O.Vel, Dir);
+						if (!X.bHuman || X.IsDown() || O.IsDown() || Closing <= 0.0) return;
+						if (X.LateFrames > 0 && X.LateWho == O.Index && Dot(X.LateVelSelf - X.LateVelOther, X.LateDir) >= Closing) return;
+						X.LateFrames = Config.Contact.LatePressFrames + 1;
+						X.LateWho = O.Index; X.LateDir = Dir; X.LateVelSelf = X.Vel; X.LateVelOther = O.Vel;
+					};
+					Note(A, B, N);
+					Note(B, A, -N);
+				}
 			}
 			else if (Config.Skater.bCheckEnabled && A.Team != B.Team)
 			{
@@ -1921,12 +1981,65 @@ void UJamSim::CollideSkaters()
 			const double Vn = Dot(B.Vel - A.Vel, N);
 			if (Vn < 0)
 			{
-				const FVector2D J = N * ((1.0 + SkaterSkaterBounce) * Vn * 0.5);
-				A.Vel += J;
-				B.Vel -= J;
+				// Lane A151 (track F1, contact.bBraceExchange; CONTACT-6.md section 3): the brace is mass in the bounce. Between opponents a skater on its feet
+				// that stands braced against the push weighs its brace (BraceOf); a skater that is down, stumbling (this hit may just have stumbled it), moving or
+				// carrying the puck weighs 1. Both at 1 (and the rule off): the equal bounce as it was, bit for bit.
+				double Wa = 1.0, Wb = 1.0;
+				if (Config.Contact.bBraceExchange && Config.Contact.bMomentum && A.Team != B.Team)
+				{
+					const int32 Carrier = CarrierIndex();   // the carrier bounces as before (law 3's gate; BraceOf)
+					if (A.CanAct() && A.Index != Carrier) Wa = BraceOf(A, -N, EContactKind::Body);
+					if (B.CanAct() && B.Index != Carrier) Wb = BraceOf(B, N, EContactKind::Body);
+				}
+				if (Wa == 1.0 && Wb == 1.0)
+				{
+					const FVector2D J = N * ((1.0 + SkaterSkaterBounce) * Vn * 0.5);
+					A.Vel += J;
+					B.Vel -= J;
+				}
+				else
+				{
+					const double Jn = (1.0 + SkaterSkaterBounce) * Vn / (Wa + Wb);
+					A.Vel += N * (Jn * Wb);
+					B.Vel -= N * (Jn * Wa);
+				}
 			}
 		}
 	}
+}
+
+// Lane A151 (track F1, evolution 5; docs/experiments/CONTACT-6.md section 2): the late press.
+bool UJamSim::TryLatePress(FJamSkaterState& S)
+{
+	const FJamContactConfig& K = Config.Contact;
+	if (K.LatePressFrames <= 0 || !K.bMomentum || !S.bHuman || S.LateFrames <= 0 || !Skaters.IsValidIndex(S.LateWho) || CarrierMayNotHit(S)) return false;
+	FJamSkaterState& O = Skaters[S.LateWho];
+	if (O.Team == S.Team || O.IsDown() || O.InBox() || O.ShieldFrames > 0 || FVector2D::Distance(O.Pos, S.Pos) > SkaterRadius * 2.0 + LatePressRangeM) return false;
+	S.LateFrames = 0;
+	// The hit is read on the velocities the two met with (the closing speed, the brace, the attacker's own stability are all of that moment).
+	const FVector2D NowS = S.Vel, NowO = O.Vel, Dir = S.LateDir;
+	S.Vel = S.LateVelSelf;
+	O.Vel = S.LateVelOther;
+	const int32 Outcome = ResolveContact(S, O, Dir, (S.Pos + O.Pos) * 0.5, EContactKind::Body);
+	if (Outcome == ContactBump)
+	{
+		// A bump moves no speed: both keep what they have now (the bounce they already had); an attacker the bump cost a recoil loses half of it.
+		O.Vel = NowO;
+		S.Vel = S.bRecoilThisFrame ? NowS * 0.5 : NowS;
+	}
+	else
+	{
+		// A stumble or a knockdown: the hit as it would have been pressed in time: what ResolveContact moved, then the bounce of that meeting.
+		const double Vn = Dot(O.Vel - S.Vel, Dir);
+		if (Vn < 0.0)
+		{
+			const FVector2D J = Dir * ((1.0 + SkaterSkaterBounce) * Vn * 0.5);
+			S.Vel += J;
+			O.Vel -= J;
+		}
+	}
+	++S.ChecksLate;
+	return true;
 }
 
 // Lane A92 (R-0045 law 1): the carrier cannot hit. S carries, and no opponent carried within stick.foul_grace_frames (LastCarryFrame, the foul rule's own clock).
@@ -1951,7 +2064,8 @@ double UJamSim::StabilityOf(const FJamSkaterState& S, const FVector2D& HitDir, E
 	if (Speed < K.StandSpeedMps)
 	{
 		// Standing or gliding slowly: braced against a hit it sees. A cross-check inside the front arc ("to the chest") ignores the brace.
-		if (!bUnseen && !(Kind == EContactKind::Cross && Along < -0.5)) St *= FMath::Max(1.0, K.StandBrace);
+		// Lane A151: the factor is BraceOf (the same numbers; from the side contact.StandSideBrace when that is set).
+		St *= BraceOf(S, HitDir, Kind);
 	}
 	else
 	{
@@ -1962,6 +2076,20 @@ double UJamSim::StabilityOf(const FJamSkaterState& S, const FVector2D& HitDir, E
 	if (S.SpinFrames > 0 || (Config.Shot.ChargeFramesMax > 0 && S.ChargeFrames >= Config.Shot.ChargeFramesMax)) St *= K.SpinStability;
 	if (bUnseen) St *= K.UnseenStability;
 	return St;
+}
+
+// Lane A151 (track F1, docs/experiments/CONTACT-6.md section 3): the brace of a skater under stand_speed_mps against a push along HitDir.
+double UJamSim::BraceOf(const FJamSkaterState& S, const FVector2D& HitDir, EContactKind Kind) const
+{
+	const FJamContactConfig& K = Config.Contact;
+	const double Along = Dot(HitDir, S.Forward());
+	if (S.Vel.Size() >= K.StandSpeedMps || Along > 0.5 || (Kind == EContactKind::Cross && Along < -0.5)) return 1.0;
+	const double Front = FMath::Max(1.0, K.StandBrace);
+	// The neutral value, a cross-check, the front arc: stand_brace. And the CARRIER: its hands are on the puck and its defence is its feet (law 3 is a gate: a
+	// stop begun too late must not be saved by standing still), so with the puck a skater keeps stand_brace from every side it sees, as before the lane.
+	if (Kind != EContactKind::Body || K.StandSideBrace <= 0.0 || Along <= -0.5 || CarrierIndex() == S.Index) return Front;
+	// From the side: the whole side brace for a push across the facing or behind it (up to the unseen arc), falling off to stand_brace at the front arc's edge.
+	return FMath::Lerp(FMath::Max(1.0, K.StandSideBrace), Front, FMath::Clamp(-Along / 0.5, 0.0, 1.0));
 }
 
 // Lane A101 (track F1, docs/experiments/CONTACT-2.md): the boards are a body.
@@ -3153,9 +3281,12 @@ uint64 UJamSim::StateHash() const
 		// Lane A113 (R-0049 point 1): the release grace only while it runs, behind a tag (contact.release_grace_frames 0: never, so the neutral value hashes as
 		// before). Main's LockstepStateHash() folds StateHash(), so the lockstep checkpoint covers it too.
 		if (S.GraceFrames != 0) { H.AddI(-113); H.AddI(S.GraceFrames); }
+		// Lane A151 (track F1): the late press's memory only while it runs, behind a tag (contact.LatePressFrames 0: never, so the neutral value hashes as before).
+		if (S.LateFrames != 0) { H.AddI(-151); H.AddI(S.LateFrames); H.AddI(S.LateWho); H.AddV(S.LateDir, 1000.0); H.AddV(S.LateVelSelf, 1000.0); H.AddV(S.LateVelOther, 1000.0); }
 		// Lane A121: the earned first step and the take grace only while they are up (burst.own_stop false and stick.take_grace_frames 0 hash as before).
 		if (S.bBurstEarned) H.AddI(0x121B);
 		if (S.TakeGraceLeft != 0) H.AddI(S.TakeGraceLeft);
+		if (S.StickLockLeft != 0) { H.AddI(0x152A); H.AddI(S.StickLockLeft); }   // lane A152: the miss's recovery only while it runs (stick.miss_recovery_frames 0 hashes as before)
 		// Lane A128: the rest counter and the spin's recovery only while they are up (burst.rest_frames 0 and spin.recovery_frames 0 hash as before).
 		if (S.RestFrames != 0) { H.AddI(0x128A); H.AddI(S.RestFrames); }
 		if (S.SpinRecoverLeft != 0) { H.AddI(0x128B); H.AddI(S.SpinRecoverLeft); }

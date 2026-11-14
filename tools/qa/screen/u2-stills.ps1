@@ -7,6 +7,9 @@
 # -EndCard: instead of the menu screens, presses PLAY NOW (jam.menuscreen play), ends the match for the other side by real goals
 #   (jam.ctrl.EndMatch 1: the loss card), takes the card at both sizes, restarts the match (jam.Season.Restart, the R key) and ends it for the
 #   player's side (jam.ctrl.EndMatch 0: the win card). The JAMMENU play now / JAMCTRL endmatch lines land in menu-lines.txt.
+# The process runs with -Multiprocess (the machine's rule for every headless start), and under that flag the engine writes no config file: a level
+# picked here lives for this process only. A pick that survives a restart cannot be shown with this tool (Jam.Menu.PickSurvivesSaveAndLoad holds the
+# game's Save() and Load(); a package writes the file).
 # Exit 0: every still asked for exists. 1: one is missing. 2: could not run.
 param(
     [string]$Tag = 'after',
@@ -14,6 +17,8 @@ param(
     [switch]$EndCard,
     [string]$LaunchCut = '',  # start the game with -cut=<this>, as the acceptance run does: PLAY NOW must then start this cut at its own level (JAMMATCH ... source=launch)
     [string]$LevelCut = '',  # with -Level: this cut or mode through the menu (jam.menuscreen choose <name>) instead of PLAY NOW
+    [string[]]$Before = @(), # console commands run once the menu is up, before the stills (for example "jam.menuscreen level pro")
+    [switch]$Switch,       # instead of the stills: the first screen's level switch, stepped by real key presses (jam.menuscreen key right / left), then Enter: the match must start at the level picked
     [switch]$Level,        # instead of the stills: PLAY NOW, then the match card and the pause card, which name the level in force (JAMMATCH level=... in menu-lines.txt)
     [switch]$Walk,         # instead of the stills: the pad walk (jam.menuscreen walk); prints its JAMMENU walk lines; exit 0 when the verdict is pass
     [switch]$Say,          # also direct one sentence on the Direct screen: with an API key on the machine this is a live, paid call
@@ -95,6 +100,34 @@ while ($sw.Elapsed.TotalSeconds - $t0 -lt $StartTimeoutSec -and -not $p.HasExite
 if (-not $up) { Finish 2 'the menu never answered its console' }
 Note 'the console answers; letting the menu draw'
 Start-Sleep -Seconds 8
+
+foreach ($cmd in $Before) { if ($cmd) { [void](Console $cmd); Start-Sleep -Milliseconds 300 } }
+
+if ($Switch) {
+    # NOTE: this writes the level into this tree's own saved settings (Game\Saved\...\GameUserSettings.ini), as a player's pick does.
+    [void](Console 'jam.menuscreen level rookie')
+    Still '1080-switch-rookie' 800
+    [void](Console 'jam.menuscreen key right')
+    Still '1080-switch-pro' 800
+    [void](Console 'jam.menuscreen key right')
+    Still '1080-switch-allstar' 800
+    [void](Console 'jam.menuscreen key right')          # the right end holds
+    [void](Console 'jam.menuscreen key left')
+    [void](Console 'r.SetRes 1280x720w'); Start-Sleep -Seconds 2
+    Still '720-switch-pro' 800
+    [void](Console 'jam.menuscreen key left')
+    Still '720-switch-rookie' 800
+    [void](Console 'jam.menuscreen key arrowright')     # the keyboard's arrow, as the pad's
+    [void](Console 'jam.menuscreen key enter')          # the acceptance run's Return: the focus never left PLAY NOW
+    $started = WaitLog 'JAMMATCH level=' 60
+    Start-Sleep -Seconds 2
+    $lines = @(Select-String -Path $log -Pattern 'JAMMENU key|JAMMENU level picked|JAMMENU start match|JAMMATCH level' | ForEach-Object { $_.Line -replace '^.*(JAMMENU|JAMMATCH)', '$1' })
+    $lines | ForEach-Object { Write-Host "  | $_" }
+    $lines | Set-Content (Join-Path $out 'switch-lines.txt')
+    if (-not $started) { Finish 1 'Enter on the first screen did not start a match' }
+    if (@($lines | Where-Object { $_ -match 'MATCH level=pro source=settings' }).Count -eq 0) { Finish 1 'the match did not play the level the switch showed (pro)' }
+    Finish 0 'the switch steps by the keys and Enter plays its level'
+}
 
 if ($Level) {
     if ($LevelCut) { [void](Console "jam.menuscreen choose $LevelCut") } else { [void](Console 'jam.menuscreen play') }

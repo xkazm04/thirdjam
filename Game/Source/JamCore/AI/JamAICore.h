@@ -150,6 +150,26 @@ namespace JamAI
 		// its skill's HuntRadiusM. Off, as on every tree so far: the hunt takes every bot inside the radius off its shape job, the presser included, so the
 		// hunt radius is also the distance at which the presser stops closing under control and charges (it moves the stop-and-go's window: R-0055 point 1).
 		bool bPressInHunt = false;
+		// Lane A153 (track Q2, evolution 4; docs/experiments/BRAIN-4.md). Both at their neutral value are the brain of evolution 3, bit for bit (the tune
+		// key brain4=0, which also switches a level's bPressInHunt off: all_star has it on since this lane, R-0058 point 1).
+		// MateFinishM (the human's mates): a mate that carries the puck inside this many metres of the opposing net, no further off its axis than 60
+		// degrees, with an open lane (no standing opponent within 1.2 m of the line puck -> net up to 3 m in front of it: the last man in his crease does
+		// not close a lane) finishes: it knows the sim's aim assist there (facing inside shot.aim_cone_deg counts as lined up) and it does not give the
+		// puck to a better-placed mate or to the human by its coin; a human set up for the one-timer still gets it, and pressure still moves the puck.
+		// 0 = a mate shoots only when lined up to atan(1.4 / distance) and inside its skill's range (REVIEW-2 item 10: 0.4 releases a match from inside 15 m).
+		double MateFinishM = 0.0;
+		// MateDriveM (the human's mates): the same open lane out to this distance: the mate takes the puck to the net itself. It does not hand the puck
+		// to the human or to a better-placed mate on the way (a human set up for the one-timer still gets it, pressure still moves the puck); inside
+		// MateFinishM it shoots. 0 = it gives the puck to an open human after MinCarryFrames wherever it is (measured: a mate is the carrier inside 15 m
+		// of the net for 53 frames a match at pro, in three spells of a third of a second: it is never there long enough to finish).
+		double MateDriveM = 0.0;
+		// ScreenFrames (the human's mates): for this many frames after the human takes the puck, the mate nearest the opponent nearest him (within 8 m of
+		// him) stands in that opponent's way, 1.2 m from it on the line to the human, instead of offering a lane: the human's first second with the puck
+		// is covered (REVIEW-2: the puck is still his two seconds after a mate's pass in 19 % of the cases at pro). 0 = every mate offers a lane.
+		int ScreenFrames = 0;
+		// CarryClockS (a team without shape jobs: fewer than five): a carrier that has held the puck this many seconds attacks or moves it: it passes when
+		// the sim's pass has a receiver, else shoots it at the net when it faces up the ice (as a stalled puck is shot away). 0 = it may carry for ever.
+		double CarryClockS = 0.0;
 		bool Any() const { return bCarryOrPass || bAttackShape || bDefenceShape || bTransition; }
 	};
 	// Lane A115: every rule of evolution 2 on (as ProHockeySense has them) or off (the brain of evolution 1). The tune key brain2 and the tests use it.
@@ -189,6 +209,22 @@ namespace JamAI
 			H.PincerM = kEvo3PincerM;
 		}
 		H.ShotMaxAngleDeg = kEvo3ShotMaxAngleDeg;
+	}
+	// Lane A153 (evolution 4, BRAIN-4.md): the rules of evolution 4 as shipped (ApplyDifficultyProfile calls it for each side) or off (evolution 3).
+	// A rule that is 0 here was measured and ships at its neutral value (its tune key plays it). Off also switches a level's bPressInHunt off.
+	constexpr double kEvo4MateFinishM = 0.0;
+	constexpr double kEvo4CarryClockS = 0.0;
+	constexpr double kEvo4MateDriveM = 0.0;
+	constexpr int kEvo4ScreenFrames = 0;
+	inline void SetEvolution4(FJamHockeySense& H, bool bOn, bool bMate)
+	{
+		H.MateFinishM = 0.0;
+		H.CarryClockS = 0.0;
+		H.MateDriveM = 0.0;
+		H.ScreenFrames = 0;
+		if (!bOn) { H.bPressInHunt = false; return; }
+		if (bMate) { H.MateFinishM = kEvo4MateFinishM; H.MateDriveM = kEvo4MateDriveM; H.ScreenFrames = kEvo4ScreenFrames; }
+		else { H.CarryClockS = kEvo4CarryClockS; }
 	}
 	// Lane A94: the sense each level plays (DifficultyProfile.cpp sets the opponents' per level; the human's teammates play ProHockeySense at every level).
 	inline FJamHockeySense ProHockeySense()
@@ -606,6 +642,8 @@ namespace JamAI
 		FPoss PossAt(const FJamAIWorld& W, int Late) const;
 		void AssignJobs(const FJamAIWorld& W);
 		bool JobSteer(const FJamAIWorld& W, int Id, FVec2& Out, bool& bToPuck) const;
+		// Lane A153 (evolution 4): where mate Id screens for the human in the first frames of his carry (FJamHockeySense::ScreenFrames); false = it does not
+		bool ScreenPoint(const FJamAIWorld& W, int Id, FVec2& Out) const;
 		bool LastManGoalie(const FJamAIWorld& W, int Id) const;
 		// Lane A51 (R-0034): where the puck sat on the carrier's body, per frame (a ring of the last kPuckHist frames; recorded once per Think). A defending
 		// bot reads the carrier's body live and the puck's offset on it SweepReactFrames late, so a sweep inside its stick reach beats the poke and a

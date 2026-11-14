@@ -185,6 +185,8 @@ struct JAMCORE_API FJamSkaterState
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bPokeArmed = false;
 	// Frames of lost control after a mistimed poke; 0 = in control.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 StumbleFrames = 0;
+	// Lane A152 (game.stick.miss_recovery_frames): frames left of the recovery after a missed poke: no poke, lift or check while above 0. Hashed while above 0.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 StickLockLeft = 0;
 	// Frames left in the penalty box; 0 = on the ice.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 PenaltyFrames = 0;
 	// First frame a poke / lift is allowed again.
@@ -309,6 +311,16 @@ struct JAMCORE_API FJamSkaterState
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 ChecksSoft = 0;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 ChecksGraced = 0;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 ChecksMissed = 0;
+	// Lane A151 (track F1, evolution 5): the late press (contact.LatePressFrames; with 0 none of these is ever written). LateFrames: frames left in which this
+	// HUMAN skater's check press still counts for the body contact it just had, with no check open, with opponent LateWho; LateDir = the push (this skater
+	// towards LateWho), LateVelSelf / LateVelOther = the two velocities as the bodies met. RULE STATE: TryLatePress reads them, StateHash() covers them while
+	// LateFrames is not 0 (so the neutral value hashes as before). ChecksLate is a read-out counter (presses the rule resolved), never hashed.
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 LateFrames = 0;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 LateWho = -1;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") FVector2D LateDir = FVector2D::ZeroVector;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") FVector2D LateVelSelf = FVector2D::ZeroVector;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") FVector2D LateVelOther = FVector2D::ZeroVector;
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int32 ChecksLate = 0;
 	// R-0029 point 3: the last frame this skater carried the puck (-1000 = never); a check within game.stick.foul_grace_frames of it is not a foul_no_puck.
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") int64 LastCarryFrame = -1000;
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Sim") bool bTouchingPuck = false;
@@ -606,6 +618,17 @@ public:
 	// to speed_stability at its top speed); sprint_stability while sprinting; spin_stability in a spin or at a full shot wind-up; unseen_stability from behind.
 	// HitDir = the push, attacker towards victim (unit). The brain and the tests read it.
 	double StabilityOf(const FJamSkaterState& S, const FVector2D& HitDir, EContactKind Kind) const;
+	// Lane A151 (track F1): the brace alone, the factor StabilityOf multiplies in for a skater under stand_speed_mps: 1 against a hit it does not see or a
+	// cross-check inside its front arc, stand_brace against the rest, and against a BODY hit from the side contact.StandSideBrace when that is set (falling
+	// off to stand_brace at the edge of the front arc; never for the puck carrier, who keeps stand_brace). 1 for a skater at stand_speed_mps or faster.
+	// CollideSkaters weighs it in the bounce (bBraceExchange; the carrier weighs 1).
+	double BraceOf(const FJamSkaterState& S, const FVector2D& HitDir, EContactKind Kind) const;
+	// Lane A151 (track F1): the late press (contact.LatePressFrames, 0 = off). S pressed its check: if S is a human whose body met an opponent's inside the
+	// last LatePressFrames frames with no check open, and that man is still up, unshielded and within LatePressRangeM of touching, the press is that hit:
+	// ResolveContact on the velocities the two met with, then the bounce of that meeting (a bump leaves today's velocities alone). True = resolved; no
+	// window opens. False = nothing to resolve: the caller opens the window as before.
+	bool TryLatePress(FJamSkaterState& S);
+	static constexpr double LatePressRangeM = 0.7;
 	// The impulse a hit by Attacker on Victim along HitDir carries, in kg m/s: mass x max(0, closing speed along HitDir + lunge_mps (Body) or thrust_mps (Cross)).
 	double ContactImpulse(const FJamSkaterState& Attacker, const FJamSkaterState& Victim, const FVector2D& HitDir, EContactKind Kind) const;
 	// Lane A138 (R-0053 point 3): the cross-check's thrust as it lands: the whole thrust_mps, but on a back (the push along the victim's facing) only as far
@@ -727,6 +750,9 @@ public:
 	void SetPuck(const FVector2D& Pos, const FVector2D& Vel, double Z, double VZ);
 	// Debug/tests: place a skater.
 	void SetSkater(int32 Index, const FVector2D& Pos, const FVector2D& Vel, double Yaw);
+	// Director (14 Nov, the H27 release): staging for drills. A skater a drill re-places is in a new scene: its release grace (lane A113) from the scene
+	// before ends. The acceptance run fells its opponent with a check and stages the cross-check right after: inside the grace that hit is a bump by rule.
+	void ClearReleaseGrace(int32 Index);
 
 private:
 	void FaceoffReset();
@@ -735,6 +761,8 @@ private:
 	void StepSkater(FJamSkaterState& S, const FJamInput& In);
 	void StepStick(FJamSkaterState& S, const FJamInput& In);
 	void TryPoke(FJamSkaterState& S);
+	// Lane A152 (game.stick.poke_assist_deg): S's open poke reaches the puck its opponent Carrier carries (within the stick's reach and the aim's cone).
+	bool PokeReaches(const FJamSkaterState& S, int32 Carrier) const;
 	void TryLift(FJamSkaterState& S);
 	void ResolvePokes();
 	void CallFoul(FJamSkaterState& Fouler, const FJamSkaterState& Victim, const FVector2D& Contact, float Strength, FName Kind);

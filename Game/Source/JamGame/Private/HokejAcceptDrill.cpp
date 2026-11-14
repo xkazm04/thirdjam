@@ -281,7 +281,7 @@ void AHokejGameMode::AcceptDrillObserve()
 		case 4: HPos = FVector2D(Gx - Dir * 10.0, 0.0); break;
 		case 5: HPos = FVector2D(Gx - Dir * 16.0, -4.0); G.bMateLive = true; Sim->SetSkater(G.Mate, FVector2D(Gx - Dir * 16.0, 4.0), FVector2D::ZeroVector, FaceYaw); break;
 		case 6: HPos = FVector2D(Gx - Dir * 10.0, -2.0); G.bMateLive = true; Sim->SetSkater(G.Mate, FVector2D(Gx - Dir * 6.0, 6.0), FVector2D::ZeroVector, YawOf(HPos - FVector2D(Gx - Dir * 6.0, 6.0))); break;
-		case 7: HPos = FVector2D(-Dir * 3.5, 0.0); G.bOppLive = true; Sim->SetSkater(G.Opp, FVector2D(Dir * 2.0, 0.0), FVector2D::ZeroVector, FaceYaw + PI); break;
+		case 7: HPos = FVector2D(-Dir * 3.5, 0.0); G.bOppLive = true; Sim->SetSkater(G.Opp, FVector2D(Dir * 2.0, 0.0), FVector2D::ZeroVector, FaceYaw + PI); Sim->ClearReleaseGrace(G.Opp); break;   // the check row felled it: a new scene (the release grace would make the cross-check a bump)
 		case 8: HPos = FVector2D(0.0, 0.0); G.bOppLive = true; Sim->SetSkater(G.Opp, FVector2D(Dir * 7.0, 0.0), FVector2D::ZeroVector, FaceYaw + PI); break;
 		default: break;
 		}
