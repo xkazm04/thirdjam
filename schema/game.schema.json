@@ -470,6 +470,12 @@
           "maximum": 90,
           "description": "Lane A152 (track F2; R-0059 point 4): a miss costs a recovery, not a fall. A poke of the skater a person steers whose window runs out next to an opposing carrier locks its stick for this many physics frames: no poke, no stick lift and no body check, while it skates and steers as it likes. Leave the key out for the default in DEFAULTS.md; 0 = the neutral value (the game before the lane): the miss costs stumble_frames without control instead. A bot's miss stays the stumble (the carrier's sweep and stop earn it); a poke the take grace refused costs neither; with stumble_frames 0 a miss costs nothing at all."
         },
+        "stop_grace_frames": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 120,
+          "description": "Lane A163 (track F2 evolution 6): the stop tucks the puck. On the frame the reverse brake of a carrier a person steers begins (input against a velocity of 6 m/s or more), its puck gets the take grace for this many physics frames: no poke and no stick lift takes it; a body check still loosens it, and a sprinting carrier has to stop first. Needs take_grace_frames above 0. Leave the key out for the default in DEFAULTS.md; 0 = off, the neutral value (the game before the lane)."
+        },
         "poke_window_frames": {
           "type": "integer",
           "minimum": 2,

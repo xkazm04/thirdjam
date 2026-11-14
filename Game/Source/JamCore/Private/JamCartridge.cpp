@@ -1118,6 +1118,7 @@ namespace
 		ReadBool(St, TEXT("passive_take"), C.Stick.bPassiveTake);   // lane A102 (R-0048): false = a carried puck leaves its carrier only by a press
 		ReadInteger(St, TEXT("take_grace_frames"), C.Stick.TakeGraceFrames);   // lane A121 (R-0049 point 2): no poke or lift on a skater that just won the puck
 		ReadNumber(St, TEXT("poke_assist_deg"), C.Stick.PokeAssistDeg);   // lane A152 (track F2, R-0059 point 4): a person's poke reaches for a carried puck inside its stick's reach
+		ReadInteger(St, TEXT("stop_grace_frames"), C.Stick.StopGraceFrames);   // lane A163: a person's stop with the puck earns the take grace
 		ReadInteger(St, TEXT("miss_recovery_frames"), C.Stick.MissRecoveryFrames);   // lane A152: a missed poke locks the stick instead of the stumble
 		// R-0029 point 4 (lane A39): game.stick.deke { offset_m, commit_frames }
 		if (const FJPtr Dk = Obj(St, TEXT("deke")))

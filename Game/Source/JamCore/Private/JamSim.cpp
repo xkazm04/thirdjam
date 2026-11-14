@@ -1197,6 +1197,10 @@ void UJamSim::Step(const TArray<FJamInput>& Inputs)
 		if (S.bHasPuck && TakeOwner != S.Index)
 		{
 			S.TakeGraceLeft = TakeOwner == TakeOwnerPlaced ? 0 : FMath::Max(0, Config.Stick.TakeGraceFrames);
+			// Lane A163 (code only, the measurement's arm: FJamSkaterConfig::BurstTakeFrames, 0 = nothing here runs): the take's first step.
+			if (Config.Skater.BurstTakeFrames > 0 && Config.Skater.BurstFrames > 0 && TakeOwner != TakeOwnerPlaced && (S.bHuman || Config.Skater.bBurstTakeBots)) S.BurstLeft = FMath::Max(S.BurstLeft, Config.Skater.BurstTakeFrames);
+			// Lane A163 (code only, the third arm: FJamStickConfig::PickupSettleFrames, 0 = nothing here runs): the pickup settles.
+			if (Config.Stick.PickupSettleFrames > 0 && TakeOwner != TakeOwnerPlaced && (S.bHuman || Config.Stick.bPickupSettleBots)) S.SettleFrames = FMath::Max(S.SettleFrames, Config.Stick.PickupSettleFrames);
 			TakeOwner = S.Index;
 		}
 	}
@@ -1335,7 +1339,21 @@ void UJamSim::StepSkater(FJamSkaterState& S, const FJamInput& In)
 		if (bReverse)
 		{
 			const double Cut = C.ReverseBrakeDecel * FMath::Min(Mag, 1.0) * DT;
-			if (V > 1.0) { if (!S.bReverseBrakeLast) ++S.ReverseBrakes; S.bBraking = S.bReverseBraking = true; }
+			if (V > 1.0)
+			{
+				if (!S.bReverseBrakeLast)
+				{
+					++S.ReverseBrakes;
+					// Lane A163 (game.stick.stop_grace_frames; docs/experiments/MOVEMENT-7.md): the stop tucks the puck. The frame a person's stop begins with the
+					// puck, at StopGraceMinMps or more, its puck has the take grace for stop_grace_frames (the frame's end counts the first off, hence + 1): no
+					// stick takes it, a body still does. The grace's own state: hashed only while it runs, so the key at 0 leaves no trace.
+					if (Config.Stick.StopGraceFrames > 0 && Config.Stick.TakeGraceFrames > 0 && bCarrying && V >= StopGraceMinMps && (S.bHuman || Config.Stick.bStopGraceBots))
+					{
+						S.TakeGraceLeft = FMath::Max(S.TakeGraceLeft, Config.Stick.StopGraceFrames + 1);
+					}
+				}
+				S.bBraking = S.bReverseBraking = true;
+			}
 			S.Vel = V > Cut ? S.Vel * ((V - Cut) / V) : FVector2D::ZeroVector;
 		}
 		else

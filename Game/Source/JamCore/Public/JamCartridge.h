@@ -94,6 +94,10 @@ struct JAMCORE_API FJamSkaterConfig
 	// Not a cartridge key (lane A121 measured it as the other candidate, MOVEMENT-3.md): the carrier's own burst multiplier; 0 = accel_mult, as everyone's.
 	// Bar.Movement.StopAndGoSweep sets it.
 	double BurstCarryAccelMult = 0.0;
+	// Not a cartridge key (lane A163, the measurement's second arm; docs/experiments/MOVEMENT-7.md section 3): the take's first step. The frame a skater a
+	// person steers wins the puck (the frame its take grace begins), its first-step burst runs this many frames. 0 = off. bBurstTakeBots: every skater's.
+	int32 BurstTakeFrames = 0;
+	bool bBurstTakeBots = false;
 	// game.skater.burst.rest_frames (lane A128, track F2 evolution 3; the Director's ruling on lane A121's open question): a skater that starts from rest has
 	// earned its first step. Slower than 1 m/s (UJamSim::BurstRestSpeed) for this many frames in a row (a faceoff, a get-up, a full stop), its burst is armed
 	// while it stands and runs burst.frames from the frame it moves off. Never on a charge already under way. 0 = the neutral value (lane A121's rule: only a
@@ -193,6 +197,20 @@ struct JAMCORE_API FJamStickConfig
 	// its stick for this many frames (no poke, no lift, no check; it skates and steers) where it cost stumble_frames without control. 0 = the neutral value: the
 	// stumble. A bot's miss stays the stumble: it is what the carrier's sweep and stop earn (with the recovery for bots too, all_star read -5.5 points on 600).
 	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 MissRecoveryFrames = 20;
+	// game.stick.stop_grace_frames (lane A163, track F2 evolution 6; docs/experiments/MOVEMENT-7.md): the stop tucks the puck. On the frame the reverse brake
+	// of a carrier a person steers begins (law 3's stop: input against a velocity of UJamSim::StopGraceMinMps or more), its puck gets the take grace for this
+	// many frames: no poke and no lift takes it. A body check still loosens it (law 1) and a sprinting carrier has to stop first (law 4). It is the take
+	// grace's own state (FJamSkaterState::TakeGraceLeft), so the HUD's cue for the grace shows it. 0 = off (the neutral value: the game before the lane).
+	// Needs take_grace_frames above 0 (one rule, one state). A bot's stop earns none (bStopGraceBots below is the measurement's arm).
+	UPROPERTY(BlueprintReadOnly, Category = "Jam|Cartridge") int32 StopGraceFrames = 0;
+	// Not a cartridge key (lane A163): the measurement's arm. true = a bot carrier's stop earns the grace too.
+	bool bStopGraceBots = false;
+	// Not a cartridge key (lane A163, the measurement's third arm; MOVEMENT-7.md section 3): the pickup settles. The frame a skater a person steers becomes
+	// the puck's new carrier (a loose puck picked up at speed, a take), the puck is seated on its blade for this many frames as a pass's reception is
+	// (FJamSkaterState::SettleFrames: the carry assist holds it whatever its speed against the body). 0 = off: a puck met at more than 4 m/s against the
+	// body is touched and slides on. bPickupSettleBots: every skater's.
+	int32 PickupSettleFrames = 0;
+	bool bPickupSettleBots = false;
 	// Not a cartridge key (lane A152): the instrument. The scripted human (regular and good) presses a poke when it can land: its aim leads its own reaction, and
 	// it does not press into a take grace or a body between. false = the press as it was (every measurement before the lane).
 	bool bPlaytesterPokeRead = false;

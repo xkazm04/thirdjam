@@ -76,6 +76,7 @@
     "stick.take_grace_frames": "0..120",
     "stick.poke_assist_deg": "0..180",
     "stick.miss_recovery_frames": "0..90",
+    "stick.stop_grace_frames": "0..120",
     "stick.deke.offset_m": "0..2",
     "stick.deke.commit_frames": "0..60",
     "stick.sweep.min_deg_per_frame": "1..45",

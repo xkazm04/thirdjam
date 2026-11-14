@@ -283,6 +283,24 @@ public:
 	void ShowContactLine(const FString& Text);
 	FString GetContactText() const;
 	FString GetToastText() const;
+	// ---- Lane A163 (track F2, evolution 6): the carrier's cues, one function (UpdateCarrierCues, called last in RefreshFromFrame). Presentation only: it
+	// reads the sim's skaters and writes nothing back; no widget of its own.
+	// The take grace (game.stick.take_grace_frames: the half second after a skater wins the puck in which no stick takes it): the ring under that carrier
+	// (YouRing for the human, CarrierRing for anybody else) is drawn in the HUD's yellow at TakeGraceRingScale times its size: 1.5 as the grace begins, its
+	// own size as it ends, so the ring closes like a clock. A ring UpdateYours hid this frame stays hidden.
+	static constexpr float TakeGraceRingGrow = 0.5f;
+	static float TakeGraceRingScale(int32 GraceLeft, int32 GraceFrames)
+	{
+		return GraceLeft <= 0 || GraceFrames <= 0 ? 1.f : 1.f + TakeGraceRingGrow * FMath::Clamp(static_cast<float>(GraceLeft) / static_cast<float>(GraceFrames), 0.f, 1.f);
+	}
+	// The stick lock (game.stick.miss_recovery_frames: after a person's missed poke Space and RMB do nothing while it runs) and the press a carrier's grace
+	// refuses: the contact line says which. The lock wins (it is the one that costs him).
+	static FString CarrierCueLine(bool bStickLocked, bool bPressIntoGrace) { return bStickLocked ? TEXT("STICK LOCKED") : bPressIntoGrace ? TEXT("JUST WON IT") : TEXT(""); }
+	// STICK LOCKED stands for the lock's length: when the lock ends, the line is put at the start of its fade (ContactFadeFrames).
+	static int64 CarrierCueFadeStart(int64 SimFrame) { return SimFrame - (ContactLineFrames - ContactFadeFrames); }
+	void UpdateCarrierCues(const FJamPresentationFrame& Frame);
+	bool bCueStickLocked = false, bCuePressIntoGrace = false;
+	int32 CueGraceCarrier = -1;
 	static bool ShowControlsHint(const FJamPresentationFrame& F) { return F.SimFrame < ControlsHintFrames && F.Phase == EJamPhase::Play; }
 	// The Directors Call prompt shows only after the first goal.
 	static bool ShowDirectorsCall(const FJamPresentationFrame& F) { return F.bDirectorsCallReady && (F.ScoreHome + F.ScoreAway) > 0 && F.Phase != EJamPhase::Win && F.Phase != EJamPhase::Lose; }

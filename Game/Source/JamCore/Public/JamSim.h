@@ -458,6 +458,7 @@ public:
 	static constexpr int32 DrawWindowFrames = 30;
 	static constexpr int32 BoxFrames = 300;          // the default of game.rules.penalty_frames (lane A72)
 	static constexpr int32 FoulPauseFrames = 60;
+	static constexpr double StopGraceMinMps = 6.0;   // lane A163 (game.stick.stop_grace_frames): the stop that earns the grace begins at this speed or more (a shuffle on the spot earns nothing)
 	static constexpr double PokeTakeM = 0.35;        // blade-to-puck distance (beyond the puck radius) that takes the puck
 	static constexpr double DeflectRangeM = 0.6;     // C-0005: a shot passing within this of a stick deflects
 	static constexpr double DeflectKeep = 0.7;       // ... at 70 % of its speed

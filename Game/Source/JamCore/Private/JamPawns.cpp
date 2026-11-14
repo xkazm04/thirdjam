@@ -514,6 +514,25 @@ void AJamSkater::ApplySimFrame(const FJamSkaterState& S)
 		UE_LOG(LogJamSim, Log, TEXT("JAMVIS grace frame=%lld skater=%d team=%d human=%d by=%d ratio=%.2f grace_left=%d (a hit inside the release grace: a bump at most)"),
 			SimFrameForLog(), S.Index, S.Team, S.bHuman ? 1 : 0, S.ContactBy, S.ContactRatio, S.GraceFrames);
 	}
+	// Lane A163 (track F2, evolution 6): the carrier's two states the player could not see, as the pawn sees them (read-outs of hashed state; nothing is
+	// written back). C-0001 has no figure call for either (asked of device B in the lane's report); the HUD shows them (UJamHudWidget::UpdateCarrierCues),
+	// and the HUD does not tick under -nullrhi, so these lines are the headless read-out. takegrace: one line when a skater's grace begins (every puck
+	// won) and, for the human, when it ends; sticklock: a person's missed poke, on and off.
+	if ((S.TakeGraceLeft > 0) != bWasTakeGrace)
+	{
+		bWasTakeGrace = S.TakeGraceLeft > 0;
+		if (bWasTakeGrace || S.bHuman)
+		{
+			UE_LOG(LogJamSim, Log, TEXT("JAMVIS takegrace frame=%lld skater=%d team=%d human=%d on=%d frames=%d (game.stick.take_grace_frames: no stick takes this skater's puck; the HUD's ring under it turns yellow and closes)"),
+				SimFrameForLog(), S.Index, S.Team, S.bHuman ? 1 : 0, bWasTakeGrace ? 1 : 0, S.TakeGraceLeft);
+		}
+	}
+	if ((S.StickLockLeft > 0) != bWasStickLock)
+	{
+		bWasStickLock = S.StickLockLeft > 0;
+		UE_LOG(LogJamSim, Log, TEXT("JAMVIS sticklock frame=%lld skater=%d team=%d human=%d on=%d frames=%d (game.stick.miss_recovery_frames: no poke, lift or check; the HUD's contact line says STICK LOCKED)"),
+			SimFrameForLog(), S.Index, S.Team, S.bHuman ? 1 : 0, bWasStickLock ? 1 : 0, S.StickLockLeft);
+	}
 	if (S.bBoardPinned != bWasPinned)
 	{
 		bWasPinned = S.bBoardPinned;

@@ -966,6 +966,7 @@ void UJamHudWidget::RefreshFromFrame(const FJamPresentationFrame& F)
 	{ TRACE_CPUPROFILER_EVENT_SCOPE(JamHud_PuckMarker); UpdatePuckMarker(F, bCount || Frames > 0 || F.SimFrame < PuckMarkerCardFrames); ResolveEdgeSlots(); YieldToDowned(); UpdateLabelPlates(); }
 	{ TRACE_CPUPROFILER_EVENT_SCOPE(JamHud_Commentary); UpdateCommentary(F); }
 	UpdatePrompts(F, Frames > 0, bSimAdvanced);
+	UpdateCarrierCues(F);   // lane A163 (track F2): the take grace on the rings, the stick lock on the contact line (after UpdateYours placed the rings)
 }
 
 // Lane A123 (1): where the human figure's head is. The visual's head_socket (a mesh socket on any of its components: device B's figures; or a scene component of
@@ -1734,6 +1735,56 @@ FString UJamHudWidget::GetTakeText() const
 	if (!TakeText) return FString();
 	const bool bRule = GoalRuleText && GoalRuleText->GetVisibility() != ESlateVisibility::Collapsed && !GoalRuleText->GetText().IsEmpty();
 	return bRule ? TakeText->GetText().ToString() + TEXT(": ") + GoalRuleText->GetText().ToString() : TakeText->GetText().ToString();
+}
+
+// Lane A163 (track F2, evolution 6): the carrier's cues (HUDWidget.h has the rules). Runs after UpdateYours has placed and coloured the rings this frame and
+// touches them only while a grace runs; the contact line is F1's plate, shown through ShowContactLine as its own lines are.
+void UJamHudWidget::UpdateCarrierCues(const FJamPresentationFrame& F)
+{
+	const AHokejGameMode* GM = GetWorld() ? GetWorld()->GetAuthGameMode<AHokejGameMode>() : nullptr;
+	const UJamSim* Sim = GM ? GM->GetSim() : nullptr;
+	if (!Sim) return;
+	const TArray<FJamSkaterState>& Sk = Sim->GetSkaters();
+	const int32 Hi = Sim->GetHumanIndex();
+	const int32 Ci = Sim->CarrierIndex();
+	// The take grace: the carrier's ring in yellow, closing to its own size as the grace runs out.
+	const bool bGrace = Sk.IsValidIndex(Ci) && Sim->InTakeGrace(Sk[Ci]);
+	if (bGrace)
+	{
+		const int32 Total = Sim->GetConfig().Stick.TakeGraceFrames;
+		const int32 Left = Sk[Ci].TakeGraceLeft > 0 ? Sk[Ci].TakeGraceLeft : Total;   // the frame the puck is won in: the grace stands, its count starts with the next
+		UImage* Ring = Ci == Hi ? YouRing.Get() : CarrierRing.Get();
+		const bool bRing = Ring && Ring->GetVisibility() != ESlateVisibility::Collapsed;
+		if (bRing)
+		{
+			const FLinearColor Y = S::Yellow();
+			Ring->SetColorAndOpacity(FLinearColor(Y.R, Y.G, Y.B, Ring->GetColorAndOpacity().A));
+			if (UCanvasPanelSlot* CS = Cast<UCanvasPanelSlot>(Ring->Slot)) CS->SetSize(CS->GetSize() * TakeGraceRingScale(Left, Total));
+		}
+		if (CueGraceCarrier != Ci)
+		{
+			UE_LOG(LogTemp, Log, TEXT("JAMHUD frame=%lld cue=take_grace carrier=%d human=%d frames=%d ring=%s shown=%d scale=%.2f"), F.SimFrame, Ci, Ci == Hi ? 1 : 0, Left, Ci == Hi ? TEXT("YouRing") : TEXT("CarrierRing"),
+				bRing ? 1 : 0, TakeGraceRingScale(Left, Total));
+		}
+	}
+	CueGraceCarrier = bGrace ? Ci : -1;
+	// The stick lock, and the press a grace refuses: the contact line.
+	if (!Sk.IsValidIndex(Hi)) return;
+	const FJamSkaterState& Hu = Sk[Hi];
+	const bool bLocked = Hu.StickLockLeft > 0;
+	const bool bInto = Hu.PokeWindow > 0 && Hu.bPokeArmed && bGrace && Ci != Hi && Sk[Ci].Team != Hu.Team;
+	if ((bLocked && !bCueStickLocked) || (bInto && !bCuePressIntoGrace && !bLocked))
+	{
+		const FString Line = CarrierCueLine(bLocked, bInto);
+		ShowContactLine(Line);
+		UE_LOG(LogTemp, Log, TEXT("JAMHUD frame=%lld cue=%s contact_line=%s lock_left=%d"), F.SimFrame, bLocked ? TEXT("stick_lock") : TEXT("press_into_grace"), *Line.Replace(TEXT(" "), TEXT("_")), Hu.StickLockLeft);
+	}
+	else if (!bLocked && bCueStickLocked && !bContactPending && GetContactText() == CarrierCueLine(true, false))
+	{
+		ContactStart = CarrierCueFadeStart(F.SimFrame);   // the lock is over: the line fades now
+	}
+	bCueStickLocked = bLocked;
+	bCuePressIntoGrace = bInto;
 }
 
 void UJamHudWidget::UpdateOwnMarker(const FJamPresentationFrame& F)
