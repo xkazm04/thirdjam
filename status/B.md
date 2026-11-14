@@ -1022,3 +1022,56 @@ Not measured yet: packaging on ARM64, frame rate, a second editor.
   trigger, the whip's weights, a plain collision's whip at 0). It is on a side branch now; a line here says "for H28: step (b): <commit>" or "step (b) not
   taken".
 - Cook: 0 errors, 3 warnings (the same three as all week: two of your cvars set by project setting, the null online subsystem).
+
+## H46.9 (04:44, 14 Nov) FOR THE DIRECTOR: **for H28: step (a) updated: this push**: the arena's switch (your ask 2); built on `main` a944639, cook-only PASS
+- **The switch**: a Blueprint cannot define a console variable in this engine, so the switch is an event: **`ke * ArenaCrowd 0`** hides everything of B's arena
+  (the live crowd owner with stands, fans, gate, loft, machine and props, and `Dress_P3_Clay`: roof and walls); **`ke * ArenaCrowd 1`** leaves the stands and the
+  barn without fans; **`ke * ArenaCrowd 2`** is everything (the default). Three things to know: send it after the match has started (the rig streams in a few
+  seconds after play begins); `ke` is compiled out of Shipping (Development and Test have it); it hides, it does not unload (right for frame time and draw
+  calls, not for load time). Proven in real headless matches on the regular rink and Pond (`status/AR8-report.md`): instance counts and visibility at each
+  value, the cheer answering a `goal` at 2, no error at 0, and a rig load with 0 warnings.
+- If you register a console variable `jam.arena.crowd` (int, default 2) in code, B's Blueprint can follow it at BeginPlay and on change: the graph is in the
+  report as text and goes back in one edit; B left the read out so that nothing warns in the operator's package.
+- Tags, if your tools prefer them: `B_Arena` on the seven layout owners, `Dress_P3_Clay` and their instanced components; `B_Fan` on the fan components.
+- Step (b) (the figure lane's second run) is still being played on the GPU; its line follows by about 06:15.
+
+## H47.4 (05:20, 14 Nov) FOR THE DIRECTOR: **for H28: step (b): this push** (B's last for the operator's package); built on `main` d21fa8b, cook-only PASS; your board caps were grey in a cooked game
+- **For H28, step (b)**: everything on `dev-b` at this push. It adds to step (a):
+  1. **The figure lane's second run** (`status/SK26-report.md`), played on the GPU before it merged (`status/QA5-report.md`: one whole clay match, most of a
+     second, 100 s on night: 0 Blueprint errors, 0 `Error` lines, get-up end minus release 0.0 on 14 of 14 knockdowns, stumbles 3 of 3, no stuck figure):
+     56 takes of the three new sets with their calls declared by name and a test trigger (`ke * SK26Test <move>`, Development only; **nothing in a normal
+     match calls any of it**: the knockdown and stumble lines of two seeded matches are identical before and after), the whip's weights, a plain collision's
+     whip at 0, the cross-check in three sizes.
+  2. **`Look/M_Toon` now has the instanced-static-mesh usage flag** (lane AR9, `status/AR9-report.md`). Why it matters to you: **your lane A145's team-coloured
+     board caps** (`ArenaCaps`, `ArenaCapsPos` on B's `MI_Toon_Blue` / `MI_Toon_Orange`) logged "missing usage flag InstancedStaticMeshes! Default Material
+     will be used in game" in every play session: in the editor they drew as dark brown lumps (mean colour 64, 41, 25) and **in a cooked game they would have
+     been the grey default material**: H27 has them so. With the flag they are orange and blue domes on the board tops, on clay and night
+     (`devlog/shots/20261114-051354-B-ar9-caps-before-after.png`). Nobody had seen them in colour: look at them in H28 and say if they are what you meant;
+     their size and brightness are yours. The flag changes nothing else: boards, crowd and benches pixel-equal within noise, the figures inside the noise of
+     two sessions; `MI_Toon_KickPlate` had the same warning in last night's logs and is covered.
+- **First run**: `M_Toon` gained one shader permutation (compiled in this cook without a warning); the two crowd masters as in step (a). Nothing of B's needs a
+  derived-data pass that B knows of.
+- **Thank you for timing the stands** (frame 1.00, game thread 1.03, GPU 1.03 on AR2's 293 actors): the arena in H28 is the instanced one (one live actor in
+  play, about half the triangles): it should cost less; if your lane has a minute, the same pair on H28 would close it.
+- **Not in H28, by design**: the sets' final exports with the real props and their sounds, the lab's re-timed get-ups, the lamp arms and far-end dressing, the
+  single arena owner: all on side branches until seen on the GPU; they come after 10:00.
+- Cook: 0 errors, 3 warnings (the usual three). B's ownership and ledger gates PASS.
+
+## H48.9 (06:50, 14 Nov) FOR THE DIRECTOR, BEFORE THE OPERATOR PLAYS: H28 was cut at 05:46 from c5dc15e, which holds dev-b only up to 83c7677: **B's step (b) is not in it, and without it your board caps draw in the engine's default material in a cooked game**
+- Your handoff A-to-B-0025 said what B pushes by 06:30 is in the operator's package; `status/A.md` line 447 says H28 was cut at 05:46 from main c5dc15e,
+  and main's last merge of dev-b is 83c7677 (04:31). So **in H28**: B's step (a) as first pushed (the instanced arena, the filmed effects). **Not in H28**:
+  the arena's switch (`ke * ArenaCrowd`, pushed 04:44), and step (b) (53e151b, pushed 05:21): the figure lane's second run and **the instanced-static-mesh
+  usage flag on `Look/M_Toon`**.
+- **Why the flag matters for H28**: your A145 board caps (`ArenaCaps`, `ArenaCapsPos`) are instanced components on B's `MI_Toon_Blue` / `MI_Toon_Orange`;
+  every play session before the flag logged "missing usage flag InstancedStaticMeshes! Default Material will be used in game." In the editor they drew as
+  dark brown lumps; **in a cooked game they get the engine's default material** (`devlog/shots/20261114-051354-B-ar9-caps-before-after.png`: before above,
+  after below). If your window on merged main was a packaged build, look at the board tops: if the caps are grey or checkered there, that is this.
+- **What B suggests, in order of cost**: (1) if a later package is still possible before 10:00: merge `dev-b` (e7751f8 now: built on main 2d15906, cook-only
+  PASS, B's gates PASS; it also carries the sets' final state, filmed on the GPU, unused by a normal match) or cherry-pick only fd40eef (the one file
+  `Look/M_Toon.uasset`, 68,056 bytes, +64 bytes: one usage flag, graph untouched) and re-cut; (2) if not: hide the caps for the operator's session with your
+  own switch (`jam.rink.react 0` stills the arena's answers; if the caps have their own, that one), or tell him the caps are a known fault of H28.
+- Everything else B pushed after 04:31 is dormant in a normal match and can wait until after he has played.
+
+## H50.0 (11:16, 14 Nov) FOR THE DIRECTOR: **merge dev-b a4c15ab9 into main now** (the operator's request): handoff B-to-A-0043
+- The operator will package on device A and test before giving directions. `dev-b` a4c15ab9 holds main 3fa9c2e6, builds, cook-only PASS, gates PASS:
+  42 commits since your last merge of dev-b, listed in the handoff. The board caps' usage flag is among them.

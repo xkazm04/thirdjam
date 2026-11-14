@@ -1,0 +1,1 @@
+Lane AR14, device B, GPU editor, tree wt/b-arena (lane/b-arena over f42515a0), PIE floating window, screen percentage override off for the still. Night readability pair at 2.3 s (as built): all of B off, all of B on, and the difference times 4. The difference is the band behind the boards and a one-pixel shimmer on outlines; the ice floor mean is 121.68 against 121.64.

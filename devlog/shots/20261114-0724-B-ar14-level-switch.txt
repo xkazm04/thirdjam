@@ -1,0 +1,1 @@
+Lane AR14, device B, GPU editor, tree wt/b-arena (lane/b-arena over f42515a0), PIE floating window, screen percentage override off for the still. Clay, risen, the far side stand at 26, 30 and 34 m from the camera (the far level takes over at 30 m). The far level carries the same poses; I see no step between the three.

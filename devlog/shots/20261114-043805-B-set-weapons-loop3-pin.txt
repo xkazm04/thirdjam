@@ -1,0 +1,1 @@
+SET-WEAPONS loop 3, rolling pin: Pin_Carry, Pin_Roll (wind-up raised over the head, contact 16 at the shins), Pin_Miss, and the pair with a victim playing Trip from frame 14 (game camera and closer). Blender Cycles CPU, frozen frames.

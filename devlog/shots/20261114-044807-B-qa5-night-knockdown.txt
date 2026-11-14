@@ -1,0 +1,1 @@
+QA5 B1. Night, un-paused, every 12th frame from frame 6. Top: a board fall (Board_Fall_Front, the figure sitting against the boards, GetUp_Wall after the strip's end). Bottom: a knockdown on open ice, lying and up by frame 114.

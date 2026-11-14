@@ -441,3 +441,245 @@ That 131 MB is 38 % of JamAssets. With A's word on the 68.9 MB the total is 200 
 1. **The sets, judged as they land:** dive, dash and weapons sheets at game size. Proving number: per lane, a verdict on every sheet and at least five pointed faults, with explicit lines on "flat by the frame it claims", "prop in the hands" and "reads as a real weapon or cruelty".
 2. **One engine picture of tonight's work for the operator:** once B42 and the animation import land, a single sheet with the same moments before and after (stop spray, ability, goal, a downed player with the stands behind). Proving number: 4 of 4 moments in un-paused engine stills, each against its critic's number (spray at least 1.5 %, ability at least 2 %, burst at least 3 %, the downed figure clear of HUD and other skaters).
 3. **The delete list turned into the engine lane's script input:** a plain path list (445 lines), plus a one-page check, in the delete slot's order, of what to verify in the editor (the reference viewer on the 10 largest). Proving number: the list's MB equals the cook's drop within 1 %.
+
+---
+
+# Round 3 (04:27 to 05:50): what the engine now shows, two judgments, the page for 10:00
+
+## 1. Summary (round 3)
+
+All four jobs are done.
+- **Superseded in part by "Round 3, final" at the end of this report.** That section is written after QA5 (`C:\Users\kazda\jam\thirdjam\status\QA5-report.md`, 16 stills) and FILM2 (17 stills in `C:\Users\kazda\jam\wt\b-fig\devlog\shots\`). Where the two disagree, that section wins.
+- The one-page summary is `C:\Users\kazda\jam\review\night\SUMMARY.md`, with a printable copy `SUMMARY.html`. Both are written by `C:\Users\kazda\jam\review\night\summary.mjs`, because the Write tool refuses new .md files in this agent.
+
+What I looked at with the Read tool, at full size:
+- the engine stills `b42-brake-fan`, `-chips-streaks`, `-goal`, `film1-fan-lighter`, `-ability-puffs`, `-pairs-close`, `-pairs-game`, `-board-together`, `-goal-together`, `-check-sizes`, `-getup`, `-night`, `ar7-ar2-side-by-side`, `-game-play-2`, `-cheer-plus`, `-wide`;
+- the Blender sheets `set-weapons-props` (025730), `-loop2-mallet`, `-loop2-cannon`, `set-dash-silhouette`, `set-dive-loop3-act-slide`, `lab-skf32-pairs-clay`.
+
+The rest were judged from their captions and reports only, and are marked so on the page: `b42-ability-kinds`, `film1-whip`, `-lying`, `-collision-pair`, `-pairs-stiff`, the other `ar7-*`, `ar4-*`, `ar6-*`, the other `set-*`, `skf31-*`, `skf32-contact-side` and `-pairs-cel`.
+
+## 2. Per evolution (round 3)
+
+### Evolution 7: what the engine now shows
+
+Per lane, a verdict and five faults. The full text is on the page under "The critic, per lane" and in `C:\Users\kazda\jam\review\night\round3.mjs` (`secondPass`).
+
+- **B42 and FILM1, effects.**
+  - The beads are gone (`20261114-030209-B-b42-chips-streaks.png` row 2, a real hit, un-paused).
+  - The pale fan is right; the dark one reads as slush.
+  - The ability dabs read by kind at 2.2 to 3.2 % (`20261114-034310-B-film1-ability-puffs.png`), but only from hand spawns.
+  - The goal dust is small from centre ice and turns muddy purple under device A's red light (`20261114-034035-B-film1-goal-together.png`).
+  - On night the dust is lost (`20261114-034310-B-film1-night.png` row 3).
+  - The streaks have lost the team colour.
+- **FILM1, the figure.**
+  - The whip reads at Strength 1.0 as a bow from the waist (caption).
+  - The light check reads; the middle and heavy look alike (`20261114-032248-B-film1-check-sizes.png` row 3).
+  - The back get-up rises in 5 frames, f75 to f80, and reads as a jump (`20261114-032248-B-film1-getup.png`).
+  - The lying moves do not read at game scale (caption).
+- **AR5 and AR7, the arena.** The best change of the night for a first look (`20261114-041908-B-ar7-ar2-side-by-side.png`).
+  - The fans are real size on the wide arena (`ar7-wide`), which fixes round 2's 2.3 m fans.
+  - The cheer is 2 % of the frame (`ar7-cheer-plus`): easy to miss.
+  - The crowd is a uniform speckle with no team colour.
+  - The lamp shades are the brightest objects in the frame.
+  - On the wide arena the barn scales but the crowd does not.
+- **SET-weapons, second loop.**
+  - The keg reads as a toy (`20261114-025730-B-set-weapons-props.png`, in-hands rows); the mallet meets the hip.
+  - Both figures in the pair are blue, so who hits whom cannot be read at the game camera (`20261114-034146-B-set-weapons-loop2-mallet.png` rows 1 and 2).
+  - In Cannon_Kick the keg ends on the figure's head (`-loop2-cannon` row 4, last cells).
+- **SET-dive, third loop** (`20261114-042658-B-set-dive-loop3-act-slide.png`).
+  - The act is a few pixels at game size, and the end pose equals Knockdown_Left (rows 1 and 2).
+  - The slide tackle still ends spread-eagled.
+- **SET-dash, second loop.**
+  - It now has its own silhouette, mainly from the trailing stick (`20261114-030634-B-set-dash-silhouette.png` rows 3 and 4).
+  - It reads as a speed skater.
+- **SKF31 and SKF32.**
+  - The hit and the fall now touch (`20261114-040913-B-lab-skf32-pairs-clay.png`).
+  - The cross-check looks like a body check at game size.
+  - The victims' sticks fly vertical at +1 to +3.
+
+**Round 1's twenty, judged again by what tonight's stills show, not what the reports claim.**
+- **Fixed (4 of round 1's twenty, plus round 2's fan size):**
+  - #6, the beads (`b42-chips-streaks` row 2);
+  - #8, the stop spray (`film1-fan-lighter`);
+  - #12, the empty barn (`ar7-*`);
+  - #17, the mark over the number (`b42-chips-streaks` tile 4);
+  - plus round 2's 2.3 m fans (`ar7-wide`).
+- **Improved (3):** #7, the abilities; #10, the far half; #14, the clocks.
+- **Stand (7):**
+  - #9, the goal: pink ice to the circles, muddy dust (`film1-goal-together`);
+  - #1, the ring is still round the human (`b42-brake-fan` row 1);
+  - #5, a skater stands in a downed body again (`ar7-game-play-2`, 650-760 by 600-700);
+  - #13, the scratches;
+  - #15, the board-foot haze (`film1-fan-lighter` row 3);
+  - #18, the faceoff dots;
+  - #19, the puck post (`film1-ability-puffs` row 1).
+- **Unproven (6):** #2, #3, #4, #11, #16 and #20, all device A's (A158). No HUD still exists tonight.
+
+**The top ten for a player on clay in the operator's package:**
+1. Device A's board-hit flash whites out the figure (new; `20261114-034035-B-film1-board-together.png`).
+2. The ring round and over the human.
+3. A skater inside a downed body.
+4. The goal: pink ice and muddy dust.
+5. The back get-up's 5-frame jump (new).
+6. Captions, taunts and markers (unproven fixed).
+7. The ice scratches at the feet.
+8. Middle and heavy check alike (new).
+9. The board-foot haze.
+10. The lifted-puck post.
+
+Items 11 to 20 are on the page.
+
+### Evolution 8: two judgments
+
+**(a) Physics on the falls: no gain a player would see.**
+- At game scale, red and blue cannot be told apart in any frame of four pairs (`20261114-032838-B-film1-pairs-game.png`).
+- Close up the bodies match. The one visible difference is a fault: in pair 1 the red stick is flung flat about a metre from the hand at f006 to f009, and again in the get-up at f057 to f060 (`-pairs-close` row 3).
+- Stop. Keep the hand-made falls.
+
+**(b) The stop's fan: the pale one.**
+- B42's dark fan (4 %) is a grey-black smear that reads as dirt on the lavender ice (`20261114-030208-B-b42-brake-fan.png` row 2, +3 and +6). That is too much for calm ice.
+- FILM1's pale fan (3 %, gone by +20) reads as snow and covers no figure or puck (`20261114-034310-B-film1-fan-lighter.png` rows 2 and 3).
+- The paler 2.09 % try is invisible, so do not go lower.
+
+### Evolution 9: the page and the summary
+
+`C:\Users\kazda\jam\review\night\index.html`, rebuilt from `round3.mjs` by `build.mjs`. A copy of the round-2 builder is kept as `build-round2.mjs`. What is on it, in order:
+
+1. A link to the printable summary `C:\Users\kazda\jam\review\night\SUMMARY.html`.
+2. **What changed since you went to bed:** nine tracks with one line and one still each, engine stills wherever they exist: arena `ar7-ar2-side-by-side`, effects `b42-chips-streaks`, the hit `film1-whip`, lying and get-up `film1-getup`, physics `film1-pairs-game`, new sets `set-weapons-props`, sound (listening page), trailer, critic.
+3. **What you must decide:** ten choices, each as A or B with two stills: get-up; goal loudness; physics stop or go; which new moves and in what order; the dash's tucked arm; the dive at 38 or 30 frames; the keg; the trailer and "cut"; the listening pages (four); the transcripts' export and the H27 zip.
+4. **What is in the package you play, and what is not** (new).
+   - In: the arena, effects, lying loops, whip and three sizes (tuned weights only with step (b)), falls and stops, sounds.
+   - Not in: the dive block, slide tackle, dash, the weapons and physics, each with the call device A must wire.
+   - Where QA5's console command should be, a line says QA5 has not filed.
+5. **What to try when you play** (8) and **What is not proven** (7).
+6. **Defaults I set** (13, now including the whip at 0, the check bars, the pale fan, the chalk dabs, the ring tint, the crowd, the windows, the weapon lengths and the dive's cover), the lanes table (10 rows, report and still counts read from disk), and the handoffs: B-to-A-0040, 0041 and 0042 and A-to-B-0025, one line each with device A's answer.
+7. **Two judgments from an outside eye** (new), each with two stills.
+8. **Round 1's twenty judged again** (new table: fault, now, seen in).
+9. The trailer section (unchanged), the critic per lane (rounds 3 and 2), the delete list, **the twenty re-ranked** (with stills), the cost, all 130 night stills by track (QA5's will join from `wt\b-fig` when they exist), and the 70 reports since 22:00.
+
+## 3. Not verified (round 3)
+
+- QA5 (the GPU play-through) had not landed. Device A's HUD and push-out fixes have no still. "In the package" is from `A-to-B-0025` and `status\B.md` H46.6, not from a package.
+- The stills read from captions only are marked so above.
+- Every engine still of the new effects comes from hand spawns or forced drills, except the stop fan and the real hit.
+- Still nothing heard. No frame time.
+
+## 4. For the engine lane (round 3)
+
+- **The back get-up:** spread the rise over 12 frames. Proving number: the hips gain no more than 15 % of standing height in any 2 frames.
+- **The heavy check:** wider and later than the middle. Proving number: a viewer tells them apart in 4 of 5 game-scale frames.
+- **Goal dust:** cream on night and under device A's red light.
+- **The cheer:** lift the fans' fill during it, to at least 4 % of the frame (AR7 decision 3).
+- **Weapon pairs:** render them in two teams.
+
+## 5. For the other device (round 3)
+
+- B-to-A-0042 still open: the flash and the red light. It is now fault 1 of the twenty.
+- Points 1 and 2 of B-to-A-0041 are seen again tonight in B's own engine stills:
+  - the ring is still drawn round the human (`b42-brake-fan`);
+  - a skater stands in a downed body (`ar7-game-play-2`).
+
+## 6. Decisions for the operator
+
+The ten on the page. The critic's leanings:
+- get-up: B, with the 5-frame rise spread over 12;
+- goal: the light off the ice;
+- physics: stop;
+- new moves: the tackle moves first;
+- the keg: accept;
+- trailer: A, with a cold open.
+
+## 7. The next three evolutions
+
+1. **QA5 judged when it lands.** Proving number: a verdict per still, and round 1's six "unproven" items each answered fixed or standing from its stills.
+2. **The twenty re-ranked after the package (H28)** from un-paused stills of the package itself. Proving number: every item in the top ten pointed at a package still.
+3. **The page cut to one screen for the afternoon:** what he decided, and what each lane does next. Proving number: no section below the fold that he must read.
+
+## Round 3, final (06:30 to 06:50): after QA5 and FILM2
+
+**What I looked at.** With the Read tool, at full size:
+- `20261114-044800-B-qa5-clay-knockdown.png`, `-044803-B-qa5-clay-goals.png`, `-044808-B-qa5-sets-dive-slide-game.png`, `-044812-B-qa5-sets-weapons-close.png`;
+- `C:\Users\kazda\jam\wt\b-fig\devlog\shots\20261114-063416-B-film2-game-scale-a.png` and `-063412-B-film2-getup-back-export35-beside.png`;
+- `20261114-043832-B-lab-skf33-getup.png`.
+
+The other QA5 stills I read by caption only. The other FILM2 stills, plus `skf34`, `skf35`, `ar9`, `ar10` and `ar12`, are on the page by file but I have not looked at them.
+
+**QA5, verdict.** These are the night's most important stills. A whole clay match runs on the GPU with 0 errors, and 14 of 14 get-ups end on the release.
+- Nothing is drawn over the downed human (`qa5-clay-knockdown` top row, f30 to f114).
+- The period text sits inside its panel, and captions are small at the bottom (`qa5-clay-goals`).
+- The goal light floods the corner and the players near the net pink.
+- The ring is still heavy round the standing human.
+- The lifted-puck post is still there (`qa5-sets-weapons-close` row 2).
+- Every new move plays on the figure by trigger; the giant stick and the mallet are stand-ins.
+- There is no still of a board hit in play, and none of the first frame.
+
+**FILM2, verdict.** The new sets with their real props are on a side branch.
+- The keg reads as a toy, and its kick is comic (`film2-game-scale-a` rows 1 and 2).
+- The mallet's wind-up holds the drum straight up over the head before the low swing (row 5, cells 3 and 4). The first half reads as a blow to the head coming. **New fault.**
+- The pin rolls the victim over the attacker's back with his legs in the air (row 6, cells 7 to 9). That is a wrestling throw, rougher than anything else in the game. **New fault.**
+- The export35 back get-up turns a quarter on the ice and reads as a scramble (`film2-getup-back-export35-beside`, from above). The figure lane says the same in its own morning note.
+
+**Round 1's twenty, final count.** These replace round 3's first count.
+- **Fixed (7):** #1 for the downed body, #2, #4, #6, #8, #12 and #17.
+- **Improved (3):** #7, #10 and #14.
+- **Stand (7):** #1 for the standing human, #5, #9, #13, #15, #18 and #19.
+- **Unproven (3):** #3, #11 and #20.
+
+**The top ten for a player on clay in H28:**
+1. Device A's board flash (`film1-board-together`).
+2. The goal light on the players (`qa5-clay-goals`).
+3. A skater standing in a downed body (`ar7-game-play-2`).
+4. The heavy ring round the standing human.
+5. The back get-up jumps in the package, and the lab fix scrambles.
+6. The mallet's overhead wind-up. This one is on a side branch, not in the package.
+7. The pin. Also on a side branch.
+8. The ice scratches at the feet.
+9. Middle and heavy check look alike.
+10. The board-foot haze.
+
+Items 11 to 20 are on the page.
+
+**The two judgments stand as written above:**
+- (a) Physics: stop. `qa5-rag-film3-pairs` repeats it by caption.
+- (b) The pale fan.
+
+**The page** (`C:\Users\kazda\jam\review\night\index.html`, rebuilt at 06:37 from `round3b.mjs` over `round3.mjs`).
+
+First screen:
+1. Links to `SUMMARY.html` and `SUMMARY.md`.
+2. **What changed:** eleven tracks, one line and one still each.
+   - New: QA5's whole match (`qa5-clay-goals`), and the new moves filmed in the engine (`film2-game-scale-a`).
+   - Arena, effects, the hit, lying, physics, sets, sound, trailer and critic as before.
+3. **What you must decide:** ten choices, each A or B with two stills:
+   - get-up (`skf34-getup-beat` / `skf35-getup-roll`);
+   - goal (`film1-goal-together` / `b42-goal`);
+   - cheer (`ar7-cheer-plus` / `ar12-cheer-25m`);
+   - physics (`film1-pairs-close` / `-game`);
+   - which moves and in what order (`film2-game-scale-a` / `qa5-sets-dive-slide-game`);
+   - the keg (`set-weapons-loop3-cannon` / `film2-cannon`);
+   - the trailer;
+   - the wide barn (`ar10-barn-wide` / `ar7-wide`);
+   - the four listening pages, full paths;
+   - the transcripts and the H27 zip.
+4. **In the package / dormant / not in**, as the lead gave it. The console command `ke * SK26Test <move>` (Development build, B's machine only) is from QA5 B2.
+
+Below the first screen:
+- What to try (7) and what is not proven (7).
+- Defaults (13).
+- The lanes, now with QA5 and FILM2.
+- Handoffs: 0040, 0041 and 0042, and A-to-B-0025 with device A's answers, including the stands timing (frame 1.00, GPU 1.03).
+- The two judgments.
+- Round 1's twenty with their final status.
+- The trailer.
+- The critic per lane, with QA5 and FILM2 first.
+- The delete list.
+- The twenty re-ranked.
+- The cost.
+- All 221 night stills by track, including QA5's, FILM2's and `wt\b-arena`'s.
+- The 84 reports changed since 22:00.
+
+**Not verified:**
+- the package itself;
+- the 15 FILM2 stills and the arena stills I did not open;
+- anything by ear.

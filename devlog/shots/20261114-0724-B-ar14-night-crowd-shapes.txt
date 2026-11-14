@@ -1,0 +1,1 @@
+Lane AR14, device B, GPU editor, tree wt/b-arena (lane/b-arena over f42515a0), PIE floating window, screen percentage override off for the still. DECISION still 1 of 2 (the night crowd): as built, black shapes against the sky. End terrace block mean luma 20.5, median 1.1.

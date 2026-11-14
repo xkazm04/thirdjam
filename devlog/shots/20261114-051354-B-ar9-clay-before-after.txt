@@ -1,0 +1,1 @@
+AR9. Clay, frozen at 2.3 s, before and after the usage flag on M_Toon: the side boards with both teams, the boards, the caps and the crowd, and the game camera. The two play sessions do not freeze in the same game state (figures differ); the measured difference is inside what two unchanged sessions differ by.

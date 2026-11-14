@@ -1,0 +1,1 @@
+SET-WEAPONS loop 3, giant stick: Giant_Carry angled out to the right with the blade open, layered (mesh space) over Stride and Stride_Sprint at the game camera, and Giant_Poke from it. Blender Cycles CPU, frozen frames.
